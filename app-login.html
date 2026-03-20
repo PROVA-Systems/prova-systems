@@ -391,12 +391,18 @@ body::after {
 // Netlify Identity — invite_token + recovery_token verarbeiten
 (function() {
   var hash = window.location.hash || '';
+  var hasToken = hash.indexOf('invite_token') !== -1 || 
+                 hash.indexOf('recovery_token') !== -1 || 
+                 hash.indexOf('confirmation_token') !== -1;
 
-  // Widget initialisieren
   if (typeof netlifyIdentity !== 'undefined') {
+    // API URL explizit auf netlify.app setzen — Identity läuft dort
+    netlifyIdentity.init({
+      APIUrl: 'https://prova-systems.netlify.app/.netlify/identity'
+    });
+
     netlifyIdentity.on('init', function(user) {
-      if (!user) {
-        // Kein eingeloggter User — Token prüfen
+      if (!user && hasToken) {
         if (hash.indexOf('invite_token') !== -1) {
           netlifyIdentity.open('signup');
         } else if (hash.indexOf('recovery_token') !== -1) {
@@ -419,17 +425,15 @@ body::after {
       console.error('Netlify Identity Fehler:', err);
     });
 
-    netlifyIdentity.init();
-
-    // Fallback: Widget nach kurzem Delay nochmal triggern falls init zu früh kam
-    if (hash.indexOf('invite_token') !== -1 || hash.indexOf('recovery_token') !== -1) {
+    // Fallback nach 1s
+    if (hasToken) {
       setTimeout(function() {
         if (hash.indexOf('invite_token') !== -1) {
           netlifyIdentity.open('signup');
-        } else {
+        } else if (hash.indexOf('recovery_token') !== -1) {
           netlifyIdentity.open('recovery');
         }
-      }, 800);
+      }, 1000);
     }
   }
 })();
