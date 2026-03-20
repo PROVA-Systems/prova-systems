@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="PROVA Systems – KI-Gutachten-Software für Sachverständige. Was bisher 3–4 Stunden Nacharbeit kostete, erledigen Sie mit PROVA in 30 Minuten. DSGVO-konform betrieben. Made in Germany.">
+  <title>PROVA Systems – KI-Gutachten für Sachverständige</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+  <noscript><link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet"></noscript>
+
+<style>
+:root {
+  --navy:#1B3F6B; --navy-dark:#0d2340; --navy-deep:#080f1e; --navy-light:#2A5490;
+  --accent:#4A90D9; --accent-dark:#2F6EB5; --accent-light:rgba(74,144,217,0.12);
+  --success:#10B981; --warning:#F59E0B; --error:#EF4444;
+  --white:#FFFFFF; --gray-100:#F3F4F6; --gray-200:#E5E7EB; --gray-300:#D1D5DB;
+  --gray-400:#9CA3AF; --gray-500:#6B7280; --gray-600:#4B5563;
+  --gray-700:#374151; --gray-800:#1F2937; --gray-900:#111827;
+  --dark-border:rgba(255,255,255,0.1);
+  --font-display:'Montserrat',system-ui,sans-serif;
+  --font-body:'Source Serif 4',Georgia,serif;
+  --radius-sm:.25rem; --radius-md:.5rem; --radius-lg:.875rem;
+  --radius-xl:1.25rem; --radius-2xl:1.75rem; --radius-full:9999px;
+  --shadow-accent:0 8px 24px rgba(74,144,217,0.35);
+  --transition-fast:150ms ease; --transition-base:250ms ease;
+  --z-sticky:100; --z-modal:200; --z-toast:300;
+  --container-max:1200px; --container-pad:2rem; --nav-height:68px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%;}
+body{font-family:var(--font-display);font-size:1rem;line-height:1.6;color:rgba(255,255,255,0.85);background:var(--navy-deep);-webkit-font-smoothing:antialiased;overflow-x:hidden;}
+img,video{max-width:100%;display:block;}
+a{color:inherit;text-decoration:none;}
+button,input,select,textarea{font-family:inherit;}
+ul,ol{list-style:none;}
+
+.container{max-width:var(--container-max);margin:0 auto;padding:0 var(--container-pad);}
+.section{padding:5rem 0;}
+.section-sm{padding:3rem 0;}
+
+/* SCROLL REVEAL */
+[data-reveal]{opacity:0;transform:translateY(30px);transition:opacity .7s ease,transform .7s ease;}
+[data-reveal].revealed{opacity:1;transform:none;}
+[data-reveal="left"]{transform:translateX(-30px);}
+[data-reveal="right"]{transform:translateX(30px);}
+[data-delay="1"]{transition-delay:.1s;}[data-delay="2"]{transition-delay:.2s;}
+[data-delay="3"]{transition-delay:.3s;}[data-delay="4"]{transition-delay:.4s;}
+[data-delay="5"]{transition-delay:.5s;}
+
+/* NAVIGATION */
+.nav{position:fixed;top:0;left:0;right:0;height:var(--nav-height);z-index:var(--z-sticky);transition:background .25s ease,box-shadow .25s ease;background:transparent;}
+.nav.scrolled{background:rgba(8,15,30,0.88);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid var(--dark-border);box-shadow:0 4px 24px rgba(0,0,0,.3);}
+.nav-container{max-width:100%;padding:0 2rem;height:100%;display:flex;align-items:center;justify-content:space-between;gap:2rem;}
+.nav-logo{display:flex;align-items:center;gap:.625rem;font-weight:700;font-size:1.25rem;color:white;}
+.nav-logo-text{letter-spacing:-.02em;}
+.nav-links{display:flex;align-items:center;gap:.25rem;}
+.nav-link{padding:.5rem .875rem;font-size:.9rem;font-weight:500;color:rgba(255,255,255,.75);border-radius:var(--radius-md);transition:color .15s ease,background .15s ease;}
+.nav-link:hover{color:white;background:rgba(255,255,255,.08);}
+.nav-actions{display:flex;align-items:center;gap:.75rem;}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;padding:.75rem 1.5rem;font-size:.9375rem;font-weight:600;font-family:var(--font-display);border-radius:var(--radius-md);cursor:pointer;transition:all .15s ease;border:2px solid transparent;text-decoration:none;white-space:nowrap;line-height:1;}
+.btn:disabled{opacity:.5;cursor:not-allowed;}
+.btn-primary{background:var(--accent);color:white;border-color:var(--accent);}
+.btn-primary:hover:not(:disabled){background:var(--accent-dark);border-color:var(--accent-dark);box-shadow:var(--shadow-accent);transform:translateY(-1px);}
+.btn-ghost{background:transparent;color:rgba(255,255,255,.75);border-color:transparent;}
+.btn-ghost:hover:not(:disabled){background:rgba(255,255,255,.1);color:white;}
+.btn-white{background:white;color:var(--navy);border-color:white;}
+.btn-white:hover:not(:disabled){box-shadow:0 4px 20px rgba(255,255,255,.25);transform:translateY(-1px);}
+.btn-white-outline{background:transparent;color:white;border-color:rgba(255,255,255,.4);}
+.btn-white-outline:hover:not(:disabled){background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.8);}
+.btn-dark-outline{background:transparent;color:rgba(255,255,255,.8);border-color:rgba(255,255,255,.2);}
+.btn-dark-outline:hover:not(:disabled){background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.5);color:white;}
+.btn-sm{padding:.5rem 1rem;font-size:.8125rem;}
+.btn-lg{padding:1rem 2rem;font-size:1.0625rem;}
+.btn-xl{padding:1.25rem 2.5rem;font-size:1.125rem;}
+.btn-full{width:100%;}
+
+/* BADGES */
+.badge{display:inline-flex;align-items:center;gap:.375rem;padding:.25rem .625rem;font-size:.75rem;font-weight:600;border-radius:var(--radius-full);}
+.badge-starter{background:rgba(156,163,175,.15);color:#d1d5db;border:1px solid rgba(156,163,175,.25);}
+.badge-pro{background:rgba(74,144,217,.15);color:#7ec8ff;border:1px solid rgba(74,144,217,.3);}
+.badge-enterprise{background:rgba(245,158,11,.15);color:#fcd34d;border:1px solid rgba(245,158,11,.3);}
+
+/* MOBILE NAV */
+.nav-toggle{display:none;flex-direction:column;gap:5px;background:none;border:none;cursor:pointer;padding:4px;}
+.nav-toggle span{display:block;width:24px;height:2px;background:white;border-radius:2px;transition:all .15s ease;}
+.nav-mobile-menu{display:none;flex-direction:column;gap:.5rem;padding:1rem 1.5rem 1.5rem;background:rgba(8,15,30,.95);backdrop-filter:blur(20px);border-top:1px solid var(--dark-border);}
+.nav.mobile-open .nav-mobile-menu{display:flex;}
+.nav-mobile-link{display:block;padding:.75rem 0;font-size:1rem;font-weight:500;color:rgba(255,255,255,.85);border-bottom:1px solid var(--dark-border);}
+.nav-mobile-divider{height:1px;background:var(--dark-border);margin:.5rem 0;}
+
+/* HERO */
+.hero{position:relative;min-height:100vh;display:flex;align-items:center;padding:calc(var(--nav-height) + 3rem) 0 4rem;overflow:hidden;}
+.hero-bg{position:absolute;inset:0;background:linear-gradient(145deg,#040a14 0%,#0d2340 35%,#1B3F6B 65%,#0a1830 100%);overflow:hidden;}
+.hero-bg .orb{position:absolute;border-radius:50%;filter:blur(90px);pointer-events:none;}
+.hero-bg .orb-1{width:700px;height:700px;background:radial-gradient(circle,rgba(74,144,217,.45) 0%,transparent 70%);top:-200px;right:-100px;animation:orbFloat 22s ease-in-out infinite;}
+.hero-bg .orb-2{width:500px;height:500px;background:radial-gradient(circle,rgba(27,63,107,.6) 0%,transparent 70%);bottom:-150px;left:-100px;animation:orbFloat 18s ease-in-out infinite reverse;}
+.hero-bg .orb-3{width:350px;height:350px;background:radial-gradient(circle,rgba(107,179,255,.3) 0%,transparent 70%);top:50%;left:30%;animation:orbPulse 14s ease-in-out infinite;}
+.hero-bg .grid{position:absolute;inset:0;background-image:linear-gradient(rgba(74,144,217,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(74,144,217,.05) 1px,transparent 1px);background-size:60px 60px;}
+.hero-bg .noise{position:absolute;inset:0;opacity:.025;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");}
+@keyframes orbFloat{0%,100%{transform:translate(0,0) scale(1);}33%{transform:translate(60px,-40px) scale(1.05);}66%{transform:translate(-40px,50px) scale(.95);}}
+@keyframes orbPulse{0%,100%{opacity:.4;transform:scale(1) translate(-50%,-50%);}50%{opacity:.7;transform:scale(1.15) translate(-50%,-50%);}}
+.hero-content{position:relative;z-index:2;text-align:center;color:white;}
+.hero-badge{display:inline-flex;align-items:center;gap:.5rem;padding:.5rem 1rem;background:rgba(74,144,217,.12);border:1px solid rgba(74,144,217,.3);border-radius:var(--radius-full);font-size:.8125rem;font-weight:500;backdrop-filter:blur(8px);margin-bottom:2rem;color:#7ec8ff;}
+.hero-title{font-size:clamp(2.5rem,6vw,4.75rem);font-weight:900;line-height:1.06;letter-spacing:-.03em;margin-bottom:1.5rem;color:white;}
+.hero-gradient{background:linear-gradient(135deg,#7EC8FF 0%,#4A90D9 45%,#a8d8ff 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.hero-subtitle{font-size:clamp(1rem,2.5vw,1.25rem);color:rgba(255,255,255,.7);max-width:600px;margin:0 auto 2.5rem;line-height:1.7;}
+.hero-actions{display:flex;justify-content:center;gap:1rem;flex-wrap:wrap;margin-bottom:2rem;}
+.hero-trust{display:flex;justify-content:center;gap:1.5rem;flex-wrap:wrap;margin-bottom:4rem;}
+.trust-item{display:flex;align-items:center;gap:.375rem;font-size:.8125rem;color:rgba(255,255,255,.55);}
+.trust-item svg{color:#4ADE80;}
+
+/* MOCKUP */
+.hero-mockup{max-width:860px;margin:0 auto;}
+.mockup-window{background:rgba(255,255,255,.04);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,.1);border-radius:var(--radius-xl);overflow:hidden;box-shadow:0 40px 80px rgba(0,0,0,.5),0 0 60px rgba(74,144,217,.1),inset 0 1px 0 rgba(255,255,255,.08);}
+.mockup-bar{display:flex;align-items:center;gap:.5rem;padding:.75rem 1.25rem;background:rgba(0,0,0,.25);border-bottom:1px solid rgba(255,255,255,.06);}
+.dot{width:12px;height:12px;border-radius:50%;}
+.dot.red{background:#FF5F57;}.dot.yellow{background:#FEBC2E;}.dot.green{background:#28C840;}
+.mockup-url{margin-left:.5rem;font-size:.75rem;color:rgba(255,255,255,.35);font-family:monospace;}
+.mockup-content{display:grid;grid-template-columns:200px 1fr;min-height:280px;}
+.mockup-sidebar{padding:1rem;background:rgba(0,0,0,.2);border-right:1px solid rgba(255,255,255,.06);}
+.mock-item{display:flex;align-items:center;gap:.625rem;padding:.6rem .75rem;border-radius:var(--radius-md);font-size:.8125rem;color:rgba(255,255,255,.5);margin-bottom:.25rem;}
+.mock-item.active{background:rgba(74,144,217,.2);color:white;font-weight:500;}
+.mock-badge{margin-left:auto;background:var(--accent);color:white;font-size:.625rem;font-weight:700;padding:.125rem .4rem;border-radius:var(--radius-full);}
+.mockup-main{padding:1.5rem;}
+.mock-header{margin-bottom:1.25rem;}
+.mock-title{font-size:.9375rem;font-weight:600;color:white;margin-bottom:.75rem;}
+.mock-progress{display:flex;align-items:center;gap:.75rem;}
+.mock-bar{flex:1;height:6px;background:rgba(255,255,255,.1);border-radius:3px;overflow:hidden;}
+.mock-bar-fill{height:100%;background:linear-gradient(90deg,var(--accent),#7EC8FF);border-radius:3px;animation:progressAnim 3s ease-in-out infinite;}
+@keyframes progressAnim{0%{width:45%;}50%{width:80%;}100%{width:45%;}}
+.mock-progress span{font-size:.75rem;color:rgba(255,255,255,.5);}
+.mock-steps{display:flex;flex-direction:column;gap:.5rem;}
+.mock-step{font-size:.8125rem;padding:.375rem 0;color:rgba(255,255,255,.4);border-bottom:1px solid rgba(255,255,255,.05);}
+.mock-step.done{color:#4ADE80;}.mock-step.active{color:white;font-weight:500;}
+
+/* STATS BAR */
+.stats-bar{background:linear-gradient(90deg,#0d2340 0%,#1B3F6B 50%,#0d2340 100%);padding:2.5rem 0;border-top:1px solid rgba(74,144,217,.2);border-bottom:1px solid rgba(74,144,217,.2);position:relative;}
+.stats-bar::before{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent 0%,rgba(74,144,217,.04) 50%,transparent 100%);}
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:2rem;text-align:center;position:relative;z-index:1;}
+.stat-value{font-size:2.5rem;font-weight:800;color:white;margin-bottom:.375rem;line-height:1;}
+.stat-label{font-size:.875rem;color:rgba(255,255,255,.5);}
+
+/* SECTION HEADERS */
+.section-header{text-align:center;max-width:680px;margin:0 auto 3rem;}
+.section-eyebrow{display:inline-block;font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:var(--accent);margin-bottom:.75rem;padding:.3rem .875rem;background:rgba(74,144,217,.1);border:1px solid rgba(74,144,217,.25);border-radius:var(--radius-full);}
+.section-title{font-size:clamp(1.75rem,3.5vw,2.5rem);font-weight:800;color:white;letter-spacing:-.025em;line-height:1.2;margin-bottom:1rem;}
+.section-subtitle{font-size:1.0625rem;color:rgba(255,255,255,.5);line-height:1.7;}
+
+/* PROBLEM SECTION */
+.problem-section{background:linear-gradient(180deg,#080f1e 0%,#0d1f38 100%);position:relative;overflow:hidden;}
+.problem-section::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 50% at 50% 0%,rgba(74,144,217,.06) 0%,transparent 70%);}
+.problem-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem;margin-bottom:3rem;position:relative;z-index:1;}
+.problem-card{background:rgba(255,255,255,.04);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.08);border-radius:var(--radius-xl);padding:2rem;text-align:center;transition:transform .25s ease,border-color .25s ease,box-shadow .25s ease;}
+.problem-card:hover{transform:translateY(-6px);border-color:rgba(74,144,217,.3);box-shadow:0 20px 40px rgba(0,0,0,.3),0 0 30px rgba(74,144,217,.08);}
+.problem-icon{font-size:2.75rem;margin-bottom:1rem;}
+.problem-card h3{font-size:1.0625rem;font-weight:700;color:white;margin-bottom:.75rem;}
+.problem-card p{font-size:.9375rem;color:rgba(255,255,255,.5);line-height:1.65;}
+.solution-arrow{display:flex;flex-direction:column;align-items:center;gap:.75rem;color:var(--accent);font-weight:600;position:relative;z-index:1;}
+
+/* HOW IT WORKS */
+.how-section{background:linear-gradient(180deg,#0d1f38 0%,#111827 100%);position:relative;overflow:hidden;}
+.how-section::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 60% 40% at 50% 100%,rgba(74,144,217,.07) 0%,transparent 70%);}
+.how-steps{display:flex;align-items:flex-start;gap:0;justify-content:center;position:relative;z-index:1;}
+.how-step{flex:1;max-width:300px;text-align:center;padding:2.5rem 1.5rem;background:rgba(255,255,255,.04);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.08);border-radius:var(--radius-xl);position:relative;transition:transform .25s ease,border-color .25s ease;}
+.how-step:hover{transform:translateY(-5px);border-color:rgba(74,144,217,.3);}
+.how-step-number{position:absolute;top:-16px;left:50%;transform:translateX(-50%);width:32px;height:32px;background:linear-gradient(135deg,var(--accent),var(--accent-dark));color:white;border-radius:var(--radius-full);display:flex;align-items:center;justify-content:center;font-size:.8125rem;font-weight:700;box-shadow:0 4px 12px rgba(74,144,217,.4);}
+.how-step-icon{width:72px;height:72px;background:rgba(74,144,217,.12);border:1px solid rgba(74,144,217,.2);border-radius:var(--radius-xl);display:flex;align-items:center;justify-content:center;color:var(--accent);margin:0 auto 1.25rem;}
+.how-step h3{font-size:1.125rem;font-weight:700;color:white;margin-bottom:.75rem;}
+.how-step p{font-size:.9375rem;color:rgba(255,255,255,.5);line-height:1.65;margin-bottom:1rem;}
+.how-step-tag{display:inline-flex;padding:.3rem .875rem;background:rgba(74,144,217,.1);border:1px solid rgba(74,144,217,.2);color:#7ec8ff;border-radius:var(--radius-full);font-size:.75rem;font-weight:500;}
+.how-connector{flex:0 0 60px;display:flex;align-items:center;justify-content:center;color:rgba(74,144,217,.4);margin-top:3rem;}
+
+/* FEATURES */
+.features-section{background:linear-gradient(180deg,#111827 0%,#0d1f38 100%);position:relative;overflow:hidden;}
+.features-section::before{content:'';position:absolute;width:800px;height:800px;border-radius:50%;background:radial-gradient(circle,rgba(74,144,217,.06) 0%,transparent 70%);top:50%;left:50%;transform:translate(-50%,-50%);}
+.features-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem;position:relative;z-index:1;}
+.feature-card{background:rgba(255,255,255,.04);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.08);border-radius:var(--radius-lg);padding:1.75rem;transition:transform .25s ease,border-color .25s ease,box-shadow .25s ease;position:relative;overflow:hidden;}
+.feature-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(74,144,217,.3),transparent);opacity:0;transition:opacity .25s ease;}
+.feature-card:hover{transform:translateY(-4px);border-color:rgba(74,144,217,.25);box-shadow:0 20px 40px rgba(0,0,0,.3),0 0 30px rgba(74,144,217,.06);}
+.feature-card:hover::before{opacity:1;}
+.feature-icon{font-size:2rem;margin-bottom:1rem;}
+.feature-card h3{font-size:1.0625rem;font-weight:700;color:white;margin-bottom:.625rem;}
+.feature-card p{font-size:.9375rem;color:rgba(255,255,255,.5);line-height:1.65;margin-bottom:1rem;}
+.feature-list{list-style:none;padding:0;}
+.feature-list li{display:flex;align-items:center;gap:.5rem;font-size:.8125rem;color:rgba(255,255,255,.55);padding:.3rem 0;border-top:1px solid rgba(255,255,255,.06);}
+.feature-list li::before{content:'✓';color:var(--success);font-weight:700;flex-shrink:0;}
+
+/* PRICING */
+.pricing-section{background:linear-gradient(180deg,#0d1f38 0%,#0a1525 100%);position:relative;overflow:hidden;}
+.pricing-section::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 70% 60% at 50% 50%,rgba(74,144,217,.06) 0%,transparent 70%);}
+.pricing-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem;margin-bottom:2rem;align-items:stretch;position:relative;z-index:1;}
+.pricing-card{background:rgba(255,255,255,.04);backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,.1);border-radius:var(--radius-xl);padding:2rem;position:relative;display:flex;flex-direction:column;transition:box-shadow .25s ease,transform .25s ease,border-color .25s ease;}
+.pricing-card:hover{box-shadow:0 24px 48px rgba(0,0,0,.4);transform:translateY(-5px);}
+.pricing-popular{border-color:rgba(74,144,217,.4);background:rgba(74,144,217,.07);transform:scale(1.02);box-shadow:0 0 60px rgba(74,144,217,.1);}
+.pricing-popular:hover{transform:scale(1.02) translateY(-5px);}
+.popular-ribbon{position:absolute;top:-14px;left:50%;transform:translateX(-50%);background:linear-gradient(90deg,var(--accent-dark),var(--accent));color:white;font-size:.6875rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;padding:.375rem 1rem;border-radius:var(--radius-full);box-shadow:0 4px 12px rgba(74,144,217,.4);}
+.pricing-header{margin-bottom:1.5rem;padding-bottom:1.5rem;border-bottom:1px solid rgba(255,255,255,.08);}
+.pricing-name{font-size:1.25rem;font-weight:700;color:white;margin:.5rem 0;}
+.pricing-price{margin:.75rem 0 .25rem;display:flex;align-items:baseline;gap:.25rem;}
+.price-num{font-size:2.75rem;font-weight:900;color:white;letter-spacing:-.02em;line-height:1;}
+.price-unit{font-size:.9375rem;color:rgba(255,255,255,.45);}
+.pricing-setup{font-size:.8125rem;color:rgba(255,255,255,.4);margin-bottom:.5rem;}
+.pricing-tagline{font-size:.875rem;color:rgba(255,255,255,.45);line-height:1.5;}
+.pricing-features{flex:1;list-style:none;padding:0;margin:0 0 1.75rem;}
+.pricing-features li{display:flex;align-items:flex-start;gap:.625rem;font-size:.875rem;color:rgba(255,255,255,.65);padding:.6rem 0;border-bottom:1px solid rgba(255,255,255,.06);}
+.pricing-features li:last-child{border-bottom:none;}
+.pricing-features li svg{flex-shrink:0;margin-top:1px;}
+.feat-yes svg{color:var(--success);}
+.feat-no{opacity:.3;}
+.feat-no svg{color:var(--gray-400);}
+.pricing-note{display:flex;align-items:center;gap:.75rem;background:rgba(74,144,217,.08);border:1px solid rgba(74,144,217,.2);border-radius:var(--radius-md);padding:1rem 1.25rem;font-size:.875rem;color:rgba(255,255,255,.5);position:relative;z-index:1;}
+.pricing-note svg{flex-shrink:0;color:var(--accent);}
+
+/* COMPARE TABLE */
+.compare-section{background:linear-gradient(180deg,#0a1525 0%,#080f1e 100%);}
+.compare-table-wrap{overflow-x:auto;background:rgba(255,255,255,.03);backdrop-filter:blur(10px);border-radius:var(--radius-lg);border:1px solid rgba(255,255,255,.08);}
+.compare-table{width:100%;border-collapse:collapse;min-width:600px;}
+.compare-table th{padding:1rem 1.25rem;font-size:.875rem;font-weight:700;text-align:center;color:white;border-bottom:1px solid rgba(255,255,255,.1);background:rgba(27,63,107,.3);}
+.compare-table th:first-child{text-align:left;}
+.compare-table td{padding:.875rem 1.25rem;font-size:.875rem;color:rgba(255,255,255,.6);border-bottom:1px solid rgba(255,255,255,.05);text-align:center;}
+.compare-table td:first-child{text-align:left;color:rgba(255,255,255,.75);font-weight:500;}
+.compare-group td{background:rgba(74,144,217,.06);font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(74,144,217,.8);padding:.625rem 1.25rem;}
+
+/* FAQ */
+.faq-section{background:linear-gradient(180deg,#080f1e 0%,#0d1f38 100%);position:relative;overflow:hidden;}
+.faq-section::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 60% 50% at 50% 50%,rgba(74,144,217,.04) 0%,transparent 70%);}
+.faq-list{max-width:800px;margin:0 auto;position:relative;z-index:1;}
+.accordion-item{border:1px solid rgba(255,255,255,.08);border-radius:var(--radius-md);margin-bottom:.75rem;overflow:hidden;background:rgba(255,255,255,.03);transition:border-color .15s ease,box-shadow .15s ease,background .15s ease;}
+.accordion-item.open{box-shadow:0 8px 24px rgba(0,0,0,.2);border-color:rgba(74,144,217,.3);background:rgba(74,144,217,.05);}
+.accordion-header{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:1.25rem 1.5rem;cursor:pointer;user-select:none;transition:background .15s ease;}
+.accordion-header:hover{background:rgba(255,255,255,.04);}
+.accordion-header h3{font-size:1rem;font-weight:600;color:white;}
+.accordion-icon{flex-shrink:0;color:rgba(255,255,255,.4);transition:transform .25s ease,color .25s ease;}
+.accordion-item.open .accordion-icon{transform:rotate(180deg);color:var(--accent);}
+.accordion-body{overflow:hidden;max-height:0;transition:max-height .35s ease;}
+.accordion-body p{padding:0 1.5rem 1.5rem;font-size:.9375rem;color:rgba(255,255,255,.5);line-height:1.7;font-family:var(--font-body);}
+
+/* CTA */
+.cta-section{padding:4rem 0;background:linear-gradient(180deg,#0d1f38 0%,#080f1e 100%);}
+.cta-box{position:relative;border-radius:var(--radius-2xl);overflow:hidden;padding:5rem 2rem;text-align:center;border:1px solid rgba(74,144,217,.2);}
+.cta-box .cta-bg{position:absolute;inset:0;background:linear-gradient(135deg,#0a1830 0%,#1B3F6B 50%,#0a1525 100%);}
+.cta-box .cta-bg .orb{position:absolute;border-radius:50%;filter:blur(80px);}
+.cta-box .cta-bg .orb-1{width:500px;height:500px;background:rgba(74,144,217,.3);top:-100px;right:-100px;}
+.cta-box .cta-bg .orb-2{width:300px;height:300px;background:rgba(107,179,255,.2);bottom:-50px;left:-50px;}
+.cta-box .cta-bg .grid{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.03) 1px,transparent 1px);background-size:60px 60px;}
+.cta-content{position:relative;z-index:2;color:white;}
+.cta-content h2{font-size:clamp(2rem,4vw,3rem);font-weight:800;letter-spacing:-.025em;margin-bottom:.75rem;}
+.cta-content p{font-size:1.125rem;color:rgba(255,255,255,.65);margin-bottom:2.5rem;}
+.cta-actions{display:flex;justify-content:center;gap:1rem;flex-wrap:wrap;}
+
+/* FOOTER */
+.footer{background:#050c18;padding:4rem 0 2rem;border-top:1px solid rgba(255,255,255,.06);}
+.footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:3rem;margin-bottom:3rem;}
+.footer-logo{display:flex;align-items:center;gap:.625rem;color:white;font-weight:700;font-size:1.125rem;margin-bottom:.875rem;}
+.footer-tagline{font-size:.875rem;line-height:1.6;margin-bottom:1rem;color:rgba(255,255,255,.45);}
+.footer-badges{display:flex;gap:.5rem;flex-wrap:wrap;}
+.footer-badge{padding:.25rem .625rem;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:var(--radius-full);font-size:.75rem;color:rgba(255,255,255,.55);}
+.footer-col h4{font-size:.8125rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:white;margin-bottom:1.25rem;}
+.footer-col a{display:block;font-size:.875rem;color:rgba(255,255,255,.4);margin-bottom:.625rem;transition:color .15s ease;}
+.footer-col a:hover{color:rgba(255,255,255,.85);}
+.footer-bottom{padding-top:2rem;border-top:1px solid rgba(255,255,255,.06);display:flex;flex-direction:column;gap:.375rem;}
+.footer-bottom p{font-size:.8125rem;color:rgba(255,255,255,.25);}
+
+/* TOAST */
+.toast-container{position:fixed;bottom:1.5rem;right:1.5rem;z-index:var(--z-toast);display:flex;flex-direction:column;gap:.5rem;}
+.toast{display:flex;align-items:center;gap:.75rem;padding:.875rem 1.25rem;background:rgba(13,35,64,.95);backdrop-filter:blur(16px);border:1px solid rgba(74,144,217,.3);color:white;border-radius:var(--radius-md);box-shadow:0 8px 24px rgba(0,0,0,.4);font-size:.875rem;font-weight:500;min-width:280px;max-width:400px;animation:slideIn .3s ease;}
+@keyframes slideIn{from{transform:translateX(100%);opacity:0;}to{transform:translateX(0);opacity:1;}}
+
+/* RESPONSIVE */
+@media (max-width:1100px){
+  .how-steps{flex-direction:column;align-items:center;}
+  .how-connector{transform:rotate(90deg);margin:0;}
+  .footer-grid{grid-template-columns:1fr 1fr;}
+}
+@media (max-width:960px){
+  :root{--container-pad:1.5rem;}
+  .nav-links{display:none;}
+  .nav-toggle{display:flex;}
+  .stats-grid{grid-template-columns:repeat(2,1fr);}
+  .problem-grid{grid-template-columns:1fr;}
+  .features-grid{grid-template-columns:repeat(2,1fr);}
+  .pricing-grid{grid-template-columns:1fr;max-width:420px;margin-left:auto;margin-right:auto;}
+  .pricing-popular{transform:none;}
+  .pricing-popular:hover{transform:translateY(-5px);}
+}
+@media (max-width:640px){
+  :root{--container-pad:1rem;--nav-height:60px;}
+  .hero-actions{flex-direction:column;align-items:stretch;}
+  .hero-trust{gap:.75rem;flex-direction:column;align-items:center;}
+  .features-grid{grid-template-columns:1fr;}
+  .footer-grid{grid-template-columns:1fr;gap:2rem;}
+  .stats-grid{grid-template-columns:1fr 1fr;gap:1rem;}
+  .mockup-content{grid-template-columns:1fr;}
+  .mockup-sidebar{display:none;}
+  .cta-actions{flex-direction:column;align-items:stretch;max-width:320px;margin:0 auto;}
+  .section{padding:3rem 0;}
+}
+</style>
+
+  <!-- Netlify Identity — invite_token Handler -->
+  <script defer src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+  <script>
+    // Wenn Netlify einen invite_token in der URL hat → zu app-login.html weiterleiten
+    (function(){
+      if (window.location.hash && window.location.hash.indexOf('invite_token') !== -1) {
+        window.location.href = 'app-login.html' + window.location.hash;
+      }
+      if (window.location.hash && window.location.hash.indexOf('recovery_token') !== -1) {
+        window.location.href = 'app-login.html' + window.location.hash;
+      }
+    })();
+  </script>
+</head>
+<body>
+
+<!-- NAVIGATION -->
+<nav class="nav" id="mainNav">
+  <div class="nav-container">
+    <a href="index.html" class="nav-logo">
+      <svg width="36" height="36" viewBox="0 0 100 100" fill="none">
+        <path d="M50 5L90 25V55C90 75 70 95 50 95C30 95 10 75 10 55V25L50 5Z" fill="#1B3F6B" stroke="#4A90D9" stroke-width="4"/>
+        <path d="M30 50L45 65L70 35" stroke="#4A90D9" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <span class="nav-logo-text">PROVA</span>
+    </a>
+    <div class="nav-links">
+      <a href="#funktionen" class="nav-link">Funktionen</a>
+      <a href="#preise" class="nav-link">Pakete & Preise</a>
+      <a href="#so-funktioniert-es" class="nav-link">So funktionierts</a>
+      <a href="#faq" class="nav-link">FAQ</a>
+    </div>
+    <div class="nav-actions">
+      <a href="app-login.html" class="btn btn-ghost btn-sm">Anmelden</a>
+      <a href="onboarding.html" class="btn btn-primary btn-sm">14 Tage testen</a>
+    </div>
+    <button class="nav-toggle" aria-label="Menü"><span></span><span></span><span></span></button>
+  </div>
+  <div class="nav-mobile-menu">
+    <a href="#funktionen" class="nav-mobile-link">Funktionen</a>
+    <a href="#preise" class="nav-mobile-link">Pakete & Preise</a>
+    <a href="#so-funktioniert-es" class="nav-mobile-link">So funktionierts</a>
+    <a href="#faq" class="nav-mobile-link">FAQ</a>
+    <div class="nav-mobile-divider"></div>
+    <a href="app-login.html" class="btn btn-dark-outline btn-full">Anmelden</a>
+    <a href="onboarding.html" class="btn btn-primary btn-full">14 Tage testen</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero" id="hero">
+  <div class="hero-bg">
+    <div class="orb orb-1"></div><div class="orb orb-2"></div><div class="orb orb-3"></div>
+    <div class="grid"></div><div class="noise"></div>
+  </div>
+  <div class="container hero-content">
+    <div data-reveal>
+      <span class="hero-badge">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        KI-Gutachten · Made in Germany · PROVA
+      </span>
+    </div>
+    <h1 class="hero-title" data-reveal data-delay="1">
+      Das erste KI‑System<br>für deutsche Sachverständige.
+    </h1>
+    <p class="hero-subtitle" data-reveal data-delay="2">
+      Vom Sprachdiktat zum strukturierten Entwurf – <strong>weniger Schreibzeit</strong> nach der Besichtigung.<br>
+      Für qualifizierte Sachverständige, mit Blick auf übliche Gutachtenstruktur und Datenschutz (EU-Hosting, AVV).
+    </p>
+    <div class="hero-actions" data-reveal data-delay="3">
+      <a href="onboarding.html" class="btn btn-white btn-lg">
+        14 Tage testen — danach entscheiden Sie
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+      </a>
+      <a href="#preise" class="btn btn-white-outline btn-lg">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        Preise ansehen
+      </a>
+    </div>
+    <div class="hero-trust" data-reveal data-delay="4">
+      <span class="trust-item"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>DSGVO-konform</span>
+      <span class="trust-item"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>Server in Deutschland</span>
+      <span class="trust-item"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>Jederzeit kündbar</span>
+    </div>
+  </div>
+</section>
+
+<!-- ROI RECHNER -->
+<section class="section" id="roi">
+  <div class="container">
+    <div class="section-header" data-reveal>
+      <span class="section-eyebrow">ROI in Echtzeit</span>
+      <h2 class="section-title">Wann rechnet sich PROVA für Sie?</h2>
+      <p class="section-subtitle">Stellen Sie ein, wie viele Gutachten Sie pro Monat schreiben – wir berechnen Ihre Ersparnis.</p>
+    </div>
+    <div class="pricing-card" data-reveal style="max-width:780px;margin:0 auto;background:linear-gradient(135deg,#0f172a,#1B3F6B);color:#fff;border-color:rgba(148,163,184,.4);">
+      <div class="pricing-header" style="border-bottom:1px solid rgba(148,163,184,.35);">
+        <div style="display:flex;flex-direction:column;gap:.5rem;">
+          <label for="roi-slider" style="font-size:.9rem;font-weight:600;">Wie viele Gutachten schreiben Sie pro Monat?</label>
+          <input id="roi-slider" type="range" min="1" max="50" value="10" style="width:100%;">
+          <div style="display:flex;justify-content:space-between;font-size:.8rem;color:rgba(226,232,240,.8);">
+            <span>1</span><span id="roi-count-label" style="font-weight:700;">10 Gutachten/Monat</span><span>50</span>
+          </div>
+        </div>
+      </div>
+      <div class="pricing-body" style="padding:1.25rem 1.5rem 1.5rem;">
+        <div style="display:grid;grid-template-columns:2fr 1fr;gap:1.25rem;align-items:center;">
+          <div style="font-size:.9rem;color:rgba(226,232,240,.9);display:flex;flex-direction:column;gap:.4rem;">
+            <div><strong>Zeitersparnis:</strong> <span id="roi-zeit"></span> / Monat<br><span style="font-size:.8rem;color:rgba(226,232,240,.75);">Berechnet mit 2,5&nbsp;Stunden pro Gutachten bei 80&nbsp;€/h.</span></div>
+            <div><strong>PROVA Starter kostet:</strong> 179&nbsp;€/Monat</div>
+            <div><strong>Ihr Netto‑Gewinn durch PROVA:</strong> <span id="roi-netto"></span> / Monat</div>
+          </div>
+          <div style="background:rgba(16,185,129,.12);border-radius:.75rem;padding:1rem;border:1px solid rgba(16,185,129,.4);text-align:center;">
+            <div style="font-size:.8rem;color:rgba(187,247,208,.9);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.25rem;">Ergebnis</div>
+            <div style="font-size:1.8rem;font-weight:800;color:#BBF7D0;" id="roi-highlight"></div>
+            <div style="font-size:.8rem;color:rgba(226,232,240,.85);margin-top:.25rem;">Mehrwert pro Monat – nach Abzug der PROVA‑Kosten.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- STATS -->
+<section class="stats-bar">
+  <div class="container">
+    <div class="stats-grid">
+      <div class="stat" data-reveal><div class="stat-value"><span>~30 Min.</span></div><div class="stat-label">Nacharbeit mit PROVA pro Gutachten</div></div>
+      <div class="stat" data-reveal data-delay="1"><div class="stat-value"><span>3–4 Std.</span></div><div class="stat-label">Nacharbeit ohne PROVA pro Gutachten</div></div>
+      <div class="stat" data-reveal data-delay="2"><div class="stat-value"><span>KI</span></div><div class="stat-label">Modernste Sprachmodelle für den Entwurf</div></div>
+      <div class="stat" data-reveal data-delay="3"><div class="stat-value"><span>DSGVO</span></div><div class="stat-label">konform betrieben · EU-Server · AVV verfügbar</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- PROBLEM -->
+<section class="section problem-section" id="problem">
+  <div class="container">
+    <div class="section-header" data-reveal>
+      <span class="section-eyebrow">Das Problem</span>
+      <h2 class="section-title">Sachverständige verlieren täglich Stunden</h2>
+      <p class="section-subtitle">Handschriftliche Notizen, Copy-Paste aus alten Gutachten, manuelle Formatierung – das kostet Zeit und Nerven.</p>
+    </div>
+    <div class="problem-grid">
+      <div class="problem-card" data-reveal><div class="problem-icon">⏰</div><h3>3–5 Stunden pro Gutachten</h3><p>Allein die Textarbeit nach der Besichtigung frisst den größten Teil Ihres Arbeitstages.</p></div>
+      <div class="problem-card" data-reveal data-delay="1"><div class="problem-icon">📋</div><h3>Fehleranfällige Vorlagen</h3><p>Copy-Paste aus alten Gutachten führt zu Flüchtigkeitsfehlern und rechtlichen Risiken.</p></div>
+      <div class="problem-card" data-reveal data-delay="2"><div class="problem-icon">📁</div><h3>Kein strukturiertes Archiv</h3><p>Gutachten landen auf Festplatten, USB-Sticks oder in E-Mails – nie dort, wo man sie braucht.</p></div>
+    </div>
+    <div class="solution-arrow" data-reveal>
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>
+      <span>Die PROVA-Lösung</span>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="section how-section" id="so-funktioniert-es">
+  <div class="container">
+    <div class="section-header" data-reveal>
+      <span class="section-eyebrow">So funktioniert's</span>
+      <h2 class="section-title">Von der Besichtigung zum PDF in 3 Schritten</h2>
+      <p class="section-subtitle">PROVA ist kein Werkzeug für Techniker – es ist für Sachverständige gemacht.</p>
+    </div>
+    <div class="how-steps">
+      <div class="how-step" data-reveal>
+        <div class="how-step-number">01</div>
+        <div class="how-step-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg></div>
+        <h3>Sprechen</h3>
+        <p>Diktieren Sie Ihre Beobachtungen per Smartphone oder Browser. Die PROVA Voice Engine transkribiert in Echtzeit – auf Deutsch, präzise.</p>
+        <div class="how-step-tag">PROVA Voice Engine · Echtzeit</div>
+      </div>
+      <div class="how-connector" data-reveal data-delay="1"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+      <div class="how-step" data-reveal data-delay="2">
+        <div class="how-step-number">02</div>
+        <div class="how-step-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+        <h3>PROVA analysiert</h3>
+        <p>Die PROVA erkennt Schadensart, generiert Ursachenanalyse, strukturiert alle Abschnitte nach ZPO §407a – rechtskonform und vollständig.</p>
+        <div class="how-step-tag">PROVA · ZPO-konform</div>
+      </div>
+      <div class="how-connector" data-reveal data-delay="3"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+      <div class="how-step" data-reveal data-delay="4">
+        <div class="how-step-number">03</div>
+        <div class="how-step-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><polyline points="20 6 9 17 4 12"/></svg></div>
+        <h3>Prüfen & Exportieren</h3>
+        <p>Überprüfen Sie den Entwurf, fügen Sie Fotos hinzu, unterschreiben Sie digital – und exportieren Sie ein druckfertiges PDF.</p>
+        <div class="how-step-tag">PDF · Digital · Sofort</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="section features-section" id="funktionen">
+  <div class="container">
+    <div class="section-header" data-reveal>
+      <span class="section-eyebrow">Funktionen</span>
+      <h2 class="section-title">Alles, was Sachverständige wirklich brauchen</h2>
+      <p class="section-subtitle">Realistisch umgesetzt – keine Marketing-Versprechen, sondern echte Werkzeuge.</p>
+    </div>
+    <div class="features-grid">
+      <div class="feature-card" data-reveal>
+        <div class="feature-icon">🎙️</div>
+        <h3>Sprachdiktat & Transkription</h3>
+        <p>Diktat per Smartphone oder Browser. Die PROVA Voice Engine transkribiert präzises Deutsch inkl. Fachbegriffen.</p>
+        <ul class="feature-list"><li>Browser-basiertes Mikrofon</li><li>Fachvokabular erkannt</li><li>Automatische Zeichensetzung</li></ul>
+      </div>
+      <div class="feature-card" data-reveal data-delay="1">
+        <div class="feature-icon">🤖</div>
+        <h3>KI-Gutachtengenerierung</h3>
+        <p>Die PROVA erstellt strukturierte Gutachten-Abschnitte: Auftrag, Objekt, Feststellungen, Ursachenanalyse, Bewertung – ZPO-konform.</p>
+        <ul class="feature-list"><li>ZPO §407a-konform</li><li>Anpassbare Vorlagen</li><li>Konfidenz-Anzeige pro Abschnitt</li></ul>
+      </div>
+      <div class="feature-card" data-reveal data-delay="2">
+        <div class="feature-icon">📝</div>
+        <h3>Freigabe & Bearbeitung</h3>
+        <p>Prüfen Sie KI-Entwürfe direkt im Browser. Bearbeiten, kommentieren, freigeben. Vollständiges Änderungsprotokoll.</p>
+        <ul class="feature-list"><li>Inline-Bearbeitung</li><li>Änderungsprotokoll</li><li>Digitale Unterschrift</li></ul>
+      </div>
+      <div class="feature-card" data-reveal data-delay="1">
+        <div class="feature-icon">📄</div>
+        <h3>PDF-Export & Vorlagen</h3>
+        <p>Professionelle, gebrandete PDFs in Sekunden. Eigenes Logo, Briefkopf, Farbschema. Mehrere Vorlagen verwaltbar.</p>
+        <ul class="feature-list"><li>Logo & Briefkopf</li><li>Mehrere Vorlagen</li><li>Direktversand per E-Mail</li></ul>
+      </div>
+      <div class="feature-card" data-reveal data-delay="2">
+        <div class="feature-icon">📁</div>
+        <h3>Gutachten-Archiv</h3>
+        <p>Alle Gutachten sicher gespeichert, durchsuchbar, filterbar. Schneller Zugriff auf Vorlagen aus früheren Fällen.</p>
+        <ul class="feature-list"><li>Volltext-Suche</li><li>Filter nach Typ & Status</li><li>Vorlagen aus Archiv laden</li></ul>
+      </div>
+      <div class="feature-card" data-reveal data-delay="3">
+        <div class="feature-icon">🔒</div>
+        <h3>DSGVO & Datensicherheit</h3>
+        <p>Alle Daten auf EU-zertifizierten Servern (AWS Frankfurt). Ende-zu-Ende-Verschlüsselung. Kein Training mit Ihren Daten.</p>
+        <ul class="feature-list"><li>EU-Serverstandorte (Make: Prag, EU)</li><li>Keine KI-Trainingsnutzung</li><li>Vollständige Datenlöschung</li></ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- § 407a ZPO / gerichtliche Stellungnahme -->
+<section class="section" id="stellungnahme-zpo" style="background:linear-gradient(180deg,rgba(15,23,42,.04),transparent);">
+  <div class="container">
+    <div class="section-header" data-reveal>
+      <span class="section-eyebrow">ZPO § 407a</span>
+      <h2 class="section-title">Gerichtliche Stellungnahme – strukturiert &amp; nachvollziehbar</h2>
+      <p class="section-subtitle">PROVA unterstützt Sie bei der Erstellung gerichtlicher Gutachten und Stellungnahmen: klare Gliederung, Fachbegriffe und ein eigener Schritt für Ihr Fachurteil – damit Konjunktiv II und zwingende Formulierungen sichtbar bleiben.</p>
+    </div>
+    <div class="features-grid" style="margin-top:1.5rem;">
+      <div class="feature-card" data-reveal>
+        <div class="feature-icon">⚖️</div>
+        <h3>Prozessuale Anforderungen im Blick</h3>
+        <p>Strukturierte Abschnitte orientieren sich an der üblichen gerichtlichen Erwartung – ohne Ihre fachliche Bewertung vorwegzunehmen.</p>
+        <ul class="feature-list"><li>Separater Arbeitsgang fürs Fachurteil</li><li>Hinweise auf Konjunktiv II / vorsichtige Formulierung</li><li>Export in Ihre PDF-Vorlagen</li></ul>
+      </div>
+      <div class="feature-card" data-reveal data-delay="1">
+        <div class="feature-icon">🛡️</div>
+        <h3>Transparenz statt „Black Box“</h3>
+        <p>Sie behalten die Hoheit über Inhalt und Freigabe. PROVA liefert Entwürfe und Textbausteine – die letzte inhaltliche Verantwortung liegt beim Sachverständigen.</p>
+        <ul class="feature-list"><li>Freigabe-Workflow im Browser</li><li>Nachvollziehbare Bearbeitung</li><li>Kein Training mit Ihren Mandantendaten</li></ul>
+      </div>
+      <div class="feature-card" data-reveal data-delay="2">
+        <div class="feature-icon">📎</div>
+        <h3>Passend zu Starter, Pro &amp; Enterprise</h3>
+        <p>Je nach Paket: von Einzelgutachter-Workflow bis Team, Vorlagen und Schnittstellen – immer mit Fokus auf Datenschutz und EU-Hosting.</p>
+        <ul class="feature-list"><li><a href="#preise" style="color:var(--accent);font-weight:600;">Pakete vergleichen</a></li><li>Pro &amp; Enterprise: erweiterte Vorlagen</li><li>Enterprise: Webhooks &amp; Anbindungen</li></ul>
+      </div>
+    </div>
+    <p style="font-size:0.8rem;color:var(--gray-400);margin-top:2rem;text-align:center;max-width:640px;margin-left:auto;margin-right:auto;" data-reveal>Kein Rechtsrat: Bindungen an konkrete Verfahren richten sich nach dem Einzelfall und Ihrer eigenen Prüfung. PROVA ist ein Unterstützungswerkzeug für qualifizierte Sachverständige.</p>
+  </div>
+</section>
+
+<!-- PREISE -->
+<section class="section pricing-section" id="preise">
+  <div class="container">
+    <div class="section-header" data-reveal>
+      <span class="section-eyebrow">Pakete & Preise</span>
+      <h2 class="section-title">Für Einzelgutachter und Kanzleien.</h2>
+      <p class="section-subtitle">Monatliche Lizenz, jederzeit kündbar. Auf Wunsch jährlich mit 2 Monaten Rabatt.</p>
+    </div>
+    <div style="display:flex;justify-content:center;align-items:center;gap:.75rem;margin-bottom:1.5rem;font-size:.85rem;color:var(--gray-300);" data-reveal>
+      <span>Monatlich</span>
+      <label style="position:relative;display:inline-flex;align-items:center;cursor:pointer;">
+        <input id="billingToggle" type="checkbox" style="display:none;">
+        <span style="width:42px;height:22px;border-radius:999px;background:rgba(148,163,184,.5);position:relative;transition:background .2s;">
+          <span id="billingKnob" style="position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:transform .2s;"></span>
+        </span>
+      </label>
+      <span>Jährlich<span style="color:#22c55e;font-weight:600;"> (−2 Monate)</span></span>
+    </div>
+    <div class="pricing-grid">
+      <!-- STARTER -->
+      <div class="pricing-card" data-reveal>
+        <div class="pricing-header">
+          <div class="badge badge-starter">Starter</div>
+          <h3 class="pricing-name">Einzelgutachter</h3>
+          <div class="pricing-price">
+            <span class="price-num" data-monthly="179" data-yearly="149">179</span>
+            <span class="price-unit">€ / Monat</span>
+          </div>
+          <p class="pricing-setup">Keine Setup-Gebühr</p>
+          <p class="pricing-tagline">Für Sachverständige mit wenigen bis mittleren Fallzahlen.</p>
+        </div>
+        <ul class="pricing-features">
+          <li class="feat-yes"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> 10 Gutachten / Monat</li>
+          <li class="feat-yes"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Sprachdiktat (Browser)</li>
+          <li class="feat-yes"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> KI-Analyse & Textentwurf</li>
+          <li class="feat-yes"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Freigabe & Bearbeitung</li>
+          <li class="feat-yes"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> PDF-Export (1 Vorlage)</li>
+          <li class="feat-yes"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Gutachten-Archiv</li>
+          <li class="feat-yes"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> E-Mail-Support (48h)</li>
+          <li class="feat-no"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Dashboard & Statistiken</li>
+          <li class="feat-no"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Mehrere Gutachter</li>
+          <li class="feat-no"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Eigenes Branding</li>
+        </ul>
+        <a href="onboarding.html?plan=starter" class="btn btn-dark-outline btn-full">Starter wählen</a>
+        <p class="pricing-tagline" style="margin-top:.5rem;font-size:.8rem;color:rgba(148,163,184,.9);">Ab ca. 1 Gutachten/Monat rentiert sich PROVA.</p>
+      </div>
+      <!-- PRO -->
+      <div class="pricing-card pricing-popular" data-reveal data-delay="1">
+        <div class="popular-ribbon">Beliebt</div>
+        <div class="pricing-header">
+          <div class="badge badge-pro">Pro</div>
+          <h3 class="pricing-name">Professional</h3>
+          <div class="pricing-price">
+            <span class="price-num" data-monthly="369" data-yearly="307">369</span>
+            <span class="price-unit">€ / Monat</span>
+          </div>
+          <p class="pricing-setup">Keine Setup-Gebühr</p>
+          <p class="pricing-tagline">Für aktive Sachverständige – mehr Gutachten, Team, Dashboard.</p>
+        </div>
+        <ul class="pricing-features">
+          <li class="feat-yes"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> 30 Gutachten / Monat</li>
+          <li class="feat-yes"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Sprachdiktat (Browser + App)</li>
+          <li class="feat-yes"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> KI-Analyse & Textentwurf</li>
+          <li class="feat-yes"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Freigabe, Kommentare, Protokoll</li>
+          <li class="feat-yes"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> PDF-Export (3 Vorlagen)</li>
+          <li class="feat-yes"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Dashboard & Statistiken</li>
+          <li class="feat-yes"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Bis zu 3 Gutachter-Accounts</li>
+          <li class="feat-yes"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Prioritäts-Support (24h)</li>
+          <li class="feat-yes"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Eigenes Logo im PDF</li>
+          <li class="feat-no"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> White-Label / eigene Domain</li>
+        </ul>
+        <a href="onboarding.html?plan=pro" class="btn btn-primary btn-full">Pro wählen</a>
+        <p class="pricing-tagline" style="margin-top:.5rem;font-size:.8rem;color:rgba(226,232,240,.95);">Rechnet sich ab wenigen zusätzlichen Gutachten im Monat.</p>
+      </div>
+      <!-- ENTERPRISE -->
+      <div class="pricing-card" data-reveal data-delay="2">
+        <div class="pricing-header">
+          <div class="badge badge-enterprise">Enterprise</div>
+          <h3 class="pricing-name">Kanzlei / Team</h3>
+          <div class="pricing-price">
+            <span class="price-num" data-monthly="699" data-yearly="582">699</span>
+            <span class="price-unit">€ / Monat</span>
+          </div>
+          <p class="pricing-setup">Keine Setup-Gebühr</p>
+          <p class="pricing-tagline">Für Sachverständigenkanzleien und größere Teams.</p>
+        </div>
+        <ul class="pricing-features">
+          <li class="feat-yes"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Unbegrenzte Gutachten</li>
+          <li class="feat-yes"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Alle Pro-Features</li>
+          <li class="feat-yes"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Team-Verwaltung (unbegrenzt)</li>
+          <li class="feat-yes"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Rollen & Berechtigungen</li>
+          <li class="feat-yes"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> White-Label (eigene Domain)</li>
+          <li class="feat-yes"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Individuelle Vorlagen</li>
+          <li class="feat-yes"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Dedizierter Ansprechpartner</li>
+          <li class="feat-yes"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> SLA 99.9% Uptime</li>
+          <li class="feat-yes"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> API-Zugang</li>
+          <li class="feat-yes"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Onboarding & Schulung</li>
+        </ul>
+        <a href="mailto:enterprise@prova-systems.de" class="btn btn-dark-outline btn-full">Anfrage stellen</a>
+        <p class="pricing-tagline" style="margin-top:.5rem;font-size:.8rem;color:rgba(148,163,184,.9);">Für Teams, Kanzleien und White‑Label‑Anforderungen.</p>
+      </div>
+    </div>
+    <div class="pricing-note" data-reveal>
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+      Alle Preise zzgl. MwSt. · Monatlich kündbar · Keine Setup-Gebühren · 14 Tage Testphase für Starter & Pro
+    </div>
+    <div style="margin-top:1rem;font-size:.85rem;color:rgba(148,163,184,.95);text-align:center;">
+      ✓ 14 Tage kostenlos testen · ✓ Jederzeit kündbar · ✓ Alle Updates inklusive
+    </div>
+  </div>
+</section>
+
+<!-- VERGLEICH: PROVA vs. klassische Lösungen -->
+<section class="section compare-section">
+  <div class="container">
+    <div class="section-header" data-reveal>
+      <span class="section-eyebrow">Vergleich</span>
+      <h2 class="section-title">PROVA vs. klassische Lösungen</h2>
+    </div>
+    <div class="compare-table-wrap" data-reveal>
+      <table class="compare-table">
+        <thead>
+          <tr>
+            <th>Feature</th>
+            <th>Gutachten Manager</th>
+            <th>PlanRadar</th>
+            <th style="background:rgba(74,144,217,.12);">PROVA</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Plattform</td><td>Windows Desktop</td><td>Web + Mobile</td><td style="background:rgba(74,144,217,.06);">Web + Mobile ✅</td></tr>
+          <tr><td>KI-Gutachten</td><td>❌</td><td>❌</td><td style="background:rgba(74,144,217,.06);">✅</td></tr>
+          <tr><td>JVEG-Rechner</td><td>✅</td><td>❌</td><td style="background:rgba(74,144,217,.06);">✅</td></tr>
+          <tr><td>Cloud & automatische Updates</td><td>❌</td><td>✅</td><td style="background:rgba(74,144,217,.06);">✅</td></tr>
+          <tr><td>Mobile Ortstermin-App</td><td>❌</td><td>✅</td><td style="background:rgba(74,144,217,.06);">✅</td></tr>
+          <tr><td>Preis</td><td>390€ einmalig</td><td>89€/User/Mo</td><td style="background:rgba(74,144,217,.06);">179€/Mo</td></tr>
+          <tr><td>Deutsche Gutachten-Vorlagen (40+)</td><td>❌</td><td>❌</td><td style="background:rgba(74,144,217,.06);">✅</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section class="section faq-section" id="faq">
+  <div class="container">
+    <div class="section-header" data-reveal>
+      <span class="section-eyebrow">FAQ</span>
+      <h2 class="section-title">Häufig gestellte Fragen</h2>
+    </div>
+    <div class="faq-list" data-accordion="single" data-reveal>
+      <div class="accordion-item open">
+        <div class="accordion-header"><h3>Ist PROVA wirklich ZPO §407a-konform?</h3><svg class="accordion-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></div>
+        <div class="accordion-body"><p>Ja. PROVA generiert Gutachten mit der gesetzlich vorgeschriebenen Struktur nach ZPO §407a. Die KI-generierten Inhalte müssen jedoch vom Sachverständigen geprüft und freigegeben werden – PROVA ist ein Werkzeug, kein Ersatz für Ihre Expertise. Alle Änderungen werden protokolliert.</p></div>
+      </div>
+      <div class="accordion-item">
+        <div class="accordion-header"><h3>Wo werden meine Daten gespeichert?</h3><svg class="accordion-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></div>
+        <div class="accordion-body"><p>Alle Daten werden ausschließlich auf EU-zertifizierten Servern (AWS EMEA, Frankfurt am Main) gespeichert. Die Übertragung ist Ende-zu-Ende-verschlüsselt (TLS 1.2+). Ihre Gutachten werden nicht für KI-Training verwendet. Sie können jederzeit alle Daten exportieren oder löschen lassen.</p></div>
+      </div>
+      <div class="accordion-item">
+        <div class="accordion-header"><h3>Wie gut ist die Spracherkennung auf Deutsch?</h3><svg class="accordion-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></div>
+        <div class="accordion-body"><p>PROVA nutzt eine auf Deutsch optimierte KI-Sprach-Engine mit einer Erkennungsrate von über 96% – auch bei Fachbegriffen wie „Schimmelsporen", „Wärmebrücke" oder „Feuchtemessung". In ruhiger Umgebung (Büro, PKW) arbeitet sie hervorragend.</p></div>
+      </div>
+      <div class="accordion-item">
+        <div class="accordion-header"><h3>Kann ich PROVA ohne technische Kenntnisse nutzen?</h3><svg class="accordion-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></div>
+        <div class="accordion-body"><p>Absolut. PROVA ist für Sachverständige gebaut, nicht für IT-Profis. Die Einrichtung dauert 15 Minuten, die Oberfläche erklärt sich selbst. Im Starter-Paket gibt es ausführliche Videoanleitungen, im Pro- und Enterprise-Paket erhalten Sie persönlichen Onboarding-Support.</p></div>
+      </div>
+      <div class="accordion-item">
+        <div class="accordion-header"><h3>Was passiert nach den 14 Tagen Testphase?</h3><svg class="accordion-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></div>
+        <div class="accordion-body"><p>Nach der 14-tägigen Testphase wird Ihr Account automatisch auf den kostenfreien Lesemodus umgestellt – keine automatische Abbuchung. Wenn Sie weitermachen möchten, wählen Sie Ihr Paket und zahlen ab dem Folgetag. Alle Testgutachten bleiben erhalten.</p></div>
+      </div>
+      <div class="accordion-item">
+        <div class="accordion-header"><h3>Ich bin Einzelunternehmer – lohnt sich das?</h3><svg class="accordion-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></div>
+        <div class="accordion-body"><p>Ja – besonders dann. Wenn Sie pro Gutachten bisher 3 Stunden benötigen und PROVA das auf 30 Minuten reduziert, sparen Sie bei 10 Gutachten im Monat ca. 25 Stunden. Bei einem üblichen Stundensatz von 80–120 €/h entspricht das einem gesparten Gegenwert von 2.000–3.000 € – bei 179 € Monatsgebühr.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section">
+  <div class="container">
+    <div class="cta-box" data-reveal>
+      <div class="cta-bg"><div class="orb orb-1"></div><div class="orb orb-2"></div><div class="grid"></div></div>
+      <div class="cta-content">
+        <h2>Bereit, Zeit zurückzugewinnen?</h2>
+        <p>14 Tage testen — kein Risiko. Jederzeit kündbar. Danach entscheiden Sie.</p>
+        <div class="cta-actions">
+          <a href="onboarding.html" class="btn btn-white btn-lg">Jetzt 14 Tage testen <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></a>
+          <a href="#preise" class="btn btn-white-outline btn-lg">Pakete ansehen</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div>
+        <a href="index.html" class="footer-logo">
+          <svg width="36" height="36" viewBox="0 0 100 100" fill="none"><path d="M50 5L90 25V55C90 75 70 95 50 95C30 95 10 75 10 55V25L50 5Z" fill="#1B3F6B" stroke="#4A90D9" stroke-width="4"/><path d="M30 50L45 65L70 35" stroke="#4A90D9" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span>PROVA Systems</span>
+        </a>
+        <p class="footer-tagline">KI-Gutachten-Software für Sachverständige. Made in Germany.</p>
+        <div class="footer-badges">
+          <span class="footer-badge">🇩🇪 Server DE</span>
+          <span class="footer-badge">🔒 DSGVO</span>
+          <span class="footer-badge">⚡ PROVA</span>
+        </div>
+      </div>
+      <div class="footer-col"><h4>Produkt</h4><a href="#funktionen">Funktionen</a><a href="#preise">Preise</a><a href="onboarding.html">14 Tage testen</a></div>
+      <div class="footer-col"><h4>Rechtliches</h4><a href="impressum.html">Impressum</a><a href="datenschutz.html">Datenschutz</a><a href="agb.html">AGB</a><a href="avv.html">AVV</a></div>
+      <div class="footer-col"><h4>Kontakt</h4><a href="mailto:kontakt@prova-systems.de">kontakt@prova-systems.de</a><a href="mailto:enterprise@prova-systems.de">Enterprise-Anfragen</a><a href="mailto:support@prova-systems.de">support@prova-systems.de</a></div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2026 PROVA Systems – Alle Rechte vorbehalten</p>
+      <p>PROVA ist ein KI-Assistenzsystem. Alle Gutachten müssen vom Sachverständigen geprüft und freigegeben werden.</p>
+    </div>
+  </div>
+</footer>
+
+<script>
+(function(){
+'use strict';
+const $=(s,c=document)=>c.querySelector(s);
+const $$=(s,c=document)=>[...c.querySelectorAll(s)];
+const on=(el,ev,fn)=>el?.addEventListener(ev,fn);
+const utils={
+  random:(a,b)=>Math.random()*(b-a)+a,
+  clamp:(v,a,b)=>Math.min(Math.max(v,a),b),
+  debounce(fn,ms){let t;return(...a)=>{clearTimeout(t);t=setTimeout(()=>fn(...a),ms);}},
+  throttle(fn,ms){let l=0;return(...a)=>{const n=Date.now();if(n-l>=ms){l=n;fn(...a);}}}
+};
+
+/* SCROLL REVEAL */
+const ro=new IntersectionObserver(entries=>{
+  entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('revealed');ro.unobserve(e.target);}});
+},{threshold:.1,rootMargin:'0px 0px -40px 0px'});
+$$('[data-reveal]').forEach(el=>ro.observe(el));
+
+/* COUNTERS */
+const co=new IntersectionObserver(entries=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting){
+      const el=e.target,target=parseFloat(el.dataset.counter),suffix=el.dataset.suffix||'',dur=2000,start=performance.now();
+      const tick=now=>{
+        const p=utils.clamp((now-start)/dur,0,1),ease=1-Math.pow(2,-10*p);
+        const val=target<1?(target*ease).toFixed(1):Math.round(target*ease);
+        el.textContent=val.toLocaleString('de-DE')+suffix;
+        if(p<1)requestAnimationFrame(tick);
+        else el.textContent=(target<1?target:target.toLocaleString('de-DE'))+suffix;
+      };
+      requestAnimationFrame(tick);
+      co.unobserve(el);
+    }
+  });
+},{threshold:.5});
+$$('[data-counter]').forEach(el=>co.observe(el));
+
+/* PARTICLES */
+const heroBg=$('.hero-bg');
+if(heroBg){
+  const canvas=document.createElement('canvas');
+  Object.assign(canvas.style,{position:'absolute',inset:0,width:'100%',height:'100%',pointerEvents:'none',zIndex:'1'});
+  heroBg.appendChild(canvas);
+  const ctx=canvas.getContext('2d');
+  const sz=()=>{canvas.width=heroBg.offsetWidth;canvas.height=heroBg.offsetHeight;};
+  sz();on(window,'resize',utils.debounce(sz,150));
+  const N=45,spd=0.4,col='#4A90D9',dist=130;
+  const ps=Array.from({length:N},()=>({x:utils.random(0,canvas.width),y:utils.random(0,canvas.height),vx:utils.random(-spd,spd),vy:utils.random(-spd,spd),r:utils.random(1,2.5),a:utils.random(.15,.45)}));
+  let mx=null,my=null;
+  on(heroBg,'mousemove',e=>{const r=heroBg.getBoundingClientRect();mx=e.clientX-r.left;my=e.clientY-r.top;});
+  on(heroBg,'mouseleave',()=>{mx=null;my=null;});
+  (function loop(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    ps.forEach(p=>{
+      p.x+=p.vx;p.y+=p.vy;
+      if(p.x<0||p.x>canvas.width)p.vx*=-1;
+      if(p.y<0||p.y>canvas.height)p.vy*=-1;
+      if(mx!==null){const dx=mx-p.x,dy=my-p.y,d=Math.sqrt(dx*dx+dy*dy);if(d<80){p.vx-=(dx/d)*.3;p.vy-=(dy/d)*.3;}}
+      ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fillStyle=col;ctx.globalAlpha=p.a;ctx.fill();
+    });
+    ctx.strokeStyle=col;ctx.lineWidth=.5;
+    for(let i=0;i<ps.length;i++)for(let j=i+1;j<ps.length;j++){
+      const dx=ps[i].x-ps[j].x,dy=ps[i].y-ps[j].y,d=Math.sqrt(dx*dx+dy*dy);
+      if(d<dist){ctx.globalAlpha=((dist-d)/dist)*.08;ctx.beginPath();ctx.moveTo(ps[i].x,ps[i].y);ctx.lineTo(ps[j].x,ps[j].y);ctx.stroke();}
+    }
+    requestAnimationFrame(loop);
+  })();
+}
+
+/* NAV */
+const nav=$('.nav');
+if(nav){
+  on(window,'scroll',utils.throttle(()=>nav.classList.toggle('scrolled',window.scrollY>40),50));
+  const toggle=$('.nav-toggle');
+  on(toggle,'click',()=>{const o=nav.classList.toggle('mobile-open');document.body.style.overflow=o?'hidden':'';});
+  $$('.nav-mobile-menu a').forEach(a=>on(a,'click',()=>{nav.classList.remove('mobile-open');document.body.style.overflow='';}));
+}
+
+/* SMOOTH SCROLL */
+$$('a[href^="#"]').forEach(a=>on(a,'click',e=>{
+  const id=a.getAttribute('href');if(id==='#')return;
+  const t=$(id);if(!t)return;
+  e.preventDefault();window.scrollTo({top:t.offsetTop-(nav?.offsetHeight||0)-16,behavior:'smooth'});
+}));
+
+/* ACCORDION */
+$$('.accordion-item').forEach(item=>{
+  const hdr=$('.accordion-header',item),body=$('.accordion-body',item);
+  if(!hdr||!body)return;
+  body.style.maxHeight=item.classList.contains('open')?body.scrollHeight+'px':'0';
+  body.style.overflow='hidden';body.style.transition='max-height .35s ease';
+  on(hdr,'click',()=>{
+    const isOpen=item.classList.contains('open');
+    if(item.parentElement.dataset.accordion==='single'){
+      $$('.accordion-item.open',item.parentElement).forEach(i=>{
+        if(i!==item){i.classList.remove('open');const b=$('.accordion-body',i);if(b)b.style.maxHeight='0';}
+      });
+    }
+    if(!isOpen){
+      item.classList.add('open');
+      body.style.maxHeight=body.scrollHeight+'px';
+    }else{
+      item.classList.remove('open');
+      body.style.maxHeight='0';
+    }
+  });
+});
+
+/* ROI RECHNER */
+(function initRoi(){
+  const slider=$('#roi-slider');
+  const countLabel=$('#roi-count-label');
+  const zeitEl=$('#roi-zeit');
+  const nettoEl=$('#roi-netto');
+  const hiEl=$('#roi-highlight');
+  if(!slider||!countLabel||!zeitEl||!nettoEl||!hiEl)return;
+  const fmt=val=>val.toLocaleString('de-DE',{minimumFractionDigits:0,maximumFractionDigits:0})+' €';
+  const update=()=>{
+    const n=parseInt(slider.value||'10',10)||10;
+    countLabel.textContent=`${n} Gutachten/Monat`;
+    const ersparnis=n*2.5*80; // 2,5h * 80€/h
+    const netto=ersparnis-179;
+    zeitEl.textContent=fmt(ersparnis);
+    nettoEl.textContent=(netto>=0?fmt(netto):'- '+fmt(Math.abs(netto)));
+    hiEl.textContent=(netto>=0?fmt(netto):'0 €');
+  };
+  on(slider,'input',update);
+  update();
+})();
+
+/* BILLING TOGGLE */
+(function initBillingToggle(){
+  const toggle=$('#billingToggle');
+  const knob=$('#billingKnob');
+  const nums=$$('.pricing-price .price-num');
+  if(!toggle||!knob||!nums.length)return;
+  let annual=!!toggle.checked;
+  const setKnob=()=>{knob.style.transform=annual?'translateX(22px)':'translateX(0)';};
+  function updatePrices(){
+    nums.forEach(el=>{
+      const v=annual?el.dataset.yearly:el.dataset.monthly;
+      if(v!=null&&v!=='') el.textContent=String(v);
+    });
+    setKnob();
+  }
+  on(toggle,'change',()=>{annual=!!toggle.checked;updatePrices();});
+  updatePrices();
+})();
+</script>
+</body>
+</html>

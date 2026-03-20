@@ -1,0 +1,2357 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PROVA — Pro Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Instrument+Sans:wght@400;500;600&family=Montserrat:wght@400;500;600;700;800&family=Source+Serif+4:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+/* ============================================
+   PROVA DESIGN SYSTEM — INLINE (app-pro)
+   ============================================ */
+:root {
+  --navy:#1B3F6B; --navy-dark:#112C4E; --navy-light:#2A5490;
+  --accent:#4A90D9; --accent-dark:#2F6EB5; --accent-light:rgba(74,144,217,0.10);
+  --success:#10B981; --success-light:rgba(16,185,129,0.12);
+  --warning:#F59E0B; --warning-light:rgba(245,158,11,0.12);
+  --error:#EF4444; --error-light:rgba(239,68,68,0.12);
+  --white:#FFFFFF;
+  --gray-50:#F9FAFB; --gray-100:#F3F4F6; --gray-200:#E5E7EB;
+  --gray-300:#D1D5DB; --gray-400:#9CA3AF; --gray-500:#6B7280;
+  --gray-600:#4B5563; --gray-700:#374151; --gray-800:#1F2937;
+  --bg:#F0F4F8;
+  --font-sans:'Montserrat',system-ui,sans-serif;
+  --font-serif:'Source Serif 4',Georgia,serif;
+  --radius-sm:0.25rem; --radius-md:0.5rem; --radius-lg:0.875rem;
+  --radius-xl:1.25rem; --radius-full:9999px;
+  --shadow-sm:0 1px 3px rgba(0,0,0,0.08),0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md:0 4px 6px -1px rgba(0,0,0,0.08),0 2px 4px -1px rgba(0,0,0,0.04);
+  --shadow-lg:0 10px 15px -3px rgba(0,0,0,0.08),0 4px 6px -2px rgba(0,0,0,0.04);
+  --shadow-xl:0 20px 25px -5px rgba(0,0,0,0.10);
+  --transition-fast:150ms ease; --transition-base:250ms ease;
+  --bg2:#13161d;--border-nav:rgba(255,255,255,0.07);--border2-nav:rgba(255,255,255,0.12);--text-nav:#e8eaf0;--text2-nav:#9da3b4;--text3-nav:#6b7280;--surface-nav:#1e2330;--display:'Fraunces',serif;--sans:'Instrument Sans',sans-serif;--nav-h:52px;--bot-h:56px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{font-family:var(--font-sans);font-size:1rem;line-height:1.6;color:var(--gray-700);background:var(--bg);-webkit-font-smoothing:antialiased;}
+img,video{max-width:100%;display:block;}
+a{color:inherit;text-decoration:none;}
+button,input,select,textarea{font-family:inherit;}
+ul,ol{list-style:none;}
+*{-webkit-tap-highlight-color:transparent;}
+/* ── TOPBAR ─────────────────────────────────────── */
+.topbar{background:var(--bg2);border-bottom:1px solid var(--border-nav);padding:0 20px;height:var(--nav-h);min-height:var(--nav-h);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:150;user-select:none;-webkit-user-select:none;}
+.topbar-left{display:flex;align-items:center;gap:16px;}
+.topbar-right{display:flex;align-items:center;gap:8px;}
+.topbar .logo{font-family:var(--display);font-weight:700;font-size:18px;color:var(--text-nav);text-decoration:none;}
+.topbar .logo span{color:var(--accent);}
+.topnav{display:flex;gap:2px;flex-wrap:wrap;}
+.topnav a{padding:6px 11px;border-radius:6px;color:var(--text3-nav);font-size:13px;font-family:var(--sans),sans-serif;font-weight:500;text-decoration:none;transition:all 0.15s;white-space:nowrap;min-height:44px;display:inline-flex;align-items:center;}
+.topnav a:hover{color:var(--text2-nav);background:rgba(255,255,255,0.04);}
+.topnav a.active{color:var(--accent);background:rgba(79,142,247,0.1);}
+.paket-badge{font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;}
+.settings-link{font-size:16px;color:var(--text3-nav);text-decoration:none;padding:6px 8px;border-radius:6px;min-height:44px;display:inline-flex;align-items:center;}
+.settings-link:hover{color:#9da3b4;background:rgba(255,255,255,0.04);}
+.burger{display:none;flex-direction:column;gap:5px;background:none;border:none;cursor:pointer;padding:6px;border-radius:6px;min-height:44px;align-items:center;justify-content:center;}
+.burger span{display:block;width:20px;height:2px;background:#9da3b4;border-radius:2px;}
+.drawer-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:200;backdrop-filter:blur(2px);}
+.drawer-overlay.open{display:block;}
+.drawer{position:fixed;top:0;left:0;bottom:0;width:260px;background:var(--bg2);border-right:1px solid var(--border2-nav);z-index:201;transform:translateX(-100%);transition:transform 0.25s cubic-bezier(0.4,0,0.2,1);display:flex;flex-direction:column;}
+.drawer.open{transform:translateX(0);}
+.drawer-header{padding:16px;border-bottom:1px solid var(--border-nav);display:flex;align-items:center;justify-content:space-between;}
+.drawer-close{background:none;border:none;color:var(--text3-nav);font-size:18px;cursor:pointer;padding:4px 8px;border-radius:5px;min-height:44px;}
+.drawer-nav{flex:1;padding:10px;overflow-y:auto;display:flex;flex-direction:column;gap:2px;}
+.drawer-nav a{display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:7px;color:#9da3b4;font-family:var(--sans),sans-serif;font-size:14px;text-decoration:none;min-height:44px;}
+.drawer-nav a:hover{background:var(--surface-nav);color:var(--text-nav);}
+.drawer-nav a.active{background:rgba(79,142,247,0.1);color:var(--accent);}
+.dnav-icon{font-size:16px;width:22px;text-align:center;}
+.drawer-footer{padding:14px 16px;border-top:1px solid var(--border-nav);display:flex;align-items:center;justify-content:space-between;}
+.drawer-settings{font-size:13px;color:var(--text3-nav);text-decoration:none;}
+.bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;min-height:var(--bot-h);height:var(--bot-h);background:var(--bg2);border-top:1px solid var(--border-nav);z-index:140;padding:0 4px;flex-direction:row;align-items:stretch;justify-content:space-around;}
+.bn-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;text-decoration:none;color:var(--text3-nav);font-family:var(--sans),sans-serif;padding:6px 0;border-radius:7px;position:relative;min-height:48px;}
+.bn-item.active{color:var(--accent);}
+.bn-item.active::after{content:'';position:absolute;bottom:2px;width:18px;height:2px;background:var(--accent);border-radius:2px;}
+.bn-icon{font-size:18px;}
+.bn-label{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;}
+@media(max-width:900px){.topnav a{font-size:12px;padding:5px 8px;}.topnav a[data-short]{font-size:0;}.topnav a[data-short]::before{content:attr(data-short);font-size:12px;font-family:var(--sans),sans-serif;}.paket-badge{display:none!important;}.settings-link{display:none!important;}.burger{display:flex;}}
+@media(max-width:600px){
+  :root{--nav-h:52px;--bot-h:56px;}
+  .topnav{display:none;}.burger{display:flex;}.bottom-nav{display:flex;}
+  body{padding-bottom:var(--bot-h);}
+  .topbar{padding:0 14px;}
+  .topbar .logo{font-size:16px;}
+  .sidebar{height:calc(100vh - var(--nav-h) - var(--bot-h));top:var(--nav-h);}
+}
+
+/* APP LAYOUT */
+.app-wrapper{display:flex;min-height:100vh;background:var(--bg);}
+
+/* SIDEBAR */
+.sidebar{width:260px;height:calc(100vh - var(--nav-h));min-height:calc(100vh - var(--nav-h));background:var(--navy);display:flex;flex-direction:column;position:fixed;left:0;top:var(--nav-h);z-index:100;transition:transform 0.3s ease;}
+.sidebar-logo{padding:24px 24px 16px;border-bottom:1px solid rgba(255,255,255,0.1);display:flex;align-items:center;gap:12px;}
+.logo-mark{width:36px;height:36px;background:var(--accent);border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:0.9rem;color:#fff;flex-shrink:0;}
+.logo-text{font-weight:700;font-size:1.1rem;color:#fff;letter-spacing:-0.02em;}
+.logo-text span{color:var(--accent);}
+.sidebar-package-badge{margin:12px 16px 0;padding:6px 12px;border-radius:6px;font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;text-align:center;}
+.badge-pro{background:rgba(74,144,217,0.15);color:#93C5FD;border:1px solid rgba(74,144,217,0.3);}
+.sidebar-nav{flex:1;padding:16px 0;overflow-y:auto;}
+.sidebar-nav-section{margin-bottom:8px;}
+.sidebar-nav-label{font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:rgba(255,255,255,0.35);padding:8px 20px 4px;}
+.sidebar-nav a{display:flex;align-items:center;gap:10px;padding:10px 20px;color:rgba(255,255,255,0.65);text-decoration:none;font-size:0.875rem;font-weight:500;transition:all 0.2s ease;cursor:pointer;border:none;background:none;width:100%;text-align:left;}
+.sidebar-nav a:hover{background:rgba(255,255,255,0.07);color:#fff;}
+.sidebar-nav a.active{background:rgba(74,144,217,0.15);color:#fff;border-right:3px solid var(--accent);}
+.sidebar-nav a.active .nav-icon{color:var(--accent);}
+.nav-icon{width:18px;height:18px;flex-shrink:0;opacity:0.8;}
+.nav-badge{margin-left:auto;font-size:0.65rem;background:var(--accent);padding:2px 7px;border-radius:10px;color:#fff;font-weight:700;}
+.nav-lock{margin-left:auto;font-size:0.65rem;background:rgba(255,255,255,0.1);padding:2px 6px;border-radius:4px;color:rgba(255,255,255,0.4);}
+.sidebar-footer{padding:16px;border-top:1px solid rgba(255,255,255,0.1);}
+.user-card{display:flex;align-items:center;gap:10px;padding:10px;background:rgba(255,255,255,0.05);border-radius:10px;}
+.user-avatar{width:34px;height:34px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.8rem;color:#fff;flex-shrink:0;}
+.user-info{flex:1;min-width:0;}
+.user-name{font-size:0.8rem;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.user-role{font-size:0.68rem;color:rgba(255,255,255,0.45);}
+
+/* MAIN */
+.app-main{flex:1;margin-left:260px;display:flex;flex-direction:column;min-height:calc(100vh - var(--nav-h));}
+.app-topnav{height:64px;background:#fff;border-bottom:1px solid var(--gray-100);display:flex;align-items:center;padding:0 28px;gap:16px;position:sticky;top:0;z-index:50;box-shadow:var(--shadow-sm);}
+.topnav-title{flex:1;font-size:1rem;font-weight:600;color:var(--navy);}
+.topnav-title span{font-weight:400;color:var(--gray-400);font-size:0.85rem;}
+.topnav-actions{display:flex;align-items:center;gap:10px;}
+.upgrade-chip{display:inline-flex;align-items:center;gap:6px;background:linear-gradient(135deg,#8B5CF6,#6D28D9);color:#fff;padding:5px 12px;border-radius:20px;font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;transition:all 0.2s;}
+.upgrade-chip:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(109,40,217,0.4);}
+
+/* PAGE CONTENT */
+.app-content{flex:1;padding:28px;}
+.page-header{margin-bottom:24px;}
+.page-title{font-size:1.5rem;font-weight:700;color:var(--navy);margin:0 0 4px;}
+.page-subtitle{font-size:0.875rem;color:var(--gray-500);margin:0;}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:0.5rem;padding:0.75rem 1.5rem;font-size:0.9375rem;font-weight:600;font-family:var(--font-sans);border-radius:var(--radius-md);cursor:pointer;transition:all var(--transition-fast);border:2px solid transparent;text-decoration:none;white-space:nowrap;line-height:1;}
+.btn:disabled{opacity:0.5;cursor:not-allowed;}
+.btn-primary{background:var(--accent);color:white;border-color:var(--accent);}
+.btn-primary:hover:not(:disabled){background:var(--accent-dark);border-color:var(--accent-dark);box-shadow:0 8px 24px rgba(74,144,217,0.30);transform:translateY(-1px);}
+.btn-outline{background:transparent;color:var(--navy);border-color:var(--gray-300);}
+.btn-outline:hover:not(:disabled){border-color:var(--accent);color:var(--accent);background:var(--accent-light);}
+.btn-sm{padding:0.5rem 1rem;font-size:0.8125rem;}
+.btn-xs{padding:0.375rem 0.75rem;font-size:0.75rem;}
+
+/* CARDS */
+.app-card{background:#fff;border-radius:14px;border:1px solid var(--gray-100);overflow:hidden;box-shadow:var(--shadow-sm);}
+.app-card-header{padding:18px 20px 0;display:flex;align-items:center;justify-content:space-between;}
+.app-card-title{font-size:0.875rem;font-weight:600;color:var(--navy);}
+.app-card-body{padding:16px 20px 20px;}
+
+/* KPI CARDS */
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px;}
+.kpi-card{background:#fff;border-radius:14px;padding:20px;border:1px solid var(--gray-100);position:relative;overflow:hidden;box-shadow:var(--shadow-sm);}
+.kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
+.kpi-card.accent::before{background:var(--accent);}
+.kpi-card.green::before{background:var(--success);}
+.kpi-card.amber::before{background:#F59E0B;}
+.kpi-card.purple::before{background:#8B5CF6;}
+.kpi-label{font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--gray-400);margin-bottom:8px;}
+.kpi-value{font-size:2rem;font-weight:800;color:var(--navy);line-height:1;margin-bottom:6px;}
+.kpi-change{font-size:0.75rem;font-weight:600;display:inline-flex;align-items:center;gap:3px;}
+.kpi-change.up{color:var(--success);}
+.kpi-change.down{color:var(--error);}
+
+/* CARDS GRID */
+.cards-grid{display:grid;gap:20px;}
+.cards-grid-2{grid-template-columns:repeat(2,1fr);}
+.cards-grid-3{grid-template-columns:repeat(3,1fr);}
+
+/* NOTICE BAR */
+.notice-bar{background:linear-gradient(90deg,rgba(74,144,217,0.08),rgba(74,144,217,0.04));border:1px solid rgba(74,144,217,0.2);border-radius:10px;padding:10px 16px;display:flex;align-items:center;gap:12px;margin-bottom:20px;font-size:0.825rem;}
+.notice-bar strong{color:var(--navy);}
+.notice-bar span{color:var(--gray-500);flex:1;}
+
+/* DATA TABLE */
+.data-table-wrap{background:#fff;border-radius:14px;border:1px solid var(--gray-100);overflow:hidden;box-shadow:var(--shadow-sm);}
+.table-toolbar{padding:16px 20px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--gray-100);flex-wrap:wrap;}
+.table-toolbar-title{font-size:0.9rem;font-weight:600;color:var(--navy);flex:1;}
+.search-input-wrap{position:relative;}
+.search-input-wrap input{padding:7px 12px 7px 32px;border:1px solid var(--gray-200);border-radius:8px;font-size:0.825rem;width:200px;outline:none;transition:border-color 0.2s;font-family:var(--font-sans);}
+.search-input-wrap input:focus{border-color:var(--accent);}
+.search-input-wrap::before{content:'🔍';position:absolute;left:9px;top:50%;transform:translateY(-50%);font-size:0.7rem;}
+.filter-select{padding:7px 10px;border:1px solid var(--gray-200);border-radius:8px;font-size:0.825rem;font-family:var(--font-sans);color:var(--gray-700);outline:none;cursor:pointer;background:#fff;}
+.data-table{width:100%;border-collapse:collapse;}
+.data-table th{font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--gray-400);padding:10px 16px;text-align:left;border-bottom:1px solid var(--gray-100);background:#FAFBFC;}
+.data-table td{padding:13px 16px;font-size:0.85rem;color:var(--gray-700);border-bottom:1px solid var(--gray-50);vertical-align:middle;}
+.data-table tr:last-child td{border-bottom:none;}
+.data-table tr:hover td{background:#F9FBFF;}
+.td-title{font-weight:600;color:var(--navy);max-width:240px;}
+.td-title small{display:block;font-weight:400;color:var(--gray-400);font-size:0.75rem;margin-top:2px;}
+
+/* STATUS BADGES */
+.status-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-size:0.72rem;font-weight:700;}
+.status-badge::before{content:'';width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+.status-badge.draft{background:#F3F4F6;color:#6B7280;}.status-badge.draft::before{background:#6B7280;}
+.status-badge.review{background:#FEF3C7;color:#92400E;}.status-badge.review::before{background:#F59E0B;}
+.status-badge.approved{background:#D1FAE5;color:#065F46;}.status-badge.approved::before{background:#10B981;}
+.status-badge.sent{background:#DBEAFE;color:#1E40AF;}.status-badge.sent::before{background:var(--accent);}
+.status-badge.archived{background:#F3F4F6;color:#9CA3AF;}.status-badge.archived::before{background:#D1D5DB;}
+
+/* ROW ACTIONS */
+.row-actions{display:flex;gap:4px;}
+.action-btn{width:28px;height:28px;border-radius:6px;border:1px solid var(--gray-200);background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:0.8rem;transition:all 0.15s;color:var(--gray-500);}
+.action-btn:hover{background:var(--gray-50);border-color:var(--gray-300);color:var(--navy);}
+.action-btn.danger:hover{background:#FEE2E2;border-color:#FECACA;color:var(--error);}
+
+/* WIZARD */
+.wizard-header{background:#fff;border-radius:14px;border:1px solid var(--gray-100);padding:20px 28px;margin-bottom:20px;display:flex;align-items:center;gap:0;box-shadow:var(--shadow-sm);}
+.wizard-step{display:flex;align-items:center;flex:1;}
+.wizard-step:last-child{flex:0;}
+.step-circle{width:36px;height:36px;border-radius:50%;border:2px solid var(--gray-200);display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:700;color:var(--gray-400);flex-shrink:0;transition:all 0.3s;background:#fff;}
+.step-circle.active{border-color:var(--accent);color:var(--accent);background:rgba(74,144,217,0.08);}
+.step-circle.done{border-color:var(--success);background:var(--success);color:#fff;}
+.step-info{margin-left:10px;}
+.step-name{font-size:0.78rem;font-weight:600;color:var(--gray-500);}
+.step-name.active{color:var(--navy);}
+.step-name.done{color:var(--success);}
+.step-desc{font-size:0.68rem;color:var(--gray-400);}
+.step-connector{flex:1;height:2px;background:var(--gray-200);margin:0 16px;}
+.step-connector.done{background:var(--success);}
+
+/* RECORDING */
+.recording-area{background:#fff;border-radius:14px;border:1px solid var(--gray-100);padding:24px;box-shadow:var(--shadow-sm);}
+.record-btn-wrap{display:flex;flex-direction:column;align-items:center;padding:28px 0 20px;}
+.record-btn{width:80px;height:80px;border-radius:50%;background:var(--accent);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:2rem;transition:all 0.2s;box-shadow:0 4px 20px rgba(74,144,217,0.35);position:relative;}
+.record-btn:hover{transform:scale(1.05);box-shadow:0 6px 28px rgba(74,144,217,0.45);}
+.record-btn.recording{background:var(--error);box-shadow:0 4px 20px rgba(239,68,68,0.4);animation:recordPulse 1.5s infinite;}
+.pulse-ring{position:absolute;inset:-8px;border-radius:50%;border:2px solid var(--accent);opacity:0;animation:ringPulse 1.5s infinite;}
+.record-btn.recording .pulse-ring{border-color:var(--error);}
+@keyframes recordPulse{0%,100%{transform:scale(1);}50%{transform:scale(1.03);}}
+@keyframes ringPulse{0%{transform:scale(1);opacity:0.8;}100%{transform:scale(1.5);opacity:0;}}
+.record-status{margin-top:12px;font-size:0.85rem;color:var(--gray-500);font-weight:500;}
+.record-timer{font-size:0.75rem;color:var(--error);font-weight:700;margin-top:4px;display:none;}
+.record-timer.active{display:block;}
+.transcript-box{background:#F9FBFF;border:1px solid var(--gray-200);border-radius:10px;padding:16px;min-height:120px;font-size:0.875rem;line-height:1.7;color:var(--gray-700);position:relative;}
+.transcript-placeholder{color:var(--gray-300);font-style:italic;position:absolute;top:16px;left:16px;}
+.transcript-text{display:none;}
+.transcript-text.visible{display:block;}
+.upload-zone{border:2px dashed var(--gray-200);border-radius:10px;padding:24px;text-align:center;cursor:pointer;transition:all 0.2s;}
+.upload-zone:hover{border-color:var(--accent);background:rgba(74,144,217,0.03);}
+.upload-zone .upload-icon{font-size:1.8rem;margin-bottom:8px;}
+.upload-zone p{font-size:0.825rem;color:var(--gray-500);margin:0;}
+.upload-zone span{color:var(--accent);font-weight:600;}
+.uploaded-files{margin-top:12px;}
+.uploaded-file{display:flex;align-items:center;gap:8px;padding:8px 12px;background:#F0F7FF;border-radius:8px;margin-bottom:6px;font-size:0.8rem;color:var(--navy);}
+.uploaded-file .remove-btn{margin-left:auto;cursor:pointer;color:var(--error);font-size:0.9rem;}
+
+/* FOTO UPLOAD UI (HTML/CSS only - no JS wiring) */
+#foto-input{display:none;}
+#foto-dropzone{
+  border:2px dashed var(--gray-200);
+  border-radius:10px;
+  padding:22px 14px;
+  background:rgba(255,255,255,0.02);
+  text-align:center;
+  cursor:pointer;
+  transition:all .2s;
+}
+#foto-dropzone:hover{border-color:var(--accent);background:rgba(74,144,217,0.03);}
+.foto-dropzone-icon{font-size:1.6rem;margin-bottom:8px;}
+.foto-dropzone-text{font-size:0.825rem;color:var(--gray-500);margin:0;}
+.foto-dropzone-text span{color:var(--accent);font-weight:700;}
+
+#foto-counter{font-size:0.8rem;font-weight:700;color:var(--gray-500);}
+#foto-hinweis{font-size:0.8rem;color:var(--warning);font-weight:700;display:block;}
+
+.foto-preview-grid{
+  margin-top:12px;
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:12px;
+}
+@media(max-width:1100px){.foto-preview-grid{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:520px){.foto-preview-grid{grid-template-columns:1fr;}}
+
+.foto-cell{
+  border:1px solid rgba(255,255,255,0.10);
+  border-radius:10px;
+  background:rgba(255,255,255,0.02);
+  padding:10px;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+.foto-cell img{
+  width:100%;
+  height:78px;
+  object-fit:cover;
+  border-radius:8px;
+  background:rgba(255,255,255,0.05);
+}
+.foto-cell select,.foto-cell input{
+  width:100%;
+  padding:9px 10px;
+  border-radius:8px;
+  border:1px solid rgba(255,255,255,0.10);
+  background:rgba(255,255,255,0.03);
+  color:#fff;
+  font-size:0.8rem;
+  outline:none;
+}
+.foto-cell input{padding:9px 10px;}
+.foto-cell button.foto-delete{
+  align-self:flex-end;
+  width:30px;height:30px;
+  border-radius:8px;
+  border:1px solid rgba(239,68,68,0.25);
+  background:rgba(239,68,68,0.08);
+  color:rgba(239,68,68,0.95);
+  cursor:pointer;
+  font-weight:900;
+}
+.foto-cell button.foto-delete:hover{background:rgba(239,68,68,0.14);}
+
+/* KI ANALYSIS */
+.ki-analysis-card{background:linear-gradient(135deg,#1B3F6B 0%,#0F2849 100%);border-radius:14px;padding:28px;color:#fff;position:relative;overflow:hidden;}
+.ki-analysis-card::before{content:'';position:absolute;top:-50%;right:-10%;width:300px;height:300px;background:radial-gradient(circle,rgba(74,144,217,0.15) 0%,transparent 70%);pointer-events:none;}
+.ki-analysis-title{font-size:1rem;font-weight:700;margin-bottom:4px;}
+.ki-analysis-subtitle{font-size:0.8rem;color:rgba(255,255,255,0.55);margin-bottom:20px;}
+.ki-steps-list{list-style:none;padding:0;margin:0;}
+.ki-step-item{display:flex;align-items:center;gap:12px;padding:8px 0;}
+.ki-step-item+.ki-step-item{border-top:1px solid rgba(255,255,255,0.08);}
+.ki-step-icon{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.7rem;flex-shrink:0;}
+.ki-step-icon.pending{background:rgba(255,255,255,0.1);color:rgba(255,255,255,0.4);}
+.ki-step-icon.processing{background:rgba(74,144,217,0.3);color:var(--accent);animation:iconPulse 1s infinite;}
+.ki-step-icon.done{background:rgba(16,185,129,0.2);color:#10B981;}
+@keyframes iconPulse{0%,100%{opacity:1;}50%{opacity:0.5;}}
+.ki-step-label{font-size:0.825rem;flex:1;color:rgba(255,255,255,0.8);}
+.ki-step-label.done{color:#fff;}
+.ki-progress-bar{height:4px;background:rgba(255,255,255,0.1);border-radius:2px;overflow:hidden;margin-top:20px;}
+.ki-progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),#38BDF8);border-radius:2px;transition:width 0.5s ease;}
+.ki-progress-label{display:flex;justify-content:space-between;font-size:0.72rem;color:rgba(255,255,255,0.45);margin-top:6px;}
+
+/* PREVIEW */
+.gutachten-preview{background:#fff;border-radius:14px;border:1px solid var(--gray-100);overflow:hidden;box-shadow:var(--shadow-sm);}
+.preview-toolbar{padding:12px 16px;background:#F9FBFF;border-bottom:1px solid var(--gray-100);display:flex;align-items:center;gap:8px;}
+.preview-toolbar-title{font-size:0.8rem;font-weight:600;color:var(--navy);flex:1;}
+.preview-content{padding:24px 28px;font-family:var(--font-serif);font-size:0.875rem;line-height:1.8;color:#2D3748;max-height:460px;overflow-y:auto;}
+
+/* TEMPLATES */
+.template-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+.template-card{border:2px solid var(--gray-200);border-radius:12px;padding:16px;cursor:pointer;transition:all 0.2s;text-align:center;}
+.template-card:hover{border-color:var(--accent);background:rgba(74,144,217,0.03);}
+.template-card.selected{border-color:var(--accent);background:rgba(74,144,217,0.06);}
+.template-icon{font-size:2rem;margin-bottom:8px;}
+.template-name{font-size:0.825rem;font-weight:700;color:var(--navy);margin-bottom:4px;}
+.template-desc{font-size:0.72rem;color:var(--gray-500);}
+
+/* SIGNATURE */
+.signature-area{border:1px solid var(--gray-200);border-radius:10px;overflow:hidden;}
+.signature-canvas{display:block;width:100%;height:150px;background:#FAFBFF;cursor:crosshair;}
+.signature-toolbar{padding:8px 12px;background:var(--gray-50);border-top:1px solid var(--gray-100);display:flex;justify-content:flex-end;gap:8px;}
+
+/* FREIGABE */
+.freigabe-card{background:#fff;border-radius:16px;border:1px solid var(--gray-100);overflow:hidden;box-shadow:var(--shadow-sm);}
+.freigabe-header{background:linear-gradient(135deg,#1B3F6B,#2E5F9E);padding:28px 32px;color:#fff;}
+.freigabe-meta{display:flex;gap:24px;margin-top:12px;font-size:0.8rem;color:rgba(255,255,255,0.65);flex-wrap:wrap;}
+.freigabe-meta span strong{color:#fff;}
+.freigabe-body{padding:28px 32px;}
+.freigabe-sections{display:flex;flex-direction:column;gap:16px;}
+.freigabe-section{border:1px solid var(--gray-100);border-radius:10px;overflow:hidden;}
+.freigabe-section-header{padding:12px 16px;background:#F9FBFF;font-size:0.825rem;font-weight:600;color:var(--navy);display:flex;align-items:center;justify-content:space-between;cursor:pointer;}
+.freigabe-section-body{padding:16px;font-size:0.875rem;line-height:1.7;color:var(--gray-700);}
+.freigabe-actions{padding:20px 32px;background:#F9FBFF;border-top:1px solid var(--gray-100);display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+
+/* TEAM */
+.team-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:20px;}
+.team-member-card{background:#fff;border:1px solid var(--gray-100);border-radius:12px;padding:20px;text-align:center;position:relative;box-shadow:var(--shadow-sm);}
+.team-member-card.empty{border-style:dashed;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:160px;cursor:pointer;transition:all 0.2s;}
+.team-member-card.empty:hover{border-color:var(--accent);background:rgba(74,144,217,0.03);}
+.member-avatar{width:52px;height:52px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:1.2rem;font-weight:700;color:#fff;margin:0 auto 12px;}
+.member-name{font-size:0.875rem;font-weight:600;color:var(--navy);margin-bottom:2px;}
+.member-email{font-size:0.75rem;color:var(--gray-400);margin-bottom:10px;}
+.member-role-badge{font-size:0.68rem;padding:2px 8px;border-radius:10px;font-weight:700;}
+.member-role-badge.admin{background:#EDE9FE;color:#6D28D9;}
+.member-role-badge.gutachter{background:#DBEAFE;color:#1E40AF;}
+
+/* FEATURE LOCK */
+.feature-locked-wrap{position:relative;}
+.feature-locked-overlay{position:absolute;inset:0;background:rgba(240,244,248,0.88);backdrop-filter:blur(4px);display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:14px;z-index:10;text-align:center;padding:24px;}
+.lock-icon{font-size:2rem;margin-bottom:8px;}
+.lock-title{font-size:0.9rem;font-weight:700;color:var(--navy);margin-bottom:4px;}
+.lock-desc{font-size:0.78rem;color:var(--gray-500);margin-bottom:12px;}
+
+/* FORM */
+.form-group{margin-bottom:14px;}
+.form-label{display:block;font-size:0.8125rem;font-weight:600;color:var(--navy);margin-bottom:5px;}
+.form-control{width:100%;padding:0.6875rem 0.9375rem;font-size:0.875rem;font-family:inherit;color:var(--gray-800);background:#fff;border:1.5px solid var(--gray-300);border-radius:var(--radius-md);transition:border-color 0.15s,box-shadow 0.15s;outline:none;}
+.form-control:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-light);}
+.form-control::placeholder{color:var(--gray-400);}
+
+/* CHARTS */
+.chart-card{background:#fff;border-radius:14px;border:1px solid var(--gray-100);padding:20px;box-shadow:var(--shadow-sm);}
+.chart-title{font-size:0.875rem;font-weight:600;color:var(--navy);margin-bottom:4px;}
+.chart-subtitle{font-size:0.75rem;color:var(--gray-400);margin-bottom:16px;}
+.bar-chart{display:flex;align-items:flex-end;gap:8px;height:140px;padding:0 4px;}
+.bar-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end;}
+.bar-fill{width:100%;border-radius:4px 4px 0 0;background:var(--accent);transition:height 1s ease;position:relative;}
+.bar-fill.secondary{background:rgba(74,144,217,0.2);}
+.bar-fill:hover::after{content:attr(data-value);position:absolute;top:-22px;left:50%;transform:translateX(-50%);font-size:0.68rem;font-weight:700;color:var(--navy);white-space:nowrap;}
+.bar-label{font-size:0.65rem;color:var(--gray-400);text-align:center;}
+.donut-chart-wrap{display:flex;align-items:center;gap:20px;}
+.donut-svg{transform:rotate(-90deg);}
+.donut-segment{fill:none;stroke-linecap:round;transition:stroke-dasharray 1s ease;}
+.donut-legend{flex:1;}
+.legend-item{display:flex;align-items:center;gap:8px;font-size:0.78rem;margin-bottom:8px;}
+.legend-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.legend-label{flex:1;color:var(--gray-600);}
+.legend-value{font-weight:700;color:var(--navy);}
+
+/* ACTIVITY */
+.activity-item{display:flex;align-items:flex-start;gap:12px;padding:10px 0;border-bottom:1px solid var(--gray-50);}
+.activity-item:last-child{border-bottom:none;}
+.activity-dot{width:8px;height:8px;border-radius:50%;background:var(--accent);flex-shrink:0;margin-top:5px;}
+.activity-dot.green{background:var(--success);}
+.activity-dot.amber{background:#F59E0B;}
+.activity-content{flex:1;}
+.activity-title{font-size:0.825rem;font-weight:600;color:var(--navy);}
+.activity-meta{font-size:0.72rem;color:var(--gray-400);margin-top:2px;}
+.mini-avatar{width:26px;height:26px;border-radius:50%;background:var(--accent);display:inline-flex;align-items:center;justify-content:center;font-size:0.65rem;font-weight:700;color:#fff;flex-shrink:0;}
+.mini-avatar.green{background:#10B981;}
+.mini-avatar.purple{background:#8B5CF6;}
+.mini-avatar.amber{background:#F59E0B;}
+
+/* TAGS */
+.pro-feature-tag{background:rgba(74,144,217,0.1);color:var(--accent);font-size:0.65rem;font-weight:700;padding:2px 7px;border-radius:6px;text-transform:uppercase;letter-spacing:0.05em;}
+.ki-badge{display:inline-flex;align-items:center;gap:5px;background:rgba(16,185,129,0.1);color:#065F46;padding:3px 10px;border-radius:20px;font-size:0.72rem;font-weight:700;}
+.ki-dot{width:7px;height:7px;border-radius:50%;background:#10B981;animation:blink 1.5s infinite;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:0.3;}}
+
+/* TOAST */
+.toast-container{position:fixed;bottom:1.5rem;right:1.5rem;z-index:300;display:flex;flex-direction:column;gap:0.5rem;}
+.toast{display:flex;align-items:center;gap:0.75rem;padding:0.875rem 1.25rem;background:var(--navy);color:white;border-radius:var(--radius-md);box-shadow:var(--shadow-xl);font-size:0.875rem;font-weight:500;min-width:280px;max-width:400px;animation:slideIn 0.3s ease;}
+.toast-success{background:var(--success);}
+.toast-error{background:var(--error);}
+@keyframes slideIn{from{transform:translateX(100%);opacity:0;}to{transform:translateX(0);opacity:1;}}
+
+/* MOBILE TOGGLE */
+.sidebar-toggle{display:none;position:fixed;top:14px;left:14px;z-index:200;width:40px;height:40px;background:var(--navy);border:none;border-radius:8px;color:#fff;font-size:1.1rem;cursor:pointer;align-items:center;justify-content:center;}
+
+/* USAGE BAR */
+.usage-card{background:#fff;border-radius:12px;padding:14px 20px;margin-bottom:24px;border:1px solid var(--gray-100);display:flex;align-items:center;gap:20px;box-shadow:var(--shadow-sm);}
+.usage-info{flex:1;}
+.usage-label{font-size:0.75rem;color:var(--gray-500);margin-bottom:6px;font-weight:500;}
+.usage-bar-wrap{height:6px;background:var(--gray-100);border-radius:3px;overflow:hidden;}
+.usage-bar-fill{height:100%;border-radius:3px;transition:width 1s ease;}
+.usage-bar-fill.ok{background:var(--accent);}
+.usage-bar-fill.warn{background:#F59E0B;}
+.usage-count{font-size:0.85rem;font-weight:700;color:var(--navy);white-space:nowrap;}
+
+/* RESPONSIVE */
+@media(max-width:1200px){.kpi-grid{grid-template-columns:repeat(2,1fr);}. cards-grid-3{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:1024px){.sidebar{transform:translateX(-100%);}.sidebar.open{transform:translateX(0);box-shadow:0 25px 50px rgba(0,0,0,0.3);}.app-main{margin-left:0;}.sidebar-toggle{display:flex;}.cards-grid-3{grid-template-columns:repeat(2,1fr);}.team-grid{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:640px){.app-content{padding:16px;}.kpi-grid{grid-template-columns:1fr 1fr;}.cards-grid-2,.cards-grid-3{grid-template-columns:1fr;}.team-grid{grid-template-columns:1fr;}.template-grid{grid-template-columns:1fr;}.freigabe-header{padding:20px;}.freigabe-body{padding:20px;}.freigabe-actions{padding:16px;}}
+  </style>
+
+</head>
+<body data-user-package="pro">
+<div class="topbar">
+  <div class="topbar-left">
+    <a href="app-starter.html" class="logo">PRO<span>VA</span></a>
+    <nav class="topnav">
+      <a href="#" data-short="Gutachten" class="active">Neues Gutachten</a>
+      <a href="archiv.html" data-short="Archiv">Archiv</a>
+      <a href="termine.html" data-short="Termine">Termine</a>
+      <a href="briefvorlagen.html" data-short="Vorlagen">Briefvorlagen</a>
+      <a href="jveg.html" data-short="JVEG">JVEG</a>
+    </nav>
+  </div>
+  <div class="topbar-right">
+    <span class="paket-badge" id="topbarPaket"></span>
+    <a href="einstellungen.html" class="settings-link">⚙</a>
+    <button class="burger" type="button" id="burgerBtnPro" onclick="toggleDrawer()" aria-label="Menü"><span></span><span></span><span></span></button>
+  </div>
+</div>
+<div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
+<div class="drawer" id="drawer">
+  <div class="drawer-header">
+    <a href="app-starter.html" class="logo">PRO<span>VA</span></a>
+    <button type="button" class="drawer-close" onclick="closeDrawer()">✕</button>
+  </div>
+  <nav class="drawer-nav">
+    <a href="#" class="active"><span class="dnav-icon">📄</span>Neues Gutachten</a>
+    <a href="archiv.html"><span class="dnav-icon">📂</span>Archiv</a>
+    <a href="termine.html"><span class="dnav-icon">📅</span>Termine</a>
+    <a href="briefvorlagen.html"><span class="dnav-icon">✉️</span>Briefvorlagen</a>
+    <a href="jveg.html"><span class="dnav-icon">💶</span>JVEG</a>
+  </nav>
+  <div class="drawer-footer">
+    <a href="einstellungen.html" class="drawer-settings">⚙ Einstellungen</a>
+    <span class="paket-badge" id="drawerPaket"></span>
+  </div>
+</div>
+<nav class="bottom-nav">
+  <a href="#" class="bn-item active"><span class="bn-icon">📄</span><span class="bn-label">Gutachten</span></a>
+  <a href="archiv.html" class="bn-item"><span class="bn-icon">📂</span><span class="bn-label">Archiv</span></a>
+  <a href="termine.html" class="bn-item"><span class="bn-icon">📅</span><span class="bn-label">Termine</span></a>
+  <a href="briefvorlagen.html" class="bn-item"><span class="bn-icon">✉️</span><span class="bn-label">Vorlagen</span></a>
+  <a href="einstellungen.html" class="bn-item"><span class="bn-icon">⚙</span><span class="bn-label">Einstellungen</span></a>
+</nav><!-- /bottom-nav -->
+<script>
+function toggleDrawer(){var d=document.getElementById('drawer'),o=document.getElementById('drawerOverlay');if(!d)return;d.classList.toggle('open');o.classList.toggle('open');document.body.style.overflow=d.classList.contains('open')?'hidden':'';}
+function closeDrawer(){var d=document.getElementById('drawer'),o=document.getElementById('drawerOverlay');if(d)d.classList.remove('open');if(o)o.classList.remove('open');document.body.style.overflow='';}
+document.addEventListener('keydown',function(e){if(e.key==='Escape')closeDrawer();});
+(function(){var p='Pro';var c={Starter:'#4f8ef7',Pro:'#f59e0b',Enterprise:'#a78bfa'}[p]||'#4f8ef7';var s='background:'+c+'18;color:'+c+';border:1px solid '+c+'33';['topbarPaket','drawerPaket'].forEach(function(id){var el=document.getElementById(id);if(el){el.textContent=p;el.setAttribute('style',s);}});})();
+window.PROVA=window.PROVA||{};PROVA.paket=localStorage.getItem('prova_paket')||'Starter';PROVA.isPro=['Pro','Enterprise'].includes(PROVA.paket);PROVA.isEnterprise=PROVA.paket==='Enterprise';PROVA.canUse=function(f){var pf=['ki_brieftext','chef_freigabe','auto_erstbericht','auftraggeber_db','foto_erweitert','3_seats'];var ef=['paragraph_407a','jahresbericht','audit_trail','outbound_webhook','whitelabel','foto_forensik'];return ef.includes(f)?PROVA.isEnterprise:pf.includes(f)?PROVA.isPro:true;};PROVA.requirePaket=function(f,m){if(!PROVA.canUse(f)){alert((m==='Enterprise'?'🔒 Nur im Enterprise-Paket verfügbar':'🔒 Nur im Pro- oder Enterprise-Paket verfügbar')+'\n\nEinstellungen → Paket & Features');return false;}return true;};
+</script>
+
+<button class="sidebar-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰</button>
+<div class="toast-container" id="toast-container"></div>
+
+<div class="app-wrapper">
+<!-- ===== SIDEBAR ===== -->
+<aside class="sidebar">
+  <div class="sidebar-logo" style="display:flex;align-items:center;gap:10px;">
+    <svg width="32" height="32" viewBox="0 0 100 100" fill="none">
+          <path d="M50 5L90 25V55C90 75 70 95 50 95C30 95 10 75 10 55V25L50 5Z" fill="#1B3F6B" stroke="#4A90D9" stroke-width="4"/>
+          <path d="M30 50L45 65L70 35" stroke="#4A90D9" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+    <span style="font-weight:800;font-size:1.1rem;color:#fff;letter-spacing:-.02em;">PROVA</span>
+  </div>
+  <div class="sidebar-package-badge badge-pro">⚡ Pro-Paket</div>
+
+  <nav class="sidebar-nav">
+    <div class="sidebar-nav-section">
+      <div class="sidebar-nav-label">Übersicht</div>
+      <a href="#" class="active" onclick="showPage('dashboard',this);return false;">
+        <svg class="nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor"><rect x="3" y="3" width="7" height="7" rx="1.5" stroke-width="2"/><rect x="14" y="3" width="7" height="7" rx="1.5" stroke-width="2"/><rect x="3" y="14" width="7" height="7" rx="1.5" stroke-width="2"/><rect x="14" y="14" width="7" height="7" rx="1.5" stroke-width="2"/></svg>
+        Dashboard
+      </a>
+    </div>
+    <div class="sidebar-nav-section">
+      <div class="sidebar-nav-label">Gutachten</div>
+      <a href="#" onclick="showPage('gutachten-list',this);return false;">
+        <svg class="nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+        Gutachten-Liste
+        <span class="nav-badge">24</span>
+      </a>
+      <a href="#" onclick="showPage('neues-gutachten',this);return false;">
+        <svg class="nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+        + Neues Gutachten
+      </a>
+      <a href="#" onclick="showPage('vorlagen',this);return false;">
+        <svg class="nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h10"/></svg>
+        PDF-Vorlagen
+        <span class="pro-feature-tag" style="margin-left:auto;font-size:0.58rem;">Pro</span>
+      </a>
+      <a href="#" onclick="showPage('briefe',this);return false;">
+        <svg class="nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4h16v16H4z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m22 6-10 7L2 6"/></svg>
+        Briefvorlagen
+      </a>
+    </div>
+    <div class="sidebar-nav-section">
+      <div class="sidebar-nav-label">Team & Verwaltung</div>
+      <a href="#" onclick="showPage('team',this);return false;">
+        <svg class="nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0"/></svg>
+        Team
+        <span class="pro-feature-tag" style="margin-left:auto;font-size:0.58rem;">Pro</span>
+      </a>
+      <a href="#" onclick="showPage('archiv',this);return false;">
+        <svg class="nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/></svg>
+        Archiv
+      </a>
+    </div>
+    <div class="sidebar-nav-section">
+      <div class="sidebar-nav-label">Konto</div>
+      <a href="#" onclick="showPage('einstellungen',this);return false;">
+        <svg class="nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3" stroke-width="2"/></svg>
+        Einstellungen
+      </a>
+    </div>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="user-card">
+      <div class="user-avatar">MK</div>
+      <div class="user-info">
+        <div class="user-name">Dr. Max Kellner</div>
+        <div class="user-role">Pro · Administrator</div>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<!-- ===== MAIN ===== -->
+<main class="app-main">
+  <div class="app-topnav">
+    <div class="topnav-title" id="topnav-title">Dashboard <span>/ Übersicht</span></div>
+    <div class="topnav-actions">
+      <span class="ki-badge"><span class="ki-dot"></span> PROVA aktiv</span>
+      <a href="index.html#preise" class="upgrade-chip">⬆ Enterprise</a>
+    </div>
+  </div>
+
+  <div class="app-content">
+
+    <!-- ============ PAGE: DASHBOARD ============ -->
+    <div id="page-dashboard" class="app-page">
+      <div class="page-header" style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+        <div>
+          <h1 class="page-title" id="greetingTitle">Guten Morgen 👋</h1>
+          <p class="page-subtitle" id="dynamicDate">Pro-Paket aktiv</p>
+        </div>
+        <button class="btn btn-primary" onclick="showPage('neues-gutachten',null)">+ Neues Gutachten</button>
+      </div>
+
+      <!-- Usage Bar -->
+      <div class="usage-card">
+        <div class="usage-info">
+          <div class="usage-label" id="usageLabel">Monatliche Gutachten</div>
+          <div class="usage-bar-wrap"><div class="usage-bar-fill ok" style="width:80%"></div></div>
+        </div>
+        <div class="usage-count">24 / 30</div>
+        <a href="index.html#preise" class="btn btn-xs btn-outline">Upgrade</a>
+      </div>
+
+      <!-- KPI Grid -->
+      <div class="kpi-grid">
+        <div class="kpi-card accent">
+          <div class="kpi-label">Gutachten gesamt</div>
+          <div class="kpi-value">24</div>
+          <div class="kpi-change up">↑ +6 ggü. Vormonat</div>
+        </div>
+        <div class="kpi-card green">
+          <div class="kpi-label">Freigegeben</div>
+          <div class="kpi-value">18</div>
+          <div class="kpi-change up">↑ 75% Freigabequote</div>
+        </div>
+        <div class="kpi-card amber">
+          <div class="kpi-label">In Bearbeitung</div>
+          <div class="kpi-value">4</div>
+          <div class="kpi-change" style="color:var(--gray-400);">— Stabil</div>
+        </div>
+        <div class="kpi-card purple">
+          <div class="kpi-label">Ø Bearbeitungszeit</div>
+          <div class="kpi-value">18<span style="font-size:1rem;font-weight:600;">min</span></div>
+          <div class="kpi-change up">↓ -22min vs. manuell</div>
+        </div>
+      </div>
+
+      <!-- Charts Row -->
+      <div class="cards-grid cards-grid-2" style="margin-bottom:24px;">
+        <div class="chart-card">
+          <div class="chart-title">Gutachten pro Monat</div>
+          <div class="chart-subtitle" id="chartSubtitle">Jahresübersicht</div>
+          <div class="bar-chart">
+            <div class="bar-col"><div class="bar-fill" style="height:40%" data-value="12"></div><div class="bar-label">Jan</div></div>
+            <div class="bar-col"><div class="bar-fill" style="height:55%" data-value="17"></div><div class="bar-label">Feb</div></div>
+            <div class="bar-col"><div class="bar-fill" style="height:45%" data-value="14"></div><div class="bar-label">Mär</div></div>
+            <div class="bar-col"><div class="bar-fill" style="height:70%" data-value="21"></div><div class="bar-label">Apr</div></div>
+            <div class="bar-col"><div class="bar-fill" style="height:60%" data-value="18"></div><div class="bar-label">Mai</div></div>
+            <div class="bar-col"><div class="bar-fill secondary" style="height:60%" data-value="18"></div><div class="bar-label">Jun</div></div>
+            <div class="bar-col"><div class="bar-fill" style="height:80%" data-value="24"></div><div class="bar-label">Jul</div></div>
+          </div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">Schadensarten</div>
+          <div class="chart-subtitle" id="chartSubtitle2">Verteilung aktueller Monat</div>
+          <div class="donut-chart-wrap">
+            <svg class="donut-svg" width="110" height="110" viewBox="0 0 110 110">
+              <circle cx="55" cy="55" r="40" fill="none" stroke="#F3F4F6" stroke-width="14"/>
+              <circle class="donut-segment" cx="55" cy="55" r="40" stroke="#4A90D9" stroke-width="14" stroke-dasharray="100 151" stroke-dashoffset="0"/>
+              <circle class="donut-segment" cx="55" cy="55" r="40" stroke="#10B981" stroke-width="14" stroke-dasharray="60 191" stroke-dashoffset="-100"/>
+              <circle class="donut-segment" cx="55" cy="55" r="40" stroke="#F59E0B" stroke-width="14" stroke-dasharray="40 211" stroke-dashoffset="-160"/>
+              <circle class="donut-segment" cx="55" cy="55" r="40" stroke="#8B5CF6" stroke-width="14" stroke-dasharray="51 200" stroke-dashoffset="-200"/>
+            </svg>
+            <div class="donut-legend">
+              <div class="legend-item"><div class="legend-dot" style="background:#4A90D9"></div><span class="legend-label">Wasser</span><span class="legend-value">10</span></div>
+              <div class="legend-item"><div class="legend-dot" style="background:#10B981"></div><span class="legend-label">Brand</span><span class="legend-value">6</span></div>
+              <div class="legend-item"><div class="legend-dot" style="background:#F59E0B"></div><span class="legend-label">Sturm</span><span class="legend-value">4</span></div>
+              <div class="legend-item"><div class="legend-dot" style="background:#8B5CF6"></div><span class="legend-label">Sonstige</span><span class="legend-value">4</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Activity + In Bearbeitung -->
+      <div class="cards-grid cards-grid-2">
+        <div class="app-card">
+          <div class="app-card-header"><span class="app-card-title">Letzte Aktivitäten</span></div>
+          <div class="app-card-body">
+            <div class="activity-item">
+              <div class="activity-dot green"></div>
+              <div class="activity-content">
+                <div class="activity-title">Wasserschaden Lindenstr. 12 — freigegeben</div>
+                <div class="activity-meta">von Dr. Kellner · heute, 09:14</div>
+              </div>
+            </div>
+            <div class="activity-item">
+              <div class="activity-dot amber"></div>
+              <div class="activity-content">
+                <div class="activity-title">Brandschaden Hauptstr. 7 — in Freigabe</div>
+                <div class="activity-meta">von T. Schmidt · heute, 08:30</div>
+              </div>
+            </div>
+            <div class="activity-item">
+              <div class="activity-dot"></div>
+              <div class="activity-content">
+                <div class="activity-title">Sturmschaden Bergweg 3 — PROVA abgeschlossen</div>
+                <div class="activity-meta">automatisch · gestern, 16:45</div>
+              </div>
+            </div>
+            <div class="activity-item">
+              <div class="activity-dot green"></div>
+              <div class="activity-content">
+                <div class="activity-title">Frostschaden Gartenweg 18 — PDF versendet</div>
+                <div class="activity-meta">von Dr. Kellner · gestern, 11:22</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="app-card">
+          <div class="app-card-header">
+            <span class="app-card-title">In Bearbeitung</span>
+            <button class="btn btn-xs btn-outline" onclick="showPage('gutachten-list',null)">Alle →</button>
+          </div>
+          <div class="app-card-body">
+            <table style="width:100%;border-collapse:collapse;">
+              <tbody>
+                <tr style="border-bottom:1px solid var(--gray-50);">
+                  <td style="padding:10px 0;"><div style="font-size:0.825rem;font-weight:600;color:var(--navy);">Brandschaden Hauptstr. 7</div><div style="font-size:0.72rem;color:var(--gray-400);">AV-2026-0043</div></td>
+                  <td style="padding:10px 0;text-align:right;"><span class="status-badge review">In Freigabe</span></td>
+                </tr>
+                <tr style="border-bottom:1px solid var(--gray-50);">
+                  <td style="padding:10px 0;"><div style="font-size:0.825rem;font-weight:600;color:var(--navy);">Frostschaden Gartenweg 18</div><div style="font-size:0.72rem;color:var(--gray-400);">AV-2026-0041</div></td>
+                  <td style="padding:10px 0;text-align:right;"><span class="status-badge draft">Entwurf</span></td>
+                </tr>
+                <tr style="border-bottom:1px solid var(--gray-50);">
+                  <td style="padding:10px 0;"><div style="font-size:0.825rem;font-weight:600;color:var(--navy);">Hagelschaden Am Hang 5</div><div style="font-size:0.72rem;color:var(--gray-400);">AV-2026-0046</div></td>
+                  <td style="padding:10px 0;text-align:right;"><span class="status-badge draft">Entwurf</span></td>
+                </tr>
+                <tr>
+                  <td style="padding:10px 0;"><div style="font-size:0.825rem;font-weight:600;color:var(--navy);">Sturmschaden Bergweg 3</div><div style="font-size:0.72rem;color:var(--gray-400);">AV-2026-0042</div></td>
+                  <td style="padding:10px 0;text-align:right;"><span class="status-badge approved">Freigegeben</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ PAGE: GUTACHTEN LIST ============ -->
+    <div id="page-gutachten-list" class="app-page" style="display:none;">
+      <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;">
+        <div><h1 class="page-title">Gutachten</h1><p class="page-subtitle">24 Gutachten · März 2026</p></div>
+        <button class="btn btn-primary" onclick="showPage('neues-gutachten',null)">+ Neues Gutachten</button>
+      </div>
+      <div class="data-table-wrap">
+        <div class="table-toolbar">
+          <span class="table-toolbar-title">Alle Gutachten</span>
+          <div class="search-input-wrap"><input type="text" placeholder="Suchen…"></div>
+          <select class="filter-select"><option>Alle Status</option><option>Entwurf</option><option>In Freigabe</option><option>Freigegeben</option><option>Versendet</option></select>
+          <select class="filter-select"><option>Alle Gutachter</option><option>Dr. M. Kellner</option><option>T. Schmidt</option></select>
+        </div>
+        <table class="data-table">
+          <thead>
+            <tr><th>Bezeichnung</th><th>Schadensart</th><th>Gutachter</th><th>Erstellt</th><th>Status</th><th>Aktionen</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="td-title">Wasserschaden Lindenstraße 12<small>Auftrag: AV-2026-0044</small></td>
+              <td>Wasserschaden</td>
+              <td><div style="display:flex;align-items:center;gap:6px;"><span class="mini-avatar" style="width:22px;height:22px;font-size:0.6rem;">MK</span> Dr. Kellner</div></td>
+              <td>14.03.2026</td>
+              <td><span class="status-badge approved">Freigegeben</span></td>
+              <td class="row-actions">
+                <button class="action-btn" title="Öffnen" onclick="showPage('neues-gutachten',null)">📄</button>
+                <button class="action-btn" title="PDF Export">⬇</button>
+                <button class="action-btn" title="E-Mail senden">✉</button>
+              </td>
+            </tr>
+            <tr>
+              <td class="td-title">Brandschaden Hauptstraße 7<small>Auftrag: AV-2026-0043</small></td>
+              <td>Brandschaden</td>
+              <td><div style="display:flex;align-items:center;gap:6px;"><span class="mini-avatar green" style="width:22px;height:22px;font-size:0.6rem;">TS</span> T. Schmidt</div></td>
+              <td>13.03.2026</td>
+              <td><span class="status-badge review">In Freigabe</span></td>
+              <td class="row-actions">
+                <button class="action-btn" title="Öffnen" onclick="showPage('neues-gutachten',null)">📄</button>
+                <button class="action-btn" title="Freigeben">✅</button>
+                <button class="action-btn danger" title="Ablehnen">✖</button>
+              </td>
+            </tr>
+            <tr>
+              <td class="td-title">Sturmschaden Bergweg 3<small>Auftrag: AV-2026-0042</small></td>
+              <td>Sturmschaden</td>
+              <td><div style="display:flex;align-items:center;gap:6px;"><span class="mini-avatar" style="width:22px;height:22px;font-size:0.6rem;">MK</span> Dr. Kellner</div></td>
+              <td>11.07.2025</td>
+              <td><span class="status-badge sent">Versendet</span></td>
+              <td class="row-actions">
+                <button class="action-btn" title="Öffnen">📄</button>
+                <button class="action-btn" title="PDF Export">⬇</button>
+              </td>
+            </tr>
+            <tr>
+              <td class="td-title">Frostschaden Gartenweg 18<small>Auftrag: AV-2026-0041</small></td>
+              <td>Frostschaden</td>
+              <td><div style="display:flex;align-items:center;gap:6px;"><span class="mini-avatar green" style="width:22px;height:22px;font-size:0.6rem;">TS</span> T. Schmidt</div></td>
+              <td>09.07.2025</td>
+              <td><span class="status-badge draft">Entwurf</span></td>
+              <td class="row-actions">
+                <button class="action-btn" title="Fortsetzen" onclick="showPage('neues-gutachten',null)">✏</button>
+                <button class="action-btn danger" title="Löschen">🗑</button>
+              </td>
+            </tr>
+            <tr>
+              <td class="td-title">Leitungswasser Kirchplatz 5<small>Auftrag: AV-2026-0040</small></td>
+              <td>Wasserschaden</td>
+              <td><div style="display:flex;align-items:center;gap:6px;"><span class="mini-avatar" style="width:22px;height:22px;font-size:0.6rem;">MK</span> Dr. Kellner</div></td>
+              <td>05.07.2025</td>
+              <td><span class="status-badge archived">Archiviert</span></td>
+              <td class="row-actions">
+                <button class="action-btn" title="Öffnen">📄</button>
+                <button class="action-btn" title="PDF Export">⬇</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ============ PAGE: NEUES GUTACHTEN ============ -->
+    <div id="page-neues-gutachten" class="app-page" style="display:none;">
+      <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+        <div><h1 class="page-title">Neues Gutachten</h1><p class="page-subtitle">Schritt <span id="step-indicator">2</span> von 5</p></div>
+        <button class="btn btn-outline btn-sm" onclick="showPage('gutachten-list',null)">← Zurück zur Liste</button>
+      </div>
+
+      <!-- Wizard Header -->
+      <div class="wizard-header">
+        <div class="wizard-step">
+          <div class="step-circle done" id="sc1">✓</div>
+          <div class="step-info"><div class="step-name done" id="sn1">Stammdaten</div><div class="step-desc">Auftrag & Objekt</div></div>
+        </div>
+        <div class="step-connector" id="conn1"></div>
+        <div class="wizard-step">
+          <div class="step-circle active" id="sc2">2</div>
+          <div class="step-info"><div class="step-name active" id="sn2">Diktat</div><div class="step-desc">Sprache & Fotos</div></div>
+        </div>
+        <div class="step-connector" id="conn2"></div>
+        <div class="wizard-step">
+          <div class="step-circle" id="sc3">3</div>
+          <div class="step-info"><div class="step-name" id="sn3">PROVA</div><div class="step-desc">Verarbeitung</div></div>
+        </div>
+        <div class="step-connector" id="conn3"></div>
+        <div class="wizard-step">
+          <div class="step-circle" id="sc4">4</div>
+          <div class="step-info"><div class="step-name" id="sn4">Vorlage & Signatur</div><div class="step-desc">Pro-Feature</div></div>
+        </div>
+        <div class="step-connector" id="conn4"></div>
+        <div class="wizard-step">
+          <div class="step-circle" id="sc5">5</div>
+          <div class="step-info"><div class="step-name" id="sn5">Freigabe</div><div class="step-desc">& Export</div></div>
+        </div>
+      </div>
+
+      <!-- Step 1: Stammdaten (Felder wie app-starter.html) -->
+      <div id="wizard-step-1" style="display:none;">
+        <div class="app-card" style="margin-bottom:1rem;">
+          <div class="app-card-header"><span class="app-card-title">Schadensart &amp; Auftrag</span></div>
+          <div class="app-card-body">
+            <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:14px;">
+              <div class="form-group"><label class="form-label">Schadensart</label><select class="form-control" id="f-schadenart"><option value="">Bitte wählen…</option><option value="Schimmelbefall">Schimmelbefall</option><option value="Wasserschaden">Wasserschaden</option><option value="Sturmschaden">Sturmschaden</option><option value="Brandschaden">Brandschaden</option><option value="Einbruchschaden">Einbruchschaden</option><option value="Sonstiger Schaden">Sonstiger Schaden</option></select></div>
+              <div class="form-group"><label class="form-label">Schadensnummer</label><input type="text" class="form-control" id="f-schadensnummer" placeholder="S-2026-00124"></div>
+              <div class="form-group"><label class="form-label">Schadensdatum</label><input type="date" class="form-control" id="f-schadensdatum"></div>
+              <div class="form-group"><label class="form-label">Auftraggeber-Typ</label><select class="form-control" id="f-auftraggeber-typ" onchange="switchAuftraggeberTypPro(this.value)"><option value="">Bitte wählen…</option><option value="Versicherung">Versicherung</option><option value="Privatperson">Privatperson</option><option value="Vermieter / Verwaltung">Vermieter / Verwaltung</option><option value="WEG / Hausverwaltung">WEG / Hausverwaltung</option><option value="Anwaltskanzlei">Anwaltskanzlei</option><option value="Gericht">Gericht</option><option value="Bauherr">Bauherr</option><option value="Wohnungsbaugesellschaft">Wohnungsbaugesellschaft</option></select>
+                <div id="versicherung-suche-wrap" style="display:none;margin-top:.5rem;position:relative;">
+                  <input type="text" class="form-control" id="f-versicherung-suche"
+                    placeholder="Versicherung suchen (z.B. Allianz, HUK…)"
+                    oninput="sucheVersicherung(this.value)"
+                    autocomplete="off">
+                  <div id="versicherung-suggestions"
+                    style="position:absolute;z-index:50;background:#fff;border:1px solid var(--gray-200);
+                           border-radius:var(--radius-md);max-height:180px;overflow-y:auto;width:100%;
+                           box-shadow:var(--shadow-md);display:none;">
+                  </div>
+                </div>
+              </div>
+              <div class="form-group" style="grid-column:span 2;"><label class="form-label">Name / Firma</label><div style="position:relative"><input type="text" class="form-control" id="f-auftraggeber-name" placeholder="Name oder Versicherung eingeben…" oninput="handleAuftraggeberInputPro(this.value)" onblur="setTimeout(function(){var d=document.getElementById('ag-dropdown');if(d)d.style.display='none';},200)"><div id="ag-dropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid var(--gray-200);border-radius:var(--radius-md);box-shadow:0 4px 20px rgba(0,0,0,.12);max-height:220px;overflow-y:auto;z-index:500;"></div></div></div>
+              <div class="form-group"><label class="form-label">E-Mail Auftraggeber</label><input type="email" class="form-control" id="f-auftraggeber-email" placeholder="mueller@vers.de"></div>
+              <div class="form-group"><label class="form-label">Ansprechpartner</label><input type="text" class="form-control" id="f-ansprechpartner" placeholder="Herr Müller"></div>
+            </div>
+          </div>
+        </div>
+        <div class="app-card" style="margin-bottom:1rem;">
+          <div class="app-card-header"><span class="app-card-title">Objekt / Schadensort</span></div>
+          <div class="app-card-body">
+            <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:14px;">
+              <div class="form-group" style="grid-column:span 2;"><label class="form-label">Straße &amp; Hausnummer</label><input type="text" class="form-control" id="f-strasse" placeholder="Musterstraße 123"></div>
+              <div class="form-group"><label class="form-label">PLZ</label><input type="text" class="form-control" id="f-plz" placeholder="12345"></div>
+              <div class="form-group"><label class="form-label">Ort</label><input type="text" class="form-control" id="f-ort" placeholder="Berlin"></div>
+              <div class="form-group"><label class="form-label">Gebäudetyp</label><select class="form-control" id="f-gebaeudetyp"><option value="">Bitte wählen…</option><option value="Einfamilienhaus">Einfamilienhaus</option><option value="Doppelhaushälfte">Doppelhaushälfte</option><option value="Reihenhaus / Reihenmittelhaus">Reihenhaus / Reihenmittelhaus</option><option value="Mehrfamilienhaus">Mehrfamilienhaus</option><option value="Wohnung / ETW">Wohnung / ETW</option><option value="Eigentümergemeinschaft (WEG)">Eigentümergemeinschaft (WEG)</option><option value="Bürogebäude">Bürogebäude</option><option value="Gewerbegebäude">Gewerbegebäude</option><option value="Industriegebäude / Halle">Industriegebäude / Halle</option><option value="Gastronomie / Hotel">Gastronomie / Hotel</option><option value="Schulgebäude / Kita">Schulgebäude / Kita</option><option value="Öffentliches Gebäude">Öffentliches Gebäude</option><option value="Sonstiges">Sonstiges</option></select></div>
+              <div class="form-group"><label class="form-label">Baujahr</label><input type="number" class="form-control" id="f-baujahr" placeholder="1968"></div>
+              <div class="form-group" style="grid-column:span 2;"><label class="form-label">Geschädigter / Versicherungsnehmer</label><input type="text" class="form-control" id="f-geschaedigter" placeholder="Familie Schmidt"></div>
+              <div class="form-group" style="grid-column:span 2;"><label class="form-label">Bereich / Lage im Gebäude</label><input type="text" class="form-control" id="f-bereich" placeholder="z.B. EG Wohnzimmer, Keller, 2. OG Bad"></div>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:flex-end;margin-top:16px;"><button class="btn btn-primary" onclick="goStep(2)">Weiter: Diktat →</button></div>
+      </div>
+
+      <!-- Step 2: Diktat -->
+      <div id="wizard-step-2">
+        <div class="cards-grid cards-grid-2" style="gap:20px;">
+          <div class="recording-area">
+            <div style="font-size:0.875rem;font-weight:600;color:var(--navy);margin-bottom:8px;">🎙 Sprachdiktat</div>
+            <p style="font-size:0.8rem;color:var(--gray-500);margin:0 0 12px;">Wie im Starter: Browser-Spracherkennung (Chrome/Edge empfohlen) oder manuelle Eingabe.</p>
+            <div role="tablist" aria-label="Diktat oder Eingabe" style="display:flex;gap:0;border-bottom:1px solid var(--gray-200);margin-bottom:12px">
+              <button type="button" id="tab-diktat-pro" onclick="switchDiktatTabPro('diktat')" style="padding:.45rem .9rem;font-size:.75rem;font-weight:600;border:none;background:var(--accent);color:#fff;border-radius:8px 0 0 0;cursor:pointer;font-family:inherit">🎤 Diktat</button>
+              <button type="button" id="tab-eingabe-pro" onclick="switchDiktatTabPro('text')" style="padding:.45rem .9rem;font-size:.75rem;font-weight:600;border:none;background:var(--gray-200);color:var(--gray-600);border-radius:0 8px 0 0;cursor:pointer;font-family:inherit">⌨️ Eingabe</button>
+            </div>
+            <div id="diktat-panel-pro" style="display:block">
+              <div class="record-btn-wrap">
+                <button type="button" class="record-btn" id="record-btn" onclick="toggleRecordingPro()">
+                  <span id="record-icon">🎙</span>
+                  <div class="pulse-ring"></div>
+                </button>
+                <div class="record-status" id="record-status">Bereit — Tippen zum Start</div>
+                <div class="record-timer" id="record-timer">00:00</div>
+              </div>
+            </div>
+            <div id="eingabe-panel-pro" style="display:none">
+              <textarea id="transcriptManuell" class="form-control" placeholder="Befund hier eintippen…" style="width:100%;min-height:120px;resize:vertical;font-size:0.85rem;margin-bottom:10px" oninput="syncManuellToTranscriptPro()"></textarea>
+            </div>
+            <div style="font-size:0.78rem;font-weight:600;color:var(--navy);margin-bottom:6px;">Live-Transkription / Text</div>
+            <div class="transcript-box" style="min-height:200px;max-height:380px;overflow-y:auto;position:relative;">
+              <div id="transcript-placeholder-pro" class="transcript-placeholder" style="pointer-events:none;">Aufnahme starten, diktieren oder im Tab „Eingabe“ tippen.</div>
+              <div id="transcriptArea" contenteditable="true" style="min-height:160px;outline:none;position:relative;z-index:1;font-size:0.875rem;line-height:1.65;color:var(--gray-700);" oninput="syncProTranscriptFromArea()"></div>
+            </div>
+          </div>
+          <div class="recording-area" style="display:flex;flex-direction:column;gap:16px;">
+            <div>
+              <div style="font-size:0.875rem;font-weight:600;color:var(--navy);margin-bottom:8px;">📷 Fotos hochladen</div>
+              <div class="messwerte-toggle-header" onclick="toggleMesswerte()"
+                   style="display:flex;align-items:center;justify-content:space-between;
+                          padding:.625rem .875rem;background:var(--gray-50);border:1px solid var(--gray-200);
+                          border-radius:var(--radius-md);cursor:pointer;margin-bottom:.5rem;">
+                <span style="font-weight:600;font-size:.875rem;color:var(--gray-700);">
+                  📐 Messwerte vor Ort
+                </span>
+                <span id="messwerte-chevron" style="color:var(--gray-400);transition:transform .2s;">▶</span>
+              </div>
+              <div id="messwerte-panel" style="display:none;">
+                <!-- Feuchte / Wasser / Schimmel -->
+                <div id="mw-feuchte" style="display:none">
+                  <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:14px;">
+                    <div class="form-group"><label class="form-label">Materialfeuchte (%)</label><input type="text" class="form-control" id="f-feuchte" placeholder="z.B. 18,5"></div>
+                    <div class="form-group"><label class="form-label">Luftfeuchtigkeit (%)</label><input type="text" class="form-control" id="f-luftfeuchte" placeholder="z.B. 72"></div>
+                    <div class="form-group"><label class="form-label">Raumtemperatur (°C)</label><input type="text" class="form-control" id="f-temperatur" placeholder="z.B. 18"></div>
+                    <div class="form-group"><label class="form-label">Taupunkt (°C)</label><input type="text" class="form-control" id="f-taupunkt" placeholder="z.B. 10,5"></div>
+                    <div class="form-group"><label class="form-label">Befallene Fläche (m²)</label><input type="text" class="form-control" id="f-flaeche" placeholder="z.B. 3,5"></div>
+                    <div class="form-group"><label class="form-label">Schadenstiefe (cm)</label><input type="text" class="form-control" id="f-tiefe" placeholder="z.B. 4"></div>
+                  </div>
+                  <div class="form-group"><label class="form-label">Messgerät</label><input type="text" class="form-control" id="f-messgeraet" placeholder="z.B. Trotec T660"></div>
+                </div>
+
+                <!-- Brand -->
+                <div id="mw-brand" style="display:none">
+                  <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:14px;">
+                    <div class="form-group"><label class="form-label">Rußtiefe (mm)</label><input type="text" class="form-control" id="f-brand-russtiefe" placeholder="z.B. 2"></div>
+                    <div class="form-group"><label class="form-label">Betroffene Fläche (m²)</label><input type="text" class="form-control" id="f-brand-flaeche" placeholder="z.B. 12"></div>
+                    <div class="form-group"><label class="form-label">Geruchsintensität (1–10)</label><input type="text" class="form-control" id="f-brand-geruch" placeholder="z.B. 7"></div>
+                    <div class="form-group"><label class="form-label">Temperatureinwirkung (°C)</label><input type="text" class="form-control" id="f-brand-temp" placeholder="z.B. 250"></div>
+                    <div class="form-group"><label class="form-label">Entfernung zum Brandherd (m)</label><input type="text" class="form-control" id="f-brand-entfernung" placeholder="z.B. 3"></div>
+                    <div class="form-group"><label class="form-label">Messgerät</label><input type="text" class="form-control" id="f-brand-messgeraet" placeholder="z.B. IR-Thermometer"></div>
+                  </div>
+                </div>
+
+                <!-- Sturm / Elementar -->
+                <div id="mw-sturm" style="display:none">
+                  <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:14px;">
+                    <div class="form-group"><label class="form-label">Betroffene Fläche (m²)</label><input type="text" class="form-control" id="f-sturm-flaeche" placeholder="z.B. 15"></div>
+                    <div class="form-group"><label class="form-label">Öffnungsgröße (m²)</label><input type="text" class="form-control" id="f-sturm-oeffnung" placeholder="z.B. 1,2"></div>
+                    <div class="form-group"><label class="form-label">Eindringtiefe (cm)</label><input type="text" class="form-control" id="f-sturm-eindring" placeholder="z.B. 6"></div>
+                    <div class="form-group"><label class="form-label">Windlastzone</label><input type="text" class="form-control" id="f-sturm-windlast" placeholder="z.B. 2"></div>
+                    <div class="form-group"><label class="form-label">Dachabdeckung (%)</label><input type="text" class="form-control" id="f-sturm-dach" placeholder="z.B. 30"></div>
+                    <div class="form-group"><label class="form-label">Messgerät</label><input type="text" class="form-control" id="f-sturm-messgeraet" placeholder="z.B. Maßband"></div>
+                  </div>
+                </div>
+
+                <!-- Einbruch / Vandalismus -->
+                <div id="mw-einbruch" style="display:none">
+                  <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:14px;">
+                    <div class="form-group"><label class="form-label">Anzahl Schadensstellen</label><input type="text" class="form-control" id="f-einbruch-anzahl" placeholder="z.B. 2"></div>
+                    <div class="form-group"><label class="form-label">Betroffene Fläche (m²)</label><input type="text" class="form-control" id="f-einbruch-flaeche" placeholder="z.B. 1,0"></div>
+                    <div class="form-group"><label class="form-label">Schadenstiefe (cm)</label><input type="text" class="form-control" id="f-einbruch-tiefe" placeholder="z.B. 1"></div>
+                    <div class="form-group"><label class="form-label">Materialverlust (kg)</label><input type="text" class="form-control" id="f-einbruch-verlust" placeholder="z.B. 0,5"></div>
+                  </div>
+                  <div class="form-group"><label class="form-label">Betroffene Bauteile</label><input type="text" class="form-control" id="f-einbruch-bauteile" placeholder="z.B. Türblatt, Schloss, Rahmen"></div>
+                </div>
+
+                <!-- Baumängel -->
+                <div id="mw-bau" style="display:none">
+                  <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:14px;">
+                    <div class="form-group"><label class="form-label">Abweichung vom Sollmaß (mm)</label><input type="text" class="form-control" id="f-bau-soll" placeholder="z.B. +12"></div>
+                    <div class="form-group"><label class="form-label">Betroffene Fläche (m²)</label><input type="text" class="form-control" id="f-bau-flaeche" placeholder="z.B. 15"></div>
+                    <div class="form-group"><label class="form-label">DIN-Referenz</label><input type="text" class="form-control" id="f-bau-din" placeholder="z.B. DIN 18202"></div>
+                    <div class="form-group"><label class="form-label">Toleranzüberschreitung (mm)</label><input type="text" class="form-control" id="f-bau-toleranz" placeholder="z.B. 8"></div>
+                  </div>
+                  <div class="form-group"><label class="form-label">Betriebszustand</label><input type="text" class="form-control" id="f-bau-betrieb" placeholder="z.B. Betrieb in Nutzung / Rohbau"></div>
+                </div>
+
+                <!-- Gemeinsames Freitextfeld -->
+                <div class="form-group" style="margin-top:.5rem"><label class="form-label">Weitere Messwerte / Besonderheiten</label><input type="text" class="form-control" id="f-mw-extra" placeholder="z.B. weitere Hinweise zu Messwerten…"></div>
+              </div>
+              <input type="file" id="foto-input" accept="image/*" multiple capture="environment">
+              <div id="foto-dropzone" role="button" tabindex="0" aria-label="Fotos hier ablegen oder klicken">
+                <div class="foto-dropzone-icon">🖼️</div>
+                <div class="foto-dropzone-text">Fotos hier ablegen oder <span>klicken</span></div>
+              </div>
+
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:12px;">
+                <div id="foto-counter">0 Fotos ausgewählt</div>
+                <div id="foto-hinweis">ℹ Keine Fotos — können nachgereicht werden</div>
+              </div>
+
+              <div id="uploadStatusPro" style="display:none;margin-top:8px;font-size:0.8rem;color:var(--gray-500);"><span>⏳</span> <span id="uploadStatusTextPro">Wird optimiert…</span></div>
+              <div id="pro-foto-grid" class="foto-preview-grid" aria-label="Foto-Vorschau" style="margin-top:10px;"></div>
+            </div>
+            <div>
+              <div style="font-size:0.875rem;font-weight:600;color:var(--navy);margin-bottom:8px;">📝 Notizen (optional)</div>
+              <textarea class="form-control" rows="4" placeholder="Ergänzende Notizen, die nicht gesprochen wurden…" style="resize:none;font-size:0.85rem;"></textarea>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-top:16px;">
+          <button class="btn btn-outline btn-sm" onclick="goStep(1)">← Zurück</button>
+          <button class="btn btn-primary" onclick="startKIAnalysis()">Analyse starten →</button>
+        </div>
+      </div>
+
+      <!-- Step 3: PROVA Analyse -->
+      <div id="wizard-step-3" style="display:none;">
+        <div class="cards-grid cards-grid-2" style="gap:20px;">
+          <div class="ki-analysis-card">
+            <div class="ki-analysis-title">🤖 PROVA analysiert…</div>
+            <div class="ki-analysis-subtitle">KI-Engine verarbeitet Ihr Diktat und generiert das Gutachten</div>
+            <ul class="ki-steps-list" id="ki-steps">
+              <li class="ki-step-item"><div class="ki-step-icon pending" id="ki-icon-0">⏳</div><div class="ki-step-label" id="ki-label-0">Transkription aufbereiten</div></li>
+              <li class="ki-step-item"><div class="ki-step-icon pending" id="ki-icon-1">⏳</div><div class="ki-step-label" id="ki-label-1">Schadensanalyse durchführen</div></li>
+              <li class="ki-step-item"><div class="ki-step-icon pending" id="ki-icon-2">⏳</div><div class="ki-step-label" id="ki-label-2">ZPO §407a Struktur anwenden</div></li>
+              <li class="ki-step-item"><div class="ki-step-icon pending" id="ki-icon-3">⏳</div><div class="ki-step-label" id="ki-label-3">Fachbegriffe validieren</div></li>
+              <li class="ki-step-item"><div class="ki-step-icon pending" id="ki-icon-4">⏳</div><div class="ki-step-label" id="ki-label-4">PDF-Vorlage befüllen</div></li>
+            </ul>
+            <div class="ki-progress-bar"><div class="ki-progress-fill" id="ki-progress" style="width:0%"></div></div>
+            <div class="ki-progress-label"><span>Verarbeitung…</span><span id="ki-percent">0%</span></div>
+          </div>
+          <div class="gutachten-preview">
+            <div class="preview-toolbar"><span class="preview-toolbar-title">📄 Vorschau (wird generiert)</span></div>
+            <div class="preview-content" id="preview-content" style="min-height:350px;">
+              <div style="display:flex;flex-direction:column;gap:8px;opacity:0.3;">
+                <div style="height:16px;background:#E5E7EB;border-radius:4px;width:70%"></div>
+                <div style="height:12px;background:#E5E7EB;border-radius:4px;width:90%"></div>
+                <div style="height:12px;background:#E5E7EB;border-radius:4px;width:80%"></div>
+                <div style="height:12px;background:#E5E7EB;border-radius:4px;width:60%"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div id="gutachtenVorlageBoxPro" style="display:none;margin-top:1.25rem;padding:1rem;background:var(--gray-50);border-radius:var(--radius-lg);border:1px solid var(--gray-200);">
+          <div style="font-weight:600;color:var(--gray-800);margin-bottom:.5rem;">Gutachten-Vorlage wählen</div>
+              <div id="btnGatePro" style="display:none;margin-top:14px;">
+                <a onclick="goToGatePro()" style="display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:15px 20px;background:linear-gradient(135deg,#4f8ef7,#3a7be0);border:none;border-radius:12px;color:#fff;font-family:inherit;font-size:15px;font-weight:700;cursor:pointer;text-decoration:none;">&#9998; Jetzt Fachurteil schreiben &#8212; ca. 3 Min</a>
+                <p style="font-size:12px;color:#6b7280;text-align:center;margin-top:5px;">&#167;407a ZPO konform &#183; Konjunktiv II wird gepr&#252;ft</p>
+              </div>
+          <div id="gutachtenVorlageRadiosPro" class="form-group"></div>
+          <button type="button" class="btn btn-outline btn-sm" id="btnVorlageVorschauPro" onclick="vorlageVorschauPro()">Vorschau</button>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-top:16px;">
+          <button class="btn btn-outline btn-sm" onclick="goStep(2)">← Zurück</button>
+          <button class="btn btn-primary" id="btn-step4" onclick="goStep(4)" disabled>Weiter: Vorlage & Signatur →</button>
+        </div>
+      </div>
+
+      <!-- Step 4: Vorlage & Signatur -->
+      <div id="wizard-step-4" style="display:none;">
+        <div class="cards-grid cards-grid-2" style="gap:20px;">
+          <div class="app-card">
+            <div class="app-card-header"><span class="app-card-title">PDF-Vorlage wählen <span class="pro-feature-tag">Pro</span></span></div>
+            <div class="app-card-body">
+              <div style="display:flex;flex-direction:column;gap:10px;">
+                <div class="template-card selected" style="text-align:left;" onclick="selectTemplate(this)">
+                  <div style="display:flex;align-items:center;gap:12px;">
+                    <span style="font-size:1.6rem;">📋</span>
+                    <div><div class="template-name">Standard ZPO</div><div class="template-desc">Vollständige Struktur nach §407a ZPO — für Gerichtsgutachten</div></div>
+                  </div>
+                </div>
+                <div class="template-card" style="text-align:left;" onclick="selectTemplate(this)">
+                  <div style="display:flex;align-items:center;gap:12px;">
+                    <span style="font-size:1.6rem;">⚡</span>
+                    <div><div class="template-name">Kurzgutachten</div><div class="template-desc">Kompakte 3-Seiten-Version für Versicherungsmeldungen</div></div>
+                  </div>
+                </div>
+                <div class="template-card" style="text-align:left;" onclick="selectTemplate(this)">
+                  <div style="display:flex;align-items:center;gap:12px;">
+                    <span style="font-size:1.6rem;">📊</span>
+                    <div><div class="template-name">Ausführlich (Premium)</div><div class="template-desc">Mit Kostenermittlung, Schadenstabelle und Bildanhang</div></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="app-card">
+            <div class="app-card-header"><span class="app-card-title">Digitale Signatur <span class="pro-feature-tag">Pro</span></span></div>
+            <div class="app-card-body">
+              <p style="font-size:0.8rem;color:var(--gray-500);margin:0 0 12px;">Zeichnen Sie Ihre Unterschrift oder laden Sie eine Bilddatei hoch. Diese wird automatisch im PDF eingefügt.</p>
+              <div class="signature-area">
+                <canvas class="signature-canvas" id="sig-canvas"></canvas>
+                <div class="signature-toolbar">
+                  <button class="btn btn-outline btn-sm" onclick="clearSignature()">✕ Löschen</button>
+                  <button class="btn btn-primary btn-sm" onclick="saveSignature()">✓ Speichern</button>
+                </div>
+              </div>
+              <div style="margin-top:12px;text-align:center;">
+                <span style="font-size:0.75rem;color:var(--gray-400)">Oder: </span>
+                <label style="font-size:0.75rem;color:var(--accent);cursor:pointer;font-weight:600;">PNG/SVG hochladen<input type="file" style="display:none" accept="image/*"></label>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-top:16px;">
+          <button class="btn btn-outline btn-sm" onclick="goStep(3)">← Zurück</button>
+          <button class="btn btn-primary" onclick="goStep(5)">Weiter: Freigabe →</button>
+        </div>
+      </div>
+
+      <!-- Step 5: Freigabe -->
+      <div id="wizard-step-5" style="display:none;">
+        <div class="freigabe-card">
+          <div class="freigabe-header">
+            <h2 style="margin:0 0 4px;font-size:1.1rem;">Gutachten zur Freigabe</h2>
+            <p style="margin:0;font-size:0.8rem;opacity:0.7;">Bitte prüfen Sie das KI-generierte Gutachten vor der Freigabe sorgfältig.</p>
+            <div class="freigabe-meta">
+              <span>Auftrag: <strong>AV-2026-0045</strong></span>
+              <span>Gutachter: <strong>Dr. M. Kellner</strong></span>
+              <span>Erstellt: <strong>15.03.2026</strong></span>
+            </div>
+          </div>
+          <div class="freigabe-body">
+            <div class="freigabe-sections">
+              <div class="freigabe-section">
+                <div class="freigabe-section-header" onclick="toggleSection(this)"><span>1. Sachverständiger und Auftrag</span><span>▾</span></div>
+                <div class="freigabe-section-body">Der unterzeichnende Sachverständige Dr. Max Kellner, zertifizierter Gutachter für Gebäudeschäden (IHK), wurde mit der Erstellung eines Gutachtens zum Schadensfall AV-2026-0045 beauftragt. Die Beauftragung erfolgte durch die Musterversicherung AG am 14.03.2026. Die Besichtigung des Schadensobjekts fand am 15.03.2026 statt.</div>
+              </div>
+              <div class="freigabe-section">
+                <div class="freigabe-section-header" onclick="toggleSection(this)"><span>2. Schadensbeschreibung</span><span>▾</span></div>
+                <div class="freigabe-section-body">Im Erdgeschoss des Objekts wurde ein ausgedehnter Wasserschaden festgestellt, der auf eine defekte Zuleitung des Spülbeckens zurückzuführen ist. Die Schadensausdehnung beträgt ca. 18 m² Bodenfläche sowie angrenzende Wandbereiche in einer Höhe bis zu 85 cm. Folgeschäden am Parkettbelag sind vollständig eingetreten.</div>
+              </div>
+              <div class="freigabe-section">
+                <div class="freigabe-section-header" onclick="toggleSection(this)"><span>3. Feststellungen und Bewertung</span><span>▾</span></div>
+                <div class="freigabe-section-body">Die Schadenshöhe wird auf Basis aktueller Kostenkennwerte (BKI 2025) auf 8.400 € bis 11.200 € geschätzt. Die Schadensursache ist eindeutig auf das beschädigte Bauteil zurückzuführen. Eine Eigenverantwortung des Versicherungsnehmers ist nicht erkennbar.</div>
+              </div>
+            </div>
+          </div>
+          <div class="freigabe-actions">
+            <button class="btn btn-outline" onclick="goStep(4)">← Zurück bearbeiten</button>
+            <div style="display:flex;gap:10px;margin-left:auto;flex-wrap:wrap;">
+              <button class="btn" style="background:#FEE2E2;color:var(--error);border:1px solid #FECACA;" onclick="showToast('Gutachten abgelehnt.','error')">✖ Ablehnen</button>
+              <button class="btn btn-primary" onclick="exportPDF()">✅ Freigeben & PDF exportieren</button>
+              <button class="btn" style="background:#DBEAFE;color:#1E40AF;border:1px solid #BFDBFE;" onclick="sendEmail()">✉ Per E-Mail senden</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ PAGE: VORLAGEN ============ -->
+    <div id="page-vorlagen" class="app-page" style="display:none;">
+      <div class="page-header"><h1 class="page-title">PDF-Vorlagen</h1><p class="page-subtitle">3 Vorlagen verfügbar im Pro-Paket</p></div>
+      <div class="template-grid">
+        <div class="template-card"><div class="template-icon">📋</div><div class="template-name">Standard ZPO</div><div class="template-desc">Vollständige Struktur nach §407a ZPO für Gerichtsgutachten</div><div style="margin-top:12px;display:flex;gap:8px;justify-content:center;"><button class="btn btn-outline btn-sm">Vorschau</button><button class="btn btn-primary btn-sm">Verwenden</button></div></div>
+        <div class="template-card"><div class="template-icon">⚡</div><div class="template-name">Kurzgutachten</div><div class="template-desc">Kompakte 3-Seiten-Version für Versicherungsmeldungen</div><div style="margin-top:12px;display:flex;gap:8px;justify-content:center;"><button class="btn btn-outline btn-sm">Vorschau</button><button class="btn btn-primary btn-sm">Verwenden</button></div></div>
+        <div class="template-card"><div class="template-icon">📊</div><div class="template-name">Ausführlich (Premium)</div><div class="template-desc">Mit Kostenermittlung, Schadenstabelle und Bildanhang</div><div style="margin-top:12px;display:flex;gap:8px;justify-content:center;"><button class="btn btn-outline btn-sm">Vorschau</button><button class="btn btn-primary btn-sm">Verwenden</button></div></div>
+        <div class="feature-locked-wrap app-card" style="padding:20px;text-align:center;opacity:0.6;">
+          <div style="font-size:2rem;margin-bottom:8px;">🏢</div>
+          <div style="font-weight:700;color:var(--navy)">Eigene Vorlage</div>
+          <div style="font-size:0.78rem;color:var(--gray-500)">Hochladen & anpassen</div>
+          <div class="feature-locked-overlay"><div class="lock-icon">🔒</div><div class="lock-title">Enterprise-Feature</div><div class="lock-desc">Eigene Vorlagen ab Enterprise</div><a href="index.html#preise" class="btn btn-primary btn-xs">Upgrade</a></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ PAGE: BRIEFVORLAGEN ============ -->
+    <div id="page-briefe" class="app-page" style="display:none;">
+      <div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;flex-wrap:wrap">
+        <div>
+          <h1 class="page-title">Briefvorlagen</h1>
+          <p class="page-subtitle">Vorlagen öffnen, prüfen und mit einem Klick versenden.</p>
+        </div>
+        <div style="display:flex;gap:.75rem;flex-wrap:wrap">
+          <input id="svEmailInput" class="form-control" style="max-width:260px" placeholder="SV E-Mail (für Profil laden)">
+          <button class="btn btn-outline btn-sm" onclick="window.setSVEmail(document.getElementById('svEmailInput')?.value)">Profil laden</button>
+        </div>
+      </div>
+
+      <div class="app-card" style="margin-bottom:16px;">
+        <div class="app-card-header"><span class="app-card-title">Aktueller Fall</span></div>
+        <div class="app-card-body">
+          <div class="cards-grid cards-grid-2" style="gap:14px;">
+            <div class="form-group">
+              <label class="form-label">Aktenzeichen</label>
+              <input class="form-control" id="brief-aktenzeichen" placeholder="z.B. AZ-2026-001" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Empfänger E-Mail</label>
+              <input class="form-control" id="brief-empfaenger-email" placeholder="z.B. kontakt@versicherung.de" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Empfänger Name</label>
+              <input class="form-control" id="brief-empfaenger-name" placeholder="z.B. Frau Müller" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Adresse Empfänger</label>
+              <input class="form-control" id="brief-empfaenger-addr" placeholder="Straße, PLZ Ort" />
+            </div>
+          </div>
+          <div style="font-size:.78rem;color:var(--gray-500);margin-top:8px;">
+            Tipp: Aktenzeichen & Empfänger können Sie aus dem Gutachten übernehmen (Schritt 1).
+          </div>
+        </div>
+      </div>
+
+      <div class="data-table-wrap">
+        <table class="data-table">
+          <thead><tr><th style="width:110px;">ID</th><th>Vorlage</th><th style="width:120px;">Versand</th><th style="width:220px;"></th></tr></thead>
+          <tbody id="briefTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ============ PAGE: TEAM ============ -->
+    <div id="page-team" class="app-page" style="display:none;">
+      <div class="page-header"><h1 class="page-title">Team verwalten</h1><p class="page-subtitle">Pro-Paket: bis zu 3 Gutachter-Accounts</p></div>
+      <div class="notice-bar"><span>👥</span><span>Sie haben <strong>2 von 3 Slots</strong> belegt. Sie können 1 weiteres Teammitglied einladen.</span><a href="index.html#preise" class="btn btn-outline btn-sm">Enterprise (unbegrenzt)</a></div>
+      <div class="team-grid">
+        <div class="team-member-card">
+          <div class="member-avatar">MK</div>
+          <div class="member-name">Dr. Max Kellner</div>
+          <div class="member-email">info@prova-systems.de</div>
+          <div><span class="member-role-badge admin">Administrator</span></div>
+          <div style="margin-top:12px;font-size:0.72rem;color:var(--gray-400);">24 Gutachten erstellt · heute aktiv</div>
+        </div>
+        <div class="team-member-card">
+          <div class="member-avatar" style="background:#10B981;">TS</div>
+          <div class="member-name">Thomas Schmidt</div>
+          <div class="member-email">info@prova-systems.de</div>
+          <div><span class="member-role-badge gutachter">Gutachter</span></div>
+          <div style="margin-top:12px;font-size:0.72rem;color:var(--gray-400);">10 Gutachten erstellt · gestern aktiv</div>
+          <div style="margin-top:10px;display:flex;gap:6px;justify-content:center;">
+            <button class="btn btn-outline btn-sm">Bearbeiten</button>
+            <button class="btn btn-sm" style="background:#FEE2E2;color:var(--error);border:1px solid #FECACA;">Entfernen</button>
+          </div>
+        </div>
+        <div class="team-member-card empty" onclick="inviteMember()">
+          <div style="font-size:2rem;color:var(--accent);margin-bottom:8px;">+</div>
+          <div style="font-size:0.875rem;font-weight:600;color:var(--accent);">Mitglied einladen</div>
+          <div style="font-size:0.75rem;color:var(--gray-400);margin-top:4px;">1 Slot verfügbar</div>
+        </div>
+      </div>
+      <div class="feature-locked-wrap app-card" style="padding:24px;">
+        <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+          <div style="font-size:2rem;">👥</div>
+          <div><div style="font-weight:700;color:var(--navy);margin-bottom:4px;">Großes Team (4+ Mitglieder)</div><div style="font-size:0.825rem;color:var(--gray-500);">Mit Enterprise können Sie ein unbegrenztes Team verwalten, Rollen vergeben und Zugriffsrechte feinsteuern.</div></div>
+          <a href="index.html#preise" class="btn btn-primary" style="margin-left:auto;white-space:nowrap;">Enterprise anfragen</a>
+        </div>
+        <div class="feature-locked-overlay" style="border-radius:10px;"><div class="lock-icon">🔒</div><div class="lock-title">Ab Enterprise: Unbegrenzte Mitglieder</div><div class="lock-desc">Rollen, Zugriffsrechte, Abteilungen</div><a href="index.html#preise" class="btn btn-primary btn-sm">Jetzt upgraden</a></div>
+      </div>
+    </div>
+
+    <!-- ============ PAGE: ARCHIV ============ -->
+    <div id="page-archiv" class="app-page" style="display:none;">
+      <div class="page-header"><h1 class="page-title">Archiv</h1><p class="page-subtitle">Alle abgeschlossenen Gutachten · durchsuchbar</p></div>
+      <div class="data-table-wrap">
+        <div class="table-toolbar">
+          <span class="table-toolbar-title">Archivierte Gutachten</span>
+          <div class="search-input-wrap"><input type="text" placeholder="Suchen nach Adresse, Auftrag…"></div>
+          <select class="filter-select"><option>2025</option><option>2024</option><option>2023</option></select>
+        </div>
+        <table class="data-table">
+          <thead><tr><th>Gutachten</th><th>Schadensart</th><th>Gutachter</th><th>Datum</th><th>Status</th><th>PDF</th></tr></thead>
+          <tbody>
+            <tr><td class="td-title">Leitungswasser Kirchplatz 5<small>AV-2026-0040</small></td><td>Wasserschaden</td><td>Dr. Kellner</td><td>05.07.2025</td><td><span class="status-badge archived">Archiviert</span></td><td><button class="action-btn" title="PDF herunterladen">⬇</button></td></tr>
+            <tr><td class="td-title">Hagelschaden Eichenweg 9<small>AV-2026-0038</small></td><td>Hagelschaden</td><td>T. Schmidt</td><td>28.06.2025</td><td><span class="status-badge archived">Archiviert</span></td><td><button class="action-btn" title="PDF herunterladen">⬇</button></td></tr>
+            <tr><td class="td-title">Brandschaden Rosestraße 3<small>AV-2026-0035</small></td><td>Brandschaden</td><td>Dr. Kellner</td><td>15.06.2025</td><td><span class="status-badge archived">Archiviert</span></td><td><button class="action-btn" title="PDF herunterladen">⬇</button></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ============ PAGE: EINSTELLUNGEN ============ -->
+    <div id="page-einstellungen" class="app-page" style="display:none;">
+      <div class="page-header"><h1 class="page-title">Einstellungen</h1><p class="page-subtitle">Profil, Kanzlei & Gutachten-Konfiguration</p></div>
+      <div class="cards-grid cards-grid-2" style="gap:20px;">
+        <div class="app-card">
+          <div class="app-card-header"><span class="app-card-title">Profil</span></div>
+          <div class="app-card-body" style="display:flex;flex-direction:column;gap:12px;">
+            <div class="form-group"><label class="form-label">Name</label><input class="form-control" value="Dr. Max Kellner"></div>
+            <div class="form-group"><label class="form-label">E-Mail</label><input class="form-control" type="email" value="m.kellner@example.de"></div>
+            <div class="form-group"><label class="form-label">Qualifikation</label><input class="form-control" value="Sachverständiger für Gebäudeschäden (IHK)"></div>
+            <button class="btn btn-primary btn-sm" onclick="showToast('Profil gespeichert!','success')">Speichern</button>
+          </div>
+        </div>
+        <div class="app-card">
+          <div class="app-card-header"><span class="app-card-title">Kanzlei-Logo <span class="pro-feature-tag">Pro</span></span></div>
+          <div class="app-card-body">
+            <div class="upload-zone" style="padding:16px;"><div class="upload-icon">🖼</div><p>Logo hochladen (PNG/SVG)<br><span>Wird in PDFs angezeigt</span></p></div>
+            <div style="margin-top:12px;padding:10px;background:#F0F7FF;border-radius:8px;font-size:0.78rem;color:var(--accent);">✅ Logo aktiv: kellner-gutachten-logo.png</div>
+          </div>
+        </div>
+        <div class="app-card">
+          <div class="app-card-header"><span class="app-card-title">E-Mail-Versand <span class="pro-feature-tag">Pro</span></span></div>
+          <div class="app-card-body" style="display:flex;flex-direction:column;gap:12px;">
+            <div class="form-group"><label class="form-label">Absender-Name</label><input class="form-control" value="Dr. Max Kellner · Sachverständiger"></div>
+            <div class="form-group"><label class="form-label">Reply-To E-Mail</label><input class="form-control" value="gutachten@kellner-sv.de"></div>
+            <div class="form-group"><label class="form-label">E-Mail-Signatur</label><textarea class="form-control" rows="3" style="resize:none;font-size:0.82rem;">Dr. Max Kellner | Sachverständiger | Tel: 030 123456</textarea></div>
+            <button class="btn btn-primary btn-sm" onclick="showToast('E-Mail-Einstellungen gespeichert!','success')">Speichern</button>
+          </div>
+        </div>
+        <div class="app-card">
+          <div class="app-card-header"><span class="app-card-title">Paket & Abrechnung</span></div>
+          <div class="app-card-body">
+            <div style="background:#F0F7FF;border:1px solid rgba(74,144,217,0.2);border-radius:10px;padding:14px;margin-bottom:14px;">
+              <div style="font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--accent);margin-bottom:4px;">Aktuelles Paket</div>
+              <div style="font-size:1.2rem;font-weight:800;color:var(--navy);">Pro · 299 €/Monat</div>
+              <div style="font-size:0.75rem;color:var(--gray-500);margin-top:2px;">Nächste Abrechnung: 01.08.2025</div>
+            </div>
+            <a href="index.html#preise" class="btn btn-primary" style="display:block;text-align:center;">⬆ Auf Enterprise upgraden</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /app-content -->
+</main>
+</div><!-- /app-wrapper -->
+
+<script>
+// ===== TOAST =====
+function showToast(msg, type) {
+  const container = document.getElementById('toast-container');
+  const toast = document.createElement('div');
+  toast.className = 'toast' + (type === 'success' ? ' toast-success' : type === 'error' ? ' toast-error' : '');
+  toast.textContent = msg;
+  container.appendChild(toast);
+  setTimeout(() => toast.remove(), 3500);
+}
+
+// ===== SV PROFIL (Airtable via Netlify Proxy) =====
+const AIRTABLE_BASE = 'appJ7bLlAHZoxENWE';
+const AIRTABLE_TABLE = 'tblSxV8bsXwd1pwa0';
+const AIRTABLE_SV_TABLE = 'tbladqEQT3tmx4DIB';
+const WEBHOOK_S1 = 'https://hook.eu1.make.com/imn2n5xs7j251xicrmdmk17of042pt2t';
+const WEBHOOK_S9 = 'https://hook.eu1.make.com/bslfuqmlud1vo8qems5ccn5z5f2eq4dl';
+
+const GUTACHTEN_VORLAGEN = [
+  { id: 'standard',        label: 'Standard-Gutachten',   file: 'vorlage-01-standard.html' },
+  { id: 'kurzgutachten',   label: 'Kurzgutachten',        file: 'vorlage-02-kurzgutachten.html' },
+  { id: 'beweissicherung', label: 'Beweissicherung',      file: 'vorlage-03-beweissicherung.html' },
+  { id: 'gericht',         label: 'Gerichtsgutachten',    file: 'vorlage-04-gerichtsgutachten.html', enterpriseOnly: true },
+  { id: 'brand',           label: 'Brandschaden',         file: 'vorlage-05-brandschaden.html' },
+  { id: 'feuchte',         label: 'Feuchte/Schimmel',    file: 'vorlage-06-feuchteschimmel.html' },
+  { id: 'elementar',       label: 'Elementarschaden',    file: 'vorlage-07-elementarschaden.html' },
+  { id: 'baumaengel',      label: 'Baumängel',           file: 'vorlage-08-baumaengel.html' },
+];
+function defaultVorlageIdBySchadenartPro() {
+  const v = document.getElementById('f-schadenart')?.value || document.querySelector('[name="schadenart"]')?.value || '';
+  if (v === 'Schimmelbefall' || v === 'Wasserschaden') return 'feuchte';
+  if (v === 'Brandschaden') return 'brand';
+  if (v === 'Sturmschaden') return 'elementar';
+  return 'standard';
+}
+function getSelectedGutachtenVorlageIdPro() {
+  const r = document.querySelector('input[name="gutachten_vorlage_pro"]:checked');
+  return r ? r.value : (sessionStorage.getItem('prova_gutachten_vorlage_id') || 'standard');
+}
+function renderGutachtenVorlageRadiosPro(enterpriseOnlyIds) {
+  const container = document.getElementById('gutachtenVorlageRadiosPro');
+  if (!container) return;
+  const current = sessionStorage.getItem('prova_gutachten_vorlage_id') || defaultVorlageIdBySchadenartPro();
+  container.innerHTML = GUTACHTEN_VORLAGEN.map(v => {
+    const isEnterpriseOnly = enterpriseOnlyIds && enterpriseOnlyIds.includes(v.id);
+    return `<label style="display:block;margin-bottom:.35rem;"><input type="radio" name="gutachten_vorlage_pro" value="${v.id}" ${v.id === current ? 'checked' : ''}> ${v.label}${isEnterpriseOnly ? ' <span class="nav-lock">Enterprise</span>' : ''}</label>`;
+  }).join('');
+  container.querySelectorAll('input[name="gutachten_vorlage_pro"]').forEach(el => {
+    el.addEventListener('change', () => sessionStorage.setItem('prova_gutachten_vorlage_id', el.value));
+  });
+}
+window.vorlageVorschauPro = function() {
+  const id = getSelectedGutachtenVorlageIdPro();
+  const vorlage = GUTACHTEN_VORLAGEN.find(v => v.id === id);
+  if (!vorlage) { showToast('Bitte zuerst eine Vorlage wählen.', 'warning'); return; }
+  const params = new URLSearchParams({
+    aktenzeichen: document.getElementById('brief-aktenzeichen')?.value || document.getElementById('f-schadensnummer')?.value || '',
+    schadenart: document.getElementById('f-schadenart')?.value || '',
+    strasse: document.getElementById('f-strasse')?.value || '',
+    plz: document.getElementById('f-plz')?.value || '',
+    ort: document.getElementById('f-ort')?.value || ''
+  });
+  window.open('formulare/' + vorlage.file + (params.toString() ? '?' + params.toString() : ''), '_blank', 'noopener');
+};
+window.SV_PROFIL = null;
+window.SV_RECORD_ID = null;
+
+async function airtableProxy(method, path, body = null) {
+  const res = await fetch('/.netlify/functions/airtable', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ method, path, body })
+  });
+  const text = await res.text();
+  const isJson = (res.headers.get('content-type') || '').includes('application/json');
+  const data = isJson ? JSON.parse(text || '{}') : text;
+  if (!res.ok) throw new Error((data && data.error) ? data.error : ('HTTP ' + res.status));
+  return data;
+}
+
+window.setSVEmail = async function(email) {
+  const v = String(email || '').trim();
+  if (!v) { showToast('SV E-Mail fehlt.', 'error'); return; }
+  sessionStorage.setItem('prova_email', v);
+  await ladeSVProfil();
+};
+
+async function ladeSVProfil() {
+  const email = (sessionStorage.getItem('prova_email') || localStorage.getItem('prova_email') || '').trim();
+  if (!email) return null;
+  const path = `/v0/${AIRTABLE_BASE}/${AIRTABLE_SV_TABLE}?filterByFormula=${encodeURIComponent(`Email=\"${email}\"`)}&maxRecords=1`;
+  const data = await airtableProxy('GET', path);
+  const rec = (data.records || [])[0];
+  if (!rec) return null;
+  window.SV_PROFIL = rec.fields || null;
+  window.SV_RECORD_ID = rec.id || null;
+  return window.SV_PROFIL;
+}
+
+function getSVVal(key, fallback = '') {
+  const f = window.SV_PROFIL || {};
+  return (f[key] ?? fallback) || fallback;
+}
+
+function fmtHeute() {
+  return new Date().toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
+}
+
+function replacePlaceholders(html, vars) {
+  return html.replace(/\{\{\s*([a-zA-Z0-9_]+)\s*\}\}/g, (_, k) => (vars[k] ?? ''));
+}
+
+// ===== STAMMDATEN PRO (wie Starter) =====
+var VERSICHERUNGEN_PRO = ['Allianz','AXA','Zurich','Generali','R+V Versicherung','Talanx / HDI','Münchener Rück','Hannover Rück','Ergo','Continentale','Debeka','HUK-Coburg','LVM','DEVK','Württembergische','Gothaer','Barmenia','Signal Iduna','Nürnberger','Provinzial','VGH','Öffentliche','Bayerische','Alte Leipziger','Condor','Arag','Roland Rechtsschutz','DA Direkt','CosmosDirekt','Helvetia','Basler','Inter','Mecklenburgische','Concordia','Rhion','Adam Riese','Friday','Wefox','Hiscox','Chubb','Aon','Marsh','Willis Towers Watson'].sort();
+const VERSICHERUNGEN = [
+  'Allianz','AXA','HUK-COBURG','DEVK','Zurich','Generali','Ergo',
+  'R+V Versicherung','VHV','Gothaer','Helvetia','Württembergische',
+  'Signal Iduna','Continentale','Nürnberger','LVM','Barmenia',
+  'Debeka','Hanse Merkur','Inter Versicherungen'
+];
+
+function sucheVersicherung(q) {
+  const wrap = document.getElementById('versicherung-suggestions');
+  if (!wrap) return;
+  if (!q || q.length < 2) { wrap.style.display='none'; return; }
+  const treffer = VERSICHERUNGEN.filter(v => v.toLowerCase().includes(q.toLowerCase()));
+  if (!treffer.length) { wrap.style.display='none'; return; }
+  wrap.innerHTML = treffer.map(v =>
+    `<div onclick="waehleVersicherung('${v}')"
+          style="padding:.5rem .75rem;cursor:pointer;font-size:.875rem;color:var(--gray-700);"
+          onmouseover="this.style.background='var(--gray-50)'"
+          onmouseout="this.style.background=''">${v}</div>`
+  ).join('');
+  wrap.style.display = 'block';
+}
+
+function waehleVersicherung(name) {
+  const s = document.getElementById('f-versicherung-suche');
+  if (s) s.value = name;
+  const n = document.getElementById('f-auftraggeber-name');
+  if (n) n.value = name;
+  const w = document.getElementById('versicherung-suggestions');
+  if (w) w.style.display = 'none';
+}
+
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('#versicherung-suche-wrap')) {
+    const w = document.getElementById('versicherung-suggestions');
+    if (w) w.style.display = 'none';
+  }
+});
+
+// Toggle Versicherungssuche bei Dropdown-Wechsel
+document.getElementById('f-auftraggeber-typ')?.addEventListener('change', function() {
+  const wrap = document.getElementById('versicherung-suche-wrap');
+  if (wrap) wrap.style.display = this.value === 'Versicherung' ? 'block' : 'none';
+});
+
+function toggleMesswerte() {
+  const panel = document.getElementById('messwerte-panel');
+  const chevron = document.getElementById('messwerte-chevron');
+  if (!panel || !chevron) return;
+  const open = panel.style.display !== 'none';
+  panel.style.display = open ? 'none' : 'block';
+  chevron.style.transform = open ? '' : 'rotate(90deg)';
+}
+
+window.updateMesswerteLayoutPro = function() {
+  var sa = (document.getElementById('f-schadenart') && document.getElementById('f-schadenart').value || '').toLowerCase();
+  var blocks = [
+    { id: 'mw-feuchte', on: sa.indexOf('schimmel') !== -1 || sa.indexOf('wasser') !== -1 || sa.indexOf('feucht') !== -1 },
+    { id: 'mw-brand', on: sa.indexOf('brand') !== -1 },
+    { id: 'mw-sturm', on: sa.indexOf('sturm') !== -1 || sa.indexOf('elementar') !== -1 },
+    { id: 'mw-einbruch', on: sa.indexOf('einbruch') !== -1 || sa.indexOf('vandal') !== -1 },
+    { id: 'mw-bau', on: sa.indexOf('baumängel') !== -1 || sa.indexOf('baumaengel') !== -1 }
+  ];
+  var any = false;
+  blocks.forEach(function(b) {
+    var el = document.getElementById(b.id);
+    if (!el) return;
+    el.style.display = b.on ? 'block' : 'none';
+    if (b.on) any = true;
+  });
+  if (!any) {
+    var fe = document.getElementById('mw-feuchte');
+    if (fe) fe.style.display = 'block';
+  }
+};
+
+function validateWizardStep1Pro() {
+  if (document.activeElement && typeof document.activeElement.blur === 'function') document.activeElement.blur();
+  var ids = [
+    ['f-schadenart', 'Schadensart'],
+    ['f-auftraggeber-name', 'Name / Firma Auftraggeber'],
+    ['f-auftraggeber-email', 'E-Mail Auftraggeber'],
+    ['f-strasse', 'Straße'],
+    ['f-plz', 'PLZ'],
+    ['f-ort', 'Ort']
+  ];
+  var ok = true;
+  ids.forEach(function(pair) {
+    var el = document.getElementById(pair[0]);
+    if (!el) return;
+    var v = (el.value || '').trim();
+    el.style.borderColor = '';
+    if (!v) {
+      el.style.borderColor = '#ef4444';
+      ok = false;
+    }
+  });
+  var mail = document.getElementById('f-auftraggeber-email');
+  if (mail && mail.value.trim() && mail.value.indexOf('@') === -1) {
+    mail.style.borderColor = '#ef4444';
+    ok = false;
+  }
+  if (!ok) {
+    showToast('Bitte alle Pflichtfelder in Stammdaten ausfüllen.', 'error');
+    var first = document.querySelector('#wizard-step-1 .form-control[style*="border-color: rgb(239, 68, 68)"]') || document.getElementById('f-schadenart');
+    if (first && first.scrollIntoView) first.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+  return ok;
+}
+function setProAktenzeichen() {
+  var y = new Date().getFullYear();
+  var n = Math.floor(Math.random() * 9000) + 1000;
+  var el = document.getElementById('f-schadensnummer');
+  if (el) el.value = 'PROVA-SM-' + y + '-' + n;
+}
+window.switchAuftraggeberTypPro = function(val) {
+  var input = document.getElementById('f-auftraggeber-name');
+  var drop = document.getElementById('ag-dropdown');
+  if (input) { input.value = ''; input.placeholder = (val === 'Versicherung') ? 'Versicherung suchen… (z.B. Allianz, AXA)' : 'Name oder Firma eingeben'; }
+  if (drop) { drop.innerHTML = ''; drop.style.display = 'none'; }
+};
+window.handleAuftraggeberInputPro = function(val) {
+  var typ = document.getElementById('f-auftraggeber-typ') && document.getElementById('f-auftraggeber-typ').value;
+  var drop = document.getElementById('ag-dropdown');
+  if (!drop) return;
+  if (typ !== 'Versicherung' || !val.trim()) { drop.innerHTML = ''; drop.style.display = 'none'; return; }
+  var filtered = VERSICHERUNGEN_PRO.filter(function(v){ return v.toLowerCase().indexOf(val.toLowerCase()) !== -1; });
+  if (!filtered.length) { drop.innerHTML = ''; drop.style.display = 'none'; return; }
+  drop.innerHTML = filtered.slice(0, 20).map(function(v) {
+    var esc = String(v).replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'\\"');
+    return '<div style="padding:9px 14px;cursor:pointer;font-size:.85rem;border-bottom:1px solid #F3F4F6" onmousedown="document.getElementById(\'f-auftraggeber-name\').value=\'' + esc + '\';document.getElementById(\'ag-dropdown\').style.display=\'none\';">' + v + '</div>';
+  }).join('');
+  drop.style.display = 'block';
+};
+window.toggleMesswertePro = function() {
+  var c = document.getElementById('mw-container');
+  var ch = document.getElementById('messwerte-chevron');
+  if (c) { c.style.display = c.style.display === 'none' ? 'block' : 'none'; }
+  if (ch) ch.textContent = (c && c.style.display === 'block') ? '▾' : '▸';
+};
+
+var proFotos = [];
+
+/* Pro Diktat (Parität Starter: Web Speech API + Tabs) */
+var proRecognition = null;
+var proRecTimer = null;
+var proRecSecs = 0;
+var proIsRecording = false;
+var proTranscriptText = '';
+var proDiktatMode = 'diktat';
+
+function updateProTranscriptPlaceholder() {
+  var area = document.getElementById('transcriptArea');
+  var ph = document.getElementById('transcript-placeholder-pro');
+  if (!ph) return;
+  var has = area && area.innerText.replace(/\s/g, '').length > 0;
+  ph.style.display = has ? 'none' : 'block';
+}
+
+window.syncProTranscriptFromArea = function() {
+  var area = document.getElementById('transcriptArea');
+  if (area) proTranscriptText = area.innerText.trim();
+  updateProTranscriptPlaceholder();
+};
+
+window.syncManuellToTranscriptPro = function() {
+  var ta = document.getElementById('transcriptManuell');
+  if (ta) proTranscriptText = ta.value;
+};
+
+window.switchDiktatTabPro = function(mode) {
+  proDiktatMode = mode;
+  var diktatPanel = document.getElementById('diktat-panel-pro');
+  var eingabePanel = document.getElementById('eingabe-panel-pro');
+  var tabDiktat = document.getElementById('tab-diktat-pro');
+  var tabEingabe = document.getElementById('tab-eingabe-pro');
+  if (mode === 'diktat') {
+    if (diktatPanel) diktatPanel.style.display = 'block';
+    if (eingabePanel) eingabePanel.style.display = 'none';
+    if (tabDiktat) { tabDiktat.style.background = 'var(--accent)'; tabDiktat.style.color = '#fff'; }
+    if (tabEingabe) { tabEingabe.style.background = 'var(--gray-200)'; tabEingabe.style.color = 'var(--gray-600)'; }
+    var ta = document.getElementById('transcriptManuell');
+    if (ta && ta.value.trim()) proTranscriptText = ta.value.trim();
+  } else {
+    if (diktatPanel) diktatPanel.style.display = 'none';
+    if (eingabePanel) eingabePanel.style.display = 'block';
+    if (tabDiktat) { tabDiktat.style.background = 'var(--gray-200)'; tabDiktat.style.color = 'var(--gray-600)'; }
+    if (tabEingabe) { tabEingabe.style.background = 'var(--accent)'; tabEingabe.style.color = '#fff'; }
+    var ta2 = document.getElementById('transcriptManuell');
+    if (ta2) ta2.value = proTranscriptText;
+  }
+};
+
+function getWizardTranscriptPro() {
+  var ta = document.getElementById('transcriptArea');
+  if (ta) proTranscriptText = ta.innerText.trim();
+  if (proDiktatMode === 'text') {
+    var manuellTa = document.getElementById('transcriptManuell');
+    proTranscriptText = (manuellTa && manuellTa.value) ? manuellTa.value.trim() : proTranscriptText;
+  }
+  return proTranscriptText;
+}
+
+function buildMesswerteStringPro() {
+  function show(id) { var e = document.getElementById(id); return e && e.style.display !== 'none'; }
+  function v(id) { var e = document.getElementById(id); return (e && e.value) ? String(e.value).trim() : ''; }
+  var parts = [];
+  if (show('mw-feuchte')) {
+    if (v('f-feuchte')) parts.push('Materialfeuchte (%): ' + v('f-feuchte'));
+    if (v('f-luftfeuchte')) parts.push('Luftfeuchtigkeit (%): ' + v('f-luftfeuchte'));
+    if (v('f-temperatur')) parts.push('Raumtemperatur (°C): ' + v('f-temperatur'));
+    if (v('f-taupunkt')) parts.push('Taupunkt (°C): ' + v('f-taupunkt'));
+    if (v('f-flaeche')) parts.push('Befallene Fläche (m²): ' + v('f-flaeche'));
+    if (v('f-tiefe')) parts.push('Schadenstiefe (cm): ' + v('f-tiefe'));
+    if (v('f-messgeraet')) parts.push('Messgerät: ' + v('f-messgeraet'));
+  }
+  if (show('mw-brand')) {
+    if (v('f-brand-russtiefe')) parts.push('Rußtiefe (mm): ' + v('f-brand-russtiefe'));
+    if (v('f-brand-flaeche')) parts.push('Betroffene Fläche (m²): ' + v('f-brand-flaeche'));
+    if (v('f-brand-geruch')) parts.push('Geruchsintensität (1–10): ' + v('f-brand-geruch'));
+    if (v('f-brand-temp')) parts.push('Temperatureinwirkung (°C): ' + v('f-brand-temp'));
+    if (v('f-brand-entfernung')) parts.push('Entfernung zum Brandherd (m): ' + v('f-brand-entfernung'));
+    if (v('f-brand-messgeraet')) parts.push('Messgerät: ' + v('f-brand-messgeraet'));
+  }
+  if (show('mw-sturm')) {
+    if (v('f-sturm-flaeche')) parts.push('Betroffene Fläche (m²): ' + v('f-sturm-flaeche'));
+    if (v('f-sturm-oeffnung')) parts.push('Öffnungsgröße (m²): ' + v('f-sturm-oeffnung'));
+    if (v('f-sturm-eindring')) parts.push('Eindringtiefe (cm): ' + v('f-sturm-eindring'));
+    if (v('f-sturm-windlast')) parts.push('Windlastzone: ' + v('f-sturm-windlast'));
+    if (v('f-sturm-dach')) parts.push('Dachabdeckung (%): ' + v('f-sturm-dach'));
+    if (v('f-sturm-messgeraet')) parts.push('Messgerät: ' + v('f-sturm-messgeraet'));
+  }
+  if (show('mw-einbruch')) {
+    if (v('f-einbruch-anzahl')) parts.push('Anzahl Schadensstellen: ' + v('f-einbruch-anzahl'));
+    if (v('f-einbruch-flaeche')) parts.push('Betroffene Fläche (m²): ' + v('f-einbruch-flaeche'));
+    if (v('f-einbruch-tiefe')) parts.push('Schadenstiefe (cm): ' + v('f-einbruch-tiefe'));
+    if (v('f-einbruch-verlust')) parts.push('Materialverlust (kg): ' + v('f-einbruch-verlust'));
+    if (v('f-einbruch-bauteile')) parts.push('Betroffene Bauteile: ' + v('f-einbruch-bauteile'));
+  }
+  if (show('mw-bau')) {
+    if (v('f-bau-soll')) parts.push('Abweichung vom Sollmaß (mm): ' + v('f-bau-soll'));
+    if (v('f-bau-flaeche')) parts.push('Betroffene Fläche (m²): ' + v('f-bau-flaeche'));
+    if (v('f-bau-din')) parts.push('DIN-Referenz: ' + v('f-bau-din'));
+    if (v('f-bau-toleranz')) parts.push('Toleranzüberschreitung (mm): ' + v('f-bau-toleranz'));
+    if (v('f-bau-betrieb')) parts.push('Betriebszustand: ' + v('f-bau-betrieb'));
+  }
+  if (v('f-mw-extra')) parts.push(v('f-mw-extra'));
+  return parts.join(' | ');
+}
+
+function sammleDatenPro() {
+  var nowIso = new Date().toISOString();
+  var messwerteStr = buildMesswerteStringPro();
+  var transkript = getWizardTranscriptPro();
+  var fotosPayload = proFotos.map(function(f, i) {
+    var cap = (f.caption && String(f.caption).trim()) ? String(f.caption).trim() : ('Foto ' + (i + 1));
+    return { index: i + 1, dataUrl: f.dataUrl, caption: cap, groesse_kb: Math.round((f.compSize || 0) / 1024) };
+  });
+  try {
+    localStorage.setItem('prova_messwerte_strukturiert', JSON.stringify({ paket: 'Pro', messwerte: messwerteStr, zeit: nowIso }));
+  } catch (e) {}
+  return {
+    paket: 'Pro',
+    schadenart: document.getElementById('f-schadenart') && document.getElementById('f-schadenart').value || '',
+    schadensnummer: document.getElementById('f-schadensnummer') && document.getElementById('f-schadensnummer').value || '',
+    schadensdatum: document.getElementById('f-schadensdatum') && document.getElementById('f-schadensdatum').value || '',
+    auftraggeber_typ: document.getElementById('f-auftraggeber-typ') && document.getElementById('f-auftraggeber-typ').value || '',
+    auftraggeber_name: document.getElementById('f-auftraggeber-name') && document.getElementById('f-auftraggeber-name').value || '',
+    ansprechpartner: document.getElementById('f-ansprechpartner') && document.getElementById('f-ansprechpartner').value || '',
+    auftraggeber_email: document.getElementById('f-auftraggeber-email') && document.getElementById('f-auftraggeber-email').value || '',
+    strasse: document.getElementById('f-strasse') && document.getElementById('f-strasse').value || '',
+    plz: document.getElementById('f-plz') && document.getElementById('f-plz').value || '',
+    ort: document.getElementById('f-ort') && document.getElementById('f-ort').value || '',
+    gebaeudetyp: document.getElementById('f-gebaeudetyp') && document.getElementById('f-gebaeudetyp').value || '',
+    baujahr: document.getElementById('f-baujahr') && document.getElementById('f-baujahr').value || '',
+    geschaedigter: document.getElementById('f-geschaedigter') && document.getElementById('f-geschaedigter').value || '',
+    bereich: document.getElementById('f-bereich') && document.getElementById('f-bereich').value || '',
+    feuchtemessung: document.getElementById('f-feuchte') && document.getElementById('f-feuchte').value || '',
+    luftfeuchtigkeit: document.getElementById('f-luftfeuchte') && document.getElementById('f-luftfeuchte').value || '',
+    temperatur: document.getElementById('f-temperatur') && document.getElementById('f-temperatur').value || '',
+    taupunkt: document.getElementById('f-taupunkt') && document.getElementById('f-taupunkt').value || '',
+    schadensflaeche: document.getElementById('f-flaeche') && document.getElementById('f-flaeche').value || '',
+    schadenstiefe: document.getElementById('f-tiefe') && document.getElementById('f-tiefe').value || '',
+    messgeraet: document.getElementById('f-messgeraet') && document.getElementById('f-messgeraet').value || '',
+    messwerte: messwerteStr,
+    prova_messwerte_strukturiert: messwerteStr,
+    transkript: transkript,
+    fotos_anzahl: fotosPayload.length,
+    fotos: fotosPayload,
+    timestamp: nowIso,
+    gutachten_vorlage_id: getSelectedGutachtenVorlageIdPro()
+  };
+}
+
+function escProHtml(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
+}
+
+function renderProFotoGrid() {
+  var grid = document.getElementById('pro-foto-grid');
+  var cnt = document.getElementById('foto-counter');
+  var hi = document.getElementById('foto-hinweis');
+  if (cnt) cnt.textContent = proFotos.length + ' Foto' + (proFotos.length === 1 ? '' : 's') + ' ausgewählt (max. 20)';
+  if (hi) {
+    if (proFotos.length) {
+      hi.textContent = 'Fotos werden mit dem Webhook übermittelt.';
+      hi.style.color = 'var(--gray-600)';
+    } else {
+      hi.textContent = 'ℹ Keine Fotos — können nachgereicht werden';
+      hi.style.color = 'var(--warning)';
+    }
+  }
+  if (!grid) return;
+  grid.innerHTML = proFotos.map(function(f, i) {
+    var capEsc = escProHtml(f.caption || '');
+    return '<div class="foto-cell" style="position:relative">' +
+      '<img src="' + escProHtml(f.dataUrl) + '" alt="Foto ' + (i + 1) + '">' +
+      '<button type="button" class="foto-delete" onclick="entferneFotoPro(' + i + ')" aria-label="Foto löschen">X</button>' +
+      '<input type="text" placeholder="Beschriftung (Raum, Lage…)" value="' + capEsc + '" ' +
+      'onchange="proFotos[' + i + '].caption=this.value" style="width:100%;margin-top:6px;padding:8px 10px;font-size:0.8rem;border:1px solid var(--gray-200);border-radius:8px;font-family:inherit">' +
+      '<div style="font-size:0.65rem;color:var(--gray-400);margin-top:4px">' + Math.round((f.compSize || 0) / 1024) + ' KB' +
+      (f.origSize > f.compSize ? ' (−' + Math.round((1 - f.compSize / f.origSize) * 100) + '%)' : '') +
+      '</div></div>';
+  }).join('');
+}
+
+window.entferneFotoPro = function(i) {
+  if (i >= 0 && i < proFotos.length) { proFotos.splice(i, 1); renderProFotoGrid(); }
+};
+
+function komprimiereBildPro(file, maxW, maxH, qual) {
+  maxW = maxW || 1920; maxH = maxH || 1920; qual = qual || 0.82;
+  return new Promise(function(resolve) {
+    var reader = new FileReader();
+    reader.onload = function(ev) {
+      var img = new Image();
+      img.onload = function() {
+        var w = img.width, h = img.height;
+        if (w > maxW || h > maxH) {
+          var r = Math.min(maxW / w, maxH / h);
+          w = Math.round(w * r); h = Math.round(h * r);
+        }
+        var canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        canvas.toBlob(function(blob) {
+          var r2 = new FileReader();
+          r2.onload = function(e2) { resolve({ dataUrl: e2.target.result, size: blob.size, w: w, h: h }); };
+          r2.readAsDataURL(blob);
+        }, 'image/jpeg', qual);
+      };
+      img.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+async function verarbeiteFotosPro(files) {
+  var maxSlots = 20;
+  if (proFotos.length + files.length > maxSlots) {
+    showToast('Maximal 20 Fotos.', 'warning');
+    files = files.slice(0, Math.max(0, maxSlots - proFotos.length));
+  }
+  if (!files.length) return;
+  var statusEl = document.getElementById('uploadStatusPro');
+  var statusText = document.getElementById('uploadStatusTextPro');
+  if (statusEl) statusEl.style.display = 'block';
+  var gespart = 0;
+  for (var i = 0; i < files.length; i++) {
+    if (statusText) statusText.textContent = 'Foto ' + (i + 1) + ' von ' + files.length + ' wird optimiert…';
+    var orig = files[i].size;
+    var res = await komprimiereBildPro(files[i]);
+    gespart += orig - res.size;
+    proFotos.push({ dataUrl: res.dataUrl, caption: '', origSize: orig, compSize: res.size });
+    renderProFotoGrid();
+  }
+  if (statusEl) statusEl.style.display = 'none';
+  showToast(files.length + ' Foto' + (files.length > 1 ? 's' : '') + ' optimiert — ' + Math.round(gespart / 1024) + ' KB gespart.', 'success');
+}
+
+function initProFotoUI() {
+  var dz = document.getElementById('foto-dropzone');
+  var fi = document.getElementById('foto-input');
+  if (dz && fi) {
+    dz.addEventListener('click', function() { fi.click(); });
+    dz.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fi.click(); }
+    });
+    dz.addEventListener('dragover', function(e) { e.preventDefault(); dz.style.borderColor = 'var(--accent)'; });
+    dz.addEventListener('dragleave', function() { dz.style.borderColor = ''; });
+    dz.addEventListener('drop', function(e) {
+      e.preventDefault();
+      dz.style.borderColor = '';
+      verarbeiteFotosPro(Array.prototype.slice.call(e.dataTransfer.files).filter(function(f) { return f.type.indexOf('image/') === 0; }));
+    });
+    fi.addEventListener('change', function(e) {
+      verarbeiteFotosPro(Array.prototype.slice.call(e.target.files).filter(function(f) { return f.type.indexOf('image/') === 0; }));
+      e.target.value = '';
+    });
+  }
+  renderProFotoGrid();
+}
+
+document.getElementById('f-schadenart') && document.getElementById('f-schadenart').addEventListener('change', function() {
+  try { window.updateMesswerteLayoutPro(); } catch (e) {}
+});
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initProFotoUI);
+} else {
+  initProFotoUI();
+}
+
+async function sendeWebhookPro() {
+  getWizardTranscriptPro();
+  var daten = sammleDatenPro();
+  if (!daten.transkript || !String(daten.transkript).trim()) { showToast('Bitte Diktat aufnehmen oder Text eingeben.', 'warning'); return false; }
+  try {
+    var _az = daten.schadensnummer || '';
+    if (_az) localStorage.setItem('prova_letztes_az', _az);
+    if (daten.schadenart) localStorage.setItem('prova_schadenart', daten.schadenart);
+    var _adr = [daten.strasse, daten.plz, daten.ort].filter(Boolean).join(', ');
+    if (_adr) localStorage.setItem('prova_adresse', _adr);
+  } catch (_e) {}
+  try {
+    var res = await fetch(WEBHOOK_S1, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(daten) });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    return true;
+  } catch (e) {
+    console.error('WEBHOOK_S1:', e);
+    showToast('Übermittlung fehlgeschlagen. Bitte erneut versuchen.', 'error');
+    return false;
+  }
+}
+
+// ===== PAGE ROUTING =====
+function showPage(id, linkEl) {
+  document.querySelectorAll('.app-page').forEach(p => p.style.display = 'none');
+  const page = document.getElementById('page-' + id);
+  if (page) page.style.display = 'block';
+  document.querySelectorAll('.sidebar-nav a').forEach(a => a.classList.remove('active'));
+  if (linkEl) linkEl.classList.add('active');
+  const titles = {
+    'dashboard': 'Dashboard <span>/ Übersicht</span>',
+    'gutachten-list': 'Gutachten <span>/ Übersicht</span>',
+    'neues-gutachten': 'Neues Gutachten <span>/ Erstellen</span>',
+    'vorlagen': 'Vorlagen <span>/ Pro-Feature</span>',
+    'briefe': 'Briefvorlagen <span>/ E-Mail</span>',
+    'team': 'Team <span>/ Verwaltung</span>',
+    'archiv': 'Archiv <span>/ Alle Gutachten</span>',
+    'einstellungen': 'Einstellungen <span>/ Konto</span>'
+  };
+  document.getElementById('topnav-title').innerHTML = titles[id] || id;
+  if (id === 'neues-gutachten') { goStep(1); setProAktenzeichen(); try { window.updateMesswerteLayoutPro(); } catch (e) {} }
+  if (id === 'briefe') { try { initBriefPage(); } catch(e) { console.error(e); } }
+}
+
+// ===== BRIEFVORLAGEN (S9) =====
+const BRIEF_TEMPLATES = [
+  { id: 'A-01', name: 'Angebot Gutachten', file: 'angebot-gutachten.html', send: true },
+  { id: 'A-03', name: 'Auftragsbestätigung', file: 'auftragsbestaetigung.html', send: true },
+  { id: 'B-01', name: 'Einladung Ortstermin', file: 'einladung-ortstermin.html', send: true },
+  { id: 'D-01', name: 'Erstbericht Versicherung', file: 'erstbericht-versicherung.html', send: true },
+  { id: 'D-04', name: 'Nachforderung Unterlagen', file: 'nachforderung-unterlagen.html', send: true },
+  { id: 'D-06', name: 'Abschlussbericht Versicherung', file: 'abschlussbericht-versicherung.html', send: true },
+  { id: 'E-06', name: 'Einverständnis DSGVO', file: 'einverstaendnis-dsgvo.html', send: true },
+  { id: 'G-01', name: 'Checkliste Wasserschaden', file: 'checkliste-wasserschaden.html', send: true },
+  { id: 'G-01b', name: 'Checkliste Sturmschaden', file: 'checkliste-sturmschaden.html', send: true },
+  { id: 'H-01', name: 'Aktennotiz (intern)', file: 'aktennotiz.html', send: false },
+  { id: 'H-04', name: 'Datenschutz Mandant', file: 'datenschutz-mandant.html', send: true },
+];
+
+function initBriefPage() {
+  ladeSVProfil().catch(() => {});
+  renderBriefTable();
+}
+
+function renderBriefTable() {
+  const tbody = document.getElementById('briefTableBody');
+  if (!tbody) return;
+  tbody.innerHTML = BRIEF_TEMPLATES.map(t => `
+    <tr>
+      <td style="font-family:monospace;font-weight:700">${t.id}</td>
+      <td>${t.name}</td>
+      <td>${t.send ? '<span class="status-badge active">E-Mail</span>' : '<span class="status-badge pending">Intern</span>'}</td>
+      <td style="text-align:right;white-space:nowrap">
+        <button class="btn btn-outline btn-sm" onclick="window.oeffneBrief('${t.id}')">Vorschau</button>
+        ${t.send
+          ? `<button class="btn btn-primary btn-sm" onclick="window.sendeBrief('${t.id}')">Senden</button>`
+          : `<button class="btn btn-primary btn-sm" onclick="window.speichereAktennotiz('${t.id}')">Speichern</button>`
+        }
+      </td>
+    </tr>
+  `).join('');
+}
+
+async function ladeBriefTemplateHtml(file) {
+  const res = await fetch('briefe/' + file, { cache: 'no-store' });
+  if (!res.ok) throw new Error('Template nicht gefunden: ' + file);
+  return await res.text();
+}
+
+function buildBriefVars() {
+  const az = (document.getElementById('brief-aktenzeichen')?.value || '').trim();
+  const empfaenger_email = (document.getElementById('brief-empfaenger-email')?.value || '').trim();
+  const empfaenger_name = (document.getElementById('brief-empfaenger-name')?.value || '').trim();
+  const empfaenger_addr = (document.getElementById('brief-empfaenger-addr')?.value || '').trim();
+  const addrParts = empfaenger_addr.split(',').map(s => s.trim()).filter(Boolean);
+  const empfaenger_strasse = addrParts[0] || '';
+  const plzOrt = (addrParts[1] || '').split(' ').filter(Boolean);
+  const empfaenger_plz = plzOrt[0] || '';
+  const empfaenger_ort = plzOrt.slice(1).join(' ') || '';
+
+  const sv_vorname = getSVVal('Vorname', '');
+  const sv_nachname = getSVVal('Nachname', '');
+  const sv_name = [sv_vorname, sv_nachname].filter(Boolean).join(' ').trim();
+
+  return {
+    aktenzeichen: az,
+    empfaenger_email,
+    empfaenger_name,
+    empfaenger_strasse,
+    empfaenger_plz,
+    empfaenger_ort,
+    datum: fmtHeute(),
+
+    sv_vorname,
+    sv_nachname,
+    sv_firma: getSVVal('Firma', ''),
+    sv_email: getSVVal('Email', ''),
+    sv_telefon: getSVVal('Telefon', ''),
+    sv_strasse: getSVVal('Strasse', ''),
+    sv_plz: String(getSVVal('PLZ', '') || ''),
+    sv_ort: getSVVal('Ort', ''),
+    sv_qualifikation: getSVVal('Zertifizierung', ''),
+    sv_ihk_hwk: getSVVal('Zertifizierungsnummer', ''),
+    sv_name,
+  };
+}
+
+window.oeffneBrief = async function(templateId) {
+  const t = BRIEF_TEMPLATES.find(x => x.id === templateId);
+  if (!t) return;
+  try {
+    const html = await ladeBriefTemplateHtml(t.file);
+    const vars = buildBriefVars();
+    const filled = replacePlaceholders(html, vars);
+    const w = window.open('', '_blank');
+    w.document.open();
+    w.document.write(filled);
+    w.document.close();
+  } catch (e) {
+    console.error(e);
+    showToast('Vorlage konnte nicht geladen werden.', 'error');
+  }
+};
+
+window.sendeBrief = async function(templateId) {
+  const t = BRIEF_TEMPLATES.find(x => x.id === templateId);
+  if (!t) return;
+  const vars = buildBriefVars();
+  if (!vars.empfaenger_email) { showToast('Empfänger E-Mail fehlt.', 'error'); return; }
+  if (!vars.aktenzeichen) { showToast('Aktenzeichen fehlt.', 'error'); return; }
+  try {
+    const html = await ladeBriefTemplateHtml(t.file);
+    const html_body = replacePlaceholders(html, vars);
+    const betreff = `${t.name} · ${vars.aktenzeichen}`;
+    await fetch(WEBHOOK_S9, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        template_id: t.id,
+        empfaenger_email: vars.empfaenger_email,
+        betreff,
+        html_body,
+        aktenzeichen: vars.aktenzeichen,
+        sv_name: vars.sv_name,
+        sv_email: vars.sv_email,
+        sv_strasse: vars.sv_strasse,
+        sv_plz: vars.sv_plz,
+        sv_ort: vars.sv_ort,
+        sv_telefon: vars.sv_telefon,
+        sv_qualifikation: vars.sv_qualifikation,
+        sv_ihk_hwk: vars.sv_ihk_hwk,
+        empfaenger_name: vars.empfaenger_name,
+        empfaenger_strasse: vars.empfaenger_strasse,
+        empfaenger_plz: vars.empfaenger_plz,
+        empfaenger_ort: vars.empfaenger_ort,
+        datum: vars.datum
+      })
+    });
+    showToast('Brief versendet.', 'success');
+  } catch (e) {
+    console.error(e);
+    showToast('Versand fehlgeschlagen.', 'error');
+  }
+};
+
+window.speichereAktennotiz = async function(templateId) {
+  if (templateId !== 'H-01') return;
+  const vars = buildBriefVars();
+  if (!vars.aktenzeichen) { showToast('Aktenzeichen fehlt.', 'error'); return; }
+  try {
+    const html = await ladeBriefTemplateHtml('aktennotiz.html');
+    const note = replacePlaceholders(html, vars).replace(/<[^>]*>/g, '').trim();
+    const findPath = `/v0/${AIRTABLE_BASE}/${AIRTABLE_TABLE}?filterByFormula=${encodeURIComponent(`OR({Schadensnummer}=\"${vars.aktenzeichen}\",{Aktenzeichen}=\"${vars.aktenzeichen}\")`)}&maxRecords=1`;
+    const data = await airtableProxy('GET', findPath);
+    const rec = (data.records || [])[0];
+    if (!rec) { showToast('Fall nicht gefunden (Airtable).', 'error'); return; }
+    const existing = (rec.fields?.Notizen || rec.fields?.Aktennotiz || rec.fields?.Notiz || '').trim();
+    const stamp = new Date().toLocaleString('de-DE');
+    const newEntry = `[${stamp}] ${note}`;
+    const combined = existing ? (newEntry + '\n\n---\n\n' + existing) : newEntry;
+    const patchPath = `/v0/${AIRTABLE_BASE}/${AIRTABLE_TABLE}/${rec.id}`;
+    await airtableProxy('PATCH', patchPath, { fields: { Notizen: combined } });
+    showToast('Aktennotiz gespeichert.', 'success');
+  } catch (e) {
+    console.error(e);
+    showToast('Aktennotiz konnte nicht erstellt werden.', 'error');
+  }
+};
+
+// ===== WIZARD =====
+function goStep(n) {
+  if (n === 2) {
+    if (!validateWizardStep1Pro()) return;
+  }
+  document.getElementById('step-indicator').textContent = n;
+  for (let i = 1; i <= 5; i++) {
+    const el = document.getElementById('wizard-step-' + i);
+    if (el) el.style.display = (i === n) ? 'block' : 'none';
+    const sc = document.getElementById('sc' + i);
+    const sn = document.getElementById('sn' + i);
+    if (!sc || !sn) continue;
+    if (i < n) { sc.className = 'step-circle done'; sc.textContent = '✓'; sn.className = 'step-name done'; }
+    else if (i === n) { sc.className = 'step-circle active'; sc.textContent = i; sn.className = 'step-name active'; }
+    else { sc.className = 'step-circle'; sc.textContent = i; sn.className = 'step-name'; }
+    const conn = document.getElementById('conn' + i);
+    if (conn) conn.className = 'step-connector' + (i < n ? ' done' : '');
+  }
+  if (n === 3) { sessionStorage.setItem('prova_gutachten_vorlage_id', defaultVorlageIdBySchadenartPro()); startKIAnimationAuto(); }
+}
+
+// ===== RECORDING (Web Speech API, wie Starter) =====
+window.toggleRecordingPro = async function() {
+  if (proIsRecording) stoppeAufnahmePro();
+  else await starteAufnahmePro();
+};
+
+async function starteAufnahmePro() {
+  try {
+    var stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    stream.getTracks().forEach(function(t) { t.stop(); });
+  } catch (err) {
+    showToast('Bitte Mikrofon-Zugriff erlauben.', 'error');
+    return;
+  }
+  proIsRecording = true;
+  proRecSecs = 0;
+  var btn = document.getElementById('record-btn');
+  var status = document.getElementById('record-status');
+  var timerEl = document.getElementById('record-timer');
+  var icon = document.getElementById('record-icon');
+  if (btn) btn.classList.add('recording');
+  if (icon) icon.textContent = '⏹';
+  if (status) status.textContent = 'Aufnahme läuft…';
+  if (timerEl) { timerEl.classList.add('active'); timerEl.textContent = '00:00'; }
+  proRecTimer = setInterval(function() {
+    proRecSecs++;
+    var m = String(Math.floor(proRecSecs / 60)).padStart(2, '0');
+    var s = String(proRecSecs % 60).padStart(2, '0');
+    if (timerEl) timerEl.textContent = m + ':' + s;
+  }, 1000);
+
+  var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) {
+    showToast('Spracherkennung nur in Chrome/Edge verfügbar.', 'warning');
+    proIsRecording = false;
+    clearInterval(proRecTimer);
+    if (btn) btn.classList.remove('recording');
+    if (icon) icon.textContent = '🎙';
+    if (status) status.textContent = 'Bereit — Tippen zum Start';
+    if (timerEl) timerEl.classList.remove('active');
+    return;
+  }
+  proRecognition = new SR();
+  proRecognition.continuous = true;
+  proRecognition.interimResults = true;
+  proRecognition.lang = 'de-DE';
+
+  proRecognition.onresult = function(e) {
+    var area = document.getElementById('transcriptArea');
+    var ph = document.getElementById('transcript-placeholder-pro');
+    if (ph) ph.style.display = 'none';
+    var interim = '';
+    for (var i = e.resultIndex; i < e.results.length; i++) {
+      if (e.results[i].isFinal) {
+        var text = e.results[i][0].transcript.trim();
+        if (text && area) {
+          proTranscriptText += (proTranscriptText ? ' ' : '') + text;
+          var p = document.createElement('p');
+          p.style.cssText = 'font-size:0.875rem;line-height:1.65;color:var(--gray-700);margin:0 0 0.5rem';
+          p.textContent = text;
+          var interimEl = area.querySelector('.interim');
+          if (interimEl) interimEl.remove();
+          area.appendChild(p);
+          area.scrollTop = area.scrollHeight;
+        }
+      } else {
+        interim += e.results[i][0].transcript;
+      }
+    }
+    if (!area) return;
+    var interimEl2 = area.querySelector('.interim');
+    if (interim) {
+      if (!interimEl2) {
+        interimEl2 = document.createElement('p');
+        interimEl2.className = 'interim';
+        interimEl2.style.cssText = 'font-size:0.875rem;color:var(--gray-400);font-style:italic;margin:0 0 0.5rem';
+        area.appendChild(interimEl2);
+      }
+      interimEl2.textContent = interim + '…';
+      area.scrollTop = area.scrollHeight;
+    } else if (interimEl2) interimEl2.remove();
+    updateProTranscriptPlaceholder();
+  };
+
+  proRecognition.onerror = function(e) {
+    if (e.error === 'not-allowed') {
+      showToast('Mikrofon verweigert.', 'error');
+      stoppeAufnahmePro();
+    }
+  };
+  proRecognition.onend = function() {
+    if (proIsRecording) {
+      try { proRecognition.start(); } catch (err) {}
+    }
+  };
+  try {
+    proRecognition.start();
+  } catch (err) {
+    showToast('Fehler beim Starten.', 'error');
+  }
+}
+
+function stoppeAufnahmePro() {
+  proIsRecording = false;
+  clearInterval(proRecTimer);
+  var btn = document.getElementById('record-btn');
+  var status = document.getElementById('record-status');
+  var timerEl = document.getElementById('record-timer');
+  var icon = document.getElementById('record-icon');
+  if (btn) btn.classList.remove('recording');
+  if (icon) icon.textContent = '🎙';
+  if (status) status.textContent = 'Bereit — Tippen zum Start';
+  if (timerEl) { timerEl.classList.remove('active'); timerEl.textContent = '00:00'; }
+  if (proRecognition) {
+    try { proRecognition.stop(); } catch (err) {}
+    proRecognition = null;
+  }
+  var area = document.getElementById('transcriptArea');
+  if (area) proTranscriptText = area.innerText.trim();
+  updateProTranscriptPlaceholder();
+}
+
+// ===== UPLOAD =====
+const fakeFiles = ['Foto_Schaden_01.jpg','Foto_Schaden_02.jpg','Übersichtsaufnahme.jpg'];
+function simulateUpload() {
+  const container = document.getElementById('uploaded-files');
+  if (container.children.length >= fakeFiles.length) return;
+  const f = fakeFiles[container.children.length];
+  const div = document.createElement('div');
+  div.className = 'uploaded-file';
+  div.innerHTML = `📷 ${f} <span class="remove-btn" onclick="this.parentElement.remove()">✕</span>`;
+  container.appendChild(div);
+}
+
+// ===== KI ANALYSIS =====
+async function startKIAnalysis() {
+  if (document.activeElement && typeof document.activeElement.blur === 'function') document.activeElement.blur();
+  var ok = await sendeWebhookPro();
+  if (ok) { goStep(3); }
+}
+
+function startKIAnimationAuto() {
+  const progress = document.getElementById('ki-progress');
+  const percent = document.getElementById('ki-percent');
+  const btn = document.getElementById('btn-step4');
+  const preview = document.getElementById('preview-content');
+  if (progress) progress.style.width = '0%';
+  if (percent) percent.textContent = '0%';
+  if (btn) btn.disabled = true;
+  const durations = [800, 1200, 900, 700, 1000];
+  let step = 0;
+  function nextStep() {
+    if (step >= 5) {
+      if (btn) { btn.disabled = false; btn.focus(); }
+      if (preview) preview.innerHTML = '<div style="text-align:center;padding:32px;"><div style="font-size:2.5rem;margin-bottom:12px;">✅</div><strong style="color:var(--navy);font-size:1rem;">Gutachten generiert!</strong><p style="color:var(--gray-500);font-size:0.825rem;margin:8px 0 0;">PROVA hat den Entwurf erfolgreich erstellt. Bitte in Schritt 4 prüfen.</p></div>';
+      proFotos = [];
+      renderProFotoGrid();
+      const vorlageBox = document.getElementById('gutachtenVorlageBoxPro');
+      if (vorlageBox) { vorlageBox.style.display = 'block'; renderGutachtenVorlageRadiosPro(null); }
+      const vorschauBtn = document.getElementById('btnVorlageVorschauPro');
+      if (vorschauBtn && !vorschauBtn.onclick) vorschauBtn.onclick = vorlageVorschauPro;
+      try {
+        var _d = sammleDatenPro();
+        if(_d.schadenart) localStorage.setItem('prova_schadenart', _d.schadenart);
+        var _az = _d.schadensnummer || '';
+        if(_az) localStorage.setItem('prova_letztes_az', _az);
+        var _adr = [_d.strasse, _d.plz, _d.ort].filter(Boolean).join(', ');
+        if(_adr) localStorage.setItem('prova_adresse', _adr);
+        localStorage.removeItem('prova_stellungnahme_done');
+        localStorage.removeItem('prova_stellungnahme_text');
+        localStorage.removeItem('prova_stellungnahme_kj2_ok');
+        localStorage.removeItem('prova_ki_stellungnahme_vorschlag');
+        var _gb = document.getElementById('btnGatePro');
+        if(_gb) _gb.style.display = 'block';
+      } catch(_e) {}
+      showToast('Analyse abgeschlossen!', 'success');
+      return;
+    }
+    const icon = document.getElementById('ki-icon-' + step);
+    if (icon) { icon.className = 'ki-step-icon processing'; icon.textContent = '⚙'; }
+    setTimeout(() => {
+      if (icon) { icon.className = 'ki-step-icon done'; icon.textContent = '✓'; }
+      const label = document.getElementById('ki-label-' + step);
+      if (label) label.classList.add('done');
+      const pct = Math.round(((step + 1) / 5) * 100);
+      if (progress) progress.style.width = pct + '%';
+      if (percent) percent.textContent = pct + '%';
+      step++;
+      nextStep();
+    }, durations[step] || 800);
+  }
+  setTimeout(nextStep, 400);
+}
+
+// ===== TEMPLATE SELECT =====
+function selectTemplate(el) {
+  el.closest('.app-card-body').querySelectorAll('.template-card').forEach(t => t.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+// ===== SIGNATURE =====
+(function initSignature() {
+  window.addEventListener('load', () => {
+    const canvas = document.getElementById('sig-canvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    canvas.width = canvas.offsetWidth;
+    canvas.height = canvas.offsetHeight;
+    let drawing = false;
+    canvas.addEventListener('mousedown', e => { drawing = true; ctx.beginPath(); ctx.moveTo(e.offsetX, e.offsetY); });
+    canvas.addEventListener('mousemove', e => { if (!drawing) return; ctx.lineTo(e.offsetX, e.offsetY); ctx.strokeStyle = '#1B3F6B'; ctx.lineWidth = 2; ctx.lineCap = 'round'; ctx.stroke(); });
+    canvas.addEventListener('mouseup', () => drawing = false);
+    canvas.addEventListener('mouseleave', () => drawing = false);
+    // Touch support
+    canvas.addEventListener('touchstart', e => { e.preventDefault(); const t = e.touches[0]; const r = canvas.getBoundingClientRect(); drawing = true; ctx.beginPath(); ctx.moveTo(t.clientX - r.left, t.clientY - r.top); });
+    canvas.addEventListener('touchmove', e => { e.preventDefault(); if (!drawing) return; const t = e.touches[0]; const r = canvas.getBoundingClientRect(); ctx.lineTo(t.clientX - r.left, t.clientY - r.top); ctx.strokeStyle = '#1B3F6B'; ctx.lineWidth = 2; ctx.lineCap = 'round'; ctx.stroke(); });
+    canvas.addEventListener('touchend', () => drawing = false);
+  });
+})();
+
+function clearSignature() { const c = document.getElementById('sig-canvas'); if (c) c.getContext('2d').clearRect(0, 0, c.width, c.height); }
+function saveSignature() { showToast('Signatur gespeichert!', 'success'); }
+
+// ===== SECTION TOGGLE =====
+function toggleSection(header) {
+  const body = header.nextElementSibling;
+  const isOpen = body.style.display !== 'none';
+  body.style.display = isOpen ? 'none' : 'block';
+  header.querySelector('span:last-child').textContent = isOpen ? '▸' : '▾';
+}
+
+// ===== EXPORT / EMAIL =====
+function exportPDF() {
+  showToast('PDF wird generiert… Download startet gleich.', 'success');
+  setTimeout(() => showToast('PDF bereit: AV-2026-0045_Gutachten.pdf', 'success'), 2000);
+}
+function sendEmail() {
+  showToast('E-Mail an Auftraggeber wird versendet…', 'default');
+  setTimeout(() => showToast('Versendet!', 'success'), 1200);
+}
+
+// Dynamisches Datum
+(function() {
+  const now = new Date();
+  const days = ['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'];
+  const months = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
+  const dateStr = days[now.getDay()] + ', ' + now.getDate() + '. ' + months[now.getMonth()] + ' ' + now.getFullYear();
+  const el = document.getElementById('dynamicDate');
+  if (el) el.textContent = dateStr + ' · Pro-Paket aktiv';
+  const ul = document.getElementById('usageLabel');
+  if (ul) ul.textContent = 'Monatliche Gutachten — ' + months[now.getMonth()] + ' ' + now.getFullYear();
+  const cs = document.getElementById('chartSubtitle');
+  if (cs) cs.textContent = 'Januar – ' + months[now.getMonth()] + ' ' + now.getFullYear();
+  const cs2 = document.getElementById('chartSubtitle2');
+  if (cs2) cs2.textContent = 'Verteilung ' + months[now.getMonth()] + ' ' + now.getFullYear();
+  const gt = document.getElementById('greetingTitle');
+  if (gt) {
+    const h = now.getHours();
+    const greeting = h < 12 ? 'Guten Morgen' : h < 18 ? 'Guten Tag' : 'Guten Abend';
+    gt.textContent = greeting + ' 👋';
+  }
+})();
+
+function goToGatePro() {
+  var az = localStorage.getItem('prova_letztes_az') || '';
+  window.location.href = az ? 'stellungnahme-gate.html?az=' + encodeURIComponent(az) : 'stellungnahme-gate.html';
+}
+</script>
+</body>
+</html>

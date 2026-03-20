@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Einstellungen · PROVA</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Fraunces:wght@300;500;700&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════════
+   PROVA SHARED CSS — identisch in allen Seiten
+   ═══════════════════════════════════════════════ */
+:root {
+  --bg:#0d0f14;--bg2:#13161d;--bg3:#1a1e28;
+  --surface:#1e2330;--surface2:#252a38;
+  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);
+  --text:#e8eaf0;--text2:#9da3b4;--text3:#6b7280;
+  --accent:#4f8ef7;--accent2:#3d7ae0;
+  --green:#10b981;--green-bg:rgba(16,185,129,0.08);--green-border:rgba(16,185,129,0.2);
+  --warn:#f59e0b;--warn-bg:rgba(245,158,11,0.08);--warn-border:rgba(245,158,11,0.25);
+  --red:#ef4444;--red-bg:rgba(239,68,68,0.08);--red-border:rgba(239,68,68,0.2);
+  --purple:#a78bfa;--purple-bg:rgba(167,139,250,0.08);--purple-border:rgba(167,139,250,0.2);
+  --mono:'IBM Plex Mono',monospace;--display:'Fraunces',serif;--sans:'Instrument Sans',sans-serif;
+  --nav-h:52px;--bot-h:56px;--radius:8px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14px;
+  min-height:100vh;-webkit-tap-highlight-color:transparent;}
+input,select,textarea{font-size:max(16px,1em);}
+
+/* ── TOPBAR ── */
+.topbar{background:var(--bg2);border-bottom:1px solid var(--border);
+  padding:0 20px;height:var(--nav-h);display:flex;align-items:center;
+  justify-content:space-between;position:sticky;top:0;z-index:100;
+  user-select:none;-webkit-user-select:none;}
+.topbar-left{display:flex;align-items:center;gap:16px;}
+.topbar-right{display:flex;align-items:center;gap:8px;}
+.logo{font-family:var(--display);font-weight:700;font-size:18px;
+  color:var(--text);text-decoration:none;flex-shrink:0;letter-spacing:-0.01em;}
+.logo span{color:var(--accent);}
+
+/* ── TOP NAV ── */
+.topnav{display:flex;gap:2px;}
+.topnav a{padding:6px 11px;border-radius:6px;color:var(--text3);font-size:13px;
+  font-family:var(--sans);font-weight:500;text-decoration:none;
+  transition:all 0.15s;white-space:nowrap;min-height:44px;
+  display:inline-flex;align-items:center;}
+.topnav a:hover{color:var(--text2);background:rgba(255,255,255,0.04);}
+.topnav a.active{color:var(--accent);background:rgba(79,142,247,0.1);}
+
+/* ── PAKET BADGE ── */
+.paket-badge{font-size:10px;font-weight:600;padding:2px 8px;
+  border-radius:10px;white-space:nowrap;flex-shrink:0;}
+
+/* ── SETTINGS ── */
+.settings-link{font-size:16px;color:var(--text3);text-decoration:none;
+  padding:6px 8px;border-radius:6px;transition:all 0.15s;
+  min-height:44px;display:inline-flex;align-items:center;}
+.settings-link:hover{color:var(--text2);background:rgba(255,255,255,0.04);}
+
+/* ── BURGER ── */
+.burger{display:none;flex-direction:column;gap:5px;background:none;
+  border:none;cursor:pointer;padding:8px;border-radius:6px;
+  min-height:44px;min-width:44px;align-items:center;justify-content:center;}
+.burger span{display:block;width:20px;height:2px;background:var(--text2);
+  border-radius:2px;transition:all 0.2s;}
+.burger:hover span{background:var(--text);}
+
+/* ── DRAWER OVERLAY ── */
+.drawer-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);
+  z-index:200;backdrop-filter:blur(2px);}
+.drawer-overlay.open{display:block;}
+
+/* ── DRAWER ── */
+.drawer{position:fixed;top:0;left:0;bottom:0;width:272px;
+  background:var(--bg2);border-right:1px solid var(--border2);
+  z-index:201;transform:translateX(-100%);
+  transition:transform 0.25s cubic-bezier(0.4,0,0.2,1);
+  display:flex;flex-direction:column;}
+.drawer.open{transform:translateX(0);}
+.drawer-header{padding:16px;display:flex;align-items:center;
+  justify-content:space-between;border-bottom:1px solid var(--border);}
+.drawer-close{background:none;border:none;color:var(--text3);
+  font-size:18px;cursor:pointer;padding:6px 10px;border-radius:5px;
+  min-height:44px;min-width:44px;display:flex;align-items:center;justify-content:center;}
+.drawer-close:hover{color:var(--text);background:var(--surface);}
+.drawer-nav{flex:1;padding:10px;overflow-y:auto;display:flex;
+  flex-direction:column;gap:3px;}
+.drawer-nav a{display:flex;align-items:center;gap:13px;padding:12px 13px;
+  border-radius:7px;color:var(--text2);font-family:var(--sans);
+  font-size:14px;font-weight:500;text-decoration:none;transition:all 0.12s;
+  min-height:48px;}
+.drawer-nav a:hover{background:var(--surface);color:var(--text);}
+.drawer-nav a.active{background:rgba(79,142,247,0.1);color:var(--accent);}
+.di{font-size:17px;width:24px;text-align:center;flex-shrink:0;}
+.drawer-footer{padding:14px 16px;border-top:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.drawer-settings{font-size:13px;color:var(--text3);text-decoration:none;
+  display:flex;align-items:center;gap:6px;transition:color 0.15s;
+  min-height:44px;}
+.drawer-settings:hover{color:var(--text2);}
+
+/* ── BOTTOM NAV ── */
+.bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;
+  height:var(--bot-h);background:var(--bg2);border-top:1px solid var(--border);
+  z-index:100;padding:0 4px;user-select:none;}
+.bn-item{flex:1;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:2px;text-decoration:none;color:var(--text3);
+  font-family:var(--sans);padding:5px 2px;border-radius:7px;
+  transition:all 0.15s;position:relative;}
+.bn-item:hover{color:var(--text2);}
+.bn-item.active{color:var(--accent);}
+.bn-item.active::after{content:'';position:absolute;bottom:3px;
+  width:16px;height:2px;background:var(--accent);border-radius:2px;}
+.bn-i{font-size:19px;line-height:1;}
+.bn-l{font-size:9px;font-weight:600;text-transform:uppercase;
+  letter-spacing:0.05em;line-height:1;}
+
+/* ── SHARED COMPONENTS ── */
+.card{background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);overflow:hidden;margin-bottom:14px;}
+.card-header{padding:11px 15px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;}
+.card-title{font-size:12px;font-weight:600;color:var(--text);}
+.card-body{padding:15px;}
+.form-group{margin-bottom:13px;}
+.form-group:last-child{margin-bottom:0;}
+.form-label{display:block;font-size:10px;font-weight:600;
+  text-transform:uppercase;letter-spacing:0.07em;color:var(--text3);margin-bottom:5px;}
+.form-input,.form-select,.form-textarea{width:100%;background:var(--bg3);
+  border:1px solid var(--border2);border-radius:6px;padding:8px 11px;
+  color:var(--text);font-family:var(--sans);outline:none;transition:border-color 0.15s;}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--accent);}
+.form-select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;}
+.form-select option{background:var(--bg2);}
+.form-textarea{resize:vertical;min-height:72px;line-height:1.6;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.form-hint{font-size:10px;color:var(--text3);margin-top:3px;}
+.btn{padding:8px 15px;border-radius:6px;font-family:var(--sans);font-size:13px;
+  font-weight:500;cursor:pointer;transition:all 0.15s;border:none;
+  display:inline-flex;align-items:center;gap:6px;min-height:36px;}
+.btn-primary{background:var(--accent);color:#fff;}
+.btn-primary:hover{background:var(--accent2);}
+.btn-primary:disabled{opacity:0.4;cursor:not-allowed;}
+.btn-secondary{background:var(--surface2);border:1px solid var(--border2);color:var(--text2);}
+.btn-secondary:hover{color:var(--text);border-color:var(--border2);}
+.btn-danger{background:var(--red-bg);border:1px solid var(--red-border);color:var(--red);}
+.btn-danger:hover{background:rgba(239,68,68,0.15);}
+.page-title{font-family:var(--display);font-size:22px;font-weight:500;margin-bottom:4px;}
+.page-sub{font-size:12px;color:var(--text3);margin-bottom:22px;}
+.section-label{font-size:10px;font-weight:600;text-transform:uppercase;
+  letter-spacing:0.08em;color:var(--text3);}
+.toast{position:fixed;bottom:20px;right:20px;padding:10px 16px;
+  background:var(--surface2);border:1px solid var(--green-border);
+  border-radius:7px;color:var(--green);font-size:12px;font-weight:500;
+  z-index:999;transform:translateY(60px);opacity:0;
+  transition:all 0.3s cubic-bezier(0.34,1.56,0.64,1);}
+.toast.show{transform:translateY(0);opacity:1;}
+.toast.err{border-color:var(--red-border);color:var(--red);}
+::-webkit-scrollbar{width:3px;}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+
+/* ── RESPONSIVE ── */
+@media(max-width:900px){
+  .topnav a{font-size:0;}
+  .topnav a::after{content:attr(data-short);font-size:12px;
+    font-family:var(--sans);font-weight:500;}
+  .paket-badge{display:none;}
+}
+@media(max-width:600px){
+  .topnav{display:none;}
+  .settings-link{display:none;}
+  .burger{display:flex;}
+  .bottom-nav{display:flex;}
+  body{padding-bottom:var(--bot-h);}
+  .topbar{padding:0 14px;height:48px;}
+  .logo{font-size:16px;}
+  --nav-h:48px;
+  ::-webkit-scrollbar{display:none;}
+  *{scrollbar-width:none;}
+}
+
+/* ── NAV JS (inline shared) ── */
+
+.layout{display:grid;grid-template-columns:200px 1fr;height:calc(100vh - var(--nav-h));overflow:hidden;}
+.snav{background:var(--bg2);border-right:1px solid var(--border);padding:12px 8px;overflow-y:auto;}
+.smain{overflow-y:auto;padding:24px;}
+.snav-sec{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--text3);padding:8px 10px 4px;margin-top:8px;}
+.snav-sec:first-of-type{margin-top:0;}
+.snav-item{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:6px;color:var(--text3);font-size:12px;cursor:pointer;transition:all 0.12s;border:none;background:transparent;width:100%;text-align:left;font-family:var(--sans);font-weight:500;min-height:40px;}
+.snav-item:hover{color:var(--text2);background:rgba(255,255,255,0.03);}
+.snav-item.active{color:var(--accent);background:rgba(79,142,247,0.08);}
+.snav-item .si{font-size:14px;width:18px;text-align:center;flex-shrink:0;}
+.snav-item.locked{opacity:0.45;}
+.sec{display:none;max-width:660px;}
+.sec.active{display:block;}
+.av-row{display:flex;align-items:center;gap:14px;margin-bottom:16px;}
+.av{width:48px;height:48px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-family:var(--display);font-size:18px;font-weight:500;color:#fff;flex-shrink:0;}
+.paket-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:14px;}
+.pk{border:1px solid var(--border);border-radius:var(--radius);padding:13px;position:relative;}
+.pk.a-s{border-color:var(--accent);background:rgba(79,142,247,0.04);}
+.pk.a-p{border-color:var(--warn);background:var(--warn-bg);}
+.pk.a-e{border-color:var(--purple);background:var(--purple-bg);}
+.pk-name{font-weight:600;font-size:13px;margin-bottom:1px;}
+.pk-price{font-family:var(--mono);font-size:10px;color:var(--text3);margin-bottom:7px;}
+.pk-feat{font-size:11px;color:var(--text2);padding:2px 0;display:flex;align-items:center;gap:4px;}
+.pk-feat::before{content:"✓";color:var(--green);font-size:9px;flex-shrink:0;}
+.pk-feat.lk{color:var(--text3);}
+.pk-feat.lk::before{content:"🔒";font-size:8px;}
+.pk-cur{position:absolute;top:7px;right:7px;font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;padding:2px 5px;border-radius:3px;}
+.ft{width:100%;border-collapse:collapse;font-size:11px;}
+.ft th{text-align:left;padding:6px 9px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text3);border-bottom:1px solid var(--border);}
+.ft th:not(:first-child){text-align:center;}
+.ft td{padding:7px 9px;border-bottom:1px solid var(--border);color:var(--text2);}
+.ft td:not(:first-child){text-align:center;}
+.ft .cat td{background:var(--bg3);color:var(--text3);font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;padding:4px 9px;}
+.ft tr:last-child td{border-bottom:none;}
+.ck{color:var(--green);}.cx{color:var(--border2);}
+.save-bar{display:flex;justify-content:flex-end;gap:8px;margin-top:14px;}
+.info-box{padding:9px 12px;background:rgba(79,142,247,0.06);border:1px solid rgba(79,142,247,0.15);border-radius:6px;font-size:11px;color:var(--text2);line-height:1.5;margin-top:10px;}
+.info-box strong{color:var(--accent);}
+.warn-box{padding:9px 12px;background:var(--warn-bg);border:1px solid var(--warn-border);border-radius:6px;font-size:11px;color:var(--warn);line-height:1.5;margin-bottom:12px;}
+.wh-row{display:flex;gap:8px;}
+.color-row{display:flex;gap:8px;align-items:center;}
+.color-row input[type=color]{width:38px;height:34px;border:1px solid var(--border2);border-radius:5px;background:none;cursor:pointer;padding:2px;}
+@media(max-width:600px){
+  .layout{grid-template-columns:1fr;height:auto;overflow:visible;}
+  .snav{display:flex;flex-wrap:wrap;gap:4px;height:auto;border-right:none;border-bottom:1px solid var(--border);padding:10px;}
+  .snav-sec{display:none;}
+  .snav-item{width:auto;padding:6px 10px;font-size:11px;}
+  .smain{padding:14px;}
+  .paket-grid{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+<!-- GEMEINSAMES NAV-FRAGMENT — in alle 4 Seiten identisch -->
+<!-- Topbar -->
+<div class="topbar">
+  <div class="topbar-left">
+    <a href="app-starter.html" class="logo">PRO<span>VA</span></a>
+    <nav class="topnav">
+      <a href="app-starter.html" data-short="Gutachten">Neues Gutachten</a>
+      <a href="archiv.html"        data-short="Archiv">Archiv</a>
+      <a href="termine.html"       data-short="Termine">Termine</a>
+      <a href="briefvorlagen.html" data-short="Vorlagen">Briefvorlagen</a>
+      <a href="jveg.html"          data-short="JVEG">JVEG</a>
+    </nav>
+  </div>
+  <div class="topbar-right">
+    <span class="paket-badge" id="topbarPaket"></span>
+    <a href="einstellungen.html" class="active settings-link" title="Einstellungen">⚙</a>
+    <button class="burger" id="burgerBtn" onclick="toggleDrawer()" aria-label="Menü öffnen">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</div>
+<!-- Overlay -->
+<div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
+<!-- Drawer -->
+<div class="drawer" id="drawer">
+  <div class="drawer-header">
+    <div class="logo">PRO<span>VA</span></div>
+    <button class="drawer-close" onclick="closeDrawer()">✕</button>
+  </div>
+  <nav class="drawer-nav">
+    <a href="app-starter.html"><span class="di">📄</span>Neues Gutachten</a>
+    <a href="archiv.html"><span class="di">📂</span>Archiv</a>
+    <a href="termine.html"><span class="di">📅</span>Termine</a>
+    <a href="briefvorlagen.html"><span class="di">✉️</span>Briefvorlagen</a>
+    <a href="jveg.html"><span class="di">💶</span>JVEG</a>
+  </nav>
+  <div class="drawer-footer">
+    <a href="einstellungen.html" class="active drawer-settings">⚙ Einstellungen</a>
+    <span class="paket-badge" id="drawerPaket"></span>
+  </div>
+</div>
+<!-- Bottom Nav -->
+<nav class="bottom-nav">
+  <a href="app-starter.html" class="bn-item"><span class="bn-i">📄</span><span class="bn-l">Gutachten</span></a>
+  <a href="archiv.html"      class="bn-item"><span class="bn-i">📂</span><span class="bn-l">Archiv</span></a>
+  <a href="termine.html"     class="bn-item"><span class="bn-i">📅</span><span class="bn-l">Termine</span></a>
+  <a href="briefvorlagen.html" class="bn-item"><span class="bn-i">✉️</span><span class="bn-l">Vorlagen</span></a>
+  <a href="einstellungen.html" class="active bn-item"><span class="bn-i">⚙</span><span class="bn-l">Einstellg.</span></a>
+</nav>
+
+<div class="layout">
+  <div class="snav">
+    <div class="snav-sec">Konto</div>
+    <button class="snav-item active" onclick="showSec('profil',this)"><span class="si">👤</span>Profil</button>
+    <button class="snav-item" onclick="showSec('paket',this)"><span class="si">📦</span>Paket</button>
+    <div class="snav-sec">App</div>
+    <button class="snav-item" onclick="showSec('briefkopf',this)"><span class="si">🏢</span>Briefkopf</button>
+    <button class="snav-item" onclick="showSec('gutachten',this)"><span class="si">📄</span>Gutachten</button>
+    <button class="snav-item" onclick="showSec('notif',this)"><span class="si">🔔</span>Benachricht.</button>
+    <div class="snav-sec">Enterprise</div>
+    <button class="snav-item" id="navWH" onclick="showSec('webhook',this)"><span class="si">🔗</span>Webhook</button>
+    <button class="snav-item" id="navWL" onclick="showSec('wl',this)"><span class="si">🎨</span>White-Label</button>
+  </div>
+  <div class="smain">
+
+    <div class="sec active" id="sec-profil">
+      <div class="page-title">Mein Profil</div>
+      <div class="page-sub">Persönliche Daten und Sachverständigen-Angaben</div>
+      <div class="card"><div class="card-header"><div class="card-title">Persönliche Daten</div></div><div class="card-body">
+        <div class="av-row"><div class="av" id="avI">SV</div><div><div style="font-size:14px;font-weight:600;" id="avN">Sachverständiger</div><div style="font-size:11px;color:var(--text3);" id="avP">Starter-Paket</div></div></div>
+        <div class="form-row"><div class="form-group"><label class="form-label">Vorname</label><input type="text" class="form-input" id="pVN" placeholder="Max" oninput="upAv()"></div><div class="form-group"><label class="form-label">Nachname</label><input type="text" class="form-input" id="pNN" placeholder="Mustermann" oninput="upAv()"></div></div>
+        <div class="form-group"><label class="form-label">E-Mail (für Gutachten-Versand)</label><input type="email" class="form-input" id="pMail" placeholder="sv@beispiel.de"><div class="form-hint">An diese Adresse werden fertige Gutachten geschickt</div></div>
+        <div class="form-row"><div class="form-group"><label class="form-label">Telefon</label><input type="tel" class="form-input" id="pTel" placeholder="+49 221 ..."></div><div class="form-group"><label class="form-label">Mobil</label><input type="tel" class="form-input" id="pMob" placeholder="+49 151 ..."></div></div>
+      </div></div>
+      <div class="card"><div class="card-header"><div class="card-title">Sachverständigen-Angaben</div></div><div class="card-body">
+        <div class="form-group"><label class="form-label">Berufsbezeichnung</label><input type="text" class="form-input" id="pTit" placeholder="Öffentlich bestellter und vereidigter Sachverständiger für Schäden an Gebäuden"></div>
+        <div class="form-row"><div class="form-group"><label class="form-label">Zertifizierung</label><input type="text" class="form-input" id="pZert" placeholder="EIPOSCERT / DGuSV / IHK"></div><div class="form-group"><label class="form-label">Zertifizierungsnummer</label><input type="text" class="form-input" id="pZNr" placeholder="2024-NRW-0123"></div></div>
+        <div class="form-row"><div class="form-group"><label class="form-label">Stundensatz (€/h)</label><input type="number" class="form-input" id="pSatz" placeholder="100" min="60" max="200" step="5"></div><div class="form-group"><label class="form-label">Gutachten/Monat</label><input type="number" class="form-input" id="pGM" placeholder="8" min="1"></div></div>
+      </div></div>
+      <div class="save-bar"><button class="btn btn-secondary" onclick="loadAll()">Verwerfen</button><button class="btn btn-primary" onclick="saveProfil()">Profil speichern</button></div>
+    </div>
+
+    <div class="sec" id="sec-paket">
+      <div class="page-title">Paket & Features</div>
+      <div class="page-sub">Ihr aktives Paket und verfügbare Features</div>
+      <div class="card"><div class="card-header"><div class="card-title">Aktives Paket</div></div><div class="card-body">
+        <div class="paket-grid">
+          <div class="pk" id="pkS"><div class="pk-name" style="color:var(--accent);">Starter</div><div class="pk-price">179 €/Mo</div><div class="pk-feat">KI-Gutachten</div><div class="pk-feat">17 Briefvorlagen</div><div class="pk-feat">Foto-Analyse Basis</div><div class="pk-feat">JVEG, Termine, Rechnungen</div><div class="pk-feat lk">KI-Brieftext</div><div class="pk-feat lk">§407a-Modul</div></div>
+          <div class="pk" id="pkP"><div class="pk-name" style="color:var(--warn);">Pro</div><div class="pk-price">369 €/Mo · 3 Seats</div><div class="pk-feat">Alles aus Starter</div><div class="pk-feat">KI-Brieftext alle Vorlagen</div><div class="pk-feat">Foto-Analyse erweitert</div><div class="pk-feat">Chef-Freigabe</div><div class="pk-feat lk">§407a-Vollmodul</div><div class="pk-feat lk">Jahresbericht</div></div>
+          <div class="pk" id="pkE"><div class="pk-name" style="color:var(--purple);">Enterprise</div><div class="pk-price">699 €+/Mo · unbegr.</div><div class="pk-feat">Alles aus Pro</div><div class="pk-feat">§407a-Vollmodul</div><div class="pk-feat">Foto-Forensik KI</div><div class="pk-feat">Jahresbericht-Generator</div><div class="pk-feat">Outbound-Webhook</div><div class="pk-feat">White-Label</div></div>
+        </div>
+        <div class="info-box"><strong>Paket ändern:</strong> Schreiben Sie uns an <strong>kontakt@prova-systems.de</strong></div>
+      </div></div>
+      <div class="card"><div class="card-header"><div class="card-title">Feature-Übersicht</div></div><div class="card-body" style="padding:0;">
+        <table class="ft"><thead><tr><th>Feature</th><th>Starter</th><th>Pro</th><th>Enterprise</th></tr></thead><tbody>
+          <tr class="cat"><td colspan="4">KI-Gutachten</td></tr>
+          <tr><td>KI-Gutachten Erstellung</td><td><span class="ck">✓</span></td><td><span class="ck">✓</span></td><td><span class="ck">✓</span></td></tr>
+          <tr><td>§6 Stellungnahme-Editor</td><td><span class="ck">✓</span></td><td><span class="ck">✓</span></td><td><span class="ck">✓</span></td></tr>
+          <tr><td>Lektor-Modul</td><td><span class="ck">✓</span></td><td><span class="ck">✓</span></td><td><span class="ck">✓</span></td></tr>
+          <tr class="cat"><td colspan="4">Foto-Analyse</td></tr>
+          <tr><td>Foto-Beschreibung Sichtbefund</td><td><span class="ck">✓</span></td><td><span class="ck">✓</span></td><td><span class="ck">✓</span></td></tr>
+          <tr><td>Schadensgrad + DIN-Einordnung</td><td><span class="cx">—</span></td><td><span class="ck">✓</span></td><td><span class="ck">✓</span></td></tr>
+          <tr><td>Forensische Vollanalyse</td><td><span class="cx">—</span></td><td><span class="cx">—</span></td><td><span class="ck">✓</span></td></tr>
+          <tr class="cat"><td colspan="4">Kommunikation</td></tr>
+          <tr><td>17 Briefvorlagen</td><td><span class="ck">✓</span></td><td><span class="ck">✓</span></td><td><span class="ck">✓</span></td></tr>
+          <tr><td>KI-Brieftext (individuell)</td><td><span class="cx">—</span></td><td><span class="ck">✓</span></td><td><span class="ck">✓</span></td></tr>
+          <tr><td>§407a-Vollmodul (A-06 + B-02)</td><td><span class="cx">—</span></td><td><span class="cx">—</span></td><td><span class="ck">✓</span></td></tr>
+          <tr class="cat"><td colspan="4">Verwaltung</td></tr>
+          <tr><td>Termine, JVEG, Rechnungen, Mahnwesen</td><td><span class="ck">✓</span></td><td><span class="ck">✓</span></td><td><span class="ck">✓</span></td></tr>
+          <tr><td>Chef-Freigabe (Multi-User)</td><td><span class="cx">—</span></td><td><span class="ck">✓</span></td><td><span class="ck">✓</span></td></tr>
+          <tr><td>Jahresbericht-Generator</td><td><span class="cx">—</span></td><td><span class="cx">—</span></td><td><span class="ck">✓</span></td></tr>
+          <tr class="cat"><td colspan="4">Enterprise</td></tr>
+          <tr><td>Outbound-Webhook</td><td><span class="cx">—</span></td><td><span class="cx">—</span></td><td><span class="ck">✓</span></td></tr>
+          <tr><td>White-Label (Logo + Farbe)</td><td><span class="cx">—</span></td><td><span class="cx">—</span></td><td><span class="ck">✓</span></td></tr>
+          <tr><td>Audit-Trail</td><td><span class="cx">—</span></td><td><span class="cx">—</span></td><td><span class="ck">✓</span></td></tr>
+        </tbody></table>
+      </div></div>
+    </div>
+
+    <div class="sec" id="sec-briefkopf">
+      <div class="page-title">Briefkopf</div>
+      <div class="page-sub">Erscheint auf allen PDFs und E-Mails</div>
+      <div class="card"><div class="card-header"><div class="card-title">Büro-/Firmenadresse</div></div><div class="card-body">
+        <div class="form-group"><label class="form-label">Firma / Büroname</label><input type="text" class="form-input" id="bFirma" placeholder="Sachverständigenbüro Mustermann"></div>
+        <div class="form-group"><label class="form-label">Straße</label><input type="text" class="form-input" id="bStr" placeholder="Musterstraße 12"></div>
+        <div class="form-row"><div class="form-group"><label class="form-label">PLZ</label><input type="text" class="form-input" id="bPLZ" placeholder="50667"></div><div class="form-group"><label class="form-label">Ort</label><input type="text" class="form-input" id="bOrt" placeholder="Köln"></div></div>
+        <div class="form-row"><div class="form-group"><label class="form-label">USt-IdNr.</label><input type="text" class="form-input" id="bUSt" placeholder="DE123456789"></div><div class="form-group"><label class="form-label">Steuernummer</label><input type="text" class="form-input" id="bStNr" placeholder="213/456/78901"></div></div>
+        <div class="form-group"><label class="form-label">Bankverbindung</label><input type="text" class="form-input" id="bBank" placeholder="IBAN: DE12 3456 ... · BIC: COLSDE33"></div>
+        <div class="form-group"><label class="form-label">PDF-Fußzeile</label><textarea class="form-textarea" id="bFuss" placeholder="Mitglied im DGuSV · Öffentlich bestellt von der IHK Köln"></textarea></div>
+      </div></div>
+      <div class="save-bar"><button class="btn btn-secondary" onclick="loadAll()">Verwerfen</button><button class="btn btn-primary" onclick="saveBrief()">Briefkopf speichern</button></div>
+    </div>
+
+    <div class="sec" id="sec-gutachten">
+      <div class="page-title">Gutachten-Einstellungen</div>
+      <div class="page-sub">Standards für die KI-Gutachten-Erstellung</div>
+      <div class="card"><div class="card-header"><div class="card-title">Standards</div></div><div class="card-body">
+        <div class="form-group"><label class="form-label">Standard-Schadensarten</label><input type="text" class="form-input" id="gSch" placeholder="Schimmelbefall, Wasserschaden, Brandschaden, Sturmschaden, Einbruchschaden"><div class="form-hint">Komma-getrennt — erscheinen als Schnellauswahl in der App</div></div>
+        <div class="form-group"><label class="form-label">Standard-Honorargruppe (JVEG)</label><select class="form-select" id="gHG"><option value="5">Gruppe 5 — 100 €/h (Standard)</option><option value="6">Gruppe 6 — 110 €/h</option><option value="7">Gruppe 7 — 125 €/h</option></select></div>
+        <div class="form-row"><div class="form-group"><label class="form-label">Aktenzeichen-Präfix</label><input type="text" class="form-input" id="gAZ" placeholder="PROVA-WS"><div class="form-hint">AZ wird automatisch generiert</div></div><div class="form-group"><label class="form-label">Zahlungsziel (Tage)</label><input type="number" class="form-input" id="gZZ" placeholder="14" min="7" max="60"></div></div>
+      </div></div>
+      <div class="save-bar"><button class="btn btn-secondary" onclick="loadAll()">Verwerfen</button><button class="btn btn-primary" onclick="saveGutachten()">Speichern</button></div>
+    </div>
+
+    <div class="sec" id="sec-notif">
+      <div class="page-title">Benachrichtigungen</div>
+      <div class="page-sub">E-Mail-Benachrichtigungen aus Make.com S8/S7</div>
+      <div class="card"><div class="card-header"><div class="card-title">E-Mail-Einstellungen</div></div><div class="card-body">
+        <div class="form-group"><label class="form-label">Terminerinnerung 24h vorher</label><select class="form-select" id="n24"><option value="1">Aktiviert</option><option value="0">Deaktiviert</option></select></div>
+        <div class="form-group"><label class="form-label">Terminerinnerung 2h vorher</label><select class="form-select" id="n2"><option value="0">Deaktiviert</option><option value="1">Aktiviert</option></select></div>
+        <div class="form-group"><label class="form-label">Automatisches Mahnwesen</label><select class="form-select" id="nM"><option value="1">Aktiviert (tägl. 09:00 Uhr)</option><option value="0">Deaktiviert</option></select></div>
+      </div></div>
+      <div class="save-bar"><button class="btn btn-primary" onclick="saveNotif()">Speichern</button></div>
+    </div>
+
+    <div class="sec" id="sec-webhook">
+      <div class="page-title">Outbound-Webhook</div>
+      <div class="page-sub">PROVA sendet bei Gutachten-Freigabe automatisch JSON an Ihre URL</div>
+      <div id="whLocked" class="warn-box" style="display:none;">🔒 Nur im Enterprise-Paket verfügbar.</div>
+      <div id="whContent">
+        <div class="card"><div class="card-header"><div class="card-title">Webhook-Konfiguration</div><span style="font-size:10px;color:var(--purple);">Enterprise</span></div><div class="card-body">
+          <div class="form-group"><label class="form-label">Ihre Webhook-URL</label><div class="wh-row"><input type="url" class="form-input" id="wURL" placeholder="https://ihre-domain.de/webhook/prova"><button class="btn btn-secondary" onclick="testWH()" style="flex-shrink:0;">Testen</button></div></div>
+          <div class="form-group"><label class="form-label">Secret-Header (optional)</label><input type="text" class="form-input" id="wSec" placeholder="X-PROVA-Secret: ihr-schlüssel"></div>
+          <div class="info-box"><strong>Payload:</strong> aktenzeichen, schadenart, adresse, gutachten_text, pdf_url, freigabe_datum</div>
+        </div></div>
+        <div class="save-bar"><button class="btn btn-primary" onclick="saveWH()">Webhook speichern</button></div>
+      </div>
+    </div>
+
+    <div class="sec" id="sec-wl">
+      <div class="page-title">White-Label</div>
+      <div class="page-sub">Ihr Logo und Ihre Farben in PDFs und E-Mails</div>
+      <div id="wlLocked" class="warn-box" style="display:none;">🔒 Nur im Enterprise-Paket verfügbar.</div>
+      <div id="wlContent">
+        <div class="card"><div class="card-header"><div class="card-title">Branding</div><span style="font-size:10px;color:var(--purple);">Enterprise</span></div><div class="card-body">
+          <div class="form-group"><label class="form-label">Logo-URL</label><input type="url" class="form-input" id="wlLogo" placeholder="https://ihre-domain.de/logo.png"><div class="form-hint">PNG oder SVG, min. 200×60px</div></div>
+          <div class="form-group"><label class="form-label">Primärfarbe</label><div class="color-row"><input type="color" id="wlCP" value="#4f8ef7" oninput="document.getElementById('wlHex').value=this.value"><input type="text" class="form-input" id="wlHex" placeholder="#4f8ef7" style="font-family:var(--mono);font-size:12px;" oninput="if(/^#[0-9A-Fa-f]{6}$/.test(this.value))document.getElementById('wlCP').value=this.value"></div><div class="form-hint">Erscheint in PDFs und E-Mails. "Powered by PROVA" bleibt erhalten.</div></div>
+        </div></div>
+        <div class="save-bar"><button class="btn btn-primary" onclick="saveWL()">White-Label speichern</button></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+const SK="prova_settings";
+function gs(){try{return JSON.parse(localStorage.getItem(SK)||"{}")}catch(e){return {}}}
+function ss(o){const s=gs();Object.assign(s,o);localStorage.setItem(SK,JSON.stringify(s));}
+function showSec(id,btn){document.querySelectorAll(".sec").forEach(s=>s.classList.remove("active"));document.querySelectorAll(".").value;document.getElementById("avI").textContent=((vn[0]||"")+(nn[0]||"")).toUpperCase()||"SV";document.getElementById("avN").textContent=[vn,nn].filter(Boolean).join(" ")||"Sachverständiger";}
+function loadAll(){
+  const s=gs();
+  const pf=[["pVN","pVorname"],["pNN","pNachname"],["pMail","pEmail"],["pTel","pTel"],["pMob","pMob"],["pTit","pTitel"],["pZert","pZert"],["pZNr","pZNr"],["pSatz","pSatz"],["pGM","pGM"]];
+  pf.forEach(([id,k])=>{const el=document.getElementById(id);if(el)el.value=s[k]||"";});
+  const bf=[["bFirma","bFirma"],["bStr","bStr"],["bPLZ","bPLZ"],["bOrt","bOrt"],["bUSt","bUSt"],["bStNr","bStNr"],["bBank","bBank"],["bFuss","bFuss"]];
+  bf.forEach(([id,k])=>{const el=document.getElementById(id);if(el)el.value=s[k]||"";});
+  if(document.getElementById("gSch"))document.getElementById("gSch").value=s.gSch||"Schimmelbefall, Wasserschaden, Brandschaden, Sturmschaden, Einbruchschaden";
+  if(document.getElementById("gHG"))document.getElementById("gHG").value=s.gHG||"5";
+  if(document.getElementById("gAZ"))document.getElementById("gAZ").value=s.gAZ||"PROVA-WS";
+  if(document.getElementById("gZZ"))document.getElementById("gZZ").value=s.gZZ||"14";
+  if(s.wURL&&document.getElementById("wURL"))document.getElementById("wURL").value=s.wURL;
+  if(s.wlLogo&&document.getElementById("wlLogo"))document.getElementById("wlLogo").value=s.wlLogo;
+  if(s.wlHex&&document.getElementById("wlHex")){document.getElementById("wlHex").value=s.wlHex;document.getElementById("wlCP").value=s.wlHex;}
+  upAv();
+}
+function saveProfil(){const d={};[["pVN","pVorname"],["pNN","pNachname"],["pMail","pEmail"],["pTel","pTel"],["pMob","pMob"],["pTit","pTitel"],["pZert","pZert"],["pZNr","pZNr"],["pSatz","pSatz"],["pGM","pGM"]].forEach(([id,k])=>{const el=document.getElementById(id);if(el)d[k]=el.value;});ss(d);if(d.pEmail)localStorage.setItem("prova_sv_email",d.pEmail);showToast("Profil gespeichert ✅");}
+function saveBrief(){const d={};[["bFirma","bFirma"],["bStr","bStr"],["bPLZ","bPLZ"],["bOrt","bOrt"],["bUSt","bUSt"],["bStNr","bStNr"],["bBank","bBank"],["bFuss","bFuss"]].forEach(([id,k])=>{const el=document.getElementById(id);if(el)d[k]=el.value;});ss(d);showToast("Briefkopf gespeichert ✅");}
+function saveGutachten(){ss({gSch:document.getElementById("gSch").value,gHG:document.getElementById("gHG").value,gAZ:document.getElementById("gAZ").value,gZZ:document.getElementById("gZZ").value});showToast("Einstellungen gespeichert ✅");}
+function saveNotif(){ss({n24:document.getElementById("n24").value,n2:document.getElementById("n2").value,nM:document.getElementById("nM").value});showToast("Benachrichtigungen gespeichert ✅");}
+function saveWH(){if(!PROVA.isEnterprise){PROVA.requirePaket("outbound_webhook","Enterprise");return;}ss({wURL:document.getElementById("wURL").value,wSec:document.getElementById("wSec").value});showToast("Webhook gespeichert ✅");}
+async function testWH(){const url=document.getElementById("wURL").value;if(!url){showToast("Bitte URL eingeben",true);return;}try{await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({test:true,source:"PROVA",ts:new Date().toISOString()})});showToast("Test-Request gesendet ✅");}catch(e){showToast("Verbindung fehlgeschlagen",true);}}
+function saveWL(){if(!PROVA.isEnterprise){PROVA.requirePaket("whitelabel","Enterprise");return;}ss({wlLogo:document.getElementById("wlLogo").value,wlHex:document.getElementById("wlHex").value});showToast("White-Label gespeichert ✅");}
+function applyPaket(){
+  const p=PROVA.paket;
+  document.getElementById("avP").textContent=p+"-Paket";
+  [["pkS","a-s","Starter"],["pkP","a-p","Pro"],["pkE","a-e","Enterprise"]].forEach(([id,cls,name])=>{
+    const el=document.getElementById(id);el.className="pk"+(p===name?" "+cls:"");
+    el.querySelector(".pk-cur")?.remove();
+    if(p===name){const b=document.createElement("div");b.className="pk-cur";b.style.cssText=cls==="a-s"?"background:#4f8ef718;color:#4f8ef7":cls==="a-p"?"background:#f59e0b18;color:#f59e0b":"background:#a78bfa18;color:#a78bfa";b.textContent="Aktiv";el.appendChild(b);}
+  });
+  const isE=PROVA.isEnterprise;
+  document.getElementById("navWH").classList.toggle("locked",!isE);
+  document.getElementById("navWL").classList.toggle("locked",!isE);
+  document.getElementById("whLocked").style.display=isE?"none":"block";
+  document.getElementById("whContent").style.display=isE?"block":"none";
+  document.getElementById("wlLocked").style.display=isE?"none":"block";
+  document.getElementById("wlContent").style.display=isE?"block":"none";
+}
+
+function toggleDrawer(){document.getElementById("drawer").classList.toggle("open");document.getElementById("drawerOverlay").classList.toggle("open");document.body.style.overflow=document.getElementById("drawer").classList.contains("open")?"hidden":"";}
+function closeDrawer(){document.getElementById("drawer").classList.remove("open");document.getElementById("drawerOverlay").classList.remove("open");document.body.style.overflow="";}
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeDrawer();});
+(function(){const p=localStorage.getItem("prova_paket")||"Starter";const c={Starter:"#4f8ef7",Pro:"#f59e0b",Enterprise:"#a78bfa"}[p];const s="background:"+c+"18;color:"+c+";border:1px solid "+c+"33";["topbarPaket","drawerPaket"].forEach(id=>{const el=document.getElementById(id);if(el){el.textContent=p;el.setAttribute("style",s);}});window.PROVA={paket:p,get isPro(){return["Pro","Enterprise"].includes(this.paket);},get isEnterprise(){return this.paket==="Enterprise";},requirePaket(f,min){const pr=["ki_brieftext","chef_freigabe","foto_erweitert"],en=["paragraph_407a","jahresbericht","outbound_webhook","whitelabel","foto_forensik"];const ok=en.includes(f)?this.isEnterprise:pr.includes(f)?this.isPro:true;if(!ok)alert((min==="Enterprise"?"🔒 Nur im Enterprise-Paket":"🔒 Nur im Pro- oder Enterprise-Paket")+"\n\nEinstellungen → Paket & Features");return ok;}};})();
+function showToast(m,e=false){const t=document.getElementById("toast");t.textContent=m;t.className="toast"+(e?" err":"");t.classList.add("show");setTimeout(()=>t.classList.remove("show"),2600);}
+
+loadAll();
+applyPaket();
+</script>
+</body>
+</html>
