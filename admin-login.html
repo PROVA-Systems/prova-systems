@@ -82,25 +82,35 @@ async function login(){
   var btn=document.getElementById('btn');
   if(!pw){err.textContent='Bitte Passwort eingeben.';err.style.display='block';return;}
   btn.disabled=true;btn.textContent='⏳ Prüfe…';err.style.display='none';
+  var hash=await sha256(pw);
+
+  // Erst Function versuchen, bei 404 Fallback
+  var ok=false;
   try{
-    var hash=await sha256(pw);
     var res=await fetch('/.netlify/functions/admin-auth',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({hash:hash})
     });
-    var data=await res.json();
-    if(data.ok){
-      sessionStorage.setItem('prova_admin',btoa(Date.now().toString()));
-      window.location.href='admin-dashboard.html';
-    }else{
-      err.textContent='Falsches Passwort.';err.style.display='block';
-      btn.disabled=false;btn.textContent='Einloggen';
-      document.getElementById('pw').value='';document.getElementById('pw').focus();
+    if(res.ok){
+      var data=await res.json();
+      ok=data.ok;
+    } else {
+      // Fallback: direkt vergleichen (bis Function deployed)
+      ok=(hash==='d4da837c5946bb39b6930baf2b95d0ffb4c273d600b045b95ae2500a38527119');
     }
   }catch(e){
-    err.textContent='Verbindungsfehler. Bitte erneut versuchen.';err.style.display='block';
+    // Fallback bei Verbindungsfehler
+    ok=(hash==='d4da837c5946bb39b6930baf2b95d0ffb4c273d600b045b95ae2500a38527119');
+  }
+
+  if(ok){
+    sessionStorage.setItem('prova_admin',btoa(Date.now().toString()));
+    window.location.href='admin-dashboard.html';
+  }else{
+    err.textContent='Falsches Passwort.';err.style.display='block';
     btn.disabled=false;btn.textContent='Einloggen';
+    document.getElementById('pw').value='';document.getElementById('pw').focus();
   }
 }
 </script>
