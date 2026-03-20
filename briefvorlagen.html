@@ -111,11 +111,13 @@
 <body>
 <div class="topbar">
   <div class="topbar-left">
-    <a href="app-starter.html" class="logo">PRO<span>VA</span></a>
+    <a href="dashboard.html" class="logo">PRO<span>VA</span></a>
     <nav class="topnav">
+      <a href="dashboard.html" data-short="Dashboard">Dashboard</a>
       <a href="app-starter.html" data-short="Gutachten">Neues Gutachten</a>
       <a href="archiv.html" data-short="Archiv">Archiv</a>
       <a href="termine.html" data-short="Termine">Termine</a>
+      <a href="rechnungen.html" data-short="Rechnungen">Rechnungen</a>
       <a href="briefvorlagen.html" data-short="Vorlagen" class="active">Briefvorlagen</a>
       <a href="jveg.html" data-short="JVEG">JVEG</a>
     </nav>
@@ -129,34 +131,53 @@
 <div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
 <div class="drawer" id="drawer">
   <div class="drawer-header">
-    <a href="app-starter.html" class="logo">PRO<span>VA</span></a>
+    <a href="dashboard.html" class="logo">PRO<span>VA</span></a>
     <button class="drawer-close" onclick="closeDrawer()">✕</button>
   </div>
   <nav class="drawer-nav">
+    <a href="dashboard.html"><span class="dnav-icon">🏠</span>Dashboard</a>
     <a href="app-starter.html"><span class="dnav-icon">📄</span>Neues Gutachten</a>
     <a href="archiv.html"><span class="dnav-icon">📂</span>Archiv</a>
     <a href="termine.html"><span class="dnav-icon">📅</span>Termine</a>
+    <a href="rechnungen.html"><span class="dnav-icon">💶</span>Rechnungen</a>
     <a href="briefvorlagen.html" class="active"><span class="dnav-icon">✉️</span>Briefvorlagen</a>
-    <a href="jveg.html"><span class="dnav-icon">💶</span>JVEG</a>
+    <a href="jveg.html"><span class="dnav-icon">🧮</span>JVEG</a>
+    <a href="einstellungen.html"><span class="dnav-icon">⚙</span>Einstellungen</a>
+    <a href="#" onclick="logout();return false;" style="margin-top:auto;color:#ef4444;"><span class="dnav-icon">🚪</span>Abmelden</a>
   </nav>
   <div class="drawer-footer">
-    <a href="einstellungen.html" class="drawer-settings">⚙ Einstellungen</a>
     <span class="paket-badge" id="drawerPaket"></span>
   </div>
 </div>
 <nav class="bottom-nav">
+  <a href="dashboard.html" class="bn-item"><span class="bn-icon">🏠</span><span class="bn-label">Dashboard</span></a>
   <a href="app-starter.html" class="bn-item"><span class="bn-icon">📄</span><span class="bn-label">Gutachten</span></a>
   <a href="archiv.html" class="bn-item"><span class="bn-icon">📂</span><span class="bn-label">Archiv</span></a>
-  <a href="termine.html" class="bn-item"><span class="bn-icon">📅</span><span class="bn-label">Termine</span></a>
-  <a href="briefvorlagen.html" class="bn-item active"><span class="bn-icon">✉️</span><span class="bn-label">Vorlagen</span></a>
+  <a href="rechnungen.html" class="bn-item"><span class="bn-icon">💶</span><span class="bn-label">Rechnungen</span></a>
   <a href="einstellungen.html" class="bn-item"><span class="bn-icon">⚙</span><span class="bn-label">Einstellungen</span></a>
-</nav>
+</nav><!-- /bottom-nav -->
 <script>
 function toggleDrawer(){var d=document.getElementById('drawer'),o=document.getElementById('drawerOverlay');d.classList.toggle('open');o.classList.toggle('open');document.body.style.overflow=d.classList.contains('open')?'hidden':'';}
 function closeDrawer(){document.getElementById('drawer').classList.remove('open');document.getElementById('drawerOverlay').classList.remove('open');document.body.style.overflow='';}
 document.addEventListener('keydown',function(e){if(e.key==='Escape')closeDrawer();});
-(function(){var p=localStorage.getItem('prova_paket')||'Starter';var c={Starter:'#4f8ef7',Pro:'#f59e0b',Enterprise:'#a78bfa'}[p]||'#4f8ef7';var s='background:'+c+'18;color:'+c+';border:1px solid '+c+'33';['topbarPaket','drawerPaket'].forEach(function(id){var el=document.getElementById(id);if(el){el.textContent=p;el.setAttribute('style',s);}});})();
-window.PROVA=window.PROVA||{};PROVA.paket=localStorage.getItem('prova_paket')||'Starter';PROVA.isPro=['Pro','Enterprise'].includes(PROVA.paket);PROVA.isEnterprise=PROVA.paket==='Enterprise';PROVA.canUse=function(f){var pf=['ki_brieftext','chef_freigabe','auto_erstbericht','auftraggeber_db','foto_erweitert','3_seats'];var ef=['paragraph_407a','jahresbericht','audit_trail','outbound_webhook','whitelabel','foto_forensik'];return ef.includes(f)?PROVA.isEnterprise:pf.includes(f)?PROVA.isPro:true;};PROVA.requirePaket=function(f,m){if(!PROVA.canUse(f)){alert((m==='Enterprise'?'🔒 Nur im Enterprise-Paket verfügbar':'🔒 Nur im Pro- oder Enterprise-Paket verfügbar')+'\n\nEinstellungen → Paket & Features');return false;}return true;};
+function logout(){
+  localStorage.removeItem('prova_user');
+  localStorage.removeItem('prova_sv_email');
+  if(typeof netlifyIdentity!=='undefined'){
+    try{netlifyIdentity.logout();}catch(e){}
+  }
+  window.location.href='app-login.html';
+}
+// Auth-Guard
+(function(){
+  var u=localStorage.getItem('prova_user');
+  if(!u){window.location.href='app-login.html';return;}
+  var p=localStorage.getItem('prova_paket')||'Starter';
+  var c={Starter:'#4f8ef7',Pro:'#f59e0b',Enterprise:'#a78bfa'}[p]||'#4f8ef7';
+  var s='background:'+c+'18;color:'+c+';border:1px solid '+c+'33';
+  ['topbarPaket','drawerPaket'].forEach(function(id){var el=document.getElementById(id);if(el){el.textContent=p;el.setAttribute('style',s);}});
+  window.PROVA=window.PROVA||{};PROVA.paket=p;PROVA.isPro=['Pro','Enterprise'].includes(p);PROVA.isEnterprise=p==='Enterprise';
+})();
 </script>
   <main class="main">
       <div class="page-header">

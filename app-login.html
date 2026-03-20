@@ -323,7 +323,10 @@ body::after {
       </div>
       <div class="form-group">
         <label class="form-label">Passwort</label>
-        <input type="password" class="form-input" id="login-pw" placeholder="••••••••" autocomplete="current-password">
+        <div style="position:relative;">
+          <input type="password" class="form-input" id="login-pw" placeholder="••••••••" autocomplete="current-password" style="padding-right:3rem;">
+          <button type="button" onclick="togglePw('login-pw','login-pw-eye')" style="position:absolute;right:.75rem;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--gray-400);font-size:1.1rem;padding:0;line-height:1;" id="login-pw-eye">👁</button>
+        </div>
         <div class="forgot-link"><a href="#" onclick="zeigePasswortReset()">Passwort vergessen?</a></div>
       </div>
       <div class="error-msg" id="login-error">E-Mail oder Passwort falsch. Bitte nochmal versuchen.</div>
@@ -466,6 +469,20 @@ function starteTestversion() {
     localStorage.setItem(KEY, Date.now().toString());
   }
   window.location.href = 'app-starter.html';
+}
+
+/* --- Passwort anzeigen/verbergen --- */
+function togglePw(inputId, btnId) {
+  const inp = document.getElementById(inputId);
+  const btn = document.getElementById(btnId);
+  if (!inp) return;
+  if (inp.type === 'password') {
+    inp.type = 'text';
+    if (btn) btn.textContent = '🙈';
+  } else {
+    inp.type = 'password';
+    if (btn) btn.textContent = '👁';
+  }
 }
 
 /* --- Login --- */
