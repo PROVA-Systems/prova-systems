@@ -504,12 +504,32 @@ async function login() {
   btn.textContent = '⏳ Anmelden…';
 
   try {
-    const user = await netlifyIdentity.login(email, pw);
+    const res = await fetch('https://prova-systems.netlify.app/.netlify/identity/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: `grant_type=password&username=${encodeURIComponent(email)}&password=${encodeURIComponent(pw)}`
+    });
+
+    if (!res.ok) {
+      throw new Error('Login fehlgeschlagen');
+    }
+
+    const data = await res.json();
+    if (!data.access_token) throw new Error('Kein Token erhalten');
+
+    // User-Info laden
+    const userRes = await fetch('https://prova-systems.netlify.app/.netlify/identity/user', {
+      headers: { 'Authorization': 'Bearer ' + data.access_token }
+    });
+    const userData = userRes.ok ? await userRes.json() : {};
+
     localStorage.setItem('prova_user', JSON.stringify({
-      email: user.email,
-      name: user.user_metadata?.full_name || email
+      email: userData.email || email,
+      name: userData.user_metadata?.full_name || email,
+      token: data.access_token
     }));
     window.location.href = 'dashboard.html';
+
   } catch(e) {
     errEl.textContent   = 'E-Mail oder Passwort falsch. Bitte erneut versuchen.';
     errEl.style.display = 'block';
