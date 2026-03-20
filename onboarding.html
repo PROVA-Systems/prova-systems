@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>PROVA Systems — Onboarding</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,700&family=Instrument+Sans:wght@400;500;600&family=Montserrat:wght@400;500;600;700;800&family=Source+Serif+4:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#0d0f14;
+      --navy:#1B3F6B;
+      --accent:#4f8ef7;
+      --success:#10B981;
+      --warning:#F59E0B;
+      --error:#EF4444;
+      --bg2:#13161d;
+      --surface:#1e2330;
+      --border:rgba(255,255,255,0.07);
+      --border2:rgba(255,255,255,0.12);
+      --text:#e8eaf0;
+      --text2:#9da3b4;
+      --text3:#6b7280;
+      --display:'Fraunces',serif;
+      --sans:'Instrument Sans',sans-serif;
+      --radius-md:.5rem;
+      --radius-lg:.875rem;
+      --shadow:0 20px 60px rgba(0,0,0,.35);
+      --nav-h:52px;
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    html{scroll-behavior:smooth;}
+    body{
+      font-family:'Montserrat',system-ui,sans-serif;
+      background:linear-gradient(135deg,#060E1C 0%,#0B1628 45%,#112240 100%);
+      color:#fff;
+      min-height:100vh;
+      display:flex;
+      flex-direction:column;
+    }
+    a{text-decoration:none;color:inherit;}
+    button,input,select,textarea{font-family:inherit;}
+
+    /* Topbar (nur Logo) */
+    .topbar{
+      background:rgba(19,22,29,0.75);
+      border-bottom:1px solid var(--border);
+      height:var(--nav-h);
+      min-height:var(--nav-h);
+      display:flex;
+      align-items:center;
+      padding:0 20px;
+      justify-content:flex-start;
+      position:sticky;
+      top:0;
+      z-index:50;
+      backdrop-filter:blur(12px);
+    }
+    .logo{
+      font-family:var(--display);
+      font-weight:700;
+      font-size:18px;
+      color:var(--text);
+      text-decoration:none;
+    }
+    .logo span{color:var(--accent);}
+
+    /* Layout */
+    .wrap{
+      max-width:980px;
+      margin:0 auto;
+      width:100%;
+      padding:22px 18px 34px;
+      flex:1;
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+    }
+    .card{
+      background:rgba(255,255,255,0.03);
+      border:1px solid var(--border);
+      border-radius:var(--radius-lg);
+      box-shadow:var(--shadow);
+      overflow:hidden;
+    }
+    .card-body{
+      padding:24px 22px;
+    }
+    .ob-title{
+      font-family:var(--display);
+      font-size:28px;
+      font-weight:800;
+      margin-bottom:10px;
+      line-height:1.15;
+    }
+    .ob-subtitle{
+      color:var(--text2);
+      font-size:14px;
+      margin-bottom:18px;
+      line-height:1.6;
+    }
+    .progress-row{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      margin-bottom:18px;
+    }
+    .progress-text{font-size:13px;color:var(--text2);font-weight:700;}
+    .progress-bar{
+      height:10px;
+      flex:1;
+      background:rgba(255,255,255,0.06);
+      border:1px solid rgba(255,255,255,0.08);
+      border-radius:999px;
+      overflow:hidden;
+    }
+    .progress-fill{
+      height:100%;
+      width:20%;
+      background:linear-gradient(90deg, rgba(79,142,247,0.95), rgba(56,189,248,0.95));
+      border-radius:999px;
+    }
+
+    /* Forms */
+    .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+    @media(max-width:720px){.form-grid{grid-template-columns:1fr;}}
+    .form-group{display:flex;flex-direction:column;gap:6px;}
+    .form-label{font-size:13px;color:var(--text2);font-weight:700;}
+    .form-input{
+      width:100%;
+      background:rgba(255,255,255,0.04);
+      border:1px solid rgba(255,255,255,0.09);
+      color:#fff;
+      border-radius:10px;
+      padding:12px 12px;
+      outline:none;
+      transition:border-color .15s, box-shadow .15s;
+    }
+    .form-input:focus{
+      border-color:rgba(79,142,247,0.7);
+      box-shadow:0 0 0 3px rgba(79,142,247,0.15);
+    }
+
+    /* Buttons */
+    .btn-row{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:22px;}
+    .btn{
+      display:inline-flex;align-items:center;justify-content:center;gap:10px;
+      padding:12px 16px;border-radius:12px;border:1px solid rgba(255,255,255,0.12);
+      background:rgba(255,255,255,0.06);color:#fff;font-weight:800;cursor:pointer;
+    }
+    .btn:hover{background:rgba(255,255,255,0.10);}
+    .btn-accent{
+      background:rgba(79,142,247,0.18);
+      border-color:rgba(79,142,247,0.35);
+    }
+    .btn-ghost{
+      background:transparent;
+      border-color:rgba(255,255,255,0.14);
+      color:var(--text2);
+    }
+
+    /* Step Switch */
+    .step{display:none;}
+    .step.active{display:block;}
+
+    /* Package cards (radio + label CSS) */
+    .pkg-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+    @media(max-width:900px){.pkg-grid{grid-template-columns:1fr;}}
+    input[type="radio"].pkg-radio{position:absolute;opacity:0;pointer-events:none;}
+    .pkg-card{
+      border:1px solid rgba(255,255,255,0.10);
+      background:rgba(255,255,255,0.03);
+      border-radius:var(--radius-lg);
+      padding:16px 14px;
+      cursor:pointer;
+      transition:border-color .15s, box-shadow .15s, transform .15s;
+      position:relative;
+      overflow:hidden;
+      user-select:none;
+    }
+    .pkg-card:hover{transform:translateY(-2px);border-color:rgba(79,142,247,0.30);}
+    input[type="radio"].pkg-radio:checked + .pkg-card{
+      border-color:rgba(79,142,247,0.65);
+      box-shadow:0 0 0 3px rgba(79,142,247,0.18);
+    }
+    .pkg-name{font-family:var(--display);font-weight:900;font-size:18px;margin-bottom:8px;}
+    .pkg-price{font-size:22px;font-weight:900;margin-bottom:4px;color:#fff;}
+    .pkg-meta{color:var(--text2);font-size:13px;line-height:1.5;}
+
+    /* Step 4 icons row */
+    .icon-row{display:flex;gap:10px;flex-wrap:wrap;}
+    .icon-step{
+      flex:1;
+      min-width:190px;
+      border:1px solid rgba(255,255,255,0.08);
+      background:rgba(255,255,255,0.03);
+      border-radius:var(--radius-lg);
+      padding:14px 12px;
+    }
+    .icon{
+      font-size:26px;
+      margin-bottom:8px;
+    }
+    .icon-step strong{display:block;font-size:14px;color:#fff;margin-bottom:6px;}
+    .icon-step span{color:var(--text2);font-size:13px;line-height:1.6;}
+
+    /* Step 5 */
+    .success-wrap{text-align:center;padding:28px 16px 18px;}
+    .success-icon{
+      width:78px;height:78px;border-radius:24px;margin:0 auto 12px;
+      display:flex;align-items:center;justify-content:center;
+      background:rgba(16,185,129,0.15);
+      border:1px solid rgba(16,185,129,0.25);
+      font-size:36px;font-weight:900;
+      color:#d1fae5;
+    }
+    .success-title{font-family:var(--display);font-size:30px;font-weight:900;margin-bottom:8px;}
+    .success-text{color:var(--text2);font-size:14px;line-height:1.6;margin-bottom:18px;}
+
+    /* Keep mobile comfortable */
+    @media(max-width:600px){
+      .wrap{padding:16px 12px 28px;}
+      .card-body{padding:20px 16px;}
+    }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <a href="index.html" class="logo">PRO<span>VA</span></a>
+  </div>
+
+  <div class="wrap">
+    <div class="card">
+      <div class="card-body">
+        <!-- STEP 1 -->
+        <section class="step active" id="ob-step-1" aria-label="Schritt 1">
+          <div class="progress-row">
+            <div class="progress-text">1/5</div>
+            <div class="progress-bar" aria-hidden="true"><div class="progress-fill" style="width:20%;"></div></div>
+          </div>
+          <div class="ob-title">Willkommen bei PROVA Systems</div>
+          <div class="ob-subtitle">Ihr KI-Assistent für Baugutachten. In 4 Minuten startklar.</div>
+          <div class="btn-row" style="justify-content:center;">
+            <button class="btn btn-accent" type="button" onclick="showStep(2)">Los geht's →</button>
+          </div>
+        </section>
+
+        <!-- STEP 2 -->
+        <section class="step" id="ob-step-2" aria-label="Schritt 2">
+          <div class="progress-row">
+            <div class="progress-text">2/5</div>
+            <div class="progress-bar" aria-hidden="true"><div class="progress-fill" style="width:40%;"></div></div>
+          </div>
+          <div class="ob-title">Ihr Profil einrichten</div>
+          <div class="ob-subtitle">Damit Ihre Gutachten im richtigen Kontext gestartet werden können.</div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label" for="ob-vorname">Vorname</label>
+              <input class="form-input" id="ob-vorname" type="text" autocomplete="given-name">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="ob-nachname">Nachname</label>
+              <input class="form-input" id="ob-nachname" type="text" autocomplete="family-name">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="ob-email">E-Mail</label>
+              <input class="form-input" id="ob-email" type="email" autocomplete="email">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="ob-telefon">Telefon</label>
+              <input class="form-input" id="ob-telefon" type="tel" autocomplete="tel">
+            </div>
+            <div class="form-group" style="grid-column:span 2;">
+              <label class="form-label" for="ob-firma">Firma/Büro</label>
+              <input class="form-input" id="ob-firma" type="text" autocomplete="organization">
+            </div>
+            <div class="form-group" style="grid-column:span 2;">
+              <label class="form-label" for="ob-quali">Qualifikation/Zertifizierung</label>
+              <input class="form-input" id="ob-quali" type="text">
+            </div>
+          </div>
+          <div class="btn-row">
+            <button class="btn btn-ghost" type="button" onclick="showStep(1)">← Zurück</button>
+            <button class="btn btn-accent" type="button" onclick="showStep(3)">Weiter →</button>
+          </div>
+        </section>
+
+        <!-- STEP 3 -->
+        <section class="step" id="ob-step-3" aria-label="Schritt 3">
+          <div class="progress-row">
+            <div class="progress-text">3/5</div>
+            <div class="progress-bar" aria-hidden="true"><div class="progress-fill" style="width:60%;"></div></div>
+          </div>
+          <div class="ob-title">Welches Paket passt zu Ihnen?</div>
+          <div class="ob-subtitle">Wählen Sie die passende Basis für Ihren Arbeitsalltag.</div>
+
+          <div class="pkg-grid" role="radiogroup" aria-label="Paket wählen">
+            <input class="pkg-radio" type="radio" name="paket" id="paket-radio-starter" value="Starter" checked>
+            <label class="pkg-card" id="paket-starter" for="paket-radio-starter">
+              <div class="pkg-name">Starter</div>
+              <div class="pkg-price">179€/Mo</div>
+              <div class="pkg-meta">1 Seat · 20 Gutachten · ideal Solo-SV</div>
+            </label>
+
+            <input class="pkg-radio" type="radio" name="paket" id="paket-radio-pro" value="Pro">
+            <label class="pkg-card" id="paket-pro" for="paket-radio-pro">
+              <div class="pkg-name">Pro</div>
+              <div class="pkg-price">369€/Mo</div>
+              <div class="pkg-meta">3 Seats · 50 Gutachten · kleines Büro</div>
+            </label>
+
+            <input class="pkg-radio" type="radio" name="paket" id="paket-radio-enterprise" value="Enterprise">
+            <label class="pkg-card" id="paket-enterprise" for="paket-radio-enterprise">
+              <div class="pkg-name">Enterprise</div>
+              <div class="pkg-price">699€/Mo</div>
+              <div class="pkg-meta">unbegrenzt · großes Büro</div>
+            </label>
+          </div>
+
+          <div class="btn-row" style="justify-content:flex-end;">
+            <button class="btn btn-ghost" type="button" onclick="showStep(2)">← Zurück</button>
+            <button class="btn btn-accent" type="button" onclick="showStep(4)">Weiter →</button>
+          </div>
+        </section>
+
+        <!-- STEP 4 -->
+        <section class="step" id="ob-step-4" aria-label="Schritt 4">
+          <div class="progress-row">
+            <div class="progress-text">4/5</div>
+            <div class="progress-bar" aria-hidden="true"><div class="progress-fill" style="width:80%;"></div></div>
+          </div>
+          <div class="ob-title">So erstellen Sie Ihr erstes Gutachten</div>
+          <div class="ob-subtitle">Kurzer Überblick über die nächsten Schritte.</div>
+          <div class="icon-row">
+            <div class="icon-step">
+              <div class="icon">📋</div>
+              <strong>Stammdaten eingeben</strong>
+              <span>Sie erfassen die relevanten Eckdaten, damit alles im richtigen Kontext läuft.</span>
+            </div>
+            <div class="icon-step">
+              <div class="icon">🎙</div>
+              <strong>Diktat sprechen</strong>
+              <span>Sie beschreiben Beobachtungen und Sachverhalte ganz natürlich per Sprache.</span>
+            </div>
+            <div class="icon-step">
+              <div class="icon">🤖</div>
+              <strong>KI analysiert</strong>
+              <span>Die KI strukturiert Ihre Angaben und erzeugt einen fachlichen Entwurf.</span>
+            </div>
+            <div class="icon-step">
+              <div class="icon">✅</div>
+              <strong>Freigeben &amp; versenden</strong>
+              <span>Sie prüfen, geben frei und versenden den Auftrag in wenigen Klicks.</span>
+            </div>
+          </div>
+          <div class="btn-row" style="justify-content:flex-end;">
+            <button class="btn btn-ghost" type="button" onclick="showStep(3)">← Zurück</button>
+            <button class="btn btn-accent" type="button" onclick="showStep(5)">Verstanden →</button>
+          </div>
+        </section>
+
+        <!-- STEP 5 -->
+        <section class="step" id="ob-step-5" aria-label="Schritt 5">
+          <div class="progress-row">
+            <div class="progress-text">5/5</div>
+            <div class="progress-bar" aria-hidden="true"><div class="progress-fill" style="width:100%;"></div></div>
+          </div>
+          <div class="success-wrap">
+            <div class="success-icon">✅</div>
+            <div class="success-title">Alles bereit!</div>
+            <div class="success-text">Ihr erstes Gutachten wartet. Starten Sie jetzt.</div>
+            <div class="btn-row" style="justify-content:center;">
+              <a class="btn btn-accent" href="dashboard.html">Zum Dashboard →</a>
+              <a class="btn" href="app-starter.html" id="ob-app-link">Erstes Gutachten erstellen →</a>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  /* ============================================================
+     PROVA Onboarding — Connect-Block
+     Speichert Profil + Paket in localStorage
+     Leitet nach Schritt 5 korrekt weiter je nach Paket
+  ============================================================ */
+
+  function showStep(n) {
+    // Vor Schritt-Wechsel: Daten speichern
+    if (n === 4) speichereProfilSchritt2();   // Profil speichern wenn weiter von Schritt 3
+    if (n === 5) speicherePaketSchritt3();    // Paket speichern wenn weiter von Schritt 4
+    if (n === 5) bereiteFertigSchritt5();     // Weiter-Links anpassen
+
+    for (var i = 1; i <= 5; i++) {
+      var el = document.getElementById('ob-step-' + i);
+      if (el) el.classList.toggle('active', i === n);
+    }
+    window.scrollTo(0, 0);
+  }
+
+  /* Schritt 2 → Profildaten in localStorage */
+  function speichereProfilSchritt2() {
+    var felder = {
+      prova_sv_vorname:  document.getElementById('ob-vorname')?.value.trim()  || '',
+      prova_sv_nachname: document.getElementById('ob-nachname')?.value.trim() || '',
+      prova_sv_email:    document.getElementById('ob-email')?.value.trim()    || '',
+      prova_sv_telefon:  document.getElementById('ob-telefon')?.value.trim()  || '',
+      prova_sv_firma:    document.getElementById('ob-firma')?.value.trim()    || '',
+      prova_sv_quali:    document.getElementById('ob-quali')?.value.trim()    || ''
+    };
+    Object.entries(felder).forEach(function(kv) {
+      if (kv[1]) localStorage.setItem(kv[0], kv[1]);
+    });
+    // Kombi-Key für SV_PROFIL (wird von ladeSVProfil() in App-Seiten gelesen)
+    localStorage.setItem('prova_sv_profil', JSON.stringify({
+      Vorname:            felder.prova_sv_vorname,
+      Nachname:           felder.prova_sv_nachname,
+      Email:              felder.prova_sv_email,
+      Telefon:            felder.prova_sv_telefon,
+      Firma:              felder.prova_sv_firma,
+      Zertifizierung:     felder.prova_sv_quali
+    }));
+  }
+
+  /* Schritt 3 → Paket in localStorage */
+  function speicherePaketSchritt3() {
+    var radio = document.querySelector('input[name="paket"]:checked');
+    var paket = radio ? radio.value : 'Starter';
+    localStorage.setItem('prova_paket', paket);
+
+    // window.PROVA sofort setzen damit andere Seiten es beim ersten Load haben
+    window.PROVA = window.PROVA || {};
+    window.PROVA.paket = paket;
+    window.PROVA.isPro = ['Pro', 'Enterprise'].includes(paket);
+    window.PROVA.isEnterprise = paket === 'Enterprise';
+  }
+
+  /* Schritt 5 — Weiter-Links je nach Paket anpassen */
+  function bereiteFertigSchritt5() {
+    var paket = localStorage.getItem('prova_paket') || 'Starter';
+    var appLink = document.getElementById('ob-app-link');
+    if (appLink) {
+      var ziel = {
+        Starter:    'app-starter.html',
+        Pro:        'app-pro.html',
+        Enterprise: 'app-enterprise.html'
+      }[paket] || 'app-starter.html';
+      appLink.href = ziel;
+      appLink.textContent = 'Erstes Gutachten erstellen →';
+    }
+    // Trial-Start setzen wenn noch nicht gesetzt
+    if (!localStorage.getItem('prova_trial_start')) {
+      localStorage.setItem('prova_trial_start', Date.now().toString());
+    }
+    // Onboarding als abgeschlossen markieren
+    localStorage.setItem('prova_onboarding_done', 'true');
+    // Airtable-Sync: SV-Datensatz anlegen
+    syncOnboardingSV();
+  }
+
+  async function syncOnboardingSV() {
+    try {
+      var svp = JSON.parse(localStorage.getItem('prova_sv_profil') || '{}');
+      var paket = localStorage.getItem('prova_paket') || 'Starter';
+      if (!svp.email) return;
+      var fields = {
+        Name:          svp.name  || '',
+        Email:         svp.email || '',
+        Telefon:       svp.telefon || '',
+        Qualifikation: svp.qualifikation || '',
+        Paket:         paket,
+        Onboarding:    new Date().toISOString().slice(0, 10)
+      };
+      // Erst prüfen ob schon vorhanden
+      var checkRes = await fetch('/.netlify/functions/airtable', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          method: 'GET',
+          path: '/v0/appJ7bLlAHZoxENWE/tbladqEQT3tmx4DIB?filterByFormula=' +
+                encodeURIComponent('{Email}="' + svp.email + '"') + '&maxRecords=1'
+        })
+      });
+      if (checkRes.ok) {
+        var checkData = await checkRes.json();
+        if (checkData.records && checkData.records.length > 0) return; // Bereits vorhanden
+      }
+      // Neu anlegen
+      await fetch('/.netlify/functions/airtable', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          method: 'POST',
+          path: '/v0/appJ7bLlAHZoxENWE/tbladqEQT3tmx4DIB',
+          body: { records: [{ fields: fields }] }
+        })
+      });
+    } catch(e) {
+      console.warn('Onboarding Airtable sync:', e.message);
+      // Stille Fehler — Onboarding trotzdem abgeschlossen
+    }
+  }
+
+  /* Validierung Schritt 2 — E-Mail Pflichtfeld */
+  function validiereSchritt2() {
+    var email = document.getElementById('ob-email')?.value.trim() || '';
+    var vorname = document.getElementById('ob-vorname')?.value.trim() || '';
+    if (!vorname) {
+      document.getElementById('ob-vorname').focus();
+      zeigeHinweis('Bitte Vorname eingeben.');
+      return false;
+    }
+    if (!email || !email.includes('@')) {
+      document.getElementById('ob-email').focus();
+      zeigeHinweis('Bitte gültige E-Mail eingeben.');
+      return false;
+    }
+    return true;
+  }
+
+  function zeigeHinweis(text) {
+    var h = document.getElementById('ob-hinweis');
+    if (!h) {
+      h = document.createElement('div');
+      h.id = 'ob-hinweis';
+      h.style.cssText = 'margin-top:12px;padding:10px 14px;background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.3);border-radius:8px;color:#fca5a5;font-size:13px;';
+      var step2 = document.getElementById('ob-step-2');
+      if (step2) step2.querySelector('.btn-row').before(h);
+    }
+    h.textContent = '⚠ ' + text;
+    h.style.display = 'block';
+    setTimeout(function() { h.style.display = 'none'; }, 3000);
+  }
+
+  /* Schritt 2 Weiter-Button mit Validierung */
+  document.addEventListener('DOMContentLoaded', function() {
+    // Weiter-Button in Schritt 2 mit Validierung versehen
+    var step2Weiter = document.querySelector('#ob-step-2 .btn-accent');
+    if (step2Weiter) {
+      step2Weiter.onclick = function() {
+        if (validiereSchritt2()) showStep(3);
+      };
+    }
+
+    // Profil aus localStorage wiederherstellen falls vorhanden (bei erneutem Besuch)
+    var gespeichert = localStorage.getItem('prova_sv_profil');
+    if (gespeichert) {
+      try {
+        var p = JSON.parse(gespeichert);
+        var map = {
+          'ob-vorname':  p.Vorname,
+          'ob-nachname': p.Nachname,
+          'ob-email':    p.Email,
+          'ob-telefon':  p.Telefon,
+          'ob-firma':    p.Firma,
+          'ob-quali':    p.Zertifizierung
+        };
+        Object.entries(map).forEach(function(kv) {
+          var el = document.getElementById(kv[0]);
+          if (el && kv[1]) el.value = kv[1];
+        });
+      } catch (e) {}
+    }
+
+    // Paket aus localStorage wiederherstellen
+    var gespeichertesPaket = localStorage.getItem('prova_paket');
+    if (gespeichertesPaket) {
+      var radio = document.querySelector('input[name="paket"][value="' + gespeichertesPaket + '"]');
+      if (radio) radio.checked = true;
+    }
+  });
+  </script>
+</body>
+</html>
+
