@@ -389,28 +389,50 @@ body::after {
 <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
 <script>
 // Netlify Identity — invite_token + recovery_token verarbeiten
-if (typeof netlifyIdentity !== 'undefined') {
-  netlifyIdentity.on('init', function(user) {
-    var hash = window.location.hash;
-    if (hash && hash.indexOf('invite_token') !== -1) {
-      netlifyIdentity.open('signup');
+(function() {
+  var hash = window.location.hash || '';
+
+  // Widget initialisieren
+  if (typeof netlifyIdentity !== 'undefined') {
+    netlifyIdentity.on('init', function(user) {
+      if (!user) {
+        // Kein eingeloggter User — Token prüfen
+        if (hash.indexOf('invite_token') !== -1) {
+          netlifyIdentity.open('signup');
+        } else if (hash.indexOf('recovery_token') !== -1) {
+          netlifyIdentity.open('recovery');
+        } else if (hash.indexOf('confirmation_token') !== -1) {
+          netlifyIdentity.open('signup');
+        }
+      }
+    });
+
+    netlifyIdentity.on('login', function(user) {
+      localStorage.setItem('prova_user', JSON.stringify({
+        email: user.email,
+        name: user.user_metadata?.full_name || user.email
+      }));
+      window.location.href = 'dashboard.html';
+    });
+
+    netlifyIdentity.on('error', function(err) {
+      console.error('Netlify Identity Fehler:', err);
+    });
+
+    netlifyIdentity.init();
+
+    // Fallback: Widget nach kurzem Delay nochmal triggern falls init zu früh kam
+    if (hash.indexOf('invite_token') !== -1 || hash.indexOf('recovery_token') !== -1) {
+      setTimeout(function() {
+        if (hash.indexOf('invite_token') !== -1) {
+          netlifyIdentity.open('signup');
+        } else {
+          netlifyIdentity.open('recovery');
+        }
+      }, 800);
     }
-    if (hash && hash.indexOf('recovery_token') !== -1) {
-      netlifyIdentity.open('recovery');
-    }
-  });
-  netlifyIdentity.on('login', function(user) {
-    localStorage.setItem('prova_user', JSON.stringify({
-      email: user.email,
-      name: user.user_metadata?.full_name || user.email
-    }));
-    window.location.href = 'dashboard.html';
-  });
-  netlifyIdentity.on('error', function(err) {
-    console.error('Netlify Identity Fehler:', err);
-  });
-  netlifyIdentity.init();
-}
+  }
+})();
 </script>
 
 <script>
