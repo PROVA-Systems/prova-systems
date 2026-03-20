@@ -388,27 +388,21 @@ body::after {
 <!-- Netlify Identity Widget — wird aktiviert wenn Netlify Identity eingerichtet ist -->
 <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
 <script>
-// Netlify Identity — invite_token + recovery_token verarbeiten
 (function() {
   var hash = window.location.hash || '';
-  var hasToken = hash.indexOf('invite_token') !== -1 || 
-                 hash.indexOf('recovery_token') !== -1 || 
+  var hasToken = hash.indexOf('invite_token') !== -1 ||
+                 hash.indexOf('recovery_token') !== -1 ||
                  hash.indexOf('confirmation_token') !== -1;
 
   if (typeof netlifyIdentity !== 'undefined') {
-    // API URL explizit auf netlify.app setzen — Identity läuft dort
-    netlifyIdentity.init({
-      APIUrl: 'https://prova-systems.netlify.app/.netlify/identity'
-    });
+    netlifyIdentity.init();
 
     netlifyIdentity.on('init', function(user) {
       if (!user && hasToken) {
-        if (hash.indexOf('invite_token') !== -1) {
+        if (hash.indexOf('invite_token') !== -1 || hash.indexOf('confirmation_token') !== -1) {
           netlifyIdentity.open('signup');
         } else if (hash.indexOf('recovery_token') !== -1) {
           netlifyIdentity.open('recovery');
-        } else if (hash.indexOf('confirmation_token') !== -1) {
-          netlifyIdentity.open('signup');
         }
       }
     });
@@ -425,15 +419,14 @@ body::after {
       console.error('Netlify Identity Fehler:', err);
     });
 
-    // Fallback nach 1s
     if (hasToken) {
       setTimeout(function() {
-        if (hash.indexOf('invite_token') !== -1) {
+        if (hash.indexOf('invite_token') !== -1 || hash.indexOf('confirmation_token') !== -1) {
           netlifyIdentity.open('signup');
         } else if (hash.indexOf('recovery_token') !== -1) {
           netlifyIdentity.open('recovery');
         }
-      }, 1000);
+      }, 800);
     }
   }
 })();
