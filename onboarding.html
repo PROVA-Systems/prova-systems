@@ -501,6 +501,39 @@
       console.warn('Onboarding Airtable sync:', e.message);
       // Stille Fehler — Onboarding trotzdem abgeschlossen
     }
+    // Pipeline-Eintrag anlegen (für Admin-Dashboard)
+    syncPipeline(svp, paket);
+  }
+
+  async function syncPipeline(svp, paket) {
+    try {
+      var vorname = localStorage.getItem('prova_sv_vorname') || svp.Vorname || '';
+      var nachname = localStorage.getItem('prova_sv_nachname') || svp.Nachname || '';
+      var email = localStorage.getItem('prova_sv_email') || svp.Email || '';
+      if (!email) return;
+      var fields = {
+        Vorname:   vorname,
+        Nachname:  nachname,
+        Email:     email,
+        Telefon:   localStorage.getItem('prova_sv_telefon') || '',
+        Quelle:    'Onboarding',
+        Stufe:     'Onboarding',
+        Status:    'Aktiv',
+        Erstkontakt_Datum: new Date().toISOString().slice(0, 10),
+        MRR_EUR:   paket === 'Enterprise' ? 699 : paket === 'Pro' ? 369 : 179
+      };
+      await fetch('/.netlify/functions/airtable', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          method: 'POST',
+          path: '/v0/appJ7bLlAHZoxENWE/tblK7a3mBdsrxsrp5',
+          body: { records: [{ fields: fields }] }
+        })
+      });
+    } catch(e) {
+      console.warn('Pipeline sync:', e.message);
+    }
   }
 
   /* Validierung Schritt 2 — E-Mail Pflichtfeld */
@@ -536,6 +569,19 @@
 
   /* Schritt 2 Weiter-Button mit Validierung */
   document.addEventListener('DOMContentLoaded', function() {
+    // Plan-Parameter aus URL lesen (z.B. onboarding.html?plan=pro)
+    (function() {
+      var params = new URLSearchParams(window.location.search);
+      var plan = (params.get('plan') || '').toLowerCase();
+      if (plan === 'pro') {
+        var radio = document.getElementById('paket-radio-pro');
+        if (radio) { radio.checked = true; }
+      } else if (plan === 'enterprise') {
+        var radio = document.getElementById('paket-radio-enterprise');
+        if (radio) { radio.checked = true; }
+      }
+      // 'starter' ist default — kein Handlungsbedarf
+    })();
     // Weiter-Button in Schritt 2 mit Validierung versehen
     var step2Weiter = document.querySelector('#ob-step-2 .btn-accent');
     if (step2Weiter) {

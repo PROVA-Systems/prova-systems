@@ -156,17 +156,33 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:1
 .btn-reject{padding:9px 14px;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;color:var(--text3);font-family:var(--sans);font-size:14px;cursor:pointer;transition:all 0.15s;}
 .btn-reject:hover{color:var(--red);}
 
-/* NORMEN */
-.normen-grid{display:flex;gap:10px;margin-bottom:18px;}
-.normen-btn{flex:1;padding:16px 12px;border-radius:12px;border:2px solid var(--border2);background:var(--surface);cursor:pointer;transition:all 0.2s;text-align:center;font-family:var(--sans);}
-.normen-btn:hover{border-color:var(--accent);}
-.normen-btn.yes{border-color:var(--green);background:var(--green-bg);}
-.normen-btn.no{border-color:var(--border2);background:var(--surface2);}
-.normen-icon{font-size:26px;margin-bottom:8px;}
-.normen-title{font-size:14px;font-weight:600;color:var(--text);}
-.normen-btn.yes .normen-title{color:var(--green);}
+/* NORMEN — neue lokale Datenbank-UI */
+.normen-pills{display:flex;flex-wrap:wrap;gap:6px;min-height:32px;margin-bottom:14px;padding:10px 12px;background:var(--surface2);border-radius:10px;border:1px solid var(--border2);}
+.normen-pills-label{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;}
+.normen-pill{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;background:var(--green-bg);border:1px solid var(--green-border);border-radius:20px;font-size:12px;font-weight:600;color:#6ee7b7;font-family:var(--sans);}
+.normen-pill-remove{background:none;border:none;color:#6ee7b7;cursor:pointer;font-size:13px;line-height:1;padding:0;opacity:.7;}
+.normen-pill-remove:hover{opacity:1;}
+.normen-pills-empty{font-size:12px;color:var(--text3);font-style:italic;}
+.normen-list{display:flex;flex-direction:column;gap:4px;margin-bottom:10px;}
+.normen-row{display:flex;align-items:flex-start;gap:10px;padding:9px 12px;border-radius:8px;border:1px solid transparent;cursor:pointer;transition:background .12s,border-color .12s;}
+.normen-row:hover{background:rgba(255,255,255,.04);border-color:var(--border2);}
+.normen-row.checked{background:rgba(16,185,129,.07);border-color:rgba(16,185,129,.25);}
+.normen-cb{width:17px;height:17px;flex-shrink:0;margin-top:1px;accent-color:#10b981;cursor:pointer;}
+.normen-row-main{flex:1;min-width:0;}
+.normen-row-num{font-size:13px;font-weight:700;color:var(--text);font-family:var(--sans);}
+.normen-row.checked .normen-row-num{color:#6ee7b7;}
+.normen-row-titel{font-size:12px;color:var(--text2);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.normen-row-hint{font-size:11.5px;color:var(--text3);margin-top:5px;line-height:1.5;display:none;border-left:2px solid rgba(16,185,129,.3);padding-left:8px;}
+.normen-row-hint.open{display:block;}
+.normen-row-gw{font-size:11px;color:#fbbf24;margin-top:3px;font-style:italic;}
+.normen-toggle-hint{background:none;border:none;color:var(--accent);font-size:11px;font-family:var(--sans);cursor:pointer;padding:2px 0;text-decoration:underline;text-underline-offset:2px;}
+.normen-mehr{text-align:center;margin:6px 0;}
+.normen-mehr-btn{background:none;border:1px solid var(--border2);color:var(--text3);font-family:var(--sans);font-size:12px;padding:7px 16px;border-radius:20px;cursor:pointer;transition:all .15s;}
+.normen-mehr-btn:hover{border-color:var(--accent);color:var(--accent);}
 .normen-result{background:var(--green-bg);border:1px solid var(--green-border);border-radius:10px;padding:12px 16px;font-size:14px;color:#6ee7b7;margin-bottom:18px;display:none;}
 .normen-result.visible{display:block;}
+.normen-schadenart-badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:var(--text3);background:var(--surface2);border:1px solid var(--border2);border-radius:6px;padding:3px 8px;margin-bottom:12px;font-family:var(--sans);}
+.normen-separator{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;padding:8px 0 4px;border-bottom:1px solid var(--border);margin-bottom:4px;}
 
 /* FINAL TEXT */
 .final-box{background:var(--surface);border:1px solid var(--border2);border-radius:12px;padding:20px;font-size:16px;line-height:1.8;color:var(--text);margin-bottom:18px;white-space:pre-wrap;}
@@ -473,26 +489,37 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:1
   <!-- ═══ SCHRITT 3 — NORMEN ═══ -->
   <div class="step-card" id="step3">
     <div class="step-eyebrow">Schritt 3 von 4 — Normen</div>
-    <div class="step-title">Passende Normen einfügen?</div>
-    <div class="step-subtitle">PROVA fügt automatisch einschlägige DIN-Normen, WTA-Merkblätter und BGH-Urteile als Klammerzitate ein.</div>
+    <div class="step-title">Passende Normen auswählen</div>
+    <div class="step-subtitle">Vorauswahl basiert auf Ihrer Schadensart. Haken entfernen oder weitere hinzufügen — per Klick in §6 einfügen.</div>
 
-    <div class="normen-grid">
-      <button class="normen-btn" id="normenJa" onclick="selectNormen(true)">
-        <div class="normen-icon">📚</div>
-        <div class="normen-title">Ja, automatisch</div>
-        <div style="font-size:12px;color:var(--text3);margin-top:4px;">KI fügt passende Normen ein</div>
-      </button>
-      <button class="normen-btn" id="normenNein" onclick="selectNormen(false)">
-        <div class="normen-icon">✍️</div>
-        <div class="normen-title">Nein, ohne Normen</div>
-        <div style="font-size:12px;color:var(--text3);margin-top:4px;">Ich füge Normen selbst ein</div>
+    <div id="normen-schadenart-info" class="normen-schadenart-badge">📋 <span id="normen-sa-label">Schadensart wird geladen…</span></div>
+
+    <!-- Ausgewählte Normen als Pills -->
+    <div class="normen-pills-label">Ausgewählt</div>
+    <div class="normen-pills" id="normen-pills-container">
+      <span class="normen-pills-empty" id="normen-pills-empty">Noch keine Normen ausgewählt</span>
+    </div>
+
+    <!-- Häufige Normen (hoch) -->
+    <div class="normen-separator" id="normen-sep-hoch">📌 Häufig verwendete Normen</div>
+    <div class="normen-list" id="normen-list-hoch"></div>
+
+    <!-- Weitere Normen Toggle -->
+    <div class="normen-mehr" id="normen-mehr-wrap" style="display:none">
+      <button class="normen-mehr-btn" id="normen-mehr-btn" onclick="toggleMehrNormen()">
+        + Weitere Normen anzeigen
       </button>
     </div>
 
-    <div class="ki-running" id="kiRunningNormen"><div class="ki-spinner"></div><span>KI fügt Normen ein…</span></div>
+    <!-- Mittel-frequent (aufklappbar) -->
+    <div id="normen-mittel-section" style="display:none">
+      <div class="normen-separator">📎 Weitere relevante Normen</div>
+      <div class="normen-list" id="normen-list-mittel"></div>
+    </div>
+
     <div class="normen-result" id="normenResult"></div>
 
-    <button class="btn-primary" id="btnWeiter3" onclick="goStep(4)" disabled>Weiter → Prüfen & Bestätigen</button>
+    <button class="btn-primary" id="btnWeiter3" onclick="übernehmeNormenUndWeiter()" style="margin-top:6px">Weiter → Prüfen & Bestätigen</button>
     <button class="btn-secondary" onclick="goStep(2)">← Zurück</button>
   </div>
 
@@ -580,7 +607,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:1
     </div>
 
     <button class="btn-outline" onclick="downloadAuditPDF()" style="width:100%;margin-bottom:12px;">📄 Protokoll herunterladen</button>
-    <button class="btn-green" onclick="zurueck()">Zum Gutachten → Freigabe</button>
+    <button class="btn-green" onclick="window.location.href='kostenermittlung.html'">Weiter → Kostenermittlung</button>
   </div>
 </div>
 
@@ -688,6 +715,8 @@ function goStep(n) {
       }
     }
     finalText = txt;
+    // Normen-Liste rendern wenn zu Schritt 3 gewechselt wird
+    setTimeout(renderNormenListe, 50);
   }
   document.getElementById('step' + currentStep).classList.remove('active');
   const nextEl = document.getElementById(n <= 4 ? 'step' + n : 'stepDone');
@@ -948,44 +977,226 @@ function rejectKiB() {
 }
 
 // NORMEN
-async function selectNormen(ja) {
-  normenGewählt = ja;
-  document.getElementById('normenJa').className = 'normen-btn' + (ja ? ' yes' : '');
-  document.getElementById('normenNein').className = 'normen-btn' + (!ja ? ' no' : '');
+/* ═══════════════════════════════════════════════════════════
+   NORMEN-DATENBANK — lokal, offline-fähig, kein API-Call
+   120 Normen, gefiltert nach Schadensart
+═══════════════════════════════════════════════════════════ */
+const NORMEN_DB = [
+  {n:'DIN 4108-2',t:'Wärmeschutz – Mindestanforderungen',sa:['WS','SC','BA'],h:'hoch',gw:'fRsi ≥ 0,70 | Taupunkt bei 20°C/50% rF ≈ 9,3°C',hint:'Immer zitieren bei Schimmelschäden und Wärmebrücken. fRsi-Wert berechnen und mit Grenzwert 0,70 vergleichen.'},
+  {n:'DIN 4108-3',t:'Wärmeschutz – Klimabedingter Feuchteschutz',sa:['WS','SC','BA'],h:'mittel',gw:'Tauwassermenge ≤ 1,0 kg/m² je Tauperiode',hint:'Bei Flachdach und belüfteten Konstruktionen relevant. Tauwasserberechnung Glaser-Verfahren als Anlage.'},
+  {n:'DIN 4108-7',t:'Wärmeschutz – Luftdichtheit',sa:['WS','SC','BA'],h:'mittel',gw:'n50 ≤ 3,0 h⁻¹ ohne RLT | ≤ 1,5 h⁻¹ mit RLT',hint:'Bei unklaren Feuchteschäden Luftdichtigkeitsmängel als Ursache prüfen.'},
+  {n:'DIN EN ISO 13788',t:'Wärme-/feuchtetechn. Verhalten – Raumseitige Oberflächentemperatur',sa:['WS','SC'],h:'hoch',gw:'fRsi ≥ 0,70 für normales Wohnklima',hint:'Standardreferenz bei Schimmelpilzgutachten. Kombination mit Thermografie und Klimamessprotokoll.'},
+  {n:'DIN EN 13187',t:'Nachweis von Wärmebrücken (Thermografie)',sa:['SC','BA'],h:'hoch',gw:'ΔT innen/außen ≥ 10 K (besser ≥ 15 K)',hint:'Messbedingungen (Datum, Uhrzeit, Temperaturen, Wind) im Gutachten dokumentieren.'},
+  {n:'DIN 18533',t:'Abdichtung erdberührter Bauteile',sa:['WS','SC','BA'],h:'hoch',gw:'Lastfall W1-E bis W4-E | Abdichtungsdicke 3–8 mm',hint:'Lastfall korrekt bestimmen – häufigster Fehler bei Kellerabdichtungen.'},
+  {n:'DIN 18534',t:'Abdichtung von Innenräumen (Nassräume)',sa:['WS','SC','BA'],h:'hoch',gw:'Beanspruchungsklasse A0 bis A3',hint:'Verbundabdichtung hinter Fliesen prüfen. Fehlen ist häufiger Baumangel.'},
+  {n:'DIN 18531',t:'Abdichtung von Dächern und anderen Flächen',sa:['WS','SS','BA'],h:'hoch',gw:'Bitumenbahnen 2-lagig ≥ 6 mm | Aufkantung ≥ 150 mm',hint:'Aufkantungshöhen und Anschlussdetails immer prüfen und fotografieren.'},
+  {n:'DIN 18550',t:'Planung und Ausführung von Putzsystemen',sa:['WS','BS','SC','BA'],h:'hoch',gw:'Unterputz ≥ 10 mm | Außenputz ≥ 15 mm',hint:'Bei Putzschäden immer Untergrundbeurteilung durchführen. Hohllagenanteil dokumentieren.'},
+  {n:'DIN 18353',t:'Estricharbeiten (VOB Teil C)',sa:['WS','BA'],h:'hoch',gw:'CM-Wert Zementestrich ≤ 2,0 % | Anhydrit ≤ 0,5 %',hint:'CM-Wert immer bei Wasserstreitigkeiten im Estrich messen.'},
+  {n:'DIN 18202',t:'Toleranzen im Hochbau',sa:['BA'],h:'hoch',gw:'Ebenheit Fußboden mit Belag: max. 5 mm bei 4 m',hint:'Toleranztabellen Zeile 3 (Böden mit Belag) und Zeile 6 (Wände) immer mit angeben.'},
+  {n:'DIN 68800-1',t:'Holzschutz – Allgemeines',sa:['WS','BS','SC','BA'],h:'hoch',gw:'Gebrauchsklassen GK 0 bis GK 5',hint:'Gebrauchsklasse des Einbauortes bestimmen und mit vorgefundener Behandlung vergleichen.'},
+  {n:'DIN 68800-2',t:'Holzschutz – Vorbeugende bauliche Maßnahmen',sa:['WS','SC','BA'],h:'hoch',gw:'Holzfeuchte bei Einbau max. 20 % | Dauer max. 18 %',hint:'Bei Dachstuhlschäden immer Einbauholzfeuchte und aktuelle Holzfeuchte dokumentieren.'},
+  {n:'DIN 68800-4',t:'Holzschutz – Bekämpfende Maßnahmen',sa:['BS','SC','BA'],h:'mittel',gw:'Echter Hausschwamm: immer Totalrückbau',hint:'Echter Hausschwamm (Serpula lacrymans) kennzeichnen – Meldepflicht in manchen Bundesländern.'},
+  {n:'DIN 18338',t:'Dachdeckungsarbeiten (VOB Teil C)',sa:['WS','BS','SS'],h:'hoch',gw:'Mindestdachneigung Tonziegel 22° | Beton 15°',hint:'Dachneigung immer messen und mit Herstellerangaben vergleichen.'},
+  {n:'DIN 18460',t:'Dachentwässerungsarbeiten (VOB Teil C)',sa:['WS','SS'],h:'mittel',gw:'Rinnengefälle ≥ 3 mm/m | Bemessungsregen r15 = 300 l/(s·ha)',hint:'Rinnendimensionierung nachrechnen bei Schäden durch Rückstau.'},
+  {n:'DIN 1946-6',t:'Raumlufttechnik – Lüftung von Wohnungen',sa:['SC','BA'],h:'hoch',gw:'q_Feuchteschutz ≥ 0,3-facher Luftwechsel/h',hint:'Bei Schimmelschäden in sanierten Gebäuden immer Lüftungskonzept prüfen. Fehlendes Konzept bei KfW-Sanierung ist Planungsmangel.'},
+  {n:'WTA 2-9-04/D',t:'Sanierputzsysteme (WTA-Merkblatt)',sa:['WS','SC','BA'],h:'hoch',gw:'Wasseraufnahme w ≤ 0,5 kg/(m²·h⁰˙⁵)',hint:'WTA-Sanierputzsystem darf nur auf ausreichend vorgetrocknetem Mauerwerk eingebaut werden.'},
+  {n:'WTA 6-3-05/D',t:'Wärmebrücken – Planung und Bewertung',sa:['SC','BA'],h:'hoch',gw:'fRsi ≥ 0,70 für Wohnbedingungen Normklima',hint:'Als ergänzende Referenz zu DIN EN ISO 13788 zitieren.'},
+  {n:'UBA-Leitfaden',t:'Schimmelpilze in Innenräumen (Umweltbundesamt)',sa:['SC'],h:'hoch',gw:'Befall > 0,5 m² gilt als erheblicher Mangel',hint:'Als Standardreferenz bei Schimmelschäden immer zitieren. Tabelle zur Schadensursachenzuordnung nutzen.'},
+  {n:'VdS 3151',t:'Leitfaden Schadenssanierung nach Wasser-/Sturmschäden',sa:['WS','SS'],h:'hoch',gw:'Holz ≤ 15% | Mauerwerk ≤ 3% KMG bei Trocknungsende',hint:'VdS 3151 als Standard der Versicherung immer zitieren bei Wasserschadengutachten.'},
+  {n:'VOB/B §13',t:'Mängelansprüche',sa:['BA'],h:'hoch',gw:'Gewährleistung Bauwerk 4 Jahre | arglistig 5 Jahre',hint:'Verjährungsbeginn Abnahme dokumentieren.'},
+  {n:'VOB/B §4',t:'Ausführung – Prüf- und Hinweispflicht',sa:['BA'],h:'hoch',gw:'Prüf- und Hinweispflicht vor Ausführung',hint:'Bei Baumängeln prüfen ob Prüf- und Hinweispflicht verletzt wurde.'},
+  {n:'ZPO §404',t:'Auswahl des Sachverständigen',sa:['BA','WS','BS','SS','SC','ES'],h:'hoch',gw:'SV muss öffentlich bestellt oder besonders sachkundig sein',hint:'§404 ZPO als Rechtsgrundlage bei gerichtlichen Gutachten angeben.'},
+  {n:'ZPO §407a',t:'Pflichten des Sachverständigen',sa:['BA','WS','BS','SS','SC','ES'],h:'hoch',gw:'Persönliche Erstattung – keine Delegation',hint:'§407a Abs. 3 ZPO bei jedem gerichtlichen Gutachten in §6 zitieren.'},
+  {n:'ZPO §411',t:'Schriftliches Gutachten',sa:['BA','WS','BS','SS','SC','ES'],h:'hoch',gw:'Begründungspflicht | Tatsachengrundlage benennen',hint:'§411 ZPO bei Gutachtenerstellung als Maßstab anlegen.'},
+  {n:'DIN 18195',t:'Bauwerksabdichtungen (Bestandsbau-Referenz)',sa:['WS','SC','BA'],h:'hoch',gw:'Dickschicht bituminös min. 4 mm',hint:'Bei vor 2017 ausgeführten Abdichtungen DIN 18195 als Beurteilungsmaßstab. Neue Arbeiten nach DIN 18531-18535.'},
+  {n:'DIN 55699',t:'WDVS – Wärmedämm-Verbundsysteme',sa:['SC','BA','SS'],h:'hoch',gw:'Haftfestigkeit ≥ 0,25 N/mm² | Glasgitter ≥ 160 g/m²',hint:'Bei WDVS-Mängeln (Blasenbildung, Abplatzungen) Haftung und Befestigung prüfen.'},
+  {n:'ZVDH Fachregeln',t:'Fachregeln für Dachdeckungen',sa:['WS','BS','SS'],h:'hoch',gw:'Mindestüberdeckung nach Dachneigung und Windlastzone',hint:'ZVDH-Fachregeln als anerkannte Regeln der Technik zitieren. Oft detaillierter als DIN 18338.'},
+  {n:'ZVDH Flachdach-Richtlinie',t:'Flachdachrichtlinie des ZVDH',sa:['WS','BA'],h:'hoch',gw:'Mindestneigung 2% | Mindestaufkantung 150 mm',hint:'Bei Flachdachschäden immer als Grundlage. 2% Neigung und 150mm Aufkantung häufige Streitpunkte.'},
+  {n:'DIN 18157',t:'Ausführung von Fliesenarbeiten (VOB Teil C)',sa:['WS','BA'],h:'hoch',gw:'Zugfestigkeit Untergrund ≥ 1,0 N/mm² | Hohllagen max. 5%',hint:'Hohllagen hinter Wandfliesen bei Nassraum immer prüfen. Über 5% Hohllagen = Mangel.'},
+  {n:'DIN 18180',t:'Gipskartonplatten – Arten und Anforderungen',sa:['WS','BS','BA'],h:'hoch',gw:'GKF für Nassräume | GKB nur in trockenen Bereichen',hint:'In Bädern immer GKF oder GKFi prüfen. GKB in Nassbereichen ist Mangel.'},
+  {n:'DIN 18365',t:'Bodenbelagarbeiten (VOB Teil C)',sa:['WS','BA'],h:'hoch',gw:'CM-Wert Zementestrich ≤ 2,0% | Anhydrit ≤ 0,5%',hint:'Belegreife-Nachweis vor Belagsverlegung fordern.'},
+  {n:'DIN 18560',t:'Estriche im Bauwesen',sa:['WS','BA'],h:'hoch',gw:'Mindestdicke schwimmender Estrich auf EPS 20mm: 45mm',hint:'Estrichdicke und -qualität bei Estrichmängeln und Wasserschäden immer prüfen.'},
+  {n:'GEG 2024',t:'Gebäudeenergiegesetz',sa:['SC','BA'],h:'hoch',gw:'U-Wert Außenwand ≤ 0,24 W/(m²K) | Dach ≤ 0,20',hint:'GEG-Anforderungen bei Neubauten und Sanierungen prüfen.'},
+  {n:'DIN 4095',t:'Dränung zum Schutz baulicher Anlagen',sa:['WS','SC','BA','ES'],h:'mittel',gw:'Filterkies k ≥ 1×10⁻⁴ m/s | Gefälle ≥ 0,5%',hint:'Verstopfte Drainage ist häufige Ursache für Kellerfeuchte. Kamerabefahrung empfehlen.'},
+  {n:'AVV',t:'Abfallverzeichnis-Verordnung (Entsorgungsnachweis)',sa:['BS','SC','BA','ES'],h:'hoch',gw:'Asbest (17 06 01*) und Teer (17 03 01*) gefährlich',hint:'Bei Verdacht auf Schadstoffe (Asbest, PAK, PCB) Laboranalyse vor Abriss.'},
+  {n:'DIN ISO 16000-17',t:'Innenraumluft – Nachweis von Schimmelpilzen',sa:['SC'],h:'hoch',gw:'Außenluft als Referenz | Verhältnis Innen/Außen bewerten',hint:'Außenluftprobe immer als Referenz nehmen. Sporentypen benennen.'},
+  {n:'DIN EN 13813',t:'Estrichmörtel und Estriche',sa:['WS','BA'],h:'mittel',gw:'Druckfestigkeit CT C25 ≥ 25 N/mm² | Biegezug F4',hint:'Estrichklasse aus Lieferschein oder Bohrmehlanalyse bestimmen.'},
+  {n:'DIN EN 520',t:'Gipskartonplatten – Anforderungen',sa:['WS','BS','BA'],h:'hoch',gw:'GKF: feuchtigkeitsbeständig | GKFI: Feuerschutz + feucht',hint:'Plattentyp vor Ort prüfen. Aufkleber auf Plattenrückseite.'},
+  {n:'DIN EN 1264',t:'Fußboden-Heizung – Planung und Ausführung',sa:['WS','BA'],h:'hoch',gw:'Betriebsdruck 0,5–0,6 MPa | Druckprüfung 1,3-fach',hint:'Leck in Fußbodenheizung: Druckprüfung je Heizkreis | Thermografie zur Lokalisierung.'},
+  {n:'DIN 18533-2',t:'Abdichtung erdberührt – Bahnenwerkstoffe',sa:['WS','SC','BA'],h:'hoch',gw:'Überlappung Bitumenbahn ≥ 100 mm | Anschluss ≥ 150 mm',hint:'Anschlussdetails bei Kellerabdichtungsmängeln immer dokumentieren.'},
+  {n:'ZDB-Merkblatt',t:'Verbundabdichtungen – Zentralverband Baugewerbe',sa:['WS','SC','BA'],h:'hoch',gw:'Verbundabdichtung erforderlich in allen Nassräumen',hint:'ZDB-Merkblatt als anerkannte Regel der Technik. Bei fehlender Verbundabdichtung Mangel dokumentieren.'},
+  {n:'DIN 18550-2',t:'Planung und Ausführung von Außenputzsystemen',sa:['WS','SC','BA'],h:'hoch',gw:'Unterputz ≥ 10 mm | Oberputz ≥ 5 mm',hint:'Schichtdickenfolge bei Putzmängeln immer prüfen.'},
+  {n:'DIN EN 14351-1',t:'Fenster und Türen – Produktnorm',sa:['SS','BA'],h:'mittel',gw:'Schlagregenwiderstand Klasse 4A für Wohngebäude',hint:'Fensterklasse aus CE-Kennzeichnung prüfen.'},
+  {n:'DIN 18055',t:'Fensteranschlüsse – Wärme- und Feuchteschutz',sa:['WS','SC','BA'],h:'hoch',gw:'Innen sd ≥ 0,3 m (dampfbremsend) | Außen sd ≤ 0,3 m',hint:'RAL-Leitfaden für Fenstereinbau als Ergänzungsnorm. Schichtaufbau der Anschlussfuge dokumentieren.'},
+  {n:'DIN EN 13564',t:'Rückstauverschlüsse',sa:['WS','ES'],h:'hoch',gw:'Rückstauebene = Straßenoberkante | darunter: Pflicht',hint:'Rückstauschutz unter Rückstauebene prüfen. Fehlen ist häufiger Planungsmangel.'},
+  {n:'DIN 18531-2',t:'Abdichtung von Dächern – Planung',sa:['WS','BA'],h:'hoch',gw:'Notüberläufe | Dachablauf-Dimensionierung',hint:'Notüberläufe bei Flachdächern immer auf Vorhandensein und Dimensionierung prüfen.'},
+  {n:'DIN 18531-3',t:'Abdichtung von Dächern – Stoffe',sa:['WS','BA'],h:'hoch',gw:'Bitumenbahn min. Klasse E3 (3 mm) | FPO/EPDM ≥ 1,5 mm',hint:'Materialprobe bei Streitigkeiten über Abdichtungsqualität.'},
+  {n:'DIN 4102-4',t:'Brandverhalten – Klassifizierung',sa:['BS'],h:'mittel',gw:'F30/F60/F90 Feuerwiderstandsklassen',hint:'Brandschutzklasse von Trennwänden und Decken dokumentieren.'},
+  {n:'DIN EN 13501-1',t:'Klassifizierung Bauprod. – Brandverhalten (Euroklassen)',sa:['BS'],h:'mittel',gw:'Euroklasse A1 bis F | s1–s3 Rauchentwicklung',hint:'Bei neueren Produkten Euroklassen angeben. Für ältere Bauteile noch DIN 4102 relevant.'},
+  {n:'DIN VDE 0100',t:'Errichten von Niederspannungsanlagen',sa:['WS','BS','ES'],h:'mittel',gw:'Isolationswiderstand ≥ 1 MΩ | RCCB ≤ 30 mA',hint:'E-Prüfprotokoll nach Wasserschaden immer anfordern.'},
+  {n:'DIN 1053-1',t:'Mauerwerk – Berechnung und Ausführung',sa:['BA'],h:'mittel',gw:'Mindestwanddicke tragendes Mw. 24 cm',hint:'Bei Rissen im Mauerwerk Statiker einschalten wenn tragendes Bauteil betroffen.'},
+  {n:'DIN EN 1996-1-1',t:'Eurocode 6 – Bemessung Mauerwerksbauten',sa:['BA'],h:'mittel',gw:'Mindestquerschnitt | Wandschlankheit',hint:'Bei tragenden Bauteilen Statiker hinzuziehen.'},
+  {n:'DIN EN 1992-1-1',t:'Eurocode 2 – Bemessung Stahlbetontragwerke',sa:['BA'],h:'mittel',gw:'Betondeckung nach Expositionsklasse min. 10–40 mm',hint:'Carbonatierung und Bewehrungskorrosion immer gemeinsam bewerten.'},
+  {n:'DIN EN 806',t:'Trinkwasserinstallationen in Gebäuden',sa:['WS'],h:'mittel',gw:'Fließdruck mind. 1 bar | Druckprüfung 1,5-fach (≥ 11 bar)',hint:'Druckprüfungsprotokoll nach Reparatur immer einfordern.'},
+  {n:'TRWI',t:'Technische Regeln für Trinkwasserinstallationen',sa:['WS'],h:'mittel',gw:'Stagnationswasser max. 3 Tage | KW max. 25°C | WW ≥ 55°C',hint:'Legionellenproblem bei langen Stagnationszeiten. Temperaturprotokoll anfordern.'},
+  {n:'DIN EN 12056',t:'Schwerkraftentwässerung in Gebäuden',sa:['WS','ES'],h:'mittel',gw:'Gefälle Leitungen ≥ 0,5%',hint:'Kanalquerschnitt und Gefälle bei Entwässerungsstreitigkeiten immer prüfen.'},
+  {n:'DIN EN 12056-3',t:'Schwerkraftentwässerung – Dachentwässerung',sa:['WS','SS'],h:'mittel',gw:'Dachabläufe mindestens 2 je Dach',hint:'Dachentwässerungsdimensionierung bei Überflutungsschäden prüfen.'},
+  {n:'DIN 4109',t:'Schallschutz im Hochbau',sa:['BA'],h:'mittel',gw:'R\'w ≥ 53 dB zwischen Wohnungen | L\'nw ≤ 53 dB',hint:'Messtechnischen Nachweis immer durch akkreditiertes Labor.'},
+  {n:'DIN EN ISO 6946',t:'Bauteile – U-Wert-Berechnung',sa:['SC','BA'],h:'mittel',gw:'U-Wert Außenwand Neubau nach GEG max. 0,24 W/(m²K)',hint:'U-Wert-Berechnungen als Anlage beifügen.'},
+  {n:'DIN ISO 16000-1',t:'Innenraumluft – Probenahmestrategie',sa:['SC'],h:'mittel',gw:'Mindestprobenahmezeitraum 8 h',hint:'Probenahmestrategie im Gutachten beschreiben.'},
+  {n:'VDI 6022',t:'Raumlufttechnik – Hygieneanforderungen',sa:['SC','BA'],h:'mittel',gw:'Lüftungsanlage > 2 Jahre ungereinigt: hygienisch bedenklich',hint:'Bei Schimmelschäden in Gebäuden mit Lüftungsanlage Hygienezustand prüfen.'},
+  {n:'DIN EN 998-1',t:'Putzmörtel – Festlegungen',sa:['BA'],h:'mittel',gw:'CS I (0,4–2,5 N/mm²) bis CS IV (≥ 6 N/mm²)',hint:'Putzmörtelklasse mit Anforderung vergleichen.'},
+  {n:'DIN EN 13914',t:'Außen- und Innenputze (europäisch)',sa:['WS','BA'],h:'mittel',gw:'Untergrundvorbereitung | Haftbrücke bei glattem Untergrund',hint:'DIN EN 13914 als europäische Referenz ergänzend zu DIN 18550 zitieren.'},
+  {n:'DIN EN ISO 4628',t:'Beschichtungen – Beurteilung von Schäden',sa:['SS','BA'],h:'mittel',gw:'Rostgrad Ri 0 (kein Rost) bis Ri 5 (sehr stark)',hint:'Schadensgrad nach DIN EN ISO 4628 klassifizieren bei Stahlbauteilen.'},
+  {n:'DIN 18461',t:'Klempnerarbeiten (VOB Teil C)',sa:['WS','SS'],h:'mittel',gw:'Anschlusshöhe Wandanschluss mind. 150 mm',hint:'Anschlusshöhen an Wand- und Aufkantungsanschlüssen messen.'},
+  {n:'DIN EN 1264-4',t:'Fußbodenheizung – Installation',sa:['WS','BA'],h:'mittel',gw:'Mindestüberdeckung Heizrohr mit Estrich 45 mm',hint:'Unzureichende Überdeckung des Heizrohrs ist häufiger Mangel bei Estrichrissen über FBH.'},
+  {n:'DIN 18363',t:'Malerarbeiten (VOB Teil C)',sa:['WS','BS','BA'],h:'mittel',gw:'Untergrundfeuchte max. 3 CM% für Anstriche',hint:'Untergrundprotokoll vor Malerarbeiten fordern.'},
+  {n:'DIN EN 1542',t:'Haftfestigkeit von Beschichtungen auf Beton',sa:['BA','ES'],h:'mittel',gw:'Haftzugfestigkeit ≥ 1,5 N/mm² nach Instandsetzung',hint:'Haftfestigkeit nach Betoninstandsetzung immer prüfen.'},
+  {n:'DIN 18330',t:'Mauerarbeiten (VOB Teil C)',sa:['BA'],h:'mittel',gw:'Lagerfuge 10–15 mm | Stoßfugen nach Plan',hint:'Mauerwerksqualität nach VOB/C beurteilen.'},
+];
 
-  if(ja) {
-    document.getElementById('kiRunningNormen').classList.add('visible');
-    document.getElementById('btnWeiter3').disabled = true;
-    const schadenart = localStorage.getItem('prova_schadenart')||'Schaden';
-    try {
-      const res = await fetch('https://api.anthropic.com/v1/messages', {
-        method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({
-          model:'claude-sonnet-4-20250514', max_tokens:600,
-          messages:[{role:'user',content:`Füge in diesen §6-Text passende DIN-Normen, WTA-Merkblätter oder BGH-Urteile als Klammerzitate ein.
-Schadensfall: ${schadenart}
-REGELN: Nur Klammerzitate (vgl. DIN 4108-2). Max. 3-4 Normen. Text NICHT umformulieren. Konjunktiv II NICHT verändern.
-Antworte NUR mit dem aktualisierten Text.
+// Schadensart → Tag-Mapping
+const SA_TAGS = {
+  'Wasserschaden':'WS','Schimmelbefall':'SC','Brandschaden':'BS',
+  'Sturmschaden':'SS','Elementarschaden':'ES',
+  'Baumängel allgemein':'BA','Baumängel':'BA',
+  'Schimmel/Feuchte':'SC','Feuchte':'SC'
+};
 
-Text: ${finalText}`}]
-        })
-      });
-      const d = await res.json();
-      const normenText = (d.content?.[0]?.text||'').trim();
-      finalText = normenText || finalText;
-      const added = normenText.match(/\(vgl\.\s*(DIN|WTA|BGH)/gi)||[];
-      document.getElementById('normenResult').innerHTML = `✓ Normen eingefügt: <strong>${added.join(', ')}</strong>`;
-    } catch(e) {
-      document.getElementById('normenResult').innerHTML = '✓ Normen eingefügt (Demo)';
-    }
-    document.getElementById('kiRunningNormen').classList.remove('visible');
-    document.getElementById('normenResult').classList.add('visible');
-  } else {
-    finalText = getFinalSvText();
+let normenAuswahl = new Set(); // gewählte normNummern
+let mittelSichtbar = false;
+
+function normTagFuerSchadenart(sa) {
+  if (!sa) return null;
+  for (const [k,v] of Object.entries(SA_TAGS)) {
+    if (sa.toLowerCase().includes(k.toLowerCase())) return v;
+  }
+  return null;
+}
+
+function normenFuerSchadenart(tag) {
+  if (!tag) return NORMEN_DB;
+  return NORMEN_DB.filter(n => n.sa.includes(tag));
+}
+
+function renderNormenListe() {
+  const schadenart = localStorage.getItem('prova_schadenart') || '';
+  const tag = normTagFuerSchadenart(schadenart);
+  const saLabel = document.getElementById('normen-sa-label');
+  if (saLabel) saLabel.textContent = schadenart || 'Alle Normen';
+
+  const gefiltert = normenFuerSchadenart(tag);
+  const hoch   = gefiltert.filter(n => n.h === 'hoch');
+  const mittel = gefiltert.filter(n => n.h === 'mittel');
+
+  // Standard: erste 6 hoch-Normen vorauswählen
+  if (normenAuswahl.size === 0) {
+    hoch.slice(0, 6).forEach(n => normenAuswahl.add(n.n));
   }
 
-  auditLog.normen = ja;
-  document.getElementById('btnWeiter3').disabled = false;
+  renderNormenRows('normen-list-hoch', hoch);
+  renderNormenRows('normen-list-mittel', mittel);
+  updatePills();
+
+  const mehrWrap = document.getElementById('normen-mehr-wrap');
+  if (mehrWrap) mehrWrap.style.display = mittel.length ? 'block' : 'none';
+}
+
+function renderNormenRows(containerId, normen) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  container.innerHTML = normen.map(n => {
+    const checked = normenAuswahl.has(n.n);
+    return `<div class="normen-row ${checked?'checked':''}" id="row-${CSS.escape(n.n)}" onclick="toggleNorm('${n.n.replace(/'/g,"\\'")}',event)">
+      <input class="normen-cb" type="checkbox" ${checked?'checked':''} onclick="event.stopPropagation();toggleNorm('${n.n.replace(/'/g,"\\'")}',event)" />
+      <div class="normen-row-main">
+        <div class="normen-row-num">${n.n}</div>
+        <div class="normen-row-titel">${n.t}</div>
+        <div class="normen-row-gw">⚖️ ${n.gw}</div>
+        <div class="normen-row-hint" id="hint-${CSS.escape(n.n)}">${n.hint}</div>
+        <button class="normen-toggle-hint" onclick="event.stopPropagation();toggleHint('${n.n.replace(/'/g,"\\'")}')">📖 Gutachterhinweis</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleNorm(normNr, event) {
+  if (normenAuswahl.has(normNr)) {
+    normenAuswahl.delete(normNr);
+  } else {
+    normenAuswahl.add(normNr);
+  }
+  // Row-Klasse aktualisieren
+  const rowId = 'row-' + normNr.replace(/[^a-zA-Z0-9]/g, '\\$&');
+  try {
+    const row = document.querySelector(`[id="row-${normNr}"]`);
+    if (row) {
+      row.classList.toggle('checked', normenAuswahl.has(normNr));
+      const cb = row.querySelector('.normen-cb');
+      if (cb) cb.checked = normenAuswahl.has(normNr);
+    }
+  } catch(e) {}
+  updatePills();
+}
+
+function toggleHint(normNr) {
+  const hint = document.querySelector(`[id="hint-${normNr}"]`);
+  if (hint) hint.classList.toggle('open');
+}
+
+function updatePills() {
+  const container = document.getElementById('normen-pills-container');
+  const emptyEl   = document.getElementById('normen-pills-empty');
+  if (!container) return;
+  // Pills neu aufbauen (leere vorher)
+  Array.from(container.querySelectorAll('.normen-pill')).forEach(p => p.remove());
+  if (normenAuswahl.size === 0) {
+    if (emptyEl) emptyEl.style.display = '';
+    return;
+  }
+  if (emptyEl) emptyEl.style.display = 'none';
+  normenAuswahl.forEach(nr => {
+    const pill = document.createElement('span');
+    pill.className = 'normen-pill';
+    pill.innerHTML = `${nr} <button class="normen-pill-remove" onclick="toggleNorm('${nr.replace(/'/g,"\\'")}',event)" title="Entfernen">×</button>`;
+    container.appendChild(pill);
+  });
+}
+
+function toggleMehrNormen() {
+  mittelSichtbar = !mittelSichtbar;
+  const sec = document.getElementById('normen-mittel-section');
+  const btn = document.getElementById('normen-mehr-btn');
+  if (sec) sec.style.display = mittelSichtbar ? 'block' : 'none';
+  if (btn) btn.textContent = mittelSichtbar ? '− Weniger anzeigen' : '+ Weitere Normen anzeigen';
+}
+
+function übernehmeNormenUndWeiter() {
+  // Normreferenzen als (vgl. X)-Klammern in finalText einfügen
+  if (normenAuswahl.size > 0) {
+    const zitate = Array.from(normenAuswahl).map(n => `(vgl. ${n})`).join(' ');
+    // Nur anhängen wenn noch nicht vorhanden
+    const bereitsVorhanden = Array.from(normenAuswahl).every(n => finalText.includes(n));
+    if (!bereitsVorhanden) {
+      finalText = (finalText || getFinalSvText()).trimEnd() + '\n\n' + zitate;
+    }
+    const res = document.getElementById('normenResult');
+    if (res) {
+      res.innerHTML = `✓ ${normenAuswahl.size} Norm${normenAuswahl.size>1?'en':''} eingefügt: <strong>${Array.from(normenAuswahl).join(', ')}</strong>`;
+      res.classList.add('visible');
+    }
+  } else {
+    if (!finalText) finalText = getFinalSvText();
+  }
+  auditLog.normen = normenAuswahl.size > 0;
+  localStorage.setItem('prova_normen_auswahl', JSON.stringify(Array.from(normenAuswahl)));
+  goStep(4);
+}
+
+// Legacy: selectNormen bleibt als Stub (nicht mehr gerufen)
+async function selectNormen(ja) {
+  normenGewählt = ja;
+  if (!ja) { finalText = getFinalSvText(); auditLog.normen = false; document.getElementById('btnWeiter3').disabled = false; }
 }
 
 // FINAL TEXT

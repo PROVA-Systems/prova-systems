@@ -194,5 +194,192 @@ function logout(){
   window.PROVA=window.PROVA||{};PROVA.paket=p;PROVA.isPro=['Pro','Enterprise'].includes(p);PROVA.isEnterprise=p==='Enterprise';
 })();
 </script>
+<!-- SUPPORT BUTTON - INTELLIGENT TRIAGE -->
+<div id="support-btn" onclick="openSupportModal()" style="position:fixed;bottom:80px;right:20px;z-index:400;width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#4f8ef7,#3a7be0);box-shadow:0 4px 16px rgba(79,142,247,0.4);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:20px;" title="Support anfragen">&#128172;</div>
+<div id="support-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:500;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px);">
+<div style="background:#13161d;border:1px solid rgba(255,255,255,0.12);border-radius:14px;max-width:500px;width:100%;padding:28px;max-height:90vh;overflow-y:auto;">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+    <div style="font-size:16px;font-weight:700;color:#e8eaf0;">&#128172; Support</div>
+    <button onclick="closeSupportModal()" style="background:none;border:none;color:#6b7280;font-size:20px;cursor:pointer;line-height:1;">&#x2715;</button>
+  </div>
+  <!-- FAQ-Antwort (Nutzungsfrage) -->
+  <div id="support-faq" style="display:none;margin-bottom:16px;padding:14px;background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.25);border-radius:10px;">
+    <div style="font-size:12px;font-weight:600;color:#10b981;margin-bottom:6px;">&#129302; KI-Antwort</div>
+    <div id="support-faq-text" style="font-size:13px;color:#e8eaf0;line-height:1.6;"></div>
+    <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">
+      <button onclick="supportFaqHilft()" style="padding:6px 14px;background:#10b981;border:none;border-radius:6px;color:#fff;font-size:12px;font-weight:600;cursor:pointer;">&#10003; Hat geholfen</button>
+      <button onclick="supportFaqNichtHilft()" style="padding:6px 14px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:6px;color:#9da3b4;font-size:12px;cursor:pointer;">Trotzdem senden</button>
+    </div>
+  </div>
+  <!-- Typ-Indikator -->
+  <div id="support-typ-indicator" style="display:none;margin-bottom:14px;padding:8px 12px;border-radius:8px;font-size:12px;font-weight:600;"></div>
+  <!-- Form -->
+  <div id="support-form">
+    <div style="margin-bottom:14px;">
+      <label style="font-size:12px;font-weight:600;color:#9da3b4;display:block;margin-bottom:5px;">Betreff</label>
+      <input id="sup-betreff" type="text" placeholder="Kurze Beschreibung" oninput="supportAnalyse()" style="width:100%;background:#1e2330;border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:10px 12px;color:#e8eaf0;font-size:14px;outline:none;font-family:inherit;">
+    </div>
+    <div style="margin-bottom:18px;">
+      <label style="font-size:12px;font-weight:600;color:#9da3b4;display:block;margin-bottom:5px;">Nachricht</label>
+      <textarea id="sup-nachricht" placeholder="Was genau ist passiert? Je mehr Details, desto schneller k&#246;nnen wir helfen." oninput="supportAnalyse()" style="width:100%;background:#1e2330;border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:10px 12px;color:#e8eaf0;font-size:14px;outline:none;font-family:inherit;min-height:90px;resize:vertical;"></textarea>
+    </div>
+    <div id="support-err" style="display:none;font-size:12px;color:#ef4444;margin-bottom:10px;padding:8px 12px;background:rgba(239,68,68,0.08);border-radius:6px;border:1px solid rgba(239,68,68,0.2);">Bitte Betreff und Nachricht eingeben.</div>
+    <button id="sup-send-btn" onclick="sendSupport()" style="width:100%;padding:11px;background:linear-gradient(135deg,#4f8ef7,#3a7be0);border:none;border-radius:8px;color:#fff;font-size:14px;font-weight:600;cursor:pointer;">Anfrage senden</button>
+  </div>
+  <!-- Erfolg -->
+  <div id="support-success" style="display:none;text-align:center;padding:20px 0;">
+    <div style="font-size:40px;margin-bottom:12px;">&#9989;</div>
+    <div id="support-success-title" style="font-size:15px;font-weight:600;color:#e8eaf0;margin-bottom:8px;">Anfrage gesendet!</div>
+    <div id="support-success-text" style="font-size:13px;color:#9da3b4;">Wir melden uns schnellstm&#246;glich bei Ihnen.</div>
+    <button onclick="closeSupportModal()" style="margin-top:16px;padding:10px 24px;background:#4f8ef7;border:none;border-radius:8px;color:#fff;font-size:14px;font-weight:600;cursor:pointer;">Schlie&#223;en</button>
+  </div>
+</div></div>
+<script>
+
+const PROVA_FAQ = [
+  {q:"gutachten erstellen",a:"Klicken Sie im Dashboard auf 'Neues Gutachten'. Sie gelangen zu Schritt 1 (Stammdaten), dann Schritt 2 (Diktat/Text), dann Schritt 3 (KI-Analyse). Nach der Analyse können Sie in der Freigabe-Ansicht alles prüfen und freigeben."},
+  {q:"diktat aufnehmen",a:"In Schritt 2 finden Sie den Aufnahme-Button. Klicken Sie ihn, sprechen Sie Ihre Beobachtungen, klicken Sie erneut zum Stoppen. Das Transkript erscheint automatisch. Alternativ können Sie Text direkt eingeben."},
+  {q:"foto hochladen",a:"In Schritt 2 gibt es den Bereich 'Fotos'. Klicken Sie auf 'Fotos hinzufügen' oder ziehen Sie Bilder per Drag & Drop. Fotos werden automatisch komprimiert. Sie können auch später nachgereicht werden."},
+  {q:"pdf generieren",a:"Nach der Freigabe wird automatisch ein PDF erstellt und an Ihre E-Mail gesendet. Dies dauert ca. 1-2 Minuten. Prüfen Sie auch Ihren Spam-Ordner."},
+  {q:"rechnung erstellen",a:"Gehen Sie zu 'Rechnungen' in der Navigation. Wählen Sie den Rechnungstyp (JVEG, Pauschal, Stundensatz etc.), füllen Sie die Felder aus und klicken Sie 'Rechnung erstellen'. Die Rechnung wird per E-Mail zugeschickt."},
+  {q:"jveg berechnen",a:"Im JVEG-Rechner (Navigation → JVEG) können Sie Honorargruppe, Stunden, Fahrtkosten und Fotokosten eingeben. Der Rechner berechnet automatisch den Gesamtbetrag nach §9, §7, §8 und §12 JVEG."},
+  {q:"termin eintragen",a:"Unter 'Termine' können Sie neue Termine anlegen. Klicken Sie auf '+ Neuer Termin', wählen Sie Typ (Ortstermin, Gerichtstermin, Frist etc.), Datum und Uhrzeit. Sie erhalten automatisch Erinnerungen."},
+  {q:"briefvorlage",a:"Unter 'Briefvorlagen' finden Sie alle verfügbaren Vorlagen. Wählen Sie die passende Vorlage, die Felder werden automatisch aus Ihren Einstellungen befüllt. Sie können den Text anpassen und dann generieren."},
+  {q:"passwort ändern",a:"Gehen Sie zu prova-systems.de/app-login.html und klicken Sie auf 'Passwort vergessen'. Sie erhalten eine E-Mail mit einem Reset-Link."},
+  {q:"profil einstellungen",a:"Unter 'Einstellungen' (Zahnrad-Symbol) können Sie Ihre persönlichen Daten, Kanzleidaten, IBAN und Zertifizierungen hinterlegen. Diese Daten werden automatisch in alle Gutachten und Rechnungen übernommen."},
+  {q:"archiv suche",a:"Im Archiv können Sie nach Aktenzeichen, Auftraggeber, Schadenart und Status suchen. Nutzen Sie die Filteroptionen oben oder die Suchleiste für eine Volltextsuche."},
+  {q:"aktenzeichen",a:"Das Aktenzeichen wird automatisch generiert (Format: PROVA-JJJJ-NNN). Sie können es in Schritt 1 auch manuell eingeben oder ändern."},
+  {q:"konjunktiv stellungnahme",a:"Die KI generiert Einschätzungen und Ursachenanalysen automatisch im Konjunktiv II (dürfte, könnte, wäre). Dies ist rechtlich korrekt nach §407a ZPO. Die Formulierungen können Sie im §6-Editor anpassen."},
+  {q:"paket upgrade",a:"Für ein Upgrade auf Pro oder Enterprise wenden Sie sich bitte an support@prova-systems.de. Wir erstellen Ihnen ein individuelles Angebot."},
+  {q:"abmelden logout",a:"Klicken Sie im Drawer-Menü (☰) auf 'Abmelden' am unteren Ende. Alternativ: Einstellungen → Abmelden."},
+  {q:"keine email bekommen",a:"Prüfen Sie zunächst Ihren Spam-Ordner. E-Mails kommen von noreply@prova-systems.de. Falls nichts da ist, prüfen Sie unter Einstellungen ob Ihre E-Mail-Adresse korrekt hinterlegt ist."},
+  {q:"daten exportieren",a:"Im Archiv können Sie einzelne Gutachten als PDF herunterladen. Ein Gesamt-Export aller Daten ist auf Anfrage über support@prova-systems.de möglich."},
+  {q:"messprot okoll messwerte",a:"In der App können Sie Messwerte strukturiert erfassen. Aktivieren Sie den Bereich 'Messwerte' in Schritt 1 (ausklappbar). Feuchtemessung, Risse etc. können dort dokumentiert werden."},
+  {q:"safari funktioniert nicht",a:"Im Safari-Privatmodus ist die Offline-Speicherung deaktiviert. Bitte nutzen Sie Safari im normalen Modus oder einen anderen Browser (Chrome, Firefox, Edge)."},
+  {q:"wie lange dauert gutachten",a:"Die KI-Analyse dauert in der Regel 30-90 Sekunden. Die gesamte Bearbeitung (Diktat bis PDF) ist typischerweise in 20-30 Minuten abgeschlossen."}
+];
+
+// Klassifizierung
+function klassifiziereAnfrage(text) {
+  var t = text.toLowerCase();
+  var fehlerKW = ['fehler','error','funktioniert nicht','geht nicht','kaputt','absturz','lädt nicht','broken','crash','404','500','bug','problem mit der app','nicht mehr'];
+  var billingKW = ['rechnung','zahlung','kündigung','kündigen','preis','kosten','abonnement','abo','zahlen','invoice','billing','upgrade','downgrade','rückerstattung'];
+  for(var i=0;i<fehlerKW.length;i++) if(t.includes(fehlerKW[i])) return 'fehler';
+  for(var i=0;i<billingKW.length;i++) if(t.includes(billingKW[i])) return 'billing';
+  return 'nutzung';
+}
+
+// FAQ-Match
+function findeFAQAntwort(text) {
+  var t = text.toLowerCase();
+  var best = null, bestScore = 0;
+  PROVA_FAQ.forEach(function(faq) {
+    var score = 0;
+    faq.q.split(' ').forEach(function(w) { if(t.includes(w)) score++; });
+    if(score > bestScore) { bestScore = score; best = faq; }
+  });
+  return bestScore > 0 ? best : null;
+}
+
+var _supportTyp = 'nutzung';
+var _supportAnalyseTimer = null;
+
+function openSupportModal(){document.getElementById("support-modal").style.display="flex";}
+function closeSupportModal(){
+  document.getElementById("support-modal").style.display="none";
+  document.getElementById("support-success").style.display="none";
+  document.getElementById("support-form").style.display="block";
+  document.getElementById("support-faq").style.display="none";
+  document.getElementById("support-typ-indicator").style.display="none";
+  document.getElementById("sup-betreff").value="";
+  document.getElementById("sup-nachricht").value="";
+  document.getElementById("support-err").style.display="none";
+  var btn=document.getElementById("sup-send-btn");
+  if(btn){btn.disabled=false;btn.textContent="Anfrage senden";}
+}
+document.addEventListener("DOMContentLoaded",function(){
+  var m=document.getElementById("support-modal");
+  if(m)m.addEventListener("click",function(e){if(e.target===m)closeSupportModal();});
+});
+function supportAnalyse(){
+  clearTimeout(_supportAnalyseTimer);
+  _supportAnalyseTimer = setTimeout(function(){
+    var b=document.getElementById("sup-betreff").value.trim();
+    var n=document.getElementById("sup-nachricht").value.trim();
+    var combined = b + " " + n;
+    if(combined.trim().length < 3) return;
+    _supportTyp = klassifiziereAnfrage(combined);
+    var ind = document.getElementById("support-typ-indicator");
+    var faqEl = document.getElementById("support-faq");
+    if(_supportTyp === 'fehler'){
+      ind.style.display="block";
+      ind.style.background="rgba(239,68,68,0.1)";
+      ind.style.border="1px solid rgba(239,68,68,0.25)";
+      ind.style.color="#ef4444";
+      ind.textContent="&#9888; Fehlermeldung erkannt — wird mit hoher Priorit&#228;t weitergeleitet";
+      faqEl.style.display="none";
+    } else if(_supportTyp === 'billing'){
+      ind.style.display="block";
+      ind.style.background="rgba(245,158,11,0.1)";
+      ind.style.border="1px solid rgba(245,158,11,0.25)";
+      ind.style.color="#f59e0b";
+      ind.textContent="&#128176; Frage zu Abrechnung/Paket — wird direkt bearbeitet";
+      faqEl.style.display="none";
+    } else {
+      ind.style.display="none";
+      var faq = findeFAQAntwort(combined);
+      if(faq){
+        document.getElementById("support-faq-text").textContent=faq.a;
+        faqEl.style.display="block";
+      } else {
+        faqEl.style.display="none";
+      }
+    }
+  }, 600);
+}
+function supportFaqHilft(){
+  document.getElementById("support-form").style.display="none";
+  document.getElementById("support-faq").style.display="none";
+  document.getElementById("support-success").style.display="block";
+  document.getElementById("support-success-title").textContent="Super! Problem gel&#246;st &#128512;";
+  document.getElementById("support-success-text").textContent="Sch&#246;n, dass wir helfen konnten.";
+}
+function supportFaqNichtHilft(){
+  document.getElementById("support-faq").style.display="none";
+}
+async function sendSupport(){
+  var b=document.getElementById("sup-betreff").value.trim();
+  var n=document.getElementById("sup-nachricht").value.trim();
+  var err=document.getElementById("support-err");
+  var btn=document.getElementById("sup-send-btn");
+  if(!b||!n){err.style.display="block";return;}
+  err.style.display="none";btn.disabled=true;btn.textContent="&#8987; Wird gesendet...";
+  var payload={
+    betreff:b, nachricht:n, typ:_supportTyp,
+    prioritaet: _supportTyp==='fehler'?'Hoch':_supportTyp==='billing'?'Kritisch':'Normal',
+    sv_email:localStorage.getItem("prova_sv_email")||"",
+    paket:localStorage.getItem("prova_paket")||"Starter",
+    seite:window.location.pathname,
+    ts:new Date().toISOString()
+  };
+  try{
+    await fetch("https://hook.eu1.make.com/lktuhugwcg5v37ib6bdaxjb1uiplnu8v",{
+      method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify(payload)
+    });
+  }catch(e){}
+  document.getElementById("support-form").style.display="none";
+  document.getElementById("support-faq").style.display="none";
+  document.getElementById("support-typ-indicator").style.display="none";
+  document.getElementById("support-success").style.display="block";
+  if(_supportTyp==='fehler'||_supportTyp==='billing'){
+    document.getElementById("support-success-title").textContent="Anfrage gesendet &#128680;";
+    document.getElementById("support-success-text").textContent="Priorit&#228;t: "+(_supportTyp==='billing'?'Kritisch':'Hoch')+" — wir melden uns umgehend.";
+  } else {
+    document.getElementById("support-success-title").textContent="Anfrage gesendet!";
+    document.getElementById("support-success-text").textContent="Wir melden uns schnellstm&#246;glich bei Ihnen.";
+  }
+}
+</script>
 </body>
 </html>

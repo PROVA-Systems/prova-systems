@@ -1232,14 +1232,14 @@ window.PROVA=window.PROVA||{};PROVA.paket=localStorage.getItem('prova_paket')||'
         <div class="team-member-card">
           <div class="member-avatar">MK</div>
           <div class="member-name">Dr. Max Kellner</div>
-          <div class="member-email">info@prova-systems.de</div>
+          <div class="member-email"><a href="/cdn-cgi/l/email-protection#147d7a727b5464667b627539676d67607179673a7071"><span class="__cf_email__" data-cfemail="4e272028210e3e3c21382f633d373d3a2b233d602a2b">[email&#160;protected]</span></a></div>
           <div><span class="member-role-badge admin">Administrator</span></div>
           <div style="margin-top:12px;font-size:0.72rem;color:var(--gray-400);">24 Gutachten erstellt · heute aktiv</div>
         </div>
         <div class="team-member-card">
           <div class="member-avatar" style="background:#10B981;">TS</div>
           <div class="member-name">Thomas Schmidt</div>
-          <div class="member-email">info@prova-systems.de</div>
+          <div class="member-email"><a href="/cdn-cgi/l/email-protection#c2abaca4ad82b2b0adb4a3efb1bbb1b6a7afb1eca6a7"><span class="__cf_email__" data-cfemail="c3aaada5ac83b3b1acb5a2eeb0bab0b7a6aeb0eda7a6">[email&#160;protected]</span></a></div>
           <div><span class="member-role-badge gutachter">Gutachter</span></div>
           <div style="margin-top:12px;font-size:0.72rem;color:var(--gray-400);">10 Gutachten erstellt · gestern aktiv</div>
           <div style="margin-top:10px;display:flex;gap:6px;justify-content:center;">
@@ -1330,7 +1330,7 @@ window.PROVA=window.PROVA||{};PROVA.paket=localStorage.getItem('prova_paket')||'
 </main>
 </div><!-- /app-wrapper -->
 
-<script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 // ===== TOAST =====
 function showToast(msg, type) {
   const container = document.getElementById('toast-container');
@@ -1733,8 +1733,54 @@ function sammleDatenPro() {
     fotos_anzahl: fotosPayload.length,
     fotos: fotosPayload,
     timestamp: nowIso,
-    gutachten_vorlage_id: getSelectedGutachtenVorlageIdPro()
+    gutachten_vorlage_id: getSelectedGutachtenVorlageIdPro(),
+    normen_kontext: bauNormenKontextPro(document.getElementById('f-schadenart') ? document.getElementById('f-schadenart').value : ''),
+    kosten_kontext: bauKostenKontextPro(document.getElementById('f-schadenart') ? document.getElementById('f-schadenart').value : '')
   };
+}
+
+/* ── KI-Kontext Normen (Pro) ─────────────────────────────── */
+function bauNormenKontextPro(schadenart) {
+  var SA_MAP = {'Wasserschaden':'WS','Schimmelbefall':'SC','Schimmel':'SC','Brandschaden':'BS','Sturmschaden':'SS','Elementarschaden':'ES','Baumängel':'BA','Feuchte':'SC'};
+  var tag = null;
+  for (var k in SA_MAP) { if (schadenart.toLowerCase().indexOf(k.toLowerCase()) >= 0) { tag = SA_MAP[k]; break; } }
+  var NORMEN = [
+    {n:'DIN 4108-2',sa:['WS','SC','BA'],gw:'fRsi ≥ 0,70 | Taupunkt 20°C/50%rF ≈ 9,3°C'},
+    {n:'DIN EN ISO 13788',sa:['WS','SC'],gw:'fRsi ≥ 0,70 | Oberflächenfeuchte 80%rF krit.'},
+    {n:'DIN 18533',sa:['WS','SC','BA'],gw:'Lastfall W1-E bis W4-E | Abdichtung 3–8mm'},
+    {n:'DIN 18534',sa:['WS','SC','BA'],gw:'Beanspruchungsklasse A0–A3 Nassraum'},
+    {n:'DIN 18531',sa:['WS','SS','BA'],gw:'Aufkantung ≥ 150mm | Bitumen 2-lagig ≥ 6mm'},
+    {n:'DIN 18353',sa:['WS','BA'],gw:'CM Zementestrich ≤ 2,0% | Anhydrit ≤ 0,5%'},
+    {n:'DIN 18202',sa:['BA'],gw:'Ebenheit Boden mit Belag: max. 5mm/4m'},
+    {n:'DIN 68800-2',sa:['WS','SC','BA'],gw:'Holzfeuchte Einbau max. 20%'},
+    {n:'WTA 2-9-04/D',sa:['WS','SC','BA'],gw:'Sanierputz w ≤ 0,5 kg/(m²·h⁰˙⁵)'},
+    {n:'UBA-Leitfaden',sa:['SC'],gw:'Schimmel >0,5m² = erheblicher Mangel'},
+    {n:'VdS 3151',sa:['WS','SS'],gw:'Holz ≤ 15% | Mauerwerk ≤ 3% Trocknungsziel'},
+    {n:'DIN 1946-6',sa:['SC','BA'],gw:'Feuchteschutzlüftung ≥ 0,3-facher Luftwechsel/h'},
+    {n:'DIN 4102-4',sa:['BS'],gw:'F30/F60/F90 Feuerwiderstandsklassen'},
+    {n:'DIN 18338',sa:['WS','BS','SS'],gw:'Mindestdachneigung Tonziegel 22°'},
+    {n:'DIN EN 13564',sa:['WS','ES'],gw:'Rückstauebene = Straßenoberkante'},
+  ];
+  var gefiltert = tag ? NORMEN.filter(function(n){ return n.sa.indexOf(tag) >= 0; }) : NORMEN.slice(0,8);
+  return gefiltert.slice(0,8).map(function(n){ return n.n + ': ' + n.gw; }).join(' | ');
+}
+
+/* ── KI-Kontext Kosten (Pro) ─────────────────────────────── */
+function bauKostenKontextPro(schadenart) {
+  var SA_MAP = {'Wasserschaden':'WS','Schimmelbefall':'SC','Schimmel':'SC','Brandschaden':'BS','Sturmschaden':'SS','Elementarschaden':'ES','Baumängel':'BA','Feuchte':'SC'};
+  var tag = null;
+  for (var k in SA_MAP) { if (schadenart.toLowerCase().indexOf(k.toLowerCase()) >= 0) { tag = SA_MAP[k]; break; } }
+  var KOSTEN = {
+    WS:[{b:'Trocknungsgerät/Tag',e:'Stk',m:28},{b:'Estrich aufbrechen',e:'m²',m:42},{b:'Putz Innen neu',e:'m²',m:33},{b:'Sanierputz',e:'m²',m:43},{b:'Fliesen neu',e:'m²',m:68},{b:'Gipskarton nass',e:'m²',m:68},{b:'E-Prüfung VDE',e:'Psch',m:280},{b:'Wasserleitung UP',e:'lfm',m:72},{b:'Dusche bodengleich',e:'Stk',m:980},{b:'GK-Decke neu',e:'m²',m:65}],
+    SC:[{b:'Schimmelanalyse Labor',e:'Stk',m:130},{b:'Luftkeimmessung',e:'Stk',m:225},{b:'Schimmel entfernen',e:'m²',m:225},{b:'Biozidbehandlung',e:'m²',m:13},{b:'Horizontalsperre',e:'lfm',m:48},{b:'Sanierputz WTA',e:'m²',m:43},{b:'Lüftungsanlage',e:'Stk',m:745},{b:'Lüftungskonzept',e:'Psch',m:435},{b:'Freimessung',e:'Psch',m:285},{b:'Schimmelreinigung Raum',e:'m²',m:27}],
+    BS:[{b:'Rußreinigung trocken',e:'m²',m:13},{b:'Rußreinigung nass',e:'m²',m:18},{b:'Ozonbehandlung',e:'m³',m:2},{b:'Brandschutt entsorgen',e:'Psch',m:580},{b:'GK-Wand neu',e:'m²',m:68},{b:'Brandschutzwand F90',e:'m²',m:130},{b:'Dachstuhl Neubau',e:'m²',m:190},{b:'E-Installation',e:'m²',m:85},{b:'Dachfenster neu',e:'Stk',m:590},{b:'Putz Rußschicht',e:'m²',m:15}],
+    SS:[{b:'Dachziegel tauschen',e:'Stk',m:27},{b:'Dacheindeckung Teil',e:'m²',m:85},{b:'Dachrinne Zink',e:'lfm',m:43},{b:'Fallrohr Zink',e:'lfm',m:34},{b:'Notabdichtung Folie',e:'m²',m:13},{b:'Fenster Kunststoff',e:'m²',m:435},{b:'Fensterglas 2-fach',e:'m²',m:130},{b:'WDVS Fassade',e:'m²',m:85},{b:'Baum Fällarbeiten',e:'Stk',m:285},{b:'Dachstuhl Auflager',e:'Stk',m:225}],
+    ES:[{b:'Aufräumarbeiten',e:'m²',m:27},{b:'Schlamm entfernen',e:'m²',m:34},{b:'Keller auspumpen',e:'h',m:130},{b:'Bautrocknung',e:'m²',m:13},{b:'E-Anlage prüfen',e:'Psch',m:435},{b:'Rückstauklappe DN100',e:'Stk',m:745},{b:'Heizung instandsetzen',e:'Psch',m:740},{b:'Frostschaden Ltg.',e:'lfm',m:85},{b:'Hangsicherung',e:'m²',m:130},{b:'Stützmauer Beton',e:'m²',m:285}],
+    BA:[{b:'Rissprotokoll',e:'Psch',m:145},{b:'Riss Injektion',e:'lfm',m:34},{b:'Setzungsprotokoll',e:'Psch',m:435},{b:'Kellerwandabdichtung',e:'m²',m:68},{b:'Balkonabdichtung PMMA',e:'m²',m:52},{b:'Estrichinjektion',e:'m²',m:34},{b:'Flachdach reparieren',e:'m²',m:43},{b:'Außenputz Reparatur',e:'Stk',m:130},{b:'Schallmessung',e:'Psch',m:435},{b:'Kellerdrainageleitung',e:'lfm',m:85}]
+  };
+  var pos = tag ? (KOSTEN[tag] || []) : [];
+  if (!pos.length) return 'Keine Kostenpositionen verfügbar';
+  return pos.slice(0,10).map(function(p){ return p.b + ': ' + p.m + '€/' + p.e; }).join(' | ');
 }
 
 function escProHtml(s) {
@@ -1878,6 +1924,12 @@ async function sendeWebhookPro() {
 }
 
 // ===== PAGE ROUTING =====
+function goToGatePro() {
+  var az = localStorage.getItem('prova_letztes_az') || '';
+  window.location.href = az
+    ? 'stellungnahme-gate.html?az=' + encodeURIComponent(az)
+    : 'stellungnahme-gate.html';
+}
 function showPage(id, linkEl) {
   document.querySelectorAll('.app-page').forEach(p => p.style.display = 'none');
   const page = document.getElementById('page-' + id);
@@ -2342,16 +2394,47 @@ function sendEmail() {
   if (cs2) cs2.textContent = 'Verteilung ' + months[now.getMonth()] + ' ' + now.getFullYear();
   const gt = document.getElementById('greetingTitle');
   if (gt) {
-    const h = now.getHours();
-    const greeting = h < 12 ? 'Guten Morgen' : h < 18 ? 'Guten Tag' : 'Guten Abend';
-    gt.textContent = greeting + ' 👋';
+    const greeting = h < 12 ? 'Guten Morgen' : h < 17 ? 'Guten Tag' : 'Guten Abend';
+    gt.textContent = greeting + ', ' + (localStorage.getItem('prova_sv_vorname') || 'SV') + '!';
   }
-})();
-
-function goToGatePro() {
-  var az = localStorage.getItem('prova_letztes_az') || '';
-  window.location.href = az ? 'stellungnahme-gate.html?az=' + encodeURIComponent(az) : 'stellungnahme-gate.html';
+  loadDashboardData();
 }
+document.addEventListener('DOMContentLoaded', initProApp);
 </script>
-</body>
-</html>
+
+<!-- SUPPORT BUTTON - INTELLIGENT TRIAGE -->
+<div id="support-btn" onclick="openSupportModal()" style="position:fixed;bottom:80px;right:20px;z-index:400;width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#4f8ef7,#3a7be0);box-shadow:0 4px 16px rgba(79,142,247,0.4);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:20px;" title="Support anfragen">&#128172;</div>
+<div id="support-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:500;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px);">
+<div style="background:#13161d;border:1px solid rgba(255,255,255,0.12);border-radius:14px;max-width:500px;width:100%;padding:28px;max-height:90vh;overflow-y:auto;">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;"><div style="font-size:16px;font-weight:700;color:#e8eaf0;">&#128172; Support</div><button onclick="closeSupportModal()" style="background:none;border:none;color:#6b7280;font-size:20px;cursor:pointer;line-height:1;">&#x2715;</button></div>
+  <div id="support-faq" style="display:none;margin-bottom:16px;padding:14px;background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.25);border-radius:10px;">
+    <div style="font-size:12px;font-weight:600;color:#10b981;margin-bottom:6px;">&#129302; KI-Antwort</div>
+    <div id="support-faq-text" style="font-size:13px;color:#e8eaf0;line-height:1.6;"></div>
+    <div style="margin-top:12px;display:flex;gap:8px;"><button onclick="supportFaqHilft()" style="padding:6px 14px;background:#10b981;border:none;border-radius:6px;color:#fff;font-size:12px;font-weight:600;cursor:pointer;">&#10003; Hat geholfen</button><button onclick="supportFaqNichtHilft()" style="padding:6px 14px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:6px;color:#9da3b4;font-size:12px;cursor:pointer;">Trotzdem senden</button></div>
+  </div>
+  <div id="support-typ-indicator" style="display:none;margin-bottom:14px;padding:8px 12px;border-radius:8px;font-size:12px;font-weight:600;"></div>
+  <div id="support-form">
+    <div style="margin-bottom:14px;"><label style="font-size:12px;font-weight:600;color:#9da3b4;display:block;margin-bottom:5px;">Betreff</label><input id="sup-betreff" type="text" placeholder="Kurze Beschreibung" oninput="supportAnalyse()" style="width:100%;background:#1e2330;border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:10px 12px;color:#e8eaf0;font-size:14px;outline:none;font-family:inherit;"></div>
+    <div style="margin-bottom:18px;"><label style="font-size:12px;font-weight:600;color:#9da3b4;display:block;margin-bottom:5px;">Nachricht</label><textarea id="sup-nachricht" placeholder="Was genau ist passiert?" oninput="supportAnalyse()" style="width:100%;background:#1e2330;border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:10px 12px;color:#e8eaf0;font-size:14px;outline:none;font-family:inherit;min-height:90px;resize:vertical;"></textarea></div>
+    <div id="support-err" style="display:none;font-size:12px;color:#ef4444;margin-bottom:10px;padding:8px 12px;background:rgba(239,68,68,0.08);border-radius:6px;">Bitte Betreff und Nachricht eingeben.</div>
+    <button id="sup-send-btn" onclick="sendSupport()" style="width:100%;padding:11px;background:linear-gradient(135deg,#4f8ef7,#3a7be0);border:none;border-radius:8px;color:#fff;font-size:14px;font-weight:600;cursor:pointer;">Anfrage senden</button>
+  </div>
+  <div id="support-success" style="display:none;text-align:center;padding:20px 0;">
+    <div style="font-size:40px;margin-bottom:12px;">&#9989;</div>
+    <div id="support-success-title" style="font-size:15px;font-weight:600;color:#e8eaf0;margin-bottom:8px;">Anfrage gesendet!</div>
+    <div id="support-success-text" style="font-size:13px;color:#9da3b4;">Wir melden uns schnellstmoeglich.</div>
+    <button onclick="closeSupportModal()" style="margin-top:16px;padding:10px 24px;background:#4f8ef7;border:none;border-radius:8px;color:#fff;font-size:14px;font-weight:600;cursor:pointer;">Schliessen</button>
+  </div>
+</div></div>
+<script>
+var PFAQ=[{q:"gutachten erstellen",a:"Dashboard auf Neues Gutachten klicken. Schritt 1 Stammdaten, Schritt 2 Diktat, Schritt 3 KI-Analyse."},{q:"diktat aufnehmen",a:"In Schritt 2 den Aufnahme-Button klicken, sprechen, nochmal klicken zum Stoppen."},{q:"foto hochladen",a:"In Schritt 2 Fotos hinzufuegen oder Drag und Drop. Fotos werden automatisch komprimiert."},{q:"pdf",a:"Nach der Freigabe wird automatisch ein PDF erstellt und an Ihre E-Mail gesendet."},{q:"rechnung erstellen",a:"Navigation Rechnungen, Rechnungstyp waehlen, Felder ausfullen, Rechnung erstellen."},{q:"jveg",a:"Im JVEG-Rechner Honorargruppe und Stunden eingeben. Berechnung nach Paragraf 9 7 8 12 JVEG."},{q:"passwort",a:"Auf prova-systems.de/app-login.html gehen und Passwort vergessen anklicken."},{q:"safari",a:"Im Safari-Privatmodus ist IndexedDB deaktiviert. Normalen Modus oder anderen Browser nutzen."}];
+var _sTyp='nutzung',_sTimer=null;
+function _kTyp(t){var fe=['fehler','error','geht nicht','funktioniert nicht','bug','kaputt'],bi=['rechnung','zahlung','kuendigung','preis','kosten','upgrade'];t=t.toLowerCase();for(var i=0;i<fe.length;i++)if(t.includes(fe[i]))return'fehler';for(var i=0;i<bi.length;i++)if(t.includes(bi[i]))return'billing';return'nutzung';}
+function _fFAQ(t){var best=null,bs=0;t=t.toLowerCase();PFAQ.forEach(function(f){var s=0;f.q.split(' ').forEach(function(w){if(t.includes(w))s++;});if(s>bs){bs=s;best=f;}});return bs>0?best:null;}
+function openSupportModal(){document.getElementById("support-modal").style.display="flex";}
+function closeSupportModal(){document.getElementById("support-modal").style.display="none";["support-success","support-faq","support-typ-indicator"].forEach(function(id){var e=document.getElementById(id);if(e)e.style.display="none";});var f=document.getElementById("support-form");if(f)f.style.display="block";["sup-betreff","sup-nachricht"].forEach(function(id){var e=document.getElementById(id);if(e)e.value="";});var btn=document.getElementById("sup-send-btn");if(btn){btn.disabled=false;btn.textContent="Anfrage senden";}}
+document.addEventListener("DOMContentLoaded",function(){var m=document.getElementById("support-modal");if(m)m.addEventListener("click",function(e){if(e.target===m)closeSupportModal();});});
+function supportAnalyse(){clearTimeout(_sTimer);_sTimer=setTimeout(function(){var b=document.getElementById("sup-betreff").value.trim(),n=document.getElementById("sup-nachricht").value.trim(),c=b+" "+n;if(c.length<3)return;_sTyp=_kTyp(c);var ind=document.getElementById("support-typ-indicator"),fEl=document.getElementById("support-faq");if(_sTyp==='fehler'){ind.style.cssText="display:block;margin-bottom:14px;padding:8px 12px;border-radius:8px;font-size:12px;font-weight:600;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.25);color:#ef4444";ind.textContent="Fehlermeldung erkannt - wird mit hoher Prioritaet weitergeleitet";fEl.style.display="none";}else if(_sTyp==='billing'){ind.style.cssText="display:block;margin-bottom:14px;padding:8px 12px;border-radius:8px;font-size:12px;font-weight:600;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.25);color:#f59e0b";ind.textContent="Frage zu Abrechnung - wird direkt bearbeitet";fEl.style.display="none";}else{ind.style.display="none";var faq=_fFAQ(c);if(faq){document.getElementById("support-faq-text").textContent=faq.a;fEl.style.display="block";}else fEl.style.display="none";}},600);}
+function supportFaqHilft(){document.getElementById("support-form").style.display="none";document.getElementById("support-faq").style.display="none";document.getElementById("support-success").style.display="block";}
+function supportFaqNichtHilft(){document.getElementById("support-faq").style.display="none";}
+async function sendSupport(){var b=document.getElementById("sup-betreff").value.trim(),n=document.getElementById("sup-nachricht").value.trim(),err=document.getElementById("support-err"),btn=document.getElementById("sup-send-btn");if(!b||!n){err.style.display="block";return;}err.style.display="none";btn.disabled=true;btn.textContent="Wird gesendet...";try{await fetch("https://hook.eu1.make.com/lktuhugwcg5v37ib6bdaxjb1uiplnu8v",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({betreff:b,nachricht:n,typ:_sTyp,prioritaet:_sTy

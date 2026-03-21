@@ -356,16 +356,16 @@ if (!sessionStorage.getItem('prova_admin')) {
 
 <script>
 /* ── AIRTABLE CONFIG ── */
-const ADMIN_BASE = 'appYS7JV36QfrwmsG';
+const ADMIN_BASE = 'appJ7bLlAHZoxENWE';
 const SV_BASE    = 'appJ7bLlAHZoxENWE';
 const T = {
-  KUNDEN:         'tblFUAea0LJPjFsO1',
-  FINANZEN_MRR:   'tbl7arE1iCCgRzzJ5',
-  NUTZUNG:        'tblAky4uZV1PLIE3d',
-  SUPPORT:        'tblX30Gu1i3tWfqlQ',
-  PIPELINE:       'tbluDrC9x08aPsga6',
-  AUDIT_LOG:      'tbloeYUDuu0wRxpM8',
-  SCHADENSFAELLE: 'tblSxV8bsXwd1pwa0'
+  KUNDEN:         'tbladqEQT3tmx4DIB',  // SACHVERSTEANDIGE
+  SCHADENSFAELLE: 'tblSxV8bsXwd1pwa0',  // SCHADENSFAELLE
+  SUPPORT:        'tblEb3A4dukGX8GFs',   // SUPPORT_TICKETS ✅
+  PIPELINE:       'tblK7a3mBdsrxsrp5',  // PIPELINE_AKQUISE ✅
+  AUDIT_LOG:      'tblSxV8bsXwd1pwa0',  // SCHADENSFAELLE als Audit-Fallback
+  FINANZEN_MRR:   'tblcGu1fM7PfLYO7c',  // ADMIN_FINANZEN ✅
+  NUTZUNG:        'tblSxV8bsXwd1pwa0'
 };
 
 /* ── PROXY CALL ── */
@@ -427,34 +427,46 @@ async function loadAll() {
 
 async function loadKPIs() {
   try {
-    // Kunden
-    const kunden = await at(ADMIN_BASE, T.KUNDEN, 'fields[]=Paket&fields[]=Status&fields[]=MRR');
-    const aktiv = kunden.records.filter(r => r.fields.Status === 'Aktiv' || !r.fields.Status);
-    const mrr = aktiv.reduce((s, r) => s + (Number(r.fields.MRR) || 0), 0) ||
-                aktiv.reduce((s, r) => {
-                  const p = {Starter:179,Pro:369,Enterprise:699};
-                  return s + (p[r.fields.Paket] || 179);
-                }, 0);
+    // Kunden aus SACHVERSTAENDIGE Tabelle
+    const kunden = await at(ADMIN_BASE, T.KUNDEN, 'fields[]=Paket&fields[]=Status&fields[]=Email&fields[]=Vorname&fields[]=Nachname&fields[]=Name');
+    const aktiv = kunden.records.filter(r => r.fields.Status !== 'Gekündigt');
+    const mrr = aktiv.reduce((s, r) => {
+      const p = {Starter:179,Pro:369,Enterprise:699};
+      return s + (Number(r.fields.MRR) || p[r.fields.Paket] || 179);
+    }, 0);
     document.getElementById('kpiMrr').textContent = fmtEur(mrr);
     document.getElementById('kpiMrrSub').textContent = `ARR ${fmtEur(mrr*12)}`;
     document.getElementById('kpiKunden').textContent = aktiv.length;
     document.getElementById('kpiKundenSub').textContent = `${kunden.records.length} gesamt`;
-    document.getElementById('finMrr').textContent = fmtEur(mrr);
-    document.getElementById('finArr').textContent = fmtEur(mrr*12);
+    if (document.getElementById('finMrr')) document.getElementById('finMrr').textContent = fmtEur(mrr);
+    if (document.getElementById('finArr')) document.getElementById('finArr').textContent = fmtEur(mrr*12);
 
-    // Tickets
-    const tickets = await at(ADMIN_BASE, T.SUPPORT, 'fields[]=Status');
-    const offen = tickets.records.filter(r => r.fields.Status === 'Offen' || r.fields.Status === 'In Bearbeitung');
-    document.getElementById('kpiTickets').textContent = offen.length;
-    document.getElementById('kpiTicketsSub').textContent = `${tickets.records.length} gesamt`;
+    // Support-Tickets — graceful wenn Tabelle noch nicht existiert
+    try {
+      const tickets = await at(ADMIN_BASE, T.SUPPORT, 'fields[]=Status');
+      const offen = tickets.records.filter(r => r.fields.Status === 'Offen' || r.fields.Status === 'In Bearbeitung');
+      document.getElementById('kpiTickets').textContent = offen.length;
+      document.getElementById('kpiTicketsSub').textContent = `${tickets.records.length} gesamt`;
+    } catch(e) {
+      document.getElementById('kpiTickets').textContent = '0';
+      document.getElementById('kpiTicketsSub').textContent = 'noch keine';
+    }
 
-    // Pipeline
-    const pipe = await at(ADMIN_BASE, T.PIPELINE, 'fields[]=Status&fields[]=Name');
-    const aktPipe = pipe.records.filter(r => r.fields.Status !== 'Abgeschlossen' && r.fields.Status !== 'Verloren');
-    document.getElementById('kpiPipeline').textContent = aktPipe.length;
-    document.getElementById('kpiPipelineSub').textContent = 'aktive Leads';
+    // Pipeline — graceful wenn Tabelle noch nicht existiert
+    try {
+      const pipe = await at(ADMIN_BASE, T.PIPELINE, 'fields[]=Status');
+      const aktPipe = pipe.records.filter(r => r.fields.Status !== 'Abgeschlossen' && r.fields.Status !== 'Verloren');
+      document.getElementById('kpiPipeline').textContent = aktPipe.length;
+      document.getElementById('kpiPipelineSub').textContent = 'aktive Leads';
+    } catch(e) {
+      document.getElementById('kpiPipeline').textContent = '0';
+      document.getElementById('kpiPipelineSub').textContent = 'noch keine';
+    }
 
-  } catch(e) { console.error('KPI load error:', e); }
+  } catch(e) {
+    console.error('KPI load error:', e);
+    document.getElementById('kpiMrr').textContent = 'Fehler';
+  }
 }
 
 async function loadPaketVerteilung() {
@@ -484,15 +496,17 @@ async function loadPaketVerteilung() {
 
 async function loadNeuesteKunden() {
   try {
-    const data = await at(ADMIN_BASE, T.KUNDEN, 'sort[0][field]=Onboarding_Datum&sort[0][direction]=desc&maxRecords=8');
+    const data = await at(ADMIN_BASE, T.KUNDEN, 'sort[0][field]=Created&sort[0][direction]=desc&maxRecords=8');
     if (!data.records.length) { document.getElementById('neuesteKunden').innerHTML = '<div class="empty">Keine Kunden</div>'; return; }
     let html = '<table class="tbl"><thead><tr><th>Name</th><th>Paket</th><th>Status</th><th>MRR</th><th>Onboarding</th><th>E-Mail</th></tr></thead><tbody>';
     data.records.forEach(r => {
       const f = r.fields;
+      const name = f.Name || [f.Vorname, f.Nachname].filter(x => x && x.trim()).join(' ') || f.Email || '–';
+      if (!name || name === '–') return; // undefined undefined überspringen
       const mrr = f.MRR || {Starter:179,Pro:369,Enterprise:699}[f.Paket] || 179;
-      html += `<tr><td><strong>${f.Name||f.Vorname+' '+f.Nachname||'–'}</strong></td>
+      html += `<tr><td><strong>${name}</strong></td>
         <td>${paketBadge(f.Paket)}</td>
-        <td>${statusBadge(f.Status)}</td>
+        <td>${statusBadge(f.Status||'Aktiv')}</td>
         <td style="font-family:var(--mono);">${fmtEur(mrr)}</td>
         <td style="font-family:var(--mono);font-size:12px;">${fmtDate(f.Onboarding_Datum||f.Created)}</td>
         <td style="font-size:12px;color:var(--text3);">${f.Email||'–'}</td></tr>`;
@@ -566,11 +580,11 @@ async function loadFinanzen() {
     if (!data.records.length) { document.getElementById('finanzenTable').innerHTML = '<div class="empty" style="padding:16px;">Keine Daten</div>'; return; }
     // Chart
     const rev = data.records.reverse();
-    const maxVal = Math.max(...rev.map(r => Number(r.fields.MRR||r.fields.Betrag||0)));
+    const maxVal = Math.max(...rev.map(r => Number(r.fields.MRR_EUR||0)));
     let chartHtml = '<div class="mrr-bars">';
     rev.forEach(r => {
       const f = r.fields;
-      const val = Number(f.MRR||f.Betrag||0);
+      const val = Number(f.MRR_EUR||0);
       const h = maxVal > 0 ? Math.round((val/maxVal)*70) : 4;
       const mon = f.Monat ? f.Monat.slice(0,7) : '–';
       chartHtml += `<div class="mrr-bar-wrap">
@@ -582,17 +596,17 @@ async function loadFinanzen() {
     chartHtml += '</div>';
     document.getElementById('mrrChart').innerHTML = chartHtml;
     // Setup sum
-    const setupSum = data.records.reduce((s,r) => s + Number(r.fields.Setup_Erloese||0), 0);
+    const setupSum = 0; // Setup wird separat berechnet
     document.getElementById('finSetup').textContent = fmtEur(setupSum);
     // Table
     let html = '<table class="tbl"><thead><tr><th>Monat</th><th>MRR</th><th>Neue Kunden</th><th>Churn</th><th>Setup</th></tr></thead><tbody>';
     data.records.reverse().forEach(r => {
       const f = r.fields;
       html += `<tr><td style="font-family:var(--mono);">${f.Monat||'–'}</td>
-        <td style="font-family:var(--mono);">${fmtEur(f.MRR||f.Betrag)}</td>
+        <td style="font-family:var(--mono);">${fmtEur(f.MRR_EUR)}</td>
         <td style="text-align:center;">${f.Neue_Kunden||'–'}</td>
-        <td style="text-align:center;color:var(--red);">${f.Churn||'0'}</td>
-        <td style="font-family:var(--mono);">${fmtEur(f.Setup_Erloese||0)}</td></tr>`;
+        <td style="text-align:center;color:var(--red);">${f.Churned_Kunden||'0'}</td>
+        <td style="font-family:var(--mono);">${fmtEur(0)}</td></tr>`;
     });
     html += '</tbody></table>';
     document.getElementById('finanzenTable').innerHTML = html;
@@ -621,14 +635,14 @@ function renderTickets(records) {
     const prioColor = prio === 'Hoch' ? 'var(--red)' : prio === 'Mittel' ? 'var(--warn)' : 'var(--text3)';
     html += `<tr class="ticket-row" onclick="toggleTicketDetail(${i})">
       <td style="font-family:var(--mono);font-size:12px;">${fmtDate(f.Datum||f.Created)}</td>
-      <td><strong>${f.Kunde||f.SV_Name||'–'}</strong></td>
+      <td style="font-size:12px;color:var(--text3);">${f['SV-Email']||'–'}</td>
       <td>${f.Betreff||f.Titel||'–'}</td>
       <td style="color:${prioColor};font-size:12px;">${prio}</td>
       <td>${statusBadge(f.Status)}</td></tr>
       <tr id="td-${i}"><td colspan="5" style="padding:0;">
         <div id="tdp-${i}" class="detail-panel">
-          <div style="font-size:12px;color:var(--text2);margin-bottom:6px;">${f.Beschreibung||f.Nachricht||'Keine Beschreibung'}</div>
-          ${f.Loesung ? `<div style="font-size:12px;color:var(--green);margin-top:6px;"><strong>Lösung:</strong> ${f.Loesung}</div>` : ''}
+          <div style="font-size:12px;color:var(--text2);margin-bottom:6px;">${f.Nachricht||'Keine Beschreibung'}</div>
+          ${f.Paket ? `<div style="font-size:12px;color:var(--text3);margin-top:4px;">Paket: ${f.Paket} · Seite: ${f.Seite||'–'}</div>` : ''}
         </div>
       </td></tr>`;
   });
@@ -653,16 +667,18 @@ async function loadPipeline() {
     const data = await at(ADMIN_BASE, T.PIPELINE, 'sort[0][field]=Erstellt&sort[0][direction]=desc');
     _pipeline = data.records;
     if (!data.records.length) { document.getElementById('pipelineTable').innerHTML = '<div class="empty" style="padding:16px;">Keine Leads</div>'; return; }
-    let html = '<table class="tbl"><thead><tr><th>Name</th><th>Kontakt</th><th>Interesse</th><th>Phase</th><th>Datum</th><th>Notiz</th></tr></thead><tbody>';
+    let html = '<table class="tbl"><thead><tr><th>Name</th><th>E-Mail</th><th>Paket-Interesse</th><th>Stufe</th><th>Status</th><th>Datum</th><th>MRR</th></tr></thead><tbody>';
     data.records.forEach(r => {
       const f = r.fields;
+      const name = [f.Vorname, f.Nachname].filter(Boolean).join(' ') || f.Email || '–';
       html += `<tr>
-        <td><strong>${f.Name||'–'}</strong></td>
-        <td style="font-size:12px;color:var(--text3);">${f.Email||f.Telefon||'–'}</td>
-        <td>${paketBadge(f.Interesse||f.Paket_Interesse||'Starter')}</td>
-        <td style="font-size:12px;">${f.Phase||f.Status||'–'}</td>
-        <td style="font-family:var(--mono);font-size:12px;">${fmtDate(f.Erstellt||f.Created)}</td>
-        <td style="font-size:12px;color:var(--text3);max-width:200px;">${f.Notiz||'–'}</td></tr>`;
+        <td><strong>${name}</strong></td>
+        <td style="font-size:12px;color:var(--text3);">${f.Email||'–'}</td>
+        <td>${paketBadge(f.Stufe||'Starter')}</td>
+        <td style="font-size:12px;">${f.Stufe||'–'}</td>
+        <td>${statusBadge(f.Status||'Aktiv')}</td>
+        <td style="font-family:var(--mono);font-size:12px;">${fmtDate(f.Erstkontakt_Datum||f.Created)}</td>
+        <td style="font-family:var(--mono);font-size:12px;">${f.MRR_EUR ? fmtEur(f.MRR_EUR) : '–'}</td></tr>`;
     });
     html += '</tbody></table>';
     document.getElementById('pipelineTable').innerHTML = html;

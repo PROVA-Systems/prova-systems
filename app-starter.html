@@ -7,6 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Instrument+Sans:wght@400;500;600&family=Montserrat:wght@400;500;600;700;800&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
+  <script src="/sw-register.js"></script>
 
 <style>
 :root{
@@ -36,6 +37,24 @@ button,input,select,textarea{font-family:inherit;}
 ul,ol{list-style:none;}
 *{-webkit-tap-highlight-color:transparent;}
 input,select,textarea{font-size:max(16px,1em);}
+
+/* ── OFFLINE STATUS BADGE ───────────────────────── */
+#prova-net-badge{
+  position:fixed;top:calc(var(--nav-h) + 8px);right:14px;z-index:500;
+  display:flex;align-items:center;gap:6px;
+  padding:5px 11px;border-radius:20px;font-size:.75rem;font-weight:600;
+  font-family:var(--sans),system-ui,sans-serif;
+  box-shadow:0 2px 8px rgba(0,0,0,.25);
+  transition:opacity .4s,transform .4s;
+  pointer-events:none;
+}
+#prova-net-badge.hidden{opacity:0;transform:translateY(-6px);}
+#prova-net-badge.online{background:#065f46;color:#d1fae5;}
+#prova-net-badge.offline{background:#78350f;color:#fde68a;}
+#prova-net-badge .dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+#prova-net-badge.online .dot{background:#34d399;}
+#prova-net-badge.offline .dot{background:#fbbf24;animation:blink 1.4s ease-in-out infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
 
 /* ── TOPBAR ─────────────────────────────────────── */
 .topbar{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 20px;height:var(--nav-h);min-height:var(--nav-h);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;user-select:none;-webkit-user-select:none;}
@@ -266,6 +285,12 @@ tr:hover td{background:var(--gray-50);}
 </style>
 </head>
 <body data-user-package="starter">
+
+<!-- NETZ-STATUS BADGE -->
+<div id="prova-net-badge" class="hidden online" aria-live="polite" aria-label="Netzwerkstatus">
+  <span class="dot"></span>
+  <span id="prova-net-label">Online</span>
+</div>
 <script>
 window.PROVA = window.PROVA || {};
 PROVA.paket = localStorage.getItem('prova_paket') || 'Starter';
@@ -1650,8 +1675,160 @@ function sammleDaten() {
     erstellungszeit_sekunden: dauerSek,
 
     gutachten_vorlage_id: getSelectedGutachtenVorlageId(),
-    paket: localStorage.getItem('prova_paket') || 'Starter'
+    paket: localStorage.getItem('prova_paket') || 'Starter',
+
+    // KI-Anreicherung: Normen + Kosten gefiltert nach Schadensart
+    normen_kontext:  bauNormenKontext(document.getElementById('f-schadenart')?.value || ''),
+    kosten_kontext:  bauKostenKontext(document.getElementById('f-schadenart')?.value || '')
   };
+}
+
+/* ── KI-Kontext: Top-Normen nach Schadensart ────────────────
+   Liefert kompakten String für GPT-4o Prompt (max. ~500 Zeichen)
+──────────────────────────────────────────────────────────── */
+function bauNormenKontext(schadenart) {
+  const SA_MAP = {
+    'Wasserschaden':'WS','Schimmelbefall':'SC','Schimmel':'SC',
+    'Brandschaden':'BS','Sturmschaden':'SS','Elementarschaden':'ES',
+    'Baumängel':'BA','Feuchte':'SC'
+  };
+  let tag = null;
+  for (const [k,v] of Object.entries(SA_MAP)) {
+    if (schadenart.toLowerCase().includes(k.toLowerCase())) { tag = v; break; }
+  }
+
+  // Kompakte Normen-Referenzdaten (hoch-frequent, schadensartgefiltert)
+  const NORMEN_KOMPAKT = [
+    {n:'DIN 4108-2',sa:['WS','SC','BA'],gw:'fRsi ≥ 0,70 | Taupunkt 20°C/50%rF ≈ 9,3°C'},
+    {n:'DIN EN ISO 13788',sa:['WS','SC'],gw:'fRsi ≥ 0,70 | Oberflächenfeuchte 80%rF krit.'},
+    {n:'DIN EN 13187',sa:['SC','BA'],gw:'ΔT innen/außen ≥ 10 K für Thermografie'},
+    {n:'DIN 18533',sa:['WS','SC','BA'],gw:'Lastfall W1-E bis W4-E | Abdichtung 3–8mm'},
+    {n:'DIN 18534',sa:['WS','SC','BA'],gw:'Beanspruchungsklasse A0–A3 Nassraum'},
+    {n:'DIN 18531',sa:['WS','SS','BA'],gw:'Aufkantung ≥ 150mm | Bitumen 2-lagig ≥ 6mm'},
+    {n:'DIN 18353',sa:['WS','BA'],gw:'CM Zementestrich ≤ 2,0% | Anhydrit ≤ 0,5%'},
+    {n:'DIN 18202',sa:['BA'],gw:'Ebenheit Boden mit Belag: max. 5mm/4m'},
+    {n:'DIN 68800-1',sa:['WS','BS','SC','BA'],gw:'Gebrauchsklassen GK 0–5'},
+    {n:'DIN 68800-2',sa:['WS','SC','BA'],gw:'Holzfeuchte Einbau max. 20%'},
+    {n:'DIN 18338',sa:['WS','BS','SS'],gw:'Mindestdachneigung Tonziegel 22°'},
+    {n:'DIN 18550',sa:['WS','BS','SC','BA'],gw:'Unterputz ≥ 10mm | Außenputz ≥ 15mm'},
+    {n:'WTA 2-9-04/D',sa:['WS','SC','BA'],gw:'Sanierputz w ≤ 0,5 kg/(m²·h⁰˙⁵)'},
+    {n:'UBA-Leitfaden',sa:['SC'],gw:'Schimmel >0,5m² = erheblicher Mangel'},
+    {n:'VdS 3151',sa:['WS','SS'],gw:'Holz ≤ 15% | Mauerwerk ≤ 3% KMG Trocknungsziel'},
+    {n:'DIN 1946-6',sa:['SC','BA'],gw:'Feuchteschutzlüftung ≥ 0,3-facher Luftwechsel/h'},
+    {n:'DIN 4102-4',sa:['BS'],gw:'F30/F60/F90 Feuerwiderstandsklassen'},
+    {n:'ZPO §407a',sa:['BA','WS','BS','SS','SC','ES'],gw:'Persönliche Erstattungspflicht'},
+    {n:'VOB/B §13',sa:['BA'],gw:'Gewährleistung Bauwerk 4 Jahre'},
+    {n:'DIN EN 13564',sa:['WS','ES'],gw:'Rückstauebene = Straßenoberkante'},
+    {n:'ZVDH Flachdach',sa:['WS','BA'],gw:'Mindestneigung 2% | Aufkantung 150mm'},
+    {n:'DIN 18157',sa:['WS','BA'],gw:'Zugfestigkeit Untergrund ≥ 1,0 N/mm² | Hohllagen max. 5%'},
+    {n:'DIN 55699',sa:['SC','BA','SS'],gw:'WDVS Haftfestigkeit ≥ 0,25 N/mm²'},
+    {n:'AVV',sa:['BS','SC','BA'],gw:'Asbest (17 06 01*) = gefährlicher Abfall'},
+    {n:'DIN ISO 16000-17',sa:['SC'],gw:'Außenluft als Referenz | Verhältnis Innen/Außen'},
+  ];
+
+  const gefiltert = tag
+    ? NORMEN_KOMPAKT.filter(n => n.sa.includes(tag))
+    : NORMEN_KOMPAKT.slice(0, 8);
+
+  const top = gefiltert.slice(0, 8);
+  return top.map(n => `${n.n}: ${n.gw}`).join(' | ');
+}
+
+/* ── KI-Kontext: Top-Kostenpositionen nach Schadensart ──────
+   Liefert kompakten String für GPT-4o Prompt (max. ~600 Zeichen)
+──────────────────────────────────────────────────────────── */
+function bauKostenKontext(schadenart) {
+  const SA_MAP = {
+    'Wasserschaden':'WS','Schimmelbefall':'SC','Schimmel':'SC',
+    'Brandschaden':'BS','Sturmschaden':'SS','Elementarschaden':'ES',
+    'Baumängel':'BA','Feuchte':'SC'
+  };
+  let tag = null;
+  for (const [k,v] of Object.entries(SA_MAP)) {
+    if (schadenart.toLowerCase().includes(k.toLowerCase())) { tag = v; break; }
+  }
+
+  // Repräsentative Top-Positionen je Schadensart (Median-Preis, netto)
+  const KOSTEN_TOP = {
+    WS: [
+      {b:'Trocknungsgerät Kondensationstrockner/Tag',e:'Stk',m:28},
+      {b:'Estrich aufbrechen+entsorgen Zementestrich',e:'m²',m:42},
+      {b:'Putz Innenputz neu Kalkgips',e:'m²',m:33},
+      {b:'Sanierputz Feuchtigkeitsschutz',e:'m²',m:43},
+      {b:'Fliesen neu verlegen Standard',e:'m²',m:68},
+      {b:'Gipskartonwand nass erneuern',e:'m²',m:68},
+      {b:'Gipskartondecke neu einbauen',e:'m²',m:65},
+      {b:'E-Prüfung nach Wasserschaden VDE-Protokoll',e:'Psch',m:280},
+      {b:'Dusche bodengleich neu',e:'Stk',m:980},
+      {b:'Wasserleitung Kupfer DN15 UP erneuern',e:'lfm',m:72},
+    ],
+    SC: [
+      {b:'Schimmelanalyse Abklatsch Labor',e:'Stk',m:130},
+      {b:'Luftkeimmessung je Raum',e:'Stk',m:225},
+      {b:'Schimmelbefall entfernen <2m²',e:'m²',m:225},
+      {b:'Schimmelbefall Totalreinigung Raum',e:'m²',m:27},
+      {b:'Biozidbehandlung nach Sanierung',e:'m²',m:13},
+      {b:'Horizontalsperre Injektion',e:'lfm',m:48},
+      {b:'Sanierputzsystem WTA Innen',e:'m²',m:43},
+      {b:'Lüftungsanlage dezentral je Raum',e:'Stk',m:745},
+      {b:'Lüftungskonzept Planung DIN 1946-6',e:'Psch',m:435},
+      {b:'Freimessung nach Sanierung',e:'Psch',m:285},
+    ],
+    BS: [
+      {b:'Rußreinigung Wände trocken',e:'m²',m:13},
+      {b:'Rußreinigung Decken trocken',e:'m²',m:15},
+      {b:'Rußreinigung nass chemisch',e:'m²',m:18},
+      {b:'Ozonbehandlung Geruchsneutralisation',e:'m³',m:2},
+      {b:'Brandschutt entsorgen bis 5m³',e:'Psch',m:580},
+      {b:'Gipskartonwand nach Brand neu',e:'m²',m:68},
+      {b:'Brandschutzwand F90',e:'m²',m:130},
+      {b:'Dachstuhl Neubau Vollholz',e:'m²',m:190},
+      {b:'Elektroinstallation komplett erneuern',e:'m²',m:85},
+      {b:'Dachfenster nach Brand erneuern',e:'Stk',m:590},
+    ],
+    SS: [
+      {b:'Dachziegel Tonziegel tauschen',e:'Stk',m:27},
+      {b:'Dacheindeckung Teilfläche bis 10m²',e:'m²',m:85},
+      {b:'Dachrinne Zink erneuern',e:'lfm',m:43},
+      {b:'Fallrohr Zinkblech erneuern',e:'lfm',m:34},
+      {b:'Notabdichtung Dachfolie',e:'m²',m:13},
+      {b:'Fenster Kunststoff erneuern',e:'m²',m:435},
+      {b:'Fensterglas Isolierverglasung 2-fach',e:'m²',m:130},
+      {b:'WDVS Fassadendämmplatten erneuern',e:'m²',m:85},
+      {b:'Baum Fällarbeiten',e:'Stk',m:285},
+      {b:'Dachstuhl Auflager reparieren',e:'Stk',m:225},
+    ],
+    ES: [
+      {b:'Aufräumarbeiten nach Überflutung',e:'m²',m:27},
+      {b:'Schlamm entfernen',e:'m²',m:34},
+      {b:'Keller auspumpen',e:'h',m:130},
+      {b:'Bautrocknung nach Überschwemmung',e:'m²',m:13},
+      {b:'Elektroanlage nach Hochwasser prüfen',e:'Psch',m:435},
+      {b:'Rückstauklappe DN100 einbauen',e:'Stk',m:745},
+      {b:'Heizung nach Hochwasser instandsetzen',e:'Psch',m:740},
+      {b:'Frostschaden Wasserleitung reparieren',e:'lfm',m:85},
+      {b:'Hangsicherung Gabionen',e:'m²',m:130},
+      {b:'Stützmauer Beton neu',e:'m²',m:285},
+    ],
+    BA: [
+      {b:'Rissprotokoll je Bauteil',e:'Psch',m:145},
+      {b:'Riss Injektionsharz',e:'lfm',m:34},
+      {b:'Setzungsprotokoll Nivellement',e:'Psch',m:435},
+      {b:'Kellerwandabdichtung außen bituminös',e:'m²',m:68},
+      {b:'Kellerdrainageleitung erneuern',e:'lfm',m:85},
+      {b:'Balkonabdichtung PMMA',e:'m²',m:52},
+      {b:'Estrichhohlstelle Injektion',e:'m²',m:34},
+      {b:'Flachdachabdichtung Blasen reparieren',e:'m²',m:43},
+      {b:'Außenputz Reparatur bis 1m²',e:'Stk',m:130},
+      {b:'Schallmessung Luftschall je Raum',e:'Psch',m:435},
+    ],
+  };
+
+  const positionen = tag ? (KOSTEN_TOP[tag] || []) : [];
+  if (!positionen.length) return 'Keine Kostenpositionen verfügbar';
+  return positionen.slice(0, 10)
+    .map(p => `${p.b}: ${p.m}€/${p.e}`)
+    .join(' | ');
 }
 
 /* ============================================================
@@ -2076,6 +2253,373 @@ function goToGate() {
     ? 'stellungnahme-gate.html?az=' + encodeURIComponent(az)
     : 'stellungnahme-gate.html';
 }
+</script>
+
+<script>
+/* ============================================================
+   PROVA OFFLINE MODULE — Ebene 2 + 3 + 4
+   IndexedDB Auto-Save, Offline-Queue, Netz-Status-Anzeige
+============================================================ */
+(function() {
+'use strict';
+
+/* ── Konstanten ──────────────────────────────────────────── */
+const DB_NAME    = 'prova_offline';
+const DB_VERSION = 2;
+const STORE_DRAFT = 'entwuerfe';
+const STORE_QUEUE = 'offline_queue';
+const DRAFT_KEY   = 'aktueller_entwurf';
+const AUTOSAVE_INTERVAL_MS = 30000; // 30 Sekunden
+
+/* ── IndexedDB öffnen ────────────────────────────────────── */
+let _db = null;
+
+function openDB() {
+  if (_db) return Promise.resolve(_db);
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, DB_VERSION);
+    req.onupgradeneeded = e => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains(STORE_DRAFT)) {
+        db.createObjectStore(STORE_DRAFT, { keyPath: 'id' });
+      }
+      if (!db.objectStoreNames.contains(STORE_QUEUE)) {
+        db.createObjectStore(STORE_QUEUE, { keyPath: 'id', autoIncrement: true });
+      }
+    };
+    req.onsuccess = e => { _db = e.target.result; resolve(_db); };
+    req.onerror   = e => reject(e.target.error);
+  });
+}
+
+/* ── Entwurf speichern (IDB) ─────────────────────────────── */
+async function speichereEntwurfIDB() {
+  try {
+    // sammleDaten() ist im Haupt-Script definiert
+    const daten = window.sammleDaten ? window.sammleDaten() : null;
+    if (!daten) return;
+    const eintrag = {
+      id: DRAFT_KEY,
+      daten,
+      gespeichert_am: new Date().toISOString()
+    };
+    const db = await openDB();
+    const tx = db.transaction(STORE_DRAFT, 'readwrite');
+    tx.objectStore(STORE_DRAFT).put(eintrag);
+    await new Promise((res, rej) => { tx.oncomplete = res; tx.onerror = rej; });
+  } catch (err) {
+    // Silent — niemals User-Fehler für Auto-Save werfen
+    console.warn('[PROVA IDB] Speichern fehlgeschlagen:', err);
+  }
+}
+
+/* ── Entwurf laden + Formular befüllen ───────────────────── */
+async function ladeUndRestoreEntwurf() {
+  try {
+    const db = await openDB();
+    const tx = db.transaction(STORE_DRAFT, 'readonly');
+    const store = tx.objectStore(STORE_DRAFT);
+    const req = store.get(DRAFT_KEY);
+    const eintrag = await new Promise((res, rej) => {
+      req.onsuccess = e => res(e.target.result);
+      req.onerror   = rej;
+    });
+    if (!eintrag || !eintrag.daten) return;
+
+    const d = eintrag.daten;
+    const felder = [
+      ['f-schadenart',         d.schadenart],
+      ['f-schadensnummer',     d.schadensnummer],
+      ['f-schadensdatum',      d.schadensdatum],
+      ['f-auftraggeber-typ',   d.auftraggeber_typ],
+      ['f-auftraggeber-name',  d.auftraggeber_name],
+      ['f-ansprechpartner',    d.ansprechpartner],
+      ['f-auftraggeber-email', d.auftraggeber_email],
+      ['f-strasse',            d.strasse],
+      ['f-plz',                d.plz],
+      ['f-ort',                d.ort],
+      ['f-gebaeudetyp',        d.gebaeudetyp],
+      ['f-baujahr',            d.baujahr],
+      ['f-geschaedigter',      d.geschaedigter],
+      ['f-bereich',            d.bereich],
+      ['f-feuchte',            d.feuchtemessung],
+      ['f-luftfeuchte',        d.luftfeuchtigkeit],
+      ['f-temperatur',         d.temperatur],
+      ['f-taupunkt',           d.taupunkt],
+      ['f-flaeche',            d.schadensflaeche],
+      ['f-tiefe',              d.schadenstiefe],
+      ['f-messgeraet',         d.messgeraet],
+      ['f-mw-extra',           d.messwerte ? '' : ''],
+    ];
+    let restored = 0;
+    felder.forEach(([id, val]) => {
+      if (!val) return;
+      const el = document.getElementById(id);
+      if (el && !el.value) { el.value = val; restored++; }
+    });
+    // Transkript wiederherstellen
+    if (d.transkript && window.transcriptText === '') {
+      window.transcriptText = d.transkript;
+      const ta = document.getElementById('transcriptArea');
+      if (ta) {
+        const p = document.createElement('p');
+        p.style.cssText = 'font-family:var(--font-body);font-size:.9375rem;line-height:1.7;color:var(--gray-700);margin-bottom:.5rem';
+        p.textContent = d.transkript;
+        const empty = ta.querySelector('.transcript-empty');
+        if (empty) empty.style.display = 'none';
+        ta.appendChild(p);
+      }
+    }
+    if (restored > 0) {
+      try { window.updateMesswerteLayout && window.updateMesswerteLayout(); } catch(e) {}
+      window.showToast && window.showToast('Entwurf wiederhergestellt (' + new Date(eintrag.gespeichert_am).toLocaleTimeString('de-DE', {hour:'2-digit',minute:'2-digit'}) + ' Uhr)', 'default', 4000);
+    }
+  } catch (err) {
+    console.warn('[PROVA IDB] Restore fehlgeschlagen:', err);
+  }
+}
+
+/* ── Entwurf löschen (nach erfolgreichem Send) ───────────── */
+async function löscheEntwurfIDB() {
+  try {
+    const db = await openDB();
+    const tx = db.transaction(STORE_DRAFT, 'readwrite');
+    tx.objectStore(STORE_DRAFT).delete(DRAFT_KEY);
+    await new Promise((res, rej) => { tx.oncomplete = res; tx.onerror = rej; });
+  } catch(err) {
+    console.warn('[PROVA IDB] Löschen fehlgeschlagen:', err);
+  }
+}
+
+/* ── Offline-Queue: Eintrag hinzufügen ───────────────────── */
+async function queueHinzufügen(url, payload) {
+  try {
+    const db = await openDB();
+    const tx = db.transaction(STORE_QUEUE, 'readwrite');
+    tx.objectStore(STORE_QUEUE).add({
+      url,
+      payload,
+      erstellt_am: new Date().toISOString(),
+      status: 'pending_sync'
+    });
+    await new Promise((res, rej) => { tx.oncomplete = res; tx.onerror = rej; });
+  } catch(err) {
+    console.warn('[PROVA Queue] Hinzufügen fehlgeschlagen:', err);
+  }
+}
+
+/* ── Offline-Queue: Alle pending senden ──────────────────── */
+async function sendeOfflineQueue() {
+  try {
+    const db = await openDB();
+    const tx = db.transaction(STORE_QUEUE, 'readonly');
+    const req = tx.objectStore(STORE_QUEUE).getAll();
+    const alle = await new Promise((res, rej) => { req.onsuccess = e => res(e.target.result||[]); req.onerror = rej; });
+
+    for (const eintrag of alle) {
+      try {
+        const res = await fetch(eintrag.url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(eintrag.payload)
+        });
+        if (res.ok) {
+          const tx2 = db.transaction(STORE_QUEUE, 'readwrite');
+          tx2.objectStore(STORE_QUEUE).delete(eintrag.id);
+          await new Promise((res2, rej2) => { tx2.oncomplete = res2; tx2.onerror = rej2; });
+        }
+      } catch(err) {
+        // Noch kein Netz für diesen Eintrag — beim nächsten Mal
+      }
+    }
+  } catch(err) {
+    console.warn('[PROVA Queue] Senden fehlgeschlagen:', err);
+  }
+}
+
+/* ── Webhook-Wrapper: Online → direkt; Offline → Queue ───── */
+// Überschreibt sendeWebhook() aus dem Haupt-Script
+const _originalSendeWebhook = window.sendeWebhook;
+
+window.sendeWebhookMitOfflineFallback = async function() {
+  if (navigator.onLine) {
+    return _originalSendeWebhook
+      ? _originalSendeWebhook()
+      : sendeWebhookOriginal();
+  }
+  // Offline: In Queue speichern
+  if (typeof sammleDaten === 'function') {
+    const daten = sammleDaten();
+    await queueHinzufügen(
+      'https://hook.eu1.make.com/imn2n5xs7j251xicrmdmk17of042pt2t',
+      daten
+    );
+  }
+  // UI: Offline-Feedback anzeigen (Schritt 3 bleibt sichtbar)
+  const h2 = document.querySelector('#step3-content h2');
+  const p  = document.querySelector('#step3-content .ki-header p');
+  if (h2) h2.textContent = 'Offline gespeichert';
+  if (p)  p.textContent  = 'Daten sind lokal gesichert und werden automatisch übertragen, sobald Sie wieder online sind.';
+  const spinner = document.getElementById('kiSpinner');
+  if (spinner) spinner.style.display = 'none';
+  // Alle Steps als "gesichert" markieren
+  ['ki-s1','ki-s2','ki-s3','ki-s4','ki-s5','ki-s6'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.className = 'ki-step';
+    const icon = el.querySelector('.ki-step-icon');
+    if (icon) icon.textContent = '○';
+  });
+  const box = document.getElementById('kiSuccessBox');
+  if (box) { box.style.display = 'block'; }
+  window.showToast && window.showToast('Offline — Daten lokal gesichert. Wird automatisch gesendet.', 'warning', 6000);
+};
+
+// weiterZuAnalyse patchen damit es den Offline-Wrapper nutzt
+const _origWeiterZuAnalyse = window.weiterZuAnalyse;
+window.weiterZuAnalyse = async function() {
+  // Sync: falls Nutzer direkt im Transkript-Bereich getippt hat
+  const ta = document.getElementById('transcriptArea');
+  if (ta) window.transcriptText = ta.innerText.trim();
+  if (window.diktatMode === 'text') {
+    const manuellTa = document.getElementById('transcriptManuell');
+    window.transcriptText = (manuellTa && manuellTa.value) ? manuellTa.value.trim() : window.transcriptText;
+  }
+  if (!(window.transcriptText || '').trim()) {
+    window.showToast && window.showToast('Bitte Diktat aufnehmen oder Text eingeben.', 'warning');
+    return;
+  }
+  sessionStorage.setItem('prova_gutachten_vorlage_id',
+    typeof defaultVorlageIdBySchadenart === 'function' ? defaultVorlageIdBySchadenart() : 'standard');
+
+  const s2text = document.getElementById('ki-s2-text');
+  if (s2text) {
+    s2text.style.color = '';
+    if ((window.fotos||[]).length > 0) {
+      s2text.textContent = window.fotos.length + ' Foto' + (window.fotos.length > 1 ? 's' : '') + ' werden mit der Anfrage übermittelt';
+    } else {
+      s2text.textContent = 'Keine Fotos — können nachgereicht werden';
+      s2text.style.color = 'var(--warning, #F59E0B)';
+    }
+  }
+  if (typeof window.goToStep === 'function') window.goToStep(3);
+  await window.sendeWebhookMitOfflineFallback();
+};
+
+// Nach erfolgreichem Webhook: Entwurf aus IDB löschen
+// Wir wrappen die Erfolgs-Logik in sendeWebhook
+const _sendeWebhookUrsprung = window.sendeWebhook;
+if (_sendeWebhookUrsprung) {
+  window.sendeWebhook = async function() {
+    await _sendeWebhookUrsprung();
+    // Prüfen ob Erfolg (kiSuccessBox sichtbar)
+    const box = document.getElementById('kiSuccessBox');
+    if (box && box.style.display !== 'none') {
+      await löscheEntwurfIDB();
+    }
+  };
+}
+
+/* ── Netz-Status Badge ───────────────────────────────────── */
+function aktualisiereNetBadge(online) {
+  const badge = document.getElementById('prova-net-badge');
+  const label = document.getElementById('prova-net-label');
+  if (!badge || !label) return;
+
+  if (online) {
+    badge.className = 'online';
+    label.textContent = 'Online';
+    // Badge kurz einblenden, dann ausblenden
+    clearTimeout(badge._hideTimer);
+    badge._hideTimer = setTimeout(() => badge.classList.add('hidden'), 3000);
+  } else {
+    badge.className = 'offline';
+    label.textContent = 'Offline — Daten gesichert';
+    clearTimeout(badge._hideTimer);
+    // Offline-Badge bleibt dauerhaft sichtbar
+  }
+}
+
+window.addEventListener('online', async () => {
+  aktualisiereNetBadge(true);
+  window.showToast && window.showToast('Verbindung wiederhergestellt — Daten werden synchronisiert', 'success', 5000);
+  // Queue abarbeiten
+  await sendeOfflineQueue();
+  // SW informieren (Background Sync triggern)
+  if (navigator.serviceWorker?.controller) {
+    navigator.serviceWorker.controller.postMessage({ type: 'TRIGGER_SYNC' });
+  }
+});
+
+window.addEventListener('offline', () => {
+  aktualisiereNetBadge(false);
+  window.showToast && window.showToast('Keine Verbindung — Daten werden lokal gesichert', 'warning', 5000);
+});
+
+/* ── Auto-Save: alle Felder + alle 30s ──────────────────── */
+let _autoSaveTimer = null;
+
+function startAutoSave() {
+  // Alle Formularfelder beobachten
+  const felder = document.querySelectorAll('.form-input, .form-select, textarea');
+  felder.forEach(el => {
+    el.addEventListener('input',  () => speichereEntwurfIDB(), { passive: true });
+    el.addEventListener('change', () => speichereEntwurfIDB(), { passive: true });
+  });
+  // Intervall-Fallback
+  _autoSaveTimer = setInterval(speichereEntwurfIDB, AUTOSAVE_INTERVAL_MS);
+  // Bei Seitenwechsel (Tab-Wechsel, Fenster minimieren)
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') speichereEntwurfIDB();
+  });
+  // Bei Navigation innerhalb der App (showPage)
+  const _origShowPage = window.showPage;
+  if (_origShowPage) {
+    window.showPage = function(name) {
+      speichereEntwurfIDB();
+      return _origShowPage(name);
+    };
+  }
+}
+
+/* ── Init: alles starten wenn DOM bereit ─────────────────── */
+function init() {
+  // IDB Support prüfen
+  if (!window.indexedDB) {
+    console.warn('[PROVA Offline] IndexedDB nicht verfügbar');
+    return;
+  }
+  // Aktuellen Netz-Status setzen
+  aktualisiereNetBadge(navigator.onLine);
+  if (!navigator.onLine) {
+    // Beim Start offline: Badge sofort zeigen
+    const badge = document.getElementById('prova-net-badge');
+    if (badge) badge.classList.remove('hidden');
+  }
+  // Auto-Save starten
+  startAutoSave();
+  // Entwurf laden (leicht verzögert, damit Formular bereit ist)
+  setTimeout(ladeUndRestoreEntwurf, 600);
+  // Beim Laden prüfen ob Queue noch Einträge hat (z.B. nach Reload)
+  if (navigator.onLine) {
+    setTimeout(sendeOfflineQueue, 2000);
+  }
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  init();
+}
+
+// Public API (für Neues Gutachten Button)
+window.PROVA_OFFLINE = {
+  speichereEntwurf: speichereEntwurfIDB,
+  löscheEntwurf:    löscheEntwurfIDB,
+  sendeQueue:       sendeOfflineQueue
+};
+
+})(); // Ende IIFE
 </script>
 </body>
 </html>
