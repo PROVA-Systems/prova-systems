@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>PROVA — Baubegleitung</title>
+  <script src="/sw-register.js"></script>
+  <style>
+  /* ── TOKENS ── */
+  :root{
+    --bg:#0d0f14; --bg2:#13161d; --bg3:#181b24;
+    --surface:#1e2330; --surface2:#242838;
+    --border:rgba(255,255,255,0.07); --border2:rgba(255,255,255,0.12);
+    --text:#e8eaf0; --text2:#9da3b4; --text3:#6b7280;
+    --accent:#4f8ef7; --accent2:#3a7be0;
+    --green:#10B981; --green-bg:rgba(16,185,129,0.08);
+    --warn:#f59e0b; --warn-bg:rgba(245,158,11,0.08); --warn-border:rgba(245,158,11,0.25);
+    --red:#ef4444; --red-bg:rgba(239,68,68,0.08); --red-border:rgba(239,68,68,0.2);
+    --purple:#a78bfa; --purple-bg:rgba(167,139,250,0.08);
+    --sans:'Instrument Sans',system-ui,sans-serif;
+    --display:'Montserrat',sans-serif;
+    --mono:'JetBrains Mono','Fira Mono',monospace;
+    --radius:10px; --nav-h:52px; --bot-h:60px;
+  }
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+  html{font-size:14px;}
+  body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:var(--bot-h);}
+  input,select,textarea{font-size:max(16px,1em);}
+  a{text-decoration:none;color:inherit;}
+
+  /* ── TOPBAR ── */
+  .topbar{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 20px;height:var(--nav-h);min-height:var(--nav-h);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+  .topbar-left{display:flex;align-items:center;gap:12px;}
+  .logo{font-family:var(--display);font-weight:700;font-size:18px;color:var(--text);}
+  .logo span{color:var(--accent);}
+  .topnav{display:flex;gap:2px;}
+  .topnav a{padding:6px 11px;border-radius:6px;color:var(--text3);font-size:13px;font-weight:500;transition:all .15s;white-space:nowrap;min-height:44px;display:inline-flex;align-items:center;}
+  .topnav a:hover{color:var(--text2);background:rgba(255,255,255,.04);}
+  .topnav a.active{color:var(--accent);background:rgba(79,142,247,.1);}
+  .settings-link{font-size:16px;color:var(--text3);padding:6px 8px;border-radius:6px;min-height:44px;display:inline-flex;align-items:center;}
+  .paket-badge{padding:3px 8px;border-radius:4px;font-size:10px;font-weight:700;letter-spacing:.04em;}
+  .burger{display:none;flex-direction:column;gap:4px;background:none;border:none;cursor:pointer;padding:8px;}
+  .burger span{width:20px;height:2px;background:var(--text2);border-radius:2px;display:block;}
+
+  /* ── DRAWER ── */
+  .drawer-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;}
+  .drawer-overlay.open{display:block;}
+  .drawer{position:fixed;top:0;right:-280px;width:280px;height:100%;background:var(--bg2);border-left:1px solid var(--border);z-index:300;transition:right .25s cubic-bezier(.4,0,.2,1);padding:0;display:flex;flex-direction:column;}
+  .drawer.open{right:0;}
+  .drawer-header{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border);}
+  .drawer-close{background:none;border:none;color:var(--text3);font-size:18px;cursor:pointer;}
+  .drawer-nav{display:flex;flex-direction:column;padding:12px;flex:1;overflow-y:auto;}
+  .drawer-nav a{display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:8px;color:var(--text2);font-size:13px;transition:all .12s;}
+  .drawer-nav a:hover{color:var(--text);background:rgba(255,255,255,.04);}
+  .drawer-footer{padding:12px 18px;border-top:1px solid var(--border);}
+  .dnav-icon{font-size:15px;width:20px;text-align:center;}
+
+  /* ── BOTTOM NAV ── */
+  .bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;height:var(--bot-h);background:var(--bg2);border-top:1px solid var(--border);z-index:100;align-items:stretch;}
+  .bn-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:var(--text3);font-size:10px;font-weight:500;padding:6px 4px;}
+  .bn-item.active{color:var(--accent);}
+  .bn-icon{font-size:18px;}
+
+  /* ── MAIN LAYOUT ── */
+  .main{max-width:900px;margin:0 auto;padding:24px 20px;}
+
+  /* ── PAGE HEADER ── */
+  .page-header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:24px;flex-wrap:wrap;}
+  .page-title{font-family:var(--display);font-size:1.4rem;font-weight:800;color:var(--text);}
+  .page-sub{font-size:0.78rem;color:var(--text3);margin-top:4px;}
+  .btn{padding:9px 16px;border-radius:8px;font-family:var(--sans);font-size:13px;font-weight:600;cursor:pointer;border:none;transition:all .15s;}
+  .btn-primary{background:var(--accent);color:#fff;}
+  .btn-primary:hover{background:var(--accent2);}
+  .btn-ghost{background:rgba(255,255,255,.05);border:1px solid var(--border2);color:var(--text2);}
+  .btn-ghost:hover{color:var(--text);background:rgba(255,255,255,.08);}
+  .btn-danger{background:var(--red-bg);border:1px solid var(--red-border);color:var(--red);}
+
+  /* ── CARDS ── */
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:16px;}
+  .card-header{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+  .card-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text2);}
+  .card-body{padding:16px;}
+
+  /* ── PROJECT LIST ── */
+  .proj-list{display:flex;flex-direction:column;gap:10px;}
+  .proj-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:space-between;gap:12px;}
+  .proj-card:hover{border-color:var(--border2);background:var(--surface);}
+  .proj-card.active-proj{border-color:rgba(79,142,247,.4);background:rgba(79,142,247,.04);}
+  .proj-name{font-size:0.88rem;font-weight:700;color:var(--text);margin-bottom:3px;}
+  .proj-meta{font-size:0.72rem;color:var(--text3);}
+  .proj-status{font-size:0.7rem;font-weight:700;padding:3px 8px;border-radius:4px;}
+  .status-aktiv{background:var(--green-bg);color:var(--green);border:1px solid rgba(16,185,129,.25);}
+  .status-abgeschlossen{background:rgba(255,255,255,.04);color:var(--text3);border:1px solid var(--border);}
+  .proj-begehungen{font-size:0.72rem;color:var(--text3);text-align:right;}
+
+  /* ── BEGEHUNGEN ── */
+  .begehung-list{display:flex;flex-direction:column;gap:8px;}
+  .begehung-item{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;display:flex;gap:12px;align-items:flex-start;}
+  .begehung-nr{width:28px;height:28px;border-radius:50%;background:rgba(79,142,247,.15);border:1px solid rgba(79,142,247,.3);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--accent);flex-shrink:0;margin-top:2px;}
+  .begehung-body{flex:1;}
+  .begehung-datum{font-size:0.75rem;font-weight:600;color:var(--text2);margin-bottom:4px;}
+  .begehung-text{font-size:0.8rem;color:var(--text);line-height:1.55;}
+  .begehung-fotos{font-size:0.7rem;color:var(--text3);margin-top:5px;}
+  .begehung-actions{display:flex;gap:6px;flex-shrink:0;}
+
+  /* ── MODAL ── */
+  .modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:400;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px);}
+  .modal-bg.open{display:flex;}
+  .modal{background:var(--bg2);border:1px solid var(--border2);border-radius:14px;max-width:560px;width:100%;max-height:90vh;overflow-y:auto;padding:24px;}
+  .modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;}
+  .modal-title{font-size:15px;font-weight:700;color:var(--text);}
+  .modal-close{background:none;border:none;color:var(--text3);font-size:20px;cursor:pointer;line-height:1;}
+  .form-group{margin-bottom:14px;}
+  .form-label{display:block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);margin-bottom:5px;}
+  .form-input,.form-select,.form-textarea{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:7px;padding:9px 12px;color:var(--text);font-family:var(--sans);font-size:13px;outline:none;transition:border-color .15s;}
+  .form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--accent);}
+  .form-textarea{resize:vertical;min-height:90px;}
+  .modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:18px;}
+
+  /* ── PROGRESS BAR ── */
+  .progress-wrap{height:4px;background:var(--border);border-radius:2px;margin-bottom:8px;overflow:hidden;}
+  .progress-bar{height:100%;background:var(--accent);border-radius:2px;transition:width .4s ease;}
+
+  /* ── BERICHT-VORSCHAU ── */
+  .bericht-vorschau{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:16px;font-size:0.8rem;line-height:1.65;color:var(--text2);white-space:pre-wrap;}
+
+  /* ── EMPTY STATE ── */
+  .empty-state{text-align:center;padding:48px 24px;}
+  .empty-icon{font-size:40px;margin-bottom:12px;}
+  .empty-title{font-size:0.95rem;font-weight:700;color:var(--text2);margin-bottom:6px;}
+  .empty-sub{font-size:0.78rem;color:var(--text3);}
+
+  /* ── TOAST ── */
+  .toast{position:fixed;bottom:80px;right:20px;z-index:600;padding:10px 16px;border-radius:8px;font-size:13px;font-weight:500;background:var(--bg2);border:1px solid rgba(16,185,129,.4);color:var(--green);transition:all .3s;opacity:0;transform:translateY(10px);}
+  .toast.show{opacity:1;transform:translateY(0);}
+  .toast.err{border-color:var(--red-border);color:var(--red);}
+
+  /* ── RESPONSIVE ── */
+  @media(max-width:900px){
+    .topnav a{font-size:0;}
+    .topnav a::after{content:attr(data-short);font-size:12px;font-family:var(--sans);font-weight:500;}
+    .paket-badge{display:none;}
+  }
+  @media(max-width:600px){
+    .topnav{display:none;} .settings-link{display:none;}
+    .burger{display:flex;} .bottom-nav{display:flex;}
+    body{padding-bottom:var(--bot-h);}
+    .topbar{padding:0 14px;height:48px;} .logo{font-size:16px;}
+    --nav-h:48px; ::-webkit-scrollbar{display:none;} *{scrollbar-width:none;}
+    .main{padding:16px 14px;}
+    .page-header{flex-direction:column;gap:10px;}
+  }
+  ::-webkit-scrollbar{width:3px;}
+  ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+  </style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="topbar-left">
+    <a href="dashboard.html" class="logo">PRO<span>VA</span></a>
+    <nav class="topnav">
+      <a href="dashboard.html" data-short="Dashboard">Dashboard</a>
+      <a href="app-starter.html" data-short="Gutachten">Neues Gutachten</a>
+      <a href="archiv.html" data-short="Archiv">Archiv</a>
+      <a href="termine.html" data-short="Termine">Termine</a>
+      <a href="rechnungen.html" data-short="Rechnungen">Rechnungen</a>
+      <a href="briefvorlagen.html" data-short="Vorlagen">Briefvorlagen</a>
+      <a href="jveg.html" data-short="JVEG">JVEG</a>
+    </nav>
+  </div>
+  <div class="topbar-right" style="display:flex;align-items:center;gap:8px;">
+    <span class="paket-badge" id="topbarPaket"></span>
+    <a href="einstellungen.html" class="settings-link">⚙</a>
+    <button class="burger" id="burgerBtn" onclick="toggleDrawer()"><span></span><span></span><span></span></button>
+  </div>
+</div>
+<div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
+<div class="drawer" id="drawer">
+  <div class="drawer-header">
+    <a href="dashboard.html" class="logo">PRO<span>VA</span></a>
+    <button class="drawer-close" onclick="closeDrawer()">✕</button>
+  </div>
+  <nav class="drawer-nav">
+    <a href="dashboard.html"><span class="dnav-icon">🏠</span>Dashboard</a>
+    <a href="app-starter.html"><span class="dnav-icon">📄</span>Neues Gutachten</a>
+    <a href="archiv.html"><span class="dnav-icon">📂</span>Archiv</a>
+    <a href="termine.html"><span class="dnav-icon">📅</span>Termine</a>
+    <a href="rechnungen.html"><span class="dnav-icon">💶</span>Rechnungen</a>
+    <a href="briefvorlagen.html"><span class="dnav-icon">✉️</span>Briefvorlagen</a>
+    <a href="jveg.html"><span class="dnav-icon">🧮</span>JVEG</a>
+    <a href="baubegleitung.html" style="color:var(--accent);background:rgba(79,142,247,.08);"><span class="dnav-icon">🏗</span>Baubegleitung</a>
+    <a href="einstellungen.html"><span class="dnav-icon">⚙</span>Einstellungen</a>
+    <a href="#" onclick="logout();return false;" style="margin-top:auto;color:#ef4444;"><span class="dnav-icon">🚪</span>Abmelden</a>
+  </nav>
+  <div class="drawer-footer"><span class="paket-badge" id="drawerPaket"></span></div>
+</div>
+<nav class="bottom-nav">
+  <a href="dashboard.html" class="bn-item"><span class="bn-icon">🏠</span><span class="bn-label">Dashboard</span></a>
+  <a href="app-starter.html" class="bn-item"><span class="bn-icon">📄</span><span class="bn-label">Gutachten</span></a>
+  <a href="baubegleitung.html" class="bn-item active"><span class="bn-icon">🏗</span><span class="bn-label">Baubegl.</span></a>
+  <a href="rechnungen.html" class="bn-item"><span class="bn-icon">💶</span><span class="bn-label">Rechnungen</span></a>
+  <a href="einstellungen.html" class="bn-item"><span class="bn-icon">⚙</span><span class="bn-label">Einstellungen</span></a>
+</nav>
+<script>
+function toggleDrawer(){var d=document.getElementById('drawer'),o=document.getElementById('drawerOverlay');d.classList.toggle('open');o.classList.toggle('open');document.body.style.overflow=d.classList.contains('open')?'hidden':'';}
+function closeDrawer(){document.getElementById('drawer').classList.remove('open');document.getElementById('drawerOverlay').classList.remove('open');document.body.style.overflow='';}
+document.addEventListener('keydown',function(e){if(e.key==='Escape'){closeDrawer();closeModal('modal-projekt');closeModal('modal-begehung');}});
+function logout(){localStorage.removeItem('prova_user');localStorage.removeItem('prova_sv_email');window.location.href='app-login.html';}
+(function(){
+  var u=localStorage.getItem('prova_user');
+  if(!u){window.location.href='app-login.html';return;}
+  var p=localStorage.getItem('prova_paket')||'Starter';
+  var c={Starter:'#4f8ef7',Pro:'#f59e0b',Enterprise:'#a78bfa'}[p]||'#4f8ef7';
+  var s='background:'+c+'18;color:'+c+';border:1px solid '+c+'33';
+  ['topbarPaket','drawerPaket'].forEach(function(id){var el=document.getElementById(id);if(el){el.textContent=p;el.setAttribute('style',s);}});
+  window.PROVA=window.PROVA||{};PROVA.paket=p;PROVA.isPro=['Pro','Enterprise'].includes(p);PROVA.isEnterprise=p==='Enterprise';
+})();
+</script>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- Page Header -->
+  <div class="page-header">
+    <div>
+      <div class="page-title">🏗 Baubegleitung</div>
+      <div class="page-sub">Projekte verwalten · Begehungen dokumentieren · Einzelberichte &amp; Gesamtbericht</div>
+    </div>
+    <button class="btn btn-primary" onclick="openModalProjekt()">+ Neues Projekt</button>
+  </div>
+
+  <!-- Zwei-Spalten Layout (ab 700px) -->
+  <div id="bb-layout" style="display:grid;grid-template-columns:300px 1fr;gap:16px;align-items:start;">
+
+    <!-- Linke Spalte: Projektliste -->
+    <div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Projekte</div>
+          <span id="proj-count" style="font-size:11px;color:var(--text3);">0</span>
+        </div>
+        <div class="card-body" style="padding:12px;">
+          <input id="proj-suche" class="form-input" type="text" placeholder="🔍 Projekt suchen…" oninput="renderProjektliste()" style="margin-bottom:10px;font-size:13px;">
+          <div id="proj-list" class="proj-list">
+            <div class="empty-state">
+              <div class="empty-icon">🏗</div>
+              <div class="empty-title">Noch keine Projekte</div>
+              <div class="empty-sub">+ Neues Projekt anlegen</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Rechte Spalte: Projekt-Detail -->
+    <div id="proj-detail">
+      <div class="card">
+        <div class="card-body">
+          <div class="empty-state">
+            <div class="empty-icon">👈</div>
+            <div class="empty-title">Projekt auswählen</div>
+            <div class="empty-sub">Wählen Sie links ein Projekt aus oder legen Sie ein neues an.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODAL: Neues Projekt -->
+<div class="modal-bg" id="modal-projekt">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-proj-titel">🏗 Neues Projekt</div>
+      <button class="modal-close" onclick="closeModal('modal-projekt')">✕</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Projektname *</label>
+      <input id="mp-name" class="form-input" type="text" placeholder="z.B. Neubau EFH Musterstraße 12">
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <div class="form-group">
+        <label class="form-label">Auftraggeber</label>
+        <input id="mp-auftraggeber" class="form-input" type="text" placeholder="Name / Firma">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Aktenzeichen</label>
+        <input id="mp-az" class="form-input" type="text" placeholder="PROVA-BB-2026-…">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Objekt / Adresse</label>
+      <input id="mp-adresse" class="form-input" type="text" placeholder="Straße, PLZ Ort">
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <div class="form-group">
+        <label class="form-label">Projektbeginn</label>
+        <input id="mp-beginn" class="form-input" type="date">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Gepl. Abnahme</label>
+        <input id="mp-abnahme" class="form-input" type="date">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Bauvorhaben-Typ</label>
+      <select id="mp-typ" class="form-select">
+        <option value="Neubau">Neubau</option>
+        <option value="Sanierung">Sanierung</option>
+        <option value="Umbau">Umbau / Erweiterung</option>
+        <option value="Denkmalschutz">Denkmalschutz</option>
+        <option value="Sonstig">Sonstiges</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Notizen (intern)</label>
+      <textarea id="mp-notiz" class="form-textarea" rows="3" placeholder="Besonderheiten, Ansprechpartner…"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('modal-projekt')">Abbrechen</button>
+      <button class="btn btn-primary" onclick="speichereProjekt()">💾 Speichern</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Neue Begehung -->
+<div class="modal-bg" id="modal-begehung">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">📋 Begehung erfassen</div>
+      <button class="modal-close" onclick="closeModal('modal-begehung')">✕</button>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <div class="form-group">
+        <label class="form-label">Datum *</label>
+        <input id="mb-datum" class="form-input" type="date">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Uhrzeit</label>
+        <input id="mb-uhrzeit" class="form-input" type="time" value="09:00">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Bauphase</label>
+      <select id="mb-phase" class="form-select">
+        <option>Rohbau</option>
+        <option>Bodenplatte / Fundament</option>
+        <option>Außenwände / Mauerwerk</option>
+        <option>Dach / Dachstuhl</option>
+        <option>Fassade</option>
+        <option>Ausbau Innen</option>
+        <option>Estrich / Fußboden</option>
+        <option>Sanitär / Heizung</option>
+        <option>Elektro</option>
+        <option>Außenanlagen</option>
+        <option>Abnahme / Schlussbegehung</option>
+        <option>Sonstig</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Feststellungen / Mängel *</label>
+      <textarea id="mb-text" class="form-textarea" rows="5" placeholder="Beobachtungen, Mängel, Abweichungen vom Plan, Empfehlungen…"></textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Anwesende Personen</label>
+      <input id="mb-anwesend" class="form-input" type="text" placeholder="z.B. Bauleiter Hr. Maier, Architekt Fr. Schulz">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Fotos (Anzahl für Protokoll)</label>
+      <input id="mb-fotos" class="form-input" type="number" min="0" value="0" placeholder="0">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Dringlichkeit</label>
+      <select id="mb-dringlichkeit" class="form-select">
+        <option value="normal">Normal — keine sofortigen Maßnahmen</option>
+        <option value="hinweis">Hinweis — Nachverfolgung erforderlich</option>
+        <option value="mangel">Mangel — Nachbesserung vor Fortsetzung</option>
+        <option value="stopp">Baustopp — sofortige Klärung nötig</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('modal-begehung')">Abbrechen</button>
+      <button class="btn btn-primary" onclick="speichereBegehung()">📋 Begehung speichern</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Bericht -->
+<div class="modal-bg" id="modal-bericht">
+  <div class="modal" style="max-width:680px;">
+    <div class="modal-header">
+      <div class="modal-title" id="bericht-modal-titel">📄 Bericht</div>
+      <button class="modal-close" onclick="closeModal('modal-bericht')">✕</button>
+    </div>
+    <div class="bericht-vorschau" id="bericht-text" style="max-height:55vh;overflow-y:auto;"></div>
+    <div class="modal-actions" style="margin-top:14px;">
+      <button class="btn btn-ghost" onclick="closeModal('modal-bericht')">Schließen</button>
+      <button class="btn btn-primary" onclick="berichtKopieren()">📋 Kopieren</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+// ============================================================
+// BAUBEGLEITUNG — DATENMODELL & STORAGE
+// ============================================================
+const BB_KEY = 'prova_baubegleitung';
+
+function ladeDaten() {
+  try { return JSON.parse(localStorage.getItem(BB_KEY) || '{"projekte":[]}'); }
+  catch(e) { return {projekte:[]}; }
+}
+function speichereDaten(data) {
+  localStorage.setItem(BB_KEY, JSON.stringify(data));
+}
+function genId() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2,6);
+}
+
+// ── State ──
+var _data = ladeDaten();
+var _aktivProjektId = null;
+var _editProjektId = null;
+
+// ============================================================
+// RENDER PROJEKTLISTE
+// ============================================================
+function renderProjektliste() {
+  var container = document.getElementById('proj-list');
+  var suche = (document.getElementById('proj-suche').value || '').toLowerCase();
+  var liste = _data.projekte.filter(function(p){
+    return !suche || p.name.toLowerCase().includes(suche) || (p.adresse||'').toLowerCase().includes(suche);
+  });
+  document.getElementById('proj-count').textContent = _data.projekte.length;
+
+  if (!liste.length) {
+    container.innerHTML = '<div class="empty-state"><div class="empty-icon">🏗</div><div class="empty-title">Keine Projekte</div><div class="empty-sub">+ Neues Projekt anlegen</div></div>';
+    return;
+  }
+  container.innerHTML = '';
+  liste.forEach(function(p) {
+    var div = document.createElement('div');
+    div.className = 'proj-card' + (p.id === _aktivProjektId ? ' active-proj' : '');
+    div.onclick = function(){ ladeProduktDetail(p.id); };
+    var statusKlasse = p.status === 'Abgeschlossen' ? 'status-abgeschlossen' : 'status-aktiv';
+    var statusText = p.status || 'Aktiv';
+    var anz = (p.begehungen || []).length;
+    div.innerHTML =
+      '<div style="flex:1;min-width:0;">' +
+        '<div class="proj-name" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + escHtml(p.name) + '</div>' +
+        '<div class="proj-meta">' + escHtml(p.auftraggeber||'—') + ' · ' + escHtml(p.typ||'') + '</div>' +
+      '</div>' +
+      '<div style="text-align:right;flex-shrink:0;">' +
+        '<div class="proj-status ' + statusKlasse + '">' + statusText + '</div>' +
+        '<div class="proj-begehungen" style="margin-top:4px;">' + anz + ' Begehung' + (anz===1?'':'en') + '</div>' +
+      '</div>';
+    container.appendChild(div);
+  });
+}
+
+// ============================================================
+// PROJEKT-DETAIL
+// ============================================================
+function ladeProduktDetail(id) {
+  _aktivProjektId = id;
+  renderProjektliste(); // Highlight aktualisieren
+
+  var proj = _data.projekte.find(function(p){return p.id===id;});
+  if (!proj) return;
+
+  var detail = document.getElementById('proj-detail');
+  var begehungen = proj.begehungen || [];
+  var fortschritt = begehungenFortschritt(proj);
+
+  detail.innerHTML =
+    '<div class="card">' +
+      '<div class="card-header">' +
+        '<div>' +
+          '<div class="card-title">📋 ' + escHtml(proj.name) + '</div>' +
+          '<div style="font-size:11px;color:var(--text3);margin-top:2px;">' + escHtml(proj.adresse||'—') + '</div>' +
+        '</div>' +
+        '<div style="display:flex;gap:6px;">' +
+          '<button class="btn btn-ghost" style="font-size:12px;padding:6px 10px;" onclick="editiereProjekt(\'' + id + '\')">✎ Bearbeiten</button>' +
+          '<button class="btn btn-primary" style="font-size:12px;padding:6px 10px;" onclick="openModalBegehung()">+ Begehung</button>' +
+        '</div>' +
+      '</div>' +
+      '<div class="card-body">' +
+
+        // Meta-Zeile
+        '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-bottom:16px;">' +
+          metaBox('Auftraggeber', proj.auftraggeber||'—') +
+          metaBox('Aktenzeichen', proj.az||'—') +
+          metaBox('Beginn', formatDatum(proj.beginn)) +
+          metaBox('Gepl. Abnahme', formatDatum(proj.abnahme)) +
+          metaBox('Begehungen', begehungen.length + ' gesamt') +
+          metaBox('Status', proj.status||'Aktiv') +
+        '</div>' +
+
+        // Fortschrittsbalken
+        '<div style="margin-bottom:16px;">' +
+          '<div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text3);margin-bottom:4px;">' +
+            '<span>Projektfortschritt (Begehungen)</span>' +
+            '<span>' + fortschritt + '%</span>' +
+          '</div>' +
+          '<div class="progress-wrap"><div class="progress-bar" style="width:' + fortschritt + '%;"></div></div>' +
+        '</div>' +
+
+        // Aktionen
+        '<div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">' +
+          '<button class="btn btn-ghost" style="font-size:12px;" onclick="generiereEinzelBericht(\'' + id + '\')">📄 Begehungs-Bericht</button>' +
+          '<button class="btn btn-ghost" style="font-size:12px;" onclick="generiereGesamtBericht(\'' + id + '\')">📑 Gesamtbericht</button>' +
+          '<button class="btn btn-ghost" style="font-size:12px;" onclick="toggleProjektStatus(\'' + id + '\')">' +
+            (proj.status==='Abgeschlossen' ? '🔄 Reaktivieren' : '✅ Abschließen') +
+          '</button>' +
+          '<button class="btn btn-danger" style="font-size:12px;" onclick="loescheProjekt(\'' + id + '\')">🗑</button>' +
+        '</div>' +
+
+        // Begehungen
+        '<div class="card-title" style="margin-bottom:10px;">Begehungen</div>' +
+        renderBegehungenHtml(begehungen, id) +
+
+      '</div>' +
+    '</div>';
+}
+
+function metaBox(label, value) {
+  return '<div style="background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:9px 11px;">' +
+    '<div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);margin-bottom:3px;">' + label + '</div>' +
+    '<div style="font-size:12px;font-weight:600;color:var(--text);">' + escHtml(String(value)) + '</div>' +
+  '</div>';
+}
+
+function renderBegehungenHtml(begehungen, projId) {
+  if (!begehungen.length) {
+    return '<div class="empty-state" style="padding:24px;"><div class="empty-icon">📋</div><div class="empty-title">Noch keine Begehungen</div><div class="empty-sub">Erste Begehung erfassen</div></div>';
+  }
+  var dring = {'normal':'','hinweis':'🔵','mangel':'🟡','stopp':'🔴'};
+  var html = '<div class="begehung-list">';
+  begehungen.forEach(function(b, i) {
+    html +=
+      '<div class="begehung-item">' +
+        '<div class="begehung-nr">' + (i+1) + '</div>' +
+        '<div class="begehung-body">' +
+          '<div class="begehung-datum">' + (dring[b.dringlichkeit]||'') + ' ' + formatDatum(b.datum) + (b.uhrzeit?' · '+b.uhrzeit:'') + ' — ' + escHtml(b.phase||'') + '</div>' +
+          '<div class="begehung-text">' + escHtml(b.text||'') + '</div>' +
+          (b.anwesend ? '<div class="begehung-fotos" style="margin-top:4px;">👥 '+escHtml(b.anwesend)+'</div>' : '') +
+          (b.fotos>0 ? '<div class="begehung-fotos">📷 '+b.fotos+' Foto'+(b.fotos===1?'':'s')+'</div>' : '') +
+        '</div>' +
+        '<div class="begehung-actions">' +
+          '<button title="Löschen" onclick="loescheBegehung(\'' + projId + '\',' + i + ')" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:14px;padding:4px;">🗑</button>' +
+        '</div>' +
+      '</div>';
+  });
+  html += '</div>';
+  return html;
+}
+
+function begehungenFortschritt(proj) {
+  // Grobe Schätzung: 8 Begehungen = 100% für typischen Neubau
+  var ziel = {'Neubau':8,'Sanierung':6,'Umbau':5,'Denkmalschutz':10}[proj.typ] || 8;
+  var anz = (proj.begehungen||[]).length;
+  return Math.min(100, Math.round(anz/ziel*100));
+}
+
+// ============================================================
+// MODALS
+// ============================================================
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+function openModalProjekt() {
+  _editProjektId = null;
+  document.getElementById('modal-proj-titel').textContent = '🏗 Neues Projekt';
+  ['mp-name','mp-auftraggeber','mp-az','mp-adresse','mp-notiz'].forEach(function(id){
+    var el=document.getElementById(id); if(el) el.value='';
+  });
+  document.getElementById('mp-beginn').value = new Date().toISOString().slice(0,10);
+  document.getElementById('mp-abnahme').value = '';
+  openModal('modal-projekt');
+  setTimeout(function(){ document.getElementById('mp-name').focus(); }, 100);
+}
+
+function editiereProjekt(id) {
+  var proj = _data.projekte.find(function(p){return p.id===id;});
+  if (!proj) return;
+  _editProjektId = id;
+  document.getElementById('modal-proj-titel').textContent = '✎ Projekt bearbeiten';
+  document.getElementById('mp-name').value = proj.name||'';
+  document.getElementById('mp-auftraggeber').value = proj.auftraggeber||'';
+  document.getElementById('mp-az').value = proj.az||'';
+  document.getElementById('mp-adresse').value = proj.adresse||'';
+  document.getElementById('mp-beginn').value = proj.beginn||'';
+  document.getElementById('mp-abnahme').value = proj.abnahme||'';
+  document.getElementById('mp-typ').value = proj.typ||'Neubau';
+  document.getElementById('mp-notiz').value = proj.notiz||'';
+  openModal('modal-projekt');
+}
+
+function openModalBegehung() {
+  if (!_aktivProjektId) return;
+  document.getElementById('mb-datum').value = new Date().toISOString().slice(0,10);
+  document.getElementById('mb-text').value = '';
+  document.getElementById('mb-anwesend').value = '';
+  document.getElementById('mb-fotos').value = '0';
+  document.getElementById('mb-dringlichkeit').value = 'normal';
+  openModal('modal-begehung');
+  setTimeout(function(){ document.getElementById('mb-text').focus(); }, 100);
+}
+
+// ============================================================
+// CRUD
+// ============================================================
+function speichereProjekt() {
+  var name = document.getElementById('mp-name').value.trim();
+  if (!name) { zeigToast('Projektname ist Pflichtfeld', 'err'); return; }
+
+  if (_editProjektId) {
+    var proj = _data.projekte.find(function(p){return p.id===_editProjektId;});
+    if (proj) {
+      proj.name = name;
+      proj.auftraggeber = document.getElementById('mp-auftraggeber').value.trim();
+      proj.az = document.getElementById('mp-az').value.trim();
+      proj.adresse = document.getElementById('mp-adresse').value.trim();
+      proj.beginn = document.getElementById('mp-beginn').value;
+      proj.abnahme = document.getElementById('mp-abnahme').value;
+      proj.typ = document.getElementById('mp-typ').value;
+      proj.notiz = document.getElementById('mp-notiz').value.trim();
+    }
+  } else {
+    var az = document.getElementById('mp-az').value.trim();
+    if (!az) az = 'PROVA-BB-' + new Date().getFullYear() + '-' + String((_data.projekte.length+1)).padStart(4,'0');
+    _data.projekte.unshift({
+      id: genId(),
+      name: name,
+      auftraggeber: document.getElementById('mp-auftraggeber').value.trim(),
+      az: az,
+      adresse: document.getElementById('mp-adresse').value.trim(),
+      beginn: document.getElementById('mp-beginn').value,
+      abnahme: document.getElementById('mp-abnahme').value,
+      typ: document.getElementById('mp-typ').value,
+      notiz: document.getElementById('mp-notiz').value.trim(),
+      status: 'Aktiv',
+      begehungen: [],
+      erstellt: new Date().toISOString()
+    });
+    _aktivProjektId = _data.projekte[0].id;
+  }
+  speichereDaten(_data);
+  closeModal('modal-projekt');
+  renderProjektliste();
+  if (_aktivProjektId) ladeProduktDetail(_aktivProjektId);
+  zeigToast(_editProjektId ? 'Projekt aktualisiert ✅' : 'Projekt angelegt ✅');
+}
+
+function speichereBegehung() {
+  if (!_aktivProjektId) return;
+  var text = document.getElementById('mb-text').value.trim();
+  var datum = document.getElementById('mb-datum').value;
+  if (!text || !datum) { zeigToast('Datum und Feststellungen sind Pflicht', 'err'); return; }
+
+  var proj = _data.projekte.find(function(p){return p.id===_aktivProjektId;});
+  if (!proj) return;
+  proj.begehungen = proj.begehungen || [];
+  proj.begehungen.push({
+    datum: datum,
+    uhrzeit: document.getElementById('mb-uhrzeit').value,
+    phase: document.getElementById('mb-phase').value,
+    text: text,
+    anwesend: document.getElementById('mb-anwesend').value.trim(),
+    fotos: parseInt(document.getElementById('mb-fotos').value)||0,
+    dringlichkeit: document.getElementById('mb-dringlichkeit').value,
+    erfasst: new Date().toISOString()
+  });
+  speichereDaten(_data);
+  closeModal('modal-begehung');
+  ladeProduktDetail(_aktivProjektId);
+  zeigToast('Begehung erfasst ✅');
+}
+
+function loescheBegehung(projId, idx) {
+  if (!confirm('Begehung löschen?')) return;
+  var proj = _data.projekte.find(function(p){return p.id===projId;});
+  if (proj) { proj.begehungen.splice(idx, 1); speichereDaten(_data); ladeProduktDetail(projId); zeigToast('Begehung gelöscht'); }
+}
+
+function toggleProjektStatus(id) {
+  var proj = _data.projekte.find(function(p){return p.id===id;});
+  if (!proj) return;
+  proj.status = proj.status === 'Abgeschlossen' ? 'Aktiv' : 'Abgeschlossen';
+  speichereDaten(_data);
+  renderProjektliste();
+  ladeProduktDetail(id);
+  zeigToast(proj.status === 'Abgeschlossen' ? 'Projekt abgeschlossen' : 'Projekt reaktiviert');
+}
+
+function loescheProjekt(id) {
+  if (!confirm('Projekt inkl. aller Begehungen unwiderruflich löschen?')) return;
+  _data.projekte = _data.projekte.filter(function(p){return p.id!==id;});
+  speichereDaten(_data);
+  _aktivProjektId = null;
+  renderProjektliste();
+  document.getElementById('proj-detail').innerHTML = '<div class="card"><div class="card-body"><div class="empty-state"><div class="empty-icon">👈</div><div class="empty-title">Projekt gelöscht</div><div class="empty-sub">Wählen Sie ein anderes Projekt aus.</div></div></div></div>';
+  zeigToast('Projekt gelöscht');
+}
+
+// ============================================================
+// BERICHTE
+// ============================================================
+function generiereEinzelBericht(projId) {
+  var proj = _data.projekte.find(function(p){return p.id===projId;});
+  if (!proj) return;
+  var begehungen = proj.begehungen || [];
+  if (!begehungen.length) { zeigToast('Keine Begehungen vorhanden', 'err'); return; }
+
+  // Letzte Begehung
+  var b = begehungen[begehungen.length-1];
+  var sv = localStorage.getItem('prova_sv_vorname')||'';
+  var svN = localStorage.getItem('prova_sv_nachname')||'Sachverständiger';
+  var dring = {'normal':'keine sofortigen Maßnahmen erforderlich','hinweis':'Nachverfolgung erforderlich','mangel':'Nachbesserung vor Fortsetzung erforderlich','stopp':'BAUSTOPP — sofortige Klärung notwendig'}[b.dringlichkeit]||'';
+
+  var text =
+    'BEGEHUNGSPROTOKOLL\n' +
+    '═'.repeat(45) + '\n\n' +
+    'Projekt:        ' + proj.name + '\n' +
+    'Aktenzeichen:   ' + (proj.az||'—') + '\n' +
+    'Auftraggeber:   ' + (proj.auftraggeber||'—') + '\n' +
+    'Objekt:         ' + (proj.adresse||'—') + '\n\n' +
+    'Begehung Nr.:   ' + begehungen.length + '\n' +
+    'Datum:          ' + formatDatum(b.datum) + (b.uhrzeit ? ' · ' + b.uhrzeit + ' Uhr' : '') + '\n' +
+    'Bauphase:       ' + (b.phase||'—') + '\n' +
+    (b.anwesend ? 'Anwesend:       ' + b.anwesend + '\n' : '') +
+    (b.fotos>0 ? 'Fotodokumentation: ' + b.fotos + ' Aufnahmen\n' : '') +
+    '\n' +
+    'FESTSTELLUNGEN\n' +
+    '─'.repeat(45) + '\n' +
+    b.text + '\n\n' +
+    'BEWERTUNG\n' +
+    '─'.repeat(45) + '\n' +
+    'Dringlichkeit:  ' + dring + '\n\n' +
+    '─'.repeat(45) + '\n' +
+    'Erstellt durch: ' + sv + ' ' + svN + '\n' +
+    'Datum:          ' + new Date().toLocaleDateString('de-DE') + '\n';
+
+  document.getElementById('bericht-modal-titel').textContent = '📄 Begehungsprotokoll · ' + proj.name;
+  document.getElementById('bericht-text').textContent = text;
+  openModal('modal-bericht');
+}
+
+function generiereGesamtBericht(projId) {
+  var proj = _data.projekte.find(function(p){return p.id===projId;});
+  if (!proj) return;
+  var begehungen = proj.begehungen || [];
+  if (!begehungen.length) { zeigToast('Keine Begehungen vorhanden', 'err'); return; }
+
+  var sv = (localStorage.getItem('prova_sv_vorname')||'') + ' ' + (localStorage.getItem('prova_sv_nachname')||'Sachverständiger');
+  var mängel = begehungen.filter(function(b){return b.dringlichkeit==='mangel'||b.dringlichkeit==='stopp';});
+
+  var text =
+    'BAUBEGLEITUNGSBERICHT — GESAMTDOKUMENTATION\n' +
+    '═'.repeat(50) + '\n\n' +
+    'Projekt:         ' + proj.name + '\n' +
+    'Aktenzeichen:    ' + (proj.az||'—') + '\n' +
+    'Auftraggeber:    ' + (proj.auftraggeber||'—') + '\n' +
+    'Objekt:          ' + (proj.adresse||'—') + '\n' +
+    'Projektbeginn:   ' + formatDatum(proj.beginn) + '\n' +
+    (proj.abnahme ? 'Gepl. Abnahme:   ' + formatDatum(proj.abnahme) + '\n' : '') +
+    'Status:          ' + (proj.status||'Aktiv') + '\n\n' +
+    'Begehungen ges.: ' + begehungen.length + '\n' +
+    'Mängel/Hinweise: ' + mängel.length + '\n\n';
+
+  begehungen.forEach(function(b, i) {
+    var dring = {'normal':'','hinweis':'[HINWEIS] ','mangel':'[MANGEL] ','stopp':'[BAUSTOPP] '}[b.dringlichkeit]||'';
+    text +=
+      '─'.repeat(50) + '\n' +
+      'BEGEHUNG ' + (i+1) + ' — ' + formatDatum(b.datum) + ' · ' + (b.phase||'') + '\n' +
+      (b.anwesend ? 'Anwesend: ' + b.anwesend + '\n' : '') +
+      '\n' +
+      dring + b.text + '\n' +
+      (b.fotos>0 ? '\n📷 Fotodokumentation: ' + b.fotos + ' Aufnahmen\n' : '') +
+      '\n';
+  });
+
+  if (mängel.length) {
+    text += '═'.repeat(50) + '\n';
+    text += 'ZUSAMMENFASSUNG MÄNGEL UND BEANSTANDUNGEN\n';
+    text += '─'.repeat(50) + '\n';
+    mängel.forEach(function(b, i) {
+      text += (i+1) + '. ' + formatDatum(b.datum) + ' · ' + (b.phase||'') + '\n   ' + b.text.split('\n')[0] + '\n\n';
+    });
+  }
+
+  text +=
+    '═'.repeat(50) + '\n' +
+    'Sachverständiger: ' + sv.trim() + '\n' +
+    'Bericht erstellt: ' + new Date().toLocaleDateString('de-DE') + '\n';
+
+  document.getElementById('bericht-modal-titel').textContent = '📑 Gesamtbericht · ' + proj.name;
+  document.getElementById('bericht-text').textContent = text;
+  openModal('modal-bericht');
+}
+
+function berichtKopieren() {
+  var text = document.getElementById('bericht-text').textContent;
+  navigator.clipboard.writeText(text).then(function(){
+    zeigToast('In Zwischenablage kopiert ✅');
+  }).catch(function(){
+    zeigToast('Kopieren nicht möglich — bitte manuell markieren', 'err');
+  });
+}
+
+// ============================================================
+// HELPERS
+// ============================================================
+function formatDatum(iso) {
+  if (!iso) return '—';
+  try { return new Date(iso).toLocaleDateString('de-DE', {day:'2-digit',month:'2-digit',year:'numeric'}); }
+  catch(e) { return iso; }
+}
+
+function escHtml(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function zeigToast(msg, typ) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast' + (typ==='err'?' err':'') + ' show';
+  clearTimeout(t._timer);
+  t._timer = setTimeout(function(){ t.classList.remove('show'); }, 3000);
+}
+
+// ============================================================
+// RESPONSIVE: Mobile Stack
+// ============================================================
+function checkLayout() {
+  var layout = document.getElementById('bb-layout');
+  if (!layout) return;
+  if (window.innerWidth < 700) {
+    layout.style.gridTemplateColumns = '1fr';
+  } else {
+    layout.style.gridTemplateColumns = '300px 1fr';
+  }
+}
+window.addEventListener('resize', checkLayout);
+
+// ============================================================
+// INIT
+// ============================================================
+document.addEventListener('DOMContentLoaded', function() {
+  checkLayout();
+  renderProjektliste();
+  // URL-Parameter: ?projekt=ID
+  var params = new URLSearchParams(window.location.search);
+  var pidParam = params.get('projekt');
+  if (pidParam) {
+    var proj = _data.projekte.find(function(p){return p.id===pidParam;});
+    if (proj) ladeProduktDetail(pidParam);
+  }
+  // Support-Modal
+  var m = document.getElementById('support-modal');
+  if (m) m.addEventListener('click', function(e){ if(e.target===m) closeModal('support-modal'); });
+});
+</script>
+
+</body>
+</html>

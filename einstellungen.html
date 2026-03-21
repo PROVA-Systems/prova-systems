@@ -306,7 +306,477 @@ function logout(){
   window.PROVA=window.PROVA||{};PROVA.paket=p;PROVA.isPro=['Pro','Enterprise'].includes(p);PROVA.isEnterprise=p==='Enterprise';
 })();
 </script>
-<!-- SUPPORT BUTTON - INTELLIGENT TRIAGE -->
+
+<!-- EINSTELLUNGEN LAYOUT -->
+<div class="layout">
+  <!-- Sidebar Nav -->
+  <div class="snav">
+    <div class="snav-sec">Profil</div>
+    <button class="snav-item active" onclick="showSec('profil',this)"><span class="si">👤</span>Mein Profil</button>
+    <button class="snav-item" onclick="showSec('signatur',this)"><span class="si">✍️</span>Unterschrift</button>
+    <div class="snav-sec">Büro</div>
+    <button class="snav-item" onclick="showSec('kanzlei',this)"><span class="si">🏢</span>Kanzleidaten</button>
+    <button class="snav-item" onclick="showSec('abrechnung',this)"><span class="si">💶</span>Abrechnung</button>
+    <div class="snav-sec">System</div>
+    <button class="snav-item" onclick="showSec('paket',this)"><span class="si">📦</span>Paket</button>
+    <button class="snav-item" id="snav-enterprise" style="display:none;" onclick="showSec('enterprise',this)"><span class="si" style="color:var(--purple);">💎</span>Enterprise</button>
+    <button class="snav-item" onclick="logout()"><span class="si" style="color:#ef4444;">🚪</span>Abmelden</button>
+  </div>
+
+  <!-- Main Content -->
+  <div class="smain">
+
+    <!-- PROFIL -->
+    <div class="sec active" id="sec-profil">
+      <div class="card">
+        <div class="card-header"><div class="card-title">👤 Persönliche Daten</div></div>
+        <div class="card-body">
+          <div class="form-group">
+            <label class="form-label">Vorname</label>
+            <input id="e-vorname" class="form-input form-input" type="text" placeholder="Max">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Nachname</label>
+            <input id="e-nachname" class="form-input" type="text" placeholder="Mustermann">
+          </div>
+          <div class="form-group">
+            <label class="form-label">E-Mail</label>
+            <input id="e-email" class="form-input" type="email" placeholder="sv@buero.de">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Telefon</label>
+            <input id="e-telefon" class="form-input" type="tel" placeholder="+49 221 ...">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Qualifikation / Zertifizierung</label>
+            <input id="e-quali" class="form-input" type="text" placeholder="ö.b.u.v. Sachverständiger IHK Köln">
+          </div>
+          <div class="save-bar">
+            <button class="btn btn-primary" onclick="speichereProfil()">Speichern</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- UNTERSCHRIFT / SIGNATUR -->
+    <div class="sec" id="sec-signatur">
+      <div class="card">
+        <div class="card-header"><div class="card-title">✍️ Unterschrift &amp; Stempel</div></div>
+        <div class="card-body">
+          <p style="font-size:12px;color:var(--text2);margin-bottom:16px;line-height:1.6;">
+            Laden Sie Ihre Unterschrift als Bild hoch. Sie wird automatisch in alle PDFs eingesetzt — in Gutachten, Rechnungen und Briefen.
+          </p>
+
+          <!-- Vorschau -->
+          <div id="sig-preview-wrap" style="display:none;margin-bottom:16px;padding:14px;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:8px;text-align:center;">
+            <img id="sig-preview" src="" alt="Unterschrift Vorschau" style="max-width:260px;max-height:80px;filter:invert(1);opacity:0.85;">
+            <div style="font-size:10px;color:var(--text3);margin-top:8px;">Vorschau · wird in PDFs als Original angezeigt</div>
+          </div>
+
+          <!-- Upload Zone -->
+          <div id="sig-dropzone" onclick="document.getElementById('sig-file').click()"
+            style="border:2px dashed var(--border2);border-radius:10px;padding:28px;text-align:center;cursor:pointer;transition:border-color 0.2s;"
+            ondragover="event.preventDefault();this.style.borderColor='var(--accent)'"
+            ondragleave="this.style.borderColor='var(--border2)'"
+            ondrop="handleSigDrop(event)">
+            <div style="font-size:28px;margin-bottom:8px;">✍️</div>
+            <div style="font-size:13px;font-weight:600;color:var(--text2);margin-bottom:4px;">Unterschrift hochladen</div>
+            <div style="font-size:11px;color:var(--text3);">PNG, SVG oder JPG · max. 500 KB · weißer oder transparenter Hintergrund empfohlen</div>
+            <input type="file" id="sig-file" accept=".png,.jpg,.jpeg,.svg" style="display:none;" onchange="ladeSigDatei(this.files[0])">
+          </div>
+
+          <!-- Status + Speichern -->
+          <div id="sig-status" style="display:none;margin-top:12px;padding:9px 12px;background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.2);border-radius:7px;font-size:12px;color:#10B981;">
+            ✅ Unterschrift gespeichert · wird in alle neuen PDFs eingesetzt
+          </div>
+
+          <div class="save-bar" style="margin-top:14px;">
+            <button class="btn btn-secondary" onclick="sigLoeschen()" id="btn-sig-loeschen" style="display:none;">Entfernen</button>
+            <button class="btn btn-primary" onclick="speichereSignatur()" id="btn-sig-save" disabled>Speichern</button>
+          </div>
+
+          <div class="info-box" style="margin-top:14px;">
+            <strong>Tipp:</strong> Unterschreiben Sie auf weißem Papier, fotografieren Sie es, schneiden Sie es frei (z.B. mit <a href="https://remove.bg" target="_blank" style="color:var(--accent)">remove.bg</a>) und laden Sie das PNG hoch.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- KANZLEI -->
+    <div class="sec" id="sec-kanzlei">
+      <div class="card">
+        <div class="card-header"><div class="card-title">🏢 Kanzlei / Büro</div></div>
+        <div class="card-body">
+          <div class="form-group">
+            <label class="form-label">Büroname / Firma</label>
+            <input id="e-firma" class="form-input" type="text" placeholder="SV-Büro Mustermann">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Straße &amp; Hausnummer</label>
+            <input id="e-strasse" class="form-input" type="text" placeholder="Musterstraße 1">
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 2fr;gap:10px;">
+            <div class="form-group">
+              <label class="form-label">PLZ</label>
+              <input id="e-plz" class="form-input" type="text" placeholder="50667">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Ort</label>
+              <input id="e-ort" class="form-input" type="text" placeholder="Köln">
+            </div>
+          </div>
+          <div class="save-bar">
+            <button class="btn btn-primary" onclick="speichereKanzlei()">Speichern</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ABRECHNUNG -->
+    <div class="sec" id="sec-abrechnung">
+      <div class="card">
+        <div class="card-header"><div class="card-title">💶 Abrechnung &amp; Bank</div></div>
+        <div class="card-body">
+          <div class="form-group">
+            <label class="form-label">IBAN</label>
+            <input id="e-iban" class="form-input" type="text" placeholder="DE12 3456 7890 1234 5678 90">
+          </div>
+          <div class="form-group">
+            <label class="form-label">BIC / Bank</label>
+            <input id="e-bic" class="form-input" type="text" placeholder="COLSDE33XXX · Commerzbank">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Steuernummer</label>
+            <input id="e-steuernr" class="form-input" type="text" placeholder="214/5678/9012">
+          </div>
+          <div class="form-group">
+            <label class="form-label">USt-ID (falls vorhanden)</label>
+            <input id="e-ustid" class="form-input" type="text" placeholder="DE 123456789">
+          </div>
+          <div class="save-bar">
+            <button class="btn btn-primary" onclick="speichereAbrechnung()">Speichern</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAKET -->
+    <div class="sec" id="sec-paket">
+      <div class="card">
+        <div class="card-header"><div class="card-title">📦 Ihr Paket</div></div>
+        <div class="card-body">
+          <div id="paket-anzeige" style="padding:14px;border-radius:10px;margin-bottom:14px;"></div>
+          <a href="/cdn-cgi/l/email-protection#dcafa9acacb3aea89cacaeb3aabdf1afa5afa8b9b1aff2b8b9e3afa9beb6b9bfa8e18cbdb7b9a8f189acbbaebdb8b9" class="btn btn-primary" style="display:block;text-align:center;">⬆ Upgrade anfragen</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- ENTERPRISE -->
+    <div class="sec" id="sec-enterprise" style="display:none;">
+      <div class="card">
+        <div class="card-header" style="background:linear-gradient(135deg,rgba(167,139,250,0.15),rgba(167,139,250,0.05));border-bottom:1px solid rgba(167,139,250,0.2);">
+          <div class="card-title" style="color:#a78bfa;">💎 Enterprise-Einstellungen</div>
+        </div>
+        <div class="card-body">
+          <div class="form-group">
+            <label class="form-label">Outbound-Webhook URL</label>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <input id="e-outbound-webhook" class="form-input" type="url" placeholder="https://ihr-system.de/webhook" style="flex:1;">
+              <button onclick="testeOutboundWebhook()" style="padding:8px 14px;background:var(--surface2);border:1px solid var(--border2);border-radius:7px;color:var(--text2);font-size:12px;font-weight:600;cursor:pointer;font-family:var(--sans);white-space:nowrap;">🧪 Test</button>
+            </div>
+            <div style="font-size:10px;color:var(--text3);margin-top:5px;">
+              PROVA sendet JSON-Payload bei jeder Gutachten-Freigabe. Kompatibel mit Zapier, Make, n8n und eigenen Systemen.<br>
+              <strong style="color:var(--text2);">Payload-Felder:</strong> prova_event, aktenzeichen, schadensart, auftraggeber_name, objekt_adresse, sv_name, timestamp
+            </div>
+            <div id="webhook-test-result" style="display:none;margin-top:8px;padding:8px 10px;border-radius:6px;font-size:11px;"></div>
+          </div>
+
+          <!-- DELIVERY LOG -->
+          <div class="form-group">
+            <label class="form-label" style="display:flex;justify-content:space-between;align-items:center;">
+              <span>Webhook-Delivery-Log</span>
+              <button onclick="ladeWebhookLog()" style="padding:2px 8px;background:none;border:1px solid var(--border2);border-radius:4px;color:var(--text3);font-size:10px;cursor:pointer;font-family:var(--sans);">↻ Aktualisieren</button>
+            </label>
+            <div id="webhook-log-container" style="background:var(--bg3);border:1px solid var(--border);border-radius:7px;max-height:200px;overflow-y:auto;font-size:11px;">
+              <div id="webhook-log-inhalt" style="padding:10px;color:var(--text3);">Log wird geladen…</div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">White-Label: Primärfarbe</label>
+            <div class="color-row">
+              <input type="color" id="e-primary-color" value="#4f8ef7">
+              <span style="font-size:12px;color:var(--text2);">In App-Header und PDFs</span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">White-Label: Büroname</label>
+            <input id="e-wl-name" class="form-input" type="text" placeholder="Sachverständigenbüro GmbH">
+          </div>
+          <div class="save-bar">
+            <button class="btn btn-primary" onclick="speichereEnterprise()">Speichern</button>
+          </div>
+          <div style="margin-top:14px;padding:10px 12px;background:rgba(167,139,250,0.06);border:1px solid rgba(167,139,250,0.2);border-radius:7px;font-size:11px;color:var(--text2);line-height:1.6;">
+            <strong style="color:#a78bfa;">Audit-Trail</strong> protokolliert alle KI-Interaktionen · §407a ZPO konform.
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /smain -->
+</div><!-- /layout -->
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+// ── Section Navigation ──
+function showSec(id, btn) {
+  document.querySelectorAll('.sec').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.snav-item').forEach(b => b.classList.remove('active'));
+  var sec = document.getElementById('sec-' + id);
+  if (sec) sec.classList.add('active');
+  if (btn) btn.classList.add('active');
+}
+
+// ── Lade-/Speicher-Funktionen ──
+function ladeProfil() {
+  var felder = {
+    'e-vorname': 'prova_sv_vorname', 'e-nachname': 'prova_sv_nachname',
+    'e-email': 'prova_sv_email', 'e-telefon': 'prova_sv_telefon',
+    'e-quali': 'prova_sv_quali', 'e-firma': 'prova_sv_firma',
+    'e-strasse': 'prova_sv_strasse', 'e-plz': 'prova_sv_plz',
+    'e-ort': 'prova_sv_ort', 'e-iban': 'prova_sv_iban',
+    'e-bic': 'prova_sv_bic', 'e-steuernr': 'prova_sv_steuernr',
+    'e-ustid': 'prova_sv_ustid'
+  };
+  Object.entries(felder).forEach(function([elId, lsKey]) {
+    var el = document.getElementById(elId);
+    var val = localStorage.getItem(lsKey);
+    if (el && val) el.value = val;
+  });
+  // Signatur laden
+  var sig = localStorage.getItem('prova_sv_signatur');
+  if (sig) {
+    var img = document.getElementById('sig-preview');
+    var wrap = document.getElementById('sig-preview-wrap');
+    var loesch = document.getElementById('btn-sig-loeschen');
+    if (img) img.src = sig;
+    if (wrap) wrap.style.display = 'block';
+    if (loesch) loesch.style.display = 'inline-flex';
+    document.getElementById('sig-status').style.display = 'block';
+  }
+  // Paket anzeigen
+  var p = localStorage.getItem('prova_paket') || 'Starter';
+  var farben = {Starter:'#4f8ef7',Pro:'#f59e0b',Enterprise:'#a78bfa'};
+  var pa = document.getElementById('paket-anzeige');
+  if (pa) pa.innerHTML = '<div style="font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:' + (farben[p]||'#4f8ef7') + ';margin-bottom:4px;">Aktives Paket</div><div style="font-size:1.4rem;font-weight:800;color:#e8eaf0;">' + p + '</div>';
+}
+
+function speichereProfil() {
+  var felder = {'e-vorname':'prova_sv_vorname','e-nachname':'prova_sv_nachname','e-email':'prova_sv_email','e-telefon':'prova_sv_telefon','e-quali':'prova_sv_quali'};
+  Object.entries(felder).forEach(function([elId,lsKey]){var el=document.getElementById(elId);if(el)localStorage.setItem(lsKey,el.value);});
+  // Kombi-Key für ladeSVProfil() in App-Seiten
+  localStorage.setItem('prova_sv_profil', JSON.stringify({
+    Vorname: document.getElementById('e-vorname').value,
+    Nachname: document.getElementById('e-nachname').value,
+    Email: document.getElementById('e-email').value,
+    Telefon: document.getElementById('e-telefon').value,
+    Zertifizierung: document.getElementById('e-quali').value
+  }));
+  zeigToast('Profil gespeichert ✅');
+}
+
+function speichereKanzlei() {
+  var felder = {'e-firma':'prova_sv_firma','e-strasse':'prova_sv_strasse','e-plz':'prova_sv_plz','e-ort':'prova_sv_ort'};
+  Object.entries(felder).forEach(function([elId,lsKey]){var el=document.getElementById(elId);if(el)localStorage.setItem(lsKey,el.value);});
+  zeigToast('Kanzleidaten gespeichert ✅');
+}
+
+function speichereAbrechnung() {
+  var felder = {'e-iban':'prova_sv_iban','e-bic':'prova_sv_bic','e-steuernr':'prova_sv_steuernr','e-ustid':'prova_sv_ustid'};
+  Object.entries(felder).forEach(function([elId,lsKey]){var el=document.getElementById(elId);if(el)localStorage.setItem(lsKey,el.value);});
+  zeigToast('Abrechnungsdaten gespeichert ✅');
+}
+
+// ── Signatur-Logik ──
+var _sigBase64 = null;
+
+function ladeSigDatei(file) {
+  if (!file) return;
+  if (file.size > 512000) { zeigToast('Datei zu groß — max. 500 KB', 'err'); return; }
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    _sigBase64 = e.target.result;
+    var img = document.getElementById('sig-preview');
+    var wrap = document.getElementById('sig-preview-wrap');
+    var saveBtn = document.getElementById('btn-sig-save');
+    if (img) img.src = _sigBase64;
+    if (wrap) wrap.style.display = 'block';
+    if (saveBtn) saveBtn.disabled = false;
+    document.getElementById('sig-dropzone').style.borderColor = 'var(--accent)';
+  };
+  reader.readAsDataURL(file);
+}
+
+function handleSigDrop(e) {
+  e.preventDefault();
+  document.getElementById('sig-dropzone').style.borderColor = 'var(--border2)';
+  var file = e.dataTransfer.files[0];
+  if (file && file.type.match(/^image\//)) ladeSigDatei(file);
+}
+
+function speichereSignatur() {
+  if (!_sigBase64) return;
+  localStorage.setItem('prova_sv_signatur', _sigBase64);
+  var status = document.getElementById('sig-status');
+  var loesch = document.getElementById('btn-sig-loeschen');
+  var saveBtn = document.getElementById('btn-sig-save');
+  if (status) status.style.display = 'block';
+  if (loesch) loesch.style.display = 'inline-flex';
+  if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = '✅ Gespeichert'; setTimeout(function(){ saveBtn.textContent = 'Speichern'; }, 2000); }
+  zeigToast('Unterschrift gespeichert ✅');
+}
+
+function sigLoeschen() {
+  localStorage.removeItem('prova_sv_signatur');
+  _sigBase64 = null;
+  var img = document.getElementById('sig-preview');
+  var wrap = document.getElementById('sig-preview-wrap');
+  var status = document.getElementById('sig-status');
+  var loesch = document.getElementById('btn-sig-loeschen');
+  if (img) img.src = '';
+  if (wrap) wrap.style.display = 'none';
+  if (status) status.style.display = 'none';
+  if (loesch) loesch.style.display = 'none';
+  document.getElementById('sig-dropzone').style.borderColor = 'var(--border2)';
+  zeigToast('Unterschrift entfernt');
+}
+
+// ── Toast ──
+function speichereEnterprise() {
+  var webhook = document.getElementById('e-outbound-webhook');
+  var color = document.getElementById('e-primary-color');
+  var wlname = document.getElementById('e-wl-name');
+  if (webhook) localStorage.setItem('prova_outbound_webhook', webhook.value.trim());
+  if (color) localStorage.setItem('prova_primary_color', color.value);
+  if (wlname) localStorage.setItem('prova_wl_name', wlname.value.trim());
+  zeigToast('Enterprise-Einstellungen gespeichert ✅');
+}
+
+function zeigToast(msg, typ) {
+  var t = document.getElementById('einst-toast');
+  if (!t) { t = document.createElement('div'); t.id='einst-toast'; t.style.cssText='position:fixed;bottom:80px;right:20px;z-index:600;padding:10px 16px;border-radius:8px;font-size:13px;font-weight:500;background:#13161d;border:1px solid rgba(16,185,129,0.4);color:#10b981;transition:all 0.3s;opacity:0;transform:translateY(10px);'; document.body.appendChild(t); }
+  t.textContent = msg;
+  t.style.borderColor = typ === 'err' ? 'rgba(239,68,68,0.4)' : 'rgba(16,185,129,0.4)';
+  t.style.color = typ === 'err' ? '#fca5a5' : '#10b981';
+  t.style.opacity = '1'; t.style.transform = 'translateY(0)';
+  setTimeout(function(){ t.style.opacity = '0'; t.style.transform = 'translateY(10px)'; }, 3000);
+}
+
+
+// ── Outbound-Webhook Test ──
+async function testeOutboundWebhook() {
+  var url = document.getElementById('e-outbound-webhook').value.trim();
+  if (!url) { alert('Bitte zuerst eine Webhook-URL eingeben und speichern.'); return; }
+
+  var result = document.getElementById('webhook-test-result');
+  result.style.display = 'block';
+  result.style.background = 'rgba(245,158,11,0.08)';
+  result.style.border = '1px solid rgba(245,158,11,0.25)';
+  result.style.color = 'var(--warn)';
+  result.textContent = '⏳ Test-Payload wird gesendet…';
+
+  var testPayload = {
+    prova_event: 'test',
+    prova_version: '1.0',
+    paket: 'Enterprise',
+    timestamp: new Date().toISOString(),
+    aktenzeichen: 'TEST-2026-0001',
+    schadensart: 'Testschaden',
+    schadensdatum: '2026-01-01',
+    objekt_adresse: 'Teststraße 1, 50667 Köln',
+    gebaeudetyp: 'Wohngebäude',
+    auftraggeber_name: 'Muster Versicherung AG',
+    auftraggeber_typ: 'Versicherung',
+    auftraggeber_email: 'schaden@muster-versicherung.de',
+    geschaedigter: 'Max Mustermann',
+    sv_name: (localStorage.getItem('prova_sv_vorname')||'') + ' ' + (localStorage.getItem('prova_sv_nachname')||''),
+    sv_email: localStorage.getItem('prova_sv_email') || '',
+    airtable_id: 'recTEST000000000',
+    gutachten_zusammenfassung: 'Dies ist ein Test-Payload vom PROVA Enterprise Outbound-Webhook.',
+    _test: true
+  };
+
+  try {
+    var res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-PROVA-Event': 'test', 'X-PROVA-Version': '1.0' },
+      body: JSON.stringify(testPayload)
+    });
+    if (res.ok) {
+      result.style.background = 'var(--green-bg)';
+      result.style.border = '1px solid var(--green-border)';
+      result.style.color = 'var(--green)';
+      result.textContent = '✅ Test erfolgreich — HTTP ' + res.status + '. Ihr Endpoint hat geantwortet.';
+    } else {
+      result.style.background = 'var(--red-bg)';
+      result.style.border = '1px solid var(--red-border)';
+      result.style.color = 'var(--red)';
+      result.textContent = '❌ HTTP ' + res.status + ' — Endpoint hat mit Fehler geantwortet.';
+    }
+  } catch(e) {
+    result.style.background = 'var(--red-bg)';
+    result.style.border = '1px solid var(--red-border)';
+    result.style.color = 'var(--red)';
+    result.textContent = '❌ Netzwerkfehler: ' + e.message + ' — URL erreichbar?';
+  }
+
+  // Log-Refresh nach Test
+  setTimeout(ladeWebhookLog, 500);
+}
+
+// ── Delivery-Log laden ──
+function ladeWebhookLog() {
+  var container = document.getElementById('webhook-log-inhalt');
+  if (!container) return;
+  try {
+    var logs = JSON.parse(localStorage.getItem('prova_outbound_log') || '[]');
+    if (!logs.length) {
+      container.innerHTML = '<span style="color:var(--text3);">Noch keine Webhook-Deliveries. Freigeben Sie ein Enterprise-Gutachten, um den ersten Eintrag zu erzeugen.</span>';
+      return;
+    }
+    container.innerHTML = logs.slice(0,20).map(function(l) {
+      var statusColor = l.status === 'success' ? 'var(--green)' : l.status === 'pending' ? 'var(--warn)' : 'var(--red)';
+      var statusIcon  = l.status === 'success' ? '✅' : l.status === 'pending' ? '⏳' : '❌';
+      var ts = new Date(l.ts).toLocaleString('de-DE', {day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+      return '<div style="padding:7px 10px;border-bottom:1px solid rgba(255,255,255,.04);display:flex;align-items:center;gap:8px;">' +
+        '<span style="color:'+statusColor+';">'+statusIcon+'</span>' +
+        '<span style="color:var(--text3);min-width:100px;">'+ts+'</span>' +
+        '<span style="color:var(--text2);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+
+          (l.url||'').replace('https://','').substring(0,50)+'</span>' +
+        '<span style="color:'+statusColor+';font-weight:600;font-size:10px;">'+l.status+'</span>' +
+      '</div>';
+    }).join('');
+  } catch(e) {
+    container.textContent = 'Log-Ladefehler: ' + e.message;
+  }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  ladeProfil();
+  // Enterprise-Sektion nur für Enterprise-Nutzer anzeigen
+  if ((localStorage.getItem('prova_paket')||'Starter') === 'Enterprise') {
+    var entNav = document.getElementById('snav-enterprise');
+    var entSec = document.getElementById('sec-enterprise');
+    var entOutbound = document.getElementById('e-outbound-webhook');
+    var entColor = document.getElementById('e-primary-color');
+    var entWl = document.getElementById('e-wl-name');
+    if (entNav) entNav.style.display = 'flex';
+    if (entSec) entSec.style.display = 'none'; // nur bei Klick
+    if (entOutbound) entOutbound.value = localStorage.getItem('prova_outbound_webhook')||'';
+    ladeWebhookLog();
+    if (entColor) entColor.value = localStorage.getItem('prova_primary_color')||'#4f8ef7';
+    if (entWl) entWl.value = localStorage.getItem('prova_wl_name')||'';
+  }
+});
+</script>
 <div id="support-btn" onclick="openSupportModal()" style="position:fixed;bottom:80px;right:20px;z-index:400;width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#4f8ef7,#3a7be0);box-shadow:0 4px 16px rgba(79,142,247,0.4);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:20px;" title="Support anfragen">&#128172;</div>
 <div id="support-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:500;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px);">
 <div style="background:#13161d;border:1px solid rgba(255,255,255,0.12);border-radius:14px;max-width:500px;width:100%;padding:28px;max-height:90vh;overflow-y:auto;">
@@ -488,10 +958,4 @@ async function sendSupport(){
     document.getElementById("support-success-title").textContent="Anfrage gesendet &#128680;";
     document.getElementById("support-success-text").textContent="Priorit&#228;t: "+(_supportTyp==='billing'?'Kritisch':'Hoch')+" — wir melden uns umgehend.";
   } else {
-    document.getElementById("support-success-title").textContent="Anfrage gesendet!";
-    document.getElementById("support-success-text").textContent="Wir melden uns schnellstm&#246;glich bei Ihnen.";
-  }
-}
-</script>
-</body>
-</html>
+    document.getElementById("support-success-title").te

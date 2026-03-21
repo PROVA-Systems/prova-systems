@@ -581,9 +581,9 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape')closeDrawer(
             <div class="checklist-box">✓</div>
             <div class="checklist-label"><strong>Schadensbeschreibung vollständig</strong>Ursache, Ausdehnung, Beweise</div>
           </div>
-          <div class="checklist-item" id="check-kosten" onclick="toggleCheck(this)">
+          <div class="checklist-item" onclick="toggleCheck(this)">
             <div class="checklist-box">✓</div>
-            <div class="checklist-label"><strong>Kostenermittlung plausibel</strong><span id="kosten-status-label">Positionen und Preise angemessen</span></div>
+            <div class="checklist-label"><strong>Kostenermittlung plausibel</strong>Positionen und Preise angemessen</div>
           </div>
           <div class="checklist-item" onclick="toggleCheck(this)">
             <div class="checklist-box">✓</div>
@@ -614,6 +614,65 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape')closeDrawer(
         <button class="btn-approve btn-reject" id="btnKorrektur" onclick="rejectGutachten()" style="width:100%;margin-top:.75rem;background:var(--accent);border-color:var(--accent);color:#fff;">
           ✖ Korrekturen anfordern
         </button>
+      </div>
+    </div>
+
+    <!-- KI-Zeitschätzung für JVEG-Abrechnung -->
+    <div class="action-card" id="card-zeitschaetzung">
+      <div class="action-card-header" style="background:linear-gradient(135deg,rgba(16,185,129,0.25),rgba(16,185,129,0.1));border-bottom:1px solid rgba(16,185,129,0.2);">
+        <div class="action-card-title">⏱ KI-Zeitschätzung — JVEG-Abrechnung</div>
+      </div>
+      <div class="action-card-body">
+        <div style="font-size:0.72rem;color:#9da3b4;margin-bottom:12px;">Automatisch berechnet aus Fallkomplexität · anpassbar</div>
+        <div id="zeit-positionen" style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px;">
+          <!-- Wird dynamisch befüllt -->
+        </div>
+        <div style="border-top:1px solid rgba(255,255,255,0.08);padding-top:10px;display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+          <span style="font-size:0.8rem;font-weight:700;color:#e8eaf0;">Gesamt</span>
+          <span style="font-size:1rem;font-weight:800;color:#10B981;" id="zeit-gesamt">0,0 Std.</span>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button onclick="zeitInRechnungUebernehmen()" style="flex:1;padding:9px;background:linear-gradient(135deg,#10B981,#059669);border:none;border-radius:8px;color:#fff;font-size:0.8rem;font-weight:700;cursor:pointer;font-family:inherit;">✓ In Rechnung übernehmen</button>
+          <button onclick="zeitBearbeiten()" style="padding:9px 14px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:8px;color:#9da3b4;font-size:0.8rem;cursor:pointer;font-family:inherit;">✎ Anpassen</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Fotodokumentation separat -->
+    <div class="action-card" id="card-fotodoku">
+      <div class="action-card-header">
+        <div class="action-card-title">📷 Fotodokumentation</div>
+      </div>
+      <div class="action-card-body">
+        <div style="font-size:0.75rem;color:#9da3b4;margin-bottom:10px;">Fotos als separates Dokument generieren — ideal für Beweissicherung und Versicherungsberichte.</div>
+        <button onclick="generierePhotodoku()" id="btnFotodoku" style="width:100%;padding:10px;background:rgba(79,142,247,0.12);border:1px solid rgba(79,142,247,0.3);border-radius:8px;color:#93C5FD;font-size:0.8rem;font-weight:600;cursor:pointer;font-family:inherit;">📄 Separate Fotodokumentation erstellen</button>
+        <div id="fotodoku-status" style="display:none;font-size:0.72rem;color:#10B981;margin-top:8px;text-align:center;"></div>
+      </div>
+    </div>
+
+    <!-- Portal-Link für Mandant -->
+    <div class="action-card" id="card-portal-link">
+      <div class="action-card-header" style="background:linear-gradient(135deg,rgba(74,144,217,0.2),rgba(74,144,217,0.08));border-bottom:1px solid rgba(74,144,217,0.2);">
+        <div class="action-card-title">🔗 Mandanten-Portal-Link</div>
+      </div>
+      <div class="action-card-body">
+        <div style="font-size:0.72rem;color:#9da3b4;margin-bottom:12px;">Generieren Sie einen sicheren Lesezugang für den Auftraggeber — gültig ohne PROVA-Login.</div>
+        <div style="display:flex;gap:8px;margin-bottom:10px;">
+          <select id="portal-tage" style="flex:1;background:#1e2330;border:1px solid rgba(255,255,255,0.12);border-radius:7px;padding:7px 10px;color:#e8eaf0;font-size:0.78rem;font-family:inherit;outline:none;">
+            <option value="7">7 Tage gültig</option>
+            <option value="14" selected>14 Tage gültig</option>
+            <option value="30">30 Tage gültig</option>
+          </select>
+          <button onclick="generierePortalLinkUI()" style="padding:7px 14px;background:rgba(74,144,217,0.15);border:1px solid rgba(74,144,217,0.35);border-radius:7px;color:#93C5FD;font-size:0.78rem;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap;">Link erzeugen</button>
+        </div>
+        <div id="portal-link-box" style="display:none;background:#0d0f14;border:1px solid rgba(74,144,217,0.25);border-radius:7px;padding:8px 10px;">
+          <div style="font-size:0.68rem;color:#9da3b4;margin-bottom:4px;">Portal-Link (kopieren &amp; per E-Mail senden):</div>
+          <div id="portal-link-text" style="font-size:0.72rem;color:#93C5FD;word-break:break-all;margin-bottom:8px;"></div>
+          <div style="display:flex;gap:6px;">
+            <button onclick="portalLinkKopieren()" style="flex:1;padding:6px;background:rgba(74,144,217,0.12);border:1px solid rgba(74,144,217,0.25);border-radius:6px;color:#93C5FD;font-size:0.72rem;cursor:pointer;font-family:inherit;">📋 Kopieren</button>
+            <button onclick="portalLinkMailen()" style="flex:1;padding:6px;background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.2);border-radius:6px;color:#6ee7b7;font-size:0.72rem;cursor:pointer;font-family:inherit;">📧 Per Mail senden</button>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -681,14 +740,221 @@ async function ladeSVProfil() {
   } catch(e) { console.warn('ladeSVProfil Fehler:', e); }
 }
 
-// ---- TOAST ----
-function showToast(msg, type) {
+// ============================================================
+// KI-ZEITSCHÄTZUNG — JVEG-konform, aus Falldata berechnet
+// ============================================================
+const JVEG_RICHTWERTE = {
+  // Seiten/Stunde nach BGH-Rechtsprechung
+  seitenProStunde: 3,
+  // Durchschnittliche Diktat-Wörter pro Minute gesprochen
+  woerterProMinuteOrts: 120,
+  // Fotos: Richtwert Dokumentationszeit
+  minutenProFoto: 0.5,
+  // Brief: Durchschnitt
+  minutenProBrief: 15,
+  // Messwert-Erfassung
+  minutenProMesswert: 5
+};
+
+function berechneZeitschaetzung(f) {
+  const positionen = [];
+
+  // 1. Ortstermin + Fahrt — aus Diktat-Länge ableiten
+  const transkript = f.Transkript || '';
+  const woerter = transkript.trim() ? transkript.trim().split(/\s+/).length : 0;
+  const ortsMinuten = woerter > 0
+    ? Math.max(60, Math.round(woerter / JVEG_RICHTWERTE.woerterProMinuteOrts * 60))
+    : 90; // Default 1,5h wenn kein Diktat
+  positionen.push({ label: 'Ortstermin inkl. Fahrt', minuten: ortsMinuten, editierbar: true });
+
+  // 2. Aktenstudium — aus Schadenstyp-Komplexität
+  const schadensart = (f.Schadensart || '').toLowerCase();
+  const istKomplex = schadensart.includes('gericht') || schadensart.includes('schimmel') || schadensart.includes('brand');
+  const aktenstudiumMin = istKomplex ? 60 : 30;
+  positionen.push({ label: 'Aktenstudium & Vorbereitung', minuten: aktenstudiumMin, editierbar: true });
+
+  // 3. Gutachtenerstellung — aus Entwurf-Seitenzahl (KI_Entwurf Zeichenanzahl / ~2800 Zeichen/Seite)
+  const entwurf = f.KI_Entwurf || '';
+  const geschaetzteSeitenanzahl = Math.max(8, Math.round(entwurf.length / 2800));
+  const erstellungMin = Math.round((geschaetzteSeitenanzahl / JVEG_RICHTWERTE.seitenProStunde) * 60);
+  positionen.push({ label: `Gutachtenerstellung (ca. ${geschaetzteSeitenanzahl} S.)`, minuten: erstellungMin, editierbar: true });
+
+  // 4. Diktat / Korrektur
+  const diktatMin = woerter > 0 ? Math.round(woerter / 150) + 20 : 30;
+  positionen.push({ label: 'Diktat & Durchsicht', minuten: diktatMin, editierbar: true });
+
+  // 5. Fotodokumentation
+  const fotos = parseInt(f.Fotos_Anzahl || '0') || 0;
+  if (fotos > 0) {
+    const fotoMin = Math.round(fotos * JVEG_RICHTWERTE.minutenProFoto);
+    positionen.push({ label: `Fotodokumentation (${fotos} Fotos)`, minuten: Math.max(15, fotoMin), editierbar: true });
+  }
+
+  // 6. Korrespondenz (pauschal wenn Auftraggeber vorhanden)
+  if (f.Auftraggeber_Name) {
+    positionen.push({ label: 'Korrespondenz & Abrechnung', minuten: 20, editierbar: true });
+  }
+
+  return positionen;
+}
+
+function renderZeitschaetzung(positionen) {
+  const container = document.getElementById('zeit-positionen');
+  if (!container) return;
+  container.innerHTML = '';
+  let gesamtMin = 0;
+  positionen.forEach(function(pos, i) {
+    gesamtMin += pos.minuten;
+    const std = (pos.minuten / 60).toFixed(1).replace('.', ',');
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;justify-content:space-between;align-items:center;font-size:0.78rem;';
+    row.innerHTML = `
+      <span style="color:#9da3b4;flex:1;">${pos.label}</span>
+      <span style="color:#e8eaf0;font-weight:600;min-width:52px;text-align:right;" id="zeit-val-${i}">${std} Std.</span>
+      <input type="number" id="zeit-inp-${i}" value="${pos.minuten}" min="0" max="600" step="5"
+        style="display:none;width:54px;padding:2px 5px;background:#1e2330;border:1px solid rgba(79,142,247,0.4);border-radius:4px;color:#e8eaf0;font-size:0.75rem;text-align:right;"
+        onchange="aktualisiereZeitSumme()">
+    `;
+    container.appendChild(row);
+  });
+  // Gesamtanzeige
+  const gesamtStd = (gesamtMin / 60).toFixed(1).replace('.', ',');
+  const el = document.getElementById('zeit-gesamt');
+  if (el) el.textContent = gesamtStd + ' Std.';
+  // In sessionStorage für Rechnungs-Übernahme speichern
+  sessionStorage.setItem('prova_zeit_positionen', JSON.stringify(positionen));
+  sessionStorage.setItem('prova_zeit_gesamt_min', gesamtMin);
+}
+
+function aktualisiereZeitSumme() {
+  const inputs = document.querySelectorAll('[id^="zeit-inp-"]');
+  let gesamtMin = 0;
+  const positionen = JSON.parse(sessionStorage.getItem('prova_zeit_positionen') || '[]');
+  inputs.forEach(function(inp, i) {
+    const min = parseInt(inp.value) || 0;
+    gesamtMin += min;
+    if (positionen[i]) positionen[i].minuten = min;
+    const val = document.getElementById('zeit-val-' + i);
+    if (val) val.textContent = (min / 60).toFixed(1).replace('.', ',') + ' Std.';
+  });
+  const el = document.getElementById('zeit-gesamt');
+  if (el) el.textContent = (gesamtMin / 60).toFixed(1).replace('.', ',') + ' Std.';
+  sessionStorage.setItem('prova_zeit_positionen', JSON.stringify(positionen));
+  sessionStorage.setItem('prova_zeit_gesamt_min', gesamtMin);
+}
+
+function zeitBearbeiten() {
+  const inputs = document.querySelectorAll('[id^="zeit-inp-"]');
+  const vals = document.querySelectorAll('[id^="zeit-val-"]');
+  const bearbeiten = inputs[0] && inputs[0].style.display === 'none';
+  inputs.forEach(inp => inp.style.display = bearbeiten ? 'block' : 'none');
+  vals.forEach(val => val.style.display = bearbeiten ? 'none' : 'block');
+  const btn = document.querySelector('[onclick="zeitBearbeiten()"]');
+  if (btn) btn.textContent = bearbeiten ? '✓ Fertig' : '✎ Anpassen';
+}
+
+function zeitInRechnungUebernehmen() {
+  const gesamtMin = parseInt(sessionStorage.getItem('prova_zeit_gesamt_min') || '0');
+  const positionen = JSON.parse(sessionStorage.getItem('prova_zeit_positionen') || '[]');
+  // Für Rechnungs-Seite bereitstellen
+  sessionStorage.setItem('prova_jveg_stunden', (gesamtMin / 60).toFixed(2));
+  sessionStorage.setItem('prova_jveg_positionen', JSON.stringify(positionen));
+  sessionStorage.setItem('prova_jveg_az', (aktuellerRecordFields && aktuellerRecordFields.Aktenzeichen) || '');
+  showToast('Zeitdaten gespeichert — in Rechnungen → JVEG abrufbar', 'success');
+  // Optional: direkt zu Rechnungen navigieren
+  setTimeout(() => {
+    if (confirm('Jetzt zur JVEG-Rechnung wechseln?')) {
+      window.location.href = 'rechnungen.html?typ=jveg';
+    }
+  }, 400);
+}
+
+// Fotodokumentation separat generieren
+async function generierePhotodoku() {
+  if (!aktuellerRecordId || !aktuellerRecordFields) {
+    showToast('Kein Fall geladen', 'error'); return;
+  }
+  const btn = document.getElementById('btnFotodoku');
+  const status = document.getElementById('fotodoku-status');
+  btn.disabled = true;
+  btn.textContent = '⏳ Wird generiert…';
+  try {
+    const f = aktuellerRecordFields;
+    const payload = {
+      typ: 'fotodokumentation',
+      airtable_id: aktuellerRecordId,
+      aktenzeichen: f.Aktenzeichen || '',
+      schadensart: f.Schadensart || '',
+      adresse: [f.Schaden_Strasse, f.PLZ, f.Ort].filter(Boolean).join(', '),
+      sv_email: (svProfil && svProfil.email) ? svProfil.email : ''
+    };
+    // S3 mit Typ-Flag — PDFMonkey wählt Template F-09
+    const res = await fetch(WEBHOOK_S3, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    if (status) { status.style.display = 'block'; status.textContent = '✅ Fotodokumentation wird per E-Mail gesendet'; }
+    btn.textContent = '✅ Gesendet';
+  } catch(e) {
+    btn.disabled = false;
+    btn.textContent = '📄 Separate Fotodokumentation erstellen';
+    showToast('Fehler: ' + e.message, 'error');
+  }
+}
   const container = document.getElementById('toast-container');
   const toast = document.createElement('div');
   toast.className = 'toast' + (type === 'success' ? ' toast-success' : type === 'error' ? ' toast-error' : '');
   toast.textContent = msg;
   container.appendChild(toast);
   setTimeout(() => toast.remove(), 3500);
+}
+
+// ============================================================
+// PORTAL-LINK GENERATOR
+// ============================================================
+function generierePortalLinkUI() {
+  var az = aktuellerRecordFields && aktuellerRecordFields.Aktenzeichen;
+  if (!az) { showToast('Gutachten noch nicht geladen', 'error'); return; }
+  var tage = parseInt(document.getElementById('portal-tage').value) || 14;
+  var exp = Date.now() + tage * 86400000;
+  var raw = az.substring(0,8) + ':' + exp;
+  var token = '';
+  try { token = btoa(raw).replace(/[+]/g,'-').replace(/[/]/g,'_').replace(/=/g,''); } catch(e) {}
+  var base = window.location.origin + '/portal.html';
+  var link = base + '?az=' + encodeURIComponent(az) + '&token=' + token + '&exp=' + exp;
+  var box = document.getElementById('portal-link-box');
+  var txt = document.getElementById('portal-link-text');
+  if (box) box.style.display = 'block';
+  if (txt) txt.textContent = link;
+  sessionStorage.setItem('prova_portal_link', link);
+  showToast('Portal-Link erzeugt — ' + tage + ' Tage gültig', 'success');
+}
+
+function portalLinkKopieren() {
+  var link = (document.getElementById('portal-link-text') || {}).textContent || '';
+  if (!link) return;
+  navigator.clipboard.writeText(link).then(function() {
+    showToast('Link kopiert', 'success');
+  }).catch(function() {
+    showToast('Bitte manuell markieren und kopieren', 'error');
+  });
+}
+
+function portalLinkMailen() {
+  var link = (document.getElementById('portal-link-text') || {}).textContent || '';
+  var az = (aktuellerRecordFields && aktuellerRecordFields.Aktenzeichen) || '';
+  var email = (aktuellerRecordFields && aktuellerRecordFields.Auftraggeber_Email) || '';
+  var betreff = encodeURIComponent('Gutachten-Entwurf: ' + az);
+  var body = encodeURIComponent('Sehr geehrte Damen und Herren,
+
+erbei erhalten Sie den Prüfzugang zum Gutachten-Entwurf:
+
+' + link + '
+
+Mit freundlichen Grüßen');
+  window.location.href = 'mailto:' + email + '?subject=' + betreff + '&body=' + body;
 }
 
 // ---- CHECKLIST ----
@@ -860,25 +1126,6 @@ function initSection7Offenlegung() {
         if (btn) { btn.textContent = 'Bearbeiten'; btn.style.background = 'rgba(16,185,129,0.15)'; btn.style.borderColor = 'rgba(16,185,129,0.3)'; btn.style.color = '#10B981'; }
       }
     }
-
-    // Kostenermittlung-Status in Prüfliste
-    (function() {
-      var kostenDone = localStorage.getItem('prova_kostenermittlung_done') === 'true';
-      var kostenData = null;
-      try { var k = localStorage.getItem('prova_kostenermittlung'); if(k) kostenData = JSON.parse(k); } catch(e) {}
-      var checkKosten = document.getElementById('check-kosten');
-      var kostenLabel = document.getElementById('kosten-status-label');
-      if (kostenDone && kostenData) {
-        if (checkKosten) { checkKosten.classList.add('checked'); aktualisiereCheckCount(); }
-        if (kostenLabel) {
-          var min = kostenData.gesamt_min ? kostenData.gesamt_min.toLocaleString('de-DE') + ' €' : '—';
-          var max = kostenData.gesamt_max ? kostenData.gesamt_max.toLocaleString('de-DE') + ' €' : '—';
-          kostenLabel.textContent = (kostenData.positionen ? kostenData.positionen.length : 0) + ' Positionen · ' + min + ' – ' + max;
-        }
-      } else {
-        if (kostenLabel) kostenLabel.textContent = 'Noch keine Positionen erfasst — optional';
-      }
-    })();
   });
 })();
 
@@ -1052,11 +1299,7 @@ async function approveGutachten() {
     sv_email:           (svProfil && svProfil.email) ? svProfil.email : '',
     ...holeSection6Payload(),
     offenlegungstext:   localStorage.getItem('prova_offenlegungstext') || '',
-    gutachten_typ:      localStorage.getItem('prova_gutachten_typ') || 'gericht',
-    kostenermittlung:   (function(){
-      try { var k=localStorage.getItem('prova_kostenermittlung'); return k?JSON.parse(k):null; }
-      catch(e){ return null; }
-    })()
+    gutachten_typ:      localStorage.getItem('prova_gutachten_typ') || 'gericht'
   };
 
   try {
@@ -1071,6 +1314,10 @@ async function approveGutachten() {
     clearTimeout(timeout);
     if (!res.ok) throw new Error('HTTP ' + res.status);
     zeigeFreigabeErfolg();
+    // ── ENTERPRISE: Outbound-Webhook nach Freigabe ──
+    if ((localStorage.getItem('prova_paket')||'Starter') === 'Enterprise') {
+      await sendeOutboundWebhookFreigabe(payload);
+    }
   } catch (err) {
     if (btn) {
       btn.disabled = false;
@@ -1264,6 +1511,10 @@ async function ladeGutachten() {
     aktuellerRecordId = record.id;
     aktuellerRecordFields = f || {};
     sessionStorage.setItem('prova_record_id', record.id);
+
+    // KI-Zeitschätzung berechnen und rendern
+    const zeitPositionen = berechneZeitschaetzung(f || {});
+    renderZeitschaetzung(zeitPositionen);
 
     // Meta-Daten befüllen
     const adresse = [f.Schaden_Strasse, f.PLZ, f.Ort].filter(Boolean).join(', ') || '—';
@@ -1526,6 +1777,62 @@ async function sendSupport(){
     document.getElementById("support-success-title").textContent="Anfrage gesendet!";
     document.getElementById("support-success-text").textContent="Wir melden uns schnellstm&#246;glich bei Ihnen.";
   }
+}
+
+// ============================================================
+// ENTERPRISE: OUTBOUND-WEBHOOK
+// ============================================================
+async function sendeOutboundWebhookFreigabe(freigabePayload) {
+  var url = localStorage.getItem('prova_outbound_webhook') || '';
+  if (!url || !url.startsWith('http')) return;
+
+  var svEmail = (svProfil && svProfil.email) ? svProfil.email : (localStorage.getItem('prova_sv_email') || '');
+  var svName  = (svProfil && svProfil.vorname) ? (svProfil.vorname + ' ' + (svProfil.nachname||'')) : (localStorage.getItem('prova_sv_vorname')||'') + ' ' + (localStorage.getItem('prova_sv_nachname')||'');
+
+  var outboundPayload = {
+    prova_event:              'gutachten_freigegeben',
+    prova_version:            '1.0',
+    paket:                    'Enterprise',
+    timestamp:                new Date().toISOString(),
+    aktenzeichen:             freigabePayload.aktenzeichen || '',
+    schadensart:              freigabePayload.schadensart || '',
+    schadensdatum:            freigabePayload.schadensdatum || '',
+    objekt_adresse:           [freigabePayload.strasse, freigabePayload.plz, freigabePayload.ort].filter(Boolean).join(', '),
+    gebaeudetyp:              freigabePayload.gebaeudetyp || '',
+    auftraggeber_name:        freigabePayload.auftraggeber_name || '',
+    auftraggeber_typ:         freigabePayload.auftraggeber_typ || '',
+    auftraggeber_email:       freigabePayload.auftraggeber_email || '',
+    geschaedigter:            freigabePayload.geschaedigter || '',
+    sv_name:                  svName.trim(),
+    sv_email:                 svEmail,
+    airtable_id:              freigabePayload.airtable_id || '',
+    gutachten_zusammenfassung: (freigabePayload.gutachten_entwurf || '').substring(0, 500),
+  };
+
+  var log = { ts: new Date().toISOString(), url: url, status: 'pending', payload_keys: Object.keys(outboundPayload) };
+
+  try {
+    var res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-PROVA-Event': 'gutachten_freigegeben', 'X-PROVA-Version': '1.0' },
+      body: JSON.stringify(outboundPayload)
+    });
+    log.status = res.ok ? 'success' : ('error_' + res.status);
+    log.http_status = res.status;
+    console.log('PROVA Outbound-Webhook:', res.status, url);
+  } catch (e) {
+    log.status = 'network_error';
+    log.error = e.message;
+    console.warn('PROVA Outbound-Webhook Fehler:', e.message);
+  }
+
+  // Log in localStorage (max 50 Einträge)
+  try {
+    var logs = JSON.parse(localStorage.getItem('prova_outbound_log') || '[]');
+    logs.unshift(log);
+    if (logs.length > 50) logs = logs.slice(0, 50);
+    localStorage.setItem('prova_outbound_log', JSON.stringify(logs));
+  } catch(e) {}
 }
 </script>
 </body>

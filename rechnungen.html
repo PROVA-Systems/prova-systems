@@ -402,6 +402,27 @@ function logout(){
             <input id="r-betrag-netto" class="form-input" type="number" inputmode="decimal" step="0.01" value="0">
           </div>
 
+          <!-- JVEG KI-Vorausfüllung Hinweis -->
+          <div id="jveg-ki-hinweis" style="display:none;grid-column:span 2;padding:10px 14px;background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.25);border-radius:8px;font-size:0.75rem;color:#6ee7b7;">
+            <span>⏱ KI-Zeitschätzung verfügbar: </span><strong id="jveg-ki-stunden">—</strong> Std. aus Freigabe-Ansicht
+            <button onclick="jvegKiUebernehmen()" style="margin-left:10px;padding:3px 10px;background:rgba(16,185,129,0.2);border:1px solid rgba(16,185,129,0.35);border-radius:5px;color:#6ee7b7;font-size:0.72rem;cursor:pointer;font-family:inherit;">Übernehmen</button>
+          </div>
+
+          <!-- Auslagen-Sektion -->
+          <div class="form-group" style="grid-column:span 2;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+              <label class="form-label" style="margin:0;">Auslagen &amp; Nebenkosten</label>
+              <button onclick="auslageHinzufuegen()" style="padding:4px 10px;background:rgba(79,142,247,0.12);border:1px solid rgba(79,142,247,0.3);border-radius:6px;color:#93C5FD;font-size:0.72rem;cursor:pointer;font-family:inherit;">+ Hinzufügen</button>
+            </div>
+            <div id="auslagen-container" style="display:flex;flex-direction:column;gap:6px;">
+              <!-- Dynamisch befüllt -->
+            </div>
+            <div id="auslagen-summe-row" style="display:none;margin-top:8px;padding:8px 12px;background:rgba(255,255,255,0.04);border-radius:6px;display:flex;justify-content:space-between;font-size:0.78rem;">
+              <span style="color:#9da3b4;">Auslagen gesamt</span>
+              <span style="color:#e8eaf0;font-weight:700;" id="auslagen-summe">0,00 €</span>
+            </div>
+          </div>
+
           <div class="form-group">
             <label class="form-label" for="r-ust">USt.</label>
             <select id="r-ust" class="form-select">
@@ -414,10 +435,60 @@ function logout(){
             <label class="form-label" for="r-betrag-brutto">Betrag brutto €</label>
             <input id="r-betrag-brutto" class="form-input" type="number" readonly value="0">
           </div>
+
+          <!-- Rechnungsdatum + Zahlungsziel -->
+          <div class="form-group">
+            <label class="form-label" for="r-rechnungsdatum">Rechnungsdatum *</label>
+            <input id="r-rechnungsdatum" class="form-input" type="date">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="r-zahlungsziel">Zahlungsziel (Tage)</label>
+            <select id="r-zahlungsziel" class="form-select">
+              <option value="14">14 Tage</option>
+              <option value="21">21 Tage</option>
+              <option value="30" selected>30 Tage</option>
+              <option value="45">45 Tage</option>
+              <option value="60">60 Tage</option>
+            </select>
+          </div>
+
+          <!-- Leitweg-ID für B2G (Behörden, Gerichte) -->
+          <div class="form-group" style="grid-column:span 2;">
+            <label class="form-label" for="r-leitweg">Leitweg-ID <span style="font-weight:400;text-transform:none;color:var(--text3);">(nur für Behörden / Gerichte — B2G)</span></label>
+            <input id="r-leitweg" class="form-input" type="text" placeholder="z.B. 991-12345678-06 (nur bei Behördenrechnungen nötig)">
+          </div>
+
+          <!-- Positions-Tabelle -->
+          <div class="form-group" style="grid-column:span 2;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+              <label class="form-label" style="margin:0;">Rechnungspositionen</label>
+              <button onclick="positionHinzufuegen()" style="padding:4px 10px;background:rgba(79,142,247,0.12);border:1px solid rgba(79,142,247,0.3);border-radius:6px;color:#93C5FD;font-size:0.72rem;cursor:pointer;font-family:inherit;">+ Position</button>
+            </div>
+            <div id="positionen-container" style="display:flex;flex-direction:column;gap:6px;"></div>
+            <div style="display:flex;justify-content:flex-end;gap:20px;margin-top:8px;padding:8px 12px;background:rgba(255,255,255,0.04);border-radius:6px;font-size:0.78rem;">
+              <span style="color:#9da3b4;">Netto gesamt</span>
+              <span style="color:#e8eaf0;font-weight:700;min-width:80px;text-align:right;" id="pos-netto-gesamt">0,00 €</span>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- E-Rechnung Toggle -->
+        <div style="margin-top:14px;padding:12px 14px;background:rgba(79,142,247,0.06);border:1px solid rgba(79,142,247,0.18);border-radius:10px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+          <div>
+            <div style="font-size:13px;font-weight:600;color:#93C5FD;">🏛 E-Rechnung (XRechnung / ZUGFeRD)</div>
+            <div style="font-size:11px;color:#9da3b4;margin-top:2px;">Pflicht ab 2025 für B2B · XML-Datei zum Download · EU-Norm EN 16931</div>
+          </div>
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:12px;color:#9da3b4;">
+            <input type="checkbox" id="r-xrechnung" style="width:16px;height:16px;accent-color:#4f8ef7;" checked>
+            XML erzeugen
+          </label>
         </div>
 
         <div class="btn-row">
-          <button id="btn-rechnung-erstellen" class="btn" type="button">📄 Rechnung erstellen</button>
+          <button id="btn-rechnung-erstellen" class="btn" type="button">📄 Rechnung erstellen &amp; PDF</button>
+          <button id="btn-xrechnung-download" class="btn" type="button" onclick="xrechnungHerunterladen()" style="background:rgba(79,142,247,0.12);border:1px solid rgba(79,142,247,0.3);color:#93C5FD;">⬇ XRechnung XML herunterladen</button>
           <button id="btn-rechnung-senden" class="btn" type="button">📧 Per E-Mail versenden</button>
         </div>
       </section>
@@ -490,11 +561,302 @@ function sammleDaten() {
     sv_plz:     sv.sv_plz,
     sv_ort:     sv.sv_ort,
     sv_email:   sv.sv_email,
-    sv_iban:    sv.sv_iban
+    sv_iban:    sv.sv_iban,
+    auslagen:         sammelAuslagen(),
+    auslagen_gesamt:  berechneAuslagenSumme(),
+    positionen_obj:   sammelPositionen(),
+    rechnungsdatum:   (document.getElementById('r-rechnungsdatum') && document.getElementById('r-rechnungsdatum').value) || new Date().toISOString().slice(0,10),
+    zahlungsziel:     (document.getElementById('r-zahlungsziel') && document.getElementById('r-zahlungsziel').value) || '30',
+    leitweg:          document.getElementById('r-leitweg') ? document.getElementById('r-leitweg').value.trim() : '',
+    sv_steuernr:      localStorage.getItem('prova_sv_steuernr') || '',
+    sv_ustid:         localStorage.getItem('prova_sv_ustid') || '',
+    xrechnung:        document.getElementById('r-xrechnung') ? document.getElementById('r-xrechnung').checked : false
   };
 }
 
-// Validierung
+// ============================================================
+// AUSLAGEN-VERWALTUNG
+// ============================================================
+var _auslagenZaehler = 0;
+var AUSLAGEN_TYPEN = ['Fahrtkosten', 'Laborkosten', 'Porto', 'Kopien/Druck', 'Messgeräte', 'Sonstiges'];
+
+function auslageHinzufuegen(typ, betrag) {
+  _auslagenZaehler++;
+  var id = 'auslage-' + _auslagenZaehler;
+  var container = document.getElementById('auslagen-container');
+  var row = document.createElement('div');
+  row.id = id;
+  row.style.cssText = 'display:grid;grid-template-columns:1fr auto auto;gap:6px;align-items:center;';
+  var optionen = AUSLAGEN_TYPEN.map(function(t) {
+    return '<option value="' + t + '"' + (t === (typ||'Fahrtkosten') ? ' selected' : '') + '>' + t + '</option>';
+  }).join('');
+  row.innerHTML =
+    '<select class="form-select" style="font-size:0.78rem;padding:6px 8px;">' + optionen + '</select>' +
+    '<input type="number" class="form-input" placeholder="0,00 €" value="' + (betrag||'') + '" step="0.01" min="0" style="width:90px;font-size:0.78rem;text-align:right;" onchange="aktualisiereAuslagenSumme()">' +
+    '<button onclick="document.getElementById(\'' + id + '\').remove();aktualisiereAuslagenSumme();" style="background:none;border:none;color:rgba(239,68,68,0.6);cursor:pointer;font-size:16px;padding:2px 6px;">×</button>';
+  container.appendChild(row);
+  aktualisiereAuslagenSumme();
+}
+
+function sammelAuslagen() {
+  var rows = document.querySelectorAll('#auslagen-container > div');
+  var result = [];
+  rows.forEach(function(row) {
+    var sel = row.querySelector('select');
+    var inp = row.querySelector('input');
+    if (sel && inp && parseFloat(inp.value) > 0) {
+      result.push({ typ: sel.value, betrag: parseFloat(inp.value) || 0 });
+    }
+  });
+  return result;
+}
+
+function berechneAuslagenSumme() {
+  return sammelAuslagen().reduce(function(s, a) { return s + a.betrag; }, 0);
+}
+
+function aktualisiereAuslagenSumme() {
+  var summe = berechneAuslagenSumme();
+  var el = document.getElementById('auslagen-summe');
+  var row = document.getElementById('auslagen-summe-row');
+  if (el) el.textContent = summe.toFixed(2).replace('.', ',') + ' €';
+  if (row) row.style.display = summe > 0 ? 'flex' : 'none';
+}
+
+// ============================================================
+// JVEG KI-VORAUSFÜLLUNG aus sessionStorage (von freigabe.html)
+// ============================================================
+function pruefeJvegVorausfuellung() {
+  var stunden = sessionStorage.getItem('prova_jveg_stunden');
+  var az = sessionStorage.getItem('prova_jveg_az');
+  var hinweis = document.getElementById('jveg-ki-hinweis');
+  var stdEl = document.getElementById('jveg-ki-stunden');
+  if (stunden && parseFloat(stunden) > 0) {
+    if (hinweis) hinweis.style.display = 'block';
+    if (stdEl) stdEl.textContent = parseFloat(stunden).toFixed(1).replace('.', ',');
+    if (az) { var azEl = document.getElementById('r-aktenzeichen'); if (azEl && !azEl.value) azEl.value = az; }
+  }
+  // Typ aus URL-Parameter vorwählen
+  var params = new URLSearchParams(window.location.search);
+  var typ = params.get('typ');
+  if (typ) { var sel = document.getElementById('rechnung-typ'); if (sel) sel.value = typ; }
+}
+
+function jvegKiUebernehmen() {
+  var stunden = parseFloat(sessionStorage.getItem('prova_jveg_stunden') || '0');
+  var positionen = JSON.parse(sessionStorage.getItem('prova_jveg_positionen') || '[]');
+  // Honorar nach JVEG H9 Gruppe 3 (Bausachverständige) = 95 €/Std.
+  var stundensatz = 95;
+  var gesamtNetto = Math.round(stunden * stundensatz * 100) / 100;
+  var betragEl = document.getElementById('r-betrag-netto');
+  if (betragEl) { betragEl.value = gesamtNetto.toFixed(2); betragEl.dispatchEvent(new Event('input')); }
+  // Auslagen aus JVEG-Positionen (Fahrtkosten wenn vorhanden)
+  if (positionen && positionen.length) {
+    positionen.forEach(function(p) {
+      if (p.label && p.label.toLowerCase().includes('fahrt') && p.minuten > 0) {
+        // Fahrtkosten: Minuten → km-Schätzung → 0,42€/km
+        var kmGeschaetzt = Math.round(p.minuten / 60 * 60); // ~60 km/h
+        auslageHinzufuegen('Fahrtkosten', Math.round(kmGeschaetzt * 0.42 * 100) / 100);
+      }
+    });
+  }
+  showToastR('JVEG-Zeitdaten übernommen: ' + stunden.toFixed(1) + ' Std. = ' + gesamtNetto + ' €', 'success');
+}
+
+// ============================================================
+// RECHNUNGSPOSITIONEN — dynamische Tabelle
+// ============================================================
+var _posZaehler = 0;
+
+function positionHinzufuegen(bez, menge, ep) {
+  _posZaehler++;
+  var id = 'pos-' + _posZaehler;
+  var container = document.getElementById('positionen-container');
+  if (!container) return;
+  var row = document.createElement('div');
+  row.id = id;
+  row.style.cssText = 'display:grid;grid-template-columns:2fr 60px 90px 90px auto;gap:6px;align-items:center;';
+  row.innerHTML =
+    '<input class="form-input" style="font-size:0.78rem;padding:6px 8px;" placeholder="Bezeichnung" value="' + (bez||'') + '" oninput="aktualisierePositionenSumme()">' +
+    '<input class="form-input" style="font-size:0.78rem;padding:6px 8px;text-align:center;" type="number" min="0.01" step="0.01" value="' + (menge||1) + '" title="Menge" oninput="aktualisierePositionenSumme()">' +
+    '<input class="form-input" style="font-size:0.78rem;padding:6px 8px;text-align:right;" type="number" min="0" step="0.01" value="' + (ep||0) + '" placeholder="EP netto €" oninput="aktualisierePositionenSumme();syncNettoFromPositionen()">' +
+    '<span class="form-input" style="font-size:0.78rem;padding:6px 8px;text-align:right;background:rgba(255,255,255,0.03);color:#9da3b4;" id="' + id + '-gp">0,00 \u20AC</span>' +
+    '<button onclick="document.getElementById(\'' + id + '\').remove();aktualisierePositionenSumme();syncNettoFromPositionen();" style="background:none;border:none;color:rgba(239,68,68,0.6);cursor:pointer;font-size:16px;padding:2px 6px;">\u00d7</button>';
+  container.appendChild(row);
+  aktualisierePositionenSumme();
+}
+
+function sammelPositionen() {
+  var rows = document.querySelectorAll('#positionen-container > div[id^="pos-"]');
+  var result = [];
+  rows.forEach(function(row) {
+    var inputs = row.querySelectorAll('input');
+    if (inputs.length >= 3) {
+      var bez = inputs[0].value.trim();
+      var menge = parseFloat(inputs[1].value) || 1;
+      var ep = parseFloat(inputs[2].value) || 0;
+      if (bez && ep > 0) result.push({bezeichnung: bez, menge: menge, ep: ep, gp: Math.round(menge*ep*100)/100});
+    }
+  });
+  return result;
+}
+
+function aktualisierePositionenSumme() {
+  var rows = document.querySelectorAll('#positionen-container > div[id^="pos-"]');
+  var gesamt = 0;
+  rows.forEach(function(row) {
+    var inputs = row.querySelectorAll('input');
+    if (inputs.length >= 3) {
+      var menge = parseFloat(inputs[1].value) || 1;
+      var ep = parseFloat(inputs[2].value) || 0;
+      var gp = Math.round(menge*ep*100)/100;
+      gesamt += gp;
+      var gpEl = row.querySelector('[id$="-gp"]');
+      if (gpEl) gpEl.textContent = gp.toFixed(2).replace('.',',') + ' \u20AC';
+    }
+  });
+  var el = document.getElementById('pos-netto-gesamt');
+  if (el) el.textContent = gesamt.toFixed(2).replace('.',',') + ' \u20AC';
+}
+
+function syncNettoFromPositionen() {
+  var positionen = sammelPositionen();
+  var gesamtNetto = positionen.reduce(function(s,p){return s+p.gp;},0);
+  if (positionen.length > 0 && gesamtNetto > 0) {
+    var nettoEl = document.getElementById('r-betrag-netto');
+    if (nettoEl) { nettoEl.value = gesamtNetto.toFixed(2); nettoEl.dispatchEvent(new Event('input')); }
+  }
+}
+
+// ============================================================
+// XRECHNUNG / ZUGFERD XML — EN 16931 / UBL 2.1
+// ============================================================
+function escXml(str) {
+  return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&apos;');
+}
+
+function generiereXRechnungXML(daten) {
+  var reDatum = daten.rechnungsdatum || new Date().toISOString().slice(0,10);
+  var tage = parseInt(daten.zahlungsziel||30);
+  var faelligkeit = new Date(new Date(reDatum).getTime() + tage*86400000).toISOString().slice(0,10);
+  var ustBetrag = Math.round((daten.netto_betrag_eur * (daten.ust_satz||0) / 100) * 100) / 100;
+  var brutto = Math.round((daten.netto_betrag_eur + ustBetrag) * 100) / 100;
+  var positionen = daten.positionen_obj || [{bezeichnung:'Gutachterhonorar', menge:1, ep:daten.netto_betrag_eur, gp:daten.netto_betrag_eur}];
+  var ustId = (daten.sv_ustid||'').trim();
+  var stNr = (daten.sv_steuernr||'').trim();
+
+  var posXml = positionen.map(function(p, i) {
+    return [
+      '    <cac:InvoiceLine>',
+      '      <cbc:ID>' + (i+1) + '</cbc:ID>',
+      '      <cbc:InvoicedQuantity unitCode="C62">' + p.menge + '</cbc:InvoicedQuantity>',
+      '      <cbc:LineExtensionAmount currencyID="EUR">' + p.gp.toFixed(2) + '</cbc:LineExtensionAmount>',
+      '      <cac:Item>',
+      '        <cbc:Name>' + escXml(p.bezeichnung) + '</cbc:Name>',
+      '        <cac:ClassifiedTaxCategory>',
+      '          <cbc:ID>' + (daten.ust_satz > 0 ? 'S' : 'E') + '</cbc:ID>',
+      '          <cbc:Percent>' + (daten.ust_satz||0) + '</cbc:Percent>',
+      '          <cac:TaxScheme><cbc:ID>VAT</cbc:ID></cac:TaxScheme>',
+      '        </cac:ClassifiedTaxCategory>',
+      '      </cac:Item>',
+      '      <cac:Price>',
+      '        <cbc:PriceAmount currencyID="EUR">' + p.ep.toFixed(2) + '</cbc:PriceAmount>',
+      '      </cac:Price>',
+      '    </cac:InvoiceLine>'
+    ].join('\n');
+  }).join('\n');
+
+  var lines = [
+    '<?xml version="1.0" encoding="UTF-8"?>',
+    '<!-- XRechnung 3.0 / ZUGFeRD 2.3 - EN 16931 - erstellt von PROVA Systems -->',
+    '<ubl:Invoice xmlns:ubl="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2"',
+    '             xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2"',
+    '             xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2">',
+    '  <cbc:CustomizationID>urn:cen.eu:en16931:2017#compliant#urn:xeinkauf.de:kosit:xrechnung_3.0</cbc:CustomizationID>',
+    '  <cbc:ProfileID>urn:fdc:peppol.eu:2017:poacc:billing:01:1.0</cbc:ProfileID>',
+    '  <cbc:ID>' + escXml(daten.rechnungsnummer) + '</cbc:ID>',
+    '  <cbc:IssueDate>' + reDatum + '</cbc:IssueDate>',
+    '  <cbc:DueDate>' + faelligkeit + '</cbc:DueDate>',
+    '  <cbc:InvoiceTypeCode>380</cbc:InvoiceTypeCode>',
+    '  <cbc:DocumentCurrencyCode>EUR</cbc:DocumentCurrencyCode>',
+    '  <cbc:BuyerReference>' + escXml(daten.leitweg || daten.aktenzeichen || 'n/a') + '</cbc:BuyerReference>',
+    '  <cac:AccountingSupplierParty>',
+    '    <cac:Party>',
+    '      <cbc:EndpointID schemeID="EM">' + escXml(daten.sv_email||'') + '</cbc:EndpointID>',
+    '      <cac:PartyName><cbc:Name>' + escXml(daten.sv_name||'') + '</cbc:Name></cac:PartyName>',
+    '      <cac:PostalAddress>',
+    '        <cbc:StreetName>' + escXml(daten.sv_strasse||'') + '</cbc:StreetName>',
+    '        <cbc:CityName>' + escXml(daten.sv_ort||'') + '</cbc:CityName>',
+    '        <cbc:PostalZone>' + escXml(daten.sv_plz||'') + '</cbc:PostalZone>',
+    '        <cac:Country><cbc:IdentificationCode>DE</cbc:IdentificationCode></cac:Country>',
+    '      </cac:PostalAddress>',
+    (ustId || stNr) ? ('      <cac:PartyTaxScheme>\n        <cbc:CompanyID>' + escXml(ustId || stNr) + '</cbc:CompanyID>\n        <cac:TaxScheme><cbc:ID>' + (ustId ? 'VAT' : 'FC') + '</cbc:ID></cac:TaxScheme>\n      </cac:PartyTaxScheme>') : '',
+    '      <cac:PartyLegalEntity><cbc:RegistrationName>' + escXml(daten.sv_name||'') + '</cbc:RegistrationName></cac:PartyLegalEntity>',
+    '    </cac:Party>',
+    '  </cac:AccountingSupplierParty>',
+    '  <cac:AccountingCustomerParty>',
+    '    <cac:Party>',
+    '      <cac:PartyName><cbc:Name>' + escXml(daten.empfaenger_name||'') + '</cbc:Name></cac:PartyName>',
+    '      <cac:PostalAddress>',
+    '        <cbc:StreetName>' + escXml(daten.empfaenger_strasse||'') + '</cbc:StreetName>',
+    '        <cbc:CityName>' + escXml(daten.empfaenger_ort||'') + '</cbc:CityName>',
+    '        <cbc:PostalZone>' + escXml(daten.empfaenger_plz||'') + '</cbc:PostalZone>',
+    '        <cac:Country><cbc:IdentificationCode>DE</cbc:IdentificationCode></cac:Country>',
+    '      </cac:PostalAddress>',
+    '    </cac:Party>',
+    '  </cac:AccountingCustomerParty>',
+    '  <cac:PaymentMeans>',
+    '    <cbc:PaymentMeansCode>58</cbc:PaymentMeansCode>',
+    '    <cac:PayeeFinancialAccount>',
+    '      <cbc:ID>' + escXml((daten.sv_iban||'').replace(/\s/g,'')) + '</cbc:ID>',
+    '    </cac:PayeeFinancialAccount>',
+    '  </cac:PaymentMeans>',
+    '  <cac:PaymentTerms><cbc:Note>Zahlbar innerhalb ' + tage + ' Tagen ohne Abzug.</cbc:Note></cac:PaymentTerms>',
+    '  <cac:TaxTotal>',
+    '    <cbc:TaxAmount currencyID="EUR">' + ustBetrag.toFixed(2) + '</cbc:TaxAmount>',
+    '    <cac:TaxSubtotal>',
+    '      <cbc:TaxableAmount currencyID="EUR">' + daten.netto_betrag_eur.toFixed(2) + '</cbc:TaxableAmount>',
+    '      <cbc:TaxAmount currencyID="EUR">' + ustBetrag.toFixed(2) + '</cbc:TaxAmount>',
+    '      <cac:TaxCategory>',
+    '        <cbc:ID>' + (daten.ust_satz > 0 ? 'S' : 'E') + '</cbc:ID>',
+    '        <cbc:Percent>' + (daten.ust_satz||0) + '</cbc:Percent>',
+    daten.ust_satz === 0 ? '        <cbc:TaxExemptionReason>Umsatzsteuerbefreiung gemäß §4 UStG</cbc:TaxExemptionReason>' : '',
+    '        <cac:TaxScheme><cbc:ID>VAT</cbc:ID></cac:TaxScheme>',
+    '      </cac:TaxCategory>',
+    '    </cac:TaxSubtotal>',
+    '  </cac:TaxTotal>',
+    '  <cac:LegalMonetaryTotal>',
+    '    <cbc:LineExtensionAmount currencyID="EUR">' + daten.netto_betrag_eur.toFixed(2) + '</cbc:LineExtensionAmount>',
+    '    <cbc:TaxExclusiveAmount currencyID="EUR">' + daten.netto_betrag_eur.toFixed(2) + '</cbc:TaxExclusiveAmount>',
+    '    <cbc:TaxInclusiveAmount currencyID="EUR">' + brutto.toFixed(2) + '</cbc:TaxInclusiveAmount>',
+    '    <cbc:PayableAmount currencyID="EUR">' + brutto.toFixed(2) + '</cbc:PayableAmount>',
+    '  </cac:LegalMonetaryTotal>',
+    posXml,
+    '</ubl:Invoice>'
+  ].filter(function(l){ return l !== undefined && l !== null; }).join('\n');
+  return lines;
+}
+
+function xrechnungHerunterladen() {
+  var daten = sammleDaten();
+  var err = validiereFormular(daten);
+  if (err) { showToastR(err, 'error'); return; }
+  if (!daten.sv_steuernr && !daten.sv_ustid) {
+    if (!confirm('Weder Steuernummer noch USt-ID hinterlegt.\nIn Einstellungen → Abrechnung ergänzen.\n\nTrotzdem XML erzeugen?')) return;
+  }
+  var xml = generiereXRechnungXML(daten);
+  var blob = new Blob([xml], {type: 'application/xml;charset=utf-8'});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = 'XRechnung_' + (daten.rechnungsnummer||'RE') + '.xml';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToastR('XRechnung XML heruntergeladen ✅', 'success');
+}
+
 function validiereFormular(daten) {
   if(!daten.empfaenger_name)  return 'Bitte Auftraggeber eingeben';
   if(!daten.aktenzeichen)     return 'Bitte Aktenzeichen eingeben';
@@ -698,6 +1060,13 @@ function closeSupportModal(){
 document.addEventListener("DOMContentLoaded",function(){
   var m=document.getElementById("support-modal");
   if(m)m.addEventListener("click",function(e){if(e.target===m)closeSupportModal();});
+  // JVEG KI-Vorausfüllung prüfen (von freigabe.html übergeben)
+  pruefeJvegVorausfuellung();
+  // Rechnungsdatum = heute vorbelegen
+  var rdEl = document.getElementById('r-rechnungsdatum');
+  if (rdEl && !rdEl.value) rdEl.value = new Date().toISOString().slice(0,10);
+  // Standard-Position anlegen
+  positionHinzufuegen('Gutachterhonorar', 1, 0);
 });
 function supportAnalyse(){
   clearTimeout(_supportAnalyseTimer);

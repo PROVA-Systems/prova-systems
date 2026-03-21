@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PROVA — Jahresbericht</title>
+  <style>
+  :root{
+    --bg:#0d0f14;--bg2:#13161d;--bg3:#181b24;
+    --surface:#1e2330;--surface2:#242838;
+    --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);
+    --text:#e8eaf0;--text2:#9da3b4;--text3:#6b7280;
+    --accent:#4f8ef7;--accent2:#3a7be0;
+    --green:#10B981;--green-bg:rgba(16,185,129,0.08);
+    --warn:#f59e0b;--purple:#a78bfa;--red:#ef4444;
+    --sans:'Instrument Sans',system-ui,sans-serif;
+    --display:'Montserrat',sans-serif;
+    --radius:10px;--nav-h:52px;--bot-h:60px;
+  }
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+  html{font-size:14px;}
+  body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh;}
+  a{text-decoration:none;color:inherit;}
+  input,select{font-size:max(16px,1em);}
+
+  /* NAV */
+  .topbar{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 20px;height:var(--nav-h);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+  .topbar-left{display:flex;align-items:center;gap:12px;}
+  .logo{font-family:var(--display);font-weight:700;font-size:18px;color:var(--text);}
+  .logo span{color:var(--accent);}
+  .topnav{display:flex;gap:2px;}
+  .topnav a{padding:6px 11px;border-radius:6px;color:var(--text3);font-size:13px;font-weight:500;transition:all .15s;min-height:44px;display:inline-flex;align-items:center;white-space:nowrap;}
+  .topnav a:hover{color:var(--text2);background:rgba(255,255,255,.04);}
+  .settings-link{font-size:16px;color:var(--text3);padding:6px 8px;border-radius:6px;min-height:44px;display:inline-flex;align-items:center;}
+  .paket-badge{padding:3px 8px;border-radius:4px;font-size:10px;font-weight:700;letter-spacing:.04em;}
+  .burger{display:none;flex-direction:column;gap:4px;background:none;border:none;cursor:pointer;padding:8px;}
+  .burger span{width:20px;height:2px;background:var(--text2);border-radius:2px;display:block;}
+  .drawer-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;}
+  .drawer-overlay.open{display:block;}
+  .drawer{position:fixed;top:0;right:-280px;width:280px;height:100%;background:var(--bg2);border-left:1px solid var(--border);z-index:300;transition:right .25s;display:flex;flex-direction:column;}
+  .drawer.open{right:0;}
+  .drawer-header{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border);}
+  .drawer-close{background:none;border:none;color:var(--text3);font-size:18px;cursor:pointer;}
+  .drawer-nav{display:flex;flex-direction:column;padding:12px;flex:1;overflow-y:auto;}
+  .drawer-nav a{display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:8px;color:var(--text2);font-size:13px;transition:all .12s;}
+  .drawer-nav a:hover{color:var(--text);background:rgba(255,255,255,.04);}
+  .drawer-footer{padding:12px 18px;border-top:1px solid var(--border);}
+  .dnav-icon{font-size:15px;width:20px;text-align:center;}
+  .bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;height:var(--bot-h);background:var(--bg2);border-top:1px solid var(--border);z-index:100;align-items:stretch;}
+  .bn-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:var(--text3);font-size:10px;font-weight:500;padding:6px 4px;}
+  .bn-item.active{color:var(--accent);}
+  .bn-icon{font-size:18px;}
+
+  /* MAIN */
+  .main{max-width:1000px;margin:0 auto;padding:24px 20px;}
+  .page-header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:24px;flex-wrap:wrap;}
+  .page-title{font-family:var(--display);font-size:1.4rem;font-weight:800;}
+  .page-sub{font-size:0.78rem;color:var(--text3);margin-top:4px;}
+
+  /* YEAR SELECTOR */
+  .year-bar{display:flex;align-items:center;gap:10px;margin-bottom:22px;flex-wrap:wrap;}
+  .year-btn{padding:7px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:1px solid var(--border2);background:var(--surface);color:var(--text2);font-family:var(--sans);transition:all .15s;}
+  .year-btn.active{background:rgba(79,142,247,.15);border-color:rgba(79,142,247,.4);color:var(--accent);}
+  .btn-export{padding:8px 16px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:none;background:var(--accent);color:#fff;font-family:var(--sans);}
+
+  /* KPI GRID */
+  .kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-bottom:22px;}
+  .kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 14px;}
+  .kpi-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);margin-bottom:6px;}
+  .kpi-val{font-family:var(--display);font-size:1.8rem;font-weight:800;color:var(--text);line-height:1;}
+  .kpi-sub{font-size:11px;color:var(--text3);margin-top:5px;}
+  .kpi-delta{font-size:11px;font-weight:700;margin-top:4px;}
+  .kpi-delta.pos{color:var(--green);}
+  .kpi-delta.neg{color:var(--red);}
+
+  /* CARDS */
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:16px;}
+  .card-header{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;}
+  .card-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text2);}
+  .card-body{padding:16px;}
+
+  /* CHARTS (pure CSS + divs) */
+  .bar-chart{display:flex;flex-direction:column;gap:8px;}
+  .bar-row{display:flex;align-items:center;gap:10px;font-size:12px;}
+  .bar-label{width:90px;color:var(--text2);flex-shrink:0;text-align:right;font-size:11px;}
+  .bar-track{flex:1;height:20px;background:rgba(255,255,255,0.05);border-radius:4px;overflow:hidden;}
+  .bar-fill{height:100%;border-radius:4px;transition:width .6s ease;display:flex;align-items:center;padding-left:8px;font-size:10px;font-weight:700;color:#fff;min-width:24px;}
+  .bar-val{width:44px;text-align:right;color:var(--text3);font-size:11px;font-weight:600;}
+
+  /* MONATSCHART */
+  .monat-chart{display:flex;align-items:flex-end;gap:6px;height:100px;padding:0 4px;}
+  .monat-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;}
+  .monat-bar{width:100%;border-radius:3px 3px 0 0;background:var(--accent);opacity:.7;transition:height .5s ease;}
+  .monat-bar:hover{opacity:1;}
+  .monat-label{font-size:9px;color:var(--text3);}
+  .monat-val{font-size:9px;color:var(--text2);font-weight:600;}
+
+  /* TABELLE */
+  .data-table{width:100%;border-collapse:collapse;font-size:12px;}
+  .data-table th{padding:8px 10px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);border-bottom:1px solid var(--border);}
+  .data-table td{padding:9px 10px;border-bottom:1px solid rgba(255,255,255,.04);color:var(--text2);}
+  .data-table tr:last-child td{border-bottom:none;}
+  .data-table tr:hover td{background:rgba(255,255,255,.02);}
+  .tag{display:inline-block;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:600;}
+
+  /* LOADING */
+  .spinner{width:32px;height:32px;border:3px solid rgba(79,142,247,.2);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;margin:40px auto;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .loading-msg{text-align:center;color:var(--text3);font-size:13px;margin-top:8px;}
+
+  /* TOAST */
+  .toast{position:fixed;bottom:24px;right:24px;z-index:600;padding:10px 16px;border-radius:8px;font-size:13px;font-weight:500;background:var(--bg2);border:1px solid rgba(16,185,129,.4);color:var(--green);transition:all .3s;opacity:0;transform:translateY(8px);}
+  .toast.show{opacity:1;transform:translateY(0);}
+  .toast.err{border-color:rgba(239,68,68,.4);color:var(--red);}
+
+  @media(max-width:900px){.topnav a{font-size:0;}.topnav a::after{content:attr(data-short);font-size:12px;font-family:var(--sans);font-weight:500;}.paket-badge{display:none;}}
+  @media(max-width:600px){.topnav{display:none;}.settings-link{display:none;}.burger{display:flex;}.bottom-nav{display:flex;}body{padding-bottom:var(--bot-h);}.topbar{padding:0 14px;height:48px;}.main{padding:14px 12px;}.kpi-grid{grid-template-columns:repeat(2,1fr);}}
+  ::-webkit-scrollbar{width:3px;}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+
+  @media print{
+    .topbar,.burger,.bottom-nav,.year-bar .btn-export,.drawer,.drawer-overlay{display:none!important;}
+    body{background:#fff!important;color:#000!important;}
+    .card,.kpi-card{background:#fff!important;border-color:#e5e7eb!important;}
+    .kpi-val,.card-title,.kpi-label{color:#000!important;}
+    .data-table td,.data-table th{color:#333!important;}
+  }
+  </style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-left">
+    <a href="dashboard.html" class="logo">PRO<span>VA</span></a>
+    <nav class="topnav">
+      <a href="dashboard.html" data-short="Dashboard">Dashboard</a>
+      <a href="archiv.html" data-short="Archiv">Archiv</a>
+      <a href="rechnungen.html" data-short="Rechnungen">Rechnungen</a>
+      <a href="jveg.html" data-short="JVEG">JVEG</a>
+    </nav>
+  </div>
+  <div class="topbar-right" style="display:flex;align-items:center;gap:8px;">
+    <span class="paket-badge" id="topbarPaket"></span>
+    <a href="einstellungen.html" class="settings-link">⚙</a>
+    <button class="burger" id="burgerBtn" onclick="toggleDrawer()"><span></span><span></span><span></span></button>
+  </div>
+</div>
+<div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
+<div class="drawer" id="drawer">
+  <div class="drawer-header"><a href="dashboard.html" class="logo">PRO<span>VA</span></a><button class="drawer-close" onclick="closeDrawer()">✕</button></div>
+  <nav class="drawer-nav">
+    <a href="dashboard.html"><span class="dnav-icon">🏠</span>Dashboard</a>
+    <a href="archiv.html"><span class="dnav-icon">📂</span>Archiv</a>
+    <a href="rechnungen.html"><span class="dnav-icon">💶</span>Rechnungen</a>
+    <a href="jahresbericht.html" style="color:var(--accent);background:rgba(79,142,247,.08);"><span class="dnav-icon">📊</span>Jahresbericht</a>
+    <a href="einstellungen.html"><span class="dnav-icon">⚙</span>Einstellungen</a>
+    <a href="#" onclick="logout();return false;" style="margin-top:auto;color:#ef4444;"><span class="dnav-icon">🚪</span>Abmelden</a>
+  </nav>
+  <div class="drawer-footer"><span class="paket-badge" id="drawerPaket"></span></div>
+</div>
+<nav class="bottom-nav">
+  <a href="dashboard.html" class="bn-item"><span class="bn-icon">🏠</span><span class="bn-label">Dashboard</span></a>
+  <a href="archiv.html" class="bn-item"><span class="bn-icon">📂</span><span class="bn-label">Archiv</span></a>
+  <a href="jahresbericht.html" class="bn-item active"><span class="bn-icon">📊</span><span class="bn-label">Jahresbericht</span></a>
+  <a href="rechnungen.html" class="bn-item"><span class="bn-icon">💶</span><span class="bn-label">Rechnungen</span></a>
+  <a href="einstellungen.html" class="bn-item"><span class="bn-icon">⚙</span><span class="bn-label">Einstellungen</span></a>
+</nav>
+<script>
+function toggleDrawer(){var d=document.getElementById('drawer'),o=document.getElementById('drawerOverlay');d.classList.toggle('open');o.classList.toggle('open');document.body.style.overflow=d.classList.contains('open')?'hidden':'';}
+function closeDrawer(){document.getElementById('drawer').classList.remove('open');document.getElementById('drawerOverlay').classList.remove('open');document.body.style.overflow='';}
+document.addEventListener('keydown',function(e){if(e.key==='Escape')closeDrawer();});
+function logout(){localStorage.removeItem('prova_user');window.location.href='app-login.html';}
+(function(){
+  var u=localStorage.getItem('prova_user');if(!u){window.location.href='app-login.html';return;}
+  var p=localStorage.getItem('prova_paket')||'Starter';
+  var c={Starter:'#4f8ef7',Pro:'#f59e0b',Enterprise:'#a78bfa'}[p]||'#4f8ef7';
+  var s='background:'+c+'18;color:'+c+';border:1px solid '+c+'33';
+  ['topbarPaket','drawerPaket'].forEach(function(id){var el=document.getElementById(id);if(el){el.textContent=p;el.setAttribute('style',s);}});
+  window.PROVA=window.PROVA||{};PROVA.paket=p;PROVA.isEnterprise=p==='Enterprise';
+})();
+</script>
+
+<div class="main" id="main-content">
+  <div class="page-header">
+    <div>
+      <div class="page-title">📊 Jahresbericht</div>
+      <div class="page-sub" id="bericht-subtitle">Lade Daten…</div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+      <button class="btn-export" onclick="window.print()">🖨 Drucken / PDF</button>
+      <button class="btn-export" style="background:var(--green);" onclick="exportCSV()">⬇ CSV Export</button>
+    </div>
+  </div>
+
+  <!-- Jahr-Auswahl -->
+  <div class="year-bar" id="year-bar">
+    <span style="font-size:12px;color:var(--text3);">Jahr:</span>
+    <!-- Dynamisch befüllt -->
+  </div>
+
+  <!-- Loading -->
+  <div id="loading-state">
+    <div class="spinner"></div>
+    <div class="loading-msg">Daten werden aus Airtable geladen…</div>
+  </div>
+
+  <!-- Inhalte (nach Laden) -->
+  <div id="report-content" style="display:none;">
+
+    <!-- KPI-Kacheln -->
+    <div class="kpi-grid" id="kpi-grid"></div>
+
+    <!-- Zwei-Spalten -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;" id="charts-row">
+
+      <!-- Monatsverteilung -->
+      <div class="card">
+        <div class="card-header"><div class="card-title">📅 Gutachten pro Monat</div></div>
+        <div class="card-body">
+          <div class="monat-chart" id="monat-chart"></div>
+          <div style="display:flex;justify-content:space-between;margin-top:6px;" id="monat-labels"></div>
+        </div>
+      </div>
+
+      <!-- Schadensarten -->
+      <div class="card">
+        <div class="card-header"><div class="card-title">🏗 Schadensarten</div></div>
+        <div class="card-body">
+          <div class="bar-chart" id="art-chart"></div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Bearbeitungszeit + Status -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;" id="status-row">
+
+      <div class="card">
+        <div class="card-header"><div class="card-title">⚡ Status-Verteilung</div></div>
+        <div class="card-body">
+          <div class="bar-chart" id="status-chart"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><div class="card-title">⏱ Bearbeitungszeiten (∅)</div></div>
+        <div class="card-body" id="zeit-card-body"></div>
+      </div>
+
+    </div>
+
+    <!-- Alle Fälle Tabelle -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">📋 Alle Fälle <span id="faelle-count" style="font-weight:400;text-transform:none;font-size:11px;"></span></div>
+        <input type="text" id="tabelle-suche" placeholder="Suchen…" oninput="filterTabelle()"
+          style="padding:5px 10px;background:var(--bg3);border:1px solid var(--border2);border-radius:6px;color:var(--text);font-size:12px;outline:none;width:180px;">
+      </div>
+      <div class="card-body" style="padding:0;overflow-x:auto;">
+        <table class="data-table" id="faelle-tabelle">
+          <thead>
+            <tr>
+              <th>Aktenzeichen</th>
+              <th>Datum</th>
+              <th>Schadensart</th>
+              <th>Adresse</th>
+              <th>Status</th>
+              <th>Bearb. (Min)</th>
+            </tr>
+          </thead>
+          <tbody id="faelle-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div><!-- /report-content -->
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+const AIRTABLE_BASE  = 'appJ7bLlAHZoxENWE';
+const AIRTABLE_TABLE = 'tblSxV8bsXwd1pwa0';
+
+var _alleRecords = [];
+var _aktivesJahr = new Date().getFullYear();
+var _gefilterteRecords = [];
+
+// ── Farben pro Status ──
+var STATUS_FARBEN = {
+  'Freigegeben':        {bg:'rgba(16,185,129,.15)',color:'#6ee7b7'},
+  'Korrektur_angefordert':{bg:'rgba(245,158,11,.1)',color:'#fcd34d'},
+  'Entwurf':            {bg:'rgba(79,142,247,.1)',color:'#93C5FD'},
+  'Exportiert':         {bg:'rgba(167,139,250,.1)',color:'#c4b5fd'},
+  'Archiviert':         {bg:'rgba(255,255,255,.06)',color:'#9da3b4'},
+};
+var ART_FARBEN = ['#4f8ef7','#10B981','#f59e0b','#a78bfa','#ef4444','#06b6d4','#f97316','#84cc16'];
+
+// ── Daten laden ──
+async function ladeDaten() {
+  try {
+    // Alle Records (max 200 - für Startbetrieb ausreichend)
+    var url = '/v0/' + AIRTABLE_BASE + '/' + AIRTABLE_TABLE +
+      '?pageSize=100&sort[0][field]=Timestamp&sort[0][direction]=desc';
+    var res = await fetch('/.netlify/functions/airtable', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({method:'GET', path: url})
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    var data = await res.json();
+    _alleRecords = (data.records || []).map(function(r){ return r.fields || {}; });
+
+    // Seite 2 wenn vorhanden
+    if (data.offset) {
+      var url2 = url + '&offset=' + data.offset;
+      var res2 = await fetch('/.netlify/functions/airtable', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({method:'GET', path: url2})
+      });
+      if (res2.ok) {
+        var data2 = await res2.json();
+        _alleRecords = _alleRecords.concat((data2.records||[]).map(function(r){return r.fields||{};}));
+      }
+    }
+
+    // Jahre ermitteln und Buttons bauen
+    var jahre = ermittleJahre(_alleRecords);
+    bautJahrButtons(jahre);
+    renderBericht(_aktivesJahr);
+
+    document.getElementById('loading-state').style.display = 'none';
+    document.getElementById('report-content').style.display = 'block';
+
+  } catch(e) {
+    document.getElementById('loading-state').innerHTML =
+      '<div style="text-align:center;padding:40px;color:var(--red);">⚠ Fehler beim Laden: ' + e.message + '</div>';
+  }
+}
+
+function ermittleJahre(records) {
+  var jahre = {};
+  records.forEach(function(r) {
+    if (r.Timestamp) {
+      var j = new Date(r.Timestamp).getFullYear();
+      jahre[j] = (jahre[j]||0) + 1;
+    }
+  });
+  return Object.keys(jahre).map(Number).sort(function(a,b){return b-a;});
+}
+
+function bautJahrButtons(jahre) {
+  var bar = document.getElementById('year-bar');
+  // Aktuelles Jahr immer dabei
+  var aktuellesJahr = new Date().getFullYear();
+  if (!jahre.includes(aktuellesJahr)) jahre.unshift(aktuellesJahr);
+  jahre.forEach(function(j) {
+    var btn = document.createElement('button');
+    btn.className = 'year-btn' + (j === _aktivesJahr ? ' active' : '');
+    btn.textContent = j;
+    btn.onclick = function() {
+      _aktivesJahr = j;
+      document.querySelectorAll('.year-btn').forEach(function(b){b.classList.remove('active');});
+      btn.classList.add('active');
+      renderBericht(j);
+    };
+    bar.appendChild(btn);
+  });
+}
+
+// ── Hauptrender ──
+function renderBericht(jahr) {
+  _gefilterteRecords = _alleRecords.filter(function(r) {
+    return r.Timestamp && new Date(r.Timestamp).getFullYear() === jahr;
+  });
+
+  document.getElementById('bericht-subtitle').textContent =
+    'Sachverständigenbüro · Statistik ' + jahr + ' · ' + _gefilterteRecords.length + ' Fälle';
+
+  renderKPIs(_gefilterteRecords, jahr);
+  renderMonatChart(_gefilterteRecords);
+  renderArtChart(_gefilterteRecords);
+  renderStatusChart(_gefilterteRecords);
+  renderZeitCard(_gefilterteRecords);
+  renderTabelle(_gefilterteRecords);
+}
+
+// ── KPIs ──
+function renderKPIs(records, jahr) {
+  var gesamt = records.length;
+  var freigegeben = records.filter(function(r){return r.Status==='Freigegeben'||r.Status==='Exportiert';}).length;
+  var freigaberate = gesamt > 0 ? Math.round(freigegeben/gesamt*100) : 0;
+
+  // Bearbeitungszeit
+  var mitZeit = records.filter(function(r){return r.Bearbeitungszeit_Min > 0;});
+  var avgMin = mitZeit.length > 0
+    ? Math.round(mitZeit.reduce(function(s,r){return s+(r.Bearbeitungszeit_Min||0);},0) / mitZeit.length)
+    : 0;
+
+  // Vorjahr-Vergleich
+  var vorjahr = _alleRecords.filter(function(r){
+    return r.Timestamp && new Date(r.Timestamp).getFullYear() === (jahr-1);
+  }).length;
+  var delta = vorjahr > 0 ? Math.round((gesamt-vorjahr)/vorjahr*100) : null;
+
+  // Pro Monat
+  var proMonat = gesamt > 0 ? (gesamt/12).toFixed(1) : '0';
+
+  // Schadensarten-Diversität
+  var arten = {};
+  records.forEach(function(r){if(r.Schadensart)arten[r.Schadensart]=(arten[r.Schadensart]||0)+1;});
+  var topArt = Object.keys(arten).sort(function(a,b){return arten[b]-arten[a];})[0] || '—';
+
+  var kpis = [
+    {label:'Fälle gesamt', val: gesamt, sub: delta !== null ? 'Vorjahr: ' + vorjahr : 'Erstes Jahr',
+     delta: delta, valFmt: String(gesamt)},
+    {label:'Freigegeben', val: freigegeben, sub: freigaberate + '% Freigaberate', valFmt: String(freigegeben)},
+    {label:'∅ / Monat', val: proMonat, sub: 'Durchschnitt ' + jahr, valFmt: proMonat},
+    {label:'∅ Bearbeitung', val: avgMin, sub: mitZeit.length + ' auswertbare Fälle',
+     valFmt: avgMin > 0 ? avgMin + ' Min' : '—'},
+    {label:'Top Schadensart', val: topArt, sub: arten[topArt] ? arten[topArt] + ' Fälle' : '—',
+     valFmt: topArt.length > 10 ? topArt.slice(0,10)+'…' : topArt},
+    {label:'Schadensarten', val: Object.keys(arten).length, sub: 'verschiedene Typen',
+     valFmt: String(Object.keys(arten).length)},
+  ];
+
+  var grid = document.getElementById('kpi-grid');
+  grid.innerHTML = '';
+  kpis.forEach(function(k) {
+    var div = document.createElement('div');
+    div.className = 'kpi-card';
+    var deltaHtml = '';
+    if (k.delta !== null && k.delta !== undefined) {
+      var cls = k.delta >= 0 ? 'pos' : 'neg';
+      var pfeil = k.delta >= 0 ? '▲' : '▼';
+      deltaHtml = '<div class="kpi-delta '+cls+'">'+pfeil+' '+Math.abs(k.delta)+'% ggü. Vorjahr</div>';
+    }
+    div.innerHTML =
+      '<div class="kpi-label">'+k.label+'</div>' +
+      '<div class="kpi-val">'+escHtml(k.valFmt)+'</div>' +
+      '<div class="kpi-sub">'+k.sub+'</div>' +
+      deltaHtml;
+    grid.appendChild(div);
+  });
+}
+
+// ── Monat-Chart ──
+function renderMonatChart(records) {
+  var monate = new Array(12).fill(0);
+  records.forEach(function(r){
+    if (r.Timestamp) monate[new Date(r.Timestamp).getMonth()]++;
+  });
+  var max = Math.max.apply(null, monate) || 1;
+  var monatNamen = ['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
+
+  var chart = document.getElementById('monat-chart');
+  var labels = document.getElementById('monat-labels');
+  chart.innerHTML = '';
+  labels.innerHTML = '';
+
+  monate.forEach(function(n, i) {
+    var col = document.createElement('div');
+    col.className = 'monat-col';
+    var h = Math.round((n/max)*90);
+    col.innerHTML =
+      '<div style="font-size:9px;color:var(--text3);min-height:14px;">'+( n > 0 ? n : '' )+'</div>' +
+      '<div class="monat-bar" style="height:'+h+'px;' + (n===0?'background:rgba(255,255,255,.05);':'') + '" title="'+monatNamen[i]+': '+n+'"></div>' +
+      '<div class="monat-label">'+monatNamen[i]+'</div>';
+    chart.appendChild(col);
+  });
+}
+
+// ── Schadensart-Chart ──
+function renderArtChart(records) {
+  var arten = {};
+  records.forEach(function(r){if(r.Schadensart)arten[r.Schadensart]=(arten[r.Schadensart]||0)+1;});
+  var sorted = Object.keys(arten).sort(function(a,b){return arten[b]-arten[a];}).slice(0,8);
+  var max = sorted.length > 0 ? arten[sorted[0]] : 1;
+
+  var chart = document.getElementById('art-chart');
+  chart.innerHTML = '';
+  if (!sorted.length) { chart.innerHTML = '<div style="color:var(--text3);font-size:12px;">Keine Daten</div>'; return; }
+
+  sorted.forEach(function(art, i) {
+    var n = arten[art];
+    var pct = Math.round(n/max*100);
+    var row = document.createElement('div');
+    row.className = 'bar-row';
+    var label = art.length > 12 ? art.slice(0,12)+'…' : art;
+    row.innerHTML =
+      '<div class="bar-label" title="'+escHtml(art)+'">'+escHtml(label)+'</div>' +
+      '<div class="bar-track"><div class="bar-fill" style="width:'+pct+'%;background:'+ART_FARBEN[i%ART_FARBEN.length]+';">'+n+'</div></div>' +
+      '<div class="bar-val">'+n+'</div>';
+    chart.appendChild(row);
+  });
+}
+
+// ── Status-Chart ──
+function renderStatusChart(records) {
+  var stati = {};
+  records.forEach(function(r){var s=r.Status||'Unbekannt';stati[s]=(stati[s]||0)+1;});
+  var sorted = Object.keys(stati).sort(function(a,b){return stati[b]-stati[a];});
+  var max = sorted.length > 0 ? stati[sorted[0]] : 1;
+
+  var chart = document.getElementById('status-chart');
+  chart.innerHTML = '';
+  sorted.forEach(function(s) {
+    var n = stati[s];
+    var pct = Math.round(n/max*100);
+    var m = STATUS_FARBEN[s] || {bg:'rgba(255,255,255,.06)',color:'#9da3b4'};
+    var row = document.createElement('div');
+    row.className = 'bar-row';
+    var label = s.length > 14 ? s.slice(0,14)+'…' : s;
+    row.innerHTML =
+      '<div class="bar-label" title="'+escHtml(s)+'">'+escHtml(label)+'</div>' +
+      '<div class="bar-track"><div class="bar-fill" style="width:'+pct+'%;background:'+m.color.replace(')',',0.8)').replace('rgb','rgba')+';">'+n+'</div></div>' +
+      '<div class="bar-val">'+n+'</div>';
+    chart.appendChild(row);
+  });
+}
+
+// ── Bearbeitungszeit-Card ──
+function renderZeitCard(records) {
+  var body = document.getElementById('zeit-card-body');
+  var mitZeit = records.filter(function(r){return r.Bearbeitungszeit_Min > 0;});
+  if (!mitZeit.length) {
+    body.innerHTML = '<div style="color:var(--text3);font-size:12px;">Noch keine Bearbeitungszeiten erfasst.<br><span style="font-size:11px;">Werden automatisch aus App-Zeitstempeln berechnet.</span></div>';
+    return;
+  }
+  var mins = mitZeit.map(function(r){return r.Bearbeitungszeit_Min;}).sort(function(a,b){return a-b;});
+  var sum = mins.reduce(function(s,v){return s+v;},0);
+  var avg = Math.round(sum/mins.length);
+  var median = mins[Math.floor(mins.length/2)];
+  var min = mins[0];
+  var max = mins[mins.length-1];
+
+  var rows = [
+    ['Durchschnitt', formatMin(avg)],
+    ['Median', formatMin(median)],
+    ['Schnellster', formatMin(min)],
+    ['Längster', formatMin(max)],
+    ['Auswertbare Fälle', mitZeit.length + ' von ' + records.length],
+    ['Gesamt (alle Fälle)', formatMin(Math.round(sum/60)*60)],
+  ];
+  body.innerHTML = rows.map(function(r){
+    return '<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.04);font-size:12px;">' +
+      '<span style="color:var(--text3);">'+r[0]+'</span>' +
+      '<span style="color:var(--text);font-weight:600;">'+r[1]+'</span>' +
+      '</div>';
+  }).join('');
+}
+
+function formatMin(min) {
+  if (min < 60) return min + ' Min';
+  var h = Math.floor(min/60);
+  var m = min % 60;
+  return h + 'h ' + (m > 0 ? m + 'min' : '');
+}
+
+// ── Tabelle ──
+var _alleFaelleTabelle = [];
+function renderTabelle(records) {
+  _alleFaelleTabelle = records;
+  document.getElementById('faelle-count').textContent = '· ' + records.length + ' Einträge';
+  filterTabelle();
+}
+
+function filterTabelle() {
+  var suche = (document.getElementById('tabelle-suche').value||'').toLowerCase();
+  var gefiltert = suche
+    ? _alleFaelleTabelle.filter(function(r){
+        return (r.Aktenzeichen||'').toLowerCase().includes(suche) ||
+               (r.Schadensart||'').toLowerCase().includes(suche) ||
+               (r.Ort||'').toLowerCase().includes(suche);
+      })
+    : _alleFaelleTabelle;
+
+  var tbody = document.getElementById('faelle-tbody');
+  if (!gefiltert.length) {
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text3);padding:20px;">Keine Treffer</td></tr>';
+    return;
+  }
+  tbody.innerHTML = gefiltert.slice(0,100).map(function(r) {
+    var adresse = [r.Schaden_Strasse, r.PLZ, r.Ort].filter(Boolean).join(', ') || '—';
+    var datum = r.Timestamp ? new Date(r.Timestamp).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric'}) : '—';
+    var s = r.Status||'—';
+    var m = STATUS_FARBEN[s]||{bg:'rgba(255,255,255,.04)',color:'#9da3b4'};
+    var statusTag = '<span class="tag" style="background:'+m.bg+';color:'+m.color+';">'+escHtml(s)+'</span>';
+    var bearb = r.Bearbeitungszeit_Min > 0 ? r.Bearbeitungszeit_Min + ' Min' : '—';
+    return '<tr>' +
+      '<td style="color:var(--accent);font-weight:600;">'+escHtml(r.Aktenzeichen||'—')+'</td>' +
+      '<td>'+datum+'</td>' +
+      '<td>'+escHtml(r.Schadensart||'—')+'</td>' +
+      '<td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="'+escHtml(adresse)+'">'+escHtml(adresse)+'</td>' +
+      '<td>'+statusTag+'</td>' +
+      '<td>'+bearb+'</td>' +
+      '</tr>';
+  }).join('');
+  if (gefiltert.length > 100) {
+    tbody.innerHTML += '<tr><td colspan="6" style="text-align:center;color:var(--text3);font-size:11px;padding:10px;">… und '+(gefiltert.length-100)+' weitere (Export für vollständige Liste)</td></tr>';
+  }
+}
+
+// ── CSV Export ──
+function exportCSV() {
+  var records = _gefilterteRecords;
+  if (!records.length) { zeigToast('Keine Daten für ' + _aktivesJahr, 'err'); return; }
+  var header = ['Aktenzeichen','Datum','Schadensart','Straße','PLZ','Ort','Status','Bearbeitungszeit_Min','Baujahr','Gebäudetyp'];
+  var rows = records.map(function(r) {
+    return [
+      r.Aktenzeichen||'', r.Timestamp?new Date(r.Timestamp).toLocaleDateString('de-DE'):'',
+      r.Schadensart||'', r.Schaden_Strasse||'', r.PLZ||'', r.Ort||'',
+      r.Status||'', r.Bearbeitungszeit_Min||'', r.Baujahr||'', r.Gebaeude_Typ||''
+    ].map(function(v){ return '"'+String(v).replace(/"/g,'""')+'"'; }).join(';');
+  });
+  var csv = '\uFEFF' + header.join(';') + '\n' + rows.join('\n');
+  var blob = new Blob([csv], {type:'text/csv;charset=utf-8'});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a'); a.href=url; a.download='PROVA_Jahresbericht_'+_aktivesJahr+'.csv';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+  zeigToast('CSV exportiert (' + records.length + ' Fälle) ✅');
+}
+
+function escHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function zeigToast(msg,typ){
+  var t=document.getElementById('toast');
+  t.textContent=msg;t.className='toast'+(typ==='err'?' err':'')+' show';
+  clearTimeout(t._t);t._t=setTimeout(function(){t.classList.remove('show');},3000);
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  // Responsive charts-row
+  function checkGrid(){
+    var r1=document.getElementById('charts-row');
+    var r2=document.getElementById('status-row');
+    var cols = window.innerWidth < 640 ? '1fr' : '1fr 1fr';
+    if(r1)r1.style.gridTemplateColumns=cols;
+    if(r2)r2.style.gridTemplateColumns=cols;
+  }
+  checkGrid();
+  window.addEventListener('resize', checkGrid);
+  ladeDaten();
+});
+</script>
+
+</body>
+</html>

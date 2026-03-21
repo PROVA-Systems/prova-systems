@@ -420,7 +420,10 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape')closeDrawer(
                   <div class="form-group"><label class="form-label">Schadensdatum</label><input type="date" class="form-input" id="f-schadensdatum"></div>
                 </div>
                 <div class="form-group">
-                  <label class="form-label form-label-required">Auftraggeber</label>
+                  <label class="form-label form-label-required" style="display:flex;justify-content:space-between;align-items:center;">
+                    <span>Auftraggeber</span>
+                    <button type="button" onclick="oeffneKontaktPicker()" style="padding:3px 9px;background:rgba(79,142,247,.12);border:1px solid rgba(79,142,247,.3);border-radius:5px;color:#93C5FD;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;">👥 Aus Kontakten</button>
+                  </label>
                   <select class="form-select" id="f-auftraggeber-typ" onchange="switchAuftraggeberTyp(this.value)">
                     <option value="">Bitte wählen…</option>
                     <option value="Versicherung">Versicherung</option>
@@ -2620,6 +2623,29 @@ window.PROVA_OFFLINE = {
 };
 
 })(); // Ende IIFE
+
+// ── Kontakt-Picker ──
+function oeffneKontaktPicker() {
+  var popup = window.open(
+    'kontakte.html?modus=quickimport&return='+encodeURIComponent(window.location.pathname.split('/').pop()),
+    'PROVA_Kontakte', 'width=540,height=680,scrollbars=yes,resizable=yes'
+  );
+  window.addEventListener('message', function handler(e) {
+    if (e.data && e.data.type === 'prova_kontakt_import') {
+      var k = e.data.kontakt;
+      var nameEl = document.getElementById('f-auftraggeber-name');
+      var typEl = document.getElementById('f-auftraggeber-typ');
+      var emailEl = document.getElementById('f-auftraggeber-email');
+      var anspEl = document.getElementById('f-ansprechpartner');
+      if (nameEl) { nameEl.value = k.auftraggeber_name||''; nameEl.dispatchEvent(new Event('input')); }
+      if (typEl) { typEl.value = k.auftraggeber_typ||''; typEl.dispatchEvent(new Event('change')); }
+      if (emailEl) { emailEl.value = k.auftraggeber_email||''; }
+      if (anspEl) { anspEl.value = k.ansprechpartner||''; }
+      window.removeEventListener('message', handler);
+      if (popup && !popup.closed) popup.close();
+    }
+  });
+}
 </script>
 </body>
 </html>

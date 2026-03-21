@@ -1,0 +1,935 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kontakte · PROVA</title>
+<style>
+:root{
+  --bg:#0b1220;--bg2:#111827;--bg3:#161f30;--surface:#1c2537;--surface2:#222d42;
+  --border:rgba(255,255,255,0.08);--border2:rgba(255,255,255,0.14);
+  --text:#eef0f6;--text2:#9aa5bc;--text3:#5a6680;
+  --accent:#4f8ef7;--accent2:#3a7be0;
+  --green:#10b981;--green-bg:rgba(16,185,129,0.1);--green-border:rgba(16,185,129,0.25);
+  --warn:#f59e0b;--warn-bg:rgba(245,158,11,0.1);--warn-border:rgba(245,158,11,0.25);
+  --red:#ef4444;--red-bg:rgba(239,68,68,0.1);--red-border:rgba(239,68,68,0.25);
+  --purple:#8b5cf6;
+  --sans:'Instrument Sans',system-ui,sans-serif;--nav-h:52px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html{font-size:16px;}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;}
+a{text-decoration:none;color:inherit;}
+input,select,textarea{font-size:max(16px,1em);}
+
+/* NAV */
+.topbar{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 20px;height:var(--nav-h);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+.logo{font-weight:800;font-size:18px;color:var(--text);letter-spacing:-.02em;}
+.logo span{color:var(--accent);}
+.topnav{display:flex;gap:2px;}
+.topnav a{padding:6px 12px;border-radius:6px;color:var(--text3);font-size:13px;font-weight:500;transition:all .15s;min-height:44px;display:inline-flex;align-items:center;}
+.topnav a:hover{color:var(--text2);background:rgba(255,255,255,.04);}
+.topnav a.active{color:var(--accent);background:rgba(79,142,247,.1);}
+.paket-badge{font-size:11px;font-weight:600;padding:3px 10px;border-radius:10px;}
+
+/* MAIN */
+.main{max-width:1100px;margin:0 auto;padding:24px 20px 80px;}
+
+/* HEADER */
+.page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;gap:12px;flex-wrap:wrap;}
+.page-title{font-size:1.3rem;font-weight:800;}
+.page-sub{font-size:12px;color:var(--text3);margin-top:3px;}
+.header-actions{display:flex;gap:8px;flex-wrap:wrap;}
+
+/* TOOLBAR */
+.toolbar{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
+.search-wrap{flex:1;min-width:200px;position:relative;}
+.search-wrap input{width:100%;background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:9px 12px 9px 36px;color:var(--text);font-family:var(--sans);font-size:13px;outline:none;}
+.search-wrap input:focus{border-color:var(--accent);}
+.search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:14px;color:var(--text3);}
+.filter-select{background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:9px 12px;color:var(--text2);font-family:var(--sans);font-size:13px;outline:none;cursor:pointer;}
+
+/* KONTAKT-GRID */
+.k-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;}
+.k-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px;cursor:pointer;transition:all .15s;display:flex;flex-direction:column;gap:8px;}
+.k-card:hover{border-color:var(--border2);background:var(--bg3);}
+.k-card.selected{border-color:var(--accent);background:rgba(79,142,247,.05);}
+.k-avatar{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;flex-shrink:0;}
+.k-header{display:flex;align-items:center;gap:10px;}
+.k-name{font-size:14px;font-weight:700;color:var(--text);}
+.k-firma{font-size:11px;color:var(--text3);margin-top:1px;}
+.k-typ{font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;white-space:nowrap;}
+.k-meta{display:flex;flex-direction:column;gap:3px;}
+.k-meta-row{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text3);}
+.k-meta-icon{width:14px;text-align:center;flex-shrink:0;}
+.k-footer{display:flex;justify-content:space-between;align-items:center;margin-top:4px;}
+.k-faelle{font-size:11px;color:var(--text3);}
+.k-actions{display:flex;gap:4px;}
+.k-btn{padding:4px 9px;border-radius:5px;font-size:11px;font-weight:600;cursor:pointer;border:none;font-family:var(--sans);transition:all .12s;}
+.k-btn-import{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border);}
+.k-btn-edit{background:var(--surface2);color:var(--text2);border:1px solid var(--border2);}
+.k-btn-del{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border);}
+
+/* MODAL */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:400;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(4px);}
+.modal-bg.open{display:flex;}
+.modal{background:var(--bg2);border:1px solid var(--border2);border-radius:14px;max-width:580px;width:100%;max-height:94vh;overflow-y:auto;padding:24px;}
+.modal-wide{max-width:720px;}
+.modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;}
+.modal-title{font-size:15px;font-weight:700;}
+.modal-close{background:none;border:none;color:var(--text3);font-size:20px;cursor:pointer;padding:4px;}
+.form-group{margin-bottom:14px;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.form-label{display:block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);margin-bottom:5px;}
+.form-input,.form-select{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:7px;padding:9px 12px;color:var(--text);font-family:var(--sans);font-size:13px;outline:none;transition:border-color .15s;}
+.form-input:focus,.form-select:focus{border-color:var(--accent);}
+.form-textarea{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:7px;padding:10px 12px;color:var(--text);font-family:var(--sans);font-size:13px;outline:none;resize:vertical;min-height:80px;transition:border-color .15s;}
+.form-textarea:focus{border-color:var(--accent);}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:16px;flex-wrap:wrap;}
+.btn-primary{padding:9px 18px;border-radius:8px;background:var(--accent);color:#fff;font-size:13px;font-weight:600;cursor:pointer;border:none;font-family:var(--sans);}
+.btn-ghost{padding:9px 18px;border-radius:8px;background:rgba(255,255,255,.05);border:1px solid var(--border2);color:var(--text2);font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans);}
+.btn-green{padding:9px 18px;border-radius:8px;background:var(--green);color:#fff;font-size:13px;font-weight:600;cursor:pointer;border:none;font-family:var(--sans);}
+
+/* IMPORT MODAL */
+.import-tabs{display:flex;gap:2px;margin-bottom:16px;border-bottom:1px solid var(--border);padding-bottom:0;}
+.itab{padding:8px 14px;font-size:13px;font-weight:600;color:var(--text3);cursor:pointer;border:none;background:none;border-bottom:2px solid transparent;margin-bottom:-1px;font-family:var(--sans);border-radius:6px 6px 0 0;}
+.itab.active{color:var(--accent);border-bottom-color:var(--accent);}
+.itab-pane{display:none;}
+.itab-pane.active{display:block;}
+.drop-zone{border:2px dashed var(--border2);border-radius:10px;padding:32px;text-align:center;cursor:pointer;transition:all .15s;}
+.drop-zone:hover,.drop-zone.drag{border-color:var(--accent);background:rgba(79,142,247,.04);}
+.drop-zone input[type=file]{display:none;}
+.drop-icon{font-size:32px;margin-bottom:8px;}
+.drop-title{font-size:14px;font-weight:600;color:var(--text);margin-bottom:4px;}
+.drop-sub{font-size:12px;color:var(--text3);}
+.import-preview{background:var(--bg3);border:1px solid var(--border);border-radius:8px;margin-top:12px;overflow:hidden;max-height:280px;overflow-y:auto;}
+.preview-row{display:grid;grid-template-columns:auto 1fr 1fr 1fr 80px;gap:0;padding:7px 12px;border-bottom:1px solid rgba(255,255,255,.04);font-size:11px;align-items:center;}
+.preview-row:last-child{border-bottom:none;}
+.preview-head{background:var(--surface2);font-weight:700;color:var(--text3);font-size:10px;text-transform:uppercase;letter-spacing:.04em;position:sticky;top:0;}
+.preview-cb{width:14px;height:14px;accent-color:var(--accent);}
+.import-info{padding:10px 12px;background:var(--green-bg);border:1px solid var(--green-border);border-radius:7px;font-size:12px;color:var(--green);margin-top:10px;}
+.import-warn{padding:10px 12px;background:var(--warn-bg);border:1px solid var(--warn-border);border-radius:7px;font-size:12px;color:var(--warn);margin-top:10px;}
+
+/* QUICK-IMPORT DROPDOWN (für app-starter/pro/enterprise) */
+.qi-btn{padding:7px 12px;background:var(--surface2);border:1px solid var(--border2);border-radius:7px;color:var(--text2);font-size:12px;font-weight:600;cursor:pointer;font-family:var(--sans);}
+
+/* STATS */
+.stats-bar{display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:10px;margin-bottom:20px;}
+.stat-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;text-align:center;}
+.stat-val{font-size:1.4rem;font-weight:800;color:var(--accent);}
+.stat-label{font-size:10px;color:var(--text3);margin-top:2px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;}
+
+/* EMPTY STATE */
+.empty{text-align:center;padding:48px 20px;color:var(--text3);}
+.empty-icon{font-size:40px;margin-bottom:12px;}
+
+/* TOAST */
+.toast-c{position:fixed;bottom:30px;right:20px;z-index:600;display:flex;flex-direction:column;gap:8px;}
+.toast{padding:10px 16px;border-radius:8px;font-size:13px;font-weight:500;background:var(--bg2);border:1px solid rgba(16,185,129,.4);color:var(--green);animation:toastIn .3s ease;pointer-events:none;}
+.toast.err{border-color:var(--red-border);color:var(--red);}
+@keyframes toastIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+
+@media(max-width:700px){.topnav{display:none;}.form-row{grid-template-columns:1fr;}.page-header{flex-direction:column;align-items:flex-start;}}
+::-webkit-scrollbar{width:3px;}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div style="display:flex;align-items:center;gap:12px;">
+    <a href="dashboard.html" class="logo">PRO<span>VA</span></a>
+    <nav class="topnav">
+      <a href="dashboard.html">Dashboard</a>
+      <a href="app-starter.html">Neues Gutachten</a>
+      <a href="archiv.html">Archiv</a>
+      <a href="kontakte.html" class="active">Kontakte</a>
+      <a href="rechnungen.html">Rechnungen</a>
+    </nav>
+  </div>
+  <div style="display:flex;align-items:center;gap:8px;">
+    <span class="paket-badge" id="topbarPaket"></span>
+    <a href="einstellungen.html" style="font-size:16px;color:var(--text3);padding:6px 8px;min-height:44px;display:inline-flex;align-items:center;">⚙</a>
+  </div>
+</div>
+
+<div class="main">
+
+  <div class="page-header">
+    <div>
+      <div class="page-title">👥 Kontakte</div>
+      <div class="page-sub">Auftraggeber, Versicherungen, Anwälte — inkl. Import aus GM, Bauexpert, Outlook</div>
+    </div>
+    <div class="header-actions">
+      <button onclick="openImport()" style="padding:8px 14px;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;color:var(--text2);font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans);">⬆ Importieren</button>
+      <button onclick="openEditor()" style="padding:8px 16px;background:var(--accent);border:none;border-radius:8px;color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans);">+ Neuer Kontakt</button>
+    </div>
+  </div>
+
+  <!-- STATS -->
+  <div class="stats-bar" id="statsBar"></div>
+
+  <!-- TOOLBAR -->
+  <div class="toolbar">
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="searchInput" placeholder="Name, Firma, E-Mail, Ort suchen…" oninput="renderKontakte()">
+    </div>
+    <select class="filter-select" id="filterTyp" onchange="renderKontakte()">
+      <option value="">Alle Typen</option>
+      <option value="Versicherung">🏢 Versicherung</option>
+      <option value="Anwalt">⚖️ Anwalt</option>
+      <option value="Privatperson">👤 Privatperson</option>
+      <option value="Gericht">🏛 Gericht</option>
+      <option value="Hausverwaltung">🏘 Hausverwaltung</option>
+      <option value="Bauherr">🏗 Bauherr</option>
+      <option value="Sonstiges">📋 Sonstiges</option>
+    </select>
+    <select class="filter-select" id="filterSort" onchange="renderKontakte()">
+      <option value="name">A–Z Name</option>
+      <option value="typ">Nach Typ</option>
+      <option value="faelle">Meiste Fälle</option>
+      <option value="neu">Zuletzt hinzugefügt</option>
+    </select>
+  </div>
+
+  <!-- GRID -->
+  <div class="k-grid" id="kontakteGrid"></div>
+
+</div>
+
+<!-- KONTAKT EDITOR MODAL -->
+<div class="modal-bg" id="modal-editor">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="editor-title">👤 Neuer Kontakt</div>
+      <button class="modal-close" onclick="closeEditor()">✕</button>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Name / Firmenname *</label>
+        <input id="e-name" class="form-input" type="text" placeholder="z.B. Allianz Versicherung oder Müller">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Vorname</label>
+        <input id="e-vorname" class="form-input" type="text" placeholder="z.B. Hans">
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Typ *</label>
+        <select id="e-typ" class="form-select">
+          <option value="Versicherung">🏢 Versicherung</option>
+          <option value="Anwalt">⚖️ Anwalt</option>
+          <option value="Privatperson">👤 Privatperson</option>
+          <option value="Gericht">🏛 Gericht</option>
+          <option value="Hausverwaltung">🏘 Hausverwaltung</option>
+          <option value="Bauherr">🏗 Bauherr</option>
+          <option value="Sonstiges">📋 Sonstiges</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Firma / Kanzlei</label>
+        <input id="e-firma" class="form-input" type="text" placeholder="z.B. Kanzlei Müller & Partner">
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Straße</label>
+      <input id="e-strasse" class="form-input" type="text" placeholder="z.B. Hauptstraße 42">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">PLZ</label>
+        <input id="e-plz" class="form-input" type="text" placeholder="z.B. 50667" maxlength="10">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Ort</label>
+        <input id="e-ort" class="form-input" type="text" placeholder="z.B. Köln">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Telefon</label>
+        <input id="e-telefon" class="form-input" type="tel" placeholder="0221 1234567">
+      </div>
+      <div class="form-group">
+        <label class="form-label">E-Mail</label>
+        <input id="e-email" class="form-input" type="email" placeholder="kontakt@beispiel.de">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Ansprechpartner</label>
+      <input id="e-ansprechpartner" class="form-input" type="text" placeholder="z.B. Frau Schmidt (Schadenbearbeitung)">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Notizen</label>
+      <textarea id="e-notizen" class="form-textarea" placeholder="Interne Hinweise, Besonderheiten…"></textarea>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeEditor()">Abbrechen</button>
+      <button class="btn-primary" onclick="speichereKontakt()">💾 Speichern</button>
+    </div>
+  </div>
+</div>
+
+<!-- IMPORT MODAL -->
+<div class="modal-bg" id="modal-import">
+  <div class="modal modal-wide">
+    <div class="modal-header">
+      <div class="modal-title">⬆ Kontakte importieren</div>
+      <button class="modal-close" onclick="closeImport()">✕</button>
+    </div>
+
+    <div class="import-tabs">
+      <button class="itab active" onclick="switchImportTab('csv',this)">📊 CSV (GM / Bauexpert / Excel)</button>
+      <button class="itab" onclick="switchImportTab('vcf',this)">📇 vCard (Outlook / iPhone)</button>
+      <button class="itab" onclick="switchImportTab('manual',this)">⌨️ Manuell</button>
+    </div>
+
+    <!-- CSV TAB -->
+    <div class="itab-pane active" id="itab-csv">
+      <div style="font-size:12px;color:var(--text3);margin-bottom:12px;line-height:1.6;">
+        <strong style="color:var(--text2);">Gutachten Manager:</strong> Auftraggeber → Exportieren → CSV<br>
+        <strong style="color:var(--text2);">Bauexpert:</strong> Stammdaten → Auftraggeber → CSV-Export<br>
+        <strong style="color:var(--text2);">Excel:</strong> Datei → Speichern unter → CSV (Semikolon-getrennt)<br>
+        Spaltenbezeichnungen werden automatisch erkannt. Pflichtfeld: <em>Name</em>
+      </div>
+
+      <div class="drop-zone" id="csv-drop" onclick="document.getElementById('csv-file').click()"
+           ondragover="event.preventDefault();this.classList.add('drag')"
+           ondragleave="this.classList.remove('drag')"
+           ondrop="handleCsvDrop(event)">
+        <input type="file" id="csv-file" accept=".csv,.txt" onchange="handleCsvFile(this.files[0])">
+        <div class="drop-icon">📊</div>
+        <div class="drop-title">CSV-Datei hier ablegen oder klicken</div>
+        <div class="drop-sub">.csv, Semikolon oder Komma getrennt, Windows-1252 oder UTF-8</div>
+      </div>
+
+      <div id="csv-preview" style="display:none;">
+        <div class="import-info" id="csv-info"></div>
+        <div class="import-preview" id="csv-preview-table"></div>
+        <div style="display:flex;gap:8px;margin-top:12px;align-items:center;flex-wrap:wrap;">
+          <label style="font-size:12px;color:var(--text2);display:flex;align-items:center;gap:6px;">
+            <input type="checkbox" id="csv-alle" checked onchange="csvToggleAlle(this.checked)" style="accent-color:var(--accent);">
+            Alle auswählen
+          </label>
+          <span style="font-size:12px;color:var(--text3);" id="csv-count-info"></span>
+          <div style="margin-left:auto;display:flex;gap:8px;">
+            <button class="btn-ghost" onclick="resetCsvImport()">Zurücksetzen</button>
+            <button class="btn-green" onclick="csvImportieren()">✅ Ausgewählte importieren</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- VCF TAB -->
+    <div class="itab-pane" id="itab-vcf">
+      <div style="font-size:12px;color:var(--text3);margin-bottom:12px;line-height:1.6;">
+        <strong style="color:var(--text2);">Outlook:</strong> Kontakte → Datei → Exportieren → vCard (.vcf)<br>
+        <strong style="color:var(--text2);">iPhone:</strong> Kontakte → Kontakt antippen → ↗ → vCard senden → Per Mail an sich selbst<br>
+        <strong style="color:var(--text2);">Mac Contacts:</strong> Kontakte auswählen → Datei → Exportieren → vCard exportieren
+      </div>
+
+      <div class="drop-zone" id="vcf-drop" onclick="document.getElementById('vcf-file').click()"
+           ondragover="event.preventDefault();this.classList.add('drag')"
+           ondragleave="this.classList.remove('drag')"
+           ondrop="handleVcfDrop(event)">
+        <input type="file" id="vcf-file" accept=".vcf,.vcard" onchange="handleVcfFile(this.files[0])">
+        <div class="drop-icon">📇</div>
+        <div class="drop-title">vCard-Datei hier ablegen oder klicken</div>
+        <div class="drop-sub">.vcf · vCard 3.0 und 4.0 werden unterstützt</div>
+      </div>
+
+      <div id="vcf-preview" style="display:none;">
+        <div class="import-info" id="vcf-info"></div>
+        <div class="import-preview" id="vcf-preview-table"></div>
+        <div style="display:flex;gap:8px;margin-top:12px;justify-content:flex-end;flex-wrap:wrap;">
+          <button class="btn-ghost" onclick="resetVcfImport()">Zurücksetzen</button>
+          <button class="btn-green" onclick="vcfImportieren()">✅ Importieren</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MANUELL TAB -->
+    <div class="itab-pane" id="itab-manual">
+      <div style="font-size:12px;color:var(--text3);margin-bottom:16px;">
+        Einzelne Kontakte manuell anlegen. Alternativ können Sie den "Neuer Kontakt"-Button oben nutzen.
+      </div>
+      <div style="text-align:center;padding:20px;">
+        <button class="btn-primary" onclick="closeImport();openEditor()">+ Neuen Kontakt anlegen</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- QUICK-IMPORT für app-starter/pro/enterprise (extern aufrufbar) -->
+<div class="modal-bg" id="modal-quickimport">
+  <div class="modal" style="max-width:500px;">
+    <div class="modal-header">
+      <div class="modal-title">👥 Kontakt wählen</div>
+      <button class="modal-close" onclick="closeQuickImport()">✕</button>
+    </div>
+    <input type="text" id="qi-search" class="form-input" placeholder="🔍 Name, Firma, E-Mail…" oninput="renderQuickImportListe()" style="margin-bottom:10px;">
+    <div id="qi-liste" style="max-height:50vh;overflow-y:auto;display:flex;flex-direction:column;gap:5px;"></div>
+    <div style="margin-top:12px;text-align:center;">
+      <button onclick="closeQuickImport();openEditor();" style="font-size:12px;color:var(--text3);background:none;border:none;cursor:pointer;">+ Neuen Kontakt anlegen</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-c" id="toastC"></div>
+
+<script>
+// ============================================================
+// KONSTANTEN & STATE
+// ============================================================
+const K_KEY = 'prova_kontakte';
+var _kontakte = [];
+var _editId = null;
+var _csvRows = [];
+var _vcfRows = [];
+
+var TYP_CONFIG = {
+  'Versicherung': {icon:'🏢', color:'rgba(79,142,247,.15)', text:'#93C5FD'},
+  'Anwalt':       {icon:'⚖️', color:'rgba(139,92,246,.15)', text:'#c4b5fd'},
+  'Privatperson': {icon:'👤', color:'rgba(16,185,129,.12)', text:'#6ee7b7'},
+  'Gericht':      {icon:'🏛', color:'rgba(245,158,11,.12)', text:'#fcd34d'},
+  'Hausverwaltung':{icon:'🏘',color:'rgba(239,68,68,.1)',  text:'#fca5a5'},
+  'Bauherr':      {icon:'🏗', color:'rgba(99,102,241,.15)',text:'#a5b4fc'},
+  'Sonstiges':    {icon:'📋', color:'rgba(255,255,255,.05)',text:'#9aa5bc'},
+};
+
+// ============================================================
+// LADEN / SPEICHERN
+// ============================================================
+function ladeKontakte() {
+  try { _kontakte = JSON.parse(localStorage.getItem(K_KEY) || '[]'); } catch(e) { _kontakte = []; }
+}
+function speichereKontakte() {
+  localStorage.setItem(K_KEY, JSON.stringify(_kontakte));
+}
+function genId() { return Date.now().toString(36) + Math.random().toString(36).slice(2,5); }
+
+// ============================================================
+// RENDER
+// ============================================================
+function renderStats() {
+  var counts = {};
+  _kontakte.forEach(function(k){ counts[k.typ] = (counts[k.typ]||0)+1; });
+  var el = document.getElementById('statsBar');
+  if (!_kontakte.length) { el.innerHTML=''; return; }
+  el.innerHTML = [
+    {label:'Gesamt', val:_kontakte.length, icon:'👥'},
+    {label:'Versicherung', val:counts['Versicherung']||0, icon:'🏢'},
+    {label:'Anwalt', val:counts['Anwalt']||0, icon:'⚖️'},
+    {label:'Privat', val:counts['Privatperson']||0, icon:'👤'},
+    {label:'Gericht', val:counts['Gericht']||0, icon:'🏛'},
+  ].map(function(s){
+    return '<div class="stat-card"><div class="stat-val">'+s.val+'</div><div class="stat-label">'+s.icon+' '+s.label+'</div></div>';
+  }).join('');
+}
+
+function renderKontakte() {
+  var suche = (document.getElementById('searchInput').value||'').toLowerCase();
+  var filterTyp = document.getElementById('filterTyp').value;
+  var sort = document.getElementById('filterSort').value;
+
+  var liste = _kontakte.filter(function(k){
+    if (filterTyp && k.typ !== filterTyp) return false;
+    if (suche) {
+      var haystack = [k.name,k.vorname,k.firma,k.email,k.ort,k.telefon].join(' ').toLowerCase();
+      if (!haystack.includes(suche)) return false;
+    }
+    return true;
+  });
+
+  liste.sort(function(a,b){
+    if (sort==='name') return (a.name||'').localeCompare(b.name||'','de');
+    if (sort==='typ') return (a.typ||'').localeCompare(b.typ||'');
+    if (sort==='faelle') return (b.faelle_anzahl||0)-(a.faelle_anzahl||0);
+    if (sort==='neu') return new Date(b.erstellt||0)-new Date(a.erstellt||0);
+    return 0;
+  });
+
+  var grid = document.getElementById('kontakteGrid');
+  if (!liste.length) {
+    grid.innerHTML = '<div class="empty" style="grid-column:1/-1;"><div class="empty-icon">👥</div><div style="font-size:14px;font-weight:600;margin-bottom:6px;">'+(suche||filterTyp?'Keine Treffer':'Noch keine Kontakte')+'</div><div style="font-size:12px;">'+(suche||filterTyp?'Filter anpassen':'+ Neuer Kontakt oder ⬆ Importieren')+'</div></div>';
+    return;
+  }
+
+  grid.innerHTML = '';
+  liste.forEach(function(k) {
+    var tc = TYP_CONFIG[k.typ] || TYP_CONFIG['Sonstiges'];
+    var initials = ((k.vorname||'')[0]||(k.name||'')[0]||'?').toUpperCase() + ((k.name||'')[0]||'').toUpperCase();
+    if (k.vorname) initials = (k.vorname[0]||'').toUpperCase() + (k.name[0]||'').toUpperCase();
+
+    var card = document.createElement('div');
+    card.className = 'k-card';
+    card.innerHTML =
+      '<div class="k-header">'+
+        '<div class="k-avatar" style="background:'+tc.color+';color:'+tc.text+';">'+tc.icon+'</div>'+
+        '<div style="flex:1;min-width:0;">'+
+          '<div class="k-name">'+escH(k.vorname?k.vorname+' '+k.name:k.name)+'</div>'+
+          (k.firma?'<div class="k-firma">'+escH(k.firma)+'</div>':'<div class="k-firma" style="color:'+tc.text+';">'+escH(k.typ||'')+'</div>')+
+        '</div>'+
+        '<span class="k-typ" style="background:'+tc.color+';color:'+tc.text+';">'+escH(k.typ||'')+'</span>'+
+      '</div>'+
+      '<div class="k-meta">'+
+        (k.email?'<div class="k-meta-row"><span class="k-meta-icon">✉️</span><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+escH(k.email)+'</span></div>':'')+
+        (k.telefon?'<div class="k-meta-row"><span class="k-meta-icon">📞</span>'+escH(k.telefon)+'</div>':'')+
+        (k.ort?'<div class="k-meta-row"><span class="k-meta-icon">📍</span>'+escH((k.plz?k.plz+' ':'')+k.ort)+'</div>':'')+
+        (k.ansprechpartner?'<div class="k-meta-row"><span class="k-meta-icon">👤</span>'+escH(k.ansprechpartner)+'</div>':'')+
+      '</div>'+
+      '<div class="k-footer">'+
+        '<span class="k-faelle">'+(k.faelle_anzahl>0?'📂 '+k.faelle_anzahl+' Fälle':'Noch keine Fälle')+'</span>'+
+        '<div class="k-actions">'+
+          '<button class="k-btn k-btn-import" onclick="event.stopPropagation();quickImportInApp(\''+k.id+'\')">↗ Einfügen</button>'+
+          '<button class="k-btn k-btn-edit" onclick="event.stopPropagation();openEditor(\''+k.id+'\')">✎</button>'+
+          '<button class="k-btn k-btn-del" onclick="event.stopPropagation();loescheKontakt(\''+k.id+'\')">✕</button>'+
+        '</div>'+
+      '</div>';
+    grid.appendChild(card);
+  });
+}
+
+// ============================================================
+// CRUD
+// ============================================================
+function openEditor(id) {
+  _editId = id || null;
+  var m = document.getElementById('modal-editor');
+  var t = document.getElementById('editor-title');
+  if (id) {
+    var k = _kontakte.find(function(x){return x.id===id;});
+    if (!k) return;
+    t.textContent = '✎ Kontakt bearbeiten';
+    document.getElementById('e-name').value = k.name||'';
+    document.getElementById('e-vorname').value = k.vorname||'';
+    document.getElementById('e-typ').value = k.typ||'Sonstiges';
+    document.getElementById('e-firma').value = k.firma||'';
+    document.getElementById('e-strasse').value = k.strasse||'';
+    document.getElementById('e-plz').value = k.plz||'';
+    document.getElementById('e-ort').value = k.ort||'';
+    document.getElementById('e-telefon').value = k.telefon||'';
+    document.getElementById('e-email').value = k.email||'';
+    document.getElementById('e-ansprechpartner').value = k.ansprechpartner||'';
+    document.getElementById('e-notizen').value = k.notizen||'';
+  } else {
+    t.textContent = '👤 Neuer Kontakt';
+    ['e-name','e-vorname','e-firma','e-strasse','e-plz','e-ort','e-telefon','e-email','e-ansprechpartner','e-notizen'].forEach(function(fid){document.getElementById(fid).value='';});
+    document.getElementById('e-typ').value = 'Versicherung';
+  }
+  m.classList.add('open');
+  setTimeout(function(){document.getElementById('e-name').focus();},100);
+}
+
+function closeEditor() { document.getElementById('modal-editor').classList.remove('open'); _editId=null; }
+
+function speichereKontakt() {
+  var name = document.getElementById('e-name').value.trim();
+  if (!name) { showToast('Name ist Pflichtfeld','err'); return; }
+  var felder = {
+    name: name,
+    vorname: document.getElementById('e-vorname').value.trim(),
+    typ: document.getElementById('e-typ').value,
+    firma: document.getElementById('e-firma').value.trim(),
+    strasse: document.getElementById('e-strasse').value.trim(),
+    plz: document.getElementById('e-plz').value.trim(),
+    ort: document.getElementById('e-ort').value.trim(),
+    telefon: document.getElementById('e-telefon').value.trim(),
+    email: document.getElementById('e-email').value.trim(),
+    ansprechpartner: document.getElementById('e-ansprechpartner').value.trim(),
+    notizen: document.getElementById('e-notizen').value.trim(),
+  };
+  if (_editId) {
+    var k = _kontakte.find(function(x){return x.id===_editId;});
+    if (k) Object.assign(k, felder);
+  } else {
+    _kontakte.unshift(Object.assign({id:genId(), erstellt:new Date().toISOString(), faelle_anzahl:0, import_quelle:'Manuell'}, felder));
+  }
+  speichereKontakte();
+  closeEditor();
+  renderStats();
+  renderKontakte();
+  showToast(_editId?'Kontakt aktualisiert ✅':'Kontakt gespeichert ✅');
+}
+
+function loescheKontakt(id) {
+  if (!confirm('Kontakt löschen?')) return;
+  _kontakte = _kontakte.filter(function(k){return k.id!==id;});
+  speichereKontakte();
+  renderStats();
+  renderKontakte();
+  showToast('Kontakt gelöscht');
+}
+
+// ============================================================
+// IMPORT MODAL
+// ============================================================
+function openImport() { document.getElementById('modal-import').classList.add('open'); }
+function closeImport() { document.getElementById('modal-import').classList.remove('open'); }
+
+function switchImportTab(id, btn) {
+  document.querySelectorAll('.itab-pane').forEach(function(p){p.classList.remove('active');});
+  document.querySelectorAll('.itab').forEach(function(b){b.classList.remove('active');});
+  document.getElementById('itab-'+id).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ── CSV IMPORT ──
+function handleCsvDrop(e) {
+  e.preventDefault();
+  document.getElementById('csv-drop').classList.remove('drag');
+  var f = e.dataTransfer.files[0];
+  if (f) handleCsvFile(f);
+}
+
+function handleCsvFile(file) {
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    var text = e.target.result;
+    // Versuche Windows-1252 Erkennung (häufig bei GM)
+    if (text.includes('\uFFFD')) {
+      reader.readAsText(file, 'windows-1252');
+      return;
+    }
+    parseCsv(text);
+  };
+  reader.readAsText(file, 'utf-8');
+}
+
+function parseCsv(text) {
+  // Auto-Trennzeichen erkennen
+  var delim = text.split('\n')[0].includes(';') ? ';' : ',';
+  var lines = text.split('\n').map(function(l){return l.trim();}).filter(Boolean);
+  if (lines.length < 2) { showToast('CSV zu klein oder leer','err'); return; }
+
+  var headers = lines[0].split(delim).map(function(h){return h.replace(/^["']|["']$/g,'').trim().toLowerCase();});
+
+  // Spalten-Mapping (fuzzy — erkennt GM, Bauexpert, Excel)
+  var MAP = {
+    name: ['name','nachname','firmenname','firma','bezeichnung','company','organization','organisation'],
+    vorname: ['vorname','firstname','givenname','first name'],
+    firma: ['firma','unternehmen','organization','organisation','company','kanzlei'],
+    strasse: ['straße','strasse','adresse','address','street'],
+    plz: ['plz','postleitzahl','zip','postal','postcode'],
+    ort: ['ort','stadt','city','place'],
+    telefon: ['telefon','tel','telefonnummer','phone','fon','festnetz'],
+    email: ['email','e-mail','mail','e_mail'],
+    typ: ['typ','kategorie','type','category','auftraggeber_typ'],
+  };
+
+  function findCol(field) {
+    var aliases = MAP[field] || [field];
+    for (var i=0; i<aliases.length; i++) {
+      var idx = headers.indexOf(aliases[i]);
+      if (idx>=0) return idx;
+    }
+    return -1;
+  }
+
+  var colMap = {};
+  Object.keys(MAP).forEach(function(f){ colMap[f] = findCol(f); });
+
+  var rows = [];
+  for (var i=1; i<lines.length; i++) {
+    var cols = splitCsvLine(lines[i], delim);
+    var get = function(f){ var c=colMap[f]; return c>=0&&c<cols.length ? cols[c].replace(/^["']|["']$/g,'').trim() : ''; };
+    var name = get('name');
+    if (!name) continue;
+    rows.push({
+      _sel: true,
+      name: name, vorname: get('vorname'),
+      firma: get('firma'),
+      strasse: get('strasse'), plz: get('plz'), ort: get('ort'),
+      telefon: get('telefon'), email: get('email'),
+      typ: mapTyp(get('typ')),
+      import_quelle: 'CSV-Import',
+    });
+  }
+
+  _csvRows = rows;
+  renderCsvPreview();
+}
+
+function splitCsvLine(line, delim) {
+  var result = []; var cur = ''; var inQ = false;
+  for (var i=0; i<line.length; i++) {
+    var c = line[i];
+    if (c==='"') { inQ=!inQ; }
+    else if (c===delim && !inQ) { result.push(cur); cur=''; }
+    else cur+=c;
+  }
+  result.push(cur);
+  return result;
+}
+
+function mapTyp(raw) {
+  var r = (raw||'').toLowerCase();
+  if (r.includes('versicher')) return 'Versicherung';
+  if (r.includes('anwalt')||r.includes('rechts')||r.includes('kanzlei')) return 'Anwalt';
+  if (r.includes('gericht')) return 'Gericht';
+  if (r.includes('hausverwalt')) return 'Hausverwaltung';
+  if (r.includes('bauherr')||r.includes('eigentümer')||r.includes('eigentumer')) return 'Bauherr';
+  if (r.includes('privat')||r.includes('person')) return 'Privatperson';
+  return 'Sonstiges';
+}
+
+function renderCsvPreview() {
+  document.getElementById('csv-preview').style.display = 'block';
+  document.getElementById('csv-info').textContent = _csvRows.length + ' Kontakte erkannt — bitte Auswahl prüfen';
+  var sel = _csvRows.filter(function(r){return r._sel;}).length;
+  document.getElementById('csv-count-info').textContent = sel + ' von ' + _csvRows.length + ' ausgewählt';
+
+  var table = document.getElementById('csv-preview-table');
+  var headRow = '<div class="preview-row preview-head"><div></div><div>Name</div><div>Firma/Typ</div><div>E-Mail / Ort</div><div>Typ</div></div>';
+  var rows = _csvRows.map(function(r, i) {
+    return '<div class="preview-row">'+
+      '<input type="checkbox" class="preview-cb" '+(r._sel?'checked':'')+' onchange="_csvRows['+i+']._sel=this.checked;updateCsvCount()">'+
+      '<div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600;font-size:12px;color:var(--text);">'+(r.vorname?r.vorname+' ':'')+escH(r.name)+'</div>'+
+      '<div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+escH(r.firma||r.typ||'')+'</div>'+
+      '<div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+escH(r.email||r.ort||'')+'</div>'+
+      '<div><span style="font-size:10px;padding:2px 6px;border-radius:3px;background:rgba(79,142,247,.1);color:#93C5FD;">'+escH(r.typ)+'</span></div>'+
+    '</div>';
+  }).join('');
+  table.innerHTML = headRow + rows;
+}
+
+function updateCsvCount() {
+  var sel = _csvRows.filter(function(r){return r._sel;}).length;
+  document.getElementById('csv-count-info').textContent = sel + ' von ' + _csvRows.length + ' ausgewählt';
+}
+
+function csvToggleAlle(val) {
+  _csvRows.forEach(function(r){r._sel=val;});
+  renderCsvPreview();
+}
+
+function csvImportieren() {
+  var sel = _csvRows.filter(function(r){return r._sel;});
+  if (!sel.length) { showToast('Keine Kontakte ausgewählt','err'); return; }
+  var neuAngelegt = 0, doppelt = 0;
+  sel.forEach(function(r) {
+    // Duplikat-Check per Name+Email
+    var dup = _kontakte.find(function(k){
+      return k.name.toLowerCase()===r.name.toLowerCase() && (k.email===r.email||!r.email);
+    });
+    if (dup) { doppelt++; return; }
+    _kontakte.unshift(Object.assign({id:genId(), erstellt:new Date().toISOString(), faelle_anzahl:0}, r));
+    neuAngelegt++;
+  });
+  speichereKontakte();
+  closeImport();
+  resetCsvImport();
+  renderStats();
+  renderKontakte();
+  showToast(neuAngelegt+' Kontakte importiert'+(doppelt?' ('+doppelt+' Duplikate übersprungen)':'')+'✅');
+}
+
+function resetCsvImport() {
+  _csvRows = [];
+  document.getElementById('csv-preview').style.display = 'none';
+  document.getElementById('csv-file').value = '';
+}
+
+// ── VCARD IMPORT ──
+function handleVcfDrop(e) {
+  e.preventDefault();
+  document.getElementById('vcf-drop').classList.remove('drag');
+  var f = e.dataTransfer.files[0];
+  if (f) handleVcfFile(f);
+}
+
+function handleVcfFile(file) {
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e){ parseVcf(e.target.result); };
+  reader.readAsText(file, 'utf-8');
+}
+
+function parseVcf(text) {
+  var vcards = text.split(/BEGIN:VCARD/i).filter(function(v){return v.trim();});
+  var rows = [];
+  vcards.forEach(function(vc) {
+    var get = function(key) {
+      var m = vc.match(new RegExp('^'+key+'[^:]*:(.*)','im'));
+      return m ? m[1].replace(/\\n/g,'\n').replace(/\\,/g,',').trim() : '';
+    };
+    var fn = get('FN') || get('N').split(';').reverse().filter(Boolean).join(' ');
+    if (!fn) return;
+
+    var nameParts = fn.split(' ');
+    var vorname = nameParts.length>1 ? nameParts[0] : '';
+    var name = nameParts.length>1 ? nameParts.slice(1).join(' ') : fn;
+
+    var adr = get('ADR').split(';');
+    rows.push({
+      _sel: true,
+      name: name, vorname: vorname,
+      firma: get('ORG').split(';')[0],
+      strasse: adr[2]||'', plz: adr[5]||'', ort: adr[3]||'',
+      telefon: get('TEL'),
+      email: get('EMAIL'),
+      typ: 'Sonstiges',
+      import_quelle: 'vCard-Import',
+    });
+  });
+
+  _vcfRows = rows;
+  renderVcfPreview();
+}
+
+function renderVcfPreview() {
+  document.getElementById('vcf-preview').style.display='block';
+  document.getElementById('vcf-info').textContent = _vcfRows.length + ' Kontakte aus vCard erkannt';
+  var table = document.getElementById('vcf-preview-table');
+  var head = '<div class="preview-row preview-head"><div></div><div>Name</div><div>Firma</div><div>E-Mail</div><div>Tel</div></div>';
+  var rows = _vcfRows.map(function(r,i){
+    return '<div class="preview-row">'+
+      '<input type="checkbox" class="preview-cb" checked onchange="_vcfRows['+i+']._sel=this.checked">'+
+      '<div style="font-size:12px;font-weight:600;color:var(--text);">'+(r.vorname?r.vorname+' ':'')+escH(r.name)+'</div>'+
+      '<div>'+escH(r.firma||'')+'</div>'+
+      '<div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+escH(r.email||'')+'</div>'+
+      '<div>'+escH(r.telefon||'')+'</div>'+
+    '</div>';
+  }).join('');
+  table.innerHTML = head + rows;
+}
+
+function vcfImportieren() {
+  var sel = _vcfRows.filter(function(r){return r._sel;});
+  if (!sel.length) { showToast('Keine Kontakte ausgewählt','err'); return; }
+  sel.forEach(function(r){
+    _kontakte.unshift(Object.assign({id:genId(), erstellt:new Date().toISOString(), faelle_anzahl:0}, r));
+  });
+  speichereKontakte();
+  closeImport();
+  resetVcfImport();
+  renderStats();
+  renderKontakte();
+  showToast(sel.length+' Kontakte aus vCard importiert ✅');
+}
+
+function resetVcfImport() {
+  _vcfRows = [];
+  document.getElementById('vcf-preview').style.display='none';
+  document.getElementById('vcf-file').value='';
+}
+
+// ============================================================
+// QUICK-IMPORT (wird aus app-starter/pro/enterprise aufgerufen)
+// ============================================================
+function quickImportInApp(id) {
+  var k = _kontakte.find(function(x){return x.id===id;});
+  if (!k) return;
+
+  // Felder in sessionStorage für die aufrufende App
+  var payload = {
+    auftraggeber_name: (k.vorname?k.vorname+' ':'')+k.name,
+    auftraggeber_typ: k.typ,
+    auftraggeber_email: k.email||'',
+    auftraggeber_telefon: k.telefon||'',
+    ansprechpartner: k.ansprechpartner||'',
+    firma: k.firma||'',
+  };
+  sessionStorage.setItem('prova_kontakt_import', JSON.stringify(payload));
+
+  // postMessage falls Popup
+  if (window.opener && !window.opener.closed) {
+    window.opener.postMessage({type:'prova_kontakt_import', kontakt: payload}, '*');
+    window.close();
+  } else {
+    // Direktlink zurück zu letzter App
+    var lastApp = sessionStorage.getItem('prova_last_app') || 'app-starter.html';
+    showToast('Kontakt geladen — weiter zu '+lastApp.split('.')[0]);
+    setTimeout(function(){ window.location.href = lastApp; }, 800);
+  }
+}
+
+window.openQuickImport = function(returnUrl) {
+  if (returnUrl) sessionStorage.setItem('prova_last_app', returnUrl);
+  document.getElementById('qi-search').value = '';
+  renderQuickImportListe();
+  document.getElementById('modal-quickimport').classList.add('open');
+};
+
+function closeQuickImport() { document.getElementById('modal-quickimport').classList.remove('open'); }
+
+function renderQuickImportListe() {
+  var suche = (document.getElementById('qi-search').value||'').toLowerCase();
+  var gefiltert = _kontakte.filter(function(k){
+    if (!suche) return true;
+    return [(k.vorname||''),(k.name||''),(k.firma||''),(k.email||''),(k.ort||'')].join(' ').toLowerCase().includes(suche);
+  }).slice(0,30);
+
+  var liste = document.getElementById('qi-liste');
+  if (!gefiltert.length) {
+    liste.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text3);font-size:13px;">Keine Kontakte'+(suche?' gefunden':' vorhanden')+'</div>';
+    return;
+  }
+  liste.innerHTML = gefiltert.map(function(k){
+    var tc = TYP_CONFIG[k.typ]||TYP_CONFIG['Sonstiges'];
+    return '<div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 12px;display:flex;align-items:center;gap:10px;">'+
+      '<div style="width:32px;height:32px;border-radius:8px;background:'+tc.color+';color:'+tc.text+';display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;">'+tc.icon+'</div>'+
+      '<div style="flex:1;min-width:0;">'+
+        '<div style="font-size:13px;font-weight:700;color:var(--text);">'+(k.vorname?k.vorname+' ':'')+escH(k.name)+'</div>'+
+        '<div style="font-size:11px;color:var(--text3);">'+escH(k.typ+(k.ort?' · '+k.ort:'')+(k.email?' · '+k.email:''))+'</div>'+
+      '</div>'+
+      '<button onclick="quickImportInApp(\''+k.id+'\')" style="padding:6px 12px;background:var(--accent);border:none;border-radius:6px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--sans);">↗ Einfügen</button>'+
+    '</div>';
+  }).join('');
+}
+
+// ============================================================
+// HELPERS
+// ============================================================
+function escH(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function showToast(msg, type) {
+  var c = document.getElementById('toastC');
+  var t = document.createElement('div');
+  t.className = 'toast'+(type==='err'?' err':'');
+  t.textContent = msg;
+  c.appendChild(t);
+  setTimeout(function(){ t.style.animation='toastIn .3s ease reverse'; setTimeout(function(){t.remove();},280); }, 3500);
+}
+
+// ============================================================
+// INIT
+// ============================================================
+document.addEventListener('DOMContentLoaded', function(){
+  // Auth
+  if (!localStorage.getItem('prova_user')) { window.location.href='app-login.html'; return; }
+
+  // Paket Badge
+  var p = localStorage.getItem('prova_paket')||'Starter';
+  var c = {Starter:'#4f8ef7',Pro:'#f59e0b',Enterprise:'#a78bfa'}[p]||'#4f8ef7';
+  var badge = document.getElementById('topbarPaket');
+  if (badge) { badge.textContent=p; badge.setAttribute('style','background:'+c+'18;color:'+c+';border:1px solid '+c+'33'); }
+
+  ladeKontakte();
+  renderStats();
+  renderKontakte();
+
+  // URL-Parameter: ?modus=quickimport
+  var params = new URLSearchParams(window.location.search);
+  if (params.get('modus')==='quickimport') {
+    var returnUrl = params.get('return')||'app-starter.html';
+    setTimeout(function(){ window.openQuickImport(returnUrl); }, 200);
+  }
+
+  // Escape schliesst Modals
+  document.addEventListener('keydown', function(e){
+    if (e.key==='Escape') {
+      closeEditor(); closeImport(); closeQuickImport();
+    }
+  });
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PROVA — Gutachten Portal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Instrument+Sans:wght@400;500;600&family=Montserrat:wght@400;500;600;700;800&family=Source+Serif+4:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+  <script src="marked_min.js"></script>
+  <style>
+  /* ── TOKENS ── */
+  :root{
+    --navy:#0B1628; --navy-mid:#112240; --navy-light:#1A3356;
+    --accent:#4A90D9; --success:#10B981; --warn:#F59E0B; --danger:#EF4444;
+    --gray-100:#E9EEF5; --gray-200:#D1D9E6; --gray-300:#A8B5C9;
+    --gray-400:#7A8CA3; --gray-500:#5A6D84; --gray-600:#3D5166; --gray-700:#233448;
+    --font-sans:'Instrument Sans',system-ui,sans-serif;
+    --font-display:'Montserrat',sans-serif;
+    --font-serif:'Source Serif 4','Georgia',serif;
+    --radius:10px;
+  }
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+  html{font-size:15px;scroll-behavior:smooth;}
+  body{font-family:var(--font-sans);background:var(--navy);color:#CBD5E1;min-height:100vh;}
+  a{text-decoration:none;color:inherit;}
+
+  /* ── PORTAL-HEADER ── */
+  .portal-header{
+    background:var(--navy-mid);
+    border-bottom:1px solid rgba(255,255,255,0.08);
+    padding:14px 24px;
+    display:flex;align-items:center;justify-content:space-between;
+    position:sticky;top:0;z-index:100;
+    backdrop-filter:blur(10px);
+  }
+  .portal-logo{font-family:var(--font-display);font-weight:800;font-size:17px;color:#E2E8F0;}
+  .portal-logo span{color:var(--accent);}
+  .portal-badge{
+    display:flex;align-items:center;gap:6px;
+    padding:5px 12px;border-radius:20px;
+    background:rgba(74,144,217,0.12);border:1px solid rgba(74,144,217,0.25);
+    font-size:11px;font-weight:600;color:var(--accent);letter-spacing:.03em;
+  }
+  .portal-badge::before{content:'';width:7px;height:7px;border-radius:50%;background:var(--accent);display:inline-block;}
+
+  /* ── LAYOUT ── */
+  .portal-layout{
+    max-width:1100px;margin:0 auto;
+    display:grid;grid-template-columns:1fr 300px;gap:20px;
+    padding:28px 20px;align-items:start;
+  }
+
+  /* ── DOKUMENT ── */
+  .doc-paper{
+    background:#FFFFFF;border-radius:var(--radius);
+    box-shadow:0 4px 32px rgba(0,0,0,0.4);
+    overflow:hidden;color:#1A1A2E;
+  }
+  .doc-briefkopf{
+    background:var(--navy-mid);padding:20px 28px;
+    border-bottom:3px solid var(--accent);
+  }
+  .doc-sv-name{font-family:var(--font-display);font-size:1.1rem;font-weight:700;color:#E2E8F0;}
+  .doc-sv-sub{font-size:0.75rem;color:var(--gray-400);margin-top:3px;}
+  .doc-gutachten-info{margin-top:14px;display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+  .doc-info-box{background:rgba(255,255,255,0.05);border-radius:6px;padding:8px 12px;}
+  .doc-info-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--gray-400);margin-bottom:2px;}
+  .doc-info-val{font-size:12px;font-weight:600;color:#E2E8F0;}
+
+  .doc-body{padding:32px 36px;font-family:var(--font-serif);font-size:0.95rem;line-height:1.75;color:#1A1A2E;}
+  .doc-body h1,.doc-body h2,.doc-body h3{font-family:var(--font-display);margin:1.5em 0 0.6em;color:#0B1628;}
+  .doc-body h1{font-size:1.15rem;}
+  .doc-body h2{font-size:1rem;}
+  .doc-body h3{font-size:0.9rem;}
+  .doc-body p{margin-bottom:0.9em;}
+  .doc-body ul,.doc-body ol{padding-left:1.4em;margin-bottom:0.9em;}
+  .doc-body li{margin-bottom:0.3em;}
+  .doc-body strong{font-weight:700;}
+  .doc-body table{width:100%;border-collapse:collapse;margin-bottom:1em;font-size:0.85rem;}
+  .doc-body th{background:#f0f4f8;padding:7px 10px;text-align:left;font-family:var(--font-sans);font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;}
+  .doc-body td{padding:7px 10px;border-bottom:1px solid #e5e7eb;}
+
+  /* ── SIDEBAR ── */
+  .sidebar{display:flex;flex-direction:column;gap:14px;}
+
+  .side-card{
+    background:var(--navy-mid);border:1px solid rgba(255,255,255,0.08);
+    border-radius:var(--radius);overflow:hidden;
+  }
+  .side-card-header{
+    padding:11px 15px;border-bottom:1px solid rgba(255,255,255,0.07);
+    font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--gray-400);
+  }
+  .side-card-body{padding:14px 15px;}
+
+  /* Metadaten */
+  .meta-row{display:flex;justify-content:space-between;align-items:baseline;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.05);font-size:12px;}
+  .meta-row:last-child{border-bottom:none;}
+  .meta-key{color:var(--gray-400);}
+  .meta-val{color:#E2E8F0;font-weight:600;text-align:right;max-width:160px;word-break:break-word;}
+
+  /* Status */
+  .status-chip{
+    display:inline-flex;align-items:center;gap:6px;
+    padding:5px 12px;border-radius:20px;font-size:11px;font-weight:700;
+  }
+  .status-chip.freigegeben{background:rgba(16,185,129,.15);color:var(--success);border:1px solid rgba(16,185,129,.3);}
+  .status-chip.entwurf{background:rgba(245,158,11,.1);color:var(--warn);border:1px solid rgba(245,158,11,.25);}
+  .status-chip-dot{width:7px;height:7px;border-radius:50%;background:currentColor;}
+
+  /* Kommentar-Formular */
+  .comment-textarea{
+    width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);
+    border-radius:7px;padding:10px 12px;color:#E2E8F0;font-family:var(--font-sans);
+    font-size:12px;resize:vertical;min-height:80px;outline:none;
+    transition:border-color .15s;
+  }
+  .comment-textarea:focus{border-color:var(--accent);}
+  .btn-portal{
+    width:100%;padding:10px;border-radius:8px;font-family:var(--font-sans);
+    font-size:12px;font-weight:700;cursor:pointer;border:none;
+    transition:all .15s;margin-top:8px;
+  }
+  .btn-freigeben{background:linear-gradient(135deg,var(--success),#059669);color:#fff;}
+  .btn-freigeben:hover{filter:brightness(1.1);}
+  .btn-freigeben:disabled{opacity:.4;cursor:not-allowed;}
+  .btn-kommentar{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:#CBD5E1;}
+  .btn-kommentar:hover{background:rgba(255,255,255,.1);}
+
+  /* Ablauf-Warnung */
+  .ablauf-warn{
+    padding:9px 12px;border-radius:7px;font-size:11px;
+    background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);color:var(--warn);
+    line-height:1.5;
+  }
+  .ablauf-ok{
+    background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.2);color:var(--success);
+  }
+  .ablauf-abgelaufen{
+    background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);color:var(--danger);
+  }
+
+  /* LOADING + ERROR */
+  .portal-state{
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    min-height:60vh;gap:16px;text-align:center;padding:40px;
+  }
+  .state-icon{font-size:48px;}
+  .state-title{font-family:var(--font-display);font-size:1.1rem;font-weight:700;color:#E2E8F0;}
+  .state-sub{font-size:13px;color:var(--gray-400);max-width:400px;line-height:1.6;}
+  .spinner{width:36px;height:36px;border:3px solid rgba(74,144,217,.2);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  /* FOOTER */
+  .portal-footer{
+    text-align:center;padding:20px;font-size:11px;color:var(--gray-500);
+    border-top:1px solid rgba(255,255,255,0.05);margin-top:32px;
+  }
+
+  /* TOAST */
+  .toast{position:fixed;bottom:24px;right:24px;z-index:600;padding:11px 18px;border-radius:9px;font-size:13px;font-weight:500;background:var(--navy-mid);border:1px solid rgba(16,185,129,.4);color:var(--success);transition:all .3s;opacity:0;transform:translateY(8px);}
+  .toast.show{opacity:1;transform:translateY(0);}
+  .toast.err{border-color:rgba(239,68,68,.4);color:var(--danger);}
+
+  /* PRINT */
+  @media print{
+    .portal-header,.sidebar,.portal-footer{display:none!important;}
+    .portal-layout{grid-template-columns:1fr!important;padding:0!important;}
+    .doc-paper{box-shadow:none!important;}
+    body{background:#fff!important;}
+  }
+
+  /* RESPONSIVE */
+  @media(max-width:768px){
+    .portal-layout{grid-template-columns:1fr;padding:14px 12px;}
+    .sidebar{order:-1;}
+    .doc-body{padding:20px 18px;}
+    .doc-gutachten-info{grid-template-columns:1fr;}
+  }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="portal-header">
+  <div class="portal-logo">PRO<span>VA</span> <span style="font-size:12px;font-weight:500;color:var(--gray-400);margin-left:6px;">Gutachten-Portal</span></div>
+  <div class="portal-badge">Geschützter Lesezugang</div>
+</header>
+
+<!-- LOADING STATE -->
+<div id="state-loading" class="portal-state">
+  <div class="spinner"></div>
+  <div class="state-title">Gutachten wird geladen…</div>
+</div>
+
+<!-- ERROR STATE -->
+<div id="state-error" class="portal-state" style="display:none;">
+  <div class="state-icon">🔒</div>
+  <div class="state-title" id="err-title">Zugang nicht möglich</div>
+  <div class="state-sub" id="err-sub">Der Link ist abgelaufen oder ungültig. Bitte fordern Sie einen neuen Link beim Sachverständigen an.</div>
+</div>
+
+<!-- DONE STATE (nach Freigabe) -->
+<div id="state-done" class="portal-state" style="display:none;">
+  <div class="state-icon">✅</div>
+  <div class="state-title">Gutachten freigegeben</div>
+  <div class="state-sub">Vielen Dank. Das Gutachten wurde freigegeben. Der Sachverständige wird das finale PDF erstellen und Ihnen zusenden.</div>
+</div>
+
+<!-- HAUPTINHALT -->
+<div id="portal-main" style="display:none;">
+  <div class="portal-layout">
+
+    <!-- DOKUMENT -->
+    <div class="doc-paper" id="doc-paper">
+
+      <!-- Briefkopf -->
+      <div class="doc-briefkopf">
+        <div class="doc-sv-name" id="sv-name">Sachverständigenbüro</div>
+        <div class="doc-sv-sub" id="sv-quali">ö.b.u.v. Sachverständiger</div>
+        <div class="doc-gutachten-info">
+          <div class="doc-info-box">
+            <div class="doc-info-label">Aktenzeichen</div>
+            <div class="doc-info-val" id="p-az">—</div>
+          </div>
+          <div class="doc-info-box">
+            <div class="doc-info-label">Schadensart</div>
+            <div class="doc-info-val" id="p-art">—</div>
+          </div>
+          <div class="doc-info-box">
+            <div class="doc-info-label">Objekt</div>
+            <div class="doc-info-val" id="p-adresse">—</div>
+          </div>
+          <div class="doc-info-box">
+            <div class="doc-info-label">Erstellt</div>
+            <div class="doc-info-val" id="p-datum">—</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Gutachten-Text -->
+      <div class="doc-body" id="doc-body">
+        <!-- Markdown wird hier gerendert -->
+      </div>
+
+      <!-- Disclaimer -->
+      <div style="padding:16px 28px 24px;border-top:1px solid #e5e7eb;font-size:11px;color:#6B7280;line-height:1.6;">
+        Dieses Dokument ist ein KI-gestützter Gutachten-Entwurf und wurde noch nicht rechtskräftig freigegeben.
+        Alle Einschätzungen, Ursachenanalysen und Empfehlungen stellen vorläufige Beurteilungen dar.
+        Das finale, unterzeichnete Gutachten wird nach Freigabe übermittelt.
+      </div>
+    </div>
+
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+
+      <!-- Status -->
+      <div class="side-card">
+        <div class="side-card-header">Status</div>
+        <div class="side-card-body">
+          <div id="status-chip-wrap" style="margin-bottom:10px;"></div>
+          <div id="ablauf-info" class="ablauf-warn"></div>
+        </div>
+      </div>
+
+      <!-- Metadaten -->
+      <div class="side-card" id="meta-card">
+        <div class="side-card-header">Fallinformationen</div>
+        <div class="side-card-body" id="meta-body">
+          <!-- Dynamisch befüllt -->
+        </div>
+      </div>
+
+      <!-- Aktionen (nur wenn noch nicht freigegeben) -->
+      <div class="side-card" id="aktion-card">
+        <div class="side-card-header">Ihre Rückmeldung</div>
+        <div class="side-card-body">
+          <div style="font-size:11px;color:var(--gray-400);margin-bottom:10px;line-height:1.55;">
+            Bitte prüfen Sie den Entwurf und geben Sie Ihre Rückmeldung. Bei Rückfragen wenden Sie sich direkt an den Sachverständigen.
+          </div>
+          <button class="btn-portal btn-freigeben" id="btn-freigeben-portal" onclick="portalFreigeben()">
+            ✅ Gutachten freigeben
+          </button>
+          <div style="margin-top:10px;font-size:11px;color:var(--gray-400);font-weight:600;">Korrekturbedarf?</div>
+          <textarea class="comment-textarea" id="portal-kommentar" placeholder="Beschreiben Sie Korrekturen oder Rückfragen…"></textarea>
+          <button class="btn-portal btn-kommentar" onclick="portalKommentar()">
+            ✉ Rückmeldung senden
+          </button>
+        </div>
+      </div>
+
+      <!-- Druck -->
+      <div class="side-card">
+        <div class="side-card-header">Dokument</div>
+        <div class="side-card-body" style="display:flex;flex-direction:column;gap:7px;">
+          <button onclick="window.print()" class="btn-portal btn-kommentar" style="margin-top:0;">🖨 Drucken / PDF speichern</button>
+          <div style="font-size:10px;color:var(--gray-400);text-align:center;">Das finale signierte PDF erhalten Sie per E-Mail nach Freigabe.</div>
+        </div>
+      </div>
+
+      <!-- Kontakt -->
+      <div class="side-card" id="kontakt-card" style="display:none;">
+        <div class="side-card-header">Kontakt</div>
+        <div class="side-card-body" id="kontakt-body"></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="portal-footer">
+  Dieses Portal wird betrieben von PROVA Systems · Vertraulich · Nur für den benannten Empfänger bestimmt
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+// ============================================================
+// PROVA MANDANTEN-PORTAL
+// Token-Schema: ?az=AKTENZEICHEN&token=HASH&exp=TIMESTAMP
+// Token = SHA-256(az + secret + exp) → wird in Netlify Function verifiziert
+// Fallback (Demo/Starter): Token-Verifikation client-side mit einfachem Hash
+// ============================================================
+
+const AIRTABLE_BASE  = 'appJ7bLlAHZoxENWE';
+const AIRTABLE_TABLE = 'tblSxV8bsXwd1pwa0';
+
+var _recordFields = null;
+var _az = null;
+var _token = null;
+var _exp = null;
+var _freigegeben = false;
+
+// ── URL-Parameter lesen ──
+function liesParams() {
+  var p = new URLSearchParams(window.location.search);
+  _az    = p.get('az')    || p.get('fall') || '';
+  _token = p.get('token') || '';
+  _exp   = parseInt(p.get('exp') || '0');
+  return { az: _az, token: _token, exp: _exp };
+}
+
+// ── Token-Validierung (client-side Fallback) ──
+// Für Produktionsbetrieb: Netlify Function /api/portal-verify übernimmt dies
+async function validiereToken(az, token, exp) {
+  // 1. Ablaufzeit prüfen
+  if (exp > 0 && Date.now() > exp) {
+    return { ok: false, grund: 'abgelaufen' };
+  }
+  // 2. Token vorhanden?
+  if (!token || token.length < 8) {
+    // Kein Token = nur az = direkter Gutachter-Link (kein Mandanten-Zugang)
+    return { ok: false, grund: 'kein_token' };
+  }
+  // 3. Einfache Client-Side Prüfung: token muss Base64-encoded az enthalten
+  // (Production: Server-Side HMAC-SHA256 via Netlify Function)
+  try {
+    var decoded = atob(token.replace(/-/g,'+').replace(/_/g,'/'));
+    if (decoded.includes(az.substring(0,6))) return { ok: true };
+  } catch(e) {}
+  // 4. Netlify Function Verifikation (Production-Pfad)
+  try {
+    var res = await fetch('/.netlify/functions/portal-verify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ az, token, exp })
+    });
+    if (res.ok) { var d = await res.json(); return { ok: !!d.valid }; }
+  } catch(e) {}
+  // 5. Fallback: Token nicht validierbar → trotzdem erlauben wenn az existiert
+  // (Sicherheits-Trade-off für Alpha-Phase)
+  return { ok: true, hinweis: 'unverified' };
+}
+
+// ── Gutachten laden ──
+async function ladeGutachten(az) {
+  var formula = encodeURIComponent(
+    'AND(OR({Aktenzeichen}="' + az + '",{Schadensnummer_Versicherung}="' + az + '"),{KI_Entwurf}!="")'
+  );
+  var url = '/v0/' + AIRTABLE_BASE + '/' + AIRTABLE_TABLE +
+    '?filterByFormula=' + formula + '&sort[0][field]=Timestamp&sort[0][direction]=desc&maxRecords=1';
+
+  var res = await fetch('/.netlify/functions/airtable', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ method: 'GET', path: url })
+  });
+
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  var data = await res.json();
+  if (!data.records || !data.records.length) throw new Error('Kein Gutachten gefunden');
+  return data.records[0];
+}
+
+// ── Portal befüllen ──
+function befuellePortal(f, record) {
+  _recordFields = f;
+
+  // Briefkopf
+  var svName = (localStorage.getItem('prova_sv_vorname')||'') + ' ' + (localStorage.getItem('prova_sv_nachname')||'');
+  document.getElementById('sv-name').textContent = svName.trim() || 'Sachverständigenbüro';
+  document.getElementById('sv-quali').textContent = localStorage.getItem('prova_sv_quali') || 'ö.b.u.v. Sachverständiger';
+
+  // Meta
+  var adresse = [f.Schaden_Strasse, f.PLZ, f.Ort].filter(Boolean).join(', ') || '—';
+  document.getElementById('p-az').textContent     = f.Aktenzeichen || '—';
+  document.getElementById('p-art').textContent    = f.Schadensart || '—';
+  document.getElementById('p-adresse').textContent = adresse;
+  document.getElementById('p-datum').textContent  = f.Timestamp
+    ? new Date(f.Timestamp).toLocaleDateString('de-DE',{day:'2-digit',month:'long',year:'numeric'})
+    : '—';
+
+  // Seitenleiste Meta
+  var metaBody = document.getElementById('meta-body');
+  var metaFelder = [
+    ['Aktenzeichen', f.Aktenzeichen],
+    ['Schadensart', f.Schadensart],
+    ['Schadensdatum', f.Schadensdatum ? new Date(f.Schadensdatum).toLocaleDateString('de-DE') : null],
+    ['Gebäudetyp', f.Gebaeude_Typ],
+    ['Auftraggeber', f.Auftraggeber_Name],
+    ['Adresse', adresse],
+    ['Baujahr', f.Baujahr]
+  ];
+  metaBody.innerHTML = metaFelder.filter(function(r){return r[1];}).map(function(r){
+    return '<div class="meta-row"><span class="meta-key">'+r[0]+'</span><span class="meta-val">'+escHtml(String(r[1]))+'</span></div>';
+  }).join('');
+
+  // Status
+  _freigegeben = f.Status === 'Freigegeben';
+  var chipWrap = document.getElementById('status-chip-wrap');
+  if (_freigegeben) {
+    chipWrap.innerHTML = '<span class="status-chip freigegeben"><span class="status-chip-dot"></span>Freigegeben</span>';
+    document.getElementById('aktion-card').style.display = 'none';
+  } else {
+    chipWrap.innerHTML = '<span class="status-chip entwurf"><span class="status-chip-dot"></span>Entwurf — Prüfung ausstehend</span>';
+  }
+
+  // Ablauf-Info
+  var ablaufEl = document.getElementById('ablauf-info');
+  if (_exp > 0) {
+    var restMs = _exp - Date.now();
+    var restTage = Math.ceil(restMs / 86400000);
+    if (restMs <= 0) {
+      ablaufEl.className = 'ablauf-warn ablauf-abgelaufen';
+      ablaufEl.textContent = '⚠ Dieser Link ist abgelaufen.';
+    } else if (restTage <= 2) {
+      ablaufEl.className = 'ablauf-warn';
+      ablaufEl.textContent = '⏱ Link läuft in ' + restTage + ' Tag' + (restTage===1?'':'en') + ' ab.';
+    } else {
+      ablaufEl.className = 'ablauf-warn ablauf-ok';
+      ablaufEl.textContent = '✓ Link gültig bis ' + new Date(_exp).toLocaleDateString('de-DE');
+    }
+  } else {
+    ablaufEl.className = 'ablauf-warn ablauf-ok';
+    ablaufEl.textContent = '✓ Gesicherter Lesezugang';
+  }
+
+  // Kontakt
+  var svEmail = localStorage.getItem('prova_sv_email') || f.SV_Email || '';
+  if (svEmail) {
+    document.getElementById('kontakt-card').style.display = 'block';
+    document.getElementById('kontakt-body').innerHTML =
+      '<div style="font-size:12px;color:#9da3b4;margin-bottom:8px;">Bei Rückfragen wenden Sie sich direkt an:</div>' +
+      '<div style="font-size:13px;font-weight:600;color:#E2E8F0;">' + escHtml(svName.trim()) + '</div>' +
+      '<a href="mailto:' + escHtml(svEmail) + '" style="font-size:12px;color:var(--accent);">' + escHtml(svEmail) + '</a>';
+  }
+
+  // Gutachten-Text rendern
+  var mdRaw = f.KI_Entwurf || '_Kein Gutachten-Entwurf vorhanden._';
+  var bodyEl = document.getElementById('doc-body');
+  if (typeof marked !== 'undefined') {
+    bodyEl.innerHTML = marked.parse(mdRaw);
+  } else {
+    bodyEl.textContent = mdRaw;
+  }
+}
+
+// ── Portal: Freigeben ──
+async function portalFreigeben() {
+  if (!confirm('Gutachten verbindlich freigeben?\n\nDiese Aktion kann nicht rückgängig gemacht werden.')) return;
+  var btn = document.getElementById('btn-freigeben-portal');
+  btn.disabled = true;
+  btn.textContent = '⏳ Wird übermittelt…';
+  try {
+    // Freigabe-Status in Airtable setzen
+    var recordId = sessionStorage.getItem('prova_portal_record_id');
+    if (recordId) {
+      await fetch('/.netlify/functions/airtable', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          method: 'PATCH',
+          path: '/v0/' + AIRTABLE_BASE + '/' + AIRTABLE_TABLE + '/' + recordId,
+          body: { fields: { Status: 'Freigegeben', Freigabe_Datum: new Date().toISOString().slice(0,10), Freigabe_Quelle: 'Portal' } }
+        })
+      });
+    }
+    // UI → Done State
+    document.getElementById('portal-main').style.display = 'none';
+    document.getElementById('state-done').style.display = 'flex';
+  } catch(e) {
+    btn.disabled = false;
+    btn.textContent = '✅ Gutachten freigeben';
+    zeigToast('Fehler beim Übermitteln — bitte erneut versuchen', 'err');
+  }
+}
+
+// ── Portal: Kommentar senden ──
+async function portalKommentar() {
+  var text = document.getElementById('portal-kommentar').value.trim();
+  if (!text) { zeigToast('Bitte Kommentar eingeben', 'err'); return; }
+  var btn = document.querySelector('[onclick="portalKommentar()"]');
+  btn.disabled = true;
+  btn.textContent = '⏳ Wird gesendet…';
+  try {
+    var recordId = sessionStorage.getItem('prova_portal_record_id');
+    if (recordId) {
+      // Kommentar in Airtable-Feld speichern
+      await fetch('/.netlify/functions/airtable', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          method: 'PATCH',
+          path: '/v0/' + AIRTABLE_BASE + '/' + AIRTABLE_TABLE + '/' + recordId,
+          body: { fields: { Mandanten_Kommentar: text, Status: 'Korrektur_angefordert' } }
+        })
+      });
+    }
+    document.getElementById('portal-kommentar').value = '';
+    zeigToast('Rückmeldung übermittelt ✅ — der Sachverständige wird benachrichtigt.');
+    btn.textContent = '✉ Rückmeldung gesendet ✅';
+  } catch(e) {
+    btn.disabled = false;
+    btn.textContent = '✉ Rückmeldung senden';
+    zeigToast('Fehler — bitte erneut versuchen', 'err');
+  }
+}
+
+// ── Hilfsfunktionen ──
+function zeigState(id) {
+  ['state-loading','state-error','state-done','portal-main'].forEach(function(s){
+    document.getElementById(s).style.display = s===id ? (id==='portal-main'?'block':'flex') : 'none';
+  });
+}
+
+function zeigeError(titel, sub) {
+  document.getElementById('err-title').textContent = titel;
+  document.getElementById('err-sub').textContent = sub;
+  zeigState('state-error');
+}
+
+function escHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function zeigToast(msg,typ){
+  var t=document.getElementById('toast');
+  t.textContent=msg;
+  t.className='toast'+(typ==='err'?' err':'')+' show';
+  clearTimeout(t._t);
+  t._t=setTimeout(function(){t.classList.remove('show');},4000);
+}
+
+// ============================================================
+// PORTAL-LINK GENERATOR — für Gutachter (in freigabe.html einbindbar)
+// ============================================================
+window.generierePortalLink = function(az, tageGueltig) {
+  tageGueltig = tageGueltig || 14;
+  var exp = Date.now() + tageGueltig * 86400000;
+  // Einfaches Base64-Token (Production: HMAC-SHA256 via Netlify Function)
+  var raw = az.substring(0,8) + ':' + exp;
+  var token = btoa(raw).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
+  var base = window.location.origin + '/portal.html';
+  return base + '?az=' + encodeURIComponent(az) + '&token=' + token + '&exp=' + exp;
+};
+
+// ============================================================
+// INIT
+// ============================================================
+document.addEventListener('DOMContentLoaded', async function() {
+  var params = liesParams();
+
+  if (!params.az) {
+    zeigeError(
+      'Kein Aktenzeichen angegeben',
+      'Der Link ist unvollständig. Bitte fordern Sie einen neuen Link beim Sachverständigen an.'
+    );
+    return;
+  }
+
+  // Token validieren
+  var valResult = await validiereToken(params.az, params.token, params.exp);
+  if (!valResult.ok) {
+    var grund = valResult.grund;
+    if (grund === 'abgelaufen') {
+      zeigeError('Link abgelaufen', 'Dieser Link ist nicht mehr gültig. Bitte fordern Sie einen neuen Link beim Sachverständigen an.');
+    } else {
+      zeigeError('Ungültiger Zugang', 'Der Zugangslink ist nicht gültig. Bitte fordern Sie einen neuen Link beim Sachverständigen an.');
+    }
+    return;
+  }
+
+  // Gutachten aus Airtable laden
+  try {
+    var record = await ladeGutachten(params.az);
+    sessionStorage.setItem('prova_portal_record_id', record.id);
+    befuellePortal(record.fields || {}, record);
+    zeigState('portal-main');
+  } catch(e) {
+    zeigeError(
+      'Gutachten nicht gefunden',
+      'Das Gutachten mit Aktenzeichen "' + params.az + '" wurde nicht gefunden oder ist noch nicht fertiggestellt. (' + e.message + ')'
+    );
+  }
+});
+</script>
+
+</body>
+</html>

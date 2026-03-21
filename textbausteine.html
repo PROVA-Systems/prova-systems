@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Textbausteine · PROVA</title>
+<style>
+:root{
+  --bg:#0b1220;--bg2:#111827;--bg3:#161f30;--surface:#1c2537;--surface2:#222d42;
+  --border:rgba(255,255,255,0.08);--border2:rgba(255,255,255,0.14);
+  --text:#eef0f6;--text2:#9aa5bc;--text3:#5a6680;
+  --accent:#4f8ef7;--accent2:#3a7be0;
+  --green:#10b981;--green-bg:rgba(16,185,129,0.1);--green-border:rgba(16,185,129,0.25);
+  --warn:#f59e0b;--warn-bg:rgba(245,158,11,0.1);--warn-border:rgba(245,158,11,0.25);
+  --red:#ef4444;--red-bg:rgba(239,68,68,0.1);--red-border:rgba(239,68,68,0.25);
+  --purple:#8b5cf6;--purple-bg:rgba(139,92,246,0.1);--purple-border:rgba(139,92,246,0.25);
+  --sans:'Instrument Sans',system-ui,sans-serif;
+  --nav-h:52px;--bot-h:60px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html{font-size:16px;}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;padding-bottom:calc(var(--bot-h)+16px);}
+input,select,textarea{font-size:max(16px,1em);}
+a{text-decoration:none;color:inherit;}
+
+/* NAV */
+.topbar{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 20px;height:var(--nav-h);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+.logo{font-weight:800;font-size:18px;color:var(--text);letter-spacing:-.02em;}
+.logo span{color:var(--accent);}
+.topnav{display:flex;gap:2px;}
+.topnav a{padding:6px 12px;border-radius:6px;color:var(--text3);font-size:13px;font-weight:500;transition:all .15s;min-height:44px;display:inline-flex;align-items:center;white-space:nowrap;}
+.topnav a:hover{color:var(--text2);background:rgba(255,255,255,.04);}
+.topnav a.active{color:var(--accent);background:rgba(79,142,247,.1);}
+.paket-badge{font-size:11px;font-weight:600;padding:3px 10px;border-radius:10px;}
+.burger{display:none;flex-direction:column;gap:4px;background:none;border:none;cursor:pointer;padding:8px;}
+.burger span{width:20px;height:2px;background:var(--text2);border-radius:2px;display:block;}
+
+/* DRAWER */
+.drawer-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;}
+.drawer-overlay.open{display:block;}
+.drawer{position:fixed;top:0;right:-280px;width:280px;height:100%;background:var(--bg2);border-left:1px solid var(--border);z-index:300;transition:right .25s;display:flex;flex-direction:column;}
+.drawer.open{right:0;}
+.drawer-header{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border);}
+.drawer-close{background:none;border:none;color:var(--text3);font-size:18px;cursor:pointer;}
+.drawer-nav{display:flex;flex-direction:column;padding:12px;flex:1;overflow-y:auto;}
+.drawer-nav a{display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:8px;color:var(--text2);font-size:13px;transition:all .12s;}
+.drawer-nav a:hover{color:var(--text);background:rgba(255,255,255,.04);}
+.drawer-footer{padding:12px 18px;border-top:1px solid var(--border);}
+.dnav-icon{font-size:15px;width:20px;text-align:center;}
+
+/* BOTTOM NAV */
+.bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;height:var(--bot-h);background:var(--bg2);border-top:1px solid var(--border);z-index:100;align-items:stretch;}
+.bn-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:var(--text3);font-size:10px;font-weight:500;padding:6px 4px;}
+.bn-item.active{color:var(--accent);}
+.bn-icon{font-size:18px;}
+
+/* MAIN LAYOUT */
+.main{max-width:1000px;margin:0 auto;padding:24px 20px;}
+.page-header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:20px;flex-wrap:wrap;}
+.page-title{font-size:1.3rem;font-weight:800;color:var(--text);}
+.page-sub{font-size:12px;color:var(--text3);margin-top:4px;}
+
+/* 2-SPALTEN LAYOUT */
+.tb-layout{display:grid;grid-template-columns:280px 1fr;gap:16px;align-items:start;}
+
+/* SIDEBAR */
+.sidebar{background:var(--bg2);border:1px solid var(--border2);border-radius:12px;overflow:hidden;position:sticky;top:calc(var(--nav-h)+16px);}
+.sidebar-search{padding:12px;border-bottom:1px solid var(--border);}
+.sidebar-search input{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:7px;padding:8px 12px;color:var(--text);font-family:var(--sans);font-size:13px;outline:none;}
+.sidebar-search input:focus{border-color:var(--accent);}
+.kat-list{padding:8px;}
+.kat-btn{width:100%;padding:9px 12px;border-radius:7px;background:none;border:none;color:var(--text2);font-size:13px;font-weight:500;cursor:pointer;text-align:left;font-family:var(--sans);transition:all .12s;display:flex;align-items:center;justify-content:space-between;gap:6px;}
+.kat-btn:hover{color:var(--text);background:rgba(255,255,255,.04);}
+.kat-btn.active{color:var(--accent);background:rgba(79,142,247,.1);}
+.kat-count{font-size:10px;font-weight:700;padding:1px 6px;border-radius:10px;background:var(--surface2);color:var(--text3);}
+.sidebar-info{padding:12px;border-top:1px solid var(--border);font-size:11px;color:var(--text3);line-height:1.5;}
+.sidebar-info strong{color:var(--text2);}
+
+/* BAUSTEIN-GRID */
+.tb-grid{display:flex;flex-direction:column;gap:10px;}
+.tb-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;overflow:hidden;transition:border-color .15s;}
+.tb-card:hover{border-color:var(--border2);}
+.tb-card-header{padding:11px 14px;display:flex;align-items:center;justify-content:space-between;gap:8px;cursor:pointer;}
+.tb-card-title{font-size:13px;font-weight:700;color:var(--text);flex:1;}
+.tb-card-kat{font-size:10px;padding:2px 7px;border-radius:4px;font-weight:600;}
+.tb-card-actions{display:flex;gap:4px;}
+.tb-btn{padding:5px 10px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;border:none;font-family:var(--sans);transition:all .15s;}
+.tb-btn-insert{background:var(--accent);color:#fff;}
+.tb-btn-insert:hover{background:var(--accent2);}
+.tb-btn-edit{background:var(--surface2);color:var(--text2);border:1px solid var(--border2);}
+.tb-btn-edit:hover{color:var(--text);border-color:var(--border2);}
+.tb-btn-del{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border);}
+.tb-preview{padding:10px 14px 12px;border-top:1px solid var(--border);font-size:12px;color:var(--text2);line-height:1.65;display:none;background:var(--bg3);}
+.tb-preview.open{display:block;}
+.tb-placeholder{display:inline-block;background:rgba(79,142,247,.2);border:1px solid rgba(79,142,247,.35);border-radius:3px;padding:0 4px;font-size:11px;font-weight:600;color:var(--accent);font-family:monospace;}
+
+/* EDITOR MODAL */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:400;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px);}
+.modal-bg.open{display:flex;}
+.modal{background:var(--bg2);border:1px solid var(--border2);border-radius:14px;max-width:640px;width:100%;max-height:92vh;overflow-y:auto;padding:24px;}
+.modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;}
+.modal-title{font-size:15px;font-weight:700;color:var(--text);}
+.modal-close{background:none;border:none;color:var(--text3);font-size:20px;cursor:pointer;}
+.form-group{margin-bottom:14px;}
+.form-label{display:block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);margin-bottom:5px;}
+.form-input,.form-select{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:7px;padding:9px 12px;color:var(--text);font-family:var(--sans);font-size:13px;outline:none;transition:border-color .15s;}
+.form-input:focus,.form-select:focus{border-color:var(--accent);}
+.form-textarea{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:7px;padding:10px 12px;color:var(--text);font-family:var(--sans);font-size:13px;outline:none;resize:vertical;min-height:140px;line-height:1.6;transition:border-color .15s;}
+.form-textarea:focus{border-color:var(--accent);}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:16px;}
+.btn-primary{padding:9px 18px;border-radius:8px;background:var(--accent);color:#fff;font-size:13px;font-weight:600;cursor:pointer;border:none;font-family:var(--sans);}
+.btn-ghost{padding:9px 18px;border-radius:8px;background:rgba(255,255,255,.05);border:1px solid var(--border2);color:var(--text2);font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans);}
+
+/* PLATZHALTER-HILFE */
+.ph-bar{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
+.ph-chip{padding:4px 9px;border-radius:5px;background:rgba(79,142,247,.1);border:1px solid rgba(79,142,247,.25);color:var(--accent);font-size:11px;font-weight:600;cursor:pointer;font-family:monospace;transition:all .15s;}
+.ph-chip:hover{background:rgba(79,142,247,.2);}
+
+/* EMPTY STATE */
+.empty{text-align:center;padding:48px 20px;color:var(--text3);}
+.empty-icon{font-size:36px;margin-bottom:10px;}
+
+/* LIMIT-BADGE */
+.limit-bar{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--warn-bg);border:1px solid var(--warn-border);border-radius:8px;margin-bottom:14px;font-size:12px;color:var(--warn);}
+
+/* TOAST */
+.toast-c{position:fixed;bottom:80px;right:20px;z-index:600;display:flex;flex-direction:column;gap:8px;}
+.toast{padding:10px 16px;border-radius:8px;font-size:13px;font-weight:500;background:var(--bg2);border:1px solid rgba(16,185,129,.4);color:var(--green);animation:toastIn .3s ease;pointer-events:none;}
+.toast.err{border-color:var(--red-border);color:var(--red);}
+@keyframes toastIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+
+@media(max-width:900px){.topnav a{font-size:0;}.topnav a::after{content:attr(data-short);font-size:12px;font-family:var(--sans);font-weight:500;}.paket-badge{display:none;}}
+@media(max-width:700px){.tb-layout{grid-template-columns:1fr;}.sidebar{position:static;}.topnav{display:none;}.burger{display:flex;}.bottom-nav{display:flex;}body{padding-bottom:var(--bot-h);}.topbar{padding:0 14px;height:48px;}.main{padding:14px 12px;}}
+::-webkit-scrollbar{width:3px;}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div style="display:flex;align-items:center;gap:12px;">
+    <a href="dashboard.html" class="logo">PRO<span>VA</span></a>
+    <nav class="topnav">
+      <a href="dashboard.html" data-short="Dashboard">Dashboard</a>
+      <a href="app-starter.html" data-short="Gutachten">Neues Gutachten</a>
+      <a href="archiv.html" data-short="Archiv">Archiv</a>
+      <a href="stellungnahme-v3.1.html" data-short="§6">§6 Stellungnahme</a>
+      <a href="textbausteine.html" class="active" data-short="Bausteine">Textbausteine</a>
+    </nav>
+  </div>
+  <div style="display:flex;align-items:center;gap:8px;">
+    <span class="paket-badge" id="topbarPaket"></span>
+    <a href="einstellungen.html" style="font-size:16px;color:var(--text3);padding:6px 8px;border-radius:6px;min-height:44px;display:inline-flex;align-items:center;">⚙</a>
+    <button class="burger" id="burgerBtn" onclick="toggleDrawer()"><span></span><span></span><span></span></button>
+  </div>
+</div>
+
+<!-- DRAWER -->
+<div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
+<div class="drawer" id="drawer">
+  <div class="drawer-header"><a href="dashboard.html" class="logo">PRO<span>VA</span></a><button class="drawer-close" onclick="closeDrawer()">✕</button></div>
+  <nav class="drawer-nav">
+    <a href="dashboard.html"><span class="dnav-icon">🏠</span>Dashboard</a>
+    <a href="app-starter.html"><span class="dnav-icon">📄</span>Neues Gutachten</a>
+    <a href="archiv.html"><span class="dnav-icon">📂</span>Archiv</a>
+    <a href="stellungnahme-v3.1.html"><span class="dnav-icon">⚖️</span>§6 Stellungnahme</a>
+    <a href="textbausteine.html" style="color:var(--accent);background:rgba(79,142,247,.08);"><span class="dnav-icon">📝</span>Textbausteine</a>
+    <a href="kostenermittlung.html"><span class="dnav-icon">🧮</span>Kostenermittlung</a>
+    <a href="einstellungen.html"><span class="dnav-icon">⚙</span>Einstellungen</a>
+    <a href="#" onclick="logout();return false;" style="margin-top:auto;color:var(--red);"><span class="dnav-icon">🚪</span>Abmelden</a>
+  </nav>
+  <div class="drawer-footer"><span class="paket-badge" id="drawerPaket"></span></div>
+</div>
+<nav class="bottom-nav">
+  <a href="dashboard.html" class="bn-item"><span class="bn-icon">🏠</span><span class="bn-label">Dashboard</span></a>
+  <a href="archiv.html" class="bn-item"><span class="bn-icon">📂</span><span class="bn-label">Archiv</span></a>
+  <a href="textbausteine.html" class="bn-item active"><span class="bn-icon">📝</span><span class="bn-label">Bausteine</span></a>
+  <a href="kostenermittlung.html" class="bn-item"><span class="bn-icon">🧮</span><span class="bn-label">Kosten</span></a>
+  <a href="einstellungen.html" class="bn-item"><span class="bn-icon">⚙</span><span class="bn-label">Einstellungen</span></a>
+</nav>
+<script>
+function toggleDrawer(){var d=document.getElementById('drawer'),o=document.getElementById('drawerOverlay');d.classList.toggle('open');o.classList.toggle('open');document.body.style.overflow=d.classList.contains('open')?'hidden':'';}
+function closeDrawer(){document.getElementById('drawer').classList.remove('open');document.getElementById('drawerOverlay').classList.remove('open');document.body.style.overflow='';}
+document.addEventListener('keydown',function(e){if(e.key==='Escape'){closeDrawer();closeModal();}});
+function logout(){localStorage.removeItem('prova_user');window.location.href='app-login.html';}
+(function(){
+  var u=localStorage.getItem('prova_user');if(!u){window.location.href='app-login.html';return;}
+  var p=localStorage.getItem('prova_paket')||'Starter';
+  var c={Starter:'#4f8ef7',Pro:'#f59e0b',Enterprise:'#a78bfa'}[p]||'#4f8ef7';
+  var s='background:'+c+'18;color:'+c+';border:1px solid '+c+'33';
+  ['topbarPaket','drawerPaket'].forEach(function(id){var el=document.getElementById(id);if(el){el.textContent=p;el.setAttribute('style',s);}});
+  window.PROVA=window.PROVA||{};PROVA.paket=p;PROVA.isPro=['Pro','Enterprise'].includes(p);PROVA.isEnterprise=p==='Enterprise';
+})();
+</script>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="page-header">
+    <div>
+      <div class="page-title">📝 Textbausteine</div>
+      <div class="page-sub">Wiederverwendbare Formulierungen für Gutachten — mit Platzhaltern für Falldaten</div>
+    </div>
+    <button onclick="openEditor()" style="padding:9px 18px;background:var(--accent);border:none;border-radius:8px;color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans);">+ Neuer Baustein</button>
+  </div>
+
+  <!-- Limit-Anzeige (nur Starter) -->
+  <div class="limit-bar" id="limit-bar" style="display:none;">
+    <span>⚠️ Starter-Paket: <strong id="limit-text">0 / 20</strong> Bausteine verwendet</span>
+    <span style="font-size:11px;opacity:.8;">Pro / Enterprise: unbegrenzt</span>
+  </div>
+
+  <div class="tb-layout">
+
+    <!-- SIDEBAR: Kategorien -->
+    <div class="sidebar">
+      <div class="sidebar-search">
+        <input type="text" id="global-search" placeholder="🔍 Baustein suchen…" oninput="renderBausteine()">
+      </div>
+      <div class="kat-list">
+        <button class="kat-btn active" data-kat="alle" onclick="setKat('alle',this)">
+          <span>📋 Alle</span>
+          <span class="kat-count" id="cnt-alle">0</span>
+        </button>
+        <button class="kat-btn" data-kat="begehung" onclick="setKat('begehung',this)">
+          <span>🚶 Begehung & Aufnahme</span>
+          <span class="kat-count" id="cnt-begehung">0</span>
+        </button>
+        <button class="kat-btn" data-kat="befund" onclick="setKat('befund',this)">
+          <span>🔍 Schadenbeschreibung</span>
+          <span class="kat-count" id="cnt-befund">0</span>
+        </button>
+        <button class="kat-btn" data-kat="ursache" onclick="setKat('ursache',this)">
+          <span>⚖️ Ursachenanalyse (§5)</span>
+          <span class="kat-count" id="cnt-ursache">0</span>
+        </button>
+        <button class="kat-btn" data-kat="massnahmen" onclick="setKat('massnahmen',this)">
+          <span>🔧 Maßnahmen & Empfehl.</span>
+          <span class="kat-count" id="cnt-massnahmen">0</span>
+        </button>
+        <button class="kat-btn" data-kat="normen" onclick="setKat('normen',this)">
+          <span>📐 Normzitate</span>
+          <span class="kat-count" id="cnt-normen">0</span>
+        </button>
+      </div>
+      <div class="sidebar-info">
+        <strong>Platzhalter:</strong> <code style="background:rgba(79,142,247,.1);padding:1px 4px;border-radius:3px;color:var(--accent);font-size:10px;">[RAUM]</code> <code style="background:rgba(79,142,247,.1);padding:1px 4px;border-radius:3px;color:var(--accent);font-size:10px;">[MESSWERT]</code> etc. werden beim Einfügen mit Falldaten befüllt.
+      </div>
+    </div>
+
+    <!-- BAUSTEIN-LISTE -->
+    <div>
+      <div class="tb-grid" id="tb-grid"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- EDITOR MODAL -->
+<div class="modal-bg" id="modal-editor">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-title">📝 Neuer Baustein</div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Titel *</label>
+      <input id="e-titel" class="form-input" type="text" placeholder="z.B. Feuchtemessung Ergebnis">
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div class="form-group">
+        <label class="form-label">Kategorie *</label>
+        <select id="e-kat" class="form-select">
+          <option value="begehung">🚶 Begehung & Aufnahme</option>
+          <option value="befund">🔍 Schadenbeschreibung</option>
+          <option value="ursache">⚖️ Ursachenanalyse (§5)</option>
+          <option value="massnahmen">🔧 Maßnahmen & Empfehlung</option>
+          <option value="normen">📐 Normzitate</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Schadensart-Tag</label>
+        <select id="e-tag" class="form-select">
+          <option value="">Alle Schadensarten</option>
+          <option value="WS">💧 Wasserschaden</option>
+          <option value="SC">🍄 Schimmel/Feuchte</option>
+          <option value="BS">🔥 Brandschaden</option>
+          <option value="SS">🌪 Sturmschaden</option>
+          <option value="ES">🌊 Elementarschaden</option>
+          <option value="BA">🏗 Baumängel</option>
+          <option value="GT">⚖️ Gerichtsgutachten</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Bausteintext *
+        <span style="font-weight:400;text-transform:none;color:var(--text3);"> — Platzhalter mit [ ] markieren</span>
+      </label>
+      <textarea id="e-text" class="form-textarea" placeholder="Formulierungstext eingeben…&#10;Platzhalter: [RAUM], [MESSWERT], [DATUM], [NORM], [FLAECHE], [NAME]"></textarea>
+      <div class="ph-bar" id="ph-bar">
+        <span style="font-size:11px;color:var(--text3);align-self:center;">Einfügen:</span>
+        <span class="ph-chip" onclick="platzhalterEinfuegen('[RAUM]')">[RAUM]</span>
+        <span class="ph-chip" onclick="platzhalterEinfuegen('[MESSWERT]')">[MESSWERT]</span>
+        <span class="ph-chip" onclick="platzhalterEinfuegen('[FLAECHE]')">[FLAECHE]</span>
+        <span class="ph-chip" onclick="platzhalterEinfuegen('[DATUM]')">[DATUM]</span>
+        <span class="ph-chip" onclick="platzhalterEinfuegen('[NORM]')">[NORM]</span>
+        <span class="ph-chip" onclick="platzhalterEinfuegen('[NAME]')">[NAME]</span>
+        <span class="ph-chip" onclick="platzhalterEinfuegen('[SCHADENSART]')">[SCHADENSART]</span>
+        <span class="ph-chip" onclick="platzhalterEinfuegen('[GRENZWERT]')">[GRENZWERT]</span>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Notiz (intern, erscheint nicht im Gutachten)</label>
+      <input id="e-notiz" class="form-input" type="text" placeholder="z.B. Nur bei Holzböden verwenden">
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeModal()">Abbrechen</button>
+      <button class="btn-primary" onclick="speichereBaustein()">💾 Speichern</button>
+    </div>
+  </div>
+</div>
+
+<!-- EINFÜGEN-MODAL (aus stellungnahme.html aufgerufen) -->
+<div class="modal-bg" id="modal-einfuegen">
+  <div class="modal" style="max-width:560px;">
+    <div class="modal-header">
+      <div class="modal-title">📋 Baustein einfügen</div>
+      <button class="modal-close" onclick="closeEinfuegenModal()">✕</button>
+    </div>
+    <input type="text" id="ei-search" class="form-input" placeholder="🔍 Baustein suchen…" oninput="renderEinfuegenListe()" style="margin-bottom:12px;">
+    <div id="ei-liste" style="max-height:55vh;overflow-y:auto;display:flex;flex-direction:column;gap:6px;"></div>
+  </div>
+</div>
+
+<div class="toast-c" id="toastC"></div>
+
+<script>
+// ============================================================
+// DATEN & KONSTANTEN
+// ============================================================
+const TB_KEY = 'prova_textbausteine';
+const STARTER_LIMIT = 20;
+
+var KATEGORIEN = {
+  begehung:   {label:'Begehung & Aufnahme',    icon:'🚶', color:'rgba(79,142,247,.15)',  textColor:'#93C5FD'},
+  befund:     {label:'Schadenbeschreibung',     icon:'🔍', color:'rgba(16,185,129,.12)', textColor:'#6ee7b7'},
+  ursache:    {label:'Ursachenanalyse (§5)',    icon:'⚖️', color:'rgba(245,158,11,.12)', textColor:'#fcd34d'},
+  massnahmen: {label:'Maßnahmen & Empfehlung', icon:'🔧', color:'rgba(239,68,68,.1)',   textColor:'#fca5a5'},
+  normen:     {label:'Normzitate',             icon:'📐', color:'rgba(139,92,246,.12)', textColor:'#c4b5fd'},
+};
+
+// ── Standard-Bausteine (werden einmalig angelegt wenn leer) ──
+var STANDARD_BAUSTEINE = [
+  {titel:'Besichtigung Standard',kat:'begehung',tag:'',text:'Am [DATUM] wurde das Schadensbjekt [RAUM] in Anwesenheit von [NAME] besichtigt. Der Unterzeichner hat die örtlichen Verhältnisse persönlich in Augenschein genommen.',notiz:''},
+  {titel:'Anwesenheit Protokoll',kat:'begehung',tag:'',text:'Bei der Besichtigung am [DATUM] waren anwesend: [NAME] (Auftraggeber), sowie der Unterzeichner als Sachverständiger.',notiz:''},
+  {titel:'Feuchtemessung Holz',kat:'befund',tag:'WS',text:'Die Messung der Holzfeuchte im Bereich [RAUM] ergab Werte von [MESSWERT] % (Messgerät: [NORM]). Der Grenzwert nach DIN 68800 für eingebautes Holz beträgt 18 %.',notiz:'Nur bei Holzböden/Balken'},
+  {titel:'Feuchtemessung Mauerwerk',kat:'befund',tag:'WS',text:'Die Feuchtemessung am Mauerwerk im Bereich [RAUM] ergab Materialfeuchtewerte von [MESSWERT] % (CM-Methode). Nach WTA-Merkblatt 6-1 gelten Werte über 3,0 % als deutlich erhöht.',notiz:''},
+  {titel:'Schimmelbefall Sichtbefund',kat:'befund',tag:'SC',text:'Im Bereich [RAUM] sind auf einer Fläche von ca. [FLAECHE] m² schwarze bis grünlich-schwarze Verfärbungen feststellbar, die auf einen Schimmelpilzbefall hindeuten.',notiz:'Nur Sichtbefund — keine Ursachenaussage'},
+  {titel:'Ursache Wasserschaden Konjunktiv',kat:'ursache',tag:'WS',text:'Als Ursache für den festgestellten Feuchteschaden dürfte eine undichte [RAUM]-Leitung in Betracht kommen. Eine abschließende Beurteilung der Schadensursache könnte erst nach vollständiger Trocknung und Leckortung erfolgen.',notiz:'Konjunktiv II — rechtssicher'},
+  {titel:'Ursache Schimmel Konjunktiv',kat:'ursache',tag:'SC',text:'Die festgestellte Schimmelbildung dürfte auf eine unzureichende Belüftung des Raumes [RAUM] zurückzuführen sein. Ein Zusammenwirken baulicher Wärmebrücken mit erhöhter Raumluftfeuchtigkeit wäre ebenfalls in Betracht zu ziehen.',notiz:''},
+  {titel:'Empfehlung Trocknung',kat:'massnahmen',tag:'WS',text:'Zur Behebung des Feuchtigkeitsschadens wird empfohlen, unverzüglich mit der Bautrocknung zu beginnen. Die Trocknungsdauer dürfte sich auf [MESSWERT] Wochen belaufen, abhängig vom Feuchtegehalt des Bauteils.',notiz:''},
+  {titel:'Empfehlung Schimmelsanierung',kat:'massnahmen',tag:'SC',text:'Die befallenen Flächen im Bereich [RAUM] sollten fachgerecht durch ein spezialisiertes Unternehmen saniert werden. Nach UBA-Leitfaden ist bei Befallsflächen über 0,5 m² eine vollständige Sanierung unter Schutzmaßnahmen zu empfehlen.',notiz:''},
+  {titel:'DIN 4108-2 Wärmeschutz',kat:'normen',tag:'SC',text:'Gemäß DIN 4108-2 ist der Mindestoberflächentemperaturfaktor fRsi ≥ 0,70 einzuhalten. Bei einer Raumtemperatur von 20 °C und einer rel. Luftfeuchte von 50 % liegt der Taupunkt bei ca. 9,3 °C.',notiz:'Immer bei Schimmelgutachten zitieren'},
+  {titel:'VdS 3151 Trocknungsziel',kat:'normen',tag:'WS',text:'Nach VdS 3151 gelten als Trocknungsziele: Holz ≤ 15 % Holzfeuchte, Mauerwerk und Beton ≤ 3 % nach CM-Methode. Die Erreichung dieser Grenzwerte ist messtechnisch zu dokumentieren.',notiz:''},
+  {titel:'§407a ZPO Offenlegung',kat:'normen',tag:'',text:'Dieses Gutachten wurde vom Unterzeichner persönlich und eigenverantwortlich erstellt. Der Einsatz von KI-gestützten Werkzeugen beschränkte sich auf die Formulierungsunterstützung; alle fachlichen Einschätzungen und Beurteilungen wurden vom Sachverständigen selbst getroffen und verantwortet (§ 407a ZPO).',notiz:'Pflicht für Enterprise §407a'},
+];
+
+// ── State ──
+var _bausteine = [];
+var _aktivKat = 'alle';
+var _editId = null;
+var _paket = localStorage.getItem('prova_paket') || 'Starter';
+var _isPro = ['Pro','Enterprise'].includes(_paket);
+
+// ============================================================
+// LADEN / SPEICHERN
+// ============================================================
+function ladeBausteine() {
+  try {
+    var raw = localStorage.getItem(TB_KEY);
+    if (raw) { _bausteine = JSON.parse(raw); return; }
+  } catch(e) {}
+  // Erstmalig: Standard-Bausteine anlegen
+  _bausteine = STANDARD_BAUSTEINE.map(function(b, i) {
+    return Object.assign({}, b, { id: 'std-' + i, erstellt: new Date().toISOString(), verwendungen: 0 });
+  });
+  speichereBausteine();
+}
+
+function speichereBausteine() {
+  localStorage.setItem(TB_KEY, JSON.stringify(_bausteine));
+}
+
+function genId() { return Date.now().toString(36) + Math.random().toString(36).slice(2,5); }
+
+// ============================================================
+// RENDER
+// ============================================================
+function renderBausteine() {
+  var suche = (document.getElementById('global-search').value || '').toLowerCase();
+  var gefiltert = _bausteine.filter(function(b) {
+    if (_aktivKat !== 'alle' && b.kat !== _aktivKat) return false;
+    if (suche && !b.titel.toLowerCase().includes(suche) && !b.text.toLowerCase().includes(suche)) return false;
+    return true;
+  });
+
+  // Kategorie-Counts
+  document.getElementById('cnt-alle').textContent = _bausteine.length;
+  ['begehung','befund','ursache','massnahmen','normen'].forEach(function(k) {
+    var el = document.getElementById('cnt-' + k);
+    if (el) el.textContent = _bausteine.filter(function(b){return b.kat===k;}).length;
+  });
+
+  // Limit-Bar (Starter)
+  var limitBar = document.getElementById('limit-bar');
+  var limitText = document.getElementById('limit-text');
+  if (!_isPro) {
+    limitBar.style.display = 'flex';
+    limitText.textContent = _bausteine.length + ' / ' + STARTER_LIMIT;
+    if (_bausteine.length >= STARTER_LIMIT) {
+      limitBar.style.background = 'var(--red-bg)';
+      limitBar.style.borderColor = 'var(--red-border)';
+      limitBar.style.color = 'var(--red)';
+    }
+  } else {
+    limitBar.style.display = 'none';
+  }
+
+  var grid = document.getElementById('tb-grid');
+  if (!gefiltert.length) {
+    grid.innerHTML = '<div class="empty"><div class="empty-icon">📝</div><div style="font-size:14px;font-weight:600;margin-bottom:6px;">' +
+      (suche ? 'Keine Treffer für "' + escH(suche) + '"' : 'Noch keine Bausteine') + '</div>' +
+      '<div style="font-size:12px;">' + (suche ? 'Suchbegriff anpassen' : '+ Neuer Baustein anlegen') + '</div></div>';
+    return;
+  }
+
+  grid.innerHTML = '';
+  gefiltert.forEach(function(b) {
+    var k = KATEGORIEN[b.kat] || {label:b.kat, icon:'📝', color:'rgba(255,255,255,.05)', textColor:'#9da3b4'};
+    var preview = markierePlatzhalter(escH(b.text));
+    var tagBadge = b.tag ? '<span style="font-size:10px;padding:1px 6px;border-radius:3px;background:rgba(255,255,255,.07);color:var(--text3);margin-left:6px;">' + b.tag + '</span>' : '';
+
+    var card = document.createElement('div');
+    card.className = 'tb-card';
+    card.innerHTML =
+      '<div class="tb-card-header" onclick="togglePreview(\'' + b.id + '\')">' +
+        '<span class="tb-card-kat" style="background:' + k.color + ';color:' + k.textColor + ';">' + k.icon + ' ' + k.label + '</span>' +
+        tagBadge +
+        '<span class="tb-card-title" style="margin-left:8px;">' + escH(b.titel) + '</span>' +
+        '<div class="tb-card-actions" onclick="event.stopPropagation()">' +
+          '<button class="tb-btn tb-btn-insert" onclick="bausteineEinfuegen(\'' + b.id + '\')">↗ Einfügen</button>' +
+          '<button class="tb-btn tb-btn-edit" onclick="openEditor(\'' + b.id + '\')">✎</button>' +
+          '<button class="tb-btn tb-btn-del" onclick="loescheBaustein(\'' + b.id + '\')">✕</button>' +
+        '</div>' +
+      '</div>' +
+      '<div class="tb-preview" id="prev-' + b.id + '">' +
+        '<div style="line-height:1.7;">' + preview + '</div>' +
+        (b.notiz ? '<div style="margin-top:8px;padding:6px 10px;background:rgba(245,158,11,.08);border-radius:5px;font-size:11px;color:var(--warn);">💡 ' + escH(b.notiz) + '</div>' : '') +
+        '<div style="margin-top:8px;font-size:11px;color:var(--text3);">Verwendet: ' + (b.verwendungen||0) + 'x</div>' +
+      '</div>';
+    grid.appendChild(card);
+  });
+}
+
+function togglePreview(id) {
+  var el = document.getElementById('prev-' + id);
+  if (el) el.classList.toggle('open');
+}
+
+function markierePlatzhalter(text) {
+  return text.replace(/\[([A-Z_]+)\]/g, '<span class="tb-placeholder">[$1]</span>');
+}
+
+function setKat(kat, btn) {
+  _aktivKat = kat;
+  document.querySelectorAll('.kat-btn').forEach(function(b){ b.classList.remove('active'); });
+  btn.classList.add('active');
+  renderBausteine();
+}
+
+// ============================================================
+// CRUD
+// ============================================================
+function openEditor(id) {
+  _editId = id || null;
+  var modal = document.getElementById('modal-editor');
+  var titleEl = document.getElementById('modal-title');
+
+  if (id) {
+    var b = _bausteine.find(function(b){return b.id===id;});
+    if (!b) return;
+    titleEl.textContent = '✎ Baustein bearbeiten';
+    document.getElementById('e-titel').value = b.titel;
+    document.getElementById('e-kat').value = b.kat;
+    document.getElementById('e-tag').value = b.tag || '';
+    document.getElementById('e-text').value = b.text;
+    document.getElementById('e-notiz').value = b.notiz || '';
+  } else {
+    // Limit-Check Starter
+    if (!_isPro && _bausteine.length >= STARTER_LIMIT) {
+      showToast('Starter-Limit erreicht (20 Bausteine). Upgrade auf Pro für unbegrenzte Bausteine.', 'err');
+      return;
+    }
+    titleEl.textContent = '📝 Neuer Baustein';
+    ['e-titel','e-text','e-notiz'].forEach(function(id){ document.getElementById(id).value=''; });
+    document.getElementById('e-kat').value = 'befund';
+    document.getElementById('e-tag').value = '';
+  }
+  modal.classList.add('open');
+  setTimeout(function(){ document.getElementById('e-titel').focus(); }, 100);
+}
+
+function closeModal() {
+  document.getElementById('modal-editor').classList.remove('open');
+  _editId = null;
+}
+
+function speichereBaustein() {
+  var titel = document.getElementById('e-titel').value.trim();
+  var text  = document.getElementById('e-text').value.trim();
+  if (!titel || !text) { showToast('Titel und Text sind Pflichtfelder', 'err'); return; }
+
+  if (_editId) {
+    var b = _bausteine.find(function(b){return b.id===_editId;});
+    if (b) {
+      b.titel = titel; b.kat = document.getElementById('e-kat').value;
+      b.tag = document.getElementById('e-tag').value;
+      b.text = text; b.notiz = document.getElementById('e-notiz').value.trim();
+    }
+  } else {
+    _bausteine.unshift({
+      id: genId(), titel: titel,
+      kat: document.getElementById('e-kat').value,
+      tag: document.getElementById('e-tag').value,
+      text: text, notiz: document.getElementById('e-notiz').value.trim(),
+      erstellt: new Date().toISOString(), verwendungen: 0
+    });
+  }
+  speichereBausteine();
+  closeModal();
+  renderBausteine();
+  showToast(_editId ? 'Baustein aktualisiert ✅' : 'Baustein gespeichert ✅');
+}
+
+function loescheBaustein(id) {
+  if (!confirm('Baustein löschen?')) return;
+  _bausteine = _bausteine.filter(function(b){return b.id!==id;});
+  speichereBausteine();
+  renderBausteine();
+  showToast('Baustein gelöscht');
+}
+
+// ============================================================
+// PLATZHALTER IM EDITOR
+// ============================================================
+function platzhalterEinfuegen(ph) {
+  var ta = document.getElementById('e-text');
+  var start = ta.selectionStart, end = ta.selectionEnd;
+  ta.value = ta.value.slice(0,start) + ph + ta.value.slice(end);
+  ta.selectionStart = ta.selectionEnd = start + ph.length;
+  ta.focus();
+}
+
+// ============================================================
+// EINFÜGEN-FLOW (wird von stellungnahme.html aufgerufen)
+// ============================================================
+function bausteineEinfuegen(id) {
+  var b = _bausteine.find(function(b){return b.id===id;});
+  if (!b) return;
+
+  // Platzhalter mit Falldaten befüllen
+  var text = befuellePlatzhalter(b.text);
+
+  // Verwendungszähler
+  b.verwendungen = (b.verwendungen||0) + 1;
+  speichereBausteine();
+
+  // In Zwischenablage + sessionStorage für stellungnahme.html
+  sessionStorage.setItem('prova_tb_einfuegen', text);
+  sessionStorage.setItem('prova_tb_einfuegen_id', id);
+
+  navigator.clipboard.writeText(text).then(function() {
+    showToast('📋 Baustein in Zwischenablage — in Stellungnahme einfügen (Strg+V)', 'ok');
+  }).catch(function() {
+    showToast('Text kopiert — in Stellungnahme einfügen', 'ok');
+  });
+
+  // Falls in Popup-Modus: zurück zur Stellungnahme
+  if (window.opener && !window.opener.closed) {
+    window.opener.postMessage({ type: 'prova_baustein', text: text, bausteinId: id }, '*');
+    window.close();
+  }
+}
+
+function befuellePlatzhalter(text) {
+  // Falldaten aus localStorage / sessionStorage
+  var data = {
+    RAUM: localStorage.getItem('prova_letzter_raum') || '[RAUM]',
+    MESSWERT: localStorage.getItem('prova_letzter_messwert') || '[MESSWERT]',
+    DATUM: new Date().toLocaleDateString('de-DE', {day:'2-digit',month:'2-digit',year:'numeric'}),
+    NORM: '[NORM]',
+    FLAECHE: '[FLAECHE]',
+    NAME: localStorage.getItem('prova_sv_vorname') ? localStorage.getItem('prova_sv_vorname') + ' ' + (localStorage.getItem('prova_sv_nachname')||'') : '[NAME]',
+    SCHADENSART: localStorage.getItem('prova_schadenart') || '[SCHADENSART]',
+    GRENZWERT: '[GRENZWERT]',
+  };
+  return text.replace(/\[([A-Z_]+)\]/g, function(match, key) {
+    return data[key] || match;
+  });
+}
+
+// ── Einfügen-Modal (aus stellungnahme.html als Popup) ──
+function openEinfuegenModal() {
+  document.getElementById('ei-search').value = '';
+  renderEinfuegenListe();
+  document.getElementById('modal-einfuegen').classList.add('open');
+}
+
+function closeEinfuegenModal() {
+  document.getElementById('modal-einfuegen').classList.remove('open');
+}
+
+function renderEinfuegenListe() {
+  var suche = (document.getElementById('ei-search').value || '').toLowerCase();
+  var gefiltert = _bausteine.filter(function(b) {
+    if (!suche) return true;
+    return b.titel.toLowerCase().includes(suche) || b.text.toLowerCase().includes(suche);
+  }).slice(0,30);
+
+  var liste = document.getElementById('ei-liste');
+  if (!gefiltert.length) {
+    liste.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text3);font-size:13px;">Keine Treffer</div>';
+    return;
+  }
+
+  liste.innerHTML = gefiltert.map(function(b) {
+    var k = KATEGORIEN[b.kat] || {label:b.kat,icon:'📝',color:'rgba(255,255,255,.05)',textColor:'#9da3b4'};
+    return '<div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 12px;display:flex;align-items:center;gap:10px;">' +
+      '<div style="flex:1;min-width:0;">' +
+        '<div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:3px;">' + escH(b.titel) + '</div>' +
+        '<div style="font-size:11px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + escH(b.text.slice(0,80)) + '…</div>' +
+      '</div>' +
+      '<button onclick="bausteineEinfuegen(\'' + b.id + '\');closeEinfuegenModal();" style="padding:6px 12px;background:var(--accent);border:none;border-radius:6px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--sans);white-space:nowrap;">↗ Einfügen</button>' +
+    '</div>';
+  }).join('');
+}
+
+// ============================================================
+// EXPORT / IMPORT
+// ============================================================
+window.exportBausteine = function() {
+  var json = JSON.stringify(_bausteine, null, 2);
+  var blob = new Blob([json], {type:'application/json'});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a'); a.href=url; a.download='PROVA_Textbausteine.json';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast('Export abgeschlossen ✅');
+};
+
+// ============================================================
+// HELPERS
+// ============================================================
+function escH(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function showToast(msg, type) {
+  var c = document.getElementById('toastC');
+  var t = document.createElement('div');
+  t.className = 'toast' + (type==='err'?' err':'');
+  t.textContent = msg;
+  c.appendChild(t);
+  setTimeout(function(){ t.style.animation='toastIn .3s ease reverse'; setTimeout(function(){ t.remove(); },280); }, 3000);
+}
+
+// ============================================================
+// INIT
+// ============================================================
+document.addEventListener('DOMContentLoaded', function() {
+  ladeBausteine();
+  renderBausteine();
+
+  // URL-Parameter: ?modus=einfuegen → direkt Einfügen-Modal öffnen
+  var params = new URLSearchParams(window.location.search);
+  if (params.get('modus') === 'einfuegen') {
+    setTimeout(openEinfuegenModal, 200);
+  }
+});
+</script>
+</body>
+</html>
