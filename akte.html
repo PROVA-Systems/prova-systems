@@ -223,7 +223,9 @@ a{text-decoration:none;color:inherit;}button,input,select,textarea{font-family:i
     <div class="sb-section-label">Werkzeuge</div>
     <a href="jveg.html" class="sb-item" data-tip="JVEG-Rechner"><span class="sb-icon">⚖️</span><span class="sb-label">JVEG-Rechner</span></a>
     <a href="kostenermittlung.html" class="sb-item" data-tip="Kosten & Aufmaß"><span class="sb-icon">📐</span><span class="sb-label">Kosten & Aufmaß</span></a>
+    <a href="positionen.html" class="sb-item" data-tip="Positionsdatenbank"><span class="sb-icon">🗂</span><span class="sb-label">Positionen</span></a>
     <a href="textbausteine.html" class="sb-item" data-tip="Textbausteine"><span class="sb-icon">✏️</span><span class="sb-label">Textbausteine</span></a>
+    <a href="normen.html" class="sb-item" data-tip="Normendatenbank"><span class="sb-icon">📚</span><span class="sb-label">Normen</span></a>
     <div class="sb-divider"></div>
     <a href="kontakte.html" class="sb-item" data-tip="Kontakte"><span class="sb-icon">👥</span><span class="sb-label">Kontakte</span></a>
   </div>
@@ -611,7 +613,7 @@ function renderSchnellaktionen(status,f,az){
     actions.push({icon:'📝',bg:'rgba(79,142,247,.1)',label:'Gutachten bearbeiten',sub:'App-Starter öffnen',action:"oeffneGutachten()"});
   }
   if(f.KI_Entwurf&&(status==='Entwurf'||status==='In Bearbeitung')){
-    actions.push({icon:'📋',bg:'rgba(139,92,246,.1)',label:'§6 Stellungnahme',sub:'Persönliches Fachurteil verfassen',action:"window.location.href='stellungnahme-gate.html'"});
+    actions.push({icon:'📋',bg:'rgba(139,92,246,.1)',label:'§6 Stellungnahme',sub:'Persönliches Fachurteil verfassen',action:"oeffneStellung()"});
   }
   if(f.KI_Entwurf&&(status==='Entwurf'||status==='In Bearbeitung')){
     actions.push({icon:'✅',bg:'rgba(16,185,129,.1)',label:'Zur Freigabe',sub:'Gutachten prüfen und freigeben',action:"oeffneFreigabe()"});
@@ -735,6 +737,19 @@ window.zeigToast=function(msg,typ){
 ladeRecord();
 
 })();
+
+window.oeffneStellung = function() {
+  // Fall-Daten für gate.html in sessionStorage schreiben
+  var f = currentFields;
+  var az = f.Aktenzeichen || '';
+  var sa = f.Schadenart || f.schadenart || '';
+  var obj = (f.Strasse||f.strasse||'') + (f.PLZ||f.plz ? ', '+(f.PLZ||f.plz)+' '+(f.Ort||f.ort||'') : (f.Ort||f.ort ? ', '+(f.Ort||f.ort) : ''));
+  if(az) sessionStorage.setItem('prova_current_az', az);
+  if(sa) sessionStorage.setItem('prova_current_schadenart', sa);
+  if(obj.trim()) sessionStorage.setItem('prova_current_objekt', obj.trim());
+  // record_id bleibt aus sessionStorage (bereits gesetzt)
+  window.location.href = 'stellungnahme-gate.html';
+};
 </script>
 </body>
 </html>
