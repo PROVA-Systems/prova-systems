@@ -995,6 +995,20 @@ async function ladeSVProfil() {
   if (!rec) return null;
   window.SV_PROFIL = rec.fields || null;
   window.SV_RECORD_ID = rec.id || null;
+  // Cache SV-Felder in localStorage für Payload + andere Seiten
+  if (window.SV_PROFIL) {
+    try {
+      const f = window.SV_PROFIL;
+      if (f['Email']) localStorage.setItem('prova_sv_email', f['Email']);
+      if (f['Vorname']) localStorage.setItem('prova_sv_vorname', f['Vorname']);
+      if (f['Nachname']) localStorage.setItem('prova_sv_nachname', f['Nachname']);
+      if (f['Zertifizierung']) localStorage.setItem('prova_sv_quali', f['Zertifizierung']);
+      if (f['Firma']) localStorage.setItem('prova_sv_firma', f['Firma']);
+      if (f['Strasse']) localStorage.setItem('prova_sv_strasse', f['Strasse']);
+      if (f['PLZ']) localStorage.setItem('prova_sv_plz', String(f['PLZ']));
+      if (f['Ort']) localStorage.setItem('prova_sv_ort', f['Ort']);
+    } catch(e) {}
+  }
   return window.SV_PROFIL;
 }
 

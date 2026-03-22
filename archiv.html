@@ -1,614 +1,641 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1.0">
-  <title>PROVA App – Archiv</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Instrument+Sans:wght@400;500;600&family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <style>
-    :root{
-      --navy:#1B3F6B;--navy-dark:#112C4E;--navy-light:#2A5490;
-      --accent:#4A90D9;--accent-dark:#2F6EB5;
-      --success:#10B981;--warning:#F59E0B;--info:#3B82F6;
-      --bg:#F0F4F8;--white:#fff;
-      --gray-50:#F9FAFB;--gray-100:#F3F4F6;--gray-200:#E5E7EB;--gray-300:#D1D5DB;--gray-400:#9CA3AF;--gray-500:#6B7280;--gray-600:#4B5563;--gray-700:#374151;--gray-800:#1F2937;
-      --bg2:#13161d;--border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);--text:#e8eaf0;--text3:#6b7280;--surface:#1e2330;
-      --display:'Fraunces',serif;--sans:'Instrument Sans',sans-serif;
-      --radius-sm:.25rem;--radius-md:.5rem;--radius-lg:.875rem;--radius-xl:1.25rem;
-      --shadow-sm:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.04);
-      --shadow-md:0 4px 6px rgba(0,0,0,.08),0 2px 4px rgba(0,0,0,.04);
-      --text2:#9da3b4;
-      --nav-h:52px;
-      --bot-h:0px;
-    }
-    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
-    html{scroll-behavior:smooth;}
-    body{font-family:'Montserrat',system-ui,sans-serif;font-size:.9375rem;line-height:1.6;color:var(--gray-700);background:var(--bg);}
-    a{text-decoration:none;color:inherit;}
-    button,input,select{font-family:inherit;}
-    *{-webkit-tap-highlight-color:transparent;}
-    input,select,textarea{font-size:max(16px,1em);}
-    /* ── TOPBAR ─────────────────────────────────────── */
-    .topbar{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 20px;height:var(--nav-h);min-height:var(--nav-h);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;user-select:none;-webkit-user-select:none;}
-    .topbar-left{display:flex;align-items:center;gap:16px;}
-    .topbar-right{display:flex;align-items:center;gap:8px;}
-    .logo{font-family:var(--display);font-weight:700;font-size:18px;color:var(--text);text-decoration:none;}
-    .logo span{color:var(--accent);}
-    .topnav{display:flex;gap:2px;}
-    .topnav a{padding:6px 11px;border-radius:6px;color:var(--text3);font-size:13px;font-family:var(--sans);font-weight:500;text-decoration:none;transition:all 0.15s;white-space:nowrap;min-height:44px;display:inline-flex;align-items:center;}
-    .topnav a:hover{color:var(--text2);background:rgba(255,255,255,0.04);}
-    .topnav a.active{color:var(--accent);background:rgba(79,142,247,0.1);}
-    .paket-badge{font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;}
-    .settings-link{font-size:16px;color:var(--text3);text-decoration:none;padding:6px 8px;border-radius:6px;min-height:44px;display:inline-flex;align-items:center;}
-    .settings-link:hover{color:#9da3b4;background:rgba(255,255,255,0.04);}
-    .burger{display:none;flex-direction:column;gap:5px;background:none;border:none;cursor:pointer;padding:6px;border-radius:6px;min-height:44px;align-items:center;justify-content:center;}
-    .burger span{display:block;width:20px;height:2px;background:#9da3b4;border-radius:2px;}
-    .burger:hover span{background:var(--text);}
-    .drawer-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:200;backdrop-filter:blur(2px);}
-    .drawer-overlay.open{display:block;}
-    .drawer{position:fixed;top:0;left:0;bottom:0;width:260px;background:var(--bg2);border-right:1px solid var(--border2);z-index:201;transform:translateX(-100%);transition:transform 0.25s cubic-bezier(0.4,0,0.2,1);display:flex;flex-direction:column;}
-    .drawer.open{transform:translateX(0);}
-    .drawer-header{padding:16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
-    .drawer-close{background:none;border:none;color:var(--text3);font-size:18px;cursor:pointer;padding:4px 8px;border-radius:5px;min-height:44px;}
-    .drawer-close:hover{color:var(--text);background:var(--surface);}
-    .drawer-nav{flex:1;padding:10px;overflow-y:auto;display:flex;flex-direction:column;gap:2px;}
-    .drawer-nav a{display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:7px;color:#9da3b4;font-family:var(--sans);font-size:14px;text-decoration:none;min-height:44px;}
-    .drawer-nav a:hover{background:var(--surface);color:var(--text);}
-    .drawer-nav a.active{background:rgba(79,142,247,0.1);color:var(--accent);}
-    .dnav-icon{font-size:16px;width:22px;text-align:center;}
-    .drawer-footer{padding:14px 16px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
-    .drawer-settings{font-size:13px;color:var(--text3);text-decoration:none;}
-    .drawer-settings:hover{color:#9da3b4;}
-    .bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;min-height:var(--bot-h);height:var(--bot-h);background:var(--bg2);border-top:1px solid var(--border);z-index:100;padding:0 4px;flex-direction:row;align-items:stretch;justify-content:space-around;}
-    .bn-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;text-decoration:none;color:var(--text3);font-family:var(--sans);padding:6px 0;border-radius:7px;position:relative;min-height:48px;}
-    .bn-item:hover{color:#9da3b4;}
-    .bn-item.active{color:var(--accent);}
-    .bn-item.active::after{content:'';position:absolute;bottom:2px;width:18px;height:2px;background:var(--accent);border-radius:2px;}
-    .bn-icon{font-size:18px;}
-    .bn-label{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;}
-    @media(max-width:900px){.topnav a{font-size:12px;padding:5px 8px;}.topnav a[data-short]{font-size:0;}.topnav a[data-short]::before{content:attr(data-short);font-size:12px;font-family:var(--sans);}.paket-badge{display:none!important;}.settings-link{display:none!important;}.burger{display:flex;}}
-    @media(max-width:600px){
-      :root{--nav-h:48px;--bot-h:56px;}
-      .topnav{display:none;}.burger{display:flex;}.bottom-nav{display:flex;}
-      body{padding-bottom:var(--bot-h);}
-      .topbar{padding:0 14px;}
-      .logo{font-size:16px;}
-    }
-    @media(max-width:600px){::-webkit-scrollbar{display:none;}*{scrollbar-width:none;}}
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Fälle · PROVA</title>
+<style>
+/* ═══ PROVA SIDEBAR SYSTEM ═══════════════════════════════════════════════ */
+:root{
+  --bg:#0b0d11;--bg2:#111318;--bg3:#161a22;
+  --surface:#1c2130;--surface2:#232a3a;
+  --border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.11);
+  --text:#eaecf4;--text2:#8b93ab;--text3:#4d5568;
+  --accent:#4f8ef7;--accent2:#3a7be0;
+  --success:#10b981;--warning:#f59e0b;--danger:#ef4444;--purple:#8b5cf6;
+  --sb-w:220px;--sb-w-col:58px;--sb-bg:#0e1016;--sb-border:rgba(255,255,255,0.07);
+  --font-ui:'DM Sans',system-ui,sans-serif;
+  --font-mono:ui-monospace,Consolas,monospace;
+  --r-sm:6px;--r-md:10px;--r-lg:14px;
+  --shadow-sm:0 1px 3px rgba(0,0,0,.25);--shadow-md:0 4px 16px rgba(0,0,0,.35);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{font-size:14px;scroll-behavior:smooth;}
+body{font-family:var(--font-ui);background:var(--bg);color:var(--text2);min-height:100vh;overflow-x:hidden;line-height:1.55;}
+a{text-decoration:none;color:inherit;}
+button,input,select,textarea{font-family:inherit;font-size:inherit;}
+*{-webkit-tap-highlight-color:transparent;}
+input,select,textarea{font-size:max(16px,1em);}
 
-    .main{flex:1;padding:2rem;}
-    .page-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1.75rem;}
-    .page-title{font-size:1.5rem;font-weight:700;color:var(--navy);margin-bottom:.25rem;}
-    .page-subtitle{font-size:.9375rem;color:var(--gray-500);}
+/* SIDEBAR */
+.app-shell{display:flex;min-height:100vh;}
+.sidebar{width:var(--sb-w);min-width:var(--sb-w);background:var(--sb-bg);border-right:1px solid var(--sb-border);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:200;transition:width .22s cubic-bezier(.4,0,.2,1),min-width .22s cubic-bezier(.4,0,.2,1);overflow:hidden;}
+.sidebar.collapsed{width:var(--sb-w-col);min-width:var(--sb-w-col);}
+.sb-logo{display:flex;align-items:center;gap:10px;padding:18px 16px 14px;border-bottom:1px solid var(--sb-border);flex-shrink:0;min-height:60px;overflow:hidden;}
+.sb-logo-mark{width:28px;height:28px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:8px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff;}
+.sb-logo-text{font-size:15px;font-weight:800;letter-spacing:-.02em;color:var(--text);white-space:nowrap;overflow:hidden;transition:opacity .15s,width .15s;}
+.sb-logo-text span{color:var(--accent);}
+.sidebar.collapsed .sb-logo-text{opacity:0;width:0;}
+.sb-new-btn{margin:12px 10px 8px;padding:9px 12px;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:var(--r-md);color:#fff;font-weight:700;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:8px;white-space:nowrap;overflow:hidden;transition:all .15s;flex-shrink:0;}
+.sb-new-btn:hover{opacity:.9;transform:translateY(-1px);}
+.sb-new-btn .btn-icon{font-size:16px;flex-shrink:0;}
+.sb-new-btn .btn-label{transition:opacity .15s,width .15s;overflow:hidden;}
+.sidebar.collapsed .sb-new-btn .btn-label{opacity:0;width:0;margin:0;padding:0;}
+.sidebar.collapsed .sb-new-btn{justify-content:center;padding:9px;}
+.sb-nav{flex:1;overflow-y:auto;overflow-x:hidden;padding:6px 8px 8px;display:flex;flex-direction:column;gap:1px;}
+.sb-nav::-webkit-scrollbar{width:3px;}
+.sb-section-label{font-size:10px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--text3);padding:12px 8px 4px;white-space:nowrap;overflow:hidden;transition:opacity .15s;}
+.sidebar.collapsed .sb-section-label{opacity:0;height:0;padding:0;}
+.sb-item{display:flex;align-items:center;gap:11px;padding:8px 8px;border-radius:var(--r-sm);color:var(--text3);font-size:13px;font-weight:500;cursor:pointer;text-decoration:none;white-space:nowrap;overflow:hidden;transition:color .12s,background .12s;position:relative;min-height:36px;}
+.sb-item:hover{color:var(--text2);background:rgba(255,255,255,.04);}
+.sb-item.active{color:var(--accent);background:rgba(79,142,247,.1);font-weight:600;}
+.sb-item.active::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:18px;background:var(--accent);border-radius:0 3px 3px 0;}
+.sb-icon{font-size:15px;width:20px;text-align:center;flex-shrink:0;}
+.sb-label{transition:opacity .15s;overflow:hidden;}
+.sidebar.collapsed .sb-label{opacity:0;width:0;}
+.sb-divider{height:1px;background:var(--sb-border);margin:6px 0;flex-shrink:0;}
+.sb-footer{border-top:1px solid var(--sb-border);padding:8px;display:flex;flex-direction:column;gap:1px;flex-shrink:0;}
+.sb-paket{display:flex;align-items:center;gap:10px;padding:8px 8px;border-radius:var(--r-sm);white-space:nowrap;overflow:hidden;}
+.paket-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.paket-name{font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;transition:opacity .15s;}
+.sidebar.collapsed .paket-name{opacity:0;width:0;}
+.sb-toggle{display:flex;align-items:center;justify-content:center;width:100%;padding:8px;border:none;background:none;color:var(--text3);cursor:pointer;border-radius:var(--r-sm);transition:color .12s,background .12s;font-size:14px;}
+.sb-toggle:hover{color:var(--text2);background:rgba(255,255,255,.04);}
+.sb-toggle-icon{transition:transform .22s;display:inline-block;}
+.sidebar.collapsed .sb-toggle-icon{transform:rotate(180deg);}
+.sb-item[data-tip]{position:relative;}
+.sidebar.collapsed .sb-item[data-tip]:hover::after{content:attr(data-tip);position:absolute;left:calc(var(--sb-w-col) + 8px);top:50%;transform:translateY(-50%);background:#1e2536;border:1px solid var(--border2);color:var(--text);font-size:12px;font-weight:500;padding:5px 10px;border-radius:6px;white-space:nowrap;z-index:500;box-shadow:var(--shadow-md);pointer-events:none;}
+.main-wrap{margin-left:var(--sb-w);flex:1;min-width:0;transition:margin-left .22s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;min-height:100vh;}
+.sidebar.collapsed ~ .main-wrap{margin-left:var(--sb-w-col);}
 
-    .layout{display:grid;grid-template-columns:260px minmax(0,1fr);gap:1.5rem;align-items:flex-start;}
-    .filter-card,.table-card{background:#fff;border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);border:1px solid var(--gray-100);}
-    .filter-card-header,.table-card-header{padding:1rem 1.25rem;border-bottom:1px solid var(--gray-100);display:flex;align-items:center;justify-content:space-between;}
-    .filter-card-title,.table-card-title{font-size:.9375rem;font-weight:700;color:var(--navy);}
-    .filter-body{padding:1rem 1.25rem;display:flex;flex-direction:column;gap:.75rem;}
-    .filter-label{font-size:.8rem;font-weight:600;color:var(--gray-600);margin-bottom:.15rem;}
-    .filter-select,.filter-input{width:100%;padding:.45rem .65rem;font-size:.85rem;border-radius:.5rem;border:1px solid var(--gray-300);background:var(--white);color:var(--gray-800);}
+/* TOPBAR */
+.topbar{height:52px;min-height:52px;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 24px;position:sticky;top:0;z-index:100;flex-shrink:0;}
+.topbar-left{display:flex;align-items:center;gap:12px;}
+.topbar-right{display:flex;align-items:center;gap:6px;}
+.breadcrumb{font-size:13px;color:var(--text3);display:flex;align-items:center;gap:6px;}
+.breadcrumb strong{color:var(--text2);font-weight:600;}
+.topbar-btn{display:flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:var(--r-sm);border:1px solid var(--border2);background:transparent;color:var(--text3);cursor:pointer;font-size:14px;transition:all .12s;}
+.topbar-btn:hover{color:var(--text2);background:rgba(255,255,255,.05);}
+.topbar-paket{font-size:10px;font-weight:700;padding:3px 9px;border-radius:10px;letter-spacing:.04em;}
+.burger{display:none;flex-direction:column;gap:4.5px;background:none;border:none;cursor:pointer;padding:8px;border-radius:6px;min-height:36px;align-items:center;justify-content:center;}
+.burger span{display:block;width:18px;height:2px;background:var(--text2);border-radius:2px;}
+.sb-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:190;backdrop-filter:blur(2px);}
+.sb-overlay.open{display:block;}
+.bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;height:56px;background:var(--bg2);border-top:1px solid var(--border);z-index:150;flex-direction:row;align-items:stretch;justify-content:space-around;padding:0 4px;}
+.bn-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;text-decoration:none;color:var(--text3);padding:4px 0;font-size:9px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;}
+.bn-item.active{color:var(--accent);}
+.bn-icon{font-size:17px;}
 
-    .table-body{padding:.75rem 1.25rem 1.25rem;}
-    table{width:100%;border-collapse:collapse;font-size:.875rem;}
-    thead th{padding:.5rem .5rem;text-align:left;color:var(--gray-500);font-weight:600;border-bottom:1px solid var(--gray-200);white-space:nowrap;}
-    tbody td{padding:.55rem .5rem;border-bottom:1px solid var(--gray-100);vertical-align:middle;}
-    tbody tr:hover{background:var(--gray-50);}
+/* PAGE */
+.page-content{padding:24px 28px 48px;max-width:1400px;width:100%;}
 
-    .badge{display:inline-flex;align-items:center;gap:.25rem;padding:.15rem .5rem;border-radius:999px;font-size:.75rem;font-weight:600;}
-    .badge-gray{background:var(--gray-100);color:var(--gray-600);}
-    .badge-blue{background:rgba(59,130,246,.1);color:#1D4ED8;}
-    .badge-orange{background:rgba(245,158,11,.1);color:#92400E;}
-    .badge-green{background:rgba(16,185,129,.1);color:#047857;}
+/* TOOLBAR */
+.toolbar{display:flex;align-items:center;gap:10px;margin-bottom:20px;flex-wrap:wrap;}
+.toolbar-left{display:flex;align-items:center;gap:8px;flex:1;min-width:0;}
+.toolbar-right{display:flex;align-items:center;gap:6px;flex-shrink:0;}
+.page-title{font-size:20px;font-weight:800;letter-spacing:-.025em;color:var(--text);white-space:nowrap;}
+.count-badge{font-size:12px;font-weight:600;padding:2px 8px;border-radius:10px;background:var(--surface2);color:var(--text3);}
+.search-input{padding:8px 12px;background:var(--surface);border:1px solid var(--border2);border-radius:var(--r-md);color:var(--text);font-size:13px;outline:none;transition:border-color .15s;width:220px;}
+.search-input:focus{border-color:var(--accent);}
+.search-input::placeholder{color:var(--text3);}
+.filter-select{padding:8px 10px;background:var(--surface);border:1px solid var(--border2);border-radius:var(--r-md);color:var(--text2);font-size:13px;outline:none;cursor:pointer;appearance:none;}
+.filter-select option{background:var(--bg2);}
+.view-toggle{display:flex;background:var(--surface);border-radius:var(--r-md);padding:3px;gap:2px;}
+.view-btn{padding:5px 10px;border-radius:6px;border:none;background:transparent;color:var(--text3);cursor:pointer;font-size:13px;transition:all .12s;}
+.view-btn.active{background:var(--surface2);color:var(--text2);}
+.btn-new{display:flex;align-items:center;gap:7px;padding:8px 16px;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:var(--r-md);color:#fff;font-weight:700;font-size:13px;cursor:pointer;transition:all .15s;white-space:nowrap;}
+.btn-new:hover{opacity:.9;transform:translateY(-1px);}
 
-    .btn{display:inline-flex;align-items:center;justify-content:center;gap:.4rem;padding:.5rem .9rem;border-radius:.5rem;border:1px solid transparent;font-size:.85rem;font-weight:600;cursor:pointer;background:var(--accent);color:#fff;}
-    .btn-ghost{background:transparent;border-color:var(--gray-300);color:var(--gray-600);}
-    .btn-ghost:hover{background:var(--gray-100);}
+/* ══ KANBAN ══ */
+.kanban-board{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;align-items:start;}
+.kanban-col{background:var(--bg3);border-radius:var(--r-lg);overflow:hidden;min-height:200px;}
+.kanban-col-header{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid var(--border);}
+.col-title{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;}
+.col-dot{width:8px;height:8px;border-radius:50%;}
+.col-count{font-size:11px;font-weight:700;padding:2px 7px;border-radius:10px;background:var(--surface2);color:var(--text3);}
+.kanban-cards{padding:10px;display:flex;flex-direction:column;gap:8px;min-height:60px;}
 
-    .empty{padding:2.5rem 1.5rem;text-align:center;font-size:.9rem;color:var(--gray-500);}
-    .empty a{color:var(--accent);}
+/* Fall-Karte */
+.fall-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);padding:13px 14px;cursor:pointer;transition:all .15s;position:relative;}
+.fall-card:hover{border-color:var(--border2);transform:translateY(-1px);box-shadow:var(--shadow-sm);}
+.fall-card:hover .card-actions{opacity:1;}
+.fall-card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:8px;}
+.fall-az{font-family:var(--font-mono);font-size:11px;font-weight:700;color:var(--accent);}
+.fall-schadenart{display:inline-flex;align-items:center;font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;text-transform:uppercase;letter-spacing:.04em;}
+.fall-card-body{margin-bottom:8px;}
+.fall-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:3px;line-height:1.3;}
+.fall-meta{font-size:11px;color:var(--text3);display:flex;flex-direction:column;gap:2px;}
+.fall-card-footer{display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.fall-date{font-size:10px;color:var(--text3);}
+.fall-frist{font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px;}
+.fall-frist.rot{background:rgba(239,68,68,.12);color:var(--danger);}
+.fall-frist.warn{background:rgba(245,158,11,.12);color:var(--warning);}
+.fall-frist.ok{background:rgba(16,185,129,.12);color:var(--success);}
+.card-actions{position:absolute;top:10px;right:10px;display:flex;gap:4px;opacity:0;transition:opacity .15s;}
+.card-action-btn{width:26px;height:26px;border-radius:5px;border:1px solid var(--border2);background:var(--bg2);color:var(--text3);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:12px;transition:all .12s;}
+.card-action-btn:hover{color:var(--text2);border-color:var(--accent);}
+.kanban-empty{padding:20px;text-align:center;color:var(--text3);font-size:12px;}
 
-    .pill{font-size:.75rem;color:var(--gray-500);}
+/* ══ LISTE ══ */
+.list-view{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;}
+.list-header{display:grid;grid-template-columns:140px 1fr 180px 100px 130px 80px;gap:12px;padding:10px 16px;border-bottom:1px solid var(--border);background:var(--bg3);}
+.list-th{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);}
+.list-row{display:grid;grid-template-columns:140px 1fr 180px 100px 130px 80px;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .12s;align-items:center;}
+.list-row:hover{background:rgba(255,255,255,.025);}
+.list-row:last-child{border-bottom:none;}
+.list-az{font-family:var(--font-mono);font-size:12px;font-weight:700;color:var(--accent);}
+.list-name{font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.list-meta{font-size:11px;color:var(--text3);}
+.list-addr{font-size:12px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.list-date{font-size:12px;color:var(--text3);}
+.status-badge{display:inline-flex;align-items:center;font-size:10px;font-weight:700;padding:3px 8px;border-radius:10px;white-space:nowrap;}
+.list-actions{display:flex;gap:4px;justify-content:flex-end;}
+.list-action-btn{width:28px;height:28px;border-radius:6px;border:1px solid var(--border2);background:transparent;color:var(--text3);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;transition:all .12s;}
+.list-action-btn:hover{color:var(--accent);border-color:var(--accent);}
+.list-empty{padding:48px;text-align:center;color:var(--text3);}
+.list-empty-icon{font-size:32px;margin-bottom:12px;opacity:.4;}
 
-    @media(max-width:960px){.main{padding:1.25rem;}.layout{grid-template-columns:1fr;}}
-  </style>
+/* Schadenart-Farben */
+.sa-schimmel{background:rgba(139,92,246,.12);color:#a78bfa;}
+.sa-wasser{background:rgba(59,130,246,.12);color:#60a5fa;}
+.sa-brand{background:rgba(239,68,68,.12);color:#f87171;}
+.sa-sturm{background:rgba(245,158,11,.12);color:#fbbf24;}
+.sa-baum{background:rgba(16,185,129,.12);color:#6ee7b7;}
+.sa-sonstig{background:rgba(255,255,255,.06);color:var(--text3);}
+
+/* Status-Farben */
+.st-bearb{background:rgba(79,142,247,.1);color:var(--accent);border:1px solid rgba(79,142,247,.2);}
+.st-entwurf{background:rgba(245,158,11,.1);color:var(--warning);border:1px solid rgba(245,158,11,.2);}
+.st-freig{background:rgba(16,185,129,.1);color:var(--success);border:1px solid rgba(16,185,129,.2);}
+.st-export{background:rgba(139,92,246,.1);color:var(--purple);border:1px solid rgba(139,92,246,.2);}
+.st-archiv{background:rgba(255,255,255,.04);color:var(--text3);border:1px solid var(--border);}
+
+/* Loading skeleton */
+.skeleton{background:linear-gradient(90deg,var(--surface) 25%,var(--surface2) 50%,var(--surface) 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:6px;}
+@keyframes shimmer{0%{background-position:200% 0;}100%{background-position:-200% 0;}}
+
+/* Support FAB */
+.support-fab{position:fixed;bottom:24px;right:24px;z-index:400;width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));box-shadow:0 4px 16px rgba(79,142,247,.4);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;transition:transform .15s;border:none;color:#fff;}
+.support-fab:hover{transform:scale(1.08);}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:500;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px);}
+.modal-overlay.open{display:flex;}
+.modal-box{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--r-lg);max-width:480px;width:100%;padding:26px;max-height:90vh;overflow-y:auto;}
+.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;}
+.modal-title{font-size:15px;font-weight:700;color:var(--text);}
+.modal-close{background:none;border:none;color:var(--text3);font-size:18px;cursor:pointer;padding:4px;border-radius:4px;}
+.form-group{margin-bottom:14px;}
+.form-label{display:block;font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--text3);margin-bottom:5px;}
+.form-input{width:100%;padding:9px 12px;background:var(--surface);border:1px solid var(--border2);border-radius:var(--r-md);color:var(--text);font-size:13px;outline:none;transition:border-color .15s;}
+.form-input:focus{border-color:var(--accent);}
+.form-input::placeholder{color:var(--text3);}
+textarea.form-input{min-height:80px;resize:vertical;}
+
+/* Responsive */
+@media(max-width:1200px){.kanban-board{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:900px){
+  .list-header{grid-template-columns:120px 1fr 90px 80px;}
+  .list-row{grid-template-columns:120px 1fr 90px 80px;}
+  .list-addr,.list-date{display:none;}
+}
+@media(max-width:768px){
+  .sidebar{transform:translateX(-100%);transition:transform .25s cubic-bezier(.4,0,.2,1);}
+  .sidebar.mobile-open{transform:translateX(0);width:var(--sb-w);min-width:var(--sb-w);}
+  .sidebar.mobile-open .sb-label,.sidebar.mobile-open .sb-logo-text,.sidebar.mobile-open .sb-section-label,.sidebar.mobile-open .paket-name,.sidebar.mobile-open .btn-label{opacity:1;width:auto;}
+  .sidebar.mobile-open .sb-new-btn{justify-content:flex-start;padding:9px 12px;}
+  .main-wrap{margin-left:0!important;}
+  .burger{display:flex;}
+  .bottom-nav{display:flex;}
+  .page-content{padding:16px 16px 72px;}
+  .topbar{padding:0 16px;}
+  .kanban-board{grid-template-columns:1fr;}
+  .search-input{width:150px;}
+}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+.page-content{animation:fadeIn .22s ease;}
+</style>
 </head>
 <body>
-<div class="topbar">
-  <div class="topbar-left">
-    <a href="dashboard.html" class="logo">PRO<span>VA</span></a>
-    <nav class="topnav">
-      <a href="dashboard.html" data-short="Dashboard">Dashboard</a>
-      <a href="app-starter.html" data-short="Gutachten">Neues Gutachten</a>
-      <a href="archiv.html" data-short="Archiv" class="active">Archiv</a>
-      <a href="termine.html" data-short="Termine">Termine</a>
-      <a href="rechnungen.html" data-short="Rechnungen">Rechnungen</a>
-      <a href="briefvorlagen.html" data-short="Vorlagen">Briefvorlagen</a>
-      <a href="jveg.html" data-short="JVEG">JVEG</a>
-    </nav>
+<div class="app-shell">
+
+<!-- SIDEBAR -->
+<nav class="sidebar" id="sidebar">
+  <div class="sb-logo">
+    <div class="sb-logo-mark">P</div>
+    <div class="sb-logo-text">PR<span>O</span>VA</div>
   </div>
-  <div class="topbar-right">
-    <span class="paket-badge" id="topbarPaket"></span>
-    <a href="einstellungen.html" class="settings-link">⚙</a>
-    <button class="burger" id="burgerBtn" onclick="toggleDrawer()" aria-label="Menü"><span></span><span></span><span></span></button>
+  <button class="sb-new-btn" id="sb-new-btn">
+    <span class="btn-icon">＋</span>
+    <span class="btn-label">Neuer Fall</span>
+  </button>
+  <div class="sb-nav">
+    <a href="dashboard.html" class="sb-item" data-tip="Zentrale"><span class="sb-icon">⊞</span><span class="sb-label">Zentrale</span></a>
+    <a href="archiv.html" class="sb-item active" data-tip="Fälle"><span class="sb-icon">📁</span><span class="sb-label">Fälle</span></a>
+    <a href="termine.html" class="sb-item" data-tip="Kalender"><span class="sb-icon">📅</span><span class="sb-label">Kalender</span></a>
+    <a href="rechnungen.html" class="sb-item" data-tip="Rechnungen"><span class="sb-icon">💶</span><span class="sb-label">Rechnungen</span></a>
+    <a href="briefvorlagen.html" class="sb-item" data-tip="Briefe"><span class="sb-icon">✉️</span><span class="sb-label">Briefe</span></a>
+    <div class="sb-section-label">Werkzeuge</div>
+    <a href="jveg.html" class="sb-item" data-tip="JVEG-Rechner"><span class="sb-icon">⚖️</span><span class="sb-label">JVEG-Rechner</span></a>
+    <a href="kostenermittlung.html" class="sb-item" data-tip="Kosten & Aufmaß"><span class="sb-icon">📐</span><span class="sb-label">Kosten & Aufmaß</span></a>
+    <a href="textbausteine.html" class="sb-item" data-tip="Textbausteine"><span class="sb-icon">✏️</span><span class="sb-label">Textbausteine</span></a>
+    <div class="sb-divider"></div>
+    <a href="kontakte.html" class="sb-item" data-tip="Kontakte"><span class="sb-icon">👥</span><span class="sb-label">Kontakte</span></a>
   </div>
-</div>
-<div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
-<div class="drawer" id="drawer">
-  <div class="drawer-header">
-    <a href="dashboard.html" class="logo">PRO<span>VA</span></a>
-    <button class="drawer-close" onclick="closeDrawer()">✕</button>
+  <div class="sb-footer">
+    <div class="sb-paket"><div class="paket-dot" id="sb-paket-dot"></div><span class="paket-name" id="sb-paket-name">Starter</span></div>
+    <a href="einstellungen.html" class="sb-item" data-tip="Einstellungen"><span class="sb-icon">⚙️</span><span class="sb-label">Einstellungen</span></a>
+    <button class="sb-toggle" onclick="toggleSidebar()"><span class="sb-toggle-icon">◀</span></button>
   </div>
-  <nav class="drawer-nav">
-    <a href="dashboard.html"><span class="dnav-icon">🏠</span>Dashboard</a>
-    <a href="app-starter.html"><span class="dnav-icon">📄</span>Neues Gutachten</a>
-    <a href="archiv.html" class="active"><span class="dnav-icon">📂</span>Archiv</a>
-    <a href="termine.html"><span class="dnav-icon">📅</span>Termine</a>
-    <a href="rechnungen.html"><span class="dnav-icon">💶</span>Rechnungen</a>
-    <a href="briefvorlagen.html"><span class="dnav-icon">✉️</span>Briefvorlagen</a>
-    <a href="jveg.html"><span class="dnav-icon">🧮</span>JVEG</a>
-    <a href="einstellungen.html"><span class="dnav-icon">⚙</span>Einstellungen</a>
-    <a href="#" onclick="logout();return false;" style="margin-top:auto;color:#ef4444;"><span class="dnav-icon">🚪</span>Abmelden</a>
-  </nav>
-  <div class="drawer-footer">
-    <span class="paket-badge" id="drawerPaket"></span>
-  </div>
-</div>
-<nav class="bottom-nav">
-  <a href="dashboard.html" class="bn-item"><span class="bn-icon">🏠</span><span class="bn-label">Dashboard</span></a>
-  <a href="app-starter.html" class="bn-item"><span class="bn-icon">📄</span><span class="bn-label">Gutachten</span></a>
-  <a href="archiv.html" class="bn-item active"><span class="bn-icon">📂</span><span class="bn-label">Archiv</span></a>
-  <a href="rechnungen.html" class="bn-item"><span class="bn-icon">💶</span><span class="bn-label">Rechnungen</span></a>
-  <a href="einstellungen.html" class="bn-item"><span class="bn-icon">⚙</span><span class="bn-label">Einstellungen</span></a>
-</nav><!-- /bottom-nav -->
-<script>
-function toggleDrawer(){var d=document.getElementById('drawer'),o=document.getElementById('drawerOverlay');d.classList.toggle('open');o.classList.toggle('open');document.body.style.overflow=d.classList.contains('open')?'hidden':'';}
-function closeDrawer(){document.getElementById('drawer').classList.remove('open');document.getElementById('drawerOverlay').classList.remove('open');document.body.style.overflow='';}
-document.addEventListener('keydown',function(e){if(e.key==='Escape')closeDrawer();});
-function logout(){
-  localStorage.removeItem('prova_user');
-  localStorage.removeItem('prova_sv_email');
-  if(typeof netlifyIdentity!=='undefined'){
-    try{netlifyIdentity.logout();}catch(e){}
-  }
-  window.location.href='app-login.html';
-}
-// Auth-Guard
-(function(){
-  var u=localStorage.getItem('prova_user');
-  if(!u){window.location.href='app-login.html';return;}
-  var p=localStorage.getItem('prova_paket')||'Starter';
-  var c={Starter:'#4f8ef7',Pro:'#f59e0b',Enterprise:'#a78bfa'}[p]||'#4f8ef7';
-  var s='background:'+c+'18;color:'+c+';border:1px solid '+c+'33';
-  ['topbarPaket','drawerPaket'].forEach(function(id){var el=document.getElementById(id);if(el){el.textContent=p;el.setAttribute('style',s);}});
-  window.PROVA=window.PROVA||{};PROVA.paket=p;PROVA.isPro=['Pro','Enterprise'].includes(p);PROVA.isEnterprise=p==='Enterprise';
-})();
-</script>
-  <main class="main">
-      <div class="page-header">
-        <div>
-          <h1 class="page-title">Archiv</h1>
-          <p class="page-subtitle">Alle Gutachten des aktuellen Sachverständigen – filterbar und durchsuchbar.</p>
+</nav>
+<div class="sb-overlay" id="sb-overlay" onclick="closeMobileSidebar()"></div>
+
+<!-- MAIN -->
+<div class="main-wrap" id="main-wrap">
+
+  <header class="topbar">
+    <div class="topbar-left">
+      <button class="burger" onclick="openMobileSidebar()"><span></span><span></span><span></span></button>
+      <div class="breadcrumb"><span>PROVA</span><span style="color:var(--text3)">›</span><strong>Fälle</strong></div>
+    </div>
+    <div class="topbar-right">
+      <span class="topbar-paket" id="topbar-paket-badge">Starter</span>
+      <a href="einstellungen.html"><button class="topbar-btn">⚙</button></a>
+    </div>
+  </header>
+
+  <main class="page-content">
+
+    <!-- TOOLBAR -->
+    <div class="toolbar">
+      <div class="toolbar-left">
+        <span class="page-title">Fälle</span>
+        <span class="count-badge" id="count-badge">—</span>
+        <input class="search-input" id="suche" type="search" placeholder="Suche…" oninput="filterUndRender()">
+        <select class="filter-select" id="f-schadenart" onchange="filterUndRender()">
+          <option value="">Alle Schadenarten</option>
+          <option value="Schimmelbefall">Schimmelbefall</option>
+          <option value="Wasserschaden">Wasserschaden</option>
+          <option value="Brandschaden">Brandschaden</option>
+          <option value="Sturmschaden">Sturmschaden</option>
+          <option value="Baumängel">Baumängel</option>
+          <option value="Elementarschaden">Elementarschaden</option>
+        </select>
+        <select class="filter-select" id="f-zeitraum" onchange="filterUndRender()">
+          <option value="">Alle Zeiträume</option>
+          <option value="30">Letzte 30 Tage</option>
+          <option value="90">Letzte 90 Tage</option>
+          <option value="jahr">Dieses Jahr</option>
+        </select>
+      </div>
+      <div class="toolbar-right">
+        <div class="view-toggle">
+          <button class="view-btn" id="btn-kanban" onclick="setView('kanban')">⊞ Kanban</button>
+          <button class="view-btn" id="btn-liste" onclick="setView('liste')">☰ Liste</button>
+        </div>
+        <button class="btn-new" id="btn-neuer-fall">＋ Neuer Fall</button>
+      </div>
+    </div>
+
+    <!-- KANBAN VIEW -->
+    <div id="view-kanban">
+      <div class="kanban-board" id="kanban-board">
+        <!-- Spalten werden per JS gerendert -->
+        <div class="kanban-col">
+          <div class="kanban-col-header">
+            <div class="col-title"><div class="col-dot" style="background:var(--accent)"></div>Auftrag erhalten</div>
+            <span class="col-count" id="kk-auftrag">0</span>
+          </div>
+          <div class="kanban-cards" id="kc-auftrag"><div class="kanban-empty">Keine Fälle</div></div>
+        </div>
+        <div class="kanban-col">
+          <div class="kanban-col-header">
+            <div class="col-title"><div class="col-dot" style="background:var(--warning)"></div>In Bearbeitung</div>
+            <span class="col-count" id="kk-bearb">0</span>
+          </div>
+          <div class="kanban-cards" id="kc-bearb"><div class="kanban-empty">Keine Fälle</div></div>
+        </div>
+        <div class="kanban-col">
+          <div class="kanban-col-header">
+            <div class="col-title"><div class="col-dot" style="background:var(--purple)"></div>Entwurf fertig</div>
+            <span class="col-count" id="kk-entwurf">0</span>
+          </div>
+          <div class="kanban-cards" id="kc-entwurf"><div class="kanban-empty">Keine Fälle</div></div>
+        </div>
+        <div class="kanban-col">
+          <div class="kanban-col-header">
+            <div class="col-title"><div class="col-dot" style="background:var(--success)"></div>Abgeschlossen</div>
+            <span class="col-count" id="kk-done">0</span>
+          </div>
+          <div class="kanban-cards" id="kc-done"><div class="kanban-empty">Keine Fälle</div></div>
         </div>
       </div>
+    </div>
 
-      <div class="layout">
-        <section class="filter-card">
-          <div class="filter-card-header">
-            <div class="filter-card-title">Filter</div>
+    <!-- LISTE VIEW -->
+    <div id="view-liste" style="display:none;">
+      <div class="list-view">
+        <div class="list-header">
+          <div class="list-th">Aktenzeichen</div>
+          <div class="list-th">Schadenfall</div>
+          <div class="list-th">Adresse</div>
+          <div class="list-th">Datum</div>
+          <div class="list-th">Status</div>
+          <div class="list-th" style="text-align:right;">Aktion</div>
+        </div>
+        <div id="liste-body">
+          <div class="list-empty">
+            <div class="list-empty-icon">⏳</div>
+            <p>Wird geladen…</p>
           </div>
-          <div class="filter-body">
-            <div>
-              <div class="filter-label">Schadensart</div>
-              <select id="f-schadenart" class="filter-select">
-                <option value="">Alle</option>
-                <option value="Schimmel">Schimmel</option>
-                <option value="Wasser">Wasser</option>
-                <option value="Brand">Brand</option>
-                <option value="Sturm">Sturm</option>
-                <option value="Einbruch">Einbruch</option>
-                <option value="Baumängel">Baumängel</option>
-              </select>
-            </div>
-            <div>
-              <div class="filter-label">Status</div>
-              <select id="f-status" class="filter-select">
-                <option value="">Alle</option>
-                <option value="In Bearbeitung">In Bearbeitung</option>
-                <option value="In Überarbeitung">In Überarbeitung</option>
-                <option value="Exportiert">Exportiert</option>
-                <option value="Freigegeben">Freigegeben</option>
-              </select>
-            </div>
-            <div>
-              <div class="filter-label">Zeitraum</div>
-              <select id="f-zeitraum" class="filter-select">
-                <option value="">Alle</option>
-                <option value="30">Letzte 30 Tage</option>
-                <option value="90">Letzte 90 Tage</option>
-                <option value="jahr">Dieses Jahr</option>
-              </select>
-            </div>
-            <div>
-              <div class="filter-label">Suche</div>
-              <input id="f-suche" class="filter-input" type="text" placeholder="Aktenzeichen, Adresse, Auftraggeber…" />
-            </div>
-            <button class="btn-ghost" id="btnReset">Filter zurücksetzen</button>
-          </div>
-        </section>
-
-        <section class="table-card">
-          <div class="table-card-header">
-            <div class="table-card-title">Gutachten</div>
-            <div style="font-size:.8rem;color:var(--gray-500)"><span id="countTotal">–</span> Einträge</div>
-          </div>
-          <div class="table-body" id="tableContainer">
-            <div class="empty" id="emptyState" style="display:none">
-              Noch keine Gutachten erstellt.<br>
-              <a href="app-starter.html">Jetzt erstes Gutachten anlegen →</a>
-            </div>
-            <div id="loadingState" class="empty">Wird geladen…</div>
-            <div id="errorState" class="empty" style="display:none;color:#b91c1c;">Fehler beim Laden. Bitte Seite neu laden.</div>
-            <table id="archivTable" style="display:none">
-              <thead>
-                <tr>
-                  <th>Aktenzeichen</th>
-                  <th>Schadensart</th>
-                  <th>Adresse</th>
-                  <th>Datum</th>
-                  <th>Status</th>
-                  <th>Aktionen</th>
-                </tr>
-              </thead>
-              <tbody id="archivBody"></tbody>
-            </table>
-          </div>
-        </section>
+        </div>
       </div>
-    </main>
-
-  <script>
-    const AIRTABLE_BASE  = 'appJ7bLlAHZoxENWE';
-    const AIRTABLE_TABLE = 'tblSxV8bsXwd1pwa0';
-    const CACHE_KEY = 'prova_archiv_cache_v1';
-    const CACHE_MS  = 5 * 60 * 1000;
-
-    function readCache() {
-      try {
-        const raw = localStorage.getItem(CACHE_KEY);
-        if (!raw) return null;
-        const obj = JSON.parse(raw);
-        if (!obj || !obj.time || !obj.data) return null;
-        if (Date.now() - obj.time > CACHE_MS) return null;
-        return obj.data;
-      } catch { return null; }
-    }
-    function writeCache(data) {
-      try {
-        localStorage.setItem(CACHE_KEY, JSON.stringify({ time: Date.now(), data }));
-      } catch {}
-    }
-
-    let alleRecords = [];
-
-    async function ladeArchiv() {
-      const cached = readCache();
-      if (cached) {
-        alleRecords = cached;
-        render();
-        return;
-      }
-      const loading = document.getElementById('loadingState');
-      const error   = document.getElementById('errorState');
-      const table   = document.getElementById('archivTable');
-      loading.style.display = 'block';
-      error.style.display = 'none';
-      table.style.display = 'none';
-      try {
-        const filter = 'OR(NOT({Status}=""),{Status}="")'; // FilterByFormula wird unten gesetzt
-        const path = `/v0/${AIRTABLE_BASE}/${AIRTABLE_TABLE}?filterByFormula=${encodeURIComponent('NOT({Status}="")')}&maxRecords=100&sort[0][field]=Timestamp&sort[0][direction]=desc`;
-        const res = await fetch('/.netlify/functions/airtable', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ method: 'GET', path })
-        });
-        if (!res.ok) throw new Error('HTTP ' + res.status);
-        const data = await res.json();
-        alleRecords = data.records || [];
-        writeCache(alleRecords);
-        render();
-      } catch (e) {
-        console.error(e);
-        loading.style.display = 'none';
-        error.style.display = 'block';
-      }
-    }
-
-    function passFilter(rec) {
-      const f = rec.fields || {};
-      const art = (f.Schadensart || '').toLowerCase();
-      const status = f.Status || '';
-      const tsRaw = f.Timestamp ? new Date(f.Timestamp) : null;
-      const such = document.getElementById('f-suche').value.toLowerCase().trim();
-      const artFilter = document.getElementById('f-schadenart').value;
-      const statusFilter = document.getElementById('f-status').value;
-      const zr = document.getElementById('f-zeitraum').value;
-
-      if (artFilter) {
-        const map = {
-          'Schimmel':'schimmel',
-          'Wasser':'wasser',
-          'Brand':'brand',
-          'Sturm':'sturm',
-          'Einbruch':'einbruch',
-          'Baumängel':'mängel'
-        };
-        const token = map[artFilter] || artFilter.toLowerCase();
-        if (!art.includes(token)) return false;
-      }
-      if (statusFilter && status !== statusFilter) return false;
-      if (zr && tsRaw instanceof Date && !isNaN(tsRaw)) {
-        const now = new Date();
-        if (zr === '30') {
-          if (now - tsRaw > 30*24*60*60*1000) return false;
-        } else if (zr === '90') {
-          if (now - tsRaw > 90*24*60*60*1000) return false;
-        } else if (zr === 'jahr') {
-          if (tsRaw.getFullYear() !== now.getFullYear()) return false;
-        }
-      }
-      if (such) {
-        const addr = [f.Schaden_Strasse, f.Ort].filter(Boolean).join(' ');
-        const az   = f.Aktenzeichen || '';
-        const ag   = f.Auftraggeber_Name || '';
-        const hay  = (az + ' ' + addr + ' ' + ag).toLowerCase();
-        if (!hay.includes(such)) return false;
-      }
-      return true;
-    }
-
-    function render() {
-      const loading = document.getElementById('loadingState');
-      const empty   = document.getElementById('emptyState');
-      const table   = document.getElementById('archivTable');
-      const body    = document.getElementById('archivBody');
-      const countEl = document.getElementById('countTotal');
-
-      loading.style.display = 'none';
-      if (!alleRecords.length) {
-        empty.style.display = 'block';
-        table.style.display = 'none';
-        countEl.textContent = '0';
-        return;
-      }
-      const filtered = alleRecords.filter(passFilter);
-      empty.style.display = filtered.length ? 'none' : 'block';
-      table.style.display = filtered.length ? 'table' : 'none';
-      countEl.textContent = String(filtered.length);
-      body.innerHTML = filtered.map(r => {
-        const f = r.fields || {};
-        const az = f.Aktenzeichen || f.Schadensnummer || r.id.slice(-6).toUpperCase();
-        const addr = [f.Schaden_Strasse,f.Ort].filter(Boolean).join(', ') || '—';
-        const dat = f.Timestamp ? new Date(f.Timestamp).toLocaleDateString('de-DE') : '—';
-        const status = f.Status || 'In Bearbeitung';
-        let badgeClass = 'badge-gray';
-        if (status === 'Exportiert') badgeClass = 'badge-green';
-        else if (status === 'In Bearbeitung') badgeClass = 'badge-blue';
-        else if (status === 'In Überarbeitung') badgeClass = 'badge-orange';
-        return `<tr>
-          <td style="font-family:monospace;font-weight:600">${az}</td>
-          <td>${f.Schadensart || '—'}</td>
-          <td>${addr}</td>
-          <td>${dat}</td>
-          <td><span class="badge ${badgeClass}">${status}</span></td>
-          <td><button class="btn-ghost" onclick="window.location.href='freigabe.html?fall=${encodeURIComponent(az)}'">Öffnen</button></td>
-        </tr>`;
-      }).join('');
-    }
-
-    document.getElementById('f-schadenart').addEventListener('change', render);
-    document.getElementById('f-status').addEventListener('change', render);
-    document.getElementById('f-zeitraum').addEventListener('change', render);
-    document.getElementById('f-suche').addEventListener('input', () => { window.clearTimeout(window.__archivDebounce); window.__archivDebounce = setTimeout(render, 150); });
-    document.getElementById('btnReset').addEventListener('click', () => {
-      document.getElementById('f-schadenart').value = '';
-      document.getElementById('f-status').value = '';
-      document.getElementById('f-zeitraum').value = '';
-      document.getElementById('f-suche').value = '';
-      render();
-    });
-
-    ladeArchiv();
-  </script>
-<!-- SUPPORT BUTTON - INTELLIGENT TRIAGE -->
-<div id="support-btn" onclick="openSupportModal()" style="position:fixed;bottom:80px;right:20px;z-index:400;width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#4f8ef7,#3a7be0);box-shadow:0 4px 16px rgba(79,142,247,0.4);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:20px;" title="Support anfragen">&#128172;</div>
-<div id="support-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:500;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px);">
-<div style="background:#13161d;border:1px solid rgba(255,255,255,0.12);border-radius:14px;max-width:500px;width:100%;padding:28px;max-height:90vh;overflow-y:auto;">
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
-    <div style="font-size:16px;font-weight:700;color:#e8eaf0;">&#128172; Support</div>
-    <button onclick="closeSupportModal()" style="background:none;border:none;color:#6b7280;font-size:20px;cursor:pointer;line-height:1;">&#x2715;</button>
-  </div>
-  <!-- FAQ-Antwort (Nutzungsfrage) -->
-  <div id="support-faq" style="display:none;margin-bottom:16px;padding:14px;background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.25);border-radius:10px;">
-    <div style="font-size:12px;font-weight:600;color:#10b981;margin-bottom:6px;">&#129302; KI-Antwort</div>
-    <div id="support-faq-text" style="font-size:13px;color:#e8eaf0;line-height:1.6;"></div>
-    <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">
-      <button onclick="supportFaqHilft()" style="padding:6px 14px;background:#10b981;border:none;border-radius:6px;color:#fff;font-size:12px;font-weight:600;cursor:pointer;">&#10003; Hat geholfen</button>
-      <button onclick="supportFaqNichtHilft()" style="padding:6px 14px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:6px;color:#9da3b4;font-size:12px;cursor:pointer;">Trotzdem senden</button>
     </div>
+
+  </main>
+</div>
+</div>
+
+<!-- Mobile Bottom Nav -->
+<nav class="bottom-nav">
+  <a href="dashboard.html" class="bn-item"><span class="bn-icon">⊞</span><span>Zentrale</span></a>
+  <a href="archiv.html" class="bn-item active"><span class="bn-icon">📁</span><span>Fälle</span></a>
+  <a href="app-starter.html" class="bn-item" id="bn-new-link" style="position:relative;"><span class="bn-icon" style="background:var(--accent);border-radius:50%;width:38px;height:38px;display:flex;align-items:center;justify-content:center;font-size:20px;color:#fff;margin-top:-12px;box-shadow:0 2px 10px rgba(79,142,247,.45);">＋</span><span>Neu</span></a>
+  <a href="rechnungen.html" class="bn-item"><span class="bn-icon">💶</span><span>Rechnungen</span></a>
+  <a href="termine.html" class="bn-item"><span class="bn-icon">📅</span><span>Kalender</span></a>
+</nav>
+
+<!-- Support FAB -->
+<button class="support-fab" onclick="document.getElementById('sup-modal').classList.add('open')">💬</button>
+<div class="modal-overlay" id="sup-modal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal-box">
+    <div class="modal-header"><div class="modal-title">💬 Support</div><button class="modal-close" onclick="document.getElementById('sup-modal').classList.remove('open')">✕</button></div>
+    <div class="form-group"><label class="form-label">Betreff</label><input class="form-input" id="sup-betreff" type="text" placeholder="Kurze Beschreibung"></div>
+    <div class="form-group"><label class="form-label">Nachricht</label><textarea class="form-input" id="sup-nachricht" placeholder="Was ist passiert?"></textarea></div>
+    <button onclick="sendSupport()" style="width:100%;padding:11px;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:var(--r-md);color:#fff;font-size:14px;font-weight:700;cursor:pointer;">Senden</button>
   </div>
-  <!-- Typ-Indikator -->
-  <div id="support-typ-indicator" style="display:none;margin-bottom:14px;padding:8px 12px;border-radius:8px;font-size:12px;font-weight:600;"></div>
-  <!-- Form -->
-  <div id="support-form">
-    <div style="margin-bottom:14px;">
-      <label style="font-size:12px;font-weight:600;color:#9da3b4;display:block;margin-bottom:5px;">Betreff</label>
-      <input id="sup-betreff" type="text" placeholder="Kurze Beschreibung" oninput="supportAnalyse()" style="width:100%;background:#1e2330;border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:10px 12px;color:#e8eaf0;font-size:14px;outline:none;font-family:inherit;">
-    </div>
-    <div style="margin-bottom:18px;">
-      <label style="font-size:12px;font-weight:600;color:#9da3b4;display:block;margin-bottom:5px;">Nachricht</label>
-      <textarea id="sup-nachricht" placeholder="Was genau ist passiert? Je mehr Details, desto schneller k&#246;nnen wir helfen." oninput="supportAnalyse()" style="width:100%;background:#1e2330;border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:10px 12px;color:#e8eaf0;font-size:14px;outline:none;font-family:inherit;min-height:90px;resize:vertical;"></textarea>
-    </div>
-    <div id="support-err" style="display:none;font-size:12px;color:#ef4444;margin-bottom:10px;padding:8px 12px;background:rgba(239,68,68,0.08);border-radius:6px;border:1px solid rgba(239,68,68,0.2);">Bitte Betreff und Nachricht eingeben.</div>
-    <button id="sup-send-btn" onclick="sendSupport()" style="width:100%;padding:11px;background:linear-gradient(135deg,#4f8ef7,#3a7be0);border:none;border-radius:8px;color:#fff;font-size:14px;font-weight:600;cursor:pointer;">Anfrage senden</button>
-  </div>
-  <!-- Erfolg -->
-  <div id="support-success" style="display:none;text-align:center;padding:20px 0;">
-    <div style="font-size:40px;margin-bottom:12px;">&#9989;</div>
-    <div id="support-success-title" style="font-size:15px;font-weight:600;color:#e8eaf0;margin-bottom:8px;">Anfrage gesendet!</div>
-    <div id="support-success-text" style="font-size:13px;color:#9da3b4;">Wir melden uns schnellstm&#246;glich bei Ihnen.</div>
-    <button onclick="closeSupportModal()" style="margin-top:16px;padding:10px 24px;background:#4f8ef7;border:none;border-radius:8px;color:#fff;font-size:14px;font-weight:600;cursor:pointer;">Schlie&#223;en</button>
-  </div>
-</div></div>
+</div>
+
 <script>
+(function(){
+'use strict';
 
-const PROVA_FAQ = [
-  {q:"gutachten erstellen",a:"Klicken Sie im Dashboard auf 'Neues Gutachten'. Sie gelangen zu Schritt 1 (Stammdaten), dann Schritt 2 (Diktat/Text), dann Schritt 3 (KI-Analyse). Nach der Analyse können Sie in der Freigabe-Ansicht alles prüfen und freigeben."},
-  {q:"diktat aufnehmen",a:"In Schritt 2 finden Sie den Aufnahme-Button. Klicken Sie ihn, sprechen Sie Ihre Beobachtungen, klicken Sie erneut zum Stoppen. Das Transkript erscheint automatisch. Alternativ können Sie Text direkt eingeben."},
-  {q:"foto hochladen",a:"In Schritt 2 gibt es den Bereich 'Fotos'. Klicken Sie auf 'Fotos hinzufügen' oder ziehen Sie Bilder per Drag & Drop. Fotos werden automatisch komprimiert. Sie können auch später nachgereicht werden."},
-  {q:"pdf generieren",a:"Nach der Freigabe wird automatisch ein PDF erstellt und an Ihre E-Mail gesendet. Dies dauert ca. 1-2 Minuten. Prüfen Sie auch Ihren Spam-Ordner."},
-  {q:"rechnung erstellen",a:"Gehen Sie zu 'Rechnungen' in der Navigation. Wählen Sie den Rechnungstyp (JVEG, Pauschal, Stundensatz etc.), füllen Sie die Felder aus und klicken Sie 'Rechnung erstellen'. Die Rechnung wird per E-Mail zugeschickt."},
-  {q:"jveg berechnen",a:"Im JVEG-Rechner (Navigation → JVEG) können Sie Honorargruppe, Stunden, Fahrtkosten und Fotokosten eingeben. Der Rechner berechnet automatisch den Gesamtbetrag nach §9, §7, §8 und §12 JVEG."},
-  {q:"termin eintragen",a:"Unter 'Termine' können Sie neue Termine anlegen. Klicken Sie auf '+ Neuer Termin', wählen Sie Typ (Ortstermin, Gerichtstermin, Frist etc.), Datum und Uhrzeit. Sie erhalten automatisch Erinnerungen."},
-  {q:"briefvorlage",a:"Unter 'Briefvorlagen' finden Sie alle verfügbaren Vorlagen. Wählen Sie die passende Vorlage, die Felder werden automatisch aus Ihren Einstellungen befüllt. Sie können den Text anpassen und dann generieren."},
-  {q:"passwort ändern",a:"Gehen Sie zu prova-systems.de/app-login.html und klicken Sie auf 'Passwort vergessen'. Sie erhalten eine E-Mail mit einem Reset-Link."},
-  {q:"profil einstellungen",a:"Unter 'Einstellungen' (Zahnrad-Symbol) können Sie Ihre persönlichen Daten, Kanzleidaten, IBAN und Zertifizierungen hinterlegen. Diese Daten werden automatisch in alle Gutachten und Rechnungen übernommen."},
-  {q:"archiv suche",a:"Im Archiv können Sie nach Aktenzeichen, Auftraggeber, Schadenart und Status suchen. Nutzen Sie die Filteroptionen oben oder die Suchleiste für eine Volltextsuche."},
-  {q:"aktenzeichen",a:"Das Aktenzeichen wird automatisch generiert (Format: PROVA-JJJJ-NNN). Sie können es in Schritt 1 auch manuell eingeben oder ändern."},
-  {q:"konjunktiv stellungnahme",a:"Die KI generiert Einschätzungen und Ursachenanalysen automatisch im Konjunktiv II (dürfte, könnte, wäre). Dies ist rechtlich korrekt nach §407a ZPO. Die Formulierungen können Sie im §6-Editor anpassen."},
-  {q:"paket upgrade",a:"Für ein Upgrade auf Pro oder Enterprise wenden Sie sich bitte an support@prova-systems.de. Wir erstellen Ihnen ein individuelles Angebot."},
-  {q:"abmelden logout",a:"Klicken Sie im Drawer-Menü (☰) auf 'Abmelden' am unteren Ende. Alternativ: Einstellungen → Abmelden."},
-  {q:"keine email bekommen",a:"Prüfen Sie zunächst Ihren Spam-Ordner. E-Mails kommen von noreply@prova-systems.de. Falls nichts da ist, prüfen Sie unter Einstellungen ob Ihre E-Mail-Adresse korrekt hinterlegt ist."},
-  {q:"daten exportieren",a:"Im Archiv können Sie einzelne Gutachten als PDF herunterladen. Ein Gesamt-Export aller Daten ist auf Anfrage über support@prova-systems.de möglich."},
-  {q:"messprot okoll messwerte",a:"In der App können Sie Messwerte strukturiert erfassen. Aktivieren Sie den Bereich 'Messwerte' in Schritt 1 (ausklappbar). Feuchtemessung, Risse etc. können dort dokumentiert werden."},
-  {q:"safari funktioniert nicht",a:"Im Safari-Privatmodus ist die Offline-Speicherung deaktiviert. Bitte nutzen Sie Safari im normalen Modus oder einen anderen Browser (Chrome, Firefox, Edge)."},
-  {q:"wie lange dauert gutachten",a:"Die KI-Analyse dauert in der Regel 30-90 Sekunden. Die gesamte Bearbeitung (Diktat bis PDF) ist typischerweise in 20-30 Minuten abgeschlossen."}
-];
+/* ── SIDEBAR ── */
+var paket=localStorage.getItem('prova_paket')||'Starter';
+var pc={'Starter':'#4f8ef7','Pro':'#f59e0b','Enterprise':'#a78bfa'}[paket]||'#4f8ef7';
+var el=document.getElementById('topbar-paket-badge');
+if(el){el.textContent=paket;el.style.cssText='font-size:10px;font-weight:700;padding:3px 9px;border-radius:10px;letter-spacing:.04em;background:'+pc+'18;color:'+pc+';border:1px solid '+pc+'33;';}
+var dot=document.getElementById('sb-paket-dot');if(dot){dot.style.background=pc;dot.style.color=pc;}
+var nm=document.getElementById('sb-paket-name');if(nm){nm.textContent=paket;nm.style.color=pc;}
+var appUrl=paket==='Enterprise'?'app-enterprise.html':paket==='Pro'?'app-pro.html':'app-starter.html';
+var nb=document.getElementById('sb-new-btn');if(nb)nb.onclick=function(){window.location.href=appUrl;};
+var bnl=document.getElementById('bn-new-link');if(bnl)bnl.href=appUrl;
+var bnn=document.getElementById('btn-neuer-fall');if(bnn)bnn.onclick=function(){window.location.href=appUrl;};
+var collapsed=localStorage.getItem('prova_sb_collapsed')==='1';
+var sb=document.getElementById('sidebar');
+if(collapsed&&sb)sb.classList.add('collapsed');
+window.toggleSidebar=function(){collapsed=!collapsed;sb.classList.toggle('collapsed',collapsed);localStorage.setItem('prova_sb_collapsed',collapsed?'1':'0');};
+window.openMobileSidebar=function(){sb.classList.add('mobile-open');document.getElementById('sb-overlay').classList.add('open');};
+window.closeMobileSidebar=function(){sb.classList.remove('mobile-open');document.getElementById('sb-overlay').classList.remove('open');};
 
-// Klassifizierung
-function klassifiziereAnfrage(text) {
-  var t = text.toLowerCase();
-  var fehlerKW = ['fehler','error','funktioniert nicht','geht nicht','kaputt','absturz','lädt nicht','broken','crash','404','500','bug','problem mit der app','nicht mehr'];
-  var billingKW = ['rechnung','zahlung','kündigung','kündigen','preis','kosten','abonnement','abo','zahlen','invoice','billing','upgrade','downgrade','rückerstattung'];
-  for(var i=0;i<fehlerKW.length;i++) if(t.includes(fehlerKW[i])) return 'fehler';
-  for(var i=0;i<billingKW.length;i++) if(t.includes(billingKW[i])) return 'billing';
-  return 'nutzung';
+/* ── AUTH ── */
+if(!localStorage.getItem('prova_user')){window.location.href='app-login.html';return;}
+
+/* ── VIEW TOGGLE ── */
+var currentView=localStorage.getItem('prova_listenansicht')||'kanban';
+window.setView=function(v){
+  currentView=v;
+  localStorage.setItem('prova_listenansicht',v);
+  document.getElementById('view-kanban').style.display=v==='kanban'?'block':'none';
+  document.getElementById('view-liste').style.display=v==='liste'?'block':'none';
+  document.getElementById('btn-kanban').classList.toggle('active',v==='kanban');
+  document.getElementById('btn-liste').classList.toggle('active',v==='liste');
+  filterUndRender();
+};
+setView(currentView);
+
+/* ── AIRTABLE ── */
+var AT_BASE='appJ7bLlAHZoxENWE';
+var AT_FAELLE='tblSxV8bsXwd1pwa0';
+var svEmail=localStorage.getItem('prova_sv_email')||'';
+var alleRecords=[];
+
+async function ladeFaelle(){
+  var cacheKey='prova_archiv_cache_v2';
+  var cacheMs=5*60*1000;
+  try{
+    var raw=localStorage.getItem(cacheKey);
+    if(raw){var c=JSON.parse(raw);if(Date.now()-c.time<cacheMs&&c.data&&c.data.length>0){alleRecords=c.data;filterUndRender();return;}}
+  }catch(e){}
+
+  // Loading state
+  zeigLadeAnimation();
+
+  try{
+    var filter=svEmail?'AND(NOT({Status}=""),{sv_email}="'+svEmail+'")':'NOT({Status}="")';
+    var path='/v0/'+AT_BASE+'/'+AT_FAELLE+'?filterByFormula='+encodeURIComponent(filter)+'&maxRecords=100&sort[0][field]=Timestamp&sort[0][direction]=desc';
+    var res=await fetch('/.netlify/functions/airtable',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({method:'GET',path:path})});
+    if(!res.ok)throw new Error('HTTP '+res.status);
+    var data=await res.json();
+    alleRecords=data.records||[];
+    try{localStorage.setItem(cacheKey,JSON.stringify({time:Date.now(),data:alleRecords}));}catch(e){}
+  }catch(e){
+    console.warn('Airtable Fehler:',e);
+    // Fallback localStorage
+    var ls=[];try{ls=JSON.parse(localStorage.getItem('prova_akten')||'[]');}catch(e2){}
+    alleRecords=ls.map(function(a){return{id:a.id||Math.random().toString(36).slice(2),fields:{Aktenzeichen:a.aktenzeichen,Status:a.status||'In Bearbeitung',Schadensart:a.schadenart,Schaden_Strasse:a.adresse,Ort:a.ort,Timestamp:a.datum,Auftraggeber_Name:a.auftraggeber_name}};});
+  }
+  filterUndRender();
 }
 
-// FAQ-Match
-function findeFAQAntwort(text) {
-  var t = text.toLowerCase();
-  var best = null, bestScore = 0;
-  PROVA_FAQ.forEach(function(faq) {
-    var score = 0;
-    faq.q.split(' ').forEach(function(w) { if(t.includes(w)) score++; });
-    if(score > bestScore) { bestScore = score; best = faq; }
-  });
-  return bestScore > 0 ? best : null;
-}
+/* ── FILTER ── */
+var gefiltert=[];
+window.filterUndRender=function(){
+  var such=(document.getElementById('suche').value||'').toLowerCase().trim();
+  var sa=document.getElementById('f-schadenart').value;
+  var zr=document.getElementById('f-zeitraum').value;
+  var now=Date.now();
 
-var _supportTyp = 'nutzung';
-var _supportAnalyseTimer = null;
-
-function openSupportModal(){document.getElementById("support-modal").style.display="flex";}
-function closeSupportModal(){
-  document.getElementById("support-modal").style.display="none";
-  document.getElementById("support-success").style.display="none";
-  document.getElementById("support-form").style.display="block";
-  document.getElementById("support-faq").style.display="none";
-  document.getElementById("support-typ-indicator").style.display="none";
-  document.getElementById("sup-betreff").value="";
-  document.getElementById("sup-nachricht").value="";
-  document.getElementById("support-err").style.display="none";
-  var btn=document.getElementById("sup-send-btn");
-  if(btn){btn.disabled=false;btn.textContent="Anfrage senden";}
-}
-document.addEventListener("DOMContentLoaded",function(){
-  var m=document.getElementById("support-modal");
-  if(m)m.addEventListener("click",function(e){if(e.target===m)closeSupportModal();});
-});
-function supportAnalyse(){
-  clearTimeout(_supportAnalyseTimer);
-  _supportAnalyseTimer = setTimeout(function(){
-    var b=document.getElementById("sup-betreff").value.trim();
-    var n=document.getElementById("sup-nachricht").value.trim();
-    var combined = b + " " + n;
-    if(combined.trim().length < 3) return;
-    _supportTyp = klassifiziereAnfrage(combined);
-    var ind = document.getElementById("support-typ-indicator");
-    var faqEl = document.getElementById("support-faq");
-    if(_supportTyp === 'fehler'){
-      ind.style.display="block";
-      ind.style.background="rgba(239,68,68,0.1)";
-      ind.style.border="1px solid rgba(239,68,68,0.25)";
-      ind.style.color="#ef4444";
-      ind.textContent="&#9888; Fehlermeldung erkannt — wird mit hoher Priorit&#228;t weitergeleitet";
-      faqEl.style.display="none";
-    } else if(_supportTyp === 'billing'){
-      ind.style.display="block";
-      ind.style.background="rgba(245,158,11,0.1)";
-      ind.style.border="1px solid rgba(245,158,11,0.25)";
-      ind.style.color="#f59e0b";
-      ind.textContent="&#128176; Frage zu Abrechnung/Paket — wird direkt bearbeitet";
-      faqEl.style.display="none";
-    } else {
-      ind.style.display="none";
-      var faq = findeFAQAntwort(combined);
-      if(faq){
-        document.getElementById("support-faq-text").textContent=faq.a;
-        faqEl.style.display="block";
-      } else {
-        faqEl.style.display="none";
+  gefiltert=alleRecords.filter(function(r){
+    var f=r.fields||{};
+    if(sa){
+      var art=(f.Schadensart||'').toLowerCase();
+      if(!art.includes(sa.toLowerCase()))return false;
+    }
+    if(zr&&f.Timestamp){
+      var ts=new Date(f.Timestamp).getTime();
+      var tage=zr==='30'?30:zr==='90'?90:365;
+      if(zr==='jahr'){
+        if(new Date(f.Timestamp).getFullYear()!==new Date().getFullYear())return false;
+      }else{
+        if(now-ts>tage*24*60*60*1000)return false;
       }
     }
-  }, 600);
+    if(such){
+      var az=(f.Aktenzeichen||'').toLowerCase();
+      var addr=[(f.Schaden_Strasse||''),(f.Ort||'')].join(' ').toLowerCase();
+      var ag=(f.Auftraggeber_Name||'').toLowerCase();
+      var art2=(f.Schadensart||'').toLowerCase();
+      if(!az.includes(such)&&!addr.includes(such)&&!ag.includes(such)&&!art2.includes(such))return false;
+    }
+    return true;
+  });
+
+  document.getElementById('count-badge').textContent=gefiltert.length+' Fälle';
+
+  if(currentView==='kanban')renderKanban();
+  else renderListe();
+};
+
+/* ── HELPER ── */
+function schadenartClass(sa){
+  var s=(sa||'').toLowerCase();
+  if(s.includes('schimmel'))return'sa-schimmel';
+  if(s.includes('wasser'))return'sa-wasser';
+  if(s.includes('brand'))return'sa-brand';
+  if(s.includes('sturm'))return'sa-sturm';
+  if(s.includes('bau')||s.includes('mängel'))return'sa-baum';
+  return'sa-sonstig';
 }
-function supportFaqHilft(){
-  document.getElementById("support-form").style.display="none";
-  document.getElementById("support-faq").style.display="none";
-  document.getElementById("support-success").style.display="block";
-  document.getElementById("support-success-title").textContent="Super! Problem gel&#246;st &#128512;";
-  document.getElementById("support-success-text").textContent="Sch&#246;n, dass wir helfen konnten.";
+function statusClass(st){
+  var s=(st||'').toLowerCase();
+  if(s.includes('bearbeitung'))return'st-bearb';
+  if(s.includes('entwurf'))return'st-entwurf';
+  if(s.includes('freig')||s.includes('export'))return'st-freig';
+  if(s.includes('archiv'))return'st-archiv';
+  return'st-bearb';
 }
-function supportFaqNichtHilft(){
-  document.getElementById("support-faq").style.display="none";
+function statusKanbanCol(st){
+  var s=(st||'').toLowerCase();
+  if(s.includes('entwurf'))return'entwurf';
+  if(s.includes('freig')||s.includes('export')||s.includes('abgeschl'))return'done';
+  if(s.includes('bearbeitung')||s.includes('überarbeitung'))return'bearb';
+  return'auftrag';
 }
-async function sendSupport(){
-  var b=document.getElementById("sup-betreff").value.trim();
-  var n=document.getElementById("sup-nachricht").value.trim();
-  var err=document.getElementById("support-err");
-  var btn=document.getElementById("sup-send-btn");
-  if(!b||!n){err.style.display="block";return;}
-  err.style.display="none";btn.disabled=true;btn.textContent="&#8987; Wird gesendet...";
-  var payload={
-    betreff:b, nachricht:n, typ:_supportTyp,
-    prioritaet: _supportTyp==='fehler'?'Hoch':_supportTyp==='billing'?'Kritisch':'Normal',
-    sv_email:localStorage.getItem("prova_sv_email")||"",
-    paket:localStorage.getItem("prova_paket")||"Starter",
-    seite:window.location.pathname,
-    ts:new Date().toISOString()
-  };
-  try{
-    await fetch("https://hook.eu1.make.com/lktuhugwcg5v37ib6bdaxjb1uiplnu8v",{
-      method:"POST",headers:{"Content-Type":"application/json"},
-      body:JSON.stringify(payload)
-    });
-  }catch(e){}
-  document.getElementById("support-form").style.display="none";
-  document.getElementById("support-faq").style.display="none";
-  document.getElementById("support-typ-indicator").style.display="none";
-  document.getElementById("support-success").style.display="block";
-  if(_supportTyp==='fehler'||_supportTyp==='billing'){
-    document.getElementById("support-success-title").textContent="Anfrage gesendet &#128680;";
-    document.getElementById("support-success-text").textContent="Priorit&#228;t: "+(_supportTyp==='billing'?'Kritisch':'Hoch')+" — wir melden uns umgehend.";
-  } else {
-    document.getElementById("support-success-title").textContent="Anfrage gesendet!";
-    document.getElementById("support-success-text").textContent="Wir melden uns schnellstm&#246;glich bei Ihnen.";
+function formatDatum(ts){
+  if(!ts)return'—';
+  try{return new Date(ts).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'2-digit'});}catch(e){return'—';}
+}
+function escHtml(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+function fallKarte(r){
+  var f=r.fields||{};
+  var az=f.Aktenzeichen||r.id.slice(-6).toUpperCase();
+  var schadenart=f.Schadensart||'Schadenfall';
+  var adresse=[f.Schaden_Strasse,f.Ort].filter(Boolean).join(', ')||'—';
+  var status=f.Status||'In Bearbeitung';
+  var datum=formatDatum(f.Timestamp||r.createdTime);
+  var ag=f.Auftraggeber_Name||'';
+  var saClass=schadenartClass(schadenart);
+  var stClass=statusClass(status);
+  return '<div class="fall-card" onclick="oeffneFall(\''+r.id+'\')">'
+    +'<div class="fall-card-top">'
+    +'<span class="fall-az">'+escHtml(az)+'</span>'
+    +'<span class="fall-schadenart '+saClass+'">'+escHtml(schadenart.replace('befall','').replace('schaden','').trim())+'</span>'
+    +'</div>'
+    +'<div class="fall-card-body">'
+    +'<div class="fall-title">'+escHtml(ag||adresse.split(',')[0]||schadenart)+'</div>'
+    +'<div class="fall-meta">'
+    +(adresse!=='—'?'<span>📍 '+escHtml(adresse)+'</span>':'')
+    +'</div>'
+    +'</div>'
+    +'<div class="fall-card-footer">'
+    +'<span class="fall-date">'+datum+'</span>'
+    +'<span class="status-badge '+stClass+'">'+escHtml(status)+'</span>'
+    +'</div>'
+    +'</div>';
+}
+
+/* ── KANBAN ── */
+function renderKanban(){
+  var cols={auftrag:[],bearb:[],entwurf:[],done:[]};
+  gefiltert.forEach(function(r){
+    var col=statusKanbanCol(r.fields.Status||'');
+    cols[col].push(r);
+  });
+  Object.keys(cols).forEach(function(key){
+    var container=document.getElementById('kc-'+key);
+    var counter=document.getElementById('kk-'+key);
+    if(!container)return;
+    if(counter)counter.textContent=cols[key].length;
+    if(cols[key].length===0){
+      container.innerHTML='<div class="kanban-empty">Keine Fälle</div>';
+    }else{
+      container.innerHTML=cols[key].map(function(r){return fallKarte(r);}).join('');
+    }
+  });
+}
+
+/* ── LISTE ── */
+function renderListe(){
+  var body=document.getElementById('liste-body');
+  if(!body)return;
+  if(gefiltert.length===0){
+    body.innerHTML='<div class="list-empty"><div class="list-empty-icon">🔍</div><p style="font-size:13px;color:var(--text3);margin-bottom:8px;">Keine Fälle gefunden.</p><a href="'+appUrl+'" style="color:var(--accent);font-size:13px;">Neuen Fall anlegen →</a></div>';
+    return;
   }
+  body.innerHTML=gefiltert.map(function(r){
+    var f=r.fields||{};
+    var az=f.Aktenzeichen||r.id.slice(-6).toUpperCase();
+    var schadenart=f.Schadensart||'Schadenfall';
+    var adresse=[f.Schaden_Strasse,f.Ort].filter(Boolean).join(', ')||'—';
+    var status=f.Status||'In Bearbeitung';
+    var datum=formatDatum(f.Timestamp||r.createdTime);
+    var ag=f.Auftraggeber_Name||'';
+    var saClass=schadenartClass(schadenart);
+    var stClass=statusClass(status);
+    return '<div class="list-row" onclick="oeffneFall(\''+r.id+'\')">'
+      +'<div class="list-az">'+escHtml(az)+'</div>'
+      +'<div><div class="list-name">'+escHtml(ag||schadenart)+'</div>'
+      +'<div class="list-meta"><span class="fall-schadenart '+saClass+'" style="font-size:10px;padding:1px 6px;">'+escHtml(schadenart)+'</span></div></div>'
+      +'<div class="list-addr">'+escHtml(adresse)+'</div>'
+      +'<div class="list-date">'+datum+'</div>'
+      +'<div><span class="status-badge '+stClass+'">'+escHtml(status)+'</span></div>'
+      +'<div class="list-actions">'
+      +'<button class="list-action-btn" onclick="event.stopPropagation();oeffneFall(\''+r.id+'\')" title="Öffnen">👁</button>'
+      +'</div>'
+      +'</div>';
+  }).join('');
 }
+
+/* ── FALL ÖFFNEN ── */
+window.oeffneFall=function(recordId){
+  sessionStorage.setItem('prova_record_id',recordId);
+  var rec=alleRecords.find(function(r){return r.id===recordId;});
+  if(rec&&rec.fields.Aktenzeichen){
+    sessionStorage.setItem('prova_letztes_az',rec.fields.Aktenzeichen);
+  }
+  window.location.href='akte.html';
+};
+
+/* ── LADE-ANIMATION ── */
+function zeigLadeAnimation(){
+  var skels='';
+  for(var i=0;i<3;i++){
+    skels+='<div class="fall-card"><div class="skeleton" style="height:14px;width:70%;margin-bottom:10px;"></div><div class="skeleton" style="height:12px;width:50%;margin-bottom:8px;"></div><div class="skeleton" style="height:10px;width:40%;"></div></div>';
+  }
+  ['kc-auftrag','kc-bearb','kc-entwurf','kc-done'].forEach(function(id){
+    var c=document.getElementById(id);if(c)c.innerHTML=skels;
+  });
+  var lb=document.getElementById('liste-body');
+  if(lb)lb.innerHTML='<div class="list-empty"><div class="list-empty-icon">⏳</div><p>Wird geladen…</p></div>';
+}
+
+/* ── SUPPORT ── */
+window.sendSupport=async function(){
+  var b=document.getElementById('sup-betreff').value.trim();
+  var n=document.getElementById('sup-nachricht').value.trim();
+  if(!b||!n)return;
+  try{await fetch('https://hook.eu1.make.com/lktuhugwcg5v37ib6bdaxjb1uiplnu8v',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({betreff:b,nachricht:n,sv_email:svEmail,paket:paket,seite:'archiv.html',ts:new Date().toISOString()})});}catch(e){}
+  document.getElementById('sup-modal').classList.remove('open');
+};
+
+/* ── INIT ── */
+ladeFaelle();
+
+// Filter-Events
+document.getElementById('f-schadenart').addEventListener('change',filterUndRender);
+document.getElementById('f-zeitraum').addEventListener('change',filterUndRender);
+
+})();
 </script>
 </body>
 </html>
-

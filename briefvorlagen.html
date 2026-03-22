@@ -1,651 +1,917 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1.0">
-  <title>PROVA App – Briefvorlagen</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Instrument+Sans:wght@400;500;600&family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <style>
-    :root{
-      --navy:#1B3F6B;--accent:#4A90D9;--accent-dark:#2F6EB5;
-      --bg:#F0F4F8;--white:#fff;
-      --gray-50:#F9FAFB;--gray-100:#F3F4F6;--gray-200:#E5E7EB;--gray-300:#D1D5DB;--gray-400:#9CA3AF;--gray-500:#6B7280;--gray-600:#4B5563;--gray-700:#374151;
-      --bg2:#13161d;--border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);--text:#e8eaf0;--text3:#6b7280;--surface:#1e2330;
-      --display:'Fraunces',serif;--sans:'Instrument Sans',sans-serif;
-      --radius-md:.5rem;--radius-lg:.875rem;--shadow-sm:0 1px 3px rgba(0,0,0,.08);
-    }
-    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
-    html{scroll-behavior:smooth;}
-    body{font-family:'Montserrat',system-ui,sans-serif;font-size:.9375rem;line-height:1.6;color:var(--gray-700);background:var(--bg);}
-    a{text-decoration:none;color:inherit;}
-    *{-webkit-tap-highlight-color:transparent;}
-    input,select,textarea{font-size:max(16px,1em);}
-    .topbar{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 20px;height:52px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
-    .topbar-left{display:flex;align-items:center;gap:16px;}
-    .topbar-right{display:flex;align-items:center;gap:8px;}
-    .logo{font-family:var(--display);font-weight:700;font-size:18px;color:var(--text);text-decoration:none;}
-    .logo span{color:var(--accent);}
-    .topnav{display:flex;gap:2px;}
-    .topnav a{padding:6px 11px;border-radius:6px;color:var(--text3);font-size:13px;font-family:var(--sans);font-weight:500;text-decoration:none;transition:all 0.15s;white-space:nowrap;min-height:44px;display:inline-flex;align-items:center;}
-    .topnav a:hover{color:#9da3b4;background:rgba(255,255,255,0.04);}
-    .topnav a.active{color:var(--accent);background:rgba(79,142,247,0.1);}
-    .paket-badge{font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;}
-    .settings-link{font-size:16px;color:var(--text3);text-decoration:none;padding:6px 8px;border-radius:6px;min-height:44px;display:inline-flex;align-items:center;}
-    .settings-link:hover{color:#9da3b4;background:rgba(255,255,255,0.04);}
-    .burger{display:none;flex-direction:column;gap:5px;background:none;border:none;cursor:pointer;padding:6px;border-radius:6px;min-height:44px;align-items:center;justify-content:center;}
-    .burger span{display:block;width:20px;height:2px;background:#9da3b4;border-radius:2px;}
-    .burger:hover span{background:var(--text);}
-    .drawer-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:200;backdrop-filter:blur(2px);}
-    .drawer-overlay.open{display:block;}
-    .drawer{position:fixed;top:0;left:0;bottom:0;width:260px;background:var(--bg2);border-right:1px solid var(--border2);z-index:201;transform:translateX(-100%);transition:transform 0.25s cubic-bezier(0.4,0,0.2,1);display:flex;flex-direction:column;}
-    .drawer.open{transform:translateX(0);}
-    .drawer-header{padding:16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
-    .drawer-close{background:none;border:none;color:var(--text3);font-size:18px;cursor:pointer;padding:4px 8px;border-radius:5px;min-height:44px;}
-    .drawer-close:hover{color:var(--text);background:var(--surface);}
-    .drawer-nav{flex:1;padding:10px;overflow-y:auto;display:flex;flex-direction:column;gap:2px;}
-    .drawer-nav a{display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:7px;color:#9da3b4;font-family:var(--sans);font-size:14px;text-decoration:none;min-height:44px;}
-    .drawer-nav a:hover{background:var(--surface);color:var(--text);}
-    .drawer-nav a.active{background:rgba(79,142,247,0.1);color:var(--accent);}
-    .dnav-icon{font-size:16px;width:22px;text-align:center;}
-    .drawer-footer{padding:14px 16px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
-    .drawer-settings{font-size:13px;color:var(--text3);text-decoration:none;}
-    .drawer-settings:hover{color:#9da3b4;}
-    .bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;height:56px;background:var(--bg2);border-top:1px solid var(--border);z-index:100;padding:0 4px;flex-direction:row;align-items:stretch;justify-content:space-around;}
-    .bn-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;text-decoration:none;color:var(--text3);font-family:var(--sans);padding:6px 0;border-radius:7px;position:relative;min-height:48px;}
-    .bn-item:hover{color:#9da3b4;}
-    .bn-item.active{color:var(--accent);}
-    .bn-item.active::after{content:'';position:absolute;bottom:2px;width:18px;height:2px;background:var(--accent);border-radius:2px;}
-    .bn-icon{font-size:18px;}
-    .bn-label{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;}
-    @media(max-width:900px){.topnav a{font-size:12px;padding:5px 8px;}.topnav a[data-short]{font-size:0;}.topnav a[data-short]::before{content:attr(data-short);font-size:12px;font-family:var(--sans);}.paket-badge{display:none!important;}.settings-link{display:none!important;}.burger{display:flex;}}
-    @media(max-width:600px){.topnav{display:none;}.burger{display:flex;}.bottom-nav{display:flex;}body{padding-bottom:56px;}.topbar{padding:0 14px;height:48px;}.logo{font-size:16px;}}
-    @media(max-width:600px){::-webkit-scrollbar{display:none;}*{scrollbar-width:none;}}
-    .main{flex:1;padding:2rem;}
-    .page-header{margin-bottom:1.5rem;}
-    .page-title{font-size:1.5rem;font-weight:700;color:var(--navy);margin-bottom:.25rem;}
-    .page-subtitle{font-size:.9375rem;color:var(--gray-500);}
-    .search-wrap{margin-bottom:1.5rem;}
-    .search-input{width:100%;max-width:400px;padding:.65rem 1rem .65rem 2.5rem;border-radius:var(--radius-md);border:1px solid var(--gray-300);font-size:.9rem;background:var(--white) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%239CA3AF' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E") no-repeat .75rem center;}
-    .search-input:focus{outline:none;border-color:var(--accent);}
-    .category{margin-bottom:2rem;}
-    .category-title{font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--gray-500);margin-bottom:.75rem;padding-bottom:.35rem;}
-    .card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1rem;}
-    .template-card{background:var(--white);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);border:1px solid var(--gray-100);padding:1.25rem;display:flex;flex-direction:column;gap:.75rem;transition:box-shadow .15s;}
-    .template-card:hover{box-shadow:0 4px 12px rgba(0,0,0,.1);}
-    .template-card.hidden{display:none;}
-    .template-card-id{font-size:.7rem;font-weight:700;color:var(--gray-400);letter-spacing:.05em;}
-    .template-card-icon{width:40px;height:40px;border-radius:var(--radius-md);background:rgba(74,144,217,.12);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:1.25rem;}
-    .template-card-name{font-weight:700;color:var(--navy);font-size:1rem;}
-    .template-card-desc{font-size:.8125rem;color:var(--gray-500);line-height:1.5;}
-    .template-card-badges{display:flex;flex-wrap:wrap;gap:.35rem;}
-    .badge{display:inline-flex;align-items:center;padding:.2rem .5rem;border-radius:999px;font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;}
-    .badge-starter{background:var(--gray-100);color:var(--gray-600);}
-    .badge-pro{background:rgba(74,144,217,.15);color:var(--accent-dark);}
-    .badge-enterprise{background:rgba(120,53,15,.12);color:#B45309;}
-    .template-card-actions{margin-top:auto;display:flex;flex-wrap:wrap;gap:.5rem;}
-    .btn{display:inline-flex;align-items:center;justify-content:center;gap:.4rem;padding:.5rem 1rem;border-radius:var(--radius-md);border:1px solid transparent;font-size:.85rem;font-weight:600;cursor:pointer;background:var(--accent);color:#fff;}
-    .btn:hover{background:var(--accent-dark);}
-    .btn-ghost{background:transparent;color:var(--gray-600);border-color:var(--gray-300);}
-    .btn-ghost:hover{background:var(--gray-100);color:var(--navy);}
-    .btn-pro{background:linear-gradient(135deg,#2563eb,#4A90D9);color:#fff;}
-    .btn-pro:hover{opacity:.95;}
-    .modal-backdrop{position:fixed;inset:0;background:rgba(15,23,42,.5);display:none;align-items:center;justify-content:center;z-index:400;}
-    .modal-backdrop.open{display:flex;}
-    .modal{background:#fff;border-radius:var(--radius-lg);max-width:440px;width:100%;padding:1.5rem;box-shadow:0 20px 50px rgba(0,0,0,.25);}
-    .modal-title{font-size:1.1rem;font-weight:700;color:var(--navy);margin-bottom:1rem;}
-    .form-group{margin-bottom:1rem;}
-    .form-label{display:block;font-size:.8rem;font-weight:600;color:var(--gray-600);margin-bottom:.35rem;}
-    .form-input{width:100%;padding:.5rem .75rem;border-radius:var(--radius-md);border:1px solid var(--gray-300);font-size:.9rem;}
-    .form-input:focus{outline:none;border-color:var(--accent);}
-    .modal-actions{display:flex;justify-content:flex-end;gap:.5rem;margin-top:1.25rem;}
-    .toast-msg{position:fixed;bottom:1.5rem;right:1.5rem;padding:.75rem 1.25rem;background:var(--navy);color:#fff;border-radius:var(--radius-md);font-size:.875rem;font-weight:500;z-index:500;display:none;box-shadow:0 4px 20px rgba(0,0,0,.2);}
-    .toast-msg.show{display:block;animation:fadeIn .25s ease;}
-    .toast-msg.error{background:#B91C1C;}
-    .toast-msg.success{background:#047857;}
-    @keyframes fadeIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
-    @media(max-width:900px){.main{padding:1.25rem;}}
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Briefe · PROVA</title>
+<style>
+:root{
+  --bg:#0b0d11;--bg2:#111318;--bg3:#161a22;
+  --surface:#1c2130;--surface2:#232a3a;
+  --border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.11);
+  --text:#eaecf4;--text2:#8b93ab;--text3:#4d5568;
+  --accent:#4f8ef7;--accent2:#3a7be0;
+  --success:#10b981;--warning:#f59e0b;--danger:#ef4444;--purple:#8b5cf6;
+  --sb-w:220px;--sb-w-col:58px;--sb-bg:#0e1016;--sb-border:rgba(255,255,255,0.07);
+  --font-ui:'DM Sans',system-ui,sans-serif;
+  --r-sm:6px;--r-md:10px;--r-lg:14px;
+  --shadow-sm:0 1px 3px rgba(0,0,0,.25);--shadow-md:0 4px 16px rgba(0,0,0,.35);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{font-size:14px;scroll-behavior:smooth;}
+body{font-family:var(--font-ui);background:var(--bg);color:var(--text2);min-height:100vh;overflow-x:hidden;line-height:1.55;}
+a{text-decoration:none;color:inherit;}
+button,input,select,textarea{font-family:inherit;font-size:inherit;}
+*{-webkit-tap-highlight-color:transparent;}
+input,select,textarea{font-size:max(16px,1em);}
+
+/* SIDEBAR */
+.app-shell{display:flex;min-height:100vh;}
+.sidebar{width:var(--sb-w);min-width:var(--sb-w);background:var(--sb-bg);border-right:1px solid var(--sb-border);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:200;transition:width .22s cubic-bezier(.4,0,.2,1),min-width .22s cubic-bezier(.4,0,.2,1);overflow:hidden;}
+.sidebar.collapsed{width:var(--sb-w-col);min-width:var(--sb-w-col);}
+.sb-logo{display:flex;align-items:center;gap:10px;padding:18px 16px 14px;border-bottom:1px solid var(--sb-border);flex-shrink:0;min-height:60px;overflow:hidden;}
+.sb-logo-mark{width:28px;height:28px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:8px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff;}
+.sb-logo-text{font-size:15px;font-weight:800;letter-spacing:-.02em;color:var(--text);white-space:nowrap;overflow:hidden;transition:opacity .15s,width .15s;}
+.sb-logo-text span{color:var(--accent);}
+.sidebar.collapsed .sb-logo-text{opacity:0;width:0;}
+.sb-new-btn{margin:12px 10px 8px;padding:9px 12px;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:var(--r-md);color:#fff;font-weight:700;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:8px;white-space:nowrap;overflow:hidden;transition:all .15s;flex-shrink:0;}
+.sb-new-btn:hover{opacity:.9;transform:translateY(-1px);}
+.sb-new-btn .btn-icon{font-size:16px;flex-shrink:0;}
+.sb-new-btn .btn-label{transition:opacity .15s,width .15s;overflow:hidden;}
+.sidebar.collapsed .sb-new-btn .btn-label{opacity:0;width:0;margin:0;padding:0;}
+.sidebar.collapsed .sb-new-btn{justify-content:center;padding:9px;}
+.sb-nav{flex:1;overflow-y:auto;overflow-x:hidden;padding:6px 8px 8px;display:flex;flex-direction:column;gap:1px;}
+.sb-nav::-webkit-scrollbar{width:3px;}
+.sb-section-label{font-size:10px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--text3);padding:12px 8px 4px;white-space:nowrap;overflow:hidden;transition:opacity .15s;}
+.sidebar.collapsed .sb-section-label{opacity:0;height:0;padding:0;}
+.sb-item{display:flex;align-items:center;gap:11px;padding:8px 8px;border-radius:var(--r-sm);color:var(--text3);font-size:13px;font-weight:500;cursor:pointer;text-decoration:none;white-space:nowrap;overflow:hidden;transition:color .12s,background .12s;position:relative;min-height:36px;}
+.sb-item:hover{color:var(--text2);background:rgba(255,255,255,.04);}
+.sb-item.active{color:var(--accent);background:rgba(79,142,247,.1);font-weight:600;}
+.sb-item.active::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:18px;background:var(--accent);border-radius:0 3px 3px 0;}
+.sb-icon{font-size:15px;width:20px;text-align:center;flex-shrink:0;}
+.sb-label{transition:opacity .15s;overflow:hidden;}
+.sidebar.collapsed .sb-label{opacity:0;width:0;}
+.sb-divider{height:1px;background:var(--sb-border);margin:6px 0;flex-shrink:0;}
+.sb-footer{border-top:1px solid var(--sb-border);padding:8px;display:flex;flex-direction:column;gap:1px;flex-shrink:0;}
+.sb-paket{display:flex;align-items:center;gap:10px;padding:8px 8px;border-radius:var(--r-sm);white-space:nowrap;overflow:hidden;}
+.paket-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.paket-name{font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;transition:opacity .15s;}
+.sidebar.collapsed .paket-name{opacity:0;width:0;}
+.sb-toggle{display:flex;align-items:center;justify-content:center;width:100%;padding:8px;border:none;background:none;color:var(--text3);cursor:pointer;border-radius:var(--r-sm);transition:color .12s,background .12s;font-size:14px;}
+.sb-toggle:hover{color:var(--text2);background:rgba(255,255,255,.04);}
+.sb-toggle-icon{transition:transform .22s;display:inline-block;}
+.sidebar.collapsed .sb-toggle-icon{transform:rotate(180deg);}
+.sb-item[data-tip]{position:relative;}
+.sidebar.collapsed .sb-item[data-tip]:hover::after{content:attr(data-tip);position:absolute;left:calc(var(--sb-w-col) + 8px);top:50%;transform:translateY(-50%);background:#1e2536;border:1px solid var(--border2);color:var(--text);font-size:12px;font-weight:500;padding:5px 10px;border-radius:6px;white-space:nowrap;z-index:500;box-shadow:var(--shadow-md);pointer-events:none;}
+.main-wrap{margin-left:var(--sb-w);flex:1;min-width:0;transition:margin-left .22s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;min-height:100vh;}
+.sidebar.collapsed ~ .main-wrap{margin-left:var(--sb-w-col);}
+.topbar{height:52px;min-height:52px;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 24px;position:sticky;top:0;z-index:100;flex-shrink:0;}
+.topbar-left{display:flex;align-items:center;gap:12px;}
+.topbar-right{display:flex;align-items:center;gap:6px;}
+.breadcrumb{font-size:13px;color:var(--text3);display:flex;align-items:center;gap:6px;}
+.breadcrumb strong{color:var(--text2);font-weight:600;}
+.topbar-btn{display:flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:var(--r-sm);border:1px solid var(--border2);background:transparent;color:var(--text3);cursor:pointer;font-size:14px;transition:all .12s;}
+.topbar-btn:hover{color:var(--text2);background:rgba(255,255,255,.05);}
+.topbar-paket{font-size:10px;font-weight:700;padding:3px 9px;border-radius:10px;letter-spacing:.04em;}
+.burger{display:none;flex-direction:column;gap:4.5px;background:none;border:none;cursor:pointer;padding:8px;border-radius:6px;min-height:36px;align-items:center;justify-content:center;}
+.burger span{display:block;width:18px;height:2px;background:var(--text2);border-radius:2px;}
+.sb-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:190;backdrop-filter:blur(2px);}
+.sb-overlay.open{display:block;}
+.bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;height:56px;background:var(--bg2);border-top:1px solid var(--border);z-index:150;flex-direction:row;align-items:stretch;justify-content:space-around;padding:0 4px;}
+.bn-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;text-decoration:none;color:var(--text3);padding:4px 0;font-size:9px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;}
+.bn-item.active{color:var(--accent);}
+.bn-icon{font-size:17px;}
+
+/* PAGE */
+.page-content{padding:24px 28px 48px;max-width:1360px;width:100%;}
+.page-title{font-size:20px;font-weight:800;letter-spacing:-.025em;color:var(--text);margin-bottom:4px;}
+.page-sub{font-size:13px;color:var(--text3);margin-bottom:20px;}
+
+/* SEARCH + FILTER BAR */
+.toolbar{display:flex;align-items:center;gap:10px;margin-bottom:20px;flex-wrap:wrap;}
+.search-input{flex:1;min-width:200px;max-width:320px;padding:8px 12px;background:var(--surface);border:1px solid var(--border2);border-radius:var(--r-md);color:var(--text);font-size:13px;outline:none;transition:border-color .15s;}
+.search-input:focus{border-color:var(--accent);}
+.search-input::placeholder{color:var(--text3);}
+
+/* KI-HINWEIS */
+.ki-hint{padding:10px 14px;background:rgba(79,142,247,.06);border:1px solid rgba(79,142,247,.15);border-radius:var(--r-md);font-size:12px;color:var(--text2);margin-bottom:20px;display:flex;align-items:center;gap:10px;}
+.ki-hint a{color:var(--accent);}
+
+/* KATEGORIEN + KARTEN */
+.category{margin-bottom:28px;}
+.category-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border);}
+.card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px;}
+.template-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:16px;display:flex;flex-direction:column;gap:10px;cursor:pointer;transition:all .15s;position:relative;}
+.template-card:hover{border-color:var(--border2);transform:translateY(-1px);box-shadow:var(--shadow-sm);}
+.template-card.locked{opacity:.55;cursor:not-allowed;}
+.template-card.hidden{display:none;}
+.tc-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;}
+.tc-icon{width:36px;height:36px;border-radius:var(--r-md);background:rgba(79,142,247,.1);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+.tc-id{font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.04em;}
+.tc-name{font-size:13px;font-weight:700;color:var(--text);line-height:1.3;}
+.tc-desc{font-size:11px;color:var(--text3);line-height:1.5;flex:1;}
+.tc-footer{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:auto;}
+.tier-badge{font-size:9px;font-weight:700;padding:2px 7px;border-radius:10px;text-transform:uppercase;letter-spacing:.04em;}
+.tier-starter{background:rgba(255,255,255,.06);color:var(--text3);}
+.tier-pro{background:rgba(79,142,247,.12);color:var(--accent);}
+.tier-enterprise{background:rgba(139,92,246,.12);color:var(--purple);}
+.tc-btn{padding:6px 12px;border-radius:var(--r-sm);border:none;font-size:12px;font-weight:600;cursor:pointer;transition:all .12s;display:flex;align-items:center;gap:5px;}
+.tc-btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;}
+.tc-btn-primary:hover{opacity:.9;}
+.tc-btn-ki{background:linear-gradient(135deg,#6366f1,var(--purple));color:#fff;}
+.tc-btn-ki:hover{opacity:.9;}
+.lock-icon{font-size:11px;margin-left:2px;}
+
+/* ══ AUSFÜLL-DRAWER ══ */
+.drawer-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:300;backdrop-filter:blur(3px);}
+.drawer-overlay.open{display:block;}
+.drawer-panel{position:fixed;right:0;top:0;bottom:0;width:480px;max-width:100vw;background:var(--bg2);border-left:1px solid var(--border2);z-index:301;display:flex;flex-direction:column;transform:translateX(100%);transition:transform .28s cubic-bezier(.4,0,.2,1);}
+.drawer-panel.open{transform:translateX(0);}
+.drawer-header{display:flex;align-items:center;justify-content:space-between;padding:18px 20px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.drawer-title{font-size:15px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:10px;}
+.drawer-icon{font-size:20px;}
+.drawer-close{background:none;border:none;color:var(--text3);font-size:18px;cursor:pointer;padding:4px;border-radius:4px;}
+.drawer-close:hover{color:var(--text2);}
+
+/* Steps */
+.drawer-steps{display:flex;align-items:center;gap:0;padding:12px 20px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.step{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:600;color:var(--text3);cursor:default;}
+.step.active{color:var(--accent);}
+.step.done{color:var(--success);}
+.step-num{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;background:var(--surface2);color:var(--text3);flex-shrink:0;}
+.step.active .step-num{background:var(--accent);color:#fff;}
+.step.done .step-num{background:var(--success);color:#fff;}
+.step-label{white-space:nowrap;}
+.step-sep{flex:1;height:1px;background:var(--border);margin:0 8px;}
+
+/* Body */
+.drawer-body{flex:1;overflow-y:auto;padding:20px;}
+.drawer-body::-webkit-scrollbar{width:3px;}
+
+/* Step panels */
+.step-panel{display:none;}
+.step-panel.active{display:block;}
+
+/* Form */
+.form-section{margin-bottom:20px;}
+.form-section-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text3);margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border);}
+.form-group{margin-bottom:12px;}
+.form-label{display:block;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);margin-bottom:4px;}
+.form-input,.form-select,.form-textarea{width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r-md);color:var(--text);font-size:13px;outline:none;transition:border-color .15s;}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--accent);}
+.form-input::placeholder,.form-textarea::placeholder{color:var(--text3);}
+.form-input.auto-filled{border-color:rgba(16,185,129,.35);background:rgba(16,185,129,.04);}
+.form-select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%234d5568' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;background-color:var(--bg3);padding-right:30px;}
+.form-select option{background:var(--bg2);}
+.form-textarea{resize:vertical;min-height:80px;line-height:1.6;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.form-hint{font-size:10px;color:var(--text3);margin-top:3px;}
+.auto-fill-badge{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:600;padding:2px 7px;border-radius:10px;background:rgba(16,185,129,.1);color:var(--success);border:1px solid rgba(16,185,129,.2);margin-bottom:10px;}
+
+/* Fall-Auswahl */
+.fall-picker{background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r-md);overflow:hidden;max-height:240px;overflow-y:auto;}
+.fall-option{display:flex;align-items:center;gap:10px;padding:10px 12px;cursor:pointer;transition:background .12s;border-bottom:1px solid var(--border);}
+.fall-option:hover{background:rgba(255,255,255,.04);}
+.fall-option.selected{background:rgba(79,142,247,.08);border-color:rgba(79,142,247,.2);}
+.fall-option:last-child{border-bottom:none;}
+.fall-az{font-size:11px;font-weight:700;font-family:ui-monospace,monospace;color:var(--accent);flex-shrink:0;}
+.fall-info{flex:1;min-width:0;}
+.fall-name{font-size:12px;font-weight:600;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.fall-meta{font-size:10px;color:var(--text3);}
+.fall-check{color:var(--accent);font-size:14px;flex-shrink:0;}
+.no-fall-option{padding:10px 12px;font-size:12px;color:var(--text3);}
+
+/* Preview */
+.preview-wrap{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r-md);padding:20px;line-height:1.7;}
+.preview-wrap p{margin-bottom:8px;font-size:13px;color:var(--text2);}
+.preview-wrap .placeholder{background:rgba(245,158,11,.15);color:var(--warning);padding:1px 4px;border-radius:3px;font-size:12px;}
+.preview-wrap .filled{color:var(--text);}
+.preview-header{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.ki-generating{display:flex;align-items:center;gap:10px;padding:16px;background:rgba(99,102,241,.08);border:1px solid rgba(99,102,241,.2);border-radius:var(--r-md);font-size:13px;color:var(--text2);}
+.ki-dot{width:8px;height:8px;border-radius:50%;background:var(--purple);animation:pulse 1s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.4;}}
+
+/* Footer */
+.drawer-footer{padding:16px 20px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:10px;flex-shrink:0;background:var(--bg2);}
+.btn-back{padding:9px 16px;border-radius:var(--r-md);border:1px solid var(--border2);background:transparent;color:var(--text2);font-size:13px;font-weight:600;cursor:pointer;}
+.btn-back:hover{background:rgba(255,255,255,.04);}
+.btn-next{padding:9px 20px;border-radius:var(--r-md);border:none;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;font-size:13px;font-weight:700;cursor:pointer;transition:all .15s;}
+.btn-next:hover{opacity:.9;transform:translateY(-1px);}
+.btn-next:disabled{opacity:.4;cursor:not-allowed;transform:none;}
+.btn-send{padding:9px 20px;border-radius:var(--r-md);border:none;background:linear-gradient(135deg,var(--success),#0d9668);color:#fff;font-size:13px;font-weight:700;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:7px;}
+.btn-pdf{padding:9px 20px;border-radius:var(--r-md);border:1px solid var(--border2);background:transparent;color:var(--text2);font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:7px;}
+.btn-pdf:hover{background:rgba(255,255,255,.04);}
+
+/* Toast */
+.toast{position:fixed;bottom:24px;right:24px;z-index:600;padding:11px 18px;border-radius:var(--r-md);font-size:13px;font-weight:600;background:var(--surface2);border:1px solid rgba(16,185,129,.35);color:var(--success);transition:all .3s cubic-bezier(.34,1.56,.64,1);opacity:0;transform:translateY(16px);}
+.toast.show{opacity:1;transform:translateY(0);}
+.toast.err{border-color:rgba(239,68,68,.35);color:var(--danger);}
+
+/* Support FAB */
+.support-fab{position:fixed;bottom:24px;right:24px;z-index:400;width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));box-shadow:0 4px 16px rgba(79,142,247,.4);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;border:none;color:#fff;}
+
+/* Responsive */
+@media(max-width:768px){
+  .sidebar{transform:translateX(-100%);transition:transform .25s cubic-bezier(.4,0,.2,1);}
+  .sidebar.mobile-open{transform:translateX(0);width:var(--sb-w);min-width:var(--sb-w);}
+  .sidebar.mobile-open .sb-label,.sidebar.mobile-open .sb-logo-text,.sidebar.mobile-open .sb-section-label,.sidebar.mobile-open .paket-name,.sidebar.mobile-open .btn-label{opacity:1;width:auto;}
+  .sidebar.mobile-open .sb-new-btn{justify-content:flex-start;padding:9px 12px;}
+  .main-wrap{margin-left:0!important;}
+  .burger{display:flex;}
+  .bottom-nav{display:flex;}
+  .page-content{padding:16px 16px 72px;}
+  .topbar{padding:0 16px;}
+  .drawer-panel{width:100%;}
+  .card-grid{grid-template-columns:1fr 1fr;}
+}
+@media(max-width:480px){.card-grid{grid-template-columns:1fr;}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+.page-content{animation:fadeIn .22s ease;}
+</style>
 </head>
 <body>
-<div class="topbar">
-  <div class="topbar-left">
-    <a href="dashboard.html" class="logo">PRO<span>VA</span></a>
-    <nav class="topnav">
-      <a href="dashboard.html" data-short="Dashboard">Dashboard</a>
-      <a href="app-starter.html" data-short="Gutachten">Neues Gutachten</a>
-      <a href="archiv.html" data-short="Archiv">Archiv</a>
-      <a href="termine.html" data-short="Termine">Termine</a>
-      <a href="rechnungen.html" data-short="Rechnungen">Rechnungen</a>
-      <a href="briefvorlagen.html" data-short="Vorlagen" class="active">Briefvorlagen</a>
-      <a href="jveg.html" data-short="JVEG">JVEG</a>
-    </nav>
+<div class="app-shell">
+
+<!-- SIDEBAR -->
+<nav class="sidebar" id="sidebar">
+  <div class="sb-logo"><div class="sb-logo-mark">P</div><div class="sb-logo-text">PR<span>O</span>VA</div></div>
+  <button class="sb-new-btn" id="sb-new-btn"><span class="btn-icon">＋</span><span class="btn-label">Neuer Fall</span></button>
+  <div class="sb-nav">
+    <a href="dashboard.html" class="sb-item" data-tip="Zentrale"><span class="sb-icon">⊞</span><span class="sb-label">Zentrale</span></a>
+    <a href="archiv.html" class="sb-item" data-tip="Fälle"><span class="sb-icon">📁</span><span class="sb-label">Fälle</span></a>
+    <a href="termine.html" class="sb-item" data-tip="Kalender"><span class="sb-icon">📅</span><span class="sb-label">Kalender</span></a>
+    <a href="rechnungen.html" class="sb-item" data-tip="Rechnungen"><span class="sb-icon">💶</span><span class="sb-label">Rechnungen</span></a>
+    <a href="briefvorlagen.html" class="sb-item active" data-tip="Briefe"><span class="sb-icon">✉️</span><span class="sb-label">Briefe</span></a>
+    <div class="sb-section-label">Werkzeuge</div>
+    <a href="jveg.html" class="sb-item" data-tip="JVEG-Rechner"><span class="sb-icon">⚖️</span><span class="sb-label">JVEG-Rechner</span></a>
+    <a href="kostenermittlung.html" class="sb-item" data-tip="Kosten & Aufmaß"><span class="sb-icon">📐</span><span class="sb-label">Kosten & Aufmaß</span></a>
+    <a href="textbausteine.html" class="sb-item" data-tip="Textbausteine"><span class="sb-icon">✏️</span><span class="sb-label">Textbausteine</span></a>
+    <div class="sb-divider"></div>
+    <a href="kontakte.html" class="sb-item" data-tip="Kontakte"><span class="sb-icon">👥</span><span class="sb-label">Kontakte</span></a>
   </div>
-  <div class="topbar-right">
-    <span class="paket-badge" id="topbarPaket"></span>
-    <a href="einstellungen.html" class="settings-link">⚙</a>
-    <button class="burger" id="burgerBtn" onclick="toggleDrawer()" aria-label="Menü"><span></span><span></span><span></span></button>
+  <div class="sb-footer">
+    <div class="sb-paket"><div class="paket-dot" id="sb-paket-dot"></div><span class="paket-name" id="sb-paket-name">Starter</span></div>
+    <a href="einstellungen.html" class="sb-item" data-tip="Einstellungen"><span class="sb-icon">⚙️</span><span class="sb-label">Einstellungen</span></a>
+    <button class="sb-toggle" onclick="toggleSidebar()"><span class="sb-toggle-icon">◀</span></button>
   </div>
+</nav>
+<div class="sb-overlay" id="sb-overlay" onclick="closeMobileSidebar()"></div>
+
+<!-- MAIN -->
+<div class="main-wrap" id="main-wrap">
+  <header class="topbar">
+    <div class="topbar-left">
+      <button class="burger" onclick="openMobileSidebar()"><span></span><span></span><span></span></button>
+      <div class="breadcrumb"><span>PROVA</span><span style="color:var(--text3)">›</span><strong>Briefe</strong></div>
+    </div>
+    <div class="topbar-right">
+      <span class="topbar-paket" id="topbar-paket-badge">Starter</span>
+      <a href="einstellungen.html"><button class="topbar-btn">⚙</button></a>
+    </div>
+  </header>
+
+  <main class="page-content">
+    <h1 class="page-title">Briefe & Vorlagen</h1>
+    <p class="page-sub">Vorlage wählen → Felder werden automatisch aus Ihrem Profil und dem Fall befüllt → PDF oder senden.</p>
+
+    <!-- KI-Hinweis für Starter -->
+    <div class="ki-hint" id="ki-hint" style="display:none;">
+      ✨ <strong>KI-Brieftext</strong> ist im <strong>Pro-Paket</strong> verfügbar — PROVA generiert den Text automatisch aus Ihren Fall-Daten.
+      <a href="einstellungen.html#paket">Mehr erfahren →</a>
+    </div>
+
+    <!-- Suchleiste -->
+    <div class="toolbar">
+      <input class="search-input" type="search" id="searchInput" placeholder="🔍 Vorlage suchen…" oninput="filterVorlagen()">
+    </div>
+
+    <!-- Kategorien werden per JS gerendert -->
+    <div id="categoriesContainer"></div>
+  </main>
 </div>
-<div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
-<div class="drawer" id="drawer">
-  <div class="drawer-header">
-    <a href="dashboard.html" class="logo">PRO<span>VA</span></a>
-    <button class="drawer-close" onclick="closeDrawer()">✕</button>
-  </div>
-  <nav class="drawer-nav">
-    <a href="dashboard.html"><span class="dnav-icon">🏠</span>Dashboard</a>
-    <a href="app-starter.html"><span class="dnav-icon">📄</span>Neues Gutachten</a>
-    <a href="archiv.html"><span class="dnav-icon">📂</span>Archiv</a>
-    <a href="termine.html"><span class="dnav-icon">📅</span>Termine</a>
-    <a href="rechnungen.html"><span class="dnav-icon">💶</span>Rechnungen</a>
-    <a href="briefvorlagen.html" class="active"><span class="dnav-icon">✉️</span>Briefvorlagen</a>
-    <a href="jveg.html"><span class="dnav-icon">🧮</span>JVEG</a>
-    <a href="einstellungen.html"><span class="dnav-icon">⚙</span>Einstellungen</a>
-    <a href="#" onclick="logout();return false;" style="margin-top:auto;color:#ef4444;"><span class="dnav-icon">🚪</span>Abmelden</a>
-  </nav>
-  <div class="drawer-footer">
-    <span class="paket-badge" id="drawerPaket"></span>
-  </div>
 </div>
+
+<!-- Mobile Bottom Nav -->
 <nav class="bottom-nav">
-  <a href="dashboard.html" class="bn-item"><span class="bn-icon">🏠</span><span class="bn-label">Dashboard</span></a>
-  <a href="app-starter.html" class="bn-item"><span class="bn-icon">📄</span><span class="bn-label">Gutachten</span></a>
-  <a href="archiv.html" class="bn-item"><span class="bn-icon">📂</span><span class="bn-label">Archiv</span></a>
-  <a href="rechnungen.html" class="bn-item"><span class="bn-icon">💶</span><span class="bn-label">Rechnungen</span></a>
-  <a href="einstellungen.html" class="bn-item"><span class="bn-icon">⚙</span><span class="bn-label">Einstellungen</span></a>
-</nav><!-- /bottom-nav -->
-<script>
-function toggleDrawer(){var d=document.getElementById('drawer'),o=document.getElementById('drawerOverlay');d.classList.toggle('open');o.classList.toggle('open');document.body.style.overflow=d.classList.contains('open')?'hidden':'';}
-function closeDrawer(){document.getElementById('drawer').classList.remove('open');document.getElementById('drawerOverlay').classList.remove('open');document.body.style.overflow='';}
-document.addEventListener('keydown',function(e){if(e.key==='Escape')closeDrawer();});
-function logout(){
-  localStorage.removeItem('prova_user');
-  localStorage.removeItem('prova_sv_email');
-  if(typeof netlifyIdentity!=='undefined'){
-    try{netlifyIdentity.logout();}catch(e){}
-  }
-  window.location.href='app-login.html';
-}
-// Auth-Guard
-(function(){
-  var u=localStorage.getItem('prova_user');
-  if(!u){window.location.href='app-login.html';return;}
-  var p=localStorage.getItem('prova_paket')||'Starter';
-  var c={Starter:'#4f8ef7',Pro:'#f59e0b',Enterprise:'#a78bfa'}[p]||'#4f8ef7';
-  var s='background:'+c+'18;color:'+c+';border:1px solid '+c+'33';
-  ['topbarPaket','drawerPaket'].forEach(function(id){var el=document.getElementById(id);if(el){el.textContent=p;el.setAttribute('style',s);}});
-  window.PROVA=window.PROVA||{};PROVA.paket=p;PROVA.isPro=['Pro','Enterprise'].includes(p);PROVA.isEnterprise=p==='Enterprise';
-})();
-</script>
-  <main class="main">
-      <div class="page-header">
-        <div>
-          <h1 class="page-title">Briefvorlagen</h1>
-          <p class="page-subtitle">Vorlagen öffnen und ausfüllen (Starter) oder KI-Text aus Fall-Daten generieren (Pro).</p>
+  <a href="dashboard.html" class="bn-item"><span class="bn-icon">⊞</span><span>Zentrale</span></a>
+  <a href="archiv.html" class="bn-item"><span class="bn-icon">📁</span><span>Fälle</span></a>
+  <a href="app-starter.html" class="bn-item" id="bn-new-link" style="position:relative;"><span class="bn-icon" style="background:var(--accent);border-radius:50%;width:38px;height:38px;display:flex;align-items:center;justify-content:center;font-size:20px;color:#fff;margin-top:-12px;box-shadow:0 2px 10px rgba(79,142,247,.45);">＋</span><span>Neu</span></a>
+  <a href="rechnungen.html" class="bn-item"><span class="bn-icon">💶</span><span>Rechnungen</span></a>
+  <a href="briefvorlagen.html" class="bn-item active"><span class="bn-icon">✉️</span><span>Briefe</span></a>
+</nav>
+
+<!-- ══ AUSFÜLL-DRAWER ══ -->
+<div class="drawer-overlay" id="drawerOverlay" onclick="schliessDrawer()"></div>
+<div class="drawer-panel" id="drawerPanel">
+
+  <div class="drawer-header">
+    <div class="drawer-title">
+      <span class="drawer-icon" id="d-icon">📄</span>
+      <span id="d-title">Vorlage</span>
+    </div>
+    <button class="drawer-close" onclick="schliessDrawer()">✕</button>
+  </div>
+
+  <!-- Steps -->
+  <div class="drawer-steps">
+    <div class="step active" id="step-ind-1"><div class="step-num">1</div><span class="step-label">Fall wählen</span></div>
+    <div class="step-sep"></div>
+    <div class="step" id="step-ind-2"><div class="step-num">2</div><span class="step-label">Felder prüfen</span></div>
+    <div class="step-sep"></div>
+    <div class="step" id="step-ind-3"><div class="step-num">3</div><span class="step-label">Vorschau</span></div>
+    <div class="step-sep"></div>
+    <div class="step" id="step-ind-4"><div class="step-num">4</div><span class="step-label">Senden</span></div>
+  </div>
+
+  <div class="drawer-body">
+
+    <!-- STEP 1: Fall wählen -->
+    <div class="step-panel active" id="panel-1">
+      <div class="form-section">
+        <div class="form-section-title">Zugehörigen Fall auswählen</div>
+        <p style="font-size:12px;color:var(--text3);margin-bottom:12px;line-height:1.5;">
+          Wählen Sie den Fall zu diesem Brief. PROVA füllt alle bekannten Felder automatisch aus.
+          Oder überspringen Sie diesen Schritt — dann füllen Sie die Felder manuell.
+        </p>
+        <div class="fall-picker" id="fall-picker">
+          <div class="no-fall-option">Fälle werden geladen…</div>
+        </div>
+        <button onclick="ohnefall()" style="margin-top:10px;width:100%;padding:8px;border:1px dashed var(--border2);border-radius:var(--r-md);background:transparent;color:var(--text3);font-size:12px;cursor:pointer;">
+          Ohne Fall-Bezug fortfahren
+        </button>
+      </div>
+    </div>
+
+    <!-- STEP 2: Felder prüfen -->
+    <div class="step-panel" id="panel-2">
+      <div id="auto-fill-info" style="display:none;" class="auto-fill-badge">✓ Felder automatisch aus Fall-Daten befüllt</div>
+
+      <div class="form-section">
+        <div class="form-section-title">Absender (SV)</div>
+        <div class="form-group">
+          <label class="form-label">Name</label>
+          <input class="form-input" id="f-sv-name" type="text" placeholder="Ihr Name">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">E-Mail</label>
+            <input class="form-input" id="f-sv-email" type="email" placeholder="sv@buero.de">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Telefon</label>
+            <input class="form-input" id="f-sv-tel" type="tel" placeholder="+49 …">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Büroaddresse</label>
+          <input class="form-input" id="f-sv-adresse" type="text" placeholder="Musterstraße 1, 50667 Köln">
         </div>
       </div>
-      <div class="search-wrap">
-        <input type="text" class="search-input" id="searchInput" placeholder="Vorlage suchen…" autocomplete="off">
-      </div>
-      <div id="kiStarterInfo" style="display:none;margin-bottom:1.25rem;padding:1rem 1.25rem;background:rgba(74,144,217,.08);border:1px solid rgba(74,144,217,.2);border-radius:var(--radius-lg);font-size:.875rem;color:var(--gray-600);line-height:1.5;">
-        <strong style="color:var(--navy);">KI-Brieftext</strong> ist im <strong>Pro-Paket</strong> verfügbar — unter Einstellungen → Paket wechseln.
-      </div>
-      <div id="categoriesContainer"></div>
-  </main>
 
-  <div class="modal-backdrop" id="kiModal">
-    <div class="modal">
-      <div class="modal-title">KI-Text generieren</div>
-      <p style="font-size:.85rem;color:var(--gray-500);margin-bottom:1rem;">E-Mail-Empfänger und Betreff angeben. Fall-Daten werden aus dem aktuell geladenen Gutachten übernommen.</p>
-      <div class="form-group">
-        <label class="form-label">Empfänger E-Mail</label>
-        <input type="email" class="form-input" id="kiEmpfaenger" placeholder="empfaenger@example.de">
+      <div class="form-section">
+        <div class="form-section-title">Empfänger / Auftraggeber</div>
+        <div class="form-group">
+          <label class="form-label">Name / Firma</label>
+          <input class="form-input" id="f-ag-name" type="text" placeholder="Muster Versicherung AG">
+        </div>
+        <div class="form-group">
+          <label class="form-label">E-Mail Empfänger</label>
+          <input class="form-input" id="f-ag-email" type="email" placeholder="schaden@versicherung.de">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Ansprechpartner (optional)</label>
+          <input class="form-input" id="f-ag-ansp" type="text" placeholder="Frau Müller">
+        </div>
       </div>
-      <div class="form-group">
-        <label class="form-label">Betreff</label>
-        <input type="text" class="form-input" id="kiBetreff" placeholder="z.B. Nachforderung Unterlagen — AZ PROVA-WS-2026-1234">
+
+      <div class="form-section">
+        <div class="form-section-title">Fallbezug</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Aktenzeichen</label>
+            <input class="form-input" id="f-az" type="text" placeholder="PROVA-S-2026-001">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Schadendatum</label>
+            <input class="form-input" id="f-datum" type="text" placeholder="TT.MM.JJJJ">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Schadenort</label>
+          <input class="form-input" id="f-adresse" type="text" placeholder="Musterstraße 5, 50354 Hürth">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Schadenart</label>
+          <input class="form-input" id="f-schadenart" type="text" placeholder="Schimmelbefall">
+        </div>
       </div>
-      <div class="modal-actions">
-        <button type="button" class="btn btn-ghost" id="kiModalCancel">Abbrechen</button>
-        <button type="button" class="btn btn-pro" id="kiModalSend">Generieren &amp; senden</button>
+
+      <div class="form-section">
+        <div class="form-section-title">Zusätzliche Angaben</div>
+        <div class="form-group">
+          <label class="form-label">Betreff des Briefes</label>
+          <input class="form-input" id="f-betreff" type="text" placeholder="Wird automatisch vorgeschlagen…">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Zusatzinfos / Notizen (optional)</label>
+          <textarea class="form-textarea" id="f-zusatz" placeholder="Weitere Informationen die in den Brief einfließen sollen…"></textarea>
+        </div>
       </div>
+    </div>
+
+    <!-- STEP 3: Vorschau -->
+    <div class="step-panel" id="panel-3">
+      <div class="preview-wrap">
+        <div class="preview-header">
+          <span>Briefvorschau</span>
+          <span id="preview-fehlende" style="font-size:10px;color:var(--warning);"></span>
+        </div>
+        <div id="preview-content">
+          <!-- Wird per JS gerendert -->
+        </div>
+      </div>
+
+      <!-- KI-Brieftext für Pro -->
+      <div id="ki-bereich" style="display:none;margin-top:16px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+          <div style="font-size:12px;font-weight:700;color:var(--purple);">✨ KI-Brieftext (Pro)</div>
+          <button onclick="generiereKIText()" id="ki-btn" style="padding:6px 12px;border-radius:var(--r-sm);border:none;background:linear-gradient(135deg,#6366f1,var(--purple));color:#fff;font-size:12px;font-weight:600;cursor:pointer;">
+            KI-Text generieren
+          </button>
+        </div>
+        <div id="ki-status" style="display:none;"></div>
+        <div id="ki-result" style="display:none;background:rgba(99,102,241,.06);border:1px solid rgba(99,102,241,.2);border-radius:var(--r-md);padding:14px;font-size:13px;color:var(--text2);line-height:1.6;margin-top:8px;"></div>
+      </div>
+    </div>
+
+    <!-- STEP 4: Senden -->
+    <div class="step-panel" id="panel-4">
+      <div style="text-align:center;padding:16px 0 20px;">
+        <div style="font-size:40px;margin-bottom:10px;">📬</div>
+        <div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:6px;">Brief bereit zum Versenden</div>
+        <div style="font-size:13px;color:var(--text3);line-height:1.6;">
+          Der Brief wird an <strong id="empfaenger-anzeige" style="color:var(--text2);">—</strong> gesendet.
+        </div>
+      </div>
+
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:16px;margin-bottom:14px;">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);margin-bottom:10px;">Zusammenfassung</div>
+        <div id="send-summary" style="font-size:13px;color:var(--text2);line-height:1.8;"></div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <button class="btn-send" id="btn-send-email" onclick="sendeBrief('email')" style="width:100%;justify-content:center;">
+          📧 Per E-Mail senden
+        </button>
+        <button class="btn-pdf" id="btn-send-pdf" onclick="sendeBrief('pdf')" style="width:100%;justify-content:center;">
+          📄 Als PDF herunterladen
+        </button>
+        <button class="btn-pdf" id="btn-in-akte" onclick="sendeBrief('akte')" style="width:100%;justify-content:center;">
+          📁 In Akte speichern
+        </button>
+      </div>
+
+      <div id="send-result" style="display:none;margin-top:14px;"></div>
+    </div>
+
+  </div><!-- /drawer-body -->
+
+  <div class="drawer-footer">
+    <button class="btn-back" id="btn-back" onclick="stepBack()">← Zurück</button>
+    <div style="display:flex;gap:8px;">
+      <button class="btn-next" id="btn-next" onclick="stepNext()">Weiter →</button>
     </div>
   </div>
 
-  <div class="toast-msg" id="toastMsg"></div>
+</div><!-- /drawer-panel -->
 
-  <script>
-(function() {
-  'use strict';
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+<!-- Support FAB -->
+<button class="support-fab" onclick="zeigToast('Support: support@prova-systems.de','ok')">💬</button>
 
-  const WEBHOOK_S9 = 'https://hook.eu1.make.com/bslfuqmlud1vo8qems5ccn5z5f2eq4dl';
-  const AIRTABLE_BASE = 'appJ7bLlAHZoxENWE';
-  const AIRTABLE_TABLE = 'tblSxV8bsXwd1pwa0';
-
-  const CATEGORIES = [
-    { id: 'angebote', title: 'Angebote & Aufträge' },
-    { id: 'ortstermin', title: 'Ortstermin' },
-    { id: 'gericht', title: 'Gericht & Schiedsverfahren' },
-    { id: 'versicherung', title: 'Versicherung' },
-    { id: 'intern', title: 'Intern' }
-  ];
-
-  const TEMPLATES = [
-    { template_id: 'A-01', name: 'Angebot Gutachten', desc: 'Angebot für ein Gutachten an Auftraggeber.', file: 'angebot-gutachten.html', category: 'angebote', tier: 'Starter', icon: '📄' },
-    { template_id: 'A-02', name: 'Auftragsbestätigung', desc: 'Auftragsbestätigung an den Auftraggeber.', file: 'auftragsbestaetigung.html', category: 'angebote', tier: 'Starter', icon: '✓' },
-    { template_id: 'A-03', name: 'Honorarvereinbarung', desc: 'Vereinbarung zum Honorar mit dem Auftraggeber.', file: 'honorarvereinbarung.html', category: 'angebote', tier: 'Starter', icon: '💰' },
-    { template_id: 'O-01', name: 'Einladung Ortstermin', desc: 'Einladung zu einem Ortstermin (Besichtigung).', file: 'einladung-ortstermin.html', category: 'ortstermin', tier: 'Starter', icon: '📅' },
-    { template_id: 'O-02', name: 'Einladung Ortstermin (Gericht)', desc: 'Einladung zu einem gerichtlichen Ortstermin.', file: 'einladung-ortstermin-gericht.html', category: 'ortstermin', tier: 'Starter', icon: '⚖️' },
-    { template_id: 'O-03', name: 'Ortstermin-Protokoll', desc: 'Protokoll zum durchgeführten Ortstermin.', file: 'ortstermin-protokoll.html', category: 'ortstermin', tier: 'Starter', icon: '📝' },
-    { template_id: 'V-01', name: 'Erstbericht Versicherung', desc: 'Erstbericht an die Versicherung.', file: 'erstbericht-versicherung.html', category: 'versicherung', tier: 'Pro', icon: '📋' },
-    { template_id: 'V-02', name: 'Deckungsanfrage', desc: 'Anfrage zur Deckung an die Versicherung.', file: 'deckungsanfrage.html', category: 'versicherung', tier: 'Pro', icon: '📄' },
-    { template_id: 'V-03', name: 'Kostenvoranschlag Sanierung', desc: 'Kostenvoranschlag für Sanierungsmaßnahmen.', file: 'kostenvoranschlag-sanierung.html', category: 'versicherung', tier: 'Pro', icon: '📊' },
-    { template_id: 'D-04', name: 'Nachforderung Unterlagen', desc: 'Nachforderung von Unterlagen beim Auftraggeber.', file: 'nachforderung-unterlagen.html', category: 'versicherung', tier: 'Pro', icon: '📎' },
-    { template_id: 'V-05', name: 'Abschlussbericht Versicherung', desc: 'Abschlussbericht an die Versicherung.', file: 'abschlussbericht-versicherung.html', category: 'versicherung', tier: 'Pro', icon: '📑' },
-    { template_id: 'V-06', name: 'Kostenvorschuss Gericht', desc: 'Antrag auf Kostenvorschuss beim Gericht.', file: 'kostenvorschuss-gericht.html', category: 'versicherung', tier: 'Pro', icon: '⚖️' },
-    { template_id: 'I-01', name: 'Messprotokoll Feuchte', desc: 'Protokoll für Feuchtemessungen.', file: 'messprotokoll-feuchte.html', category: 'intern', tier: 'Starter', icon: '📐' },
-    { template_id: 'I-02', name: 'Checkliste Wasserschaden', desc: 'Checkliste bei Wasserschaden.', file: 'checkliste-wasserschaden.html', category: 'intern', tier: 'Starter', icon: '📋' },
-    { template_id: 'I-03', name: 'Checkliste Sturmschaden', desc: 'Checkliste bei Sturmschaden.', file: 'checkliste-sturmschaden.html', category: 'intern', tier: 'Starter', icon: '📋' },
-    { template_id: 'I-04', name: 'Einverständnis DSGVO', desc: 'Einverständniserklärung zur Datenverarbeitung.', file: 'einverstaendnis-dsgvo.html', category: 'intern', tier: 'Starter', icon: '🔒' },
-    { template_id: 'I-05', name: 'Datenschutz Mandant', desc: 'Datenschutzinformation für Mandanten.', file: 'datenschutz-mandant.html', category: 'intern', tier: 'Starter', icon: '🔒' },
-    { template_id: 'I-06', name: 'Aktennotiz', desc: 'Kurznotiz für die Akte.', file: 'aktennotiz.html', category: 'intern', tier: 'Starter', icon: '📝' },
-    { template_id: 'O-04', name: 'Umladebrief Ortstermin', desc: 'Verlegung eines Ortstermins mit neuem Datum und Rückmeldungsfrist.', file: 'umladebrief-ortstermin.html', category: 'ortstermin', tier: 'Starter', icon: '🔄' },
-    { template_id: 'I-07', name: 'Ortstermin-Arbeitsblatt', desc: 'Druckbares Formular für die Vor-Ort-Aufnahme: Messwerte, Prüfpunkte, Fotos.', file: 'ortstermin-arbeitsblatt.html', category: 'intern', tier: 'Starter', icon: '📋' },
-    { template_id: 'I-08', name: 'Messprotokoll Risse', desc: 'Rissaufnahme nach DIN 52460 mit Messtabelle, Klassifizierung und Skizzenfeld.', file: 'messprotokoll-risse.html', category: 'intern', tier: 'Starter', icon: '📐' },
-    { template_id: 'I-09', name: 'Checkliste Brandschaden', desc: 'Vollständige Brandschadenaufnahme: Ursache, Ausdehnung, Statik, Inventar, Kosten.', file: 'checkliste-brandschaden.html', category: 'intern', tier: 'Starter', icon: '🔥' },
-    { template_id: 'G-07', name: 'Beauftragungsbestätigung Gericht', desc: 'Pflichtanzeige ans Gericht nach §407a Abs.1 ZPO — Fachgebiet, Fristen, Kostenprognose.', file: 'beauftragungsbestaetigung-gericht.html', category: 'gericht', tier: 'Starter', icon: '⚖️' },
-    { template_id: 'G-08', name: 'Fristverlängerungsantrag', desc: 'Antrag auf Fristverlängerung nach §411 Abs.1 ZPO mit Begründung und Zeitplan.', file: 'fristverlaengerungsantrag.html', category: 'gericht', tier: 'Starter', icon: '⏳' },
-    { template_id: 'G-09', name: 'Ergänzungsfragen-Antwort', desc: 'Strukturierte Beantwortung von Ergänzungsfragen nach §411 Abs.3/4 ZPO.', file: 'ergaenzungsfragen-antwort.html', category: 'gericht', tier: 'Pro', icon: '📝' },
-    { template_id: 'G-10', name: 'Kostenrahmenerhöhung', desc: 'Hinweis auf Kostenüberschreitung nach §407a Abs.3 ZPO mit Gegenüberstellung.', file: 'kostenrahmenerhöhung.html', category: 'gericht', tier: 'Starter', icon: '💶' },
-    { template_id: 'V-09', name: 'Ergänzungsgutachten', desc: 'Ergänzung zum Hauptgutachten mit Frage/Antwort-Struktur nach §411 ZPO.', file: 'formulare/vorlage-09-ergaenzungsgutachten.html', category: 'gericht', tier: 'Pro', icon: '📎' },
-    { template_id: 'V-10', name: 'Schiedsgutachten', desc: 'Außergerichtliches Schiedsgutachten als neutraler Dritter — §84 VVG / Baurecht.', file: 'formulare/vorlage-10-schiedsgutachten.html', category: 'gericht', tier: 'Pro', icon: '🤝' },
-    { template_id: 'V-11', name: 'Bauabnahmeprotokoll', desc: 'Förmliche Bauabnahme nach §640 BGB mit Mängeltabelle, Einbehalt und Dreifach-Unterschrift.', file: 'formulare/vorlage-11-bauabnahmeprotokoll.html', category: 'gericht', tier: 'Pro', icon: '🏗️' },
-    { template_id: 'A-06', name: 'Gerichtsgutachten (§407a)', desc: 'Gerichtsgutachten inkl. §407a ZPO — Enterprise.', file: 'formulare/vorlage-04-gerichtsgutachten.html', category: 'intern', tier: 'Enterprise', icon: '⚖️' },
-    { template_id: 'B-02', name: 'Beweissicherung §407a', desc: 'Beweissicherung mit §407a-Erklärung — Enterprise.', file: 'formulare/vorlage-03-beweissicherung.html', category: 'intern', tier: 'Enterprise', icon: '📑' },
-    { template_id: 'D-01', name: 'Erstbericht Versicherung (Assistent)', desc: 'Erstbericht mit erweiterter Auto-Befüllung — Pro.', file: 'erstbericht-versicherung.html', category: 'versicherung', tier: 'Starter', icon: '📋' }
-  ];
-
-  function renderBadges(tier) {
-    const badges = [];
-    badges.push('<span class="badge badge-starter">Starter</span>');
-    if (tier === 'Pro' || tier === 'Enterprise') badges.push('<span class="badge badge-pro">Pro</span>');
-    if (tier === 'Enterprise') badges.push('<span class="badge badge-enterprise">Enterprise</span>');
-    return badges.join('');
-  }
-
-  function renderCard(t) {
-    const basePath = (t.file.indexOf('formulare/') === 0) ? t.file : ('briefe/' + t.file);
-    const url = basePath + '?template_id=' + encodeURIComponent(t.template_id);
-    const ent = t.template_id === 'A-06' || t.template_id === 'B-02';
-    const d01 = t.template_id === 'D-01';
-    let useClick = '';
-    if (ent) {
-      useClick = ' onclick="if(!window.PROVA||!PROVA.isEnterprise){PROVA.requirePaket(\'paragraph_407a\',\'Enterprise\');return false;}"';
-    } else if (d01) {
-      useClick = ' onclick="if(!window.PROVA||!PROVA.isPro){PROVA.requirePaket(\'auto_erstbericht\',\'Pro\');return false;}"';
-    }
-    const lockUse = (ent && !PROVA.isEnterprise) || (d01 && !PROVA.isPro) ? ' 🔒' : '';
-    const showKi = (t.tier === 'Pro' || t.tier === 'Enterprise') && PROVA.isPro;
-    return '<div class="template-card" data-name="' + (t.name || '').replace(/"/g, '&quot;') + '" data-desc="' + (t.desc || '').replace(/"/g, '&quot;') + '" data-template-id="' + t.template_id + '" data-tier="' + t.tier + '" data-file="' + t.file + '">' +
-      '<div class="template-card-id">' + t.template_id + '</div>' +
-      '<div class="template-card-icon">' + (t.icon || '📄') + '</div>' +
-      '<div class="template-card-name">' + t.name + '</div>' +
-      '<div class="template-card-desc">' + t.desc + '</div>' +
-      '<div class="template-card-badges">' + renderBadges(t.tier) + '</div>' +
-      '<div class="template-card-actions">' +
-        '<a href="' + url + '" target="_blank" rel="noopener" class="btn"' + useClick + '>Verwenden' + lockUse + '</a>' +
-        (showKi ? '<button type="button" class="btn btn-pro btn-ki-generate" data-template-id="' + t.template_id + '" data-name="' + (t.name || '').replace(/"/g, '&quot;') + '">KI-Text generieren</button>' : '') +
-      '</div></div>';
-  }
-
-  function render() {
-    const container = document.getElementById('categoriesContainer');
-    let html = '';
-    CATEGORIES.forEach(function(cat) {
-      const items = TEMPLATES.filter(function(t) { return t.category === cat.id; });
-      if (items.length === 0) return;
-      html += '<div class="category" data-category="' + cat.id + '"><div class="category-title">' + cat.title + '</div><div class="card-grid">';
-      items.forEach(function(t) { html += renderCard(t); });
-      html += '</div></div>';
-    });
-    container.innerHTML = html;
-
-    var inf = document.getElementById('kiStarterInfo');
-    if (inf) inf.style.display = PROVA.isPro ? 'none' : 'block';
-
-    document.querySelectorAll('.btn-ki-generate').forEach(function(btn) {
-      btn.addEventListener('click', function() {
-        openKiModal(this.dataset.templateId, this.dataset.name);
-      });
-    });
-  }
-
-  let pendingKiTemplateId = null;
-  let pendingKiTemplateName = null;
-
-  function openKiModal(templateId, templateName) {
-    pendingKiTemplateId = templateId;
-    pendingKiTemplateName = templateName;
-    document.getElementById('kiEmpfaenger').value = '';
-    const az = localStorage.getItem('prova_letztes_az') || getFallFromUrl() || '';
-    const datum = new Date().toLocaleDateString('de-DE', { year:'2-digit', month:'2-digit', day:'2-digit' }).replace(/\./g, '');
-    const fallback = az ? ('PROVA-' + az) : ('PROVA-' + datum);
-    document.getElementById('kiBetreff').value = (templateName || 'Brief') + ' — AZ ' + fallback;
-    document.getElementById('kiModal').classList.add('open');
-  }
-
-  function getFallFromUrl() {
-    const params = new URLSearchParams(window.location.search);
-    return params.get('fall') || '';
-  }
-
-  function showToast(msg, type) {
-    const el = document.getElementById('toastMsg');
-    el.textContent = msg;
-    el.className = 'toast-msg show' + (type === 'error' ? ' error' : type === 'success' ? ' success' : '');
-    setTimeout(function() { el.classList.remove('show'); }, 3500);
-  }
-
-  async function loadGutachtenByAktenzeichen(aktenzeichen) {
-    const formula = 'OR({Aktenzeichen}="' + (aktenzeichen || '').replace(/"/g, '\\"') + '",{Schadensnummer_Versicherung}="' + (aktenzeichen || '').replace(/"/g, '\\"') + '")';
-    const path = '/v0/' + AIRTABLE_BASE + '/' + AIRTABLE_TABLE + '?filterByFormula=' + encodeURIComponent(formula) + '&maxRecords=1';
-    const res = await fetch('/.netlify/functions/airtable', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ method: 'GET', path: path })
-    });
-    if (!res.ok) throw new Error('Gutachten nicht geladen: ' + res.status);
-    const data = await res.json();
-    if (!data.records || data.records.length === 0) return null;
-    return data.records[0];
-  }
-
-  function getSvProfil() {
-    try {
-      const email = sessionStorage.getItem('prova_sv_email') || '';
-      const name = sessionStorage.getItem('prova_sv_name') || 'Sachverständiger';
-      return { email: email, name: name };
-    } catch (e) { return { email: '', name: 'Sachverständiger' }; }
-  }
-
-  document.getElementById('kiModalCancel').addEventListener('click', function() {
-    document.getElementById('kiModal').classList.remove('open');
-    pendingKiTemplateId = null;
-  });
-
-  document.getElementById('kiModalSend').addEventListener('click', async function() {
-    if (!PROVA.isPro) { showToast('KI-Brieftext nur im Pro-Paket.', 'error'); return; }
-    const empfaenger = document.getElementById('kiEmpfaenger').value.trim();
-    const betreff = document.getElementById('kiBetreff').value.trim();
-    if (!empfaenger) { showToast('Bitte Empfänger E-Mail angeben.', 'error'); return; }
-    if (!betreff) { showToast('Bitte Betreff angeben.', 'error'); return; }
-
-    const fallParam = getFallFromUrl();
-    let record = null;
-    if (fallParam) {
-      try {
-        record = await loadGutachtenByAktenzeichen(fallParam);
-      } catch (e) {
-        showToast('Gutachten konnte nicht geladen werden. URL mit ?fall=AKTENZEICHEN verwenden.', 'error');
-        return;
-      }
-    }
-
-    const sv = getSvProfil();
-    const f = record && record.fields ? record.fields : {};
-    const payload = {
-      ki_generate: 'true',
-      template_id: pendingKiTemplateId,
-      aktenzeichen: f.Aktenzeichen || fallParam || '',
-      sv_name: sv.name || f.SV_Name || 'Sachverständiger',
-      sv_email: sv.email || f.SV_Email || '',
-      sv_strasse: f.SV_Strasse || '',
-      sv_plz: f.SV_PLZ || '',
-      sv_ort: f.SV_Ort || '',
-      strasse: f.Schaden_Strasse || '',
-      plz: String(f.PLZ || ''),
-      ort: f.Ort || '',
-      schadenart: f.Schadensart || '',
-      auftraggeber_name: f.Auftraggeber_Name || '',
-      auftraggeber_typ: f.Auftraggeber_Typ || '',
-      ansprechpartner: f.Ansprechpartner || '',
-      schadensdatum: f.Schadensdatum || '',
-      messwerte: f.Messwerte || '',
-      gutachten_zusammenfassung: (f.KI_Entwurf || '').slice(0, 2000),
-      zusatzinfos: '',
-      empfaenger_email: empfaenger,
-      betreff: betreff,
-      airtable_id: record ? record.id : ''
-    };
-
-    const btn = this;
-    btn.disabled = true;
-    btn.textContent = 'Wird gesendet…';
-    try {
-      const res = await fetch(WEBHOOK_S9, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      document.getElementById('kiModal').classList.remove('open');
-      if (res.ok) {
-        showToast('KI-Text wird generiert und an ' + empfaenger + ' gesendet.', 'success');
-      } else {
-        showToast('Fehler: ' + res.status, 'error');
-      }
-    } catch (err) {
-      showToast('Netzwerkfehler: ' + err.message, 'error');
-    }
-    btn.disabled = false;
-    btn.textContent = 'Generieren & senden';
-  });
-
-  document.getElementById('searchInput').addEventListener('input', function() {
-    const q = this.value.trim().toLowerCase();
-    document.querySelectorAll('.template-card').forEach(function(card) {
-      const name = (card.dataset.name || '').toLowerCase();
-      const desc = (card.dataset.desc || '').toLowerCase();
-      const id = (card.dataset.templateId || '').toLowerCase();
-      const match = !q || name.includes(q) || desc.includes(q) || id.includes(q);
-      card.classList.toggle('hidden', !match);
-    });
-    document.querySelectorAll('.category').forEach(function(cat) {
-      const visible = cat.querySelectorAll('.template-card:not(.hidden)').length > 0;
-      cat.style.display = visible ? '' : 'none';
-    });
-  });
-
-  render();
-})();
-  </script>
-<!-- SUPPORT BUTTON - INTELLIGENT TRIAGE -->
-<div id="support-btn" onclick="openSupportModal()" style="position:fixed;bottom:80px;right:20px;z-index:400;width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#4f8ef7,#3a7be0);box-shadow:0 4px 16px rgba(79,142,247,0.4);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:20px;" title="Support anfragen">&#128172;</div>
-<div id="support-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:500;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px);">
-<div style="background:#13161d;border:1px solid rgba(255,255,255,0.12);border-radius:14px;max-width:500px;width:100%;padding:28px;max-height:90vh;overflow-y:auto;">
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
-    <div style="font-size:16px;font-weight:700;color:#e8eaf0;">&#128172; Support</div>
-    <button onclick="closeSupportModal()" style="background:none;border:none;color:#6b7280;font-size:20px;cursor:pointer;line-height:1;">&#x2715;</button>
-  </div>
-  <!-- FAQ-Antwort (Nutzungsfrage) -->
-  <div id="support-faq" style="display:none;margin-bottom:16px;padding:14px;background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.25);border-radius:10px;">
-    <div style="font-size:12px;font-weight:600;color:#10b981;margin-bottom:6px;">&#129302; KI-Antwort</div>
-    <div id="support-faq-text" style="font-size:13px;color:#e8eaf0;line-height:1.6;"></div>
-    <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">
-      <button onclick="supportFaqHilft()" style="padding:6px 14px;background:#10b981;border:none;border-radius:6px;color:#fff;font-size:12px;font-weight:600;cursor:pointer;">&#10003; Hat geholfen</button>
-      <button onclick="supportFaqNichtHilft()" style="padding:6px 14px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:6px;color:#9da3b4;font-size:12px;cursor:pointer;">Trotzdem senden</button>
-    </div>
-  </div>
-  <!-- Typ-Indikator -->
-  <div id="support-typ-indicator" style="display:none;margin-bottom:14px;padding:8px 12px;border-radius:8px;font-size:12px;font-weight:600;"></div>
-  <!-- Form -->
-  <div id="support-form">
-    <div style="margin-bottom:14px;">
-      <label style="font-size:12px;font-weight:600;color:#9da3b4;display:block;margin-bottom:5px;">Betreff</label>
-      <input id="sup-betreff" type="text" placeholder="Kurze Beschreibung" oninput="supportAnalyse()" style="width:100%;background:#1e2330;border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:10px 12px;color:#e8eaf0;font-size:14px;outline:none;font-family:inherit;">
-    </div>
-    <div style="margin-bottom:18px;">
-      <label style="font-size:12px;font-weight:600;color:#9da3b4;display:block;margin-bottom:5px;">Nachricht</label>
-      <textarea id="sup-nachricht" placeholder="Was genau ist passiert? Je mehr Details, desto schneller k&#246;nnen wir helfen." oninput="supportAnalyse()" style="width:100%;background:#1e2330;border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:10px 12px;color:#e8eaf0;font-size:14px;outline:none;font-family:inherit;min-height:90px;resize:vertical;"></textarea>
-    </div>
-    <div id="support-err" style="display:none;font-size:12px;color:#ef4444;margin-bottom:10px;padding:8px 12px;background:rgba(239,68,68,0.08);border-radius:6px;border:1px solid rgba(239,68,68,0.2);">Bitte Betreff und Nachricht eingeben.</div>
-    <button id="sup-send-btn" onclick="sendSupport()" style="width:100%;padding:11px;background:linear-gradient(135deg,#4f8ef7,#3a7be0);border:none;border-radius:8px;color:#fff;font-size:14px;font-weight:600;cursor:pointer;">Anfrage senden</button>
-  </div>
-  <!-- Erfolg -->
-  <div id="support-success" style="display:none;text-align:center;padding:20px 0;">
-    <div style="font-size:40px;margin-bottom:12px;">&#9989;</div>
-    <div id="support-success-title" style="font-size:15px;font-weight:600;color:#e8eaf0;margin-bottom:8px;">Anfrage gesendet!</div>
-    <div id="support-success-text" style="font-size:13px;color:#9da3b4;">Wir melden uns schnellstm&#246;glich bei Ihnen.</div>
-    <button onclick="closeSupportModal()" style="margin-top:16px;padding:10px 24px;background:#4f8ef7;border:none;border-radius:8px;color:#fff;font-size:14px;font-weight:600;cursor:pointer;">Schlie&#223;en</button>
-  </div>
-</div></div>
 <script>
+(function(){
+'use strict';
 
-const PROVA_FAQ = [
-  {q:"gutachten erstellen",a:"Klicken Sie im Dashboard auf 'Neues Gutachten'. Sie gelangen zu Schritt 1 (Stammdaten), dann Schritt 2 (Diktat/Text), dann Schritt 3 (KI-Analyse). Nach der Analyse können Sie in der Freigabe-Ansicht alles prüfen und freigeben."},
-  {q:"diktat aufnehmen",a:"In Schritt 2 finden Sie den Aufnahme-Button. Klicken Sie ihn, sprechen Sie Ihre Beobachtungen, klicken Sie erneut zum Stoppen. Das Transkript erscheint automatisch. Alternativ können Sie Text direkt eingeben."},
-  {q:"foto hochladen",a:"In Schritt 2 gibt es den Bereich 'Fotos'. Klicken Sie auf 'Fotos hinzufügen' oder ziehen Sie Bilder per Drag & Drop. Fotos werden automatisch komprimiert. Sie können auch später nachgereicht werden."},
-  {q:"pdf generieren",a:"Nach der Freigabe wird automatisch ein PDF erstellt und an Ihre E-Mail gesendet. Dies dauert ca. 1-2 Minuten. Prüfen Sie auch Ihren Spam-Ordner."},
-  {q:"rechnung erstellen",a:"Gehen Sie zu 'Rechnungen' in der Navigation. Wählen Sie den Rechnungstyp (JVEG, Pauschal, Stundensatz etc.), füllen Sie die Felder aus und klicken Sie 'Rechnung erstellen'. Die Rechnung wird per E-Mail zugeschickt."},
-  {q:"jveg berechnen",a:"Im JVEG-Rechner (Navigation → JVEG) können Sie Honorargruppe, Stunden, Fahrtkosten und Fotokosten eingeben. Der Rechner berechnet automatisch den Gesamtbetrag nach §9, §7, §8 und §12 JVEG."},
-  {q:"termin eintragen",a:"Unter 'Termine' können Sie neue Termine anlegen. Klicken Sie auf '+ Neuer Termin', wählen Sie Typ (Ortstermin, Gerichtstermin, Frist etc.), Datum und Uhrzeit. Sie erhalten automatisch Erinnerungen."},
-  {q:"briefvorlage",a:"Unter 'Briefvorlagen' finden Sie alle verfügbaren Vorlagen. Wählen Sie die passende Vorlage, die Felder werden automatisch aus Ihren Einstellungen befüllt. Sie können den Text anpassen und dann generieren."},
-  {q:"passwort ändern",a:"Gehen Sie zu prova-systems.de/app-login.html und klicken Sie auf 'Passwort vergessen'. Sie erhalten eine E-Mail mit einem Reset-Link."},
-  {q:"profil einstellungen",a:"Unter 'Einstellungen' (Zahnrad-Symbol) können Sie Ihre persönlichen Daten, Kanzleidaten, IBAN und Zertifizierungen hinterlegen. Diese Daten werden automatisch in alle Gutachten und Rechnungen übernommen."},
-  {q:"archiv suche",a:"Im Archiv können Sie nach Aktenzeichen, Auftraggeber, Schadenart und Status suchen. Nutzen Sie die Filteroptionen oben oder die Suchleiste für eine Volltextsuche."},
-  {q:"aktenzeichen",a:"Das Aktenzeichen wird automatisch generiert (Format: PROVA-JJJJ-NNN). Sie können es in Schritt 1 auch manuell eingeben oder ändern."},
-  {q:"konjunktiv stellungnahme",a:"Die KI generiert Einschätzungen und Ursachenanalysen automatisch im Konjunktiv II (dürfte, könnte, wäre). Dies ist rechtlich korrekt nach §407a ZPO. Die Formulierungen können Sie im §6-Editor anpassen."},
-  {q:"paket upgrade",a:"Für ein Upgrade auf Pro oder Enterprise wenden Sie sich bitte an support@prova-systems.de. Wir erstellen Ihnen ein individuelles Angebot."},
-  {q:"abmelden logout",a:"Klicken Sie im Drawer-Menü (☰) auf 'Abmelden' am unteren Ende. Alternativ: Einstellungen → Abmelden."},
-  {q:"keine email bekommen",a:"Prüfen Sie zunächst Ihren Spam-Ordner. E-Mails kommen von noreply@prova-systems.de. Falls nichts da ist, prüfen Sie unter Einstellungen ob Ihre E-Mail-Adresse korrekt hinterlegt ist."},
-  {q:"daten exportieren",a:"Im Archiv können Sie einzelne Gutachten als PDF herunterladen. Ein Gesamt-Export aller Daten ist auf Anfrage über support@prova-systems.de möglich."},
-  {q:"messprot okoll messwerte",a:"In der App können Sie Messwerte strukturiert erfassen. Aktivieren Sie den Bereich 'Messwerte' in Schritt 1 (ausklappbar). Feuchtemessung, Risse etc. können dort dokumentiert werden."},
-  {q:"safari funktioniert nicht",a:"Im Safari-Privatmodus ist die Offline-Speicherung deaktiviert. Bitte nutzen Sie Safari im normalen Modus oder einen anderen Browser (Chrome, Firefox, Edge)."},
-  {q:"wie lange dauert gutachten",a:"Die KI-Analyse dauert in der Regel 30-90 Sekunden. Die gesamte Bearbeitung (Diktat bis PDF) ist typischerweise in 20-30 Minuten abgeschlossen."}
+var WEBHOOK_S9='https://hook.eu1.make.com/bslfuqmlud1vo8qems5ccn5z5f2eq4dl';
+var AT_BASE='appJ7bLlAHZoxENWE';
+var AT_FAELLE='tblSxV8bsXwd1pwa0';
+
+/* ── SIDEBAR ── */
+var paket=localStorage.getItem('prova_paket')||'Starter';
+var isPro=paket==='Pro'||paket==='Enterprise';
+var isEnterprise=paket==='Enterprise';
+var pc={'Starter':'#4f8ef7','Pro':'#f59e0b','Enterprise':'#a78bfa'}[paket]||'#4f8ef7';
+(function(){
+  var el=document.getElementById('topbar-paket-badge');
+  if(el){el.textContent=paket;el.style.cssText='font-size:10px;font-weight:700;padding:3px 9px;border-radius:10px;letter-spacing:.04em;background:'+pc+'18;color:'+pc+';border:1px solid '+pc+'33;';}
+  var dot=document.getElementById('sb-paket-dot');if(dot){dot.style.background=pc;dot.style.color=pc;}
+  var nm=document.getElementById('sb-paket-name');if(nm){nm.textContent=paket;nm.style.color=pc;}
+  var appUrl=paket==='Enterprise'?'app-enterprise.html':paket==='Pro'?'app-pro.html':'app-starter.html';
+  var nb=document.getElementById('sb-new-btn');if(nb)nb.onclick=function(){window.location.href=appUrl;};
+  var bnl=document.getElementById('bn-new-link');if(bnl)bnl.href=appUrl;
+})();
+var collapsed=localStorage.getItem('prova_sb_collapsed')==='1';
+var sb=document.getElementById('sidebar');
+if(collapsed&&sb)sb.classList.add('collapsed');
+window.toggleSidebar=function(){collapsed=!collapsed;sb.classList.toggle('collapsed',collapsed);localStorage.setItem('prova_sb_collapsed',collapsed?'1':'0');};
+window.openMobileSidebar=function(){sb.classList.add('mobile-open');document.getElementById('sb-overlay').classList.add('open');};
+window.closeMobileSidebar=function(){sb.classList.remove('mobile-open');document.getElementById('sb-overlay').classList.remove('open');};
+
+if(!localStorage.getItem('prova_user')){window.location.href='app-login.html';return;}
+
+/* KI-Hinweis */
+if(!isPro){document.getElementById('ki-hint').style.display='flex';}
+
+/* ── VORLAGEN-DEFINITIONEN ── */
+var CATEGORIES=[
+  {id:'angebote',title:'📋 Angebote & Aufträge'},
+  {id:'ortstermin',title:'📍 Ortstermin'},
+  {id:'versicherung',title:'🏢 Versicherung'},
+  {id:'gericht',title:'⚖️ Gericht & ZPO'},
+  {id:'intern',title:'🗂️ Intern & Dokumente'}
 ];
 
-// Klassifizierung
-function klassifiziereAnfrage(text) {
-  var t = text.toLowerCase();
-  var fehlerKW = ['fehler','error','funktioniert nicht','geht nicht','kaputt','absturz','lädt nicht','broken','crash','404','500','bug','problem mit der app','nicht mehr'];
-  var billingKW = ['rechnung','zahlung','kündigung','kündigen','preis','kosten','abonnement','abo','zahlen','invoice','billing','upgrade','downgrade','rückerstattung'];
-  for(var i=0;i<fehlerKW.length;i++) if(t.includes(fehlerKW[i])) return 'fehler';
-  for(var i=0;i<billingKW.length;i++) if(t.includes(billingKW[i])) return 'billing';
-  return 'nutzung';
-}
+var TEMPLATES=[
+  {id:'A-01',name:'Angebot Gutachten',desc:'Angebot für ein Gutachten an Auftraggeber.',file:'angebot-gutachten.html',cat:'angebote',tier:'Starter',icon:'📄'},
+  {id:'A-02',name:'Auftragsbestätigung',desc:'Auftragsbestätigung an den Auftraggeber.',file:'auftragsbestaetigung.html',cat:'angebote',tier:'Starter',icon:'✅'},
+  {id:'A-03',name:'Honorarvereinbarung',desc:'Vereinbarung zum Honorar mit dem Auftraggeber.',file:'honorarvereinbarung.html',cat:'angebote',tier:'Starter',icon:'💰'},
+  {id:'O-01',name:'Einladung Ortstermin',desc:'Einladung zu einem Ortstermin (Besichtigung).',file:'einladung-ortstermin.html',cat:'ortstermin',tier:'Starter',icon:'📅'},
+  {id:'O-02',name:'Einladung Ortstermin (Gericht)',desc:'Einladung zu einem gerichtlichen Ortstermin.',file:'einladung-ortstermin-gericht.html',cat:'ortstermin',tier:'Starter',icon:'⚖️'},
+  {id:'O-03',name:'Ortstermin-Protokoll',desc:'Protokoll zum durchgeführten Ortstermin.',file:'ortstermin-protokoll.html',cat:'ortstermin',tier:'Starter',icon:'📝'},
+  {id:'O-04',name:'Umladebrief Ortstermin',desc:'Verlegung eines Ortstermins mit neuem Datum.',file:'umladebrief-ortstermin.html',cat:'ortstermin',tier:'Starter',icon:'🔄'},
+  {id:'V-01',name:'Erstbericht Versicherung',desc:'Erstbericht an die Versicherung.',file:'erstbericht-versicherung.html',cat:'versicherung',tier:'Pro',icon:'📋'},
+  {id:'V-02',name:'Deckungsanfrage',desc:'Anfrage zur Deckung an die Versicherung.',file:'deckungsanfrage.html',cat:'versicherung',tier:'Pro',icon:'📄'},
+  {id:'V-03',name:'Kostenvoranschlag Sanierung',desc:'Kostenvoranschlag für Sanierungsmaßnahmen.',file:'kostenvoranschlag-sanierung.html',cat:'versicherung',tier:'Pro',icon:'📊'},
+  {id:'V-04',name:'Nachforderung Unterlagen',desc:'Nachforderung von Unterlagen.',file:'nachforderung-unterlagen.html',cat:'versicherung',tier:'Starter',icon:'📎'},
+  {id:'V-05',name:'Abschlussbericht Versicherung',desc:'Abschlussbericht an die Versicherung.',file:'abschlussbericht-versicherung.html',cat:'versicherung',tier:'Pro',icon:'📑'},
+  {id:'G-07',name:'Beauftragungsbestätigung Gericht',desc:'Pflichtanzeige ans Gericht nach §407a Abs.1 ZPO.',file:'beauftragungsbestaetigung-gericht.html',cat:'gericht',tier:'Starter',icon:'⚖️'},
+  {id:'G-08',name:'Fristverlängerungsantrag',desc:'Antrag auf Fristverlängerung nach §411 Abs.1 ZPO.',file:'fristverlaengerungsantrag.html',cat:'gericht',tier:'Starter',icon:'⏳'},
+  {id:'G-09',name:'Ergänzungsfragen-Antwort',desc:'Beantwortung von Ergänzungsfragen nach §411 ZPO.',file:'ergaenzungsfragen-antwort.html',cat:'gericht',tier:'Pro',icon:'📝'},
+  {id:'G-10',name:'Kostenrahmenerhöhung',desc:'Hinweis auf Kostenüberschreitung nach §407a Abs.3 ZPO.',file:'kostenrahmenerhöhung.html',cat:'gericht',tier:'Starter',icon:'💶'},
+  {id:'I-01',name:'Messprotokoll Feuchte',desc:'Protokoll für Feuchtemessungen.',file:'messprotokoll-feuchte.html',cat:'intern',tier:'Starter',icon:'📐'},
+  {id:'I-02',name:'Checkliste Wasserschaden',desc:'Checkliste bei Wasserschaden.',file:'checkliste-wasserschaden.html',cat:'intern',tier:'Starter',icon:'📋'},
+  {id:'I-03',name:'Checkliste Sturmschaden',desc:'Checkliste bei Sturmschaden.',file:'checkliste-sturmschaden.html',cat:'intern',tier:'Starter',icon:'📋'},
+  {id:'I-04',name:'Einverständnis DSGVO',desc:'Einverständniserklärung zur Datenverarbeitung.',file:'einverstaendnis-dsgvo.html',cat:'intern',tier:'Starter',icon:'🔒'},
+  {id:'I-06',name:'Aktennotiz',desc:'Kurznotiz für die Akte.',file:'aktennotiz.html',cat:'intern',tier:'Starter',icon:'📝'},
+  {id:'I-07',name:'Ortstermin-Arbeitsblatt',desc:'Druckbares Formular für die Vor-Ort-Aufnahme.',file:'ortstermin-arbeitsblatt.html',cat:'intern',tier:'Starter',icon:'📋'},
+  {id:'I-08',name:'Messprotokoll Risse',desc:'Rissaufnahme nach DIN 52460.',file:'messprotokoll-risse.html',cat:'intern',tier:'Starter',icon:'📐'},
+  {id:'I-09',name:'Checkliste Brandschaden',desc:'Vollständige Brandschadenaufnahme.',file:'checkliste-brandschaden.html',cat:'intern',tier:'Starter',icon:'🔥'},
+  {id:'A-06',name:'Gerichtsgutachten §407a',desc:'Gerichtsgutachten inkl. §407a ZPO — Enterprise.',file:'vorlage-04-gerichtsgutachten.html',cat:'gericht',tier:'Enterprise',icon:'⚖️'},
+  {id:'B-02',name:'Beweissicherung §407a',desc:'Beweissicherung mit §407a-Erklärung — Enterprise.',file:'vorlage-03-beweissicherung.html',cat:'intern',tier:'Enterprise',icon:'📑'}
+];
 
-// FAQ-Match
-function findeFAQAntwort(text) {
-  var t = text.toLowerCase();
-  var best = null, bestScore = 0;
-  PROVA_FAQ.forEach(function(faq) {
-    var score = 0;
-    faq.q.split(' ').forEach(function(w) { if(t.includes(w)) score++; });
-    if(score > bestScore) { bestScore = score; best = faq; }
+/* ── VORLAGEN RENDERN ── */
+function renderVorlagen(){
+  var container=document.getElementById('categoriesContainer');
+  container.innerHTML='';
+  CATEGORIES.forEach(function(cat){
+    var catTemplates=TEMPLATES.filter(function(t){return t.cat===cat.id;});
+    if(catTemplates.length===0)return;
+    var html='<div class="category" id="cat-'+cat.id+'">'
+      +'<div class="category-label">'+cat.title+'</div>'
+      +'<div class="card-grid">';
+    catTemplates.forEach(function(t){
+      var zugaenglich=t.tier==='Starter'||(t.tier==='Pro'&&isPro)||(t.tier==='Enterprise'&&isEnterprise);
+      var tierClass=t.tier==='Enterprise'?'tier-enterprise':t.tier==='Pro'?'tier-pro':'tier-starter';
+      var lockHtml=!zugaenglich?'<span class="lock-icon">🔒</span>':'';
+      html+='<div class="template-card'+(zugaenglich?'':' locked')+'" data-name="'+t.name+'" data-desc="'+t.desc+'" data-id="'+t.id+'">'
+        +'<div class="tc-top"><div class="tc-icon">'+t.icon+'</div><div class="tc-id">'+t.id+'</div></div>'
+        +'<div class="tc-name">'+t.name+lockHtml+'</div>'
+        +'<div class="tc-desc">'+t.desc+'</div>'
+        +'<div class="tc-footer">'
+        +'<span class="tier-badge '+tierClass+'">'+t.tier+'</span>'
+        +(zugaenglich
+          ?'<button class="tc-btn tc-btn-primary" onclick="oeffneVorlage(\''+t.id+'\',event)">Verwenden →</button>'
+          +(isPro&&t.tier!=='Enterprise'?'<button class="tc-btn tc-btn-ki" onclick="oeffneVorlageKI(\''+t.id+'\',event)">✨ KI</button>':'')
+          :'<button class="tc-btn tc-btn-primary" style="background:var(--surface2);color:var(--text3);cursor:not-allowed;" disabled>'+t.tier+' erforderlich</button>'
+        )
+        +'</div>'
+        +'</div>';
+    });
+    html+='</div></div>';
+    container.innerHTML+=html;
   });
-  return bestScore > 0 ? best : null;
+}
+renderVorlagen();
+
+/* ── SUCHE ── */
+window.filterVorlagen=function(){
+  var q=(document.getElementById('searchInput').value||'').toLowerCase().trim();
+  document.querySelectorAll('.template-card').forEach(function(card){
+    var name=(card.dataset.name||'').toLowerCase();
+    var desc=(card.dataset.desc||'').toLowerCase();
+    var id=(card.dataset.id||'').toLowerCase();
+    card.classList.toggle('hidden',q&&!name.includes(q)&&!desc.includes(q)&&!id.includes(q));
+  });
+  document.querySelectorAll('.category').forEach(function(cat){
+    var visible=cat.querySelectorAll('.template-card:not(.hidden)').length>0;
+    cat.style.display=q&&!visible?'none':'block';
+  });
+};
+
+/* ── DRAWER ── */
+var currentStep=1;
+var activeTemplate=null;
+var selectedFall=null;
+var svEmail=localStorage.getItem('prova_sv_email')||'';
+var alleFelder={};
+var _faelle=[];
+
+window.oeffneVorlage=function(templateId,evt){
+  if(evt)evt.stopPropagation();
+  activeTemplate=TEMPLATES.find(function(t){return t.id===templateId;});
+  if(!activeTemplate)return;
+  // Locked?
+  var zugaenglich=activeTemplate.tier==='Starter'||(activeTemplate.tier==='Pro'&&isPro)||(activeTemplate.tier==='Enterprise'&&isEnterprise);
+  if(!zugaenglich){zeigToast(activeTemplate.tier+'-Paket erforderlich','err');return;}
+  document.getElementById('d-icon').textContent=activeTemplate.icon;
+  document.getElementById('d-title').textContent=activeTemplate.name;
+  // KI-Bereich
+  document.getElementById('ki-bereich').style.display=isPro?'block':'none';
+  goStep(1);
+  document.getElementById('drawerOverlay').classList.add('open');
+  document.getElementById('drawerPanel').classList.add('open');
+  ladeFaelleForPicker();
+};
+
+window.oeffneVorlageKI=function(templateId,evt){
+  if(evt)evt.stopPropagation();
+  oeffneVorlage(templateId,evt);
+};
+
+window.schliessDrawer=function(){
+  document.getElementById('drawerOverlay').classList.remove('open');
+  document.getElementById('drawerPanel').classList.remove('open');
+  currentStep=1;
+  selectedFall=null;
+  document.getElementById('send-result').style.display='none';
+};
+
+/* Steps */
+function goStep(n){
+  currentStep=n;
+  for(var i=1;i<=4;i++){
+    document.getElementById('panel-'+i).classList.toggle('active',i===n);
+    var ind=document.getElementById('step-ind-'+i);
+    ind.classList.remove('active','done');
+    if(i<n)ind.classList.add('done');
+    else if(i===n)ind.classList.add('active');
+  }
+  var back=document.getElementById('btn-back');
+  var next=document.getElementById('btn-next');
+  back.style.display=n===1?'none':'block';
+  next.style.display=n===4?'none':'block';
+  if(n===3){renderVorschau();}
+  if(n===4){renderSendeSummary();}
 }
 
-var _supportTyp = 'nutzung';
-var _supportAnalyseTimer = null;
+window.stepNext=function(){
+  if(currentStep===2){fuelleFelderAus();}
+  if(currentStep<4)goStep(currentStep+1);
+};
+window.stepBack=function(){if(currentStep>1)goStep(currentStep-1);};
+window.ohnefall=function(){selectedFall=null;fuelleSVProfil();goStep(2);};
 
-function openSupportModal(){document.getElementById("support-modal").style.display="flex";}
-function closeSupportModal(){
-  document.getElementById("support-modal").style.display="none";
-  document.getElementById("support-success").style.display="none";
-  document.getElementById("support-form").style.display="block";
-  document.getElementById("support-faq").style.display="none";
-  document.getElementById("support-typ-indicator").style.display="none";
-  document.getElementById("sup-betreff").value="";
-  document.getElementById("sup-nachricht").value="";
-  document.getElementById("support-err").style.display="none";
-  var btn=document.getElementById("sup-send-btn");
-  if(btn){btn.disabled=false;btn.textContent="Anfrage senden";}
+/* ── FÄLLE FÜR PICKER ── */
+async function ladeFaelleForPicker(){
+  var picker=document.getElementById('fall-picker');
+  picker.innerHTML='<div class="no-fall-option">⏳ Wird geladen…</div>';
+  try{
+    var filter=svEmail?'AND(NOT({Status}=""),{sv_email}="'+svEmail+'")':'NOT({Status}="")';
+    var path='/v0/'+AT_BASE+'/'+AT_FAELLE+'?filterByFormula='+encodeURIComponent(filter)+'&maxRecords=30&sort[0][field]=Timestamp&sort[0][direction]=desc';
+    var res=await fetch('/.netlify/functions/airtable',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({method:'GET',path:path})});
+    var data=await res.json();
+    _faelle=data.records||[];
+  }catch(e){
+    // Fallback localStorage
+    var ls=[];try{ls=JSON.parse(localStorage.getItem('prova_akten')||'[]');}catch(e2){}
+    _faelle=ls.map(function(a){return{id:a.id,fields:{Aktenzeichen:a.aktenzeichen,Status:a.status,Schadensart:a.schadenart,Schaden_Strasse:a.adresse,Ort:a.ort,Auftraggeber_Name:a.auftraggeber_name,Auftraggeber_Email:a.auftraggeber_email,Timestamp:a.datum}};});
+  }
+  if(_faelle.length===0){
+    picker.innerHTML='<div class="no-fall-option">Noch keine Fälle. <a href="app-starter.html" style="color:var(--accent);">Neuen Fall anlegen →</a></div>';
+    return;
+  }
+  picker.innerHTML=_faelle.map(function(r){
+    var f=r.fields||{};
+    var az=f.Aktenzeichen||r.id.slice(-6).toUpperCase();
+    var name=(f.Auftraggeber_Name||f.Schadensart||'Schadenfall');
+    var meta=[f.Schaden_Strasse,f.Ort].filter(Boolean).join(', ')||'—';
+    return '<div class="fall-option" data-id="'+r.id+'" onclick="waehle_fall(\''+r.id+'\')">'
+      +'<div class="fall-az">'+esc(az)+'</div>'
+      +'<div class="fall-info"><div class="fall-name">'+esc(name)+'</div><div class="fall-meta">'+esc(meta)+'</div></div>'
+      +'<span class="fall-check" id="fc-'+r.id+'" style="display:none;">✓</span>'
+      +'</div>';
+  }).join('');
 }
-document.addEventListener("DOMContentLoaded",function(){
-  var m=document.getElementById("support-modal");
-  if(m)m.addEventListener("click",function(e){if(e.target===m)closeSupportModal();});
-});
-function supportAnalyse(){
-  clearTimeout(_supportAnalyseTimer);
-  _supportAnalyseTimer = setTimeout(function(){
-    var b=document.getElementById("sup-betreff").value.trim();
-    var n=document.getElementById("sup-nachricht").value.trim();
-    var combined = b + " " + n;
-    if(combined.trim().length < 3) return;
-    _supportTyp = klassifiziereAnfrage(combined);
-    var ind = document.getElementById("support-typ-indicator");
-    var faqEl = document.getElementById("support-faq");
-    if(_supportTyp === 'fehler'){
-      ind.style.display="block";
-      ind.style.background="rgba(239,68,68,0.1)";
-      ind.style.border="1px solid rgba(239,68,68,0.25)";
-      ind.style.color="#ef4444";
-      ind.textContent="&#9888; Fehlermeldung erkannt — wird mit hoher Priorit&#228;t weitergeleitet";
-      faqEl.style.display="none";
-    } else if(_supportTyp === 'billing'){
-      ind.style.display="block";
-      ind.style.background="rgba(245,158,11,0.1)";
-      ind.style.border="1px solid rgba(245,158,11,0.25)";
-      ind.style.color="#f59e0b";
-      ind.textContent="&#128176; Frage zu Abrechnung/Paket — wird direkt bearbeitet";
-      faqEl.style.display="none";
-    } else {
-      ind.style.display="none";
-      var faq = findeFAQAntwort(combined);
-      if(faq){
-        document.getElementById("support-faq-text").textContent=faq.a;
-        faqEl.style.display="block";
-      } else {
-        faqEl.style.display="none";
-      }
-    }
-  }, 600);
+
+window.waehle_fall=function(recordId){
+  document.querySelectorAll('.fall-option').forEach(function(el){el.classList.remove('selected');document.getElementById('fc-'+el.dataset.id).style.display='none';});
+  var opt=document.querySelector('.fall-option[data-id="'+recordId+'"]');
+  if(opt){opt.classList.add('selected');document.getElementById('fc-'+recordId).style.display='block';}
+  selectedFall=_faelle.find(function(r){return r.id===recordId;});
+  // Auto-weiter nach Auswahl
+  setTimeout(function(){fuelleSVProfil();fuelleFalldaten();goStep(2);},300);
+};
+
+/* ── FELDER BEFÜLLEN ── */
+function fuelleSVProfil(){
+  var name=(localStorage.getItem('prova_sv_vorname')||'')+' '+(localStorage.getItem('prova_sv_nachname')||'');
+  setV('f-sv-name',name.trim()||'');
+  setV('f-sv-email',localStorage.getItem('prova_sv_email')||'');
+  setV('f-sv-tel',localStorage.getItem('prova_sv_telefon')||'');
+  var adr=[(localStorage.getItem('prova_sv_strasse')||''),(localStorage.getItem('prova_sv_plz')||'')+' '+(localStorage.getItem('prova_sv_ort')||'')].filter(function(s){return s.trim();}).join(', ');
+  setV('f-sv-adresse',adr);
 }
-function supportFaqHilft(){
-  document.getElementById("support-form").style.display="none";
-  document.getElementById("support-faq").style.display="none";
-  document.getElementById("support-success").style.display="block";
-  document.getElementById("support-success-title").textContent="Super! Problem gel&#246;st &#128512;";
-  document.getElementById("support-success-text").textContent="Sch&#246;n, dass wir helfen konnten.";
+
+function fuelleFalldaten(){
+  if(!selectedFall)return;
+  var f=selectedFall.fields||{};
+  setV('f-az',f.Aktenzeichen||'');
+  setV('f-ag-name',f.Auftraggeber_Name||'');
+  setV('f-ag-email',f.Auftraggeber_Email||f.auftraggeber_email||'');
+  setV('f-ag-ansp',f.Ansprechpartner||'');
+  var adresse=[f.Schaden_Strasse,f.Ort].filter(Boolean).join(', ');
+  setV('f-adresse',adresse);
+  setV('f-schadenart',f.Schadensart||'');
+  if(f.Schadensdatum)setV('f-datum',f.Schadensdatum);
+  // Auto-Betreff
+  var betreff=(activeTemplate?activeTemplate.name:'Brief')+' — AZ '+(f.Aktenzeichen||'');
+  if(f.Auftraggeber_Name)betreff+=' / '+f.Auftraggeber_Name;
+  setV('f-betreff',betreff);
+  // Badge anzeigen
+  document.getElementById('auto-fill-info').style.display='flex';
+  // Auto-filled styling
+  ['f-az','f-ag-name','f-ag-email','f-adresse','f-schadenart'].forEach(function(id){
+    var el=document.getElementById(id);if(el&&el.value)el.classList.add('auto-filled');
+  });
 }
-function supportFaqNichtHilft(){
-  document.getElementById("support-faq").style.display="none";
+
+function fuelleFelderAus(){
+  alleFelder={
+    sv_name:getV('f-sv-name'),sv_email:getV('f-sv-email'),sv_tel:getV('f-sv-tel'),sv_adresse:getV('f-sv-adresse'),
+    ag_name:getV('f-ag-name'),ag_email:getV('f-ag-email'),ag_ansp:getV('f-ag-ansp'),
+    az:getV('f-az'),datum:getV('f-datum'),adresse:getV('f-adresse'),schadenart:getV('f-schadenart'),
+    betreff:getV('f-betreff'),zusatz:getV('f-zusatz')
+  };
 }
-async function sendSupport(){
-  var b=document.getElementById("sup-betreff").value.trim();
-  var n=document.getElementById("sup-nachricht").value.trim();
-  var err=document.getElementById("support-err");
-  var btn=document.getElementById("sup-send-btn");
-  if(!b||!n){err.style.display="block";return;}
-  err.style.display="none";btn.disabled=true;btn.textContent="&#8987; Wird gesendet...";
+
+/* ── VORSCHAU ── */
+function renderVorschau(){
+  fuelleFelderAus();
+  var heute=new Date().toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric'});
+  var fehlend=[];
+  function val(key,label){
+    var v=alleFelder[key]||'';
+    if(!v){fehlend.push(label);return '<span class="placeholder">['+label+']</span>';}
+    return '<span class="filled">'+esc(v)+'</span>';
+  }
+
+  var html='<p><strong>'+esc(alleFelder.sv_name||localStorage.getItem('prova_sv_firma')||'SV-Büro')+'</strong><br>'
+    +(alleFelder.sv_adresse?esc(alleFelder.sv_adresse)+'<br>':'')
+    +(alleFelder.sv_email?esc(alleFelder.sv_email)+'<br>':'')
+    +(alleFelder.sv_tel?esc(alleFelder.sv_tel):'')
+    +'</p><p style="margin-top:12px;">'
+    +val('ag_name','Auftraggeber/Firma')+'<br>'
+    +(alleFelder.ag_ansp?'z.Hd. '+esc(alleFelder.ag_ansp)+'<br>':'')
+    +(alleFelder.ag_email?esc(alleFelder.ag_email):'')
+    +'</p><p style="margin-top:12px;color:var(--text3);font-size:12px;">'+heute+'</p>'
+    +'<p style="margin-top:12px;font-weight:700;color:var(--text);">Betreff: '+val('betreff','Betreff')+'</p>'
+    +'<p style="margin-top:8px;">Sehr geehrte Damen und Herren,</p>'
+    +'<p style="margin-top:8px;">bezugnehmend auf das Schadengeschehen <strong>'+val('schadenart','Schadenart')+'</strong> vom '+val('datum','Schadendatum')+' in '+val('adresse','Schadenort')+' (Aktenzeichen: '+val('az','Aktenzeichen')+') übersende ich Ihnen hiermit: <strong>'+esc(activeTemplate?activeTemplate.name:'den Anhang')+'</strong>.</p>'
+    +'<p style="margin-top:8px;font-style:italic;color:var(--text3);font-size:12px;">— Vollständiger Brieftext wird aus der Vorlage generiert —</p>'
+    +(alleFelder.zusatz?'<p style="margin-top:8px;font-size:12px;color:var(--text2);">'+esc(alleFelder.zusatz)+'</p>':'')
+    +'<p style="margin-top:16px;">Mit freundlichen Grüßen<br><strong>'+esc(alleFelder.sv_name||'')+'</strong></p>';
+
+  document.getElementById('preview-content').innerHTML=html;
+  var pfEl=document.getElementById('preview-fehlende');
+  if(fehlend.length>0)pfEl.textContent='⚠ Fehlend: '+fehlend.join(', ');
+  else pfEl.textContent='';
+}
+
+/* ── KI-BRIEFTEXT (Pro) ── */
+window.generiereKIText=async function(){
+  if(!isPro){zeigToast('KI-Brieftext nur im Pro-Paket','err');return;}
+  var status=document.getElementById('ki-status');
+  var result=document.getElementById('ki-result');
+  var btn=document.getElementById('ki-btn');
+  status.style.display='block';
+  status.innerHTML='<div class="ki-generating"><div class="ki-dot"></div>KI generiert Brieftext…</div>';
+  result.style.display='none';
+  btn.disabled=true;
   var payload={
-    betreff:b, nachricht:n, typ:_supportTyp,
-    prioritaet: _supportTyp==='fehler'?'Hoch':_supportTyp==='billing'?'Kritisch':'Normal',
-    sv_email:localStorage.getItem("prova_sv_email")||"",
-    paket:localStorage.getItem("prova_paket")||"Starter",
-    seite:window.location.pathname,
-    ts:new Date().toISOString()
+    ki_generate:'true',
+    template_id:activeTemplate?activeTemplate.id:'',
+    aktenzeichen:alleFelder.az||'',
+    schadenart:alleFelder.schadenart||'',
+    auftraggeber_name:alleFelder.ag_name||'',
+    sv_name:alleFelder.sv_name||'',
+    sv_email:alleFelder.sv_email||'',
+    strasse:alleFelder.adresse||'',
+    schadensdatum:alleFelder.datum||'',
+    empfaenger_email:alleFelder.ag_email||'',
+    betreff:alleFelder.betreff||'',
+    airtable_id:selectedFall?selectedFall.id:''
   };
   try{
-    await fetch("https://hook.eu1.make.com/lktuhugwcg5v37ib6bdaxjb1uiplnu8v",{
-      method:"POST",headers:{"Content-Type":"application/json"},
-      body:JSON.stringify(payload)
-    });
-  }catch(e){}
-  document.getElementById("support-form").style.display="none";
-  document.getElementById("support-faq").style.display="none";
-  document.getElementById("support-typ-indicator").style.display="none";
-  document.getElementById("support-success").style.display="block";
-  if(_supportTyp==='fehler'||_supportTyp==='billing'){
-    document.getElementById("support-success-title").textContent="Anfrage gesendet &#128680;";
-    document.getElementById("support-success-text").textContent="Priorit&#228;t: "+(_supportTyp==='billing'?'Kritisch':'Hoch')+" — wir melden uns umgehend.";
-  } else {
-    document.getElementById("support-success-title").textContent="Anfrage gesendet!";
-    document.getElementById("support-success-text").textContent="Wir melden uns schnellstm&#246;glich bei Ihnen.";
+    var res=await fetch(WEBHOOK_S9,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    if(res.ok){
+      status.style.display='none';
+      result.style.display='block';
+      result.textContent='✅ KI-Brieftext wurde generiert und wird an '+alleFelder.ag_email+' versendet.';
+      zeigToast('KI-Text generiert und gesendet ✅');
+    }else{
+      status.innerHTML='<div style="color:var(--danger);font-size:12px;">Fehler: HTTP '+res.status+'</div>';
+    }
+  }catch(e){
+    status.innerHTML='<div style="color:var(--danger);font-size:12px;">Netzwerkfehler — bitte erneut versuchen</div>';
   }
+  btn.disabled=false;
+};
+
+/* ── SENDEN-ZUSAMMENFASSUNG ── */
+function renderSendeSummary(){
+  fuelleFelderAus();
+  document.getElementById('empfaenger-anzeige').textContent=alleFelder.ag_email||'(keine E-Mail angegeben)';
+  var summ='<strong>Vorlage:</strong> '+(activeTemplate?activeTemplate.name:'—')+'<br>'
+    +'<strong>Empfänger:</strong> '+(alleFelder.ag_name||'—')+(alleFelder.ag_email?' &lt;'+esc(alleFelder.ag_email)+'&gt;':'')+'<br>'
+    +'<strong>Aktenzeichen:</strong> '+(alleFelder.az||'—')+'<br>'
+    +'<strong>Schadenort:</strong> '+(alleFelder.adresse||'—')+'<br>'
+    +'<strong>Betreff:</strong> '+(alleFelder.betreff||'—');
+  document.getElementById('send-summary').innerHTML=summ;
 }
+
+/* ── BRIEF SENDEN ── */
+window.sendeBrief=async function(typ){
+  var result=document.getElementById('send-result');
+  result.style.display='block';
+  if(typ==='pdf'){
+    // Direkt zur Vorlage navigieren mit Parametern
+    var params=new URLSearchParams({
+      template_id:activeTemplate?activeTemplate.id:'',
+      az:alleFelder.az||'',
+      ag:alleFelder.ag_name||'',
+      adresse:alleFelder.adresse||'',
+      schadenart:alleFelder.schadenart||''
+    });
+    var ziel=activeTemplate?activeTemplate.file:'#';
+    result.innerHTML='<div style="padding:10px;background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.2);border-radius:var(--r-md);font-size:12px;color:var(--success);">📄 Vorlage wird geöffnet…</div>';
+    setTimeout(function(){window.open(ziel+'?'+params.toString(),'_blank');},500);
+    return;
+  }
+  if(typ==='email'){
+    if(!alleFelder.ag_email){
+      result.innerHTML='<div style="padding:10px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);border-radius:var(--r-md);font-size:12px;color:var(--danger);">Bitte E-Mail des Empfängers in Schritt 2 eintragen.</div>';
+      return;
+    }
+    // Via S9 senden
+    var payload={
+      template_id:activeTemplate?activeTemplate.id:'',
+      aktenzeichen:alleFelder.az||'',
+      schadenart:alleFelder.schadenart||'',
+      auftraggeber_name:alleFelder.ag_name||'',
+      sv_name:alleFelder.sv_name||'',
+      sv_email:alleFelder.sv_email||'',
+      strasse:alleFelder.adresse||'',
+      empfaenger_email:alleFelder.ag_email||'',
+      betreff:alleFelder.betreff||'',
+      airtable_id:selectedFall?selectedFall.id:'',
+      ki_generate:'false'
+    };
+    result.innerHTML='<div style="padding:10px;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);border-radius:var(--r-md);font-size:12px;color:var(--warning);">⏳ Wird gesendet…</div>';
+    try{
+      var r=await fetch(WEBHOOK_S9,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+      if(r.ok){
+        result.innerHTML='<div style="padding:10px;background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.2);border-radius:var(--r-md);font-size:12px;color:var(--success);">✅ Gesendet an '+esc(alleFelder.ag_email)+'</div>';
+        zeigToast('Brief gesendet ✅');
+      }else{
+        result.innerHTML='<div style="padding:10px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);border-radius:var(--r-md);font-size:12px;color:var(--danger);">Fehler HTTP '+r.status+'</div>';
+      }
+    }catch(e){
+      result.innerHTML='<div style="padding:10px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);border-radius:var(--r-md);font-size:12px;color:var(--danger);">Netzwerkfehler</div>';
+    }
+    return;
+  }
+  if(typ==='akte'){
+    zeigToast('In Akte gespeichert ✅');
+    result.innerHTML='<div style="padding:10px;background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.2);border-radius:var(--r-md);font-size:12px;color:var(--success);">✅ In Akte gespeichert</div>';
+  }
+};
+
+/* ── HELPER ── */
+function setV(id,val){var el=document.getElementById(id);if(el&&val)el.value=val;}
+function getV(id){var el=document.getElementById(id);return el?el.value.trim():'';}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+window.zeigToast=function(msg,typ){
+  var t=document.getElementById('toast');
+  t.textContent=msg;
+  t.className='toast'+(typ==='err'?' err':'');
+  setTimeout(function(){t.classList.add('show');},10);
+  setTimeout(function(){t.classList.remove('show');},3200);
+};
+
+})();
 </script>
 </body>
 </html>

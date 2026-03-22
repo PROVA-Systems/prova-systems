@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PROVA — Positionsdatenbank</title>
+<style>
+:root{
+  --bg:#0b1220;--bg2:#111827;--bg3:#161f30;
+  --surface:#1c2537;--surface2:#222d42;--surface3:#2a3550;
+  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);
+  --text:#e8eaf0;--text2:#aab4cb;--text3:#6b7a99;
+  --accent:#4f8ef7;--accent2:#3a7be0;
+  --green:#10b981;--green-border:rgba(16,185,129,0.25);
+  --warn:#f59e0b;--red:#ef4444;--purple:#8b5cf6;
+  --r-sm:6px;--r-md:10px;--r-lg:14px;
+  --sans:'Instrument Sans',system-ui,sans-serif;
+  --mono:'JetBrains Mono',monospace;
+  --sb-w:220px;--sb-w-col:58px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14px;}
+
+/* SIDEBAR */
+.sidebar{position:fixed;left:0;top:0;bottom:0;width:var(--sb-w);background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;z-index:100;transition:width 0.22s cubic-bezier(0.4,0,0.2,1);}
+.sidebar.collapsed{width:var(--sb-w-col);}
+.sb-logo{display:flex;align-items:center;gap:10px;padding:16px 14px 12px;border-bottom:1px solid var(--border);min-height:54px;overflow:hidden;white-space:nowrap;}
+.sb-logo-text{font-size:17px;font-weight:800;letter-spacing:-0.03em;}
+.sb-logo-text span{color:var(--accent);}
+.sb-paket{font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;background:rgba(79,142,247,0.15);color:var(--accent);border:1px solid rgba(79,142,247,0.25);}
+.sb-new-btn{display:flex;align-items:center;gap:9px;margin:10px 10px 4px;padding:10px 12px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:var(--r-md);color:#fff;font-weight:700;font-size:13px;cursor:pointer;border:none;width:calc(100% - 20px);text-decoration:none;white-space:nowrap;overflow:hidden;transition:all 0.18s;}
+.sb-new-btn:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(79,142,247,0.35);}
+.sb-nav{flex:1;overflow-y:auto;overflow-x:hidden;padding:4px 0;}
+.sb-section{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--text3);padding:12px 14px 4px;white-space:nowrap;overflow:hidden;}
+.sb-item{display:flex;align-items:center;gap:11px;padding:8px 14px;color:var(--text3);text-decoration:none;transition:all 0.15s;white-space:nowrap;overflow:hidden;border-left:3px solid transparent;min-height:36px;font-size:13px;font-weight:500;}
+.sb-item:hover{background:rgba(255,255,255,0.04);color:var(--text2);}
+.sb-item.active{background:rgba(79,142,247,0.1);color:var(--accent);border-left-color:var(--accent);font-weight:600;}
+.sb-icon{font-size:15px;width:20px;text-align:center;flex-shrink:0;}
+.sb-label{overflow:hidden;}
+.sb-collapse{padding:10px 14px;border-top:1px solid var(--border);cursor:pointer;display:flex;align-items:center;gap:8px;color:var(--text3);font-size:12px;}
+.sb-collapse:hover{color:var(--text2);}
+.sidebar.collapsed .sb-label,.sidebar.collapsed .sb-section,.sidebar.collapsed .sb-logo-text,.sidebar.collapsed .sb-paket,.sidebar.collapsed .sb-new-btn span{display:none;}
+.sidebar.collapsed .sb-item{justify-content:center;padding:10px;}
+.sidebar.collapsed .sb-new-btn{justify-content:center;padding:10px;}
+.sidebar.collapsed .sb-collapse{justify-content:center;}
+.sidebar.collapsed .sb-item[data-tip]:hover::after{content:attr(data-tip);position:absolute;left:calc(var(--sb-w-col) + 8px);top:50%;transform:translateY(-50%);background:#1e2536;border:1px solid var(--border2);color:var(--text);font-size:12px;padding:5px 10px;border-radius:6px;white-space:nowrap;z-index:500;}
+
+/* LAYOUT */
+.main{margin-left:var(--sb-w);transition:margin-left 0.22s;min-height:100vh;display:flex;flex-direction:column;}
+.main.collapsed{margin-left:var(--sb-w-col);}
+.topbar{height:52px;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 20px;position:sticky;top:0;z-index:50;}
+.topbar-title{font-size:15px;font-weight:700;}
+.topbar-title span{color:var(--text3);font-weight:400;}
+.page{flex:1;padding:24px;}
+
+/* PAGE STYLES */
+.page-title{font-size:22px;font-weight:800;letter-spacing:-0.02em;margin-bottom:4px;}
+.page-sub{font-size:13px;color:var(--text3);margin-bottom:20px;}
+.page-sub strong{color:var(--accent);}
+
+/* SEARCH + FILTER */
+.search-bar{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;}
+.search-wrap{position:relative;flex:1;min-width:200px;}
+.search-wrap .si{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--text3);pointer-events:none;}
+.search-input{width:100%;padding:9px 12px 9px 34px;background:var(--surface);border:1px solid var(--border2);border-radius:var(--r-md);color:var(--text);font-size:13px;font-family:var(--sans);outline:none;transition:border-color 0.15s;}
+.search-input:focus{border-color:var(--accent);}
+.search-input::placeholder{color:var(--text3);}
+.filter-select{padding:8px 12px;background:var(--surface);border:1px solid var(--border2);border-radius:var(--r-md);color:var(--text);font-size:12px;cursor:pointer;outline:none;min-width:130px;font-family:var(--sans);}
+.filter-select:focus{border-color:var(--accent);}
+
+/* CHIPS */
+.chips{display:flex;gap:7px;margin-bottom:16px;flex-wrap:wrap;}
+.chip{padding:4px 12px;background:var(--surface);border:1px solid var(--border);border-radius:20px;font-size:12px;color:var(--text2);cursor:pointer;transition:all 0.15s;}
+.chip:hover,.chip.active{background:rgba(79,142,247,0.12);border-color:rgba(79,142,247,0.3);color:var(--accent);}
+
+/* TABLE */
+.table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;}
+.table-header{display:grid;grid-template-columns:90px 1fr 60px 110px 90px 100px;gap:0;padding:9px 14px;background:var(--surface2);border-bottom:1px solid var(--border);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text3);}
+.table-body{max-height:calc(100vh - 280px);overflow-y:auto;}
+.pos-row{display:grid;grid-template-columns:90px 1fr 60px 110px 90px 100px;gap:0;padding:9px 14px;border-bottom:1px solid var(--border);align-items:center;transition:background 0.12s;cursor:pointer;}
+.pos-row:hover{background:rgba(255,255,255,0.03);}
+.pos-row:last-child{border-bottom:none;}
+.pos-nr{font-size:11px;font-weight:700;color:var(--accent);font-family:var(--mono);}
+.pos-bez{font-size:12px;color:var(--text);line-height:1.35;}
+.pos-sub{font-size:10px;color:var(--text3);margin-top:2px;}
+.pos-ein{font-size:12px;color:var(--text2);text-align:center;}
+.pos-preise{font-size:11px;color:var(--text2);}
+.pos-preise .med{font-size:13px;font-weight:700;color:var(--text);}
+.pos-preise .range{font-size:10px;color:var(--text3);margin-top:1px;}
+.pos-norm{font-size:10px;color:var(--text3);font-family:var(--mono);}
+.pos-actions{display:flex;gap:5px;justify-content:flex-end;}
+.btn-pos{padding:5px 10px;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--sans);transition:all 0.15s;}
+.btn-insert{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;}
+.btn-insert:hover{transform:translateY(-1px);}
+.btn-copy{background:var(--surface3);color:var(--text2);border:1px solid var(--border2);}
+.btn-copy:hover{color:var(--text);}
+
+/* KPI Leiste */
+.kpi-bar{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;}
+.kpi-chip{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);padding:8px 14px;font-size:12px;color:var(--text2);}
+.kpi-chip strong{color:var(--text);font-size:14px;display:block;}
+
+/* Empty */
+.empty{text-align:center;padding:40px;color:var(--text3);}
+
+/* Toast */
+.toast{position:fixed;bottom:20px;right:20px;padding:10px 18px;background:var(--surface2);border:1px solid var(--green-border);border-radius:10px;color:var(--green);font-size:13px;font-weight:600;z-index:999;transform:translateY(60px);opacity:0;transition:all 0.3s cubic-bezier(0.34,1.56,0.64,1);}
+.toast.show{transform:translateY(0);opacity:1;}
+
+/* Paket-Badge */
+.paket-badge{font-size:11px;font-weight:600;padding:3px 10px;border-radius:10px;}
+</style>
+</head>
+<body>
+
+<nav class="sidebar" id="sidebar">
+  <div class="sb-logo">
+    <div class="sb-logo-mark">P</div>
+    <div class="sb-logo-text">PR<span>O</span>VA</div>
+  </div>
+  <button class="sb-new-btn" id="sb-new-btn">
+    <span class="btn-icon">＋</span>
+    <span class="btn-label">Neuer Fall</span>
+  </button>
+  <div class="sb-nav">
+    <a href="dashboard.html" class="sb-item" data-tip="Zentrale"><span class="sb-icon">⊞</span><span class="sb-label">Zentrale</span></a>
+    <a href="archiv.html" class="sb-item" data-tip="Fälle"><span class="sb-icon">📁</span><span class="sb-label">Fälle</span></a>
+    <a href="termine.html" class="sb-item" data-tip="Kalender"><span class="sb-icon">📅</span><span class="sb-label">Kalender</span></a>
+    <a href="rechnungen.html" class="sb-item" data-tip="Rechnungen"><span class="sb-icon">💶</span><span class="sb-label">Rechnungen</span></a>
+    <a href="briefvorlagen.html" class="sb-item" data-tip="Briefe"><span class="sb-icon">✉️</span><span class="sb-label">Briefe</span></a>
+    <div class="sb-section-label">Werkzeuge</div>
+    <a href="jveg.html" class="sb-item" data-tip="JVEG-Rechner"><span class="sb-icon">⚖️</span><span class="sb-label">JVEG-Rechner</span></a>
+    <a href="kostenermittlung.html" class="sb-item" data-tip="Kosten & Aufmaß"><span class="sb-icon">📐</span><span class="sb-label">Kosten & Aufmaß</span></a>
+    <a href="textbausteine.html" class="sb-item" data-tip="Textbausteine"><span class="sb-icon">✏️</span><span class="sb-label">Textbausteine</span></a>
+    <a href="positionen.html" class="sb-item active" data-tip="Positionsdatenbank"><span class="sb-icon">🗂</span><span class="sb-label">Positionen</span></a>
+    <a href="normen.html" class="sb-item" data-tip="Normendatenbank"><span class="sb-icon">📚</span><span class="sb-label">Normen</span></a>
+    <div class="sb-divider"></div>
+    <a href="kontakte.html" class="sb-item" data-tip="Kontakte"><span class="sb-icon">👥</span><span class="sb-label">Kontakte</span></a>
+  </div>
+  <div class="sb-footer">
+    <div class="sb-paket"><div class="paket-dot" id="sb-paket-dot"></div><span class="paket-name" id="sb-paket-name">Starter</span></div>
+    <a href="einstellungen.html" class="sb-item" data-tip="Einstellungen"><span class="sb-icon">⚙️</span><span class="sb-label">Einstellungen</span></a>
+    <button class="sb-toggle" onclick="toggleSidebar()"><span class="sb-toggle-icon">◀</span></button>
+  </div>
+</nav>
+
+<div class="main" id="mainContent">
+  <div class="topbar">
+    <div class="topbar-title">Positionsdatenbank <span>/ BKI-Einheitspreise & Kostenrahmen</span></div>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <span class="paket-badge" id="topbarPaket"></span>
+      <button style="background:none;border:none;color:var(--text3);font-size:17px;cursor:pointer;padding:6px;" onclick="location.href='einstellungen.html'">⚙</button>
+    </div>
+  </div>
+
+  <div class="page">
+    <div class="page-title">🗂 Positionsdatenbank</div>
+    <div class="page-sub">
+      <strong id="posCount">303</strong> BKI-Positionen mit Min/Median/Max-Preisen · 
+      <span style="color:var(--green);">In Kostenermittlung einfügen</span> oder 
+      <span style="color:var(--text2);">Zeile kopieren</span>
+    </div>
+
+    <!-- KPI -->
+    <div class="kpi-bar" id="kpiBar"></div>
+
+    <!-- SUCHE + FILTER -->
+    <div class="search-bar">
+      <div class="search-wrap">
+        <span class="si">🔍</span>
+        <input type="text" class="search-input" id="searchInput" placeholder="Position suchen… z.B. 'Estrich', 'Trocknung', 'Putz', 'Dach'" oninput="renderPositionen()">
+      </div>
+      <select class="filter-select" id="filterKat" onchange="renderPositionen()">
+        <option value="">Alle Schadenarten</option>
+        <option value="Wasserschaden">Wasserschaden</option>
+        <option value="Schimmel/Feuchte">Schimmel / Feuchte</option>
+        <option value="Brandschaden">Brandschaden</option>
+        <option value="Sturmschaden">Sturmschaden</option>
+        <option value="Elementarschaden">Elementarschaden</option>
+        <option value="Baumängel allgemein">Baumängel</option>
+      </select>
+      <select class="filter-select" id="filterSub" onchange="renderPositionen()">
+        <option value="">Alle Bereiche</option>
+      </select>
+    </div>
+
+    <!-- CHIPS -->
+    <div class="chips" id="chipBar">
+      <div class="chip active" onclick="setChip('',this)">Alle</div>
+      <div class="chip" onclick="setChip('WS',this)">💧 Wasser</div>
+      <div class="chip" onclick="setChip('SC',this)">🟢 Schimmel</div>
+      <div class="chip" onclick="setChip('BS',this)">🔥 Brand</div>
+      <div class="chip" onclick="setChip('SS',this)">🌪 Sturm</div>
+      <div class="chip" onclick="setChip('ES',this)">🌊 Elementar</div>
+      <div class="chip" onclick="setChip('BA',this)">🏗 Baumängel</div>
+    </div>
+
+    <!-- TABELLE -->
+    <div class="table-wrap">
+      <div class="table-header">
+        <div>Nr.</div>
+        <div>Bezeichnung</div>
+        <div style="text-align:center;">Einh.</div>
+        <div>Preis (€)</div>
+        <div>Norm</div>
+        <div style="text-align:right;">Aktion</div>
+      </div>
+      <div class="table-body" id="posTabelle"></div>
+    </div>
+    <div class="empty" id="emptyState" style="display:none;">
+      <div style="font-size:32px;margin-bottom:8px;opacity:0.4;">🗂</div>
+      <div style="font-weight:600;color:var(--text2);">Keine Positionen gefunden</div>
+      <div style="font-size:12px;margin-top:4px;">Filter oder Suchbegriff anpassen</div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// SIDEBAR
+(function(){
+  const sb=document.querySelector('.sidebar');
+  const main=document.getElementById('mainContent');
+  if(localStorage.getItem('prova_sidebar_collapsed')==='true'){sb.classList.add('collapsed');main.classList.add('collapsed');}
+  const btn=document.querySelector('.sb-collapse');
+  if(btn)btn.onclick=function(){sb.classList.toggle('collapsed');main.classList.toggle('collapsed');localStorage.setItem('prova_sidebar_collapsed',sb.classList.contains('collapsed'));}
+})();
+
+// AUTH
+if(!localStorage.getItem('prova_user')){window.location.href='app-login.html';}
+
+// PAKET
+(function(){
+  var p=localStorage.getItem('prova_paket')||'Starter';
+  var c={Starter:'#4f8ef7',Pro:'#f59e0b',Enterprise:'#a78bfa'}[p]||'#4f8ef7';
+  var b=document.getElementById('topbarPaket');
+  if(b){b.textContent=p;b.style.cssText='background:'+c+'18;color:'+c+';border:1px solid '+c+'33;';}
+})();
+
+// POSITIONEN DB
+const POSITIONEN_DB = [
+  {nr:'WS-001',kat:'Wasserschaden',sub:'Trocknung',bez:'Trocknungsgerät Kondensationstrockner Aufstellung und Betrieb je Tag',ein:'Stk',min:18,med:28,max:42,norm:'VdS 3151',sa:'WS'},
+  {nr:'WS-002',kat:'Wasserschaden',sub:'Trocknung',bez:'Trocknungsgerät Großgerät (Baukondensator) je Tag',ein:'Stk',min:45,med:65,max:95,norm:'VdS 3151',sa:'WS'},
+  {nr:'WS-003',kat:'Wasserschaden',sub:'Trocknung',bez:'Luftentfeuchter Kleingerät bis 20 l/Tag je Tag',ein:'Stk',min:12,med:18,max:28,norm:'VdS 3151',sa:'WS'},
+  {nr:'WS-004',kat:'Wasserschaden',sub:'Trocknung',bez:'Infrarot-Flächenheizung Wandtrocknung je Tag',ein:'Stk',min:35,med:52,max:78,norm:'VdS 3151',sa:'WS'},
+  {nr:'WS-005',kat:'Wasserschaden',sub:'Trocknung',bez:'Mikrowellen-Trocknungsgerät Estrich/Wand je Tag',ein:'Stk',min:55,med:85,max:130,norm:'VdS 3151',sa:'WS'},
+  {nr:'WS-006',kat:'Wasserschaden',sub:'Trocknung',bez:'Injektionstrocknung Horizontalsperre nachträglich je lfm',ein:'lfm',min:28,med:42,max:68,norm:'DIN 18533',sa:'WS'},
+  {nr:'WS-007',kat:'Wasserschaden',sub:'Trocknung',bez:'Warmluftgebläse Bauteiltrocknung je Tag',ein:'Stk',min:22,med:35,max:55,norm:'VdS 3151',sa:'WS'},
+  {nr:'WS-008',kat:'Wasserschaden',sub:'Trocknung',bez:'Feuchtemesskampagne Aufnahme und Protokoll',ein:'Psch',min:120,med:185,max:280,norm:'DIN EN ISO 12572',sa:'WS'},
+  {nr:'WS-009',kat:'Wasserschaden',sub:'Trocknung',bez:'Trocknungsbegleitung und Dokumentation je Begehung',ein:'Psch',min:95,med:145,max:220,norm:'VdS 3151',sa:'WS'},
+  {nr:'WS-010',kat:'Wasserschaden',sub:'Trocknung',bez:'Lüftungsgerät Zuluft/Abluft Bauteiltrocknung je Tag',ein:'Stk',min:25,med:38,max:58,norm:'',sa:'WS'},
+  {nr:'WS-011',kat:'Wasserschaden',sub:'Trocknung',bez:'Trocknungsprotokoll komplett inkl. Messberichte',ein:'Psch',min:150,med:225,max:380,norm:'VdS 3151',sa:'WS'},
+  {nr:'WS-012',kat:'Wasserschaden',sub:'Trocknung',bez:'Kernbohrung Trocknungskanal Estrich je Bohrung',ein:'Stk',min:18,med:26,max:42,norm:'DIN 18353',sa:'WS'},
+  {nr:'WS-013',kat:'Wasserschaden',sub:'Trocknung',bez:'Estrichrandschlitz für Trocknungsschläuche je lfm',ein:'lfm',min:8,med:13,max:22,norm:'DIN 18353',sa:'WS'},
+  {nr:'WS-014',kat:'Wasserschaden',sub:'Trocknung',bez:'Restfeuchtemesung Dielenboden Protokoll je Fläche',ein:'Psch',min:85,med:130,max:195,norm:'',sa:'WS'},
+  {nr:'WS-015',kat:'Wasserschaden',sub:'Estrichöffnung',bez:'Estrich aufbrechen und entsorgen Zementestrich bis 60mm je m²',ein:'m²',min:28,med:42,max:68,norm:'DIN 18353',sa:'WS'},
+  {nr:'WS-016',kat:'Wasserschaden',sub:'Estrichöffnung',bez:'Estrich aufbrechen und entsorgen Anhydritestrich bis 50mm je m²',ein:'m²',min:25,med:38,max:62,norm:'DIN 18353',sa:'WS'},
+  {nr:'WS-017',kat:'Wasserschaden',sub:'Estrichöffnung',bez:'Estrich aufbrechen Teilfläche bis 5 m² Mindermengenzuschlag',ein:'Psch',min:180,med:265,max:420,norm:'DIN 18353',sa:'WS'},
+  {nr:'WS-018',kat:'Wasserschaden',sub:'Estrichöffnung',bez:'Schwimmender Estrich komplett entfernen inkl. Dämmung je m²',ein:'m²',min:35,med:52,max:82,norm:'DIN 18353',sa:'WS'},
+  {nr:'WS-019',kat:'Wasserschaden',sub:'Estrichöffnung',bez:'Fußbodenheizungsestrich öffnen Trocknungsfenster je Stk',ein:'Stk',min:45,med:68,max:105,norm:'DIN 18353',sa:'WS'},
+  {nr:'WS-020',kat:'Wasserschaden',sub:'Estrichöffnung',bez:'Wannenestrich aufstemmen Feuchtenest lokalisieren',ein:'Psch',min:120,med:185,max:295,norm:'',sa:'WS'},
+  {nr:'WS-021',kat:'Wasserschaden',sub:'Estrichöffnung',bez:'Estrichmörtel neu einbringen Zement C25 je m²',ein:'m²',min:32,med:48,max:76,norm:'DIN 18353',sa:'WS'},
+  {nr:'WS-022',kat:'Wasserschaden',sub:'Estrichöffnung',bez:'Estrich Anhydrit Reparatur je m²',ein:'m²',min:28,med:43,max:68,norm:'DIN 18353',sa:'WS'},
+  {nr:'WS-023',kat:'Wasserschaden',sub:'Estrichöffnung',bez:'Verbundestrich neu einbringen je m²',ein:'m²',min:38,med:56,max:88,norm:'DIN 18353',sa:'WS'},
+  {nr:'WS-024',kat:'Wasserschaden',sub:'Estrichöffnung',bez:'Dehnfuge Estrich einschneiden und neu verfüllen je lfm',ein:'lfm',min:12,med:18,max:28,norm:'DIN 18353',sa:'WS'},
+  {nr:'WS-025',kat:'Wasserschaden',sub:'Leitungserneuerung',bez:'Wasserleitung Kupfer DN 15 Unterputz erneuern je lfm',ein:'lfm',min:48,med:72,max:115,norm:'DIN EN 1057',sa:'WS'},
+  {nr:'WS-026',kat:'Wasserschaden',sub:'Leitungserneuerung',bez:'Wasserleitung Kunststoff PE-X DN 20 UP erneuern je lfm',ein:'lfm',min:38,med:56,max:88,norm:'',sa:'WS'},
+  {nr:'WS-027',kat:'Wasserschaden',sub:'Leitungserneuerung',bez:'Heizungsrohr Stahl DN 20 UP erneuern je lfm',ein:'lfm',min:52,med:78,max:125,norm:'DIN EN 10255',sa:'WS'},
+  {nr:'WS-028',kat:'Wasserschaden',sub:'Leitungserneuerung',bez:'Abwasserleitung HT-Rohr DN 50 erneuern je lfm',ein:'lfm',min:42,med:65,max:105,norm:'DIN EN 1329',sa:'WS'},
+  {nr:'WS-029',kat:'Wasserschaden',sub:'Leitungserneuerung',bez:'Abwasserleitung HT-Rohr DN 100 erneuern je lfm',ein:'lfm',min:55,med:85,max:135,norm:'DIN EN 1329',sa:'WS'},
+  {nr:'WS-030',kat:'Wasserschaden',sub:'Leitungserneuerung',bez:'Rohrmanschette Leckstelle reparieren Kupfer',ein:'Stk',min:45,med:68,max:108,norm:'',sa:'WS'},
+  {nr:'WS-031',kat:'Wasserschaden',sub:'Leitungserneuerung',bez:'Leitungsschlitz aufstämmen Mauerwerk je lfm',ein:'lfm',min:22,med:34,max:55,norm:'',sa:'WS'},
+  {nr:'WS-032',kat:'Wasserschaden',sub:'Leitungserneuerung',bez:'Leitungsschlitz schließen verputzen je lfm',ein:'lfm',min:18,med:27,max:43,norm:'',sa:'WS'},
+  {nr:'WS-033',kat:'Wasserschaden',sub:'Leitungserneuerung',bez:'Wasseruhr Hauswasserzähler austauschen',ein:'Stk',min:125,med:188,max:295,norm:'',sa:'WS'},
+  {nr:'WS-034',kat:'Wasserschaden',sub:'Leitungserneuerung',bez:'Kugelhahn Absperrarmatur DN 25 tauschen',ein:'Stk',min:85,med:128,max:205,norm:'',sa:'WS'},
+  {nr:'WS-035',kat:'Wasserschaden',sub:'Bodenbeläge',bez:'Fliesen und Fliesenbelag inkl. Klebemörtel entfernen je m²',ein:'m²',min:18,med:27,max:43,norm:'DIN 18157',sa:'WS'},
+  {nr:'WS-036',kat:'Wasserschaden',sub:'Bodenbeläge',bez:'Parkettboden Diele entfernen und entsorgen je m²',ein:'m²',min:15,med:23,max:38,norm:'DIN 280',sa:'WS'},
+  {nr:'WS-037',kat:'Wasserschaden',sub:'Bodenbeläge',bez:'Laminatboden entfernen und entsorgen je m²',ein:'m²',min:8,med:13,max:22,norm:'',sa:'WS'},
+  {nr:'WS-038',kat:'Wasserschaden',sub:'Bodenbeläge',bez:'PVC-Belag/Vinylboden entfernen je m²',ein:'m²',min:10,med:16,max:26,norm:'',sa:'WS'},
+  {nr:'WS-039',kat:'Wasserschaden',sub:'Bodenbeläge',bez:'Teppichboden entfernen und entsorgen je m²',ein:'m²',min:6,med:9,max:15,norm:'',sa:'WS'},
+  {nr:'WS-040',kat:'Wasserschaden',sub:'Bodenbeläge',bez:'Fliesen neu verlegen Standardfliese bis 30x30cm je m²',ein:'m²',min:45,med:68,max:105,norm:'DIN 18157',sa:'WS'},
+  {nr:'WS-041',kat:'Wasserschaden',sub:'Bodenbeläge',bez:'Fliesen neu verlegen Großformat ab 60x60cm je m²',ein:'m²',min:65,med:98,max:155,norm:'DIN 18157',sa:'WS'},
+  {nr:'WS-042',kat:'Wasserschaden',sub:'Bodenbeläge',bez:'Parkettboden Stabparkett neu verlegen je m²',ein:'m²',min:52,med:78,max:125,norm:'DIN 280',sa:'WS'},
+  {nr:'WS-043',kat:'Wasserschaden',sub:'Bodenbeläge',bez:'Laminatboden neu verlegen mit Trittschalldämmung je m²',ein:'m²',min:28,med:42,max:68,norm:'',sa:'WS'},
+  {nr:'WS-044',kat:'Wasserschaden',sub:'Bodenbeläge',bez:'PVC-Designbelag neu verlegen je m²',ein:'m²',min:32,med:48,max:76,norm:'',sa:'WS'},
+  {nr:'WS-045',kat:'Wasserschaden',sub:'Wände',bez:'Tapete und Unterputz Lehmputz entfernen je m²',ein:'m²',min:12,med:18,max:28,norm:'',sa:'WS'},
+  {nr:'WS-046',kat:'Wasserschaden',sub:'Wände',bez:'Putz Unterputz Kalkzementputz abtragen je m²',ein:'m²',min:15,med:23,max:38,norm:'DIN 18550',sa:'WS'},
+  {nr:'WS-047',kat:'Wasserschaden',sub:'Wände',bez:'Putz Innenputz neu aufbringen Kalkgipsputz je m²',ein:'m²',min:22,med:33,max:52,norm:'DIN 18550',sa:'WS'},
+  {nr:'WS-048',kat:'Wasserschaden',sub:'Wände',bez:'Sanierputz Feuchtigkeitsschutz aufbringen je m²',ein:'m²',min:28,med:43,max:68,norm:'WTA 2-9-04/D',sa:'WS'},
+  {nr:'WS-049',kat:'Wasserschaden',sub:'Wände',bez:'Mauerwerk austrocknen Injektionsmittel Horizontalsperre je lfm',ein:'lfm',min:32,med:48,max:78,norm:'DIN 18533',sa:'WS'},
+  {nr:'WS-050',kat:'Wasserschaden',sub:'Wände',bez:'Tapete entfernen einfachlagig je m²',ein:'m²',min:4,med:6,max:10,norm:'',sa:'WS'},
+  {nr:'WS-051',kat:'Wasserschaden',sub:'Wände',bez:'Tapezieren neu einfache Raufasertapete je m²',ein:'m²',min:8,med:12,max:19,norm:'',sa:'WS'},
+  {nr:'WS-052',kat:'Wasserschaden',sub:'Wände',bez:'Anstrich Dispersionsfarbe 2-fach je m²',ein:'m²',min:5,med:8,max:13,norm:'',sa:'WS'},
+  {nr:'WS-053',kat:'Wasserschaden',sub:'Wände',bez:'Gipskartonwand nass erneuern komplett je m²',ein:'m²',min:45,med:68,max:108,norm:'DIN 18180',sa:'WS'},
+  {nr:'WS-054',kat:'Wasserschaden',sub:'Wände',bez:'Fliesen Wandfliesen entfernen je m²',ein:'m²',min:16,med:25,max:40,norm:'DIN 18157',sa:'WS'},
+  {nr:'WS-055',kat:'Wasserschaden',sub:'Wände',bez:'Fliesen Wandfliesen neu verlegen je m²',ein:'m²',min:48,med:72,max:115,norm:'DIN 18157',sa:'WS'},
+  {nr:'WS-056',kat:'Wasserschaden',sub:'Decken',bez:'Gipskartondecke abbauen und entsorgen je m²',ein:'m²',min:18,med:27,max:43,norm:'DIN 18180',sa:'WS'},
+  {nr:'WS-057',kat:'Wasserschaden',sub:'Decken',bez:'Gipskartondecke neu einbauen je m²',ein:'m²',min:42,med:65,max:105,norm:'DIN 18180',sa:'WS'},
+  {nr:'WS-058',kat:'Wasserschaden',sub:'Decken',bez:'Rigips Deckenputz abschlagen je m²',ein:'m²',min:14,med:21,max:34,norm:'',sa:'WS'},
+  {nr:'WS-059',kat:'Wasserschaden',sub:'Decken',bez:'Deckenputz neu aufbringen Kalkgips je m²',ein:'m²',min:20,med:30,max:48,norm:'DIN 18550',sa:'WS'},
+  {nr:'WS-060',kat:'Wasserschaden',sub:'Decken',bez:'Dämmung Decke Mineralwolle entfernen je m²',ein:'m²',min:12,med:18,max:28,norm:'DIN 18165',sa:'WS'},
+  {nr:'WS-061',kat:'Wasserschaden',sub:'Sanitär',bez:'Waschtisch demontieren und entsorgen',ein:'Stk',min:65,med:98,max:155,norm:'',sa:'WS'},
+  {nr:'WS-062',kat:'Wasserschaden',sub:'Sanitär',bez:'WC-Komplettanlage demontieren und entsorgen',ein:'Stk',min:85,med:128,max:205,norm:'',sa:'WS'},
+  {nr:'WS-063',kat:'Wasserschaden',sub:'Sanitär',bez:'Badewanne demontieren und entsorgen',ein:'Stk',min:95,med:145,max:230,norm:'',sa:'WS'},
+  {nr:'WS-064',kat:'Wasserschaden',sub:'Sanitär',bez:'Duschkabine inkl. Acrylwanne demontieren und entsorgen',ein:'Stk',min:115,med:175,max:280,norm:'',sa:'WS'},
+  {nr:'WS-065',kat:'Wasserschaden',sub:'Sanitär',bez:'Waschtisch Standard neu liefern und montieren',ein:'Stk',min:185,med:285,max:450,norm:'',sa:'WS'},
+  {nr:'WS-066',kat:'Wasserschaden',sub:'Sanitär',bez:'WC-Kombination Standard neu liefern und montieren',ein:'Stk',min:225,med:345,max:550,norm:'',sa:'WS'},
+  {nr:'WS-067',kat:'Wasserschaden',sub:'Sanitär',bez:'Dusche bodengleich inkl. Ablauf neu herstellen',ein:'Stk',min:650,med:980,max:1550,norm:'DIN 18534',sa:'WS'},
+  {nr:'WS-068',kat:'Wasserschaden',sub:'Sanitär',bez:'Siphon/Geruchsverschluss tauschen',ein:'Stk',min:35,med:52,max:85,norm:'',sa:'WS'},
+  {nr:'WS-069',kat:'Wasserschaden',sub:'Elektro',bez:'Steckdose Unterputz nass demontieren und neu installieren',ein:'Stk',min:45,med:68,max:108,norm:'DIN VDE 0100',sa:'WS'},
+  {nr:'WS-070',kat:'Wasserschaden',sub:'Elektro',bez:'Unterverteilung LS-Schalter nach Wasserschaden prüfen und freigeben',ein:'Psch',min:120,med:185,max:295,norm:'DIN VDE 0100',sa:'WS'},
+  {nr:'WS-071',kat:'Wasserschaden',sub:'Elektro',bez:'Elektroleitungen UP erneuern je lfm',ein:'lfm',min:18,med:27,max:43,norm:'DIN VDE 0100',sa:'WS'},
+  {nr:'WS-072',kat:'Wasserschaden',sub:'Elektro',bez:'Leuchtmittel Einbaustrahler nach Nässeschaden tauschen',ein:'Stk',min:28,med:42,max:68,norm:'DIN VDE 0100',sa:'WS'},
+  {nr:'WS-073',kat:'Wasserschaden',sub:'Elektro',bez:'E-Prüfung nach Wasserschaden VDE-Protokoll',ein:'Psch',min:185,med:280,max:445,norm:'DIN VDE 0100',sa:'WS'},
+  {nr:'WS-074',kat:'Wasserschaden',sub:'Demontage',bez:'Mobiliar ausräumen und zwischenlagern je m²',ein:'m²',min:8,med:13,max:22,norm:'',sa:'WS'},
+  {nr:'WS-075',kat:'Wasserschaden',sub:'Demontage',bez:'Sockelleisten entfernen je lfm',ein:'lfm',min:4,med:6,max:10,norm:'',sa:'WS'},
+  {nr:'WS-076',kat:'Wasserschaden',sub:'Demontage',bez:'Türzarge demontieren und wiedereinbauen',ein:'Stk',min:65,med:98,max:155,norm:'',sa:'WS'},
+  {nr:'WS-077',kat:'Wasserschaden',sub:'Demontage',bez:'Schutzmaßnahmen Staubschutzwand aufbauen je m²',ein:'m²',min:8,med:12,max:19,norm:'',sa:'WS'},
+  {nr:'WS-078',kat:'Wasserschaden',sub:'Demontage',bez:'Entsorgung Bauschutt bis 2m³ Container',ein:'Psch',min:185,med:280,max:445,norm:'',sa:'WS'},
+  {nr:'WS-079',kat:'Wasserschaden',sub:'Demontage',bez:'Geruchsneutralisation nach Nässeschaden je m²',ein:'m²',min:6,med:9,max:15,norm:'',sa:'WS'},
+  {nr:'WS-080',kat:'Wasserschaden',sub:'Demontage',bez:'Bautrocknung Abschlussbericht Feuchteatlas',ein:'Psch',min:220,med:340,max:540,norm:'VdS 3151',sa:'WS'},
+  {nr:'WSBS-001',kat:'Brandschaden',sub:'Rußreinigung',bez:'Rußreinigung Wände trocken Schwamm je m²',ein:'m²',min:8,med:13,max:22,norm:'',sa:'BS'},
+  {nr:'BS-002',kat:'Brandschaden',sub:'Rußreinigung',bez:'Rußreinigung Decken trocken Schwamm je m²',ein:'m²',min:10,med:15,max:25,norm:'',sa:'BS'},
+  {nr:'BS-003',kat:'Brandschaden',sub:'Rußreinigung',bez:'Rußreinigung nass chemisch Wände je m²',ein:'m²',min:12,med:18,max:30,norm:'',sa:'BS'},
+  {nr:'BS-004',kat:'Brandschaden',sub:'Rußreinigung',bez:'Rußreinigung Holzbalken Dachstuhl je m²',ein:'m²',min:15,med:23,max:38,norm:'',sa:'BS'},
+  {nr:'BS-005',kat:'Brandschaden',sub:'Rußreinigung',bez:'Hochdruckreinigung brandbeschädigte Flächen je m²',ein:'m²',min:6,med:9,max:15,norm:'',sa:'BS'},
+  {nr:'BS-006',kat:'Brandschaden',sub:'Rußreinigung',bez:'Industriesauger Feinstaub Feinreinigung je h',ein:'h',min:65,med:95,max:145,norm:'',sa:'BS'},
+  {nr:'BS-007',kat:'Brandschaden',sub:'Rußreinigung',bez:'Rußreinigung Heizungsanlage Kessel und Rohre',ein:'Psch',min:285,med:435,max:695,norm:'',sa:'BS'},
+  {nr:'BS-008',kat:'Brandschaden',sub:'Rußreinigung',bez:'Lüftungsanlage Brandgase reinigen komplett',ein:'Psch',min:450,med:685,max:1095,norm:'DIN 1946-4',sa:'BS'},
+  {nr:'BS-009',kat:'Brandschaden',sub:'Rußreinigung',bez:'Rußreinigung Möbel/Einbauschränke je Stk',ein:'Stk',min:45,med:68,max:108,norm:'',sa:'BS'},
+  {nr:'BS-010',kat:'Brandschaden',sub:'Rußreinigung',bez:'Rußschadenprotokoll inkl. Fotodokumentation',ein:'Psch',min:180,med:275,max:440,norm:'',sa:'BS'},
+  {nr:'BS-011',kat:'Brandschaden',sub:'Geruchsneutralisation',bez:'Ozonbehandlung je m³ Raumvolumen',ein:'m³',min:1,med:2,max:3,norm:'',sa:'BS'},
+  {nr:'BS-012',kat:'Brandschaden',sub:'Geruchsneutralisation',bez:'Hydroxyl-Generator Betrieb je Tag',ein:'Stk',min:65,med:98,max:155,norm:'',sa:'BS'},
+  {nr:'BS-013',kat:'Brandschaden',sub:'Geruchsneutralisation',bez:'Thermische Nebelverfahren je m² Fläche',ein:'m²',min:3,med:5,max:8,norm:'',sa:'BS'},
+  {nr:'BS-014',kat:'Brandschaden',sub:'Geruchsneutralisation',bez:'Geruchsneutralisierer Sprühverfahren je m²',ein:'m²',min:4,med:6,max:10,norm:'',sa:'BS'},
+  {nr:'BS-015',kat:'Brandschaden',sub:'Geruchsneutralisation',bez:'Einschlusslackierung Geruchssperrschicht je m²',ein:'m²',min:8,med:13,max:22,norm:'',sa:'BS'},
+  {nr:'BS-016',kat:'Brandschaden',sub:'Geruchsneutralisation',bez:'Aktivkohlefilter Raumluft je Tag',ein:'Stk',min:35,med:52,max:85,norm:'',sa:'BS'},
+  {nr:'BS-017',kat:'Brandschaden',sub:'Geruchsneutralisation',bez:'Geruchsmessung Protokoll nach Sanierung',ein:'Psch',min:145,med:225,max:360,norm:'',sa:'BS'},
+  {nr:'BS-018',kat:'Brandschaden',sub:'Demontage Brandschaden',bez:'Brandschutt entfernen und entsorgen bis 5m³',ein:'Psch',min:380,med:580,max:925,norm:'AVV',sa:'BS'},
+  {nr:'BS-019',kat:'Brandschaden',sub:'Demontage Brandschaden',bez:'Brandschutt Sonderabfall kontaminiert Entsorgungsnachweis',ein:'Psch',min:580,med:885,max:1415,norm:'AVV',sa:'BS'},
+  {nr:'BS-020',kat:'Brandschaden',sub:'Demontage Brandschaden',bez:'Dachstuhl brandgeschädigt Teilabbruch je m²',ein:'m²',min:35,med:52,max:85,norm:'DIN 18338',sa:'BS'},
+  {nr:'BS-021',kat:'Brandschaden',sub:'Demontage Brandschaden',bez:'Dachstuhl komplett abreißen je m²',ein:'m²',min:55,med:85,max:135,norm:'DIN 18338',sa:'BS'},
+  {nr:'BS-022',kat:'Brandschaden',sub:'Demontage Brandschaden',bez:'Gipskartonwände brandbeschädigt entfernen je m²',ein:'m²',min:18,med:27,max:43,norm:'DIN 18180',sa:'BS'},
+  {nr:'BS-023',kat:'Brandschaden',sub:'Demontage Brandschaden',bez:'Holzdielung brandbeschädigt entfernen je m²',ein:'m²',min:22,med:34,max:55,norm:'',sa:'BS'},
+  {nr:'BS-024',kat:'Brandschaden',sub:'Demontage Brandschaden',bez:'Estrich brandbeschädigt aufbrechen je m²',ein:'m²',min:28,med:42,max:68,norm:'DIN 18353',sa:'BS'},
+  {nr:'BS-025',kat:'Brandschaden',sub:'Demontage Brandschaden',bez:'Fenster brandbeschädigt ausbauen je Stk',ein:'Stk',min:85,med:130,max:210,norm:'',sa:'BS'},
+  {nr:'BS-026',kat:'Brandschaden',sub:'Demontage Brandschaden',bez:'Außentür brandbeschädigt ausbauen je Stk',ein:'Stk',min:125,med:190,max:305,norm:'',sa:'BS'},
+  {nr:'BS-027',kat:'Brandschaden',sub:'Demontage Brandschaden',bez:'Innentür inkl. Zarge brandbeschädigt ausbauen',ein:'Stk',min:68,med:105,max:168,norm:'',sa:'BS'},
+  {nr:'BS-028',kat:'Brandschaden',sub:'Demontage Brandschaden',bez:'Dämmung brandbeschädigt entfernen Mineralwolle je m²',ein:'m²',min:15,med:23,max:38,norm:'DIN 18165',sa:'BS'},
+  {nr:'BS-029',kat:'Brandschaden',sub:'Demontage Brandschaden',bez:'Holztreppe brandbeschädigt demontieren',ein:'Psch',min:280,med:430,max:685,norm:'',sa:'BS'},
+  {nr:'BS-030',kat:'Brandschaden',sub:'Demontage Brandschaden',bez:'Küche Einbauküche abbauen und entsorgen',ein:'Psch',min:380,med:580,max:925,norm:'',sa:'BS'},
+  {nr:'BS-031',kat:'Brandschaden',sub:'Wiederherstellung Wände',bez:'Wände nach Brand neu verputzen Kalkzement je m²',ein:'m²',min:22,med:34,max:55,norm:'DIN 18550',sa:'BS'},
+  {nr:'BS-032',kat:'Brandschaden',sub:'Wiederherstellung Wände',bez:'Gipskartonwand nach Brand neu erstellen je m²',ein:'m²',min:45,med:68,max:108,norm:'DIN 18180',sa:'BS'},
+  {nr:'BS-033',kat:'Brandschaden',sub:'Wiederherstellung Wände',bez:'Brandschutzwand F90 neu erstellen je m²',ein:'m²',min:85,med:130,max:210,norm:'DIN 4102-4',sa:'BS'},
+  {nr:'BS-034',kat:'Brandschaden',sub:'Wiederherstellung Wände',bez:'Mauerwerk Ziegel neu aufmauern je m²',ein:'m²',min:55,med:85,max:135,norm:'DIN 1053',sa:'BS'},
+  {nr:'BS-035',kat:'Brandschaden',sub:'Wiederherstellung Wände',bez:'Sperrschicht Brandgeruchsblocker Anstrich je m²',ein:'m²',min:8,med:13,max:22,norm:'',sa:'BS'},
+  {nr:'BS-036',kat:'Brandschaden',sub:'Wiederherstellung Wände',bez:'Tapezieren und Anstreichen nach Brand je m²',ein:'m²',min:12,med:18,max:28,norm:'',sa:'BS'},
+  {nr:'BS-037',kat:'Brandschaden',sub:'Wiederherstellung Decken',bez:'Deckenputz erneuern nach Brand je m²',ein:'m²',min:20,med:30,max:48,norm:'DIN 18550',sa:'BS'},
+  {nr:'BS-038',kat:'Brandschaden',sub:'Wiederherstellung Decken',bez:'Gipskartondecke neu erstellen nach Brand je m²',ein:'m²',min:42,med:65,max:105,norm:'DIN 18180',sa:'BS'},
+  {nr:'BS-039',kat:'Brandschaden',sub:'Wiederherstellung Decken',bez:'Holzbalkendecke Balken beurteilen und teiltauschen je lfm',ein:'lfm',min:95,med:145,max:230,norm:'',sa:'BS'},
+  {nr:'BS-040',kat:'Brandschaden',sub:'Wiederherstellung Decken',bez:'Betondecke sichtbar reinigen und versiegeln je m²',ein:'m²',min:15,med:23,max:38,norm:'',sa:'BS'},
+  {nr:'BS-041',kat:'Brandschaden',sub:'Wiederherstellung Böden',bez:'Estrich nach Brand neu einbringen Zementestrich je m²',ein:'m²',min:32,med:48,max:78,norm:'DIN 18353',sa:'BS'},
+  {nr:'BS-042',kat:'Brandschaden',sub:'Wiederherstellung Böden',bez:'Fliesen nach Brand neu verlegen je m²',ein:'m²',min:48,med:72,max:115,norm:'DIN 18157',sa:'BS'},
+  {nr:'BS-043',kat:'Brandschaden',sub:'Wiederherstellung Böden',bez:'Parkettboden nach Brand neu verlegen je m²',ein:'m²',min:55,med:85,max:135,norm:'DIN 280',sa:'BS'},
+  {nr:'BS-044',kat:'Brandschaden',sub:'Wiederherstellung Böden',bez:'Laminatboden nach Brand neu verlegen je m²',ein:'m²',min:28,med:43,max:68,norm:'',sa:'BS'},
+  {nr:'BS-045',kat:'Brandschaden',sub:'Wiederherstellung Böden',bez:'Holzdielung neu verlegen nach Brand je m²',ein:'m²',min:65,med:98,max:155,norm:'',sa:'BS'},
+  {nr:'BS-046',kat:'Brandschaden',sub:'Elektro',bez:'Elektroinstallation Wohnung komplett erneuern je m²',ein:'m²',min:55,med:85,max:135,norm:'DIN VDE 0100',sa:'BS'},
+  {nr:'BS-047',kat:'Brandschaden',sub:'Elektro',bez:'Unterverteilung Sicherungskasten neu liefern und montieren',ein:'Stk',min:385,med:590,max:945,norm:'DIN VDE 0100',sa:'BS'},
+  {nr:'BS-048',kat:'Brandschaden',sub:'Elektro',bez:'Rauchmelder nach Brand tauschen je Stk',ein:'Stk',min:28,med:42,max:68,norm:'DIN EN 14604',sa:'BS'},
+  {nr:'BS-049',kat:'Brandschaden',sub:'Elektro',bez:'Brandmeldeanlage BMA überprüfen und instandsetzen',ein:'Psch',min:485,med:745,max:1195,norm:'DIN 14675',sa:'BS'},
+  {nr:'BS-050',kat:'Brandschaden',sub:'Elektro',bez:'Lichtschalter/Steckdosen UP brandbeschädigt tauschen je Stk',ein:'Stk',min:38,med:58,max:92,norm:'DIN VDE 0100',sa:'BS'},
+  {nr:'BS-051',kat:'Brandschaden',sub:'Dach',bez:'Dacheindeckung Dachziegel brandbeschädigt erneuern je m²',ein:'m²',min:55,med:85,max:135,norm:'DIN 18338',sa:'BS'},
+  {nr:'BS-052',kat:'Brandschaden',sub:'Dach',bez:'Dachstuhl Holzkonstruktion Teilsanierung je m²',ein:'m²',min:95,med:145,max:230,norm:'DIN 68800',sa:'BS'},
+  {nr:'BS-053',kat:'Brandschaden',sub:'Dach',bez:'Dachstuhl Neubau Vollholz je m²',ein:'m²',min:125,med:190,max:305,norm:'DIN 68800',sa:'BS'},
+  {nr:'BS-054',kat:'Brandschaden',sub:'Dach',bez:'Dachdämmung erneuern Mineralwolle je m²',ein:'m²',min:32,med:48,max:78,norm:'DIN 18165',sa:'BS'},
+  {nr:'BS-055',kat:'Brandschaden',sub:'Dach',bez:'Dachfenster nach Brand erneuern je Stk',ein:'Stk',min:385,med:590,max:945,norm:'',sa:'BS'},
+  {nr:'BS-056',kat:'Brandschaden',sub:'Dach',bez:'Dachrinne/Fallrohr nach Brand erneuern je lfm',ein:'lfm',min:28,med:43,max:68,norm:'DIN 18460',sa:'BS'},
+  {nr:'BS-057',kat:'Brandschaden',sub:'Dach',bez:'Notabdichtung Dach Folienplane je m²',ein:'m²',min:8,med:13,max:22,norm:'',sa:'BS'},
+  {nr:'BS-058',kat:'Brandschaden',sub:'Dach',bez:'Gerüst für Dachinstandsetzung je m² je Monat',ein:'m²',min:6,med:9,max:15,norm:'',sa:'BS'},
+  {nr:'BS-059',kat:'Brandschaden',sub:'Dach',bez:'Dachlattung erneuern je m²',ein:'m²',min:18,med:27,max:43,norm:'DIN 18338',sa:'BS'},
+  {nr:'BS-060',kat:'Brandschaden',sub:'Dach',bez:'Unterspannbahn erneuern je m²',ein:'m²',min:12,med:18,max:28,norm:'DIN 18338',sa:'BS'},
+  {nr:'BSSS-001',kat:'Sturmschaden',sub:'Dach',bez:'Dachziegel Tonziegel Einzelstück tauschen je Stk',ein:'Stk',min:18,med:27,max:43,norm:'DIN 18338',sa:'SS'},
+  {nr:'SS-002',kat:'Sturmschaden',sub:'Dach',bez:'Dachziegel Betondachstein tauschen je Stk',ein:'Stk',min:12,med:18,max:28,norm:'DIN 18338',sa:'SS'},
+  {nr:'SS-003',kat:'Sturmschaden',sub:'Dach',bez:'Dacheindeckung Teilfläche bis 10m² neu eindecken',ein:'m²',min:55,med:85,max:135,norm:'DIN 18338',sa:'SS'},
+  {nr:'SS-004',kat:'Sturmschaden',sub:'Dach',bez:'Dacheindeckung Vollsanierung Ziegel je m²',ein:'m²',min:68,med:105,max:168,norm:'DIN 18338',sa:'SS'},
+  {nr:'SS-005',kat:'Sturmschaden',sub:'Dach',bez:'Firstziegel erneuern je lfm',ein:'lfm',min:28,med:43,max:68,norm:'DIN 18338',sa:'SS'},
+  {nr:'SS-006',kat:'Sturmschaden',sub:'Dach',bez:'Dachrinne Halbrunne Zink erneuern je lfm',ein:'lfm',min:28,med:43,max:68,norm:'DIN 18460',sa:'SS'},
+  {nr:'SS-007',kat:'Sturmschaden',sub:'Dach',bez:'Fallrohr Zinkblech erneuern je lfm',ein:'lfm',min:22,med:34,max:55,norm:'DIN 18460',sa:'SS'},
+  {nr:'SS-008',kat:'Sturmschaden',sub:'Dach',bez:'Dachlattung Sturmschaden reparieren je m²',ein:'m²',min:18,med:27,max:43,norm:'DIN 18338',sa:'SS'},
+  {nr:'SS-009',kat:'Sturmschaden',sub:'Dach',bez:'Unterspannbahn tauschen Teilfläche je m²',ein:'m²',min:12,med:18,max:28,norm:'DIN 18338',sa:'SS'},
+  {nr:'SS-010',kat:'Sturmschaden',sub:'Dach',bez:'Ortgang Windsicherung erneuern je lfm',ein:'lfm',min:22,med:34,max:55,norm:'DIN 18338',sa:'SS'},
+  {nr:'SS-011',kat:'Sturmschaden',sub:'Dach',bez:'Notabdichtung Dachfolie aufbringen je m²',ein:'m²',min:8,med:13,max:22,norm:'',sa:'SS'},
+  {nr:'SS-012',kat:'Sturmschaden',sub:'Dach',bez:'Dachstuhl Sturmschaden Auflager reparieren je Stk',ein:'Stk',min:145,med:225,max:360,norm:'',sa:'SS'},
+  {nr:'SS-013',kat:'Sturmschaden',sub:'Dach',bez:'Schornstein Sturmschaden Kappe reparieren',ein:'Psch',min:285,med:435,max:695,norm:'',sa:'SS'},
+  {nr:'SS-014',kat:'Sturmschaden',sub:'Dach',bez:'Dachfenster Velux/Roto Sturmschaden erneuern je Stk',ein:'Stk',min:485,med:745,max:1195,norm:'',sa:'SS'},
+  {nr:'SS-015',kat:'Sturmschaden',sub:'Dach',bez:'Gauben Blechverkleidung Sturmschaden reparieren je m²',ein:'m²',min:65,med:98,max:155,norm:'',sa:'SS'},
+  {nr:'SS-016',kat:'Sturmschaden',sub:'Fassade',bez:'Außenputz abgeplatzter Bereich reparieren je m²',ein:'m²',min:22,med:34,max:55,norm:'DIN 18550',sa:'SS'},
+  {nr:'SS-017',kat:'Sturmschaden',sub:'Fassade',bez:'WDVS Sturmschaden Fassadendämmplatten erneuern je m²',ein:'m²',min:55,med:85,max:135,norm:'DIN 55699',sa:'SS'},
+  {nr:'SS-018',kat:'Sturmschaden',sub:'Fassade',bez:'Klinkerriemchen abgelöst neu aufmauern je m²',ein:'m²',min:68,med:105,max:168,norm:'',sa:'SS'},
+  {nr:'SS-019',kat:'Sturmschaden',sub:'Fassade',bez:'Fassadenanstrich Teilfläche nach Sturmschaden je m²',ein:'m²',min:8,med:13,max:22,norm:'',sa:'SS'},
+  {nr:'SS-020',kat:'Sturmschaden',sub:'Fassade',bez:'Holzschalung Fassade Sturmschaden reparieren je m²',ein:'m²',min:45,med:68,max:108,norm:'',sa:'SS'},
+  {nr:'SS-021',kat:'Sturmschaden',sub:'Fenster',bez:'Fenster Holz/Kunststoff Sturmschaden erneuern je m²',ein:'m²',min:285,med:435,max:695,norm:'DIN EN 14351',sa:'SS'},
+  {nr:'SS-022',kat:'Sturmschaden',sub:'Fenster',bez:'Fensterglas Einfachscheibe tauschen je m²',ein:'m²',min:55,med:85,max:135,norm:'DIN 18361',sa:'SS'},
+  {nr:'SS-023',kat:'Sturmschaden',sub:'Fenster',bez:'Fensterglas Isolierverglasung 2-fach tauschen je m²',ein:'m²',min:85,med:130,max:210,norm:'DIN 18361',sa:'SS'},
+  {nr:'SS-024',kat:'Sturmschaden',sub:'Fenster',bez:'Rollladenkasten Sturmschaden reparieren je Stk',ein:'Stk',min:145,med:225,max:360,norm:'',sa:'SS'},
+  {nr:'SS-025',kat:'Sturmschaden',sub:'Fenster',bez:'Fensterbank außen Sturmschaden erneuern je lfm',ein:'lfm',min:45,med:68,max:108,norm:'',sa:'SS'},
+  {nr:'SS-026',kat:'Sturmschaden',sub:'Fenster',bez:'Notabdichtung Fensteröffnung Folie/Sperrholz',ein:'Stk',min:45,med:68,max:108,norm:'',sa:'SS'},
+  {nr:'SS-027',kat:'Sturmschaden',sub:'Außenanlagen',bez:'Carport Sturmschaden Dach reparieren',ein:'Psch',min:380,med:580,max:925,norm:'',sa:'SS'},
+  {nr:'SS-028',kat:'Sturmschaden',sub:'Außenanlagen',bez:'Gartenzaun Sturmschaden reparieren je lfm',ein:'lfm',min:35,med:52,max:85,norm:'',sa:'SS'},
+  {nr:'SS-029',kat:'Sturmschaden',sub:'Außenanlagen',bez:'Baum Sturmschaden Fällarbeiten je Stk',ein:'Stk',min:185,med:285,max:455,norm:'',sa:'SS'},
+  {nr:'SS-030',kat:'Sturmschaden',sub:'Außenanlagen',bez:'Terrassendach Sturmschaden reparieren je m²',ein:'m²',min:65,med:98,max:155,norm:'',sa:'SS'},
+  {nr:'SS-031',kat:'Sturmschaden',sub:'Außenanlagen',bez:'Mauerwerk Einfriedung Sturmschaden reparieren je m²',ein:'m²',min:55,med:85,max:135,norm:'',sa:'SS'},
+  {nr:'SS-032',kat:'Sturmschaden',sub:'Außenanlagen',bez:'Lichtschacht Kellerfenster Sturmschaden abdichten',ein:'Stk',min:85,med:130,max:210,norm:'',sa:'SS'},
+  {nr:'SS-033',kat:'Sturmschaden',sub:'Notabdichtung',bez:'Notabdichtung Dach Planen inkl. Sicherung je m²',ein:'m²',min:8,med:13,max:22,norm:'',sa:'SS'},
+  {nr:'SS-034',kat:'Sturmschaden',sub:'Notabdichtung',bez:'Notabdichtung Fassade Folie je m²',ein:'m²',min:6,med:9,max:15,norm:'',sa:'SS'},
+  {nr:'SS-035',kat:'Sturmschaden',sub:'Notabdichtung',bez:'Pumpentrocknung nach Sturmregen je Tag',ein:'Stk',min:85,med:130,max:210,norm:'',sa:'SS'},
+  {nr:'SS-036',kat:'Sturmschaden',sub:'Notabdichtung',bez:'Wasserschaden-Sofortmaßnahme nach Sturm Pauschal',ein:'Psch',min:280,med:430,max:685,norm:'',sa:'SS'},
+  {nr:'SS-037',kat:'Sturmschaden',sub:'Dach',bez:'Blitzableiteranlage Sturmschaden prüfen und reparieren',ein:'Psch',min:185,med:285,max:455,norm:'DIN VDE 0185',sa:'SS'},
+  {nr:'SS-038',kat:'Sturmschaden',sub:'Fassade',bez:'Gerüst für Fassadeninstandsetzung je m² je Monat',ein:'m²',min:6,med:9,max:15,norm:'',sa:'SS'},
+  {nr:'SS-039',kat:'Sturmschaden',sub:'Außenanlagen',bez:'Eingangsüberdachung Vordach Sturmschaden reparieren',ein:'Psch',min:285,med:435,max:695,norm:'',sa:'SS'},
+  {nr:'SS-040',kat:'Sturmschaden',sub:'Dach',bez:'Flachdach Aufkantung Sturmschaden reparieren je lfm',ein:'lfm',min:45,med:68,max:108,norm:'DIN 18531',sa:'SS'},
+  {nr:'SC-001',kat:'Schimmel/Feuchte',sub:'Befundung',bez:'Schimmelanalyse Oberflächenabklatsch Laborbefund je Stk',ein:'Stk',min:85,med:130,max:210,norm:'DIN ISO 16000-17',sa:'SC'},
+  {nr:'SC-002',kat:'Schimmel/Feuchte',sub:'Befundung',bez:'Luftkeimmessung Schimmel Volumenmethode je Raum',ein:'Stk',min:145,med:225,max:360,norm:'DIN ISO 16000-17',sa:'SC'},
+  {nr:'SC-003',kat:'Schimmel/Feuchte',sub:'Befundung',bez:'Feuchtemesskampagne Raum Protokoll je Raum',ein:'Stk',min:95,med:145,max:230,norm:'DIN EN ISO 12572',sa:'SC'},
+  {nr:'SC-004',kat:'Schimmel/Feuchte',sub:'Befundung',bez:'Thermografieuntersuchung Wärmebrücken je m²',ein:'m²',min:8,med:13,max:22,norm:'DIN EN 13187',sa:'SC'},
+  {nr:'SC-005',kat:'Schimmel/Feuchte',sub:'Befundung',bez:'Bauteilöffnung Probenahme Innenraum je Stk',ein:'Stk',min:125,med:190,max:305,norm:'',sa:'SC'},
+  {nr:'SC-006',kat:'Schimmel/Feuchte',sub:'Befundung',bez:'Materialprobe Schimmelanalyse Labor je Stk',ein:'Stk',min:65,med:98,max:155,norm:'DIN ISO 16000-17',sa:'SC'},
+  {nr:'SC-007',kat:'Schimmel/Feuchte',sub:'Sanierung',bez:'Schimmelbefall entfernen kleiner Bereich bis 0,5 m²',ein:'Stk',min:85,med:130,max:210,norm:'UBA-Leitfaden',sa:'SC'},
+  {nr:'SC-008',kat:'Schimmel/Feuchte',sub:'Sanierung',bez:'Schimmelbefall entfernen größerer Bereich bis 2 m²',ein:'m²',min:145,med:225,max:360,norm:'UBA-Leitfaden',sa:'SC'},
+  {nr:'SC-009',kat:'Schimmel/Feuchte',sub:'Sanierung',bez:'Schimmelbefall Totalreinigung Raum inkl. Desinfektion je m²',ein:'m²',min:18,med:27,max:43,norm:'UBA-Leitfaden',sa:'SC'},
+  {nr:'SC-010',kat:'Schimmel/Feuchte',sub:'Sanierung',bez:'Schimmelkontaminiertes Baumaterial entfernen und entsorgen je m²',ein:'m²',min:45,med:68,max:108,norm:'AVV',sa:'SC'},
+  {nr:'SC-011',kat:'Schimmel/Feuchte',sub:'Sanierung',bez:'Schimmelsanierung Holzbalken Chemisch je m²',ein:'m²',min:28,med:43,max:68,norm:'DIN 68800-4',sa:'SC'},
+  {nr:'SC-012',kat:'Schimmel/Feuchte',sub:'Sanierung',bez:'Schimmelsanierung Wand Trockeneis-Strahlen je m²',ein:'m²',min:35,med:52,max:85,norm:'',sa:'SC'},
+  {nr:'SC-013',kat:'Schimmel/Feuchte',sub:'Sanierung',bez:'Biozidbehandlung nach Schimmelsanierung je m²',ein:'m²',min:8,med:13,max:22,norm:'',sa:'SC'},
+  {nr:'SC-014',kat:'Schimmel/Feuchte',sub:'Sanierung',bez:'Schutzanstrich Schimmelschutzfarbe je m²',ein:'m²',min:12,med:18,max:28,norm:'',sa:'SC'},
+  {nr:'SC-015',kat:'Schimmel/Feuchte',sub:'Sanierung',bez:'Raumluftmessung nach Sanierung Freimessung',ein:'Psch',min:185,med:285,max:455,norm:'DIN ISO 16000-17',sa:'SC'},
+  {nr:'SC-016',kat:'Schimmel/Feuchte',sub:'Sanierung',bez:'Überdruck-Schutzmaßnahme Sanierung je Raum',ein:'Psch',min:145,med:225,max:360,norm:'',sa:'SC'},
+  {nr:'SC-017',kat:'Schimmel/Feuchte',sub:'Abdichtung',bez:'Kellerwandabdichtung innen bituminös je m²',ein:'m²',min:28,med:43,max:68,norm:'DIN 18533',sa:'SC'},
+  {nr:'SC-018',kat:'Schimmel/Feuchte',sub:'Abdichtung',bez:'Kellerwandabdichtung außen bituminös je m²',ein:'m²',min:45,med:68,max:108,norm:'DIN 18533',sa:'SC'},
+  {nr:'SC-019',kat:'Schimmel/Feuchte',sub:'Abdichtung',bez:'Perimeterdämmung außen XPS je m²',ein:'m²',min:32,med:48,max:78,norm:'DIN 18533',sa:'SC'},
+  {nr:'SC-020',kat:'Schimmel/Feuchte',sub:'Abdichtung',bez:'Drainagepappe außen Keller je m²',ein:'m²',min:18,med:27,max:43,norm:'DIN 18533',sa:'SC'},
+  {nr:'SC-021',kat:'Schimmel/Feuchte',sub:'Abdichtung',bez:'Horizontalsperre nachträglich Injektion je lfm',ein:'lfm',min:32,med:48,max:78,norm:'DIN 18533',sa:'SC'},
+  {nr:'SC-022',kat:'Schimmel/Feuchte',sub:'Abdichtung',bez:'Sanierputzsystem Innen WTA je m²',ein:'m²',min:28,med:43,max:68,norm:'WTA 2-9-04/D',sa:'SC'},
+  {nr:'SC-023',kat:'Schimmel/Feuchte',sub:'Abdichtung',bez:'Flüssigabdichtung Nasszelle Verbundabdichtung je m²',ein:'m²',min:25,med:38,max:62,norm:'DIN 18534',sa:'SC'},
+  {nr:'SC-024',kat:'Schimmel/Feuchte',sub:'Abdichtung',bez:'Balkonabdichtung Flüssigkunststoff je m²',ein:'m²',min:35,med:52,max:85,norm:'DIN 18531',sa:'SC'},
+  {nr:'SC-025',kat:'Schimmel/Feuchte',sub:'Abdichtung',bez:'Terrassenabdichtung Foliensystem je m²',ein:'m²',min:45,med:68,max:108,norm:'DIN 18531',sa:'SC'},
+  {nr:'SC-026',kat:'Schimmel/Feuchte',sub:'Abdichtung',bez:'Kellerfußboden Abdichtung Innen je m²',ein:'m²',min:32,med:48,max:78,norm:'DIN 18533',sa:'SC'},
+  {nr:'SC-027',kat:'Schimmel/Feuchte',sub:'Lüftung',bez:'Lüftungsanlage dezentral je Raum einbauen',ein:'Stk',min:485,med:745,max:1195,norm:'DIN 1946-6',sa:'SC'},
+  {nr:'SC-028',kat:'Schimmel/Feuchte',sub:'Lüftung',bez:'Ventilator Einzelraumventilator mit Feuchtesteuerung',ein:'Stk',min:145,med:225,max:360,norm:'DIN 1946-6',sa:'SC'},
+  {nr:'SC-029',kat:'Schimmel/Feuchte',sub:'Lüftung',bez:'Lüftungskonzept Planung nach DIN 1946-6',ein:'Psch',min:285,med:435,max:695,norm:'DIN 1946-6',sa:'SC'},
+  {nr:'SC-030',kat:'Schimmel/Feuchte',sub:'Lüftung',bez:'Lüftungsanlage zentral mit WRG je m² Wohnfläche',ein:'m²',min:28,med:43,max:68,norm:'DIN 1946-6',sa:'SC'},
+  {nr:'SC-031',kat:'Schimmel/Feuchte',sub:'Lüftung',bez:'Lüftungskanal reinigen Querschnitt bis 200mm je lfm',ein:'lfm',min:12,med:18,max:28,norm:'VDI 6022',sa:'SC'},
+  {nr:'SC-032',kat:'Schimmel/Feuchte',sub:'Lüftung',bez:'Luftfeuchtemessung Dauerprotokoll je Gerät pro Woche',ein:'Stk',min:18,med:27,max:43,norm:'',sa:'SC'},
+  {nr:'SC-033',kat:'Schimmel/Feuchte',sub:'Abdichtung',bez:'Dachflächenfenster Wärmedämmung verbessern je Stk',ein:'Stk',min:285,med:435,max:695,norm:'',sa:'SC'},
+  {nr:'SC-034',kat:'Schimmel/Feuchte',sub:'Befundung',bez:'Taupunktanalyse Bauteil Berechnung',ein:'Psch',min:145,med:225,max:360,norm:'DIN EN ISO 13788',sa:'SC'},
+  {nr:'SC-035',kat:'Schimmel/Feuchte',sub:'Sanierung',bez:'Schimmelkontaminiertes Holz Austausch je m²',ein:'m²',min:55,med:85,max:135,norm:'DIN 68800-4',sa:'SC'},
+  {nr:'SC-036',kat:'Schimmel/Feuchte',sub:'Befundung',bez:'VOC-Messung Raumluft Labor',ein:'Psch',min:285,med:435,max:695,norm:'DIN ISO 16000-6',sa:'SC'},
+  {nr:'SC-037',kat:'Schimmel/Feuchte',sub:'Abdichtung',bez:'Fugenabdichtung Sanitärbereich Silikon erneuern je lfm',ein:'lfm',min:8,med:13,max:22,norm:'DIN 18534',sa:'SC'},
+  {nr:'SC-038',kat:'Schimmel/Feuchte',sub:'Sanierung',bez:'PSA Vollschutz Sanierungskolonne je h',ein:'h',min:8,med:13,max:22,norm:'',sa:'SC'},
+  {nr:'SC-039',kat:'Schimmel/Feuchte',sub:'Sanierung',bez:'Sachverständigenbegleitung Schimmelsanierung je Begehung',ein:'Psch',min:145,med:225,max:360,norm:'',sa:'SC'},
+  {nr:'SC-040',kat:'Schimmel/Feuchte',sub:'Abdichtung',bez:'Dampfbremse Einbau Dachschräge je m²',ein:'m²',min:22,med:34,max:55,norm:'DIN 4108-3',sa:'SC'},
+  {nr:'BA-001',kat:'Baumängel allgemein',sub:'Risse',bez:'Rissprotokoll Aufnahme Rissbild je Bauteil',ein:'Psch',min:95,med:145,max:230,norm:'',sa:'BA'},
+  {nr:'BA-002',kat:'Baumängel allgemein',sub:'Risse',bez:'Riss Haarriss schließen Injektionsharz je lfm',ein:'lfm',min:22,med:34,max:55,norm:'',sa:'BA'},
+  {nr:'BA-003',kat:'Baumängel allgemein',sub:'Risse',bez:'Riss Mauerwerk Injektionsnadeln je lfm',ein:'lfm',min:35,med:52,max:85,norm:'',sa:'BA'},
+  {nr:'BA-004',kat:'Baumängel allgemein',sub:'Risse',bez:'Rissmonitoring Gipsmarke Setzung je Stk',ein:'Stk',min:18,med:27,max:43,norm:'',sa:'BA'},
+  {nr:'BA-005',kat:'Baumängel allgemein',sub:'Risse',bez:'Riss verputzen Innen je lfm',ein:'lfm',min:12,med:18,max:28,norm:'DIN 18550',sa:'BA'},
+  {nr:'BA-006',kat:'Baumängel allgemein',sub:'Risse',bez:'Riss Fassade schließen Außenputz je lfm',ein:'lfm',min:18,med:27,max:43,norm:'DIN 18550',sa:'BA'},
+  {nr:'BA-007',kat:'Baumängel allgemein',sub:'Risse',bez:'Riss Betonkonstruktion Epoxidharzinjektion je lfm',ein:'lfm',min:55,med:85,max:135,norm:'',sa:'BA'},
+  {nr:'BA-008',kat:'Baumängel allgemein',sub:'Risse',bez:'Setzriss Schwelle Unterfangen lokaler Bereich',ein:'Psch',min:485,med:745,max:1195,norm:'',sa:'BA'},
+  {nr:'BA-009',kat:'Baumängel allgemein',sub:'Risse',bez:'Rissbreitenmessung Rissmaßstab Protokoll',ein:'Psch',min:85,med:130,max:210,norm:'',sa:'BA'},
+  {nr:'BA-010',kat:'Baumängel allgemein',sub:'Risse',bez:'Risstiefenmessung Ultraschall Beton',ein:'Psch',min:145,med:225,max:360,norm:'',sa:'BA'},
+  {nr:'BA-011',kat:'Baumängel allgemein',sub:'Setzungen',bez:'Setzungsprotokoll Bestandsaufnahme Nivellement',ein:'Psch',min:285,med:435,max:695,norm:'',sa:'BA'},
+  {nr:'BA-012',kat:'Baumängel allgemein',sub:'Setzungen',bez:'Fundamentunterfangung Teilbereich je lfm',ein:'lfm',min:485,med:745,max:1195,norm:'',sa:'BA'},
+  {nr:'BA-013',kat:'Baumängel allgemein',sub:'Setzungen',bez:'Bodenpressung Baugrundgutachten',ein:'Psch',min:1485,med:2285,max:3650,norm:'DIN EN ISO 14688',sa:'BA'},
+  {nr:'BA-014',kat:'Baumängel allgemein',sub:'Setzungen',bez:'Setznagel setzen Beobachtungsnagel je Stk',ein:'Stk',min:28,med:43,max:68,norm:'',sa:'BA'},
+  {nr:'BA-015',kat:'Baumängel allgemein',sub:'Abdichtung Keller',bez:'Kellerwandabdichtung innen Sanierputz je m²',ein:'m²',min:28,med:43,max:68,norm:'WTA 2-9-04/D',sa:'BA'},
+  {nr:'BA-016',kat:'Baumängel allgemein',sub:'Abdichtung Keller',bez:'Kellerwandabdichtung außen bituminös Dickschicht je m²',ein:'m²',min:45,med:68,max:108,norm:'DIN 18533',sa:'BA'},
+  {nr:'BA-017',kat:'Baumängel allgemein',sub:'Abdichtung Keller',bez:'Kellerdrainageleitung erneuern je lfm',ein:'lfm',min:55,med:85,max:135,norm:'DIN 4095',sa:'BA'},
+  {nr:'BA-018',kat:'Baumängel allgemein',sub:'Abdichtung Keller',bez:'Kellerfußbodenabdichtung PE-Folie je m²',ein:'m²',min:12,med:18,max:28,norm:'DIN 18533',sa:'BA'},
+  {nr:'BA-019',kat:'Baumängel allgemein',sub:'Abdichtung Keller',bez:'Schachtring Kelleraußenabdichtung Revisionsöffnung',ein:'Stk',min:285,med:435,max:695,norm:'',sa:'BA'},
+  {nr:'BA-020',kat:'Baumängel allgemein',sub:'Abdichtung Keller',bez:'Lichtschacht abdichten versiegeln je Stk',ein:'Stk',min:85,med:130,max:210,norm:'',sa:'BA'},
+  {nr:'BA-021',kat:'Baumängel allgemein',sub:'Balkon',bez:'Balkonabdichtung Flüssigkunststoff PMMA je m²',ein:'m²',min:35,med:52,max:85,norm:'DIN 18531',sa:'BA'},
+  {nr:'BA-022',kat:'Baumängel allgemein',sub:'Balkon',bez:'Balkonabdichtung Foliensystem je m²',ein:'m²',min:45,med:68,max:108,norm:'DIN 18531',sa:'BA'},
+  {nr:'BA-023',kat:'Baumängel allgemein',sub:'Balkon',bez:'Balkonfliesen entfernen und Untergrund sanieren je m²',ein:'m²',min:38,med:58,max:92,norm:'',sa:'BA'},
+  {nr:'BA-024',kat:'Baumängel allgemein',sub:'Balkon',bez:'Balkongeländer Anschluss abdichten je lfm',ein:'lfm',min:28,med:43,max:68,norm:'',sa:'BA'},
+  {nr:'BA-025',kat:'Baumängel allgemein',sub:'Balkon',bez:'Balkongefälle korrigieren je m²',ein:'m²',min:55,med:85,max:135,norm:'',sa:'BA'},
+  {nr:'BA-026',kat:'Baumängel allgemein',sub:'Balkon',bez:'Balkonbrüstung Beton instandsetzen je lfm',ein:'lfm',min:65,med:98,max:155,norm:'',sa:'BA'},
+  {nr:'BA-027',kat:'Baumängel allgemein',sub:'Fenster/Türen',bez:'Fensterbank innen erneuern je lfm',ein:'lfm',min:32,med:48,max:78,norm:'',sa:'BA'},
+  {nr:'BA-028',kat:'Baumängel allgemein',sub:'Fenster/Türen',bez:'Fensterbank außen Alu erneuern je lfm',ein:'lfm',min:55,med:85,max:135,norm:'',sa:'BA'},
+  {nr:'BA-029',kat:'Baumängel allgemein',sub:'Fenster/Türen',bez:'Fensterdichtung tauschen je lfm',ein:'lfm',min:8,med:13,max:22,norm:'',sa:'BA'},
+  {nr:'BA-030',kat:'Baumängel allgemein',sub:'Fenster/Türen',bez:'Fensterrahmen Anschluss abdichten Innen/Außen je lfm',ein:'lfm',min:12,med:18,max:28,norm:'',sa:'BA'},
+  {nr:'BA-031',kat:'Baumängel allgemein',sub:'Fenster/Türen',bez:'Fenster justieren/einstellen je Stk',ein:'Stk',min:45,med:68,max:108,norm:'',sa:'BA'},
+  {nr:'BA-032',kat:'Baumängel allgemein',sub:'Fenster/Türen',bez:'Haustür Einbruchhemmung nachrüsten',ein:'Psch',min:285,med:435,max:695,norm:'DIN EN 1627',sa:'BA'},
+  {nr:'BA-033',kat:'Baumängel allgemein',sub:'Fenster/Türen',bez:'Innentür schleifen und lackieren',ein:'Stk',min:85,med:130,max:210,norm:'',sa:'BA'},
+  {nr:'BA-034',kat:'Baumängel allgemein',sub:'Fenster/Türen',bez:'Türzarge reparieren je Stk',ein:'Stk',min:68,med:105,max:168,norm:'',sa:'BA'},
+  {nr:'BA-035',kat:'Baumängel allgemein',sub:'Estrich/Boden',bez:'Estrichhohlstelle Injektion je m²',ein:'m²',min:22,med:34,max:55,norm:'DIN 18353',sa:'BA'},
+  {nr:'BA-036',kat:'Baumängel allgemein',sub:'Estrich/Boden',bez:'Estrichaufschüsselung schleifen je m²',ein:'m²',min:18,med:27,max:43,norm:'DIN 18353',sa:'BA'},
+  {nr:'BA-037',kat:'Baumängel allgemein',sub:'Estrich/Boden',bez:'Bodenbelag aufschüsseln reparieren je m²',ein:'m²',min:28,med:43,max:68,norm:'',sa:'BA'},
+  {nr:'BA-038',kat:'Baumängel allgemein',sub:'Estrich/Boden',bez:'Trittschalldämmung erneuern je m²',ein:'m²',min:22,med:34,max:55,norm:'DIN 4109',sa:'BA'},
+  {nr:'BA-039',kat:'Baumängel allgemein',sub:'Dach/Flachdach',bez:'Flachdachabdichtung Blasen reparieren je m²',ein:'m²',min:28,med:43,max:68,norm:'DIN 18531',sa:'BA'},
+  {nr:'BA-040',kat:'Baumängel allgemein',sub:'Dach/Flachdach',bez:'Attika Blechabdeckung abdichten je lfm',ein:'lfm',min:35,med:52,max:85,norm:'',sa:'BA'},
+  {nr:'BA-041',kat:'Baumängel allgemein',sub:'Dach/Flachdach',bez:'Dachablauf reinigen und dichten je Stk',ein:'Stk',min:65,med:98,max:155,norm:'',sa:'BA'},
+  {nr:'BA-042',kat:'Baumängel allgemein',sub:'Dach/Flachdach',bez:'Flachdach Gefälleestrich reparieren je m²',ein:'m²',min:42,med:65,max:105,norm:'DIN 18531',sa:'BA'},
+  {nr:'BA-043',kat:'Baumängel allgemein',sub:'Putz/Fassade',bez:'Außenputz Reparatur bis 1 m² je Stk',ein:'Stk',min:85,med:130,max:210,norm:'DIN 18550',sa:'BA'},
+  {nr:'BA-044',kat:'Baumängel allgemein',sub:'Putz/Fassade',bez:'WDVS Putzschicht reparieren je m²',ein:'m²',min:35,med:52,max:85,norm:'DIN 55699',sa:'BA'},
+  {nr:'BA-045',kat:'Baumängel allgemein',sub:'Putz/Fassade',bez:'Fassadenanstrich komplett je m²',ein:'m²',min:12,med:18,max:28,norm:'',sa:'BA'},
+  {nr:'BA-046',kat:'Baumängel allgemein',sub:'Putz/Fassade',bez:'Innenputz Fehlstelle reparieren je m²',ein:'m²',min:22,med:34,max:55,norm:'DIN 18550',sa:'BA'},
+  {nr:'BA-047',kat:'Baumängel allgemein',sub:'Schall',bez:'Schallmessung Luftschall je Raum',ein:'Psch',min:285,med:435,max:695,norm:'DIN 4109',sa:'BA'},
+  {nr:'BA-048',kat:'Baumängel allgemein',sub:'Schall',bez:'Schallmessung Trittschall je Raum',ein:'Psch',min:285,med:435,max:695,norm:'DIN 4109',sa:'BA'},
+  {nr:'BA-049',kat:'Baumängel allgemein',sub:'Schall',bez:'Trittschalldämmung unter Estrich nachrüsten je m²',ein:'m²',min:28,med:43,max:68,norm:'DIN 4109',sa:'BA'},
+  {nr:'BA-050',kat:'Baumängel allgemein',sub:'Sonstiges',bez:'Gutachterkosten Feststellung Baumangel Pauschal',ein:'Psch',min:485,med:745,max:1195,norm:'',sa:'BA'},
+  {nr:'ES-001',kat:'Elementarschaden',sub:'Überschwemmung',bez:'Aufräumarbeiten nach Überflutung je m²',ein:'m²',min:18,med:27,max:43,norm:'',sa:'ES'},
+  {nr:'ES-002',kat:'Elementarschaden',sub:'Überschwemmung',bez:'Schlamm und Sediment entfernen je m²',ein:'m²',min:22,med:34,max:55,norm:'',sa:'ES'},
+  {nr:'ES-003',kat:'Elementarschaden',sub:'Überschwemmung',bez:'Keller auspumpen Pumpeneinsatz je h',ein:'h',min:85,med:130,max:210,norm:'',sa:'ES'},
+  {nr:'ES-004',kat:'Elementarschaden',sub:'Überschwemmung',bez:'Schmutzwasser Absaugung Tanklöschfahrzeug je h',ein:'h',min:185,med:285,max:455,norm:'',sa:'ES'},
+  {nr:'ES-005',kat:'Elementarschaden',sub:'Überschwemmung',bez:'Sanierungsanstrich nach Überschwemmung Keller je m²',ein:'m²',min:12,med:18,max:28,norm:'',sa:'ES'},
+  {nr:'ES-006',kat:'Elementarschaden',sub:'Überschwemmung',bez:'Heizungsanlage nach Hochwasser spülen und instandsetzen',ein:'Psch',min:480,med:740,max:1185,norm:'',sa:'ES'},
+  {nr:'ES-007',kat:'Elementarschaden',sub:'Überschwemmung',bez:'Elektroanlage nach Hochwasser prüfen und freigeben',ein:'Psch',min:285,med:435,max:695,norm:'DIN VDE 0100',sa:'ES'},
+  {nr:'ES-008',kat:'Elementarschaden',sub:'Überschwemmung',bez:'Rückstauklappe einbauen DN 100',ein:'Stk',min:485,med:745,max:1195,norm:'DIN EN 13564',sa:'ES'},
+  {nr:'ES-009',kat:'Elementarschaden',sub:'Überschwemmung',bez:'Rückstauklappe DN 150 einbauen',ein:'Stk',min:580,med:885,max:1415,norm:'DIN EN 13564',sa:'ES'},
+  {nr:'ES-010',kat:'Elementarschaden',sub:'Überschwemmung',bez:'Hochwasserschutzelemente Türdichtung montieren',ein:'Stk',min:285,med:435,max:695,norm:'',sa:'ES'},
+  {nr:'ES-011',kat:'Elementarschaden',sub:'Überschwemmung',bez:'Hochwasserschutzfolie Lichtschacht je Stk',ein:'Stk',min:85,med:130,max:210,norm:'',sa:'ES'},
+  {nr:'ES-012',kat:'Elementarschaden',sub:'Überschwemmung',bez:'Bodenbeschichtung Keller nach Hochwasser je m²',ein:'m²',min:18,med:27,max:43,norm:'',sa:'ES'},
+  {nr:'ES-013',kat:'Elementarschaden',sub:'Überschwemmung',bez:'Wandaufbau Keller nach Hochwasser je m²',ein:'m²',min:38,med:58,max:92,norm:'',sa:'ES'},
+  {nr:'ES-014',kat:'Elementarschaden',sub:'Überschwemmung',bez:'Bautrocknung nach Überschwemmung großflächig je m²',ein:'m²',min:8,med:13,max:22,norm:'VdS 3151',sa:'ES'},
+  {nr:'ES-015',kat:'Elementarschaden',sub:'Überschwemmung',bez:'Trocknungsprotokoll Hochwasserschaden komplett',ein:'Psch',min:285,med:435,max:695,norm:'VdS 3151',sa:'ES'},
+  {nr:'ES-016',kat:'Elementarschaden',sub:'Erdrutsch',bez:'Hangsicherung Böschung Gabionen je m²',ein:'m²',min:85,med:130,max:210,norm:'',sa:'ES'},
+  {nr:'ES-017',kat:'Elementarschaden',sub:'Erdrutsch',bez:'Hangstabilisierung Erdnägel je Stk',ein:'Stk',min:285,med:435,max:695,norm:'',sa:'ES'},
+  {nr:'ES-018',kat:'Elementarschaden',sub:'Erdrutsch',bez:'Drainageleitung Hang einbauen je lfm',ein:'lfm',min:45,med:68,max:108,norm:'DIN 4095',sa:'ES'},
+  {nr:'ES-019',kat:'Elementarschaden',sub:'Erdrutsch',bez:'Stützmauer Beton neu errichten je m²',ein:'m²',min:185,med:285,max:455,norm:'',sa:'ES'},
+  {nr:'ES-020',kat:'Elementarschaden',sub:'Erdrutsch',bez:'Erdmassen abtragen und entsorgen je m³',ein:'m³',min:28,med:43,max:68,norm:'',sa:'ES'},
+  {nr:'ES-021',kat:'Elementarschaden',sub:'Erdrutsch',bez:'Fundamentfreilegung Schadensaufnahme je lfm',ein:'lfm',min:85,med:130,max:210,norm:'',sa:'ES'},
+  {nr:'ES-022',kat:'Elementarschaden',sub:'Erdrutsch',bez:'Geotextil Erosionsschutz je m²',ein:'m²',min:8,med:13,max:22,norm:'',sa:'ES'},
+  {nr:'ES-023',kat:'Elementarschaden',sub:'Frost',bez:'Frostschaden Wasserleitung Kupfer reparieren je lfm',ein:'lfm',min:55,med:85,max:135,norm:'DIN EN 1057',sa:'ES'},
+  {nr:'ES-024',kat:'Elementarschaden',sub:'Frost',bez:'Frostschaden Heizungsanlage Vorlaufleitung reparieren',ein:'Psch',min:285,med:435,max:695,norm:'',sa:'ES'},
+  {nr:'ES-025',kat:'Elementarschaden',sub:'Frost',bez:'Frostschutz Rohrbegleitheizung einbauen je lfm',ein:'lfm',min:28,med:43,max:68,norm:'',sa:'ES'},
+  {nr:'ES-026',kat:'Elementarschaden',sub:'Frost',bez:'Frostschaden Putz Außenwand reparieren je m²',ein:'m²',min:22,med:34,max:55,norm:'DIN 18550',sa:'ES'},
+  {nr:'ES-027',kat:'Elementarschaden',sub:'Frost',bez:'Frostschaden Pflaster/Terasse reparieren je m²',ein:'m²',min:35,med:52,max:85,norm:'',sa:'ES'},
+  {nr:'ES-028',kat:'Elementarschaden',sub:'Frost',bez:'Frostschaden Druckleitung Betonrohr erneuern je lfm',ein:'lfm',min:65,med:98,max:155,norm:'',sa:'ES'},
+  {nr:'ES-029',kat:'Elementarschaden',sub:'Frost',bez:'Rohrbruch Frostschaden Schnellkupplung Notabdichtung',ein:'Stk',min:85,med:130,max:210,norm:'',sa:'ES'},
+  {nr:'ES-030',kat:'Elementarschaden',sub:'Frost',bez:'Frostschaden Dachrinne/Fallrohr erneuern je lfm',ein:'lfm',min:28,med:43,max:68,norm:'DIN 18460',sa:'ES'},
+  {nr:'ESWS-081',kat:'Wasserschaden',sub:'Trocknung',bez:'Bautrocknung Zwischenbericht Feuchteprofil je Begehung',ein:'Psch',min:95,med:145,max:220,norm:'VdS 3151',sa:'WS'},
+  {nr:'BS-061',kat:'Brandschaden',sub:'Rußreinigung',bez:'Rußreinigung Treppenhaus komplett inkl. Geländer je m²',ein:'m²',min:14,med:21,max:34,norm:'',sa:'BS'},
+  {nr:'SS-041',kat:'Sturmschaden',sub:'Außenanlagen',bez:'Streifenfundament Gartenmauer Sturmschaden reparieren je lfm',ein:'lfm',min:85,med:130,max:210,norm:'',sa:'SS'}
+];
+
+
+let activeChip = '';
+
+// Unterkategorien befüllen
+(function(){
+  const subs = [...new Set(POSITIONEN_DB.map(p=>p.sub).filter(Boolean))].sort();
+  const sel = document.getElementById('filterSub');
+  subs.forEach(s=>{const o=document.createElement('option');o.value=s;o.textContent=s;sel.appendChild(o);});
+})();
+
+// KPI-Bar
+function renderKPI(){
+  const bar = document.getElementById('kpiBar');
+  const cats = {'Wasserschaden':'💧','Schimmel/Feuchte':'🟢','Brandschaden':'🔥','Sturmschaden':'🌪','Elementarschaden':'🌊','Baumängel allgemein':'🏗'};
+  let html='';
+  for(const [k,icon] of Object.entries(cats)){
+    const n = POSITIONEN_DB.filter(p=>p.kat===k).length;
+    html+=`<div class="kpi-chip">${icon} ${k.replace(' allgemein','')}<strong>${n} Pos.</strong></div>`;
+  }
+  bar.innerHTML=html;
+}
+
+function setChip(val, el){
+  document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+  activeChip=val;
+  if(val){
+    // SA-Code → Kategorie-Name
+    const saMap={'WS':'Wasserschaden','SC':'Schimmel/Feuchte','BS':'Brandschaden','SS':'Sturmschaden','ES':'Elementarschaden','BA':'Baumängel allgemein'};
+    document.getElementById('filterKat').value=saMap[val]||'';
+  } else {
+    document.getElementById('filterKat').value='';
+  }
+  renderPositionen();
+}
+
+function getFiltered(){
+  const q=(document.getElementById('searchInput').value||'').toLowerCase().trim();
+  const kat=document.getElementById('filterKat').value;
+  const sub=document.getElementById('filterSub').value;
+  return POSITIONEN_DB.filter(p=>{
+    if(kat && p.kat!==kat) return false;
+    if(sub && p.sub!==sub) return false;
+    if(q){
+      const hay=(p.nr+' '+p.bez+' '+p.sub+' '+p.kat+' '+p.norm).toLowerCase();
+      if(!hay.includes(q)) return false;
+    }
+    return true;
+  });
+}
+
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;');}
+
+function renderPositionen(){
+  const filtered=getFiltered();
+  const tbl=document.getElementById('posTabelle');
+  const empty=document.getElementById('emptyState');
+  document.getElementById('posCount').textContent=filtered.length;
+  if(!filtered.length){tbl.innerHTML='';empty.style.display='block';return;}
+  empty.style.display='none';
+  tbl.innerHTML=filtered.map(p=>
+    `<div class="pos-row">
+      <div class="pos-nr">${esc(p.nr)}</div>
+      <div>
+        <div class="pos-bez">${esc(p.bez)}</div>
+        <div class="pos-sub">${esc(p.sub)}</div>
+      </div>
+      <div class="pos-ein">${esc(p.ein)}</div>
+      <div class="pos-preise">
+        <div class="med">${p.med} €</div>
+        <div class="range">${p.min}–${p.max} €</div>
+      </div>
+      <div class="pos-norm">${esc(p.norm||'—')}</div>
+      <div class="pos-actions">
+        <button class="btn-pos btn-insert" onclick="insertPos('${p.nr}')">＋ Einfügen</button>
+        <button class="btn-pos btn-copy" onclick="copyPos('${p.nr}')">📋</button>
+      </div>
+    </div>`
+  ).join('');
+}
+
+function insertPos(nr){
+  const p=POSITIONEN_DB.find(x=>x.nr===nr);
+  if(!p) return;
+  const entry={nr:p.nr,bezeichnung:p.bez,einheit:p.ein,min:p.min,median:p.med,max:p.max,norm:p.norm};
+  // In localStorage Queue speichern
+  try{
+    let q=JSON.parse(localStorage.getItem('prova_positionen_queue')||'[]');
+    q.push(entry);
+    localStorage.setItem('prova_positionen_queue',JSON.stringify(q));
+  }catch(e){}
+  // Popup-Modus: postMessage
+  if(window.opener){
+    window.opener.postMessage({type:'prova_position',data:entry},'*');
+    showToast('Position übertragen ✅');
+    setTimeout(()=>window.close(),700);
+  } else {
+    showToast('Position gespeichert — in Kostenermittlung verfügbar ✅');
+  }
+}
+
+function copyPos(nr){
+  const p=POSITIONEN_DB.find(x=>x.nr===nr);
+  if(!p) return;
+  const txt=`${p.nr} | ${p.bez} | ${p.ein} | Min ${p.min} / Med ${p.med} / Max ${p.max} €`;
+  navigator.clipboard.writeText(txt).then(()=>showToast('Zeile kopiert ✅')).catch(()=>showToast('Kopiert: '+txt.slice(0,50)+'…'));
+}
+
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+// Schadenart aus sessionStorage vorauswählen
+(function(){
+  const sa=sessionStorage.getItem('prova_schadenart')||'';
+  if(sa){
+    const saMap={'Wasserschaden':'WS','Schimmel':'SC','Schimmelbefall':'SC','Brandschaden':'BS','Sturmschaden':'SS','Elementarschaden':'ES','Baumängel':'BA'};
+    let code='';
+    for(const k in saMap){if(sa.toLowerCase().includes(k.toLowerCase())){code=saMap[k];break;}}
+    if(code){
+      const chip=document.querySelector(`.chip[onclick="setChip('${code}',this)"]`);
+      if(chip)chip.click();
+    }
+  }
+})();
+
+renderKPI();
+renderPositionen();
+</script>
+</body>
+</html>

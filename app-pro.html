@@ -872,7 +872,7 @@ window.PROVA=window.PROVA||{};PROVA.paket=localStorage.getItem('prova_paket')||'
                   </div>
                 </div>
               </div>
-              <div class="form-group" style="grid-column:span 2;"><label class="form-label">Name / Firma</label><div style="position:relative"><input type="text" class="form-control" id="f-auftraggeber-name" placeholder="Name oder Versicherung eingeben…" oninput="handleAuftraggeberInputPro(this.value)" onblur="setTimeout(function(){var d=document.getElementById('ag-dropdown');if(d)d.style.display='none';},200)"><div id="ag-dropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid var(--gray-200);border-radius:var(--radius-md);box-shadow:0 4px 20px rgba(0,0,0,.12);max-height:220px;overflow-y:auto;z-index:500;"></div></div></div>
+              <div class="form-group" style="grid-column:span 2;"><label class="form-label" style="display:flex;justify-content:space-between;align-items:center;"><span>Name / Firma</span> <button type="button" onclick="oeffneKontaktPickerPro()" style="padding:3px 9px;background:rgba(79,142,247,.12);border:1px solid rgba(79,142,247,.3);border-radius:5px;color:#93C5FD;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;">👥 Aus Kontakten</button></label><div style="position:relative"><input type="text" class="form-control" id="f-auftraggeber-name" placeholder="Name oder Versicherung eingeben…" oninput="handleAuftraggeberInputPro(this.value)" onblur="setTimeout(function(){var d=document.getElementById('ag-dropdown');if(d)d.style.display='none';},200)"><div id="ag-dropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid var(--gray-200);border-radius:var(--radius-md);box-shadow:0 4px 20px rgba(0,0,0,.12);max-height:220px;overflow-y:auto;z-index:500;"></div></div></div>
               <div class="form-group"><label class="form-label">E-Mail Auftraggeber</label><input type="email" class="form-control" id="f-auftraggeber-email" placeholder="mueller@vers.de"></div>
               <div class="form-group"><label class="form-label">Ansprechpartner</label><input type="text" class="form-control" id="f-ansprechpartner" placeholder="Herr Müller"></div>
             </div>
@@ -1232,14 +1232,14 @@ window.PROVA=window.PROVA||{};PROVA.paket=localStorage.getItem('prova_paket')||'
         <div class="team-member-card">
           <div class="member-avatar">MK</div>
           <div class="member-name">Dr. Max Kellner</div>
-          <div class="member-email">info@prova-systems.de</div>
+          <div class="member-email">m.kellner@sv-buero.de</div>
           <div><span class="member-role-badge admin">Administrator</span></div>
           <div style="margin-top:12px;font-size:0.72rem;color:var(--gray-400);">24 Gutachten erstellt · heute aktiv</div>
         </div>
         <div class="team-member-card">
           <div class="member-avatar" style="background:#10B981;">TS</div>
           <div class="member-name">Thomas Schmidt</div>
-          <div class="member-email">kontakt@prova-systems.de</div>
+          <div class="member-email">t.schmidt@sv-buero.de</div>
           <div><span class="member-role-badge gutachter">Gutachter</span></div>
           <div style="margin-top:12px;font-size:0.72rem;color:var(--gray-400);">10 Gutachten erstellt · gestern aktiv</div>
           <div style="margin-top:10px;display:flex;gap:6px;justify-content:center;">
@@ -1345,7 +1345,7 @@ function showToast(msg, type) {
 const AIRTABLE_BASE = 'appJ7bLlAHZoxENWE';
 const AIRTABLE_TABLE = 'tblSxV8bsXwd1pwa0';
 const AIRTABLE_SV_TABLE = 'tbladqEQT3tmx4DIB';
-const WEBHOOK_S1 = 'https://hook.eu1.make.com/imn2n5xs7j251xicrmdmk17of042pt2t';
+const WEBHOOK_S1 = 'https://hook.eu1.make.com/sv2ex5pctyeli9pu4d7i1736h8u4vfmn';
 const WEBHOOK_S9 = 'https://hook.eu1.make.com/bslfuqmlud1vo8qems5ccn5z5f2eq4dl';
 
 const GUTACHTEN_VORLAGEN = [
@@ -1426,6 +1426,20 @@ async function ladeSVProfil() {
   if (!rec) return null;
   window.SV_PROFIL = rec.fields || null;
   window.SV_RECORD_ID = rec.id || null;
+  // Cache wichtige SV-Felder in localStorage für Payload-Zugriff
+  if (window.SV_PROFIL) {
+    try {
+      const f = window.SV_PROFIL;
+      if (f['Email']) localStorage.setItem('prova_sv_email', f['Email']);
+      if (f['Vorname']) localStorage.setItem('prova_sv_vorname', f['Vorname']);
+      if (f['Nachname']) localStorage.setItem('prova_sv_nachname', f['Nachname']);
+      if (f['Zertifizierung']) localStorage.setItem('prova_sv_quali', f['Zertifizierung']);
+      if (f['Firma']) localStorage.setItem('prova_sv_firma', f['Firma']);
+      if (f['Strasse']) localStorage.setItem('prova_sv_strasse', f['Strasse']);
+      if (f['PLZ']) localStorage.setItem('prova_sv_plz', String(f['PLZ']));
+      if (f['Ort']) localStorage.setItem('prova_sv_ort', f['Ort']);
+    } catch(e) {}
+  }
   return window.SV_PROFIL;
 }
 
@@ -1564,17 +1578,82 @@ window.switchAuftraggeberTypPro = function(val) {
   if (input) { input.value = ''; input.placeholder = (val === 'Versicherung') ? 'Versicherung suchen… (z.B. Allianz, AXA)' : 'Name oder Firma eingeben'; }
   if (drop) { drop.innerHTML = ''; drop.style.display = 'none'; }
 };
-window.handleAuftraggeberInputPro = function(val) {
-  var typ = document.getElementById('f-auftraggeber-typ') && document.getElementById('f-auftraggeber-typ').value;
+// Airtable KONTAKTE für Auftraggeber-Dropdown
+var _agKontakteCache = null;
+async function ladeAgKontakte() {
+  if (_agKontakteCache) return _agKontakteCache;
+  try {
+    var res = await fetch('/.netlify/functions/airtable', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({method:'GET', path:'/v0/appJ7bLlAHZoxENWE/tblMKmPLjRelr6Hal?fields[]=Name&fields[]=Firma&fields[]=Typ&fields[]=Email&fields[]=Telefon&fields[]=Ort&maxRecords=200'})
+    });
+    var data = await res.json();
+    _agKontakteCache = (data.records||[]).map(function(r){
+      return {id:r.id, name:r.fields.Name||r.fields.Firma||'', firma:r.fields.Firma||'', typ:r.fields.Typ||'', email:r.fields.Email||'', tel:r.fields.Telefon||'', ort:r.fields.Ort||''};
+    }).filter(function(k){return k.name.trim();});
+    return _agKontakteCache;
+  } catch(e) { return []; }
+}
+
+function fillAuftraggeberFelder(kontakt) {
+  var name = document.getElementById('f-auftraggeber-name');
+  var email = document.getElementById('f-auftraggeber-email');
+  var ansp = document.getElementById('f-ansprechpartner');
+  var typ = document.getElementById('f-auftraggeber-typ');
+  if(name) name.value = kontakt.name;
+  if(email && kontakt.email) email.value = kontakt.email;
+  if(ansp && kontakt.name) ansp.value = kontakt.name;
+  if(typ && kontakt.typ) {
+    var opts = Array.from(typ.options).map(o=>o.value);
+    if(opts.includes(kontakt.typ)) typ.value = kontakt.typ;
+  }
+  var drop = document.getElementById('ag-dropdown');
+  if(drop) drop.style.display='none';
+  showToast('Kontakt geladen ✅', 'success');
+}
+
+window.handleAuftraggeberInputPro = async function(val) {
   var drop = document.getElementById('ag-dropdown');
   if (!drop) return;
-  if (typ !== 'Versicherung' || !val.trim()) { drop.innerHTML = ''; drop.style.display = 'none'; return; }
-  var filtered = VERSICHERUNGEN_PRO.filter(function(v){ return v.toLowerCase().indexOf(val.toLowerCase()) !== -1; });
-  if (!filtered.length) { drop.innerHTML = ''; drop.style.display = 'none'; return; }
-  drop.innerHTML = filtered.slice(0, 20).map(function(v) {
-    var esc = String(v).replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'\\"');
-    return '<div style="padding:9px 14px;cursor:pointer;font-size:.85rem;border-bottom:1px solid #F3F4F6" onmousedown="document.getElementById(\'f-auftraggeber-name\').value=\'' + esc + '\';document.getElementById(\'ag-dropdown\').style.display=\'none\';">' + v + '</div>';
+  if (!val || !val.trim() || val.trim().length < 2) { drop.innerHTML=''; drop.style.display='none'; return; }
+  var q = val.toLowerCase().trim();
+  var results = [];
+
+  // 1. Airtable KONTAKTE durchsuchen
+  var kontakte = await ladeAgKontakte();
+  var atMatches = kontakte.filter(function(k){
+    return k.name.toLowerCase().indexOf(q) !== -1 || (k.firma&&k.firma.toLowerCase().indexOf(q)!==-1);
+  }).slice(0, 8);
+
+  atMatches.forEach(function(k) {
+    results.push({
+      label: k.name + (k.ort ? ' · ' + k.ort : '') + (k.typ ? ' <span style="font-size:10px;color:#6b7280;">['+k.typ+']</span>' : ''),
+      action: function(){fillAuftraggeberFelder(k);}
+    });
+  });
+
+  // 2. Lokale Versicherungsliste als Ergänzung
+  var versMatches = VERSICHERUNGEN_PRO.filter(function(v){
+    return v.toLowerCase().indexOf(q) !== -1 && !atMatches.find(function(k){return k.name===v;});
+  }).slice(0, 8 - results.length);
+
+  versMatches.forEach(function(v) {
+    results.push({
+      label: v + ' <span style="font-size:10px;color:#6b7280;">[Versicherung]</span>',
+      action: function(){
+        var n=document.getElementById('f-auftraggeber-name'); if(n)n.value=v;
+        var t=document.getElementById('f-auftraggeber-typ'); if(t)t.value='Versicherung';
+        drop.style.display='none';
+      }
+    });
+  });
+
+  if (!results.length) { drop.innerHTML=''; drop.style.display='none'; return; }
+
+  drop.innerHTML = results.map(function(r,i){
+    return '<div style="padding:9px 14px;cursor:pointer;font-size:.85rem;border-bottom:1px solid #F3F4F6;transition:background 0.12s;" onmouseover="this.style.background='#F9FAFB'" onmouseout="this.style.background=''" onmousedown="window._agAction' + i + '&&window._agAction' + i + '()">' + r.label + '</div>';
   }).join('');
+  results.forEach(function(r,i){ window['_agAction'+i]=r.action; });
   drop.style.display = 'block';
 };
 window.toggleMesswertePro = function() {
@@ -1733,7 +1812,16 @@ function sammleDatenPro() {
     fotos_anzahl: fotosPayload.length,
     fotos: fotosPayload,
     timestamp: nowIso,
-    gutachten_vorlage_id: getSelectedGutachtenVorlageIdPro()
+    gutachten_vorlage_id: getSelectedGutachtenVorlageIdPro(),
+    // ── PRO-SPEZIFISCHE FELDER ──
+    aktenzeichen: 'PROVA-P-' + new Date().getFullYear() + '-' + String(Math.floor(Math.random()*9000)+1000),
+    normen_kontext: bauNormenKontextPro(document.getElementById('f-schadenart') ? document.getElementById('f-schadenart').value : ''),
+    kosten_kontext: bauKostenKontextPro(document.getElementById('f-schadenart') ? document.getElementById('f-schadenart').value : ''),
+    email_routing: 'pro',
+    sv_email: localStorage.getItem('prova_sv_email') || getSVVal('Email', ''),
+    sv_name: ((localStorage.getItem('prova_sv_vorname')||getSVVal('Vorname','')) + ' ' + (localStorage.getItem('prova_sv_nachname')||getSVVal('Nachname',''))).trim(),
+    sv_quali: localStorage.getItem('prova_sv_quali') || getSVVal('Zertifizierung', ''),
+    paket: 'Pro'
   };
 }
 
@@ -2348,7 +2436,64 @@ function sendEmail() {
   loadDashboardData();
 }
 document.addEventListener('DOMContentLoaded', initProApp);
+
+// ── KONTAKT-PICKER (Pro) ──
+window.oeffneKontaktPickerPro = function() {
+  var popup = window.open('kontakte.html?modus=quickimport&return=app-pro.html', 'PROVA_Kontakte',
+    'width=700,height=650,scrollbars=yes,resizable=yes');
+  window.addEventListener('message', function handler(e) {
+    if (e.data && e.data.type === 'prova_kontakt_selected') {
+      var k = e.data.kontakt;
+      fillAuftraggeberFelder(k);
+      window.removeEventListener('message', handler);
+      if (popup && !popup.closed) popup.close();
+    }
+  });
+};
 </script>
+
+// ── Normen-Kontext Pro ──
+function bauNormenKontextPro(schadenart) {
+  var SA_MAP = {'Wasserschaden':'WS','Schimmelbefall':'SC','Schimmel':'SC','Brandschaden':'BS','Sturmschaden':'SS','Elementarschaden':'ES','Baumängel':'BA','Feuchte':'SC'};
+  var tag = null;
+  for (var k in SA_MAP) { if ((schadenart||'').toLowerCase().indexOf(k.toLowerCase())>=0){tag=SA_MAP[k];break;} }
+  var NORMEN = [
+    {n:'DIN 4108-2',sa:['WS','SC','BA'],gw:'fRsi ≥ 0,70 | Taupunkt 20°C/50%rF ≈ 9,3°C'},
+    {n:'DIN EN ISO 13788',sa:['WS','SC'],gw:'fRsi ≥ 0,70 | Oberflächenfeuchte 80%rF krit.'},
+    {n:'DIN 18533',sa:['WS','SC','BA'],gw:'Lastfall W1-E bis W4-E | Abdichtung 3–8mm'},
+    {n:'DIN 18534',sa:['WS','SC','BA'],gw:'Beanspruchungsklasse A0–A3 Nassraum'},
+    {n:'DIN 18353',sa:['WS','BA'],gw:'CM Zementestrich ≤ 2,0% | Anhydrit ≤ 0,5%'},
+    {n:'DIN 18202',sa:['BA'],gw:'Ebenheit Boden mit Belag: max. 5mm/4m'},
+    {n:'DIN 68800-2',sa:['WS','SC','BA'],gw:'Holzfeuchte Einbau max. 20%'},
+    {n:'DIN 18531',sa:['WS','SS','BA'],gw:'Aufkantung ≥ 150mm | Bitumen 2-lagig ≥ 6mm'},
+    {n:'WTA 2-9-04/D',sa:['WS','SC','BA'],gw:'Sanierputz w ≤ 0,5 kg/(m²·h⁰˙⁵)'},
+    {n:'UBA-Leitfaden',sa:['SC'],gw:'Schimmel >0,5m² = erheblicher Mangel'},
+    {n:'VdS 3151',sa:['WS','SS'],gw:'Holz ≤ 15% | Mauerwerk ≤ 3% Trocknungsziel'},
+    {n:'DIN 4102-4',sa:['BS'],gw:'F30/F60/F90 Feuerwiderstandsklassen'},
+    {n:'VOB/B §13',sa:['BA'],gw:'Gewährleistung Bauwerk 4 Jahre'},
+    {n:'DIN 1946-6',sa:['SC','BA'],gw:'Feuchteschutzlüftung ≥ 0,3-facher Luftwechsel/h'},
+  ];
+  var gef = tag ? NORMEN.filter(function(n){return n.sa.indexOf(tag)>=0;}) : NORMEN.slice(0,8);
+  return gef.slice(0,8).map(function(n){return n.n+': '+n.gw;}).join(' | ');
+}
+
+// ── Kosten-Kontext Pro ──
+function bauKostenKontextPro(schadenart) {
+  var SA_MAP = {'Wasserschaden':'WS','Schimmelbefall':'SC','Schimmel':'SC','Brandschaden':'BS','Sturmschaden':'SS','Elementarschaden':'ES','Baumängel':'BA','Feuchte':'SC'};
+  var tag = null;
+  for (var k in SA_MAP) { if ((schadenart||'').toLowerCase().indexOf(k.toLowerCase())>=0){tag=SA_MAP[k];break;} }
+  var TOP = {
+    WS:[{b:'Trocknungsgerät/Tag',e:'Stk',min:18,m:28,max:42},{b:'Estrich aufbrechen+entsorgen',e:'m²',min:32,m:42,max:58},{b:'Innenputz neu Kalkgips',e:'m²',min:25,m:33,max:48},{b:'Fliesen neu',e:'m²',min:52,m:68,max:95},{b:'Gipskarton nass erneuern',e:'m²',min:52,m:68,max:88},{b:'Wasserleitung Kupfer UP',e:'lfm',min:58,m:72,max:95}],
+    SC:[{b:'Schimmelanalyse Labor',e:'Stk',min:95,m:130,max:180},{b:'Schimmel entfernen',e:'m²',min:175,m:225,max:295},{b:'Sanierputzsystem WTA',e:'m²',min:35,m:43,max:58},{b:'Lüftungsanlage dezentral',e:'Stk',min:580,m:745,max:980}],
+    BS:[{b:'Rußreinigung trocken',e:'m²',min:9,m:13,max:18},{b:'Ozonbehandlung',e:'m³',min:1.5,m:2,max:3},{b:'Brandschutzwand F90',e:'m²',min:95,m:130,max:175}],
+    SS:[{b:'Dachziegel tauschen',e:'Stk',min:18,m:27,max:38},{b:'Dacheindeckung',e:'m²',min:65,m:85,max:115},{b:'Fenster erneuern',e:'m²',min:350,m:435,max:580}],
+    ES:[{b:'Aufräumarbeiten',e:'m²',min:18,m:27,max:38},{b:'Keller auspumpen',e:'h',min:95,m:130,max:175}],
+    BA:[{b:'Rissprotokoll',e:'Psch',min:115,m:145,max:195},{b:'Kellerwandabdichtung',e:'m²',min:52,m:68,max:92},{b:'Balkonabdichtung PMMA',e:'m²',min:38,m:52,max:72}]
+  };
+  var pos = tag ? (TOP[tag]||[]) : [];
+  if (!pos.length) return '';
+  return pos.slice(0,8).map(function(p){return p.b+': Min '+p.min+'/Med '+p.m+'/Max '+p.max+'€/'+p.e;}).join(' | ');
+}
 
 <!-- SUPPORT BUTTON - INTELLIGENT TRIAGE -->
 <div id="support-btn" onclick="openSupportModal()" style="position:fixed;bottom:80px;right:20px;z-index:400;width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#4f8ef7,#3a7be0);box-shadow:0 4px 16px rgba(79,142,247,0.4);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:20px;" title="Support anfragen">&#128172;</div>
@@ -2382,10 +2527,4 @@ function _fFAQ(t){var best=null,bs=0;t=t.toLowerCase();PFAQ.forEach(function(f){
 function openSupportModal(){document.getElementById("support-modal").style.display="flex";}
 function closeSupportModal(){document.getElementById("support-modal").style.display="none";["support-success","support-faq","support-typ-indicator"].forEach(function(id){var e=document.getElementById(id);if(e)e.style.display="none";});var f=document.getElementById("support-form");if(f)f.style.display="block";["sup-betreff","sup-nachricht"].forEach(function(id){var e=document.getElementById(id);if(e)e.value="";});var btn=document.getElementById("sup-send-btn");if(btn){btn.disabled=false;btn.textContent="Anfrage senden";}}
 document.addEventListener("DOMContentLoaded",function(){var m=document.getElementById("support-modal");if(m)m.addEventListener("click",function(e){if(e.target===m)closeSupportModal();});});
-function supportAnalyse(){clearTimeout(_sTimer);_sTimer=setTimeout(function(){var b=document.getElementById("sup-betreff").value.trim(),n=document.getElementById("sup-nachricht").value.trim(),c=b+" "+n;if(c.length<3)return;_sTyp=_kTyp(c);var ind=document.getElementById("support-typ-indicator"),fEl=document.getElementById("support-faq");if(_sTyp==='fehler'){ind.style.cssText="display:block;margin-bottom:14px;padding:8px 12px;border-radius:8px;font-size:12px;font-weight:600;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.25);color:#ef4444";ind.textContent="Fehlermeldung erkannt - wird mit hoher Prioritaet weitergeleitet";fEl.style.display="none";}else if(_sTyp==='billing'){ind.style.cssText="display:block;margin-bottom:14px;padding:8px 12px;border-radius:8px;font-size:12px;font-weight:600;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.25);color:#f59e0b";ind.textContent="Frage zu Abrechnung - wird direkt bearbeitet";fEl.style.display="none";}else{ind.style.display="none";var faq=_fFAQ(c);if(faq){document.getElementById("support-faq-text").textContent=faq.a;fEl.style.display="block";}else fEl.style.display="none";}},600);}
-function supportFaqHilft(){document.getElementById("support-form").style.display="none";document.getElementById("support-faq").style.display="none";document.getElementById("support-success").style.display="block";}
-function supportFaqNichtHilft(){document.getElementById("support-faq").style.display="none";}
-async function sendSupport(){var b=document.getElementById("sup-betreff").value.trim(),n=document.getElementById("sup-nachricht").value.trim(),err=document.getElementById("support-err"),btn=document.getElementById("sup-send-btn");if(!b||!n){err.style.display="block";return;}err.style.display="none";btn.disabled=true;btn.textContent="Wird gesendet...";try{await fetch("https://hook.eu1.make.com/lktuhugwcg5v37ib6bdaxjb1uiplnu8v",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({betreff:b,nachricht:n,typ:_sTyp,prioritaet:_sTyp==='fehler'?'Hoch':_sTyp==='billing'?'Kritisch':'Normal',sv_email:localStorage.getItem("prova_sv_email")||"",paket:localStorage.getItem("prova_paket")||"Pro",seite:window.location.pathname,ts:new Date().toISOString()})});}catch(e){}document.getElementById("support-form").style.display="none";document.getElementById("support-success").style.display="block";}
-</script>
-</body>
-</html>
+function supportAnalyse(){clearTimeout(_sTimer);_sTimer=setTimeout(function(){var b=document.getElementById("sup-betreff").value.trim(),n=document.getElementById("sup-nachricht").value.trim(),c=b+" "+n;if(c.length<3)return;_sTyp=_kTyp(c);var ind=document.getElementById("support-typ-indicator"),fEl=document.getElementById("support-faq");if(_sTyp==='fehler'){ind.style.cssText="display:block;margin-bottom:14px;padding:8px 12px;border-radius:8px;font-size:12px;font-weight:600;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.25);color:#ef4444";ind.textContent="Fehlermeldung erkannt - wird mit hoher Prioritaet weitergeleitet"

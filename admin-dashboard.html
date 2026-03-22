@@ -159,9 +159,21 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14
 
 <!-- Auth Guard -->
 <script>
-if (!sessionStorage.getItem('prova_admin')) {
-  window.location.href = 'admin-login.html';
-}
+(function() {
+  var token = sessionStorage.getItem('prova_admin');
+  if (!token) { window.location.href = 'admin-login.html'; return; }
+  // Token-Expiry: 8 Stunden
+  try {
+    var ts = parseInt(atob(token));
+    if (isNaN(ts) || Date.now() - ts > 8 * 60 * 60 * 1000) {
+      sessionStorage.removeItem('prova_admin');
+      window.location.href = 'admin-login.html';
+    }
+  } catch(e) {
+    sessionStorage.removeItem('prova_admin');
+    window.location.href = 'admin-login.html';
+  }
+})();
 </script>
 
 <!-- TOPBAR -->
