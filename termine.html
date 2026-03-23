@@ -446,7 +446,7 @@ async function ladeTermine(){
     if(!res.ok)throw new Error('HTTP '+res.status);
     var data=await res.json();
     var atTermine=(data.records||[]).map(function(r){
-      return{id:r.id,titel:r.fields.titel||r.fields.termin_titel||'Termin',typ:r.fields.termin_typ||'Sonstiges',datum:r.fields.termin_datum,uhrzeit:r.fields.uhrzeit||'',az:r.fields.aktenzeichen||'',notiz:r.fields.notiz||'',src:'at'};
+      return{id:r.id,titel:r.fields.titel||r.fields.termin_titel||'Termin',typ:r.fields.termin_typ||'Sonstiges',datum:r.fields.termin_datum,uhrzeit:r.fields.uhrzeit||'',az:r.fields.aktenzeichen||'',notiz:r.fields.notiz||'',auftragstyp:r.fields.auftragstyp||'',src:'at'};
     });
     alleTermine=atTermine;
   }catch(e){
@@ -582,6 +582,37 @@ function terminCard(t,statusCls){
   var day=d?d.getDate():'—';
   var mon=d?d.toLocaleString('de-DE',{month:'short'}).replace('.',''):'';
   var typClass='typ-'+(t.typ||'Sonstiges');
+
+  // ── Farbampel für Fristen ──
+  var ampelHtml = '';
+  var isFrist = (t.typ==='Frist'||t.typ==='Abgabe'||t.typ==='Gerichtstermin');
+  if (isFrist && d) {
+    var heute = new Date(); heute.setHours(0,0,0,0);
+    var fristD = new Date(d); fristD.setHours(0,0,0,0);
+    var diffTage = Math.round((fristD - heute) / (1000*60*60*24));
+    var ampelFarbe, ampelText;
+    if (diffTage < 0) {
+      ampelFarbe = '#ef4444'; ampelText = 'Überfällig';
+    } else if (diffTage <= 2) {
+      ampelFarbe = '#ef4444'; ampelText = diffTage === 0 ? 'Heute!' : 'In '+diffTage+' Tag'+(diffTage===1?'':'en');
+    } else if (diffTage <= 7) {
+      ampelFarbe = '#f59e0b'; ampelText = 'In '+diffTage+' Tagen';
+    } else {
+      ampelFarbe = '#10b981'; ampelText = 'In '+diffTage+' Tagen';
+    }
+    ampelHtml = '<span style="display:inline-flex;align-items:center;gap:4px;padding:2px 7px;border-radius:10px;font-size:10px;font-weight:700;background:'+ampelFarbe+'18;color:'+ampelFarbe+';border:1px solid '+ampelFarbe+'33;">'
+      +'<span style="width:6px;height:6px;border-radius:50%;background:'+ampelFarbe+';display:inline-block;"></span>'
+      +esc(ampelText)+'</span>';
+  }
+
+  // ── Auftragstyp-Badge ──
+  var auftragsBadge = '';
+  if (t.auftragstyp) {
+    var icons = { 'Gericht':'⚖️', 'Versicherung':'🏢', 'Privat':'👤' };
+    var icon = icons[t.auftragstyp] || '📋';
+    auftragsBadge = '<span style="font-size:10px;color:var(--text3);">'+icon+' '+esc(t.auftragstyp)+'</span>';
+  }
+
   return '<div class="termin-card '+(statusCls||'')+'" onclick="bearbeiteTermin(\''+t.id+'\')">'
     +'<div class="date-box"><div class="date-day">'+day+'</div><div class="date-mon">'+mon+'</div></div>'
     +'<div class="termin-info">'
@@ -589,6 +620,8 @@ function terminCard(t,statusCls){
     +'<div class="termin-meta">'
     +'<span class="termin-typ '+typClass+'">'+esc(t.typ||'Sonstiges')+'</span>'
     +(t.az?'<span>AZ: '+esc(t.az)+'</span>':'')
+    +(auftragsBadge?auftragsBadge:'')
+    +(ampelHtml?ampelHtml:'')
     +(t.notiz?'<span style="color:var(--text3)">'+esc(t.notiz.slice(0,40))+'</span>':'')
     +'</div>'
     +'</div>'

@@ -329,7 +329,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:1
   <div class="diktat-hinweis">
     <div class="diktat-hinweis-icon">ℹ️</div>
     <div>Beschreiben Sie Ihre <strong>fachliche Einschätzung</strong> — Ursache, Beweislast, Empfehlung.
-    §1–§5 (Sichtbefunde &amp; Messwerte) hat die KI bereits ausformuliert.</div>
+    §1–§5 (Sichtbefunde &amp; Messwerte) hat PROVA bereits ausformuliert.</div>
   </div>
 
   <!-- 2-SPALTEN-LAYOUT -->
@@ -388,14 +388,14 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:1
               <textarea class="sv-textarea" id="svB1"
                 placeholder="z.B. Im Schlafzimmer OG wurde Schimmelbefall ca. 0,5 m² festgestellt…"
                 oninput="onInputB()" rows="3" style="min-height:80px;"></textarea>
-              <div class="char-count bad" id="charB1">0/100</div>
+              <div class="char-count bad" id="charB1">0/250</div>
             </div>
             <div class="feld-block">
               <div class="feld-label"><span class="feld-num">2</span> Was schließen <em>Sie</em> daraus? <small style="color:var(--accent);font-style:normal;">(Ihre Kausalaussage)</small></div>
               <textarea class="sv-textarea" id="svB2"
                 placeholder="z.B. Die Ursache dürfte auf unzureichende Beheizung und Lüftung zurückzuführen sein…"
                 oninput="onInputB()" rows="3" style="min-height:80px;"></textarea>
-              <div class="char-count bad" id="charB2">0/120</div>
+              <div class="char-count bad" id="charB2">0/350</div>
               <div class="kj-check idle" id="kjCheckB">
                 <span>⏳</span><span>Konjunktiv II wird geprüft…</span>
               </div>
@@ -405,7 +405,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:1
               <textarea class="sv-textarea" id="svB3"
                 placeholder="z.B. Es wäre zu empfehlen, die Außenwand thermisch zu sanieren…"
                 oninput="onInputB()" rows="2" style="min-height:70px;"></textarea>
-              <div class="char-count bad" id="charB3">0/80</div>
+              <div class="char-count bad" id="charB3">0/200</div>
             </div>
 
             <!-- KI-Ausformulieren -->
@@ -666,17 +666,17 @@ function onInputB() {
   const b2 = document.getElementById('svB2').value;
   const b1 = document.getElementById('svB1').value;
   const b3 = document.getElementById('svB3').value;
-  document.getElementById('charB1').textContent = b1.length+'/100';
-  document.getElementById('charB1').className = 'char-count '+(b1.length>=100?'ok':b1.length>=50?'warn':'bad');
-  document.getElementById('charB2').textContent = b2.length+'/120';
-  document.getElementById('charB2').className = 'char-count '+(b2.length>=120?'ok':b2.length>=60?'warn':'bad');
-  document.getElementById('charB3').textContent = b3.length+'/80';
-  document.getElementById('charB3').className = 'char-count '+(b3.length>=80?'ok':b3.length>=40?'warn':'bad');
+  document.getElementById('charB1').textContent = b1.length+'/250';
+  document.getElementById('charB1').className = 'char-count '+(b1.length>=250?'ok':b1.length>=125?'warn':'bad');
+  document.getElementById('charB2').textContent = b2.length+'/350';
+  document.getElementById('charB2').className = 'char-count '+(b2.length>=350?'ok':b2.length>=175?'warn':'bad');
+  document.getElementById('charB3').textContent = b3.length+'/200';
+  document.getElementById('charB3').className = 'char-count '+(b3.length>=200?'ok':b3.length>=100?'warn':'bad');
   runKjCheck(b2, 'kjCheckB');
   const total = b1.length+b2.length+b3.length;
   // Ausform-Button zeigen wenn genug Inhalt
   const btn = document.getElementById('btnAusform');
-  if(btn) btn.style.display = (total>=100) ? 'block' : 'none';
+  if(btn) btn.style.display = (total>=200) ? 'block' : 'none';
   checkReady();
 }
 
@@ -726,10 +726,10 @@ async function ladeKiInsp() {
   document.getElementById('kiInspRefresh').style.display = 'none';
   const messwerte = localStorage.getItem('prova_messwerte')||'';
   try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
+    const res = await fetch('/api/ki-proxy', {
       method:'POST', headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
-        model:'claude-sonnet-4-20250514', max_tokens:400,
+        model:'claude-haiku-4-5-20251001', max_tokens:400,
         messages:[{role:'user',content:`§6-Konjunktiv-II-Inspiration für Bausachverständigen-Gutachten.
 Fall: ${sa}${messwerte?'\nMesswerte: '+messwerte:''}
 NUR Konjunktiv II: dürfte, könnte, wäre — VERBOTEN: ist, führt zu, muss.
@@ -762,10 +762,10 @@ async function ausformulieren() {
   const gesamtLen = b1.length+b2.length+b3.length;
   const maxLen = Math.round(gesamtLen*0.7);
   try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
+    const res = await fetch('/api/ki-proxy', {
       method:'POST', headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
-        model:'claude-sonnet-4-20250514', max_tokens:600,
+        model:'claude-haiku-4-5-20251001', max_tokens:600,
         messages:[{role:'user',content:`Formuliere aus diesen SV-Angaben einen §6-Fachurteil-Text.
 REGELN: 1. Output max ${maxLen} Zeichen. 2. NUR SV-Vorgaben — keine neuen Fakten. 3. Konjunktiv II PFLICHT. 4. Indikativ nur für Messwerte/Sichtbefunde.
 SV-Beobachtung: ${b1}

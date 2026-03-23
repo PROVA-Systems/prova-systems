@@ -407,7 +407,54 @@ input,select,textarea{font-size:max(16px,1em);}
               </div>
             </div>
           </div>
-        </div>
+
+          <!-- ─── MESSGERÄTE ─── -->
+          <div class="card">
+            <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;">
+              <div class="card-title">📐 Meine Messgeräte</div>
+              <button onclick="oeffneGeraetModal()" style="padding:5px 12px;background:rgba(79,142,247,.12);border:1px solid rgba(79,142,247,.3);border-radius:6px;color:var(--accent,#4f8ef7);font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">+ Gerät hinzufügen</button>
+            </div>
+            <div class="card-body">
+              <div class="form-hint" style="margin-bottom:12px;">Gespeicherte Geräte stehen in der App als Dropdown zur Auswahl bereit. Kalibrierungsdatum wird automatisch dokumentiert.</div>
+              <div id="geraete-liste" style="display:flex;flex-direction:column;gap:8px;"></div>
+              <div id="geraete-leer" style="font-size:12px;color:var(--text3,#6b7a99);text-align:center;padding:16px 0;">Noch keine Geräte hinterlegt.</div>
+            </div>
+          </div>
+
+          <!-- Gerät Modal -->
+          <div id="geraet-modal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px;">
+            <div style="background:var(--surface,#1c2537);border:1px solid var(--border2,rgba(255,255,255,.12));border-radius:14px;padding:22px;max-width:420px;width:100%;">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+                <div style="font-size:14px;font-weight:700;color:var(--text,#e8eaf0);" id="geraet-modal-titel">Gerät hinzufügen</div>
+                <button onclick="schliesseGeraetModal()" style="background:none;border:none;color:var(--text3,#6b7a99);font-size:18px;cursor:pointer;line-height:1;">×</button>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:10px;">
+                <div>
+                  <label style="font-size:11px;font-weight:600;color:var(--text2,#aab4cb);display:block;margin-bottom:4px;">Hersteller *</label>
+                  <input id="gm-hersteller" type="text" placeholder="z.B. Trotec, Gann, Testo" style="width:100%;padding:9px 12px;background:var(--bg3,#141e2f);border:1.5px solid var(--border2,rgba(255,255,255,.12));border-radius:8px;color:var(--text,#e8eaf0);font-size:13px;font-family:inherit;outline:none;">
+                </div>
+                <div>
+                  <label style="font-size:11px;font-weight:600;color:var(--text2,#aab4cb);display:block;margin-bottom:4px;">Modell *</label>
+                  <input id="gm-modell" type="text" placeholder="z.B. T660, H 42, 435" style="width:100%;padding:9px 12px;background:var(--bg3,#141e2f);border:1.5px solid var(--border2,rgba(255,255,255,.12));border-radius:8px;color:var(--text,#e8eaf0);font-size:13px;font-family:inherit;outline:none;">
+                </div>
+                <div>
+                  <label style="font-size:11px;font-weight:600;color:var(--text2,#aab4cb);display:block;margin-bottom:4px;">Seriennummer</label>
+                  <input id="gm-seriennr" type="text" placeholder="z.B. SN-2024-00123" style="width:100%;padding:9px 12px;background:var(--bg3,#141e2f);border:1.5px solid var(--border2,rgba(255,255,255,.12));border-radius:8px;color:var(--text,#e8eaf0);font-size:13px;font-family:inherit;outline:none;">
+                </div>
+                <div>
+                  <label style="font-size:11px;font-weight:600;color:var(--text2,#aab4cb);display:block;margin-bottom:4px;">Letztes Kalibrierdatum *</label>
+                  <input id="gm-kalibrierung" type="date" style="width:100%;padding:9px 12px;background:var(--bg3,#141e2f);border:1.5px solid var(--border2,rgba(255,255,255,.12));border-radius:8px;color:var(--text,#e8eaf0);font-size:13px;font-family:inherit;outline:none;">
+                </div>
+              </div>
+              <input type="hidden" id="gm-edit-id">
+              <div style="display:flex;gap:10px;margin-top:18px;">
+                <button onclick="speichereGeraet()" style="flex:1;padding:10px;background:linear-gradient(135deg,#4f8ef7,#3a7be0);border:none;border-radius:8px;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">Speichern</button>
+                <button onclick="schliesseGeraetModal()" style="padding:10px 16px;background:transparent;border:1px solid var(--border2,rgba(255,255,255,.12));border-radius:8px;color:var(--text3,#6b7a99);font-size:13px;cursor:pointer;font-family:inherit;">Abbrechen</button>
+              </div>
+            </div>
+          </div>
+
+        </div><!-- /sec-arbeitsweise -->
 
         <!-- ─── BENACHRICHTIGUNGEN ─── -->
         <div class="sec" id="sec-benachrichtigungen">
@@ -731,7 +778,7 @@ input,select,textarea{font-size:max(16px,1em);}
 <!-- Toast -->
 <div class="toast-prova" id="einst-toast"></div>
 
-</script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+</script><script>
 (function(){
 'use strict';
 
@@ -922,6 +969,134 @@ window.speichereArbeitsweise = function(){
   if(kj2)localStorage.setItem('prova_kj2_auto',kj2.checked?'1':'0');
   zeigToast('Einstellungen gespeichert ✅');
 };
+
+/* ══════════════════════════════════════
+   MESSGERÄTE-VERWALTUNG
+══════════════════════════════════════ */
+var _geraetEditId = null;
+
+function ladeGeraete() {
+  return JSON.parse(localStorage.getItem('prova_messgeraete') || '[]');
+}
+
+function speichereGeraeteListe(liste) {
+  localStorage.setItem('prova_messgeraete', JSON.stringify(liste));
+}
+
+function renderGeraeteListe() {
+  var liste = ladeGeraete();
+  var el = document.getElementById('geraete-liste');
+  var leer = document.getElementById('geraete-leer');
+  if (!el) return;
+  if (!liste.length) {
+    el.innerHTML = '';
+    if (leer) leer.style.display = 'block';
+    return;
+  }
+  if (leer) leer.style.display = 'none';
+  var heute = new Date(); heute.setHours(0,0,0,0);
+  el.innerHTML = liste.map(function(g) {
+    var ampel = '';
+    var ampelText = '';
+    if (g.kalibrierung) {
+      var kalDat = new Date(g.kalibrierung);
+      var monate = (heute - kalDat) / (1000 * 60 * 60 * 24 * 30);
+      if (monate > 24) {
+        ampel = '#ef4444';
+        ampelText = '&#9679; Kalibrierung >' + Math.round(monate) + ' Mo. &mdash; dringend erneuern';
+      } else if (monate > 12) {
+        ampel = '#f59e0b';
+        ampelText = '&#9679; Kalibrierung ' + Math.round(monate) + ' Mo. alt &mdash; prüfen';
+      } else {
+        ampel = '#10b981';
+        ampelText = '&#9679; Kalibrierung aktuell';
+      }
+    }
+    var kalDE = g.kalibrierung ? new Date(g.kalibrierung).toLocaleDateString('de-DE', {day:'2-digit',month:'2-digit',year:'numeric'}) : '—';
+    return '<div style="background:var(--bg3,#141e2f);border:1px solid var(--border,rgba(255,255,255,.07));border-radius:8px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px;">'
+      + '<div style="flex:1;min-width:0;">'
+      + '<div style="font-size:13px;font-weight:600;color:var(--text,#e8eaf0);">' + escG(g.hersteller) + ' ' + escG(g.modell) + '</div>'
+      + '<div style="font-size:11px;color:var(--text3,#6b7a99);margin-top:2px;">'
+      + (g.seriennr ? 'S/N: ' + escG(g.seriennr) + ' &nbsp;·&nbsp; ' : '')
+      + 'Kalibriert: ' + kalDE
+      + '</div>'
+      + (ampelText ? '<div style="font-size:10px;color:' + ampel + ';margin-top:3px;">' + ampelText + '</div>' : '')
+      + '</div>'
+      + '<div style="display:flex;gap:6px;flex-shrink:0;">'
+      + '<button onclick="bearbeiteGeraet(\'' + g.id + '\')" style="padding:4px 10px;background:rgba(79,142,247,.1);border:1px solid rgba(79,142,247,.25);border-radius:6px;color:var(--accent,#4f8ef7);font-size:11px;cursor:pointer;font-family:inherit;">Bearbeiten</button>'
+      + '<button onclick="loescheGeraet(\'' + g.id + '\')" style="padding:4px 10px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);border-radius:6px;color:#ef4444;font-size:11px;cursor:pointer;font-family:inherit;">Löschen</button>'
+      + '</div>'
+      + '</div>';
+  }).join('');
+}
+
+function escG(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+window.oeffneGeraetModal = function(id) {
+  _geraetEditId = id || null;
+  var modal = document.getElementById('geraet-modal');
+  var titel = document.getElementById('geraet-modal-titel');
+  if (!modal) return;
+  document.getElementById('gm-hersteller').value = '';
+  document.getElementById('gm-modell').value = '';
+  document.getElementById('gm-seriennr').value = '';
+  document.getElementById('gm-kalibrierung').value = '';
+  if (id) {
+    var g = ladeGeraete().find(function(x){return x.id===id;});
+    if (g) {
+      document.getElementById('gm-hersteller').value = g.hersteller || '';
+      document.getElementById('gm-modell').value = g.modell || '';
+      document.getElementById('gm-seriennr').value = g.seriennr || '';
+      document.getElementById('gm-kalibrierung').value = g.kalibrierung || '';
+    }
+    if (titel) titel.textContent = 'Gerät bearbeiten';
+  } else {
+    if (titel) titel.textContent = 'Gerät hinzufügen';
+  }
+  modal.style.display = 'flex';
+};
+
+window.schliesseGeraetModal = function() {
+  var modal = document.getElementById('geraet-modal');
+  if (modal) modal.style.display = 'none';
+  _geraetEditId = null;
+};
+
+window.bearbeiteGeraet = function(id) { oeffneGeraetModal(id); };
+
+window.speichereGeraet = function() {
+  var h = (document.getElementById('gm-hersteller').value || '').trim();
+  var m = (document.getElementById('gm-modell').value || '').trim();
+  var s = (document.getElementById('gm-seriennr').value || '').trim();
+  var k = (document.getElementById('gm-kalibrierung').value || '').trim();
+  if (!h || !m || !k) { zeigToast('Hersteller, Modell und Kalibrierdatum sind Pflichtfelder.'); return; }
+  var liste = ladeGeraete();
+  if (_geraetEditId) {
+    var idx = liste.findIndex(function(x){return x.id===_geraetEditId;});
+    if (idx >= 0) liste[idx] = { id: _geraetEditId, hersteller: h, modell: m, seriennr: s, kalibrierung: k };
+  } else {
+    liste.push({ id: 'g' + Date.now(), hersteller: h, modell: m, seriennr: s, kalibrierung: k });
+  }
+  speichereGeraeteListe(liste);
+  renderGeraeteListe();
+  schliesseGeraetModal();
+  zeigToast('Gerät gespeichert ✅');
+};
+
+window.loescheGeraet = function(id) {
+  if (!confirm('Gerät löschen?')) return;
+  var liste = ladeGeraete().filter(function(x){return x.id!==id;});
+  speichereGeraeteListe(liste);
+  renderGeraeteListe();
+  zeigToast('Gerät gelöscht');
+};
+
+// Beim Laden rendern
+(function() {
+  setTimeout(renderGeraeteListe, 300);
+})();
 
 /* ── ARBEITSTAGE TOGGLE ── */
 document.querySelectorAll('.day-btn').forEach(function(btn){
