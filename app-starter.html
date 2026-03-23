@@ -2,6 +2,13 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8">
+    <link rel="manifest" href="/manifest.json">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="PROVA">
+  <meta name="theme-color" content="#111827">
+  <link rel="apple-touch-icon" href="/icons/icon-192.png">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>PROVA App – Starter</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -215,7 +222,7 @@ input,select,textarea{font-size:max(16px,1em);}
 .upload-zone small{font-size:.75rem;color:var(--gray-400);}
 
 /* KI ANALYSIS */
-.ki-analysis-card{background:var(--white);border-radius:var(--radius-xl);box-shadow:var(--shadow-md);border:1px solid var(--gray-100);padding:2rem;max-width:640px;}
+.ki-analysis-card{background:var(--white);border-radius:var(--radius-xl);box-shadow:var(--shadow-md);border:1px solid var(--gray-100);padding:2rem;max-width:720px;width:100%;}
 .ki-header{display:flex;align-items:center;gap:1rem;margin-bottom:1.5rem;}
 .ki-spinner{width:48px;height:48px;border-radius:50%;border:3px solid var(--gray-200);border-top-color:var(--accent);animation:spin 1s linear infinite;flex-shrink:0;}
 @keyframes spin{to{transform:rotate(360deg);}}
@@ -528,8 +535,18 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape')closeDrawer(
                     </div>
                   </div>
                 </div>
+                <div id="whisper-badge" style="display:none;align-items:center;gap:8px;
+                  padding:8px 12px;margin-top:8px;
+                  background:rgba(79,142,247,.08);border:1px solid rgba(79,142,247,.2);
+                  border-radius:8px;font-size:12px;color:#aab4cb;font-weight:500;">
+                  <span style="color:#4f8ef7;">🔄</span>
+                  <span>KI verfeinert Transkription…</span>
+                </div>
                 <div id="eingabe-panel" role="tabpanel" aria-labelledby="tab-eingabe" style="display:none">
-                  <textarea id="transcriptManuell" class="form-input" placeholder="Befund hier eintippen…" style="width:100%;min-height:140px;resize:vertical;font-family:inherit;padding:.75rem" oninput="syncManuellToTranscript()"></textarea>
+                  <div style="font-size:11px;color:var(--gray-400,#9CA3AF);margin-bottom:8px;line-height:1.5;">
+                  ℹ️ Beschreiben Sie was Sie <strong>sehen und messen</strong>. Ihr <strong>Fachurteil (§6)</strong> tragen Sie nach der KI-Analyse separat ein.
+                </div>
+                <textarea id="transcriptManuell" class="form-input" placeholder="Befund hier eintippen…" style="width:100%;min-height:140px;resize:vertical;font-family:inherit;padding:.75rem" oninput="syncManuellToTranscript()"></textarea>
                 </div>
                 <div style="margin-top:1rem">
                   <div style="font-size:.75rem;font-weight:600;color:var(--gray-500);margin-bottom:.35rem">Live-Transkription</div>
@@ -646,6 +663,21 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape')closeDrawer(
                   <span>Fotos hochladen oder hierher ziehen</span>
                   <small>JPG, PNG · max. 20 Fotos</small>
                   <input type="file" id="fotoInput" multiple accept="image/*" style="position:absolute;inset:0;opacity:0;cursor:pointer">
+                  <input type="file" id="fotoKameraInput" multiple accept="image/*" capture="environment" style="display:none">
+                </div>
+                <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">
+                  <button type="button" onclick="document.getElementById('fotoKameraInput').click()"
+                    style="display:flex;align-items:center;gap:6px;padding:8px 16px;
+                    background:linear-gradient(135deg,#4f8ef7,#3a7be0);border:none;border-radius:8px;
+                    color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;">
+                    📷 Kamera öffnen
+                  </button>
+                  <button type="button" onclick="document.getElementById('fotoInput').click()"
+                    style="display:flex;align-items:center;gap:6px;padding:8px 16px;
+                    background:var(--white,#fff);border:1.5px solid var(--gray-300,#D1D5DB);border-radius:8px;
+                    color:var(--navy,#1E3A5F);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;">
+                    🖼️ Aus Galerie
+                  </button>
                 </div>
                 <div id="uploadStatus" class="upload-status" style="display:none;margin-top:.5rem;font-size:.8rem;color:var(--gray-500);align-items:center;gap:.5rem"><span>⏳</span><span id="uploadStatusText">Wird optimiert…</span></div>
                 <div id="fotoGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:.5rem;margin-top:.75rem"></div>
@@ -1391,6 +1423,10 @@ on(document.getElementById('fotoInput'), 'change', e => {
   verarbeiteFotos(Array.from(e.target.files));
   e.target.value = '';
 });
+on(document.getElementById('fotoKameraInput'), 'change', e => {
+  verarbeiteFotos(Array.from(e.target.files));
+  e.target.value = '';
+});
 
 async function komprimiereBild(file, maxW = 1920, maxH = 1920, qual = 0.82) {
   return new Promise(resolve => {
@@ -1532,13 +1568,22 @@ window.toggleRecord = async function() {
 };
 
 async function starteAufnahme() {
+  // Consent-Check beim ersten Mal
+  if(!whisperConsentOk()) {
+    zeigeWhisperConsent(function() { starteAufnahme(); });
+    return;
+  }
+  var aufnahmeStream = null;
   try {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    stream.getTracks().forEach(t => t.stop());
+    aufnahmeStream = await navigator.mediaDevices.getUserMedia({ audio: true });
   } catch(err) {
     showToast('Bitte Mikrofon-Zugriff erlauben.', 'error');
     return;
   }
+  // MediaRecorder parallel starten (für Whisper)
+  starteMediaRecorder(aufnahmeStream);
+  starteAufnahmeLimit();
+  // SpeechRecognition braucht eigenen Stream (Browser-intern)
   isRecording = true; recSecs = 0;
   const btn = $('#recBtn'), lbl = $('#recLabel'), status = $('#recStatus');
   btn.classList.add('recording'); lbl.textContent = 'Stopp'; status.textContent = 'Aufnahme läuft…';
@@ -1591,12 +1636,17 @@ async function starteAufnahme() {
 }
 
 function stoppeAufnahme() {
-  isRecording = false; clearInterval(recTimer);
+  isRecording = false; clearInterval(recTimer); clearTimeout(recLimitTimer);
   const btn = $('#recBtn'), lbl = $('#recLabel'), status = $('#recStatus');
   btn.classList.remove('recording'); lbl.textContent = 'Start'; status.textContent = 'Bereit';
   var iconPlay = document.getElementById('recIconPlay'); var iconStop = document.getElementById('recIconStop');
   if (iconPlay) iconPlay.style.display = ''; if (iconStop) iconStop.style.display = 'none';
   if (recognition) { try { recognition.stop(); } catch(err) {} recognition = null; }
+  // MediaRecorder stoppen → Whisper-Korrektur startet
+  if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+    try { mediaRecorder.stop(); } catch(e) {}
+  }
+  mediaRecorder = null;
 }
 
 /* ============================================================
@@ -2267,8 +2317,8 @@ PROVA.requirePaket = function(feature, minPaket) {
 function goToGate() {
   var az = localStorage.getItem('prova_letztes_az') || '';
   window.location.href = az
-    ? 'stellungnahme-gate.html?az=' + encodeURIComponent(az)
-    : 'stellungnahme-gate.html';
+    ? 'stellungnahme.html?az=' + encodeURIComponent(az)
+    : 'stellungnahme.html';
 }
 </script>
 
@@ -2660,6 +2710,429 @@ function oeffneKontaktPicker() {
     }
   });
 }
+
+/* ── NORMEN AUTO-VORSCHLAG ── */
+var NORMEN_DB=[
+  {n:"DIN 4108-2",t:"Wärmeschutz und Energie-Einsparung in Gebäuden – Mindestanforderungen",k:["mindestanforderungen", "energie-einsparung", "wärmeschutz", "gebäuden"],g:"Mindestoberflächentemperaturfaktor fRsi ≥ 0,70 bei Wohngebäu"},
+  {n:"DIN 4108-3",t:"Wärmeschutz und Energie-Einsparung – Klimabedingter Feuchteschutz",k:["feuchteschutz", "energie-einsparung", "klimabedingter", "wärmeschutz"],g:"Tauwassermenge an Dampfsperre max. 1,0 kg/m² je Tauperiode |"},
+  {n:"DIN 4108-7",t:"Wärmeschutz – Luftdichtheit von Gebäuden",k:["luftdichtheit", "wärmeschutz", "gebäuden"],g:"n50-Wert ≤ 3,0 h⁻¹ ohne RLT | n50-Wert ≤ 1,5 h⁻¹ mit RLT nac"},
+  {n:"DIN EN ISO 13788",t:"Wärme- und feuchtetechnisches Verhalten von Bauteilen – Raumseitige Oberflächent",k:["wärme-", "raumseitige", "bauteilen", "feuchtetechnisches", "oberflächentemperatur", "verhalten"],g:"fRsi ≥ 0,70 für normales Wohnklima (20°C/50% rF) | Kritische"},
+  {n:"DIN EN 13187",t:"Wärmetechnisches Verhalten von Gebäuden – Nachweis von Wärmebrücken (Thermografi",k:["gebäuden", "wärmetechnisches", "(thermografie)", "wärmebrücken", "nachweis", "verhalten"],g:"Mindest-Temperaturdifferenz innen/außen ΔT ≥ 10 K für verwer"},
+  {n:"DIN 18533",t:"Abdichtung von erdberührten Bauteilen",k:["bauteilen", "erdberührten", "abdichtung"],g:"Lastfall W1-E (Bodenfeuchte) bis W4-E (aufstauendes Sickerwa"},
+  {n:"DIN 18534",t:"Abdichtung von Innenräumen",k:["innenräumen", "abdichtung"],g:"Beanspruchungsklasse A0 (gelegentlich nass) bis A3 (häufig n"},
+  {n:"DIN 18531",t:"Abdichtung von Dächern und anderen Flächen",k:["dächern", "flächen", "anderen", "abdichtung"],g:"Mindest-Abdichtungsdicke Bitumenbahnen 2-lagig ≥ 6 mm | Foli"},
+  {n:"DIN 18550",t:"Planung, Zubereitung und Ausführung von Innen- und Außenputzsystemen",k:["innen-", "außenputzsystemen", "ausführung", "zubereitung", "planung"],g:"Mindestdicke Unterputz 10 mm | Mindestdicke Außenputz 15 mm "},
+  {n:"DIN 18353",t:"Estricharbeiten (VOB Teil C)",k:["estricharbeiten"],g:"Belegreife Zementestrich CM-Wert ≤ 2,0 % | Anhydritestrich ≤"},
+  {n:"DIN 18202",t:"Toleranzen im Hochbau",k:["hochbau", "toleranzen"],g:"Ebenheitstoleranz Fußboden mit Bodenbelag: max. 5 mm bei 4 m"},
+  {n:"DIN 68800-1",t:"Holzschutz – Teil 1: Allgemeines",k:["holzschutz", "allgemeines"],g:"Gebrauchsklasse GK 0 (kein Kontakt mit Feuchte) bis GK 5 (st"},
+  {n:"DIN 68800-2",t:"Holzschutz – Teil 2: Vorbeugende bauliche Maßnahmen",k:["vorbeugende", "bauliche", "holzschutz", "maßnahmen"],g:"Holzfeuchte bei Einbau max. 20 % | Dauerfeuchte im Einbauzus"},
+  {n:"DIN 68800-4",t:"Holzschutz – Teil 4: Bekämpfende Maßnahmen",k:["maßnahmen", "holzschutz", "bekämpfende"],g:"Erkennbarer Schimmelpilzbefall an Holz ist ab Befall sanieru"},
+  {n:"DIN 18338",t:"Dachdeckungsarbeiten (VOB Teil C)",k:["dachdeckungsarbeiten"],g:"Mindestdachneigung Tonziegel ab 22° | Betondachstein ab 15° "},
+  {n:"DIN 18460",t:"Dachentwässerungsarbeiten (VOB Teil C)",k:["dachentwässerungsarbeiten"],g:"Rinnengefälle mindestens 3 mm/m (0,3%) | Niederschlagsintens"},
+  {n:"DIN 1946-6",t:"Raumlufttechnik – Lüftung von Wohnungen",k:["lüftung", "wohnungen", "raumlufttechnik"],g:"Lüftungsstufe 1 (Feuchteschutz) bis Lüftungsstufe 4 (Intensi"},
+  {n:"DIN 4109",t:"Schallschutz im Hochbau",k:["schallschutz", "hochbau"],g:"Mindest-Luft-Schalldämmmaß R'w ≥ 53 dB zwischen Wohnungen | "},
+  {n:"DIN EN ISO 140",t:"Schallschutzmessungen im Gebäude",k:["schallschutzmessungen", "gebäude"],g:"Messunsicherheit Feld ca. ±2 dB | mindestens 5 Frequenzbände"},
+  {n:"DIN VDE 0100",t:"Errichten von Niederspannungsanlagen",k:["errichten", "niederspannungsanlagen"],g:"Isolationswiderstand ≥ 1 MΩ bei 500V Prüfspannung | RCCB-Aus"},
+  {n:"DIN EN 14604",t:"Rauchwarnmelder",k:["rauchwarnmelder"],g:"Rauchwarnmelder müssen DIN EN 14604 entsprechen | Standzeit "},
+  {n:"DIN 4102-4",t:"Brandverhalten von Baustoffen – Teil 4: Klassifizierung",k:["klassifizierung", "baustoffen", "brandverhalten"],g:"Baustoffklasse A1/A2 (nicht brennbar) bis B3 (leicht entflam"},
+  {n:"DIN EN 13501-1",t:"Klassifizierung von Bauprodukten und Bauarten – Brandverhalten",k:["bauarten", "bauprodukten", "klassifizierung", "brandverhalten"],g:"Euroklasse A1/A2 (nichtbrennbar) bis F (brennbar) | s1 (kein"},
+  {n:"DIN 14675",t:"Brandmeldeanlagen – Planung und Einbau",k:["einbau", "brandmeldeanlagen", "planung"],g:"BMA muss nach DIN 14675 geplant und von anerkanntem Errichte"},
+  {n:"WTA 2-9-04/D",t:"Sanierputzsysteme (WTA-Merkblatt)",k:["sanierputzsysteme", "(wta-merkblatt)"],g:"Wasseraufnahme Sanierputz w ≤ 0,5 kg/(m²·h⁰˙⁵) | Wasserdampf"},
+  {n:"WTA 6-3-05/D",t:"Wärmebrücken – Planung und Bewertung",k:["bewertung", "wärmebrücken", "planung"],g:"Temperaturfaktor fRsi ≥ 0,70 für Wohnbedingungen Normklima |"},
+  {n:"UBA-Leitfaden",t:"Schimmelpilze in Innenräumen (Umweltbundesamt Leitfaden)",k:["leitfaden)", "(umweltbundesamt", "schimmelpilze", "innenräumen"],g:"Schimmelbefall >0,5 m² in Wohnräumen gilt als erheblicher Ma"},
+  {n:"VDI 6022",t:"Raumlufttechnik – Hygieneanforderungen",k:["hygieneanforderungen", "raumlufttechnik"],g:"Lüftungsanlage nach >2 Jahren ohne Reinigung gilt als hygien"},
+  {n:"DIN ISO 16000-1",t:"Innenraumluftverunreinigungen – Probenahmestrategie",k:["innenraumluftverunreinigungen", "probenahmestrategie"],g:"Mindestprobenahmezeitraum 8 h für integrierende Probenahme |"},
+  {n:"DIN ISO 16000-17",t:"Innenraumluft – Nachweis und Zählung von Schimmelpilzen",k:["schimmelpilzen", "innenraumluft", "nachweis", "zählung"],g:"Keine gesetzlichen Grenzwerte | Orientierungswerte: Belastun"},
+  {n:"DIN EN ISO 12572",t:"Wärme- und feuchtetechnisches Verhalten von Baustoffen – Bestimmung der Wasserda",k:["bestimmung", "wärme-", "wasserdampfdurchlässigkeit", "baustoffen", "feuchtetechnisches", "verhalten"],g:"µ-Wert Mineralwolle ca. 1 | Holz 40-200 | PE-Folie >100.000 "},
+  {n:"DIN EN ISO 6946",t:"Bauteile – Wärmedurchlasswiderstand und Wärmedurchgangskoeffizient",k:["wärmedurchgangskoeffizient", "wärmedurchlasswiderstand", "bauteile"],g:"U-Wert Außenwand Neubau nach GEG max. 0,24 W/(m²K) | Fenster"},
+  {n:"GEG 2024",t:"Gebäudeenergiegesetz",k:["gebäudeenergiegesetz"],g:"U-Wert Außenwand ≤ 0,24 W/(m²K) | Dach ≤ 0,20 | Kellerdecke "},
+  {n:"DIN 1053-1",t:"Mauerwerk – Berechnung und Ausführung",k:["mauerwerk", "ausführung", "berechnung"],g:"Druckfestigkeit Mauerstein MZ je nach Klasse | Mindestwanddi"},
+  {n:"DIN EN 1992-1-1",t:"Eurocode 2 – Bemessung von Stahlbetontragwerken",k:["stahlbetontragwerken", "bemessung", "eurocode"],g:"Betondeckung Mindestmaß cmin nach Expositionsklasse | XC1 (t"},
+  {n:"DIN EN ISO 14688",t:"Benennung und Beschreibung von Boden",k:["boden", "beschreibung", "benennung"],g:"Bodenklassifikation nach Korngröße | Schotterböden >63mm | K"},
+  {n:"DIN 4095",t:"Dränung zum Schutz baulicher Anlagen",k:["dränung", "schutz", "baulicher", "anlagen"],g:"Filterkies Permeabilität k ≥ 1×10⁻⁴ m/s | Drainageleitung Ge"},
+  {n:"DIN 18157",t:"Ausführung von Fliesenarbeiten (VOB Teil C)",k:["ausführung", "fliesenarbeiten"],g:"Zugfestigkeit Untergrund ≥ 1,0 N/mm² | Restfeuchte Zementest"},
+  {n:"DIN EN 13813",t:"Estrichmörtel, Estrichmassen und Estriche",k:["estriche", "estrichmörtel", "estrichmassen"],g:"Druckfestigkeit CT C25 ≥ 25 N/mm² | Biegezugfestigkeit F4 ≥ "},
+  {n:"DIN 18180",t:"Gipskartonplatten – Arten und Anforderungen",k:["arten", "gipskartonplatten", "anforderungen"],g:"GKF (feuchtbeständig) für Nassräume | GKB (Standard) nur in "},
+  {n:"VOB/B §13",t:"Mängelansprüche",k:["mängelansprüche"],g:"Gewährleistung Bauwerk 4 Jahre | bewegliche Sachen 2 Jahre |"},
+  {n:"VOB/B §4",t:"Ausführung von Bauleistungen",k:["ausführung", "bauleistungen"],g:"Prüf- und Hinweispflicht vor Ausführung | bei fehlender Anze"},
+  {n:"VOB/B §17",t:"Sicherheitsleistung",k:["sicherheitsleistung"],g:"Höhe Sicherheitsleistung max. 10% der Auftragssumme | Bürgsc"},
+  {n:"ZPO §404",t:"Auswahl des Sachverständigen",k:["sachverständigen", "auswahl"],g:"SV muss für das Fachgebiet öffentlich bestellt oder besonder"},
+  {n:"ZPO §407a",t:"Pflichten des Sachverständigen",k:["pflichten", "sachverständigen"],g:"Persönliche Erstattung | keine Delegation | unverzügliche An"},
+  {n:"ZPO §411",t:"Schriftliches Gutachten",k:["schriftliches", "gutachten"],g:"Begründungspflicht | Tatsachengrundlage benennen | Schlussfo"},
+  {n:"DIN 18195",t:"Bauwerksabdichtungen (Bestandsbau-Referenz, ersetzt durch DIN 18531-18535)",k:["(bestandsbau-referenz", "ersetzt", "durch", "18531-18535)", "bauwerksabdichtungen"],g:"Dickschicht bituminös min. 4 mm | Dünnschicht 2-lagig | Druc"},
+  {n:"DIN 55699",t:"WDVS – Wärmedämm-Verbundsysteme",k:["wärmedämm-verbundsysteme"],g:"Haftfestigkeit Dämmplatte am Untergrund ≥ 0,25 N/mm² | Dübel"},
+  {n:"ZVDH Fachregeln",t:"Fachregeln für Dachdeckungen – Zentralverband des Deutschen Dachdeckerhandwerks",k:["fachregeln", "dachdeckerhandwerks", "zentralverband", "deutschen", "dachdeckungen"],g:"Mindestüberdeckung Dachziegel nach Dachneigung und Windlastz"},
+  {n:"ZVDH Flachdach-Richtlinie",t:"Flachdachrichtlinie des ZVDH",k:["flachdachrichtlinie"],g:"Mindestneigung Flachdach 2% (1,15°) | Mindestaufkantung Dach"},
+  {n:"DIN 18330",t:"Mauerarbeiten (VOB Teil C)",k:["mauerarbeiten"],g:"Mindestmörteldicke Lagerfuge 10-15 mm | Stoßfugen vermörtelt"},
+  {n:"DIN 18300",t:"Erdarbeiten (VOB Teil C)",k:["erdarbeiten"],g:"Bodenverdichtungsgrad Dpr ≥ 97% (Straße) bzw. 95% (Grundstüc"},
+  {n:"DIN EN ISO 4628",t:"Beschichtungen – Beurteilung von Beschichtungsschäden",k:["beschichtungsschäden", "beurteilung", "beschichtungen"],g:"Rostgrad Ri 0 (kein Rost) bis Ri 5 (sehr starker Rost) | Bla"},
+  {n:"DIN 18363",t:"Malerarbeiten (VOB Teil C)",k:["malerarbeiten"],g:"Untergrundfeuchte max. 3 CM% für Anstriche | Haftzugfestigke"},
+  {n:"DIN 18365",t:"Bodenbelagarbeiten (VOB Teil C)",k:["bodenbelagarbeiten"],g:"CM-Wert Zementestrich ≤ 2,0% | Anhydrit ≤ 0,5% | Ebenheitsab"},
+  {n:"DIN 18560",t:"Estriche im Bauwesen",k:["estriche", "bauwesen"],g:"Mindestdicke schwimmender Estrich auf EPS 20mm: 45mm (Zement"},
+  {n:"DIN EN 1329",t:"Kunststoff-Rohrleitungssysteme für Ablaufinstallationen",k:["kunststoff-rohrleitungssysteme", "ablaufinstallationen"],g:"Wanddicke nach Druckklasse | Dichtheitsprüfung mit Wasser od"},
+  {n:"DIN EN 1057",t:"Kupfer und Kupferlegierungen – Kupferrohre",k:["kupferrohre", "kupfer", "kupferlegierungen"],g:"Mindestwanddicke je Außendurchmesser | Druckprüfung 1,5-fach"},
+  {n:"DIN 18540",t:"Abdichten von Außenwandfugen",k:["abdichten", "außenwandfugen"],g:"Fugentiefe/Fugenbreite = 1:1 | Mindestfugenbreite 10 mm | Di"},
+  {n:"DIN EN 806",t:"Trinkwasserinstallationen in Gebäuden",k:["trinkwasserinstallationen", "gebäuden"],g:"Fließdruck mind. 1 bar an jeder Entnahmestelle | Druckprüfun"},
+  {n:"DIN EN 1264",t:"Fußboden-Heizung und -Kühlung",k:["-kühlung", "fußboden-heizung"],g:"Betriebsdruck Fußbodenheizung 0,5-0,6 MPa | Druckprüfung 1,3"},
+  {n:"AVV",t:"Abfallverzeichnis-Verordnung (Entsorgungsnachweis)",k:["(entsorgungsnachweis)", "abfallverzeichnis-verordnung"],g:"Asbest-Abfall (17 06 01*) gefährlicher Abfall | teerhaltiger"},
+  {n:"DIN EN ISO 16000-6",t:"Innenraumluftverunreinigungen – VOC-Messung",k:["innenraumluftverunreinigungen", "voc-messung"],g:"Summe VOC (TVOC) Richtwert II (Sanierungsbedarf) = 10 mg/m³ "},
+  {n:"DIN EN 13564",t:"Rückstauverschlüsse",k:["rückstauverschlüsse"],g:"Rückstauebene = Straßenoberkante | unterhalb: Rückstauschutz"},
+  {n:"DIN EN 12056",t:"Schwerkraftentwässerungsanlagen innerhalb von Gebäuden",k:["schwerkraftentwässerungsanlagen", "innerhalb", "gebäuden"],g:"Dimensionierung nach Bemessungsdurchfluss | Gefälle Leitunge"},
+  {n:"DIN 18461",t:"Klempnerarbeiten (VOB Teil C)",k:["klempnerarbeiten"],g:"Blechdicke Zink mind. 0,8 mm | Kupfer 0,6 mm | Anschlusshöhe"},
+  {n:"DIN 4102-1",t:"Brandverhalten von Baustoffen – Baustoffklassen",k:["baustoffklassen", "baustoffen", "brandverhalten"],g:"A1 nichtbrennbar (Beton, Ziegel) | B1 schwer entflammbar | B"},
+  {n:"VdS 3151",t:"Leitfaden zur Schadensanierung nach Wasser- und Sturmschäden",k:["schadensanierung", "wasser-", "leitfaden", "sturmschäden"],g:"Grenzwert Materialfeuchte vor Trocknungsende je nach Baustof"},
+  {n:"DIN EN 14351-1",t:"Fenster und Türen – Produktnorm",k:["fenster", "türen", "produktnorm"],g:"Schlagregenwiderstand Klasse 4A (übliche Wohngebäude) bis E1"},
+  {n:"DIN 18055",t:"Fensteranschlüsse – Anforderungen an Wärme- und Feuchteschutz",k:["feuchteschutz", "anforderungen", "fensteranschlüsse", "wärme-"],g:"Innenabdichtung sd ≥ 0,3 m (dampfbremsend) | Außenabdichtung"},
+  {n:"DIN EN ISO 9972",t:"Wärmetechnisches Verhalten von Gebäuden – Luftdurchlässigkeit (Blower-Door)",k:["gebäuden", "wärmetechnisches", "(blower-door)", "luftdurchlässigkeit", "verhalten"],g:"Messung bei 50 Pa | n50-Wert in h⁻¹ | q50-Wert in m³/(h·m²)"},
+  {n:"DIN EN 15026",t:"Hygrothermische Simulation von Bauteilen",k:["simulation", "hygrothermische", "bauteilen"],g:"Kritische Feuchtegehalt für Schimmelwachstum RH > 80% an Obe"},
+  {n:"DIN EN 206",t:"Beton – Festlegung, Eigenschaften, Herstellung",k:["festlegung", "eigenschaften", "herstellung", "beton"],g:"Expositionsklasse XC3/XC4 für Außenbauteile | w/z-Wert ≤ 0,5"},
+  {n:"DIN EN 12390",t:"Prüfung von Festbeton",k:["festbeton", "prüfung"],g:"Druckfestigkeit Bohrkern mind. 85% der Würfelfestigkeit | Ko"},
+  {n:"DIN EN 771",t:"Festlegungen für Mauersteine",k:["festlegungen", "mauersteine"],g:"Druckfestigkeit Mauerziegel nach Klasse | NM (Normalmörtel) "},
+  {n:"DIN EN 1996-1-1",t:"Eurocode 6 – Bemessung und Konstruktion von Mauerwerksbauten",k:["mauerwerksbauten", "konstruktion", "bemessung", "eurocode"],g:"Mindestquerschnitt tragend | Mindestexzentrizität | Wandschl"},
+  {n:"DIN 18335",t:"Zimmerarbeiten (VOB Teil C)",k:["zimmerarbeiten"],g:"Holzfeuchte bei Einbau max. 20% | Geradheit ≤ 3 mm/m | Ansch"},
+  {n:"DIN VDE 0185-305",t:"Blitzschutz",k:["blitzschutz"],g:"Schutzklasse I bis IV | Maschenweite Fangeinrichtung nach Kl"},
+  {n:"DIN 18232",t:"Rauch- und Wärmeabzugsanlagen",k:["rauch-", "wärmeabzugsanlagen"],g:"RWA-Fläche 1% der Grundfläche in Aufenthaltsräumen > 200 m²"},
+  {n:"DIN EN 1991-1-4",t:"Eurocode 1 – Einwirkungen auf Tragwerke – Windlasten",k:["tragwerke", "windlasten", "eurocode", "einwirkungen"],g:"Windlastzone Deutschland 1-4 | Böengeschwindigkeitsdruck 0,3"},
+  {n:"TRWI",t:"Technische Regeln für Trinkwasserinstallationen",k:["regeln", "trinkwasserinstallationen", "technische"],g:"Stagnationswasser max. 3 Tage | Kaltwasser max. 25°C | Warmw"},
+  {n:"DIN 4109-2",t:"Schallschutz im Hochbau – Rechnerische Nachweise",k:["schallschutz", "nachweise", "hochbau", "rechnerische"],g:"Korrekturterm K für Flankenübertragung | Rechenwert ≥ Anford"},
+  {n:"DIN 18533-2",t:"Abdichtung erdberührter Bauteile – Teil 2: Bahnenwerkstoffe",k:["erdberührter", "bahnenwerkstoffe", "bauteile", "abdichtung"],g:"Überlappungsbreite Bitumenbahn ≥ 100 mm | Kunststoffbahn ≥ 1"},
+  {n:"ZDB-Merkblatt",t:"Verbundabdichtungen – Zentralverband des Deutschen Baugewerbes",k:["baugewerbes", "verbundabdichtungen", "deutschen", "zentralverband"],g:"Verbundabdichtung erforderlich in allen Nassräumen | mind. 1"},
+  {n:"DIN EN 998-1",t:"Festlegungen für Mörtel im Mauerwerksbau – Teil 1: Putzmörtel",k:["festlegungen", "mörtel", "putzmörtel", "mauerwerksbau"],g:"CS I (0,4-2,5 N/mm²) bis CS IV (≥ 6 N/mm²) | w-Wert Wasserau"},
+  {n:"DIN EN 520",t:"Gipskartonplatten – Anforderungen",k:["gipskartonplatten", "anforderungen"],g:"GKF Feuchtigkeitsbeständigkeit | GKFI Feuerschutz und feucht"},
+  {n:"DIN EN 1542",t:"Produkte für den Schutz von Betonbauwerken – Haftfestigkeit",k:["haftfestigkeit", "schutz", "betonbauwerken", "produkte"],g:"Haftzugfestigkeit nach Instandsetzung ≥ 1,5 N/mm² (Klasse B2"},
+  {n:"DIN 18532",t:"Abdichtung von befahrbaren Verkehrsflächen",k:["verkehrsflächen", "befahrbaren", "abdichtung"],g:"Mindestdicke Abdichtung 4 mm | Nutzschicht Betonpflaster min"},
+  {n:"DIN EN 15651",t:"Fugendichtstoffe für Fassaden und Glasarbeiten",k:["glasarbeiten", "fassaden", "fugendichtstoffe"],g:"Klasse F (Fassade) Bewegungsaufnahme ±25% der Fugenbreite | "},
+  {n:"DIN EN 1991-1-3",t:"Eurocode 1 – Einwirkungen auf Tragwerke – Schneelasten",k:["tragwerke", "eurocode", "einwirkungen", "schneelasten"],g:"Schneelastzone Deutschland 1-3 | Charakteristische Schneelas"},
+  {n:"DIN 18317",t:"Verkehrswegebauarbeiten – Pflasterdecken (VOB Teil C)",k:["verkehrswegebauarbeiten", "pflasterdecken"],g:"Gefälle Pflasterfläche mind. 1,5% für Wasserableitung | Bett"},
+  {n:"DIN 18315",t:"Verkehrswegebauarbeiten – Oberbauschichten (VOB Teil C)",k:["oberbauschichten", "verkehrswegebauarbeiten"],g:"Verdichtungsgrad nach Schicht | Asphalt 97% nach Prüfung"},
+  {n:"DIN 18322",t:"Kabelanlagen (VOB Teil C)",k:["kabelanlagen"],g:"Verlegetiefe mind. 0,6 m unter Gelände | Schutzrohr bei mech"},
+  {n:"DIN EN ISO 11600",t:"Hochbau – Fugendichtstoffe",k:["fugendichtstoffe", "hochbau"],g:"Fugenbreite 6-40 mm | Dehnung ≥ 25% (Klasse 25) oder 12,5% ("},
+  {n:"DIN 18182",t:"Zubehör für die Verarbeitung von Gipskartonplatten",k:["gipskartonplatten", "zubehör", "verarbeitung"],g:"Unterkonstruktion Metallständer C-Profil | Befestigung nach "},
+  {n:"DIN 18550-2",t:"Planung und Ausführung von Außenputzsystemen",k:["außenputzsystemen", "ausführung", "planung"],g:"Unterputz mind. 10 mm | Oberputz mind. 5 mm | Deckputz mind."},
+  {n:"DIN EN 13914",t:"Außen- und Innenputze",k:["innenputze", "außen-"],g:"Untergrundvorbereitung | Haftbrücke bei glattem Untergrund |"},
+  {n:"DIN EN 10255",t:"Stahlrohre für allgemeine Zwecke",k:["stahlrohre", "zwecke", "allgemeine"],g:"Wanddicke und Druckstufe je Rohrdimension | Korrosionsschutz"},
+  {n:"DIN EN 12831",t:"Heizungsanlagen in Gebäuden – Raumheizlastberechnung",k:["raumheizlastberechnung", "heizungsanlagen", "gebäuden"],g:"Mindestraumtemperatur 20°C für Wohnräume | 24°C für Bäder"},
+  {n:"DIN EN 1627",t:"Türen, Fenster – Einbruchhemmung",k:["einbruchhemmung", "fenster", "türen"],g:"RC2 empfohlen für Wohngebäude | RC3 für erhöhten Einbruchsch"},
+  {n:"DIN EN ISO 7730",t:"Ergonomie der thermischen Umgebung",k:["umgebung", "thermischen", "ergonomie"],g:"PMV-Wert (Predicted Mean Vote) -0,5 bis +0,5 für Behaglichke"},
+  {n:"DIN 18041",t:"Hörsamkeit in Räumen",k:["räumen", "hörsamkeit"],g:"Nachhallzeit T nach Raumnutzung | Unterrichtsräume T ≤ 0,8 s"},
+  {n:"DIN EN ISO 6781",t:"Wärmetechnisches Verhalten von Gebäuden – Qualitative Erkennung von Feuchte",k:["gebäuden", "erkennung", "wärmetechnisches", "qualitative", "feuchte", "verhalten"],g:"Temperaturdifferenz ΔT mind. 10 K | Messabstand und Emission"},
+  {n:"DIN 18310",t:"Naturwerksteinarbeiten (VOB Teil C)",k:["naturwerksteinarbeiten"],g:"Druckfestigkeit Naturstein ≥ 60 N/mm² | Biegebruchfestigkeit"},
+  {n:"DIN 18200",t:"Übereinstimmungsnachweis für Bauprodukte",k:["übereinstimmungsnachweis", "bauprodukte"],g:"CE-Kennzeichnung mit Leistungserklärung | ÜZ-Zeichen für nat"},
+  {n:"DIN EN ISO 13793",t:"Wärmetechnisches Verhalten von Gebäuden – Thermische Gestaltung von Fundamenten",k:["gebäuden", "thermische", "wärmetechnisches", "fundamenten", "gestaltung", "verhalten"],g:"Frostfreie Tiefe in Deutschland 0,8-1,2 m unter GOK je nach "},
+  {n:"DIN 18320",t:"Landschaftsbauarbeiten (VOB Teil C)",k:["landschaftsbauarbeiten"],g:"Stammumfang | Wurzelballengröße | Standsicherheitsbeurteilun"},
+  {n:"DIN EN 12350",t:"Prüfung von Frischbeton",k:["frischbeton", "prüfung"],g:"Setzmaß nach Konsistenzklasse | Luftgehalt nach Expositionsk"},
+  {n:"DIN EN ISO 4628",t:"Beschichtungen – Beurteilung von Beschichtungsschäden (Ergänzungsnorm)",k:["beschichtungsschäden", "(ergänzungsnorm)", "beurteilung", "beschichtungen"],g:"Rostgrad Ri 0 (kein Rost) bis Ri 5 (sehr starker Rost) | Bla"},
+  {n:"DIN 18531-3",t:"Abdichtung von Dächern – Teil 3: Stoffe",k:["dächern", "stoffe", "abdichtung"],g:"Bitumendachbahn min. Klasse E3 (3 mm dick, Polyestervlies) |"},
+  {n:"DIN 4159",t:"Rohre aus weichmacherfreiem Polyvinylchlorid PVC-U",k:["polyvinylchlorid", "weichmacherfreiem", "rohre", "pvc-u"],g:"Rohrsteifigkeit nach Klasse | Dichtheit nach DIN EN 1401"},
+  {n:"DIN EN 1401",t:"Kunststoff-Rohrleitungssysteme – PVC-U für Entwässerung außerhalb von Gebäuden",k:["entwässerung", "gebäuden", "außerhalb", "kunststoff-rohrleitungssysteme", "pvc-u"],g:"Ringsteifigkeit SN 4 (Garten) | SN 8 (Straße) | Dichtheit na"},
+  {n:"DIN 18360",t:"Metallbauarbeiten (VOB Teil C)",k:["metallbauarbeiten"],g:"Korrosionsschutzklassen C1-C5 | Beschichtungsdicke nach Klas"},
+  {n:"DIN EN 450",t:"Flugasche für Beton",k:["beton", "flugasche"],g:"Glühverlust max. 7% | Feinheit nach Norm"},
+  {n:"DIN 18555",t:"Prüfung von Mörteln mit mineralischen Bindemitteln",k:["mineralischen", "mörteln", "prüfung", "bindemitteln"],g:"Frischmörtelkonsistenz | Druckfestigkeit nach 28 Tagen je Mö"},
+  {n:"DIN 18252",t:"Steckdosen und Schalter – Einbautoleranzen",k:["einbautoleranzen", "schalter", "steckdosen"],g:"Einbautiefe Unterputz | Lage genau"},
+  {n:"DIN EN 1264-4",t:"Fußbodenheizung – Teil 4: Installation",k:["fußbodenheizung", "installation"],g:"Mindestüberdeckung Heizrohr mit Estrich 45 mm | Rohrabstand "},
+  {n:"DIN 18531-2",t:"Abdichtung von Dächern – Teil 2: Planung",k:["dächern", "planung", "abdichtung"],g:"Entwässerungsquerschnitt Notüberläufe | Dachablauf Dimension"},
+  {n:"DIN EN 12056-3",t:"Schwerkraftentwässerung – Dachentwässerung",k:["dachentwässerung", "schwerkraftentwässerung"],g:"Bemessungsregenspende r5(2) für Standort | Dachabläufe minde"},
+  {n:"DIN 4108-10",t:"Wärmeschutz – Anwendungsbezogene Anforderungen an Wärmedämmstoffe",k:["wärmedämmstoffe", "anwendungsbezogene", "anforderungen", "wärmeschutz"],g:"Druckspannungsklasse CS (10) bis CS (100) für druckbelastete"}
+];
+
+var _normenTimer = null;
+var _normenShown = {};
+var _normenToastEl = null;
+
+function initNormenVorschlag() {
+  // Toast-Element erstellen
+  var toast = document.createElement('div');
+  toast.id = 'normen-toast';
+  toast.style.cssText = [
+    'position:fixed',
+    'bottom:80px',
+    'right:20px',
+    'max-width:340px',
+    'background:#1c2537',
+    'border:1px solid rgba(79,142,247,.3)',
+    'border-radius:12px',
+    'padding:14px 16px',
+    'box-shadow:0 8px 32px rgba(0,0,0,.4)',
+    'z-index:500',
+    'display:none',
+    'font-family:inherit'
+  ].join(';');
+  document.body.appendChild(toast);
+  _normenToastEl = toast;
+
+  // Beide Textareas überwachen
+  ['transcriptManuell'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if(el) el.addEventListener('input', function() {
+      clearTimeout(_normenTimer);
+      _normenTimer = setTimeout(function() {
+        pruefeNormen(el.value);
+      }, 900);
+    });
+  });
+}
+
+function pruefeNormen(text) {
+  if(!text || text.length < 20) return;
+  var lower = text.toLowerCase();
+  var treffer = [];
+
+  NORMEN_DB.forEach(function(norm) {
+    if(_normenShown[norm.n]) return; // Bereits gezeigt
+    var matchCount = 0;
+    norm.k.forEach(function(kw) {
+      if(kw.length > 4 && lower.indexOf(kw.toLowerCase()) >= 0) matchCount++;
+    });
+    // Mindestens 2 Keyword-Treffer oder Norm direkt erwähnt
+    if(matchCount >= 2 || lower.indexOf(norm.n.toLowerCase()) >= 0) {
+      treffer.push({norm: norm, score: matchCount});
+    }
+  });
+
+  // Sortieren nach Score, max 2 zeigen
+  treffer.sort(function(a,b) { return b.score - a.score; });
+  treffer = treffer.slice(0, 2);
+
+  if(treffer.length === 0) return;
+
+  // Toast aufbauen
+  var html = '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#4f8ef7;margin-bottom:10px;">📐 PROVA Normen-Hinweis</div>';
+  treffer.forEach(function(t) {
+    var norm = t.norm;
+    html += '<div style="margin-bottom:8px;padding:8px 10px;background:rgba(79,142,247,.08);border-radius:8px;">';
+    html += '<div style="font-size:12px;font-weight:700;color:#e8eaf0;">' + norm.n + '</div>';
+    html += '<div style="font-size:11px;color:#aab4cb;margin:2px 0;">' + norm.t + '</div>';
+    if(norm.g) html += '<div style="font-size:10px;color:#6b7a99;font-style:italic;">' + norm.g + '</div>';
+    html += '<div style="display:flex;gap:6px;margin-top:6px;">';
+    html += '<button onclick="normEinfuegen(\'' + norm.n + '\',\'' + norm.t.replace(/'/g,"\\'") + '')" ';
+    html += 'style="font-size:11px;padding:4px 10px;background:rgba(79,142,247,.2);border:1px solid rgba(79,142,247,.3);border-radius:6px;color:#4f8ef7;cursor:pointer;font-family:inherit;">+ Einfügen</button>';
+    html += '<button onclick="normIgnorieren(\'' + norm.n + '\')" ';
+    html += 'style="font-size:11px;padding:4px 10px;background:transparent;border:1px solid rgba(255,255,255,.1);border-radius:6px;color:#6b7a99;cursor:pointer;font-family:inherit;">Ignorieren</button>';
+    html += '</div></div>';
+    _normenShown[norm.n] = true; // Nicht nochmal zeigen
+  });
+  html += '<button onclick="document.getElementById('normen-toast').style.display='none'" ';
+  html += 'style="position:absolute;top:10px;right:10px;background:none;border:none;color:#6b7a99;cursor:pointer;font-size:16px;">✕</button>';
+
+  _normenToastEl.style.position = 'relative';
+  _normenToastEl.innerHTML = html;
+  _normenToastEl.style.display = 'block';
+
+  // Auto-hide nach 12 Sekunden
+  setTimeout(function() {
+    if(_normenToastEl) _normenToastEl.style.display = 'none';
+  }, 12000);
+}
+
+function normEinfuegen(normNr, titel) {
+  // In transcriptManuell einfügen
+  var ta = document.getElementById('transcriptManuell');
+  if(ta) {
+    var pos = ta.selectionStart || ta.value.length;
+    var insert = '\n(gem. ' + normNr + ' – ' + titel + ')';
+    ta.value = ta.value.slice(0,pos) + insert + ta.value.slice(pos);
+    syncManuellToTranscript && syncManuellToTranscript();
+  }
+  if(_normenToastEl) _normenToastEl.style.display = 'none';
+}
+
+function normIgnorieren(normNr) {
+  _normenShown[normNr] = true;
+  // Nächste Norm aus Queue anzeigen (falls vorhanden)
+  if(_normenToastEl) _normenToastEl.style.display = 'none';
+}
+
+// Init nach DOM-Ready
+document.addEventListener('DOMContentLoaded', function() {
+  setTimeout(initNormenVorschlag, 500);
+});
+
+
+/* ══════════════════════════════════════════════════════════
+   OPTION 4: WEB SPEECH (live) + WHISPER-KORREKTUR
+   S11 Webhook: https://hook.eu1.make.com/h019rspppkvc4m146sv1opxs74h9dp3x
+   ══════════════════════════════════════════════════════════ */
+
+var WHISPER_WEBHOOK = 'https://hook.eu1.make.com/h019rspppkvc4m146sv1opxs74h9dp3x';
+var mediaRecorder = null;
+var audioChunks = [];
+var whisperLaeuft = false;
+
+/* ── CONSENT CHECK ── */
+function whisperConsentOk() {
+  return localStorage.getItem('prova_whisper_consent') === '1';
+}
+
+function zeigeWhisperConsent(callback) {
+  if(whisperConsentOk()) { callback(); return; }
+  var overlay = document.createElement('div');
+  overlay.id = 'whisper-consent-overlay';
+  overlay.style.cssText = [
+    'position:fixed','inset:0','z-index:9999',
+    'background:rgba(11,18,32,.92)',
+    'display:flex','align-items:center','justify-content:center',
+    'padding:20px'
+  ].join(';');
+  overlay.innerHTML = [
+    '<div style="background:#1c2537;border:1px solid rgba(79,142,247,.3);border-radius:16px;',
+    'padding:28px;max-width:480px;width:100%;font-family:inherit;">',
+    '<div style="font-size:24px;margin-bottom:12px;">🎤</div>',
+    '<div style="font-size:17px;font-weight:700;color:#e8eaf0;margin-bottom:10px;">',
+    'Sprachdiktat aktivieren</div>',
+    '<div style="font-size:13px;color:#aab4cb;line-height:1.7;margin-bottom:20px;">',
+    'Ihr Diktat wird zur Qualitätsverbesserung an unseren KI-Transkriptionsdienst übermittelt.<br><br>',
+    '<strong style="color:#e8eaf0;">Was passiert mit der Aufnahme?</strong><br>',
+    '• Audiodaten werden ausschließlich zur Texterkennung verwendet<br>',
+    '• Keine dauerhafte Speicherung nach der Transkription<br>',
+    '• Übermittlung verschlüsselt (HTTPS)<br>',
+    '• Details in unserer <a href="avv.html" target="_blank" style="color:#4f8ef7;">AVV §3.6</a>',
+    '</div>',
+    '<div style="display:flex;gap:10px;">',
+    '<button id="consent-ja" style="flex:1;padding:12px;background:linear-gradient(135deg,#4f8ef7,#3a7be0);',
+    'border:none;border-radius:10px;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;">',
+    'Verstanden, Diktat starten</button>',
+    '<button id="consent-nein" style="padding:12px 18px;background:transparent;',
+    'border:1px solid rgba(255,255,255,.15);border-radius:10px;color:#aab4cb;',
+    'font-size:13px;cursor:pointer;font-family:inherit;">',
+    'Abbrechen</button>',
+    '</div></div>'
+  ].join('');
+  document.body.appendChild(overlay);
+  document.getElementById('consent-ja').onclick = function() {
+    localStorage.setItem('prova_whisper_consent','1');
+    overlay.remove();
+    callback();
+  };
+  document.getElementById('consent-nein').onclick = function() {
+    overlay.remove();
+  };
+}
+
+/* ── WHISPER KORREKTUR ── */
+async function starteWhisperKorrektur(audioBlob) {
+  if(!audioBlob || audioBlob.size < 1000) return;
+  whisperLaeuft = true;
+
+  // Status-Anzeige
+  var status = document.getElementById('recStatus');
+  if(status) status.textContent = '🔄 KI verfeinert…';
+
+  // Whisper-Badge einblenden
+  var badge = document.getElementById('whisper-badge');
+  if(badge) badge.style.display = 'flex';
+
+  try {
+    // AudioBlob → Base64
+    var base64 = await new Promise(function(resolve, reject) {
+      var reader = new FileReader();
+      reader.onload = function(e) {
+        // Data-URL → nur Base64-Teil
+        resolve(e.target.result.split(',')[1]);
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(audioBlob);
+    });
+
+    // Dateiformat bestimmen
+    var filename = 'diktat.webm';
+    if(audioBlob.type.includes('mp4')) filename = 'diktat.mp4';
+    else if(audioBlob.type.includes('ogg')) filename = 'diktat.ogg';
+    else if(audioBlob.type.includes('wav')) filename = 'diktat.wav';
+
+    // An S11 senden
+    var resp = await fetch(WHISPER_WEBHOOK, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ audio_base64: base64, filename: filename })
+    });
+
+    if(!resp.ok) throw new Error('S11 HTTP ' + resp.status);
+    var data = await resp.json();
+
+    if(data.success && data.text && data.text.trim()) {
+      // Whisper-Text in Textarea übernehmen
+      var ta = document.getElementById('transcriptManuell');
+      if(ta) {
+        // Whisper-Text ist besser — ersetze den Web-Speech-Text
+        ta.value = data.text.trim();
+        syncManuellToTranscript && syncManuellToTranscript();
+
+        // Auch transcriptText (globale Variable) updaten
+        if(typeof transcriptText !== 'undefined') transcriptText = data.text.trim();
+
+        // Live-Transcript-Area mit korrigiertem Text updaten
+        var area = document.getElementById('transcriptArea');
+        if(area) {
+          var existing = area.querySelectorAll('p:not(.interim)');
+          existing.forEach(function(p) { p.remove(); });
+          var p = document.createElement('p');
+          p.style.cssText = 'font-family:var(--font-body);font-size:.9375rem;line-height:1.7;color:var(--gray-700);margin-bottom:.5rem';
+          p.textContent = data.text.trim();
+          var empty = area.querySelector('.transcript-empty');
+          if(empty) empty.style.display = 'none';
+          area.appendChild(p);
+        }
+      }
+
+      // Badge: fertig
+      if(badge) {
+        badge.innerHTML = '<span style="color:#10b981;">✅</span><span>Whisper-Korrektur abgeschlossen</span>';
+        setTimeout(function() { badge.style.display='none'; }, 4000);
+      }
+      if(status) status.textContent = 'Bereit';
+    }
+  } catch(err) {
+    console.warn('Whisper-Korrektur fehlgeschlagen:', err);
+    // Kein Fehler für Nutzer — Web-Speech-Text bleibt einfach
+    if(badge) badge.style.display = 'none';
+    if(status) status.textContent = 'Bereit';
+  }
+
+  whisperLaeuft = false;
+}
+
+/* ── MEDIACORDER INIT ── */
+function starteMediaRecorder(stream) {
+  audioChunks = [];
+  // Bestes unterstütztes Format wählen
+  var mimeType = 'audio/webm;codecs=opus';
+  if(!MediaRecorder.isTypeSupported(mimeType)) {
+    mimeType = 'audio/webm';
+    if(!MediaRecorder.isTypeSupported(mimeType)) {
+      mimeType = 'audio/ogg;codecs=opus';
+      if(!MediaRecorder.isTypeSupported(mimeType)) mimeType = '';
+    }
+  }
+  var opts = mimeType ? { mimeType: mimeType } : {};
+  try {
+    mediaRecorder = new MediaRecorder(stream, opts);
+  } catch(e) {
+    mediaRecorder = new MediaRecorder(stream);
+  }
+  mediaRecorder.ondataavailable = function(e) {
+    if(e.data && e.data.size > 0) audioChunks.push(e.data);
+  };
+  mediaRecorder.onstop = function() {
+    if(audioChunks.length > 0) {
+      var blob = new Blob(audioChunks, { type: mediaRecorder.mimeType || 'audio/webm' });
+      starteWhisperKorrektur(blob);
+    }
+  };
+  mediaRecorder.start(1000); // Jede Sekunde ein Chunk
+}
+
+/* ── 3-MIN LIMIT ── */
+var recLimitTimer = null;
+function starteAufnahmeLimit() {
+  clearTimeout(recLimitTimer);
+  recLimitTimer = setTimeout(function() {
+    if(isRecording) {
+      zeigToast('3-Minuten-Limit erreicht — Aufnahme gestoppt.', 'info');
+      stoppeAufnahme();
+    }
+  }, 3 * 60 * 1000);
+}
+
 </script>
 </body>
 </html>

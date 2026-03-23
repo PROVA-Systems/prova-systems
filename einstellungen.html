@@ -206,6 +206,29 @@ input,select,textarea{font-size:max(16px,1em);}
 }
 @keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
 .sec.active{animation:fadeIn .2s ease;}
+
+  /* ── SUPPORT FAB ── */
+  .support-fab{position:fixed;bottom:20px;right:20px;width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,var(--accent,#4f8ef7),#3a7be0);border:none;color:#fff;font-size:20px;cursor:pointer;box-shadow:0 4px 16px rgba(79,142,247,.4);z-index:300;transition:all .2s;display:flex;align-items:center;justify-content:center;}
+  .support-fab:hover{transform:scale(1.08);box-shadow:0 6px 22px rgba(79,142,247,.5);}
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:400;backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:20px;}
+  .modal-overlay.open{display:flex;}
+  .modal-box{background:var(--surface,#1c2537);border:1px solid var(--border2,rgba(255,255,255,.12));border-radius:16px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;}
+  .modal-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border,rgba(255,255,255,.07));}
+  .modal-title{font-size:15px;font-weight:700;color:var(--text,#e8eaf0);}
+  .modal-close{background:none;border:none;color:var(--text3,#6b7a99);font-size:18px;cursor:pointer;padding:4px;border-radius:4px;}
+  .modal-close:hover{color:var(--text,#e8eaf0);}
+  .modal-body{padding:20px;}
+  .sup-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text3,#6b7a99);margin-bottom:5px;}
+  .sup-input{width:100%;padding:9px 12px;background:var(--bg3,#161f30);border:1px solid var(--border2,rgba(255,255,255,.12));border-radius:8px;color:var(--text,#e8eaf0);font-size:13px;font-family:inherit;outline:none;margin-bottom:12px;}
+  .sup-input:focus{border-color:var(--accent,#4f8ef7);}
+  .sup-textarea{resize:vertical;min-height:90px;}
+  .sup-err{font-size:12px;color:var(--red,#ef4444);margin-bottom:8px;display:none;}
+  .sup-send-btn{width:100%;padding:11px;background:linear-gradient(135deg,var(--accent,#4f8ef7),#3a7be0);border:none;border-radius:8px;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;}
+  .sup-send-btn:disabled{opacity:.5;cursor:not-allowed;}
+  .sup-ok{display:none;text-align:center;padding:20px 0;}
+  .sup-ok-icon{font-size:36px;margin-bottom:8px;}
+  .sup-ok-title{font-size:15px;font-weight:700;color:var(--green,#10b981);margin-bottom:4px;}
+  .sup-ok-sub{font-size:12px;color:var(--text3,#6b7a99);}
 </style>
 </head>
 <body>
@@ -230,7 +253,9 @@ input,select,textarea{font-size:max(16px,1em);}
     <div class="sb-section-label">Werkzeuge</div>
     <a href="jveg.html" class="sb-item" data-tip="JVEG-Rechner"><span class="sb-icon">⚖️</span><span class="sb-label">JVEG-Rechner</span></a>
     <a href="kostenermittlung.html" class="sb-item" data-tip="Kosten & Aufmaß"><span class="sb-icon">📐</span><span class="sb-label">Kosten & Aufmaß</span></a>
+    <a href="positionen.html" class="sb-item" data-tip="Positionsdatenbank"><span class="sb-icon">🗂</span><span class="sb-label">Positionen</span></a>
     <a href="textbausteine.html" class="sb-item" data-tip="Textbausteine"><span class="sb-icon">✏️</span><span class="sb-label">Textbausteine</span></a>
+    <a href="normen.html" class="sb-item" data-tip="Normendatenbank"><span class="sb-icon">📚</span><span class="sb-label">Normen</span></a>
     <div class="sb-divider"></div>
     <a href="kontakte.html" class="sb-item" data-tip="Kontakte"><span class="sb-icon">👥</span><span class="sb-label">Kontakte</span></a>
   </div>
@@ -624,7 +649,7 @@ input,select,textarea{font-size:max(16px,1em);}
             <div class="card-body">
               <div id="paket-anzeige" style="padding:16px;border-radius:var(--r-md);margin-bottom:16px;"></div>
               <div class="paket-grid" id="paket-grid"></div>
-              <a href="mailto:support@prova-systems.de?subject=Upgrade-Anfrage PROVA" class="btn btn-primary" style="display:block;text-align:center;">⬆ Upgrade anfragen</a>
+              <a href="mailto:kontakt@prova-systems.de" class="btn btn-primary" style="display:block;text-align:center;">⬆ Upgrade anfragen</a>
             </div>
           </div>
         </div>
@@ -642,6 +667,21 @@ input,select,textarea{font-size:max(16px,1em);}
                   <input id="e-outbound-webhook" class="form-input" type="url" placeholder="https://ihr-system.de/webhook" style="flex:1;">
                   <button onclick="testeOutboundWebhook()" class="btn btn-secondary">🧪 Test</button>
                 </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:20px;">
+                <div style="padding:14px;background:rgba(79,142,247,.06);border:1px solid rgba(79,142,247,.18);border-radius:10px;font-size:12px;color:var(--text2);line-height:1.7;">
+                  <div style="font-size:10px;font-weight:700;text-transform:uppercase;color:var(--accent);margin-bottom:8px;">📋 Anleitung</div>
+                  <div>① Auf weißem Papier unterschreiben</div>
+                  <div>② Fotografieren oder scannen</div>
+                  <div>③ Hintergrund entfernen: <a href="https://remove.bg" target="_blank" style="color:var(--accent);">remove.bg</a></div>
+                  <div>④ Als PNG hochladen</div>
+                </div>
+                <div style="padding:14px;background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.18);border-radius:10px;font-size:12px;color:var(--text2);line-height:1.7;">
+                  <div style="font-size:10px;font-weight:700;text-transform:uppercase;color:var(--green);margin-bottom:8px;">✅ Eingesetzt in</div>
+                  <div>• Gutachten-PDFs</div>
+                  <div>• Briefvorlagen</div>
+                  <div>• Rechnungen</div>
+                </div>
+              </div>
                 <div class="form-hint">PROVA sendet JSON bei jeder Freigabe. Kompatibel mit Zapier, Make, n8n.</div>
                 <div id="webhook-test-result" style="display:none;margin-top:8px;padding:8px 10px;border-radius:var(--r-md);font-size:12px;"></div>
               </div>
@@ -691,7 +731,7 @@ input,select,textarea{font-size:max(16px,1em);}
 <!-- Toast -->
 <div class="toast-prova" id="einst-toast"></div>
 
-<script>
+</script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 (function(){
 'use strict';
 
@@ -1039,6 +1079,7 @@ function renderPaket(){
     var istAktiv=p.name===paket;
     return '<div class="pk '+p.cls+'">'
       +(istAktiv?'<span class="pk-badge" style="background:'+({'Starter':'rgba(79,142,247,.15)','Pro':'rgba(245,158,11,.15)','Enterprise':'rgba(139,92,246,.15)'}[p.name])+';color:'+({'Starter':'#4f8ef7','Pro':'#f59e0b','Enterprise':'#a78bfa'}[p.name])+'">Aktiv</span>':'')
+      +(p.demnächst&&!istAktiv?'<span style="display:inline-block;background:rgba(245,158,11,.12);color:#f59e0b;border:1px solid rgba(245,158,11,.25);border-radius:10px;font-size:9px;font-weight:700;letter-spacing:.06em;padding:2px 7px;margin-bottom:4px;">DEMNÄCHST</span>':'')
       +'<div class="pk-name">'+p.name+'</div>'
       +'<div class="pk-price">'+p.price+'</div>'
       +p.feats.map(function(f){return '<div class="pk-feat'+(istAktiv?'':' locked')+'">'+f+'</div>';}).join('')
@@ -1076,17 +1117,4 @@ window.ladeWebhookLog = function(){
       return '<div style="padding:7px 12px;border-bottom:1px solid rgba(255,255,255,.04);display:flex;align-items:center;gap:8px;">'
         +'<span style="color:'+sc+';">'+si+'</span>'
         +'<span style="color:var(--text3);min-width:90px;font-size:11px;">'+ts+'</span>'
-        +'<span style="color:var(--text2);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;">'+(l.url||'').replace('https://','').substring(0,50)+'</span>'
-        +'<span style="color:'+sc+';font-weight:600;font-size:10px;">'+l.status+'</span>'
-        +'</div>';
-    }).join('');
-  }catch(e){c.textContent='Log-Fehler: '+e.message;}
-};
-
-/* ── INIT ── */
-ladeProfil();
-
-})();
-</script>
-</body>
-</html>
+        +'<span style="color:var(--text2);flex:1;overflow:hidden;text-overflow

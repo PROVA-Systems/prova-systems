@@ -2,6 +2,13 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8">
+    <link rel="manifest" href="/manifest.json">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="PROVA">
+  <meta name="theme-color" content="#111827">
+  <link rel="apple-touch-icon" href="/icons/icon-192.png">
   <meta name="viewport" content="width=device-width,initial-scale=1.0">
   <title>PROVA — Zentrale</title>
   <style>
@@ -866,7 +873,26 @@
     border-radius:6px;
   }
   @keyframes shimmer{0%{background-position:200% 0;}100%{background-position:-200% 0;}}
-  </style>
+  
+/* ── PWA INSTALL BANNER ── */
+#pwa-install-banner{
+  display:none;position:fixed;bottom:70px;left:50%;
+  transform:translateX(-50%);
+  background:var(--surface,#1c2537);
+  border:1px solid rgba(79,142,247,.3);
+  border-radius:14px;padding:12px 18px;
+  display:flex;align-items:center;gap:12px;
+  box-shadow:0 8px 32px rgba(0,0,0,.5);
+  z-index:400;max-width:360px;width:calc(100% - 32px);
+  animation:slideUp .3s ease;
+}
+@keyframes slideUp{from{opacity:0;transform:translateX(-50%) translateY(20px);}to{opacity:1;transform:translateX(-50%) translateY(0);}}
+.pwa-install-icon{font-size:22px;flex-shrink:0;}
+.pwa-install-text{flex:1;font-size:12px;color:var(--text2,#aab4cb);line-height:1.4;}
+.pwa-install-text strong{display:block;color:var(--text,#e8eaf0);margin-bottom:2px;}
+.pwa-install-btn{padding:7px 14px;background:var(--accent,#4f8ef7);border:none;border-radius:8px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;}
+.pwa-install-close{background:none;border:none;color:var(--text3,#6b7a99);cursor:pointer;font-size:16px;padding:4px;line-height:1;}
+</style>
 </head>
 <body>
 
@@ -925,7 +951,8 @@
         <span class="sb-icon">📐</span>
         <span class="sb-label">Kosten & Aufmaß</span>
       </a>
-      <a href="#" class="sb-item" id="sb-normen" data-tip="Normendatenbank">
+    <a href="positionen.html" class="sb-item" data-tip="Positionsdatenbank"><span class="sb-icon">🗂</span><span class="sb-label">Positionen</span></a>
+      <a href="normen.html" class="sb-item" id="sb-normen" data-tip="Normendatenbank">
         <span class="sb-icon">📚</span>
         <span class="sb-label">Normen</span>
       </a>
@@ -1145,7 +1172,7 @@
 </nav>
 
 <!-- Support FAB -->
-<button class="support-fab" onclick="document.getElementById('support-modal').classList.add('open')" title="Support">💬</button>
+<button class="support-fab" onclick="openSupportModal()" title="Support">💬</button>
 
 <!-- Support Modal -->
 <div class="modal-overlay" id="support-modal" onclick="if(event.target===this)this.classList.remove('open')">
@@ -1393,7 +1420,7 @@ function renderFeed(faelle, termine, rechnungen, stats){
     var f=r.fields;
     actions.push({
       prio:'warn',
-      title:(f.Aktenzeichen||'Fall')+' — '+(f.Schadensart||'Schadenfall'),
+      title:(f.Aktenzeichen||'Fall')+' — '+(f.Schadenart||f.schadenart||f.Schadensart||'Schadenfall'),
       meta:(f.Schaden_Strasse?f.Schaden_Strasse+', ':'')+( f.Ort||'')+(f.Timestamp?' · '+new Date(f.Timestamp).toLocaleDateString('de-DE'):''),
       badge:'offen',badge_text:'Freigabe ausstehend',
       href:'freigabe.html',sort:1
@@ -1410,8 +1437,8 @@ function renderFeed(faelle, termine, rechnungen, stats){
     var f=r.fields;
     actions.push({
       prio:'grey',
-      title:(f.Aktenzeichen||'Fall')+' — '+(f.Schadensart||'Schadenfall'),
-      meta:(f.Schaden_Strasse?f.Schaden_Strasse+', ':''+(f.Ort||''))+' · In Bearbeitung',
+      title:(f.Aktenzeichen||'Fall')+' — '+(f.Schadenart||f.schadenart||f.Schadensart||'Schadenfall'),
+      meta:(f.Adresse||f.Schaden_Strasse||(f.Ort?f.Ort:''))+' · In Bearbeitung',
       badge:'offen',badge_text:'In Bearbeitung',
       href:'archiv.html',sort:2
     });
@@ -1478,12 +1505,12 @@ function renderRecent(faelle){
     var status=f.Status||'In Bearbeitung';
     var statusClass=status==='Freigegeben'||status==='Exportiert'?'status-done':status==='Entwurf'?'status-frei':'status-bearb';
     var az=(f.Aktenzeichen||r.id.slice(-6).toUpperCase()).slice(0,8);
-    var addr=[f.Schaden_Strasse,f.Ort].filter(Boolean).join(', ')||'—';
+    var addr=f.Adresse||[f.Schaden_Strasse,f.Ort].filter(Boolean).join(', ')||'—';
     var datum=f.Timestamp?new Date(f.Timestamp).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'}):'';
     return '<div class="recent-item" onclick="window.location.href=\'archiv.html\'">'
       +'<div class="recent-az">'+az+'</div>'
       +'<div class="recent-info">'
-      +'<div class="recent-name">'+(f.Schadensart||'Schadenfall')+(datum?' <span style="color:var(--text3);font-weight:400;">'+datum+'</span>':'')+'</div>'
+      +'<div class="recent-name">'+(f.Schadenart||f.schadenart||f.Schadensart||'Schadenfall')+(datum?' <span style="color:var(--text3);font-weight:400;">'+datum+'</span>':'')+'</div>'
       +'<div class="recent-meta">'+addr+'</div>'
       +'</div>'
       +'<span class="recent-status '+statusClass+'">'+status+'</span>'
@@ -1700,6 +1727,63 @@ window.sendSupport=async function(){
 };
 
 })();
+
+function openSupportModal(){
+  var m=document.getElementById('support-modal');
+  if(!m)return;
+  var fb=document.getElementById('support-form-body');
+  var ok=document.getElementById('support-ok');
+  var fq=document.getElementById('support-faq-box');
+  if(fb)fb.style.display='block';
+  if(ok)ok.style.display='none';
+  if(fq)fq.style.display='none';
+  var b=document.getElementById('sup-betreff');
+  var n=document.getElementById('sup-nachricht');
+  var btn=document.getElementById('sup-btn');
+  if(b)b.value='';
+  if(n)n.value='';
+  if(btn){btn.disabled=false;btn.textContent='Nachricht senden';}
+  m.classList.add('open');
+}
+</script>
+  <script src="/sw-register.js" defer>
+/* ── PWA INSTALL PROMPT ── */
+var _pwaPrompt = null;
+window.addEventListener('beforeinstallprompt', function(e) {
+  e.preventDefault();
+  _pwaPrompt = e;
+  // Nur zeigen wenn noch nie dismissed und nicht schon installiert
+  if(!localStorage.getItem('prova_pwa_dismissed') && !localStorage.getItem('prova_pwa_installed')) {
+    setTimeout(function() {
+      var banner = document.getElementById('pwa-install-banner');
+      if(banner) banner.style.display = 'flex';
+    }, 3000); // 3s nach Seitenaufruf
+  }
+});
+window.addEventListener('appinstalled', function() {
+  localStorage.setItem('prova_pwa_installed','1');
+  var banner = document.getElementById('pwa-install-banner');
+  if(banner) banner.style.display = 'none';
+});
+function pwaInstall() {
+  if(_pwaPrompt) {
+    _pwaPrompt.prompt();
+    _pwaPrompt.userChoice.then(function(r) {
+      if(r.outcome === 'accepted') {
+        localStorage.setItem('prova_pwa_installed','1');
+      }
+      _pwaPrompt = null;
+      var banner = document.getElementById('pwa-install-banner');
+      if(banner) banner.style.display = 'none';
+    });
+  }
+}
+function pwaDismiss() {
+  localStorage.setItem('prova_pwa_dismissed','1');
+  var banner = document.getElementById('pwa-install-banner');
+  if(banner) banner.style.display = 'none';
+}
+
 </script>
 </body>
 </html>

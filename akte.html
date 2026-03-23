@@ -2,7 +2,14 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="PROVA">
+  <meta name="theme-color" content="#111827">
+  <link rel="apple-touch-icon" href="/icons/icon-192.png">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Akte · PROVA</title>
 <style>
 :root{
@@ -206,6 +213,29 @@ a{text-decoration:none;color:inherit;}button,input,select,textarea{font-family:i
 }
 @keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
 .page-content{animation:fadeIn .22s ease;}
+
+  /* ── SUPPORT FAB ── */
+  .support-fab{position:fixed;bottom:20px;right:20px;width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,var(--accent,#4f8ef7),#3a7be0);border:none;color:#fff;font-size:20px;cursor:pointer;box-shadow:0 4px 16px rgba(79,142,247,.4);z-index:300;transition:all .2s;display:flex;align-items:center;justify-content:center;}
+  .support-fab:hover{transform:scale(1.08);box-shadow:0 6px 22px rgba(79,142,247,.5);}
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:400;backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:20px;}
+  .modal-overlay.open{display:flex;}
+  .modal-box{background:var(--surface,#1c2537);border:1px solid var(--border2,rgba(255,255,255,.12));border-radius:16px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;}
+  .modal-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border,rgba(255,255,255,.07));}
+  .modal-title{font-size:15px;font-weight:700;color:var(--text,#e8eaf0);}
+  .modal-close{background:none;border:none;color:var(--text3,#6b7a99);font-size:18px;cursor:pointer;padding:4px;border-radius:4px;}
+  .modal-close:hover{color:var(--text,#e8eaf0);}
+  .modal-body{padding:20px;}
+  .sup-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text3,#6b7a99);margin-bottom:5px;}
+  .sup-input{width:100%;padding:9px 12px;background:var(--bg3,#161f30);border:1px solid var(--border2,rgba(255,255,255,.12));border-radius:8px;color:var(--text,#e8eaf0);font-size:13px;font-family:inherit;outline:none;margin-bottom:12px;}
+  .sup-input:focus{border-color:var(--accent,#4f8ef7);}
+  .sup-textarea{resize:vertical;min-height:90px;}
+  .sup-err{font-size:12px;color:var(--red,#ef4444);margin-bottom:8px;display:none;}
+  .sup-send-btn{width:100%;padding:11px;background:linear-gradient(135deg,var(--accent,#4f8ef7),#3a7be0);border:none;border-radius:8px;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;}
+  .sup-send-btn:disabled{opacity:.5;cursor:not-allowed;}
+  .sup-ok{display:none;text-align:center;padding:20px 0;}
+  .sup-ok-icon{font-size:36px;margin-bottom:8px;}
+  .sup-ok-title{font-size:15px;font-weight:700;color:var(--green,#10b981);margin-bottom:4px;}
+  .sup-ok-sub{font-size:12px;color:var(--text3,#6b7a99);}
 </style>
 </head>
 <body>
@@ -259,7 +289,7 @@ a{text-decoration:none;color:inherit;}button,input,select,textarea{font-family:i
     <div id="loading-state" class="loading-state">
       <div class="loading-icon">📂</div>
       <div style="font-size:14px;color:var(--text2);margin-bottom:6px;">Akte wird geladen…</div>
-      <div style="font-size:12px;color:var(--text3);">Daten werden aus Airtable abgerufen</div>
+      <div style="font-size:12px;color:var(--text3);">Daten werden geladen…</div>
     </div>
 
     <!-- Content (hidden while loading) -->
@@ -284,6 +314,7 @@ a{text-decoration:none;color:inherit;}button,input,select,textarea{font-family:i
             <option value="Archiviert">Archiviert</option>
           </select>
           <button class="action-btn btn-primary" onclick="oeffneGutachten()">📄 Gutachten öffnen</button>
+          <button class="action-btn btn-ghost" onclick="exportWordAkte()" title="Als Word-Dokument herunterladen">📝 Word (.doc)</button>
           <button class="action-btn btn-ghost" onclick="oeffneFreigabe()">✅ Freigabe</button>
         </div>
       </div>
@@ -421,7 +452,7 @@ a{text-decoration:none;color:inherit;}button,input,select,textarea{font-family:i
 </nav>
 
 <div class="toast" id="toast"></div>
-<button class="support-fab" onclick="zeigToast('Support: support@prova-systems.de')">💬</button>
+<button class="support-fab" onclick="openSupportModal()" title="Support">💬</button>
 
 <script>
 (function(){
@@ -482,8 +513,8 @@ async function ladeRecord(){
 function renderAkte(){
   var f=currentFields;
   var az=f.Aktenzeichen||recordId.slice(-6).toUpperCase();
-  var schadenart=f.Schadensart||'Schadenfall';
-  var adresse=[f.Schaden_Strasse,f.Ort].filter(Boolean).join(', ')||'—';
+  var schadenart=f.Schadenart||f.schadenart||f.Schadensart||'Schadenfall';
+  var adresse=f.Adresse||[f.Schaden_Strasse,f.Ort].filter(Boolean).join(', ')||'—';
   var status=f.Status||'In Bearbeitung';
 
   // Breadcrumb + Header
@@ -505,7 +536,7 @@ function renderAkte(){
   // Stammdaten
   var metaItems=[
     {label:'Aktenzeichen',value:az,mono:true},
-    {label:'Schadensart',value:schadenart},
+    {label:'Schadenart',value:schadenart},
     {label:'Schadensdatum',value:f.Schadensdatum?formatDatum(f.Schadensdatum):'—'},
     {label:'Objekt-Adresse',value:adresse},
     {label:'PLZ / Ort',value:[f.PLZ,f.Ort].filter(Boolean).join(' ')||'—'},
@@ -748,8 +779,110 @@ window.oeffneStellung = function() {
   if(sa) sessionStorage.setItem('prova_current_schadenart', sa);
   if(obj.trim()) sessionStorage.setItem('prova_current_objekt', obj.trim());
   // record_id bleibt aus sessionStorage (bereits gesetzt)
-  window.location.href = 'stellungnahme-gate.html';
+  window.location.href = 'stellungnahme.html';
 };
 </script>
-</body>
-</html>
+
+<button class="support-fab" onclick="openSupportModal()" title="Support">💬</button>
+<div class="modal-overlay" id="support-modal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-title">💬 Support & Hilfe</div>
+      <button class="modal-close" onclick="document.getElementById('support-modal').classList.remove('open')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="support-form-body">
+        <div class="sup-label">Betreff</div>
+        <input type="text" class="sup-input" id="sup-betreff" placeholder="z.B. PDF-Fehler, Frage zu Rechnung…">
+        <div class="sup-label">Nachricht</div>
+        <textarea class="sup-input sup-textarea" id="sup-nachricht" placeholder="Beschreiben Sie Ihr Anliegen…"></textarea>
+        <div class="sup-err" id="sup-err">Bitte Betreff und Nachricht eingeben.</div>
+        <button class="sup-send-btn" id="sup-btn" onclick="supSendModal()">Nachricht senden</button>
+        <div style="text-align:center;margin-top:10px;font-size:11px;color:var(--text3,#6b7a99);">
+          Oder direkt: <a href="/cdn-cgi/l/email-protection#eb8084859f8a809fab9b99849d8ac69892989f8e8698c58f8e" style="color:var(--accent,#4f8ef7);"><span class="__cf_email__" data-cfemail="13787c7d677278675363617c65723e606a6067767e603d7776">[email&#160;protected]</span></a>
+        </div>
+      </div>
+      <div class="sup-ok" id="sup-ok">
+        <div class="sup-ok-icon">✅</div>
+        <div class="sup-ok-title">Nachricht gesendet</div>
+        <div class="sup-ok-sub">Wir melden uns werktags innerhalb von 24h.</div>
+      </div>
+    </div>
+  </div>
+</div>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js">
+/* ── WORD EXPORT (Akte) ── */
+window.exportWordAkte = function() {
+  var f = currentFields || {};
+  var az = f.Aktenzeichen || recordId || 'Gutachten';
+  var svName = (localStorage.getItem('prova_sv_vorname')||'') + ' ' + (localStorage.getItem('prova_sv_nachname')||'');
+  var buero  = localStorage.getItem('prova_bueronamen') || '';
+  var quali  = localStorage.getItem('prova_sv_qualifikation') || '';
+  var heute  = new Date().toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric'});
+
+  var entwurf = f.KI_Entwurf || f.ki_entwurf || '';
+  var schadenart = f.Schadenart || f.schadenart || '';
+  var adresse = f.Adresse || '';
+
+  if(!entwurf) {
+    zeigToast('Kein Gutachten-Entwurf vorhanden.', 'warn');
+    return;
+  }
+
+  var wordHtml = [
+    '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">',
+    '<head><meta charset="UTF-8"><meta name=ProgId content=Word.Document>',
+    '<style>',
+    'body{font-family:Arial,sans-serif;font-size:11pt;margin:2cm;line-height:1.5;}',
+    'h1{font-size:14pt;font-weight:bold;border-bottom:1px solid #333;padding-bottom:4pt;margin-top:18pt;}',
+    '.kpf{border-bottom:2px solid #1E3A5F;padding-bottom:10pt;margin-bottom:18pt;}',
+    '.kpf-name{font-size:14pt;font-weight:bold;color:#1E3A5F;}',
+    '.az{background:#f5f5f5;border:1px solid #ccc;padding:8pt;margin:10pt 0;}',
+    '.footer{border-top:1px solid #ccc;margin-top:30pt;padding-top:8pt;font-size:9pt;color:#666;}',
+    '</style></head><body>',
+    '<div class="kpf"><div class="kpf-name">' + (buero||svName.trim()) + '</div><div>' + quali + '</div></div>',
+    '<div class="az"><strong>Aktenzeichen:</strong> ' + az + ' &nbsp;&nbsp; <strong>Schadenart:</strong> ' + schadenart + ' &nbsp;&nbsp; <strong>Datum:</strong> ' + heute + '</div>',
+    adresse ? '<p><strong>Objekt:</strong> ' + adresse + '</p>' : '',
+    '<h1>Gutachten</h1>',
+    '<div>' + entwurf.replace(/
+/g,'<br>') + '</div>',
+    '<div class="footer">Erstellt mit PROVA Systems &middot; ' + svName.trim() + ' &middot; ' + heute + '</div>',
+    '  <script src="/sw-register.js" defer></script>
+</body></html>'
+  ].join('\n');
+
+  var blob = new Blob([wordHtml], {type:'application/msword'});
+  var url  = URL.createObjectURL(blob);
+  var a    = document.createElement('a');
+  a.href = url;
+  a.download = 'Gutachten_' + az.replace(/[^a-zA-Z0-9-]/g,'_') + '.doc';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(function(){ URL.revokeObjectURL(url); }, 2000);
+  zeigToast('Word-Dokument wird heruntergeladen…','ok');
+};
+
+</script><script>
+function openSupportModal(){
+  var m=document.getElementById('support-modal');
+  if(!m)return;
+  var fb=document.getElementById('support-form-body');
+  var ok=document.getElementById('sup-ok');
+  if(fb)fb.style.display='block';
+  if(ok)ok.style.display='none';
+  var b=document.getElementById('sup-betreff');
+  var n=document.getElementById('sup-nachricht');
+  var btn=document.getElementById('sup-btn');
+  if(b)b.value='';if(n)n.value='';
+  if(btn){btn.disabled=false;btn.textContent='Nachricht senden';}
+  m.classList.add('open');
+}
+async function supSendModal(){
+  var b=(document.getElementById('sup-betreff').value||'').trim();
+  var n=(document.getElementById('sup-nachricht').value||'').trim();
+  if(!b||!n){document.getElementById('sup-err').style.display='block';return;}
+  document.getElementById('sup-err').style.display='none';
+  var btn=document.getElementById('sup-btn');
+  btn.disabled=true;btn.textContent='⏳ Wird gesendet…';
+  try{
+    await fetch('https://hook.eu1.make.com/lktuhugwcg5v37ib6bdaxjb1uiplnu8v',{
+     

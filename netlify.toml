@@ -68,10 +68,18 @@
   status = 200
 
 # ---- 404 FALLBACK ----
+# KEIN SPA-Catchall — würde fehlende Dateien auf Landingpage weiterleiten
+# Netlify zeigt stattdessen eigene 404-Seite
+# [[redirects]]
+#   from = "/*"
+#   to = "/index.html"
+#   status = 200
+
+# Expliziter 404-Handler
 [[redirects]]
   from = "/*"
-  to = "/index.html"
-  status = 200
+  to = "/404.html"
+  status = 404
 
 # ---- SECURITY HEADERS ----
 [[headers]]
@@ -103,3 +111,19 @@
   for = "/sw-register.js"
   [headers.values]
     Cache-Control = "public, max-age=3600"
+
+[[headers]]
+  for = "/manifest.json"
+  [headers.values]
+    Content-Type = "application/manifest+json"
+
+[[headers]]
+  for = "/sw.js"
+  [headers.values]
+    Cache-Control = "no-cache"
+    Content-Type = "application/javascript"
+
+[[headers]]
+  for = "/icons/*"
+  [headers.values]
+    Cache-Control = "public, max-age=86400"

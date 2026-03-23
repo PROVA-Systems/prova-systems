@@ -351,7 +351,8 @@ a{text-decoration:none;color:inherit;}
     localStorage.setItem('prova_user',JSON.stringify({email:user.email,name:md.full_name||user.email,token:'netlify'}));
     if(md.full_name){var parts=md.full_name.split(' ');localStorage.setItem('prova_sv_vorname',parts[0]||'');localStorage.setItem('prova_sv_nachname',parts.slice(1).join(' ')||'');}
     localStorage.setItem('prova_sv_email',user.email);
-    window.location.href='dashboard.html';
+    // Paket aus Airtable laden (async IIFE)
+    (async function(){ await ladePaketUndWeiterleiten(user.email, localStorage.getItem('prova_onboarding_done')?'dashboard.html':'onboarding-schnellstart.html'); })();
   });
   if(hasToken)setTimeout(function(){
     if(hash.includes('invite_token')||hash.includes('confirmation_token'))netlifyIdentity.open('signup');
@@ -412,6 +413,49 @@ window.starteTestversion=function(){
 };
 
 /* ── LOGIN ── */
+
+/* ── PAKET AUS AIRTABLE LADEN ── */
+async function ladePaketUndWeiterleiten(email, ziel) {
+  // Fallback: Starter
+  var paket = 'Starter';
+  try {
+    var AT_BASE = 'appJ7bLlAHZoxENWE';
+    var AT_SV = 'tbladqEQT3tmx4DIB';
+    var filter = encodeURIComponent('{sv_email}="' + email + '"');
+    var url = '/.netlify/functions/airtable';
+    var res = await fetch(url, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        method: 'GET',
+        path: '/v0/' + AT_BASE + '/' + AT_SV + '?filterByFormula=' + filter + '&maxRecords=1'
+      })
+    });
+    if (res.ok) {
+      var data = await res.json();
+      var records = data.records || [];
+      if (records.length > 0) {
+        var f = records[0].fields || {};
+        // Paket-Feld: 'Paket' oder 'paket' oder 'Packet'
+        paket = f.Paket || f.paket || f.Packet || 'Starter';
+        // Sicherstellen dass Wert gültig
+        if (!['Starter','Pro','Enterprise'].includes(paket)) paket = 'Starter';
+        // Auch Profil-Daten laden wenn vorhanden
+        if (f.sv_vorname) localStorage.setItem('prova_sv_vorname', f.sv_vorname);
+        if (f.sv_nachname) localStorage.setItem('prova_sv_nachname', f.sv_nachname);
+        if (f.sv_qualifikation) localStorage.setItem('prova_sv_qualifikation', f.sv_qualifikation);
+        if (f.sv_bueronamen) localStorage.setItem('prova_bueronamen', f.sv_bueronamen);
+      }
+    }
+  } catch(e) {
+    console.warn('Paket-Abfrage fehlgeschlagen, Fallback Starter:', e);
+  }
+  localStorage.setItem('prova_paket', paket);
+  // Badge im Login kurz zeigen (optional)
+  console.log('Paket geladen:', paket);
+  window.location.href = ziel;
+}
+
 window.login=async function(){
   var email=document.getElementById('login-email').value.trim();
   var pw=document.getElementById('login-pw').value;
@@ -470,8 +514,7 @@ window.register=async function(){
         localStorage.setItem('prova_sv_vorname',parts[0]||'');
         localStorage.setItem('prova_sv_nachname',parts.slice(1).join(' ')||'');
         localStorage.setItem('prova_trial_start',Date.now().toString());
-        localStorage.setItem('prova_paket','Starter');
-        window.location.href='onboarding.html';
+        await ladePaketUndWeiterleiten(email, localStorage.getItem('prova_onboarding_done')?'dashboard.html':'onboarding-schnellstart.html');
       },1500);
     }else{
       var errData=await res.json().catch(function(){return{};});
@@ -485,8 +528,7 @@ window.register=async function(){
     localStorage.setItem('prova_sv_email',email);
     localStorage.setItem('prova_sv_vorname',parts[0]||'');
     localStorage.setItem('prova_trial_start',Date.now().toString());
-    localStorage.setItem('prova_paket','Starter');
-    window.location.href='onboarding.html';
+    await ladePaketUndWeiterleiten(email, localStorage.getItem('prova_onboarding_done')?'dashboard.html':'onboarding-schnellstart.html');
   }
 };
 

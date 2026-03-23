@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PROVA — Willkommen & Schnellstart</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#0b1220;--bg2:#111827;--bg3:#141e2f;
+  --surface:#1c2537;--surface2:#222d42;
+  --border:rgba(255,255,255,.07);--border2:rgba(255,255,255,.12);
+  --text:#e8eaf0;--text2:#aab4cb;--text3:#6b7a99;
+  --accent:#4f8ef7;--accent2:#3a7be0;
+  --green:#10b981;--warn:#f59e0b;--red:#ef4444;--purple:#a78bfa;
+  --r-md:10px;--r-lg:14px;--r-xl:20px;
+  --sans:'Instrument Sans',system-ui,sans-serif;
+  --mono:'JetBrains Mono',monospace;
+}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;}
+
+/* TOPBAR */
+.topbar{
+  position:fixed;top:0;left:0;right:0;height:52px;
+  background:var(--bg2);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 24px;z-index:100;
+}
+.logo{font-size:18px;font-weight:800;letter-spacing:-.03em;color:var(--text);}
+.logo span{color:var(--accent);}
+.skip-btn{font-size:12px;color:var(--text3);background:none;border:none;cursor:pointer;font-family:var(--sans);}
+.skip-btn:hover{color:var(--text2);}
+
+/* PROGRESS */
+.progress-wrap{
+  position:fixed;top:52px;left:0;right:0;
+  background:var(--bg3);border-bottom:1px solid var(--border);
+  padding:16px 24px;z-index:99;
+}
+.steps-row{display:flex;align-items:center;gap:0;max-width:700px;margin:0 auto;}
+.step-item{
+  display:flex;align-items:center;gap:8px;
+  font-size:12px;font-weight:600;color:var(--text3);
+  flex:1;
+}
+.step-item.active{color:var(--text);}
+.step-item.done{color:var(--green);}
+.step-dot{
+  width:28px;height:28px;border-radius:50%;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-size:12px;font-weight:800;
+  background:var(--surface2);color:var(--text3);
+  border:1px solid var(--border2);
+  transition:all .2s;
+}
+.step-item.active .step-dot{background:var(--accent);color:#fff;border-color:var(--accent);}
+.step-item.done .step-dot{background:var(--green);color:#fff;border-color:var(--green);}
+.step-connector{flex:1;height:1px;background:var(--border2);margin:0 4px;}
+.step-label{display:none;}
+@media(min-width:600px){.step-label{display:inline;}}
+
+/* MAIN */
+.main{
+  padding-top:calc(52px + 70px + 40px);
+  padding-bottom:60px;
+  min-height:100vh;
+}
+.page{display:none;}
+.page.active{display:block;animation:fadeIn .25s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
+
+.page-inner{max-width:600px;margin:0 auto;padding:0 20px;}
+
+/* PAGE HEADER */
+.page-tag{
+  font-size:10px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.1em;color:var(--accent);margin-bottom:10px;
+}
+.page-title{font-size:28px;font-weight:800;line-height:1.2;margin-bottom:10px;}
+.page-sub{font-size:14px;color:var(--text2);line-height:1.6;margin-bottom:28px;}
+
+/* FORM */
+.form-card{
+  background:var(--surface);border:1px solid var(--border2);
+  border-radius:var(--r-lg);padding:24px;margin-bottom:20px;
+}
+.form-row{margin-bottom:16px;}
+.form-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text3);margin-bottom:6px;display:block;}
+.form-input{
+  width:100%;padding:10px 14px;
+  background:var(--bg3);border:1px solid var(--border2);
+  border-radius:8px;color:var(--text);font-size:14px;
+  font-family:var(--sans);outline:none;transition:border-color .15s;
+}
+.form-input:focus{border-color:var(--accent);}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+@media(max-width:480px){.form-grid{grid-template-columns:1fr;}}
+.form-hint{font-size:11px;color:var(--text3);margin-top:4px;}
+
+/* DEMO CARD */
+.demo-card{
+  background:linear-gradient(135deg,rgba(79,142,247,.1),rgba(79,142,247,.04));
+  border:1px solid rgba(79,142,247,.2);
+  border-radius:var(--r-lg);padding:20px;margin-bottom:16px;
+}
+.demo-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--accent);margin-bottom:12px;}
+.demo-field{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;}
+.demo-field:last-child{border-bottom:none;}
+.demo-key{color:var(--text3);font-weight:600;}
+.demo-val{color:var(--text);font-weight:700;}
+
+/* KI ANIMATION */
+.ki-box{
+  background:var(--surface);border:1px solid var(--border2);
+  border-radius:var(--r-lg);padding:24px;margin-bottom:20px;
+}
+.ki-steps{display:flex;flex-direction:column;gap:12px;margin-bottom:20px;}
+.ki-step{display:flex;align-items:center;gap:12px;font-size:13px;}
+.ki-step-icon{
+  width:32px;height:32px;border-radius:50%;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-size:14px;background:var(--surface2);
+  border:1px solid var(--border2);
+}
+.ki-step.done .ki-step-icon{background:rgba(16,185,129,.15);border-color:rgba(16,185,129,.3);}
+.ki-step.active .ki-step-icon{background:rgba(79,142,247,.15);border-color:rgba(79,142,247,.3);}
+.ki-step-text{color:var(--text2);}
+.ki-step.done .ki-step-text{color:var(--text);}
+.ki-step.active .ki-step-text{color:var(--text);font-weight:600;}
+.ki-progress{height:4px;background:var(--surface2);border-radius:2px;overflow:hidden;margin-top:12px;}
+.ki-progress-bar{height:100%;background:linear-gradient(90deg,var(--accent),var(--purple));border-radius:2px;transition:width .3s ease;width:0%;}
+
+/* VORSCHAU */
+.preview-card{
+  background:var(--surface);border:1px solid var(--border2);
+  border-radius:var(--r-lg);padding:20px;margin-bottom:16px;
+  font-size:12px;color:var(--text2);line-height:1.8;
+}
+.preview-section{margin-bottom:14px;}
+.preview-section-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--accent);margin-bottom:6px;}
+.preview-text{font-size:13px;color:var(--text2);line-height:1.7;}
+
+/* SUCCESS */
+.success-icon{font-size:52px;text-align:center;margin-bottom:16px;}
+.feature-list{display:flex;flex-direction:column;gap:10px;margin-bottom:24px;}
+.feature-item{
+  display:flex;align-items:center;gap:12px;
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:10px;padding:12px 16px;
+  font-size:13px;color:var(--text2);
+}
+.feature-item-icon{font-size:18px;flex-shrink:0;}
+.feature-item-text strong{color:var(--text);display:block;margin-bottom:2px;font-size:13px;}
+
+/* CTA */
+.btn-primary{
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  width:100%;padding:15px 24px;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  border:none;border-radius:var(--r-lg);
+  color:#fff;font-size:16px;font-weight:700;
+  cursor:pointer;font-family:var(--sans);
+  transition:all .2s;
+  box-shadow:0 4px 20px rgba(79,142,247,.3);
+  min-height:52px;
+}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 6px 28px rgba(79,142,247,.45);}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+.btn-secondary{
+  display:flex;align-items:center;justify-content:center;
+  width:100%;padding:12px;margin-top:10px;
+  background:transparent;border:1px solid var(--border2);
+  border-radius:var(--r-lg);color:var(--text3);
+  font-size:13px;font-weight:500;cursor:pointer;font-family:var(--sans);
+  transition:all .15s;
+}
+.btn-secondary:hover{background:var(--surface);color:var(--text2);}
+.btn-small{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:8px 16px;background:rgba(79,142,247,.1);
+  border:1px solid rgba(79,142,247,.2);border-radius:8px;
+  color:var(--accent);font-size:12px;font-weight:600;
+  cursor:pointer;font-family:var(--sans);transition:all .15s;
+}
+.btn-small:hover{background:rgba(79,142,247,.18);}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="logo">PRO<span>VA</span></div>
+  <button class="skip-btn" onclick="überspringen()">Überspringen →</button>
+</div>
+
+<!-- PROGRESS STEPPER -->
+<div class="progress-wrap">
+  <div class="steps-row">
+    <div class="step-item active" id="si-1">
+      <div class="step-dot" id="sd-1">1</div>
+      <span class="step-label">Profil</span>
+    </div>
+    <div class="step-connector"></div>
+    <div class="step-item" id="si-2">
+      <div class="step-dot" id="sd-2">2</div>
+      <span class="step-label">Demo-Fall</span>
+    </div>
+    <div class="step-connector"></div>
+    <div class="step-item" id="si-3">
+      <div class="step-dot" id="sd-3">3</div>
+      <span class="step-label">KI erleben</span>
+    </div>
+    <div class="step-connector"></div>
+    <div class="step-item" id="si-4">
+      <div class="step-dot" id="sd-4">4</div>
+      <span class="step-label">Vorschau</span>
+    </div>
+    <div class="step-connector"></div>
+    <div class="step-item" id="si-5">
+      <div class="step-dot" id="sd-5">✓</div>
+      <span class="step-label">Los geht's</span>
+    </div>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- SCHRITT 1: PROFIL -->
+  <div class="page active" id="page-1">
+    <div class="page-inner">
+      <div class="page-tag">Schritt 1 von 5</div>
+      <h1 class="page-title">Willkommen bei PROVA. 👋</h1>
+      <p class="page-sub">Richten Sie Ihr Profil ein — PROVA befüllt damit alle Gutachten, Briefe und Rechnungen automatisch.</p>
+
+      <div class="form-card">
+        <div class="form-grid">
+          <div class="form-row">
+            <label class="form-label">Vorname *</label>
+            <input type="text" class="form-input" id="ob-vorname" placeholder="Thomas" autocomplete="given-name">
+          </div>
+          <div class="form-row">
+            <label class="form-label">Nachname *</label>
+            <input type="text" class="form-input" id="ob-nachname" placeholder="Müller" autocomplete="family-name">
+          </div>
+        </div>
+        <div class="form-row">
+          <label class="form-label">Qualifikation / Titel</label>
+          <input type="text" class="form-input" id="ob-quali" placeholder="Dipl.-Ing., ö.b.u.v. Sachverständiger für Schäden an Gebäuden">
+          <div class="form-hint">Erscheint im Briefkopf und im Gutachten</div>
+        </div>
+        <div class="form-row">
+          <label class="form-label">Büroname / Firma</label>
+          <input type="text" class="form-input" id="ob-buero" placeholder="SV-Büro Müller">
+        </div>
+        <div class="form-row">
+          <label class="form-label">IHK / Kammer</label>
+          <input type="text" class="form-input" id="ob-ihk" placeholder="IHK Köln">
+        </div>
+      </div>
+
+      <button class="btn-primary" onclick="schritt1Weiter()">
+        Weiter — Demo-Fall ansehen →
+      </button>
+    </div>
+  </div>
+
+  <!-- SCHRITT 2: DEMO-FALL -->
+  <div class="page" id="page-2">
+    <div class="page-inner">
+      <div class="page-tag">Schritt 2 von 5</div>
+      <h1 class="page-title">So sieht ein typischer Fall aus.</h1>
+      <p class="page-sub">PROVA hat einen Demo-Fall vorbereitet — so können Sie alle Funktionen gefahrlos testen. Ihre echten Fälle sind davon getrennt.</p>
+
+      <div class="demo-card">
+        <div class="demo-label">🧪 Demo-Fall — Schimmelbefall</div>
+        <div class="demo-field"><span class="demo-key">Schadenart</span><span class="demo-val">Feuchte & Schimmel</span></div>
+        <div class="demo-field"><span class="demo-key">Objekt</span><span class="demo-val">Am Nottbäumchen 35, 41366 Schwalmtal</span></div>
+        <div class="demo-field"><span class="demo-key">Auftraggeber</span><span class="demo-val">Bayerische Hausbesitzer Versicherung</span></div>
+        <div class="demo-field"><span class="demo-key">Geschädigter</span><span class="demo-val">Heike Schreiber</span></div>
+        <div class="demo-field"><span class="demo-key">Begehung</span><span class="demo-val">22.03.2026</span></div>
+      </div>
+
+      <div class="form-card">
+        <div class="form-label" style="margin-bottom:10px;">📝 Ihre Diktat-Notizen (Demo)</div>
+        <textarea class="form-input" id="ob-diktat" rows="5"
+          style="resize:vertical;font-size:13px;line-height:1.6;"
+          placeholder="Schreiben Sie hier Ihre Beobachtungen wie beim echten Ortstermin...">Im Schlafzimmer OG, Außenwandecke Nord-West, schwarzer Schimmelbefall ca. 0,5m² auf Putz. Feuchtemessung Mauerwerk: 24,5% (Holzfeuchteäquivalent). Tapete stellenweise abgelöst. Keine sichtbaren Undichtigkeiten an Fenstern. Heizung offenbar nicht ausreichend genutzt (laut Bewohnerin selten geheizt).</textarea>
+        <div class="form-hint">Diese Notizen werden in Schritt 3 von der KI verarbeitet</div>
+      </div>
+
+      <button class="btn-primary" onclick="schritt2Weiter()">
+        KI startet jetzt →
+      </button>
+      <button class="btn-secondary" onclick="geheZu(1)">← Zurück</button>
+    </div>
+  </div>
+
+  <!-- SCHRITT 3: KI ANIMATION -->
+  <div class="page" id="page-3">
+    <div class="page-inner">
+      <div class="page-tag">Schritt 3 von 5</div>
+      <h1 class="page-title">Die KI arbeitet für Sie.</h1>
+      <p class="page-sub">Aus Ihren Notizen werden §1–§5 des Gutachtens automatisch generiert. Das dauert normalerweise 30–90 Sekunden.</p>
+
+      <div class="ki-box">
+        <div class="ki-steps" id="ki-steps-list">
+          <div class="ki-step" id="ks-1">
+            <div class="ki-step-icon">1</div>
+            <div class="ki-step-text">Stammdaten & Diktat werden verarbeitet</div>
+          </div>
+          <div class="ki-step" id="ks-2">
+            <div class="ki-step-icon">2</div>
+            <div class="ki-step-text">§1 Auftrag & §2 Objekt werden verfasst</div>
+          </div>
+          <div class="ki-step" id="ks-3">
+            <div class="ki-step-icon">3</div>
+            <div class="ki-step-text">§3 Feststellungen (Konjunktiv II) wird geprüft</div>
+          </div>
+          <div class="ki-step" id="ks-4">
+            <div class="ki-step-icon">4</div>
+            <div class="ki-step-text">§4 Messwerte & DIN-Normen werden zugeordnet</div>
+          </div>
+          <div class="ki-step" id="ks-5">
+            <div class="ki-step-icon">5</div>
+            <div class="ki-step-text">§5 Kosten & Positionen werden berechnet</div>
+          </div>
+          <div class="ki-step" id="ks-6">
+            <div class="ki-step-icon">6</div>
+            <div class="ki-step-text">Gutachten-Entwurf wird gespeichert</div>
+          </div>
+        </div>
+        <div class="ki-progress"><div class="ki-progress-bar" id="ki-bar"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCHRITT 4: VORSCHAU -->
+  <div class="page" id="page-4">
+    <div class="page-inner">
+      <div class="page-tag">Schritt 4 von 5</div>
+      <h1 class="page-title">Ihr Gutachten-Entwurf.</h1>
+      <p class="page-sub">Die KI hat §1–§5 fertig. Jetzt fehlt nur noch <strong style="color:var(--accent)">Ihr persönliches Fachurteil (§6)</strong> — das schreiben Sie selbst.</p>
+
+      <div class="preview-card" id="preview-card">
+        <div class="preview-section">
+          <div class="preview-section-title">§1 Auftrag</div>
+          <div class="preview-text" id="prev-s1">wird geladen…</div>
+        </div>
+        <div class="preview-section">
+          <div class="preview-section-title">§2 Objekt</div>
+          <div class="preview-text" id="prev-s2">wird geladen…</div>
+        </div>
+        <div class="preview-section">
+          <div class="preview-section-title">§3 Feststellungen</div>
+          <div class="preview-text" id="prev-s3">wird geladen…</div>
+        </div>
+        <div class="preview-section">
+          <div class="preview-section-title">§4 Messwerte & Normen</div>
+          <div class="preview-text" id="prev-s4">wird geladen…</div>
+        </div>
+      </div>
+
+      <div style="background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2);border-radius:10px;padding:14px 16px;margin-bottom:20px;font-size:12px;color:#d97706;line-height:1.6;">
+        ⚖️ <strong>§407a ZPO:</strong> §6 (Fachurteil) müssen Sie persönlich verfassen. PROVA prüft automatisch, dass alle Einschätzungen im Konjunktiv II stehen.
+      </div>
+
+      <button class="btn-primary" onclick="geheZu(5)">
+        Alles verstanden — los geht's →
+      </button>
+      <button class="btn-secondary" onclick="geheZu(3)">← Zurück</button>
+    </div>
+  </div>
+
+  <!-- SCHRITT 5: FERTIG -->
+  <div class="page" id="page-5">
+    <div class="page-inner">
+      <div class="page-tag">Bereit!</div>
+      <div class="success-icon">🎉</div>
+      <h1 class="page-title" id="welcome-title">PROVA ist bereit, <span id="user-name">Thomas</span>.</h1>
+      <p class="page-sub">Ihr Profil ist gespeichert. Sie können jetzt Ihr erstes echtes Gutachten erstellen.</p>
+
+      <div class="feature-list">
+        <div class="feature-item">
+          <div class="feature-item-icon">⏱️</div>
+          <div><strong>Unter 60 Minuten</strong>statt 3–5 Stunden pro Gutachten</div>
+        </div>
+        <div class="feature-item">
+          <div class="feature-item-icon">⚖️</div>
+          <div><strong>§407a-geschützt</strong>Konjunktiv II wird automatisch geprüft</div>
+        </div>
+        <div class="feature-item">
+          <div class="feature-item-icon">📱</div>
+          <div><strong>Überall nutzbar</strong>Browser, iPad, Smartphone — kein Download</div>
+        </div>
+        <div class="feature-item">
+          <div class="feature-item-icon">📄</div>
+          <div><strong>PDF sofort</strong>Gutachten, Rechnungen und Briefe automatisch</div>
+        </div>
+      </div>
+
+      <button class="btn-primary" onclick="starten()">
+        ✍ Erstes Gutachten erstellen
+      </button>
+      <button class="btn-secondary" onclick="window.location.href='dashboard.html'">
+        Zur Zentrale →
+      </button>
+    </div>
+  </div>
+
+</div><!-- /main -->
+
+<script>
+// Auth
+(function(){
+  if(!localStorage.getItem('prova_user')) window.location.href='app-login.html';
+  // Profil vorladen
+  var v=localStorage.getItem('prova_sv_vorname')||'';
+  var n=localStorage.getItem('prova_sv_nachname')||'';
+  var q=localStorage.getItem('prova_sv_qualifikation')||'';
+  var b=localStorage.getItem('prova_bueronamen')||'';
+  if(v) document.getElementById('ob-vorname').value=v;
+  if(n) document.getElementById('ob-nachname').value=n;
+  if(q) document.getElementById('ob-quali').value=q;
+  if(b) document.getElementById('ob-buero').value=b;
+})();
+
+var aktuellerSchritt = 1;
+
+function geheZu(n){
+  // Alten Step deaktivieren
+  document.getElementById('page-'+aktuellerSchritt).classList.remove('active');
+  // Stepper updaten
+  for(var i=1;i<=5;i++){
+    var si=document.getElementById('si-'+i);
+    var sd=document.getElementById('sd-'+i);
+    si.classList.remove('active','done');
+    if(i < n){ si.classList.add('done'); sd.textContent='✓'; }
+    else if(i === n){ si.classList.add('active'); sd.textContent=i; }
+    else { sd.textContent=i; }
+  }
+  aktuellerSchritt=n;
+  document.getElementById('page-'+n).classList.add('active');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function schritt1Weiter(){
+  var v=document.getElementById('ob-vorname').value.trim();
+  var nn=document.getElementById('ob-nachname').value.trim();
+  if(!v||!nn){ alert('Bitte Vor- und Nachname eingeben.'); return; }
+  // Speichern
+  localStorage.setItem('prova_sv_vorname',v);
+  localStorage.setItem('prova_sv_nachname',nn);
+  var q=document.getElementById('ob-quali').value.trim();
+  var b=document.getElementById('ob-buero').value.trim();
+  var ihk=document.getElementById('ob-ihk').value.trim();
+  if(q) localStorage.setItem('prova_sv_qualifikation',q);
+  if(b) localStorage.setItem('prova_bueronamen',b);
+  if(ihk) localStorage.setItem('prova_sv_ihk',ihk);
+  // Name auf letzter Seite setzen
+  document.getElementById('user-name').textContent=v;
+  geheZu(2);
+}
+
+function schritt2Weiter(){
+  geheZu(3);
+  // KI-Animation starten
+  setTimeout(starteKiAnimation, 400);
+}
+
+var ki_demo_text = {
+  s1: 'Die Unterzeichnende wurde von der Bayerischen Hausbesitzer Versicherung AG beauftragt, Feststellungen zu einem Feuchteschaden im Gebäude Am Nottbäumchen 35, 41366 Schwalmtal zu treffen. Die Begehung erfolgte am 22.03.2026 in Anwesenheit der Wohnungsinhaberin Heike Schreiber.',
+  s2: 'Beim Begutachtungsobjekt handelt es sich um eine Doppelhaushälfte, Baujahr ca. 1998. Das Gebäude weist eine konventionelle Massivbauweise mit verputzten Außenwänden auf. Die betroffene Wohnung befindet sich im Obergeschoss.',
+  s3: 'Im Schlafzimmer OG, im Bereich der Außenwandecke Nord-West, wurden Schimmelbildungen auf dem Wandputz festgestellt. Der befallene Bereich beträgt schätzungsweise 0,5 m². Die Tapete war in diesem Bereich stellenweise abgelöst. Sichtbare Undichtigkeiten an Fenstern oder Abdichtungen wurden nicht vorgefunden.',
+  s4: 'Feuchtemessung Mauerwerk (Holzfeuchteäquivalent): 24,5 %. Gemäß DIN 68800-1 liegt der Grenzwert für Holzbauteile bei 20 % rel. Holzfeuchte. Der gemessene Wert überschreitet diesen Grenzwert um 4,5 Prozentpunkte. Normativ relevant: WTA-Merkblatt 6-1-01/D (Lüftung zur Vermeidung von Schimmelpilzbildung).'
+};
+
+function starteKiAnimation(){
+  var steps=[
+    {id:'ks-1',delay:0,duration:800},
+    {id:'ks-2',delay:900,duration:1200},
+    {id:'ks-3',delay:2200,duration:1100},
+    {id:'ks-4',delay:3400,duration:1000},
+    {id:'ks-5',delay:4500,duration:900},
+    {id:'ks-6',delay:5500,duration:700},
+  ];
+  var total=6400;
+
+  steps.forEach(function(s,idx){
+    setTimeout(function(){
+      document.getElementById(s.id).classList.add('active');
+      var pct=Math.round(((idx+1)/6)*100);
+      document.getElementById('ki-bar').style.width=pct+'%';
+    }, s.delay);
+    setTimeout(function(){
+      document.getElementById(s.id).classList.remove('active');
+      document.getElementById(s.id).classList.add('done');
+      document.querySelector('#'+s.id+' .ki-step-icon').textContent='✓';
+    }, s.delay+s.duration);
+  });
+
+  setTimeout(function(){
+    document.getElementById('ki-bar').style.width='100%';
+    // Vorschau-Texte befüllen
+    var vorname=localStorage.getItem('prova_sv_vorname')||'Der Sachverständige';
+    document.getElementById('prev-s1').textContent=ki_demo_text.s1.replace('Die Unterzeichnende', vorname);
+    document.getElementById('prev-s2').textContent=ki_demo_text.s2;
+    document.getElementById('prev-s3').textContent=ki_demo_text.s3;
+    document.getElementById('prev-s4').textContent=ki_demo_text.s4;
+    setTimeout(function(){ geheZu(4); }, 600);
+  }, total+300);
+}
+
+function starten(){
+  localStorage.setItem('prova_onboarding_done','true');
+  window.location.href='app-starter.html';
+}
+
+function überspringen(){
+  var v=document.getElementById('ob-vorname').value.trim();
+  var nn=document.getElementById('ob-nachname').value.trim();
+  if(v) localStorage.setItem('prova_sv_vorname',v);
+  if(nn) localStorage.setItem('prova_sv_nachname',nn);
+  localStorage.setItem('prova_onboarding_done','true');
+  window.location.href='dashboard.html';
+}
+</script>
+</body>
+</html>

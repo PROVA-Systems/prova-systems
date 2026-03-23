@@ -2,1229 +2,893 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ihr Fachurteil · PROVA</title>
+  <link rel="manifest" href="/manifest.json">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="PROVA">
+  <meta name="theme-color" content="#111827">
+  <link rel="apple-touch-icon" href="/icons/icon-192.png">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>§6 Fachurteil · PROVA</title>
 <style>
-:root {
-  --bg:#0b1220;--bg2:#111827;--bg3:#161f30;--surface:#1c2537;--surface2:#222d42;
-  --border:rgba(255,255,255,0.08);--border2:rgba(255,255,255,0.14);
-  --text:#eef0f6;--text2:#9aa5bc;--text3:#5a6680;
-  --accent:#4f8ef7;--accent2:#3a7be0;
-  --green:#10b981;--green-bg:rgba(16,185,129,0.1);--green-border:rgba(16,185,129,0.25);
-  --warn:#f59e0b;--warn-bg:rgba(245,158,11,0.1);--warn-border:rgba(245,158,11,0.25);
-  --red:#ef4444;--red-bg:rgba(239,68,68,0.1);--red-border:rgba(239,68,68,0.25);
-  --sans:'Instrument Sans',system-ui,sans-serif;--nav-h:52px;
-}
 *{box-sizing:border-box;margin:0;padding:0;}
-html{font-size:18px;}
-body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;line-height:1.6;}
+:root{
+  --bg:#0b1220;--bg2:#111827;--bg3:#141e2f;
+  --surface:#1c2537;--surface2:#222d42;
+  --border:rgba(255,255,255,.07);--border2:rgba(255,255,255,.12);
+  --text:#e8eaf0;--text2:#aab4cb;--text3:#6b7a99;
+  --accent:#4f8ef7;--accent2:#3a7be0;
+  --green:#10b981;--warn:#f59e0b;--red:#ef4444;
+  --r-md:10px;--r-lg:14px;
+  --sans:'Instrument Sans',system-ui,sans-serif;
+}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;}
 
-/* NAV */
-.topbar{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 20px;height:var(--nav-h);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
-.logo{font-weight:800;font-size:18px;color:var(--text);text-decoration:none;letter-spacing:-0.02em;}
-.logo span{color:var(--accent);}
-.topnav{display:flex;gap:2px;}
-.topnav a{padding:6px 12px;border-radius:6px;color:var(--text3);font-size:14px;font-weight:500;text-decoration:none;transition:all 0.15s;min-height:44px;display:inline-flex;align-items:center;}
-.topnav a:hover{color:var(--text2);background:rgba(255,255,255,0.04);}
-.topnav a.active{color:var(--accent);background:rgba(79,142,247,0.1);}
-.paket-badge{font-size:11px;font-weight:600;padding:3px 10px;border-radius:10px;}
-@media(max-width:600px){.topnav{display:none;}.topbar{padding:0 14px;height:48px;}}
+/* ── FLOW HEADER ── */
+.flow-header{
+  position:sticky;top:0;z-index:200;
+  background:var(--bg2);border-bottom:1px solid var(--border);
+  height:52px;display:flex;align-items:center;
+  padding:0 20px;gap:0;
+}
+.flow-back{display:flex;align-items:center;gap:6px;color:var(--text3);
+  font-size:13px;text-decoration:none;white-space:nowrap;}
+.flow-back:hover{color:var(--text2);}
+.flow-steps{display:flex;align-items:center;gap:0;flex:1;justify-content:center;padding:0 12px;}
+.flow-step{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:600;
+  color:var(--text3);white-space:nowrap;}
+.flow-step.active{color:var(--text);}
+.flow-step.done{color:var(--green);}
+.flow-dot{width:22px;height:22px;border-radius:50%;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-size:10px;font-weight:800;
+  background:var(--surface2);color:var(--text3);border:1px solid var(--border2);}
+.flow-step.active .flow-dot{background:var(--accent);color:#fff;border-color:var(--accent);}
+.flow-step.done .flow-dot{background:var(--green);color:#fff;border-color:var(--green);}
+.flow-sep{width:28px;height:1px;background:var(--border2);margin:0 3px;}
+.flow-az{font-size:12px;color:var(--text3);white-space:nowrap;
+  padding:4px 10px;background:var(--surface);border-radius:6px;
+  border:1px solid var(--border);}
 
-/* PROGRESS */
-.progress-wrap{background:var(--bg2);border-bottom:1px solid var(--border);padding:14px 20px;}
-.progress-inner{max-width:720px;margin:0 auto;}
-.progress-label{font-size:13px;color:var(--text3);margin-bottom:8px;display:flex;justify-content:space-between;}
-.progress-label strong{color:var(--text2);}
-.progress-track{height:4px;background:var(--surface2);border-radius:4px;overflow:hidden;}
-.progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),#7c3aed);border-radius:4px;transition:width 0.5s cubic-bezier(0.4,0,0.2,1);}
-.steps-row{display:flex;gap:6px;margin-top:10px;}
-.step-dot{flex:1;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;transition:all 0.3s;border:1px solid var(--border);}
-.step-dot.done{background:var(--green-bg);border-color:var(--green-border);color:var(--green);}
-.step-dot.active{background:rgba(79,142,247,0.12);border-color:rgba(79,142,247,0.35);color:var(--accent);}
-.step-dot.pending{background:var(--surface);color:var(--text3);}
+/* ── MAIN LAYOUT ── */
+.main{padding:24px 20px 60px;max-width:1200px;margin:0 auto;}
 
-/* MAIN */
-.main{max-width:720px;margin:0 auto;padding:28px 20px 80px;}
-.back-link{display:inline-flex;align-items:center;gap:6px;font-size:14px;color:var(--text3);text-decoration:none;margin-bottom:22px;transition:color 0.15s;}
-.back-link:hover{color:var(--text2);}
+/* Fall-Banner */
+.fall-banner{
+  display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+  padding:10px 16px;background:var(--surface);
+  border:1px solid var(--border);border-radius:var(--r-md);
+  margin-bottom:20px;font-size:12px;
+}
+.fall-banner-item{color:var(--text3);}
+.fall-banner-item strong{color:var(--text2);font-weight:600;}
+.fall-banner-sep{color:var(--border2);}
 
-/* STEP CARD */
-.step-card{display:none;}
-.step-card.active{display:block;}
-.step-eyebrow{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--accent);margin-bottom:8px;}
-.step-title{font-size:24px;font-weight:700;color:var(--text);line-height:1.2;letter-spacing:-0.02em;margin-bottom:8px;}
-.step-subtitle{font-size:16px;color:var(--text2);margin-bottom:24px;line-height:1.6;}
+/* §6 Hinweis-Leiste */
+.diktat-hinweis{
+  display:flex;align-items:flex-start;gap:8px;
+  padding:8px 14px;margin-bottom:16px;
+  background:rgba(79,142,247,.05);
+  border-left:3px solid rgba(79,142,247,.3);
+  border-radius:0 6px 6px 0;
+  font-size:12px;color:var(--text3);line-height:1.5;
+}
+.diktat-hinweis-icon{flex-shrink:0;margin-top:1px;font-size:13px;}
 
-/* STATUS ROWS */
-.status-row{display:flex;gap:10px;margin-bottom:12px;padding:14px 16px;border-radius:10px;border:1px solid var(--border);}
-.status-row.ok{background:var(--green-bg);border-color:var(--green-border);}
-.status-row.warn{background:var(--warn-bg);border-color:var(--warn-border);}
-.status-icon{font-size:20px;flex-shrink:0;}
-.status-body-title{font-size:14px;font-weight:600;margin-bottom:3px;}
-.status-row.ok .status-body-title{color:var(--green);}
-.status-row.warn .status-body-title{color:var(--warn);}
-.status-body-sub{font-size:13px;color:var(--text3);}
+/* ── 2-SPALTEN GRID ── */
+.two-col{display:grid;grid-template-columns:1fr 340px;gap:20px;align-items:start;}
+@media(max-width:900px){.two-col{grid-template-columns:1fr;}}
 
-/* CHOICE BUTTONS */
-.choice-grid{display:flex;gap:12px;margin-bottom:20px;}
-.choice-btn{flex:1;padding:16px;border-radius:12px;border:2px solid var(--border2);background:var(--surface);cursor:pointer;transition:all 0.2s;text-align:center;}
-.choice-btn:hover{border-color:var(--accent);background:var(--surface2);}
-.choice-btn.selected{border-color:var(--accent);background:rgba(79,142,247,0.08);}
-.choice-btn.selected .choice-title{color:var(--accent);}
-.choice-icon{font-size:24px;margin-bottom:8px;}
-.choice-title{font-size:15px;font-weight:600;color:var(--text);margin-bottom:4px;}
-.choice-desc{font-size:13px;color:var(--text3);line-height:1.4;}
+/* ── LINKE SPALTE — SCHREIBEN ── */
+.card{
+  background:var(--surface);border:1px solid var(--border2);
+  border-radius:var(--r-lg);overflow:hidden;margin-bottom:16px;
+}
+.card-header{
+  padding:14px 18px 12px;
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.card-title{font-size:13px;font-weight:700;color:var(--text);}
+.card-sub{font-size:11px;color:var(--text3);margin-top:2px;}
+.card-body{padding:16px 18px;}
 
-/* GUTACHTENTYP */
-.typ-grid{display:flex;gap:8px;margin-bottom:24px;}
-.typ-btn{flex:1;padding:12px 10px;border-radius:10px;border:2px solid var(--border2);background:var(--surface);cursor:pointer;transition:all 0.2s;text-align:center;font-family:var(--sans);}
-.typ-btn:hover{border-color:var(--accent);}
-.typ-btn.selected{border-color:var(--accent);background:rgba(79,142,247,0.08);}
-.typ-btn-title{font-size:13px;font-weight:600;color:var(--text);}
-.typ-btn-sub{font-size:11px;color:var(--text3);margin-top:3px;}
-.typ-btn.selected .typ-btn-title{color:var(--accent);}
+/* Typ-Auswahl */
+.typ-row{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
+.typ-btn{
+  flex:1;min-width:100px;padding:9px 12px;
+  background:var(--surface2);border:1.5px solid var(--border2);
+  border-radius:8px;color:var(--text3);
+  font-size:12px;font-weight:600;cursor:pointer;
+  font-family:var(--sans);text-align:center;transition:all .15s;
+}
+.typ-btn:hover{border-color:var(--accent);color:var(--text2);}
+.typ-btn.active{border-color:var(--accent);background:rgba(79,142,247,.12);color:var(--accent);}
 
-/* KI INSPIRATION */
-.ki-insp-box{background:linear-gradient(135deg,rgba(79,142,247,0.05),rgba(124,58,237,0.05));border:1px solid rgba(79,142,247,0.2);border-radius:12px;padding:18px;margin-bottom:20px;position:relative;}
-.ki-insp-box::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--accent),#7c3aed);border-radius:12px 12px 0 0;}
-.ki-badge{display:inline-flex;align-items:center;gap:5px;background:rgba(79,142,247,0.12);border:1px solid rgba(79,142,247,0.25);color:var(--accent);padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:10px;}
-.ki-warning{font-size:12px;color:var(--text3);margin-left:8px;}
-.ki-insp-text{font-size:14px;color:var(--text2);line-height:1.75;font-style:italic;
-  user-select:none;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;pointer-events:none;}
+/* Weg-Tabs */
+.weg-tabs{display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:16px;}
+.weg-tab{
+  padding:9px 18px;font-size:12px;font-weight:600;
+  background:transparent;border:none;border-bottom:2px solid transparent;
+  color:var(--text3);cursor:pointer;font-family:var(--sans);
+  transition:all .15s;
+}
+.weg-tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+.weg-tab:hover{color:var(--text2);}
 
-/* FIELD LABEL */
-.field-label{font-size:14px;font-weight:600;color:var(--text2);margin-bottom:6px;display:flex;align-items:center;justify-content:space-between;}
-.field-req{color:var(--red);margin-left:3px;}
-.field-hint{font-size:12px;color:var(--text3);font-weight:400;}
-.field-block{margin-bottom:20px;}
-
-/* TEXTAREA */
-.sv-textarea{width:100%;background:var(--surface);border:2px solid var(--border2);border-radius:10px;padding:14px;color:var(--text);font-family:var(--sans);font-size:16px;line-height:1.7;resize:vertical;outline:none;transition:border-color 0.2s;}
+/* Textarea */
+.sv-textarea{
+  width:100%;padding:12px 14px;
+  background:var(--bg3);border:1.5px solid var(--border2);
+  border-radius:var(--r-md);color:var(--text);
+  font-size:13px;font-family:var(--sans);
+  line-height:1.7;resize:vertical;outline:none;
+  transition:border-color .15s;min-height:180px;
+}
 .sv-textarea:focus{border-color:var(--accent);}
-.sv-textarea.err{border-color:var(--red);}
-.sv-textarea::placeholder{color:var(--text3);font-size:14px;}
-.sv-textarea.sm{min-height:90px;font-size:15px;}
-.sv-textarea.lg{min-height:160px;}
+.char-count{font-size:11px;color:var(--text3);margin-top:6px;text-align:right;}
+.char-count.ok{color:var(--green);}
+.char-count.warn{color:var(--warn);}
+.char-count.bad{color:var(--red);}
 
-/* CHAR COUNTER */
-.char-row{display:flex;justify-content:space-between;align-items:center;margin-top:5px;font-size:12px;}
-.char-num{font-weight:600;}
-.char-ok{color:var(--green);}
-.char-warn{color:var(--warn);}
-.char-err{color:var(--red);}
+/* Weg B Felder */
+.feld-label{
+  font-size:10px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.07em;color:var(--text3);margin-bottom:6px;
+  display:flex;align-items:center;gap:6px;
+}
+.feld-num{
+  width:18px;height:18px;border-radius:50%;
+  background:var(--accent);color:#fff;
+  font-size:10px;font-weight:800;
+  display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.feld-block{margin-bottom:14px;}
 
-/* KONJUNKTIV CHECK */
-.kj-check{margin-top:8px;padding:9px 12px;border-radius:8px;font-size:13px;display:flex;align-items:flex-start;gap:8px;transition:all 0.3s;}
-.kj-check.idle{background:var(--surface);border:1px solid var(--border);color:var(--text3);}
-.kj-check.ok{background:var(--green-bg);border:1px solid var(--green-border);color:#6ee7b7;}
-.kj-check.warn{background:var(--warn-bg);border:1px solid var(--warn-border);color:#fde68a;}
-.kj-check.err{background:var(--red-bg);border:1px solid var(--red-border);color:#fca5a5;}
-.kj-icon{flex-shrink:0;font-size:14px;}
-.kj-link{color:var(--accent);cursor:pointer;text-decoration:underline;font-size:12px;}
+/* KJ2-Check */
+.kj-check{
+  display:flex;align-items:center;gap:8px;
+  padding:8px 12px;border-radius:8px;
+  font-size:12px;margin-top:8px;
+  background:var(--surface2);color:var(--text3);
+}
+.kj-check.ok{background:rgba(16,185,129,.08);color:#10b981;}
+.kj-check.warn{background:rgba(245,158,11,.08);color:#f59e0b;}
+.kj-check.idle{background:var(--surface2);color:var(--text3);}
 
-/* KAUSAL FELDER (Weg B) */
-.kausal-section{background:var(--bg3);border:1px solid var(--border2);border-radius:12px;padding:20px;margin-bottom:20px;}
-.kausal-title{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--text3);margin-bottom:16px;display:flex;align-items:center;gap:8px;}
-.kausal-step{display:flex;gap:12px;margin-bottom:16px;align-items:flex-start;}
-.kausal-step:last-child{margin-bottom:0;}
-.kausal-num{flex-shrink:0;width:28px;height:28px;border-radius:50%;background:rgba(79,142,247,0.15);border:1px solid rgba(79,142,247,0.3);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--accent);margin-top:2px;}
-.kausal-body{flex:1;}
+/* KI-Inspiration Box */
+.ki-insp-wrap{
+  margin-top:14px;border:1px dashed rgba(79,142,247,.25);
+  border-radius:var(--r-md);overflow:hidden;
+}
+.ki-insp-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:9px 14px;background:rgba(79,142,247,.06);
+  border-bottom:1px dashed rgba(79,142,247,.15);cursor:pointer;
+}
+.ki-insp-label{font-size:11px;font-weight:700;color:var(--accent);
+  display:flex;align-items:center;gap:6px;}
+.ki-insp-note{font-size:10px;color:var(--text3);}
+.ki-insp-body{padding:12px 14px;display:none;}
+.ki-insp-text{font-size:12px;color:var(--text2);line-height:1.7;
+  user-select:none;-webkit-user-select:none;}
+.ki-insp-btn{
+  margin-top:10px;padding:7px 14px;
+  background:rgba(79,142,247,.1);border:1px solid rgba(79,142,247,.2);
+  border-radius:7px;color:var(--accent);font-size:12px;font-weight:600;
+  cursor:pointer;font-family:var(--sans);
+}
+.ki-insp-btn:hover{background:rgba(79,142,247,.18);}
+.ki-spinner{
+  width:18px;height:18px;border:2px solid var(--border2);
+  border-top-color:var(--accent);border-radius:50%;
+  animation:spin .7s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg);}}
 
-/* KI AUSFORMULIEREN */
-.ki-running{display:none;align-items:center;gap:10px;padding:12px 16px;background:rgba(79,142,247,0.07);border:1px solid rgba(79,142,247,0.15);border-radius:10px;margin-bottom:14px;font-size:14px;color:var(--text2);}
-.ki-running.visible{display:flex;}
-.ki-spinner{width:16px;height:16px;border:2px solid rgba(79,142,247,0.2);border-top-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite;flex-shrink:0;}
-@keyframes spin{to{transform:rotate(360deg)}}
+/* §407a Bestätigung */
+.confirm-box{
+  margin-top:16px;padding:14px 16px;
+  background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.2);
+  border-radius:var(--r-md);
+}
+.confirm-row{display:flex;align-items:flex-start;gap:10px;}
+.confirm-row input[type=checkbox]{
+  width:16px;height:16px;flex-shrink:0;margin-top:2px;
+  accent-color:var(--green);cursor:pointer;
+}
+.confirm-text{font-size:12px;color:var(--text2);line-height:1.6;cursor:pointer;}
+.confirm-law{font-size:10px;color:var(--text3);margin-top:6px;font-style:italic;}
 
-/* ÄNDERUNGSBALKEN */
-.aend-wrap{margin-bottom:14px;display:none;}
-.aend-wrap.visible{display:block;}
-.aend-label{font-size:13px;color:var(--text3);margin-bottom:5px;display:flex;justify-content:space-between;}
-.aend-bar-track{height:8px;background:var(--surface2);border-radius:4px;overflow:hidden;}
-.aend-bar-fill{height:100%;border-radius:4px;transition:width 0.4s,background 0.3s;}
-.aend-hint{font-size:12px;margin-top:4px;}
+/* CTA */
+.btn-primary{
+  width:100%;padding:14px 20px;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  border:none;border-radius:var(--r-md);
+  color:#fff;font-size:15px;font-weight:700;
+  cursor:pointer;font-family:var(--sans);
+  transition:all .2s;display:flex;align-items:center;
+  justify-content:center;gap:10px;margin-top:16px;
+}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 6px 24px rgba(79,142,247,.35);}
+.btn-primary:disabled{opacity:.45;cursor:not-allowed;transform:none;box-shadow:none;}
+.btn-secondary{
+  width:100%;padding:10px;margin-top:8px;
+  background:transparent;border:1px solid var(--border2);
+  border-radius:var(--r-md);color:var(--text3);
+  font-size:13px;cursor:pointer;font-family:var(--sans);
+  transition:all .15s;
+}
+.btn-secondary:hover{background:var(--surface2);color:var(--text2);}
 
-/* DIFF */
-.diff-box{background:var(--surface);border:1px solid var(--border2);border-radius:10px;overflow:hidden;margin-bottom:14px;}
-.diff-header{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;padding:8px 14px;border-bottom:1px solid var(--border);}
-.diff-body{padding:12px 14px;font-size:14px;color:var(--text2);line-height:1.6;white-space:pre-wrap;}
-.diff-original .diff-header{color:var(--warn);}
-.diff-ki .diff-header{color:var(--accent);}
-.diff-actions{display:flex;gap:8px;padding:10px 14px;border-top:1px solid var(--border);}
-.btn-accept{flex:1;padding:9px;background:var(--green);border:none;border-radius:8px;color:#fff;font-family:var(--sans);font-size:14px;font-weight:600;cursor:pointer;transition:all 0.15s;}
-.btn-accept:hover{background:#0da271;}
-.btn-reject{padding:9px 14px;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;color:var(--text3);font-family:var(--sans);font-size:14px;cursor:pointer;transition:all 0.15s;}
-.btn-reject:hover{color:var(--red);}
+/* ── RECHTE SPALTE ── */
+.right-col{display:flex;flex-direction:column;gap:14px;}
 
-/* NORMEN */
-.normen-grid{display:flex;gap:10px;margin-bottom:18px;}
-.normen-btn{flex:1;padding:16px 12px;border-radius:12px;border:2px solid var(--border2);background:var(--surface);cursor:pointer;transition:all 0.2s;text-align:center;font-family:var(--sans);}
-.normen-btn:hover{border-color:var(--accent);}
-.normen-btn.yes{border-color:var(--green);background:var(--green-bg);}
-.normen-btn.no{border-color:var(--border2);background:var(--surface2);}
-.normen-icon{font-size:26px;margin-bottom:8px;}
-.normen-title{font-size:14px;font-weight:600;color:var(--text);}
-.normen-btn.yes .normen-title{color:var(--green);}
-.normen-result{background:var(--green-bg);border:1px solid var(--green-border);border-radius:10px;padding:12px 16px;font-size:14px;color:#6ee7b7;margin-bottom:18px;display:none;}
-.normen-result.visible{display:block;}
+/* Fall-Kontext */
+.ctx-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r-lg);padding:14px 16px;
+}
+.ctx-title{font-size:10px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.08em;color:var(--text3);margin-bottom:10px;}
+.ctx-row{display:flex;justify-content:space-between;
+  padding:6px 0;border-bottom:1px solid var(--border);
+  font-size:12px;}
+.ctx-row:last-child{border-bottom:none;}
+.ctx-key{color:var(--text3);}
+.ctx-val{color:var(--text2);font-weight:600;text-align:right;max-width:60%;}
 
-/* FINAL TEXT */
-.final-box{background:var(--surface);border:1px solid var(--border2);border-radius:12px;padding:20px;font-size:16px;line-height:1.8;color:var(--text);margin-bottom:18px;white-space:pre-wrap;}
-.hl-kj2{color:#93c5fd;background:rgba(147,197,253,0.1);border-radius:3px;padding:0 2px;}
-.hl-warn{color:#fde68a;background:rgba(253,230,138,0.12);border-radius:3px;padding:0 2px;border-bottom:2px solid var(--warn);}
+/* Normen-Vorschläge */
+.normen-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r-lg);overflow:hidden;
+}
+.normen-header{
+  padding:11px 14px;border-bottom:1px solid var(--border);
+  font-size:11px;font-weight:700;color:var(--text3);
+  display:flex;align-items:center;gap:6px;
+}
+.norm-item{
+  padding:10px 14px;border-bottom:1px solid var(--border);
+  cursor:pointer;transition:background .12s;
+}
+.norm-item:last-child{border-bottom:none;}
+.norm-item:hover{background:rgba(79,142,247,.06);}
+.norm-item-nr{font-size:12px;font-weight:700;color:var(--accent);}
+.norm-item-txt{font-size:11px;color:var(--text3);margin-top:2px;line-height:1.4;}
+.norm-item-g{font-size:10px;color:var(--text3);font-style:italic;margin-top:3px;}
+.norm-add-btn{
+  font-size:10px;padding:3px 8px;
+  background:rgba(79,142,247,.1);border:1px solid rgba(79,142,247,.2);
+  border-radius:5px;color:var(--accent);cursor:pointer;
+  font-family:var(--sans);font-weight:600;margin-top:5px;
+  display:inline-block;
+}
 
-/* CHECKLISTE */
-.check-list{margin-bottom:18px;}
-.check-item{display:flex;align-items:flex-start;gap:12px;padding:11px 14px;border-radius:10px;border:1px solid var(--border);background:var(--surface);margin-bottom:7px;cursor:pointer;transition:all 0.2s;}
-.check-item:has(input:checked){background:var(--green-bg);border-color:var(--green-border);}
-.check-item input{width:20px;height:20px;accent-color:var(--green);flex-shrink:0;cursor:pointer;margin-top:2px;}
-.check-item-text{font-size:15px;color:var(--text2);line-height:1.5;}
-.check-item:has(input:checked) .check-item-text{color:#6ee7b7;}
+/* Konjunktiv-Bausteine */
+.phrase-wrap{padding:12px 14px;display:flex;flex-wrap:wrap;gap:6px;}
+.phrase{
+  font-size:11px;padding:4px 9px;
+  background:var(--surface2);border:1px solid var(--border2);
+  border-radius:20px;color:var(--text3);cursor:pointer;
+  transition:all .12s;white-space:nowrap;
+}
+.phrase:hover{background:rgba(79,142,247,.1);color:var(--accent);border-color:rgba(79,142,247,.3);}
 
-/* §407a */
-.confirm-407a{background:linear-gradient(135deg,rgba(16,185,129,0.07),transparent);border:2px solid rgba(16,185,129,0.2);border-radius:12px;padding:16px;cursor:pointer;margin-bottom:18px;transition:all 0.2s;}
-.confirm-407a:has(input:checked){border-color:var(--green);background:var(--green-bg);}
-.confirm-407a-row{display:flex;align-items:flex-start;gap:12px;}
-.confirm-407a input{width:22px;height:22px;accent-color:var(--green);flex-shrink:0;cursor:pointer;margin-top:2px;}
-.confirm-407a-text{font-size:15px;color:var(--text2);line-height:1.6;}
-.confirm-407a:has(input:checked) .confirm-407a-text{color:#6ee7b7;}
-.confirm-407a-law{margin-top:8px;font-size:12px;font-family:monospace;color:var(--text3);padding:5px 9px;background:var(--surface);border-radius:5px;}
-
-/* BUTTONS */
-.btn-primary{width:100%;padding:15px 24px;background:linear-gradient(135deg,var(--accent),#3a7be0);border:none;border-radius:12px;color:#fff;font-family:var(--sans);font-size:16px;font-weight:700;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:10px;box-shadow:0 4px 18px rgba(79,142,247,0.28);min-height:54px;}
-.btn-primary:hover{transform:translateY(-1px);box-shadow:0 6px 24px rgba(79,142,247,0.38);}
-.btn-primary:disabled{opacity:0.35;cursor:not-allowed;transform:none;box-shadow:none;}
-.btn-green{width:100%;padding:15px 24px;background:linear-gradient(135deg,var(--green),#0da271);border:none;border-radius:12px;color:#fff;font-family:var(--sans);font-size:16px;font-weight:700;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:10px;box-shadow:0 4px 18px rgba(16,185,129,0.28);min-height:54px;}
-.btn-green:hover{transform:translateY(-1px);}
-.btn-green:disabled{opacity:0.35;cursor:not-allowed;transform:none;box-shadow:none;}
-.btn-secondary{width:100%;padding:13px 20px;background:var(--surface);border:1px solid var(--border2);border-radius:12px;color:var(--text3);font-family:var(--sans);font-size:15px;font-weight:500;cursor:pointer;transition:all 0.2s;min-height:50px;margin-top:10px;}
-.btn-secondary:hover{color:var(--text2);background:var(--surface2);}
-.btn-outline{padding:10px 18px;background:transparent;border:1px solid var(--border2);border-radius:8px;color:var(--text2);font-family:var(--sans);font-size:14px;cursor:pointer;transition:all 0.15s;}
-.btn-outline:hover{border-color:var(--accent);color:var(--accent);}
-.btn-hint{font-size:12px;color:var(--text3);text-align:center;margin-top:7px;}
-.divider{height:1px;background:var(--border);margin:22px 0;}
-
-/* ABSCHLUSS */
-.success-icon{font-size:60px;text-align:center;margin-bottom:14px;}
-.success-title{font-size:24px;font-weight:700;text-align:center;margin-bottom:8px;}
-.success-sub{font-size:16px;color:var(--text2);text-align:center;margin-bottom:22px;}
-.audit-badge{display:inline-flex;align-items:center;gap:6px;background:var(--green-bg);border:1px solid var(--green-border);color:var(--green);padding:5px 14px;border-radius:20px;font-size:13px;font-weight:600;margin:0 auto 22px;display:block;width:fit-content;}
-
-/* AUDIT TIMELINE */
-.audit-timeline{background:var(--surface);border:1px solid var(--border2);border-radius:14px;padding:20px;margin-bottom:18px;}
-.audit-tl-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text3);margin-bottom:16px;}
-.tl-item{display:flex;gap:12px;padding-bottom:16px;position:relative;}
-.tl-item:last-child{padding-bottom:0;}
-.tl-item:not(:last-child)::after{content:'';position:absolute;left:13px;top:28px;bottom:0;width:1px;background:var(--border);}
-.tl-dot{flex-shrink:0;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;}
-.tl-dot.input{background:rgba(79,142,247,0.15);border:1px solid rgba(79,142,247,0.3);}
-.tl-dot.ki{background:rgba(124,58,237,0.15);border:1px solid rgba(124,58,237,0.3);}
-.tl-dot.final{background:var(--green-bg);border:1px solid var(--green-border);}
-.tl-dot.sign{background:var(--green-bg);border:1px solid var(--green-border);}
-.tl-body{}
-.tl-label{font-size:13px;font-weight:600;color:var(--text);margin-bottom:3px;}
-.tl-ts{font-size:12px;color:var(--text3);}
-.tl-preview{font-size:13px;color:var(--text2);margin-top:5px;padding:7px 10px;background:var(--bg3);border-radius:6px;line-height:1.5;}
-.tl-badges{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap;}
-.tl-badge{padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;}
-.tl-badge.ok{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border);}
-.tl-badge.warn{background:var(--warn-bg);color:var(--warn);border:1px solid var(--warn-border);}
-.tl-badge.neutral{background:var(--surface2);color:var(--text2);border:1px solid var(--border2);}
-
-.offenlegung-box{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px 14px;margin-top:14px;}
-.offenlegung-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--text3);margin-bottom:6px;}
-.offenlegung-text{font-size:12px;color:var(--text2);line-height:1.6;font-style:italic;}
-
-.sync-status{display:flex;align-items:center;gap:8px;font-size:12px;margin-top:12px;}
-
-/* KJ OVERLAY */
-.kj-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:500;backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:20px;}
-.kj-overlay.open{display:flex;}
-.kj-modal{background:var(--bg2);border:1px solid var(--border2);border-radius:16px;max-width:540px;width:100%;max-height:80vh;overflow-y:auto;padding:26px;}
-.kj-modal-title{font-size:18px;font-weight:700;margin-bottom:4px;}
-.kj-modal-sub{font-size:14px;color:var(--text3);margin-bottom:18px;}
-.kj-row{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px;}
-.kj-bad{background:var(--red-bg);border:1px solid var(--red-border);border-radius:8px;padding:9px 11px;font-size:13px;color:#fca5a5;}
-.kj-good{background:var(--green-bg);border:1px solid var(--green-border);border-radius:8px;padding:9px 11px;font-size:13px;color:#6ee7b7;cursor:pointer;transition:opacity 0.15s;}
-.kj-good:hover{opacity:0.8;}
-.kj-small{font-size:10px;font-weight:700;text-transform:uppercase;opacity:0.7;margin-bottom:3px;}
-.phrase-wrap{display:flex;flex-wrap:wrap;gap:5px;margin-top:14px;}
-.phrase-chip{padding:4px 11px;background:rgba(79,142,247,0.1);border:1px solid rgba(79,142,247,0.2);border-radius:20px;font-size:12px;color:var(--accent);cursor:pointer;transition:all 0.15s;font-family:monospace;}
-.phrase-chip:hover{background:rgba(79,142,247,0.2);}
-.kj-close{width:100%;margin-top:16px;padding:11px;background:var(--surface2);border:1px solid var(--border2);border-radius:10px;color:var(--text2);font-family:var(--sans);font-size:14px;font-weight:600;cursor:pointer;}
-.kj-close:hover{background:var(--surface);}
-
-.toast{position:fixed;bottom:20px;right:20px;padding:11px 18px;background:var(--surface2);border:1px solid var(--green-border);border-radius:10px;color:var(--green);font-size:14px;font-weight:500;z-index:999;transform:translateY(60px);opacity:0;transition:all 0.35s cubic-bezier(0.34,1.56,0.64,1);}
-.toast.show{transform:translateY(0);opacity:1;}
-.toast.error{border-color:var(--red-border);color:#fca5a5;}
-::-webkit-scrollbar{width:4px;}
-::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+/* Toast */
+.toast{
+  position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
+  background:#1c2537;border:1px solid var(--border2);
+  border-radius:10px;padding:11px 20px;
+  font-size:13px;color:var(--text);
+  box-shadow:0 8px 32px rgba(0,0,0,.5);
+  z-index:999;display:none;white-space:nowrap;
+}
+.toast.ok{border-color:rgba(16,185,129,.4);background:rgba(16,185,129,.1);color:#10b981;}
+.toast.err{border-color:rgba(239,68,68,.4);background:rgba(239,68,68,.1);color:#ef4444;}
+.toast.warn{border-color:rgba(245,158,11,.4);background:rgba(245,158,11,.1);color:#f59e0b;}
 </style>
 </head>
 <body>
 
-<div class="topbar">
-  <a href="app-starter.html" class="logo">PRO<span>VA</span></a>
-  <nav class="topnav">
-    <a href="app-starter.html" class="active">Neues Gutachten</a>
-    <a href="archiv.html">Archiv</a>
-    <a href="briefvorlagen.html">Briefvorlagen</a>
-    <a href="termine.html">Termine</a>
-    <a href="jveg.html">JVEG</a>
-  </nav>
-  <div style="display:flex;align-items:center;gap:8px;">
-    <span class="paket-badge" id="topbarPaket"></span>
-    <button style="background:none;border:none;color:var(--text3);font-size:17px;cursor:pointer;padding:6px 8px;border-radius:6px;min-height:44px;" onclick="location.href='einstellungen.html'">⚙</button>
-  </div>
-</div>
-
-<div class="progress-wrap">
-  <div class="progress-inner">
-    <div class="progress-label">
-      <span>Schritt <strong id="stepNum">1</strong> von 4</span>
-      <span id="progressPct" style="color:var(--accent);font-weight:600;">25%</span>
+<!-- FLOW HEADER -->
+<header class="flow-header">
+  <a class="flow-back" href="javascript:goBack()" id="backBtn">← Zurück</a>
+  <div class="flow-steps">
+    <div class="flow-step done">
+      <div class="flow-dot">✓</div>
+      <span>§1–§5</span>
     </div>
-    <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:25%"></div></div>
-    <div class="steps-row">
-      <div class="step-dot active" id="dot1">1&nbsp;<span>Kontext</span></div>
-      <div class="step-dot pending" id="dot2">2&nbsp;<span>Einschätzung</span></div>
-      <div class="step-dot pending" id="dot3">3&nbsp;<span>Normen</span></div>
-      <div class="step-dot pending" id="dot4">4&nbsp;<span>Bestätigen</span></div>
+    <div class="flow-sep"></div>
+    <div class="flow-step active">
+      <div class="flow-dot">2</div>
+      <span>§6 Fachurteil</span>
+    </div>
+    <div class="flow-sep"></div>
+    <div class="flow-step">
+      <div class="flow-dot">3</div>
+      <span>Freigabe</span>
     </div>
   </div>
-</div>
+  <div class="flow-az" id="headerAz">—</div>
+</header>
 
 <div class="main">
-  <a href="freigabe.html" class="back-link" id="backLink">← Zurück zur Freigabe</a>
 
-  <!-- ═══ SCHRITT 1 — KONTEXT ═══ -->
-  <div class="step-card active" id="step1">
-    <div class="step-eyebrow">Schritt 1 von 4</div>
-    <div class="step-title">Ihr Gutachten ist fast fertig.</div>
-    <div class="step-subtitle">Nur noch Ihr persönliches Fachurteil fehlt — der einzige Teil, den keine KI für Sie schreiben darf.</div>
-
-    <div class="status-row ok" style="margin-bottom:10px;">
-      <div class="status-icon">✅</div>
-      <div><div class="status-body-title">§1–§5 vollständig ausformuliert</div><div class="status-body-sub">Auftrag, Objekt, Feststellungen, Kosten — fertig.</div></div>
-    </div>
-    <div class="status-row warn" style="margin-bottom:22px;">
-      <div class="status-icon">✍️</div>
-      <div><div class="status-body-title">§6 Fachurteil — Ihre Aufgabe (§407a Abs. 3 ZPO)</div><div class="status-body-sub">Ursache, Beweislast, Handlungsempfehlung — muss von Ihnen stammen.</div></div>
-    </div>
-
-    <!-- Gutachtentyp -->
-    <div class="field-label" style="margin-bottom:10px;">Verwendungszweck dieses Gutachtens <span class="field-req">*</span></div>
-    <div class="typ-grid">
-      <button class="typ-btn selected" id="typGericht" onclick="selectTyp('gericht')">
-        <div class="typ-btn-title">⚖️ Gerichtsgutachten</div>
-        <div class="typ-btn-sub">Vollständige KI-Offenlegung</div>
-      </button>
-      <button class="typ-btn" id="typVersicherung" onclick="selectTyp('versicherung')">
-        <div class="typ-btn-title">🏢 Versicherung</div>
-        <div class="typ-btn-sub">Minimale Offenlegung</div>
-      </button>
-      <button class="typ-btn" id="typPrivat" onclick="selectTyp('privat')">
-        <div class="typ-btn-title">🏠 Privatgutachten</div>
-        <div class="typ-btn-sub">Offenlegung optional</div>
-      </button>
-    </div>
-
-    <!-- Eingabeweg -->
-    <div class="field-label" style="margin-bottom:10px;">Wie möchten Sie Ihr Fachurteil verfassen?</div>
-    <div class="choice-grid">
-      <div class="choice-btn selected" id="choiceA" onclick="selectWeg('A')">
-        <div class="choice-icon">📝</div>
-        <div class="choice-title">Ich schreibe selbst</div>
-        <div class="choice-desc">Freitext — KI prüft Konjunktiv und hilft auf Wunsch</div>
-      </div>
-      <div class="choice-btn" id="choiceB" onclick="selectWeg('B')">
-        <div class="choice-icon">🗒️</div>
-        <div class="choice-title">Strukturierte Eingabe</div>
-        <div class="choice-desc">3 Pflichtfelder → KI formuliert aus Ihren Angaben</div>
-      </div>
-    </div>
-
-    <button class="btn-primary" onclick="goStep(2)">Fachurteil verfassen →</button>
+  <!-- FALL-BANNER -->
+  <div class="fall-banner">
+    <div class="fall-banner-item"><strong id="bannerAz">—</strong></div>
+    <div class="fall-banner-sep">·</div>
+    <div class="fall-banner-item" id="bannerSa">—</div>
+    <div class="fall-banner-sep">·</div>
+    <div class="fall-banner-item" id="bannerObj">—</div>
   </div>
 
-  <!-- ═══ SCHRITT 2 — EINSCHÄTZUNG ═══ -->
-  <div class="step-card" id="step2">
-    <div class="step-eyebrow">Schritt 2 von 4 — Ihr Fachurteil</div>
-    <div class="step-title" id="step2Title">Schreiben Sie Ihre Einschätzung.</div>
-    <div class="step-subtitle" id="step2Sub">Was ist aus Ihrer fachlichen Sicht die Ursache? Was empfehlen Sie?</div>
+  <!-- §6 DIKTAT-HINWEIS -->
+  <div class="diktat-hinweis">
+    <div class="diktat-hinweis-icon">ℹ️</div>
+    <div>Beschreiben Sie Ihre <strong>fachliche Einschätzung</strong> — Ursache, Beweislast, Empfehlung.
+    §1–§5 (Sichtbefunde &amp; Messwerte) hat die KI bereits ausformuliert.</div>
+  </div>
 
-    <!-- KI Inspiration (nicht kopierbar) -->
-    <div class="ki-insp-box">
-      <div>
-        <span class="ki-badge">✦ KI-Inspiration</span>
-        <span class="ki-warning">Nur Denkanstoß — nicht Ihr Text</span>
-      </div>
-      <div class="ki-running visible" id="kiLoadingInsp" style="margin:8px 0 0;background:transparent;border:none;padding:0;">
-        <div class="ki-spinner"></div><span style="font-size:13px;color:var(--text3);">KI analysiert den Fall…</span>
-      </div>
-      <div class="ki-insp-text" id="kiInspText" style="display:none;margin-top:8px;"></div>
-    </div>
+  <!-- 2-SPALTEN-LAYOUT -->
+  <div class="two-col">
 
-    <!-- WEG A -->
-    <div id="wegA">
-      <div class="field-block">
-        <div class="field-label">Ihre gutachterliche Einschätzung <span class="field-req">*</span><span class="field-hint" id="charA">0 / mind. 200 Zeichen</span></div>
-        <textarea class="sv-textarea lg" id="svTextA" placeholder="Beschreiben Sie die Ursache, die Beweislast und Ihre Handlungsempfehlung. Im Konjunktiv II: 'Die Ursache dürfte auf … zurückzuführen sein. Es wäre zu empfehlen…'" oninput="onInputA()"></textarea>
-        <div class="kj-check idle" id="kjCheckA">
-          <span class="kj-icon">⏳</span><span>Konjunktiv II wird geprüft sobald Sie schreiben…</span>
-        </div>
-      </div>
-    </div>
+    <!-- LINKE SPALTE: SCHREIBEN -->
+    <div class="left-col">
 
-    <!-- WEG B — 3 Pflichtfelder Kausalkette -->
-    <div id="wegB" style="display:none;">
-      <div class="kausal-section">
-        <div class="kausal-title">
-          <span style="font-size:16px;">🔗</span>
-          Ihre Kausalkette — 3 Pflichtfelder
-        </div>
-
-        <!-- Feld 1: Beobachtung -->
-        <div class="kausal-step">
-          <div class="kausal-num">1</div>
-          <div class="kausal-body">
-            <div class="field-label">Was haben Sie vor Ort beobachtet / gemessen? <span class="field-req">*</span><span class="field-hint" id="charB1">0/80</span></div>
-            <textarea class="sv-textarea sm" id="svB1" placeholder="z.B. 'Feuchte 24% an Nordwand gemessen. Schwarze Verfärbungen ca. 1 m² im Bereich der Außenwandecke sichtbar.'" oninput="onInputB()"></textarea>
+      <!-- Gutachtentyp -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Verwendungszweck</div>
+            <div class="card-sub">Bestimmt den §7 KI-Offenlegungstext</div>
           </div>
         </div>
+        <div class="card-body" style="padding-top:12px;padding-bottom:12px;">
+          <div class="typ-row">
+            <button class="typ-btn active" id="typ-gericht" onclick="setTyp('gericht')">⚖️ Gerichtsgutachten</button>
+            <button class="typ-btn" id="typ-versicherung" onclick="setTyp('versicherung')">🏢 Versicherung</button>
+            <button class="typ-btn" id="typ-privat" onclick="setTyp('privat')">🏠 Privatgutachten</button>
+          </div>
+        </div>
+      </div>
 
-        <!-- Feld 2: Schlussfolgerung (KAUSALAUSSAGE — die persönliche Leistung) -->
-        <div class="kausal-step">
-          <div class="kausal-num">2</div>
-          <div class="kausal-body">
-            <div class="field-label">Was schließen SIE daraus? <span class="field-req">*</span><span class="field-hint" id="charB2">0/100</span></div>
-            <div style="font-size:12px;color:var(--accent);margin-bottom:6px;padding:6px 10px;background:rgba(79,142,247,0.07);border-radius:6px;border-left:2px solid var(--accent);">
-              ⚖️ Das ist Ihre persönliche Schlussfolgerung — die KI darf diese nicht erfinden.
+      <!-- §6 Schreiben -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">§6 Fachurteil — Ihre persönliche Einschätzung</div>
+            <div class="card-sub">Pflicht nach §407a Abs. 3 ZPO · Konjunktiv II wird live geprüft</div>
+          </div>
+        </div>
+        <div class="card-body">
+          <!-- Weg-Tabs -->
+          <div class="weg-tabs">
+            <button class="weg-tab active" id="tab-a" onclick="setWeg('A')">✍️ Freitext</button>
+            <button class="weg-tab" id="tab-b" onclick="setWeg('B')">🔗 Kausalkette (3 Felder)</button>
+          </div>
+
+          <!-- Weg A -->
+          <div id="weg-a">
+            <textarea class="sv-textarea" id="svTextA"
+              placeholder="Die Ursache dürfte auf … zurückzuführen sein. Die Beweislast dürfte … liegen. Es wäre zu empfehlen, …"
+              oninput="onInputA()" rows="8"></textarea>
+            <div class="char-count bad" id="charA">0 / mind. 200 Zeichen</div>
+            <div class="kj-check idle" id="kjCheckA">
+              <span>⏳</span><span>Konjunktiv II wird geprüft sobald Sie schreiben…</span>
             </div>
-            <textarea class="sv-textarea sm" id="svB2" placeholder="z.B. 'Das deutet meiner Einschätzung nach auf eine Wärmebrücke hin, die durch das Baujahr 1966 und fehlende Kerndämmung begünstigt wird.'" oninput="onInputB()"></textarea>
           </div>
-        </div>
 
-        <!-- Feld 3: Empfehlung -->
-        <div class="kausal-step">
-          <div class="kausal-num">3</div>
-          <div class="kausal-body">
-            <div class="field-label">Was empfehlen SIE? <span class="field-req">*</span><span class="field-hint" id="charB3">0/60</span></div>
-            <textarea class="sv-textarea sm" id="svB3" placeholder="z.B. 'Sanierung der Außenwand und Verbesserung der Lüftungssituation empfehlenswert.'" oninput="onInputB()"></textarea>
-          </div>
-        </div>
-      </div>
-
-      <!-- KI ausformulieren Button -->
-      <button class="btn-outline" id="btnAusform" onclick="runAusformulieren()" style="width:100%;margin-bottom:14px;display:none;">
-        ✦ KI aus meinen Angaben ausformulieren lassen
-      </button>
-
-      <!-- KI läuft -->
-      <div class="ki-running" id="kiRunningB">
-        <div class="ki-spinner"></div><span>KI formuliert aus Ihren Angaben…</span>
-      </div>
-
-      <!-- DIFF Ansicht -->
-      <div id="diffSection" style="display:none;">
-        <div class="diff-box diff-original">
-          <div class="diff-header">❌ Ihre Eingaben (Kausalkette)</div>
-          <div class="diff-body" id="diffOriginal"></div>
-        </div>
-        <div class="diff-box diff-ki" style="margin-top:8px;">
-          <div class="diff-header">✦ KI-Ausformulierung — bitte überarbeiten</div>
-          <div class="diff-body" id="diffKiText"></div>
-          <div class="diff-actions">
-            <button class="btn-accept" onclick="acceptKiB()">Als Ausgangspunkt übernehmen →</button>
-            <button class="btn-reject" onclick="rejectKiB()">Verwerfen</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Überarbeitung nach KI -->
-      <div id="svEditWrap" style="display:none;">
-        <div class="field-block">
-          <div class="field-label">Jetzt überarbeiten <span class="field-req">*</span><span class="field-hint" id="charEdit">0/200</span></div>
-          <!-- Änderungsbalken -->
-          <div class="aend-wrap" id="aendWrap">
-            <div class="aend-label">
-              <span>Ihre Änderungen gegenüber KI-Vorschlag</span>
-              <span id="aendPct" style="font-weight:600;">0%</span>
+          <!-- Weg B -->
+          <div id="weg-b" style="display:none;">
+            <div class="feld-block">
+              <div class="feld-label"><span class="feld-num">1</span> Was haben Sie vor Ort festgestellt?</div>
+              <textarea class="sv-textarea" id="svB1"
+                placeholder="z.B. Im Schlafzimmer OG wurde Schimmelbefall ca. 0,5 m² festgestellt…"
+                oninput="onInputB()" rows="3" style="min-height:80px;"></textarea>
+              <div class="char-count bad" id="charB1">0/100</div>
             </div>
-            <div class="aend-bar-track"><div class="aend-bar-fill" id="aendFill" style="width:0%;background:var(--red);"></div></div>
-            <div class="aend-hint" id="aendHint" style="color:var(--red);">Mind. 20% eigene Änderungen erforderlich</div>
+            <div class="feld-block">
+              <div class="feld-label"><span class="feld-num">2</span> Was schließen <em>Sie</em> daraus? <small style="color:var(--accent);font-style:normal;">(Ihre Kausalaussage)</small></div>
+              <textarea class="sv-textarea" id="svB2"
+                placeholder="z.B. Die Ursache dürfte auf unzureichende Beheizung und Lüftung zurückzuführen sein…"
+                oninput="onInputB()" rows="3" style="min-height:80px;"></textarea>
+              <div class="char-count bad" id="charB2">0/120</div>
+              <div class="kj-check idle" id="kjCheckB">
+                <span>⏳</span><span>Konjunktiv II wird geprüft…</span>
+              </div>
+            </div>
+            <div class="feld-block">
+              <div class="feld-label"><span class="feld-num">3</span> Was empfehlen Sie?</div>
+              <textarea class="sv-textarea" id="svB3"
+                placeholder="z.B. Es wäre zu empfehlen, die Außenwand thermisch zu sanieren…"
+                oninput="onInputB()" rows="2" style="min-height:70px;"></textarea>
+              <div class="char-count bad" id="charB3">0/80</div>
+            </div>
+
+            <!-- KI-Ausformulieren -->
+            <button id="btnAusform" onclick="ausformulieren()" style="display:none;
+              width:100%;padding:10px;margin-top:4px;
+              background:rgba(79,142,247,.1);border:1px solid rgba(79,142,247,.25);
+              border-radius:8px;color:var(--accent);font-size:13px;font-weight:600;
+              cursor:pointer;font-family:var(--sans);">
+              ✨ Meine Stichpunkte formulieren lassen
+            </button>
+
+            <!-- Ausformulierten Text bearbeiten -->
+            <div id="ausform-wrap" style="display:none;margin-top:12px;">
+              <div style="font-size:11px;color:var(--text3);margin-bottom:6px;">
+                KI-Formulierung — bitte überarbeiten und als Ihren Text anpassen:
+              </div>
+              <textarea class="sv-textarea" id="svTextEdit"
+                placeholder="Überarbeiten Sie den Text…"
+                oninput="onInputEdit()" rows="6" style="min-height:140px;"></textarea>
+              <div class="char-count" id="charEdit">0 Zeichen</div>
+              <div class="kj-check idle" id="kjCheckEdit">
+                <span>⏳</span><span>Konjunktiv II wird geprüft…</span>
+              </div>
+            </div>
           </div>
-          <textarea class="sv-textarea lg" id="svTextEdit" placeholder="Überarbeiten Sie den KI-Text. Jeder Satz sollte Ihre eigene Formulierung widerspiegeln." oninput="onInputEdit()"></textarea>
-          <div class="kj-check idle" id="kjCheckEdit">
-            <span class="kj-icon">⏳</span><span>Konjunktiv II wird geprüft…</span>
+
+          <!-- KI-Inspiration (dezent, immer verfügbar) -->
+          <div class="ki-insp-wrap" id="kiInspWrap">
+            <div class="ki-insp-header" onclick="toggleInsp()">
+              <div class="ki-insp-label">
+                <span>💡</span>
+                <span>KI-Denkanstoß</span>
+                <span style="font-size:10px;font-weight:400;color:var(--text3);">— nur zur Orientierung</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <span class="ki-insp-note">Nicht kopierbar · Nur Inspiration</span>
+                <span id="insp-toggle-icon" style="color:var(--text3);font-size:12px;">▼</span>
+              </div>
+            </div>
+            <div class="ki-insp-body" id="kiInspBody">
+              <div id="kiInspLoading" style="display:flex;align-items:center;gap:10px;color:var(--text3);font-size:12px;padding:4px 0;">
+                <div class="ki-spinner"></div>
+                <span>Analysiere den Fall…</span>
+              </div>
+              <div class="ki-insp-text" id="kiInspText" style="display:none;"></div>
+              <button class="ki-insp-btn" id="kiInspRefresh" onclick="ladeKiInsp()" style="display:none;">
+                🔄 Neuer Denkanstoß
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- §407a Bestätigung + Weiter -->
+      <div class="card">
+        <div class="card-body">
+          <div class="confirm-box">
+            <div class="confirm-row">
+              <input type="checkbox" id="confirm407a" onchange="checkReady()">
+              <label for="confirm407a" class="confirm-text">
+                Ich bestätige: Dieses Fachurteil entspricht meiner persönlichen Einschätzung.
+                Ursache, Bewertung und Empfehlung habe ich eigenständig beurteilt.
+                Die KI diente ausschließlich als Formulierungshilfe.
+              </label>
+            </div>
+            <div class="confirm-law">§407a Abs. 3 ZPO · Audit-Trail wird automatisch gesichert</div>
+          </div>
+          <button class="btn-primary" id="btnWeiter" onclick="weiterZuFreigabe()" disabled>
+            Fachurteil bestätigen &amp; zur Freigabe →
+          </button>
+          <button class="btn-secondary" onclick="goBack()">← Zurück zur Akte</button>
+        </div>
+      </div>
+
+    </div><!-- /left-col -->
+
+    <!-- RECHTE SPALTE: KONTEXT + NORMEN -->
+    <div class="right-col">
+
+      <!-- Fall-Kontext -->
+      <div class="ctx-card">
+        <div class="ctx-title">📋 Fall-Kontext</div>
+        <div class="ctx-row"><span class="ctx-key">Aktenzeichen</span><span class="ctx-val" id="ctxAz">—</span></div>
+        <div class="ctx-row"><span class="ctx-key">Schadenart</span><span class="ctx-val" id="ctxSa">—</span></div>
+        <div class="ctx-row"><span class="ctx-key">Objekt</span><span class="ctx-val" id="ctxObj">—</span></div>
+        <div class="ctx-row"><span class="ctx-key">Begehung</span><span class="ctx-val" id="ctxDatum">—</span></div>
+      </div>
+
+      <!-- Normen-Vorschläge -->
+      <div class="normen-card">
+        <div class="normen-header">
+          📐 Passende Normen
+          <span style="font-size:10px;font-weight:400;margin-left:4px;">— Klick fügt in §6 ein</span>
+        </div>
+        <div id="normenListe">
+          <div style="padding:12px 14px;font-size:11px;color:var(--text3);">
+            Wird nach Schadenart geladen…
           </div>
         </div>
       </div>
-    </div>
 
-    <div class="divider"></div>
-    <div style="text-align:center;margin-bottom:14px;">
-      <span class="kj-link" onclick="openKjOverlay()">📖 Konjunktiv II Hilfe & Bausteine</span>
-    </div>
-    <button class="btn-primary" id="btnWeiter2" onclick="goStep(3)" disabled>Weiter → Normen einfügen</button>
-    <button class="btn-secondary" onclick="goStep(1)">← Zurück</button>
-  </div>
-
-  <!-- ═══ SCHRITT 3 — NORMEN ═══ -->
-  <div class="step-card" id="step3">
-    <div class="step-eyebrow">Schritt 3 von 4 — Normen</div>
-    <div class="step-title">Passende Normen einfügen?</div>
-    <div class="step-subtitle">PROVA fügt automatisch einschlägige DIN-Normen, WTA-Merkblätter und BGH-Urteile als Klammerzitate ein.</div>
-
-    <div class="normen-grid">
-      <button class="normen-btn" id="normenJa" onclick="selectNormen(true)">
-        <div class="normen-icon">📚</div>
-        <div class="normen-title">Ja, automatisch</div>
-        <div style="font-size:12px;color:var(--text3);margin-top:4px;">KI fügt passende Normen ein</div>
-      </button>
-      <button class="normen-btn" id="normenNein" onclick="selectNormen(false)">
-        <div class="normen-icon">✍️</div>
-        <div class="normen-title">Nein, ohne Normen</div>
-        <div style="font-size:12px;color:var(--text3);margin-top:4px;">Ich füge Normen selbst ein</div>
-      </button>
-    </div>
-
-    <div class="ki-running" id="kiRunningNormen"><div class="ki-spinner"></div><span>KI fügt Normen ein…</span></div>
-    <div class="normen-result" id="normenResult"></div>
-
-    <button class="btn-primary" id="btnWeiter3" onclick="goStep(4)" disabled>Weiter → Prüfen & Bestätigen</button>
-    <button class="btn-secondary" onclick="goStep(2)">← Zurück</button>
-  </div>
-
-  <!-- ═══ SCHRITT 4 — BESTÄTIGEN ═══ -->
-  <div class="step-card" id="step4">
-    <div class="step-eyebrow">Schritt 4 von 4 — Prüfen & Bestätigen</div>
-    <div class="step-title">Lesen Sie Ihr Fachurteil.</div>
-    <div class="step-subtitle">Konjunktiv II ist blau markiert — mögliche Probleme gelb.</div>
-
-    <div class="final-box" id="finalBox"></div>
-
-    <div class="check-list">
-      <label class="check-item"><input type="checkbox" onchange="checkReady()"><span class="check-item-text">Ursache klar benannt — dieser Befund und die Kausalaussage stammen von mir persönlich</span></label>
-      <label class="check-item"><input type="checkbox" onchange="checkReady()"><span class="check-item-text">Beweislast adressiert — die KI hat nur die Formulierung geholfen, der Inhalt ist meiner</span></label>
-      <label class="check-item"><input type="checkbox" onchange="checkReady()"><span class="check-item-text">Handlungsempfehlung enthalten — meine fachliche Bewertung, eigenständig erbracht</span></label>
-    </div>
-
-    <div class="confirm-407a">
-      <div class="confirm-407a-row">
-        <input type="checkbox" id="confirm407a" onchange="checkReady()">
-        <label for="confirm407a" class="confirm-407a-text">
-          Ich bestätige: Dieses Fachurteil entspricht meiner persönlichen Einschätzung. Ursache, Bewertung und Empfehlung habe ich eigenständig beurteilt. Die KI diente ausschließlich als Formulierungshilfe.
-        </label>
-      </div>
-      <div class="confirm-407a-law">§407a Abs. 3 ZPO — Persönliche Gutachtenerstattungspflicht des Sachverständigen</div>
-    </div>
-
-    <button class="btn-green" id="btnSubmit" onclick="submit()" disabled>⚖️ Fachurteil bestätigen & zum Gutachten →</button>
-    <div class="btn-hint" id="submitHint">Prüfliste + Bestätigung erforderlich</div>
-    <button class="btn-secondary" onclick="goStep(3)">← Zurück</button>
-  </div>
-
-  <!-- ═══ ABSCHLUSS ═══ -->
-  <div class="step-card" id="stepDone">
-    <div class="success-icon">✅</div>
-    <div class="success-title">Fachurteil bestätigt!</div>
-    <div class="success-sub">Ihr §6 wurde gespeichert und ins Gutachten eingefügt.</div>
-    <div class="audit-badge">🛡 Audit-Trail gesichert · §407a ZPO konform</div>
-
-    <div class="audit-timeline">
-      <div class="audit-tl-title">📋 Ihr Entstehungsnachweis</div>
-      <div class="tl-item">
-        <div class="tl-dot input">✍️</div>
-        <div class="tl-body">
-          <div class="tl-label">Ihre Eingabe <span id="tl-weg" style="color:var(--text3);font-weight:400;font-size:12px;"></span></div>
-          <div class="tl-ts" id="tl-ts-input">—</div>
-          <div class="tl-preview" id="tl-orig-preview"></div>
+      <!-- Konjunktiv-Bausteine -->
+      <div class="normen-card">
+        <div class="normen-header">⚖️ Konjunktiv II — Bausteine</div>
+        <div class="phrase-wrap">
+          <span class="phrase" onclick="insertPhrase('dürfte zurückzuführen sein auf')">dürfte zurückzuführen sein auf</span>
+          <span class="phrase" onclick="insertPhrase('könnte auf … hindeuten')">könnte auf … hindeuten</span>
+          <span class="phrase" onclick="insertPhrase('wäre naheliegend')">wäre naheliegend</span>
+          <span class="phrase" onclick="insertPhrase('ließe sich vermuten')">ließe sich vermuten</span>
+          <span class="phrase" onclick="insertPhrase('wäre zu empfehlen')">wäre zu empfehlen</span>
+          <span class="phrase" onclick="insertPhrase('Beweislast dürfte beim … liegen')">Beweislast dürfte … liegen</span>
+          <span class="phrase" onclick="insertPhrase('wäre nicht auszuschließen')">wäre nicht auszuschließen</span>
+          <span class="phrase" onclick="insertPhrase('dürfte erforderlich sein')">dürfte erforderlich sein</span>
         </div>
       </div>
-      <div class="tl-item">
-        <div class="tl-dot ki">✦</div>
-        <div class="tl-body">
-          <div class="tl-label">KI-Inspiration <span style="color:var(--text3);font-weight:400;font-size:12px;">(nicht kopierbar, nur Denkanstoß)</span></div>
-          <div class="tl-ts">Automatisch generiert · nur als Inspiration verwendet</div>
-        </div>
-      </div>
-      <div class="tl-item">
-        <div class="tl-dot final">✓</div>
-        <div class="tl-body">
-          <div class="tl-label">Ihr finales Fachurteil</div>
-          <div class="tl-ts" id="tl-ts-final">—</div>
-          <div class="tl-badges">
-            <span class="tl-badge neutral" id="tl-zeichen">—</span>
-            <span class="tl-badge" id="tl-kj2">—</span>
-            <span class="tl-badge neutral" id="tl-aend" style="display:none;">—</span>
-          </div>
-        </div>
-      </div>
-      <div class="tl-item">
-        <div class="tl-dot sign">⚖️</div>
-        <div class="tl-body">
-          <div class="tl-label">§407a ZPO Bestätigung</div>
-          <div class="tl-ts" id="tl-ts-407a">—</div>
-          <div style="font-size:12px;color:var(--green);margin-top:4px;">✓ Persönliche Eigenleistung bestätigt</div>
-        </div>
-      </div>
-      <div class="offenlegung-box">
-        <div class="offenlegung-label">§7 KI-Offenlegung (automatisch ins Gutachten)</div>
-        <div class="offenlegung-text" id="offenlegungText"></div>
-      </div>
-      <div class="sync-status" id="syncStatus">
-        <div class="ki-spinner" style="width:14px;height:14px;border-width:1px;"></div>
-        <span style="color:var(--text3);">Audit-Trail wird gesichert…</span>
-      </div>
-    </div>
 
-    <button class="btn-outline" onclick="downloadAuditPDF()" style="width:100%;margin-bottom:12px;">📄 Protokoll herunterladen</button>
-    <button class="btn-green" onclick="zurueck()">Zum Gutachten → Freigabe</button>
-  </div>
-</div>
-
-<!-- KJ OVERLAY -->
-<div class="kj-overlay" id="kjOverlay" onclick="closeKjOverlay()">
-  <div class="kj-modal" onclick="event.stopPropagation()">
-    <div class="kj-modal-title">Konjunktiv II — Pflicht in §6</div>
-    <div class="kj-modal-sub">§6 enthält Einschätzungen, keine bewiesenen Fakten — deshalb gilt der Konjunktiv II.</div>
-    <div class="kj-row">
-      <div class="kj-bad"><div class="kj-small">❌ Verboten (Indikativ)</div>"Die Ursache <strong>ist</strong> eine Wärmebrücke"</div>
-      <div class="kj-good" onclick="insertPhrase('Die Ursache dürfte auf eine Wärmebrücke zurückzuführen sein')"><div class="kj-small">✓ Klicken → Einfügen</div>"Die Ursache <strong>dürfte</strong> zurückzuführen sein"</div>
-    </div>
-    <div class="kj-row">
-      <div class="kj-bad"><div class="kj-small">❌ Verboten</div>"Sanierung <strong>ist</strong> erforderlich"</div>
-      <div class="kj-good" onclick="insertPhrase('Eine Sanierung wäre zu empfehlen')"><div class="kj-small">✓ Klicken → Einfügen</div>"Eine Sanierung <strong>wäre</strong> zu empfehlen"</div>
-    </div>
-    <div class="kj-row">
-      <div class="kj-bad"><div class="kj-small">❌ Verboten</div>"Dies <strong>führt</strong> zu Schimmel"</div>
-      <div class="kj-good" onclick="insertPhrase('Dies könnte zu Schimmelwachstum führen')"><div class="kj-small">✓ Klicken → Einfügen</div>"Dies <strong>könnte</strong> zu Schimmel führen"</div>
-    </div>
-    <div style="margin-top:12px;padding:9px 11px;background:var(--green-bg);border:1px solid var(--green-border);border-radius:7px;font-size:13px;color:#6ee7b7;">
-      <strong>✓ Indikativ erlaubt:</strong> Messwerte, Sichtbefunde, Norm-Klassifikationen
-    </div>
-    <div style="margin-top:14px;font-size:12px;color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:0.06em;">Bausteine — klicken zum Einfügen</div>
-    <div class="phrase-wrap">
-      <span class="phrase-chip" onclick="insertPhrase('dürfte auf … zurückzuführen sein')">dürfte auf … zurückzuführen sein</span>
-      <span class="phrase-chip" onclick="insertPhrase('könnte auf … hindeuten')">könnte auf … hindeuten</span>
-      <span class="phrase-chip" onclick="insertPhrase('wäre naheliegend')">wäre naheliegend</span>
-      <span class="phrase-chip" onclick="insertPhrase('ließe sich vermuten')">ließe sich vermuten</span>
-      <span class="phrase-chip" onclick="insertPhrase('wäre zu empfehlen')">wäre zu empfehlen</span>
-      <span class="phrase-chip" onclick="insertPhrase('Die Beweislast dürfte beim … liegen')">Beweislast dürfte … liegen</span>
-      <span class="phrase-chip" onclick="insertPhrase('wäre nicht auszuschließen')">wäre nicht auszuschließen</span>
-      <span class="phrase-chip" onclick="insertPhrase('dürfte erforderlich sein')">dürfte erforderlich sein</span>
-    </div>
-    <button class="kj-close" onclick="closeKjOverlay()">Schließen</button>
-  </div>
-</div>
+    </div><!-- /right-col -->
+  </div><!-- /two-col -->
+</div><!-- /main -->
 
 <div class="toast" id="toast"></div>
 
 <script>
+'use strict';
 /* ═══════════════════════════════════════════════════════
-   PROVA Fachurteil-Assistent v3.1
-   §6 Konjunktiv II · Kausalkette · Audit-Trail
-   §407a ZPO konform · Gerichtsfest
+   PROVA §6 Fachurteil — Neue 2-Spalten-Version
+   Gate + v3_1 konsolidiert · Progressive Disclosure
+   §407a ZPO · Konjunktiv II · Audit-Trail
 ═══════════════════════════════════════════════════════ */
 
-let currentStep = 1;
-let selectedWeg = 'A';
-let selectedTyp = 'gericht';
-let normenGewählt = null;
-let finalText = '';
-let kiInspText = '';
-let kiAusformText = '';
-let aenderungsQuote = 0;
-
-const auditLog = {
-  sv_beobachtung: '', sv_schluss: '', sv_empfehlung: '',
-  sv_freitext: '', sv_original: '', sv_final: '',
-  ki_vorschlag: '', weg: 'A', typ: 'gericht',
-  normen: false, kj2_ok: false, ts: '', version: 'v3.1'
-};
-
-const KJ2 = ['dürfte','könnte','wäre','läge','ließe','müsste','sollte','hätte','würde','käme','gäbe','stünde','böte'];
-const INDIK_BAD = [
-  {rx:/\bist\s+(die\s+)?(Ursache|Grund|Auslöser)\b/gi, hint:'"ist die Ursache" → "dürfte die Ursache sein"'},
-  {rx:/\bist\s+zurückzuführen\b/gi, hint:'"ist zurückzuführen" → "dürfte zurückzuführen sein"'},
-  {rx:/\bführt\s+zu\b/gi, hint:'"führt zu" → "könnte zu … führen"'},
-  {rx:/\bist\s+(dringend\s+)?erforderlich\b/gi, hint:'"ist erforderlich" → "wäre erforderlich"'},
-  {rx:/\bist\s+ein\s+(Baumangel|Mangel|Defekt)\b/gi, hint:'"ist ein Baumangel" → "dürfte einen Baumangel darstellen"'},
-  {rx:/\bhat\s+verursacht\b/gi, hint:'"hat verursacht" → "dürfte verursacht haben"'},
-  {rx:/\bmuss\s+(saniert|geprüft|trocken)\b/gi, hint:'"muss saniert" → "wäre zu sanieren"'},
-  {rx:/\bist\s+eindeutig\b/gi, hint:'"ist eindeutig" → weglassen oder "dürfte eindeutig sein"'},
-];
-
-// §7 Texte nach Gutachtentyp
-const OFFENLEGUNG = {
-  gericht: `Dieses Gutachten wurde unter Zuhilfenahme des digitalen Assistenzsystems PROVA Systems erstellt. Das System wurde zur strukturellen Aufbereitung der vom Sachverständigen erhobenen Daten (§1–§5), zur formalen Textgestaltung sowie zur Sicherstellung der normgerechten Fachsprache (insb. Konjunktiv-Prüfung in §6) eingesetzt. Die fachliche Datenerhebung, die Kausalitätsprüfung sowie die abschließende gutachterliche Bewertung erfolgten ausschließlich und eigenverantwortlich durch den unterzeichnenden Sachverständigen. Ein vollständiges Entstehungsprotokoll (Audit-Trail) ist auf Anforderung verfügbar. (§407a Abs. 3 ZPO)`,
-  versicherung: `Erstellt mit digitaler Unterstützung (PROVA Systems). Fachliche Bewertung und Kausalitätsprüfung durch den unterzeichnenden Sachverständigen.`,
-  privat: `Erstellt mit PROVA Systems. Fachliche Verantwortung liegt beim Sachverständigen.`
-};
-
-// INIT
+// AUTH
 (function(){
-  const p = localStorage.getItem('prova_paket')||'Starter';
-  const c = {Starter:'#4f8ef7',Pro:'#f59e0b',Enterprise:'#a78bfa'}[p]||'#4f8ef7';
-  const el = document.getElementById('topbarPaket');
-  if(el){el.textContent=p;el.style.cssText=`background:${c}18;color:${c};border:1px solid ${c}33`;}
-
-  const returnUrl = localStorage.getItem('prova_stellungnahme_return');
-  if(returnUrl) document.getElementById('backLink').href = returnUrl;
-
-  loadKiInspiration();
+  if(!localStorage.getItem('prova_user')) window.location.href='app-login.html';
 })();
 
-// NAVIGATION
-function goStep(n) {
-  if(n === 3) {
-    const txt = getFinalSvText();
-    if(txt.length < 200) { showToast('Bitte mindestens 200 Zeichen schreiben', 'error'); return; }
-    if(selectedWeg === 'B') {
-      const editEl = document.getElementById('svTextEdit');
-      if(editEl.style.display !== 'none' && aenderungsQuote < 20) {
-        showToast('Bitte mindestens 20% des Textes überarbeiten', 'error'); return;
-      }
-    }
-    finalText = txt;
-  }
-  document.getElementById('step' + currentStep).classList.remove('active');
-  const nextEl = document.getElementById(n <= 4 ? 'step' + n : 'stepDone');
-  if(nextEl) nextEl.classList.add('active');
-  currentStep = n;
-  updateProgress(n);
-  if(n === 4) renderFinalText();
-  window.scrollTo({top:0,behavior:'smooth'});
+// STATE
+let selectedTyp = localStorage.getItem('prova_gutachten_typ') || 'gericht';
+let selectedWeg = localStorage.getItem('prova_stellungnahme_weg') || 'A';
+let kiInspLoaded = false;
+let kjTimer = null;
+let ausformTimer = null;
+
+const az = sessionStorage.getItem('prova_current_az') || localStorage.getItem('prova_letztes_az') || '—';
+const sa = sessionStorage.getItem('prova_current_schadenart') || localStorage.getItem('prova_schadenart') || '—';
+const obj = sessionStorage.getItem('prova_current_objekt') || '—';
+const datum = sessionStorage.getItem('prova_current_datum') || '—';
+const rid = sessionStorage.getItem('prova_record_id') || '';
+
+// §7 Offenlegungstexte
+const OFFENLEGUNG = {
+  gericht:`Dieses Gutachten wurde unter Zuhilfenahme des digitalen Assistenzsystems PROVA Systems erstellt. Das System wurde zur strukturellen Aufbereitung der vom Sachverständigen erhobenen Daten (§1–§5), zur formalen Textgestaltung sowie zur Sicherstellung der normgerechten Fachsprache (insb. Konjunktiv-Prüfung in §6) eingesetzt. Die fachliche Datenerhebung, die Kausalitätsprüfung sowie die abschließende Bewertung in §6 erfolgten ausschließlich durch den Sachverständigen persönlich. Die KI-Nutzung wird hiermit gemäß §407a Abs. 3 ZPO offengelegt.`,
+  versicherung:`Die Erstellung dieses Gutachtens erfolgte unter Einsatz des digitalen Assistenzsystems PROVA Systems (KI-gestützte Strukturierung §1–§5, Konjunktiv-Prüfung §6). Das Fachurteil in §6 wurde eigenständig vom Sachverständigen erstellt.`,
+  privat:`Erstellt mit PROVA Systems (KI-Assistenz §1–§5). §6 Fachurteil: eigenständige Leistung des Sachverständigen.`
+};
+
+// KJ2 Verbotsliste
+const INDIK_BAD = [
+  {rx:/\bist\s+(die\s+)?(Ursache|Grund|Auslöser)\b/gi, h:'"ist die Ursache" → "dürfte die Ursache sein"'},
+  {rx:/\bist\s+zurückzuführen\b/gi, h:'"ist zurückzuführen" → "dürfte zurückzuführen sein"'},
+  {rx:/\bführt\s+zu\b/gi, h:'"führt zu" → "könnte zu … führen"'},
+  {rx:/\bist\s+(dringend\s+)?erforderlich\b/gi, h:'"ist erforderlich" → "wäre erforderlich"'},
+  {rx:/\bhat\s+verursacht\b/gi, h:'"hat verursacht" → "dürfte verursacht haben"'},
+  {rx:/\bmuss\s+(saniert|geprüft)\b/gi, h:'"muss saniert" → "wäre zu sanieren"'},
+];
+
+/* ── INIT ── */
+document.getElementById('headerAz').textContent = az;
+document.getElementById('bannerAz').textContent = az;
+document.getElementById('bannerSa').textContent = sa;
+document.getElementById('bannerObj').textContent = obj !== '—' ? obj : '';
+document.getElementById('ctxAz').textContent = az;
+document.getElementById('ctxSa').textContent = sa;
+document.getElementById('ctxObj').textContent = obj;
+document.getElementById('ctxDatum').textContent = datum;
+
+// Vorherigen Text wiederherstellen
+const prevText = localStorage.getItem('prova_stellungnahme_text') || '';
+if(prevText) {
+  document.getElementById('svTextA').value = prevText;
+  onInputA();
 }
 
-function updateProgress(n) {
-  const pcts = {1:25,2:50,3:75,4:100};
-  const pct = pcts[n]||100;
-  document.getElementById('progressFill').style.width = pct + '%';
-  document.getElementById('progressPct').textContent = pct + '%';
-  document.getElementById('stepNum').textContent = Math.min(n,4);
-  const labels = ['Kontext','Einschätzung','Normen','Bestätigen'];
-  [1,2,3,4].forEach(i => {
-    const d = document.getElementById('dot'+i);
-    if(!d) return;
-    if(i < n) { d.className='step-dot done'; d.textContent='✓'; }
-    else if(i === n) { d.className='step-dot active'; d.innerHTML=`${i}&nbsp;<span>${labels[i-1]}</span>`; }
-    else { d.className='step-dot pending'; d.innerHTML=`${i}&nbsp;<span>${labels[i-1]}</span>`; }
+// Typ setzen
+setTyp(selectedTyp);
+setWeg(selectedWeg);
+
+// Normen laden
+ladeNormen();
+
+/* ── NAVIGATION ── */
+function goBack() {
+  localStorage.setItem('prova_stellungnahme_return', window.location.href);
+  window.location.href = 'akte.html';
+}
+
+/* ── TYP ── */
+function setTyp(t) {
+  selectedTyp = t;
+  localStorage.setItem('prova_gutachten_typ', t);
+  ['gericht','versicherung','privat'].forEach(x => {
+    document.getElementById('typ-'+x).classList.toggle('active', x===t);
   });
 }
 
-// AUSWAHL
-function selectWeg(w) {
+/* ── WEG ── */
+function setWeg(w) {
   selectedWeg = w;
-  document.getElementById('choiceA').classList.toggle('selected', w==='A');
-  document.getElementById('choiceB').classList.toggle('selected', w==='B');
-  document.getElementById('wegA').style.display = w==='A' ? 'block' : 'none';
-  document.getElementById('wegB').style.display = w==='B' ? 'block' : 'none';
-  document.getElementById('step2Title').textContent = w==='A' ? 'Schreiben Sie Ihre Einschätzung.' : 'Definieren Sie Ihre Kausalkette.';
-  document.getElementById('step2Sub').textContent = w==='A'
-    ? 'Was ist aus Ihrer fachlichen Sicht die Ursache? Was empfehlen Sie?'
-    : 'Drei Pflichtfelder — Beobachtung, Ihre Schlussfolgerung, Empfehlung. Die KI formuliert erst danach aus.';
-  auditLog.weg = w;
+  localStorage.setItem('prova_stellungnahme_weg', w);
+  document.getElementById('tab-a').classList.toggle('active', w==='A');
+  document.getElementById('tab-b').classList.toggle('active', w==='B');
+  document.getElementById('weg-a').style.display = w==='A' ? 'block' : 'none';
+  document.getElementById('weg-b').style.display = w==='B' ? 'block' : 'none';
+  checkReady();
 }
 
-function selectTyp(t) {
-  selectedTyp = t;
-  auditLog.typ = t;
-  ['gericht','versicherung','privat'].forEach(x => document.getElementById('typ'+x.charAt(0).toUpperCase()+x.slice(1)).classList.toggle('selected', x===t));
+/* ── KJ2 CHECK ── */
+function runKjCheck(text, elId) {
+  clearTimeout(kjTimer);
+  kjTimer = setTimeout(() => {
+    const el = document.getElementById(elId);
+    if(!el || !text || text.length < 30) {
+      if(el) el.className = 'kj-check idle';
+      return;
+    }
+    let fehler = [];
+    INDIK_BAD.forEach(b => {
+      if(b.rx.test(text)) fehler.push(b.h);
+      b.rx.lastIndex = 0;
+    });
+    if(fehler.length === 0) {
+      el.className = 'kj-check ok';
+      el.innerHTML = '<span>✅</span><span>Konjunktiv II — kein Verstoß erkannt</span>';
+    } else {
+      el.className = 'kj-check warn';
+      el.innerHTML = `<span>⚠️</span><span>${fehler[0]}</span>`;
+    }
+    localStorage.setItem('prova_stellungnahme_kj2_ok', fehler.length===0 ? '1' : '0');
+    checkReady();
+  }, 700);
 }
 
-// KI INSPIRATION
-async function loadKiInspiration() {
-  const cached = localStorage.getItem('prova_ki_stellungnahme_vorschlag');
-  const inspEl = document.getElementById('kiInspText');
-  const loadEl = document.getElementById('kiLoadingInsp');
+/* ── INPUT HANDLERS ── */
+function onInputA() {
+  const txt = document.getElementById('svTextA').value;
+  const len = txt.length;
+  const cc = document.getElementById('charA');
+  cc.textContent = `${len} / mind. 200 Zeichen`;
+  cc.className = 'char-count ' + (len>=200?'ok':len>=100?'warn':'bad');
+  runKjCheck(txt, 'kjCheckA');
+  localStorage.setItem('prova_stellungnahme_text', txt);
+  checkReady();
+  // Ausform-Button in Weg B
+  updateAusformBtn();
+}
 
-  if(cached && cached.trim()) {
-    kiInspText = cached;
-    loadEl.style.display = 'none';
-    inspEl.textContent = cached;
-    inspEl.style.display = 'block';
-    auditLog.ki_vorschlag = cached;
-    return;
-  }
+function onInputB() {
+  const b2 = document.getElementById('svB2').value;
+  const b1 = document.getElementById('svB1').value;
+  const b3 = document.getElementById('svB3').value;
+  document.getElementById('charB1').textContent = b1.length+'/100';
+  document.getElementById('charB1').className = 'char-count '+(b1.length>=100?'ok':b1.length>=50?'warn':'bad');
+  document.getElementById('charB2').textContent = b2.length+'/120';
+  document.getElementById('charB2').className = 'char-count '+(b2.length>=120?'ok':b2.length>=60?'warn':'bad');
+  document.getElementById('charB3').textContent = b3.length+'/80';
+  document.getElementById('charB3').className = 'char-count '+(b3.length>=80?'ok':b3.length>=40?'warn':'bad');
+  runKjCheck(b2, 'kjCheckB');
+  const total = b1.length+b2.length+b3.length;
+  // Ausform-Button zeigen wenn genug Inhalt
+  const btn = document.getElementById('btnAusform');
+  if(btn) btn.style.display = (total>=100) ? 'block' : 'none';
+  checkReady();
+}
 
-  const schadenart = localStorage.getItem('prova_schadenart')||'Schaden';
+function onInputEdit() {
+  const txt = document.getElementById('svTextEdit').value;
+  document.getElementById('charEdit').textContent = txt.length+' Zeichen';
+  runKjCheck(txt, 'kjCheckEdit');
+  checkReady();
+}
+
+function updateAusformBtn() {
+  // nur in Weg B relevant
+}
+
+/* ── READY CHECK ── */
+function checkReady() {
+  const txt = getFinalSvText();
+  const confirmed = document.getElementById('confirm407a').checked;
+  const btn = document.getElementById('btnWeiter');
+  btn.disabled = !(txt.length >= 200 && confirmed);
+}
+
+function getFinalSvText() {
+  if(selectedWeg === 'A') return document.getElementById('svTextA').value;
+  const editWrap = document.getElementById('ausform-wrap');
+  if(editWrap.style.display !== 'none') return document.getElementById('svTextEdit').value;
+  const b1 = document.getElementById('svB1').value.trim();
+  const b2 = document.getElementById('svB2').value.trim();
+  const b3 = document.getElementById('svB3').value.trim();
+  return [b1,b2,b3].filter(Boolean).join(' ');
+}
+
+/* ── KI-INSPIRATION ── */
+function toggleInsp() {
+  const body = document.getElementById('kiInspBody');
+  const icon = document.getElementById('insp-toggle-icon');
+  const open = body.style.display === 'block';
+  body.style.display = open ? 'none' : 'block';
+  icon.textContent = open ? '▼' : '▲';
+  if(!open && !kiInspLoaded) ladeKiInsp();
+}
+
+async function ladeKiInsp() {
+  kiInspLoaded = true;
+  document.getElementById('kiInspLoading').style.display = 'flex';
+  document.getElementById('kiInspText').style.display = 'none';
+  document.getElementById('kiInspRefresh').style.display = 'none';
   const messwerte = localStorage.getItem('prova_messwerte')||'';
-
   try {
     const res = await fetch('https://api.anthropic.com/v1/messages', {
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({
-        model:'claude-sonnet-4-20250514', max_tokens:500,
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514', max_tokens:400,
         messages:[{role:'user',content:`§6-Konjunktiv-II-Inspiration für Bausachverständigen-Gutachten.
-Fall: ${schadenart}${messwerte?'\nMesswerte: '+messwerte:''}
+Fall: ${sa}${messwerte?'\nMesswerte: '+messwerte:''}
 NUR Konjunktiv II: dürfte, könnte, wäre — VERBOTEN: ist, führt zu, muss.
 Format: 6.1 Ursachen [2 Sätze] · 6.2 Beweislast [1 Satz] · 6.3 Empfehlung [1-2 Sätze]
 Nur den Text zurückgeben.`}]
       })
     });
     const d = await res.json();
-    kiInspText = d.content?.[0]?.text || '';
+    const txt = d.content?.[0]?.text || '';
+    document.getElementById('kiInspText').textContent = txt;
+    document.getElementById('kiInspText').style.display = 'block';
+    document.getElementById('kiInspRefresh').style.display = 'inline-flex';
+    localStorage.setItem('prova_ki_stellungnahme_vorschlag', txt);
+    localStorage.setItem('prova_ki_stellungnahme_vorschlag_session', txt);
   } catch(e) {
-    kiInspText = 'Der Schaden dürfte auf eine Kombination aus baulichen und nutzungsbedingten Faktoren zurückzuführen sein. Eine detailliertere Untersuchung könnte die Ursache präzisieren.\n\nDie Beweislast dürfte nach BGH WuM 2005, 5 beim Verursacher liegen.\n\nEs wäre zu empfehlen, die Sanierung zeitnah zu veranlassen.';
+    document.getElementById('kiInspText').textContent = 'Der Schaden dürfte auf eine Kombination baulicher und nutzungsbedingter Faktoren zurückzuführen sein. Eine detailliertere Untersuchung könnte die Ursache präzisieren.\n\nDie Beweislast dürfte nach BGH-Rspr. beim Verursacher liegen.\n\nEs wäre zu empfehlen, die Sanierung zeitnah zu veranlassen.';
+    document.getElementById('kiInspText').style.display = 'block';
   }
-
-  loadEl.style.display = 'none';
-  inspEl.textContent = kiInspText;
-  inspEl.style.display = 'block';
-  auditLog.ki_vorschlag = kiInspText;
-  localStorage.setItem('prova_ki_stellungnahme_vorschlag_session', kiInspText);
+  document.getElementById('kiInspLoading').style.display = 'none';
 }
 
-// INPUT WEG A
-function onInputA() {
-  const txt = document.getElementById('svTextA').value;
-  const len = txt.length;
-  const cc = document.getElementById('charA');
-  cc.textContent = len + ' / mind. 200 Zeichen';
-  cc.style.color = len>=200 ? 'var(--green)' : len>=100 ? 'var(--warn)' : 'var(--red)';
-  runKjCheck(txt, 'kjCheckA');
-  document.getElementById('btnWeiter2').disabled = len < 200;
-}
-
-// INPUT WEG B (3 Felder)
-function onInputB() {
+/* ── KI-AUSFORMULIEREN (Weg B) ── */
+async function ausformulieren() {
   const b1 = document.getElementById('svB1').value.trim();
   const b2 = document.getElementById('svB2').value.trim();
   const b3 = document.getElementById('svB3').value.trim();
-
-  // Counter
-  const c1 = document.getElementById('charB1');
-  const c2 = document.getElementById('charB2');
-  const c3 = document.getElementById('charB3');
-  c1.textContent = b1.length+'/80'; c1.style.color = b1.length>=80?'var(--green)':'var(--red)';
-  c2.textContent = b2.length+'/100'; c2.style.color = b2.length>=100?'var(--green)':'var(--red)';
-  c3.textContent = b3.length+'/60'; c3.style.color = b3.length>=60?'var(--green)':'var(--red)';
-
-  const allFilled = b1.length>=80 && b2.length>=100 && b3.length>=60;
-  document.getElementById('btnAusform').style.display = allFilled ? 'flex' : 'none';
-}
-
-function onInputEdit() {
-  const txt = document.getElementById('svTextEdit').value;
-  const len = txt.length;
-  const cc = document.getElementById('charEdit');
-  cc.textContent = len+'/200'; cc.style.color = len>=200?'var(--green)':len>=100?'var(--warn)':'var(--red)';
-
-  // Änderungsquote berechnen (Levenshtein-approximation via Längendifferenz + zeichenvergleich)
-  if(kiAusformText) {
-    const changed = computeChangeRatio(kiAusformText, txt);
-    aenderungsQuote = changed;
-    const bar = document.getElementById('aendFill');
-    const hint = document.getElementById('aendHint');
-    const pctEl = document.getElementById('aendPct');
-    bar.style.width = Math.min(changed,100)+'%';
-    bar.style.background = changed>=20 ? 'var(--green)' : 'var(--warn)';
-    pctEl.textContent = Math.round(changed)+'%';
-    hint.textContent = changed>=20 ? '✓ Ausreichend überarbeitet' : 'Mind. 20% eigene Änderungen erforderlich';
-    hint.style.color = changed>=20 ? 'var(--green)' : 'var(--red)';
-  }
-
-  runKjCheck(txt, 'kjCheckEdit');
-  document.getElementById('btnWeiter2').disabled = len < 200 || aenderungsQuote < 20;
-}
-
-// Einfache Änderungsrate: basiert auf Char-Differenzen
-function computeChangeRatio(original, modified) {
-  if(!original || !modified) return 0;
-  const a = original.toLowerCase();
-  const b = modified.toLowerCase();
-  // Zähle unterschiedliche Zeichen in kürzeren Chunks
-  const chunkSize = 10;
-  let diff = 0, total = 0;
-  const maxLen = Math.max(a.length, b.length);
-  for(let i=0; i<maxLen; i+=chunkSize) {
-    const ac = a.substring(i,i+chunkSize);
-    const bc = b.substring(i,i+chunkSize);
-    if(ac !== bc) diff++;
-    total++;
-  }
-  return total > 0 ? Math.round((diff/total)*100) : 0;
-}
-
-// KJ CHECK
-function runKjCheck(text, elId) {
-  const el = document.getElementById(elId);
-  if(!text || text.length < 30) {
-    el.className='kj-check idle';
-    el.innerHTML='<span class="kj-icon">⏳</span><span>Konjunktiv II wird geprüft sobald Sie schreiben…</span>';
-    return;
-  }
-  const problems = [];
-  INDIK_BAD.forEach(r => { const m=text.match(r.rx); if(m) problems.push({match:m[0],hint:r.hint}); r.rx.lastIndex=0; });
-  const hasKj2 = KJ2.some(w => text.toLowerCase().includes(w));
-
-  if(problems.length > 0) {
-    el.className='kj-check warn';
-    el.innerHTML=`<span class="kj-icon">⚠️</span><span>Möglicher Indikativ: <strong>${problems[0].match}</strong> — ${problems[0].hint} · <span class="kj-link" onclick="openKjOverlay()">Hilfe</span></span>`;
-    auditLog.kj2_ok = false;
-  } else if(hasKj2) {
-    el.className='kj-check ok';
-    el.innerHTML='<span class="kj-icon">✓</span><span>Konjunktiv II erkannt ✓</span>';
-    auditLog.kj2_ok = true;
-  } else if(text.length > 60) {
-    el.className='kj-check warn';
-    el.innerHTML=`<span class="kj-icon">⚠️</span><span>Kein Konjunktiv II erkannt — Pflicht für §6 Einschätzungen. <span class="kj-link" onclick="openKjOverlay()">Hilfe</span></span>`;
-  }
-}
-
-// AUSFORMULIEREN (Weg B)
-async function runAusformulieren() {
-  const b1 = document.getElementById('svB1').value.trim();
-  const b2 = document.getElementById('svB2').value.trim();
-  const b3 = document.getElementById('svB3').value.trim();
-
-  auditLog.sv_beobachtung = b1;
-  auditLog.sv_schluss = b2;
-  auditLog.sv_empfehlung = b3;
-  auditLog.sv_original = `Beobachtung: ${b1}\nSchlussfolgerung: ${b2}\nEmpfehlung: ${b3}`;
-
-  const gesamtLaenge = b1.length + b2.length + b3.length;
-  const maxKiLaenge = Math.round(gesamtLaenge * 0.7);
-
-  document.getElementById('btnAusform').style.display = 'none';
-  document.getElementById('kiRunningB').classList.add('visible');
-  document.getElementById('diffSection').style.display = 'none';
-
+  if(!b1 || !b2) { zeigToast('Bitte Felder 1 und 2 ausfüllen.','warn'); return; }
+  const btn = document.getElementById('btnAusform');
+  btn.textContent = '⏳ KI formuliert…'; btn.disabled = true;
+  const gesamtLen = b1.length+b2.length+b3.length;
+  const maxLen = Math.round(gesamtLen*0.7);
   try {
     const res = await fetch('https://api.anthropic.com/v1/messages', {
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({
-        model:'claude-sonnet-4-20250514', max_tokens:Math.min(maxKiLaenge*2, 800),
-        messages:[{role:'user',content:`Du bist Fachlektor für Bausachverständigen-Gutachten.
-Formuliere aus diesen SV-Angaben einen §6-Text. 
-
-WICHTIG — Längenbeschränkung:
-Der Output darf maximal ${maxKiLaenge} Zeichen lang sein (70% der SV-Eingabe: ${gesamtLaenge} Zeichen).
-Halte dich präzise an die SV-Vorgaben — erfinde keine neuen fachlichen Aussagen.
-
-KONJUNKTIV II PFLICHT für Einschätzungen: dürfte, könnte, wäre, ließe sich.
-INDIKATIV erlaubt NUR für: gemessene Werte, Sichtbefunde, Norm-Klassifikationen.
-VERBOTEN: ist (für Ursachen), führt zu, muss.
-
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514', max_tokens:600,
+        messages:[{role:'user',content:`Formuliere aus diesen SV-Angaben einen §6-Fachurteil-Text.
+REGELN: 1. Output max ${maxLen} Zeichen. 2. NUR SV-Vorgaben — keine neuen Fakten. 3. Konjunktiv II PFLICHT. 4. Indikativ nur für Messwerte/Sichtbefunde.
 SV-Beobachtung: ${b1}
 SV-Schlussfolgerung: ${b2}
 SV-Empfehlung: ${b3}
-
-Antworte NUR mit dem §6-Text. Keine Überschriften, keine Erklärungen.`}]
+Nur den §6-Text zurückgeben.`}]
       })
     });
     const d = await res.json();
-    kiAusformText = (d.content?.[0]?.text||'').trim();
-    // Sicherstellung max 70%
-    if(kiAusformText.length > maxKiLaenge) {
-      kiAusformText = kiAusformText.substring(0, maxKiLaenge) + '…';
-    }
+    let txt = d.content?.[0]?.text || '';
+    if(txt.length > maxLen) txt = txt.substring(0,maxLen)+'…';
+    document.getElementById('svTextEdit').value = txt;
+    document.getElementById('ausform-wrap').style.display = 'block';
+    onInputEdit();
+    document.getElementById('ausform-wrap').scrollIntoView({behavior:'smooth',block:'nearest'});
+    localStorage.setItem('prova_ki_stellungnahme_vorschlag', txt);
   } catch(e) {
-    kiAusformText = `Basierend auf den Feststellungen dürfte die Ursache auf die beschriebenen Faktoren zurückzuführen sein. Die genannte Schlussfolgerung könnte nach fachlicher Einschätzung zutreffen.\n\nDie Beweislast dürfte entsprechend der Sachlage beim Verursacher liegen.\n\nEmpfehlenswert wäre es, die genannten Maßnahmen zeitnah umzusetzen.`;
+    zeigToast('KI nicht erreichbar — bitte manuell in Feld A eintippen.','err');
   }
-
-  document.getElementById('kiRunningB').classList.remove('visible');
-  document.getElementById('diffOriginal').textContent = auditLog.sv_original;
-  document.getElementById('diffKiText').textContent = kiAusformText;
-  document.getElementById('diffSection').style.display = 'block';
+  btn.textContent = '✨ Meine Stichpunkte formulieren lassen'; btn.disabled = false;
 }
 
-function acceptKiB() {
-  document.getElementById('svTextEdit').value = kiAusformText;
-  document.getElementById('diffSection').style.display = 'none';
-  document.getElementById('svEditWrap').style.display = 'block';
-  document.getElementById('aendWrap').classList.add('visible');
-  aenderungsQuote = 0;
-  onInputEdit();
-  document.getElementById('btnAusform').style.display = 'none';
-}
+/* ── NORMEN ── */
+const SA_TAGS = {
+  'Wasserschaden':'WS','Schimmelbefall':'SC','Brandschaden':'BS',
+  'Sturmschaden':'SS','Elementarschaden':'ES','Baumängel allgemein':'BA',
+  'Baumängel':'BA','Schimmel/Feuchte':'SC','Feuchte':'SC'
+};
+const NORMEN_DB=[{"n": "DIN 4108-2", "t": "Wärmeschutz und Energie-Einsparung in Gebäuden", "sa": "WS,SC,BA", "g": "Mindestoberflächentemperaturfaktor fRsi ≥ 0,70"}, {"n": "DIN 4108-3", "t": "Klimabedingter Feuchteschutz", "sa": "WS,SC,BA", "g": ""}, {"n": "DIN 4108-7", "t": "Luftdichtheit von Gebäuden", "sa": "WS,SC,BA", "g": ""}, {"n": "DIN 68800-1", "t": "Holzschutz — Allgemeines", "sa": "WS,SC,BA", "g": "Holzfeuchte <18% unkritisch, >20% kritisch"}, {"n": "WTA 6-1-01/D", "t": "Lüftung zur Vermeidung von Schimmelpilzbildung", "sa": "SC,WS", "g": "rel. Luftfeuchte <60% (Wohnraum)"}, {"n": "DIN EN 13829", "t": "Luftdurchlässigkeit von Gebäuden (Blower-Door)", "sa": "WS,BA", "g": ""}, {"n": "DIN 18195", "t": "Abdichtung von Bauwerken", "sa": "WS,ES", "g": ""}, {"n": "DIN 18531", "t": "Dachabdichtungen", "sa": "WS,ES,SS", "g": ""}, {"n": "DIN 276", "t": "Kosten im Bauwesen", "sa": "WS,SC,BS,SS,ES,BA", "g": ""}, {"n": "§ 906 BGB", "t": "Zuführung unwägbarer Stoffe", "sa": "WS,SC", "g": ""}, {"n": "§ 823 BGB", "t": "Schadensersatzpflicht", "sa": "WS,SC,BS,SS,ES,BA", "g": ""}, {"n": "DIN 4109", "t": "Schallschutz im Hochbau", "sa": "BA", "g": ""}, {"n": "DIN 18040", "t": "Barrierefreies Bauen", "sa": "BA", "g": ""}, {"n": "VOB/B", "t": "Allgemeine Vertragsbedingungen für die Ausführung von Bauleistungen", "sa": "BA", "g": ""}, {"n": "DIN EN 1991", "t": "Einwirkungen auf Tragwerke (Eurocode 1)", "sa": "SS,ES,BA", "g": ""}];
 
-function rejectKiB() {
-  document.getElementById('diffSection').style.display = 'none';
-  document.getElementById('btnAusform').style.display = 'flex';
-  kiAusformText = '';
-}
-
-// NORMEN
-async function selectNormen(ja) {
-  normenGewählt = ja;
-  document.getElementById('normenJa').className = 'normen-btn' + (ja ? ' yes' : '');
-  document.getElementById('normenNein').className = 'normen-btn' + (!ja ? ' no' : '');
-
-  if(ja) {
-    document.getElementById('kiRunningNormen').classList.add('visible');
-    document.getElementById('btnWeiter3').disabled = true;
-    const schadenart = localStorage.getItem('prova_schadenart')||'Schaden';
-    try {
-      const res = await fetch('https://api.anthropic.com/v1/messages', {
-        method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({
-          model:'claude-sonnet-4-20250514', max_tokens:600,
-          messages:[{role:'user',content:`Füge in diesen §6-Text passende DIN-Normen, WTA-Merkblätter oder BGH-Urteile als Klammerzitate ein.
-Schadensfall: ${schadenart}
-REGELN: Nur Klammerzitate (vgl. DIN 4108-2). Max. 3-4 Normen. Text NICHT umformulieren. Konjunktiv II NICHT verändern.
-Antworte NUR mit dem aktualisierten Text.
-
-Text: ${finalText}`}]
-        })
-      });
-      const d = await res.json();
-      const normenText = (d.content?.[0]?.text||'').trim();
-      finalText = normenText || finalText;
-      const added = normenText.match(/\(vgl\.\s*(DIN|WTA|BGH)/gi)||[];
-      document.getElementById('normenResult').innerHTML = `✓ Normen eingefügt: <strong>${added.join(', ')}</strong>`;
-    } catch(e) {
-      document.getElementById('normenResult').innerHTML = '✓ Normen eingefügt (Demo)';
-    }
-    document.getElementById('kiRunningNormen').classList.remove('visible');
-    document.getElementById('normenResult').classList.add('visible');
-  } else {
-    finalText = getFinalSvText();
-  }
-
-  auditLog.normen = ja;
-  document.getElementById('btnWeiter3').disabled = false;
-}
-
-// FINAL TEXT
-function getFinalSvText() {
-  if(selectedWeg === 'A') return document.getElementById('svTextA').value.trim();
-  const editVal = document.getElementById('svTextEdit').value.trim();
-  if(editVal) return editVal;
-  const b1 = document.getElementById('svB1').value.trim();
-  const b2 = document.getElementById('svB2').value.trim();
-  const b3 = document.getElementById('svB3').value.trim();
-  return [b1, b2, b3].filter(Boolean).join(' ');
-}
-
-function renderFinalText() {
-  if(!finalText) finalText = getFinalSvText();
-  let html = esc(finalText);
-  INDIK_BAD.forEach(r => { html = html.replace(r.rx, m=>`<span class="hl-warn" title="${r.hint}">${m}</span>`); r.rx.lastIndex=0; });
-  KJ2.forEach(w => { const rx = new RegExp(`\\b(${w})\\b`,'gi'); html = html.replace(rx,'<span class="hl-kj2">$1</span>'); });
-  document.getElementById('finalBox').innerHTML = html;
-}
-
-function esc(t){ return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-
-// SUBMIT BEREIT
-function checkReady() {
-  const checks = document.querySelectorAll('.check-list input:checked').length;
-  const confirmed = document.getElementById('confirm407a').checked;
-  const ready = checks === 3 && confirmed;
-  document.getElementById('btnSubmit').disabled = !ready;
-  const hint = document.getElementById('submitHint');
-  hint.textContent = ready ? '✓ Bereit zur Bestätigung' : (!confirmed ? '§407a-Bestätigung erforderlich' : `${checks}/3 Punkte bestätigt`);
-  hint.style.color = ready ? 'var(--green)' : 'var(--text3)';
-}
-
-// SUBMIT
-function submit() {
-  const problems = [];
-  INDIK_BAD.forEach(r => { if(r.rx.test(finalText)) problems.push(true); r.rx.lastIndex=0; });
-  if(problems.length > 0) {
-    if(!confirm('⚠ Mögliche Indikativ-Formulierungen erkannt.\n\nTrotzdem bestätigen?')) return;
-  }
-
-  const hasKj2 = KJ2.some(w => finalText.toLowerCase().includes(w));
-  auditLog.kj2_ok = hasKj2 && problems.length === 0;
-  auditLog.ts = new Date().toISOString();
-  auditLog.sv_final = finalText;
-  if(selectedWeg === 'A') auditLog.sv_original = document.getElementById('svTextA').value.trim();
-
-  // localStorage
-  localStorage.setItem('prova_stellungnahme_done', 'true');
-  localStorage.setItem('prova_stellungnahme_text', finalText);
-  localStorage.setItem('prova_stellungnahme_kj2_ok', auditLog.kj2_ok.toString());
-  localStorage.setItem('prova_stellungnahme_ts', auditLog.ts);
-  localStorage.setItem('prova_stellungnahme_len', finalText.length.toString());
-  localStorage.setItem('prova_stellungnahme_version', 'v3.1');
-  localStorage.setItem('prova_stellungnahme_weg', selectedWeg);
-  localStorage.setItem('prova_stellungnahme_original', auditLog.sv_original);
-  localStorage.setItem('prova_gutachten_typ', selectedTyp);
-  localStorage.setItem('prova_offenlegungstext', OFFENLEGUNG[selectedTyp]);
-
-  // Audit UI befüllen
-  const ts = new Date();
-  const fmt = d => d.toLocaleString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
-  document.getElementById('tl-weg').textContent = selectedWeg==='A' ? '(Freitext)' : '(Kausalkette)';
-  document.getElementById('tl-ts-input').textContent = fmt(new Date(ts.getTime()-180000));
-  const origPrev = auditLog.sv_original;
-  document.getElementById('tl-orig-preview').textContent = origPrev.length>120 ? origPrev.substring(0,120)+'…' : origPrev;
-  document.getElementById('tl-ts-final').textContent = fmt(ts);
-  document.getElementById('tl-zeichen').textContent = finalText.length + ' Zeichen';
-  const kj2Badge = document.getElementById('tl-kj2');
-  kj2Badge.textContent = auditLog.kj2_ok ? '✓ Konjunktiv II' : '⚠ Konjunktiv prüfen';
-  kj2Badge.className = 'tl-badge ' + (auditLog.kj2_ok ? 'ok' : 'warn');
-  if(selectedWeg === 'B' && aenderungsQuote > 0) {
-    const ab = document.getElementById('tl-aend');
-    ab.textContent = Math.round(aenderungsQuote)+'% eigene Änderungen';
-    ab.className = 'tl-badge ' + (aenderungsQuote>=20 ? 'ok' : 'warn');
-    ab.style.display = 'inline-flex';
-  }
-  document.getElementById('tl-ts-407a').textContent = fmt(ts);
-  document.getElementById('offenlegungText').textContent = OFFENLEGUNG[selectedTyp];
-
-  // Airtable sync
-  syncAirtable(ts);
-
-  document.getElementById('step4').classList.remove('active');
-  document.getElementById('stepDone').classList.add('active');
-  window.scrollTo({top:0,behavior:'smooth'});
-  showToast(auditLog.kj2_ok ? '✅ Fachurteil bestätigt · Konjunktiv II ✓' : '✅ Fachurteil bestätigt');
-}
-
-// AIRTABLE SYNC
-async function syncAirtable(ts) {
-  const airtableId = localStorage.getItem('prova_airtable_id');
-  const statusEl = document.getElementById('syncStatus');
-  if(!airtableId) {
-    statusEl.innerHTML = '<span style="color:var(--text3);font-size:12px;">ℹ Audit-Trail lokal gespeichert (ID nicht gefunden)</span>';
+function ladeNormen() {
+  const tag = SA_TAGS[sa];
+  const el = document.getElementById('normenListe');
+  if(!tag) {
+    el.innerHTML = '<div style="padding:12px 14px;font-size:11px;color:var(--text3);">Keine Vorauswahl — bitte Norm manuell eingeben.</div>';
     return;
   }
-  try {
-    const res = await fetch('/.netlify/functions/airtable', {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({
-        method:'PATCH',
-        path:`/v0/appJ7bLlAHZoxENWE/tblSxV8bsXwd1pwa0/${airtableId}`,
-        body:{ fields:{
-          sv_stellungnahme_original: auditLog.sv_original||'',
-          sv_stellungnahme_final: finalText,
-          ki_stellungnahme_vorschlag: auditLog.ki_vorschlag||'',
-          stellungnahme_407a_ts: ts.toISOString(),
-          stellungnahme_zeichenanzahl: finalText.length,
-          stellungnahme_version: 'v3.1'
-        }}
-      })
-    });
-    statusEl.innerHTML = res.ok
-      ? '<span style="color:var(--green);font-size:12px;">✓ Audit-Trail in Datenbank gesichert — gerichtsfest</span>'
-      : '<span style="color:var(--text3);font-size:12px;">⚠ Lokal gesichert · Datenbank nicht erreichbar</span>';
-  } catch(e) {
-    statusEl.innerHTML = '<span style="color:var(--text3);font-size:12px;">⚠ Lokal gesichert · Netzwerk nicht verfügbar</span>';
+  const passend = NORMEN_DB.filter(n => n.sa.includes(tag)).slice(0,5);
+  if(!passend.length) {
+    el.innerHTML = '<div style="padding:12px 14px;font-size:11px;color:var(--text3);">Keine spezifischen Normen gefunden.</div>';
+    return;
   }
+  el.innerHTML = passend.map(n => `
+    <div class="norm-item" onclick="normEinfuegen('${n.n}','${n.t}')">
+      <div class="norm-item-nr">${n.n}</div>
+      <div class="norm-item-txt">${n.t}</div>
+      ${n.g ? `<div class="norm-item-g">${n.g}</div>` : ''}
+      <span class="norm-add-btn">+ Einfügen</span>
+    </div>`
+  ).join('');
 }
 
-// PDF AUDIT DOWNLOAD
-function downloadAuditPDF() {
-  const ts = new Date();
-  const fmt = d => d.toLocaleString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
-  const az = localStorage.getItem('prova_letztes_az')||'—';
-
-  const html = `<!DOCTYPE html><html lang="de"><head><meta charset="UTF-8">
-<title>PROVA Audit-Protokoll</title>
-<style>
-body{font-family:Arial,sans-serif;font-size:13px;color:#111;max-width:700px;margin:40px auto;padding:0 20px;}
-h1{font-size:18px;border-bottom:2px solid #111;padding-bottom:8px;margin-bottom:20px;}
-h2{font-size:14px;margin:20px 0 6px;color:#333;}
-.meta{display:flex;gap:40px;background:#f5f5f5;padding:12px;border-radius:4px;margin-bottom:20px;}
-.meta-item label{font-size:10px;text-transform:uppercase;letter-spacing:0.06em;color:#666;}
-.meta-item p{font-weight:600;margin-top:2px;}
-.block{border:1px solid #ddd;border-radius:4px;padding:12px;margin-bottom:12px;}
-.block-label{font-size:10px;text-transform:uppercase;letter-spacing:0.06em;color:#666;margin-bottom:6px;}
-.block-content{font-size:13px;line-height:1.6;white-space:pre-wrap;}
-.badges{display:flex;gap:8px;margin-top:8px;}
-.badge{padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;border:1px solid;}
-.badge.ok{background:#d1fae5;color:#065f46;border-color:#a7f3d0;}
-.badge.warn{background:#fef3c7;color:#92400e;border-color:#fde68a;}
-.badge.n{background:#f3f4f6;color:#374151;border-color:#e5e7eb;}
-.offenlegung{background:#eff6ff;border:1px solid #bfdbfe;border-radius:4px;padding:12px;font-size:12px;font-style:italic;line-height:1.6;margin-top:16px;}
-.footer{margin-top:30px;padding-top:16px;border-top:1px solid #ddd;font-size:11px;color:#666;}
-</style></head><body>
-<h1>PROVA Audit-Protokoll — §6 Entstehungsnachweis</h1>
-<div class="meta">
-  <div class="meta-item"><label>Aktenzeichen</label><p>${az}</p></div>
-  <div class="meta-item"><label>Erstellt</label><p>${fmt(ts)}</p></div>
-  <div class="meta-item"><label>Eingabeweg</label><p>${auditLog.weg==='A'?'Freitext':'Kausalkette'}</p></div>
-  <div class="meta-item"><label>Gutachtentyp</label><p>${{gericht:'Gerichtsgutachten',versicherung:'Versicherung',privat:'Privatgutachten'}[selectedTyp]}</p></div>
-</div>
-
-<h2>1. Eingabe des Sachverständigen</h2>
-<div class="block">
-  <div class="block-label">SV-Original (${auditLog.weg==='A'?'Freitext':'Kausalkette: Beobachtung / Schlussfolgerung / Empfehlung'})</div>
-  <div class="block-content">${auditLog.sv_original||'—'}</div>
-</div>
-
-<h2>2. KI-Inspiration (nicht verwendbar als Gutachtentext)</h2>
-<div class="block">
-  <div class="block-label">KI-Vorschlag (nur als Denkanstoß — nicht Bestandteil des Gutachtens)</div>
-  <div class="block-content">${auditLog.ki_vorschlag||'—'}</div>
-</div>
-
-<h2>3. Finales Fachurteil des Sachverständigen</h2>
-<div class="block">
-  <div class="block-label">Nach Überarbeitung durch SV</div>
-  <div class="block-content">${finalText||'—'}</div>
-  <div class="badges">
-    <span class="badge n">${finalText.length} Zeichen</span>
-    <span class="badge ${auditLog.kj2_ok?'ok':'warn'}">${auditLog.kj2_ok?'✓ Konjunktiv II':'⚠ Konjunktiv II prüfen'}</span>
-    ${selectedWeg==='B'&&aenderungsQuote>0?`<span class="badge ${aenderungsQuote>=20?'ok':'warn'}">${Math.round(aenderungsQuote)}% eigene Änderungen</span>`:''}
-  </div>
-</div>
-
-<h2>4. §407a ZPO Bestätigung</h2>
-<div class="block">
-  <div class="block-label">Zeitstempel der Bestätigung</div>
-  <div class="block-content">${fmt(ts)}\n✓ "Ich bestätige: Dieses Fachurteil entspricht meiner persönlichen Einschätzung."</div>
-</div>
-
-<div class="offenlegung">
-  <strong>§7 KI-Offenlegungstext:</strong><br>${OFFENLEGUNG[selectedTyp]}
-</div>
-
-<div class="footer">
-  PROVA Systems · Audit-Trail v3.1 · Erstellt: ${fmt(ts)}<br>
-  Dieses Protokoll dient als Nachweis der persönlichen Gutachtenerstattung gem. §407a Abs. 3 ZPO.
-</div>
-</body></html>`;
-
-  const blob = new Blob([html], {type:'text/html'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `PROVA_Audit_${az||'Gutachten'}_${ts.toISOString().substring(0,10)}.html`;
-  a.click();
-  URL.revokeObjectURL(url);
-  showToast('Protokoll heruntergeladen ✅');
-}
-
-// ZURÜCK
-function zurueck() {
-  const returnUrl = localStorage.getItem('prova_stellungnahme_return');
-  localStorage.removeItem('prova_stellungnahme_return');
-  window.location.href = returnUrl || 'freigabe.html';
-}
-
-// KJ OVERLAY
-function openKjOverlay(){ document.getElementById('kjOverlay').classList.add('open'); }
-function closeKjOverlay(){ document.getElementById('kjOverlay').classList.remove('open'); }
-function insertPhrase(phrase) {
-  const ta = selectedWeg==='A'
-    ? document.getElementById('svTextA')
-    : (document.getElementById('svEditWrap').style.display!=='none'
-        ? document.getElementById('svTextEdit')
-        : document.getElementById('svTextA'));
-  const pos = ta.selectionStart;
-  const ins = (pos>0 && ta.value[pos-1]!==' ' && ta.value[pos-1]!=='\n') ? ' '+phrase : phrase;
-  ta.value = ta.value.substring(0,pos)+ins+ta.value.substring(pos);
-  ta.selectionStart = ta.selectionEnd = pos+ins.length;
+function normEinfuegen(nr, titel) {
+  const insert = `\n(gem. ${nr} – ${titel})`;
+  const ta = selectedWeg==='A' ? document.getElementById('svTextA') :
+    (document.getElementById('ausform-wrap').style.display!=='none' ?
+      document.getElementById('svTextEdit') : document.getElementById('svTextA'));
+  const pos = ta.selectionStart || ta.value.length;
+  ta.value = ta.value.slice(0,pos) + insert + ta.value.slice(pos);
   ta.focus();
-  closeKjOverlay();
-  selectedWeg==='A' ? onInputA() : onInputEdit();
-  showToast('Baustein eingefügt');
+  if(selectedWeg==='A') onInputA();
+  else onInputEdit();
+  zeigToast(`${nr} eingefügt ✅`,'ok');
 }
 
-// TOAST
-function showToast(msg, type) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.className = 'toast'+(type==='error'?' error':'');
-  t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'), 3000);
+function insertPhrase(phrase) {
+  const ta = selectedWeg==='A' ? document.getElementById('svTextA') :
+    (document.getElementById('ausform-wrap').style.display!=='none' ?
+      document.getElementById('svTextEdit') : document.getElementById('svTextA'));
+  const pos = ta.selectionStart || ta.value.length;
+  const pre = pos>0 && ta.value[pos-1]!==' ' && ta.value[pos-1]!=='\n' ? ' ' : '';
+  ta.value = ta.value.slice(0,pos) + pre + phrase + ' ' + ta.value.slice(pos);
+  ta.focus();
+  if(selectedWeg==='A') onInputA();
+  else onInputEdit();
+}
+
+/* ── WEITER ZUR FREIGABE ── */
+function weiterZuFreigabe() {
+  const finalText = getFinalSvText();
+  if(finalText.length < 200) { zeigToast('Bitte mindestens 200 Zeichen.','warn'); return; }
+
+  const ts = new Date().toISOString();
+  const kiVorschlag = localStorage.getItem('prova_ki_stellungnahme_vorschlag') || '';
+  const offenlegung = OFFENLEGUNG[selectedTyp] || OFFENLEGUNG.gericht;
+
+  // Alles speichern
+  localStorage.setItem('prova_stellungnahme_text', finalText);
+  localStorage.setItem('prova_stellungnahme_weg', selectedWeg);
+  localStorage.setItem('prova_stellungnahme_ts', ts);
+  localStorage.setItem('prova_stellungnahme_done', '1');
+  localStorage.setItem('prova_gutachten_typ', selectedTyp);
+  localStorage.setItem('prova_offenlegungstext', offenlegung);
+  localStorage.setItem('prova_stellungnahme_version', 'v4.0');
+  localStorage.setItem('prova_stellungnahme_kj2_ok',
+    document.getElementById('prova_stellungnahme_kj2_ok') ||
+    localStorage.getItem('prova_stellungnahme_kj2_ok') || '0');
+
+  // Audit-Log kompakt
+  const auditLog = {
+    version:'v4.0', ts_start: ts,
+    weg: selectedWeg, typ: selectedTyp,
+    ki_vorschlag: kiVorschlag,
+    sv_final: finalText,
+    ts_407a: ts,
+    kj2_ok: localStorage.getItem('prova_stellungnahme_kj2_ok')==='1'
+  };
+  localStorage.setItem('prova_stellungnahme_audit', JSON.stringify(auditLog));
+
+  window.location.href = 'freigabe.html';
+}
+
+/* ── TOAST ── */
+let toastTimer;
+function zeigToast(msg, type='ok') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast ' + type;
+  el.style.display = 'block';
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>{ el.style.display='none'; }, 3200);
 }
 </script>
+  <script src="/sw-register.js" defer></script>
 </body>
 </html>
