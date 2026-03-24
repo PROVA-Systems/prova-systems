@@ -441,6 +441,12 @@ async function ladePaketUndWeiterleiten(email, ziel) {
         var f = records[0].fields || {};
         // Paket-Feld: 'Paket' oder 'paket' oder 'Packet'
         paket = f.Paket || f.paket || f.Packet || 'Starter';
+        // Admin-Erkennung
+        var adminEmails = ['admin@prova-systems.de'];
+        if (adminEmails.indexOf(email.toLowerCase()) >= 0) {
+          localStorage.setItem('prova_is_admin', 'true');
+          paket = 'Enterprise';
+        }
         // Sicherstellen dass Wert gültig
         if (!['Starter','Pro','Enterprise'].includes(paket)) paket = 'Starter';
         // Auch Profil-Daten laden wenn vorhanden

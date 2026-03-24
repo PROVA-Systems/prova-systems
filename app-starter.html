@@ -292,6 +292,136 @@ tr:hover td{background:var(--gray-50);}
 </style>
 </head>
 <body data-user-package="starter">
+<!-- PROVA Paket-Gate — nicht entfernen -->
+<script>
+// PROVA Systems — Paket-Gate
+// Einbinden am ANFANG jeder App-Seite (nach <script> Tag)
+// Prüft localStorage + verifiziert gegen Airtable
+// Admin-Bypass: prova_is_admin === 'true' in localStorage
+
+(function() {
+  var ADMIN_EMAIL = 'admin@prova-systems.de'; // deine Admin-Email
+
+  // Welche Seite bin ich? Ermittle aus Dateiname
+  var page = window.location.pathname.split('/').pop() || '';
+  
+  // Zugangs-Mapping
+  var SEITEN_PAKET = {
+    'app-starter.html':    ['Starter', 'Pro', 'Enterprise'],
+    'app-pro.html':        ['Pro', 'Enterprise'],
+    'app-enterprise.html': ['Enterprise']
+  };
+  
+  var erlaubt = SEITEN_PAKET[page];
+  if (!erlaubt) return; // Unbekannte Seite — kein Gate
+
+  // Nutzer eingeloggt?
+  var userStr = localStorage.getItem('prova_user');
+  if (!userStr) {
+    window.location.href = 'app-login.html?reason=not_logged_in';
+    return;
+  }
+
+  var user;
+  try { user = JSON.parse(userStr); } catch(e) {
+    window.location.href = 'app-login.html?reason=session_error';
+    return;
+  }
+
+  var email = user.email || localStorage.getItem('prova_sv_email') || '';
+  var paket = localStorage.getItem('prova_paket') || 'Starter';
+
+  // ADMIN-BYPASS: Admin darf überall rein
+  var isAdmin = localStorage.getItem('prova_is_admin') === 'true' 
+             || email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
+  
+  if (isAdmin) {
+    // Admin-Modus: Paket auf Enterprise hochsetzen für vollen Zugang
+    if (!localStorage.getItem('prova_paket')) {
+      localStorage.setItem('prova_paket', 'Enterprise');
+    }
+    // Admin-Badge einblenden (nach DOM-Load)
+    document.addEventListener('DOMContentLoaded', function() {
+      var badge = document.createElement('div');
+      badge.style.cssText = 'position:fixed;bottom:1rem;right:1rem;z-index:9999;padding:.35rem .75rem;border-radius:999px;background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.3);font-size:.7rem;font-weight:700;color:#f87171;pointer-events:none;';
+      badge.textContent = '🔑 Admin-Modus';
+      document.body.appendChild(badge);
+    });
+    return; // Admin kommt immer rein
+  }
+
+  // Paket-Check: darf dieser Nutzer diese Seite sehen?
+  if (!erlaubt.includes(paket)) {
+    // Falsche Seite — richtigen redirect
+    var ziel = paket === 'Pro' ? 'app-pro.html' 
+              : paket === 'Enterprise' ? 'app-enterprise.html' 
+              : 'app-starter.html';
+    
+    if (page !== ziel) {
+      // Zeige kurzen Hinweis bevor Redirect
+      document.addEventListener('DOMContentLoaded', function() {
+        document.body.style.display = 'none';
+      });
+      
+      var msg = paket === 'Starter' && page !== 'app-starter.html'
+        ? 'Diese Funktion ist nur im ' + (page === 'app-pro.html' ? 'Pro' : 'Enterprise') + '-Paket verfügbar.'
+        : 'Weiterleitung zu Ihrer App…';
+      
+      sessionStorage.setItem('prova_gate_msg', msg);
+      window.location.replace(ziel + '?from=gate');
+      return;
+    }
+  }
+
+  // Hintergrund-Verifikation gegen Airtable (nicht-blockierend)
+  // Wenn localStorage manipuliert wurde → korrigieren
+  if (email) {
+    fetch('/.netlify/functions/airtable', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        method: 'GET',
+        path: '/v0/appJ7bLlAHZoxENWE/tbladqEQT3tmx4DIB?filterByFormula=' 
+              + encodeURIComponent('{Email}="' + email + '"')
+              + '&maxRecords=1&fields[]=Paket&fields[]=Email&fields[]=Status'
+      })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      var records = data.records || [];
+      if (records.length === 0) return;
+      
+      var f = records[0].fields || {};
+      var echtesPaket = (f.Paket && f.Paket.name) ? f.Paket.name : (f.Paket || 'Starter');
+      var status = (f.Status && f.Status.name) ? f.Status.name : (f.Status || '');
+      
+      // Status check: gesperrte Accounts
+      if (status === 'Gesperrt' || status === 'Gekuendigt') {
+        localStorage.clear();
+        window.location.href = 'app-login.html?reason=account_locked';
+        return;
+      }
+      
+      // Paket korrekt setzen
+      if (echtesPaket && echtesPaket !== paket) {
+        localStorage.setItem('prova_paket', echtesPaket);
+        
+        // Falls jetzt falscher Bereich → redirect
+        var neuErlaubt = SEITEN_PAKET[page] || [];
+        if (!neuErlaubt.includes(echtesPaket)) {
+          var neuZiel = echtesPaket === 'Pro' ? 'app-pro.html' 
+                       : echtesPaket === 'Enterprise' ? 'app-enterprise.html' 
+                       : 'app-starter.html';
+          window.location.replace(neuZiel);
+        }
+      }
+    })
+    .catch(function() {}); // Fehler ignorieren — nicht blockieren
+  }
+})();
+
+</script>
+
 
 <!-- NETZ-STATUS BADGE -->
 <div id="prova-net-badge" class="hidden online" aria-live="polite" aria-label="Netzwerkstatus">
@@ -1469,12 +1599,68 @@ async function verarbeiteFotos(files) {
     const orig = files[i].size;
     const res = await komprimiereBild(files[i]);
     gespart += orig - res.size;
-    fotos.push({ dataUrl: res.dataUrl, caption: '', origSize: orig, compSize: res.size });
+    const fotoIdx = fotos.length;
+    fotos.push({ dataUrl: res.dataUrl, caption: '', origSize: orig, compSize: res.size, captionLoading: true });
     renderFotoGrid();
+    autoCaption(fotoIdx);
   }
   if (statusEl) statusEl.style.display = 'none';
   showToast(`${files.length} Foto${files.length>1?'s':''} optimiert — ${Math.round(gespart/1024)} KB gespart.`, 'success');
 }
+
+/* AUTO-CAPTION: Foto-Beschriftung per KI (Starter) */
+async function autoCaption(idx) {
+  var foto = fotos[idx];
+  if (!foto || !foto.dataUrl) return;
+
+  var b64  = foto.dataUrl.replace(/^data:image\/[a-z]+;base64,/, '');
+  var mime = (foto.dataUrl.match(/^data:(image\/[a-z]+);base64,/) || [])[1] || 'image/jpeg';
+  var schaden = (document.getElementById('f-schadenart') || {}).value || '';
+  var context = schaden ? ' Schadensart: ' + schaden + '.' : '';
+
+  var prompt = 'Beschrifte dieses Foto aus einem Bausachverständigen-Gutachten.' +
+    context + ' Gib NUR eine kurze Beschriftung zurück (max. 15 Wörter):' +
+    ' Raum + Lage + was sichtbar ist + ggf. Maß. Beispiel:' +
+    ' "Badezimmer OG, Nordwand, Schimmel ca. 0,5 m², Fugenbereich".' +
+    ' Keine Einleitung, kein Punkt, keine Anführungszeichen. Fachsprache.';
+
+  try {
+    var res = await fetch('/.netlify/functions/ki-proxy', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        max_tokens: 80,
+        messages: [{ role: 'user', content: [
+          { type: 'image', source: { type: 'base64', media_type: mime, data: b64 } },
+          { type: 'text',  text: prompt }
+        ]}]
+      })
+    });
+
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    var data = await res.json();
+    var text = (data.content && data.content[0] && data.content[0].text)
+      ? data.content[0].text.trim().replace(/^["']|["']$/g, '') : '';
+
+    if (text && fotos[idx] && (!fotos[idx].caption || fotos[idx].captionLoading)) {
+      fotos[idx].caption = text;
+      fotos[idx].captionLoading = false;
+      var inp = document.getElementById('foto-cap-' + idx);
+      if (inp) {
+        inp.value = text;
+        inp.placeholder = 'Beschriftung…';
+        inp.style.background = 'rgba(34,197,94,0.1)';
+        setTimeout(function() { if(inp) inp.style.background = 'transparent'; }, 2000);
+      }
+    }
+  } catch(e) {
+    if (fotos[idx]) fotos[idx].captionLoading = false;
+    var inp = document.getElementById('foto-cap-' + idx);
+    if (inp) { inp.placeholder = 'Beschriftung…'; inp.style.background = 'transparent'; }
+  }
+}
+
 
 function renderFotoGrid() {
   const grid = document.getElementById('fotoGrid');
@@ -1486,9 +1672,11 @@ function renderFotoGrid() {
       <img src="${f.dataUrl}" style="width:100%;height:80px;object-fit:cover;display:block" alt="Foto ${i+1}">
       <button onclick="entferneFoto(${i})" style="position:absolute;top:3px;right:3px;width:18px;height:18px;border-radius:50%;background:rgba(0,0,0,.6);color:white;border:none;cursor:pointer;font-size:.65rem;display:flex;align-items:center;justify-content:center">×</button>
       <div style="padding:.25rem .375rem">
-        <input type="text" placeholder="Beschriftung…" value="${f.caption}"
-          style="width:100%;font-size:.65rem;border:none;background:transparent;color:var(--gray-700);outline:none;font-family:inherit"
-          onchange="fotos[${i}].caption=this.value">
+        <input type="text" id="foto-cap-${i}"
+          placeholder="${f.captionLoading ? '⟳ KI…' : 'Beschriftung…'}"
+          value="${f.caption}"
+          style="width:100%;font-size:.65rem;border:none;background:${f.captionLoading ? 'rgba(74,144,217,0.08)' : 'transparent'};color:var(--gray-700);outline:none;font-family:inherit;border-radius:3px;padding:1px 2px;transition:background .3s"
+          oninput="fotos[${i}].caption=this.value">
         <div style="font-size:.6rem;color:var(--gray-400)">${Math.round(f.compSize/1024)} KB ${f.origSize>f.compSize?`(-${Math.round((1-f.compSize/f.origSize)*100)}%)`:''}
         </div>
       </div>

@@ -458,6 +458,136 @@ ul,ol{list-style:none;}
 
 </head>
 <body data-user-package="pro">
+<!-- PROVA Paket-Gate — nicht entfernen -->
+<script>
+// PROVA Systems — Paket-Gate
+// Einbinden am ANFANG jeder App-Seite (nach <script> Tag)
+// Prüft localStorage + verifiziert gegen Airtable
+// Admin-Bypass: prova_is_admin === 'true' in localStorage
+
+(function() {
+  var ADMIN_EMAIL = 'admin@prova-systems.de'; // deine Admin-Email
+
+  // Welche Seite bin ich? Ermittle aus Dateiname
+  var page = window.location.pathname.split('/').pop() || '';
+  
+  // Zugangs-Mapping
+  var SEITEN_PAKET = {
+    'app-starter.html':    ['Starter', 'Pro', 'Enterprise'],
+    'app-pro.html':        ['Pro', 'Enterprise'],
+    'app-enterprise.html': ['Enterprise']
+  };
+  
+  var erlaubt = SEITEN_PAKET[page];
+  if (!erlaubt) return; // Unbekannte Seite — kein Gate
+
+  // Nutzer eingeloggt?
+  var userStr = localStorage.getItem('prova_user');
+  if (!userStr) {
+    window.location.href = 'app-login.html?reason=not_logged_in';
+    return;
+  }
+
+  var user;
+  try { user = JSON.parse(userStr); } catch(e) {
+    window.location.href = 'app-login.html?reason=session_error';
+    return;
+  }
+
+  var email = user.email || localStorage.getItem('prova_sv_email') || '';
+  var paket = localStorage.getItem('prova_paket') || 'Starter';
+
+  // ADMIN-BYPASS: Admin darf überall rein
+  var isAdmin = localStorage.getItem('prova_is_admin') === 'true' 
+             || email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
+  
+  if (isAdmin) {
+    // Admin-Modus: Paket auf Enterprise hochsetzen für vollen Zugang
+    if (!localStorage.getItem('prova_paket')) {
+      localStorage.setItem('prova_paket', 'Enterprise');
+    }
+    // Admin-Badge einblenden (nach DOM-Load)
+    document.addEventListener('DOMContentLoaded', function() {
+      var badge = document.createElement('div');
+      badge.style.cssText = 'position:fixed;bottom:1rem;right:1rem;z-index:9999;padding:.35rem .75rem;border-radius:999px;background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.3);font-size:.7rem;font-weight:700;color:#f87171;pointer-events:none;';
+      badge.textContent = '🔑 Admin-Modus';
+      document.body.appendChild(badge);
+    });
+    return; // Admin kommt immer rein
+  }
+
+  // Paket-Check: darf dieser Nutzer diese Seite sehen?
+  if (!erlaubt.includes(paket)) {
+    // Falsche Seite — richtigen redirect
+    var ziel = paket === 'Pro' ? 'app-pro.html' 
+              : paket === 'Enterprise' ? 'app-enterprise.html' 
+              : 'app-starter.html';
+    
+    if (page !== ziel) {
+      // Zeige kurzen Hinweis bevor Redirect
+      document.addEventListener('DOMContentLoaded', function() {
+        document.body.style.display = 'none';
+      });
+      
+      var msg = paket === 'Starter' && page !== 'app-starter.html'
+        ? 'Diese Funktion ist nur im ' + (page === 'app-pro.html' ? 'Pro' : 'Enterprise') + '-Paket verfügbar.'
+        : 'Weiterleitung zu Ihrer App…';
+      
+      sessionStorage.setItem('prova_gate_msg', msg);
+      window.location.replace(ziel + '?from=gate');
+      return;
+    }
+  }
+
+  // Hintergrund-Verifikation gegen Airtable (nicht-blockierend)
+  // Wenn localStorage manipuliert wurde → korrigieren
+  if (email) {
+    fetch('/.netlify/functions/airtable', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        method: 'GET',
+        path: '/v0/appJ7bLlAHZoxENWE/tbladqEQT3tmx4DIB?filterByFormula=' 
+              + encodeURIComponent('{Email}="' + email + '"')
+              + '&maxRecords=1&fields[]=Paket&fields[]=Email&fields[]=Status'
+      })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      var records = data.records || [];
+      if (records.length === 0) return;
+      
+      var f = records[0].fields || {};
+      var echtesPaket = (f.Paket && f.Paket.name) ? f.Paket.name : (f.Paket || 'Starter');
+      var status = (f.Status && f.Status.name) ? f.Status.name : (f.Status || '');
+      
+      // Status check: gesperrte Accounts
+      if (status === 'Gesperrt' || status === 'Gekuendigt') {
+        localStorage.clear();
+        window.location.href = 'app-login.html?reason=account_locked';
+        return;
+      }
+      
+      // Paket korrekt setzen
+      if (echtesPaket && echtesPaket !== paket) {
+        localStorage.setItem('prova_paket', echtesPaket);
+        
+        // Falls jetzt falscher Bereich → redirect
+        var neuErlaubt = SEITEN_PAKET[page] || [];
+        if (!neuErlaubt.includes(echtesPaket)) {
+          var neuZiel = echtesPaket === 'Pro' ? 'app-pro.html' 
+                       : echtesPaket === 'Enterprise' ? 'app-enterprise.html' 
+                       : 'app-starter.html';
+          window.location.replace(neuZiel);
+        }
+      }
+    })
+    .catch(function() {}); // Fehler ignorieren — nicht blockieren
+  }
+})();
+
+</script>
+
 <div class="topbar">
   <div class="topbar-left">
     <a href="app-starter.html" class="logo">PRO<span>VA</span></a>
@@ -1245,14 +1375,14 @@ window.PROVA=window.PROVA||{};PROVA.paket=localStorage.getItem('prova_paket')||'
         <div class="team-member-card">
           <div class="member-avatar">MK</div>
           <div class="member-name">Dr. Max Kellner</div>
-          <div class="member-email">kontakt@prova-systems.de</div>
+          <div class="member-email"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="73181c1d071218073303011c05125e000a0007161e005d1716">[email&#160;protected]</a></div>
           <div><span class="member-role-badge admin">Administrator</span></div>
           <div style="margin-top:12px;font-size:0.72rem;color:var(--gray-400);">24 Gutachten erstellt · heute aktiv</div>
         </div>
         <div class="team-member-card">
           <div class="member-avatar" style="background:#10B981;">TS</div>
           <div class="member-name">Thomas Schmidt</div>
-          <div class="member-email">kontakt@prova-systems.de</div>
+          <div class="member-email"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="12797d7c667379665262607d64733f616b6166777f613c7677">[email&#160;protected]</a></div>
           <div><span class="member-role-badge gutachter">Gutachter</span></div>
           <div style="margin-top:12px;font-size:0.72rem;color:var(--gray-400);">10 Gutachten erstellt · gestern aktiv</div>
           <div style="margin-top:10px;display:flex;gap:6px;justify-content:center;">
@@ -1343,7 +1473,7 @@ window.PROVA=window.PROVA||{};PROVA.paket=localStorage.getItem('prova_paket')||'
 </main>
 </div><!-- /app-wrapper -->
 
-</script><script>
+</script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 // ===== TOAST =====
 function showToast(msg, type) {
   const container = document.getElementById('toast-container');
@@ -1870,6 +2000,51 @@ function renderProFotoGrid() {
   }).join('');
 }
 
+/* AUTO-CAPTION: Foto-Beschriftung per KI (Pro) */
+async function autoCaptionPro(idx) {
+  var foto = proFotos[idx];
+  if (!foto || !foto.dataUrl) return;
+
+  var b64  = foto.dataUrl.replace(/^data:image\/[a-z]+;base64,/, '');
+  var mime = (foto.dataUrl.match(/^data:(image\/[a-z]+);base64,/) || [])[1] || 'image/jpeg';
+  var schaden = (document.getElementById('f-schadenart') || {}).value || '';
+  var ctx = schaden ? ' Schadensart: ' + schaden + '.' : '';
+
+  try {
+    var res = await fetch('/.netlify/functions/ki-proxy', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        max_tokens: 80,
+        messages: [{ role: 'user', content: [
+          { type: 'image', source: { type: 'base64', media_type: mime, data: b64 } },
+          { type: 'text', text: 'Beschrifte dieses Bausachverständigen-Foto.' + ctx + ' Max. 15 Wörter: Raum + Lage + was sichtbar + ggf. Maß. Beispiel: "Badezimmer OG, Nordwand, Schimmel ca. 0,5 m², Fugenbereich". Keine Einleitung, kein Punkt. Fachsprache.' }
+        ]}]
+      })
+    });
+    if (!res.ok) throw new Error('');
+    var data = await res.json();
+    var text = (data.content && data.content[0] && data.content[0].text)
+      ? data.content[0].text.trim().replace(/^["']|["']$/g, '') : '';
+    if (text && proFotos[idx] && (!proFotos[idx].caption || proFotos[idx].captionLoading)) {
+      proFotos[idx].caption = text;
+      proFotos[idx].captionLoading = false;
+      var inp = document.getElementById('pro-foto-cap-' + idx);
+      if (inp) {
+        inp.value = text;
+        inp.style.background = 'rgba(34,197,94,0.1)';
+        setTimeout(function() { if(inp) inp.style.background = 'transparent'; }, 2000);
+      } else {
+        renderProFotoGrid(); // Fallback
+      }
+    }
+  } catch(e) {
+    if (proFotos[idx]) proFotos[idx].captionLoading = false;
+  }
+}
+
+
 window.entferneFotoPro = function(i) {
   if (i >= 0 && i < proFotos.length) { proFotos.splice(i, 1); renderProFotoGrid(); }
 };
@@ -1917,7 +2092,10 @@ async function verarbeiteFotosPro(files) {
     var orig = files[i].size;
     var res = await komprimiereBildPro(files[i]);
     gespart += orig - res.size;
-    proFotos.push({ dataUrl: res.dataUrl, caption: '', origSize: orig, compSize: res.size });
+    var fotoIdxPro = proFotos.length;
+    proFotos.push({ dataUrl: res.dataUrl, caption: '', origSize: orig, compSize: res.size, captionLoading: true });
+    renderProFotoGrid();
+    autoCaptionPro(fotoIdxPro);
     renderProFotoGrid();
   }
   if (statusEl) statusEl.style.display = 'none';
@@ -2546,8 +2724,9 @@ var _sTyp='nutzung',_sTimer=null;
 function _kTyp(t){ve();PFAQ.forEach(function(f){var s=0;f.q.split(' ').forEach(function(w){if(t.includes(w))s++;});if(s>bs){bs=s;best=f;}});return bs>0?best:null;}
 function openSupportModal(){document.getElementById("support-modal").style.display="flex";}
 function closeSupportModal(){document.getElementById("support-modal").style.display="none";["support-success","support-faq","support-typ-indicator"].forEach(function(id){var e=document.getElementById(id);if(e)e.style.display="none";});var f=document.getElementById("support-form");if(f)f.style.display="block";["sup-betreff","sup-nachricht"].forEach(function(id){var e=document.getElementById(id);if(e)e.value="";});var btn=document.getElementById("sup-send-btn");if(btn){btn.disabled=false;btn.textContent="Anfrage senden";}}
-document.addEventListener("DOMContentLoaded",function(){var m=document.getElementById("support-modal");if(m)m.addEven
-<script>
+document.addEventListener("DOMContentLoaded",function(){var m=document.getElementById("support-modal");if(m)m.addEventListener('click',function(){m.style.display='flex';});
+});
+</script><script>
 /* ── WHISPER OPTION 4 — PRO ── */
 var WHISPER_WEBHOOK_PRO = 'https://hook.eu1.make.com/h019rspppkvc4m146sv1opxs74h9dp3x';
 var _proMediaRecorder = null;
@@ -2645,15 +2824,4 @@ function exportWordPro() {
     +'</body></html>';
   var blob=new Blob([wordHtml],{type:'application/msword'});
   var url=URL.createObjectURL(blob);
-  var a=document.createElement('a');
-  a.href=url;
-  a.download='Gutachten_'+az.replace(/[^a-zA-Z0-9-]/g,'_')+'.doc';
-  document.body.appendChild(a); a.click(); document.body.removeChild(a);
-  setTimeout(function(){URL.revokeObjectURL(url);},2000);
-  showToast && showToast('Word-Download gestartet ✅','success');
-}
-
-</script>
-  <script src="/sw-register.js" defer></script>
-</body>
-</html>
+  var a=document.createElement

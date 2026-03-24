@@ -308,6 +308,34 @@ ul,ol{list-style:none;}
   font-weight:900;
 }
 .foto-cell button.foto-delete:hover{background:rgba(239,68,68,0.14);}
+.foto-ki-btn{
+  width:100%;padding:7px 10px;border-radius:8px;
+  border:1px solid rgba(74,144,217,0.3);
+  background:rgba(74,144,217,0.08);
+  color:#7EC8FF;font-size:0.75rem;font-weight:600;
+  cursor:pointer;font-family:inherit;transition:all .2s;
+  display:flex;align-items:center;justify-content:center;gap:6px;
+}
+.foto-ki-btn:hover{background:rgba(74,144,217,0.15);border-color:rgba(74,144,217,0.5);}
+.foto-ki-btn:disabled{opacity:.5;cursor:not-allowed;}
+.foto-ki-result{
+  margin-top:6px;padding:8px 10px;
+  border-radius:8px;border:1px solid rgba(74,144,217,0.2);
+  background:rgba(74,144,217,0.05);
+  font-size:0.75rem;color:rgba(226,232,240,0.85);
+  line-height:1.5;display:none;
+}
+.foto-ki-result.visible{display:block;}
+.foto-ki-result strong{display:block;font-size:0.65rem;color:#7EC8FF;
+  text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;}
+.foto-ki-uebernehmen{
+  margin-top:6px;width:100%;padding:6px 10px;border-radius:8px;
+  border:1px solid rgba(34,197,94,0.3);
+  background:rgba(34,197,94,0.08);
+  color:#4ade80;font-size:0.72rem;font-weight:600;
+  cursor:pointer;font-family:inherit;
+}
+.foto-ki-uebernehmen:hover{background:rgba(34,197,94,0.15);}
 
 /* KI ANALYSIS */
 .ki-analysis-card{background:linear-gradient(135deg,#1B3F6B 0%,#0F2849 100%);border-radius:14px;padding:28px;color:#fff;position:relative;overflow:hidden;}
@@ -430,6 +458,136 @@ ul,ol{list-style:none;}
 
 </head>
 <body data-user-package="enterprise">
+<!-- PROVA Paket-Gate — nicht entfernen -->
+<script>
+// PROVA Systems — Paket-Gate
+// Einbinden am ANFANG jeder App-Seite (nach <script> Tag)
+// Prüft localStorage + verifiziert gegen Airtable
+// Admin-Bypass: prova_is_admin === 'true' in localStorage
+
+(function() {
+  var ADMIN_EMAIL = 'admin@prova-systems.de'; // deine Admin-Email
+
+  // Welche Seite bin ich? Ermittle aus Dateiname
+  var page = window.location.pathname.split('/').pop() || '';
+  
+  // Zugangs-Mapping
+  var SEITEN_PAKET = {
+    'app-starter.html':    ['Starter', 'Pro', 'Enterprise'],
+    'app-pro.html':        ['Pro', 'Enterprise'],
+    'app-enterprise.html': ['Enterprise']
+  };
+  
+  var erlaubt = SEITEN_PAKET[page];
+  if (!erlaubt) return; // Unbekannte Seite — kein Gate
+
+  // Nutzer eingeloggt?
+  var userStr = localStorage.getItem('prova_user');
+  if (!userStr) {
+    window.location.href = 'app-login.html?reason=not_logged_in';
+    return;
+  }
+
+  var user;
+  try { user = JSON.parse(userStr); } catch(e) {
+    window.location.href = 'app-login.html?reason=session_error';
+    return;
+  }
+
+  var email = user.email || localStorage.getItem('prova_sv_email') || '';
+  var paket = localStorage.getItem('prova_paket') || 'Starter';
+
+  // ADMIN-BYPASS: Admin darf überall rein
+  var isAdmin = localStorage.getItem('prova_is_admin') === 'true' 
+             || email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
+  
+  if (isAdmin) {
+    // Admin-Modus: Paket auf Enterprise hochsetzen für vollen Zugang
+    if (!localStorage.getItem('prova_paket')) {
+      localStorage.setItem('prova_paket', 'Enterprise');
+    }
+    // Admin-Badge einblenden (nach DOM-Load)
+    document.addEventListener('DOMContentLoaded', function() {
+      var badge = document.createElement('div');
+      badge.style.cssText = 'position:fixed;bottom:1rem;right:1rem;z-index:9999;padding:.35rem .75rem;border-radius:999px;background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.3);font-size:.7rem;font-weight:700;color:#f87171;pointer-events:none;';
+      badge.textContent = '🔑 Admin-Modus';
+      document.body.appendChild(badge);
+    });
+    return; // Admin kommt immer rein
+  }
+
+  // Paket-Check: darf dieser Nutzer diese Seite sehen?
+  if (!erlaubt.includes(paket)) {
+    // Falsche Seite — richtigen redirect
+    var ziel = paket === 'Pro' ? 'app-pro.html' 
+              : paket === 'Enterprise' ? 'app-enterprise.html' 
+              : 'app-starter.html';
+    
+    if (page !== ziel) {
+      // Zeige kurzen Hinweis bevor Redirect
+      document.addEventListener('DOMContentLoaded', function() {
+        document.body.style.display = 'none';
+      });
+      
+      var msg = paket === 'Starter' && page !== 'app-starter.html'
+        ? 'Diese Funktion ist nur im ' + (page === 'app-pro.html' ? 'Pro' : 'Enterprise') + '-Paket verfügbar.'
+        : 'Weiterleitung zu Ihrer App…';
+      
+      sessionStorage.setItem('prova_gate_msg', msg);
+      window.location.replace(ziel + '?from=gate');
+      return;
+    }
+  }
+
+  // Hintergrund-Verifikation gegen Airtable (nicht-blockierend)
+  // Wenn localStorage manipuliert wurde → korrigieren
+  if (email) {
+    fetch('/.netlify/functions/airtable', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        method: 'GET',
+        path: '/v0/appJ7bLlAHZoxENWE/tbladqEQT3tmx4DIB?filterByFormula=' 
+              + encodeURIComponent('{Email}="' + email + '"')
+              + '&maxRecords=1&fields[]=Paket&fields[]=Email&fields[]=Status'
+      })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      var records = data.records || [];
+      if (records.length === 0) return;
+      
+      var f = records[0].fields || {};
+      var echtesPaket = (f.Paket && f.Paket.name) ? f.Paket.name : (f.Paket || 'Starter');
+      var status = (f.Status && f.Status.name) ? f.Status.name : (f.Status || '');
+      
+      // Status check: gesperrte Accounts
+      if (status === 'Gesperrt' || status === 'Gekuendigt') {
+        localStorage.clear();
+        window.location.href = 'app-login.html?reason=account_locked';
+        return;
+      }
+      
+      // Paket korrekt setzen
+      if (echtesPaket && echtesPaket !== paket) {
+        localStorage.setItem('prova_paket', echtesPaket);
+        
+        // Falls jetzt falscher Bereich → redirect
+        var neuErlaubt = SEITEN_PAKET[page] || [];
+        if (!neuErlaubt.includes(echtesPaket)) {
+          var neuZiel = echtesPaket === 'Pro' ? 'app-pro.html' 
+                       : echtesPaket === 'Enterprise' ? 'app-enterprise.html' 
+                       : 'app-starter.html';
+          window.location.replace(neuZiel);
+        }
+      }
+    })
+    .catch(function() {}); // Fehler ignorieren — nicht blockieren
+  }
+})();
+
+</script>
+
 <div class="topbar">
   <div class="topbar-left">
     <a href="app-starter.html" class="logo">PRO<span>VA</span></a>
@@ -926,11 +1084,11 @@ window.PROVA=window.PROVA||{};PROVA.paket='Enterprise';PROVA.isPro=['Pro','Enter
     <div id="page-team" class="app-page" style="display:none;">
       <div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:12px;"><div><h1 class="page-title">Team &amp; Rollen</h1><p class="page-subtitle">Enterprise: Unbegrenzte Mitglieder · 4 Rollen · Abteilungen</p></div><button class="btn btn-gold btn-sm" onclick="inviteMember()">+ Mitglied einladen</button></div>
       <div class="team-grid">
-        <div class="team-member-card"><div class="member-avatar" style="background:var(--gold);">RB</div><div class="member-name">R. Berger</div><div class="member-email">kontakt@prova-systems.de</div><div><span class="role-chip admin">Super-Admin</span></div><div style="margin-top:10px;font-size:0.72rem;color:var(--gray-400);">9 Gutachten · Alle Abt.</div></div>
-        <div class="team-member-card"><div class="member-avatar" style="background:#10B981;">TS</div><div class="member-name">T. Schmidt</div><div class="member-email">kontakt@prova-systems.de</div><div><span class="role-chip gutachter">Gutachter</span></div><div style="margin-top:10px;font-size:0.72rem;color:var(--gray-400);">7 Gutachten · Wasser</div><div style="margin-top:8px;display:flex;gap:6px;justify-content:center;"><button class="btn btn-outline btn-sm">Rolle</button><button class="btn btn-sm" style="background:#FEE2E2;color:var(--error);border:1px solid #FECACA;font-size:0.7rem;padding:4px 8px;">Entf.</button></div></div>
-        <div class="team-member-card"><div class="member-avatar" style="background:#8B5CF6;">SM</div><div class="member-name">S. Maier</div><div class="member-email">kontakt@prova-systems.de</div><div><span class="role-chip pruefer">Prüfer</span></div><div style="margin-top:10px;font-size:0.72rem;color:var(--gray-400);">5 Gutachten · Brand</div><div style="margin-top:8px;display:flex;gap:6px;justify-content:center;"><button class="btn btn-outline btn-sm">Rolle</button><button class="btn btn-sm" style="background:#FEE2E2;color:var(--error);border:1px solid #FECACA;font-size:0.7rem;padding:4px 8px;">Entf.</button></div></div>
-        <div class="team-member-card"><div class="member-avatar" style="background:#EF4444;">KF</div><div class="member-name">K. Fischer</div><div class="member-email">kontakt@prova-systems.de</div><div><span class="role-chip gutachter">Gutachter</span></div><div style="margin-top:10px;font-size:0.72rem;color:var(--gray-400);">4 Gutachten · Brand</div><div style="margin-top:8px;display:flex;gap:6px;justify-content:center;"><button class="btn btn-outline btn-sm">Rolle</button><button class="btn btn-sm" style="background:#FEE2E2;color:var(--error);border:1px solid #FECACA;font-size:0.7rem;padding:4px 8px;">Entf.</button></div></div>
-        <div class="team-member-card"><div class="member-avatar" style="background:#6B7280;">PW</div><div class="member-name">P. Weber</div><div class="member-email">kontakt@prova-systems.de</div><div><span class="role-chip viewer">Betrachter</span></div><div style="margin-top:10px;font-size:0.72rem;color:var(--gray-400);">3 Gutachten · Sturm</div><div style="margin-top:8px;display:flex;gap:6px;justify-content:center;"><button class="btn btn-outline btn-sm">Rolle</button><button class="btn btn-sm" style="background:#FEE2E2;color:var(--error);border:1px solid #FECACA;font-size:0.7rem;padding:4px 8px;">Entf.</button></div></div>
+        <div class="team-member-card"><div class="member-avatar" style="background:var(--gold);">RB</div><div class="member-name">R. Berger</div><div class="member-email"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="3d565253495c56497d4d4f524b5c104e444e4958504e135958">[email&#160;protected]</a></div><div><span class="role-chip admin">Super-Admin</span></div><div style="margin-top:10px;font-size:0.72rem;color:var(--gray-400);">9 Gutachten · Alle Abt.</div></div>
+        <div class="team-member-card"><div class="member-avatar" style="background:#10B981;">TS</div><div class="member-name">T. Schmidt</div><div class="member-email"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="264d494852474d526656544950470b555f5552434b55084243">[email&#160;protected]</a></div><div><span class="role-chip gutachter">Gutachter</span></div><div style="margin-top:10px;font-size:0.72rem;color:var(--gray-400);">7 Gutachten · Wasser</div><div style="margin-top:8px;display:flex;gap:6px;justify-content:center;"><button class="btn btn-outline btn-sm">Rolle</button><button class="btn btn-sm" style="background:#FEE2E2;color:var(--error);border:1px solid #FECACA;font-size:0.7rem;padding:4px 8px;">Entf.</button></div></div>
+        <div class="team-member-card"><div class="member-avatar" style="background:#8B5CF6;">SM</div><div class="member-name">S. Maier</div><div class="member-email"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="aec5c1c0dacfc5daeededcc1d8cf83ddd7dddacbc3dd80cacb">[email&#160;protected]</a></div><div><span class="role-chip pruefer">Prüfer</span></div><div style="margin-top:10px;font-size:0.72rem;color:var(--gray-400);">5 Gutachten · Brand</div><div style="margin-top:8px;display:flex;gap:6px;justify-content:center;"><button class="btn btn-outline btn-sm">Rolle</button><button class="btn btn-sm" style="background:#FEE2E2;color:var(--error);border:1px solid #FECACA;font-size:0.7rem;padding:4px 8px;">Entf.</button></div></div>
+        <div class="team-member-card"><div class="member-avatar" style="background:#EF4444;">KF</div><div class="member-name">K. Fischer</div><div class="member-email"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="177c787963767c635767657861763a646e6463727a64397372">[email&#160;protected]</a></div><div><span class="role-chip gutachter">Gutachter</span></div><div style="margin-top:10px;font-size:0.72rem;color:var(--gray-400);">4 Gutachten · Brand</div><div style="margin-top:8px;display:flex;gap:6px;justify-content:center;"><button class="btn btn-outline btn-sm">Rolle</button><button class="btn btn-sm" style="background:#FEE2E2;color:var(--error);border:1px solid #FECACA;font-size:0.7rem;padding:4px 8px;">Entf.</button></div></div>
+        <div class="team-member-card"><div class="member-avatar" style="background:#6B7280;">PW</div><div class="member-name">P. Weber</div><div class="member-email"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="80ebefeef4e1ebf4c0f0f2eff6e1adf3f9f3f4e5edf3aee4e5">[email&#160;protected]</a></div><div><span class="role-chip viewer">Betrachter</span></div><div style="margin-top:10px;font-size:0.72rem;color:var(--gray-400);">3 Gutachten · Sturm</div><div style="margin-top:8px;display:flex;gap:6px;justify-content:center;"><button class="btn btn-outline btn-sm">Rolle</button><button class="btn btn-sm" style="background:#FEE2E2;color:var(--error);border:1px solid #FECACA;font-size:0.7rem;padding:4px 8px;">Entf.</button></div></div>
         <div class="team-member-card empty" onclick="inviteMember()"><div style="font-size:2rem;color:var(--gold);margin-bottom:8px;">+</div><div style="font-size:0.875rem;font-weight:600;color:var(--gold);">Mitglied einladen</div><div style="font-size:0.75rem;color:var(--gray-400);margin-top:4px;">Unbegrenzte Slots</div></div>
       </div>
       <div class="app-card"><div class="app-card-header"><span class="app-card-title">Rollen-Berechtigungen</span></div>
@@ -1096,7 +1254,7 @@ Authorization: Bearer prova_live_sk_...
       <div class="page-header"><h1 class="page-title">Einstellungen</h1><p class="page-subtitle">Enterprise-Konfiguration</p></div>
       <div class="cards-grid cards-grid-2" style="gap:20px;">
         <div class="app-card"><div class="app-card-header"><span class="app-card-title">Unternehmens-Profil</span></div><div class="app-card-body" style="display:flex;flex-direction:column;gap:12px;"><div class="form-group"><label class="form-label">Firma</label><input class="form-control" value="Berger Sachverständige GmbH"></div><div class="form-group"><label class="form-label">USt-ID</label><input class="form-control" value="DE123456789"></div><div class="form-group"><label class="form-label">Rechnungs-E-Mail</label><input class="form-control" value="rechnung@sv-berger.de"></div><button class="btn btn-gold btn-sm" style="align-self:flex-start;" onclick="showToast('Gespeichert!','success')">Speichern</button></div></div>
-        <div class="app-card"><div class="app-card-header"><span class="app-card-title">Paket &amp; Account Manager</span></div><div class="app-card-body"><div style="background:#FEF3C7;border:1px solid rgba(245,158,11,0.3);border-radius:10px;padding:14px;margin-bottom:14px;"><div style="font-size:0.75rem;font-weight:700;text-transform:uppercase;color:#92400E;margin-bottom:4px;">Aktuelles Paket</div><div style="font-size:1.2rem;font-weight:800;color:#92400E;">Enterprise · 599 €/Monat</div><div style="font-size:0.75rem;color:#92400E;margin-top:2px;opacity:0.7;">Vertragslaufzeit: 12 Monate</div></div><div style="font-size:0.8rem;color:var(--gray-600);line-height:1.8;">Account Manager: <strong>Lisa Kröger</strong><br>E-Mail: kontakt@prova-systems.de<br>Tel: <strong>+49 30 123456-10</strong><br>Support: Mo–Fr 8–18 Uhr</div></div></div>
+        <div class="app-card"><div class="app-card-header"><span class="app-card-title">Paket &amp; Account Manager</span></div><div class="app-card-body"><div style="background:#FEF3C7;border:1px solid rgba(245,158,11,0.3);border-radius:10px;padding:14px;margin-bottom:14px;"><div style="font-size:0.75rem;font-weight:700;text-transform:uppercase;color:#92400E;margin-bottom:4px;">Aktuelles Paket</div><div style="font-size:1.2rem;font-weight:800;color:#92400E;">Enterprise · 599 €/Monat</div><div style="font-size:0.75rem;color:#92400E;margin-top:2px;opacity:0.7;">Vertragslaufzeit: 12 Monate</div></div><div style="font-size:0.8rem;color:var(--gray-600);line-height:1.8;">Account Manager: <strong>Lisa Kröger</strong><br>E-Mail: <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="d8b3b7b6acb9b3ac98a8aab7aeb9f5aba1abacbdb5abf6bcbd">[email&#160;protected]</a><br>Tel: <strong>+49 30 123456-10</strong><br>Support: Mo–Fr 8–18 Uhr</div></div></div>
       </div>
     </div>
 
@@ -1104,7 +1262,7 @@ Authorization: Bearer prova_live_sk_...
 </main>
 </div><!-- /app-wrapper -->
 
-<script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 // ===== TOAST =====
 function showToast(msg, type) {
   const container = document.getElementById('toast-container');
@@ -1663,11 +1821,23 @@ function renderEntFotoGrid() {
   if (!grid) return;
   grid.innerHTML = entFotos.map(function(f, i) {
     var capEsc = escEntHtml(f.caption || '');
-    return '<div class="foto-cell" style="position:relative">' +
+    var kiText = escEntHtml(f.kiText || '');
+    var kiVis  = f.kiText ? ' visible' : '';
+    return '<div class="foto-cell" style="position:relative" id="foto-cell-' + i + '">' +
       '<img src="' + escEntHtml(f.dataUrl) + '" alt="Foto ' + (i + 1) + '">' +
       '<button type="button" class="foto-delete" onclick="entferneFotoEnt(' + i + ')" aria-label="Foto löschen">X</button>' +
-      '<input type="text" placeholder="Beschriftung (Raum, Lage…)" value="' + capEsc + '" ' +
-      'onchange="entFotos[' + i + '].caption=this.value" style="width:100%;margin-top:6px;padding:8px 10px;font-size:0.8rem;border:1px solid var(--gray-200);border-radius:8px;font-family:inherit">' +
+      '<input type="text" id="foto-caption-' + i + '" ' +
+      'placeholder="' + (f.captionLoading ? '⟳ KI beschriftet…' : 'Beschriftung (Raum, Lage…)') + '" ' +
+      'value="' + capEsc + '" ' +
+      'oninput="entFotos[' + i + '].caption=this.value" ' +
+      'style="width:100%;margin-top:6px;padding:8px 10px;font-size:0.8rem;border:1px solid ' + (f.captionLoading ? 'rgba(74,144,217,0.4)' : 'var(--gray-200)') + ';border-radius:8px;font-family:inherit;background:' + (f.captionLoading ? 'rgba(74,144,217,0.05)' : 'transparent') + ';color:#fff">' +
+      '<button type="button" class="foto-ki-btn" id="foto-ki-btn-' + i + '" onclick="analysiereFotoKI(' + i + ')">' +
+      '🔍 <span>KI-Schadensanalyse</span></button>' +
+      '<div class="foto-ki-result' + kiVis + '" id="foto-ki-result-' + i + '">' +
+      '<strong>KI-Befund (Konjunktiv II):</strong>' +
+      '<span id="foto-ki-text-' + i + '">' + kiText + '</span>' +
+      '</div>' +
+      (f.kiText ? '<button type="button" class="foto-ki-uebernehmen" onclick="kiTextUebernehmen(' + i + ')">✓ In Diktat übernehmen</button>' : '') +
       '<div style="font-size:0.65rem;color:var(--gray-400);margin-top:4px">' + Math.round((f.compSize || 0) / 1024) + ' KB' +
       (f.origSize > f.compSize ? ' (−' + Math.round((1 - f.compSize / f.origSize) * 100) + '%)' : '') +
       '</div></div>';
@@ -1718,8 +1888,11 @@ async function verarbeiteFotosEnt(files) {
     var orig = files[i].size;
     var res = await komprimiereBildEnt(files[i]);
     gespart += orig - res.size;
-    entFotos.push({ dataUrl: res.dataUrl, caption: '', origSize: orig, compSize: res.size });
+    var fotoIdx = entFotos.length;
+    entFotos.push({ dataUrl: res.dataUrl, caption: '', origSize: orig, compSize: res.size, captionLoading: true });
     renderEntFotoGrid();
+    // KI-Caption automatisch im Hintergrund
+    autoCaption(fotoIdx);
   }
   if (statusEl) statusEl.style.display = 'none';
   showToast(files.length + ' Foto' + (files.length > 1 ? 's' : '') + ' optimiert — ' + Math.round(gespart / 1024) + ' KB gespart.', 'success');
@@ -1745,6 +1918,213 @@ function initEntFotoUI() {
   }
   renderEntFotoGrid();
 }
+
+/* ══════════════════════════════════════════════════════════
+   KI-FOTO-ANALYSE (Enterprise) — GPT-4o Vision
+   Sendet Foto an /.netlify/functions/ki-proxy
+   Antwort: Schadensbeschreibung in Konjunktiv II
+══════════════════════════════════════════════════════════ */
+async function analysiereFotoKI(idx) {
+  var foto = entFotos[idx];
+  if (!foto) return;
+
+  var btn   = document.getElementById('foto-ki-btn-' + idx);
+  var resDiv = document.getElementById('foto-ki-result-' + idx);
+  var resText = document.getElementById('foto-ki-text-' + idx);
+  if (!btn || !resDiv || !resText) return;
+
+  // UI: Ladestate
+  btn.disabled = true;
+  btn.innerHTML = '<span style="display:inline-block;animation:spin 1s linear infinite;">⟳</span> <span>Analysiert…</span>';
+
+  // Base64 ohne data-URL Präfix extrahieren
+  var b64 = foto.dataUrl;
+  var mimeMatch = b64.match(/^data:(image\/[a-z]+);base64,/);
+  var mimeType  = mimeMatch ? mimeMatch[1] : 'image/jpeg';
+  var b64Data   = b64.replace(/^data:image\/[a-z]+;base64,/, '');
+
+  // Schadenart für Kontext
+  var schadenart = (document.getElementById('f-schadenart') || {}).value || 'Gebäudeschaden';
+  var caption    = foto.caption ? ' Das Foto zeigt: ' + foto.caption + '.' : '';
+
+  var prompt = 'Du bist ein erfahrener Bausachverständiger. Analysiere das Foto eines Gebäudeschadens.' +
+    ' Schadensart: ' + schadenart + '.' + caption +
+    ' Beschreibe ausschließlich was auf dem Foto sichtbar ist (Sichtbefund).' +
+    ' Verwende Konjunktiv II für alle Einschätzungen, Ursachen und Empfehlungen (z.B. "würde darauf hindeuten", "dürfte auf … zurückzuführen sein").' +
+    ' Beginne direkt mit dem Befund, ohne Einleitung. Maximal 4 Sätze. Fachsprache.';
+
+  try {
+    var res = await fetch('/.netlify/functions/ki-proxy', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'gpt-4o',
+        max_tokens: 300,
+        messages: [{
+          role: 'user',
+          content: [
+            { type: 'image', source: { type: 'base64', media_type: mimeType, data: b64Data } },
+            { type: 'text',  text: prompt }
+          ]
+        }]
+      })
+    });
+
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    var data = await res.json();
+
+    // Text aus Antwort extrahieren
+    var text = (data.content && data.content[0] && data.content[0].text) ? data.content[0].text.trim() : '';
+    if (!text) throw new Error('Keine Antwort erhalten');
+
+    // Ergebnis speichern + anzeigen
+    entFotos[idx].kiText = text;
+    resText.textContent = text;
+    resDiv.classList.add('visible');
+
+    // "In Diktat übernehmen" Button hinzufügen (wenn noch nicht da)
+    var existingBtn = document.querySelector('#foto-cell-' + idx + ' .foto-ki-uebernehmen');
+    if (!existingBtn) {
+      var ueBtn = document.createElement('button');
+      ueBtn.type = 'button';
+      ueBtn.className = 'foto-ki-uebernehmen';
+      ueBtn.textContent = '✓ In Diktat übernehmen';
+      ueBtn.onclick = function() { kiTextUebernehmen(idx); };
+      resDiv.parentNode.insertBefore(ueBtn, resDiv.nextSibling);
+    }
+
+    btn.disabled = false;
+    btn.innerHTML = '✅ <span>Erneut analysieren</span>';
+    showToast('KI-Analyse abgeschlossen.', 'success');
+
+  } catch(e) {
+    console.error('KI-Foto-Analyse Fehler:', e);
+    btn.disabled = false;
+    btn.innerHTML = '⚠ <span>Fehler — erneut versuchen</span>';
+    showToast('KI-Analyse fehlgeschlagen: ' + e.message, 'error');
+  }
+}
+
+function kiTextUebernehmen(idx) {
+  var text = entFotos[idx] && entFotos[idx].kiText;
+  if (!text) return;
+
+  // In das aktive Transkript-Feld einfügen
+  var transkript = document.getElementById('transkript-ent') ||
+                   document.getElementById('transcript-ent') ||
+                   document.getElementById('manual-input-ent') ||
+                   document.querySelector('textarea[id*="transkript"]') ||
+                   document.querySelector('textarea[id*="transcript"]');
+
+  if (transkript) {
+    var foto = entFotos[idx];
+    var label = foto.caption ? 'Foto ' + (idx + 1) + ' (' + foto.caption + '): ' : 'Foto ' + (idx + 1) + ': ';
+    var current = transkript.value ? transkript.value.trim() + '\n\n' : '';
+    transkript.value = current + label + text;
+    transkript.dispatchEvent(new Event('input'));
+    transkript.focus();
+    transkript.scrollTop = transkript.scrollHeight;
+    showToast('KI-Befund in Diktat übernommen.', 'success');
+  } else {
+    // Fallback: in Clipboard kopieren
+    navigator.clipboard && navigator.clipboard.writeText(text)
+      .then(function() { showToast('Text in Zwischenablage kopiert.', 'success'); })
+      .catch(function() { showToast('Bitte manuell ins Diktat einfügen.', 'warning'); });
+  }
+}
+
+/* ══════════════════════════════════════════════════════════
+   AUTO-CAPTION: Automatische Foto-Beschriftung per KI
+   Läuft sofort nach Foto-Upload im Hintergrund
+   Füllt das Beschriftungsfeld automatisch aus
+══════════════════════════════════════════════════════════ */
+async function autoCaption(idx) {
+  var foto = entFotos[idx];
+  if (!foto || !foto.dataUrl) return;
+
+  var b64     = foto.dataUrl.replace(/^data:image\/[a-z]+;base64,/, '');
+  var mime    = (foto.dataUrl.match(/^data:(image\/[a-z]+);base64,/) || [])[1] || 'image/jpeg';
+  var schaden = (document.getElementById('f-schadenart') || {}).value || '';
+  var context = schaden ? ' Schadensart des Falls: ' + schaden + '.' : '';
+
+  var prompt = 'Beschrifte dieses Foto aus einem Bausachverständigen-Gutachten.' +
+    context +
+    ' Gib NUR eine präzise Beschriftung zurück (max. 15 Wörter):' +
+    ' Raum + Lage + was sichtbar ist + ggf. Maß. Beispiele:' +
+    ' "Badezimmer OG, Nordwand, flächiger Schimmel ca. 0,5 m²" oder' +
+    ' "Keller Außenwand, horizontaler Riss im Mauerwerk ca. 80 cm" oder' +
+    ' "Wohnzimmer Decke, Feuchteflecken 30×40 cm, Putz blasig".' +
+    ' Keine Einleitung, kein Punkt am Ende, keine Anführungszeichen. Fachsprache.';
+
+  try {
+    var res = await fetch('/.netlify/functions/ki-proxy', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        max_tokens: 80,
+        messages: [{
+          role: 'user',
+          content: [
+            { type: 'image', source: { type: 'base64', media_type: mime, data: b64 } },
+            { type: 'text',  text: prompt }
+          ]
+        }]
+      })
+    });
+
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    var data = await res.json();
+    var text = (data.content && data.content[0] && data.content[0].text)
+      ? data.content[0].text.trim().replace(/^["']|["']$/g, '')
+      : '';
+
+    if (text && entFotos[idx]) {
+      // Nur setzen wenn SV das Feld nicht bereits bearbeitet hat
+      if (!entFotos[idx].caption || entFotos[idx].captionLoading) {
+        entFotos[idx].caption = text;
+        entFotos[idx].captionLoading = false;
+        // Input-Feld direkt updaten ohne ganzes Grid neu rendern
+        var input = document.getElementById('foto-caption-' + idx);
+        if (input) {
+          input.value = text;
+          input.placeholder = 'Beschriftung (Raum, Lage…)';
+          input.style.border = '1px solid rgba(34,197,94,0.4)';
+          input.style.background = 'rgba(34,197,94,0.04)';
+          // Kurz grün aufleuchten, dann normal
+          setTimeout(function() {
+            if (input) {
+              input.style.border = '1px solid var(--gray-200)';
+              input.style.background = 'transparent';
+            }
+          }, 2000);
+        }
+      }
+    } else if (entFotos[idx]) {
+      entFotos[idx].captionLoading = false;
+      var input = document.getElementById('foto-caption-' + idx);
+      if (input) {
+        input.placeholder = 'Beschriftung (Raum, Lage…)';
+        input.style.border = '1px solid var(--gray-200)';
+        input.style.background = 'transparent';
+      }
+    }
+
+  } catch(e) {
+    // Fehler ignorieren — SV kann manuell beschriften
+    if (entFotos[idx]) entFotos[idx].captionLoading = false;
+    var input = document.getElementById('foto-caption-' + idx);
+    if (input) {
+      input.placeholder = 'Beschriftung (Raum, Lage…)';
+      input.style.border = '1px solid var(--gray-200)';
+      input.style.background = 'transparent';
+    }
+  }
+}
+
+
+/* Spin-Animation für KI-Ladestate */
+
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initEntFotoUI);
 else initEntFotoUI();
 
@@ -2172,7 +2552,8 @@ async function sendeEntWebhook() {
       if (last) { last.classList.remove('active'); last.classList.add('completed'); }
       sessionStorage.setItem('prova_paket', 'Enterprise');
       sessionStorage.setItem('prova_letztes_az', daten.aktenzeichen||'');
-      localStorage.setItem('prova_letztes_az', daten.akten<script>
+      localStorage.setItem('prova_letztes_az', daten.aktenzeichen||'');
+    </script><script>
 /* WHISPER OPTION 4 - ENTERPRISE */
 var WHISPER_WEBHOOK_ENT='https://hook.eu1.make.com/h019rspppkvc4m146sv1opxs74h9dp3x';
 var _entMediaRecorder=null,_entAudioChunks=[],_entWhisperLaeuft=false,_entRecLimitTimer=null;
@@ -2250,23 +2631,10 @@ function exportWordEnt(){
   var s6=localStorage.getItem('prova_stellungnahme_text')||'';
   var html='<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word">'
     +'<head><meta charset="UTF-8"><meta name=ProgId content=Word.Document>'
-    +'<style>body{font-family:Arial;font-size:11pt;margin:2cm;line-height:1.5;}h1,h2{font-size:13pt;color:#1E3A5F;border-bottom:1px solid #ccc;padding-bottom:4pt;margin-top:14pt;}</style></head><body>'
+    +'<style>body{font-family:Arial;font-size:11pt;margin:2cm;line-height:1.5;}h1,h2{font-size:13pt;color:#1E3A5F;border-bottom:1px solid #ccc;padding-bottom:4pt;margin-top:14pt;}
+  @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+</style></head><body>'
     +'<div style="border-bottom:2px solid #7c3aed;padding-bottom:10pt;margin-bottom:18pt;"><strong style="font-size:14pt;color:#7c3aed;">'+(buero||svN)+'</strong><br>'+quali+' | Enterprise &sect;407a ZPO</div>'
     +'<div style="background:#f5f5f5;border:1px solid #ccc;padding:8pt;margin:10pt 0;"><strong>AZ:</strong> '+az+' &nbsp; <strong>Datum:</strong> '+heute+'</div>'
     +'<h1>Vollgutachten &sect;407a ZPO Enterprise</h1>'
-    +(entwurf?'<div>'+entwurf.replace(/\n/g,'<br>')+'</div>':'<p><em>Kein Entwurf.</em></p>')
-    +(s6?'<h2>&sect;6 Gutachterliche Stellungnahme</h2><div>'+s6.replace(/\n/g,'<br>')+'</div>':'')
-    +'<div style="border-top:1px solid #ccc;margin-top:28pt;padding-top:8pt;font-size:9pt;color:#666;">PROVA Enterprise &middot; &sect;407a ZPO &middot; '+svN+' &middot; '+heute+'</div>'
-    +'</body></html>';
-  var blob=new Blob([html],{type:'application/msword'});
-  var url=URL.createObjectURL(blob);
-  var a=document.createElement('a');
-  a.href=url;a.download='Gutachten_ENT_'+az.replace(/[^a-zA-Z0-9-]/g,'_')+'.doc';
-  document.body.appendChild(a);a.click();document.body.removeChild(a);
-  setTimeout(function(){URL.revokeObjectURL(url);},2000);
-  typeof showToast!=='undefined'&&showToast('Word-Download gestartet','success');
-}
-</script>
-<script src="/sw-register.js" defer></script>
-</body>
-</html>
+    +(entwurf?'<div>'+entwurf.re
