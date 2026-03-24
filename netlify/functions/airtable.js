@@ -57,7 +57,7 @@ exports.handler = async function(event) {
     method: method,
     headers: {
       'Authorization': `Bearer ${pat}`,
-      'Content-Type': 'application/json'
+      ...(method !== 'GET' ? { 'Content-Type': 'application/json' } : {})
     }
   };
 

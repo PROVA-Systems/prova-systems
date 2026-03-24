@@ -455,6 +455,13 @@ async async function ladePaketUndWeiterleiten(email, ziel) {
         if (paket === 'PRO' || paket === 'pro') paket = 'Pro';
         if (paket === 'ENTERPRISE' || paket === 'enterprise') paket = 'Enterprise';
         if (!['Starter','Pro','Enterprise'].includes(paket)) paket = 'Starter';
+        // Status-Check: Gesperrte Accounts blockieren
+        var status = (f.Status && f.Status.name) ? f.Status.name : (f.Status || 'Aktiv');
+        if (status === 'Gesperrt' || status === 'Gekuendigt') {
+          localStorage.clear();
+          window.location.href = 'app-login.html?reason=account_locked';
+          return;
+        }
         // Auch Profil-Daten laden wenn vorhanden
         if (f.sv_vorname) localStorage.setItem('prova_sv_vorname', f.sv_vorname);
         if (f.sv_nachname) localStorage.setItem('prova_sv_nachname', f.sv_nachname);
