@@ -470,47 +470,27 @@ window.login=async function(){
   var pw=document.getElementById('login-pw').value;
   var errEl=document.getElementById('login-err');
   var btn=document.getElementById('login-btn');
+  var hintEl=document.getElementById('login-netlify-hint');
   errEl.classList.remove('show');
+  if(hintEl)hintEl.style.display='none';
   if(!email){showErr(errEl,'Bitte E-Mail-Adresse eingeben.');return;}
   if(!pw){showErr(errEl,'Bitte Passwort eingeben.');return;}
+  if(typeof netlifyIdentity==='undefined'){
+    showErr(errEl,'Anmelde-System wird nicht geladen. Bitte Seite neu laden oder später erneut versuchen.');
+    if(hintEl)hintEl.style.display='block';
+    return;
+  }
   btn.disabled=true;btn.innerHTML='<span class="spinner"></span>Anmelden…';
   try{
-    var res=await fetch('/.netlify/identity/token',{
-      method:'POST',
-      headers:{'Content-Type':'application/x-www-form-urlencoded'},
-      body:'grant_type=password&username='+encodeURIComponent(email)+'&password='+encodeURIComponent(pw)
-    });
-    if(res.status===404){
-      showErr(errEl,'Konto-System noch nicht aktiviert.');
-      document.getElementById('login-netlify-hint').style.display='block';
-      btn.disabled=false;btn.textContent='Anmelden';
-      return;
-    }
-    if(res.status===401||res.status===422){
-      showErr(errEl,'E-Mail oder Passwort falsch. Bitte prüfen und erneut versuchen.');
-      btn.disabled=false;btn.textContent='Anmelden';
-      return;
-    }
-    if(!res.ok){
-      showErr(errEl,'Anmeldung fehlgeschlagen ('+res.status+'). Bitte erneut versuchen.');
-      btn.disabled=false;btn.textContent='Anmelden';
-      return;
-    }
-    var data=await res.json();
-    if(!data.access_token)throw new Error('No token');
-    var userRes=await fetch('/.netlify/identity/user',{headers:{'Authorization':'Bearer '+data.access_token}});
-    var userData=userRes.ok?await userRes.json():{};
-    var md=userData.user_metadata||{};
-    var name=md.full_name||email;
-    localStorage.setItem('prova_user',JSON.stringify({email:userData.email||email,name:name,token:data.access_token}));
-    localStorage.setItem('prova_sv_email',userData.email||email);
-    if(md.full_name){var parts=name.split(' ');localStorage.setItem('prova_sv_vorname',parts[0]||'');localStorage.setItem('prova_sv_nachname',parts.slice(1).join(' ')||'');}
-    window.location.href='dashboard.html';
+    await netlifyIdentity.login(email,pw);
+    /* Weiterleitung + localStorage übernimmt netlifyIdentity.on('login') → ladePaketUndWeiterleiten */
   }catch(e){
-    var msg='Verbindungsfehler. Bitte Internetverbindung prüfen.';
-    if(e&&(e.message||'').includes('fetch'))msg='Keine Verbindung zum Server. Bitte Seite neu laden.';
+    var msg='E-Mail oder Passwort falsch. Bitte prüfen und erneut versuchen.';
+    if(e&&e.message&&(e.message.indexOf('network')!==-1||e.message.indexOf('fetch')!==-1)){
+      msg='Keine Verbindung zum Server. Bitte Internetverbindung prüfen und Seite neu laden.';
+    }
     showErr(errEl,msg);
-    document.getElementById('login-netlify-hint').style.display='block';
+    if(hintEl)hintEl.style.display='block';
     btn.disabled=false;btn.textContent='Anmelden';
   }
 };
