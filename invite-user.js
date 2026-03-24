@@ -1,88 +1,88 @@
-// Netlify Function: invite-user.js
-// Lädt einen neuen Nutzer per GoTrue Admin-API ein
-// Erwartet env var: INVITE_SECRET (Make.com muss diesen Header mitsenden)
-// POST /.netlify/functions/invite-user
-// Body: { "email": "sv@beispiel.de", "name": "Max Mustermann", "paket": "Starter", "secret": "..." }
+// PROVA Systems — User Invite Function
+// Lädt neue Sachverständige per E-Mail ein (Netlify Identity)
+// Env Vars: NETLIFY_SITE_ID, NETLIFY_ACCESS_TOKEN
 
-function json(statusCode, obj) {
-  return {
-    statusCode,
-    headers: { 'Content-Type': 'application/json; charset=utf-8' },
-    body: JSON.stringify(obj),
-  };
-}
-
-exports.handler = async (event, context) => {
-  // Nur POST erlaubt
+exports.handler = async function(event) {
   if (event.httpMethod !== 'POST') {
-    return json(405, { error: 'Method not allowed' });
+    return {
+      statusCode: 405,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ error: 'Method not allowed' })
+    };
   }
 
-  // Secret prüfen (Make.com muss diesen Wert mitsenden)
-  const secret = process.env.INVITE_SECRET;
-  if (!secret) return json(500, { error: 'INVITE_SECRET nicht konfiguriert' });
+  const siteId = process.env.NETLIFY_SITE_ID;
+  const token  = process.env.NETLIFY_ACCESS_TOKEN;
 
-  let payload;
+  if (!siteId || !token) {
+    return {
+      statusCode: 500,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ error: 'NETLIFY_SITE_ID or NETLIFY_ACCESS_TOKEN not configured' })
+    };
+  }
+
+  let body;
   try {
-    payload = JSON.parse(event.body || '{}');
-  } catch {
-    return json(400, { error: 'Ungültiger JSON-Body' });
+    body = JSON.parse(event.body);
+  } catch (e) {
+    return {
+      statusCode: 400,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ error: 'Invalid JSON' })
+    };
   }
 
-  const { email, name, paket, secret: incomingSecret } = payload;
+  const { email, name, paket = 'Starter' } = body;
 
-  // Sicherheit: Secret abgleichen
-  if (!incomingSecret || incomingSecret !== secret) {
-    return json(401, { error: 'Nicht autorisiert' });
-  }
-
-  // Pflichtfeld E-Mail
-  if (!email || !email.includes('@')) {
-    return json(400, { error: 'Ungültige E-Mail-Adresse' });
-  }
-
-  // GoTrue Admin-Token aus Netlify Identity Context
-  // Dieser Token ist nur in Netlify Functions verfügbar wenn Identity aktiviert ist
-  const identity = context?.clientContext?.identity;
-  if (!identity?.token || !identity?.url) {
-    return json(500, { error: 'Netlify Identity nicht konfiguriert oder kein Admin-Token verfügbar' });
+  if (!email) {
+    return {
+      statusCode: 400,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ error: 'E-Mail ist Pflichtfeld' })
+    };
   }
 
   try {
-    // GoTrue /invite Endpoint aufrufen
-    const res = await fetch(`${identity.url}/invite`, {
+    const res = await fetch(`https://api.netlify.com/api/v1/sites/${siteId}/identity/users/invite`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${identity.token}`,
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        email,
-        data: {
-          full_name: name || '',
-          paket: paket || 'Starter',
-        },
-      }),
+        invites: [{
+          email,
+          data: {
+            full_name: name || email,
+            paket: paket,
+            onboarding_done: false
+          }
+        }]
+      })
     });
 
     const data = await res.json();
 
     if (!res.ok) {
-      // Bereits eingeladen / existiert schon → kein Fehler für Make.com
-      if (data?.msg?.includes('already') || data?.code === 422) {
-        return json(200, { ok: true, status: 'already_invited', email });
-      }
-      return json(res.status, { error: data?.msg || 'GoTrue Fehler', detail: data });
+      return {
+        statusCode: res.status,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ error: data.msg || 'Einladung fehlgeschlagen', detail: data })
+      };
     }
 
-    return json(200, {
-      ok: true,
-      status: 'invited',
-      email,
-      user_id: data?.id,
-    });
+    return {
+      statusCode: 200,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ok: true, message: `Einladung an ${email} gesendet`, data })
+    };
 
   } catch (e) {
-    return json(500, { error: 'Netzwerkfehler', detail: String(e?.message || e) });
+    return {
+      statusCode: 502,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ error: 'Netlify API nicht erreichbar', detail: e.message })
+    };
   }
 };

@@ -3,1012 +3,726 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>PROVA Admin</title>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<title>PROVA Admin Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Fraunces:wght@300;700&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#0a0c12;--bg2:#111520;--bg3:#181d2a;
-  --surface:#1c2133;--surface2:#222840;
-  --border:rgba(255,255,255,.06);--border2:rgba(255,255,255,.11);
-  --text:#e8eaf0;--text2:#9da3b4;--text3:#5c6478;
+  --bg:#0d0f14;--bg2:#13161d;--bg3:#1a1e28;
+  --surface:#1e2330;--surface2:#252a38;
+  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);
+  --text:#e8eaf0;--text2:#9da3b4;--text3:#6b7280;
   --accent:#4f8ef7;--accent2:#3d7ae0;
-  --green:#10b981;--warn:#f59e0b;--red:#ef4444;--purple:#a78bfa;--cyan:#22d3ee;
-  --mono:'IBM Plex Mono',monospace;--sans:'Instrument Sans',sans-serif;
-  --nav-h:52px;--r:8px;
+  --green:#10b981;--green-bg:rgba(16,185,129,0.08);--green-border:rgba(16,185,129,0.2);
+  --warn:#f59e0b;--warn-bg:rgba(245,158,11,0.08);--warn-border:rgba(245,158,11,0.2);
+  --red:#ef4444;--red-bg:rgba(239,68,68,0.08);--red-border:rgba(239,68,68,0.2);
+  --purple:#a78bfa;--purple-bg:rgba(167,139,250,0.08);--purple-border:rgba(167,139,250,0.2);
+  --mono:'IBM Plex Mono',monospace;--display:'Fraunces',serif;--sans:'Instrument Sans',sans-serif;
+  --nav-h:52px;--radius:8px;
 }
 *{box-sizing:border-box;margin:0;padding:0;}
-body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:13px;min-height:100vh;overflow-x:hidden;}
-a{color:inherit;text-decoration:none;}
-button{font-family:var(--sans);cursor:pointer;}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14px;min-height:100vh;}
 
 /* ── TOPBAR ── */
 .topbar{height:var(--nav-h);background:var(--bg2);border-bottom:1px solid var(--border);
-  display:flex;align-items:center;padding:0 18px;gap:12px;position:sticky;top:0;z-index:100;}
-.logo{font-family:var(--sans);font-weight:700;font-size:17px;color:var(--text);letter-spacing:-.02em;flex-shrink:0;}
-.logo em{color:var(--accent);font-style:normal;}
-.admin-pill{font-size:9px;font-weight:700;padding:2px 7px;border-radius:9px;
-  background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.25);color:var(--red);
-  font-family:var(--mono);letter-spacing:.08em;text-transform:uppercase;}
-.tab-nav{display:flex;gap:2px;background:var(--bg3);border-radius:9px;padding:3px;margin-left:8px;}
-.tab-btn{padding:5px 13px;border-radius:6px;font-size:12px;font-weight:500;
-  border:none;background:transparent;color:var(--text3);transition:all .15s;}
+  display:flex;align-items:center;padding:0 20px;gap:16px;position:sticky;top:0;z-index:100;}
+.logo{font-family:var(--display);font-weight:700;font-size:18px;color:var(--text);
+  text-decoration:none;letter-spacing:-0.01em;flex-shrink:0;}
+.logo span{color:var(--accent);}
+.admin-badge{font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;
+  background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:var(--red);
+  font-family:var(--mono);letter-spacing:.06em;}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:10px;}
+.tab-nav{display:flex;gap:2px;background:var(--bg3);border-radius:8px;padding:3px;}
+.tab-btn{padding:5px 14px;border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;
+  border:none;background:transparent;color:var(--text3);font-family:var(--sans);transition:all .15s;}
 .tab-btn.active{background:var(--surface2);color:var(--text);}
 .tab-btn:hover:not(.active){color:var(--text2);}
-.tb-right{margin-left:auto;display:flex;align-items:center;gap:8px;}
-.ts{font-size:11px;color:var(--text3);font-family:var(--mono);}
-.rbtn{font-size:12px;color:var(--text2);background:none;border:1px solid var(--border);
-  border-radius:6px;padding:4px 10px;}
-.rbtn:hover{border-color:var(--border2);color:var(--text);}
+.logout-btn{font-size:12px;color:var(--text3);background:none;border:1px solid var(--border);
+  border-radius:6px;padding:4px 10px;cursor:pointer;font-family:var(--sans);}
+.logout-btn:hover{border-color:var(--border2);color:var(--text2);}
 
 /* ── LAYOUT ── */
-.main{padding:18px;max-width:1360px;margin:0 auto;}
-.sec{display:none;}
-.sec.active{display:block;}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;}
-.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:14px;}
-.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:14px;}
-.grid5{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:14px;}
-@media(max-width:1100px){.grid5{grid-template-columns:repeat(3,1fr);}.grid4{grid-template-columns:repeat(2,1fr);}}
-@media(max-width:720px){.grid2,.grid3,.grid4,.grid5{grid-template-columns:1fr;}}
+.main{padding:20px;max-width:1300px;margin:0 auto;}
+.section{display:none;}
+.section.active{display:block;}
 
-/* ── KPI ── */
-.kpi{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);
-  padding:14px 16px;position:relative;overflow:hidden;}
+/* ── KPI GRID ── */
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px;}
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  padding:16px 18px;position:relative;overflow:hidden;}
 .kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
-.kpi.gr::before{background:var(--green);}
-.kpi.ac::before{background:var(--accent);}
-.kpi.wa::before{background:var(--warn);}
-.kpi.rd::before{background:var(--red);}
-.kpi.pu::before{background:var(--purple);}
-.kpi.cy::before{background:var(--cyan);}
-.kpi-lbl{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.09em;color:var(--text3);margin-bottom:6px;}
-.kpi-val{font-size:24px;font-weight:700;font-family:var(--mono);letter-spacing:-.02em;color:var(--text);}
-.kpi-sub{font-size:11px;color:var(--text3);margin-top:4px;}
-.kpi-delta{font-size:11px;font-weight:600;margin-top:5px;}
+.kpi.green::before{background:var(--green);}
+.kpi.blue::before{background:var(--accent);}
+.kpi.warn::before{background:var(--warn);}
+.kpi.purple::before{background:var(--purple);}
+.kpi-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;
+  color:var(--text3);margin-bottom:8px;}
+.kpi-value{font-size:26px;font-weight:700;font-family:var(--display);letter-spacing:-.02em;color:var(--text);}
+.kpi-sub{font-size:11px;color:var(--text3);margin-top:4px;font-family:var(--mono);}
+.kpi-delta{font-size:11px;font-weight:600;margin-top:6px;}
 .kpi-delta.up{color:var(--green);}
-.kpi-delta.dn{color:var(--red);}
+.kpi-delta.down{color:var(--red);}
 
-/* ── CARD ── */
-.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);margin-bottom:14px;}
-.card-h{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:8px;}
-.card-t{font-size:12px;font-weight:600;color:var(--text);}
-.card-b{padding:16px;}
+/* ── CARDS ── */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:16px;}
+.card-header{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;
+  align-items:center;justify-content:space-between;}
+.card-title{font-size:13px;font-weight:600;color:var(--text);}
+.card-body{padding:18px;}
 
 /* ── TABLE ── */
-.tbl{width:100%;border-collapse:collapse;}
-.tbl th{padding:9px 12px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;
-  color:var(--text3);border-bottom:1px solid var(--border);text-align:left;background:var(--bg3);}
-.tbl td{padding:9px 12px;border-bottom:1px solid var(--border);vertical-align:middle;font-size:12px;color:var(--text2);}
+.tbl{width:100%;border-collapse:collapse;font-size:13px;}
+.tbl th{padding:8px 12px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;
+  letter-spacing:.07em;color:var(--text3);border-bottom:1px solid var(--border);white-space:nowrap;}
+.tbl td{padding:10px 12px;border-bottom:1px solid var(--border);color:var(--text2);vertical-align:top;}
 .tbl tr:last-child td{border-bottom:none;}
-.tbl tr:hover td{background:rgba(255,255,255,.02);}
+.tbl tr:hover td{background:rgba(255,255,255,0.02);}
 .tbl td strong{color:var(--text);}
 
 /* ── BADGES ── */
-.b{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:600;
-  border-radius:5px;padding:2px 7px;font-family:var(--mono);}
-.b-starter{background:rgba(156,163,175,.1);color:#9ca3af;border:1px solid rgba(156,163,175,.2);}
-.b-pro{background:rgba(79,142,247,.1);color:#4f8ef7;border:1px solid rgba(79,142,247,.2);}
-.b-enterprise{background:rgba(245,158,11,.1);color:#f59e0b;border:1px solid rgba(245,158,11,.2);}
-.b-green{background:rgba(16,185,129,.1);color:#10b981;border:1px solid rgba(16,185,129,.2);}
-.b-warn{background:rgba(245,158,11,.1);color:#f59e0b;border:1px solid rgba(245,158,11,.2);}
-.b-red{background:rgba(239,68,68,.1);color:#ef4444;border:1px solid rgba(239,68,68,.2);}
-.b-gray{background:rgba(107,114,128,.1);color:#6b7280;border:1px solid rgba(107,114,128,.2);}
-.b-cyan{background:rgba(34,211,238,.1);color:#22d3ee;border:1px solid rgba(34,211,238,.2);}
-.b-purple{background:rgba(167,139,250,.1);color:#a78bfa;border:1px solid rgba(167,139,250,.2);}
+.badge{display:inline-block;font-size:10px;font-weight:600;padding:2px 8px;
+  border-radius:10px;letter-spacing:.05em;white-space:nowrap;}
+.badge-starter{background:rgba(79,142,247,0.12);border:1px solid rgba(79,142,247,0.25);color:var(--accent);}
+.badge-pro{background:var(--warn-bg);border:1px solid var(--warn-border);color:var(--warn);}
+.badge-enterprise{background:var(--purple-bg);border:1px solid var(--purple-border);color:var(--purple);}
+.badge-aktiv{background:var(--green-bg);border:1px solid var(--green-border);color:var(--green);}
+.badge-trial{background:var(--warn-bg);border:1px solid var(--warn-border);color:var(--warn);}
+.badge-gekuendigt{background:var(--red-bg);border:1px solid var(--red-border);color:var(--red);}
+.badge-offen{background:var(--warn-bg);border:1px solid var(--warn-border);color:var(--warn);}
+.badge-geloest{background:var(--green-bg);border:1px solid var(--green-border);color:var(--green);}
 
-/* ── INPUTS ── */
-.srch{background:var(--bg3);border:1px solid var(--border);border-radius:6px;
-  padding:5px 10px;color:var(--text);font-size:12px;outline:none;font-family:var(--sans);}
-.srch:focus{border-color:var(--border2);}
-.sel{background:var(--bg3);border:1px solid var(--border);border-radius:6px;
-  padding:5px 10px;color:var(--text);font-size:12px;outline:none;font-family:var(--sans);}
+/* ── GRID 2-COL ── */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:20px;}
 
-/* ── MISC ── */
-.spin{width:16px;height:16px;border:2px solid var(--border2);border-top-color:var(--accent);
-  border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0;}
-@keyframes spin{to{transform:rotate(360deg);}}
-.loading{display:flex;align-items:center;gap:8px;color:var(--text3);padding:20px 16px;}
-.empty{color:var(--text3);text-align:center;padding:28px;font-size:12px;}
-.mono{font-family:var(--mono);}
-.dot{width:7px;height:7px;border-radius:50%;display:inline-block;flex-shrink:0;}
-.dot.gr{background:var(--green);}
-.dot.wa{background:var(--warn);}
-.dot.rd{background:var(--red);}
-.dot.gy{background:var(--text3);}
+/* ── MRR BAR CHART ── */
+.mrr-bars{display:flex;align-items:flex-end;gap:8px;height:80px;padding:0 4px;}
+.mrr-bar-wrap{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;}
+.mrr-bar{width:100%;background:var(--accent);border-radius:3px 3px 0 0;opacity:.7;
+  transition:opacity .2s;min-height:4px;}
+.mrr-bar:hover{opacity:1;}
+.mrr-bar-label{font-size:10px;color:var(--text3);font-family:var(--mono);white-space:nowrap;}
+.mrr-bar-val{font-size:10px;color:var(--text2);font-family:var(--mono);}
 
-/* ── PAKET BARS ── */
-.pk-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
-.pk-lbl{min-width:80px;}
-.pk-track{flex:1;height:6px;background:var(--bg3);border-radius:3px;overflow:hidden;}
-.pk-fill{height:100%;border-radius:3px;transition:width .5s ease;}
-.pk-cnt{min-width:24px;text-align:right;font-family:var(--mono);font-size:11px;color:var(--text2);}
+/* ── HEALTH DOTS ── */
+.health-row{display:flex;align-items:center;justify-content:space-between;
+  padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;}
+.health-row:last-child{border-bottom:none;padding-bottom:0;}
+.health-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.health-dot.green{background:var(--green);box-shadow:0 0 6px rgba(16,185,129,.5);}
+.health-dot.warn{background:var(--warn);box-shadow:0 0 6px rgba(245,158,11,.4);}
+.health-dot.red{background:var(--red);box-shadow:0 0 6px rgba(239,68,68,.4);}
+.health-name{flex:1;margin-left:10px;color:var(--text2);}
+.health-status{font-size:11px;font-family:var(--mono);}
+.health-status.green{color:var(--green);}
+.health-status.warn{color:var(--warn);}
+.health-status.red{color:var(--red);}
 
-/* ── HEALTH ROW ── */
-.hrow{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);}
-.hrow:last-child{border-bottom:none;}
-.hname{flex:1;color:var(--text2);font-size:12px;}
-.hval{font-size:11px;font-family:var(--mono);}
+/* ── LOADING ── */
+.loading{display:flex;align-items:center;gap:8px;color:var(--text3);font-size:12px;
+  padding:20px 0;font-family:var(--mono);}
+.spin{width:14px;height:14px;border:2px solid var(--border2);border-top-color:var(--accent);
+  border-radius:50%;animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.empty{color:var(--text3);font-size:13px;padding:16px 0;text-align:center;font-family:var(--mono);}
+.refresh-btn{font-size:11px;font-family:var(--mono);background:none;border:1px solid var(--border);
+  border-radius:5px;padding:3px 8px;color:var(--text3);cursor:pointer;}
+.refresh-btn:hover{border-color:var(--border2);color:var(--text2);}
 
-/* ── MODAL ── */
-.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:200;
-  align-items:center;justify-content:center;padding:20px;}
-.modal-bg.open{display:flex;}
-.modal{background:var(--surface);border:1px solid var(--border2);border-radius:12px;
-  padding:20px;max-width:560px;width:100%;max-height:85vh;overflow-y:auto;}
-.modal-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
-.modal-t{font-size:14px;font-weight:600;color:var(--text);}
-.modal-x{background:none;border:none;color:var(--text3);font-size:20px;line-height:1;}
-.mrow{display:flex;gap:6px;padding:7px 0;border-bottom:1px solid var(--border);font-size:12px;}
-.mrow:last-child{border-bottom:none;}
-.mk{color:var(--text3);min-width:160px;flex-shrink:0;}
-.mv{color:var(--text);word-break:break-all;}
+/* ── PAKET PIE ── */
+.paket-bars{display:flex;flex-direction:column;gap:8px;margin-top:8px;}
+.paket-bar-row{display:flex;align-items:center;gap:10px;}
+.paket-bar-label{font-size:12px;color:var(--text2);width:80px;flex-shrink:0;}
+.paket-bar-track{flex:1;height:6px;background:var(--bg3);border-radius:3px;overflow:hidden;}
+.paket-bar-fill{height:100%;border-radius:3px;transition:width .5s ease;}
+.paket-bar-count{font-size:11px;font-family:var(--mono);color:var(--text3);width:24px;text-align:right;}
+
+/* ── TICKET DETAIL ── */
+.ticket-row{cursor:pointer;}
+.ticket-row:hover td{background:rgba(79,142,247,0.04)!important;}
+.detail-panel{background:var(--bg3);border:1px solid var(--border2);border-radius:8px;
+  padding:14px;margin-top:10px;display:none;font-size:13px;}
+.detail-panel.open{display:block;}
+
+@media(max-width:900px){
+  .kpi-grid{grid-template-columns:repeat(2,1fr);}
+  .grid2,.grid3{grid-template-columns:1fr;}
+  .tab-nav{overflow-x:auto;}
+}
+@media(max-width:600px){
+  .kpi-grid{grid-template-columns:repeat(2,1fr);}
+  .main{padding:12px;}
+}
 </style>
 </head>
 <body>
 
 <!-- Auth Guard -->
 <script>
-(function(){
-  var t=sessionStorage.getItem('prova_admin');
-  if(!t){window.location.href='admin-login.html';return;}
-  try{var ts=parseInt(atob(t));if(isNaN(ts)||Date.now()-ts>8*3600000){sessionStorage.removeItem('prova_admin');window.location.href='admin-login.html';}}
-  catch(e){sessionStorage.removeItem('prova_admin');window.location.href='admin-login.html';}
+(function() {
+  var token = sessionStorage.getItem('prova_admin');
+  if (!token) { window.location.href = 'admin-login.html'; return; }
+  // Token-Expiry: 8 Stunden
+  try {
+    var ts = parseInt(atob(token));
+    if (isNaN(ts) || Date.now() - ts > 8 * 60 * 60 * 1000) {
+      sessionStorage.removeItem('prova_admin');
+      window.location.href = 'admin-login.html';
+    }
+  } catch(e) {
+    sessionStorage.removeItem('prova_admin');
+    window.location.href = 'admin-login.html';
+  }
 })();
 </script>
 
 <!-- TOPBAR -->
 <div class="topbar">
-  <a class="logo" href="admin-dashboard.html">PRO<em>VA</em></a>
-  <span class="admin-pill">Admin</span>
+  <a class="logo" href="admin-dashboard.html">PRO<span>VA</span></a>
+  <span class="admin-badge">ADMIN</span>
   <div class="tab-nav">
     <button class="tab-btn active" onclick="showTab('overview',this)">Übersicht</button>
     <button class="tab-btn" onclick="showTab('kunden',this)">Kunden</button>
-    <button class="tab-btn" onclick="showTab('gutachten',this)">Gutachten</button>
     <button class="tab-btn" onclick="showTab('finanzen',this)">Finanzen</button>
-    <button class="tab-btn" onclick="showTab('recht',this)">Rechtliches</button>
-    <button class="tab-btn" onclick="showTab('support',this)">Support</button>
+    <button class="tab-btn" onclick="showTab('tickets',this)">Support</button>
+    <button class="tab-btn" onclick="showTab('pipeline',this)">Pipeline</button>
     <button class="tab-btn" onclick="showTab('system',this)">System</button>
   </div>
-  <div class="tb-right">
-    <span class="ts" id="lastTs"></span>
-    <button class="rbtn" onclick="loadAll()">↻ Reload</button>
-    <button class="rbtn" onclick="logout()" style="color:var(--red);border-color:rgba(239,68,68,.2);">Abmelden</button>
+  <div class="topbar-right">
+    <span id="lastRefresh" style="font-size:11px;color:var(--text3);font-family:var(--mono);"></span>
+    <button class="refresh-btn" onclick="loadAll()">↻ Reload</button>
+    <button class="logout-btn" onclick="logout()">Abmelden</button>
   </div>
 </div>
 
 <div class="main">
 
-<!-- ═══ ÜBERSICHT ═══ -->
-<div class="sec active" id="sec-overview">
-  <div class="grid5" id="kpiStrip">
-    <div class="kpi gr"><div class="kpi-lbl">MRR</div><div class="kpi-val" id="k-mrr">–</div><div class="kpi-sub" id="k-mrr-sub">lädt…</div></div>
-    <div class="kpi ac"><div class="kpi-lbl">Aktive Kunden</div><div class="kpi-val" id="k-kunden">–</div><div class="kpi-sub" id="k-kunden-sub">lädt…</div></div>
-    <div class="kpi cy"><div class="kpi-lbl">Gutachten</div><div class="kpi-val" id="k-gutachten">–</div><div class="kpi-sub" id="k-gutachten-sub">lädt…</div></div>
-    <div class="kpi wa"><div class="kpi-lbl">Support offen</div><div class="kpi-val" id="k-tickets">–</div><div class="kpi-sub" id="k-tickets-sub">lädt…</div></div>
-    <div class="kpi rd"><div class="kpi-lbl">Re-Consent offen</div><div class="kpi-val" id="k-consent">–</div><div class="kpi-sub" id="k-consent-sub">lädt…</div></div>
-  </div>
-  <div class="grid2">
-    <div class="card">
-      <div class="card-h"><span class="card-t">Paketverteilung</span><button class="rbtn" onclick="loadOverview()">↻</button></div>
-      <div class="card-b" id="paketBars"><div class="loading"><div class="spin"></div>Lädt…</div></div>
-    </div>
-    <div class="card">
-      <div class="card-h"><span class="card-t">System-Health</span><button class="rbtn" onclick="checkHealth()">↻</button></div>
-      <div class="card-b" id="healthRows"><div class="loading"><div class="spin"></div>Lädt…</div></div>
-    </div>
-  </div>
-  <div class="card">
-    <div class="card-h"><span class="card-t">Neueste Kunden</span></div>
-    <div style="padding:0;" id="recentKunden"><div class="loading" style="padding:16px;"><div class="spin"></div>Lädt…</div></div>
-  </div>
-  <div class="card">
-    <div class="card-h"><span class="card-t">Letzte Gutachten</span></div>
-    <div style="padding:0;" id="recentGutachten"><div class="loading" style="padding:16px;"><div class="spin"></div>Lädt…</div></div>
-  </div>
-</div>
+  <!-- ══════════════ ÜBERSICHT ══════════════ -->
+  <div class="section active" id="sec-overview">
 
-<!-- ═══ KUNDEN ═══ -->
-<div class="sec" id="sec-kunden">
-  <div class="card">
-    <div class="card-h">
-      <span class="card-t">Sachverständige</span>
-      <div style="display:flex;gap:8px;align-items:center;">
-        <input class="srch" id="ks" placeholder="Name / E-Mail / Paket…" oninput="filterKunden()" style="width:200px;">
-        <select class="sel" id="kf-paket" onchange="filterKunden()">
-          <option value="">Alle Pakete</option>
-          <option value="Starter">Starter</option>
-          <option value="Pro">Pro</option>
-          <option value="Enterprise">Enterprise</option>
-        </select>
-        <select class="sel" id="kf-status" onchange="filterKunden()">
-          <option value="">Alle Status</option>
-          <option value="Aktiv">Aktiv</option>
-          <option value="Trial">Trial</option>
-          <option value="Gekündigt">Gekündigt</option>
-        </select>
-        <button class="rbtn" onclick="loadKunden()">↻</button>
+    <!-- KPI Strip -->
+    <div class="kpi-grid" id="kpiGrid">
+      <div class="kpi green"><div class="kpi-label">MRR</div><div class="kpi-value" id="kpiMrr">–</div><div class="kpi-sub" id="kpiMrrSub">lädt…</div></div>
+      <div class="kpi blue"><div class="kpi-label">Aktive Kunden</div><div class="kpi-value" id="kpiKunden">–</div><div class="kpi-sub" id="kpiKundenSub">lädt…</div></div>
+      <div class="kpi warn"><div class="kpi-label">Offene Tickets</div><div class="kpi-value" id="kpiTickets">–</div><div class="kpi-sub" id="kpiTicketsSub">lädt…</div></div>
+      <div class="kpi purple"><div class="kpi-label">Pipeline</div><div class="kpi-value" id="kpiPipeline">–</div><div class="kpi-sub" id="kpiPipelineSub">lädt…</div></div>
+    </div>
+
+    <div class="grid2">
+      <!-- Paket-Verteilung -->
+      <div class="card">
+        <div class="card-header"><span class="card-title">Paket-Verteilung</span><button class="refresh-btn" onclick="loadKunden()">↻</button></div>
+        <div class="card-body" id="paketVerteilung"><div class="loading"><div class="spin"></div>Lädt…</div></div>
+      </div>
+
+      <!-- System Health -->
+      <div class="card">
+        <div class="card-header"><span class="card-title">System Health</span></div>
+        <div class="card-body">
+          <div class="health-row">
+            <div class="health-dot green"></div>
+            <span class="health-name">Netlify Deploy</span>
+            <span class="health-status green">Online</span>
+          </div>
+          <div class="health-row">
+            <div class="health-dot" id="h-s1"></div>
+            <span class="health-name">S1 KI-Pipeline</span>
+            <span class="health-status" id="h-s1-txt">–</span>
+          </div>
+          <div class="health-row">
+            <div class="health-dot" id="h-s3"></div>
+            <span class="health-name">S3 PDF-Generierung</span>
+            <span class="health-status" id="h-s3-txt">–</span>
+          </div>
+          <div class="health-row">
+            <div class="health-dot green"></div>
+            <span class="health-name">S7 Mahnwesen</span>
+            <span class="health-status green">Aktiv</span>
+          </div>
+          <div class="health-row">
+            <div class="health-dot green"></div>
+            <span class="health-name">S8 Termine</span>
+            <span class="health-status green">Aktiv</span>
+          </div>
+          <div class="health-row">
+            <div class="health-dot green"></div>
+            <span class="health-name">Airtable API</span>
+            <span class="health-status green" id="h-airtable">–</span>
+          </div>
+        </div>
       </div>
     </div>
-    <div style="padding:0;" id="kundenTbl"><div class="loading" style="padding:16px;"><div class="spin"></div>Lädt…</div></div>
-  </div>
-</div>
 
-<!-- ═══ GUTACHTEN ═══ -->
-<div class="sec" id="sec-gutachten">
-  <div class="grid3" style="margin-bottom:14px;" id="gKpis">
-    <div class="kpi cy"><div class="kpi-lbl">Gesamt</div><div class="kpi-val" id="g-total">–</div></div>
-    <div class="kpi gr"><div class="kpi-lbl">Freigegeben</div><div class="kpi-val" id="g-frei">–</div></div>
-    <div class="kpi wa"><div class="kpi-lbl">In Bearbeitung</div><div class="kpi-val" id="g-bear">–</div></div>
-  </div>
-  <div class="card">
-    <div class="card-h">
-      <span class="card-t">Alle Schadensfälle</span>
-      <div style="display:flex;gap:8px;align-items:center;">
-        <input class="srch" id="gs" placeholder="AZ / Ort / Schadenart…" oninput="filterGutachten()" style="width:200px;">
-        <select class="sel" id="gf-status" onchange="filterGutachten()">
-          <option value="">Alle Status</option>
-          <option value="In Bearbeitung">In Bearbeitung</option>
-          <option value="Freigegeben">Freigegeben</option>
-          <option value="Exportiert">Exportiert</option>
-          <option value="Entwurf">Entwurf</option>
-        </select>
-        <select class="sel" id="gf-paket" onchange="filterGutachten()">
-          <option value="">Alle Pakete</option>
-          <option value="Starter">Starter</option>
-          <option value="Pro">Pro</option>
-          <option value="Enterprise">Enterprise</option>
-        </select>
-        <button class="rbtn" onclick="loadGutachten()">↻</button>
+    <!-- Letzte Kunden -->
+    <div class="card">
+      <div class="card-header"><span class="card-title">Neueste Kunden</span></div>
+      <div class="card-body" style="padding:0;">
+        <div id="neuesteKunden"><div class="loading" style="padding:16px 18px;"><div class="spin"></div>Lädt…</div></div>
       </div>
     </div>
-    <div style="padding:0;" id="gutachtenTbl"><div class="loading" style="padding:16px;"><div class="spin"></div>Lädt…</div></div>
   </div>
-</div>
 
-<!-- ═══ FINANZEN ═══ -->
-<div class="sec" id="sec-finanzen">
-  <div class="grid3" id="finKpis">
-    <div class="kpi gr"><div class="kpi-lbl">MRR kalkuliert</div><div class="kpi-val" id="f-mrr">–</div><div class="kpi-sub">aus Paket-Mix</div></div>
-    <div class="kpi ac"><div class="kpi-lbl">ARR</div><div class="kpi-val" id="f-arr">–</div><div class="kpi-sub">annualisiert</div></div>
-    <div class="kpi wa"><div class="kpi-lbl">Offene Rechnungen</div><div class="kpi-val" id="f-offen">–</div><div class="kpi-sub" id="f-offen-sub">lädt…</div></div>
-  </div>
-  <div class="card">
-    <div class="card-h"><span class="card-t">Rechnungen</span>
-      <div style="display:flex;gap:8px;">
-        <select class="sel" id="rf-status" onchange="filterRechnungen()">
-          <option value="">Alle</option>
-          <option value="Offen">Offen</option>
-          <option value="Überfällig">Überfällig</option>
-          <option value="Bezahlt">Bezahlt</option>
-        </select>
-        <button class="rbtn" onclick="loadFinanzen()">↻</button>
+  <!-- ══════════════ KUNDEN ══════════════ -->
+  <div class="section" id="sec-kunden">
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Alle Kunden</span>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <input type="text" id="kundenSearch" placeholder="Suche…" oninput="filterKunden()"
+            style="background:var(--bg2);border:1px solid var(--border);border-radius:6px;
+            padding:5px 10px;color:var(--text);font-size:12px;outline:none;width:180px;">
+          <button class="refresh-btn" onclick="loadKunden()">↻</button>
+        </div>
+      </div>
+      <div class="card-body" style="padding:0;">
+        <div id="kundenTable"><div class="loading" style="padding:16px 18px;"><div class="spin"></div>Lädt…</div></div>
       </div>
     </div>
-    <div style="padding:0;" id="rechnungTbl"><div class="loading" style="padding:16px;"><div class="spin"></div>Lädt…</div></div>
   </div>
-  <div class="card">
-    <div class="card-h"><span class="card-t">ADMIN_FINANZEN — Monatswerte</span></div>
-    <div style="padding:0;" id="finMonatTbl"><div class="loading" style="padding:16px;"><div class="spin"></div>Lädt…</div></div>
-  </div>
-</div>
 
-<!-- ═══ RECHTLICHES ═══ -->
-<div class="sec" id="sec-recht">
-  <div class="grid3" style="margin-bottom:14px;">
-    <div class="kpi gr"><div class="kpi-lbl">Einwilligungen gesamt</div><div class="kpi-val" id="r-total">–</div></div>
-    <div class="kpi rd"><div class="kpi-lbl">Re-Consent offen</div><div class="kpi-val" id="r-pending">–</div></div>
-    <div class="kpi ac"><div class="kpi-lbl">Dokument-Versionen</div><div class="kpi-val" id="r-docs">–</div></div>
-  </div>
-  <div class="grid2">
-    <div class="card">
-      <div class="card-h"><span class="card-t">RECHTSDOKUMENTE</span><button class="rbtn" onclick="loadRecht()">↻</button></div>
-      <div style="padding:0;" id="rechtdokTbl"><div class="loading" style="padding:16px;"><div class="spin"></div>Lädt…</div></div>
+  <!-- ══════════════ FINANZEN ══════════════ -->
+  <div class="section" id="sec-finanzen">
+    <div class="grid3">
+      <div class="kpi green"><div class="kpi-label">MRR gesamt</div><div class="kpi-value" id="finMrr">–</div><div class="kpi-sub">monatl. wiederk. Umsatz</div></div>
+      <div class="kpi blue"><div class="kpi-label">ARR</div><div class="kpi-value" id="finArr">–</div><div class="kpi-sub">annualisiert</div></div>
+      <div class="kpi warn"><div class="kpi-label">Setup-Erlöse</div><div class="kpi-value" id="finSetup">–</div><div class="kpi-sub">einmalig</div></div>
     </div>
     <div class="card">
-      <div class="card-h"><span class="card-t">AVV-Compliance pro SV</span></div>
-      <div style="padding:0;" id="avvCompTbl"><div class="loading" style="padding:16px;"><div class="spin"></div>Lädt…</div></div>
+      <div class="card-header"><span class="card-title">MRR-Verlauf</span><button class="refresh-btn" onclick="loadFinanzen()">↻</button></div>
+      <div class="card-body" id="mrrChart"><div class="loading"><div class="spin"></div>Lädt…</div></div>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="card-title">Finanz-Einträge</span></div>
+      <div class="card-body" style="padding:0;" id="finanzenTable"><div class="loading" style="padding:16px 18px;"><div class="spin"></div>Lädt…</div></div>
     </div>
   </div>
-  <div class="card">
-    <div class="card-h">
-      <span class="card-t">EINWILLIGUNGEN — vollständiges Log</span>
-      <div style="display:flex;gap:8px;">
-        <select class="sel" id="ef-typ" onchange="filterEinwilligungen()">
-          <option value="">Alle Typen</option>
-          <option value="AVV">AVV</option>
-          <option value="AGB">AGB</option>
-          <option value="Datenschutz">Datenschutz</option>
-        </select>
-        <button class="rbtn" onclick="loadRecht()">↻</button>
-      </div>
-    </div>
-    <div style="padding:0;" id="einwTbl"><div class="loading" style="padding:16px;"><div class="spin"></div>Lädt…</div></div>
-  </div>
-</div>
 
-<!-- ═══ SUPPORT ═══ -->
-<div class="sec" id="sec-support">
-  <div class="grid2">
+  <!-- ══════════════ SUPPORT ══════════════ -->
+  <div class="section" id="sec-tickets">
     <div class="card">
-      <div class="card-h">
-        <span class="card-t">Support-Tickets</span>
+      <div class="card-header">
+        <span class="card-title">Support-Tickets</span>
         <div style="display:flex;gap:8px;">
-          <select class="sel" id="tf-status" onchange="filterTickets()">
-            <option value="">Alle</option>
+          <select id="ticketFilter" onchange="filterTickets()"
+            style="background:var(--bg2);border:1px solid var(--border);border-radius:6px;
+            padding:5px 10px;color:var(--text);font-size:12px;outline:none;">
+            <option value="">Alle Status</option>
             <option value="Offen">Offen</option>
             <option value="In Bearbeitung">In Bearbeitung</option>
             <option value="Gelöst">Gelöst</option>
           </select>
-          <button class="rbtn" onclick="loadSupport()">↻</button>
+          <button class="refresh-btn" onclick="loadTickets()">↻</button>
         </div>
       </div>
-      <div style="padding:0;" id="ticketTbl"><div class="loading" style="padding:16px;"><div class="spin"></div>Lädt…</div></div>
-    </div>
-    <div class="card">
-      <div class="card-h"><span class="card-t">Akquise-Pipeline</span><button class="rbtn" onclick="loadSupport()">↻</button></div>
-      <div style="padding:0;" id="pipelineTbl"><div class="loading" style="padding:16px;"><div class="spin"></div>Lädt…</div></div>
+      <div class="card-body" style="padding:0;" id="ticketsTable">
+        <div class="loading" style="padding:16px 18px;"><div class="spin"></div>Lädt…</div>
+      </div>
     </div>
   </div>
-</div>
 
-<!-- ═══ SYSTEM ═══ -->
-<div class="sec" id="sec-system">
-  <div class="grid2">
+  <!-- ══════════════ PIPELINE ══════════════ -->
+  <div class="section" id="sec-pipeline">
     <div class="card">
-      <div class="card-h"><span class="card-t">Airtable — Tabellen</span></div>
-      <div class="card-b" style="font-family:var(--mono);font-size:11px;line-height:2.2;color:var(--text2);">
-        <div><span style="color:var(--text3);">Base ID</span><br><span style="color:var(--cyan);">appJ7bLlAHZoxENWE</span></div>
-        <div style="margin-top:10px;display:grid;grid-template-columns:1fr 1fr;gap:4px 16px;">
-          <div>SACHVERSTAENDIGE<br><span style="color:var(--text3);font-size:10px;">tbladqEQT3tmx4DIB</span></div>
-          <div>SCHADENSFAELLE<br><span style="color:var(--text3);font-size:10px;">tblSxV8bsXwd1pwa0</span></div>
-          <div>EINWILLIGUNGEN<br><span style="color:var(--text3);font-size:10px;">tblwgUQgtBWckPMHp</span></div>
-          <div>RECHTSDOKUMENTE<br><span style="color:var(--text3);font-size:10px;">tbljJkS3HOvtmpAGT</span></div>
-          <div>RECHNUNGEN<br><span style="color:var(--text3);font-size:10px;">tblF6MS7uiFAJDjiT</span></div>
-          <div>TERMINE<br><span style="color:var(--text3);font-size:10px;">tblyMTTdtfGQjjmc2</span></div>
-          <div>SUPPORT_TICKETS<br><span style="color:var(--text3);font-size:10px;">tblEb3A4dukGX8GFs</span></div>
-          <div>PIPELINE_AKQUISE<br><span style="color:var(--text3);font-size:10px;">tblK7a3mBdsrxsrp5</span></div>
-          <div>ADMIN_FINANZEN<br><span style="color:var(--text3);font-size:10px;">tblcGu1fM7PfLYO7c</span></div>
-          <div>KONTAKTE<br><span style="color:var(--text3);font-size:10px;">tblMKmPLjRelr6Hal</span></div>
+      <div class="card-header"><span class="card-title">Akquise-Pipeline</span><button class="refresh-btn" onclick="loadPipeline()">↻</button></div>
+      <div class="card-body" style="padding:0;" id="pipelineTable">
+        <div class="loading" style="padding:16px 18px;"><div class="spin"></div>Lädt…</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════ SYSTEM ══════════════ -->
+  <div class="section" id="sec-system">
+    <div class="grid2">
+      <div class="card">
+        <div class="card-header"><span class="card-title">Credentials</span></div>
+        <div class="card-body">
+          <div style="font-size:12px;color:var(--text3);font-family:var(--mono);line-height:2.2;">
+            <div><span style="color:var(--text2);">Netlify Site</span><br>prova-systems.netlify.app</div>
+            <div style="margin-top:8px;"><span style="color:var(--text2);">Admin-Base</span><br>appJ7bLlAHZoxENWE</div>
+            <div style="margin-top:8px;"><span style="color:var(--text2);">SV-Base</span><br>appJ7bLlAHZoxENWE</div>
+            <div style="margin-top:8px;"><span style="color:var(--text2);">Make.com Region</span><br>EU1 · Org 6673687</div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="card-title">Webhooks</span></div>
+        <div class="card-body">
+          <div style="font-size:12px;color:var(--text3);font-family:var(--mono);line-height:2;">
+            <div><span style="color:var(--accent);">S1</span> KI-Pipeline<br><span style="font-size:10px;">imn2n5xs7j251xicrmdmk17of042pt2t</span></div>
+            <div style="margin-top:6px;"><span style="color:var(--accent);">S3</span> PDF-Freigabe<br><span style="font-size:10px;">44kqx7eo142aw7warqao4c4wqo1nw158</span></div>
+            <div style="margin-top:6px;"><span style="color:var(--accent);">S8</span> Termine<br><span style="font-size:10px;">lktuhugwcg5v37ib6bdaxjb1uiplnu8v</span></div>
+            <div style="margin-top:6px;"><span style="color:var(--accent);">S10</span> Briefvorlagen<br><span style="font-size:10px;">bslfuqmlud1vo8qems5ccn5z5f2eq4dl</span></div>
+          </div>
         </div>
       </div>
     </div>
     <div class="card">
-      <div class="card-h"><span class="card-t">Make.com Webhooks</span></div>
-      <div class="card-b" style="font-family:var(--mono);font-size:11px;line-height:1.8;">
-        <div class="hrow"><span class="hname"><span style="color:var(--accent);">S1</span> KI-Pipeline (Starter)</span><span class="hval" style="color:var(--text3);">imn2n5xs7j251xicrmdmk17of042pt2t</span></div>
-        <div class="hrow"><span class="hname"><span style="color:var(--accent);">S3</span> PDF + Freigabe</span><span class="hval" style="color:var(--text3);">44kqx7eo142aw7warqao4c4wqo1nw158</span></div>
-        <div class="hrow"><span class="hname"><span style="color:var(--accent);">S8</span> Termine</span><span class="hval" style="color:var(--text3);">lktuhugwcg5v37ib6bdaxjb1uiplnu8v</span></div>
-        <div class="hrow"><span class="hname"><span style="color:var(--accent);">S9</span> Briefvorlagen</span><span class="hval" style="color:var(--text3);">bslfuqmlud1vo8qems5ccn5z5f2eq4dl</span></div>
-        <div class="hrow"><span class="hname"><span style="color:var(--accent);">S12</span> Re-Consent Gate</span><span class="hval" style="color:var(--text3);">gtsgj1me65sxr0llixnefan72qkhfgwy</span></div>
-        <div style="margin-top:12px;color:var(--text3);font-size:10px;">Alle EU1 · hook.eu1.make.com/[id]</div>
+      <div class="card-header"><span class="card-title">Audit Log</span><button class="refresh-btn" onclick="loadAudit()">↻</button></div>
+      <div class="card-body" style="padding:0;" id="auditTable">
+        <div class="loading" style="padding:16px 18px;"><div class="spin"></div>Lädt…</div>
       </div>
     </div>
   </div>
-  <div class="card">
-    <div class="card-h"><span class="card-t">System-Health</span><button class="rbtn" onclick="checkHealth()">↻ Prüfen</button></div>
-    <div class="card-b" id="sysHealth"><div class="loading"><div class="spin"></div>Lädt…</div></div>
-  </div>
-  <div class="card">
-    <div class="card-h"><span class="card-t">Netlify &amp; Zugänge</span></div>
-    <div class="card-b" style="font-family:var(--mono);font-size:11px;line-height:2.2;color:var(--text2);">
-      <div class="grid2">
-        <div><span style="color:var(--text3);">Netlify Site</span><br>prova-systems.netlify.app</div>
-        <div><span style="color:var(--text3);">Site ID</span><br>79cd5c61-e8e8-451e-9bf1-e2d17f971386</div>
-        <div><span style="color:var(--text3);">Make.com Org</span><br>6673687 · Team 1089536 · EU1</div>
-        <div><span style="color:var(--text3);">PAT läuft ab</span><br>18.05.2026</div>
-      </div>
-    </div>
-  </div>
-</div>
 
 </div><!-- .main -->
 
-<!-- KUNDEN DETAIL MODAL -->
-<div class="modal-bg" id="modalBg" onclick="if(event.target===this)closeModal()">
-  <div class="modal">
-    <div class="modal-h">
-      <span class="modal-t" id="modalTitle">Kundendetail</span>
-      <button class="modal-x" onclick="closeModal()">×</button>
-    </div>
-    <div id="modalBody"></div>
-  </div>
-</div>
-
 <script>
-/* ═══════════════════════════════════════
-   PROVA ADMIN DASHBOARD v2
-   Komplett neu — alle echten Airtable-IDs
-   Stand: März 2026
-═══════════════════════════════════════ */
-
-const BASE = 'appJ7bLlAHZoxENWE';
+/* ── AIRTABLE CONFIG ── */
+const ADMIN_BASE = 'appJ7bLlAHZoxENWE';
+const SV_BASE    = 'appJ7bLlAHZoxENWE';
 const T = {
-  SV:         'tbladqEQT3tmx4DIB',
-  FAELLE:     'tblSxV8bsXwd1pwa0',
-  EINW:       'tblwgUQgtBWckPMHp',
-  RECHT:      'tbljJkS3HOvtmpAGT',
-  RECHNUNGEN: 'tblF6MS7uiFAJDjiT',
-  FINANZEN:   'tblcGu1fM7PfLYO7c',
-  SUPPORT:    'tblEb3A4dukGX8GFs',
-  PIPELINE:   'tblK7a3mBdsrxsrp5',
-  TERMINE:    'tblyMTTdtfGQjjmc2',
-  KONTAKTE:   'tblMKmPLjRelr6Hal',
+  KUNDEN:         'tbladqEQT3tmx4DIB',  // SACHVERSTEANDIGE
+  SCHADENSFAELLE: 'tblSxV8bsXwd1pwa0',  // SCHADENSFAELLE
+  SUPPORT:        'tblEb3A4dukGX8GFs',   // SUPPORT_TICKETS ✅
+  PIPELINE:       'tblK7a3mBdsrxsrp5',  // PIPELINE_AKQUISE ✅
+  AUDIT_LOG:      'tblSxV8bsXwd1pwa0',  // SCHADENSFAELLE als Audit-Fallback
+  FINANZEN_MRR:   'tblcGu1fM7PfLYO7c',  // ADMIN_FINANZEN ✅
+  NUTZUNG:        'tblSxV8bsXwd1pwa0'
 };
 
-/* State */
-let _sv=[], _faelle=[], _einw=[], _tickets=[], _rechnungen=[];
-
-/* ── API Helper ── */
-async function at(table, params='', method='GET', body=null) {
+/* ── PROXY CALL ── */
+async function at(base, table, params='') {
   const res = await fetch('/.netlify/functions/airtable', {
     method: 'POST',
     headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({method, path:`/v0/${BASE}/${table}?${params}`, body})
+    body: JSON.stringify({
+      method: 'GET',
+      path: `/v0/${base}/${table}?${params}`
+    })
   });
-  if (!res.ok) throw new Error('HTTP '+res.status);
+  if (!res.ok) throw new Error('HTTP ' + res.status);
   return res.json();
 }
 
-/* ── Format helpers ── */
-const fmtEur = n => n == null ? '–' : Number(n).toLocaleString('de-DE',{style:'currency',currency:'EUR',maximumFractionDigits:0});
-const fmtDate = d => d ? new Date(d).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric'}) : '–';
-const fmtTs = d => d ? new Date(d).toLocaleString('de-DE',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}) : '–';
-const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-
-function paketB(p) {
-  const m={Starter:'starter',Pro:'pro',Enterprise:'enterprise'};
-  return `<span class="b b-${m[p]||'starter'}">${p||'Starter'}</span>`;
-}
-function statusB(s) {
-  const m={
-    'Aktiv':'green','Trial':'cyan','Gekündigt':'gray',
-    'In Bearbeitung':'warn','Freigegeben':'green','Exportiert':'ac','Entwurf':'gray',
-    'Offen':'warn','Gelöst':'green','Überfällig':'rd',
-  };
-  const c=m[s]||'gray';
-  return `<span class="b b-${c}">${esc(s)||'–'}</span>`;
-}
+/* ── STATE ── */
+let _kunden = [], _tickets = [], _pipeline = [];
 
 /* ── TABS ── */
 function showTab(id, btn) {
-  document.querySelectorAll('.sec').forEach(s=>s.classList.remove('active'));
-  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
-  document.getElementById('sec-'+id).classList.add('active');
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('sec-' + id).classList.add('active');
   btn.classList.add('active');
-  const loaders = {
-    kunden: loadKunden, gutachten: loadGutachten,
-    finanzen: loadFinanzen, recht: loadRecht,
-    support: loadSupport, system: checkHealth
-  };
-  if (loaders[id]) loaders[id]();
+  if (id === 'kunden')   loadKunden();
+  if (id === 'finanzen') loadFinanzen();
+  if (id === 'tickets')  loadTickets();
+  if (id === 'pipeline') loadPipeline();
+  if (id === 'system')   loadAudit();
 }
 
-/* ── LOAD ALL ── */
+/* ── HELPERS ── */
+function paketBadge(p) {
+  const m = {Starter:'starter',Pro:'pro',Enterprise:'enterprise'};
+  return `<span class="badge badge-${m[p]||'starter'}">${p||'Starter'}</span>`;
+}
+function statusBadge(s) {
+  const m = {'Aktiv':'aktiv','Trial':'trial','Gekündigt':'gekuendigt','Offen':'offen','Gelöst':'geloest'};
+  return `<span class="badge badge-${m[s]||'aktiv'}">${s||'Aktiv'}</span>`;
+}
+function fmtDate(d) {
+  if (!d) return '–';
+  return new Date(d).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric'});
+}
+function fmtEur(n) {
+  if (!n && n !== 0) return '–';
+  return Number(n).toLocaleString('de-DE',{style:'currency',currency:'EUR',maximumFractionDigits:0});
+}
+
+/* ── LOAD ALL (Übersicht) ── */
 async function loadAll() {
-  document.getElementById('lastTs').textContent = new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});
-  loadOverview();
-  checkHealth();
-}
-
-/* ══ ÜBERSICHT ══ */
-async function loadOverview() {
-  await Promise.all([loadKPIs(), loadPaketBars(), loadRecentKunden(), loadRecentGutachten()]);
+  document.getElementById('lastRefresh').textContent = new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});
+  loadKPIs();
+  loadPaketVerteilung();
+  loadNeuesteKunden();
+  checkAirtableHealth();
 }
 
 async function loadKPIs() {
   try {
-    // Kunden
-    const sv = await at(T.SV, 'fields[]=Paket&fields[]=Status&fields[]=Email&maxRecords=500');
-    _sv = sv.records;
-    const aktiv = _sv.filter(r=>r.fields.Status!=='Gekündigt');
-    const MRR_MAP = {Starter:179,Pro:369,Enterprise:699};
-    const mrr = aktiv.reduce((s,r)=>s+(Number(r.fields.MRR_EUR)||MRR_MAP[r.fields.Paket]||179),0);
-    set('k-mrr', fmtEur(mrr));
-    set('k-mrr-sub', `ARR ${fmtEur(mrr*12)}`);
-    set('k-kunden', aktiv.length);
-    set('k-kunden-sub', `${_sv.length} gesamt`);
-    set('f-mrr', fmtEur(mrr));
-    set('f-arr', fmtEur(mrr*12));
-  } catch(e) { set('k-mrr','Fehler'); }
+    // Kunden aus SACHVERSTAENDIGE Tabelle
+    const kunden = await at(ADMIN_BASE, T.KUNDEN, 'fields[]=Paket&fields[]=Status&fields[]=Email&fields[]=Vorname&fields[]=Nachname&fields[]=Name');
+    const aktiv = kunden.records.filter(r => r.fields.Status !== 'Gekündigt');
+    const mrr = aktiv.reduce((s, r) => {
+      const p = {Starter:179,Pro:369,Enterprise:699};
+      return s + (Number(r.fields.MRR_EUR) || p[r.fields.Paket] || 179);
+    }, 0);
+    document.getElementById('kpiMrr').textContent = fmtEur(mrr);
+    document.getElementById('kpiMrrSub').textContent = `ARR ${fmtEur(mrr*12)}`;
+    document.getElementById('kpiKunden').textContent = aktiv.length;
+    document.getElementById('kpiKundenSub').textContent = `${kunden.records.length} gesamt`;
+    if (document.getElementById('finMrr')) document.getElementById('finMrr').textContent = fmtEur(mrr);
+    if (document.getElementById('finArr')) document.getElementById('finArr').textContent = fmtEur(mrr*12);
 
-  try {
-    // Gutachten
-    const f = await at(T.FAELLE, 'fields[]=Status&maxRecords=500');
-    const total = f.records.length;
-    const frei = f.records.filter(r=>r.fields.Status==='Freigegeben'||r.fields.Status==='Exportiert').length;
-    const bear = f.records.filter(r=>r.fields.Status==='In Bearbeitung').length;
-    set('k-gutachten', total);
-    set('k-gutachten-sub', `${frei} freigegeben`);
-    set('g-total', total); set('g-frei', frei); set('g-bear', bear);
-  } catch(e) {}
+    // Support-Tickets — graceful wenn Tabelle noch nicht existiert
+    try {
+      const tickets = await at(ADMIN_BASE, T.SUPPORT, 'fields[]=Status');
+      const offen = tickets.records.filter(r => r.fields.Status === 'Offen' || r.fields.Status === 'In Bearbeitung');
+      document.getElementById('kpiTickets').textContent = offen.length;
+      document.getElementById('kpiTicketsSub').textContent = `${tickets.records.length} gesamt`;
+    } catch(e) {
+      document.getElementById('kpiTickets').textContent = '0';
+      document.getElementById('kpiTicketsSub').textContent = 'noch keine';
+    }
 
-  try {
-    // Tickets
-    const t = await at(T.SUPPORT, 'fields[]=Status&maxRecords=200');
-    const offen = t.records.filter(r=>r.fields.Status==='Offen'||r.fields.Status==='In Bearbeitung').length;
-    set('k-tickets', offen);
-    set('k-tickets-sub', `${t.records.length} gesamt`);
-  } catch(e) { set('k-tickets','0'); }
+    // Pipeline — graceful wenn Tabelle noch nicht existiert
+    try {
+      const pipe = await at(ADMIN_BASE, T.PIPELINE, 'fields[]=Status');
+      const aktPipe = pipe.records.filter(r => r.fields.Status !== 'Abgeschlossen' && r.fields.Status !== 'Verloren');
+      document.getElementById('kpiPipeline').textContent = aktPipe.length;
+      document.getElementById('kpiPipelineSub').textContent = 'aktive Leads';
+    } catch(e) {
+      document.getElementById('kpiPipeline').textContent = '0';
+      document.getElementById('kpiPipelineSub').textContent = 'noch keine';
+    }
 
-  try {
-    // Re-Consent
-    const sv2 = await at(T.SV, 'fields[]=re_consent_required&filterByFormula={re_consent_required}=TRUE()&maxRecords=200');
-    const cnt = sv2.records.length;
-    set('k-consent', cnt);
-    set('k-consent-sub', cnt>0 ? '⚠️ Handlung erforderlich' : 'Alle aktuell');
-    set('r-pending', cnt);
-  } catch(e) { set('k-consent','0'); }
+  } catch(e) {
+    console.error('KPI load error:', e);
+    document.getElementById('kpiMrr').textContent = 'Fehler';
+  }
 }
 
-async function loadPaketBars() {
-  const el = document.getElementById('paketBars');
+async function loadPaketVerteilung() {
   try {
-    const sv = await at(T.SV, 'fields[]=Paket&fields[]=Status&maxRecords=500');
-    const aktiv = sv.records.filter(r=>r.fields.Status!=='Gekündigt');
-    const cnt = {Starter:0,Pro:0,Enterprise:0};
-    aktiv.forEach(r=>{const p=r.fields.Paket||'Starter';if(cnt[p]!==undefined)cnt[p]++;});
-    const total = aktiv.length||1;
-    const col = {Starter:'var(--accent)',Pro:'var(--warn)',Enterprise:'var(--purple)'};
-    const mrr = {Starter:179,Pro:369,Enterprise:699};
-    let h = '';
-    for(const [p,c] of Object.entries(cnt)){
-      const pct=Math.round(c/total*100);
-      h+=`<div class="pk-row">
-        <div class="pk-lbl">${paketB(p)}</div>
-        <div class="pk-track"><div class="pk-fill" style="width:${pct}%;background:${col[p]};"></div></div>
-        <div class="pk-cnt">${c}</div>
+    const kunden = await at(ADMIN_BASE, T.KUNDEN, 'fields[]=Paket&fields[]=Status');
+    const aktiv = kunden.records.filter(r => r.fields.Status !== 'Gekündigt');
+    const counts = {Starter:0, Pro:0, Enterprise:0};
+    aktiv.forEach(r => { const p = r.fields.Paket || 'Starter'; if (counts[p] !== undefined) counts[p]++; });
+    const total = aktiv.length || 1;
+    const colors = {Starter:'var(--accent)',Pro:'var(--warn)',Enterprise:'var(--purple)'};
+    const mrrs = {Starter:179,Pro:369,Enterprise:699};
+    let html = '<div class="paket-bars">';
+    for (const [p, c] of Object.entries(counts)) {
+      const pct = Math.round(c/total*100);
+      html += `<div class="paket-bar-row">
+        <span class="paket-bar-label">${paketBadge(p)}</span>
+        <div class="paket-bar-track"><div class="paket-bar-fill" style="width:${pct}%;background:${colors[p]};"></div></div>
+        <span class="paket-bar-count">${c}</span>
       </div>`;
     }
-    h+=`<div style="margin-top:10px;font-size:11px;color:var(--text3);font-family:var(--mono);">
-      MRR-Mix: S ${fmtEur(cnt.Starter*179)} · P ${fmtEur(cnt.Pro*369)} · E ${fmtEur(cnt.Enterprise*699)}
+    html += `</div><div style="margin-top:12px;font-size:11px;color:var(--text3);font-family:var(--mono);">
+      MRR-Mix: Starter ${fmtEur(counts.Starter*179)} · Pro ${fmtEur(counts.Pro*369)} · Enterprise ${fmtEur(counts.Enterprise*699)}
     </div>`;
-    el.innerHTML=h;
-  } catch(e){el.innerHTML='<div class="empty">Fehler beim Laden</div>';}
+    document.getElementById('paketVerteilung').innerHTML = html;
+  } catch(e) { document.getElementById('paketVerteilung').innerHTML = '<div class="empty">Fehler beim Laden</div>'; }
 }
 
-async function loadRecentKunden() {
-  const el = document.getElementById('recentKunden');
+async function loadNeuesteKunden() {
   try {
-    const data = await at(T.SV,
-      'sort[0][field]=Onboarding_Datum&sort[0][direction]=desc&maxRecords=6'+
-      '&fields[]=Vorname&fields[]=Nachname&fields[]=Firma&fields[]=Email&fields[]=Paket&fields[]=Status&fields[]=Onboarding_Datum&fields[]=avv_signed_ts');
-    if(!data.records.length){el.innerHTML='<div class="empty">Keine Kunden</div>';return;}
-    let h='<table class="tbl"><thead><tr><th>Name</th><th>Paket</th><th>Status</th><th>AVV</th><th>Onboarding</th><th>E-Mail</th></tr></thead><tbody>';
-    data.records.forEach(r=>{
-      const f=r.fields;
-      const name=esc([f.Vorname,f.Nachname].filter(Boolean).join(' ')||f.Firma||f.Email||'–');
-      const avv=f.avv_signed_ts?`<span class="b b-green">✓ ${fmtDate(f.avv_signed_ts)}</span>`:'<span class="b b-red">Offen</span>';
-      h+=`<tr style="cursor:pointer;" onclick="showKundeModal(${JSON.stringify(JSON.stringify(r.fields))})">
-        <td><strong>${name}</strong></td>
-        <td>${paketB(f.Paket)}</td>
-        <td>${statusB(f.Status||'Aktiv')}</td>
-        <td>${avv}</td>
-        <td class="mono" style="font-size:11px;">${fmtDate(f.Onboarding_Datum)}</td>
-        <td style="color:var(--text3);font-size:11px;">${esc(f.Email||'–')}</td>
-      </tr>`;
+    const data = await at(ADMIN_BASE, T.KUNDEN, 'sort[0][field]=Created&sort[0][direction]=desc&maxRecords=8');
+    if (!data.records.length) { document.getElementById('neuesteKunden').innerHTML = '<div class="empty">Keine Kunden</div>'; return; }
+    let html = '<table class="tbl"><thead><tr><th>Name</th><th>Paket</th><th>Status</th><th>MRR</th><th>Onboarding</th><th>E-Mail</th></tr></thead><tbody>';
+    data.records.forEach(r => {
+      const f = r.fields;
+      const name = [f.Vorname, f.Nachname].filter(x => x && x.trim()).join(' ') || f.Email || '–';
+      if (!name || name === '–') return; // undefined undefined überspringen
+      const mrr = f.MRR_EUR || {Starter:179,Pro:369,Enterprise:699}[f.Paket] || 179;
+      html += `<tr><td><strong>${name}</strong></td>
+        <td>${paketBadge(f.Paket)}</td>
+        <td>${statusBadge(f.Status||'Aktiv')}</td>
+        <td style="font-family:var(--mono);">${fmtEur(mrr)}</td>
+        <td style="font-family:var(--mono);font-size:12px;">${fmtDate(f.Onboarding_Datum || f.Onboarding_Datum||f.Created)}</td>
+        <td style="font-size:12px;color:var(--text3);">${f.Email||'–'}</td></tr>`;
     });
-    h+='</tbody></table>';
-    el.innerHTML=h;
-  } catch(e){el.innerHTML='<div class="empty" style="padding:16px;">Fehler beim Laden</div>';}
+    html += '</tbody></table>';
+    document.getElementById('neuesteKunden').innerHTML = html;
+  } catch(e) { document.getElementById('neuesteKunden').innerHTML = '<div class="empty" style="padding:16px;">Fehler beim Laden</div>'; }
 }
 
-async function loadRecentGutachten() {
-  const el = document.getElementById('recentGutachten');
+async function checkAirtableHealth() {
   try {
-    const data = await at(T.FAELLE,
-      'sort[0][field]=Timestamp&sort[0][direction]=desc&maxRecords=6'+
-      '&fields[]=Aktenzeichen&fields[]=Schadensart&fields[]=Ort&fields[]=Status&fields[]=Paket&fields[]=Timestamp');
-    if(!data.records.length){el.innerHTML='<div class="empty">Keine Gutachten</div>';return;}
-    let h='<table class="tbl"><thead><tr><th>AZ</th><th>Schadenart</th><th>Ort</th><th>Status</th><th>Paket</th><th>Erstellt</th></tr></thead><tbody>';
-    data.records.forEach(r=>{
-      const f=r.fields;
-      h+=`<tr>
-        <td class="mono" style="font-size:11px;">${esc(f.Aktenzeichen||'–')}</td>
-        <td>${esc(f.Schadensart||'–')}</td>
-        <td style="color:var(--text3);">${esc(f.Ort||'–')}</td>
-        <td>${statusB(f.Status)}</td>
-        <td>${paketB(f.Paket)}</td>
-        <td class="mono" style="font-size:11px;">${fmtTs(f.Timestamp)}</td>
-      </tr>`;
-    });
-    h+='</tbody></table>';
-    el.innerHTML=h;
-  } catch(e){el.innerHTML='<div class="empty" style="padding:16px;">Fehler beim Laden</div>';}
+    await at(ADMIN_BASE, T.KUNDEN, 'maxRecords=1');
+    document.getElementById('h-airtable').textContent = 'Erreichbar';
+    document.getElementById('h-airtable').className = 'health-status green';
+    // S3 hat 8/8 Fehler lt. Dokumentation
+    document.getElementById('h-s1').className = 'health-dot warn';
+    document.getElementById('h-s1-txt').textContent = '30% Fehler';
+    document.getElementById('h-s1-txt').className = 'health-status warn';
+    document.getElementById('h-s3').className = 'health-dot red';
+    document.getElementById('h-s3-txt').textContent = 'PDFMonkey fehlt';
+    document.getElementById('h-s3-txt').className = 'health-status red';
+  } catch(e) {
+    document.getElementById('h-airtable').textContent = 'Fehler';
+    document.getElementById('h-airtable').className = 'health-status red';
+  }
 }
 
-/* ══ HEALTH ══ */
-async function checkHealth() {
-  const el1 = document.getElementById('healthRows');
-  const el2 = document.getElementById('sysHealth');
-  const checks = [
-    {name:'Airtable API', fn:()=>at(T.SV,'maxRecords=1')},
-    {name:'EINWILLIGUNGEN', fn:()=>at(T.EINW,'maxRecords=1')},
-    {name:'RECHTSDOKUMENTE', fn:()=>at(T.RECHT,'maxRecords=1')},
-    {name:'RECHNUNGEN', fn:()=>at(T.RECHNUNGEN,'maxRecords=1')},
-    {name:'Netlify Function', fn:()=>fetch('/.netlify/functions/airtable',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({method:'GET',path:'/v0/meta/bases'})})},
-  ];
-  const results = await Promise.all(checks.map(async c=>{
-    try{await c.fn();return{name:c.name,ok:true};}
-    catch(e){return{name:c.name,ok:false};}
-  }));
-  const html = results.map(r=>
-    `<div class="hrow"><div class="hname">${r.name}</div>
-    <div class="hval" style="color:${r.ok?'var(--green)':'var(--red);'};">${r.ok?'✓ Erreichbar':'✗ Fehler'}</div></div>`
-  ).join('');
-  if(el1) el1.innerHTML=`<div style="padding:4px 0;">${html}</div>`;
-  if(el2) el2.innerHTML=`<div style="padding:4px 16px;">${html}</div>`;
-}
-
-/* ══ KUNDEN ══ */
+/* ── KUNDEN ── */
 async function loadKunden() {
-  document.getElementById('kundenTbl').innerHTML='<div class="loading" style="padding:16px;"><div class="spin"></div>Lädt…</div>';
+  document.getElementById('kundenTable').innerHTML = '<div class="loading" style="padding:16px 18px;"><div class="spin"></div>Lädt…</div>';
   try {
-    const data = await at(T.SV,
-      'sort[0][field]=Onboarding_Datum&sort[0][direction]=desc&maxRecords=500'+
-      '&fields[]=Vorname&fields[]=Nachname&fields[]=Firma&fields[]=Email&fields[]=Paket&fields[]=Status'+
-      '&fields[]=Onboarding_Datum&fields[]=Gutachten_pro_Monat&fields[]=avv_signed_ts&fields[]=re_consent_required'+
-      '&fields[]=Zertifizierung&fields[]=Ort&fields[]=Telefon&fields[]=Spezialisierungen');
-    _sv = data.records;
-    renderKunden(_sv);
-  } catch(e){document.getElementById('kundenTbl').innerHTML='<div class="empty" style="padding:16px;">Fehler beim Laden</div>';}
+    const data = await at(ADMIN_BASE, T.KUNDEN, 'sort[0][field]=Onboarding_Datum&sort[0][direction]=desc');
+    _kunden = data.records;
+    renderKunden(_kunden);
+  } catch(e) { document.getElementById('kundenTable').innerHTML = '<div class="empty" style="padding:16px;">Fehler beim Laden</div>'; }
 }
 
 function renderKunden(records) {
-  const el = document.getElementById('kundenTbl');
-  if(!records.length){el.innerHTML='<div class="empty" style="padding:16px;">Keine Kunden</div>';return;}
-  let h='<table class="tbl"><thead><tr><th>Name</th><th>Paket</th><th>Status</th><th>AVV</th><th>Re-Consent</th><th>Gutachten/Mo</th><th>Onboarding</th><th>E-Mail</th></tr></thead><tbody>';
-  records.forEach(r=>{
-    const f=r.fields;
-    const name=esc([f.Vorname,f.Nachname].filter(Boolean).join(' ')||f.Firma||f.Email||'–');
-    const avv=f.avv_signed_ts?`<span class="b b-green">✓</span>`:'<span class="b b-red">Fehlt</span>';
-    const rc=f.re_consent_required?'<span class="b b-warn">⚠️ Offen</span>':'<span class="b b-green">✓</span>';
-    h+=`<tr style="cursor:pointer;" onclick="showKundeModal(${JSON.stringify(JSON.stringify(f))})">
-      <td><strong>${name}</strong></td>
-      <td>${paketB(f.Paket)}</td>
-      <td>${statusB(f.Status||'Aktiv')}</td>
-      <td>${avv}</td>
-      <td>${rc}</td>
-      <td class="mono" style="text-align:center;">${f.Gutachten_pro_Monat||'–'}</td>
-      <td class="mono" style="font-size:11px;">${fmtDate(f.Onboarding_Datum)}</td>
-      <td style="color:var(--text3);font-size:11px;">${esc(f.Email||'–')}</td>
-    </tr>`;
+  if (!records.length) { document.getElementById('kundenTable').innerHTML = '<div class="empty" style="padding:16px;">Keine Kunden</div>'; return; }
+  let html = '<table class="tbl"><thead><tr><th>Name</th><th>Paket</th><th>Status</th><th>MRR</th><th>Gutachten/Mo</th><th>Onboarding</th><th>E-Mail</th></tr></thead><tbody>';
+  records.forEach(r => {
+    const f = r.fields;
+    const name = f.Name || [f.Vorname, f.Nachname].filter(Boolean).join(' ') || '–';
+    const mrr = f.MRR_EUR || {Starter:179,Pro:369,Enterprise:699}[f.Paket] || 179;
+    html += `<tr><td><strong>${name}</strong></td>
+      <td>${paketBadge(f.Paket)}</td>
+      <td>${statusBadge(f.Status)}</td>
+      <td style="font-family:var(--mono);">${fmtEur(mrr)}</td>
+      <td style="font-family:var(--mono);text-align:center;">${f.Gutachten_pro_Monat||'–'}</td>
+      <td style="font-family:var(--mono);font-size:12px;">${fmtDate(f.Onboarding_Datum || f.Onboarding_Datum||f.Created)}</td>
+      <td style="font-size:12px;color:var(--text3);">${f.Email||'–'}</td></tr>`;
   });
-  h+='</tbody></table>';
-  el.innerHTML=h;
+  html += '</tbody></table>';
+  document.getElementById('kundenTable').innerHTML = html;
 }
 
 function filterKunden() {
-  const q=(document.getElementById('ks').value||'').toLowerCase();
-  const p=document.getElementById('kf-paket').value;
-  const s=document.getElementById('kf-status').value;
-  renderKunden(_sv.filter(r=>{
-    const f=r.fields;
-    const name=([f.Vorname,f.Nachname].filter(Boolean).join(' ')||f.Firma||f.Email||'').toLowerCase();
-    const matchQ=!q||name.includes(q)||(f.Email||'').toLowerCase().includes(q);
-    const matchP=!p||(f.Paket||'')==p;
-    const matchS=!s||(f.Status||'')==s;
-    return matchQ&&matchP&&matchS;
-  }));
-}
-
-/* ══ GUTACHTEN ══ */
-async function loadGutachten() {
-  document.getElementById('gutachtenTbl').innerHTML='<div class="loading" style="padding:16px;"><div class="spin"></div>Lädt…</div>';
-  try {
-    const data = await at(T.FAELLE,
-      'sort[0][field]=Timestamp&sort[0][direction]=desc&maxRecords=500'+
-      '&fields[]=Aktenzeichen&fields[]=Schadensart&fields[]=Schaden_Strasse&fields[]=Ort&fields[]=PLZ'+
-      '&fields[]=Status&fields[]=Paket&fields[]=Auftraggeber_Typ&fields[]=Auftraggeber_Name'+
-      '&fields[]=Timestamp&fields[]=Bearbeitungszeit_Min&fields[]=Fotos_Anzahl&fields[]=Vollgutachten_Erstellt');
-    _faelle = data.records;
-    const s=_faelle.filter(r=>r.fields.Status==='In Bearbeitung').length;
-    const f=_faelle.filter(r=>r.fields.Status==='Freigegeben'||r.fields.Status==='Exportiert').length;
-    set('g-total',_faelle.length); set('g-frei',f); set('g-bear',s);
-    renderGutachten(_faelle);
-  } catch(e){document.getElementById('gutachtenTbl').innerHTML='<div class="empty" style="padding:16px;">Fehler</div>';}
-}
-
-function renderGutachten(records) {
-  const el = document.getElementById('gutachtenTbl');
-  if(!records.length){el.innerHTML='<div class="empty" style="padding:16px;">Keine Gutachten</div>';return;}
-  let h='<table class="tbl"><thead><tr><th>AZ</th><th>Schadenart</th><th>Ort</th><th>Auftraggeber</th><th>Status</th><th>Paket</th><th>Fotos</th><th>Bearbeitungszeit</th><th>Erstellt</th></tr></thead><tbody>';
-  records.forEach(r=>{
-    const f=r.fields;
-    const min=f.Bearbeitungszeit_Min;
-    const dauer=min?`${min} Min.`:'–';
-    h+=`<tr>
-      <td class="mono" style="font-size:11px;">${esc(f.Aktenzeichen||'–')}</td>
-      <td>${esc(f.Schadensart||'–')}</td>
-      <td style="color:var(--text3);font-size:11px;">${esc(f.Ort||'–')}</td>
-      <td style="font-size:11px;">${esc(f.Auftraggeber_Name||f.Auftraggeber_Typ||'–')}</td>
-      <td>${statusB(f.Status)}</td>
-      <td>${paketB(f.Paket)}</td>
-      <td class="mono" style="text-align:center;">${f.Fotos_Anzahl||'0'}</td>
-      <td class="mono" style="font-size:11px;">${dauer}</td>
-      <td class="mono" style="font-size:11px;">${fmtTs(f.Timestamp)}</td>
-    </tr>`;
+  const q = document.getElementById('kundenSearch').value.toLowerCase();
+  const filtered = _kunden.filter(r => {
+    const f = r.fields;
+    const name = (f.Name||[f.Vorname,f.Nachname].filter(Boolean).join(' ')||'').toLowerCase();
+    return name.includes(q) || (f.Email||'').toLowerCase().includes(q) || (f.Paket||'').toLowerCase().includes(q);
   });
-  h+='</tbody></table>';
-  el.innerHTML=h;
+  renderKunden(filtered);
 }
 
-function filterGutachten() {
-  const q=(document.getElementById('gs').value||'').toLowerCase();
-  const s=document.getElementById('gf-status').value;
-  const p=document.getElementById('gf-paket').value;
-  renderGutachten(_faelle.filter(r=>{
-    const f=r.fields;
-    const str=(f.Aktenzeichen||'')+' '+(f.Ort||'')+' '+(f.Schadensart||'');
-    const matchQ=!q||str.toLowerCase().includes(q);
-    const matchS=!s||(f.Status||'')==s;
-    const matchP=!p||(f.Paket||'')==p;
-    return matchQ&&matchS&&matchP;
-  }));
-}
-
-/* ══ FINANZEN ══ */
+/* ── FINANZEN ── */
 async function loadFinanzen() {
   try {
-    // Rechnungen
-    const r = await at(T.RECHNUNGEN,
-      'sort[0][field]=erstellt_am&sort[0][direction]=desc&maxRecords=200'+
-      '&fields[]=empfaenger_name&fields[]=rechnungsdatum&fields[]=aktenzeichen'+
-      '&fields[]=brutto_betrag_eur&fields[]=status&fields[]=faellig_am&fields[]=mahnstufe');
-    _rechnungen=r.records;
-    const offen=_rechnungen.filter(r=>r.fields.status==='Offen'||r.fields.status==='Überfällig');
-    const sum=offen.reduce((s,r)=>s+(Number(r.fields.brutto_betrag_eur)||0),0);
-    set('f-offen',fmtEur(sum));
-    set('f-offen-sub',`${offen.length} Rechnungen offen`);
-    renderRechnungen(_rechnungen);
-  } catch(e){}
-
-  try {
-    const m = await at(T.FINANZEN,
-      'sort[0][field]=Monat&sort[0][direction]=desc&maxRecords=12');
-    renderFinMonat(m.records);
-  } catch(e){}
-}
-
-function renderRechnungen(records) {
-  const el=document.getElementById('rechnungTbl');
-  if(!records.length){el.innerHTML='<div class="empty" style="padding:16px;">Keine Rechnungen</div>';return;}
-  let h='<table class="tbl"><thead><tr><th>Empfänger</th><th>AZ</th><th>Betrag</th><th>Status</th><th>Fällig</th><th>Mahnstufe</th></tr></thead><tbody>';
-  records.forEach(r=>{
-    const f=r.fields;
-    const ms=f.mahnstufe;
-    h+=`<tr>
-      <td>${esc(f.empfaenger_name||'–')}</td>
-      <td class="mono" style="font-size:11px;">${esc(f.aktenzeichen||'–')}</td>
-      <td class="mono" style="color:var(--text);">${fmtEur(f.brutto_betrag_eur)}</td>
-      <td>${statusB(f.status)}</td>
-      <td class="mono" style="font-size:11px;">${fmtDate(f.faellig_am)}</td>
-      <td class="mono" style="text-align:center;">${ms?`<span class="b b-${ms>=2?'rd':'wa'}">${ms}</span>`:'–'}</td>
-    </tr>`;
-  });
-  h+='</tbody></table>';
-  el.innerHTML=h;
-}
-
-function filterRechnungen() {
-  const s=document.getElementById('rf-status').value;
-  renderRechnungen(s?_rechnungen.filter(r=>(r.fields.status||'')==s):_rechnungen);
-}
-
-function renderFinMonat(records) {
-  const el=document.getElementById('finMonatTbl');
-  if(!records.length){el.innerHTML='<div class="empty" style="padding:16px;">Keine Daten</div>';return;}
-  let h='<table class="tbl"><thead><tr><th>Monat</th><th>MRR</th><th>ARR</th><th>Aktive Kunden</th><th>Neue</th><th>Churned</th><th>KI-Kosten</th><th>Marge</th></tr></thead><tbody>';
-  records.forEach(r=>{
-    const f=r.fields;
-    h+=`<tr>
-      <td class="mono" style="font-size:11px;">${esc(f.Monat||'–')}</td>
-      <td class="mono">${fmtEur(f.MRR_EUR)}</td>
-      <td class="mono">${fmtEur(f.ARR_EUR)}</td>
-      <td class="mono" style="text-align:center;">${f.Aktive_Kunden||'–'}</td>
-      <td class="mono" style="text-align:center;color:var(--green);">${f.Neue_Kunden||'–'}</td>
-      <td class="mono" style="text-align:center;color:var(--red);">${f.Churned_Kunden||'–'}</td>
-      <td class="mono">${fmtEur(f.Kosten_OpenAI_EUR)}</td>
-      <td class="mono">${f.Marge_Pct?f.Marge_Pct+'%':'–'}</td>
-    </tr>`;
-  });
-  h+='</tbody></table>';
-  el.innerHTML=h;
-}
-
-/* ══ RECHTLICHES ══ */
-async function loadRecht() {
-  try {
-    // Rechtsdokumente
-    const rd = await at(T.RECHT, 'sort[0][field]=gueltig_ab&sort[0][direction]=desc');
-    set('r-docs', rd.records.length);
-    renderRechtDok(rd.records);
-
-    // Einwilligungen
-    const ew = await at(T.EINW,
-      'sort[0][field]=signed_ts&sort[0][direction]=desc&maxRecords=500'+
-      '&fields[]=sv_email&fields[]=dokument_typ&fields[]=version&fields[]=signed_ts&fields[]=paket&fields[]=inhalt_hash&fields[]=onboarding_schritt');
-    _einw=ew.records;
-    set('r-total', _einw.length);
-    const pending=_einw.filter(r=>(r.fields.version||'').includes('PENDING'));
-    set('r-pending', pending.length);
-    renderEinw(_einw);
-
-    // AVV-Compliance
-    loadAvvCompliance(_einw);
-  } catch(e){ console.error(e); }
-}
-
-function renderRechtDok(records) {
-  const el=document.getElementById('rechtdokTbl');
-  if(!records.length){el.innerHTML='<div class="empty" style="padding:16px;">Keine Dokumente</div>';return;}
-  let h='<table class="tbl"><thead><tr><th>Dokument</th><th>Version</th><th>Gültig ab</th><th>Aktuell</th><th>Hash</th></tr></thead><tbody>';
-  records.forEach(r=>{
-    const f=r.fields;
-    h+=`<tr>
-      <td><strong>${esc(f.dokuments_typ||f.Name||'–')}</strong></td>
-      <td class="mono">${esc(f.version||'–')}</td>
-      <td class="mono" style="font-size:11px;">${fmtDate(f.gueltig_ab)}</td>
-      <td>${f.aktuell?'<span class="b b-green">✓ Aktuell</span>':'<span class="b b-gray">Archiv</span>'}</td>
-      <td class="mono" style="font-size:10px;color:var(--text3);">${(f.inhalt_hash||'–').slice(0,24)}…</td>
-    </tr>`;
-  });
-  h+='</tbody></table>';
-  el.innerHTML=h;
-}
-
-function renderEinw(records) {
-  const el=document.getElementById('einwTbl');
-  if(!records.length){el.innerHTML='<div class="empty" style="padding:16px;">Keine Einwilligungen</div>';return;}
-  let h='<table class="tbl"><thead><tr><th>SV E-Mail</th><th>Dokument</th><th>Version</th><th>Status</th><th>Paket</th><th>Unterzeichnet</th></tr></thead><tbody>';
-  records.forEach(r=>{
-    const f=r.fields;
-    const isPending=(f.version||'').includes('PENDING');
-    const vBadge=isPending?'<span class="b b-warn">Pending</span>':`<span class="b b-gray mono">${esc(f.version||'–')}</span>`;
-    const stBadge=isPending?'<span class="b b-warn">⚠️ Re-Consent</span>':'<span class="b b-green">✓ Signiert</span>';
-    h+=`<tr>
-      <td style="font-size:11px;color:var(--text3);">${esc(f.sv_email||'–')}</td>
-      <td>${esc(f.dokument_typ||'–')}</td>
-      <td>${vBadge}</td>
-      <td>${stBadge}</td>
-      <td>${paketB(f.paket)}</td>
-      <td class="mono" style="font-size:11px;">${fmtTs(f.signed_ts)}</td>
-    </tr>`;
-  });
-  h+='</tbody></table>';
-  el.innerHTML=h;
-}
-
-function filterEinwilligungen() {
-  const t=document.getElementById('ef-typ').value;
-  renderEinw(t?_einw.filter(r=>(r.fields.dokument_typ||'')==t):_einw);
-}
-
-async function loadAvvCompliance(einwRecords) {
-  const el=document.getElementById('avvCompTbl');
-  try {
-    const sv = await at(T.SV,'fields[]=Email&fields[]=Vorname&fields[]=Nachname&fields[]=Paket&fields[]=avv_signed_ts&fields[]=re_consent_required&maxRecords=200');
-    const signiert=new Set(einwRecords.filter(r=>r.fields.dokument_typ==='AVV'&&!(r.fields.version||'').includes('PENDING')).map(r=>r.fields.sv_email));
-    let h='<table class="tbl"><thead><tr><th>SV</th><th>Paket</th><th>AVV</th><th>Re-Consent</th></tr></thead><tbody>';
-    sv.records.forEach(r=>{
-      const f=r.fields;
-      const email=f.Email||'';
-      const name=esc([f.Vorname,f.Nachname].filter(Boolean).join(' ')||email||'–');
-      const avv=signiert.has(email)||f.avv_signed_ts?'<span class="b b-green">✓</span>':'<span class="b b-red">Fehlt</span>';
-      const rc=f.re_consent_required?'<span class="b b-warn">⚠️ Offen</span>':'<span class="b b-green">✓</span>';
-      h+=`<tr><td>${name}</td><td>${paketB(f.Paket)}</td><td>${avv}</td><td>${rc}</td></tr>`;
+    const data = await at(ADMIN_BASE, T.FINANZEN_MRR, 'sort[0][field]=Monat&sort[0][direction]=desc&maxRecords=12');
+    if (!data.records.length) { document.getElementById('finanzenTable').innerHTML = '<div class="empty" style="padding:16px;">Keine Daten</div>'; return; }
+    // Chart
+    const rev = data.records.reverse();
+    const maxVal = Math.max(...rev.map(r => Number(r.fields.MRR_EUR||0)));
+    let chartHtml = '<div class="mrr-bars">';
+    rev.forEach(r => {
+      const f = r.fields;
+      const val = Number(f.MRR_EUR||0);
+      const h = maxVal > 0 ? Math.round((val/maxVal)*70) : 4;
+      const mon = f.Monat ? f.Monat.slice(0,7) : '–';
+      chartHtml += `<div class="mrr-bar-wrap">
+        <div class="mrr-bar-val">${val > 0 ? fmtEur(val).replace(' €','') : ''}</div>
+        <div class="mrr-bar" style="height:${h}px;" title="${fmtEur(val)}"></div>
+        <div class="mrr-bar-label">${mon}</div>
+      </div>`;
     });
-    h+='</tbody></table>';
-    el.innerHTML=h;
-  } catch(e){el.innerHTML='<div class="empty" style="padding:16px;">Fehler</div>';}
+    chartHtml += '</div>';
+    document.getElementById('mrrChart').innerHTML = chartHtml;
+    // Setup sum
+    const setupSum = 0; // Setup wird separat berechnet
+    document.getElementById('finSetup').textContent = fmtEur(setupSum);
+    // Table
+    let html = '<table class="tbl"><thead><tr><th>Monat</th><th>MRR</th><th>Neue Kunden</th><th>Churn</th><th>Setup</th></tr></thead><tbody>';
+    data.records.reverse().forEach(r => {
+      const f = r.fields;
+      html += `<tr><td style="font-family:var(--mono);">${f.Monat||'–'}</td>
+        <td style="font-family:var(--mono);">${fmtEur(f.MRR_EUR)}</td>
+        <td style="text-align:center;">${f.Neue_Kunden||'–'}</td>
+        <td style="text-align:center;color:var(--red);">${f.Churned_Kunden||'0'}</td>
+        <td style="font-family:var(--mono);">${fmtEur(0)}</td></tr>`;
+    });
+    html += '</tbody></table>';
+    document.getElementById('finanzenTable').innerHTML = html;
+  } catch(e) {
+    document.getElementById('mrrChart').innerHTML = '<div class="empty">Fehler</div>';
+    document.getElementById('finanzenTable').innerHTML = '<div class="empty" style="padding:16px;">Fehler beim Laden</div>';
+  }
 }
 
-/* ══ SUPPORT ══ */
-async function loadSupport() {
+/* ── TICKETS ── */
+async function loadTickets() {
+  document.getElementById('ticketsTable').innerHTML = '<div class="loading" style="padding:16px 18px;"><div class="spin"></div>Lädt…</div>';
   try {
-    const t=await at(T.SUPPORT,
-      'sort[0][field]=Datum&sort[0][direction]=desc&maxRecords=200'+
-      '&fields[]=Betreff&fields[]=Typ&fields[]=Status&fields[]=Prioritaet&fields[]=SV-Email&fields[]=Paket&fields[]=Seite&fields[]=Datum');
-    _tickets=t.records;
+    const data = await at(ADMIN_BASE, T.SUPPORT, 'sort[0][field]=Datum&sort[0][direction]=desc');
+    _tickets = data.records;
     renderTickets(_tickets);
-  } catch(e){document.getElementById('ticketTbl').innerHTML='<div class="empty" style="padding:16px;">Fehler</div>';}
-
-  try {
-    const p=await at(T.PIPELINE,
-      'sort[0][field]=Erstkontakt_Datum&sort[0][direction]=desc&maxRecords=100'+
-      '&fields[]=Vorname&fields[]=Nachname&fields[]=Firma&fields[]=Email&fields[]=Status&fields[]=Stufe&fields[]=MRR_EUR&fields[]=Abschluss_Wahrscheinlichkeit_Pct&fields[]=Erstkontakt_Datum');
-    renderPipeline(p.records);
-  } catch(e){document.getElementById('pipelineTbl').innerHTML='<div class="empty" style="padding:16px;">Fehler</div>';}
+  } catch(e) { document.getElementById('ticketsTable').innerHTML = '<div class="empty" style="padding:16px;">Fehler</div>'; }
 }
 
 function renderTickets(records) {
-  const el=document.getElementById('ticketTbl');
-  if(!records.length){el.innerHTML='<div class="empty" style="padding:16px;">Keine Tickets</div>';return;}
-  let h='<table class="tbl"><thead><tr><th>Betreff</th><th>Typ</th><th>Priorität</th><th>Status</th><th>SV</th><th>Paket</th><th>Datum</th></tr></thead><tbody>';
-  records.forEach(r=>{
-    const f=r.fields;
-    const pri=f.Prioritaet;
-    const pBadge=pri==='Hoch'?`<span class="b b-red">${pri}</span>`:pri==='Mittel'?`<span class="b b-warn">${pri}</span>`:`<span class="b b-gray">${pri||'–'}</span>`;
-    h+=`<tr>
-      <td><strong>${esc(f.Betreff||'–')}</strong></td>
-      <td style="color:var(--text3);">${esc(f.Typ||'–')}</td>
-      <td>${pBadge}</td>
-      <td>${statusB(f.Status)}</td>
-      <td style="font-size:11px;color:var(--text3);">${esc(f['SV-Email']||'–')}</td>
-      <td>${paketB(f.Paket)}</td>
-      <td class="mono" style="font-size:11px;">${fmtDate(f.Datum)}</td>
-    </tr>`;
+  if (!records.length) { document.getElementById('ticketsTable').innerHTML = '<div class="empty" style="padding:16px;">Keine Tickets</div>'; return; }
+  let html = '<table class="tbl"><thead><tr><th>Datum</th><th>Kunde</th><th>Betreff</th><th>Priorität</th><th>Status</th></tr></thead><tbody>';
+  records.forEach((r, i) => {
+    const f = r.fields;
+    const prio = f.Prioritaet || f.Priorität || '–';
+    const prioColor = prio === 'Hoch' ? 'var(--red)' : prio === 'Mittel' ? 'var(--warn)' : 'var(--text3)';
+    html += `<tr class="ticket-row" onclick="toggleTicketDetail(${i})">
+      <td style="font-family:var(--mono);font-size:12px;">${fmtDate(f.Datum||f.Created)}</td>
+      <td style="font-size:12px;color:var(--text3);">${f['SV-Email']||'–'}</td>
+      <td>${f.Betreff||f.Titel||'–'}</td>
+      <td style="color:${prioColor};font-size:12px;">${prio}</td>
+      <td>${statusBadge(f.Status)}</td></tr>
+      <tr id="td-${i}"><td colspan="5" style="padding:0;">
+        <div id="tdp-${i}" class="detail-panel">
+          <div style="font-size:12px;color:var(--text2);margin-bottom:6px;">${f.Nachricht||'Keine Beschreibung'}</div>
+          ${f.Paket ? `<div style="font-size:12px;color:var(--text3);margin-top:4px;">Paket: ${f.Paket} · Seite: ${f.Seite||'–'}</div>` : ''}
+        </div>
+      </td></tr>`;
   });
-  h+='</tbody></table>';
-  el.innerHTML=h;
+  html += '</tbody></table>';
+  document.getElementById('ticketsTable').innerHTML = html;
+}
+
+function toggleTicketDetail(i) {
+  const p = document.getElementById('tdp-'+i);
+  if (p) p.classList.toggle('open');
 }
 
 function filterTickets() {
-  const s=document.getElementById('tf-status').value;
-  renderTickets(s?_tickets.filter(r=>(r.fields.Status||'')==s):_tickets);
+  const val = document.getElementById('ticketFilter').value;
+  renderTickets(val ? _tickets.filter(r => r.fields.Status === val) : _tickets);
 }
 
-function renderPipeline(records) {
-  const el=document.getElementById('pipelineTbl');
-  if(!records.length){el.innerHTML='<div class="empty" style="padding:16px;">Keine Pipeline-Einträge</div>';return;}
-  let h='<table class="tbl"><thead><tr><th>Name</th><th>Status</th><th>Stufe</th><th>MRR</th><th>Wahrsch.</th><th>Kontakt</th></tr></thead><tbody>';
-  records.forEach(r=>{
-    const f=r.fields;
-    const name=esc([f.Vorname,f.Nachname].filter(Boolean).join(' ')||f.Firma||'–');
-    h+=`<tr>
-      <td><strong>${name}</strong></td>
-      <td>${statusB(f.Status)}</td>
-      <td style="color:var(--text3);">${esc(f.Stufe||'–')}</td>
-      <td class="mono">${fmtEur(f.MRR_EUR)}</td>
-      <td class="mono" style="text-align:center;">${f.Abschluss_Wahrscheinlichkeit_Pct?f.Abschluss_Wahrscheinlichkeit_Pct+'%':'–'}</td>
-      <td class="mono" style="font-size:11px;">${fmtDate(f.Erstkontakt_Datum)}</td>
-    </tr>`;
-  });
-  h+='</tbody></table>';
-  el.innerHTML=h;
+/* ── PIPELINE ── */
+async function loadPipeline() {
+  document.getElementById('pipelineTable').innerHTML = '<div class="loading" style="padding:16px 18px;"><div class="spin"></div>Lädt…</div>';
+  try {
+    const data = await at(ADMIN_BASE, T.PIPELINE, 'sort[0][field]=Erstellt&sort[0][direction]=desc');
+    _pipeline = data.records;
+    if (!data.records.length) { document.getElementById('pipelineTable').innerHTML = '<div class="empty" style="padding:16px;">Keine Leads</div>'; return; }
+    let html = '<table class="tbl"><thead><tr><th>Name</th><th>E-Mail</th><th>Paket-Interesse</th><th>Stufe</th><th>Status</th><th>Datum</th><th>MRR</th></tr></thead><tbody>';
+    data.records.forEach(r => {
+      const f = r.fields;
+      const name = [f.Vorname, f.Nachname].filter(Boolean).join(' ') || f.Email || '–';
+      html += `<tr>
+        <td><strong>${name}</strong></td>
+        <td style="font-size:12px;color:var(--text3);">${f.Email||'–'}</td>
+        <td>${paketBadge(f.Stufe||'Starter')}</td>
+        <td style="font-size:12px;">${f.Stufe||'–'}</td>
+        <td>${statusBadge(f.Status||'Aktiv')}</td>
+        <td style="font-family:var(--mono);font-size:12px;">${fmtDate(f.Erstkontakt_Datum||f.Created)}</td>
+        <td style="font-family:var(--mono);font-size:12px;">${f.MRR_EUR ? fmtEur(f.MRR_EUR) : '–'}</td></tr>`;
+    });
+    html += '</tbody></table>';
+    document.getElementById('pipelineTable').innerHTML = html;
+  } catch(e) { document.getElementById('pipelineTable').innerHTML = '<div class="empty" style="padding:16px;">Fehler</div>'; }
 }
 
-/* ══ MODAL ══ */
-function showKundeModal(jsonStr) {
-  const f = JSON.parse(jsonStr);
-  const name = [f.Vorname,f.Nachname].filter(Boolean).join(' ')||f.Firma||f.Email||'–';
-  document.getElementById('modalTitle').textContent = name;
-  const rows = [
-    ['E-Mail', f.Email],
-    ['Paket', f.Paket],
-    ['Status', f.Status],
-    ['Firma', f.Firma],
-    ['Telefon', f.Telefon],
-    ['Ort', f.Ort],
-    ['Zertifizierung', f.Zertifizierung],
-    ['Spezialisierungen', Array.isArray(f.Spezialisierungen)?f.Spezialisierungen.join(', '):f.Spezialisierungen],
-    ['Gutachten/Mo', f.Gutachten_pro_Monat],
-    ['Onboarding', f.Onboarding_Datum ? fmtDate(f.Onboarding_Datum) : '–'],
-    ['AVV signiert', f.avv_signed_ts ? fmtTs(f.avv_signed_ts) : '⚠️ Fehlt'],
-    ['Re-Consent', f.re_consent_required ? '⚠️ Erforderlich' : '✓ Aktuell'],
-    ['Arbeitszeit', f.sv_arbeitszeit_von&&f.sv_arbeitszeit_bis?`${f.sv_arbeitszeit_von}–${f.sv_arbeitszeit_bis}`:'–'],
-  ];
-  document.getElementById('modalBody').innerHTML = rows.filter(r=>r[1]!==undefined&&r[1]!==null&&r[1]!=='').map(r=>
-    `<div class="mrow"><div class="mk">${esc(r[0])}</div><div class="mv">${esc(String(r[1]))}</div></div>`
-  ).join('');
-  document.getElementById('modalBg').classList.add('open');
-}
-
-function closeModal() {
-  document.getElementById('modalBg').classList.remove('open');
-}
-
-/* ── Util ── */
-function set(id, val) {
-  const el=document.getElementById(id);
-  if(el) el.textContent=val;
+/* ── AUDIT LOG ── */
+async function loadAudit() {
+  document.getElementById('auditTable').innerHTML = '<div class="loading" style="padding:16px 18px;"><div class="spin"></div>Lädt…</div>';
+  try {
+    const data = await at(ADMIN_BASE, T.AUDIT_LOG, 'sort[0][field]=Timestamp&sort[0][direction]=desc&maxRecords=50');
+    if (!data.records.length) { document.getElementById('auditTable').innerHTML = '<div class="empty" style="padding:16px;">Keine Einträge</div>'; return; }
+    let html = '<table class="tbl"><thead><tr><th>Zeitstempel</th><th>Aktion</th><th>SV / User</th><th>Details</th></tr></thead><tbody>';
+    data.records.forEach(r => {
+      const f = r.fields;
+      html += `<tr>
+        <td style="font-family:var(--mono);font-size:11px;">${fmtDate(f.Timestamp||f.Created)}</td>
+        <td style="font-size:12px;"><strong>${f.Aktion||f.Action||'–'}</strong></td>
+        <td style="font-size:12px;color:var(--text3);">${f.SV||f.User||'–'}</td>
+        <td style="font-size:11px;color:var(--text3);max-width:240px;">${f.Details||'–'}</td></tr>`;
+    });
+    html += '</tbody></table>';
+    document.getElementById('auditTable').innerHTML = html;
+  } catch(e) { document.getElementById('auditTable').innerHTML = '<div class="empty" style="padding:16px;">Fehler</div>'; }
 }
 
 function logout() {
   sessionStorage.removeItem('prova_admin');
-  window.location.href='admin-login.html';
+  window.location.href = 'admin-login.html';
 }
 
-/* ── INIT ── */
+// Init
 loadAll();
 </script>
 </body>

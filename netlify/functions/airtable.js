@@ -1,62 +1,87 @@
 // PROVA Systems — Airtable Proxy Function
-// Hält den Airtable PAT sicher auf dem Server (nie im Frontend)
-// Wird von app-starter.html, app-pro.html, freigabe.html aufgerufen
+// Löst CORS: Browser → /.netlify/functions/airtable → Airtable API
+// API-Key liegt sicher in Netlify Env Var AIRTABLE_PAT
 
-const AIRTABLE_BASE_URL = 'https://api.airtable.com';
-
-exports.handler = async function (event) {
+exports.handler = async function(event) {
   // Nur POST erlaubt
   if (event.httpMethod !== 'POST') {
-    return { statusCode: 405, body: JSON.stringify({ error: 'Method Not Allowed' }) };
+    return {
+      statusCode: 405,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ error: 'Method not allowed' })
+    };
   }
 
-  // PAT aus Netlify Environment Variable
   const pat = process.env.AIRTABLE_PAT;
   if (!pat) {
-    return { statusCode: 500, body: JSON.stringify({ error: 'AIRTABLE_PAT nicht konfiguriert' }) };
+    return {
+      statusCode: 500,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ error: 'AIRTABLE_PAT not configured in Netlify environment variables' })
+    };
   }
 
-  let payload;
+  let body;
   try {
-    payload = JSON.parse(event.body || '{}');
+    body = JSON.parse(event.body);
   } catch (e) {
-    return { statusCode: 400, body: JSON.stringify({ error: 'Ungültiger Request-Body' }) };
+    return {
+      statusCode: 400,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ error: 'Invalid JSON body' })
+    };
   }
 
-  const { method = 'GET', path = '', body = null } = payload;
+  const { method = 'GET', path, payload } = body;
 
-  // Nur Airtable-Pfade erlaubt (Sicherheit)
+  if (!path) {
+    return {
+      statusCode: 400,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ error: 'Missing path parameter' })
+    };
+  }
+
+  // Whitelist: nur Airtable API-Pfade erlaubt
   if (!path.startsWith('/v0/')) {
-    return { statusCode: 400, body: JSON.stringify({ error: 'Ungültiger Pfad' }) };
+    return {
+      statusCode: 403,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ error: 'Invalid API path' })
+    };
   }
 
-  const url = AIRTABLE_BASE_URL + path;
+  const url = `https://api.airtable.com${path}`;
 
   const fetchOptions = {
-    method,
+    method: method,
     headers: {
-      'Authorization': 'Bearer ' + pat,
-      'Content-Type': 'application/json',
-    },
+      'Authorization': `Bearer ${pat}`,
+      'Content-Type': 'application/json'
+    }
   };
 
-  if (body && method !== 'GET') {
-    fetchOptions.body = JSON.stringify(body);
+  if (payload && (method === 'POST' || method === 'PATCH' || method === 'PUT')) {
+    fetchOptions.body = JSON.stringify(payload);
   }
 
   try {
-    const res = await fetch(url, fetchOptions);
-    const text = await res.text();
+    const response = await fetch(url, fetchOptions);
+    const data = await response.json();
 
     return {
-      statusCode: res.status,
-      headers: { 'Content-Type': 'application/json' },
-      body: text,
+      statusCode: response.status,
+      headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*'
+      },
+      body: JSON.stringify(data)
     };
-  } catch (err) {
+  } catch (e) {
     return {
       statusCode: 502,
-      body: JSON.stringify({ error: 'Airtable nicht erreichbar: ' + err.message }),
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ error: 'Airtable API unreachable', detail: e.message })
     };
   }
 };
