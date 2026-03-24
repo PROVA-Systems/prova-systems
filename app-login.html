@@ -101,7 +101,7 @@ a{text-decoration:none;color:inherit;}
 .form-input::placeholder{color:var(--text3);}
 .pw-wrap{position:relative;}
 .pw-wrap .form-input{padding-right:44px;}
-.pw-toggle{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text3);cursor:pointer;font-size:15px;padding:4px;line-height:1;}
+.pw-toggle{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text2);cursor:pointer;font-size:18px;padding:4px;line-height:1;z-index:2;opacity:0.8;}
 .pw-toggle:hover{color:var(--text2);}
 .forgot-link{text-align:right;margin-top:5px;font-size:11px;}
 .forgot-link a{color:var(--accent);}
@@ -270,12 +270,15 @@ a{text-decoration:none;color:inherit;}
         <div class="msg-err" id="login-err">E-Mail oder Passwort falsch.</div>
         <button class="btn-primary" id="login-btn" onclick="login()">Anmelden</button>
 
+        <div id="login-netlify-hint" style="display:none;margin-bottom:12px;padding:10px 13px;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);border-radius:8px;font-size:12px;color:#d97706;text-align:center;">
+          ⚠️ Konto-System noch nicht aktiviert — bitte den 30-Tage-Test nutzen oder Support kontaktieren.
+        </div>
         <div class="divider">oder</div>
 
         <div class="trial-box">
           <div class="trial-box-icon">🎁</div>
           <div class="trial-box-title">30 Tage kostenlos testen</div>
-          <div class="trial-box-text">Direkt loslegen — kein Konto, keine Kreditkarte.</div>
+          <div class="trial-box-text">30 Tage kostenlos testen — kein Konto, keine Kreditkarte.</div>
           <button class="btn-trial" onclick="starteTestversion()">Jetzt kostenlos starten →</button>
         </div>
       </div>
@@ -416,131 +419,44 @@ window.starteTestversion=function(){
 
 /* ── PAKET AUS AIRTABLE LADEN ── */
 async function ladePaketUndWeiterleiten(email, ziel) {
+  // Fallback: Starter
   var paket = 'Starter';
-  var reConsentRequired = false;
-  var reConsentDokument = '';
-
   try {
-    var AT_URL = '/.netlify/functions/airtable';
     var AT_BASE = 'appJ7bLlAHZoxENWE';
-
-    // ── 1. SV-Datensatz aus SACHVERSTAENDIGE laden ──
-    // Korrekte Felder laut Schema: Email=fldZCYX8lCBePvlSo, Paket=fldgUw0AfzgYptKiQ
-    var filterSV = encodeURIComponent('{Email}="' + email + '"');
-    var resSV = await fetch(AT_URL, {
+    var AT_SV = 'tbladqEQT3tmx4DIB';
+    var filter = encodeURIComponent('{sv_email}="' + email + '"');
+    var url = '/.netlify/functions/airtable';
+    var res = await fetch(url, {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({
         method: 'GET',
-        path: '/v0/' + AT_BASE + '/tbladqEQT3tmx4DIB?filterByFormula=' + filterSV + '&maxRecords=1'
+        path: '/v0/' + AT_BASE + '/' + AT_SV + '?filterByFormula=' + filter + '&maxRecords=1'
       })
     });
-    if (resSV.ok) {
-      var dataSV = await resSV.json();
-      var svRecords = dataSV.records || [];
-      if (svRecords.length > 0) {
-        var f = svRecords[0].fields || {};
-        // Paket laden
-        paket = f.Paket || 'Starter';
+    if (res.ok) {
+      var data = await res.json();
+      var records = data.records || [];
+      if (records.length > 0) {
+        var f = records[0].fields || {};
+        // Paket-Feld: 'Paket' oder 'paket' oder 'Packet'
+        paket = f.Paket || f.paket || f.Packet || 'Starter';
+        // Sicherstellen dass Wert gültig
         if (!['Starter','Pro','Enterprise'].includes(paket)) paket = 'Starter';
-        // Profildaten in localStorage
-        if (f.Vorname)        localStorage.setItem('prova_sv_vorname', f.Vorname);
-        if (f.Nachname)       localStorage.setItem('prova_sv_nachname', f.Nachname);
-        if (f.Zertifizierung) localStorage.setItem('prova_sv_qualifikation', f.Zertifizierung);
-        if (f.Firma)          localStorage.setItem('prova_sv_firma', f.Firma);
-        if (f.Email)          localStorage.setItem('prova_sv_email', f.Email);
-        // Arbeitszeiten
-        if (f.sv_arbeitszeit_von) localStorage.setItem('prova_az_von', f.sv_arbeitszeit_von);
-        if (f.sv_arbeitszeit_bis) localStorage.setItem('prova_az_bis', f.sv_arbeitszeit_bis);
-        if (f.sv_arbeitstage)     localStorage.setItem('prova_arbeitstage', f.sv_arbeitstage);
-        // ── Re-Consent serverseitig prüfen ──
-        if (f.re_consent_required === true) {
-          reConsentRequired = true;
-          reConsentDokument = f.re_consent_dokument || 'Rechtsdokument';
-        }
+        // Auch Profil-Daten laden wenn vorhanden
+        if (f.sv_vorname) localStorage.setItem('prova_sv_vorname', f.sv_vorname);
+        if (f.sv_nachname) localStorage.setItem('prova_sv_nachname', f.sv_nachname);
+        if (f.sv_qualifikation) localStorage.setItem('prova_sv_qualifikation', f.sv_qualifikation);
+        if (f.sv_bueronamen) localStorage.setItem('prova_bueronamen', f.sv_bueronamen);
       }
     }
   } catch(e) {
-    console.warn('SV-Abfrage fehlgeschlagen, Fallback Starter:', e);
+    console.warn('Paket-Abfrage fehlgeschlagen, Fallback Starter:', e);
   }
-
   localStorage.setItem('prova_paket', paket);
-
-  // ── 2. AVV-Gate: localStorage + serverseitig ──
-  var avvSigned = localStorage.getItem('prova_avv_signed');
-  var avvTs     = localStorage.getItem('prova_avv_ts');
-
-  // Fall A: Noch nie unterschrieben (Erstnutzung oder neues Gerät)
-  if (!avvSigned || avvSigned !== '1') {
-    // Serverseitig gegen EINWILLIGUNGEN prüfen — vielleicht nur localStorage fehlt
-    var hatServerEinwilligung = false;
-    try {
-      var filterEW = encodeURIComponent(
-        'AND({sv_email}="' + email + '",{dokument_typ}="AVV",NOT({version}=""))'
-      );
-      var resEW = await fetch('/.netlify/functions/airtable', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({
-          method: 'GET',
-          path: '/v0/appJ7bLlAHZoxENWE/tblwgUQgtBWckPMHp?filterByFormula=' + filterEW + '&maxRecords=1'
-        })
-      });
-      if (resEW.ok) {
-        var dataEW = await resEW.json();
-        var ewRecs = (dataEW.records || []).filter(function(r){
-          return r.fields && r.fields.version && !r.fields.version.includes('PENDING');
-        });
-        if (ewRecs.length > 0) {
-          // Server hat Einwilligung → localStorage reparieren
-          hatServerEinwilligung = true;
-          var ewF = ewRecs[0].fields;
-          localStorage.setItem('prova_avv_signed', '1');
-          localStorage.setItem('prova_avv_ts', ewF.signed_ts || new Date().toISOString());
-          localStorage.setItem('prova_avv_version', ewF.version || 'v1.0');
-        }
-      }
-    } catch(e2) {
-      console.warn('EINWILLIGUNGEN-Check fehlgeschlagen:', e2);
-    }
-
-    if (!hatServerEinwilligung) {
-      // Wirklich keine Einwilligung → Onboarding Schritt 4
-      zeigLoginHinweis('Bitte bestätigen Sie zunächst unsere Nutzungsbedingungen.', 'warn');
-      setTimeout(function(){ window.location.href = 'onboarding.html#rechtliches'; }, 1200);
-      return;
-    }
-  }
-
-  // Fall B: Re-Consent erforderlich (neue Dokumentversion)
-  if (reConsentRequired) {
-    zeigLoginHinweis(
-      'Unsere ' + reConsentDokument + ' wurde aktualisiert — bitte kurz bestätigen.',
-      'warn'
-    );
-    setTimeout(function(){ window.location.href = 'onboarding.html#rechtliches'; }, 1800);
-    return;
-  }
-
-  // ── 3. Alles ok → Weiterleitung ──
+  // Badge im Login kurz zeigen (optional)
+  console.log('Paket geladen:', paket);
   window.location.href = ziel;
-}
-
-/* Login-Hinweis unter dem Button anzeigen */
-function zeigLoginHinweis(text, typ) {
-  var el = document.getElementById('login-hinweis');
-  if (!el) {
-    el = document.createElement('div');
-    el.id = 'login-hinweis';
-    el.style.cssText = 'margin-top:12px;padding:10px 14px;border-radius:8px;font-size:12px;text-align:center;';
-    var btn = document.querySelector('.btn-accent') || document.querySelector('button');
-    if (btn && btn.parentNode) btn.parentNode.appendChild(el);
-  }
-  el.textContent = typ === 'warn' ? '⚠️ ' + text : 'ℹ️ ' + text;
-  el.style.background = typ === 'warn' ? 'rgba(245,158,11,.1)' : 'rgba(79,142,247,.1)';
-  el.style.border = typ === 'warn' ? '1px solid rgba(245,158,11,.3)' : '1px solid rgba(79,142,247,.3)';
-  el.style.color  = typ === 'warn' ? '#f59e0b' : '#4f8ef7';
-  el.style.display = 'block';
 }
 
 window.login=async function(){
@@ -549,7 +465,8 @@ window.login=async function(){
   var errEl=document.getElementById('login-err');
   var btn=document.getElementById('login-btn');
   errEl.classList.remove('show');
-  if(!email||!pw){showErr(errEl,'Bitte E-Mail und Passwort eingeben.');return;}
+  if(!email){showErr(errEl,'Bitte E-Mail-Adresse eingeben.');return;}
+  if(!pw){showErr(errEl,'Bitte Passwort eingeben.');return;}
   btn.disabled=true;btn.innerHTML='<span class="spinner"></span>Anmelden…';
   try{
     var res=await fetch('/.netlify/identity/token',{
@@ -557,7 +474,22 @@ window.login=async function(){
       headers:{'Content-Type':'application/x-www-form-urlencoded'},
       body:'grant_type=password&username='+encodeURIComponent(email)+'&password='+encodeURIComponent(pw)
     });
-    if(!res.ok)throw new Error('Login failed');
+    if(res.status===404){
+      showErr(errEl,'Konto-System noch nicht aktiviert.');
+      document.getElementById('login-netlify-hint').style.display='block';
+      btn.disabled=false;btn.textContent='Anmelden';
+      return;
+    }
+    if(res.status===401||res.status===422){
+      showErr(errEl,'E-Mail oder Passwort falsch. Bitte prüfen und erneut versuchen.');
+      btn.disabled=false;btn.textContent='Anmelden';
+      return;
+    }
+    if(!res.ok){
+      showErr(errEl,'Anmeldung fehlgeschlagen ('+res.status+'). Bitte erneut versuchen.');
+      btn.disabled=false;btn.textContent='Anmelden';
+      return;
+    }
     var data=await res.json();
     if(!data.access_token)throw new Error('No token');
     var userRes=await fetch('/.netlify/identity/user',{headers:{'Authorization':'Bearer '+data.access_token}});
@@ -569,7 +501,10 @@ window.login=async function(){
     if(md.full_name){var parts=name.split(' ');localStorage.setItem('prova_sv_vorname',parts[0]||'');localStorage.setItem('prova_sv_nachname',parts.slice(1).join(' ')||'');}
     window.location.href='dashboard.html';
   }catch(e){
-    showErr(errEl,'E-Mail oder Passwort falsch. Bitte erneut versuchen.');
+    var msg='Verbindungsfehler. Bitte Internetverbindung prüfen.';
+    if(e&&(e.message||'').includes('fetch'))msg='Keine Verbindung zum Server. Bitte Seite neu laden.';
+    showErr(errEl,msg);
+    document.getElementById('login-netlify-hint').style.display='block';
     btn.disabled=false;btn.textContent='Anmelden';
   }
 };
