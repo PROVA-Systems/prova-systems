@@ -367,7 +367,8 @@ a{text-decoration:none;color:inherit;}
 if(localStorage.getItem('prova_user')){
   var params=new URLSearchParams(window.location.search);
   if(params.get('reason')!=='logout'&&params.get('reason')!=='trial_expired'){
-    window.location.href='dashboard.html';
+    // Paket aus Airtable laden und zur richtigen App weiterleiten
+    await ladePaketUndWeiterleiten(userData.email||email);
     return;
   }
 }
@@ -418,13 +419,13 @@ window.starteTestversion=function(){
 /* ── LOGIN ── */
 
 /* ── PAKET AUS AIRTABLE LADEN ── */
-async function ladePaketUndWeiterleiten(email, ziel) {
+async async function ladePaketUndWeiterleiten(email, ziel) {
   // Fallback: Starter
   var paket = 'Starter';
   try {
     var AT_BASE = 'appJ7bLlAHZoxENWE';
     var AT_SV = 'tbladqEQT3tmx4DIB';
-    var filter = encodeURIComponent('{sv_email}="' + email + '"');
+    var filter = encodeURIComponent('{Email}="' + email + '"');
     var url = '/.netlify/functions/airtable';
     var res = await fetch(url, {
       method: 'POST',
@@ -440,7 +441,8 @@ async function ladePaketUndWeiterleiten(email, ziel) {
       if (records.length > 0) {
         var f = records[0].fields || {};
         // Paket-Feld: 'Paket' oder 'paket' oder 'Packet'
-        paket = f.Paket || f.paket || f.Packet || 'Starter';
+        paket = (f.Paket && f.Paket.name) ? f.Paket.name 
+                  : (f.Paket || f.paket || f.Packet || 'Starter');
         // Admin-Erkennung
         var adminEmails = ['admin@prova-systems.de'];
         if (adminEmails.indexOf(email.toLowerCase()) >= 0) {
@@ -448,6 +450,10 @@ async function ladePaketUndWeiterleiten(email, ziel) {
           paket = 'Enterprise';
         }
         // Sicherstellen dass Wert gültig
+        // Normalisiere: STARTER→Starter, PRO→Pro, ENTERPRISE→Enterprise
+        if (paket === 'STARTER' || paket === 'starter') paket = 'Starter';
+        if (paket === 'PRO' || paket === 'pro') paket = 'Pro';
+        if (paket === 'ENTERPRISE' || paket === 'enterprise') paket = 'Enterprise';
         if (!['Starter','Pro','Enterprise'].includes(paket)) paket = 'Starter';
         // Auch Profil-Daten laden wenn vorhanden
         if (f.sv_vorname) localStorage.setItem('prova_sv_vorname', f.sv_vorname);
@@ -505,7 +511,8 @@ window.login=async function(){
     localStorage.setItem('prova_user',JSON.stringify({email:userData.email||email,name:name,token:data.access_token}));
     localStorage.setItem('prova_sv_email',userData.email||email);
     if(md.full_name){var parts=name.split(' ');localStorage.setItem('prova_sv_vorname',parts[0]||'');localStorage.setItem('prova_sv_nachname',parts.slice(1).join(' ')||'');}
-    window.location.href='dashboard.html';
+    // Paket aus Airtable laden und zur richtigen App weiterleiten
+    await ladePaketUndWeiterleiten(userData.email||email);
   }catch(e){
     var msg='Verbindungsfehler. Bitte Internetverbindung prüfen.';
     if(e&&(e.message||'').includes('fetch'))msg='Keine Verbindung zum Server. Bitte Seite neu laden.';
