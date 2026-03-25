@@ -1361,5 +1361,354 @@ async function supSendModal(){
 }
 </script>
 
+
+<script>
+/* ================================================================
+   PROVA Fall-Kontext-System v1.0
+   Zeigt auf jeder Workflow/Werkzeug-Seite den aktiven Fall-Kontext
+   und führt den SV zum nächsten Schritt.
+   
+   Aktiviert sich automatisch wenn ein aktiver Fall vorhanden ist.
+   Kein Eingriff in bestehende Seiten-Logik.
+================================================================ */
+
+(function() {
+'use strict';
+
+// ── WORKFLOW-KONFIGURATION ──────────────────────────────────────────────
+var WORKFLOW = [
+  {
+    schritt: 1,
+    name: 'Fall anlegen',
+    seite: 'app-starter.html',
+    icon: '📋',
+    farbe: '#4f8ef7'
+  },
+  {
+    schritt: 2,
+    name: 'Diktat & Fotos',
+    seite: 'app-starter.html#step2',
+    icon: '🎙️',
+    farbe: '#4f8ef7'
+  },
+  {
+    schritt: 3,
+    name: 'KI-Analyse',
+    seite: 'app-starter.html#step3',
+    icon: '🤖',
+    farbe: '#6366f1'
+  },
+  {
+    schritt: 4,
+    name: '§6 Fachurteil',
+    seite: 'stellungnahme.html',
+    icon: '⚖️',
+    farbe: '#f59e0b'
+  },
+  {
+    schritt: 5,
+    name: 'Freigabe',
+    seite: 'freigabe.html',
+    icon: '✅',
+    farbe: '#10b981'
+  },
+  {
+    schritt: 6,
+    name: 'Rechnung',
+    seite: 'rechnungen.html',
+    icon: '💶',
+    farbe: '#10b981'
+  },
+  {
+    schritt: 7,
+    name: 'Abschluss',
+    seite: 'archiv.html',
+    icon: '📁',
+    farbe: '#6b7280'
+  }
+];
+
+// ── WERKZEUGE (kontextuell, kein fester Workflow-Schritt) ───────────────
+var WERKZEUGE = {
+  'normen.html':         { name: 'Normendatenbank',    icon: '📚', zurück: true },
+  'positionen.html':     { name: 'Positionsdatenbank', icon: '📦', zurück: true },
+  'textbausteine.html':  { name: 'Textbausteine',      icon: '✏️',  zurück: true },
+  'jveg.html':           { name: 'JVEG-Rechner',       icon: '⚖️',  zurück: false },
+  'kostenermittlung.html':{ name: 'Kosten & Aufmaß',   icon: '📐', zurück: true },
+  'briefvorlagen.html':  { name: 'Briefvorlagen',      icon: '✉️',  zurück: false }
+};
+
+// ── SEITE BESTIMMEN ─────────────────────────────────────────────────────
+var currentPage = window.location.pathname.split('/').pop() || 'dashboard.html';
+if (currentPage === '') currentPage = 'dashboard.html';
+
+// ── AKTUELLEN SCHRITT BESTIMMEN ─────────────────────────────────────────
+function getCurrentSchritt() {
+  var basePage = currentPage.split('#')[0];
+  for (var i = 0; i < WORKFLOW.length; i++) {
+    if (WORKFLOW[i].seite.split('#')[0] === basePage) {
+      return WORKFLOW[i].schritt;
+    }
+  }
+  return null;
+}
+
+// ── FALL-KONTEXT LADEN ──────────────────────────────────────────────────
+function ladeFallKontext() {
+  // Versuche aus URL-Parameter zu laden
+  var params = new URLSearchParams(window.location.search);
+  var urlAz   = params.get('az') || params.get('fall') || params.get('aktenzeichen');
+  
+  // Dann aus sessionStorage/localStorage
+  var az         = urlAz
+                 || sessionStorage.getItem('prova_current_az')
+                 || localStorage.getItem('prova_letztes_az')
+                 || '';
+  
+  var schadenart = sessionStorage.getItem('prova_current_schadenart')
+                 || localStorage.getItem('prova_schadenart')
+                 || '';
+  
+  var adresse    = sessionStorage.getItem('prova_current_objekt')
+                 || localStorage.getItem('prova_adresse')
+                 || '';
+  
+  var recordId   = sessionStorage.getItem('prova_record_id')
+                 || sessionStorage.getItem('prova_current_record_id')
+                 || '';
+  
+  if (!az) return null;
+  
+  return { az: az, schadenart: schadenart, adresse: adresse, recordId: recordId };
+}
+
+// ── NÄCHSTER SCHRITT ─────────────────────────────────────────────────────
+function naechsterSchritt(aktuellerSchritt) {
+  if (!aktuellerSchritt) return null;
+  for (var i = 0; i < WORKFLOW.length; i++) {
+    if (WORKFLOW[i].schritt === aktuellerSchritt + 1) {
+      return WORKFLOW[i];
+    }
+  }
+  return null;
+}
+
+// ── BANNER HTML BAUEN ───────────────────────────────────────────────────
+function baueBanner(kontext, aktuellerSchritt, istWerkzeug) {
+  var az        = kontext.az;
+  var sa        = kontext.schadenart;
+  var adr       = kontext.adresse;
+  var recordId  = kontext.recordId;
+  
+  // Schadensart Farbe
+  var saFarben = {
+    'Schimmelbefall': '#10b981',
+    'Wasserschaden':  '#3b82f6',
+    'Brandschaden':   '#ef4444',
+    'Sturmschaden':   '#8b5cf6',
+    'Baumängel':      '#f59e0b',
+    'Sonstiger Schaden': '#6b7280'
+  };
+  var saFarbe = saFarben[sa] || '#4f8ef7';
+  
+  // Akte-Link bauen
+  var akteLink = recordId
+    ? 'akte.html?id=' + recordId
+    : az
+      ? 'akte.html?az=' + encodeURIComponent(az)
+      : 'archiv.html';
+  
+  // Nächster-Schritt Button
+  var naechsterBtn = '';
+  if (!istWerkzeug && aktuellerSchritt) {
+    var naechster = naechsterSchritt(aktuellerSchritt);
+    if (naechster) {
+      var naechsterUrl = naechster.seite;
+      // AZ mitgeben wenn relevant
+      if (naechster.seite.indexOf('stellungnahme') >= 0 && az) {
+        naechsterUrl = naechster.seite + '?az=' + encodeURIComponent(az);
+      } else if (naechster.seite.indexOf('freigabe') >= 0 && recordId) {
+        naechsterUrl = naechster.seite + '?id=' + recordId;
+      } else if (naechster.seite.indexOf('rechnungen') >= 0 && az) {
+        naechsterUrl = naechster.seite + '?az=' + encodeURIComponent(az);
+      } else if (naechster.seite.indexOf('archiv') >= 0) {
+        naechsterUrl = naechster.seite;
+      }
+      
+      naechsterBtn = '<a href="' + naechsterUrl + '" style="'
+        + 'display:inline-flex;align-items:center;gap:5px;padding:4px 12px;'
+        + 'background:' + naechster.farbe + '22;border:1px solid ' + naechster.farbe + '44;'
+        + 'border-radius:999px;font-size:11px;font-weight:700;color:' + naechster.farbe + ';'
+        + 'text-decoration:none;white-space:nowrap;transition:all .15s;'
+        + '" onmouseover="this.style.background='' + naechster.farbe + '33'"'
+        + ' onmouseout="this.style.background='' + naechster.farbe + '22'">'
+        + naechster.icon + ' ' + naechster.name + ' →'
+        + '</a>';
+    }
+  }
+  
+  // Zurück-zu-Fall Button (für Werkzeuge)
+  var zurueckBtn = '';
+  if (istWerkzeug && WERKZEUGE[currentPage] && WERKZEUGE[currentPage].zurück) {
+    zurueckBtn = '<a href="' + akteLink + '" style="'
+      + 'display:inline-flex;align-items:center;gap:5px;padding:4px 10px;'
+      + 'background:rgba(79,142,247,.1);border:1px solid rgba(79,142,247,.25);'
+      + 'border-radius:999px;font-size:11px;font-weight:600;color:#4f8ef7;'
+      + 'text-decoration:none;white-space:nowrap;'
+      + '">← Zurück zu ' + az + '</a>';
+  }
+  
+  // Akte-Link in AZ
+  var azHtml = '<a href="' + akteLink + '" style="'
+    + 'font-weight:800;font-size:13px;color:var(--text, #e2e8f0);'
+    + 'text-decoration:none;letter-spacing:.02em;'
+    + 'border-bottom:1px solid rgba(255,255,255,.2);'
+    + '" title="Akte öffnen">' + az + '</a>';
+  
+  // Schrittanzeige
+  var schrittHtml = '';
+  if (aktuellerSchritt && !istWerkzeug) {
+    schrittHtml = '<span style="font-size:10px;color:rgba(255,255,255,.4);white-space:nowrap;">'
+      + 'Schritt ' + aktuellerSchritt + ' von 7'
+      + '</span>';
+    
+    // Mini-Progress (7 Punkte)
+    var dots = '';
+    for (var s = 1; s <= 7; s++) {
+      var dotColor = s < aktuellerSchritt
+        ? '#10b981'
+        : s === aktuellerSchritt
+          ? '#4f8ef7'
+          : 'rgba(255,255,255,.15)';
+      dots += '<span style="width:6px;height:6px;border-radius:50%;background:' + dotColor
+            + ';display:inline-block;' + (s < 7 ? 'margin-right:3px;' : '') + '"></span>';
+    }
+    schrittHtml += '<span style="display:inline-flex;align-items:center;margin-left:6px;">' + dots + '</span>';
+  }
+  
+  // Banner HTML
+  var html = '<div id="prova-fall-kontext-banner" style="'
+    + 'display:flex;align-items:center;gap:10px;flex-wrap:wrap;'
+    + 'padding:7px 16px 7px 20px;'
+    + 'background:linear-gradient(90deg,rgba(79,142,247,.12) 0%,rgba(10,15,28,.0) 100%);'
+    + 'border-bottom:1px solid rgba(79,142,247,.15);'
+    + 'font-family:inherit;position:relative;z-index:10;'
+    + 'min-height:36px;'
+    + '">'
+    
+    // AZ + Schadenart
+    + '<div style="display:flex;align-items:center;gap:8px;flex:1;min-width:0;">'
+    + '<span style="width:8px;height:8px;border-radius:50%;background:' + saFarbe + ';flex-shrink:0;"></span>'
+    + azHtml;
+    
+  if (sa) {
+    html += '<span style="font-size:11px;padding:2px 8px;border-radius:999px;background:' + saFarbe + '18;color:' + saFarbe + ';font-weight:600;white-space:nowrap;">' + sa + '</span>';
+  }
+  
+  if (adr && adr.length > 2 && adr !== '—') {
+    html += '<span style="font-size:11px;color:rgba(255,255,255,.35);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:200px;" title="' + adr + '">'
+          + adr.split(',')[0] // nur Straße, kürzer
+          + '</span>';
+  }
+  
+  html += '</div>'; // end flex-1
+  
+  // Mitte: Schritt-Anzeige
+  if (schrittHtml) {
+    html += '<div style="display:flex;align-items:center;gap:4px;">' + schrittHtml + '</div>';
+  }
+  
+  // Rechts: Werkzeug-Zurück oder Nächster-Schritt
+  if (zurueckBtn) {
+    html += '<div>' + zurueckBtn + '</div>';
+  }
+  if (naechsterBtn) {
+    html += '<div>' + naechsterBtn + '</div>';
+  }
+  
+  html += '</div>'; // end banner
+  
+  return html;
+}
+
+// ── BANNER EINFÜGEN ─────────────────────────────────────────────────────
+function einfuegenBanner() {
+  // Nicht auf Dashboard, Zentrale, Login, Onboarding
+  var ausnahmen = ['dashboard.html', 'archiv.html', 'app-login.html', 
+                   'onboarding.html', 'onboarding-schnellstart.html',
+                   'index.html', 'impressum.html', 'datenschutz.html',
+                   'agb.html', 'avv.html', 'termine.html', 'kontakte.html',
+                   'einstellungen.html'];
+  
+  if (ausnahmen.indexOf(currentPage) >= 0) return;
+  
+  var kontext = ladeFallKontext();
+  if (!kontext) return; // Kein aktiver Fall — kein Banner
+  
+  var aktuellerSchritt = getCurrentSchritt();
+  var istWerkzeug = !!WERKZEUGE[currentPage];
+  
+  var bannerHtml = baueBanner(kontext, aktuellerSchritt, istWerkzeug);
+  
+  // Einfüge-Strategie: nach <header class="topbar"> oder nach <div class="topbar">
+  // Suche den richtigen Einfügepunkt
+  var insertAfter = null;
+  
+  // Strategie 1: Nach topbar Header
+  var topbar = document.querySelector('header.topbar, div.topbar, .topbar');
+  if (topbar) {
+    insertAfter = topbar;
+  }
+  
+  // Strategie 2: Als erstes Child von main oder page-content
+  if (!insertAfter) {
+    insertAfter = document.querySelector('main, .page-content, .main, .page');
+    if (insertAfter) {
+      insertAfter.insertAdjacentHTML('afterbegin', bannerHtml);
+      return;
+    }
+  }
+  
+  if (insertAfter) {
+    insertAfter.insertAdjacentHTML('afterend', bannerHtml);
+  }
+}
+
+// ── INIT ────────────────────────────────────────────────────────────────
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', einfuegenBanner);
+} else {
+  einfuegenBanner();
+}
+
+// ── PUBLIC API ──────────────────────────────────────────────────────────
+window.PROVA_KONTEXT = {
+  // Erlaubt anderen Scripts den Fall-Kontext zu setzen
+  setFall: function(az, schadenart, adresse, recordId) {
+    if (az) localStorage.setItem('prova_letztes_az', az);
+    if (schadenart) localStorage.setItem('prova_schadenart', schadenart);
+    if (adresse) localStorage.setItem('prova_adresse', adresse);
+    if (recordId) sessionStorage.setItem('prova_record_id', recordId);
+    // Banner aktualisieren
+    var existing = document.getElementById('prova-fall-kontext-banner');
+    if (existing) existing.remove();
+    einfuegenBanner();
+  },
+  // Fall-Kontext löschen (nach Archivierung)
+  clearFall: function() {
+    localStorage.removeItem('prova_letztes_az');
+    localStorage.removeItem('prova_schadenart');
+    localStorage.removeItem('prova_adresse');
+    sessionStorage.removeItem('prova_record_id');
+    sessionStorage.removeItem('prova_current_az');
+    sessionStorage.removeItem('prova_current_schadenart');
+    var existing = document.getElementById('prova-fall-kontext-banner');
+    if (existing) existing.remove();
+  }
+};
+
+})();
+
+</script>
 </body>
 </html>

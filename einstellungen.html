@@ -649,7 +649,7 @@ input,select,textarea{font-size:max(16px,1em);}
             <div class="card-body">
               <div id="paket-anzeige" style="padding:16px;border-radius:var(--r-md);margin-bottom:16px;"></div>
               <div class="paket-grid" id="paket-grid"></div>
-              <a href="mailto:kontakt@prova-systems.de" class="btn btn-primary" style="display:block;text-align:center;">⬆ Upgrade anfragen</a>
+              <a href="/cdn-cgi/l/email-protection#c3a8acadb7a2a8b783b3b1acb5a2eeb0bab0b7a6aeb0eda7a6" class="btn btn-primary" style="display:block;text-align:center;">⬆ Upgrade anfragen</a>
             </div>
           </div>
         </div>
@@ -683,6 +683,8 @@ input,select,textarea{font-size:max(16px,1em);}
                 </div>
               </div>
                 <div class="form-hint">PROVA sendet JSON bei jeder Freigabe. Kompatibel mit Zapier, Make, n8n.</div>
+              <div id="payload-vorschau" style="display:none;margin-top:10px;background:rgba(0,0,0,.25);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:12px;font-size:11px;font-family:monospace;color:rgba(226,232,240,.7);white-space:pre;overflow-x:auto;max-height:220px;overflow-y:auto;"></div>
+              <button onclick="togglePayloadVorschau()" style="margin-top:6px;padding:4px 10px;background:rgba(79,142,247,.1);color:#4f8ef7;border:1px solid rgba(79,142,247,.2);border-radius:6px;font-size:11px;cursor:pointer;">{ } Payload-Vorschau</button>
                 <div id="webhook-test-result" style="display:none;margin-top:8px;padding:8px 10px;border-radius:var(--r-md);font-size:12px;"></div>
               </div>
               <div class="form-group">
@@ -731,7 +733,7 @@ input,select,textarea{font-size:max(16px,1em);}
 <!-- Toast -->
 <div class="toast-prova" id="einst-toast"></div>
 
-</script><script>
+</script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 (function(){
 'use strict';
 
@@ -1127,6 +1129,18 @@ window.ladeWebhookLog = function(){
 
 /* ── INIT ── */
 document.addEventListener('DOMContentLoaded', function(){
+  // Signatur laden + Vorschau zeigen
+  var _savedSig = localStorage.getItem('prova_sv_signatur');
+  if(_savedSig){
+    var _si=document.getElementById('sig-preview');
+    var _sw=document.getElementById('sig-preview-wrap');
+    var _ss=document.getElementById('sig-status');
+    var _sl=document.getElementById('btn-sig-loeschen');
+    if(_si)_si.src=_savedSig;
+    if(_sw)_sw.style.display='block';
+    if(_ss)_ss.style.display='block';
+    if(_sl)_sl.style.display='inline-flex';
+  }
   // Profil laden
   var pfn=localStorage.getItem('prova_sv_vorname')||'';
   var pln=localStorage.getItem('prova_sv_nachname')||'';
@@ -1145,9 +1159,41 @@ document.addEventListener('DOMContentLoaded', function(){
   if(firstSec){firstSec.classList.add('active');}
   // Webhook-Log laden
   if(typeof window.ladeWebhookLog==='function') window.ladeWebhookLog();
+  // Enterprise-Einstellungen laden
+  var _whu = localStorage.getItem('prova_outbound_webhook') || '';
+  if(_whu) { var _el = document.getElementById('e-outbound-webhook'); if(_el) _el.value = _whu; }
+  var _wln = localStorage.getItem('prova_wl_name') || '';
+  if(_wln) { var _en = document.getElementById('e-wl-name'); if(_en) _en.value = _wln; }
+  var _wlc = localStorage.getItem('prova_primary_color') || '#4f8ef7';
+  var _ec = document.getElementById('e-primary-color'); if(_ec) _ec.value = _wlc;
 });
 
 })();
 </script>
+<script>
+/* PROVA Outbound-Webhook Payload-Vorschau */
+function togglePayloadVorschau() {
+  var box = document.getElementById('payload-vorschau');
+  if (!box) return;
+  if (box.style.display === 'none' || !box.style.display) {
+    var beispiel = {
+      prova_event:       'gutachten.freigegeben',
+      prova_version:     '1.0',
+      timestamp:         new Date().toISOString(),
+      fall_id:           'recXXXXXXXXXXXXXXX',
+      aktenzeichen:      'SCH-2026-001',
+      schadensart:       'Schimmelbefall',
+      auftraggeber_typ:  'Versicherung',
+      auftraggeber_name: 'Allianz Versicherung AG',
+      objekt: {
+        strasse: 'Musterstrasse 42',
+        plz:     '50667',
+        ort:     'Koeln'
+      },
+      sv_email:       localStorage.getItem('prova_sv_email') || 'sv@buero.de',
+      pdf_url:        'https://cdn.pdfmonkey.io/...',
+      gutachten_typ:  'gericht'
+    };
+    box.te
 </body>
 </html>
