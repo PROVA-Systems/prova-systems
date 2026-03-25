@@ -553,7 +553,7 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape')closeDrawer(
                   <div class="field-error" id="e-schadenart">Bitte Schadensart wählen</div>
                 </div>
                 <div class="form-row">
-                  <div class="form-group"><label class="form-label">Schadensnummer</label><input type="text" class="form-input" id="f-schadensnummer" placeholder="S-2026-00124"></div>
+                  <div class="form-group"><label class="form-label">Aktenzeichen</label><input type="text" class="form-input" id="f-schadensnummer" placeholder="SCH-2026-001"></div>
                   <div class="form-group"><label class="form-label">Schadensdatum</label><input type="date" class="form-input" id="f-schadensdatum"></div>
                 </div>
                 <div class="form-group">
@@ -1756,16 +1756,46 @@ window.toggleRecord = async function() {
 };
 
 async function starteAufnahme() {
-  // Consent-Check beim ersten Mal
+  // 1. Browser-Kompatibilitätsprüfung
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) {
+    showToast('Spracherkennung erfordert Chrome oder Edge. Bitte Browser wechseln.', 'error');
+    // Zeige dauerhaften Hinweis
+    var hint = document.getElementById('diktat-browser-hint');
+    if(hint) hint.style.display='block';
+    return;
+  }
+  // 2. HTTPS-Check
+  if(location.protocol !== 'https:' && location.hostname !== 'localhost') {
+    showToast('Diktat benötigt eine sichere HTTPS-Verbindung.', 'error');
+    return;
+  }
+  // 3. Consent-Check
   if(!whisperConsentOk()) {
     zeigeWhisperConsent(function() { starteAufnahme(); });
     return;
   }
+  // 4. Mikrofon-Permission prüfen
   var aufnahmeStream = null;
   try {
+    if(navigator.permissions) {
+      try {
+        var perm = await navigator.permissions.query({name:'microphone'});
+        if(perm.state === 'denied') {
+          showToast('Mikrofon-Zugriff verweigert. Bitte in den Browser-Einstellungen freigeben (🔒 in der Adressleiste).', 'error');
+          return;
+        }
+      } catch(e) {} // permissions API nicht verfügbar — ignorieren
+    }
     aufnahmeStream = await navigator.mediaDevices.getUserMedia({ audio: true });
   } catch(err) {
-    showToast('Bitte Mikrofon-Zugriff erlauben.', 'error');
+    if(err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+      showToast('Mikrofon-Zugriff verweigert. Klicken Sie auf das 🔒-Symbol in der Adressleiste und erlauben Sie das Mikrofon.', 'error');
+    } else if(err.name === 'NotFoundError') {
+      showToast('Kein Mikrofon gefunden. Bitte Mikrofon anschließen.', 'error');
+    } else {
+      showToast('Mikrofon-Fehler: ' + err.message, 'error');
+    }
     return;
   }
   // MediaRecorder parallel starten (für Whisper)
@@ -1782,9 +1812,7 @@ async function starteAufnahme() {
     $('#recTime').textContent = String(Math.floor(recSecs/60)).padStart(2,'0')+':'+String(recSecs%60).padStart(2,'0');
   }, 1000);
 
-  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SR) { showToast('Spracherkennung nur in Chrome/Edge verfügbar.', 'warning'); return; }
-  recognition = new SR();
+  recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
   recognition.continuous = true; recognition.interimResults = true; recognition.lang = 'de-DE';
 
   recognition.onresult = e => {
@@ -3321,6 +3349,56 @@ function starteAufnahmeLimit() {
   }, 3 * 60 * 1000);
 }
 
+</script>
+<script>
+/* ── AKTENZEICHEN AUTO-GENERATOR ── */
+(function(){
+  var KUERZEL = {
+    'Schimmelbefall': 'SCH',
+    'Wasserschaden':  'WAS',
+    'Sturmschaden':   'STU',
+    'Brandschaden':   'BRA',
+    'Einbruchschaden':'EIN',
+    'Sonstiger Schaden':'SON'
+  };
+
+  function generiereAZ(schadenart) {
+    var kuerzel = KUERZEL[schadenart] || 'SON';
+    var jahr = new Date().getFullYear();
+    // Laufnummer aus localStorage
+    var counterKey = 'prova_az_counter_' + jahr;
+    var counter = parseInt(localStorage.getItem(counterKey) || '0') + 1;
+    localStorage.setItem(counterKey, counter);
+    var nr = String(counter).padStart(3, '0');
+    return kuerzel + '-' + jahr + '-' + nr;
+  }
+
+  function aktualisiereAZ() {
+    var sel = document.getElementById('f-schadenart');
+    var azField = document.getElementById('f-schadensnummer');
+    if (!sel || !azField) return;
+    var schadenart = sel.value;
+    if (!schadenart) return;
+    // Nur generieren wenn Feld leer oder altes Format (PRO-V etc.)
+    var current = azField.value.trim();
+    var hasOldFormat = /^[A-Z]+-[A-Z]+-\d{4}/.test(current);
+    if (!current || hasOldFormat) {
+      azField.value = generiereAZ(schadenart);
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    var sel = document.getElementById('f-schadenart');
+    if (sel) {
+      sel.addEventListener('change', aktualisiereAZ);
+      // Beim Laden sofort generieren falls Schadenart bereits gewählt
+      if (sel.value) aktualisiereAZ();
+    }
+  });
+
+  window.generiereAZ = generiereAZ;
+  window.aktualisiereAZ = aktualisiereAZ;
+})();
 </script>
 </body>
 </html>

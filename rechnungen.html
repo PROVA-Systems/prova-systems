@@ -257,7 +257,7 @@ a{text-decoration:none;color:inherit;}button,input,select,textarea{font-family:i
       <div class="breadcrumb"><span>PROVA</span><span style="color:var(--text3)">›</span><strong>Rechnungen</strong></div>
     </div>
     <div class="topbar-right">
-      <span class="topbar-paket" id="topbar-paket-badge">Starter</span>
+      <span class="topbar-paket" id="topbar-paket-badge"></span>
       <a href="einstellungen.html"><button class="topbar-btn">⚙</button></a>
     </div>
   </header>
@@ -393,7 +393,10 @@ a{text-decoration:none;color:inherit;}button,input,select,textarea{font-family:i
               <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);text-align:right;">G-Preis €</div>
               <div></div>
             </div>
-            <div id="positionen-container"></div>
+            <div id="jveg-position-tipp" style="display:none;padding:8px 12px;background:rgba(74,144,217,.08);border:1px solid rgba(74,144,217,.2);border-radius:8px;font-size:.78rem;color:rgba(226,232,240,.7);margin-bottom:10px;">
+    💡 Stunden aus dem <a href="jveg.html" style="color:#7EC8FF;text-decoration:underline;">JVEG-Rechner</a> übernehmen → Einzelpreis eintragen
+  </div>
+  <div id="positionen-container"></div>
             <div class="pos-summe">
               <span>Netto gesamt</span>
               <strong id="pos-netto-gesamt" style="font-family:var(--font-mono);">0,00 €</strong>
@@ -594,7 +597,11 @@ window.onTypChange=function(){
   document.getElementById('form-titel').textContent={JVEG:'JVEG-Rechnung',Pauschal:'Pauschalrechnung',Stunde:'Stundenrechnung',Kurz:'Kurzrechnung',Gutschrift:'Gutschrift'}[typ]||'Neue Rechnung';
   // Standardposition je Typ
   if(document.querySelectorAll('#positionen-container .pos-row').length===0){
-    if(typ==='JVEG')addPosition('Gutachterhonorar §9 JVEG',1,0);
+    if(typ==='JVEG'){addPosition('Gutachterhonorar §9 JVEG',1,0);
+    // Tipp einblenden
+    var tip=document.getElementById('jveg-position-tipp');
+    if(tip)tip.style.display='block';
+  }
     else if(typ==='Pauschal')addPosition('Gutachterhonorar (Pauschal)',1,0);
     else if(typ==='Stunde')addPosition('Sachverständigenleistung',1,95);
     else if(typ==='Kurz')addPosition('Kurzgutachten',1,0);
@@ -933,4 +940,24 @@ async function supSendModal(){
         betreff:b,nachricht:n,
         sv_email:localStorage.getItem('prova_sv_email')||'',
         paket:localStorage.getItem('prova_paket')||'Starter',
-        sei
+        seite:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({
+          betreff:b,nachricht:n,
+          sv_email:localStorage.getItem('prova_sv_email')||'',
+          paket:localStorage.getItem('prova_paket')||'Starter',
+          seite:window.location.pathname
+        })
+      });
+    }catch(e){}
+    zeigToast('Nachricht gesendet — wir melden uns schnellstmöglich!','success');
+    if(ta)ta.value='';
+    if(modal)modal.style.display='none';
+  }catch(e){
+    zeigToast('Fehler. Bitte E-Mail an kontakt@prova-systems.de','error');
+  }
+};
+})();
+</script>
+</body>
+</html>

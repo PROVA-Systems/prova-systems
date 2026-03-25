@@ -290,7 +290,7 @@ input,select,textarea{font-size:max(16px,1em);}
       <div class="breadcrumb"><span>PROVA</span><span style="color:var(--text3)">›</span><strong>Briefe</strong></div>
     </div>
     <div class="topbar-right">
-      <span class="topbar-paket" id="topbar-paket-badge">Starter</span>
+      <span class="topbar-paket" id="topbar-paket-badge"></span>
       <a href="einstellungen.html"><button class="topbar-btn">⚙</button></a>
     </div>
   </header>
@@ -465,7 +465,8 @@ input,select,textarea{font-size:max(16px,1em);}
           </button>
         </div>
         <div id="ki-status" style="display:none;"></div>
-        <div id="ki-result" style="display:none;background:rgba(99,102,241,.06);border:1px solid rgba(99,102,241,.2);border-radius:var(--r-md);padding:14px;font-size:13px;color:var(--text2);line-height:1.6;margin-top:8px;"></div>
+        <div id="ki-result" style="display:none;margin-top:8px;"></div>
+      <textarea id="ki-edit-area" style="display:none;width:100%;min-height:200px;background:rgba(255,255,255,.05);border:1px solid rgba(99,102,241,.3);border-radius:var(--r-md);padding:12px;font-size:13px;color:var(--text1);font-family:var(--font-body);line-height:1.7;resize:vertical;margin-top:8px;" placeholder="KI-Text erscheint hier zum Bearbeiten…"></textarea>
       </div>
     </div>
 
@@ -832,55 +833,75 @@ function renderVorschau(){
 
 /* ── KI-BRIEFTEXT (Pro) ── */
 window.generiereKIText=async function(){
-  if(!isPro){zeigToast('KI-Brieftext nur im Pro-Paket','err');return;}
+  if(!isPro){zeigToast('KI-Brieftext nur im Pro-Paket verfügbar.','err');return;}
   var status=document.getElementById('ki-status');
   var result=document.getElementById('ki-result');
   var btn=document.getElementById('ki-btn');
+  var editArea=document.getElementById('ki-edit-area');
+
   status.style.display='block';
   status.innerHTML='<div class="ki-generating"><div class="ki-dot"></div>KI generiert Brieftext…</div>';
-  result.style.display='none';
+  if(result)result.style.display='none';
   btn.disabled=true;
-  var payload={
-    ki_generate:'true',
-    template_id:activeTemplate?activeTemplate.id:'',
-    aktenzeichen:alleFelder.az||'',
-    schadenart:alleFelder.schadenart||'',
-    auftraggeber_name:alleFelder.ag_name||'',
-    sv_name:alleFelder.sv_name||'',
-    sv_email:alleFelder.sv_email||'',
-    strasse:alleFelder.adresse||'',
-    schadensdatum:alleFelder.datum||'',
-    empfaenger_email:alleFelder.ag_email||'',
-    betreff:alleFelder.betreff||'',
-    airtable_id:selectedFall?selectedFall.id:''
-  };
+
+  // Vorlage-Kontext aufbauen
+  var templateName = activeTemplate ? (activeTemplate.name||activeTemplate.id) : 'Allgemein';
+  var systemPrompt = 'Du bist ein professioneller Assistent für öffentlich bestellte Sachverständige für Gebäudeschäden. Schreibe präzise Brieftext auf Deutsch. Nur der Fließtext — kein Briefkopf, keine Grußformel, keine Markdown-Formatierung.';
+  var userPrompt = 'Erstelle den Brieftext für Vorlage: '+templateName+'\n'+
+    'Aktenzeichen: '+(alleFelder.az||'(nicht angegeben)')+'\n'+
+    'Auftraggeber: '+(alleFelder.ag_name||'(nicht angegeben)')+'\n'+
+    'Objekt: '+(alleFelder.adresse||'(nicht angegeben)')+'\n'+
+    'Schadensart: '+(alleFelder.schadenart||'(nicht angegeben)')+'\n'+
+    'Schadensdatum: '+(alleFelder.datum||'(nicht angegeben)')+'\n'+
+    'Sachverständiger: '+(alleFelder.sv_name||'(nicht angegeben)');
+
   try{
-    var res=await fetch(WEBHOOK_S9,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
-    if(res.ok){
-      status.style.display='none';
-      result.style.display='block';
-      result.textContent='✅ KI-Brieftext wurde generiert und wird an '+alleFelder.ag_email+' versendet.';
-      zeigToast('KI-Text generiert und gesendet ✅');
-    }else{
-      status.innerHTML='<div style="color:var(--danger);font-size:12px;">Fehler: HTTP '+res.status+'</div>';
+    var res=await fetch('/.netlify/functions/ki-proxy',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'gpt-4o-mini',
+        max_tokens:1000,
+        messages:[
+          {role:'system',content:systemPrompt},
+          {role:'user',content:userPrompt}
+        ]
+      })
+    });
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    var data=await res.json();
+    var text='';
+    if(data.content&&data.content[0]&&data.content[0].text){
+      text=data.content[0].text;
+    } else if(data.choices&&data.choices[0]){
+      text=data.choices[0].message.content||'';
     }
+    if(!text) throw new Error('Kein Text erhalten');
+
+    status.style.display='none';
+    // Text in editierbares Feld einfügen
+    if(editArea){
+      editArea.style.display='block';
+      editArea.value=text;
+    }
+    if(result){
+      result.style.display='block';
+      result.innerHTML='<div style="font-size:11px;color:var(--text3);margin-bottom:6px;">✅ KI-Brieftext generiert — bitte prüfen und bearbeiten:</div>';
+    }
+    zeigToast('KI-Brieftext bereit — bitte prüfen ✅','success');
   }catch(e){
-    status.innerHTML='<div style="color:var(--danger);font-size:12px;">Netzwerkfehler — bitte erneut versuchen</div>';
+    status.innerHTML='<div style="color:var(--danger);font-size:12px;">Fehler: '+e.message+'</div>';
+    zeigToast('KI-Fehler: '+e.message,'err');
   }
   btn.disabled=false;
 };
 
-/* ── SENDEN-ZUSAMMENFASSUNG ── */
-function renderSendeSummary(){
-  fuelleFelderAus();
-  document.getElementById('empfaenger-anzeige').textContent=alleFelder.ag_email||'(keine E-Mail angegeben)';
-  var summ='<strong>Vorlage:</strong> '+(activeTemplate?activeTemplate.name:'—')+'<br>'
-    +'<strong>Empfänger:</strong> '+(alleFelder.ag_name||'—')+(alleFelder.ag_email?' &lt;'+esc(alleFelder.ag_email)+'&gt;':'')+'<br>'
-    +'<strong>Aktenzeichen:</strong> '+(alleFelder.az||'—')+'<br>'
-    +'<strong>Schadenort:</strong> '+(alleFelder.adresse||'—')+'<br>'
-    +'<strong>Betreff:</strong> '+(alleFelder.betreff||'—');
+/* ── BRIEF-ZUSAMMENFASSUNG RENDERN ── */
+window.renderSendSummary=function(){
+  var summ='<b>Empfänger:</b> '+(alleFelder.ag_name||'—')+'<br><b>Betreff:</b> '+(alleFelder.betreff||'—');
   document.getElementById('send-summary').innerHTML=summ;
-}
+};
+
 
 /* ── BRIEF SENDEN ── */
 window.sendeBrief=async function(typ){
@@ -906,6 +927,8 @@ window.sendeBrief=async function(typ){
       return;
     }
     // Via S9 senden
+    var editArea=document.getElementById('ki-edit-area');
+    var kiText=editArea&&editArea.style.display!=='none'?editArea.value.trim():'';
     var payload={
       template_id:activeTemplate?activeTemplate.id:'',
       aktenzeichen:alleFelder.az||'',
@@ -917,7 +940,8 @@ window.sendeBrief=async function(typ){
       empfaenger_email:alleFelder.ag_email||'',
       betreff:alleFelder.betreff||'',
       airtable_id:selectedFall?selectedFall.id:'',
-      ki_generate:'false'
+      ki_generate:'false',
+      ki_brieftext:kiText
     };
     result.innerHTML='<div style="padding:10px;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);border-radius:var(--r-md);font-size:12px;color:var(--warning);">⏳ Wird gesendet…</div>';
     try{
@@ -1010,4 +1034,24 @@ async function supSendModal(){
         betreff:b,nachricht:n,
         sv_email:localStorage.getItem('prova_sv_email')||'',
         paket:localStorage.getItem('prova_paket')||'Starter',
-        sei
+        seite:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({
+          betreff:b,nachricht:n,
+          sv_email:localStorage.getItem('prova_sv_email')||'',
+          paket:localStorage.getItem('prova_paket')||'Starter',
+          seite:window.location.pathname
+        })
+      });
+    }catch(e){}
+    zeigToast('Nachricht gesendet — wir melden uns schnellstmöglich!','success');
+    if(ta)ta.value='';
+    if(modal)modal.style.display='none';
+  }catch(e){
+    zeigToast('Fehler. Bitte E-Mail an kontakt@prova-systems.de','error');
+  }
+};
+})();
+</script>
+</body>
+</html>

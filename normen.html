@@ -596,7 +596,7 @@ function insertInStellung(normNum) {
   } else {
     // Direkt in Clipboard + hinweis
     navigator.clipboard.writeText(text).catch(()=>{});
-    showToast('Norm kopiert — in Stellungnahme einfügen ✅');
+    showToast('Norm kopiert ✅ — in der Stellungnahme (Schritt 4) einfügen');
   }
 }
 
@@ -690,4 +690,35 @@ async function supSendModal(){
         betreff:b,nachricht:n,
         sv_email:localStorage.getItem('prova_sv_email')||'',
         paket:localStorage.getItem('prova_paket')||'Starter',
-        sei
+        seite:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({
+          betreff:b,nachricht:n,
+          sv_email:localStorage.getItem('prova_sv_email')||'',
+          paket:localStorage.getItem('prova_paket')||'Starter',
+          seite:window.location.pathname
+        })
+      });
+    }catch(e){}
+    zeigToast('Nachricht gesendet — wir melden uns schnellstmöglich!','success');
+    if(ta)ta.value='';
+    if(modal)modal.style.display='none';
+  }catch(e){
+    zeigToast('Fehler. Bitte E-Mail an kontakt@prova-systems.de','error');
+  }
+};
+})();
+</script>
+<script>
+(function(){
+  var path=window.location.pathname.split('/').pop()||'dashboard';
+  document.addEventListener('DOMContentLoaded',function(){
+    document.querySelectorAll('[data-nav]').forEach(function(el){el.classList.remove('active');});
+    var map={'normen':'nav-normen','textbausteine':'nav-textbausteine','positionen':'nav-positionen'};
+    var id=map[path];
+    if(id){var el=document.getElementById(id);if(el)el.classList.add('active');}
+  });
+})();
+</script>
+</body>
+</html>

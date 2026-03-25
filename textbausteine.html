@@ -299,7 +299,7 @@ a{text-decoration:none;color:inherit;}
   </div>
   <div class="topbar-right">
     <div class="notif-wrap"><button class="topbar-btn" title="Benachrichtigungen">🔔</button></div>
-    <span class="topbar-paket" id="topbar-paket-badge">Starter</span>
+    <span class="topbar-paket" id="topbar-paket-badge"></span>
     <a href="einstellungen.html"><button class="topbar-btn">⚙</button></a>
   </div>
 </header>
@@ -925,5 +925,44 @@ async function supSendModal(){
 }
 </script>
 
+<script>
+/* ── NAV ACTIVE STATE FIX ── */
+(function(){
+  var path = window.location.pathname.replace(/\/$/, '').split('/').pop() || 'dashboard';
+  var navMap = {
+    'dashboard':      'nav-zentrale',
+    'archiv':         'nav-faelle',
+    'termine':        'nav-kalender',
+    'rechnungen':     'nav-rechnungen',
+    'briefvorlagen':  'nav-briefe',
+    'jveg':           'nav-jveg',
+    'kostenermittlung':'nav-kosten',
+    'positionen':     'nav-positionen',
+    'textbausteine':  'nav-textbausteine',
+    'normen':         'nav-normen',
+    'kontakte':       'nav-kontakte',
+    'einstellungen':  'nav-einstellungen',
+  };
+  document.addEventListener('DOMContentLoaded', function(){
+    // Alle aktiven Klassen entfernen
+    document.querySelectorAll('.sidebar-link, .nav-link, [data-nav]').forEach(function(el){
+      el.classList.remove('active');
+    });
+    // Korrekte Seite markieren
+    var activeId = navMap[path];
+    if(activeId){
+      var el = document.getElementById(activeId);
+      if(el) el.classList.add('active');
+    }
+    // Fallback: per href matchen
+    document.querySelectorAll('a[href]').forEach(function(a){
+      var href = a.getAttribute('href');
+      if(href && href.indexOf(path) !== -1 && path.length > 2){
+        a.classList.add('active');
+      }
+    });
+  });
+})();
+</script>
 </body>
 </html>

@@ -665,7 +665,10 @@ function insertPos(nr){
     showToast('Position übertragen ✅');
     setTimeout(()=>window.close(),700);
   } else {
-    showToast('Position gespeichert — in Kostenermittlung verfügbar ✅');
+    showToast('Position gespeichert ✅ — <a href="kostenermittlung.html" style="color:#7EC8FF;text-decoration:underline;">Zur Kostenermittlung →</a>');
+    // Kurz-Link Button anzeigen
+    var linkBtn = document.getElementById('goto-kosten-btn');
+    if(linkBtn) linkBtn.style.display='inline-flex';
   }
 }
 
@@ -756,4 +759,35 @@ async function supSendModal(){
         betreff:b,nachricht:n,
         sv_email:localStorage.getItem('prova_sv_email')||'',
         paket:localStorage.getItem('prova_paket')||'Starter',
-        se
+        sete:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({
+          betreff:b,nachricht:n,
+          sv_email:localStorage.getItem('prova_sv_email')||'',
+          paket:localStorage.getItem('prova_paket')||'Starter',
+          seite:window.location.pathname
+        })
+      });
+    }catch(e){}
+    zeigToast('Nachricht gesendet — wir melden uns schnellstmöglich!','success');
+    if(ta)ta.value='';
+    if(modal)modal.style.display='none';
+  }catch(e){
+    zeigToast('Fehler. Bitte E-Mail an kontakt@prova-systems.de','error');
+  }
+};
+})();
+</script>
+<script>
+(function(){
+  var path=window.location.pathname.split('/').pop()||'dashboard';
+  document.addEventListener('DOMContentLoaded',function(){
+    document.querySelectorAll('[data-nav]').forEach(function(el){el.classList.remove('active');});
+    var map={'normen':'nav-normen','textbausteine':'nav-textbausteine','positionen':'nav-positionen'};
+    var id=map[path];
+    if(id){var el=document.getElementById(id);if(el)el.classList.add('active');}
+  });
+})();
+</script>
+</body>
+</html>

@@ -282,7 +282,7 @@ textarea.form-input{min-height:80px;resize:vertical;}
       <div class="breadcrumb"><span>PROVA</span><span style="color:var(--text3)">›</span><strong>Fälle</strong></div>
     </div>
     <div class="topbar-right">
-      <span class="topbar-paket" id="topbar-paket-badge">Starter</span>
+      <span class="topbar-paket" id="topbar-paket-badge"></span>
       <a href="einstellungen.html"><button class="topbar-btn">⚙</button></a>
     </div>
   </header>
@@ -446,18 +446,24 @@ var alleRecords=[];
 async function ladeFaelle(){
   var cacheKey='prova_archiv_cache_v2';
   var cacheMs=5*60*1000;
+  var isAdminMode = localStorage.getItem('prova_is_admin')==='true';
   try{
     var raw=localStorage.getItem(cacheKey);
-    if(raw){var c=JSON.parse(raw);if(Date.now()-c.time<cacheMs&&c.data&&c.data.length>0){alleRecords=c.data;filterUndRender();return;}}
+    // Admin: kein Cache — immer frisch laden für vollständige Sicht
+    if(!isAdminMode && raw){var c=JSON.parse(raw);if(Date.now()-c.time<cacheMs&&c.data&&c.data.length>0){alleRecords=c.data;filterUndRender();return;}}
   }catch(e){}
 
   // Loading state
   zeigLadeAnimation();
 
   try{
-    var filter=svEmail
-    ?'OR(AND(NOT({Status}=""),{sv_email}="'+svEmail+'"),AND(NOT({Status}=""),{sv_email}=""))'
-    :'NOT({Status}="")';
+    var isAdmin = localStorage.getItem('prova_is_admin')==='true'
+    || (svEmail.toLowerCase()==='admin@prova-systems.de');
+  var filter = isAdmin
+    ? 'TRUE()'
+    : svEmail
+      ? 'OR({sv_email}="'+svEmail+'",{sv_email}="")'
+      : 'TRUE()';
     var path='/v0/'+AT_BASE+'/'+AT_FAELLE+'?filterByFormula='+encodeURIComponent(filter)+'&maxRecords=100&sort[0][field]=Timestamp&sort[0][direction]=desc';
     var res=await fetch('/.netlify/functions/airtable',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({method:'GET',path:path})});
     if(!res.ok)throw new Error('HTTP '+res.status);
