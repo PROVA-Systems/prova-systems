@@ -833,16 +833,21 @@ function zeigeHint(hintElId, textElId, text) {
   const hint = getHint(text);
   if(!hint) {
     bubble.classList.remove('show');
+    bubble.removeAttribute('data-last-hint');
     return;
   }
+  // Nur neu animieren wenn sich der Hint-Typ geändert hat
+  const lastHint = bubble.getAttribute('data-last-hint');
+  if(lastHint === hint.text) return; // gleicher Verstoß — nicht neu animieren
+  bubble.setAttribute('data-last-hint', hint.text);
   // Text setzen
   textEl.innerHTML = hint.text + '<br>' +
     hint.fixes.map(f =>
       `<span class="ki-hint-fix" onclick="applyFix(this,'${f}')" title="Klicken zum Einfügen">→ ${f}</span>`
     ).join('');
-  // Neu animieren
+  // Nur bei neuem Verstoß animieren
   bubble.classList.remove('show');
-  void bubble.offsetWidth; // reflow für Animation
+  void bubble.offsetWidth;
   bubble.classList.add('show');
 }
 
@@ -894,10 +899,20 @@ function onInputB() {
   // KJ2-Check nur auf Kausalaussage (Feld 2)
   runKjCheck(b2, 'kjCheckB');
 
-  // Hüpfende Denkanstöße — nur für aktives Feld
-  zeigeHint('hintB1', 'hintB1text', b1);
-  zeigeHint('hintB2', 'hintB2text', b2);
-  zeigeHint('hintB3', 'hintB3text', b3);
+  // Hüpfende Denkanstöße — nur für aktives Feld, andere ausblenden
+  if(aktivFeld === 'B1') {
+    zeigeHint('hintB1', 'hintB1text', b1);
+    document.getElementById('hintB2')?.classList.remove('show');
+    document.getElementById('hintB3')?.classList.remove('show');
+  } else if(aktivFeld === 'B2') {
+    zeigeHint('hintB2', 'hintB2text', b2);
+    document.getElementById('hintB1')?.classList.remove('show');
+    document.getElementById('hintB3')?.classList.remove('show');
+  } else if(aktivFeld === 'B3') {
+    zeigeHint('hintB3', 'hintB3text', b3);
+    document.getElementById('hintB1')?.classList.remove('show');
+    document.getElementById('hintB2')?.classList.remove('show');
+  }
 
   // Ausform-Button
   const total = b1.length+b2.length+b3.length;

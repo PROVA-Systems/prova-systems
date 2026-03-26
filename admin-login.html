@@ -77,10 +77,12 @@ async function sha256(msg){
   return Array.from(new Uint8Array(buf)).map(function(b){return b.toString(16).padStart(2,'0');}).join('');
 }
 async function login(){
-  var pw=document.getElementById('pw').value;
+  var pwEl=document.getElementById('pw');
+  pwEl.blur();
+  var pw=pwEl.value;
   var err=document.getElementById('err');
   var btn=document.getElementById('btn');
-  if(!pw){err.textContent='Bitte Passwort eingeben.';err.style.display='block';return;}
+  if(!pw){err.textContent='Bitte Passwort eingeben.';err.style.display='block';pwEl.focus();return;}
   btn.disabled=true;btn.textContent='⏳ Prüfe…';err.style.display='none';
   var hash=await sha256(pw);
 
