@@ -13,6 +13,7 @@
 # ---- REDIRECT RULES ----
 
 # Confirmation + Invite Links → app-login.html (nicht index.html!)
+# Query-Parameter Variante (falls Netlify Token als ?param= schickt)
 [[redirects]]
   from = "/"
   to = "/app-login.html"
@@ -30,9 +31,12 @@
   to = "/app-login.html"
   status = 302
   conditions = {Query = {recovery_token = ":token"}}
+
+# Hash-Fragment Variante: Netlify Identity sendet Token als /#invite_token=...
+# Der Browser landet auf "/" → JS in app-login.html liest window.location.hash
 [[redirects]]
   from = "/"
-  to = "/index.html"
+  to = "/app-login.html"
   status = 200
 
 [[redirects]]
@@ -114,7 +118,7 @@
     Permissions-Policy = "camera=(), microphone=(self), geolocation=()"
     Strict-Transport-Security = "max-age=31536000; includeSubDomains"
     # connect-src erlaubt Make.com eu1 Webhooks + Netlify Functions + Anthropic API + Airtable + Netlify Identity
-    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://identity.netlify.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.gstatic.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; media-src 'self' blob:; worker-src 'self' blob:; connect-src 'self' https://hook.eu1.make.com https://api.anthropic.com https://api.airtable.com https://*.netlify.com https://prova-systems.netlify.app https://*.netlify.app https://fonts.googleapis.com https://fonts.gstatic.com; frame-ancestors 'self';"
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://identity.netlify.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.gstatic.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; media-src 'self' blob:; worker-src 'self' blob:; connect-src 'self' https://hook.eu1.make.com https://api.anthropic.com https://api.airtable.com https://*.netlify.com https://*.netlify.app https://prova-systems.netlify.app https://fonts.googleapis.com https://fonts.gstatic.com https://identity.netlify.com; frame-ancestors 'self';"
 
 # HTML nie gecacht
 [[headers]]

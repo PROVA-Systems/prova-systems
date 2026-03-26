@@ -491,12 +491,57 @@ window.register = async function() {
   var okEl  = document.getElementById('reg-ok');
   var btn   = document.getElementById('reg-btn');
   errEl.classList.remove('show'); okEl.classList.remove('show');
-  if (!name || !email) { showErr(errEl,'Bitte alle Felder ausfüllen.'); return; }
-  if (pw.length < 8)   { showErr(errEl,'Passwort muss mindestens 8 Zeichen haben.'); return; }
+
+  // Bei Einladung: Name+Email optional (kommt aus Invite-Token)
+  var inviteToken = sessionStorage.getItem('prova_invite_token');
+  if (!inviteToken) {
+    if (!name || !email) { showErr(errEl,'Bitte alle Felder ausfüllen.'); return; }
+  }
+  if (pw.length < 8) { showErr(errEl,'Passwort muss mindestens 8 Zeichen haben.'); return; }
+
   btn.disabled = true;
   btn.innerHTML = '<span class="spinner"></span>Konto wird erstellt…';
+
   try {
-    var res = await fetch('/.netlify/identity/signup', {
+    var res, data;
+
+    if (inviteToken) {
+      // ── Einladungs-Flow: /.netlify/identity/verify mit Invite-Token ──
+      res = await fetch('/.netlify/identity/verify', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          token: inviteToken,
+          password: pw,
+          type: 'invite'
+        })
+      });
+      data = await res.json().catch(function(){ return {}; });
+
+      if (res.ok && data.email) {
+        // Erfolg: Name aus Token-Response oder Formular
+        var resolvedName = name || data.user_metadata?.full_name || data.email;
+        var resolvedEmail = data.email;
+        var parts = resolvedName.split(' ');
+        sessionStorage.removeItem('prova_invite_token');
+        localStorage.setItem('prova_user',        JSON.stringify({name: resolvedName, email: resolvedEmail, token: data.access_token||'netlify'}));
+        localStorage.setItem('prova_sv_email',    resolvedEmail);
+        localStorage.setItem('prova_sv_vorname',  parts[0]||'');
+        localStorage.setItem('prova_sv_nachname', parts.slice(1).join(' ')||'');
+        okEl.textContent = '✅ Passwort gesetzt — Sie werden weitergeleitet…';
+        okEl.classList.add('show');
+        setTimeout(function() { ladePaketUndWeiterleiten(resolvedEmail); }, 1500);
+        return;
+      } else {
+        // Invite-Token abgelaufen oder ungültig
+        showErr(errEl, data.msg || 'Einladungslink abgelaufen oder ungültig. Bitte neuen Link anfordern.');
+        btn.disabled = false; btn.textContent = 'Passwort festlegen & loslegen';
+        return;
+      }
+    }
+
+    // ── Normaler Signup-Flow ──
+    res = await fetch('/.netlify/identity/signup', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({email: email, password: pw, data: {full_name: name}})
@@ -518,8 +563,8 @@ window.register = async function() {
       btn.disabled = false; btn.textContent = 'Konto erstellen & loslegen';
     }
   } catch(e) {
-    var parts = name.split(' ');
-    localStorage.setItem('prova_user',        JSON.stringify({name: name, email: email}));
+    var parts = (name||'').split(' ');
+    localStorage.setItem('prova_user',        JSON.stringify({name: name||email, email: email}));
     localStorage.setItem('prova_sv_email',    email);
     localStorage.setItem('prova_sv_vorname',  parts[0]||'');
     localStorage.setItem('prova_trial_start', Date.now().toString());
@@ -555,10 +600,23 @@ window.resetPasswort = async function() {
     showTab('register');
     var hint = document.getElementById('invite-hint');
     if (hint) hint.style.display = 'block';
-    // Token aus Hash extrahieren und in Formular vormerken
+    // Token aus Hash extrahieren und in sessionStorage speichern
     var tokenMatch = hash.match(/invite_token=([^&]+)/);
     if (!tokenMatch) tokenMatch = hash.match(/confirmation_token=([^&]+)/);
-    if (tokenMatch) sessionStorage.setItem('prova_invite_token', tokenMatch[1]);
+    if (tokenMatch) {
+      sessionStorage.setItem('prova_invite_token', tokenMatch[1]);
+      // Bei Invite: Name+Email-Felder ausblenden, nur Passwort nötig
+      setTimeout(function() {
+        var nameGroup = document.getElementById('reg-name')?.closest('.form-group');
+        var emailGroup = document.getElementById('reg-email')?.closest('.form-group');
+        if (nameGroup) nameGroup.style.display = 'none';
+        if (emailGroup) emailGroup.style.display = 'none';
+        var btn = document.getElementById('reg-btn');
+        if (btn) btn.textContent = 'Passwort festlegen & loslegen';
+        var okEl = document.getElementById('reg-ok');
+        if (okEl) okEl.textContent = '✅ Passwort gesetzt — Sie werden weitergeleitet…';
+      }, 100);
+    }
     return;
   }
 
