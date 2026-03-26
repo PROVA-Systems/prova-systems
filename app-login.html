@@ -333,113 +333,70 @@ a{text-decoration:none;color:inherit;}
 
 </div>
 
+
 <script>
-(function(){
-'use strict';
-
-/* ── NETLIFY IDENTITY ── */
-(function(){
-  var hash=window.location.hash||'';
-  var hasToken=hash.includes('invite_token')||hash.includes('recovery_token')||hash.includes('confirmation_token');
-  if(typeof netlifyIdentity==='undefined')return;
-  netlifyIdentity.init();
-  netlifyIdentity.on('init',function(user){
-    if(!user&&hasToken){
-      if(hash.includes('invite_token')||hash.includes('confirmation_token'))netlifyIdentity.open('signup');
-      else if(hash.includes('recovery_token'))netlifyIdentity.open('recovery');
-    }
-  });
-  netlifyIdentity.on('login',function(user){
-    var md=user.user_metadata||{};
-    localStorage.setItem('prova_user',JSON.stringify({email:user.email,name:md.full_name||user.email,token:'netlify'}));
-    if(md.full_name){var parts=md.full_name.split(' ');localStorage.setItem('prova_sv_vorname',parts[0]||'');localStorage.setItem('prova_sv_nachname',parts.slice(1).join(' ')||'');}
-    localStorage.setItem('prova_sv_email',user.email);
-    // Paket aus Airtable laden (async IIFE)
-    (async function(){ await ladePaketUndWeiterleiten(user.email, localStorage.getItem('prova_onboarding_done')?'dashboard.html':'onboarding-schnellstart.html'); })();
-  });
-  if(hasToken)setTimeout(function(){
-    if(hash.includes('invite_token')||hash.includes('confirmation_token'))netlifyIdentity.open('signup');
-    else if(hash.includes('recovery_token'))netlifyIdentity.open('recovery');
-  },800);
-})();
-
-/* ── AUTH CHECK ── */
-if(localStorage.getItem('prova_user')){
-  var params=new URLSearchParams(window.location.search);
-  if(params.get('reason')!=='logout'&&params.get('reason')!=='trial_expired'){
-    // Paket aus Airtable laden und zur richtigen App weiterleiten
-    await ladePaketUndWeiterleiten(userData.email||email);
-    return;
-  }
-}
-
-/* ── ABGELAUFEN ── */
-(function(){
-  var p=new URLSearchParams(window.location.search);
-  if(p.get('reason')==='trial_expired'){
-    document.getElementById('expired-banner').classList.add('show');
-    showTab('register');
-  }
-})();
-
-/* ── Mobile Logo ── */
-if(window.innerWidth<=800){
-  document.getElementById('mobile-logo').style.display='flex';
-}
-
-/* ── TAB-WECHSEL ── */
-window.showTab=function(tab){
-  ['login','register','reset'].forEach(function(t){
-    document.getElementById('form-'+t).style.display=t===tab?'block':'none';
-  });
-  ['login','register'].forEach(function(t){
-    var btn=document.getElementById('tab-'+t);
-    if(btn)btn.classList.toggle('active',t===tab);
-  });
-};
+/* ═══════════════════════════════════════════════
+   PROVA LOGIN — Alle Funktionen ZUERST definiert
+   Dann erst Initialisierung unten
+   ═══════════════════════════════════════════════ */
 
 /* ── PASSWORT TOGGLE ── */
-window.togglePw=function(inputId,btn){
-  var inp=document.getElementById(inputId);
-  if(!inp)return;
-  inp.type=inp.type==='password'?'text':'password';
-  btn.textContent=inp.type==='password'?'👁':'🙈';
-};
+function togglePw(inputId, btn) {
+  var inp = document.getElementById(inputId);
+  if (!inp) return;
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+  btn.textContent = inp.type === 'password' ? '👁' : '🙈';
+}
+window.togglePw = togglePw;
+
+/* ── TAB-WECHSEL ── */
+function showTab(tab) {
+  ['login','register','reset'].forEach(function(t) {
+    var el = document.getElementById('form-' + t);
+    if (el) el.style.display = t === tab ? 'block' : 'none';
+  });
+  ['login','register'].forEach(function(t) {
+    var btn = document.getElementById('tab-' + t);
+    if (btn) btn.classList.toggle('active', t === tab);
+  });
+}
+window.showTab = showTab;
+
+/* ── FEHLERANZEIGE ── */
+function showErr(el, msg) {
+  if (!el) return;
+  el.textContent = msg;
+  el.classList.add('show');
+}
 
 /* ── TESTVERSION ── */
-window.starteTestversion=function(){
-  if(!localStorage.getItem('prova_trial_start')){
-    localStorage.setItem('prova_trial_start',Date.now().toString());
+window.starteTestversion = function() {
+  if (!localStorage.getItem('prova_trial_start')) {
+    localStorage.setItem('prova_trial_start', Date.now().toString());
   }
-  localStorage.setItem('prova_user',JSON.stringify({name:'Testbenutzer',email:'test@prova-systems.de',trial:true}));
-  localStorage.setItem('prova_paket','Starter');
-  window.location.href='dashboard.html';
+  localStorage.setItem('prova_user', JSON.stringify({name:'Testbenutzer', email:'test@prova-systems.de', trial:true}));
+  localStorage.setItem('prova_paket', 'Starter');
+  window.location.href = 'dashboard.html';
 };
-
-/* ── LOGIN ── */
 
 /* ── PAKET AUS AIRTABLE LADEN ── */
 async function ladePaketUndWeiterleiten(email, ziel) {
-  // Admin-Bypass — kein Airtable-Call, direkt zu Admin-Dashboard
-  if((email||'').toLowerCase() === 'admin@prova-systems.de'){
-    localStorage.setItem('prova_is_admin','true');
-    localStorage.setItem('prova_paket','Enterprise');
+  // Admin-Bypass
+  if ((email||'').toLowerCase() === 'admin@prova-systems.de') {
+    localStorage.setItem('prova_is_admin', 'true');
+    localStorage.setItem('prova_paket', 'Enterprise');
     window.location.href = 'admin-dashboard.html';
     return;
   }
-  // Fallback: Starter
   var paket = 'Starter';
+  if (!ziel) ziel = localStorage.getItem('prova_onboarding_done') ? 'dashboard.html' : 'onboarding-schnellstart.html';
   try {
-    var AT_BASE = 'appJ7bLlAHZoxENWE';
-    var AT_SV = 'tbladqEQT3tmx4DIB';
-    var filter = encodeURIComponent('{Email}="' + email + '"');
-    var url = '/.netlify/functions/airtable';
-    var res = await fetch(url, {
+    var res = await fetch('/.netlify/functions/airtable', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({
         method: 'GET',
-        path: '/v0/' + AT_BASE + '/' + AT_SV + '?filterByFormula=' + filter + '&maxRecords=1'
+        path: '/v0/appJ7bLlAHZoxENWE/tbladqEQT3tmx4DIB?filterByFormula=' + encodeURIComponent('{Email}="' + email + '"') + '&maxRecords=1'
       })
     });
     if (res.ok) {
@@ -447,165 +404,196 @@ async function ladePaketUndWeiterleiten(email, ziel) {
       var records = data.records || [];
       if (records.length > 0) {
         var f = records[0].fields || {};
-        // Paket-Feld: 'Paket' oder 'paket' oder 'Packet'
-        paket = (f.Paket && f.Paket.name) ? f.Paket.name 
-                  : (f.Paket || f.paket || f.Packet || 'Starter');
-        // Admin-Erkennung
-        var adminEmails = ['admin@prova-systems.de'];
-        if (adminEmails.indexOf(email.toLowerCase()) >= 0) {
-          localStorage.setItem('prova_is_admin', 'true');
-          paket = 'Enterprise';
-        }
-        // Sicherstellen dass Wert gültig
-        // Normalisiere: STARTER→Starter, PRO→Pro, ENTERPRISE→Enterprise
+        paket = (f.Paket && f.Paket.name) ? f.Paket.name : (f.Paket || f.paket || 'Starter');
         if (paket === 'STARTER' || paket === 'starter') paket = 'Starter';
-        if (paket === 'PRO' || paket === 'pro') paket = 'Pro';
+        if (paket === 'PRO'     || paket === 'pro')     paket = 'Pro';
         if (paket === 'ENTERPRISE' || paket === 'enterprise') paket = 'Enterprise';
         if (!['Starter','Pro','Enterprise'].includes(paket)) paket = 'Starter';
-        // Status-Check: Gesperrte Accounts blockieren
         var status = (f.Status && f.Status.name) ? f.Status.name : (f.Status || 'Aktiv');
         if (status === 'Gesperrt' || status === 'Gekuendigt') {
           localStorage.clear();
           window.location.href = 'app-login.html?reason=account_locked';
           return;
         }
-        // Auch Profil-Daten laden wenn vorhanden
-        if (f.sv_vorname) localStorage.setItem('prova_sv_vorname', f.sv_vorname);
-        if (f.sv_nachname) localStorage.setItem('prova_sv_nachname', f.sv_nachname);
+        if (f.sv_vorname)      localStorage.setItem('prova_sv_vorname', f.sv_vorname);
+        if (f.sv_nachname)     localStorage.setItem('prova_sv_nachname', f.sv_nachname);
         if (f.sv_qualifikation) localStorage.setItem('prova_sv_qualifikation', f.sv_qualifikation);
-        if (f.sv_bueronamen) localStorage.setItem('prova_bueronamen', f.sv_bueronamen);
-        // Onboarding-Status aus Airtable — geräteübergreifend
+        if (f.sv_bueronamen)   localStorage.setItem('prova_bueronamen', f.sv_bueronamen);
         if (f.onboarding_done || f.Onboarding_Done) {
           localStorage.setItem('prova_onboarding_done', 'true');
-          ziel = 'dashboard.html'; // Onboarding bereits erledigt → immer zur Zentrale
+          ziel = 'dashboard.html';
         }
       }
     }
-  } catch(e) {
-    console.warn('Paket-Abfrage fehlgeschlagen, Fallback Starter:', e);
-  }
+  } catch(e) { console.warn('Paket-Abfrage fehlgeschlagen:', e); }
   localStorage.setItem('prova_paket', paket);
-  // Badge im Login kurz zeigen (optional)
-  console.log('Paket geladen:', paket);
   window.location.href = ziel;
 }
 
-window.login=async function(){
-  var email=document.getElementById('login-email').value.trim();
-  var pw=document.getElementById('login-pw').value;
-  var errEl=document.getElementById('login-err');
-  var btn=document.getElementById('login-btn');
+/* ── LOGIN ── */
+window.login = async function() {
+  var email = document.getElementById('login-email').value.trim();
+  var pw    = document.getElementById('login-pw').value;
+  var errEl = document.getElementById('login-err');
+  var btn   = document.getElementById('login-btn');
   errEl.classList.remove('show');
-  if(!email){showErr(errEl,'Bitte E-Mail-Adresse eingeben.');return;}
-  if(!pw){showErr(errEl,'Bitte Passwort eingeben.');return;}
-  btn.disabled=true;btn.innerHTML='<span class="spinner"></span>Anmelden…';
-  try{
-    var res=await fetch('/.netlify/identity/token',{
-      method:'POST',
-      headers:{'Content-Type':'application/x-www-form-urlencoded'},
-      body:'grant_type=password&username='+encodeURIComponent(email)+'&password='+encodeURIComponent(pw)
+  if (!email) { showErr(errEl,'Bitte E-Mail-Adresse eingeben.'); return; }
+  if (!pw)    { showErr(errEl,'Bitte Passwort eingeben.'); return; }
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>Anmelden…';
+  try {
+    var res = await fetch('/.netlify/identity/token', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+      body: 'grant_type=password&username=' + encodeURIComponent(email) + '&password=' + encodeURIComponent(pw)
     });
-    if(res.status===404){
-      showErr(errEl,'Konto-System noch nicht aktiviert.');
-      document.getElementById('login-netlify-hint').style.display='block';
-      btn.disabled=false;btn.textContent='Anmelden';
-      return;
+    if (res.status === 404) {
+      showErr(errEl, 'Konto-System noch nicht aktiviert.');
+      document.getElementById('login-netlify-hint').style.display = 'block';
+      btn.disabled = false; btn.textContent = 'Anmelden'; return;
     }
-    if(res.status===401||res.status===422){
-      showErr(errEl,'E-Mail oder Passwort falsch. Bitte prüfen und erneut versuchen.');
-      btn.disabled=false;btn.textContent='Anmelden';
-      return;
+    if (res.status === 401 || res.status === 422) {
+      showErr(errEl, 'E-Mail oder Passwort falsch.');
+      btn.disabled = false; btn.textContent = 'Anmelden'; return;
     }
-    if(!res.ok){
-      showErr(errEl,'Anmeldung fehlgeschlagen ('+res.status+'). Bitte erneut versuchen.');
-      btn.disabled=false;btn.textContent='Anmelden';
-      return;
+    if (!res.ok) {
+      showErr(errEl, 'Anmeldung fehlgeschlagen (' + res.status + ').');
+      btn.disabled = false; btn.textContent = 'Anmelden'; return;
     }
-    var data=await res.json();
-    if(!data.access_token)throw new Error('No token');
-    var userRes=await fetch('/.netlify/identity/user',{headers:{'Authorization':'Bearer '+data.access_token}});
-    var userData=userRes.ok?await userRes.json():{};
-    var md=userData.user_metadata||{};
-    var name=md.full_name||email;
-    localStorage.setItem('prova_user',JSON.stringify({email:userData.email||email,name:name,token:data.access_token}));
-    localStorage.setItem('prova_sv_email',userData.email||email);
-    if(md.full_name){var parts=name.split(' ');localStorage.setItem('prova_sv_vorname',parts[0]||'');localStorage.setItem('prova_sv_nachname',parts.slice(1).join(' ')||'');}
-    // Paket aus Airtable laden und zur richtigen App weiterleiten
+    var data = await res.json();
+    if (!data.access_token) throw new Error('No token');
+    var userRes  = await fetch('/.netlify/identity/user', {headers: {'Authorization': 'Bearer ' + data.access_token}});
+    var userData = userRes.ok ? await userRes.json() : {};
+    var md   = userData.user_metadata || {};
+    var name = md.full_name || email;
+    localStorage.setItem('prova_user',     JSON.stringify({email: userData.email||email, name: name, token: data.access_token}));
+    localStorage.setItem('prova_sv_email', userData.email||email);
+    if (md.full_name) {
+      var parts = name.split(' ');
+      localStorage.setItem('prova_sv_vorname',  parts[0]||'');
+      localStorage.setItem('prova_sv_nachname', parts.slice(1).join(' ')||'');
+    }
     await ladePaketUndWeiterleiten(userData.email||email);
-  }catch(e){
-    var msg='Verbindungsfehler. Bitte Internetverbindung prüfen.';
-    if(e&&(e.message||'').includes('fetch'))msg='Keine Verbindung zum Server. Bitte Seite neu laden.';
-    showErr(errEl,msg);
-    document.getElementById('login-netlify-hint').style.display='block';
-    btn.disabled=false;btn.textContent='Anmelden';
+  } catch(e) {
+    showErr(errEl, 'Verbindungsfehler. Bitte Internetverbindung prüfen.');
+    document.getElementById('login-netlify-hint').style.display = 'block';
+    btn.disabled = false; btn.textContent = 'Anmelden';
   }
 };
 
 /* ── REGISTRIERUNG ── */
-window.register=async function(){
-  var name=document.getElementById('reg-name').value.trim();
-  var email=document.getElementById('reg-email').value.trim();
-  var pw=document.getElementById('reg-pw').value;
-  var errEl=document.getElementById('reg-err');
-  var okEl=document.getElementById('reg-ok');
-  var btn=document.getElementById('reg-btn');
-  errEl.classList.remove('show');okEl.classList.remove('show');
-  if(!name||!email){showErr(errEl,'Bitte alle Felder ausfüllen.');return;}
-  if(pw.length<8){showErr(errEl,'Passwort muss mindestens 8 Zeichen haben.');return;}
-  btn.disabled=true;btn.innerHTML='<span class="spinner"></span>Konto wird erstellt…';
-  try{
-    var res=await fetch('/.netlify/identity/signup',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({email:email,password:pw,data:{full_name:name}})
+window.register = async function() {
+  var name  = document.getElementById('reg-name').value.trim();
+  var email = document.getElementById('reg-email').value.trim();
+  var pw    = document.getElementById('reg-pw').value;
+  var errEl = document.getElementById('reg-err');
+  var okEl  = document.getElementById('reg-ok');
+  var btn   = document.getElementById('reg-btn');
+  errEl.classList.remove('show'); okEl.classList.remove('show');
+  if (!name || !email) { showErr(errEl,'Bitte alle Felder ausfüllen.'); return; }
+  if (pw.length < 8)   { showErr(errEl,'Passwort muss mindestens 8 Zeichen haben.'); return; }
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>Konto wird erstellt…';
+  try {
+    var res = await fetch('/.netlify/identity/signup', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({email: email, password: pw, data: {full_name: name}})
     });
-    if(res.ok){
+    if (res.ok) {
       okEl.classList.add('show');
-      setTimeout(function(){
-        var parts=name.split(' ');
-        localStorage.setItem('prova_user',JSON.stringify({name:name,email:email}));
-        localStorage.setItem('prova_sv_email',email);
-        localStorage.setItem('prova_sv_vorname',parts[0]||'');
-        localStorage.setItem('prova_sv_nachname',parts.slice(1).join(' ')||'');
-        localStorage.setItem('prova_trial_start',Date.now().toString());
-        await ladePaketUndWeiterleiten(email, localStorage.getItem('prova_onboarding_done')?'dashboard.html':'onboarding-schnellstart.html');
-      },1500);
-    }else{
-      var errData=await res.json().catch(function(){return{};});
-      showErr(errEl,errData.msg||'Registrierung fehlgeschlagen. Bitte erneut versuchen.');
-      btn.disabled=false;btn.textContent='Konto erstellen & loslegen';
+      var parts = name.split(' ');
+      localStorage.setItem('prova_user',        JSON.stringify({name: name, email: email}));
+      localStorage.setItem('prova_sv_email',    email);
+      localStorage.setItem('prova_sv_vorname',  parts[0]||'');
+      localStorage.setItem('prova_sv_nachname', parts.slice(1).join(' ')||'');
+      localStorage.setItem('prova_trial_start', Date.now().toString());
+      setTimeout(function() {
+        ladePaketUndWeiterleiten(email, 'onboarding-schnellstart.html');
+      }, 1500);
+    } else {
+      var errData = await res.json().catch(function(){ return {}; });
+      showErr(errEl, errData.msg || 'Registrierung fehlgeschlagen.');
+      btn.disabled = false; btn.textContent = 'Konto erstellen & loslegen';
     }
-  }catch(e){
-    // Fallback: direkt loslegen
-    var parts=name.split(' ');
-    localStorage.setItem('prova_user',JSON.stringify({name:name,email:email}));
-    localStorage.setItem('prova_sv_email',email);
-    localStorage.setItem('prova_sv_vorname',parts[0]||'');
-    localStorage.setItem('prova_trial_start',Date.now().toString());
-    await ladePaketUndWeiterleiten(email, localStorage.getItem('prova_onboarding_done')?'dashboard.html':'onboarding-schnellstart.html');
+  } catch(e) {
+    var parts = name.split(' ');
+    localStorage.setItem('prova_user',        JSON.stringify({name: name, email: email}));
+    localStorage.setItem('prova_sv_email',    email);
+    localStorage.setItem('prova_sv_vorname',  parts[0]||'');
+    localStorage.setItem('prova_trial_start', Date.now().toString());
+    ladePaketUndWeiterleiten(email, 'onboarding-schnellstart.html');
   }
 };
 
 /* ── PASSWORT RESET ── */
-window.resetPasswort=async function(){
-  var email=document.getElementById('reset-email').value.trim();
-  if(!email)return;
-  var okEl=document.getElementById('reset-ok');
-  try{
-    await fetch('/.netlify/identity/recover',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({email:email})
+window.resetPasswort = async function() {
+  var email = document.getElementById('reset-email').value.trim();
+  if (!email) return;
+  var okEl = document.getElementById('reset-ok');
+  try {
+    await fetch('/.netlify/identity/recover', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({email: email})
     });
-  }catch(e){}
-  okEl.classList.add('show');
+  } catch(e) {}
+  if (okEl) okEl.classList.add('show');
 };
 
-function showErr(el,msg){
-  el.textContent=msg;
-  el.classList.add('show');
+/* ═══════════════════════════════════════════════
+   INITIALISIERUNG — erst NACH Funktionsdefinition
+   ═══════════════════════════════════════════════ */
+
+/* ── NETLIFY IDENTITY ── */
+(function() {
+  var hash = window.location.hash || '';
+  var hasToken = hash.includes('invite_token') || hash.includes('recovery_token') || hash.includes('confirmation_token');
+  if (typeof netlifyIdentity === 'undefined') return;
+  netlifyIdentity.init();
+  netlifyIdentity.on('init', function(user) {
+    if (!user && hasToken) {
+      if (hash.includes('invite_token') || hash.includes('confirmation_token')) netlifyIdentity.open('signup');
+      else if (hash.includes('recovery_token')) netlifyIdentity.open('recovery');
+    }
+  });
+  netlifyIdentity.on('login', function(user) {
+    var md = user.user_metadata || {};
+    localStorage.setItem('prova_user', JSON.stringify({email: user.email, name: md.full_name||user.email, token:'netlify'}));
+    if (md.full_name) {
+      var parts = md.full_name.split(' ');
+      localStorage.setItem('prova_sv_vorname',  parts[0]||'');
+      localStorage.setItem('prova_sv_nachname', parts.slice(1).join(' ')||'');
+    }
+    localStorage.setItem('prova_sv_email', user.email);
+    ladePaketUndWeiterleiten(user.email);
+  });
+  if (hasToken) setTimeout(function() {
+    if (hash.includes('invite_token') || hash.includes('confirmation_token')) netlifyIdentity.open('signup');
+    else if (hash.includes('recovery_token')) netlifyIdentity.open('recovery');
+  }, 800);
+})();
+
+/* ── MOBILE LOGO ── */
+if (window.innerWidth <= 800) {
+  var ml = document.getElementById('mobile-logo');
+  if (ml) ml.style.display = 'flex';
 }
 
+/* ── AUTH CHECK — bereits eingeloggt? ── */
+(function() {
+  var params = new URLSearchParams(window.location.search);
+  var reason = params.get('reason');
+  if (reason === 'trial_expired') {
+    var banner = document.getElementById('expired-banner');
+    if (banner) banner.classList.add('show');
+    showTab('register');
+    return;
+  }
+  if (localStorage.getItem('prova_user') && reason !== 'logout') {
+    var stored = JSON.parse(localStorage.getItem('prova_user') || '{}');
+    ladePaketUndWeiterleiten(stored.email || '');
+  }
 })();
 </script>
 </body>
