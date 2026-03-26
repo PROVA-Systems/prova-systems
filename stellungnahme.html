@@ -154,8 +154,51 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:1
   background:var(--surface2);color:var(--text3);
 }
 .kj-check.ok{background:rgba(16,185,129,.08);color:#10b981;}
-.kj-check.warn{background:rgba(245,158,11,.08);color:#f59e0b;}
+.kj-check.warn{background:rgba(239,68,68,.08);color:#ef4444;}
 .kj-check.idle{background:var(--surface2);color:var(--text3);}
+
+/* Highlight-Overlay */
+.textarea-wrap{position:relative;}
+.textarea-wrap{background:var(--bg3);border-radius:var(--r-md);}
+.textarea-wrap textarea{position:relative;z-index:2;background:transparent !important;caret-color:var(--text);border:none !important;}
+.textarea-wrap:focus-within{outline:1.5px solid var(--accent);border-radius:var(--r-md);}
+.textarea-highlight{background:var(--bg3);}
+.textarea-highlight{
+  position:absolute;top:0;left:0;right:0;bottom:0;z-index:1;pointer-events:none;
+  font-family:var(--sans);font-size:13px;line-height:1.6;
+  padding:10px 12px;white-space:pre-wrap;word-wrap:break-word;
+  color:transparent;border-radius:var(--r-md);overflow:hidden;
+}
+.textarea-highlight mark.indikativ{
+  background:rgba(239,68,68,0.28);border-radius:3px;color:transparent;
+  border-bottom:2px solid rgba(239,68,68,0.7);
+}
+
+/* Hüpfender Denkanstoß */
+.ki-hint-bubble{
+  display:none;margin-top:8px;padding:12px 14px 10px;
+  background:linear-gradient(135deg,rgba(79,142,247,.08),rgba(139,92,246,.06));
+  border:1px solid rgba(79,142,247,.2);border-radius:10px;
+  font-size:12px;color:var(--text2);line-height:1.6;
+  animation:hüpf .4s cubic-bezier(.34,1.56,.64,1);position:relative;
+}
+.ki-hint-bubble.show{display:block;}
+.ki-hint-bubble::before{
+  content:'💡';position:absolute;top:-11px;left:14px;
+  font-size:16px;animation:kiBounce 1.8s ease infinite;
+}
+@keyframes hüpf{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+@keyframes kiBounce{0%,100%{transform:translateY(0);}50%{transform:translateY(-5px);}}
+.ki-hint-label{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);margin-bottom:5px;padding-left:20px;}
+.ki-hint-text{color:var(--text2);padding-left:4px;margin-bottom:6px;}
+.ki-hint-fix{
+  display:inline-block;margin-top:4px;margin-right:6px;
+  padding:3px 10px;background:rgba(79,142,247,.12);
+  border:1px solid rgba(79,142,247,.25);border-radius:20px;
+  font-size:11px;font-weight:600;color:var(--accent);
+  cursor:pointer;transition:background .15s;user-select:none;
+}
+.ki-hint-fix:hover{background:rgba(79,142,247,.22);}
 
 /* KI-Inspiration Box */
 .ki-insp-wrap{
@@ -385,27 +428,48 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:1
           <div id="weg-b" style="display:none;">
             <div class="feld-block">
               <div class="feld-label"><span class="feld-num">1</span> Was haben Sie vor Ort festgestellt?</div>
-              <textarea class="sv-textarea" id="svB1"
-                placeholder="z.B. Im Schlafzimmer OG wurde Schimmelbefall ca. 0,5 m² festgestellt…"
-                oninput="onInputB()" rows="3" style="min-height:80px;"></textarea>
+              <div class="textarea-wrap">
+                <div class="textarea-highlight" id="hlB1"></div>
+                <textarea class="sv-textarea" id="svB1"
+                  placeholder="z.B. Im Schlafzimmer OG wurde Schimmelbefall ca. 0,5 m² festgestellt…"
+                  oninput="onInputB()" onfocus="setAktivFeld('B1')" rows="3" style="min-height:80px;"></textarea>
+              </div>
               <div class="char-count bad" id="charB1">0/250</div>
+              <div class="ki-hint-bubble" id="hintB1">
+                <div class="ki-hint-label">KI-Denkanstoß</div>
+                <div class="ki-hint-text" id="hintB1text"></div>
+              </div>
             </div>
             <div class="feld-block">
               <div class="feld-label"><span class="feld-num">2</span> Was schließen <em>Sie</em> daraus? <small style="color:var(--accent);font-style:normal;">(Ihre Kausalaussage)</small></div>
-              <textarea class="sv-textarea" id="svB2"
-                placeholder="z.B. Die Ursache dürfte auf unzureichende Beheizung und Lüftung zurückzuführen sein…"
-                oninput="onInputB()" rows="3" style="min-height:80px;"></textarea>
+              <div class="textarea-wrap">
+                <div class="textarea-highlight" id="hlB2"></div>
+                <textarea class="sv-textarea" id="svB2"
+                  placeholder="z.B. Die Ursache dürfte auf unzureichende Beheizung und Lüftung zurückzuführen sein…"
+                  oninput="onInputB()" onfocus="setAktivFeld('B2')" rows="3" style="min-height:80px;"></textarea>
+              </div>
               <div class="char-count bad" id="charB2">0/350</div>
               <div class="kj-check idle" id="kjCheckB">
                 <span>⏳</span><span>Konjunktiv II wird geprüft…</span>
               </div>
+              <div class="ki-hint-bubble" id="hintB2">
+                <div class="ki-hint-label">KI-Denkanstoß</div>
+                <div class="ki-hint-text" id="hintB2text"></div>
+              </div>
             </div>
             <div class="feld-block">
               <div class="feld-label"><span class="feld-num">3</span> Was empfehlen Sie?</div>
-              <textarea class="sv-textarea" id="svB3"
-                placeholder="z.B. Es wäre zu empfehlen, die Außenwand thermisch zu sanieren…"
-                oninput="onInputB()" rows="2" style="min-height:70px;"></textarea>
+              <div class="textarea-wrap">
+                <div class="textarea-highlight" id="hlB3"></div>
+                <textarea class="sv-textarea" id="svB3"
+                  placeholder="z.B. Es wäre zu empfehlen, die Außenwand thermisch zu sanieren…"
+                  oninput="onInputB()" onfocus="setAktivFeld('B3')" rows="2" style="min-height:70px;"></textarea>
+              </div>
               <div class="char-count bad" id="charB3">0/200</div>
+              <div class="ki-hint-bubble" id="hintB3">
+                <div class="ki-hint-label">KI-Denkanstoß</div>
+                <div class="ki-hint-text" id="hintB3text"></div>
+              </div>
             </div>
 
             <!-- KI-Ausformulieren -->
@@ -562,14 +626,39 @@ const OFFENLEGUNG = {
   privat:`Erstellt mit PROVA Systems (KI-Assistenz §1–§5). §6 Fachurteil: eigenständige Leistung des Sachverständigen.`
 };
 
-// KJ2 Verbotsliste
+// KJ2 Verbotsliste — erweitert, alle typischen SV-Indikativ-Muster
 const INDIK_BAD = [
-  {rx:/\bist\s+(die\s+)?(Ursache|Grund|Auslöser)\b/gi, h:'"ist die Ursache" → "dürfte die Ursache sein"'},
+  // URSACHE / KAUSALITÄT
+  {rx:/\bist\s+(die\s+)?(Ursache|Schadensursache|Grund|Auslöser|Ursächlich)\b/gi, h:'"ist die Schadensursache" → "dürfte die Schadensursache sein"'},
   {rx:/\bist\s+zurückzuführen\b/gi, h:'"ist zurückzuführen" → "dürfte zurückzuführen sein"'},
+  {rx:/\bist\s+zu\s+suchen\b/gi, h:'"ist zu suchen" → "dürfte zu suchen sein"'},
+  {rx:/\bliegt\s+(in|an|bei)\b/gi, h:'"liegt in/an" → "dürfte liegen in/an"'},
+  {rx:/\bhat\s+(dazu\s+)?geführt\b/gi, h:'"hat geführt" → "dürfte geführt haben"'},
   {rx:/\bführt\s+zu\b/gi, h:'"führt zu" → "könnte zu … führen"'},
-  {rx:/\bist\s+(dringend\s+)?erforderlich\b/gi, h:'"ist erforderlich" → "wäre erforderlich"'},
   {rx:/\bhat\s+verursacht\b/gi, h:'"hat verursacht" → "dürfte verursacht haben"'},
-  {rx:/\bmuss\s+(saniert|geprüft)\b/gi, h:'"muss saniert" → "wäre zu sanieren"'},
+  {rx:/\bverursacht\s+(den|die|das|einen|eine)\b/gi, h:'"verursacht den/die" → "dürfte … verursacht haben"'},
+  {rx:/\bbewirkt\b/gi, h:'"bewirkt" → "dürfte bewirken"'},
+  {rx:/\bberuht\s+auf\b/gi, h:'"beruht auf" → "dürfte beruhen auf"'},
+  {rx:/\bist\s+(eindeutig|offensichtlich|klar)\b/gi, h:'"ist eindeutig" → "erscheint naheliegend"'},
+  {rx:/\bzeigt\s+(sich|dass)\b/gi, h:'"zeigt sich/dass" → "ließe sich erkennen"'},
+  // BEWERTUNG / EINSCHÄTZUNG
+  {rx:/\bist\s+(dringend\s+)?erforderlich\b/gi, h:'"ist erforderlich" → "wäre erforderlich"'},
+  {rx:/\bist\s+(unbedingt\s+)?notwendig\b/gi, h:'"ist notwendig" → "wäre notwendig"'},
+  {rx:/\bist\s+geboten\b/gi, h:'"ist geboten" → "wäre geboten"'},
+  {rx:/\bmuss\s+\w+\b/gi, h:'"muss …" → "wäre zu … / sollte …"'},
+  {rx:/\bmüssen\s+\w+\b/gi, h:'"müssen …" → "wären zu …"'},
+  {rx:/\bsollte\s+unverzüglich\b/gi, h:'"sollte unverzüglich" → "wäre unverzüglich zu empfehlen"'},
+  {rx:/\bist\s+zu\s+(erneuern|sanieren|beheben|prüfen|reparieren|ersetzen)\b/gi, h:'"ist zu sanieren" → "wäre zu sanieren"'},
+  {rx:/\bist\s+(mangelhaft|defekt|beschädigt|unzureichend)\b/gi, h:'"ist mangelhaft" → "erscheint mangelhaft" / "dürfte mangelhaft sein"'},
+  {rx:/\bist\s+(nicht\s+)?(norm|DIN|VOB|regelwerk)gerecht\b/gi, h:'"ist nicht normgerecht" → Messwert-Feststellung → Indikativ erlaubt, Bewertung → Konjunktiv II'},
+  // PROGNOSE / FOLGEN
+  {rx:/\bwird\s+(zu\s+)?(Schäden|Folgeschäden|Feuchte|Schimmel)\b/gi, h:'"wird zu Schäden" → "könnte zu Schäden führen"'},
+  {rx:/\bbesteht\s+(die\s+)?(Gefahr|Risiko)\b/gi, h:'"besteht Gefahr" → "bestünde die Gefahr"'},
+  {rx:/\bkann\s+(zu\s+)?\w+\s+führen\b/gi, h:'"kann zu … führen" → "könnte zu … führen"'},
+  // ZUSAMMENFASSUNG
+  {rx:/\bfazit\s*:\s*die\b/gi, h:'Fazit: Einschätzungen im Fazit müssen Konjunktiv II enthalten'},
+  {rx:/\bals\s+(Ursache|Auslöser)\s+gilt\b/gi, h:'"gilt als Ursache" → "dürfte als Ursache in Betracht kommen"'},
+  {rx:/\bist\s+damit\s+(bewiesen|belegt|nachgewiesen)\b/gi, h:'"ist damit bewiesen" → "erscheint damit naheliegend"'},
 ];
 
 /* ── INIT ── */
@@ -633,15 +722,23 @@ function runKjCheck(text, elId) {
     }
     let fehler = [];
     INDIK_BAD.forEach(b => {
-      if(b.rx.test(text)) fehler.push(b.h);
+      // Reset lastIndex vor jedem Test (wichtig bei /g flag)
+      b.rx.lastIndex = 0;
+      if(b.rx.test(text)) {
+        b.rx.lastIndex = 0;
+        fehler.push(b.h);
+      }
       b.rx.lastIndex = 0;
     });
     if(fehler.length === 0) {
       el.className = 'kj-check ok';
       el.innerHTML = '<span>✅</span><span>Konjunktiv II — kein Verstoß erkannt</span>';
-    } else {
+    } else if(fehler.length === 1) {
       el.className = 'kj-check warn';
       el.innerHTML = `<span>⚠️</span><span>${fehler[0]}</span>`;
+    } else {
+      el.className = 'kj-check warn';
+      el.innerHTML = `<span>⚠️</span><span>${fehler.length} Verstöße erkannt — ${fehler[0]}</span>`;
     }
     localStorage.setItem('prova_stellungnahme_kj2_ok', fehler.length===0 ? '1' : '0');
     checkReady();
@@ -649,6 +746,121 @@ function runKjCheck(text, elId) {
 }
 
 /* ── INPUT HANDLERS ── */
+var aktivFeld = 'B2'; // Standard: Kausalaussage
+function setAktivFeld(feld) { aktivFeld = feld; }
+
+// Indikativ-Wörter im Text highlighten
+function highlightIndikativ(text, hlElId) {
+  const el = document.getElementById(hlElId);
+  if(!el) return;
+  // HTML escapen
+  let html = text
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;');
+  // Jeden Verstoß markieren
+  INDIK_BAD.forEach(b => {
+    b.rx.lastIndex = 0;
+    html = html.replace(b.rx, match => `<mark class="indikativ">${match}</mark>`);
+    b.rx.lastIndex = 0;
+  });
+  el.innerHTML = html;
+}
+
+// KI-Denkanstoß: kontextuell basierend auf Verstoß + Feld
+const HINT_MAP = {
+  // Kausalaussagen (Feld B2)
+  'Ursache|Schadensursache': {
+    text: 'Kausalaussagen brauchen Konjunktiv II.',
+    fixes: ['dürfte die Schadensursache sein', 'könnte ursächlich sein', 'wäre naheliegenderweise zurückzuführen auf']
+  },
+  'zurückzuführen': {
+    text: '"ist zurückzuführen" ist Indikativ.',
+    fixes: ['dürfte zurückzuführen sein auf', 'ließe sich zurückführen auf']
+  },
+  'zu suchen': {
+    text: '"ist zu suchen" klingt nach Aussage, nicht Einschätzung.',
+    fixes: ['dürfte zu suchen sein in', 'wäre am ehesten zu suchen in']
+  },
+  'liegt in|liegt an|liegt bei': {
+    text: '"liegt in/an" ist Indikativ bei Ursachenaussagen.',
+    fixes: ['dürfte liegen in', 'könnte begründet liegen in']
+  },
+  'geführt|führt zu': {
+    text: 'Ursache-Wirkung muss im Konjunktiv II stehen.',
+    fixes: ['dürfte geführt haben zu', 'könnte zu … geführt haben']
+  },
+  'verursacht': {
+    text: '"verursacht" ist eine Kausalaussage → Konjunktiv II.',
+    fixes: ['dürfte verursacht haben', 'könnte mitverursacht haben']
+  },
+  // Bewertungen (Feld B2/B3)
+  'erforderlich|notwendig|geboten': {
+    text: 'Handlungsempfehlungen müssen im Konjunktiv II stehen.',
+    fixes: ['wäre erforderlich', 'erschiene notwendig', 'wäre geboten']
+  },
+  'muss |müssen ': {
+    text: '"muss" ist imperativ — in Gutachten Konjunktiv II verwenden.',
+    fixes: ['wäre zu empfehlen', 'sollte geprüft werden', 'wäre durchzuführen']
+  },
+  'ist zu (erneuern|sanieren|beheben|prüfen)': {
+    text: '"ist zu sanieren" wirkt wie Anweisung, nicht Gutachten.',
+    fixes: ['wäre zu sanieren', 'wäre zu erneuern', 'wäre fachgerecht zu beheben']
+  },
+  'mangelhaft|defekt': {
+    text: 'Bewertungen ("mangelhaft") → Konjunktiv II wenn interpretativ.',
+    fixes: ['erscheint mangelhaft', 'dürfte als mangelhaft einzustufen sein']
+  },
+  'eindeutig|offensichtlich|klar': {
+    text: 'Absolute Aussagen vermeiden — Gutachten ist Einschätzung.',
+    fixes: ['erscheint naheliegend', 'dürfte mit hoher Wahrscheinlichkeit', 'ließe sich schließen']
+  },
+};
+
+function getHint(text) {
+  if(!text || text.length < 20) return null;
+  for(const [pattern, hint] of Object.entries(HINT_MAP)) {
+    const rx = new RegExp(pattern, 'i');
+    if(rx.test(text)) return hint;
+  }
+  return null;
+}
+
+function zeigeHint(hintElId, textElId, text) {
+  const bubble = document.getElementById(hintElId);
+  const textEl = document.getElementById(textElId);
+  if(!bubble || !textEl) return;
+  const hint = getHint(text);
+  if(!hint) {
+    bubble.classList.remove('show');
+    return;
+  }
+  // Text setzen
+  textEl.innerHTML = hint.text + '<br>' +
+    hint.fixes.map(f =>
+      `<span class="ki-hint-fix" onclick="applyFix(this,'${f}')" title="Klicken zum Einfügen">→ ${f}</span>`
+    ).join('');
+  // Neu animieren
+  bubble.classList.remove('show');
+  void bubble.offsetWidth; // reflow für Animation
+  bubble.classList.add('show');
+}
+
+function applyFix(el, fix) {
+  // Fix in aktives Textarea einfügen — Cursor-Position respektieren
+  const taMap = {B1:'svB1', B2:'svB2', B3:'svB3'};
+  const taId = taMap[aktivFeld] || 'svB2';
+  const ta = document.getElementById(taId);
+  if(!ta) return;
+  const start = ta.selectionStart;
+  const end = ta.selectionEnd;
+  const val = ta.value;
+  ta.value = val.substring(0,start) + fix + val.substring(end);
+  ta.selectionStart = ta.selectionEnd = start + fix.length;
+  ta.focus();
+  onInputB();
+}
+
 function onInputA() {
   const txt = document.getElementById('svTextA').value;
   const len = txt.length;
@@ -658,23 +870,37 @@ function onInputA() {
   runKjCheck(txt, 'kjCheckA');
   localStorage.setItem('prova_stellungnahme_text', txt);
   checkReady();
-  // Ausform-Button in Weg B
   updateAusformBtn();
 }
 
 function onInputB() {
-  const b2 = document.getElementById('svB2').value;
   const b1 = document.getElementById('svB1').value;
+  const b2 = document.getElementById('svB2').value;
   const b3 = document.getElementById('svB3').value;
+
+  // Char-Counter
   document.getElementById('charB1').textContent = b1.length+'/250';
   document.getElementById('charB1').className = 'char-count '+(b1.length>=250?'ok':b1.length>=125?'warn':'bad');
   document.getElementById('charB2').textContent = b2.length+'/350';
   document.getElementById('charB2').className = 'char-count '+(b2.length>=350?'ok':b2.length>=175?'warn':'bad');
   document.getElementById('charB3').textContent = b3.length+'/200';
   document.getElementById('charB3').className = 'char-count '+(b3.length>=200?'ok':b3.length>=100?'warn':'bad');
+
+  // Highlights
+  highlightIndikativ(b1, 'hlB1');
+  highlightIndikativ(b2, 'hlB2');
+  highlightIndikativ(b3, 'hlB3');
+
+  // KJ2-Check nur auf Kausalaussage (Feld 2)
   runKjCheck(b2, 'kjCheckB');
+
+  // Hüpfende Denkanstöße — nur für aktives Feld
+  zeigeHint('hintB1', 'hintB1text', b1);
+  zeigeHint('hintB2', 'hintB2text', b2);
+  zeigeHint('hintB3', 'hintB3text', b3);
+
+  // Ausform-Button
   const total = b1.length+b2.length+b3.length;
-  // Ausform-Button zeigen wenn genug Inhalt
   const btn = document.getElementById('btnAusform');
   if(btn) btn.style.display = (total>=200) ? 'block' : 'none';
   checkReady();
@@ -890,654 +1116,5 @@ function zeigToast(msg, type='ok') {
 }
 </script>
   <script src="/sw-register.js" defer></script>
-
-<script>
-/* ================================================================
-   PROVA Fall-Kontext-System v1.0
-   Zeigt auf jeder Workflow/Werkzeug-Seite den aktiven Fall-Kontext
-   und führt den SV zum nächsten Schritt.
-   
-   Aktiviert sich automatisch wenn ein aktiver Fall vorhanden ist.
-   Kein Eingriff in bestehende Seiten-Logik.
-================================================================ */
-
-(function() {
-'use strict';
-
-// ── WORKFLOW-KONFIGURATION ──────────────────────────────────────────────
-var WORKFLOW = [
-  {
-    schritt: 1,
-    name: 'Fall anlegen',
-    seite: 'app-starter.html',
-    icon: '📋',
-    farbe: '#4f8ef7'
-  },
-  {
-    schritt: 2,
-    name: 'Diktat & Fotos',
-    seite: 'app-starter.html#step2',
-    icon: '🎙️',
-    farbe: '#4f8ef7'
-  },
-  {
-    schritt: 3,
-    name: 'KI-Analyse',
-    seite: 'app-starter.html#step3',
-    icon: '🤖',
-    farbe: '#6366f1'
-  },
-  {
-    schritt: 4,
-    name: '§6 Fachurteil',
-    seite: 'stellungnahme.html',
-    icon: '⚖️',
-    farbe: '#f59e0b'
-  },
-  {
-    schritt: 5,
-    name: 'Freigabe',
-    seite: 'freigabe.html',
-    icon: '✅',
-    farbe: '#10b981'
-  },
-  {
-    schritt: 6,
-    name: 'Rechnung',
-    seite: 'rechnungen.html',
-    icon: '💶',
-    farbe: '#10b981'
-  },
-  {
-    schritt: 7,
-    name: 'Abschluss',
-    seite: 'archiv.html',
-    icon: '📁',
-    farbe: '#6b7280'
-  }
-];
-
-// ── WERKZEUGE (kontextuell, kein fester Workflow-Schritt) ───────────────
-var WERKZEUGE = {
-  'normen.html':         { name: 'Normendatenbank',    icon: '📚', zurück: true },
-  'positionen.html':     { name: 'Positionsdatenbank', icon: '📦', zurück: true },
-  'textbausteine.html':  { name: 'Textbausteine',      icon: '✏️',  zurück: true },
-  'jveg.html':           { name: 'JVEG-Rechner',       icon: '⚖️',  zurück: false },
-  'kostenermittlung.html':{ name: 'Kosten & Aufmaß',   icon: '📐', zurück: true },
-  'briefvorlagen.html':  { name: 'Briefvorlagen',      icon: '✉️',  zurück: false }
-};
-
-// ── SEITE BESTIMMEN ─────────────────────────────────────────────────────
-var currentPage = window.location.pathname.split('/').pop() || 'dashboard.html';
-if (currentPage === '') currentPage = 'dashboard.html';
-
-// ── AKTUELLEN SCHRITT BESTIMMEN ─────────────────────────────────────────
-function getCurrentSchritt() {
-  var basePage = currentPage.split('#')[0];
-  for (var i = 0; i < WORKFLOW.length; i++) {
-    if (WORKFLOW[i].seite.split('#')[0] === basePage) {
-      return WORKFLOW[i].schritt;
-    }
-  }
-  return null;
-}
-
-// ── FALL-KONTEXT LADEN ──────────────────────────────────────────────────
-function ladeFallKontext() {
-  // Versuche aus URL-Parameter zu laden
-  var params = new URLSearchParams(window.location.search);
-  var urlAz   = params.get('az') || params.get('fall') || params.get('aktenzeichen');
-  
-  // Dann aus sessionStorage/localStorage
-  var az         = urlAz
-                 || sessionStorage.getItem('prova_current_az')
-                 || localStorage.getItem('prova_letztes_az')
-                 || '';
-  
-  var schadenart = sessionStorage.getItem('prova_current_schadenart')
-                 || localStorage.getItem('prova_schadenart')
-                 || '';
-  
-  var adresse    = sessionStorage.getItem('prova_current_objekt')
-                 || localStorage.getItem('prova_adresse')
-                 || '';
-  
-  var recordId   = sessionStorage.getItem('prova_record_id')
-                 || sessionStorage.getItem('prova_current_record_id')
-                 || '';
-  
-  if (!az) return null;
-  
-  return { az: az, schadenart: schadenart, adresse: adresse, recordId: recordId };
-}
-
-// ── NÄCHSTER SCHRITT ─────────────────────────────────────────────────────
-function naechsterSchritt(aktuellerSchritt) {
-  if (!aktuellerSchritt) return null;
-  for (var i = 0; i < WORKFLOW.length; i++) {
-    if (WORKFLOW[i].schritt === aktuellerSchritt + 1) {
-      return WORKFLOW[i];
-    }
-  }
-  return null;
-}
-
-// ── BANNER HTML BAUEN ───────────────────────────────────────────────────
-function baueBanner(kontext, aktuellerSchritt, istWerkzeug) {
-  var az        = kontext.az;
-  var sa        = kontext.schadenart;
-  var adr       = kontext.adresse;
-  var recordId  = kontext.recordId;
-  
-  // Schadensart Farbe
-  var saFarben = {
-    'Schimmelbefall': '#10b981',
-    'Wasserschaden':  '#3b82f6',
-    'Brandschaden':   '#ef4444',
-    'Sturmschaden':   '#8b5cf6',
-    'Baumängel':      '#f59e0b',
-    'Sonstiger Schaden': '#6b7280'
-  };
-  var saFarbe = saFarben[sa] || '#4f8ef7';
-  
-  // Akte-Link bauen
-  var akteLink = recordId
-    ? 'akte.html?id=' + recordId
-    : az
-      ? 'akte.html?az=' + encodeURIComponent(az)
-      : 'archiv.html';
-  
-  // Nächster-Schritt Button
-  var naechsterBtn = '';
-  if (!istWerkzeug && aktuellerSchritt) {
-    var naechster = naechsterSchritt(aktuellerSchritt);
-    if (naechster) {
-      var naechsterUrl = naechster.seite;
-      // AZ mitgeben wenn relevant
-      if (naechster.seite.indexOf('stellungnahme') >= 0 && az) {
-        naechsterUrl = naechster.seite + '?az=' + encodeURIComponent(az);
-      } else if (naechster.seite.indexOf('freigabe') >= 0 && recordId) {
-        naechsterUrl = naechster.seite + '?id=' + recordId;
-      } else if (naechster.seite.indexOf('rechnungen') >= 0 && az) {
-        naechsterUrl = naechster.seite + '?az=' + encodeURIComponent(az);
-      } else if (naechster.seite.indexOf('archiv') >= 0) {
-        naechsterUrl = naechster.seite;
-      }
-      
-      naechsterBtn = '<a href="' + naechsterUrl + '" style="'
-        + 'display:inline-flex;align-items:center;gap:5px;padding:4px 12px;'
-        + 'background:' + naechster.farbe + '22;border:1px solid ' + naechster.farbe + '44;'
-        + 'border-radius:999px;font-size:11px;font-weight:700;color:' + naechster.farbe + ';'
-        + 'text-decoration:none;white-space:nowrap;transition:all .15s;'
-        + '" onmouseover="this.style.background='' + naechster.farbe + '33'"'
-        + ' onmouseout="this.style.background='' + naechster.farbe + '22'">'
-        + naechster.icon + ' ' + naechster.name + ' →'
-        + '</a>';
-    }
-  }
-  
-  // Zurück-zu-Fall Button (für Werkzeuge)
-  var zurueckBtn = '';
-  if (istWerkzeug && WERKZEUGE[currentPage] && WERKZEUGE[currentPage].zurück) {
-    zurueckBtn = '<a href="' + akteLink + '" style="'
-      + 'display:inline-flex;align-items:center;gap:5px;padding:4px 10px;'
-      + 'background:rgba(79,142,247,.1);border:1px solid rgba(79,142,247,.25);'
-      + 'border-radius:999px;font-size:11px;font-weight:600;color:#4f8ef7;'
-      + 'text-decoration:none;white-space:nowrap;'
-      + '">← Zurück zu ' + az + '</a>';
-  }
-  
-  // Akte-Link in AZ
-  var azHtml = '<a href="' + akteLink + '" style="'
-    + 'font-weight:800;font-size:13px;color:var(--text, #e2e8f0);'
-    + 'text-decoration:none;letter-spacing:.02em;'
-    + 'border-bottom:1px solid rgba(255,255,255,.2);'
-    + '" title="Akte öffnen">' + az + '</a>';
-  
-  // Schrittanzeige
-  var schrittHtml = '';
-  if (aktuellerSchritt && !istWerkzeug) {
-    schrittHtml = '<span style="font-size:10px;color:rgba(255,255,255,.4);white-space:nowrap;">'
-      + 'Schritt ' + aktuellerSchritt + ' von 7'
-      + '</span>';
-    
-    // Mini-Progress (7 Punkte)
-    var dots = '';
-    for (var s = 1; s <= 7; s++) {
-      var dotColor = s < aktuellerSchritt
-        ? '#10b981'
-        : s === aktuellerSchritt
-          ? '#4f8ef7'
-          : 'rgba(255,255,255,.15)';
-      dots += '<span style="width:6px;height:6px;border-radius:50%;background:' + dotColor
-            + ';display:inline-block;' + (s < 7 ? 'margin-right:3px;' : '') + '"></span>';
-    }
-    schrittHtml += '<span style="display:inline-flex;align-items:center;margin-left:6px;">' + dots + '</span>';
-  }
-  
-  // Banner HTML
-  var html = '<div id="prova-fall-kontext-banner" style="'
-    + 'display:flex;align-items:center;gap:10px;flex-wrap:wrap;'
-    + 'padding:7px 16px 7px 20px;'
-    + 'background:linear-gradient(90deg,rgba(79,142,247,.12) 0%,rgba(10,15,28,.0) 100%);'
-    + 'border-bottom:1px solid rgba(79,142,247,.15);'
-    + 'font-family:inherit;position:relative;z-index:10;'
-    + 'min-height:36px;'
-    + '">'
-    
-    // AZ + Schadenart
-    + '<div style="display:flex;align-items:center;gap:8px;flex:1;min-width:0;">'
-    + '<span style="width:8px;height:8px;border-radius:50%;background:' + saFarbe + ';flex-shrink:0;"></span>'
-    + azHtml;
-    
-  if (sa) {
-    html += '<span style="font-size:11px;padding:2px 8px;border-radius:999px;background:' + saFarbe + '18;color:' + saFarbe + ';font-weight:600;white-space:nowrap;">' + sa + '</span>';
-  }
-  
-  if (adr && adr.length > 2 && adr !== '—') {
-    html += '<span style="font-size:11px;color:rgba(255,255,255,.35);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:200px;" title="' + adr + '">'
-          + adr.split(',')[0] // nur Straße, kürzer
-          + '</span>';
-  }
-  
-  html += '</div>'; // end flex-1
-  
-  // Mitte: Schritt-Anzeige
-  if (schrittHtml) {
-    html += '<div style="display:flex;align-items:center;gap:4px;">' + schrittHtml + '</div>';
-  }
-  
-  // Rechts: Werkzeug-Zurück oder Nächster-Schritt
-  if (zurueckBtn) {
-    html += '<div>' + zurueckBtn + '</div>';
-  }
-  if (naechsterBtn) {
-    html += '<div>' + naechsterBtn + '</div>';
-  }
-  
-  html += '</div>'; // end banner
-  
-  return html;
-}
-
-// ── BANNER EINFÜGEN ─────────────────────────────────────────────────────
-function einfuegenBanner() {
-  // Nicht auf Dashboard, Zentrale, Login, Onboarding
-  var ausnahmen = ['dashboard.html', 'archiv.html', 'app-login.html', 
-                   'onboarding.html', 'onboarding-schnellstart.html',
-                   'index.html', 'impressum.html', 'datenschutz.html',
-                   'agb.html', 'avv.html', 'termine.html', 'kontakte.html',
-                   'einstellungen.html'];
-  
-  if (ausnahmen.indexOf(currentPage) >= 0) return;
-  
-  var kontext = ladeFallKontext();
-  if (!kontext) return; // Kein aktiver Fall — kein Banner
-  
-  var aktuellerSchritt = getCurrentSchritt();
-  var istWerkzeug = !!WERKZEUGE[currentPage];
-  
-  var bannerHtml = baueBanner(kontext, aktuellerSchritt, istWerkzeug);
-  
-  // Einfüge-Strategie: nach <header class="topbar"> oder nach <div class="topbar">
-  // Suche den richtigen Einfügepunkt
-  var insertAfter = null;
-  
-  // Strategie 1: Nach topbar Header
-  var topbar = document.querySelector('header.topbar, div.topbar, .topbar');
-  if (topbar) {
-    insertAfter = topbar;
-  }
-  
-  // Strategie 2: Als erstes Child von main oder page-content
-  if (!insertAfter) {
-    insertAfter = document.querySelector('main, .page-content, .main, .page');
-    if (insertAfter) {
-      insertAfter.insertAdjacentHTML('afterbegin', bannerHtml);
-      return;
-    }
-  }
-  
-  if (insertAfter) {
-    insertAfter.insertAdjacentHTML('afterend', bannerHtml);
-  }
-}
-
-// ── INIT ────────────────────────────────────────────────────────────────
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', einfuegenBanner);
-} else {
-  einfuegenBanner();
-}
-
-// ── PUBLIC API ──────────────────────────────────────────────────────────
-window.PROVA_KONTEXT = {
-  // Erlaubt anderen Scripts den Fall-Kontext zu setzen
-  setFall: function(az, schadenart, adresse, recordId) {
-    if (az) localStorage.setItem('prova_letztes_az', az);
-    if (schadenart) localStorage.setItem('prova_schadenart', schadenart);
-    if (adresse) localStorage.setItem('prova_adresse', adresse);
-    if (recordId) sessionStorage.setItem('prova_record_id', recordId);
-    // Banner aktualisieren
-    var existing = document.getElementById('prova-fall-kontext-banner');
-    if (existing) existing.remove();
-    einfuegenBanner();
-  },
-  // Fall-Kontext löschen (nach Archivierung)
-  clearFall: function() {
-    localStorage.removeItem('prova_letztes_az');
-    localStorage.removeItem('prova_schadenart');
-    localStorage.removeItem('prova_adresse');
-    sessionStorage.removeItem('prova_record_id');
-    sessionStorage.removeItem('prova_current_az');
-    sessionStorage.removeItem('prova_current_schadenart');
-    var existing = document.getElementById('prova-fall-kontext-banner');
-    if (existing) existing.remove();
-  }
-};
-
-})();
-
-</script>
-<script>
-
-/* ================================================================
-   PROVA Audit-Trail v1.0
-   Schreibt KI-Beteiligungen in Airtable AUDIT_TRAIL (Pro/Enterprise)
-   Starter: nur localStorage
-   Pro: + Airtable
-   Enterprise: + Airtable + PDF-Offenlegungstext
-================================================================ */
-
-window.PROVA_AUDIT = (function() {
-  'use strict';
-  
-  var AT_BASE = 'appJ7bLlAHZoxENWE';
-  var AT_AUDIT = 'AUDIT_TRAIL'; // Tabellenname (wird per Name aufgelöst)
-  
-  // Einfacher Hash-Funktion (SHA-256 Simulation via djb2 für Client-Side)
-  function simpleHash(str) {
-    var hash = 5381;
-    for (var i = 0; i < Math.min(str.length, 500); i++) {
-      hash = ((hash << 5) + hash) + str.charCodeAt(i);
-      hash = hash & hash; // 32bit int
-    }
-    return Math.abs(hash).toString(16).padStart(8, '0');
-  }
-  
-  // Offenlegungstext je nach Gutachtentyp
-  var OFFENLEGUNG = {
-    gericht: 'Dieses Gutachten wurde unter Zuhilfenahme des digitalen Assistenzsystems PROVA Systems erstellt. Das System wurde zur strukturellen Aufbereitung der vom Sachverständigen erhobenen Daten (§1–§5), zur formalen Textgestaltung sowie zur Sicherstellung der normgerechten Fachsprache (insb. Konjunktiv-Prüfung in §6) eingesetzt. Die fachliche Datenerhebung, die Kausalitätsprüfung sowie die abschließende Bewertung in §6 erfolgten ausschließlich durch den Sachverständigen persönlich. Die KI-Nutzung wird hiermit gemäß §407a Abs. 3 ZPO offengelegt.',
-    versicherung: 'Die Erstellung dieses Gutachtens erfolgte unter Einsatz des digitalen Assistenzsystems PROVA Systems (KI-gestützte Strukturierung §1–§5, Konjunktiv-Prüfung §6). Das Fachurteil in §6 wurde eigenständig vom Sachverständigen erstellt.',
-    privat: 'Erstellt mit PROVA Systems (KI-Assistenz §1–§5). §6 Fachurteil: eigenständige Leistung des Sachverständigen.'
-  };
-  
-  function genOffenlegungstext(auftraggeber_typ) {
-    if (!auftraggeber_typ) return OFFENLEGUNG.gericht;
-    var typ = auftraggeber_typ.toLowerCase();
-    if (typ.includes('gericht') || typ.includes('gerichtlich')) return OFFENLEGUNG.gericht;
-    if (typ.includes('versicherung') || typ.includes('insurance')) return OFFENLEGUNG.versicherung;
-    return OFFENLEGUNG.privat;
-  }
-  
-  // Lokal in localStorage speichern (alle Pakete)
-  function speichereLokal(eintrag) {
-    try {
-      var key = 'prova_audit_' + (eintrag.fall_id || eintrag.aktenzeichen || Date.now());
-      var existing = [];
-      try { existing = JSON.parse(localStorage.getItem('prova_audit_log') || '[]'); } catch(e) {}
-      existing.push(eintrag);
-      // Maximal 50 Einträge lokal speichern
-      if (existing.length > 50) existing = existing.slice(-50);
-      localStorage.setItem('prova_audit_log', JSON.stringify(existing));
-    } catch(e) {}
-  }
-  
-  // In Airtable schreiben (Pro/Enterprise)
-  async function speichereAirtable(eintrag) {
-    var paket = localStorage.getItem('prova_paket') || 'Starter';
-    if (paket === 'Starter') return; // Starter nur localStorage
-    
-    try {
-      var res = await fetch('/.netlify/functions/airtable', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({
-          method: 'POST',
-          path: '/v0/' + AT_BASE + '/AUDIT_TRAIL',
-          body: {
-            records: [{
-              fields: {
-                fall_id:          eintrag.fall_id || '',
-                aktenzeichen:     eintrag.aktenzeichen || '',
-                sv_email:         eintrag.sv_email || '',
-                paket:            paket,
-                aktion:           eintrag.aktion || '',
-                ki_modell:        eintrag.ki_modell || '',
-                sv_validiert:     eintrag.sv_validiert || false,
-                timestamp:        eintrag.timestamp || new Date().toISOString(),
-                input_hash:       eintrag.input_hash || '',
-                output_laenge:    eintrag.output_laenge || 0,
-                aenderungsquote:  eintrag.aenderungsquote || 0,
-                offenlegungstext: eintrag.offenlegungstext || '',
-                notizen:          eintrag.notizen || ''
-              }
-            }]
-          }
-        })
-      });
-      if (!res.ok) console.warn('PROVA Audit-Trail: Airtable Fehler', res.status);
-    } catch(e) {
-      console.warn('PROVA Audit-Trail: Netzwerkfehler', e.message);
-    }
-  }
-  
-  // Öffentliche API
-  return {
-    // Hauptfunktion: Aktion protokollieren
-    log: function(params) {
-      var paket = localStorage.getItem('prova_paket') || 'Starter';
-      var svEmail = localStorage.getItem('prova_sv_email') || '';
-      var az = localStorage.getItem('prova_letztes_az') || '';
-      var rid = sessionStorage.getItem('prova_record_id') || '';
-      var auftraggeber_typ = localStorage.getItem('prova_auftraggeber_typ') || '';
-      
-      var eintrag = {
-        fall_id:          params.fall_id || rid,
-        aktenzeichen:     params.aktenzeichen || az,
-        sv_email:         svEmail,
-        paket:            paket,
-        aktion:           params.aktion || 'unbekannt',
-        ki_modell:        params.ki_modell || '',
-        sv_validiert:     params.sv_validiert || false,
-        timestamp:        new Date().toISOString(),
-        input_hash:       params.input ? simpleHash(params.input) : '',
-        output_laenge:    params.output ? params.output.length : 0,
-        aenderungsquote:  params.aenderungsquote || 0,
-        offenlegungstext: params.offenlegungstext || genOffenlegungstext(auftraggeber_typ),
-        notizen:          params.notizen || ''
-      };
-      
-      // Immer lokal speichern
-      speichereLokal(eintrag);
-      
-      // Pro/Enterprise: auch Airtable
-      if (paket === 'Pro' || paket === 'Enterprise') {
-        speichereAirtable(eintrag).catch(function(e) {
-          console.warn('PROVA Audit-Trail:', e);
-        });
-      }
-      
-      // Enterprise: Offenlegungstext in sessionStorage für Freigabe
-      if (paket === 'Enterprise') {
-        try {
-          sessionStorage.setItem('prova_offenlegungstext', eintrag.offenlegungstext);
-        } catch(e) {}
-      }
-      
-      return eintrag;
-    },
-    
-    // Audit-Log aus localStorage abrufen
-    getLokalesLog: function() {
-      try { return JSON.parse(localStorage.getItem('prova_audit_log') || '[]'); } catch(e) { return []; }
-    },
-    
-    // Offenlegungstext generieren
-    genOffenlegungstext: genOffenlegungstext
-  };
-})();
-
-</script>
-<script>
-
-/* ================================================================
-   PROVA Audit-Trail v1.0
-   Schreibt KI-Beteiligungen in Airtable AUDIT_TRAIL (Pro/Enterprise)
-   Starter: nur localStorage
-   Pro: + Airtable
-   Enterprise: + Airtable + PDF-Offenlegungstext
-================================================================ */
-
-window.PROVA_AUDIT = (function() {
-  'use strict';
-  
-  var AT_BASE = 'appJ7bLlAHZoxENWE';
-  var AT_AUDIT = 'AUDIT_TRAIL'; // Tabellenname (wird per Name aufgelöst)
-  
-  // Einfacher Hash-Funktion (SHA-256 Simulation via djb2 für Client-Side)
-  function simpleHash(str) {
-    var hash = 5381;
-    for (var i = 0; i < Math.min(str.length, 500); i++) {
-      hash = ((hash << 5) + hash) + str.charCodeAt(i);
-      hash = hash & hash; // 32bit int
-    }
-    return Math.abs(hash).toString(16).padStart(8, '0');
-  }
-  
-  // Offenlegungstext je nach Gutachtentyp
-  var OFFENLEGUNG = {
-    gericht: 'Dieses Gutachten wurde unter Zuhilfenahme des digitalen Assistenzsystems PROVA Systems erstellt. Das System wurde zur strukturellen Aufbereitung der vom Sachverständigen erhobenen Daten (§1–§5), zur formalen Textgestaltung sowie zur Sicherstellung der normgerechten Fachsprache (insb. Konjunktiv-Prüfung in §6) eingesetzt. Die fachliche Datenerhebung, die Kausalitätsprüfung sowie die abschließende Bewertung in §6 erfolgten ausschließlich durch den Sachverständigen persönlich. Die KI-Nutzung wird hiermit gemäß §407a Abs. 3 ZPO offengelegt.',
-    versicherung: 'Die Erstellung dieses Gutachtens erfolgte unter Einsatz des digitalen Assistenzsystems PROVA Systems (KI-gestützte Strukturierung §1–§5, Konjunktiv-Prüfung §6). Das Fachurteil in §6 wurde eigenständig vom Sachverständigen erstellt.',
-    privat: 'Erstellt mit PROVA Systems (KI-Assistenz §1–§5). §6 Fachurteil: eigenständige Leistung des Sachverständigen.'
-  };
-  
-  function genOffenlegungstext(auftraggeber_typ) {
-    if (!auftraggeber_typ) return OFFENLEGUNG.gericht;
-    var typ = auftraggeber_typ.toLowerCase();
-    if (typ.includes('gericht') || typ.includes('gerichtlich')) return OFFENLEGUNG.gericht;
-    if (typ.includes('versicherung') || typ.includes('insurance')) return OFFENLEGUNG.versicherung;
-    return OFFENLEGUNG.privat;
-  }
-  
-  // Lokal in localStorage speichern (alle Pakete)
-  function speichereLokal(eintrag) {
-    try {
-      var key = 'prova_audit_' + (eintrag.fall_id || eintrag.aktenzeichen || Date.now());
-      var existing = [];
-      try { existing = JSON.parse(localStorage.getItem('prova_audit_log') || '[]'); } catch(e) {}
-      existing.push(eintrag);
-      // Maximal 50 Einträge lokal speichern
-      if (existing.length > 50) existing = existing.slice(-50);
-      localStorage.setItem('prova_audit_log', JSON.stringify(existing));
-    } catch(e) {}
-  }
-  
-  // In Airtable schreiben (Pro/Enterprise)
-  async function speichereAirtable(eintrag) {
-    var paket = localStorage.getItem('prova_paket') || 'Starter';
-    if (paket === 'Starter') return; // Starter nur localStorage
-    
-    try {
-      var res = await fetch('/.netlify/functions/airtable', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({
-          method: 'POST',
-          path: '/v0/' + AT_BASE + '/tblqQmMwJKxltXXXl',
-          body: {
-            records: [{
-              fields: {
-                fldBk9Qpni99KO5sc: eintrag.fall_id || eintrag.aktenzeichen || 'PROVA-' + Date.now(),
-                fldfbNMQDJSmmNnT7: eintrag.aktenzeichen || '',
-                fldgSoSEHNX7gDBCj: eintrag.sv_email || '',
-                fld4XDJA7wE54WYBg: paket,
-                fldT6ZDEhrNa38hyT: eintrag.aktion || '',
-                fldEXhCUAgokRJxSA: eintrag.ki_modell || '',
-                fldj2cR7sLY4tu8Mv: eintrag.sv_validiert || false,
-                fldrGtAJlW3aOoxgi: eintrag.timestamp || new Date().toISOString(),
-                fldXwHCuiidCkqQoo: eintrag.input_hash || '',
-                fld5wR400PRNE7hJL: eintrag.output_laenge || 0,
-                fldhzKP4LhG6HubZq: eintrag.aenderungsquote || 0,
-                fldk4V3tEinYwHeRQ: eintrag.offenlegungstext || '',
-                fld8EeypJENJPVFPJ: eintrag.notizen || ''
-              }
-            }]
-          }
-        })
-      });
-      if (!res.ok) console.warn('PROVA Audit-Trail: Airtable Fehler', res.status);
-    } catch(e) {
-      console.warn('PROVA Audit-Trail: Netzwerkfehler', e.message);
-    }
-  }
-  
-  // Öffentliche API
-  return {
-    // Hauptfunktion: Aktion protokollieren
-    log: function(params) {
-      var paket = localStorage.getItem('prova_paket') || 'Starter';
-      var svEmail = localStorage.getItem('prova_sv_email') || '';
-      var az = localStorage.getItem('prova_letztes_az') || '';
-      var rid = sessionStorage.getItem('prova_record_id') || '';
-      var auftraggeber_typ = localStorage.getItem('prova_auftraggeber_typ') || '';
-      
-      var eintrag = {
-        fall_id:          params.fall_id || rid,
-        aktenzeichen:     params.aktenzeichen || az,
-        sv_email:         svEmail,
-        paket:            paket,
-        aktion:           params.aktion || 'unbekannt',
-        ki_modell:        params.ki_modell || '',
-        sv_validiert:     params.sv_validiert || false,
-        timestamp:        new Date().toISOString(),
-        input_hash:       params.input ? simpleHash(params.input) : '',
-        output_laenge:    params.output ? params.output.length : 0,
-        aenderungsquote:  params.aenderungsquote || 0,
-        offenlegungstext: params.offenlegungstext || genOffenlegungstext(auftraggeber_typ),
-        notizen:          params.notizen || ''
-      };
-      
-      // Immer lokal speichern
-      speichereLokal(eintrag);
-      
-      // Pro/Enterprise: auch Airtable
-      if (paket === 'Pro' || paket === 'Enterprise') {
-        speichereAirtable(eintrag).catch(function(e) {
-          console.warn('PROVA Audit-Trail:', e);
-        });
-      }
-      
-      // Enterprise: Offenlegungstext in sessionStorage für Freigabe
-      if (paket === 'Enterprise') {
-        try {
-          sessionStorage.setItem('prova_offenlegungstext', eintrag.offenlegungstext);
-        } catch(e) {}
-      }
-      
-      return eintrag;
-    },
-    
-    // Audit-Log aus localStorage abrufen
-    getLokalesLog: function() {
-      try { return JSON.parse(localStorage.getItem('prova_audit_log') || '[]'); } catch(e) { return []; }
-    },
-    
-    // Offenlegungstext generieren
-    genOffenlegungstext: genOffenlegungstext
-  };
-})();
-
-</script>
 </body>
 </html>
