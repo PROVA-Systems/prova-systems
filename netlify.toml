@@ -6,7 +6,30 @@
   publish = "."
   functions = "netlify/functions"
 
+# ---- NETLIFY IDENTITY TRIGGERS ----
+[functions."identity-signup"]
+  included_files = []
+
 # ---- REDIRECT RULES ----
+
+# Confirmation + Invite Links → app-login.html (nicht index.html!)
+[[redirects]]
+  from = "/"
+  to = "/app-login.html"
+  status = 302
+  conditions = {Query = {confirmation_token = ":token"}}
+
+[[redirects]]
+  from = "/"
+  to = "/app-login.html"
+  status = 302
+  conditions = {Query = {invite_token = ":token"}}
+
+[[redirects]]
+  from = "/"
+  to = "/app-login.html"
+  status = 302
+  conditions = {Query = {recovery_token = ":token"}}
 [[redirects]]
   from = "/"
   to = "/index.html"

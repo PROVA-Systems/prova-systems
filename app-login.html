@@ -285,6 +285,7 @@ a{text-decoration:none;color:inherit;}
 
       <!-- ── REGISTER ── -->
       <div id="form-register" style="display:none;">
+        <div id="invite-hint" style="display:none;margin-bottom:16px;padding:12px 14px;background:rgba(79,142,247,.1);border:1px solid rgba(79,142,247,.3);border-radius:8px;font-size:13px;color:#93C5FD;text-align:center;">🎉 Sie wurden zu PROVA eingeladen — bitte Passwort festlegen und loslegen.</div>
         <div class="form-group">
           <label class="form-label">Vollständiger Name</label>
           <input class="form-input" id="reg-name" type="text" placeholder="Max Mustermann" autocomplete="name">
@@ -545,33 +546,45 @@ window.resetPasswort = async function() {
    INITIALISIERUNG — erst NACH Funktionsdefinition
    ═══════════════════════════════════════════════ */
 
-/* ── NETLIFY IDENTITY ── */
+/* ── TOKEN-HANDLING (Invite / Recovery) — EIGENER DEUTSCHER FLOW ── */
 (function() {
   var hash = window.location.hash || '';
-  var hasToken = hash.includes('invite_token') || hash.includes('recovery_token') || hash.includes('confirmation_token');
-  if (typeof netlifyIdentity === 'undefined') return;
-  netlifyIdentity.init();
-  netlifyIdentity.on('init', function(user) {
-    if (!user && hasToken) {
-      if (hash.includes('invite_token') || hash.includes('confirmation_token')) netlifyIdentity.open('signup');
-      else if (hash.includes('recovery_token')) netlifyIdentity.open('recovery');
-    }
-  });
-  netlifyIdentity.on('login', function(user) {
-    var md = user.user_metadata || {};
-    localStorage.setItem('prova_user', JSON.stringify({email: user.email, name: md.full_name||user.email, token:'netlify'}));
-    if (md.full_name) {
-      var parts = md.full_name.split(' ');
-      localStorage.setItem('prova_sv_vorname',  parts[0]||'');
-      localStorage.setItem('prova_sv_nachname', parts.slice(1).join(' ')||'');
-    }
-    localStorage.setItem('prova_sv_email', user.email);
-    ladePaketUndWeiterleiten(user.email);
-  });
-  if (hasToken) setTimeout(function() {
-    if (hash.includes('invite_token') || hash.includes('confirmation_token')) netlifyIdentity.open('signup');
-    else if (hash.includes('recovery_token')) netlifyIdentity.open('recovery');
-  }, 800);
+
+  // Invite-Token → Tab "Registrieren" zeigen + Token-Info anzeigen
+  if (hash.includes('invite_token') || hash.includes('confirmation_token')) {
+    showTab('register');
+    var hint = document.getElementById('invite-hint');
+    if (hint) hint.style.display = 'block';
+    // Token aus Hash extrahieren und in Formular vormerken
+    var tokenMatch = hash.match(/invite_token=([^&]+)/);
+    if (!tokenMatch) tokenMatch = hash.match(/confirmation_token=([^&]+)/);
+    if (tokenMatch) sessionStorage.setItem('prova_invite_token', tokenMatch[1]);
+    return;
+  }
+
+  // Recovery-Token → Passwort-Reset Tab zeigen
+  if (hash.includes('recovery_token')) {
+    showTab('reset');
+    var tokenMatch = hash.match(/recovery_token=([^&]+)/);
+    if (tokenMatch) sessionStorage.setItem('prova_recovery_token', tokenMatch[1]);
+    return;
+  }
+
+  // Kein Token → Netlify Identity für normale OAuth-Flows initialisieren
+  if (typeof netlifyIdentity !== 'undefined') {
+    netlifyIdentity.init();
+    netlifyIdentity.on('login', function(user) {
+      var md = user.user_metadata || {};
+      localStorage.setItem('prova_user', JSON.stringify({email: user.email, name: md.full_name||user.email, token:'netlify'}));
+      if (md.full_name) {
+        var parts = md.full_name.split(' ');
+        localStorage.setItem('prova_sv_vorname',  parts[0]||'');
+        localStorage.setItem('prova_sv_nachname', parts.slice(1).join(' ')||'');
+      }
+      localStorage.setItem('prova_sv_email', user.email);
+      ladePaketUndWeiterleiten(user.email);
+    });
+  }
 })();
 
 /* ── MOBILE LOGO ── */
