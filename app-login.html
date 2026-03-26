@@ -382,12 +382,12 @@ window.starteTestversion = function() {
 
 /* ── PAKET AUS AIRTABLE LADEN ── */
 async function ladePaketUndWeiterleiten(email, ziel) {
-  // Admin-Bypass
+  // Admin-Email gehört nicht in die SV-App
   if ((email||'').toLowerCase() === 'admin@prova-systems.de') {
-    localStorage.setItem('prova_is_admin', 'true');
-    localStorage.setItem('prova_paket', 'Enterprise');
-    window.location.href = 'admin-dashboard.html';
-    return;
+    localStorage.removeItem('prova_user');
+    localStorage.removeItem('prova_paket');
+    localStorage.removeItem('prova_is_admin');
+    return; // Bleibt auf app-login.html
   }
   var paket = 'Starter';
   if (!ziel) ziel = localStorage.getItem('prova_onboarding_done') ? 'dashboard.html' : 'onboarding-schnellstart.html';
@@ -603,9 +603,21 @@ if (window.innerWidth <= 800) {
     showTab('register');
     return;
   }
-  if (localStorage.getItem('prova_user') && reason !== 'logout') {
-    var stored = JSON.parse(localStorage.getItem('prova_user') || '{}');
-    ladePaketUndWeiterleiten(stored.email || '');
+  if (reason === 'logout') {
+    localStorage.removeItem('prova_user');
+    localStorage.removeItem('prova_paket');
+    return;
+  }
+  var stored = JSON.parse(localStorage.getItem('prova_user') || 'null');
+  if (stored && stored.email) {
+    // Admin-Email nicht automatisch weiterleiten — Admin nutzt admin-login.html
+    if (stored.email.toLowerCase() === 'admin@prova-systems.de') {
+      localStorage.removeItem('prova_user');
+      localStorage.removeItem('prova_paket');
+      localStorage.removeItem('prova_is_admin');
+      return;
+    }
+    ladePaketUndWeiterleiten(stored.email);
   }
 })();
 </script>
