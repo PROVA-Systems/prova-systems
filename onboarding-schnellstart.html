@@ -512,8 +512,40 @@ function starteKiAnimation(){
   }, total+300);
 }
 
+function speichereOnboardingDoneAirtable() {
+  try {
+    var email = localStorage.getItem('prova_sv_email') || '';
+    if (!email) return;
+    var AT_BASE = 'appJ7bLlAHZoxENWE';
+    var AT_SV = 'tbladqEQT3tmx4DIB';
+    // Erst Record-ID holen, dann updaten
+    fetch('/.netlify/functions/airtable', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        method: 'GET',
+        path: '/v0/' + AT_BASE + '/' + AT_SV + '?filterByFormula=' + encodeURIComponent('{Email}="' + email + '"') + '&maxRecords=1'
+      })
+    }).then(function(r){ return r.json(); }).then(function(data){
+      var records = data.records || [];
+      if (records.length === 0) return;
+      var recId = records[0].id;
+      fetch('/.netlify/functions/airtable', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          method: 'PATCH',
+          path: '/v0/' + AT_BASE + '/' + AT_SV + '/' + recId,
+          payload: { fields: { onboarding_done: true } }
+        })
+      });
+    });
+  } catch(e) { console.warn('Onboarding Airtable sync:', e); }
+}
+
 function starten(){
   localStorage.setItem('prova_onboarding_done','true');
+  speichereOnboardingDoneAirtable();
   window.location.href='app-starter.html';
 }
 
@@ -523,6 +555,7 @@ function überspringen(){
   if(v) localStorage.setItem('prova_sv_vorname',v);
   if(nn) localStorage.setItem('prova_sv_nachname',nn);
   localStorage.setItem('prova_onboarding_done','true');
+  speichereOnboardingDoneAirtable();
   window.location.href='dashboard.html';
 }
 </script>
