@@ -506,38 +506,38 @@ window.register = async function() {
     var res, data;
 
     if (inviteToken) {
-      // ── Einladungs-Flow: /.netlify/identity/verify mit Invite-Token ──
-      res = await fetch('/.netlify/identity/verify', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({
-          token: inviteToken,
-          password: pw,
-          type: 'invite'
-        })
-      });
-      data = await res.json().catch(function(){ return {}; });
-
-      if (res.ok && data.email) {
-        // Erfolg: Name aus Token-Response oder Formular
-        var resolvedName = name || data.user_metadata?.full_name || data.email;
-        var resolvedEmail = data.email;
-        var parts = resolvedName.split(' ');
-        sessionStorage.removeItem('prova_invite_token');
-        localStorage.setItem('prova_user',        JSON.stringify({name: resolvedName, email: resolvedEmail, token: data.access_token||'netlify'}));
-        localStorage.setItem('prova_sv_email',    resolvedEmail);
-        localStorage.setItem('prova_sv_vorname',  parts[0]||'');
-        localStorage.setItem('prova_sv_nachname', parts.slice(1).join(' ')||'');
-        okEl.textContent = '✅ Passwort gesetzt — Sie werden weitergeleitet…';
-        okEl.classList.add('show');
-        setTimeout(function() { ladePaketUndWeiterleiten(resolvedEmail); }, 1500);
-        return;
-      } else {
-        // Invite-Token abgelaufen oder ungültig
-        showErr(errEl, data.msg || 'Einladungslink abgelaufen oder ungültig. Bitte neuen Link anfordern.');
+      // ── Einladungs-Flow: netlifyIdentity.acceptInvite() ──
+      // Das ist die einzige korrekte Methode — kein manueller /verify-Fetch
+      if (typeof netlifyIdentity === 'undefined') {
+        showErr(errEl, 'Authentifizierungssystem nicht geladen. Bitte Seite neu laden.');
         btn.disabled = false; btn.textContent = 'Passwort festlegen & loslegen';
         return;
       }
+
+      netlifyIdentity.acceptInvite(inviteToken, pw, function(err, user) {
+        if (err) {
+          var msg = (err && err.json && err.json.error_description)
+            ? err.json.error_description
+            : 'Einladungslink abgelaufen oder ungültig. Bitte neuen Link anfordern.';
+          showErr(errEl, msg);
+          btn.disabled = false; btn.textContent = 'Passwort festlegen & loslegen';
+          return;
+        }
+        // Erfolg
+        var md = (user && user.user_metadata) ? user.user_metadata : {};
+        var resolvedName  = name || md.full_name || (user && user.email) || '';
+        var resolvedEmail = (user && user.email) || '';
+        var parts = resolvedName.split(' ');
+        sessionStorage.removeItem('prova_invite_token');
+        localStorage.setItem('prova_user',        JSON.stringify({name: resolvedName, email: resolvedEmail, token: 'netlify'}));
+        localStorage.setItem('prova_sv_email',    resolvedEmail);
+        localStorage.setItem('prova_sv_vorname',  parts[0] || '');
+        localStorage.setItem('prova_sv_nachname', parts.slice(1).join(' ') || '');
+        okEl.textContent = '✅ Passwort gesetzt — Sie werden weitergeleitet…';
+        okEl.classList.add('show');
+        setTimeout(function() { ladePaketUndWeiterleiten(resolvedEmail); }, 1500);
+      });
+      return; // netlifyIdentity.acceptInvite ist callback-basiert, hier Funktion beenden
     }
 
     // ── Normaler Signup-Flow ──
@@ -595,6 +595,11 @@ window.resetPasswort = async function() {
 (function() {
   var hash = window.location.hash || '';
 
+  // Netlify Identity Widget immer initialisieren (nötig für acceptInvite)
+  if (typeof netlifyIdentity !== 'undefined') {
+    netlifyIdentity.init();
+  }
+
   // Invite-Token → Tab "Registrieren" zeigen + Token-Info anzeigen
   if (hash.includes('invite_token') || hash.includes('confirmation_token')) {
     showTab('register');
@@ -628,9 +633,8 @@ window.resetPasswort = async function() {
     return;
   }
 
-  // Kein Token → Netlify Identity für normale OAuth-Flows initialisieren
+  // Kein Token → normales Login, netlifyIdentity für OAuth-Flows
   if (typeof netlifyIdentity !== 'undefined') {
-    netlifyIdentity.init();
     netlifyIdentity.on('login', function(user) {
       var md = user.user_metadata || {};
       localStorage.setItem('prova_user', JSON.stringify({email: user.email, name: md.full_name||user.email, token:'netlify'}));
