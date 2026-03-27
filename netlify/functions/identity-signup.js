@@ -38,8 +38,9 @@ exports.handler = async function(event) {
 
   try {
     // Prüfen ob Nutzer bereits existiert
+    // FIX: doppelte }} entfernt → korrekte URL
     const checkRes = await fetch(
-      `https://api.airtable.com/v0/${baseId}/${tableId}?filterByFormula=${encodeURIComponent(`{Email}="${email}"`)}}&maxRecords=1`,
+      `https://api.airtable.com/v0/${baseId}/${tableId}?filterByFormula=${encodeURIComponent(`{Email}="${email}"`)}&maxRecords=1`,
       { headers: { 'Authorization': `Bearer ${pat}` } }
     );
     const checkData = await checkRes.json();
