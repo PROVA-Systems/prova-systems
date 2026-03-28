@@ -710,13 +710,74 @@
         </div>
         <div class="kpi-card" style="--kpi-color:var(--success);">
           <div class="kpi-label-text">Kontingent</div>
-          <div class="kpi-value" id="kpi-kontingent">— / 10</div>
+          <div class="kpi-value" id="kpi-kontingent">— / 30</div>
           <div class="kpi-sub">Gutachten diesen Monat</div>
           <div class="kpi-progress">
             <div class="kpi-progress-fill" id="kpi-progress" style="width:0%;"></div>
           </div>
         </div>
       </div>
+
+      <!-- Fristen-Widget -->
+      <div id="fristen-widget" style="display:none;margin-bottom:20px;background:var(--bg2);border:1px solid var(--border2);border-radius:var(--r-lg);overflow:hidden;">
+        <div style="padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+          <div style="font-size:14px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:8px;">⚖️ Anstehende Fristen</div>
+          <span style="font-size:11px;color:var(--text3);" id="fristen-count">0 offene Fristen</span>
+        </div>
+        <div id="fristen-list" style="padding:10px 14px;max-height:220px;overflow-y:auto;"></div>
+      </div>
+      <script>
+      (function(){
+        // Fristen aus localStorage laden und anzeigen
+        try {
+          var faelle = JSON.parse(localStorage.getItem('prova_faelle_cache') || '[]');
+          var fristen = faelle.filter(function(f) { return f.fristdatum && f.status !== 'Freigegeben' && f.status !== 'Exportiert'; });
+          if(fristen.length === 0) return;
+
+          fristen.sort(function(a,b) { return new Date(a.fristdatum) - new Date(b.fristdatum); });
+
+          var widget = document.getElementById('fristen-widget');
+          var list = document.getElementById('fristen-list');
+          var count = document.getElementById('fristen-count');
+          if(!widget || !list) return;
+
+          var heute = new Date();
+          var html = '';
+          var ueberfaellig = 0;
+
+          fristen.forEach(function(f) {
+            var frist = new Date(f.fristdatum);
+            var tage = Math.ceil((frist - heute) / (1000*60*60*24));
+            var farbe, icon, label;
+            if(tage < 0) { farbe='#ef4444'; icon='🔴'; label=Math.abs(tage)+' Tage überfällig'; ueberfaellig++; }
+            else if(tage <= 7) { farbe='#ef4444'; icon='🔴'; label='Noch '+tage+' Tage'; }
+            else if(tage <= 21) { farbe='#f59e0b'; icon='🟡'; label='Noch '+tage+' Tage'; }
+            else { farbe='#10b981'; icon='🟢'; label='Noch '+tage+' Tage'; }
+
+            html += '<div style="display:flex;align-items:center;gap:12px;padding:8px 4px;border-bottom:1px solid var(--border);">'
+              + '<span style="font-size:14px;">'+icon+'</span>'
+              + '<div style="flex:1;min-width:0;">'
+              + '<div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+(f.gerichts_az || f.aktenzeichen || 'Fall')+'</div>'
+              + '<div style="font-size:11px;color:var(--text3);">'+(f.schadenart || '')+'</div>'
+              + '</div>'
+              + '<div style="text-align:right;">'
+              + '<div style="font-size:12px;font-weight:700;color:'+farbe+';">'+label+'</div>'
+              + '<div style="font-size:10px;color:var(--text3);">'+frist.toLocaleDateString('de-DE')+'</div>'
+              + '</div></div>';
+          });
+
+          list.innerHTML = html;
+          count.textContent = fristen.length + ' offene Frist' + (fristen.length !== 1 ? 'en' : '');
+          if(ueberfaellig > 0) count.style.color = '#ef4444';
+          widget.style.display = 'block';
+
+          // KPI "Heute fällig" aktualisieren
+          var kpiHeute = document.getElementById('kpi-heute');
+          var heuteFaellig = fristen.filter(function(f) { return Math.ceil((new Date(f.fristdatum)-heute)/(1000*60*60*24)) <= 7; }).length;
+          if(kpiHeute) kpiHeute.textContent = heuteFaellig;
+        } catch(e) { console.warn('Fristen-Widget:', e); }
+      })();
+      </script>
 
       <!-- Hauptgrid: Feed + Rechts -->
       <div class="zentrale-grid">
@@ -873,30 +934,17 @@ var AT_FAELLE = 'tblSxV8bsXwd1pwa0';
 var AT_TERMINE = 'tblyMTTdtfGQjjmc2';
 var AT_RECHNUNGEN = 'tblF6MS7uiFAJDjiT';
 
-var paket = localStorage.getItem('prova_paket') || 'Starter';
+var paket = localStorage.getItem('prova_paket') || 'Solo';
 var vorname = localStorage.getItem('prova_sv_vorname') || '';
-var paketColors = {Starter:'#4f8ef7',Pro:'#f59e0b',Enterprise:'#a78bfa'};
+var paketColors = {Solo:'#4f8ef7',Team:'#a78bfa',Starter:'#4f8ef7',Pro:'#4f8ef7',Enterprise:'#a78bfa'};
 var pc = paketColors[paket] || paketColors.Starter;
-var maxKontingent = paket==='Pro' ? 30 : paket==='Enterprise' ? 999 : 10;
+var maxKontingent = paket==='Solo' ? 30 : paket==='Team' ? 999 : 10;
 
-/* ── Sidebar + Paket ── */
+/* ── Paket Badge ── */
 (function(){
   var el=document.getElementById('topbar-paket-badge');
   if(el){el.textContent=paket;el.style.cssText='font-size:10px;font-weight:700;padding:3px 9px;border-radius:10px;letter-spacing:.04em;background:'+pc+'18;color:'+pc+';border:1px solid '+pc+'33;';}
-  var dot=document.getElementById('sb-paket-dot');if(dot){dot.style.background=pc;dot.style.color=pc;}
-  var nm=document.getElementById('sb-paket-name');if(nm){nm.textContent=paket;nm.style.color=pc;}
-  var appUrl=paket==='Enterprise'?'app-enterprise.html':paket==='Pro'?'app-pro.html':'app-starter.html';
-  var nb=document.getElementById('sb-new-btn');if(nb)nb.onclick=function(){window.location.href=appUrl;};
-  var bnNew=document.getElementById('bn-new');if(bnNew)bnNew.href=appUrl;
 })();
-
-/* ── Sidebar collapse ── */
-var sidebar=document.getElementById('sidebar');
-var collapsed=localStorage.getItem('prova_sb_collapsed')==='1';
-if(collapsed&&sidebar)sidebar.classList.add('collapsed');
-window.toggleSidebar=function(){collapsed=!collapsed;sidebar.classList.toggle('collapsed',collapsed);localStorage.setItem('prova_sb_collapsed',collapsed?'1':'0');};
-window.openMobileSidebar=function(){sidebar.classList.add('mobile-open');document.getElementById('sb-overlay').classList.add('open');};
-window.closeMobileSidebar=function(){sidebar.classList.remove('mobile-open');document.getElementById('sb-overlay').classList.remove('open');};
 
 /* ── Begrüssung ── */
 (function(){
@@ -945,7 +993,7 @@ function zeigSkeleton(){
    ONBOARDING EMPTY STATE — für neuen SV
 ══════════════════════════════════════════════════ */
 function zeigOnboarding(){
-  var appUrl=paket==='Enterprise'?'app-enterprise.html':paket==='Pro'?'app-pro.html':'app-starter.html';
+  var appUrl=paket==='Team'?'app-enterprise.html':paket==='Solo'?'app-pro.html':'app-starter.html';
   var feed=document.getElementById('action-feed');
   if(feed){
     feed.innerHTML=
@@ -1023,9 +1071,9 @@ function renderKPIs(faelle, termine, rechnungen){
     return ts.startsWith(thisMonth);
   }).length;
   var kpiK=document.getElementById('kpi-kontingent');
-  if(kpiK)kpiK.textContent=paket==='Enterprise'?'∞':diesesMonat+' / '+maxKontingent;
+  if(kpiK)kpiK.textContent=paket==='Team'?'∞':diesesMonat+' / '+maxKontingent;
   var prog=document.getElementById('kpi-progress');
-  if(prog&&paket!=='Enterprise'){
+  if(prog&&paket!=='Team'){
     var pct=maxKontingent>0?Math.min(100,Math.round(diesesMonat/maxKontingent*100)):0;
     setTimeout(function(){prog.style.width=pct+'%';},100);
     // Farbe ändern wenn nah am Limit
@@ -1473,5 +1521,7 @@ function pwaDismiss() {
   });
 })();
 </script>
+<script src="support-chat.js"></script>
+<script src="onboarding-tour.js"></script>
 </body>
 </html>

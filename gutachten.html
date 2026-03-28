@@ -10,7 +10,7 @@
   <meta name="theme-color" content="#111827">
   <link rel="apple-touch-icon" href="/icons/icon-192.png">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PROVA App – Starter</title>
+  <title>PROVA — Gutachten</title>
 <script src="nav.js"></script>
 <script src="slide-panel.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1939,12 +1939,34 @@ function renderFotoGrid() {
 window.entferneFoto = function(i) { fotos.splice(i,1); renderFotoGrid(); };
 
 /* FOTO-ANLAGE EXPORT als druckbares HTML */
-window.exportFotoAnlage = function() {
+window.exportFotoAnlage = async function() {
   if (!fotos.length) { showToast('Keine Fotos vorhanden.', 'warning'); return; }
   var az = document.getElementById('f-schadensnummer')?.value || localStorage.getItem('prova_letztes_az') || 'Ohne AZ';
   var svName = localStorage.getItem('prova_sv_name') || '';
   var datum = new Date().toLocaleDateString('de-DE');
 
+  // Versuch 1: PdfMonkey (professionelles PDF)
+  try {
+    showToast('PDF wird generiert…', 'info');
+    var res = await fetch('/.netlify/functions/foto-anlage-pdf', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        aktenzeichen: az, sv_name: svName, datum: datum,
+        fotos: fotos.map(function(f) { return { dataUrl: f.dataUrl, caption: f.caption || '' }; })
+      })
+    });
+    if (res.ok) {
+      var data = await res.json();
+      if (data.success && data.url) {
+        window.open(data.url, '_blank');
+        showToast('Foto-Anlage PDF erstellt ✓', 'success');
+        return;
+      }
+    }
+  } catch(e) { /* Fallback zu Browser-Print */ }
+
+  // Versuch 2: Browser-Print (Fallback)
   var html = '<!DOCTYPE html><html lang="de"><head><meta charset="UTF-8"><title>Fotodokumentation – ' + az + '</title>'
     + '<style>*{box-sizing:border-box;margin:0;padding:0;}body{font-family:Arial,sans-serif;font-size:11pt;color:#1a1a1a;}'
     + '.header{text-align:center;padding:20px 0 10px;border-bottom:2px solid #2563eb;margin-bottom:20px;}'
@@ -1968,8 +1990,7 @@ window.exportFotoAnlage = function() {
   });
 
   html += '<div class="footer">Erstellt mit PROVA Systems | ' + fotos.length + ' Fotos | ' + datum + '</div>'
-    + '<script src="support-chat.js"></script>
-</body></html>';
+    + '</body></html>';
 
   var w = window.open('', '_blank');
   if (w) {
@@ -4292,6 +4313,7 @@ window.PROVA_AUDIT = (function() {
 })();
 
 </script>
+<script src="auftragstyp.js"></script>
 <script src="support-chat.js"></script>
 </body>
 </html>

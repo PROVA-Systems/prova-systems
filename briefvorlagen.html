@@ -228,7 +228,7 @@ input,select,textarea{font-size:max(16px,1em);}
 
     <!-- KI-Hinweis für Starter -->
     <div class="ki-hint" id="ki-hint" style="display:none;">
-      ✨ <strong>KI-Brieftext</strong> ist im <strong>Pro-Paket</strong> verfügbar — PROVA generiert den Text automatisch aus Ihren Fall-Daten.
+      ✨ <strong>KI-Brieftext</strong> — PROVA generiert den Text automatisch aus Ihren Fall-Daten.
       <a href="einstellungen.html#paket">Mehr erfahren →</a>
     </div>
 
@@ -247,7 +247,6 @@ input,select,textarea{font-size:max(16px,1em);}
 <nav class="bottom-nav">
   <a href="dashboard.html" class="bn-item"><span class="bn-icon">⊞</span><span>Zentrale</span></a>
   <a href="archiv.html" class="bn-item"><span class="bn-icon">📁</span><span>Fälle</span></a>
-  <a href="app-starter.html" class="bn-item" id="bn-new-link" style="position:relative;"><span class="bn-icon" style="background:var(--accent);border-radius:50%;width:38px;height:38px;display:flex;align-items:center;justify-content:center;font-size:20px;color:#fff;margin-top:-12px;box-shadow:0 2px 10px rgba(79,142,247,.45);">＋</span><span>Neu</span></a>
   <a href="rechnungen.html" class="bn-item"><span class="bn-icon">💶</span><span>Rechnungen</span></a>
   <a href="briefvorlagen.html" class="bn-item active"><span class="bn-icon">✉️</span><span>Briefe</span></a>
 </nav>
@@ -452,30 +451,20 @@ var AT_BASE='appJ7bLlAHZoxENWE';
 var AT_FAELLE='tblSxV8bsXwd1pwa0';
 
 /* ── SIDEBAR ── */
-var paket=localStorage.getItem('prova_paket')||'Starter';
-var isPro=paket==='Pro'||paket==='Enterprise';
-var isEnterprise=paket==='Enterprise';
-var pc={'Starter':'#4f8ef7','Pro':'#f59e0b','Enterprise':'#a78bfa'}[paket]||'#4f8ef7';
+var paket=localStorage.getItem('prova_paket')||'Solo';
+var isPro=paket==='Solo'||paket==='Team';
+var isEnterprise=paket==='Team';
+var pc={'Solo':'#4f8ef7','Team':'#a78bfa','Starter':'#4f8ef7','Pro':'#4f8ef7','Enterprise':'#a78bfa'}[paket]||'#4f8ef7';
 (function(){
   var el=document.getElementById('topbar-paket-badge');
   if(el){el.textContent=paket;el.style.cssText='font-size:10px;font-weight:700;padding:3px 9px;border-radius:10px;letter-spacing:.04em;background:'+pc+'18;color:'+pc+';border:1px solid '+pc+'33;';}
-  var dot=document.getElementById('sb-paket-dot');if(dot){dot.style.background=pc;dot.style.color=pc;}
-  var nm=document.getElementById('sb-paket-name');if(nm){nm.textContent=paket;nm.style.color=pc;}
-  var appUrl=paket==='Enterprise'?'app-enterprise.html':paket==='Pro'?'app-pro.html':'app-starter.html';
-  var nb=document.getElementById('sb-new-btn');if(nb)nb.onclick=function(){window.location.href=appUrl;};
-  var bnl=document.getElementById('bn-new-link');if(bnl)bnl.href=appUrl;
+  var appUrl=paket==='Team'?'app-enterprise.html':paket==='Solo'?'app-pro.html':'app-starter.html';
 })();
-var collapsed=localStorage.getItem('prova_sb_collapsed')==='1';
-var sb=document.getElementById('sidebar');
-if(collapsed&&sb)sb.classList.add('collapsed');
-window.toggleSidebar=function(){collapsed=!collapsed;sb.classList.toggle('collapsed',collapsed);localStorage.setItem('prova_sb_collapsed',collapsed?'1':'0');};
-window.openMobileSidebar=function(){sb.classList.add('mobile-open');document.getElementById('sb-overlay').classList.add('open');};
-window.closeMobileSidebar=function(){sb.classList.remove('mobile-open');document.getElementById('sb-overlay').classList.remove('open');};
 
 if(!localStorage.getItem('prova_user')){window.location.href='app-login.html';return;}
 
 /* KI-Hinweis */
-if(!isPro){document.getElementById('ki-hint').style.display='flex';}
+// KI-Brieftext ist jetzt für alle Pakete verfügbar
 
 /* ── VORLAGEN-DEFINITIONEN ── */
 var CATEGORIES=[
@@ -487,32 +476,32 @@ var CATEGORIES=[
 ];
 
 var TEMPLATES=[
-  {id:'A-01',name:'Angebot Gutachten',desc:'Angebot für ein Gutachten an Auftraggeber.',file:'angebot-gutachten.html',cat:'angebote',tier:'Starter',icon:'📄'},
-  {id:'A-02',name:'Auftragsbestätigung',desc:'Auftragsbestätigung an den Auftraggeber.',file:'auftragsbestaetigung.html',cat:'angebote',tier:'Starter',icon:'✅'},
-  {id:'A-03',name:'Honorarvereinbarung',desc:'Vereinbarung zum Honorar mit dem Auftraggeber.',file:'honorarvereinbarung.html',cat:'angebote',tier:'Starter',icon:'💰'},
-  {id:'O-01',name:'Einladung Ortstermin',desc:'Einladung zu einem Ortstermin (Besichtigung).',file:'einladung-ortstermin.html',cat:'ortstermin',tier:'Starter',icon:'📅'},
-  {id:'O-02',name:'Einladung Ortstermin (Gericht)',desc:'Einladung zu einem gerichtlichen Ortstermin.',file:'einladung-ortstermin-gericht.html',cat:'ortstermin',tier:'Starter',icon:'⚖️'},
-  {id:'O-03',name:'Ortstermin-Protokoll',desc:'Protokoll zum durchgeführten Ortstermin.',file:'ortstermin-protokoll.html',cat:'ortstermin',tier:'Starter',icon:'📝'},
-  {id:'O-04',name:'Umladebrief Ortstermin',desc:'Verlegung eines Ortstermins mit neuem Datum.',file:'umladebrief-ortstermin.html',cat:'ortstermin',tier:'Starter',icon:'🔄'},
-  {id:'V-01',name:'Erstbericht Versicherung',desc:'Erstbericht an die Versicherung.',file:'erstbericht-versicherung.html',cat:'versicherung',tier:'Pro',icon:'📋'},
-  {id:'V-02',name:'Deckungsanfrage',desc:'Anfrage zur Deckung an die Versicherung.',file:'deckungsanfrage.html',cat:'versicherung',tier:'Pro',icon:'📄'},
-  {id:'V-03',name:'Kostenvoranschlag Sanierung',desc:'Kostenvoranschlag für Sanierungsmaßnahmen.',file:'kostenvoranschlag-sanierung.html',cat:'versicherung',tier:'Pro',icon:'📊'},
-  {id:'V-04',name:'Nachforderung Unterlagen',desc:'Nachforderung von Unterlagen.',file:'nachforderung-unterlagen.html',cat:'versicherung',tier:'Starter',icon:'📎'},
-  {id:'V-05',name:'Abschlussbericht Versicherung',desc:'Abschlussbericht an die Versicherung.',file:'abschlussbericht-versicherung.html',cat:'versicherung',tier:'Pro',icon:'📑'},
-  {id:'G-07',name:'Beauftragungsbestätigung Gericht',desc:'Pflichtanzeige ans Gericht nach §407a Abs.1 ZPO.',file:'beauftragungsbestaetigung-gericht.html',cat:'gericht',tier:'Starter',icon:'⚖️'},
-  {id:'G-08',name:'Fristverlängerungsantrag',desc:'Antrag auf Fristverlängerung nach §411 Abs.1 ZPO.',file:'fristverlaengerungsantrag.html',cat:'gericht',tier:'Starter',icon:'⏳'},
-  {id:'G-09',name:'Ergänzungsfragen-Antwort',desc:'Beantwortung von Ergänzungsfragen nach §411 ZPO.',file:'ergaenzungsfragen-antwort.html',cat:'gericht',tier:'Pro',icon:'📝'},
-  {id:'G-10',name:'Kostenrahmenerhöhung',desc:'Hinweis auf Kostenüberschreitung nach §407a Abs.3 ZPO.',file:'kostenrahmenerhöhung.html',cat:'gericht',tier:'Starter',icon:'💶'},
-  {id:'I-01',name:'Messprotokoll Feuchte',desc:'Protokoll für Feuchtemessungen.',file:'messprotokoll-feuchte.html',cat:'intern',tier:'Starter',icon:'📐'},
-  {id:'I-02',name:'Checkliste Wasserschaden',desc:'Checkliste bei Wasserschaden.',file:'checkliste-wasserschaden.html',cat:'intern',tier:'Starter',icon:'📋'},
-  {id:'I-03',name:'Checkliste Sturmschaden',desc:'Checkliste bei Sturmschaden.',file:'checkliste-sturmschaden.html',cat:'intern',tier:'Starter',icon:'📋'},
-  {id:'I-04',name:'Einverständnis DSGVO',desc:'Einverständniserklärung zur Datenverarbeitung.',file:'einverstaendnis-dsgvo.html',cat:'intern',tier:'Starter',icon:'🔒'},
-  {id:'I-06',name:'Aktennotiz',desc:'Kurznotiz für die Akte.',file:'aktennotiz.html',cat:'intern',tier:'Starter',icon:'📝'},
-  {id:'I-07',name:'Ortstermin-Arbeitsblatt',desc:'Druckbares Formular für die Vor-Ort-Aufnahme.',file:'ortstermin-arbeitsblatt.html',cat:'intern',tier:'Starter',icon:'📋'},
-  {id:'I-08',name:'Messprotokoll Risse',desc:'Rissaufnahme nach DIN 52460.',file:'messprotokoll-risse.html',cat:'intern',tier:'Starter',icon:'📐'},
-  {id:'I-09',name:'Checkliste Brandschaden',desc:'Vollständige Brandschadenaufnahme.',file:'checkliste-brandschaden.html',cat:'intern',tier:'Starter',icon:'🔥'},
-  {id:'A-06',name:'Gerichtsgutachten §407a',desc:'Gerichtsgutachten inkl. §407a ZPO — Enterprise.',file:'vorlage-04-gerichtsgutachten.html',cat:'gericht',tier:'Enterprise',icon:'⚖️'},
-  {id:'B-02',name:'Beweissicherung §407a',desc:'Beweissicherung mit §407a-Erklärung — Enterprise.',file:'vorlage-03-beweissicherung.html',cat:'intern',tier:'Enterprise',icon:'📑'}
+  {id:'A-01',name:'Angebot Gutachten',desc:'Angebot für ein Gutachten an Auftraggeber.',file:'angebot-gutachten.html',cat:'angebote',tier:'Solo',icon:'📄'},
+  {id:'A-02',name:'Auftragsbestätigung',desc:'Auftragsbestätigung an den Auftraggeber.',file:'auftragsbestaetigung.html',cat:'angebote',tier:'Solo',icon:'✅'},
+  {id:'A-03',name:'Honorarvereinbarung',desc:'Vereinbarung zum Honorar mit dem Auftraggeber.',file:'honorarvereinbarung.html',cat:'angebote',tier:'Solo',icon:'💰'},
+  {id:'O-01',name:'Einladung Ortstermin',desc:'Einladung zu einem Ortstermin (Besichtigung).',file:'einladung-ortstermin.html',cat:'ortstermin',tier:'Solo',icon:'📅'},
+  {id:'O-02',name:'Einladung Ortstermin (Gericht)',desc:'Einladung zu einem gerichtlichen Ortstermin.',file:'einladung-ortstermin-gericht.html',cat:'ortstermin',tier:'Solo',icon:'⚖️'},
+  {id:'O-03',name:'Ortstermin-Protokoll',desc:'Protokoll zum durchgeführten Ortstermin.',file:'ortstermin-protokoll.html',cat:'ortstermin',tier:'Solo',icon:'📝'},
+  {id:'O-04',name:'Umladebrief Ortstermin',desc:'Verlegung eines Ortstermins mit neuem Datum.',file:'umladebrief-ortstermin.html',cat:'ortstermin',tier:'Solo',icon:'🔄'},
+  {id:'V-01',name:'Erstbericht Versicherung',desc:'Erstbericht an die Versicherung.',file:'erstbericht-versicherung.html',cat:'versicherung',tier:'Solo',icon:'📋'},
+  {id:'V-02',name:'Deckungsanfrage',desc:'Anfrage zur Deckung an die Versicherung.',file:'deckungsanfrage.html',cat:'versicherung',tier:'Solo',icon:'📄'},
+  {id:'V-03',name:'Kostenvoranschlag Sanierung',desc:'Kostenvoranschlag für Sanierungsmaßnahmen.',file:'kostenvoranschlag-sanierung.html',cat:'versicherung',tier:'Solo',icon:'📊'},
+  {id:'V-04',name:'Nachforderung Unterlagen',desc:'Nachforderung von Unterlagen.',file:'nachforderung-unterlagen.html',cat:'versicherung',tier:'Solo',icon:'📎'},
+  {id:'V-05',name:'Abschlussbericht Versicherung',desc:'Abschlussbericht an die Versicherung.',file:'abschlussbericht-versicherung.html',cat:'versicherung',tier:'Solo',icon:'📑'},
+  {id:'G-07',name:'Beauftragungsbestätigung Gericht',desc:'Pflichtanzeige ans Gericht nach §407a Abs.1 ZPO.',file:'beauftragungsbestaetigung-gericht.html',cat:'gericht',tier:'Solo',icon:'⚖️'},
+  {id:'G-08',name:'Fristverlängerungsantrag',desc:'Antrag auf Fristverlängerung nach §411 Abs.1 ZPO.',file:'fristverlaengerungsantrag.html',cat:'gericht',tier:'Solo',icon:'⏳'},
+  {id:'G-09',name:'Ergänzungsfragen-Antwort',desc:'Beantwortung von Ergänzungsfragen nach §411 ZPO.',file:'ergaenzungsfragen-antwort.html',cat:'gericht',tier:'Solo',icon:'📝'},
+  {id:'G-10',name:'Kostenrahmenerhöhung',desc:'Hinweis auf Kostenüberschreitung nach §407a Abs.3 ZPO.',file:'kostenrahmenerhöhung.html',cat:'gericht',tier:'Solo',icon:'💶'},
+  {id:'I-01',name:'Messprotokoll Feuchte',desc:'Protokoll für Feuchtemessungen.',file:'messprotokoll-feuchte.html',cat:'intern',tier:'Solo',icon:'📐'},
+  {id:'I-02',name:'Checkliste Wasserschaden',desc:'Checkliste bei Wasserschaden.',file:'checkliste-wasserschaden.html',cat:'intern',tier:'Solo',icon:'📋'},
+  {id:'I-03',name:'Checkliste Sturmschaden',desc:'Checkliste bei Sturmschaden.',file:'checkliste-sturmschaden.html',cat:'intern',tier:'Solo',icon:'📋'},
+  {id:'I-04',name:'Einverständnis DSGVO',desc:'Einverständniserklärung zur Datenverarbeitung.',file:'einverstaendnis-dsgvo.html',cat:'intern',tier:'Solo',icon:'🔒'},
+  {id:'I-06',name:'Aktennotiz',desc:'Kurznotiz für die Akte.',file:'aktennotiz.html',cat:'intern',tier:'Solo',icon:'📝'},
+  {id:'I-07',name:'Ortstermin-Arbeitsblatt',desc:'Druckbares Formular für die Vor-Ort-Aufnahme.',file:'ortstermin-arbeitsblatt.html',cat:'intern',tier:'Solo',icon:'📋'},
+  {id:'I-08',name:'Messprotokoll Risse',desc:'Rissaufnahme nach DIN 52460.',file:'messprotokoll-risse.html',cat:'intern',tier:'Solo',icon:'📐'},
+  {id:'I-09',name:'Checkliste Brandschaden',desc:'Vollständige Brandschadenaufnahme.',file:'checkliste-brandschaden.html',cat:'intern',tier:'Solo',icon:'🔥'},
+  {id:'A-06',name:'Gerichtsgutachten §407a',desc:'Gerichtsgutachten inkl. §407a ZPO — Enterprise.',file:'vorlage-04-gerichtsgutachten.html',cat:'gericht',tier:'Team',icon:'⚖️'},
+  {id:'B-02',name:'Beweissicherung §407a',desc:'Beweissicherung mit §407a-Erklärung — Enterprise.',file:'vorlage-03-beweissicherung.html',cat:'intern',tier:'Team',icon:'📑'}
 ];
 
 /* ── VORLAGEN RENDERN ── */
@@ -526,8 +515,8 @@ function renderVorlagen(){
       +'<div class="category-label">'+cat.title+'</div>'
       +'<div class="card-grid">';
     catTemplates.forEach(function(t){
-      var zugaenglich=t.tier==='Starter'||(t.tier==='Pro'&&isPro)||(t.tier==='Enterprise'&&isEnterprise);
-      var tierClass=t.tier==='Enterprise'?'tier-enterprise':t.tier==='Pro'?'tier-pro':'tier-starter';
+      var zugaenglich=t.tier==='Solo'||(t.tier==='Team'&&isEnterprise);
+      var tierClass=t.tier==='Team'?'tier-team':'tier-solo';
       var lockHtml=!zugaenglich?'<span class="lock-icon">🔒</span>':'';
       html+='<div class="template-card'+(zugaenglich?'':' locked')+'" data-name="'+t.name+'" data-desc="'+t.desc+'" data-id="'+t.id+'">'
         +'<div class="tc-top"><div class="tc-icon">'+t.icon+'</div><div class="tc-id">'+t.id+'</div></div>'
@@ -537,7 +526,7 @@ function renderVorlagen(){
         +'<span class="tier-badge '+tierClass+'">'+t.tier+'</span>'
         +(zugaenglich
           ?'<button class="tc-btn tc-btn-primary" onclick="oeffneVorlage(\''+t.id+'\',event)">Verwenden →</button>'
-          +(isPro&&t.tier!=='Enterprise'?'<button class="tc-btn tc-btn-ki" onclick="oeffneVorlageKI(\''+t.id+'\',event)">✨ KI</button>':'')
+          +(t.tier!=='Team'?'<button class="tc-btn tc-btn-ki" onclick="oeffneVorlageKI(\''+t.id+'\',event)">✨ KI</button>':'')
           :'<button class="tc-btn tc-btn-primary" style="background:var(--surface2);color:var(--text3);cursor:not-allowed;" disabled>'+t.tier+' erforderlich</button>'
         )
         +'</div>'
@@ -577,7 +566,7 @@ window.oeffneVorlage=function(templateId,evt){
   activeTemplate=TEMPLATES.find(function(t){return t.id===templateId;});
   if(!activeTemplate)return;
   // Locked?
-  var zugaenglich=activeTemplate.tier==='Starter'||(activeTemplate.tier==='Pro'&&isPro)||(activeTemplate.tier==='Enterprise'&&isEnterprise);
+  var zugaenglich=activeTemplate.tier==='Solo'||(activeTemplate.tier==='Team'&&isEnterprise);
   if(!zugaenglich){zeigToast(activeTemplate.tier+'-Paket erforderlich','err');return;}
   document.getElementById('d-icon').textContent=activeTemplate.icon;
   document.getElementById('d-title').textContent=activeTemplate.name;
@@ -716,19 +705,19 @@ function renderVorschau(){
   var heute=new Date().toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric'});
   var fehlend=[
   // ── GUTACHTEN-VORLAGEN ──
-  {id:'GV-01',name:'Standard-Gutachten',desc:'Vollgutachten Standardvorlage.',file:'vorlage-01-standard.html',cat:'vorlagen',tier:'Starter',icon:'📋'},
-  {id:'GV-02',name:'Kurzgutachten',desc:'Kompaktes Kurzgutachten.',file:'vorlage-02-kurzgutachten.html',cat:'vorlagen',tier:'Starter',icon:'📝'},
-  {id:'GV-03',name:'Beweissicherung',desc:'Beweissicherungsgutachten.',file:'vorlage-03-beweissicherung.html',cat:'vorlagen',tier:'Starter',icon:'🔍'},
-  {id:'GV-04',name:'Gerichtsgutachten',desc:'Gutachten für gerichtliche Verfahren.',file:'vorlage-04-gerichtsgutachten.html',cat:'vorlagen',tier:'Starter',icon:'⚖️'},
-  {id:'GV-05',name:'Brandschaden',desc:'Gutachtenvorlage Brandschaden.',file:'vorlage-05-brandschaden.html',cat:'vorlagen',tier:'Starter',icon:'🔥'},
-  {id:'GV-06',name:'Feuchte & Schimmel',desc:'Gutachtenvorlage Feuchteschäden.',file:'vorlage-06-feuchteschimmel.html',cat:'vorlagen',tier:'Starter',icon:'💧'},
-  {id:'GV-07',name:'Elementarschaden',desc:'Gutachtenvorlage Elementarschäden.',file:'vorlage-07-elementarschaden.html',cat:'vorlagen',tier:'Starter',icon:'⛈️'},
-  {id:'GV-08',name:'Baumängel',desc:'Gutachtenvorlage Baumängel.',file:'vorlage-08-baumaengel.html',cat:'vorlagen',tier:'Starter',icon:'🏗️'},
-  {id:'GV-09',name:'Ergänzungsgutachten',desc:'Ergänzung zu bestehendem Gutachten.',file:'vorlage-09-ergaenzungsgutachten.html',cat:'vorlagen',tier:'Starter',icon:'➕'},
-  {id:'GV-10',name:'Schiedsgutachten',desc:'Gutachten für Schiedsverfahren.',file:'vorlage-10-schiedsgutachten.html',cat:'vorlagen',tier:'Starter',icon:'🤝'},
-  {id:'GV-11',name:'Bauabnahmeprotokoll',desc:'Protokoll zur Bauabnahme.',file:'vorlage-11-bauabnahmeprotokoll.html',cat:'vorlagen',tier:'Starter',icon:'✅'},
-  {id:'I-10',name:'Datenschutzerklärung Mandant',desc:'DSGVO-Einwilligung für Mandanten.',file:'datenschutz-mandant.html',cat:'sonstiges',tier:'Starter',icon:'🔒'},
-  {id:'G-11',name:'Kostenvorschuss Gericht',desc:'Antrag auf Kostenvorschuss beim Gericht.',file:'kostenvorschuss-gericht.html',cat:'gericht',tier:'Starter',icon:'💶'},
+  {id:'GV-01',name:'Standard-Gutachten',desc:'Vollgutachten Standardvorlage.',file:'vorlage-01-standard.html',cat:'vorlagen',tier:'Solo',icon:'📋'},
+  {id:'GV-02',name:'Kurzgutachten',desc:'Kompaktes Kurzgutachten.',file:'vorlage-02-kurzgutachten.html',cat:'vorlagen',tier:'Solo',icon:'📝'},
+  {id:'GV-03',name:'Beweissicherung',desc:'Beweissicherungsgutachten.',file:'vorlage-03-beweissicherung.html',cat:'vorlagen',tier:'Solo',icon:'🔍'},
+  {id:'GV-04',name:'Gerichtsgutachten',desc:'Gutachten für gerichtliche Verfahren.',file:'vorlage-04-gerichtsgutachten.html',cat:'vorlagen',tier:'Solo',icon:'⚖️'},
+  {id:'GV-05',name:'Brandschaden',desc:'Gutachtenvorlage Brandschaden.',file:'vorlage-05-brandschaden.html',cat:'vorlagen',tier:'Solo',icon:'🔥'},
+  {id:'GV-06',name:'Feuchte & Schimmel',desc:'Gutachtenvorlage Feuchteschäden.',file:'vorlage-06-feuchteschimmel.html',cat:'vorlagen',tier:'Solo',icon:'💧'},
+  {id:'GV-07',name:'Elementarschaden',desc:'Gutachtenvorlage Elementarschäden.',file:'vorlage-07-elementarschaden.html',cat:'vorlagen',tier:'Solo',icon:'⛈️'},
+  {id:'GV-08',name:'Baumängel',desc:'Gutachtenvorlage Baumängel.',file:'vorlage-08-baumaengel.html',cat:'vorlagen',tier:'Solo',icon:'🏗️'},
+  {id:'GV-09',name:'Ergänzungsgutachten',desc:'Ergänzung zu bestehendem Gutachten.',file:'vorlage-09-ergaenzungsgutachten.html',cat:'vorlagen',tier:'Solo',icon:'➕'},
+  {id:'GV-10',name:'Schiedsgutachten',desc:'Gutachten für Schiedsverfahren.',file:'vorlage-10-schiedsgutachten.html',cat:'vorlagen',tier:'Solo',icon:'🤝'},
+  {id:'GV-11',name:'Bauabnahmeprotokoll',desc:'Protokoll zur Bauabnahme.',file:'vorlage-11-bauabnahmeprotokoll.html',cat:'vorlagen',tier:'Solo',icon:'✅'},
+  {id:'I-10',name:'Datenschutzerklärung Mandant',desc:'DSGVO-Einwilligung für Mandanten.',file:'datenschutz-mandant.html',cat:'sonstiges',tier:'Solo',icon:'🔒'},
+  {id:'G-11',name:'Kostenvorschuss Gericht',desc:'Antrag auf Kostenvorschuss beim Gericht.',file:'kostenvorschuss-gericht.html',cat:'gericht',tier:'Solo',icon:'💶'},
 ];
   function val(key,label){
     var v=alleFelder[key]||'';
@@ -760,7 +749,7 @@ function renderVorschau(){
 
 /* ── KI-BRIEFTEXT (Pro) ── */
 window.generiereKIText=async function(){
-  if(!isPro){zeigToast('KI-Brieftext nur im Pro-Paket verfügbar.','err');return;}
+  if(!isPro){zeigToast('KI-Brieftext wird geladen.','err');return;}
   var status=document.getElementById('ki-status');
   var result=document.getElementById('ki-result');
   var btn=document.getElementById('ki-btn');
@@ -960,13 +949,13 @@ async function supSendModal(){
       body:JSON.stringify({
         betreff:b,nachricht:n,
         sv_email:localStorage.getItem('prova_sv_email')||'',
-        paket:localStorage.getItem('prova_paket')||'Starter',
+        paket:localStorage.getItem('prova_paket')||'Solo',
         seite:'POST',
         headers:{'Content-Type':'application/json'},
         body:JSON.stringify({
           betreff:b,nachricht:n,
           sv_email:localStorage.getItem('prova_sv_email')||'',
-          paket:localStorage.getItem('prova_paket')||'Starter',
+          paket:localStorage.getItem('prova_paket')||'Solo',
           seite:window.location.pathname
         })
       });

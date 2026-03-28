@@ -413,7 +413,7 @@ function showTab(id, btn) {
 /* ── HELPERS ── */
 function paketBadge(p) {
   const m = {Starter:'starter',Pro:'pro',Enterprise:'enterprise'};
-  return `<span class="badge badge-${m[p]||'starter'}">${p||'Starter'}</span>`;
+  return `<span class="badge badge-${m[p]||'solo'}">${p||'Solo'}</span>`;
 }
 function statusBadge(s) {
   const m = {'Aktiv':'aktiv','Trial':'trial','Gekündigt':'gekuendigt','Offen':'offen','Gelöst':'geloest'};
@@ -655,6 +655,11 @@ function renderTickets(records) {
         <div id="tdp-${i}" class="detail-panel">
           <div style="font-size:12px;color:var(--text2);margin-bottom:6px;">${f.Nachricht||'Keine Beschreibung'}</div>
           ${f.Paket ? `<div style="font-size:12px;color:var(--text3);margin-top:4px;">Paket: ${f.Paket} · Seite: ${f.Seite||'–'}</div>` : ''}
+          <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;">
+            <button onclick="updateTicketStatus('${r.id}','In Bearbeitung',${i})" style="padding:4px 10px;border-radius:5px;background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.25);color:#f59e0b;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;">⏳ In Bearbeitung</button>
+            <button onclick="updateTicketStatus('${r.id}','Gelöst',${i})" style="padding:4px 10px;border-radius:5px;background:rgba(16,185,129,.12);border:1px solid rgba(16,185,129,.25);color:#10b981;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;">✅ Gelöst</button>
+            ${f['SV-Email'] ? `<a href="mailto:${f['SV-Email']}?subject=Re: ${encodeURIComponent(f.Betreff||'Support')}&body=${encodeURIComponent('Sehr geehrte/r Herr/Frau,\\n\\nvielen Dank für Ihre Nachricht.\\n\\n')}" style="padding:4px 10px;border-radius:5px;background:rgba(79,142,247,.12);border:1px solid rgba(79,142,247,.25);color:#4f8ef7;font-size:11px;font-weight:600;text-decoration:none;font-family:inherit;">✉️ Antworten</a>` : ''}
+          </div>
         </div>
       </td></tr>`;
   });
@@ -672,6 +677,25 @@ function filterTickets() {
   renderTickets(val ? _tickets.filter(r => r.fields.Status === val) : _tickets);
 }
 
+async function updateTicketStatus(recordId, newStatus, idx) {
+  try {
+    await fetch('/.netlify/functions/airtable', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        method: 'PATCH',
+        path: `/v0/${ADMIN_BASE}/${T.SUPPORT}/${recordId}`,
+        body: { fields: { Status: newStatus } }
+      })
+    });
+    // Lokal aktualisieren
+    if (_tickets[idx]) _tickets[idx].fields.Status = newStatus;
+    renderTickets(_tickets);
+  } catch(e) {
+    alert('Fehler beim Aktualisieren: ' + e.message);
+  }
+}
+
 /* ── PIPELINE ── */
 async function loadPipeline() {
   document.getElementById('pipelineTable').innerHTML = '<div class="loading" style="padding:16px 18px;"><div class="spin"></div>Lädt…</div>';
@@ -686,7 +710,7 @@ async function loadPipeline() {
       html += `<tr>
         <td><strong>${name}</strong></td>
         <td style="font-size:12px;color:var(--text3);">${f.Email||'–'}</td>
-        <td>${paketBadge(f.Stufe||'Starter')}</td>
+        <td>${paketBadge(f.Stufe||'Solo')}</td>
         <td style="font-size:12px;">${f.Stufe||'–'}</td>
         <td>${statusBadge(f.Status||'Aktiv')}</td>
         <td style="font-family:var(--mono);font-size:12px;">${fmtDate(f.Erstkontakt_Datum||f.Created)}</td>

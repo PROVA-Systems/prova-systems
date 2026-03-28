@@ -579,7 +579,7 @@ input,select,textarea{font-size:max(16px,1em);}
         <div class="sec" id="sec-enterprise" style="display:none;">
           <div class="card">
             <div class="card-header" style="background:linear-gradient(135deg,rgba(139,92,246,.12),rgba(139,92,246,.04));border-bottom:1px solid rgba(139,92,246,.2);">
-              <div class="card-title" style="color:var(--purple);">💎 Enterprise-Einstellungen</div>
+              <div class="card-title" style="color:var(--purple);">💎 Team-Einstellungen</div>
             </div>
             <div class="card-body">
               <div class="form-group">
@@ -620,7 +620,7 @@ input,select,textarea{font-size:max(16px,1em);}
                 </div>
               </div>
               <div class="save-bar">
-                <button class="btn btn-primary" onclick="speichereEnterprise()">Enterprise-Einstellungen speichern</button>
+                <button class="btn btn-primary" onclick="speichereEnterprise()">Team-Einstellungen speichern</button>
               </div>
             </div>
           </div>
@@ -646,7 +646,6 @@ input,select,textarea{font-size:max(16px,1em);}
 <nav class="bottom-nav">
   <a href="dashboard.html" class="bn-item"><span class="bn-icon">⊞</span><span>Zentrale</span></a>
   <a href="archiv.html" class="bn-item"><span class="bn-icon">📁</span><span>Fälle</span></a>
-  <a href="app-starter.html" class="bn-item" id="bn-new-link" style="position:relative;"><span class="bn-icon" style="background:var(--accent);border-radius:50%;width:38px;height:38px;display:flex;align-items:center;justify-content:center;font-size:20px;color:#fff;margin-top:-12px;box-shadow:0 2px 10px rgba(79,142,247,.45);">＋</span><span>Neu</span></a>
   <a href="rechnungen.html" class="bn-item"><span class="bn-icon">💶</span><span>Rechnungen</span></a>
   <a href="einstellungen.html" class="bn-item active"><span class="bn-icon">⚙️</span><span>Einst.</span></a>
 </nav>
@@ -659,21 +658,11 @@ input,select,textarea{font-size:max(16px,1em);}
 'use strict';
 
 /* ── SIDEBAR ── */
-var paket = localStorage.getItem('prova_paket')||'Starter';
-var pc = {'Starter':'#4f8ef7','Pro':'#f59e0b','Enterprise':'#a78bfa'}[paket]||'#4f8ef7';
+var paket = localStorage.getItem('prova_paket')||'Solo';
+var pc = {'Solo':'#4f8ef7','Team':'#a78bfa','Starter':'#4f8ef7','Pro':'#4f8ef7','Enterprise':'#a78bfa'}[paket]||'#4f8ef7';
 var el = document.getElementById('topbar-paket-badge');
 if(el){el.textContent=paket;el.style.cssText='font-size:10px;font-weight:700;padding:3px 9px;border-radius:10px;letter-spacing:.04em;background:'+pc+'18;color:'+pc+';border:1px solid '+pc+'33;';}
-var dot=document.getElementById('sb-paket-dot');if(dot){dot.style.background=pc;dot.style.color=pc;}
-var nm=document.getElementById('sb-paket-name');if(nm){nm.textContent=paket;nm.style.color=pc;}
-var appUrl=paket==='Enterprise'?'app-enterprise.html':paket==='Pro'?'app-pro.html':'app-starter.html';
-var nb=document.getElementById('sb-new-btn');if(nb)nb.onclick=function(){window.location.href=appUrl;};
-var bnl=document.getElementById('bn-new-link');if(bnl)bnl.href=appUrl;
-var collapsed=localStorage.getItem('prova_sb_collapsed')==='1';
-var sb=document.getElementById('sidebar');
-if(collapsed&&sb)sb.classList.add('collapsed');
-window.toggleSidebar=function(){collapsed=!collapsed;sb.classList.toggle('collapsed',collapsed);localStorage.setItem('prova_sb_collapsed',collapsed?'1':'0');};
-window.openMobileSidebar=function(){sb.classList.add('mobile-open');document.getElementById('sb-overlay').classList.add('open');};
-window.closeMobileSidebar=function(){sb.classList.remove('mobile-open');document.getElementById('sb-overlay').classList.remove('open');};
+var appUrl=paket==='Team'?'app-enterprise.html':paket==='Solo'?'app-pro.html':'app-starter.html';
 
 /* ── AUTH ── */
 if(!localStorage.getItem('prova_user')){window.location.href='app-login.html';return;}
@@ -805,7 +794,7 @@ function ladeProfil(){
     document.getElementById('btn-sig-loeschen').style.display='inline-flex';
   }
   // Enterprise
-  if(paket==='Enterprise'){
+  if(paket==='Team'){
     setVal('e-outbound-webhook',ls.getItem('prova_outbound_webhook')||'');
     setVal('e-primary-color',ls.getItem('prova_primary_color')||'#4f8ef7');
     setVal('e-wl-name',ls.getItem('prova_wl_name')||'');
@@ -989,19 +978,18 @@ window.sigLoeschen = function(){
 /* ── PAKET ANZEIGE ── */
 function renderPaket(){
   var pa=document.getElementById('paket-anzeige');
-  var pc2={'Starter':'#4f8ef7','Pro':'#f59e0b','Enterprise':'#a78bfa'}[paket]||'#4f8ef7';
+  var pc2={'Solo':'#4f8ef7','Team':'#a78bfa','Starter':'#4f8ef7','Pro':'#4f8ef7','Enterprise':'#a78bfa'}[paket]||'#4f8ef7';
   if(pa)pa.innerHTML='<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:'+pc2+';margin-bottom:4px;">Aktives Paket</div><div style="font-size:26px;font-weight:800;color:var(--text);">'+paket+'</div>';
   var grid=document.getElementById('paket-grid');
   if(!grid)return;
   var pakete=[
-    {name:'Starter',price:'179 €/Mo',cls:paket==='Starter'?'aktiv-starter':'',feats:['KI-Gutachten §1–§6','PDF & Freigabe','17 Briefvorlagen','JVEG-Rechner','Mahnwesen','Archiv & Suche']},
-    {name:'Pro',price:'369 €/Mo',cls:paket==='Pro'?'aktiv-pro':'',feats:['Alles aus Starter','KI-Brieftext','Auto-Erstbericht','3 Seats','Chef-Freigabe','Auftraggeber-DB']},
-    {name:'Enterprise',price:'699 €/Mo',cls:paket==='Enterprise'?'aktiv-ent':'',feats:['Alles aus Pro','KI-Foto-Analyse','§407a-Modul','Audit-Trail PDF','Outbound-Webhook','White-Label']}
+    {name:'Solo',price:'149 €/Mo',cls:paket==='Solo'?'aktiv-starter':'',feats:['1 Nutzer, 30 Gutachten/Mo','KI-Gutachten §1–§6','§407a + EU AI Act Compliance','Persönlicher Audit-Trail','Alle Werkzeuge unbegrenzt','Normen, Textbausteine, JVEG','Briefvorlagen + KI-Brieftext','Fristenverwaltung','Foto-Anlage + Auto-Captioning']},
+    {name:'Team',price:'349 €/Mo',cls:paket==='Team'?'aktiv-ent':'',feats:['Alles aus Solo','Unbegrenzte Nutzer (+99 €/Nutzer)','Rechteverwaltung','Chef-Freigabe-Workflow','Team-Dashboard','Organisations-Audit-Trail','Geteilte Textbausteine & Vorlagen','Jahresbericht','Priority-Support']}
   ];
   grid.innerHTML=pakete.map(function(p){
     var istAktiv=p.name===paket;
     return '<div class="pk '+p.cls+'">'
-      +(istAktiv?'<span class="pk-badge" style="background:'+({'Starter':'rgba(79,142,247,.15)','Pro':'rgba(245,158,11,.15)','Enterprise':'rgba(139,92,246,.15)'}[p.name])+';color:'+({'Starter':'#4f8ef7','Pro':'#f59e0b','Enterprise':'#a78bfa'}[p.name])+'">Aktiv</span>':'')
+      +(istAktiv?'<span class="pk-badge" style="background:'+({'Solo':'rgba(79,142,247,.15)','Team':'rgba(139,92,246,.15)'}[p.name]||'rgba(79,142,247,.15)')+';color:'+({'Solo':'#4f8ef7','Team':'#a78bfa'}[p.name]||'#4f8ef7')+'">Aktiv</span>':'')
       +(p.demnächst&&!istAktiv?'<span style="display:inline-block;background:rgba(245,158,11,.12);color:#f59e0b;border:1px solid rgba(245,158,11,.25);border-radius:10px;font-size:9px;font-weight:700;letter-spacing:.06em;padding:2px 7px;margin-bottom:4px;">DEMNÄCHST</span>':'')
       +'<div class="pk-name">'+p.name+'</div>'
       +'<div class="pk-price">'+p.price+'</div>'
@@ -1015,7 +1003,7 @@ window.speichereEnterprise = function(){
   localStorage.setItem('prova_outbound_webhook',getVal('e-outbound-webhook'));
   localStorage.setItem('prova_primary_color',getVal('e-primary-color')||'#4f8ef7');
   localStorage.setItem('prova_wl_name',getVal('e-wl-name'));
-  zeigToast('Enterprise-Einstellungen gespeichert ✅');
+  zeigToast('Team-Einstellungen gespeichert ✅');
 };
 window.testeOutboundWebhook = async function(){
   var url=getVal('e-outbound-webhook');
@@ -1080,7 +1068,7 @@ document.addEventListener('DOMContentLoaded', function(){
   if(firstSec){firstSec.classList.add('active');}
   // Webhook-Log laden
   if(typeof window.ladeWebhookLog==='function') window.ladeWebhookLog();
-  // Enterprise-Einstellungen laden
+  // Team-Einstellungen laden
   var _whu = localStorage.getItem('prova_outbound_webhook') || '';
   if(_whu) { var _el = document.getElementById('e-outbound-webhook'); if(_el) _el.value = _whu; }
   var _wln = localStorage.getItem('prova_wl_name') || '';

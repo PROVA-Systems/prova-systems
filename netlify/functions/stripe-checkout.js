@@ -1,16 +1,25 @@
 // ══════════════════════════════════════════════════
 // PROVA Systems — Stripe Checkout Function
-// Erstellt eine Checkout Session für Abo + Onboarding
+// Solo/Team Paketmodell (Stand: März 2026)
 // Netlify Env: STRIPE_SECRET_KEY
 // ══════════════════════════════════════════════════
 
 const PRICE_MAP = {
-  Starter:    { abo: 'price_1TEHG68d1CNm0HvYFNx99Tq6', onboarding: 29900  }, // 299€
-  Pro:        { abo: 'price_1TEHGg8d1CNm0HvYm17V5pSs', onboarding: 69900  }, // 699€
-  Enterprise: { abo: 'price_1TEHH68d1CNm0HvYLeG1Or7T', onboarding: 149900 }, // 1499€
+  // Neue Pakete: Solo / Team
+  Solo:       { abo: 'price_1TEHG68d1CNm0HvYFNx99Tq6', onboarding: 24900  }, // 149€/Mo, Onboarding 249€
+  Team:       { abo: 'price_1TEHH68d1CNm0HvYLeG1Or7T', onboarding: 59900  }, // 349€/Mo, Onboarding 599€
+  // Backward-Kompatibilität (alte Paketnamen → neue Preise)
+  Starter:    { abo: 'price_1TEHG68d1CNm0HvYFNx99Tq6', onboarding: 24900  },
+  Pro:        { abo: 'price_1TEHG68d1CNm0HvYFNx99Tq6', onboarding: 24900  },
+  Enterprise: { abo: 'price_1TEHH68d1CNm0HvYLeG1Or7T', onboarding: 59900  },
 };
 
-const TRIAL_DAYS = 30;
+// WICHTIG: Neue Stripe Price-Objekte in Stripe Dashboard anlegen:
+// Solo: 149 €/Monat (recurring) → price_id hier eintragen
+// Team: 349 €/Monat (recurring) → price_id hier eintragen
+// Bis dahin: vorhandene Starter/Enterprise Price-IDs als Platzhalter
+
+const TRIAL_DAYS = 14;
 
 exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') {
@@ -33,6 +42,9 @@ exports.handler = async (event) => {
       return { statusCode: 400, headers, body: JSON.stringify({ error: 'E-Mail fehlt' }) };
     }
 
+    // Paketnamen normalisieren (alte → neue)
+    const paketNormalized = ({ Starter: 'Solo', Pro: 'Solo', Enterprise: 'Team' })[paket] || paket;
+
     const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
     const prices = PRICE_MAP[paket];
 
@@ -44,7 +56,7 @@ exports.handler = async (event) => {
     } else {
       customer = await stripe.customers.create({
         email,
-        metadata: { paket, ref_code: ref_code || '' }
+        metadata: { paket: paketNormalized, ref_code: ref_code || '' }
       });
     }
 
@@ -58,7 +70,7 @@ exports.handler = async (event) => {
         price_data: {
           currency: 'eur',
           product_data: {
-            name: `PROVA ${paket} — Persönliches Einführungsgespräch`,
+            name: `PROVA ${paketNormalized} — Persönliches Einführungsgespräch`,
             description: 'Einmalige Onboarding-Gebühr inkl. Einrichtung Ihres Büroprofils',
           },
           unit_amount: prices.onboarding,
@@ -75,17 +87,17 @@ exports.handler = async (event) => {
       subscription_data: {
         trial_period_days: TRIAL_DAYS,
         metadata: {
-          paket,
+          paket: paketNormalized,
           email,
           ref_code: ref_code || '',
         },
       },
       metadata: {
-        paket,
+        paket: paketNormalized,
         email,
         ref_code: ref_code || '',
       },
-      success_url: `${process.env.URL || 'https://prova-systems.netlify.app'}/onboarding.html?stripe=success&session_id={CHECKOUT_SESSION_ID}&paket=${paket}`,
+      success_url: `${process.env.URL || 'https://prova-systems.netlify.app'}/onboarding.html?stripe=success&session_id={CHECKOUT_SESSION_ID}&paket=${paketNormalized}`,
       cancel_url: `${process.env.URL || 'https://prova-systems.netlify.app'}/onboarding.html?stripe=cancel`,
       locale: 'de',
       customer_email: customer.email ? undefined : email,

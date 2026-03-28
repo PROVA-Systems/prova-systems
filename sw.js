@@ -5,23 +5,25 @@
    Background Sync für Offline-Queue (Webhook S1)
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v3';
+const CACHE_VERSION = 'prova-v4';
 const SYNC_TAG = 'prova-sync-queue';
 
 // App-Shell: alle Dateien die gecacht werden sollen
 const APP_SHELL = [
   '/',
   '/app-login.html',
+  '/app-register.html',
   '/onboarding.html',
   '/dashboard.html',
   '/archiv.html',
   '/akte.html',
+  '/gutachten.html',
   '/app-starter.html',
   '/app-pro.html',
   '/app-enterprise.html',
   '/freigabe.html',
   '/stellungnahme.html',
-    '/briefvorlagen.html',
+  '/briefvorlagen.html',
   '/rechnungen.html',
   '/termine.html',
   '/jveg.html',
@@ -29,6 +31,15 @@ const APP_SHELL = [
   '/kontakte.html',
   '/kostenermittlung.html',
   '/textbausteine.html',
+  '/normen.html',
+  '/positionen.html',
+  '/baubegleitung.html',
+  '/nav.js',
+  '/slide-panel.js',
+  '/support-chat.js',
+  '/onboarding-tour.js',
+  '/auftragstyp.js',
+  '/sw-register.js',
 ];
 
 /* ── INSTALL: App-Shell precachen ─────────────────────────── */
