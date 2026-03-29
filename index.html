@@ -270,6 +270,7 @@ a:hover { color: #fff; }
 /* Hero visual */
 .hero-visual {
   position: relative; display: flex; justify-content: center; align-items: center;
+  overflow: hidden; padding: 20px;
 }
 
 .hero-phone {
@@ -367,9 +368,9 @@ a:hover { color: #fff; }
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-8px); }
 }
-.hero-float-card.top-right { top: 40px; right: -30px; animation-delay: 0s; }
-.hero-float-card.mid-left { top: 50%; left: -60px; animation-delay: -2s; }
-.hero-float-card.bottom-right { bottom: 80px; right: -40px; animation-delay: -4s; }
+.hero-float-card.top-right { top: 40px; right: 10px; animation-delay: 0s; }
+.hero-float-card.mid-left { top: 50%; left: 0px; animation-delay: -2s; }
+.hero-float-card.bottom-right { bottom: 80px; right: 20px; animation-delay: -4s; }
 
 .hero-float-icon {
   width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center;
@@ -452,20 +453,34 @@ a:hover { color: #fff; }
   position: relative; border-radius: var(--r-lg); overflow: hidden;
   background: var(--surface-card); border: 1px solid rgba(255,255,255,0.06);
   user-select: none; -webkit-user-select: none;
-  aspect-ratio: 16 / 8;
+  min-height: 440px;
 }
 .ba-side {
   position: absolute; inset: 0;
   display: flex; flex-direction: column; justify-content: center;
-  padding: 48px 56px;
+  padding: 40px 48px;
 }
 .ba-before {
   background: linear-gradient(135deg, #1a0a0a 0%, #1c1218 100%);
-  z-index: 1;
+  z-index: 1; clip-path: inset(0 50% 0 0);
 }
 .ba-after {
   background: linear-gradient(135deg, #0a1525 0%, #0e1a30 100%);
   z-index: 0;
+}
+.ba-handle {
+  position: absolute; top: 0; bottom: 0; width: 4px;
+  background: #fff; z-index: 10; left: 50%;
+  cursor: ew-resize; transform: translateX(-50%);
+  box-shadow: 0 0 20px rgba(255,255,255,0.3);
+}
+.ba-handle::after {
+  content: '⟨⟩'; position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+  width: 44px; height: 44px; border-radius: 50%;
+  background: #fff; color: var(--ink); font-size: 14px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+  letter-spacing: 2px;
 }
 .ba-side-label {
   font-size: var(--fs-xs); font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
@@ -488,26 +503,10 @@ a:hover { color: #fff; }
 .ba-after .ba-items li { color: rgba(180,230,210,0.85); }
 .ba-items li span { flex-shrink: 0; font-size: 16px; margin-top: 1px; }
 
-/* Slider handle */
-.ba-handle {
-  position: absolute; top: 0; bottom: 0; width: 4px;
-  background: #fff; z-index: 10; left: 50%;
-  cursor: ew-resize; transform: translateX(-50%);
-  box-shadow: 0 0 20px rgba(255,255,255,0.3);
-}
-.ba-handle::after {
-  content: '⟨⟩'; position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
-  width: 44px; height: 44px; border-radius: 50%;
-  background: #fff; color: var(--ink); font-size: 14px; font-weight: 700;
-  display: flex; align-items: center; justify-content: center;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
-  letter-spacing: 2px;
-}
-
 @media (max-width: 640px) {
-  .ba-side { padding: 32px 28px; }
+  .ba-side { padding: 28px 22px; }
   .ba-items li { font-size: var(--fs-xs); }
-  .beforeafter-slider { aspect-ratio: 9 / 10; }
+  .beforeafter-slider { min-height: 480px; }
 }
 
 /* ─── GRÜNDER / WARUM PROVA ─── */
@@ -1117,7 +1116,8 @@ a:hover { color: #fff; }
       <li><a href="#roi">ROI-Rechner</a></li>
       <li><a href="#vergleich">Vergleich</a></li>
       <li><a href="#faq">FAQ</a></li>
-      <li><a href="app-login.html" class="nav-cta">Kostenlos testen</a></li>
+      <li><a href="app-login.html" style="color:var(--accent-bright);">Anmelden</a></li>
+      <li><a href="app-register.html" class="nav-cta">Kostenlos testen</a></li>
     </ul>
     <button class="nav-mobile-toggle" id="navToggle" aria-label="Menü">
       <span></span><span></span><span></span>
@@ -1140,7 +1140,7 @@ a:hover { color: #fff; }
           PROVA ist die erste KI-gestützte Cloud-Software für Schadensgutachter am Bau. Ob Schimmel, Wasser oder Sturm — diktieren Sie vor Ort, PROVA schreibt das Gutachten. Rechtssicher, normkonform und in Ihrem Namen.
         </p>
         <div class="hero-actions">
-          <a href="app-login.html" class="btn-primary">
+          <a href="app-register.html" class="btn-primary">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
             14 Tage kostenlos testen
           </a>
@@ -1273,6 +1273,38 @@ a:hover { color: #fff; }
   </div>
 </section>
 
+<!-- ═══════════════ 2026-KONFORM TRUST-LEISTE ═══════════════ -->
+<section style="padding:40px 0;background:linear-gradient(180deg,var(--surface) 0%,var(--surface-raised) 100%);border-top:1px solid rgba(255,255,255,0.04);border-bottom:1px solid rgba(255,255,255,0.04);">
+  <div class="container">
+    <div style="text-align:center;margin-bottom:20px;">
+      <span style="display:inline-block;background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.2);border-radius:20px;padding:5px 16px;font-size:0.72rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--success);">✓ 2026-konform · Sofort einsatzbereit</span>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:12px;max-width:900px;margin:0 auto;">
+      <div style="display:flex;align-items:center;gap:8px;padding:10px 18px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:10px;font-size:0.82rem;font-weight:600;color:var(--text);">
+        <span style="color:var(--success);">✓</span> §407a ZPO
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;padding:10px 18px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:10px;font-size:0.82rem;font-weight:600;color:var(--text);">
+        <span style="color:var(--success);">✓</span> EU AI Act
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;padding:10px 18px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:10px;font-size:0.82rem;font-weight:600;color:var(--text);">
+        <span style="color:var(--success);">✓</span> DSGVO
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;padding:10px 18px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:10px;font-size:0.82rem;font-weight:600;color:var(--text);">
+        <span style="color:var(--success);">✓</span> ZUGFeRD / XRechnung
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;padding:10px 18px;background:rgba(79,142,247,0.06);border:1px solid rgba(79,142,247,0.15);border-radius:10px;font-size:0.82rem;font-weight:600;color:var(--accent-bright);">
+        <span>🔴</span> Digitaler IHK-Rundstempel <span style="font-size:0.6rem;background:rgba(245,158,11,0.15);color:#f59e0b;padding:1px 6px;border-radius:4px;font-weight:700;">NEU</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;padding:10px 18px;background:rgba(79,142,247,0.06);border:1px solid rgba(79,142,247,0.15);border-radius:10px;font-size:0.82rem;font-weight:600;color:var(--accent-bright);">
+        <span>📋</span> KI-Audit-Log <span style="font-size:0.6rem;background:rgba(245,158,11,0.15);color:#f59e0b;padding:1px 6px;border-radius:4px;font-weight:700;">NEU</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;padding:10px 18px;background:rgba(79,142,247,0.06);border:1px solid rgba(79,142,247,0.15);border-radius:10px;font-size:0.82rem;font-weight:600;color:var(--accent-bright);">
+        <span>🔍</span> KI-Qualitätsprüfung <span style="font-size:0.6rem;background:rgba(245,158,11,0.15);color:#f59e0b;padding:1px 6px;border-radius:4px;font-weight:700;">NEU</span>
+      </div>
+    </div>
+  </div>
+</section>
+
 
 <!-- ═══════════════ ZIELGRUPPE / SCHADENSARTEN ═══════════════ -->
 <section class="audience" id="schadensarten">
@@ -1328,7 +1360,7 @@ a:hover { color: #fff; }
       <div class="section-label">Der Unterschied</div>
       <h2 class="section-title">Vorher vs. mit PROVA</h2>
       <p class="section-desc">
-        Ziehen Sie den Regler und vergleichen Sie: links der bisherige Alltag, rechts Ihr Workflow mit PROVA.
+        Ziehen Sie den Regler und vergleichen Sie Ihren bisherigen Alltag mit dem PROVA-Workflow.
       </p>
     </div>
     <div class="beforeafter-slider fade-up" id="baSlider">
@@ -1356,7 +1388,6 @@ a:hover { color: #fff; }
           <li><span>⚡</span> ~60 % weniger Zeitaufwand pro Gutachten</li>
         </ul>
       </div>
-      <!-- Drag handle -->
       <div class="ba-handle" id="baHandle"></div>
     </div>
   </div>
@@ -1560,7 +1591,7 @@ a:hover { color: #fff; }
           <div class="roi-result-sub">pro Monat — bei gleicher Arbeitszeit</div>
         </div>
 
-        <a href="app-login.html" class="btn-primary roi-result-cta">
+        <a href="app-register.html" class="btn-primary roi-result-cta">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
           Jetzt kostenlos testen
         </a>
@@ -1692,7 +1723,7 @@ a:hover { color: #fff; }
       <div class="testimonial-card placeholder fade-up">
         <div style="font-size:36px;margin-bottom:12px;opacity:0.3;">💬</div>
         <p>Ihr Erfahrungsbericht könnte hier stehen — werden Sie einer unserer ersten Anwender.</p>
-        <a href="app-login.html" style="font-size:var(--fs-small);font-weight:600;margin-top:8px;">Jetzt testen →</a>
+        <a href="app-register.html" style="font-size:var(--fs-small);font-weight:600;margin-top:8px;">Jetzt testen →</a>
       </div>
       <div class="testimonial-card placeholder fade-up" style="animation-delay:0.1s">
         <div style="font-size:36px;margin-bottom:12px;opacity:0.3;">💬</div>
@@ -1848,7 +1879,7 @@ a:hover { color: #fff; }
     <p class="section-desc">
       Testen Sie PROVA 14 Tage kostenlos. Diktieren Sie ein echtes Gutachten und erleben Sie den Unterschied. Keine Verpflichtung, kein Risiko.
     </p>
-    <a href="app-login.html" class="btn-primary" style="font-size:1.1rem;padding:18px 44px;">
+    <a href="app-register.html" class="btn-primary" style="font-size:1.1rem;padding:18px 44px;">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
       Jetzt kostenlos starten
     </a>
@@ -1881,6 +1912,7 @@ a:hover { color: #fff; }
       <div class="footer-links">
         <a href="agb.html">AGB</a>
         <a href="datenschutz.html">Datenschutz</a>
+        <a href="avv.html">AVV</a>
         <a href="impressum.html">Impressum</a>
       </div>
       <div class="footer-badge">🔒 DSGVO-konform · EU AI Act konform</div>
@@ -1891,7 +1923,7 @@ a:hover { color: #fff; }
 
 <!-- ═══════════════ STICKY CTA (Mobile) ═══════════════ -->
 <div class="sticky-cta" id="stickyCta">
-  <a href="app-login.html" class="btn-primary">
+  <a href="app-register.html" class="btn-primary">
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
     14 Tage kostenlos testen
   </a>
@@ -2016,7 +2048,7 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
   });
 });
 
-// ─── BEFORE / AFTER SLIDER ───
+// ─── BEFORE / AFTER SLIDER (fixed: starts at 50%) ───
 (function() {
   const slider = document.getElementById('baSlider');
   const handle = document.getElementById('baHandle');
@@ -2025,32 +2057,27 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
 
   let isDragging = false;
 
-  function setPosition(x) {
-    const rect = slider.getBoundingClientRect();
-    let pct = ((x - rect.left) / rect.width) * 100;
-    pct = Math.max(8, Math.min(92, pct));
+  function setPosition(pct) {
+    pct = Math.max(15, Math.min(85, pct));
     handle.style.left = pct + '%';
     before.style.clipPath = 'inset(0 ' + (100 - pct) + '% 0 0)';
   }
 
-  // Initial position
-  setPosition(0); // will clamp to 8%
-  requestAnimationFrame(() => {
+  // Start at 50% so both sides are equally visible
+  setPosition(50);
+
+  function getPct(clientX) {
     const rect = slider.getBoundingClientRect();
-    setPosition(rect.left + rect.width * 0.5);
-  });
+    return ((clientX - rect.left) / rect.width) * 100;
+  }
 
   handle.addEventListener('mousedown', (e) => { isDragging = true; e.preventDefault(); });
-  handle.addEventListener('touchstart', (e) => { isDragging = true; }, { passive: true });
-
-  window.addEventListener('mousemove', (e) => { if (isDragging) setPosition(e.clientX); });
-  window.addEventListener('touchmove', (e) => { if (isDragging) setPosition(e.touches[0].clientX); }, { passive: true });
-
+  handle.addEventListener('touchstart', () => { isDragging = true; }, { passive: true });
+  window.addEventListener('mousemove', (e) => { if (isDragging) setPosition(getPct(e.clientX)); });
+  window.addEventListener('touchmove', (e) => { if (isDragging) setPosition(getPct(e.touches[0].clientX)); }, { passive: true });
   window.addEventListener('mouseup', () => { isDragging = false; });
   window.addEventListener('touchend', () => { isDragging = false; });
-
-  // Click anywhere on slider to move handle
-  slider.addEventListener('click', (e) => { setPosition(e.clientX); });
+  slider.addEventListener('click', (e) => { setPosition(getPct(e.clientX)); });
 })();
 
 // ─── STICKY CTA (Mobile) ───

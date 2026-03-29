@@ -216,6 +216,7 @@ input,select,textarea{font-size:max(16px,1em);}
         <div class="snav-sec">Büro</div>
         <button class="snav-item" onclick="showSec('buero',this)"><span class="si">🏢</span>Büro & Rechnungen</button>
         <button class="snav-item" onclick="showSec('signatur',this)"><span class="si">✍️</span>Unterschrift</button>
+        <button class="snav-item" onclick="showSec('signatur2',this)"><span class="si">🔴</span>Rundstempel</button>
         <div class="snav-sep"></div>
         <div class="snav-sec">System</div>
         <button class="snav-item" onclick="showSec('paket',this)"><span class="si">📦</span>Paket</button>
@@ -564,6 +565,66 @@ input,select,textarea{font-size:max(16px,1em);}
         </div>
 
         <!-- ─── PAKET ─── -->
+
+        <!-- ─── RUNDSTEMPEL ─── -->
+        <div class="sec" id="sec-signatur2" style="display:none;">
+          <div class="card">
+            <div class="card-header"><div class="card-title">🔴 Digitaler IHK-Rundstempel</div></div>
+            <div class="card-body">
+              <p style="font-size:13px;color:var(--text2);margin-bottom:12px;line-height:1.6;">
+                Laden Sie Ihren digitalen Rundstempel hoch. Er wird automatisch in alle Gutachten-PDFs eingesetzt — kein Stempeln, kein Scannen.
+              </p>
+
+              <div id="stempel-preview-wrap" style="display:none;margin-bottom:16px;padding:16px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:var(--r-md);text-align:center;">
+                <img id="stempel-preview" src="" alt="Rundstempel" style="max-width:180px;max-height:180px;border-radius:50%;">
+                <div style="font-size:10px;color:var(--text3);margin-top:6px;">Vorschau — wird rechts unten im PDF platziert</div>
+              </div>
+
+              <div class="sig-dropzone" onclick="document.getElementById('stempel-file').click()"
+                ondragover="event.preventDefault();this.style.borderColor='var(--accent)'"
+                ondragleave="this.style.borderColor='var(--border2)'"
+                ondrop="handleStempelDrop(event)">
+                <div style="font-size:28px;margin-bottom:8px;">🔴</div>
+                <div style="font-size:13px;font-weight:600;color:var(--text2);margin-bottom:4px;">Rundstempel hochladen</div>
+                <div style="font-size:11px;color:var(--text3);">PNG mit transparentem Hintergrund · max. 500 KB</div>
+                <input type="file" id="stempel-file" accept=".png,.jpg,.jpeg" style="display:none;" onchange="ladeStempelDatei(this.files[0])">
+              </div>
+
+              <div id="stempel-validierung" style="display:none;margin-top:12px;"></div>
+
+              <div id="stempel-status" style="display:none;margin-top:12px;padding:9px 12px;background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.2);border-radius:var(--r-md);font-size:12px;color:var(--success);">
+                ✅ Rundstempel gespeichert — wird in alle Gutachten-PDFs eingesetzt
+              </div>
+
+              <div class="save-bar">
+                <button class="btn btn-danger" onclick="stempelLoeschen()" id="btn-stempel-loeschen" style="display:none;">Entfernen</button>
+                <button class="btn btn-primary" onclick="speichereStempel()" id="btn-stempel-save" disabled>Speichern</button>
+              </div>
+
+              <div style="margin-top:14px;padding:12px 14px;background:rgba(79,142,247,.06);border:1px solid rgba(79,142,247,.12);border-radius:var(--r-md);">
+                <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--accent);margin-bottom:6px;">Noch keinen digitalen Stempel?</div>
+                <div style="font-size:12px;color:var(--text2);line-height:1.6;">
+                  <strong>1.</strong> E-Mail an Ihre IHK/HWK: <em>"Bitte digitalen Rundstempel als PNG bereitstellen"</em><br>
+                  <strong>2.</strong> Oder: Foto vom physischen Stempel → Hintergrund entfernen mit <a href="https://www.remove.bg" target="_blank" style="color:var(--accent)">remove.bg</a> → PNG hochladen<br>
+                  <strong>3.</strong> IHK Köln: <a href="mailto:sachverstaendige@ihk.de" style="color:var(--accent)">sachverstaendige@ihk.de</a> · 0221 2021-4242
+                </div>
+              </div>
+
+              <div class="form-group" style="margin-top:14px;">
+                <label class="form-label">IHK / HWK (für Stempelnachweis)</label>
+                <select id="e-ihk" class="form-select" onchange="localStorage.setItem('prova_ihk',this.value)">
+                  <option value="">Bitte wählen…</option>
+                  <option>IHK Köln</option><option>IHK Düsseldorf</option><option>IHK Aachen</option>
+                  <option>IHK Berlin</option><option>IHK München</option><option>IHK Frankfurt</option>
+                  <option>IHK Hamburg</option><option>IHK Stuttgart</option><option>IHK Hannover</option>
+                  <option>HWK Köln</option><option>HWK Düsseldorf</option><option>HWK München</option>
+                  <option>Andere</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div class="sec" id="sec-paket">
           <div class="card">
             <div class="card-header"><div class="card-title">📦 Ihr aktives Paket</div></div>
@@ -975,6 +1036,89 @@ window.sigLoeschen = function(){
   zeigToast('Unterschrift entfernt');
 };
 
+/* ── RUNDSTEMPEL ── */
+var _stempelBase64 = localStorage.getItem('prova_sv_stempel') || null;
+
+window.ladeStempelDatei = function(file) {
+  if (!file) return;
+  if (file.size > 512000) { zeigToast('Datei zu groß (max. 500 KB)', 'err'); return; }
+  if (!file.type.match(/^image\/(png|jpeg|jpg)$/)) { zeigToast('Nur PNG oder JPG erlaubt', 'err'); return; }
+
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    _stempelBase64 = e.target.result;
+    var img = document.getElementById('stempel-preview');
+    var wrap = document.getElementById('stempel-preview-wrap');
+    img.src = _stempelBase64;
+    wrap.style.display = 'block';
+
+    // Validierung
+    var valEl = document.getElementById('stempel-validierung');
+    var checks = [];
+    var tempImg = new Image();
+    tempImg.onload = function() {
+      var w = tempImg.width, h = tempImg.height;
+      var ratio = Math.abs(w / h - 1);
+      checks.push({ ok: file.type === 'image/png', label: 'PNG-Format', hint: file.type === 'image/png' ? 'Transparent möglich' : 'JPG hat keinen transparenten Hintergrund' });
+      checks.push({ ok: w >= 200 && w <= 600, label: 'Größe ' + w + '×' + h + 'px', hint: w >= 200 && w <= 600 ? 'Optimal' : 'Empfohlen: 250-300px' });
+      checks.push({ ok: ratio < 0.15, label: ratio < 0.15 ? 'Quadratisch' : 'Nicht quadratisch', hint: ratio < 0.15 ? 'Perfekt für Rundstempel' : 'Stempel sollte rund/quadratisch sein' });
+      checks.push({ ok: file.size < 300000, label: (file.size / 1024).toFixed(0) + ' KB', hint: file.size < 300000 ? 'Kompakt' : 'Funktioniert, aber etwas groß' });
+
+      valEl.style.display = 'block';
+      valEl.innerHTML = checks.map(function(c) {
+        return '<div style="display:flex;align-items:center;gap:6px;font-size:11px;margin-bottom:3px;">'
+          + '<span>' + (c.ok ? '✅' : '⚠️') + '</span>'
+          + '<span style="color:' + (c.ok ? '#10b981' : '#f59e0b') + ';">' + c.label + '</span>'
+          + '<span style="color:var(--text3);">— ' + c.hint + '</span>'
+          + '</div>';
+      }).join('');
+    };
+    tempImg.src = _stempelBase64;
+
+    document.getElementById('btn-stempel-save').disabled = false;
+  };
+  reader.readAsDataURL(file);
+};
+
+window.handleStempelDrop = function(e) {
+  e.preventDefault(); e.currentTarget.style.borderColor = 'var(--border2)';
+  var file = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+  if (file && file.type.match(/^image\//)) ladeStempelDatei(file);
+};
+
+window.speichereStempel = function() {
+  if (!_stempelBase64) return;
+  localStorage.setItem('prova_sv_stempel', _stempelBase64);
+  document.getElementById('stempel-status').style.display = 'block';
+  document.getElementById('btn-stempel-loeschen').style.display = 'inline-flex';
+  zeigToast('Rundstempel gespeichert ✅');
+};
+
+window.stempelLoeschen = function() {
+  localStorage.removeItem('prova_sv_stempel'); _stempelBase64 = null;
+  var img = document.getElementById('stempel-preview'); var wrap = document.getElementById('stempel-preview-wrap');
+  if (img) img.src = ''; if (wrap) wrap.style.display = 'none';
+  document.getElementById('stempel-status').style.display = 'none';
+  document.getElementById('btn-stempel-loeschen').style.display = 'none';
+  document.getElementById('stempel-validierung').style.display = 'none';
+  document.getElementById('btn-stempel-save').disabled = true;
+  zeigToast('Rundstempel entfernt');
+};
+
+// Stempel beim Laden anzeigen
+(function() {
+  var saved = localStorage.getItem('prova_sv_stempel');
+  if (saved) {
+    var img = document.getElementById('stempel-preview');
+    var wrap = document.getElementById('stempel-preview-wrap');
+    if (img && wrap) { img.src = saved; wrap.style.display = 'block'; }
+    var st = document.getElementById('stempel-status'); if (st) st.style.display = 'block';
+    var dl = document.getElementById('btn-stempel-loeschen'); if (dl) dl.style.display = 'inline-flex';
+  }
+  var ihk = localStorage.getItem('prova_ihk');
+  if (ihk) { var sel = document.getElementById('e-ihk'); if (sel) sel.value = ihk; }
+})();
+
 /* ── PAKET ANZEIGE ── */
 function renderPaket(){
   var pa=document.getElementById('paket-anzeige');
@@ -1110,5 +1254,8 @@ function togglePayloadVorschau() {
   }
 }
 </script>
+<script src="auftragstyp.js"></script>
+<script src="support-chat.js"></script>
+<script src="trial-guard.js"></script>
 </body>
 </html>
