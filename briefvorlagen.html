@@ -200,6 +200,7 @@ input,select,textarea{font-size:max(16px,1em);}
   .sup-ok-icon{font-size:36px;margin-bottom:8px;}
   .sup-ok-title{font-size:15px;font-weight:700;color:var(--green,#10b981);margin-bottom:4px;}
   .sup-ok-sub{font-size:12px;color:var(--text3,#6b7a99);}
+@media(max-width:768px){.bottom-nav{display:flex !important;}}
 </style>
 </head>
 <body>
@@ -244,7 +245,7 @@ input,select,textarea{font-size:max(16px,1em);}
 </div>
 
 <!-- Mobile Bottom Nav -->
-<nav class="bottom-nav">
+<nav class="bottom-nav" style="display:none;">
   <a href="dashboard.html" class="bn-item"><span class="bn-icon">⊞</span><span>Zentrale</span></a>
   <a href="archiv.html" class="bn-item"><span class="bn-icon">📁</span><span>Fälle</span></a>
   <a href="rechnungen.html" class="bn-item"><span class="bn-icon">💶</span><span>Rechnungen</span></a>
@@ -454,11 +455,11 @@ var AT_FAELLE='tblSxV8bsXwd1pwa0';
 var paket=localStorage.getItem('prova_paket')||'Solo';
 var isPro=paket==='Solo'||paket==='Team';
 var isEnterprise=paket==='Team';
-var pc={'Solo':'#4f8ef7','Team':'#a78bfa','Starter':'#4f8ef7','Pro':'#4f8ef7','Enterprise':'#a78bfa'}[paket]||'#4f8ef7';
+var pc={'Solo':'#4f8ef7','Team':'#a78bfa','Solo':'#4f8ef7','Pro':'#4f8ef7','Enterprise':'#a78bfa'}[paket]||'#4f8ef7';
 (function(){
   var el=document.getElementById('topbar-paket-badge');
   if(el){el.textContent=paket;el.style.cssText='font-size:10px;font-weight:700;padding:3px 9px;border-radius:10px;letter-spacing:.04em;background:'+pc+'18;color:'+pc+';border:1px solid '+pc+'33;';}
-  var appUrl=paket==='Team'?'app-enterprise.html':paket==='Solo'?'app-pro.html':'app-starter.html';
+  var appUrl=paket==='Team'?'app-enterprise.html':paket==='Solo'?'gutachten.html':'gutachten.html';
 })();
 
 if(!localStorage.getItem('prova_user')){window.location.href='app-login.html';return;}
@@ -632,7 +633,7 @@ async function ladeFaelleForPicker(){
     _faelle=ls.map(function(a){return{id:a.id,fields:{Aktenzeichen:a.aktenzeichen,Status:a.status,Schadensart:a.schadenart,Schaden_Strasse:a.adresse,Ort:a.ort,Auftraggeber_Name:a.auftraggeber_name,Auftraggeber_Email:a.auftraggeber_email,Timestamp:a.datum}};});
   }
   if(_faelle.length===0){
-    picker.innerHTML='<div class="no-fall-option">Noch keine Fälle. <a href="app-starter.html" style="color:var(--accent);">Neuen Fall anlegen →</a></div>';
+    picker.innerHTML='<div class="no-fall-option">Noch keine Fälle. <a href="gutachten.html" style="color:var(--accent);">Neuen Fall anlegen →</a></div>';
     return;
   }
   picker.innerHTML=_faelle.map(function(r){
@@ -1308,4 +1309,5 @@ window.PROVA_KONTEXT = {
     localStorage.removeItem('prova_schadenart');
     localStorage.removeItem('prova_adresse');
     sessionStorage.removeItem('prova_record_id');
-    ses
+    ses<script src="auftragstyp.js"></script>
+<script src="trial-guard.js"></script>

@@ -25,6 +25,8 @@
   // Backward-Kompatibilität: alte Werte mappen
   var paketMap = { Starter: 'Solo', Pro: 'Solo', Enterprise: 'Team' };
   var paket = paketMap[rawPaket] || rawPaket;
+  // Korrektur: Alten Paketnamen überschreiben damit alle Seiten den richtigen lesen
+  if (paketMap[rawPaket]) localStorage.setItem('prova_paket', paket);
   var paketColors = { Solo: '#4f8ef7', Team: '#a78bfa' };
   var pc = paketColors[paket] || paketColors.Solo;
   
@@ -128,8 +130,8 @@
 
       /* ─── SECTION LABEL ─── */
       + '.sb-section-label{'
-      +   'font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;'
-      +   'color:var(--text3,#4d5568);padding:14px 8px 6px;white-space:nowrap;'
+      +   'font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;'
+      +   'color:rgba(255,255,255,0.4);padding:18px 8px 6px;white-space:nowrap;'
       +   'overflow:hidden;transition:opacity .18s,height .18s,padding .18s;'
       +   'user-select:none;'
       + '}'

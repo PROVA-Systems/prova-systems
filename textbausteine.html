@@ -75,7 +75,7 @@
 .page-sub{font-size:12px;color:var(--text3);margin-top:4px;}
 
 /* 2-SPALTEN LAYOUT */
-.tb-layout{display:grid;grid-template-columns:280px 1fr;gap:16px;align-items:start;}
+.tb-layout{display:grid;grid-template-columns:280px 1fr;gap:16px;align-items:start;overflow:hidden;}
 
 /* SIDEBAR */
 .kat-list{padding:8px;}
@@ -163,6 +163,7 @@
   .sup-ok-icon{font-size:36px;margin-bottom:8px;}
   .sup-ok-title{font-size:15px;font-weight:700;color:var(--green,#10b981);margin-bottom:4px;}
   .sup-ok-sub{font-size:12px;color:var(--text3,#6b7a99);}
+@media(max-width:768px){.bottom-nav{display:flex !important;}}
 </style>
 <script>(function(){if(!localStorage.getItem("prova_user"))window.location.href="app-login.html";})();</script>
 </head>
@@ -198,10 +199,10 @@
     <button onclick="openEditor()" style="padding:9px 18px;background:var(--accent);border:none;border-radius:8px;color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font-ui);">+ Neuer Baustein</button>
   </div>
 
-  <!-- Limit-Anzeige (nur Starter) -->
-  <div class="limit-bar" id="limit-bar" style="display:none;">
-    <span>⚠️ Starter-Paket: <strong id="limit-text">0 / 20</strong> Bausteine verwendet</span>
-    <span style="font-size:11px;opacity:.8;">Pro / Enterprise: unbegrenzt</span>
+  <!-- Limit-Anzeige entfernt — alle Bausteine in allen Paketen frei -->
+  <div class="limit-bar" id="limit-bar" style="display:none !important;">
+    <span>⚠️ Solo-Paket: <strong id="limit-text">0 / 20</strong> Bausteine verwendet</span>
+    <span style="font-size:11px;opacity:.8;">Team: unbegrenzt</span>
   </div>
 
   <div class="tb-layout">
@@ -338,7 +339,7 @@
 // DATEN & KONSTANTEN
 // ============================================================
 const TB_KEY = 'prova_textbausteine';
-const STARTER_LIMIT = 20;
+const STARTER_LIMIT = 9999; // Kein Limit — alle Bausteine frei
 
 var KATEGORIEN = {
   begehung:   {label:'Begehung & Aufnahme',    icon:'🚶', color:'rgba(79,142,247,.15)',  textColor:'#93C5FD'},
@@ -368,8 +369,8 @@ var STANDARD_BAUSTEINE = [
 var _bausteine = [];
 var _aktivKat = 'alle';
 var _editId = null;
-var _paket = localStorage.getItem('prova_paket') || 'Starter';
-var _isPro = ['Pro','Enterprise'].includes(_paket);
+var _paket = localStorage.getItem('prova_paket') || 'Solo';
+var _isPro = ['Solo','Team'].includes(_paket);
 
 // ============================================================
 // LADEN / SPEICHERN
@@ -497,7 +498,7 @@ function openEditor(id) {
   } else {
     // Limit-Check Starter
     if (!_isPro && _bausteine.length >= STARTER_LIMIT) {
-      showToast('Starter-Limit erreicht (20 Bausteine). Upgrade auf Pro für unbegrenzte Bausteine.', 'err');
+      showToast('Solo-Limit erreicht (20 Bausteine). Upgrade auf Team für unbegrenzte Bausteine.', 'err');
       return;
     }
     titleEl.textContent = '📝 Neuer Baustein';
@@ -689,7 +690,7 @@ document.addEventListener('DOMContentLoaded', function() {
 </div><!-- /main-wrap -->
 </div><!-- /app-shell -->
 
-<nav class="bottom-nav">
+<nav class="bottom-nav" style="display:none;">
   <a href="dashboard.html" class="bn-item "><span class="bn-icon">⊞</span><span>Zentrale</span></a>
   <a href="archiv.html" class="bn-item active"><span class="bn-icon">📁</span><span>Fälle</span></a>
   <a href="rechnungen.html" class="bn-item "><span class="bn-icon">💶</span><span>Rechnungen</span></a>
@@ -721,16 +722,16 @@ var _SFAQ=[
 function supAnalyse(){clearTimeout(_supT);_supT=setTimeout(function(){var txt=(document.getElementById('sup-betreff').value+' '+document.getElementById('sup-msg').value).toLowerCase();var f=_SFAQ.find(function(x){return x.q.some(function(w){return txt.includes(w);});});var box=document.getElementById('sup-faq-box');if(f){document.getElementById('sup-faq-txt').textContent=f.a;box.style.display='block';}else box.style.display='none';},600);}
 function supFaqOk(){document.getElementById('sup-form').style.display='none';document.getElementById('sup-faq-box').style.display='none';document.getElementById('sup-ok').style.display='block';}
 function supClose(){document.getElementById('sup-modal').classList.remove('open');document.getElementById('sup-ok').style.display='none';document.getElementById('sup-form').style.display='block';document.getElementById('sup-betreff').value='';document.getElementById('sup-msg').value='';}
-async function supSend(){var b=document.getElementById('sup-betreff').value.trim(),n=document.getElementById('sup-msg').value.trim();if(!b||!n){document.getElementById('sup-err').style.display='block';return;}document.getElementById('sup-err').style.display='none';var btn=document.getElementById('sup-btn');btn.disabled=true;btn.textContent='⏳ Wird gesendet...';try{await fetch('https://hook.eu1.make.com/lktuhugwcg5v37ib6bdaxjb1uiplnu8v',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({betreff:b,nachricht:n,sv_email:localStorage.getItem('prova_sv_email')||'',paket:localStorage.getItem('prova_paket')||'Starter',seite:window.location.pathname,ts:new Date().toISOString()})});}catch(e){}document.getElementById('sup-form').style.display='none';document.getElementById('sup-faq-box').style.display='none';document.getElementById('sup-ok').style.display='block';}
+async function supSend(){var b=document.getElementById('sup-betreff').value.trim(),n=document.getElementById('sup-msg').value.trim();if(!b||!n){document.getElementById('sup-err').style.display='block';return;}document.getElementById('sup-err').style.display='none';var btn=document.getElementById('sup-btn');btn.disabled=true;btn.textContent='⏳ Wird gesendet...';try{await fetch('https://hook.eu1.make.com/lktuhugwcg5v37ib6bdaxjb1uiplnu8v',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({betreff:b,nachricht:n,sv_email:localStorage.getItem('prova_sv_email')||'',paket:localStorage.getItem('prova_paket')||'Solo',seite:window.location.pathname,ts:new Date().toISOString()})});}catch(e){}document.getElementById('sup-form').style.display='none';document.getElementById('sup-faq-box').style.display='none';document.getElementById('sup-ok').style.display='block';}
 </script>
 
 <script>
 (function(){
-  var paket=localStorage.getItem('prova_paket')||'Starter';
-  var pc={'Starter':'#4f8ef7','Pro':'#f59e0b','Enterprise':'#a78bfa'}[paket]||'#4f8ef7';
+  var paket=localStorage.getItem('prova_paket')||'Solo';
+  var pc={'Solo':'#4f8ef7','Team':'#a78bfa','Solo':'#4f8ef7','Pro':'#4f8ef7','Enterprise':'#a78bfa'}[paket]||'#4f8ef7';
   var el=document.getElementById('topbar-paket-badge');
   if(el){el.textContent=paket;el.style.cssText='font-size:10px;font-weight:700;padding:3px 9px;border-radius:10px;letter-spacing:.04em;background:'+pc+'18;color:'+pc+';border:1px solid '+pc+'33;';}
-  var appUrl=paket==='Enterprise'?'app-enterprise.html':paket==='Pro'?'app-pro.html':'app-starter.html';
+  var appUrl=paket==='Team'?'app-enterprise.html':paket==='Solo'?'app-pro.html':'app-starter.html';
 })();
 </script>
 
@@ -789,7 +790,7 @@ async function supSendModal(){
       body:JSON.stringify({
         betreff:b,nachricht:n,
         sv_email:localStorage.getItem('prova_sv_email')||'',
-        paket:localStorage.getItem('prova_paket')||'Starter',
+        paket:localStorage.getItem('prova_paket')||'Solo',
         seite:window.location.pathname,
         ts:new Date().toISOString()
       })
@@ -1178,4 +1179,5 @@ window.PROVA_KONTEXT = {
     localStorage.removeItem('prova_schadenart');
     localStorage.removeItem('prova_adresse');
     sessionStorage.removeItem('prova_record_id');
-    sess
+    sess<script src="auftragstyp.js"></script>
+<script src="trial-guard.js"></script>

@@ -79,6 +79,7 @@ a{text-decoration:none;color:inherit;}button,input,select,textarea{font-family:i
 .kal-wd{padding:8px 0;text-align:center;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text3);}
 .kal-days{display:grid;grid-template-columns:repeat(7,1fr);}
 .kal-cell{min-height:90px;padding:6px;border-right:1px solid var(--border);border-bottom:1px solid var(--border);cursor:pointer;transition:background .12s;display:flex;flex-direction:column;gap:2px;}
+@media(min-width:1200px){.kal-cell{min-height:120px;}}
 .kal-cell:hover{background:rgba(255,255,255,.025);}
 .kal-cell:nth-child(7n){border-right:none;}
 .kal-cell.other-month{opacity:.3;}
@@ -186,6 +187,7 @@ a{text-decoration:none;color:inherit;}button,input,select,textarea{font-family:i
   .sup-ok-icon{font-size:36px;margin-bottom:8px;}
   .sup-ok-title{font-size:15px;font-weight:700;color:var(--green,#10b981);margin-bottom:4px;}
   .sup-ok-sub{font-size:12px;color:var(--text3,#6b7a99);}
+@media(max-width:768px){.bottom-nav{display:flex !important;}}
 </style>
 </head>
 <body>
@@ -271,7 +273,7 @@ a{text-decoration:none;color:inherit;}button,input,select,textarea{font-family:i
 </div>
 
 <!-- Mobile Bottom Nav -->
-<nav class="bottom-nav">
+<nav class="bottom-nav" style="display:none;">
   <a href="dashboard.html" class="bn-item"><span class="bn-icon">⊞</span><span>Zentrale</span></a>
   <a href="archiv.html" class="bn-item"><span class="bn-icon">📁</span><span>Fälle</span></a>
   <a href="termine.html" class="bn-item active"><span class="bn-icon">📅</span><span>Kalender</span></a>
@@ -334,22 +336,13 @@ a{text-decoration:none;color:inherit;}button,input,select,textarea{font-family:i
 'use strict';
 
 /* ─── SIDEBAR ─── */
-var paket=localStorage.getItem('prova_paket')||'Starter';
-var pc={'Starter':'#4f8ef7','Pro':'#f59e0b','Enterprise':'#a78bfa'}[paket]||'#4f8ef7';
+var paket=localStorage.getItem('prova_paket')||'Solo';
+var pc={'Solo':'#4f8ef7','Team':'#a78bfa','Solo':'#4f8ef7','Pro':'#4f8ef7','Enterprise':'#a78bfa'}[paket]||'#4f8ef7';
 (function(){
   var el=document.getElementById('topbar-paket-badge');
   if(el){el.textContent=paket;el.style.cssText='font-size:10px;font-weight:700;padding:3px 9px;border-radius:10px;letter-spacing:.04em;background:'+pc+'18;color:'+pc+';border:1px solid '+pc+'33;';}
-  var dot=document.getElementById('sb-paket-dot');if(dot){dot.style.background=pc;}
-  var nm=document.getElementById('sb-paket-name');if(nm){nm.textContent=paket;nm.style.color=pc;}
-  var appUrl=paket==='Enterprise'?'app-enterprise.html':paket==='Pro'?'app-pro.html':'app-starter.html';
-  var nb=document.getElementById('sb-new-btn');if(nb)nb.onclick=function(){window.location.href=appUrl;};
+  var appUrl=paket==='Team'?'app-enterprise.html':paket==='Solo'?'app-pro.html':'app-starter.html';
 })();
-var collapsed=localStorage.getItem('prova_sb_collapsed')==='1';
-var sb=document.getElementById('sidebar');
-if(collapsed&&sb)sb.classList.add('collapsed');
-window.toggleSidebar=function(){collapsed=!collapsed;sb.classList.toggle('collapsed',collapsed);localStorage.setItem('prova_sb_collapsed',collapsed?'1':'0');};
-window.openMobileSidebar=function(){sb.classList.add('mobile-open');document.getElementById('sb-overlay').classList.add('open');};
-window.closeMobileSidebar=function(){sb.classList.remove('mobile-open');document.getElementById('sb-overlay').classList.remove('open');};
 if(!localStorage.getItem('prova_user')){window.location.href='app-login.html';return;}
 
 /* ─── DATEN ─── */
@@ -678,5 +671,6 @@ async function supSendModal(){
       body:JSON.stringify({
         betreff:b,nachricht:n,
         sv_email:localStorage.getItem('prova_sv_email')||'',
-        paket:localStorage.getItem('prova_paket')||'Starter',
-        sei
+        paket:localStorage.getItem('prova_paket')||'Solo',
+        sei<script src="auftragstyp.js"></script>
+<script src="trial-guard.js"></script>

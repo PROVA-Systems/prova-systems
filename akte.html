@@ -196,6 +196,7 @@ a{text-decoration:none;color:inherit;}button,input,select,textarea{font-family:i
   .sup-ok-icon{font-size:36px;margin-bottom:8px;}
   .sup-ok-title{font-size:15px;font-weight:700;color:var(--green,#10b981);margin-bottom:4px;}
   .sup-ok-sub{font-size:12px;color:var(--text3,#6b7a99);}
+@media(max-width:768px){.bottom-nav{display:flex !important;}}
 </style>
 </head>
 <body>
@@ -216,7 +217,7 @@ a{text-decoration:none;color:inherit;}button,input,select,textarea{font-family:i
       </div>
     </div>
     <div class="topbar-right">
-      <span class="topbar-paket" id="topbar-paket-badge">Starter</span>
+      <span class="topbar-paket" id="topbar-paket-badge">Solo</span>
       <a href="einstellungen.html"><button class="topbar-btn">⚙</button></a>
     </div>
   </header>
@@ -398,7 +399,7 @@ a{text-decoration:none;color:inherit;}button,input,select,textarea{font-family:i
 </div>
 </div>
 
-<nav class="bottom-nav">
+<nav class="bottom-nav" style="display:none;">
   <a href="dashboard.html" class="bn-item"><span class="bn-icon">⊞</span><span>Zentrale</span></a>
   <a href="archiv.html" class="bn-item active"><span class="bn-icon">📁</span><span>Fälle</span></a>
   <a href="rechnungen.html" class="bn-item"><span class="bn-icon">💶</span><span>Rechnungen</span></a>
@@ -419,7 +420,7 @@ var AT_TERMINE='tblyMTTdtfGQjjmc2';
 
 /* ─── SETUP ─── */
 var paket=localStorage.getItem('prova_paket')||'Solo';
-var pc={'Solo':'#4f8ef7','Team':'#a78bfa','Starter':'#4f8ef7','Pro':'#4f8ef7','Enterprise':'#a78bfa'}[paket]||'#4f8ef7';
+var pc={'Solo':'#4f8ef7','Team':'#a78bfa','Solo':'#4f8ef7','Pro':'#4f8ef7','Enterprise':'#a78bfa'}[paket]||'#4f8ef7';
 (function(){
   var el=document.getElementById('topbar-paket-badge');
   if(el){el.textContent=paket;el.style.cssText='font-size:10px;font-weight:700;padding:3px 9px;border-radius:10px;letter-spacing:.04em;background:'+pc+'18;color:'+pc+';border:1px solid '+pc+'33;';}
@@ -755,7 +756,7 @@ window.aktualisiereStatus=async function(){
 
 /* ─── NAVIGATIONEN ─── */
 window.oeffneGutachten=function(){
-  var appUrl=paket==='Team'?'app-enterprise.html':paket==='Solo'?'app-pro.html':'app-starter.html';
+  var appUrl=paket==='Team'?'app-enterprise.html':paket==='Solo'?'gutachten.html':'gutachten.html';
   window.location.href=appUrl;
 };
 window.oeffneFreigabe=function(){
@@ -886,7 +887,8 @@ window.exportWordAkte = function() {
     '.kpf-name{font-size:14pt;font-weight:bold;color:#1E3A5F;}',
     '.az{background:#f5f5f5;border:1px solid #ccc;padding:8pt;margin:10pt 0;}',
     '.footer{border-top:1px solid #ccc;margin-top:30pt;padding-top:8pt;font-size:9pt;color:#666;}',
-    '</style></head><body>',
+    '@media(max-width:768px){.bottom-nav{display:flex !important;}}
+</style></head><body>',
     '<div class="kpf"><div class="kpf-name">' + (buero||svName.trim()) + '</div><div>' + quali + '</div></div>',
     '<div class="az"><strong>Aktenzeichen:</strong> ' + az + ' &nbsp;&nbsp; <strong>Schadenart:</strong> ' + schadenart + ' &nbsp;&nbsp; <strong>Datum:</strong> ' + heute + '</div>',
     adresse ? '<p><strong>Objekt:</strong> ' + adresse + '</p>' : '',
@@ -1246,6 +1248,7 @@ window.PROVA_KONTEXT = {
 </script>
 <script src="auftragstyp.js"></script>
 <script src="support-chat.js"></script>
+<script src="trial-guard.js"></script>
 </body></html>'
   ].join('\n');
 

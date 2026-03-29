@@ -189,6 +189,7 @@
   .sup-ok-icon{font-size:36px;margin-bottom:8px;}
   .sup-ok-title{font-size:15px;font-weight:700;color:var(--green,#10b981);margin-bottom:4px;}
   .sup-ok-sub{font-size:12px;color:var(--text3,#6b7a99);}
+@media(max-width:768px){.bottom-nav{display:flex !important;}}
 </style>
 </head>
 <body>
@@ -206,7 +207,7 @@
   </div>
   <div class="topbar-right">
     <div class="notif-wrap"><button class="topbar-btn" title="Benachrichtigungen">🔔</button></div>
-    <span class="topbar-paket" id="topbar-paket-badge">Starter</span>
+    <span class="topbar-paket" id="topbar-paket-badge">Solo</span>
     <a href="einstellungen.html"><button class="topbar-btn">⚙</button></a>
   </div>
 </header>
@@ -324,6 +325,36 @@
     <div class="form-group">
       <label class="form-label">Notizen</label>
       <textarea id="e-notizen" class="form-textarea" placeholder="Interne Hinweise, Besonderheiten…"></textarea>
+    </div>
+
+    <!-- Auftraggeber-Profil -->
+    <div style="border-top:1px solid var(--border2);padding-top:14px;margin-top:6px;">
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#4f8ef7;margin-bottom:10px;">📋 Auftraggeber-Profil</div>
+      <div class="form-group">
+        <label class="form-label">Bevorzugte Briefvorlage</label>
+        <select id="e-briefvorlage" class="form-select">
+          <option value="">— Keine Zuordnung —</option>
+          <option value="A-01">Angebot Gutachten</option>
+          <option value="V-01">Erstbericht Versicherung</option>
+          <option value="V-05">Abschlussbericht Versicherung</option>
+          <option value="G-07">Beauftragungsbestätigung Gericht</option>
+          <option value="G-08">Fristverlängerungsantrag</option>
+          <option value="O-01">Einladung Ortstermin</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Gutachten-Format</label>
+        <select id="e-gutachten-format" class="form-select">
+          <option value="">— Standard —</option>
+          <option value="versicherung">Versicherungs-Format (kompakt)</option>
+          <option value="gericht">Gerichts-Format (§1–§6 ausführlich)</option>
+          <option value="privat">Privat-Format (leicht verständlich)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Sonder-Konditionen / Hinweise</label>
+        <input id="e-sonder" class="form-input" type="text" placeholder="z.B. Immer Kopie an schadenteam@allianz.de">
+      </div>
     </div>
 
     <div class="modal-actions">
@@ -670,10 +701,15 @@ function openEditor(id) {
     document.getElementById('e-email').value = k.email||'';
     document.getElementById('e-ansprechpartner').value = k.ansprechpartner||'';
     document.getElementById('e-notizen').value = k.notizen||'';
+    document.getElementById('e-briefvorlage').value = k.briefvorlage||'';
+    document.getElementById('e-gutachten-format').value = k.gutachtenFormat||'';
+    document.getElementById('e-sonder').value = k.sonder||'';
   } else {
     t.textContent = '👤 Neuer Kontakt';
-    ['e-name','e-vorname','e-firma','e-strasse','e-plz','e-ort','e-telefon','e-email','e-ansprechpartner','e-notizen'].forEach(function(fid){document.getElementById(fid).value='';});
+    ['e-name','e-vorname','e-firma','e-strasse','e-plz','e-ort','e-telefon','e-email','e-ansprechpartner','e-notizen','e-sonder'].forEach(function(fid){document.getElementById(fid).value='';});
     document.getElementById('e-typ').value = 'Versicherung';
+    document.getElementById('e-briefvorlage').value = '';
+    document.getElementById('e-gutachten-format').value = '';
   }
   m.classList.add('open');
   setTimeout(function(){document.getElementById('e-name').focus();},100);
@@ -696,6 +732,9 @@ function speichereKontakt() {
     email: document.getElementById('e-email').value.trim(),
     ansprechpartner: document.getElementById('e-ansprechpartner').value.trim(),
     notizen: document.getElementById('e-notizen').value.trim(),
+    briefvorlage: document.getElementById('e-briefvorlage').value,
+    gutachtenFormat: document.getElementById('e-gutachten-format').value,
+    sonder: document.getElementById('e-sonder').value.trim(),
   };
   var savedKontakt;
   if (_editId) {
@@ -1077,8 +1116,8 @@ document.addEventListener('DOMContentLoaded', function(){
   if (!localStorage.getItem('prova_user')) { window.location.href='app-login.html'; return; }
 
   // Paket Badge
-  var p = localStorage.getItem('prova_paket')||'Starter';
-  var c = {Starter:'#4f8ef7',Pro:'#f59e0b',Enterprise:'#a78bfa'}[p]||'#4f8ef7';
+  var p = localStorage.getItem('prova_paket')||'Solo';
+  var c = {Solo:'#4f8ef7',Team:'#a78bfa',Starter:'#4f8ef7',Pro:'#4f8ef7',Enterprise:'#a78bfa'}[p]||'#4f8ef7';
   var badge = document.getElementById('topbarPaket');
   if (badge) { badge.textContent=p; badge.setAttribute('style','background:'+c+'18;color:'+c+';border:1px solid '+c+'33'); }
 
@@ -1105,7 +1144,7 @@ document.addEventListener('DOMContentLoaded', function(){
 </div><!-- /main-wrap -->
 </div><!-- /app-shell -->
 
-<nav class="bottom-nav">
+<nav class="bottom-nav" style="display:none;">
   <a href="dashboard.html" class="bn-item "><span class="bn-icon">⊞</span><span>Zentrale</span></a>
   <a href="archiv.html" class="bn-item active"><span class="bn-icon">📁</span><span>Fälle</span></a>
   <a href="rechnungen.html" class="bn-item "><span class="bn-icon">💶</span><span>Rechnungen</span></a>
@@ -1137,16 +1176,16 @@ var _SFAQ=[
 function supAnalyse(){clearTimeout(_supT);_supT=setTimeout(function(){var txt=(document.getElementById('sup-betreff').value+' '+document.getElementById('sup-msg').value).toLowerCase();var f=_SFAQ.find(function(x){return x.q.some(function(w){return txt.includes(w);});});var box=document.getElementById('sup-faq-box');if(f){document.getElementById('sup-faq-txt').textContent=f.a;box.style.display='block';}else box.style.display='none';},600);}
 function supFaqOk(){document.getElementById('sup-form').style.display='none';document.getElementById('sup-faq-box').style.display='none';document.getElementById('sup-ok').style.display='block';}
 function supClose(){document.getElementById('sup-modal').classList.remove('open');document.getElementById('sup-ok').style.display='none';document.getElementById('sup-form').style.display='block';document.getElementById('sup-betreff').value='';document.getElementById('sup-msg').value='';}
-async function supSend(){var b=document.getElementById('sup-betreff').value.trim(),n=document.getElementById('sup-msg').value.trim();if(!b||!n){document.getElementById('sup-err').style.display='block';return;}document.getElementById('sup-err').style.display='none';var btn=document.getElementById('sup-btn');btn.disabled=true;btn.textContent='⏳ Wird gesendet...';try{await fetch('https://hook.eu1.make.com/lktuhugwcg5v37ib6bdaxjb1uiplnu8v',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({betreff:b,nachricht:n,sv_email:localStorage.getItem('prova_sv_email')||'',paket:localStorage.getItem('prova_paket')||'Starter',seite:window.location.pathname,ts:new Date().toISOString()})});}catch(e){}document.getElementById('sup-form').style.display='none';document.getElementById('sup-faq-box').style.display='none';document.getElementById('sup-ok').style.display='block';}
+async function supSend(){var b=document.getElementById('sup-betreff').value.trim(),n=document.getElementById('sup-msg').value.trim();if(!b||!n){document.getElementById('sup-err').style.display='block';return;}document.getElementById('sup-err').style.display='none';var btn=document.getElementById('sup-btn');btn.disabled=true;btn.textContent='⏳ Wird gesendet...';try{await fetch('https://hook.eu1.make.com/lktuhugwcg5v37ib6bdaxjb1uiplnu8v',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({betreff:b,nachricht:n,sv_email:localStorage.getItem('prova_sv_email')||'',paket:localStorage.getItem('prova_paket')||'Solo',seite:window.location.pathname,ts:new Date().toISOString()})});}catch(e){}document.getElementById('sup-form').style.display='none';document.getElementById('sup-faq-box').style.display='none';document.getElementById('sup-ok').style.display='block';}
 </script>
 
 <script>
 (function(){
-  var paket=localStorage.getItem('prova_paket')||'Starter';
-  var pc={'Starter':'#4f8ef7','Pro':'#f59e0b','Enterprise':'#a78bfa'}[paket]||'#4f8ef7';
+  var paket=localStorage.getItem('prova_paket')||'Solo';
+  var pc={'Solo':'#4f8ef7','Team':'#a78bfa','Solo':'#4f8ef7','Pro':'#4f8ef7','Enterprise':'#a78bfa'}[paket]||'#4f8ef7';
   var el=document.getElementById('topbar-paket-badge');
   if(el){el.textContent=paket;el.style.cssText='font-size:10px;font-weight:700;padding:3px 9px;border-radius:10px;letter-spacing:.04em;background:'+pc+'18;color:'+pc+';border:1px solid '+pc+'33;';}
-  var appUrl=paket==='Enterprise'?'app-enterprise.html':paket==='Pro'?'app-pro.html':'app-starter.html';
+  var appUrl=paket==='Team'?'app-enterprise.html':paket==='Solo'?'gutachten.html':'app-starter.html';
 })();
 </script>
 
@@ -1205,5 +1244,6 @@ async function supSendModal(){
       body:JSON.stringify({
         betreff:b,nachricht:n,
         sv_email:localStorage.getItem('prova_sv_email')||'',
-        paket:localStorage.getItem('prova_paket')||'Starter',
-        sei
+        paket:localStorage.getItem('prova_paket')||'Solo',
+        sei<script src="auftragstyp.js"></script>
+<script src="trial-guard.js"></script>
