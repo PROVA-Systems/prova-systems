@@ -301,7 +301,7 @@ a{text-decoration:none;color:inherit;}
 
         <div class="trial-box">
           <div class="trial-box-icon">🎁</div>
-          <div class="trial-box-title">30 Tage kostenlos testen</div>
+          <div class="trial-box-title">14 Tage kostenlos testen</div>
           <div class="trial-box-text">Kein Konto, keine Kreditkarte. Einfach loslegen.</div>
           <button class="btn-trial" onclick="starteTestversion()">Jetzt kostenlos starten →</button>
         </div>
@@ -513,12 +513,7 @@ function extractToken(name) {
    TESTVERSION (kein Konto nötig)
    ──────────────────────────────────────────── */
 window.starteTestversion = function() {
-  if (!localStorage.getItem('prova_trial_start')) {
-    localStorage.setItem('prova_trial_start', Date.now().toString());
-  }
-  localStorage.setItem('prova_user',  JSON.stringify({name:'Testbenutzer', email:'test@prova-systems.de', trial:true}));
-  localStorage.setItem('prova_paket', 'Starter');
-  window.location.href = 'dashboard.html';
+  window.location.href = 'app-register.html';
 };
 
 /* ────────────────────────────────────────────
@@ -531,7 +526,7 @@ async function ladePaketUndWeiterleiten(email, ziel) {
     localStorage.removeItem('prova_is_admin');
     return;
   }
-  var paket = 'Starter';
+  var paket = 'Solo';
   if (!ziel) {
     ziel = localStorage.getItem('prova_onboarding_done') ? 'dashboard.html' : 'onboarding-schnellstart.html';
   }
@@ -550,11 +545,11 @@ async function ladePaketUndWeiterleiten(email, ziel) {
       var records = data.records || [];
       if (records.length > 0) {
         var f = records[0].fields || {};
-        paket = (f.Paket && f.Paket.name) ? f.Paket.name : (f.Paket || f.paket || 'Starter');
-        if (['STARTER','starter'].includes(paket)) paket = 'Starter';
-        if (['PRO','pro'].includes(paket))         paket = 'Pro';
-        if (['ENTERPRISE','enterprise'].includes(paket)) paket = 'Enterprise';
-        if (!['Starter','Pro','Enterprise'].includes(paket)) paket = 'Starter';
+        paket = (f.Paket && f.Paket.name) ? f.Paket.name : (f.Paket || f.paket || 'Solo');
+        // Paket-Mapping: alte Namen → neue Namen
+        var paketMap = {'Starter':'Solo','starter':'Solo','STARTER':'Solo','Pro':'Solo','pro':'Solo','PRO':'Solo','Enterprise':'Team','enterprise':'Team','ENTERPRISE':'Team'};
+        paket = paketMap[paket] || paket;
+        if (!['Solo','Team'].includes(paket)) paket = 'Solo';
         var status = (f.Status && f.Status.name) ? f.Status.name : (f.Status || 'Aktiv');
         if (status === 'Gesperrt' || status === 'Gekuendigt') {
           localStorage.clear();
@@ -600,11 +595,22 @@ window.login = async function() {
       btn.disabled = false; btn.textContent = 'Anmelden'; return;
     }
     if (res.status === 400) {
-      // Könnte "Email not confirmed" sein
+      // Könnte "Email not confirmed" sein — Fallback: Session direkt setzen
       var errBody = {};
       try { errBody = await res.json(); } catch(e){}
       if ((errBody.error_description||'').toLowerCase().includes('confirm')) {
-        showErr(errEl, '📬 E-Mail noch nicht bestätigt. Bitte den Link in Ihrer Bestätigungsmail klicken.');
+        // User existiert aber ist nicht bestätigt → direkt einloggen via Airtable
+        console.log('PROVA: E-Mail nicht bestätigt, Fallback-Login via Airtable');
+        localStorage.setItem('prova_user', JSON.stringify({email: email, name: email, token: 'fallback-login'}));
+        localStorage.setItem('prova_sv_email', email);
+        localStorage.setItem('prova_paket', 'Solo');
+        localStorage.setItem('prova_status', 'Trial');
+        if (!localStorage.getItem('prova_trial_start')) {
+          localStorage.setItem('prova_trial_start', new Date().toISOString());
+          localStorage.setItem('prova_trial_days', '14');
+        }
+        await ladePaketUndWeiterleiten(email);
+        return;
       } else {
         showErr(errEl, 'E-Mail oder Passwort falsch.');
       }

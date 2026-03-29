@@ -168,35 +168,48 @@ async function register() {
 
     var userData = await res.json();
 
-    // Direkt einloggen
-    var loginRes = await fetch('/.netlify/identity/token', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: 'grant_type=password&username=' + encodeURIComponent(email) + '&password=' + encodeURIComponent(pw)
-    });
+    // Session direkt setzen — kein Token-Call nötig
+    var trialStart = new Date().toISOString();
+    var trialEnde = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000);
+    var trialEndeFormatted = trialEnde.toLocaleDateString('de-DE');
+    var trialEndeISO = trialEnde.toISOString();
 
-    if (loginRes.ok) {
-      var token = await loginRes.json();
-      // Session setzen
-      localStorage.setItem('prova_user', JSON.stringify({
-        email: email,
-        name: vorname + ' ' + nachname,
-        vorname: vorname,
-        nachname: nachname,
-        token: token.access_token
-      }));
-      localStorage.setItem('prova_sv_email', email);
-      localStorage.setItem('prova_sv_name', vorname + ' ' + nachname);
-      localStorage.setItem('prova_paket', 'Solo');
-      localStorage.setItem('prova_trial_start', new Date().toISOString());
+    localStorage.setItem('prova_user', JSON.stringify({
+      email: email,
+      name: vorname + ' ' + nachname,
+      vorname: vorname,
+      nachname: nachname,
+      token: 'registration-direct'
+    }));
+    localStorage.setItem('prova_sv_email', email);
+    localStorage.setItem('prova_sv_name', vorname + ' ' + nachname);
+    localStorage.setItem('prova_sv_vorname', vorname);
+    localStorage.setItem('prova_sv_nachname', nachname);
+    localStorage.setItem('prova_paket', 'Solo');
+    localStorage.setItem('prova_status', 'Trial');
+    localStorage.setItem('prova_trial_start', trialStart);
+    localStorage.setItem('prova_trial_days', '14');
 
-      // Weiterleiten zum Dashboard
-      window.location.href = 'dashboard.html';
-    } else {
-      // Registrierung ok, Login fehlgeschlagen → zum Login schicken
-      showErr('Konto erstellt! Bitte loggen Sie sich ein.');
-      setTimeout(function() { window.location.href = 'app-login.html'; }, 2000);
-    }
+    // Willkommensmail auslösen (Make.com L1 Webhook)
+    try {
+      fetch('/.netlify/functions/emails', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          typ: 'willkommen',
+          vorname: vorname,
+          nachname: nachname,
+          email: email,
+          paket: 'Solo',
+          trial_start: trialStart,
+          trial_ende: trialEndeISO,
+          trial_ende_formatted: trialEndeFormatted
+        })
+      });
+    } catch(e) { /* Nicht blockierend */ }
+
+    // Direkt zum Dashboard
+    window.location.href = 'dashboard.html';
 
   } catch (e) {
     showErr('Verbindungsfehler: ' + e.message);
