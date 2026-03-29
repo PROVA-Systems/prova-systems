@@ -295,6 +295,24 @@ a{text-decoration:none;color:inherit;}button,input,select,textarea{font-family:i
               <span class="section-toggle">▾</span>
             </div>
             <div class="section-body">
+              <!-- Upload Zone -->
+              <div id="dok-upload-zone" style="padding:16px;border:2px dashed var(--border2,rgba(255,255,255,.12));border-radius:8px;text-align:center;margin-bottom:12px;cursor:pointer;transition:all .2s;"
+                ondragover="event.preventDefault();this.style.borderColor='var(--accent)';this.style.background='rgba(79,142,247,.05)'"
+                ondragleave="this.style.borderColor='';this.style.background=''"
+                ondrop="event.preventDefault();this.style.borderColor='';this.style.background='';handleDokUpload(event.dataTransfer.files)"
+                onclick="document.getElementById('dok-file-input').click()">
+                <div style="font-size:20px;margin-bottom:4px;">📂</div>
+                <div style="font-size:12px;color:var(--text2);">Dokument hochladen (PDF, Scan, Brief)</div>
+                <div style="font-size:10px;color:var(--text3);margin-top:2px;">Drag & Drop oder klicken — KI erkennt Typ + Fristen</div>
+                <input type="file" id="dok-file-input" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" multiple style="display:none" onchange="handleDokUpload(this.files)">
+              </div>
+              <div id="dok-upload-status" style="display:none;font-size:12px;color:#4f8ef7;padding:8px;margin-bottom:8px;">⏳ KI analysiert…</div>
+              <!-- Frist-Vorschlag Banner -->
+              <div id="dok-frist-banner" style="display:none;padding:10px 14px;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);border-radius:8px;margin-bottom:10px;font-size:12px;">
+                <strong style="color:#f59e0b;">📅 Frist erkannt:</strong> <span id="dok-frist-text"></span>
+                <button onclick="uebernimmFrist()" style="margin-left:8px;padding:3px 10px;border-radius:5px;background:#f59e0b;border:none;color:#fff;font-size:11px;font-weight:600;cursor:pointer;">In Kalender übernehmen</button>
+                <button onclick="document.getElementById('dok-frist-banner').style.display='none'" style="margin-left:4px;padding:3px 8px;border-radius:5px;background:transparent;border:1px solid rgba(245,158,11,.3);color:#f59e0b;font-size:11px;cursor:pointer;">✕</button>
+              </div>
               <div class="dokument-list" id="dok-list">
                 <!-- Wird per JS befüllt -->
               </div>
@@ -400,8 +418,8 @@ var AT_FAELLE='tblSxV8bsXwd1pwa0';
 var AT_TERMINE='tblyMTTdtfGQjjmc2';
 
 /* ─── SETUP ─── */
-var paket=localStorage.getItem('prova_paket')||'Starter';
-var pc={'Starter':'#4f8ef7','Pro':'#f59e0b','Enterprise':'#a78bfa'}[paket]||'#4f8ef7';
+var paket=localStorage.getItem('prova_paket')||'Solo';
+var pc={'Solo':'#4f8ef7','Team':'#a78bfa','Starter':'#4f8ef7','Pro':'#4f8ef7','Enterprise':'#a78bfa'}[paket]||'#4f8ef7';
 (function(){
   var el=document.getElementById('topbar-paket-badge');
   if(el){el.textContent=paket;el.style.cssText='font-size:10px;font-weight:700;padding:3px 9px;border-radius:10px;letter-spacing:.04em;background:'+pc+'18;color:'+pc+';border:1px solid '+pc+'33;';}
@@ -553,15 +571,117 @@ function renderDokumente(f){
   if(f.Messwerte){
     list.push({icon:'📐',name:'Messwerte',meta:'Vor-Ort-Messungen',url:null,typ:'mess'});
   }
+  // Lokale Uploads laden
+  var az = f.Aktenzeichen || f.AZ || '';
+  var uploads = JSON.parse(localStorage.getItem('prova_akte_docs_' + az) || '[]');
+  uploads.forEach(function(u) {
+    list.push({icon:u.icon||'📎',name:u.name,meta:u.typ_label + (u.datum ? ' · ' + u.datum : ''),url:u.dataUrl||null,typ:'upload'});
+  });
+
   var el=document.getElementById('dok-list');
   if(list.length===0){
-    el.innerHTML='<div class="dok-empty">📂 Noch keine Dokumente.<br>Nach der Freigabe wird das PDF automatisch hier verlinkt.</div>';
+    el.innerHTML='<div class="dok-empty">📂 Noch keine Dokumente.<br>Laden Sie Beweisbeschlüsse, Stellungnahmen oder andere PDFs hoch.</div>';
     return;
   }
   el.innerHTML=list.map(function(d){
     var actions=d.url?'<button class="dok-btn" onclick="window.open(\''+d.url+'\',\'_blank\')">⬇ Download</button>':'';
     return '<div class="dok-item"><div class="dok-icon">'+d.icon+'</div><div style="flex:1;"><div class="dok-name">'+esc(d.name)+'</div><div class="dok-meta">'+esc(d.meta)+'</div></div><div class="dok-actions">'+actions+'</div></div>';
   }).join('');
+}
+
+/* ─── DOKUMENT-UPLOAD + KI-KLASSIFIZIERUNG ─── */
+var _erkFrist = null;
+async function handleDokUpload(files) {
+  if (!files || !files.length) return;
+  var statusEl = document.getElementById('dok-upload-status');
+  var az = document.getElementById('akte-az')?.textContent || localStorage.getItem('prova_letztes_az') || '';
+  var uploads = JSON.parse(localStorage.getItem('prova_akte_docs_' + az) || '[]');
+
+  for (var i = 0; i < files.length; i++) {
+    var file = files[i];
+    statusEl.style.display = 'block';
+    statusEl.textContent = '⏳ KI analysiert: ' + file.name + '…';
+
+    var typLabel = 'Dokument';
+    var icon = '📎';
+    var frist = null;
+    var zusammenfassung = '';
+
+    // KI-Klassifizierung versuchen (nur für PDFs)
+    if (file.type === 'application/pdf') {
+      try {
+        var b64 = await new Promise(function(res, rej) {
+          var r = new FileReader();
+          r.onload = function() { res(r.result.split(',')[1]); };
+          r.onerror = rej;
+          r.readAsDataURL(file);
+        });
+
+        var kiRes = await fetch('/.netlify/functions/ki-proxy', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ aufgabe: 'pdf_extraktion', pdf_base64: b64, dateiname: file.name })
+        });
+
+        if (kiRes.ok) {
+          var kiData = await kiRes.json();
+          // Typ erkennen aus dem Inhalt
+          if (kiData.beweisfragen && kiData.beweisfragen.length > 0) { typLabel = 'Beweisbeschluss'; icon = '⚖️'; }
+          else if (file.name.toLowerCase().indexOf('stellungnahme') >= 0) { typLabel = 'Stellungnahme'; icon = '💬'; }
+          else if (file.name.toLowerCase().indexOf('rechnung') >= 0) { typLabel = 'Rechnung'; icon = '🧾'; }
+          else if (kiData.frist) { typLabel = 'Gerichtsverfügung'; icon = '📋'; }
+          else { typLabel = 'Schriftstück'; icon = '📄'; }
+
+          if (kiData.frist) {
+            frist = kiData.frist;
+            _erkFrist = frist;
+          }
+        }
+      } catch (e) {
+        console.log('KI-Klassifizierung fehlgeschlagen:', e);
+      }
+    } else {
+      // Bilder etc.
+      icon = file.type.startsWith('image/') ? '🖼️' : '📎';
+      typLabel = file.type.startsWith('image/') ? 'Scan/Foto' : 'Dokument';
+    }
+
+    uploads.push({
+      name: file.name,
+      typ_label: typLabel,
+      icon: icon,
+      datum: new Date().toLocaleDateString('de-DE'),
+      size: Math.round(file.size / 1024) + ' KB',
+      frist: frist
+    });
+
+    localStorage.setItem('prova_akte_docs_' + az, JSON.stringify(uploads));
+
+    // Frist-Banner zeigen
+    if (frist) {
+      document.getElementById('dok-frist-banner').style.display = 'block';
+      document.getElementById('dok-frist-text').textContent = frist + ' — Aus: ' + file.name;
+    }
+  }
+
+  statusEl.style.display = 'none';
+  // Re-render mit aktuellem Fall
+  if (window._currentFall) renderDokumente(window._currentFall);
+  else location.reload();
+}
+
+function uebernimmFrist() {
+  if (!_erkFrist) return;
+  // In localStorage speichern (Fristenverwaltung liest das)
+  var az = document.getElementById('akte-az')?.textContent || '';
+  var cache = JSON.parse(localStorage.getItem('prova_faelle_cache') || '{}');
+  if (cache[az]) {
+    cache[az].fristdatum = _erkFrist;
+    localStorage.setItem('prova_faelle_cache', JSON.stringify(cache));
+  }
+  document.getElementById('dok-frist-banner').style.display = 'none';
+  if (typeof showToast === 'function') showToast('Frist ' + _erkFrist + ' im Kalender eingetragen ✓', 'success');
+  else alert('Frist ' + _erkFrist + ' eingetragen.');
 }
 
 /* ─── SCHNELLAKTIONEN ─── */
@@ -635,7 +755,7 @@ window.aktualisiereStatus=async function(){
 
 /* ─── NAVIGATIONEN ─── */
 window.oeffneGutachten=function(){
-  var appUrl=paket==='Enterprise'?'app-enterprise.html':paket==='Pro'?'app-pro.html':'app-starter.html';
+  var appUrl=paket==='Team'?'app-enterprise.html':paket==='Solo'?'app-pro.html':'app-starter.html';
   window.location.href=appUrl;
 };
 window.oeffneFreigabe=function(){
@@ -1124,6 +1244,8 @@ window.PROVA_KONTEXT = {
 })();
 
 </script>
+<script src="auftragstyp.js"></script>
+<script src="support-chat.js"></script>
 </body></html>'
   ].join('\n');
 

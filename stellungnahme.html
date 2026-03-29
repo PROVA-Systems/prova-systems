@@ -21,9 +21,9 @@
   --accent:#4f8ef7;--accent2:#3a7be0;
   --green:#10b981;--warn:#f59e0b;--red:#ef4444;
   --r-md:10px;--r-lg:14px;
-  --sans:'Instrument Sans',system-ui,sans-serif;
+  --font-ui:'DM Sans',system-ui,sans-serif;
 }
-body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;}
+body{background:var(--bg);color:var(--text);font-family:var(--font-ui);min-height:100vh;}
 
 /* ── FLOW HEADER ── */
 .flow-header{
@@ -101,7 +101,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:1
   background:var(--surface2);border:1.5px solid var(--border2);
   border-radius:8px;color:var(--text3);
   font-size:12px;font-weight:600;cursor:pointer;
-  font-family:var(--sans);text-align:center;transition:all .15s;
+  font-family:var(--font-ui);text-align:center;transition:all .15s;
 }
 .typ-btn:hover{border-color:var(--accent);color:var(--text2);}
 .typ-btn.active{border-color:var(--accent);background:rgba(79,142,247,.12);color:var(--accent);}
@@ -111,7 +111,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:1
 .weg-tab{
   padding:9px 18px;font-size:12px;font-weight:600;
   background:transparent;border:none;border-bottom:2px solid transparent;
-  color:var(--text3);cursor:pointer;font-family:var(--sans);
+  color:var(--text3);cursor:pointer;font-family:var(--font-ui);
   transition:all .15s;
 }
 .weg-tab.active{color:var(--accent);border-bottom-color:var(--accent);}
@@ -122,7 +122,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:1
   width:100%;padding:12px 14px;
   background:var(--bg3);border:1.5px solid var(--border2);
   border-radius:var(--r-md);color:var(--text);
-  font-size:13px;font-family:var(--sans);
+  font-size:13px;font-family:var(--font-ui);
   line-height:1.7;resize:vertical;outline:none;
   transition:border-color .15s;min-height:180px;
 }
@@ -165,7 +165,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:1
 .textarea-highlight{background:var(--bg3);}
 .textarea-highlight{
   position:absolute;top:0;left:0;right:0;bottom:0;z-index:1;pointer-events:none;
-  font-family:var(--sans);font-size:13px;line-height:1.6;
+  font-family:var(--font-ui);font-size:13px;line-height:1.6;
   padding:10px 12px;white-space:pre-wrap;word-wrap:break-word;
   color:transparent;border-radius:var(--r-md);overflow:hidden;
 }
@@ -220,7 +220,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:1
   margin-top:10px;padding:7px 14px;
   background:rgba(79,142,247,.1);border:1px solid rgba(79,142,247,.2);
   border-radius:7px;color:var(--accent);font-size:12px;font-weight:600;
-  cursor:pointer;font-family:var(--sans);
+  cursor:pointer;font-family:var(--font-ui);
 }
 .ki-insp-btn:hover{background:rgba(79,142,247,.18);}
 .ki-spinner{
@@ -250,7 +250,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:1
   background:linear-gradient(135deg,var(--accent),var(--accent2));
   border:none;border-radius:var(--r-md);
   color:#fff;font-size:15px;font-weight:700;
-  cursor:pointer;font-family:var(--sans);
+  cursor:pointer;font-family:var(--font-ui);
   transition:all .2s;display:flex;align-items:center;
   justify-content:center;gap:10px;margin-top:16px;
 }
@@ -260,7 +260,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:1
   width:100%;padding:10px;margin-top:8px;
   background:transparent;border:1px solid var(--border2);
   border-radius:var(--r-md);color:var(--text3);
-  font-size:13px;cursor:pointer;font-family:var(--sans);
+  font-size:13px;cursor:pointer;font-family:var(--font-ui);
   transition:all .15s;
 }
 .btn-secondary:hover{background:var(--surface2);color:var(--text2);}
@@ -305,7 +305,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:1
   font-size:10px;padding:3px 8px;
   background:rgba(79,142,247,.1);border:1px solid rgba(79,142,247,.2);
   border-radius:5px;color:var(--accent);cursor:pointer;
-  font-family:var(--sans);font-weight:600;margin-top:5px;
+  font-family:var(--font-ui);font-weight:600;margin-top:5px;
   display:inline-block;
 }
 
@@ -478,7 +478,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:1
               width:100%;padding:10px;margin-top:4px;
               background:rgba(79,142,247,.1);border:1px solid rgba(79,142,247,.25);
               border-radius:8px;color:var(--accent);font-size:13px;font-weight:600;
-              cursor:pointer;font-family:var(--sans);">
+              cursor:pointer;font-family:var(--font-ui);">
               ✨ Meine Stichpunkte formulieren lassen
             </button>
 
@@ -968,19 +968,20 @@ async function ladeKiInsp() {
   document.getElementById('kiInspRefresh').style.display = 'none';
   const messwerte = localStorage.getItem('prova_messwerte')||'';
   try {
-    const res = await fetch('/api/ki-proxy', {
+    const res = await fetch('/.netlify/functions/ki-proxy', {
       method:'POST', headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
-        model:'claude-haiku-4-5-20251001', max_tokens:400,
-        messages:[{role:'user',content:`§6-Konjunktiv-II-Inspiration für Bausachverständigen-Gutachten.
+        aufgabe:'freitext',
+        system:'Du bist ein Assistent für Bausachverständige. Antworte nur mit dem gewünschten Text, keine Erklärungen.',
+        prompt:`§6-Konjunktiv-II-Inspiration für Bausachverständigen-Gutachten.
 Fall: ${sa}${messwerte?'\nMesswerte: '+messwerte:''}
 NUR Konjunktiv II: dürfte, könnte, wäre — VERBOTEN: ist, führt zu, muss.
 Format: 6.1 Ursachen [2 Sätze] · 6.2 Beweislast [1 Satz] · 6.3 Empfehlung [1-2 Sätze]
-Nur den Text zurückgeben.`}]
+Nur den Text zurückgeben.`
       })
     });
     const d = await res.json();
-    const txt = d.content?.[0]?.text || '';
+    const txt = d.text || '';
     document.getElementById('kiInspText').textContent = txt;
     document.getElementById('kiInspText').style.display = 'block';
     document.getElementById('kiInspRefresh').style.display = 'inline-flex';
@@ -1004,20 +1005,21 @@ async function ausformulieren() {
   const gesamtLen = b1.length+b2.length+b3.length;
   const maxLen = Math.round(gesamtLen*0.7);
   try {
-    const res = await fetch('/api/ki-proxy', {
+    const res = await fetch('/.netlify/functions/ki-proxy', {
       method:'POST', headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
-        model:'claude-haiku-4-5-20251001', max_tokens:600,
-        messages:[{role:'user',content:`Formuliere aus diesen SV-Angaben einen §6-Fachurteil-Text.
+        aufgabe:'freitext',
+        system:'Du bist ein Assistent für Bausachverständige. Formuliere Fachurteile im Konjunktiv II.',
+        prompt:`Formuliere aus diesen SV-Angaben einen §6-Fachurteil-Text.
 REGELN: 1. Output max ${maxLen} Zeichen. 2. NUR SV-Vorgaben — keine neuen Fakten. 3. Konjunktiv II PFLICHT. 4. Indikativ nur für Messwerte/Sichtbefunde.
 SV-Beobachtung: ${b1}
 SV-Schlussfolgerung: ${b2}
 SV-Empfehlung: ${b3}
-Nur den §6-Text zurückgeben.`}]
+Nur den §6-Text zurückgeben.`
       })
     });
     const d = await res.json();
-    let txt = d.content?.[0]?.text || '';
+    let txt = d.text || '';
     if(txt.length > maxLen) txt = txt.substring(0,maxLen)+'…';
     document.getElementById('svTextEdit').value = txt;
     document.getElementById('ausform-wrap').style.display = 'block';
@@ -1132,5 +1134,6 @@ function zeigToast(msg, type='ok') {
 }
 </script>
   <script src="/sw-register.js" defer></script>
+<script src="auftragstyp.js"></script>
 </body>
 </html>

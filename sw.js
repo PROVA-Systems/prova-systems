@@ -78,7 +78,7 @@ self.addEventListener('fetch', event => {
     url.pathname.startsWith('/.netlify/') ||
     url.hostname.includes('make.com') ||
     url.hostname.includes('airtable.com') ||
-    url.hostname.includes('anthropic.com') ||
+    url.hostname.includes('openai.com') ||
     url.hostname.includes('pdfmonkey.io') ||
     event.request.method !== 'GET'
   ) {

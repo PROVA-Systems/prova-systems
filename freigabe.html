@@ -255,6 +255,18 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-ui);min-heigh
         <div class="check-foot" id="checkCount">0 / 5 Punkte geprüft</div>
       </div>
 
+      <!-- KI-QUALITÄTSPRÜFUNG -->
+      <div style="margin-bottom:14px;">
+        <button id="btn-qi-check" onclick="starteQualitaetspruefung()" style="width:100%;padding:12px 16px;border-radius:10px;background:rgba(167,139,250,.08);border:1px solid rgba(167,139,250,.2);color:#a78bfa;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .15s;">
+          🔍 KI-Qualitätsprüfung starten
+        </button>
+        <div id="qi-result" style="display:none;margin-top:10px;padding:14px 16px;border-radius:10px;background:var(--bg3,#181b24);border:1px solid var(--border2);">
+          <div id="qi-loading" style="display:none;font-size:13px;color:#a78bfa;">⏳ KI prüft Gutachten auf Vollständigkeit, Normen und Konsistenz…</div>
+          <div id="qi-items"></div>
+          <div id="qi-summary" style="display:none;margin-top:10px;padding:10px 12px;border-radius:7px;font-size:12px;line-height:1.5;"></div>
+        </div>
+      </div>
+
       <!-- §407a BESTÄTIGUNG -->
       <div class="primary-wrap">
         <div id="approve-content">
@@ -480,6 +492,98 @@ function renderDoc(){
   }
 }
 
+/* KI-QUALITÄTSPRÜFUNG */
+async function starteQualitaetspruefung() {
+  var btn = document.getElementById('btn-qi-check');
+  var resultEl = document.getElementById('qi-result');
+  var loadingEl = document.getElementById('qi-loading');
+  var itemsEl = document.getElementById('qi-items');
+  var summaryEl = document.getElementById('qi-summary');
+
+  // Gutachten-Text sammeln
+  var gutachtenText = (recFields?.KI_Entwurf || '') + '\n\n§6 Stellungnahme:\n' + (localStorage.getItem('prova_stellungnahme_text') || '[Noch nicht verfasst]');
+  var beweisfragen = [];
+  try {
+    var cache = JSON.parse(localStorage.getItem('prova_faelle_cache') || '{}');
+    var az = recFields?.Aktenzeichen || '';
+    if (cache[az] && cache[az].beweisfragen) {
+      beweisfragen = cache[az].beweisfragen.split('\n').filter(function(b) { return b.trim(); });
+    }
+  } catch(e) {}
+
+  if (!gutachtenText || gutachtenText.length < 100) {
+    zeigToast('Kein Gutachten-Entwurf vorhanden.', 'err');
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = '⏳ KI prüft…';
+  resultEl.style.display = 'block';
+  loadingEl.style.display = 'block';
+  itemsEl.innerHTML = '';
+  summaryEl.style.display = 'none';
+
+  try {
+    var res = await fetch('/.netlify/functions/ki-proxy', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        aufgabe: 'qualitaetspruefung',
+        gutachten_text: gutachtenText,
+        beweisfragen: beweisfragen,
+        auftragstyp: localStorage.getItem('prova_gutachten_typ') || 'gerichtsgutachten'
+      })
+    });
+
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    var data = await res.json();
+    loadingEl.style.display = 'none';
+
+    if (data.parse_error) {
+      itemsEl.innerHTML = '<div style="font-size:12px;color:var(--text3);">KI-Antwort konnte nicht verarbeitet werden. Bitte manuell prüfen.</div>';
+      btn.disabled = false; btn.textContent = '🔍 Erneut prüfen';
+      return;
+    }
+
+    // Prüfpunkte rendern
+    var html = '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#a78bfa;margin-bottom:8px;">Prüfergebnis</div>';
+    if (data.pruefpunkte && data.pruefpunkte.length) {
+      data.pruefpunkte.forEach(function(p) {
+        var icon = p.status === 'ok' ? '✅' : p.status === 'warnung' ? '⚠️' : '❌';
+        var color = p.status === 'ok' ? '#10b981' : p.status === 'warnung' ? '#f59e0b' : '#ef4444';
+        html += '<div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:6px;font-size:12px;">'
+          + '<span>' + icon + '</span>'
+          + '<div><strong style="color:' + color + ';">' + (p.kategorie || '') + '</strong>'
+          + (p.hinweis ? '<div style="color:var(--text3);margin-top:2px;">' + p.hinweis + '</div>' : '')
+          + '</div></div>';
+      });
+    }
+    itemsEl.innerHTML = html;
+
+    // Zusammenfassung
+    if (data.zusammenfassung) {
+      var bgColor = data.gesamtergebnis === 'gruen' ? 'rgba(16,185,129,.08)' : data.gesamtergebnis === 'gelb' ? 'rgba(245,158,11,.08)' : 'rgba(239,68,68,.08)';
+      var txtColor = data.gesamtergebnis === 'gruen' ? '#10b981' : data.gesamtergebnis === 'gelb' ? '#f59e0b' : '#ef4444';
+      summaryEl.style.display = 'block';
+      summaryEl.style.background = bgColor;
+      summaryEl.style.color = txtColor;
+      summaryEl.style.border = '1px solid ' + txtColor + '33';
+      summaryEl.textContent = data.zusammenfassung;
+    }
+
+    btn.disabled = false;
+    btn.textContent = '🔍 Erneut prüfen';
+    btn.style.background = data.gesamtergebnis === 'gruen' ? 'rgba(16,185,129,.08)' : 'rgba(167,139,250,.08)';
+    btn.style.borderColor = data.gesamtergebnis === 'gruen' ? 'rgba(16,185,129,.2)' : 'rgba(167,139,250,.2)';
+    btn.style.color = data.gesamtergebnis === 'gruen' ? '#10b981' : '#a78bfa';
+
+  } catch(e) {
+    loadingEl.style.display = 'none';
+    itemsEl.innerHTML = '<div style="font-size:12px;color:var(--danger);">Fehler: ' + e.message + '</div>';
+    btn.disabled = false; btn.textContent = '🔍 Erneut prüfen';
+  }
+}
+
 /* §407a BESTÄTIGUNG */
 function toggle407a(){
   var cb=document.getElementById('cb407a');
@@ -622,5 +726,6 @@ function zeigToast(msg,type='ok'){
   clearTimeout(_tt); _tt=setTimeout(()=>{el.style.display='none';},3500);
 }
 </script>
+<script src="auftragstyp.js"></script>
 </body>
 </html>

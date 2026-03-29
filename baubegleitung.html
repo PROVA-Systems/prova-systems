@@ -17,21 +17,21 @@
     --warn:#f59e0b; --warn-bg:rgba(245,158,11,0.08); --warn-border:rgba(245,158,11,0.25);
     --red:#ef4444; --red-bg:rgba(239,68,68,0.08); --red-border:rgba(239,68,68,0.2);
     --purple:#a78bfa; --purple-bg:rgba(167,139,250,0.08);
-    --sans:'Instrument Sans',system-ui,sans-serif;
-    --display:'Montserrat',sans-serif;
+    --font-ui:'DM Sans',system-ui,sans-serif;
+    --font-display:'DM Sans',system-ui,sans-serif;
     --mono:'JetBrains Mono','Fira Mono',monospace;
     --radius:10px; --nav-h:52px; --bot-h:60px;
   }
   *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
   html{font-size:14px;}
-  body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:var(--bot-h);}
+  body{font-family:var(--font-ui);background:var(--bg);color:var(--text);min-height:100vh;}
   input,select,textarea{font-size:max(16px,1em);}
   a{text-decoration:none;color:inherit;}
 
   /* ── TOPBAR ── */
   .topbar{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 20px;height:var(--nav-h);min-height:var(--nav-h);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
   .topbar-left{display:flex;align-items:center;gap:12px;}
-  .logo{font-family:var(--display);font-weight:700;font-size:18px;color:var(--text);}
+  .logo{font-family:var(--font-ui);font-weight:700;font-size:18px;color:var(--text);}
   .logo span{color:var(--accent);}
   .topnav{display:flex;gap:2px;}
   .topnav a{padding:6px 11px;border-radius:6px;color:var(--text3);font-size:13px;font-weight:500;transition:all .15s;white-space:nowrap;min-height:44px;display:inline-flex;align-items:center;}
@@ -66,9 +66,9 @@
 
   /* ── PAGE HEADER ── */
   .page-header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:24px;flex-wrap:wrap;}
-  .page-title{font-family:var(--display);font-size:1.4rem;font-weight:800;color:var(--text);}
+  .page-title{font-family:var(--font-ui);font-size:1.4rem;font-weight:800;color:var(--text);}
   .page-sub{font-size:0.78rem;color:var(--text3);margin-top:4px;}
-  .btn{padding:9px 16px;border-radius:8px;font-family:var(--sans);font-size:13px;font-weight:600;cursor:pointer;border:none;transition:all .15s;}
+  .btn{padding:9px 16px;border-radius:8px;font-family:var(--font-ui);font-size:13px;font-weight:600;cursor:pointer;border:none;transition:all .15s;}
   .btn-primary{background:var(--accent);color:#fff;}
   .btn-primary:hover{background:var(--accent2);}
   .btn-ghost{background:rgba(255,255,255,.05);border:1px solid var(--border2);color:var(--text2);}
@@ -112,7 +112,7 @@
   .modal-close{background:none;border:none;color:var(--text3);font-size:20px;cursor:pointer;line-height:1;}
   .form-group{margin-bottom:14px;}
   .form-label{display:block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);margin-bottom:5px;}
-  .form-input,.form-select,.form-textarea{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:7px;padding:9px 12px;color:var(--text);font-family:var(--sans);font-size:13px;outline:none;transition:border-color .15s;}
+  .form-input,.form-select,.form-textarea{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:7px;padding:9px 12px;color:var(--text);font-family:var(--font-ui);font-size:13px;outline:none;transition:border-color .15s;}
   .form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--accent);}
   .form-textarea{resize:vertical;min-height:90px;}
   .modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:18px;}
@@ -138,7 +138,7 @@
   /* ── RESPONSIVE ── */
   @media(max-width:900px){
     .topnav a{font-size:0;}
-    .topnav a::after{content:attr(data-short);font-size:12px;font-family:var(--sans);font-weight:500;}
+    .topnav a::after{content:attr(data-short);font-size:12px;font-family:var(--font-ui);font-weight:500;}
     .paket-badge{display:none;}
   }
   @media(max-width:600px){
@@ -153,69 +153,37 @@
   ::-webkit-scrollbar{width:3px;}
   ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
   </style>
+<script src="nav.js"></script>
 </head>
 <body>
 
-<!-- TOPBAR -->
-<div class="topbar">
+<div class="app-shell">
+<nav class="sidebar" id="sidebar"></nav>
+<div class="sb-overlay" id="sb-overlay" onclick="closeMobileSidebar()"></div>
+
+<div class="main-wrap" id="main-wrap">
+<header class="topbar">
   <div class="topbar-left">
-    <a href="dashboard.html" class="logo">PRO<span>VA</span></a>
-    <nav class="topnav">
-      <a href="dashboard.html" data-short="Dashboard">Dashboard</a>
-      <a href="app-starter.html" data-short="Gutachten">Neues Gutachten</a>
-      <a href="archiv.html" data-short="Archiv">Archiv</a>
-      <a href="termine.html" data-short="Termine">Termine</a>
-      <a href="rechnungen.html" data-short="Rechnungen">Rechnungen</a>
-      <a href="briefvorlagen.html" data-short="Vorlagen">Briefvorlagen</a>
-      <a href="jveg.html" data-short="JVEG">JVEG</a>
-    </nav>
+    <button class="burger" onclick="openMobileSidebar()" aria-label="Menü öffnen"><span></span><span></span><span></span></button>
+    <div class="breadcrumb"><span>PROVA</span><span style="color:var(--text3)">›</span><strong>Baubegleitung</strong></div>
   </div>
   <div class="topbar-right" style="display:flex;align-items:center;gap:8px;">
-    <span class="paket-badge" id="topbarPaket"></span>
-    <a href="einstellungen.html" class="settings-link">⚙</a>
-    <button class="burger" id="burgerBtn" onclick="toggleDrawer()"><span></span><span></span><span></span></button>
+    <span class="topbar-paket" id="topbar-paket-badge"></span>
+    <a href="einstellungen.html"><button class="topbar-btn" style="display:flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:6px;border:1px solid rgba(255,255,255,.11);background:transparent;color:var(--text3);cursor:pointer;font-size:14px;">⚙</button></a>
   </div>
-</div>
-<div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
-<div class="drawer" id="drawer">
-  <div class="drawer-header">
-    <a href="dashboard.html" class="logo">PRO<span>VA</span></a>
-    <button class="drawer-close" onclick="closeDrawer()">✕</button>
-  </div>
-  <nav class="drawer-nav">
-    <a href="dashboard.html"><span class="dnav-icon">🏠</span>Dashboard</a>
-    <a href="app-starter.html"><span class="dnav-icon">📄</span>Neues Gutachten</a>
-    <a href="archiv.html"><span class="dnav-icon">📂</span>Archiv</a>
-    <a href="termine.html"><span class="dnav-icon">📅</span>Termine</a>
-    <a href="rechnungen.html"><span class="dnav-icon">💶</span>Rechnungen</a>
-    <a href="briefvorlagen.html"><span class="dnav-icon">✉️</span>Briefvorlagen</a>
-    <a href="jveg.html"><span class="dnav-icon">🧮</span>JVEG</a>
-    <a href="baubegleitung.html" style="color:var(--accent);background:rgba(79,142,247,.08);"><span class="dnav-icon">🏗</span>Baubegleitung</a>
-    <a href="einstellungen.html"><span class="dnav-icon">⚙</span>Einstellungen</a>
-    <a href="#" onclick="logout();return false;" style="margin-top:auto;color:#ef4444;"><span class="dnav-icon">🚪</span>Abmelden</a>
-  </nav>
-  <div class="drawer-footer"><span class="paket-badge" id="drawerPaket"></span></div>
-</div>
-<nav class="bottom-nav">
-  <a href="dashboard.html" class="bn-item"><span class="bn-icon">🏠</span><span class="bn-label">Dashboard</span></a>
-  <a href="app-starter.html" class="bn-item"><span class="bn-icon">📄</span><span class="bn-label">Gutachten</span></a>
-  <a href="baubegleitung.html" class="bn-item active"><span class="bn-icon">🏗</span><span class="bn-label">Baubegl.</span></a>
-  <a href="rechnungen.html" class="bn-item"><span class="bn-icon">💶</span><span class="bn-label">Rechnungen</span></a>
-  <a href="einstellungen.html" class="bn-item"><span class="bn-icon">⚙</span><span class="bn-label">Einstellungen</span></a>
-</nav>
+</header>
+
 <script>
-function toggleDrawer(){var d=document.getElementById('drawer'),o=document.getElementById('drawerOverlay');d.classList.toggle('open');o.classList.toggle('open');document.body.style.overflow=d.classList.contains('open')?'hidden':'';}
-function closeDrawer(){document.getElementById('drawer').classList.remove('open');document.getElementById('drawerOverlay').classList.remove('open');document.body.style.overflow='';}
-document.addEventListener('keydown',function(e){if(e.key==='Escape'){closeDrawer();closeModal('modal-projekt');closeModal('modal-begehung');}});
+document.addEventListener('keydown',function(e){if(e.key==='Escape'){closeModal('modal-projekt');closeModal('modal-begehung');}});
 function logout(){localStorage.removeItem('prova_user');localStorage.removeItem('prova_sv_email');window.location.href='app-login.html';}
 (function(){
   var u=localStorage.getItem('prova_user');
   if(!u){window.location.href='app-login.html';return;}
-  var p=localStorage.getItem('prova_paket')||'Starter';
-  var c={Starter:'#4f8ef7',Pro:'#f59e0b',Enterprise:'#a78bfa'}[p]||'#4f8ef7';
-  var s='background:'+c+'18;color:'+c+';border:1px solid '+c+'33';
-  ['topbarPaket','drawerPaket'].forEach(function(id){var el=document.getElementById(id);if(el){el.textContent=p;el.setAttribute('style',s);}});
-  window.PROVA=window.PROVA||{};PROVA.paket=p;PROVA.isPro=['Pro','Enterprise'].includes(p);PROVA.isEnterprise=p==='Enterprise';
+  var p=localStorage.getItem('prova_paket')||'Solo';
+  var c={Solo:'#4f8ef7',Team:'#a78bfa',Starter:'#4f8ef7',Pro:'#4f8ef7',Enterprise:'#a78bfa'}[p]||'#4f8ef7';
+  var el=document.getElementById('topbar-paket-badge');
+  if(el){el.textContent=p;el.style.cssText='font-size:10px;font-weight:700;padding:3px 9px;border-radius:10px;letter-spacing:.04em;background:'+c+'18;color:'+c+';border:1px solid '+c+'33;';}
+  window.PROVA=window.PROVA||{};PROVA.paket=p;PROVA.isPro=['Solo','Team'].includes(p);PROVA.isEnterprise=p==='Team';
 })();
 </script>
 
@@ -524,6 +492,10 @@ function ladeProduktDetail(id) {
         '<div class="card-title" style="margin-bottom:10px;">Begehungen</div>' +
         renderBegehungenHtml(begehungen, id) +
 
+        // Mängel-Tracking
+        '<div class="card-title" style="margin-top:20px;margin-bottom:10px;">Mängel-Tracking</div>' +
+        renderMaengelHtml(proj) +
+
       '</div>' +
     '</div>';
 }
@@ -566,6 +538,120 @@ function begehungenFortschritt(proj) {
   var anz = (proj.begehungen||[]).length;
   return Math.min(100, Math.round(anz/ziel*100));
 }
+
+/* ─── MÄNGEL-TRACKING ─── */
+function renderMaengelHtml(proj) {
+  var maengel = proj.maengel || [];
+  var offen = maengel.filter(function(m){return m.status==='Offen';}).length;
+  var inArbeit = maengel.filter(function(m){return m.status==='In Arbeit';}).length;
+  var erledigt = maengel.filter(function(m){return m.status==='Erledigt';}).length;
+
+  var html = '';
+
+  // Stats-Leiste
+  html += '<div style="display:flex;gap:8px;margin-bottom:12px;">'
+    + '<div style="flex:1;padding:8px;border-radius:6px;background:rgba(239,68,68,.08);text-align:center;font-size:11px;">'
+    + '<div style="font-size:16px;font-weight:700;color:#ef4444;">' + offen + '</div>Offen</div>'
+    + '<div style="flex:1;padding:8px;border-radius:6px;background:rgba(245,158,11,.08);text-align:center;font-size:11px;">'
+    + '<div style="font-size:16px;font-weight:700;color:#f59e0b;">' + inArbeit + '</div>In Arbeit</div>'
+    + '<div style="flex:1;padding:8px;border-radius:6px;background:rgba(16,185,129,.08);text-align:center;font-size:11px;">'
+    + '<div style="font-size:16px;font-weight:700;color:#10b981;">' + erledigt + '</div>Erledigt</div>'
+    + '</div>';
+
+  // Add-Button
+  html += '<button onclick="addMangel(\'' + proj.id + '\')" style="width:100%;padding:8px;margin-bottom:10px;border-radius:7px;background:rgba(239,68,68,.06);border:1px dashed rgba(239,68,68,.25);color:#ef4444;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;">+ Mangel erfassen</button>';
+
+  // Inline-Add-Form
+  html += '<div id="mangel-form-' + proj.id + '" style="display:none;padding:12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;margin-bottom:10px;">'
+    + '<input id="mf-text-' + proj.id + '" type="text" placeholder="Mangelbeschreibung…" style="width:100%;padding:8px 10px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px;margin-bottom:6px;font-family:inherit;outline:none;">'
+    + '<div style="display:flex;gap:6px;">'
+    + '<select id="mf-gewerk-' + proj.id + '" style="flex:1;padding:6px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:11px;">'
+    + '<option value="">Gewerk…</option><option>Rohbau</option><option>Dach</option><option>Fenster</option><option>Fassade</option><option>Estrich</option><option>Sanitär</option><option>Elektro</option><option>Heizung</option><option>Innenputz</option><option>Maler</option><option>Bodenbelag</option><option>Sonstiges</option>'
+    + '</select>'
+    + '<select id="mf-prio-' + proj.id + '" style="flex:1;padding:6px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:11px;">'
+    + '<option value="normal">Normal</option><option value="hoch">Hoch</option><option value="kritisch">Kritisch</option>'
+    + '</select>'
+    + '<button onclick="saveMangel(\'' + proj.id + '\')" style="padding:6px 12px;border-radius:6px;background:#ef4444;border:none;color:#fff;font-size:11px;font-weight:600;cursor:pointer;">Speichern</button>'
+    + '<button onclick="document.getElementById(\'mangel-form-' + proj.id + '\').style.display=\'none\'" style="padding:6px 8px;border-radius:6px;background:none;border:1px solid var(--border);color:var(--text3);font-size:11px;cursor:pointer;">✕</button>'
+    + '</div></div>';
+
+  // Mängel-Liste
+  if (maengel.length === 0) {
+    html += '<div style="text-align:center;padding:16px;font-size:12px;color:var(--text3);">Keine Mängel erfasst — gut so!</div>';
+  } else {
+    maengel.forEach(function(m, i) {
+      var stColor = m.status === 'Offen' ? '#ef4444' : m.status === 'In Arbeit' ? '#f59e0b' : '#10b981';
+      var stBg = m.status === 'Offen' ? 'rgba(239,68,68,.1)' : m.status === 'In Arbeit' ? 'rgba(245,158,11,.1)' : 'rgba(16,185,129,.1)';
+      var prioIcon = m.prioritaet === 'kritisch' ? '🔴' : m.prioritaet === 'hoch' ? '🟡' : '';
+
+      html += '<div style="display:flex;align-items:flex-start;gap:10px;padding:10px 12px;background:var(--bg2);border:1px solid var(--border);border-radius:7px;margin-bottom:6px;">'
+        + '<div style="font-size:11px;font-weight:700;color:' + stColor + ';background:' + stBg + ';padding:2px 8px;border-radius:4px;white-space:nowrap;">'
+        + 'M-' + String(i+1).padStart(3,'0') + '</div>'
+        + '<div style="flex:1;">'
+        + '<div style="font-size:12px;font-weight:600;color:var(--text);">' + prioIcon + ' ' + escHtml(m.text) + '</div>'
+        + '<div style="font-size:10px;color:var(--text3);margin-top:2px;">' + escHtml(m.gewerk||'') + ' · ' + formatDatum(m.datum) + ' · <span style="color:' + stColor + ';">' + m.status + '</span></div>'
+        + '</div>'
+        + '<div style="display:flex;gap:4px;">';
+
+      if (m.status === 'Offen') {
+        html += '<button onclick="updateMangelStatus(\'' + proj.id + '\',' + i + ',\'In Arbeit\')" style="background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.2);border-radius:4px;color:#f59e0b;font-size:10px;padding:3px 6px;cursor:pointer;" title="In Arbeit">⏳</button>';
+      }
+      if (m.status !== 'Erledigt') {
+        html += '<button onclick="updateMangelStatus(\'' + proj.id + '\',' + i + ',\'Erledigt\')" style="background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.2);border-radius:4px;color:#10b981;font-size:10px;padding:3px 6px;cursor:pointer;" title="Erledigt">✅</button>';
+      }
+      html += '<button onclick="deleteMangel(\'' + proj.id + '\',' + i + ')" style="background:none;border:none;color:var(--text3);font-size:12px;cursor:pointer;" title="Löschen">🗑</button>';
+      html += '</div></div>';
+    });
+  }
+
+  return html;
+}
+
+window.addMangel = function(projId) {
+  var form = document.getElementById('mangel-form-' + projId);
+  if (form) form.style.display = 'block';
+};
+
+window.saveMangel = function(projId) {
+  var text = document.getElementById('mf-text-' + projId)?.value.trim();
+  if (!text) return;
+  var gewerk = document.getElementById('mf-gewerk-' + projId)?.value || '';
+  var prio = document.getElementById('mf-prio-' + projId)?.value || 'normal';
+
+  var proj = _data.projekte.find(function(p){return p.id===projId;});
+  if (!proj) return;
+  if (!proj.maengel) proj.maengel = [];
+
+  proj.maengel.push({
+    text: text,
+    gewerk: gewerk,
+    prioritaet: prio,
+    status: 'Offen',
+    datum: new Date().toISOString().slice(0,10),
+    begehung_nr: (proj.begehungen||[]).length
+  });
+
+  speichereDaten();
+  ladeProduktDetail(projId);
+};
+
+window.updateMangelStatus = function(projId, idx, neuerStatus) {
+  var proj = _data.projekte.find(function(p){return p.id===projId;});
+  if (!proj || !proj.maengel || !proj.maengel[idx]) return;
+  proj.maengel[idx].status = neuerStatus;
+  if (neuerStatus === 'Erledigt') proj.maengel[idx].erledigt_am = new Date().toISOString().slice(0,10);
+  speichereDaten();
+  ladeProduktDetail(projId);
+};
+
+window.deleteMangel = function(projId, idx) {
+  if (!confirm('Mangel M-' + String(idx+1).padStart(3,'0') + ' wirklich löschen?')) return;
+  var proj = _data.projekte.find(function(p){return p.id===projId;});
+  if (!proj || !proj.maengel) return;
+  proj.maengel.splice(idx, 1);
+  speichereDaten();
+  ladeProduktDetail(projId);
+};
 
 // ============================================================
 // MODALS
@@ -867,5 +953,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
+<script src="auftragstyp.js"></script>
+<script src="support-chat.js"></script>
 </body>
 </html>

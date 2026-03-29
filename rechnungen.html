@@ -363,6 +363,18 @@ a{text-decoration:none;color:inherit;}button,input,select,textarea{font-family:i
           <div class="brutto-val" id="brutto-display">0,00 €</div>
         </div>
 
+        <!-- ZUGFeRD Toggle -->
+        <div style="margin-bottom:12px;padding:10px 14px;background:rgba(79,142,247,.06);border:1px solid rgba(79,142,247,.12);border-radius:8px;display:flex;align-items:center;gap:10px;">
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12px;color:var(--text2);">
+            <input type="checkbox" id="zugferd-toggle" checked style="accent-color:var(--accent);">
+            ZUGFeRD/XRechnung (E-Rechnung)
+          </label>
+          <select id="zugferd-format" style="background:var(--bg2);border:1px solid var(--border);border-radius:5px;padding:4px 8px;color:var(--text);font-size:11px;">
+            <option value="zugferd">ZUGFeRD (PDF+XML)</option>
+            <option value="xrechnung">XRechnung (nur XML)</option>
+          </select>
+        </div>
+
         <!-- Buttons -->
         <div class="btn-row">
           <button class="btn-primary" id="btn-erstellen" onclick="erstelleRechnung()">
@@ -400,22 +412,13 @@ var AT_RECHNUNGEN='tblF6MS7uiFAJDjiT';
 var AT_FAELLE='tblSxV8bsXwd1pwa0';
 
 /* ─── SIDEBAR ─── */
-var paket=localStorage.getItem('prova_paket')||'Starter';
-var pc={'Starter':'#4f8ef7','Pro':'#f59e0b','Enterprise':'#a78bfa'}[paket]||'#4f8ef7';
+var paket=localStorage.getItem('prova_paket')||'Solo';
+var pc={'Solo':'#4f8ef7','Team':'#a78bfa','Starter':'#4f8ef7','Pro':'#4f8ef7','Enterprise':'#a78bfa'}[paket]||'#4f8ef7';
 (function(){
   var el=document.getElementById('topbar-paket-badge');
   if(el){el.textContent=paket;el.style.cssText='font-size:10px;font-weight:700;padding:3px 9px;border-radius:10px;letter-spacing:.04em;background:'+pc+'18;color:'+pc+';border:1px solid '+pc+'33;';}
-  var dot=document.getElementById('sb-paket-dot');if(dot){dot.style.background=pc;}
-  var nm=document.getElementById('sb-paket-name');if(nm){nm.textContent=paket;nm.style.color=pc;}
-  var appUrl=paket==='Enterprise'?'app-enterprise.html':paket==='Pro'?'app-pro.html':'app-starter.html';
-  var nb=document.getElementById('sb-new-btn');if(nb)nb.onclick=function(){window.location.href=appUrl;};
+  var appUrl=paket==='Team'?'app-enterprise.html':paket==='Solo'?'app-pro.html':'app-starter.html';
 })();
-var collapsed=localStorage.getItem('prova_sb_collapsed')==='1';
-var sb=document.getElementById('sidebar');
-if(collapsed&&sb)sb.classList.add('collapsed');
-window.toggleSidebar=function(){collapsed=!collapsed;sb.classList.toggle('collapsed',collapsed);localStorage.setItem('prova_sb_collapsed',collapsed?'1':'0');};
-window.openMobileSidebar=function(){sb.classList.add('mobile-open');document.getElementById('sb-overlay').classList.add('open');};
-window.closeMobileSidebar=function(){sb.classList.remove('mobile-open');document.getElementById('sb-overlay').classList.remove('open');};
 if(!localStorage.getItem('prova_user')){window.location.href='app-login.html';return;}
 
 var svEmail=localStorage.getItem('prova_sv_email')||'';
@@ -699,10 +702,121 @@ window.waehleSpalte=function(id){
   document.querySelectorAll('.rechnung-item').forEach(function(el){el.classList.remove('selected');});
   var r=alleRechnungen.find(function(x){return x.id===id;});
   if(!r)return;
-  // Vorerst nur visuell markieren — Bearbeitung in späterer Version
   event.currentTarget&&event.currentTarget.classList.add('selected');
-  zeigToast('Rechnung '+r.re_nr+' — '+fmt(r.betrag)+' ('+r.status+')');
+  zeigeRechnungDetail(r);
 };
+
+/* ─── RECHNUNGS-DETAIL + MAHNWESEN ─── */
+function zeigeRechnungDetail(r) {
+  var existing = document.getElementById('re-detail-panel');
+  if (existing) existing.remove();
+
+  var tageOffen = r.datum ? Math.floor((Date.now() - new Date(r.datum).getTime()) / 86400000) : 0;
+  var zahlungsziel = 30;
+  var tageUeber = tageOffen - zahlungsziel;
+  var istOffen = r.status !== 'Bezahlt';
+
+  var mahnStufe = 'keine';
+  if (tageUeber > 60) mahnStufe = '3. Mahnung';
+  else if (tageUeber > 30) mahnStufe = '2. Mahnung';
+  else if (tageUeber > 0) mahnStufe = '1. Mahnung';
+
+  var html = '<div id="re-detail-panel" style="margin-top:12px;padding:16px;background:var(--bg3,#181b24);border:1px solid var(--border2);border-radius:10px;">'
+    + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">'
+    + '<div style="font-size:14px;font-weight:700;color:var(--text);">' + esc(r.re_nr) + ' — ' + esc(r.auftraggeber) + '</div>'
+    + '<button onclick="document.getElementById(\'re-detail-panel\').remove()" style="background:none;border:none;color:var(--text3);font-size:16px;cursor:pointer;">✕</button>'
+    + '</div>'
+    + '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;font-size:12px;margin-bottom:12px;">'
+    + '<div><span style="color:var(--text3);">Betrag</span><br><strong>' + fmt(r.betrag) + '</strong></div>'
+    + '<div><span style="color:var(--text3);">Erstellt</span><br>' + (r.datum ? new Date(r.datum).toLocaleDateString('de-DE') : '—') + '</div>'
+    + '<div><span style="color:var(--text3);">Tage offen</span><br><strong style="color:' + (tageUeber > 0 ? 'var(--danger)' : 'var(--text)') + ';">' + tageOffen + ' Tage' + (tageUeber > 0 ? ' (überfällig!)' : '') + '</strong></div>'
+    + '</div>';
+
+  if (istOffen) {
+    html += '<div style="display:flex;gap:6px;flex-wrap:wrap;">'
+      + '<button onclick="markiereBezahlt(\'' + r.id + '\')" style="padding:7px 14px;border-radius:7px;background:rgba(16,185,129,.12);border:1px solid rgba(16,185,129,.25);color:#10b981;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;">✅ Als bezahlt markieren</button>';
+
+    if (tageUeber > 0) {
+      html += '<button onclick="erstelleMahnung(\'' + r.id + '\',1)" style="padding:7px 14px;border-radius:7px;background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.25);color:#f59e0b;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;">📧 1. Mahnung</button>';
+    }
+    if (tageUeber > 30) {
+      html += '<button onclick="erstelleMahnung(\'' + r.id + '\',2)" style="padding:7px 14px;border-radius:7px;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.25);color:#ef4444;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;">📧 2. Mahnung</button>';
+    }
+    if (tageUeber > 60) {
+      html += '<button onclick="erstelleMahnung(\'' + r.id + '\',3)" style="padding:7px 14px;border-radius:7px;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.25);color:#ef4444;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;">🚨 Letzte Mahnung</button>';
+    }
+
+    html += '</div>';
+
+    if (mahnStufe !== 'keine') {
+      html += '<div style="margin-top:8px;font-size:11px;color:var(--text3);">Empfehlung: <strong style="color:#f59e0b;">' + mahnStufe + '</strong> versenden</div>';
+    }
+  } else {
+    html += '<div style="font-size:12px;color:#10b981;">✅ Bezahlt</div>';
+  }
+
+  html += '<div id="mahnung-preview" style="display:none;margin-top:12px;"></div>';
+  html += '</div>';
+
+  var liste = document.getElementById('rechnungs-liste') || document.querySelector('.liste-body');
+  if (liste) liste.insertAdjacentHTML('afterend', html);
+}
+
+/* ─── MAHNUNG ERSTELLEN ─── */
+window.erstelleMahnung = function(reId, stufe) {
+  var r = alleRechnungen.find(function(x) { return x.id === reId; });
+  if (!r) return;
+
+  var svName = localStorage.getItem('prova_sv_name') || 'Sachverständigenbüro';
+  var tageOffen = r.datum ? Math.floor((Date.now() - new Date(r.datum).getTime()) / 86400000) : 0;
+  var reDatum = r.datum ? new Date(r.datum).toLocaleDateString('de-DE') : '';
+
+  var texte = {
+    1: {
+      betreff: 'Zahlungserinnerung — Rechnung ' + r.re_nr,
+      text: 'Sehr geehrte Damen und Herren,\n\nsicherlich ist es Ihrer Aufmerksamkeit entgangen, dass unsere Rechnung Nr. ' + r.re_nr + ' vom ' + reDatum + ' über ' + fmt(r.betrag) + ' noch nicht beglichen wurde.\n\nWir bitten Sie, den offenen Betrag innerhalb von 10 Tagen auf unser Konto zu überweisen.\n\nMit freundlichen Grüßen\n' + svName
+    },
+    2: {
+      betreff: '2. Mahnung — Rechnung ' + r.re_nr,
+      text: 'Sehr geehrte Damen und Herren,\n\ntrotz unserer Zahlungserinnerung ist die Rechnung Nr. ' + r.re_nr + ' vom ' + reDatum + ' über ' + fmt(r.betrag) + ' weiterhin unbeglichen. Die Rechnung ist seit ' + tageOffen + ' Tagen offen.\n\nWir fordern Sie auf, den Betrag innerhalb von 7 Tagen zu begleichen. Andernfalls behalten wir uns rechtliche Schritte vor.\n\nMit freundlichen Grüßen\n' + svName
+    },
+    3: {
+      betreff: 'Letzte Mahnung vor Inkasso — Rechnung ' + r.re_nr,
+      text: 'Sehr geehrte Damen und Herren,\n\ndie Rechnung Nr. ' + r.re_nr + ' vom ' + reDatum + ' über ' + fmt(r.betrag) + ' ist seit ' + tageOffen + ' Tagen unbeglichen — trotz unserer bisherigen Mahnungen.\n\nDies ist unsere letzte Mahnung. Sollte der Betrag nicht innerhalb von 5 Werktagen auf unserem Konto eingehen, werden wir die Forderung ohne weitere Ankündigung an ein Inkassobüro übergeben.\n\nMit freundlichen Grüßen\n' + svName
+    }
+  };
+
+  var t = texte[stufe] || texte[1];
+  var preview = document.getElementById('mahnung-preview');
+  if (!preview) return;
+
+  preview.style.display = 'block';
+  preview.innerHTML = '<div style="font-size:11px;font-weight:700;text-transform:uppercase;color:#f59e0b;margin-bottom:6px;">Mahnung Vorschau — Stufe ' + stufe + '</div>'
+    + '<div style="font-size:11px;color:var(--text3);margin-bottom:4px;"><strong>Betreff:</strong> ' + esc(t.betreff) + '</div>'
+    + '<pre style="font-size:11px;color:var(--text2);white-space:pre-wrap;line-height:1.5;background:var(--bg2);padding:10px;border-radius:6px;margin-bottom:8px;">' + esc(t.text) + '</pre>'
+    + '<div style="display:flex;gap:6px;">'
+    + '<a href="mailto:' + (r.email || '') + '?subject=' + encodeURIComponent(t.betreff) + '&body=' + encodeURIComponent(t.text) + '" style="padding:6px 14px;border-radius:6px;background:#f59e0b;color:#fff;font-size:12px;font-weight:600;text-decoration:none;font-family:inherit;">📧 Per E-Mail senden</a>'
+    + '<button onclick="navigator.clipboard.writeText(decodeURIComponent(\'' + encodeURIComponent(t.text) + '\'));zeigToast(\'Text kopiert ✓\')" style="padding:6px 14px;border-radius:6px;background:rgba(255,255,255,.06);border:1px solid var(--border2);color:var(--text2);font-size:12px;cursor:pointer;font-family:inherit;">📋 Kopieren</button>'
+    + '<button onclick="setzeStatus(\'' + r.id + '\',\'' + stufe + '. Mahnung\')" style="padding:6px 14px;border-radius:6px;background:rgba(255,255,255,.06);border:1px solid var(--border2);color:var(--text2);font-size:12px;cursor:pointer;font-family:inherit;">Status → ' + stufe + '. Mahnung</button>'
+    + '</div>';
+};
+
+/* ─── STATUS SETZEN ─── */
+window.markiereBezahlt = function(reId) {
+  setzeStatus(reId, 'Bezahlt');
+  zeigToast('✅ Rechnung als bezahlt markiert');
+};
+
+function setzeStatus(reId, neuerStatus) {
+  var r = alleRechnungen.find(function(x) { return x.id === reId; });
+  if (r) {
+    r.status = neuerStatus;
+    localStorage.setItem('prova_rechnungen', JSON.stringify(alleRechnungen));
+    ladeListe();
+    var panel = document.getElementById('re-detail-panel');
+    if (panel) panel.remove();
+  }
+}
 
 /* ─── RESET ─── */
 window.resetForm=function(){
@@ -766,6 +880,55 @@ ladeListe();
 </div>
 
 /* ── DATEV CSV EXPORT ── */
+/* ── ZUGFeRD / XRechnung Export ── */
+async function exportZugferd(rechnungsDaten) {
+  var toggle = document.getElementById('zugferd-toggle');
+  if (!toggle || !toggle.checked) return null;
+
+  var format = document.getElementById('zugferd-format')?.value || 'zugferd';
+
+  try {
+    var res = await fetch('/.netlify/functions/zugferd-rechnung', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        ...rechnungsDaten,
+        format: format,
+        absender_name: localStorage.getItem('prova_sv_name') || '',
+        absender_strasse: localStorage.getItem('prova_sv_strasse') || '',
+        absender_plz: localStorage.getItem('prova_sv_plz') || '',
+        absender_ort: localStorage.getItem('prova_sv_ort') || '',
+        absender_steuernr: localStorage.getItem('prova_sv_steuernr') || '',
+        absender_iban: localStorage.getItem('prova_sv_iban') || '',
+        absender_bic: localStorage.getItem('prova_sv_bic') || '',
+      })
+    });
+    if (!res.ok) return null;
+    var data = await res.json();
+
+    if (data.success && data.url) {
+      window.open(data.url, '_blank');
+      zeigToast('ZUGFeRD-Rechnung erstellt ✓', 'success');
+    } else if (data.xml && format === 'xrechnung') {
+      // XRechnung XML als Download anbieten
+      var blob = new Blob([data.xml], { type: 'application/xml' });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url;
+      a.download = 'XRechnung-' + (rechnungsDaten.rechnungsnr || 'RE') + '.xml';
+      a.click();
+      URL.revokeObjectURL(url);
+      zeigToast('XRechnung-XML heruntergeladen ✓', 'success');
+    } else if (data.fallback) {
+      zeigToast(data.reason || 'ZUGFeRD-Fallback', 'warn');
+    }
+    return data;
+  } catch (e) {
+    console.error('ZUGFeRD Error:', e);
+    return null;
+  }
+}
+
 function exportDatevCSV() {
   // Rechnungen aus der aktuellen Ansicht laden
   var rows = document.querySelectorAll('.rech-row, .rechnung-row, tr[data-id]');
@@ -879,13 +1042,13 @@ async function supSendModal(){
       body:JSON.stringify({
         betreff:b,nachricht:n,
         sv_email:localStorage.getItem('prova_sv_email')||'',
-        paket:localStorage.getItem('prova_paket')||'Starter',
+        paket:localStorage.getItem('prova_paket')||'Solo',
         seite:'POST',
         headers:{'Content-Type':'application/json'},
         body:JSON.stringify({
           betreff:b,nachricht:n,
           sv_email:localStorage.getItem('prova_sv_email')||'',
-          paket:localStorage.getItem('prova_paket')||'Starter',
+          paket:localStorage.getItem('prova_paket')||'Solo',
           seite:window.location.pathname
         })
       });
@@ -1279,5 +1442,7 @@ function setzeFallAbgeschlossen(rid) {
   }).catch(function(){});
 }
 </script>
+<script src="auftragstyp.js"></script>
+<script src="support-chat.js"></script>
 </body>
 </html>
