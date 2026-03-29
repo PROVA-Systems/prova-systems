@@ -130,8 +130,8 @@
 
       /* ─── SECTION LABEL ─── */
       + '.sb-section-label{'
-      +   'font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;'
-      +   'color:rgba(255,255,255,0.4);padding:18px 8px 6px;white-space:nowrap;'
+      +   'font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;'
+      +   'color:rgba(255,255,255,0.55) !important;padding:20px 10px 6px;white-space:nowrap;'
       +   'overflow:hidden;transition:opacity .18s,height .18s,padding .18s;'
       +   'user-select:none;'
       + '}'

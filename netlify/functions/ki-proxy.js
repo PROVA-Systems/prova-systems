@@ -7,6 +7,9 @@
 //   - pdf_extraktion: PDF → KI → Aktenzeichen, Parteien, Beweisfragen, Fristen
 //   - qualitaetspruefung: Gutachten-Entwurf → KI → Checkliste
 //   - kostenkalkulation: Befund → KI → Sanierungskosten
+//   - freitext: Allgemeine KI-Hilfe
+//   - fachurteil_entwurf: Diktat+§1-§5 → KI-Analyse + Ursachenkategorien + Normen (§6 Guided Writing)
+//   - diktat_nachtrag: Nachträgliches Diktat verarbeiten → §6-Material extrahieren
 // ══════════════════════════════════════════════════
 
 const OPENAI_API = 'https://api.openai.com/v1/chat/completions';
@@ -36,6 +39,8 @@ exports.handler = async (event) => {
       case 'qualitaetspruefung': result = await qualitaetspruefung(API_KEY, input); break;
       case 'kostenkalkulation': result = await kostenkalkulation(API_KEY, input); break;
       case 'freitext': result = await freitext(API_KEY, input); break;
+      case 'fachurteil_entwurf': result = await fachurteilEntwurf(API_KEY, input); break;
+      case 'diktat_nachtrag': result = await diktatNachtrag(API_KEY, input); break;
       default: return { statusCode: 400, headers, body: JSON.stringify({ error: `Unbekannte Aufgabe: ${aufgabe}` }) };
     }
 
@@ -210,4 +215,101 @@ async function freitext(apiKey, input) {
 
   const data = await res.json();
   return { text: data.choices?.[0]?.message?.content || '' };
+}
+
+// ════════════════════════════════════════
+// AUFGABE 5: Fachurteil-Entwurf (§6 Guided Writing)
+// Analysiert Diktat + §1-§5, liefert KI-Analyse-Box-Inhalte
+// ════════════════════════════════════════
+async function fachurteilEntwurf(apiKey, input) {
+  const { diktat, paragraphen, schadenart, messwerte, normen_kontext, verwendungszweck } = input;
+
+  const systemPrompt = `Du bist ein KI-Assistent für Bausachverständige (§6 Guided Writing).
+Analysiere das Diktat und die §1-§5 Daten. Antworte AUSSCHLIESSLICH mit einem JSON-Objekt.
+
+WICHTIG:
+- Du erstellst KEIN fertiges §6 Fachurteil
+- Du lieferst ANALYSE-DATEN die dem SV helfen, sein eigenes §6 zu schreiben
+- Messwert-Analyse: Vergleiche Messwerte mit DIN-Grenzwerten
+- Ursachenkategorien: Schlage plausible Ursachen vor basierend auf Schadensbild + Messwerten
+- Normen: Schlage relevante Normen vor
+- Diktat-Extrakte: Extrahiere §6-relevante Aussagen aus dem Diktat (Ursachen, Bewertungen, Empfehlungen)
+- Alle Texte auf Deutsch`;
+
+  const userPrompt = `Analysiere für §6 Guided Writing. Antworte mit JSON:
+
+{
+  "messwert_analyse": [
+    {"messwert": "Materialfeuchte 26%", "grenzwert": "DIN 68800: 20%", "bewertung": "Überschreitung +30%", "normreferenz": "DIN 68800-1"}
+  ],
+  "ursachenkategorien": [
+    {"kategorie": "Wärmebrücke / fehlende Dämmung", "plausibilitaet": "hoch", "begruendung": "Kurze Begründung"},
+    {"kategorie": "Lüftungsdefizit", "plausibilitaet": "mittel", "begruendung": "Kurze Begründung"}
+  ],
+  "normen_vorschlaege": [
+    {"norm": "DIN 4108-2", "relevanz": "fRsi-Wert Mindestanforderung", "klick_text": "gemäß DIN 4108-2 (fRsi ≥ 0,70)"}
+  ],
+  "diktat_extrakte": {
+    "feststellungen": "Extrahierte Feststellungen aus dem Diktat",
+    "ursachen_hinweise": "Extrahierte Ursachen-Aussagen (falls im Diktat vorhanden)",
+    "empfehlungen": "Extrahierte Empfehlungen (falls im Diktat vorhanden)",
+    "hat_ursachen": true,
+    "hat_empfehlungen": false
+  },
+  "konjunktiv_bausteine": [
+    "dürfte zurückzuführen sein auf",
+    "könnte auf … hindeuten",
+    "wäre naheliegend",
+    "wäre zu empfehlen"
+  ]
+}
+
+EINGABEDATEN:
+Schadensart: ${schadenart || 'nicht angegeben'}
+Messwerte: ${messwerte || 'keine'}
+Normen-Kontext: ${normen_kontext || 'keine'}
+Verwendungszweck: ${verwendungszweck || 'Gerichtsgutachten'}
+Diktat: ${diktat || 'kein Diktat'}
+
+§1-§5 (falls vorhanden):
+${paragraphen ? JSON.stringify(paragraphen) : 'keine Paragraphen-Daten'}`;
+
+  return await openaiChat(apiKey, systemPrompt, userPrompt, 2000);
+}
+
+// ════════════════════════════════════════
+// AUFGABE 6: Diktat-Nachtrag
+// Verarbeitet nachträgliches Diktat → extrahiert §6-Material
+// ════════════════════════════════════════
+async function diktatNachtrag(apiKey, input) {
+  const { nachtrag_text, schadenart, bestehende_analyse } = input;
+  if (!nachtrag_text) throw new Error('nachtrag_text fehlt');
+
+  const systemPrompt = `Du bist ein KI-Assistent für Bausachverständige.
+Analysiere ein nachträgliches Diktat und extrahiere §6-relevantes Material.
+Antworte AUSSCHLIESSLICH mit einem JSON-Objekt.
+
+WICHTIG:
+- Erkenne Ursachen-Aussagen, Bewertungen und Empfehlungen
+- Formuliere NICHTS um — extrahiere nur was der SV gesagt hat
+- Markiere die Confidence: "diktat" wenn direkt aus dem Diktat, "abgeleitet" wenn interpretiert`;
+
+  const userPrompt = `Extrahiere §6-Material aus nachträglichem Diktat. Antworte mit JSON:
+
+{
+  "feststellungen": "Extrahierte Ergänzungen zum Befund",
+  "ursachen": "Ursachen-Aussagen des SV",
+  "empfehlungen": "Empfehlungen des SV",
+  "hat_ursachen": true,
+  "hat_empfehlungen": true,
+  "confidence": "diktat"
+}
+
+Schadensart: ${schadenart || 'nicht angegeben'}
+Bestehende Analyse: ${bestehende_analyse || 'keine'}
+
+Nachträgliches Diktat:
+${nachtrag_text}`;
+
+  return await openaiChat(apiKey, systemPrompt, userPrompt, 1000);
 }

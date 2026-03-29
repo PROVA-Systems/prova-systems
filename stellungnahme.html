@@ -342,16 +342,26 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-ui);min-heigh
   <div class="flow-steps">
     <div class="flow-step done">
       <div class="flow-dot">✓</div>
+      <span>Stammdaten</span>
+    </div>
+    <div class="flow-sep"></div>
+    <div class="flow-step done">
+      <div class="flow-dot">✓</div>
+      <span>Diktat</span>
+    </div>
+    <div class="flow-sep"></div>
+    <div class="flow-step done">
+      <div class="flow-dot">✓</div>
       <span>§1–§5</span>
     </div>
     <div class="flow-sep"></div>
     <div class="flow-step active">
-      <div class="flow-dot">2</div>
+      <div class="flow-dot">4</div>
       <span>§6 Fachurteil</span>
     </div>
     <div class="flow-sep"></div>
     <div class="flow-step">
-      <div class="flow-dot">3</div>
+      <div class="flow-dot">5</div>
       <span>Freigabe</span>
     </div>
   </div>
@@ -374,6 +384,67 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-ui);min-heigh
     <div class="diktat-hinweis-icon">ℹ️</div>
     <div>Beschreiben Sie Ihre <strong>fachliche Einschätzung</strong> — Ursache, Beweislast, Empfehlung.
     §1–§5 (Sichtbefunde &amp; Messwerte) hat PROVA bereits ausformuliert.</div>
+  </div>
+
+  <!-- KI-ANALYSE-BOX (Guided Writing v3.1) -->
+  <div class="card" id="kiAnalyseBox" style="border:1px solid rgba(79,142,247,.15);background:linear-gradient(135deg,rgba(79,142,247,.04),rgba(79,142,247,.01));">
+    <div class="card-header" style="border-bottom:1px solid rgba(79,142,247,.1);">
+      <div>
+        <div class="card-title" style="color:#4f8ef7;">🔬 KI-Analyse — Daten aus Ihrem Fall</div>
+        <div class="card-sub">Nur zur Orientierung · Nicht kopierbar · Formulieren Sie selbst</div>
+      </div>
+      <button onclick="ladeKIAnalyse()" id="btnKIAnalyse" style="padding:6px 14px;border-radius:8px;background:rgba(79,142,247,.1);border:1px solid rgba(79,142,247,.2);color:#4f8ef7;font-size:11px;font-weight:600;cursor:pointer;">↻ Analyse laden</button>
+    </div>
+    <div class="card-body" id="kiAnalyseContent" style="user-select:none;-webkit-user-select:none;">
+
+      <!-- Messwert-Analyse -->
+      <div id="messwertAnalyse" style="display:none;margin-bottom:16px;">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--accent);margin-bottom:8px;">📊 Messwert-Analyse</div>
+        <div id="messwertListe" style="font-size:12px;line-height:1.7;color:var(--text2);"></div>
+      </div>
+
+      <!-- Ursachenkategorien -->
+      <div id="ursachenBox" style="display:none;margin-bottom:16px;">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--accent);margin-bottom:8px;">💡 Mögliche Ursachenkategorien</div>
+        <div id="ursachenListe" style="display:flex;flex-direction:column;gap:6px;"></div>
+        <div style="margin-top:10px;display:flex;gap:8px;align-items:center;">
+          <input type="checkbox" id="ursacheAndere" onchange="toggleAndereUrsache()">
+          <label for="ursacheAndere" style="font-size:12px;color:var(--text2);cursor:pointer;">Andere Ursache:</label>
+          <input type="text" id="ursacheAndereText" placeholder="Eigene Ursache eingeben…" disabled
+            style="flex:1;padding:6px 10px;border-radius:6px;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-size:12px;font-family:inherit;">
+        </div>
+      </div>
+
+      <!-- Diktat-Extrakte -->
+      <div id="diktatExtrakte" style="display:none;margin-bottom:12px;">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--green);margin-bottom:8px;">🎙️ Aus Ihrem Diktat erkannt</div>
+        <div id="diktatExtraktText" style="font-size:12px;line-height:1.7;color:var(--text2);"></div>
+      </div>
+
+      <!-- Loading/Empty state -->
+      <div id="kiAnalyseLoading" style="padding:16px;text-align:center;font-size:12px;color:var(--text3);">
+        Klicken Sie auf "Analyse laden" oder beginnen Sie direkt mit Ihrem Fachurteil.
+      </div>
+    </div>
+  </div>
+
+  <!-- ERGÄNZUNGS-DIKTAT -->
+  <div style="display:flex;gap:10px;margin-bottom:16px;align-items:center;">
+    <button onclick="starteErgaenzungsDiktat()" id="btnErgDiktat" style="display:flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.2);color:var(--green);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;">
+      🎙️ Ergänzung diktieren
+    </button>
+    <span style="font-size:11px;color:var(--text3);">Sprechen Sie weitere Einschätzungen ein — auch nachträglich von zu Hause</span>
+  </div>
+
+  <!-- EIGENLEISTUNG-FORTSCHRITTSBALKEN -->
+  <div id="eigenleistungBar" style="margin-bottom:16px;padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+      <span style="font-size:11px;font-weight:600;color:var(--text2);">✏️ Ihre Eigenleistung</span>
+      <span id="eigenleistungCount" style="font-size:11px;font-weight:700;color:var(--red);">0 / 500 Zeichen</span>
+    </div>
+    <div style="height:5px;border-radius:5px;background:rgba(255,255,255,.06);overflow:hidden;">
+      <div id="eigenleistungFill" style="height:100%;border-radius:5px;background:var(--red);transition:width .3s,background .3s;width:0%;"></div>
+    </div>
   </div>
 
   <!-- 2-SPALTEN-LAYOUT -->
@@ -419,7 +490,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-ui);min-heigh
             <textarea class="sv-textarea" id="svTextA"
               placeholder="Die Ursache dürfte auf … zurückzuführen sein. Die Beweislast dürfte … liegen. Es wäre zu empfehlen, …"
               oninput="onInputA()" rows="8"></textarea>
-            <div class="char-count bad" id="charA">0 / mind. 200 Zeichen</div>
+            <div class="char-count bad" id="charA">0 / mind. 500 Zeichen</div>
             <div class="kj-check idle" id="kjCheckA">
               <span>⏳</span><span>Konjunktiv II wird geprüft sobald Sie schreiben…</span>
             </div>
@@ -466,7 +537,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-ui);min-heigh
                   placeholder="z.B. Es wäre zu empfehlen, die Außenwand thermisch zu sanieren…"
                   oninput="onInputB()" onfocus="setAktivFeld('B3')" rows="2" style="min-height:70px;"></textarea>
               </div>
-              <div class="char-count bad" id="charB3">0/200</div>
+              <div class="char-count bad" id="charB3">0/150</div>
               <div class="ki-hint-bubble" id="hintB3">
                 <div class="ki-hint-label">KI-Denkanstoß</div>
                 <div class="ki-hint-text" id="hintB3text"></div>
@@ -532,12 +603,12 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-ui);min-heigh
             <div class="confirm-row">
               <input type="checkbox" id="confirm407a" onchange="checkReady()">
               <label for="confirm407a" class="confirm-text">
-                Ich bestätige: Dieses Fachurteil entspricht meiner persönlichen Einschätzung.
-                Ursache, Bewertung und Empfehlung habe ich eigenständig beurteilt.
-                Die KI diente ausschließlich als Formulierungshilfe.
+                Ich habe dieses Gutachten <strong>persönlich geprüft</strong> und übernehme die
+                <strong>fachliche Verantwortung</strong> gemäß §407a ZPO. Die KI-Offenlegung
+                gemäß EU AI Act ist im Gutachten enthalten.
               </label>
             </div>
-            <div class="confirm-law">§407a Abs. 3 ZPO · Audit-Trail wird automatisch gesichert</div>
+            <div class="confirm-law">§407a Abs. 3 ZPO · EU AI Act (VO 2024/1689) · Audit-Trail wird automatisch gesichert</div>
           </div>
           <button class="btn-primary" id="btnWeiter" onclick="weiterZuFreigabe()" disabled>
             Fachurteil bestätigen &amp; zur Freigabe →
@@ -613,6 +684,7 @@ let selectedWeg = localStorage.getItem('prova_stellungnahme_weg') || 'A';
 let kiInspLoaded = false;
 let kjTimer = null;
 let ausformTimer = null;
+let kiAnalyseData = null; // Guided Writing v3.1
 
 const az = sessionStorage.getItem('prova_current_az') || localStorage.getItem('prova_letztes_az') || '—';
 const sa = sessionStorage.getItem('prova_current_schadenart') || localStorage.getItem('prova_schadenart') || '—';
@@ -620,11 +692,194 @@ const obj = sessionStorage.getItem('prova_current_objekt') || '—';
 const datum = sessionStorage.getItem('prova_current_datum') || '—';
 const rid = sessionStorage.getItem('prova_record_id') || '';
 
+// ═══════════════════════════════════════════════════════
+// GUIDED WRITING v3.1 — KI-Analyse-Box
+// ═══════════════════════════════════════════════════════
+async function ladeKIAnalyse() {
+  const btn = document.getElementById('btnKIAnalyse');
+  const content = document.getElementById('kiAnalyseContent');
+  const loading = document.getElementById('kiAnalyseLoading');
+  btn.disabled = true;
+  btn.textContent = '⏳ Wird geladen…';
+  loading.innerHTML = '<div style="padding:20px;text-align:center;"><div class="spinner" style="width:24px;height:24px;border:3px solid rgba(79,142,247,.2);border-top-color:#4f8ef7;border-radius:50%;animation:spin .6s linear infinite;margin:0 auto 8px;"></div><div style="font-size:11px;color:var(--text3);">KI analysiert Ihren Fall…</div></div>';
+
+  try {
+    const diktat = localStorage.getItem('prova_transkript') || '';
+    const messwerte = localStorage.getItem('prova_messwerte') || '';
+    const entwurf = localStorage.getItem('prova_entwurf_text') || '';
+
+    const res = await fetch('/.netlify/functions/ki-proxy', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        aufgabe: 'fachurteil_entwurf',
+        diktat: diktat,
+        schadenart: sa,
+        messwerte: messwerte,
+        normen_kontext: '',
+        verwendungszweck: selectedTyp,
+        paragraphen: entwurf ? { gesamt: entwurf } : null
+      })
+    });
+
+    const data = await res.json();
+    kiAnalyseData = data;
+    renderKIAnalyse(data);
+    btn.textContent = '✅ Geladen';
+  } catch (err) {
+    console.error('KI-Analyse Fehler:', err);
+    loading.innerHTML = '<div style="padding:12px;color:var(--red);font-size:12px;">⚠️ Fehler beim Laden der Analyse. Bitte versuchen Sie es erneut.</div>';
+    btn.disabled = false;
+    btn.textContent = '↻ Erneut laden';
+  }
+}
+
+function renderKIAnalyse(data) {
+  const loading = document.getElementById('kiAnalyseLoading');
+  loading.style.display = 'none';
+
+  // Messwert-Analyse
+  if (data.messwert_analyse && data.messwert_analyse.length > 0) {
+    const box = document.getElementById('messwertAnalyse');
+    const liste = document.getElementById('messwertListe');
+    box.style.display = 'block';
+    liste.innerHTML = data.messwert_analyse.map(m =>
+      `<div style="padding:6px 0;border-bottom:1px solid var(--border);">
+        <strong style="color:var(--text);">${m.messwert}</strong>
+        <span style="color:var(--text3);"> → Grenzwert: ${m.grenzwert}</span>
+        <span style="color:${m.bewertung && m.bewertung.includes('Überschreitung') ? 'var(--red)' : 'var(--green)'}; font-weight:600;"> ${m.bewertung}</span>
+        <span style="font-size:10px;color:var(--text3);"> (${m.normreferenz})</span>
+      </div>`
+    ).join('');
+  }
+
+  // Ursachenkategorien
+  if (data.ursachenkategorien && data.ursachenkategorien.length > 0) {
+    const box = document.getElementById('ursachenBox');
+    const liste = document.getElementById('ursachenListe');
+    box.style.display = 'block';
+    liste.innerHTML = data.ursachenkategorien.map((u, i) => {
+      const color = u.plausibilitaet === 'hoch' ? 'var(--green)' : u.plausibilitaet === 'mittel' ? 'var(--warn)' : 'var(--text3)';
+      return `<label style="display:flex;gap:8px;align-items:flex-start;padding:8px 10px;background:var(--surface2);border-radius:8px;cursor:pointer;">
+        <input type="checkbox" class="ursache-check" data-kategorie="${u.kategorie}" onchange="trackUrsacheWahl(this)" style="margin-top:2px;">
+        <div>
+          <div style="font-size:12px;font-weight:600;color:var(--text);">${u.kategorie}
+            <span style="font-size:9px;padding:2px 6px;border-radius:4px;background:${color}20;color:${color};font-weight:700;margin-left:4px;">${u.plausibilitaet}</span>
+          </div>
+          <div style="font-size:11px;color:var(--text3);margin-top:2px;">${u.begruendung}</div>
+        </div>
+      </label>`;
+    }).join('');
+  }
+
+  // Diktat-Extrakte
+  if (data.diktat_extrakte) {
+    const de = data.diktat_extrakte;
+    const box = document.getElementById('diktatExtrakte');
+    const text = document.getElementById('diktatExtraktText');
+    if (de.feststellungen || de.ursachen_hinweise || de.empfehlungen) {
+      box.style.display = 'block';
+      let html = '';
+      if (de.feststellungen) html += `<div style="margin-bottom:6px;"><span style="color:var(--accent);font-weight:600;">Feststellungen:</span> ${de.feststellungen}</div>`;
+      if (de.ursachen_hinweise) html += `<div style="margin-bottom:6px;"><span style="color:var(--warn);font-weight:600;">Ursachen-Hinweise:</span> ${de.ursachen_hinweise}</div>`;
+      if (de.empfehlungen) html += `<div><span style="color:var(--green);font-weight:600;">Empfehlungen:</span> ${de.empfehlungen}</div>`;
+      text.innerHTML = html;
+    }
+  }
+
+  // Normen-Vorschläge aktualisieren
+  if (data.normen_vorschlaege && data.normen_vorschlaege.length > 0) {
+    const nl = document.getElementById('normenListe');
+    nl.innerHTML = data.normen_vorschlaege.map(n =>
+      `<div class="norm-item" onclick="insertPhrase('${n.klick_text.replace(/'/g, "\\'")}')">
+        <strong>${n.norm}</strong>
+        <span style="font-size:10px;color:var(--text3);display:block;">${n.relevanz}</span>
+      </div>`
+    ).join('');
+  }
+}
+
+// Ursache-Wahl tracken
+function trackUrsacheWahl(checkbox) {
+  // Für KI_STATISTIK — wird beim Bestätigen gesammelt
+}
+
+// "Andere Ursache" Toggle
+function toggleAndereUrsache() {
+  const cb = document.getElementById('ursacheAndere');
+  const input = document.getElementById('ursacheAndereText');
+  input.disabled = !cb.checked;
+  if (cb.checked) input.focus();
+}
+
+// Ergänzungs-Diktat
+function starteErgaenzungsDiktat() {
+  if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
+    alert('Spracherkennung wird von Ihrem Browser nicht unterstützt. Bitte verwenden Sie Chrome.');
+    return;
+  }
+
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const recognition = new SpeechRecognition();
+  recognition.lang = 'de-DE';
+  recognition.continuous = true;
+  recognition.interimResults = true;
+
+  const btn = document.getElementById('btnErgDiktat');
+  btn.textContent = '🔴 Aufnahme läuft… (Klick = Stopp)';
+  btn.style.background = 'rgba(239,68,68,.1)';
+  btn.style.borderColor = 'rgba(239,68,68,.3)';
+  btn.style.color = 'var(--red)';
+
+  let transcript = '';
+
+  recognition.onresult = function(e) {
+    transcript = '';
+    for (let i = 0; i < e.results.length; i++) {
+      transcript += e.results[i][0].transcript;
+    }
+  };
+
+  recognition.onend = function() {
+    btn.textContent = '🎙️ Ergänzung diktieren';
+    btn.style.background = 'rgba(16,185,129,.08)';
+    btn.style.borderColor = 'rgba(16,185,129,.2)';
+    btn.style.color = 'var(--green)';
+
+    if (transcript.trim()) {
+      // In aktuelles Textfeld einfügen
+      const ta = selectedWeg === 'A' ? document.getElementById('svTextA') : null;
+      if (ta) {
+        const pos = ta.selectionStart || ta.value.length;
+        ta.value = ta.value.substring(0, pos) + ' ' + transcript.trim() + ' ' + ta.value.substring(pos);
+        onInputA();
+        zeigToast('Diktat eingefügt ✅', 'ok');
+      }
+    }
+  };
+
+  btn.onclick = function() { recognition.stop(); };
+  recognition.start();
+}
+
+// Eigenleistung-Fortschrittsbalken aktualisieren
+function updateEigenleistung(len) {
+  const count = document.getElementById('eigenleistungCount');
+  const fill = document.getElementById('eigenleistungFill');
+  const pct = Math.min(100, (len / 500) * 100);
+  const color = len >= 500 ? 'var(--green)' : len >= 250 ? 'var(--warn)' : 'var(--red)';
+
+  count.textContent = `${len} / 500 Zeichen`;
+  count.style.color = color;
+  fill.style.width = pct + '%';
+  fill.style.background = color;
+}
+
 // §7 Offenlegungstexte
 const OFFENLEGUNG = {
-  gericht:`Dieses Gutachten wurde unter Zuhilfenahme des digitalen Assistenzsystems PROVA Systems erstellt. Das System wurde zur strukturellen Aufbereitung der vom Sachverständigen erhobenen Daten (§1–§5), zur formalen Textgestaltung sowie zur Sicherstellung der normgerechten Fachsprache (insb. Konjunktiv-Prüfung in §6) eingesetzt. Die fachliche Datenerhebung, die Kausalitätsprüfung sowie die abschließende Bewertung in §6 erfolgten ausschließlich durch den Sachverständigen persönlich. Die KI-Nutzung wird hiermit gemäß §407a Abs. 3 ZPO offengelegt.`,
-  versicherung:`Die Erstellung dieses Gutachtens erfolgte unter Einsatz des digitalen Assistenzsystems PROVA Systems (KI-gestützte Strukturierung §1–§5, Konjunktiv-Prüfung §6). Das Fachurteil in §6 wurde eigenständig vom Sachverständigen erstellt.`,
-  privat:`Erstellt mit PROVA Systems (KI-Assistenz §1–§5). §6 Fachurteil: eigenständige Leistung des Sachverständigen.`
+  gericht:`Dieses Gutachten wurde unter Zuhilfenahme des digitalen Assistenzsystems PROVA Systems erstellt. Das System wurde zur strukturellen Aufbereitung der vom Sachverständigen erhobenen Daten (§1–§5), zur formalen Textgestaltung sowie zur Sicherstellung der normgerechten Fachsprache (insb. Konjunktiv-Prüfung in §6) eingesetzt. Die fachliche Datenerhebung, die Kausalitätsprüfung sowie die abschließende Bewertung in §6 erfolgten ausschließlich durch den Sachverständigen persönlich. Die KI-Nutzung wird hiermit gemäß §407a Abs. 3 ZPO offengelegt. Gemäß EU AI Act (Verordnung (EU) 2024/1689): KI-gestützt erstellt, geprüft und verantwortet durch den unterzeichnenden Sachverständigen.`,
+  versicherung:`Die Erstellung dieses Gutachtens erfolgte unter Einsatz des digitalen Assistenzsystems PROVA Systems (KI-gestützte Strukturierung §1–§5, Konjunktiv-Prüfung §6). Das Fachurteil in §6 wurde eigenständig vom Sachverständigen erstellt. KI-gestützt erstellt, geprüft und verantwortet durch den unterzeichnenden Sachverständigen (EU AI Act).`,
+  privat:`Erstellt mit PROVA Systems (KI-Assistenz §1–§5). §6 Fachurteil: eigenständige Leistung des Sachverständigen. KI-gestützt erstellt, geprüft und verantwortet durch den unterzeichnenden Sachverständigen (EU AI Act).`
 };
 
 // KJ2 Verbotsliste — erweitert, alle typischen SV-Indikativ-Muster
@@ -871,12 +1126,13 @@ function onInputA() {
   const txt = document.getElementById('svTextA').value;
   const len = txt.length;
   const cc = document.getElementById('charA');
-  cc.textContent = `${len} / mind. 200 Zeichen`;
-  cc.className = 'char-count ' + (len>=200?'ok':len>=100?'warn':'bad');
+  cc.textContent = `${len} / mind. 500 Zeichen`;
+  cc.className = 'char-count ' + (len>=500?'ok':len>=250?'warn':'bad');
   runKjCheck(txt, 'kjCheckA');
   localStorage.setItem('prova_stellungnahme_text', txt);
   checkReady();
   updateAusformBtn();
+  updateEigenleistung(len);
 }
 
 function onInputB() {
@@ -890,7 +1146,7 @@ function onInputB() {
   document.getElementById('charB2').textContent = b2.length+'/350';
   document.getElementById('charB2').className = 'char-count '+(b2.length>=350?'ok':b2.length>=175?'warn':'bad');
   document.getElementById('charB3').textContent = b3.length+'/200';
-  document.getElementById('charB3').className = 'char-count '+(b3.length>=200?'ok':b3.length>=100?'warn':'bad');
+  document.getElementById('charB3').className = 'char-count '+(b3.length>=150?'ok':b3.length>=75?'warn':'bad');
 
   // Highlights
   highlightIndikativ(b1, 'hlB1');
@@ -918,8 +1174,9 @@ function onInputB() {
   // Ausform-Button
   const total = b1.length+b2.length+b3.length;
   const btn = document.getElementById('btnAusform');
-  if(btn) btn.style.display = (total>=200) ? 'block' : 'none';
+  if(btn) btn.style.display = (total>=500) ? 'block' : 'none';
   checkReady();
+  updateEigenleistung(total);
 }
 
 function onInputEdit() {
@@ -938,7 +1195,7 @@ function checkReady() {
   const txt = getFinalSvText();
   const confirmed = document.getElementById('confirm407a').checked;
   const btn = document.getElementById('btnWeiter');
-  btn.disabled = !(txt.length >= 200 && confirmed);
+  btn.disabled = !(txt.length >= 500 && confirmed);
 }
 
 function getFinalSvText() {
@@ -1090,7 +1347,7 @@ function insertPhrase(phrase) {
 /* ── WEITER ZUR FREIGABE ── */
 function weiterZuFreigabe() {
   const finalText = getFinalSvText();
-  if(finalText.length < 200) { zeigToast('Bitte mindestens 200 Zeichen.','warn'); return; }
+  if(finalText.length < 500) { zeigToast('Bitte mindestens 500 Zeichen.','warn'); return; }
 
   const ts = new Date().toISOString();
   const kiVorschlag = localStorage.getItem('prova_ki_stellungnahme_vorschlag') || '';
@@ -1103,21 +1360,60 @@ function weiterZuFreigabe() {
   localStorage.setItem('prova_stellungnahme_done', '1');
   localStorage.setItem('prova_gutachten_typ', selectedTyp);
   localStorage.setItem('prova_offenlegungstext', offenlegung);
-  localStorage.setItem('prova_stellungnahme_version', 'v4.0');
+  localStorage.setItem('prova_stellungnahme_version', 'v5.0-guided');
   localStorage.setItem('prova_stellungnahme_kj2_ok',
     document.getElementById('prova_stellungnahme_kj2_ok') ||
     localStorage.getItem('prova_stellungnahme_kj2_ok') || '0');
 
+  // KI-Statistik sammeln (anonym)
+  const gewaehlteUrsachen = Array.from(document.querySelectorAll('.ursache-check:checked')).map(cb => cb.dataset.kategorie);
+  const andereUrsache = document.getElementById('ursacheAndere')?.checked ? document.getElementById('ursacheAndereText')?.value || '' : '';
+  
+  const kiStatistik = {
+    schadenart: sa,
+    ursache_quelle: gewaehlteUrsachen.length > 0 ? 'ki_vorschlag' : (andereUrsache ? 'eigene_eingabe' : 'keine'),
+    ursache_kategorien: gewaehlteUrsachen,
+    andere_ursache: andereUrsache,
+    ki_analyse_geladen: kiAnalyseData !== null,
+    eigentext_zeichen: finalText.length,
+    weg: selectedWeg,
+    diktat_verwendet: !!localStorage.getItem('prova_transkript'),
+    datum: new Date().toISOString().split('T')[0]
+  };
+  localStorage.setItem('prova_ki_statistik', JSON.stringify(kiStatistik));
+
+  // "Andere Ursache" für KI_LERNPOOL speichern
+  if (andereUrsache) {
+    const lernpool = JSON.parse(localStorage.getItem('prova_lernpool') || '[]');
+    lernpool.push({ schadenart: sa, ursache: andereUrsache, datum: kiStatistik.datum });
+    localStorage.setItem('prova_lernpool', JSON.stringify(lernpool));
+  }
+
   // Audit-Log kompakt
   const auditLog = {
-    version:'v4.0', ts_start: ts,
+    version:'v5.0-guided', ts_start: ts,
     weg: selectedWeg, typ: selectedTyp,
-    ki_vorschlag: kiVorschlag,
+    ki_analyse: kiAnalyseData !== null,
+    ursachen_gewaehlt: gewaehlteUrsachen,
+    andere_ursache: andereUrsache,
     sv_final: finalText,
     ts_407a: ts,
     kj2_ok: localStorage.getItem('prova_stellungnahme_kj2_ok')==='1'
   };
   localStorage.setItem('prova_stellungnahme_audit', JSON.stringify(auditLog));
+
+  // KI-Statistik + Lernpool an Airtable senden (non-blocking)
+  try {
+    const syncPayload = { statistik: kiStatistik };
+    if (andereUrsache) {
+      syncPayload.lernpool = [{ schadenart: sa, ursache: andereUrsache, datum: kiStatistik.datum }];
+    }
+    fetch('/.netlify/functions/ki-statistik', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(syncPayload)
+    }).catch(e => console.warn('KI-Statistik sync failed:', e));
+  } catch (e) { console.warn('KI-Statistik sync error:', e); }
 
   window.location.href = 'freigabe.html';
 }
@@ -1135,5 +1431,6 @@ function zeigToast(msg, type='ok') {
 </script>
   <script src="/sw-register.js" defer></script>
 <script src="auftragstyp.js"></script>
+<script src="trial-guard.js"></script>
 </body>
 </html>

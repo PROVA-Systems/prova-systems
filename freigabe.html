@@ -11,8 +11,19 @@
   <link rel="apple-touch-icon" href="/icons/icon-192.png">
   <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Freigabe · PROVA</title>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
+/* Gutachten Markdown Styling */
+.gutachten-preview h1,.gutachten-preview h2,.gutachten-preview h3{color:#fff;margin:20px 0 10px;font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid rgba(255,255,255,.08);padding-bottom:8px;}
+.gutachten-preview h1{font-size:16px;color:#4f8ef7;}
+.gutachten-preview p{margin:8px 0;line-height:1.7;color:rgba(255,255,255,.8);font-size:13px;}
+.gutachten-preview table{width:100%;border-collapse:collapse;margin:12px 0;font-size:12px;}
+.gutachten-preview th{background:rgba(79,142,247,.1);color:#4f8ef7;padding:8px 10px;text-align:left;font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.04em;border-bottom:2px solid rgba(79,142,247,.2);}
+.gutachten-preview td{padding:7px 10px;border-bottom:1px solid rgba(255,255,255,.05);color:rgba(255,255,255,.7);}
+.gutachten-preview tr:hover td{background:rgba(255,255,255,.02);}
+.gutachten-preview strong{color:#fff;}
+.gutachten-preview hr{border:none;border-top:1px solid rgba(255,255,255,.08);margin:16px 0;}
 :root{
   --bg:#0b1220;--bg2:#111827;--bg3:#141e2f;
   --surface:#1c2537;--surface2:#222d42;
@@ -73,10 +84,10 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-ui);min-heigh
 .doc-gtype{font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:#64748b;margin-bottom:6px;font-family:var(--font-ui);}
 .doc-haupttitel{font-size:17px;font-weight:700;color:#1E3A5F;font-family:var(--font-ui);}
 .doc-auftragzeile{font-size:11px;color:#4a5568;margin-top:4px;font-family:var(--font-ui);}
-.doc-entwurf h1,.doc-entwurf h2{font-size:14px;font-weight:700;margin:20px 0 8px;color:#1E3A5F;font-family:var(--font-ui);border-bottom:1px solid #e2e8f0;padding-bottom:4px;}
-.doc-entwurf h3,.doc-entwurf h4{font-size:13px;font-weight:700;margin:14px 0 6px;color:#1E3A5F;font-family:var(--font-ui);}
-.doc-entwurf p{margin:0 0 10px;}
-.doc-entwurf ul,.doc-entwurf ol{margin:0 0 10px 20px;}
+.doc-entwurf h1,.doc-entwurf h2{font-size:14px;font-weight:700;margin:20px 0 8px;color:#4f8ef7;font-family:var(--font-ui);border-bottom:1px solid rgba(255,255,255,.08);padding-bottom:4px;}
+.doc-entwurf h3,.doc-entwurf h4{font-size:13px;font-weight:700;margin:14px 0 6px;color:#e8eaf0;font-family:var(--font-ui);}
+.doc-entwurf p{margin:0 0 10px;color:rgba(255,255,255,.8);line-height:1.7;}
+.doc-entwurf ul,.doc-entwurf ol{margin:0 0 10px 20px;color:rgba(255,255,255,.8);}
 
 /* S6 BANNER */
 .s6-banner{margin-bottom:16px;padding:10px 16px;border-radius:8px;font-size:12px;display:flex;align-items:center;justify-content:space-between;gap:8px;}
@@ -210,13 +221,13 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-ui);min-heigh
               <div class="doc-haupttitel" id="doc-haupttitel">—</div>
               <div class="doc-auftragzeile" id="doc-auftragzeile">—</div>
             </div>
-            <div class="doc-entwurf" id="gutachten-entwurf-content" contenteditable="false"></div>
-            <div id="section6-block" style="display:none;margin-top:28px;padding-top:20px;border-top:2px solid #e2e8f0;">
-              <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#1E3A5F;margin-bottom:10px;font-family:var(--font-ui);">§6 Gutachterliche Stellungnahme</div>
-              <div id="section6-text" style="font-size:13px;line-height:1.9;color:#1a202c;white-space:pre-wrap;"></div>
+            <div class="doc-entwurf gutachten-preview" id="gutachten-entwurf-content" contenteditable="false"></div>
+            <div id="section6-block" style="display:none;margin-top:28px;padding-top:20px;border-top:2px solid rgba(79,142,247,.2);">
+              <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#4f8ef7;margin-bottom:10px;">§6 Gutachterliche Stellungnahme</div>
+              <div id="section6-text" class="gutachten-preview" style="font-size:13px;line-height:1.9;white-space:pre-wrap;"></div>
             </div>
-            <div id="section7-block" style="display:none;margin-top:24px;padding:14px 16px;background:#f8fafc;border-radius:6px;border:1px solid #e2e8f0;font-size:11px;color:#64748b;line-height:1.7;">
-              <strong style="display:block;margin-bottom:4px;color:#1E3A5F;font-family:var(--font-ui);" id="section7-title">§7 KI-Offenlegung gemäß §407a Abs. 2 ZPO</strong>
+            <div id="section7-block" style="display:none;margin-top:24px;padding:14px 16px;background:rgba(79,142,247,.05);border-radius:8px;border:1px solid rgba(79,142,247,.12);font-size:11px;color:rgba(255,255,255,.6);line-height:1.7;">
+              <strong style="display:block;margin-bottom:4px;color:#4f8ef7;" id="section7-title">§7 KI-Offenlegung gemäß §407a ZPO & EU AI Act</strong>
               <div id="section7-text"></div>
             </div>
           </div>
@@ -474,8 +485,19 @@ function renderDoc(){
   const entwurf=f.KI_Entwurf||'';
   const el=document.getElementById('gutachten-entwurf-content');
   if(entwurf){
-    if(typeof marked!=='undefined') el.innerHTML=marked.parse(entwurf);
-    else el.textContent=entwurf;
+    // Markdown-Preprocessor: GPT-4o Output aufbereiten
+    let cleanText = entwurf
+      .replace(/---\s*/g, '\n\n')                          // --- Trennlinien zu Absätzen
+      .replace(/##(\d+)\s*/g, '\n## §$1 ')                 // ##1 → ## §1
+      .replace(/\*\*([^*]+)\*\*/g, '**$1**')               // Bold behalten
+      .replace(/\n{3,}/g, '\n\n');                          // Max 2 Leerzeilen
+    
+    if(typeof marked!=='undefined') {
+      marked.setOptions({ breaks: true, gfm: true });
+      el.innerHTML=marked.parse(cleanText);
+    } else {
+      el.innerHTML='<pre style="white-space:pre-wrap;font-family:inherit;font-size:13px;line-height:1.8;color:rgba(255,255,255,.8);">'+entwurf.replace(/</g,'&lt;')+'</pre>';
+    }
   } else {
     el.innerHTML='<p style="color:#94a3b8;font-style:italic;">Kein Gutachten-Entwurf gefunden.</p>';
   }
