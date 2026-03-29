@@ -1,90 +1,82 @@
-// PROVA Systems — Netlify Identity Trigger
-// Wird automatisch aufgerufen wenn sich ein neuer User registriert
-// Legt automatisch einen Airtable-Eintrag in SACHVERSTAENDIGE an
+// ══════════════════════════════════════════════════
+// PROVA Systems — Identity Signup (Auto-Confirm + Airtable)
+// Netlify Function: identity-signup
+//
+// Wird automatisch von Netlify Identity aufgerufen.
+// 1. Bestätigt den User SOFORT (keine E-Mail nötig)
+// 2. Legt Eintrag in Airtable SACHVERSTAENDIGE an
+//
+// WICHTIG: Die Response MUSS app_metadata enthalten
+// damit Netlify den User auto-confirmed.
+// ══════════════════════════════════════════════════
 
 exports.handler = async function(event) {
-  // Nur POST von Netlify Identity akzeptieren
-  if (event.httpMethod !== 'POST') {
-    return { statusCode: 405, body: 'Method not allowed' };
-  }
-
   let payload;
   try {
     payload = JSON.parse(event.body);
   } catch(e) {
-    return { statusCode: 400, body: 'Invalid JSON' };
+    return {
+      statusCode: 200,
+      body: JSON.stringify({ app_metadata: { roles: ['user'] } })
+    };
   }
 
-  // Netlify Identity sendet: { event: "signup", user: { email, user_metadata: { full_name } } }
-  if (!payload.user || !payload.user.email) {
-    return { statusCode: 400, body: 'No user data' };
-  }
+  const user = payload.user || {};
+  const email = user.email || '';
+  const meta = user.user_metadata || {};
+  const name = meta.full_name || '';
+  const vorname = meta.vorname || name.split(' ')[0] || '';
+  const nachname = meta.nachname || name.split(' ').slice(1).join(' ') || '';
 
-  const email = payload.user.email;
-  const meta  = payload.user.user_metadata || {};
-  const name  = meta.full_name || '';
-  const parts = name.split(' ');
-  const vorname  = parts[0] || '';
-  const nachname = parts.slice(1).join(' ') || '';
+  console.log('PROVA Identity Signup:', email);
 
-  const pat     = process.env.AIRTABLE_PAT;
-  const baseId  = process.env.AIRTABLE_BASE || 'appJ7bLlAHZoxENWE';
-  const tableId = 'tbladqEQT3tmx4DIB'; // SACHVERSTAENDIGE
-
-  if (!pat) {
-    console.error('AIRTABLE_PAT nicht gesetzt');
-    return { statusCode: 500, body: 'Config error' };
-  }
-
+  // Airtable-Eintrag anlegen (nicht-blockierend)
   try {
-    // Prüfen ob Nutzer bereits existiert
-    // FIX: doppelte }} entfernt → korrekte URL
-    const checkRes = await fetch(
-      `https://api.airtable.com/v0/${baseId}/${tableId}?filterByFormula=${encodeURIComponent(`{Email}="${email}"`)}&maxRecords=1`,
-      { headers: { 'Authorization': `Bearer ${pat}` } }
-    );
-    const checkData = await checkRes.json();
+    const pat = process.env.AIRTABLE_PAT;
+    const baseId = 'appJ7bLlAHZoxENWE';
+    const tableId = 'tbladqEQT3tmx4DIB';
 
-    if (checkData.records && checkData.records.length > 0) {
-      // Bereits vorhanden — kein Duplikat anlegen
-      console.log('User bereits in Airtable:', email);
-      return { statusCode: 200, body: 'Already exists' };
-    }
+    if (pat && email) {
+      const checkRes = await fetch(
+        `https://api.airtable.com/v0/${baseId}/${tableId}?filterByFormula=${encodeURIComponent(`{Email}="${email}"`)}&maxRecords=1`,
+        { headers: { 'Authorization': `Bearer ${pat}` } }
+      );
+      const checkData = await checkRes.json();
 
-    // Neuen Eintrag anlegen
-    const createRes = await fetch(
-      `https://api.airtable.com/v0/${baseId}/${tableId}`,
-      {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${pat}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          fields: {
-            Email:           email,
-            sv_vorname:      vorname,
-            sv_nachname:     nachname,
-            Paket:           'Starter',
-            Status:          'Aktiv',
-            onboarding_done: false,
-            registriert_am:  new Date().toISOString().split('T')[0]
-          }
-        })
+      if (!checkData.records || checkData.records.length === 0) {
+        await fetch(`https://api.airtable.com/v0/${baseId}/${tableId}`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${pat}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            fields: {
+              Email: email,
+              sv_vorname: vorname,
+              sv_nachname: nachname,
+              Paket: 'Solo',
+              Status: 'Trial',
+              onboarding_done: false,
+              registriert_am: new Date().toISOString().split('T')[0]
+            }
+          })
+        });
+        console.log('Neuer SV in Airtable angelegt:', email);
       }
-    );
-
-    if (!createRes.ok) {
-      const err = await createRes.text();
-      console.error('Airtable Fehler:', err);
-      return { statusCode: 502, body: 'Airtable error' };
     }
-
-    console.log('Neuer SV in Airtable angelegt:', email);
-    return { statusCode: 200, body: 'Created' };
-
   } catch(e) {
-    console.error('Fehler:', e.message);
-    return { statusCode: 502, body: e.message };
+    console.error('Airtable Fehler (nicht kritisch):', e.message);
   }
+
+  // DIESE RESPONSE BESTÄTIGT DEN USER AUTOMATISCH
+  return {
+    statusCode: 200,
+    body: JSON.stringify({
+      app_metadata: {
+        roles: ['user'],
+        provider: 'prova'
+      }
+    })
+  };
 };
