@@ -382,8 +382,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-ui);min-heigh
   <!-- §6 DIKTAT-HINWEIS -->
   <div class="diktat-hinweis">
     <div class="diktat-hinweis-icon">ℹ️</div>
-    <div>Beschreiben Sie Ihre <strong>fachliche Einschätzung</strong> — Ursache, Beweislast, Empfehlung.
-    §1–§5 (Sichtbefunde &amp; Messwerte) hat PROVA bereits ausformuliert.</div>
+    <div>Ihr <strong>§6 Fachurteil</strong> — §1–§5 (Sichtbefunde &amp; Messwerte) hat PROVA bereits ausformuliert.</div>
   </div>
 
   <!-- KI-ANALYSE-BOX (Guided Writing v3.1) -->
@@ -391,9 +390,10 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-ui);min-heigh
     <div class="card-header" style="border-bottom:1px solid rgba(79,142,247,.1);">
       <div>
         <div class="card-title" style="color:#4f8ef7;">🔬 KI-Analyse — Daten aus Ihrem Fall</div>
-        <div class="card-sub">Nur zur Orientierung · Nicht kopierbar · Formulieren Sie selbst</div>
+        <div class="card-sub">Nur zur Orientierung · Nicht kopierbar</div>
       </div>
       <button onclick="ladeKIAnalyse()" id="btnKIAnalyse" style="padding:6px 14px;border-radius:8px;background:rgba(79,142,247,.1);border:1px solid rgba(79,142,247,.2);color:#4f8ef7;font-size:11px;font-weight:600;cursor:pointer;">↻ Analyse laden</button>
+      <button onclick="toggleKIBox()" id="btnKIToggle" style="display:none;padding:6px 14px;border-radius:8px;background:rgba(255,255,255,.05);border:1px solid var(--border);color:var(--text3);font-size:11px;cursor:pointer;">▲ Einklappen</button>
     </div>
     <div class="card-body" id="kiAnalyseContent" style="user-select:none;-webkit-user-select:none;">
 
@@ -417,7 +417,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-ui);min-heigh
 
       <!-- Diktat-Extrakte -->
       <div id="diktatExtrakte" style="display:none;margin-bottom:12px;">
-        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--green);margin-bottom:8px;">🎙️ Aus Ihrem Diktat erkannt</div>
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--green);margin-bottom:8px;">🎙️ Aus Ihrem Diktat</div>
         <div id="diktatExtraktText" style="font-size:12px;line-height:1.7;color:var(--text2);"></div>
       </div>
 
@@ -433,7 +433,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-ui);min-heigh
     <button onclick="starteErgaenzungsDiktat()" id="btnErgDiktat" style="display:flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.2);color:var(--green);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;">
       🎙️ Ergänzung diktieren
     </button>
-    <span style="font-size:11px;color:var(--text3);">Sprechen Sie weitere Einschätzungen ein — auch nachträglich von zu Hause</span>
+    <span style="font-size:11px;color:var(--text3);">Auch nachträglich von zu Hause oder unterwegs</span>
   </div>
 
   <!-- EIGENLEISTUNG-FORTSCHRITTSBALKEN -->
@@ -726,6 +726,7 @@ async function ladeKIAnalyse() {
     kiAnalyseData = data;
     renderKIAnalyse(data);
     btn.textContent = '✅ Geladen';
+    document.getElementById('btnKIToggle').style.display = '';
   } catch (err) {
     console.error('KI-Analyse Fehler:', err);
     loading.innerHTML = '<div style="padding:12px;color:var(--red);font-size:12px;">⚠️ Fehler beim Laden der Analyse. Bitte versuchen Sie es erneut.</div>';
@@ -772,17 +773,22 @@ function renderKIAnalyse(data) {
     }).join('');
   }
 
-  // Diktat-Extrakte
+  // Diktat-Extrakte — NUR anzeigen wenn der SV tatsächlich etwas gesagt hat
   if (data.diktat_extrakte) {
     const de = data.diktat_extrakte;
     const box = document.getElementById('diktatExtrakte');
     const text = document.getElementById('diktatExtraktText');
-    if (de.feststellungen || de.ursachen_hinweise || de.empfehlungen) {
+    const hasFeststellungen = de.feststellungen && de.feststellungen.trim() && de.feststellungen.trim() !== 'leer';
+    const hasUrsachen = de.hat_ursachen && de.ursachen_hinweise && de.ursachen_hinweise.trim();
+    const hasEmpf = de.hat_empfehlungen && de.empfehlungen && de.empfehlungen.trim();
+    
+    if (hasFeststellungen || hasUrsachen || hasEmpf) {
       box.style.display = 'block';
       let html = '';
-      if (de.feststellungen) html += `<div style="margin-bottom:6px;"><span style="color:var(--accent);font-weight:600;">Feststellungen:</span> ${de.feststellungen}</div>`;
-      if (de.ursachen_hinweise) html += `<div style="margin-bottom:6px;"><span style="color:var(--warn);font-weight:600;">Ursachen-Hinweise:</span> ${de.ursachen_hinweise}</div>`;
-      if (de.empfehlungen) html += `<div><span style="color:var(--green);font-weight:600;">Empfehlungen:</span> ${de.empfehlungen}</div>`;
+      if (hasFeststellungen) html += `<div style="margin-bottom:8px;padding:8px 10px;background:var(--surface2);border-radius:6px;"><span style="color:var(--accent);font-weight:600;font-size:11px;">FESTSTELLUNGEN:</span><br>${de.feststellungen}</div>`;
+      if (hasUrsachen) html += `<div style="margin-bottom:8px;padding:8px 10px;background:var(--surface2);border-radius:6px;"><span style="color:var(--warn);font-weight:600;font-size:11px;">URSACHEN-HINWEISE (aus Ihrem Diktat):</span><br>${de.ursachen_hinweise}</div>`;
+      if (hasEmpf) html += `<div style="padding:8px 10px;background:var(--surface2);border-radius:6px;"><span style="color:var(--green);font-weight:600;font-size:11px;">EMPFEHLUNGEN (aus Ihrem Diktat):</span><br>${de.empfehlungen}</div>`;
+      if (!hasUrsachen && !hasEmpf) html += '';
       text.innerHTML = html;
     }
   }
@@ -810,6 +816,19 @@ function toggleAndereUrsache() {
   const input = document.getElementById('ursacheAndereText');
   input.disabled = !cb.checked;
   if (cb.checked) input.focus();
+}
+
+// KI-Analyse Box ein/ausklappen
+function toggleKIBox() {
+  const content = document.getElementById('kiAnalyseContent');
+  const btn = document.getElementById('btnKIToggle');
+  if (content.style.display === 'none') {
+    content.style.display = '';
+    btn.textContent = '▲ Einklappen';
+  } else {
+    content.style.display = 'none';
+    btn.textContent = '▼ Ausklappen';
+  }
 }
 
 // Ergänzungs-Diktat

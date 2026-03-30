@@ -225,35 +225,44 @@ async function fachurteilEntwurf(apiKey, input) {
   const { diktat, paragraphen, schadenart, messwerte, normen_kontext, verwendungszweck } = input;
 
   const systemPrompt = `Du bist ein KI-Assistent für Bausachverständige (§6 Guided Writing).
-Analysiere das Diktat und die §1-§5 Daten. Antworte AUSSCHLIESSLICH mit einem JSON-Objekt.
+Antworte AUSSCHLIESSLICH mit einem JSON-Objekt.
 
-WICHTIG:
-- Du erstellst KEIN fertiges §6 Fachurteil
-- Du lieferst ANALYSE-DATEN die dem SV helfen, sein eigenes §6 zu schreiben
-- Messwert-Analyse: Vergleiche Messwerte mit DIN-Grenzwerten
-- Ursachenkategorien: Schlage plausible Ursachen vor basierend auf Schadensbild + Messwerten
-- Normen: Schlage relevante Normen vor
-- Diktat-Extrakte: Extrahiere §6-relevante Aussagen aus dem Diktat (Ursachen, Bewertungen, Empfehlungen)
-- Alle Texte auf Deutsch`;
+ABSOLUTE REGELN — VERSTÖSSE SIND INAKZEPTABEL:
+
+1. HALLUZINATIONSVERBOT: Du darfst NIEMALS Details erfinden die nicht im Diktat oder in den §1-§5 Daten stehen.
+   - VERBOTEN: Orte erfinden ("neben dem Fenster", "hinter dem Schrank") wenn der SV das nicht gesagt hat
+   - VERBOTEN: Messwerte erfinden die nicht übermittelt wurden
+   - VERBOTEN: Details hinzudichten um den Text "besser" klingen zu lassen
+   - Wenn etwas nicht im Diktat steht → NICHT erwähnen
+   - Bei diktat_extrakte: NUR wörtliche oder sinngemäße Wiedergabe dessen was der SV gesagt hat
+
+2. KONJUNKTIV II — PFLICHT bei allen Ursachen und Empfehlungen:
+   - RICHTIG: "dürfte zurückzuführen sein", "könnte auf ... hindeuten", "wäre zu empfehlen"
+   - FALSCH: "ist zurückzuführen", "führt zu", "muss saniert werden"
+   - Einzige Ausnahme: Messwert-Feststellungen dürfen Indikativ sein ("beträgt", "wurde gemessen")
+
+3. URSACHENKATEGORIEN: Nur technisch plausible Kategorien vorschlagen, basierend auf Schadenart + Messwerten.
+   Begründungen müssen sich auf vorliegende Daten beziehen, nicht auf Vermutungen.
+
+4. NORMEN: Nur Normen vorschlagen die zur Schadenart passen. Keine generischen Normen.`;
 
   const userPrompt = `Analysiere für §6 Guided Writing. Antworte mit JSON:
 
 {
   "messwert_analyse": [
-    {"messwert": "Materialfeuchte 26%", "grenzwert": "DIN 68800: 20%", "bewertung": "Überschreitung +30%", "normreferenz": "DIN 68800-1"}
+    {"messwert": "Beschreibung des Messwerts", "grenzwert": "Norm: Grenzwert", "bewertung": "Einordnung", "normreferenz": "DIN XXXX"}
   ],
   "ursachenkategorien": [
-    {"kategorie": "Wärmebrücke / fehlende Dämmung", "plausibilitaet": "hoch", "begruendung": "Kurze Begründung"},
-    {"kategorie": "Lüftungsdefizit", "plausibilitaet": "mittel", "begruendung": "Kurze Begründung"}
+    {"kategorie": "Technische Ursachenkategorie", "plausibilitaet": "hoch|mittel|niedrig", "begruendung": "Begründung NUR basierend auf vorliegenden Daten, im Konjunktiv II"}
   ],
   "normen_vorschlaege": [
-    {"norm": "DIN 4108-2", "relevanz": "fRsi-Wert Mindestanforderung", "klick_text": "gemäß DIN 4108-2 (fRsi ≥ 0,70)"}
+    {"norm": "DIN XXXX", "relevanz": "Warum relevant", "klick_text": "gemäß DIN XXXX (Kurzreferenz)"}
   ],
   "diktat_extrakte": {
-    "feststellungen": "Extrahierte Feststellungen aus dem Diktat",
-    "ursachen_hinweise": "Extrahierte Ursachen-Aussagen (falls im Diktat vorhanden)",
-    "empfehlungen": "Extrahierte Empfehlungen (falls im Diktat vorhanden)",
-    "hat_ursachen": true,
+    "feststellungen": "NUR was der SV tatsächlich gesagt/diktiert hat — KEINE Ergänzungen, KEINE Erfindungen. Wenn nichts gesagt wurde: leer lassen.",
+    "ursachen_hinweise": "NUR Ursachen-Aussagen die der SV SELBST im Diktat gemacht hat. Im Konjunktiv II wiedergeben. Wenn der SV nichts zu Ursachen gesagt hat: leer lassen.",
+    "empfehlungen": "NUR Empfehlungen die der SV SELBST im Diktat ausgesprochen hat. Im Konjunktiv II. Wenn keine: leer lassen.",
+    "hat_ursachen": false,
     "hat_empfehlungen": false
   },
   "konjunktiv_bausteine": [
@@ -264,14 +273,22 @@ WICHTIG:
   ]
 }
 
+WICHTIG für diktat_extrakte:
+- "hat_ursachen" ist NUR true wenn der SV im Diktat EXPLIZIT etwas zu Ursachen gesagt hat
+- "hat_empfehlungen" ist NUR true wenn der SV im Diktat EXPLIZIT Empfehlungen ausgesprochen hat
+- Wenn der SV nur Befunde beschrieben hat (was er gesehen/gemessen hat), sind "ursachen_hinweise" und "empfehlungen" LEER
+- NIEMALS aus §1-§5 generierte KI-Texte als "Diktat-Extrakte" ausgeben — nur das Original-Diktat zählt
+
 EINGABEDATEN:
 Schadensart: ${schadenart || 'nicht angegeben'}
 Messwerte: ${messwerte || 'keine'}
 Normen-Kontext: ${normen_kontext || 'keine'}
 Verwendungszweck: ${verwendungszweck || 'Gerichtsgutachten'}
-Diktat: ${diktat || 'kein Diktat'}
 
-§1-§5 (falls vorhanden):
+ORIGINAL-DIKTAT DES SACHVERSTÄNDIGEN (nur hieraus extrahieren!):
+${diktat || 'kein Diktat vorhanden'}
+
+§1-§5 KI-GENERIERTER TEXT (nur für Messwert-Analyse und Ursachenkategorien verwenden, NICHT als Diktat-Extrakt!):
 ${paragraphen ? JSON.stringify(paragraphen) : 'keine Paragraphen-Daten'}`;
 
   return await openaiChat(apiKey, systemPrompt, userPrompt, 2000);
@@ -289,10 +306,12 @@ async function diktatNachtrag(apiKey, input) {
 Analysiere ein nachträgliches Diktat und extrahiere §6-relevantes Material.
 Antworte AUSSCHLIESSLICH mit einem JSON-Objekt.
 
-WICHTIG:
+ABSOLUTE REGELN:
 - Erkenne Ursachen-Aussagen, Bewertungen und Empfehlungen
-- Formuliere NICHTS um — extrahiere nur was der SV gesagt hat
-- Markiere die Confidence: "diktat" wenn direkt aus dem Diktat, "abgeleitet" wenn interpretiert`;
+- NIEMALS Details erfinden die der SV nicht gesagt hat
+- NUR wiedergeben was der SV TATSÄCHLICH diktiert hat
+- Alle Ursachen und Empfehlungen im Konjunktiv II wiedergeben
+- "confidence: diktat" NUR wenn es wörtlich aus dem Diktat stammt`;
 
   const userPrompt = `Extrahiere §6-Material aus nachträglichem Diktat. Antworte mit JSON:
 

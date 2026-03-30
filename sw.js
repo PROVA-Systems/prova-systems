@@ -5,7 +5,7 @@
    Background Sync für Offline-Queue (Webhook S1)
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v11';
+const CACHE_VERSION = 'prova-v12';
 const SYNC_TAG = 'prova-sync-queue';
 
 // App-Shell: alle Dateien die gecacht werden sollen
