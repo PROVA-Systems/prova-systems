@@ -157,6 +157,7 @@
   ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
   @media(max-width:768px){.bottom-nav{display:flex !important;}}
 </style>
+<script src="theme.js"></script>
 <script src="nav.js"></script>
 </head>
 <body>
@@ -172,7 +173,7 @@
     <div class="breadcrumb"><span>PROVA</span><span style="color:var(--text3)">›</span><strong>Baubegleitung</strong></div>
   </div>
   <div class="topbar-right" style="display:flex;align-items:center;gap:8px;">
-    <span class="topbar-paket" id="topbar-paket-badge"></span>
+    <span class="topbar-paket" id="topbar-paket-badge" style="display:none;"></span>
     <a href="einstellungen.html"><button class="topbar-btn" style="display:flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:6px;border:1px solid rgba(255,255,255,.11);background:transparent;color:var(--text3);cursor:pointer;font-size:14px;">⚙</button></a>
   </div>
 </header>
@@ -370,6 +371,7 @@ function logout(){localStorage.removeItem('prova_user');localStorage.removeItem(
     <div class="bericht-vorschau" id="bericht-text" style="max-height:55vh;overflow-y:auto;"></div>
     <div class="modal-actions" style="margin-top:14px;">
       <button class="btn btn-ghost" onclick="closeModal('modal-bericht')">Schließen</button>
+      <button class="btn btn-ghost" id="ki-bericht-btn" onclick="generiereKIBericht()" style="background:linear-gradient(135deg,#6366f1,var(--purple,#a78bfa));color:#fff;border:none;">✨ KI-Bericht</button>
       <button class="btn btn-primary" onclick="berichtKopieren()">📋 Kopieren</button>
     </div>
   </div>
@@ -836,8 +838,12 @@ function generiereEinzelBericht(projId) {
     'Erstellt durch: ' + sv + ' ' + svN + '\n' +
     'Datum:          ' + new Date().toLocaleDateString('de-DE') + '\n';
 
+  _aktuellProjId = proj.id;
   document.getElementById('bericht-modal-titel').textContent = '📄 Begehungsprotokoll · ' + proj.name;
   document.getElementById('bericht-text').textContent = text;
+  document.getElementById('ki-bericht-btn').textContent='✨ KI-Bericht';
+  document.getElementById('ki-bericht-btn').disabled=false;
+  document.getElementById('ki-bericht-status').style.display='none';
   openModal('modal-bericht');
 }
 
@@ -889,9 +895,69 @@ function generiereGesamtBericht(projId) {
     'Sachverständiger: ' + sv.trim() + '\n' +
     'Bericht erstellt: ' + new Date().toLocaleDateString('de-DE') + '\n';
 
+  _aktuellProjId = proj.id;
   document.getElementById('bericht-modal-titel').textContent = '📑 Gesamtbericht · ' + proj.name;
   document.getElementById('bericht-text').textContent = text;
   openModal('modal-bericht');
+}
+
+/* ── KI-BERICHT GENERATOR ───────────────────────────────────── */
+var _aktuellProjId = null; // wird beim Öffnen gesetzt
+
+async function generiereKIBericht() {
+  var btn = document.getElementById('ki-bericht-btn');
+  var status = document.getElementById('ki-bericht-status');
+  var textEl = document.getElementById('bericht-text');
+  if (!btn || !status || !textEl) return;
+
+  btn.disabled = true;
+  btn.textContent = '⏳ Generiert…';
+  status.style.display = 'block';
+
+  // Aktuellen Rohentext aus dem Modal holen
+  var rohenText = textEl.textContent || '';
+  var svName = (localStorage.getItem('prova_sv_vorname')||'') + ' ' +
+               (localStorage.getItem('prova_sv_nachname')||'Sachverständiger');
+
+  var systemPrompt = 'Du bist ein öffentlich bestellter und vereidigter Bausachverständiger. ' +
+    'Formuliere den vorliegenden Baubegleitungsbericht professionell, strukturiert und rechtssicher um. ' +
+    'Behalte alle Fakten, Daten und Feststellungen exakt bei. ' +
+    'Verwende Fachsprache. Kein Markdown. Klare Absätze. Konjunktiv wo fachlich angebracht.';
+
+  var userPrompt = 'Formuliere diesen Baubegleitungsbericht professionell:
+
+' + rohenText;
+
+  try {
+    var res = await fetch('/.netlify/functions/ki-proxy', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        max_tokens: 1500,
+        messages: [
+          {role: 'system', content: systemPrompt},
+          {role: 'user', content: userPrompt}
+        ]
+      })
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    var data = await res.json();
+    var text = (data.content && data.content[0] && data.content[0].text)
+      ? data.content[0].text : '';
+    if (!text) throw new Error('Keine Antwort');
+
+    textEl.textContent = text;
+    status.style.display = 'none';
+    btn.textContent = '↻ Neu generieren';
+    btn.disabled = false;
+    zeigToast('✅ KI-Bericht bereit — bitte prüfen und ggf. anpassen', 'ok');
+  } catch(e) {
+    status.style.display = 'none';
+    btn.textContent = '✨ KI-Bericht';
+    btn.disabled = false;
+    zeigToast('KI-Fehler: ' + e.message, 'err');
+  }
 }
 
 function berichtKopieren() {

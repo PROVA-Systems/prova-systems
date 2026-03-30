@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Kontakte · PROVA</title>
+<script src="theme.js"></script>
 <script src="nav.js"></script>
 <style>
   /* ═══ PROVA SIDEBAR SYSTEM ══════════════════════════════════════════════ */
@@ -1060,7 +1061,7 @@ function quickImportInApp(id) {
     showToast('Kontakt übertragen ✅');
     setTimeout(function(){ window.close(); }, 600);
   } else {
-    var lastApp = sessionStorage.getItem('prova_last_app') || 'app-starter.html';
+    var lastApp = sessionStorage.getItem('prova_last_app') || 'app.html';
     showToast('Kontakt geladen — weiter zu ' + lastApp.split('.')[0]);
     setTimeout(function(){ window.location.href = lastApp; }, 800);
   }
@@ -1134,7 +1135,7 @@ document.addEventListener('DOMContentLoaded', function(){
   // URL-Parameter: ?modus=quickimport
   var params = new URLSearchParams(window.location.search);
   if (params.get('modus')==='quickimport') {
-    var returnUrl = params.get('return')||'app-starter.html';
+    var returnUrl = params.get('return')||'app.html';
     setTimeout(function(){ window.openQuickImport(returnUrl); }, 200);
   }
 
@@ -1191,7 +1192,7 @@ async function supSend(){var b=document.getElementById('sup-betreff').value.trim
   var pc={'Solo':'#4f8ef7','Team':'#a78bfa','Solo':'#4f8ef7','Pro':'#4f8ef7','Enterprise':'#a78bfa'}[paket]||'#4f8ef7';
   var el=document.getElementById('topbar-paket-badge');
   if(el){el.textContent=paket;el.style.cssText='font-size:10px;font-weight:700;padding:3px 9px;border-radius:10px;letter-spacing:.04em;background:'+pc+'18;color:'+pc+';border:1px solid '+pc+'33;';}
-  var appUrl=paket==='Team'?'app-enterprise.html':paket==='Solo'?'gutachten.html':'app-starter.html';
+  var appUrl=paket==='Team'?'app.html':paket==='Solo'?'gutachten.html':'app.html';
 })();
 </script>
 
@@ -1246,10 +1247,23 @@ async function supSendModal(){
   btn.disabled=true;btn.textContent='⏳ Wird gesendet…';
   try{
     await fetch('https://hook.eu1.make.com/lktuhugwcg5v37ib6bdaxjb1uiplnu8v',{
-      method:'POST',headers:{'Content-Type':'application/json'},
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
-        betreff:b,nachricht:n,
+        betreff:b,
+        nachricht:n,
         sv_email:localStorage.getItem('prova_sv_email')||'',
         paket:localStorage.getItem('prova_paket')||'Solo',
-        sei<script src="auftragstyp.js"></script>
+        seite:window.location.pathname
+      })
+    });
+    document.getElementById('support-form-body').style.display='none';
+    document.getElementById('sup-ok').style.display='block';
+  }catch(e){
+    btn.disabled=false;
+    btn.textContent='Nachricht senden';
+  }
+}
+</script>
+
 <script src="trial-guard.js"></script>

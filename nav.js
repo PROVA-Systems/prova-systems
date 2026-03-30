@@ -279,16 +279,7 @@
       });
     }
 
-    /* Trial-Badge zentriert oben */
-    if (isTrial && trialLabel) {
-      var badge = document.getElementById('prova-trial-badge');
-      if (!badge) {
-        badge = document.createElement('div');
-        badge.id = 'prova-trial-badge';
-        document.body.appendChild(badge);
-      }
-      badge.textContent = trialLabel;
-    }
+    // Trial-Badge wird von trial-guard.js gesetzt
 
     /* Solo-Badge aus Topbar entfernen (steht in Sidebar unten) */
     setTimeout(function() {
