@@ -9,14 +9,14 @@
    - Neu: Gruppierung Arbeit / Werkzeuge / Verwaltung
    - Neu: Einstellungen fixiert im Footer
    - Neu: Mobile Overlay-Support
-   - Neu: Einheitlicher Link zu gutachten.html (statt 3 separate Apps)
+   - Neu: Einheitlicher Link zu app.html (Solo + Team)
    - Neu: Baubegleitung in Nav aufgenommen
    ============================================================ */
 (function () {
   /* ── Aktive Seite erkennen ── */
   var page = window.location.pathname.split('/').pop() || 'dashboard.html';
-  // Auch app-starter/pro/enterprise als gutachten.html matchen
-  if (page === 'app-starter.html' || page === 'app-pro.html' || page === 'app-enterprise.html' || page === 'gutachten.html') {
+  // app-starter/pro/enterprise redirecten via netlify.toml → app.html
+  if (page === 'app.html') {
     page = 'gutachten';
   }
 
@@ -30,8 +30,8 @@
   var paketColors = { Solo: '#4f8ef7', Team: '#a78bfa' };
   var pc = paketColors[paket] || paketColors.Solo;
   
-  // Übergangsphase: noch separate Dateien, später gutachten.html
-  var appUrl = paket === 'Team' ? 'app-enterprise.html' : 'gutachten.html';
+  // Übergangsphase: noch separate Dateien, später app.html
+  var appUrl = 'app.html'; // Solo und Team nutzen beide app.html
 
   /* ── Nav-Items: workflow-orientierte Gruppierung ── */
   var ARBEIT = [
@@ -130,12 +130,14 @@
 
       /* ─── SECTION LABEL ─── */
       + '.sb-section-label{'
-      +   'font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;'
-      +   'color:rgba(255,255,255,0.55) !important;padding:20px 10px 6px;white-space:nowrap;'
-      +   'overflow:hidden;transition:opacity .18s,height .18s,padding .18s;'
-      +   'user-select:none;'
+      +   'font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;'
+      +   'color:rgba(255,255,255,0.55) !important;padding:6px 10px 4px;margin-top:16px;'
+      +   'white-space:nowrap;overflow:visible;'
+      +   'transition:opacity .18s,height .18s,padding .18s;'
+      +   'user-select:none;line-height:1.2;'
       + '}'
-      + '.sidebar.collapsed .sb-section-label{opacity:0;height:0;padding:0;margin:0;}'
+      + '.sb-section-label:first-child{margin-top:4px;}'
+      + '.sidebar.collapsed .sb-section-label{opacity:0;height:0;padding:0;margin:0;overflow:hidden;}'
 
       /* ─── NAV ITEMS — NO LAYOUT SHIFT ─── */
       + '.sb-item{'
@@ -222,10 +224,23 @@
       + '.sidebar.collapsed .sb-collapse-label{opacity:0;width:0;}'
 
       /* ─── MAIN CONTENT OFFSET ─── */
-      + '.main-wrap{margin-left:var(--sb-w);transition:margin-left .22s cubic-bezier(.4,0,.2,1);}'
-      + '.sidebar.collapsed ~ .main-wrap{margin-left:var(--sb-w-col);}'
-      + '.main{margin-left:var(--sb-w);transition:margin-left .22s cubic-bezier(.4,0,.2,1);}'
-      + '.sidebar.collapsed ~ .main{margin-left:var(--sb-w-col);}'
+      /* !important nötig: nav.js-Style wird in <head> VOR dem HTML-<style>-Block injiziert.
+         Spätere Regeln gewinnen im Cascade — !important schützt die kritischen margin-left Werte
+         vor Überschreibung durch seitenspezifisches CSS. Padding/flex etc. bleiben davon unberührt. */
+      + '.main-wrap{margin-left:var(--sb-w)!important;transition:margin-left .22s cubic-bezier(.4,0,.2,1);max-width:100%;box-sizing:border-box;}'
+      + '.sidebar.collapsed ~ .main-wrap{margin-left:var(--sb-w-col)!important;}'
+      + '.sidebar ~ .main{margin-left:var(--sb-w)!important;transition:margin-left .22s cubic-bezier(.4,0,.2,1);}'
+      + '.sidebar.collapsed ~ .main{margin-left:var(--sb-w-col)!important;}'
+
+      /* ─── TABLET / HALBER LAPTOP: Auto-Collapse bei ≤1100px ─── */
+      + '@media(max-width:1100px) and (min-width:769px){'
+      +   '.sidebar{width:var(--sb-w-col);min-width:var(--sb-w-col);}'
+      +   '.sb-label,.sb-logo-text,.sb-section-label,.paket-name,.btn-label,.sb-collapse-label{opacity:0!important;width:0!important;overflow:hidden;}'
+      +   '.sb-item{justify-content:center;padding:0;}'
+      +   '.sb-new-btn{justify-content:center;padding:10px;margin:12px 8px 6px;}'
+      +   '.main-wrap{margin-left:var(--sb-w-col)!important;}'
+      +   '.sidebar ~ .main{margin-left:var(--sb-w-col)!important;}'
+      + '}'
 
       /* ─── MOBILE ─── */
       + '.sb-overlay{'
@@ -239,10 +254,10 @@
       +   '.sidebar.mobile-open{transform:translateX(0);width:var(--sb-w);min-width:var(--sb-w);}'
       +   '.sidebar.mobile-open .sb-label,.sidebar.mobile-open .sb-logo-text,'
       +   '.sidebar.mobile-open .sb-section-label,.sidebar.mobile-open .paket-name,'
-      +   '.sidebar.mobile-open .btn-label,.sidebar.mobile-open .sb-collapse-label{opacity:1;width:auto;}'
+      +   '.sidebar.mobile-open .btn-label,.sidebar.mobile-open .sb-collapse-label{opacity:1!important;width:auto!important;}'
       +   '.sidebar.mobile-open .sb-new-btn{justify-content:flex-start;padding:10px 14px;}'
       +   '.sidebar.mobile-open .sb-item{justify-content:flex-start;padding:0 10px;}'
-      +   '.main-wrap,.main{margin-left:0!important;}'
+      +   '.main-wrap,.sidebar ~ .main{margin-left:0!important;}'
       + '}'
     ;
     document.head.appendChild(style);

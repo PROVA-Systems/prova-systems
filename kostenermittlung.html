@@ -80,7 +80,7 @@
 
 /* TOOLBAR */
 .toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:18px;}
-.search-box{flex:1;min-width:200px;position:relative;}
+.search-box{flex:1;min-width:160px;position:relative;}
 .search-box input{width:100%;background:var(--surface);border:1px solid var(--border2);border-radius:9px;padding:9px 12px 9px 36px;color:var(--text);font-family:var(--font-ui);font-size:14px;outline:none;transition:border-color .15s;}
 .search-box input:focus{border-color:var(--accent);}
 .search-box input::placeholder{color:var(--text3);}
@@ -90,8 +90,8 @@
 .filter-select option{background:var(--bg2);}
 
 /* TABS */
-.tabs-nav{display:flex;gap:2px;margin-bottom:20px;border-bottom:1px solid var(--border);padding-bottom:0;}
-.tab-btn{padding:9px 18px;font-size:13px;font-weight:600;color:var(--text3);cursor:pointer;border:none;background:none;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s;font-family:var(--font-ui);border-radius:6px 6px 0 0;}
+.tabs-nav{display:flex;gap:2px;margin-bottom:20px;border-bottom:1px solid var(--border);padding-bottom:0;overflow-x:auto;-webkit-overflow-scrolling:touch;}
+.tab-btn{padding:9px 18px;font-size:13px;font-weight:600;color:var(--text3);cursor:pointer;border:none;background:none;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s;font-family:var(--font-ui);border-radius:6px 6px 0 0;white-space:nowrap;}
 .tab-btn:hover{color:var(--text2);}
 .tab-btn.active{color:var(--accent);border-bottom-color:var(--accent);}
 .tab-pane{display:none;}
@@ -122,11 +122,11 @@
 .quick-add-bar input{flex:1;background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:9px 14px;color:var(--text);font-family:var(--font-ui);font-size:13px;outline:none;}
 .quick-add-bar input:focus{border-color:var(--accent);}
 
-/* POSITIONEN TABLE */
+/* POSITIONEN TABLE — 7 Spalten Desktop */
 .pos-table-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:22px;}
-.pos-table-header{display:grid;grid-template-columns:1fr 90px 90px 90px 90px 100px 44px;gap:0;background:var(--surface2);border-bottom:1px solid var(--border2);padding:10px 16px;font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;}
+.pos-table-header{display:grid;grid-template-columns:1fr 80px 88px 80px 70px 88px 40px;gap:0;background:var(--surface2);border-bottom:1px solid var(--border2);padding:10px 16px;font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;}
 .pos-table-body{display:flex;flex-direction:column;}
-.pos-row{display:grid;grid-template-columns:1fr 90px 90px 90px 90px 100px 44px;gap:0;align-items:center;padding:10px 16px;border-bottom:1px solid var(--border);transition:background .1s;cursor:pointer;}
+.pos-row{display:grid;grid-template-columns:1fr 80px 88px 80px 70px 88px 40px;gap:0;align-items:center;padding:10px 16px;border-bottom:1px solid var(--border);transition:background .1s;cursor:pointer;}
 .pos-row:last-child{border-bottom:none;}
 .pos-row:hover{background:rgba(255,255,255,.03);}
 .pos-row.added{background:rgba(16,185,129,.06);border-left:2px solid var(--green);}
@@ -146,10 +146,9 @@
 .pos-add-btn.active{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border);}
 .no-results{padding:36px;text-align:center;color:var(--text3);font-size:14px;}
 
-/* AUSWAHL — rechte sticky Spalte / mobil unten */
-.layout{display:grid;grid-template-columns:1fr 280px;gap:22px;align-items:start;}
-@media(max-width:720px){.layout{grid-template-columns:1fr;}.auswahl-card{position:static!important;}}
-.auswahl-card{position:sticky;top:calc(var(--nav-h) + 16px);background:var(--bg2);border:1px solid var(--border2);border-radius:14px;padding:18px;}
+/* 2-SPALTEN LAYOUT */
+.layout{display:grid;grid-template-columns:1fr 268px;gap:20px;align-items:start;}
+.auswahl-card{position:sticky;top:calc(52px + 16px);background:var(--bg2);border:1px solid var(--border2);border-radius:14px;padding:18px;}
 .auswahl-title{font-size:14px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
 .auswahl-leer{font-size:13px;color:var(--text3);font-style:italic;text-align:center;padding:20px 0;}
 .auswahl-item{display:flex;flex-direction:column;gap:2px;padding:8px 0;border-bottom:1px solid var(--border);}
@@ -190,6 +189,35 @@
 .pg-btn{background:var(--surface);border:1px solid var(--border2);color:var(--text2);border-radius:7px;padding:5px 12px;font-family:var(--font-ui);font-size:12px;cursor:pointer;}
 .pg-btn:hover{border-color:var(--accent);color:var(--accent);}
 .pg-btn:disabled{opacity:.4;cursor:not-allowed;}
+
+/* ── RESPONSIVE: Halber Laptop (≤1000px) ── */
+@media(max-width:1000px){
+  .layout{grid-template-columns:1fr;}
+  .auswahl-card{position:static;}
+  /* Min+Max ausblenden, nur Median zeigen */
+  .pos-table-header{grid-template-columns:1fr 80px 70px 80px 40px;}
+  .pos-row{grid-template-columns:1fr 80px 70px 80px 40px;}
+  .pos-table-header > div:nth-child(2),
+  .pos-table-header > div:nth-child(4),
+  .pos-row > div:nth-child(2),
+  .pos-row > div:nth-child(4){display:none;}
+}
+
+/* ── RESPONSIVE: Tablet/Mobil (≤600px) ── */
+@media(max-width:600px){
+  .main{padding:12px 12px 72px;}
+  .header-title{font-size:16px;}
+  .pos-table-header{grid-template-columns:1fr 80px 40px;padding:8px 10px;}
+  .pos-row{grid-template-columns:1fr 80px 40px;padding:8px 10px;}
+  .pos-table-header > div:nth-child(2),
+  .pos-table-header > div:nth-child(4),
+  .pos-table-header > div:nth-child(5),
+  .pos-row > div:nth-child(2),
+  .pos-row > div:nth-child(4),
+  .pos-row > div:nth-child(5){display:none;}
+  .tab-btn{padding:7px 10px;font-size:12px;}
+  .header-card{padding:14px 16px;}
+}
 
   /* ── SUPPORT FAB ── */
   .support-fab{position:fixed;bottom:20px;right:20px;width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,var(--accent,#4f8ef7),#3a7be0);border:none;color:#fff;font-size:20px;cursor:pointer;box-shadow:0 4px 16px rgba(79,142,247,.4);z-index:300;transition:all .2s;display:flex;align-items:center;justify-content:center;}
@@ -1048,7 +1076,7 @@ Möchten Sie diese Menge für ausgewählte Positionen übernehmen?
     localStorage.setItem('prova_aufmass_cache', JSON.stringify(aufmassCache));
   } catch(e) {}
 
-  showToast('Aufmaß "' + raum.name + '" gespeichert: ' + gesamt.toFixed(2).replace('.',',') + ' ' + (t?t.einheit:''), 'ok');
+  toast('Aufmaß "' + raum.name + '" gespeichert: ' + gesamt.toFixed(2).replace('.',',') + ' ' + (t?t.einheit:''), 'ok');
 
   // Wechsle zu Positionen-Tab mit Hinweis
   switchTab('positionen', document.querySelector('.tab-btn'));
@@ -1062,7 +1090,7 @@ function escHtmlAufmass(s) { return String(s||'').replace(/&/g,'&amp;').replace(
 // ZUSAMMENFASSUNG-TAB
 // ============================================================
 function renderZusammenfassung() {
-  var ausgewählt = window._ausgewaehlt || ausgewaehlt || {};
+  var ausgewählt = auswahl || {};
   var keys = Object.keys(ausgewählt);
 
   // KPI-Grid
@@ -1124,9 +1152,9 @@ function renderZusammenfassung() {
 }
 
 function zsf_exportCSV() {
-  var ausgewählt = window._ausgewaehlt || ausgewaehlt || {};
+  var ausgewählt = auswahl || {};
   var keys = Object.keys(ausgewählt);
-  if (!keys.length) { showToast('Keine Positionen ausgewählt', ''); return; }
+  if (!keys.length) { toast('Keine Positionen ausgewählt', ''); return; }
 
   var header = 'Positions-Nr;Bezeichnung;Einheit;Menge;Min €;Median €;Max €;GP Min;GP Median;GP Max;Norm';
   var rows = keys.map(function(id) {
@@ -1144,7 +1172,7 @@ function zsf_exportCSV() {
   var a = document.createElement('a'); a.href=url; a.download='PROVA_Kostenermittlung_'+az+'.csv';
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
   URL.revokeObjectURL(url);
-  showToast('CSV exportiert ✅', 'ok');
+  toast('CSV exportiert ✅', 'ok');
 }
 </script>
 
@@ -1441,9 +1469,9 @@ function baueBanner(kontext, aktuellerSchritt, istWerkzeug) {
         + 'background:' + naechster.farbe + '22;border:1px solid ' + naechster.farbe + '44;'
         + 'border-radius:999px;font-size:11px;font-weight:700;color:' + naechster.farbe + ';'
         + 'text-decoration:none;white-space:nowrap;transition:all .15s;'
-        + '" onmouseover="this.style.background='' + naechster.farbe + '33'"'
-        + ' onmouseout="this.style.background='' + naechster.farbe + '22'">'
-        + naechster.icon + ' ' + naechster.name + ' →'
+        + '" onmouseover="this.style.background=\'' + naechster.farbe + '33\'"'
+        + ' onmouseout="this.style.background=\'' + naechster.farbe + '22\'">'
+        + naechster.icon + ' ' + naechster.name + ' \u2192'
         + '</a>';
     }
   }

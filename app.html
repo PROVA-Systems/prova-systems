@@ -445,12 +445,14 @@ tr:hover td{background:var(--gray-50);}
 
 /* RESPONSIVE */
 @media(max-width:960px){
-  .main-content{margin-left:0;}
   .form-row{grid-template-columns:1fr;}
 }
 @media(max-width:640px){
   .main-content{padding:1rem;}
   .steps{overflow-x:auto;padding-bottom:.5rem;}
+}
+@media(max-width:600px){
+  .main-content{padding:.75rem .75rem 4.5rem;}
 }
 </style>
 </head>
@@ -468,11 +470,13 @@ tr:hover td{background:var(--gray-50);}
   // Welche Seite bin ich? Ermittle aus Dateiname
   var page = window.location.pathname.split('/').pop() || '';
   
-  // Zugangs-Mapping
+  // Zugangs-Mapping — Solo und Team dürfen alle App-Seiten
+  // app-pro und app-enterprise redirecten sowieso zu app.html
   var SEITEN_PAKET = {
+    'app.html':      ['Solo', 'Team'],
     'app-starter.html':    ['Solo', 'Team'],
     'app-pro.html':        ['Solo', 'Team'],
-    'app-enterprise.html': ['Team']
+    'app-enterprise.html': ['Solo', 'Team']
   };
   
   var erlaubt = SEITEN_PAKET[page];
@@ -492,49 +496,31 @@ tr:hover td{background:var(--gray-50);}
   }
 
   var email = user.email || localStorage.getItem('prova_sv_email') || '';
-  var paket = localStorage.getItem('prova_paket') || 'Solo';
+  // Paket normalisieren: alte Werte → Solo/Team
+  var rawPaket = localStorage.getItem('prova_paket') || 'Solo';
+  var paketMap = { Starter: 'Solo', Pro: 'Solo', Enterprise: 'Team' };
+  var paket = paketMap[rawPaket] || rawPaket;
+  if (paketMap[rawPaket]) localStorage.setItem('prova_paket', paket);
 
   // ADMIN-BYPASS: Admin darf überall rein
   var isAdmin = localStorage.getItem('prova_is_admin') === 'true' 
              || email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
   
   if (isAdmin) {
-    // Admin-Modus: Paket auf Enterprise hochsetzen für vollen Zugang
     if (!localStorage.getItem('prova_paket')) {
       localStorage.setItem('prova_paket', 'Team');
     }
-    // Admin-Badge einblenden (nach DOM-Load)
     document.addEventListener('DOMContentLoaded', function() {
       var badge = document.createElement('div');
       badge.style.cssText = 'position:fixed;bottom:1rem;right:1rem;z-index:9999;padding:.35rem .75rem;border-radius:999px;background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.3);font-size:.7rem;font-weight:700;color:#f87171;pointer-events:none;';
       badge.textContent = '🔑 Admin-Modus';
       document.body.appendChild(badge);
     });
-    return; // Admin kommt immer rein
+    return;
   }
 
-  // Paket-Check: darf dieser Nutzer diese Seite sehen?
-  if (!erlaubt.includes(paket)) {
-    // Falsche Seite — richtigen redirect
-    var ziel = paket === 'Solo' ? 'app-pro.html' 
-              : paket === 'Team' ? 'app-enterprise.html' 
-              : 'app-starter.html';
-    
-    if (page !== ziel) {
-      // Zeige kurzen Hinweis bevor Redirect
-      document.addEventListener('DOMContentLoaded', function() {
-        document.body.style.display = 'none';
-      });
-      
-      var msg = paket === 'Solo' && page !== 'app-starter.html'
-        ? 'Diese Funktion ist nur im ' + 'Team-Paket verfügbar.'
-        : 'Weiterleitung zu Ihrer App…';
-      
-      sessionStorage.setItem('prova_gate_msg', msg);
-      window.location.replace(ziel + '?from=gate');
-      return;
-    }
-  }
+  // Solo und Team haben beide vollen Zugang — kein Feature-Gate nötig
+  // Nur Login-Status prüfen (bereits oben erledigt)
 
   // Hintergrund-Verifikation gegen Airtable (nicht-blockierend)
   // Wenn localStorage manipuliert wurde → korrigieren
@@ -558,6 +544,10 @@ tr:hover td{background:var(--gray-50);}
       var echtesPaket = (f.Paket && f.Paket.name) ? f.Paket.name : (f.Paket || 'Solo');
       var status = (f.Status && f.Status.name) ? f.Status.name : (f.Status || '');
       
+      // Paket normalisieren (alte Werte → Solo/Team)
+      var paketNorm = { Starter: 'Solo', Pro: 'Solo', Enterprise: 'Team' };
+      if (paketNorm[echtesPaket]) echtesPaket = paketNorm[echtesPaket];
+      
       // Status check: gesperrte Accounts
       if (status === 'Gesperrt' || status === 'Gekuendigt') {
         localStorage.clear();
@@ -568,15 +558,7 @@ tr:hover td{background:var(--gray-50);}
       // Paket korrekt setzen
       if (echtesPaket && echtesPaket !== paket) {
         localStorage.setItem('prova_paket', echtesPaket);
-        
-        // Falls jetzt falscher Bereich → redirect
-        var neuErlaubt = SEITEN_PAKET[page] || [];
-        if (!neuErlaubt.includes(echtesPaket)) {
-          var neuZiel = echtesPaket === 'Solo' ? 'app-starter.html' 
-                       : echtesPaket === 'Team' ? 'app-enterprise.html' 
-                       : 'app-starter.html';
-          window.location.replace(neuZiel);
-        }
+        // Solo und Team bleiben beide auf app.html → kein Redirect nötig
       }
     })
     .catch(function() {}); // Fehler ignorieren — nicht blockieren
@@ -1275,9 +1257,9 @@ const AIRTABLE_SV_TABLE = 'tbladqEQT3tmx4DIB';
 // Gutachten-Output-Templates (formulare/) — Auswahl in Schritt 3, S3/PDFMonkey
 const GUTACHTEN_VORLAGEN = [
   { id: 'standard',        label: 'Standard-Gutachten',   file: 'vorlage-01-standard.html' },
-  { id: 'kurzgutachten',   label: 'Kurzgutachten',        file: 'vorlage-02-kurzgutachten.html' },
+  { id: 'kurzgutachten',   label: 'Kurzgutachten',        file: 'vorlage-02-kurzapp.html' },
   { id: 'beweissicherung', label: 'Beweissicherung',      file: 'vorlage-03-beweissicherung.html' },
-  { id: 'gericht',         label: 'Gerichtsgutachten',    file: 'vorlage-04-gerichtsgutachten.html', enterpriseOnly: true },
+  { id: 'gericht',         label: 'Gerichtsgutachten',    file: 'vorlage-04-gerichtsapp.html', enterpriseOnly: true },
   { id: 'brand',           label: 'Brandschaden',         file: 'vorlage-05-brandschaden.html' },
   { id: 'feuchte',         label: 'Feuchte/Schimmel',    file: 'vorlage-06-feuchteschimmel.html' },
   { id: 'elementar',       label: 'Elementarschaden',    file: 'vorlage-07-elementarschaden.html' },
@@ -1452,7 +1434,7 @@ window.showPage = function(name) {
    BRIEFVORLAGEN (S9) — Starter+
 ============================================================ */
 const BRIEF_TEMPLATES = [
-  { id: 'A-01', name: 'Angebot Gutachten', file: 'angebot-gutachten.html', send: true },
+  { id: 'A-01', name: 'Angebot Gutachten', file: 'angebot-app.html', send: true },
   { id: 'A-03', name: 'Auftragsbestätigung', file: 'auftragsbestaetigung.html', send: true },
   { id: 'B-01', name: 'Einladung Ortstermin', file: 'einladung-ortstermin.html', send: true },
   { id: 'D-01', name: 'Erstbericht Versicherung', file: 'erstbericht-versicherung.html', send: true },
@@ -3824,7 +3806,7 @@ var WORKFLOW = [
   {
     schritt: 1,
     name: 'Fall anlegen',
-    seite: 'app-starter.html',
+    seite: 'app.html',
     icon: '📋',
     farbe: '#4f8ef7'
   },

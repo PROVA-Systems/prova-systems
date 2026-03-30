@@ -83,6 +83,8 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14
 .badge{display:inline-block;font-size:10px;font-weight:600;padding:2px 8px;
   border-radius:10px;letter-spacing:.05em;white-space:nowrap;}
 .badge-starter{background:rgba(79,142,247,0.12);border:1px solid rgba(79,142,247,0.25);color:var(--accent);}
+.badge-solo{background:rgba(79,142,247,0.12);border:1px solid rgba(79,142,247,0.25);color:var(--accent);}
+.badge-team{background:var(--purple-bg);border:1px solid var(--purple-border);color:var(--purple);}
 .badge-pro{background:var(--warn-bg);border:1px solid var(--warn-border);color:var(--warn);}
 .badge-enterprise{background:var(--purple-bg);border:1px solid var(--purple-border);color:var(--purple);}
 .badge-aktiv{background:var(--green-bg);border:1px solid var(--green-border);color:var(--green);}
@@ -412,7 +414,7 @@ function showTab(id, btn) {
 
 /* ── HELPERS ── */
 function paketBadge(p) {
-  const m = {Starter:'starter',Pro:'pro',Enterprise:'enterprise'};
+  const m = {Solo:'solo',Team:'team',Starter:'solo',Pro:'solo',Enterprise:'team'};
   return `<span class="badge badge-${m[p]||'solo'}">${p||'Solo'}</span>`;
 }
 function statusBadge(s) {
@@ -443,7 +445,7 @@ async function loadKPIs() {
     const kunden = await at(ADMIN_BASE, T.KUNDEN, 'fields[]=Paket&fields[]=Status&fields[]=Email&fields[]=Vorname&fields[]=Nachname&fields[]=Name');
     const aktiv = kunden.records.filter(r => r.fields.Status !== 'Gekündigt');
     const mrr = aktiv.reduce((s, r) => {
-      const p = {Starter:179,Pro:369,Enterprise:699};
+      const p = {Solo:149,Team:349,Starter:149,Pro:149,Enterprise:349};
       return s + (Number(r.fields.MRR_EUR) || p[r.fields.Paket] || 179);
     }, 0);
     document.getElementById('kpiMrr').textContent = fmtEur(mrr);
@@ -485,11 +487,11 @@ async function loadPaketVerteilung() {
   try {
     const kunden = await at(ADMIN_BASE, T.KUNDEN, 'fields[]=Paket&fields[]=Status');
     const aktiv = kunden.records.filter(r => r.fields.Status !== 'Gekündigt');
-    const counts = {Starter:0, Pro:0, Enterprise:0};
+    const counts = {Solo:0,Team:0,Starter:0,Pro:0,Enterprise:0};
     aktiv.forEach(r => { const p = r.fields.Paket || 'Starter'; if (counts[p] !== undefined) counts[p]++; });
     const total = aktiv.length || 1;
     const colors = {Starter:'var(--accent)',Pro:'var(--warn)',Enterprise:'var(--purple)'};
-    const mrrs = {Starter:179,Pro:369,Enterprise:699};
+    const mrrs = {Solo:149,Team:349,Starter:149,Pro:149,Enterprise:349};
     let html = '<div class="paket-bars">';
     for (const [p, c] of Object.entries(counts)) {
       const pct = Math.round(c/total*100);
@@ -500,7 +502,7 @@ async function loadPaketVerteilung() {
       </div>`;
     }
     html += `</div><div style="margin-top:12px;font-size:11px;color:var(--text3);font-family:var(--mono);">
-      MRR-Mix: Starter ${fmtEur(counts.Starter*179)} · Pro ${fmtEur(counts.Pro*369)} · Enterprise ${fmtEur(counts.Enterprise*699)}
+      MRR-Mix: Solo ${fmtEur(counts.Solo*149)} · Team ${fmtEur(counts.Team*349)}
     </div>`;
     document.getElementById('paketVerteilung').innerHTML = html;
   } catch(e) { document.getElementById('paketVerteilung').innerHTML = '<div class="empty">Fehler beim Laden</div>'; }
@@ -515,7 +517,7 @@ async function loadNeuesteKunden() {
       const f = r.fields;
       const name = [f.Vorname, f.Nachname].filter(x => x && x.trim()).join(' ') || f.Email || '–';
       if (!name || name === '–') return; // undefined undefined überspringen
-      const mrr = f.MRR_EUR || {Starter:179,Pro:369,Enterprise:699}[f.Paket] || 179;
+      const mrr = f.MRR_EUR || {Solo:149,Team:349,Starter:149,Pro:149,Enterprise:349}[f.Paket] || 149;
       html += `<tr><td><strong>${name}</strong></td>
         <td>${paketBadge(f.Paket)}</td>
         <td>${statusBadge(f.Status||'Aktiv')}</td>
@@ -562,7 +564,7 @@ function renderKunden(records) {
   records.forEach(r => {
     const f = r.fields;
     const name = f.Name || [f.Vorname, f.Nachname].filter(Boolean).join(' ') || '–';
-    const mrr = f.MRR_EUR || {Starter:179,Pro:369,Enterprise:699}[f.Paket] || 179;
+    const mrr = f.MRR_EUR || {Solo:149,Team:349,Starter:149,Pro:149,Enterprise:349}[f.Paket] || 149;
     html += `<tr><td><strong>${name}</strong></td>
       <td>${paketBadge(f.Paket)}</td>
       <td>${statusBadge(f.Status)}</td>
