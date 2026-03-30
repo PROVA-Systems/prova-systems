@@ -11,6 +11,7 @@
   <link rel="apple-touch-icon" href="/icons/icon-192.png">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>PROVA — Gutachten</title>
+<script src="theme.js"></script>
 <script src="nav.js"></script>
 <script src="slide-panel.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1827,56 +1828,74 @@ async function verarbeiteFotos(files) {
   showToast(`${files.length} Foto${files.length>1?'s':''} optimiert — ${Math.round(gespart/1024)} KB gespart.`, 'success');
 }
 
-/* AUTO-CAPTION: Foto-Beschriftung per KI (Starter) */
+/* AUTO-CAPTION: Foto-Beschriftung via GPT-4o Vision (Magic Moment)
+   Nutzt foto-captioning.js Function für strukturierte Metadaten              */
 async function autoCaption(idx) {
   var foto = fotos[idx];
   if (!foto || !foto.dataUrl) return;
 
   var b64  = foto.dataUrl.replace(/^data:image\/[a-z]+;base64,/, '');
   var mime = (foto.dataUrl.match(/^data:(image\/[a-z]+);base64,/) || [])[1] || 'image/jpeg';
-  var schaden = (document.getElementById('f-schadenart') || {}).value || '';
-  var context = schaden ? ' Schadensart: ' + schaden + '.' : '';
-
-  var prompt = 'Beschrifte dieses Foto aus einem Bausachverständigen-Gutachten.' +
-    context + ' Gib NUR eine kurze Beschriftung zurück (max. 15 Wörter):' +
-    ' Raum + Lage + was sichtbar ist + ggf. Maß. Beispiel:' +
-    ' "Badezimmer OG, Nordwand, Schimmel ca. 0,5 m², Fugenbereich".' +
-    ' Keine Einleitung, kein Punkt, keine Anführungszeichen. Fachsprache.';
+  var az   = document.getElementById('f-schadensnummer')?.value
+             || localStorage.getItem('prova_letztes_az') || '';
+  var schadenart = (document.getElementById('f-schadenart') || {}).value || '';
 
   try {
-    var res = await fetch('/.netlify/functions/ki-proxy', {
+    var res = await fetch('/.netlify/functions/foto-captioning', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        max_tokens: 80,
-        messages: [{ role: 'user', content: [
-          { type: 'image', source: { type: 'base64', media_type: mime, data: b64 } },
-          { type: 'text',  text: prompt }
-        ]}]
+        imageBase64: b64,
+        mediaType: mime,
+        aktenzeichen: az,
+        schadensart: schadenart
       })
     });
 
     if (!res.ok) throw new Error('HTTP ' + res.status);
     var data = await res.json();
-    var text = (data.content && data.content[0] && data.content[0].text)
-      ? data.content[0].text.trim().replace(/^["']|["']$/g, '') : '';
 
-    if (text && fotos[idx] && (!fotos[idx].caption || fotos[idx].captionLoading)) {
-      fotos[idx].caption = text;
+    if (data.success && data.metadata && fotos[idx]) {
+      var meta = data.metadata;
+      var caption = meta.beschriftung || '';
+
+      // Caption ins Foto-Objekt + Input-Feld
+      fotos[idx].caption = caption;
       fotos[idx].captionLoading = false;
+      fotos[idx].metadata = meta; // Volle Metadaten speichern
+
       var inp = document.getElementById('foto-cap-' + idx);
       if (inp) {
-        inp.value = text;
+        inp.value = caption;
         inp.placeholder = 'Beschriftung…';
-        inp.style.background = 'rgba(34,197,94,0.1)';
-        setTimeout(function() { if(inp) inp.style.background = 'transparent'; }, 2000);
+        // Grünes Aufleuchten = Magic Moment
+        inp.style.background = 'rgba(34,197,94,0.12)';
+        inp.style.borderRadius = '4px';
+        setTimeout(function() {
+          if(inp) { inp.style.background = 'transparent'; }
+        }, 2500);
       }
+
+      // Badge mit Schadensart + Schweregrad unter dem Foto anzeigen
+      var badgeEl = document.getElementById('foto-badge-' + idx);
+      if (badgeEl && meta.schadensart) {
+        var farbe = {gering:'#22c55e',mittel:'#f59e0b',schwer:'#ef4444',kritisch:'#dc2626'}[meta.schweregrad] || '#6b7280';
+        badgeEl.innerHTML = '<span style="background:'+farbe+'22;color:'+farbe+';border:1px solid '+farbe+'44;border-radius:4px;font-size:9px;font-weight:700;padding:1px 5px;">'
+          + meta.schadensart + (meta.schweregrad ? ' · ' + meta.schweregrad : '') + '</span>';
+      }
+
+      // Alle Foto-Metadaten in localStorage persistieren (für Bildarchiv später)
+      try {
+        var stored = JSON.parse(localStorage.getItem('prova_foto_metadata_' + az) || '[]');
+        stored.push({ idx: idx, az: az, datum: new Date().toISOString(), ...meta });
+        localStorage.setItem('prova_foto_metadata_' + az, JSON.stringify(stored.slice(-50)));
+      } catch(e) {}
     }
   } catch(e) {
     if (fotos[idx]) fotos[idx].captionLoading = false;
     var inp = document.getElementById('foto-cap-' + idx);
     if (inp) { inp.placeholder = 'Beschriftung…'; inp.style.background = 'transparent'; }
+    console.warn('[PROVA] Foto-Captioning Fehler:', e.message);
   }
 }
 
@@ -1897,10 +1916,11 @@ function renderFotoGrid() {
       <button onclick="entferneFoto(${i})" style="position:absolute;top:3px;right:3px;width:18px;height:18px;border-radius:50%;background:rgba(0,0,0,.6);color:white;border:none;cursor:pointer;font-size:.65rem;display:flex;align-items:center;justify-content:center">×</button>
       <div style="padding:.25rem .375rem">
         <input type="text" id="foto-cap-${i}"
-          placeholder="${f.captionLoading ? '⟳ KI…' : 'Beschriftung…'}"
+          placeholder="${f.captionLoading ? '⟳ KI analysiert…' : 'Beschriftung…'}"
           value="${f.caption}"
           style="width:100%;font-size:.65rem;border:none;background:${f.captionLoading ? 'rgba(74,144,217,0.08)' : 'transparent'};color:var(--gray-700);outline:none;font-family:inherit;border-radius:3px;padding:1px 2px;transition:background .3s"
           oninput="fotos[${i}].caption=this.value">
+        <div id="foto-badge-${i}" style="margin-top:2px;min-height:14px;"></div>
         <div style="font-size:.6rem;color:var(--gray-400)">${Math.round(f.compSize/1024)} KB ${f.origSize>f.compSize?`(-${Math.round((1-f.compSize/f.origSize)*100)}%)`:''}
         </div>
       </div>
@@ -2547,7 +2567,7 @@ async function sendeWebhook() {
       }
       
       // Schadenart und AZ für Banner speichern
-      if (_az) localStorage.setItem('prova_letztes_az', _az);
+      if (_az) { localStorage.setItem('prova_letztes_az', _az); localStorage.setItem('prova_aktiver_fall', _az); }
       if (_sa) localStorage.setItem('prova_schadenart', _sa);
       if (_adr) localStorage.setItem('prova_adresse', _adr);
       
@@ -3939,7 +3959,7 @@ function baueBanner(kontext, aktuellerSchritt, istWerkzeug) {
   
   // Akte-Link bauen
   var akteLink = recordId
-    ? 'akte.html?id=' + recordId
+    ? (localStorage.setItem('prova_erster_fall_erstellt','1'), 'akte.html?id=' + recordId)
     : az
       ? 'akte.html?az=' + encodeURIComponent(az)
       : 'archiv.html';
@@ -4111,7 +4131,7 @@ if (document.readyState === 'loading') {
 window.PROVA_KONTEXT = {
   // Erlaubt anderen Scripts den Fall-Kontext zu setzen
   setFall: function(az, schadenart, adresse, recordId) {
-    if (az) localStorage.setItem('prova_letztes_az', az);
+    if (az) { localStorage.setItem('prova_letztes_az', az); localStorage.setItem('prova_aktiver_fall', az); }
     if (schadenart) localStorage.setItem('prova_schadenart', schadenart);
     if (adresse) localStorage.setItem('prova_adresse', adresse);
     if (recordId) sessionStorage.setItem('prova_record_id', recordId);

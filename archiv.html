@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Fälle · PROVA</title>
+<script src="theme.js"></script>
 <script src="nav.js"></script>
 <style>
 /* ═══ PROVA SIDEBAR SYSTEM ═══════════════════════════════════════════════ */
@@ -333,7 +334,7 @@ var paket=localStorage.getItem('prova_paket')||'Solo';
 var pc={'Solo':'#4f8ef7','Team':'#a78bfa','Solo':'#4f8ef7','Pro':'#4f8ef7','Enterprise':'#a78bfa'}[paket]||'#4f8ef7';
 var el=document.getElementById('topbar-paket-badge');
 if(el){el.textContent=paket;el.style.cssText='font-size:10px;font-weight:700;padding:3px 9px;border-radius:10px;letter-spacing:.04em;background:'+pc+'18;color:'+pc+';border:1px solid '+pc+'33;';}
-var appUrl=paket==='Team'?'app-enterprise.html':paket==='Solo'?'app-pro.html':'app-starter.html';
+var appUrl=paket==='Team'?'app.html':paket==='Solo'?'app-pro.html':'app.html';
 
 /* ── AUTH ── */
 if(!localStorage.getItem('prova_user')){window.location.href='app-login.html';return;}
@@ -383,7 +384,13 @@ async function ladeFaelle(){
     if(!res.ok)throw new Error('HTTP '+res.status);
     var data=await res.json();
     alleRecords=data.records||[];
-    try{if(alleRecords.length>0)localStorage.setItem(cacheKey,JSON.stringify({time:Date.now(),data:alleRecords}));}catch(e){}
+    try{
+      if(alleRecords.length>0) {
+        localStorage.setItem(cacheKey,JSON.stringify({time:Date.now(),data:alleRecords}));
+        // Globaler Fälle-Cache für KI-Drawer in Briefvorlagen
+        localStorage.setItem('prova_faelle_cache', JSON.stringify(alleRecords.slice(0,20)));
+      }
+    }catch(e){}
   }catch(e){
     console.warn('Airtable Fehler:',e);
     // Fallback localStorage

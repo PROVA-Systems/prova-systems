@@ -191,7 +191,7 @@ a{text-decoration:none;color:inherit;}button,input,select,textarea{font-family:i
       <div class="breadcrumb"><span>PROVA</span><span style="color:var(--text3)">›</span><strong>Rechnungen</strong></div>
     </div>
     <div class="topbar-right">
-      <span class="topbar-paket" id="topbar-paket-badge"></span>
+      <span class="topbar-paket" id="topbar-paket-badge" style="display:none;"></span>
       <a href="einstellungen.html"><button class="topbar-btn">⚙</button></a>
     </div>
   </header>
@@ -418,11 +418,11 @@ var AT_FAELLE='tblSxV8bsXwd1pwa0';
 
 /* ─── SIDEBAR ─── */
 var paket=localStorage.getItem('prova_paket')||'Solo';
-var pc={'Solo':'#4f8ef7','Team':'#a78bfa','Solo':'#4f8ef7','Pro':'#4f8ef7','Enterprise':'#a78bfa'}[paket]||'#4f8ef7';
+var pc={'Solo':'#4f8ef7','Team':'#a78bfa'}[paket]||'#4f8ef7';
 (function(){
   var el=document.getElementById('topbar-paket-badge');
-  if(el){el.textContent=paket;el.style.cssText='font-size:10px;font-weight:700;padding:3px 9px;border-radius:10px;letter-spacing:.04em;background:'+pc+'18;color:'+pc+';border:1px solid '+pc+'33;';}
-  var appUrl=paket==='Team'?'app-enterprise.html':paket==='Solo'?'app-pro.html':'app-starter.html';
+  if(el){el.style.display='none';} // Paket steht in Sidebar unten
+  var appUrl='app.html';
 })();
 if(!localStorage.getItem('prova_user')){window.location.href='app-login.html';return;}
 
@@ -1043,28 +1043,24 @@ async function supSendModal(){
   btn.disabled=true;btn.textContent='⏳ Wird gesendet…';
   try{
     await fetch('https://hook.eu1.make.com/lktuhugwcg5v37ib6bdaxjb1uiplnu8v',{
-      method:'POST',headers:{'Content-Type':'application/json'},
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
-        betreff:b,nachricht:n,
+        betreff:b,
+        nachricht:n,
         sv_email:localStorage.getItem('prova_sv_email')||'',
         paket:localStorage.getItem('prova_paket')||'Solo',
-        seite:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({
-          betreff:b,nachricht:n,
-          sv_email:localStorage.getItem('prova_sv_email')||'',
-          paket:localStorage.getItem('prova_paket')||'Solo',
-          seite:window.location.pathname
-        })
-      });
-    }catch(e){}
-    zeigToast('Nachricht gesendet — wir melden uns schnellstmöglich!','success');
-    if(ta)ta.value='';
-    if(modal)modal.style.display='none';
+        seite:window.location.pathname
+      })
+    });
+    document.getElementById('support-form-body').style.display='none';
+    document.getElementById('sup-ok').style.display='block';
   }catch(e){
-    zeigToast('Fehler. Bitte E-Mail an kontakt@prova-systems.de','error');
+    btn.disabled=false;
+    btn.textContent='Nachricht senden';
+    alert('Fehler. Bitte E-Mail an support@prova-systems.de');
   }
-};
+}
 })();
 </script>
 
@@ -1086,7 +1082,7 @@ var WORKFLOW = [
   {
     schritt: 1,
     name: 'Fall anlegen',
-    seite: 'app-starter.html',
+    seite: 'app.html',
     icon: '📋',
     farbe: '#4f8ef7'
   },

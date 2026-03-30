@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Textbausteine · PROVA</title>
+<script src="theme.js"></script>
 <script src="nav.js"></script>
 <style>
   /* ═══ PROVA SIDEBAR SYSTEM ══════════════════════════════════════════════ */
@@ -68,25 +69,14 @@
 
 /* MAIN LAYOUT */
 .main{flex:1;padding:24px 28px 48px;max-width:1360px;width:100%;}
+/* MAIN LAYOUT */
+.main{flex:1;padding:24px 28px 48px;max-width:1360px;width:100%;}
 .page-header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:20px;flex-wrap:wrap;}
 .page-title{font-size:1.3rem;font-weight:800;color:var(--text);}
 .page-sub{font-size:12px;color:var(--text3);margin-top:4px;}
 
 /* 2-SPALTEN LAYOUT */
-.tb-layout{display:grid;grid-template-columns:260px 1fr;gap:16px;align-items:start;}
-
-/* ── RESPONSIVE: Halber Laptop (≤900px) ── */
-@media(max-width:900px){
-  .tb-layout{grid-template-columns:1fr;}
-  /* Kategorie-Liste wird horizontal scrollbar */
-  .kat-list{display:flex;flex-direction:row;flex-wrap:wrap;gap:4px;padding:8px 4px;}
-  .kat-btn{width:auto;flex-shrink:0;}
-}
-@media(max-width:600px){
-  .main{padding:12px 12px 72px;}
-  .page-header{flex-direction:column;gap:10px;}
-  .page-header > *{width:100%;}
-}
+.tb-layout{display:grid;grid-template-columns:280px 1fr;gap:16px;align-items:start;overflow:hidden;}
 
 /* SIDEBAR */
 .kat-list{padding:8px;}
@@ -509,7 +499,7 @@ function openEditor(id) {
   } else {
     // Limit-Check Starter
     if (!_isPro && _bausteine.length >= STARTER_LIMIT) {
-      showToast('Solo-Limit erreicht (20 Bausteine). Upgrade auf Team für unbegrenzte Bausteine.', 'err');
+      showToast('Limit erreicht (20 Bausteine). Team-Paket für unbegrenzte Bausteine.', 'err');
       return;
     }
     titleEl.textContent = '📝 Neuer Baustein';
@@ -590,16 +580,22 @@ function bausteineEinfuegen(id) {
   sessionStorage.setItem('prova_tb_einfuegen', text);
   sessionStorage.setItem('prova_tb_einfuegen_id', id);
 
-  navigator.clipboard.writeText(text).then(function() {
-    showToast('📋 Baustein in Zwischenablage — in Stellungnahme einfügen (Strg+V)', 'ok');
-  }).catch(function() {
-    showToast('Text kopiert — in Stellungnahme einfügen', 'ok');
-  });
+  navigator.clipboard.writeText(text).catch(function(){});
 
   // Falls in Popup-Modus: zurück zur Stellungnahme
   if (window.opener && !window.opener.closed) {
     window.opener.postMessage({ type: 'prova_baustein', text: text, bausteinId: id }, '*');
-    window.close();
+    showToast('✅ Baustein eingefügt', 'ok');
+    setTimeout(function(){window.close();}, 600);
+    return;
+  }
+
+  // Context-aware: aktiver Fall?
+  var aktenzeichen = localStorage.getItem('prova_aktiver_fall') || '';
+  if(aktenzeichen) {
+    showToastMitCTA('📋 Baustein für Fall ' + aktenzeichen + ' bereit', 'Zur Stellungnahme →', 'stellungnahme.html', 'ok');
+  } else {
+    showToastMitCTA('📋 Baustein in Zwischenablage', 'Fall auswählen →', 'archiv.html', 'ok');
   }
 }
 

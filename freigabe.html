@@ -52,13 +52,6 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-ui);min-heigh
 .main{padding:24px 20px 80px;max-width:1100px;margin:0 auto;}
 .layout{display:grid;grid-template-columns:1fr 320px;gap:20px;align-items:start;}
 @media(max-width:900px){.layout{grid-template-columns:1fr;}}
-@media(max-width:600px){
-  .main{padding:12px 12px 72px;}
-  .flow-steps .flow-step span{display:none;}
-  .flow-sep{width:16px;}
-  .flow-az{display:none;}
-  .flow-header{padding:0 12px;}
-}
 
 /* DOC VIEWER */
 .doc-wrap{background:var(--surface);border:1px solid var(--border2);border-radius:var(--r-lg);overflow:hidden;}
@@ -778,6 +771,11 @@ async function approveGutachten(){
     offenlegungstext:localStorage.getItem('prova_offenlegungstext')||'',
     bestaetigung_407a:new Date().toISOString(),
     bestaetigung_407a_text:'Persönlich geprüft und fachliche Verantwortung übernommen gemäß §407a ZPO',
+    // EU AI Act Label für PDF-Template (TO-DO aus Session 4)
+    ki_label:'KI-gestützt erstellt, geprüft und verantwortet durch '
+      +([localStorage.getItem('prova_sv_vorname'),localStorage.getItem('prova_sv_nachname')].filter(Boolean).join(' ')||'den Sachverständigen'),
+    gutachter_name:[localStorage.getItem('prova_sv_vorname'),localStorage.getItem('prova_sv_nachname')].filter(Boolean).join(' ')||'',
+    paket:localStorage.getItem('prova_paket')||'Solo',
   };
   try {
     const res=await fetch(WH_S3,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});

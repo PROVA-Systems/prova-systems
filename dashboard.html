@@ -11,6 +11,7 @@
   <link rel="apple-touch-icon" href="/icons/icon-192.png">
   <meta name="viewport" content="width=device-width,initial-scale=1.0">
   <title>PROVA — Zentrale</title>
+<script src="theme.js"></script>
 <script src="nav.js"></script>
   <style>
   /* ═══════════════════════════════════════════════════
@@ -592,11 +593,6 @@
     .right-col{flex-direction:column;}
   }
 
-  @media(max-width:600px){
-    .page-content{padding:12px 12px 72px;}
-    .kpi-grid{grid-template-columns:1fr 1fr;}
-  }
-
   @media(max-width:480px){
     .kpi-grid{grid-template-columns:1fr 1fr;}
     .briefing{flex-direction:column;gap:10px;}
@@ -672,7 +668,7 @@
           <div class="notif-dot" id="notif-dot" style="display:none;"></div>
         </div>
         <!-- Paket Badge -->
-        <span class="topbar-paket" id="topbar-paket-badge"></span>
+        <span class="topbar-paket" id="topbar-paket-badge" style="display:none;"></span>
         <!-- Einstellungen -->
         <a href="einstellungen.html">
           <button class="topbar-btn" title="Einstellungen">⚙</button>
@@ -850,7 +846,7 @@
             <div class="recent-list" id="recent-list">
               <div style="padding:20px 10px;text-align:center;font-size:12px;color:var(--text3);">
                 Noch keine Fälle angelegt.<br>
-                <a href="gutachten.html" style="color:var(--accent);margin-top:6px;display:inline-block;">Ersten Fall erstellen →</a>
+                <a href="app.html" style="color:var(--accent);margin-top:6px;display:inline-block;">Ersten Fall erstellen →</a>
               </div>
             </div>
           </div>
@@ -873,7 +869,7 @@
     <span class="bn-icon">📁</span>
     <span>Fälle</span>
   </a>
-  <a href="gutachten.html" class="bn-item" id="bn-new" style="position:relative;">
+  <a href="app.html" class="bn-item" id="bn-new" style="position:relative;">
     <span class="bn-icon" style="background:var(--accent);border-radius:50%;width:38px;height:38px;display:flex;align-items:center;justify-content:center;font-size:20px;color:#fff;margin-top:-12px;box-shadow:0 2px 10px rgba(79,142,247,.45);">＋</span>
     <span>Neu</span>
   </a>
@@ -949,7 +945,7 @@ var maxKontingent = paket==='Solo' ? 30 : paket==='Team' ? 999 : 10;
 /* ── Paket Badge ── */
 (function(){
   var el=document.getElementById('topbar-paket-badge');
-  if(el){el.textContent=paket;el.style.cssText='font-size:10px;font-weight:700;padding:3px 9px;border-radius:10px;letter-spacing:.04em;background:'+pc+'18;color:'+pc+';border:1px solid '+pc+'33;';}
+  if(el){el.style.display='none';} // Paket steht in Sidebar unten
 })();
 
 /* ── Begrüssung ── */
@@ -999,22 +995,59 @@ function zeigSkeleton(){
    ONBOARDING EMPTY STATE — für neuen SV
 ══════════════════════════════════════════════════ */
 function zeigOnboarding(){
-  var appUrl=paket==='Team'?'app-enterprise.html':paket==='Solo'?'gutachten.html':'gutachten.html';
-  var feed=document.getElementById('action-feed');
-  if(feed){
-    feed.innerHTML=
-      '<div style="padding:28px 20px;text-align:center;">'
-        +'<div style="font-size:36px;margin-bottom:12px;">🏗️</div>'
-        +'<div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:6px;">Willkommen bei PROVA!</div>'
-        +'<div style="font-size:13px;color:var(--text3);margin-bottom:20px;line-height:1.6;">Starten Sie mit Ihrem ersten Gutachten.<br>Die KI führt Sie durch den gesamten Prozess.</div>'
-        +'<div style="display:flex;flex-direction:column;gap:10px;max-width:300px;margin:0 auto;">'
-          +'<a href="'+appUrl+'" style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:var(--r-md);color:#fff;text-decoration:none;font-weight:600;font-size:13px;">📄 Erstes Gutachten anlegen</a>'
-          +'<a href="einstellungen.html" style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--r-md);color:var(--text2);text-decoration:none;font-weight:500;font-size:13px;">⚙️ SV-Profil vervollständigen</a>'
-          +'<a href="kontakte.html" style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--r-md);color:var(--text2);text-decoration:none;font-weight:500;font-size:13px;">👥 Kontakte importieren</a>'
-        +'</div>'
-      +'</div>';
+  /* ── Progressives Onboarding ──────────────────────────────
+     Box zeigt nur was noch fehlt. Verschwindet komplett wenn:
+     ✓ Profil ausgefüllt  ✓ Kontakte vorhanden  ✓ Erster Fall
+  ─────────────────────────────────────────────────────────── */
+  var profilOk  = !!(localStorage.getItem('prova_sv_vorname') && localStorage.getItem('prova_sv_nachname'));
+  var kontakteOk= localStorage.getItem('prova_kontakte_importiert') === '1';
+  var ersterFall= localStorage.getItem('prova_erster_fall_erstellt') === '1';
+
+  // Nur beim ERSTEN Besuch "Erstes Gutachten" zeigen
+  var erstesMalGesehen = localStorage.getItem('prova_welcome_seen') === '1';
+  if(!erstesMalGesehen) localStorage.setItem('prova_welcome_seen','1');
+
+  // Alle erledigt → Box komplett ausblenden
+  if(profilOk && kontakteOk) {
+    var feedCard = document.querySelector('.feed-card');
+    if(feedCard) {
+      feedCard.style.display = 'none';
+      // Mehr Platz für den Kalender
+      var grid = document.querySelector('.zentrale-grid');
+      if(grid) grid.style.gridTemplateColumns = '1fr';
+    }
+    var bt=document.getElementById('briefing-text');
+    var btags=document.getElementById('briefing-tags');
+    if(bt)bt.innerHTML='<strong>Alles eingerichtet.</strong> Hier ist Ihr Überblick für heute.';
+    if(btags)btags.innerHTML='<span class="briefing-tag ok">✓ Bereit</span>';
+    return;
   }
-  // Briefing
+
+  // Todo-Liste: nur was noch fehlt
+  var todos = [];
+  if(!profilOk)   todos.push({icon:'⚙️',label:'SV-Profil vervollständigen',href:'einstellungen.html',key:'profil'});
+  if(!kontakteOk) todos.push({icon:'👥',label:'Kontakte importieren',href:'kontakte.html',key:'kontakte'});
+  if(!ersterFall && !erstesMalGesehen) todos.push({icon:'📄',label:'Erstes Gutachten anlegen',href:'app.html',key:'gutachten',primary:true});
+
+  var feed=document.getElementById('action-feed');
+  if(feed && todos.length > 0){
+    feed.innerHTML=
+      '<div style="padding:20px;">'
+       +'<div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:14px;">🚀 Noch ' + todos.length + ' Schritt' + (todos.length > 1 ? 'e' : '') + ' zum Start</div>'
+       + todos.map(function(t){
+           return '<a href="'+t.href+'" style="display:flex;align-items:center;gap:12px;padding:11px 14px;margin-bottom:8px;'
+             +(t.primary?'background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;':'background:var(--surface2);border:1px solid var(--border2);color:var(--text2);')
+             +'border-radius:var(--r-md);text-decoration:none;font-weight:500;font-size:13px;transition:opacity .15s;" '
+             +'onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">'
+             +'<span style="font-size:18px;">'+t.icon+'</span>'
+             +'<span>'+t.label+'</span>'
+             +'</a>';
+         }).join('')
+      +'</div>';
+  } else if(feed) {
+    feed.innerHTML='<div class="feed-empty"><div class="feed-empty-icon">✨</div><p>Alles erledigt — keine offenen Aktionen.</p></div>';
+  }
+
   var bt=document.getElementById('briefing-text');
   var btags=document.getElementById('briefing-tags');
   if(bt)bt.innerHTML='<strong>Willkommen bei PROVA.</strong> Legen Sie Ihren ersten Fall an oder vervollständigen Sie Ihr SV-Profil in den Einstellungen.';
@@ -1200,7 +1233,7 @@ function renderRecent(faelle){
   if(!list)return;
   var recent=faelle.slice(0,5);
   if(recent.length===0){
-    list.innerHTML='<div style="padding:20px;text-align:center;font-size:12px;color:var(--text3);">Noch keine Fälle angelegt.<br><a href="gutachten.html" style="color:var(--accent);margin-top:6px;display:inline-block;">Ersten Fall erstellen →</a></div>';
+    list.innerHTML='<div style="padding:20px;text-align:center;font-size:12px;color:var(--text3);">Noch keine Fälle angelegt.<br><a href="app.html" style="color:var(--accent);margin-top:6px;display:inline-block;">Ersten Fall erstellen →</a></div>';
     return;
   }
   list.innerHTML=recent.map(function(r){

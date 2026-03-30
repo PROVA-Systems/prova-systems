@@ -11,6 +11,7 @@
   <link rel="apple-touch-icon" href="/icons/icon-192.png">
   <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Akte · PROVA</title>
+<script src="theme.js"></script>
 <script src="nav.js"></script>
 <style>
 :root{
@@ -220,7 +221,7 @@ a{text-decoration:none;color:inherit;}button,input,select,textarea{font-family:i
       </div>
     </div>
     <div class="topbar-right">
-      <span class="topbar-paket" id="topbar-paket-badge">Solo</span>
+      <span class="topbar-paket" id="topbar-paket-badge" style="display:none;"></span>
       <a href="einstellungen.html"><button class="topbar-btn">⚙</button></a>
     </div>
   </header>
@@ -423,10 +424,10 @@ var AT_TERMINE='tblyMTTdtfGQjjmc2';
 
 /* ─── SETUP ─── */
 var paket=localStorage.getItem('prova_paket')||'Solo';
-var pc={'Solo':'#4f8ef7','Team':'#a78bfa','Solo':'#4f8ef7','Pro':'#4f8ef7','Enterprise':'#a78bfa'}[paket]||'#4f8ef7';
+var pc={'Solo':'#4f8ef7','Team':'#a78bfa'}[paket]||'#4f8ef7';
 (function(){
   var el=document.getElementById('topbar-paket-badge');
-  if(el){el.textContent=paket;el.style.cssText='font-size:10px;font-weight:700;padding:3px 9px;border-radius:10px;letter-spacing:.04em;background:'+pc+'18;color:'+pc+';border:1px solid '+pc+'33;';}
+  if(el){el.style.display='none';} // Paket steht in Sidebar unten
 })();
 if(!localStorage.getItem('prova_user')){window.location.href='app-login.html';return;}
 
@@ -759,7 +760,7 @@ window.aktualisiereStatus=async function(){
 
 /* ─── NAVIGATIONEN ─── */
 window.oeffneGutachten=function(){
-  var appUrl=paket==='Team'?'app-enterprise.html':paket==='Solo'?'gutachten.html':'gutachten.html';
+  var appUrl=paket==='Team'?'app.html':paket==='Solo'?'gutachten.html':'gutachten.html';
   window.location.href=appUrl;
 };
 window.oeffneFreigabe=function(){
@@ -919,7 +920,7 @@ var WORKFLOW = [
   {
     schritt: 1,
     name: 'Fall anlegen',
-    seite: 'app-starter.html',
+    seite: 'app.html',
     icon: '📋',
     farbe: '#4f8ef7'
   },

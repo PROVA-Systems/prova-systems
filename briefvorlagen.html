@@ -174,9 +174,6 @@ input,select,textarea{font-size:max(16px,1em);}
   .drawer-panel{width:100%;}
   .card-grid{grid-template-columns:1fr 1fr;}
 }
-@media(max-width:600px){
-  .page-content{padding:12px 12px 72px;}
-}
 @media(max-width:480px){.card-grid{grid-template-columns:1fr;}}
 @keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
 .page-content{animation:fadeIn .22s ease;}
@@ -519,7 +516,7 @@ function renderVorlagen(){
       +'<div class="category-label">'+cat.title+'</div>'
       +'<div class="card-grid">';
     catTemplates.forEach(function(t){
-      var zugaenglich=t.tier==='Solo'||(t.tier==='Team'&&isEnterprise);
+      var zugaenglich=true; // Solo+Team haben Zugriff auf alle Vorlagen
       var tierClass=t.tier==='Team'?'tier-team':'tier-solo';
       var lockHtml=!zugaenglich?'<span class="lock-icon">🔒</span>':'';
       html+='<div class="template-card'+(zugaenglich?'':' locked')+'" data-name="'+t.name+'" data-desc="'+t.desc+'" data-id="'+t.id+'">'
@@ -530,7 +527,7 @@ function renderVorlagen(){
         +'<span class="tier-badge '+tierClass+'">'+t.tier+'</span>'
         +(zugaenglich
           ?'<button class="tc-btn tc-btn-primary" onclick="oeffneVorlage(\''+t.id+'\',event)">Verwenden →</button>'
-          +(t.tier!=='Team'?'<button class="tc-btn tc-btn-ki" onclick="oeffneVorlageKI(\''+t.id+'\',event)">✨ KI</button>':'')
+          +'<button class="tc-btn tc-btn-ki" onclick="oeffneVorlageKI(\''+t.id+'\',event)">✨ KI</button>'
           :'<button class="tc-btn tc-btn-primary" style="background:var(--surface2);color:var(--text3);cursor:not-allowed;" disabled>'+t.tier+' erforderlich</button>'
         )
         +'</div>'
@@ -570,12 +567,12 @@ window.oeffneVorlage=function(templateId,evt){
   activeTemplate=TEMPLATES.find(function(t){return t.id===templateId;});
   if(!activeTemplate)return;
   // Locked?
-  var zugaenglich=activeTemplate.tier==='Solo'||(activeTemplate.tier==='Team'&&isEnterprise);
+  var zugaenglich=true;
   if(!zugaenglich){zeigToast(activeTemplate.tier+'-Paket erforderlich','err');return;}
   document.getElementById('d-icon').textContent=activeTemplate.icon;
   document.getElementById('d-title').textContent=activeTemplate.name;
   // KI-Bereich
-  document.getElementById('ki-bereich').style.display=isPro?'block':'none';
+  document.getElementById('ki-bereich').style.display='block';
   goStep(1);
   document.getElementById('drawerOverlay').classList.add('open');
   document.getElementById('drawerPanel').classList.add('open');
@@ -753,7 +750,7 @@ function renderVorschau(){
 
 /* ── KI-BRIEFTEXT (Pro) ── */
 window.generiereKIText=async function(){
-  if(!isPro){zeigToast('KI-Brieftext wird geladen.','err');return;}
+  // KI für alle freigegeben
   var status=document.getElementById('ki-status');
   var result=document.getElementById('ki-result');
   var btn=document.getElementById('ki-btn');

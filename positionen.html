@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>PROVA — Positionsdatenbank</title>
+<script src="theme.js"></script>
 <script src="nav.js"></script>
 <style>
 :root{
@@ -21,8 +22,10 @@
 *{box-sizing:border-box;margin:0;padding:0;}
 html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--font-ui);font-size:14px;}
 
-/* LAYOUT — margin-left wird von nav.js via .sidebar ~ .main gesetzt */
-.main{min-height:100vh;display:flex;flex-direction:column;}
+/* SIDEBAR */
+
+/* LAYOUT */
+.main{margin-left:var(--sb-w);transition:margin-left 0.22s;min-height:100vh;display:flex;flex-direction:column;}
 .topbar{height:52px;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 20px;position:sticky;top:0;z-index:50;}
 .topbar-title{font-size:15px;font-weight:700;}
 .topbar-title span{color:var(--text3);font-weight:400;}
@@ -35,7 +38,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
 
 /* SEARCH + FILTER */
 .search-bar{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;}
-.search-wrap{position:relative;flex:1;min-width:160px;}
+.search-wrap{position:relative;flex:1;min-width:200px;}
 .search-wrap .si{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--text3);pointer-events:none;}
 .search-input{width:100%;padding:9px 12px 9px 34px;background:var(--surface);border:1px solid var(--border2);border-radius:var(--r-md);color:var(--text);font-size:13px;font-family:var(--font-ui);outline:none;transition:border-color 0.15s;}
 .search-input:focus{border-color:var(--accent);}
@@ -79,33 +82,11 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
 .empty{text-align:center;padding:40px;color:var(--text3);}
 
 /* Toast */
-.toast{position:fixed;bottom:20px;right:20px;padding:10px 18px;background:var(--surface2);border:1px solid var(--green-border);border-radius:10px;color:var(--green);font-size:13px;font-weight:600;z-index:999;transform:translateY(60px);opacity:0;transition:all 0.3s cubic-bezier(0.34,1.56,0.64,1);}
+.toast{position:fixed;bottom:24px;right:24px;padding:14px 18px;background:var(--bg2);border:1px solid var(--border2);border-radius:12px;color:var(--text);font-size:13px;font-weight:500;z-index:9999;transform:translateY(80px);opacity:0;transition:all 0.35s cubic-bezier(0.34,1.56,0.64,1);min-width:260px;max-width:360px;box-shadow:0 8px 32px rgba(0,0,0,.3);}
 .toast.show{transform:translateY(0);opacity:1;}
 
 /* Paket-Badge */
 .paket-badge{font-size:11px;font-weight:600;padding:3px 10px;border-radius:10px;}
-
-/* ── RESPONSIVE ── */
-@media(max-width:900px){
-  .table-header{grid-template-columns:80px 1fr 100px 100px;}
-  .pos-row{grid-template-columns:80px 1fr 100px 100px;}
-  .table-header > div:nth-child(3),
-  .table-header > div:nth-child(5),
-  .pos-row > div:nth-child(3),
-  .pos-row > div:nth-child(5){display:none;}
-}
-@media(max-width:600px){
-  .page{padding:12px 12px 72px;}
-  .table-header{grid-template-columns:70px 1fr 90px;}
-  .pos-row{grid-template-columns:70px 1fr 90px;}
-  .table-header > div:nth-child(3),
-  .table-header > div:nth-child(4),
-  .table-header > div:nth-child(5),
-  .pos-row > div:nth-child(3),
-  .pos-row > div:nth-child(4),
-  .pos-row > div:nth-child(5){display:none;}
-  .page-title{font-size:18px;}
-}
 
   /* ── SUPPORT FAB ── */
   .support-fab{position:fixed;bottom:20px;right:20px;width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,var(--accent,#4f8ef7),#3a7be0);border:none;color:#fff;font-size:20px;cursor:pointer;box-shadow:0 4px 16px rgba(79,142,247,.4);z-index:300;transition:all .2s;display:flex;align-items:center;justify-content:center;}
@@ -206,7 +187,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
   </div>
 </div>
 
-<div class="toast" id="toast"></div>
+<div class="toast" id="toast"><div id="toast-text"></div><div id="toast-cta" style="margin-top:10px;display:none;"></div></div>
 
 <script>
 // AUTH
@@ -624,10 +605,15 @@ function insertPos(nr){
     showToast('Position übertragen ✅');
     setTimeout(()=>window.close(),700);
   } else {
-    showToast('Position gespeichert ✅ — <a href="kostenermittlung.html" style="color:#7EC8FF;text-decoration:underline;">Zur Kostenermittlung →</a>');
-    // Kurz-Link Button anzeigen
     var linkBtn = document.getElementById('goto-kosten-btn');
     if(linkBtn) linkBtn.style.display='inline-flex';
+    // Context-aware: aktiver Fall?
+    var aktenzeichen = localStorage.getItem('prova_aktiver_fall') || '';
+    if(aktenzeichen) {
+      showToastMitCTA('📐 Position ' + p.nr + ' für Fall ' + aktenzeichen + ' gespeichert', 'Zur Kostenermittlung →', 'kostenermittlung.html');
+    } else {
+      showToastMitCTA('📐 Position ' + p.nr + ' gespeichert', 'Zur Kostenermittlung →', 'kostenermittlung.html');
+    }
   }
 }
 
@@ -639,9 +625,29 @@ function copyPos(nr){
 }
 
 function showToast(msg){
-  const t=document.getElementById('toast');
-  t.textContent=msg;t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'),2500);
+  showToastMitCTA(msg, null, null);
+}
+function showToastMitCTA(msg, ctaLabel, ctaHref) {
+  const t = document.getElementById('toast');
+  const txt = document.getElementById('toast-text');
+  const cta = document.getElementById('toast-cta');
+  if(txt) txt.innerHTML = msg;
+  if(cta) {
+    if(ctaLabel && ctaHref) {
+      cta.style.display = 'block';
+      cta.innerHTML = '<a href="'+ctaHref+'" style="display:inline-block;padding:7px 14px;background:var(--accent);color:#fff;border-radius:7px;font-size:12px;font-weight:700;text-decoration:none;">'+ctaLabel+'</a>';
+    } else {
+      cta.style.display = 'none';
+      cta.innerHTML = '';
+    }
+  }
+  if(t) {
+    t.classList.remove('show');
+    void t.offsetWidth;
+    t.classList.add('show');
+    clearTimeout(t._timer);
+    t._timer = setTimeout(()=>t.classList.remove('show'), ctaLabel ? 4000 : 2500);
+  }
 }
 
 // Schadenart aus sessionStorage vorauswählen
