@@ -204,8 +204,7 @@ a{text-decoration:none;color:inherit;}button,input,select,textarea{font-family:i
 <nav class="sidebar" id="sidebar"></nav>
 <div class="sb-overlay" id="sb-overlay" onclick="closeMobileSidebar()"></div>
 
-<div class="main-wrap" id="main-wrap">
-  <header class="topbar">
+<header class="topbar">
     <div class="topbar-left">
       <button class="burger" onclick="openMobileSidebar()"><span></span><span></span><span></span></button>
       <div class="breadcrumb"><span>PROVA</span><span style="color:var(--text3)">›</span><strong>Kalender</strong></div>
@@ -226,7 +225,12 @@ a{text-decoration:none;color:inherit;}button,input,select,textarea{font-family:i
           <button class="tab" id="tab-list" onclick="setView('list')">☰ Liste</button>
         </div>
       </div>
-      <div class="toolbar-right">
+      <div class="toolbar-right" style="display:flex;gap:8px;align-items:center;">
+        <button onclick="importFristenAusFaellen()" title="Fristen aus Ihren Fällen importieren"
+          style="padding:7px 12px;background:rgba(79,142,247,.1);border:1px solid rgba(79,142,247,.2);
+          border-radius:8px;color:var(--accent);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;">
+          📥 Fristen aus Fällen
+        </button>
         <button class="btn-new" onclick="oeffneModal()">＋ Neuer Termin</button>
       </div>
     </div>
@@ -618,6 +622,59 @@ window.zeigToast=function(msg,typ){
 // Heute-Datum als Default im Modal
 document.getElementById('t-datum').value=new Date().toISOString().slice(0,10);
 
+
+/* ─── FRIST-IMPORT AUS AIRTABLE-FÄLLEN ─── */
+window.importFristenAusFaellen = async function() {
+  var btn = document.querySelector('[onclick="importFristenAusFaellen()"]');
+  if(btn){btn.disabled=true;btn.textContent='⏳ Lädt…';}
+  try{
+    var AT_BASE='appJ7bLlAHZoxENWE';
+    var AT_FAELLE='tblSxV8bsXwd1pwa0';
+    var svEmail=localStorage.getItem('prova_sv_email')||'';
+    var filter=svEmail?'{sv_email}="'+svEmail+'"':'NOT({Aktenzeichen}="")';
+    var path='/v0/'+AT_BASE+'/'+AT_FAELLE+'?filterByFormula='+encodeURIComponent(filter)
+      +'&fields[]=Aktenzeichen&fields[]=Fristdatum&fields[]=Termin_Gericht&fields[]=Termin_Ortstermin&fields[]=Schadensart&fields[]=Auftraggeber_Name&maxRecords=50';
+    var res=await fetch('/.netlify/functions/airtable',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({method:'GET',path:path})});
+    if(!res.ok)throw new Error('HTTP '+res.status);
+    var data=await res.json();
+    var records=data.records||[];
+    var neu=0;
+    var jetzt=new Date().toISOString().slice(0,10);
+    var vorhandeneIds=new Set(alleTermine.map(function(t){return t.id;}));
+    records.forEach(function(r){
+      var f=r.fields||{};
+      var az=f.Aktenzeichen||'';
+      var sa=f.Schadensart||'';
+      var ag=f.Auftraggeber_Name||'';
+      if(f.Fristdatum&&f.Fristdatum>=jetzt){
+        var tid='frist_'+r.id;
+        if(!vorhandeneIds.has(tid)){
+          alleTermine.push({id:tid,src:'import',titel:'Frist: '+az+(ag?' · '+ag:''),typ:'Abgabefrist',datum:f.Fristdatum,uhrzeit:'',az:az,notiz:'Aus Fall importiert'+(sa?' · '+sa:'')});
+          neu++;
+        }
+      }
+      if(f.Termin_Gericht&&f.Termin_Gericht>=jetzt){
+        var tid2='gericht_'+r.id;
+        if(!vorhandeneIds.has(tid2)){
+          alleTermine.push({id:tid2,src:'import',titel:'Gerichtstermin: '+az,typ:'Gerichtstermin',datum:f.Termin_Gericht,uhrzeit:'',az:az,notiz:ag?'Auftraggeber: '+ag:''});
+          neu++;
+        }
+      }
+      if(f.Termin_Ortstermin&&f.Termin_Ortstermin>=jetzt){
+        var tid3='ort_'+r.id;
+        if(!vorhandeneIds.has(tid3)){
+          alleTermine.push({id:tid3,src:'import',titel:'Ortstermin: '+az,typ:'Ortstermin',datum:f.Termin_Ortstermin,uhrzeit:'',az:az,notiz:ag?'Auftraggeber: '+ag:''});
+          neu++;
+        }
+      }
+    });
+    updateStats();renderKalender();renderListe();
+    zeigToast(neu>0?neu+' Frist'+(neu>1?'en':'')+' aus Fällen importiert ✅':'Keine neuen Fristen gefunden.', neu>0?'ok':'info');
+  }catch(e){
+    zeigToast('Import fehlgeschlagen: '+e.message,'err');
+  }
+  if(btn){btn.disabled=false;btn.textContent='📥 Fristen aus Fällen';}
+};
 // Init
 ladeTermine();
 

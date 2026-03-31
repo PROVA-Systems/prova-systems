@@ -760,7 +760,7 @@ window.aktualisiereStatus=async function(){
 
 /* ─── NAVIGATIONEN ─── */
 window.oeffneGutachten=function(){
-  var appUrl=paket==='Team'?'app.html':paket==='Solo'?'gutachten.html':'gutachten.html';
+  var appUrl=paket==='Team'?'app.html':paket==='Solo'?'app.html':'app.html';
   window.location.href=appUrl;
 };
 window.oeffneFreigabe=function(){
@@ -830,8 +830,10 @@ window.oeffneStellung = function() {
   if(az) sessionStorage.setItem('prova_current_az', az);
   if(sa) sessionStorage.setItem('prova_current_schadenart', sa);
   if(obj.trim()) sessionStorage.setItem('prova_current_objekt', obj.trim());
+  if(baujahr) sessionStorage.setItem('prova_current_baujahr', baujahr);
   // record_id bleibt aus sessionStorage (bereits gesetzt)
-  window.location.href = 'stellungnahme.html';
+  // az als URL-Parameter damit stellungnahme.html es auch ohne sessionStorage hat
+  window.location.href = az ? 'stellungnahme.html?az=' + encodeURIComponent(az) : 'stellungnahme.html';
 };
 </script>
 
@@ -927,14 +929,14 @@ var WORKFLOW = [
   {
     schritt: 2,
     name: 'Diktat & Fotos',
-    seite: 'app-starter.html#step2',
+    seite: 'app.html',
     icon: '🎙️',
     farbe: '#4f8ef7'
   },
   {
     schritt: 3,
     name: 'KI-Analyse',
-    seite: 'app-starter.html#step3',
+    seite: 'app.html',
     icon: '🤖',
     farbe: '#6366f1'
   },

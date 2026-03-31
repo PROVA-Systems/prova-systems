@@ -478,22 +478,34 @@ function fallKarte(r){
   var status=f.Status||'In Bearbeitung';
   var datum=formatDatum(f.Timestamp||r.createdTime);
   var ag=f.Auftraggeber_Name||'';
+  var agTyp=f.Auftraggeber_Typ||'';
   var saClass=schadenartClass(schadenart);
   var stClass=statusClass(status);
-  return '<div class="fall-card" onclick="oeffneFall(\''+r.id+'\')">'
-    +'<div class="fall-card-top">'
-    +'<span class="fall-az">'+escHtml(az)+'</span>'
-    +'<span class="fall-schadenart '+saClass+'">'+escHtml(schadenart.replace('befall','').replace('schaden','').trim())+'</span>'
+  var pdfUrl=f.PDF_URL||'';
+  var saKurz=schadenart.replace('befall','').replace('schaden','').replace('Schaden','').trim();
+  var schrittMap={'Neuer Auftrag':1,'In Bearbeitung':2,'Entwurf fertig':3,'Abgeschlossen':4,'Exportiert':4};
+  var schritt=schrittMap[status]||2;
+  var fortschritt=Math.round((schritt/4)*100);
+  var fortColor={'Abgeschlossen':'#10b981','Exportiert':'#10b981','Entwurf fertig':'#f59e0b'}[status]||'#4f8ef7';
+  return '<div class="fall-card" onclick="oeffneFall(\'' + r.id + '\')" style="cursor:pointer;">'
+    +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">'
+    +'<span class="fall-az" style="font-size:11px;font-weight:800;letter-spacing:.04em;">'+escHtml(az)+'</span>'
+    +'<span class="fall-schadenart '+saClass+'" style="font-size:9px;padding:2px 7px;border-radius:4px;font-weight:700;">'+escHtml(saKurz)+'</span>'
     +'</div>'
-    +'<div class="fall-card-body">'
-    +'<div class="fall-title">'+escHtml(ag||adresse.split(',')[0]||schadenart)+'</div>'
-    +'<div class="fall-meta">'
-    +(adresse!=='—'?'<span>📍 '+escHtml(adresse)+'</span>':'')
+    +'<div style="margin-bottom:10px;">'
+    +'<div style="font-size:13px;font-weight:600;margin-bottom:3px;">'+escHtml(ag||adresse.split(',')[0]||schadenart)+'</div>'
+    +(agTyp?'<div style="font-size:10px;color:var(--text3);margin-bottom:2px;">'+escHtml(agTyp)+'</div>':'')
+    +(adresse!=='—'?'<div style="font-size:11px;color:var(--text3);">📍 '+escHtml(adresse)+'</div>':'')
     +'</div>'
+    +'<div style="height:3px;background:var(--border);border-radius:2px;overflow:hidden;margin-bottom:8px;">'
+    +'<div style="height:100%;width:'+fortschritt+'%;background:'+fortColor+';border-radius:2px;"></div>'
     +'</div>'
-    +'<div class="fall-card-footer">'
-    +'<span class="fall-date">'+datum+'</span>'
-    +'<span class="status-badge '+stClass+'">'+escHtml(status)+'</span>'
+    +'<div style="display:flex;align-items:center;justify-content:space-between;">'
+    +'<span style="font-size:10px;color:var(--text3);">'+datum+'</span>'
+    +'<div style="display:flex;gap:6px;align-items:center;">'
+    +(pdfUrl?'<a href="'+pdfUrl+'" target="_blank" onclick="event.stopPropagation()" style="font-size:10px;color:var(--accent);text-decoration:none;font-weight:600;padding:2px 7px;border-radius:4px;background:rgba(79,142,247,.1);">PDF</a>':'')
+    +'<span class="status-badge '+stClass+'" style="font-size:9px;padding:2px 7px;">'+escHtml(status)+'</span>'
+    +'</div>'
     +'</div>'
     +'</div>';
 }
@@ -544,7 +556,7 @@ function renderListe(){
       +'<div class="list-date">'+datum+'</div>'
       +'<div><span class="status-badge '+stClass+'">'+escHtml(status)+'</span></div>'
       +'<div class="list-actions">'
-      +'<button class="list-action-btn" onclick="event.stopPropagation();oeffneFall(\''+r.id+'\')" title="Öffnen">👁</button>'
+      +(f.PDF_URL?'<a href="'+f.PDF_URL+'" target="_blank" onclick="event.stopPropagation()" class="list-action-btn" title="PDF" style="text-decoration:none;display:flex;align-items:center;justify-content:center;">📄</a>':'')+'<button class="list-action-btn" onclick="event.stopPropagation();oeffneFall(\''+r.id+'\')" title="Fall öffnen" style="font-weight:700;">→</button>'
       +'</div>'
       +'</div>';
   }).join('');

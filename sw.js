@@ -1,11 +1,11 @@
 /* ============================================================
-   PROVA Systems — Service Worker v19
+   PROVA Systems — Service Worker v20
    Strategie: Network-First für HTML (kein Zwischenbild mehr!)
               Cache-First für Assets (Fonts, JS, CSS)
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v19';
+const CACHE_VERSION = 'prova-v20';
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
@@ -32,12 +32,8 @@ const APP_SHELL = [
   '/positionen.html',
   '/baubegleitung.html',
   '/nav.js',
-  '/slide-panel.js',
-  '/support-chat.js',
-  '/onboarding-tour.js',
-  '/auftragstyp.js',
+  '/theme.js',
   '/trial-guard.js',
-  '/sw-register.js',
 ];
 
 self.addEventListener('install', event => {

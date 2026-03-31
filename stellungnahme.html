@@ -347,12 +347,12 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-ui);min-heigh
     <div class="flow-sep"></div>
     <div class="flow-step done">
       <div class="flow-dot">✓</div>
-      <span>Diktat</span>
+      <span>Diktat &amp; Fotos</span>
     </div>
     <div class="flow-sep"></div>
     <div class="flow-step done">
       <div class="flow-dot">✓</div>
-      <span>§1–§5</span>
+      <span>Analyse</span>
     </div>
     <div class="flow-sep"></div>
     <div class="flow-step active">
@@ -686,10 +686,14 @@ let kjTimer = null;
 let ausformTimer = null;
 let kiAnalyseData = null; // Guided Writing v3.1
 
-const az = sessionStorage.getItem('prova_current_az') || localStorage.getItem('prova_letztes_az') || '—';
+// az aus URL-Parameter (von akte.html) oder sessionStorage
+const _urlAz = new URLSearchParams(window.location.search).get('az') || '';
+if(_urlAz) sessionStorage.setItem('prova_current_az', _urlAz);
+const az = _urlAz || sessionStorage.getItem('prova_current_az') || localStorage.getItem('prova_letztes_az') || '—';
 const sa = sessionStorage.getItem('prova_current_schadenart') || localStorage.getItem('prova_schadenart') || '—';
 const obj = sessionStorage.getItem('prova_current_objekt') || '—';
 const datum = sessionStorage.getItem('prova_current_datum') || '—';
+const baujahr = sessionStorage.getItem('prova_current_baujahr') || localStorage.getItem('prova_baujahr') || '';
 const rid = sessionStorage.getItem('prova_record_id') || '';
 
 // ═══════════════════════════════════════════════════════
@@ -716,9 +720,12 @@ async function ladeKIAnalyse() {
         diktat: diktat,
         schadenart: sa,
         messwerte: messwerte,
-        normen_kontext: '',
         verwendungszweck: selectedTyp,
-        paragraphen: entwurf ? { gesamt: entwurf } : null
+        paragraphen: entwurf ? { gesamt: entwurf } : null,
+        az: az,
+        objekt: obj,
+        baujahr: localStorage.getItem('prova_baujahr') || '',
+        auftraggeber: localStorage.getItem('prova_auftraggeber_name') || ''
       })
     });
 
@@ -738,6 +745,19 @@ async function ladeKIAnalyse() {
 function renderKIAnalyse(data) {
   const loading = document.getElementById('kiAnalyseLoading');
   loading.style.display = 'none';
+
+  // Diktat zu kurz → Hinweis anzeigen
+  if (data.hinweis === 'DIKTAT_ZU_KURZ') {
+    loading.innerHTML = '<div style="padding:14px 16px;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);border-radius:8px;font-size:12px;color:var(--warn);">'
+      + '⚠️ <strong>Zu wenig Informationen im Diktat.</strong><br><br>'
+      + 'Bitte ergänzen Sie im Diktat:<br>'
+      + '• Genaue Lage und Ausdehnung des Schadens<br>'
+      + '• Gemessene Feuchte- oder Temperaturwerte<br>'
+      + '• Bauphase und Baujahr des Objekts<br>'
+      + '• Nutzungsverhalten (sofern relevant)</div>';
+    loading.style.display = 'block';
+    return;
+  }
 
   // Messwert-Analyse
   if (data.messwert_analyse && data.messwert_analyse.length > 0) {
@@ -973,6 +993,27 @@ function setTyp(t) {
   ['gericht','versicherung','privat'].forEach(x => {
     document.getElementById('typ-'+x).classList.toggle('active', x===t);
   });
+
+  // §7-Vorschau anzeigen + Hinweis
+  const hinweise = {
+    gericht: '⚖️ Gerichtsgutachten: Vollständige §407a ZPO-Offenlegung + EU AI Act Label im PDF.',
+    versicherung: '🏢 Versicherungsgutachten: Kürzere Offenlegung, kein ZPO-Verweis, EU AI Act Label bleibt.',
+    privat: '🏠 Privatgutachten: Minimale Offenlegung, kein ZPO-Bezug, EU AI Act Label bleibt.'
+  };
+  const hinweisEl = document.getElementById('typ-hinweis');
+  const vorschauEl = document.getElementById('offenlegungs-vorschau');
+  const textEl = document.getElementById('offenlegungs-text');
+  if(hinweisEl) {
+    hinweisEl.textContent = hinweise[t] || '';
+    hinweisEl.style.display = 'block';
+    // Kurze Animation
+    hinweisEl.style.opacity = '0';
+    setTimeout(() => { hinweisEl.style.opacity = '1'; hinweisEl.style.transition = 'opacity .3s'; }, 10);
+  }
+  if(vorschauEl && textEl) {
+    textEl.textContent = (OFFENLEGUNG[t] || OFFENLEGUNG.gericht).substring(0, 200) + '…';
+    vorschauEl.style.display = 'block';
+  }
 }
 
 /* ── WEG ── */
@@ -1242,30 +1283,96 @@ async function ladeKiInsp() {
   document.getElementById('kiInspLoading').style.display = 'flex';
   document.getElementById('kiInspText').style.display = 'none';
   document.getElementById('kiInspRefresh').style.display = 'none';
-  const messwerte = localStorage.getItem('prova_messwerte')||'';
+
+  // ── Vollständiger Fallkontext ──────────────────────────────
+  const diktat    = (localStorage.getItem('prova_transkript') || '').trim();
+  const messwerte = (localStorage.getItem('prova_messwerte') || '').trim();
+  const entwurf   = (localStorage.getItem('prova_entwurf_text') || '').trim();
+  const svText    = (document.getElementById('svTextA')?.value || '').trim();
+  const baujahr   = localStorage.getItem('prova_baujahr') || '';
+  const auftraggeber = localStorage.getItem('prova_auftraggeber_name') || '';
+  const gutTyp    = selectedTyp || 'gericht';
+
+  // ── Mindest-Kontext prüfen ────────────────────────────────
+  const gesamtKontext = diktat + messwerte + entwurf;
+  if(gesamtKontext.length < 80) {
+    document.getElementById('kiInspLoading').style.display = 'none';
+    document.getElementById('kiInspText').innerHTML =
+      '<span style="color:var(--warn);">⚠️ Zu wenig Informationen für einen Denkanstoß.<br><br>' +
+      'Bitte ergänzen Sie im Diktat:<br>' +
+      '• Lage und Ausdehnung des Schadens<br>' +
+      '• Gemessene Feuchte- oder Temperaturwerte<br>' +
+      '• Bauphase / Baujahr des Objekts<br>' +
+      '• Nutzungsverhalten (sofern relevant)</span>';
+    document.getElementById('kiInspText').style.display = 'block';
+    document.getElementById('kiInspRefresh').style.display = 'inline-flex';
+    return;
+  }
+
+  // ── Mega-System-Prompt ────────────────────────────────────
+  const systemPrompt = `Du bist ein öffentlich bestellter und vereidigter Sachverständiger für Schäden an Gebäuden mit 30 Jahren Berufserfahrung. Du kennst die einschlägigen Normen (DIN-Normen, WTA-Merkblätter, VDI-Richtlinien), die Rechtsprechung des BGH und der Oberlandesgerichte sowie die Anforderungen der Sachverständigenordnung (IHK, BVS, BDSF).
+
+RECHTLICHE GRUNDLAGEN:
+- §407a ZPO: Persönliche Begutachtung, keine Spekulation über nicht erhobene Fakten
+- BGH VII ZR 138/19: KI-Assistenz offenlegen, Verantwortung bleibt beim SV
+- BGH VII ZR 46/17: Darlegungs- und Beweislast bei Baumängeln
+- §823 BGB, §906 BGB: Schadensersatz und Kausalität
+- VOB/B §13: Mängelgewährleistung am Bau
+
+SCHREIBREGELN FÜR §6 — STRIKTE EINHALTUNG:
+1. Konjunktiv II PFLICHT für ALLE Kausal- und Bewertungsaussagen: "dürfte", "könnte", "wäre", "ließe sich", "erscheint naheliegend"
+2. Indikativ NUR für gemessene Fakten/Sichtbefunde/Normwerte: "Die gemessene Feuchte beträgt X%"
+3. ABSOLUT VERBOTEN: Fakten erfinden die NICHT im Diktat/Entwurf stehen
+4. VERBOTEN: Indikativ bei Ursachenaussagen: NICHT "ist zurückzuführen", SONDERN "dürfte zurückzuführen sein"
+5. Wenn Informationen fehlen: EXPLIZIT benennen was fehlt, z.B. "Für eine abschließende Beurteilung wäre die Angabe der Raumluftfeuchte erforderlich."
+6. Beweislast nach BGH-Rspr. formulieren (Anscheinsbeweis bei typischen Schadensbildern)
+7. Sanierungsempfehlung mit konkreten Normen/Merkblättern
+
+DENKANSTOSS-FORMAT:
+6.1 Ursache: [2-3 Sätze im Konjunktiv II — ausschließlich aus Diktat/Entwurf ableiten]
+6.2 Beweislast: [1-2 Sätze, BGH-Referenz wenn passend]
+6.3 Sanierungsempfehlung: [2-3 Sätze, mit DIN/WTA-Verweis]
+
+Antworte NUR mit dem §6-Denkanstoß-Text. Keine Einleitung, keine Erklärungen.`;
+
+  // ── User-Prompt mit vollem Kontext ────────────────────────
+  const userPrompt = `FALLKONTEXT:
+Aktenzeichen: ${az}
+Schadensart: ${sa}
+Objekt: ${obj}${baujahr ? '\nBaujahr: '+baujahr : ''}${auftraggeber ? '\nAuftraggeber: '+auftraggeber : ''}
+Gutachtentyp: ${{gericht:'Gerichtsgutachten',versicherung:'Versicherungsgutachten',privat:'Privatgutachten'}[gutTyp]||gutTyp}
+
+${diktat ? 'DIKTAT DES SACHVERSTÄNDIGEN (Originalaufnahme):\n'+diktat : ''}${messwerte ? '\n\nMESSWERTE:\n'+messwerte : ''}${entwurf ? '\n\n§1–§5 ENTWURF (KI-ausformuliert, erste 1500 Zeichen):\n'+entwurf.substring(0,1500) : ''}${svText ? '\n\nWAS DER SV BISHER IN §6 GESCHRIEBEN HAT:\n'+svText : ''}
+
+AUFGABE: Schreibe einen professionellen §6-Denkanstoß der AUSSCHLIESSLICH auf den oben stehenden Fallinformationen basiert. Falls wesentliche Informationen fehlen, benenne diese explizit.`;
+
   try {
     const res = await fetch('/.netlify/functions/ki-proxy', {
       method:'POST', headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
-        aufgabe:'freitext',
-        system:'Du bist ein Assistent für Bausachverständige. Antworte nur mit dem gewünschten Text, keine Erklärungen.',
-        prompt:`§6-Konjunktiv-II-Inspiration für Bausachverständigen-Gutachten.
-Fall: ${sa}${messwerte?'\nMesswerte: '+messwerte:''}
-NUR Konjunktiv II: dürfte, könnte, wäre — VERBOTEN: ist, führt zu, muss.
-Format: 6.1 Ursachen [2 Sätze] · 6.2 Beweislast [1 Satz] · 6.3 Empfehlung [1-2 Sätze]
-Nur den Text zurückgeben.`
+        model: 'gpt-4o-mini',
+        max_tokens: 600,
+        messages:[
+          {role:'system', content: systemPrompt},
+          {role:'user',   content: userPrompt}
+        ]
       })
     });
+    if(!res.ok) throw new Error('HTTP '+res.status);
     const d = await res.json();
-    const txt = d.text || '';
+    const txt = (d.content&&d.content[0]&&d.content[0].text)
+      ? d.content[0].text
+      : (d.choices&&d.choices[0] ? d.choices[0].message.content : '');
+    if(!txt) throw new Error('Kein Text');
     document.getElementById('kiInspText').textContent = txt;
     document.getElementById('kiInspText').style.display = 'block';
     document.getElementById('kiInspRefresh').style.display = 'inline-flex';
     localStorage.setItem('prova_ki_stellungnahme_vorschlag', txt);
-    localStorage.setItem('prova_ki_stellungnahme_vorschlag_session', txt);
   } catch(e) {
-    document.getElementById('kiInspText').textContent = 'Der Schaden dürfte auf eine Kombination baulicher und nutzungsbedingter Faktoren zurückzuführen sein. Eine detailliertere Untersuchung könnte die Ursache präzisieren.\n\nDie Beweislast dürfte nach BGH-Rspr. beim Verursacher liegen.\n\nEs wäre zu empfehlen, die Sanierung zeitnah zu veranlassen.';
+    document.getElementById('kiInspText').innerHTML =
+      '<span style="color:var(--red);">KI nicht erreichbar ('+e.message+'). Bitte erneut versuchen.</span>';
     document.getElementById('kiInspText').style.display = 'block';
+    document.getElementById('kiInspRefresh').style.display = 'inline-flex';
   }
   document.getElementById('kiInspLoading').style.display = 'none';
 }
@@ -1284,18 +1391,46 @@ async function ausformulieren() {
     const res = await fetch('/.netlify/functions/ki-proxy', {
       method:'POST', headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
-        aufgabe:'freitext',
-        system:'Du bist ein Assistent für Bausachverständige. Formuliere Fachurteile im Konjunktiv II.',
-        prompt:`Formuliere aus diesen SV-Angaben einen §6-Fachurteil-Text.
-REGELN: 1. Output max ${maxLen} Zeichen. 2. NUR SV-Vorgaben — keine neuen Fakten. 3. Konjunktiv II PFLICHT. 4. Indikativ nur für Messwerte/Sichtbefunde.
-SV-Beobachtung: ${b1}
-SV-Schlussfolgerung: ${b2}
-SV-Empfehlung: ${b3}
-Nur den §6-Text zurückgeben.`
+        model:'gpt-4o-mini',
+        max_tokens:700,
+        messages:[
+          {role:'system', content:`Du bist ein öffentlich bestellter und vereidigter Sachverständiger für Schäden an Gebäuden mit 30 Jahren Berufserfahrung. Du formulierst §6 Fachurteile für Gutachten.
+
+STRIKTE REGELN — KEINE AUSNAHMEN:
+1. Konjunktiv II PFLICHT für Kausal- und Bewertungsaussagen: dürfte, könnte, wäre, ließe sich
+2. Indikativ NUR für Messwerte und Sichtbefunde
+3. VERBOTEN: Fakten erfinden die der SV nicht angegeben hat
+4. VERBOTEN: Indikativ bei Ursachenaussagen
+5. Falls SV-Angaben unvollständig: im Text explizit benennen was für eine abschließende Bewertung fehlt
+6. Beweislast nach BGH-Rechtsprechung formulieren wo passend
+7. Sanierungsempfehlung mit Normverweis (DIN, WTA, VDI)
+8. Output max ${maxLen} Zeichen
+9. NUR den §6-Fließtext — keine Überschriften, keine Nummerierung
+
+Antworte ausschließlich mit dem §6-Text.`},
+          {role:'user', content:`Formuliere §6 aus diesen SV-Stichpunkten:
+
+Aktenzeichen: ${az}
+Schadensart: ${sa}
+Objekt: ${obj}
+
+SV-Beobachtung / Ursache:
+${b1}
+
+SV-Kausalschluss / Beweislast:
+${b2}
+
+SV-Empfehlung:
+${b3}
+
+Formuliere daraus einen vollständigen, professionellen §6-Fachurteil-Text im Konjunktiv II.`}
+        ]
       })
     });
     const d = await res.json();
-    let txt = d.text || '';
+    let txt = (d.content&&d.content[0]&&d.content[0].text)
+      ? d.content[0].text
+      : (d.choices&&d.choices[0] ? d.choices[0].message.content : d.text || '');
     if(txt.length > maxLen) txt = txt.substring(0,maxLen)+'…';
     document.getElementById('svTextEdit').value = txt;
     document.getElementById('ausform-wrap').style.display = 'block';
@@ -1316,26 +1451,71 @@ const SA_TAGS = {
 };
 const NORMEN_DB=[{"n": "DIN 4108-2", "t": "Wärmeschutz und Energie-Einsparung in Gebäuden", "sa": "WS,SC,BA", "g": "Mindestoberflächentemperaturfaktor fRsi ≥ 0,70"}, {"n": "DIN 4108-3", "t": "Klimabedingter Feuchteschutz", "sa": "WS,SC,BA", "g": ""}, {"n": "DIN 4108-7", "t": "Luftdichtheit von Gebäuden", "sa": "WS,SC,BA", "g": ""}, {"n": "DIN 68800-1", "t": "Holzschutz — Allgemeines", "sa": "WS,SC,BA", "g": "Holzfeuchte <18% unkritisch, >20% kritisch"}, {"n": "WTA 6-1-01/D", "t": "Lüftung zur Vermeidung von Schimmelpilzbildung", "sa": "SC,WS", "g": "rel. Luftfeuchte <60% (Wohnraum)"}, {"n": "DIN EN 13829", "t": "Luftdurchlässigkeit von Gebäuden (Blower-Door)", "sa": "WS,BA", "g": ""}, {"n": "DIN 18195", "t": "Abdichtung von Bauwerken", "sa": "WS,ES", "g": ""}, {"n": "DIN 18531", "t": "Dachabdichtungen", "sa": "WS,ES,SS", "g": ""}, {"n": "DIN 276", "t": "Kosten im Bauwesen", "sa": "WS,SC,BS,SS,ES,BA", "g": ""}, {"n": "§ 906 BGB", "t": "Zuführung unwägbarer Stoffe", "sa": "WS,SC", "g": ""}, {"n": "§ 823 BGB", "t": "Schadensersatzpflicht", "sa": "WS,SC,BS,SS,ES,BA", "g": ""}, {"n": "DIN 4109", "t": "Schallschutz im Hochbau", "sa": "BA", "g": ""}, {"n": "DIN 18040", "t": "Barrierefreies Bauen", "sa": "BA", "g": ""}, {"n": "VOB/B", "t": "Allgemeine Vertragsbedingungen für die Ausführung von Bauleistungen", "sa": "BA", "g": ""}, {"n": "DIN EN 1991", "t": "Einwirkungen auf Tragwerke (Eurocode 1)", "sa": "SS,ES,BA", "g": ""}];
 
-function ladeNormen() {
-  const tag = SA_TAGS[sa];
+async function ladeNormen() {
   const el = document.getElementById('normenListe');
-  if(!tag) {
-    el.innerHTML = '<div style="padding:12px 14px;font-size:11px;color:var(--text3);">Keine Vorauswahl — bitte Norm manuell eingeben.</div>';
+  if(!el) return;
+
+  // Erste Stufe: statische Vorauswahl sofort zeigen
+  const tag = SA_TAGS[sa];
+  const statisch = tag
+    ? NORMEN_DB.filter(n => n.sa.includes(tag)).slice(0,3)
+    : NORMEN_DB.slice(0,3);
+
+  el.innerHTML = '<div style="padding:8px 12px;font-size:11px;color:var(--text3);display:flex;align-items:center;gap:6px;"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;border:2px solid var(--accent);border-top-color:transparent;animation:spin .6s linear infinite;"></span>KI analysiert Diktat…</div>'
+    + statisch.map(n => renderNormItem(n)).join('');
+
+  // Zweite Stufe: KI liest Diktat und schlägt spezifische Normen vor
+  const diktat  = (localStorage.getItem('prova_transkript') || '').trim();
+  const entwurf = (localStorage.getItem('prova_entwurf_text') || '').substring(0,800).trim();
+  const kontext = diktat || entwurf;
+
+  if(!kontext) {
+    // Nur statische Normen zeigen
+    el.innerHTML = statisch.map(n => renderNormItem(n)).join('');
     return;
   }
-  const passend = NORMEN_DB.filter(n => n.sa.includes(tag)).slice(0,5);
-  if(!passend.length) {
-    el.innerHTML = '<div style="padding:12px 14px;font-size:11px;color:var(--text3);">Keine spezifischen Normen gefunden.</div>';
-    return;
+
+  try {
+    const normenListe = NORMEN_DB.map(n => n.n + ' — ' + n.t + (n.g?' ('+n.g+')':'')).join('\n');
+    const res = await fetch('/.netlify/functions/ki-proxy', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model:'gpt-4o-mini',
+        max_tokens:200,
+        messages:[
+          {role:'system', content:'Du bist ein erfahrener Bausachverständiger. Antworte NUR mit einem JSON-Array der Norm-Bezeichnungen, z.B. ["DIN 4108-2","WTA 6-1-01/D"]. Keine Erklärungen, kein Markdown.'},
+          {role:'user', content:'Wähle aus der folgenden Liste die 3-5 relevantesten Normen für diesen Fall aus.\n\nFall: '+sa+'\nDiktat/Sichtbefunde:\n'+kontext.substring(0,600)+'\n\nVerfügbare Normen:\n'+normenListe+'\n\nGib NUR ein JSON-Array zurück.'}
+        ]
+      })
+    });
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const d = await res.json();
+    const txt = (d.content&&d.content[0]&&d.content[0].text)||
+                (d.choices&&d.choices[0]?.message?.content)||'';
+
+    let vorschlag = [];
+    try {
+      const match = txt.match(/\[.*?\]/s);
+      if(match) vorschlag = JSON.parse(match[0]);
+    } catch(e) {}
+
+    const kiNormen = vorschlag.length
+      ? vorschlag.map(nr => NORMEN_DB.find(n => n.n===nr)).filter(Boolean)
+      : statisch;
+
+    el.innerHTML = kiNormen.map(n => renderNormItem(n)).join('');
+  } catch(e) {
+    el.innerHTML = statisch.map(n => renderNormItem(n)).join('');
   }
-  el.innerHTML = passend.map(n => `
-    <div class="norm-item" onclick="normEinfuegen('${n.n}','${n.t}')">
-      <div class="norm-item-nr">${n.n}</div>
-      <div class="norm-item-txt">${n.t}</div>
-      ${n.g ? `<div class="norm-item-g">${n.g}</div>` : ''}
-      <span class="norm-add-btn">+ Einfügen</span>
-    </div>`
-  ).join('');
+}
+
+function renderNormItem(n) {
+  return '<div class="norm-item" onclick="normEinfuegen(\'' + n.n.replace(/'/g,"\'") + '\',\'' + n.t.replace(/'/g,"\'") + '\')" style="cursor:pointer;">'
+    + '<div class="norm-item-nr">' + n.n + '</div>'
+    + '<div class="norm-item-txt">' + n.t + '</div>'
+    + (n.g ? '<div class="norm-item-g">' + n.g + '</div>' : '')
+    + '<span class="norm-add-btn" style="cursor:pointer;">+ In §6 einfügen</span>'
+    + '</div>';
 }
 
 function normEinfuegen(nr, titel) {

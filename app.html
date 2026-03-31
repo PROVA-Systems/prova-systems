@@ -1030,27 +1030,62 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
           </div>
 
-          <!-- Rechte Spalte (40%) — blau, sticky, Kurzübersicht + Buttons -->
-          <div class="step2-right" style="display:flex;flex-direction:column;min-height:400px">
-            <div style="margin-bottom:1rem">
-              <div class="step2-summary-label">Aktenzeichen</div>
-              <div class="step2-summary-value" id="step2-az">—</div>
+          <!-- Rechte Spalte (40%) — Info-Panel, sticky -->
+          <div class="step2-right" style="display:flex;flex-direction:column;gap:0;position:sticky;top:80px">
+
+            <!-- Fall-Übersicht -->
+            <div style="background:var(--navy,#1E3A5F);border-radius:12px;padding:16px 18px;margin-bottom:12px;color:#fff;">
+              <div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;opacity:.6;margin-bottom:10px;">Fall-Übersicht</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                <div>
+                  <div style="font-size:9px;opacity:.6;text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px;">Aktenzeichen</div>
+                  <div style="font-size:13px;font-weight:700;" id="step2-az">—</div>
+                </div>
+                <div>
+                  <div style="font-size:9px;opacity:.6;text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px;">Schadensart</div>
+                  <div style="font-size:13px;font-weight:600;" id="step2-schadenart">—</div>
+                </div>
+              </div>
+              <div style="margin-top:10px;">
+                <div style="font-size:9px;opacity:.6;text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px;">Adresse</div>
+                <div style="font-size:12px;opacity:.9;" id="step2-adresse">—</div>
+              </div>
+              <div style="margin-top:8px;">
+                <div style="font-size:9px;opacity:.6;text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px;">Auftraggeber</div>
+                <div style="font-size:12px;opacity:.9;" id="step2-auftraggeber">—</div>
+              </div>
             </div>
-            <div style="margin-bottom:1rem">
-              <div class="step2-summary-label">Schadensart</div>
-              <div class="step2-summary-value" id="step2-schadenart">—</div>
+
+            <!-- Diktat-Status -->
+            <div style="background:rgba(79,142,247,.08);border:1px solid rgba(79,142,247,.2);border-radius:10px;padding:12px 14px;margin-bottom:10px;">
+              <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--accent,#4f8ef7);margin-bottom:8px;">🎤 Diktat-Status</div>
+              <div id="step2-diktat-status" style="font-size:12px;color:var(--gray-500);display:flex;align-items:center;gap:6px;">
+                <span id="step2-diktat-dot" style="width:8px;height:8px;border-radius:50%;background:#d1d5db;display:inline-block;"></span>
+                <span id="step2-diktat-label">Noch kein Diktat</span>
+              </div>
+              <div id="step2-diktat-preview" style="display:none;margin-top:8px;font-size:11px;color:var(--gray-600);background:rgba(0,0,0,.04);border-radius:6px;padding:8px 10px;line-height:1.5;max-height:80px;overflow:hidden;"></div>
             </div>
-            <div style="margin-bottom:1rem">
-              <div class="step2-summary-label">Adresse</div>
-              <div class="step2-summary-value" id="step2-adresse">—</div>
+
+            <!-- Foto-Status -->
+            <div style="background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.2);border-radius:10px;padding:12px 14px;margin-bottom:10px;">
+              <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#10b981;margin-bottom:8px;">📷 Fotos</div>
+              <div id="step2-foto-status" style="font-size:12px;color:var(--gray-500);display:flex;align-items:center;gap:6px;">
+                <span id="step2-foto-dot" style="width:8px;height:8px;border-radius:50%;background:#d1d5db;display:inline-block;"></span>
+                <span id="step2-foto-label">Keine Fotos</span>
+              </div>
+              <div id="step2-foto-mini" style="display:none;margin-top:8px;display:flex;gap:4px;flex-wrap:wrap;"></div>
             </div>
-            <div style="margin-bottom:1rem">
-              <div class="step2-summary-label">Auftraggeber</div>
-              <div class="step2-summary-value" id="step2-auftraggeber">—</div>
+
+            <!-- KI-Tipp -->
+            <div style="background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.2);border-radius:10px;padding:12px 14px;margin-bottom:14px;">
+              <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#f59e0b;margin-bottom:6px;">💡 Diktat-Tipp</div>
+              <div id="step2-tipp" style="font-size:11px;color:var(--gray-600);line-height:1.5;">Beschreiben Sie: Lage des Schadens, gemessene Feuchte- oder Temperaturwerte, Bauphase und Baujahr.</div>
             </div>
-            <div class="step2-actions" style="display:flex;flex-direction:column;gap:.75rem">
-              <button type="button" class="btn btn-step2-back" onclick="goToStep(1)" style="padding:.6rem 1rem;border-radius:var(--radius-md);font-weight:600;cursor:pointer;font-family:inherit">← Zurück</button>
-              <button type="button" class="btn btn-step2-analyze" onclick="weiterZuAnalyse()" style="padding:.6rem 1rem;border-radius:var(--radius-md);font-weight:600;cursor:pointer;font-family:inherit">Analyse starten →</button>
+
+            <!-- Buttons -->
+            <div style="display:flex;flex-direction:column;gap:.6rem;">
+              <button type="button" onclick="goToStep(1)" style="padding:10px;border-radius:9px;border:1.5px solid var(--gray-300,#D1D5DB);background:transparent;color:var(--navy,#1E3A5F);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;">← Zurück zu Stammdaten</button>
+              <button type="button" id="btn-analyse-starten" onclick="weiterZuAnalyse()" style="padding:12px;border-radius:9px;border:none;background:linear-gradient(135deg,#4f8ef7,#3a7be0);color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;">Analyse starten →</button>
             </div>
           </div>
         </div>
@@ -1909,6 +1944,7 @@ function renderFotoGrid() {
   var exportBtn = document.getElementById('fotoAnlageBtn');
   if (exportBtn) exportBtn.style.display = fotos.length > 0 ? 'flex' : 'none';
 
+  updateStep2Panel();
   grid.innerHTML = fotos.map((f, i) => `
     <div style="position:relative;border-radius:.5rem;overflow:hidden;background:var(--gray-100);border:1px solid var(--gray-200)">
       <img src="${f.dataUrl}" style="width:100%;height:80px;object-fit:cover;display:block" alt="Foto ${i+1}">
@@ -1928,7 +1964,60 @@ function renderFotoGrid() {
   `).join('');
 }
 
-window.entferneFoto = function(i) { fotos.splice(i,1); renderFotoGrid(); };
+window.entferneFoto = function(i) { fotos.splice(i,1); renderFotoGrid(); updateStep2Panel(); };
+
+/* ── SCHRITT 2: Rechte Spalte live updaten ───────────────── */
+function updateStep2Panel() {
+  // Diktat-Status
+  const transkript = document.getElementById('transkrip')?.value ||
+                     document.getElementById('eingabe-text')?.value || '';
+  const dotD = document.getElementById('step2-diktat-dot');
+  const lblD = document.getElementById('step2-diktat-label');
+  const prevD = document.getElementById('step2-diktat-preview');
+  if (dotD && lblD) {
+    if (transkript.length > 20) {
+      dotD.style.background = '#10b981';
+      lblD.textContent = transkript.length + ' Zeichen aufgenommen';
+      lblD.style.color = '#10b981';
+      if (prevD) {
+        prevD.style.display = 'block';
+        prevD.textContent = transkript.substring(0, 120) + (transkript.length > 120 ? '…' : '');
+      }
+      // Tipp anpassen
+      const tipp = document.getElementById('step2-tipp');
+      if (tipp) tipp.textContent = 'Gut! Sie können jetzt die Analyse starten oder weitere Fotos anhängen.';
+    } else {
+      dotD.style.background = '#f59e0b';
+      lblD.textContent = 'Diktat noch leer — bitte sprechen oder eintippen';
+      lblD.style.color = '#f59e0b';
+    }
+  }
+
+  // Foto-Status
+  const dotF = document.getElementById('step2-foto-dot');
+  const lblF = document.getElementById('step2-foto-label');
+  const miniF = document.getElementById('step2-foto-mini');
+  if (dotF && lblF) {
+    if (fotos && fotos.length > 0) {
+      dotF.style.background = '#10b981';
+      lblF.textContent = fotos.length + ' Foto' + (fotos.length > 1 ? 's' : '') + ' bereit';
+      lblF.style.color = '#10b981';
+      // Mini-Vorschau (max 4)
+      if (miniF) {
+        miniF.style.display = 'flex';
+        miniF.innerHTML = fotos.slice(0, 4).map(function(f, i) {
+          return '<img src="' + f.dataUrl + '" style="width:40px;height:40px;object-fit:cover;border-radius:5px;border:1px solid rgba(0,0,0,.1);" title="Foto ' + (i+1) + '">';
+        }).join('') + (fotos.length > 4 ? '<span style="width:40px;height:40px;border-radius:5px;background:rgba(0,0,0,.08);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--gray-500);">+' + (fotos.length-4) + '</span>' : '');
+      }
+    } else {
+      dotF.style.background = '#d1d5db';
+      lblF.textContent = 'Keine Fotos — optional';
+      lblF.style.color = '';
+      if (miniF) miniF.style.display = 'none';
+    }
+  }
+}
+
 
 /* FOTO-ANLAGE EXPORT als druckbares HTML */
 window.exportFotoAnlage = async function() {

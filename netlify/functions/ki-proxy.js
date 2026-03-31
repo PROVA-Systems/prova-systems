@@ -1,334 +1,139 @@
-// ══════════════════════════════════════════════════
-// PROVA Systems — KI-Proxy Netlify Function
-// Netlify Function: ki-proxy
-// Env: OPENAI_API_KEY
-//
-// Aufgaben:
-//   - pdf_extraktion: PDF → KI → Aktenzeichen, Parteien, Beweisfragen, Fristen
-//   - qualitaetspruefung: Gutachten-Entwurf → KI → Checkliste
-//   - kostenkalkulation: Befund → KI → Sanierungskosten
-//   - freitext: Allgemeine KI-Hilfe
-//   - fachurteil_entwurf: Diktat+§1-§5 → KI-Analyse + Ursachenkategorien + Normen (§6 Guided Writing)
-//   - diktat_nachtrag: Nachträgliches Diktat verarbeiten → §6-Material extrahieren
-// ══════════════════════════════════════════════════
+// PROVA Systems — KI-Proxy Netlify Function v3.0
+// Aufgaben-Router: messages-Format + aufgabe-Format
+// API-Key: Netlify Env Var OPENAI_API_KEY
 
-const OPENAI_API = 'https://api.openai.com/v1/chat/completions';
-const MODEL = 'gpt-4o';
+exports.handler = async function(event) {
+  if (event.httpMethod === 'OPTIONS') {
+    return { statusCode: 200, headers: { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'Content-Type', 'Access-Control-Allow-Methods': 'POST, OPTIONS' }, body: '' };
+  }
+  if (event.httpMethod !== 'POST') {
+    return { statusCode: 405, body: JSON.stringify({ error: 'Method not allowed' }) };
+  }
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) return { statusCode: 500, body: JSON.stringify({ error: 'OPENAI_API_KEY nicht konfiguriert' }) };
 
-exports.handler = async (event) => {
-  const headers = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'Content-Type',
-    'Content-Type': 'application/json',
-  };
-
-  if (event.httpMethod === 'OPTIONS') return { statusCode: 200, headers, body: '' };
-  if (event.httpMethod !== 'POST') return { statusCode: 405, headers, body: JSON.stringify({ error: 'Method Not Allowed' }) };
-
-  const API_KEY = process.env.OPENAI_API_KEY;
-  if (!API_KEY) return { statusCode: 500, headers, body: JSON.stringify({ error: 'OPENAI_API_KEY nicht konfiguriert' }) };
+  let body;
+  try { body = JSON.parse(event.body); }
+  catch (e) { return { statusCode: 400, body: JSON.stringify({ error: 'Invalid JSON' }) }; }
 
   try {
-    const input = JSON.parse(event.body || '{}');
-    const aufgabe = input.aufgabe;
-    if (!aufgabe) return { statusCode: 400, headers, body: JSON.stringify({ error: 'Feld "aufgabe" fehlt' }) };
-
-    let result;
-    switch (aufgabe) {
-      case 'pdf_extraktion': result = await pdfExtraktion(API_KEY, input); break;
-      case 'qualitaetspruefung': result = await qualitaetspruefung(API_KEY, input); break;
-      case 'kostenkalkulation': result = await kostenkalkulation(API_KEY, input); break;
-      case 'freitext': result = await freitext(API_KEY, input); break;
-      case 'fachurteil_entwurf': result = await fachurteilEntwurf(API_KEY, input); break;
-      case 'diktat_nachtrag': result = await diktatNachtrag(API_KEY, input); break;
-      default: return { statusCode: 400, headers, body: JSON.stringify({ error: `Unbekannte Aufgabe: ${aufgabe}` }) };
-    }
-
-    return { statusCode: 200, headers, body: JSON.stringify(result) };
-  } catch (err) {
-    console.error('ki-proxy error:', err);
-    return { statusCode: 500, headers, body: JSON.stringify({ error: err.message }) };
+    const aufgabe = body.aufgabe || 'messages';
+    if (aufgabe === 'fachurteil_entwurf') return await handleFachurteilEntwurf(body, apiKey);
+    if (aufgabe === 'qualitaetspruefung') return await handleQualitaetspruefung(body, apiKey);
+    if (aufgabe === 'freitext') return await handleFreitext(body, apiKey);
+    return await handleMessages(body, apiKey);
+  } catch (e) {
+    return { statusCode: 502, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }, body: JSON.stringify({ error: 'Upstream error', detail: e.message }) };
   }
 };
 
-// ════════════════════════════════════════
-// OpenAI Chat-Completion Helper
-// ════════════════════════════════════════
-async function openaiChat(apiKey, systemPrompt, userContent, maxTokens = 2000) {
-  const messages = [
-    { role: 'system', content: systemPrompt },
-    { role: 'user', content: userContent }
-  ];
+async function handleFachurteilEntwurf(body, apiKey) {
+  const { diktat = '', schadenart = '', messwerte = '', verwendungszweck = 'gericht', paragraphen = null, az = '', objekt = '', baujahr = '', auftraggeber = '' } = body;
+  const entwurf = paragraphen ? (paragraphen.gesamt || '') : '';
+  const gesamtKontext = (diktat + messwerte + entwurf).trim();
 
-  const body = {
-    model: MODEL,
-    max_tokens: maxTokens,
-    temperature: 0.2,
-    response_format: { type: 'json_object' },
-    messages,
-  };
-
-  const res = await fetch(OPENAI_API, {
-    method: 'POST',
-    headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify(body)
-  });
-
-  if (!res.ok) {
-    const errText = await res.text();
-    throw new Error(`OpenAI API Error ${res.status}: ${errText}`);
+  if (gesamtKontext.length < 50) {
+    return jsonResponse({ ursachenkategorien: [], messwert_analyse: [], normen_vorschlaege: [], diktat_extrakte: { feststellungen: '', hat_ursachen: false, hat_empfehlungen: false }, hinweis: 'DIKTAT_ZU_KURZ' });
   }
 
-  const data = await res.json();
-  const text = data.choices?.[0]?.message?.content || '';
-  const cleaned = text.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
+  const systemPrompt = `Du bist ein öffentlich bestellter und vereidigter Sachverständiger für Schäden an Gebäuden mit 30 Jahren Berufserfahrung. Du analysierst Schadensfälle für das PROVA Gutachten-Assistenzsystem.
 
-  try { return JSON.parse(cleaned); }
-  catch (e) { return { raw_response: text, parse_error: e.message }; }
-}
+EXPERTISE: Wasserschaden, Schimmel/Feuchte, Brandschaden, Sturm, Elementar, Baumängel. DIN 4108-2/3/7, WTA 6-1-01/D, DIN 68800, DIN EN ISO 13788, DIN 18195, VOB/B §13, §§823/906 BGB. BGH-Rspr. zu Beweislast und Kausalität.
 
-// ════════════════════════════════════════
-// AUFGABE 1: PDF-Extraktion (GPT-4o Vision)
-// ════════════════════════════════════════
-async function pdfExtraktion(apiKey, input) {
-  const { pdf_base64, auftragstyp } = input;
-  if (!pdf_base64) throw new Error('pdf_base64 fehlt');
+GRENZWERTE: fRsi ≥ 0,70 (DIN 4108-2) | Holzfeuchte <18% unkritisch, >20% kritisch (DIN 68800) | rel. Luftfeuchte <60% Wohnraum (WTA 6-1-01/D) | Taupunkt bei 20°C/50%rF = 9,3°C (DIN EN ISO 13788)
 
-  const auftragsContext = {
-    gerichtsgutachten: 'Dies ist wahrscheinlich ein Beweisbeschluss eines Gerichts.',
-    versicherungsgutachten: 'Dies ist wahrscheinlich ein Auftrag einer Versicherungsgesellschaft.',
-    schiedsgutachten: 'Dies ist wahrscheinlich eine Schiedsvereinbarung.',
-    privatgutachten: 'Dies ist wahrscheinlich eine Anfrage einer Privatperson.',
-  };
-  const contextHint = auftragsContext[auftragstyp] || 'Bitte analysiere dieses Dokument.';
+PFLICHTREGELN:
+1. NUR aus Diktat/Sichtbefunden schließen — KEINE Fakten erfinden
+2. Ursachenkategorien NUR wenn Diktat konkrete Hinweise enthält
+3. Messwerte NUR wenn explizit genannt
+4. Wenn zu wenig Info → leere Arrays, nicht raten
 
-  const systemPrompt = 'Du bist ein KI-Assistent für Bausachverständige. Du analysierst Dokumente und extrahierst strukturierte Daten. Antworte AUSSCHLIESSLICH mit einem JSON-Objekt.';
+NORMEN_DB (nur diese verwenden): DIN 4108-2, DIN 4108-3, DIN 4108-7, DIN 68800-1, WTA 6-1-01/D, DIN EN ISO 13788, DIN EN 13829, DIN 18195, DIN 18531, DIN 276, § 906 BGB, § 823 BGB, VOB/B §13, DIN 4109, DIN EN 1991
 
-  // GPT-4o Vision: PDF als Data-URL
-  const userContent = [
-    { type: 'image_url', image_url: { url: `data:application/pdf;base64,${pdf_base64}`, detail: 'high' } },
-    { type: 'text', text: `${contextHint}
+ANTWORT: NUR gültiges JSON ohne Markdown:
+{"ursachenkategorien":[{"kategorie":"Name","plausibilitaet":"hoch|mittel|gering","begruendung":"Max 120 Zeichen, NUR aus Diktat"}],"messwert_analyse":[{"messwert":"z.B. Holzfeuchte 24%","grenzwert":"<18% (DIN 68800)","bewertung":"Überschreitung kritisch","normreferenz":"DIN 68800-1"}],"normen_vorschlaege":[{"norm":"DIN 4108-2","relevanz":"Kurze Begründung","klick_text":"gem. DIN 4108-2 (Wärmeschutz)"}],"diktat_extrakte":{"feststellungen":"Sichtbefunde aus Diktat","hat_ursachen":true,"ursachen_hinweise":"Ursachen aus Diktat","hat_empfehlungen":false,"empfehlungen":""}}`;
 
-Extrahiere folgende Informationen und antworte mit JSON:
+  const gutTypMap = { gericht: 'Gerichtsgutachten', versicherung: 'Versicherungsgutachten', privat: 'Privatgutachten' };
+  const userPrompt = `FALLANALYSE:
+AZ: ${az || '—'} | Schadensart: ${schadenart || '—'} | Objekt: ${objekt || '—'}${baujahr ? ' | Baujahr: ' + baujahr : ''}${auftraggeber ? ' | Auftraggeber: ' + auftraggeber : ''}
+Gutachtentyp: ${gutTypMap[verwendungszweck] || verwendungszweck}
 
-{
-  "aktenzeichen": "Aktenzeichen oder null",
-  "gericht": "Gericht oder null",
-  "auftraggeber": "Auftraggeber falls kein Gericht, oder null",
-  "klaeger": "Kläger/Antragsteller oder null",
-  "beklagter": "Beklagter/Antragsgegner oder null",
-  "geschaedigter": "Geschädigter oder null",
-  "beweisfragen": ["Beweisfragen als Array, oder []"],
-  "frist": "Frist als TT.MM.JJJJ oder null",
-  "adresse": "Schadensort-Adresse oder null",
-  "schadenart": "Schadensart oder null",
-  "versicherungsnr": "Versicherungsnummer oder null"
-}
+DIKTAT DES SACHVERSTÄNDIGEN:
+${diktat || '(kein Diktat vorhanden)'}
+${messwerte ? '\nMESSWERTE:\n' + messwerte : ''}${entwurf ? '\n§1–§5 ENTWURF (erste 1200 Zeichen):\n' + entwurf.substring(0, 1200) : ''}
 
-Wenn ein Feld nicht erkennbar ist, setze es auf null.` }
-  ];
+WICHTIG: Analysiere AUSSCHLIESSLICH was im Diktat steht. Leere Arrays wenn zu wenig Info. Gib NUR JSON zurück.`;
 
-  return await openaiChat(apiKey, systemPrompt, userContent, 2000);
-}
-
-// ════════════════════════════════════════
-// AUFGABE 2: Qualitätsprüfung
-// ════════════════════════════════════════
-async function qualitaetspruefung(apiKey, input) {
-  const { gutachten_text, beweisfragen } = input;
-  if (!gutachten_text) throw new Error('gutachten_text fehlt');
-
-  const bwfText = (beweisfragen && beweisfragen.length)
-    ? `\n\nBeweisfragen die beantwortet sein müssen:\n${beweisfragen.map((b, i) => `${i + 1}. ${b}`).join('\n')}`
-    : '';
-
-  const systemPrompt = 'Du bist ein Qualitätsprüfer für Baugutachten. Antworte AUSSCHLIESSLICH mit einem JSON-Objekt.';
-
-  const userPrompt = `Prüfe dieses Gutachten. Antworte mit JSON:
-
-{
-  "gesamtergebnis": "gruen" oder "gelb" oder "rot",
-  "pruefpunkte": [{"kategorie":"...","status":"ok|warnung|fehler","hinweis":"..."}],
-  "zusammenfassung": "1-2 Sätze"
-}
-
-Prüfe: 1) §1-§5 vollständig? 2) Beweisfragen beantwortet?${bwfText} 3) Normen korrekt? 4) Konsistenz §3↔§4? 5) Konjunktiv II? 6) §6 vom SV verfasst?
-
-Gutachten:
-${gutachten_text}`;
-
-  return await openaiChat(apiKey, systemPrompt, userPrompt, 2000);
-}
-
-// ════════════════════════════════════════
-// AUFGABE 3: Kostenkalkulation
-// ════════════════════════════════════════
-async function kostenkalkulation(apiKey, input) {
-  const { befund_text, schadenart, region } = input;
-  if (!befund_text) throw new Error('befund_text fehlt');
-
-  const regionHint = region ? `Region: ${region}.` : '';
-
-  const systemPrompt = 'Du bist ein Baukostenkalkulator. Erstelle realistische Sanierungskosten für Deutschland (2025/2026). Antworte AUSSCHLIESSLICH mit einem JSON-Objekt.';
-
-  const userPrompt = `Kostenkalkulation erstellen. Antworte mit JSON:
-
-{
-  "positionen": [{"nr":1,"gewerk":"...","beschreibung":"...","einheit":"m²","menge":0.0,"einheitspreis_euro":0.00,"gesamtpreis_euro":0.00}],
-  "netto_gesamt": 0.00,
-  "mwst_19": 0.00,
-  "brutto_gesamt": 0.00,
-  "hinweise": "...",
-  "genauigkeit": "Schätzung"
-}
-
-Schadensart: ${schadenart || 'nicht angegeben'} ${regionHint}
-
-Befund:
-${befund_text}`;
-
-  return await openaiChat(apiKey, systemPrompt, userPrompt, 2000);
-}
-
-// ════════════════════════════════════════
-// AUFGABE 4: Freitext (für Stellungnahme-Hilfe etc.)
-// ════════════════════════════════════════
-async function freitext(apiKey, input) {
-  const { system, prompt } = input;
-  if (!prompt) throw new Error('prompt fehlt');
-
-  const messages = [
-    { role: 'system', content: system || 'Du bist ein hilfreicher Assistent für Bausachverständige. Antworte auf Deutsch.' },
-    { role: 'user', content: prompt }
-  ];
-
-  const res = await fetch(OPENAI_API, {
-    method: 'POST',
-    headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ model: 'gpt-4o-mini', max_tokens: 800, temperature: 0.4, messages })
-  });
-
-  if (!res.ok) {
-    const errText = await res.text();
-    throw new Error(`OpenAI API Error ${res.status}: ${errText}`);
+  const result = await callOpenAI({ model: 'gpt-4o-mini', max_tokens: 1200, messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: userPrompt }] }, apiKey);
+  const rawText = result.choices?.[0]?.message?.content || '';
+  let parsed = {};
+  try {
+    const match = rawText.match(/\{[\s\S]*\}/);
+    if (match) parsed = JSON.parse(match[0]);
+  } catch (e) {
+    parsed = { ursachenkategorien: [], messwert_analyse: [], normen_vorschlaege: [], diktat_extrakte: { feststellungen: rawText.substring(0, 200), hat_ursachen: false, hat_empfehlungen: false } };
   }
-
-  const data = await res.json();
-  return { text: data.choices?.[0]?.message?.content || '' };
+  return jsonResponse(parsed);
 }
 
-// ════════════════════════════════════════
-// AUFGABE 5: Fachurteil-Entwurf (§6 Guided Writing)
-// Analysiert Diktat + §1-§5, liefert KI-Analyse-Box-Inhalte
-// ════════════════════════════════════════
-async function fachurteilEntwurf(apiKey, input) {
-  const { diktat, paragraphen, schadenart, messwerte, normen_kontext, verwendungszweck } = input;
+async function handleQualitaetspruefung(body, apiKey) {
+  const { gutachten_text = '', beweisfragen = '' } = body;
+  if (!gutachten_text || gutachten_text.length < 100) return jsonResponse({ pruefpunkte: [], gesamt_bewertung: 'TEXT_ZU_KURZ' });
 
-  const systemPrompt = `Du bist ein KI-Assistent für Bausachverständige (§6 Guided Writing).
-Antworte AUSSCHLIESSLICH mit einem JSON-Objekt.
+  const result = await callOpenAI({ model: 'gpt-4o-mini', max_tokens: 600, messages: [
+    { role: 'system', content: 'Du bist ein Oberlandesgericht-Sachverständiger. Prüfe §6-Fachurteilstexte auf: 1. Konjunktiv II korrekt? 2. Keine unzulässigen Indikativ-Kausalaussagen? 3. Beweislast korrekt? 4. Normverweise vorhanden? 5. Sanierungsempfehlung konkret? ANTWORT NUR JSON: {"pruefpunkte":[{"typ":"ok|warnung|fehler","text":"Beschreibung"}],"konjunktiv_ok":true,"gesamt_bewertung":"gut|verbesserungswuerdig|ueberarbeiten"}' },
+    { role: 'user', content: 'Prüfe:\n\n' + gutachten_text.substring(0, 2000) + (beweisfragen ? '\n\nBeweisfragen:\n' + beweisfragen : '') }
+  ] }, apiKey);
 
-ABSOLUTE REGELN — VERSTÖSSE SIND INAKZEPTABEL:
-
-1. HALLUZINATIONSVERBOT: Du darfst NIEMALS Details erfinden die nicht im Diktat oder in den §1-§5 Daten stehen.
-   - VERBOTEN: Orte erfinden ("neben dem Fenster", "hinter dem Schrank") wenn der SV das nicht gesagt hat
-   - VERBOTEN: Messwerte erfinden die nicht übermittelt wurden
-   - VERBOTEN: Details hinzudichten um den Text "besser" klingen zu lassen
-   - Wenn etwas nicht im Diktat steht → NICHT erwähnen
-   - Bei diktat_extrakte: NUR wörtliche oder sinngemäße Wiedergabe dessen was der SV gesagt hat
-
-2. KONJUNKTIV II — PFLICHT bei allen Ursachen und Empfehlungen:
-   - RICHTIG: "dürfte zurückzuführen sein", "könnte auf ... hindeuten", "wäre zu empfehlen"
-   - FALSCH: "ist zurückzuführen", "führt zu", "muss saniert werden"
-   - Einzige Ausnahme: Messwert-Feststellungen dürfen Indikativ sein ("beträgt", "wurde gemessen")
-
-3. URSACHENKATEGORIEN: Nur technisch plausible Kategorien vorschlagen, basierend auf Schadenart + Messwerten.
-   Begründungen müssen sich auf vorliegende Daten beziehen, nicht auf Vermutungen.
-
-4. NORMEN: Nur Normen vorschlagen die zur Schadenart passen. Keine generischen Normen.`;
-
-  const userPrompt = `Analysiere für §6 Guided Writing. Antworte mit JSON:
-
-{
-  "messwert_analyse": [
-    {"messwert": "Beschreibung des Messwerts", "grenzwert": "Norm: Grenzwert", "bewertung": "Einordnung", "normreferenz": "DIN XXXX"}
-  ],
-  "ursachenkategorien": [
-    {"kategorie": "Technische Ursachenkategorie", "plausibilitaet": "hoch|mittel|niedrig", "begruendung": "Begründung NUR basierend auf vorliegenden Daten, im Konjunktiv II"}
-  ],
-  "normen_vorschlaege": [
-    {"norm": "DIN XXXX", "relevanz": "Warum relevant", "klick_text": "gemäß DIN XXXX (Kurzreferenz)"}
-  ],
-  "diktat_extrakte": {
-    "feststellungen": "NUR was der SV tatsächlich gesagt/diktiert hat — KEINE Ergänzungen, KEINE Erfindungen. Wenn nichts gesagt wurde: leer lassen.",
-    "ursachen_hinweise": "NUR Ursachen-Aussagen die der SV SELBST im Diktat gemacht hat. Im Konjunktiv II wiedergeben. Wenn der SV nichts zu Ursachen gesagt hat: leer lassen.",
-    "empfehlungen": "NUR Empfehlungen die der SV SELBST im Diktat ausgesprochen hat. Im Konjunktiv II. Wenn keine: leer lassen.",
-    "hat_ursachen": false,
-    "hat_empfehlungen": false
-  },
-  "konjunktiv_bausteine": [
-    "dürfte zurückzuführen sein auf",
-    "könnte auf … hindeuten",
-    "wäre naheliegend",
-    "wäre zu empfehlen"
-  ]
+  const rawText = result.choices?.[0]?.message?.content || '';
+  let parsed = {};
+  try { const m = rawText.match(/\{[\s\S]*\}/); if (m) parsed = JSON.parse(m[0]); }
+  catch (e) { parsed = { pruefpunkte: [{ typ: 'warnung', text: 'Manuelle Prüfung erforderlich.' }], gesamt_bewertung: 'verbesserungswuerdig' }; }
+  return jsonResponse(parsed);
 }
 
-WICHTIG für diktat_extrakte:
-- "hat_ursachen" ist NUR true wenn der SV im Diktat EXPLIZIT etwas zu Ursachen gesagt hat
-- "hat_empfehlungen" ist NUR true wenn der SV im Diktat EXPLIZIT Empfehlungen ausgesprochen hat
-- Wenn der SV nur Befunde beschrieben hat (was er gesehen/gemessen hat), sind "ursachen_hinweise" und "empfehlungen" LEER
-- NIEMALS aus §1-§5 generierte KI-Texte als "Diktat-Extrakte" ausgeben — nur das Original-Diktat zählt
-
-EINGABEDATEN:
-Schadensart: ${schadenart || 'nicht angegeben'}
-Messwerte: ${messwerte || 'keine'}
-Normen-Kontext: ${normen_kontext || 'keine'}
-Verwendungszweck: ${verwendungszweck || 'Gerichtsgutachten'}
-
-ORIGINAL-DIKTAT DES SACHVERSTÄNDIGEN (nur hieraus extrahieren!):
-${diktat || 'kein Diktat vorhanden'}
-
-§1-§5 KI-GENERIERTER TEXT (nur für Messwert-Analyse und Ursachenkategorien verwenden, NICHT als Diktat-Extrakt!):
-${paragraphen ? JSON.stringify(paragraphen) : 'keine Paragraphen-Daten'}`;
-
-  return await openaiChat(apiKey, systemPrompt, userPrompt, 2000);
+async function handleFreitext(body, apiKey) {
+  const result = await callOpenAI({ model: body.model || 'gpt-4o-mini', max_tokens: body.max_tokens || 500, messages: [
+    { role: 'system', content: body.system || 'Du bist ein Assistent für öffentlich bestellte Sachverständige.' },
+    { role: 'user', content: body.prompt || '' }
+  ] }, apiKey);
+  const text = result.choices?.[0]?.message?.content || '';
+  return jsonResponse({ text, content: [{ type: 'text', text }] });
 }
 
-// ════════════════════════════════════════
-// AUFGABE 6: Diktat-Nachtrag
-// Verarbeitet nachträgliches Diktat → extrahiert §6-Material
-// ════════════════════════════════════════
-async function diktatNachtrag(apiKey, input) {
-  const { nachtrag_text, schadenart, bestehende_analyse } = input;
-  if (!nachtrag_text) throw new Error('nachtrag_text fehlt');
+async function handleMessages(body, apiKey) {
+  const messages = (body.messages || []).map(msg => {
+    if (!Array.isArray(msg.content)) return msg;
+    const content = msg.content.map(part => {
+      if (part.type === 'text') return { type: 'text', text: part.text };
+      if (part.type === 'image' && part.source) return { type: 'image_url', image_url: { url: 'data:' + part.source.media_type + ';base64,' + part.source.data, detail: 'low' } };
+      return part;
+    });
+    return { role: msg.role, content };
+  });
+  if (!messages.length) return jsonResponse({ error: 'Keine messages angegeben' }, 400);
 
-  const systemPrompt = `Du bist ein KI-Assistent für Bausachverständige.
-Analysiere ein nachträgliches Diktat und extrahiere §6-relevantes Material.
-Antworte AUSSCHLIESSLICH mit einem JSON-Objekt.
+  let model = body.model || 'gpt-4o-mini';
+  if (model.includes('haiku') || model.includes('sonnet') || model.includes('opus')) model = 'gpt-4o-mini';
 
-ABSOLUTE REGELN:
-- Erkenne Ursachen-Aussagen, Bewertungen und Empfehlungen
-- NIEMALS Details erfinden die der SV nicht gesagt hat
-- NUR wiedergeben was der SV TATSÄCHLICH diktiert hat
-- Alle Ursachen und Empfehlungen im Konjunktiv II wiedergeben
-- "confidence: diktat" NUR wenn es wörtlich aus dem Diktat stammt`;
-
-  const userPrompt = `Extrahiere §6-Material aus nachträglichem Diktat. Antworte mit JSON:
-
-{
-  "feststellungen": "Extrahierte Ergänzungen zum Befund",
-  "ursachen": "Ursachen-Aussagen des SV",
-  "empfehlungen": "Empfehlungen des SV",
-  "hat_ursachen": true,
-  "hat_empfehlungen": true,
-  "confidence": "diktat"
+  const result = await callOpenAI({ model, max_tokens: body.max_tokens || 500, messages }, apiKey);
+  const text = result.choices?.[0]?.message?.content || '';
+  return jsonResponse({ content: [{ type: 'text', text }], model: result.model, usage: result.usage });
 }
 
-Schadensart: ${schadenart || 'nicht angegeben'}
-Bestehende Analyse: ${bestehende_analyse || 'keine'}
+async function callOpenAI(params, apiKey) {
+  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + apiKey },
+    body: JSON.stringify(params)
+  });
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error('OpenAI ' + response.status + ': ' + (err.error?.message || 'Fehler'));
+  }
+  return response.json();
+}
 
-Nachträgliches Diktat:
-${nachtrag_text}`;
-
-  return await openaiChat(apiKey, systemPrompt, userPrompt, 1000);
+function jsonResponse(data, status = 200) {
+  return { statusCode: status, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }, body: JSON.stringify(data) };
 }
