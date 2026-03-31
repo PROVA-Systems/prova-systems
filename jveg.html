@@ -486,7 +486,11 @@ window.alsRechnungUebernehmen=function(){
     stunden_akten:jveg.stunden_akten,
     km:jveg.km,wartezeit:jveg.wartezeit,schreibseiten:jveg.schreibseiten,fotos:jveg.fotos,
     netto:jveg.netto,mwst_betrag:jveg.mwst_betrag,brutto:jveg.brutto,
-    mit_mwst:jveg.mit_mwst,aktenzeichen:jveg.aktenzeichen
+    mit_mwst:jveg.mit_mwst,aktenzeichen:jveg.aktenzeichen,
+    // Kontext aus Akte mitgeben
+    auftraggeber_name: localStorage.getItem('prova_auftraggeber_name') || '',
+    auftraggeber_email: localStorage.getItem('prova_auftraggeber_email') || '',
+    rueckweg: jveg.aktenzeichen ? ('akte.html?az=' + encodeURIComponent(jveg.aktenzeichen)) : 'archiv.html'
   }));
 
   setTimeout(function(){window.location.href='rechnungen.html?from=jveg';},1200);
@@ -524,6 +528,39 @@ window.zeigToast=function(msg,typ){
 
 // Init
 update();
+
+// ── Kontext aus URL-Parameter oder localStorage laden ──
+(function ladeKontext() {
+  var params = new URLSearchParams(window.location.search);
+  // AZ: erst URL-Parameter, dann localStorage
+  var az = params.get('az') || localStorage.getItem('prova_letztes_az') || '';
+  if (az) {
+    var azEl = document.getElementById('aktenzeichen');
+    if (azEl && !azEl.value) {
+      azEl.value = az;
+      azEl.classList.add('prefilled');
+    }
+  }
+  // Schadenart → Sachgebiet vorschlagen
+  var sa = params.get('sa') || localStorage.getItem('prova_schadenart') || '';
+  if (sa) {
+    var sgEl = document.getElementById('sachgebiet');
+    if (sgEl) {
+      // Wasserschaden/Schimmel/Feuchte → M2 (Bau)
+      // Brand/Sturm/Elementar → M2
+      // Default M2 ist bereits gesetzt, nur bei Sonderfällen anpassen
+      var saL = sa.toLowerCase();
+      if (saL.includes('wasser') || saL.includes('schimmel') || saL.includes('feuchte') ||
+          saL.includes('brand') || saL.includes('sturm') || saL.includes('bau')) {
+        // M2 = 95€/h — Bauschäden: korrekt, kein Änderung nötig
+        // Aber Hinweis-Toast anzeigen
+        setTimeout(function() {
+          zeigToast('Honorargruppe für ' + sa + ' vorausgefüllt — bitte prüfen', 'info');
+        }, 800);
+      }
+    }
+  }
+})();
 
 })();
 </script>

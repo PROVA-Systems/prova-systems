@@ -954,19 +954,18 @@ var maxKontingent = paket==='Solo' ? 30 : paket==='Team' ? 999 : 10;
   var anrede=localStorage.getItem('prova_sv_anrede')||'Sie';
   var rnd=Math.random();
   var gr, emoji;
-  /* ~15% Chance: "Willkommen zurück" — jederzeit */
-  if(rnd < 0.15){
+  /* ~12% Chance: "Willkommen zurück" — jederzeit */
+  if(rnd < 0.12){
     gr='Willkommen zurück'; emoji='👋';
-  /* ~8% Chance: "Hallo" — jederzeit */
-  } else if(rnd < 0.23){
-    gr='Hallo'; emoji='😊';
-  /* Uhrzeit-basiert */
-  } else if(h<12){
+  /* Uhrzeit-basiert: 05-11 Morgen, 12-17 Tag, 18-21 Abend, 22-04 Nacht */
+  } else if(h>=5 && h<12){
     gr='Guten Morgen'; emoji='☀️';
-  } else if(h<17){
+  } else if(h>=12 && h<18){
     gr='Guten Tag'; emoji='👋';
-  } else {
+  } else if(h>=18 && h<22){
     gr='Guten Abend'; emoji='🌙';
+  } else {
+    gr='Gute Nacht'; emoji='🌛';
   }
   var name=vorname?', '+vorname:'';
   var t=document.getElementById('greeting-title');
@@ -1055,32 +1054,39 @@ function zeigOnboarding(){
 
   // Todo-Liste: nur was noch fehlt
   var todos = [];
-  if(!profilOk)   todos.push({icon:'⚙️',label:'SV-Profil vervollständigen',href:'einstellungen.html',key:'profil'});
-  if(!kontakteOk) todos.push({icon:'👥',label:'Kontakte importieren',href:'kontakte.html',key:'kontakte'});
-  if(!ersterFall && !erstesMalGesehen) todos.push({icon:'📄',label:'Erstes Gutachten anlegen',href:'app.html',key:'gutachten',primary:true});
+  if(!profilOk)   todos.push({icon:'⚙️',label:'SV-Profil vervollständigen',sub:'Name, Qualifikation, Bürodaten',href:'einstellungen.html'});
+  if(!kontakteOk) todos.push({icon:'👥',label:'Ersten Kontakt anlegen',sub:'Auftraggeber, Versicherung oder Anwalt',href:'kontakte.html'});
+  if(!ersterFall && !erstesMalGesehen) todos.push({icon:'📄',label:'Erstes Gutachten anlegen',sub:'Diktat aufnehmen → KI erstellt §1–§5',href:'app.html',primary:true});
 
   var feed=document.getElementById('action-feed');
   if(feed && todos.length > 0){
+    var doneCount = 3 - todos.length;
+    var pct = Math.round(doneCount / 3 * 100);
     feed.innerHTML=
-      '<div style="padding:20px;">'
-       +'<div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:14px;">🚀 Noch ' + todos.length + ' Schritt' + (todos.length > 1 ? 'e' : '') + ' zum Start</div>'
-       + todos.map(function(t){
-           return '<a href="'+t.href+'" style="display:flex;align-items:center;gap:12px;padding:11px 14px;margin-bottom:8px;'
-             +(t.primary?'background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;':'background:var(--surface2);border:1px solid var(--border2);color:var(--text2);')
-             +'border-radius:var(--r-md);text-decoration:none;font-weight:500;font-size:13px;transition:opacity .15s;" '
-             +'onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">'
-             +'<span style="font-size:18px;">'+t.icon+'</span>'
-             +'<span>'+t.label+'</span>'
-             +'</a>';
-         }).join('')
-      +'</div>';
+      '<div style="padding:16px 20px;">'+
+      '<div style="font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;">Einrichtung · '+doneCount+' von 3 erledigt</div>'+
+      '<div style="height:4px;border-radius:4px;background:var(--border);margin-bottom:14px;overflow:hidden;">'+
+        '<div style="height:100%;border-radius:4px;background:linear-gradient(90deg,var(--accent),var(--accent2));width:'+pct+'%;"></div>'+
+      '</div>'+
+      todos.map(function(t,i){
+        var isNext = i===0;
+        return '<a href="'+t.href+'" style="display:flex;align-items:center;gap:12px;padding:12px 14px;margin-bottom:7px;'+
+          (isNext
+            ? 'background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;'
+            : 'background:var(--surface2);border:1px solid var(--border2);color:var(--text2);opacity:.55;pointer-events:none;')+
+          'border-radius:var(--r-md);text-decoration:none;font-size:13px;transition:opacity .15s;">'+
+          '<span style="font-size:20px;flex-shrink:0;">'+t.icon+'</span>'+
+          '<div style="flex:1;"><div style="font-weight:600;">'+t.label+'</div>'+
+          '<div style="font-size:11px;opacity:.75;margin-top:1px;">'+t.sub+'</div></div>'+
+          (isNext ? '<span style="font-size:15px;opacity:.9;">→</span>' : '')+
+          '</a>';
+      }).join('')+
+      '</div>';
   } else if(feed) {
     feed.innerHTML='<div class="feed-empty"><div class="feed-empty-icon">✨</div><p>Alles erledigt — keine offenen Aktionen.</p></div>';
   }
 
-  var bt=document.getElementById('briefing-text');
-  var btags=document.getElementById('briefing-tags');
-  if(bt)bt.innerHTML='<strong>Willkommen bei PROVA.</strong> Legen Sie Ihren ersten Fall an oder vervollständigen Sie Ihr SV-Profil in den Einstellungen.';
+if(bt)bt.innerHTML='<strong>Willkommen bei PROVA.</strong> Legen Sie Ihren ersten Fall an oder vervollständigen Sie Ihr SV-Profil in den Einstellungen.';
   if(btags)btags.innerHTML='<span class="briefing-tag info">🚀 Bereit zum Start</span>';
 }
 

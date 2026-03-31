@@ -701,7 +701,8 @@ function renderSchnellaktionen(status,f,az){
   if(f.KI_Entwurf&&(status==='Entwurf'||status==='In Bearbeitung')){
     actions.push({icon:'✅',bg:'rgba(16,185,129,.1)',label:'Zur Freigabe',sub:'Gutachten prüfen und freigeben',action:"oeffneFreigabe()"});
   }
-  actions.push({icon:'💶',bg:'rgba(245,158,11,.1)',label:'Rechnung erstellen',sub:'JVEG oder Pauschal',action:"window.location.href='rechnungen.html'"});
+  actions.push({icon:'⚖️',bg:'rgba(79,142,247,.08)',label:'JVEG-Rechner',sub:'Honorar berechnen nach §7–§9 JVEG',action:"(function(){var az=currentFields.Aktenzeichen||'';var sa=currentFields.Schadenart||currentFields.schadensart||'';var ag=currentFields.Auftraggeber_Name||'';var agMail=currentFields.Auftraggeber_Email||'';if(ag)localStorage.setItem('prova_auftraggeber_name',ag);if(agMail)localStorage.setItem('prova_auftraggeber_email',agMail);window.location.href='jveg.html?az='+encodeURIComponent(az)+'&sa='+encodeURIComponent(sa);})();"});
+  actions.push({icon:'💶',bg:'rgba(245,158,11,.1)',label:'Rechnung erstellen',sub:'Direkt oder via JVEG-Rechner',action:"(function(){var az=currentFields.Aktenzeichen||'';window.location.href='rechnungen.html'+(az?'?az='+encodeURIComponent(az):'');})();"});
   actions.push({icon:'📐',bg:'rgba(16,185,129,.08)',label:'Kostenermittlung',sub:'Sanierungskosten nach BKI/Sirados',action:"(function(){var az=currentFields.Aktenzeichen||'';var sa=currentFields.Schadensart||currentFields.schadensart||'';window.location.href='kostenermittlung.html?az='+encodeURIComponent(az)+'&sa='+encodeURIComponent(sa);})();"});
   actions.push({icon:'✉️',bg:'rgba(139,92,246,.1)',label:'Brief schreiben',sub:'Aus Vorlage mit Fall-Daten',action:"window.location.href='briefvorlagen.html'"});
   actions.push({icon:'📅',bg:'rgba(79,142,247,.08)',label:'Termin anlegen',sub:'Ortstermin, Frist etc.',action:"window.location.href='termine.html'"});

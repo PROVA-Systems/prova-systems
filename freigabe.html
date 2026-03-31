@@ -663,49 +663,75 @@ function renderAuditTimeline() {
     events.push({ zeit: erstellt, icon: '📂', titel: 'Fall angelegt', detail: 'Aktenzeichen: ' + (f.Aktenzeichen || '—'), typ: 'system' });
   }
 
-  // 2. Diktat / Eingabe
-  var diktatTs = localStorage.getItem('prova_diktat_ts');
+  // 2. Diktat — Start und Ende mit Dauer
+  var diktatStartTs = localStorage.getItem('prova_diktat_start_ts');
+  var diktatEndeTs  = localStorage.getItem('prova_diktat_ende_ts');
+  var diktatTs      = diktatStartTs || localStorage.getItem('prova_diktat_ts');
+  var diktatDauer   = localStorage.getItem('prova_diktat_dauer_sek');
+  var transkriptLen = (localStorage.getItem('prova_transkript') || '').length;
   if (diktatTs) {
-    events.push({ zeit: diktatTs, icon: '🎤', titel: 'Diktat / Befund-Eingabe', detail: 'Sachverständiger hat Befunddaten eingegeben', typ: 'sv' });
+    var diktatDetail = 'Sachverständiger hat Befunddaten diktiert';
+    if (diktatDauer) {
+      var min = Math.floor(parseInt(diktatDauer) / 60);
+      var sek = parseInt(diktatDauer) % 60;
+      diktatDetail += ' · Dauer: ' + (min > 0 ? min + ' Min ' : '') + sek + ' Sek';
+    }
+    if (transkriptLen > 0) diktatDetail += ' · ' + transkriptLen + ' Zeichen';
+    events.push({ zeit: diktatTs, icon: '🎤', titel: 'Diktat / Befund-Eingabe', detail: diktatDetail, typ: 'sv' });
+  }
+  if (diktatEndeTs && diktatEndeTs !== diktatTs) {
+    events.push({ zeit: diktatEndeTs, icon: '⏹️', titel: 'Diktat beendet', detail: 'Aufnahme gestoppt · Text wird KI-bereinigt', typ: 'sv' });
   }
 
-  // 3. KI-Entwurf generiert
-  if (f.KI_Entwurf && f.KI_Entwurf.length > 100) {
-    var kiTs = f.KI_Entwurf_Datum || f.Modified || now.toISOString();
-    var kiLen = f.KI_Entwurf.length;
-    events.push({ zeit: kiTs, icon: '🤖', titel: 'KI-Entwurf generiert (§1–§5)', detail: kiLen + ' Zeichen · GPT-4o · Struktur + Normen-Vorschläge', typ: 'ki' });
+  // 3. KI-Entwurf generiert — aus localStorage oder Airtable
+  var kiTs = localStorage.getItem('prova_ki_ts') || f.KI_Entwurf_Datum || f.Modified;
+  var kiModell = localStorage.getItem('prova_ki_modell') || 'GPT-4o · PROVA-Analyse';
+  if (kiTs || (f.KI_Entwurf && f.KI_Entwurf.length > 100)) {
+    var kiLen = (f.KI_Entwurf || '').length;
+    events.push({
+      zeit: kiTs || now.toISOString(),
+      icon: '🤖',
+      titel: 'KI-Entwurf generiert (§1–§5)',
+      detail: (kiLen > 0 ? kiLen + ' Zeichen · ' : '') + kiModell + ' · Struktur, Normen-Vorschläge, Konjunktiv-Prüfung',
+      typ: 'ki'
+    });
   }
 
   // 4. SV-Änderungen am Entwurf
   var editCount = parseInt(localStorage.getItem('prova_entwurf_edits') || '0');
   if (editCount > 0) {
-    events.push({ zeit: localStorage.getItem('prova_entwurf_edit_ts') || now.toISOString(), icon: '✏️', titel: 'SV hat KI-Entwurf bearbeitet', detail: editCount + ' Änderungen am generierten Text', typ: 'sv' });
+    events.push({ zeit: localStorage.getItem('prova_entwurf_edit_ts') || now.toISOString(), icon: '✏️', titel: 'SV hat KI-Entwurf bearbeitet', detail: editCount + ' Änderung(en) am generierten Text · SV-Eigenverantwortung', typ: 'sv' });
   }
 
   // 5. Stellungnahme §6
   var stText = localStorage.getItem('prova_stellungnahme_text');
-  var stWeg = localStorage.getItem('prova_stellungnahme_weg');
-  var stTs = localStorage.getItem('prova_stellungnahme_ts');
+  var stWeg  = localStorage.getItem('prova_stellungnahme_weg');
+  var stTs   = localStorage.getItem('prova_stellungnahme_ts');
+  var kj2Ok  = localStorage.getItem('prova_stellungnahme_kj2_ok');
   if (stText && stText.length > 20) {
-    var wegLabel = stWeg === 'B' ? 'KI-unterstützt ausformuliert (Weg B) — SV hat Stichpunkte vorgegeben' : 'Komplett vom SV selbst verfasst (Weg A)';
-    events.push({ zeit: stTs || now.toISOString(), icon: '⚖️', titel: '§6 Stellungnahme verfasst', detail: wegLabel + ' · ' + stText.length + ' Zeichen', typ: stWeg === 'B' ? 'ki-sv' : 'sv' });
+    var wegLabel = stWeg === 'B'
+      ? 'KI-unterstützt ausformuliert (Weg B) — SV hat Stichpunkte vorgegeben'
+      : 'Komplett vom SV selbst verfasst (Weg A)';
+    var kj2Label = kj2Ok === '1' ? ' · ✅ Konjunktiv II geprüft' : ' · ⚠️ Konjunktiv-Verstöße erkannt';
+    events.push({ zeit: stTs || now.toISOString(), icon: '⚖️', titel: '§6 Stellungnahme verfasst', detail: wegLabel + ' · ' + stText.length + ' Zeichen' + kj2Label, typ: stWeg === 'B' ? 'ki-sv' : 'sv' });
   }
 
   // 6. KI-Qualitätsprüfung
   var qiDone = localStorage.getItem('prova_qi_done');
   if (qiDone) {
-    events.push({ zeit: localStorage.getItem('prova_qi_ts') || now.toISOString(), icon: '🔍', titel: 'KI-Qualitätsprüfung durchgeführt', detail: 'Prüfung auf Vollständigkeit, Normen, Konsistenz, Konjunktiv II', typ: 'ki' });
+    events.push({ zeit: localStorage.getItem('prova_qi_ts') || now.toISOString(), icon: '🔍', titel: 'KI-Qualitätsprüfung durchgeführt', detail: 'Prüfung auf Vollständigkeit, Normen-Konsistenz, Konjunktiv II', typ: 'ki' });
   }
 
-  // 7. §407a Bestätigung
-  var confirm407a = f.bestaetigung_407a || localStorage.getItem('prova_407a_ts');
+  // 7. §407a ZPO Bestätigung
+  var confirm407a = localStorage.getItem('prova_407a_ts') || f.bestaetigung_407a;
   if (confirm407a) {
-    events.push({ zeit: confirm407a, icon: '✅', titel: '§407a ZPO Bestätigung', detail: 'SV hat persönliche Prüfung und fachliche Verantwortung bestätigt', typ: 'sv' });
+    var svName = [localStorage.getItem('prova_sv_vorname'), localStorage.getItem('prova_sv_nachname')].filter(Boolean).join(' ') || 'Sachverständiger';
+    events.push({ zeit: confirm407a, icon: '✅', titel: '§407a ZPO — Persönliche Bestätigung', detail: svName + ' hat persönliche Prüfung und fachliche Verantwortung bestätigt · Rechtsverbindlich', typ: 'sv' });
   }
 
-  // 8. Freigabe
-  if (f.Status === 'Freigegeben' || f.Status === 'freigegeben') {
-    events.push({ zeit: f.Freigabe_Datum || now.toISOString(), icon: '🎉', titel: 'Gutachten freigegeben', detail: 'PDF wird generiert · §407a dokumentiert · EU AI Act §7 enthalten', typ: 'system' });
+  // 8. Freigabe / PDF-Export
+  if (f.Status === 'Freigegeben' || f.Status === 'freigegeben' || f.Status === 'Exportiert') {
+    events.push({ zeit: f.Freigabe_Datum || f.PDF_Datum || now.toISOString(), icon: '🎉', titel: 'Gutachten freigegeben & exportiert', detail: 'PDF generiert · §407a dokumentiert · EU AI Act Art. 14 (KI-Label) enthalten', typ: 'system' });
   }
 
   // Sortieren (älteste zuerst)
@@ -752,6 +778,12 @@ function toggle407a(){
     btn.disabled=!cb.checked;
     btn.style.opacity=cb.checked?'1':'.5';
     btn.style.cursor=cb.checked?'pointer':'not-allowed';
+    // Audit-Log: §407a Bestätigung Timestamp
+    if(cb.checked) {
+      localStorage.setItem('prova_407a_ts', new Date().toISOString());
+    } else {
+      localStorage.removeItem('prova_407a_ts');
+    }
   }
 }
 
@@ -833,7 +865,7 @@ async function speichereAenderungen(){
   if(!recId){zeigToast('Kein Datensatz.','err');return;}
   try {
     const url=`/v0/${AT_BASE}/${AT_TABLE}/${recId}`;
-    const res=await fetch('/.netlify/functions/airtable',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({method:'PATCH',path:url,payload:{fields:{KI_Entwurf:txt}}})});
+    const res=await fetch('/.netlify/functions/airtable',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({method:'PATCH',path:url,body:{fields:{KI_Entwurf:txt}}})});
     if(!res.ok) throw new Error('HTTP '+res.status);
     if(recFields) recFields.KI_Entwurf=txt;
     localStorage.setItem('prova_entwurf_text',txt);

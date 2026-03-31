@@ -452,13 +452,25 @@ var posCounter=0;
   var raw=null;try{raw=JSON.parse(sessionStorage.getItem('prova_rechnung_prefill')||'null');}catch(e){}
   if(!raw||raw.typ!=='JVEG')return;
 
-  // Typ setzen
-  document.getElementById('rechnung-typ').value='JVEG';
+  // Typ: JVEG existiert nicht mehr im Dropdown → Pauschal nehmen, Titel manuell setzen
+  document.getElementById('rechnung-typ').value='Pauschal';
+  var titelEl = document.getElementById('form-titel');
+  if(titelEl) titelEl.textContent = 'JVEG-Rechnung';
 
   // AZ setzen
   if(raw.aktenzeichen){
     var azEl=document.getElementById('r-aktenzeichen');
     if(azEl){azEl.value=raw.aktenzeichen;azEl.classList.add('prefilled');}
+  }
+
+  // Auftraggeber aus Akte vorausfüllen (neu)
+  if(raw.auftraggeber_name){
+    var agEl=document.getElementById('r-auftraggeber');
+    if(agEl){agEl.value=raw.auftraggeber_name;agEl.classList.add('prefilled');}
+  }
+  if(raw.auftraggeber_email){
+    var emailEl=document.getElementById('r-email');
+    if(emailEl){emailEl.value=raw.auftraggeber_email;emailEl.classList.add('prefilled');}
   }
 
   // Positionen aus JVEG-Daten aufbauen
@@ -477,6 +489,16 @@ var posCounter=0;
   var info='JVEG '+raw.honorargruppe+' · '+fmt(raw.netto)+' netto · '+fmt(raw.brutto)+' brutto';
   document.getElementById('jveg-banner-info').textContent=info;
   document.getElementById('jveg-banner').classList.add('show');
+
+  // Rückweg-Button zur Akte einblenden (neu)
+  if(raw.rueckweg){
+    var rueckBtn = document.createElement('a');
+    rueckBtn.href = raw.rueckweg;
+    rueckBtn.style.cssText = 'display:inline-flex;align-items:center;gap:6px;margin-left:12px;font-size:12px;color:var(--accent);text-decoration:none;font-weight:600;';
+    rueckBtn.innerHTML = '← Zurück zur Akte';
+    var banner = document.getElementById('jveg-banner');
+    if(banner) banner.appendChild(rueckBtn);
+  }
 
   // sessionStorage aufräumen
   sessionStorage.removeItem('prova_rechnung_prefill');

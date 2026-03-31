@@ -69,6 +69,7 @@ self.addEventListener('fetch', event => {
 
   if (
     url.pathname.startsWith('/.netlify/') ||
+    url.pathname.startsWith('/cdn-cgi/') ||
     url.hostname.includes('make.com') ||
     url.hostname.includes('airtable.com') ||
     url.hostname.includes('openai.com') ||

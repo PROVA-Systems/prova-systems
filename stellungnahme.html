@@ -125,7 +125,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-ui);min-heigh
   border-radius:var(--r-md);color:var(--text);
   font-size:13px;font-family:var(--font-ui);
   line-height:1.7;resize:vertical;outline:none;
-  transition:border-color .15s;min-height:180px;
+  transition:border-color .15s;min-height:320px;
 }
 .sv-textarea:focus{border-color:var(--accent);}
 .char-count{font-size:11px;color:var(--text3);margin-top:6px;text-align:right;}
@@ -454,29 +454,20 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-ui);min-heigh
     <!-- LINKE SPALTE: SCHREIBEN -->
     <div class="left-col">
 
-      <!-- Gutachtentyp -->
+      <!-- §6 FACHURTEIL — Hauptelement -->
       <div class="card">
-        <div class="card-header">
-          <div>
-            <div class="card-title">Verwendungszweck</div>
-            <div class="card-sub">Bestimmt den §7 KI-Offenlegungstext</div>
-          </div>
-        </div>
-        <div class="card-body" style="padding-top:12px;padding-bottom:12px;">
-          <div class="typ-row">
-            <button class="typ-btn active" id="typ-gericht" onclick="setTyp('gericht')">⚖️ Gerichtsgutachten</button>
-            <button class="typ-btn" id="typ-versicherung" onclick="setTyp('versicherung')">🏢 Versicherung</button>
-            <button class="typ-btn" id="typ-privat" onclick="setTyp('privat')">🏠 Privatgutachten</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- §6 Schreiben -->
-      <div class="card">
-        <div class="card-header">
-          <div>
-            <div class="card-title">§6 Fachurteil — Ihre persönliche Einschätzung</div>
-            <div class="card-sub">Pflicht nach §407a Abs. 3 ZPO · Konjunktiv II wird live geprüft</div>
+        <div class="card-header" style="flex-direction:column;align-items:flex-start;gap:8px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;width:100%;">
+            <div>
+              <div class="card-title">§6 Fachurteil — Ihre persönliche Einschätzung</div>
+              <div class="card-sub">Pflicht nach §407a Abs. 3 ZPO · Konjunktiv II wird live geprüft</div>
+            </div>
+            <!-- Verwendungszweck: kompakte Pills direkt im Header -->
+            <div style="display:flex;gap:6px;flex-shrink:0;">
+              <button class="typ-btn active" id="typ-gericht" onclick="setTyp('gericht')" style="padding:4px 10px;font-size:10px;min-width:auto;">⚖️ Gericht</button>
+              <button class="typ-btn" id="typ-versicherung" onclick="setTyp('versicherung')" style="padding:4px 10px;font-size:10px;min-width:auto;">🏢 Versicherung</button>
+              <button class="typ-btn" id="typ-privat" onclick="setTyp('privat')" style="padding:4px 10px;font-size:10px;min-width:auto;">🏠 Privat</button>
+            </div>
           </div>
         </div>
         <div class="card-body">
@@ -492,7 +483,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-ui);min-heigh
               <div class="textarea-highlight" id="hlA" style="pointer-events:none;z-index:1;"></div>
               <textarea class="sv-textarea" id="svTextA"
                 placeholder="Die Ursache dürfte auf … zurückzuführen sein. Die Beweislast dürfte … liegen. Es wäre zu empfehlen, …"
-                oninput="onInputA()" rows="8"
+                oninput="onInputA()" rows="14"
                 style="position:relative;z-index:2;background:transparent;"></textarea>
             </div>
             <div class="char-count bad" id="charA">0 / mind. 500 Zeichen</div>
@@ -576,16 +567,16 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-ui);min-heigh
           </div>
 
           <!-- KI-Inspiration (dezent, immer verfügbar) -->
-          <div class="ki-insp-wrap" id="kiInspWrap">
-            <div class="ki-insp-header" onclick="toggleInsp()">
-              <div class="ki-insp-label">
+          <div class="ki-insp-wrap" id="kiInspWrap" style="margin-top:10px;">
+            <div class="ki-insp-header" onclick="toggleInsp()" style="padding:6px 10px;border-radius:8px;background:rgba(79,142,247,.05);border:1px solid rgba(79,142,247,.1);cursor:pointer;">
+              <div class="ki-insp-label" style="font-size:11px;">
                 <span>💡</span>
-                <span>KI-Denkanstoß</span>
-                <span style="font-size:10px;font-weight:400;color:var(--text3);">— nur zur Orientierung</span>
+                <span style="font-weight:600;color:var(--accent);">KI-Denkanstoß</span>
+                <span style="font-size:10px;font-weight:400;color:var(--text3);">— nur zur Orientierung · Nicht kopierbar</span>
               </div>
               <div style="display:flex;align-items:center;gap:8px;">
                 <span class="ki-insp-note">Nicht kopierbar · Nur Inspiration</span>
-                <span id="insp-toggle-icon" style="color:var(--text3);font-size:12px;">▼</span>
+                <span id="insp-toggle-icon" style="color:var(--text3);font-size:10px;">▼ einblenden</span>
               </div>
             </div>
             <div class="ki-insp-body" id="kiInspBody">
@@ -930,37 +921,108 @@ const OFFENLEGUNG = {
 
 // KJ2 Verbotsliste — erweitert, alle typischen SV-Indikativ-Muster
 const INDIK_BAD = [
-  // URSACHE / KAUSALITÄT
-  {rx:/\bist\s+(die\s+)?(Ursache|Schadensursache|Grund|Auslöser|Ursächlich)\b/gi, h:'"ist die Schadensursache" → "dürfte die Schadensursache sein"'},
-  {rx:/\bist\s+zurückzuführen\b/gi, h:'"ist zurückzuführen" → "dürfte zurückzuführen sein"'},
-  {rx:/\bist\s+zu\s+suchen\b/gi, h:'"ist zu suchen" → "dürfte zu suchen sein"'},
-  {rx:/\bliegt\s+(in|an|bei)\b/gi, h:'"liegt in/an" → "dürfte liegen in/an"'},
-  {rx:/\bhat\s+(dazu\s+)?geführt\b/gi, h:'"hat geführt" → "dürfte geführt haben"'},
-  {rx:/\bführt\s+zu\b/gi, h:'"führt zu" → "könnte zu … führen"'},
-  {rx:/\bhat\s+verursacht\b/gi, h:'"hat verursacht" → "dürfte verursacht haben"'},
-  {rx:/\bverursacht\s+(den|die|das|einen|eine)\b/gi, h:'"verursacht den/die" → "dürfte … verursacht haben"'},
-  {rx:/\bbewirkt\b/gi, h:'"bewirkt" → "dürfte bewirken"'},
-  {rx:/\bberuht\s+auf\b/gi, h:'"beruht auf" → "dürfte beruhen auf"'},
-  {rx:/\bist\s+(eindeutig|offensichtlich|klar)\b/gi, h:'"ist eindeutig" → "erscheint naheliegend"'},
-  {rx:/\bzeigt\s+(sich|dass)\b/gi, h:'"zeigt sich/dass" → "ließe sich erkennen"'},
-  // BEWERTUNG / EINSCHÄTZUNG
-  {rx:/\bist\s+(dringend\s+)?erforderlich\b/gi, h:'"ist erforderlich" → "wäre erforderlich"'},
-  {rx:/\bist\s+(unbedingt\s+)?notwendig\b/gi, h:'"ist notwendig" → "wäre notwendig"'},
-  {rx:/\bist\s+geboten\b/gi, h:'"ist geboten" → "wäre geboten"'},
-  {rx:/\bmuss\s+\w+\b/gi, h:'"muss …" → "wäre zu … / sollte …"'},
-  {rx:/\bmüssen\s+\w+\b/gi, h:'"müssen …" → "wären zu …"'},
-  {rx:/\bsollte\s+unverzüglich\b/gi, h:'"sollte unverzüglich" → "wäre unverzüglich zu empfehlen"'},
-  {rx:/\bist\s+zu\s+(erneuern|sanieren|beheben|prüfen|reparieren|ersetzen)\b/gi, h:'"ist zu sanieren" → "wäre zu sanieren"'},
-  {rx:/\bist\s+(mangelhaft|defekt|beschädigt|unzureichend)\b/gi, h:'"ist mangelhaft" → "erscheint mangelhaft" / "dürfte mangelhaft sein"'},
-  {rx:/\bist\s+(nicht\s+)?(norm|DIN|VOB|regelwerk)gerecht\b/gi, h:'"ist nicht normgerecht" → Messwert-Feststellung → Indikativ erlaubt, Bewertung → Konjunktiv II'},
-  // PROGNOSE / FOLGEN
-  {rx:/\bwird\s+(zu\s+)?(Schäden|Folgeschäden|Feuchte|Schimmel)\b/gi, h:'"wird zu Schäden" → "könnte zu Schäden führen"'},
-  {rx:/\bbesteht\s+(die\s+)?(Gefahr|Risiko)\b/gi, h:'"besteht Gefahr" → "bestünde die Gefahr"'},
-  {rx:/\bkann\s+(zu\s+)?\w+\s+führen\b/gi, h:'"kann zu … führen" → "könnte zu … führen"'},
-  // ZUSAMMENFASSUNG
-  {rx:/\bfazit\s*:\s*die\b/gi, h:'Fazit: Einschätzungen im Fazit müssen Konjunktiv II enthalten'},
-  {rx:/\bals\s+(Ursache|Auslöser)\s+gilt\b/gi, h:'"gilt als Ursache" → "dürfte als Ursache in Betracht kommen"'},
-  {rx:/\bist\s+damit\s+(bewiesen|belegt|nachgewiesen)\b/gi, h:'"ist damit bewiesen" → "erscheint damit naheliegend"'},
+  /* KJ2-CHECKER v2.0 — Rechtsgrundlage:
+     §407a ZPO, §839a BGB, IFS Sachverständigen-Merkblatt,
+     BGH §286 ZPO (Vollbeweis = Richteraufgabe), IHK Köln Gutachten-Empfehlung
+     REGEL: SV formuliert Wahrscheinlichkeiten — kein Vollbeweis, kein Indikativ bei Kausalaussagen.
+     ERLAUBT im Indikativ: Messwerte, Sichtbefunde, Laborergebnisse. */
+
+  // KATEGORIE 1: GEWISSHEITSAUSSAGEN — absolut verboten
+  // IFS: "Keine Vorspiegelung nicht vorhandener Sicherheiten im Ergebnis"
+  {rx:/\bsicher\b/gi,            sev:'HOCH', h:'"sicher" → VERBOTEN (§407a ZPO) — keine Gewissheitsaussagen → "naheliegend", "wahrscheinlich"'},
+  {rx:/\bzweifelsfrei\b/gi,      sev:'HOCH', h:'"zweifelsfrei" → VERBOTEN — unzulässige Gewissheitsaussage → "mit hoher Wahrscheinlichkeit"'},
+  {rx:/\bzweifelsohne\b/gi,      sev:'HOCH', h:'"zweifelsohne" → VERBOTEN → "naheliegend"'},
+  {rx:/\bunzweifelhaft\b/gi,     sev:'HOCH', h:'"unzweifelhaft" → VERBOTEN → "mit überwiegender Wahrscheinlichkeit"'},
+  {rx:/\bmit\s+Sicherheit\b/gi, sev:'HOCH', h:'"mit Sicherheit" → VERBOTEN — nur Richter stellen Gewissheit fest → "mit hoher Wahrscheinlichkeit"'},
+  {rx:/\bohne\s+(jeden\s+)?Zweifel\b/gi, sev:'HOCH', h:'"ohne Zweifel" → VERBOTEN → "mit überwiegender Wahrscheinlichkeit"'},
+  {rx:/\bsteht\s+fest\b/gi,     sev:'HOCH', h:'"steht fest" → VERBOTEN — Richtersprache → "erscheint naheliegend"'},
+  {rx:/\bliegt\s+auf\s+der\s+Hand\b/gi, sev:'HOCH', h:'"liegt auf der Hand" → VERBOTEN → "erscheint naheliegend"'},
+  {rx:/\bist\s+bewiesen\b/gi,   sev:'HOCH', h:'"ist bewiesen" → VERBOTEN — Beweis stellt das Gericht fest → "erscheint belegt"'},
+  {rx:/\bist\s+damit\s+(bewiesen|belegt|nachgewiesen)\b/gi, sev:'HOCH', h:'"ist damit bewiesen/belegt" → VERBOTEN → "erscheint damit naheliegend"'},
+  {rx:/\bist\s+erwiesen\b/gi,   sev:'HOCH', h:'"ist erwiesen" → VERBOTEN → "erscheint hinreichend belegt"'},
+  {rx:/\beindeutig\s+(fest)?gestellt\b/gi, sev:'HOCH', h:'"eindeutig festgestellt" → VERBOTEN → "festgestellt werden konnte"'},
+  {rx:/\bist\s+(eindeutig|offensichtlich|offenbar|klar|zwingend)\b/gi, sev:'HOCH', h:'"ist eindeutig/offensichtlich/klar" → VERBOTEN → "erscheint naheliegend"'},
+  {rx:/\bmit\s+an\s+Sicherheit\s+grenzender\s+Wahrscheinlichkeit\b/gi, sev:'HOCH', h:'"mit an Sicherheit grenzender Wahrscheinlichkeit" → NUR Richterformulierung (BGH §286 ZPO) — SV schreibt: "mit hoher Wahrscheinlichkeit"'},
+  {rx:/\bist\s+unstreitig\b/gi, sev:'HOCH', h:'"ist unstreitig" → Richtersprache — SV schreibt: "erscheint unbestritten"'},
+  {rx:/\bist\s+zwingend\b/gi,   sev:'HOCH', h:'"ist zwingend" → VERBOTEN → "erscheint naheliegend"'},
+  {rx:/\bohne\s+Weiteres\b/gi,  sev:'MITTEL', h:'"ohne Weiteres" → impliziert Selbstverständlichkeit → "nach den festgestellten Befunden"'},
+  {rx:/\bist\s+klar\b/gi,       sev:'HOCH', h:'"ist klar" → VERBOTEN → "erscheint naheliegend"'},
+  {rx:/\bgilt\s+als\s+(erwiesen|belegt|bewiesen|gesichert)\b/gi, sev:'HOCH', h:'"gilt als erwiesen/bewiesen" → VERBOTEN → "erscheint hinreichend belegt"'},
+
+  // KATEGORIE 2: KAUSALAUSSAGEN IM INDIKATIV — Konjunktiv II erforderlich
+  // SV stellt Wahrscheinlichkeiten fest, keinen Kausalitätsbeweis
+  {rx:/\bist\s+zurückzuführen\b/gi, sev:'HOCH', h:'"ist zurückzuführen" → Kausalindikativ → "dürfte zurückzuführen sein"'},
+  {rx:/\blässt\s+sich\s+zurückführen\b/gi, sev:'MITTEL', h:'"lässt sich zurückführen" → besser: "dürfte zurückzuführen sein"'},
+  {rx:/\bliegt\s+(in|an|bei)\b/gi, sev:'HOCH', h:'"liegt in/an/bei" → Kausalindikativ → "dürfte liegen in/an/bei"'},
+  {rx:/\bliegt\s+\w+(\s+\w+){0,5}\s+(in|an|bei|vor)\b/gi, sev:'HOCH', h:'"liegt … in/an/bei/vor" → Kausalindikativ → "dürfte … liegen"'},
+  {rx:/\bliegt\s+(die\s+)?(Ursache|Grund|Auslöser|Fehler|Mangel|Schaden|Problem|Ursächlichkeit)\b/gi, sev:'HOCH', h:'"liegt die Ursache" → Kausalindikativ → "dürfte die Ursache liegen"'},
+  {rx:/\bliegt\s+darin\b/gi,    sev:'HOCH', h:'"liegt darin" → Indikativ → "dürfte darin liegen"'},
+  {rx:/\bliegt\s+daran\b/gi,    sev:'HOCH', h:'"liegt daran" → Indikativ → "dürfte daran liegen"'},
+  {rx:/\bhat\s+(dazu\s+)?geführt\b/gi, sev:'HOCH', h:'"hat geführt" → Kausalindikativ → "dürfte geführt haben"'},
+  {rx:/\bführt\s+zu\b/gi,       sev:'HOCH', h:'"führt zu" → Kausalindikativ → "könnte zu … führen"'},
+  {rx:/\bführte\s+zu\b/gi,      sev:'HOCH', h:'"führte zu" → Kausalindikativ → "dürfte geführt haben zu"'},
+  {rx:/\bhat\s+verursacht\b/gi, sev:'HOCH', h:'"hat verursacht" → Kausalindikativ → "dürfte verursacht haben"'},
+  {rx:/\bverursacht(e)?\s+(den|die|das|einen|eine|diesen|diese|dieses)\b/gi, sev:'HOCH', h:'"verursacht(e) den/die" → Kausalindikativ → "dürfte … verursacht haben"'},
+  {rx:/\bwurde\s+verursacht\s+durch\b/gi, sev:'HOCH', h:'"wurde verursacht durch" → Kausalindikativ → "dürfte verursacht worden sein durch"'},
+  {rx:/\bist\s+entstanden\s+(durch|infolge)\b/gi, sev:'HOCH', h:'"ist entstanden durch" → Kausalindikativ → "dürfte entstanden sein durch"'},
+  {rx:/\bentstand\s+(durch|infolge|wegen)\b/gi, sev:'HOCH', h:'"entstand durch" → Kausalindikativ → "dürfte entstanden sein durch"'},
+  {rx:/\bberuht\s+auf\b/gi,     sev:'HOCH', h:'"beruht auf" → Kausalindikativ → "dürfte beruhen auf"'},
+  {rx:/\bbasiert\s+auf\b/gi,    sev:'MITTEL', h:'"basiert auf" → Kausalindikativ → "dürfte basieren auf"'},
+  {rx:/\bbewirkt\b/gi,           sev:'HOCH', h:'"bewirkt" → Kausalindikativ → "dürfte bewirken"'},
+  {rx:/\bbewirkte\b/gi,          sev:'HOCH', h:'"bewirkte" → Kausalindikativ → "dürfte bewirkt haben"'},
+  {rx:/\bresultiert\s+(aus|daraus)\b/gi, sev:'HOCH', h:'"resultiert aus" → Kausalindikativ → "dürfte resultieren aus"'},
+  {rx:/\bresultierte\s+(aus|daraus)\b/gi, sev:'HOCH', h:'"resultierte aus" → Kausalindikativ → "dürfte resultiert haben aus"'},
+  {rx:/\bhat\s+ausgelöst\b/gi,  sev:'HOCH', h:'"hat ausgelöst" → Kausalindikativ → "dürfte ausgelöst haben"'},
+  {rx:/\blöst(e)?\s+aus\b/gi,   sev:'HOCH', h:'"löst/löste aus" → Kausalindikativ → "dürfte auslösen/ausgelöst haben"'},
+  {rx:/\bhat\s+(dazu\s+)?beigetragen\b/gi, sev:'HOCH', h:'"hat beigetragen" → Kausalindikativ → "dürfte beigetragen haben"'},
+  {rx:/\btrug\s+(dazu\s+)?bei\b/gi, sev:'HOCH', h:'"trug bei" → Kausalindikativ → "dürfte beigetragen haben"'},
+  {rx:/\bhat\s+begünstigt\b/gi, sev:'HOCH', h:'"hat begünstigt" → Kausalindikativ → "dürfte begünstigt haben"'},
+  {rx:/\bbegünstigte?\b/gi,      sev:'HOCH', h:'"begünstigt/begünstigte" → Kausalindikativ → "dürfte begünstigen/begünstigt haben"'},
+  {rx:/\bhat\s+ermöglicht\b/gi, sev:'MITTEL', h:'"hat ermöglicht" → Kausalindikativ → "dürfte ermöglicht haben"'},
+  {rx:/\bfolgt\s+(daraus|hieraus)\b/gi, sev:'HOCH', h:'"folgt daraus" → Kausalindikativ → "ließe sich daraus ableiten"'},
+  {rx:/\bergibt\s+sich\s+(daraus|hieraus)\b/gi, sev:'HOCH', h:'"ergibt sich daraus" → Kausalindikativ → "ließe sich daraus schließen"'},
+  {rx:/\bist\s+(die\s+)?(Ursache|Schadensursache|Grund|Auslöser|Ursächlichkeit)\b/gi, sev:'HOCH', h:'"ist die Ursache/der Grund" → Kausalindikativ → "dürfte die Ursache/der Grund sein"'},
+  {rx:/\bist\s+(kausal|ursächlich)\b/gi, sev:'HOCH', h:'"ist kausal/ursächlich" → Kausalindikativ → "dürfte kausal/ursächlich sein"'},
+  {rx:/\bist\s+zu\s+suchen\b/gi, sev:'HOCH', h:'"ist zu suchen" → Kausalindikativ → "dürfte zu suchen sein"'},
+  {rx:/\bzeigt\s+(sich|sich\s+deutlich|dass)\b/gi, sev:'MITTEL', h:'"zeigt sich/dass" → Kausalindikativ → "ließe sich erkennen / legt nahe"'},
+
+  // KATEGORIE 3: SCHULD- UND VERANTWORTUNGSZUWEISUNGEN
+  // SV darf keine Schuld zuweisen — das ist Richteraufgabe
+  {rx:/\bist\s+(allein\s+)?verantwortlich\s+für\b/gi, sev:'HOCH', h:'"ist verantwortlich für" → Schuldzuweisung durch SV unzulässig → "dürfte mitursächlich sein für"'},
+  {rx:/\bist\s+schuld\b/gi,     sev:'HOCH', h:'"ist schuld" → Schuldzuweisung — nicht Aufgabe des SV → "erscheint mitursächlich"'},
+  {rx:/\bhat\s+schuldhaft\b/gi, sev:'HOCH', h:'"hat schuldhaft" → Schuldzuweisung → "scheint schuldhaft gehandelt zu haben"'},
+  {rx:/\bhat\s+fahrlässig\b/gi, sev:'HOCH', h:'"hat fahrlässig" → Rechtsbegriff — Schuldzuweisung → "scheint fahrlässig gehandelt zu haben"'},
+  {rx:/\bhat\s+(vernachlässigt|ignoriert|missachtet)\b/gi, sev:'HOCH', h:'"hat vernachlässigt/ignoriert" → Indikativ-Schuldzuweisung → "dürfte vernachlässigt haben"'},
+  {rx:/\bhätte\s+\w+\s+müssen\b/gi, sev:'MITTEL', h:'"hätte … müssen" → impliziert Pflichtverstoß — Rechtsbewertung ist Richteraufgabe → nur Befunde beschreiben'},
+  {rx:/\bhat\s+gegen\s+(die\s+)?(DIN|VOB|WTA|Norm|Vorschrift|Regel)\b/gi, sev:'HOCH', h:'"hat gegen DIN/Norm verstoßen" → Rechtswertung → "entspricht nicht den Anforderungen der …"'},
+  {rx:/\bverstoß(en)?\s+gegen\b/gi, sev:'MITTEL', h:'"Verstoß gegen" → rechtliche Wertung → "entspricht nicht … / weicht ab von …"'},
+
+  // KATEGORIE 4: BEWERTUNGSAUSSAGEN IM INDIKATIV
+  {rx:/\bist\s+(dringend\s+)?erforderlich\b/gi, sev:'MITTEL', h:'"ist erforderlich" → Indikativ → "wäre erforderlich"'},
+  {rx:/\bist\s+(unbedingt\s+)?notwendig\b/gi, sev:'MITTEL', h:'"ist notwendig" → Indikativ → "wäre notwendig"'},
+  {rx:/\bist\s+geboten\b/gi,    sev:'MITTEL', h:'"ist geboten" → Indikativ → "wäre geboten"'},
+  {rx:/\bmuss\s+\w+\b/gi,      sev:'MITTEL', h:'"muss …" → Indikativ → "wäre zu … / sollte …"'},
+  {rx:/\bmüssen\s+\w+\b/gi,    sev:'MITTEL', h:'"müssen …" → Indikativ → "wären zu …"'},
+  {rx:/\bsollte\s+unverzüglich\b/gi, sev:'MITTEL', h:'"sollte unverzüglich" → "wäre unverzüglich zu empfehlen"'},
+  {rx:/\bist\s+zu\s+(erneuern|sanieren|beheben|prüfen|reparieren|ersetzen|beseitigen|abdichten|trockenleg)\b/gi, sev:'MITTEL', h:'"ist zu sanieren/erneuern" → Indikativ → "wäre zu sanieren/erneuern"'},
+  {rx:/\bist\s+(mangelhaft|fehlerhaft|defekt|beschädigt|unzureichend|ungenügend)\b/gi, sev:'MITTEL', h:'"ist mangelhaft/fehlerhaft" → Indikativ-Bewertung → "erscheint mangelhaft" / "dürfte mangelhaft sein"'},
+  {rx:/\bist\s+(nicht\s+)?(norm|DIN|VOB|WTA|regelwerk)gerecht\b/gi, sev:'MITTEL', h:'"ist nicht normgerecht" → als Wertung: "erscheint nicht normgerecht gem. …" / Messwert: Indikativ OK'},
+  {rx:/\bist\s+normwidrig\b/gi, sev:'MITTEL', h:'"ist normwidrig" → Wertung → "erscheint nicht konform mit …"'},
+
+  // KATEGORIE 5: PROGNOSEN IM INDIKATIV
+  {rx:/\bwird\s+(zu\s+)?(Schäden|Folgeschäden|Feuchte|Schimmel|Schimmelbildung|Korrosion|Substanzverlust)\b/gi, sev:'MITTEL', h:'"wird zu Schäden/Schimmel" → Prognoseindikativ → "könnte zu … führen"'},
+  {rx:/\bbesteht\s+(die\s+)?(Gefahr|Risiko|Möglichkeit)\b/gi, sev:'MITTEL', h:'"besteht Gefahr/Risiko" → Indikativ → "bestünde die Gefahr / das Risiko"'},
+  {rx:/\bkann\s+(zu\s+)?\w+(\s+\w+)?\s+führen\b/gi, sev:'MITTEL', h:'"kann zu … führen" → "könnte zu … führen"'},
+  {rx:/\bwird\s+sich\s+(ausbreiten|fortschreiten|verschlechtern|zunehmen|vergrößern)\b/gi, sev:'MITTEL', h:'"wird sich ausbreiten/fortschreiten" → Prognoseindikativ → "könnte sich ausbreiten"'},
+  {rx:/\bist\s+zu\s+erwarten\b/gi, sev:'MITTEL', h:'"ist zu erwarten" → Prognoseindikativ → "wäre zu erwarten"'},
+  {rx:/\bwird\s+(langfristig|mittelfristig|kurzfristig)\b/gi, sev:'MITTEL', h:'"wird langfristig/mittelfristig" → Prognoseindikativ → "könnte langfristig …"'},
+
+  // KATEGORIE 6: UNZULÄSSIGE ZUSAMMENFASSUNGEN
+  {rx:/\bfazit\s*:\s*(die|der|das|es|als|die\s+Ursache)\b/gi, sev:'HOCH', h:'Fazit: muss Konjunktiv II enthalten — keine Indikativ-Kausalaussagen'},
+  {rx:/\bals\s+(Ursache|Auslöser)\s+gilt\b/gi, sev:'HOCH', h:'"gilt als Ursache/Auslöser" → "dürfte als Ursache in Betracht kommen"'},
+  {rx:/\bzusammenfassend\s+ist\s+festzustellen\b/gi, sev:'HOCH', h:'"Zusammenfassend ist festzustellen" → "Zusammenfassend erscheint naheliegend, dass …"'},
+  {rx:/\bals\s+Ergebnis\s+ist\s+(festzuhalten|festzustellen)\b/gi, sev:'HOCH', h:'"Als Ergebnis ist festzustellen" → "Als Ergebnis erscheint naheliegend, dass …"'},
+  {rx:/\bes\s+steht\s+fest\s*,?\s*dass\b/gi, sev:'HOCH', h:'"Es steht fest, dass" → VERBOTEN — Richtersprache → "Es erscheint naheliegend, dass"'},
 ];
 
 /* ── INIT ── */
@@ -1091,21 +1153,25 @@ function runKjCheck(text, elId) {
         listeEl.innerHTML = '';
       } else {
         listeEl.style.display = 'block';
-        listeEl.innerHTML = fehler.map((f, i) =>
-          `<div onclick="springZuVerstoss('${taId}', ${f.position})"
-            style="display:flex;align-items:flex-start;gap:8px;padding:5px 8px;margin-bottom:3px;
-            background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.15);
-            border-radius:6px;cursor:pointer;transition:background .12s;font-size:11px;"
-            onmouseover="this.style.background='rgba(239,68,68,.12)'"
-            onmouseout="this.style.background='rgba(239,68,68,.06)'" >
-            <span style="color:#ef4444;font-weight:700;flex-shrink:0;">⚠ ${i+1}</span>
-            <div>
-              <span style="background:rgba(239,68,68,.15);color:#ef4444;padding:1px 5px;
-              border-radius:3px;font-weight:600;font-family:monospace;">"${f.fundstelle}"</span>
-              <span style="color:var(--text3);margin-left:5px;">→ ${f.hinweis}</span>
-            </div>
-          </div>`
-        ).join('');
+        listeEl.innerHTML = fehler.map(function(f, i) {
+          var isHoch = f.sev === 'HOCH';
+          var bg     = isHoch ? 'rgba(239,68,68,.06)'  : 'rgba(245,158,11,.06)';
+          var bgHov  = isHoch ? 'rgba(239,68,68,.12)'  : 'rgba(245,158,11,.12)';
+          var border = isHoch ? 'rgba(239,68,68,.15)'  : 'rgba(245,158,11,.2)';
+          var col    = isHoch ? '#ef4444'               : '#f59e0b';
+          var sevTxt = isHoch ? '⛔ HOCH'               : '⚠ MITTEL';
+          return '<div onclick="springZuVerstoss(\'' + taId + '\', ' + f.position + ')"'
+            + ' style="display:flex;align-items:flex-start;gap:8px;padding:5px 8px;margin-bottom:3px;'
+            + 'background:' + bg + ';border:1px solid ' + border + ';'
+            + 'border-radius:6px;cursor:pointer;transition:background .12s;font-size:11px;"'
+            + ' onmouseover="this.style.background=\'' + bgHov + '\'"'
+            + ' onmouseout="this.style.background=\'' + bg + '\'">'
+            + '<span style="color:' + col + ';font-weight:700;flex-shrink:0;">' + sevTxt + ' ' + (i+1) + '</span>'
+            + '<div>'
+            + '<span style="background:rgba(' + (isHoch?'239,68,68':'245,158,11') + ',.15);color:' + col + ';padding:1px 5px;border-radius:3px;font-weight:600;font-family:monospace;">&quot;' + f.fundstelle + '&quot;</span>'
+            + '<span style="color:var(--text3);margin-left:5px;">→ ' + f.hinweis + '</span>'
+            + '</div></div>';
+        }).join('');
       }
     }
 

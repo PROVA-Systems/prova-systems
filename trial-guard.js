@@ -3,6 +3,7 @@
    Einbinden auf JEDER App-Seite: <script src="trial-guard.js"></script>
    
    Prüft ob der Nutzer:
+   - Testpilot ist → kostenloses Badge, kein Ablauf, kein Stripe
    - Im Trial ist → zeigt Tage-verbleibend Badge
    - Trial abgelaufen → zeigt Upgrade-Banner, blockiert Kern-Features
    - Bezahlendes Paket hat → alles frei
@@ -16,6 +17,23 @@
   var trialStart = localStorage.getItem('prova_trial_start');
   var trialDays = parseInt(localStorage.getItem('prova_trial_days') || '14', 10);
   var isGruenderkreis = localStorage.getItem('prova_gruenderkreis') === '1';
+  var isTestpilot = localStorage.getItem('prova_testpilot') === '1';
+
+  // ── TESTPILOT: dauerhaft Sonderkonditionen, kein Ablauf, kein Stripe ──
+  if (isTestpilot) {
+    if (!document.getElementById('prova-trial-css')) {
+      var s = document.createElement('style');
+      s.id = 'prova-trial-css';
+      s.textContent = '.trial-badge{position:fixed;top:10px;right:80px;z-index:600;padding:5px 12px;border-radius:8px;font-size:11px;font-weight:700;font-family:inherit;display:flex;align-items:center;gap:6px;cursor:default;}.trial-badge.testpilot{background:rgba(16,185,129,.12);border:1px solid rgba(16,185,129,.25);color:#10b981;}';
+      document.head.appendChild(s);
+    }
+    var badge = document.createElement('div');
+    badge.className = 'trial-badge testpilot';
+    badge.innerHTML = '🚀 Testpilot';
+    badge.title = 'Du bist PROVA-Testpilot — kostenloser Zugang mit Sonderkonditionen';
+    document.body.appendChild(badge);
+    return; // Alles frei — kein weiterer Check
+  }
 
   // Gründerkreis bekommt 90 Tage
   if (isGruenderkreis) trialDays = 90;
@@ -95,7 +113,7 @@
 
   /* ── Upgrade-Dialog ── */
   function zeigeUpgradeDialog() {
-    window.location.href = 'einstellungen.html';
+    window.location.href = 'einstellungen.html#sec-paket';
   }
 
   /* ── Trial-Ablauf-Overlay ── */
@@ -110,27 +128,50 @@
       + '<div class="trial-dialog">'
       + '<div style="font-size:40px;margin-bottom:12px;">⏰</div>'
       + '<h2>Ihr Testzeitraum ist abgelaufen</h2>'
-      + '<p>Vielen Dank für das Testen von PROVA! Um weiterhin KI-Gutachten zu erstellen, wählen Sie jetzt Ihr Paket:</p>'
+      + '<p>Wählen Sie jetzt Ihr Paket und legen Sie direkt weiter los:</p>'
       + '<div class="trial-prices">'
       +   '<div class="trial-price-card">'
       +     '<h3>Solo</h3>'
       +     '<div class="price">149€</div>'
       +     '<div class="per">pro Monat</div>'
+      +     '<button id="overlay-btn-solo" onclick="starteStripeCheckout('Solo')" style="width:100%;margin-top:10px;padding:8px;border-radius:6px;border:none;background:#4f8ef7;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">Solo wählen →</button>'
       +   '</div>'
       +   '<div class="trial-price-card">'
       +     '<h3>Team</h3>'
       +     '<div class="price">349€</div>'
       +     '<div class="per">pro Monat + 99€/Nutzer</div>'
+      +     '<button id="overlay-btn-team" onclick="starteStripeCheckout('Team')" style="width:100%;margin-top:10px;padding:8px;border-radius:6px;border:none;background:#a78bfa;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">Team wählen →</button>'
       +   '</div>'
       + '</div>'
-      + '<div>'
-      +   '<a href="einstellungen.html" class="trial-btn trial-btn-primary">Jetzt upgraden →</a>'
+      + '<div style="margin-top:8px;">'
       +   '<a href="archiv.html" class="trial-btn trial-btn-ghost">Nur Archiv ansehen</a>'
       + '</div>'
-      + '<p style="margin-top:16px;font-size:11px;color:#6b7280;">Ihre Daten bleiben 30 Tage gespeichert. Bei Fragen: kontakt@prova-systems.de</p>'
+      + '<p style="margin-top:16px;font-size:11px;color:#6b7280;">Ihre Daten bleiben 30 Tage gespeichert. Fragen: kontakt@prova-systems.de</p>'
       + '</div>';
 
     document.body.appendChild(overlay);
   }
+
+  /* ── Stripe direkt aus Trial-Overlay ── */
+  window.starteStripeCheckout = async function(paketName) {
+    var email = localStorage.getItem('prova_sv_email') || '';
+    if (!email) { alert('Bitte zuerst anmelden.'); return; }
+    var btnId = 'overlay-btn-' + paketName.toLowerCase();
+    var btn = document.getElementById(btnId);
+    if (btn) { btn.disabled = true; btn.textContent = '⏳ Öffne Checkout…'; }
+    try {
+      var res = await fetch('/.netlify/functions/stripe-checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ paket: paketName, email: email })
+      });
+      var data = await res.json();
+      if (data.url) { window.location.href = data.url; }
+      else throw new Error(data.error || 'Fehler');
+    } catch(e) {
+      if (btn) { btn.disabled = false; btn.textContent = paketName + ' wählen →'; }
+      alert('Checkout-Fehler: ' + e.message);
+    }
+  };
 
 })();

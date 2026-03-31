@@ -2186,6 +2186,11 @@ window.toggleRecord = async function() {
 };
 
 async function starteAufnahme() {
+  // Audit-Log: Diktat-Start Timestamp
+  if (!localStorage.getItem('prova_diktat_start_ts')) {
+    localStorage.setItem('prova_diktat_start_ts', new Date().toISOString());
+  }
+  localStorage.setItem('prova_diktat_ts', new Date().toISOString());
   // 1. Browser-Kompatibilitätsprüfung
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SR) {
@@ -2294,6 +2299,14 @@ async function starteAufnahme() {
 
 function stoppeAufnahme() {
   isRecording = false; clearInterval(recTimer); clearTimeout(recLimitTimer);
+  // Audit-Log: Diktat-Ende Timestamp + Dauer
+  var diktatEnde = new Date().toISOString();
+  localStorage.setItem('prova_diktat_ende_ts', diktatEnde);
+  var startTs = localStorage.getItem('prova_diktat_start_ts');
+  if (startTs) {
+    var dauerSek = Math.round((new Date(diktatEnde) - new Date(startTs)) / 1000);
+    localStorage.setItem('prova_diktat_dauer_sek', String(dauerSek));
+  }
   const btn = $('#recBtn'), lbl = $('#recLabel'), status = $('#recStatus');
   btn.classList.remove('recording'); lbl.textContent = 'Start'; status.textContent = 'Bereit';
   // Reset modern UI elements
@@ -2789,6 +2802,9 @@ async function sendeWebhook() {
       localStorage.removeItem('prova_stellungnahme_text');
       localStorage.removeItem('prova_stellungnahme_kj2_ok');
       localStorage.removeItem('prova_ki_stellungnahme_vorschlag');
+      // Audit-Log: KI-Analyse Timestamp
+      localStorage.setItem('prova_ki_ts', new Date().toISOString());
+      localStorage.setItem('prova_ki_modell', 'GPT-4o · PROVA-Analyse');
       
       const h2 = document.querySelector('#step3-content h2');
       const p  = document.querySelector('#step3-content .ki-header p');

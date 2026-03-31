@@ -632,7 +632,24 @@ input,select,textarea{font-size:max(16px,1em);}
             <div class="card-body">
               <div id="paket-anzeige" style="padding:16px;border-radius:var(--r-md);margin-bottom:16px;"></div>
               <div class="paket-grid" id="paket-grid"></div>
-              <a href="/cdn-cgi/l/email-protection#c3a8acadb7a2a8b783b3b1acb5a2eeb0bab0b7a6aeb0eda7a6" class="btn btn-primary" style="display:block;text-align:center;">⬆ Upgrade anfragen</a>
+              <div id="upgrade-anfragen-btn">
+              <div id="upgrade-cta-box" style="margin-top:8px;"></div>
+              <script>
+              (function(){
+                var box = document.getElementById('upgrade-cta-box');
+                if(!box) return;
+                var status = localStorage.getItem('prova_status')||'Trial';
+                var isTrial = status === 'Trial';
+                if(isTrial){
+                  box.innerHTML = '<div style="text-align:center;padding:12px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2);border-radius:8px;font-size:12px;color:var(--text2);">'
+                    +'⏰ Ihr Trial läuft — wählen Sie oben ein Paket für den automatischen Checkout.'
+                    +'</div>';
+                } else {
+                  box.innerHTML = '<a href="mailto:kontakt@prova-systems.de?subject=Paket-Wechsel" class="btn btn-primary" style="display:block;text-align:center;">✉ Paket-Änderung anfragen</a>';
+                }
+              })();
+              </script>
+            </div>
             </div>
           </div>
         </div>
@@ -866,6 +883,11 @@ function ladeProfil(){
   }
   // Paket anzeigen
   renderPaket();
+  // Testpilot: Upgrade-Button ausblenden
+  if(localStorage.getItem('prova_testpilot') === '1'){
+    var upBtn = document.getElementById('upgrade-anfragen-btn');
+    if(upBtn) upBtn.style.display = 'none';
+  }
 }
 
 function setVal(id,val){var el=document.getElementById(id);if(el&&val!==null&&val!==undefined)el.value=val;}
@@ -1121,24 +1143,90 @@ window.stempelLoeschen = function() {
 })();
 
 /* ── PAKET ANZEIGE ── */
+
+/* ── STRIPE CHECKOUT ── */
+window.starteCheckout = async function(paketName) {
+  var email = localStorage.getItem('prova_sv_email') || '';
+  if (!email) { zeigToast('Bitte zuerst anmelden', 'err'); return; }
+
+  var btn = document.getElementById('checkout-btn-' + paketName);
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Wird geöffnet…'; }
+
+  try {
+    var res = await fetch('/.netlify/functions/stripe-checkout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ paket: paketName, email: email })
+    });
+    var data = await res.json();
+    if (data.url) {
+      window.location.href = data.url;
+    } else {
+      throw new Error(data.error || 'Checkout-Fehler');
+    }
+  } catch(e) {
+    zeigToast('Fehler: ' + e.message, 'err');
+    if (btn) { btn.disabled = false; btn.textContent = 'Jetzt kaufen'; }
+  }
+};
+
 function renderPaket(){
   var pa=document.getElementById('paket-anzeige');
   var pc2={'Solo':'#4f8ef7','Team':'#a78bfa','Solo':'#4f8ef7','Pro':'#4f8ef7','Enterprise':'#a78bfa'}[paket]||'#4f8ef7';
-  if(pa)pa.innerHTML='<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:'+pc2+';margin-bottom:4px;">Aktives Paket</div><div style="font-size:26px;font-weight:800;color:var(--text);">'+paket+'</div>';
+
+  // Testpilot: Sonder-Badge + kein Upgrade-Grid
+  var isTestpilot = localStorage.getItem('prova_testpilot') === '1';
+  if(pa){
+    if(isTestpilot){
+      pa.innerHTML='<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#10b981;margin-bottom:4px;">Aktives Paket</div><div style="font-size:26px;font-weight:800;color:var(--text);">Testpilot 🚀</div>';
+    } else {
+      pa.innerHTML='<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:'+pc2+';margin-bottom:4px;">Aktives Paket</div><div style="font-size:26px;font-weight:800;color:var(--text);">'+paket+'</div>';
+    }
+  }
+
   var grid=document.getElementById('paket-grid');
   if(!grid)return;
+
+  // Testpilot: Paket-Grid komplett ausblenden, Info-Card zeigen
+  if(isTestpilot){
+    grid.innerHTML='<div style="padding:24px;background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.18);border-radius:12px;text-align:center;">'
+      +'<div style="font-size:28px;margin-bottom:8px;">🚀</div>'
+      +'<div style="font-size:15px;font-weight:700;color:#10b981;margin-bottom:6px;">Testpilot-Phase aktiv</div>'
+      +'<div style="font-size:13px;color:var(--text2);line-height:1.6;">Du nutzt PROVA im Rahmen der exklusiven Testpiloten-Phase.<br>Du hast dauerhaften Zugang zu allen Features — kostenlos und ohne Einschränkungen.<br><br>Wir melden uns persönlich bei dir, bevor sich etwas ändert. 👌</div>'
+      +'</div>';
+    return;
+  }
+
   var pakete=[
     {name:'Solo',price:'149 €/Mo',cls:paket==='Solo'?'aktiv-starter':'',feats:['1 Nutzer, 30 Gutachten/Mo','KI-Gutachten §1–§6','§407a + EU AI Act Compliance','Persönlicher Audit-Trail','Alle Werkzeuge unbegrenzt','Normen, Textbausteine, JVEG','Briefvorlagen + KI-Brieftext','Fristenverwaltung','Foto-Anlage + Auto-Captioning']},
     {name:'Team',price:'349 €/Mo',cls:paket==='Team'?'aktiv-ent':'',feats:['Alles aus Solo','Unbegrenzte Nutzer (+99 €/Nutzer)','Rechteverwaltung','Chef-Freigabe-Workflow','Team-Dashboard','Organisations-Audit-Trail','Geteilte Textbausteine & Vorlagen','Jahresbericht','Priority-Support']}
   ];
   grid.innerHTML=pakete.map(function(p){
     var istAktiv=p.name===paket;
+    var istTrial = (localStorage.getItem('prova_status')||'Trial') === 'Trial';
+    var trialDays = parseInt(localStorage.getItem('prova_trial_days')||'14');
+    var trialStart = localStorage.getItem('prova_trial_start');
+    var trialLeft = 14;
+    if (trialStart) {
+      trialLeft = Math.max(0, Math.ceil((new Date(trialStart).getTime() + trialDays*86400000 - Date.now()) / 86400000));
+    }
     return '<div class="pk '+p.cls+'">'
-      +(istAktiv?'<span class="pk-badge" style="background:'+({'Solo':'rgba(79,142,247,.15)','Team':'rgba(139,92,246,.15)'}[p.name]||'rgba(79,142,247,.15)')+';color:'+({'Solo':'#4f8ef7','Team':'#a78bfa'}[p.name]||'#4f8ef7')+'">Aktiv</span>':'')
-      +(p.demnächst&&!istAktiv?'<span style="display:inline-block;background:rgba(245,158,11,.12);color:#f59e0b;border:1px solid rgba(245,158,11,.25);border-radius:10px;font-size:9px;font-weight:700;letter-spacing:.06em;padding:2px 7px;margin-bottom:4px;">DEMNÄCHST</span>':'')
+      +(istAktiv?'<span class="pk-badge" style="background:'+({'Solo':'rgba(79,142,247,.15)','Team':'rgba(139,92,246,.15)'}[p.name]||'rgba(79,142,247,.15)')+';color:'+({'Solo':'#4f8ef7','Team':'#a78bfa'}[p.name]||'#4f8ef7')+'">✓ Aktiv</span>':'')
       +'<div class="pk-name">'+p.name+'</div>'
       +'<div class="pk-price">'+p.price+'</div>'
       +p.feats.map(function(f){return '<div class="pk-feat'+(istAktiv?'':' locked')+'">'+f+'</div>';}).join('')
+      // Upgrade-Button nur wenn nicht aktiv
+      +(!istAktiv
+        ? '<button id="checkout-btn-'+p.name+'" onclick="starteCheckout(\'' + p.name + '\')" '
+          + 'style="width:100%;margin-top:12px;padding:10px;border-radius:8px;border:none;cursor:pointer;font-family:inherit;font-size:13px;font-weight:700;'
+          + (p.name==='Solo'
+            ? 'background:linear-gradient(135deg,#4f8ef7,#3a7be0);color:#fff;'
+            : 'background:linear-gradient(135deg,#a78bfa,#7c3aed);color:#fff;')
+          + '">Jetzt starten – 14 Tage kostenlos</button>'
+        : (istTrial
+            ? '<div style="margin-top:10px;padding:7px 10px;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);border-radius:7px;font-size:11px;color:#f59e0b;">'
+              + '⏰ Trial: noch '+trialLeft+' Tag'+(trialLeft===1?'':'e')+' · Danach automatisch abgerechnet</div>'
+            : ''))
       +'</div>';
   }).join('');
 }
