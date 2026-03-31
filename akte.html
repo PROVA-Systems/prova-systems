@@ -751,7 +751,7 @@ window.aktualisiereStatus=async function(){
   document.getElementById('status-hint').textContent=statusHint(newStatus);
   if(!recordId||!recordId.startsWith('rec'))return;
   try{
-    await fetch('/.netlify/functions/airtable',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({method:'PATCH',path:'/v0/'+AT_BASE+'/'+AT_FAELLE+'/'+recordId,body:{fields:{Status:newStatus}}})});
+    await fetch('/.netlify/functions/airtable',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({method:'PATCH',path:'/v0/'+AT_BASE+'/'+AT_FAELLE+'/'+recordId,payload:{fields:{Status:newStatus}}})});
     zeigToast('Status aktualisiert: '+newStatus);
     // Cache invalidieren
     localStorage.removeItem('prova_archiv_cache_v2');

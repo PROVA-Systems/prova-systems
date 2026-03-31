@@ -952,9 +952,23 @@ var maxKontingent = paket==='Solo' ? 30 : paket==='Team' ? 999 : 10;
 (function(){
   var h=new Date().getHours();
   var anrede=localStorage.getItem('prova_sv_anrede')||'Sie';
-  var gr=h<12?'Guten Morgen':h<17?'Guten Tag':'Guten Abend';
+  var rnd=Math.random();
+  var gr, emoji;
+  /* ~15% Chance: "Willkommen zurück" — jederzeit */
+  if(rnd < 0.15){
+    gr='Willkommen zurück'; emoji='👋';
+  /* ~8% Chance: "Hallo" — jederzeit */
+  } else if(rnd < 0.23){
+    gr='Hallo'; emoji='😊';
+  /* Uhrzeit-basiert */
+  } else if(h<12){
+    gr='Guten Morgen'; emoji='☀️';
+  } else if(h<17){
+    gr='Guten Tag'; emoji='👋';
+  } else {
+    gr='Guten Abend'; emoji='🌙';
+  }
   var name=vorname?', '+vorname:'';
-  var emoji=h<12?'☀️':h<17?'👋':'🌙';
   var t=document.getElementById('greeting-title');
   if(t)t.textContent=gr+name+' '+emoji;
   var sub=document.getElementById('greeting-sub');
@@ -1009,6 +1023,22 @@ function zeigOnboarding(){
 
   // Alle erledigt → Box komplett ausblenden
   if(profilOk && kontakteOk) {
+    // Onboarding-Flag in Airtable setzen (cross-device Persistenz)
+    if(!localStorage.getItem('prova_onboarding_done')) {
+      localStorage.setItem('prova_onboarding_done','true');
+      var atRecId = localStorage.getItem('prova_at_sv_record_id');
+      if(atRecId) {
+        fetch('/.netlify/functions/airtable',{
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({
+            method:'PATCH',
+            path:'/v0/appJ7bLlAHZoxENWE/tbladqEQT3tmx4DIB/'+atRecId,
+            payload:{fields:{onboarding_done:true}}
+          })
+        }).catch(function(e){console.warn('Onboarding-Flag Airtable-Patch fehlgeschlagen:',e);});
+      }
+    }
     var feedCard = document.querySelector('.feed-card');
     if(feedCard) {
       feedCard.style.display = 'none';

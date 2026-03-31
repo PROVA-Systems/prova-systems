@@ -545,6 +545,8 @@ async function ladePaketUndWeiterleiten(email, ziel) {
       var records = data.records || [];
       if (records.length > 0) {
         var f = records[0].fields || {};
+        // Record-ID für spätere Airtable-Patches speichern (z.B. onboarding_done)
+        localStorage.setItem('prova_at_sv_record_id', records[0].id);
         paket = (f.Paket && f.Paket.name) ? f.Paket.name : (f.Paket || f.paket || 'Solo');
         // Paket-Mapping: alte Namen → neue Namen
         var paketMap = {'Starter':'Solo','starter':'Solo','STARTER':'Solo','Pro':'Solo','pro':'Solo','PRO':'Solo','Enterprise':'Team','enterprise':'Team','ENTERPRISE':'Team'};
@@ -947,8 +949,10 @@ window.resetPasswort = async function() {
   }
 
   /* ── Bereits eingeloggt? Direkt weiterleiten ── */
+  /* NICHT wenn User explizit von der Landingpage kommt (?from=landing) */
+  var fromLanding = window.location.search.indexOf('from=landing') !== -1;
   var stored = JSON.parse(localStorage.getItem('prova_user') || 'null');
-  if (stored && stored.email) {
+  if (stored && stored.email && !fromLanding) {
     if (stored.email.toLowerCase() === 'admin@prova-systems.de') {
       localStorage.removeItem('prova_user');
       localStorage.removeItem('prova_paket');
