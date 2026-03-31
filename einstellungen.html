@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Einstellungen · PROVA</title>
-<script src="theme.js"></script>
 <script src="nav.js"></script>
 <style>
 /* ═══ PROVA SIDEBAR SYSTEM ═══════════════════════════════════════════════ */
@@ -633,7 +632,7 @@ input,select,textarea{font-size:max(16px,1em);}
             <div class="card-body">
               <div id="paket-anzeige" style="padding:16px;border-radius:var(--r-md);margin-bottom:16px;"></div>
               <div class="paket-grid" id="paket-grid"></div>
-              <a href="/einstellungen.html#paket-upgrade" onclick="window.location.href='https://prova-systems.de/onboarding.html?upgrade=1'" class="btn btn-primary" style="display:block;text-align:center;">⬆ Zu Team upgraden</a>
+              <a href="/cdn-cgi/l/email-protection#c3a8acadb7a2a8b783b3b1acb5a2eeb0bab0b7a6aeb0eda7a6" class="btn btn-primary" style="display:block;text-align:center;">⬆ Upgrade anfragen</a>
             </div>
           </div>
         </div>
@@ -865,8 +864,8 @@ function ladeProfil(){
     document.getElementById('sec-enterprise').style.display='none';
     ladeWebhookLog();
   }
-  // Paket anzeigen — MUSS nach DOM-Load laufen
-  // renderPaket() wird in DOMContentLoaded aufgerufen
+  // Paket anzeigen
+  renderPaket();
 }
 
 function setVal(id,val){var el=document.getElementById(id);if(el&&val!==null&&val!==undefined)el.value=val;}
@@ -889,9 +888,7 @@ window.speichereProfil = function(){
 /* ── SPEICHERN ARBEITSWEISE ── */
 window.speichereArbeitsweise = function(){
   localStorage.setItem('prova_sv_anrede',getVal('e-anrede'));
-  var newTheme=getVal('e-theme');
-  localStorage.setItem('prova_theme',newTheme);
-  if(window.PROVA_THEME)window.PROVA_THEME.apply(newTheme);
+  localStorage.setItem('prova_theme',getVal('e-theme'));
   localStorage.setItem('prova_startseite',getVal('e-startseite'));
   localStorage.setItem('prova_listenansicht',getVal('e-listenansicht'));
   localStorage.setItem('prova_ki_ton',getVal('e-ki-ton'));
@@ -1126,7 +1123,7 @@ window.stempelLoeschen = function() {
 /* ── PAKET ANZEIGE ── */
 function renderPaket(){
   var pa=document.getElementById('paket-anzeige');
-  var pc2={'Solo':'#4f8ef7','Team':'#a78bfa'}[paket]||'#4f8ef7';
+  var pc2={'Solo':'#4f8ef7','Team':'#a78bfa','Solo':'#4f8ef7','Pro':'#4f8ef7','Enterprise':'#a78bfa'}[paket]||'#4f8ef7';
   if(pa)pa.innerHTML='<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:'+pc2+';margin-bottom:4px;">Aktives Paket</div><div style="font-size:26px;font-weight:800;color:var(--text);">'+paket+'</div>';
   var grid=document.getElementById('paket-grid');
   if(!grid)return;
@@ -1186,8 +1183,6 @@ window.ladeWebhookLog = function(){
 
 /* ── INIT ── */
 document.addEventListener('DOMContentLoaded', function(){
-  // Paket-Card rendern (HIER statt vorher — DOM muss fertig sein!)
-  renderPaket();
   // Signatur laden + Vorschau zeigen
   var _savedSig = localStorage.getItem('prova_sv_signatur');
   if(_savedSig){

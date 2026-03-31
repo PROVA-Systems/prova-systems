@@ -1969,8 +1969,12 @@ window.entferneFoto = function(i) { fotos.splice(i,1); renderFotoGrid(); updateS
 /* ── SCHRITT 2: Rechte Spalte live updaten ───────────────── */
 function updateStep2Panel() {
   // Diktat-Status
-  const transkript = document.getElementById('transkrip')?.value ||
-                     document.getElementById('eingabe-text')?.value || '';
+  // transcriptArea = contenteditable div; transcriptManuell = textarea
+  const taEl = document.getElementById('transcriptArea');
+  const manuellEl = document.getElementById('transcriptManuell');
+  const transkript = (taEl ? taEl.innerText.trim() : '') ||
+                     (manuellEl ? manuellEl.value.trim() : '') ||
+                     window.transcriptText || '';
   const dotD = document.getElementById('step2-diktat-dot');
   const lblD = document.getElementById('step2-diktat-label');
   const prevD = document.getElementById('step2-diktat-preview');
@@ -2233,7 +2237,7 @@ async function starteAufnahme() {
   }, 1000);
 
   recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-  recognition.continuous = true; recognition.interimResults = true; recognition.lang = 'de-DE';
+  recognition.continuous = true; recognition.interimResults = false; recognition.lang = 'de-DE';
 
   recognition.onresult = e => {
     const area = $('#transcriptArea');
@@ -2262,6 +2266,8 @@ async function starteAufnahme() {
     } else if (interimEl) interimEl.remove();
     const z = area.querySelectorAll('p:not(.interim)').length;
     $('#transcriptBadge').textContent = z + ' Abschnitte';
+    // Live-Update rechte Spalte
+    if (typeof updateStep2Panel === 'function') updateStep2Panel();
   };
 
   recognition.onerror = e => {
@@ -2292,6 +2298,74 @@ function stoppeAufnahme() {
     try { mediaRecorder.stop(); } catch(e) {}
   }
   mediaRecorder = null;
+
+  // Nach Aufnahme: Text bereinigen + Diktat nummerieren
+  if (transcriptText.trim().length > 20) {
+    bereinigeDiktatText();
+  }
+}
+
+/* ── DIKTAT-POST-PROCESSING ───────────────────────────── */
+var diktate = []; // Array aller Diktate
+var aktivDiktatIdx = -1;
+
+async function bereinigeDiktatText() {
+  var area = document.getElementById('transcriptArea');
+  var rawText = transcriptText.trim();
+  if (!rawText || rawText.length < 10) return;
+
+  // Loading-Indikator
+  var badge = document.getElementById('diktat-status-badge');
+  if (badge) { badge.textContent = '⟳ Wird aufbereitet…'; badge.style.background = 'rgba(245,158,11,.2)'; }
+
+  try {
+    var res = await fetch('/.netlify/functions/ki-proxy', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        max_tokens: 600,
+        messages: [
+          {role:'system', content:'Du bist ein Textkorrektur-Assistent. Formatiere den folgenden Sprach-zu-Text-Diktat-Text: setze Kommas, Punkte und Großschreibung korrekt. Korrigiere offensichtliche Spracherkennungsfehler ("zirka" statt "zirkr", Zahlen ausschreiben wenn klar). Behalte ALLE inhaltlichen Angaben exakt bei — ändere keine Zahlen, Messwerte oder Fakten. Antworte NUR mit dem korrigierten Fließtext, keine Erklärungen.'},
+          {role:'user', content: rawText}
+        ]
+      })
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    var d = await res.json();
+    var bereinigt = (d.content&&d.content[0]&&d.content[0].text)
+      ? d.content[0].text.trim()
+      : (d.choices&&d.choices[0] ? d.choices[0].message.content.trim() : rawText);
+
+    if (bereinigt && bereinigt.length > 10) {
+      transcriptText = bereinigt;
+      localStorage.setItem('prova_transkript', bereinigt);
+
+      // Diktat zur Liste hinzufügen
+      var diktatNr = diktate.length + 1;
+      diktate.push({ nr: diktatNr, text: bereinigt, ts: new Date().toISOString() });
+
+      // Transkript-Area neu rendern
+      if (area) {
+        area.innerHTML = '';
+        var p = document.createElement('p');
+        p.style.cssText = 'font-family:var(--font-body);font-size:.9375rem;line-height:1.7;color:var(--gray-700);margin:0;white-space:pre-wrap;';
+        p.textContent = bereinigt;
+        area.appendChild(p);
+      }
+
+      // Diktat-Badge
+      var badge2 = document.getElementById('transcriptBadge');
+      if (badge2) badge2.textContent = diktatNr + '. Diktat · ' + bereinigt.length + ' Zeichen';
+    }
+  } catch(e) {
+    // Fallback: Rohtext behalten
+    console.warn('[PROVA] Diktat-Bereinigung Fehler:', e.message);
+  }
+
+  // Badge zurücksetzen
+  if (badge) { badge.textContent = 'Bereit'; badge.style.background = ''; }
+  if (typeof updateStep2Panel === 'function') updateStep2Panel();
 }
 
 /* ============================================================
@@ -2570,6 +2644,24 @@ window.weiterZuAnalyse = async function() {
     showToast('Bitte Diktat aufnehmen oder Text eingeben.', 'warning');
     return;
   }
+  // ── KRITISCH: Diktat + Messwerte in localStorage für stellungnahme.html ──
+  localStorage.setItem('prova_transkript', transcriptText);
+  const az = document.getElementById('f-schadensnummer')?.value || '';
+  const sa = document.getElementById('f-schadenart')?.value || '';
+  const baujahr = document.getElementById('f-baujahr')?.value || '';
+  if(az) { localStorage.setItem('prova_letztes_az', az); localStorage.setItem('prova_aktiver_fall', az); }
+  if(sa) localStorage.setItem('prova_schadenart', sa);
+  if(baujahr) localStorage.setItem('prova_baujahr', baujahr);
+  // Messwerte sammeln
+  const mwFeuchte = document.getElementById('f-feuchte')?.value || '';
+  const mwLuft = document.getElementById('f-luftfeuchte')?.value || '';
+  const mwTemp = document.getElementById('f-temperatur')?.value || '';
+  const mwListe = [
+    mwFeuchte ? 'Materialfeuchte: ' + mwFeuchte + ' %' : '',
+    mwLuft    ? 'Luftfeuchtigkeit: ' + mwLuft + ' %' : '',
+    mwTemp    ? 'Raumtemperatur: ' + mwTemp + ' °C' : '',
+  ].filter(Boolean).join(' | ');
+  if(mwListe) localStorage.setItem('prova_messwerte', mwListe);
   sessionStorage.setItem('prova_gutachten_vorlage_id', defaultVorlageIdBySchadenart());
   const s2text = document.getElementById('ki-s2-text');
   if (s2text) {

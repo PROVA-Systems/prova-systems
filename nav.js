@@ -183,8 +183,9 @@
       /* MAIN CONTENT OFFSET */
       + '.main-wrap{margin-left:var(--sb-w)!important;transition:margin-left .22s cubic-bezier(.4,0,.2,1);}'
       + '.sidebar.collapsed~.main-wrap{margin-left:var(--sb-w-col)!important;}'
-      + '.main{margin-left:var(--sb-w)!important;transition:margin-left .22s cubic-bezier(.4,0,.2,1);}'
-      + '.sidebar.collapsed~.main{margin-left:var(--sb-w-col)!important;}'
+      + '.main-wrap>.main,.main-wrap .main{margin-left:0!important;}'
+      + '.main:not(.main-wrap>.main){margin-left:var(--sb-w)!important;transition:margin-left .22s cubic-bezier(.4,0,.2,1);}'
+      + '.sidebar.collapsed~.main:not(.main-wrap>.main){margin-left:var(--sb-w-col)!important;}'
 
       /* MOBILE */
       + '.sb-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:199;'
@@ -337,6 +338,49 @@
       window.location.href = href;
     });
   }, true);
+
+  /* ── SERVICE WORKER UPDATE: Auto-Reload nach neuem Deploy ─── */
+  if ('serviceWorker' in navigator) {
+    // Neuen SW aktivieren sobald er wartet
+    navigator.serviceWorker.getRegistration().then(function(reg) {
+      if (!reg) return;
+      // Wenn bereits ein wartender SW da ist
+      if (reg.waiting) {
+        reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+      }
+      // Neuen SW beobachten
+      reg.addEventListener('updatefound', function() {
+        var newSW = reg.installing;
+        if (!newSW) return;
+        newSW.addEventListener('statechange', function() {
+          if (newSW.state === 'installed' && navigator.serviceWorker.controller) {
+            newSW.postMessage({ type: 'SKIP_WAITING' });
+          }
+        });
+      });
+    });
+
+    // SW_UPDATED Nachricht empfangen → Seite neu laden
+    navigator.serviceWorker.addEventListener('message', function(event) {
+      if (event.data && event.data.type === 'SW_UPDATED') {
+        // Kurzen Toast zeigen dann reload
+        var toast = document.createElement('div');
+        toast.textContent = '🔄 PROVA wurde aktualisiert…';
+        toast.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);'
+          + 'background:#1B3F6B;color:#fff;padding:10px 20px;border-radius:20px;'
+          + 'font-size:13px;font-weight:600;z-index:99999;'
+          + 'box-shadow:0 4px 20px rgba(0,0,0,.3);';
+        document.body.appendChild(toast);
+        setTimeout(function() { window.location.reload(); }, 1500);
+      }
+    });
+
+    // Beim Laden: prüfen ob SW Update verfügbar
+    navigator.serviceWorker.ready.then(function(reg) {
+      reg.update().catch(function() {});
+    });
+  }
+
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', injectNav);
   } else {

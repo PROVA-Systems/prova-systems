@@ -55,6 +55,12 @@ self.addEventListener('activate', event => {
         keys.filter(k => k !== CACHE_VERSION).map(k => caches.delete(k))
       )
     ).then(() => self.clients.claim())
+    .then(() => {
+      // Alle offenen Tabs nach Update benachrichtigen → auto-reload
+      self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(clients => {
+        clients.forEach(client => client.postMessage({ type: 'SW_UPDATED', version: CACHE_VERSION }));
+      });
+    })
   );
 });
 
@@ -105,7 +111,22 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // JS/CSS/Assets → Stale-While-Revalidate
+  // PROVA Core JS (nav, theme, trial-guard) → Network-First
+  // Diese Dateien ändern sich häufig → immer frisch holen
+  const isCoreJs = ['/nav.js', '/theme.js', '/trial-guard.js', '/sw-register.js'].includes(url.pathname);
+  if (isCoreJs) {
+    event.respondWith(
+      fetch(event.request)
+        .then(res => {
+          if (res.ok) caches.open(CACHE_VERSION).then(c => c.put(event.request, res.clone()));
+          return res;
+        })
+        .catch(() => caches.match(event.request))
+    );
+    return;
+  }
+
+  // Andere JS/CSS/Assets → Stale-While-Revalidate
   event.respondWith(
     caches.open(CACHE_VERSION).then(cache =>
       cache.match(event.request).then(cached => {

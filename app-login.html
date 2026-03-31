@@ -556,14 +556,29 @@ async function ladePaketUndWeiterleiten(email, ziel) {
           window.location.href = 'app-login.html?reason=account_locked';
           return;
         }
-        if (f.sv_vorname)       localStorage.setItem('prova_sv_vorname',      f.sv_vorname);
-        if (f.sv_nachname)      localStorage.setItem('prova_sv_nachname',     f.sv_nachname);
-        if (f.sv_qualifikation) localStorage.setItem('prova_sv_qualifikation',f.sv_qualifikation);
-        if (f.sv_bueronamen)    localStorage.setItem('prova_bueronamen',      f.sv_bueronamen);
+        // ── Profil-Sync: alle relevanten Felder aus Airtable ──────────────
+        if (f.sv_vorname)        localStorage.setItem('prova_sv_vorname',       f.sv_vorname);
+        if (f.sv_nachname)       localStorage.setItem('prova_sv_nachname',      f.sv_nachname);
+        if (f.sv_qualifikation)  localStorage.setItem('prova_sv_qualifikation', f.sv_qualifikation);
+        if (f.sv_bueronamen)     localStorage.setItem('prova_bueronamen',       f.sv_bueronamen);
+        if (f.sv_telefon)        localStorage.setItem('prova_sv_telefon',       f.sv_telefon);
+        if (f.sv_adresse)        localStorage.setItem('prova_sv_adresse',       f.sv_adresse);
+        if (f.sv_stempel_url)    localStorage.setItem('prova_sv_stempel_url',   f.sv_stempel_url);
+        if (f.sv_signatur)       localStorage.setItem('prova_sv_signatur',      f.sv_signatur);
+        if (f.sv_firma)          localStorage.setItem('prova_sv_firma',         f.sv_firma);
+        // Trial: aus Airtable laden damit es geräteübergreifend stimmt
+        if (f.trial_start)       localStorage.setItem('prova_trial_start',      f.trial_start);
+        if (f.trial_days)        localStorage.setItem('prova_trial_days',       String(f.trial_days));
+        // Onboarding-Flags: aus Airtable laden
         if (f.onboarding_done || f.Onboarding_Done) {
-          localStorage.setItem('prova_onboarding_done', 'true');
+          localStorage.setItem('prova_onboarding_done',       'true');
+          localStorage.setItem('prova_welcome_seen',          '1');
+          localStorage.setItem('prova_erster_fall_erstellt',  '1');
           ziel = 'dashboard.html';
         }
+        if (f.kontakte_importiert) localStorage.setItem('prova_kontakte_importiert', '1');
+        // Primärfarbe / Branding
+        if (f.primary_color) localStorage.setItem('prova_primary_color', f.primary_color);
       }
     }
   } catch(e) { console.warn('Paket-Abfrage fehlgeschlagen:', e); }
@@ -605,9 +620,21 @@ window.login = async function() {
         localStorage.setItem('prova_sv_email', email);
         localStorage.setItem('prova_paket', 'Solo');
         localStorage.setItem('prova_status', 'Trial');
+        // Trial-Start nur setzen wenn noch NICHT in Airtable und NICHT in localStorage
         if (!localStorage.getItem('prova_trial_start')) {
-          localStorage.setItem('prova_trial_start', new Date().toISOString());
+          var trialStart = new Date().toISOString();
+          localStorage.setItem('prova_trial_start', trialStart);
           localStorage.setItem('prova_trial_days', '14');
+          // In Airtable speichern damit es geräteübergreifend funktioniert
+          fetch('/.netlify/functions/airtable', {
+            method: 'POST',
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({
+              method: 'PATCH',
+              path: '/v0/appJ7bLlAHZoxENWE/tbladqEQT3tmx4DIB',
+              body: { fields: { trial_start: trialStart, trial_days: 14 } }
+            })
+          }).catch(function(){});
         }
         await ladePaketUndWeiterleiten(email);
         return;
