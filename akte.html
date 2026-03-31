@@ -702,6 +702,7 @@ function renderSchnellaktionen(status,f,az){
     actions.push({icon:'✅',bg:'rgba(16,185,129,.1)',label:'Zur Freigabe',sub:'Gutachten prüfen und freigeben',action:"oeffneFreigabe()"});
   }
   actions.push({icon:'💶',bg:'rgba(245,158,11,.1)',label:'Rechnung erstellen',sub:'JVEG oder Pauschal',action:"window.location.href='rechnungen.html'"});
+  actions.push({icon:'📐',bg:'rgba(16,185,129,.08)',label:'Kostenermittlung',sub:'Sanierungskosten nach BKI/Sirados',action:"(function(){var az=currentFields.Aktenzeichen||'';var sa=currentFields.Schadensart||currentFields.schadensart||'';window.location.href='kostenermittlung.html?az='+encodeURIComponent(az)+'&sa='+encodeURIComponent(sa);})();"});
   actions.push({icon:'✉️',bg:'rgba(139,92,246,.1)',label:'Brief schreiben',sub:'Aus Vorlage mit Fall-Daten',action:"window.location.href='briefvorlagen.html'"});
   actions.push({icon:'📅',bg:'rgba(79,142,247,.08)',label:'Termin anlegen',sub:'Ortstermin, Frist etc.',action:"window.location.href='termine.html'"});
 
@@ -751,7 +752,7 @@ window.aktualisiereStatus=async function(){
   document.getElementById('status-hint').textContent=statusHint(newStatus);
   if(!recordId||!recordId.startsWith('rec'))return;
   try{
-    await fetch('/.netlify/functions/airtable',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({method:'PATCH',path:'/v0/'+AT_BASE+'/'+AT_FAELLE+'/'+recordId,payload:{fields:{Status:newStatus}}})});
+    await fetch('/.netlify/functions/airtable',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({method:'PATCH',path:'/v0/'+AT_BASE+'/'+AT_FAELLE+'/'+recordId,body:{fields:{Status:newStatus}}})});
     zeigToast('Status aktualisiert: '+newStatus);
     // Cache invalidieren
     localStorage.removeItem('prova_archiv_cache_v2');
@@ -1253,8 +1254,72 @@ window.PROVA_KONTEXT = {
 
 </script>
 <script src="auftragstyp.js"></script>
+<script src="slide-panel.js"></script>
 <script src="support-chat.js"></script>
 <script src="trial-guard.js"></script>
+<script>
+/* ── Bibliothek-FAB für akte.html ── */
+(function() {
+  // FAB-Button: öffnet Slide-Panel mit Tabs
+  var fab = document.createElement('div');
+  fab.id = 'bib-fab';
+  fab.style.cssText = 'position:fixed;bottom:84px;right:24px;z-index:500;display:flex;flex-direction:column;align-items:flex-end;gap:8px;';
+
+  // Mini-Buttons für jeden Panel-Typ (erscheinen beim Hover)
+  var items = [
+    { icon: '📚', label: 'Normen', type: 'normen' },
+    { icon: '📝', label: 'Textbausteine', type: 'textbausteine' },
+    { icon: '🗂️', label: 'Positionen', type: 'positionen' }
+  ];
+
+  var expanded = false;
+  var miniWrap = document.createElement('div');
+  miniWrap.id = 'bib-mini';
+  miniWrap.style.cssText = 'display:none;flex-direction:column;gap:6px;align-items:flex-end;';
+
+  items.forEach(function(item) {
+    var btn = document.createElement('button');
+    btn.style.cssText = 'display:flex;align-items:center;gap:8px;padding:7px 14px;background:var(--bg2,#13161d);border:1px solid var(--border2,rgba(255,255,255,.12));border-radius:20px;color:var(--text,#eaecf4);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;box-shadow:0 2px 12px rgba(0,0,0,.3);white-space:nowrap;transition:border-color .12s;';
+    btn.innerHTML = item.icon + ' ' + item.label;
+    btn.onmouseover = function(){ this.style.borderColor='var(--accent,#4f8ef7)'; };
+    btn.onmouseout  = function(){ this.style.borderColor='var(--border2,rgba(255,255,255,.12))'; };
+    btn.onclick = function(e) {
+      e.stopPropagation();
+      PROVA.openPanel(item.type);
+      // Insert-Callback: Text in Notiz-Feld einfügen (falls vorhanden)
+      PROVA.onPanelInsert = function(text, type) {
+        var target = document.getElementById('notiz-input');
+        if (target) {
+          var pos = target.selectionStart || target.value.length;
+          target.value = target.value.slice(0, pos) + (pos > 0 && target.value[pos-1] !== '\n' ? '\n' : '') + text + '\n' + target.value.slice(pos);
+          target.dispatchEvent(new Event('input'));
+          target.focus();
+        }
+        PROVA.closePanel();
+      };
+      toggleFab(false);
+    };
+    miniWrap.appendChild(btn);
+  });
+
+  var mainBtn = document.createElement('button');
+  mainBtn.style.cssText = 'width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#6366f1,#4f8ef7);border:none;color:#fff;font-size:20px;cursor:pointer;box-shadow:0 4px 16px rgba(99,102,241,.4);transition:all .2s;display:flex;align-items:center;justify-content:center;';
+  mainBtn.title = 'Bibliothek — Normen, Textbausteine, Positionen';
+  mainBtn.innerHTML = '📖';
+  mainBtn.onclick = function(e) { e.stopPropagation(); toggleFab(!expanded); };
+
+  function toggleFab(open) {
+    expanded = open;
+    miniWrap.style.display = open ? 'flex' : 'none';
+    mainBtn.style.transform = open ? 'rotate(45deg)' : '';
+  }
+
+  document.addEventListener('click', function() { if(expanded) toggleFab(false); });
+  fab.appendChild(miniWrap);
+  fab.appendChild(mainBtn);
+  document.body.appendChild(fab);
+})();
+</script>
 </body></html>'
   ].join('\n');
 

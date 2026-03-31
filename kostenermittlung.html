@@ -253,10 +253,11 @@
 <nav class="sidebar" id="sidebar"></nav>
 <div class="sb-overlay" id="sb-overlay" onclick="closeMobileSidebar()"></div>
 
-<div class="main">
+<div class="main-wrap"><div class="main">
 <header class="topbar">
   <div class="topbar-left">
     <button class="burger" onclick="openMobileSidebar()"><span></span><span></span><span></span></button>
+    <button class="topbar-btn" onclick="window._kostenRueck()" title="Zurück" style="font-size:16px;">←</button>
     <div class="breadcrumb"><span>PROVA</span><span style="color:var(--text3)">›</span><strong>Kosten & Aufmaß</strong></div>
   </div>
   <div class="topbar-right">
@@ -660,8 +661,28 @@ let auswahl = {}; // id → {pos, menge}
 let gefiltertPos = [];
 let currentPage = 0;
 const PAGE_SIZE = 25;
+
+// Kontext: erst URL-Parameter, dann localStorage
+(function ladeKontext() {
+  var params = new URLSearchParams(window.location.search);
+  var azParam = params.get('az');
+  var saParam = params.get('sa');
+  if (azParam) {
+    localStorage.setItem('prova_letztes_az', azParam);
+    if (saParam) localStorage.setItem('prova_schadenart', saParam);
+  }
+})();
+
 const schadenart = localStorage.getItem('prova_schadenart') || '';
 const aktenzeichen = localStorage.getItem('prova_letztes_az') || localStorage.getItem('prova_aktenzeichen') || '';
+
+// Rückweg: zurück zur akte wenn AZ bekannt, sonst archiv
+window._kostenRueck = function() {
+  var az = aktenzeichen;
+  if (az) { window.location.href = 'akte.html?az=' + encodeURIComponent(az); }
+  else { window.location.href = 'archiv.html'; }
+};
+
 const tag = saTag(schadenart);
 
 /* ── Init ── */
@@ -894,7 +915,11 @@ function speichernUndWeiter() {
   localStorage.setItem('prova_kostenermittlung', JSON.stringify(payload));
   localStorage.setItem('prova_kostenermittlung_done', 'true');
   toast('Kostenermittlung gespeichert ✓', 'ok');
-  setTimeout(() => { window.location.href = 'freigabe.html'; }, 600);
+  setTimeout(() => {
+    var az = aktenzeichen;
+    if (az) { window.location.href = 'akte.html?az=' + encodeURIComponent(az); }
+    else { window.location.href = 'archiv.html'; }
+  }, 600);
 }
 
 function überspringen() {
@@ -1181,6 +1206,8 @@ function zsf_exportCSV() {
 }
 </script>
 
+
+</div></div><!-- /main-wrap -->
 
 </div><!-- /app-shell -->
 
@@ -1634,4 +1661,50 @@ window.PROVA_KONTEXT = {
     localStorage.removeItem('prova_schadenart');
     localStorage.removeItem('prova_adresse');
     sessionStorage.removeItem('prova_record_id');
-    sess<script src="trial-guard.js"></script>
+    sess<script src="slide-panel.js"></script>
+<script>
+/* ── Bibliothek-FAB für kostenermittlung.html ── */
+(function() {
+  var fab = document.createElement('div');
+  fab.style.cssText = 'position:fixed;bottom:84px;right:24px;z-index:500;display:flex;flex-direction:column;align-items:flex-end;gap:8px;';
+  var items = [
+    {icon:'📚',label:'Normen',type:'normen'},
+    {icon:'📝',label:'Textbausteine',type:'textbausteine'}
+  ];
+  var expanded = false;
+  var miniWrap = document.createElement('div');
+  miniWrap.style.cssText = 'display:none;flex-direction:column;gap:6px;align-items:flex-end;';
+  items.forEach(function(item) {
+    var btn = document.createElement('button');
+    btn.style.cssText = 'display:flex;align-items:center;gap:8px;padding:7px 14px;background:var(--bg2,#13161d);border:1px solid var(--border2,rgba(255,255,255,.12));border-radius:20px;color:var(--text,#eaecf4);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;box-shadow:0 2px 12px rgba(0,0,0,.3);white-space:nowrap;transition:border-color .12s;';
+    btn.innerHTML = item.icon + ' ' + item.label;
+    btn.onmouseover = function(){ this.style.borderColor='var(--accent,#4f8ef7)'; };
+    btn.onmouseout  = function(){ this.style.borderColor='var(--border2,rgba(255,255,255,.12))'; };
+    btn.onclick = function(e) {
+      e.stopPropagation();
+      PROVA.openPanel(item.type);
+      PROVA.onPanelInsert = function(text) {
+        if (navigator.clipboard) navigator.clipboard.writeText(text);
+        PROVA.closePanel();
+      };
+      toggleFab(false);
+    };
+    miniWrap.appendChild(btn);
+  });
+  var mainBtn = document.createElement('button');
+  mainBtn.style.cssText = 'width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#6366f1,#4f8ef7);border:none;color:#fff;font-size:20px;cursor:pointer;box-shadow:0 4px 16px rgba(99,102,241,.4);transition:all .2s;display:flex;align-items:center;justify-content:center;';
+  mainBtn.title = 'Normen & Textbausteine nachschlagen';
+  mainBtn.innerHTML = '📖';
+  mainBtn.onclick = function(e) { e.stopPropagation(); toggleFab(!expanded); };
+  function toggleFab(open) {
+    expanded = open;
+    miniWrap.style.display = open ? 'flex' : 'none';
+    mainBtn.style.transform = open ? 'rotate(45deg)' : '';
+  }
+  document.addEventListener('click', function() { if(expanded) toggleFab(false); });
+  fab.appendChild(miniWrap);
+  fab.appendChild(mainBtn);
+  document.body.appendChild(fab);
+})();
+</script>
+<script src="trial-guard.js"></script>
