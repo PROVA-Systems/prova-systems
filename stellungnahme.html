@@ -40,13 +40,14 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-ui);min-heigh
   color:var(--text3);white-space:nowrap;}
 .flow-step.active{color:var(--text);}
 .flow-step.done{color:var(--green);}
-.flow-dot{width:22px;height:22px;border-radius:50%;flex-shrink:0;
+.flow-dot{width:26px;height:26px;border-radius:50%;flex-shrink:0;
   display:flex;align-items:center;justify-content:center;
-  font-size:10px;font-weight:800;
+  font-size:11px;font-weight:800;
   background:var(--surface2);color:var(--text3);border:1px solid var(--border2);}
 .flow-step.active .flow-dot{background:var(--accent);color:#fff;border-color:var(--accent);}
 .flow-step.done .flow-dot{background:var(--green);color:#fff;border-color:var(--green);}
-.flow-sep{width:28px;height:1px;background:var(--border2);margin:0 3px;}
+.flow-sep{width:28px;height:2px;background:var(--border2);margin:0 3px;transition:background .3s;}
+.flow-sep.done{background:var(--green);}
 .flow-az{font-size:12px;color:var(--text3);white-space:nowrap;
   padding:4px 10px;background:var(--surface);border-radius:6px;
   border:1px solid var(--border);}
@@ -158,7 +159,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-ui);min-heigh
 .kj-check.idle{background:var(--surface2);color:var(--text3);}
 
 /* Highlight-Overlay */
-.textarea-wrap{position:relative;}
+.textarea-wrap{position:relative;overflow:hidden;}
 .textarea-wrap{background:var(--bg3);border-radius:var(--r-md);}
 .textarea-wrap textarea{position:relative;z-index:2;background:transparent !important;caret-color:var(--text);border:none !important;}
 .textarea-wrap:focus-within{outline:1.5px solid var(--accent);border-radius:var(--r-md);}
@@ -344,23 +345,23 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-ui);min-heigh
       <div class="flow-dot">✓</div>
       <span>Stammdaten</span>
     </div>
-    <div class="flow-sep"></div>
+    <div class="flow-sep done"></div>
     <div class="flow-step done">
       <div class="flow-dot">✓</div>
       <span>Diktat &amp; Fotos</span>
     </div>
-    <div class="flow-sep"></div>
+    <div class="flow-sep done"></div>
     <div class="flow-step done">
       <div class="flow-dot">✓</div>
       <span>Analyse</span>
     </div>
-    <div class="flow-sep"></div>
+    <div class="flow-sep done"></div>
     <div class="flow-step active">
       <div class="flow-dot">4</div>
       <span>§6 Fachurteil</span>
     </div>
     <div class="flow-sep"></div>
-    <div class="flow-step">
+    <div class="flow-step" id="flow-step-freigabe">
       <div class="flow-dot">5</div>
       <span>Freigabe</span>
     </div>
@@ -487,13 +488,19 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-ui);min-heigh
 
           <!-- Weg A -->
           <div id="weg-a">
-            <textarea class="sv-textarea" id="svTextA"
-              placeholder="Die Ursache dürfte auf … zurückzuführen sein. Die Beweislast dürfte … liegen. Es wäre zu empfehlen, …"
-              oninput="onInputA()" rows="8"></textarea>
+            <div class="textarea-wrap" style="position:relative;">
+              <div class="textarea-highlight" id="hlA" style="pointer-events:none;z-index:1;"></div>
+              <textarea class="sv-textarea" id="svTextA"
+                placeholder="Die Ursache dürfte auf … zurückzuführen sein. Die Beweislast dürfte … liegen. Es wäre zu empfehlen, …"
+                oninput="onInputA()" rows="8"
+                style="position:relative;z-index:2;background:transparent;"></textarea>
+            </div>
             <div class="char-count bad" id="charA">0 / mind. 500 Zeichen</div>
             <div class="kj-check idle" id="kjCheckA">
               <span>⏳</span><span>Konjunktiv II wird geprüft sobald Sie schreiben…</span>
             </div>
+            <!-- Verstöße-Liste: klickbar, springt zur Stelle -->
+            <div id="kjFehlerListeA" style="display:none;margin-top:6px;"></div>
           </div>
 
           <!-- Weg B -->
@@ -980,6 +987,16 @@ setWeg(selectedWeg);
 // Normen laden
 ladeNormen();
 
+// KI-Analyse auto-load wenn Diktat vorhanden
+(function() {
+  var diktat = localStorage.getItem('prova_transkript') || '';
+  var entwurf = localStorage.getItem('prova_entwurf_text') || '';
+  if((diktat + entwurf).length > 50) {
+    // Kurz warten damit DOM vollständig ist
+    setTimeout(ladeKIAnalyse, 800);
+  }
+})();
+
 /* ── NAVIGATION ── */
 function goBack() {
   localStorage.setItem('prova_stellungnahme_return', window.location.href);
@@ -1036,29 +1053,89 @@ function runKjCheck(text, elId) {
       if(el) el.className = 'kj-check idle';
       return;
     }
+
+    // Alle Verstöße sammeln MIT Position im Text
     let fehler = [];
     INDIK_BAD.forEach(b => {
-      // Reset lastIndex vor jedem Test (wichtig bei /g flag)
       b.rx.lastIndex = 0;
-      if(b.rx.test(text)) {
-        b.rx.lastIndex = 0;
-        fehler.push(b.h);
+      let match;
+      while((match = b.rx.exec(text)) !== null) {
+        fehler.push({
+          hinweis: b.h,
+          fundstelle: match[0],
+          position: match.index
+        });
+        b.rx.lastIndex = match.index + 1;
       }
       b.rx.lastIndex = 0;
     });
+
+    // KJ2-Badge
     if(fehler.length === 0) {
       el.className = 'kj-check ok';
       el.innerHTML = '<span>✅</span><span>Konjunktiv II — kein Verstoß erkannt</span>';
-    } else if(fehler.length === 1) {
-      el.className = 'kj-check warn';
-      el.innerHTML = `<span>⚠️</span><span>${fehler[0]}</span>`;
     } else {
       el.className = 'kj-check warn';
-      el.innerHTML = `<span>⚠️</span><span>${fehler.length} Verstöße erkannt — ${fehler[0]}</span>`;
+      el.innerHTML = `<span>⚠️</span><span>${fehler.length} Konjunktiv-Verstoß${fehler.length>1?'e':''} — klicken zum Anspringen:</span>`;
     }
+
+    // Fehler-Sprung-Liste anzeigen
+    // Ermittle zugehöriges textarea und Fehlerliste
+    var taId = elId === 'kjCheckA' ? 'svTextA' : (elId === 'kjCheckB' ? null : 'svTextEdit');
+    var listeId = elId === 'kjCheckA' ? 'kjFehlerListeA' : (elId === 'kjCheckEdit' ? 'kjFehlerListeEdit' : null);
+    var listeEl = listeId ? document.getElementById(listeId) : null;
+
+    if(listeEl) {
+      if(fehler.length === 0) {
+        listeEl.style.display = 'none';
+        listeEl.innerHTML = '';
+      } else {
+        listeEl.style.display = 'block';
+        listeEl.innerHTML = fehler.map((f, i) =>
+          `<div onclick="springZuVerstoss('${taId}', ${f.position})"
+            style="display:flex;align-items:flex-start;gap:8px;padding:5px 8px;margin-bottom:3px;
+            background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.15);
+            border-radius:6px;cursor:pointer;transition:background .12s;font-size:11px;"
+            onmouseover="this.style.background='rgba(239,68,68,.12)'"
+            onmouseout="this.style.background='rgba(239,68,68,.06)'" >
+            <span style="color:#ef4444;font-weight:700;flex-shrink:0;">⚠ ${i+1}</span>
+            <div>
+              <span style="background:rgba(239,68,68,.15);color:#ef4444;padding:1px 5px;
+              border-radius:3px;font-weight:600;font-family:monospace;">"${f.fundstelle}"</span>
+              <span style="color:var(--text3);margin-left:5px;">→ ${f.hinweis}</span>
+            </div>
+          </div>`
+        ).join('');
+      }
+    }
+
     localStorage.setItem('prova_stellungnahme_kj2_ok', fehler.length===0 ? '1' : '0');
     checkReady();
   }, 700);
+}
+
+/* Springt zu einer Verstoss-Position in der Textarea */
+function springZuVerstoss(taId, position) {
+  var ta = document.getElementById(taId);
+  if(!ta) return;
+  ta.focus();
+  ta.setSelectionRange(position, position);
+  // Textarea scrollt zur Cursurposition
+  var text = ta.value;
+  var linesBefore = (text.substring(0, position).match(/\n/g) || []).length;
+  var lineHeight = parseInt(getComputedStyle(ta).lineHeight) || 20;
+  ta.scrollTop = Math.max(0, (linesBefore - 2) * lineHeight);
+  // Kurz den gefundenen Text markieren (Selection)
+  // Finde Ende des Treffers
+  var restText = text.substring(position);
+  INDIK_BAD.forEach(b => {
+    b.rx.lastIndex = 0;
+    var m = b.rx.exec(restText);
+    if(m && m.index === 0) {
+      ta.setSelectionRange(position, position + m[0].length);
+    }
+    b.rx.lastIndex = 0;
+  });
 }
 
 /* ── INPUT HANDLERS ── */
@@ -1184,6 +1261,8 @@ function applyFix(el, fix) {
 
 function onInputA() {
   const txt = document.getElementById('svTextA').value;
+  // Inline-Highlighting im Overlay
+  highlightIndikativ(txt, 'hlA');
   const len = txt.length;
   const cc = document.getElementById('charA');
   cc.textContent = `${len} / mind. 500 Zeichen`;
@@ -1614,7 +1693,15 @@ function weiterZuFreigabe() {
     }).catch(e => console.warn('KI-Statistik sync failed:', e));
   } catch (e) { console.warn('KI-Statistik sync error:', e); }
 
-  window.location.href = 'freigabe.html';
+  // Schritt 5 visuell aktivieren
+  var fs5 = document.getElementById('flow-step-freigabe');
+  if(fs5) { fs5.className = 'flow-step active'; }
+  var seps = document.querySelectorAll('.flow-sep');
+  if(seps[3]) seps[3].classList.add('done');
+  // Kurze Pause damit der User den Fortschritt sieht, dann weiterleiten
+  setTimeout(function() {
+    window.location.href = az && az !== '—' ? 'freigabe.html?az=' + encodeURIComponent(az) : 'freigabe.html';
+  }, 400);
 }
 
 /* ── TOAST ── */

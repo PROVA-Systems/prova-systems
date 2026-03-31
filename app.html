@@ -1655,6 +1655,21 @@ window.speichereAktennotiz = async function(templateId) {
 window.goToStep = function(n) {
   try { TRACKING.schritt(n); } catch(e) {}
   if (n === 1) { try { TRACKING.starte(); } catch(e) {} }
+  // Bei Schritt 2: wenn neue AZ → alten Diktat-Kontext löschen
+  if (n === 2) {
+    var neueAz = document.getElementById('f-schadensnummer')?.value || '';
+    var alteAz = localStorage.getItem('prova_letztes_az') || '';
+    if (neueAz && neueAz !== alteAz) {
+      localStorage.removeItem('prova_transkript');
+      localStorage.removeItem('prova_messwerte');
+      localStorage.removeItem('prova_entwurf_text');
+      localStorage.removeItem('prova_stellungnahme_text');
+      window.transcriptText = '';
+      var taEl = document.getElementById('transcriptArea');
+      if (taEl) taEl.innerHTML = '';
+    }
+    setTimeout(updateStep2Panel, 100);
+  }
   for (let i = 1; i <= 3; i++) {
     const el = document.getElementById('step' + i + '-content');
     if (el) el.style.display = (i === n) ? 'block' : 'none';

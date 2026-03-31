@@ -43,10 +43,11 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-ui);min-heigh
 .flow-step{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:var(--text3);}
 .flow-step.active{color:var(--text);}
 .flow-step.done{color:var(--green);}
-.flow-dot{width:22px;height:22px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;background:var(--surface2);color:var(--text3);border:1px solid var(--border2);}
+.flow-dot{width:26px;height:26px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;background:var(--surface2);color:var(--text3);border:1px solid var(--border2);}
 .flow-step.active .flow-dot{background:var(--accent);color:#fff;border-color:var(--accent);}
 .flow-step.done .flow-dot{background:var(--green);color:#fff;border-color:var(--green);}
-.flow-sep{width:28px;height:1px;background:var(--border2);margin:0 3px;}
+.flow-sep{width:28px;height:2px;background:var(--border2);margin:0 3px;transition:background .3s;}
+.flow-sep.done{background:var(--green);}
 .flow-az{font-size:12px;color:var(--text3);padding:4px 10px;background:var(--surface);border-radius:6px;border:1px solid var(--border);white-space:nowrap;}
 
 .main{padding:24px 20px 80px;max-width:1100px;margin:0 auto;}
@@ -158,11 +159,15 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-ui);min-heigh
   <a href="dashboard.html" style="display:flex;align-items:center;gap:7px;text-decoration:none;" title="Zur Zentrale"><div style="width:24px;height:24px;background:linear-gradient(135deg,#4f8ef7,#3a7be0);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;">P</div><span style="font-size:14px;font-weight:800;color:#eaecf4;letter-spacing:-.02em;">PR<span style="color:#4f8ef7">O</span>VA</span></a>
   <a class="flow-back" onclick="history.back()">← §6 bearbeiten</a>
   <div class="flow-steps">
-    <div class="flow-step done"><div class="flow-dot">✓</div><span>§1–§5</span></div>
-    <div class="flow-sep"></div>
+    <div class="flow-step done"><div class="flow-dot">✓</div><span>Stammdaten</span></div>
+    <div class="flow-sep done"></div>
+    <div class="flow-step done"><div class="flow-dot">✓</div><span>Diktat &amp; Fotos</span></div>
+    <div class="flow-sep done"></div>
+    <div class="flow-step done"><div class="flow-dot">✓</div><span>Analyse</span></div>
+    <div class="flow-sep done"></div>
     <div class="flow-step done"><div class="flow-dot">✓</div><span>§6 Fachurteil</span></div>
-    <div class="flow-sep"></div>
-    <div class="flow-step active"><div class="flow-dot">3</div><span>Freigabe</span></div>
+    <div class="flow-sep done"></div>
+    <div class="flow-step active"><div class="flow-dot">5</div><span>Freigabe</span></div>
   </div>
   <div class="flow-az" id="headerAz">—</div>
 </header>
@@ -414,7 +419,13 @@ function pruefeS6(){
 /* LADEN */
 async function ladeGutachten(){
   const rid=sessionStorage.getItem('prova_record_id');
-  const fall=new URLSearchParams(location.search).get('fall');
+  // AZ aus mehreren Quellen laden (URL-Parameter, sessionStorage, localStorage)
+  const urlParams=new URLSearchParams(location.search);
+  const fall=urlParams.get('fall')
+    || urlParams.get('az')
+    || sessionStorage.getItem('prova_current_az')
+    || localStorage.getItem('prova_letztes_az')
+    || '';
   let url;
   if(rid&&!fall){
     url=`/v0/${AT_BASE}/${AT_TABLE}/${rid}`;
