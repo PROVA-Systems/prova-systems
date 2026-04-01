@@ -85,6 +85,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
 .hint-icon{color:var(--green);margin-right:4px;}
 .hint-text{font-size:12px;color:#6ee7b7;line-height:1.6;}
 .card-actions{display:flex;gap:6px;margin-top:12px;}
+@keyframes slideDown{from{opacity:0;transform:translateX(-50%) translateY(-12px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
 .btn-insert{flex:1;padding:8px 12px;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:8px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;transition:all 0.15s;font-family:var(--font-ui);}
 .btn-insert:hover{transform:translateY(-1px);box-shadow:0 3px 12px rgba(79,142,247,0.35);}
 .btn-copy{padding:8px 12px;background:var(--surface3);border:1px solid var(--border2);border-radius:8px;color:var(--text2);font-size:12px;cursor:pointer;transition:all 0.15s;font-family:var(--font-ui);}
@@ -133,10 +134,12 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
   .sup-ok-icon{font-size:36px;margin-bottom:8px;}
   .sup-ok-title{font-size:15px;font-weight:700;color:var(--green,#10b981);margin-bottom:4px;}
   .sup-ok-sub{font-size:12px;color:var(--text3,#6b7a99);}
+.app-shell{display:flex;min-height:100vh;}
 </style>
 </head>
 <body>
 
+<div class="app-shell">
 <nav class="sidebar" id="sidebar"></nav>
 
 <div class="main" id="mainContent">
@@ -453,38 +456,56 @@ function insertInStellung(normNum) {
   const n = NORMEN_DB.find(x=>x.num===normNum);
   if(!n) return;
   const text = `Gemäß ${n.num} (${n.titel}) gilt: ${n.gw}`;
-  // In localStorage für Stellungnahme speichern
+
+  // In localStorage-Queue für Stellungnahme speichern
   try {
-    var bestehend = localStorage.getItem('prova_normen_queue') || '';
-    localStorage.setItem('prova_normen_queue', bestehend ? bestehend+'\n'+text : text);
+    var bestehend = JSON.parse(localStorage.getItem('prova_normen_queue') || '[]');
+    bestehend.push({ num: n.num, titel: n.titel, text: text, ts: new Date().toISOString() });
+    localStorage.setItem('prova_normen_queue', JSON.stringify(bestehend));
   } catch(e) {}
 
   // postMessage wenn als Popup geöffnet
   if(window.opener) {
     window.opener.postMessage({type:'prova_norm', text:text}, '*');
-    showToastMitCTA('Norm eingefügt ✅', null, null);
-    setTimeout(()=>window.close(), 800);
+    zeigeEingefuegtBanner(n.num, true);
+    setTimeout(()=>window.close(), 1200);
     return;
   }
 
-  // Clipboard
+  // Clipboard als Fallback
   navigator.clipboard.writeText(text).catch(()=>{});
 
-  // Context-aware: aktiver Fall?
-  var aktenzeichen = localStorage.getItem('prova_aktiver_fall') || '';
-  if(aktenzeichen) {
-    showToastMitCTA(
-      '📚 ' + n.num + ' für Fall ' + aktenzeichen + ' gespeichert',
-      'Jetzt zu §6 →',
-      'stellungnahme.html'
-    );
-  } else {
-    showToastMitCTA(
-      '📚 ' + n.num + ' in Zwischenablage gespeichert',
-      'Fall öffnen & einfügen →',
-      'archiv.html'
-    );
-  }
+  // Inline-Banner auf der Seite anzeigen
+  zeigeEingefuegtBanner(n.num, false);
+}
+
+function zeigeEingefuegtBanner(normNum, istPopup) {
+  var az = localStorage.getItem('prova_aktiver_fall') || '';
+  // Bestehendes Banner entfernen
+  var alt = document.getElementById('normen-insert-banner');
+  if (alt) alt.remove();
+
+  var banner = document.createElement('div');
+  banner.id = 'normen-insert-banner';
+  banner.style.cssText = 'position:fixed;top:70px;left:50%;transform:translateX(-50%);z-index:9999;' +
+    'background:linear-gradient(135deg,rgba(16,185,129,.15),rgba(16,185,129,.08));' +
+    'border:1.5px solid rgba(16,185,129,.4);border-radius:14px;padding:14px 20px;' +
+    'display:flex;align-items:center;gap:14px;min-width:320px;max-width:90vw;' +
+    'box-shadow:0 8px 32px rgba(0,0,0,.4);animation:slideDown .25s ease;';
+
+  banner.innerHTML =
+    '<span style="font-size:22px;">✅</span>' +
+    '<div style="flex:1;">' +
+      '<div style="font-size:13px;font-weight:700;color:#10b981;margin-bottom:2px;">' + normNum + ' gespeichert</div>' +
+      '<div style="font-size:11px;color:var(--text2);">' +
+        (az ? ('Für Fall ' + az + ' · ') : '') + 'In §6 Stellungnahme verfügbar' +
+      '</div>' +
+    '</div>' +
+    (az ? '<a href="stellungnahme.html" style="padding:7px 14px;background:#10b981;color:#fff;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;white-space:nowrap;">→ Zu §6</a>' : '') +
+    '<button onclick="this.parentElement.remove()" style="background:none;border:none;color:var(--text3);font-size:18px;cursor:pointer;padding:0 4px;line-height:1;">×</button>';
+
+  document.body.appendChild(banner);
+  setTimeout(function(){ if(banner.parentElement) banner.style.opacity='0'; banner.style.transition='opacity .4s'; setTimeout(function(){if(banner.parentElement)banner.remove();},400); }, 4000);
 }
 
 function copyZitat(normNum) {
@@ -525,11 +546,6 @@ function showToastMitCTA(msg, ctaLabel, ctaHref) {
 // Init
 renderNormen();
 
-// NORMEN_DB in localStorage cachen → slide-panel.js kann sie auf allen Seiten nutzen
-try {
-  localStorage.setItem('prova_normen_cache', JSON.stringify(NORMEN_DB));
-} catch(e) {}
-
 // Schadenart aus sessionStorage vorauswählen (wenn von app-starter etc. geöffnet)
 (function(){
   var sa = sessionStorage.getItem('prova_schadenart') || '';
@@ -561,7 +577,7 @@ try {
         <div class="sup-err" id="sup-err">Bitte Betreff und Nachricht eingeben.</div>
         <button class="sup-send-btn" id="sup-btn" onclick="supSendModal()">Nachricht senden</button>
         <div style="text-align:center;margin-top:10px;font-size:11px;color:var(--text3,#6b7a99);">
-          Oder direkt: <a href="/cdn-cgi/l/email-protection#d5bebabba1b4bea195a5a7baa3b4f8a6aca6a1b0b8a6fbb1b0" style="color:var(--accent,#4f8ef7);"><span class="__cf_email__" data-cfemail="f69d999882979d82b68684998097db858f8582939b85d89293">[email&#160;protected]</span></a>
+          Oder direkt: <a href="mailto:kontakt@prova-systems.de" style="color:var(--accent,#4f8ef7);">kontakt@prova-systems.de</a>
         </div>
       </div>
       <div class="sup-ok" id="sup-ok">
@@ -572,7 +588,7 @@ try {
     </div>
   </div>
 </div>
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+<script>
 function openSupportModal(){
   var m=document.getElementById('support-modal');
   if(!m)return;

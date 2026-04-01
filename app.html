@@ -1458,7 +1458,7 @@ window.showPage = function(name) {
   if (!page) return;
   $$('[id^="page-"]').forEach(p => { if (p && p.style) p.style.display = 'none'; });
   page.style.display = '';
-  if (name === 'new') goToStep(1);
+  if (name === 'new') { if(typeof provaResetFall==='function') provaResetFall(); goToStep(1); }
   if (name === 'list') ladeGutachtenListe();
   if (name === 'archiv') ladeArchivDaten();
   if (name === 'briefe') {
@@ -1654,7 +1654,30 @@ window.speichereAktennotiz = async function(templateId) {
 /* STEP NAVIGATION */
 window.goToStep = function(n) {
   try { TRACKING.schritt(n); } catch(e) {}
-  if (n === 1) { try { TRACKING.starte(); } catch(e) {} }
+  if (n === 1) {
+    try { TRACKING.starte(); } catch(e) {}
+    // Neuer Fall: Formular komplett leeren
+    ['f-schadensnummer','f-schadenart','f-auftraggeber-name','f-auftraggeber-firma',
+     'f-email','f-telefon','f-strasse','f-plz','f-ort','f-baujahr',
+     'f-feuchte','f-luftfeuchte','f-temperatur','f-fristdatum',
+     'f-gerichts-az','f-beweisfragen','transcriptManuell'].forEach(function(id){
+      var el = document.getElementById(id); if (el) el.value = '';
+    });
+    var ta = document.getElementById('transcriptArea');
+    if (ta) { ta.innerText = ''; }
+    if (typeof window.transcriptText !== 'undefined') window.transcriptText = '';
+    if (typeof window.diktate !== 'undefined') window.diktate = [];
+    if (typeof window.fotos !== 'undefined') window.fotos = [];
+    var dp = document.getElementById('step2-diktat-preview');
+    if (dp) { dp.style.display='none'; dp.textContent=''; }
+    var ds = document.getElementById('step2-diktat-status');
+    if (ds) ds.innerHTML = '<span style="opacity:.5">🎤</span><span>Noch kein Diktat</span>';
+    // KI-Erfolgs-Box verstecken
+    var kiBox = document.getElementById('kiSuccessBox');
+    if (kiBox) kiBox.style.display = 'none';
+    var naechste = document.getElementById('ki-naechste-schritte');
+    if (naechste) naechste.style.display = 'none';
+  }
   // Bei Schritt 2: wenn neue AZ → alten Diktat-Kontext löschen
   if (n === 2) {
     var neueAz = document.getElementById('f-schadensnummer')?.value || '';
@@ -1960,24 +1983,25 @@ function renderFotoGrid() {
   if (exportBtn) exportBtn.style.display = fotos.length > 0 ? 'flex' : 'none';
 
   updateStep2Panel();
-  grid.innerHTML = fotos.map((f, i) => `
-    <div style="position:relative;border-radius:.5rem;overflow:hidden;background:var(--gray-100);border:1px solid var(--gray-200)">
-      <img src="${f.dataUrl}" style="width:100%;height:80px;object-fit:cover;display:block" alt="Foto ${i+1}">
-      <div style="position:absolute;top:3px;left:3px;background:rgba(0,0,0,.7);color:#fff;font-size:9px;font-weight:800;padding:2px 6px;border-radius:4px;">Foto ${i+1}</div>
-      <button onclick="entferneFoto(${i})" style="position:absolute;top:3px;right:3px;width:18px;height:18px;border-radius:50%;background:rgba(0,0,0,.6);color:white;border:none;cursor:pointer;font-size:.65rem;display:flex;align-items:center;justify-content:center">×</button>
-      <div style="padding:.25rem .375rem">
-        <input type="text" id="foto-cap-${i}"
-          placeholder="${f.captionLoading ? '⟳ KI analysiert…' : 'Beschriftung…'}"
-          value="${f.caption}"
-          style="width:100%;font-size:.65rem;border:none;background:${f.captionLoading ? 'rgba(74,144,217,0.08)' : 'transparent'};color:var(--gray-700);outline:none;font-family:inherit;border-radius:3px;padding:1px 2px;transition:background .3s"
-          oninput="fotos[${i}].caption=this.value">
-        <div id="foto-badge-${i}" style="margin-top:2px;min-height:14px;"></div>
-        <div style="font-size:.6rem;color:var(--gray-400)">${Math.round(f.compSize/1024)} KB ${f.origSize>f.compSize?`(-${Math.round((1-f.compSize/f.origSize)*100)}%)`:''}
-        </div>
-      </div>
-    </div>
-  `).join('');
-}
+    // Foto-Grid v2: Nummerierung + KI-Caption + Schweregrad + Referenz
+  grid.innerHTML = fotos.map(function(f, i) {
+    var sevColor = {gering:'#22c55e',mittel:'#f59e0b',schwer:'#ef4444',kritisch:'#dc2626'}[(f.metadata||{}).schweregrad] || '#6b7280';
+    var sevBg = {gering:'rgba(34,197,94,.1)',mittel:'rgba(245,158,11,.1)',schwer:'rgba(239,68,68,.1)',kritisch:'rgba(220,38,38,.1)'}[(f.metadata||{}).schweregrad] || '';
+    var az = (document.getElementById('f-schadensnummer')||{}).value || localStorage.getItem('prova_letztes_az') || '';
+    var ref = (az ? az + ' · ' : '') + 'Abb. ' + (i+1);
+    var borderCol = f.captionLoading ? 'rgba(79,142,247,.35)' : (f.caption ? 'rgba(16,185,129,.3)' : '#e5e7eb');
+    return '<div style="position:relative;border-radius:8px;overflow:hidden;background:#f9fafb;border:1px solid ' + borderCol + ';transition:border-color .4s;">'
+      + '<img src="' + f.dataUrl + '" style="width:100%;height:80px;object-fit:cover;display:block;" alt="Abb. ' + (i+1) + '">'
+      + '<div style="position:absolute;top:3px;left:3px;background:rgba(0,0,0,.75);color:#fff;font-size:9px;font-weight:800;padding:2px 6px;border-radius:4px;letter-spacing:.02em;">' + (i+1) + '</div>'
+      + (f.metadata && f.metadata.schweregrad ? '<div style="position:absolute;top:3px;right:20px;background:' + sevBg + ';color:' + sevColor + ';border:1px solid ' + sevColor + '44;font-size:8px;font-weight:700;padding:1px 5px;border-radius:3px;">' + f.metadata.schweregrad + '</div>' : '')
+      + '<button onclick="entferneFoto(' + i + ')" style="position:absolute;top:3px;right:3px;width:16px;height:16px;border-radius:50%;background:rgba(0,0,0,.6);color:#fff;border:none;cursor:pointer;font-size:10px;display:flex;align-items:center;justify-content:center;">×</button>'
+      + '<div style="padding:4px 6px;">'
+      + '<input type="text" id="foto-cap-' + i + '" placeholder="' + (f.captionLoading ? '⟳ KI beschriftet…' : 'Beschriftung…') + '" value="' + f.caption.replace(/"/g, '&quot;') + '" style="width:100%;font-size:10px;border:none;background:' + (f.captionLoading ? 'rgba(79,142,247,.07)' : 'transparent') + ';color:#374151;outline:none;font-family:inherit;border-radius:3px;padding:1px 2px;transition:background .4s;" oninput="fotos[' + i + '].caption=this.value">'
+      + '<div style="font-size:8px;color:#9ca3af;margin-top:1px;font-family:monospace;">' + ref + '</div>'
+      + '<div id="foto-badge-' + i + '" style="margin-top:2px;min-height:12px;"></div>'
+      + '<div style="font-size:8px;color:#9ca3af;">' + Math.round(f.compSize/1024) + ' KB' + (f.origSize>f.compSize ? ' (-' + Math.round((1-f.compSize/f.origSize)*100) + '%)' : '') + '</div>'
+      + '</div></div>';
+  }).join('');
 
 window.entferneFoto = function(i) { fotos.splice(i,1); renderFotoGrid(); updateStep2Panel(); };
 
@@ -2354,7 +2378,7 @@ async function bereinigeDiktatText() {
         model: 'gpt-4o-mini',
         max_tokens: 600,
         messages: [
-          {role:'system', content:'Du bist ein Textkorrektur-Assistent. Formatiere den folgenden Sprach-zu-Text-Diktat-Text: setze Kommas, Punkte und Großschreibung korrekt. Korrigiere offensichtliche Spracherkennungsfehler ("zirka" statt "zirkr", Zahlen ausschreiben wenn klar). Behalte ALLE inhaltlichen Angaben exakt bei — ändere keine Zahlen, Messwerte oder Fakten. Antworte NUR mit dem korrigierten Fließtext, keine Erklärungen.'},
+          {role:'system', content:'Du bist ein Textkorrektur-Assistent. Formatiere den folgenden Sprach-zu-Text-Diktat-Text eines Bausachverständigen: setze Kommas, Punkte und Großschreibung korrekt. Korrigiere Spracherkennungsfehler. WICHTIG: Wandle ausgeschriebene Zahlen in Ziffern um (zwanzig → 20, fünfzehn → 15, achtzig → 80, hundert → 100 usw.). Ersetze ausgeschriebene Einheiten durch Symbole (Prozent → %, Grad Celsius → °C, Quadratmeter → m², Zentimeter → cm, Meter → m). Behalte alle Fakten und Messwerte exakt bei. Antworte NUR mit dem korrigierten Fließtext, keine Erklärungen.'},
           {role:'user', content: rawText}
         ]
       })
@@ -2819,7 +2843,19 @@ async function sendeWebhook() {
       const btnF = document.getElementById('btnFreigabe'), btnN = document.getElementById('btnNeues');
       if (btnF) btnF.style.display = ''; if (btnN) btnN.style.display = '';
       fotos = [];
-      showToast('Gutachten übermittelt!', 'success');
+      showToast('Diktat & Daten übermittelt — KI analysiert ✓', 'success');
+      // Fortschrittsanzeige: nächsten Schritt anzeigen
+      setTimeout(function() {
+        var naechste = document.getElementById('ki-naechste-schritte');
+        if (naechste) {
+          var az = localStorage.getItem('prova_letztes_az') || '';
+          var hinweis = document.createElement('div');
+          hinweis.style.cssText = 'margin-top:12px;padding:12px 16px;background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.2);border-radius:10px;font-size:12px;color:#10b981;text-align:center;';
+          hinweis.innerHTML = '🎯 <strong>Nächster Schritt:</strong> §6 Fachurteil schreiben → <a href="stellungnahme.html' + (az ? '?az='+encodeURIComponent(az) : '') + '" style="color:#10b981;font-weight:700;">Jetzt →</a>';
+          var box = document.getElementById('kiSuccessBox');
+          if (box) box.appendChild(hinweis);
+        }
+      }, 500);;
     } else {
       const h2 = document.querySelector('#step3-content h2');
       if (h2) h2.textContent = 'Fehler ' + res.status;
@@ -4520,6 +4556,29 @@ window.PROVA_AUDIT = (function() {
 </script>
 <script src="auftragstyp.js"></script>
 <script src="support-chat.js"></script>
-<script src="trial-guard.js"></script>
+<script src="trial-guard.js">
+/* ═══ KI FOTO-CAPTIONING ═══ */
+async function ladeKIFotoCaption(fotoData, dateiname, idx) {
+  try {
+    var res = await fetch('/.netlify/functions/ki-proxy', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        aufgabe: 'foto_caption',
+        foto_base64: fotoData.split(',')[1],
+        schadenart: localStorage.getItem('prova_schadenart') || '',
+        dateiname: dateiname,
+        diktat_kontext: (localStorage.getItem('prova_transkript') || '').slice(0, 500)
+      })
+    });
+    var data = await res.json();
+    return data.caption || (dateiname + ' — Foto ' + (idx+1));
+  } catch(e) {
+    return dateiname + ' — Foto ' + (idx+1);
+  }
+}
+
+
+</script>
 </body>
 </html>

@@ -43,7 +43,7 @@
   .burger{display:none;flex-direction:column;gap:4.5px;background:none;border:none;cursor:pointer;padding:8px;border-radius:6px;min-height:36px;align-items:center;justify-content:center;}
   .burger span{display:block;width:18px;height:2px;background:var(--text2);border-radius:2px;}
   .burger:hover span{background:var(--text);}
-  .page-content{padding:24px 28px 48px;max-width:1360px;width:100%;}
+  .page-content{padding:24px 28px 48px;width:100%;}
   .support-fab{position:fixed;bottom:24px;right:24px;z-index:400;width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));box-shadow:0 4px 16px rgba(79,142,247,.4);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;transition:transform .15s;border:none;color:#fff;}
   .support-fab:hover{transform:scale(1.08);}
   .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:500;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px);}
@@ -67,7 +67,7 @@
   .page-content{animation:fadeIn .25s ease;}
 
 /* MAIN LAYOUT */
-.main{flex:1;padding:24px 28px 48px;max-width:1360px;width:100%;}
+.main{flex:1;padding:24px 28px 48px;min-width:0;}
 
 /* HEADER CARD */
 .header-card{background:var(--bg2);border:1px solid var(--border2);border-radius:14px;padding:20px 24px;margin-bottom:22px;display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;}
@@ -270,7 +270,7 @@
   <div class="header-card">
     <div class="header-meta">
       <div class="header-title">§ 4 Kostenermittlung</div>
-      <div class="header-sub">Sanierungspositionen auswählen und Mengen eingeben — Preisbasis BKI/Sirados 2024</div>
+      <div class="header-sub">Sanierungspositionen auswählen · Mengen eingeben · Kostenrahmen ermitteln</div>
       <div class="header-badges">
         <span class="badge badge-sa" id="badge-sa">📋 Alle Schadensarten</span>
         <span class="badge badge-az" id="badge-az"></span>
@@ -337,7 +337,7 @@
         <div class="summe-row"><span>Summe Median</span><span id="sumMed">0,00 €</span></div>
         <div class="summe-row"><span>Summe Max</span><span id="sumMax">0,00 €</span></div>
         <div class="summe-row total"><span>Empfohlene Kostenbasis</span><span id="sumTotal">0,00 €</span></div>
-        <div style="font-size:10px;color:var(--text3);margin-top:6px;">Alle Preise netto ohne MwSt. · Preisbasis Deutschland 2024</div>
+        <div style="font-size:10px;color:var(--text3);margin-top:6px;">Richtwerte netto · Regionale Abweichungen möglich · Nur zur Orientierung</div>
       </div>
 
       <div class="actions-bar">
@@ -923,9 +923,8 @@ function speichernUndWeiter() {
 }
 
 function überspringen() {
-  localStorage.setItem('prova_kostenermittlung_done', 'false');
-  localStorage.removeItem('prova_kostenermittlung');
-  window.location.href = 'freigabe.html';
+  var az = localStorage.getItem('prova_letztes_az') || '';
+  window.location.href = az ? 'akte.html?az=' + encodeURIComponent(az) : 'archiv.html';
 }
 
 /* ── Hilfsfunktionen ── */
@@ -1272,7 +1271,7 @@ async function supSend(){var b=document.getElementById('sup-betreff').value.trim
         <div class="sup-err" id="sup-err">Bitte Betreff und Nachricht eingeben.</div>
         <button class="sup-send-btn" id="sup-btn" onclick="supSendModal()">Nachricht senden</button>
         <div style="text-align:center;margin-top:10px;font-size:11px;color:var(--text3,#6b7a99);">
-          Oder direkt: <a href="/cdn-cgi/l/email-protection#becdcbceced1cccafececcd1c8df93cdc7cdcadbd3cd90dadb" style="color:var(--accent,#4f8ef7);"><span class="__cf_email__" data-cfemail="1a696f6a6a75686e5a6a68756c7b376963696e7f7769347e7f">[email&#160;protected]</span></a>
+          Oder direkt: <a href="mailto:kontakt@prova-systems.de" style="color:var(--accent,#4f8ef7);">kontakt@prova-systems.de</a>
         </div>
       </div>
       <div class="sup-ok" id="sup-ok">
@@ -1283,7 +1282,7 @@ async function supSend(){var b=document.getElementById('sup-betreff').value.trim
     </div>
   </div>
 </div>
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+<script>
 function openSupportModal(){
   var m=document.getElementById('support-modal');
   if(!m)return;
@@ -1698,17 +1697,4 @@ window.PROVA_KONTEXT = {
   var mainBtn = document.createElement('button');
   mainBtn.style.cssText = 'width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#6366f1,#4f8ef7);border:none;color:#fff;font-size:20px;cursor:pointer;box-shadow:0 4px 16px rgba(99,102,241,.4);transition:all .2s;display:flex;align-items:center;justify-content:center;';
   mainBtn.title = 'Normen & Textbausteine nachschlagen';
-  mainBtn.innerHTML = '📖';
-  mainBtn.onclick = function(e) { e.stopPropagation(); toggleFab(!expanded); };
-  function toggleFab(open) {
-    expanded = open;
-    miniWrap.style.display = open ? 'flex' : 'none';
-    mainBtn.style.transform = open ? 'rotate(45deg)' : '';
-  }
-  document.addEventListener('click', function() { if(expanded) toggleFab(false); });
-  fab.appendChild(miniWrap);
-  fab.appendChild(mainBtn);
-  document.body.appendChild(fab);
-})();
-</script>
-<script src="trial-guard.js"></script>
+ 

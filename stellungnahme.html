@@ -53,7 +53,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-ui);min-heigh
   border:1px solid var(--border);}
 
 /* ── MAIN LAYOUT ── */
-.main{padding:24px 20px 60px;max-width:1200px;margin:0 auto;}
+.main{padding:24px 20px 60px;margin:0 auto;}
 
 /* Fall-Banner */
 .fall-banner{
@@ -332,6 +332,84 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-ui);min-heigh
 .toast.ok{border-color:rgba(16,185,129,.4);background:rgba(16,185,129,.1);color:#10b981;}
 .toast.err{border-color:rgba(239,68,68,.4);background:rgba(239,68,68,.1);color:#ef4444;}
 .toast.warn{border-color:rgba(245,158,11,.4);background:rgba(245,158,11,.1);color:#f59e0b;}
+
+/* ═══ NORMEN-SLIDE-PANEL ═══ */
+.normen-panel-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:400;backdrop-filter:blur(2px);}
+.normen-panel-overlay.open{display:block;}
+.normen-slide-panel{position:fixed;top:0;right:-420px;width:380px;height:100vh;background:var(--bg2,#111318);border-left:1px solid var(--border2,rgba(255,255,255,.11));z-index:401;transition:right .28s cubic-bezier(.4,0,.2,1);overflow-y:auto;display:flex;flex-direction:column;}
+.normen-slide-panel.open{right:0;}
+.nsp-head{padding:16px 20px;border-bottom:1px solid var(--border,rgba(255,255,255,.06));display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--bg2,#111318);z-index:1;}
+.nsp-title{font-size:14px;font-weight:700;color:var(--text,#eaecf4);}
+.nsp-close{background:none;border:none;color:var(--text3,#4d5568);font-size:20px;cursor:pointer;padding:4px 8px;border-radius:6px;}
+.nsp-close:hover{color:var(--text,#eaecf4);background:rgba(255,255,255,.05);}
+.nsp-search{padding:12px 16px;border-bottom:1px solid var(--border,rgba(255,255,255,.06));}
+.nsp-search input{width:100%;padding:8px 12px;background:var(--bg3,#161a22);border:1px solid var(--border2,rgba(255,255,255,.11));border-radius:8px;color:var(--text,#eaecf4);font-size:12px;outline:none;font-family:inherit;}
+.nsp-search input:focus{border-color:var(--accent,#4f8ef7);}
+.nsp-filter{display:flex;gap:6px;padding:10px 16px;border-bottom:1px solid var(--border,rgba(255,255,255,.06));flex-wrap:wrap;}
+.nsp-filter-btn{padding:4px 10px;border-radius:10px;border:1px solid var(--border2,rgba(255,255,255,.11));background:transparent;color:var(--text3,#4d5568);font-size:10px;font-weight:600;cursor:pointer;transition:all .12s;}
+.nsp-filter-btn.active{background:rgba(79,142,247,.15);border-color:rgba(79,142,247,.4);color:var(--accent,#4f8ef7);}
+.nsp-list{flex:1;padding:12px 16px;}
+.nsp-norm-card{padding:12px;border:1px solid var(--border,rgba(255,255,255,.06));border-radius:10px;margin-bottom:8px;cursor:pointer;transition:all .15s;}
+.nsp-norm-card:hover{border-color:rgba(79,142,247,.3);background:rgba(79,142,247,.05);}
+.nsp-norm-num{font-size:11px;font-weight:700;color:var(--accent,#4f8ef7);font-family:var(--font-mono,monospace);margin-bottom:3px;}
+.nsp-norm-titel{font-size:12px;color:var(--text,#eaecf4);margin-bottom:4px;font-weight:600;}
+.nsp-norm-gw{font-size:11px;color:var(--text2,#8b93ab);margin-bottom:6px;}
+.nsp-norm-actions{display:flex;gap:6px;}
+.nsp-norm-insert{padding:4px 10px;border-radius:6px;background:rgba(79,142,247,.12);border:1px solid rgba(79,142,247,.25);color:var(--accent,#4f8ef7);font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .12s;}
+.nsp-norm-insert:hover{background:rgba(79,142,247,.22);}
+.nsp-norm-copy{padding:4px 10px;border-radius:6px;background:transparent;border:1px solid var(--border2,rgba(255,255,255,.11));color:var(--text3,#4d5568);font-size:10px;cursor:pointer;font-family:inherit;}
+.nsp-empty{text-align:center;padding:40px 20px;color:var(--text3,#4d5568);font-size:12px;}
+
+/* NORMEN-FAB BUTTON */
+.normen-fab{position:fixed;right:20px;bottom:80px;z-index:200;width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,rgba(79,142,247,.9),rgba(58,123,224,.9));border:1px solid rgba(79,142,247,.4);color:#fff;font-size:18px;cursor:pointer;box-shadow:0 4px 16px rgba(79,142,247,.3);display:flex;align-items:center;justify-content:center;transition:all .2s;}
+.normen-fab:hover{transform:scale(1.08);}
+.normen-fab-label{position:absolute;right:54px;background:var(--bg2,#111318);border:1px solid var(--border2,rgba(255,255,255,.11));color:var(--text,#eaecf4);padding:4px 10px;border-radius:6px;font-size:11px;font-weight:600;white-space:nowrap;opacity:0;transition:opacity .2s;}
+.normen-fab:hover .normen-fab-label{opacity:1;}
+
+/* KI-Inline-Vorschläge beim Tippen */
+.ki-normen-inline{margin-top:8px;display:none;}
+.ki-normen-inline.show{display:block;}
+.ki-normen-inline-title{font-size:10px;font-weight:700;color:var(--accent,#4f8ef7);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;display:flex;align-items:center;gap:4px;}
+.ki-normen-chips{display:flex;gap:6px;flex-wrap:wrap;}
+.ki-normen-chip{padding:4px 10px;border-radius:10px;background:rgba(79,142,247,.08);border:1px solid rgba(79,142,247,.2);color:var(--accent,#4f8ef7);font-size:10px;font-weight:600;cursor:pointer;transition:all .12s;display:flex;align-items:center;gap:4px;}
+.ki-normen-chip:hover{background:rgba(79,142,247,.18);}
+
+
+  /* ═══ NORMEN SLIDE PANEL ═══ */
+  .normen-panel{position:fixed;top:0;right:-380px;width:360px;height:100vh;background:var(--surface);border-left:1px solid var(--border2);z-index:500;transition:right .25s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;box-shadow:-4px 0 24px rgba(0,0,0,.3);}
+  .normen-panel.open{right:0;}
+  .normen-panel-header{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--bg2);flex-shrink:0;}
+  .normen-panel-title{font-size:14px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:8px;}
+  .normen-panel-close{background:none;border:none;color:var(--text3);font-size:20px;cursor:pointer;padding:0 4px;line-height:1;}
+  .normen-panel-search{padding:10px 12px;border-bottom:1px solid var(--border);flex-shrink:0;}
+  .normen-panel-input{width:100%;padding:8px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:12px;font-family:inherit;outline:none;}
+  .normen-panel-input:focus{border-color:var(--accent);}
+  .normen-panel-list{flex:1;overflow-y:auto;padding:8px;}
+  .normen-panel-item{padding:10px 12px;border-radius:8px;margin-bottom:4px;cursor:pointer;border:1px solid transparent;transition:all .12s;}
+  .normen-panel-item:hover{background:rgba(79,142,247,.06);border-color:rgba(79,142,247,.15);}
+  .normen-panel-item-num{font-size:11px;font-weight:700;color:var(--accent);margin-bottom:2px;}
+  .normen-panel-item-titel{font-size:11px;color:var(--text2);margin-bottom:3px;line-height:1.4;}
+  .normen-panel-item-gw{font-size:10px;color:var(--text3);}
+  .normen-panel-item-btn{display:flex;gap:4px;margin-top:6px;}
+  .normen-einfuegen-btn{padding:3px 10px;border-radius:5px;border:none;background:var(--accent);color:#fff;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;}
+  .normen-einfuegen-btn:hover{opacity:.85;}
+  .normen-grp-header{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);padding:8px 12px 4px;margin-top:4px;}
+
+  /* ═══ NORMEN FAB BUTTON ═══ */
+  .normen-fab{position:fixed;right:20px;bottom:80px;width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#3a7be0);border:none;color:#fff;font-size:20px;cursor:pointer;box-shadow:0 4px 16px rgba(79,142,247,.4);z-index:200;transition:all .2s;display:flex;align-items:center;justify-content:center;}
+  .normen-fab:hover{transform:scale(1.08);box-shadow:0 6px 22px rgba(79,142,247,.5);}
+  .normen-fab-label{position:absolute;right:54px;white-space:nowrap;background:var(--surface);border:1px solid var(--border2);border-radius:6px;padding:3px 8px;font-size:11px;font-weight:600;color:var(--text);opacity:0;transition:opacity .2s;pointer-events:none;}
+  .normen-fab:hover .normen-fab-label{opacity:1;}
+
+  /* KI-Suggestion Strip */
+  .ki-norm-strip{padding:8px 12px;background:rgba(79,142,247,.06);border-top:1px solid var(--border);flex-shrink:0;}
+  .ki-norm-strip-title{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;}
+  .ki-norm-chip{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:10px;border:1px solid rgba(79,142,247,.25);background:rgba(79,142,247,.08);color:var(--accent);font-size:11px;font-weight:600;cursor:pointer;margin:2px;transition:all .12s;}
+  .ki-norm-chip:hover{background:var(--accent);color:#fff;}
+
+  /* Normen-Panel Overlay */
+  .normen-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:499;}
+  .normen-overlay.open{display:block;}
 </style>
 </head>
 <body>
@@ -487,6 +565,10 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-ui);min-heigh
                 style="position:relative;z-index:2;background:transparent;"></textarea>
             </div>
             <div class="char-count bad" id="charA">0 / mind. 500 Zeichen</div>
+            <div class="ki-normen-inline" id="ki-normen-inline">
+              <div class="ki-normen-inline-title">🤖 Passende Normen erkannt</div>
+              <div class="ki-normen-chips" id="ki-normen-chips"></div>
+            </div>
             <div class="kj-check idle" id="kjCheckA">
               <span>⏳</span><span>Konjunktiv II wird geprüft sobald Sie schreiben…</span>
             </div>
@@ -921,108 +1003,172 @@ const OFFENLEGUNG = {
 
 // KJ2 Verbotsliste — erweitert, alle typischen SV-Indikativ-Muster
 const INDIK_BAD = [
-  /* KJ2-CHECKER v2.0 — Rechtsgrundlage:
+  /* KJ2-CHECKER v3.0 — Rechtsgrundlage:
      §407a ZPO, §839a BGB, IFS Sachverständigen-Merkblatt,
-     BGH §286 ZPO (Vollbeweis = Richteraufgabe), IHK Köln Gutachten-Empfehlung
-     REGEL: SV formuliert Wahrscheinlichkeiten — kein Vollbeweis, kein Indikativ bei Kausalaussagen.
-     ERLAUBT im Indikativ: Messwerte, Sichtbefunde, Laborergebnisse. */
+     BGH §286 ZPO (Vollbeweis = Richteraufgabe)
+     KERN-REGEL: SV formuliert Wahrscheinlichkeiten — kein Vollbeweis im Indikativ.
+     ERLAUBT im Indikativ: Messwerte, Sichtbefunde, Laborergebnisse.
+     VERBOTEN: Kausalaussagen, Wertungen, Schuldzuweisungen, Prognosen im Indikativ.
+     TECHNISCH: [^.!?]{0,120} erfasst dt. Satzklammer (Hilfsverb…Partizip). */
 
-  // KATEGORIE 1: GEWISSHEITSAUSSAGEN — absolut verboten
-  // IFS: "Keine Vorspiegelung nicht vorhandener Sicherheiten im Ergebnis"
-  {rx:/\bsicher\b/gi,            sev:'HOCH', h:'"sicher" → VERBOTEN (§407a ZPO) — keine Gewissheitsaussagen → "naheliegend", "wahrscheinlich"'},
-  {rx:/\bzweifelsfrei\b/gi,      sev:'HOCH', h:'"zweifelsfrei" → VERBOTEN — unzulässige Gewissheitsaussage → "mit hoher Wahrscheinlichkeit"'},
+  // ═══ KATEGORIE 1: GEWISSHEITSAUSSAGEN — absolut verboten ═══
+  {rx:/\bsicher\b/gi,            sev:'HOCH', h:'"sicher" → VERBOTEN (§407a ZPO) → "naheliegend", "wahrscheinlich"'},
+  {rx:/\bzweifelsfrei\b/gi,      sev:'HOCH', h:'"zweifelsfrei" → VERBOTEN → "mit hoher Wahrscheinlichkeit"'},
   {rx:/\bzweifelsohne\b/gi,      sev:'HOCH', h:'"zweifelsohne" → VERBOTEN → "naheliegend"'},
   {rx:/\bunzweifelhaft\b/gi,     sev:'HOCH', h:'"unzweifelhaft" → VERBOTEN → "mit überwiegender Wahrscheinlichkeit"'},
-  {rx:/\bmit\s+Sicherheit\b/gi, sev:'HOCH', h:'"mit Sicherheit" → VERBOTEN — nur Richter stellen Gewissheit fest → "mit hoher Wahrscheinlichkeit"'},
+  {rx:/\bmit\s+Sicherheit\b/gi,  sev:'HOCH', h:'"mit Sicherheit" → Richterformulierung → "mit hoher Wahrscheinlichkeit"'},
   {rx:/\bohne\s+(jeden\s+)?Zweifel\b/gi, sev:'HOCH', h:'"ohne Zweifel" → VERBOTEN → "mit überwiegender Wahrscheinlichkeit"'},
-  {rx:/\bsteht\s+fest\b/gi,     sev:'HOCH', h:'"steht fest" → VERBOTEN — Richtersprache → "erscheint naheliegend"'},
+  {rx:/\bsteht\s+fest\b/gi,      sev:'HOCH', h:'"steht fest" → Richtersprache → "erscheint naheliegend"'},
   {rx:/\bliegt\s+auf\s+der\s+Hand\b/gi, sev:'HOCH', h:'"liegt auf der Hand" → VERBOTEN → "erscheint naheliegend"'},
-  {rx:/\bist\s+bewiesen\b/gi,   sev:'HOCH', h:'"ist bewiesen" → VERBOTEN — Beweis stellt das Gericht fest → "erscheint belegt"'},
-  {rx:/\bist\s+damit\s+(bewiesen|belegt|nachgewiesen)\b/gi, sev:'HOCH', h:'"ist damit bewiesen/belegt" → VERBOTEN → "erscheint damit naheliegend"'},
-  {rx:/\bist\s+erwiesen\b/gi,   sev:'HOCH', h:'"ist erwiesen" → VERBOTEN → "erscheint hinreichend belegt"'},
+  {rx:/\bist\s+(damit\s+)?(bewiesen|belegt|nachgewiesen|gesichert)\b/gi, sev:'HOCH', h:'"ist bewiesen/belegt/nachgewiesen" → VERBOTEN → "erscheint naheliegend"'},
+  {rx:/\bist\s+erwiesen\b/gi,    sev:'HOCH', h:'"ist erwiesen" → VERBOTEN → "erscheint hinreichend belegt"'},
+  {rx:/\bgilt\s+als\s+(erwiesen|belegt|bewiesen|gesichert|nachgewiesen)\b/gi, sev:'HOCH', h:'"gilt als erwiesen" → VERBOTEN → "erscheint hinreichend belegt"'},
   {rx:/\beindeutig\s+(fest)?gestellt\b/gi, sev:'HOCH', h:'"eindeutig festgestellt" → VERBOTEN → "festgestellt werden konnte"'},
-  {rx:/\bist\s+(eindeutig|offensichtlich|offenbar|klar|zwingend)\b/gi, sev:'HOCH', h:'"ist eindeutig/offensichtlich/klar" → VERBOTEN → "erscheint naheliegend"'},
-  {rx:/\bmit\s+an\s+Sicherheit\s+grenzender\s+Wahrscheinlichkeit\b/gi, sev:'HOCH', h:'"mit an Sicherheit grenzender Wahrscheinlichkeit" → NUR Richterformulierung (BGH §286 ZPO) — SV schreibt: "mit hoher Wahrscheinlichkeit"'},
-  {rx:/\bist\s+unstreitig\b/gi, sev:'HOCH', h:'"ist unstreitig" → Richtersprache — SV schreibt: "erscheint unbestritten"'},
-  {rx:/\bist\s+zwingend\b/gi,   sev:'HOCH', h:'"ist zwingend" → VERBOTEN → "erscheint naheliegend"'},
-  {rx:/\bohne\s+Weiteres\b/gi,  sev:'MITTEL', h:'"ohne Weiteres" → impliziert Selbstverständlichkeit → "nach den festgestellten Befunden"'},
-  {rx:/\bist\s+klar\b/gi,       sev:'HOCH', h:'"ist klar" → VERBOTEN → "erscheint naheliegend"'},
-  {rx:/\bgilt\s+als\s+(erwiesen|belegt|bewiesen|gesichert)\b/gi, sev:'HOCH', h:'"gilt als erwiesen/bewiesen" → VERBOTEN → "erscheint hinreichend belegt"'},
+  {rx:/\bist\s+(eindeutig|offensichtlich|offenbar|klar|zwingend|unbestreitbar)\b/gi, sev:'HOCH', h:'"ist eindeutig/offensichtlich/klar" → VERBOTEN → "erscheint naheliegend"'},
+  {rx:/\bmit\s+an\s+Sicherheit\s+grenzender\s+Wahrscheinlichkeit\b/gi, sev:'HOCH', h:'"mit an Sicherheit grenzender Wahrscheinlichkeit" → NUR Richterformel (BGH §286 ZPO) → "mit hoher Wahrscheinlichkeit"'},
+  {rx:/\bist\s+unstreitig\b/gi,  sev:'HOCH', h:'"ist unstreitig" → Richtersprache → "erscheint unbestritten"'},
+  {rx:/\bist\s+zwingend\b/gi,    sev:'HOCH', h:'"ist zwingend" → VERBOTEN → "erscheint naheliegend"'},
+  {rx:/\bist\s+klar\b/gi,        sev:'HOCH', h:'"ist klar" → VERBOTEN → "erscheint naheliegend"'},
+  {rx:/\bnachweislich\b/gi,      sev:'HOCH', h:'"nachweislich" → impliziert Beweis → "nach den Feststellungen"'},
+  {rx:/\berwiesenermaßen\b/gi,   sev:'HOCH', h:'"erwiesenermaßen" → VERBOTEN → "nach den vorliegenden Befunden"'},
+  {rx:/\bdefinitiv\b/gi,         sev:'HOCH', h:'"definitiv" → VERBOTEN → "mit hoher Wahrscheinlichkeit"'},
+  {rx:/\boffensichtlich\b/gi,    sev:'MITTEL', h:'"offensichtlich" → nur bei Sichtbefunden zulässig, nicht bei Kausalaussagen → "naheliegenderweise"'},
+  {rx:/\baugenscheinlich\b/gi,   sev:'MITTEL', h:'"augenscheinlich" → nur bei Sichtbefunden zulässig, nicht bei Kausalaussagen'},
+  {rx:/\btatsächlich\b/gi,       sev:'MITTEL', h:'"tatsächlich" → suggeriert Gewissheit → nur bei direkt gemessenen Fakten zulässig'},
+  {rx:/\bohne\s+Weiteres\b/gi,   sev:'MITTEL', h:'"ohne Weiteres" → impliziert Selbstverständlichkeit → "nach den festgestellten Befunden"'},
+  {rx:/\bes\s+steht\s+fest\s*,?\s*dass\b/gi, sev:'HOCH', h:'"Es steht fest, dass" → VERBOTEN — Richtersprache → "Es erscheint naheliegend, dass"'},
 
-  // KATEGORIE 2: KAUSALAUSSAGEN IM INDIKATIV — Konjunktiv II erforderlich
-  // SV stellt Wahrscheinlichkeiten fest, keinen Kausalitätsbeweis
-  {rx:/\bist\s+zurückzuführen\b/gi, sev:'HOCH', h:'"ist zurückzuführen" → Kausalindikativ → "dürfte zurückzuführen sein"'},
+  // ═══ KATEGORIE 2: KAUSALAUSSAGEN IM INDIKATIV ═══
+  // SATZKLAMMER: hat/haben + [beliebige Satzglieder] + Partizip
+  {rx:/\bhat\b[^.!?]{0,120}\bbeigetragen\b/gi,   sev:'HOCH', h:'"hat … beigetragen" → Kausalindikativ → "dürfte … beigetragen haben"'},
+  {rx:/\bhaben\b[^.!?]{0,120}\bbeigetragen\b/gi,  sev:'HOCH', h:'"haben … beigetragen" → Kausalindikativ → "dürften … beigetragen haben"'},
+  {rx:/\bhat\b[^.!?]{0,120}\bgeführt\b/gi,        sev:'HOCH', h:'"hat … geführt" → Kausalindikativ → "dürfte … geführt haben"'},
+  {rx:/\bhaben\b[^.!?]{0,120}\bgeführt\b/gi,      sev:'HOCH', h:'"haben … geführt" → Kausalindikativ → "dürften … geführt haben"'},
+  {rx:/\bhat\b[^.!?]{0,120}\bverursacht\b/gi,     sev:'HOCH', h:'"hat … verursacht" → Kausalindikativ → "dürfte … verursacht haben"'},
+  {rx:/\bhaben\b[^.!?]{0,120}\bverursacht\b/gi,   sev:'HOCH', h:'"haben … verursacht" → Kausalindikativ → "dürften … verursacht haben"'},
+  {rx:/\bhat\b[^.!?]{0,120}\bausgelöst\b/gi,      sev:'HOCH', h:'"hat … ausgelöst" → Kausalindikativ → "dürfte … ausgelöst haben"'},
+  {rx:/\bhaben\b[^.!?]{0,120}\bausgelöst\b/gi,    sev:'HOCH', h:'"haben … ausgelöst" → Kausalindikativ → "dürften … ausgelöst haben"'},
+  {rx:/\bhat\b[^.!?]{0,120}\bbegünstigt\b/gi,     sev:'HOCH', h:'"hat … begünstigt" → Kausalindikativ → "dürfte … begünstigt haben"'},
+  {rx:/\bhaben\b[^.!?]{0,120}\bbegünstigt\b/gi,   sev:'HOCH', h:'"haben … begünstigt" → Kausalindikativ → "dürften … begünstigt haben"'},
+  {rx:/\bhat\b[^.!?]{0,120}\bbewirkt\b/gi,        sev:'HOCH', h:'"hat … bewirkt" → Kausalindikativ → "dürfte … bewirkt haben"'},
+  {rx:/\bhaben\b[^.!?]{0,120}\bbewirkt\b/gi,      sev:'HOCH', h:'"haben … bewirkt" → Kausalindikativ → "dürften … bewirkt haben"'},
+  {rx:/\bhat\b[^.!?]{0,120}\bherbeigeführt\b/gi,  sev:'HOCH', h:'"hat … herbeigeführt" → Kausalindikativ → "dürfte … herbeigeführt haben"'},
+  {rx:/\bhat\b[^.!?]{0,120}\bermöglicht\b/gi,     sev:'MITTEL', h:'"hat … ermöglicht" → Kausalindikativ → "dürfte … ermöglicht haben"'},
+  {rx:/\bhat\b[^.!?]{0,120}\bverstärkt\b/gi,      sev:'MITTEL', h:'"hat … verstärkt" → Kausalindikativ → "dürfte … verstärkt haben"'},
+  {rx:/\bhat\b[^.!?]{0,120}\bbeschleunigt\b/gi,   sev:'MITTEL', h:'"hat … beschleunigt" → Kausalindikativ → "dürfte … beschleunigt haben"'},
+  {rx:/\bhat\b[^.!?]{0,120}\bverschuldet\b/gi,    sev:'HOCH', h:'"hat … verschuldet" → Schuldzuweisung → "dürfte … beigetragen haben"'},
+  {rx:/\bhat\b[^.!?]{0,120}\bversäumt\b/gi,       sev:'HOCH', h:'"hat … versäumt" → Schuldzuweisung → "wurde … nicht durchgeführt"'},
+  {rx:/\bhat\b[^.!?]{0,120}\bvernachlässigt\b/gi, sev:'HOCH', h:'"hat … vernachlässigt" → Schuldzuweisung → "dürfte … nicht ausreichend berücksichtigt haben"'},
+  {rx:/\bhaben\b[^.!?]{0,120}\bvernachlässigt\b/gi, sev:'HOCH', h:'"haben … vernachlässigt" → Schuldzuweisung → "dürften … nicht ausreichend berücksichtigt haben"'},
+  {rx:/\bhat\b[^.!?]{0,120}\bmissachtet\b/gi,     sev:'HOCH', h:'"hat … missachtet" → Schuldzuweisung → "dürfte … nicht berücksichtigt haben"'},
+  {rx:/\bhätte\b[^.!?]{0,100}\bmüssen\b/gi,       sev:'MITTEL', h:'"hätte … müssen" → impliziert Pflichtverstoß — Rechtswertung ist Richteraufgabe → nur Befunde beschreiben'},
+  {rx:/\btrug\b[^.!?]{0,80}\bbei\b/gi,            sev:'HOCH', h:'"trug … bei" → Kausalindikativ → "dürfte … beigetragen haben"'},
+  // Präsens-Kausalaussagen
+  {rx:/\bist\s+zurückzuführen\b/gi,    sev:'HOCH', h:'"ist zurückzuführen" → Kausalindikativ → "dürfte zurückzuführen sein"'},
   {rx:/\blässt\s+sich\s+zurückführen\b/gi, sev:'MITTEL', h:'"lässt sich zurückführen" → besser: "dürfte zurückzuführen sein"'},
-  {rx:/\bliegt\s+(in|an|bei)\b/gi, sev:'HOCH', h:'"liegt in/an/bei" → Kausalindikativ → "dürfte liegen in/an/bei"'},
-  {rx:/\bliegt\s+\w+(\s+\w+){0,5}\s+(in|an|bei|vor)\b/gi, sev:'HOCH', h:'"liegt … in/an/bei/vor" → Kausalindikativ → "dürfte … liegen"'},
-  {rx:/\bliegt\s+(die\s+)?(Ursache|Grund|Auslöser|Fehler|Mangel|Schaden|Problem|Ursächlichkeit)\b/gi, sev:'HOCH', h:'"liegt die Ursache" → Kausalindikativ → "dürfte die Ursache liegen"'},
-  {rx:/\bliegt\s+darin\b/gi,    sev:'HOCH', h:'"liegt darin" → Indikativ → "dürfte darin liegen"'},
-  {rx:/\bliegt\s+daran\b/gi,    sev:'HOCH', h:'"liegt daran" → Indikativ → "dürfte daran liegen"'},
-  {rx:/\bhat\s+(dazu\s+)?geführt\b/gi, sev:'HOCH', h:'"hat geführt" → Kausalindikativ → "dürfte geführt haben"'},
-  {rx:/\bführt\s+zu\b/gi,       sev:'HOCH', h:'"führt zu" → Kausalindikativ → "könnte zu … führen"'},
-  {rx:/\bführte\s+zu\b/gi,      sev:'HOCH', h:'"führte zu" → Kausalindikativ → "dürfte geführt haben zu"'},
-  {rx:/\bhat\s+verursacht\b/gi, sev:'HOCH', h:'"hat verursacht" → Kausalindikativ → "dürfte verursacht haben"'},
-  {rx:/\bverursacht(e)?\s+(den|die|das|einen|eine|diesen|diese|dieses)\b/gi, sev:'HOCH', h:'"verursacht(e) den/die" → Kausalindikativ → "dürfte … verursacht haben"'},
+  {rx:/\bführt\s+zu\b/gi,              sev:'HOCH', h:'"führt zu" → Kausalindikativ → "könnte zu … führen"'},
+  {rx:/\bführte\s+zu\b/gi,             sev:'HOCH', h:'"führte zu" → Kausalindikativ → "dürfte geführt haben zu"'},
+  {rx:/\bberuht\s+auf\b/gi,            sev:'HOCH', h:'"beruht auf" → Kausalindikativ → "dürfte beruhen auf"'},
+  {rx:/\bbasiert\s+auf\b/gi,           sev:'MITTEL', h:'"basiert auf" → Kausalindikativ → "dürfte basieren auf"'},
+  {rx:/\bresultiert\s+(aus|daraus)\b/gi, sev:'HOCH', h:'"resultiert aus" → Kausalindikativ → "dürfte resultieren aus"'},
+  {rx:/\bresultierte\s+(aus|daraus)\b/gi, sev:'HOCH', h:'"resultierte aus" → Kausalindikativ → "dürfte resultiert haben aus"'},
+  {rx:/\bbewirkt\b/gi,                 sev:'HOCH', h:'"bewirkt" → Kausalindikativ → "dürfte bewirken"'},
+  {rx:/\bbewirkte\b/gi,                sev:'HOCH', h:'"bewirkte" → Kausalindikativ → "dürfte bewirkt haben"'},
+  {rx:/\blöst\s+aus\b/gi,              sev:'HOCH', h:'"löst aus" → Kausalindikativ → "dürfte auslösen"'},
+  {rx:/\blöste\s+aus\b/gi,             sev:'HOCH', h:'"löste aus" → Kausalindikativ → "dürfte ausgelöst haben"'},
+  {rx:/\bgeht\s+zurück\s+auf\b/gi,    sev:'HOCH', h:'"geht zurück auf" → Kausalindikativ → "dürfte zurückzuführen sein auf"'},
+  {rx:/\bging\s+zurück\s+auf\b/gi,    sev:'HOCH', h:'"ging zurück auf" → Kausalindikativ → "dürfte zurückzuführen sein auf"'},
+  {rx:/\bliegt\s+(die\s+)?(Ursache|Grund|Auslöser|Fehler|Mangel|Ursächlichkeit)\b/gi, sev:'HOCH', h:'"liegt die Ursache/der Grund" → Kausalindikativ → "dürfte die Ursache liegen"'},
+  {rx:/\bliegt\s+darin\b/gi,           sev:'HOCH', h:'"liegt darin" → Indikativ → "dürfte darin liegen"'},
+  {rx:/\bliegt\s+daran\b/gi,           sev:'HOCH', h:'"liegt daran" → Indikativ → "dürfte daran liegen"'},
+  {rx:/\bist\s+(die\s+)?(Ursache|Schadensursache|Grund|Auslöser)\b/gi, sev:'HOCH', h:'"ist die Ursache/der Grund" → Kausalindikativ → "dürfte die Ursache sein"'},
+  {rx:/\bwar\s+(die\s+)?(Ursache|ursächlich|kausal)\b/gi, sev:'HOCH', h:'"war die Ursache/ursächlich" → Kausalindikativ → "dürfte ursächlich gewesen sein"'},
+  {rx:/\bist\s+(kausal|ursächlich|mitursächlich|mitverantwortlich)\b/gi, sev:'HOCH', h:'"ist kausal/ursächlich/mitursächlich" → Kausalindikativ → "dürfte … sein"'},
+  {rx:/\bist\s+(die\s+)?Folge\b/gi,   sev:'HOCH', h:'"ist die Folge" → Kausalindikativ → "dürfte die Folge sein"'},
+  {rx:/\bist\s+zu\s+suchen\b/gi,      sev:'HOCH', h:'"ist zu suchen" → Kausalindikativ → "dürfte zu suchen sein"'},
+  {rx:/\bist\s+damit\s+(erklärt|begründet)\b/gi, sev:'HOCH', h:'"ist damit erklärt/begründet" → Kausalindikativ → "ließe sich damit erklären"'},
+  {rx:/\berklärt\s+sich\b/gi,          sev:'HOCH', h:'"erklärt sich" → Kausalindikativ → "ließe sich erklären durch"'},
+  {rx:/\bzeigt\s*,?\s*dass\b/gi,       sev:'MITTEL', h:'"zeigt, dass" → impliziert Beweis → "legt nahe, dass"'},
+  {rx:/\bzeigt\s+sich\s*,?\s*dass\b/gi, sev:'MITTEL', h:'"zeigt sich, dass" → "ließe sich erkennen, dass"'},
+  {rx:/\bbeweist\b/gi,                 sev:'HOCH', h:'"beweist" → VERBOTEN — Beweisführung ist Aufgabe des Gerichts → "legt nahe"'},
+  {rx:/\bbelegt\s*,?\s*dass\b/gi,      sev:'MITTEL', h:'"belegt, dass" → suggeriert Beweis → "legt nahe, dass"'},
+  {rx:/\bfolgt\s+(daraus|hieraus)\b/gi, sev:'HOCH', h:'"folgt daraus" → Kausalindikativ → "ließe sich daraus ableiten"'},
+  {rx:/\bergibt\s+sich\s+(daraus|hieraus)\b/gi, sev:'HOCH', h:'"ergibt sich daraus" → Kausalindikativ → "ließe sich daraus schließen"'},
   {rx:/\bwurde\s+verursacht\s+durch\b/gi, sev:'HOCH', h:'"wurde verursacht durch" → Kausalindikativ → "dürfte verursacht worden sein durch"'},
   {rx:/\bist\s+entstanden\s+(durch|infolge)\b/gi, sev:'HOCH', h:'"ist entstanden durch" → Kausalindikativ → "dürfte entstanden sein durch"'},
   {rx:/\bentstand\s+(durch|infolge|wegen)\b/gi, sev:'HOCH', h:'"entstand durch" → Kausalindikativ → "dürfte entstanden sein durch"'},
-  {rx:/\bberuht\s+auf\b/gi,     sev:'HOCH', h:'"beruht auf" → Kausalindikativ → "dürfte beruhen auf"'},
-  {rx:/\bbasiert\s+auf\b/gi,    sev:'MITTEL', h:'"basiert auf" → Kausalindikativ → "dürfte basieren auf"'},
-  {rx:/\bbewirkt\b/gi,           sev:'HOCH', h:'"bewirkt" → Kausalindikativ → "dürfte bewirken"'},
-  {rx:/\bbewirkte\b/gi,          sev:'HOCH', h:'"bewirkte" → Kausalindikativ → "dürfte bewirkt haben"'},
-  {rx:/\bresultiert\s+(aus|daraus)\b/gi, sev:'HOCH', h:'"resultiert aus" → Kausalindikativ → "dürfte resultieren aus"'},
-  {rx:/\bresultierte\s+(aus|daraus)\b/gi, sev:'HOCH', h:'"resultierte aus" → Kausalindikativ → "dürfte resultiert haben aus"'},
-  {rx:/\bhat\s+ausgelöst\b/gi,  sev:'HOCH', h:'"hat ausgelöst" → Kausalindikativ → "dürfte ausgelöst haben"'},
-  {rx:/\blöst(e)?\s+aus\b/gi,   sev:'HOCH', h:'"löst/löste aus" → Kausalindikativ → "dürfte auslösen/ausgelöst haben"'},
-  {rx:/\bhat\s+(dazu\s+)?beigetragen\b/gi, sev:'HOCH', h:'"hat beigetragen" → Kausalindikativ → "dürfte beigetragen haben"'},
-  {rx:/\btrug\s+(dazu\s+)?bei\b/gi, sev:'HOCH', h:'"trug bei" → Kausalindikativ → "dürfte beigetragen haben"'},
-  {rx:/\bhat\s+begünstigt\b/gi, sev:'HOCH', h:'"hat begünstigt" → Kausalindikativ → "dürfte begünstigt haben"'},
-  {rx:/\bbegünstigte?\b/gi,      sev:'HOCH', h:'"begünstigt/begünstigte" → Kausalindikativ → "dürfte begünstigen/begünstigt haben"'},
-  {rx:/\bhat\s+ermöglicht\b/gi, sev:'MITTEL', h:'"hat ermöglicht" → Kausalindikativ → "dürfte ermöglicht haben"'},
-  {rx:/\bfolgt\s+(daraus|hieraus)\b/gi, sev:'HOCH', h:'"folgt daraus" → Kausalindikativ → "ließe sich daraus ableiten"'},
-  {rx:/\bergibt\s+sich\s+(daraus|hieraus)\b/gi, sev:'HOCH', h:'"ergibt sich daraus" → Kausalindikativ → "ließe sich daraus schließen"'},
-  {rx:/\bist\s+(die\s+)?(Ursache|Schadensursache|Grund|Auslöser|Ursächlichkeit)\b/gi, sev:'HOCH', h:'"ist die Ursache/der Grund" → Kausalindikativ → "dürfte die Ursache/der Grund sein"'},
-  {rx:/\bist\s+(kausal|ursächlich)\b/gi, sev:'HOCH', h:'"ist kausal/ursächlich" → Kausalindikativ → "dürfte kausal/ursächlich sein"'},
-  {rx:/\bist\s+zu\s+suchen\b/gi, sev:'HOCH', h:'"ist zu suchen" → Kausalindikativ → "dürfte zu suchen sein"'},
-  {rx:/\bzeigt\s+(sich|sich\s+deutlich|dass)\b/gi, sev:'MITTEL', h:'"zeigt sich/dass" → Kausalindikativ → "ließe sich erkennen / legt nahe"'},
 
-  // KATEGORIE 3: SCHULD- UND VERANTWORTUNGSZUWEISUNGEN
-  // SV darf keine Schuld zuweisen — das ist Richteraufgabe
+  // ═══ KATEGORIE 3: SCHULD- UND VERANTWORTUNGSZUWEISUNGEN ═══
   {rx:/\bist\s+(allein\s+)?verantwortlich\s+für\b/gi, sev:'HOCH', h:'"ist verantwortlich für" → Schuldzuweisung durch SV unzulässig → "dürfte mitursächlich sein für"'},
-  {rx:/\bist\s+schuld\b/gi,     sev:'HOCH', h:'"ist schuld" → Schuldzuweisung — nicht Aufgabe des SV → "erscheint mitursächlich"'},
-  {rx:/\bhat\s+schuldhaft\b/gi, sev:'HOCH', h:'"hat schuldhaft" → Schuldzuweisung → "scheint schuldhaft gehandelt zu haben"'},
-  {rx:/\bhat\s+fahrlässig\b/gi, sev:'HOCH', h:'"hat fahrlässig" → Rechtsbegriff — Schuldzuweisung → "scheint fahrlässig gehandelt zu haben"'},
-  {rx:/\bhat\s+(vernachlässigt|ignoriert|missachtet)\b/gi, sev:'HOCH', h:'"hat vernachlässigt/ignoriert" → Indikativ-Schuldzuweisung → "dürfte vernachlässigt haben"'},
-  {rx:/\bhätte\s+\w+\s+müssen\b/gi, sev:'MITTEL', h:'"hätte … müssen" → impliziert Pflichtverstoß — Rechtsbewertung ist Richteraufgabe → nur Befunde beschreiben'},
-  {rx:/\bhat\s+gegen\s+(die\s+)?(DIN|VOB|WTA|Norm|Vorschrift|Regel)\b/gi, sev:'HOCH', h:'"hat gegen DIN/Norm verstoßen" → Rechtswertung → "entspricht nicht den Anforderungen der …"'},
-  {rx:/\bverstoß(en)?\s+gegen\b/gi, sev:'MITTEL', h:'"Verstoß gegen" → rechtliche Wertung → "entspricht nicht … / weicht ab von …"'},
+  {rx:/\bist\s+schuld\b/gi,            sev:'HOCH', h:'"ist schuld" → Schuldzuweisung — nicht Aufgabe des SV → "erscheint mitursächlich"'},
+  {rx:/\bhat\s+schuldhaft\b/gi,        sev:'HOCH', h:'"hat schuldhaft" → Schuldzuweisung → "scheint schuldhaft gehandelt zu haben"'},
+  {rx:/\bhat\s+fahrlässig\b/gi,        sev:'HOCH', h:'"hat fahrlässig" → Rechtsbegriff — Schuldzuweisung → "scheint fahrlässig gehandelt zu haben"'},
+  {rx:/\bgrob\s+fahrlässig\b/gi,       sev:'HOCH', h:'"grob fahrlässig" → rechtliche Wertung VERBOTEN → "dürfte eine erhebliche Abweichung … darstellen"'},
+  {rx:/\bvorsätzlich\b/gi,             sev:'HOCH', h:'"vorsätzlich" → strafrechtlicher Begriff VERBOTEN → Befunde beschreiben'},
+  {rx:/\bhat\b[^.!?]{0,80}\bgegen\s+(die\s+)?(DIN|VOB|WTA|Norm|Vorschrift|Regel)\b/gi, sev:'HOCH', h:'"hat gegen DIN/Norm verstoßen" → Rechtswertung → "entspricht nicht den Anforderungen der …"'},
+  {rx:/\bVerstoß\s+gegen\b/gi,         sev:'MITTEL', h:'"Verstoß gegen" → rechtliche Wertung → "entspricht nicht … / weicht ab von …"'},
+  {rx:/\bunterlassen\b/gi,             sev:'MITTEL', h:'"unterlassen" → impliziert Pflichtversäumnis → "wurde … nicht ausgeführt"'},
 
-  // KATEGORIE 4: BEWERTUNGSAUSSAGEN IM INDIKATIV
+  // ═══ KATEGORIE 4: DIREKTIVE EMPFEHLUNGEN IM INDIKATIV ═══
+  {rx:/\bwird\s+empfohlen\b/gi,        sev:'HOCH', h:'"wird empfohlen" → Direktive im Indikativ → "wäre zu empfehlen"'},
+  {rx:/\bempfehle\s+ich\b/gi,          sev:'MITTEL', h:'"empfehle ich" → Direktive 1. Person → "wäre zu empfehlen" (objektiver)'},
+  {rx:/\bwird\s+geraten\b/gi,          sev:'MITTEL', h:'"wird geraten" → Direktive im Indikativ → "wäre zu empfehlen"'},
+  {rx:/\bist\s+anzuordnen\b/gi,        sev:'HOCH', h:'"ist anzuordnen" → Anordnung durch SV unzulässig — Richteraufgabe → "wäre zu empfehlen"'},
+  {rx:/\bist\s+anzuweisen\b/gi,        sev:'HOCH', h:'"ist anzuweisen" → Anweisung durch SV unzulässig → "wäre zu empfehlen"'},
+  {rx:/\bist\s+durchzuführen\b/gi,     sev:'HOCH', h:'"ist durchzuführen" → Direktive im Indikativ → "wäre durchzuführen"'},
+  {rx:/\bist\s+umzusetzen\b/gi,        sev:'HOCH', h:'"ist umzusetzen" → Direktive im Indikativ → "wäre umzusetzen"'},
+  {rx:/\bist\s+vorzunehmen\b/gi,       sev:'HOCH', h:'"ist vorzunehmen" → Direktive im Indikativ → "wäre vorzunehmen"'},
+  {rx:/\bist\s+herzustellen\b/gi,      sev:'MITTEL', h:'"ist herzustellen" → Direktive im Indikativ → "wäre herzustellen"'},
+  {rx:/\bist\s+zu\s+(erneuern|sanieren|beheben|prüfen|reparieren|ersetzen|beseitigen|abdichten|trockenleg|reinigen|entfernen|trocknen)\b/gi, sev:'MITTEL', h:'"ist zu sanieren/erneuern/beheben/prüfen" → Direktive Indikativ → "wäre zu sanieren/erneuern"'},
+  {rx:/\bmuss\s+(sofort|unverzüglich|umgehend|zwingend)\b/gi, sev:'HOCH', h:'"muss sofort/unverzüglich" → Anordnung durch SV → "wäre unverzüglich … zu empfehlen"'},
+  {rx:/\bist\s+(sofort|unverzüglich|umgehend)\b/gi, sev:'MITTEL', h:'"ist sofort/unverzüglich" → Direktive → "wäre unverzüglich … zu empfehlen"'},
+
+  // ═══ KATEGORIE 5: BEWERTUNGSAUSSAGEN IM INDIKATIV ═══
   {rx:/\bist\s+(dringend\s+)?erforderlich\b/gi, sev:'MITTEL', h:'"ist erforderlich" → Indikativ → "wäre erforderlich"'},
   {rx:/\bist\s+(unbedingt\s+)?notwendig\b/gi, sev:'MITTEL', h:'"ist notwendig" → Indikativ → "wäre notwendig"'},
-  {rx:/\bist\s+geboten\b/gi,    sev:'MITTEL', h:'"ist geboten" → Indikativ → "wäre geboten"'},
-  {rx:/\bmuss\s+\w+\b/gi,      sev:'MITTEL', h:'"muss …" → Indikativ → "wäre zu … / sollte …"'},
-  {rx:/\bmüssen\s+\w+\b/gi,    sev:'MITTEL', h:'"müssen …" → Indikativ → "wären zu …"'},
-  {rx:/\bsollte\s+unverzüglich\b/gi, sev:'MITTEL', h:'"sollte unverzüglich" → "wäre unverzüglich zu empfehlen"'},
-  {rx:/\bist\s+zu\s+(erneuern|sanieren|beheben|prüfen|reparieren|ersetzen|beseitigen|abdichten|trockenleg)\b/gi, sev:'MITTEL', h:'"ist zu sanieren/erneuern" → Indikativ → "wäre zu sanieren/erneuern"'},
-  {rx:/\bist\s+(mangelhaft|fehlerhaft|defekt|beschädigt|unzureichend|ungenügend)\b/gi, sev:'MITTEL', h:'"ist mangelhaft/fehlerhaft" → Indikativ-Bewertung → "erscheint mangelhaft" / "dürfte mangelhaft sein"'},
-  {rx:/\bist\s+(nicht\s+)?(norm|DIN|VOB|WTA|regelwerk)gerecht\b/gi, sev:'MITTEL', h:'"ist nicht normgerecht" → als Wertung: "erscheint nicht normgerecht gem. …" / Messwert: Indikativ OK'},
-  {rx:/\bist\s+normwidrig\b/gi, sev:'MITTEL', h:'"ist normwidrig" → Wertung → "erscheint nicht konform mit …"'},
+  {rx:/\bist\s+geboten\b/gi,           sev:'MITTEL', h:'"ist geboten" → Indikativ → "wäre geboten"'},
+  {rx:/\bmuss\s+[a-zäöüß]/gi,          sev:'MITTEL', h:'"muss …" → Indikativ → "wäre zu … / sollte …"'},
+  {rx:/\bmüssen\s+[a-zäöüß]/gi,        sev:'MITTEL', h:'"müssen …" → Indikativ → "wären zu …"'},
+  {rx:/\bsollte\s+unverzüglich\b/gi,   sev:'MITTEL', h:'"sollte unverzüglich" → "wäre unverzüglich zu empfehlen"'},
+  {rx:/\bist\s+(mangelhaft|fehlerhaft|defekt|beschädigt|unzureichend|ungenügend|schadhaft)\b/gi, sev:'MITTEL', h:'"ist mangelhaft/fehlerhaft/unzureichend" → Wertungs-Indikativ → "erscheint mangelhaft" / "dürfte mangelhaft sein"'},
+  {rx:/\bist\s+(nicht\s+)?(norm|DIN|VOB|WTA|regelwerk)gerecht\b/gi, sev:'MITTEL', h:'"ist nicht normgerecht" → Wertung → "erscheint nicht normgerecht gem. …"'},
+  {rx:/\bist\s+normwidrig\b/gi,        sev:'MITTEL', h:'"ist normwidrig" → Wertung → "erscheint nicht konform mit …"'},
+  {rx:/\bist\s+einwandfrei\b/gi,       sev:'MITTEL', h:'"ist einwandfrei" → absolute Wertung → "erscheint nach den Befunden einwandfrei"'},
+  {rx:/\bist\s+ordnungsgemäß\b/gi,     sev:'MITTEL', h:'"ist ordnungsgemäß" → rechtliche Wertung → "erscheint ordnungsgemäß ausgeführt"'},
 
-  // KATEGORIE 5: PROGNOSEN IM INDIKATIV
+  // ═══ KATEGORIE 6: PROGNOSEN IM INDIKATIV ═══
   {rx:/\bwird\s+(zu\s+)?(Schäden|Folgeschäden|Feuchte|Schimmel|Schimmelbildung|Korrosion|Substanzverlust)\b/gi, sev:'MITTEL', h:'"wird zu Schäden/Schimmel" → Prognoseindikativ → "könnte zu … führen"'},
-  {rx:/\bbesteht\s+(die\s+)?(Gefahr|Risiko|Möglichkeit)\b/gi, sev:'MITTEL', h:'"besteht Gefahr/Risiko" → Indikativ → "bestünde die Gefahr / das Risiko"'},
-  {rx:/\bkann\s+(zu\s+)?\w+(\s+\w+)?\s+führen\b/gi, sev:'MITTEL', h:'"kann zu … führen" → "könnte zu … führen"'},
-  {rx:/\bwird\s+sich\s+(ausbreiten|fortschreiten|verschlechtern|zunehmen|vergrößern)\b/gi, sev:'MITTEL', h:'"wird sich ausbreiten/fortschreiten" → Prognoseindikativ → "könnte sich ausbreiten"'},
-  {rx:/\bist\s+zu\s+erwarten\b/gi, sev:'MITTEL', h:'"ist zu erwarten" → Prognoseindikativ → "wäre zu erwarten"'},
-  {rx:/\bwird\s+(langfristig|mittelfristig|kurzfristig)\b/gi, sev:'MITTEL', h:'"wird langfristig/mittelfristig" → Prognoseindikativ → "könnte langfristig …"'},
+  {rx:/\bbesteht\s+(die\s+)?(Gefahr|Risiko|Möglichkeit|Wahrscheinlichkeit)\b/gi, sev:'MITTEL', h:'"besteht Gefahr/Risiko" → Indikativ → "bestünde die Gefahr"'},
+  {rx:/\bkann\s+[^.!?]{0,60}\bführen\b/gi, sev:'MITTEL', h:'"kann zu … führen" → "könnte zu … führen"'},
+  {rx:/\bwird\s+sich\s+(ausbreiten|fortschreiten|verschlechtern|zunehmen|vergrößern|verstärken)\b/gi, sev:'MITTEL', h:'"wird sich ausbreiten/verschlechtern" → Prognoseindikativ → "könnte sich ausbreiten"'},
+  {rx:/\bist\s+zu\s+erwarten\b/gi,     sev:'MITTEL', h:'"ist zu erwarten" → Prognoseindikativ → "wäre zu erwarten"'},
+  {rx:/\bwird\s+(langfristig|mittelfristig|kurzfristig|absehbar)\b/gi, sev:'MITTEL', h:'"wird langfristig/mittelfristig" → Prognoseindikativ → "könnte langfristig …"'},
+  {rx:/\bwird\s+eintreten\b/gi,        sev:'HOCH', h:'"wird eintreten" → absolute Prognose → "könnte eintreten"'},
+  {rx:/\bist\s+unausweichlich\b/gi,    sev:'HOCH', h:'"ist unausweichlich" → absolute Prognose → "erscheint wahrscheinlich"'},
 
-  // KATEGORIE 6: UNZULÄSSIGE ZUSAMMENFASSUNGEN
-  {rx:/\bfazit\s*:\s*(die|der|das|es|als|die\s+Ursache)\b/gi, sev:'HOCH', h:'Fazit: muss Konjunktiv II enthalten — keine Indikativ-Kausalaussagen'},
+  // ═══ KATEGORIE 7: FAZIT- UND ZUSAMMENFASSUNGS-VERSTÖSSE ═══
   {rx:/\bals\s+(Ursache|Auslöser)\s+gilt\b/gi, sev:'HOCH', h:'"gilt als Ursache/Auslöser" → "dürfte als Ursache in Betracht kommen"'},
   {rx:/\bzusammenfassend\s+ist\s+festzustellen\b/gi, sev:'HOCH', h:'"Zusammenfassend ist festzustellen" → "Zusammenfassend erscheint naheliegend, dass …"'},
   {rx:/\bals\s+Ergebnis\s+ist\s+(festzuhalten|festzustellen)\b/gi, sev:'HOCH', h:'"Als Ergebnis ist festzustellen" → "Als Ergebnis erscheint naheliegend, dass …"'},
-  {rx:/\bes\s+steht\s+fest\s*,?\s*dass\b/gi, sev:'HOCH', h:'"Es steht fest, dass" → VERBOTEN — Richtersprache → "Es erscheint naheliegend, dass"'},
+  {rx:/\bes\s+steht\s+fest\s*,?\s*dass\b/gi, sev:'HOCH', h:'"Es steht fest, dass" → Richtersprache → "Es erscheint naheliegend, dass"'},
+  {rx:/\bfazit\s*:\s*(die|der|das|es|als|eine|ein)\b/gi, sev:'HOCH', h:'Fazit: muss Konjunktiv II enthalten — keine Indikativ-Kausalaussagen'},
+  {rx:/\bim\s+Ergebnis\s+ist\b/gi,     sev:'HOCH', h:'"Im Ergebnis ist" → Indikativ-Schlussfolgerung → "Im Ergebnis erscheint naheliegend"'},
+  {rx:/\bist\s+festzustellen\s*,?\s*dass\b/gi, sev:'HOCH', h:'"ist festzustellen, dass" → Indikativ-Fazit → "erscheint naheliegend, dass"'},
+  {rx:/\bstellt\s+der\s+Sachverständige\s+fest\b/gi, sev:'HOCH', h:'"stellt der Sachverständige fest" → "ist der Sachverständige der Auffassung, dass"'},
+  {rx:/\bstellt\s+sich\s+heraus\b/gi,  sev:'MITTEL', h:'"stellt sich heraus" → Indikativ → "lässt sich erkennen" / "erscheint naheliegend"'},
+  // ─── NEBENSATZ-ERGÄNZUNG: Partizip vor Hilfsverb (dt. Satzstellung) ───
+  // z.B. "...die Bildung von Kondensat begünstigt haben." (Nebensatz)
+  // z.B. "...was zur Entstehung beigetragen hat." (Relativsatz)
+  {rx:/\bbeigetragen\s+(hat|haben|hatte|hatten)\b/gi,  sev:'HOCH', h:'"beigetragen hat/haben" → Kausalindikativ (Nebensatz) → "beigetragen haben dürfte/dürften"'},
+  {rx:/\bbegünstigt\s+(hat|haben|hatte|hatten)\b/gi,   sev:'HOCH', h:'"begünstigt hat/haben" → Kausalindikativ (Nebensatz) → "begünstigt haben dürfte/dürften"'},
+  {rx:/\bverursacht\s+(hat|haben|hatte|hatten)\b/gi,   sev:'HOCH', h:'"verursacht hat/haben" → Kausalindikativ (Nebensatz) → "verursacht haben dürfte/dürften"'},
+  {rx:/\bgeführt\s+(hat|haben|hatte|hatten)\b/gi,      sev:'HOCH', h:'"geführt hat/haben" → Kausalindikativ (Nebensatz) → "geführt haben dürfte/dürften"'},
+  {rx:/\bausgelöst\s+(hat|haben|hatte|hatten)\b/gi,    sev:'HOCH', h:'"ausgelöst hat/haben" → Kausalindikativ (Nebensatz) → "ausgelöst haben dürfte/dürften"'},
+  {rx:/\bbewirkt\s+(hat|haben|hatte|hatten)\b/gi,      sev:'HOCH', h:'"bewirkt hat/haben" → Kausalindikativ (Nebensatz) → "bewirkt haben dürfte/dürften"'},
+  {rx:/\bherbeigeführt\s+(hat|haben|hatte|hatten)\b/gi, sev:'HOCH', h:'"herbeigeführt hat/haben" → Kausalindikativ (Nebensatz) → "herbeigeführt haben dürfte/dürften"'},
+  {rx:/\bverstärkt\s+(hat|haben|hatte|hatten)\b/gi,    sev:'MITTEL', h:'"verstärkt hat/haben" → Kausalindikativ (Nebensatz) → "verstärkt haben dürfte/dürften"'},
+  {rx:/\bbeschleunigt\s+(hat|haben|hatte|hatten)\b/gi, sev:'MITTEL', h:'"beschleunigt hat/haben" → Kausalindikativ (Nebensatz) → "beschleunigt haben dürfte/dürften"'},
+  {rx:/\bermöglicht\s+(hat|haben|hatte|hatten)\b/gi,   sev:'MITTEL', h:'"ermöglicht hat/haben" → Kausalindikativ (Nebensatz) → "ermöglicht haben dürfte/dürften"'},
 ];
 
 /* ── INIT ── */
@@ -1057,6 +1203,37 @@ ladeNormen();
     // Kurz warten damit DOM vollständig ist
     setTimeout(ladeKIAnalyse, 800);
   }
+})();
+
+// Normen-Queue aus normen.html verarbeiten
+(function() {
+  try {
+    var queue = JSON.parse(localStorage.getItem('prova_normen_queue') || '[]');
+    if (!Array.isArray(queue) || queue.length === 0) return;
+    // In aktive Textarea einfügen
+    setTimeout(function() {
+      var activeTab = document.querySelector('.weg-tab.active');
+      var isWegA = !activeTab || activeTab.dataset.weg !== 'B';
+      var ta = document.getElementById(isWegA ? 'svTextA' : 'svStichpunkte');
+      if (!ta) ta = document.getElementById('svTextA');
+      if (!ta) return;
+      var prefix = ta.value.trim() ? '
+
+' : '';
+      var normenText = queue.map(function(n){ return n.text || n; }).join('
+');
+      ta.value = ta.value + prefix + 'Normenbezug:
+' + normenText;
+      ta.dispatchEvent(new Event('input'));
+      localStorage.removeItem('prova_normen_queue');
+      // Inline-Hinweis
+      var hint = document.createElement('div');
+      hint.style.cssText = 'position:fixed;top:70px;left:50%;transform:translateX(-50%);z-index:9999;background:rgba(16,185,129,.12);border:1.5px solid rgba(16,185,129,.35);border-radius:12px;padding:12px 20px;font-size:13px;font-weight:600;color:#10b981;box-shadow:0 4px 20px rgba(0,0,0,.3);';
+      hint.textContent = '✅ ' + queue.length + ' Norm(en) aus Bibliothek in §6 eingefügt';
+      document.body.appendChild(hint);
+      setTimeout(function(){ hint.remove(); }, 3000);
+    }, 600);
+  } catch(e) {}
 })();
 
 /* ── NAVIGATION ── */
@@ -1783,6 +1960,400 @@ function zeigToast(msg, type='ok') {
 </script>
   <script src="/sw-register.js" defer></script>
 <script src="auftragstyp.js"></script>
-<script src="trial-guard.js"></script>
+<script src="trial-guard.js">
+/* ══════════════════════════════════════════════
+   NORMEN SLIDE-PANEL
+══════════════════════════════════════════════ */
+var NSP_NORMEN = [
+  {num:'WTA 6-1-01/D',sa:'SC',titel:'Schimmel: Grenzwerte Luftfeuchtigkeit',gw:'Relative Feuchte <60% (Raum), Wandfeuchte >20% kritisch (DIN 68800-1)'},
+  {num:'DIN 68800-1',sa:'SC',titel:'Holzschutz — Allgemeines',gw:'Holzfeuchte >18%: Schimmelrisiko. Risikoklasse 1–4 nach Expositionslage'},
+  {num:'DIN 1946-6',sa:'SC',titel:'Lüftung Wohngebäude',gw:'Mindestluftwechsel 0,3–0,5 h⁻¹. Fensterlüftung: 3×tägl. 5 Min. Stoßlüftung'},
+  {num:'WTA 2-9-04/D',sa:'SC',titel:'Sanierputz Schimmelbefall',gw:'Sanierputzschicht min. 20mm. Vorbehandlung mit Biozid erforderlich'},
+  {num:'VdS 3151',sa:'WS',titel:'Wasserschaden: Trocknungsrichtlinien',gw:'Trocknungsziel: Materialfeuchte ≤Ausgleichsfeuchte. Messung täglich dokumentieren'},
+  {num:'DIN 18533',sa:'WS',titel:'Abdichtung erdberührender Bauteile',gw:'Abdichtungsklasse W1-E bis W3-E. Kellerabdichtung: bituminöse Abdichtung'},
+  {num:'DIN 18353',sa:'WS',titel:'Estricharbeiten',gw:'Belegreife Feuchte: Zementestrich ≤2,0 CM%, Anhydrit ≤0,5 CM%'},
+  {num:'DIN 18157',sa:'WS',titel:'Keramische Bekleidungen',gw:'Haftfestigkeit ≥0,5 N/mm². Verlegemörtel: Klasse C2S1 bei Nassbereichen'},
+  {num:'DIN 18550',sa:'WS',titel:'Putz und Putzsysteme',gw:'Haftzugfestigkeit >0,1 N/mm². Mindestdicke Unterputz 10mm, Oberputz 5mm'},
+  {num:'DIN 4102-1',sa:'BS',titel:'Brandverhalten Baustoffe',gw:'Baustoffklassen A1/A2 (nichtbrennbar), B1 (schwer entflammbar), B2 (normal)'},
+  {num:'DIN EN 13501-1',sa:'BS',titel:'Klassifizierung Brandverhalten',gw:'Euroklassen A1–F. Rauchentwicklung: s1/s2/s3. Brennendes Abtropfen: d0/d1/d2'},
+  {num:'VOB/B §13',sa:'BA',titel:'Mängelansprüche',gw:'Verjährung Baumängel: 4 Jahre (§634a BGB). Wesentlicher Mangel: funktions­beeinträchtigend'},
+  {num:'DIN 18202',sa:'BA',titel:'Toleranzen im Hochbau',gw:'Ebenheitstoleranz: Stichmaß ≤3mm/1m, ≤10mm/4m (Tabelle 3, Zeile 3)'},
+  {num:'§407a ZPO',sa:'all',titel:'SV-Pflichten: Offenlegung KI-Nutzung',gw:'SV muss KI-Nutzung offenlegen. Fachliches Urteil (§6) bleibt allein beim SV'},
+  {num:'§839a BGB',sa:'all',titel:'Haftung Gerichtssachverständiger',gw:'Haftung bei grob fahrlässig unrichtigen Gutachten. Sorgfaltspflicht §276 BGB'},
+  {num:'BGH VII ZR 46/17',sa:'SC',titel:'Beweislast Schimmelschäden',gw:'Anscheinsbeweis bei typischen Schadensbildern. Kausalitätsvermutung für Mieter'},
+];
+
+var nspAktivFilter = 'all';
+var nspSuchText = '';
+
+function renderNSP() {
+  var list = document.getElementById('nsp-list');
+  if (!list) return;
+
+  var gefiltert = NSP_NORMEN.filter(function(n) {
+    var saMatch = nspAktivFilter === 'all' || n.sa === 'all' || n.sa === nspAktivFilter;
+    var suchMatch = !nspSuchText || 
+      n.num.toLowerCase().includes(nspSuchText.toLowerCase()) ||
+      n.titel.toLowerCase().includes(nspSuchText.toLowerCase()) ||
+      n.gw.toLowerCase().includes(nspSuchText.toLowerCase());
+    return saMatch && suchMatch;
+  });
+
+  if (!gefiltert.length) {
+    list.innerHTML = '<div class="nsp-empty">Keine Normen gefunden — Suchbegriff anpassen</div>';
+    return;
+  }
+
+  list.innerHTML = gefiltert.map(function(n) {
+    return '<div class="nsp-norm-card">' +
+      '<div class="nsp-norm-num">' + n.num + '</div>' +
+      '<div class="nsp-norm-titel">' + n.titel + '</div>' +
+      '<div class="nsp-norm-gw">' + n.gw + '</div>' +
+      '<div class="nsp-norm-actions">' +
+        '<button class="nsp-norm-insert" onclick="nspEinfuegen(' + JSON.stringify(n) + ')">↙ In §6 einfügen</button>' +
+        '<button class="nsp-norm-copy" onclick="nspKopieren(' + JSON.stringify(n.num) + ')">📋 Kopieren</button>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+
+window.oeffneNormenPanel = function() {
+  document.getElementById('normen-overlay').classList.add('open');
+  document.getElementById('normen-slide-panel').classList.add('open');
+  renderNSP();
+};
+
+window.schliesseNormenPanel = function() {
+  document.getElementById('normen-overlay').classList.remove('open');
+  document.getElementById('normen-slide-panel').classList.remove('open');
+};
+
+window.nspFilter = function(sa, btn) {
+  nspAktivFilter = sa;
+  document.querySelectorAll('.nsp-filter-btn').forEach(function(b){ b.classList.remove('active'); });
+  if (btn) btn.classList.add('active');
+  renderNSP();
+};
+
+window.nspSuche = function(v) {
+  nspSuchText = v;
+  renderNSP();
+};
+
+window.nspEinfuegen = function(norm) {
+  // Aktive Textarea finden
+  var aktTab = document.querySelector('.weg-tab.active');
+  var isB = aktTab && aktTab.dataset.weg === 'B';
+  var ta = document.getElementById(isB ? 'svStichpunkte' : 'svTextA');
+  if (!ta) ta = document.getElementById('svTextA');
+
+  var text = 'Gemäß ' + norm.num + ' (' + norm.titel + ') gilt: ' + norm.gw;
+  
+  if (ta) {
+    var start = ta.selectionStart;
+    var end = ta.selectionEnd;
+    var prefix = ta.value.trim() ? '\n\n' : '';
+    ta.value = ta.value.slice(0, start) + prefix + text + ta.value.slice(end);
+    ta.selectionStart = ta.selectionEnd = start + prefix.length + text.length;
+    ta.dispatchEvent(new Event('input'));
+    ta.focus();
+  }
+
+  // Auch in Queue für andere Seiten
+  try {
+    var q = JSON.parse(localStorage.getItem('prova_normen_queue') || '[]');
+    q.push({num: norm.num, titel: norm.titel, text: text, ts: new Date().toISOString()});
+    localStorage.setItem('prova_normen_queue', JSON.stringify(q));
+  } catch(e) {}
+
+  schliesseNormenPanel();
+  
+  // Inline-Bestätigung
+  var banner = document.createElement('div');
+  banner.style.cssText = 'position:fixed;top:70px;left:50%;transform:translateX(-50%);z-index:9999;background:rgba(16,185,129,.12);border:1.5px solid rgba(16,185,129,.35);border-radius:12px;padding:12px 20px;font-size:13px;font-weight:600;color:#10b981;box-shadow:0 4px 20px rgba(0,0,0,.3);white-space:nowrap;';
+  banner.textContent = '✅ ' + norm.num + ' in §6 eingefügt';
+  document.body.appendChild(banner);
+  setTimeout(function(){ banner.remove(); }, 2500);
+};
+
+window.nspKopieren = function(normNum) {
+  navigator.clipboard.writeText(normNum).catch(function(){});
+  var banner = document.createElement('div');
+  banner.style.cssText = 'position:fixed;top:70px;left:50%;transform:translateX(-50%);z-index:9999;background:rgba(79,142,247,.12);border:1px solid rgba(79,142,247,.3);border-radius:10px;padding:10px 18px;font-size:12px;color:var(--accent);';
+  banner.textContent = '📋 ' + normNum + ' kopiert';
+  document.body.appendChild(banner);
+  setTimeout(function(){ banner.remove(); }, 2000);
+};
+
+/* ── KI-Normen-Vorschlag beim Tippen ── */
+var NORM_TRIGGER = {
+  'schimmel':   ['WTA 6-1-01/D','DIN 68800-1','BGH VII ZR 46/17'],
+  'feuchte':    ['WTA 6-1-01/D','DIN 68800-1'],
+  'luft':       ['DIN 1946-6','WTA 6-1-01/D'],
+  'wasser':     ['VdS 3151','DIN 18533'],
+  'estrich':    ['DIN 18353'],
+  'putz':       ['DIN 18550','WTA 2-9-04/D'],
+  'brand':      ['DIN 4102-1','DIN EN 13501-1'],
+  'toleranz':   ['DIN 18202'],
+  'mangel':     ['VOB/B §13','§839a BGB'],
+  'haftung':    ['§839a BGB','§407a ZPO'],
+};
+
+var normVorschlagTimer = null;
+
+function pruefeNormenVorschlag(text) {
+  clearTimeout(normVorschlagTimer);
+  normVorschlagTimer = setTimeout(function() {
+    var textL = text.toLowerCase();
+    var vorschlaege = [];
+    Object.keys(NORM_TRIGGER).forEach(function(kw) {
+      if (textL.includes(kw)) {
+        NORM_TRIGGER[kw].forEach(function(n) {
+          if (!vorschlaege.includes(n)) vorschlaege.push(n);
+        });
+      }
+    });
+    
+    var container = document.getElementById('ki-normen-inline');
+    if (!container) return;
+    
+    if (vorschlaege.length > 0) {
+      container.className = 'ki-normen-inline show';
+      document.getElementById('ki-normen-chips').innerHTML = vorschlaege.slice(0,4).map(function(n) {
+        var normObj = NSP_NORMEN.find(function(x){return x.num===n;}) || {num:n,titel:'',gw:''};
+        return '<span class="ki-normen-chip" onclick="nspEinfuegen(' + JSON.stringify(normObj) + ')">+ ' + n + '</span>';
+      }).join('');
+    } else {
+      container.className = 'ki-normen-inline';
+    }
+  }, 1500);
+}
+
+// Hook in svTextA
+document.addEventListener('DOMContentLoaded', function() {
+  var ta = document.getElementById('svTextA');
+  if (ta) {
+    ta.addEventListener('input', function() {
+      pruefeNormenVorschlag(this.value);
+    });
+  }
+  // Schadenart für NSP-Filter vorauswählen
+  var sa = localStorage.getItem('prova_schadenart') || '';
+  if (sa.toLowerCase().includes('schimmel')) nspAktivFilter = 'SC';
+  else if (sa.toLowerCase().includes('wasser')) nspAktivFilter = 'WS';
+  else if (sa.toLowerCase().includes('brand')) nspAktivFilter = 'BS';
+});
+
+
+
+/* ═══════════════════════════════════════════════════════════
+   NORMEN SLIDE PANEL — Kontextuell, ohne Seitenwechsel
+   ═══════════════════════════════════════════════════════════ */
+
+var _normenPanelData = [];
+var _normenPanelGeladen = false;
+
+function oeffneNormenPanel() {
+  document.getElementById('normen-panel').classList.add('open');
+  document.getElementById('normen-overlay').classList.add('open');
+  if (!_normenPanelGeladen) ladeNormenPanel();
+  document.getElementById('normen-panel-suche').focus();
+}
+
+function schliesseNormenPanel() {
+  document.getElementById('normen-panel').classList.remove('open');
+  document.getElementById('normen-overlay').classList.remove('open');
+}
+
+async function ladeNormenPanel() {
+  // Aus Cache laden (normen.html cacht in prova_normen_cache)
+  try {
+    var cached = JSON.parse(localStorage.getItem('prova_normen_cache') || 'null');
+    if (cached && cached.length > 0) {
+      _normenPanelData = cached;
+      _normenPanelGeladen = true;
+      renderNormenPanel(_normenPanelData);
+      zeigeKINormenVorschlaege();
+      return;
+    }
+  } catch(e) {}
+
+  // Fallback: Kernset direkt eingebettet
+  _normenPanelData = [
+    {num:'WTA 6-1-01/D',titel:'Leitfaden Wärme- und Feuchteschutz von Außenwänden',gw:'Taupunkt < Oberflächentemperatur; rH < 80% an Oberfläche',sa:'SC'},
+    {num:'DIN 68800-1',titel:'Holzschutz — Allgemeines',gw:'Holzfeuchte < 20% (Grenzwert für Schimmelpilzrisiko)',sa:'SC'},
+    {num:'DIN 1946-6',titel:'Raumlufttechnik — Lüftung von Wohnungen',gw:'Mindestluftwechsel 0,5/h; Feuchteschutz-Lüftung',sa:'SC'},
+    {num:'VdS 3151',titel:'Leitfaden Wasserschäden',gw:'Trocknung bis max. 3% Materialfeuchte; Protokollpflicht',sa:'WS'},
+    {num:'DIN 18533',titel:'Abdichtung von erdberührten Bauteilen',gw:'Expositionsklasse W1-E bis W4-E nach Beanspruchung',sa:'WS'},
+    {num:'DIN 18550',titel:'Außenputz und Innenputz',gw:'Haftfestigkeit > 0,3 N/mm²; Rissbreite < 0,2mm',sa:'BA'},
+    {num:'WTA 2-9-04/D',titel:'Sanierputzsysteme',gw:'Wasseraufnahme w < 0,5 kg/(m²·h⁰·⁵); Haftzug > 0,3 N/mm²',sa:'WS'},
+    {num:'DIN 18157',titel:'Ausführung von Keramikbelägen',gw:'Verformung < 1/300 der Stützweite; Verbund > 0,5 N/mm²',sa:'WS'},
+    {num:'DIN 4108-2',titel:'Mindestwärmeschutz',gw:'Raumseitig: θsi ≥ θsi,min = fRsi · (θi - θe) + θe',sa:'SC'},
+    {num:'BGH VII ZR 46/17',titel:'BGH-Urt. Schimmelbefall Beweislast',gw:'Anscheinsbeweis bei typischem Schadensbild zugunsten Mangel',sa:'SC'},
+    {num:'§ 13 VOB/B',titel:'Mängelansprüche des Auftraggebers',gw:'4 Jahre Gewährleistung Bauwerk; Mängelbeseitigungspflicht',sa:'BA'},
+    {num:'DIN 4102-1',titel:'Brandverhalten von Baustoffen',gw:'Klassifizierung A1/A2 (nichtbrennbar) bis F (brennbar)',sa:'BS'},
+  ];
+  _normenPanelGeladen = true;
+  renderNormenPanel(_normenPanelData);
+  zeigeKINormenVorschlaege();
+}
+
+function renderNormenPanel(normen) {
+  var el = document.getElementById('normen-panel-list');
+  if (!el) return;
+  if (!normen.length) {
+    el.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text3);font-size:12px;">Keine Normen gefunden</div>';
+    return;
+  }
+  el.innerHTML = normen.map(function(n) {
+    return '<div class="normen-panel-item">' +
+      '<div class="normen-panel-item-num">' + n.num + '</div>' +
+      '<div class="normen-panel-item-titel">' + n.titel + '</div>' +
+      '<div class="normen-panel-item-gw">📏 ' + (n.gw || '—') + '</div>' +
+      '<div class="normen-panel-item-btn">' +
+        '<button class="normen-einfuegen-btn" onclick="normInTextarea(\''+n.num+'\',\''+n.titel+'\',\''+n.gw+'\')">↙ Einfügen</button>' +
+        '<button class="normen-einfuegen-btn" style="background:var(--surface2);color:var(--text2);border:1px solid var(--border2);" onclick="normZitatKopieren(\''+n.num+'\')">📋 Zitat</button>' +
+      '</div>' +
+      '</div>';
+  }).join('');
+}
+
+function filterNormenPanel(q) {
+  if (!q) { renderNormenPanel(_normenPanelData); return; }
+  var ql = q.toLowerCase();
+  var gefiltert = _normenPanelData.filter(function(n) {
+    return n.num.toLowerCase().includes(ql) || n.titel.toLowerCase().includes(ql) || (n.gw||'').toLowerCase().includes(ql);
+  });
+  renderNormenPanel(gefiltert);
+}
+
+function normInTextarea(num, titel, gw) {
+  // Aktive Textarea bestimmen
+  var activeTab = document.querySelector('.weg-tab.active');
+  var isB = activeTab && activeTab.dataset && activeTab.dataset.weg === 'B';
+  var ta = document.getElementById(isB ? 'svStichpunkte' : 'svTextA');
+  if (!ta) ta = document.getElementById('svTextA');
+  if (!ta) return;
+
+  var normText = 'Gemäß ' + num + ' (' + titel + ') gilt: ' + (gw || '');
+  var pos = ta.selectionStart || ta.value.length;
+  var prefix = ta.value.slice(0, pos);
+  var suffix = ta.value.slice(pos);
+  ta.value = prefix + (prefix && !prefix.endsWith('\n') ? '\n' : '') + normText + (suffix ? '\n' + suffix : '');
+  ta.focus();
+  ta.dispatchEvent(new Event('input'));
+
+  // Gespeicherte Queue aktualisieren
+  try {
+    var q = JSON.parse(localStorage.getItem('prova_normen_queue') || '[]');
+    q.push({num:num, titel:titel, text:normText, ts:new Date().toISOString()});
+    localStorage.setItem('prova_normen_queue', JSON.stringify(q));
+  } catch(e) {}
+
+  // Bestätigung
+  var flash = document.createElement('div');
+  flash.style.cssText = 'position:fixed;top:70px;left:50%;transform:translateX(-50%);z-index:9999;background:rgba(16,185,129,.15);border:1.5px solid rgba(16,185,129,.4);border-radius:10px;padding:10px 18px;font-size:13px;font-weight:600;color:#10b981;';
+  flash.textContent = '✅ ' + num + ' in §6 eingefügt';
+  document.body.appendChild(flash);
+  setTimeout(function() { flash.remove(); }, 2000);
+}
+
+function normZitatKopieren(num) {
+  var n = _normenPanelData.find(function(x) { return x.num === num; });
+  if (!n) return;
+  var zitat = 'Gemäß ' + n.num + ' (' + n.titel + ') gilt als Grenzwert: ' + (n.gw || '—');
+  navigator.clipboard.writeText(zitat).then(function() {
+    zeigToast('Zitat kopiert: ' + n.num, 'success');
+  });
+}
+
+function zeigeKINormenVorschlaege() {
+  var sa = localStorage.getItem('prova_schadenart') || '';
+  var strip = document.getElementById('ki-norm-strip');
+  var chips = document.getElementById('ki-norm-chips');
+  if (!strip || !chips || !sa) return;
+
+  var saL = sa.toLowerCase();
+  var vorschlaege = _normenPanelData.filter(function(n) {
+    if (saL.includes('schimmel') || saL.includes('feuchte')) return n.sa === 'SC';
+    if (saL.includes('wasser')) return n.sa === 'WS';
+    if (saL.includes('brand')) return n.sa === 'BS';
+    if (saL.includes('bau') || saL.includes('mangel')) return n.sa === 'BA';
+    return false;
+  }).slice(0, 4);
+
+  if (!vorschlaege.length) return;
+  strip.style.display = 'block';
+  chips.innerHTML = vorschlaege.map(function(n) {
+    return '<span class="ki-norm-chip" onclick="normInTextarea(\''+n.num+'\',\''+n.titel+'\',\''+n.gw+'\')">'+n.num+'</span>';
+  }).join('');
+}
+
+/* Keyboard shortcut: N zum Öffnen/Schließen */
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'n' && (e.ctrlKey || e.metaKey) && e.shiftKey) {
+    e.preventDefault();
+    var panel = document.getElementById('normen-panel');
+    panel.classList.contains('open') ? schliesseNormenPanel() : oeffneNormenPanel();
+  }
+});
+
+
+</script>
+
+<!-- ══ NORMEN SLIDE-PANEL ══ -->
+<div class="normen-panel-overlay" id="normen-overlay" onclick="schliesseNormenPanel()"></div>
+<div class="normen-slide-panel" id="normen-slide-panel">
+  <div class="nsp-head">
+    <div class="nsp-title">📚 Normen-Bibliothek</div>
+    <button class="nsp-close" onclick="schliesseNormenPanel()">✕</button>
+  </div>
+  <div class="nsp-search">
+    <input type="text" id="nsp-search-input" placeholder="Norm suchen… z.B. WTA, DIN 68800, Schimmel" oninput="nspSuche(this.value)">
+  </div>
+  <div class="nsp-filter" id="nsp-filter">
+    <button class="nsp-filter-btn active" data-sa="all" onclick="nspFilter('all',this)">Alle</button>
+    <button class="nsp-filter-btn" data-sa="WS" onclick="nspFilter('WS',this)">Wasserschaden</button>
+    <button class="nsp-filter-btn" data-sa="SC" onclick="nspFilter('SC',this)">Schimmel</button>
+    <button class="nsp-filter-btn" data-sa="BS" onclick="nspFilter('BS',this)">Brand</button>
+    <button class="nsp-filter-btn" data-sa="BA" onclick="nspFilter('BA',this)">Baumängel</button>
+  </div>
+  <div class="nsp-list" id="nsp-list">
+    <div class="nsp-empty">Normen werden geladen…</div>
+  </div>
+</div>
+
+<!-- NORMEN-FAB -->
+<button class="normen-fab" onclick="oeffneNormenPanel()" title="Normen-Bibliothek">
+  <span>📚</span>
+  <span class="normen-fab-label">Normen einfügen</span>
+</button>
+
+
+<!-- ═══ NORMEN SLIDE PANEL ═══ -->
+<div class="normen-overlay" id="normen-overlay" onclick="schliesseNormenPanel()"></div>
+<aside class="normen-panel" id="normen-panel">
+  <div class="normen-panel-header">
+    <div class="normen-panel-title">📚 Normen-Bibliothek</div>
+    <button class="normen-panel-close" onclick="schliesseNormenPanel()">×</button>
+  </div>
+  <div class="normen-panel-search">
+    <input class="normen-panel-input" id="normen-panel-suche" placeholder="DIN, WTA, BGH oder Begriff…" oninput="filterNormenPanel(this.value)">
+  </div>
+  <!-- KI-Vorschläge für diese Schadenart -->
+  <div class="ki-norm-strip" id="ki-norm-strip" style="display:none;">
+    <div class="ki-norm-strip-title">🤖 KI-Vorschläge für diesen Fall</div>
+    <div id="ki-norm-chips"></div>
+  </div>
+  <div class="normen-panel-list" id="normen-panel-list">
+    <div style="padding:20px;text-align:center;color:var(--text3);font-size:12px;">Normen werden geladen…</div>
+  </div>
+</aside>
+
+<!-- Normen FAB -->
+<button class="normen-fab" onclick="oeffneNormenPanel()" title="Normen-Bibliothek">
+  📚
+</button>
+
 </body>
 </html>

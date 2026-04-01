@@ -44,7 +44,7 @@ input,select,textarea{font-size:max(16px,1em);}
 .burger span{display:block;width:18px;height:2px;background:var(--text2);border-radius:2px;}
 
 /* PAGE */
-.page-content{padding:24px 28px 48px;max-width:1400px;width:100%;}
+.page-content{padding:24px 28px 48px;width:100%;}
 
 /* TOOLBAR */
 .toolbar{display:flex;align-items:center;gap:10px;margin-bottom:20px;flex-wrap:wrap;}
@@ -507,6 +507,11 @@ function fallKarte(r){
     +'<span class="status-badge '+stClass+'" style="font-size:9px;padding:2px 7px;">'+escHtml(status)+'</span>'
     +'</div>'
     +'</div>'
+    // ── DIREKTSTART-BUTTON ──
+    + '<div style="margin-top:8px;border-top:1px solid rgba(255,255,255,.05);padding-top:8px;display:flex;gap:6px;" onclick="event.stopPropagation()">'
+    + naechsterSchrittBtn(f, r.id, az)
+    + '<button onclick="oeffneFall(''+r.id+'')" style="padding:5px 10px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text3);font-size:10px;cursor:pointer;font-family:inherit;">Akte</button>'
+    + '</div>'
     +'</div>';
 }
 
@@ -628,7 +633,7 @@ document.getElementById('f-zeitraum').addEventListener('change',filterUndRender)
         <div class="sup-err" id="sup-err">Bitte Betreff und Nachricht eingeben.</div>
         <button class="sup-send-btn" id="sup-btn" onclick="supSendModal()">Nachricht senden</button>
         <div style="text-align:center;margin-top:10px;font-size:11px;color:var(--text3,#6b7a99);">
-          Oder direkt: <a href="/cdn-cgi/l/email-protection#ef9c9a9f9f809d9baf9f9d80998ec29c969c9b8a829cc18b8a" style="color:var(--accent,#4f8ef7);"><span class="__cf_email__" data-cfemail="77040207071805033707051801165a040e0403121a04591312">[email&#160;protected]</span></a>
+          Oder direkt: <a href="mailto:kontakt@prova-systems.de" style="color:var(--accent,#4f8ef7);">kontakt@prova-systems.de</a>
         </div>
       </div>
       <div class="sup-ok" id="sup-ok">
@@ -639,7 +644,7 @@ document.getElementById('f-zeitraum').addEventListener('change',filterUndRender)
     </div>
   </div>
 </div>
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+<script>
 function openSupportModal(){
   var m=document.getElementById('support-modal');
   if(!m)return;
@@ -683,4 +688,18 @@ async function supSendModal(){
 }
 </script>
 
-<script src="trial-guard.js"></script>
+<script src="trial-guard.js">
+/* ═══ DIREKTSTART-BUTTON je Fall-Phase ═══ */
+function naechsterSchrittBtn(f, recId, az) {
+  var status = f.Status || 'In Bearbeitung';
+  var hatEntwurf = !!f.KI_Entwurf;
+  var hatFreigabe = status === 'Freigegeben' || status === 'Exportiert';
+
+  if (!hatEntwurf) {
+    return '<button onclick="provaResetFall && provaResetFall(); window.location.href=\'app.html\'" style="flex:1;padding:5px 10px;border-radius:6px;border:none;background:var(--accent);color:#fff;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;">🎤 Diktat</button>';
+  } else if (!hatFreigabe) {
+    return '<button onclick="window.location.href=\'stellungnahme.html?az='+encodeURIComponent(az)+'\'" style="flex:1;padding:5px 10px;border-radius:6px;border:none;background:linear-gradient(135deg,#4f8ef7,#3a7be0);color:#fff;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;">⚖️ §6 schreiben</button>';
+  } else if (status !== 'Exportiert') {
+    return '<button onclick="sessionStorage.setItem(\'prova_record_id\',\''+recId+'\');window.location.href=\'freigabe.html\'" style="flex:1;padding:5px 10px;border-radius:6px;border:none;background:rgba(16,185,129,.15);color:#10b981;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;border:1px solid rgba(16,185,129,.3);">✅ Freigeben</button>';
+  }
+  return '<button onclick="window.location.href=\'rechnungen.html?az='+encodeURIComponent(az)+'\'"

@@ -1083,12 +1083,134 @@ function zeigOnboarding(){
       }).join('')+
       '</div>';
   } else if(feed) {
-    feed.innerHTML='<div class="feed-empty"><div class="feed-empty-icon">✨</div><p>Alles erledigt — keine offenen Aktionen.</p></div>';
+    // Prüfe offene Fälle im Cache
+    var archivCache=[];
+    try{archivCache=JSON.parse(localStorage.getItem('prova_archiv_cache_v2')||'{}').data||[];}catch(e){}
+    var offene=archivCache.filter(function(r){var s=(r.fields&&r.fields.Status)||'';return s!=='Archiviert'&&s!=='Freigegeben'&&s!=='Exportiert';});
+    if(offene.length>0){
+      feed.innerHTML='<div style="padding:16px 20px;">'
+        +'<div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px;">Was steht heute an?</div>'
+        +offene.slice(0,3).map(function(r){
+          var f=r.fields||{};var az=f.Aktenzeichen||'—';var sa=f.Schadenart||'Schadenfall';
+          var naechst=!f.KI_Entwurf?{icon:'🎤',label:'Diktat aufnehmen',col:'#4f8ef7',href:'app.html'}:!f.Stellungnahme_Text?{icon:'⚖️',label:'§6 Fachurteil schreiben',col:'#f59e0b',href:'stellungnahme.html?az='+encodeURIComponent(az)}:{icon:'✅',label:'Freigeben & PDF erstellen',col:'#10b981',href:'freigabe.html?az='+encodeURIComponent(az)};
+          return '<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;margin-bottom:8px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:10px;cursor:pointer;" onclick="window.location.href='akte.html?id='+r.id+''">'
+            +'<span style="font-size:16px;">'+naechst.icon+'</span>'
+            +'<div style="flex:1;min-width:0;"><div style="font-size:12px;font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+az+' · '+sa+'</div>'
+            +'<div style="font-size:11px;color:'+naechst.col+';margin-top:1px;">'+naechst.label+'</div></div>'
+            +'<span style="color:var(--text3);">→</span></div>';
+        }).join('')+'</div>';
+    }else{
+      feed.innerHTML='<div class="feed-empty"><div class="feed-empty-icon">✨</div><p>Alles erledigt — keine offenen Aktionen.</p></div>';
+    }
   }
 
 if(bt)bt.innerHTML='<strong>Willkommen bei PROVA.</strong> Legen Sie Ihren ersten Fall an oder vervollständigen Sie Ihr SV-Profil in den Einstellungen.';
   if(btags)btags.innerHTML='<span class="briefing-tag info">🚀 Bereit zum Start</span>';
 }
+
+
+/* ═══════════════════════════════════════════════════════════
+   AUFGABEN-WIDGET — Zeigt dem SV was heute zu tun ist
+   ═══════════════════════════════════════════════════════════ */
+function renderAufgaben(faelle, termine) {
+  var heute = new Date();
+  var aufgaben = [];
+
+  faelle.forEach(function(r) {
+    var f = r.fields || r;
+    var az = f.Aktenzeichen || f.AZ || '';
+    var status = f.Status || 'In Bearbeitung';
+    var frist = f.Fristdatum ? new Date(f.Fristdatum) : null;
+    var tage = frist ? Math.ceil((frist - heute) / 86400000) : null;
+    var prioritaet = 0;
+    var aktion = null;
+
+    if (status === 'Exportiert' || status === 'Archiviert') return;
+
+    // Phase bestimmen
+    var hatEntwurf = !!f.KI_Entwurf;
+    var hatSt6 = f.Status === 'Freigegeben' || f.Status === 'Exportiert';
+
+    if (!hatEntwurf) {
+      aktion = {icon:'🎤', label:'Diktat aufnehmen', url:'app.html', cls:'neu'};
+      prioritaet = tage !== null && tage <= 5 ? 3 : 1;
+    } else if (!hatSt6) {
+      aktion = {icon:'⚖️', label:'§6 Fachurteil schreiben', url:'stellungnahme.html?az='+encodeURIComponent(az), cls:'aktiv'};
+      prioritaet = tage !== null && tage <= 3 ? 4 : 2;
+    } else if (status !== 'Exportiert') {
+      aktion = {icon:'✅', label:'Freigeben & PDF senden', url:'freigabe.html', cls:'freigabe'};
+      prioritaet = 3;
+    }
+
+    if (!aktion) return;
+    aufgaben.push({
+      az: az,
+      schadenart: f.Schadenart || f.schadensart || '—',
+      tage: tage,
+      prioritaet: prioritaet,
+      aktion: aktion,
+      frist: frist
+    });
+  });
+
+  // Sortieren: Priorität → Frist
+  aufgaben.sort(function(a, b) {
+    if (b.prioritaet !== a.prioritaet) return b.prioritaet - a.prioritaet;
+    if (a.tage !== null && b.tage !== null) return a.tage - b.tage;
+    return 0;
+  });
+
+  var feed = document.getElementById('action-feed');
+  if (!feed) return;
+
+  if (aufgaben.length === 0) {
+    feed.innerHTML = '<div class="feed-empty"><div class="feed-empty-icon">✨</div><p>Alle Fälle up-to-date — keine offenen Aufgaben.</p></div>';
+    return;
+  }
+
+  var fristGruppe = aufgaben.filter(function(a) { return a.tage !== null && a.tage <= 2; });
+  var aktivGruppe = aufgaben.filter(function(a) { return !fristGruppe.includes(a); }).slice(0, 4);
+
+  var html = '<div style="padding:0 4px;">';
+
+  if (fristGruppe.length) {
+    html += '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#ef4444;margin-bottom:8px;margin-top:8px;">🔴 Heute / morgen fällig</div>';
+    fristGruppe.forEach(function(a) {
+      html += renderAufgabeKarte(a, true);
+    });
+  }
+
+  if (aktivGruppe.length) {
+    html += '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);margin-bottom:8px;margin-top:' + (fristGruppe.length ? '14' : '8') + 'px;">📋 Offen</div>';
+    aktivGruppe.forEach(function(a) {
+      html += renderAufgabeKarte(a, false);
+    });
+  }
+
+  html += '</div>';
+  feed.innerHTML = html;
+}
+
+function renderAufgabeKarte(a, dringend) {
+  var fristLabel = '';
+  if (a.tage !== null) {
+    if (a.tage < 0) fristLabel = '<span style="color:#ef4444;font-weight:700;">'+Math.abs(a.tage)+'T überfällig</span>';
+    else if (a.tage === 0) fristLabel = '<span style="color:#ef4444;font-weight:700;">Heute fällig</span>';
+    else if (a.tage === 1) fristLabel = '<span style="color:#f59e0b;font-weight:700;">Morgen fällig</span>';
+    else fristLabel = '<span style="color:var(--text3);">Frist: '+a.tage+'T</span>';
+  }
+  var bg = dringend ? 'rgba(239,68,68,.04)' : 'var(--surface2)';
+  var border = dringend ? '1px solid rgba(239,68,68,.15)' : '1px solid var(--border)';
+  return '<a href="'+a.aktion.url+'" style="display:flex;align-items:center;gap:10px;padding:10px 12px;margin-bottom:6px;background:'+bg+';border:'+border+';border-radius:10px;text-decoration:none;transition:all .15s;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor=''+(dringend?'rgba(239,68,68,.15)':'var(--border)')+''">'+
+    '<span style="font-size:18px;flex-shrink:0;">'+a.aktion.icon+'</span>'+
+    '<div style="flex:1;min-width:0;">'+
+      '<div style="font-size:12px;font-weight:700;color:var(--text);">'+a.az+'</div>'+
+      '<div style="font-size:11px;color:var(--text3);">'+a.schadenart+' · '+a.aktion.label+'</div>'+
+    '</div>'+
+    '<div style="text-align:right;flex-shrink:0;font-size:10px;">'+fristLabel+'<div style="color:var(--accent);font-size:13px;margin-top:2px;">→</div></div>'+
+  '</a>';
+}
+
 
 /* ══════════════════════════════════════════════════
    KPI + FEED RENDERN

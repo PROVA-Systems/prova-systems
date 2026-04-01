@@ -50,7 +50,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-ui);min-heigh
 .flow-sep.done{background:var(--green);}
 .flow-az{font-size:12px;color:var(--text3);padding:4px 10px;background:var(--surface);border-radius:6px;border:1px solid var(--border);white-space:nowrap;}
 
-.main{padding:24px 20px 80px;max-width:1100px;margin:0 auto;}
+.main{padding:24px 20px 80px;margin:0 auto;}
 .layout{display:grid;grid-template-columns:1fr 320px;gap:20px;align-items:start;}
 @media(max-width:900px){.layout{grid-template-columns:1fr;}}
 
@@ -283,6 +283,48 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-ui);min-heigh
         </div>
       </div>
 
+      <!-- BUNDESSTEMPEL / RUNDSTEMPEL -->
+      <div class="card" id="stempel-card" style="margin-bottom:12px;">
+        <div class="card-head">🔏 Sachverständigen-Stempel</div>
+        <div style="padding:16px;display:flex;align-items:center;gap:20px;flex-wrap:wrap;">
+          <!-- SVG-Rundstempel live generiert aus SV-Daten -->
+          <div id="stempel-preview" style="flex-shrink:0;">
+            <svg id="sv-stempel-svg" width="140" height="140" viewBox="0 0 140 140" xmlns="http://www.w3.org/2000/svg">
+              <!-- Äußerer Ring -->
+              <circle cx="70" cy="70" r="66" fill="none" stroke="#1e3a5f" stroke-width="4"/>
+              <!-- Innerer Ring -->
+              <circle cx="70" cy="70" r="56" fill="none" stroke="#1e3a5f" stroke-width="1.5"/>
+              <!-- Oben: Name auf Bogenpfad -->
+              <path id="arc-top" d="M 18,70 A 52,52 0 0,1 122,70" fill="none"/>
+              <text font-size="9" font-family="Arial,sans-serif" font-weight="700" fill="#1e3a5f" letter-spacing="1">
+                <textPath href="#arc-top" startOffset="50%" text-anchor="middle" id="stempel-name-top">ÖBUV SACHVERSTÄNDIGER</textPath>
+              </text>
+              <!-- Unten: Ort auf Bogenpfad -->
+              <path id="arc-bot" d="M 18,70 A 52,52 0 0,0 122,70" fill="none"/>
+              <text font-size="8" font-family="Arial,sans-serif" fill="#1e3a5f" letter-spacing="1">
+                <textPath href="#arc-bot" startOffset="50%" text-anchor="middle" id="stempel-ort-bot">BUNDESREPUBLIK DEUTSCHLAND</textPath>
+              </text>
+              <!-- Mitte: Name + Kürzel -->
+              <text id="stempel-kuerzel" x="70" y="62" text-anchor="middle" font-size="13" font-weight="800" font-family="Arial,sans-serif" fill="#1e3a5f">SV</text>
+              <text id="stempel-name-mitte" x="70" y="78" text-anchor="middle" font-size="8.5" font-family="Arial,sans-serif" fill="#1e3a5f">NAME</text>
+              <line x1="36" y1="84" x2="104" y2="84" stroke="#1e3a5f" stroke-width="1"/>
+              <text id="stempel-quali-mitte" x="70" y="95" text-anchor="middle" font-size="7" font-family="Arial,sans-serif" fill="#1e3a5f">BAUSACHVERSTÄNDIGER</text>
+            </svg>
+          </div>
+          <div style="flex:1;min-width:180px;">
+            <div style="font-size:12px;color:var(--text2);margin-bottom:10px;line-height:1.5;">
+              Ihr digitaler Bundesstempel wird automatisch aus Ihrem SV-Profil generiert und im PDF-Gutachten platziert.
+            </div>
+            <div style="font-size:11px;color:var(--text3);">
+              Änderungen am Stempel → <a href="einstellungen.html" style="color:var(--accent);">Einstellungen → SV-Profil</a>
+            </div>
+            <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
+              <button onclick="exportStempelSVG()" style="padding:5px 12px;border-radius:6px;border:1px solid var(--border2);background:transparent;color:var(--text2);font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;">⬇ SVG herunterladen</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- §407a BESTÄTIGUNG -->
       <div class="primary-wrap">
         <div id="approve-content">
@@ -301,6 +343,14 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-ui);min-heigh
           <div class="erfolg-icon">🎉</div>
           <div class="erfolg-title">Freigegeben!</div>
           <div class="erfolg-sub">PDF wird generiert und verschickt. §407a-Bestätigung dokumentiert.</div>
+          <div id="jveg-auto-cta" style="margin-top:14px;padding:14px;background:rgba(16,185,129,.07);border:1px solid rgba(16,185,129,.2);border-radius:10px;text-align:left;display:none;">
+            <div style="font-size:12px;font-weight:700;color:#10b981;margin-bottom:6px;">💶 Rechnung — JVEG automatisch berechnet</div>
+            <div id="jveg-auto-preview" style="font-size:11px;color:var(--text2);margin-bottom:10px;line-height:1.7;">Berechne…</div>
+            <div style="display:flex;gap:8px;">
+              <button onclick="jvegAutoRechnung()" style="flex:1;padding:9px;border-radius:8px;background:linear-gradient(135deg,#10b981,#059669);border:none;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">Rechnung jetzt erstellen</button>
+              <button onclick="this.closest('#jveg-auto-cta').style.display='none'" style="padding:9px 14px;border-radius:8px;background:transparent;border:1px solid var(--border2);color:var(--text3);font-size:12px;cursor:pointer;font-family:inherit;">Später</button>
+            </div>
+          </div>
           
           <div style="margin-top:18px;padding:16px;background:rgba(79,142,247,.06);border:1px solid rgba(79,142,247,.15);border-radius:10px;text-align:left;">
             <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);margin-bottom:10px;">Nächste Schritte</div>
@@ -770,6 +820,41 @@ function renderAuditTimeline() {
   }).join('');
 }
 
+/* ── BUNDESSTEMPEL: SV-Daten laden und SVG befüllen ── */
+(function initStempel() {
+  var vn = localStorage.getItem('prova_sv_vorname') || '';
+  var nn = localStorage.getItem('prova_sv_nachname') || '';
+  var quali = localStorage.getItem('prova_sv_quali') || 'Bausachverständiger';
+  var ort  = localStorage.getItem('prova_sv_ort') || '';
+  var fullName = (vn + ' ' + nn).trim().toUpperCase() || 'IHR NAME';
+  // Kürzel: Initialen
+  var kuerzel = ((vn[0]||'') + (nn[0]||'')).toUpperCase() || 'SV';
+
+  var elName   = document.getElementById('stempel-name-mitte');
+  var elKuerzel= document.getElementById('stempel-kuerzel');
+  var elQuali  = document.getElementById('stempel-quali-mitte');
+  var elOrt    = document.getElementById('stempel-ort-bot');
+  var elTop    = document.getElementById('stempel-name-top');
+
+  if (elName)    elName.textContent    = fullName;
+  if (elKuerzel) elKuerzel.textContent = kuerzel;
+  if (elQuali)   elQuali.textContent   = quali.toUpperCase().substring(0,28);
+  if (elOrt)     elOrt.textContent     = ort ? ('ÖBUV · ' + ort.toUpperCase()) : 'BUNDESREPUBLIK DEUTSCHLAND';
+  if (elTop)     elTop.textContent     = 'ÖBUV SACHVERSTÄNDIGER';
+})();
+
+window.exportStempelSVG = function() {
+  var svg = document.getElementById('sv-stempel-svg');
+  if (!svg) return;
+  var svgData = new XMLSerializer().serializeToString(svg);
+  var blob = new Blob([svgData], {type:'image/svg+xml'});
+  var url  = URL.createObjectURL(blob);
+  var a    = document.createElement('a');
+  var nn   = localStorage.getItem('prova_sv_nachname') || 'SV';
+  a.href = url; a.download = 'PROVA-Stempel-' + nn + '.svg';
+  a.click(); URL.revokeObjectURL(url);
+};
+
 /* §407a BESTÄTIGUNG */
 function toggle407a(){
   var cb=document.getElementById('cb407a');
@@ -865,7 +950,7 @@ async function speichereAenderungen(){
   if(!recId){zeigToast('Kein Datensatz.','err');return;}
   try {
     const url=`/v0/${AT_BASE}/${AT_TABLE}/${recId}`;
-    const res=await fetch('/.netlify/functions/airtable',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({method:'PATCH',path:url,body:{fields:{KI_Entwurf:txt}}})});
+    const res=await fetch('/.netlify/functions/airtable',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({method:'PATCH',path:url,payload:{fields:{KI_Entwurf:txt}}})});
     if(!res.ok) throw new Error('HTTP '+res.status);
     if(recFields) recFields.KI_Entwurf=txt;
     localStorage.setItem('prova_entwurf_text',txt);
@@ -923,6 +1008,70 @@ function zeigToast(msg,type='ok'){
 }
 </script>
 <script src="auftragstyp.js"></script>
-<script src="trial-guard.js"></script>
+<script src="trial-guard.js">
+/* ── JVEG AUTO-RECHNUNG nach Freigabe ── */
+function zeigeJvegAutoCta() {
+  var cta = document.getElementById('jveg-auto-cta');
+  if (!cta) return;
+
+  // Zeiterfassung aus localStorage
+  var dauerSek = parseInt(localStorage.getItem('prova_zeit_dauer_sek') || localStorage.getItem('prova_diktat_dauer_sek') || '0');
+  var stunden = Math.max(0.5, parseFloat((dauerSek / 3600).toFixed(1)));
+
+  // JVEG Honorargruppe M2 Standard
+  var satz = 95;
+  var honorar = Math.round(stunden * satz * 100) / 100;
+  var km = parseInt(localStorage.getItem('prova_km_gefahren') || '30');
+  var fahrt = Math.round(km * 0.42 * 100) / 100;
+  var netto = Math.round((honorar + fahrt) * 100) / 100;
+  var brutto = Math.round(netto * 1.19 * 100) / 100;
+
+  var fmt = function(n){ return n.toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2}); };
+
+  var preview = document.getElementById('jveg-auto-preview');
+  if (preview) {
+    preview.innerHTML =
+      stunden + 'h × ' + fmt(satz) + ' €/h (Gruppe M2) = <strong>' + fmt(honorar) + ' €</strong><br>' +
+      km + ' km Fahrt = <strong>' + fmt(fahrt) + ' €</strong><br>' +
+      '<strong style="color:#10b981;">Gesamt netto: ' + fmt(netto) + ' € · Brutto: ' + fmt(brutto) + ' €</strong>';
+  }
+
+  // Werte speichern für Übergabe
+  localStorage.setItem('prova_jveg_auto_netto', String(netto));
+  localStorage.setItem('prova_jveg_auto_stunden', String(stunden));
+  localStorage.setItem('prova_jveg_auto_km', String(km));
+
+  cta.style.display = 'block';
+}
+
+window.jvegAutoRechnung = function() {
+  var az = (recFields||{}).Aktenzeichen || localStorage.getItem('prova_letztes_az') || '';
+  var stunden = localStorage.getItem('prova_jveg_auto_stunden') || '2';
+  var km = localStorage.getItem('prova_jveg_auto_km') || '30';
+  // Prefill für JVEG-Rechner
+  sessionStorage.setItem('prova_rechnung_prefill', JSON.stringify({
+    typ: 'JVEG',
+    source: 'auto_nach_freigabe',
+    honorargruppe: 'M2',
+    stundensatz: 95,
+    stunden_gutachten: parseFloat(stunden),
+    stunden_akten: 0,
+    km: parseInt(km),
+    wartezeit: 0,
+    schreibseiten: 0,
+    fotos: 0,
+    netto: parseFloat(localStorage.getItem('prova_jveg_auto_netto') || '0'),
+    mwst_betrag: 0,
+    brutto: 0,
+    mit_mwst: true,
+    aktenzeichen: az,
+    auftraggeber_name: localStorage.getItem('prova_auftraggeber_name') || '',
+    auftraggeber_email: localStorage.getItem('prova_auftraggeber_email') || '',
+    rueckweg: az ? 'akte.html?az=' + encodeURIComponent(az) : 'archiv.html'
+  }));
+  window.location.href = 'rechnungen.html?from=jveg&az=' + encodeURIComponent(az);
+};
+
+</script>
 </body>
 </html>
