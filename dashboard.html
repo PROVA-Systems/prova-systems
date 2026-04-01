@@ -633,6 +633,7 @@
 .pwa-install-btn{padding:7px 14px;background:var(--accent,#4f8ef7);border:none;border-radius:8px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;}
 .pwa-install-close{background:none;border:none;color:var(--text3,#6b7a99);cursor:pointer;font-size:16px;padding:4px;line-height:1;}
 @media(max-width:768px){.bottom-nav{display:flex !important;}}
+@media(max-width:800px){#dash-grid{grid-template-columns:1fr !important}#kpi-row{grid-template-columns:repeat(2,1fr) !important}}
 </style>
 </head>
 <body>
@@ -679,182 +680,92 @@
     <!-- Page Content -->
     <main class="page-content">
 
-      <!-- Page Header -->
-      <div class="page-header">
-        <h1 class="page-title" id="greeting-title">Guten Morgen 👋</h1>
-        <p class="page-sub" id="greeting-sub">Hier ist Ihr Überblick für heute.</p>
+  <!-- ── HEADER ── -->
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:24px;flex-wrap:wrap;">
+    <div>
+      <h1 id="greeting-title" style="font-size:22px;font-weight:800;color:var(--text);margin-bottom:4px;">Guten Morgen 👋</h1>
+      <p id="greeting-sub" style="font-size:13px;color:var(--text3);">Hier ist Ihr Überblick für heute.</p>
+    </div>
+    <button onclick="window.location.href='app.html'" style="display:flex;align-items:center;gap:8px;padding:10px 18px;border-radius:10px;background:linear-gradient(135deg,var(--accent,#4f8ef7),var(--accent2,#3a7be0));border:none;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font-ui,sans-serif);white-space:nowrap;box-shadow:0 2px 12px rgba(79,142,247,.3);">
+      <span>+</span> Neuer Fall
+    </button>
+  </div>
+
+  <!-- ── KPI STREIFEN (klein, nicht dominant) ── -->
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:24px;" id="kpi-row">
+    <div onclick="window.location.href='archiv.html'" style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;cursor:pointer;transition:border-color .15s;" onmouseover="this.style.borderColor='var(--border2)'" onmouseout="this.style.borderColor='var(--border)'">
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);margin-bottom:6px;">Aktive Fälle</div>
+      <div id="kpi-aktiv" style="font-size:22px;font-weight:800;color:var(--accent);">—</div>
+    </div>
+    <div onclick="window.location.href='termine.html'" style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;cursor:pointer;transition:border-color .15s;" onmouseover="this.style.borderColor='var(--border2)'" onmouseout="this.style.borderColor='var(--border)'">
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);margin-bottom:6px;">Fristen diese Woche</div>
+      <div id="kpi-heute" style="font-size:22px;font-weight:800;color:var(--warning,#f59e0b);">—</div>
+    </div>
+    <div onclick="window.location.href='rechnungen.html'" style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;cursor:pointer;transition:border-color .15s;" onmouseover="this.style.borderColor='var(--border2)'" onmouseout="this.style.borderColor='var(--border)'">
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);margin-bottom:6px;">Offene Rechnungen</div>
+      <div id="kpi-rechnungen" style="font-size:22px;font-weight:800;color:var(--danger,#ef4444);">—</div>
+    </div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;">
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);margin-bottom:6px;">Kontingent</div>
+      <div id="kpi-kontingent" style="font-size:22px;font-weight:800;color:var(--success,#10b981);">—</div>
+    </div>
+  </div>
+
+  <!-- ── HAUPTBEREICH: Aufgaben + Kalender ── -->
+  <div style="display:grid;grid-template-columns:1fr 300px;gap:16px;align-items:start;" id="dash-grid">
+
+    <!-- LINKE SPALTE: Was steht an -->
+    <div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+        <div style="font-size:13px;font-weight:700;color:var(--text);">Was steht an?</div>
+        <a href="archiv.html" style="font-size:11px;color:var(--accent);text-decoration:none;font-weight:600;">Alle Fälle →</a>
       </div>
-
-      <!-- Tages-Briefing Banner -->
-      <div class="briefing" id="briefing-banner">
-        <div class="briefing-text" id="briefing-text">
-          <strong>Alles auf einem Blick.</strong> Starten Sie, indem Sie Ihren ersten Fall anlegen oder Ihr SV-Profil vervollständigen.
-        </div>
-        <div class="briefing-tags" id="briefing-tags"></div>
-      </div>
-
-      <!-- KPI Kacheln -->
-      <div class="kpi-grid">
-        <div class="kpi-card" style="--kpi-color:var(--accent);" onclick="window.location.href='archiv.html'">
-          <div class="kpi-label-text">Aktive Fälle</div>
-          <div class="kpi-value" id="kpi-aktiv">—</div>
-          <div class="kpi-sub" id="kpi-aktiv-sub">In Bearbeitung</div>
-        </div>
-        <div class="kpi-card" style="--kpi-color:var(--warning);" onclick="window.location.href='termine.html'">
-          <div class="kpi-label-text">Heute fällig</div>
-          <div class="kpi-value" id="kpi-heute">—</div>
-          <div class="kpi-sub">Fristen & Termine</div>
-        </div>
-        <div class="kpi-card" style="--kpi-color:var(--danger);" onclick="window.location.href='rechnungen.html'">
-          <div class="kpi-label-text">Offene Rechnungen</div>
-          <div class="kpi-value" id="kpi-rechnungen">—</div>
-          <div class="kpi-sub" id="kpi-rechnungen-sub">Ausstehend</div>
-        </div>
-        <div class="kpi-card" style="--kpi-color:var(--success);">
-          <div class="kpi-label-text">Kontingent</div>
-          <div class="kpi-value" id="kpi-kontingent">— / 30</div>
-          <div class="kpi-sub">Gutachten diesen Monat</div>
-          <div class="kpi-progress">
-            <div class="kpi-progress-fill" id="kpi-progress" style="width:0%;"></div>
-          </div>
+      <div id="aufgaben-feed" style="display:flex;flex-direction:column;gap:8px;">
+        <!-- Sofort aus Cache laden, skeleton zeigen -->
+        <div id="aufgaben-skeleton">
+          <div style="height:72px;border-radius:10px;background:var(--surface);margin-bottom:8px;animation:shimmer 1.5s infinite;background-size:200% 100%;background-image:linear-gradient(90deg,var(--surface) 25%,rgba(255,255,255,.04) 50%,var(--surface) 75%);"></div>
+          <div style="height:72px;border-radius:10px;background:var(--surface);margin-bottom:8px;animation:shimmer 1.5s infinite .2s;background-size:200% 100%;background-image:linear-gradient(90deg,var(--surface) 25%,rgba(255,255,255,.04) 50%,var(--surface) 75%);"></div>
+          <div style="height:72px;border-radius:10px;background:var(--surface);animation:shimmer 1.5s infinite .4s;background-size:200% 100%;background-image:linear-gradient(90deg,var(--surface) 25%,rgba(255,255,255,.04) 50%,var(--surface) 75%);"></div>
         </div>
       </div>
+    </div>
 
-      <!-- Fristen-Widget -->
-      <div id="fristen-widget" style="display:none;margin-bottom:20px;background:var(--bg2);border:1px solid var(--border2);border-radius:var(--r-lg);overflow:hidden;">
-        <div style="padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
-          <div style="font-size:14px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:8px;">⚖️ Anstehende Fristen</div>
-          <span style="font-size:11px;color:var(--text3);" id="fristen-count">0 offene Fristen</span>
+    <!-- RECHTE SPALTE: Kalender-Mini + Schnellzugriff -->
+    <div style="display:flex;flex-direction:column;gap:12px;">
+
+      <!-- Fristen heute -->
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;">
+        <div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+          <div style="font-size:12px;font-weight:700;color:var(--text);">📅 Fristen</div>
+          <a href="termine.html" style="font-size:10px;color:var(--accent);text-decoration:none;">Alle →</a>
         </div>
-        <div id="fristen-list" style="padding:10px 14px;max-height:220px;overflow-y:auto;"></div>
-      </div>
-      <script>
-      (function(){
-        // Fristen aus localStorage laden und anzeigen
-        try {
-          var faelle = JSON.parse(localStorage.getItem('prova_faelle_cache') || '[]');
-          var fristen = faelle.filter(function(f) { return f.fristdatum && f.status !== 'Freigegeben' && f.status !== 'Exportiert'; });
-          if(fristen.length === 0) return;
-
-          fristen.sort(function(a,b) { return new Date(a.fristdatum) - new Date(b.fristdatum); });
-
-          var widget = document.getElementById('fristen-widget');
-          var list = document.getElementById('fristen-list');
-          var count = document.getElementById('fristen-count');
-          if(!widget || !list) return;
-
-          var heute = new Date();
-          var html = '';
-          var ueberfaellig = 0;
-
-          fristen.forEach(function(f) {
-            var frist = new Date(f.fristdatum);
-            var tage = Math.ceil((frist - heute) / (1000*60*60*24));
-            var farbe, icon, label;
-            if(tage < 0) { farbe='#ef4444'; icon='🔴'; label=Math.abs(tage)+' Tage überfällig'; ueberfaellig++; }
-            else if(tage <= 7) { farbe='#ef4444'; icon='🔴'; label='Noch '+tage+' Tage'; }
-            else if(tage <= 21) { farbe='#f59e0b'; icon='🟡'; label='Noch '+tage+' Tage'; }
-            else { farbe='#10b981'; icon='🟢'; label='Noch '+tage+' Tage'; }
-
-            html += '<div style="display:flex;align-items:center;gap:12px;padding:8px 4px;border-bottom:1px solid var(--border);">'
-              + '<span style="font-size:14px;">'+icon+'</span>'
-              + '<div style="flex:1;min-width:0;">'
-              + '<div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+(f.gerichts_az || f.aktenzeichen || 'Fall')+'</div>'
-              + '<div style="font-size:11px;color:var(--text3);">'+(f.schadenart || '')+'</div>'
-              + '</div>'
-              + '<div style="text-align:right;">'
-              + '<div style="font-size:12px;font-weight:700;color:'+farbe+';">'+label+'</div>'
-              + '<div style="font-size:10px;color:var(--text3);">'+frist.toLocaleDateString('de-DE')+'</div>'
-              + '</div></div>';
-          });
-
-          list.innerHTML = html;
-          count.textContent = fristen.length + ' offene Frist' + (fristen.length !== 1 ? 'en' : '');
-          if(ueberfaellig > 0) count.style.color = '#ef4444';
-          widget.style.display = 'block';
-
-          // KPI "Heute fällig" aktualisieren
-          var kpiHeute = document.getElementById('kpi-heute');
-          var heuteFaellig = fristen.filter(function(f) { return Math.ceil((new Date(f.fristdatum)-heute)/(1000*60*60*24)) <= 7; }).length;
-          if(kpiHeute) kpiHeute.textContent = heuteFaellig;
-        } catch(e) { console.warn('Fristen-Widget:', e); }
-      })();
-      </script>
-
-      <!-- Hauptgrid: Feed + Rechts -->
-      <div class="zentrale-grid">
-
-        <!-- Aktions-Feed -->
-        <div class="feed-card">
-          <div class="feed-header">
-            <div class="feed-title">
-              <span class="feed-title-icon">⚡</span>
-              Was braucht jetzt Ihre Aufmerksamkeit
-            </div>
-            <span class="feed-link" onclick="window.location.href='archiv.html'">Alle Fälle →</span>
-          </div>
-          <div class="action-list" id="action-feed">
-            <!-- Wird per JS befüllt -->
-            <div class="feed-empty">
-              <div class="feed-empty-icon">✨</div>
-              <p>Alles erledigt — keine offenen Aktionen.</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- Rechte Spalte -->
-        <div class="right-col">
-
-          <!-- Mini-Kalender -->
-          <div class="mini-cal">
-            <div class="cal-header">
-              <div class="cal-title" id="cal-month-label">März 2026</div>
-              <div class="cal-nav">
-                <button class="cal-nav-btn" onclick="calNav(-1)">‹</button>
-                <button class="cal-nav-btn" onclick="calNav(1)">›</button>
-              </div>
-            </div>
-            <div class="cal-grid">
-              <div class="cal-weekdays">
-                <div class="cal-wd">Mo</div>
-                <div class="cal-wd">Di</div>
-                <div class="cal-wd">Mi</div>
-                <div class="cal-wd">Do</div>
-                <div class="cal-wd">Fr</div>
-                <div class="cal-wd">Sa</div>
-                <div class="cal-wd">So</div>
-              </div>
-              <div class="cal-days" id="cal-days">
-                <!-- Wird per JS gerendert -->
-              </div>
-            </div>
-            <div class="cal-day-detail" id="cal-detail">
-              <div class="cal-day-label" id="cal-detail-label">Heute</div>
-              <div id="cal-events-list">
-                <div style="font-size:12px;color:var(--text3);padding:6px 0;">Keine Termine heute.</div>
-              </div>
-              <a href="termine.html" class="cal-full-link">Vollständigen Kalender öffnen →</a>
-            </div>
-          </div>
-
-          <!-- Zuletzt bearbeitet -->
-          <div class="recent-card">
-            <div class="recent-header">
-              <div class="recent-title">🕐 Zuletzt bearbeitet</div>
-              <span class="feed-link" onclick="window.location.href='archiv.html'">Alle →</span>
-            </div>
-            <div class="recent-list" id="recent-list">
-              <div style="padding:20px 10px;text-align:center;font-size:12px;color:var(--text3);">
-                Noch keine Fälle angelegt.<br>
-                <a href="app.html" style="color:var(--accent);margin-top:6px;display:inline-block;">Ersten Fall erstellen →</a>
-              </div>
-            </div>
-          </div>
-
+        <div id="fristen-mini" style="padding:10px 14px;">
+          <div style="font-size:12px;color:var(--text3);text-align:center;padding:12px 0;">Wird geladen…</div>
         </div>
       </div>
 
-    </main>
+      <!-- Schnellzugriff -->
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;">
+        <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:12px;">Schnellzugriff</div>
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          <a href="normen.html" style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;background:rgba(255,255,255,.03);color:var(--text2);text-decoration:none;font-size:12px;font-weight:600;transition:background .12s;" onmouseover="this.style.background='rgba(255,255,255,.06)'" onmouseout="this.style.background='rgba(255,255,255,.03)'">
+            <span>📚</span> Normendatenbank
+          </a>
+          <a href="jveg.html" style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;background:rgba(255,255,255,.03);color:var(--text2);text-decoration:none;font-size:12px;font-weight:600;transition:background .12s;" onmouseover="this.style.background='rgba(255,255,255,.06)'" onmouseout="this.style.background='rgba(255,255,255,.03)'">
+            <span>⚖️</span> JVEG-Rechner
+          </a>
+          <a href="briefvorlagen.html" style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;background:rgba(255,255,255,.03);color:var(--text2);text-decoration:none;font-size:12px;font-weight:600;transition:background .12s;" onmouseover="this.style.background='rgba(255,255,255,.06)'" onmouseout="this.style.background='rgba(255,255,255,.03)'">
+            <span>✉️</span> Briefvorlagen
+          </a>
+          <a href="einstellungen.html" style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;background:rgba(255,255,255,.03);color:var(--text2);text-decoration:none;font-size:12px;font-weight:600;transition:background .12s;" onmouseover="this.style.background='rgba(255,255,255,.06)'" onmouseout="this.style.background='rgba(255,255,255,.03)'">
+            <span>⚙️</span> Einstellungen
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</main>
   </div><!-- end main-wrap -->
 
 </div><!-- end app-shell -->
@@ -1058,7 +969,7 @@ function zeigOnboarding(){
   if(!kontakteOk) todos.push({icon:'👥',label:'Ersten Kontakt anlegen',sub:'Auftraggeber, Versicherung oder Anwalt',href:'kontakte.html'});
   if(!ersterFall && !erstesMalGesehen) todos.push({icon:'📄',label:'Erstes Gutachten anlegen',sub:'Diktat aufnehmen → KI erstellt §1–§5',href:'app.html',primary:true});
 
-  var feed=document.getElementById('action-feed');
+  var feed=document.getElementById('aufgaben-feed');
   if(feed && todos.length > 0){
     var doneCount = 3 - todos.length;
     var pct = Math.round(doneCount / 3 * 100);
@@ -1160,7 +1071,7 @@ function renderAufgaben(faelle, termine) {
     return 0;
   });
 
-  var feed = document.getElementById('action-feed');
+  var feed = document.getElementById('aufgaben-feed');
   if (!feed) return;
 
   if (aufgaben.length === 0) {
@@ -1283,8 +1194,8 @@ function renderKPIs(faelle, termine, rechnungen){
   return {aktiv:aktiv,heuteAnz:heuteAnz,offene:offene,hatUeber:hatUeber,diesesMonat:diesesMonat};
 }
 
-function renderFeed(faelle, termine, rechnungen, stats){
-  var feed=document.getElementById('action-feed');
+function // renderFeed(faelle, termine, rechnungen, stats){
+  var feed=document.getElementById('aufgaben-feed');
   if(!feed)return;
   var actions=[];
 
@@ -1355,17 +1266,48 @@ function renderFeed(faelle, termine, rechnungen, stats){
   actions.sort(function(a,b){return(a.sort||9)-(b.sort||9);});
 
   if(actions.length===0){
-    feed.innerHTML='<div class="feed-empty"><div class="feed-empty-icon">✨</div><p>Keine offenen Aktionen — gute Arbeit!</p></div>';
+    // Prüfe offene Fälle im Cache
+    var archivCache=[];
+    try{archivCache=JSON.parse(localStorage.getItem('prova_archiv_cache_v2')||'{}').data||[];}catch(e){}
+    var offeneF=archivCache.filter(function(r){var s=(r.fields&&r.fields.Status)||'';return s!=='Archiviert'&&s!=='Freigegeben'&&s!=='Exportiert';});
+    if(offeneF.length>0){
+      feed.innerHTML='<div style="padding:0;">'
+        +offeneF.slice(0,4).map(function(r){
+          var f=r.fields||{};
+          var az=f.Aktenzeichen||'—';var sa=f.Schadenart||'Schadenfall';
+          var ns=!f.KI_Entwurf
+            ?{icon:'🎤',label:'Diktat aufnehmen',col:'#4f8ef7',href:'app.html',prio:'blue'}
+            :!(f.Stellungnahme_Text&&f.Stellungnahme_Text.length>30)
+            ?{icon:'⚖️',label:'§6 Fachurteil schreiben',col:'#f59e0b',href:'stellungnahme.html?az='+encodeURIComponent(az),prio:'warn'}
+            :f.Status!=='Freigegeben'
+            ?{icon:'✅',label:'Freigeben & PDF erstellen',col:'#10b981',href:'freigabe.html?az='+encodeURIComponent(az),prio:'green'}
+            :{icon:'💶',label:'Rechnung erstellen',col:'#8b5cf6',href:'rechnungen.html?az='+encodeURIComponent(az),prio:'purple'};
+          var bcol={'blue':'rgba(79,142,247,.12)','warn':'rgba(245,158,11,.1)','green':'rgba(16,185,129,.1)','purple':'rgba(139,92,246,.1)'}[ns.prio]||'rgba(255,255,255,.04)';
+          var bord={'blue':'rgba(79,142,247,.25)','warn':'rgba(245,158,11,.2)','green':'rgba(16,185,129,.2)','purple':'rgba(139,92,246,.2)'}[ns.prio]||'rgba(255,255,255,.08)';
+          return '<div style="display:flex;align-items:center;gap:10px;padding:10px 16px;margin:6px 12px;background:'+bcol+';border:1px solid '+bord+';border-radius:10px;cursor:pointer;" onclick="window.location.href='akte.html?id='+r.id+''">'
+            +'<span style="font-size:18px;">'+ns.icon+'</span>'
+            +'<div style="flex:1;min-width:0;">'
+            +'<div style="font-size:13px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+escHtml(az)+' · '+escHtml(sa)+'</div>'
+            +'<div style="font-size:11px;color:'+ns.col+';margin-top:2px;font-weight:600;">'+ns.label+'</div>'
+            +'</div>'
+            +'<a href="'+ns.href+'" onclick="event.stopPropagation()" style="padding:6px 14px;border-radius:8px;border:none;background:'+ns.col+';color:#fff;font-size:11px;font-weight:700;text-decoration:none;white-space:nowrap;">→ Jetzt</a>'
+            +'</div>';
+        }).join('')+'</div>';
+    } else {
+      feed.innerHTML='<div class="feed-empty"><div class="feed-empty-icon">✨</div><p>Alle Fälle auf dem neuesten Stand — gute Arbeit!</p></div>';
+    }
   }else{
     feed.innerHTML=actions.map(function(a){
-      return '<a href="'+(a.href||'#')+'" class="action-item" style="text-decoration:none;">'
-        +'<div class="action-prio '+a.prio+'"></div>'
-        +'<div class="action-body">'
-        +'<div class="action-title">'+escHtml(a.title)+'</div>'
-        +'<div class="action-meta">'+escHtml(a.meta)+'</div>'
+      var bcol=a.prio==='red'?'rgba(239,68,68,.08)':a.prio==='warn'?'rgba(245,158,11,.08)':'rgba(255,255,255,.03)';
+      var bord=a.prio==='red'?'rgba(239,68,68,.2)':a.prio==='warn'?'rgba(245,158,11,.15)':'var(--border)';
+      return '<div style="display:flex;align-items:center;gap:10px;padding:10px 16px;margin:6px 12px;background:'+bcol+';border:1px solid '+bord+';border-radius:10px;cursor:pointer;" onclick="window.location.href=''+(a.href||'archiv.html')+''">'
+        +'<div class="action-prio '+a.prio+'" style="width:8px;height:8px;border-radius:50%;flex-shrink:0;background:'+(a.prio==='red'?'#ef4444':a.prio==='warn'?'#f59e0b':'#6b7280')+';"></div>'
+        +'<div class="action-body" style="flex:1;min-width:0;">'
+        +'<div class="action-title" style="font-size:13px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+escHtml(a.title)+'</div>'
+        +'<div class="action-meta" style="font-size:11px;color:var(--text3);margin-top:2px;">'+escHtml(a.meta)+'</div>'
         +'</div>'
-        +'<span class="action-badge '+a.badge+'">'+a.badge_text+'</span>'
-        +'</a>';
+        +'<span class="action-badge '+a.badge+'" style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:10px;white-space:nowrap;background:'+(a.prio==='red'?'rgba(239,68,68,.15)':a.prio==='warn'?'rgba(245,158,11,.12)':'rgba(255,255,255,.08)')+';color:'+(a.prio==='red'?'#ef4444':a.prio==='warn'?'#f59e0b':'var(--text2)')+';border:1px solid '+(a.prio==='red'?'rgba(239,68,68,.25)':'var(--border)')+';margin-left:4px;">'+a.badge_text+'</span>'
+        +'</div>';
     }).join('');
   }
 
@@ -1558,7 +1500,7 @@ async function ladeAlleDaten(){
     }
 
     var stats=renderKPIs(faelle,termine,rechnungen);
-    renderFeed(faelle,termine,rechnungen,stats);
+    // renderFeed(faelle,termine,rechnungen,stats);
     renderRecent(faelle);
     renderCal(termine);
 
@@ -1721,6 +1663,177 @@ function pwaDismiss() {
 <script src="auftragstyp.js"></script>
 <script src="support-chat.js"></script>
 <script src="onboarding-tour.js"></script>
-<script src="trial-guard.js"></script>
+<script src="trial-guard.js">
+/* ── AUFGABEN: sofort aus Cache, dann Airtable ── */
+
+/* ── PROFIL-VOLLSTÄNDIGKEIT ── */
+(function checkProfil() {
+  var vorname = localStorage.getItem('prova_sv_vorname') || '';
+  var firma   = localStorage.getItem('prova_sv_firma')   || '';
+  var email   = localStorage.getItem('prova_sv_email')   || '';
+  
+  if (!vorname || !firma) {
+    var feed = document.getElementById('aufgaben-feed');
+    if (!feed) return;
+    
+    // Profil-Banner einmalig anzeigen (max 3x gesehen)
+    var seen = parseInt(localStorage.getItem('prova_profil_banner_seen') || '0');
+    if (seen >= 3) return;
+    localStorage.setItem('prova_profil_banner_seen', String(seen + 1));
+    
+    var banner = document.createElement('div');
+    banner.style.cssText = 'background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);border-radius:12px;padding:14px 16px;margin-bottom:12px;display:flex;align-items:center;gap:12px;';
+    banner.innerHTML = '<span style="font-size:20px;">👤</span>'
+      + '<div style="flex:1;">'
+      + '<div style="font-size:13px;font-weight:700;color:var(--warning,#f59e0b);">SV-Profil unvollständig</div>'
+      + '<div style="font-size:11px;color:var(--text3);margin-top:2px;">Name und Büroangaben werden auf dem Gutachten-PDF angezeigt</div>'
+      + '</div>'
+      + '<a href="onboarding-schnellstart.html" style="padding:7px 14px;border-radius:8px;background:rgba(245,158,11,.15);border:1px solid rgba(245,158,11,.3);color:#f59e0b;font-size:11px;font-weight:700;text-decoration:none;white-space:nowrap;">Jetzt ausfüllen</a>'
+      + '<button onclick="this.parentElement.remove()" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:16px;padding:0;">×</button>';
+    
+    feed.insertBefore(banner, feed.firstChild);
+  }
+})();
+
+function renderAufgabenSofort() {
+  var feed = document.getElementById('aufgaben-feed');
+  var skel = document.getElementById('aufgaben-skeleton');
+  if (!feed) return;
+
+  // Sofort aus localStorage-Cache
+  var cache = [];
+  try { cache = JSON.parse(localStorage.getItem('prova_archiv_cache_v2') || '{}').data || []; } catch(e) {}
+
+  if (cache.length === 0) {
+    // Kein Cache → Onboarding-State
+    if (skel) skel.remove();
+    feed.innerHTML = '<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:28px 20px;text-align:center;">'
+      + '<div style="font-size:32px;margin-bottom:12px;">🏗️</div>'
+      + '<div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:8px;">Noch kein Fall angelegt</div>'
+      + '<div style="font-size:13px;color:var(--text3);margin-bottom:20px;">Erstellen Sie Ihren ersten Fall — PROVA führt Sie durch den gesamten Workflow.</div>'
+      + '<button onclick="window.location.href='app.html'" style="padding:10px 22px;border-radius:8px;background:var(--accent,#4f8ef7);border:none;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font-ui,sans-serif);">+ Ersten Fall anlegen</button>'
+      + '</div>';
+    return;
+  }
+
+  // Offene Fälle filtern
+  var offen = cache.filter(function(r) {
+    var s = (r.fields && r.fields.Status) || '';
+    return s !== 'Archiviert' && s !== 'Freigegeben' && s !== 'Exportiert';
+  });
+  
+  // KPIs aus Cache
+  var kpiAktiv = document.getElementById('kpi-aktiv');
+  if (kpiAktiv) kpiAktiv.textContent = offen.length;
+  var kpiKontingent = document.getElementById('kpi-kontingent');
+  if (kpiKontingent) kpiKontingent.textContent = cache.length + '/30';
+
+  if (skel) skel.remove();
+
+  if (offen.length === 0) {
+    feed.innerHTML = '<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px 20px;text-align:center;">'
+      + '<div style="font-size:28px;margin-bottom:10px;">✨</div>'
+      + '<div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:6px;">Alle Fälle abgeschlossen</div>'
+      + '<div style="font-size:12px;color:var(--text3);">Gute Arbeit! Neuen Fall anlegen?</div>'
+      + '</div>';
+    return;
+  }
+
+  // Kontextuell: was ist der nächste Schritt für jeden Fall?
+  feed.innerHTML = offen.slice(0, 5).map(function(r) {
+    var f = r.fields || {};
+    var az = f.Aktenzeichen || '—';
+    var sa = f.Schadenart || 'Schadenfall';
+    var adr = f.Adresse || f.Schaden_Strasse || '';
+    var ort = f.Ort || '';
+    var loc = [adr, ort].filter(Boolean).join(', ');
+
+    // Phase bestimmen
+    var hat_diktat = !!(f.KI_Entwurf && f.KI_Entwurf.length > 50);
+    var hat_stell  = !!(f.Stellungnahme_Text && f.Stellungnahme_Text.length > 30);
+    var hat_freig  = f.Status === 'Freigegeben' || f.Status === 'Exportiert';
+
+    var ns;
+    if (!hat_diktat) {
+      ns = { icon: '🎤', label: 'Diktat aufnehmen', col: '#4f8ef7', bg: 'rgba(79,142,247,.08)', bc: 'rgba(79,142,247,.2)', href: 'app.html', phase: 2 };
+    } else if (!hat_stell) {
+      ns = { icon: '⚖️', label: '§6 Fachurteil schreiben', col: '#f59e0b', bg: 'rgba(245,158,11,.08)', bc: 'rgba(245,158,11,.2)', href: 'stellungnahme.html?az=' + encodeURIComponent(az), phase: 3 };
+    } else {
+      ns = { icon: '✅', label: 'Freigeben & PDF erstellen', col: '#10b981', bg: 'rgba(16,185,129,.08)', bc: 'rgba(16,185,129,.2)', href: 'freigabe.html?az=' + encodeURIComponent(az), phase: 4 };
+    }
+
+    return '<div style="display:flex;align-items:center;gap:12px;padding:14px 16px;background:' + ns.bg + ';border:1px solid ' + ns.bc + ';border-radius:12px;cursor:pointer;transition:all .15s;" onclick="sessionStorage.setItem('prova_record_id','' + r.id + '');window.location.href='akte.html?id=' + r.id + ''" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">'
+      + '<span style="font-size:22px;">' + ns.icon + '</span>'
+      + '<div style="flex:1;min-width:0;">'
+      + '<div style="font-size:13px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:8px;">'
+      + '<span style="font-family:var(--font-mono);font-size:11px;color:var(--accent);">' + escHtml(az) + '</span>'
+      + '<span style="color:var(--text3);">·</span>'
+      + '<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + escHtml(sa) + '</span>'
+      + '</div>'
+      + (loc ? '<div style="font-size:11px;color:var(--text3);margin-top:2px;">📍 ' + escHtml(loc) + '</div>' : '')
+      + '<div style="font-size:11px;font-weight:700;color:' + ns.col + ';margin-top:3px;">' + ns.label + '</div>'
+      + '</div>'
+      + '<a href="' + ns.href + '" onclick="event.stopPropagation()" style="padding:7px 14px;border-radius:8px;border:none;background:' + ns.col + ';color:#fff;font-size:11px;font-weight:700;text-decoration:none;white-space:nowrap;flex-shrink:0;">→ Jetzt</a>'
+      + '</div>';
+  }).join('');
+}
+
+/* ── FRISTEN MINI ── */
+function renderFristenMini() {
+  var container = document.getElementById('fristen-mini');
+  if (!container) return;
+  var termine = [];
+  try { termine = JSON.parse(localStorage.getItem('prova_termine_cache') || '[]'); } catch(e) {}
+  
+  var heute = new Date();
+  var bald = termine.filter(function(r) {
+    var f = r.fields || {};
+    if (!f.termin_datum) return false;
+    var d = new Date(f.termin_datum);
+    var diff = Math.floor((d - heute) / (1000*60*60*24));
+    return diff >= -1 && diff <= 14;
+  }).sort(function(a,b) {
+    return new Date(a.fields.termin_datum) - new Date(b.fields.termin_datum);
+  }).slice(0, 5);
+
+  if (!bald.length) {
+    container.innerHTML = '<div style="font-size:11px;color:var(--text3);text-align:center;padding:8px 0;">Keine Fristen in den nächsten 14 Tagen</div>';
+    return;
+  }
+
+  container.innerHTML = bald.map(function(r) {
+    var f = r.fields || {};
+    var d = new Date(f.termin_datum);
+    var diff = Math.floor((d - heute) / (1000*60*60*24));
+    var col = diff < 0 ? '#ef4444' : diff <= 3 ? '#f59e0b' : '#10b981';
+    var label = diff < 0 ? 'Überfällig' : diff === 0 ? 'Heute' : 'in ' + diff + 'T';
+    return '<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);">'
+      + '<div style="font-size:11px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:160px;">' + escHtml(f.titel || f.termin_typ || 'Termin') + '</div>'
+      + '<div style="font-size:10px;font-weight:700;color:' + col + ';flex-shrink:0;margin-left:8px;">' + label + '</div>'
+      + '</div>';
+  }).join('');
+  
+  // KPI updaten
+  var fristenKPI = document.getElementById('kpi-heute');
+  if (fristenKPI) fristenKPI.textContent = bald.filter(function(r) {
+    return Math.floor((new Date(r.fields.termin_datum)-heute)/(1000*60*60*24)) <= 7;
+  }).length;
+}
+
+/* ── INIT ── */
+document.addEventListener('DOMContentLoaded', function() {
+  // Sofort aus Cache rendern
+  renderAufgabenSofort();
+  renderFristenMini();
+  
+  // Greeting
+  var h = new Date().getHours();
+  var greet = h < 12 ? 'Guten Morgen' : h < 18 ? 'Guten Tag' : 'Guten Abend';
+  var svName = [localStorage.getItem('prova_sv_vorname'), localStorage.getItem('prova_sv_nachname')].filter(Boolean).join(' ');
+  var gt = document.getElementById('greeting-title');
+  if (gt) gt.textContent = greet + (svName ? ', ' + svName : '') + ' 👋';
+});
+
+</script>
 </body>
 </html>

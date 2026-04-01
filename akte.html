@@ -316,36 +316,106 @@ a{text-decoration:none;color:inherit;}button,input,select,textarea{font-family:i
 
 
       <!-- ═══ COCKPIT COMMAND CENTER ═══ -->
-      <div class="cockpit" id="phase-cockpit">
-        <div class="cockpit-phase">
-          <span class="cockpit-phase-label">Phase</span>
-          <div class="cockpit-phase-steps" id="cockpit-steps">
-            <div class="cockpit-step done" title="Fallerfassung"></div>
-            <div class="cockpit-step done" title="Diktat & KI"></div>
-            <div class="cockpit-step active" title="§6 Fachurteil"></div>
-            <div class="cockpit-step" title="Freigabe"></div>
-            <div class="cockpit-step" title="Abschluss"></div>
-          </div>
-          <span class="cockpit-frist" id="cockpit-frist">Wird geladen…</span>
-        </div>
-        <div class="cockpit-next">
-          <span class="cockpit-next-label">Nächster Schritt:</span>
-          <button class="cockpit-cta" id="cockpit-cta" onclick="">
-            <span id="cockpit-cta-icon">→</span>
-            <span id="cockpit-cta-text">Wird geladen…</span>
-          </button>
-        </div>
-        <div class="cockpit-secondary" id="cockpit-secondary"></div>
-      </div>
+      <div class="cockpit" id="phase-cockpit" style="background:var(--surface);border:1px solid var(--border2);border-radius:var(--r-lg);margin-bottom:20px;overflow:hidden;">
 
-      <!-- ═══ KI-ASSISTENT KONTEXTBAR ═══ -->
-      <div class="ki-assist-bar" id="ki-assist-bar" style="display:none;">
-        <div class="ki-assist-icon" id="ki-assist-icon">🤖</div>
-        <div class="ki-assist-text">
-          <strong id="ki-assist-title">KI-Assistent</strong>
-          <span id="ki-assist-msg"></span>
+        <!-- ── 5-PHASEN-BAR ── -->
+        <div style="padding:16px 20px;border-bottom:1px solid var(--border);">
+          <div style="display:flex;align-items:center;margin-bottom:14px;">
+            <div class="phase-step inactive" id="ph-1" onclick="zeigePhasenTooltip(1)" style="flex:1;display:flex;flex-direction:column;align-items:center;cursor:pointer;padding:6px 2px;border-radius:8px;transition:background .15s;">
+              <div class="phase-circle" id="pc-1" style="width:28px;height:28px;border-radius:50%;border:1.5px solid var(--border2);background:transparent;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--text3);margin-bottom:4px;transition:all .2s;">1</div>
+              <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);">Auftrag</div>
+            </div>
+            <div style="flex:0 0 20px;height:2px;background:var(--border);border-radius:1px;margin-bottom:16px;" id="pcon-1"></div>
+            <div class="phase-step inactive" id="ph-2" onclick="zeigePhasenTooltip(2)" style="flex:1;display:flex;flex-direction:column;align-items:center;cursor:pointer;padding:6px 2px;border-radius:8px;transition:background .15s;">
+              <div class="phase-circle" id="pc-2" style="width:28px;height:28px;border-radius:50%;border:1.5px solid var(--border2);background:transparent;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--text3);margin-bottom:4px;transition:all .2s;">2</div>
+              <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);">Ortstermin</div>
+            </div>
+            <div style="flex:0 0 20px;height:2px;background:var(--border);border-radius:1px;margin-bottom:16px;" id="pcon-2"></div>
+            <div class="phase-step inactive" id="ph-3" onclick="zeigePhasenTooltip(3)" style="flex:1;display:flex;flex-direction:column;align-items:center;cursor:pointer;padding:6px 2px;border-radius:8px;transition:background .15s;">
+              <div class="phase-circle" id="pc-3" style="width:28px;height:28px;border-radius:50%;border:1.5px solid var(--border2);background:transparent;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--text3);margin-bottom:4px;transition:all .2s;">3</div>
+              <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);">Gutachten</div>
+            </div>
+            <div style="flex:0 0 20px;height:2px;background:var(--border);border-radius:1px;margin-bottom:16px;" id="pcon-3"></div>
+            <div class="phase-step inactive" id="ph-4" onclick="zeigePhasenTooltip(4)" style="flex:1;display:flex;flex-direction:column;align-items:center;cursor:pointer;padding:6px 2px;border-radius:8px;transition:background .15s;">
+              <div class="phase-circle" id="pc-4" style="width:28px;height:28px;border-radius:50%;border:1.5px solid var(--border2);background:transparent;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--text3);margin-bottom:4px;transition:all .2s;">4</div>
+              <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);">Freigabe</div>
+            </div>
+            <div style="flex:0 0 20px;height:2px;background:var(--border);border-radius:1px;margin-bottom:16px;" id="pcon-4"></div>
+            <div class="phase-step inactive" id="ph-5" onclick="zeigePhasenTooltip(5)" style="flex:1;display:flex;flex-direction:column;align-items:center;cursor:pointer;padding:6px 2px;border-radius:8px;transition:background .15s;">
+              <div class="phase-circle" id="pc-5" style="width:28px;height:28px;border-radius:50%;border:1.5px solid var(--border2);background:transparent;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--text3);margin-bottom:4px;transition:all .2s;">5</div>
+              <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);">Rechnung</div>
+            </div>
+          </div>
+
+          <!-- NÄCHSTER SCHRITT CTA -->
+          <div id="next-step-cta" style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:rgba(79,142,247,.08);border:1px solid rgba(79,142,247,.2);border-radius:10px;">
+            <div style="display:flex;align-items:center;gap:10px;">
+              <span style="font-size:20px;" id="ns-icon">⏳</span>
+              <div>
+                <div style="font-size:13px;font-weight:700;color:var(--text);" id="ns-title">Akte wird geladen…</div>
+                <div style="font-size:11px;color:var(--text3);margin-top:2px;" id="ns-sub">Bitte warten</div>
+              </div>
+            </div>
+            <button id="ns-btn" onclick="naechsterSchrittKlick()" style="padding:8px 18px;border-radius:8px;border:none;background:var(--accent);color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;">→ Los</button>
+          </div>
+
+          <!-- ZEITERFASSUNG (kompakt) -->
+          <div style="display:flex;align-items:center;gap:8px;margin-top:10px;">
+            <div style="font-size:11px;color:var(--text3);">⏱</div>
+            <div id="zeit-display" style="font-size:12px;font-weight:700;color:#10b981;font-family:var(--font-mono);">00:00</div>
+            <button id="zeit-btn" onclick="toggleZeit()" style="padding:4px 12px;border-radius:6px;border:1px solid rgba(16,185,129,.3);background:transparent;color:#10b981;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s;" onmouseover="this.style.background='rgba(16,185,129,.1)'" onmouseout="this.style.background='transparent'">Start</button>
+            <span style="font-size:10px;color:var(--text3);">Zeiterfassung</span>
+          </div>
         </div>
-        <button class="ki-assist-btn" id="ki-assist-btn" onclick="">Jetzt →</button>
+
+        <!-- §4 KALKULATION INLINE -->
+        <div style="border-top:1px solid var(--border);">
+          <div onclick="toggleKalk()" style="display:flex;align-items:center;justify-content:space-between;padding:12px 20px;cursor:pointer;transition:background .12s;" onmouseover="this.style.background='rgba(255,255,255,.03)'" onmouseout="this.style.background='transparent'">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span>💰</span>
+              <span style="font-size:13px;font-weight:700;color:var(--text2);">§4 Schadenswert — KI-Kalkulation</span>
+              <span style="font-size:10px;color:var(--accent);background:rgba(79,142,247,.1);padding:2px 7px;border-radius:10px;font-weight:600;">KI</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:12px;">
+              <span style="font-size:14px;font-weight:800;color:var(--accent);" id="kalk-sum-preview">—</span>
+              <span id="kalk-toggle-icon" style="color:var(--text3);font-size:12px;">▼ anzeigen</span>
+            </div>
+          </div>
+          <div id="kalk-body" style="display:none;padding:0 20px 16px;">
+            <div style="font-size:11px;color:var(--text3);padding:8px 12px;background:rgba(79,142,247,.05);border:1px solid rgba(79,142,247,.1);border-radius:6px;margin-bottom:12px;display:flex;align-items:center;gap:6px;">
+              <span>🤖</span><span>KI hat Positionen aus Ihrem Diktat erkannt — Mengen prüfen und bestätigen</span>
+            </div>
+            <table style="width:100%;border-collapse:collapse;font-size:12px;">
+              <thead><tr>
+                <th style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);padding:6px 8px;border-bottom:1px solid var(--border);text-align:left;width:28px;"></th>
+                <th style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);padding:6px 8px;border-bottom:1px solid var(--border);text-align:left;">Position</th>
+                <th style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);padding:6px 8px;border-bottom:1px solid var(--border);text-align:right;width:65px;">Menge</th>
+                <th style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);padding:6px 8px;border-bottom:1px solid var(--border);text-align:center;width:40px;">Einh.</th>
+                <th style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);padding:6px 8px;border-bottom:1px solid var(--border);text-align:right;width:75px;">Median €</th>
+                <th style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);padding:6px 8px;border-bottom:1px solid var(--border);text-align:right;width:85px;">Gesamt</th>
+              </tr></thead>
+              <tbody id="kalk-tbody">
+                <tr><td colspan="6" style="text-align:center;padding:20px;color:var(--text3);">Wird geladen…</td></tr>
+              </tbody>
+            </table>
+            <div style="display:flex;justify-content:flex-end;align-items:center;gap:20px;padding:10px 0;border-top:1px solid var(--border);margin-top:6px;">
+              <span style="font-size:11px;color:var(--text3);">Netto Median</span>
+              <span style="font-size:13px;font-weight:700;color:var(--text);" id="kalk-netto">—</span>
+              <span style="font-size:11px;color:var(--text3);">Brutto (19% MwSt.)</span>
+              <span style="font-size:14px;font-weight:800;color:var(--accent);" id="kalk-brutto">—</span>
+            </div>
+            <button onclick="kalkInGutachtenUebernehmen()" style="width:100%;padding:10px;border-radius:8px;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:8px;">✅ Wert in §4 des Gutachtens übernehmen</button>
+            <div style="text-align:center;margin-top:8px;"><a onclick="oeffneKostenermittlung()" href="#" style="font-size:11px;color:var(--text3);text-decoration:none;cursor:pointer;" onmouseover="this.style.color='var(--accent)'">Ausführliche Kostenermittlung → Aufmaß & alle Positionen</a></div>
+          </div>
+        </div>
+
+        <!-- NORMEN-QUICKBAR -->
+        <div style="border-top:1px solid var(--border);padding:12px 20px;">
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text3);margin-bottom:8px;">📚 Normen für diese Schadenart → direkt in §6</div>
+          <div id="normen-quickbar" style="display:flex;gap:6px;flex-wrap:wrap;">
+            <span style="font-size:11px;color:var(--text3);">Wird aus Schadenart geladen…</span>
+          </div>
+        </div>
       </div>
 
       <!-- MAIN GRID -->
@@ -984,7 +1054,7 @@ window.oeffneStellung = function() {
         <div class="sup-err" id="sup-err">Bitte Betreff und Nachricht eingeben.</div>
         <button class="sup-send-btn" id="sup-btn" onclick="supSendModal()">Nachricht senden</button>
         <div style="text-align:center;margin-top:10px;font-size:11px;color:var(--text3,#6b7a99);">
-          Oder direkt: <a href="mailto:kontakt@prova-systems.de" style="color:var(--accent,#4f8ef7);">kontakt@prova-systems.de</a>
+          Oder direkt: <a href="mailto:kontakt@prova-systems.de">kontakt@prova-systems.de</a>
         </div>
       </div>
       <div class="sup-ok" id="sup-ok">
@@ -1033,7 +1103,7 @@ window.exportWordAkte = function() {
     '<div>' + entwurf.replace(/
 /g,'<br>') + '</div>',
     '<div class="footer">Erstellt mit PROVA Systems &middot; ' + svName.trim() + ' &middot; ' + heute + '</div>',
-    '  <script src="/sw-register.js" defer></script>
+    '  </script><script src="/sw-register.js" defer></script>
 
 <script>
 /* ================================================================
@@ -1805,19 +1875,271 @@ window.kalkInGutachtenUebernehmen=function(){var n=kalkDaten.reduce(function(s,p
 function renderNormenQuickbar(sa){var el=document.getElementById('normen-quickbar');if(!el)return;var code=sa.toLowerCase().includes('wasser')?'WS':sa.toLowerCase().includes('schimmel')?'SC':sa.toLowerCase().includes('brand')?'BS':'default';var normen=NORMEN_SA[code]||NORMEN_SA['default'];el.innerHTML=normen.map(function(n){return '<span class="norm-pill" onclick="normZuStellung(''+n+'')">'+n+' →§6</span>';}).join('');}
 window.normZuStellung=function(n){try{var q=JSON.parse(localStorage.getItem('prova_normen_queue')||'[]');q.push({num:n,text:'Gemäß '+n+' gilt: [Grenzwert eintragen]',ts:new Date().toISOString()});localStorage.setItem('prova_normen_queue',JSON.stringify(q));}catch(e){}zeigToast('Norm '+n+' für §6 gespeichert ✅');};
 
-</script><script>
-function openSupportModal(){
-  var m=document.getElementById('support-modal');
-  if(!m)return;
-  var fb=document.getElementById('support-form-body');
-  var ok=document.getElementById('sup-ok');
-  if(fb)fb.style.display='block';
-  if(ok)ok.style.display='none';
-  var b=document.getElementById('sup-betreff');
-  var n=document.getElementById('sup-nachricht');
-  var btn=document.getElementById('sup-btn');
-  if(b)b.value='';if(n)n.value='';
-  if(btn){btn.disabled=false;btn.textContent='Nachricht senden';}
-  m.classList.add('open');
+
+/* ══════════════════════════════════════════════
+   PHASE-COCKPIT — vollständige Implementierung
+══════════════════════════════════════════════ */
+var kalkDaten = [], kalkOffen = false;
+var zeitSekunden = 0, zeitLaeuft = false, zeitInterval = null;
+
+var KALK_DB = {
+  'WS':[
+    {id:'WS-015',bez:'Estrich aufbrechen & entsorgen',ei:'m²',mn:28,me:42,mx:68},
+    {id:'WS-043',bez:'Innenputz neu aufbringen',ei:'m²',mn:22,me:33,mx:52},
+    {id:'WS-037',bez:'Fliesen neu verlegen (Standard)',ei:'m²',mn:45,me:68,mx:105},
+    {id:'WS-001',bez:'Trocknungsgerät je Tag',ei:'Stk',mn:18,me:28,mx:42},
+    {id:'WS-044',bez:'Sanierputz aufbringen',ei:'m²',mn:28,me:43,mx:68}
+  ],
+  'SC':[
+    {id:'SC-001',bez:'Schimmelbefall entfernen & desinfizieren',ei:'m²',mn:35,me:55,mx:85},
+    {id:'SC-002',bez:'Putz abschlagen (Schimmelbefall)',ei:'m²',mn:18,me:28,mx:45},
+    {id:'SC-003',bez:'Mauerwerk Schimmelschutz behandeln',ei:'m²',mn:22,me:34,mx:52},
+    {id:'WS-043',bez:'Innenputz neu aufbringen',ei:'m²',mn:22,me:33,mx:52},
+    {id:'WS-048',bez:'Anstrich Dispersionsfarbe 2-fach',ei:'m²',mn:5,me:8,mx:13}
+  ],
+  'BS':[
+    {id:'BS-001',bez:'Brandschutt entfernen & entsorgen',ei:'m³',mn:120,me:185,mx:280},
+    {id:'BS-002',bez:'Rußschäden professionell reinigen',ei:'m²',mn:28,me:42,mx:68},
+    {id:'BS-003',bez:'Mauerwerk rauchgeschädigt sanieren',ei:'m²',mn:35,me:52,mx:85}
+  ]
+};
+
+var NORMEN_DB = {
+  'WS':['VdS 3151 (Trocknungsrichtl.)','DIN 18533 (Abdichtung)','DIN 18353 (Estrich CM%)'],
+  'SC':['WTA 6-1-01/D (Schimmel)','DIN 68800-1 (Holzschutz)','DIN 1946-6 (Lüftung)'],
+  'BS':['DIN 4102-1 (Brandverhalten)','DIN EN 13501 (Euroklassen)'],
+  'ST':['DIN 1055 (Lasten)','DIN EN 1991 (Windlasten)'],
+  'def':['DIN 18550 (Putz)','VOB/B §13 (Mängel)','DIN 18202 (Toleranzen)']
+};
+
+function naechsterSchrittConfig(phase, az, sa, f) {
+  var azEnc = encodeURIComponent(az);
+  switch(phase) {
+    case 1: return {icon:'📋',cls:'',btnCls:'',
+      title:'Auftrag erfassen — Stammdaten & Termin anlegen',
+      sub:'AZ, Auftraggeber, Beweisfragen, Frist setzen',
+      btn:'→ Neuen Fall anlegen', href:'app.html'};
+    case 2: return {icon:'🎤',cls:'',btnCls:'',
+      title:'Diktat aufnehmen — KI startet §1–§5 automatisch',
+      sub:'Befund vor Ort diktieren · Fotos mit KI-Captioning',
+      btn:'→ Diktat & Fotos', href:'app.html'};
+    case 3: return {icon:'⚖️',cls:'cta-warning',btnCls:'btn-warn',
+      title:'§6 Fachurteil schreiben — Ihr persönliches Urteil fehlt',
+      sub:'Normen-Panel rechts · KJ2-Prüfung live · KI-Denkanstoß',
+      btn:'→ §6 jetzt schreiben', href:'stellungnahme.html?az='+azEnc};
+    case 4: return {icon:'✅',cls:'cta-warning',btnCls:'btn-warn',
+      title:'Gutachten freigeben & PDF erstellen',
+      sub:'KI-Qualitätsprüfung · §407a ZPO · Rundstempel · Audit-Log',
+      btn:'→ Zur Freigabe', href:'freigabe.html?az='+azEnc};
+    case 5: return {icon:'💶',cls:'cta-success',btnCls:'btn-ok',
+      title:'Rechnung erstellen — JVEG automatisch berechnet',
+      sub:'Aus Zeiterfassung · Honorargruppe M2 · Fahrtkosten',
+      btn:'→ Rechnung erstellen', href:'rechnungen.html?az='+azEnc};
+    default: return {icon:'📋',cls:'',btnCls:'',
+      title:'Fall laden…',sub:'',btn:'→',href:''};
+  }
 }
-async 
+
+function renderCockpit(f) {
+  if (!f) return;
+  var az  = f.Aktenzeichen || '';
+  var sa  = f.Schadenart   || '';
+  var hat_diktat  = !!(f.KI_Entwurf && f.KI_Entwurf.length > 50);
+  var hat_stell   = !!(f.Stellungnahme_Text && f.Stellungnahme_Text.length > 30);
+  var hat_freig   = (f.Status === 'Freigegeben' || f.Status === 'Exportiert');
+  var hat_rech    = !!(f.Rechnung_PDF || f.Rechnungsstatus);
+  var phase = hat_rech ? 5 : hat_freig ? 5 : hat_stell ? 4 : hat_diktat ? 3 : az ? 2 : 1;
+
+  // Phase-Kreise
+  for (var i = 1; i <= 5; i++) {
+    var el  = document.getElementById('ph-' + i);
+    var cEl = document.getElementById('pc-' + i);
+    var ln  = document.getElementById('pcon-' + (i < 5 ? i : 4));
+    if (!el || !cEl) continue;
+    if (i < phase) {
+      cEl.style.cssText = 'width:28px;height:28px;border-radius:50%;border:1.5px solid rgba(16,185,129,.5);background:rgba(16,185,129,.15);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#10b981;margin-bottom:4px;transition:all .2s;';
+      cEl.textContent = '✓';
+      el.style.background = '';
+      if (ln) ln.style.background = 'rgba(16,185,129,.4)';
+    } else if (i === phase) {
+      cEl.style.cssText = 'width:28px;height:28px;border-radius:50%;border:1.5px solid var(--accent);background:rgba(79,142,247,.15);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--accent);margin-bottom:4px;transition:all .2s;';
+      cEl.textContent = String(i);
+    } else {
+      cEl.style.cssText = 'width:28px;height:28px;border-radius:50%;border:1.5px solid var(--border2);background:transparent;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--text3);margin-bottom:4px;transition:all .2s;';
+      cEl.textContent = String(i);
+    }
+  }
+
+  // CTA
+  var cfg = naechsterSchrittConfig(phase, az, sa, f);
+  var cta = document.getElementById('next-step-cta');
+  if (cta) {
+    var bg = phase === 3 || phase === 4 ? 'rgba(245,158,11,.08)' : phase === 5 ? 'rgba(16,185,129,.08)' : 'rgba(79,142,247,.08)';
+    var bc = phase === 3 || phase === 4 ? 'rgba(245,158,11,.25)' : phase === 5 ? 'rgba(16,185,129,.25)' : 'rgba(79,142,247,.2)';
+    cta.style.background = bg;
+    cta.style.borderColor = bc;
+  }
+  var nsI = document.getElementById('ns-icon'); if(nsI) nsI.textContent = cfg.icon;
+  var nsT = document.getElementById('ns-title'); if(nsT) nsT.textContent = cfg.title;
+  var nsS = document.getElementById('ns-sub'); if(nsS) nsS.textContent = cfg.sub;
+  var nsB = document.getElementById('ns-btn');
+  if (nsB) {
+    nsB.textContent = cfg.btn;
+    var bc2 = phase===3||phase===4 ? '#f59e0b' : phase===5 ? '#10b981' : 'var(--accent)';
+    nsB.style.background = bc2;
+    nsB.setAttribute('data-href', cfg.href);
+  }
+
+  // §4 Kalkulation laden
+  ladeKalkulation(f, sa);
+  setTimeout(function(){ window.autoOpenKalk(phase); }, 300);
+  // Normen-Quickbar
+  renderNormenQuickbar(sa);
+}
+
+window.naechsterSchrittKlick = function() {
+  var btn = document.getElementById('ns-btn');
+  if (!btn) return;
+  var href = btn.getAttribute('data-href');
+  if (!href) return;
+  var az = currentFields.Aktenzeichen || '';
+  var sa = currentFields.Schadenart   || '';
+  var ag = currentFields.Auftraggeber_Name  || '';
+  var agM= currentFields.Auftraggeber_Email || '';
+  if (az)  { localStorage.setItem('prova_letztes_az', az); localStorage.setItem('prova_aktiver_fall', az); }
+  if (sa)  localStorage.setItem('prova_schadenart', sa);
+  if (ag)  localStorage.setItem('prova_auftraggeber_name', ag);
+  if (agM) localStorage.setItem('prova_auftraggeber_email', agM);
+  window.location.href = href;
+};
+
+window.zeigePhasenTooltip = function(n) {
+  var labels = ['','Auftrag & Planung','Ortstermin & Befund','Gutachtenerstellung','Prüfung & Freigabe','Abschluss & Rechnung'];
+  zeigToast('Phase ' + n + ': ' + labels[n]);
+};
+
+// §4 Kalkulation
+function ladeKalkulation(f, sa) {
+  var code = sa.toLowerCase().includes('wasser')?'WS': sa.toLowerCase().includes('schimmel')?'SC': sa.toLowerCase().includes('brand')?'BS': null;
+  var pos  = code ? (KALK_DB[code]||[]) : [];
+  if (f.Kalkulation_JSON) {
+    try { kalkDaten = JSON.parse(f.Kalkulation_JSON); }
+    catch(e) { kalkDaten = pos.map(function(p){return Object.assign({},p,{menge:0,aktiv:true});}); }
+  } else {
+    kalkDaten = pos.map(function(p){return Object.assign({},p,{menge:0,aktiv:true});});
+  }
+  renderKalkTable();
+}
+
+function renderKalkTable() {
+  var tb = document.getElementById('kalk-tbody');
+  if (!tb) return;
+  if (!kalkDaten.length) {
+    tb.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:16px;color:var(--text3);font-size:11px;">Keine KI-Positionen erkannt — manuell hinzufügen</td></tr>';
+    aktualisiereKalkSumme(); return;
+  }
+  var fmt = function(n){return n.toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2});};
+  tb.innerHTML = kalkDaten.map(function(p,i){
+    var g = p.aktiv && p.menge > 0 ? p.menge * p.me : 0;
+    return '<tr style="border-bottom:1px solid rgba(255,255,255,.03);">'
+      +'<td style="padding:7px 8px;"><input type="checkbox" style="accent-color:var(--accent);width:14px;height:14px;cursor:pointer;" '+(p.aktiv?'checked':'')+' onchange="kalkToggle('+i+',this.checked)"></td>'
+      +'<td style="padding:7px 8px;color:var(--text);font-size:11px;">'+p.bez+'<div style="font-size:9px;color:var(--text3);font-family:var(--font-mono);">'+p.id+' · '+fmt(p.mn)+'–'+fmt(p.mx)+' €/'+p.ei+'</div></td>'
+      +'<td style="padding:7px 8px;"><input type="number" value="'+(p.menge||'')+'" placeholder="0" style="width:60px;padding:3px 6px;background:var(--bg3);border:1px solid var(--border2);border-radius:4px;color:var(--text);font-size:11px;text-align:right;font-family:var(--font-mono);" onchange="kalkMenge('+i+',this.value)" oninput="kalkMenge('+i+',this.value)"></td>'
+      +'<td style="padding:7px 8px;text-align:center;color:var(--text3);">'+p.ei+'</td>'
+      +'<td style="padding:7px 8px;text-align:right;color:var(--text2);">'+fmt(p.me)+' €</td>'
+      +'<td style="padding:7px 8px;text-align:right;font-weight:600;color:'+(g>0?'var(--text)':'var(--text3)')+';">'+(g>0?fmt(g)+' €':'—')+'</td>'
+      +'</tr>';
+  }).join('');
+  aktualisiereKalkSumme();
+}
+
+window.kalkToggle = function(i,v){kalkDaten[i].aktiv=v; aktualisiereKalkSumme();};
+window.kalkMenge  = function(i,v){kalkDaten[i].menge=parseFloat(v)||0; renderKalkTable();};
+
+function aktualisiereKalkSumme() {
+  var n = kalkDaten.reduce(function(s,p){return s+(p.aktiv&&p.menge>0?p.menge*p.me:0);},0);
+  var b = n * 1.19;
+  var fmt = function(x){return x.toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2})+' €';};
+  var e1=document.getElementById('kalk-netto');    if(e1)e1.textContent = n>0?fmt(n):'—';
+  var e2=document.getElementById('kalk-brutto');   if(e2)e2.textContent = b>0?fmt(b):'—';
+  var ep=document.getElementById('kalk-sum-preview'); if(ep)ep.textContent = n>0?fmt(n)+' netto':'—';
+}
+
+window.autoOpenKalk = function(phase) {
+  if (phase >= 3 && !kalkOffen) {
+    window.toggleKalk();
+  }
+};
+
+window.toggleKalk = function(){
+  kalkOffen = !kalkOffen;
+  var bd = document.getElementById('kalk-body');
+  var ic = document.getElementById('kalk-toggle-icon');
+  if(bd) bd.style.display = kalkOffen ? 'block' : 'none';
+  if(ic) ic.textContent = kalkOffen ? '▲ ausblenden' : '▼ anzeigen';
+};
+
+window.oeffneKostenermittlung = function() {
+  var az = (typeof currentFields !== "undefined" && currentFields.Aktenzeichen) || localStorage.getItem("prova_letztes_az") || "";
+  var sa = (typeof currentFields !== "undefined" && currentFields.Schadenart) || localStorage.getItem("prova_schadenart") || "";
+  localStorage.setItem("prova_kalk_az", az);
+  localStorage.setItem("prova_kalk_sa", sa);
+  window.location.href = "kostenermittlung.html?az=" + encodeURIComponent(az) + "&sa=" + encodeURIComponent(sa);
+};
+
+window.kalkInGutachtenUebernehmen = function(){
+  var n = kalkDaten.reduce(function(s,p){return s+(p.aktiv&&p.menge>0?p.menge*p.me:0);},0);
+  var fmt = function(x){return x.toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2});};
+  localStorage.setItem('prova_kalkulation_netto', fmt(n));
+  localStorage.setItem('prova_kalkulation_json',  JSON.stringify(kalkDaten));
+  zeigToast('§4 Kostenrahmen: '+fmt(n)+' € netto übernommen ✅');
+};
+
+// Normen-Quickbar
+function renderNormenQuickbar(sa) {
+  var el = document.getElementById('normen-quickbar');
+  if (!el) return;
+  var code = sa.toLowerCase().includes('wasser')?'WS': sa.toLowerCase().includes('schimmel')?'SC': sa.toLowerCase().includes('brand')?'BS': sa.toLowerCase().includes('sturm')?'ST': 'def';
+  var normen = NORMEN_DB[code] || NORMEN_DB['def'];
+  el.innerHTML = normen.map(function(n){
+    return '<span onclick="normZuStellung(''+n.split(' ')[0]+'')" style="padding:4px 10px;border-radius:12px;background:rgba(79,142,247,.08);border:1px solid rgba(79,142,247,.2);color:var(--accent);font-size:10px;font-weight:600;cursor:pointer;white-space:nowrap;transition:background .12s;" onmouseover="this.style.background='rgba(79,142,247,.18)'" onmouseout="this.style.background='rgba(79,142,247,.08)'">'
+      + n + ' →§6</span>';
+  }).join('');
+}
+
+window.normZuStellung = function(n){
+  try{
+    var q=JSON.parse(localStorage.getItem('prova_normen_queue')||'[]');
+    q.push({num:n, text:'Gemäß '+n+' gilt: [Grenzwert eintragen]', ts:new Date().toISOString()});
+    localStorage.setItem('prova_normen_queue',JSON.stringify(q));
+  }catch(e){}
+  zeigToast('Norm '+n+' für §6 gespeichert ✅');
+};
+
+// Zeiterfassung
+window.toggleZeit = function(){
+  var btn = document.getElementById('zeit-btn');
+  var dis = document.getElementById('zeit-display');
+  if (!zeitLaeuft) {
+    zeitLaeuft = true;
+    if(btn){btn.textContent='Stop';btn.style.background='rgba(239,68,68,.15)';btn.style.border='1px solid rgba(239,68,68,.3)';btn.style.color='var(--danger)';}
+    localStorage.setItem('prova_zeit_start_ts', new Date().toISOString());
+    zeitInterval = setInterval(function(){
+      zeitSekunden++;
+      var m=Math.floor(zeitSekunden/60), s=zeitSekunden%60;
+      if(dis) dis.textContent=(m<10?'0':'')+m+':'+(s<10?'0':'')+s;
+    },1000);
+  } else {
+    zeitLaeuft = false;
+    clearInterval(zeitInterval);
+    if(btn){btn.textContent='Start';btn.style.background='#10b981';btn.style.border='none';btn.style.color='#fff';}
+    localStorage.setItem('prova_zeit_dauer_sek', String(zeitSekunden));
+    zeigToast('Zeiterfassung: '+Math.round(zeitSekunden/60)+' Min. gespeichert');
+  }
+};
+
+// Hook in renderAkte
+(function hookRenderAkte(){
+  var origRender = window.renderAkte;
+  if (typeof origRender === 'function') {
+    wind

@@ -1227,9 +1227,14 @@ ladeNormen();
       ta.dispatchEvent(new Event('input'));
       localStorage.removeItem('prova_normen_queue');
       // Inline-Hinweis
+      var normCount = queue.filter(function(q){ return q.typ !== 'baustein'; }).length;
+      var tbCount = queue.filter(function(q){ return q.typ === 'baustein'; }).length;
+      var label = [];
+      if (normCount > 0) label.push(normCount + ' Norm(en)');
+      if (tbCount > 0) label.push(tbCount + ' Textbaustein(e)');
       var hint = document.createElement('div');
-      hint.style.cssText = 'position:fixed;top:70px;left:50%;transform:translateX(-50%);z-index:9999;background:rgba(16,185,129,.12);border:1.5px solid rgba(16,185,129,.35);border-radius:12px;padding:12px 20px;font-size:13px;font-weight:600;color:#10b981;box-shadow:0 4px 20px rgba(0,0,0,.3);';
-      hint.textContent = '✅ ' + queue.length + ' Norm(en) aus Bibliothek in §6 eingefügt';
+      hint.style.cssText = 'position:fixed;top:70px;left:50%;transform:translateX(-50%);z-index:99999;background:#0a1f2e;border:2px solid #10b981;border-radius:12px;padding:12px 20px;font-size:13px;font-weight:600;color:#10b981;box-shadow:0 8px 24px rgba(0,0,0,.8);';
+      hint.textContent = '✅ ' + label.join(' + ') + ' in §6 eingefügt';
       document.body.appendChild(hint);
       setTimeout(function(){ hint.remove(); }, 3000);
     }, 600);
@@ -1949,13 +1954,7 @@ function weiterZuFreigabe() {
 
 /* ── TOAST ── */
 let toastTimer;
-function zeigToast(msg, type='ok') {
-  const el = document.getElementById('toast');
-  el.textContent = msg;
-  el.className = 'toast ' + type;
-  el.style.display = 'block';
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(()=>{ el.style.display='none'; }, 3200);
+window.zeigToast = window.zeigToast || window.showToast || function(m){ alert(m); };, 3200);
 }
 </script>
   <script src="/sw-register.js" defer></script>

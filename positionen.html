@@ -626,9 +626,7 @@ function copyPos(nr){
   navigator.clipboard.writeText(txt).then(()=>showToast('Zeile kopiert ✅')).catch(()=>showToast('Kopiert: '+txt.slice(0,50)+'…'));
 }
 
-function showToast(msg){
-  showToastMitCTA(msg, null, null);
-}
+window.showToast = window.showToast || window.zeigToast || function(m){ alert(m); };
 function showToastMitCTA(msg, ctaLabel, ctaHref) {
   const t = document.getElementById('toast');
   const txt = document.getElementById('toast-text');
@@ -686,7 +684,7 @@ renderPositionen();
         <div class="sup-err" id="sup-err">Bitte Betreff und Nachricht eingeben.</div>
         <button class="sup-send-btn" id="sup-btn" onclick="supSendModal()">Nachricht senden</button>
         <div style="text-align:center;margin-top:10px;font-size:11px;color:var(--text3,#6b7a99);">
-          Oder direkt: <a href="mailto:kontakt@prova-systems.de" style="color:var(--accent,#4f8ef7);">kontakt@prova-systems.de</a>
+          Oder direkt: <a href="mailto:kontakt@prova-systems.de">kontakt@prova-systems.de</a>
         </div>
       </div>
       <div class="sup-ok" id="sup-ok">
@@ -697,7 +695,7 @@ renderPositionen();
     </div>
   </div>
 </div>
-<script>
+</script><script>
 function openSupportModal(){
   var m=document.getElementById('support-modal');
   if(!m)return;
@@ -1076,19 +1074,4 @@ if (document.readyState === 'loading') {
   einfuegenBanner();
 }
 
-// ── PUBLIC API ──────────────────────────────────────────────────────────
-window.PROVA_KONTEXT = {
-  // Erlaubt anderen Scripts den Fall-Kontext zu setzen
-  setFall: function(az, schadenart, adresse, recordId) {
-    if (az) localStorage.setItem('prova_letztes_az', az);
-    if (schadenart) localStorage.setItem('prova_schadenart', schadenart);
-    if (adresse) localStorage.setItem('prova_adresse', adresse);
-    if (recordId) sessionStorage.setItem('prova_record_id', recordId);
-    // Banner aktualisieren
-    var existing = document.getElementById('prova-fall-kontext-banner');
-    if (existing) existing.remove();
-    einfuegenBanner();
-  },
-  // Fall-Kontext löschen (nach Archivierung)
-  clearFall: function() {
-    localStorage.removeIte
+// ── PUBLIC API ─────────────────────────────

@@ -224,7 +224,7 @@
       + '.sidebar.collapsed .sb-collapse-label{opacity:0;width:0;}'
 
       /* ─── MAIN CONTENT OFFSET ─── */
-      + '.main-wrap{margin-left:var(--sb-w);transition:margin-left .22s cubic-bezier(.4,0,.2,1);}'
+      + '.main-wrap{margin-left:var(--sb-w);transition:margin-left .22s cubic-bezier(.4,0,.2,1);background:var(--bg,#0b0d11);min-height:100vh;}'
       + '.sidebar.collapsed ~ .main-wrap{margin-left:var(--sb-w-col);}'
       + '.main{margin-left:var(--sb-w);transition:margin-left .22s cubic-bezier(.4,0,.2,1);}'
       + '.sidebar.collapsed ~ .main{margin-left:var(--sb-w-col);}'
@@ -256,6 +256,8 @@
 
   /* ── NEUER FALL: kompletter Fall-Reset ── */
   window.provaResetFall = function() {
+  // Flag setzen: app.html soll keinen Entwurf laden
+  sessionStorage.setItem('prova_neuer_fall', '1');
     var FALL_KEYS = [
       'prova_transkript','prova_aktiver_fall','prova_schadenart','prova_baujahr',
       'prova_adresse','prova_messwerte','prova_messwerte_strukturiert',
@@ -370,3 +372,104 @@
     injectNav();
   }
 })();
+
+/* ============================================================
+   PROVA Design System — Globale Helfer-Funktionen
+   Wird von nav.js exportiert und allen Seiten zur Verfügung gestellt
+   ============================================================ */
+
+/* ── Toast (einheitlich, alle Seiten) ── */
+window.showToast = window.zeigToast = function(msg, type, duration) {
+  var old = document.getElementById('prova-toast');
+  if (old) old.remove();
+  var t = document.createElement('div');
+  t.id = 'prova-toast';
+  var colors = {
+    success: { bg: '#0f2518', border: '#10b981', text: '#10b981' },
+    error:   { bg: '#1f0a0a', border: '#ef4444', text: '#ef4444' },
+    warning: { bg: '#1f1508', border: '#f59e0b', text: '#f59e0b' },
+    info:    { bg: '#0a1220', border: '#4f8ef7', text: '#4f8ef7' },
+  };
+  var c = colors[type] || colors.info;
+  t.style.cssText = [
+    'position:fixed', 'bottom:24px', 'right:24px', 'z-index:99999',
+    'background:' + c.bg, 'border:1.5px solid ' + c.border,
+    'color:' + c.text, 'border-radius:10px', 'padding:12px 18px',
+    'font-size:13px', 'font-weight:600', 'font-family:var(--font-ui,sans-serif)',
+    'box-shadow:0 4px 20px rgba(0,0,0,.5)', 'max-width:380px',
+    'opacity:0', 'transform:translateY(8px)', 'transition:all .2s ease',
+    'display:flex', 'align-items:center', 'gap:10px'
+  ].join(';');
+  t.innerHTML = msg;
+  document.body.appendChild(t);
+  requestAnimationFrame(function() {
+    t.style.opacity = '1';
+    t.style.transform = 'translateY(0)';
+  });
+  setTimeout(function() {
+    t.style.opacity = '0';
+    t.style.transform = 'translateY(8px)';
+    setTimeout(function() { if (t.parentNode) t.remove(); }, 200);
+  }, duration || 3000);
+};
+
+/* ── Banner (inline, opak, wichtig) ── */
+window.showBanner = function(msg, color, href, btnLabel, duration) {
+  var id = 'prova-banner-' + Date.now();
+  var old = document.querySelector('.prova-banner');
+  if (old) old.remove();
+  var b = document.createElement('div');
+  b.className = 'prova-banner';
+  var col = color === 'green' ? '#10b981' : color === 'warning' ? '#f59e0b' : '#4f8ef7';
+  var bg  = color === 'green' ? '#0a1f14' : color === 'warning' ? '#1f1508' : '#0a1220';
+  b.style.cssText = [
+    'position:fixed', 'top:64px', 'left:50%', 'transform:translateX(-50%)',
+    'z-index:99998', 'background:' + bg, 'border:1.5px solid ' + col,
+    'border-radius:12px', 'padding:12px 20px', 'display:flex',
+    'align-items:center', 'gap:12px', 'box-shadow:0 8px 32px rgba(0,0,0,.7)',
+    'max-width:90vw', 'min-width:280px', 'font-family:var(--font-ui,sans-serif)'
+  ].join(';');
+  b.innerHTML = '<div style="flex:1;font-size:13px;font-weight:600;color:' + col + ';">' + msg + '</div>'
+    + (href ? '<a href="' + href + '" style="padding:6px 14px;border-radius:8px;background:' + col + ';color:#fff;font-size:12px;font-weight:700;text-decoration:none;white-space:nowrap;">' + (btnLabel || '→') + '</a>' : '')
+    + '<button onclick="this.parentElement.remove()" style="background:none;border:none;color:rgba(255,255,255,.4);font-size:18px;cursor:pointer;padding:0;line-height:1;">×</button>';
+  document.body.appendChild(b);
+  if (duration !== 0) setTimeout(function() { if (b.parentNode) b.remove(); }, duration || 5000);
+  return b;
+};
+
+/* ── Skeleton Loading ── */
+window.skeleton = function(n, height) {
+  var h = height || 44;
+  return Array(n || 3).fill(0).map(function() {
+    return '<div style="height:' + h + 'px;border-radius:8px;background:var(--surface);animation:shimmer 1.5s infinite;background-size:200% 100%;background-image:linear-gradient(90deg,var(--surface) 25%,var(--surface2,#232a3a) 50%,var(--surface) 75%);margin-bottom:8px;"></div>';
+  }).join('');
+};
+
+/* ── Empty State ── */
+window.emptyState = function(icon, title, sub, btnLabel, btnHref, btnAction) {
+  return '<div style="text-align:center;padding:48px 20px;">'
+    + '<div style="font-size:36px;margin-bottom:12px;opacity:.5;">' + icon + '</div>'
+    + '<div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:6px;">' + title + '</div>'
+    + (sub ? '<div style="font-size:13px;color:var(--text3);margin-bottom:20px;">' + sub + '</div>' : '')
+    + (btnLabel ? '<button onclick="' + (btnAction || 'window.location.href=\'' + (btnHref || '#') + '\'') + '" style="padding:10px 22px;border-radius:8px;background:var(--accent,#4f8ef7);border:none;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font-ui,sans-serif);">' + btnLabel + '</button>' : '')
+    + '</div>';
+};
+
+/* ── Confirm Dialog ── */
+window.provaConfirm = function(msg, onYes) {
+  var overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(2px);';
+  overlay.innerHTML = '<div style="background:var(--surface,#1c2130);border:1px solid var(--border2);border-radius:16px;padding:24px;max-width:380px;width:100%;font-family:var(--font-ui,sans-serif);">'
+    + '<div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:8px;">Bestätigen</div>'
+    + '<div style="font-size:13px;color:var(--text2);margin-bottom:20px;">' + msg + '</div>'
+    + '<div style="display:flex;gap:8px;justify-content:flex-end;">'
+    + '<button onclick="this.closest(\'div[style]\').remove()" style="padding:8px 16px;border-radius:8px;border:1px solid var(--border2);background:transparent;color:var(--text2);font-size:13px;cursor:pointer;font-family:inherit;">Abbrechen</button>'
+    + '<button id="_confirm_yes" style="padding:8px 16px;border-radius:8px;border:none;background:#ef4444;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">Bestätigen</button>'
+    + '</div></div>';
+  document.body.appendChild(overlay);
+  overlay.querySelector('#_confirm_yes').onclick = function() {
+    overlay.remove();
+    if (onYes) onYes();
+  };
+  overlay.onclick = function(e) { if (e.target === overlay) overlay.remove(); };
+};

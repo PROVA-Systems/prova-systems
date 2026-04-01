@@ -502,6 +502,14 @@ var posCounter=0;
 
   // sessionStorage aufräumen
   sessionStorage.removeItem('prova_rechnung_prefill');
+  // Prefill-Banner anzeigen
+  (function() {
+    var banner = document.createElement('div');
+    banner.style.cssText = 'position:fixed;top:64px;left:50%;transform:translateX(-50%);z-index:99998;background:#0a1f14;border:1.5px solid #10b981;border-radius:12px;padding:12px 20px;display:flex;align-items:center;gap:12px;box-shadow:0 8px 32px rgba(0,0,0,.7);max-width:90vw;font-family:var(--font-ui,sans-serif);';
+    banner.innerHTML = '<span style="font-size:18px;">💶</span><div style="font-size:13px;font-weight:600;color:#10b981;">JVEG-Rechnung vorausgefüllt aus Zeiterfassung — bitte prüfen und anpassen</div><button onclick="this.parentElement.remove()" style="background:none;border:none;color:rgba(255,255,255,.4);font-size:18px;cursor:pointer;padding:0;">×</button>';
+    document.body.appendChild(banner);
+    setTimeout(function() { if (banner.parentNode) banner.remove(); }, 7000);
+  })();
 })();
 
 window.verwerfeJveg=function(){
@@ -908,7 +916,7 @@ ladeListe();
         <div class="sup-err" id="sup-err">Bitte Betreff und Nachricht eingeben.</div>
         <button class="sup-send-btn" id="sup-btn" onclick="supSendModal()">Nachricht senden</button>
         <div style="text-align:center;margin-top:10px;font-size:11px;color:var(--text3,#6b7a99);">
-          Oder direkt: <a href="/cdn-cgi/l/email-protection#4c272322382d27380c3c3e233a2d613f353f3829213f622829" style="color:var(--accent,#4f8ef7);"><span class="__cf_email__" data-cfemail="f3989c9d87929887b383819c8592de808a8087969e80dd9796">[email&#160;protected]</span></a>
+          Oder direkt: <a href="mailto:kontakt@prova-systems.de">kontakt@prova-systems.de</a>
         </div>
       </div>
       <div class="sup-ok" id="sup-ok">
@@ -1055,7 +1063,7 @@ function exportDatevCSV() {
   zeigToast('DATEV-Export (' + allRechnungen.length + ' Rechnungen) heruntergeladen ✅', 'ok');
 }
 
-</script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+</script></script><script>
 function openSupportModal(){
   var m=document.getElementById('support-modal');
   if(!m)return;
@@ -1466,13 +1474,4 @@ function zeigeAbschlussButton(reNr) {
     + '</div>'
     + '<div style="display:flex;gap:8px;flex-shrink:0;">'
     + '<a href="archiv.html" onclick="setzeFallAbgeschlossen(\'' + rid + '\')" style="padding:8px 14px;background:rgba(16,185,129,.15);color:#10b981;border:1px solid rgba(16,185,129,.3);border-radius:8px;font-size:.8rem;font-weight:700;text-decoration:none;white-space:nowrap;">Fall abschließen \u2192</a>'
-    + '<button onclick="document.getElementById(\'rechnung-abschluss-banner\').remove()" style="padding:8px 10px;background:rgba(255,255,255,.06);color:rgba(226,232,240,.4);border:1px solid rgba(255,255,255,.1);border-radius:8px;font-size:.8rem;cursor:pointer;">×</button>'
-    + '</div>';
-  setTimeout(function() { if (container && container.parentNode) container.remove(); }, 30000);
-}
-function setzeFallAbgeschlossen(rid) {
-  if (!rid) return;
-  fetch('/.netlify/functions/airtable', {
-    method: 'POST',
-    headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({method:'PATCH',path:'/v0/ap
+    + '<button onclick="document.getElementById(\'rechnung-abschluss-banner\').remove()" style="padding:8px

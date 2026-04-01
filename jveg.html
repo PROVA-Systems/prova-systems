@@ -542,6 +542,31 @@ update();
     }
   }
   // Schadenart → Sachgebiet vorschlagen
+  // Zeiterfassung aus Akte → Stunden vorausfüllen
+  var zeitSek = parseInt(localStorage.getItem('prova_zeit_dauer_sek') || '0');
+  if (zeitSek > 0) {
+    var stunden = Math.max(0.5, Math.round(zeitSek / 3600 * 4) / 4); // Runden auf 0.25h
+    var stdEl = document.getElementById('stundenGutachten');
+    if (stdEl && stdEl.value === '0') {
+      stdEl.value = stunden;
+      stdEl.classList.add('prefilled');
+    }
+  }
+  // JVEG-Prefill aus freigabe.html (sessionStorage)
+  try {
+    var prefill = JSON.parse(sessionStorage.getItem('prova_rechnung_prefill') || '{}');
+    if (prefill.stunden_gutachten) {
+      var stdEl2 = document.getElementById('stundenGutachten');
+      if (stdEl2) { stdEl2.value = prefill.stunden_gutachten; stdEl2.classList.add('prefilled'); }
+    }
+    if (prefill.km) {
+      var kmEl = document.getElementById('km');
+      if (kmEl) { kmEl.value = prefill.km; kmEl.classList.add('prefilled'); }
+    }
+  } catch(e) {}
+  // Nach Befüllen Berechnung updaten
+  setTimeout(function(){ if(typeof update==='function') update(); }, 100);
+
   var sa = params.get('sa') || localStorage.getItem('prova_schadenart') || '';
   if (sa) {
     var sgEl = document.getElementById('sachgebiet');
@@ -581,7 +606,7 @@ update();
         <div class="sup-err" id="sup-err">Bitte Betreff und Nachricht eingeben.</div>
         <button class="sup-send-btn" id="sup-btn" onclick="supSendModal()">Nachricht senden</button>
         <div style="text-align:center;margin-top:10px;font-size:11px;color:var(--text3,#6b7a99);">
-          Oder direkt: <a href="mailto:kontakt@prova-systems.de" style="color:var(--accent,#4f8ef7);">kontakt@prova-systems.de</a>
+          Oder direkt: <a href="mailto:kontakt@prova-systems.de">kontakt@prova-systems.de</a>
         </div>
       </div>
       <div class="sup-ok" id="sup-ok">
@@ -592,7 +617,7 @@ update();
     </div>
   </div>
 </div>
-<script>
+</script><script>
 function openSupportModal(){
   var m=document.getElementById('support-modal');
   if(!m)return;
@@ -955,15 +980,4 @@ if (document.readyState === 'loading') {
 window.PROVA_KONTEXT = {
   // Erlaubt anderen Scripts den Fall-Kontext zu setzen
   setFall: function(az, schadenart, adresse, recordId) {
-    if (az) localStorage.setItem('prova_letztes_az', az);
-    if (schadenart) localStorage.setItem('prova_schadenart', schadenart);
-    if (adresse) localStorage.setItem('prova_adresse', adresse);
-    if (recordId) sessionStorage.setItem('prova_record_id', recordId);
-    // Banner aktualisieren
-    var existing = document.getElementById('prova-fall-kontext-banner');
-    if (existing) existing.remove();
-    einfuegenBanner();
-  },
-  // Fall-Kontext löschen (nach Archivierung)
-  clearFall: function() {
-    localStorage.removeItem
+    if (az) localStorage.set

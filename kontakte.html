@@ -494,6 +494,7 @@ var TYP_CONFIG = {
   'Hausverwaltung':{icon:'🏘',color:'rgba(239,68,68,.1)',  text:'#fca5a5'},
   'Bauherr':      {icon:'🏗', color:'rgba(99,102,241,.15)',text:'#a5b4fc'},
   'Sonstiges':    {icon:'📋', color:'rgba(255,255,255,.05)',text:'#9aa5bc'},
+  'Sonstige':     {icon:'📋', color:'rgba(255,255,255,.05)',text:'#9aa5bc'},
 };
 
 // ============================================================
@@ -1105,13 +1106,7 @@ function renderQuickImportListe() {
 // ============================================================
 function escH(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
-function showToast(msg, type) {
-  var c = document.getElementById('toastC');
-  var t = document.createElement('div');
-  t.className = 'toast'+(type==='err'?' err':'');
-  t.textContent = msg;
-  c.appendChild(t);
-  setTimeout(function(){ t.style.animation='toastIn .3s ease reverse'; setTimeout(function(){t.remove();},280); }, 3500);
+window.showToast = window.showToast || window.zeigToast || function(m){ alert(m); };,280); }, 3500);
 }
 
 // ============================================================
@@ -1211,7 +1206,7 @@ async function supSend(){var b=document.getElementById('sup-betreff').value.trim
         <div class="sup-err" id="sup-err">Bitte Betreff und Nachricht eingeben.</div>
         <button class="sup-send-btn" id="sup-btn" onclick="supSendModal()">Nachricht senden</button>
         <div style="text-align:center;margin-top:10px;font-size:11px;color:var(--text3,#6b7a99);">
-          Oder direkt: <a href="mailto:kontakt@prova-systems.de" style="color:var(--accent,#4f8ef7);">kontakt@prova-systems.de</a>
+          Oder direkt: <a href="mailto:kontakt@prova-systems.de">kontakt@prova-systems.de</a>
         </div>
       </div>
       <div class="sup-ok" id="sup-ok">
@@ -1222,7 +1217,7 @@ async function supSend(){var b=document.getElementById('sup-betreff').value.trim
     </div>
   </div>
 </div>
-<script>
+</script><script>
 function openSupportModal(){
   var m=document.getElementById('support-modal');
   if(!m)return;
@@ -1242,18 +1237,4 @@ async function supSendModal(){
   var n=(document.getElementById('sup-nachricht').value||'').trim();
   if(!b||!n){document.getElementById('sup-err').style.display='block';return;}
   document.getElementById('sup-err').style.display='none';
-  var btn=document.getElementById('sup-btn');
-  btn.disabled=true;btn.textContent='⏳ Wird gesendet…';
-  try{
-    await fetch('https://hook.eu1.make.com/lktuhugwcg5v37ib6bdaxjb1uiplnu8v',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
-        betreff:b,
-        nachricht:n,
-        sv_email:localStorage.getItem('prova_sv_email')||'',
-        paket:localStorage.getItem('prova_paket')||'Solo',
-        seite:window.location.pathname
-      })
-    });
-    document
+  var btn=docu

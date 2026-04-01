@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v20';
+const CACHE_VERSION = 'prova-v23';
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
@@ -127,15 +127,21 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // Andere JS/CSS/Assets → Stale-While-Revalidate
+  // Andere JS/CSS/Assets → Cache-First mit Background-Update
   event.respondWith(
     caches.open(CACHE_VERSION).then(cache =>
       cache.match(event.request).then(cached => {
-        const net = fetch(event.request).then(res => {
-          if (res.ok) cache.put(event.request, res.clone());
+        // Background-Revalidation (kein Clone-Konflikt da nicht im critical path)
+        fetch(event.request).then(res => {
+          if (res && res.ok) cache.put(event.request, res.clone());
+        }).catch(() => {});
+        // Sofort aus Cache liefern wenn vorhanden
+        if (cached) return cached;
+        // Sonst Netz
+        return fetch(event.request).then(res => {
+          if (res && res.ok) cache.put(event.request, res.clone());
           return res;
-        }).catch(() => null);
-        return cached || net;
+        }).catch(() => new Response('', { status: 503 }));
       })
     )
   );

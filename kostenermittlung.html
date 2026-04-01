@@ -722,6 +722,21 @@ const tag = saTag(schadenart);
     }
   } catch(e) {}
 
+
+  // AZ + Schadenart aus URL oder localStorage (von akte.html kommend)
+  var urlParams2 = new URLSearchParams(window.location.search);
+  var prefillAz = urlParams2.get('az') || localStorage.getItem('prova_kalk_az') || localStorage.getItem('prova_letztes_az') || '';
+  var prefillSa = urlParams2.get('sa') || localStorage.getItem('prova_kalk_sa') || localStorage.getItem('prova_schadenart') || '';
+  if (prefillAz) {
+    var azEl = document.getElementById('badge-az') || document.getElementById('kalk-az');
+    if (azEl) azEl.textContent = prefillAz;
+    localStorage.setItem('prova_letztes_az', prefillAz);
+  }
+  if (prefillSa && !schadenart) {
+    // schadenart Variable überschreiben
+    schadenart = prefillSa;
+    localStorage.setItem('prova_schadenart', prefillSa);
+  }
   filterPositionen();
 })();
 // Fallback: nochmal nach DOMContentLoaded falls IIFE zu früh lief
@@ -737,7 +752,7 @@ function filterPositionen() {
   const kat = document.getElementById('filterKat').value;
 
   gefiltertPos = POSITIONEN.filter(p => {
-    const matchSa = !tag || p.sa === tag;
+    const matchSa = !tag || tag === '' || p.sa === tag;
     const matchKat = !kat || p.uk === kat;
     const matchSuche = !suche || p.bez.toLowerCase().includes(suche) || p.id.toLowerCase().includes(suche);
     return matchSa && matchKat && matchSuche;
@@ -1271,7 +1286,7 @@ async function supSend(){var b=document.getElementById('sup-betreff').value.trim
         <div class="sup-err" id="sup-err">Bitte Betreff und Nachricht eingeben.</div>
         <button class="sup-send-btn" id="sup-btn" onclick="supSendModal()">Nachricht senden</button>
         <div style="text-align:center;margin-top:10px;font-size:11px;color:var(--text3,#6b7a99);">
-          Oder direkt: <a href="mailto:kontakt@prova-systems.de" style="color:var(--accent,#4f8ef7);">kontakt@prova-systems.de</a>
+          Oder direkt: <a href="mailto:kontakt@prova-systems.de">kontakt@prova-systems.de</a>
         </div>
       </div>
       <div class="sup-ok" id="sup-ok">
@@ -1282,7 +1297,7 @@ async function supSend(){var b=document.getElementById('sup-betreff').value.trim
     </div>
   </div>
 </div>
-<script>
+</script><script>
 function openSupportModal(){
   var m=document.getElementById('support-modal');
   if(!m)return;
@@ -1682,19 +1697,4 @@ window.PROVA_KONTEXT = {
     btn.style.cssText = 'display:flex;align-items:center;gap:8px;padding:7px 14px;background:var(--bg2,#13161d);border:1px solid var(--border2,rgba(255,255,255,.12));border-radius:20px;color:var(--text,#eaecf4);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;box-shadow:0 2px 12px rgba(0,0,0,.3);white-space:nowrap;transition:border-color .12s;';
     btn.innerHTML = item.icon + ' ' + item.label;
     btn.onmouseover = function(){ this.style.borderColor='var(--accent,#4f8ef7)'; };
-    btn.onmouseout  = function(){ this.style.borderColor='var(--border2,rgba(255,255,255,.12))'; };
-    btn.onclick = function(e) {
-      e.stopPropagation();
-      PROVA.openPanel(item.type);
-      PROVA.onPanelInsert = function(text) {
-        if (navigator.clipboard) navigator.clipboard.writeText(text);
-        PROVA.closePanel();
-      };
-      toggleFab(false);
-    };
-    miniWrap.appendChild(btn);
-  });
-  var mainBtn = document.createElement('button');
-  mainBtn.style.cssText = 'width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#6366f1,#4f8ef7);border:none;color:#fff;font-size:20px;cursor:pointer;box-shadow:0 4px 16px rgba(99,102,241,.4);transition:all .2s;display:flex;align-items:center;justify-content:center;';
-  mainBtn.title = 'Normen & Textbausteine nachschlagen';
- 
+    btn.onmouseout  = function(){ this.style.borderCo
