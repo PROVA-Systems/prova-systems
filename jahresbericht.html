@@ -191,7 +191,7 @@ function logout(){localStorage.removeItem('prova_user');window.location.href='ap
       <div class="page-sub" id="bericht-subtitle">Lade Daten…</div>
     </div>
     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-      <button class="btn-export" onclick="window.print()">🖨 Drucken / PDF</button>
+      <button class="btn-export" onclick="druckePDF()" title="Als PDF speichern — Browser-Druckdialog öffnet sich">🖨 Drucken / PDF</button>
       <button class="btn-export" style="background:var(--green);" onclick="exportCSV()">⬇ CSV Export</button>
     </div>
   </div>
@@ -646,6 +646,20 @@ document.addEventListener('DOMContentLoaded', function() {
 
 </div></div><!-- /main-wrap -->
 </div><!-- /app-shell -->
-<script src="trial-guard.js"></script>
+<script src="trial-guard.js">
+/* ── PDF-EXPORT via Browser-Print ── */
+window.druckePDF = function() {
+  // Hinweis-Toast
+  if (typeof showToast === 'function') {
+    showToast('Browser-Druckdialog: "Als PDF speichern" wählen ✅', 'info', 4000);
+  }
+  // Kurze Verzögerung damit Toast sichtbar ist
+  setTimeout(function() {
+    document.title = 'PROVA Jahresbericht ' + new Date().getFullYear();
+    window.print();
+  }, 600);
+};
+
+</script>
 </body>
 </html>

@@ -145,7 +145,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
 <div class="main" id="mainContent">
   <!-- TOPBAR -->
   <div class="topbar">
-    <div class="topbar-title">Normendatenbank <span>/ Baunormen & Grenzwerte</span></div>
+    <button class="burger" onclick="openMobileSidebar()" style="background:none;border:none;cursor:pointer;padding:4px 8px;margin-right:4px;display:none;" id="burger-btn"><span style="display:block;width:18px;height:2px;background:var(--text2);margin:3px 0;border-radius:1px;"></span><span style="display:block;width:18px;height:2px;background:var(--text2);margin:3px 0;border-radius:1px;"></span><span style="display:block;width:18px;height:2px;background:var(--text2);margin:3px 0;border-radius:1px;"></span></button><div class="topbar-title">Normendatenbank <span>/ Baunormen & Grenzwerte</span></div>
     <div class="topbar-right">
       <span class="paket-badge" id="topbarPaket"></span>
       <button style="background:none;border:none;color:var(--text3);font-size:17px;cursor:pointer;padding:6px;border-radius:6px;min-height:44px;" onclick="location.href='einstellungen.html'">⚙</button>
@@ -360,7 +360,21 @@ const NORMEN_DB = [
   {num:'DIN 18531-2',titel:'Abdichtung von Dächern – Teil 2: Planung',bereich:'Abdichtung',sa:'WS,BA',anw:'Planungsnorm für Dachabdichtungen. Regelt Anforderungen an Planung und Detailausführung von Flachdächern und Balkonen.',gw:'Entwässerungsquerschnitt Notüberläufe | Dachablauf Dimensionierung | Ausdehnungsstreifen',mess:'Dachablauf-Querschnitt messen | Notüberlauf vorhanden prüfen',hf:'hoch',hint:'Notüberläufe bei Flachdächern immer auf Vorhandensein und Dimensionierung prüfen.'},
   {num:'DIN EN 12056-3',titel:'Schwerkraftentwässerung – Dachentwässerung',bereich:'Abdichtung',sa:'WS,SS',anw:'Norm für Planung und Bemessung von Dachentwässerungsanlagen. Relevant bei Wasserschäden durch überlastete Dachableitung.',gw:'Bemessungsregenspende r5(2) für Standort | Dachabläufe mindestens 2 je Dach',mess:'Niederschlagssumme prüfen | Ablaufquerschnitt bemessen',hf:'mittel',hint:'Dachentwässerungsdimensionierung bei Überflutungsschäden prüfen. Regenspende regional recherchieren.'},
   {num:'DIN 4108-10',titel:'Wärmeschutz – Anwendungsbezogene Anforderungen an Wärmedämmstoffe',bereich:'Wärme',sa:'SC,BA',anw:'Legt anwendungsbezogene Anforderungen an Wärmedämmstoffe fest. Grundlage für Beurteilung von Wärmedämmungen bei Schadensgutachten.',gw:'Druckspannungsklasse CS (10) bis CS (100) für druckbelastete Dämmung | WL-Klasse Wärmeleitfähigkeit',mess:'Druckfestigkeitsprüfung | Wärmeleitfähigkeitsmessung',hf:'mittel',hint:'Dämmstoffklasse mit Einbauort-Anforderungen vergleichen. Druckbelastete Dämmungen unter Estrich prüfen.'}
+,
+  {num:'BGB §536',titel:'Mietminderung bei Mängeln der Mietsache',bereich:'Recht',sa:'WS,SC,BA,SS,BS',anw:'Basis für Minderungsgutachten. Quote je nach Beeinträchtigung der Gebrauchstauglichkeit.',gw:'5-30% bei Feuchte/Schimmel | bis 100% bei Unbewohnbarkeit',mess:'Begehung, Feuchtemessung, Fotodokumentation'},
+  {num:'BGB §823',titel:'Schadensersatzpflicht — Deliktsrecht',bereich:'Recht',sa:'WS,SC,BA,BS,ES',anw:'Wer fahrlässig Eigentum verletzt ist schadensersatzpflichtig. Basis für Privatgutachten.',gw:'Kausalität muss gutachterlich festgestellt werden',mess:'Schadensursache, Schadenshöhe, Kausalzusammenhang dokumentieren'},
+  {num:'HOAI 2021',titel:'Honorarordnung Architekten und Ingenieure',bereich:'Honorar',sa:'BA',anw:'Maßstab bei Planungsfehlern. LPH 1-9 definieren Leistungsumfang. Honorar nach anrechenbaren Kosten (DIN 276) und Honorarzone.',gw:'LPH 4+5 besonders haftungsrelevant | Honorarzone I-V',mess:'Kostenfeststellung DIN 276, Abgleich Soll-/Ist-Leistung'},
+  {num:'JVEG §7',titel:'Honorar für Sachverstaendige — Stundensaetze',bereich:'Honorar',sa:'WS,SC,BA,SS,BS,ES',anw:'Honorargruppen H1-H13. Bausachverstaendige H12-H13. Fahrt (§5), Auslagen (§8), Schreibauslagen (§9) separat.',gw:'H13: 130 EUR/h | H12: 110 EUR/h | Fahrtzeit: 70 EUR/h',mess:'Zeiterfassung: Verlassen bis Rueckkehr Buero'},
+  {num:'TRGS 519',titel:'Asbest — Abbruch-, Sanierungs- und Instandhaltungsarbeiten',bereich:'Schadstoff',sa:'BA,WS',anw:'Asbest bis ca. 1992 verbreitet. SV darf nur Verdacht dokumentieren, keine Probenahme ohne Schutzausruestung. Probenahme durch Fachbetrieb.',gw:'KRL-Wert: 500 F/m³ Innenraum | > 1.000 F/m³ Gefaehrdungsbeurteilung',mess:'Laboranalyse durch akkreditiertes Labor, REM oder Phasenkontrast-LM'},
+  {num:'TRGS 521',titel:'Kuenstliche Mineralfasern (KMF)',bereich:'Schadstoff',sa:'BA,WS',anw:'Glaswolle, Steinwolle, Keramikfasern in Daemmstoffen. Gebaeude 1950-1996: auf KMF-Verdacht hinweisen.',gw:'Alte bio-persistente KMF erhoeht krebserregend | REACH-Kennzeichnungspflicht',mess:'Laboranalyse, SDB pruefen, WHO-Fasereinstufung'},
+  {num:'GEG 2024',titel:'Gebaeudeenergiegesetz',bereich:'Energie',sa:'BA,WS',anw:'Abloesung EnEV 2020, aktuelle Fassung 2024. Neubau-Maengel, Sanierungsgutachten, Heizungsmodernisierung §71. Bei Bauschäden: U-Wert-Unterschreitung.',gw:'Primärenergiebedarf Neubau max. 55% Referenzgebäude | U-Wert Außenwand neu max. 0,24 W/m²K',mess:'Blower-Door-Test DIN EN 13829, Thermografie DIN EN 13187'},
+  {num:'DIN 18040-1',titel:'Barrierefreies Bauen — Öffentliche Gebäude',bereich:'Barrierefrei',sa:'BA',anw:'Bemessungsgrundlage barrierefreie Erschließung. Relevant bei Baumängeln öffentlicher Gebäude.',gw:'Türbreite min. 90 cm | Bewegungsfläche 150x150 cm | Rampe max. 6% | Schwelle max. 2 cm',mess:'Maßhaltigkeit, Kraftmessung Türöffner, Rutschfestigkeit R9-R13'},
+  {num:'VDI 3882',titel:'Olfaktometrie — Geruchsbelästigung',bereich:'Feuchte',sa:'SC,BA',anw:'Bei Schimmelbefall: Geruchsbelästigung ist eigenständiges Schadmerkmal. Messverfahren für GE/m³.',gw:'Schimmelpilze: typisch > 2 GE/m³ | Bewohnbarkeit: < 5 GE/m³',mess:'Olfaktometrie, Geruchstagebuch, MVOC-Analyse'},
+  {num:'DIN EN 1990',titel:'Eurocode 0 — Grundlagen Tragwerksplanung',bereich:'Statik',sa:'BA,BS',anw:'Basisnorm für alle Eurocodes. Grenzzustände GZT und GZG. Für Tragwerksschäden und Standsicherheitsbeurteilungen.',gw:'ULS: 1,35*Gk + 1,5*Qk | SLS: charakteristische Werte',mess:'Schadensaufnahme, Resttragfähigkeit, Verweis auf Tragwerksplaner'},
+  {num:'VdS 2073',titel:'Leckageortung bei Wasserschäden',bereich:'Abdichtung',sa:'WS',anw:'Richtlinie für die Ortung verdeckter Wasserleckagen. Beschreibt Messverfahren (Korrelation, akustisch, thermisch). Grundlage für die Dokumentation der Leckageortung im Gutachten.',gw:'Korrelationsmessgenauigkeit: ± 0,5 m | Thermografie: Delta-T mind. 2°C für zuverlässige Ortung',mess:'Korrelationsmessung, akustische Ortung, Thermografie, Tracergas'},
+  {num:'LAWA 2017',titel:'Länderarbeitsgemeinschaft Wasser — Hochwasserschutz',bereich:'Elementar',sa:'ES',anw:'Maßstab für Elementarschadengutachten bei Überschwemmung. Klassifizierung Hochwasserereignisse HQ10 bis HQ100 plus. Relevant für Versicherungsgutachten Elementarschäden.',gw:'HQ100: statistisch einmal in 100 Jahren | Schutzwerte je Bundesland verschieden',mess:'Pegelstände dokumentieren, Überschwemmungshöhe messen, Fotos mit Datum+Uhrzeit'}
 ];
+
 
 
 let activeChipSA = '';
@@ -576,7 +590,7 @@ renderNormen();
         <div class="sup-err" id="sup-err">Bitte Betreff und Nachricht eingeben.</div>
         <button class="sup-send-btn" id="sup-btn" onclick="supSendModal()">Nachricht senden</button>
         <div style="text-align:center;margin-top:10px;font-size:11px;color:var(--text3,#6b7a99);">
-          Oder direkt: <a href="mailto:kontakt@prova-systems.de">kontakt@prova-systems.de</a>
+          Oder direkt: <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="8ee5e1e0faefe5facefefce1f8efa3fdf7fdfaebe3fda0eaeb">[email&#160;protected]</a>
         </div>
       </div>
       <div class="sup-ok" id="sup-ok">
@@ -955,23 +969,4 @@ function einfuegenBanner() {
   }
   
   if (insertAfter) {
-    insertAfter.insertAdjacentHTML('afterend', bannerHtml);
-  }
-}
-
-// ── INIT ────────────────────────────────────────────────────────────────
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', einfuegenBanner);
-} else {
-  einfuegenBanner();
-}
-
-// ── PUBLIC API ──────────────────────────────────────────────────────────
-window.PROVA_KONTEXT = {
-  // Erlaubt anderen Scripts den Fall-Kontext zu setzen
-  setFall: function(az, schadenart, adresse, recordId) {
-    if (az) localStorage.setItem('prova_letztes_az', az);
-    if (schadenart) localStorage.setItem('prova_schadenart', schadenart);
-    if (adresse) localStorage.setItem('prova_adresse', adresse);
-    if (recordId) sessionStorage.setItem('prova_record_id', recordId);
-    // Banne
+    insertAfter.insertAdjacentHTML('afterend', banner

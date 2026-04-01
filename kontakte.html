@@ -210,6 +210,7 @@
     <div class="breadcrumb"><span>PROVA</span><span style="color:var(--text3)">›</span><strong>Kontakte</strong></div>
   </div>
   <div class="topbar-right">
+    <button class="topbar-btn" onclick="exportAlleVCF()" title="Alle Kontakte als VCF exportieren">📇</button>
     <div class="notif-wrap"><button class="topbar-btn" title="Benachrichtigungen">🔔</button></div>
     <span class="topbar-paket" id="topbar-paket-badge">Solo</span>
     <a href="einstellungen.html"><button class="topbar-btn">⚙</button></a>
@@ -1188,6 +1189,58 @@ async function supSend(){var b=document.getElementById('sup-betreff').value.trim
   if(el){el.textContent=paket;el.style.cssText='font-size:10px;font-weight:700;padding:3px 9px;border-radius:10px;letter-spacing:.04em;background:'+pc+'18;color:'+pc+';border:1px solid '+pc+'33;';}
   var appUrl=paket==='Team'?'app.html':paket==='Solo'?'gutachten.html':'app.html';
 })();
+
+/* ── VCF-EXPORT ALLE KONTAKTE ── */
+window.exportAlleVCF = function() {
+  var alle = typeof alleKontakte !== 'undefined' ? alleKontakte : [];
+  if (!alle.length) {
+    try { alle = JSON.parse(localStorage.getItem('prova_kontakte') || '[]'); } catch(e) {}
+  }
+  if (!alle.length) { if(typeof showToast==='function') showToast('Keine Kontakte zum Exportieren', 'warning'); return; }
+
+  var vcf = alle.map(function(k) {
+    var lines = ['BEGIN:VCARD', 'VERSION:3.0'];
+    var name = k.name || k.fields?.Name || '';
+    var firma = k.firma || k.fields?.Firma || '';
+    var email = k.email || k.fields?.Email || '';
+    var tel   = k.telefon || k.fields?.Telefon || '';
+    var typ   = k.typ || k.fields?.Typ || '';
+    var adr   = k.adresse || k.fields?.Adresse || '';
+
+    if (name) {
+      var parts = name.trim().split(/\s+/);
+      var last = parts.length > 1 ? parts.pop() : '';
+      lines.push('FN:' + name);
+      lines.push('N:' + last + ';' + parts.join(' ') + ';;;');
+    }
+    if (firma) lines.push('ORG:' + firma);
+    if (email) lines.push('EMAIL;TYPE=INTERNET:' + email);
+    if (tel)   lines.push('TEL;TYPE=VOICE:' + tel);
+    if (adr)   lines.push('ADR;TYPE=WORK:;;' + adr + ';;;;');
+    if (typ)   lines.push('TITLE:' + typ);
+    lines.push('END:VCARD');
+    return lines.join('
+');
+  }).join('
+
+');
+
+  var blob = new Blob([vcf], { type: 'text/vcard;charset=utf-8' });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = 'PROVA_Kontakte_' + new Date().toISOString().split('T')[0] + '.vcf';
+  a.click();
+  URL.revokeObjectURL(url);
+  if(typeof showToast==='function') showToast(alle.length + ' Kontakte als VCF exportiert ✅', 'success');
+};
+
+
+/* ── escHtml: XSS-Schutz ── */
+function escHtml(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
 </script>
 
 <button class="support-fab" onclick="openSupportModal()" title="Support">💬</button>
@@ -1206,7 +1259,7 @@ async function supSend(){var b=document.getElementById('sup-betreff').value.trim
         <div class="sup-err" id="sup-err">Bitte Betreff und Nachricht eingeben.</div>
         <button class="sup-send-btn" id="sup-btn" onclick="supSendModal()">Nachricht senden</button>
         <div style="text-align:center;margin-top:10px;font-size:11px;color:var(--text3,#6b7a99);">
-          Oder direkt: <a href="mailto:kontakt@prova-systems.de">kontakt@prova-systems.de</a>
+          Oder direkt: <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="a3c8cccdd7c2c8d7e3d3d1ccd5c28ed0dad0d7c6ced08dc7c6">[email&#160;protected]</a>
         </div>
       </div>
       <div class="sup-ok" id="sup-ok">
@@ -1217,24 +1270,4 @@ async function supSend(){var b=document.getElementById('sup-betreff').value.trim
     </div>
   </div>
 </div>
-</script><script>
-function openSupportModal(){
-  var m=document.getElementById('support-modal');
-  if(!m)return;
-  var fb=document.getElementById('support-form-body');
-  var ok=document.getElementById('sup-ok');
-  if(fb)fb.style.display='block';
-  if(ok)ok.style.display='none';
-  var b=document.getElementById('sup-betreff');
-  var n=document.getElementById('sup-nachricht');
-  var btn=document.getElementById('sup-btn');
-  if(b)b.value='';if(n)n.value='';
-  if(btn){btn.disabled=false;btn.textContent='Nachricht senden';}
-  m.classList.add('open');
-}
-async function supSendModal(){
-  var b=(document.getElementById('sup-betreff').value||'').trim();
-  var n=(document.getElementById('sup-nachricht').value||'').trim();
-  if(!b||!n){document.getElementById('sup-err').style.display='block';return;}
-  document.getElementById('sup-err').style.display='none';
-  var btn=docu
+</sc

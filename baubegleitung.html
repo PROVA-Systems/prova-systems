@@ -254,6 +254,11 @@ function logout(){localStorage.removeItem('prova_user');localStorage.removeItem(
       <label class="form-label">Projektname *</label>
       <input id="mp-name" class="form-input" type="text" placeholder="z.B. Neubau EFH Musterstraße 12">
     </div>
+    <div class="form-group">
+      <label class="form-label">Verknüpftes Gutachten-AZ <span style="font-size:10px;color:var(--text3);">(optional — öffnet Akte direkt)</span></label>
+      <input id="mp-az" class="form-input" type="text" placeholder="z.B. WS-2026-013" list="bb-az-datalist">
+      <datalist id="bb-az-datalist"></datalist>
+    </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
       <div class="form-group">
         <label class="form-label">Auftraggeber</label>
@@ -261,7 +266,7 @@ function logout(){localStorage.removeItem('prova_user');localStorage.removeItem(
       </div>
       <div class="form-group">
         <label class="form-label">Aktenzeichen</label>
-        <input id="mp-az" class="form-input" type="text" placeholder="PROVA-BB-2026-…">
+        <input id="mp-az-edit" class="form-input" type="text" placeholder="PROVA-BB-2026-…">
       </div>
     </div>
     <div class="form-group">
@@ -371,6 +376,7 @@ function logout(){localStorage.removeItem('prova_user');localStorage.removeItem(
     <div class="bericht-vorschau" id="bericht-text" style="max-height:55vh;overflow-y:auto;"></div>
     <div class="modal-actions" style="margin-top:14px;">
       <button class="btn btn-ghost" onclick="closeModal('modal-bericht')">Schließen</button>
+      <button class="btn" onclick="berichtInStellungnahme()" style="background:var(--accent,#4f8ef7);color:#fff;border:none;">📝 In §6 einfügen</button>
       <button class="btn btn-ghost" id="ki-bericht-btn" onclick="generiereKIBericht()" style="background:linear-gradient(135deg,#6366f1,var(--purple,#a78bfa));color:#fff;border:none;">✨ KI-Bericht</button>
       <button class="btn btn-primary" onclick="berichtKopieren()">📋 Kopieren</button>
     </div>
@@ -684,7 +690,7 @@ function editiereProjekt(id) {
   document.getElementById('modal-proj-titel').textContent = '✎ Projekt bearbeiten';
   document.getElementById('mp-name').value = proj.name||'';
   document.getElementById('mp-auftraggeber').value = proj.auftraggeber||'';
-  document.getElementById('mp-az').value = proj.az||'';
+  document.document.getElementById('mp-az') || document.getElementById('mp-az-edit').value = proj.az||'';
   document.getElementById('mp-adresse').value = proj.adresse||'';
   document.getElementById('mp-beginn').value = proj.beginn||'';
   document.getElementById('mp-abnahme').value = proj.abnahme||'';
@@ -716,7 +722,7 @@ function speichereProjekt() {
     if (proj) {
       proj.name = name;
       proj.auftraggeber = document.getElementById('mp-auftraggeber').value.trim();
-      proj.az = document.getElementById('mp-az').value.trim();
+      proj.az = document.document.getElementById('mp-az') || document.getElementById('mp-az-edit').value.trim();
       proj.adresse = document.getElementById('mp-adresse').value.trim();
       proj.beginn = document.getElementById('mp-beginn').value;
       proj.abnahme = document.getElementById('mp-abnahme').value;
@@ -724,7 +730,7 @@ function speichereProjekt() {
       proj.notiz = document.getElementById('mp-notiz').value.trim();
     }
   } else {
-    var az = document.getElementById('mp-az').value.trim();
+    var az = document.document.getElementById('mp-az') || document.getElementById('mp-az-edit').value.trim();
     if (!az) az = 'PROVA-BB-' + new Date().getFullYear() + '-' + String((_data.projekte.length+1)).padStart(4,'0');
     _data.projekte.unshift({
       id: genId(),
@@ -1020,6 +1026,37 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <script src="auftragstyp.js"></script>
 <script src="support-chat.js"></script>
-<script src="trial-guard.js"></script>
+<script src="trial-guard.js">
+/* ── AZ-Datalist für Baubegleitung ── */
+(function() {
+  function befuelleAzDatalist() {
+    var dl = document.getElementById('bb-az-datalist');
+    if (!dl) return;
+    try {
+      var cache = JSON.parse(localStorage.getItem('prova_archiv_cache_v2')||'{}');
+      var faelle = (cache.data||[]).slice(0,50);
+      dl.innerHTML = faelle.map(function(r) {
+        var f = r.fields||{};
+        return f.Aktenzeichen ? '<option value="'+f.Aktenzeichen+'">'+(f.Schadenart||'')+' · '+f.Aktenzeichen+'</option>' : '';
+      }).join('');
+    } catch(e) {}
+  }
+  document.addEventListener('DOMContentLoaded', befuelleAzDatalist);
+})();
+
+/* ── In §6 einfügen aus KI-Bericht ── */
+window.berichtInStellungnahme = function() {
+  var txt = (document.getElementById('bericht-text')||{}).textContent || '';
+  if (!txt.trim()) { if(typeof showToast==='function') showToast('Kein Bericht vorhanden', 'warning'); return; }
+  sessionStorage.setItem('prova_bb_bericht', txt.trim());
+  var az = '';
+  try {
+    var aktP = JSON.parse(localStorage.getItem('prova_bb_aktives_projekt')||'null');
+    az = (aktP && aktP.az) || '';
+  } catch(e) {}
+  window.location.href = 'stellungnahme.html' + (az ? '?az='+encodeURIComponent(az) : '');
+};
+
+</script>
 </body>
 </html>

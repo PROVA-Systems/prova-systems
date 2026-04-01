@@ -338,7 +338,7 @@
 // ============================================================
 // DATEN & KONSTANTEN
 // ============================================================
-const TB_KEY = 'prova_textbausteine';
+const TB_KEY = 'prova_textbausteine_v2'; // v2 = neue Bausteine
 const STARTER_LIMIT = 9999; // Kein Limit — alle Bausteine frei
 
 var KATEGORIEN = {
@@ -362,7 +362,35 @@ var STANDARD_BAUSTEINE = [
   {titel:'Empfehlung Schimmelsanierung',kat:'massnahmen',tag:'SC',text:'Die befallenen Flächen im Bereich [RAUM] sollten fachgerecht durch ein spezialisiertes Unternehmen saniert werden. Nach UBA-Leitfaden ist bei Befallsflächen über 0,5 m² eine vollständige Sanierung unter Schutzmaßnahmen zu empfehlen.',notiz:''},
   {titel:'DIN 4108-2 Wärmeschutz',kat:'normen',tag:'SC',text:'Gemäß DIN 4108-2 ist der Mindestoberflächentemperaturfaktor fRsi ≥ 0,70 einzuhalten. Bei einer Raumtemperatur von 20 °C und einer rel. Luftfeuchte von 50 % liegt der Taupunkt bei ca. 9,3 °C.',notiz:'Immer bei Schimmelgutachten zitieren'},
   {titel:'VdS 3151 Trocknungsziel',kat:'normen',tag:'WS',text:'Nach VdS 3151 gelten als Trocknungsziele: Holz ≤ 15 % Holzfeuchte, Mauerwerk und Beton ≤ 3 % nach CM-Methode. Die Erreichung dieser Grenzwerte ist messtechnisch zu dokumentieren.',notiz:''},
-  {titel:'§407a ZPO Offenlegung',kat:'normen',tag:'',text:'Dieses Gutachten wurde vom Unterzeichner persönlich und eigenverantwortlich erstellt. Der Einsatz von KI-gestützten Werkzeugen beschränkte sich auf die Formulierungsunterstützung; alle fachlichen Einschätzungen und Beurteilungen wurden vom Sachverständigen selbst getroffen und verantwortet (§ 407a ZPO).',notiz:'Pflicht für Enterprise §407a'},
+  {titel:'§407a ZPO Offenlegung',kat:'normen',tag:'',text:'Dieses Gutachten wurde vom Unterzeichner persönlich und eigenverantwortlich erstellt. Der Einsatz von KI-gestützten Werkzeugen beschränkte sich auf die Formulierungsunterstützung; alle fachlichen Einschätzungen und Beurteilungen wurden vom Sachverständigen selbst getroffen und verantwortet (§ 407a ZPO).',notiz:'Pflicht für Enterprise §407a'},,
+  // ── BEGEHUNG ERWEITERT ──
+  {titel:'Fotodokumentation',kat:'begehung',tag:'',text:'Die Begutachtung wurde durch eine umfangreiche Fotodokumentation ergänzt. Sämtliche Fotos wurden am [DATUM] vor Ort aufgenommen und sind Bestandteil dieses Gutachtens.',notiz:''},
+  {titel:'Messprotokoll Raumklima',kat:'begehung',tag:'',text:'Das Raumklima wurde mit einem kalibrierten Hygrometer gemessen. Zum Zeitpunkt der Besichtigung betrug die relative Luftfeuchtigkeit [MESSWERT] % bei einer Raumtemperatur von [MESSWERT2] °C.',notiz:''},
+
+  // ── BEFUND ERWEITERT ──
+  {titel:'Wasserschaden Kellerwand',kat:'befund',tag:'WS',text:'Im Bereich [RAUM] wurden an der Außenwand großflächige Durchfeuchtungen festgestellt. Die CM-Messung ergab Feuchtegehalte von [MESSWERT] CM-% (Grenzwert DIN 18533: ≤ 4 CM-%). Die betroffene Fläche beträgt ca. [FLAECHE] m².',notiz:''},
+  {titel:'Estrich Feuchteschaden',kat:'befund',tag:'WS',text:'Der Estrich im Bereich [RAUM] wies zum Zeitpunkt der Messung eine Feuchte von [MESSWERT] CM-% auf. Belegreife gemäß DIN 18353: ≤ 2,0 CM-% (Zementestrich). Eine Trocknung ist erforderlich.',notiz:'CM-Messung Ergebnis eintragen'},
+  {titel:'Schimmelbefall Ausmaß',kat:'befund',tag:'SC',text:'Im Bereich [RAUM] wurde Schimmelbefall auf einer Fläche von ca. [FLAECHE] m² festgestellt. Der Befall ist [MESSWERT] (oberflächlich/tief). Eine Raumluftmessung wird empfohlen.',notiz:''},
+  {titel:'Brandschaden Beschreibung',kat:'befund',tag:'BS',text:'Im Bereich [RAUM] sind [MESSWERT] m² Wandfläche und [MESSWERT2] m² Deckenfläche mit Ruß belastet. Die Holzbalken zeigen eine Ankohlungstiefe von ca. [MESSWERT3] cm.',notiz:''},
+  {titel:'Sturmschaden Dach',kat:'befund',tag:'ST',text:'Am Dach wurden durch das Sturmereignis vom [DATUM] folgende Schäden festgestellt: [MESSWERT] Dachziegel sind verschoben/gebrochen, im Bereich [RAUM] ist die Unterspannbahn beschädigt.',notiz:''},
+
+  // ── URSACHENANALYSE ERWEITERT ──
+  {titel:'Ursache Leckage Wasserführend',kat:'ursache',tag:'WS',text:'Nach dem Befund dürfte die Ursache des Wasserschadens auf eine Leckage an der [NORM]-Leitung im Bereich [RAUM] zurückzuführen sein.',notiz:''},
+  {titel:'Ursache Abdichtung mangelhaft',kat:'ursache',tag:'WS',text:'Die vorliegende Durchfeuchtung ist nach dem Befund auf eine mangelhafte Abdichtung im Sockelbereich zurückzuführen. Die Abdichtung entspricht nicht den Anforderungen der DIN 18533. Eine sachgerechte Erneuerung ist erforderlich.',notiz:''},
+  {titel:'Ursache Lüftungsmangel',kat:'ursache',tag:'SC',text:'Die Schimmelbildung ist nach dem Befund auf unzureichenden Luftaustausch zurückzuführen. Gemäß DIN 1946-6 ist ein Mindestluftwechsel von 0,3–0,5 h⁻¹ erforderlich.',notiz:''},
+  {titel:'Ursache Wärmebrücke',kat:'ursache',tag:'SC',text:'Die Schimmelbildung im Bereich [RAUM] ist nach dem Befund auf eine Wärmebrücke zurückzuführen. Gemäß DIN 4108-2 darf der Temperaturfaktor fRsi nicht unter 0,70 liegen. Ermittelter Wert: ca. [MESSWERT].',notiz:''},
+
+  // ── MAßNAHMEN ERWEITERT ──
+  {titel:'Sofortmaßnahme Wasserabsaugung',kat:'massnahmen',tag:'WS',text:'Als Sofortmaßnahme ist das eingedrungene Wasser im Bereich [RAUM] unverzüglich abzusaugen und das betroffene Bauteil professionell zu trocknen (gem. VdS 3151). Die Trocknung ist täglich zu dokumentieren.',notiz:''},
+  {titel:'Schimmelsanierung Ablauf',kat:'massnahmen',tag:'SC',text:'Die befallenen Bauteile im Bereich [RAUM] sind gemäß WTA 2-9-04/D zu sanieren: 1. Befallene Putzschichten vollständig abschlagen. 2. Mauerwerk mit Biozid behandeln. 3. Sanierputzsystem aufbringen (mind. 20 mm). 4. Abschließende Kontrolle.',notiz:''},
+  {titel:'Empfehlung Statiker',kat:'massnahmen',tag:'BS',text:'Aufgrund der festgestellten Brandschäden am Tragwerk wird empfohlen, einen Tragwerksplaner hinzuzuziehen. Über die Verwendbarkeit der brandgeschädigten Bauteile kann erst nach statischer Prüfung entschieden werden.',notiz:''},
+  {titel:'Schimmelprophylaxe',kat:'massnahmen',tag:'SC',text:'Zur Vermeidung erneuter Schimmelbildung wird empfohlen: Regelmäßiges Stoßlüften (mind. 3× täglich 5–10 Min.), Raumtemperatur ≥ 18 °C, Möbel mit 5 cm Wandabstand aufstellen.',notiz:''},
+
+  // ── NORMZITATE ERWEITERT ──
+  {titel:'DIN 68800-1 Holzschutz',kat:'normzitat',tag:'WS',text:'Gemäß DIN 68800-1 gilt für eingebautes Holz eine Ausgleichsfeuchte von 18 % als Grenzwert für Schimmel- und Pilzbefall. Die gemessenen Werte von [MESSWERT] % liegen [MESSWERT2] (ober-/unterhalb) dieses Grenzwertes.',notiz:''},
+  {titel:'DIN 18202 Ebenheitstoleranzen',kat:'normzitat',tag:'',text:'Gemäß DIN 18202 Tabelle 3 sind für fertige Wand-/Deckenflächen Ebenheitstoleranzen von ≤ 3 mm/1 m und ≤ 10 mm/4 m einzuhalten. Die gemessene Abweichung von [MESSWERT] mm überschreitet diesen Grenzwert.',notiz:''},
+  {titel:'WTA 6-1-01/D Schimmel',kat:'normzitat',tag:'SC',text:'Gemäß WTA 6-1-01/D ist eine relative Luftfeuchtigkeit von dauerhaft über 80 % an der Bauteiloberfläche als kritisch für Schimmelwachstum einzustufen. Gemessener Wert: [MESSWERT] %.',notiz:''},
+  {titel:'VOB/B §13 Mängelansprüche',kat:'normzitat',tag:'',text:'Gemäß VOB/B §13 Abs. 4 beträgt die Verjährungsfrist für Mängelansprüche bei Bauwerken vier Jahre. Der Mangel wurde erstmals am [DATUM] schriftlich gerügt.',notiz:''}
 ];
 
 // ── State ──
@@ -776,7 +804,7 @@ async function supSend(){var b=document.getElementById('sup-betreff').value.trim
         <div class="sup-err" id="sup-err">Bitte Betreff und Nachricht eingeben.</div>
         <button class="sup-send-btn" id="sup-btn" onclick="supSendModal()">Nachricht senden</button>
         <div style="text-align:center;margin-top:10px;font-size:11px;color:var(--text3,#6b7a99);">
-          Oder direkt: <a href="mailto:kontakt@prova-systems.de">kontakt@prova-systems.de</a>
+          Oder direkt: kontakt@prova-systems.de
         </div>
       </div>
       <div class="sup-ok" id="sup-ok">
@@ -864,6 +892,29 @@ async function supSendModal(){
     });
   });
 })();
+
+// Reset-Funktion: Standard-Bausteine neu laden
+window.resetBausteine = function() {
+  if (!confirm('Standard-Bausteine zurücksetzen? Eigene Bausteine bleiben erhalten.')) return;
+  var eigene = _bausteine.filter(function(b) { return !b.id.startsWith('std-'); });
+  var standards = STANDARD_BAUSTEINE.map(function(b, i) {
+    return Object.assign({}, b, { id: 'std-' + i, erstellt: new Date().toISOString(), verwendungen: 0 });
+  });
+  _bausteine = standards.concat(eigene);
+  speichereBausteine();
+  renderBausteinListe();
+  if (typeof showToast === 'function') showToast('Standard-Bausteine wiederhergestellt ✅', 'success');
+};
+
+window.resetBausteine = function() {
+  if (!confirm('Standard-Bausteine zurücksetzen? Eigene Bausteine bleiben erhalten.')) return;
+  var eigene = _bausteine.filter(function(b){ return !String(b.id).startsWith('std-'); });
+  var std = STANDARD_BAUSTEINE.map(function(b,i){ return Object.assign({},b,{id:'std-'+i,erstellt:new Date().toISOString(),verwendungen:0}); });
+  _bausteine = std.concat(eigene);
+  speichereBausteine();
+  renderBausteinListe();
+  if(typeof showToast === 'function') showToast('Standard-Bausteine wiederhergestellt ✅', 'success');
+};
 </script>
 
 <script>
@@ -1178,15 +1229,4 @@ function einfuegenBanner() {
   }
 }
 
-// ── INIT ────────────────────────────────────────────────────────────────
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', einfuegenBanner);
-} else {
-  einfuegenBanner();
-}
-
-// ── PUBLIC API ──────────────────────────────────────────────────────────
-window.PROVA_KONTEXT = {
-  // Erlaubt anderen Scripts den Fall-Kontext zu setzen
-  setFall: function(az, schadenart, adresse, recordId) {
-    if (az) localStorage.set
+// ── INIT ───────────────────────────────────────────────────────────────�

@@ -406,6 +406,123 @@ a{text-decoration:none;color:inherit;}button,input,select,textarea{font-family:i
             </div>
             <button onclick="kalkInGutachtenUebernehmen()" style="width:100%;padding:10px;border-radius:8px;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:8px;">✅ Wert in §4 des Gutachtens übernehmen</button>
             <div style="text-align:center;margin-top:8px;"><a onclick="oeffneKostenermittlung()" href="#" style="font-size:11px;color:var(--text3);text-decoration:none;cursor:pointer;" onmouseover="this.style.color='var(--accent)'">Ausführliche Kostenermittlung → Aufmaß & alle Positionen</a></div>
+
+            <!-- ENTWERTUNGSBERECHNUNG -->
+            <div class="kosten-modul" style="margin-top:10px;" id="entwertungs-modul">
+              <div class="kosten-modul-header" onclick="toggleEntwertung()" style="background:rgba(245,158,11,.04);">
+                <div style="display:flex;align-items:center;gap:8px;">
+                  <span>📉</span>
+                  <span style="font-size:13px;font-weight:700;color:#f59e0b;">Entwertungsberechnung</span>
+                  <span style="font-size:10px;padding:2px 7px;border-radius:8px;background:rgba(245,158,11,.12);color:#f59e0b;">Linear / Rossmann</span>
+                </div>
+                <span id="entwert-arrow" style="font-size:11px;color:var(--text3);">▶</span>
+              </div>
+              <div id="entwertungs-body" style="display:none;padding:14px 16px;">
+                <div style="font-size:11px;color:var(--text3);margin-bottom:12px;">Altersabzug vom Neuwert · Versicherungsrechtlich anerkanntes Verfahren</div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+                  <div>
+                    <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:4px;">Neuwert (€)</label>
+                    <input type="number" id="enw-neuwert" placeholder="0" min="0" step="100"
+                      style="width:100%;padding:8px;border-radius:7px;border:1px solid var(--border2);background:var(--surface2);color:var(--text);font-size:13px;outline:none;"
+                      oninput="berechneEntwertung()">
+                  </div>
+                  <div>
+                    <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:4px;">Verfahren</label>
+                    <select id="enw-verfahren" onchange="berechneEntwertung()"
+                      style="width:100%;padding:8px;border-radius:7px;border:1px solid var(--border2);background:var(--surface2);color:var(--text);font-size:13px;outline:none;">
+                      <option value="linear">Linear (gleichmäßig)</option>
+                      <option value="rossmann">Rossmann (degressiv)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:4px;">Baujahr / Einbaujahr</label>
+                    <input type="number" id="enw-baujahr" placeholder="1990" min="1900" max="2025"
+                      style="width:100%;padding:8px;border-radius:7px;border:1px solid var(--border2);background:var(--surface2);color:var(--text);font-size:13px;outline:none;"
+                      oninput="berechneEntwertung()">
+                  </div>
+                  <div>
+                    <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:4px;">Gesamtlebensdauer</label>
+                    <select id="enw-lebensdauer" onchange="berechneEntwertung()"
+                      style="width:100%;padding:8px;border-radius:7px;border:1px solid var(--border2);background:var(--surface2);color:var(--text);font-size:13px;outline:none;">
+                      <option value="15">15 J. — Tapete, Bodenbelag</option>
+                      <option value="20">20 J. — Sanitär, Küche</option>
+                      <option value="25">25 J. — Elektro, Heizung</option>
+                      <option value="40">40 J. — Dach, Fenster</option>
+                      <option value="50">50 J. — Mauerwerk, Putz</option>
+                      <option value="60">60 J. — Fundament, Tragwerk</option>
+                    </select>
+                  </div>
+                </div>
+                <div id="enw-ergebnis" style="display:none;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2);border-radius:8px;padding:12px;margin-bottom:12px;">
+                  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;text-align:center;">
+                    <div><div style="font-size:10px;color:var(--text3);">Alter</div><div id="enw-alter" style="font-size:15px;font-weight:700;color:var(--text);">—</div></div>
+                    <div><div style="font-size:10px;color:var(--text3);">Entwertung</div><div id="enw-prozent" style="font-size:15px;font-weight:700;color:#f59e0b;">—</div></div>
+                    <div><div style="font-size:10px;color:var(--text3);">Zeitwert</div><div id="enw-zeitwert" style="font-size:18px;font-weight:800;color:#10b981;">—</div></div>
+                  </div>
+                  <div id="enw-formel" style="font-size:10px;color:var(--text3);text-align:center;margin-top:8px;"></div>
+                </div>
+                <button onclick="entwertungInGutachten()"
+                  style="width:100%;padding:9px;border-radius:8px;background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.3);color:#f59e0b;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">
+                  📋 Entwertung in §4 übernehmen
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- REGULIERUNGSTOOL -->
+        <div class="kosten-modul" style="margin-top:10px;" id="regulierungs-modul">
+          <div class="kosten-modul-header" onclick="toggleRegulierung()" style="background:rgba(139,92,246,.04);">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span>⚖️</span>
+              <span style="font-size:13px;font-weight:700;color:#a78bfa;">Regulierungstool</span>
+              <span style="font-size:10px;padding:2px 7px;border-radius:8px;background:rgba(139,92,246,.12);color:#a78bfa;">WH / ZW / NW / Hausrat</span>
+            </div>
+            <span id="regulier-arrow" style="font-size:11px;color:var(--text3);">▶</span>
+          </div>
+          <div id="regulierungs-body" style="display:none;padding:14px 16px;">
+            <div style="font-size:11px;color:var(--text3);margin-bottom:12px;">Versicherungsrechtliche Regulierungsgrundlage berechnen</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+              <div>
+                <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:4px;">Regulierungsart</label>
+                <select id="reg-art" onchange="berechneRegulierung()"
+                  style="width:100%;padding:8px;border-radius:7px;border:1px solid var(--border2);background:var(--surface2);color:var(--text);font-size:13px;outline:none;">
+                  <option value="wh">Wiederherstellungskosten (WH)</option>
+                  <option value="nw">Neuwert (NW) — Vollkasko</option>
+                  <option value="zw">Zeitwert (ZW) — Abzug alt/neu</option>
+                  <option value="hausrat">Hausrat (Zeitwert)</option>
+                </select>
+              </div>
+              <div>
+                <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:4px;">Schadensumme brutto (EUR)</label>
+                <input type="number" id="reg-schaden" placeholder="0" min="0" step="100"
+                  style="width:100%;padding:8px;border-radius:7px;border:1px solid var(--border2);background:var(--surface2);color:var(--text);font-size:13px;outline:none;"
+                  oninput="berechneRegulierung()">
+              </div>
+              <div id="reg-entwert-row">
+                <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:4px;">Entwertung % (aus Berechnung oben)</label>
+                <input type="number" id="reg-entwert-pct" placeholder="0" min="0" max="100" step="1"
+                  style="width:100%;padding:8px;border-radius:7px;border:1px solid var(--border2);background:var(--surface2);color:var(--text);font-size:13px;outline:none;"
+                  oninput="berechneRegulierung()">
+              </div>
+              <div>
+                <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:4px;">Selbstbeteiligung (EUR)</label>
+                <input type="number" id="reg-sb" placeholder="0" min="0" step="100" value="0"
+                  style="width:100%;padding:8px;border-radius:7px;border:1px solid var(--border2);background:var(--surface2);color:var(--text);font-size:13px;outline:none;"
+                  oninput="berechneRegulierung()">
+              </div>
+            </div>
+            <div id="reg-ergebnis" style="display:none;background:rgba(139,92,246,.06);border:1px solid rgba(139,92,246,.2);border-radius:8px;padding:12px;margin-bottom:12px;">
+              <div id="reg-zeilen" style="font-size:12px;line-height:2;"></div>
+              <div style="border-top:1px solid rgba(139,92,246,.2);margin-top:8px;padding-top:8px;display:flex;justify-content:space-between;">
+                <span style="font-size:12px;font-weight:700;color:#a78bfa;">Regulierungsbetrag</span>
+                <span id="reg-total" style="font-size:20px;font-weight:800;color:#10b981;">—</span>
+              </div>
+            </div>
+            <button onclick="regulierungInGutachten()"
+              style="width:100%;padding:9px;border-radius:8px;background:rgba(139,92,246,.12);border:1px solid rgba(139,92,246,.3);color:#a78bfa;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">
+              📋 Regulierung in §4 übernehmen
+            </button>
           </div>
         </div>
 
@@ -1054,7 +1171,7 @@ window.oeffneStellung = function() {
         <div class="sup-err" id="sup-err">Bitte Betreff und Nachricht eingeben.</div>
         <button class="sup-send-btn" id="sup-btn" onclick="supSendModal()">Nachricht senden</button>
         <div style="text-align:center;margin-top:10px;font-size:11px;color:var(--text3,#6b7a99);">
-          Oder direkt: <a href="mailto:kontakt@prova-systems.de">kontakt@prova-systems.de</a>
+          Oder direkt: <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="d5bebabba1b4bea195a5a7baa3b4f8a6aca6a1b0b8a6fbb1b0">[email&#160;protected]</a>
         </div>
       </div>
       <div class="sup-ok" id="sup-ok">
@@ -1519,6 +1636,195 @@ window.PROVA_KONTEXT = {
   fab.appendChild(mainBtn);
   document.body.appendChild(fab);
 })();
+
+/* ── ENTWERTUNGSBERECHNUNG LINEAR / ROSSMANN ── */
+window.toggleEntwertung = function() {
+  var body  = document.getElementById('entwertungs-body');
+  var arrow = document.getElementById('entwert-arrow');
+  if (!body) return;
+  var open = body.style.display !== 'none';
+  body.style.display = open ? 'none' : 'block';
+  if (arrow) arrow.textContent = open ? '▶' : '▼';
+};
+
+window.berechneEntwertung = function() {
+  var neuwert   = parseFloat((document.getElementById('enw-neuwert')||{}).value || '0');
+  var verfahren = (document.getElementById('enw-verfahren')||{}).value || 'linear';
+  var baujahr   = parseInt((document.getElementById('enw-baujahr')||{}).value || '0');
+  var ld        = parseInt((document.getElementById('enw-lebensdauer')||{}).value || '40');
+
+  var ergebnis  = document.getElementById('enw-ergebnis');
+  var alterEl   = document.getElementById('enw-alter');
+  var prozentEl = document.getElementById('enw-prozent');
+  var zeitwertEl= document.getElementById('enw-zeitwert');
+  var formelEl  = document.getElementById('enw-formel');
+
+  if (!neuwert || !baujahr || baujahr < 1900) {
+    if (ergebnis) ergebnis.style.display = 'none';
+    return;
+  }
+
+  var alter = new Date().getFullYear() - baujahr;
+  alter = Math.max(0, Math.min(alter, ld)); // 0 bis Lebensdauer
+
+  var entwertProzent;
+  var formel;
+
+  if (verfahren === 'linear') {
+    // Linear: gleichmäßige Abschreibung
+    entwertProzent = Math.min(100, Math.round((alter / ld) * 100));
+    formel = 'Linear: ' + alter + ' J. / ' + ld + ' J. × 100 = ' + entwertProzent + '%';
+  } else {
+    // Rossmann: degressive Abschreibung (quadratisch)
+    // Formel: E = (a/L)² × 100
+    entwertProzent = Math.min(100, Math.round(Math.pow(alter / ld, 1.5) * 100));
+    formel = 'Rossmann: (' + alter + ' / ' + ld + ')^1.5 × 100 = ' + entwertProzent + '%';
+  }
+
+  var zeitwert = Math.round(neuwert * (1 - entwertProzent / 100));
+
+  if (ergebnis) ergebnis.style.display = 'block';
+  if (alterEl)   alterEl.textContent   = alter + ' Jahre';
+  if (prozentEl) prozentEl.textContent = entwertProzent + '%';
+  if (zeitwertEl) zeitwertEl.textContent = zeitwert.toLocaleString('de-DE') + ' €';
+  if (formelEl)  formelEl.textContent  = formel;
+
+  // Zwischenspeichern für §4-Übernahme
+  window._entwertResult = { alter, entwertProzent, zeitwert, neuwert, verfahren };
+};
+
+window.entwertungInGutachten = function() {
+  var res = window._entwertResult;
+  if (!res) { showToast('Bitte erst Werte eingeben', 'warning'); return; }
+  var text = 'Der Zeitwert des beschädigten Bauteils beträgt nach der Methode ' + (res.verfahren === 'linear' ? 'Linear' : 'Rossmann (degressiv)')
+    + ' bei einem Alter von ' + res.alter + ' Jahren und einer Gesamtlebensdauer von '
+    + ((document.getElementById('enw-lebensdauer')||{}).value||'?') + ' Jahren:
+
+'
+    + 'Neuwert: ' + res.neuwert.toLocaleString('de-DE') + ' €
+'
+    + 'Entwertung: ' + res.entwertProzent + ' %
+'
+    + 'Zeitwert: ' + res.zeitwert.toLocaleString('de-DE') + ' €
+
+'
+    + 'Die Entwertung wurde nach dem versicherungsrechtlich anerkannten Verfahren nach '
+    + (res.verfahren === 'rossmann' ? 'Rossmann' : 'dem Linearen Abschreibungsmodell') + ' berechnet.';
+
+  // In §4 Kalkulations-Notiz-Feld einfügen (falls vorhanden)
+  var notizEl = document.getElementById('kalk-notiz') || document.querySelector('[id*="notiz"]');
+  if (notizEl) {
+    notizEl.value = (notizEl.value ? notizEl.value + '\n\n' : '') + text;
+  }
+
+  // In sessionStorage für stellungnahme.html
+  var existing = sessionStorage.getItem('prova_kalk_notizen') || '';
+  sessionStorage.setItem('prova_kalk_notizen', existing + (existing ? '\n\n' : '') + text);
+
+  showToast('Entwertungsberechnung in §4 übernommen ✅', 'success');
+};
+
+
+/* ── REGULIERUNGSTOOL ── */
+window.toggleRegulierung = function() {
+  var body = document.getElementById('regulierungs-body');
+  var arrow = document.getElementById('regulier-arrow');
+  if (!body) return;
+  var open = body.style.display !== 'none';
+  body.style.display = open ? 'none' : 'block';
+  if (arrow) arrow.textContent = open ? '▶' : '▼';
+  // Entwertung aus Entwertungsberechnung übernehmen
+  if (!open && window._entwertResult) {
+    var pct = document.getElementById('reg-entwert-pct');
+    if (pct && !pct.value) pct.value = window._entwertResult.entwertProzent;
+    berechneRegulierung();
+  }
+};
+
+window.berechneRegulierung = function() {
+  var art     = (document.getElementById('reg-art')||{}).value || 'wh';
+  var schaden = parseFloat((document.getElementById('reg-schaden')||{}).value || '0');
+  var entwert = parseFloat((document.getElementById('reg-entwert-pct')||{}).value || '0');
+  var sb      = parseFloat((document.getElementById('reg-sb')||{}).value || '0');
+  var ergebnis = document.getElementById('reg-ergebnis');
+  var zeilen   = document.getElementById('reg-zeilen');
+  var total    = document.getElementById('reg-total');
+  var entwRow  = document.getElementById('reg-entwert-row');
+
+  // Entwertungs-Zeile nur bei ZW/Hausrat zeigen
+  if (entwRow) entwRow.style.display = (art === 'zw' || art === 'hausrat') ? '' : 'none';
+
+  if (!schaden) { if (ergebnis) ergebnis.style.display = 'none'; return; }
+
+  var lines = [];
+  var regulierungsBetrag = 0;
+  var artLabel = '';
+
+  if (art === 'nw') {
+    artLabel = 'Neuwert (NW)';
+    lines.push({ label: 'Neuwert (Schadensumme)', val: schaden });
+    lines.push({ label: 'Selbstbeteiligung', val: -sb });
+    regulierungsBetrag = schaden - sb;
+  } else if (art === 'wh') {
+    artLabel = 'Wiederherstellungskosten (WH)';
+    // WH = Nettoschadensumme (ohne MwSt auf Entwertungsanteil)
+    var mwst = Math.round(schaden / 1.19 * 0.19);
+    lines.push({ label: 'Brutto-Schaden', val: schaden });
+    lines.push({ label: 'Abzug MwSt Entwertungsanteil', val: -Math.round(mwst * 0.3) });
+    lines.push({ label: 'Selbstbeteiligung', val: -sb });
+    regulierungsBetrag = schaden - Math.round(mwst * 0.3) - sb;
+  } else if (art === 'zw') {
+    artLabel = 'Zeitwert (ZW)';
+    var abzug = Math.round(schaden * entwert / 100);
+    lines.push({ label: 'Neuwert (Schadensumme)', val: schaden });
+    lines.push({ label: 'Abzug Entwertung ' + entwert + '%', val: -abzug });
+    lines.push({ label: 'Selbstbeteiligung', val: -sb });
+    regulierungsBetrag = schaden - abzug - sb;
+  } else if (art === 'hausrat') {
+    artLabel = 'Hausrat (ZW-Methode)';
+    // Hausrat: Zeitwerttabelle vereinfacht nach GDV-Schema
+    var factor = entwert > 60 ? 0.1 : entwert > 40 ? 0.3 : entwert > 20 ? 0.6 : 0.85;
+    var zeitwert = Math.round(schaden * factor);
+    lines.push({ label: 'Wiederbeschaffungswert', val: schaden });
+    lines.push({ label: 'Zeitwertfaktor ' + Math.round(factor*100) + '%', val: zeitwert - schaden });
+    lines.push({ label: 'Selbstbeteiligung', val: -sb });
+    regulierungsBetrag = zeitwert - sb;
+  }
+
+  if (ergebnis) ergebnis.style.display = 'block';
+  if (zeilen) zeilen.innerHTML = lines.map(function(l) {
+    var color = l.val < 0 ? '#ef4444' : '#10b981';
+    return '<div style="display:flex;justify-content:space-between;">'
+      + '<span style="color:var(--text2);">' + l.label + '</span>'
+      + '<span style="font-weight:700;color:' + color + ';">' + (l.val >= 0 ? '+' : '') + Math.round(l.val).toLocaleString('de-DE') + ' €</span>'
+      + '</div>';
+  }).join('');
+  if (total) total.textContent = Math.max(0, regulierungsBetrag).toLocaleString('de-DE') + ' €';
+
+  window._regulierResult = { art: artLabel, schaden, regulierungsBetrag: Math.max(0, regulierungsBetrag), sb };
+};
+
+window.regulierungInGutachten = function() {
+  var res = window._regulierResult;
+  if (!res || !res.schaden) { showToast('Bitte erst Werte eingeben', 'warning'); return; }
+  var text = 'Auf Basis der ' + res.art + ' ergibt sich für den vorliegenden Schaden folgender Regulierungsbetrag:
+
+'
+    + 'Schadensumme:         ' + res.schaden.toLocaleString('de-DE') + ' €
+'
+    + (res.sb ? 'Selbstbeteiligung:    ' + res.sb.toLocaleString('de-DE') + ' €
+' : '')
+    + 'Regulierungsbetrag:   ' + res.regulierungsBetrag.toLocaleString('de-DE') + ' €
+
+'
+    + 'Der Regulierungsbetrag versteht sich als Empfehlung des Sachverständigen. Die abschließende Regulierungsentscheidung obliegt dem Versicherungsunternehmen.';
+  var existing = sessionStorage.getItem('prova_kalk_notizen') || '';
+  sessionStorage.setItem('prova_kalk_notizen', existing + (existing ? '
+
+' : '') + text);
+  showToast('Regulierungsberechnung in §4 übernommen ✅', 'success');
+};
+
 </script>
 </body></html>'
   ].join('\n');
@@ -1990,6 +2296,14 @@ function renderCockpit(f) {
     nsB.setAttribute('data-href', cfg.href);
   }
 
+  // Phase in localStorage für Nav-Anzeige
+  localStorage.setItem('prova_aktuelle_phase', String(phase));
+  if (az) { localStorage.setItem('prova_aktiver_fall', az); localStorage.setItem('prova_letztes_az', az); }
+  if (sa) localStorage.setItem('prova_schadenart', sa);
+  var adr = f.Adresse || f.Schaden_Strasse || '';
+  var ort = f.Ort || '';
+  if (adr || ort) localStorage.setItem('prova_adresse', [adr, ort].filter(Boolean).join(', '));
+
   // §4 Kalkulation laden
   ladeKalkulation(f, sa);
   setTimeout(function(){ window.autoOpenKalk(phase); }, 300);
@@ -2123,23 +2437,4 @@ window.toggleZeit = function(){
   if (!zeitLaeuft) {
     zeitLaeuft = true;
     if(btn){btn.textContent='Stop';btn.style.background='rgba(239,68,68,.15)';btn.style.border='1px solid rgba(239,68,68,.3)';btn.style.color='var(--danger)';}
-    localStorage.setItem('prova_zeit_start_ts', new Date().toISOString());
-    zeitInterval = setInterval(function(){
-      zeitSekunden++;
-      var m=Math.floor(zeitSekunden/60), s=zeitSekunden%60;
-      if(dis) dis.textContent=(m<10?'0':'')+m+':'+(s<10?'0':'')+s;
-    },1000);
-  } else {
-    zeitLaeuft = false;
-    clearInterval(zeitInterval);
-    if(btn){btn.textContent='Start';btn.style.background='#10b981';btn.style.border='none';btn.style.color='#fff';}
-    localStorage.setItem('prova_zeit_dauer_sek', String(zeitSekunden));
-    zeigToast('Zeiterfassung: '+Math.round(zeitSekunden/60)+' Min. gespeichert');
-  }
-};
-
-// Hook in renderAkte
-(function hookRenderAkte(){
-  var origRender = window.renderAkte;
-  if (typeof origRender === 'function') {
-    wind
+    localStorage.setItem('prova_zeit_star

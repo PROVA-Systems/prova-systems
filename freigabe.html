@@ -151,10 +151,14 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-ui);min-heigh
 #toast.ok{border-color:rgba(16,185,129,.4);color:#10b981;}
 #toast.err{border-color:rgba(239,68,68,.4);color:#ef4444;}
 #toast.warn{border-color:rgba(245,158,11,.4);color:#f59e0b;}
+.app-shell .main-wrap{padding-top:0}.sidebar{z-index:300}
 </style>
+<script src="theme.js"></script>
+<script src="trial-guard.js"></script>
+<script src="nav.js"></script>
 </head>
 <body>
-
+<div class="app-shell" id="app-shell">
 <header class="flow-header">
   <a href="dashboard.html" style="display:flex;align-items:center;gap:7px;text-decoration:none;" title="Zur Zentrale"><div style="width:24px;height:24px;background:linear-gradient(135deg,#4f8ef7,#3a7be0);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;">P</div><span style="font-size:14px;font-weight:800;color:#eaecf4;letter-spacing:-.02em;">PR<span style="color:#4f8ef7">O</span>VA</span></a>
   <a class="flow-back" onclick="history.back()">← §6 bearbeiten</a>
@@ -172,7 +176,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-ui);min-heigh
   <div class="flow-az" id="headerAz">—</div>
 </header>
 
-<div class="main">
+<div class="main-wrap" id="main-wrap"><div class="main" id="freig-main">
   <div class="layout">
 
     <!-- DOKUMENT -->
@@ -433,6 +437,10 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-ui);min-heigh
 <div id="toast"></div>
 
 <script>
+/* zeigToast → globales showToast */
+if (!window.zeigToast && window.showToast) window.zeigToast = window.showToast;
+if (!window.showToast && window.zeigToast) window.showToast = window.zeigToast;
+
 'use strict';
 if(!localStorage.getItem('prova_user')) location.href='app-login.html';
 
@@ -987,7 +995,9 @@ function exportiereAlsWord(){
   const heute=new Date().toLocaleDateString('de-DE');
   const entwurf=recFields?.KI_Entwurf||localStorage.getItem('prova_entwurf_text')||'';
   const s6=localStorage.getItem('prova_stellungnahme_text')||'';
-  const html=`<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word"><head><meta charset="UTF-8"><meta name=ProgId content=Word.Document><style>body{font-family:Arial,sans-serif;font-size:11pt;margin:2cm;line-height:1.5;}h1,h2{font-size:13pt;font-weight:bold;color:#1E3A5F;border-bottom:1px solid #ccc;padding-bottom:4pt;margin-top:16pt;}.kpf{border-bottom:2px solid #1E3A5F;padding-bottom:10pt;margin-bottom:18pt;}.az{background:#f5f5f5;border:1px solid #ccc;padding:8pt;margin:10pt 0;}.foot{border-top:1px solid #ccc;margin-top:28pt;padding-top:8pt;font-size:9pt;color:#666;}</style></head><body><div class="kpf"><strong style="font-size:14pt;color:#1E3A5F;">${buero||svN}</strong><br>${quali}</div><div class="az"><strong>AZ:</strong> ${az} &nbsp;&nbsp; <strong>Datum:</strong> ${heute}</div><h1>Gutachten</h1><div>${entwurf.replace(/\n/g,'<br>')}</div>${s6?`<h2>§6 Gutachterliche Stellungnahme</h2><div>${s6.replace(/\n/g,'<br>')}</div>`:''}<div class="foot">Erstellt mit PROVA Systems · ${svN} · ${heute}</div></body></html>`;
+  const html=`<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word"><head><meta charset="UTF-8"><meta name=ProgId content=Word.Document><style>body{font-family:Arial,sans-serif;font-size:11pt;margin:2cm;line-height:1.5;}h1,h2{font-size:13pt;font-weight:bold;color:#1E3A5F;border-bottom:1px solid #ccc;padding-bottom:4pt;margin-top:16pt;}.kpf{border-bottom:2px solid #1E3A5F;padding-bottom:10pt;margin-bottom:18pt;}.az{background:#f5f5f5;border:1px solid #ccc;padding:8pt;margin:10pt 0;}.foot{border-top:1px solid #ccc;margin-top:28pt;padding-top:8pt;font-size:9pt;color:#666;}</style></head><body><div class="kpf"><strong style="font-size:14pt;color:#1E3A5F;">${buero||svN}</strong><br>${quali}</div><div class="az"><strong>AZ:</strong> ${az} &nbsp;&nbsp; <strong>Datum:</strong> ${heute}</div><h1>Gutachten</h1><div>${entwurf.replace(/\n/g,'<br>')}</div>${s6?`<h2>§6 Gutachterliche Stellungnahme</h2><div>${s6.replace(/\n/g,'<br>')}</div>`:''}<div class="foot">Erstellt mit PROVA Systems · ${svN} · ${heute}</div></div></div><!-- /main-wrap -->
+</div><!-- /app-shell -->
+</body></html>`;
   const blob=new Blob([html],{type:'application/msword'});
   const url=URL.createObjectURL(blob);
   const a=document.createElement('a');

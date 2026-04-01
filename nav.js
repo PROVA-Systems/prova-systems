@@ -39,19 +39,79 @@
     { href: 'archiv.html',        icon: '📂', label: 'Fälle' },
     { href: 'termine.html',       icon: '📅', label: 'Kalender' },
   ];
-  var WERKZEUGE = [
+  // GUTACHTEN: Alle Werkzeuge die direkt im Gutachten-Workflow verwendet werden
+  var GUTACHTEN = [
     { href: 'normen.html',            icon: '📚', label: 'Normen' },
     { href: 'textbausteine.html',     icon: '📝', label: 'Textbausteine' },
-    { href: 'positionen.html',        icon: '🗂️', label: 'Positionen' },
-    { href: 'jveg.html',              icon: '⚖️', label: 'JVEG-Rechner' },
-    { href: 'kostenermittlung.html',  icon: '📐', label: 'Kosten & Aufmaß' },
+    { href: 'positionen.html',        icon: '🗂️', label: 'Positionen & Kosten' },
   ];
-  var VERWALTUNG = [
-    { href: 'briefvorlagen.html', icon: '✉️', label: 'Briefe' },
-    { href: 'rechnungen.html',    icon: '🧾', label: 'Rechnungen' },
+  // ABRECHNUNG: Alles was mit Honorar + Rechnung zu tun hat
+  var ABRECHNUNG = [
+    { href: 'rechnungen.html',    icon: '💶', label: 'Rechnungen' },
+    { href: 'jveg.html',          icon: '⚖️', label: 'JVEG-Rechner' },
+  ];
+  // BÜRO: Korrespondenz, Kontakte, Projekte
+  var BUERO = [
+    { href: 'briefvorlagen.html', icon: '✉️', label: 'Briefe & Vorlagen' },
     { href: 'kontakte.html',      icon: '👥', label: 'Kontakte' },
     { href: 'baubegleitung.html', icon: '🏗️', label: 'Baubegleitung' },
   ];
+  // VERWALTUNG: Selten genutzte Admin-Funktionen
+  var VERWALTUNG = [];
+
+
+  function aktiverFallBlock() {
+    // Aktiven Fall aus localStorage laden
+    var az    = localStorage.getItem('prova_aktiver_fall') || localStorage.getItem('prova_letztes_az') || '';
+    var sa    = localStorage.getItem('prova_schadenart') || '';
+    var adr   = localStorage.getItem('prova_adresse') || '';
+    var phase = parseInt(localStorage.getItem('prova_aktuelle_phase') || '0');
+
+    if (!az) return ''; // Kein aktiver Fall
+
+    // Phase-Label und CTA
+    var phaseTxt, ctaHref, ctaLabel, ctaColor;
+    if (phase <= 2 || !phase) {
+      phaseTxt = 'Phase 2: Ortstermin';
+      ctaLabel = 'Diktat aufnehmen';
+      ctaHref  = 'app.html';
+      ctaColor = '#4f8ef7';
+    } else if (phase === 3) {
+      phaseTxt = 'Phase 3: Gutachten';
+      ctaLabel = '§6 schreiben';
+      ctaHref  = 'stellungnahme.html?az=' + encodeURIComponent(az);
+      ctaColor = '#f59e0b';
+    } else if (phase === 4) {
+      phaseTxt = 'Phase 4: Freigabe';
+      ctaLabel = 'Freigeben & PDF';
+      ctaHref  = 'freigabe.html?az=' + encodeURIComponent(az);
+      ctaColor = '#10b981';
+    } else {
+      phaseTxt = 'Phase 5: Abschluss';
+      ctaLabel = 'Rechnung erstellen';
+      ctaHref  = 'rechnungen.html?az=' + encodeURIComponent(az);
+      ctaColor = '#a78bfa';
+    }
+
+    var locShort = adr ? adr.split(',')[0] : '';
+    var saShort  = sa ? sa.replace('schaden','').replace('befall','') : '';
+
+    return '<div class="sb-active-fall" onclick="window.location.href=\'akte.html?az=' + encodeURIComponent(az) + '\'" '
+      + 'style="margin:4px 8px 8px;padding:9px 11px;background:rgba(79,142,247,.07);border:0.5px solid rgba(79,142,247,.2);'
+      + 'border-radius:9px;cursor:pointer;transition:background .12s;" '
+      + 'onmouseover="this.style.background=\'rgba(79,142,247,.12)\'" '
+      + 'onmouseout="this.style.background=\'rgba(79,142,247,.07)\'">'
+      + '<div style="font-size:11px;font-weight:700;color:var(--accent,#4f8ef7);font-family:var(--font-mono,monospace);letter-spacing:.02em;">' + az + '</div>'
+      + (sa ? '<div style="font-size:10px;color:var(--text3,#4d5568);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + sa + (locShort ? ' · ' + locShort : '') + '</div>' : '')
+      + '<div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px;">'
+      + '<span style="font-size:9px;font-weight:600;color:var(--text3,#4d5568);text-transform:uppercase;letter-spacing:.05em;">' + phaseTxt + '</span>'
+      + '<a href="' + ctaHref + '" onclick="event.stopPropagation()" '
+      + 'style="font-size:10px;font-weight:700;color:' + ctaColor + ';text-decoration:none;white-space:nowrap;'
+      + 'padding:2px 8px;border-radius:5px;background:' + ctaColor.replace('#','rgba(').replace(/([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})/i, function(m,r,g,b){return parseInt(r,16)+','+parseInt(g,16)+','+parseInt(b,16)}) + ',.12)">'
+      + ctaLabel + ' →</a>'
+      + '</div>'
+      + '</div>';
+  }
 
   function makeItem(item) {
     var isActive = (page === item.href) || (page === 'gutachten' && item.href === appUrl);
@@ -293,10 +353,25 @@
     +   '<span class="btn-label">Neuer Fall</span>'
     + '</button>'
 
+    + aktiverFallBlock()
+
+    + '<button onclick="window.provaOpenCmdPalette&&provaOpenCmdPalette()" '
+    + 'style="display:flex;align-items:center;gap:8px;margin:0 8px 6px;padding:7px 12px;'
+    + 'background:rgba(255,255,255,.04);border:1px solid var(--border,rgba(255,255,255,.07));'
+    + 'border-radius:8px;color:var(--text3,#6b7280);font-size:12px;cursor:pointer;'
+    + 'width:calc(100% - 16px);text-align:left;font-family:inherit;transition:border-color .15s;" '
+    + 'onmouseover="this.style.borderColor=\'rgba(255,255,255,.15)\'" '
+    + 'onmouseout="this.style.borderColor=\'var(--border,rgba(255,255,255,.07))\'">'
+    + '<span style="font-size:13px;">🔍</span>'
+    + '<span style="flex:1;">Suchen…</span>'
+    + '<kbd style="font-size:9px;padding:1px 5px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:4px;font-family:monospace;flex-shrink:0;">⌘K</kbd>'
+    + '</button>'
+
     + '<div class="sb-nav">'
     +   makeGroup('Arbeit', ARBEIT)
-    +   makeGroup('Werkzeuge', WERKZEUGE)
-    +   makeGroup('Verwaltung', VERWALTUNG)
+    +   makeGroup('Gutachten', GUTACHTEN)
+    +   makeGroup('Abrechnung', ABRECHNUNG)
+    +   makeGroup('Büro', BUERO)
     + '</div>'
 
     + '<div class="sb-footer">'
@@ -473,3 +548,192 @@ window.provaConfirm = function(msg, onYes) {
   };
   overlay.onclick = function(e) { if (e.target === overlay) overlay.remove(); };
 };
+
+
+/* ══════════════════════════════════════════════════════
+   ⌘K COMMAND PALETTE — Global in allen PROVA-Seiten
+   ══════════════════════════════════════════════════════ */
+(function() {
+  var overlay, input, results, visible = false;
+
+  var AKTIONEN = [
+    { label: '+ Neuer Fall', desc: 'Neues Gutachten anlegen', href: 'app.html', icon: '📋' },
+    { label: 'Fälle / Archiv', desc: 'Alle Fälle anzeigen', href: 'archiv.html', icon: '📂' },
+    { label: 'Zentrale / Dashboard', desc: 'Was steht heute an?', href: 'dashboard.html', icon: '⊞' },
+    { label: 'Kalender', desc: 'Termine und Fristen', href: 'termine.html', icon: '📅' },
+    { label: 'Normen-Datenbank', desc: 'DIN, VOB, WTA, ZPO', href: 'normen.html', icon: '📚' },
+    { label: 'Textbausteine', desc: 'Wiederkehrende Formulierungen', href: 'textbausteine.html', icon: '📝' },
+    { label: 'Positionen & Kosten', desc: 'BKI-Einheitspreise', href: 'positionen.html', icon: '🗂️' },
+    { label: 'Rechnungen', desc: 'Honorarrechnungen', href: 'rechnungen.html', icon: '💶' },
+    { label: 'JVEG-Rechner', desc: 'Honorar berechnen §7–§9 JVEG', href: 'jveg.html', icon: '⚖️' },
+    { label: 'Kontakte', desc: 'Auftraggeber, Beteiligte', href: 'kontakte.html', icon: '👥' },
+    { label: 'Briefvorlagen', desc: 'Korrespondenz erstellen', href: 'briefvorlagen.html', icon: '✉️' },
+    { label: 'Baubegleitung', desc: 'Projekte, Begehungen, Mängel', href: 'baubegleitung.html', icon: '🏗️' },
+    { label: 'Jahresbericht', desc: 'Statistiken und Auswertung', href: 'jahresbericht.html', icon: '📊' },
+    { label: 'Einstellungen', desc: 'SV-Profil, Konto, Paket', href: 'einstellungen.html', icon: '⚙️' },
+  ];
+
+  function buildOverlay() {
+    if (document.getElementById('prova-cmd')) return;
+    var el = document.createElement('div');
+    el.id = 'prova-cmd';
+    el.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:99999;display:none;align-items:flex-start;justify-content:center;padding-top:80px;backdrop-filter:blur(3px);';
+    el.innerHTML = '<div style="background:var(--surface,#1c2130);border:1px solid var(--border2,rgba(255,255,255,.12));border-radius:14px;width:100%;max-width:560px;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,.6);font-family:var(--font-ui,sans-serif);">'
+      + '<div style="display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--border,rgba(255,255,255,.07));">'
+      + '<span style="font-size:16px;color:var(--text3);">🔍</span>'
+      + '<input id="prova-cmd-input" type="text" placeholder="Navigation, Fälle, Normen suchen…" autocomplete="off" '
+      + 'style="flex:1;background:transparent;border:none;outline:none;font-size:15px;color:var(--text,#eaecf4);font-family:inherit;">'
+      + '<kbd style="font-size:10px;padding:2px 6px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:5px;color:var(--text3);font-family:monospace;">ESC</kbd>'
+      + '</div>'
+      + '<div id="prova-cmd-results" style="max-height:340px;overflow-y:auto;padding:6px;"></div>'
+      + '<div style="padding:8px 14px;border-top:1px solid var(--border,rgba(255,255,255,.07));display:flex;gap:12px;font-size:10px;color:var(--text3);">'
+      + '<span>↑↓ navigieren</span><span>↵ öffnen</span><span>ESC schließen</span>'
+      + '</div>'
+      + '</div>';
+    document.body.appendChild(el);
+    overlay = el;
+    input = document.getElementById('prova-cmd-input');
+    results = document.getElementById('prova-cmd-results');
+    el.addEventListener('click', function(e) { if(e.target === el) closePalette(); });
+    input.addEventListener('input', function() { renderResults(input.value); });
+    input.addEventListener('keydown', handleKey);
+  }
+
+  function renderResults(q) {
+    if (!results) return;
+    q = (q||'').toLowerCase().trim();
+
+    // Fälle aus Cache
+    var faelle = [];
+    try {
+      var cache = JSON.parse(localStorage.getItem('prova_archiv_cache_v2')||'{}');
+      faelle = (cache.data||[]).filter(function(r) {
+        var f = r.fields||{};
+        var text = [(f.Aktenzeichen||''),(f.Schadenart||''),(f.Auftraggeber_Name||''),(f.Adresse||'')].join(' ').toLowerCase();
+        return !q || text.includes(q);
+      }).slice(0, 5).map(function(r) {
+        var f = r.fields||{};
+        return { label: f.Aktenzeichen||'—', desc: (f.Schadenart||'')+(f.Adresse?' · '+f.Adresse:''), href: 'akte.html?id='+r.id, icon: '📂', type: 'fall' };
+      });
+    } catch(e) {}
+
+    // Aktionen filtern
+    var aktionen = q ? AKTIONEN.filter(function(a) {
+      return (a.label+' '+a.desc).toLowerCase().includes(q);
+    }) : AKTIONEN;
+
+    var all = [];
+    if (faelle.length) {
+      all.push({ type: 'header', label: 'Fälle' });
+      all = all.concat(faelle);
+    }
+    if (aktionen.length) {
+      all.push({ type: 'header', label: q ? 'Aktionen' : 'Navigation' });
+      all = all.concat(aktionen);
+    }
+    if (!all.length) {
+      results.innerHTML = '<div style="text-align:center;padding:24px;font-size:13px;color:var(--text3);">Keine Ergebnisse für "'+q+'"</div>';
+      return;
+    }
+
+    var selected = 0;
+    results.innerHTML = all.map(function(item, i) {
+      if (item.type === 'header') {
+        return '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text3);padding:8px 10px 4px;">' + item.label + '</div>';
+      }
+      var isFirst = (i === 0 || all[0].type === 'header') && i <= 1;
+      return '<a href="'+item.href+'" data-cmd-item="'+i+'" '
+        + 'style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;text-decoration:none;transition:background .1s;'
+        + (isFirst ? 'background:rgba(79,142,247,.1);' : '')
+        + '" onmouseover="this.style.background='rgba(255,255,255,.05)'" '
+        + 'onmouseout="this.style.background=''+(isFirst?'rgba(79,142,247,.1)':'')+'';">'
+        + '<span style="font-size:16px;width:22px;text-align:center;flex-shrink:0;">' + item.icon + '</span>'
+        + '<div style="flex:1;min-width:0;">'
+        + '<div style="font-size:13px;font-weight:600;color:var(--text,#eaecf4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + item.label + '</div>'
+        + (item.desc ? '<div style="font-size:11px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + item.desc + '</div>' : '')
+        + '</div>'
+        + (item.type === 'fall' ? '<span style="font-size:10px;color:var(--accent,#4f8ef7);font-weight:600;">Fall →</span>' : '')
+        + '</a>';
+    }).join('');
+  }
+
+  function handleKey(e) {
+    if (e.key === 'Escape') { closePalette(); return; }
+    if (e.key === 'Enter') {
+      var first = results.querySelector('a[data-cmd-item]');
+      if (first) first.click();
+    }
+  }
+
+  function openPalette() {
+    if (!overlay) buildOverlay();
+    overlay.style.display = 'flex';
+    input.value = '';
+    input.focus();
+    renderResults('');
+    visible = true;
+  }
+
+  function closePalette() {
+    if (overlay) overlay.style.display = 'none';
+    visible = false;
+  }
+
+  // Tastenkürzel: ⌘K oder Ctrl+K
+  document.addEventListener('keydown', function(e) {
+    if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+      e.preventDefault();
+      if (visible) closePalette(); else openPalette();
+    }
+  });
+
+  // Global verfügbar
+  window.provaOpenCmdPalette = openPalette;
+  window.provaCloseCmdPalette = closePalette;
+
+  // Nach DOM-Bereit aufbauen
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', buildOverlay);
+  } else {
+    buildOverlay();
+  }
+})();
+/* ── END COMMAND PALETTE ── */
+
+/* ══════════════════════════════════════════════════
+   OFFLINE-MODUS INDIKATOR — erscheint wenn kein Netz
+   ══════════════════════════════════════════════════ */
+(function() {
+  function updateOffline(offline) {
+    var existing = document.getElementById('prova-offline-banner');
+    if (offline) {
+      if (existing) return;
+      var b = document.createElement('div');
+      b.id = 'prova-offline-banner';
+      b.style.cssText = 'position:fixed;bottom:16px;left:50%;transform:translateX(-50%);z-index:99990;'
+        + 'background:#1f1508;border:1.5px solid #f59e0b;border-radius:10px;padding:8px 16px;'
+        + 'display:flex;align-items:center;gap:8px;font-family:var(--font-ui,sans-serif);'
+        + 'box-shadow:0 4px 20px rgba(0,0,0,.5);white-space:nowrap;';
+      b.innerHTML = '<span style="font-size:14px;">📵</span>'
+        + '<span style="font-size:12px;font-weight:600;color:#f59e0b;">Offline — Änderungen werden lokal gespeichert</span>';
+      document.body.appendChild(b);
+    } else {
+      if (existing) {
+        existing.style.opacity = '0';
+        existing.style.transition = 'opacity .4s';
+        setTimeout(function() { if (existing.parentNode) existing.remove(); }, 400);
+        // Kurze "Wieder online"-Meldung
+        if (typeof showToast === 'function') showToast('✅ Wieder online', 'success', 2500);
+      }
+    }
+  }
+
+  window.addEventListener('online',  function() { updateOffline(false); });
+  window.addEventListener('offline', function() { updateOffline(true); });
+
+  // Sofort beim Laden prüfen
+  if (typeof navigator !== 'undefined' && !navigator.onLine) {
+    document.addEventListener('DOMContentLoaded', function() { updateOffline(true); });
+  }
+})();
+/* ── END OFFLINE INDIKATOR ── */

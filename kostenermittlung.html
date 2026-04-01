@@ -30,6 +30,14 @@
   *{-webkit-tap-highlight-color:transparent;}
   input,select,textarea{font-size:max(16px,1em);}
   .app-shell{display:flex;min-height:100vh;}
+  /* Sidebar/Overlay Minimal-Fallback (falls nav.js fehlt) */
+  .sidebar{width:280px;flex:0 0 280px;background:var(--bg2);border-right:1px solid var(--border);min-height:100vh;}
+  .sb-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:120;}
+  .sb-overlay.open{display:block;}
+  @media(max-width:768px){
+    .sidebar{position:fixed;top:0;bottom:0;left:0;transform:translateX(-102%);transition:transform .2s ease;z-index:140;box-shadow:0 10px 40px rgba(0,0,0,.4);}
+    .sidebar.open{transform:translateX(0);}
+  }
   .topbar{height:52px;min-height:52px;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 24px;position:sticky;top:0;z-index:100;flex-shrink:0;}
   .topbar-left{display:flex;align-items:center;gap:12px;}
   .topbar-right{display:flex;align-items:center;gap:6px;}
@@ -43,7 +51,7 @@
   .burger{display:none;flex-direction:column;gap:4.5px;background:none;border:none;cursor:pointer;padding:8px;border-radius:6px;min-height:36px;align-items:center;justify-content:center;}
   .burger span{display:block;width:18px;height:2px;background:var(--text2);border-radius:2px;}
   .burger:hover span{background:var(--text);}
-  .page-content{padding:24px 28px 48px;width:100%;}
+  .page-content{padding:24px 28px 48px;max-width:1360px;width:100%;}
   .support-fab{position:fixed;bottom:24px;right:24px;z-index:400;width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));box-shadow:0 4px 16px rgba(79,142,247,.4);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;transition:transform .15s;border:none;color:#fff;}
   .support-fab:hover{transform:scale(1.08);}
   .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:500;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px);}
@@ -67,7 +75,7 @@
   .page-content{animation:fadeIn .25s ease;}
 
 /* MAIN LAYOUT */
-.main{flex:1;padding:24px 28px 48px;min-width:0;}
+.main{flex:1;padding:24px 28px 48px;}
 
 /* HEADER CARD */
 .header-card{background:var(--bg2);border:1px solid var(--border2);border-radius:14px;padding:20px 24px;margin-bottom:22px;display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;}
@@ -270,7 +278,7 @@
   <div class="header-card">
     <div class="header-meta">
       <div class="header-title">§ 4 Kostenermittlung</div>
-      <div class="header-sub">Sanierungspositionen auswählen · Mengen eingeben · Kostenrahmen ermitteln</div>
+      <div class="header-sub">Sanierungspositionen auswählen und Mengen eingeben — Preisbasis BKI/Sirados 2024</div>
       <div class="header-badges">
         <span class="badge badge-sa" id="badge-sa">📋 Alle Schadensarten</span>
         <span class="badge badge-az" id="badge-az"></span>
@@ -337,7 +345,7 @@
         <div class="summe-row"><span>Summe Median</span><span id="sumMed">0,00 €</span></div>
         <div class="summe-row"><span>Summe Max</span><span id="sumMax">0,00 €</span></div>
         <div class="summe-row total"><span>Empfohlene Kostenbasis</span><span id="sumTotal">0,00 €</span></div>
-        <div style="font-size:10px;color:var(--text3);margin-top:6px;">Richtwerte netto · Regionale Abweichungen möglich · Nur zur Orientierung</div>
+        <div style="font-size:10px;color:var(--text3);margin-top:6px;">Alle Preise netto ohne MwSt. · Preisbasis Deutschland 2024</div>
       </div>
 
       <div class="actions-bar">
@@ -639,7 +647,23 @@ const POSITIONEN = [
   {id:'ES-019',sa:'ES',kat:'Elementarschaden',uk:'Frost',bez:'Frostschaden Putz Außenwand reparieren je m²',ei:'m²',mn:22,me:34,mx:55,nr:'DIN 18550'},
   {id:'ES-020',sa:'ES',kat:'Elementarschaden',uk:'Frost',bez:'Frostschaden Pflaster/Terrasse reparieren je m²',ei:'m²',mn:35,me:52,mx:85,nr:''},
   {id:'ES-021',sa:'ES',kat:'Elementarschaden',uk:'Frost',bez:'Frostschaden Dachrinne/Fallrohr erneuern je lfm',ei:'lfm',mn:28,me:43,mx:68,nr:'DIN 18460'},
+,
+  // SCHADSTOFF
+  {id:'SS-001',sa:'SS',kat:'Schadstoff',uk:'Asbest',bez:'Asbestprobe entnehmen und Laboranalyse (REM)',ei:'Probe',mn:180,me:280,mx:420,nr:'TRGS 519'},
+  {id:'SS-002',sa:'SS',kat:'Schadstoff',uk:'Asbest',bez:'Asbestkataster erstellen',ei:'Psch',mn:450,me:750,mx:1200,nr:'TRGS 519'},
+  {id:'SS-003',sa:'SS',kat:'Schadstoff',uk:'Asbest',bez:'Asbestzementplatten demontieren und entsorgen',ei:'m²',mn:45,me:65,mx:95,nr:'TRGS 519'},
+  {id:'SS-004',sa:'SS',kat:'Schadstoff',uk:'Asbest',bez:'Asbesthaltige Bodenbeläge entfernen und entsorgen',ei:'m²',mn:35,me:52,mx:78,nr:'TRGS 519'},
+  {id:'SS-005',sa:'SS',kat:'Schadstoff',uk:'Mineralfasern',bez:'KMF-Altwolle (bio-persistent) entfernen und entsorgen',ei:'m²',mn:28,me:42,mx:68,nr:'TRGS 521'},
+  {id:'SS-006',sa:'SS',kat:'Schadstoff',uk:'Mineralfasern',bez:'KMF-Probe und Laboranalyse (Fasereinstufung)',ei:'Probe',mn:120,me:190,mx:290,nr:'TRGS 521'},
+  {id:'SS-007',sa:'SS',kat:'Schadstoff',uk:'PCB/PAK',bez:'PCB-Probe und Laboranalyse',ei:'Probe',mn:220,me:340,mx:520,nr:'TRGS 524'},
+  {id:'SS-008',sa:'SS',kat:'Schadstoff',uk:'Entsorgung',bez:'Sonderabfallentsorgung gefährlicher Baustoffe bis 1t',ei:'t',mn:280,me:420,mx:680,nr:'KrWG §48'},
+  // GERÜST
+  {id:'GE-001',sa:'WS,BS,ST,BA',kat:'Gerüst',uk:'Fassadengerüst',bez:'Fassadengerüst aufbauen, vorhalten 4 Wochen und abbauen',ei:'m²',mn:18,me:26,mx:38,nr:'DIN EN 12811'},
+  {id:'GE-002',sa:'WS,BS,ST,BA',kat:'Gerüst',uk:'Fassadengerüst',bez:'Gerüst Verlängerungsmiete je Woche',ei:'m²/Wo',mn:2,me:3,mx:4,nr:'DIN EN 12811'},
+  {id:'GE-003',sa:'BS,ST,BA',kat:'Gerüst',uk:'Dachgerüst',bez:'Fanggerüst / Dachschutzwand aufbauen, vorhalten, abbauen',ei:'lfm',mn:45,me:68,mx:105,nr:'DIN EN 12811'},
+  {id:'GE-004',sa:'WS,BS,ST,BA,ES',kat:'Gerüst',uk:'Einrichtung',bez:'Baustellenabsperrung (Absperrgitter)',ei:'lfm',mn:8,me:12,mx:18,nr:'RSA 21'}
 ];
+
 
 /* ── Schadensart → Tag ── */
 const SA_TAGS = {
@@ -673,7 +697,13 @@ const PAGE_SIZE = 25;
   }
 })();
 
-const schadenart = localStorage.getItem('prova_schadenart') || '';
+const _urlP = new URLSearchParams(window.location.search);
+const _saFromUrl = _urlP.get('sa') || _urlP.get('schadenart') || '';
+const _saUrl = _saFromUrl || _urlP.get('schadenart') || '';
+const _azUrl = _urlP.get('az') || _urlP.get('aktenzeichen') || '';
+if (_saUrl) localStorage.setItem('prova_schadenart', _saUrl);
+if (_azUrl) localStorage.setItem('prova_letztes_az', _azUrl);
+const schadenart = _saUrl || localStorage.getItem('prova_schadenart') || '';
 const aktenzeichen = localStorage.getItem('prova_letztes_az') || localStorage.getItem('prova_aktenzeichen') || '';
 
 // Rückweg: zurück zur akte wenn AZ bekannt, sonst archiv
@@ -683,7 +713,23 @@ window._kostenRueck = function() {
   else { window.location.href = 'archiv.html'; }
 };
 
-const tag = saTag(schadenart);
+// Mobile Sidebar (nav.js/theme.js fehlen in diesem Deploy)
+function openMobileSidebar(){
+  var sb = document.getElementById('sidebar');
+  var ov = document.getElementById('sb-overlay');
+  if (sb) sb.classList.add('open');
+  if (ov) ov.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeMobileSidebar(){
+  var sb = document.getElementById('sidebar');
+  var ov = document.getElementById('sb-overlay');
+  if (sb) sb.classList.remove('open');
+  if (ov) ov.classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+let tag = saTag(schadenart);
 
 /* ── Init ── */
 (function init() {
@@ -722,21 +768,65 @@ const tag = saTag(schadenart);
     }
   } catch(e) {}
 
+  // Import: Positionsdatenbank → Kostenermittlung (Queue)
+  (function importPositionenQueue(){
+    var raw = localStorage.getItem('prova_positionen_queue');
+    if(!raw) return;
+    var q;
+    try { q = JSON.parse(raw) || []; } catch(e) { return; }
+    if(!Array.isArray(q) || !q.length) return;
 
-  // AZ + Schadenart aus URL oder localStorage (von akte.html kommend)
-  var urlParams2 = new URLSearchParams(window.location.search);
-  var prefillAz = urlParams2.get('az') || localStorage.getItem('prova_kalk_az') || localStorage.getItem('prova_letztes_az') || '';
-  var prefillSa = urlParams2.get('sa') || localStorage.getItem('prova_kalk_sa') || localStorage.getItem('prova_schadenart') || '';
-  if (prefillAz) {
-    var azEl = document.getElementById('badge-az') || document.getElementById('kalk-az');
-    if (azEl) azEl.textContent = prefillAz;
-    localStorage.setItem('prova_letztes_az', prefillAz);
-  }
-  if (prefillSa && !schadenart) {
-    // schadenart Variable überschreiben
-    schadenart = prefillSa;
-    localStorage.setItem('prova_schadenart', prefillSa);
-  }
+    var currentAz = aktenzeichen || '';
+    var remaining = [];
+    var imported = 0;
+
+    q.forEach(function(entry){
+      if(!entry) return;
+      var entryAz = entry.az || '';
+      // Wenn Fall bekannt ist: nur passende Einträge importieren, Rest behalten
+      if(currentAz && entryAz && entryAz !== currentAz){
+        remaining.push(entry);
+        return;
+      }
+      var id = entry.id || entry.nr;
+      if(!id){ return; }
+      // In POSITIONEN suchen (sowohl id als auch nr als Schlüssel)
+      var pos = POSITIONEN.find(function(p){ return p.id === id || p.id === entry.nr; });
+      if(!pos){
+        // Unbekannte ID: Position aus Queue-Daten direkt erstellen (Felder-Mapping)
+        pos = {
+          id:  id,
+          bez: entry.bez || entry.bezeichnung || id,
+          ei:  entry.ei  || entry.einheit     || 'Pos',
+          mn:  parseFloat(entry.mn  || entry.min    || 0),
+          me:  parseFloat(entry.me  || entry.median || 0),
+          mx:  parseFloat(entry.mx  || entry.max    || 0),
+          sa:  entry.sa  || '',
+          nr:  entry.norm || ''
+        };
+        // Zur lokalen POSITIONEN hinzufügen
+        POSITIONEN.push(pos);
+        remaining.push(entry);
+        return;
+      }
+      if(!auswahl[id]){
+        auswahl[id] = { pos: pos, menge: 1 };
+        imported++;
+      }
+    });
+
+    // Queue aktualisieren (nicht importierte / andere Fälle behalten)
+    try{
+      if(remaining.length) localStorage.setItem('prova_positionen_queue', JSON.stringify(remaining));
+      else localStorage.removeItem('prova_positionen_queue');
+    }catch(e){}
+
+    if(imported > 0){
+      renderAuswahl();
+      toast(imported + ' Position' + (imported===1?'':'en') + ' aus Positionsdatenbank übernommen ✓', 'ok');
+    }
+  })();
+
   filterPositionen();
 })();
 // Fallback: nochmal nach DOMContentLoaded falls IIFE zu früh lief
@@ -757,6 +847,14 @@ function filterPositionen() {
     const matchSuche = !suche || p.bez.toLowerCase().includes(suche) || p.id.toLowerCase().includes(suche);
     return matchSa && matchKat && matchSuche;
   });
+  // Fallback: wenn tag gesetzt aber keine Treffer → zeige alle (Fallback: wenn tag gesetzt)
+  if (gefiltertPos.length === 0 && tag && !suche && !kat) {
+    gefiltertPos = POSITIONEN.filter(p => {
+      const matchKat = !kat || p.uk === kat;
+      const matchSuche = !suche || p.bez.toLowerCase().includes(suche) || p.id.toLowerCase().includes(suche);
+      return matchKat && matchSuche;
+    });
+  }
 
   currentPage = 0;
   renderPage();
@@ -777,7 +875,7 @@ function renderPage() {
 
   body.innerHTML = slice.map(p => {
     const isAdded = !!auswahl[p.id];
-    const menge = auswahl[p.id]?.menge || '';
+    const menge = (auswahl[p.id] && typeof auswahl[p.id].menge !== 'undefined') ? auswahl[p.id].menge : '';
     return `<div class="pos-row ${isAdded ? 'added' : ''}" id="row-${p.id}">
       <div>
         <div class="pos-nr">${p.id}</div>
@@ -833,7 +931,7 @@ function togglePosition(id) {
     toast('Position entfernt');
   } else {
     const mengeEl = document.getElementById('qty-' + id);
-    const menge = parseFloat(mengeEl?.value) || 1;
+    const menge = parseFloat(mengeEl && mengeEl.value) || 1;
     auswahl[id] = { pos, menge };
     toast('Position hinzugefügt ✓', 'ok');
   }
@@ -938,8 +1036,9 @@ function speichernUndWeiter() {
 }
 
 function überspringen() {
-  var az = localStorage.getItem('prova_letztes_az') || '';
-  window.location.href = az ? 'akte.html?az=' + encodeURIComponent(az) : 'archiv.html';
+  localStorage.setItem('prova_kostenermittlung_done', 'false');
+  localStorage.removeItem('prova_kostenermittlung');
+  window.location.href = 'freigabe.html';
 }
 
 /* ── Hilfsfunktionen ── */
@@ -1286,7 +1385,7 @@ async function supSend(){var b=document.getElementById('sup-betreff').value.trim
         <div class="sup-err" id="sup-err">Bitte Betreff und Nachricht eingeben.</div>
         <button class="sup-send-btn" id="sup-btn" onclick="supSendModal()">Nachricht senden</button>
         <div style="text-align:center;margin-top:10px;font-size:11px;color:var(--text3,#6b7a99);">
-          Oder direkt: <a href="mailto:kontakt@prova-systems.de">kontakt@prova-systems.de</a>
+          Oder direkt: kontakt@prova-systems.de
         </div>
       </div>
       <div class="sup-ok" id="sup-ok">
@@ -1297,7 +1396,7 @@ async function supSend(){var b=document.getElementById('sup-betreff').value.trim
     </div>
   </div>
 </div>
-</script><script>
+<script>
 function openSupportModal(){
   var m=document.getElementById('support-modal');
   if(!m)return;
@@ -1675,11 +1774,7 @@ window.PROVA_KONTEXT = {
     localStorage.removeItem('prova_schadenart');
     localStorage.removeItem('prova_adresse');
     sessionStorage.removeItem('prova_record_id');
-    sessionStorage.removeItem('prova_record_id');
-  }
-};
-</script>
-<script src="slide-panel.js"></script>
+    sess<script src="slide-panel.js"></script>
 <script>
 /* ── Bibliothek-FAB für kostenermittlung.html ── */
 (function() {
@@ -1697,4 +1792,24 @@ window.PROVA_KONTEXT = {
     btn.style.cssText = 'display:flex;align-items:center;gap:8px;padding:7px 14px;background:var(--bg2,#13161d);border:1px solid var(--border2,rgba(255,255,255,.12));border-radius:20px;color:var(--text,#eaecf4);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;box-shadow:0 2px 12px rgba(0,0,0,.3);white-space:nowrap;transition:border-color .12s;';
     btn.innerHTML = item.icon + ' ' + item.label;
     btn.onmouseover = function(){ this.style.borderColor='var(--accent,#4f8ef7)'; };
-    btn.onmouseout  = function(){ this.style.borderCo
+    btn.onmouseout  = function(){ this.style.borderColor='var(--border2,rgba(255,255,255,.12))'; };
+    btn.onclick = function(e) {
+      e.stopPropagation();
+      PROVA.openPanel(item.type);
+      PROVA.onPanelInsert = function(text) {
+        if (navigator.clipboard) navigator.clipboard.writeText(text);
+        PROVA.closePanel();
+      };
+      toggleFab(false);
+    };
+    miniWrap.appendChild(btn);
+  });
+  var mainBtn = document.createElement('button');
+  mainBtn.style.cssText = 'width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#6366f1,#4f8ef7);border:none;color:#fff;font-size:20px;cursor:pointer;box-shadow:0 4px 16px rgba(99,102,241,.4);transition:all .2s;display:flex;align-items:center;justify-content:center;';
+  mainBtn.title = 'Normen & Textbausteine nachschlagen';
+  mainBtn.innerHTML = '📖';
+  mainBtn.onclick = function(e) { e.stopPropagation(); toggleFab(!expanded); };
+  function toggleFab(open) {
+    expanded = open;
+    miniWrap.style.display = open ? 'flex' : 'none';
+    mainBtn.style.transform = open ? 'rotate(45deg)' : '';

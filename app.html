@@ -1719,6 +1719,25 @@ window.weiterZuSchritt2 = function() {
   const log = [];
   document.querySelectorAll('input,select').forEach(el => el.blur());
 
+  // AZ-Duplikat-Check: ist dieses AZ bereits vergeben?
+  const azEl = document.getElementById('f-schadensnummer');
+  if (azEl && azEl.value.trim()) {
+    try {
+      const cache = JSON.parse(localStorage.getItem('prova_archiv_cache_v2') || '{}');
+      const faelle = (cache.data || []);
+      const azNeu = azEl.value.trim().toLowerCase();
+      const dupe = faelle.find(r => (r.fields?.Aktenzeichen||'').toLowerCase() === azNeu);
+      if (dupe) {
+        const f = dupe.fields || {};
+        if (!confirm('Aktenzeichen "' + azEl.value + '" ist bereits vergeben\n(' + (f.Schadenart||'') + ' · ' + (f.Adresse||'') + ')\n\nTrotzdem verwenden?')) {
+          azEl.focus();
+          azEl.style.borderColor = '#ef4444';
+          return;
+        }
+      }
+    } catch(e) {}
+  }
+
   // Hilfsfunktion: Feld + Fehlermeldung prüfen
   function chk(id, eid) {
     const el = document.getElementById(id);

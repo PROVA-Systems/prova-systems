@@ -372,6 +372,10 @@ a{text-decoration:none;color:inherit;}button,input,select,textarea{font-family:i
 <button class="support-fab" onclick="openSupportModal()" title="Support">💬</button>
 
 <script>
+/* zeigToast → globales showToast */
+if (!window.zeigToast && window.showToast) window.zeigToast = window.showToast;
+if (!window.showToast && window.zeigToast) window.showToast = window.zeigToast;
+
 (function(){
 'use strict';
 
@@ -412,8 +416,29 @@ window.update=function(){
   var s=satz();
   var mwst=hasMwSt();
 
-  var s1=hGut*s,s2=hAkten*s,s3=km*KM_SATZ,s4=warte*s,s5=schreib*SCHREIB_SATZ,s6=fotos*FOTO_SATZ;
+  // §3 Zeitzuschläge
+  var zzNacht = document.getElementById('zz-nacht') && document.getElementById('zz-nacht').checked;
+  var zzSonntag = document.getElementById('zz-sonntag') && document.getElementById('zz-sonntag').checked;
+  var zzNachtFeiertag = document.getElementById('zz-nacht-feiertag') && document.getElementById('zz-nacht-feiertag').checked;
+  var zzBesond = document.getElementById('zz-besond') && document.getElementById('zz-besond').checked;
+  var zzFaktor = 1 + (zzNacht ? 0.25 : 0) + (zzSonntag ? 0.25 : 0) + (zzNachtFeiertag ? 0.40 : 0) + (zzBesond ? 0.10 : 0);
+  // Zuschlag nur auf Zeitstunden (nicht KM/Schreib/Fotos)
+  var sEffektiv = s * zzFaktor;
+
+  var s1=hGut*sEffektiv,s2=hAkten*sEffektiv,s3=km*KM_SATZ,s4=warte*sEffektiv,s5=schreib*SCHREIB_SATZ,s6=fotos*FOTO_SATZ;
   var netto=s1+s2+s3+s4+s5+s6;
+
+  // Zeitzuschlag-Info anzeigen
+  var zzInfo = document.getElementById('zz-info');
+  if (zzInfo) {
+    if (zzFaktor > 1) {
+      var aufschlag = Math.round((zzFaktor - 1) * 100);
+      zzInfo.style.display = 'block';
+      zzInfo.textContent = 'Zeitzuschlag §3 JVEG: ' + aufschlag + '% → ' + fmt(s) + '/h → ' + fmt(sEffektiv) + '/h';
+    } else {
+      zzInfo.style.display = 'none';
+    }
+  }
   var mwstBetrag=mwst?netto*0.19:0;
   var brutto=netto+mwstBetrag;
 
@@ -606,7 +631,7 @@ update();
         <div class="sup-err" id="sup-err">Bitte Betreff und Nachricht eingeben.</div>
         <button class="sup-send-btn" id="sup-btn" onclick="supSendModal()">Nachricht senden</button>
         <div style="text-align:center;margin-top:10px;font-size:11px;color:var(--text3,#6b7a99);">
-          Oder direkt: <a href="mailto:kontakt@prova-systems.de">kontakt@prova-systems.de</a>
+          Oder direkt: <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="8ae1e5e4feebe1fecafaf8e5fceba7f9f3f9feefe7f9a4eeef">[email&#160;protected]</a>
         </div>
       </div>
       <div class="sup-ok" id="sup-ok">
@@ -957,27 +982,4 @@ function einfuegenBanner() {
   
   // Strategie 2: Als erstes Child von main oder page-content
   if (!insertAfter) {
-    insertAfter = document.querySelector('main, .page-content, .main, .page');
-    if (insertAfter) {
-      insertAfter.insertAdjacentHTML('afterbegin', bannerHtml);
-      return;
-    }
-  }
-  
-  if (insertAfter) {
-    insertAfter.insertAdjacentHTML('afterend', bannerHtml);
-  }
-}
-
-// ── INIT ────────────────────────────────────────────────────────────────
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', einfuegenBanner);
-} else {
-  einfuegenBanner();
-}
-
-// ── PUBLIC API ──────────────────────────────────────────────────────────
-window.PROVA_KONTEXT = {
-  // Erlaubt anderen Scripts den Fall-Kontext zu setzen
-  setFall: function(az, schadenart, adresse, recordId) {
-    if (az) localStorage.set
+    insertAfter = 

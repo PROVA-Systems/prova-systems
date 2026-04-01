@@ -556,6 +556,34 @@ function überspringen(){
   if(v) localStorage.setItem('prova_sv_vorname',v);
   if(nn) localStorage.setItem('prova_sv_nachname',nn);
   localStorage.setItem('prova_onboarding_done','true');
+
+  // Sample-Fall anlegen damit Dashboard nicht leer ist
+  try {
+    var existing = JSON.parse(localStorage.getItem('prova_archiv_cache_v2')||'{}');
+    if (!existing.data || !existing.data.length) {
+      var svName = (localStorage.getItem('prova_sv_vorname')||'') + ' ' + (localStorage.getItem('prova_sv_nachname')||'');
+      var sampleFall = {
+        id: 'sample-' + Date.now(),
+        fields: {
+          Aktenzeichen: 'WS-' + new Date().getFullYear() + '-001',
+          Schadenart: 'Wasserschaden',
+          Status: 'Neu',
+          Auftraggeber_Name: 'Allianz Versicherungs AG',
+          Auftraggeber_Typ: 'Versicherung',
+          Adresse: 'Musterstraße 42',
+          Ort: 'Köln',
+          Timestamp: new Date().toISOString(),
+          _sample: true
+        }
+      };
+      localStorage.setItem('prova_archiv_cache_v2', JSON.stringify({
+        data: [sampleFall],
+        ts: Date.now(),
+        _sample: true
+      }));
+    }
+  } catch(e) {}
+
   speichereOnboardingDoneAirtable();
   window.location.href='dashboard.html';
 }

@@ -912,7 +912,7 @@ window.zeigToast=function(msg,typ){
         <div class="sup-err" id="sup-err">Bitte Betreff und Nachricht eingeben.</div>
         <button class="sup-send-btn" id="sup-btn" onclick="supSendModal()">Nachricht senden</button>
         <div style="text-align:center;margin-top:10px;font-size:11px;color:var(--text3,#6b7a99);">
-          Oder direkt: <a href="mailto:kontakt@prova-systems.de">kontakt@prova-systems.de</a>
+          Oder direkt: kontakt@prova-systems.de
         </div>
       </div>
       <div class="sup-ok" id="sup-ok">
@@ -970,6 +970,80 @@ async function supSendModal(){
   }
 };
 })();
+
+/* ── LADUNGSVERSAND: Fall-Kontext automatisch einfügen ── */
+window.ladungVorbereiten = function(templateId) {
+  // Fall-Daten aus localStorage/sessionStorage laden
+  var az   = localStorage.getItem('prova_letztes_az') || '';
+  var sa   = localStorage.getItem('prova_schadenart') || '';
+  var adr  = localStorage.getItem('prova_adresse') || '';
+  var termin = localStorage.getItem('prova_naechster_termin') || '';
+  var svName = [localStorage.getItem('prova_sv_vorname'), localStorage.getItem('prova_sv_nachname')].filter(Boolean).join(' ') || 'Sachverständiger';
+  var svFirma = localStorage.getItem('prova_sv_firma') || svName;
+  var svAdr   = localStorage.getItem('prova_sv_strasse') || '';
+  var svPlzOrt= [localStorage.getItem('prova_sv_plz'), localStorage.getItem('prova_sv_ort')].filter(Boolean).join(' ') || '';
+  var svTel   = localStorage.getItem('prova_sv_telefon') || '';
+  var svQuali = localStorage.getItem('prova_sv_quali') || 'Öffentlich bestellter und vereidigter Sachverständiger';
+
+  // Aktuelles Datum
+  var heute = new Date().toLocaleDateString('de-DE', {day:'2-digit', month:'long', year:'numeric'});
+  
+  // Platzhalter befüllen
+  var replacements = {
+    '[AKTENZEICHEN]': az || 'Az. bitte eintragen',
+    '[SCHADENART]': sa || 'Schadenart',
+    '[SCHADENSORT]': adr || 'Schadensort',
+    '[DATUM]': heute,
+    '[SV_NAME]': svName,
+    '[SACHVERSTAENDIGENBUERO]': svFirma,
+    '[ADRESSE]': svAdr,
+    '[PLZ_ORT]': svPlzOrt,
+    '[TELEFON]': svTel,
+    '[SV_QUALIFIKATION]': svQuali,
+    '[TERMIN_DATUM]': termin ? new Date(termin).toLocaleDateString('de-DE') : '[Datum einsetzen]',
+    '[TERMIN_UHRZEIT]': localStorage.getItem('prova_naechster_termin_uhrzeit') || '10:00',
+    '[RUECKMELDEFRIST]': (() => {
+      var d = new Date(); d.setDate(d.getDate() + 3);
+      return d.toLocaleDateString('de-DE');
+    })(),
+    '[LIEFERFRIST]': '10–14',
+    '[ZUGANG_HINWEIS]': 'allen betroffenen Räumlichkeiten',
+    '[PARTEIEN]': 'Klägerin ./. Beklagter',
+    '[GERICHT]': localStorage.getItem('prova_gericht') || 'Landgericht',
+    '[GERICHTS_AZ]': localStorage.getItem('prova_gerichts_az') || 'Az. bitte eintragen',
+    '[BEWEISFRAGEN]': localStorage.getItem('prova_beweisfragen') || '1. Liegt ein Baumangel vor?
+2. Welche Sanierungskosten entstehen?',
+  };
+
+  return replacements;
+};
+
+/* Erweiterte Vorlage-KI: Ladungsbriefe vorausfüllen */
+var _origOeffneVorlageKI = window.oeffneVorlageKI;
+window.oeffneVorlageKI = function(id, event) {
+  // Prüfen ob Ladungsbrief
+  var tmpl = TEMPLATES.find(function(t) { return t.id === id; });
+  if (tmpl && tmpl.cat === 'ladung') {
+    // Modal direkt mit vorausgefülltem Text öffnen
+    var replacements = ladungVorbereiten(id);
+    var text = tmpl.text;
+    Object.keys(replacements).forEach(function(k) {
+      text = text.split(k).join(replacements[k]);
+    });
+    // In Editor-Bereich einfügen (briefvorlagen nutzt eigenes Editor-System)
+    var editorEl = document.getElementById('brief-editor') || document.getElementById('vorlage-text');
+    if (editorEl) {
+      editorEl.value = text;
+      editorEl.style.display = 'block';
+      if (typeof showToast === 'function') showToast('Ladungsbrief mit Fall-Daten vorausgefüllt ✅', 'success');
+    } else if (_origOeffneVorlageKI) {
+      _origOeffneVorlageKI(id, event);
+    }
+    return;
+  }
+  if (_origOeffneVorlageKI) _origOeffneVorlageKI(id, event);
+};
+
 </script>
 
 <script>
@@ -1036,7 +1110,138 @@ var WORKFLOW = [
     icon: '📁',
     farbe: '#6b7280'
   }
+,
+
+  // ── LADUNGSVERSAND & EINLADUNGEN ──
+  {id:'L-01', cat:'ladung', name:'Ladungsschreiben Ortstermin',
+   desc:'Einladung aller Beteiligten zum Ortstermin mit Datum, Uhrzeit, Ort und Hinweis auf §407a ZPO',
+   tier:'Solo',
+   text:`[SACHVERSTAENDIGENBUERO]
+[ADRESSE]
+[PLZ_ORT]
+
+[DATUM]
+
+Betreff: Ladung zum Ortstermin — Az. [AKTENZEICHEN]
+
+Sehr geehrte Damen und Herren,
+
+im Gutachtenauftrag Az. [AKTENZEICHEN] ([SCHADENART], Schadensort: [SCHADENSORT]) ist ein Ortstermin zur Schadensaufnahme erforderlich.
+
+Ich lade Sie hiermit ein zum:
+
+Ortstermin am:  [TERMIN_DATUM], [TERMIN_UHRZEIT] Uhr
+Ort:            [SCHADENSORT]
+Bitte bestätigen Sie Ihre Teilnahme bis [RUECKMELDEFRIST].
+
+Für Rückfragen stehe ich Ihnen gerne zur Verfügung.
+
+Mit freundlichen Grüßen
+
+[SV_NAME]
+[SV_QUALIFIKATION]`
+  },
+
+  {id:'L-02', cat:'ladung', name:'Ladung Gerichtstermin (§ 411 ZPO)',
+   desc:'Einladung zum Ortstermin gemäß Gerichtsbeschluss — mit Beweisfragen und Beteiligten',
+   tier:'Solo',
+   text:`[SACHVERSTAENDIGENBUERO]
+[ADRESSE]
+[PLZ_ORT]
+
+[DATUM]
+
+Betreff: Ladung Ortstermin — Gerichtsgutachten [GERICHTS_AZ]
+
+Sehr geehrte Damen und Herren,
+
+in der Angelegenheit [GERICHTS_AZ] ([PARTEIEN]) wurde ich durch das [GERICHT] mit der Erstattung eines Gutachtens zu folgenden Beweisfragen beauftragt:
+
+[BEWEISFRAGEN]
+
+Zur Durchführung der erforderlichen Untersuchungen lade ich alle Beteiligten ein zum:
+
+Ortstermin am:  [TERMIN_DATUM], [TERMIN_UHRZEIT] Uhr
+Ort:            [SCHADENSORT]
+
+Alle Parteien sind berechtigt, an dem Termin teilzunehmen (§ 411 ZPO). Bitte teilen Sie mir bis [RUECKMELDEFRIST] mit, ob Ihrerseits Einwendungen gegen den Termin bestehen.
+
+Mit freundlichen Grüßen
+
+[SV_NAME]
+Öffentlich bestellter und vereidigter Sachverständiger
+[SV_QUALIFIKATION]`
+  },
+
+  {id:'L-03', cat:'ladung', name:'Terminbestätigung an Auftraggeber',
+   desc:'Bestätigung des vereinbarten Ortstermins an den Auftraggeber',
+   tier:'Solo',
+   text:`[SACHVERSTAENDIGENBUERO]
+[ADRESSE]
+[PLZ_ORT]
+
+[DATUM]
+
+Betreff: Terminbestätigung — Az. [AKTENZEICHEN]
+
+Sehr geehrte Damen und Herren,
+
+ich bestätige Ihnen den vereinbarten Ortstermin zur Schadensaufnahme:
+
+Aktenzeichen:   [AKTENZEICHEN]
+Schadenart:     [SCHADENART]
+Datum / Uhrzeit:[TERMIN_DATUM], [TERMIN_UHRZEIT] Uhr
+Schadensort:    [SCHADENSORT]
+
+Für die Begutachtung benötige ich Zugang zu [ZUGANG_HINWEIS].
+
+Bei Verhinderung bitte ich um frühzeitige Benachrichtigung unter [TELEFON].
+
+Mit freundlichen Grüßen
+
+[SV_NAME]`
+  },
+
+  {id:'L-04', cat:'ladung', name:'Terminerinnerung (3 Tage vorher)',
+   desc:'Kurze Erinnerung an bevorstehenden Ortstermin',
+   tier:'Solo',
+   text:`[SACHVERSTAENDIGENBUERO]
+[DATUM]
+
+Betreff: Erinnerung Ortstermin — Az. [AKTENZEICHEN]
+
+Sehr geehrte Damen und Herren,
+
+zur Erinnerung: Der Ortstermin für Az. [AKTENZEICHEN] findet statt am:
+[TERMIN_DATUM] um [TERMIN_UHRZEIT] Uhr — [SCHADENSORT]
+
+Bei Fragen: [TELEFON]
+
+Mit freundlichen Grüßen
+[SV_NAME]`
+  },
+
+  {id:'L-05', cat:'ladung', name:'Nachfassschreiben nach Ortstermin',
+   desc:'Bestätigung des durchgeführten Termins mit Hinweis auf Gutachtenerstellung',
+   tier:'Solo',
+   text:`[SACHVERSTAENDIGENBUERO]
+[DATUM]
+
+Betreff: Ortstermin durchgeführt — Az. [AKTENZEICHEN]
+
+Sehr geehrte Damen und Herren,
+
+am [TERMIN_DATUM] habe ich den Ortstermin am Schadensort [SCHADENSORT] (Az. [AKTENZEICHEN]) durchgeführt.
+
+Das Gutachten wird in ca. [LIEFERFRIST] Werktagen fertiggestellt.
+
+Bei dringenden Rückfragen stehe ich unter [TELEFON] zur Verfügung.
+
+Mit freundlichen Grüßen
+[SV_NAME]`
+  }
 ];
+
 
 // ── WERKZEUGE (kontextuell, kein fester Workflow-Schritt) ───────────────
 var WERKZEUGE = {
@@ -1280,19 +1485,4 @@ function einfuegenBanner() {
   }
   
   if (insertAfter) {
-    insertAfter.insertAdjacentHTML('afterend', bannerHtml);
-  }
-}
-
-// ── INIT ────────────────────────────────────────────────────────────────
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', einfuegenBanner);
-} else {
-  einfuegenBanner();
-}
-
-// ── PUBLIC API ──────────────────────────────────────────────────────────
-window.PROVA_KONTEXT = {
-  // Erlaubt anderen Scripts den Fall-Kontext zu setzen
-  setFall: function(az, schadenart, adresse, recordId) {
-    if (az) localStorage.se
+    insertAfter.insertAdjacentHTML('

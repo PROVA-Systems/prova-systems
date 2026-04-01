@@ -4,8 +4,6 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>PROVA — Positionsdatenbank</title>
-<script src="theme.js"></script>
-<script src="nav.js"></script>
 <style>
 :root{
   --bg:#0b1220;--bg2:#111827;--bg3:#161f30;
@@ -13,19 +11,43 @@
   --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);
   --text:#e8eaf0;--text2:#aab4cb;--text3:#6b7a99;
   --accent:#4f8ef7;--accent2:#3a7be0;
-  --green:#10b981;--green-bg:rgba(16,185,129,.08);--green-border:rgba(16,185,129,.25);
-  --warn:#f59e0b;--warn-bg:rgba(245,158,11,.08);--warn-border:rgba(245,158,11,.25);--red:#ef4444;--red-bg:rgba(239,68,68,.08);--red-border:rgba(239,68,68,.25);--purple:#8b5cf6;
+  --green:#10b981;--green-border:rgba(16,185,129,0.25);
+  --warn:#f59e0b;--red:#ef4444;--purple:#8b5cf6;
   --r-sm:6px;--r-md:10px;--r-lg:14px;
-  --font-ui:'DM Sans',system-ui,sans-serif;
+  --sans:'Instrument Sans',system-ui,sans-serif;
   --mono:'JetBrains Mono',monospace;
+  --sb-w:220px;--sb-w-col:58px;
 }
 *{box-sizing:border-box;margin:0;padding:0;}
-html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--font-ui);font-size:14px;}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14px;}
 
 /* SIDEBAR */
+.sidebar{position:fixed;left:0;top:0;bottom:0;width:var(--sb-w);background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;z-index:100;transition:width 0.22s cubic-bezier(0.4,0,0.2,1);}
+.sidebar.collapsed{width:var(--sb-w-col);}
+.sb-logo{display:flex;align-items:center;gap:10px;padding:16px 14px 12px;border-bottom:1px solid var(--border);min-height:54px;overflow:hidden;white-space:nowrap;}
+.sb-logo-text{font-size:17px;font-weight:800;letter-spacing:-0.03em;}
+.sb-logo-text span{color:var(--accent);}
+.sb-paket{font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;background:rgba(79,142,247,0.15);color:var(--accent);border:1px solid rgba(79,142,247,0.25);}
+.sb-new-btn{display:flex;align-items:center;gap:9px;margin:10px 10px 4px;padding:10px 12px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:var(--r-md);color:#fff;font-weight:700;font-size:13px;cursor:pointer;border:none;width:calc(100% - 20px);text-decoration:none;white-space:nowrap;overflow:hidden;transition:all 0.18s;}
+.sb-new-btn:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(79,142,247,0.35);}
+.sb-nav{flex:1;overflow-y:auto;overflow-x:hidden;padding:4px 0;}
+.sb-section{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--text3);padding:12px 14px 4px;white-space:nowrap;overflow:hidden;}
+.sb-item{display:flex;align-items:center;gap:11px;padding:8px 14px;color:var(--text3);text-decoration:none;transition:all 0.15s;white-space:nowrap;overflow:hidden;border-left:3px solid transparent;min-height:36px;font-size:13px;font-weight:500;}
+.sb-item:hover{background:rgba(255,255,255,0.04);color:var(--text2);}
+.sb-item.active{background:rgba(79,142,247,0.1);color:var(--accent);border-left-color:var(--accent);font-weight:600;}
+.sb-icon{font-size:15px;width:20px;text-align:center;flex-shrink:0;}
+.sb-label{overflow:hidden;}
+.sb-collapse{padding:10px 14px;border-top:1px solid var(--border);cursor:pointer;display:flex;align-items:center;gap:8px;color:var(--text3);font-size:12px;}
+.sb-collapse:hover{color:var(--text2);}
+.sidebar.collapsed .sb-label,.sidebar.collapsed .sb-section,.sidebar.collapsed .sb-logo-text,.sidebar.collapsed .sb-paket,.sidebar.collapsed .sb-new-btn span{display:none;}
+.sidebar.collapsed .sb-item{justify-content:center;padding:10px;}
+.sidebar.collapsed .sb-new-btn{justify-content:center;padding:10px;}
+.sidebar.collapsed .sb-collapse{justify-content:center;}
+.sidebar.collapsed .sb-item[data-tip]:hover::after{content:attr(data-tip);position:absolute;left:calc(var(--sb-w-col) + 8px);top:50%;transform:translateY(-50%);background:#1e2536;border:1px solid var(--border2);color:var(--text);font-size:12px;padding:5px 10px;border-radius:6px;white-space:nowrap;z-index:500;}
 
 /* LAYOUT */
 .main{margin-left:var(--sb-w);transition:margin-left 0.22s;min-height:100vh;display:flex;flex-direction:column;}
+.main.collapsed{margin-left:var(--sb-w-col);}
 .topbar{height:52px;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 20px;position:sticky;top:0;z-index:50;}
 .topbar-title{font-size:15px;font-weight:700;}
 .topbar-title span{color:var(--text3);font-weight:400;}
@@ -40,10 +62,10 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
 .search-bar{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;}
 .search-wrap{position:relative;flex:1;min-width:200px;}
 .search-wrap .si{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--text3);pointer-events:none;}
-.search-input{width:100%;padding:9px 12px 9px 34px;background:var(--surface);border:1px solid var(--border2);border-radius:var(--r-md);color:var(--text);font-size:13px;font-family:var(--font-ui);outline:none;transition:border-color 0.15s;}
+.search-input{width:100%;padding:9px 12px 9px 34px;background:var(--surface);border:1px solid var(--border2);border-radius:var(--r-md);color:var(--text);font-size:13px;font-family:var(--sans);outline:none;transition:border-color 0.15s;}
 .search-input:focus{border-color:var(--accent);}
 .search-input::placeholder{color:var(--text3);}
-.filter-select{padding:8px 12px;background:var(--surface);border:1px solid var(--border2);border-radius:var(--r-md);color:var(--text);font-size:12px;cursor:pointer;outline:none;min-width:130px;font-family:var(--font-ui);}
+.filter-select{padding:8px 12px;background:var(--surface);border:1px solid var(--border2);border-radius:var(--r-md);color:var(--text);font-size:12px;cursor:pointer;outline:none;min-width:130px;font-family:var(--sans);}
 .filter-select:focus{border-color:var(--accent);}
 
 /* CHIPS */
@@ -58,16 +80,16 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
 .pos-row{display:grid;grid-template-columns:90px 1fr 60px 110px 90px 100px;gap:0;padding:9px 14px;border-bottom:1px solid var(--border);align-items:center;transition:background 0.12s;cursor:pointer;}
 .pos-row:hover{background:rgba(255,255,255,0.03);}
 .pos-row:last-child{border-bottom:none;}
-.pos-nr{font-size:11px;font-weight:700;color:var(--accent);font-family:var(--font-mono);}
+.pos-nr{font-size:11px;font-weight:700;color:var(--accent);font-family:var(--mono);}
 .pos-bez{font-size:12px;color:var(--text);line-height:1.35;}
 .pos-sub{font-size:10px;color:var(--text3);margin-top:2px;}
 .pos-ein{font-size:12px;color:var(--text2);text-align:center;}
 .pos-preise{font-size:11px;color:var(--text2);}
 .pos-preise .med{font-size:13px;font-weight:700;color:var(--text);}
 .pos-preise .range{font-size:10px;color:var(--text3);margin-top:1px;}
-.pos-norm{font-size:10px;color:var(--text3);font-family:var(--font-mono);}
+.pos-norm{font-size:10px;color:var(--text3);font-family:var(--mono);}
 .pos-actions{display:flex;gap:5px;justify-content:flex-end;}
-.btn-pos{padding:5px 10px;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font-ui);transition:all 0.15s;}
+.btn-pos{padding:5px 10px;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--sans);transition:all 0.15s;}
 .btn-insert{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;}
 .btn-insert:hover{transform:translateY(-1px);}
 .btn-copy{background:var(--surface3);color:var(--text2);border:1px solid var(--border2);}
@@ -82,7 +104,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
 .empty{text-align:center;padding:40px;color:var(--text3);}
 
 /* Toast */
-.toast{position:fixed;bottom:24px;right:24px;padding:14px 18px;background:var(--bg2);border:1px solid var(--border2);border-radius:12px;color:var(--text);font-size:13px;font-weight:500;z-index:9999;transform:translateY(80px);opacity:0;transition:all 0.35s cubic-bezier(0.34,1.56,0.64,1);min-width:260px;max-width:360px;box-shadow:0 8px 32px rgba(0,0,0,.3);}
+.toast{position:fixed;bottom:20px;right:20px;padding:10px 18px;background:var(--surface2);border:1px solid var(--green-border);border-radius:10px;color:var(--green);font-size:13px;font-weight:600;z-index:999;transform:translateY(60px);opacity:0;transition:all 0.3s cubic-bezier(0.34,1.56,0.64,1);}
 .toast.show{transform:translateY(0);opacity:1;}
 
 /* Paket-Badge */
@@ -110,17 +132,63 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
   .sup-ok-icon{font-size:36px;margin-bottom:8px;}
   .sup-ok-title{font-size:15px;font-weight:700;color:var(--green,#10b981);margin-bottom:4px;}
   .sup-ok-sub{font-size:12px;color:var(--text3,#6b7a99);}
-.app-shell{display:flex;min-height:100vh;}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 900px) {
+  .main { padding: 12px !important; }
+  .pos-grid { grid-template-columns: 1fr !important; }
+  .filter-row { flex-direction: column !important; gap: 8px !important; }
+  .chip-bar { flex-wrap: wrap !important; }
+  #mainContent { margin-left: 0 !important; }
+}
+@media (max-width: 600px) {
+  .topbar-title span { display: none; }
+  .pos-table { font-size: 11px; }
+  .pos-table .norm-col { display: none; }
+}
+
+@media(max-width:768px){#burger-btn{display:block!important}}
 </style>
+<script src="theme.js"></script>
+<script src="nav.js"></script>
+<script src="trial-guard.js"></script>
 </head>
 <body>
-
 <div class="app-shell">
-<nav class="sidebar" id="sidebar"></nav>
+<nav class="sidebar" id="sidebar">
+  <div class="sb-logo">
+    <div class="sb-logo-mark">P</div>
+    <div class="sb-logo-text">PR<span>O</span>VA</div>
+  </div>
+  <button class="sb-new-btn" id="sb-new-btn">
+    <span class="btn-icon">＋</span>
+    <span class="btn-label">Neuer Fall</span>
+  </button>
+  <div class="sb-nav">
+    <a href="dashboard.html" class="sb-item" data-tip="Zentrale"><span class="sb-icon">⊞</span><span class="sb-label">Zentrale</span></a>
+    <a href="archiv.html" class="sb-item" data-tip="Fälle"><span class="sb-icon">📁</span><span class="sb-label">Fälle</span></a>
+    <a href="termine.html" class="sb-item" data-tip="Kalender"><span class="sb-icon">📅</span><span class="sb-label">Kalender</span></a>
+    <a href="rechnungen.html" class="sb-item" data-tip="Rechnungen"><span class="sb-icon">💶</span><span class="sb-label">Rechnungen</span></a>
+    <a href="briefvorlagen.html" class="sb-item" data-tip="Briefe"><span class="sb-icon">✉️</span><span class="sb-label">Briefe</span></a>
+    <div class="sb-section-label">Werkzeuge</div>
+    <a href="jveg.html" class="sb-item" data-tip="JVEG-Rechner"><span class="sb-icon">⚖️</span><span class="sb-label">JVEG-Rechner</span></a>
+    <a href="kostenermittlung.html" class="sb-item" data-tip="Kosten & Aufmaß"><span class="sb-icon">📐</span><span class="sb-label">Kosten & Aufmaß</span></a>
+    <a href="textbausteine.html" class="sb-item" data-tip="Textbausteine"><span class="sb-icon">✏️</span><span class="sb-label">Textbausteine</span></a>
+    <a href="positionen.html" class="sb-item active" data-tip="Positionsdatenbank"><span class="sb-icon">🗂</span><span class="sb-label">Positionen</span></a>
+    <a href="normen.html" class="sb-item" data-tip="Normendatenbank"><span class="sb-icon">📚</span><span class="sb-label">Normen</span></a>
+    <div class="sb-divider"></div>
+    <a href="kontakte.html" class="sb-item" data-tip="Kontakte"><span class="sb-icon">👥</span><span class="sb-label">Kontakte</span></a>
+  </div>
+  <div class="sb-footer">
+    <div class="sb-paket"><div class="paket-dot" id="sb-paket-dot"></div><span class="paket-name" id="sb-paket-name">Starter</span></div>
+    <a href="einstellungen.html" class="sb-item" data-tip="Einstellungen"><span class="sb-icon">⚙️</span><span class="sb-label">Einstellungen</span></a>
+    <button class="sb-toggle" onclick="toggleSidebar()"><span class="sb-toggle-icon">◀</span></button>
+  </div>
+</nav>
 
-<div class="main" id="mainContent">
+<div class="main-wrap" id="main-wrap"><div class="main" id="mainContent">
   <div class="topbar">
-    <div class="topbar-title">Positionsdatenbank <span>/ BKI-Einheitspreise & Kostenrahmen</span></div>
+    <button class="burger" onclick="openMobileSidebar()" style="background:none;border:none;cursor:pointer;padding:4px 8px;margin-right:4px;display:none;" id="burger-btn"><span style="display:block;width:18px;height:2px;background:var(--text2);margin:3px 0;border-radius:1px;"></span><span style="display:block;width:18px;height:2px;background:var(--text2);margin:3px 0;border-radius:1px;"></span><span style="display:block;width:18px;height:2px;background:var(--text2);margin:3px 0;border-radius:1px;"></span></button><div class="topbar-title">Positionsdatenbank <span>/ BKI-Einheitspreise & Kostenrahmen</span></div>
     <div style="display:flex;align-items:center;gap:10px;">
       <span class="paket-badge" id="topbarPaket"></span>
       <button style="background:none;border:none;color:var(--text3);font-size:17px;cursor:pointer;padding:6px;" onclick="location.href='einstellungen.html'">⚙</button>
@@ -146,6 +214,13 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
       </div>
       <select class="filter-select" id="filterKat" onchange="renderPositionen()">
         <option value="">Alle Schadenarten</option>
+                <option value="WS">💧 Wasserschaden</option>
+                <option value="SC">🟢 Schimmel/Feuchte</option>
+                <option value="BS">🔥 Brandschaden</option>
+                <option value="ST">🌪️ Sturmschaden</option>
+                <option value="BA">🏗️ Baumängel</option>
+                <option value="ES">🌊 Elementarschaden</option>
+                <option value="SS">☣️ Schadstoff</option>
         <option value="Wasserschaden">Wasserschaden</option>
         <option value="Schimmel/Feuchte">Schimmel / Feuchte</option>
         <option value="Brandschaden">Brandschaden</option>
@@ -167,6 +242,8 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
       <div class="chip" onclick="setChip('SS',this)">🌪 Sturm</div>
       <div class="chip" onclick="setChip('ES',this)">🌊 Elementar</div>
       <div class="chip" onclick="setChip('BA',this)">🏗 Baumängel</div>
+      <div class="chip" onclick="setChip('ES',this)">🌊 Elementar</div>
+      <div class="chip" onclick="setChip('SS',this)">☣️ Schadstoff</div>
     </div>
 
     <!-- TABELLE -->
@@ -189,16 +266,25 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
   </div>
 </div>
 
-<div class="toast" id="toast"><div id="toast-text"></div><div id="toast-cta" style="margin-top:10px;display:none;"></div></div>
+<div class="toast" id="toast"></div>
 
 <script>
+// SIDEBAR
+(function(){
+  const sb=document.querySelector('.sidebar');
+  const main=document.getElementById('mainContent');
+  if(localStorage.getItem('prova_sb_collapsed')==='true'){sb.classList.add('collapsed');main.classList.add('collapsed');}
+  const btn=document.querySelector('.sb-collapse');
+  if(btn)btn.onclick=function(){sb.classList.toggle('collapsed');main.classList.toggle('collapsed');localStorage.setItem('prova_sb_collapsed',sb.classList.contains('collapsed'));}
+})();
+
 // AUTH
 if(!localStorage.getItem('prova_user')){window.location.href='app-login.html';}
 
 // PAKET
 (function(){
-  var p=localStorage.getItem('prova_paket')||'Solo';
-  var c={Solo:'#4f8ef7',Team:'#a78bfa',Starter:'#4f8ef7',Pro:'#4f8ef7',Enterprise:'#a78bfa'}[p]||'#4f8ef7';
+  var p=localStorage.getItem('prova_paket')||'Starter';
+  var c={Starter:'#4f8ef7',Pro:'#f59e0b',Enterprise:'#a78bfa'}[p]||'#4f8ef7';
   var b=document.getElementById('topbarPaket');
   if(b){b.textContent=p;b.style.cssText='background:'+c+'18;color:'+c+';border:1px solid '+c+'33;';}
 })();
@@ -508,7 +594,31 @@ const POSITIONEN_DB = [
   {nr:'ESWS-081',kat:'Wasserschaden',sub:'Trocknung',bez:'Bautrocknung Zwischenbericht Feuchteprofil je Begehung',ein:'Psch',min:95,med:145,max:220,norm:'VdS 3151',sa:'WS'},
   {nr:'BS-061',kat:'Brandschaden',sub:'Rußreinigung',bez:'Rußreinigung Treppenhaus komplett inkl. Geländer je m²',ein:'m²',min:14,med:21,max:34,norm:'',sa:'BS'},
   {nr:'SS-041',kat:'Sturmschaden',sub:'Außenanlagen',bez:'Streifenfundament Gartenmauer Sturmschaden reparieren je lfm',ein:'lfm',min:85,med:130,max:210,norm:'',sa:'SS'}
+,
+  // ── SCHADSTOFF & ENTSORGUNG ──
+  {nr:'SS-001',kat:'Schadstoff',sub:'Asbest',bez:'Asbestprobe entnehmen und Laboranalyse (inkl. REM)',ein:'Probe',min:180,med:280,max:420,norm:'TRGS 519',sa:'SS'},
+  {nr:'SS-002',kat:'Schadstoff',sub:'Asbest',bez:'Asbestkataster erstellen',ein:'Psch',min:450,med:750,max:1200,norm:'TRGS 519',sa:'SS'},
+  {nr:'SS-003',kat:'Schadstoff',sub:'Asbest',bez:'Asbestzementplatten Dach demontieren und entsorgen (inkl. Container)',ein:'m²',min:45,med:65,max:95,norm:'TRGS 519',sa:'SS'},
+  {nr:'SS-004',kat:'Schadstoff',sub:'Asbest',bez:'Asbesthaltige Bodenfliesen (Vinylplatten) demontieren und entsorgen',ein:'m²',min:35,med:52,max:78,norm:'TRGS 519',sa:'SS'},
+  {nr:'SS-005',kat:'Schadstoff',sub:'Asbest',bez:'Asbesthaltige Putze/Spachtelmassen (Spritzasbest) entfernen — Schutzklasse 3',ein:'m²',min:85,med:130,max:195,norm:'TRGS 519',sa:'SS'},
+  {nr:'SS-006',kat:'Schadstoff',sub:'Mineralfasern',bez:'KMF-Altwolle (bio-persistent) entfernen und entsorgen',ein:'m²',min:28,med:42,max:68,norm:'TRGS 521',sa:'SS'},
+  {nr:'SS-007',kat:'Schadstoff',sub:'Mineralfasern',bez:'KMF-Probe und Laboranalyse (Fasereinstufung WHO)',ein:'Probe',min:120,med:190,max:290,norm:'TRGS 521',sa:'SS'},
+  {nr:'SS-008',kat:'Schadstoff',sub:'PCB/PAK',bez:'PCB-Probe (Polychlorierte Biphenyle) und Laboranalyse',ein:'Probe',min:220,med:340,max:520,norm:'TRGS 524',sa:'SS'},
+  {nr:'SS-009',kat:'Schadstoff',sub:'PCB/PAK',bez:'PAK-haltige Fugendichtstoffe entfernen (Spezialbetrieb)',ein:'lfm',min:55,med:85,max:130,norm:'TRGS 524',sa:'SS'},
+  {nr:'SS-010',kat:'Schadstoff',sub:'Blei',bez:'Bleihaltige Farbe — Probe und Laboranalyse',ein:'Probe',min:150,med:230,max:350,norm:'TRGS 505',sa:'SS'},
+  {nr:'SS-011',kat:'Schadstoff',sub:'Entsorgung',bez:'Sonderabfallentsorgung gefährlicher Baustoffe — Kleinmengen (bis 1t)',ein:'t',min:280,med:420,max:680,norm:'KrWG §48',sa:'SS'},
+  {nr:'SS-012',kat:'Schadstoff',sub:'Entsorgung',bez:'Schadstoffgutachten / Schadstoffkataster Vollerhebung Gebäude',ein:'Psch',min:800,med:1400,max:2200,norm:'TRGS 519',sa:'SS'},
+
+  // ── GERÜST & BAUSTELLENEINRICHTUNG ──
+  {nr:'GE-001',kat:'Gerüst',sub:'Fassadengerüst',bez:'Fassadengerüst aufbauen, vorhalten (4 Wochen) und abbauen',ein:'m²',min:18,med:26,max:38,norm:'DIN EN 12811',sa:'WS,BS,ST,BA'},
+  {nr:'GE-002',kat:'Gerüst',sub:'Fassadengerüst',bez:'Gerüst Verlängerungsmiete je Woche',ein:'m²/Wo',min:1.50,med:2.20,max:3.50,norm:'DIN EN 12811',sa:'WS,BS,ST,BA'},
+  {nr:'GE-003',kat:'Gerüst',sub:'Dachgerüst',bez:'Fanggerüst / Dachschutzwand aufbauen, vorhalten und abbauen',ein:'lfm',min:45,med:68,max:105,norm:'DIN EN 12811',sa:'BS,ST,BA'},
+  {nr:'GE-004',kat:'Gerüst',sub:'Einhausung',bez:'Wetterschutzplane / Einhausung (Vollschutz)',ein:'m²',min:12,med:18,max:28,norm:'BG Bau',sa:'WS,BS,ST'},
+  {nr:'GE-005',kat:'Gerüst',sub:'Baustelleneinrichtung',bez:'Baustellenabsperrung (Absperrgitter inkl. Aufstellen)',ein:'lfm',min:8,med:12,max:18,norm:'RSA 21',sa:'WS,BS,ST,BA,ES'},
+  {nr:'GE-006',kat:'Gerüst',sub:'Baustelleneinrichtung',bez:'Baucontainer (Büro/Lager) aufstellen, vorhalten 4 Wochen und abbauen',ein:'Psch',min:380,med:580,max:880,norm:'',sa:'BA'},
+  {nr:'GE-007',kat:'Gerüst',sub:'Baustelleneinrichtung',bez:'Baustrom-Anschluss und Verteilung',ein:'Psch',min:280,med:420,max:680,norm:'DIN VDE 0100-704',sa:'BA'}
 ];
+
 
 
 let activeChip = '';
@@ -594,10 +704,26 @@ function renderPositionen(){
 function insertPos(nr){
   const p=POSITIONEN_DB.find(x=>x.nr===nr);
   if(!p) return;
-  const entry={nr:p.nr,bezeichnung:p.bez,einheit:p.ein,min:p.min,median:p.med,max:p.max,norm:p.norm};
-  // In localStorage Queue speichern
+  // Einheitliches Format für kostenermittlung.html
+  const az = localStorage.getItem('prova_aktiver_fall') || localStorage.getItem('prova_letztes_az') || '';
+  const entry={
+    id: p.nr,          // 'id' wie kostenermittlung erwartet
+    nr: p.nr,          // Kompatibilität
+    bez: p.bez,
+    ei: p.ein,         // 'ei' wie kostenermittlung
+    mn: p.min,         // 'mn' wie kostenermittlung
+    me: p.med,         // 'me' wie kostenermittlung
+    mx: p.max,         // 'mx' wie kostenermittlung
+    sa: p.sa,
+    norm: p.norm,
+    az: az,            // AZ mitsenden für Fall-Matching
+    ts: Date.now()
+  };
+  // Deduplizierung: gleiche Position + gleicher Fall nicht doppelt
   try{
     let q=JSON.parse(localStorage.getItem('prova_positionen_queue')||'[]');
+    // Alten Eintrag entfernen falls vorhanden
+    q = q.filter(e => !(e.id === entry.id && e.az === az));
     q.push(entry);
     localStorage.setItem('prova_positionen_queue',JSON.stringify(q));
   }catch(e){}
@@ -607,15 +733,7 @@ function insertPos(nr){
     showToast('Position übertragen ✅');
     setTimeout(()=>window.close(),700);
   } else {
-    var linkBtn = document.getElementById('goto-kosten-btn');
-    if(linkBtn) linkBtn.style.display='inline-flex';
-    // Context-aware: aktiver Fall?
-    var aktenzeichen = localStorage.getItem('prova_aktiver_fall') || '';
-    if(aktenzeichen) {
-      showToastMitCTA('📐 Position ' + p.nr + ' für Fall ' + aktenzeichen + ' gespeichert', 'Zur Kostenermittlung →', 'kostenermittlung.html');
-    } else {
-      showToastMitCTA('📐 Position ' + p.nr + ' gespeichert', 'Zur Kostenermittlung →', 'kostenermittlung.html');
-    }
+    showToast('Position gespeichert — in Kostenermittlung verfügbar ✅');
   }
 }
 
@@ -626,28 +744,10 @@ function copyPos(nr){
   navigator.clipboard.writeText(txt).then(()=>showToast('Zeile kopiert ✅')).catch(()=>showToast('Kopiert: '+txt.slice(0,50)+'…'));
 }
 
-window.showToast = window.showToast || window.zeigToast || function(m){ alert(m); };
-function showToastMitCTA(msg, ctaLabel, ctaHref) {
-  const t = document.getElementById('toast');
-  const txt = document.getElementById('toast-text');
-  const cta = document.getElementById('toast-cta');
-  if(txt) txt.innerHTML = msg;
-  if(cta) {
-    if(ctaLabel && ctaHref) {
-      cta.style.display = 'block';
-      cta.innerHTML = '<a href="'+ctaHref+'" style="display:inline-block;padding:7px 14px;background:var(--accent);color:#fff;border-radius:7px;font-size:12px;font-weight:700;text-decoration:none;">'+ctaLabel+'</a>';
-    } else {
-      cta.style.display = 'none';
-      cta.innerHTML = '';
-    }
-  }
-  if(t) {
-    t.classList.remove('show');
-    void t.offsetWidth;
-    t.classList.add('show');
-    clearTimeout(t._timer);
-    t._timer = setTimeout(()=>t.classList.remove('show'), ctaLabel ? 4000 : 2500);
-  }
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2500);
 }
 
 // Schadenart aus sessionStorage vorauswählen
@@ -684,7 +784,7 @@ renderPositionen();
         <div class="sup-err" id="sup-err">Bitte Betreff und Nachricht eingeben.</div>
         <button class="sup-send-btn" id="sup-btn" onclick="supSendModal()">Nachricht senden</button>
         <div style="text-align:center;margin-top:10px;font-size:11px;color:var(--text3,#6b7a99);">
-          Oder direkt: <a href="mailto:kontakt@prova-systems.de">kontakt@prova-systems.de</a>
+          Oder direkt: <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="cfa4a0a1bbaea4bb8fbfbda0b9aee2bcb6bcbbaaa2bce1abaa">[email&#160;protected]</a>
         </div>
       </div>
       <div class="sup-ok" id="sup-ok">
@@ -695,7 +795,7 @@ renderPositionen();
     </div>
   </div>
 </div>
-</script><script>
+<script>
 function openSupportModal(){
   var m=document.getElementById('support-modal');
   if(!m)return;
@@ -711,367 +811,3 @@ function openSupportModal(){
   m.classList.add('open');
 }
 async function supSendModal(){
-  var b=(document.getElementById('sup-betreff').value||'').trim();
-  var n=(document.getElementById('sup-nachricht').value||'').trim();
-  if(!b||!n){document.getElementById('sup-err').style.display='block';return;}
-  document.getElementById('sup-err').style.display='none';
-  var btn=document.getElementById('sup-btn');
-  btn.disabled=true;btn.textContent='⏳ Wird gesendet…';
-  try{
-    await fetch('https://hook.eu1.make.com/lktuhugwcg5v37ib6bdaxjb1uiplnu8v',{
-      method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
-        betreff:b,nachricht:n,
-        sv_email:localStorage.getItem('prova_sv_email')||'',
-        paket:localStorage.getItem('prova_paket')||'Solo',
-        sete:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({
-          betreff:b,nachricht:n,
-          sv_email:localStorage.getItem('prova_sv_email')||'',
-          paket:localStorage.getItem('prova_paket')||'Solo',
-          seite:window.location.pathname
-        })
-      });
-    }catch(e){}
-    zeigToast('Nachricht gesendet — wir melden uns schnellstmöglich!','success');
-    if(ta)ta.value='';
-    if(modal)modal.style.display='none';
-  }catch(e){
-    zeigToast('Fehler. Bitte E-Mail an kontakt@prova-systems.de','error');
-  }
-};
-})();
-</script>
-<script>
-(function(){
-  var path=window.location.pathname.split('/').pop()||'dashboard';
-  document.addEventListener('DOMContentLoaded',function(){
-    document.querySelectorAll('[data-nav]').forEach(function(el){el.classList.remove('active');});
-    var map={'normen':'nav-normen','textbausteine':'nav-textbausteine','positionen':'nav-positionen'};
-    var id=map[path];
-    if(id){var el=document.getElementById(id);if(el)el.classList.add('active');}
-  });
-})();
-</script>
-
-<script>
-/* ================================================================
-   PROVA Fall-Kontext-System v1.0
-   Zeigt auf jeder Workflow/Werkzeug-Seite den aktiven Fall-Kontext
-   und führt den SV zum nächsten Schritt.
-   
-   Aktiviert sich automatisch wenn ein aktiver Fall vorhanden ist.
-   Kein Eingriff in bestehende Seiten-Logik.
-================================================================ */
-
-(function() {
-'use strict';
-
-// ── WORKFLOW-KONFIGURATION ──────────────────────────────────────────────
-var WORKFLOW = [
-  {
-    schritt: 1,
-    name: 'Fall anlegen',
-    seite: 'app-starter.html',
-    icon: '📋',
-    farbe: '#4f8ef7'
-  },
-  {
-    schritt: 2,
-    name: 'Diktat & Fotos',
-    seite: 'app-starter.html#step2',
-    icon: '🎙️',
-    farbe: '#4f8ef7'
-  },
-  {
-    schritt: 3,
-    name: 'KI-Analyse',
-    seite: 'app-starter.html#step3',
-    icon: '🤖',
-    farbe: '#6366f1'
-  },
-  {
-    schritt: 4,
-    name: '§6 Fachurteil',
-    seite: 'stellungnahme.html',
-    icon: '⚖️',
-    farbe: '#f59e0b'
-  },
-  {
-    schritt: 5,
-    name: 'Freigabe',
-    seite: 'freigabe.html',
-    icon: '✅',
-    farbe: '#10b981'
-  },
-  {
-    schritt: 6,
-    name: 'Rechnung',
-    seite: 'rechnungen.html',
-    icon: '💶',
-    farbe: '#10b981'
-  },
-  {
-    schritt: 7,
-    name: 'Abschluss',
-    seite: 'archiv.html',
-    icon: '📁',
-    farbe: '#6b7280'
-  }
-];
-
-// ── WERKZEUGE (kontextuell, kein fester Workflow-Schritt) ───────────────
-var WERKZEUGE = {
-  'normen.html':         { name: 'Normendatenbank',    icon: '📚', zurück: true },
-  'positionen.html':     { name: 'Positionsdatenbank', icon: '📦', zurück: true },
-  'textbausteine.html':  { name: 'Textbausteine',      icon: '✏️',  zurück: true },
-  'jveg.html':           { name: 'JVEG-Rechner',       icon: '⚖️',  zurück: false },
-  'kostenermittlung.html':{ name: 'Kosten & Aufmaß',   icon: '📐', zurück: true },
-  'briefvorlagen.html':  { name: 'Briefvorlagen',      icon: '✉️',  zurück: false }
-};
-
-// ── SEITE BESTIMMEN ─────────────────────────────────────────────────────
-var currentPage = window.location.pathname.split('/').pop() || 'dashboard.html';
-if (currentPage === '') currentPage = 'dashboard.html';
-
-// ── AKTUELLEN SCHRITT BESTIMMEN ─────────────────────────────────────────
-function getCurrentSchritt() {
-  var basePage = currentPage.split('#')[0];
-  for (var i = 0; i < WORKFLOW.length; i++) {
-    if (WORKFLOW[i].seite.split('#')[0] === basePage) {
-      return WORKFLOW[i].schritt;
-    }
-  }
-  return null;
-}
-
-// ── FALL-KONTEXT LADEN ──────────────────────────────────────────────────
-function ladeFallKontext() {
-  // Versuche aus URL-Parameter zu laden
-  var params = new URLSearchParams(window.location.search);
-  var urlAz   = params.get('az') || params.get('fall') || params.get('aktenzeichen');
-  
-  // Dann aus sessionStorage/localStorage
-  var az         = urlAz
-                 || sessionStorage.getItem('prova_current_az')
-                 || localStorage.getItem('prova_letztes_az')
-                 || '';
-  
-  var schadenart = sessionStorage.getItem('prova_current_schadenart')
-                 || localStorage.getItem('prova_schadenart')
-                 || '';
-  
-  var adresse    = sessionStorage.getItem('prova_current_objekt')
-                 || localStorage.getItem('prova_adresse')
-                 || '';
-  
-  var recordId   = sessionStorage.getItem('prova_record_id')
-                 || sessionStorage.getItem('prova_current_record_id')
-                 || '';
-  
-  if (!az) return null;
-  
-  return { az: az, schadenart: schadenart, adresse: adresse, recordId: recordId };
-}
-
-// ── NÄCHSTER SCHRITT ─────────────────────────────────────────────────────
-function naechsterSchritt(aktuellerSchritt) {
-  if (!aktuellerSchritt) return null;
-  for (var i = 0; i < WORKFLOW.length; i++) {
-    if (WORKFLOW[i].schritt === aktuellerSchritt + 1) {
-      return WORKFLOW[i];
-    }
-  }
-  return null;
-}
-
-// ── BANNER HTML BAUEN ───────────────────────────────────────────────────
-function baueBanner(kontext, aktuellerSchritt, istWerkzeug) {
-  var az        = kontext.az;
-  var sa        = kontext.schadenart;
-  var adr       = kontext.adresse;
-  var recordId  = kontext.recordId;
-  
-  // Schadensart Farbe
-  var saFarben = {
-    'Schimmelbefall': '#10b981',
-    'Wasserschaden':  '#3b82f6',
-    'Brandschaden':   '#ef4444',
-    'Sturmschaden':   '#8b5cf6',
-    'Baumängel':      '#f59e0b',
-    'Sonstiger Schaden': '#6b7280'
-  };
-  var saFarbe = saFarben[sa] || '#4f8ef7';
-  
-  // Akte-Link bauen
-  var akteLink = recordId
-    ? 'akte.html?id=' + recordId
-    : az
-      ? 'akte.html?az=' + encodeURIComponent(az)
-      : 'archiv.html';
-  
-  // Nächster-Schritt Button
-  var naechsterBtn = '';
-  if (!istWerkzeug && aktuellerSchritt) {
-    var naechster = naechsterSchritt(aktuellerSchritt);
-    if (naechster) {
-      var naechsterUrl = naechster.seite;
-      // AZ mitgeben wenn relevant
-      if (naechster.seite.indexOf('stellungnahme') >= 0 && az) {
-        naechsterUrl = naechster.seite + '?az=' + encodeURIComponent(az);
-      } else if (naechster.seite.indexOf('freigabe') >= 0 && recordId) {
-        naechsterUrl = naechster.seite + '?id=' + recordId;
-      } else if (naechster.seite.indexOf('rechnungen') >= 0 && az) {
-        naechsterUrl = naechster.seite + '?az=' + encodeURIComponent(az);
-      } else if (naechster.seite.indexOf('archiv') >= 0) {
-        naechsterUrl = naechster.seite;
-      }
-      
-      naechsterBtn = '<a href="' + naechsterUrl + '" style="'
-        + 'display:inline-flex;align-items:center;gap:5px;padding:4px 12px;'
-        + 'background:' + naechster.farbe + '22;border:1px solid ' + naechster.farbe + '44;'
-        + 'border-radius:999px;font-size:11px;font-weight:700;color:' + naechster.farbe + ';'
-        + 'text-decoration:none;white-space:nowrap;transition:all .15s;'
-        + '" onmouseover="this.style.background='' + naechster.farbe + '33'"'
-        + ' onmouseout="this.style.background='' + naechster.farbe + '22'">'
-        + naechster.icon + ' ' + naechster.name + ' →'
-        + '</a>';
-    }
-  }
-  
-  // Zurück-zu-Fall Button (für Werkzeuge)
-  var zurueckBtn = '';
-  if (istWerkzeug && WERKZEUGE[currentPage] && WERKZEUGE[currentPage].zurück) {
-    zurueckBtn = '<a href="' + akteLink + '" style="'
-      + 'display:inline-flex;align-items:center;gap:5px;padding:4px 10px;'
-      + 'background:rgba(79,142,247,.1);border:1px solid rgba(79,142,247,.25);'
-      + 'border-radius:999px;font-size:11px;font-weight:600;color:#4f8ef7;'
-      + 'text-decoration:none;white-space:nowrap;'
-      + '">← Zurück zu ' + az + '</a>';
-  }
-  
-  // Akte-Link in AZ
-  var azHtml = '<a href="' + akteLink + '" style="'
-    + 'font-weight:800;font-size:13px;color:var(--text, #e2e8f0);'
-    + 'text-decoration:none;letter-spacing:.02em;'
-    + 'border-bottom:1px solid rgba(255,255,255,.2);'
-    + '" title="Akte öffnen">' + az + '</a>';
-  
-  // Schrittanzeige
-  var schrittHtml = '';
-  if (aktuellerSchritt && !istWerkzeug) {
-    schrittHtml = '<span style="font-size:10px;color:rgba(255,255,255,.4);white-space:nowrap;">'
-      + 'Schritt ' + aktuellerSchritt + ' von 7'
-      + '</span>';
-    
-    // Mini-Progress (7 Punkte)
-    var dots = '';
-    for (var s = 1; s <= 7; s++) {
-      var dotColor = s < aktuellerSchritt
-        ? '#10b981'
-        : s === aktuellerSchritt
-          ? '#4f8ef7'
-          : 'rgba(255,255,255,.15)';
-      dots += '<span style="width:6px;height:6px;border-radius:50%;background:' + dotColor
-            + ';display:inline-block;' + (s < 7 ? 'margin-right:3px;' : '') + '"></span>';
-    }
-    schrittHtml += '<span style="display:inline-flex;align-items:center;margin-left:6px;">' + dots + '</span>';
-  }
-  
-  // Banner HTML
-  var html = '<div id="prova-fall-kontext-banner" style="'
-    + 'display:flex;align-items:center;gap:10px;flex-wrap:wrap;'
-    + 'padding:7px 16px 7px 20px;'
-    + 'background:linear-gradient(90deg,rgba(79,142,247,.12) 0%,rgba(10,15,28,.0) 100%);'
-    + 'border-bottom:1px solid rgba(79,142,247,.15);'
-    + 'font-family:inherit;position:relative;z-index:10;'
-    + 'min-height:36px;'
-    + '">'
-    
-    // AZ + Schadenart
-    + '<div style="display:flex;align-items:center;gap:8px;flex:1;min-width:0;">'
-    + '<span style="width:8px;height:8px;border-radius:50%;background:' + saFarbe + ';flex-shrink:0;"></span>'
-    + azHtml;
-    
-  if (sa) {
-    html += '<span style="font-size:11px;padding:2px 8px;border-radius:999px;background:' + saFarbe + '18;color:' + saFarbe + ';font-weight:600;white-space:nowrap;">' + sa + '</span>';
-  }
-  
-  if (adr && adr.length > 2 && adr !== '—') {
-    html += '<span style="font-size:11px;color:rgba(255,255,255,.35);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:200px;" title="' + adr + '">'
-          + adr.split(',')[0] // nur Straße, kürzer
-          + '</span>';
-  }
-  
-  html += '</div>'; // end flex-1
-  
-  // Mitte: Schritt-Anzeige
-  if (schrittHtml) {
-    html += '<div style="display:flex;align-items:center;gap:4px;">' + schrittHtml + '</div>';
-  }
-  
-  // Rechts: Werkzeug-Zurück oder Nächster-Schritt
-  if (zurueckBtn) {
-    html += '<div>' + zurueckBtn + '</div>';
-  }
-  if (naechsterBtn) {
-    html += '<div>' + naechsterBtn + '</div>';
-  }
-  
-  html += '</div>'; // end banner
-  
-  return html;
-}
-
-// ── BANNER EINFÜGEN ─────────────────────────────────────────────────────
-function einfuegenBanner() {
-  // Nicht auf Dashboard, Zentrale, Login, Onboarding
-  var ausnahmen = ['dashboard.html', 'archiv.html', 'app-login.html', 
-                   'onboarding.html', 'onboarding-schnellstart.html',
-                   'index.html', 'impressum.html', 'datenschutz.html',
-                   'agb.html', 'avv.html', 'termine.html', 'kontakte.html',
-                   'einstellungen.html'];
-  
-  if (ausnahmen.indexOf(currentPage) >= 0) return;
-  
-  var kontext = ladeFallKontext();
-  if (!kontext) return; // Kein aktiver Fall — kein Banner
-  
-  var aktuellerSchritt = getCurrentSchritt();
-  var istWerkzeug = !!WERKZEUGE[currentPage];
-  
-  var bannerHtml = baueBanner(kontext, aktuellerSchritt, istWerkzeug);
-  
-  // Einfüge-Strategie: nach <header class="topbar"> oder nach <div class="topbar">
-  // Suche den richtigen Einfügepunkt
-  var insertAfter = null;
-  
-  // Strategie 1: Nach topbar Header
-  var topbar = document.querySelector('header.topbar, div.topbar, .topbar');
-  if (topbar) {
-    insertAfter = topbar;
-  }
-  
-  // Strategie 2: Als erstes Child von main oder page-content
-  if (!insertAfter) {
-    insertAfter = document.querySelector('main, .page-content, .main, .page');
-    if (insertAfter) {
-      insertAfter.insertAdjacentHTML('afterbegin', bannerHtml);
-      return;
-    }
-  }
-  
-  if (insertAfter) {
-    insertAfter.insertAdjacentHTML('afterend', bannerHtml);
-  }
-}
-
-// ── INIT ────────────────────────────────────────────────────────────────
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', einfuegenBanner);
-} else {
-  einfuegenBanner();
-}
-
-// ── PUBLIC API ─────────────────────────────
