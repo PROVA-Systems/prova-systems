@@ -254,6 +254,7 @@ a{text-decoration:none;color:inherit;}button,input,select,textarea{font-family:i
   .qa-tile-icon{font-size:18px;}
   .qa-tile-label{font-size:12px;font-weight:700;color:var(--text);}
   .qa-tile-sub{font-size:10px;color:var(--text3);line-height:1.4;}
+@keyframes spin{to{transform:rotate(360deg)}}
 </style>
 </head>
 <body>
@@ -706,7 +707,8 @@ a{text-decoration:none;color:inherit;}button,input,select,textarea{font-family:i
               <span class="section-toggle">▾</span>
             </div>
             <div class="section-body">
-              <textarea class="notiz-area" id="notiz-input" placeholder="Interne Notizen zu diesem Fall (werden nicht im Gutachten angezeigt)…"></textarea>
+              <textarea class="notiz-area" id="notiz-input" placeholder="Interne Notizen zu diesem Fall (werden nicht im Gutachten angezeigt)…" oninput="autoSaveNotiz()"></textarea>
+              <div id="notiz-autosave-ind" style="font-size:11px;color:#10b981;opacity:0;transition:opacity .4s;margin-top:4px;">✓ automatisch gespeichert</div>
               <button class="notiz-save" onclick="speichereNotiz()">Notiz speichern</button>
             </div>
           </div>
@@ -916,6 +918,38 @@ function renderAkte(){
   if(f.KI_Entwurf&&f.KI_Entwurf.trim()){
     document.getElementById('sec-entwurf').style.display='block';
     document.getElementById('entwurf-preview').textContent=f.KI_Entwurf.slice(0,1500)+(f.KI_Entwurf.length>1500?'\n\n[…Vorschau gekürzt. Volltext in Freigabe-Ansicht.]':'');
+    clearInterval(window._kiPollTimer); // Stop polling wenn Entwurf da
+  } else {
+    // KI noch am Rechnen? Timestamp prüfen + Polling
+    var kiTs = localStorage.getItem('prova_ki_ts');
+    if (kiTs) {
+      var minAlt = (Date.now() - new Date(kiTs)) / 60000;
+      if (minAlt < 25) { // < 25 Minuten alt → wahrscheinlich noch am Rechnen
+        document.getElementById('sec-entwurf').style.display='block';
+        document.getElementById('entwurf-preview').innerHTML =
+          '<div style="display:flex;align-items:center;gap:10px;padding:12px 0;color:var(--accent);">'
+          + '<div style="width:14px;height:14px;border:2px solid var(--accent);border-top-color:transparent;border-radius:50%;animation:spin 1s linear infinite;flex-shrink:0;"></div>'
+          + '<span style="font-size:12px;font-weight:600;">KI analysiert Ihren Fall — Entwurf in wenigen Minuten…</span>'
+          + '</div>'
+          + '<div style="font-size:11px;color:var(--text3);">Die Seite aktualisiert sich automatisch wenn der Entwurf fertig ist.</div>';
+        // Polling: alle 30s prüfen ob Entwurf fertig
+        clearInterval(window._kiPollTimer);
+        window._kiPollTimer = setInterval(function() {
+          fetch('/.netlify/functions/airtable', {
+            method:'POST', headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({method:'GET', path:'/v0/'+AT_BASE+'/'+AT_FAELLE+'/'+recordId})
+          }).then(function(res){return res.json();}).then(function(data){
+            if (data.fields && data.fields.KI_Entwurf && data.fields.KI_Entwurf.trim()) {
+              clearInterval(window._kiPollTimer);
+              currentFields = data.fields;
+              document.getElementById('entwurf-preview').textContent = data.fields.KI_Entwurf.slice(0,1500);
+              if(typeof zeigToast==='function') zeigToast('✅ KI-Entwurf ist fertig!', 'success');
+              renderCockpit(data.fields.Status||'', data.fields, az||'');
+            }
+          }).catch(function(){});
+        }, 30000);
+      }
+    }
   }
 
   // Notizen aus localStorage
@@ -1163,7 +1197,17 @@ window.oeffneFreigabe=function(){
 /* ─── SECTION TOGGLE ─── */
 window.toggleSection=function(id){
   var el=document.getElementById(id);
-  if(el)el.classList.toggle('collapsed');
+  if(!el)return;
+  var body=el.querySelector('.section-body');
+  if(body){
+    var open=body.style.display!=='none';
+    body.style.display=open?'none':'';
+    sessionStorage.setItem('prova_sec_open_'+id, open?'0':'1');
+    var tog=el.querySelector('.section-toggle');
+    if(tog)tog.textContent=open?'▾':'▴';
+  } else {
+    el.classList.toggle('collapsed');
+  }
 };
 
 /* ─── NOTIZ SPEICHERN ─── */
@@ -2017,6 +2061,34 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 /* ── END MESSWERTE ── */
 
+
+/* ── NOTIZ AUTO-SAVE (Stripe-Style: nach 1.5s Pause) ── */
+var _notizTimer = null;
+window.autoSaveNotiz = function() {
+  clearTimeout(_notizTimer);
+  var ind = document.getElementById('notiz-autosave-ind');
+  if (ind) { ind.textContent = '…'; ind.style.color = 'var(--text3)'; ind.style.opacity = '1'; }
+  _notizTimer = setTimeout(function() {
+    var text = document.getElementById('notiz-input');
+    if (!text || !recordId) return;
+    localStorage.setItem('prova_notiz_' + recordId, text.value.trim());
+    // Airtable-Sync (non-blocking)
+    if (text.value.trim()) {
+      fetch('/.netlify/functions/airtable', {
+        method: 'POST', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({method: 'PATCH',
+          path: '/v0/' + AT_BASE + '/' + AT_FAELLE + '/' + recordId,
+          payload: {fields: {Notizen: text.value.trim()}}})
+      }).catch(function(){});
+    }
+    if (ind) {
+      ind.textContent = '✓ automatisch gespeichert';
+      ind.style.color = '#10b981';
+      setTimeout(function(){ ind.style.opacity = '0'; }, 2000);
+    }
+  }, 1500);
+};
+
 </script>
 </body></html>'
   ].join('\n');
@@ -2133,6 +2205,35 @@ function renderCockpit(status, f, az) {
 
   // KI-Assistent Kontextbar
   renderKIAssist(status, f, az, phases, activeIdx);
+
+  // ── PROGRESSIVE DISCLOSURE: Phase-basierte Section-Sichtbarkeit ──
+  // Linear-Prinzip: Zeige NUR was in der aktuellen Phase gebraucht wird
+  (function applyPhaseVisibility() {
+    // Defaults: alle eingeklappt außer Timeline
+    var sectionDefaults = {
+      'sec-stamm':    activeIdx <= 0,  // Phase 1: Stammdaten offen
+      'sec-timeline': true,            // Immer offen (Fortschrittsübersicht)
+      'sec-docs':     false,           // Eingeklappt bis explizit geöffnet
+      'sec-entwurf':  activeIdx === 1, // Phase 2: KI-Entwurf offen wenn fertig
+      'sec-kosten':   activeIdx === 2 || activeIdx === 3, // Phase 3-4: Kosten/Kalkulation
+      'sec-notizen':  activeIdx >= 2,  // Ab Phase 3: Notizen verfügbar
+    };
+
+    Object.keys(sectionDefaults).forEach(function(secId) {
+      var el = document.getElementById(secId);
+      if (!el) return;
+      var shouldOpen = sectionDefaults[secId];
+      var body = el.querySelector('.section-body');
+      if (!body) return;
+      // Nur setzen wenn User es nicht manuell geändert hat
+      var userKey = 'prova_sec_open_' + secId;
+      var userPref = sessionStorage.getItem(userKey);
+      if (userPref !== null) return; // User hat es manuell geöffnet/geschlossen
+      body.style.display = shouldOpen ? '' : 'none';
+      var toggle = el.querySelector('.section-toggle');
+      if (toggle) toggle.textContent = shouldOpen ? '▴' : '▾';
+    });
+  })();
 }
 
 function renderKIAssist(status, f, az, phases, activeIdx) {
@@ -2610,17 +2711,4 @@ window.oeffneKostenermittlung = function() {
 
 window.kalkInGutachtenUebernehmen = function(){
   var n = kalkDaten.reduce(function(s,p){return s+(p.aktiv&&p.menge>0?p.menge*p.me:0);},0);
-  var fmt = function(x){return x.toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2});};
-  localStorage.setItem('prova_kalkulation_netto', fmt(n));
-  localStorage.setItem('prova_kalkulation_json',  JSON.stringify(kalkDaten));
-  zeigToast('§4 Kostenrahmen: '+fmt(n)+' € netto übernommen ✅');
-};
-
-// Normen-Quickbar
-function renderNormenQuickbar(sa) {
-  var el = document.getElementById('normen-quickbar');
-  if (!el) return;
-  var code = sa.toLowerCase().includes('wasser')?'WS': sa.toLowerCase().includes('schimmel')?'SC': sa.toLowerCase().includes('brand')?'BS': sa.toLowerCase().includes('sturm')?'ST': 'def';
-  var normen = NORMEN_DB[code] || NORMEN_DB['def'];
-  el.innerHTML = normen.map(function(n){
-    return '<span onclick="normZ
+  var fmt = function(x){return x.toLocaleString('de-DE',{mi

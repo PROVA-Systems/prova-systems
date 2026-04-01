@@ -512,6 +512,7 @@ async function atKontakte(method, path, body) {
       headers: {'Content-Type':'application/json'},
       body: JSON.stringify({method: method, path: path, payload: body || null})
     });
+
     if (!res.ok) return null;
     return await res.json();
   } catch(e) { return null; }
@@ -649,6 +650,35 @@ function renderKontakte() {
   });
 
   var grid = document.getElementById('kontakteGrid');
+
+  // Figma-Style: Zuletzt verwendete Kontakte als Banner
+  var recentBanner = document.getElementById('recent-kontakte-banner');
+  if (!suche && !filterTyp) {
+    try {
+      var recentIds = JSON.parse(localStorage.getItem('prova_kontakte_recent')||'[]');
+      var recentK = recentIds.map(function(id){ return _kontakte.find(function(k){return k.id===id;}); }).filter(Boolean).slice(0,3);
+      if (recentK.length > 0 && !recentBanner) {
+        var banner = document.createElement('div');
+        banner.id = 'recent-kontakte-banner';
+        banner.style.cssText = 'margin-bottom:16px;';
+        banner.innerHTML = '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:8px;">Zuletzt verwendet</div>'
+          + '<div style="display:flex;gap:8px;flex-wrap:wrap;">'
+          + recentK.map(function(k){
+              var tc = TYP_CONFIG[k.typ]||TYP_CONFIG['Sonstiges'];
+              return '<button onclick="quickImportInApp(''+k.id+'')" style="display:flex;align-items:center;gap:6px;padding:5px 10px;border-radius:8px;background:var(--surface);border:1px solid var(--border);color:var(--text2);font-size:12px;cursor:pointer;font-family:inherit;">'
+                + '<span style="font-size:14px;">'+tc.icon+'</span><span>'+escH(k.vorname?k.vorname+' '+k.name:k.name)+'</span>'
+                + '</button>';
+            }).join('')
+          + '</div>';
+        grid.parentNode.insertBefore(banner, grid);
+      } else if (recentBanner && recentK.length === 0) {
+        recentBanner.remove();
+      }
+    } catch(e) {}
+  } else if (recentBanner) {
+    recentBanner.remove();
+  }
+
   if (!liste.length) {
     grid.innerHTML = '<div class="empty" style="grid-column:1/-1;"><div class="empty-icon">👥</div><div style="font-size:14px;font-weight:600;margin-bottom:6px;">'+(suche||filterTyp?'Keine Treffer':'Noch keine Kontakte')+'</div><div style="font-size:12px;">'+(suche||filterTyp?'Filter anpassen':'+ Neuer Kontakt oder ⬆ Importieren')+'</div></div>';
     return;
@@ -1059,8 +1089,15 @@ function quickImportInApp(id) {
     ort: k.ort || '',
     ansprechpartner: k.ansprechpartner || ''
   };
+  // Recent-Tracking (Figma-Style: zuletzt verwendet oben)
+  try {
+    var rk = JSON.parse(localStorage.getItem('prova_kontakte_recent')||'[]');
+    rk = rk.filter(function(x){return x!==id;});
+    rk.unshift(id); rk = rk.slice(0,5);
+    localStorage.setItem('prova_kontakte_recent', JSON.stringify(rk));
+  } catch(e) {}
+
   if (window.opener && !window.opener.closed) {
-    // Beide Message-Types senden für Kompatibilität
     window.opener.postMessage({type:'prova_kontakt_selected', kontakt: msgPayload}, '*');
     window.opener.postMessage({type:'prova_kontakt_import', kontakt: payload}, '*');
     showToast('Kontakt übertragen ✅');

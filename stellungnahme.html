@@ -476,20 +476,20 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-ui);min-heigh
   <!-- §6 DIKTAT-HINWEIS -->
   <div class="diktat-hinweis">
     <div class="diktat-hinweis-icon">ℹ️</div>
-    <div>Ihr <strong>§6 Fachurteil</strong> — §1–§5 (Sichtbefunde &amp; Messwerte) hat PROVA bereits ausformuliert.</div>
+    <div><strong>Ihr Schritt:</strong> §6 Fachurteil schreiben. §1–§5 hat die KI bereits ausformuliert — <button onclick="document.getElementById('kiAnalyseBox').querySelector('button').click()" style="background:none;border:none;color:var(--accent);font-size:inherit;cursor:pointer;text-decoration:underline;padding:0;">KI-Entwurf ansehen ↓</button></div>
   </div>
 
   <!-- KI-ANALYSE-BOX (Guided Writing v3.1) -->
-  <div class="card" id="kiAnalyseBox" style="border:1px solid rgba(79,142,247,.15);background:linear-gradient(135deg,rgba(79,142,247,.04),rgba(79,142,247,.01));">
+  <div class="card" id="kiAnalyseBox" style="border:1px solid rgba(79,142,247,.15);background:linear-gradient(135deg,rgba(79,142,247,.04),rgba(79,142,247,.01));" data-collapsed="true">
     <div class="card-header" style="border-bottom:1px solid rgba(79,142,247,.1);">
       <div>
         <div class="card-title" style="color:#4f8ef7;">🔬 KI-Analyse — Daten aus Ihrem Fall</div>
         <div class="card-sub">Nur zur Orientierung · Nicht kopierbar</div>
       </div>
-      <button onclick="ladeKIAnalyse()" id="btnKIAnalyse" style="padding:6px 14px;border-radius:8px;background:rgba(79,142,247,.1);border:1px solid rgba(79,142,247,.2);color:#4f8ef7;font-size:11px;font-weight:600;cursor:pointer;">↻ Analyse laden</button>
-      <button onclick="toggleKIBox()" id="btnKIToggle" style="display:none;padding:6px 14px;border-radius:8px;background:rgba(255,255,255,.05);border:1px solid var(--border);color:var(--text3);font-size:11px;cursor:pointer;">▲ Einklappen</button>
+      <button onclick="ladeKIAnalyse()" id="btnKIAnalyse" style="padding:6px 14px;border-radius:8px;background:rgba(79,142,247,.1);border:1px solid rgba(79,142,247,.2);color:#4f8ef7;font-size:11px;font-weight:600;cursor:pointer;">↓ KI-Daten anzeigen</button>
+      <button onclick="toggleKIBox()" id="btnKIToggle" style="display:block;padding:6px 14px;border-radius:8px;background:rgba(255,255,255,.05);border:1px solid var(--border);color:var(--text3);font-size:11px;cursor:pointer;">▲ Einklappen</button>
     </div>
-    <div class="card-body" id="kiAnalyseContent" style="user-select:none;-webkit-user-select:none;">
+    <div class="card-body" id="kiAnalyseContent" style="user-select:none;-webkit-user-select:none;display:none;">
 
       <!-- Messwert-Analyse -->
       <div id="messwertAnalyse" style="display:none;margin-bottom:16px;">
@@ -589,6 +589,15 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-ui);min-heigh
             <div class="ki-normen-inline" id="ki-normen-inline">
               <div class="ki-normen-inline-title">🤖 Passende Normen erkannt</div>
               <div class="ki-normen-chips" id="ki-normen-chips"></div>
+            </div>
+            <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap;">
+              <button onclick="window.open('textbausteine.html','tb_popup','width=800,height=600,resizable')"
+                style="padding:5px 11px;border-radius:6px;background:var(--surface2);border:1px solid var(--border2);color:var(--text3);font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;"
+                title="Textbaustein einfügen">📝 Textbaustein</button>
+              <button onclick="window.open('normen.html','norm_popup','width=900,height=700,resizable')"
+                style="padding:5px 11px;border-radius:6px;background:var(--surface2);border:1px solid var(--border2);color:var(--text3);font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;"
+                title="Norm einfügen">📚 Norm</button>
+              <span style="font-size:10px;color:var(--text3);padding:5px 6px;align-self:center;">oder <kbd style="background:var(--surface2);border:1px solid var(--border2);border-radius:3px;padding:1px 5px;font-size:10px;">/</kbd> tippen</span>
             </div>
             <div class="kj-check idle" id="kjCheckA">
               <span>⏳</span><span>Konjunktiv II wird geprüft sobald Sie schreiben…</span>
@@ -2392,6 +2401,114 @@ document.addEventListener('keydown', function(e) {
 })();
 
 
+
+
+/* ── SLASH-COMMAND (Notion-Style) für §6 Editor ── */
+(function() {
+  var SLASH_ITEMS = [
+    { icon: '⚖️', label: 'Konjunktiv-Phrase einfügen',  text: 'Die Ursache dürfte auf … zurückzuführen sein. ' },
+    { icon: '📚', label: 'Norm einfügen',               fn: 'openNormenPanel' },
+    { icon: '📝', label: 'Textbaustein einfügen',       fn: 'openTBPanel' },
+    { icon: '🔍', label: 'Handlungsempfehlung',         text: 'Es wäre zu empfehlen, dass … umgehend … veranlasst wird. ' },
+    { icon: '⚡', label: 'Beweislast-Phrase',           text: 'Die Beweislast für … dürfte beim … liegen. ' },
+    { icon: '📐', label: 'Maßangabe einfügen',          text: 'Im Bereich … wurde ein Schadensbild von ca. [Maß] festgestellt. ' },
+  ];
+
+  var menu = null;
+  var ta = null;
+
+  function createMenu() {
+    var el = document.createElement('div');
+    el.id = 'slash-menu';
+    el.style.cssText = 'position:fixed;z-index:9999;background:var(--bg2,#1a1d2e);border:1px solid var(--border2,rgba(255,255,255,.15));border-radius:10px;box-shadow:0 8px 32px rgba(0,0,0,.4);padding:6px;min-width:240px;display:none;';
+    el.innerHTML = SLASH_ITEMS.map(function(item,i) {
+      return '<div class="slash-item" data-idx="'+i+'" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:7px;cursor:pointer;font-size:13px;color:var(--text2,#c8d0e0);transition:background .1s;" onmouseover="this.style.background='var(--surface2,rgba(255,255,255,.06))'" onmouseout="this.style.background='';">'
+        + '<span style="font-size:16px;width:20px;text-align:center;">'+item.icon+'</span>'
+        + '<span>'+item.label+'</span>'
+        + '</div>';
+    }).join('');
+    document.body.appendChild(el);
+    return el;
+  }
+
+  function showMenu(x, y) {
+    if (!menu) menu = createMenu();
+    menu.style.left = Math.min(x, window.innerWidth - 260) + 'px';
+    menu.style.top  = Math.min(y, window.innerHeight - 280) + 'px';
+    menu.style.display = 'block';
+    // Item-Klick
+    menu.querySelectorAll('.slash-item').forEach(function(el) {
+      el.onclick = function() {
+        var idx = parseInt(el.dataset.idx);
+        var item = SLASH_ITEMS[idx];
+        hideMenu();
+        // "/" entfernen
+        if (ta) {
+          var pos = ta.selectionStart;
+          ta.value = ta.value.slice(0, pos-1) + ta.value.slice(pos);
+          ta.selectionStart = ta.selectionEnd = pos-1;
+        }
+        if (item.text && ta) {
+          var p = ta.selectionStart;
+          ta.value = ta.value.slice(0,p) + item.text + ta.value.slice(p);
+          ta.selectionStart = ta.selectionEnd = p + item.text.length;
+          ta.dispatchEvent(new Event('input'));
+        } else if (item.fn === 'openNormenPanel') {
+          if (window.PROVA && window.PROVA.openPanel) PROVA.openPanel('normen');
+        } else if (item.fn === 'openTBPanel') {
+          if (window.PROVA && window.PROVA.openPanel) PROVA.openPanel('textbausteine');
+        }
+      };
+    });
+  }
+
+  function hideMenu() {
+    if (menu) menu.style.display = 'none';
+  }
+
+  // Hook in §6-Textarea
+  document.addEventListener('DOMContentLoaded', function() {
+    ta = document.getElementById('svTextA');
+    if (!ta) return;
+    ta.addEventListener('keyup', function(e) {
+      var pos = ta.selectionStart;
+      var lastChar = ta.value[pos-1];
+      if (lastChar === '/') {
+        var rect = ta.getBoundingClientRect();
+        var lineH = parseInt(getComputedStyle(ta).lineHeight) || 22;
+        var lines = ta.value.slice(0, pos).split('\n').length;
+        showMenu(rect.left + 8, rect.top + Math.min(lines * lineH, rect.height - 10));
+      } else if (e.key === 'Escape') {
+        hideMenu();
+      } else {
+        hideMenu();
+      }
+    });
+  });
+
+  document.addEventListener('click', function(e) {
+    if (menu && !menu.contains(e.target)) hideMenu();
+  });
+})();
+/* ── END SLASH-COMMAND ── */
+
+
+/* ── POSTMESSAGE LISTENER: Textbausteine aus Popup ── */
+window.addEventListener('message', function(e) {
+  if (!e.data || (e.data.type !== 'prova_baustein' && e.data.type !== 'prova_norm')) return;
+  var text = e.data.text || '';
+  if (!text) return;
+  var ta = document.getElementById('svTextA');
+  if (!ta) ta = document.getElementById('svB1');
+  if (!ta) return;
+  var pos = ta.selectionStart || ta.value.length;
+  var prefix = pos > 0 && ta.value[pos-1] !== '\n' ? '\n' : '';
+  ta.value = ta.value.slice(0,pos) + prefix + text + '\n' + ta.value.slice(pos);
+  ta.selectionStart = ta.selectionEnd = pos + prefix.length + text.length + 1;
+  ta.dispatchEvent(new Event('input'));
+  if (typeof showToast === 'function') showToast('Textbaustein eingefügt ✅', 'success');
+}, false);
+/* ── END POSTMESSAGE ── */
 
 </script>
 

@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v40';
+const CACHE_VERSION = 'prova-v46';
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
@@ -87,7 +87,8 @@ self.addEventListener('fetch', event => {
         if (cached) return cached;
         return fetch(event.request).then(res => {
           if (res.ok) {
-            caches.open(CACHE_VERSION).then(c => c.put(event.request, res.clone()));
+            const resClone = res.clone();
+            caches.open(CACHE_VERSION).then(c => c.put(event.request, resClone));
           }
           return res;
         }).catch(() => new Response('', { status: 503 }));
@@ -97,11 +98,25 @@ self.addEventListener('fetch', event => {
   }
 
   // HTML → Network-First: immer frisch, kein Zwischenbild
+  // Icons: ewig cachen (ändern sich nie → maximale Performance)
+  if (url.pathname.startsWith('/icons/') || url.pathname.match(/favicon/)) {
+    event.respondWith(
+      caches.match(event.request).then(cached => {
+        if (cached) return cached;
+        return fetch(event.request).then(res => {
+          if (res.ok) { const ri = res.clone(); caches.open(CACHE_VERSION).then(c => c.put(event.request, ri)); }
+          return res;
+        }).catch(() => new Response('', {status: 404}));
+      })
+    );
+    return;
+  }
+
   if (url.pathname.endsWith('.html') || url.pathname === '/' || url.pathname === '') {
     event.respondWith(
       fetch(event.request)
         .then(res => {
-          if (res.ok) caches.open(CACHE_VERSION).then(c => c.put(event.request, res.clone()));
+          if (res.ok) { const rc = res.clone(); caches.open(CACHE_VERSION).then(c => c.put(event.request, rc)); }
           return res;
         })
         .catch(() => caches.match(event.request).then(cached =>
@@ -114,12 +129,14 @@ self.addEventListener('fetch', event => {
 
   // PROVA Core JS (nav, theme, trial-guard) → Network-First
   // Diese Dateien ändern sich häufig → immer frisch holen
-  const isCoreJs = ['/nav.js', '/theme.js', '/trial-guard.js', '/sw-register.js'].includes(url.pathname);
+  const isCoreJs = ['/nav.js','/theme.js','/trial-guard.js','/sw-register.js','/mobile.css'].includes(url.pathname)
+    || url.pathname.endsWith('.css')
+    || (url.pathname.endsWith('.js') && !url.pathname.includes('netlify'));
   if (isCoreJs) {
     event.respondWith(
       fetch(event.request)
         .then(res => {
-          if (res.ok) caches.open(CACHE_VERSION).then(c => c.put(event.request, res.clone()));
+          if (res.ok) { const rj = res.clone(); caches.open(CACHE_VERSION).then(c => c.put(event.request, rj)); }
           return res;
         })
         .catch(() => caches.match(event.request))

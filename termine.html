@@ -712,7 +712,7 @@ window.importFristenAusFaellen = async function() {
         <div class="sup-err" id="sup-err">Bitte Betreff und Nachricht eingeben.</div>
         <button class="sup-send-btn" id="sup-btn" onclick="supSendModal()">Nachricht senden</button>
         <div style="text-align:center;margin-top:10px;font-size:11px;color:var(--text3,#6b7a99);">
-          Oder direkt: support@prova-systems.de
+          Oder direkt: <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="e0939590908f9294a090928f9681cd93999394858d93ce8485">[email&#160;protected]</a>
         </div>
       </div>
       <div class="sup-ok" id="sup-ok">
@@ -728,6 +728,35 @@ window.importFristenAusFaellen = async function() {
 function escHtml(s) {
   return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
+
+
+/* ── iCAL EXPORT ── */
+window.exportIcal = function() {
+  if (!alleTermine || !alleTermine.length) {
+    zeigToast('Keine Termine vorhanden', 'err'); return;
+  }
+  var lines = ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//PROVA Systems//Termine//DE','CALSCALE:GREGORIAN'];
+  alleTermine.forEach(function(t) {
+    if (!t.datum) return;
+    var dt = t.datum.replace(/-/g,'') + (t.uhrzeit ? 'T' + t.uhrzeit.replace(':','') + '00' : '');
+    var uid = (t.id || Date.now()) + '@prova-systems.de';
+    lines.push('BEGIN:VEVENT');
+    lines.push('UID:' + uid);
+    lines.push('DTSTAMP:' + new Date().toISOString().replace(/[-:]/g,'').split('.')[0] + 'Z');
+    lines.push('DTSTART' + (t.uhrzeit ? ':' + dt : ';VALUE=DATE:' + t.datum.replace(/-/g,'')));
+    lines.push('SUMMARY:' + (t.titel || t.typ || 'PROVA Termin').replace(/[\n\r]/g,' '));
+    if (t.notiz) lines.push('DESCRIPTION:' + t.notiz.replace(/[\n\r]/g,'\\n'));
+    if (t.az) lines.push('CATEGORIES:AZ-' + t.az);
+    lines.push('END:VEVENT');
+  });
+  lines.push('END:VCALENDAR');
+  var blob = new Blob([lines.join('\r\n')], {type:'text/calendar;charset=utf-8'});
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'PROVA_Termine_' + new Date().toISOString().split('T')[0] + '.ics';
+  a.click();
+  zeigToast(alleTermine.length + ' Termine exportiert ✅');
+};
 
 </script>
 /* ── iCAL EXPORT ── */
@@ -779,8 +808,4 @@ function befuelleAzDatalist() {
   } catch(e) {}
 }
 
-/* ── TERMIN-KARTE: Fall-Link einblenden ── */
-function buildFallLink(az) {
-  if (!az) return '';
-  return '<a href="akte.html?az='+encodeURIComponent(az)+'" onclick="event.stopPropagation()" '
-    + 'style="font-size:10px;color:var(--accent,#4f8ef7);text-decoration:none;font-weight:600;
+/* ── TERMIN-KARTE: Fall-Link einblend

@@ -6,6 +6,7 @@
 <title>PROVA — Normendatenbank</title>
 <script src="theme.js"></script>
 <script src="nav.js"></script>
+<script src="trial-guard.js"></script>
 <style>
 /* ── TOKENS ── */
 :root{
@@ -414,7 +415,28 @@ function renderNormen() {
   const filtered = getFiltered();
   const grid = document.getElementById('normenGrid');
   const empty = document.getElementById('emptyState');
-  document.getElementById('normenCount').textContent = filtered.length;
+  const q = (document.getElementById('searchInput').value||'').trim();
+  document.getElementById('normenCount').textContent = filtered.length + ' Normen';
+
+  // Figma-Style: Zuletzt genutzte Normen oben (wenn kein Filter)
+  var recentSection = '';
+  if (!q && !document.getElementById('filterBereich').value) {
+    try {
+      var recentNums = JSON.parse(localStorage.getItem('prova_normen_recent')||'[]');
+      var recentNormen = recentNums.map(function(num){ return NORMEN_DB.find(function(n){return n.num===num;}); }).filter(Boolean).slice(0,4);
+      if (recentNormen.length > 0) {
+        recentSection = '<div style="margin-bottom:20px;">'
+          + '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:10px;padding:0 2px;">Zuletzt verwendet</div>'
+          + '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px;">'
+          + recentNormen.map(function(n){
+              return normCard(n, true);
+            }).join('')
+          + '</div></div>'
+          + '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:10px;padding:0 2px;">Alle Normen</div>';
+      }
+    } catch(e) {}
+  }
+
   if(!filtered.length){ grid.innerHTML=''; empty.style.display='block'; return; }
   empty.style.display='none';
   grid.innerHTML = filtered.map((n,i) => {
@@ -590,7 +612,7 @@ function showToastMitCTA(msg, ctaLabel, ctaHref) {
         <div class="sup-err" id="sup-err">Bitte Betreff und Nachricht eingeben.</div>
         <button class="sup-send-btn" id="sup-btn" onclick="supSendModal()">Nachricht senden</button>
         <div style="text-align:center;margin-top:10px;font-size:11px;color:var(--text3,#6b7a99);">
-          Oder direkt: <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="8ee5e1e0faefe5facefefce1f8efa3fdf7fdfaebe3fda0eaeb">[email&#160;protected]</a>
+          Oder direkt: support@prova-systems.de
         </div>
       </div>
       <div class="sup-ok" id="sup-ok">
@@ -915,59 +937,4 @@ function baueBanner(kontext, aktuellerSchritt, istWerkzeug) {
   
   // Mitte: Schritt-Anzeige
   if (schrittHtml) {
-    html += '<div style="display:flex;align-items:center;gap:4px;">' + schrittHtml + '</div>';
-  }
-  
-  // Rechts: Werkzeug-Zurück oder Nächster-Schritt
-  if (zurueckBtn) {
-    html += '<div>' + zurueckBtn + '</div>';
-  }
-  if (naechsterBtn) {
-    html += '<div>' + naechsterBtn + '</div>';
-  }
-  
-  html += '</div>'; // end banner
-  
-  return html;
-}
-
-// ── BANNER EINFÜGEN ─────────────────────────────────────────────────────
-function einfuegenBanner() {
-  // Nicht auf Dashboard, Zentrale, Login, Onboarding
-  var ausnahmen = ['dashboard.html', 'archiv.html', 'app-login.html', 
-                   'onboarding.html', 'onboarding-schnellstart.html',
-                   'index.html', 'impressum.html', 'datenschutz.html',
-                   'agb.html', 'avv.html', 'termine.html', 'kontakte.html',
-                   'einstellungen.html'];
-  
-  if (ausnahmen.indexOf(currentPage) >= 0) return;
-  
-  var kontext = ladeFallKontext();
-  if (!kontext) return; // Kein aktiver Fall — kein Banner
-  
-  var aktuellerSchritt = getCurrentSchritt();
-  var istWerkzeug = !!WERKZEUGE[currentPage];
-  
-  var bannerHtml = baueBanner(kontext, aktuellerSchritt, istWerkzeug);
-  
-  // Einfüge-Strategie: nach <header class="topbar"> oder nach <div class="topbar">
-  // Suche den richtigen Einfügepunkt
-  var insertAfter = null;
-  
-  // Strategie 1: Nach topbar Header
-  var topbar = document.querySelector('header.topbar, div.topbar, .topbar');
-  if (topbar) {
-    insertAfter = topbar;
-  }
-  
-  // Strategie 2: Als erstes Child von main oder page-content
-  if (!insertAfter) {
-    insertAfter = document.querySelector('main, .page-content, .main, .page');
-    if (insertAfter) {
-      insertAfter.insertAdjacentHTML('afterbegin', bannerHtml);
-      return;
-    }
-  }
-  
-  if (insertAfter) {
-    insertAfter.insertAdjacentHTML('afterend', banner
+    html += '<div style="display:flex;align-items:center;gap:4px;">'

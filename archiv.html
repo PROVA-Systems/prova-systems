@@ -5,7 +5,8 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Fälle · PROVA</title>
 <script src="theme.js"></script>
-<script src="nav.js"></script>
+<script src="nav.js" defer></script>
+<link rel="stylesheet" href="mobile.css">
 <style>
 /* ═══ PROVA SIDEBAR SYSTEM ═══════════════════════════════════════════════ */
 :root{
@@ -205,6 +206,7 @@ textarea.form-input{min-height:80px;resize:vertical;}
 <div class="main-wrap" id="main-wrap">
 
   <header class="topbar">
+  <button id="mobile-menu-btn" aria-label="Menü öffnen" style="display:none;align-items:center;justify-content:center;width:40px;height:40px;border:none;background:none;color:var(--text2);font-size:20px;cursor:pointer;border-radius:8px;flex-shrink:0;">☰</button>
     <div class="topbar-left">
       <button class="burger" onclick="openMobileSidebar()"><span></span><span></span><span></span></button>
       <div class="breadcrumb"><span>PROVA</span><span style="color:var(--text3)">›</span><strong>Fälle</strong></div>
@@ -223,6 +225,7 @@ textarea.form-input{min-height:80px;resize:vertical;}
         <span class="page-title">Fälle</span>
         <span class="count-badge" id="count-badge">—</span>
         <input class="search-input" id="suche" type="search" placeholder="Suche…" oninput="filterUndRender()">
+        <select class="filter-select" id="f-auftraggeber" onchange="filterUndRender()"><option value="">Alle AG-Typen</option><option value="Versicherung">Versicherung</option><option value="Gericht">Gericht</option><option value="Privatperson">Privat</option></select>
         <select class="filter-select" id="f-schadenart" onchange="filterUndRender()">
           <option value="">Alle Schadenarten</option>
           <option value="Schimmelbefall">Schimmelbefall</option>
@@ -357,6 +360,7 @@ var AT_BASE='appJ7bLlAHZoxENWE';
 var AT_FAELLE='tblSxV8bsXwd1pwa0';
 var svEmail=localStorage.getItem('prova_sv_email')||'';
 var alleRecords=[];
+var _stilleAktualisierung=false;
 
 async function ladeFaelle(){
   var cacheKey='prova_archiv_cache_v2';
@@ -365,11 +369,21 @@ async function ladeFaelle(){
   try{
     var raw=localStorage.getItem(cacheKey);
     // Admin: kein Cache — immer frisch laden für vollständige Sicht
-    if(!isAdminMode && raw){var c=JSON.parse(raw);if(Date.now()-c.time<cacheMs&&c.data&&c.data.length>0){alleRecords=c.data;filterUndRender();return;}}
+    if(!isAdminMode && raw){
+        var c=JSON.parse(raw);
+        if(c.data&&c.data.length>0){
+          // LINEAR-STYLE: Cache SOFORT anzeigen
+          alleRecords=c.data; filterUndRender();
+          // Wenn Cache < 5min alt: fertig (kein Netz-Call)
+          if(Date.now()-c.time<cacheMs) return;
+          // Wenn Cache älter: Still im Hintergrund updaten ohne Spinner
+          _stilleAktualisierung = true;
+        }
+      }
   }catch(e){}
 
-  // Loading state
-  zeigLadeAnimation();
+  // Loading state (nur wenn kein Cache vorhanden)
+  if (!_stilleAktualisierung) zeigLadeAnimation();
 
   try{
     var isAdmin = localStorage.getItem('prova_is_admin')==='true'
@@ -386,7 +400,8 @@ async function ladeFaelle(){
     alleRecords=data.records||[];
     try{
       if(alleRecords.length>0) {
-        localStorage.setItem(cacheKey,JSON.stringify({time:Date.now(),data:alleRecords}));
+        _stilleAktualisierung=false;
+    localStorage.setItem(cacheKey,JSON.stringify({time:Date.now(),data:alleRecords}));
         // Globaler Fälle-Cache für KI-Drawer in Briefvorlagen
         localStorage.setItem('prova_faelle_cache', JSON.stringify(alleRecords.slice(0,20)));
       }
@@ -483,9 +498,10 @@ function fallKarte(r){
   var stClass=statusClass(status);
   var pdfUrl=f.PDF_URL||'';
   var saKurz=schadenart.replace('befall','').replace('schaden','').replace('Schaden','').trim();
-  var schrittMap={'Neuer Auftrag':1,'In Bearbeitung':2,'Entwurf fertig':3,'Abgeschlossen':4,'Exportiert':4};
-  var schritt=schrittMap[status]||2;
-  var fortschritt=Math.round((schritt/4)*100);
+  var explPhase=parseInt(f.Phase||0);
+  var schrittMap={'Neuer Auftrag':1,'Neu':1,'In Bearbeitung':2,'Diktat':2,'Entwurf':3,'Entwurf fertig':3,'Stellungnahme':4,'Freigabe':4,'Abgeschlossen':5,'Freigegeben':5,'Exportiert':5};
+  var schritt=explPhase>0?explPhase:(schrittMap[status]||2);
+  var fortschritt=Math.round((Math.min(schritt,5)/5)*100);
   var fortColor={'Abgeschlossen':'#10b981','Exportiert':'#10b981','Entwurf fertig':'#f59e0b'}[status]||'#4f8ef7';
   return '<div class="fall-card" onclick="oeffneFall(\'' + r.id + '\')" style="cursor:pointer;">'
     +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">'
@@ -535,7 +551,21 @@ function renderListe(){
   var body=document.getElementById('liste-body');
   if(!body)return;
   if(gefiltert.length===0){
-    body.innerHTML='<div class="list-empty"><div class="list-empty-icon">🔍</div><p style="font-size:13px;color:var(--text3);margin-bottom:8px;">Keine Fälle gefunden.</p><a href="'+appUrl+'" style="color:var(--accent);font-size:13px;">Neuen Fall anlegen →</a></div>';
+    var suchTerm = (document.getElementById('suche')||{value:''}).value||'';
+    var emptyMsg = suchTerm
+      ? '<div class="list-empty">'
+          + '<div style="font-size:32px;margin-bottom:12px;opacity:.4;">🔍</div>'
+          + '<div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:6px;">Keine Treffer für \"' + suchTerm + '\"</div>'
+          + '<div style="font-size:12px;color:var(--text3);margin-bottom:16px;">Suche in AZ, Auftraggeber, Adresse, Schadenart</div>'
+          + '<button onclick="document.getElementById(\'suche\').value=\'\';filterUndRender()" style="padding:8px 16px;border-radius:8px;background:var(--surface2);border:1px solid var(--border2);color:var(--text2);font-size:12px;cursor:pointer;font-family:inherit;">Filter zurücksetzen</button>'
+          + '</div>'
+      : '<div class="list-empty">'
+          + '<div style="font-size:40px;margin-bottom:14px;">📂</div>'
+          + '<div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:8px;">Noch keine Fälle angelegt</div>'
+          + '<div style="font-size:12px;color:var(--text3);margin-bottom:20px;line-height:1.6;">Legen Sie Ihren ersten Gutachten-Fall an —<br>PROVA führt Sie durch den gesamten Workflow.</div>'
+          + '<a href="' + appUrl + '" style="display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border-radius:10px;background:var(--accent,#4f8ef7);color:#fff;font-size:13px;font-weight:700;text-decoration:none;">+ Ersten Fall anlegen</a>'
+          + '</div>';
+    body.innerHTML = emptyMsg;
     return;
   }
   body.innerHTML=gefiltert.map(function(r){
@@ -569,7 +599,7 @@ window.oeffneFall=function(recordId){
   if(rec&&rec.fields.Aktenzeichen){
     sessionStorage.setItem('prova_letztes_az',rec.fields.Aktenzeichen);
   }
-  window.location.href='akte.html';
+  window.location.href='akte.html?id='+encodeURIComponent(recordId);
 };
 
 /* ── LADE-ANIMATION ── */
@@ -628,7 +658,7 @@ document.getElementById('f-zeitraum').addEventListener('change',filterUndRender)
         <div class="sup-err" id="sup-err">Bitte Betreff und Nachricht eingeben.</div>
         <button class="sup-send-btn" id="sup-btn" onclick="supSendModal()">Nachricht senden</button>
         <div style="text-align:center;margin-top:10px;font-size:11px;color:var(--text3,#6b7a99);">
-          Oder direkt: <a href="/cdn-cgi/l/email-protection#ef9c9a9f9f809d9baf9f9d80998ec29c969c9b8a829cc18b8a" style="color:var(--accent,#4f8ef7);"><span class="__cf_email__" data-cfemail="77040207071805033707051801165a040e0403121a04591312">[email&#160;protected]</span></a>
+          Oder direkt: support@prova-systems.de
         </div>
       </div>
       <div class="sup-ok" id="sup-ok">
@@ -639,7 +669,7 @@ document.getElementById('f-zeitraum').addEventListener('change',filterUndRender)
     </div>
   </div>
 </div>
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+<script>
 function openSupportModal(){
   var m=document.getElementById('support-modal');
   if(!m)return;
@@ -683,4 +713,56 @@ async function supSendModal(){
 }
 </script>
 
-<script src="trial-guard.js"></script>
+<script src="trial-guard.js">
+document.addEventListener('DOMContentLoaded',function(){ladeFaelle().then(function(){setView(_currentView||'kanban');}).catch(function(){setView(_currentView||'kanban');});});
+
+window.exportCSV=function(){var f=alleRecords||[];if(!f.length)return;var h=['Aktenzeichen','Schadenart','Status','Auftraggeber','Adresse'];var rows=f.map(function(r){var x=r.fields||{};return[x.Aktenzeichen||'',x.Schadenart||'',x.Status||'',x.Auftraggeber_Name||'',x.Schaden_Strasse||''].map(function(v){return'"'+String(v).replace(/"/g,'""')+'"';}).join(',');});var blob=new Blob(['"'+h.join('","')+'"\n'+rows.join('\n')],{type:'text/csv'});var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='Faelle_'+new Date().toISOString().split('T')[0]+'.csv';a.click();};
+
+/* ── BULK ACTIONS (Linear-Style) ── */
+var _selectedIds = new Set();
+
+window.toggleSelect = function(id, cb) {
+  if (cb.checked) _selectedIds.add(id);
+  else _selectedIds.delete(id);
+  updateBulkBar();
+};
+
+function updateBulkBar() {
+  var bar = document.getElementById('bulk-bar');
+  var cnt = document.getElementById('bulk-count');
+  if (!bar) return;
+  if (_selectedIds.size > 0) {
+    bar.style.display = 'flex';
+    cnt.textContent = _selectedIds.size + ' Fall' + (_selectedIds.size !== 1 ? 'fälle' : '') + ' ausgewählt';
+  } else {
+    bar.style.display = 'none';
+  }
+}
+
+window.bulkClear = function() {
+  _selectedIds.clear();
+  document.querySelectorAll('.fall-select-cb').forEach(function(cb){ cb.checked = false; });
+  updateBulkBar();
+};
+
+window.bulkExportCSV = function() {
+  var selected = alleRecords.filter(function(r){ return _selectedIds.has(r.id); });
+  if (!selected.length) return;
+  var h = ['Aktenzeichen','Schadenart','Status','Auftraggeber','Adresse'];
+  var rows = selected.map(function(r){
+    var f = r.fields||{};
+    return [f.Aktenzeichen||'',f.Schadenart||'',f.Status||'',f.Auftraggeber_Name||'',f.Schaden_Strasse||'']
+      .map(function(v){return '"'+String(v).replace(/"/g,'""')+'"';}).join(',');
+  });
+  var blob = new Blob(['"'+h.join('","')+'"\n'+rows.join('\n')],{type:'text/csv'});
+  var a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = 'PROVA_Auswahl_'+new Date().toISOString().split('T')[0]+'.csv'; a.click();
+  if(typeof showToast==='function') showToast(selected.length+' Fälle exportiert ✅','success');
+};
+
+window.bulkSetStatus = function(status) {
+  var ids = Array.from(_selectedIds);
+  if (!ids.length) return;
+  if (!confirm(ids.length + ' Fall/Fälle auf "' + status + '" setzen?')) return;
+  ids.forEach(function(id) {
+    fetch('/.netlify/functions/airtable',{metho

@@ -370,6 +370,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-ui);min-heigh
           <div class="erfolg-icon">🎉</div>
           <div class="erfolg-title">Freigegeben!</div>
           <div class="erfolg-sub">PDF wird generiert und verschickt. §407a-Bestätigung dokumentiert.</div>
+          <div id="erfolg-email-cta" style="margin-top:12px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap;"></div>
           <div id="jveg-auto-cta" style="margin-top:14px;padding:14px;background:rgba(16,185,129,.07);border:1px solid rgba(16,185,129,.2);border-radius:10px;text-align:left;display:none;">
             <div style="font-size:12px;font-weight:700;color:#10b981;margin-bottom:6px;">💶 Rechnung — JVEG automatisch berechnet</div>
             <div id="jveg-auto-preview" style="font-size:11px;color:var(--text2);margin-bottom:10px;line-height:1.7;">Berechne…</div>
@@ -964,6 +965,38 @@ async function approveGutachten(){
         })
       }).catch(e => console.warn('Status-Update:', e));
     } catch(e) { console.warn('Freigabe Status:', e); }
+
+    // E-Mail CTA einblenden
+    try {
+      var agEmail = payload.auftraggeber_email || '';
+      var agName  = payload.auftraggeber_name  || 'Auftraggeber';
+      var az      = payload.aktenzeichen || '';
+      var svName  = payload.gutachter_name || 'Sachverständiger';
+      var mailSubject = encodeURIComponent('Gutachten ' + az + ' – Freigabe');
+      var mailBody    = encodeURIComponent(
+        'Sehr geehrte Damen und Herren,\n\nIhr Gutachten zum Aktenzeichen ' + az +
+        ' wurde soeben freigegeben.\nSie erhalten das PDF in Kürze per E-Mail.\n\n' +
+        'Mit freundlichen Grüßen\n' + svName
+      );
+      var ctaDiv = document.getElementById('erfolg-email-cta');
+      if (ctaDiv) {
+        ctaDiv.innerHTML = (agEmail
+          ? '<a href="mailto:' + agEmail + '?subject=' + mailSubject + '&body=' + mailBody + '" '
+            + 'style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;'
+            + 'background:rgba(79,142,247,.12);border:1px solid rgba(79,142,247,.25);color:#4f8ef7;'
+            + 'font-size:12px;font-weight:700;text-decoration:none;">'
+            + '📧 E-Mail an ' + agName + '</a>'
+          : '')
+          + '<button onclick="window.print()" style="padding:8px 16px;border-radius:8px;'
+            + 'background:var(--surface2);border:1px solid var(--border2);color:var(--text2);'
+            + 'font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;">'
+            + '🖨 Drucken</button>'
+          + '<a href="archiv.html" style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;'
+            + 'background:var(--surface2);border:1px solid var(--border2);color:var(--text2);'
+            + 'font-size:12px;font-weight:600;text-decoration:none;">'
+            + '📂 Zum Archiv</a>';
+      }
+    } catch(e) {}
 
     // Archiv-Cache invalidieren damit Status sofort korrekt zeigt
     try {

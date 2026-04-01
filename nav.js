@@ -387,6 +387,10 @@
     +     '<span style="font-size:14px;">↩</span>'
     +     '<span class="sb-label">Abmelden</span>'
     +   '</button>'
+    +   '<div class="sb-kbd-hint" onclick="provaOpenCmdPalette()" title="Schnellsuche öffnen" style="display:flex;align-items:center;justify-content:space-between;padding:6px 14px;margin-bottom:2px;cursor:pointer;border-radius:8px;transition:background .15s;opacity:.5;" onmouseover="this.style.opacity=\'1\'" onmouseout="this.style.opacity=\'.5\'">'
+    +     '<span style="font-size:11px;color:var(--text3);">Schnellsuche</span>'
+    +     '<kbd style="font-size:10px;padding:2px 6px;border-radius:4px;background:var(--surface2);border:1px solid var(--border2);color:var(--text3);font-family:var(--font-mono);">⌘K</kbd>'
+    +   '</div>'
     +   '<button class="sb-collapse" id="sb-collapse-btn">'
     +     '<span class="sb-toggle-icon">‹</span>'
     +     '<span class="sb-collapse-label">Einklappen</span>'
@@ -646,11 +650,12 @@ window.provaConfirm = function(msg, onYes) {
         return '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text3);padding:8px 10px 4px;">' + item.label + '</div>';
       }
       var isFirst = (i === 0 || all[0].type === 'header') && i <= 1;
+      var bgDefault = isFirst ? 'rgba(79,142,247,.1)' : 'transparent';
       return '<a href="'+item.href+'" data-cmd-item="'+i+'" '
         + 'style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;text-decoration:none;transition:background .1s;'
         + (isFirst ? 'background:rgba(79,142,247,.1);' : '')
-        + '" onmouseover="this.style.background='rgba(255,255,255,.05)'" '
-        + 'onmouseout="this.style.background=''+(isFirst?'rgba(79,142,247,.1)':'')+'';">'
+        + '" onmouseover="this.style.background=\'rgba(255,255,255,.08)\'" '
+        + 'onmouseout="this.style.background=\''+bgDefault+'\';" >'
         + '<span style="font-size:16px;width:22px;text-align:center;flex-shrink:0;">' + item.icon + '</span>'
         + '<div style="flex:1;min-width:0;">'
         + '<div style="font-size:13px;font-weight:600;color:var(--text,#eaecf4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + item.label + '</div>'
@@ -767,3 +772,305 @@ window.provaSbLogout = function() {
 };
 
 /* ── END OFFLINE INDIKATOR ── */
+
+/* ═══════════════════════════════════════════════════════
+   PROVA First-Visit Hints (Notion-Style)
+   Zeigt kontextuelle Tipps beim ersten Besuch einer Seite.
+   Wird nie mehr als 1x pro Seite angezeigt.
+   ═══════════════════════════════════════════════════════ */
+(function() {
+  var HINTS = {
+    'archiv.html': {
+      target: '#suche',
+      text: '💡 Tipp: Suche nach AZ, Auftraggeber oder Adresse. <kbd>⌘K</kbd> für alles.',
+      pos: 'bottom', delay: 1500
+    },
+    'akte.html': {
+      target: '#cockpit-cta',
+      text: '💡 Dieser Button zeigt immer Ihren nächsten Schritt im Gutachten-Workflow.',
+      pos: 'bottom', delay: 2000
+    },
+    'stellungnahme.html': {
+      target: '#svTextA',
+      text: '💡 Tippen Sie <kbd>/</kbd> für schnelle Einfügungen: Normen, Textbausteine, Phrasen.',
+      pos: 'top', delay: 1800
+    },
+    'normen.html': {
+      target: '#searchInput',
+      text: '💡 Norm suchen → Klick auf "↙ In §6 einfügen" öffnet Stellungnahme direkt.',
+      pos: 'bottom', delay: 1500
+    },
+    'jveg.html': {
+      target: '#btn-jveg-weiter',
+      text: '💡 Nach der Berechnung: "→ Rechnung erstellen" überträgt alle Werte automatisch.',
+      pos: 'top', delay: 2000
+    }
+  };
+
+  var page = window.location.pathname.split('/').pop() || 'dashboard.html';
+  var hint = HINTS[page];
+  if (!hint) return;
+
+  var seenKey = 'prova_hint_seen_' + page;
+  if (localStorage.getItem(seenKey)) return; // Bereits gesehen
+
+  setTimeout(function() {
+    var target = document.querySelector(hint.target);
+    if (!target) return;
+
+    var bubble = document.createElement('div');
+    bubble.id = 'prova-hint-bubble';
+    bubble.innerHTML = hint.text
+      + '<button onclick="this.parentNode.remove();localStorage.setItem(\''+seenKey+'\',\'1\')" '
+      + 'style="display:block;margin-top:8px;padding:4px 12px;border-radius:6px;background:rgba(255,255,255,.15);border:none;color:#fff;font-size:11px;cursor:pointer;font-family:inherit;width:100%;">Verstanden ✓</button>';
+
+    var rect = target.getBoundingClientRect();
+    var top = hint.pos === 'top'
+      ? (rect.top + window.scrollY - 100)
+      : (rect.bottom + window.scrollY + 12);
+
+    bubble.style.cssText = [
+      'position:absolute',
+      'left:' + Math.max(12, Math.min(rect.left, window.innerWidth - 280)) + 'px',
+      'top:' + top + 'px',
+      'z-index:88888',
+      'background:linear-gradient(135deg,#1e3a5f,#1a2744)',
+      'border:1px solid rgba(79,142,247,.4)',
+      'border-radius:10px',
+      'padding:12px 14px',
+      'font-size:12px',
+      'color:#e2e8f0',
+      'line-height:1.5',
+      'max-width:260px',
+      'box-shadow:0 8px 24px rgba(0,0,0,.4)',
+      'animation:fadeInUp .3s ease'
+    ].join(';');
+
+    document.body.appendChild(bubble);
+
+    // Schließen nach 8 Sekunden
+    setTimeout(function() {
+      if (bubble.parentNode) {
+        localStorage.setItem(seenKey, '1');
+        bubble.style.opacity = '0';
+        bubble.style.transition = 'opacity .5s';
+        setTimeout(function(){ bubble.remove(); }, 500);
+      }
+    }, 8000);
+
+  }, hint.delay);
+})();
+/* ── END FIRST-VISIT HINTS ── */
+
+/* ═════════════════════════════════════════════════════
+   PROVA Contextual Tooltips (Stripe-Style)
+   Usage: <span class="prova-help" data-tip="Erklärung…">?</span>
+   ═════════════════════════════════════════════════════ */
+(function() {
+  var tip = null;
+
+  function showTip(text, el) {
+    if (tip) tip.remove();
+    tip = document.createElement('div');
+    tip.id = 'prova-tooltip';
+    tip.textContent = text;
+    tip.style.cssText = 'position:fixed;z-index:99999;background:#1e293b;color:#e2e8f0;font-size:12px;line-height:1.5;padding:8px 12px;border-radius:8px;border:1px solid rgba(255,255,255,.1);max-width:240px;box-shadow:0 4px 16px rgba(0,0,0,.4);pointer-events:none;transition:opacity .15s;';
+    document.body.appendChild(tip);
+    var rect = el.getBoundingClientRect();
+    var top = rect.bottom + 8;
+    var left = Math.min(rect.left, window.innerWidth - 256);
+    tip.style.top = top + 'px';
+    tip.style.left = left + 'px';
+  }
+
+  function hideTip() {
+    if (tip) { tip.remove(); tip = null; }
+  }
+
+  document.addEventListener('mouseover', function(e) {
+    var el = e.target.closest('[data-tip]');
+    if (el) showTip(el.dataset.tip, el);
+  });
+  document.addEventListener('mouseout', function(e) {
+    if (e.target.closest('[data-tip]')) hideTip();
+  });
+
+  // Inject CSS für Help-Icon
+  var style = document.createElement('style');
+  style.textContent = '.prova-help{display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);color:var(--text3);font-size:9px;font-weight:700;cursor:help;margin-left:5px;vertical-align:middle;flex-shrink:0;transition:all .15s;}.prova-help:hover{background:rgba(79,142,247,.2);border-color:rgba(79,142,247,.4);color:var(--accent,#4f8ef7);}@keyframes fadeInUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}';
+  document.head.appendChild(style);
+})();
+/* ── END TOOLTIPS ── */
+
+/* ══════════════════════════════════════════════════════
+   PROVA Global Status System (Stripe-Style)
+   Semantische Farben: Rot=Jetzt, Orange=Bald, Grün=OK, Grau=Inaktiv
+   ══════════════════════════════════════════════════════ */
+.prova-status{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;white-space:nowrap;}
+.prova-status::before{content:'';width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+.prova-status.danger{background:rgba(239,68,68,.1);color:#ef4444;border:1px solid rgba(239,68,68,.2);}
+.prova-status.danger::before{background:#ef4444;}
+.prova-status.warning{background:rgba(245,158,11,.1);color:#f59e0b;border:1px solid rgba(245,158,11,.2);}
+.prova-status.warning::before{background:#f59e0b;}
+.prova-status.success{background:rgba(16,185,129,.1);color:#10b981;border:1px solid rgba(16,185,129,.2);}
+.prova-status.success::before{background:#10b981;}
+.prova-status.info{background:rgba(79,142,247,.1);color:#4f8ef7;border:1px solid rgba(79,142,247,.2);}
+.prova-status.info::before{background:#4f8ef7;}
+.prova-status.neutral{background:rgba(255,255,255,.05);color:var(--text3);border:1px solid var(--border);}
+.prova-status.neutral::before{background:var(--text3);}
+/* Fallback für alte Status-Badge-Klassen */
+.st-bearb{background:rgba(79,142,247,.1);color:#4f8ef7;}
+.st-entwurf{background:rgba(245,158,11,.1);color:#f59e0b;}
+.st-freig{background:rgba(16,185,129,.1);color:#10b981;}
+.st-export{background:rgba(16,185,129,.15);color:#059669;}
+.st-archiv{background:rgba(255,255,255,.05);color:var(--text3);}
+
+
+/* ════════════════════════════════════════════════════════════════
+   PROVA MOBILE SYSTEM
+   - Erkennt automatisch: Desktop / Tablet / Mobile
+   - Bottom-Nav auf Smartphone
+   - Sidebar als Bottom-Sheet
+   - Touch-Optimierungen
+   ════════════════════════════════════════════════════════════════ */
+(function() {
+  'use strict';
+
+  /* ─── DEVICE DETECTION ─── */
+  var isMobile  = window.matchMedia('(max-width: 768px)').matches;
+  var isTablet  = window.matchMedia('(min-width: 769px) and (max-width: 1024px)').matches;
+  var isIOS     = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+  var isAndroid = /Android/.test(navigator.userAgent);
+
+  // Globale Flags
+  window.PROVA_DEVICE = { isMobile: isMobile, isTablet: isTablet, isIOS: isIOS, isAndroid: isAndroid };
+
+  /* ─── iOS SAFE AREA ─── */
+  if (isIOS) {
+    document.documentElement.style.setProperty('--safe-bottom', 'env(safe-area-inset-bottom, 16px)');
+  }
+
+  /* ─── BOTTOM-NAV AUFBAUEN ─── */
+  function buildBottomNav() {
+    if (!isMobile) return;
+    var page = window.location.pathname.split('/').pop() || 'dashboard.html';
+
+    var navItems = [
+      { icon: '⊞', label: 'Zentrale', href: 'dashboard.html' },
+      { icon: '📂', label: 'Fälle',   href: 'archiv.html'   },
+      { icon: '➕', label: 'Neu',     href: 'app.html', highlight: true },
+      { icon: '📅', label: 'Termine', href: 'termine.html'  },
+      { icon: '☰',  label: 'Menü',   href: '#menu'          },
+    ];
+
+    var nav = document.createElement('nav');
+    nav.className = 'prova-bottom-nav';
+    nav.setAttribute('role', 'navigation');
+    nav.setAttribute('aria-label', 'Hauptnavigation');
+
+    var items = document.createElement('div');
+    items.className = 'prova-bottom-nav-items';
+
+    navItems.forEach(function(item) {
+      var el = document.createElement(item.href === '#menu' ? 'button' : 'a');
+      el.className = 'prova-bottom-nav-item' + (page === item.href ? ' active' : '');
+      if (item.highlight) {
+        el.style.cssText = 'background:var(--accent,#4f8ef7);color:#fff;border-radius:12px;padding:8px 16px;';
+      }
+      if (item.href !== '#menu') {
+        el.href = item.href;
+      } else {
+        el.onclick = toggleMobileSidebar;
+      }
+      el.innerHTML = '<span>' + item.icon + '</span><span>' + item.label + '</span>';
+      items.appendChild(el);
+    });
+
+    nav.appendChild(items);
+    document.body.appendChild(nav);
+
+    // Overlay für Sidebar
+    var overlay = document.createElement('div');
+    overlay.className = 'mobile-sidebar-overlay';
+    overlay.id = 'mobile-sidebar-overlay';
+    overlay.onclick = closeMobileSidebar;
+    document.body.appendChild(overlay);
+  }
+
+  /* ─── SIDEBAR TOGGLE AUF MOBILE ─── */
+  function toggleMobileSidebar() {
+    var sb = document.querySelector('.sidebar, .sb-wrap');
+    var ov = document.getElementById('mobile-sidebar-overlay');
+    if (!sb) return;
+    var isOpen = sb.classList.contains('mobile-open');
+    if (isOpen) {
+      closeMobileSidebar();
+    } else {
+      sb.classList.add('mobile-open');
+      if (ov) ov.classList.add('show');
+      // Scroll-Lock
+      document.body.style.overflow = 'hidden';
+    }
+  }
+  window.toggleMobileSidebar = toggleMobileSidebar;
+
+  function closeMobileSidebar() {
+    var sb = document.querySelector('.sidebar, .sb-wrap');
+    var ov = document.getElementById('mobile-sidebar-overlay');
+    if (sb) sb.classList.remove('mobile-open');
+    if (ov) ov.classList.remove('show');
+    document.body.style.overflow = '';
+  }
+
+  /* ─── MOBILE OPTIMIERUNGEN ─── */
+  function applyMobileOptimizations() {
+    if (!isMobile) return;
+
+    // Viewport-Height Fix für iOS (Safari 100vh Bug)
+    function setVh() {
+      var vh = window.innerHeight * 0.01;
+      document.documentElement.style.setProperty('--vh', vh + 'px');
+    }
+    setVh();
+    window.addEventListener('resize', setVh);
+
+    // Doppeltes Tap-Delay entfernen (iOS < 13)
+    var lastTap = 0;
+    document.addEventListener('touchend', function(e) {
+      var now = Date.now();
+      if (now - lastTap < 300) e.preventDefault();
+      lastTap = now;
+    }, { passive: false });
+
+    // Input-Zoom auf iOS verhindern
+    document.querySelectorAll('input, select, textarea').forEach(function(el) {
+      if (parseFloat(window.getComputedStyle(el).fontSize) < 16) {
+        el.style.fontSize = '16px';
+      }
+    });
+  }
+
+  /* ─── PERFORMANCE: Passive Event Listeners ─── */
+  function addPassiveListeners() {
+    // Touch-Events als passive für schnelleres Scrolling
+    window.addEventListener('touchstart', function(){}, { passive: true });
+    window.addEventListener('touchmove', function(){}, { passive: true });
+    window.addEventListener('wheel', function(){}, { passive: true });
+  }
+
+  /* ─── INIT ─── */
+  document.addEventListener('DOMContentLoaded', function() {
+    buildBottomNav();
+    applyMobileOptimizations();
+    addPassiveListeners();
+
+    // Hamburger-Button in Topbar auf Mobile sichtbar machen
+    var hamburger = document.getElementById('mobile-menu-btn');
+    if (hamburger && isMobile) {
+      hamburger.style.display = 'flex';
+      hamburger.onclick = toggleMobileSidebar;
+    }
+  });
+
+})();
+/* ── END PROVA MOBILE SYSTEM ── */

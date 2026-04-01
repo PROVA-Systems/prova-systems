@@ -678,6 +678,39 @@ function renderPositionen(){
   const tbl=document.getElementById('posTabelle');
   const empty=document.getElementById('emptyState');
   document.getElementById('posCount').textContent=filtered.length;
+  // Figma-Style: Zuletzt genutzte Positionen (tabellenbasiert)
+  var recentDiv = document.getElementById('pos-recent-section');
+  const q2 = (document.getElementById('search-input')||{value:''}).value.trim();
+  if (!q2) {
+    try {
+      var rpIds = JSON.parse(localStorage.getItem('prova_positionen_recent')||'[]');
+      var rpItems = rpIds.map(function(n){ return POSITIONEN_DB.find(function(p){return p.nr===n;}); }).filter(Boolean).slice(0,4);
+      if (rpItems.length > 0) {
+        if (!recentDiv) {
+          recentDiv = document.createElement('div');
+          recentDiv.id = 'pos-recent-section';
+          recentDiv.style.cssText = 'margin-bottom:16px;';
+          tbl.parentNode.insertBefore(recentDiv, tbl);
+        }
+        recentDiv.innerHTML =
+          '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:8px;">Zuletzt verwendet</div>'
+          + '<div style="display:flex;flex-wrap:wrap;gap:6px;">'
+          + rpItems.map(function(p){
+              return '<button onclick="insertPos(''+p.nr+'')" style="display:flex;align-items:center;gap:6px;padding:5px 11px;border-radius:8px;background:var(--surface);border:1px solid var(--border);color:var(--text2);font-size:12px;cursor:pointer;font-family:inherit;transition:all .15s;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">'
+                + '<span style="font-size:10px;color:var(--text3);">'+esc(p.nr)+'</span>'
+                + '<span>'+esc(p.bez.slice(0,30))+(p.bez.length>30?'…':'')+'</span>'
+                + '<span style="color:#10b981;font-size:11px;font-weight:700;">'+p.med+' €</span>'
+                + '</button>';
+            }).join('')
+          + '</div>';
+      } else if (recentDiv) {
+        recentDiv.innerHTML = '';
+      }
+    } catch(e) {}
+  } else if (recentDiv) {
+    recentDiv.innerHTML = '';
+  }
+
   if(!filtered.length){tbl.innerHTML='';empty.style.display='block';return;}
   empty.style.display='none';
   tbl.innerHTML=filtered.map(p=>
@@ -735,6 +768,13 @@ function insertPos(nr){
   } else {
     showToast('Position gespeichert — in Kostenermittlung verfügbar ✅');
   }
+  // Figma Recent-Tracking
+  try {
+    var rp = JSON.parse(localStorage.getItem('prova_positionen_recent')||'[]');
+    rp = rp.filter(function(x){return x!==nr;});
+    rp.unshift(nr); rp = rp.slice(0,6);
+    localStorage.setItem('prova_positionen_recent', JSON.stringify(rp));
+  } catch(e) {}
 }
 
 function copyPos(nr){
@@ -766,6 +806,10 @@ function showToast(msg){
 
 renderKPI();
 renderPositionen();
+
+document.addEventListener('DOMContentLoaded', function() {
+  if (typeof filterPositionen === 'function') filterPositionen();
+});
 </script>
 
 <button class="support-fab" onclick="openSupportModal()" title="Support">💬</button>
@@ -784,30 +828,9 @@ renderPositionen();
         <div class="sup-err" id="sup-err">Bitte Betreff und Nachricht eingeben.</div>
         <button class="sup-send-btn" id="sup-btn" onclick="supSendModal()">Nachricht senden</button>
         <div style="text-align:center;margin-top:10px;font-size:11px;color:var(--text3,#6b7a99);">
-          Oder direkt: <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="cfa4a0a1bbaea4bb8fbfbda0b9aee2bcb6bcbbaaa2bce1abaa">[email&#160;protected]</a>
+          Oder direkt: <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="f1828481819e8385b181839e8790dc82888285949c82df9594">[email&#160;protected]</a>
         </div>
       </div>
       <div class="sup-ok" id="sup-ok">
         <div class="sup-ok-icon">✅</div>
-        <div class="sup-ok-title">Nachricht gesendet</div>
-        <div class="sup-ok-sub">Wir melden uns werktags innerhalb von 24h.</div>
-      </div>
-    </div>
-  </div>
-</div>
-<script>
-function openSupportModal(){
-  var m=document.getElementById('support-modal');
-  if(!m)return;
-  var fb=document.getElementById('support-form-body');
-  var ok=document.getElementById('sup-ok');
-  if(fb)fb.style.display='block';
-  if(ok)ok.style.display='none';
-  var b=document.getElementById('sup-betreff');
-  var n=document.getElementById('sup-nachricht');
-  var btn=document.getElementById('sup-btn');
-  if(b)b.value='';if(n)n.value='';
-  if(btn){btn.disabled=false;btn.textContent='Nachricht senden';}
-  m.classList.add('open');
-}
-async function supSendModal(){
+        <div class="sup-ok-titl
