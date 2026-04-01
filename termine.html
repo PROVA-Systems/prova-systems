@@ -6,6 +6,7 @@
 <title>Kalender · PROVA</title>
 <script src="theme.js"></script>
 <script src="nav.js"></script>
+<script src="trial-guard.js"></script>
 <style>
 :root{
   --bg:#0b0d11;--bg2:#111318;--bg3:#161a22;
@@ -587,6 +588,13 @@ window.speichereTermin=async function(){
     alleTermine.push(termin);
   }
   speichereInLS(alleTermine);
+  // Dashboard-Cache updaten damit Fristen-Widget sofort aktuell ist
+  try {
+    var cacheTermine = alleTermine.map(function(t) {
+      return { fields: { termin_datum: t.datum, termin_typ: t.typ, aktenzeichen: t.az || '', notiz: t.titel || '' } };
+    });
+    localStorage.setItem('prova_termine_cache', JSON.stringify(cacheTermine));
+  } catch(e) {}
   schliesseModal();
   updateStats();renderKalender();renderListe();
   zeigToast(editId?'Termin aktualisiert ✓':'Termin gespeichert ✓');
@@ -683,7 +691,7 @@ window.importFristenAusFaellen = async function() {
   if(btn){btn.disabled=false;btn.textContent='📥 Fristen aus Fällen';}
 };
 // Init
-ladeTermine();
+// ladeTermine() → in DOMContentLoaded
 
 })();
 </script>
@@ -704,7 +712,7 @@ ladeTermine();
         <div class="sup-err" id="sup-err">Bitte Betreff und Nachricht eingeben.</div>
         <button class="sup-send-btn" id="sup-btn" onclick="supSendModal()">Nachricht senden</button>
         <div style="text-align:center;margin-top:10px;font-size:11px;color:var(--text3,#6b7a99);">
-          Oder direkt: <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="107b7f7e64717b645060627f66713d63696364757d633e7475">[email&#160;protected]</a>
+          Oder direkt: support@prova-systems.de
         </div>
       </div>
       <div class="sup-ok" id="sup-ok">
@@ -775,11 +783,4 @@ function befuelleAzDatalist() {
 function buildFallLink(az) {
   if (!az) return '';
   return '<a href="akte.html?az='+encodeURIComponent(az)+'" onclick="event.stopPropagation()" '
-    + 'style="font-size:10px;color:var(--accent,#4f8ef7);text-decoration:none;font-weight:600;display:inline-block;margin-top:4px;">'
-    + '→ Fall öffnen</a>';
-}
-
-// Datalist beim Laden befüllen
-document.addEventListener('DOMContentLoaded', befuelleAzDatalist);
-
-</sc
+    + 'style="font-size:10px;color:var(--accent,#4f8ef7);text-decoration:none;font-weight:600;

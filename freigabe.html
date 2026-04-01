@@ -152,6 +152,20 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-ui);min-heigh
 #toast.err{border-color:rgba(239,68,68,.4);color:#ef4444;}
 #toast.warn{border-color:rgba(245,158,11,.4);color:#f59e0b;}
 .app-shell .main-wrap{padding-top:0}.sidebar{z-index:300}
+
+@media(max-width:768px){#flow-burger{display:block!important}}
+
+@media print {
+  .sidebar, .topbar, #approve-content,
+  #btn-qi-check, .audit-log-toggle, #qi-loading { display: none !important; }
+  .main-wrap, .main { margin: 0 !important; padding: 0 !important; }
+  body { background: white !important; color: #111 !important; }
+  .gutachten-preview { background: white !important; color: #111 !important; border: none !important; }
+  .gutachten-preview h1, .gutachten-preview h2, .gutachten-preview h3 { color: #111 !important; }
+  .doc-card, .section-block { background: white !important; border: 1px solid #ccc !important; page-break-inside: avoid; }
+  #erfolg { display: none !important; }
+}
+
 </style>
 <script src="theme.js"></script>
 <script src="trial-guard.js"></script>
@@ -160,6 +174,11 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-ui);min-heigh
 <body>
 <div class="app-shell" id="app-shell">
 <header class="flow-header">
+  <button class="burger" onclick="openMobileSidebar()" style="background:none;border:none;cursor:pointer;padding:4px 8px;margin-right:4px;display:none;flex-shrink:0;" id="flow-burger">
+    <span style="display:block;width:18px;height:2px;background:var(--text2,#c8d0e0);margin:3px 0;border-radius:1px;"></span>
+    <span style="display:block;width:18px;height:2px;background:var(--text2,#c8d0e0);margin:3px 0;border-radius:1px;"></span>
+    <span style="display:block;width:18px;height:2px;background:var(--text2,#c8d0e0);margin:3px 0;border-radius:1px;"></span>
+  </button>
   <a href="dashboard.html" style="display:flex;align-items:center;gap:7px;text-decoration:none;" title="Zur Zentrale"><div style="width:24px;height:24px;background:linear-gradient(135deg,#4f8ef7,#3a7be0);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;">P</div><span style="font-size:14px;font-weight:800;color:#eaecf4;letter-spacing:-.02em;">PR<span style="color:#4f8ef7">O</span>VA</span></a>
   <a class="flow-back" onclick="history.back()">← §6 bearbeiten</a>
   <div class="flow-steps">
@@ -174,6 +193,10 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-ui);min-heigh
     <div class="flow-step active"><div class="flow-dot">5</div><span>Freigabe</span></div>
   </div>
   <div class="flow-az" id="headerAz">—</div>
+  <button onclick="window.print()" title="Drucken / Als PDF speichern"
+    style="background:none;border:1px solid var(--border2);border-radius:8px;color:var(--text3);font-size:12px;cursor:pointer;padding:5px 12px;margin-left:auto;flex-shrink:0;font-family:inherit;display:flex;align-items:center;gap:5px;">
+    🖨️ <span>Drucken</span>
+  </button>
 </header>
 
 <div class="main-wrap" id="main-wrap"><div class="main" id="freig-main">
@@ -922,6 +945,41 @@ async function approveGutachten(){
     chip.className='status-chip status-approved';
     chip.innerHTML='<div style="width:7px;height:7px;border-radius:50%;background:currentColor;"></div> Freigegeben';
     localStorage.setItem('prova_stellungnahme_done','0');
+
+    // Airtable Status → "Freigegeben" (non-blocking)
+    try {
+      fetch('/.netlify/functions/airtable', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          method: 'PATCH',
+          path: '/v0/' + AT_BASE + '/' + AT_TABLE + '/' + recId,
+          payload: {
+            fields: {
+              Status: 'Freigegeben',
+              Freigabe_Datum: new Date().toISOString().split('T')[0],
+              Freigabe_Durch: localStorage.getItem('prova_sv_email') || ''
+            }
+          }
+        })
+      }).catch(e => console.warn('Status-Update:', e));
+    } catch(e) { console.warn('Freigabe Status:', e); }
+
+    // Archiv-Cache invalidieren damit Status sofort korrekt zeigt
+    try {
+      var cache = JSON.parse(localStorage.getItem('prova_archiv_cache_v2') || '{}');
+      if (cache.data) {
+        cache.data = cache.data.map(function(r) {
+          if (r.id === recId) {
+            r.fields = r.fields || {};
+            r.fields.Status = 'Freigegeben';
+          }
+          return r;
+        });
+        cache.ts = Date.now();
+        localStorage.setItem('prova_archiv_cache_v2', JSON.stringify(cache));
+      }
+    } catch(e) {}
   } catch(e){
     zeigToast('Freigabe fehlgeschlagen: '+e.message,'err');
     btn.disabled=false; btn.textContent='✅ Gutachten freigeben';

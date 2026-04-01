@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Einstellungen · PROVA</title>
 <script src="nav.js"></script>
+<script src="trial-guard.js"></script>
 <style>
 /* ═══ PROVA SIDEBAR SYSTEM ═══════════════════════════════════════════════ */
 :root{
@@ -607,7 +608,7 @@ input,select,textarea{font-size:max(16px,1em);}
                 <div style="font-size:12px;color:var(--text2);line-height:1.6;">
                   <strong>1.</strong> E-Mail an Ihre IHK/HWK: <em>"Bitte digitalen Rundstempel als PNG bereitstellen"</em><br>
                   <strong>2.</strong> Oder: Foto vom physischen Stempel → Hintergrund entfernen mit <a href="https://www.remove.bg" target="_blank" style="color:var(--accent)">remove.bg</a> → PNG hochladen<br>
-                  <strong>3.</strong> IHK Köln: <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="3b5054554f5a504f7b4b49544d5a164842484f5e5648155f5e">[email&#160;protected]</a> · 0221 2021-4242
+                  <strong>3.</strong> IHK Köln: support@prova-systems.de · 0221 2021-4242
                 </div>
               </div>
 
@@ -634,6 +635,19 @@ input,select,textarea{font-size:max(16px,1em);}
               <div class="paket-grid" id="paket-grid"></div>
               <div id="upgrade-anfragen-btn">
               <div id="upgrade-cta-box" style="margin-top:8px;"></div>
+
+              <!-- Kündigung -->
+              <div style="border-top:1px solid var(--border);margin-top:20px;padding-top:16px;">
+                <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px;">Kündigung & Datenlöschung</div>
+                <div style="font-size:11px;color:var(--text3);margin-bottom:12px;line-height:1.6;">
+                  Ihr Abonnement läuft monatlich. Kündigung jederzeit zum Monatsende möglich.
+                  Bei Kündigung werden alle Daten nach 30 Tagen gelöscht.
+                </div>
+                <button onclick="beantragteKuendigung()" style="padding:8px 16px;border-radius:8px;background:transparent;border:1px solid rgba(239,68,68,.3);color:#ef4444;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s;"
+                  onmouseover="this.style.background='rgba(239,68,68,.08)'" onmouseout="this.style.background='transparent'">
+                  Kündigung beantragen
+                </button>
+              </div>
               </script><script>
 /* zeigToast → globales showToast */
 if (!window.zeigToast && window.showToast) window.zeigToast = window.showToast;
@@ -735,6 +749,18 @@ if (!window.showToast && window.zeigToast) window.showToast = window.zeigToast;
 
 <!-- Toast -->
 <div class="toast-prova" id="einst-toast"></div>
+
+
+window.beantragteKuendigung = function() {
+  var email = localStorage.getItem('prova_sv_email') || '';
+  var paket = localStorage.getItem('prova_paket') || 'Solo';
+  if (!confirm('Kündigung beantragen für ' + paket + '-Paket?\n\nNach Bestätigung senden wir Ihnen eine Kündigungsbestätigung per E-Mail. Das Abonnement läuft bis zum Monatsende.')) return;
+  // Zur Support-E-Mail weiterleiten
+  var subject = encodeURIComponent('Kündigung PROVA Systems - ' + paket);
+  var body = encodeURIComponent('Ich möchte mein PROVA Systems ' + paket + '-Paket kündigen.\n\nE-Mail: ' + email + '\n\nBitte bestätigen Sie die Kündigung.');
+  window.open('mailto:support@prova-systems.de?subject=' + subject + '&body=' + body);
+  if(typeof zeigToast === 'function') zeigToast('Kündigungsanfrage geöffnet — bitte E-Mail absenden', '');
+};
 
 </script><script>
 (function(){
@@ -1202,8 +1228,8 @@ function renderPaket(){
   }
 
   var pakete=[
-    {name:'Solo',price:'149 €/Mo',cls:paket==='Solo'?'aktiv-starter':'',feats:['1 Nutzer, 30 Gutachten/Mo','KI-Gutachten §1–§6','§407a + EU AI Act Compliance','Persönlicher Audit-Trail','Alle Werkzeuge unbegrenzt','Normen, Textbausteine, JVEG','Briefvorlagen + KI-Brieftext','Fristenverwaltung','Foto-Anlage + Auto-Captioning']},
-    {name:'Team',price:'349 €/Mo',cls:paket==='Team'?'aktiv-ent':'',feats:['Alles aus Solo','Unbegrenzte Nutzer (+99 €/Nutzer)','Rechteverwaltung','Chef-Freigabe-Workflow','Team-Dashboard','Organisations-Audit-Trail','Geteilte Textbausteine & Vorlagen','Jahresbericht','Priority-Support']}
+    {name:'Solo',price:'89 €/Mo',cls:paket==='Solo'?'aktiv-starter':'',feats:['1 Nutzer, 30 Gutachten/Mo','KI-Gutachten §1–§6','§407a + EU AI Act Compliance','Persönlicher Audit-Trail','Alle Werkzeuge unbegrenzt','Normen, Textbausteine, JVEG','Briefvorlagen + KI-Brieftext','Fristenverwaltung','Foto-Anlage + Auto-Captioning']},
+    {name:'Team',price:'179 €/Mo',cls:paket==='Team'?'aktiv-ent':'',feats:['Alles aus Solo','Unbegrenzte Nutzer (+inklusive bis 5 SVs)','Rechteverwaltung','Chef-Freigabe-Workflow','Team-Dashboard','Organisations-Audit-Trail','Geteilte Textbausteine & Vorlagen','Jahresbericht','Priority-Support']}
   ];
   grid.innerHTML=pakete.map(function(p){
     var istAktiv=p.name===paket;
@@ -1276,27 +1302,4 @@ window.ladeWebhookLog = function(){
 /* ── INIT ── */
 document.addEventListener('DOMContentLoaded', function(){
   // Signatur laden + Vorschau zeigen
-  var _savedSig = localStorage.getItem('prova_sv_signatur');
-  if(_savedSig){
-    var _si=document.getElementById('sig-preview');
-    var _sw=document.getElementById('sig-preview-wrap');
-    var _ss=document.getElementById('sig-status');
-    var _sl=document.getElementById('btn-sig-loeschen');
-    if(_si)_si.src=_savedSig;
-    if(_sw)_sw.style.display='block';
-    if(_ss)_ss.style.display='block';
-    if(_sl)_sl.style.display='inline-flex';
-  }
-  // Profil laden
-  var pfn=localStorage.getItem('prova_sv_vorname')||'';
-  var pln=localStorage.getItem('prova_sv_nachname')||'';
-  var pem=localStorage.getItem('prova_sv_email')||'';
-  var ptel=localStorage.getItem('prova_sv_telefon')||'';
-  var pqual=localStorage.getItem('prova_sv_qualifikation')||'';
-  if(pfn){var el=document.getElementById('profil-vorname');if(el)el.value=pfn;}
-  if(pln){var el=document.getElementById('profil-nachname');if(el)el.value=pln;}
-  if(pem){var el=document.getElementById('profil-email');if(el)el.value=pem;}
-  if(ptel){var el=document.getElementById('profil-telefon');if(el)el.value=ptel;}
-  if(pqual){var el=document.getElementById('profil-qualifikation');if(el)el.value=pqual;}
-  // Erste Sektion anzeigen
-  var 
+  var _savedSig = localSt

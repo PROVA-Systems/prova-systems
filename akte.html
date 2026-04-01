@@ -526,6 +526,52 @@ a{text-decoration:none;color:inherit;}button,input,select,textarea{font-family:i
           </div>
         </div>
 
+        <!-- MESSWERT-SCHNELLEINGABE -->
+        <div class="kosten-modul" style="margin:0 0 8px 0;" id="messwert-modul">
+          <div class="kosten-modul-header" onclick="toggleMesswerte()" style="background:rgba(16,185,129,.04);">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span>📐</span>
+              <span style="font-size:13px;font-weight:700;color:#10b981;">Messwerte</span>
+              <span id="mw-badge" style="font-size:10px;padding:2px 7px;border-radius:8px;background:rgba(16,185,129,.12);color:#10b981;display:none;">0 Werte</span>
+            </div>
+            <span id="mw-arrow" style="font-size:11px;color:var(--text3);">▶</span>
+          </div>
+          <div id="messwert-body" style="display:none;padding:14px 16px;">
+            <div style="font-size:11px;color:var(--text3);margin-bottom:12px;">Vor-Ort-Messungen direkt erfassen — fließen in §2 Befund ein</div>
+            <div id="mw-liste" style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px;"></div>
+            <div style="display:grid;grid-template-columns:2fr 1fr 80px 32px;gap:6px;align-items:center;margin-bottom:8px;">
+              <select id="mw-typ" style="padding:7px;border-radius:7px;border:1px solid var(--border2);background:var(--surface2);color:var(--text);font-size:12px;outline:none;">
+                <option value="Feuchte (%)">💧 Feuchte (%)</option>
+                <option value="Rel. Luftfeuchte (%)">🌫️ Rel. Luftfeuchte (%)</option>
+                <option value="Temperatur (°C)">🌡️ Temperatur (°C)</option>
+                <option value="Taupunkt (°C)">❄️ Taupunkt (°C)</option>
+                <option value="CO₂ (ppm)">💨 CO₂ (ppm)</option>
+                <option value="pH-Wert">🧪 pH-Wert</option>
+                <option value="Schichtdicke (mm)">📏 Schichtdicke (mm)</option>
+                <option value="Sonstiges">📋 Sonstiges</option>
+              </select>
+              <input type="number" id="mw-wert" placeholder="Wert" step="0.1"
+                style="padding:7px;border-radius:7px;border:1px solid var(--border2);background:var(--surface2);color:var(--text);font-size:12px;outline:none;"
+                onkeydown="if(event.key==='Enter')addMesswert()">
+              <input type="text" id="mw-ort" placeholder="Ort/Raum"
+                style="padding:7px;border-radius:7px;border:1px solid var(--border2);background:var(--surface2);color:var(--text);font-size:12px;outline:none;"
+                onkeydown="if(event.key==='Enter')addMesswert()">
+              <button onclick="addMesswert()"
+                style="padding:7px;border-radius:7px;background:var(--accent,#4f8ef7);border:none;color:#fff;font-size:14px;cursor:pointer;font-family:inherit;">+</button>
+            </div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;">
+              <button onclick="messwerteInBefund()"
+                style="padding:8px 14px;border-radius:7px;background:rgba(16,185,129,.12);border:1px solid rgba(16,185,129,.2);color:#10b981;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">
+                📋 In §2 Befund einfügen
+              </button>
+              <button onclick="messwerteNachAirtable()"
+                style="padding:8px 14px;border-radius:7px;background:rgba(255,255,255,.04);border:1px solid var(--border2);color:var(--text2);font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;">
+                💾 Speichern
+              </button>
+            </div>
+          </div>
+        </div>
+
         <!-- NORMEN-QUICKBAR -->
         <div style="border-top:1px solid var(--border);padding:12px 20px;">
           <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text3);margin-bottom:8px;">📚 Normen für diese Schadenart → direkt in §6</div>
@@ -711,6 +757,14 @@ a{text-decoration:none;color:inherit;}button,input,select,textarea{font-family:i
       <div style="font-size:48px;margin-bottom:16px;opacity:.3;">🔍</div>
       <div style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:8px;">Fall nicht gefunden</div>
       <div style="font-size:13px;color:var(--text3);margin-bottom:20px;">Möglicherweise wurde der Fall gelöscht oder Sie haben keine Berechtigung.</div>
+      <div style="display:flex;gap:10px;justify-content:center;margin-bottom:8px;">
+        <button onclick="window.location.href='archiv.html'" style="padding:9px 18px;border-radius:8px;background:var(--surface2);border:1px solid var(--border2);color:var(--text2);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;">&#8592; Alle Faelle</button>
+        <button onclick="window.location.reload()" style="padding:9px 18px;border-radius:8px;background:var(--accent,#4f8ef7);border:none;color:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;">&#x1F504; Erneut laden</button>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:8px;">
+        <button onclick="window.location.href='archiv.html'" style="padding:9px 18px;border-radius:8px;background:var(--surface2);border:1px solid var(--border2);color:var(--text2);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;">← Alle Fälle</button>
+        <button onclick="window.location.reload()" style="padding:9px 18px;border-radius:8px;background:var(--accent,#4f8ef7);border:none;color:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;">🔄 Erneut laden</button>
+      </div>
       <button class="action-btn btn-primary" onclick="window.location.href='archiv.html'">← Zurück zu Fälle</button>
     </div>
   </main>
@@ -746,11 +800,31 @@ var pc={'Solo':'#4f8ef7','Team':'#a78bfa'}[paket]||'#4f8ef7';
 if(!localStorage.getItem('prova_user')){window.location.href='app-login.html';return;}
 
 /* ─── RECORD LADEN ─── */
-var recordId=sessionStorage.getItem('prova_record_id')||new URLSearchParams(window.location.search).get('id')||'';
+var _urlP=new URLSearchParams(window.location.search);
+var recordId=sessionStorage.getItem('prova_record_id')||_urlP.get('id')||'';
+var _azFromUrl=_urlP.get('az')||_urlP.get('aktenzeichen')||'';
 var currentRecord=null;
 var currentFields={};
 
 async function ladeRecord(){
+  // Wenn keine ID aber AZ vorhanden: per AZ in Airtable suchen
+  if(!recordId && _azFromUrl){
+    try{
+      var svEmail=localStorage.getItem('prova_sv_email')||'';
+      var searchPath='/v0/'+AT_BASE+'/'+AT_FAELLE
+        +'?filterByFormula='+encodeURIComponent('AND({Aktenzeichen}="'+_azFromUrl+'"'+(svEmail?',{sv_email}="'+svEmail+'"':'')+')')
+        +'&maxRecords=1';
+      var sRes=await fetch('/.netlify/functions/airtable',{
+        method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({method:'GET',path:searchPath})
+      });
+      var sData=await sRes.json();
+      if(sData.records&&sData.records.length){
+        recordId=sData.records[0].id;
+        sessionStorage.setItem('prova_record_id',recordId);
+      }
+    }catch(e){}
+  }
   if(!recordId){zeigNotFound();return;}
   try{
     var path='/v0/'+AT_BASE+'/'+AT_FAELLE+'/'+recordId;
@@ -862,7 +936,7 @@ function renderTimeline(status,f){
   var schritte=[
     {key:'erfassung',label:'Fallerfassung',meta:'Stammdaten + Fotos',done:true},
     {key:'ki',label:'KI-Analyse',meta:f.KI_Entwurf?'Entwurf vorhanden':'Noch nicht gestartet',done:!!f.KI_Entwurf},
-    {key:'stellungnahme',label:'§6 Stellungnahme',meta:localStorage.getItem('prova_stellungnahme_done')==='true'?'Fertiggestellt':'Ausstehend',done:localStorage.getItem('prova_stellungnahme_done')==='true'},
+    {key:'stellungnahme',label:'§6 Stellungnahme',meta:(localStorage.getItem('prova_stellungnahme_done')==='1'||localStorage.getItem('prova_stellungnahme_done')==='true')?'Fertiggestellt':'Ausstehend',done:(localStorage.getItem('prova_stellungnahme_done')==='1'||localStorage.getItem('prova_stellungnahme_done')==='true')},
     {key:'freigabe',label:'Freigabe',meta:status==='Freigegeben'||status==='Exportiert'?'Freigegeben':'Ausstehend',done:status==='Freigegeben'||status==='Exportiert'},
     {key:'pdf',label:'PDF & Versand',meta:status==='Exportiert'?'PDF erstellt und versendet':'Ausstehend',done:status==='Exportiert'}
   ];
@@ -1135,7 +1209,7 @@ window.zeigToast=function(msg,typ){
 };
 
 /* ─── INIT ─── */
-ladeRecord();
+// ladeRecord() → in DOMContentLoaded
 
 })();
 
@@ -1171,7 +1245,7 @@ window.oeffneStellung = function() {
         <div class="sup-err" id="sup-err">Bitte Betreff und Nachricht eingeben.</div>
         <button class="sup-send-btn" id="sup-btn" onclick="supSendModal()">Nachricht senden</button>
         <div style="text-align:center;margin-top:10px;font-size:11px;color:var(--text3,#6b7a99);">
-          Oder direkt: <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="d5bebabba1b4bea195a5a7baa3b4f8a6aca6a1b0b8a6fbb1b0">[email&#160;protected]</a>
+          Oder direkt: support@prova-systems.de
         </div>
       </div>
       <div class="sup-ok" id="sup-ok">
@@ -1556,6 +1630,7 @@ window.PROVA_KONTEXT = {
   },
   // Fall-Kontext löschen (nach Archivierung)
   clearFall: function() {
+  if(typeof ladeRecord==='function') ladeRecord();
     localStorage.removeItem('prova_letztes_az');
     localStorage.removeItem('prova_schadenart');
     localStorage.removeItem('prova_adresse');
@@ -1824,6 +1899,123 @@ window.regulierungInGutachten = function() {
 ' : '') + text);
   showToast('Regulierungsberechnung in §4 übernommen ✅', 'success');
 };
+
+
+/* ══════════════════════════════════════════════════
+   MESSWERTE — Schnelleingabe in Akte
+   ══════════════════════════════════════════════════ */
+var _messwerte = [];
+try {
+  var _mw_az = sessionStorage.getItem('prova_letztes_az') || localStorage.getItem('prova_letztes_az') || '';
+  _messwerte = JSON.parse(localStorage.getItem('prova_messwerte_' + _mw_az) || '[]');
+} catch(e) {}
+
+window.toggleMesswerte = function() {
+  var body  = document.getElementById('messwert-body');
+  var arrow = document.getElementById('mw-arrow');
+  if (!body) return;
+  var open = body.style.display !== 'none';
+  body.style.display = open ? 'none' : 'block';
+  if (arrow) arrow.textContent = open ? '▶' : '▼';
+  if (!open) renderMesswertListe();
+};
+
+window.addMesswert = function() {
+  var typ  = (document.getElementById('mw-typ')  || {}).value || '';
+  var wert = (document.getElementById('mw-wert') || {}).value || '';
+  var ort  = (document.getElementById('mw-ort')  || {}).value || '';
+  if (!wert) { if(typeof showToast==='function') showToast('Bitte Wert eingeben', 'warning'); return; }
+  _messwerte.push({
+    id: Date.now(),
+    typ: typ,
+    wert: parseFloat(wert),
+    ort: ort,
+    ts: new Date().toLocaleString('de-DE', {timeZone:'Europe/Berlin'})
+  });
+  document.getElementById('mw-wert').value = '';
+  document.getElementById('mw-ort').value  = '';
+  renderMesswertListe();
+  speichereMesswerteLs();
+};
+
+function renderMesswertListe() {
+  var list = document.getElementById('mw-liste');
+  var badge = document.getElementById('mw-badge');
+  if (!list) return;
+  if (badge) { badge.style.display = _messwerte.length ? 'inline-block' : 'none'; badge.textContent = _messwerte.length + ' Wert' + (_messwerte.length !== 1 ? 'e' : ''); }
+  if (!_messwerte.length) { list.innerHTML = '<div style="font-size:11px;color:var(--text3);text-align:center;padding:8px 0;">Noch keine Messwerte</div>'; return; }
+  list.innerHTML = _messwerte.map(function(m, i) {
+    var warn = (m.typ.includes('Feuchte') && m.wert > 80) ? '⚠️' : (m.typ.includes('Feuchte') && m.wert > 20 && !m.typ.includes('Luft')) ? '⚠️' : '';
+    return '<div style="display:flex;align-items:center;gap:8px;padding:5px 8px;background:var(--surface2);border-radius:6px;font-size:11px;">'
+      + '<span style="font-weight:700;color:var(--accent);">' + m.typ + '</span>'
+      + '<span style="font-weight:800;color:' + (warn ? '#f59e0b' : 'var(--text)') + ';">' + m.wert + ' ' + warn + '</span>'
+      + (m.ort ? '<span style="color:var(--text3);">@ ' + m.ort + '</span>' : '')
+      + '<span style="color:var(--text3);margin-left:auto;font-size:10px;">' + m.ts + '</span>'
+      + '<button onclick="_messwerte.splice(' + i + ',1);renderMesswertListe();speichereMesswerteLs()" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:12px;padding:0;">✕</button>'
+      + '</div>';
+  }).join('');
+}
+
+function speichereMesswerteLs() {
+  try {
+    var az = currentFields && currentFields.Aktenzeichen ? currentFields.Aktenzeichen : (localStorage.getItem('prova_letztes_az') || '');
+    if (az) localStorage.setItem('prova_messwerte_' + az, JSON.stringify(_messwerte));
+  } catch(e) {}
+}
+
+window.messwerteInBefund = function() {
+  if (!_messwerte.length) { if(typeof showToast==='function') showToast('Keine Messwerte vorhanden', 'warning'); return; }
+  var text = 'Messwerte (Vor-Ort-Messungen):
+'
+    + _messwerte.map(function(m) {
+        return '• ' + m.typ + ': ' + m.wert + (m.ort ? ' (' + m.ort + ')' : '');
+      }).join('
+');
+  // Speichern für stellungnahme.html
+  var existing = localStorage.getItem('prova_messwerte_text') || '';
+  localStorage.setItem('prova_messwerte_text', text);
+  localStorage.setItem('prova_messwerte', JSON.stringify(_messwerte));
+  if(typeof showToast==='function') showToast('Messwerte für §2 gespeichert ✅', 'success');
+};
+
+window.messwerteNachAirtable = function() {
+  if (!_messwerte.length) return;
+  var rid = typeof recordId !== 'undefined' ? recordId : '';
+  if (!rid) { if(typeof showToast==='function') showToast('Kein Datensatz geladen', 'warning'); return; }
+  var mwText = _messwerte.map(function(m) {
+    return m.typ + ': ' + m.wert + (m.ort ? ' (' + m.ort + ')' : '');
+  }).join(' | ');
+  fetch('/.netlify/functions/airtable', {
+    method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({
+      method: 'PATCH',
+      path: '/v0/' + AT_BASE + '/' + AT_FAELLE + '/' + rid,
+      payload: { fields: { Messwerte: mwText } }
+    })
+  }).then(function() {
+    if(typeof showToast==='function') showToast('Messwerte gespeichert ✅', 'success');
+  }).catch(function(e) {
+    if(typeof showToast==='function') showToast('Fehler: ' + e.message, 'error');
+  });
+};
+
+// Beim Laden der Akte: Messwerte aus localStorage laden
+document.addEventListener('DOMContentLoaded', function() {
+  setTimeout(function() {
+    try {
+      var az = localStorage.getItem('prova_letztes_az') || '';
+      if (az) {
+        _messwerte = JSON.parse(localStorage.getItem('prova_messwerte_' + az) || '[]');
+        var badge = document.getElementById('mw-badge');
+        if (badge && _messwerte.length) {
+          badge.style.display = 'inline-block';
+          badge.textContent = _messwerte.length + ' Wert' + (_messwerte.length !== 1 ? 'e' : '');
+        }
+      }
+    } catch(e) {}
+  }, 500);
+});
+/* ── END MESSWERTE ── */
 
 </script>
 </body></html>'
@@ -2298,6 +2490,21 @@ function renderCockpit(f) {
 
   // Phase in localStorage für Nav-Anzeige
   localStorage.setItem('prova_aktuelle_phase', String(phase));
+
+  // Phase auch in Airtable persistieren (non-blocking)
+  if (typeof recordId !== 'undefined' && recordId) {
+    var phaseMap = {1:'Neu',2:'Diktat',3:'Entwurf',4:'Stellungnahme',5:'Freigabe'};
+    var phaseStatus = phaseMap[phase] || ('Phase ' + phase);
+    fetch('/.netlify/functions/airtable', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        method: 'PATCH',
+        path: '/v0/' + AT_BASE + '/' + AT_FAELLE + '/' + recordId,
+        payload: { fields: { Phase: String(phase), Status: phaseStatus } }
+      })
+    }).then(function(){ if(typeof zeigToast==='function') zeigToast('Phase gespeichert ✓',''); }).catch(function(e) { console.warn('Phase sync:', e); });
+  }
   if (az) { localStorage.setItem('prova_aktiver_fall', az); localStorage.setItem('prova_letztes_az', az); }
   if (sa) localStorage.setItem('prova_schadenart', sa);
   var adr = f.Adresse || f.Schaden_Strasse || '';
@@ -2416,25 +2623,4 @@ function renderNormenQuickbar(sa) {
   var code = sa.toLowerCase().includes('wasser')?'WS': sa.toLowerCase().includes('schimmel')?'SC': sa.toLowerCase().includes('brand')?'BS': sa.toLowerCase().includes('sturm')?'ST': 'def';
   var normen = NORMEN_DB[code] || NORMEN_DB['def'];
   el.innerHTML = normen.map(function(n){
-    return '<span onclick="normZuStellung(''+n.split(' ')[0]+'')" style="padding:4px 10px;border-radius:12px;background:rgba(79,142,247,.08);border:1px solid rgba(79,142,247,.2);color:var(--accent);font-size:10px;font-weight:600;cursor:pointer;white-space:nowrap;transition:background .12s;" onmouseover="this.style.background='rgba(79,142,247,.18)'" onmouseout="this.style.background='rgba(79,142,247,.08)'">'
-      + n + ' →§6</span>';
-  }).join('');
-}
-
-window.normZuStellung = function(n){
-  try{
-    var q=JSON.parse(localStorage.getItem('prova_normen_queue')||'[]');
-    q.push({num:n, text:'Gemäß '+n+' gilt: [Grenzwert eintragen]', ts:new Date().toISOString()});
-    localStorage.setItem('prova_normen_queue',JSON.stringify(q));
-  }catch(e){}
-  zeigToast('Norm '+n+' für §6 gespeichert ✅');
-};
-
-// Zeiterfassung
-window.toggleZeit = function(){
-  var btn = document.getElementById('zeit-btn');
-  var dis = document.getElementById('zeit-display');
-  if (!zeitLaeuft) {
-    zeitLaeuft = true;
-    if(btn){btn.textContent='Stop';btn.style.background='rgba(239,68,68,.15)';btn.style.border='1px solid rgba(239,68,68,.3)';btn.style.color='var(--danger)';}
-    localStorage.setItem('prova_zeit_star
+    return '<span onclick="normZ

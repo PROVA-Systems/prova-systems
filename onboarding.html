@@ -296,25 +296,19 @@
           <div class="ob-subtitle">Wählen Sie die passende Basis für Ihren Arbeitsalltag.</div>
 
           <div class="pkg-grid" role="radiogroup" aria-label="Paket wählen">
-            <input class="pkg-radio" type="radio" name="paket" id="paket-radio-starter" value="Starter" checked>
+            <input class="pkg-radio" type="radio" name="paket" id="paket-radio-starter" value="Solo" checked>
             <label class="pkg-card" id="paket-starter" for="paket-radio-starter">
-              <div class="pkg-name">Starter</div>
-              <div class="pkg-price">179€/Mo</div>
-              <div class="pkg-meta">1 Seat · 20 Gutachten · ideal Solo-SV</div>
+              <div class="pkg-name">Solo</div>
+              <div class="pkg-price">89€/Mo</div>
+              <div class="pkg-meta">1 Sachverständiger · 30 Gutachten/Mo · ideal Solo-SV</div>
             </label>
 
-            <input class="pkg-radio" type="radio" name="paket" id="paket-radio-pro" value="Pro">
-            <label class="pkg-card" id="paket-pro" for="paket-radio-pro">
-              <div class="pkg-name">Pro</div>
-              <div class="pkg-price">369€/Mo</div>
-              <div class="pkg-meta">3 Seats · 50 Gutachten · kleines Büro</div>
-            </label>
-
-            <input class="pkg-radio" type="radio" name="paket" id="paket-radio-enterprise" value="Enterprise">
+            
+            <input class="pkg-radio" type="radio" name="paket" id="paket-radio-enterprise" value="Team">
             <label class="pkg-card" id="paket-enterprise" for="paket-radio-enterprise">
-              <div class="pkg-name">Enterprise</div>
-              <div class="pkg-price">699€/Mo</div>
-              <div class="pkg-meta">unbegrenzt · großes Büro</div>
+              <div class="pkg-name">Team</div>
+              <div class="pkg-price">179€/Mo</div>
+              <div class="pkg-meta">bis 5 Sachverständige · unbegrenzt · Büro</div>
             </label>
           </div>
 
@@ -535,7 +529,7 @@
     if (!avv || !dsgvo || !agb) return;
 
     var ts = new Date().toISOString();
-    var paket = localStorage.getItem('prova_paket') || 'Starter';
+    var paket = localStorage.getItem('prova_paket') || 'Solo';
     var sid = getSessionId();
 
     // localStorage sofort setzen — unabhängig von API-Ergebnis
@@ -587,25 +581,27 @@
   /* Schritt 3 → Paket in localStorage */
   function speicherePaketSchritt3() {
     var radio = document.querySelector('input[name="paket"]:checked');
-    var paket = radio ? radio.value : 'Starter';
+    var paket = radio ? radio.value : 'Solo'; if(paket==='Solo')paket='Solo'; if(paket==='Team'||paket==='Pro')paket='Team';
     localStorage.setItem('prova_paket', paket);
 
     // window.PROVA sofort setzen damit andere Seiten es beim ersten Load haben
     window.PROVA = window.PROVA || {};
     window.PROVA.paket = paket;
-    window.PROVA.isPro = ['Pro', 'Enterprise'].includes(paket);
-    window.PROVA.isEnterprise = paket === 'Enterprise';
+    window.PROVA.isPro = ['Pro', 'Team'].includes(paket);
+    window.PROVA.isEnterprise = paket === 'Team';
   }
 
   /* Schritt 5 — Weiter-Links je nach Paket anpassen */
   function bereiteFertigSchritt5() {
-    var paket = localStorage.getItem('prova_paket') || 'Starter';
+    var paket = localStorage.getItem('prova_paket') || 'Solo';
     var appLink = document.getElementById('ob-app-link');
     if (appLink) {
       var ziel = {
+        Solo:       'app.html',
+        Team:       'app.html',
         Starter:    'app.html',
-        Pro:        'app-pro.html',
-        Enterprise: 'app-enterprise.html'
+        Pro:        'app.html',
+        Enterprise: 'app.html'
       }[paket] || 'app.html';
       appLink.href = ziel;
       appLink.textContent = 'Erstes Gutachten erstellen →';
@@ -623,7 +619,7 @@
   async function syncOnboardingSV() {
     try {
       var svp = JSON.parse(localStorage.getItem('prova_sv_profil') || '{}');
-      var paket = localStorage.getItem('prova_paket') || 'Starter';
+      var paket = localStorage.getItem('prova_paket') || 'Solo';
       if (!svp.email) return;
       var fields = {
         Name:          svp.name  || '',
@@ -655,7 +651,7 @@
         body: JSON.stringify({
           method: 'POST',
           path: '/v0/appJ7bLlAHZoxENWE/tbladqEQT3tmx4DIB',
-          body: { records: [{ fields: fields }] }
+          payload: { records: [{ fields: fields }] }
         })
       });
     } catch(e) {
@@ -681,7 +677,7 @@
         Stufe:     'Onboarding',
         Status:    'Aktiv',
         Erstkontakt_Datum: new Date().toISOString().slice(0, 10),
-        MRR_EUR:   paket === 'Enterprise' ? 699 : paket === 'Pro' ? 369 : 179
+        MRR_EUR:   paket === 'Team' ? 699 : paket === 'Pro' ? 369 : 179
       };
       await fetch('/.netlify/functions/airtable', {
         method: 'POST',
@@ -689,7 +685,7 @@
         body: JSON.stringify({
           method: 'POST',
           path: '/v0/appJ7bLlAHZoxENWE/tblK7a3mBdsrxsrp5',
-          body: { records: [{ fields: fields }] }
+          payload: { records: [{ fields: fields }] }
         })
       });
     } catch(e) {

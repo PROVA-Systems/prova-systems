@@ -75,7 +75,7 @@
   .page-content{animation:fadeIn .25s ease;}
 
 /* MAIN LAYOUT */
-.main{flex:1;padding:24px 28px 48px;}
+.main{flex:1;padding:24px 28px 48px;max-width:1360px;width:100%;}
 
 /* HEADER CARD */
 .header-card{background:var(--bg2);border:1px solid var(--border2);border-radius:14px;padding:20px 24px;margin-bottom:22px;display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;}
@@ -647,23 +647,7 @@ const POSITIONEN = [
   {id:'ES-019',sa:'ES',kat:'Elementarschaden',uk:'Frost',bez:'Frostschaden Putz Außenwand reparieren je m²',ei:'m²',mn:22,me:34,mx:55,nr:'DIN 18550'},
   {id:'ES-020',sa:'ES',kat:'Elementarschaden',uk:'Frost',bez:'Frostschaden Pflaster/Terrasse reparieren je m²',ei:'m²',mn:35,me:52,mx:85,nr:''},
   {id:'ES-021',sa:'ES',kat:'Elementarschaden',uk:'Frost',bez:'Frostschaden Dachrinne/Fallrohr erneuern je lfm',ei:'lfm',mn:28,me:43,mx:68,nr:'DIN 18460'},
-,
-  // SCHADSTOFF
-  {id:'SS-001',sa:'SS',kat:'Schadstoff',uk:'Asbest',bez:'Asbestprobe entnehmen und Laboranalyse (REM)',ei:'Probe',mn:180,me:280,mx:420,nr:'TRGS 519'},
-  {id:'SS-002',sa:'SS',kat:'Schadstoff',uk:'Asbest',bez:'Asbestkataster erstellen',ei:'Psch',mn:450,me:750,mx:1200,nr:'TRGS 519'},
-  {id:'SS-003',sa:'SS',kat:'Schadstoff',uk:'Asbest',bez:'Asbestzementplatten demontieren und entsorgen',ei:'m²',mn:45,me:65,mx:95,nr:'TRGS 519'},
-  {id:'SS-004',sa:'SS',kat:'Schadstoff',uk:'Asbest',bez:'Asbesthaltige Bodenbeläge entfernen und entsorgen',ei:'m²',mn:35,me:52,mx:78,nr:'TRGS 519'},
-  {id:'SS-005',sa:'SS',kat:'Schadstoff',uk:'Mineralfasern',bez:'KMF-Altwolle (bio-persistent) entfernen und entsorgen',ei:'m²',mn:28,me:42,mx:68,nr:'TRGS 521'},
-  {id:'SS-006',sa:'SS',kat:'Schadstoff',uk:'Mineralfasern',bez:'KMF-Probe und Laboranalyse (Fasereinstufung)',ei:'Probe',mn:120,me:190,mx:290,nr:'TRGS 521'},
-  {id:'SS-007',sa:'SS',kat:'Schadstoff',uk:'PCB/PAK',bez:'PCB-Probe und Laboranalyse',ei:'Probe',mn:220,me:340,mx:520,nr:'TRGS 524'},
-  {id:'SS-008',sa:'SS',kat:'Schadstoff',uk:'Entsorgung',bez:'Sonderabfallentsorgung gefährlicher Baustoffe bis 1t',ei:'t',mn:280,me:420,mx:680,nr:'KrWG §48'},
-  // GERÜST
-  {id:'GE-001',sa:'WS,BS,ST,BA',kat:'Gerüst',uk:'Fassadengerüst',bez:'Fassadengerüst aufbauen, vorhalten 4 Wochen und abbauen',ei:'m²',mn:18,me:26,mx:38,nr:'DIN EN 12811'},
-  {id:'GE-002',sa:'WS,BS,ST,BA',kat:'Gerüst',uk:'Fassadengerüst',bez:'Gerüst Verlängerungsmiete je Woche',ei:'m²/Wo',mn:2,me:3,mx:4,nr:'DIN EN 12811'},
-  {id:'GE-003',sa:'BS,ST,BA',kat:'Gerüst',uk:'Dachgerüst',bez:'Fanggerüst / Dachschutzwand aufbauen, vorhalten, abbauen',ei:'lfm',mn:45,me:68,mx:105,nr:'DIN EN 12811'},
-  {id:'GE-004',sa:'WS,BS,ST,BA,ES',kat:'Gerüst',uk:'Einrichtung',bez:'Baustellenabsperrung (Absperrgitter)',ei:'lfm',mn:8,me:12,mx:18,nr:'RSA 21'}
 ];
-
 
 /* ── Schadensart → Tag ── */
 const SA_TAGS = {
@@ -697,13 +681,7 @@ const PAGE_SIZE = 25;
   }
 })();
 
-const _urlP = new URLSearchParams(window.location.search);
-const _saFromUrl = _urlP.get('sa') || _urlP.get('schadenart') || '';
-const _saUrl = _saFromUrl || _urlP.get('schadenart') || '';
-const _azUrl = _urlP.get('az') || _urlP.get('aktenzeichen') || '';
-if (_saUrl) localStorage.setItem('prova_schadenart', _saUrl);
-if (_azUrl) localStorage.setItem('prova_letztes_az', _azUrl);
-const schadenart = _saUrl || localStorage.getItem('prova_schadenart') || '';
+const schadenart = localStorage.getItem('prova_schadenart') || '';
 const aktenzeichen = localStorage.getItem('prova_letztes_az') || localStorage.getItem('prova_aktenzeichen') || '';
 
 // Rückweg: zurück zur akte wenn AZ bekannt, sonst archiv
@@ -729,7 +707,7 @@ function closeMobileSidebar(){
   document.body.style.overflow = '';
 }
 
-let tag = saTag(schadenart);
+const tag = saTag(schadenart);
 
 /* ── Init ── */
 (function init() {
@@ -788,24 +766,11 @@ let tag = saTag(schadenart);
         remaining.push(entry);
         return;
       }
-      var id = entry.id || entry.nr;
+      var id = entry.id || entry.nr; // positionen.html nutzt nr
       if(!id){ return; }
-      // In POSITIONEN suchen (sowohl id als auch nr als Schlüssel)
-      var pos = POSITIONEN.find(function(p){ return p.id === id || p.id === entry.nr; });
+      var pos = POSITIONEN.find(function(p){ return p.id === id; });
       if(!pos){
-        // Unbekannte ID: Position aus Queue-Daten direkt erstellen (Felder-Mapping)
-        pos = {
-          id:  id,
-          bez: entry.bez || entry.bezeichnung || id,
-          ei:  entry.ei  || entry.einheit     || 'Pos',
-          mn:  parseFloat(entry.mn  || entry.min    || 0),
-          me:  parseFloat(entry.me  || entry.median || 0),
-          mx:  parseFloat(entry.mx  || entry.max    || 0),
-          sa:  entry.sa  || '',
-          nr:  entry.norm || ''
-        };
-        // Zur lokalen POSITIONEN hinzufügen
-        POSITIONEN.push(pos);
+        // Unbekannte Position → in Queue lassen, damit nichts verloren geht
         remaining.push(entry);
         return;
       }
@@ -842,19 +807,11 @@ function filterPositionen() {
   const kat = document.getElementById('filterKat').value;
 
   gefiltertPos = POSITIONEN.filter(p => {
-    const matchSa = !tag || tag === '' || p.sa === tag;
+    const matchSa = !tag || p.sa === tag;
     const matchKat = !kat || p.uk === kat;
     const matchSuche = !suche || p.bez.toLowerCase().includes(suche) || p.id.toLowerCase().includes(suche);
     return matchSa && matchKat && matchSuche;
   });
-  // Fallback: wenn tag gesetzt aber keine Treffer → zeige alle (Fallback: wenn tag gesetzt)
-  if (gefiltertPos.length === 0 && tag && !suche && !kat) {
-    gefiltertPos = POSITIONEN.filter(p => {
-      const matchKat = !kat || p.uk === kat;
-      const matchSuche = !suche || p.bez.toLowerCase().includes(suche) || p.id.toLowerCase().includes(suche);
-      return matchKat && matchSuche;
-    });
-  }
 
   currentPage = 0;
   renderPage();
@@ -1385,7 +1342,7 @@ async function supSend(){var b=document.getElementById('sup-betreff').value.trim
         <div class="sup-err" id="sup-err">Bitte Betreff und Nachricht eingeben.</div>
         <button class="sup-send-btn" id="sup-btn" onclick="supSendModal()">Nachricht senden</button>
         <div style="text-align:center;margin-top:10px;font-size:11px;color:var(--text3,#6b7a99);">
-          Oder direkt: kontakt@prova-systems.de
+          Oder direkt: support@prova-systems.de
         </div>
       </div>
       <div class="sup-ok" id="sup-ok">
@@ -1808,8 +1765,4 @@ window.PROVA_KONTEXT = {
   mainBtn.style.cssText = 'width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#6366f1,#4f8ef7);border:none;color:#fff;font-size:20px;cursor:pointer;box-shadow:0 4px 16px rgba(99,102,241,.4);transition:all .2s;display:flex;align-items:center;justify-content:center;';
   mainBtn.title = 'Normen & Textbausteine nachschlagen';
   mainBtn.innerHTML = '📖';
-  mainBtn.onclick = function(e) { e.stopPropagation(); toggleFab(!expanded); };
-  function toggleFab(open) {
-    expanded = open;
-    miniWrap.style.display = open ? 'flex' : 'none';
-    mainBtn.style.transform = open ? 'rotate(45deg)' : '';
+  mainB

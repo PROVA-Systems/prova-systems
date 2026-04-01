@@ -415,6 +415,8 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-ui);min-heigh
 .app-shell .main-wrap { padding-top: 0; }
 .sidebar { z-index: 300; }
 @media(max-width:768px){ #main-wrap { margin-left: 0 !important; } }
+
+@media(max-width:768px){#flow-burger{display:block!important}}
 </style>
 <script src="theme.js"></script>
 <script src="trial-guard.js"></script>
@@ -424,6 +426,11 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-ui);min-heigh
 <div class="app-shell" id="app-shell">
 <!-- FLOW HEADER -->
 <header class="flow-header">
+  <button class="burger" onclick="openMobileSidebar()" style="background:none;border:none;cursor:pointer;padding:4px 8px;margin-right:4px;display:none;flex-shrink:0;" id="flow-burger">
+    <span style="display:block;width:18px;height:2px;background:var(--text2,#c8d0e0);margin:3px 0;border-radius:1px;"></span>
+    <span style="display:block;width:18px;height:2px;background:var(--text2,#c8d0e0);margin:3px 0;border-radius:1px;"></span>
+    <span style="display:block;width:18px;height:2px;background:var(--text2,#c8d0e0);margin:3px 0;border-radius:1px;"></span>
+  </button>
   <a href="dashboard.html" style="display:flex;align-items:center;gap:7px;text-decoration:none;" title="Zur Zentrale"><div style="width:24px;height:24px;background:linear-gradient(135deg,#4f8ef7,#3a7be0);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;">P</div><span style="font-size:14px;font-weight:800;color:#eaecf4;letter-spacing:-.02em;">PR<span style="color:#4f8ef7">O</span>VA</span></a>
   <a class="flow-back" href="javascript:goBack()" id="backBtn">← Zurück</a>
   <div class="flow-steps">
@@ -573,6 +580,12 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-ui);min-heigh
                 style="position:relative;z-index:2;background:transparent;"></textarea>
             </div>
             <div class="char-count bad" id="charA">0 / mind. 500 Zeichen</div>
+            <div id="autosave-ind" style="font-size:11px;color:#10b981;opacity:0;transition:opacity .5s;margin-top:3px;">✓ gespeichert</div>
+            <div id="freigabe-cta" style="display:none;margin-top:10px;">
+              <button onclick="speichereUndWeiter()" style="width:100%;padding:10px 16px;border-radius:8px;background:linear-gradient(135deg,#10b981,#059669);border:none;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font-ui,inherit);letter-spacing:.02em;">
+                ✅ §6 abschließen &amp; Freigabe starten →
+              </button>
+            </div>
             <div class="ki-normen-inline" id="ki-normen-inline">
               <div class="ki-normen-inline-title">🤖 Passende Normen erkannt</div>
               <div class="ki-normen-chips" id="ki-normen-chips"></div>
@@ -1521,10 +1534,16 @@ function onInputA() {
   highlightIndikativ(txt, 'hlA');
   const len = txt.length;
   const cc = document.getElementById('charA');
-  cc.textContent = `${len} / mind. 500 Zeichen`;
+  var words = txt.trim() ? txt.trim().split(/\s+/).length : 0;
+  cc.textContent = `${len} Zeichen · ${words} Wörter (mind. 500 Z.)`;
   cc.className = 'char-count ' + (len>=500?'ok':len>=250?'warn':'bad');
+  var cta = document.getElementById('freigabe-cta');
+  if (cta) cta.style.display = len >= 500 ? 'block' : 'none';
   runKjCheck(txt, 'kjCheckA');
   localStorage.setItem('prova_stellungnahme_text', txt);
+  // Auto-Save Indikator
+  var saveInd = document.getElementById('autosave-ind');
+  if (saveInd) { saveInd.textContent = '✓ gespeichert'; saveInd.style.opacity='1'; clearTimeout(window._saveTimer); window._saveTimer = setTimeout(function(){ saveInd.style.opacity='0'; }, 2000); }
   checkReady();
   updateAusformBtn();
   updateEigenleistung(len);
@@ -1949,6 +1968,30 @@ function weiterZuFreigabe() {
     }).catch(e => console.warn('KI-Statistik sync failed:', e));
   } catch (e) { console.warn('KI-Statistik sync error:', e); }
 
+  // §6-Text AUCH nach Airtable schreiben (non-blocking, als Backup)
+  try {
+    var recordId = sessionStorage.getItem('prova_record_id') || localStorage.getItem('prova_record_id') || '';
+    var az_write = localStorage.getItem('prova_letztes_az') || '';
+    if (recordId && az_write) {
+      fetch('/.netlify/functions/airtable', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          method: 'PATCH',
+          path: '/v0/appJ7bLlAHZoxENWE/tblSxV8bsXwd1pwa0/' + recordId,
+          payload: {
+            fields: {
+              Stellungnahme_Text: finalText,
+              Status: 'Entwurf',
+              Gutachten_Typ: selectedTyp,
+              Stellungnahme_Datum: ts
+            }
+          }
+        })
+      }).catch(e => console.warn('§6 Airtable-Sync:', e));
+    }
+  } catch(e) { console.warn('§6 Airtable-Write:', e); }
+
   // Schritt 5 visuell aktivieren
   var fs5 = document.getElementById('flow-step-freigabe');
   if(fs5) { fs5.className = 'flow-step active'; }
@@ -2309,6 +2352,13 @@ document.addEventListener('keydown', function(e) {
 
 /* ── WORKFLOW-INTEGRATIONEN: Baubegleitung + Kalk-Notizen ── */
 (function ladeWorkflowDaten() {
+  // 0. Messwerte aus Akte in §2 vorab laden
+  var mwText = localStorage.getItem('prova_messwerte_text') || '';
+  if (mwText) {
+    localStorage.removeItem('prova_messwerte_text');
+    window._pendingMesswerte = mwText;
+  }
+
   // 1. Baubegleitungs-KI-Bericht in §2/§3 einfügen wenn vorhanden
   var bbBericht = sessionStorage.getItem('prova_bb_bericht');
   if (bbBericht) {
@@ -2340,6 +2390,8 @@ document.addEventListener('keydown', function(e) {
     }
   }
 })();
+
+
 
 </script>
 

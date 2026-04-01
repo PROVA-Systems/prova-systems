@@ -6,6 +6,7 @@
 <title>Rechnungen · PROVA</title>
 <script src="theme.js"></script>
 <script src="nav.js"></script>
+<script src="trial-guard.js"></script>
 <style>
 :root{
   --bg:#0b0d11;--bg2:#111318;--bg3:#161a22;
@@ -272,30 +273,30 @@ a{text-decoration:none;color:inherit;}button,input,select,textarea{font-family:i
 
           <div class="form-group">
             <label class="form-label">Auftraggeber / Firma *</label>
-            <input class="form-input" id="r-auftraggeber" type="text" placeholder="Muster Versicherung AG">
+            <input class="form-input" id="r-auftraggeber" type="text" placeholder="Muster Versicherung AG" onkeydown="if(event.key==='Enter')speichereLokal()">
           </div>
           <div class="form-group">
             <label class="form-label">E-Mail Empfänger *</label>
-            <input class="form-input" id="r-email" type="email" placeholder="schaden@versicherung.de">
+            <input class="form-input" id="r-email" type="email" placeholder="schaden@versicherung.de" onkeydown="if(event.key==='Enter')speichereLokal()">
           </div>
           <div class="form-group span2">
             <label class="form-label">Straße & Hausnummer</label>
-            <input class="form-input" id="r-strasse" type="text" placeholder="Musterstraße 1">
+            <input class="form-input" id="r-strasse" type="text" placeholder="Musterstraße 1" onkeydown="if(event.key==='Enter')speichereLokal()">
           </div>
           <div class="form-group">
             <label class="form-label">PLZ</label>
-            <input class="form-input" id="r-plz" type="text" placeholder="50667">
+            <input class="form-input" id="r-plz" type="text" placeholder="50667" onkeydown="if(event.key==='Enter')speichereLokal()">
           </div>
           <div class="form-group">
             <label class="form-label">Ort</label>
-            <input class="form-input" id="r-ort" type="text" placeholder="Köln">
+            <input class="form-input" id="r-ort" type="text" placeholder="Köln" onkeydown="if(event.key==='Enter')speichereLokal()">
           </div>
 
           <div class="section-sep">Fallbezug</div>
 
           <div class="form-group">
             <label class="form-label">Aktenzeichen</label>
-            <input class="form-input" id="r-aktenzeichen" type="text" placeholder="PROVA-S-2026-001">
+            <input class="form-input" id="r-aktenzeichen" type="text" placeholder="PROVA-S-2026-001" onkeydown="if(event.key==='Enter')speichereLokal()">
           </div>
           <div class="form-group">
             <label class="form-label">Schadensnummer</label>
@@ -303,7 +304,7 @@ a{text-decoration:none;color:inherit;}button,input,select,textarea{font-family:i
           </div>
           <div class="form-group">
             <label class="form-label">Rechnungsdatum *</label>
-            <input class="form-input" id="r-datum" type="date">
+            <input class="form-input" id="r-datum" type="date" onkeydown="if(event.key==='Enter')speichereLokal()">
           </div>
           <div class="form-group">
             <label class="form-label">Zahlungsziel</label>
@@ -899,7 +900,7 @@ document.getElementById('r-datum').value=new Date().toISOString().slice(0,10);
 if(document.querySelectorAll('#positionen-container .pos-row').length===0){
   addPosition('Gutachterhonorar §9 JVEG',1,0);
 }
-ladeListe();
+// ladeListe() → in DOMContentLoaded
 
 })();
 </script>
@@ -920,7 +921,7 @@ ladeListe();
         <div class="sup-err" id="sup-err">Bitte Betreff und Nachricht eingeben.</div>
         <button class="sup-send-btn" id="sup-btn" onclick="supSendModal()">Nachricht senden</button>
         <div style="text-align:center;margin-top:10px;font-size:11px;color:var(--text3,#6b7a99);">
-          Oder direkt: <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="791216170d18120d39090b160f18540a000a0d1c140a571d1c">[email&#160;protected]</a>
+          Oder direkt: support@prova-systems.de
         </div>
       </div>
       <div class="sup-ok" id="sup-ok">
@@ -1512,34 +1513,4 @@ window.pruefeMahnlauf = function() {
 
 // Nach dem Laden der Rechnungen prüfen
 var _origLadeRechnungen = window.ladeRechnungen;
-if (typeof _origLadeRechnungen === 'function') {
-  window.ladeRechnungen = function() {
-    var result = _origLadeRechnungen.apply(this, arguments);
-    if (result && result.then) result.then(pruefeMahnlauf);
-    else setTimeout(pruefeMahnlauf, 1500);
-    return result;
-  };
-} else {
-  document.addEventListener('DOMContentLoaded', function() {
-    setTimeout(pruefeMahnlauf, 2000);
-  });
-}
-
-
-/* ── escHtml: XSS-Schutz ── */
-function escHtml(s) {
-  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-
-</script>
-
-<script>
-/* ABSCHLUSS-UEBERGANG */
-function zeigeAbschlussButton(reNr) {
-  var az = localStorage.getItem('prova_letztes_az') || '';
-  var rid = sessionStorage.getItem('prova_record_id') || '';
-  var container = document.getElementById('rechnung-abschluss-banner');
-  if (!container) {
-    container = document.createElement('div');
-    container.id = 'rechnung-abschluss-banner';
-    container.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:1000;background:linear-gradient(135deg,#1a2535,#0f1923);border:1px solid rgba(16,185,129,.3);border-radius:14
+if (typeof _origLadeRechnungen === 'function')

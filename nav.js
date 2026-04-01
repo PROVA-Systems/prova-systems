@@ -383,6 +383,10 @@
     +     '<div class="paket-dot" style="background:' + pc + '"></div>'
     +     '<span class="paket-name" style="color:' + pc + '">' + paket + '</span>'
     +   '</div>'
+    +   '<button onclick="provaSbLogout()" class="sb-logout" title="Abmelden" style="display:flex;align-items:center;gap:8px;padding:8px 14px;border:none;background:none;color:var(--text3);font-size:12px;cursor:pointer;width:100%;border-radius:8px;font-family:inherit;transition:all .15s;" onmouseover="this.style.background=\'rgba(239,68,68,.08)\';this.style.color=\'#ef4444\'" onmouseout="this.style.background=\'none\';this.style.color=\'var(--text3)\'">'
+    +     '<span style="font-size:14px;">↩</span>'
+    +     '<span class="sb-label">Abmelden</span>'
+    +   '</button>'
     +   '<button class="sb-collapse" id="sb-collapse-btn">'
     +     '<span class="sb-toggle-icon">‹</span>'
     +     '<span class="sb-collapse-label">Einklappen</span>'
@@ -736,4 +740,30 @@ window.provaConfirm = function(msg, onYes) {
     document.addEventListener('DOMContentLoaded', function() { updateOffline(true); });
   }
 })();
+
+/* ── SIDEBAR LOGOUT ── */
+window.provaSbLogout = function() {
+  if (!confirm('Wirklich abmelden?')) return;
+  // Netlify Identity
+  try {
+    if (window.netlifyIdentity && netlifyIdentity.currentUser()) {
+      netlifyIdentity.logout();
+      return;
+    }
+  } catch(e) {}
+  // Fallback: localStorage leeren + zu Login
+  var keysToKeep = ['prova_theme','prova_sb_collapsed'];
+  var keep = {};
+  keysToKeep.forEach(function(k) {
+    var v = localStorage.getItem(k);
+    if (v !== null) keep[k] = v;
+  });
+  localStorage.clear();
+  sessionStorage.clear();
+  keysToKeep.forEach(function(k) {
+    if (keep[k] !== undefined) localStorage.setItem(k, keep[k]);
+  });
+  window.location.href = 'app-login.html';
+};
+
 /* ── END OFFLINE INDIKATOR ── */

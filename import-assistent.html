@@ -774,6 +774,36 @@ function importAlles() {
   localStorage.setItem('prova_migration_done',new Date().toISOString());
   localStorage.setItem('prova_migration_sw',_selectedSw?_selectedSw.id:'');
 
+  // Airtable-Sync: Importierte Fälle nach Airtable schreiben
+  var svEmail = localStorage.getItem('prova_sv_email') || '';
+  var AT_BASE = 'appJ7bLlAHZoxENWE';
+  var AT_FAELLE = 'tblSxV8bsXwd1pwa0';
+  var faelleZuSync = _parsed.faelle.filter(function(r){return r._sel;}).slice(0,20); // max 20 auf einmal
+  if (svEmail && faelleZuSync.length) {
+    faelleZuSync.forEach(function(f) {
+      try {
+        fetch('/.netlify/functions/airtable', {
+          method: 'POST',
+          headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({
+            method: 'POST',
+            path: '/v0/' + AT_BASE + '/' + AT_FAELLE,
+            payload: { records: [{fields: {
+              Aktenzeichen: f.aktenzeichen || '',
+              Schadenart:   f.schadenart || '',
+              Status:       f.status || 'Archiviert',
+              Auftraggeber_Name: f.auftraggeber || '',
+              sv_email:     svEmail,
+              Timestamp:    f.schadensdatum || new Date().toISOString(),
+              Import_Quelle: _selectedSw ? _selectedSw.id : 'Import'
+            }}]}
+          })
+        }).catch(function(e){ console.warn('Airtable sync:', e); });
+      } catch(e){}
+    });
+    _result.faelle_synced = faelleZuSync.length;
+  }
+
   goStep(4);
   renderErgebnis();
 }
@@ -782,7 +812,7 @@ function renderErgebnis() {
   var grid=document.getElementById('result-grid');
   var items=[
     {icon:'👥',val:_result.kontakte,label:'Kontakte',sub:'in prova_kontakte'},
-    {icon:'📂',val:_result.faelle,label:'Fälle',sub:'im Archiv'},
+    {icon:'📂',val:_result.faelle,label:'Fälle',sub:_result.faelle_synced?'inkl. '+_result.faelle_synced+' in Airtable':'in localStorage'},
     {icon:'🧾',val:_result.rechnungen,label:'Rechnungen',sub:'in rechnungen.html'},
     {icon:'📝',val:_result.textbausteine,label:'Textbausteine',sub:'in textbausteine.html'},
   ];

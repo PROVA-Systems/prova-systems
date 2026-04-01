@@ -156,6 +156,9 @@
   ::-webkit-scrollbar{width:3px;}
   ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
   @media(max-width:768px){.bottom-nav{display:flex !important;}}
+
+#ki-bericht-status{animation:pulse-text 1.5s ease-in-out infinite;}
+@keyframes pulse-text{0%,100%{opacity:.4}50%{opacity:1}}
 </style>
 <script src="theme.js"></script>
 <script src="nav.js"></script>
@@ -690,7 +693,7 @@ function editiereProjekt(id) {
   document.getElementById('modal-proj-titel').textContent = '✎ Projekt bearbeiten';
   document.getElementById('mp-name').value = proj.name||'';
   document.getElementById('mp-auftraggeber').value = proj.auftraggeber||'';
-  document.document.getElementById('mp-az') || document.getElementById('mp-az-edit').value = proj.az||'';
+  document.getElementById('mp-az') || document.getElementById('mp-az-edit').value = proj.az||'';
   document.getElementById('mp-adresse').value = proj.adresse||'';
   document.getElementById('mp-beginn').value = proj.beginn||'';
   document.getElementById('mp-abnahme').value = proj.abnahme||'';
@@ -722,7 +725,7 @@ function speichereProjekt() {
     if (proj) {
       proj.name = name;
       proj.auftraggeber = document.getElementById('mp-auftraggeber').value.trim();
-      proj.az = document.document.getElementById('mp-az') || document.getElementById('mp-az-edit').value.trim();
+      proj.az = document.getElementById('mp-az') || document.getElementById('mp-az-edit').value.trim();
       proj.adresse = document.getElementById('mp-adresse').value.trim();
       proj.beginn = document.getElementById('mp-beginn').value;
       proj.abnahme = document.getElementById('mp-abnahme').value;
@@ -730,7 +733,7 @@ function speichereProjekt() {
       proj.notiz = document.getElementById('mp-notiz').value.trim();
     }
   } else {
-    var az = document.document.getElementById('mp-az') || document.getElementById('mp-az-edit').value.trim();
+    var az = document.getElementById('mp-az') || document.getElementById('mp-az-edit').value.trim();
     if (!az) az = 'PROVA-BB-' + new Date().getFullYear() + '-' + String((_data.projekte.length+1)).padStart(4,'0');
     _data.projekte.unshift({
       id: genId(),
@@ -753,6 +756,20 @@ function speichereProjekt() {
   renderProjektliste();
   if (_aktivProjektId) ladeProduktDetail(_aktivProjektId);
   zeigToast(_editProjektId ? 'Projekt aktualisiert ✅' : 'Projekt angelegt ✅');
+  // Airtable-Sync (non-blocking)
+  try {
+    var _svE = localStorage.getItem('prova_sv_email')||'';
+    var _aktP = _data.projekte.find(function(p){return p.id===(_editProjektId||_data.projekte[0].id);});
+    if (_svE && _aktP) {
+      fetch('/.netlify/functions/airtable',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({method:'POST',path:'/v0/appJ7bLlAHZoxENWE/tblyMTTdtfGQjjmc2',
+          payload:{records:[{fields:{titel:'BB: '+_aktP.name,termin_typ:'Baubegleitung',
+            aktenzeichen:_aktP.az||'',sv_email:_svE,notiz:_aktP.adresse||''
+          }}]}
+        })
+      }).catch(function(){});
+    }
+  } catch(e) {}
 }
 
 function speichereBegehung() {
@@ -1046,6 +1063,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 /* ── In §6 einfügen aus KI-Bericht ── */
 window.berichtInStellungnahme = function() {
+  if (typeof ladeDaten === 'function') ladeDaten();
   var txt = (document.getElementById('bericht-text')||{}).textContent || '';
   if (!txt.trim()) { if(typeof showToast==='function') showToast('Kein Bericht vorhanden', 'warning'); return; }
   sessionStorage.setItem('prova_bb_bericht', txt.trim());

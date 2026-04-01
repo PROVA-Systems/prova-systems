@@ -6,6 +6,7 @@
 <title>Kontakte · PROVA</title>
 <script src="theme.js"></script>
 <script src="nav.js"></script>
+<script src="trial-guard.js"></script>
 <style>
   /* ═══ PROVA SIDEBAR SYSTEM ══════════════════════════════════════════════ */
   :root{
@@ -272,11 +273,11 @@
     <div class="form-row">
       <div class="form-group">
         <label class="form-label">Name / Firmenname *</label>
-        <input id="e-name" class="form-input" type="text" placeholder="z.B. Allianz Versicherung oder Müller">
+        <input id="e-name" class="form-input" type="text" placeholder="z.B. Allianz Versicherung oder Müller" onkeydown="if(event.key==='Enter')speichereKontakt()">
       </div>
       <div class="form-group">
         <label class="form-label">Vorname</label>
-        <input id="e-vorname" class="form-input" type="text" placeholder="z.B. Hans">
+        <input id="e-vorname" class="form-input" type="text" placeholder="z.B. Hans" onkeydown="if(event.key==='Enter')speichereKontakt()">
       </div>
     </div>
 
@@ -295,37 +296,37 @@
       </div>
       <div class="form-group">
         <label class="form-label">Firma / Kanzlei</label>
-        <input id="e-firma" class="form-input" type="text" placeholder="z.B. Kanzlei Müller & Partner">
+        <input id="e-firma" class="form-input" type="text" placeholder="z.B. Kanzlei Müller & Partner" onkeydown="if(event.key==='Enter')speichereKontakt()">
       </div>
     </div>
 
     <div class="form-group">
       <label class="form-label">Straße</label>
-      <input id="e-strasse" class="form-input" type="text" placeholder="z.B. Hauptstraße 42">
+      <input id="e-strasse" class="form-input" type="text" placeholder="z.B. Hauptstraße 42" onkeydown="if(event.key==='Enter')speichereKontakt()">
     </div>
     <div class="form-row">
       <div class="form-group">
         <label class="form-label">PLZ</label>
-        <input id="e-plz" class="form-input" type="text" placeholder="z.B. 50667" maxlength="10">
+        <input id="e-plz" class="form-input" type="text" placeholder="z.B. 50667" maxlength="10" onkeydown="if(event.key==='Enter')speichereKontakt()">
       </div>
       <div class="form-group">
         <label class="form-label">Ort</label>
-        <input id="e-ort" class="form-input" type="text" placeholder="z.B. Köln">
+        <input id="e-ort" class="form-input" type="text" placeholder="z.B. Köln" onkeydown="if(event.key==='Enter')speichereKontakt()">
       </div>
     </div>
     <div class="form-row">
       <div class="form-group">
         <label class="form-label">Telefon</label>
-        <input id="e-telefon" class="form-input" type="tel" placeholder="0221 1234567">
+        <input id="e-telefon" class="form-input" type="tel" placeholder="0221 1234567" onkeydown="if(event.key==='Enter')speichereKontakt()">
       </div>
       <div class="form-group">
         <label class="form-label">E-Mail</label>
-        <input id="e-email" class="form-input" type="email" placeholder="kontakt@beispiel.de">
+        <input id="e-email" class="form-input" type="email" placeholder="kontakt@beispiel.de" onkeydown="if(event.key==='Enter')speichereKontakt()">
       </div>
     </div>
     <div class="form-group">
       <label class="form-label">Ansprechpartner</label>
-      <input id="e-ansprechpartner" class="form-input" type="text" placeholder="z.B. Frau Schmidt (Schadenbearbeitung)">
+      <input id="e-ansprechpartner" class="form-input" type="text" placeholder="z.B. Frau Schmidt (Schadenbearbeitung)" onkeydown="if(event.key==='Enter')speichereKontakt()">
     </div>
     <div class="form-group">
       <label class="form-label">Notizen</label>
@@ -358,7 +359,7 @@
       </div>
       <div class="form-group">
         <label class="form-label">Sonder-Konditionen / Hinweise</label>
-        <input id="e-sonder" class="form-input" type="text" placeholder="z.B. Immer Kopie an schadenteam@allianz.de">
+        <input id="e-sonder" class="form-input" type="text" placeholder="z.B. Immer Kopie an schadenteam@allianz.de" onkeydown="if(event.key==='Enter')speichereKontakt()">
       </div>
     </div>
 
@@ -526,7 +527,10 @@ function ladeKontakte() {
 async function syncKontakteVonAirtable() {
   var email = localStorage.getItem('prova_sv_email') || '';
   if (!email) return;
-  var path = '/v0/' + AT_BASE_K + '/' + AT_KONTAKTE + '?maxRecords=200&sort[0][field]=Name&sort[0][direction]=asc';
+  var filterFormula = email ? encodeURIComponent('{sv_email}="' + email + '"') : '';
+  var path = '/v0/' + AT_BASE_K + '/' + AT_KONTAKTE
+    + '?maxRecords=200&sort[0][field]=Name&sort[0][direction]=asc'
+    + (filterFormula ? '&filterByFormula=' + filterFormula : '');
   var data = await atKontakte('GET', path);
   if (!data || !data.records || !data.records.length) return;
   // Merge: Airtable-Datensätze in lokale Liste — AT-Datensätze haben Vorrang
@@ -1192,6 +1196,7 @@ async function supSend(){var b=document.getElementById('sup-betreff').value.trim
 
 /* ── VCF-EXPORT ALLE KONTAKTE ── */
 window.exportAlleVCF = function() {
+  if (typeof ladeKontakte === 'function') ladeKontakte();
   var alle = typeof alleKontakte !== 'undefined' ? alleKontakte : [];
   if (!alle.length) {
     try { alle = JSON.parse(localStorage.getItem('prova_kontakte') || '[]'); } catch(e) {}
@@ -1259,15 +1264,4 @@ function escHtml(s) {
         <div class="sup-err" id="sup-err">Bitte Betreff und Nachricht eingeben.</div>
         <button class="sup-send-btn" id="sup-btn" onclick="supSendModal()">Nachricht senden</button>
         <div style="text-align:center;margin-top:10px;font-size:11px;color:var(--text3,#6b7a99);">
-          Oder direkt: <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="a3c8cccdd7c2c8d7e3d3d1ccd5c28ed0dad0d7c6ced08dc7c6">[email&#160;protected]</a>
-        </div>
-      </div>
-      <div class="sup-ok" id="sup-ok">
-        <div class="sup-ok-icon">✅</div>
-        <div class="sup-ok-title">Nachricht gesendet</div>
-        <div class="sup-ok-sub">Wir melden uns werktags innerhalb von 24h.</div>
-      </div>
-    </div>
-  </div>
-</div>
-</sc
+          Oder direkt: <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-c
