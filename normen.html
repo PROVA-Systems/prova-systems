@@ -136,10 +136,6 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
   .sup-ok-title{font-size:15px;font-weight:700;color:var(--green,#10b981);margin-bottom:4px;}
   .sup-ok-sub{font-size:12px;color:var(--text3,#6b7a99);}
 .app-shell{display:flex;min-height:100vh;}
-
-/* ── LAYOUT FIX ── */
-.app-shell{display:flex;width:100%;min-height:100vh;overflow:hidden;}
-.main-wrap,.main{flex:1;min-width:0;overflow-x:hidden;}
 </style>
 </head>
 <body>
@@ -419,7 +415,7 @@ function renderNormen() {
   const filtered = getFiltered();
   const grid = document.getElementById('normenGrid');
   const empty = document.getElementById('emptyState');
-  const q = (document.getElementById('searchInput').value||'').toLowerCase().trim();
+  const q = (document.getElementById('searchInput').value||'').trim();
   document.getElementById('normenCount').textContent = filtered.length + ' Normen';
 
   // Figma-Style: Zuletzt genutzte Normen oben (wenn kein Filter)
@@ -616,7 +612,7 @@ function showToastMitCTA(msg, ctaLabel, ctaHref) {
         <div class="sup-err" id="sup-err">Bitte Betreff und Nachricht eingeben.</div>
         <button class="sup-send-btn" id="sup-btn" onclick="supSendModal()">Nachricht senden</button>
         <div style="text-align:center;margin-top:10px;font-size:11px;color:var(--text3,#6b7a99);">
-          Oder direkt: <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="86f5f3f6f6e9f4f2c6f6f4e9f0e7abf5fff5f2e3ebf5a8e2e3">[email&#160;protected]</a>
+          Oder direkt: <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="bac9cfcacad5c8cefacac8d5ccdb97c9c3c9cedfd7c994dedf">[email&#160;protected]</a>
         </div>
       </div>
       <div class="sup-ok" id="sup-ok">
@@ -656,16 +652,9 @@ async function supSendModal(){
         betreff:b,nachricht:n,
         sv_email:localStorage.getItem('prova_sv_email')||'',
         paket:localStorage.getItem('prova_paket')||'Solo',
-        seite:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({
-          betreff:b,nachricht:n,
-          sv_email:localStorage.getItem('prova_sv_email')||'',
-          paket:localStorage.getItem('prova_paket')||'Solo',
-          seite:window.location.pathname
-        })
-      });
-    }catch(e){}
+        seite:window.location.pathname
+      })
+    });
     zeigToast('Nachricht gesendet — wir melden uns schnellstmöglich!','success');
     if(ta)ta.value='';
     if(modal)modal.style.display='none';
@@ -688,39 +677,249 @@ async function supSendModal(){
 </script>
 
 <script>
-// ── INIT: renderNormen sofort beim Seitenload ──
+/* ================================================================
+   PROVA Fall-Kontext-System v1.0
+   Zeigt auf jeder Workflow/Werkzeug-Seite den aktiven Fall-Kontext
+   und führt den SV zum nächsten Schritt.
+   
+   Aktiviert sich automatisch wenn ein aktiver Fall vorhanden ist.
+   Kein Eingriff in bestehende Seiten-Logik.
+================================================================ */
+
 (function() {
-  function init() {
-    // URL-Parameter ?q= vorausfüllen (kommt von Nav-Suche)
-    var params = new URLSearchParams(window.location.search);
-    var urlQ = params.get('q') || '';
-    if (urlQ) {
-      var inp = document.getElementById('searchInput');
-      if (inp) { inp.value = urlQ; }
-    }
-    if (typeof renderNormen === 'function') {
-      renderNormen();
+  if(typeof renderNormen==='function') renderNormen();
+'use strict';
+
+// ── WORKFLOW-KONFIGURATION ──────────────────────────────────────────────
+var WORKFLOW = [
+  {
+    schritt: 1,
+    name: 'Fall anlegen',
+    seite: 'app.html',
+    icon: '📋',
+    farbe: '#4f8ef7'
+  },
+  {
+    schritt: 2,
+    name: 'Diktat & Fotos',
+    seite: 'app-starter.html#step2',
+    icon: '🎙️',
+    farbe: '#4f8ef7'
+  },
+  {
+    schritt: 3,
+    name: 'KI-Analyse',
+    seite: 'app-starter.html#step3',
+    icon: '🤖',
+    farbe: '#6366f1'
+  },
+  {
+    schritt: 4,
+    name: '§6 Fachurteil',
+    seite: 'stellungnahme.html',
+    icon: '⚖️',
+    farbe: '#f59e0b'
+  },
+  {
+    schritt: 5,
+    name: 'Freigabe',
+    seite: 'freigabe.html',
+    icon: '✅',
+    farbe: '#10b981'
+  },
+  {
+    schritt: 6,
+    name: 'Rechnung',
+    seite: 'rechnungen.html',
+    icon: '💶',
+    farbe: '#10b981'
+  },
+  {
+    schritt: 7,
+    name: 'Abschluss',
+    seite: 'archiv.html',
+    icon: '📁',
+    farbe: '#6b7280'
+  }
+];
+
+// ── WERKZEUGE (kontextuell, kein fester Workflow-Schritt) ───────────────
+var WERKZEUGE = {
+  'normen.html':         { name: 'Normendatenbank',    icon: '📚', zurück: true },
+  'positionen.html':     { name: 'Positionsdatenbank', icon: '📦', zurück: true },
+  'textbausteine.html':  { name: 'Textbausteine',      icon: '✏️',  zurück: true },
+  'jveg.html':           { name: 'JVEG-Rechner',       icon: '⚖️',  zurück: false },
+  'kostenermittlung.html':{ name: 'Kosten & Aufmaß',   icon: '📐', zurück: true },
+  'briefvorlagen.html':  { name: 'Briefvorlagen',      icon: '✉️',  zurück: false }
+};
+
+// ── SEITE BESTIMMEN ─────────────────────────────────────────────────────
+var currentPage = window.location.pathname.split('/').pop() || 'dashboard.html';
+if (currentPage === '') currentPage = 'dashboard.html';
+
+// ── AKTUELLEN SCHRITT BESTIMMEN ─────────────────────────────────────────
+function getCurrentSchritt() {
+  var basePage = currentPage.split('#')[0];
+  for (var i = 0; i < WORKFLOW.length; i++) {
+    if (WORKFLOW[i].seite.split('#')[0] === basePage) {
+      return WORKFLOW[i].schritt;
     }
   }
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-  } else {
-    init();
+  return null;
+}
+
+// ── FALL-KONTEXT LADEN ──────────────────────────────────────────────────
+function ladeFallKontext() {
+  // Versuche aus URL-Parameter zu laden
+  var params = new URLSearchParams(window.location.search);
+  var urlAz   = params.get('az') || params.get('fall') || params.get('aktenzeichen');
+  
+  // Dann aus sessionStorage/localStorage
+  var az         = urlAz
+                 || sessionStorage.getItem('prova_current_az')
+                 || localStorage.getItem('prova_letztes_az')
+                 || '';
+  
+  var schadenart = sessionStorage.getItem('prova_current_schadenart')
+                 || localStorage.getItem('prova_schadenart')
+                 || '';
+  
+  var adresse    = sessionStorage.getItem('prova_current_objekt')
+                 || localStorage.getItem('prova_adresse')
+                 || '';
+  
+  var recordId   = sessionStorage.getItem('prova_record_id')
+                 || sessionStorage.getItem('prova_current_record_id')
+                 || '';
+  
+  if (!az) return null;
+  
+  return { az: az, schadenart: schadenart, adresse: adresse, recordId: recordId };
+}
+
+// ── NÄCHSTER SCHRITT ─────────────────────────────────────────────────────
+function naechsterSchritt(aktuellerSchritt) {
+  if (!aktuellerSchritt) return null;
+  for (var i = 0; i < WORKFLOW.length; i++) {
+    if (WORKFLOW[i].schritt === aktuellerSchritt + 1) {
+      return WORKFLOW[i];
+    }
   }
-})();
-</script>
+  return null;
+}
 
-<button class="support-fab" onclick="openSupportModal()" title="Support">💬</button>
-<div class="modal-overlay" id="support-modal" onclick="if(event.target===this)this.style.display='none'" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:400;backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:20px;">
-  <div style="background:#1c2537;border:1px solid rgba(255,255,255,.12);border-radius:16px;max-width:460px;width:100%;padding:24px;">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
-      <div style="font-size:15px;font-weight:700;">💬 Support & Hilfe</div>
-      <button onclick="document.getElementById('support-modal').style.display='none'" style="background:none;border:none;color:#6b7a99;font-size:18px;cursor:pointer;">✕</button>
-    </div>
-    <p style="font-size:13px;color:#9da3b4;margin-bottom:16px;">Fragen? Schreiben Sie uns:</p>
-    <a href="mailto:kontakt@prova-systems.de" style="display:block;text-align:center;padding:11px;background:#4f8ef7;border-radius:8px;color:#fff;font-size:14px;font-weight:700;text-decoration:none;">kontakt@prova-systems.de</a>
-  </div>
-</div>
-
-</body>
-</html>
+// ── BANNER HTML BAUEN ───────────────────────────────────────────────────
+function baueBanner(kontext, aktuellerSchritt, istWerkzeug) {
+  var az        = kontext.az;
+  var sa        = kontext.schadenart;
+  var adr       = kontext.adresse;
+  var recordId  = kontext.recordId;
+  
+  // Schadensart Farbe
+  var saFarben = {
+    'Schimmelbefall': '#10b981',
+    'Wasserschaden':  '#3b82f6',
+    'Brandschaden':   '#ef4444',
+    'Sturmschaden':   '#8b5cf6',
+    'Baumängel':      '#f59e0b',
+    'Sonstiger Schaden': '#6b7280'
+  };
+  var saFarbe = saFarben[sa] || '#4f8ef7';
+  
+  // Akte-Link bauen
+  var akteLink = recordId
+    ? 'akte.html?id=' + recordId
+    : az
+      ? 'akte.html?az=' + encodeURIComponent(az)
+      : 'archiv.html';
+  
+  // Nächster-Schritt Button
+  var naechsterBtn = '';
+  if (!istWerkzeug && aktuellerSchritt) {
+    var naechster = naechsterSchritt(aktuellerSchritt);
+    if (naechster) {
+      var naechsterUrl = naechster.seite;
+      // AZ mitgeben wenn relevant
+      if (naechster.seite.indexOf('stellungnahme') >= 0 && az) {
+        naechsterUrl = naechster.seite + '?az=' + encodeURIComponent(az);
+      } else if (naechster.seite.indexOf('freigabe') >= 0 && recordId) {
+        naechsterUrl = naechster.seite + '?id=' + recordId;
+      } else if (naechster.seite.indexOf('rechnungen') >= 0 && az) {
+        naechsterUrl = naechster.seite + '?az=' + encodeURIComponent(az);
+      } else if (naechster.seite.indexOf('archiv') >= 0) {
+        naechsterUrl = naechster.seite;
+      }
+      
+      naechsterBtn = '<a href="' + naechsterUrl + '" style="'
+        + 'display:inline-flex;align-items:center;gap:5px;padding:4px 12px;'
+        + 'background:' + naechster.farbe + '22;border:1px solid ' + naechster.farbe + '44;'
+        + 'border-radius:999px;font-size:11px;font-weight:700;color:' + naechster.farbe + ';'
+        + 'text-decoration:none;white-space:nowrap;transition:all .15s;'
+        + '" onmouseover="this.style.background='' + naechster.farbe + '33'"'
+        + ' onmouseout="this.style.background='' + naechster.farbe + '22'">'
+        + naechster.icon + ' ' + naechster.name + ' →'
+        + '</a>';
+    }
+  }
+  
+  // Zurück-zu-Fall Button (für Werkzeuge)
+  var zurueckBtn = '';
+  if (istWerkzeug && WERKZEUGE[currentPage] && WERKZEUGE[currentPage].zurück) {
+    zurueckBtn = '<a href="' + akteLink + '" style="'
+      + 'display:inline-flex;align-items:center;gap:5px;padding:4px 10px;'
+      + 'background:rgba(79,142,247,.1);border:1px solid rgba(79,142,247,.25);'
+      + 'border-radius:999px;font-size:11px;font-weight:600;color:#4f8ef7;'
+      + 'text-decoration:none;white-space:nowrap;'
+      + '">← Zurück zu ' + az + '</a>';
+  }
+  
+  // Akte-Link in AZ
+  var azHtml = '<a href="' + akteLink + '" style="'
+    + 'font-weight:800;font-size:13px;color:var(--text, #e2e8f0);'
+    + 'text-decoration:none;letter-spacing:.02em;'
+    + 'border-bottom:1px solid rgba(255,255,255,.2);'
+    + '" title="Akte öffnen">' + az + '</a>';
+  
+  // Schrittanzeige
+  var schrittHtml = '';
+  if (aktuellerSchritt && !istWerkzeug) {
+    schrittHtml = '<span style="font-size:10px;color:rgba(255,255,255,.4);white-space:nowrap;">'
+      + 'Schritt ' + aktuellerSchritt + ' von 7'
+      + '</span>';
+    
+    // Mini-Progress (7 Punkte)
+    var dots = '';
+    for (var s = 1; s <= 7; s++) {
+      var dotColor = s < aktuellerSchritt
+        ? '#10b981'
+        : s === aktuellerSchritt
+          ? '#4f8ef7'
+          : 'rgba(255,255,255,.15)';
+      dots += '<span style="width:6px;height:6px;border-radius:50%;background:' + dotColor
+            + ';display:inline-block;' + (s < 7 ? 'margin-right:3px;' : '') + '"></span>';
+    }
+    schrittHtml += '<span style="display:inline-flex;align-items:center;margin-left:6px;">' + dots + '</span>';
+  }
+  
+  // Banner HTML
+  var html = '<div id="prova-fall-kontext-banner" style="'
+    + 'display:flex;align-items:center;gap:10px;flex-wrap:wrap;'
+    + 'padding:7px 16px 7px 20px;'
+    + 'background:linear-gradient(90deg,rgba(79,142,247,.12) 0%,rgba(10,15,28,.0) 100%);'
+    + 'border-bottom:1px solid rgba(79,142,247,.15);'
+    + 'font-family:inherit;position:relative;z-index:10;'
+    + 'min-height:36px;'
+    + '">'
+    
+    // AZ + Schadenart
+    + '<div style="display:flex;align-items:center;gap:8px;flex:1;min-width:0;">'
+    + '<span style="width:8px;height:8px;border-radius:50%;background:' + saFarbe + ';flex-shrink:0;"></span>'
+    + azHtml;
+    
+  if (sa) {
+    html += '<span style="font-size:11px;padding:2px 8px;border-radius:999px;background:' + saFarbe + '18;color:' + saFarbe + ';font-weight:600;white-space:nowrap;">' + sa + '</span>';
+  }
+  
+  if (adr && adr.length > 2 && adr !== '—') {
+    html += '<span style="font-size:11px;color:rgba(255,255,255,.35);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:200px;" title="' + adr + '">'
+   

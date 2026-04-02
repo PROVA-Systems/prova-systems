@@ -196,10 +196,6 @@
   .sup-ok-title{font-size:15px;font-weight:700;color:var(--green,#10b981);margin-bottom:4px;}
   .sup-ok-sub{font-size:12px;color:var(--text3,#6b7a99);}
 @media(max-width:768px){.bottom-nav{display:flex !important;}}
-
-/* ── LAYOUT FIX ── */
-.app-shell{display:flex;width:100%;min-height:100vh;overflow:hidden;}
-.main{flex:1;min-width:0;overflow-x:hidden;}
 </style>
 </head>
 <body>
@@ -669,7 +665,7 @@ function renderKontakte() {
           + '<div style="display:flex;gap:8px;flex-wrap:wrap;">'
           + recentK.map(function(k){
               var tc = TYP_CONFIG[k.typ]||TYP_CONFIG['Sonstiges'];
-              return '<button onclick="quickImportInApp(''+k.id+'')" style="display:flex;align-items:center;gap:6px;padding:5px 10px;border-radius:8px;background:var(--surface);border:1px solid var(--border);color:var(--text2);font-size:12px;cursor:pointer;font-family:inherit;">'
+              return '<button onclick="quickImportInApp('"+k.id+"')" style="display:flex;align-items:center;gap:6px;padding:5px 10px;border-radius:8px;background:var(--surface);border:1px solid var(--border);color:var(--text2);font-size:12px;cursor:pointer;font-family:inherit;">'
                 + '<span style="font-size:14px;">'+tc.icon+'</span><span>'+escH(k.vorname?k.vorname+' '+k.name:k.name)+'</span>'
                 + '</button>';
             }).join('')
@@ -1265,10 +1261,8 @@ window.exportAlleVCF = function() {
     if (adr)   lines.push('ADR;TYPE=WORK:;;' + adr + ';;;;');
     if (typ)   lines.push('TITLE:' + typ);
     lines.push('END:VCARD');
-    return lines.join('
-');
-  }).join('
-
+    return lines.join('\n');
+  }).join('\n
 ');
 
   var blob = new Blob([vcf], { type: 'text/vcard;charset=utf-8' });
@@ -1290,15 +1284,19 @@ function escHtml(s) {
 </script>
 
 <button class="support-fab" onclick="openSupportModal()" title="Support">💬</button>
-<button onclick="document.getElementById('sup-modal-kt').style.display='flex'" style="position:fixed;bottom:24px;right:24px;z-index:800;width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#4f8ef7,#3a7be0);box-shadow:0 4px 16px rgba(79,142,247,.4);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:20px;border:none;color:#fff;">💬</button>
-<div id="sup-modal-kt" onclick="if(event.target===this)this.style.display='none'" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;align-items:center;justify-content:center;padding:20px;">
-  <div style="background:#1c2537;border:1px solid rgba(255,255,255,.12);border-radius:16px;max-width:440px;width:100%;padding:24px;">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
-      <b style="font-size:15px;">💬 Support</b>
-      <button onclick="document.getElementById('sup-modal-kt').style.display='none'" style="background:none;border:none;color:#6b7a99;font-size:18px;cursor:pointer;">✕</button>
+<div class="modal-overlay" id="support-modal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-title">💬 Support & Hilfe</div>
+      <button class="modal-close" onclick="document.getElementById('support-modal').classList.remove('open')">✕</button>
     </div>
-    <a href="mailto:kontakt@prova-systems.de" style="display:block;text-align:center;padding:11px;background:#4f8ef7;border-radius:8px;color:#fff;font-size:14px;font-weight:700;text-decoration:none;">kontakt@prova-systems.de</a>
-  </div>
-</div>
-</body>
-</html>
+    <div class="modal-body">
+      <div id="support-form-body">
+        <div class="sup-label">Betreff</div>
+        <input type="text" class="sup-input" id="sup-betreff" placeholder="z.B. PDF-Fehler, Frage zu Rechnung…">
+        <div class="sup-label">Nachricht</div>
+        <textarea class="sup-input sup-textarea" id="sup-nachricht" placeholder="Beschreiben Sie Ihr Anliegen…"></textarea>
+        <div class="sup-err" id="sup-err">Bitte Betreff und Nachricht eingeben.</div>
+        <button class="sup-send-btn" id="sup-btn" onclick="supSendModal()">Nachricht senden</button>
+        <div style="text-align:center;margin-top:10px;font-size:11px;color:var(--text3,#6b7a99);">
+          Oder direkt: <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-c
