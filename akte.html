@@ -754,7 +754,7 @@ window.aktualisiereStatus=async function(){
   document.getElementById('status-hint').textContent=statusHint(newStatus);
   if(!recordId||!recordId.startsWith('rec'))return;
   try{
-    await fetch('/.netlify/functions/airtable',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({method:'PATCH',path:'/v0/'+AT_BASE+'/'+AT_FAELLE+'/'+recordId,body:{fields:{Status:newStatus}}})});
+    await fetch('/.netlify/functions/airtable',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({method:'PATCH',path:'/v0/'+AT_BASE+'/'+AT_FAELLE+'/'+recordId,payload:{fields:{Status:newStatus}}})});
     zeigToast('Status aktualisiert: '+newStatus);
     // Cache invalidieren
     localStorage.removeItem('prova_archiv_cache_v2');
@@ -856,7 +856,7 @@ window.oeffneStellung = function() {
         <div class="sup-err" id="sup-err">Bitte Betreff und Nachricht eingeben.</div>
         <button class="sup-send-btn" id="sup-btn" onclick="supSendModal()">Nachricht senden</button>
         <div style="text-align:center;margin-top:10px;font-size:11px;color:var(--text3,#6b7a99);">
-          Oder direkt: support@prova-systems.de
+          Oder direkt: <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="2e5d5b5e5e415c5a6e5e5c41584f035d575d5a4b435d004a4b">[email&#160;protected]</a>
         </div>
       </div>
       <div class="sup-ok" id="sup-ok">
@@ -905,7 +905,7 @@ window.exportWordAkte = function() {
     '<div>' + entwurf.replace(/
 /g,'<br>') + '</div>',
     '<div class="footer">Erstellt mit PROVA Systems &middot; ' + svName.trim() + ' &middot; ' + heute + '</div>',
-    '  <script src="/sw-register.js" defer></script>
+    '  <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="/sw-register.js" defer></script>
 
 <script>
 /* ================================================================
@@ -1312,8 +1312,4 @@ function openSupportModal(){
   if(btn){btn.disabled=false;btn.textContent='Nachricht senden';}
   m.classList.add('open');
 }
-async function supSendModal(){
-  var b=(document.getElementById('sup-betreff').value||'').trim();
-  var n=(document.getElementById('sup-nachricht').value||'').trim();
-  if(!b||!n){document.getElementById('sup-err').style.display='block';return;}
-  document.ge
+async function supSendMo

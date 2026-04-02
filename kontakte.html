@@ -665,7 +665,7 @@ function renderKontakte() {
           + '<div style="display:flex;gap:8px;flex-wrap:wrap;">'
           + recentK.map(function(k){
               var tc = TYP_CONFIG[k.typ]||TYP_CONFIG['Sonstiges'];
-              return '<button onclick="quickImportInApp('"+k.id+"')" style="display:flex;align-items:center;gap:6px;padding:5px 10px;border-radius:8px;background:var(--surface);border:1px solid var(--border);color:var(--text2);font-size:12px;cursor:pointer;font-family:inherit;">'
+              return '<button data-kid="'+escH(k.id)+'" onclick="quickImportInApp(this.getAttribute(\'data-kid\'))" style="display:flex;align-items:center;gap:6px;padding:5px 10px;border-radius:8px;background:var(--surface);border:1px solid var(--border);color:var(--text2);font-size:12px;cursor:pointer;font-family:inherit;">'
                 + '<span style="font-size:14px;">'+tc.icon+'</span><span>'+escH(k.vorname?k.vorname+' '+k.name:k.name)+'</span>'
                 + '</button>';
             }).join('')
@@ -1262,8 +1262,7 @@ window.exportAlleVCF = function() {
     if (typ)   lines.push('TITLE:' + typ);
     lines.push('END:VCARD');
     return lines.join('\n');
-  }).join('\n
-');
+  }).join('\n');
 
   var blob = new Blob([vcf], { type: 'text/vcard;charset=utf-8' });
   var url = URL.createObjectURL(blob);
@@ -1300,3 +1299,5 @@ function escHtml(s) {
         <button class="sup-send-btn" id="sup-btn" onclick="supSendModal()">Nachricht senden</button>
         <div style="text-align:center;margin-top:10px;font-size:11px;color:var(--text3,#6b7a99);">
           Oder direkt: <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-c
+</body>
+</html>
