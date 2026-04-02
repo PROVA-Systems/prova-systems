@@ -9,7 +9,7 @@
   <meta name="apple-mobile-web-app-title" content="PROVA">
   <meta name="theme-color" content="#111827">
   <link rel="apple-touch-icon" href="/icons/icon-192.png">
-  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <meta name="viewport" content="width=device-width,initial-scale=1, viewport-fit=cover">
 <title>Freigabe · PROVA</title>
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <style>
@@ -169,7 +169,10 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-ui);min-heigh
 </style>
 <script src="theme.js"></script>
 <script src="trial-guard.js"></script>
-<script src="nav.js"></script>
+<script src="nav.js" defer></script>
+<link rel="stylesheet" href="mobile.css">
+
+<link rel="icon" type="image/svg+xml" href="/icons/icon-192.svg">
 </head>
 <body>
 <div class="app-shell" id="app-shell">
@@ -543,7 +546,7 @@ async function ladeSVProfil(){
     const res=await fetch('/.netlify/functions/airtable',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({method:'GET',path:url})});
     if(!res.ok) return;
     const d=await res.json();
-    if(d.records?.length){ svProfil=d.records[0].fields; svProfil.email=email; }
+    if(d.(records&&records.length)){ svProfil=d.records[0].fields; svProfil.email=email; }
   } catch(e){}
 }
 
@@ -554,12 +557,12 @@ function renderDoc(){
   const sa=f.Schadenart||f.Schadensart||'—';
   const str=f.Adresse||f.Schaden_Strasse||'';
   const adr=[str,[f.PLZ,f.Ort].filter(Boolean).join(' ')].filter(Boolean).join(', ');
-  const svV=svProfil?.SV_Vorname||localStorage.getItem('prova_sv_vorname')||'';
-  const svN=svProfil?.SV_Nachname||localStorage.getItem('prova_sv_nachname')||'';
-  const svName=svProfil?.Name||[svV,svN].filter(Boolean).join(' ')||'Sachverständiger';
-  const svQ=svProfil?.Qualifikation||localStorage.getItem('prova_sv_qualifikation')||'Sachverständiger';
-  const buero=svProfil?.Firma||localStorage.getItem('prova_bueronamen')||'';
-  const svAdr=[svProfil?.Adresse,svProfil?.PLZ,svProfil?.Ort].filter(Boolean).join(' · ');
+  const svV=(svProfil&&svProfil.SV_Vorname)||localStorage.getItem('prova_sv_vorname')||'';
+  const svN=(svProfil&&svProfil.SV_Nachname)||localStorage.getItem('prova_sv_nachname')||'';
+  const svName=(svProfil&&svProfil.Name)||[svV,svN].filter(Boolean).join(' ')||'Sachverständiger';
+  const svQ=(svProfil&&svProfil.Qualifikation)||localStorage.getItem('prova_sv_qualifikation')||'Sachverständiger';
+  const buero=(svProfil&&svProfil.Firma)||localStorage.getItem('prova_bueronamen')||'';
+  const svAdr=[(svProfil&&svProfil.Adresse),(svProfil&&svProfil.PLZ),(svProfil&&svProfil.Ort)].filter(Boolean).join(' · ');
   const ini=svName.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2)||'SV';
   const ts=f.Timestamp||''; const dtStr=ts?new Date(ts).toLocaleDateString('de-DE'):'—';
 
@@ -602,11 +605,11 @@ function renderDoc(){
   const paket=localStorage.getItem('prova_paket')||'Solo';
   const isPro=paket==='Solo'||paket==='Team';
   const isEnterprise=paket==='Team';
-  const svNameOff=svProfil?.Name||[
-    svProfil?.SV_Vorname||localStorage.getItem('prova_sv_vorname')||'',
-    svProfil?.SV_Nachname||localStorage.getItem('prova_sv_nachname')||''
+  const svNameOff=(svProfil&&svProfil.Name)||[
+    (svProfil&&svProfil.SV_Vorname)||localStorage.getItem('prova_sv_vorname')||'',
+    (svProfil&&svProfil.SV_Nachname)||localStorage.getItem('prova_sv_nachname')||''
   ].filter(Boolean).join(' ')||'der Sachverständige';
-  const svQOff=svProfil?.Qualifikation||localStorage.getItem('prova_sv_qualifikation')||'Sachverständiger';
+  const svQOff=(svProfil&&svProfil.Qualifikation)||localStorage.getItem('prova_sv_qualifikation')||'Sachverständiger';
   const datumOff=new Date().toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric'});
   const azOff=f.Aktenzeichen||'—';
 
@@ -634,11 +637,11 @@ async function starteQualitaetspruefung() {
   var summaryEl = document.getElementById('qi-summary');
 
   // Gutachten-Text sammeln
-  var gutachtenText = (recFields?.KI_Entwurf || '') + '\n\n§6 Stellungnahme:\n' + (localStorage.getItem('prova_stellungnahme_text') || '[Noch nicht verfasst]');
+  var gutachtenText = ((recFields&&recFields.KI_Entwurf) || '') + '\n\n§6 Stellungnahme:\n' + (localStorage.getItem('prova_stellungnahme_text') || '[Noch nicht verfasst]');
   var beweisfragen = [];
   try {
     var cache = JSON.parse(localStorage.getItem('prova_faelle_cache') || '{}');
-    var az = recFields?.Aktenzeichen || '';
+    var az = (recFields&&recFields.Aktenzeichen) || '';
     if (cache[az] && cache[az].beweisfragen) {
       beweisfragen = cache[az].beweisfragen.split('\n').filter(function(b) { return b.trim(); });
     }
@@ -912,18 +915,18 @@ async function approveGutachten(){
   const f=recFields;
   const payload={
     airtable_id:recId,
-    aktenzeichen:f.Aktenzeichen??'',schadensdatum:f.Schadensdatum??'',
-    schadensart:f.Schadenart??f.Schadensart??'',
-    gebaeudetyp:f.Gebaeude_Typ??'',baujahr:f.Baujahr??'',
-    strasse:f.Adresse??f.Schaden_Strasse??'',
-    plz:f.PLZ??'',ort:f.Ort??'',
-    geschaedigter:f.Geschaedigter??'',
-    auftraggeber_name:f.Auftraggeber_Name??'',
-    auftraggeber_typ:f.Auftraggeber_Typ??'',
-    auftraggeber_email:f.Auftraggeber_Email??'',
-    bereich:f.Bereich??'',messwerte:f.Messwerte??'',
-    gutachten_entwurf:f.KI_Entwurf??'',
-    sv_email:svProfil?.email||localStorage.getItem('prova_sv_email')||'',
+    aktenzeichen:(f.Aktenzeichen !== null && f.Aktenzeichen !== undefined && f.Aktenzeichen !== '' ? f.Aktenzeichen : ''),schadensdatum:(f.Schadensdatum !== null && f.Schadensdatum !== undefined && f.Schadensdatum !== '' ? f.Schadensdatum : ''),
+    schadensart:f.Schadenart||(f.Schadensart !== null && f.Schadensart !== undefined && f.Schadensart !== '' ? f.Schadensart : ''),
+    gebaeudetyp:(f.Gebaeude_Typ !== null && f.Gebaeude_Typ !== undefined && f.Gebaeude_Typ !== '' ? f.Gebaeude_Typ : ''),baujahr:(f.Baujahr !== null && f.Baujahr !== undefined && f.Baujahr !== '' ? f.Baujahr : ''),
+    strasse:f.Adresse||(f.Schaden_Strasse !== null && f.Schaden_Strasse !== undefined && f.Schaden_Strasse !== '' ? f.Schaden_Strasse : ''),
+    plz:(f.PLZ !== null && f.PLZ !== undefined && f.PLZ !== '' ? f.PLZ : ''),ort:(f.Ort !== null && f.Ort !== undefined && f.Ort !== '' ? f.Ort : ''),
+    geschaedigter:(f.Geschaedigter !== null && f.Geschaedigter !== undefined && f.Geschaedigter !== '' ? f.Geschaedigter : ''),
+    auftraggeber_name:(f.Auftraggeber_Name !== null && f.Auftraggeber_Name !== undefined && f.Auftraggeber_Name !== '' ? f.Auftraggeber_Name : ''),
+    auftraggeber_typ:(f.Auftraggeber_Typ !== null && f.Auftraggeber_Typ !== undefined && f.Auftraggeber_Typ !== '' ? f.Auftraggeber_Typ : ''),
+    auftraggeber_email:(f.Auftraggeber_Email !== null && f.Auftraggeber_Email !== undefined && f.Auftraggeber_Email !== '' ? f.Auftraggeber_Email : ''),
+    bereich:(f.Bereich !== null && f.Bereich !== undefined && f.Bereich !== '' ? f.Bereich : ''),messwerte:(f.Messwerte !== null && f.Messwerte !== undefined && f.Messwerte !== '' ? f.Messwerte : ''),
+    gutachten_entwurf:(f.KI_Entwurf !== null && f.KI_Entwurf !== undefined && f.KI_Entwurf !== '' ? f.KI_Entwurf : ''),
+    sv_email:(svProfil&&svProfil.email)||localStorage.getItem('prova_sv_email')||'',
     stellungnahme_text:localStorage.getItem('prova_stellungnahme_text')||'',
     stellungnahme_weg:localStorage.getItem('prova_stellungnahme_weg')||'A',
     stellungnahme_ts:localStorage.getItem('prova_stellungnahme_ts')||new Date().toISOString(),
@@ -1025,7 +1028,7 @@ async function rejectGutachten(){
   if(!txt){zeigToast('Bitte Korrekturhinweis eingeben.','warn');return;}
   if(!recId){zeigToast('Kein Datensatz.','err');return;}
   try {
-    const res=await fetch(WH_S1,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({airtable_id:recId,aktenzeichen:recFields?.Aktenzeichen||'',korrektur_hinweise:txt,sv_email:localStorage.getItem('prova_sv_email')||''})});
+    const res=await fetch(WH_S1,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({airtable_id:recId,aktenzeichen:(recFields&&recFields.Aktenzeichen)||'',korrektur_hinweise:txt,sv_email:localStorage.getItem('prova_sv_email')||''})});
     if(!res.ok) throw new Error('HTTP '+res.status);
     zeigToast('Korrektur angefordert ✅','ok');
     document.getElementById('korrekturSub').classList.remove('open');
@@ -1079,12 +1082,12 @@ function toggleKorrektur(){
 
 /* WORD EXPORT */
 function exportiereAlsWord(){
-  const az=recFields?.Aktenzeichen||'—';
+  const az=(recFields&&recFields.Aktenzeichen)||'—';
   const svN=[localStorage.getItem('prova_sv_vorname'),localStorage.getItem('prova_sv_nachname')].filter(Boolean).join(' ');
   const buero=localStorage.getItem('prova_bueronamen')||'';
   const quali=localStorage.getItem('prova_sv_qualifikation')||'';
   const heute=new Date().toLocaleDateString('de-DE');
-  const entwurf=recFields?.KI_Entwurf||localStorage.getItem('prova_entwurf_text')||'';
+  const entwurf=(recFields&&recFields.KI_Entwurf)||localStorage.getItem('prova_entwurf_text')||'';
   const s6=localStorage.getItem('prova_stellungnahme_text')||'';
   const html=`<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word"><head><meta charset="UTF-8"><meta name=ProgId content=Word.Document><style>body{font-family:Arial,sans-serif;font-size:11pt;margin:2cm;line-height:1.5;}h1,h2{font-size:13pt;font-weight:bold;color:#1E3A5F;border-bottom:1px solid #ccc;padding-bottom:4pt;margin-top:16pt;}.kpf{border-bottom:2px solid #1E3A5F;padding-bottom:10pt;margin-bottom:18pt;}.az{background:#f5f5f5;border:1px solid #ccc;padding:8pt;margin:10pt 0;}.foot{border-top:1px solid #ccc;margin-top:28pt;padding-top:8pt;font-size:9pt;color:#666;}</style></head><body><div class="kpf"><strong style="font-size:14pt;color:#1E3A5F;">${buero||svN}</strong><br>${quali}</div><div class="az"><strong>AZ:</strong> ${az} &nbsp;&nbsp; <strong>Datum:</strong> ${heute}</div><h1>Gutachten</h1><div>${entwurf.replace(/\n/g,'<br>')}</div>${s6?`<h2>§6 Gutachterliche Stellungnahme</h2><div>${s6.replace(/\n/g,'<br>')}</div>`:''}<div class="foot">Erstellt mit PROVA Systems · ${svN} · ${heute}</div></div></div><!-- /main-wrap -->
 </div><!-- /app-shell -->

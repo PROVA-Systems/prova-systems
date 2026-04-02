@@ -9,7 +9,7 @@
   <meta name="apple-mobile-web-app-title" content="PROVA">
   <meta name="theme-color" content="#111827">
   <link rel="apple-touch-icon" href="/icons/icon-192.png">
-  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <meta name="viewport" content="width=device-width,initial-scale=1, viewport-fit=cover">
 <title>§6 Fachurteil · PROVA</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
@@ -420,7 +420,10 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-ui);min-heigh
 </style>
 <script src="theme.js"></script>
 <script src="trial-guard.js"></script>
-<script src="nav.js"></script>
+<script src="nav.js" defer></script>
+<link rel="stylesheet" href="mobile.css">
+
+<link rel="icon" type="image/svg+xml" href="/icons/icon-192.svg">
 </head>
 <body>
 <div class="app-shell" id="app-shell">
@@ -1582,16 +1585,16 @@ function onInputB() {
   // Hüpfende Denkanstöße — nur für aktives Feld, andere ausblenden
   if(aktivFeld === 'B1') {
     zeigeHint('hintB1', 'hintB1text', b1);
-    document.getElementById('hintB2')?.classList.remove('show');
-    document.getElementById('hintB3')?.classList.remove('show');
+    (function(){var _el=document.getElementById('hintB2');if(_el)_el.classList.remove('show');})();
+    (function(){var _el=document.getElementById('hintB3');if(_el)_el.classList.remove('show');})();
   } else if(aktivFeld === 'B2') {
     zeigeHint('hintB2', 'hintB2text', b2);
-    document.getElementById('hintB1')?.classList.remove('show');
-    document.getElementById('hintB3')?.classList.remove('show');
+    (function(){var _el=document.getElementById('hintB1');if(_el)_el.classList.remove('show');})();
+    (function(){var _el=document.getElementById('hintB3');if(_el)_el.classList.remove('show');})();
   } else if(aktivFeld === 'B3') {
     zeigeHint('hintB3', 'hintB3text', b3);
-    document.getElementById('hintB1')?.classList.remove('show');
-    document.getElementById('hintB2')?.classList.remove('show');
+    (function(){var _el=document.getElementById('hintB1');if(_el)_el.classList.remove('show');})();
+    (function(){var _el=document.getElementById('hintB2');if(_el)_el.classList.remove('show');})();
   }
 
   // Ausform-Button
@@ -1651,7 +1654,7 @@ async function ladeKiInsp() {
   const diktat    = (localStorage.getItem('prova_transkript') || '').trim();
   const messwerte = (localStorage.getItem('prova_messwerte') || '').trim();
   const entwurf   = (localStorage.getItem('prova_entwurf_text') || '').trim();
-  const svText    = (document.getElementById('svTextA')?.value || '').trim();
+  const svText    = ((document.getElementById('svTextA')?document.getElementById('svTextA').value:'') || '').trim();
   const baujahr   = localStorage.getItem('prova_baujahr') || '';
   const auftraggeber = localStorage.getItem('prova_auftraggeber_name') || '';
   const gutTyp    = selectedTyp || 'gericht';
@@ -1854,7 +1857,7 @@ async function ladeNormen() {
     if(!res.ok) throw new Error('HTTP '+res.status);
     const d = await res.json();
     const txt = (d.content&&d.content[0]&&d.content[0].text)||
-                (d.choices&&d.choices[0]?.message?.content)||'';
+                (d.choices&&(d.choices[0]&&d.choices[0].message&&d.choices[0].message.content))||'';
 
     let vorschlag = [];
     try {
@@ -1929,7 +1932,7 @@ function weiterZuFreigabe() {
 
   // KI-Statistik sammeln (anonym)
   const gewaehlteUrsachen = Array.from(document.querySelectorAll('.ursache-check:checked')).map(cb => cb.dataset.kategorie);
-  const andereUrsache = document.getElementById('ursacheAndere')?.checked ? document.getElementById('ursacheAndereText')?.value || '' : '';
+  const andereUrsache = document.getElementById('ursacheAndere').checked ? (document.getElementById('ursacheAndereText')?document.getElementById('ursacheAndereText').value:'') || '' : '';
   
   const kiStatistik = {
     schadenart: sa,

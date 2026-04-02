@@ -2,10 +2,11 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1, viewport-fit=cover">
 <title>Rechnungen · PROVA</title>
 <script src="theme.js"></script>
-<script src="nav.js"></script>
+<script src="nav.js" defer></script>
+<link rel="stylesheet" href="mobile.css">
 <script src="trial-guard.js"></script>
 <style>
 :root{
@@ -179,6 +180,8 @@ a{text-decoration:none;color:inherit;}button,input,select,textarea{font-family:i
   .sup-ok-sub{font-size:12px;color:var(--text3,#6b7a99);}
 @media(max-width:768px){.bottom-nav{display:flex !important;}}
 </style>
+
+<link rel="icon" type="image/svg+xml" href="/icons/icon-192.svg">
 </head>
 <body>
 <div class="app-shell">
@@ -187,6 +190,7 @@ a{text-decoration:none;color:inherit;}button,input,select,textarea{font-family:i
 <div class="sb-overlay" id="sb-overlay" onclick="closeMobileSidebar()"></div>
 
 <header class="topbar">
+  <button id="mobile-menu-btn" aria-label="Menü öffnen" style="display:none;align-items:center;justify-content:center;width:40px;height:40px;border:none;background:none;color:var(--text2);font-size:20px;cursor:pointer;border-radius:8px;flex-shrink:0;">☰</button>
     <div class="topbar-left">
       <button class="burger" onclick="openMobileSidebar()"><span></span><span></span><span></span></button>
       <div class="breadcrumb"><span>PROVA</span><span style="color:var(--text3)">›</span><strong>Rechnungen</strong></div>
@@ -939,7 +943,7 @@ async function exportZugferd(rechnungsDaten) {
   var toggle = document.getElementById('zugferd-toggle');
   if (!toggle || !toggle.checked) return null;
 
-  var format = document.getElementById('zugferd-format')?.value || 'zugferd';
+  var format = (document.getElementById('zugferd-format')?document.getElementById('zugferd-format').value:'') || 'zugferd';
 
   try {
     var res = await fetch('/.netlify/functions/zugferd-rechnung', {
@@ -1501,16 +1505,4 @@ window.pruefeMahnlauf = function() {
   var banner = document.createElement('div');
   banner.style.cssText = 'position:fixed;top:64px;left:50%;transform:translateX(-50%);z-index:99998;background:#1f0a0a;border:1.5px solid #ef4444;border-radius:12px;padding:14px 18px;display:flex;align-items:flex-start;gap:12px;box-shadow:0 8px 32px rgba(0,0,0,.6);max-width:500px;width:90vw;font-family:var(--font-ui,sans-serif);';
   var lines = [];
-  if (gruppen['3'].length) lines.push('<strong style="color:#ef4444;">⚠ ' + gruppen['3'].length + ' × 3. Mahnung fällig</strong>');
-  if (gruppen['2'].length) lines.push('<span style="color:#f59e0b;">• ' + gruppen['2'].length + ' × 2. Mahnung fällig</span>');
-  if (gruppen['1'].length) lines.push('<span style="color:#fbbf24;">• ' + gruppen['1'].length + ' × 1. Erinnerung fällig</span>');
-  banner.innerHTML = '<span style="font-size:20px;">💶</span>'
-    + '<div style="flex:1;font-size:12px;line-height:1.7;">' + lines.join('<br>') + '</div>'
-    + '<button onclick="this.parentElement.remove()" style="background:none;border:none;color:rgba(255,255,255,.4);font-size:18px;cursor:pointer;padding:0;line-height:1;flex-shrink:0;">×</button>';
-  document.body.appendChild(banner);
-  setTimeout(function() { if(banner.parentNode) banner.remove(); }, 8000);
-};
-
-// Nach dem Laden der Rechnungen prüfen
-var _origLadeRechnungen = window.ladeRechnungen;
-if (typeof _origLadeRechnungen === 'function')
+  if (gruppen['3'].length) lines.push('<strong style="color:#ef4444;">�

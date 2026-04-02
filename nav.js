@@ -902,37 +902,30 @@ window.provaSbLogout = function() {
 })();
 /* ── END TOOLTIPS ── */
 
-/* ══════════════════════════════════════════════════════
-   PROVA Global Status System (Stripe-Style)
-   Semantische Farben: Rot=Jetzt, Orange=Bald, Grün=OK, Grau=Inaktiv
-   ══════════════════════════════════════════════════════ */
-.prova-status{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;white-space:nowrap;}
-.prova-status::before{content:'';width:6px;height:6px;border-radius:50%;flex-shrink:0;}
-.prova-status.danger{background:rgba(239,68,68,.1);color:#ef4444;border:1px solid rgba(239,68,68,.2);}
-.prova-status.danger::before{background:#ef4444;}
-.prova-status.warning{background:rgba(245,158,11,.1);color:#f59e0b;border:1px solid rgba(245,158,11,.2);}
-.prova-status.warning::before{background:#f59e0b;}
-.prova-status.success{background:rgba(16,185,129,.1);color:#10b981;border:1px solid rgba(16,185,129,.2);}
-.prova-status.success::before{background:#10b981;}
-.prova-status.info{background:rgba(79,142,247,.1);color:#4f8ef7;border:1px solid rgba(79,142,247,.2);}
-.prova-status.info::before{background:#4f8ef7;}
-.prova-status.neutral{background:rgba(255,255,255,.05);color:var(--text3);border:1px solid var(--border);}
-.prova-status.neutral::before{background:var(--text3);}
-/* Fallback für alte Status-Badge-Klassen */
-.st-bearb{background:rgba(79,142,247,.1);color:#4f8ef7;}
-.st-entwurf{background:rgba(245,158,11,.1);color:#f59e0b;}
-.st-freig{background:rgba(16,185,129,.1);color:#10b981;}
-.st-export{background:rgba(16,185,129,.15);color:#059669;}
-.st-archiv{background:rgba(255,255,255,.05);color:var(--text3);}
+(function(){
+  var _s = document.createElement('style');
+  _s.textContent = [
+    '.prova-status{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;white-space:nowrap;}',
+    '.prova-status::before{content:"";width:6px;height:6px;border-radius:50%;flex-shrink:0;}',
+    '.prova-status.danger{background:rgba(239,68,68,.1);color:#ef4444;border:1px solid rgba(239,68,68,.2);}',
+    '.prova-status.danger::before{background:#ef4444;}',
+    '.prova-status.warning{background:rgba(245,158,11,.1);color:#f59e0b;border:1px solid rgba(245,158,11,.2);}',
+    '.prova-status.warning::before{background:#f59e0b;}',
+    '.prova-status.success{background:rgba(16,185,129,.1);color:#10b981;border:1px solid rgba(16,185,129,.2);}',
+    '.prova-status.success::before{background:#10b981;}',
+    '.prova-status.info{background:rgba(79,142,247,.1);color:#4f8ef7;border:1px solid rgba(79,142,247,.2);}',
+    '.prova-status.info::before{background:#4f8ef7;}',
+    '.prova-status.neutral{background:rgba(255,255,255,.05);color:var(--text3);border:1px solid var(--border);}',
+    '.prova-status.neutral::before{background:var(--text3);}',
+    '.st-bearb{background:rgba(79,142,247,.1);color:#4f8ef7;}',
+    '.st-entwurf{background:rgba(245,158,11,.1);color:#f59e0b;}',
+    '.st-freig{background:rgba(16,185,129,.1);color:#10b981;}',
+    '.st-export{background:rgba(16,185,129,.15);color:#059669;}',
+    '.st-archiv{background:rgba(255,255,255,.05);color:var(--text3);}',
+  ].join('');
+  document.head.appendChild(_s);
+})();
 
-
-/* ════════════════════════════════════════════════════════════════
-   PROVA MOBILE SYSTEM
-   - Erkennt automatisch: Desktop / Tablet / Mobile
-   - Bottom-Nav auf Smartphone
-   - Sidebar als Bottom-Sheet
-   - Touch-Optimierungen
-   ════════════════════════════════════════════════════════════════ */
 (function() {
   'use strict';
 

@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v46';
+const CACHE_VERSION = 'prova-v50';
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
@@ -184,8 +184,8 @@ async function verarbeiteOfflineQueue() {
 }
 
 self.addEventListener('message', event => {
-  if (event.data?.type === 'SKIP_WAITING') self.skipWaiting();
-  if (event.data?.type === 'TRIGGER_SYNC') {
+  if ((event.data&&event.data.type) === 'SKIP_WAITING') self.skipWaiting();
+  if ((event.data&&event.data.type) === 'TRIGGER_SYNC') {
     self.registration.sync.register(SYNC_TAG).catch(() => verarbeiteOfflineQueue());
   }
 });
