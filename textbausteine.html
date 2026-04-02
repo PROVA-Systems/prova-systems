@@ -227,48 +227,153 @@ var KATEGORIEN = {
 
 // ── Standard-Bausteine (werden einmalig angelegt wenn leer) ──
 var STANDARD_BAUSTEINE = [
-  {titel:'Besichtigung Standard',kat:'begehung',tag:'',text:'Am [DATUM] wurde das Schadensbjekt [RAUM] in Anwesenheit von [NAME] besichtigt. Der Unterzeichner hat die örtlichen Verhältnisse persönlich in Augenschein genommen.',notiz:''},
-  {titel:'Anwesenheit Protokoll',kat:'begehung',tag:'',text:'Bei der Besichtigung am [DATUM] waren anwesend: [NAME] (Auftraggeber), sowie der Unterzeichner als Sachverständiger.',notiz:''},
-  {titel:'Feuchtemessung Holz',kat:'befund',tag:'WS',text:'Die Messung der Holzfeuchte im Bereich [RAUM] ergab Werte von [MESSWERT] % (Messgerät: [NORM]). Der Grenzwert nach DIN 68800 für eingebautes Holz beträgt 18 %.',notiz:'Nur bei Holzböden/Balken'},
-  {titel:'Feuchtemessung Mauerwerk',kat:'befund',tag:'WS',text:'Die Feuchtemessung am Mauerwerk im Bereich [RAUM] ergab Materialfeuchtewerte von [MESSWERT] % (CM-Methode). Nach WTA-Merkblatt 6-1 gelten Werte über 3,0 % als deutlich erhöht.',notiz:''},
-  {titel:'Schimmelbefall Sichtbefund',kat:'befund',tag:'SC',text:'Im Bereich [RAUM] sind auf einer Fläche von ca. [FLAECHE] m² schwarze bis grünlich-schwarze Verfärbungen feststellbar, die auf einen Schimmelpilzbefall hindeuten.',notiz:'Nur Sichtbefund — keine Ursachenaussage'},
-  {titel:'Ursache Wasserschaden Konjunktiv',kat:'ursache',tag:'WS',text:'Als Ursache für den festgestellten Feuchteschaden dürfte eine undichte [RAUM]-Leitung in Betracht kommen. Eine abschließende Beurteilung der Schadensursache könnte erst nach vollständiger Trocknung und Leckortung erfolgen.',notiz:'Konjunktiv II — rechtssicher'},
-  {titel:'Ursache Schimmel Konjunktiv',kat:'ursache',tag:'SC',text:'Die festgestellte Schimmelbildung dürfte auf eine unzureichende Belüftung des Raumes [RAUM] zurückzuführen sein. Ein Zusammenwirken baulicher Wärmebrücken mit erhöhter Raumluftfeuchtigkeit wäre ebenfalls in Betracht zu ziehen.',notiz:''},
-  {titel:'Empfehlung Trocknung',kat:'massnahmen',tag:'WS',text:'Zur Behebung des Feuchtigkeitsschadens wird empfohlen, unverzüglich mit der Bautrocknung zu beginnen. Die Trocknungsdauer dürfte sich auf [MESSWERT] Wochen belaufen, abhängig vom Feuchtegehalt des Bauteils.',notiz:''},
-  {titel:'Empfehlung Schimmelsanierung',kat:'massnahmen',tag:'SC',text:'Die befallenen Flächen im Bereich [RAUM] sollten fachgerecht durch ein spezialisiertes Unternehmen saniert werden. Nach UBA-Leitfaden ist bei Befallsflächen über 0,5 m² eine vollständige Sanierung unter Schutzmaßnahmen zu empfehlen.',notiz:''},
-  {titel:'DIN 4108-2 Wärmeschutz',kat:'normen',tag:'SC',text:'Gemäß DIN 4108-2 ist der Mindestoberflächentemperaturfaktor fRsi ≥ 0,70 einzuhalten. Bei einer Raumtemperatur von 20 °C und einer rel. Luftfeuchte von 50 % liegt der Taupunkt bei ca. 9,3 °C.',notiz:'Immer bei Schimmelgutachten zitieren'},
-  {titel:'VdS 3151 Trocknungsziel',kat:'normen',tag:'WS',text:'Nach VdS 3151 gelten als Trocknungsziele: Holz ≤ 15 % Holzfeuchte, Mauerwerk und Beton ≤ 3 % nach CM-Methode. Die Erreichung dieser Grenzwerte ist messtechnisch zu dokumentieren.',notiz:''},
-  {titel:'§407a ZPO Offenlegung',kat:'normen',tag:'',text:'Dieses Gutachten wurde vom Unterzeichner persönlich und eigenverantwortlich erstellt. Der Einsatz von KI-gestützten Werkzeugen beschränkte sich auf die Formulierungsunterstützung; alle fachlichen Einschätzungen und Beurteilungen wurden vom Sachverständigen selbst getroffen und verantwortet (§ 407a ZPO).',notiz:'Pflicht für Enterprise §407a'},,
-  // ── BEGEHUNG ERWEITERT ──
-  {titel:'Fotodokumentation',kat:'begehung',tag:'',text:'Die Begutachtung wurde durch eine umfangreiche Fotodokumentation ergänzt. Sämtliche Fotos wurden am [DATUM] vor Ort aufgenommen und sind Bestandteil dieses Gutachtens.',notiz:''},
-  {titel:'Messprotokoll Raumklima',kat:'begehung',tag:'',text:'Das Raumklima wurde mit einem kalibrierten Hygrometer gemessen. Zum Zeitpunkt der Besichtigung betrug die relative Luftfeuchtigkeit [MESSWERT] % bei einer Raumtemperatur von [MESSWERT2] °C.',notiz:''},
+  /* ─── BEGEHUNG & AUFNAHME ─── */
+  {kat:'begehung',tag:'',titel:'Ortstermin Standard',
+   text:'Am [DATUM] wurde das Schadensobjekt [ADRESSE] in Anwesenheit von [NAME] ([FUNKTION]) durch den Unterzeichner persönlich besichtigt und aufgenommen. Die örtlichen Verhältnisse wurden durch Lichtbildaufnahmen dokumentiert.',notiz:''},
 
-  // ── BEFUND ERWEITERT ──
-  {titel:'Wasserschaden Kellerwand',kat:'befund',tag:'WS',text:'Im Bereich [RAUM] wurden an der Außenwand großflächige Durchfeuchtungen festgestellt. Die CM-Messung ergab Feuchtegehalte von [MESSWERT] CM-% (Grenzwert DIN 18533: ≤ 4 CM-%). Die betroffene Fläche beträgt ca. [FLAECHE] m².',notiz:''},
-  {titel:'Estrich Feuchteschaden',kat:'befund',tag:'WS',text:'Der Estrich im Bereich [RAUM] wies zum Zeitpunkt der Messung eine Feuchte von [MESSWERT] CM-% auf. Belegreife gemäß DIN 18353: ≤ 2,0 CM-% (Zementestrich). Eine Trocknung ist erforderlich.',notiz:'CM-Messung Ergebnis eintragen'},
-  {titel:'Schimmelbefall Ausmaß',kat:'befund',tag:'SC',text:'Im Bereich [RAUM] wurde Schimmelbefall auf einer Fläche von ca. [FLAECHE] m² festgestellt. Der Befall ist [MESSWERT] (oberflächlich/tief). Eine Raumluftmessung wird empfohlen.',notiz:''},
-  {titel:'Brandschaden Beschreibung',kat:'befund',tag:'BS',text:'Im Bereich [RAUM] sind [MESSWERT] m² Wandfläche und [MESSWERT2] m² Deckenfläche mit Ruß belastet. Die Holzbalken zeigen eine Ankohlungstiefe von ca. [MESSWERT3] cm.',notiz:''},
-  {titel:'Sturmschaden Dach',kat:'befund',tag:'ST',text:'Am Dach wurden durch das Sturmereignis vom [DATUM] folgende Schäden festgestellt: [MESSWERT] Dachziegel sind verschoben/gebrochen, im Bereich [RAUM] ist die Unterspannbahn beschädigt.',notiz:''},
+  {kat:'begehung',tag:'',titel:'Anwesenheitsliste Ortstermin',
+   text:'Bei der Ortsbesichtigung am [DATUM] waren anwesend:\n– [NAME] (Auftraggeber / Versicherungsnehmer)\n– [NAME] (Versicherungsvertreter)\n– [NAME] (Sachverständiger)\n\nWeitere Personen waren nicht zugegen.',notiz:'Ggf. ergänzen'},
 
-  // ── URSACHENANALYSE ERWEITERT ──
-  {titel:'Ursache Leckage Wasserführend',kat:'ursache',tag:'WS',text:'Nach dem Befund dürfte die Ursache des Wasserschadens auf eine Leckage an der [NORM]-Leitung im Bereich [RAUM] zurückzuführen sein.',notiz:''},
-  {titel:'Ursache Abdichtung mangelhaft',kat:'ursache',tag:'WS',text:'Die vorliegende Durchfeuchtung ist nach dem Befund auf eine mangelhafte Abdichtung im Sockelbereich zurückzuführen. Die Abdichtung entspricht nicht den Anforderungen der DIN 18533. Eine sachgerechte Erneuerung ist erforderlich.',notiz:''},
-  {titel:'Ursache Lüftungsmangel',kat:'ursache',tag:'SC',text:'Die Schimmelbildung ist nach dem Befund auf unzureichenden Luftaustausch zurückzuführen. Gemäß DIN 1946-6 ist ein Mindestluftwechsel von 0,3–0,5 h⁻¹ erforderlich.',notiz:''},
-  {titel:'Ursache Wärmebrücke',kat:'ursache',tag:'SC',text:'Die Schimmelbildung im Bereich [RAUM] ist nach dem Befund auf eine Wärmebrücke zurückzuführen. Gemäß DIN 4108-2 darf der Temperaturfaktor fRsi nicht unter 0,70 liegen. Ermittelter Wert: ca. [MESSWERT].',notiz:''},
+  {kat:'begehung',tag:'',titel:'Begehungsprotokoll Räume',
+   text:'Der Unterzeichner hat am [DATUM] die nachfolgend genannten Räumlichkeiten des [GEBÄUDETYP] in [ORT] begangen und aufgenommen:\n\n[RAUM 1]: [KURZBESCHREIBUNG]\n[RAUM 2]: [KURZBESCHREIBUNG]\n[RAUM 3]: [KURZBESCHREIBUNG]\n\nSämtliche Feststellungen beruhen auf dem Augenschein zum Zeitpunkt der Besichtigung.',notiz:''},
 
-  // ── MAßNAHMEN ERWEITERT ──
-  {titel:'Sofortmaßnahme Wasserabsaugung',kat:'massnahmen',tag:'WS',text:'Als Sofortmaßnahme ist das eingedrungene Wasser im Bereich [RAUM] unverzüglich abzusaugen und das betroffene Bauteil professionell zu trocknen (gem. VdS 3151). Die Trocknung ist täglich zu dokumentieren.',notiz:''},
-  {titel:'Schimmelsanierung Ablauf',kat:'massnahmen',tag:'SC',text:'Die befallenen Bauteile im Bereich [RAUM] sind gemäß WTA 2-9-04/D zu sanieren: 1. Befallene Putzschichten vollständig abschlagen. 2. Mauerwerk mit Biozid behandeln. 3. Sanierputzsystem aufbringen (mind. 20 mm). 4. Abschließende Kontrolle.',notiz:''},
-  {titel:'Empfehlung Statiker',kat:'massnahmen',tag:'BS',text:'Aufgrund der festgestellten Brandschäden am Tragwerk wird empfohlen, einen Tragwerksplaner hinzuzuziehen. Über die Verwendbarkeit der brandgeschädigten Bauteile kann erst nach statischer Prüfung entschieden werden.',notiz:''},
-  {titel:'Schimmelprophylaxe',kat:'massnahmen',tag:'SC',text:'Zur Vermeidung erneuter Schimmelbildung wird empfohlen: Regelmäßiges Stoßlüften (mind. 3× täglich 5–10 Min.), Raumtemperatur ≥ 18 °C, Möbel mit 5 cm Wandabstand aufstellen.',notiz:''},
+  {kat:'begehung',tag:'',titel:'Messtechnik eingesetzt',
+   text:'Zur Beurteilung des Feuchtezustandes wurden folgende Messgeräte eingesetzt: Feuchtemessgerät [GERÄT] (Messmethode: [METHODE]), kalibriert am [DATUM]. Die Messungen erfolgten an repräsentativen Stellen gemäß WTA-Merkblatt 6-1.',notiz:'Kalibrierdatum aktuell halten'},
 
-  // ── NORMZITATE ERWEITERT ──
-  {titel:'DIN 68800-1 Holzschutz',kat:'normzitat',tag:'WS',text:'Gemäß DIN 68800-1 gilt für eingebautes Holz eine Ausgleichsfeuchte von 18 % als Grenzwert für Schimmel- und Pilzbefall. Die gemessenen Werte von [MESSWERT] % liegen [MESSWERT2] (ober-/unterhalb) dieses Grenzwertes.',notiz:''},
-  {titel:'DIN 18202 Ebenheitstoleranzen',kat:'normzitat',tag:'',text:'Gemäß DIN 18202 Tabelle 3 sind für fertige Wand-/Deckenflächen Ebenheitstoleranzen von ≤ 3 mm/1 m und ≤ 10 mm/4 m einzuhalten. Die gemessene Abweichung von [MESSWERT] mm überschreitet diesen Grenzwert.',notiz:''},
-  {titel:'WTA 6-1-01/D Schimmel',kat:'normzitat',tag:'SC',text:'Gemäß WTA 6-1-01/D ist eine relative Luftfeuchtigkeit von dauerhaft über 80 % an der Bauteiloberfläche als kritisch für Schimmelwachstum einzustufen. Gemessener Wert: [MESSWERT] %.',notiz:''},
-  {titel:'VOB/B §13 Mängelansprüche',kat:'normzitat',tag:'',text:'Gemäß VOB/B §13 Abs. 4 beträgt die Verjährungsfrist für Mängelansprüche bei Bauwerken vier Jahre. Der Mangel wurde erstmals am [DATUM] schriftlich gerügt.',notiz:''}
+  {kat:'begehung',tag:'',titel:'Beweissicherung vor Trocknung',
+   text:'Im Rahmen der Beweissicherung vor Beginn von Trocknungsmaßnahmen wurde der Schadensbereich fotografisch und messtechnisch dokumentiert. Eine Probenahme [wurde / wurde nicht] durchgeführt.',notiz:''},
+
+  {kat:'begehung',tag:'',titel:'Akteneinsicht / Unterlagenprüfung',
+   text:'Dem Unterzeichner lagen folgende Unterlagen vor: Baupläne vom [DATUM], Baugenehmigung vom [DATUM], Versicherungspolice Nr. [NUMMER]. Die Unterlagen wurden gesichtet; weiterführende Unterlagen [standen nicht zur Verfügung / wurden nachgereicht].',notiz:''},
+
+  /* ─── SCHADENBESCHREIBUNG ─── */
+  {kat:'befund',tag:'WS',titel:'Leitungswasserschaden Sichtbefund',
+   text:'Im Bereich [RAUM] waren deutliche Durchfeuchtungsspuren an [Decke / Wand / Boden] feststellbar. Die Verfärbungen und Ausblühungen deuten auf einen länger andauernden Feuchteeinfluss hin. Der betroffene Bereich umfasst ca. [FLAECHE] m².',notiz:'Messprotokoll beifügen'},
+
+  {kat:'befund',tag:'WS',titel:'Feuchtemessung Mauerwerk CM',
+   text:'Die Feuchtemessung am Mauerwerk im Bereich [RAUM] nach der Calciumcarbid-Methode (CM) ergab Werte von [MESSWERT] M.-%. Nach WTA-Merkblatt 6-1 gelten Werte über 3,0 M.-% für Mauerziegel als deutlich erhöht. Grenzwert für Trocknungsende: ≤ 3,0 M.-%.',notiz:''},
+
+  {kat:'befund',tag:'WS',titel:'Feuchtemessung Estrich CM',
+   text:'Die CM-Messung des Estrichs im Bereich [RAUM] ergab einen Feuchtegehalt von [MESSWERT] M.-%. Gemäß DIN 18560 und den Verlegehinweisen der Hersteller ist für Zementestriche ein Wert von ≤ 2,0 CM-% vor Belegung einzuhalten.',notiz:''},
+
+  {kat:'befund',tag:'WS',titel:'Feuchtemessung Holz elektrisch',
+   text:'Die Messung der Holzfeuchte im Bereich [RAUM] (Messgerät: [GERÄT], Messmethode: elektrisch-kapazitiv) ergab Werte von [MESSWERT] %. Der Grenzwert nach DIN 68800 für eingebautes Holz im Innenbereich beträgt 18 %. Werte über 20 % gelten als Gefährdungsbereich für Holzfäule.',notiz:''},
+
+  {kat:'befund',tag:'SC',titel:'Schimmelpilzbefall Sichtbefund',
+   text:'Im Bereich [RAUM] wurden auf einer Fläche von ca. [FLAECHE] m² schwarz-grünliche bis schwarze Verfärbungen festgestellt, die auf einen Schimmelpilzbefall hindeuten. Die Beurteilung erfolgt gemäß UBA-Leitfaden "Schimmelpilze in Innenräumen" (2017). Eine mikrobiologische Beprobung [wurde / wurde nicht] veranlasst.',notiz:'Nur Sichtbefund — Laboranalyse ggf. nachfordern'},
+
+  {kat:'befund',tag:'SC',titel:'Wärmebrücke Thermografie',
+   text:'Mittels Infrarot-Thermografie wurden im Bereich [RAUM] Oberflächentemperaturen von min. [MESSWERT] °C gemessen. Bei einer Raumtemperatur von [MESSWERT] °C und einer relativen Luftfeuchte von [MESSWERT] % liegt der Taupunkt bei ca. [MESSWERT] °C. Der Mindestoberflächentemperaturfaktor fRsi beträgt [MESSWERT] und liegt [oberhalb / unterhalb] des Grenzwerts von 0,70 nach DIN 4108-2.',notiz:'fRsi = (Tsi - Te) / (Ti - Te)'},
+
+  {kat:'befund',tag:'BS',titel:'Brandschaden Sichtbefund',
+   text:'Im Bereich [RAUM] wurden flächige Verrußungen, thermische Schädigungen an [Bauteil] sowie Geruchsbelastungen festgestellt. Der Brandbereich erstreckt sich auf ca. [FLAECHE] m². Statisch relevante Bauteile wurden augenscheinlich [nicht] beeinträchtigt; eine statische Überprüfung wird [empfohlen / ist erfolgt].',notiz:''},
+
+  {kat:'befund',tag:'ST',titel:'Sturmschaden Dach',
+   text:'Am Dach des Objektes [ADRESSE] wurden infolge des Sturmereignisses vom [DATUM] (Windstärke laut DWD: [WINDSTÄRKE]) folgende Schäden festgestellt: [BESCHREIBUNG]. Die Abdichtung / Eindeckung ist im Bereich [LAGE] beschädigt. Eindringendes Meteorwasser hat zu [FOLGESCHÄDEN] geführt.',notiz:'DWD-Auskunft beifügen'},
+
+  {kat:'befund',tag:'BA',titel:'Rissschaden Mauerwerk',
+   text:'Im Bereich [RAUM / FASSADE] wurden Risse mit einer Breite von [MESSWERT] mm und einer Länge von ca. [MESSWERT] cm festgestellt. Die Risscharakteristik (Verlauf, Breite, Tiefe) lässt auf [Setzungsrisse / Schwindrisse / Zwängrisse] schließen. Eine Rissbreitenmessung erfolgte gemäß DIN EN 12390.',notiz:''},
+
+  {kat:'befund',tag:'BA',titel:'Toleranzüberschreitung Ebenheit',
+   text:'Die Überprüfung der Ebenheit des Bodens / der Wand im Bereich [RAUM] nach DIN 18202 Tab. 3 ergab Abweichungen von max. [MESSWERT] mm auf einer Messlänge von [MESSLÄNGE] m. Der zulässige Grenzwert beträgt nach DIN 18202 Tab. 3, Zeile [ZEILE] maximal [GRENZWERT] mm und wird somit [eingehalten / überschritten].',notiz:'Stichmaßprotokoll beifügen'},
+
+  /* ─── URSACHENANALYSE §5 ─── */
+  {kat:'ursache',tag:'WS',titel:'Ursache Leitungswasser — Konjunktiv',
+   text:'Als schadensursächlich dürfte eine Undichtigkeit an [BAUTEIL / LEITUNG] in Betracht kommen. Die festgestellten Durchfeuchtungsmuster und die Schadenslokalisation sprechen dafür, dass das Wasser durch [STELLE] eingedrungen sein dürfte. Eine abschließende Ursachenklärung könnte erst nach vollständiger Freilegung der betreffenden Bauteile erfolgen.',notiz:'Konjunktiv II — rechtssicher nach §5 JVEG'},
+
+  {kat:'ursache',tag:'SC',titel:'Ursache Schimmel nutzungsbedingt — Konjunktiv',
+   text:'Die festgestellte Schimmelpilzbildung im Bereich [RAUM] dürfte auf eine Kombination aus baulichen und nutzungsbedingten Faktoren zurückzuführen sein. Das Vorhandensein einer Wärmebrücke im Anschlussbereich [STELLE] dürfte zu einer Absenkung der Oberflächentemperatur geführt haben, was bei der festgestellten Raumluftfeuchte zu Kondensation und in der Folge zu Schimmelpilzwachstum geführt haben dürfte.',notiz:''},
+
+  {kat:'ursache',tag:'SC',titel:'Ursache Schimmel baukonstruktiv — Konjunktiv',
+   text:'Nach den vorliegenden Messbefunden und dem Schadensbild dürfte die Schimmelpilzbildung primär auf baukonstruktive Mängel zurückzuführen sein. Konkret dürfte [BAUTEIL] nicht den Anforderungen der DIN 4108-2 entsprechen, sodass bei normaler Nutzung und üblicher Beheizung Kondensation an der Oberfläche nicht auszuschließen gewesen sein dürfte.',notiz:''},
+
+  {kat:'ursache',tag:'WS',titel:'Ursache ungeklärt — weiterer Klärungsbedarf',
+   text:'Die Schadensursache konnte im Rahmen der Besichtigung nicht abschließend festgestellt werden. Zur weiteren Klärung wären folgende Maßnahmen erforderlich: [MASSNAHME 1], [MASSNAHME 2]. Der Unterzeichner behält sich vor, nach Vorliegen weiterer Untersuchungsergebnisse ergänzend Stellung zu nehmen.',notiz:''},
+
+  {kat:'ursache',tag:'BA',titel:'Ursache Ausführungsmangel — Konjunktiv',
+   text:'Die festgestellten Schäden dürften ihre Ursache in einer nicht fachgerechten Ausführung der [GEWERK]-Arbeiten haben. Konkret dürfte [BESCHREIBUNG DES MANGELS] nicht den anerkannten Regeln der Technik entsprochen haben, was als auslösende Ursache des vorliegenden Schadens in Betracht kommt.',notiz:'Verweis auf VOB/C oder DIN'},
+
+  {kat:'ursache',tag:'BA',titel:'Planungsmangel — Konjunktiv',
+   text:'Nach Durchsicht der vorliegenden Planunterlagen und Auswertung des Schadenbildes dürfte ein Planungsfehler mitursächlich für den vorliegenden Schaden sein. Die in den Plänen vom [DATUM] vorgesehene Konstruktion dürfte den Anforderungen der [NORM] nicht entsprochen haben.',notiz:''},
+
+  {kat:'ursache',tag:'',titel:'Schadensteilung / Mitverschulden',
+   text:'Nach dem vorliegenden Befund dürften sowohl baukonstruktive als auch nutzungsbedingte Einflüsse zum Schadenseintritt beigetragen haben. Der Anteil der [baukonstruktiven / nutzungsbedingten] Einflüsse am Gesamtschaden wird nach sachverständiger Schätzung auf ca. [PROZENT] % veranschlagt.',notiz:'Juristische Einordnung ist Sache des Gerichts'},
+
+  /* ─── MASSNAHMEN & EMPFEHLUNGEN ─── */
+  {kat:'massnahmen',tag:'WS',titel:'Empfehlung Sofortmaßnahmen Wasser',
+   text:'Zur Schadensbegrenzung werden folgende Sofortmaßnahmen empfohlen:\n1. Unterbrechung der Wasserzufuhr [soweit noch nicht erfolgt]\n2. Sicherung gefährdeter Einrichtungsgegenstände\n3. Aufnahme von Staunässe\n4. Einleitung professioneller Trocknungsmaßnahmen (Fachunternehmen)\n\nMit Trocknungsmaßnahmen sollte unverzüglich begonnen werden, da anhaltende Feuchtigkeit zu weiteren Folgeschäden führen kann.',notiz:''},
+
+  {kat:'massnahmen',tag:'WS',titel:'Empfehlung Bautrocknung',
+   text:'Zur nachhaltigen Behebung des Feuchtigkeitsschadens wird empfohlen, unverzüglich mit einer professionellen Bautrocknung zu beginnen. Die Trocknungsdauer dürfte erfahrungsgemäß [MESSWERT] bis [MESSWERT] Wochen betragen, abhängig vom erreichten Feuchtegehalt und den bauphysikalischen Eigenschaften des Bauteils. Trocknungsfortschritte sollten wöchentlich messtechnisch dokumentiert werden.',notiz:'Trocknungsprotokoll anfordern'},
+
+  {kat:'massnahmen',tag:'SC',titel:'Empfehlung Schimmelsanierung',
+   text:'Die festgestellten Schimmelpilzbefälle sollten durch ein auf Schimmelsanierungen spezialisiertes Fachunternehmen gemäß UBA-Leitfaden (2017) beseitigt werden. Bei Befallsflächen über 0,5 m² sind Schutzmaßnahmen für die ausführenden Personen zwingend erforderlich. Nach Abschluss der Sanierung wird ein Freimessprotokoll durch einen unabhängigen Sachverständigen empfohlen.',notiz:'UBA-Leitfaden 2017 beachten'},
+
+  {kat:'massnahmen',tag:'SC',titel:'Empfehlung Lüftungsverhalten',
+   text:'Zur Vorbeugung erneuter Schimmelpilzbildung wird empfohlen, das Lüftungsverhalten anzupassen. Stoßlüften (mehrmals täglich, 5–10 Minuten) ist dem dauerhaften Kippen der Fenster vorzuziehen. Die relative Raumluftfeuchte sollte dauerhaft unter 60 % gehalten werden (Kontrollmessung mittels Hygrometer empfohlen).',notiz:''},
+
+  {kat:'massnahmen',tag:'BS',titel:'Empfehlung Brandsanierung',
+   text:'Die verrußten und thermisch geschädigten Bauteile sind durch ein auf Brandsanierungen spezialisiertes Fachunternehmen zu reinigen oder zurückzubauen. Statisch relevante Bauteile sind vor Wiederbenutzung durch einen Tragwerksplaner zu überprüfen. Die Schadstoffbelastung durch [Ruß / Löschwasser / Asbest] ist durch geeignete Messungen zu ermitteln.',notiz:''},
+
+  {kat:'massnahmen',tag:'BA',titel:'Empfehlung Rissüberwachung',
+   text:'Die festgestellten Risse sollten durch Gipsmarken oder Rissmonitore überwacht werden, um einen etwaigen Fortschritt zu dokumentieren. Eine erneute Begehung nach [ZEITRAUM] Monaten wird empfohlen. Bis zum Abschluss der Ursachenklärung sollte von Instandsetzungsmaßnahmen abgesehen werden.',notiz:''},
+
+  {kat:'massnahmen',tag:'',titel:'Empfehlung Fachplaner einschalten',
+   text:'Für die Planung und Überwachung der erforderlichen Instandsetzungsmaßnahmen wird die Hinzuziehung eines [Architekten / Fachplaners / Tragwerksplaners] empfohlen. Die Instandsetzungsarbeiten sollten durch ein geeignetes Fachunternehmen nach schriftlicher Angebotseinholung ausgeführt werden.',notiz:''},
+
+  {kat:'massnahmen',tag:'WS',titel:'Schadenshöhe / Kostenschätzung',
+   text:'Die Kosten für die erforderliche Instandsetzung werden auf Basis der vorliegenden Feststellungen überschlägig auf ca. [BETRAG] € (netto) geschätzt. Diese Schätzung basiert auf Erfahrungswerten und ersetzt kein förmliches Leistungsverzeichnis. Für eine verbindliche Kostenfeststellung ist ein Fachunternehmen zu beauftragen.',notiz:''},
+
+  /* ─── NORMZITATE ─── */
+  {kat:'normen',tag:'SC',titel:'DIN 4108-2 fRsi-Wert',
+   text:'Gemäß DIN 4108-2:2013-02, Abschnitt 4.3 ist an wärmeübertragenden Außenbauteilen ein Mindestoberflächentemperaturfaktor fRsi ≥ 0,70 einzuhalten. Bei einer Raumtemperatur von 20 °C und einer relativen Luftfeuchte von 50 % liegt der Taupunkt bei ca. 9,3 °C. Eine Oberflächentemperatur unter diesem Wert führt zu Kondensation und begünstigt Schimmelpilzwachstum.',notiz:'Immer bei Schimmelgutachten zitieren'},
+
+  {kat:'normen',tag:'WS',titel:'WTA-Merkblatt 6-1 Trocknungsziel',
+   text:'Nach WTA-Merkblatt 6-1-01/D (2011) gelten folgende Trocknungsziele für Mauerwerk: Ziegelmauerwerk ≤ 3,0 M.-% (CM), Porenbeton ≤ 6,0 M.-% (CM), Beton ≤ 3,0 M.-% (CM). Die Messung erfolgt nach dem CM-Verfahren (Calciumcarbid-Methode).',notiz:''},
+
+  {kat:'normen',tag:'WS',titel:'VdS 3151 Trocknungsgrenzwerte',
+   text:'Nach VdS 3151 (Leitfaden für die Schaden-Trocknung) gelten folgende Trocknungsziele: Holz ≤ 15 % Holzfeuchte (elektrisch gemessen), Mauerwerk und Beton ≤ 3,0 M.-% (CM-Methode), Estriche: Zementestrich ≤ 2,0 CM-%, Calciumsulfatestrich ≤ 0,5 CM-%.',notiz:''},
+
+  {kat:'normen',tag:'SC',titel:'UBA-Leitfaden Schimmel 2017',
+   text:'Gemäß UBA-Leitfaden "Schimmelpilze in Innenräumen — Nachweis, Bewertung, Qualitätssicherung" (2017) ist bereits ein sichtbarer Schimmelpilzbefall von mehr als 0,5 m² als erheblich zu bewerten und erfordert professionelle Sanierungsmaßnahmen. Für Flächen über 0,5 m² sind dabei persönliche Schutzmaßnahmen der ausführenden Personen zwingend vorgeschrieben.',notiz:''},
+
+  {kat:'normen',tag:'WS',titel:'DIN 18533 Abdichtung erdberührt',
+   text:'Die Abdichtung erdberührter Bauteile richtet sich nach DIN 18533:2017-07. Maßgebend ist die Lastfallklasse des einwirkenden Wassers (W1-E bis W4-E). Bei drückendem Wasser (W3-E, W4-E) ist eine wasserundurchlässige Stahlbetonkonstruktion (WU-Beton) oder eine Abdichtung mit flächig haftenden Abdichtungsstoffen vorzusehen.',notiz:''},
+
+  {kat:'normen',tag:'BA',titel:'DIN 18202 Toleranzen Hochbau',
+   text:'DIN 18202:2013-04 "Toleranzen im Hochbau" regelt die Grenzabmaße für fertige Bauteile. Für Fußböden (Tabelle 3) gelten bei einem Stichmaß auf 2 m Länge folgende Grenzwerte: Rohbau 10 mm, Feinputz / Estriche 5 mm, Bodenbeläge 4 mm. Überschreitungen gelten als Toleranzüberschreitung.',notiz:'Messtabelle beifügen'},
+
+  {kat:'normen',tag:'BA',titel:'VOB/B §13 Mängelhaftung',
+   text:'Gemäß VOB/B §13 Abs. 1 hat der Auftragnehmer dem Auftraggeber sein Werk zum Zeitpunkt der Abnahme frei von Sachmängeln zu übergeben. Ein Sachmangel liegt vor, wenn das Werk von der vereinbarten Beschaffenheit abweicht oder sich nicht für die nach dem Vertrag vorausgesetzte oder gewöhnliche Verwendung eignet. Die Verjährungsfrist für Mängel beträgt nach VOB/B §13 Abs. 4 grundsätzlich 4 Jahre für Bauwerke.',notiz:''},
+
+  {kat:'normen',tag:'',titel:'DIN 68800 Holzschutz',
+   text:'Gemäß DIN 68800-1:2011-10 und DIN 68800-3:2012-02 ist Holz vor biogenen Schäden (Pilze, Insekten) zu schützen. Im verbauten Zustand gilt eine Holzfeuchte ≤ 18 % als unbedenklich. Bei Überschreitung besteht Gefährdung durch holzzerstörende Pilze. Nach DIN 68800-3 sind bei erkennbarem Pilzbefall geeignete Schutzmaßnahmen einzuleiten.',notiz:''},
+
+  {kat:'normen',tag:'BS',titel:'DIN 4102 Brandschutz',
+   text:'Gemäß DIN 4102 werden Baustoffe in Baustoffklassen (A1, A2 nicht brennbar; B1 schwer entflammbar; B2 normal entflammbar; B3 leicht entflammbar) und Bauteile in Feuerwiderstandsklassen (F30 bis F180) eingeteilt. Thermisch geschädigte tragende Bauteile sind auf ihre Reststandsicherheit zu überprüfen.',notiz:''},
+
+  /* ─── ABSCHLUSSFORMULIERUNGEN ─── */
+  {kat:'begehung',tag:'',titel:'Vorbehalt Folgeschäden',
+   text:'Die vorliegende Begutachtung bezieht sich auf den Schadensumfang zum Zeitpunkt der Besichtigung am [DATUM]. Verdeckte Schäden, die erst nach Freilegung erkennbar werden, sind nicht Gegenstand dieses Berichts. Der Unterzeichner behält sich vor, nach Freigabe weiterer Bereiche ergänzend zu berichten.',notiz:''},
+
+  {kat:'begehung',tag:'',titel:'Berichtsgrundlagen und Vollständigkeit',
+   text:'Dieser Bericht beruht auf dem Ergebnis der Ortsbesichtigung, den vorgelegten Unterlagen sowie dem allgemeinen Fachwissen des Unterzeichners. Angaben zu verdeckten Bauteilen und nicht zugänglichen Bereichen beruhen auf Schlussfolgerungen aus dem Sichtbefund. Für die Vollständigkeit der vorgelegten Unterlagen übernimmt der Unterzeichner keine Gewähr.',notiz:''},
+
+  {kat:'ursache',tag:'',titel:'Kausalität und Beweislast',
+   text:'Die Frage der Kausalität — d.h. ob und in welchem Ausmaß das festgestellte Schadensereignis für den vorliegenden Schaden ursächlich ist — ist eine Rechtsfrage und dem Gericht vorbehalten. Der Unterzeichner beschränkt sich auf die Darstellung der technischen Zusammenhänge.',notiz:'Gilt besonders bei streitigen Fällen'},
+
+  {kat:'massnahmen',tag:'',titel:'Abschlussempfehlung / Zusammenfassung',
+   text:'Zusammenfassend empfiehlt der Unterzeichner:\n1. [MASSNAHME 1]\n2. [MASSNAHME 2]\n3. [MASSNAHME 3]\n\nDie vorgeschlagenen Maßnahmen sollten zeitnah und in der genannten Reihenfolge umgesetzt werden. Eine Abnahme der Instandsetzungsarbeiten durch einen Sachverständigen wird empfohlen.',notiz:''},
+
+  {kat:'massnahmen',tag:'',titel:'JVEG Honorarhinweis',
+   text:'Das vorliegende Gutachten wurde nach den Bestimmungen des Justizvergütungs- und -entschädigungsgesetzes (JVEG) erstellt. Die Vergütung richtet sich nach §9 JVEG. Der Stundensatz beträgt [BETRAG] €/h (Honorargruppe [GRUPPE]). Die Bearbeitungszeit wird separat abgerechnet.',notiz:'Nur bei Gerichtsgutachten'},
+
+  {kat:'normen',tag:'',titel:'Anerkannte Regeln der Technik',
+   text:'Die "anerkannten Regeln der Technik" umfassen technische Regelwerke wie DIN-Normen, VOB/C-Normen, VDE-Vorschriften und Merkblätter der Fachverbände, die in der Baupraxis als allgemein anerkannt gelten. Ein Abweichen von diesen Regeln begründet nicht zwingend einen Mangel, kann jedoch als Indiz für eine mangelhafte Ausführung herangezogen werden.',notiz:''},
+
+  {kat:'normen',tag:'WS',titel:'DIN EN 13187 Thermografie',
+   text:'Die thermografische Untersuchung erfolgte gemäß DIN EN 13187:1999-02. Für verwertbare Aufnahmen ist eine Temperaturdifferenz innen/außen von mindestens ΔT ≥ 10 K erforderlich; ΔT ≥ 15 K wird empfohlen. Die Aufnahmen wurden im stationären Zustand bei einer Außentemperatur von [MESSWERT] °C und einer Innentemperatur von [MESSWERT] °C erstellt.',notiz:''},
 ];
-
 // ── State ──
 var _bausteine = [];
 var _aktivKat = 'alle';
@@ -284,7 +389,7 @@ function ladeBausteine() {
     var raw = localStorage.getItem(TB_KEY);
     if (raw) {
       var parsed = JSON.parse(raw);
-      if (parsed && parsed.length > 0) { _bausteine = parsed; return; }
+      if (parsed && parsed.length > 0) { _bausteine = parsed.filter(function(b){return b && b.titel && b.text;}); return; }
     }
   } catch(e) {}
   // Erstmalig: Standard-Bausteine anlegen
@@ -306,12 +411,15 @@ function genId() { return Date.now().toString(36) + Math.random().toString(36).s
 function renderBausteine() {
   var suche = (document.getElementById('global-search').value || '').toLowerCase();
   var gefiltert = _bausteine.filter(function(b) {
+    if (!b || !b.kat) return false;  // Null-Guard
     if (_aktivKat !== 'alle' && b.kat !== _aktivKat) return false;
     if (suche && !b.titel.toLowerCase().includes(suche) && !b.text.toLowerCase().includes(suche)) return false;
     return true;
   });
 
   // Kategorie-Counts
+  var totalCountEl = document.getElementById('tb-count');
+  if(totalCountEl) totalCountEl.textContent = _bausteine.length;
   document.getElementById('cnt-alle').textContent = _bausteine.length;
   ['begehung','befund','ursache','massnahmen','normen'].forEach(function(k) {
     var el = document.getElementById('cnt-' + k);
@@ -321,15 +429,10 @@ function renderBausteine() {
   // Limit-Bar (Starter)
   var limitBar = document.getElementById('limit-bar');
   var limitText = document.getElementById('limit-text');
-  if (!_isPro) {
+  if (limitBar && limitText && !_isPro) {
     limitBar.style.display = 'flex';
     limitText.textContent = _bausteine.length + ' / ' + STARTER_LIMIT;
-    if (_bausteine.length >= STARTER_LIMIT) {
-      limitBar.style.background = 'var(--red-bg)';
-      limitBar.style.borderColor = 'var(--red-border)';
-      limitBar.style.color = 'var(--red)';
-    }
-  } else {
+  } else if (limitBar) {
     limitBar.style.display = 'none';
   }
 
