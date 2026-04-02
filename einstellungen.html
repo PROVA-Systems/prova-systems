@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1, viewport-fit=cover">
 <title>Einstellungen · PROVA</title>
 <script src="nav.js" defer></script>
-<script src="trial-guard.js"></script>
+<script src="trial-guard.js" defer></script>
 <style>
 /* ═══ PROVA SIDEBAR SYSTEM ═══════════════════════════════════════════════ */
 :root{
@@ -181,6 +181,522 @@ input,select,textarea{font-size:max(16px,1em);}
   .sup-ok-title{font-size:15px;font-weight:700;color:var(--green,#10b981);margin-bottom:4px;}
   .sup-ok-sub{font-size:12px;color:var(--text3,#6b7a99);}
 @media(max-width:768px){.bottom-nav{display:flex !important;}}
+
+/* ════════════════════════════════════════
+   PREMIUM THEME SWITCHER — Linear/Vercel Style
+   ════════════════════════════════════════ */
+.theme-card {
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: border-color .2s, transform .15s, box-shadow .2s;
+  background: var(--surface);
+  position: relative;
+}
+.theme-card:hover {
+  border-color: var(--accent, #4f8ef7);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0,0,0,.35);
+}
+.theme-card.tc-active {
+  border-color: var(--accent, #4f8ef7);
+  box-shadow: 0 0 0 1px var(--accent, #4f8ef7), 0 6px 20px rgba(79,142,247,.2);
+}
+
+/* Mini UI Preview */
+.tc-preview {
+  height: 80px;
+  display: flex;
+  border-radius: 8px 8px 0 0;
+  overflow: hidden;
+}
+.tc-preview-dark { background: #0b0d11; }
+.tc-preview-light { background: #f4f5f7; }
+.tc-preview-system {
+  background: linear-gradient(135deg, #0b0d11 50%, #f4f5f7 50%);
+}
+
+/* Mini Sidebar */
+.tc-mini-sidebar {
+  width: 28px;
+  background: #111318;
+  padding: 5px 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex-shrink: 0;
+}
+.tc-mini-sidebar-light { background: #ffffff; border-right: 1px solid #e5e7eb; }
+.tc-mini-logo {
+  width: 16px; height: 8px;
+  background: #4f8ef7;
+  border-radius: 3px;
+  margin-bottom: 4px;
+}
+.tc-mini-logo-light { background: #2563eb; }
+.tc-mini-item {
+  height: 5px;
+  background: rgba(255,255,255,.12);
+  border-radius: 2px;
+}
+.tc-mini-item-light { background: rgba(0,0,0,.08); }
+.tc-mini-item-active {
+  background: rgba(79,142,247,.7);
+  border-radius: 2px;
+}
+.tc-mini-item-active-light { background: rgba(37,99,235,.2); }
+
+/* Mini Main Content */
+.tc-mini-main {
+  flex: 1;
+  background: #0b0d11;
+  padding: 6px;
+}
+.tc-mini-main-light { background: #f4f5f7; }
+.tc-mini-header {
+  height: 8px;
+  background: rgba(255,255,255,.08);
+  border-radius: 3px;
+  margin-bottom: 5px;
+}
+.tc-mini-header-light { background: rgba(0,0,0,.07); }
+.tc-mini-card {
+  height: 12px;
+  background: rgba(255,255,255,.06);
+  border-radius: 4px;
+  margin-bottom: 4px;
+  width: 100%;
+}
+.tc-mini-card-light { background: #ffffff; box-shadow: 0 1px 3px rgba(0,0,0,.1); }
+
+/* Label + Check */
+.tc-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text2);
+  border-top: 1px solid var(--border);
+}
+.tc-check {
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  border: 2px solid var(--border2);
+  background: transparent;
+  font-size: 9px;
+  display: flex; align-items: center; justify-content: center;
+  color: transparent;
+  transition: all .2s;
+  flex-shrink: 0;
+}
+.theme-card.tc-active .tc-check {
+  background: var(--accent, #4f8ef7);
+  border-color: var(--accent, #4f8ef7);
+  color: #fff;
+}
+
+/* ACCENT COLOR SWATCHES */
+.accent-swatch {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  background: var(--sc);
+  border: 3px solid transparent;
+  cursor: pointer;
+  transition: transform .15s, border-color .15s, box-shadow .15s;
+  position: relative;
+}
+.accent-swatch:hover {
+  transform: scale(1.15);
+  box-shadow: 0 2px 8px rgba(0,0,0,.4);
+}
+.accent-swatch.ac-active {
+  border-color: #fff;
+  box-shadow: 0 0 0 2px var(--sc), 0 2px 8px rgba(0,0,0,.4);
+}
+
+/* Transition für Theme-Wechsel */
+html { transition: background-color .25s, color .25s; }
+
+/* ════════════════════════════════════════════════════════
+   PREMIUM BILLING PAGE — Linear / Vercel / Raycast Style
+   ════════════════════════════════════════════════════════ */
+
+/* ── Current Plan Hero ── */
+.plan-hero {
+  border-radius: 16px;
+  padding: 22px 24px;
+  margin-bottom: 20px;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.plan-hero-solo {
+  background: linear-gradient(135deg, rgba(79,142,247,.1) 0%, rgba(79,142,247,.04) 100%);
+  border: 1px solid rgba(79,142,247,.25);
+}
+.plan-hero-team {
+  background: linear-gradient(135deg, rgba(139,92,246,.12) 0%, rgba(139,92,246,.04) 100%);
+  border: 1px solid rgba(139,92,246,.3);
+}
+.plan-hero::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--plan-color, #4f8ef7), transparent);
+}
+.plan-hero-left { flex: 1; min-width: 0; }
+.plan-hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  margin-bottom: 8px;
+}
+.plan-hero-name {
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -.03em;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+.plan-hero-sub {
+  font-size: 12px;
+  color: var(--text3);
+  line-height: 1.6;
+}
+.plan-hero-price {
+  text-align: right;
+  flex-shrink: 0;
+}
+.plan-hero-price .amount {
+  font-size: 32px;
+  font-weight: 800;
+  letter-spacing: -.03em;
+  color: var(--text);
+  line-height: 1;
+}
+.plan-hero-price .per {
+  font-size: 11px;
+  color: var(--text3);
+  margin-top: 2px;
+}
+
+/* ── Trial Countdown ── */
+.trial-countdown {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  background: rgba(245,158,11,.07);
+  border: 1px solid rgba(245,158,11,.2);
+  border-radius: 12px;
+  margin-bottom: 20px;
+  gap: 12px;
+}
+.trial-countdown-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.trial-countdown-icon { font-size: 22px; }
+.trial-countdown-text { font-size: 13px; color: var(--text2); }
+.trial-countdown-days {
+  font-weight: 800;
+  color: #f59e0b;
+  font-size: 15px;
+}
+.trial-progress {
+  width: 100%;
+  height: 4px;
+  background: rgba(245,158,11,.15);
+  border-radius: 2px;
+  margin-top: 8px;
+}
+.trial-progress-fill {
+  height: 100%;
+  border-radius: 2px;
+  background: #f59e0b;
+  transition: width .5s ease;
+}
+
+/* ── Usage Meters (Linear Style) ── */
+.usage-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+.usage-card {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px;
+}
+.usage-label {
+  font-size: 11px;
+  color: var(--text3);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  margin-bottom: 8px;
+}
+.usage-value {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--text);
+  letter-spacing: -.02em;
+  margin-bottom: 6px;
+}
+.usage-value span { font-size: 13px; font-weight: 500; color: var(--text3); }
+.usage-bar {
+  width: 100%;
+  height: 5px;
+  background: var(--border);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.usage-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  background: var(--accent, #4f8ef7);
+  transition: width .6s cubic-bezier(.4,0,.2,1);
+}
+.usage-bar-fill.warn { background: #f59e0b; }
+.usage-bar-fill.danger { background: #ef4444; }
+
+/* ── Billing Cycle Toggle (Raycast Style) ── */
+.billing-toggle {
+  display: inline-flex;
+  align-items: center;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 3px;
+  gap: 2px;
+  margin-bottom: 16px;
+}
+.billing-toggle-btn {
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  color: var(--text3);
+  transition: all .15s;
+  font-family: inherit;
+  position: relative;
+}
+.billing-toggle-btn.active {
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 1px 4px rgba(0,0,0,.3);
+}
+.billing-save-badge {
+  position: absolute;
+  top: -6px;
+  right: -2px;
+  background: #10b981;
+  color: #fff;
+  font-size: 8px;
+  font-weight: 800;
+  padding: 1px 4px;
+  border-radius: 4px;
+  letter-spacing: .03em;
+}
+
+/* ── Plan Cards (Vercel/Raycast Style) ── */
+.plan-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.plan-card {
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 20px;
+  position: relative;
+  transition: all .2s;
+  cursor: pointer;
+  background: var(--surface);
+}
+.plan-card:hover { border-color: var(--border2); transform: translateY(-2px); }
+.plan-card.plan-active-solo {
+  border-color: rgba(79,142,247,.5);
+  background: rgba(79,142,247,.04);
+  box-shadow: 0 0 0 1px rgba(79,142,247,.2);
+}
+.plan-card.plan-active-team {
+  border-color: rgba(139,92,246,.5);
+  background: rgba(139,92,246,.04);
+  box-shadow: 0 0 0 1px rgba(139,92,246,.2);
+}
+.plan-card-badge {
+  position: absolute;
+  top: -1px; right: 16px;
+  padding: 3px 10px;
+  border-radius: 0 0 8px 8px;
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+.plan-card-name {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text);
+  margin-bottom: 3px;
+}
+.plan-card-desc {
+  font-size: 11px;
+  color: var(--text3);
+  margin-bottom: 14px;
+  line-height: 1.5;
+}
+.plan-card-price {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  margin-bottom: 16px;
+}
+.plan-card-price .big {
+  font-size: 30px;
+  font-weight: 800;
+  letter-spacing: -.03em;
+  color: var(--text);
+}
+.plan-card-price .small {
+  font-size: 12px;
+  color: var(--text3);
+}
+.plan-card-price .strike {
+  font-size: 13px;
+  color: var(--text3);
+  text-decoration: line-through;
+}
+.plan-feature {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text2);
+  margin-bottom: 6px;
+  line-height: 1.4;
+}
+.plan-feature-check {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 8px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.plan-feature-check.yes { background: rgba(16,185,129,.15); color: #10b981; }
+.plan-feature-check.no { background: rgba(255,255,255,.05); color: var(--text3); }
+.plan-cta {
+  width: 100%;
+  padding: 10px;
+  border-radius: 9px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  border: none;
+  font-family: inherit;
+  transition: all .15s;
+  margin-top: 16px;
+}
+.plan-cta-current {
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  color: var(--text3);
+  cursor: default;
+}
+.plan-cta-upgrade {
+  background: linear-gradient(135deg, #4f8ef7, #3a7be0);
+  color: #fff;
+}
+.plan-cta-upgrade:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(79,142,247,.45);
+}
+.plan-cta-team {
+  background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+  color: #fff;
+}
+.plan-cta-team:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(139,92,246,.45);
+}
+
+/* ── FAQ ── */
+.billing-faq { margin-top: 20px; }
+.faq-item {
+  border-bottom: 1px solid var(--border);
+  padding: 12px 0;
+}
+.faq-item:last-child { border-bottom: none; }
+.faq-q {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.faq-q::after { content: '+'; font-size: 16px; color: var(--text3); flex-shrink: 0; }
+.faq-item.open .faq-q::after { content: '−'; }
+.faq-a {
+  display: none;
+  font-size: 12px;
+  color: var(--text3);
+  line-height: 1.7;
+  margin-top: 8px;
+}
+.faq-item.open .faq-a { display: block; }
+
+/* ── Trust Bar ── */
+.trust-bar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 16px;
+  background: rgba(16,185,129,.05);
+  border: 1px solid rgba(16,185,129,.15);
+  border-radius: 10px;
+  font-size: 11px;
+  color: var(--text3);
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+.trust-item { display: flex; align-items: center; gap: 5px; }
+.trust-item span:first-child { color: #10b981; }
+
+@media(max-width:700px) {
+  .plan-cards { grid-template-columns: 1fr; }
+  .usage-grid { grid-template-columns: 1fr; }
+  .plan-hero { flex-direction: column; align-items: flex-start; }
+  .plan-hero-price { text-align: left; }
+}
 </style>
 <link rel="icon" type="image/svg+xml" href="/icons/icon-192.svg">
 <link rel="stylesheet" href="mobile.css">
@@ -273,8 +789,98 @@ input,select,textarea{font-size:max(16px,1em);}
 
         <!-- ─── ARBEITSWEISE ─── -->
         <div class="sec" id="sec-arbeitsweise">
+
+          <!-- ─── APPEARANCE: Premium Theme Switcher ─── -->
+          <div class="card" style="margin-bottom:16px;">
+            <div class="card-header">
+              <div class="card-title">🎨 Erscheinungsbild</div>
+              <div style="font-size:11px;color:var(--text3);">Wird sofort angewendet</div>
+            </div>
+            <div class="card-body">
+
+              <!-- THEME CARDS — Linear/Vercel Style -->
+              <div class="form-label" style="margin-bottom:12px;">Farbschema</div>
+              <div id="theme-cards" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px;">
+
+                <!-- DUNKEL -->
+                <div class="theme-card" id="tc-dark" onclick="setTheme('dark')" data-theme="dark">
+                  <div class="tc-preview tc-preview-dark">
+                    <div class="tc-mini-sidebar">
+                      <div class="tc-mini-logo"></div>
+                      <div class="tc-mini-item tc-mini-item-active"></div>
+                      <div class="tc-mini-item"></div>
+                      <div class="tc-mini-item"></div>
+                    </div>
+                    <div class="tc-mini-main">
+                      <div class="tc-mini-header"></div>
+                      <div class="tc-mini-card"></div>
+                      <div class="tc-mini-card" style="width:70%;"></div>
+                    </div>
+                  </div>
+                  <div class="tc-label">
+                    <div class="tc-check" id="check-dark">✓</div>
+                    <span>Dunkel</span>
+                  </div>
+                </div>
+
+                <!-- HELL -->
+                <div class="theme-card" id="tc-light" onclick="setTheme('light')" data-theme="light">
+                  <div class="tc-preview tc-preview-light">
+                    <div class="tc-mini-sidebar tc-mini-sidebar-light">
+                      <div class="tc-mini-logo tc-mini-logo-light"></div>
+                      <div class="tc-mini-item tc-mini-item-active-light"></div>
+                      <div class="tc-mini-item tc-mini-item-light"></div>
+                      <div class="tc-mini-item tc-mini-item-light"></div>
+                    </div>
+                    <div class="tc-mini-main tc-mini-main-light">
+                      <div class="tc-mini-header tc-mini-header-light"></div>
+                      <div class="tc-mini-card tc-mini-card-light"></div>
+                      <div class="tc-mini-card tc-mini-card-light" style="width:70%;"></div>
+                    </div>
+                  </div>
+                  <div class="tc-label">
+                    <div class="tc-check" id="check-light">✓</div>
+                    <span>Hell</span>
+                  </div>
+                </div>
+
+                <!-- SYSTEM -->
+                <div class="theme-card" id="tc-system" onclick="setTheme('system')" data-theme="system">
+                  <div class="tc-preview tc-preview-system">
+                    <div class="tc-mini-sidebar">
+                      <div class="tc-mini-logo"></div>
+                      <div class="tc-mini-item tc-mini-item-active"></div>
+                      <div class="tc-mini-item"></div>
+                    </div>
+                    <div class="tc-mini-main tc-mini-main-light" style="border-radius:0 6px 6px 0;">
+                      <div class="tc-mini-header tc-mini-header-light"></div>
+                      <div class="tc-mini-card tc-mini-card-light"></div>
+                    </div>
+                  </div>
+                  <div class="tc-label">
+                    <div class="tc-check" id="check-system">✓</div>
+                    <span>System</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- ACCENT COLOR PICKER -->
+              <div class="form-label" style="margin-bottom:10px;">Akzentfarbe</div>
+              <div id="accent-picker" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:4px;">
+                <button class="accent-swatch" data-accent="blue"   onclick="setAccent('blue')"   title="PROVA Blau"   style="--sc:#4f8ef7;"></button>
+                <button class="accent-swatch" data-accent="violet" onclick="setAccent('violet')" title="Violett"      style="--sc:#8b5cf6;"></button>
+                <button class="accent-swatch" data-accent="teal"   onclick="setAccent('teal')"   title="Petrol"       style="--sc:#14b8a6;"></button>
+                <button class="accent-swatch" data-accent="green"  onclick="setAccent('green')"  title="Grün"         style="--sc:#10b981;"></button>
+                <button class="accent-swatch" data-accent="orange" onclick="setAccent('orange')" title="Orange"       style="--sc:#f59e0b;"></button>
+                <button class="accent-swatch" data-accent="red"    onclick="setAccent('red')"    title="Rot"          style="--sc:#ef4444;"></button>
+              </div>
+              <div style="font-size:11px;color:var(--text3);margin-top:6px;">Akzentfarbe gilt für Buttons, aktive Nav-Items und Highlights.</div>
+            </div>
+          </div>
+
+          <!-- ─── INTERFACE ─── -->
           <div class="card">
-            <div class="card-header"><div class="card-title">🎨 Darstellung & Interface</div></div>
+            <div class="card-header"><div class="card-title">⚙️ Interface & Workflow</div></div>
             <div class="card-body">
               <div class="form-group">
                 <label class="form-label">Anrede</label>
@@ -283,14 +889,6 @@ input,select,textarea{font-size:max(16px,1em);}
                   <option value="Du">Du (informal)</option>
                 </select>
                 <div class="form-hint">Bestimmt wie PROVA Sie in der App anspricht.</div>
-              </div>
-              <div class="form-group">
-                <label class="form-label">Farbschema</label>
-                <select id="e-theme" class="form-select" onchange="speichereArbeitsweise()">
-                  <option value="dark">Dunkel (Standard)</option>
-                  <option value="light">Hell</option>
-                  <option value="system">Systemeinstellung folgen</option>
-                </select>
               </div>
               <div class="form-group">
                 <label class="form-label">Startseite nach Login</label>
@@ -611,7 +1209,7 @@ input,select,textarea{font-size:max(16px,1em);}
                 <div style="font-size:12px;color:var(--text2);line-height:1.6;">
                   <strong>1.</strong> E-Mail an Ihre IHK/HWK: <em>"Bitte digitalen Rundstempel als PNG bereitstellen"</em><br>
                   <strong>2.</strong> Oder: Foto vom physischen Stempel → Hintergrund entfernen mit <a href="https://www.remove.bg" target="_blank" style="color:var(--accent)">remove.bg</a> → PNG hochladen<br>
-                  <strong>3.</strong> IHK Köln: support@prova-systems.de · 0221 2021-4242
+                  <strong>3.</strong> IHK Köln: <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="493a3c3939263b3d09393b263f28643a303a3d2c243a672d2c">[email&#160;protected]</a> · 0221 2021-4242
                 </div>
               </div>
 
@@ -630,16 +1228,64 @@ input,select,textarea{font-size:max(16px,1em);}
           </div>
         </div>
 
-        <div class="sec" id="sec-paket">
-          <div class="card">
-            <div class="card-header"><div class="card-title">📦 Ihr aktives Paket</div></div>
-            <div class="card-body">
-              <div id="paket-anzeige" style="padding:16px;border-radius:var(--r-md);margin-bottom:16px;"></div>
-              <div class="paket-grid" id="paket-grid"></div>
-              support@prova-systems.de
+                <div class="sec" id="sec-paket">
+
+          <!-- ── CURRENT PLAN HERO ── -->
+          <div id="plan-hero-wrap"></div>
+
+          <!-- ── TRIAL COUNTDOWN (wenn Trial aktiv) ── -->
+          <div id="trial-countdown-wrap"></div>
+
+          <!-- ── USAGE METERS ── -->
+          <div class="usage-grid" id="usage-grid-wrap"></div>
+
+          <!-- ── BILLING CYCLE TOGGLE ── -->
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+            <div style="font-size:13px;font-weight:700;color:var(--text);">Pakete vergleichen</div>
+            <div class="billing-toggle" id="billing-toggle">
+              <button class="billing-toggle-btn active" id="btn-monthly" onclick="setBillingCycle('monthly')">Monatlich</button>
+              <button class="billing-toggle-btn" id="btn-yearly" onclick="setBillingCycle('yearly')">
+                Jährlich
+                <span class="billing-save-badge">−20%</span>
+              </button>
             </div>
           </div>
+
+          <!-- ── PLAN CARDS ── -->
+          <div class="plan-cards" id="plan-cards-wrap"></div>
+
+          <!-- ── TRUST BAR ── -->
+          <div class="trust-bar">
+            <div class="trust-item"><span>🔒</span><span>SSL-verschlüsselt</span></div>
+            <div class="trust-item"><span>🇩🇪</span><span>Daten in Deutschland</span></div>
+            <div class="trust-item"><span>↩️</span><span>Jederzeit kündbar</span></div>
+            <div class="trust-item"><span>📞</span><span>Support: kontakt@prova-systems.de</span></div>
+          </div>
+
+          <!-- ── FAQ ── -->
+          <div class="billing-faq" style="margin-top:20px;">
+            <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text3);margin-bottom:12px;">Häufige Fragen</div>
+            <div class="faq-item" onclick="this.classList.toggle('open')">
+              <div class="faq-q">Kann ich jederzeit kündigen?</div>
+              <div class="faq-a">Ja — keine Mindestlaufzeit. Kündigung gilt zum Ende des aktuellen Abrechnungsmonats. Ihre Daten bleiben 30 Tage nach Kündigung abrufbar.</div>
+            </div>
+            <div class="faq-item" onclick="this.classList.toggle('open')">
+              <div class="faq-q">Was passiert nach dem Trial?</div>
+              <div class="faq-a">Nach 14 Tagen wird Ihr Konto auf einen Lesezugriff eingeschränkt. Alle Ihre Daten und Gutachten bleiben erhalten. Mit einem Upgrade haben Sie sofort wieder vollen Zugriff.</div>
+            </div>
+            <div class="faq-item" onclick="this.classList.toggle('open')">
+              <div class="faq-q">Kann ich von Solo auf Team wechseln?</div>
+              <div class="faq-a">Ja, jederzeit. Der Wechsel wird zum nächsten Monatsbeginn aktiv. Anteilige Erstattung für verbleibende Solo-Tage wird automatisch verrechnet.</div>
+            </div>
+            <div class="faq-item" onclick="this.classList.toggle('open')">
+              <div class="faq-q">Welche Zahlungsmethoden akzeptieren Sie?</div>
+              <div class="faq-a">Kreditkarte (Visa, Mastercard, Amex) und SEPA-Lastschrift über Stripe. PCI DSS Level 1 zertifiziert. Rechnungslegung nach §14 UStG automatisch per E-Mail.</div>
+            </div>
+          </div>
+
         </div>
+
+
 
         <!-- ─── ENTERPRISE ─── -->
         <div class="sec" id="sec-enterprise" style="display:none;">
@@ -719,7 +1365,7 @@ input,select,textarea{font-size:max(16px,1em);}
 <!-- Toast -->
 <div class="toast-prova" id="einst-toast"></div>
 
-</script><script>
+</script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 (function(){
 'use strict';
 
@@ -892,7 +1538,7 @@ window.speichereProfil = function(){
 /* ── SPEICHERN ARBEITSWEISE ── */
 window.speichereArbeitsweise = function(){
   localStorage.setItem('prova_sv_anrede',getVal('e-anrede'));
-  localStorage.setItem('prova_theme',getVal('e-theme'));
+  // Theme wird jetzt über setTheme() direkt gesetzt — kein doppeltes Speichern nötig
   localStorage.setItem('prova_startseite',getVal('e-startseite'));
   localStorage.setItem('prova_listenansicht',getVal('e-listenansicht'));
   localStorage.setItem('prova_ki_ton',getVal('e-ki-ton'));
@@ -1125,27 +1771,205 @@ window.stempelLoeschen = function() {
 })();
 
 /* ── PAKET ANZEIGE ── */
-function renderPaket(){
-  var pa=document.getElementById('paket-anzeige');
-  var pc2={'Solo':'#4f8ef7','Team':'#a78bfa','Solo':'#4f8ef7','Pro':'#4f8ef7','Enterprise':'#a78bfa'}[paket]||'#4f8ef7';
-  if(pa)pa.innerHTML='<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:'+pc2+';margin-bottom:4px;">Aktives Paket</div><div style="font-size:26px;font-weight:800;color:var(--text);">'+paket+'</div>';
-  var grid=document.getElementById('paket-grid');
-  if(!grid)return;
-  var pakete=[
-    {name:'Solo',price:'149 €/Mo',cls:paket==='Solo'?'aktiv-starter':'',feats:['1 Nutzer, 30 Gutachten/Mo','KI-Gutachten §1–§6','§407a + EU AI Act Compliance','Persönlicher Audit-Trail','Alle Werkzeuge unbegrenzt','Normen, Textbausteine, JVEG','Briefvorlagen + KI-Brieftext','Fristenverwaltung','Foto-Anlage + Auto-Captioning']},
-    {name:'Team',price:'349 €/Mo',cls:paket==='Team'?'aktiv-ent':'',feats:['Alles aus Solo','Unbegrenzte Nutzer (+99 €/Nutzer)','Rechteverwaltung','Chef-Freigabe-Workflow','Team-Dashboard','Organisations-Audit-Trail','Geteilte Textbausteine & Vorlagen','Jahresbericht','Priority-Support']}
-  ];
-  grid.innerHTML=pakete.map(function(p){
-    var istAktiv=p.name===paket;
-    return '<div class="pk '+p.cls+'">'
-      +(istAktiv?'<span class="pk-badge" style="background:'+({'Solo':'rgba(79,142,247,.15)','Team':'rgba(139,92,246,.15)'}[p.name]||'rgba(79,142,247,.15)')+';color:'+({'Solo':'#4f8ef7','Team':'#a78bfa'}[p.name]||'#4f8ef7')+'">Aktiv</span>':'')
-      +(p.demnächst&&!istAktiv?'<span style="display:inline-block;background:rgba(245,158,11,.12);color:#f59e0b;border:1px solid rgba(245,158,11,.25);border-radius:10px;font-size:9px;font-weight:700;letter-spacing:.06em;padding:2px 7px;margin-bottom:4px;">DEMNÄCHST</span>':'')
-      +'<div class="pk-name">'+p.name+'</div>'
-      +'<div class="pk-price">'+p.price+'</div>'
-      +p.feats.map(function(f){return '<div class="pk-feat'+(istAktiv?'':' locked')+'">'+f+'</div>';}).join('')
-      +'</div>';
+/* ════════════════════════════════════════
+   PREMIUM BILLING — JS (Linear/Vercel/Raycast)
+   ════════════════════════════════════════ */
+var _billingCycle = 'monthly'; // 'monthly' | 'yearly'
+
+var PLAN_DATA = {
+  Solo: {
+    color: '#4f8ef7',
+    colorBg: 'rgba(79,142,247,.1)',
+    desc: 'Für den selbstständigen Sachverständigen',
+    preisMonatlich: 89,
+    preisJaehrlich: 71, // -20%
+    limit: 30,
+    features: [
+      { text: '1 Nutzer', yes: true },
+      { text: '30 Gutachten / Monat', yes: true },
+      { text: 'KI-Gutachten §1–§6 (GPT-4o)', yes: true },
+      { text: '§407a ZPO + EU AI Act Compliance', yes: true },
+      { text: 'Persönlicher Audit-Trail', yes: true },
+      { text: 'Normen, Textbausteine, JVEG', yes: true },
+      { text: 'Briefvorlagen + KI-Brieftext', yes: true },
+      { text: 'Foto-Anlage + Auto-Captioning', yes: true },
+      { text: 'Mehrere Nutzer', yes: false },
+      { text: 'Chef-Freigabe-Workflow', yes: false },
+      { text: 'Team-Dashboard', yes: false },
+    ]
+  },
+  Team: {
+    color: '#8b5cf6',
+    colorBg: 'rgba(139,92,246,.1)',
+    desc: 'Für Büros mit mehreren Sachverständigen',
+    preisMonatlich: 179,
+    preisJaehrlich: 143, // -20%
+    limit: null, // unbegrenzt
+    features: [
+      { text: 'Alles aus Solo', yes: true },
+      { text: 'Unbegrenzte Nutzer', yes: true },
+      { text: 'Unbegrenzte Gutachten', yes: true },
+      { text: '§407a ZPO + EU AI Act Compliance', yes: true },
+      { text: 'Chef-Freigabe-Workflow', yes: true },
+      { text: 'Team-Dashboard + Auswertungen', yes: true },
+      { text: 'Organisations-Audit-Trail', yes: true },
+      { text: 'Geteilte Textbausteine & Vorlagen', yes: true },
+      { text: 'Jahresbericht', yes: true },
+      { text: 'Priority-Support (< 4h)', yes: true },
+    ]
+  }
+};
+
+window.setBillingCycle = function(cycle) {
+  _billingCycle = cycle;
+  document.getElementById('btn-monthly').classList.toggle('active', cycle === 'monthly');
+  document.getElementById('btn-yearly').classList.toggle('active', cycle === 'yearly');
+  renderPlanCards();
+};
+
+function renderPaket() {
+  renderPlanHero();
+  renderTrialCountdown();
+  renderUsageMeters();
+  renderPlanCards();
+}
+
+function renderPlanHero() {
+  var wrap = document.getElementById('plan-hero-wrap');
+  if (!wrap) return;
+  var status = localStorage.getItem('prova_status') || 'Trial';
+  var plan = PLAN_DATA[paket] || PLAN_DATA.Solo;
+  var preis = _billingCycle === 'yearly' ? plan.preisJaehrlich : plan.preisMonatlich;
+
+  var statusBadge = status === 'Trial'
+    ? '<span class="plan-hero-badge" style="background:rgba(245,158,11,.12);color:#f59e0b;border:1px solid rgba(245,158,11,.2);">⏱ Testzeitraum</span>'
+    : '<span class="plan-hero-badge" style="background:rgba(16,185,129,.12);color:#10b981;border:1px solid rgba(16,185,129,.2);">✓ Aktiv</span>';
+
+  wrap.innerHTML = '<div class="plan-hero plan-hero-' + paket.toLowerCase() + '" style="--plan-color:' + plan.color + '">'
+    + '<div class="plan-hero-left">'
+    +   statusBadge
+    +   '<div class="plan-hero-name">' + paket + '</div>'
+    +   '<div class="plan-hero-sub">' + plan.desc + '</div>'
+    + '</div>'
+    + '<div class="plan-hero-price">'
+    +   '<div class="amount">' + preis + ' €</div>'
+    +   '<div class="per">pro Monat</div>'
+    + '</div>'
+    + '</div>';
+}
+
+function renderTrialCountdown() {
+  var wrap = document.getElementById('trial-countdown-wrap');
+  if (!wrap) return;
+  var status = localStorage.getItem('prova_status') || 'Trial';
+  var trialStart = localStorage.getItem('prova_trial_start');
+  var trialDays = parseInt(localStorage.getItem('prova_trial_days') || '14');
+
+  if (status !== 'Trial' || !trialStart) { wrap.innerHTML = ''; return; }
+
+  var start = new Date(parseInt(trialStart) || trialStart).getTime();
+  var end = start + (trialDays * 24 * 60 * 60 * 1000);
+  var verbleibend = Math.max(0, Math.ceil((end - Date.now()) / (24 * 60 * 60 * 1000)));
+  var verbraucht = trialDays - verbleibend;
+  var pct = Math.min(100, Math.round(verbraucht / trialDays * 100));
+  var color = verbleibend <= 3 ? '#ef4444' : '#f59e0b';
+
+  wrap.innerHTML = '<div class="trial-countdown">'
+    + '<div class="trial-countdown-left">'
+    +   '<div class="trial-countdown-icon">⏳</div>'
+    +   '<div>'
+    +     '<div class="trial-countdown-text">Testzeitraum: <span class="trial-countdown-days" style="color:' + color + '">' + verbleibend + ' Tag' + (verbleibend !== 1 ? 'e' : '') + ' verbleibend</span></div>'
+    +     '<div class="trial-progress"><div class="trial-progress-fill" style="width:' + pct + '%;background:' + color + ';"></div></div>'
+    +   '</div>'
+    + '</div>'
+    + '<button onclick="starteStripeCheckout(\'' + paket + '\')" '
+    +   'style="padding:8px 16px;background:linear-gradient(135deg,#4f8ef7,#3a7be0);color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;font-family:inherit;">'
+    +   'Jetzt upgraden →'
+    + '</button>'
+    + '</div>';
+}
+
+function renderUsageMeters() {
+  var wrap = document.getElementById('usage-grid-wrap');
+  if (!wrap) return;
+  var plan = PLAN_DATA[paket] || PLAN_DATA.Solo;
+
+  // Gutachten diesen Monat aus Cache
+  var gutachtenMonat = 0;
+  try {
+    var cache = JSON.parse(localStorage.getItem('prova_archiv_cache_v2') || '{}');
+    var month = new Date().toISOString().slice(0, 7);
+    gutachtenMonat = (cache.data || []).filter(function(r) {
+      return (r.fields && (r.fields.Timestamp || r.createdTime || '')).startsWith(month);
+    }).length;
+  } catch(e) {}
+
+  var limit = plan.limit;
+  var pct = limit ? Math.min(100, Math.round(gutachtenMonat / limit * 100)) : 0;
+  var barClass = pct >= 90 ? 'danger' : pct >= 70 ? 'warn' : '';
+
+  var aktivSeit = localStorage.getItem('prova_trial_start');
+  var aktivSeitText = '—';
+  if (aktivSeit) {
+    try {
+      var d = new Date(parseInt(aktivSeit) || aktivSeit);
+      aktivSeitText = d.toLocaleDateString('de-DE', {day:'2-digit', month:'2-digit', year:'numeric'});
+    } catch(e) {}
+  }
+
+  wrap.innerHTML =
+    '<div class="usage-card">'
+    +   '<div class="usage-label">Gutachten diesen Monat</div>'
+    +   '<div class="usage-value">' + gutachtenMonat + (limit ? '<span> / ' + limit + '</span>' : '<span> / ∞</span>') + '</div>'
+    +   '<div class="usage-bar"><div class="usage-bar-fill ' + barClass + '" style="width:' + (limit ? pct : 20) + '%;"></div></div>'
+    + '</div>'
+    + '<div class="usage-card">'
+    +   '<div class="usage-label">Aktiv seit</div>'
+    +   '<div class="usage-value" style="font-size:16px;letter-spacing:0;">' + aktivSeitText + '</div>'
+    +   '<div style="font-size:11px;color:var(--text3);margin-top:4px;">Paket: ' + paket + ' · ' + (localStorage.getItem('prova_status') || 'Trial') + '</div>'
+    + '</div>';
+}
+
+function renderPlanCards() {
+  var wrap = document.getElementById('plan-cards-wrap');
+  if (!wrap) return;
+
+  var plans = ['Solo', 'Team'];
+  wrap.innerHTML = plans.map(function(name) {
+    var p = PLAN_DATA[name];
+    var istAktiv = name === paket;
+    var preis = _billingCycle === 'yearly' ? p.preisJaehrlich : p.preisMonatlich;
+    var preisAlt = _billingCycle === 'yearly' ? p.preisMonatlich : null;
+
+    var ctaHtml;
+    if (istAktiv) {
+      ctaHtml = '<button class="plan-cta plan-cta-current" disabled>✓ Ihr aktuelles Paket</button>';
+    } else if (name === 'Team') {
+      ctaHtml = '<button class="plan-cta plan-cta-team" onclick="starteStripeCheckout(\'Team\')">Zu Team upgraden →</button>';
+    } else {
+      ctaHtml = '<button class="plan-cta plan-cta-upgrade" onclick="starteStripeCheckout(\'Solo\')">Solo wählen →</button>';
+    }
+
+    return '<div class="plan-card ' + (istAktiv ? ('plan-active-' + name.toLowerCase()) : '') + '">'
+      + (istAktiv ? '<div class="plan-card-badge" style="background:' + p.colorBg + ';color:' + p.color + ';">Ihr Plan</div>' : '')
+      + '<div class="plan-card-name">' + name + '</div>'
+      + '<div class="plan-card-desc">' + p.desc + '</div>'
+      + '<div class="plan-card-price">'
+      +   '<div class="big">' + preis + ' €</div>'
+      +   '<div class="small">/ Monat' + (_billingCycle === 'yearly' ? ', jährlich' : '') + '</div>'
+      +   (preisAlt ? '<div class="strike">' + preisAlt + ' €</div>' : '')
+      + '</div>'
+      + p.features.map(function(f) {
+          return '<div class="plan-feature">'
+            + '<div class="plan-feature-check ' + (f.yes ? 'yes' : 'no') + '">' + (f.yes ? '✓' : '×') + '</div>'
+            + '<span ' + (!f.yes ? 'style="color:var(--text3);"' : '') + '>' + f.text + '</span>'
+            + '</div>';
+        }).join('')
+      + ctaHtml
+      + '</div>';
   }).join('');
 }
+
 
 /* ── ENTERPRISE ── */
 window.speichereEnterprise = function(){
@@ -1227,29 +2051,100 @@ document.addEventListener('DOMContentLoaded', function(){
 });
 
 })();
+
+/* ════════════════════════════════════════
+   PREMIUM THEME SWITCHER — JS
+   ════════════════════════════════════════ */
+
+/* Accent color CSS variables */
+var ACCENT_COLORS = {
+  blue:   { accent: '#4f8ef7', accent2: '#3a7be0' },
+  violet: { accent: '#8b5cf6', accent2: '#7c3aed' },
+  teal:   { accent: '#14b8a6', accent2: '#0d9488' },
+  green:  { accent: '#10b981', accent2: '#059669' },
+  orange: { accent: '#f59e0b', accent2: '#d97706' },
+  red:    { accent: '#ef4444', accent2: '#dc2626' },
+};
+
+window.setTheme = function(t) {
+  localStorage.setItem('prova_theme', t);
+
+  // Resolve 'system' to actual theme
+  var resolved = t;
+  if (t === 'system') {
+    resolved = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+  }
+
+  if (window.PROVA_THEME) {
+    window.PROVA_THEME.set(resolved);
+  } else {
+    // Fallback: direkt anwenden
+    var root = document.documentElement;
+    if (resolved === 'light') {
+      root.setAttribute('data-theme', 'light');
+    } else {
+      root.removeAttribute('data-theme');
+    }
+  }
+
+  // Cards updaten
+  document.querySelectorAll('.theme-card').forEach(function(c) {
+    c.classList.toggle('tc-active', c.dataset.theme === t);
+  });
+
+  // verstecktes select sync (für speichereArbeitsweise)
+  var sel = document.getElementById('e-theme');
+  if (sel) sel.value = t;
+
+  zeigToast('Farbschema: ' + {dark:'Dunkel',light:'Hell',system:'System'}[t] + ' ✅');
+};
+
+window.setAccent = function(name) {
+  var colors = ACCENT_COLORS[name];
+  if (!colors) return;
+  localStorage.setItem('prova_accent', name);
+
+  // CSS-Variablen live setzen
+  document.documentElement.style.setProperty('--accent', colors.accent);
+  document.documentElement.style.setProperty('--accent2', colors.accent2);
+
+  // Swatch-Buttons updaten
+  document.querySelectorAll('.accent-swatch').forEach(function(s) {
+    s.classList.toggle('ac-active', s.dataset.accent === name);
+  });
+
+  zeigToast('Akzentfarbe geändert ✅');
+};
+
+/* ── Init: Theme Cards + Accent beim Laden ── */
+(function initAppearance() {
+  var savedTheme = localStorage.getItem('prova_theme') || 'dark';
+  var savedAccent = localStorage.getItem('prova_accent') || 'blue';
+
+  // Theme Card als aktiv markieren
+  document.querySelectorAll('.theme-card').forEach(function(c) {
+    c.classList.toggle('tc-active', c.dataset.theme === savedTheme);
+  });
+
+  // Accent Swatch markieren + Farbe anwenden
+  document.querySelectorAll('.accent-swatch').forEach(function(s) {
+    s.classList.toggle('ac-active', s.dataset.accent === savedAccent);
+  });
+  if (ACCENT_COLORS[savedAccent]) {
+    document.documentElement.style.setProperty('--accent', ACCENT_COLORS[savedAccent].accent);
+    document.documentElement.style.setProperty('--accent2', ACCENT_COLORS[savedAccent].accent2);
+  }
+})();
+
 </script>
 <script>
 /* PROVA Outbound-Webhook Payload-Vorschau */
 function togglePayloadVorschau() {
   var box = document.getElementById('payload-vorschau');
   if (!box) return;
-  if (box.style.display === 'none' || !box.style.display) {
-    var beispiel = {
-      prova_event:       'gutachten.freigegeben',
-      prova_version:     '1.0',
-      timestamp:         new Date().toISOString(),
-      fall_id:           'recXXXXXXXXXXXXXXX',
-      aktenzeichen:      'SCH-2026-001',
-      schadensart:       'Schimmelbefall',
-      auftraggeber_typ:  'Versicherung',
-      auftraggeber_name: 'Allianz Versicherung AG',
-      objekt: {
-        strasse: 'Musterstrasse 42',
-        plz:     '50667',
-        ort:     'Koeln'
-      },
-      sv_email:       localStorage.getItem('prova_sv_email') || 'sv@buero.de',
-      pdf_url:        'https://cdn.pdfmonkey.io/...',
-      gutachten_typ:  'gericht'
-    };
-    box.textContent = JSON.strin
+
+};
+
+</script>
+</body>
+</html>

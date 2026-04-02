@@ -607,6 +607,45 @@ window.provaConfirm = function(msg, onYes) {
     input.addEventListener('keydown', handleKey);
   }
 
+  // Normen-Datenbank (inline für Nav-Suche — Top 120 Normen)
+  var NORMEN_NAV = [
+    {num:'DIN 4108-2',titel:'Wärmeschutz – Mindestwerte',bereich:'Feuchte'},
+    {num:'DIN 4108-3',titel:'Klimabedingter Feuchteschutz',bereich:'Feuchte'},
+    {num:'DIN 4108-7',titel:'Luftdichtheit von Gebäuden',bereich:'Feuchte'},
+    {num:'DIN 18195',titel:'Bauwerksabdichtungen',bereich:'Abdichtung'},
+    {num:'DIN 18533',titel:'Abdichtung erdberührender Bauteile',bereich:'Abdichtung'},
+    {num:'DIN 18534',titel:'Abdichtung von Innenräumen',bereich:'Abdichtung'},
+    {num:'DIN 68800-1',titel:'Holzschutz – Allgemeines',bereich:'Holz'},
+    {num:'DIN 68800-2',titel:'Holzschutz – vorbeugende bauliche Maßnahmen',bereich:'Holz'},
+    {num:'DIN 68800-3',titel:'Holzschutz – vorbeugend chemische Maßnahmen',bereich:'Holz'},
+    {num:'DIN 68800-4',titel:'Holzschutz – bekämpfende Maßnahmen',bereich:'Holz'},
+    {num:'DIN EN ISO 13788',titel:'Raumseitige Oberflächentemperatur / Tauwasser',bereich:'Feuchte'},
+    {num:'WTA 6-1-01/D',titel:'Leitfaden für hygrothermische Simulationen',bereich:'Feuchte'},
+    {num:'WTA 4-11-02/D',titel:'Messung der Feuchte in Baustoffen',bereich:'Feuchte'},
+    {num:'DIN 52460',titel:'Fugen- und Rahmenabdichtungen',bereich:'Abdichtung'},
+    {num:'VOB/B §13',titel:'Mängelansprüche',bereich:'VOB-Recht'},
+    {num:'VOB/B §17',titel:'Sicherheitsleistungen',bereich:'VOB-Recht'},
+    {num:'ZPO §404',titel:'Sachverständigenauswahl',bereich:'VOB-Recht'},
+    {num:'ZPO §407',titel:'Pflicht zur Erstattung',bereich:'VOB-Recht'},
+    {num:'ZPO §407a',titel:'Weitere Pflichten des Sachverständigen',bereich:'VOB-Recht'},
+    {num:'ZPO §411',titel:'Schriftliches Gutachten',bereich:'VOB-Recht'},
+    {num:'DIN EN 1995',titel:'Eurocode 5 – Bemessung Holzbauten',bereich:'Statik'},
+    {num:'DIN EN 1992',titel:'Eurocode 2 – Bemessung Betonbauten',bereich:'Statik'},
+    {num:'DIN EN 1990',titel:'Eurocode 0 – Grundlagen Tragwerksplanung',bereich:'Statik'},
+    {num:'DIN 18560',titel:'Estriche im Bauwesen',bereich:'Estrich'},
+    {num:'DIN 18157',titel:'Ausführung keramischer Bekleidungen',bereich:'Fliesen'},
+    {num:'DIN 18202',titel:'Toleranzen im Hochbau',bereich:'Baumängel'},
+    {num:'DIN 18203',titel:'Toleranzen – Vorgefertigte Teile',bereich:'Baumängel'},
+    {num:'DIN 1045',titel:'Tragwerke aus Beton',bereich:'Statik'},
+    {num:'DIN EN ISO 9972',titel:'Gebäudeluftdichtheit – Prüfverfahren Blower Door',bereich:'Feuchte'},
+    {num:'DIN ISO 16000-1',titel:'Innenraumluft – Probenahmestrategie',bereich:'Feuchte'},
+    {num:'VdS 3151',titel:'Wasserschadentrocknung',bereich:'Wasserschaden'},
+    {num:'VdS 2298',titel:'Leitfaden Brandschutz',bereich:'Brand'},
+    {num:'DIN 4102-4',titel:'Brandverhalten – Klassifizierung',bereich:'Brand'},
+    {num:'DIN 18230',titel:'Baulicher Brandschutz im Industriebau',bereich:'Brand'},
+    {num:'DIN EN 13501',titel:'Klassifizierung Brandverhalten Bauprodukte',bereich:'Brand'},
+  ];
+
   function renderResults(q) {
     if (!results) return;
     q = (q||'').toLowerCase().trim();
@@ -625,6 +664,32 @@ window.provaConfirm = function(msg, onYes) {
       });
     } catch(e) {}
 
+    // Normen durchsuchen (wenn q vorhanden)
+    var normenTreffer = [];
+    if (q && q.length >= 2) {
+      normenTreffer = NORMEN_NAV.filter(function(n) {
+        return (n.num+' '+n.titel+' '+n.bereich).toLowerCase().includes(q);
+      }).slice(0, 4).map(function(n) {
+        return { label: n.num, desc: n.titel, href: 'normen.html?q='+encodeURIComponent(n.num), icon: '📚', type: 'norm' };
+      });
+    }
+
+    // Kontakte durchsuchen (aus localStorage)
+    var kontakteTreffer = [];
+    if (q && q.length >= 2) {
+      try {
+        var kData = JSON.parse(localStorage.getItem('prova_kontakte') || '[]');
+        kontakteTreffer = kData.filter(function(k) {
+          var hay = [k.name||'', k.firma||'', k.email||'', k.ort||'', k.typ||'', k.ansprechpartner||''].join(' ').toLowerCase();
+          return hay.includes(q);
+        }).slice(0, 3).map(function(k) {
+          var label = [k.name, k.firma].filter(Boolean).join(' · ') || k.email || '—';
+          var desc = [k.typ, k.ort].filter(Boolean).join(' · ');
+          return { label: label, desc: desc, href: 'kontakte.html?id='+(k.id||k.at_id||''), icon: '👤', type: 'kontakt' };
+        });
+      } catch(e) {}
+    }
+
     // Aktionen filtern
     var aktionen = q ? AKTIONEN.filter(function(a) {
       return (a.label+' '+a.desc).toLowerCase().includes(q);
@@ -634,6 +699,14 @@ window.provaConfirm = function(msg, onYes) {
     if (faelle.length) {
       all.push({ type: 'header', label: 'Fälle' });
       all = all.concat(faelle);
+    }
+    if (normenTreffer.length) {
+      all.push({ type: 'header', label: 'Normen' });
+      all = all.concat(normenTreffer);
+    }
+    if (kontakteTreffer.length) {
+      all.push({ type: 'header', label: 'Kontakte' });
+      all = all.concat(kontakteTreffer);
     }
     if (aktionen.length) {
       all.push({ type: 'header', label: q ? 'Aktionen' : 'Navigation' });

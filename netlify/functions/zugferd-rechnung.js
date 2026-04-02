@@ -87,7 +87,7 @@ exports.handler = async (event) => {
     }
 
     const doc = await pdfRes.json();
-    const docId = doc.document?.id;
+    const docId = doc.(document&&document.id);
 
     // Polling auf PDF
     let pdfUrl = null;
@@ -97,11 +97,11 @@ exports.handler = async (event) => {
         headers: { 'Authorization': `Bearer ${PDFMONKEY_KEY}` }
       });
       const status = await check.json();
-      if (status.document?.status === 'success') {
+      if (status.(document&&document.status) === 'success') {
         pdfUrl = status.document.download_url;
         break;
       }
-      if (status.document?.status === 'failure') break;
+      if (status.(document&&document.status) === 'failure') break;
     }
 
     if (pdfUrl) {

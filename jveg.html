@@ -679,6 +679,90 @@ async function supSendModal(){
   document.getElementById('support-form-body').style.display='none';
   document.getElementById('sup-ok').style.display='block';
 }
+
+/* ══════════════════════════════════════════════════════════
+   SMART DEFAULTS — Memory System (Raycast-Prinzip)
+   Merkt sich die letzten Eingaben und füllt beim nächsten
+   Öffnen automatisch vor. Der SV ändert nur was anders ist.
+   ══════════════════════════════════════════════════════════ */
+(function() {
+  var DEFAULTS_KEY = 'prova_jveg_defaults';
+
+  /* ── Defaults laden und Felder vorausfüllen ── */
+  function ladeDefaults() {
+    var d;
+    try { d = JSON.parse(localStorage.getItem(DEFAULTS_KEY) || 'null'); } catch(e) {}
+    if (!d) return; // Erster Start — keine Defaults
+
+    // Sachgebiet (Honorargruppe) wiederherstellen
+    var sg = document.getElementById('sachgebiet');
+    if (sg && d.sachgebiet) {
+      sg.value = d.sachgebiet;
+    }
+
+    // KM-Satz wiederherstellen (falls angepasst)
+    // Stunden NICHT vorausfüllen — die sind fallspezifisch
+
+    // MwSt-Toggle wiederherstellen
+    var mwst = document.getElementById('mwst-toggle');
+    if (mwst && d.mit_mwst !== undefined) {
+      mwst.checked = d.mit_mwst;
+    }
+
+    // AZ aus letztem Fall
+    var azEl = document.getElementById('jveg-az');
+    if (azEl && !azEl.value) {
+      var letzterAz = localStorage.getItem('prova_letztes_az') || '';
+      if (letzterAz) { azEl.value = letzterAz; azEl.classList.add('prefilled'); }
+    }
+
+    // Visual hint: zeige dass Werte aus Memory kommen
+    if (d.sachgebiet) {
+      var hint = document.getElementById('smart-default-hint');
+      if (hint) {
+        hint.style.display = 'flex';
+        // Auto-hide nach 4s
+        setTimeout(function() { hint.style.display = 'none'; }, 4000);
+      }
+    }
+
+    update();
+  }
+
+  /* ── Defaults speichern (bei jeder Änderung) ── */
+  function speichereDefaults() {
+    var sg = document.getElementById('sachgebiet');
+    var mwst = document.getElementById('mwst-toggle');
+    try {
+      localStorage.setItem(DEFAULTS_KEY, JSON.stringify({
+        sachgebiet: sg ? sg.value : null,
+        mit_mwst:   mwst ? mwst.checked : true,
+        ts: Date.now()
+      }));
+    } catch(e) {}
+  }
+
+  /* ── Hooks auf Inputs ── */
+  function hookInputs() {
+    var sg = document.getElementById('sachgebiet');
+    if (sg) sg.addEventListener('change', speichereDefaults);
+    var mwst = document.getElementById('mwst-toggle');
+    if (mwst) mwst.addEventListener('change', speichereDefaults);
+  }
+
+  /* ── Init ── */
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function() {
+      ladeDefaults();
+      hookInputs();
+    });
+  } else {
+    ladeDefaults();
+    hookInputs();
+  }
+
+})();
+
 </script>
 
 
@@ -979,7 +1063,6 @@ function einfuegenBanner() {
   if (topbar) {
     insertAfter = topbar;
   }
-  
-  // Strategie 2: Als erstes Child von main oder page-content
-  if (!insertAfter) {
-    insertAfter = 
+</script>
+</body>
+</html>

@@ -31,7 +31,14 @@
     badge.className = 'trial-badge testpilot';
     badge.innerHTML = '🚀 Testpilot';
     badge.title = 'Du bist PROVA-Testpilot — kostenloser Zugang mit Sonderkonditionen';
+    // Safety: body might not exist yet (script loaded in <head>)
+  if (document.body) {
     document.body.appendChild(badge);
+  } else {
+    document.addEventListener('DOMContentLoaded', function() {
+      document.body.appendChild(badge);
+    });
+  }
     return; // Alles frei — kein weiterer Check
   }
 
@@ -98,7 +105,14 @@
     badge.onclick = function() { zeigeUpgradeDialog(); };
   }
 
-  document.body.appendChild(badge);
+  // Safety: body might not exist yet (script loaded in <head>)
+  if (document.body) {
+    document.body.appendChild(badge);
+  } else {
+    document.addEventListener('DOMContentLoaded', function() {
+      document.body.appendChild(badge);
+    });
+  }
 
   /* ── Trial abgelaufen → Overlay ── */
   if (trialAbgelaufen) {

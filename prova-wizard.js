@@ -34,6 +34,192 @@ var SCHADENARTEN = [
 /* ── GEBÄUDETYPEN ── */
 var GEBAEUDETYPEN = ['EFH', 'MFH', 'WHG', 'Gewerbe', 'Büro', 'Halle', 'Sonstiges'];
 
+
+/* ══════════════════════════════════════════════════════════
+   STARTER-KITS — E: Vorauswahl von Normen nach Schadenart
+   Wird beim Chip-Click ausgelöst, in localStorage gespeichert,
+   von stellungnahme.html als Normen-Pinnwand (F) gelesen.
+   ══════════════════════════════════════════════════════════ */
+var STARTER_KITS = {
+  wasser: {
+    name: 'Wasserschaden',
+    icon: '💧',
+    color: '#3b82f6',
+    normen: [
+      { num: 'VdS 3151',    titel: 'Leitfaden Wasserschadentrocknung' },
+      { num: 'DIN 18195',   titel: 'Bauwerksabdichtungen' },
+      { num: 'DIN 18533',   titel: 'Abdichtung erdberührender Bauteile' },
+      { num: 'DIN 4108-3',  titel: 'Klimabedingter Feuchteschutz' },
+      { num: 'DIN 52460',   titel: 'Fugen- und Rahmenabdichtungen' },
+    ],
+    hinweise: ['Feuchtemessung Wände + Estrich', 'Trocknungsgeräte dokumentieren', 'Folgeschäden (Schimmel) prüfen'],
+  },
+  schimmel: {
+    name: 'Schimmelbefall',
+    icon: '🟢',
+    color: '#10b981',
+    normen: [
+      { num: 'DIN 4108-2',       titel: 'Wärmeschutz – Mindestwerte' },
+      { num: 'WTA 6-1-01/D',     titel: 'Leitfaden hygrothermische Simulationen' },
+      { num: 'DIN EN ISO 13788', titel: 'Raumseitige Oberflächentemperatur / Tauwasser' },
+      { num: 'DIN ISO 16000-1',  titel: 'Innenraumluft – Probenahmestrategie' },
+      { num: 'DIN 68800-1',      titel: 'Holzschutz – Allgemeines' },
+    ],
+    hinweise: ['fRsi-Wert berechnen (≥ 0,70)', 'Raumluftfeuchte messen (> 60% kritisch)', 'Lüftungsverhalten erfragen'],
+  },
+  brand: {
+    name: 'Brandschaden',
+    icon: '🔥',
+    color: '#ef4444',
+    normen: [
+      { num: 'DIN 4102-4',     titel: 'Brandverhalten – Klassifizierung' },
+      { num: 'DIN EN 13501-1', titel: 'Klassifizierung Bauprodukte Brandverhalten' },
+      { num: 'DIN 18230',      titel: 'Baulicher Brandschutz Industriebau' },
+      { num: 'VdS 2298',       titel: 'Leitfaden Brandschutz' },
+    ],
+    hinweise: ['Rußverteilung dokumentieren', 'Brandausbruchsbereich bestimmen', 'Tragsicherheit prüfen lassen'],
+  },
+  sturm: {
+    name: 'Sturmschaden',
+    icon: '💨',
+    color: '#8b5cf6',
+    normen: [
+      { num: 'DIN EN 1991-1-4', titel: 'Eurocode 1 – Windlasten' },
+      { num: 'DIN 18807',        titel: 'Trapezprofile im Hochbau' },
+      { num: 'DIN 1055-4',       titel: 'Einwirkungen auf Tragwerke – Wind' },
+    ],
+    hinweise: ['Windzone ermitteln', 'Dacheindeckung + Befestigung prüfen', 'Vorschäden ausschließen'],
+  },
+  elementar: {
+    name: 'Elementarschaden',
+    icon: '⛈️',
+    color: '#f59e0b',
+    normen: [
+      { num: 'DIN 18195',  titel: 'Bauwerksabdichtungen' },
+      { num: 'DIN 18533',  titel: 'Abdichtung erdberührender Bauteile' },
+      { num: 'VdS 3151',   titel: 'Wasserschadentrocknung' },
+      { num: 'DIN 4108-3', titel: 'Klimabedingter Feuchteschutz' },
+    ],
+    hinweise: ['Überflutungszone prüfen', 'Kellerabdichtung bewerten', 'Rückstausicherung dokumentieren'],
+  },
+  baum: {
+    name: 'Baumängel',
+    icon: '🏗️',
+    color: '#ec4899',
+    normen: [
+      { num: 'VOB/B §13',  titel: 'Mängelansprüche' },
+      { num: 'DIN 18202',  titel: 'Toleranzen im Hochbau' },
+      { num: 'DIN 18300',  titel: 'Erdarbeiten (VOB Teil C)' },
+      { num: 'DIN EN 1992', titel: 'Eurocode 2 – Betonbauten' },
+    ],
+    hinweise: ['VOB/B Rügefrist prüfen', 'Maßtoleranzen nach DIN 18202 messen', 'Abnahmeprotokoll anfordern'],
+  },
+  riss: {
+    name: 'Rissschaden',
+    icon: '⚡',
+    color: '#64748b',
+    normen: [
+      { num: 'DIN 52460',   titel: 'Fugen- und Rahmenabdichtungen' },
+      { num: 'DIN 18202',   titel: 'Toleranzen im Hochbau' },
+      { num: 'DIN 1045',    titel: 'Tragwerke aus Beton' },
+      { num: 'DIN EN 1992', titel: 'Eurocode 2 – Betonbauten' },
+    ],
+    hinweise: ['Rissbreite messen (> 0,2mm relevant)', 'Rissverlauf dokumentieren', 'Rissaktivität prüfen (Gipsmarken)'],
+  },
+  einbruch: {
+    name: 'Einbruchschaden',
+    icon: '🔓',
+    color: '#6366f1',
+    normen: [
+      { num: 'DIN EN 1627', titel: 'Einbruchhemmende Bauteile' },
+      { num: 'VdS 2311',    titel: 'Einbruchmeldeanlagen Richtlinie' },
+    ],
+    hinweise: ['Widerstandsklasse ermitteln', 'Aufbruchspuren dokumentieren', 'Sachschaden vs. Folgeschaden trennen'],
+  },
+  sonstige: {
+    name: 'Sonstiger Schaden',
+    icon: '📋',
+    color: '#64748b',
+    normen: [
+      { num: 'VOB/B §13',  titel: 'Mängelansprüche' },
+      { num: 'DIN 18202',  titel: 'Toleranzen im Hochbau' },
+    ],
+    hinweise: ['Schadensursache dokumentieren', 'Beweissicherung sofort'],
+  },
+};
+
+/* ── Starter-Kit laden + in localStorage speichern ── */
+function _ladeStarterKit(schadenartId) {
+  var kit = STARTER_KITS[schadenartId];
+  if (!kit) return;
+
+  var az = sessionStorage.getItem('prova_current_az')
+        || localStorage.getItem('prova_letztes_az')
+        || 'NEU';
+
+  // Normen in localStorage speichern (für Normen-Pinnwand F)
+  try {
+    localStorage.setItem(
+      'prova_fall_normen_' + az,
+      JSON.stringify({ kit: schadenartId, normen: kit.normen, hinweise: kit.hinweise, ts: Date.now() })
+    );
+    // Auch ohne AZ speichern (Fallback für stellungnahme.html)
+    localStorage.setItem(
+      'prova_starter_kit_aktiv',
+      JSON.stringify({ kit: schadenartId, normen: kit.normen, hinweise: kit.hinweise, schadenart: kit.name })
+    );
+  } catch(e) {}
+
+  // Preview-Banner im Wizard einblenden
+  _zeigeKitBanner(kit);
+}
+
+/* ── Banner im Wizard anzeigen ── */
+function _zeigeKitBanner(kit) {
+  var existing = WZ.el ? WZ.el.querySelector('#wz-kit-banner') : null;
+  if (existing) existing.remove();
+  if (!WZ.el) return;
+
+  var banner = document.createElement('div');
+  banner.id = 'wz-kit-banner';
+  banner.style.cssText = [
+    'margin:0 20px 4px;padding:10px 14px;',
+    'background:rgba(79,142,247,.07);',
+    'border:1px solid rgba(79,142,247,.18);',
+    'border-radius:10px;',
+    'display:flex;align-items:flex-start;gap:10px;',
+    'animation:wzKitFadeIn .25s ease;',
+  ].join('');
+
+  banner.innerHTML = '<span style="font-size:16px;flex-shrink:0;">' + kit.icon + '</span>'
+    + '<div style="flex:1;min-width:0;">'
+    +   '<div style="font-size:11px;font-weight:700;color:#4f8ef7;margin-bottom:4px;">'
+    +     'Starter-Kit: ' + kit.name
+    +   '</div>'
+    +   '<div style="font-size:11px;color:var(--text3);line-height:1.6;">'
+    +     kit.normen.slice(0,3).map(function(n){ return '📚 ' + n.num; }).join('  ·  ')
+    +     (kit.normen.length > 3 ? '  +' + (kit.normen.length - 3) + ' weitere' : '')
+    +   '</div>'
+    +   '<div style="font-size:10px;color:var(--text3);margin-top:3px;">'
+    +     '→ Werden automatisch als Referenz in §5 angezeigt'
+    +   '</div>'
+    + '</div>';
+
+  // Nach den Chips einfügen
+  var chipSection = WZ.el.querySelector('.wz-section');
+  if (chipSection) {
+    chipSection.after(banner);
+  }
+
+  // Fade-in Animation
+  if (!document.getElementById('wz-kit-anim')) {
+    var style = document.createElement('style');
+    style.id = 'wz-kit-anim';
+    style.textContent = '@keyframes wzKitFadeIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}';
+    document.head.appendChild(style);
+  }
+}
+
 /* ── WIZARD STARTEN (nach Auftragstyp-Auswahl) ── */
 window.PROVA_WIZARD = {
   start: function(typ) {
@@ -159,6 +345,20 @@ function _abschliessen() {
 
   // Auftragstyp in Formular übernehmen
   if (WZ.typ) _setVal('f-auftraggeber-typ', _typZuAgTyp(WZ.typ));
+
+  // Starter-Kit mit finalem AZ neu speichern (AZ jetzt bekannt)
+  var finalAz = (WZ.felder['wz-schadensnummer'] || sessionStorage.getItem('prova_current_az') || '').trim();
+  if (finalAz && WZ.felder['wz-schadenart']) {
+    var kit = STARTER_KITS[WZ.felder['wz-schadenart']];
+    if (kit) {
+      try {
+        localStorage.setItem(
+          'prova_fall_normen_' + finalAz,
+          JSON.stringify({ kit: WZ.felder['wz-schadenart'], normen: kit.normen, hinweise: kit.hinweise, ts: Date.now() })
+        );
+      } catch(e) {}
+    }
+  }
 
   _schliessen();
 
@@ -455,6 +655,10 @@ window.PROVA_WZ_chipSA = function(btn) {
   btn.style.borderColor = 'var(--accent,#4f8ef7)';
   btn.style.background  = 'rgba(79,142,247,.12)';
   btn.style.color       = 'var(--accent,#4f8ef7)';
+
+  // ── E: Starter-Kit für gewählte Schadenart laden ──
+  var schadenartId = btn.dataset.id;
+  if (schadenartId) _ladeStarterKit(schadenartId);
 };
 
 window.PROVA_WZ_chipHA = function(btn) {

@@ -33,7 +33,7 @@ exports.handler = async function(event) {
     };
   }
 
-  const { email, name, paket = 'Starter' } = body;
+  const { email, name, paket = 'Solo' } = body;
 
   if (!email) {
     return {
@@ -55,7 +55,7 @@ exports.handler = async function(event) {
           email,
           data: {
             full_name: name || email,
-            paket: paket,
+            paket: paket || 'Solo',
             onboarding_done: false
           }
         }]

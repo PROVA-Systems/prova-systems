@@ -358,11 +358,34 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-ui);min-heigh
       <!-- §407a BESTÄTIGUNG -->
       <div class="primary-wrap">
         <div id="approve-content">
-          <div id="compliance-confirm" style="background:rgba(79,142,247,.06);border:1px solid rgba(79,142,247,.18);border-radius:10px;padding:14px 16px;margin-bottom:14px;">
-            <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;font-size:13px;color:var(--text2);line-height:1.55;">
+          <div id="compliance-confirm" style="background:rgba(79,142,247,.06);border:1px solid rgba(79,142,247,.18);border-radius:10px;padding:14px 16px;margin-bottom:8px;">
+
+            <!-- CHECKBOX 1: §407a ZPO — Persönliche Verantwortung -->
+            <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;font-size:13px;color:var(--text2);line-height:1.55;margin-bottom:10px;">
               <input type="checkbox" id="cb407a" onchange="toggle407a()" style="margin-top:3px;width:18px;height:18px;accent-color:#4f8ef7;flex-shrink:0;cursor:pointer;">
-              <span>Ich habe dieses Gutachten <strong style="color:var(--text);">persönlich geprüft</strong> und übernehme die <strong style="color:var(--text);">fachliche Verantwortung</strong> gemäß §407a ZPO. Die KI-Offenlegung gemäß EU AI Act ist im Gutachten enthalten.</span>
+              <span>
+                <strong style="color:var(--text);">§407a ZPO:</strong>
+                Ich habe dieses Gutachten <strong style="color:var(--text);">persönlich geprüft</strong> und übernehme die fachliche Verantwortung. Die KI-Offenlegung gemäß EU AI Act Art. 13 ist im Gutachten enthalten.
+              </span>
             </label>
+
+            <!-- TRENNLINIE -->
+            <div style="height:1px;background:rgba(79,142,247,.12);margin-bottom:10px;"></div>
+
+            <!-- CHECKBOX 2: §5 Kausalitätsprüfung — IHK-Sicherheit -->
+            <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;font-size:13px;color:var(--text2);line-height:1.55;">
+              <input type="checkbox" id="cb5pruef" onchange="toggle407a()" style="margin-top:3px;width:18px;height:18px;accent-color:#10b981;flex-shrink:0;cursor:pointer;">
+              <span>
+                <strong style="color:var(--text);">§5 Kausalitätsprüfung:</strong>
+                Ich habe die KI-generierten Kausalitätshypothesen in §5 <strong style="color:var(--text);">persönlich fachlich bewertet</strong>. Die Formulierungen im Konjunktiv II entsprechen meiner eigenen Einschätzung.
+              </span>
+            </label>
+
+            <!-- Hinweis: nur sichtbar wenn beide noch nicht gecheckt -->
+            <div id="cb-hinweis" style="font-size:11px;color:var(--text3);margin-top:8px;padding:6px 10px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.15);border-radius:6px;display:flex;gap:6px;align-items:flex-start;">
+              <span>⚠️</span>
+              <span>Beide Bestätigungen sind gemäß IHK-Sachverständigenordnung §3 und §407a ZPO Abs. 2 erforderlich, um die persönliche Verantwortung rechtssicher zu dokumentieren.</span>
+            </div>
           </div>
           <button class="btn-approve" id="btnFreigeben" onclick="approveGutachten()" disabled style="opacity:.5;cursor:not-allowed;">
             ✅ Gutachten freigeben
@@ -615,7 +638,20 @@ function renderDoc(){
 
   let offText='';
   // Offenlegungstext für ALLE Pakete (§407a ZPO + EU AI Act)
-  offText=`Gemäß §407a Abs. 2 ZPO erklärt der Sachverständige ${svNameOff}${svQOff ? ' ('+svQOff+')' : ''}, dass er das vorliegende Gutachten persönlich und eigenverantwortlich erstellt hat.\n\nZur Unterstützung bei der Textstrukturierung in §1 bis §5 sowie bei der sprachlichen Überprüfung von §6 auf korrekte Konjunktiv-II-Formulierungen wurde das KI-gestützte Fachinformationssystem PROVA Systems eingesetzt. Sämtliche fachlichen Feststellungen, Messwerte, Normbewertungen sowie das gutachterliche Urteil in §6 beruhen ausschließlich auf der persönlichen Sachkenntnis und Beurteilung des Sachverständigen.\n\nDie Nutzung des KI-Systems beschränkte sich auf: Strukturierung des Berichtsaufbaus nach §1–§5, grammatikalische und stilistische Überprüfung, Konjunktiv-II-Kontrolle in §6. Eine inhaltliche Einflussnahme durch das KI-System auf Feststellungen, Ursachenbewertung oder Handlungsempfehlungen hat nicht stattgefunden.\n\nAktenzeichen: ${azOff} · Erstellt am: ${datumOff}`;
+  offText=`Gemäß §407a Abs. 2 ZPO erklärt der Sachverständige ${svNameOff}${svQOff ? ' ('+svQOff+')' : ''}, dass er das vorliegende Gutachten persönlich und eigenverantwortlich erstellt hat.
+
+Zur Unterstützung bei der Erstellung wurde das digitale Assistenzsystem PROVA Systems (KI-gestützt) eingesetzt. Der Einsatz beschränkte sich ausschließlich auf folgende vorbereitende Tätigkeiten:
+• §1–§3: Formale Strukturierung auf Basis der vom Sachverständigen eingegebenen Stammdaten (Aktenzeichen, Beteiligte, Objektdaten, Termine)
+• §4: Sprachliche Formatierung des vom Sachverständigen diktierten Befundtextes in Fachsprache
+• §5: Aufbereitung von Kausalitätshypothesen im Konjunktiv II auf Basis des Sachverständigen-Diktats und anerkannter Baunormen
+
+Der Sachverständige hat alle KI-generierten Inhalte in §4 und §5 persönlich fachlich überprüft und bestätigt. §6 (Fachurteil) wurde ausschließlich vom Sachverständigen persönlich verfasst.
+
+Sämtliche fachlichen Feststellungen, Messwerte, Normbewertungen und das gutachterliche Urteil in §6 beruhen ausschließlich auf der persönlichen Sachkenntnis und eigenverantwortlichen Beurteilung des Sachverständigen. Eine inhaltliche Einflussnahme durch das KI-System auf Feststellungen, Ursachenbewertung oder Handlungsempfehlungen hat nicht stattgefunden.
+
+Offenlegung gemäß EU AI Act (Verordnung (EU) 2024/1689) Art. 13 (Transparenzpflicht) und Art. 14 (menschliche Aufsicht).
+
+Aktenzeichen: \${azOff} · Erstellt am: \${datumOff} · §5-Prüfbestätigung: \${localStorage.getItem('prova_5pruef_ts')||'—'}`;
 
   // Gespeicherten Text bevorzugen (falls manuell überschrieben), sonst auto-generierten verwenden
   const offGespeichert=localStorage.getItem('prova_offenlegungstext')||f.Offenlegungstext||'';
@@ -890,20 +926,35 @@ window.exportStempelSVG = function() {
   a.click(); URL.revokeObjectURL(url);
 };
 
-/* §407a BESTÄTIGUNG */
+/* §407a + §5 BESTÄTIGUNG — beide Checkboxen müssen aktiv sein */
 function toggle407a(){
-  var cb=document.getElementById('cb407a');
-  var btn=document.getElementById('btnFreigeben');
-  if(cb&&btn){
-    btn.disabled=!cb.checked;
-    btn.style.opacity=cb.checked?'1':'.5';
-    btn.style.cursor=cb.checked?'pointer':'not-allowed';
-    // Audit-Log: §407a Bestätigung Timestamp
-    if(cb.checked) {
-      localStorage.setItem('prova_407a_ts', new Date().toISOString());
-    } else {
-      localStorage.removeItem('prova_407a_ts');
-    }
+  var cb407  = document.getElementById('cb407a');
+  var cb5    = document.getElementById('cb5pruef');
+  var btn    = document.getElementById('btnFreigeben');
+  var hinweis= document.getElementById('cb-hinweis');
+
+  var beideGecheckt = cb407 && cb5 && cb407.checked && cb5.checked;
+
+  if(btn){
+    btn.disabled = !beideGecheckt;
+    btn.style.opacity = beideGecheckt ? '1' : '.5';
+    btn.style.cursor  = beideGecheckt ? 'pointer' : 'not-allowed';
+  }
+
+  // Hinweis ausblenden wenn beide gecheckt
+  if(hinweis) hinweis.style.display = beideGecheckt ? 'none' : 'flex';
+
+  // Audit-Timestamps
+  var now = new Date().toISOString();
+  if(cb407 && cb407.checked) {
+    localStorage.setItem('prova_407a_ts', now);
+  } else {
+    localStorage.removeItem('prova_407a_ts');
+  }
+  if(cb5 && cb5.checked) {
+    localStorage.setItem('prova_5pruef_ts', now);
+  } else {
+    localStorage.removeItem('prova_5pruef_ts');
   }
 }
 
@@ -933,6 +984,8 @@ async function approveGutachten(){
     gutachten_typ:localStorage.getItem('prova_gutachten_typ')||'gericht',
     offenlegungstext:localStorage.getItem('prova_offenlegungstext')||'',
     bestaetigung_407a:new Date().toISOString(),
+    bestaetigung_5pruef:localStorage.getItem('prova_5pruef_ts')||new Date().toISOString(),
+    bestaetigung_5pruef_text:'KI-Kausalitätshypothesen §5 persönlich fachlich geprüft und bestätigt gemäß IHK-SVO §3',
     bestaetigung_407a_text:'Persönlich geprüft und fachliche Verantwortung übernommen gemäß §407a ZPO',
     // EU AI Act Label für PDF-Template (TO-DO aus Session 4)
     ki_label:'KI-gestützt erstellt, geprüft und verantwortet durch '

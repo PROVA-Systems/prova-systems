@@ -89,11 +89,11 @@ Gib das JSON-Objekt zurück.`;
       return {
         statusCode: 502,
         headers: { 'Access-Control-Allow-Origin': '*', 'Content-Type': 'application/json' },
-        body: JSON.stringify({ error: 'OpenAI Fehler', detail: data.error?.message || 'Unbekannt' })
+        body: JSON.stringify({ error: 'OpenAI Fehler', detail: (data.error&&data.error.message) || 'Unbekannt' })
       };
     }
 
-    const rawText = data.choices?.[0]?.message?.content || '';
+    const rawText = (data.choices&&data.choices[0]&&data.choices[0].message&&data.choices[0].message.content) || '';
     let metadata = {};
     try {
       // JSON aus Antwort extrahieren (robuster Parser)
@@ -115,7 +115,7 @@ Gib das JSON-Objekt zurück.`;
       body: JSON.stringify({
         success: true,
         metadata: metadata,
-        tokens_used: data.usage?.total_tokens || 0
+        tokens_used: (data.usage&&data.usage.total_tokens) || 0
       })
     };
 

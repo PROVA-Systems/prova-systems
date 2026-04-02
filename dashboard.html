@@ -1180,7 +1180,7 @@ function renderKPIs(faelle, termine, rechnungen){
   }).length;
   var kpiA=document.getElementById('kpi-aktiv');
   if(kpiA){
-    kpiA.textContent=aktiv||'0';
+    kpiA.textContent=String(aktiv||0);
     if(aktiv>=5)kpiA.classList.add('warn');
     if(aktiv>0){var bd=document.getElementById('sb-badge-faelle');if(bd){bd.style.display='inline-block';bd.textContent=aktiv;}}
   }
@@ -1194,7 +1194,7 @@ function renderKPIs(faelle, termine, rechnungen){
   }).length;
   var kpiH=document.getElementById('kpi-heute');
   if(kpiH){
-    kpiH.textContent=heuteAnz||'0';
+    kpiH.textContent=String(heuteAnz||0);
     if(heuteAnz>0){kpiH.classList.add('warn');var bd2=document.getElementById('sb-badge-termine');if(bd2){bd2.style.display='inline-block';bd2.textContent=heuteAnz;}}
   }
 
@@ -1576,7 +1576,12 @@ async function ladeAlleDaten(){
     if(faelle.length===0){
       var ls=[];
       try{ls=JSON.parse(localStorage.getItem('prova_akten')||'[]');}catch(e){}
-      if(ls.length===0){zeigOnboarding();renderCal([]);return;}
+      if(ls.length===0){
+        zeigOnboarding();
+        renderKPIs([],[],[]);  // KPIs auf 0 setzen statt Loading-State
+        renderCal([]);
+        return;
+      }
       // localStorage-Daten in Airtable-Format konvertieren
       faelle=ls.map(function(a){return{fields:{Aktenzeichen:a.aktenzeichen,Status:a.status||'In Bearbeitung',Schadensart:a.schadenart,Schaden_Strasse:a.adresse,Ort:a.ort,Timestamp:a.datum}};});
     }
@@ -1601,7 +1606,10 @@ async function ladeAlleDaten(){
     console.warn('Zentrale Ladefehler:',err);
     // Graceful degradation — zeige was in localStorage ist
     var ls=[];try{ls=JSON.parse(localStorage.getItem('prova_akten')||'[]');}catch(e){}
-    if(ls.length===0){zeigOnboarding();}
+    if(ls.length===0){
+      zeigOnboarding();
+      renderKPIs([],[],[]);  // KPIs auf 0 setzen
+    }
     else{
       var faelleLS=ls.map(function(a){return{fields:{Aktenzeichen:a.aktenzeichen,Status:a.status||'In Bearbeitung',Schadensart:a.schadenart,Timestamp:a.datum}};});
       renderKPIs(faelleLS,[],[]);
@@ -1756,7 +1764,8 @@ function pwaDismiss() {
 <script src="auftragstyp.js"></script>
 <script src="support-chat.js"></script>
 <script src="onboarding-tour.js"></script>
-<script src="trial-guard.js">
+<script src="trial-guard.js"></script>
+<script>
 /* ── AUFGABEN: sofort aus Cache, dann Airtable ── */
 
 /* ── PROFIL-VOLLSTÄNDIGKEIT ── */

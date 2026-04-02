@@ -499,7 +499,7 @@
         body: JSON.stringify({
           method: 'POST',
           path: '/v0/appJ7bLlAHZoxENWE/tblwgUQgtBWckPMHp',
-          body: {
+          payload: {
             records: [{
               fields: {
                 fldV8gB6F1WuRkvlO: svEmail,
@@ -642,9 +642,31 @@
       });
       if (checkRes.ok) {
         var checkData = await checkRes.json();
-        if (checkData.records && checkData.records.length > 0) return; // Bereits vorhanden
+        if (checkData.records && checkData.records.length > 0) {
+          // Datensatz existiert → PATCH: onboarding_done + Paket + Datum setzen
+          var existingId = checkData.records[0].id;
+          localStorage.setItem('prova_sv_record_id', existingId);
+          await fetch('/.netlify/functions/airtable', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              method: 'PATCH',
+              path: '/v0/appJ7bLlAHZoxENWE/tbladqEQT3tmx4DIB/' + existingId,
+              payload: {
+                fields: {
+                  onboarding_done: true,
+                  Paket: localStorage.getItem('prova_paket') || 'Solo',
+                  Onboarding: new Date().toISOString().slice(0, 10),
+                  avv_signed_ts: localStorage.getItem('prova_avv_ts') || new Date().toISOString()
+                }
+              }
+            })
+          });
+          return;
+        }
       }
-      // Neu anlegen
+      // Neu anlegen (POST) — onboarding_done direkt mitgeben
+      fields.onboarding_done = true;
       await fetch('/.netlify/functions/airtable', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

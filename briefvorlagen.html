@@ -22,6 +22,11 @@
 }
 
 /* ── LAYOUT ── */
+
+/* ── LAYOUT FIX ── */
+.app-shell{display:flex;width:100%;min-height:100vh;overflow:hidden;}
+.main-wrap{flex:1;min-width:0;overflow-x:hidden;display:flex;flex-direction:column;}
+
 .page-content{padding:0;display:flex;flex-direction:column;height:100vh;overflow:hidden;}
 .bv-header{padding:20px 24px 0;flex-shrink:0;}
 .bv-title-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
@@ -368,8 +373,9 @@ html, body {
 </style>
 </head>
 <body>
-<div class="app-layout">
-  <div id="sidebar-container"></div>
+<div class="app-shell">
+  <nav class="sidebar" id="sidebar"></nav>
+  <div class="main-wrap" id="main-wrap">
   <main class="page-content">
 
     <!-- ═══ HEADER ═══ -->
@@ -404,7 +410,8 @@ html, body {
     <div class="bv-body" id="bv-container"></div>
 
   </main>
-</div>
+  </div><!-- /main-wrap -->
+</div><!-- /app-shell -->
 
 <!-- OVERLAY -->
 <div class="bv-ov" id="bv-ov" onclick="bvCloseDrawer()"></div>
@@ -439,21 +446,75 @@ html, body {
 
     <!-- SCHRITT 2 -->
     <div class="bv-panel" id="pnl-2">
+
+      <!-- KI Ladeindikator -->
       <div class="bv-ki-box" id="ki-box">
         <div class="bv-ki-dot"></div>
         <span id="ki-box-txt">KI schreibt Ihren Brieftext…</span>
       </div>
-      <div class="bv-label" style="margin-bottom:8px;">Briefvorschau</div>
-      <div class="bv-prev" id="prev-content"></div>
-      <div id="prev-missing" style="font-size:11px;color:var(--text3);margin-top:6px;"></div>
 
-      <div id="ki-area" style="display:none;margin-top:14px;">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-          <div style="font-size:11px;font-weight:700;color:#8b5cf6;text-transform:uppercase;letter-spacing:.06em;">✨ KI-Brieftext</div>
-          <button onclick="bvGenKI()" id="ki-gen-btn" style="padding:5px 12px;border-radius:7px;background:linear-gradient(135deg,#5b48f0,#8b5cf6);color:#fff;border:none;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font-ui);">Generieren</button>
+      <!-- Toggle: Vorschau / Bearbeiten -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text3);">Briefvorschau</div>
+        <div style="display:flex;gap:4px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:2px;">
+          <button id="tab-prev" onclick="bvShowTab('prev')" style="padding:4px 10px;border-radius:6px;font-size:11px;font-weight:600;border:none;cursor:pointer;font-family:var(--font-ui);background:#4f8ef7;color:#fff;transition:all .15s;">📧 E-Mail</button>
+          <button id="tab-edit" onclick="bvShowTab('edit')" style="padding:4px 10px;border-radius:6px;font-size:11px;font-weight:600;border:none;cursor:pointer;font-family:var(--font-ui);background:transparent;color:var(--text3);transition:all .15s;">✏️ Bearbeiten</button>
         </div>
-        <textarea id="ki-edit" class="bv-textarea" style="display:none;" placeholder="KI-Brieftext erscheint hier zum Bearbeiten…"></textarea>
       </div>
+
+      <!-- EMAIL VORSCHAU — exakt wie der Empfänger es sieht -->
+      <div id="tab-prev-panel">
+        <div style="background:#1a1f2e;border:1px solid var(--border2);border-radius:12px;overflow:hidden;font-family:'SF Pro Display',-apple-system,'Segoe UI',sans-serif;">
+
+          <!-- Email-Client Header -->
+          <div style="background:#13161d;padding:12px 16px;border-bottom:1px solid var(--border);">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+              <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#4f8ef7,#3a7be0);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0;" id="prev-avatar">M</div>
+              <div style="flex:1;min-width:0;">
+                <div style="font-size:12px;font-weight:700;color:#e8eaf0;" id="prev-from-name">Marcel Schreiber</div>
+                <div style="font-size:10px;color:#6b7a99;" id="prev-from-email">kontakt@prova-systems.de</div>
+              </div>
+              <div style="font-size:10px;color:#4d5568;" id="prev-date">Heute, 10:00</div>
+            </div>
+            <div style="display:flex;align-items:baseline;gap:6px;">
+              <span style="font-size:10px;color:#6b7a99;flex-shrink:0;">An:</span>
+              <span style="font-size:11px;color:#9da3b4;" id="prev-to">—</span>
+            </div>
+            <div style="display:flex;align-items:baseline;gap:6px;margin-top:3px;">
+              <span style="font-size:10px;color:#6b7a99;flex-shrink:0;">Betreff:</span>
+              <span style="font-size:12px;font-weight:700;color:#e8eaf0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" id="prev-subject">—</span>
+            </div>
+          </div>
+
+          <!-- Email Body — weißer Hintergrund wie echter Client -->
+          <div style="background:#ffffff;padding:24px 20px;min-height:160px;">
+            <div id="prev-body" style="font-size:13px;color:#1a1a2e;line-height:1.9;white-space:pre-wrap;font-family:Georgia,'Times New Roman',serif;"></div>
+          </div>
+
+          <!-- Email Footer -->
+          <div style="background:#f8f9fa;padding:10px 16px;border-top:1px solid #e5e7eb;">
+            <div style="font-size:10px;color:#9ca3af;line-height:1.6;" id="prev-sig-footer"></div>
+          </div>
+        </div>
+
+        <!-- KI-Bereich unter Preview -->
+        <div id="ki-area" style="display:none;margin-top:12px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+            <div style="font-size:11px;font-weight:700;color:#8b5cf6;text-transform:uppercase;letter-spacing:.06em;">✨ KI hat einen Brieftext erstellt</div>
+            <button onclick="bvGenKI()" id="ki-gen-btn" style="padding:5px 12px;border-radius:7px;background:linear-gradient(135deg,#5b48f0,#8b5cf6);color:#fff;border:none;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font-ui);">↻ Neu</button>
+          </div>
+          <div style="font-size:11px;color:var(--text3);padding:6px 10px;background:rgba(91,72,240,.06);border:1px solid rgba(91,72,240,.15);border-radius:7px;">
+            💡 KI-Text ist in der Vorschau oben eingebaut. Im Tab „Bearbeiten" können Sie ihn anpassen.
+          </div>
+        </div>
+      </div>
+
+      <!-- BEARBEITEN TAB -->
+      <div id="tab-edit-panel" style="display:none;">
+        <textarea id="ki-edit" class="bv-textarea" placeholder="Brieftext hier bearbeiten…" style="min-height:220px;" oninput="bvSyncEditToPreview()"></textarea>
+        <div style="font-size:11px;color:var(--text3);margin-top:6px;">Änderungen werden sofort in der E-Mail-Vorschau übernommen.</div>
+      </div>
+
     </div>
 
     <!-- SCHRITT 3 -->
@@ -740,21 +801,76 @@ function fuelleFall(){
   }catch(e){}
 }
 
+/* ── TAB SWITCHER ── */
+window.bvShowTab=function(tab){
+  var pp=document.getElementById('tab-prev-panel');
+  var ep=document.getElementById('tab-edit-panel');
+  var tb=document.getElementById('tab-prev');
+  var te=document.getElementById('tab-edit');
+  if(tab==='prev'){
+    if(pp)pp.style.display='';
+    if(ep)ep.style.display='none';
+    if(tb){tb.style.background='#4f8ef7';tb.style.color='#fff';}
+    if(te){te.style.background='transparent';te.style.color='var(--text3)';}
+  } else {
+    if(pp)pp.style.display='none';
+    if(ep)ep.style.display='';
+    if(tb){tb.style.background='transparent';tb.style.color='var(--text3)';}
+    if(te){te.style.background='#4f8ef7';te.style.color='#fff';}
+  }
+};
+
+/* ── SYNC: Edit → Preview ── */
+window.bvSyncEditToPreview=function(){
+  var edit=document.getElementById('ki-edit');
+  var body=document.getElementById('prev-body');
+  if(edit&&body) body.textContent=edit.value;
+};
+
 /* ── VORSCHAU ── */
 function bvRenderVorschau(){
-  var prev=document.getElementById('prev-content');
-  if(!prev||!_tpl)return;
-  var az=_felder.az||'[Aktenzeichen]';
-  var ag=_felder.ag_name||'[Auftraggeber]';
-  var adr=_felder.adresse||'[Objekt-Adresse]';
-  var dat=_felder.datum||new Date().toLocaleDateString('de-DE');
-  var nm=_felder.sv_name||'[Sachverständiger]';
-  var kz=_felder.kanzlei||'[Büroname]';
-  var txt=bvGetText(_tpl.id,{az:az,ag:ag,adr:adr,dat:dat,nm:nm});
-  prev.innerHTML='<div style="font-size:11px;color:var(--text3);margin-bottom:10px;font-family:var(--font-ui);">'+kz+'  ·  '+dat+'</div>'
-    +'<div style="font-size:12px;color:var(--text2);margin-bottom:8px;">'+ag+'</div>'
-    +'<div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:10px;">'+_tpl.name+(az!='[Aktenzeichen]'?' — '+az:'')+'</div>'
-    +'<div style="font-size:12px;color:var(--text2);line-height:1.85;white-space:pre-wrap;">'+txt+'</div>';
+  if(!_tpl)return;
+  var az  = _felder.az      || '';
+  var ag  = _felder.ag_name || '';
+  var agE = _felder.ag_email|| '';
+  var adr = _felder.adresse || '';
+  var dat = _felder.datum   || new Date().toLocaleDateString('de-DE');
+  var nm  = _felder.sv_name || localStorage.getItem('prova_sv_vorname')+' '+localStorage.getItem('prova_sv_nachname');
+  var kz  = _felder.kanzlei || localStorage.getItem('prova_kanzlei_name') || 'Sachverständigenbüro';
+  var svE = _felder.sv_email|| localStorage.getItem('prova_sv_email') || '';
+  var svT = _felder.sv_tel  || localStorage.getItem('prova_sv_telefon') || '';
+
+  // Betreff-Logik
+  var subj = _tpl.name;
+  if(az) subj += ' — AZ: '+az;
+
+  // Body-Text
+  var txt = bvGetText(_tpl.id,{az:az||'[Aktenzeichen]',ag:ag||'[Auftraggeber]',adr:adr||'[Objekt-Adresse]',dat:dat,nm:nm.trim()});
+
+  // Avatar-Initiale
+  var initiale=(nm.trim()||'S').charAt(0).toUpperCase();
+
+  // Uhrzeit
+  var jetzt=new Date();
+  var zeit=jetzt.getHours().toString().padStart(2,'0')+':'+jetzt.getMinutes().toString().padStart(2,'0');
+
+  // Signatur-Footer
+  var sig=[kz,nm.trim(),svE,svT].filter(function(x){return x&&x.trim()&&x!=='null null';}).join('  ·  ');
+
+  // Felder setzen
+  function setEl(id,val){var el=document.getElementById(id);if(el)el.textContent=val;}
+  setEl('prev-avatar',    initiale);
+  setEl('prev-from-name', nm.trim()&&nm.trim()!=='null null' ? nm.trim() : 'Sachverständiger');
+  setEl('prev-from-email',svE||'—');
+  setEl('prev-date',      'Heute, '+zeit);
+  setEl('prev-to',        ag + (agE?' <'+agE+'>':'') || '—');
+  setEl('prev-subject',   subj);
+  setEl('prev-body',      txt);
+  setEl('prev-sig-footer',sig);
+
+  // Edit-Textarea synchron halten
+  var edit=document.getElementById('ki-edit');
+  if(edit&&!edit.value) edit.value=txt;
 }
 function bvGetText(id,d){
   var T={
@@ -767,27 +883,224 @@ function bvGetText(id,d){
 }
 
 /* ── KI GENERIEREN ── */
+/* ── TYP-SPEZIFISCHE SYSTEM-PROMPTS ── */
+var KI_PROMPTS = {
+
+  // ANGEBOTE & AUFTRÄGE
+  'A-01': {
+    sys: 'Du bist ö.b.u.v. Sachverständiger für Bau- und Gebäudeschäden. Schreibe den Rumpftext eines seriösen Angebotsschreibens. NUR der Fließtext — keine Anrede, keinen Briefkopf, keine Grußformel, kein Markdown. Maximal 4 Sätze. Sachlich, professionell, direkt.',
+    usr: function(f) {
+      return 'Vorlage: Angebot zur Gutachtenerstellung\n'
+        + 'Auftraggeber: '+f.ag_name+'\n'
+        + 'Objekt: '+f.adresse+'\n'
+        + 'Aktenzeichen: '+(f.az||'wird noch mitgeteilt')+'\n'
+        + 'Sachverständiger: '+f.sv_name+'\n'
+        + 'Datum: '+f.datum+'\n\n'
+        + 'Schreibe: Ich unterbreite hiermit mein Angebot zur Erstellung eines Sachverständigengutachtens für das Objekt [Adresse]. Honorar nach JVEG bzw. nach Vereinbarung. Keine Platzhalter wie X EUR.';
+    }
+  },
+
+  'A-02': {
+    sys: 'Du bist ö.b.u.v. Sachverständiger. Schreibe den Rumpftext einer Auftragsbestätigung. NUR Fließtext, keine Anrede, kein Briefkopf, keine Grußformel, kein Markdown. 3-4 Sätze.',
+    usr: function(f) {
+      return 'Vorlage: Auftragsbestätigung\n'
+        + 'Auftraggeber: '+f.ag_name+'\n'
+        + 'Objekt: '+f.adresse+'\n'
+        + 'Aktenzeichen: '+(f.az||'wird noch mitgeteilt')+'\n'
+        + 'Sachverständiger: '+f.sv_name+'\n'
+        + 'Datum: '+f.datum+'\n\n'
+        + 'Bestätige den Auftrag zur Gutachtenerstellung konkret mit AZ und Adresse. Erwähne dass der Ortstermin zeitnah vereinbart wird.';
+    }
+  },
+
+  'A-03': {
+    sys: 'Du bist ö.b.u.v. Sachverständiger. Schreibe den Rumpftext einer Honorarvereinbarung. NUR Fließtext, keine Anrede, kein Briefkopf, keine Grußformel, kein Markdown. 4-5 Sätze. Seriös, verbindlich.',
+    usr: function(f) {
+      return 'Vorlage: Honorarvereinbarung\n'
+        + 'Auftraggeber: '+f.ag_name+'\n'
+        + 'Objekt: '+f.adresse+'\n'
+        + 'Aktenzeichen: '+(f.az||'wird noch mitgeteilt')+'\n'
+        + 'Sachverständiger: '+f.sv_name+'\n\n'
+        + 'Halte fest: Honorar richtet sich nach JVEG oder nach schriftlicher Vereinbarung. Fahrtkosten, Auslagen, Kopierkosten werden gesondert berechnet. Abrechnung nach Abschluss des Gutachtens. Keine konkreten EUR-Beträge nennen.';
+    }
+  },
+
+  // ORTSTERMIN
+  'O-01': {
+    sys: 'Du bist ö.b.u.v. Sachverständiger. Schreibe eine Einladung zum Ortstermin (Besichtigung). NUR Fließtext, keine Anrede, kein Briefkopf, keine Grußformel, kein Markdown. 3-4 Sätze.',
+    usr: function(f) {
+      return 'Vorlage: Einladung Ortstermin\n'
+        + 'Auftraggeber/Eingeladene: '+f.ag_name+'\n'
+        + 'Objekt: '+f.adresse+'\n'
+        + 'Aktenzeichen: '+(f.az||'wird noch mitgeteilt')+'\n'
+        + 'Sachverständiger: '+f.sv_name+'\n\n'
+        + 'Lade zur Besichtigung des Objekts ein. Bitte um Terminbestätigung. Weise darauf hin dass relevante Unterlagen bereitgehalten werden sollen. Kein konkretes Datum (das wird manuell ergänzt).';
+    }
+  },
+
+  'O-02': {
+    sys: 'Du bist ö.b.u.v. Sachverständiger im gerichtlichen Auftrag. Schreibe eine förmliche Einladung zum gerichtlichen Ortstermin nach §404 ZPO. NUR Fließtext, keine Anrede, kein Briefkopf, keine Grußformel, kein Markdown. 4-5 Sätze. Formell-juristischer Ton.',
+    usr: function(f) {
+      return 'Vorlage: Einladung gerichtlicher Ortstermin\n'
+        + 'Aktenzeichen: '+(f.az||'[Gerichts-AZ]')+'\n'
+        + 'Objekt: '+f.adresse+'\n'
+        + 'Sachverständiger: '+f.sv_name+'\n\n'
+        + 'Förmliche Ladung aller Parteien zum Ortstermin gem. Gerichtsauftrag. Hinweis auf §407a ZPO-Pflichten. Parteien sind zur Mitwirkung verpflichtet. Kein konkretes Datum.';
+    }
+  },
+
+  'O-03': {
+    sys: 'Du bist ö.b.u.v. Sachverständiger. Schreibe den Einleitungstext eines Ortstermin-Protokolls. NUR Fließtext, keine Anrede, kein Briefkopf, keine Grußformel, kein Markdown. 3-4 Sätze. Sachlich-dokumentarisch.',
+    usr: function(f) {
+      return 'Vorlage: Ortstermin-Protokoll\n'
+        + 'Objekt: '+f.adresse+'\n'
+        + 'Aktenzeichen: '+(f.az||'wird noch mitgeteilt')+'\n'
+        + 'Sachverständiger: '+f.sv_name+'\n\n'
+        + 'Protokolleinleitung: Am [Datum] fand die Besichtigung des Objekts [Adresse] statt. Anwesende Parteien, Zweck, Begehungsumfang. Kein konkretes Datum eintragen.';
+    }
+  },
+
+  // GERICHT
+  'G-07': {
+    sys: 'Du bist ö.b.u.v. Sachverständiger im gerichtlichen Auftrag. Schreibe die Pflichtanzeige nach §407a Abs. 1 ZPO. NUR Fließtext, keine Anrede, kein Briefkopf, keine Grußformel, kein Markdown. 4-5 Sätze. Förmlich-juristisch, präzise.',
+    usr: function(f) {
+      return 'Vorlage: Beauftragungsbestätigung §407a ZPO\n'
+        + 'Gericht / Auftraggeber: '+f.ag_name+'\n'
+        + 'Aktenzeichen: '+(f.az||'[Gerichts-AZ]')+'\n'
+        + 'Sachverständiger: '+f.sv_name+'\n\n'
+        + 'Zeige gemäß §407a Abs.1 ZPO an: Gutachtenauftrag angenommen, AZ '+f.az+'. Bestätige persönliche Unabhängigkeit von den Parteien, Fachkunde, keine Ausschlussgründe nach §406 ZPO. Hinweis auf erwartete Bearbeitungszeit ohne konkretes Datum.';
+    }
+  },
+
+  'G-08': {
+    sys: 'Du bist ö.b.u.v. Sachverständiger. Schreibe einen Fristverlängerungsantrag nach §411 Abs.1 ZPO. NUR Fließtext, keine Anrede, kein Briefkopf, keine Grußformel, kein Markdown. 4-5 Sätze. Sachlich begründet, förmlich.',
+    usr: function(f) {
+      return 'Vorlage: Fristverlängerungsantrag §411 ZPO\n'
+        + 'Gericht: '+f.ag_name+'\n'
+        + 'Aktenzeichen: '+(f.az||'[Gerichts-AZ]')+'\n'
+        + 'Sachverständiger: '+f.sv_name+'\n\n'
+        + 'Beantrage gemäß §411 Abs.1 ZPO Fristverlängerung für Gutachten AZ '+f.az+'. Begründe mit Komplexität des Schadenbilds / noch ausstehenden Unterlagen / Untersuchungsaufwand. Kein konkretes neues Datum.';
+    }
+  },
+
+  'G-09': {
+    sys: 'Du bist ö.b.u.v. Sachverständiger. Schreibe den Einleitungstext für Ergänzungsfragen-Antwort gem. §411 ZPO. NUR Fließtext, keine Anrede, kein Briefkopf, keine Grußformel, kein Markdown. 3-4 Sätze.',
+    usr: function(f) {
+      return 'Vorlage: Ergänzungsfragen-Antwort §411 ZPO\n'
+        + 'Aktenzeichen: '+(f.az||'[Gerichts-AZ]')+'\n'
+        + 'Sachverständiger: '+f.sv_name+'\n\n'
+        + 'Nehme Stellung zu den Ergänzungsfragen des Gerichts / der Parteien im Verfahren AZ '+f.az+'. Verweise auf das bereits erstattete Gutachten. Beantworte die Fragen auf Basis der dortigen Feststellungen.';
+    }
+  },
+
+  'G-10': {
+    sys: 'Du bist ö.b.u.v. Sachverständiger. Schreibe einen Hinweis auf Kostenüberschreitung nach §407a Abs.3 ZPO. NUR Fließtext, keine Anrede, kein Briefkopf, keine Grußformel, kein Markdown. 4-5 Sätze. Sachlich, förmlich.',
+    usr: function(f) {
+      return 'Vorlage: Kostenrahmenerhöhung §407a Abs.3 ZPO\n'
+        + 'Gericht: '+f.ag_name+'\n'
+        + 'Aktenzeichen: '+(f.az||'[Gerichts-AZ]')+'\n'
+        + 'Sachverständiger: '+f.sv_name+'\n\n'
+        + 'Zeige gemäß §407a Abs.3 ZPO an dass der Aufwand den Kostenrahmen voraussichtlich übersteigt. Begründe sachlich (Untersuchungsumfang, Laboranalysen, Aktenlage). Bitte um gerichtliche Entscheidung zur Fortführung. Kein konkreter EUR-Betrag.';
+    }
+  },
+
+  // VERSICHERUNG
+  'V-01': {
+    sys: 'Du bist ö.b.u.v. Sachverständiger. Schreibe einen Erstbericht an eine Versicherung nach Schadensmeldung. NUR Fließtext, keine Anrede, kein Briefkopf, keine Grußformel, kein Markdown. 4-5 Sätze. Professionell, faktenorientiert.',
+    usr: function(f) {
+      return 'Vorlage: Erstbericht an Versicherung\n'
+        + 'Versicherung: '+f.ag_name+'\n'
+        + 'Objekt: '+f.adresse+'\n'
+        + 'Aktenzeichen: '+(f.az||'wird noch mitgeteilt')+'\n'
+        + 'Sachverständiger: '+f.sv_name+'\n\n'
+        + 'Berichte über die erste Inaugenscheinnahme des Schadensobjekts '+f.adresse+'. Schildere kurz den vorgefundenen Zustand, den Schadensumfang und die nächsten Schritte (Detailuntersuchung, Gutachtenerstellung). Kein abschließendes Urteil im Erstbericht.';
+    }
+  }
+};
+
+/* ── FALLBACK FÜR NICHT SPEZIFIZIERTE VORLAGEN ── */
+function kiGetPrompt(tplId, felder) {
+  var p = KI_PROMPTS[tplId];
+  if (p) {
+    return { sys: p.sys, usr: p.usr(felder) };
+  }
+  // Generischer Fallback
+  var cat = _tpl ? _tpl.cat : 'allgemein';
+  var catTon = {
+    gericht: 'förmlich-juristisch, §407a ZPO beachten',
+    versicherung: 'sachlich-technisch, faktenorientiert',
+    ortstermin: 'sachlich-dokumentarisch',
+    angebote: 'professionell-akquise',
+    intern: 'intern-dokumentarisch'
+  }[cat] || 'sachlich-professionell';
+
+  return {
+    sys: 'Du bist ö.b.u.v. Sachverständiger für Bau- und Gebäudeschäden. Schreibe den Rumpftext des angeforderten Briefes. NUR Fließtext — keine Anrede, keinen Briefkopf, keine Grußformel, kein Markdown. Ton: '+catTon+'. 3-5 Sätze. Konkret mit den gegebenen Falldaten, keine Platzhalter wie X, Y oder [...]..',
+    usr: 'Vorlage: '+(_tpl?_tpl.name:'Brief')+'\n'
+      +'Auftraggeber: '+(felder.ag_name||'—')+'\n'
+      +'Objekt: '+(felder.adresse||'—')+'\n'
+      +'Aktenzeichen: '+(felder.az||'—')+'\n'
+      +'Sachverständiger: '+(felder.sv_name||'—')+'\n'
+      +'Datum: '+(felder.datum||'—')+'\n\n'
+      +'Schreibe jetzt den konkreten Brieftext für diese Vorlage.'
+  };
+}
+
 window.bvGenKI=async function(){
-  var box=document.getElementById('ki-box');var boxTxt=document.getElementById('ki-box-txt');
-  var edit=document.getElementById('ki-edit');var btn=document.getElementById('ki-gen-btn');
-  box.classList.add('show');if(boxTxt)boxTxt.textContent='KI generiert Brieftext…';
-  if(edit)edit.style.display='none';if(btn)btn.disabled=true;
-  var sys='Du bist Assistent für öffentlich bestellte Sachverständige. Schreibe präzisen deutschen Brieftext. Nur Fließtext — kein Briefkopf, keine Grußformel, kein Markdown.';
-  var usr='Brief: '+(_tpl?_tpl.name:'Allgemein')+'\nAZ: '+(_felder.az||'unbekannt')+'\nAuftraggeber: '+(_felder.ag_name||'unbekannt')+'\nObjekt: '+(_felder.adresse||'unbekannt')+'\nSachverständiger: '+(_felder.sv_name||'unbekannt');
+  var box=document.getElementById('ki-box');
+  var boxTxt=document.getElementById('ki-box-txt');
+  var edit=document.getElementById('ki-edit');
+  var btn=document.getElementById('ki-gen-btn');
+
+  box.classList.add('show');
+  if(boxTxt) boxTxt.textContent='KI schreibt Ihren Brief…';
+  if(btn) btn.disabled=true;
+
+  // Felder sicherstellen
+  fuelleSV();
+  if(_fall) fuelleFall();
+
+  // Prompt abrufen
+  var prompt = kiGetPrompt(_tpl?_tpl.id:'', _felder);
+
   try{
-    var res=await fetch('/.netlify/functions/ki-proxy',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({model:'gpt-4o-mini',max_tokens:600,messages:[{role:'system',content:sys},{role:'user',content:usr}]})});
-    if(!res.ok)throw new Error('HTTP '+res.status);
+    var res=await fetch('/.netlify/functions/ki-proxy',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'gpt-4o-mini',
+        max_tokens:500,
+        messages:[
+          {role:'system', content:prompt.sys},
+          {role:'user',   content:prompt.usr}
+        ]
+      })
+    });
+    if(!res.ok) throw new Error('HTTP '+res.status);
     var data=await res.json();
     var txt=(data.content&&data.content[0]&&data.content[0].text)||'';
-    if(!txt)throw new Error('Keine Antwort');
+    if(!txt) throw new Error('Keine Antwort von KI');
+
     box.classList.remove('show');
-    if(edit){edit.value=txt;edit.style.display='block';}
-    if(btn){btn.disabled=false;btn.textContent='↻ Neu';}
-    bvToast('✅ KI-Text bereit','success');
+
+    // Edit-Textarea befüllen
+    if(edit) edit.value=txt;
+
+    // Sofort in Email-Vorschau übernehmen
+    var body=document.getElementById('prev-body');
+    if(body) body.textContent=txt;
+
+    if(btn){btn.disabled=false;btn.textContent='↻ Neu generieren';}
+
+    // KI-Hinweisbox einblenden
+    var kiArea=document.getElementById('ki-area');
+    if(kiArea) kiArea.style.display='block';
+
+    bvToast('✅ Brief fertig — in Vorschau übernommen','success');
+
   }catch(e){
     box.classList.remove('show');
-    if(btn){btn.disabled=false;btn.textContent='Generieren';}
+    if(btn){btn.disabled=false;btn.textContent='↻ Neu generieren';}
     bvToast('KI-Fehler: '+e.message,'error');
   }
 };

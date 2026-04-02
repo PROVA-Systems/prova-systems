@@ -417,6 +417,377 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-ui);min-heigh
 @media(max-width:768px){ #main-wrap { margin-left: 0 !important; } }
 
 @media(max-width:768px){#flow-burger{display:block!important}}
+
+/* ════════════════════════════════════════════════════════
+   NORMEN-PINNWAND — Feature F
+   ════════════════════════════════════════════════════════ */
+.normen-pinnwand {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 16px;
+  background: linear-gradient(135deg, rgba(79,142,247,.06), rgba(79,142,247,.02));
+  border: 1px solid rgba(79,142,247,.15);
+  border-radius: 12px;
+  margin: 8px 16px 12px;
+  position: relative;
+  transition: all .2s;
+}
+.normen-pinnwand.collapsed {
+  padding: 8px 16px;
+  background: rgba(79,142,247,.03);
+}
+.normen-pinnwand-icon {
+  font-size: 16px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.normen-pinnwand-body { flex: 1; min-width: 0; }
+.normen-pinnwand-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  cursor: pointer;
+}
+.normen-pinnwand-title {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--accent, #4f8ef7);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.normen-pinnwand-toggle {
+  font-size: 10px;
+  color: var(--text3);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: inherit;
+  transition: color .12s;
+}
+.normen-pinnwand-toggle:hover { color: var(--text2); }
+.normen-pinnwand-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+.normen-pinnwand.collapsed .normen-pinnwand-chips { display: none; }
+.np-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  background: rgba(79,142,247,.08);
+  border: 1px solid rgba(79,142,247,.2);
+  color: var(--accent, #4f8ef7);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .15s;
+  font-family: inherit;
+  white-space: nowrap;
+}
+.np-chip:hover {
+  background: rgba(79,142,247,.16);
+  border-color: rgba(79,142,247,.4);
+  transform: translateY(-1px);
+}
+.np-chip:active { transform: translateY(0); }
+.np-chip-title {
+  font-size: 10px;
+  color: var(--text3);
+  font-weight: 400;
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.normen-pinnwand-hinweise {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(79,142,247,.1);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.normen-pinnwand.collapsed .normen-pinnwand-hinweise { display: none; }
+.np-hinweis {
+  font-size: 10px;
+  color: var(--text3);
+  padding: 2px 8px;
+  background: rgba(255,255,255,.04);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+.np-copy-toast {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%) translateY(10px);
+  background: rgba(16,185,129,.15);
+  border: 1px solid rgba(16,185,129,.3);
+  color: #10b981;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 8px 16px;
+  border-radius: 8px;
+  z-index: 9999;
+  opacity: 0;
+  transition: all .2s;
+  pointer-events: none;
+  white-space: nowrap;
+}
+.np-copy-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ════════════════════════════════════════════════════════
+   SLASH COMMANDS — Raycast/Notion Style
+   ════════════════════════════════════════════════════════ */
+.slash-menu {
+  position: fixed;
+  z-index: 9000;
+  background: var(--surface, #1c2130);
+  border: 1px solid var(--border2, rgba(255,255,255,.14));
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0,0,0,.55), 0 2px 8px rgba(0,0,0,.35);
+  width: 320px;
+  max-height: 360px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: slashIn .15s cubic-bezier(.25,.46,.45,.94);
+}
+@keyframes slashIn {
+  from { opacity:0; transform:translateY(-6px) scale(.97); }
+  to   { opacity:1; transform:translateY(0) scale(1); }
+}
+.slash-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border, rgba(255,255,255,.07));
+  flex-shrink: 0;
+}
+.slash-search-icon { font-size: 13px; color: var(--text3); flex-shrink: 0; }
+.slash-search-input {
+  flex: 1;
+  background: none;
+  border: none;
+  outline: none;
+  font-size: 13px;
+  color: var(--text);
+  font-family: inherit;
+  caret-color: var(--accent);
+}
+.slash-search-input::placeholder { color: var(--text3); }
+.slash-search-kbd {
+  font-size: 9px;
+  color: var(--text3);
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 4px;
+  padding: 2px 5px;
+  font-family: monospace;
+  flex-shrink: 0;
+}
+.slash-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 6px;
+}
+.slash-body::-webkit-scrollbar { width: 3px; }
+.slash-body::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+.slash-section-label {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--text3);
+  padding: 6px 8px 3px;
+}
+.slash-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 7px 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background .1s;
+}
+.slash-item:hover, .slash-item.slash-active {
+  background: rgba(79,142,247,.1);
+}
+.slash-item-icon {
+  width: 28px; height: 28px;
+  border-radius: 8px;
+  background: rgba(255,255,255,.06);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px;
+  flex-shrink: 0;
+}
+.slash-item-icon.norm { background: rgba(79,142,247,.1); }
+.slash-item-icon.baustein { background: rgba(16,185,129,.1); }
+.slash-item-icon.phrase { background: rgba(245,158,11,.1); }
+.slash-item-body { flex: 1; min-width: 0; }
+.slash-item-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.slash-item-sub {
+  font-size: 10px;
+  color: var(--text3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 1px;
+}
+.slash-item-badge {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: rgba(79,142,247,.12);
+  color: var(--accent);
+  flex-shrink: 0;
+}
+.slash-empty {
+  text-align: center;
+  padding: 20px;
+  font-size: 12px;
+  color: var(--text3);
+}
+.slash-footer {
+  padding: 6px 12px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  gap: 12px;
+  flex-shrink: 0;
+}
+.slash-footer-hint {
+  font-size: 10px;
+  color: var(--text3);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.slash-footer-hint kbd {
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 3px;
+  padding: 1px 4px;
+  font-family: monospace;
+  font-size: 9px;
+}
+
+/* ════════════════════════════════════════════════════════
+   FOCUS MODE — iA Writer / Notion Style
+   ════════════════════════════════════════════════════════ */
+body.focus-mode .flow-header        { opacity:0; pointer-events:none; transition:opacity .3s; }
+body.focus-mode .fall-banner        { display:none !important; }
+body.focus-mode .normen-pinnwand    { display:none !important; }
+body.focus-mode .diktat-hinweis     { display:none !important; }
+body.focus-mode #kiAnalyseBox       { display:none !important; }
+body.focus-mode .sidebar            { transform:translateX(-100%) !important; transition:transform .3s !important; }
+body.focus-mode .main-wrap          { margin-left:0 !important; transition:margin-left .3s; }
+body.focus-mode .weg-tabs           { display:none !important; }
+body.focus-mode .ki-normen-inline   { display:none !important; }
+body.focus-mode .card-header .typ-btn { display:none; }
+
+/* Fokus-Overlay: dunkler Rand um Textarea */
+body.focus-mode .textarea-wrap {
+  box-shadow: 0 0 0 100vmax rgba(0,0,0,.45);
+  border-radius: 8px;
+  position: relative;
+  z-index: 50;
+}
+body.focus-mode .sv-textarea {
+  font-size: 16px !important;
+  line-height: 1.9 !important;
+  padding: 20px !important;
+  min-height: 60vh !important;
+  border-color: rgba(79,142,247,.3) !important;
+  background: var(--bg2, #111318) !important;
+}
+
+/* Fokus-Leiste oben */
+.focus-bar {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: 44px;
+  background: rgba(11,13,17,.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(255,255,255,.06);
+  z-index: 500;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+}
+body.focus-mode .focus-bar { display:flex; }
+body.focus-mode .main-wrap { padding-top: 44px; }
+.focus-bar-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text3);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.focus-bar-title span { color: var(--accent); }
+.focus-bar-exit {
+  padding: 5px 12px;
+  border-radius: 7px;
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.1);
+  color: var(--text3);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all .15s;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.focus-bar-exit:hover { background:rgba(255,255,255,.1); color:var(--text); }
+.focus-bar-chars {
+  font-size: 11px;
+  color: var(--text3);
+  font-variant-numeric: tabular-nums;
+}
+.focus-bar-chars.ok { color: #10b981; }
+
+/* Focus-Toggle-Button im §6 Header */
+.focus-toggle-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 7px;
+  background: rgba(255,255,255,.05);
+  border: 1px solid var(--border);
+  color: var(--text3);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all .15s;
+}
+.focus-toggle-btn:hover { background:rgba(79,142,247,.1); color:var(--accent); border-color:rgba(79,142,247,.3); }
+body.focus-mode .focus-toggle-btn { background:rgba(79,142,247,.12); color:var(--accent); border-color:rgba(79,142,247,.3); }
 </style>
 <script src="theme.js"></script>
 <script src="trial-guard.js"></script>
@@ -426,6 +797,16 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-ui);min-heigh
 <link rel="icon" type="image/svg+xml" href="/icons/icon-192.svg">
 </head>
 <body>
+<!-- FOCUS BAR (erscheint nur im Focus Mode) -->
+<div class="focus-bar" id="focus-bar">
+  <div class="focus-bar-title">
+    <span>✍️</span> Fokus-Modus · §6 Fachurteil
+    <span style="font-size:9px;padding:2px 6px;background:rgba(79,142,247,.15);border-radius:4px;">ESC beendet</span>
+  </div>
+  <div class="focus-bar-chars" id="focus-char-count">0 Zeichen</div>
+  <button class="focus-bar-exit" onclick="toggleFocusMode()">✕ Fokus beenden</button>
+</div>
+
 <div class="app-shell" id="app-shell">
 <!-- FLOW HEADER -->
 <header class="flow-header">
@@ -475,6 +856,23 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-ui);min-heigh
     <div class="fall-banner-sep">·</div>
     <div class="fall-banner-item" id="bannerObj">—</div>
   </div>
+
+  <!-- ── F: NORMEN-PINNWAND ── -->
+  <div class="normen-pinnwand" id="normen-pinnwand" style="display:none;">
+    <div class="normen-pinnwand-icon">📚</div>
+    <div class="normen-pinnwand-body">
+      <div class="normen-pinnwand-header" onclick="toggleNormenPinnwand()">
+        <div class="normen-pinnwand-title">
+          <span id="np-schadenart-label">Referenz-Normen</span>
+          <span id="np-count" style="background:rgba(79,142,247,.15);color:var(--accent);border-radius:8px;padding:1px 6px;font-size:9px;">0</span>
+        </div>
+        <button class="normen-pinnwand-toggle" id="np-toggle-btn">▲ Einklappen</button>
+      </div>
+      <div class="normen-pinnwand-chips" id="np-chips"></div>
+      <div class="normen-pinnwand-hinweise" id="np-hinweise"></div>
+    </div>
+  </div>
+  <div class="np-copy-toast" id="np-copy-toast"></div>
 
   <!-- §6 DIKTAT-HINWEIS -->
   <div class="diktat-hinweis">
@@ -559,10 +957,15 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-ui);min-heigh
               <div class="card-sub">Pflicht nach §407a Abs. 3 ZPO · Konjunktiv II wird live geprüft</div>
             </div>
             <!-- Verwendungszweck: kompakte Pills direkt im Header -->
-            <div style="display:flex;gap:6px;flex-shrink:0;">
+            <div style="display:flex;gap:6px;flex-shrink:0;align-items:center;">
               <button class="typ-btn active" id="typ-gericht" onclick="setTyp('gericht')" style="padding:4px 10px;font-size:10px;min-width:auto;">⚖️ Gericht</button>
               <button class="typ-btn" id="typ-versicherung" onclick="setTyp('versicherung')" style="padding:4px 10px;font-size:10px;min-width:auto;">🏢 Versicherung</button>
               <button class="typ-btn" id="typ-privat" onclick="setTyp('privat')" style="padding:4px 10px;font-size:10px;min-width:auto;">🏠 Privat</button>
+              <div style="width:1px;height:18px;background:var(--border);margin:0 2px;"></div>
+              <button class="focus-toggle-btn" id="focus-btn" onclick="toggleFocusMode()" title="Fokus-Modus (F)">
+                <span id="focus-btn-icon">⛶</span>
+                <span id="focus-btn-label">Fokus</span>
+              </button>
             </div>
           </div>
         </div>
@@ -2512,6 +2915,497 @@ window.addEventListener('message', function(e) {
   if (typeof showToast === 'function') showToast('Textbaustein eingefügt ✅', 'success');
 }, false);
 /* ── END POSTMESSAGE ── */
+
+
+/* ══════════════════════════════════════════════════════════
+   FEATURE F: NORMEN-PINNWAND
+   Lädt Normen aus Starter-Kit (E) und zeigt sie als Chips
+   ══════════════════════════════════════════════════════════ */
+(function() {
+  var _npCollapsed = localStorage.getItem('prova_np_collapsed') === '1';
+
+  function ladeNormenPinnwand() {
+    var panel = document.getElementById('normen-pinnwand');
+    if (!panel) return;
+
+    // Daten laden: erst AZ-spezifisch, dann generisch
+    var data = null;
+    try {
+      var az = sessionStorage.getItem('prova_current_az')
+             || new URLSearchParams(window.location.search).get('az')
+             || localStorage.getItem('prova_letztes_az')
+             || '';
+
+      if (az && az !== '—') {
+        var azData = localStorage.getItem('prova_fall_normen_' + az);
+        if (azData) data = JSON.parse(azData);
+      }
+      if (!data) {
+        var generic = localStorage.getItem('prova_starter_kit_aktiv');
+        if (generic) data = JSON.parse(generic);
+      }
+    } catch(e) {}
+
+    if (!data || !data.normen || !data.normen.length) {
+      panel.style.display = 'none';
+      return;
+    }
+
+    // Label
+    var label = document.getElementById('np-schadenart-label');
+    var kitName = data.schadenart || (data.kit ? (window.STARTER_KITS && window.STARTER_KITS[data.kit] ? window.STARTER_KITS[data.kit].name : data.kit) : '');
+    if (label) label.textContent = kitName ? kitName + ' — Referenz-Normen' : 'Referenz-Normen';
+
+    // Count
+    var countEl = document.getElementById('np-count');
+    if (countEl) countEl.textContent = data.normen.length;
+
+    // Chips
+    var chipsEl = document.getElementById('np-chips');
+    if (chipsEl) {
+      chipsEl.innerHTML = data.normen.map(function(n) {
+        return '<button class="np-chip" onclick="npCopyNorm('' + escNp(n.num) + '', '' + escNp(n.titel) + '')" title="Klick: In Zwischenablage kopieren\n' + escNp(n.titel) + '">'
+          + '<span>📌</span>'
+          + '<span>' + escNp(n.num) + '</span>'
+          + '<span class="np-chip-title">' + escNp(n.titel) + '</span>'
+          + '</button>';
+      }).join('');
+    }
+
+    // Hinweise
+    var hinEl = document.getElementById('np-hinweise');
+    if (hinEl && data.hinweise && data.hinweise.length) {
+      hinEl.innerHTML = data.hinweise.map(function(h) {
+        return '<span class="np-hinweis">💡 ' + escNp(h) + '</span>';
+      }).join('');
+    }
+
+    // Panel anzeigen + Collapse-State
+    panel.style.display = 'flex';
+    if (_npCollapsed) {
+      panel.classList.add('collapsed');
+      var btn = document.getElementById('np-toggle-btn');
+      if (btn) btn.textContent = '▼ Ausklappen';
+    }
+  }
+
+  window.toggleNormenPinnwand = function() {
+    var panel = document.getElementById('normen-pinnwand');
+    var btn = document.getElementById('np-toggle-btn');
+    if (!panel) return;
+    _npCollapsed = !_npCollapsed;
+    localStorage.setItem('prova_np_collapsed', _npCollapsed ? '1' : '0');
+    panel.classList.toggle('collapsed', _npCollapsed);
+    if (btn) btn.textContent = _npCollapsed ? '▼ Ausklappen' : '▲ Einklappen';
+  };
+
+  window.npCopyNorm = function(num, titel) {
+    var text = num + ': ' + titel;
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(text).then(function() {
+        _npToast('📋 ' + num + ' kopiert');
+      }).catch(function() { _npToastFallback(text); });
+    } else {
+      _npToastFallback(text);
+    }
+  };
+
+  function _npToastFallback(text) {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px;';
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand('copy'); _npToast('📋 Kopiert'); } catch(e) {}
+    ta.remove();
+  }
+
+  function _npToast(msg) {
+    var t = document.getElementById('np-copy-toast');
+    if (!t) return;
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(function() { t.classList.remove('show'); }, 2000);
+  }
+
+  function escNp(s) {
+    return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  }
+
+  // Init: nach DOM-Ready laden
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', ladeNormenPinnwand);
+  } else {
+    ladeNormenPinnwand();
+  }
+
+})();
+
+
+/* ══════════════════════════════════════════════════════════
+   SLASH COMMANDS — Raycast/Notion-Style für §6 Textareas
+   Trigger: '/' → floating Picker mit Normen + Textbausteinen
+   ══════════════════════════════════════════════════════════ */
+(function() {
+  'use strict';
+
+  var _menu = null;
+  var _targetTA = null;
+  var _slashPos = -1;
+  var _activeIdx = -1;
+  var _items = [];
+
+  /* ── Standard-Phrasen für Sachverständige ── */
+  var PHRASEN = [
+    { title: 'Sichtbefund positiv',   text: 'Im Rahmen der Ortsinaugenscheinnahme wurden folgende Schäden festgestellt:', typ: 'phrase', icon: '📋' },
+    { title: 'Kein Befund',            text: 'Im Bereich [Bereich] konnten keine relevanten Schäden festgestellt werden.', typ: 'phrase', icon: '✅' },
+    { title: 'Messwert-Einleitung',    text: 'Die durchgeführten Feuchtemessungen ergaben folgende Werte:', typ: 'phrase', icon: '📊' },
+    { title: 'Normbezug einleiten',    text: 'Gemäß [Norm] ist festzustellen, dass', typ: 'phrase', icon: '⚖️' },
+    { title: 'Sanierung empfehlen',    text: 'Zur Behebung des Schadens wird folgende Sanierungsmaßnahme empfohlen:', typ: 'phrase', icon: '🔧' },
+    { title: 'Kausalität Konjunktiv', text: 'Als Ursache für den festgestellten Schaden käme in Betracht:', typ: 'phrase', icon: '🔍' },
+    { title: 'Fotoverweis',            text: 'Zur Dokumentation wird auf die beigefügte Foto-Anlage (Bild [Nr.]) verwiesen.', typ: 'phrase', icon: '📷' },
+    { title: 'Dringlichkeit',          text: 'Aufgrund des fortgeschrittenen Schadensbildes wird eine umgehende Schadensbehebung empfohlen.', typ: 'phrase', icon: '⚠️' },
+  ];
+
+  /* ── Daten sammeln (Normen + Textbausteine + Phrasen) ── */
+  function _getAllItems() {
+    var all = [];
+
+    // 1. Pinnwand-Normen zuerst (aus Starter-Kit — höchste Relevanz)
+    try {
+      var kitRaw = localStorage.getItem('prova_starter_kit_aktiv');
+      if (kitRaw) {
+        var kit = JSON.parse(kitRaw);
+        if (kit.normen) {
+          kit.normen.forEach(function(n) {
+            all.push({ title: n.num, sub: n.titel, text: n.num + ': ' + n.titel, typ: 'norm', icon: '📌', pinned: true });
+          });
+        }
+      }
+    } catch(e) {}
+
+    // 2. NORMEN_DB (falls verfügbar)
+    if (window.NORMEN_DB && window.NORMEN_DB.length) {
+      var added = all.map(function(i){return i.title;});
+      window.NORMEN_DB.slice(0, 20).forEach(function(n) {
+        var num = n.n || n.num || '';
+        if (num && added.indexOf(num) === -1) {
+          all.push({ title: num, sub: n.t || n.titel || '', text: num + ': ' + (n.t || n.titel || ''), typ: 'norm', icon: '📚' });
+        }
+      });
+    }
+
+    // 3. Textbausteine aus localStorage
+    try {
+      var tb = JSON.parse(localStorage.getItem('prova_textbausteine') || '[]');
+      tb.slice(0, 30).forEach(function(b) {
+        all.push({ title: b.titel || b.name || '—', sub: (b.text || '').slice(0, 60) + '…', text: b.text || '', typ: 'baustein', icon: '📝' });
+      });
+    } catch(e) {}
+
+    // 4. Standard-Phrasen
+    PHRASEN.forEach(function(p) {
+      all.push({ title: p.title, sub: p.text.slice(0, 55) + '…', text: p.text, typ: 'phrase', icon: p.icon });
+    });
+
+    return all;
+  }
+
+  /* ── Filter nach Query ── */
+  function _filter(q) {
+    var all = _getAllItems();
+    if (!q) return all.slice(0, 12);
+    var ql = q.toLowerCase();
+    return all.filter(function(i) {
+      return (i.title + ' ' + i.sub).toLowerCase().indexOf(ql) !== -1;
+    }).slice(0, 12);
+  }
+
+  /* ── Menu öffnen ── */
+  function _open(ta) {
+    _close();
+    _targetTA = ta;
+    _menu = document.createElement('div');
+    _menu.className = 'slash-menu';
+    _menu.id = 'slash-menu';
+    _menu.innerHTML = '<div class="slash-search">'
+      + '<span class="slash-search-icon">⌘</span>'
+      + '<input class="slash-search-input" id="slash-input" placeholder="Norm, Baustein oder Phrase suchen…" autocomplete="off">'
+      + '<span class="slash-search-kbd">ESC</span>'
+      + '</div>'
+      + '<div class="slash-body" id="slash-body"></div>'
+      + '<div class="slash-footer">'
+      +   '<div class="slash-footer-hint"><kbd>↑↓</kbd> Navigieren</div>'
+      +   '<div class="slash-footer-hint"><kbd>↵</kbd> Einfügen</div>'
+      +   '<div class="slash-footer-hint"><kbd>ESC</kbd> Schließen</div>'
+      + '</div>';
+
+    document.body.appendChild(_menu);
+    _positionMenu(ta);
+    _render('');
+
+    var inp = document.getElementById('slash-input');
+    if (inp) {
+      inp.focus();
+      inp.addEventListener('input', function() { _render(this.value); _activeIdx = 0; _updateActive(); });
+      inp.addEventListener('keydown', _onMenuKey);
+    }
+
+    // Click outside schließt
+    setTimeout(function() {
+      document.addEventListener('click', _onOutsideClick, true);
+    }, 50);
+  }
+
+  /* ── Menu positionieren (unter Caret) ── */
+  function _positionMenu(ta) {
+    if (!_menu || !ta) return;
+    var rect = ta.getBoundingClientRect();
+    var menuH = 360;
+    var top = rect.bottom + 6;
+    if (top + menuH > window.innerHeight - 20) top = rect.top - menuH - 6;
+    var left = rect.left;
+    if (left + 320 > window.innerWidth - 16) left = window.innerWidth - 336;
+    _menu.style.top = top + 'px';
+    _menu.style.left = Math.max(8, left) + 'px';
+  }
+
+  /* ── Items rendern ── */
+  function _render(q) {
+    _items = _filter(q);
+    var body = document.getElementById('slash-body');
+    if (!body) return;
+    if (!_items.length) {
+      body.innerHTML = '<div class="slash-empty">Nichts gefunden für „' + _esc(q) + '"</div>';
+      return;
+    }
+
+    // Nach Typ gruppieren
+    var pinned   = _items.filter(function(i){return i.pinned;});
+    var normen   = _items.filter(function(i){return i.typ==='norm' && !i.pinned;});
+    var bausteine= _items.filter(function(i){return i.typ==='baustein';});
+    var phrasen  = _items.filter(function(i){return i.typ==='phrase';});
+
+    var html = '';
+    var idx = 0;
+    function group(label, arr) {
+      if (!arr.length) return;
+      html += '<div class="slash-section-label">' + label + '</div>';
+      arr.forEach(function(item) {
+        var iconClass = item.typ === 'norm' ? 'norm' : item.typ === 'baustein' ? 'baustein' : 'phrase';
+        html += '<div class="slash-item" data-idx="' + idx + '" onclick="slashInsert(' + idx + ')">'
+          + '<div class="slash-item-icon ' + iconClass + '">' + item.icon + '</div>'
+          + '<div class="slash-item-body">'
+          +   '<div class="slash-item-title">' + _esc(item.title) + '</div>'
+          +   '<div class="slash-item-sub">' + _esc(item.sub) + '</div>'
+          + '</div>'
+          + (item.pinned ? '<span class="slash-item-badge">📌 Kit</span>' : '')
+          + '</div>';
+        idx++;
+      });
+    }
+
+    if (pinned.length)    group('📌 Starter-Kit Normen', pinned);
+    if (normen.length)    group('📚 Normen', normen);
+    if (bausteine.length) group('📝 Textbausteine', bausteine);
+    if (phrasen.length)   group('💬 Phrasen', phrasen);
+
+    body.innerHTML = html;
+    _activeIdx = 0;
+    _updateActive();
+  }
+
+  /* ── Aktives Item markieren ── */
+  function _updateActive() {
+    var items = document.querySelectorAll('.slash-item');
+    items.forEach(function(el, i) { el.classList.toggle('slash-active', i === _activeIdx); });
+    var active = document.querySelector('.slash-item.slash-active');
+    if (active) active.scrollIntoView({ block: 'nearest' });
+  }
+
+  /* ── Tastaturnavigation ── */
+  function _onMenuKey(e) {
+    if (e.key === 'ArrowDown') { e.preventDefault(); _activeIdx = Math.min(_activeIdx + 1, _items.length - 1); _updateActive(); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); _activeIdx = Math.max(_activeIdx - 1, 0); _updateActive(); }
+    else if (e.key === 'Enter') { e.preventDefault(); _insertItem(_activeIdx); }
+    else if (e.key === 'Escape') { e.preventDefault(); _close(); _restoreFocus(); }
+  }
+
+  /* ── Einfügen ── */
+  window.slashInsert = function(idx) { _insertItem(idx); };
+
+  function _insertItem(idx) {
+    var item = _items[idx];
+    if (!item || !_targetTA) { _close(); return; }
+
+    var ta = _targetTA;
+    var val = ta.value;
+    var start = _slashPos;
+    var end = ta.selectionStart;
+
+    // Slash-Trigger + getippte Query ersetzen
+    var before = val.slice(0, start);
+    var after  = val.slice(end);
+    ta.value = before + item.text + ' ' + after;
+    ta.selectionStart = ta.selectionEnd = (before + item.text + ' ').length;
+
+    // Event feuern damit PROVA den Inhalt registriert
+    ta.dispatchEvent(new Event('input', { bubbles: true }));
+    _close();
+    ta.focus();
+
+    // Toast
+    _showSlashToast('✅ ' + item.title + ' eingefügt');
+  }
+
+  function _restoreFocus() { if (_targetTA) _targetTA.focus(); }
+
+  /* ── Schließen ── */
+  function _close() {
+    if (_menu) { _menu.remove(); _menu = null; }
+    document.removeEventListener('click', _onOutsideClick, true);
+    _items = [];
+    _activeIdx = -1;
+    _slashPos = -1;
+  }
+
+  function _onOutsideClick(e) {
+    if (_menu && !_menu.contains(e.target)) _close();
+  }
+
+  /* ── Toast ── */
+  function _showSlashToast(msg) {
+    var t = document.getElementById('np-copy-toast');
+    if (!t) return;
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(function() { t.classList.remove('show'); }, 2000);
+  }
+
+  /* ── Escape ── */
+  function _esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+  /* ── Textarea-Listener einrichten ── */
+  function _attachSlash(ta) {
+    ta.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape' && _menu) { _close(); return; }
+    });
+
+    ta.addEventListener('keyup', function(e) {
+      if (_menu) return; // Menu schon offen
+
+      // Slash nur am Zeilenanfang oder nach Whitespace
+      var pos = ta.selectionStart;
+      var val = ta.value;
+      var before = val.slice(0, pos);
+
+      if (e.key === '/' || (e.key !== 'Escape' && before.endsWith('/'))) {
+        var charBefore = before.slice(0, -1);
+        var isStart = charBefore.length === 0
+                   || /[\s
+]$/.test(charBefore);
+
+        if (isStart) {
+          _slashPos = pos - 1; // Position des '/'
+          _open(ta);
+        }
+      }
+    });
+  }
+
+  /* ── Init: alle sv-textareas anbinden ── */
+  function _init() {
+    var ids = ['svTextA','svB1','svB2','svB3','svTextEdit'];
+    ids.forEach(function(id) {
+      var el = document.getElementById(id);
+      if (el) _attachSlash(el);
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', _init);
+  } else {
+    _init();
+  }
+
+})();
+
+
+/* ══════════════════════════════════════════════════════════
+   FOCUS MODE — iA Writer / Notion Style
+   ══════════════════════════════════════════════════════════ */
+(function() {
+  var _focusActive = false;
+
+  window.toggleFocusMode = function() {
+    _focusActive = !_focusActive;
+    document.body.classList.toggle('focus-mode', _focusActive);
+
+    var btn    = document.getElementById('focus-btn');
+    var icon   = document.getElementById('focus-btn-icon');
+    var label  = document.getElementById('focus-btn-label');
+
+    if (_focusActive) {
+      if (icon)  icon.textContent  = '⛶';
+      if (label) label.textContent = 'Beenden';
+      // Fokus auf aktives Textarea
+      var activeTA = _getActiveTA();
+      if (activeTA) {
+        setTimeout(function() {
+          activeTA.focus();
+          activeTA.setSelectionRange(activeTA.value.length, activeTA.value.length);
+        }, 320);
+      }
+    } else {
+      if (icon)  icon.textContent  = '⛶';
+      if (label) label.textContent = 'Fokus';
+    }
+
+    // Zeichen in Focus-Bar aktualisieren
+    _updateFocusBar();
+  };
+
+  function _getActiveTA() {
+    var ids = ['svTextA','svB1','svB2','svB3','svTextEdit'];
+    for (var i = 0; i < ids.length; i++) {
+      var el = document.getElementById(ids[i]);
+      if (el && el.offsetParent !== null) return el; // erstes sichtbares
+    }
+    return null;
+  }
+
+  function _updateFocusBar() {
+    var charEl = document.getElementById('focus-char-count');
+    if (!charEl) return;
+    var ta = _getActiveTA();
+    var len = ta ? ta.value.trim().length : 0;
+    charEl.textContent = len + ' Zeichen' + (len >= 500 ? ' ✓' : ' (mind. 500)');
+    charEl.classList.toggle('ok', len >= 500);
+  }
+
+  // Zeichenanzahl live in Focus-Bar aktualisieren
+  ['svTextA','svB1','svB2','svB3','svTextEdit'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.addEventListener('input', function() { if (_focusActive) _updateFocusBar(); });
+  });
+
+  // ESC beendet Focus Mode
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && _focusActive) {
+      // Slash-Menu hat Vorrang — nur Focus beenden wenn Menu zu
+      var menu = document.getElementById('slash-menu');
+      if (!menu) toggleFocusMode();
+    }
+    // F-Taste als Shortcut (wenn kein Input fokussiert)
+    if (e.key === 'F' && !e.ctrlKey && !e.metaKey && !e.altKey) {
+      var tag = document.activeElement.tagName;
+      if (tag !== 'INPUT' && tag !== 'TEXTAREA') {
+        toggleFocusMode();
+      }
+    }
+  });
+
+})();
 
 </script>
 
