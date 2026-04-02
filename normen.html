@@ -405,7 +405,10 @@ function getFiltered() {
     if(hf && n.hf !== hf) return false;
     if(q) {
       const hay = (n.num+' '+n.titel+' '+n.bereich+' '+n.gw+' '+n.hint+' '+n.anw).toLowerCase();
-      if(!hay.includes(q)) return false;
+      // Normalisierte Suche: "DIN4108" findet "DIN 4108-2" (Leerzeichen/Bindestriche ignorieren)
+      const hayNorm = hay.replace(/[\s\-\.]/g,'');
+      const qNorm   = q.replace(/[\s\-\.]/g,'');
+      if(!hay.includes(q) && !hayNorm.includes(qNorm)) return false;
     }
     return true;
   });
