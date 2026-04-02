@@ -12,8 +12,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>PROVA — Gutachten</title>
 <script src="theme.js"></script>
-<script src="nav.js" defer></script>
-<link rel="stylesheet" href="mobile.css">
+<script src="nav.js"></script>
 <script src="slide-panel.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -457,8 +456,9 @@ tr:hover td{background:var(--gray-50);}
   .main-content{padding:.75rem .75rem 4.5rem;}
 }
 </style>
-
 <link rel="icon" type="image/svg+xml" href="/icons/icon-192.svg">
+<link rel="stylesheet" href="mobile.css">
+<link rel="stylesheet" href="prova-design.css">
 </head>
 <body data-user-package="starter">
 <!-- PROVA Paket-Gate — nicht entfernen -->
@@ -634,7 +634,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <div class="main-wrap" id="main-wrap">
 <header class="topbar">
-  <button id="mobile-menu-btn" aria-label="Menü öffnen" style="display:none;align-items:center;justify-content:center;width:40px;height:40px;border:none;background:none;color:var(--text2);font-size:20px;cursor:pointer;border-radius:8px;flex-shrink:0;">☰</button>
   <div class="topbar-left">
     <button class="burger" onclick="openMobileSidebar()" aria-label="Menü öffnen"><span></span><span></span><span></span></button>
     <div class="breadcrumb">
@@ -685,145 +684,187 @@ document.addEventListener('DOMContentLoaded', function() {
 
       <!-- Step 1: Stammdaten -->
       <div id="step1-content">
-        <!-- ── NEUER FALL: Minimalformular ── -->
-        <div style="max-width:680px;margin:0 auto;">
-
-          <!-- Schadenart + Adresse in einer Reihe -->
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
-            <div class="form-group">
-              <label class="form-label form-label-required">Schadenart</label>
-              <select class="form-select" id="f-schadenart" onchange="onSchadenartChange(this.value)">
-                <option value="">Bitte wählen…</option>
-                <option value="Wasserschaden">💧 Wasserschaden</option>
-                <option value="Schimmelbefall">🟢 Schimmelbefall</option>
-                <option value="Brandschaden">🔥 Brandschaden</option>
-                <option value="Sturmschaden">🌪️ Sturmschaden</option>
-                <option value="Baumangel">🏗️ Baumangel</option>
-                <option value="Einbruchschaden">🔒 Einbruchschaden</option>
-                <option value="Sonstiger Schaden">📋 Sonstiger Schaden</option>
-              </select>
-              <div class="field-error" id="e-schadenart">Bitte Schadenart wählen</div>
-            </div>
-            <div class="form-group">
-              <label class="form-label form-label-required">Auftraggeber-Typ</label>
-              <select class="form-select" id="f-auftraggeber-typ" onchange="switchAuftraggeberTyp(this.value)">
-                <option value="Versicherung">🏢 Versicherung</option>
-                <option value="Gericht">🏛️ Gericht / Behörde</option>
-                <option value="Privatperson">👤 Privatperson</option>
-                <option value="Anwaltskanzlei">⚖️ Anwaltskanzlei</option>
-                <option value="Hausverwaltung">🏘️ Hausverwaltung</option>
-                <option value="Bauherr">🏗️ Bauherr</option>
-              </select>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem">
+          <div>
+            <div class="card">
+              <div class="card-header"><h3 class="card-title">Schadensart & Auftrag</h3></div>
+              <div class="card-body">
+                <div class="form-group">
+                  <label class="form-label form-label-required">Schadensart</label>
+                  <select class="form-select" id="f-schadenart">
+                    <option value="">Bitte wählen…</option>
+                    <option value="Schimmelbefall" selected>Schimmelbefall</option>
+                    <option value="Wasserschaden">Wasserschaden</option>
+                    <option value="Sturmschaden">Sturmschaden</option>
+                    <option value="Brandschaden">Brandschaden</option>
+                    <option value="Einbruchschaden">Einbruchschaden</option>
+                    <option value="Sonstiger Schaden">Sonstiger Schaden</option>
+                  </select>
+                  <div class="field-error" id="e-schadenart">Bitte Schadensart wählen</div>
+                </div>
+                <div class="form-row">
+                  <div class="form-group"><label class="form-label">Aktenzeichen</label><input type="text" class="form-input" id="f-schadensnummer" placeholder="SCH-2026-001"></div>
+                  <div class="form-group"><label class="form-label">Schadensdatum</label><input type="date" class="form-input" id="f-schadensdatum"></div>
+                </div>
+                <!-- Fristenverwaltung (erscheint bei Gericht) -->
+                <div id="frist-block" style="display:none;background:rgba(79,142,247,.04);border:1px solid rgba(79,142,247,.12);border-radius:10px;padding:14px 16px;margin-bottom:16px;">
+                  <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#4f8ef7;margin-bottom:10px;">⚖️ Gerichtsgutachten — Fristen &amp; Beweisfragen</div>
+                  <div class="form-row">
+                    <div class="form-group"><label class="form-label">Gerichtsaktenzeichen</label><input type="text" class="form-input" id="f-gerichts-az" placeholder="7 OH 12/26"></div>
+                    <div class="form-group"><label class="form-label">Frist zur Gutachtenabgabe</label><input type="date" class="form-input" id="f-fristdatum" onchange="berechneFristWarnung()"></div>
+                  </div>
+                  <div id="frist-warnung" style="display:none;padding:8px 12px;border-radius:7px;margin-bottom:10px;font-size:12px;font-weight:600;"></div>
+                  <div class="form-group">
+                    <label class="form-label">Beweisfragen des Gerichts</label>
+                    <textarea class="form-input" id="f-beweisfragen" rows="4" placeholder="1. Liegt ein Mangel vor?&#10;2. Was ist die Ursache?&#10;3. Welche Kosten entstehen?" style="resize:vertical;min-height:80px;line-height:1.6;"></textarea>
+                    <div style="font-size:10px;color:var(--gray-500);margin-top:4px;">Jede Frage in eine neue Zeile. PROVA strukturiert das Gutachten automatisch nach den Beweisfragen.</div>
+                  </div>
+                </div>
+                <script>
+                function berechneFristWarnung(){
+                  var fd=document.getElementById('f-fristdatum');
+                  var warn=document.getElementById('frist-warnung');
+                  if(!fd||!fd.value||!warn)return;
+                  var frist=new Date(fd.value);
+                  var heute=new Date();
+                  var tage=Math.ceil((frist-heute)/(1000*60*60*24));
+                  if(tage<0){
+                    warn.style.display='block';warn.style.background='rgba(239,68,68,.1)';warn.style.color='#ef4444';
+                    warn.textContent='⚠️ Frist überschritten! '+Math.abs(tage)+' Tage überfällig.';
+                  }else if(tage<=7){
+                    warn.style.display='block';warn.style.background='rgba(239,68,68,.1)';warn.style.color='#ef4444';
+                    warn.textContent='🔴 Nur noch '+tage+' Tage bis zur Frist!';
+                  }else if(tage<=21){
+                    warn.style.display='block';warn.style.background='rgba(245,158,11,.1)';warn.style.color='#f59e0b';
+                    warn.textContent='🟡 Noch '+tage+' Tage bis zur Frist.';
+                  }else{
+                    warn.style.display='block';warn.style.background='rgba(16,185,129,.08)';warn.style.color='#10b981';
+                    warn.textContent='✅ Noch '+tage+' Tage bis zur Frist.';
+                  }
+                }
+                // Frist-Block bei Gericht anzeigen
+                var _origSwitchAT = window.switchAuftraggeberTyp || function(){};
+                window.switchAuftraggeberTyp = function(val) {
+                  _origSwitchAT(val);
+                  var fb=document.getElementById('frist-block');
+                  if(fb) fb.style.display=(val==='Gericht')?'block':'none';
+                };
+                </script>
+                <div class="form-group">
+                  <label class="form-label form-label-required" style="display:flex;justify-content:space-between;align-items:center;">
+                    <span>Auftraggeber</span>
+                    <button type="button" onclick="oeffneKontaktPicker()" style="padding:3px 9px;background:rgba(79,142,247,.12);border:1px solid rgba(79,142,247,.3);border-radius:5px;color:#93C5FD;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;">👥 Aus Kontakten</button>
+                  </label>
+                  <select class="form-select" id="f-auftraggeber-typ" onchange="switchAuftraggeberTyp(this.value)">
+                    <option value="">Bitte wählen…</option>
+                    <option value="Versicherung">Versicherung</option>
+                    <option value="Privatperson">Privatperson</option>
+                    <option value="Vermieter / Verwaltung">Vermieter / Verwaltung</option>
+                    <option value="WEG / Hausverwaltung">WEG / Hausverwaltung</option>
+                    <option value="Anwaltskanzlei">Anwaltskanzlei</option>
+                    <option value="Gericht">Gericht</option>
+                    <option value="Bauherr">Bauherr</option>
+                    <option value="Wohnungsbaugesellschaft">Wohnungsbaugesellschaft</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label form-label-required">Name / Firma</label>
+                  <!-- Immer sichtbares Suchfeld mit Autocomplete -->
+                  <div style="position:relative">
+                    <input type="text" class="form-input" id="f-auftraggeber-name"
+                      placeholder="Name oder Versicherung eingeben…"
+                      autocomplete="organization"
+                      oninput="handleAuftraggeberInput(this.value)"
+                      onblur="setTimeout(()=>{const d=document.getElementById('ag-dropdown');if(d)d.style.display='none'},200)">
+                    <div id="ag-dropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid var(--gray-200);border-radius:var(--radius-md);box-shadow:0 4px 20px rgba(0,0,0,.12);max-height:220px;overflow-y:auto;z-index:500;"></div>
+                  </div>
+                  <div class="field-error" id="e-auftraggeber-name">Bitte Name oder Versicherung eingeben</div>
+                </div>
+                <div class="form-group"><label class="form-label form-label-required">E-Mail Auftraggeber</label><input type="email" class="form-input" id="f-auftraggeber-email" placeholder="mueller@vers.de"><div class="field-error" id="e-auftraggeber-email">Bitte gültige E-Mail eingeben</div></div>
+                <div class="form-group"><label class="form-label">Ansprechpartner</label><input type="text" class="form-input" id="f-ansprechpartner" placeholder="Herr Müller"></div>
+              </div>
             </div>
           </div>
 
-          <!-- Auftraggeber Name -->
-          <div class="form-group" style="margin-bottom:14px;">
-            <label class="form-label form-label-required">Auftraggeber / Name</label>
-            <div style="position:relative;">
-              <input type="text" class="form-input" id="f-auftraggeber-name"
-                placeholder="z.B. Allianz Versicherung AG oder Dr. Max Müster"
-                oninput="handleAuftraggeberInput(this.value)" autocomplete="off">
-              <div id="ag-dropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--surface2,#232a3a);border:1px solid var(--border2);border-radius:8px;z-index:100;max-height:180px;overflow-y:auto;box-shadow:0 4px 16px rgba(0,0,0,.4);margin-top:2px;"></div>
-            </div>
-            <div class="field-error" id="e-auftraggeber-name">Bitte Namen eingeben</div>
-          </div>
-
-          <!-- Objekt-Adresse -->
-          <div style="display:grid;grid-template-columns:1fr auto auto;gap:10px;margin-bottom:14px;">
-            <div class="form-group" style="margin:0;">
-              <label class="form-label form-label-required">Straße & Hausnummer</label>
-              <input type="text" class="form-input" id="f-strasse" placeholder="Musterstraße 42">
-              <div class="field-error" id="e-strasse">Bitte Adresse eingeben</div>
-            </div>
-            <div class="form-group" style="margin:0;width:90px;">
-              <label class="form-label form-label-required">PLZ</label>
-              <input type="text" class="form-input" id="f-plz" placeholder="50667" maxlength="5">
-              <div class="field-error" id="e-plz">PLZ?</div>
-            </div>
-            <div class="form-group" style="margin:0;width:150px;">
-              <label class="form-label form-label-required">Ort</label>
-              <input type="text" class="form-input" id="f-ort" placeholder="Köln">
-              <div class="field-error" id="e-ort">Ort?</div>
-            </div>
-          </div>
-
-          <!-- Auto-AZ (klein, editierbar) -->
-          <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;padding:10px 14px;background:rgba(79,142,247,.06);border:1px solid rgba(79,142,247,.15);border-radius:8px;">
-            <span style="font-size:11px;color:var(--text3);white-space:nowrap;">Aktenzeichen (auto):</span>
-            <input type="text" id="f-schadensnummer" placeholder="wird generiert"
-              style="flex:1;background:transparent;border:none;outline:none;font-size:12px;font-family:var(--font-mono,monospace);color:var(--accent,#4f8ef7);font-weight:700;"
-              oninput="if(this.value){this.setAttribute('data-manual','1');var h=document.getElementById('az-live-hint');if(h){h.textContent='✓ '+this.value;h.style.color='#10b981';h.style.opacity='1';}}">
-            <span style="font-size:10px;color:var(--text3);">editierbar</span>
-          </div>
-
-          <!-- OPTIONALE DETAILS: aufklappbar -->
-          <div id="mehr-details-toggle" onclick="toggleMehrDetails()" style="display:flex;align-items:center;gap:8px;cursor:pointer;margin-bottom:8px;padding:6px 0;user-select:none;">
-            <span id="mehr-details-icon" style="font-size:11px;color:var(--text3);font-weight:700;">▶</span>
-            <span style="font-size:12px;color:var(--text3);font-weight:600;">Weitere Details (optional)</span>
-            <span style="font-size:11px;color:var(--text3);">— Datum, Frist, Gerichts-AZ, Baujahr …</span>
-          </div>
-          <div id="mehr-details-body" style="display:none;border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:16px;">
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-              <div class="form-group" style="margin:0;">
-                <label class="form-label">Schadensdatum</label>
-                <input type="date" class="form-input" id="f-schadensdatum">
-              </div>
-              <div class="form-group" style="margin:0;">
-                <label class="form-label">Frist Gutachtenabgabe</label>
-                <input type="date" class="form-input" id="f-fristdatum">
-              </div>
-              <div class="form-group" style="margin:0;">
-                <label class="form-label">E-Mail Auftraggeber</label>
-                <input type="email" class="form-input" id="f-auftraggeber-email" placeholder="kontakt@versicherung.de">
-              </div>
-              <div class="form-group" style="margin:0;">
-                <label class="form-label">Ansprechpartner</label>
-                <input type="text" class="form-input" id="f-ansprechpartner" placeholder="Name Sachbearbeiter">
-              </div>
-              <div class="form-group" style="margin:0;">
-                <label class="form-label">Gerichtsaktenzeichen</label>
-                <input type="text" class="form-input" id="f-gerichts-az" placeholder="Az. 3 O 254/24">
-              </div>
-              <div class="form-group" style="margin:0;">
-                <label class="form-label">Baujahr Objekt</label>
-                <input type="number" class="form-input" id="f-baujahr" placeholder="1985" min="1800" max="2025">
-              </div>
-              <div class="form-group" style="margin:0;">
-                <label class="form-label">Gebäudetyp</label>
-                <select class="form-select" id="f-gebaeudetyp">
-                  <option value="">Bitte wählen…</option>
-                  <option value="Einfamilienhaus">Einfamilienhaus</option>
-                  <option value="Mehrfamilienhaus">Mehrfamilienhaus</option>
-                  <option value="Wohnung / ETW">Wohnung / ETW</option>
-                  <option value="Gewerbe">Gewerbe</option>
-                  <option value="Industriegebäude">Industriegebäude</option>
-                  <option value="Sonstiges">Sonstiges</option>
-                </select>
-              </div>
-              <div class="form-group" style="margin:0;">
-                <label class="form-label">Geschädigter / VN</label>
-                <input type="text" class="form-input" id="f-geschaedigter" placeholder="Vor- und Nachname">
+          <div>
+            <div class="card" style="margin-bottom:1.25rem">
+              <div class="card-header"><h3 class="card-title">Objekt / Schadensort</h3></div>
+              <div class="card-body">
+                <div class="form-group"><label class="form-label form-label-required">Straße & Hausnummer</label><input type="text" class="form-input" id="f-strasse" placeholder="Musterstraße 123"><div class="field-error" id="e-strasse">Bitte Straße eingeben</div></div>
+                <div class="form-row">
+                  <div class="form-group"><label class="form-label form-label-required">PLZ</label><input type="text" class="form-input" id="f-plz" placeholder="12345"><div class="field-error" id="e-plz">Pflichtfeld</div></div>
+                  <div class="form-group"><label class="form-label form-label-required">Ort</label><input type="text" class="form-input" id="f-ort" placeholder="Berlin"><div class="field-error" id="e-ort">Pflichtfeld</div></div>
+                </div>
+                <div class="form-row">
+                  <div class="form-group"><label class="form-label">Gebäudetyp</label><select class="form-select" id="f-gebaeudetyp">
+                      <option value="">Bitte wählen…</option>
+                      <option value="Einfamilienhaus">Einfamilienhaus</option>
+                      <option value="Doppelhaushälfte">Doppelhaushälfte</option>
+                      <option value="Reihenhaus / Reihenmittelhaus">Reihenhaus / Reihenmittelhaus</option>
+                      <option value="Mehrfamilienhaus">Mehrfamilienhaus</option>
+                      <option value="Wohnung / ETW">Wohnung / ETW</option>
+                      <option value="Eigentümergemeinschaft (WEG)">Eigentümergemeinschaft (WEG)</option>
+                      <option value="Bürogebäude">Bürogebäude</option>
+                      <option value="Gewerbegebäude">Gewerbegebäude</option>
+                      <option value="Industriegebäude / Halle">Industriegebäude / Halle</option>
+                      <option value="Gastronomie / Hotel">Gastronomie / Hotel</option>
+                      <option value="Schulgebäude / Kita">Schulgebäude / Kita</option>
+                      <option value="Öffentliches Gebäude">Öffentliches Gebäude</option>
+                      <option value="Sonstiges">Sonstiges</option>
+                    </select></div>
+                  <div class="form-group"><label class="form-label">Baujahr</label><input type="number" class="form-input" id="f-baujahr" placeholder="1968"></div>
+                </div>
+                <div class="form-group"><label class="form-label">Geschädigter / Versicherungsnehmer</label><input type="text" class="form-input" id="f-geschaedigter" placeholder="Familie Schmidt"></div>
               </div>
             </div>
-            <div class="form-group" style="margin:12px 0 0;">
-              <label class="form-label">Beweisfragen des Gerichts</label>
-              <textarea class="form-input" id="f-beweisfragen" rows="3"
-                placeholder="1. Liegt ein Baumangel vor?&#10;2. Was sind die Sanierungskosten?&#10;…"
-                style="resize:vertical;font-size:12px;"></textarea>
-            </div>
-          </div>
-
-          <!-- CTA -->
-          <button class="btn btn-primary" onclick="weiterZuSchritt2()" style="width:100%;padding:14px;font-size:15px;border-radius:10px;">
-            Weiter zu Diktat & Fotos →
-          </button>
-          <div style="text-align:center;margin-top:10px;">
-            <button onclick="speichereAlsEntwurf()" style="background:none;border:none;color:var(--text3);font-size:12px;cursor:pointer;font-family:inherit;">Entwurf speichern</button>
           </div>
         </div>
 
-      id="step2-content" style="display:none">
+
+          <!-- ═══ WORKFLOW-KRITISCHE ZUSATZFELDER ═══ -->
+          <div style="margin-top:16px;padding-top:14px;border-top:1px solid rgba(255,255,255,.07);">
+            <div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);margin-bottom:10px;">Abrechnung & Gericht (optional)</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+              <div class="form-group">
+                <label class="form-label">AG Telefon</label>
+                <input type="tel" id="f-auftraggeber-telefon" class="form-input" placeholder="+49 221 ...">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Geschädigter E-Mail</label>
+                <input type="email" id="f-geschaedigter-email" class="form-input" placeholder="familie@email.de">
+              </div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+              <div class="form-group">
+                <label class="form-label">Honorarart</label>
+                <select id="f-honorar-art" class="form-select" onchange="document.getElementById('f-stundensatz-wrap').style.display=this.value!=='jveg'?'':'none'">
+                  <option value="jveg">JVEG (gesetzlich)</option>
+                  <option value="frei">Frei vereinbart</option>
+                  <option value="pauschal">Pauschal</option>
+                </select>
+              </div>
+              <div class="form-group" id="f-stundensatz-wrap" style="display:none;">
+                <label class="form-label">Stundensatz (€/h)</label>
+                <input type="number" id="f-stundensatz" class="form-input" placeholder="120" min="50" max="500">
+              </div>
+            </div>
+            <div class="form-group" id="f-gericht-name-wrap" style="display:none;">
+              <label class="form-label">Gericht</label>
+              <input type="text" id="f-gericht-name" class="form-input" placeholder="z.B. Landgericht Köln">
+            </div>
+          </div>
+
+        <div class="page-actions" style="position:sticky;bottom:0;z-index:50;background:var(--bg,#0b0d11);padding:14px 0;margin-top:16px;border-top:1px solid rgba(255,255,255,.08);">
+          <button class="btn btn-ghost btn-sm" onclick="showToast('Entwurf gespeichert','success')">Entwurf speichern</button>
+          <button class="btn btn-primary" onclick="weiterZuSchritt2()">
+            Weiter zu Diktat & Fotos
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Step 2: Diktat & Fotos — Zweispaltig: Links 60% (Diktat, Bereich, Messwerte, Fotos), Rechts 40% sticky blau (Kurzübersicht + Buttons) -->
+      <div id="step2-content" style="display:none">
         <div style="display:grid;grid-template-columns:3fr 2fr;gap:1.5rem;align-items:start">
           <!-- Linke Spalte (60%) -->
           <div>
@@ -1301,7 +1342,7 @@ const GUTACHTEN_VORLAGEN = [
 const GUTACHTEN_VORLAGEN_STARTER_IDS = ['standard', 'kurzgutachten', 'feuchte'];
 
 function defaultVorlageIdBySchadenart() {
-  const v = (document.getElementById('f-schadenart') ? document.getElementById('f-schadenart').value : '') || '';
+  const v = document.getElementById('f-schadenart')?.value || '';
   if (v === 'Schimmelbefall' || v === 'Wasserschaden') return 'feuchte';
   if (v === 'Brandschaden') return 'brand';
   if (v === 'Sturmschaden') return 'elementar';
@@ -1331,12 +1372,12 @@ window.vorlageVorschau = function() {
   const vorlage = GUTACHTEN_VORLAGEN.find(v => v.id === id);
   if (!vorlage) { showToast('Bitte zuerst eine Vorlage wählen.', 'warning'); return; }
   const params = new URLSearchParams({
-    aktenzeichen: (document.getElementById('f-schadensnummer') ? document.getElementById('f-schadensnummer').value : '') || '',
-    schadenart: (document.getElementById('f-schadenart') ? document.getElementById('f-schadenart').value : '') || '',
-    strasse: (document.getElementById('f-strasse') ? document.getElementById('f-strasse').value : '') || '',
-    plz: (document.getElementById('f-plz') ? document.getElementById('f-plz').value : '') || '',
-    ort: (document.getElementById('f-ort') ? document.getElementById('f-ort').value : '') || '',
-    auftraggeber: (document.getElementById('f-auftraggeber-name') ? document.getElementById('f-auftraggeber-name').value : '') || ''
+    aktenzeichen: document.getElementById('f-schadensnummer')?.value || '',
+    schadenart: document.getElementById('f-schadenart')?.value || '',
+    strasse: document.getElementById('f-strasse')?.value || '',
+    plz: document.getElementById('f-plz')?.value || '',
+    ort: document.getElementById('f-ort')?.value || '',
+    auftraggeber: document.getElementById('f-auftraggeber-name')?.value || ''
   });
   window.open('formulare/' + vorlage.file + (params.toString() ? '?' + params.toString() : ''), '_blank', 'noopener');
 };
@@ -1371,7 +1412,7 @@ const TRACKING = {
 
 const $ = (s, c = document) => c.querySelector(s);
 const $$ = (s, c = document) => [...c.querySelectorAll(s)];
-const on = (el, ev, fn) => (el && el.addEventListener(ev, fn);
+const on = (el, ev, fn) => el?.addEventListener(ev, fn);
 
 /* ============================================================
    SV PROFIL — via Netlify Airtable Proxy
@@ -1383,7 +1424,7 @@ async function airtableProxy(method, path, body = null) {
   const res = await fetch('/.netlify/functions/airtable', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ method, path, payload: body })  // payload: nicht body:
+    body: JSON.stringify({ method, path, body })
   });
   const text = await res.text();
   const isJson = (res.headers.get('content-type') || '').includes('application/json');
@@ -1393,7 +1434,7 @@ async function airtableProxy(method, path, body = null) {
 }
 
 window.setSVEmail = async function() {
-  const v = ((document.getElementById('svEmailInput') ? document.getElementById('svEmailInput').value : '') || '').trim();
+  const v = (document.getElementById('svEmailInput')?.value || '').trim();
   if (!v) { showToast('Bitte SV E-Mail eintragen.', 'warning'); return; }
   sessionStorage.setItem('prova_email', v);
   await ladeSVProfil();
@@ -1427,7 +1468,7 @@ async function ladeSVProfil() {
 
 function getSVVal(key, fallback = '') {
   const f = window.SV_PROFIL || {};
-  return (f[key] || fallback) || fallback;
+  return (f[key] ?? fallback) || fallback;
 }
 
 function fmtHeute() {
@@ -1435,7 +1476,7 @@ function fmtHeute() {
 }
 
 function replacePlaceholders(html, vars) {
-  return html.replace(/\{\{\s*([a-zA-Z0-9_]+)\s*\}\}/g, (_, k) => ((vars[k] !== null && (vars[k] !== undefined ? (vars[k] : '')));
+  return html.replace(/\{\{\s*([a-zA-Z0-9_]+)\s*\}\}/g, (_, k) => (vars[k] ?? ''));
 }
 
 /* TOAST */
@@ -1454,7 +1495,7 @@ window.showPage = function(name) {
   if (!page) return;
   $$('[id^="page-"]').forEach(p => { if (p && p.style) p.style.display = 'none'; });
   page.style.display = '';
-  if (name === 'new') { if(typeof provaResetFall==='function') provaResetFall(); goToStep(1); }
+  if (name === 'new') goToStep(1);
   if (name === 'list') ladeGutachtenListe();
   if (name === 'archiv') ladeArchivDaten();
   if (name === 'briefe') {
@@ -1481,9 +1522,9 @@ const BRIEF_TEMPLATES = [
 
 function initBriefPage() {
   // Defaults aus aktuellem Fall ziehen (sofern vorhanden)
-  const az = (document.getElementById('f-schadensnummer') ? document.getElementById('f-schadensnummer').value : '') || '';
-  const empMail = (document.getElementById('f-auftraggeber-email') ? document.getElementById('f-auftraggeber-email').value : '') || '';
-  const empName = (document.getElementById('f-auftraggeber-name') ? document.getElementById('f-auftraggeber-name').value : '') || '';
+  const az = document.getElementById('f-schadensnummer')?.value || '';
+  const empMail = document.getElementById('f-auftraggeber-email')?.value || '';
+  const empName = document.getElementById('f-auftraggeber-name')?.value || '';
   const azEl = document.getElementById('brief-aktenzeichen');
   const emEl = document.getElementById('brief-empfaenger-email');
   const nmEl = document.getElementById('brief-empfaenger-name');
@@ -1522,10 +1563,10 @@ async function ladeBriefTemplateHtml(file) {
 }
 
 function buildBriefVars() {
-  const az = ((document.getElementById('brief-aktenzeichen') ? document.getElementById('brief-aktenzeichen').value : '') || '').trim();
-  const empfaenger_email = ((document.getElementById('brief-empfaenger-email') ? document.getElementById('brief-empfaenger-email').value : '') || '').trim();
-  const empfaenger_name = ((document.getElementById('brief-empfaenger-name') ? document.getElementById('brief-empfaenger-name').value : '') || '').trim();
-  const empfaenger_addr = ((document.getElementById('brief-empfaenger-addr') ? document.getElementById('brief-empfaenger-addr').value : '') || '').trim();
+  const az = (document.getElementById('brief-aktenzeichen')?.value || '').trim();
+  const empfaenger_email = (document.getElementById('brief-empfaenger-email')?.value || '').trim();
+  const empfaenger_name = (document.getElementById('brief-empfaenger-name')?.value || '').trim();
+  const empfaenger_addr = (document.getElementById('brief-empfaenger-addr')?.value || '').trim();
   const addrParts = empfaenger_addr.split(',').map(s => s.trim()).filter(Boolean);
   const empfaenger_strasse = addrParts[0] || '';
   const plzOrt = (addrParts[1] || '').split(' ').filter(Boolean);
@@ -1633,7 +1674,7 @@ window.speichereAktennotiz = async function(templateId) {
     const rec = (data.records || [])[0];
     if (!rec) { showToast('Fall nicht gefunden (Airtable).', 'error'); return; }
 
-    const existing = (rec.(fields && fields.Aktennotiz) || rec.(fields && fields.Notiz) || rec.(fields && fields.Notizen) || '').trim();
+    const existing = (rec.fields?.Aktennotiz || rec.fields?.Notiz || rec.fields?.Notizen || '').trim();
     const stamp = new Date().toLocaleString('de-DE');
     const newEntry = `[${stamp}] ${note}`;
     const combined = existing ? (newEntry + '\n\n---\n\n' + existing) : newEntry;
@@ -1650,33 +1691,10 @@ window.speichereAktennotiz = async function(templateId) {
 /* STEP NAVIGATION */
 window.goToStep = function(n) {
   try { TRACKING.schritt(n); } catch(e) {}
-  if (n === 1) {
-    try { TRACKING.starte(); } catch(e) {}
-    // Neuer Fall: Formular komplett leeren
-    ['f-schadensnummer','f-schadenart','f-auftraggeber-name','f-auftraggeber-firma',
-     'f-email','f-telefon','f-strasse','f-plz','f-ort','f-baujahr',
-     'f-feuchte','f-luftfeuchte','f-temperatur','f-fristdatum',
-     'f-gerichts-az','f-beweisfragen','transcriptManuell'].forEach(function(id){
-      var el = document.getElementById(id); if (el) el.value = '';
-    });
-    var ta = document.getElementById('transcriptArea');
-    if (ta) { ta.innerText = ''; }
-    if (typeof window.transcriptText !== 'undefined') window.transcriptText = '';
-    if (typeof window.diktate !== 'undefined') window.diktate = [];
-    if (typeof window.fotos !== 'undefined') window.fotos = [];
-    var dp = document.getElementById('step2-diktat-preview');
-    if (dp) { dp.style.display='none'; dp.textContent=''; }
-    var ds = document.getElementById('step2-diktat-status');
-    if (ds) ds.innerHTML = '<span style="opacity:.5">🎤</span><span>Noch kein Diktat</span>';
-    // KI-Erfolgs-Box verstecken
-    var kiBox = document.getElementById('kiSuccessBox');
-    if (kiBox) kiBox.style.display = 'none';
-    var naechste = document.getElementById('ki-naechste-schritte');
-    if (naechste) naechste.style.display = 'none';
-  }
+  if (n === 1) { try { TRACKING.starte(); } catch(e) {} }
   // Bei Schritt 2: wenn neue AZ → alten Diktat-Kontext löschen
   if (n === 2) {
-    var neueAz = (document.getElementById('f-schadensnummer') ? document.getElementById('f-schadensnummer').value : '') || '';
+    var neueAz = document.getElementById('f-schadensnummer')?.value || '';
     var alteAz = localStorage.getItem('prova_letztes_az') || '';
     if (neueAz && neueAz !== alteAz) {
       localStorage.removeItem('prova_transkript');
@@ -1699,15 +1717,15 @@ window.goToStep = function(n) {
     s.classList.toggle('active', i === n);
     s.classList.toggle('done', i < n);
   }
-  for (let i = 1; i <= 4; i++) (function(){var _el=document.getElementById('conn-' + i); if(_el) _el.classList.toggle('done', i < n);})();
+  for (let i = 1; i <= 4; i++) document.getElementById('conn-' + i)?.classList.toggle('done', i < n);
   if (n === 2) {
-    var az = document.getElementById('f-schadensnummer')?.(value && value.trim)() || '—';
-    var sa = (document.getElementById('f-schadenart') ? document.getElementById('f-schadenart').value : '') || '—';
-    var str = (document.getElementById('f-strasse') ? document.getElementById('f-strasse').value : '') || '';
-    var plz = (document.getElementById('f-plz') ? document.getElementById('f-plz').value : '') || '';
-    var ort = (document.getElementById('f-ort') ? document.getElementById('f-ort').value : '') || '';
+    var az = document.getElementById('f-schadensnummer')?.value?.trim() || '—';
+    var sa = document.getElementById('f-schadenart')?.value || '—';
+    var str = document.getElementById('f-strasse')?.value || '';
+    var plz = document.getElementById('f-plz')?.value || '';
+    var ort = document.getElementById('f-ort')?.value || '';
     var adr = [str, plz, ort].filter(Boolean).join(', ') || '—';
-    var ag = document.getElementById('f-auftraggeber-name')?.(value && value.trim)() || '—';
+    var ag = document.getElementById('f-auftraggeber-name')?.value?.trim() || '—';
     var elAz = document.getElementById('step2-az'); if (elAz) elAz.textContent = az;
     var elSa = document.getElementById('step2-schadenart'); if (elSa) elSa.textContent = sa;
     var elAdr = document.getElementById('step2-adresse'); if (elAdr) elAdr.textContent = adr;
@@ -1722,25 +1740,6 @@ window.weiterZuSchritt2 = function() {
   let ok = true;
   const log = [];
   document.querySelectorAll('input,select').forEach(el => el.blur());
-
-  // AZ-Duplikat-Check: ist dieses AZ bereits vergeben?
-  const azEl = document.getElementById('f-schadensnummer');
-  if (azEl && azEl.value.trim()) {
-    try {
-      const cache = JSON.parse(localStorage.getItem('prova_archiv_cache_v2') || '{}');
-      const faelle = (cache.data || []);
-      const azNeu = azEl.value.trim().toLowerCase();
-      const dupe = faelle.find(r => (r.(fields && fields.Aktenzeichen)||'').toLowerCase() === azNeu);
-      if (dupe) {
-        const f = dupe.fields || {};
-        if (!confirm('Aktenzeichen "' + azEl.value + '" ist bereits vergeben\n(' + (f.Schadenart||'') + ' · ' + (f.Adresse||'') + ')\n\nTrotzdem verwenden?')) {
-          azEl.focus();
-          azEl.style.borderColor = '#ef4444';
-          return;
-        }
-      }
-    } catch(e) {}
-  }
 
   // Hilfsfunktion: Feld + Fehlermeldung prüfen
   function chk(id, eid) {
@@ -1762,8 +1761,7 @@ window.weiterZuSchritt2 = function() {
 
   chk('f-schadenart',        'e-schadenart');
   chk('f-auftraggeber-name', 'e-auftraggeber-name');
-  // E-Mail optional — nur Format prüfen wenn ausgefüllt
-  // chk('f-auftraggeber-email','e-auftraggeber-email');
+  chk('f-auftraggeber-email','e-auftraggeber-email');
   chk('f-strasse',           'e-strasse');
   chk('f-plz',               'e-plz');
   chk('f-ort',               'e-ort');
@@ -1771,7 +1769,7 @@ window.weiterZuSchritt2 = function() {
   // E-Mail Format
   const mail = document.getElementById('f-auftraggeber-email');
   const mailEm = document.getElementById('e-auftraggeber-email');
-  if ((mail ? mail.value : '') && mail.value.trim() && !mail.value.includes('@')) {
+  if (mail?.value && mail.value.trim() && !mail.value.includes('@')) {
     mail.classList.add('err');
     if (mailEm) { mailEm.textContent = 'Bitte gültige E-Mail eingeben'; mailEm.classList.add('on'); }
     ok = false;
@@ -1821,7 +1819,7 @@ window.switchAuftraggeberTyp = function(val) {
 
 /* Autocomplete — nur bei Typ Versicherung; Klick auf Vorschlag füllt Feld und schließt Dropdown */
 window.handleAuftraggeberInput = function(val) {
-  const typ = (document.getElementById('f-auftraggeber-typ') ? document.getElementById('f-auftraggeber-typ').value : '');
+  const typ = document.getElementById('f-auftraggeber-typ')?.value;
   const drop = document.getElementById('ag-dropdown');
   if (!drop) return;
   if (typ !== 'Versicherung' || !val.trim()) { drop.innerHTML = ''; drop.style.display = 'none'; return; }
@@ -1834,7 +1832,7 @@ window.handleAuftraggeberInput = function(val) {
   drop.style.display = 'block';
 };
 
-(function(){var _el=document.getElementById('f-auftraggeber-typ'); if(_el) _el.addEventListener('change', function() {
+document.getElementById('f-auftraggeber-typ')?.addEventListener('change', function() {
   window.switchAuftraggeberTyp(this.value);
 });
 
@@ -1925,7 +1923,7 @@ async function autoCaption(idx) {
 
   var b64  = foto.dataUrl.replace(/^data:image\/[a-z]+;base64,/, '');
   var mime = (foto.dataUrl.match(/^data:(image\/[a-z]+);base64,/) || [])[1] || 'image/jpeg';
-  var az   = (document.getElementById('f-schadensnummer') ? document.getElementById('f-schadensnummer').value : '')
+  var az   = document.getElementById('f-schadensnummer')?.value
              || localStorage.getItem('prova_letztes_az') || '';
   var schadenart = (document.getElementById('f-schadenart') || {}).value || '';
 
@@ -1999,25 +1997,24 @@ function renderFotoGrid() {
   if (exportBtn) exportBtn.style.display = fotos.length > 0 ? 'flex' : 'none';
 
   updateStep2Panel();
-    // Foto-Grid v2: Nummerierung + KI-Caption + Schweregrad + Referenz
-  grid.innerHTML = fotos.map(function(f, i) {
-    var sevColor = {gering:'#22c55e',mittel:'#f59e0b',schwer:'#ef4444',kritisch:'#dc2626'}[(f.metadata||{}).schweregrad] || '#6b7280';
-    var sevBg = {gering:'rgba(34,197,94,.1)',mittel:'rgba(245,158,11,.1)',schwer:'rgba(239,68,68,.1)',kritisch:'rgba(220,38,38,.1)'}[(f.metadata||{}).schweregrad] || '';
-    var az = (document.getElementById('f-schadensnummer')||{}).value || localStorage.getItem('prova_letztes_az') || '';
-    var ref = (az ? az + ' · ' : '') + 'Abb. ' + (i+1);
-    var borderCol = f.captionLoading ? 'rgba(79,142,247,.35)' : (f.caption ? 'rgba(16,185,129,.3)' : '#e5e7eb');
-    return '<div style="position:relative;border-radius:8px;overflow:hidden;background:#f9fafb;border:1px solid ' + borderCol + ';transition:border-color .4s;">'
-      + '<img src="' + f.dataUrl + '" style="width:100%;height:80px;object-fit:cover;display:block;" alt="Abb. ' + (i+1) + '">'
-      + '<div style="position:absolute;top:3px;left:3px;background:rgba(0,0,0,.75);color:#fff;font-size:9px;font-weight:800;padding:2px 6px;border-radius:4px;letter-spacing:.02em;">' + (i+1) + '</div>'
-      + (f.metadata && f.metadata.schweregrad ? '<div style="position:absolute;top:3px;right:20px;background:' + sevBg + ';color:' + sevColor + ';border:1px solid ' + sevColor + '44;font-size:8px;font-weight:700;padding:1px 5px;border-radius:3px;">' + f.metadata.schweregrad + '</div>' : '')
-      + '<button onclick="entferneFoto(' + i + ')" style="position:absolute;top:3px;right:3px;width:16px;height:16px;border-radius:50%;background:rgba(0,0,0,.6);color:#fff;border:none;cursor:pointer;font-size:10px;display:flex;align-items:center;justify-content:center;">×</button>'
-      + '<div style="padding:4px 6px;">'
-      + '<input type="text" id="foto-cap-' + i + '" placeholder="' + (f.captionLoading ? '⟳ KI beschriftet…' : 'Beschriftung…') + '" value="' + f.caption.replace(/"/g, '&quot;') + '" style="width:100%;font-size:10px;border:none;background:' + (f.captionLoading ? 'rgba(79,142,247,.07)' : 'transparent') + ';color:#374151;outline:none;font-family:inherit;border-radius:3px;padding:1px 2px;transition:background .4s;" oninput="fotos[' + i + '].caption=this.value">'
-      + '<div style="font-size:8px;color:#9ca3af;margin-top:1px;font-family:monospace;">' + ref + '</div>'
-      + '<div id="foto-badge-' + i + '" style="margin-top:2px;min-height:12px;"></div>'
-      + '<div style="font-size:8px;color:#9ca3af;">' + Math.round(f.compSize/1024) + ' KB' + (f.origSize>f.compSize ? ' (-' + Math.round((1-f.compSize/f.origSize)*100) + '%)' : '') + '</div>'
-      + '</div></div>';
-  }).join('');
+  grid.innerHTML = fotos.map((f, i) => `
+    <div style="position:relative;border-radius:.5rem;overflow:hidden;background:var(--gray-100);border:1px solid var(--gray-200)">
+      <img src="${f.dataUrl}" style="width:100%;height:80px;object-fit:cover;display:block" alt="Foto ${i+1}">
+      <div style="position:absolute;top:3px;left:3px;background:rgba(0,0,0,.7);color:#fff;font-size:9px;font-weight:800;padding:2px 6px;border-radius:4px;">Foto ${i+1}</div>
+      <button onclick="entferneFoto(${i})" style="position:absolute;top:3px;right:3px;width:18px;height:18px;border-radius:50%;background:rgba(0,0,0,.6);color:white;border:none;cursor:pointer;font-size:.65rem;display:flex;align-items:center;justify-content:center">×</button>
+      <div style="padding:.25rem .375rem">
+        <input type="text" id="foto-cap-${i}"
+          placeholder="${f.captionLoading ? '⟳ KI analysiert…' : 'Beschriftung…'}"
+          value="${f.caption}"
+          style="width:100%;font-size:.65rem;border:none;background:${f.captionLoading ? 'rgba(74,144,217,0.08)' : 'transparent'};color:var(--gray-700);outline:none;font-family:inherit;border-radius:3px;padding:1px 2px;transition:background .3s"
+          oninput="fotos[${i}].caption=this.value">
+        <div id="foto-badge-${i}" style="margin-top:2px;min-height:14px;"></div>
+        <div style="font-size:.6rem;color:var(--gray-400)">${Math.round(f.compSize/1024)} KB ${f.origSize>f.compSize?`(-${Math.round((1-f.compSize/f.origSize)*100)}%)`:''}
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
 
 window.entferneFoto = function(i) { fotos.splice(i,1); renderFotoGrid(); updateStep2Panel(); };
 
@@ -2081,7 +2078,7 @@ function updateStep2Panel() {
 /* FOTO-ANLAGE EXPORT als druckbares HTML */
 window.exportFotoAnlage = async function() {
   if (!fotos.length) { showToast('Keine Fotos vorhanden.', 'warning'); return; }
-  var az = (document.getElementById('f-schadensnummer') ? document.getElementById('f-schadensnummer').value : '') || localStorage.getItem('prova_letztes_az') || 'Ohne AZ';
+  var az = document.getElementById('f-schadensnummer')?.value || localStorage.getItem('prova_letztes_az') || 'Ohne AZ';
   var svName = localStorage.getItem('prova_sv_name') || '';
   var datum = new Date().toLocaleDateString('de-DE');
 
@@ -2226,11 +2223,6 @@ window.toggleRecord = async function() {
 };
 
 async function starteAufnahme() {
-  // Audit-Log: Diktat-Start Timestamp
-  if (!localStorage.getItem('prova_diktat_start_ts')) {
-    localStorage.setItem('prova_diktat_start_ts', new Date().toISOString());
-  }
-  localStorage.setItem('prova_diktat_ts', new Date().toISOString());
   // 1. Browser-Kompatibilitätsprüfung
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SR) {
@@ -2339,14 +2331,6 @@ async function starteAufnahme() {
 
 function stoppeAufnahme() {
   isRecording = false; clearInterval(recTimer); clearTimeout(recLimitTimer);
-  // Audit-Log: Diktat-Ende Timestamp + Dauer
-  var diktatEnde = new Date().toISOString();
-  localStorage.setItem('prova_diktat_ende_ts', diktatEnde);
-  var startTs = localStorage.getItem('prova_diktat_start_ts');
-  if (startTs) {
-    var dauerSek = Math.round((new Date(diktatEnde) - new Date(startTs)) / 1000);
-    localStorage.setItem('prova_diktat_dauer_sek', String(dauerSek));
-  }
   const btn = $('#recBtn'), lbl = $('#recLabel'), status = $('#recStatus');
   btn.classList.remove('recording'); lbl.textContent = 'Start'; status.textContent = 'Bereit';
   // Reset modern UI elements
@@ -2394,7 +2378,7 @@ async function bereinigeDiktatText() {
         model: 'gpt-4o-mini',
         max_tokens: 600,
         messages: [
-          {role:'system', content:'Du bist ein Textkorrektur-Assistent. Formatiere den folgenden Sprach-zu-Text-Diktat-Text eines Bausachverständigen: setze Kommas, Punkte und Großschreibung korrekt. Korrigiere Spracherkennungsfehler. WICHTIG: Wandle ausgeschriebene Zahlen in Ziffern um (zwanzig → 20, fünfzehn → 15, achtzig → 80, hundert → 100 usw.). Ersetze ausgeschriebene Einheiten durch Symbole (Prozent → %, Grad Celsius → °C, Quadratmeter → m², Zentimeter → cm, Meter → m). Behalte alle Fakten und Messwerte exakt bei. Antworte NUR mit dem korrigierten Fließtext, keine Erklärungen.'},
+          {role:'system', content:'Du bist ein Textkorrektur-Assistent. Formatiere den folgenden Sprach-zu-Text-Diktat-Text: setze Kommas, Punkte und Großschreibung korrekt. Korrigiere offensichtliche Spracherkennungsfehler ("zirka" statt "zirkr", Zahlen ausschreiben wenn klar). Behalte ALLE inhaltlichen Angaben exakt bei — ändere keine Zahlen, Messwerte oder Fakten. Antworte NUR mit dem korrigierten Fließtext, keine Erklärungen.'},
           {role:'user', content: rawText}
         ]
       })
@@ -2441,83 +2425,83 @@ async function bereinigeDiktatText() {
 ============================================================ */
 function sammleDaten() {
   const nowIso = new Date().toISOString();
-  const startMs = (typeof (TRACKING && TRACKING.start) === 'number' && TRACKING.start > 0) ? TRACKING.start : null;
+  const startMs = (typeof TRACKING?.start === 'number' && TRACKING.start > 0) ? TRACKING.start : null;
   const dauerSek = startMs ? Math.round((Date.now() - startMs) / 1000) : null;
   const dauerMin = dauerSek !== null ? Math.round((dauerSek / 60) * 10) / 10 : null;
 
   try {
     const _mw = [
-      (document.getElementById('mw-feuchte') ? document.getElementById('mw-feuchte').style.display !== 'none'  : '')&& (document.getElementById('f-feuchte') ? document.getElementById('f-feuchte').value : '') ? 'Materialfeuchte (%): ' + document.getElementById('f-feuchte').value : '',
-      (document.getElementById('f-mw-extra') ? document.getElementById('f-mw-extra').value : '') ? String(document.getElementById('f-mw-extra').value) : '',
+      document.getElementById('mw-feuchte')?.style.display !== 'none' && document.getElementById('f-feuchte')?.value ? 'Materialfeuchte (%): ' + document.getElementById('f-feuchte').value : '',
+      document.getElementById('f-mw-extra')?.value ? String(document.getElementById('f-mw-extra').value) : '',
     ].filter(Boolean).join(' | ');
     localStorage.setItem('prova_messwerte_strukturiert', JSON.stringify({ paket: localStorage.getItem('prova_paket') || 'Solo', messwerte: _mw, zeit: nowIso }));
   } catch (_e) {}
 
   return {
-    schadenart:         (document.getElementById('f-schadenart') ? document.getElementById('f-schadenart').value : '') || '',
-    schadensnummer:     (document.getElementById('f-schadensnummer') ? document.getElementById('f-schadensnummer').value : '') || '',
-    schadensdatum:      (document.getElementById('f-schadensdatum') ? document.getElementById('f-schadensdatum').value : '') || '',
-    gerichts_az:        (document.getElementById('f-gerichts-az') ? document.getElementById('f-gerichts-az').value : '') || '',
-    fristdatum:         (document.getElementById('f-fristdatum') ? document.getElementById('f-fristdatum').value : '') || '',
-    beweisfragen:       (document.getElementById('f-beweisfragen') ? document.getElementById('f-beweisfragen').value : '') || '',
-    auftraggeber_typ:   (document.getElementById('f-auftraggeber-typ') ? document.getElementById('f-auftraggeber-typ').value : '') || '',
-    auftraggeber_name:  (document.getElementById('f-auftraggeber-name') ? document.getElementById('f-auftraggeber-name').value : '') || '',
-    ansprechpartner:    (document.getElementById('f-ansprechpartner') ? document.getElementById('f-ansprechpartner').value : '') || '',
-    auftraggeber_email: (document.getElementById('f-auftraggeber-email') ? document.getElementById('f-auftraggeber-email').value : '') || '',
-    strasse:            (document.getElementById('f-strasse') ? document.getElementById('f-strasse').value : '') || '',
-    plz:                (document.getElementById('f-plz') ? document.getElementById('f-plz').value : '') || '',
-    ort:                (document.getElementById('f-ort') ? document.getElementById('f-ort').value : '') || '',
-    gebaeudetyp:        (document.getElementById('f-gebaeudetyp') ? document.getElementById('f-gebaeudetyp').value : '') || '',
-    baujahr:            (document.getElementById('f-baujahr') ? document.getElementById('f-baujahr').value : '') || '',
-    geschaedigter:      (document.getElementById('f-geschaedigter') ? document.getElementById('f-geschaedigter').value : '') || '',
-    bereich:            (document.getElementById('f-bereich') ? document.getElementById('f-bereich').value : '') || '',
-    feuchtemessung:     (document.getElementById('f-feuchte') ? document.getElementById('f-feuchte').value : '') || '',
-    luftfeuchtigkeit:   (document.getElementById('f-luftfeuchte') ? document.getElementById('f-luftfeuchte').value : '') || '',
-    temperatur:         (document.getElementById('f-temperatur') ? document.getElementById('f-temperatur').value : '') || '',
-    taupunkt:           (document.getElementById('f-taupunkt') ? document.getElementById('f-taupunkt').value : '') || '',
-    schadensflaeche:    (document.getElementById('f-flaeche') ? document.getElementById('f-flaeche').value : '') || '',
-    schadenstiefe:      (document.getElementById('f-tiefe') ? document.getElementById('f-tiefe').value : '') || '',
-    messgeraet:         (document.getElementById('f-messgeraet') ? document.getElementById('f-messgeraet').value : '') || '',
+    schadenart:         document.getElementById('f-schadenart')?.value || '',
+    schadensnummer:     document.getElementById('f-schadensnummer')?.value || '',
+    schadensdatum:      document.getElementById('f-schadensdatum')?.value || '',
+    gerichts_az:        document.getElementById('f-gerichts-az')?.value || '',
+    fristdatum:         document.getElementById('f-fristdatum')?.value || '',
+    beweisfragen:       document.getElementById('f-beweisfragen')?.value || '',
+    auftraggeber_typ:   document.getElementById('f-auftraggeber-typ')?.value || '',
+    auftraggeber_name:  document.getElementById('f-auftraggeber-name')?.value || '',
+    ansprechpartner:    document.getElementById('f-ansprechpartner')?.value || '',
+    auftraggeber_email: document.getElementById('f-auftraggeber-email')?.value || '',
+    strasse:            document.getElementById('f-strasse')?.value || '',
+    plz:                document.getElementById('f-plz')?.value || '',
+    ort:                document.getElementById('f-ort')?.value || '',
+    gebaeudetyp:        document.getElementById('f-gebaeudetyp')?.value || '',
+    baujahr:            document.getElementById('f-baujahr')?.value || '',
+    geschaedigter:      document.getElementById('f-geschaedigter')?.value || '',
+    bereich:            document.getElementById('f-bereich')?.value || '',
+    feuchtemessung:     document.getElementById('f-feuchte')?.value || '',
+    luftfeuchtigkeit:   document.getElementById('f-luftfeuchte')?.value || '',
+    temperatur:         document.getElementById('f-temperatur')?.value || '',
+    taupunkt:           document.getElementById('f-taupunkt')?.value || '',
+    schadensflaeche:    document.getElementById('f-flaeche')?.value || '',
+    schadenstiefe:      document.getElementById('f-tiefe')?.value || '',
+    messgeraet:         document.getElementById('f-messgeraet')?.value || '',
     paket:               'Solo',
     unterschrift_base64: localStorage.getItem('prova_sv_signatur') || '',
     wl_name:             localStorage.getItem('prova_wl_name') || localStorage.getItem('prova_sv_firma') || '',
     wl_primary_color:    localStorage.getItem('prova_primary_color') || '#4f8ef7',
     messwerte:          [
-      (document.getElementById('mw-feuchte') ? document.getElementById('mw-feuchte').style.display !== 'none'  : '')&& (document.getElementById('f-feuchte') ? document.getElementById('f-feuchte').value : '') ? 'Materialfeuchte (%): ' + document.getElementById('f-feuchte').value : '',
-      (document.getElementById('mw-feuchte') ? document.getElementById('mw-feuchte').style.display !== 'none'  : '')&& (document.getElementById('f-luftfeuchte') ? document.getElementById('f-luftfeuchte').value : '') ? 'Luftfeuchtigkeit (%): ' + document.getElementById('f-luftfeuchte').value : '',
-      (document.getElementById('mw-feuchte') ? document.getElementById('mw-feuchte').style.display !== 'none'  : '')&& (document.getElementById('f-temperatur') ? document.getElementById('f-temperatur').value : '') ? 'Raumtemperatur (°C): ' + document.getElementById('f-temperatur').value : '',
-      (document.getElementById('mw-feuchte') ? document.getElementById('mw-feuchte').style.display !== 'none'  : '')&& (document.getElementById('f-taupunkt') ? document.getElementById('f-taupunkt').value : '') ? 'Taupunkt (°C): ' + document.getElementById('f-taupunkt').value : '',
-      (document.getElementById('mw-feuchte') ? document.getElementById('mw-feuchte').style.display !== 'none'  : '')&& (document.getElementById('f-flaeche') ? document.getElementById('f-flaeche').value : '') ? 'Befallene Fläche (m²): ' + document.getElementById('f-flaeche').value : '',
-      (document.getElementById('mw-feuchte') ? document.getElementById('mw-feuchte').style.display !== 'none'  : '')&& (document.getElementById('f-tiefe') ? document.getElementById('f-tiefe').value : '') ? 'Schadenstiefe (cm): ' + document.getElementById('f-tiefe').value : '',
-      (document.getElementById('mw-feuchte') ? document.getElementById('mw-feuchte').style.display !== 'none'  : '')&& (document.getElementById('f-messgeraet') ? document.getElementById('f-messgeraet').value : '') ? 'Messgerät: ' + document.getElementById('f-messgeraet').value : '',
+      document.getElementById('mw-feuchte')?.style.display !== 'none' && document.getElementById('f-feuchte')?.value ? 'Materialfeuchte (%): ' + document.getElementById('f-feuchte').value : '',
+      document.getElementById('mw-feuchte')?.style.display !== 'none' && document.getElementById('f-luftfeuchte')?.value ? 'Luftfeuchtigkeit (%): ' + document.getElementById('f-luftfeuchte').value : '',
+      document.getElementById('mw-feuchte')?.style.display !== 'none' && document.getElementById('f-temperatur')?.value ? 'Raumtemperatur (°C): ' + document.getElementById('f-temperatur').value : '',
+      document.getElementById('mw-feuchte')?.style.display !== 'none' && document.getElementById('f-taupunkt')?.value ? 'Taupunkt (°C): ' + document.getElementById('f-taupunkt').value : '',
+      document.getElementById('mw-feuchte')?.style.display !== 'none' && document.getElementById('f-flaeche')?.value ? 'Befallene Fläche (m²): ' + document.getElementById('f-flaeche').value : '',
+      document.getElementById('mw-feuchte')?.style.display !== 'none' && document.getElementById('f-tiefe')?.value ? 'Schadenstiefe (cm): ' + document.getElementById('f-tiefe').value : '',
+      document.getElementById('mw-feuchte')?.style.display !== 'none' && document.getElementById('f-messgeraet')?.value ? 'Messgerät: ' + document.getElementById('f-messgeraet').value : '',
 
-      (document.getElementById('mw-brand') ? document.getElementById('mw-brand').style.display !== 'none'  : '')&& (document.getElementById('f-brand-russtiefe') ? document.getElementById('f-brand-russtiefe').value : '') ? 'Rußtiefe (mm): ' + document.getElementById('f-brand-russtiefe').value : '',
-      (document.getElementById('mw-brand') ? document.getElementById('mw-brand').style.display !== 'none'  : '')&& (document.getElementById('f-brand-flaeche') ? document.getElementById('f-brand-flaeche').value : '') ? 'Betroffene Fläche (m²): ' + document.getElementById('f-brand-flaeche').value : '',
-      (document.getElementById('mw-brand') ? document.getElementById('mw-brand').style.display !== 'none'  : '')&& (document.getElementById('f-brand-geruch') ? document.getElementById('f-brand-geruch').value : '') ? 'Geruchsintensität (1–10): ' + document.getElementById('f-brand-geruch').value : '',
-      (document.getElementById('mw-brand') ? document.getElementById('mw-brand').style.display !== 'none'  : '')&& (document.getElementById('f-brand-temp') ? document.getElementById('f-brand-temp').value : '') ? 'Temperatureinwirkung (°C): ' + document.getElementById('f-brand-temp').value : '',
-      (document.getElementById('mw-brand') ? document.getElementById('mw-brand').style.display !== 'none'  : '')&& (document.getElementById('f-brand-entfernung') ? document.getElementById('f-brand-entfernung').value : '') ? 'Entfernung zum Brandherd (m): ' + document.getElementById('f-brand-entfernung').value : '',
-      (document.getElementById('mw-brand') ? document.getElementById('mw-brand').style.display !== 'none'  : '')&& (document.getElementById('f-brand-messgeraet') ? document.getElementById('f-brand-messgeraet').value : '') ? 'Messgerät: ' + document.getElementById('f-brand-messgeraet').value : '',
+      document.getElementById('mw-brand')?.style.display !== 'none' && document.getElementById('f-brand-russtiefe')?.value ? 'Rußtiefe (mm): ' + document.getElementById('f-brand-russtiefe').value : '',
+      document.getElementById('mw-brand')?.style.display !== 'none' && document.getElementById('f-brand-flaeche')?.value ? 'Betroffene Fläche (m²): ' + document.getElementById('f-brand-flaeche').value : '',
+      document.getElementById('mw-brand')?.style.display !== 'none' && document.getElementById('f-brand-geruch')?.value ? 'Geruchsintensität (1–10): ' + document.getElementById('f-brand-geruch').value : '',
+      document.getElementById('mw-brand')?.style.display !== 'none' && document.getElementById('f-brand-temp')?.value ? 'Temperatureinwirkung (°C): ' + document.getElementById('f-brand-temp').value : '',
+      document.getElementById('mw-brand')?.style.display !== 'none' && document.getElementById('f-brand-entfernung')?.value ? 'Entfernung zum Brandherd (m): ' + document.getElementById('f-brand-entfernung').value : '',
+      document.getElementById('mw-brand')?.style.display !== 'none' && document.getElementById('f-brand-messgeraet')?.value ? 'Messgerät: ' + document.getElementById('f-brand-messgeraet').value : '',
 
-      (document.getElementById('mw-sturm') ? document.getElementById('mw-sturm').style.display !== 'none'  : '')&& (document.getElementById('f-sturm-flaeche') ? document.getElementById('f-sturm-flaeche').value : '') ? 'Betroffene Fläche (m²): ' + document.getElementById('f-sturm-flaeche').value : '',
-      (document.getElementById('mw-sturm') ? document.getElementById('mw-sturm').style.display !== 'none'  : '')&& (document.getElementById('f-sturm-oeffnung') ? document.getElementById('f-sturm-oeffnung').value : '') ? 'Öffnungsgröße (m²): ' + document.getElementById('f-sturm-oeffnung').value : '',
-      (document.getElementById('mw-sturm') ? document.getElementById('mw-sturm').style.display !== 'none'  : '')&& (document.getElementById('f-sturm-eindring') ? document.getElementById('f-sturm-eindring').value : '') ? 'Eindringtiefe (cm): ' + document.getElementById('f-sturm-eindring').value : '',
-      (document.getElementById('mw-sturm') ? document.getElementById('mw-sturm').style.display !== 'none'  : '')&& (document.getElementById('f-sturm-windlast') ? document.getElementById('f-sturm-windlast').value : '') ? 'Windlastzone: ' + document.getElementById('f-sturm-windlast').value : '',
-      (document.getElementById('mw-sturm') ? document.getElementById('mw-sturm').style.display !== 'none'  : '')&& (document.getElementById('f-sturm-dach') ? document.getElementById('f-sturm-dach').value : '') ? 'Dachabdeckung (%): ' + document.getElementById('f-sturm-dach').value : '',
-      (document.getElementById('mw-sturm') ? document.getElementById('mw-sturm').style.display !== 'none'  : '')&& (document.getElementById('f-sturm-messgeraet') ? document.getElementById('f-sturm-messgeraet').value : '') ? 'Messgerät: ' + document.getElementById('f-sturm-messgeraet').value : '',
+      document.getElementById('mw-sturm')?.style.display !== 'none' && document.getElementById('f-sturm-flaeche')?.value ? 'Betroffene Fläche (m²): ' + document.getElementById('f-sturm-flaeche').value : '',
+      document.getElementById('mw-sturm')?.style.display !== 'none' && document.getElementById('f-sturm-oeffnung')?.value ? 'Öffnungsgröße (m²): ' + document.getElementById('f-sturm-oeffnung').value : '',
+      document.getElementById('mw-sturm')?.style.display !== 'none' && document.getElementById('f-sturm-eindring')?.value ? 'Eindringtiefe (cm): ' + document.getElementById('f-sturm-eindring').value : '',
+      document.getElementById('mw-sturm')?.style.display !== 'none' && document.getElementById('f-sturm-windlast')?.value ? 'Windlastzone: ' + document.getElementById('f-sturm-windlast').value : '',
+      document.getElementById('mw-sturm')?.style.display !== 'none' && document.getElementById('f-sturm-dach')?.value ? 'Dachabdeckung (%): ' + document.getElementById('f-sturm-dach').value : '',
+      document.getElementById('mw-sturm')?.style.display !== 'none' && document.getElementById('f-sturm-messgeraet')?.value ? 'Messgerät: ' + document.getElementById('f-sturm-messgeraet').value : '',
 
-      (document.getElementById('mw-einbruch') ? document.getElementById('mw-einbruch').style.display !== 'none'  : '')&& (document.getElementById('f-einbruch-anzahl') ? document.getElementById('f-einbruch-anzahl').value : '') ? 'Anzahl Schadensstellen: ' + document.getElementById('f-einbruch-anzahl').value : '',
-      (document.getElementById('mw-einbruch') ? document.getElementById('mw-einbruch').style.display !== 'none'  : '')&& (document.getElementById('f-einbruch-flaeche') ? document.getElementById('f-einbruch-flaeche').value : '') ? 'Betroffene Fläche (m²): ' + document.getElementById('f-einbruch-flaeche').value : '',
-      (document.getElementById('mw-einbruch') ? document.getElementById('mw-einbruch').style.display !== 'none'  : '')&& (document.getElementById('f-einbruch-tiefe') ? document.getElementById('f-einbruch-tiefe').value : '') ? 'Schadenstiefe (cm): ' + document.getElementById('f-einbruch-tiefe').value : '',
-      (document.getElementById('mw-einbruch') ? document.getElementById('mw-einbruch').style.display !== 'none'  : '')&& (document.getElementById('f-einbruch-verlust') ? document.getElementById('f-einbruch-verlust').value : '') ? 'Materialverlust (kg): ' + document.getElementById('f-einbruch-verlust').value : '',
-      (document.getElementById('mw-einbruch') ? document.getElementById('mw-einbruch').style.display !== 'none'  : '')&& (document.getElementById('f-einbruch-bauteile') ? document.getElementById('f-einbruch-bauteile').value : '') ? 'Betroffene Bauteile: ' + document.getElementById('f-einbruch-bauteile').value : '',
+      document.getElementById('mw-einbruch')?.style.display !== 'none' && document.getElementById('f-einbruch-anzahl')?.value ? 'Anzahl Schadensstellen: ' + document.getElementById('f-einbruch-anzahl').value : '',
+      document.getElementById('mw-einbruch')?.style.display !== 'none' && document.getElementById('f-einbruch-flaeche')?.value ? 'Betroffene Fläche (m²): ' + document.getElementById('f-einbruch-flaeche').value : '',
+      document.getElementById('mw-einbruch')?.style.display !== 'none' && document.getElementById('f-einbruch-tiefe')?.value ? 'Schadenstiefe (cm): ' + document.getElementById('f-einbruch-tiefe').value : '',
+      document.getElementById('mw-einbruch')?.style.display !== 'none' && document.getElementById('f-einbruch-verlust')?.value ? 'Materialverlust (kg): ' + document.getElementById('f-einbruch-verlust').value : '',
+      document.getElementById('mw-einbruch')?.style.display !== 'none' && document.getElementById('f-einbruch-bauteile')?.value ? 'Betroffene Bauteile: ' + document.getElementById('f-einbruch-bauteile').value : '',
 
-      (document.getElementById('mw-bau') ? document.getElementById('mw-bau').style.display !== 'none'  : '')&& (document.getElementById('f-bau-soll') ? document.getElementById('f-bau-soll').value : '') ? 'Abweichung vom Sollmaß (mm): ' + document.getElementById('f-bau-soll').value : '',
-      (document.getElementById('mw-bau') ? document.getElementById('mw-bau').style.display !== 'none'  : '')&& (document.getElementById('f-bau-flaeche') ? document.getElementById('f-bau-flaeche').value : '') ? 'Betroffene Fläche (m²): ' + document.getElementById('f-bau-flaeche').value : '',
-      (document.getElementById('mw-bau') ? document.getElementById('mw-bau').style.display !== 'none'  : '')&& (document.getElementById('f-bau-din') ? document.getElementById('f-bau-din').value : '') ? 'DIN-Referenz: ' + document.getElementById('f-bau-din').value : '',
-      (document.getElementById('mw-bau') ? document.getElementById('mw-bau').style.display !== 'none'  : '')&& (document.getElementById('f-bau-toleranz') ? document.getElementById('f-bau-toleranz').value : '') ? 'Toleranzüberschreitung (mm): ' + document.getElementById('f-bau-toleranz').value : '',
-      (document.getElementById('mw-bau') ? document.getElementById('mw-bau').style.display !== 'none'  : '')&& (document.getElementById('f-bau-betrieb') ? document.getElementById('f-bau-betrieb').value : '') ? 'Betriebszustand: ' + document.getElementById('f-bau-betrieb').value : '',
+      document.getElementById('mw-bau')?.style.display !== 'none' && document.getElementById('f-bau-soll')?.value ? 'Abweichung vom Sollmaß (mm): ' + document.getElementById('f-bau-soll').value : '',
+      document.getElementById('mw-bau')?.style.display !== 'none' && document.getElementById('f-bau-flaeche')?.value ? 'Betroffene Fläche (m²): ' + document.getElementById('f-bau-flaeche').value : '',
+      document.getElementById('mw-bau')?.style.display !== 'none' && document.getElementById('f-bau-din')?.value ? 'DIN-Referenz: ' + document.getElementById('f-bau-din').value : '',
+      document.getElementById('mw-bau')?.style.display !== 'none' && document.getElementById('f-bau-toleranz')?.value ? 'Toleranzüberschreitung (mm): ' + document.getElementById('f-bau-toleranz').value : '',
+      document.getElementById('mw-bau')?.style.display !== 'none' && document.getElementById('f-bau-betrieb')?.value ? 'Betriebszustand: ' + document.getElementById('f-bau-betrieb').value : '',
 
-      (document.getElementById('f-mw-extra') ? document.getElementById('f-mw-extra').value : '') ? String(document.getElementById('f-mw-extra').value) : '',
+      document.getElementById('f-mw-extra')?.value ? String(document.getElementById('f-mw-extra').value) : '',
     ].filter(Boolean).join(' | ') || '',
     transkript:         transcriptText,
     fotos_anzahl:       fotos.length,
@@ -2525,9 +2509,9 @@ function sammleDaten() {
     timestamp:          nowIso,
 
     // Zeiterfassung (für Airtable/Analytics in Make.com)
-    zeiterfassung_start:    (TRACKING && TRACKING.schrittZeiten && TRACKING.schrittZeiten.schritt1_start) || null,
-    zeiterfassung_schritt2: (TRACKING && TRACKING.schrittZeiten && TRACKING.schrittZeiten.schritt2_start) || null,
-    zeiterfassung_schritt3: (TRACKING && TRACKING.schrittZeiten && TRACKING.schrittZeiten.schritt3_start) || null,
+    zeiterfassung_start:    TRACKING?.schrittZeiten?.schritt1_start || null,
+    zeiterfassung_schritt2: TRACKING?.schrittZeiten?.schritt2_start || null,
+    zeiterfassung_schritt3: TRACKING?.schrittZeiten?.schritt3_start || null,
     zeiterfassung_fertig:   null,
     dauer_gesamt_sekunden:  dauerSek,
     dauer_gesamt_minuten:   dauerMin,
@@ -2539,13 +2523,13 @@ function sammleDaten() {
     paket: localStorage.getItem('prova_paket') || 'Solo',
 
     // KI-Anreicherung: Normen + Kosten gefiltert nach Schadensart
-    normen_kontext:  bauNormenKontext((document.getElementById('f-schadenart') ? document.getElementById('f-schadenart').value : '') || ''),
-    kosten_kontext:  bauKostenKontext((document.getElementById('f-schadenart') ? document.getElementById('f-schadenart').value : '') || ''),
+    normen_kontext:  bauNormenKontext(document.getElementById('f-schadenart')?.value || ''),
+    kosten_kontext:  bauKostenKontext(document.getElementById('f-schadenart')?.value || ''),
     
     // Beweisfragen-Assistent: Gutachten nach Beweisfragen strukturieren
-    beweisfragen:    ((document.getElementById('f-beweisfragen') ? document.getElementById('f-beweisfragen').value : '') || '').trim(),
-    gerichts_az:     ((document.getElementById('f-gerichts-az') ? document.getElementById('f-gerichts-az').value : '') || '').trim(),
-    ist_gerichtsgutachten: !!((document.getElementById('f-beweisfragen') ? document.getElementById('f-beweisfragen').value : '') || '').trim()
+    beweisfragen:    (document.getElementById('f-beweisfragen')?.value || '').trim(),
+    gerichts_az:     (document.getElementById('f-gerichts-az')?.value || '').trim(),
+    ist_gerichtsgutachten: !!(document.getElementById('f-beweisfragen')?.value || '').trim()
   };
 }
 
@@ -2714,16 +2698,16 @@ window.weiterZuAnalyse = async function() {
   }
   // ── KRITISCH: Diktat + Messwerte in localStorage für stellungnahme.html ──
   localStorage.setItem('prova_transkript', transcriptText);
-  const az = (document.getElementById('f-schadensnummer') ? document.getElementById('f-schadensnummer').value : '') || '';
-  const sa = (document.getElementById('f-schadenart') ? document.getElementById('f-schadenart').value : '') || '';
-  const baujahr = (document.getElementById('f-baujahr') ? document.getElementById('f-baujahr').value : '') || '';
+  const az = document.getElementById('f-schadensnummer')?.value || '';
+  const sa = document.getElementById('f-schadenart')?.value || '';
+  const baujahr = document.getElementById('f-baujahr')?.value || '';
   if(az) { localStorage.setItem('prova_letztes_az', az); localStorage.setItem('prova_aktiver_fall', az); }
   if(sa) localStorage.setItem('prova_schadenart', sa);
   if(baujahr) localStorage.setItem('prova_baujahr', baujahr);
   // Messwerte sammeln
-  const mwFeuchte = (document.getElementById('f-feuchte') ? document.getElementById('f-feuchte').value : '') || '';
-  const mwLuft = (document.getElementById('f-luftfeuchte') ? document.getElementById('f-luftfeuchte').value : '') || '';
-  const mwTemp = (document.getElementById('f-temperatur') ? document.getElementById('f-temperatur').value : '') || '';
+  const mwFeuchte = document.getElementById('f-feuchte')?.value || '';
+  const mwLuft = document.getElementById('f-luftfeuchte')?.value || '';
+  const mwTemp = document.getElementById('f-temperatur')?.value || '';
   const mwListe = [
     mwFeuchte ? 'Materialfeuchte: ' + mwFeuchte + ' %' : '',
     mwLuft    ? 'Luftfeuchtigkeit: ' + mwLuft + ' %' : '',
@@ -2842,9 +2826,6 @@ async function sendeWebhook() {
       localStorage.removeItem('prova_stellungnahme_text');
       localStorage.removeItem('prova_stellungnahme_kj2_ok');
       localStorage.removeItem('prova_ki_stellungnahme_vorschlag');
-      // Audit-Log: KI-Analyse Timestamp
-      localStorage.setItem('prova_ki_ts', new Date().toISOString());
-      localStorage.setItem('prova_ki_modell', 'GPT-4o · PROVA-Analyse');
       
       const h2 = document.querySelector('#step3-content h2');
       const p  = document.querySelector('#step3-content .ki-header p');
@@ -2859,19 +2840,7 @@ async function sendeWebhook() {
       const btnF = document.getElementById('btnFreigabe'), btnN = document.getElementById('btnNeues');
       if (btnF) btnF.style.display = ''; if (btnN) btnN.style.display = '';
       fotos = [];
-      showToast('Diktat & Daten übermittelt — KI analysiert ✓', 'success');
-      // Fortschrittsanzeige: nächsten Schritt anzeigen
-      setTimeout(function() {
-        var naechste = document.getElementById('ki-naechste-schritte');
-        if (naechste) {
-          var az = localStorage.getItem('prova_letztes_az') || '';
-          var hinweis = document.createElement('div');
-          hinweis.style.cssText = 'margin-top:12px;padding:12px 16px;background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.2);border-radius:10px;font-size:12px;color:#10b981;text-align:center;';
-          hinweis.innerHTML = '🎯 <strong>Nächster Schritt:</strong> §6 Fachurteil schreiben → <a href="stellungnahme.html' + (az ? '?az='+encodeURIComponent(az) : '') + '" style="color:#10b981;font-weight:700;">Jetzt →</a>';
-          var box = document.getElementById('kiSuccessBox');
-          if (box) box.appendChild(hinweis);
-        }
-      }, 500);;
+      showToast('Gutachten übermittelt!', 'success');
     } else {
       const h2 = document.querySelector('#step3-content h2');
       if (h2) h2.textContent = 'Fehler ' + res.status;
@@ -2945,8 +2914,8 @@ function renderTabelle(records) {
 }
 
 window.filterGutachten = function() {
-  const s = (document.getElementById('searchInput') ? document.getElementById('searchInput').value : '').toLowerCase()||'';
-  const st = (document.getElementById('statusFilter') ? document.getElementById('statusFilter').value : '')||'';
+  const s = document.getElementById('searchInput')?.value.toLowerCase()||'';
+  const st = document.getElementById('statusFilter')?.value||'';
   renderTabelle(alleGutachten.filter(r => {
     const f = r.fields||{};
     const txt = [f.Schadensnummer,f.Strasse,f.Ort,f.Schadenart].join(' ').toLowerCase();
@@ -2977,12 +2946,12 @@ async function ladeArchivDaten() {
 
     // Statistiken berechnen
     const gesamt = alleArchivDaten.length;
-    const freigegeben = alleArchivDaten.filter(r => ['Freigegeben','Exportiert'].includes(r.(fields && fields.Status))).length;
+    const freigegeben = alleArchivDaten.filter(r => ['Freigegeben','Exportiert'].includes(r.fields?.Status)).length;
     const offen = gesamt - freigegeben;
 
     // Durchschnittliche Erstellungszeit aus Tracking-Daten
     const zeiten = alleArchivDaten
-      .map(r => r.(fields && fields.Erstellungszeit_Sekunden))
+      .map(r => r.fields?.Erstellungszeit_Sekunden)
       .filter(z => z && z > 0);
     const avgMin = zeiten.length ? Math.round(zeiten.reduce((a,b) => a+b, 0) / zeiten.length / 60) : null;
 
@@ -3042,10 +3011,10 @@ function renderArchivTabelle(records) {
 }
 
 window.filterArchiv = function() {
-  const suche = (document.getElementById('archivSearch') ? document.getElementById('archivSearch').value : '').toLowerCase() || '';
-  const art = (document.getElementById('archivSchadenart') ? document.getElementById('archivSchadenart').value : '') || '';
-  const jahr = (document.getElementById('archivJahr') ? document.getElementById('archivJahr').value : '') || '';
-  const status = (document.getElementById('archivStatus') ? document.getElementById('archivStatus').value : '') || '';
+  const suche = document.getElementById('archivSearch')?.value.toLowerCase() || '';
+  const art = document.getElementById('archivSchadenart')?.value || '';
+  const jahr = document.getElementById('archivJahr')?.value || '';
+  const status = document.getElementById('archivStatus')?.value || '';
 
   const gefiltert = alleArchivDaten.filter(r => {
     const f = r.fields || {};
@@ -3123,7 +3092,7 @@ window.toggleMesswerte = function() {
 
 /* Messwerte-Felder je nach Schadensart anzeigen */
 window.updateMesswerteLayout = function() {
-  const sa = ((document.getElementById('f-schadenart') ? document.getElementById('f-schadenart').value : '') || '').toLowerCase();
+  const sa = (document.getElementById('f-schadenart')?.value || '').toLowerCase();
   const blocks = [
     { id: 'mw-feuchte',  on: (sa.includes('schimmel') || sa.includes('wasser') || sa.includes('feucht')) },
     { id: 'mw-brand',    on: (sa.includes('brand')) },
@@ -3145,7 +3114,7 @@ window.updateMesswerteLayout = function() {
   }
 };
 
-(function(){var _el=document.getElementById('f-schadenart'); if(_el) _el.addEventListener('change', function() {
+document.getElementById('f-schadenart')?.addEventListener('change', function() {
   try { window.updateMesswerteLayout(); } catch(e) {}
 });
 </script>
@@ -3247,17 +3216,6 @@ async function speichereEntwurfIDB() {
 
 /* ── Entwurf laden + Formular befüllen ───────────────────── */
 async function ladeUndRestoreEntwurf() {
-  // Bei Neuer-Fall: Draft löschen und NICHT laden
-  if (sessionStorage.getItem('prova_neuer_fall') === '1') {
-    sessionStorage.removeItem('prova_neuer_fall');
-    // IndexedDB Draft löschen
-    try {
-      const db2 = await openDB();
-      const tx2 = db2.transaction(STORE_DRAFT, 'readwrite');
-      tx2.objectStore(STORE_DRAFT).delete(DRAFT_KEY);
-    } catch(e) {}
-    return;
-  }
   try {
     const db = await openDB();
     const tx = db.transaction(STORE_DRAFT, 'readonly');
@@ -3489,7 +3447,7 @@ window.addEventListener('online', async () => {
   // Queue abarbeiten
   await sendeOfflineQueue();
   // SW informieren (Background Sync triggern)
-  if (navigator.(serviceWorker && serviceWorker.controller)) {
+  if (navigator.serviceWorker?.controller) {
     navigator.serviceWorker.controller.postMessage({ type: 'TRIGGER_SYNC' });
   }
 });
@@ -4582,87 +4540,8 @@ window.PROVA_AUDIT = (function() {
 
 </script>
 <script src="auftragstyp.js"></script>
+<script src="prova-wizard.js"></script>
 <script src="support-chat.js"></script>
-<script src="trial-guard.js">
-/* ═══ KI FOTO-CAPTIONING ═══ */
-async function ladeKIFotoCaption(fotoData, dateiname, idx) {
-  try {
-    var res = await fetch('/.netlify/functions/ki-proxy', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({
-        aufgabe: 'foto_caption',
-        foto_base64: fotoData.split(',')[1],
-        schadenart: localStorage.getItem('prova_schadenart') || '',
-        dateiname: dateiname,
-        diktat_kontext: (localStorage.getItem('prova_transkript') || '').slice(0, 500)
-      })
-    });
-    var data = await res.json();
-    return data.caption || (dateiname + ' — Foto ' + (idx+1));
-  } catch(e) {
-    return dateiname + ' — Foto ' + (idx+1);
-  }
-}
-
-
-
-window.toggleMehrDetails = function() {
-  var body = document.getElementById('mehr-details-body');
-  var icon = document.getElementById('mehr-details-icon');
-  var open = body.style.display !== 'none';
-  body.style.display = open ? 'none' : 'block';
-  if (icon) icon.textContent = open ? '▶' : '▼';
-};
-
-// Auto-AZ generieren
-window.generiereAZ = function() {
-  var sa = (document.getElementById('f-schadenart') ? document.getElementById('f-schadenart').value : '') || '';
-  var prefix = sa.includes('Wasser') ? 'WS' : sa.includes('Schimmel') ? 'SC' :
-               sa.includes('Brand') ? 'BS' : sa.includes('Sturm') ? 'ST' :
-               sa.includes('Bau') ? 'BM' : 'SF';
-  var year = new Date().getFullYear();
-  var num = String(Math.floor(Math.random() * 900) + 100);
-  return prefix + '-' + year + '-' + num;
-};
-
-window.onSchadenartChange = function(val) {
-  var azEl = document.getElementById('f-schadensnummer');
-  if (azEl && !azEl.getAttribute('data-manual')) {
-    azEl.value = window.generiereAZ();
-    azEl.style.color = 'var(--accent,#4f8ef7)';
-  }
-  // Stripe-Style: Live-Feedback unter AZ-Feld
-  var hint = document.getElementById('az-live-hint');
-  if (hint && azEl) {
-    if (val && azEl.value) {
-      hint.textContent = '✓ Ihr Aktenzeichen: ' + azEl.value;
-      hint.style.color = '#10b981';
-      hint.style.opacity = '1';
-    } else {
-      hint.style.opacity = '0';
-    }
-  }
-  // Schadenart-Chip farbig
-  var saIcon = document.getElementById('sa-selected-icon');
-  var saColors = {'Wasserschaden':'#3b82f6','Schimmelbefall':'#10b981','Brandschaden':'#ef4444','Sturmschaden':'#8b5cf6','Baumängel':'#f59e0b','Elementarschaden':'#06b6d4','Sonstiger Schaden':'#6b7280'};
-  if (saIcon) {
-    saIcon.style.background = (saColors[val] || '#4f8ef7') + '22';
-    saIcon.style.borderColor = (saColors[val] || '#4f8ef7') + '44';
-    saIcon.style.color = saColors[val] || '#4f8ef7';
-    saIcon.textContent = val || '';
-    saIcon.style.display = val ? 'inline-block' : 'none';
-  }
-};
-
-window.speichereAlsEntwurf = function() {
-  if (typeof speichereEntwurfIDB === 'function') {
-    speichereEntwurfIDB().then(function() {
-      if (typeof showToast === 'function') showToast('Entwurf gespeichert', 'success');
-    });
-  }
-};
-
-</script>
+<script src="trial-guard.js"></script>
 </body>
 </html>

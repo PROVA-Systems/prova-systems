@@ -346,7 +346,16 @@
     }
 
     PROVA.closeAuftragstyp();
-    window.location.href = zielSeite;
+    // Wizard starten wenn auf app.html / gutachten.html
+    if (zielSeite === 'gutachten.html' || zielSeite === 'app.html' || !zielSeite) {
+      if (typeof PROVA_WIZARD !== 'undefined' && PROVA_WIZARD.start) {
+        PROVA_WIZARD.start(selectedType || 'privatgutachten');
+      } else {
+        window.location.href = zielSeite || 'app.html';
+      }
+    } else {
+      window.location.href = zielSeite;
+    }
   };
 
   /* ── Dialog öffnen / schließen ── */

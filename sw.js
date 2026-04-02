@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v50';
+const CACHE_VERSION = 'prova-v52';
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
@@ -129,7 +129,8 @@ self.addEventListener('fetch', event => {
 
   // PROVA Core JS (nav, theme, trial-guard) → Network-First
   // Diese Dateien ändern sich häufig → immer frisch holen
-  const isCoreJs = ['/nav.js','/theme.js','/trial-guard.js','/sw-register.js','/mobile.css'].includes(url.pathname)
+  const isCoreJs = ['/nav.js','/theme.js','/trial-guard.js','/sw-register.js','/mobile.css',
+  '/prova-wizard.js'].includes(url.pathname)
     || url.pathname.endsWith('.css')
     || (url.pathname.endsWith('.js') && !url.pathname.includes('netlify'));
   if (isCoreJs) {

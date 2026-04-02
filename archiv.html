@@ -2,11 +2,10 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1, viewport-fit=cover">
 <title>Fälle · PROVA</title>
 <script src="theme.js"></script>
-<script src="nav.js" defer></script>
-<link rel="stylesheet" href="mobile.css">
+<script src="nav.js"></script>
 <style>
 /* ═══ PROVA SIDEBAR SYSTEM ═══════════════════════════════════════════════ */
 :root{
@@ -194,6 +193,9 @@ textarea.form-input{min-height:80px;resize:vertical;}
   .sup-ok-sub{font-size:12px;color:var(--text3,#6b7a99);}
 @media(max-width:768px){.bottom-nav{display:flex !important;}}
 </style>
+<link rel="icon" type="image/svg+xml" href="/icons/icon-192.svg">
+<link rel="stylesheet" href="mobile.css">
+<link rel="stylesheet" href="prova-design.css">
 </head>
 <body>
 <div class="app-shell">
@@ -206,7 +208,6 @@ textarea.form-input{min-height:80px;resize:vertical;}
 <div class="main-wrap" id="main-wrap">
 
   <header class="topbar">
-  <button id="mobile-menu-btn" aria-label="Menü öffnen" style="display:none;align-items:center;justify-content:center;width:40px;height:40px;border:none;background:none;color:var(--text2);font-size:20px;cursor:pointer;border-radius:8px;flex-shrink:0;">☰</button>
     <div class="topbar-left">
       <button class="burger" onclick="openMobileSidebar()"><span></span><span></span><span></span></button>
       <div class="breadcrumb"><span>PROVA</span><span style="color:var(--text3)">›</span><strong>Fälle</strong></div>
@@ -225,7 +226,6 @@ textarea.form-input{min-height:80px;resize:vertical;}
         <span class="page-title">Fälle</span>
         <span class="count-badge" id="count-badge">—</span>
         <input class="search-input" id="suche" type="search" placeholder="Suche…" oninput="filterUndRender()">
-        <select class="filter-select" id="f-auftraggeber" onchange="filterUndRender()"><option value="">Alle AG-Typen</option><option value="Versicherung">Versicherung</option><option value="Gericht">Gericht</option><option value="Privatperson">Privat</option></select>
         <select class="filter-select" id="f-schadenart" onchange="filterUndRender()">
           <option value="">Alle Schadenarten</option>
           <option value="Schimmelbefall">Schimmelbefall</option>
@@ -372,18 +372,15 @@ async function ladeFaelle(){
     if(!isAdminMode && raw){
         var c=JSON.parse(raw);
         if(c.data&&c.data.length>0){
-          // LINEAR-STYLE: Cache SOFORT anzeigen
           alleRecords=c.data; filterUndRender();
-          // Wenn Cache < 5min alt: fertig (kein Netz-Call)
           if(Date.now()-c.time<cacheMs) return;
-          // Wenn Cache älter: Still im Hintergrund updaten ohne Spinner
           _stilleAktualisierung = true;
         }
       }
   }catch(e){}
 
-  // Loading state (nur wenn kein Cache vorhanden)
-  if (!_stilleAktualisierung) zeigLadeAnimation();
+  // Loading state
+  zeigLadeAnimation();
 
   try{
     var isAdmin = localStorage.getItem('prova_is_admin')==='true'
@@ -400,8 +397,7 @@ async function ladeFaelle(){
     alleRecords=data.records||[];
     try{
       if(alleRecords.length>0) {
-        _stilleAktualisierung=false;
-    localStorage.setItem(cacheKey,JSON.stringify({time:Date.now(),data:alleRecords}));
+        localStorage.setItem(cacheKey,JSON.stringify({time:Date.now(),data:alleRecords}));
         // Globaler Fälle-Cache für KI-Drawer in Briefvorlagen
         localStorage.setItem('prova_faelle_cache', JSON.stringify(alleRecords.slice(0,20)));
       }
@@ -498,10 +494,9 @@ function fallKarte(r){
   var stClass=statusClass(status);
   var pdfUrl=f.PDF_URL||'';
   var saKurz=schadenart.replace('befall','').replace('schaden','').replace('Schaden','').trim();
-  var explPhase=parseInt(f.Phase||0);
-  var schrittMap={'Neuer Auftrag':1,'Neu':1,'In Bearbeitung':2,'Diktat':2,'Entwurf':3,'Entwurf fertig':3,'Stellungnahme':4,'Freigabe':4,'Abgeschlossen':5,'Freigegeben':5,'Exportiert':5};
-  var schritt=explPhase>0?explPhase:(schrittMap[status]||2);
-  var fortschritt=Math.round((Math.min(schritt,5)/5)*100);
+  var schrittMap={'Neuer Auftrag':1,'In Bearbeitung':2,'Entwurf fertig':3,'Abgeschlossen':4,'Exportiert':4};
+  var schritt=schrittMap[status]||2;
+  var fortschritt=Math.round((schritt/4)*100);
   var fortColor={'Abgeschlossen':'#10b981','Exportiert':'#10b981','Entwurf fertig':'#f59e0b'}[status]||'#4f8ef7';
   return '<div class="fall-card" onclick="oeffneFall(\'' + r.id + '\')" style="cursor:pointer;">'
     +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">'
@@ -551,21 +546,7 @@ function renderListe(){
   var body=document.getElementById('liste-body');
   if(!body)return;
   if(gefiltert.length===0){
-    var suchTerm = (document.getElementById('suche')||{value:''}).value||'';
-    var emptyMsg = suchTerm
-      ? '<div class="list-empty">'
-          + '<div style="font-size:32px;margin-bottom:12px;opacity:.4;">🔍</div>'
-          + '<div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:6px;">Keine Treffer für \"' + suchTerm + '\"</div>'
-          + '<div style="font-size:12px;color:var(--text3);margin-bottom:16px;">Suche in AZ, Auftraggeber, Adresse, Schadenart</div>'
-          + '<button onclick="document.getElementById(\'suche\').value=\'\';filterUndRender()" style="padding:8px 16px;border-radius:8px;background:var(--surface2);border:1px solid var(--border2);color:var(--text2);font-size:12px;cursor:pointer;font-family:inherit;">Filter zurücksetzen</button>'
-          + '</div>'
-      : '<div class="list-empty">'
-          + '<div style="font-size:40px;margin-bottom:14px;">📂</div>'
-          + '<div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:8px;">Noch keine Fälle angelegt</div>'
-          + '<div style="font-size:12px;color:var(--text3);margin-bottom:20px;line-height:1.6;">Legen Sie Ihren ersten Gutachten-Fall an —<br>PROVA führt Sie durch den gesamten Workflow.</div>'
-          + '<a href="' + appUrl + '" style="display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border-radius:10px;background:var(--accent,#4f8ef7);color:#fff;font-size:13px;font-weight:700;text-decoration:none;">+ Ersten Fall anlegen</a>'
-          + '</div>';
-    body.innerHTML = emptyMsg;
+    body.innerHTML='<div class="list-empty"><div class="list-empty-icon">🔍</div><p style="font-size:13px;color:var(--text3);margin-bottom:8px;">Keine Fälle gefunden.</p><a href="'+appUrl+'" style="color:var(--accent);font-size:13px;">Neuen Fall anlegen →</a></div>';
     return;
   }
   body.innerHTML=gefiltert.map(function(r){
@@ -599,7 +580,7 @@ window.oeffneFall=function(recordId){
   if(rec&&rec.fields.Aktenzeichen){
     sessionStorage.setItem('prova_letztes_az',rec.fields.Aktenzeichen);
   }
-  window.location.href='akte.html?id='+encodeURIComponent(recordId);
+  window.location.href='akte.html';
 };
 
 /* ── LADE-ANIMATION ── */
@@ -713,56 +694,4 @@ async function supSendModal(){
 }
 </script>
 
-<script src="trial-guard.js">
-document.addEventListener('DOMContentLoaded',function(){ladeFaelle().then(function(){setView(_currentView||'kanban');}).catch(function(){setView(_currentView||'kanban');});});
-
-window.exportCSV=function(){var f=alleRecords||[];if(!f.length)return;var h=['Aktenzeichen','Schadenart','Status','Auftraggeber','Adresse'];var rows=f.map(function(r){var x=r.fields||{};return[x.Aktenzeichen||'',x.Schadenart||'',x.Status||'',x.Auftraggeber_Name||'',x.Schaden_Strasse||''].map(function(v){return'"'+String(v).replace(/"/g,'""')+'"';}).join(',');});var blob=new Blob(['"'+h.join('","')+'"\n'+rows.join('\n')],{type:'text/csv'});var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='Faelle_'+new Date().toISOString().split('T')[0]+'.csv';a.click();};
-
-/* ── BULK ACTIONS (Linear-Style) ── */
-var _selectedIds = new Set();
-
-window.toggleSelect = function(id, cb) {
-  if (cb.checked) _selectedIds.add(id);
-  else _selectedIds.delete(id);
-  updateBulkBar();
-};
-
-function updateBulkBar() {
-  var bar = document.getElementById('bulk-bar');
-  var cnt = document.getElementById('bulk-count');
-  if (!bar) return;
-  if (_selectedIds.size > 0) {
-    bar.style.display = 'flex';
-    cnt.textContent = _selectedIds.size + ' Fall' + (_selectedIds.size !== 1 ? 'fälle' : '') + ' ausgewählt';
-  } else {
-    bar.style.display = 'none';
-  }
-}
-
-window.bulkClear = function() {
-  _selectedIds.clear();
-  document.querySelectorAll('.fall-select-cb').forEach(function(cb){ cb.checked = false; });
-  updateBulkBar();
-};
-
-window.bulkExportCSV = function() {
-  var selected = alleRecords.filter(function(r){ return _selectedIds.has(r.id); });
-  if (!selected.length) return;
-  var h = ['Aktenzeichen','Schadenart','Status','Auftraggeber','Adresse'];
-  var rows = selected.map(function(r){
-    var f = r.fields||{};
-    return [f.Aktenzeichen||'',f.Schadenart||'',f.Status||'',f.Auftraggeber_Name||'',f.Schaden_Strasse||'']
-      .map(function(v){return '"'+String(v).replace(/"/g,'""')+'"';}).join(',');
-  });
-  var blob = new Blob(['"'+h.join('","')+'"\n'+rows.join('\n')],{type:'text/csv'});
-  var a = document.createElement('a'); a.href = URL.createObjectURL(blob);
-  a.download = 'PROVA_Auswahl_'+new Date().toISOString().split('T')[0]+'.csv'; a.click();
-  if(typeof showToast==='function') showToast(selected.length+' Fälle exportiert ✅','success');
-};
-
-window.bulkSetStatus = function(status) {
-  var ids = Array.from(_selectedIds);
-  if (!ids.length) return;
-  if (!confirm(ids.length + ' Fall/Fälle auf "' + status + '" setzen?')) return;
-  ids.forEach(function(id) {
-    fetch('/.netlify/functions/airtable',{metho
+<script src="trial-guard.js"></script>

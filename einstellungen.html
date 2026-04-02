@@ -2,9 +2,9 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1, viewport-fit=cover">
 <title>Einstellungen · PROVA</title>
-<script src="nav.js"></script>
+<script src="nav.js" defer></script>
 <script src="trial-guard.js"></script>
 <style>
 /* ═══ PROVA SIDEBAR SYSTEM ═══════════════════════════════════════════════ */
@@ -182,6 +182,9 @@ input,select,textarea{font-size:max(16px,1em);}
   .sup-ok-sub{font-size:12px;color:var(--text3,#6b7a99);}
 @media(max-width:768px){.bottom-nav{display:flex !important;}}
 </style>
+<link rel="icon" type="image/svg+xml" href="/icons/icon-192.svg">
+<link rel="stylesheet" href="mobile.css">
+<link rel="stylesheet" href="prova-design.css">
 </head>
 <body>
 <div class="app-shell">
@@ -633,41 +636,7 @@ input,select,textarea{font-size:max(16px,1em);}
             <div class="card-body">
               <div id="paket-anzeige" style="padding:16px;border-radius:var(--r-md);margin-bottom:16px;"></div>
               <div class="paket-grid" id="paket-grid"></div>
-              <div id="upgrade-anfragen-btn">
-              <div id="upgrade-cta-box" style="margin-top:8px;"></div>
-
-              <!-- Kündigung -->
-              <div style="border-top:1px solid var(--border);margin-top:20px;padding-top:16px;">
-                <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px;">Kündigung & Datenlöschung</div>
-                <div style="font-size:11px;color:var(--text3);margin-bottom:12px;line-height:1.6;">
-                  Ihr Abonnement läuft monatlich. Kündigung jederzeit zum Monatsende möglich.
-                  Bei Kündigung werden alle Daten nach 30 Tagen gelöscht.
-                </div>
-                <button onclick="beantragteKuendigung()" style="padding:8px 16px;border-radius:8px;background:transparent;border:1px solid rgba(239,68,68,.3);color:#ef4444;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s;"
-                  onmouseover="this.style.background='rgba(239,68,68,.08)'" onmouseout="this.style.background='transparent'">
-                  Kündigung beantragen
-                </button>
-              </div>
-              </script><script>
-/* zeigToast → globales showToast */
-if (!window.zeigToast && window.showToast) window.zeigToast = window.showToast;
-if (!window.showToast && window.zeigToast) window.showToast = window.zeigToast;
-
-              (function(){
-                var box = document.getElementById('upgrade-cta-box');
-                if(!box) return;
-                var status = localStorage.getItem('prova_status')||'Trial';
-                var isTrial = status === 'Trial';
-                if(isTrial){
-                  box.innerHTML = '<div style="text-align:center;padding:12px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2);border-radius:8px;font-size:12px;color:var(--text2);">'
-                    +'⏰ Ihr Trial läuft — wählen Sie oben ein Paket für den automatischen Checkout.'
-                    +'</div>';
-                } else {
-                  box.innerHTML = '<a href="mailto:kontakt@prova-systems.de?subject=Paket-Wechsel" class="btn btn-primary" style="display:block;text-align:center;">✉ Paket-Änderung anfragen</a>';
-                }
-              })();
-              </script>
-            </div>
+              support@prova-systems.de
             </div>
           </div>
         </div>
@@ -750,18 +719,6 @@ if (!window.showToast && window.zeigToast) window.showToast = window.zeigToast;
 <!-- Toast -->
 <div class="toast-prova" id="einst-toast"></div>
 
-
-window.beantragteKuendigung = function() {
-  var email = localStorage.getItem('prova_sv_email') || '';
-  var paket = localStorage.getItem('prova_paket') || 'Solo';
-  if (!confirm('Kündigung beantragen für ' + paket + '-Paket?\n\nNach Bestätigung senden wir Ihnen eine Kündigungsbestätigung per E-Mail. Das Abonnement läuft bis zum Monatsende.')) return;
-  // Zur Support-E-Mail weiterleiten
-  var subject = encodeURIComponent('Kündigung PROVA Systems - ' + paket);
-  var body = encodeURIComponent('Ich möchte mein PROVA Systems ' + paket + '-Paket kündigen.\n\nE-Mail: ' + email + '\n\nBitte bestätigen Sie die Kündigung.');
-  window.open('mailto:support@prova-systems.de?subject=' + subject + '&body=' + body);
-  if(typeof zeigToast === 'function') zeigToast('Kündigungsanfrage geöffnet — bitte E-Mail absenden', '');
-};
-
 </script><script>
 (function(){
 'use strict';
@@ -834,7 +791,7 @@ async function updateAirtableFelder(felder){
   if(!recId){console.warn('Kein AT Record ID — Sync übersprungen');return false;}
   try{
     var path='/v0/'+AT_BASE+'/'+AT_SV_TABLE+'/'+recId;
-    var res=await fetch('/.netlify/functions/airtable',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({method:'PATCH',path:path,payload:{fields:felder}})});
+    var res=await fetch('/.netlify/functions/airtable',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({method:'PATCH',path:path,body:{fields:felder}})});
     return res.ok;
   }catch(e){console.warn('AT PATCH Fehler:',e);return false;}
 }
@@ -913,11 +870,6 @@ function ladeProfil(){
   }
   // Paket anzeigen
   renderPaket();
-  // Testpilot: Upgrade-Button ausblenden
-  if(localStorage.getItem('prova_testpilot') === '1'){
-    var upBtn = document.getElementById('upgrade-anfragen-btn');
-    if(upBtn) upBtn.style.display = 'none';
-  }
 }
 
 function setVal(id,val){var el=document.getElementById(id);if(el&&val!==null&&val!==undefined)el.value=val;}
@@ -1173,90 +1125,24 @@ window.stempelLoeschen = function() {
 })();
 
 /* ── PAKET ANZEIGE ── */
-
-/* ── STRIPE CHECKOUT ── */
-window.starteCheckout = async function(paketName) {
-  var email = localStorage.getItem('prova_sv_email') || '';
-  if (!email) { zeigToast('Bitte zuerst anmelden', 'err'); return; }
-
-  var btn = document.getElementById('checkout-btn-' + paketName);
-  if (btn) { btn.disabled = true; btn.textContent = '⏳ Wird geöffnet…'; }
-
-  try {
-    var res = await fetch('/.netlify/functions/stripe-checkout', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ paket: paketName, email: email })
-    });
-    var data = await res.json();
-    if (data.url) {
-      window.location.href = data.url;
-    } else {
-      throw new Error(data.error || 'Checkout-Fehler');
-    }
-  } catch(e) {
-    zeigToast('Fehler: ' + e.message, 'err');
-    if (btn) { btn.disabled = false; btn.textContent = 'Jetzt kaufen'; }
-  }
-};
-
 function renderPaket(){
   var pa=document.getElementById('paket-anzeige');
   var pc2={'Solo':'#4f8ef7','Team':'#a78bfa','Solo':'#4f8ef7','Pro':'#4f8ef7','Enterprise':'#a78bfa'}[paket]||'#4f8ef7';
-
-  // Testpilot: Sonder-Badge + kein Upgrade-Grid
-  var isTestpilot = localStorage.getItem('prova_testpilot') === '1';
-  if(pa){
-    if(isTestpilot){
-      pa.innerHTML='<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#10b981;margin-bottom:4px;">Aktives Paket</div><div style="font-size:26px;font-weight:800;color:var(--text);">Testpilot 🚀</div>';
-    } else {
-      pa.innerHTML='<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:'+pc2+';margin-bottom:4px;">Aktives Paket</div><div style="font-size:26px;font-weight:800;color:var(--text);">'+paket+'</div>';
-    }
-  }
-
+  if(pa)pa.innerHTML='<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:'+pc2+';margin-bottom:4px;">Aktives Paket</div><div style="font-size:26px;font-weight:800;color:var(--text);">'+paket+'</div>';
   var grid=document.getElementById('paket-grid');
   if(!grid)return;
-
-  // Testpilot: Paket-Grid komplett ausblenden, Info-Card zeigen
-  if(isTestpilot){
-    grid.innerHTML='<div style="padding:24px;background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.18);border-radius:12px;text-align:center;">'
-      +'<div style="font-size:28px;margin-bottom:8px;">🚀</div>'
-      +'<div style="font-size:15px;font-weight:700;color:#10b981;margin-bottom:6px;">Testpilot-Phase aktiv</div>'
-      +'<div style="font-size:13px;color:var(--text2);line-height:1.6;">Du nutzt PROVA im Rahmen der exklusiven Testpiloten-Phase.<br>Du hast dauerhaften Zugang zu allen Features — kostenlos und ohne Einschränkungen.<br><br>Wir melden uns persönlich bei dir, bevor sich etwas ändert. 👌</div>'
-      +'</div>';
-    return;
-  }
-
   var pakete=[
-    {name:'Solo',price:'89 €/Mo',cls:paket==='Solo'?'aktiv-starter':'',feats:['1 Nutzer, 30 Gutachten/Mo','KI-Gutachten §1–§6','§407a + EU AI Act Compliance','Persönlicher Audit-Trail','Alle Werkzeuge unbegrenzt','Normen, Textbausteine, JVEG','Briefvorlagen + KI-Brieftext','Fristenverwaltung','Foto-Anlage + Auto-Captioning']},
-    {name:'Team',price:'179 €/Mo',cls:paket==='Team'?'aktiv-ent':'',feats:['Alles aus Solo','Unbegrenzte Nutzer (+inklusive bis 5 SVs)','Rechteverwaltung','Chef-Freigabe-Workflow','Team-Dashboard','Organisations-Audit-Trail','Geteilte Textbausteine & Vorlagen','Jahresbericht','Priority-Support']}
+    {name:'Solo',price:'149 €/Mo',cls:paket==='Solo'?'aktiv-starter':'',feats:['1 Nutzer, 30 Gutachten/Mo','KI-Gutachten §1–§6','§407a + EU AI Act Compliance','Persönlicher Audit-Trail','Alle Werkzeuge unbegrenzt','Normen, Textbausteine, JVEG','Briefvorlagen + KI-Brieftext','Fristenverwaltung','Foto-Anlage + Auto-Captioning']},
+    {name:'Team',price:'349 €/Mo',cls:paket==='Team'?'aktiv-ent':'',feats:['Alles aus Solo','Unbegrenzte Nutzer (+99 €/Nutzer)','Rechteverwaltung','Chef-Freigabe-Workflow','Team-Dashboard','Organisations-Audit-Trail','Geteilte Textbausteine & Vorlagen','Jahresbericht','Priority-Support']}
   ];
   grid.innerHTML=pakete.map(function(p){
     var istAktiv=p.name===paket;
-    var istTrial = (localStorage.getItem('prova_status')||'Trial') === 'Trial';
-    var trialDays = parseInt(localStorage.getItem('prova_trial_days')||'14');
-    var trialStart = localStorage.getItem('prova_trial_start');
-    var trialLeft = 14;
-    if (trialStart) {
-      trialLeft = Math.max(0, Math.ceil((new Date(trialStart).getTime() + trialDays*86400000 - Date.now()) / 86400000));
-    }
     return '<div class="pk '+p.cls+'">'
-      +(istAktiv?'<span class="pk-badge" style="background:'+({'Solo':'rgba(79,142,247,.15)','Team':'rgba(139,92,246,.15)'}[p.name]||'rgba(79,142,247,.15)')+';color:'+({'Solo':'#4f8ef7','Team':'#a78bfa'}[p.name]||'#4f8ef7')+'">✓ Aktiv</span>':'')
+      +(istAktiv?'<span class="pk-badge" style="background:'+({'Solo':'rgba(79,142,247,.15)','Team':'rgba(139,92,246,.15)'}[p.name]||'rgba(79,142,247,.15)')+';color:'+({'Solo':'#4f8ef7','Team':'#a78bfa'}[p.name]||'#4f8ef7')+'">Aktiv</span>':'')
+      +(p.demnächst&&!istAktiv?'<span style="display:inline-block;background:rgba(245,158,11,.12);color:#f59e0b;border:1px solid rgba(245,158,11,.25);border-radius:10px;font-size:9px;font-weight:700;letter-spacing:.06em;padding:2px 7px;margin-bottom:4px;">DEMNÄCHST</span>':'')
       +'<div class="pk-name">'+p.name+'</div>'
       +'<div class="pk-price">'+p.price+'</div>'
       +p.feats.map(function(f){return '<div class="pk-feat'+(istAktiv?'':' locked')+'">'+f+'</div>';}).join('')
-      // Upgrade-Button nur wenn nicht aktiv
-      +(!istAktiv
-        ? '<button id="checkout-btn-'+p.name+'" onclick="starteCheckout(\'' + p.name + '\')" '
-          + 'style="width:100%;margin-top:12px;padding:10px;border-radius:8px;border:none;cursor:pointer;font-family:inherit;font-size:13px;font-weight:700;'
-          + (p.name==='Solo'
-            ? 'background:linear-gradient(135deg,#4f8ef7,#3a7be0);color:#fff;'
-            : 'background:linear-gradient(135deg,#a78bfa,#7c3aed);color:#fff;')
-          + '">Jetzt starten – 14 Tage kostenlos</button>'
-        : (istTrial
-            ? '<div style="margin-top:10px;padding:7px 10px;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);border-radius:7px;font-size:11px;color:#f59e0b;">'
-              + '⏰ Trial: noch '+trialLeft+' Tag'+(trialLeft===1?'':'e')+' · Danach automatisch abgerechnet</div>'
-            : ''))
       +'</div>';
   }).join('');
 }
@@ -1302,4 +1188,68 @@ window.ladeWebhookLog = function(){
 /* ── INIT ── */
 document.addEventListener('DOMContentLoaded', function(){
   // Signatur laden + Vorschau zeigen
-  var _savedSig = localSt
+  var _savedSig = localStorage.getItem('prova_sv_signatur');
+  if(_savedSig){
+    var _si=document.getElementById('sig-preview');
+    var _sw=document.getElementById('sig-preview-wrap');
+    var _ss=document.getElementById('sig-status');
+    var _sl=document.getElementById('btn-sig-loeschen');
+    if(_si)_si.src=_savedSig;
+    if(_sw)_sw.style.display='block';
+    if(_ss)_ss.style.display='block';
+    if(_sl)_sl.style.display='inline-flex';
+  }
+  // Profil laden
+  var pfn=localStorage.getItem('prova_sv_vorname')||'';
+  var pln=localStorage.getItem('prova_sv_nachname')||'';
+  var pem=localStorage.getItem('prova_sv_email')||'';
+  var ptel=localStorage.getItem('prova_sv_telefon')||'';
+  var pqual=localStorage.getItem('prova_sv_qualifikation')||'';
+  if(pfn){var el=document.getElementById('profil-vorname');if(el)el.value=pfn;}
+  if(pln){var el=document.getElementById('profil-nachname');if(el)el.value=pln;}
+  if(pem){var el=document.getElementById('profil-email');if(el)el.value=pem;}
+  if(ptel){var el=document.getElementById('profil-telefon');if(el)el.value=ptel;}
+  if(pqual){var el=document.getElementById('profil-qualifikation');if(el)el.value=pqual;}
+  // Erste Sektion anzeigen
+  var firstBtn=document.querySelector('.snav-item');
+  if(firstBtn){firstBtn.classList.add('active');}
+  var firstSec=document.getElementById('sec-profil');
+  if(firstSec){firstSec.classList.add('active');}
+  // Webhook-Log laden
+  if(typeof window.ladeWebhookLog==='function') window.ladeWebhookLog();
+  // Team-Einstellungen laden
+  var _whu = localStorage.getItem('prova_outbound_webhook') || '';
+  if(_whu) { var _el = document.getElementById('e-outbound-webhook'); if(_el) _el.value = _whu; }
+  var _wln = localStorage.getItem('prova_wl_name') || '';
+  if(_wln) { var _en = document.getElementById('e-wl-name'); if(_en) _en.value = _wln; }
+  var _wlc = localStorage.getItem('prova_primary_color') || '#4f8ef7';
+  var _ec = document.getElementById('e-primary-color'); if(_ec) _ec.value = _wlc;
+});
+
+})();
+</script>
+<script>
+/* PROVA Outbound-Webhook Payload-Vorschau */
+function togglePayloadVorschau() {
+  var box = document.getElementById('payload-vorschau');
+  if (!box) return;
+  if (box.style.display === 'none' || !box.style.display) {
+    var beispiel = {
+      prova_event:       'gutachten.freigegeben',
+      prova_version:     '1.0',
+      timestamp:         new Date().toISOString(),
+      fall_id:           'recXXXXXXXXXXXXXXX',
+      aktenzeichen:      'SCH-2026-001',
+      schadensart:       'Schimmelbefall',
+      auftraggeber_typ:  'Versicherung',
+      auftraggeber_name: 'Allianz Versicherung AG',
+      objekt: {
+        strasse: 'Musterstrasse 42',
+        plz:     '50667',
+        ort:     'Koeln'
+      },
+      sv_email:       localStorage.getItem('prova_sv_email') || 'sv@buero.de',
+      pdf_url:        'https://cdn.pdfmonkey.io/...',
+      gutachten_typ:  'gericht'
+    };
+    box.textContent = JSON.strin
