@@ -101,7 +101,7 @@
       + '.at-title{font-size:18px;font-weight:700;color:var(--text,#eaecf4);}'
       + '.at-close{background:none;border:none;color:var(--text3,#6b7280);font-size:20px;cursor:pointer;padding:4px 8px;border-radius:6px;}'
       + '.at-close:hover{color:var(--text,#eaecf4);background:rgba(255,255,255,.05);}'
-      + '.at-body{padding:16px 20px 20px;}'
+      + '.at-body{padding:16px 20px 20px;flex:1;overflow-y:auto;min-height:0;}'
       + '.at-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}'
       + '.at-card{padding:14px;border-radius:10px;background:var(--bg3,#181b24);border:1px solid var(--border,rgba(255,255,255,.07));cursor:pointer;transition:all .15s;text-align:center;}'
       + '.at-card:hover{border-color:var(--accent,#4f8ef7);transform:translateY(-2px);box-shadow:0 4px 16px rgba(0,0,0,.3);}'
@@ -133,7 +133,7 @@
       + '.at-preview-value{color:var(--text,#eaecf4);flex:1;}'
       + '.at-preview-edit{background:none;border:none;color:#4f8ef7;cursor:pointer;font-size:11px;padding:2px 6px;flex-shrink:0;}'
       /* Footer */
-      + '.at-footer{padding:16px 20px;border-top:1px solid var(--border,rgba(255,255,255,.07));display:flex;gap:8px;justify-content:flex-end;}'
+      + '.at-footer{padding:16px 20px;border-top:1px solid var(--border,rgba(255,255,255,.07));display:flex;gap:8px;justify-content:flex-end;flex-shrink:0;background:var(--bg2,#13161d);}'
       + '.at-btn{padding:10px 20px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:none;font-family:inherit;transition:all .12s;}'
       + '.at-btn-primary{background:var(--accent,#4f8ef7);color:#fff;}'
       + '.at-btn-primary:hover{background:#3a7be0;}'
@@ -231,13 +231,28 @@
     // PDF-Zone zeigen/verstecken
     var typ = AUFTRAGSTYPEN.find(function(t) { return t.id === typeId; });
     // Hinweis-Banner für PDF-Upload zeigen wenn relevant
+    // Hinweis-Banner: nur bei Typen mit PDF-Upload sinnvoll
     var pdfHintBanner = document.getElementById('at-pdf-hint-banner');
     if (!pdfHintBanner) {
       pdfHintBanner = document.createElement('div');
       pdfHintBanner.id = 'at-pdf-hint-banner';
-      pdfHintBanner.style.cssText = 'display:none;margin:8px 0;padding:8px 12px;background:rgba(79,142,247,.08);border:1px solid rgba(79,142,247,.2);border-radius:8px;font-size:11px;color:#7eb3ff;display:flex;align-items:center;gap:8px;';
-      pdfHintBanner.innerHTML = '<span style="font-size:14px;">💡</span><span><strong>Tipp:</strong> Laden Sie Ihren Beweisbeschluss hoch — PROVA extrahiert automatisch alle Daten und spart Ihnen die manuelle Eingabe.</span>';
+      pdfHintBanner.style.cssText = 'margin:0 0 10px 0;padding:9px 13px;background:rgba(79,142,247,.08);border:1px solid rgba(79,142,247,.2);border-radius:8px;font-size:11px;color:#7eb3ff;display:flex;align-items:center;gap:8px;';
+      pdfHintBanner.innerHTML = '<span style="font-size:14px;">💡</span><span id="at-pdf-hint-text"><strong>Tipp:</strong> Laden Sie das relevante PDF hoch — PROVA extrahiert automatisch alle Daten.</span>';
       if (bodyEl) bodyEl.insertBefore(pdfHintBanner, bodyEl.firstChild);
+    }
+    // Banner nur anzeigen wenn dieser Typ PDF-Upload unterstützt
+    pdfHintBanner.style.display = (typ && typ.pdfUpload) ? 'flex' : 'none';
+    // Hinweis-Text je Typ anpassen
+    if (typ && typ.pdfUpload) {
+      var hintTextMap = {
+        'gerichtsgutachten':    'Laden Sie den Beweisbeschluss hoch — PROVA extrahiert Beweisfragen, AZ und Fristen automatisch.',
+        'versicherungsgutachten':'Laden Sie den Schadensbericht oder Auftrag der Versicherung hoch — PROVA extrahiert alle Daten automatisch.',
+        'schiedsgutachten':     'Laden Sie die Schiedsvereinbarung hoch — PROVA extrahiert Streitgegenstand und Schiedsfragen.'
+      };
+      var hintEl = document.getElementById('at-pdf-hint-text');
+      if (hintEl && hintTextMap[selectedType]) {
+        hintEl.innerHTML = '<strong>Tipp:</strong> ' + hintTextMap[selectedType];
+      }
     }
 
     if (typ && typ.pdfUpload) {

@@ -697,18 +697,16 @@ document.addEventListener('DOMContentLoaded', function() {
               <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
                 <div class="form-group">
                   <label class="form-label form-label-required">Auftragsart</label>
-                  <select class="form-select" id="f-auftragsart" onchange="onAuftragsartChange()">
-                    <option value="">Bitte wählen…</option>
-                    <option value="gericht">Gerichtsgutachten</option>
-                    <option value="versicherung">Versicherungsgutachten</option>
-                    <option value="privat">Privatgutachten</option>
-                    <option value="schied">Schiedsgutachten</option>
-                    <option value="baubegleitung">Baubegleitung</option>
-                    <option value="abnahme">Bauabnahme</option>
-                    <option value="beweissicherung">Beweissicherung</option>
-                    <option value="kaufberatung">Kaufberatung</option>
-                    <option value="sanierung">Sanierungsberatung</option>
-                  </select>
+                  <!-- Auftragsart: aus Modal vorbelegt, nicht editierbar -->
+                  <div style="display:flex;align-items:center;gap:8px;padding:9px 12px;background:rgba(79,142,247,.06);border:1px solid rgba(79,142,247,.2);border-radius:8px;">
+                    <span id="f-auftragsart-icon" style="font-size:16px;">📋</span>
+                    <span id="f-auftragsart-label" style="font-size:13px;font-weight:600;color:var(--gray-800);">—</span>
+                    <button onclick="PROVA && PROVA.openAuftragstyp && PROVA.openAuftragstyp()" 
+                      style="margin-left:auto;font-size:10px;color:var(--primary-400);background:none;border:none;cursor:pointer;padding:2px 6px;border-radius:4px;font-family:inherit;">
+                      ändern
+                    </button>
+                  </div>
+                  <input type="hidden" id="f-auftragsart" name="auftragsart">
                 </div>
                 <div class="form-group">
                   <label class="form-label form-label-required">Schadensart</label>
@@ -1244,6 +1242,14 @@ document.addEventListener('DOMContentLoaded', function() {
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
           </button>
         </div>
+      </div>
+
+      <!-- Weiter-Button UNTEN — sichtbar nach Scrollen durch Stammdaten -->
+      <div style="display:flex;justify-content:flex-end;padding:16px 0 8px;border-top:1px solid var(--gray-200);margin-top:8px;" id="step1-footer-bottom">
+        <button class="btn btn-primary" onclick="weiterZuSchritt2()" style="gap:8px;">
+          Weiter zu Diktat &amp; Fotos
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </button>
       </div>
 
       <!-- Step 2: Diktat & Fotos — Zweispaltig: Links 60% (Diktat, Bereich, Messwerte, Fotos), Rechts 40% sticky blau (Kurzübersicht + Buttons) -->
@@ -3557,6 +3563,49 @@ PROVA.requirePaket = function(feature, minPaket) {
 };
 
 // ── GATE: Nach Analyse → §6-Fachurteil ──
+
+/* ── Step Navigation ── */
+function goToStep(n) {
+  // Alle Steps ausblenden
+  [1,2,3].forEach(function(i) {
+    var el = document.getElementById('step' + i + '-content');
+    if (el) el.style.display = (i === n) ? 'block' : 'none';
+    var circle = document.getElementById('step-' + i);
+    if (circle) {
+      circle.classList.remove('active','completed');
+      if (i < n) circle.classList.add('completed');
+      else if (i === n) circle.classList.add('active');
+    }
+    var conn = document.getElementById('conn-' + i);
+    if (conn) conn.classList.toggle('completed', i < n);
+  });
+  // Scroll nach oben
+  window.scrollTo({top:0, behavior:'smooth'});
+  // Tracking
+  if (window.TRACKING && window.TRACKING.schrittZeiten) {
+    window.TRACKING.schrittZeiten['schritt' + n + '_start'] = new Date().toISOString();
+  }
+}
+
+function weiterZuSchritt2() {
+  // Pflichtfelder prüfen
+  var schadenart = document.getElementById('f-schadenart');
+  if (!schadenart || !schadenart.value) {
+    if (window.showToast) showToast('Bitte Schadensart wählen', 'warn');
+    if (schadenart) schadenart.focus();
+    return;
+  }
+  // Stammdaten in localStorage speichern
+  var auftragsart = document.getElementById('f-auftragsart');
+  if (auftragsart && auftragsart.value) {
+    localStorage.setItem('prova_auftragsart', auftragsart.value);
+  }
+  goToStep(2);
+}
+
+function zurueckZuSchritt1() { goToStep(1); }
+function zurueckZuSchritt2() { goToStep(2); }
+
 function goToGate() {
   var az = localStorage.getItem('prova_letztes_az') || '';
   var sa = localStorage.getItem('prova_schadenart') || '';
@@ -5109,6 +5158,39 @@ function openKontakteModal(typ) {
   }
 }
 
+</script>
+<script>
+// Auftragsart-Label aus sessionStorage befüllen
+(function() {
+  var typMap = {
+    'gerichtsgutachten':     { icon:'⚖️', label:'Gerichtsgutachten' },
+    'versicherungsgutachten':{ icon:'🛡️', label:'Versicherungsgutachten' },
+    'privatgutachten':       { icon:'👤', label:'Privatgutachten' },
+    'schiedsgutachten':      { icon:'⚔️', label:'Schiedsgutachten' },
+    'baubegleitung':         { icon:'🏗️', label:'Baubegleitung' },
+    'bauabnahme':            { icon:'✅', label:'Bauabnahme' },
+    'beweissicherung':       { icon:'📸', label:'Beweissicherung' },
+    'kaufberatung':          { icon:'🏠', label:'Kaufberatung' },
+    'sanierungsberatung':    { icon:'🔧', label:'Sanierungsberatung' },
+  };
+  document.addEventListener('DOMContentLoaded', function() {
+    var raw = sessionStorage.getItem('prova_neuer_auftrag') || '{}';
+    var data = {}; try { data = JSON.parse(raw); } catch(e) {}
+    var typ = (data.auftragstyp || localStorage.getItem('prova_auftragsart') || '').toLowerCase();
+    var info = typMap[typ];
+    var iconEl = document.getElementById('f-auftragsart-icon');
+    var lblEl  = document.getElementById('f-auftragsart-label');
+    var hidEl  = document.getElementById('f-auftragsart');
+    if (info) {
+      if (iconEl) iconEl.textContent = info.icon;
+      if (lblEl)  lblEl.textContent  = info.label;
+      if (hidEl)  hidEl.value        = typ;
+    } else if (lblEl) {
+      lblEl.textContent = 'Bitte Auftragsart wählen';
+      lblEl.style.color = '#d97706';
+    }
+  });
+})();
 </script>
 </body>
 </html>
