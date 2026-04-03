@@ -358,6 +358,55 @@ body{background:var(--bg,#0b1220);color:var(--text,rgba(255,255,255,.88));}
   .main-layout{grid-template-columns:1fr;}
   .main-right{display:none;}
 }
+
+/* ── Diktat-Referenz Panel ── */
+.diktat-panel { margin-bottom:12px; }
+.diktat-toggle {
+  display:flex;align-items:center;justify-content:space-between;
+  padding:7px 10px;background:rgba(79,142,247,.07);
+  border:1px solid rgba(79,142,247,.15);border-radius:8px;
+  cursor:pointer;transition:all .15s;
+}
+.diktat-toggle:hover { background:rgba(79,142,247,.12); }
+.diktat-toggle-label { font-size:10px;font-weight:700;color:#7eb3ff;text-transform:uppercase;letter-spacing:.06em; }
+.diktat-toggle-icon { font-size:11px;color:#7eb3ff;transition:transform .2s; }
+.diktat-toggle-icon.open { transform:rotate(180deg); }
+.diktat-content {
+  display:none;margin-top:5px;
+  padding:10px 12px;
+  background:rgba(79,142,247,.04);
+  border:1px solid rgba(79,142,247,.1);
+  border-radius:7px;
+  font-size:11px;line-height:1.7;
+  color:rgba(255,255,255,.55);
+  max-height:180px;overflow-y:auto;
+  user-select:none;-webkit-user-select:none;
+  scrollbar-width:thin;
+}
+.diktat-content.open { display:block; }
+.diktat-label-hint { font-size:9px;color:rgba(79,142,247,.5);margin-bottom:6px;font-style:italic; }
+
+/* ── Normen Zeilen-Layout ── */
+.norm-row {
+  display:flex;align-items:flex-start;gap:8px;
+  padding:7px 8px;border-radius:7px;
+  border-bottom:1px solid rgba(255,255,255,.04);
+  cursor:pointer;transition:background .12s;
+}
+.norm-row:hover { background:rgba(16,185,129,.08); }
+.norm-row:hover .norm-insert { opacity:1; }
+.norm-name {
+  font-size:11px;font-weight:700;color:#34d399;
+  white-space:nowrap;flex-shrink:0;min-width:90px;
+}
+.norm-text { font-size:10px;color:rgba(255,255,255,.4);line-height:1.4;flex:1; }
+.norm-insert {
+  font-size:9px;font-weight:700;color:#34d399;
+  opacity:0;transition:opacity .12s;flex-shrink:0;
+  padding:2px 5px;border-radius:4px;
+  background:rgba(16,185,129,.1);white-space:nowrap;
+}
+
 </style>
 </head>
 <body>
@@ -655,7 +704,7 @@ body{background:var(--bg,#0b1220);color:var(--text,rgba(255,255,255,.88));}
       <!-- §407a BESTÄTIGUNG + FREIGABE -->
       <div class="confirm-section">
         <div class="confirm-box" id="confirm-box" onclick="toggleConfirm()">
-          <div class="confirm-checkbox" id="confirm-check">✓</div>
+          <div class="confirm-checkbox" id="confirm-check"></div>
           <div class="confirm-text">
             Ich habe dieses Gutachten <strong>persönlich geprüft</strong> und übernehme die <strong>fachliche Verantwortung</strong> gemäß §407a ZPO. Die KI-Offenlegung gemäß EU AI Act (VO 2024/1689) ist im Gutachten enthalten.
           </div>
@@ -687,6 +736,19 @@ body{background:var(--bg,#0b1220);color:var(--text,rgba(255,255,255,.88));}
           </div>
         </div>
 
+        <!-- DIKTAT-REFERENZ -->
+        <div class="diktat-panel" id="diktat-panel" style="display:none;">
+          <div class="diktat-toggle" onclick="toggleDiktat()">
+            <span class="diktat-toggle-label" id="diktat-toggle-label">🎙️ Ihr Diktat — Nur zur Referenz</span>
+            <span class="diktat-toggle-icon" id="diktat-icon">▾</span>
+          </div>
+          <div class="diktat-content" id="diktat-content">
+            <div class="diktat-label-hint">Ihre eigenen Worte vom Ortstermin — nicht kopierbar als §6</div>
+            <div id="diktat-text">—</div>
+          </div>
+        </div>
+        <div class="sb-divider" id="sb-div-diktat" style="display:none;"></div>
+
         <!-- MESSWERTE -->
         <div class="sb-sec" id="sb-messwerte" style="display:none;">
           <div class="sb-label">📐 Messwerte — klicken fügt in §6 ein</div>
@@ -698,8 +760,8 @@ body{background:var(--bg,#0b1220);color:var(--text,rgba(255,255,255,.88));}
         <!-- NORMEN -->
         <div class="sb-sec">
           <div class="sb-label">§ Passende Normen — Klick fügt in §6 ein</div>
-          <div class="norm-chips" id="sb-normen-chips">
-            <span class="norm-chip" style="color:rgba(255,255,255,.2);cursor:default;">Wird geladen…</span>
+          <div id="sb-normen-list">
+            <div style="font-size:10px;color:rgba(255,255,255,.2);padding:6px 0;">Wird geladen…</div>
           </div>
         </div>
 
@@ -793,101 +855,341 @@ var OFFENLEGUNG = {
 // ── EXPERT-LEVEL KI PROMPTS ────────────────────────────
 // Hochkalibriert für ö.b.u.v. Bausachverständige
 var KI_PROMPTS = {
+
+  /* ══════════════════════════════════════════════════════════════
+     SCHADENART-SPEZIFISCHES FACHVOKABULAR & NORMEN-KATALOG
+     Wird in alle 4 Prompts via ${fachkontext} eingebettet
+  ══════════════════════════════════════════════════════════════ */
+
+  _fachkontext: function(schadenart) {
+    var sa = (schadenart || '').toLowerCase();
+    var kataloge = {
+
+      schimmel: {
+        norm: 'WTA 6-1-01/D, DIN 4108-2 (fRsi ≥ 0,70), DIN 4108-3, DIN EN ISO 13788, DIN 68800-1, DIN 1946-6, UBA-Leitfaden Schimmelpilze',
+        grenzwerte: 'Materialfeuchte >20%: kritisch | Luftfeuchtigkeit >70%: schimmelfördernd | fRsi-Wert <0,70: unzureichender Mindestwärmeschutz | Taupunktunterschreitung bei 20°C/50%rF = 9,3°C',
+        fachbegriffe: 'Taupunktunterschreitung · Kondensatbildung an der Bauteiloberfläche · Wärmebrückeneffekt · Mindestwärmeschutz nach DIN 4108-2 · fRsi-Wert · Kapillarer Feuchtetransport · Diffusionswiderstand · Hygienischer Luftwechsel (0,3-fach/h) · Schimmelsporen (Cladosporium, Aspergillus, Penicillium) · Befallsklasse I–III (UBA) · Schimmelbefall >0,5 m² = erheblicher Mangel · Mitursächlichkeit des Nutzerverhaltens · Beheizungsdefizit · Lüftungsdefizit · Wandoberflächentemperatur · Raumlufttemperatur',
+        kausal: 'dürfte auf unzureichende Beheizung und/oder Lüftung zurückzuführen sein | dürfte auf einen Wärmebrückeneffekt zurückzuführen sein | dürfte durch Taupunktunterschreitung verursacht worden sein | dürfte auf eine mangelhafte Wärmedämmung zurückzuführen sein'
+      },
+
+      wasser: {
+        norm: 'DIN 18533 (Abdichtung erdberührt, Lastfall W1-E bis W4-E), DIN 18534 (Nassraum, Klasse A0–A3), DIN 18535, DIN 18532, DIN 18353 (Estrich: CM-Wert ≤2,0% ZE / ≤0,5% AE), DIN EN 13564 (Rückstau), VdS 3151 (Trocknung), DIN EN ISO 13788',
+        grenzwerte: 'Zementestrich trocken: CM ≤2,0% | Anhydritestrich trocken: CM ≤0,5% | Holzfeuchte Trocknungsziel: ≤15% | Mauerwerk Trocknungsziel: ≤3% KMG | Rückstauebene = Straßenoberkante',
+        fachbegriffe: 'Leckageortung · Druckprüfung (DIN EN 805) · Haarriss · Rohrbruch · Kapillarwirkung · Sättigungsfeuchte · Feuchtemigration · CM-Messung (Calciumcarbid-Methode) · Estrichrestfeuchte · Trocknungsgrenzwert · Kellerabdichtung (bituminös/KMB) · Rückstausicherung · Überflutungsschadenklasse · Sanierungsputz (WTA) · Abdichtungsfehler · Fugenundichtigkeit · Durchdringung · Anschlussdetail · Bauteilöffnung (Leckagesuche)',
+        kausal: 'dürfte auf einen Rohrbruch / eine Leckage zurückzuführen sein | dürfte durch einen Abdichtungsfehler verursacht worden sein | dürfte auf kapillaren Feuchtetransport zurückzuführen sein | dürfte durch Rückstau entstanden sein'
+      },
+
+      brand: {
+        norm: 'DIN 4102-4 (Feuerwiderstandsklassen F30/F60/F90), DIN EN 13501-2, DIN 14011, DIN EN 1363-1, DIN EN 1991-1-2 (Naturbrandmodell), AVV 17 06 01* (Asbest = gefährlicher Abfall), DIN 68800-2 (Holzschutz nach Brand)',
+        grenzwerte: 'Stahlversagen ab 500°C | Betonabplatzungen ab 300°C | Holzpyrolyse ab 270°C | Rußablagerung kritisch ab 0,5 mm Schichtdicke | Chlorwasserstoffsäure (HCl) aus PVC-Verbrennung: korrosiv',
+        fachbegriffe: 'Verkohlungstiefe · Rußablagerung · Brandrückstände · Pyrolyse · Temperatureinwirkung · Rauchgaskorrosion · Chlorwasserstoffsäure (HCl-Bildung) · Hitzeverformung · Stahlversagen · Brandlast (MJ/m²) · Brandeinwirkungsdauer · Feuerwiderstandsklasse (F30-B/F60-B/F90-B) · Baustoffklasse A1/A2/B1/B2 · Brandabschnitt · Rauchdichtigkeit · Einsturzgefährdung · Asbest-Verdacht · Schadstoffgutachten · Statische Nachberechnung erforderlich',
+        kausal: 'dürfte durch die thermische Einwirkung des Brandgeschehens verursacht worden sein | dürfte auf die Temperatureinwirkung und Rauchgaskorrosion zurückzuführen sein | dürfte eine statische Nachberechnung erforderlich machen | dürfte als kontaminiert zu bewerten sein'
+      },
+
+      sturm: {
+        norm: 'DIN EN 1991-1-4 (Windlasten, Windzone 1–4), DIN 18338 (Dachdeckung, Mindestneigung Tonziegel 22°), DIN 18339, ZVDH-Flachdachrichtlinie (Aufkantung ≥150 mm, Neigung ≥2%), DIN 18531 (Flachdachabdichtung), DIN 1053 (Mauerwerk)',
+        grenzwerte: 'Windzone 1: Basisdruck 0,32 kN/m² | Windzone 4: Basisdruck 0,56 kN/m² | Mindestüberdeckungsmaß Tonziegel: 22° Dachneigung | Windsogsicherung: Befestigung alle 30–50 cm',
+        fachbegriffe: 'Windlastzone · Böengeschwindigkeit · Windstaudruck · Windsog · Firstanschluss · Traufausbildung · Kehlanschluss · Gratausbildung · Ortgangausbildung · Windsogsicherung · Lattungsabstand · Eindeckrahmen · Schartenmaß · Überdeckungsmaß · Stehfalzdeckung · Dacheindeckung Verschiebewiderstand · Dachstuhl Stabilitätsversagen · Zwischensparrendämmung · Dampfbremsschicht · Traufstreifen · Reparaturbedürftigkeit',
+        kausal: 'dürfte auf die außergewöhnliche Windeinwirkung zurückzuführen sein | dürfte auf eine unzureichende Windsogsicherung zurückzuführen sein | dürfte im Zusammenhang mit dem Sturmereignis stehen | dürfte auf eine Überschreitung der Bemessungswindlast hinweisen'
+      },
+
+      baumaengel: {
+        norm: 'VOB/B §13 (Gewährleistung 4 Jahre Bauwerk), VOB/B §4 Nr. 3 (Bedenkenanmeldung), DIN 18202 (Toleranzen Hochbau), DIN 18195 (Abdichtung), DIN 18197 (Fugenabdichtung), DIN EN 206 (Beton, Expositionsklassen XC1–XF4), DIN 1045 (Stahlbeton), DIN 18550 (Putz), DIN 18157 (Fliesenarbeiten), DIN 55699 (WDVS), DIN 18560 (Estriche)',
+        grenzwerte: 'Ebenheitstoleranz Boden mit Belag: ≤5mm/4m (DIN 18202 Tab. 3, Zeile 3) | Putzhaftfestigkeit: ≥0,25 N/mm² | WDVS-Zugfestigkeit Untergrund: ≥0,25 N/mm² | Fliesenhohllagen: ≤5% | Rissbreite zulässig (unbewehrt): ≤0,2 mm | Soll-Ist-Abweichung: nach DIN 18202',
+        fachbegriffe: 'Soll-Ist-Abweichung · Maßhaltigkeit · Ebenheitstoleranz (DIN 18202 Tab. 3) · Haftfestigkeit · Zugfestigkeit · Rissbreite · Risstiefe · Rissursache (Schwinden/Setzen/Temperatur) · Gewährleistungsmangel · Verdeckter Mangel · Ausführungsmangel · Planungsmangel · Behinderungsanzeige · Bedenkenanmeldung (VOB/B §4 Nr. 3) · Abnahmeprotokoll · Mangelfreiheit i.S.d. VOB/B §13 · Gebrauchstauglichkeit · Standsicherheit · Dauerhaftigkeit · Wesentlicher Mangel · Unwesentlicher Mangel · Mängelbeseitigungskosten',
+        kausal: 'dürfte einen wesentlichen Mangel i.S.d. VOB/B §13 darstellen | dürfte auf einen Ausführungsfehler zurückzuführen sein | dürfte die vereinbarte Beschaffenheit unterschreiten | dürfte die anerkannten Regeln der Technik verletzen'
+      },
+
+      elementar: {
+        norm: 'DIN EN 1991-1-3 (Schneelasten), DIN EN 1991-1-4 (Windlasten), DIN EN 13564 (Rückstau), DIN 18533 (Abdichtung erdberührt), DIN 4095 (Drainagen), DIN EN 1610 (Kanalbau), DIN EN 752 (Entwässerungssysteme)',
+        grenzwerte: 'Rückstauebene = Straßenoberkante (DIN EN 13564) | Schneelastzone 1–3: 0,65–1,10 kN/m² | Drainageabstand: ≤5m bei Kellerwand',
+        fachbegriffe: 'Hochwassermarke · Flutlinie · Überflutungsdauer · Wassereindringtiefe · Rückstausicherung · Rückstauebene · Erddruckbelastung · Auftrieb · Grundwasseranstieg · Hangrutschung · Erdrutsch · Bodensetzung · Drainageversagen · Druckwasser (DIN 18533 Klasse W3/W4) · Nichtdrückendes Wasser (Klasse W1/W2) · Kapillarwasser · Staunässe · Hochwasserschutz · Einstauhöhe · Schäden durch höhere Gewalt',
+        kausal: 'dürfte auf das Extremereignis zurückzuführen sein | dürfte durch Rückstau in Verbindung mit dem Starkregenereignis entstanden sein | dürfte auf eine unzureichende Rückstausicherung zurückzuführen sein | dürfte den Tatbestand eines Elementarschadens erfüllen'
+      },
+
+      beweissicherung: {
+        norm: 'ZPO §485 ff. (Selbständiges Beweisverfahren), §407a ZPO (Pflichten SV), DIN 18202 (Toleranzen), DIN EN ISO 17123 (Messverfahren)',
+        grenzwerte: 'Rissbreite dokumentieren (mm, Lupe ≥10x) | Fotodokumentation: Maßstab, Datum, Uhrzeit | Messprotokoll mit geeichtem Gerät',
+        fachbegriffe: 'Ist-Zustand-Dokumentation · Fotodokumentation · Zustandsprotokoll · Maßskizze · Rissprotokoll · Rissbreite (mm) · Risstiefe · Risscharakter (durchgehend/oberflächlich) · Verformungsmaß · Setzungsriss · Temperaturriss · Schwindriss · Bewertungsfreie Dokumentation · Keine Kausalitätsaussage · Selbständiges Beweisverfahren (§485 ZPO) · Beweissicherungsprotokoll',
+        kausal: 'wurde zum Zeitpunkt der Begehung dokumentiert | wurde im Rahmen der Bestandsaufnahme festgestellt | ist im beigefügten Fotoprotokoll belegt'
+      }
+
+    };
+
+    // Schadenart-Matching
+    var match = null;
+    if (sa.includes('schimmel') || sa.includes('feuchte') || sa.includes('schimmelpilz')) match = kataloge.schimmel;
+    else if (sa.includes('wasser') || sa.includes('leckage') || sa.includes('rohrbruch') || sa.includes('überflutung')) match = kataloge.wasser;
+    else if (sa.includes('brand') || sa.includes('feuer') || sa.includes('rauch')) match = kataloge.brand;
+    else if (sa.includes('sturm') || sa.includes('wind') || sa.includes('hagel')) match = kataloge.sturm;
+    else if (sa.includes('mangel') || sa.includes('baumangel') || sa.includes('ausführung')) match = kataloge.baumaengel;
+    else if (sa.includes('elementar') || sa.includes('hochwasser') || sa.includes('schnee') || sa.includes('erdrutsch')) match = kataloge.elementar;
+    else if (sa.includes('beweis') || sa.includes('dokumentation') || sa.includes('zustand')) match = kataloge.beweissicherung;
+    
+    if (!match) {
+      // Generischer Katalog wenn keine Schadenart erkannt
+      return 'SCHADENART: ' + (schadenart || 'unbekannt') + '\nNormen: DIN 18202, VOB/B §13, §407a ZPO\nFachbegriffe: Soll-Ist-Abweichung, Maßhaltigkeit, Gebrauchstauglichkeit, Standsicherheit, Dauerhaftigkeit, Mangelfreiheit\nGrenzwerte: nach einschlägiger DIN-Norm';
+    }
+    return 'SCHADENART: ' + schadenart + '\nNormen: ' + match.norm + '\nGrenzwerte: ' + match.grenzwerte + '\nFachbegriffe: ' + match.fachbegriffe + '\nKausaltypische Formulierungen: ' + match.kausal;
+  },
+
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     PROMPT 1: KONJUNKTIV II — UNIVERSELL & VOLLSTÄNDIG
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
   konjunktiv: {
-    system: `Du bist ein erfahrener öffentlich bestellter und vereidigter Bausachverständiger (ö.b.u.v.) mit juristischer Zusatzausbildung. Du korrigierst §6-Fachurteil-Texte nach §407a ZPO.
+    system: `Du bist ein öffentlich bestellter und vereidigter Bausachverständiger (ö.b.u.v.) und Jurist mit 30 Jahren Gerichtserfahrung. Du korrigierst §6-Fachurteil-Texte nach §407a ZPO präzise in Konjunktiv II.
 
-STRIKTE REGELN — KEINE AUSNAHMEN:
+═══ VOLLSTÄNDIGER INDIKATIV-ERKENNUNGSKATALOG ═══
 
-INDIKATIV ERLAUBT (Befund-Schilderung):
-"wurde festgestellt", "ist sichtbar", "beträgt", "zeigt sich", "wurde gemessen"
+KATEGORIE A — Kausale Hauptverben (IMMER → Konjunktiv II):
+ist (kausal) → dürfte … sein / wäre
+sind (kausal) → dürften … sein / wären
+liegt/liegen → dürfte/dürften … liegen
+führt/führen → dürfte/dürften … führen
+verursacht → dürfte … verursacht haben
+bedingt → dürfte … bedingt sein
+resultiert → dürfte … resultieren
+beruht → dürfte … beruhen auf
+basiert → dürfte … basieren auf
+zeigt → dürfte … zeigen / könnte … hinweisen auf
+belegt → dürfte … belegen
+beweist → dürfte … belegen
+bestätigt → dürfte … bestätigen
+erklärt sich → dürfte sich … erklären
+lässt sich zurückführen → dürfte zurückzuführen sein auf
+ist zurückzuführen → dürfte zurückzuführen sein auf
+hat zur Folge → dürfte zur Folge haben
+bewirkt → dürfte … bewirken
+entsteht → dürfte … entstehen
+bildet sich → dürfte sich … bilden
+tritt auf → dürfte … auftreten
+ergibt sich → dürfte sich … ergeben
+folgt → dürfte … folgen
+zeigt sich → dürfte sich … zeigen
+stellt dar → dürfte … darstellen
+entspricht nicht → dürfte … nicht entsprechen
 
-KONJUNKTIV II PFLICHT (Schlussfolgerungen, Kausalaussagen, Beweisaussagen):
-FALSCH: "Die Ursache ist Kondenswasser."
-RICHTIG: "Die Ursache dürfte auf Kondenswasser zurückzuführen sein."
-FALSCH: "Die Beweislast liegt beim Vermieter."
-RICHTIG: "Die Beweislast dürfte beim Vermieter liegen."
-FALSCH: "Das ist ein Baumangel."
-RICHTIG: "Ein Baumangel dürfte nicht auszuschließen sein."
+KATEGORIE B — Kausal-Hilfsverben (IMMER → Konjunktiv II):
+muss/müssen (kausal) → wäre/wären / dürfte/dürften … erforderlich sein
+soll/sollen → sollte/sollten
+kann/können (kausal) → könnte/könnten
+wird/werden (kausal passiv) → dürfte/dürften … werden
+wurde/wurden (kausal) → dürfte … worden sein
 
-Verwende: dürfte, könnte, wäre, ließe sich, würde, müsste (im Konjunktiv II-Sinn)
+KATEGORIE C — Beweislast-Verben (IMMER → Konjunktiv II):
+liegt beim → dürfte beim … liegen
+trägt → dürfte … tragen
+obliegt → dürfte … obliegen
+trifft → dürfte … treffen
 
-AUSGABE: Nur den korrigierten Text. Kein Kommentar. Keine Einleitung. Keine Erklärung.`,
-    user: (text, schadenart, messwerte) =>
-      `Schadenfall: ${schadenart}\nMesswerte: ${messwerte || 'keine angegeben'}\n\nText zu korrigieren:\n${text}`
-  },
+INDIKATIV ERLAUBT — nur Befund/Messtatsachen:
+"wurde festgestellt", "wurde gemessen", "wurde vorgefunden", "wurde dokumentiert",
+"wurde aufgenommen", "beträgt", "betrug", "misst", "maß",
+"ist sichtbar", "ist erkennbar", "ist vorhanden", "ist messbar",
+"ist vorliegend" (nur als Befund-Aussage, nicht kausal)
 
-  neutral: {
-    system: `Du bist ein auf Gutachtenrecht spezialisierter Jurist und Bausachverständiger. Du formulierst §6-Stellungnahmen nach §407a ZPO neutralitätskonform um.
+═══ GRAMMATIK-REGELN — UNVERSTÖSSLICH ═══
 
-ZIEL: Sachlich, neutral, nicht parteiisch. Keine direkte Schuldzuweisung.
+REGEL 1 — Wortstellung Hauptsatz:
+Modalverb (dürfte/könnte/wäre/müsste) IMMER an Position 2, Vollverb-Infinitiv ans Satzende.
+✗ FALSCH: "Die Ursache ist dürfte Kondenswasser."
+✓ RICHTIG: "Die Ursache dürfte Kondenswasser sein."
+✗ FALSCH: "Der Schaden zurückzuführen ist dürfte auf..."
+✓ RICHTIG: "Der Schaden dürfte zurückzuführen sein auf..."
 
-REGELN:
-- Feststellungen: Indikativ ("wurde festgestellt", "ist vorhanden")
-- Schlussfolgerungen: Konjunktiv II ("dürfte", "könnte")
-- Keine direkten Beschuldigungen ("Der Mieter hat...")
-- Keine absoluten Kausalaussagen ("Die Ursache ist...")
-- BGH-Konformität: Beweislast immer im Konjunktiv II
-- Max. 3 präzise Sätze
+REGEL 2 — Wortstellung Nebensatz (dass / da / weil / sodass / weshalb / wobei / zumal):
+Modalverb ans Ende des Nebensatzes, VOR dem Infinitiv.
+✗ FALSCH: "..., da die Außenwand nicht gedämmt ist."
+✓ RICHTIG: "..., da die Außenwand nicht gedämmt sein dürfte."
+✗ FALSCH: "..., weil unzureichend gelüftet wird."
+✓ RICHTIG: "..., weil unzureichend gelüftet worden sein dürfte."
+✗ FALSCH: "..., sodass Kondensat entsteht."
+✓ RICHTIG: "..., sodass Kondensat entstehen dürfte."
 
-AUSGABE: Nur den neutralen Text. Keine Einleitungen oder Erklärungen.`,
-    user: (text, schadenart) =>
-      `Schadenart: ${schadenart}\n\nUmzuformulierender Text:\n${text}`
-  },
+REGEL 3 — Relativsätze (der/die/das/was/welche):
+✗ FALSCH: "..., was die Kondensatbildung verursacht."
+✓ RICHTIG: "..., was zur Kondensatbildung geführt haben dürfte."
+✗ FALSCH: "..., der die Schadensursache darstellt."
+✓ RICHTIG: "..., der als Schadensursache in Betracht kommen dürfte."
 
-  ausformulieren: {
-    system: `Du bist ein erfahrener ö.b.u.v. Bausachverständiger. Du formulierst Stichpunkte zu vollständigen, professionellen §6-Fachurteilssätzen aus.
+REGEL 4 — Passiv-Konstruktionen:
+✗ FALSCH: "wird unterschritten" (kausal) → ✓ RICHTIG: "dürfte unterschritten werden"
+✗ FALSCH: "wird verursacht" (kausal) → ✓ RICHTIG: "dürfte verursacht worden sein"
+✗ FALSCH: "ist zu sanieren" → ✓ RICHTIG: "wäre zu sanieren"
+✗ FALSCH: "muss saniert werden" → ✓ RICHTIG: "wäre einer Sanierung zuzuführen"
 
-ANFORDERUNGEN:
-- Befunde im Indikativ: "Im Bereich ... wurde ... festgestellt."
-- Kausalaussagen im Konjunktiv II: "Die Ursache dürfte auf ... zurückzuführen sein."
-- Beweislast im Konjunktiv II: "Die Beweislast dürfte ... liegen."
-- Empfehlungen im Konjunktiv II: "Es wäre zu empfehlen, ..."
-- Fachwortschatz: Schadensart-spezifisch, DIN-norm-bewusst
-- Struktur: max. 4 Sätze, kohärent, gerichtsfest
+REGEL 5 — Semantische Konsistenz (VERBOTE):
+NIEMALS: "dürfte eindeutig" — logischer Widerspruch (Konjunktiv II = Ungewissheit)
+NIEMALS: "dürfte offensichtlich" — logischer Widerspruch
+NIEMALS: "dürfte klar" — logischer Widerspruch
+STATTDESSEN: "dürfte mit überwiegender Wahrscheinlichkeit" / "dürfte nach derzeitigem Erkenntnisstand"
 
-STYLE: Wie ein 30-jähriger erfahrener Gerichtsgutachter schreibt.
-
-AUSGABE: Nur den fertig formulierten Text. Keine Einleitungen oder Kommentare.`,
-    user: (text, schadenart, messwerte, feld) => {
-      const feldCtx = feld===1 ? 'Ursachenanalyse' : feld===2 ? 'Beweislast-Bewertung' : 'Sanierungsempfehlung';
-      return `Schadenart: ${schadenart}\nMesswerte: ${messwerte||'keine'}\nAbschnitt: ${feldCtx}\n\nStichpunkte/Rohentwurf:\n${text}`;
+REGEL 6 — Fachvokabular unverändert:
+DIN-Normen, WTA-Merkblätter, Messwerte, Grenzwerte, Fachbegriffe NICHT verändern.`,
+    user: (text, schadenart, messwerte) => {
+      const fk = KI_PROMPTS._fachkontext(schadenart);
+      return `${fk}\nMesswerte vor Ort: ${messwerte || 'keine angegeben'}\n\n───\nText — bitte alle Indikativ-Kausalaussagen vollständig in Konjunktiv II korrigieren:\n\n${text}\n───\nGib NUR den vollständig korrigierten deutschen Text zurück. Perfekte Grammatik, Groß-/Kleinschreibung, Zeichensetzung.`;
     }
   },
 
-  praezisieren: {
-    system: `Du bist ein präziser Gutachten-Lektor mit Expertise in Baurecht und §407a ZPO. Du verdichtest §6-Texte auf ihre juristische Kernaussage.
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     PROMPT 2: JURISTISCH NEUTRAL — ALLE SCHADENARTEN
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  neutral: {
+    system: `Du bist ein spezialisierter Gutachtenlektor mit Expertise in §407a ZPO, BGH-Rechtsprechung und den anerkannten Regeln der Technik für Bau-Sachverständigen-Gutachten. Du formulierst §6-Texte juristisch präzise, neutral und parteiisch ausgewogen um.
 
-ZIEL: Kürzen ohne Informationsverlust. Jeder Satz muss gerichtlich verwertbar bleiben.
+═══ NEUTRALISIERUNGS-REGELN ═══
 
-REGELN:
-- Entferne Füllformulierungen und Redundanzen
-- Behalte alle messwertbasierten Aussagen
-- Behalte alle Normreferenzen
-- Konjunktiv II für alle Schlussfolgerungen
-- Max. 3 Sätze
+REGEL 1 — Keine direkte Schuldzuweisung:
+✗ FALSCH: "Der Mieter hat falsch gelüftet."
+✓ RICHTIG: "Ein dem Nutzerverhalten zuzuordnendes Lüftungsdefizit dürfte nicht auszuschließen sein."
+✗ FALSCH: "Der Bauunternehmer hat schlecht gearbeitet."
+✓ RICHTIG: "Die Ausführung dürfte den anerkannten Regeln der Technik nicht in vollem Umfang entsprochen haben."
+✗ FALSCH: "Der Vermieter hat die Pflicht verletzt."
+✓ RICHTIG: "Eine Pflichtverletzung des Vermieters dürfte in Betracht zu ziehen sein."
 
-AUSGABE: Nur den präzisierten Text. Keine Einleitungen.`,
-    user: (text, schadenart) =>
-      `Schadenart: ${schadenart}\n\nZu verdichtender Text:\n${text}`
+REGEL 2 — Keine absoluten Kausalaussagen:
+✗ FALSCH: "Die Ursache ist die fehlende Dämmung."
+✓ RICHTIG: "Als maßgebliche Ursache dürfte das Fehlen einer ausreichenden Wärmedämmung in Betracht zu ziehen sein."
+✗ FALSCH: "Der Schaden wurde durch Frost verursacht."
+✓ RICHTIG: "Frosteinwirkung dürfte als schadensursächlich in Betracht kommen."
+
+REGEL 3 — Konjunktiv II DURCHGÄNGIG — auch in allen Nebensätzen:
+✗ FALSCH: "..., da die Wand ungedämmt ist."
+✓ RICHTIG: "..., da die Wand ungedämmt sein dürfte."
+✗ FALSCH: "..., was zur Kondensation führt."
+✓ RICHTIG: "..., was zur Kondensation führen dürfte."
+✗ FALSCH: "..., sodass Schimmelbildung entsteht."
+✓ RICHTIG: "..., sodass Schimmelbildung entstehen dürfte."
+✗ FALSCH: "..., weil Feuchtigkeit vorhanden ist."
+✓ RICHTIG: "..., weil Feuchtigkeit vorhanden sein dürfte."
+
+REGEL 4 — Fachsprachliche Neutralformulierungen:
+"liegt vor" (kausal) → "dürfte festzustellen sein"
+"vorliegen" (kausal) → "dürften gegeben sein" / "dürften vorzuliegen scheinen"
+"ist zu empfehlen" → "wäre zu empfehlen" / "erschiene sachgerecht"
+"muss saniert werden" → "wäre einer fachgerechten Sanierung zuzuführen"
+"ist nicht möglich" → "erschiene nicht sachgerecht"
+"kann nicht akzeptiert werden" → "dürfte nicht dem vertraglich geschuldeten Standard entsprechen"
+"muss geprüft werden" → "wäre einer sachkundigen Prüfung zu unterziehen"
+
+REGEL 5 — BGH-konforme Beweislastformulierungen:
+✓ "Die Beweislast dürfte beim [Partei] liegen."
+✓ "Der Nachweis dürfte [Partei] obliegen."
+✓ "Eine Umkehr der Beweislast dürfte in Betracht kommen."
+
+REGEL 6 — Befunde bleiben im Indikativ (unverändert):
+Messwerte, Fotodokumentation, sichtbare Befunde → Indikativ korrekt.
+"Es wurde ein Befund von X festgestellt." → bleibt unverändert.`,
+    user: (text, schadenart) => {
+      const fk = KI_PROMPTS._fachkontext(schadenart);
+      return `${fk}\n\n───\nText — bitte juristisch neutral, §407a-konform und BGH-kompatibel umformulieren:\n\n${text}\n───\nGib NUR den neutralen deutschen Text zurück. Korrekte Grammatik, alle Fachbegriffe und DIN-Normen unverändert übernehmen.`;
+    }
   },
 
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     PROMPT 3: AUSFORMULIEREN — ALLE SCHADENARTEN
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  ausformulieren: {
+    system: `Du bist ein erfahrener ö.b.u.v. Bausachverständiger und formulierst §6-Fachurteile auf dem Niveau eines Gerichtsgutachtens beim Land- oder Oberlandesgericht aus. Deine Texte sind sprachlich einwandfrei, fachlich präzise und juristisch gerichtsfest.
+
+═══ STRUKTUR DES §6-FACHURTEILS ═══
+
+Feld 1 — Ursache:
+"[Befund im Indikativ]. Die Ursache dürfte [Kausalaussage im KJ II] zurückzuführen sein. [Technische Begründung mit Messwert und DIN-Norm-Referenz im KJ II]."
+
+Feld 2 — Beweislast & Bewertung:
+"Die Beweislast dürfte [Partei] obliegen / beim [Partei] liegen, da [Begründung im KJ II]. [BGH-konforme Formulierung]. [Normreferenz falls relevant]."
+
+Feld 3 — Empfehlung:
+"Es wäre zu empfehlen, [konkrete Maßnahme]. [Normreferenz]. [Ggf. Dringlichkeit und Zeitrahmen]."
+
+═══ UNIVERSAL-SPRACHREGELN ═══
+
+BEFUND (Indikativ erlaubt):
+"Es wurde festgestellt, dass..." | "Im Rahmen der Ortsbesichtigung wurde ... vorgefunden." | "Die Messung ergab einen Wert von..."
+
+KAUSALAUSSAGE (Konjunktiv II Pflicht):
+"dürfte zurückzuführen sein auf" | "dürfte als schadensursächlich in Betracht kommen" | "dürfte maßgeblich zu ... beigetragen haben" | "dürfte in einem kausalen Zusammenhang stehen mit"
+
+BEWEISLAST (Konjunktiv II Pflicht):
+"dürfte beim [Partei] liegen" | "dürfte [Partei] obliegen" | "dürfte [Partei] treffen"
+
+EMPFEHLUNG (Konjunktiv II Pflicht):
+"wäre zu empfehlen" | "wäre einer fachgerechten Sanierung zuzuführen" | "erschiene sachgerecht" | "wäre einer sachkundigen Prüfung zu unterziehen" | "wäre unverzüglich in Auftrag zu geben"
+
+═══ ALLGEMEINES FACHVOKABULAR BAUSV ═══
+Schadensursache · Schadensursächlichkeit · Mitursächlichkeit · Primärschaden · Folgeschaden
+Beweisführungslast · Beweislast (unterschiedlich!) · Beweislastumkehr
+Anerkannte Regeln der Technik (a.R.d.T.) · Stand der Technik · Allgemein anerkannte Bauregeln
+Gebrauchstauglichkeit · Standsicherheit · Dauerhaftigkeit (die drei Grundanforderungen)
+Wesentlicher Mangel · Unwesentlicher Mangel · Verdeckter Mangel · Arglistig verschwiegener Mangel
+Mangelfreiheit i.S.d. VOB/B §13 / BGB §633 · Beschaffenheitsvereinbarung · Werkvertrag
+Verkehrssicherungspflicht · Instandhaltungspflicht · Instandsetzungspflicht
+Sachverständige Einschätzung · Fachkundige Beurteilung · Erfahrungssatz
+Kausalitätsvermutung · Anscheinsbeweis · Prima-facie-Beweis
+Schadensminderungspflicht (§254 BGB)`,
+    user: (text, schadenart, messwerte, feld) => {
+      const fk = KI_PROMPTS._fachkontext(schadenart);
+      const feldCtx = feld===1 ? 'Ursachenanalyse — §6 Absatz 1' : feld===2 ? 'Beweislast-Bewertung — §6 Absatz 2' : 'Sanierungsempfehlung — §6 Absatz 3';
+      return `${fk}\nMesswerte: ${messwerte||'keine'}\nAbschnitt: ${feldCtx}\n\n───\nStichpunkte / Rohentwurf des Sachverständigen:\n\n${text}\n───\nFormuliere 2–4 vollständige, gerichtsfeste Sätze auf Sachverständigen-Niveau.\nKorrekte deutsche Grammatik, Groß-/Kleinschreibung, Zeichensetzung.\nGib nur den fertigen Text zurück, keine Erklärungen.`;
+    }
+  },
+
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     PROMPT 4: PRÄZISIEREN — ALLE SCHADENARTEN
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  praezisieren: {
+    system: `Du bist ein erfahrener Gutachten-Lektor mit 20 Jahren Expertise in baurechtskonformen Sachverständigen-Gutachten nach §407a ZPO. Du verdichtest §6-Texte auf das juristisch Wesentliche — ohne dabei Konjunktiv II, Fachnormen oder Messwerte zu verlieren.
+
+═══ BEHALTEN — ZWINGEND ═══
+✓ Alle Messwerte mit Einheit (85 %, 11,6 °C, 0,5 m², 2,3 mm)
+✓ Alle DIN-Norm-Referenzen, WTA-Merkblätter, VOB/B-Paragraphen
+✓ Alle Konjunktiv-II-Formen — diese definieren rechtlich die Kausalaussage
+✓ Die Kausalstruktur: Befund → Ursache → Schlussfolgerung / Beweislast / Empfehlung
+✓ Alle schadenartspezifischen Fachbegriffe
+
+═══ KÜRZEN — ENTFERNEN ═══
+✗ Füllwörter: "eindeutig", "offensichtlich", "ganz klar", "ohne Weiteres"
+✗ Redundanzen: "festgestellt und dokumentiert" → nur "festgestellt"
+✗ Doppelaussagen: "ursächlich und kausal" → nur "ursächlich"
+✗ Schachtelsätze über 3 Ebenen → aufteilen in max. 2 Ebenen
+
+═══ NIEMALS DURCH INDIKATIV KÜRZEN ═══
+✗ "dürfte zurückzuführen sein" → DARF NICHT werden zu → "liegt"
+✗ "dürfte liegen beim" → DARF NICHT werden zu → "liegt beim"
+✗ "wäre zu sanieren" → DARF NICHT werden zu → "muss saniert werden"
+
+KORREKTE KONJUNKTIV-KÜRZUNGEN:
+"dürfte als maßgebliche Ursache angesehen werden können" → "dürfte maßgeblich ursächlich sein"
+"dürfte in einem ursächlichen Zusammenhang stehen mit" → "dürfte ursächlich sein für"
+"wäre einer fachgerechten Sanierung zuzuführen" → bleibt so (bereits präzise)
+
+═══ WORTSTELLUNG ERHALTEN ═══
+Hauptsatz: Modalverb an Position 2, Vollverb-Infinitiv am Ende.
+Nebensatz: Modalverb am Ende vor dem Infinitiv.
+Diese Struktur NICHT verändern, auch nicht beim Kürzen.`,
+    user: (text, schadenart) => {
+      const fk = KI_PROMPTS._fachkontext(schadenart);
+      return `${fk}\n\n───\nText — bitte auf juristische Kernaussage verdichten (max. 3 Sätze, Konjunktiv II und Fachbegriffe vollständig erhalten):\n\n${text}\n───\nGib nur den präzisierten deutschen Text zurück.`;
+    }
+  },
+
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     PROMPT 5: KJ-FIX (lokale Inline-Korrektur)
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
   kj_fix: {
-    system: `Du bist Konjunktiv-II-Korrektor für Bausachverständigen-Gutachten (§407a ZPO).
+    system: `Du korrigierst ein einzelnes Indikativ-Wort oder eine Indikativ-Phrase in einem §6-Fachurteil (§407a ZPO) in korrekten Konjunktiv II.
 
-EINZIGE AUFGABE: Ersetze GENAU die markierten Indikativ-Aussagen durch Konjunktiv II.
-Ändere nichts anderes.
-
-Indikativ-Muster → Konjunktiv-II-Ersatz:
-"ist" (kausativ) → "dürfte sein" / "wäre"
-"liegt" → "dürfte liegen"
-"führt zu" → "dürfte führen zu"
-"ist zurückzuführen auf" → "dürfte zurückzuführen sein auf"
-"verursacht" → "dürfte verursacht haben"
-"beweist" → "dürfte belegen"
-
-AUSGABE: Vollständigen korrigierten Satz. NUR den Satz, keine Erklärung.`,
-    user: (originalSatz, indikatvivWort) =>
-      `Originalsatz: "${originalSatz}"\nIndikativ-Wort: "${indikatvivWort}"\n\nBitte korrigiere nur dieses Wort/diese Phrase im Konjunktiv II und gib den vollständigen Satz zurück.`
+Regeln:
+- Ersetze NUR das genannte Indikativ-Wort/die Phrase
+- Passe die Wortstellung des gesamten Satzes grammatisch korrekt an
+- Hauptsatz: Modalverb an Position 2, Infinitiv ans Ende
+- Nebensatz: Modalverb am Ende vor dem Infinitiv
+- DIN-Normen, Messwerte und Fachbegriffe bleiben unverändert
+- Gib den vollständigen korrigierten Satz zurück — nur den Satz, ohne Kommentar`,
+    user: (originalSatz, indikatiwort) =>
+      `Originalsatz: "${originalSatz}"\nIndikativ-Wort/Phrase: "${indikatiwort}"\n\nKorrigiere dieses Wort/diese Phrase in Konjunktiv II und gib den vollständigen korrekten Satz zurück.`
   }
 };
 
@@ -931,6 +1233,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // Normen laden
   ladeNormenSidebar();
+
+  // Diktat-Referenz laden
+  ladeDiktatReferenz();
 
   // Shortcut-Hint einmalig
   var hintShown = false;
@@ -1088,17 +1393,28 @@ function updateGesamt() {
 }
 
 function updateFreigabeBtn() {
-  var ok = false;
+  var textOk = false;
   if (selectedMode === 'kausalkette') {
     var b1 = (document.getElementById('svB1')||{}).value||'';
     var b2 = (document.getElementById('svB2')||{}).value||'';
     var b3 = (document.getElementById('svB3')||{}).value||'';
-    ok = (b1.length + b2.length + b3.length) >= 500;
+    textOk = (b1.length + b2.length + b3.length) >= 500;
   } else {
-    ok = ((document.getElementById('svTextA')||{}).value||'').length >= 500;
+    textOk = ((document.getElementById('svTextA')||{}).value||'').length >= 500;
   }
   var btn = document.getElementById('btn-freigabe');
-  if (btn) btn.disabled = !(ok && bestaetigungOk);
+  if (!btn) return;
+  btn.disabled = !(textOk && bestaetigungOk);
+  // Hinweis warum noch gesperrt
+  if (!textOk && bestaetigungOk) {
+    btn.title = 'Bitte mindestens 500 Zeichen in den Feldern eingeben';
+  } else if (textOk && !bestaetigungOk) {
+    btn.title = 'Bitte Verantwortungs-Bestätigung anklicken';
+  } else if (!textOk && !bestaetigungOk) {
+    btn.title = 'Text unvollständig + Bestätigung fehlt';
+  } else {
+    btn.title = '';
+  }
 }
 
 // ── §407a BESTÄTIGUNG ──────────────────────────────────
@@ -1247,7 +1563,13 @@ async function kiAssistAktiv(typ) {
 }
 
 async function runKiAssist(typ, n, currentText) {
-  if (_kiPending[n]) return; // kein Doppel-Call
+  // Feld n direkt aus DOM lesen — nicht aus aktivFeld (kann falsch sein)
+  if (!currentText || currentText.trim().length === 0) {
+    var taId = n === 0 ? 'svTextA' : 'svB' + n;
+    var ta = document.getElementById(taId);
+    currentText = ta ? ta.value.trim() : '';
+  }
+  if (_kiPending[n]) return;
   _kiPending[n] = true;
 
   var schadenart = sa || localStorage.getItem('prova_schadenart') || 'Schadensfall';
@@ -1326,8 +1648,11 @@ function acceptVorschlag(n) {
   ta.dispatchEvent(new Event('input', {bubbles:true}));
   ta.focus();
   autoExpand(ta);
+  // KJ-Recheck nach Insertion — KI-Vorschlag könnte noch Fehler haben
+  clearTimeout(kjTimers[n]);
+  kjTimers[n] = setTimeout(function() { kjPruefeInline(n); }, 600);
   closeVorschlag(n);
-  zeigToast('Vorschlag eingefügt ✓ — bitte prüfen und anpassen', 'ok');
+  zeigToast('Vorschlag eingefügt ✓ — KJ-II wird geprüft…', 'ok');
 }
 
 function closeVorschlag(n) {
@@ -1515,33 +1840,7 @@ function insertMW(text) {
 }
 
 // ── NORMEN SIDEBAR ─────────────────────────────────────
-function ladeNormenSidebar() {
-  var schadenart = sa || localStorage.getItem('prova_schadenart') || '';
-  var chips = document.getElementById('sb-normen-chips');
-  if (!chips) return;
-
-  // Normen nach Schadenart filtern
-  var normenMap = {
-    'Schimmelbefall': ['WTA 6-1-01/D','DIN 4108-2','DIN 4108-3','DIN EN ISO 13788','DIN 68800-1'],
-    'Wasserschaden': ['DIN 18533','VdS 3151','DIN 4108-3','DIN EN ISO 13788','DIN 276'],
-    'Brandschaden': ['DIN 14011','DIN EN 1363','DIN 4102','VdS 2000'],
-    'Sturmschaden': ['DIN EN 1991','DIN 1055-4','DIN EN 206','DIN 1045-1'],
-    'Baumängel': ['VOB/B §13','DIN 18202','DIN 276','DIN 18195','DIN EN 206'],
-    'Elementarschaden': ['DIN EN 1991','DIN 18533','DIN 4108-3','DIN 276']
-  };
-
-  var normen = [];
-  Object.keys(normenMap).forEach(function(key) {
-    if (schadenart.toLowerCase().includes(key.toLowerCase())) {
-      normen = normen.concat(normenMap[key]);
-    }
-  });
-  if (!normen.length) normen = ['DIN 4108-2','DIN 4108-3','VOB/B §13','DIN 18202','DIN 276'];
-
-  chips.innerHTML = normen.map(function(n) {
-    return '<span class="norm-chip" onclick="insertNorm(\'' + n.replace(/'/g,"\\'") + '\')">' + n + '</span>';
-  }).join('');
-}
+// ladeNormenSidebar: ersetzt durch neue Version weiter unten
 
 function insertNorm(normText) {
   var n = aktivFeld !== undefined ? aktivFeld : 1;
@@ -1716,6 +2015,156 @@ window.zeigToast = function(msg, typ, ms) {
   toast.classList.add('show');
   _toastTimer = setTimeout(function() { toast.classList.remove('show'); }, ms || 3500);
 };
+
+/* ══ DIKTAT-REFERENZ PANEL ══════════════════════════════════ */
+function ladeDiktatReferenz() {
+  // Alle Quellen sammeln: Diktat (Sprache), Freitext (manuell), Nachtrag
+  var quelle = localStorage.getItem('prova_eingabe_quelle') || 'diktat';
+  
+  var teile = [];
+
+  // 1. Haupt-Transkript (Diktat oder Freitext je nach Quelle)
+  var hauptText = localStorage.getItem('prova_transkript') || 
+                  localStorage.getItem('prova_diktat_text') || '';
+  if (hauptText.trim().length > 10) {
+    teile.push({ label: quelle === 'manuell' ? 'Freitext' : 'Diktat', text: hauptText.trim() });
+  }
+
+  // 2. Manueller Freitext (kann zusätzlich zum Diktat existieren)
+  var freitext = localStorage.getItem('prova_manuell_text') || 
+                 localStorage.getItem('prova_freitext') || '';
+  if (freitext.trim().length > 10 && freitext.trim() !== hauptText.trim()) {
+    teile.push({ label: 'Freitext (manuell)', text: freitext.trim() });
+  }
+
+  // 3. Diktat-Nachtrag (nachträglich ergänzt)
+  var nachtrag = localStorage.getItem('prova_diktat_nachtrag') || 
+                 localStorage.getItem('prova_nachtrag') || '';
+  if (nachtrag.trim().length > 10) {
+    teile.push({ label: 'Ergänzungs-Diktat', text: nachtrag.trim() });
+  }
+
+  if (teile.length === 0) return;
+
+  var panel = document.getElementById('diktat-panel');
+  var div   = document.getElementById('sb-div-diktat');
+  var txt   = document.getElementById('diktat-text');
+  var toggleLabel = document.getElementById('diktat-toggle-label');
+  if (!panel || !txt) return;
+
+  // Alle Teile zusammenbauen
+  var html = '';
+  teile.forEach(function(teil) {
+    var gekuerzt = teil.text.length > 800 ? teil.text.substring(0, 800) + ' …' : teil.text;
+    html += '<div style="margin-bottom:8px;">'
+      + '<div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:rgba(79,142,247,.5);margin-bottom:3px;">'
+      + teil.label + '</div>'
+      + '<div style="color:rgba(255,255,255,.6);font-size:11px;line-height:1.65;">' + gekuerzt.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</div>'
+      + '</div>';
+  });
+
+  txt.innerHTML = html;
+
+  // Label anpassen
+  if (toggleLabel) {
+    var labelText = teile.length === 1
+      ? '🎙️ ' + teile[0].label + ' — Nur zur Referenz'
+      : '🎙️ Ihre Eingaben (' + teile.length + ') — Nur zur Referenz';
+    toggleLabel.textContent = labelText;
+  }
+
+  panel.style.display = 'block';
+  if (div) div.style.display = 'block';
+}
+
+function toggleDiktat() {
+  var content = document.getElementById('diktat-content');
+  var icon = document.getElementById('diktat-icon');
+  if (!content) return;
+  var open = content.classList.contains('open');
+  content.classList.toggle('open', !open);
+  if (icon) icon.classList.toggle('open', !open);
+}
+
+/* ══ NORMEN ZEILEN-FORMAT ════════════════════════════════════ */
+// Normen-Datenbank mit Grenzwert-Kontext pro Schadenart
+var NORMEN_MIT_KONTEXT = {
+  'Schimmelbefall': [
+    {nr:'WTA 6-1-01/D', info:'Schimmel: Luftfeuchte <60% Raum, Wandfeuchte >20% kritisch'},
+    {nr:'DIN 4108-2',   info:'Wärmeschutz: fRsi ≥ 0,70 — Taupunkt bei 20°C/50%rF = 9,3°C'},
+    {nr:'DIN 4108-3',   info:'Feuchteschutz: Tauwassernachweis, Diffusionswiderstand'},
+    {nr:'DIN EN ISO 13788', info:'Hygrothermik: Oberflächenfeuchte >80%rF = schimmelkritisch'},
+    {nr:'DIN 68800-1',  info:'Holzschutz: Holzfeuchte >18% = Schimmelrisiko'},
+    {nr:'DIN 1946-6',   info:'Lüftung Wohngebäude: mind. 0,3-facher Luftwechsel/h'},
+    {nr:'UBA-Leitfaden', info:'Schimmel >0,5 m² = erheblicher Mangel, Sanierungspflicht'},
+  ],
+  'Wasserschaden': [
+    {nr:'DIN 18533',    info:'Abdichtung erdberührt: Lastfall W1-E bis W4-E'},
+    {nr:'DIN 18534',    info:'Nassraum-Abdichtung: Beanspruchungsklasse A0–A3'},
+    {nr:'VdS 3151',     info:'Trocknung: Holz ≤15%, Mauerwerk ≤3% KMG Zielfeuchte'},
+    {nr:'DIN 4108-3',   info:'Feuchteschutz: Dampfdiffusion, Tauwasservermeidung'},
+    {nr:'DIN 18353',    info:'Estrich: CM Zementestrich ≤2,0%, Anhydrit ≤0,5%'},
+    {nr:'DIN EN 13564', info:'Rückstauschutz: Rückstauebene = Straßenoberkante'},
+  ],
+  'Brandschaden': [
+    {nr:'DIN 4102-4',   info:'Feuerwiderstand: F30/F60/F90-Klassen nach Bauteilen'},
+    {nr:'DIN 14011',    info:'Begriffe im Feuerwehrwesen: Schadensdefinitionen'},
+    {nr:'DIN EN 1363',  info:'Feuerwiderstandsprüfungen: Methodik und Bewertung'},
+    {nr:'AVV 17 06 01*', info:'Asbest = gefährlicher Abfall, gesonderte Entsorgung'},
+    {nr:'DIN 68800-2',  info:'Holzschutz: Feuchteklassen nach Brandschaden-Sanierung'},
+  ],
+  'Sturmschaden': [
+    {nr:'DIN EN 1991-1-4', info:'Windlasten: Windzone 1–4, Böengeschwindigkeit'},
+    {nr:'DIN 18338',    info:'Dachdeckungsarbeiten: Mindestdachneigung Tonziegel 22°'},
+    {nr:'DIN 18531',    info:'Flachdach: Aufkantung ≥150 mm, Bitumen 2-lagig ≥6 mm'},
+    {nr:'ZVDH Flachdach', info:'Mindestneigung 2%, Aufkantung 150 mm'},
+  ],
+  'Baumängel': [
+    {nr:'VOB/B §13',    info:'Gewährleistung Bauwerk 4 Jahre, Mängelansprüche'},
+    {nr:'DIN 18202',    info:'Maßtoleranzen: Ebenheit Boden mit Belag max. 5 mm/4 m'},
+    {nr:'DIN EN 206',   info:'Beton: Expositionsklassen XC1–XF4'},
+    {nr:'DIN 18550',    info:'Putz: Unterputz ≥10 mm, Außenputz ≥15 mm'},
+    {nr:'DIN 55699',    info:'WDVS: Haftfestigkeit Untergrund ≥0,25 N/mm²'},
+    {nr:'DIN 18157',    info:'Fliesenarbeiten: Zugfestigkeit ≥1,0 N/mm², Hohllagen ≤5%'},
+  ],
+  'Elementarschaden': [
+    {nr:'DIN 18533',    info:'Abdichtung: Erdberührte Bauteile, Lastfälle W1–W4'},
+    {nr:'DIN EN 1991-1-4', info:'Windlasten und Schneelasten nach Region'},
+    {nr:'DIN EN 13564', info:'Rückstauschutz: Absperrorgane, Rückstauebene'},
+    {nr:'VdS 3151',     info:'Trocknung nach Elementarschaden: Zielfeuchten'},
+  ],
+};
+var NORMEN_STANDARD = [
+  {nr:'DIN 4108-2',   info:'Wärmeschutz: fRsi ≥ 0,70 — Taupunkttemperatur prüfen'},
+  {nr:'DIN 18533',    info:'Abdichtung erdberührter Bauteile: Lastfälle W1-E bis W4-E'},
+  {nr:'VOB/B §13',    info:'Gewährleistung am Bauwerk: 4 Jahre Mängelansprüche'},
+  {nr:'DIN 18202',    info:'Toleranzen im Hochbau: Ebenheit, Maßabweichungen'},
+  {nr:'ZPO §407a',    info:'Persönliche Erstattungspflicht des Sachverständigen'},
+];
+
+function ladeNormenSidebar() {
+  var schadenart = sa || localStorage.getItem('prova_schadenart') || '';
+  var list = document.getElementById('sb-normen-list');
+  if (!list) return;
+
+  var normen = null;
+  Object.keys(NORMEN_MIT_KONTEXT).forEach(function(key) {
+    if (!normen && schadenart.toLowerCase().includes(key.toLowerCase())) {
+      normen = NORMEN_MIT_KONTEXT[key];
+    }
+  });
+  if (!normen) normen = NORMEN_STANDARD;
+
+  list.innerHTML = normen.map(function(n) {
+    var escaped = (n.nr + ' — ' + n.info).replace(/'/g, "\'");
+    return '<div class="norm-row" onclick="insertNorm('' + n.nr.replace(/'/g,"\'") + '')" title="Klicken zum Einfügen in §6">'
+      + '<span class="norm-name">' + n.nr + '</span>'
+      + '<span class="norm-text">' + n.info + '</span>'
+      + '<span class="norm-insert">↵</span>'
+      + '</div>';
+  }).join('');
+}
+
 </script>
 
 </body>

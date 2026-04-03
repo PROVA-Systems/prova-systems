@@ -96,12 +96,12 @@
     s.textContent = ''
       + '.at-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:700;backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);align-items:center;justify-content:center;padding:20px;}'
       + '.at-overlay.open{display:flex;}'
-      + '.at-dialog{background:var(--bg2,#13161d);border:1px solid var(--border2,rgba(255,255,255,.12));border-radius:16px;width:100%;max-width:640px;max-height:90vh;overflow-y:auto;box-shadow:0 16px 48px rgba(0,0,0,.5);}'
+      + '.at-dialog{background:var(--bg2,#13161d);border:1px solid var(--border2,rgba(255,255,255,.12));border-radius:16px;width:100%;max-width:640px;max-height:88vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 16px 48px rgba(0,0,0,.5);}'
       + '.at-header{padding:20px 24px 16px;border-bottom:1px solid var(--border,rgba(255,255,255,.07));display:flex;align-items:center;justify-content:space-between;}'
       + '.at-title{font-size:18px;font-weight:700;color:var(--text,#eaecf4);}'
       + '.at-close{background:none;border:none;color:var(--text3,#6b7280);font-size:20px;cursor:pointer;padding:4px 8px;border-radius:6px;}'
       + '.at-close:hover{color:var(--text,#eaecf4);background:rgba(255,255,255,.05);}'
-      + '.at-body{padding:16px 20px 20px;}'
+      + '.at-body{padding:20px;overflow-y:auto;flex:1;min-height:0;}'
       + '.at-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}'
       + '.at-card{padding:14px;border-radius:10px;background:var(--bg3,#181b24);border:1px solid var(--border,rgba(255,255,255,.07));cursor:pointer;transition:all .15s;text-align:center;}'
       + '.at-card:hover{border-color:var(--accent,#4f8ef7);transform:translateY(-2px);box-shadow:0 4px 16px rgba(0,0,0,.3);}'
@@ -113,7 +113,7 @@
       + '.at-manual{display:block;width:100%;padding:10px;border-radius:8px;background:transparent;border:1px dashed var(--border2,rgba(255,255,255,.12));color:var(--text3,#6b7280);font-size:12px;cursor:pointer;font-family:inherit;transition:all .12s;text-align:center;}'
       + '.at-manual:hover{border-color:var(--text3,#6b7280);color:var(--text2,#9da3b4);}'
       /* PDF Upload Zone */
-      + '.at-pdf-zone{display:none;margin-top:12px;padding:20px;border:2px dashed var(--border2,rgba(255,255,255,.12));border-radius:10px;text-align:center;transition:all .2s;}'
+      + '.at-pdf-zone{display:none;margin-top:10px;padding:12px 16px;border:1.5px dashed var(--border2,rgba(255,255,255,.12));border-radius:8px;text-align:center;transition:all .2s;}'
       + '.at-pdf-zone.visible{display:block;}'
       + '.at-pdf-zone.dragover{border-color:var(--accent,#4f8ef7);background:rgba(79,142,247,.05);}'
       + '.at-pdf-icon{font-size:32px;margin-bottom:8px;}'
@@ -133,7 +133,7 @@
       + '.at-preview-value{color:var(--text,#eaecf4);flex:1;}'
       + '.at-preview-edit{background:none;border:none;color:#4f8ef7;cursor:pointer;font-size:11px;padding:2px 6px;flex-shrink:0;}'
       /* Footer */
-      + '.at-footer{padding:16px 20px;border-top:1px solid var(--border,rgba(255,255,255,.07));display:flex;gap:8px;justify-content:flex-end;}'
+      + '.at-footer{padding:16px 20px;border-top:1px solid var(--border,rgba(255,255,255,.07));display:flex;gap:8px;justify-content:flex-end;background:var(--bg2,#13161d);flex-shrink:0;}'
       + '.at-btn{padding:10px 20px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:none;font-family:inherit;transition:all .12s;}'
       + '.at-btn-primary{background:var(--accent,#4f8ef7);color:#fff;}'
       + '.at-btn-primary:hover{background:#3a7be0;}'
@@ -162,7 +162,7 @@
     var html = ''
       + '<div class="at-dialog">'
       +   '<div class="at-header">'
-      +     '<div class="at-title">Neuer Fall</div>'
+      +     '<div class="at-title">Neuer Auftrag</div>'
       +     '<button class="at-close" onclick="PROVA.closeAuftragstyp()">✕</button>'
       +   '</div>'
       +   '<div class="at-body" id="at-body">'
@@ -241,7 +241,7 @@
 
     // Button aktivieren
     footerBtn.disabled = false;
-    footerBtn.textContent = (typ ? typ.label : 'Fall') + ' starten →';
+    footerBtn.textContent = (typ ? typ.label : 'Auftrag') + ' starten →';
   };
 
   /* ── PDF hochladen + KI-Extraktion ── */
@@ -342,12 +342,12 @@
     if (selectedType === 'baubegleitung') {
       zielSeite = 'baubegleitung.html';
     } else {
-      zielSeite = 'app.html';
+      zielSeite = 'gutachten.html';
     }
 
     PROVA.closeAuftragstyp();
     // Wizard starten wenn auf app.html / gutachten.html
-    if (zielSeite === 'app.html' || zielSeite === 'app.html' || !zielSeite) {
+    if (zielSeite === 'gutachten.html' || zielSeite === 'app.html' || !zielSeite) {
       if (typeof PROVA_WIZARD !== 'undefined' && PROVA_WIZARD.start) {
         PROVA_WIZARD.start(selectedType || 'privatgutachten');
       } else {

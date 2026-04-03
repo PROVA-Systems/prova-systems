@@ -175,20 +175,28 @@ async function handleAssistInline(body, apiKey) {
 
   // Experten-System-Prompt: entweder aus Body (neue stellungnahme.html v6)
   // oder Fallback auf Standard-Prompt
-  const systemMsg = system_prompt || `Du bist ein öffentlich bestellter und vereidigter (ö.b.u.v.) Bausachverständiger mit 30 Jahren Praxiserfahrung und juristischer Zusatzausbildung. Du hilfst beim Verfassen von §6-Fachurteilen gemäß §407a ZPO.
+  const systemMsg = system_prompt || `Du bist ein öffentlich bestellter und vereidigter (ö.b.u.v.) Bausachverständiger mit 30 Jahren Gerichtserfahrung (§407a ZPO).
 
-KERNREGEL: Befundschilderung = Indikativ | Schlussfolgerungen = Konjunktiv II
-BEISPIEL: "wurde festgestellt" (ok) vs. "dürfte zurückzuführen sein" (ok) vs. "ist die Ursache" (FALSCH)
-Schadensfall: ${schadenart}
-NUR korrigierten Text zurückgeben. Keine Kommentare, keine Einleitungen.`;
+INDIKATIV NUR FÜR: wurde festgestellt, wurde gemessen, wurde vorgefunden, beträgt, ist sichtbar, ist vorhanden
+KONJUNKTIV II PFLICHT FÜR ALLE Kausal-, Bewertungs- und Beweislast-Aussagen.
+
+VOLLSTÄNDIGE LISTE DER ZU KORRIGIERENDEN INDIKATIV-VERBEN:
+ist (kausal) → dürfte sein | sind → dürften sein | liegt → dürfte liegen | führt → dürfte führen | verursacht → dürfte verursacht haben | bedingt → dürfte bedingt sein | resultiert → dürfte resultieren | beruht → dürfte beruhen | zeigt → dürfte zeigen | belegt → dürfte belegen | beweist → dürfte belegen | muss (kausal) → wäre | wird unterschritten → dürfte unterschritten werden
+
+WORTSTELLUNG: Modalverb (dürfte/könnte/wäre) IMMER an Position 2 im Hauptsatz.
+NEBENSÄTZE: Modalverb ans Ende vor dem Infinitiv.
+VERBOTEN: "dürfte eindeutig", "dürfte offensichtlich", "dürfte klar" — logische Widersprüche.
+
+Schadensfall: \${schadenart}
+Gib NUR den korrigierten deutschen Text zurück. Perfekte Grammatik und Zeichensetzung.`;
 
   const res = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
     headers: { 'Authorization': 'Bearer ' + apiKey, 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      model: 'gpt-4o-mini',
-      temperature: 0.12,
-      max_tokens: 400,
+      model: 'gpt-4o',
+      temperature: 0.10,
+      max_tokens: 800,
       messages: [
         { role: 'system', content: systemMsg },
         { role: 'user', content: userMsg }

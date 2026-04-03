@@ -684,174 +684,557 @@ document.addEventListener('DOMContentLoaded', function() {
 
       <!-- Step 1: Stammdaten -->
       <div id="step1-content">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem">
-          <div>
-            <div class="card">
-              <div class="card-header"><h3 class="card-title">Schadensart & Auftrag</h3></div>
-              <div class="card-body">
+        <div style="display:flex;flex-direction:column;gap:1.25rem;">
+
+          <!-- ═══ SEKTION 1: AUFTRAG & IDENTIFIKATION ═══ -->
+          <div class="card">
+            <div class="card-header" style="display:flex;align-items:center;gap:10px;">
+              <div style="width:28px;height:28px;border-radius:8px;background:rgba(79,142,247,.15);color:#4f8ef7;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;">A</div>
+              <h3 class="card-title" style="margin:0;">Auftrag &amp; Identifikation</h3>
+              <span style="margin-left:auto;font-size:10px;font-weight:600;color:#ef4444;background:rgba(239,68,68,.08);padding:2px 7px;border-radius:4px;">Pflicht</span>
+            </div>
+            <div class="card-body">
+              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
+                <div class="form-group">
+                  <label class="form-label form-label-required">Auftragsart</label>
+                  <select class="form-select" id="f-auftragsart" onchange="onAuftragsartChange()">
+                    <option value="">Bitte wählen…</option>
+                    <option value="gericht">Gerichtsgutachten</option>
+                    <option value="versicherung">Versicherungsgutachten</option>
+                    <option value="privat">Privatgutachten</option>
+                    <option value="schied">Schiedsgutachten</option>
+                    <option value="baubegleitung">Baubegleitung</option>
+                    <option value="abnahme">Bauabnahme</option>
+                    <option value="beweissicherung">Beweissicherung</option>
+                    <option value="kaufberatung">Kaufberatung</option>
+                    <option value="sanierung">Sanierungsberatung</option>
+                  </select>
+                </div>
                 <div class="form-group">
                   <label class="form-label form-label-required">Schadensart</label>
-                  <select class="form-select" id="f-schadenart">
+                  <select class="form-select" id="f-schadenart" onchange="onSchadenartChange(this.value)">
                     <option value="">Bitte wählen…</option>
-                    <option value="Schimmelbefall" selected>Schimmelbefall</option>
                     <option value="Wasserschaden">Wasserschaden</option>
-                    <option value="Sturmschaden">Sturmschaden</option>
+                    <option value="Schimmelbefall">Schimmelbefall</option>
                     <option value="Brandschaden">Brandschaden</option>
+                    <option value="Sturmschaden">Sturmschaden</option>
+                    <option value="Baumängel">Baumängel</option>
+                    <option value="Elementarschaden">Elementarschaden</option>
                     <option value="Einbruchschaden">Einbruchschaden</option>
-                    <option value="Sonstiger Schaden">Sonstiger Schaden</option>
+                    <option value="Sonstige">Sonstige</option>
                   </select>
-                  <div class="field-error" id="e-schadenart">Bitte Schadensart wählen</div>
                 </div>
-                <div class="form-row">
-                  <div class="form-group"><label class="form-label">Aktenzeichen</label><input type="text" class="form-input" id="f-schadensnummer" placeholder="SCH-2026-001"></div>
-                  <div class="form-group"><label class="form-label">Schadensdatum</label><input type="date" class="form-input" id="f-schadensdatum"></div>
-                </div>
-                <!-- Fristenverwaltung (erscheint bei Gericht) -->
-                <div id="frist-block" style="display:none;background:rgba(79,142,247,.04);border:1px solid rgba(79,142,247,.12);border-radius:10px;padding:14px 16px;margin-bottom:16px;">
-                  <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#4f8ef7;margin-bottom:10px;">⚖️ Gerichtsgutachten — Fristen &amp; Beweisfragen</div>
-                  <div class="form-row">
-                    <div class="form-group"><label class="form-label">Gerichtsaktenzeichen</label><input type="text" class="form-input" id="f-gerichts-az" placeholder="7 OH 12/26"></div>
-                    <div class="form-group"><label class="form-label">Frist zur Gutachtenabgabe</label><input type="date" class="form-input" id="f-fristdatum" onchange="berechneFristWarnung()"></div>
-                  </div>
-                  <div id="frist-warnung" style="display:none;padding:8px 12px;border-radius:7px;margin-bottom:10px;font-size:12px;font-weight:600;"></div>
-                  <div class="form-group">
-                    <label class="form-label">Beweisfragen des Gerichts</label>
-                    <textarea class="form-input" id="f-beweisfragen" rows="4" placeholder="1. Liegt ein Mangel vor?&#10;2. Was ist die Ursache?&#10;3. Welche Kosten entstehen?" style="resize:vertical;min-height:80px;line-height:1.6;"></textarea>
-                    <div style="font-size:10px;color:var(--gray-500);margin-top:4px;">Jede Frage in eine neue Zeile. PROVA strukturiert das Gutachten automatisch nach den Beweisfragen.</div>
-                  </div>
-                </div>
-                <script>
-                function berechneFristWarnung(){
-                  var fd=document.getElementById('f-fristdatum');
-                  var warn=document.getElementById('frist-warnung');
-                  if(!fd||!fd.value||!warn)return;
-                  var frist=new Date(fd.value);
-                  var heute=new Date();
-                  var tage=Math.ceil((frist-heute)/(1000*60*60*24));
-                  if(tage<0){
-                    warn.style.display='block';warn.style.background='rgba(239,68,68,.1)';warn.style.color='#ef4444';
-                    warn.textContent='⚠️ Frist überschritten! '+Math.abs(tage)+' Tage überfällig.';
-                  }else if(tage<=7){
-                    warn.style.display='block';warn.style.background='rgba(239,68,68,.1)';warn.style.color='#ef4444';
-                    warn.textContent='🔴 Nur noch '+tage+' Tage bis zur Frist!';
-                  }else if(tage<=21){
-                    warn.style.display='block';warn.style.background='rgba(245,158,11,.1)';warn.style.color='#f59e0b';
-                    warn.textContent='🟡 Noch '+tage+' Tage bis zur Frist.';
-                  }else{
-                    warn.style.display='block';warn.style.background='rgba(16,185,129,.08)';warn.style.color='#10b981';
-                    warn.textContent='✅ Noch '+tage+' Tage bis zur Frist.';
-                  }
-                }
-                // Frist-Block bei Gericht anzeigen
-                var _origSwitchAT = window.switchAuftraggeberTyp || function(){};
-                window.switchAuftraggeberTyp = function(val) {
-                  _origSwitchAT(val);
-                  var fb=document.getElementById('frist-block');
-                  if(fb) fb.style.display=(val==='Gericht')?'block':'none';
-                };
-                </script>
                 <div class="form-group">
-                  <label class="form-label form-label-required" style="display:flex;justify-content:space-between;align-items:center;">
-                    <span>Auftraggeber</span>
-                    <button type="button" onclick="oeffneKontaktPicker()" style="padding:3px 9px;background:rgba(79,142,247,.12);border:1px solid rgba(79,142,247,.3);border-radius:5px;color:#93C5FD;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;">👥 Aus Kontakten</button>
+                  <label class="form-label" style="display:flex;align-items:center;gap:5px;">
+                    Aktenzeichen
+                    <span style="font-size:9px;font-weight:600;color:#4f8ef7;background:rgba(79,142,247,.1);padding:1px 5px;border-radius:3px;">auto</span>
                   </label>
-                  <select class="form-select" id="f-auftraggeber-typ" onchange="switchAuftraggeberTyp(this.value)">
+                  <input class="form-input" id="f-schadensnummer" type="text" placeholder="Wird automatisch vergeben" readonly style="background:rgba(79,142,247,.06);color:#4f8ef7;cursor:default;">
+                </div>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:12px;">
+                <div class="form-group">
+                  <label class="form-label form-label-required">Schadensdatum</label>
+                  <input class="form-input" id="f-schadensdatum" type="date">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Auftragsdatum</label>
+                  <input class="form-input" id="f-auftragsdatum" type="date">
+                </div>
+                <div class="form-group">
+                  <label class="form-label" style="display:flex;align-items:center;gap:5px;">
+                    Frist zur Gutachtenabgabe
+                    <span id="f-fristdatum-wrap" style="display:none;" class="badge-auto">optional</span>
+                  </label>
+                  <input class="form-input" id="f-fristdatum" type="date">
+                  <div style="font-size:10px;color:var(--gray-500);margin-top:3px;">Erzeugt automatisch einen Kalender-Eintrag</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ═══ SEKTION 2: AUFTRAGGEBER ═══ -->
+          <div class="card">
+            <div class="card-header" style="display:flex;align-items:center;gap:10px;">
+              <div style="width:28px;height:28px;border-radius:8px;background:rgba(16,185,129,.1);color:#059669;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;">AG</div>
+              <h3 class="card-title" style="margin:0;">Auftraggeber</h3>
+              <span style="margin-left:auto;font-size:10px;font-weight:600;color:#ef4444;background:rgba(239,68,68,.08);padding:2px 7px;border-radius:4px;">Pflicht</span>
+            </div>
+            <div class="card-body">
+              <div style="display:grid;grid-template-columns:1fr 2fr;gap:12px;">
+                <div class="form-group">
+                  <label class="form-label form-label-required">Typ</label>
+                  <select class="form-select" id="f-auftraggeber-typ" onchange="onAGTypChange(this.value)">
                     <option value="">Bitte wählen…</option>
-                    <option value="Versicherung">Versicherung</option>
-                    <option value="Privatperson">Privatperson</option>
-                    <option value="Vermieter / Verwaltung">Vermieter / Verwaltung</option>
-                    <option value="WEG / Hausverwaltung">WEG / Hausverwaltung</option>
-                    <option value="Anwaltskanzlei">Anwaltskanzlei</option>
-                    <option value="Gericht">Gericht</option>
-                    <option value="Bauherr">Bauherr</option>
-                    <option value="Wohnungsbaugesellschaft">Wohnungsbaugesellschaft</option>
+                    <option value="gericht">Gericht</option>
+                    <option value="versicherung">Versicherung</option>
+                    <option value="anwalt">Anwaltskanzlei</option>
+                    <option value="privat">Privatperson</option>
+                    <option value="unternehmen">Unternehmen</option>
+                    <option value="hausverwaltung">Hausverwaltung</option>
                   </select>
                 </div>
                 <div class="form-group">
-                  <label class="form-label form-label-required">Name / Firma</label>
-                  <!-- Immer sichtbares Suchfeld mit Autocomplete -->
-                  <div style="position:relative">
-                    <input type="text" class="form-input" id="f-auftraggeber-name"
-                      placeholder="Name oder Versicherung eingeben…"
-                      autocomplete="organization"
-                      oninput="handleAuftraggeberInput(this.value)"
-                      onblur="setTimeout(()=>{const d=document.getElementById('ag-dropdown');if(d)d.style.display='none'},200)">
-                    <div id="ag-dropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid var(--gray-200);border-radius:var(--radius-md);box-shadow:0 4px 20px rgba(0,0,0,.12);max-height:220px;overflow-y:auto;z-index:500;"></div>
+                  <label class="form-label form-label-required">Name / Gericht / Versicherung</label>
+                  <div style="display:flex;gap:8px;">
+                    <input class="form-input" id="f-auftraggeber-name" type="text" placeholder="Name oder Institution" style="flex:1;">
+                    <button type="button" onclick="openKontakteModal('auftraggeber')" style="white-space:nowrap;padding:0 12px;height:38px;border-radius:var(--radius-md);border:1px solid var(--border);background:var(--bg2);color:var(--text2);font-size:11px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:4px;">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                      Aus Kontakten
+                    </button>
                   </div>
-                  <div class="field-error" id="e-auftraggeber-name">Bitte Name oder Versicherung eingeben</div>
+                  <div style="font-size:10px;color:var(--gray-500);margin-top:3px;">Aus Kontakten wählen oder direkt eingeben</div>
                 </div>
-                <div class="form-group"><label class="form-label form-label-required">E-Mail Auftraggeber</label><input type="email" class="form-input" id="f-auftraggeber-email" placeholder="mueller@vers.de"><div class="field-error" id="e-auftraggeber-email">Bitte gültige E-Mail eingeben</div></div>
-                <div class="form-group"><label class="form-label">Ansprechpartner</label><input type="text" class="form-input" id="f-ansprechpartner" placeholder="Herr Müller"></div>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:12px;">
+                <div class="form-group">
+                  <label class="form-label" id="f-ag-ansprechpartner-label">Ansprechpartner / Richter</label>
+                  <input class="form-input" id="f-ansprechpartner" type="text" placeholder="Herr / Frau …">
+                </div>
+                <div class="form-group">
+                  <label class="form-label form-label-required">E-Mail Auftraggeber</label>
+                  <input class="form-input" id="f-auftraggeber-email" type="email" placeholder="name@domain.de">
+                  <div style="font-size:10px;color:var(--gray-500);margin-top:3px;">Für automatischen E-Mail-Versand des Gutachtens</div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Telefon Auftraggeber</label>
+                  <input class="form-input" id="f-auftraggeber-telefon" type="tel" placeholder="+49 221 …">
+                </div>
+              </div>
+              <!-- Gericht-Name (konditional) -->
+              <div id="f-gericht-name-wrap" style="display:none;margin-top:12px;">
+                <div class="form-group">
+                  <label class="form-label">Gerichtsname (falls abweichend von Auftraggeber)</label>
+                  <input class="form-input" id="f-gericht-name" type="text" placeholder="z.B. Landgericht Köln">
+                </div>
               </div>
             </div>
           </div>
 
-          <div>
-            <div class="card" style="margin-bottom:1.25rem">
-              <div class="card-header"><h3 class="card-title">Objekt / Schadensort</h3></div>
-              <div class="card-body">
-                <div class="form-group"><label class="form-label form-label-required">Straße & Hausnummer</label><input type="text" class="form-input" id="f-strasse" placeholder="Musterstraße 123"><div class="field-error" id="e-strasse">Bitte Straße eingeben</div></div>
-                <div class="form-row">
-                  <div class="form-group"><label class="form-label form-label-required">PLZ</label><input type="text" class="form-input" id="f-plz" placeholder="12345"><div class="field-error" id="e-plz">Pflichtfeld</div></div>
-                  <div class="form-group"><label class="form-label form-label-required">Ort</label><input type="text" class="form-input" id="f-ort" placeholder="Berlin"><div class="field-error" id="e-ort">Pflichtfeld</div></div>
+          <!-- ═══ SEKTION 3: GESCHÄDIGTER ═══ -->
+          <div class="card">
+            <div class="card-header" style="display:flex;align-items:center;gap:10px;">
+              <div style="width:28px;height:28px;border-radius:8px;background:rgba(245,158,11,.1);color:#d97706;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;">GS</div>
+              <h3 class="card-title" style="margin:0;">Geschädigter / Versicherungsnehmer</h3>
+              <span style="margin-left:auto;font-size:10px;color:var(--gray-500);background:var(--bg3);padding:2px 7px;border-radius:4px;">Optional</span>
+            </div>
+            <div class="card-body">
+              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
+                <div class="form-group">
+                  <label class="form-label">Name / Firma</label>
+                  <input class="form-input" id="f-geschaedigter" type="text" placeholder="Familie Schmidt">
                 </div>
-                <div class="form-row">
-                  <div class="form-group"><label class="form-label">Gebäudetyp</label><select class="form-select" id="f-gebaeudetyp">
-                      <option value="">Bitte wählen…</option>
-                      <option value="Einfamilienhaus">Einfamilienhaus</option>
-                      <option value="Doppelhaushälfte">Doppelhaushälfte</option>
-                      <option value="Reihenhaus / Reihenmittelhaus">Reihenhaus / Reihenmittelhaus</option>
-                      <option value="Mehrfamilienhaus">Mehrfamilienhaus</option>
-                      <option value="Wohnung / ETW">Wohnung / ETW</option>
-                      <option value="Eigentümergemeinschaft (WEG)">Eigentümergemeinschaft (WEG)</option>
-                      <option value="Bürogebäude">Bürogebäude</option>
-                      <option value="Gewerbegebäude">Gewerbegebäude</option>
-                      <option value="Industriegebäude / Halle">Industriegebäude / Halle</option>
-                      <option value="Gastronomie / Hotel">Gastronomie / Hotel</option>
-                      <option value="Schulgebäude / Kita">Schulgebäude / Kita</option>
-                      <option value="Öffentliches Gebäude">Öffentliches Gebäude</option>
-                      <option value="Sonstiges">Sonstiges</option>
-                    </select></div>
-                  <div class="form-group"><label class="form-label">Baujahr</label><input type="number" class="form-input" id="f-baujahr" placeholder="1968"></div>
+                <div class="form-group">
+                  <label class="form-label">E-Mail Geschädigter</label>
+                  <input class="form-input" id="f-geschaedigter-email" type="email" placeholder="familie@email.de">
+                  <div style="font-size:10px;color:var(--gray-500);margin-top:3px;">Für Zustellung und Berichts-E-Mail</div>
                 </div>
-                <div class="form-group"><label class="form-label">Geschädigter / Versicherungsnehmer</label><input type="text" class="form-input" id="f-geschaedigter" placeholder="Familie Schmidt"></div>
+                <div class="form-group">
+                  <label class="form-label">Telefon Geschädigter</label>
+                  <input class="form-input" id="f-geschaedigter-telefon" type="tel" placeholder="+49 …">
+                </div>
               </div>
             </div>
           </div>
-        </div>
+
+          <!-- ═══ SEKTION 4: SCHADENSORT & OBJEKT ═══ -->
+          <div class="card">
+            <div class="card-header" style="display:flex;align-items:center;gap:10px;">
+              <div style="width:28px;height:28px;border-radius:8px;background:rgba(139,92,246,.1);color:#7c3aed;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;">OB</div>
+              <h3 class="card-title" style="margin:0;">Schadensort &amp; Objekt</h3>
+              <span style="margin-left:auto;font-size:10px;font-weight:600;color:#ef4444;background:rgba(239,68,68,.08);padding:2px 7px;border-radius:4px;">Pflicht</span>
+            </div>
+            <div class="card-body">
+              <div class="form-group">
+                <label class="form-label form-label-required">Straße &amp; Hausnummer</label>
+                <input class="form-input" id="f-strasse" type="text" placeholder="Musterstraße 123">
+              </div>
+              <div style="display:grid;grid-template-columns:120px 1fr 1fr;gap:12px;margin-top:12px;">
+                <div class="form-group">
+                  <label class="form-label form-label-required">PLZ</label>
+                  <input class="form-input" id="f-plz" type="text" placeholder="12345" maxlength="5" oninput="autoFillOrt(this.value)">
+                </div>
+                <div class="form-group">
+                  <label class="form-label form-label-required">Ort</label>
+                  <input class="form-input" id="f-ort" type="text" placeholder="Berlin">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Bundesland</label>
+                  <select class="form-select" id="f-bundesland">
+                    <option value="">Bitte wählen…</option>
+                    <option>Baden-Württemberg</option><option>Bayern</option>
+                    <option>Berlin</option><option>Brandenburg</option>
+                    <option>Bremen</option><option>Hamburg</option>
+                    <option>Hessen</option><option>Mecklenburg-Vorpommern</option>
+                    <option>Niedersachsen</option><option selected>Nordrhein-Westfalen</option>
+                    <option>Rheinland-Pfalz</option><option>Saarland</option>
+                    <option>Sachsen</option><option>Sachsen-Anhalt</option>
+                    <option>Schleswig-Holstein</option><option>Thüringen</option>
+                  </select>
+                </div>
+              </div>
+              <div style="height:1px;background:var(--border);margin:14px 0;"></div>
+              <div style="display:grid;grid-template-columns:1fr 100px 1fr;gap:12px;">
+                <div class="form-group">
+                  <label class="form-label form-label-required">Gebäudetyp</label>
+                  <select class="form-select" id="f-gebaeudetyp">
+                    <option value="">Bitte wählen…</option>
+                    <option value="EFH">Einfamilienhaus (EFH)</option>
+                    <option value="MFH">Mehrfamilienhaus (MFH)</option>
+                    <option value="ETW">Wohnung / ETW</option>
+                    <option value="GEWBE">Gewerbe / Büro</option>
+                    <option value="INDUSTRIE">Industrie / Lager</option>
+                    <option value="SONDER">Sonderbau</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Baujahr</label>
+                  <input class="form-input" id="f-baujahr" type="number" placeholder="1978" min="1800" max="2025">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Betroffener Bereich</label>
+                  <input class="form-input" id="f-bereich" type="text" placeholder="z.B. Schlafzimmer OG, Nordwand">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ═══ SEKTION 5: GERICHTLICHE ANGABEN (konditional) ═══ -->
+          <div class="card" id="sektion-gericht" style="display:none;border-color:rgba(239,68,68,.2);">
+            <div class="card-header" style="display:flex;align-items:center;gap:10px;background:rgba(239,68,68,.04);">
+              <div style="width:28px;height:28px;border-radius:8px;background:rgba(239,68,68,.1);color:#ef4444;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;">GR</div>
+              <h3 class="card-title" style="margin:0;">Gerichtliche Angaben</h3>
+              <span style="margin-left:auto;font-size:10px;font-weight:600;color:#ef4444;background:rgba(239,68,68,.08);padding:2px 7px;border-radius:4px;">Nur Gerichtsgutachten</span>
+            </div>
+            <div class="card-body">
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                <div class="form-group">
+                  <label class="form-label">Gerichts-Aktenzeichen</label>
+                  <input class="form-input" id="f-gerichts-az" type="text" placeholder="12 O 123/26">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Beweisbeschluss vom</label>
+                  <input class="form-input" id="f-beweisbeschluss-datum" type="date">
+                </div>
+              </div>
+              <div class="form-group" style="margin-top:12px;">
+                <label class="form-label">Beweisfragen (aus Beweisbeschluss)</label>
+                <textarea class="form-input" id="f-beweisfragen" rows="3" style="resize:vertical;" placeholder="1. Liegt ein Baumangel vor?&#10;2. Welche Maßnahmen sind erforderlich?&#10;3. Wie hoch ist der Schaden?"></textarea>
+                <div style="font-size:10px;color:var(--gray-500);margin-top:3px;">Das Gutachten wird automatisch nach diesen Beweisfragen strukturiert</div>
+              </div>
+            </div>
+          </div>
 
 
-          <!-- ═══ WORKFLOW-KRITISCHE ZUSATZFELDER ═══ -->
-          <div style="margin-top:16px;padding-top:14px;border-top:1px solid rgba(255,255,255,.07);">
-            <div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);margin-bottom:10px;">Abrechnung & Gericht (optional)</div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-              <div class="form-group">
-                <label class="form-label">AG Telefon</label>
-                <input type="tel" id="f-auftraggeber-telefon" class="form-input" placeholder="+49 221 ...">
+          <!-- ═══ VERSICHERUNGSGUTACHTEN ═══ -->
+          <div class="card" id="sektion-versicherung" style="display:none;border-color:rgba(16,185,129,.2);">
+            <div class="card-header" style="display:flex;align-items:center;gap:10px;background:rgba(16,185,129,.04);">
+              <div style="width:28px;height:28px;border-radius:8px;background:rgba(16,185,129,.12);color:#059669;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;">VS</div>
+              <h3 class="card-title" style="margin:0;">Versicherungsangaben</h3>
+              <span style="margin-left:auto;font-size:10px;font-weight:600;color:#059669;background:rgba(16,185,129,.08);padding:2px 7px;border-radius:4px;">Nur Versicherungsgutachten</span>
+            </div>
+            <div class="card-body">
+              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
+                <div class="form-group">
+                  <label class="form-label">Versicherungsgesellschaft</label>
+                  <input class="form-input" id="f-vers-gesellschaft" type="text" placeholder="z.B. Allianz, AXA, ERGO">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Versicherungsscheinnummer</label>
+                  <input class="form-input" id="f-vers-scheinnr" type="text" placeholder="VS-123456789">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Schadennummer Versicherung</label>
+                  <input class="form-input" id="f-vers-schadennr" type="text" placeholder="SCH-2026-…">
+                </div>
               </div>
-              <div class="form-group">
-                <label class="form-label">Geschädigter E-Mail</label>
-                <input type="email" id="f-geschaedigter-email" class="form-input" placeholder="familie@email.de">
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px;">
+                <div class="form-group">
+                  <label class="form-label">Schadensmeldung vom</label>
+                  <input class="form-input" id="f-vers-meldedatum" type="date">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Regulierungsbeauftragter</label>
+                  <input class="form-input" id="f-vers-regulierer" type="text" placeholder="Name des Regulierers">
+                </div>
               </div>
             </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-              <div class="form-group">
-                <label class="form-label">Honorarart</label>
-                <select id="f-honorar-art" class="form-select" onchange="document.getElementById('f-stundensatz-wrap').style.display=this.value!=='jveg'?'':'none'">
-                  <option value="jveg">JVEG (gesetzlich)</option>
-                  <option value="frei">Frei vereinbart</option>
-                  <option value="pauschal">Pauschal</option>
-                </select>
+          </div>
+
+          <!-- ═══ SCHIEDSGUTACHTEN ═══ -->
+          <div class="card" id="sektion-schied" style="display:none;border-color:rgba(139,92,246,.2);">
+            <div class="card-header" style="display:flex;align-items:center;gap:10px;background:rgba(139,92,246,.04);">
+              <div style="width:28px;height:28px;border-radius:8px;background:rgba(139,92,246,.12);color:#7c3aed;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;">SG</div>
+              <h3 class="card-title" style="margin:0;">Schiedsangaben</h3>
+              <span style="margin-left:auto;font-size:10px;font-weight:600;color:#7c3aed;background:rgba(139,92,246,.08);padding:2px 7px;border-radius:4px;">Nur Schiedsgutachten</span>
+            </div>
+            <div class="card-body">
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                <div class="form-group">
+                  <label class="form-label form-label-required">Partei 1 (Auftraggeber / Kläger)</label>
+                  <input class="form-input" id="f-schied-partei1" type="text" placeholder="Name Partei 1">
+                </div>
+                <div class="form-group">
+                  <label class="form-label form-label-required">Partei 2 (Beklagter / Gegner)</label>
+                  <input class="form-input" id="f-schied-partei2" type="text" placeholder="Name Partei 2">
+                </div>
               </div>
-              <div class="form-group" id="f-stundensatz-wrap" style="display:none;">
-                <label class="form-label">Stundensatz (€/h)</label>
-                <input type="number" id="f-stundensatz" class="form-input" placeholder="120" min="50" max="500">
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px;">
+                <div class="form-group">
+                  <label class="form-label">Schiedsvereinbarung vom</label>
+                  <input class="form-input" id="f-schied-datum" type="date">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Streitgegenstand</label>
+                  <input class="form-input" id="f-schied-gegenstand" type="text" placeholder="z.B. Werklohn, Mängelbeseitigung">
+                </div>
+              </div>
+              <div class="form-group" style="margin-top:12px;">
+                <label class="form-label">Schiedsfragen (verbindlich für beide Parteien)</label>
+                <textarea class="form-input" id="f-schied-fragen" rows="2" style="resize:vertical;" placeholder="1. Liegen Baumängel vor?&#10;2. Welche Kosten entstehen für die Mängelbeseitigung?"></textarea>
               </div>
             </div>
-            <div class="form-group" id="f-gericht-name-wrap" style="display:none;">
-              <label class="form-label">Gericht</label>
-              <input type="text" id="f-gericht-name" class="form-input" placeholder="z.B. Landgericht Köln">
+          </div>
+
+          <!-- ═══ BAUBEGLEITUNG ═══ -->
+          <div class="card" id="sektion-baubegleitung" style="display:none;border-color:rgba(245,158,11,.2);">
+            <div class="card-header" style="display:flex;align-items:center;gap:10px;background:rgba(245,158,11,.04);">
+              <div style="width:28px;height:28px;border-radius:8px;background:rgba(245,158,11,.12);color:#d97706;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;">BB</div>
+              <h3 class="card-title" style="margin:0;">Baubegleitungs-Angaben</h3>
+              <span style="margin-left:auto;font-size:10px;font-weight:600;color:#d97706;background:rgba(245,158,11,.08);padding:2px 7px;border-radius:4px;">Nur Baubegleitung</span>
             </div>
+            <div class="card-body">
+              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
+                <div class="form-group">
+                  <label class="form-label">Baubeginn</label>
+                  <input class="form-input" id="f-bau-beginn" type="date">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Geplantes Bauende</label>
+                  <input class="form-input" id="f-bau-ende" type="date">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Anzahl geplanter Begehungen</label>
+                  <input class="form-input" id="f-bau-begehungen" type="number" placeholder="z.B. 5" min="1" max="50">
+                </div>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px;">
+                <div class="form-group">
+                  <label class="form-label">Bauvolumen (€ ca.)</label>
+                  <input class="form-input" id="f-bau-volumen" type="number" placeholder="250000">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Bauphase bei Beginn</label>
+                  <select class="form-select" id="f-bau-phase">
+                    <option value="">Bitte wählen…</option>
+                    <option>Rohbau</option>
+                    <option>Ausbau</option>
+                    <option>Haustechnik</option>
+                    <option>Fassade / Dach</option>
+                    <option>Innenausbau</option>
+                    <option>Fertigstellung</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-group" style="margin-top:12px;">
+                <label class="form-label">Baubeschreibung / Besonderheiten</label>
+                <textarea class="form-input" id="f-bau-beschreibung" rows="2" style="resize:vertical;" placeholder="Kurze Beschreibung des Bauvorhabens, besondere Herausforderungen…"></textarea>
+              </div>
+            </div>
+          </div>
+
+          <!-- ═══ BAUABNAHME ═══ -->
+          <div class="card" id="sektion-abnahme" style="display:none;border-color:rgba(16,185,129,.2);">
+            <div class="card-header" style="display:flex;align-items:center;gap:10px;background:rgba(16,185,129,.04);">
+              <div style="width:28px;height:28px;border-radius:8px;background:rgba(16,185,129,.12);color:#059669;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;">BA</div>
+              <h3 class="card-title" style="margin:0;">Bauabnahme-Angaben</h3>
+              <span style="margin-left:auto;font-size:10px;font-weight:600;color:#059669;background:rgba(16,185,129,.08);padding:2px 7px;border-radius:4px;">Nur Bauabnahme</span>
+            </div>
+            <div class="card-body">
+              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
+                <div class="form-group">
+                  <label class="form-label form-label-required">Abnahmetermin</label>
+                  <input class="form-input" id="f-abnahme-termin" type="date">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Checklisten-Typ</label>
+                  <select class="form-select" id="f-abnahme-checkliste">
+                    <option value="">Standard</option>
+                    <option value="efh">Einfamilienhaus komplett</option>
+                    <option value="etw">Eigentumswohnung</option>
+                    <option value="gewerbe">Gewerbe / Büro</option>
+                    <option value="rohbau">Rohbauabnahme</option>
+                    <option value="dach">Dach &amp; Fassade</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Auftraggeber der Abnahme</label>
+                  <select class="form-select" id="f-abnahme-partei">
+                    <option value="kaeufer">Käufer / Bauherr</option>
+                    <option value="verkaeufer">Verkäufer / Bauträger</option>
+                    <option value="beide">Im Auftrag beider Parteien</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-group" style="margin-top:12px;">
+                <label class="form-label">Besondere Prüfpunkte</label>
+                <input class="form-input" id="f-abnahme-pruefpunkte" type="text" placeholder="z.B. Keller-Abdichtung, Treppe, Terrasse überprüfen">
+              </div>
+            </div>
+          </div>
+
+          <!-- ═══ BEWEISSICHERUNG ═══ -->
+          <div class="card" id="sektion-beweissicherung" style="display:none;border-color:rgba(79,142,247,.2);">
+            <div class="card-header" style="display:flex;align-items:center;gap:10px;background:rgba(79,142,247,.04);">
+              <div style="width:28px;height:28px;border-radius:8px;background:rgba(79,142,247,.12);color:#4f8ef7;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;">BW</div>
+              <h3 class="card-title" style="margin:0;">Beweissicherungs-Angaben</h3>
+              <span style="margin-left:auto;font-size:10px;font-weight:600;color:#4f8ef7;background:rgba(79,142,247,.08);padding:2px 7px;border-radius:4px;">Nur Beweissicherung</span>
+            </div>
+            <div class="card-body">
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                <div class="form-group">
+                  <label class="form-label form-label-required">Dokumentationszweck</label>
+                  <select class="form-select" id="f-beweis-zweck">
+                    <option value="">Bitte wählen…</option>
+                    <option value="vor-bau">Vor Baubeginn (Nachbarschaft)</option>
+                    <option value="vor-kauf">Vor Kauf / Übergabe</option>
+                    <option value="streit">Zur Streitvorbeugung</option>
+                    <option value="gericht">Gerichtlich angeordnet</option>
+                    <option value="versicherung">Versicherungsfall</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Sicherungsdatum</label>
+                  <input class="form-input" id="f-beweis-datum" type="date">
+                </div>
+              </div>
+              <div class="form-group" style="margin-top:12px;">
+                <label class="form-label">Zu sichernde Bereiche / Besonderheiten</label>
+                <textarea class="form-input" id="f-beweis-bereiche" rows="2" style="resize:vertical;" placeholder="z.B. Risse in Außenwand, Feuchtigkeitsflecken Kellerdecke, Bodenbelag EG…"></textarea>
+                <div style="font-size:10px;color:var(--gray-500);margin-top:3px;">Keine Bewertung — reine Dokumentation des Ist-Zustands</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ═══ KAUFBERATUNG ═══ -->
+          <div class="card" id="sektion-kaufberatung" style="display:none;border-color:rgba(245,158,11,.2);">
+            <div class="card-header" style="display:flex;align-items:center;gap:10px;background:rgba(245,158,11,.04);">
+              <div style="width:28px;height:28px;border-radius:8px;background:rgba(245,158,11,.12);color:#d97706;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;">KB</div>
+              <h3 class="card-title" style="margin:0;">Kaufberatungs-Angaben</h3>
+              <span style="margin-left:auto;font-size:10px;font-weight:600;color:#d97706;background:rgba(245,158,11,.08);padding:2px 7px;border-radius:4px;">Nur Kaufberatung</span>
+            </div>
+            <div class="card-body">
+              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
+                <div class="form-group">
+                  <label class="form-label">Kaufpreis (€ ca.)</label>
+                  <input class="form-input" id="f-kauf-preis" type="number" placeholder="450000">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Geplanter Kauftermin</label>
+                  <input class="form-input" id="f-kauf-termin" type="date">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Fokus der Prüfung</label>
+                  <select class="form-select" id="f-kauf-fokus">
+                    <option value="gesamt">Gesamtzustand</option>
+                    <option value="feuchtigkeit">Feuchtigkeit / Keller</option>
+                    <option value="dach">Dach &amp; Fassade</option>
+                    <option value="heizung">Haustechnik / Heizung</option>
+                    <option value="schimmel">Schimmel / Raumluft</option>
+                    <option value="statik">Statik &amp; Tragwerk</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-group" style="margin-top:12px;">
+                <label class="form-label">Besondere Käufer-Fragen</label>
+                <input class="form-input" id="f-kauf-fragen" type="text" placeholder="z.B. Ist eine Aufstockung möglich? Sind weitere Kosten zu erwarten?">
+              </div>
+            </div>
+          </div>
+
+          <!-- ═══ SANIERUNGSBERATUNG ═══ -->
+          <div class="card" id="sektion-sanierung" style="display:none;border-color:rgba(16,185,129,.2);">
+            <div class="card-header" style="display:flex;align-items:center;gap:10px;background:rgba(16,185,129,.04);">
+              <div style="width:28px;height:28px;border-radius:8px;background:rgba(16,185,129,.12);color:#059669;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;">SB</div>
+              <h3 class="card-title" style="margin:0;">Sanierungsberatungs-Angaben</h3>
+              <span style="margin-left:auto;font-size:10px;font-weight:600;color:#059669;background:rgba(16,185,129,.08);padding:2px 7px;border-radius:4px;">Nur Sanierungsberatung</span>
+            </div>
+            <div class="card-body">
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                <div class="form-group">
+                  <label class="form-label">Sanierungsziel</label>
+                  <select class="form-select" id="f-san-ziel">
+                    <option value="">Bitte wählen…</option>
+                    <option value="energetisch">Energetische Sanierung</option>
+                    <option value="schaden">Schadensbehebung</option>
+                    <option value="modernisierung">Modernisierung</option>
+                    <option value="foerderung">Fördermittel-optimiert (BAFA/KfW)</option>
+                    <option value="umbau">Umbau / Umnutzung</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Budgetrahmen (€ ca.)</label>
+                  <input class="form-input" id="f-san-budget" type="number" placeholder="80000">
+                </div>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px;">
+                <div class="form-group">
+                  <label class="form-label">Förderprogramm gewünscht</label>
+                  <select class="form-select" id="f-san-foerderung">
+                    <option value="nein">Kein Förderprogramm</option>
+                    <option value="kfw">KfW (Bundeskredit)</option>
+                    <option value="bafa">BAFA (Bundesamt)</option>
+                    <option value="land">Länderprogramm NRW</option>
+                    <option value="unbekannt">Prüfung gewünscht</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Dringlichkeit</label>
+                  <select class="form-select" id="f-san-dringlichkeit">
+                    <option value="normal">Normal (3–6 Monate)</option>
+                    <option value="bald">Bald (1–3 Monate)</option>
+                    <option value="dringend">Dringend (&lt; 1 Monat)</option>
+                    <option value="planung">Langfristig / Planung</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ═══ SEKTION 6: ABRECHNUNG & HONORAR ═══ -->
+          <div class="card">
+            <div class="card-header" style="display:flex;align-items:center;gap:10px;">
+              <div style="width:28px;height:28px;border-radius:8px;background:var(--bg3);color:var(--text2);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;">€</div>
+              <h3 class="card-title" style="margin:0;">Abrechnung &amp; Honorar</h3>
+              <span style="margin-left:auto;font-size:10px;color:var(--gray-500);background:var(--bg3);padding:2px 7px;border-radius:4px;">Optional</span>
+            </div>
+            <div class="card-body">
+              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
+                <div class="form-group">
+                  <label class="form-label">Honorarart</label>
+                  <select class="form-select" id="f-honorar-art" onchange="onHonorarChange(this.value)">
+                    <option value="jveg">JVEG (gesetzlich)</option>
+                    <option value="stundensatz">Stundensatz (frei)</option>
+                    <option value="pauschal">Pauschalhonorar</option>
+                  </select>
+                </div>
+                <div class="form-group" id="f-stundensatz-wrap" style="display:none;">
+                  <label class="form-label">Stundensatz (€/h)</label>
+                  <input class="form-input" id="f-stundensatz" type="number" placeholder="120" min="50" max="500">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Kostenvorschuss beantragt</label>
+                  <select class="form-select" id="f-kostenvorschuss">
+                    <option value="nein">Nein</option>
+                    <option value="ja">Ja — Antrag gestellt</option>
+                    <option value="erhalten">Ja — bereits erhalten</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div><!-- /flex col </div>
           </div>
 
         <div class="page-actions" style="position:sticky;bottom:0;z-index:50;background:var(--bg,#0b0d11);padding:14px 0;margin-top:16px;border-top:1px solid rgba(255,255,255,.08);">
@@ -1147,29 +1530,31 @@ document.addEventListener('DOMContentLoaded', function() {
             <div class="ki-step pending" id="ki-s6"><span class="ki-step-icon">6</span><span>In PROVA gespeichert & Bestätigung gesendet</span></div>
           </div>
           <div id="kiStatusText" style="margin-top:1.25rem;font-size:.8rem;color:var(--gray-500);text-align:center;min-height:1.2em"></div>
-          <div id="kiSuccessBox" style="display:none;background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.2);border-radius:.875rem;padding:1rem;margin-top:1.5rem;text-align:center">
-            <div style="font-size:1.1rem;font-weight:700;color:#065F46;margin-bottom:.25rem">✅ Entwurf erfolgreich erstellt!</div>
-            <div style="font-size:.825rem;color:var(--gray-600);margin-bottom:1rem">PROVA hat §1–§5 strukturiert. Jetzt Ihr Fachurteil §6 verfassen.</div>
-            <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin-top:4px;">
-              <button onclick="PROVA.openPanel('normen')" style="padding:6px 12px;border-radius:7px;background:rgba(79,142,247,.1);border:1px solid rgba(79,142,247,.2);color:#4f8ef7;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;">📚 Normen</button>
-              <button onclick="PROVA.openPanel('textbausteine')" style="padding:6px 12px;border-radius:7px;background:rgba(79,142,247,.1);border:1px solid rgba(79,142,247,.2);color:#4f8ef7;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;">📝 Textbausteine</button>
-              <button onclick="PROVA.openPanel('positionen')" style="padding:6px 12px;border-radius:7px;background:rgba(79,142,247,.1);border:1px solid rgba(79,142,247,.2);color:#4f8ef7;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;">🗂️ Positionen</button>
+          <!-- FIX: CTA + Vorlage erst nach vollständiger Checkliste sichtbar -->
+          <div id="kiSuccessBox" style="display:none;margin-top:1.5rem;">
+
+            <!-- Vorlage-Wahl: VOR dem CTA (Fix 3) -->
+            <div id="gutachtenVorlageBox" style="margin-bottom:1rem;padding:14px 16px;background:var(--gray-50);border-radius:var(--radius-lg);border:1px solid var(--gray-200);">
+              <div style="font-size:12px;font-weight:600;color:var(--gray-700);margin-bottom:8px;display:flex;align-items:center;gap:6px;">
+                📋 Gutachten-Vorlage wählen
+                <span style="font-size:10px;font-weight:400;color:var(--gray-500);">— beeinflusst §1–§5 Struktur</span>
+              </div>
+              <div id="gutachtenVorlageRadios" class="form-group" style="margin:0;"></div>
+            </div>
+
+            <!-- Einzel-CTA (Fix 1: kein doppelter Heading, Fix 4: keine Normen-Buttons hier) -->
+            <div id="ki-naechste-schritte" style="display:flex;flex-direction:column;gap:8px;">
+              <button onclick="goToGate()" style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:14px 20px;background:linear-gradient(135deg,#4f8ef7,#3a7be0);color:#fff;border:none;border-radius:10px;font-size:.95rem;font-weight:700;cursor:pointer;letter-spacing:.01em;">
+                Weiter zum Fachurteil §6 →
+              </button>
+              <!-- Fix 5: Zur Fall-Akte als Textlink, klar getrennt -->
+              <div style="text-align:center;padding-top:2px;">
+                <a onclick="window.location.href='akte.html?az='+encodeURIComponent(localStorage.getItem('prova_letztes_az')||'')" style="font-size:12px;color:var(--gray-500);cursor:pointer;text-decoration:underline;text-underline-offset:2px;">
+                  Zur Fall-Akte
+                </a>
+              </div>
             </div>
           </div>
-          <div id="ki-naechste-schritte" style="display:none;margin-top:1rem;flex-direction:column;gap:8px;">
-            <button onclick="goToGate()" style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:13px 20px;background:linear-gradient(135deg,#4f8ef7,#3a7be0);color:#fff;border:none;border-radius:10px;font-size:.9rem;font-weight:700;cursor:pointer;">
-              ⚖️ Weiter zum Fachurteil §6 →
-            </button>
-            <button onclick="window.location.href='akte.html?az='+encodeURIComponent(localStorage.getItem('prova_letztes_az')||'')" style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:10px 20px;background:rgba(79,142,247,.08);color:#4f8ef7;border:1px solid rgba(79,142,247,.25);border-radius:10px;font-size:.85rem;font-weight:600;cursor:pointer;">
-              📂 Zur Fall-Akte
-            </button>
-          </div>
-          <div id="gutachtenVorlageBox" style="display:none;margin-top:1.25rem;text-align:left;padding:1rem;background:var(--gray-50);border-radius:var(--radius-lg);border:1px solid var(--gray-200)">
-            <div style="font-weight:600;color:var(--gray-800);margin-bottom:.5rem">Gutachten-Vorlage wählen</div>
-            <div id="gutachtenVorlageRadios" class="form-group"></div>
-            <button type="button" class="btn btn-outline btn-sm" id="btnVorlageVorschau" onclick="vorlageVorschau()">Vorschau</button>
-          </div>
-          <!-- Buttons in ki-naechste-schritte oben sind ausreichend -->
         </div>
       </div>
     </div>
@@ -2191,8 +2576,14 @@ window.switchDiktatTab = function(mode) {
 
 window.syncManuellToTranscript = function() {
   var ta = document.getElementById('transcriptManuell');
-  if (ta) transcriptText = ta.value;
-  updateStep2Panel(); // Panel-Status sofort aktualisieren
+  if (ta) {
+    transcriptText = ta.value;
+    // Für stellungnahme.html: Freitext persistent speichern
+    if (ta.value && ta.value.trim().length > 5) {
+      localStorage.setItem('prova_manuell_text', ta.value.trim());
+    }
+  }
+  updateStep2Panel();
 };
 
 // Tastatursteuerung für Tabs (←/→, Enter/Space)
@@ -2850,14 +3241,19 @@ async function sendeWebhook() {
       
       const h2 = document.querySelector('#step3-content h2');
       const p  = document.querySelector('#step3-content .ki-header p');
+      // Fix: h2 bleibt als Erfolgs-Heading, kein Duplikat
       if (h2) h2.textContent = 'Entwurf erfolgreich erstellt!';
       if (p)  p.textContent  = 'Sie erhalten in Kürze eine Eingangsbestätigung per E-Mail.';
+      // Success-Box erscheint erst wenn ALLE Schritte done (ki-s6 abgeschlossen = hier)
       const box = document.getElementById('kiSuccessBox');
       if (box) box.style.display = 'block';
-      const naechste = document.getElementById('ki-naechste-schritte');
-      if (naechste) naechste.style.display = 'flex';
+      // Spinner ausblenden — alles fertig
+      const kiSpinner = document.getElementById('kiSpinner');
+      if (kiSpinner) kiSpinner.style.display = 'none';
+      // ki-naechste-schritte ist jetzt INNERHALB kiSuccessBox — kein separates display:flex nötig
+      // Vorlage-Box wird immer gezeigt (direkt vor CTA)
       const vorlageBox = document.getElementById('gutachtenVorlageBox');
-      if (vorlageBox) { vorlageBox.style.display = 'block'; renderGutachtenVorlageRadios(GUTACHTEN_VORLAGEN_STARTER_IDS); }
+      if (vorlageBox) { renderGutachtenVorlageRadios(GUTACHTEN_VORLAGEN_STARTER_IDS); }
       const btnF = document.getElementById('btnFreigabe'), btnN = document.getElementById('btnNeues');
       if (btnF) btnF.style.display = ''; if (btnN) btnN.style.display = '';
       fotos = [];
@@ -3296,7 +3692,22 @@ async function ladeUndRestoreEntwurf() {
     }
     if (restored > 0) {
       try { window.updateMesswerteLayout && window.updateMesswerteLayout(); } catch(e) {}
-      window.showToast && window.showToast('Entwurf wiederhergestellt (' + new Date(eintrag.gespeichert_am).toLocaleTimeString('de-DE', {hour:'2-digit',minute:'2-digit'}) + ' Uhr)', 'default', 4000);
+      // Nur "Wiederhergestellt" wenn dieselbe AZ wie aktuell (echte Fortführung)
+      var aktuelleAZ = document.getElementById('f-schadensnummer') && document.getElementById('f-schadensnummer').value;
+      var gespeicherteAZ = d.schadensnummer || '';
+      var istSelbeSession = aktuelleAZ && gespeicherteAZ && aktuelleAZ === gespeicherteAZ;
+      var jetzt = new Date().toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'});
+      if (istSelbeSession) {
+        window.showToast && window.showToast('Entwurf wiederhergestellt (' + new Date(eintrag.gespeichert_am).toLocaleTimeString('de-DE', {hour:'2-digit',minute:'2-digit'}) + ' Uhr)', 'default', 4000);
+      } else {
+        window.showToast && window.showToast('Sitzung gestartet: ' + jetzt + ' Uhr', 'default', 3000);
+      }
+    } else {
+      // Neuer Auftrag — keine Wiederherstellung
+      var jetzt2 = new Date().toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'});
+      if (sessionStorage.getItem('prova_neuer_auftrag')) {
+        window.showToast && window.showToast('Sitzung gestartet: ' + jetzt2 + ' Uhr', 'default', 3000);
+      }
     }
   } catch (err) {
     console.warn('[PROVA IDB] Restore fehlgeschlagen:', err);
@@ -4603,6 +5014,100 @@ window.PROVA_AUDIT = (function() {
   var inp = document.getElementById('f-auftraggeber-name');
   if (inp) inp.addEventListener('input', function() { _idx = -1; });
 })();
+
+
+/* ── Stammdaten Step 1 — neue Blueprint-Logik ── */
+function onAuftragsartChange() {
+  var val = (document.getElementById('f-auftragsart') || {}).value || '';
+
+  // Alle typ-spezifischen Sektionen aus/einblenden
+  var sektionenMap = {
+    gericht:       'sektion-gericht',
+    versicherung:  'sektion-versicherung',
+    schied:        'sektion-schied',
+    baubegleitung: 'sektion-baubegleitung',
+    abnahme:       'sektion-abnahme',
+    beweissicherung:'sektion-beweissicherung',
+    kaufberatung:  'sektion-kaufberatung',
+    sanierung:     'sektion-sanierung'
+  };
+  Object.keys(sektionenMap).forEach(function(typ) {
+    var el = document.getElementById(sektionenMap[typ]);
+    if (el) el.style.display = (val === typ) ? 'block' : 'none';
+  });
+
+  // Auftraggeber-Typ vorbelegen
+  var agTyp = document.getElementById('f-auftraggeber-typ');
+  if (agTyp && !agTyp.value) {
+    var agDefaults = {gericht:'gericht', versicherung:'versicherung', privat:'privat', schied:'privat', kaufberatung:'privat', sanierung:'privat'};
+    agTyp.value = agDefaults[val] || '';
+    if (agTyp.value) onAGTypChange(agTyp.value);
+  }
+
+  // Schadensart-Sichtbarkeit: bei Baubegleitung/Abnahme/Beweissicherung/Kauf/Sanierung optional
+  var saGrp = document.getElementById('f-schadenart') && document.getElementById('f-schadenart').closest('.form-group');
+  var saLabel = document.getElementById('f-schadenart') && document.getElementById('f-schadenart').previousElementSibling;
+  var ohneSchadenart = ['baubegleitung','abnahme','beweissicherung','kaufberatung','sanierung'];
+  if (saLabel) {
+    saLabel.querySelector('.form-label-required') && (saLabel.className = ohneSchadenart.includes(val) ? 'form-label' : 'form-label form-label-required');
+  }
+
+  // Toast mit Hinweis auf neue Felder
+  var toastMap = {
+    gericht: 'Gerichtsgutachten — Beweisbeschluss-Angaben sichtbar',
+    versicherung: 'Versicherungsgutachten — Versicherungsangaben sichtbar',
+    schied: 'Schiedsgutachten — Schiedsangaben sichtbar',
+    baubegleitung: 'Baubegleitung — Baubegleitungs-Angaben sichtbar',
+    abnahme: 'Bauabnahme — Abnahme-Angaben sichtbar',
+    beweissicherung: 'Beweissicherung — Dokumentationsangaben sichtbar',
+    kaufberatung: 'Kaufberatung — Kaufangaben sichtbar',
+    sanierung: 'Sanierungsberatung — Sanierungsangaben sichtbar'
+  };
+  if (val && toastMap[val] && typeof zeigToast === 'function') {
+    zeigToast(toastMap[val], 'info', 3000);
+  }
+}
+
+function onAGTypChange(typ) {
+  var label = document.getElementById('f-ag-ansprechpartner-label');
+  if (label) {
+    var labels = {gericht:'Richter / Kammervorsitzender', versicherung:'Sachbearbeiter', anwalt:'Rechtsanwalt', hausverwaltung:'Verwalter', privat:'Ansprechpartner'};
+    label.textContent = labels[typ] || 'Ansprechpartner';
+  }
+  var gerichtWrap = document.getElementById('f-gericht-name-wrap');
+  if (gerichtWrap) gerichtWrap.style.display = typ === 'gericht' ? 'block' : 'none';
+}
+
+function autoFillOrt(plz) {
+  // PLZ → Ort Auto-Fill (vereinfacht für bekannte PLZ-Bereiche)
+  if (plz.length !== 5) return;
+  var ortFeld = document.getElementById('f-ort');
+  var blFeld = document.getElementById('f-bundesland');
+  if (!ortFeld || ortFeld.value) return; // Nicht überschreiben wenn schon gefüllt
+  // Bundesland aus PLZ-Prefix
+  var prefix = parseInt(plz.substring(0, 2));
+  var blMap = {
+    1:'Berlin', 2:'Hamburg', 3:'Niedersachsen', 4:'Nordrhein-Westfalen',
+    5:'Nordrhein-Westfalen', 6:'Hessen', 7:'Baden-Württemberg', 8:'Bayern',
+    9:'Bayern'
+  };
+  var bl = blMap[parseInt(plz.substring(0, 1))];
+  if (bl && blFeld && !blFeld.value) {
+    var opts = blFeld.options;
+    for (var i = 0; i < opts.length; i++) {
+      if (opts[i].text === bl) { blFeld.selectedIndex = i; break; }
+    }
+  }
+}
+
+function openKontakteModal(typ) {
+  // Öffnet Kontakte-Auswahl (bestehende Logik)
+  if (typeof window._openKontakteAuswahl === 'function') {
+    window._openKontakteAuswahl(typ);
+  } else {
+    zeigToast('Kontakte werden geladen…', 'info');
+  }
+}
 
 </script>
 </body>
