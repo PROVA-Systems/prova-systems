@@ -552,9 +552,10 @@ body{background:var(--bg,#0b1220);color:var(--text,rgba(255,255,255,.88));}
               rows="3"></textarea>
             <div class="ki-vorschlag-box" id="kvb1">
               <div class="ki-vb-header">
-                <span class="ki-vb-title"><span style="font-size:12px;">✦</span> PROVA-Vorschlag — bitte prüfen</span>
+                <span class="ki-vb-title" id="kvb1-title">✦ PROVA-Vorschlag</span>
                 <button class="ki-vb-close" onclick="closeVorschlag(1)">✕</button>
               </div>
+              <div style="font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:rgba(167,139,250,.45);padding:0 14px 4px;" id="kvb1-sub">PROVA analysiert…</div>
               <div class="ki-vb-text" id="kvb1-text"></div>
               <div class="ki-vb-actions">
                 <button class="ki-vb-accept" onclick="acceptVorschlag(1)">In Feld einfügen →</button>
@@ -606,9 +607,10 @@ body{background:var(--bg,#0b1220);color:var(--text,rgba(255,255,255,.88));}
               rows="3"></textarea>
             <div class="ki-vorschlag-box" id="kvb2">
               <div class="ki-vb-header">
-                <span class="ki-vb-title"><span style="font-size:12px;">✦</span> PROVA-Vorschlag — bitte prüfen</span>
+                <span class="ki-vb-title" id="kvb2-title">✦ PROVA-Vorschlag</span>
                 <button class="ki-vb-close" onclick="closeVorschlag(2)">✕</button>
               </div>
+              <div style="font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:rgba(167,139,250,.45);padding:0 14px 4px;" id="kvb2-sub">PROVA analysiert…</div>
               <div class="ki-vb-text" id="kvb2-text"></div>
               <div class="ki-vb-actions">
                 <button class="ki-vb-accept" onclick="acceptVorschlag(2)">In Feld einfügen →</button>
@@ -656,9 +658,10 @@ body{background:var(--bg,#0b1220);color:var(--text,rgba(255,255,255,.88));}
               rows="3"></textarea>
             <div class="ki-vorschlag-box" id="kvb3">
               <div class="ki-vb-header">
-                <span class="ki-vb-title"><span style="font-size:12px;">✦</span> PROVA-Vorschlag — bitte prüfen</span>
+                <span class="ki-vb-title" id="kvb3-title">✦ PROVA-Vorschlag</span>
                 <button class="ki-vb-close" onclick="closeVorschlag(3)">✕</button>
               </div>
+              <div style="font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:rgba(167,139,250,.45);padding:0 14px 4px;" id="kvb3-sub">PROVA analysiert…</div>
               <div class="ki-vb-text" id="kvb3-text"></div>
               <div class="ki-vb-actions">
                 <button class="ki-vb-accept" onclick="acceptVorschlag(3)">In Feld einfügen →</button>
@@ -1581,13 +1584,8 @@ async function runKiAssist(typ, n, currentText) {
 
   zeigToast('KI analysiert…', 'info');
 
-  // Vorschlag-Box loading
-  var kvb = document.getElementById('kvb' + n);
-  var kvbText = document.getElementById('kvb' + n + '-text');
-  if (kvb && kvbText) {
-    kvbText.textContent = '⏳ PROVA analysiert Ihren Text…';
-    kvb.style.display = 'block';
-  }
+  // Vorschlag-Box loading mit kontextuellem Label
+  zeigeVorschlagLoading(n, typ);
 
   try {
     var userMsg = typeof prompts.user === 'function'
@@ -1615,12 +1613,12 @@ async function runKiAssist(typ, n, currentText) {
     var data = await res.json();
     var vorschlag = data.vorschlag || data.text || data.result || '';
 
-    if (vorschlag && kvbText) {
-      kvbText.textContent = vorschlag;
-      vorschlaege[n] = vorschlag;
+    if (vorschlag) {
+      zeigeVorschlagBox(n, typ, vorschlag);
       zeigToast('Vorschlag bereit — bitte prüfen', 'ok');
     } else {
-      if (kvb) kvb.style.display = 'none';
+      var kvb2 = document.getElementById('kvb' + n);
+      if (kvb2) kvb2.style.display = 'none';
       zeigToast('Kein Vorschlag generiert', 'warn');
     }
   } catch (err) {
@@ -2163,6 +2161,56 @@ function ladeNormenSidebar() {
       + '<span class="norm-insert">↵</span>'
       + '</div>';
   }).join('');
+}
+
+
+/* ══ KI-Assist Label-System — Linear-Stil ══ */
+var KI_LABELS = {
+  konjunktiv:    { icon: '✦', title: 'Konjunktiv II', sub: 'Indikativ-Kausalaussagen wurden korrigiert' },
+  neutral:       { icon: '⚖', title: 'Juristisch neutral', sub: '§407a-konforme Formulierung ohne Schuldzuweisung' },
+  ausformulieren:{ icon: '✦', title: 'Ausformuliert', sub: 'Stichpunkte wurden zu Sachverständigen-Sätzen ausformuliert' },
+  praezisieren:  { icon: '◈', title: 'Präzisiert', sub: 'Text wurde auf juristische Kernaussage verdichtet' }
+};
+
+// Vorschlag-Box mit kontextuellem Label anzeigen
+function zeigeVorschlagBox(n, typ, text) {
+  var kvb = document.getElementById('kvb' + n);
+  var kvbText = document.getElementById('kvb' + n + '-text');
+  var kvbTitle = document.getElementById('kvb' + n + '-title');
+  var kvbSub = document.getElementById('kvb' + n + '-sub');
+  if (!kvb || !kvbText) return;
+
+  var label = KI_LABELS[typ] || { icon: '✦', title: 'PROVA-Vorschlag', sub: 'Bitte prüfen und anpassen' };
+
+  // Titel aktualisieren
+  if (kvbTitle) kvbTitle.textContent = label.icon + ' ' + label.title;
+  if (kvbSub) kvbSub.textContent = label.sub;
+
+  kvbText.textContent = text;
+  kvb.style.display = 'block';
+  vorschlaege[n] = text;
+}
+
+// Loading-State mit Label
+function zeigeVorschlagLoading(n, typ) {
+  var kvb = document.getElementById('kvb' + n);
+  var kvbText = document.getElementById('kvb' + n + '-text');
+  var kvbTitle = document.getElementById('kvb' + n + '-title');
+  var kvbSub = document.getElementById('kvb' + n + '-sub');
+  if (!kvb || !kvbText) return;
+
+  var label = KI_LABELS[typ] || { icon: '✦', title: 'PROVA analysiert', sub: '' };
+  var loadingTexts = {
+    konjunktiv:    'PROVA prüft Konjunktiv II…',
+    neutral:       'PROVA analysiert §407a-Konformität…',
+    ausformulieren:'PROVA formuliert aus…',
+    praezisieren:  'PROVA präzisiert auf Kernaussage…'
+  };
+
+  if (kvbTitle) kvbTitle.textContent = label.icon + ' ' + label.title;
+  if (kvbSub) kvbSub.textContent = loadingTexts[typ] || 'PROVA analysiert…';
+  kvbText.textContent = '';
+  kvb.style.display = 'block';
 }
 
 </script>
