@@ -673,9 +673,9 @@ document.addEventListener('DOMContentLoaded', function() {
       <div class="steps">
         <div class="step active" id="step-1"><div class="step-circle">1</div><span class="step-label">Stammdaten</span></div>
         <div class="step-connector" id="conn-1"></div>
-        <div class="step" id="step-2"><div class="step-circle">2</div><span class="step-label">Diktat & Fotos</span></div>
+        <div class="step" id="step-2" onclick="goToStep(2)" style="cursor:pointer;" title="Zu Diktat & Fotos"><div class="step-circle">2</div><span class="step-label">Diktat & Fotos</span></div>
         <div class="step-connector" id="conn-2"></div>
-        <div class="step" id="step-3"><div class="step-circle">3</div><span class="step-label">Analyse</span></div>
+        <div class="step" id="step-3" onclick="goToStep(3)" style="cursor:pointer;" title="Zur Analyse"><div class="step-circle">3</div><span class="step-label">Analyse</span></div>
         <div class="step-connector" id="conn-3"></div>
         <div class="step" id="step-4"><div class="step-circle">4</div><span class="step-label">Freigabe</span></div>
         <div class="step-connector" id="conn-4"></div>
@@ -775,7 +775,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 <div class="form-group">
                   <label class="form-label form-label-required">Name / Gericht / Versicherung</label>
                   <div style="display:flex;gap:8px;">
-                    <input class="form-input" id="f-auftraggeber-name" type="text" placeholder="Name oder Institution" style="flex:1;">
+                    <div class="autocomplete-wrap">
+                      <input class="form-input" id="f-auftraggeber-name" type="text" 
+                        placeholder="Name oder Institution — tippen für Vorschläge"
+                        autocomplete="off"
+                        oninput="acSuche(this,'ac-auftraggeber')"
+                        onkeydown="acKeydown(event,'ac-auftraggeber','f-auftraggeber-name')"
+                        onblur="setTimeout(function(){acClose('ac-auftraggeber')},200)"
+                        style="width:100%;">
+                      <div class="autocomplete-list" id="ac-auftraggeber"></div>
+                    </div>
                     <button type="button" onclick="openKontakteModal('auftraggeber')" style="white-space:nowrap;padding:0 12px;height:38px;border-radius:var(--radius-md);border:1px solid var(--border);background:var(--bg2);color:var(--text2);font-size:11px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:4px;">
                       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
                       Aus Kontakten
@@ -2506,7 +2515,24 @@ window.exportFotoAnlage = async function() {
     + '.foto-nr{font-weight:700;color:#2563eb;white-space:nowrap;}'
     + '.footer{text-align:center;font-size:9pt;color:#999;margin-top:30px;padding-top:10px;border-top:1px solid #ddd;}'
     + '@media print{body{margin:1.5cm;}}'
-    + '</style></head><body>'
+    + '
+/* ── Autocomplete mit Pfeiltasten ── */
+.autocomplete-wrap { position:relative; flex:1; }
+.autocomplete-list {
+  position:absolute;top:100%;left:0;right:0;z-index:999;
+  background:var(--white);border:1px solid var(--gray-300);
+  border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.12);
+  max-height:220px;overflow-y:auto;display:none;margin-top:2px;
+}
+.autocomplete-list.open { display:block; }
+.ac-item {
+  padding:8px 12px;font-size:13px;cursor:pointer;
+  border-bottom:1px solid var(--gray-100);transition:background .1s;
+}
+.ac-item:last-child { border-bottom:none; }
+.ac-item:hover, .ac-item.focused { background:var(--primary-50);color:var(--primary-600); }
+
+</style></head><body>'
     + '<div class="header"><h1>Fotodokumentation</h1>'
     + '<div class="sub">Aktenzeichen: ' + az + ' | Datum: ' + datum + (svName ? ' | SV: ' + svName : '') + '</div></div>';
 
@@ -3587,6 +3613,14 @@ function goToStep(n) {
   }
 }
 
+function weiterZuAnalyse() {
+  // Alias: Step 2 → Step 3 (G1 Webhook senden)
+  goToStep(3);
+  setTimeout(function() {
+    if (typeof sendeWebhook === 'function') sendeWebhook();
+  }, 300);
+}
+
 function weiterZuSchritt2() {
   // Pflichtfelder prüfen
   var schadenart = document.getElementById('f-schadenart');
@@ -3742,9 +3776,11 @@ async function ladeUndRestoreEntwurf() {
     if (restored > 0) {
       try { window.updateMesswerteLayout && window.updateMesswerteLayout(); } catch(e) {}
       // Nur "Wiederhergestellt" wenn dieselbe AZ wie aktuell (echte Fortführung)
+      // Neuer Fall? → kein Wiederhergestellt-Toast
+      var istNeuerFall = sessionStorage.getItem('prova_neuer_fall') === '1';
       var aktuelleAZ = document.getElementById('f-schadensnummer') && document.getElementById('f-schadensnummer').value;
       var gespeicherteAZ = d.schadensnummer || '';
-      var istSelbeSession = aktuelleAZ && gespeicherteAZ && aktuelleAZ === gespeicherteAZ;
+      var istSelbeSession = !istNeuerFall && aktuelleAZ && gespeicherteAZ && aktuelleAZ === gespeicherteAZ;
       var jetzt = new Date().toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'});
       if (istSelbeSession) {
         window.showToast && window.showToast('Entwurf wiederhergestellt (' + new Date(eintrag.gespeichert_am).toLocaleTimeString('de-DE', {hour:'2-digit',minute:'2-digit'}) + ' Uhr)', 'default', 4000);
@@ -5191,6 +5227,156 @@ function openKontakteModal(typ) {
     }
   });
 })();
+
+/* ══ AUTOCOMPLETE — Deutsche Versicherungen + Pfeiltasten ══ */
+var VERSICHERUNGEN_DE = [
+  // A
+  'Allianz','Allianz Versicherung','Allianz Lebensversicherung',
+  'ARAG','ARAG Versicherung',
+  'Alte Leipziger','Alte Oldenburger',
+  'AXA','AXA Versicherung','AXA Krankenversicherung',
+  'AöV','Aachener und Münchener',
+  // B
+  'Barmenia','Barmenia Versicherung',
+  'Basler','Basler Versicherung',
+  'Bayerische','Bayerische Versicherung','Bayerische Beamtenkrankenkasse',
+  'Berliner Versicherung','BHW',
+  'BGAG','BGV',
+  // C
+  'Condor','Continentale',
+  // D
+  'Debeka','Devk','DEVK Versicherungen',
+  'DKV','DKV Krankenversicherung',
+  'Dortmunder Volksversicherung','Dialog',
+  // E
+  'Ergo','Ergo Versicherung','Ergo Direkt',
+  // F
+  'Familienfürsorge','Feuersozietät',
+  'Frankfurter Versicherung',
+  // G
+  'Generali','GEV','GHV','Gothaer',
+  'Gothaer Versicherung','Grundeigentümer-Versicherung',
+  // H
+  'HafenCity Versicherung','Hamburg Mannheimer',
+  'HanseMerkur','Hannoversche',
+  'HDI','HDI Versicherung',
+  'Helvetia','HELAG',
+  'HUK-Coburg','HUK24',
+  // I
+  'Ideal Versicherung',
+  // J
+  'Janitos',
+  // K
+  'KS-Auxilia','Kravag',
+  // L
+  'LVM','LVM Versicherung',
+  'LBN','Landeskrankenhilfe',
+  // M
+  'Mannheimer','Mecklenburgische',
+  'Munich Re','Münchener Verein',
+  // N
+  'Nürnberger','Nürnberger Versicherung',
+  'Nürnberger Lebensversicherung',
+  'NV','Norddeutsche Versicherung',
+  // O
+  'ÖRAG','Ostangler','Öffentliche Versicherung',
+  // P
+  'Provinzial','Provinzial NordWest','Provinzial Rheinland',
+  // R
+  'R+V','R+V Versicherung','R+V Allgemeine Versicherung',
+  'Roland Rechtsschutz','Rheinland Versicherungen',
+  // S
+  'S-Versicherung','Saarland Versicherung','Schwarzmeer und Ostsee',
+  'Signal Iduna','SV SparkassenVersicherung',
+  // T
+  'Talanx',
+  // U
+  'Universa','Uniqa',
+  // V
+  'VGH','VHV','VHV Versicherungen',
+  'Versicherungskammer Bayern',
+  'Victoria','Volksfürsorge',
+  // W
+  'Württembergische','WWK',
+  'WGV','Würzburger Versicherung',
+  // Z
+  'Zurich','Zurich Versicherung',
+  // Gerichte (für Gerichtsgutachten)
+  'Amtsgericht','Landgericht','Oberlandesgericht',
+  'Arbeitsgericht','Finanzgericht','Verwaltungsgericht',
+  'Sozialgericht','Bundesgerichtshof',
+];
+
+var _acFocused = -1;
+
+function acSuche(input, listId) {
+  var q = (input.value || '').trim().toLowerCase();
+  var list = document.getElementById(listId);
+  if (!list) return;
+  _acFocused = -1;
+  if (q.length < 1) { acClose(listId); return; }
+  
+  var treffer = VERSICHERUNGEN_DE.filter(function(v) {
+    return v.toLowerCase().indexOf(q) === 0; // Beginnt mit
+  }).concat(VERSICHERUNGEN_DE.filter(function(v) {
+    return v.toLowerCase().indexOf(q) > 0; // Enthält
+  }));
+  
+  // Duplikate entfernen, max 8
+  treffer = treffer.filter(function(v,i,a) { return a.indexOf(v)===i; }).slice(0,8);
+  
+  if (!treffer.length) { acClose(listId); return; }
+  
+  var inputId = input.id;
+  list.innerHTML = treffer.map(function(v, i) {
+    return '<div class="ac-item" data-idx="'+i+'" onmousedown="acWaehle(''+listId+'',''+inputId+'',''+v.replace(/'/g,"\'")+'')">'
+      + v.replace(new RegExp('('+q+')', 'gi'), '<strong>$1</strong>')
+      + '</div>';
+  }).join('');
+  list.classList.add('open');
+}
+
+function acKeydown(e, listId, inputId) {
+  var list = document.getElementById(listId);
+  var items = list ? list.querySelectorAll('.ac-item') : [];
+  if (!list || !list.classList.contains('open') || !items.length) return;
+  
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    _acFocused = Math.min(_acFocused + 1, items.length - 1);
+    acHighlight(items);
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    _acFocused = Math.max(_acFocused - 1, 0);
+    acHighlight(items);
+  } else if (e.key === 'Enter' && _acFocused >= 0) {
+    e.preventDefault();
+    var val = items[_acFocused].textContent;
+    acWaehle(listId, inputId, val);
+  } else if (e.key === 'Escape') {
+    acClose(listId);
+  }
+}
+
+function acHighlight(items) {
+  items.forEach(function(item, i) {
+    item.classList.toggle('focused', i === _acFocused);
+    if (i === _acFocused) item.scrollIntoView({block:'nearest'});
+  });
+}
+
+function acWaehle(listId, inputId, val) {
+  var input = document.getElementById(inputId);
+  if (input) { input.value = val; input.dispatchEvent(new Event('input', {bubbles:true})); }
+  acClose(listId);
+  _acFocused = -1;
+}
+
+function acClose(listId) {
+  var list = document.getElementById(listId);
+  if (list) list.classList.remove('open');
+}
+
 </script>
 </body>
 </html>
