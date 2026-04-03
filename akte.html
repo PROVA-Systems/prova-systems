@@ -437,10 +437,25 @@ provaAuthGuard();
 
 /* ─── RECORD LADEN ─── */
 var recordId=sessionStorage.getItem('prova_record_id')||new URLSearchParams(window.location.search).get('id')||'';
+var aktenzeichen=new URLSearchParams(window.location.search).get('az')||'';
 var currentRecord=null;
 var currentFields={};
 
 async function ladeRecord(){
+  // Wenn nur az= übergeben (kein Record-ID) → per Aktenzeichen suchen
+  if(!recordId && aktenzeichen){
+    try{
+      var searchPath='/v0/'+AT_BASE+'/'+AT_FAELLE+'?filterByFormula='+encodeURIComponent('{Aktenzeichen}="'+aktenzeichen+'"')+'&maxRecords=1';
+      var searchRes=await fetch('/.netlify/functions/airtable',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({method:'GET',path:searchPath})});
+      if(searchRes.ok){
+        var searchData=await searchRes.json();
+        if(searchData&&searchData.records&&searchData.records.length>0){
+          recordId=searchData.records[0].id;
+          sessionStorage.setItem('prova_record_id',recordId);
+        }
+      }
+    }catch(e){console.warn('AZ-Lookup Fehler:',e);}
+  }
   if(!recordId){zeigNotFound();return;}
   try{
     var path='/v0/'+AT_BASE+'/'+AT_FAELLE+'/'+recordId;

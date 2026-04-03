@@ -162,7 +162,7 @@
     var html = ''
       + '<div class="at-dialog">'
       +   '<div class="at-header">'
-      +     '<div class="at-title">Neuer Auftrag</div>'
+      +     '<div class="at-title">Neuer Fall</div>'
       +     '<button class="at-close" onclick="PROVA.closeAuftragstyp()">✕</button>'
       +   '</div>'
       +   '<div class="at-body" id="at-body">'
@@ -241,7 +241,7 @@
 
     // Button aktivieren
     footerBtn.disabled = false;
-    footerBtn.textContent = (typ ? typ.label : 'Auftrag') + ' starten →';
+    footerBtn.textContent = (typ ? typ.label : 'Fall') + ' starten →';
   };
 
   /* ── PDF hochladen + KI-Extraktion ── */
@@ -342,12 +342,12 @@
     if (selectedType === 'baubegleitung') {
       zielSeite = 'baubegleitung.html';
     } else {
-      zielSeite = 'gutachten.html';
+      zielSeite = 'app.html';
     }
 
     PROVA.closeAuftragstyp();
     // Wizard starten wenn auf app.html / gutachten.html
-    if (zielSeite === 'gutachten.html' || zielSeite === 'app.html' || !zielSeite) {
+    if (zielSeite === 'app.html' || zielSeite === 'app.html' || !zielSeite) {
       if (typeof PROVA_WIZARD !== 'undefined' && PROVA_WIZARD.start) {
         PROVA_WIZARD.start(selectedType || 'privatgutachten');
       } else {
