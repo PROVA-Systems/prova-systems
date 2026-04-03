@@ -1110,13 +1110,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 <span id="step2-foto-dot" style="width:8px;height:8px;border-radius:50%;background:#d1d5db;display:inline-block;"></span>
                 <span id="step2-foto-label">Keine Fotos</span>
               </div>
-              <div id="step2-foto-mini" style="display:none;margin-top:8px;display:flex;gap:4px;flex-wrap:wrap;"></div>
+              <div id="step2-foto-mini" style="display:none;margin-top:8px;gap:4px;flex-wrap:wrap;"></div>
             </div>
 
             <!-- KI-Tipp -->
             <div style="background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.2);border-radius:10px;padding:12px 14px;margin-bottom:14px;">
               <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#f59e0b;margin-bottom:6px;">💡 Diktat-Tipp</div>
-              <div id="step2-tipp" style="font-size:11px;color:var(--gray-600);line-height:1.5;">Beschreiben Sie: Lage des Schadens, gemessene Feuchte- oder Temperaturwerte, Bauphase und Baujahr.</div>
+              <div id="step2-tipp" style="font-size:12px;color:#1a2236;line-height:1.5;font-weight:500;">Beschreiben Sie: Lage des Schadens, gemessene Feuchte- oder Temperaturwerte, Bauphase und Baujahr.</div>
             </div>
 
             <!-- Buttons -->
@@ -1156,7 +1156,7 @@ document.addEventListener('DOMContentLoaded', function() {
               <button onclick="PROVA.openPanel('positionen')" style="padding:6px 12px;border-radius:7px;background:rgba(79,142,247,.1);border:1px solid rgba(79,142,247,.2);color:#4f8ef7;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;">🗂️ Positionen</button>
             </div>
           </div>
-          <div id="ki-naechste-schritte" style="display:none;margin-top:1rem;display:flex;flex-direction:column;gap:8px;">
+          <div id="ki-naechste-schritte" style="display:none;margin-top:1rem;flex-direction:column;gap:8px;">
             <button onclick="goToGate()" style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:13px 20px;background:linear-gradient(135deg,#4f8ef7,#3a7be0);color:#fff;border:none;border-radius:10px;font-size:.9rem;font-weight:700;cursor:pointer;">
               ⚖️ Weiter zum Fachurteil §6 →
             </button>
@@ -2169,9 +2169,11 @@ window.switchDiktatTab = function(mode) {
   var eingabePanel = document.getElementById('eingabe-panel');
   var tabDiktat = document.getElementById('tab-diktat');
   var tabEingabe = document.getElementById('tab-eingabe');
+  var transSection = document.querySelector('.diktat-transcript-section');
   if (mode === 'diktat') {
     if (diktatPanel) diktatPanel.style.display = 'block';
     if (eingabePanel) eingabePanel.style.display = 'none';
+    if (transSection) transSection.style.display = 'block';
     if (tabDiktat) { tabDiktat.classList.add('active'); tabDiktat.setAttribute('aria-selected','true'); tabDiktat.tabIndex = 0; }
     if (tabEingabe) { tabEingabe.classList.remove('active'); tabEingabe.setAttribute('aria-selected','false'); tabEingabe.tabIndex = -1; }
     var ta = document.getElementById('transcriptManuell');
@@ -2179,6 +2181,7 @@ window.switchDiktatTab = function(mode) {
   } else {
     if (diktatPanel) diktatPanel.style.display = 'none';
     if (eingabePanel) eingabePanel.style.display = 'block';
+    if (transSection) transSection.style.display = 'none';
     if (tabDiktat) { tabDiktat.classList.remove('active'); tabDiktat.setAttribute('aria-selected','false'); tabDiktat.tabIndex = -1; }
     if (tabEingabe) { tabEingabe.classList.add('active'); tabEingabe.setAttribute('aria-selected','true'); tabEingabe.tabIndex = 0; }
     var ta = document.getElementById('transcriptManuell');
@@ -2189,6 +2192,7 @@ window.switchDiktatTab = function(mode) {
 window.syncManuellToTranscript = function() {
   var ta = document.getElementById('transcriptManuell');
   if (ta) transcriptText = ta.value;
+  updateStep2Panel(); // Panel-Status sofort aktualisieren
 };
 
 // Tastatursteuerung für Tabs (←/→, Enter/Space)
@@ -2685,13 +2689,15 @@ function bauKostenKontext(schadenart) {
    SCHRITT 2 → 3: WEBHOOK
 ============================================================ */
 window.weiterZuAnalyse = async function() {
-  // Sync: falls Nutzer direkt im Transkript-Bereich getippt hat
+  // Sync: BEIDE Quellen prüfen — manuelle Eingabe hat Vorrang
+  var manuellTa = document.getElementById('transcriptManuell');
+  var manuellText = (manuellTa && manuellTa.value) ? manuellTa.value.trim() : '';
   const ta = document.getElementById('transcriptArea');
-  if (ta) transcriptText = ta.innerText.trim();
-  if (diktatMode === 'text') {
-    var manuellTa = document.getElementById('transcriptManuell');
-    transcriptText = (manuellTa && manuellTa.value) ? manuellTa.value.trim() : transcriptText;
-  }
+  var diktatText = (ta && ta.innerText) ? ta.innerText.trim() : '';
+  // Placeholder-Text herausfiltern
+  if (diktatText === 'Aufnahme starten oder unten eingeben.') diktatText = '';
+  // Manuelle Eingabe hat Vorrang, sonst Diktat
+  transcriptText = manuellText || diktatText || transcriptText.trim();
   if (!transcriptText.trim()) {
     showToast('Bitte Diktat aufnehmen oder Text eingeben.', 'warning');
     return;
@@ -3228,20 +3234,22 @@ async function ladeUndRestoreEntwurf() {
     if (!eintrag || !eintrag.daten) return;
 
     const d = eintrag.daten;
+    // Bei frisch gestartetem Fall (via Auftragstyp-Auswahl) keine Kontakt/Adress-Daten übernehmen
+    const istNeuerFall = !!sessionStorage.getItem('prova_neuer_auftrag');
     const felder = [
       ['f-schadenart',         d.schadenart],
       ['f-schadensnummer',     d.schadensnummer],
       ['f-schadensdatum',      d.schadensdatum],
-      ['f-auftraggeber-typ',   d.auftraggeber_typ],
-      ['f-auftraggeber-name',  d.auftraggeber_name],
-      ['f-ansprechpartner',    d.ansprechpartner],
-      ['f-auftraggeber-email', d.auftraggeber_email],
-      ['f-strasse',            d.strasse],
-      ['f-plz',                d.plz],
-      ['f-ort',                d.ort],
+      ['f-auftraggeber-typ',   istNeuerFall ? null : d.auftraggeber_typ],
+      ['f-auftraggeber-name',  istNeuerFall ? null : d.auftraggeber_name],
+      ['f-ansprechpartner',    istNeuerFall ? null : d.ansprechpartner],
+      ['f-auftraggeber-email', istNeuerFall ? null : d.auftraggeber_email],
+      ['f-strasse',            istNeuerFall ? null : d.strasse],
+      ['f-plz',                istNeuerFall ? null : d.plz],
+      ['f-ort',                istNeuerFall ? null : d.ort],
       ['f-gebaeudetyp',        d.gebaeudetyp],
       ['f-baujahr',            d.baujahr],
-      ['f-geschaedigter',      d.geschaedigter],
+      ['f-geschaedigter',      istNeuerFall ? null : d.geschaedigter],
       ['f-bereich',            d.bereich],
       ['f-feuchte',            d.feuchtemessung],
       ['f-luftfeuchte',        d.luftfeuchtigkeit],
@@ -4542,6 +4550,40 @@ window.PROVA_AUDIT = (function() {
 <script src="auftragstyp.js"></script>
 <script src="prova-wizard.js"></script>
 <script src="support-chat.js"></script>
-<script src="trial-guard.js"></script>
+<script src="trial-guard.js">
+/* ── Keyboard-Navigation ag-dropdown (Pfeil ↑↓ + Enter) ── */
+(function() {
+  var _idx = -1;
+  function getItems() {
+    var drop = document.getElementById('ag-dropdown');
+    return drop && drop.style.display !== 'none' ? Array.from(drop.querySelectorAll('[onmousedown]')) : [];
+  }
+  function highlight(items) {
+    items.forEach(function(el, i) {
+      el.style.background = i === _idx ? '#EFF6FF' : '';
+      el.style.fontWeight = i === _idx ? '700' : '';
+    });
+  }
+  document.addEventListener('keydown', function(e) {
+    var items = getItems();
+    if (!items.length) return;
+    if (e.key === 'ArrowDown') { e.preventDefault(); _idx = Math.min(_idx + 1, items.length - 1); highlight(items); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); _idx = Math.max(_idx - 1, 0); highlight(items); }
+    else if (e.key === 'Enter' && _idx >= 0) {
+      e.preventDefault();
+      items[_idx].dispatchEvent(new MouseEvent('mousedown', {bubbles:true}));
+      _idx = -1;
+    } else if (e.key === 'Escape') {
+      var drop = document.getElementById('ag-dropdown');
+      if (drop) { drop.style.display = 'none'; drop.innerHTML = ''; }
+      _idx = -1;
+    }
+  });
+  // Reset beim Tippen
+  var inp = document.getElementById('f-auftraggeber-name');
+  if (inp) inp.addEventListener('input', function() { _idx = -1; });
+})();
+
+</script>
 </body>
 </html>

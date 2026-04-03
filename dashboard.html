@@ -1864,8 +1864,9 @@ function renderAufgabenSofort() {
   // Kontextuell: was ist der nächste Schritt für jeden Fall?
   feed.innerHTML = offen.slice(0, 5).map(function(r) {
     var f = r.fields || {};
-    var az = f.Aktenzeichen || '—';
-    var sa = f.Schadenart || 'Schadenfall';
+    var az = f.Aktenzeichen || r.id.slice(-6).toUpperCase() || '—';
+    var sa = f.Schadenart || f.schadenart || 'Schadenfall';
+    var ag = f.Auftraggeber_Name || f.auftraggeber_name || '';
     var adr = f.Adresse || f.Schaden_Strasse || '';
     var ort = f.Ort || '';
     var loc = [adr, ort].filter(Boolean).join(', ');
@@ -1895,6 +1896,7 @@ function renderAufgabenSofort() {
       + '<span style="font-family:var(--font-mono);font-size:11px;color:var(--accent);">' + escHtml(az) + '</span>'
       + '<span style="color:var(--text3);">·</span>'
       + '<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + escHtml(sa) + '</span>'
+      + (ag ? '<span style="font-size:10px;font-weight:500;color:var(--text3);padding:1px 6px;background:rgba(255,255,255,.05);border-radius:4px;flex-shrink:0;">' + escHtml(ag) + '</span>' : '')
       + '</div>'
       + (loc ? '<div style="font-size:11px;color:var(--text3);margin-top:2px;">📍 ' + escHtml(loc) + '</div>' : '')
       + '<div style="font-size:11px;font-weight:700;color:' + ns.col + ';margin-top:3px;">' + ns.label + '</div>'

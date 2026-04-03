@@ -31,7 +31,7 @@
   var pc = paketColors[paket] || paketColors.Solo;
   
   // Übergangsphase: noch separate Dateien, später gutachten.html
-  var appUrl = paket === 'Team' ? 'app-enterprise.html' : 'gutachten.html';
+  var appUrl = 'app.html'; // gutachten.html → app.html (app-enterprise.html aufgelöst)
 
   /* ── Nav-Items: workflow-orientierte Gruppierung ── */
   var ARBEIT = [

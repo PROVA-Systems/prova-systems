@@ -528,26 +528,22 @@ function ladeKontakte() {
 async function syncKontakteVonAirtable() {
   var email = localStorage.getItem('prova_sv_email') || '';
   if (!email) return;
-  // TRUE() holen, client-seitig nach sv_email filtern (verhindert 422 durch doppeltes Encoding)
+  var filterFormula = email ? encodeURIComponent('{sv_email}="' + email + '"') : '';
   var path = '/v0/' + AT_BASE_K + '/' + AT_KONTAKTE
-    + '?maxRecords=200&filterByFormula=' + encodeURIComponent('TRUE()');
+    + '?maxRecords=200&sort[0][field]=Name&sort[0][direction]=asc'
+    + (filterFormula ? '&filterByFormula=' + filterFormula : '');
   var data = await atKontakte('GET', path);
   if (!data || !data.records || !data.records.length) return;
-  // Client-seitig filtern: nur eigene Kontakte
-  var eigeneRecords = data.records.filter(function(rec) {
-    return !rec.fields.sv_email || rec.fields.sv_email === email;
-  });
-  if (!eigeneRecords.length) return;
   // Merge: Airtable-Datensätze in lokale Liste — AT-Datensätze haben Vorrang
   var atIds = {};
-  eigeneRecords.forEach(function(rec) {
+  data.records.forEach(function(rec) {
     var f = rec.fields;
     var k = {
       id: rec.id, // Airtable Record-ID
       at_id: rec.id,
       name: f.Name || '',
       firma: f.Firma || '',
-      typ: f.Typ || 'Sonstige',
+      typ: (f.Typ && f.Typ.name) ? f.Typ.name : (f.Typ || 'Sonstige'),
       email: f.Email || '',
       telefon: f.Telefon || '',
       strasse: f.Strasse || '',
@@ -700,7 +696,7 @@ function renderKontakte() {
       '<div class="k-header">'+
         '<div class="k-avatar" style="background:'+tc.color+';color:'+tc.text+';">'+tc.icon+'</div>'+
         '<div style="flex:1;min-width:0;">'+
-          '<div class="k-name">'+escH(k.vorname?k.vorname+' '+k.name:k.name)+'</div>'+
+          '<div class="k-name">'+escH(k.vorname?k.vorname+' '+k.name:k.name||k.firma||k.email||('Kontakt '+k.id.slice(-4)))+'</div>'+
           (k.firma?'<div class="k-firma">'+escH(k.firma)+'</div>':'<div class="k-firma" style="color:'+tc.text+';">'+escH(k.typ||'')+'</div>')+
         '</div>'+
         '<span class="k-typ" style="background:'+tc.color+';color:'+tc.text+';">'+escH(k.typ||'')+'</span>'+

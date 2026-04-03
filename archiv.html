@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width,initial-scale=1, viewport-fit=cover">
 <title>Fälle · PROVA</title>
 <script src="theme.js"></script>
-<script src="auth-guard.js"></script>
 <script src="nav.js"></script>
 <style>
 /* ═══ PROVA SIDEBAR SYSTEM ═══════════════════════════════════════════════ */
@@ -478,7 +477,7 @@ if(el){el.textContent=paket;el.style.cssText='font-size:10px;font-weight:700;pad
 var appUrl=paket==='Team'?'app.html':paket==='Solo'?'app-pro.html':'app.html';
 
 /* ── AUTH ── */
-provaAuthGuard();
+if(!localStorage.getItem('prova_user')){window.location.href='app-login.html';return;}
 
 /* ── VIEW TOGGLE ── */
 var currentView=localStorage.getItem('prova_listenansicht')||'kanban';
@@ -746,14 +745,17 @@ window.sendSupport=async function(){
 
 /* ── INIT ── */
 ladeFaelle();
-// Sicherheits-Timeout: Falls Airtable nicht antwortet, nach 6 Sekunden Empty-State zeigen
+// Sicherheits-Timeout: Falls Airtable nicht antwortet, nach 10 Sekunden Empty-State zeigen
+// NUR wenn wirklich noch keine Daten gerendert wurden (nicht im Kanban-Modus feuern!)
 setTimeout(function() {
+  if (alleRecords.length > 0) return; // Daten bereits geladen — nichts tun
   var lb = document.getElementById('liste-body');
-  if (lb && lb.innerHTML.includes('Wird geladen')) {
-    alleRecords = [];
-    filterUndRender();
+  var kanbanHasData = document.querySelector('#kc-bearb .kanban-card, #kc-auftrag .kanban-card, #kc-done .kanban-card');
+  if (kanbanHasData) return; // Kanban zeigt bereits Daten
+  if (currentView === 'liste' && lb && lb.innerHTML.includes('Wird geladen')) {
+    filterUndRender(); // ohne alleRecords zu löschen!
   }
-}, 6000);
+}, 10000);
 
 // Filter-Events
 document.getElementById('f-schadenart').addEventListener('change',filterUndRender);
