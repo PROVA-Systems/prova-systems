@@ -12,6 +12,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>PROVA — Zentrale</title>
 <script src="theme.js"></script>
+<script src="auth-guard.js"></script>
 <script src="nav.js" defer></script>
 <link rel="stylesheet" href="mobile.css">
   <style>
@@ -1047,7 +1048,7 @@ function zeigOnboarding(){
         +offene.slice(0,3).map(function(r){
           var f=r.fields||{};var az=f.Aktenzeichen||'—';var sa=f.Schadenart||'Schadenfall';
           var naechst=!f.KI_Entwurf?{icon:'🎤',label:'Diktat aufnehmen',col:'#4f8ef7',href:'app.html'}:!f.Stellungnahme_Text?{icon:'⚖️',label:'§6 Fachurteil schreiben',col:'#f59e0b',href:'stellungnahme.html?az='+encodeURIComponent(az)}:{icon:'✅',label:'Freigeben & PDF erstellen',col:'#10b981',href:'freigabe.html?az='+encodeURIComponent(az)};
-          return '<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;margin-bottom:8px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:10px;cursor:pointer;" onclick="window.location.href=\'akte.html?id=\'+r.id+\'\'">'
+          return '<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;margin-bottom:8px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:10px;cursor:pointer;" data-href="akte.html?id='+r.id+'" onclick="window.location.href=this.dataset.href">'
             +'<span style="font-size:16px;">'+naechst.icon+'</span>'
             +'<div style="flex:1;min-width:0;"><div style="font-size:12px;font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+az+' · '+sa+'</div>'
             +'<div style="font-size:11px;color:'+naechst.col+';margin-top:1px;">'+naechst.label+'</div></div>'
@@ -1155,7 +1156,7 @@ function renderAufgabeKarte(a, dringend) {
   }
   var bg = dringend ? 'rgba(239,68,68,.04)' : 'var(--surface2)';
   var border = dringend ? '1px solid rgba(239,68,68,.15)' : '1px solid var(--border)';
-  return '<a href="'+a.aktion.url+'" style="display:flex;align-items:center;gap:10px;padding:10px 12px;margin-bottom:6px;background:'+bg+';border:'+border+';border-radius:10px;text-decoration:none;transition:all .15s;" onmouseover="this.style.outline='1px solid var(--accent)'" onmouseout="this.style.outline=''">'+
+  return '<a href="'+a.aktion.url+'" style="display:flex;align-items:center;gap:10px;padding:10px 12px;margin-bottom:6px;background:'+bg+';border:'+border+';border-radius:10px;text-decoration:none;transition:all .15s;" data-ol="1px solid var(--accent)" data-oloff="" onmouseenter="this.style.outline=this.dataset.ol" onmouseleave="this.style.outline=this.dataset.oloff">'+
     '<span style="font-size:18px;flex-shrink:0;">'+a.aktion.icon+'</span>'+
     '<div style="flex:1;min-width:0;">'+
       '<div style="font-size:12px;font-weight:700;color:var(--text);">'+a.az+'</div>'+
@@ -1276,7 +1277,7 @@ function renderKPIs(faelle, termine, rechnungen){
   return {aktiv:aktiv,heuteAnz:heuteAnz,offene:offene,hatUeber:hatUeber,diesesMonat:diesesMonat};
 }
 
-function // renderFeed(faelle, termine, rechnungen, stats){
+function renderFeed(faelle, termine, rechnungen, stats){
   var feed=document.getElementById('aufgaben-feed');
   if(!feed)return;
   var actions=[];
@@ -1366,7 +1367,7 @@ function // renderFeed(faelle, termine, rechnungen, stats){
             :{icon:'💶',label:'Rechnung erstellen',col:'#8b5cf6',href:'rechnungen.html?az='+encodeURIComponent(az),prio:'purple'};
           var bcol={'blue':'rgba(79,142,247,.12)','warn':'rgba(245,158,11,.1)','green':'rgba(16,185,129,.1)','purple':'rgba(139,92,246,.1)'}[ns.prio]||'rgba(255,255,255,.04)';
           var bord={'blue':'rgba(79,142,247,.25)','warn':'rgba(245,158,11,.2)','green':'rgba(16,185,129,.2)','purple':'rgba(139,92,246,.2)'}[ns.prio]||'rgba(255,255,255,.08)';
-          return '<div style="display:flex;align-items:center;gap:10px;padding:10px 16px;margin:6px 12px;background:'+bcol+';border:1px solid '+bord+';border-radius:10px;cursor:pointer;" onclick=\"window.location.href='akte.html?id='+r.id\" >'
+          return '<div style="display:flex;align-items:center;gap:10px;padding:10px 16px;margin:6px 12px;background:'+bcol+';border:1px solid '+bord+';border-radius:10px;cursor:pointer;" data-href="akte.html?id='+r.id+'" onclick="window.location.href=this.dataset.href">'
             +'<span style="font-size:18px;">'+ns.icon+'</span>'
             +'<div style="flex:1;min-width:0;">'
             +'<div style="font-size:13px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+escHtml(az)+' · '+escHtml(sa)+'</div>'
@@ -1382,7 +1383,7 @@ function // renderFeed(faelle, termine, rechnungen, stats){
     feed.innerHTML=actions.map(function(a){
       var bcol=a.prio==='red'?'rgba(239,68,68,.08)':a.prio==='warn'?'rgba(245,158,11,.08)':'rgba(255,255,255,.03)';
       var bord=a.prio==='red'?'rgba(239,68,68,.2)':a.prio==='warn'?'rgba(245,158,11,.15)':'var(--border)';
-      return '<div style="display:flex;align-items:center;gap:10px;padding:10px 16px;margin:6px 12px;background:'+bcol+';border:1px solid '+bord+';border-radius:10px;cursor:pointer;" onclick="window.location.href=''+(a.href||'archiv.html')+''">'
+      return '<div style="display:flex;align-items:center;gap:10px;padding:10px 16px;margin:6px 12px;background:'+bcol+';border:1px solid '+bord+';border-radius:10px;cursor:pointer;" data-href="'+(a.href||'archiv.html')+'" onclick="window.location.href=this.dataset.href">'
         +'<div class="action-prio '+a.prio+'" style="width:8px;height:8px;border-radius:50%;flex-shrink:0;background:'+(a.prio==='red'?'#ef4444':a.prio==='warn'?'#f59e0b':'#6b7280')+';"></div>'
         +'<div class="action-body" style="flex:1;min-width:0;">'
         +'<div class="action-title" style="font-size:13px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+escHtml(a.title)+'</div>'
@@ -1546,10 +1547,7 @@ window.calNav=function(dir){
 ══════════════════════════════════════════════════ */
 zeigSkeleton();
 
-// Auth check
-if(!localStorage.getItem('prova_user')){
-  // Kein Redirect — Zentrale zeigt Onboarding auch ohne Login
-}
+provaAuthGuard();
 
 var svEmail=localStorage.getItem('prova_sv_email')||'';
 

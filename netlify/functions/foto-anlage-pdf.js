@@ -75,7 +75,7 @@ exports.handler = async (event) => {
     }
 
     const doc = await res.json();
-    const docId = doc.(document&&document.id);
+    const docId = doc?.document?.id;
 
     if (!docId) {
       return {
@@ -92,11 +92,11 @@ exports.handler = async (event) => {
         headers: { 'Authorization': `Bearer ${API_KEY}` }
       });
       const status = await check.json();
-      if (status.(document&&document.status) === 'success') {
+      if (status?.document?.status === 'success') {
         pdfUrl = status.document.download_url;
         break;
       }
-      if (status.(document&&document.status) === 'failure') {
+      if (status?.document?.status === 'failure') {
         return {
           statusCode: 200, headers,
           body: JSON.stringify({ fallback: true, reason: 'PDF-Generierung fehlgeschlagen.' })

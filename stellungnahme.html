@@ -1653,13 +1653,11 @@ ladeNormen();
       var ta = document.getElementById(isWegA ? 'svTextA' : 'svStichpunkte');
       if (!ta) ta = document.getElementById('svTextA');
       if (!ta) return;
-      var prefix = ta.value.trim() ? '
+      var prefix = ta.value.trim() ? '\n\n' : '';
+      var normenText = queue.map(function(n){ return n.text || n; }).join('\n');
 
-' : '';
-      var normenText = queue.map(function(n){ return n.text || n; }).join('
-');
-      ta.value = ta.value + prefix + 'Normenbezug:
-' + normenText;
+      ta.value = ta.value + prefix + 'Normenbezug:\n' + normenText;
+
       ta.dispatchEvent(new Event('input'));
       localStorage.removeItem('prova_normen_queue');
       // Inline-Hinweis
@@ -2420,8 +2418,7 @@ function weiterZuFreigabe() {
 
 /* ── TOAST ── */
 let toastTimer;
-window.zeigToast = window.zeigToast || window.showToast || function(m){ alert(m); };, 3200);
-}
+window.zeigToast = window.zeigToast || window.showToast || function(m){ alert(m); };
 </script>
   <script src="/sw-register.js" defer></script>
 <script src="auftragstyp.js"></script>

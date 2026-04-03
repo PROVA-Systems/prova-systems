@@ -84,7 +84,7 @@ ${messwerte ? '\nMESSWERTE:\n' + messwerte : ''}${entwurf ? '\n§1–§5 ENTWURF
 WICHTIG: Analysiere AUSSCHLIESSLICH was im Diktat steht. Leere Arrays wenn zu wenig Info. Gib NUR JSON zurück.`;
 
   const result = await callOpenAI({ model: 'gpt-4o-mini', max_tokens: 1200, messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: userPrompt }] }, apiKey);
-  const rawText = result.choices?.[0]?.(message&&message.content) || '';
+  const rawText = result.choices?.[0]?.message?.content || '';
   let parsed = {};
   try {
     const match = rawText.match(/\{[\s\S]*\}/);
@@ -104,7 +104,7 @@ async function handleQualitaetspruefung(body, apiKey) {
     { role: 'user', content: 'Prüfe:\n\n' + gutachten_text.substring(0, 2000) + (beweisfragen ? '\n\nBeweisfragen:\n' + beweisfragen : '') }
   ] }, apiKey);
 
-  const rawText = result.choices?.[0]?.(message&&message.content) || '';
+  const rawText = result.choices?.[0]?.message?.content || '';
   let parsed = {};
   try { const m = rawText.match(/\{[\s\S]*\}/); if (m) parsed = JSON.parse(m[0]); }
   catch (e) { parsed = { pruefpunkte: [{ typ: 'warnung', text: 'Manuelle Prüfung erforderlich.' }], gesamt_bewertung: 'verbesserungswuerdig' }; }
@@ -116,7 +116,7 @@ async function handleFreitext(body, apiKey) {
     { role: 'system', content: body.system || 'Du bist ein Assistent für öffentlich bestellte Sachverständige.' },
     { role: 'user', content: body.prompt || '' }
   ] }, apiKey);
-  const text = result.choices?.[0]?.(message&&message.content) || '';
+  const text = result.choices?.[0]?.message?.content || '';
   return jsonResponse({ text, content: [{ type: 'text', text }] });
 }
 
@@ -136,7 +136,7 @@ async function handleMessages(body, apiKey) {
   if (model.includes('haiku') || model.includes('sonnet') || model.includes('opus')) model = 'gpt-4o-mini';
 
   const result = await callOpenAI({ model, max_tokens: body.max_tokens || 500, messages }, apiKey);
-  const text = result.choices?.[0]?.(message&&message.content) || '';
+  const text = result.choices?.[0]?.message?.content || '';
   return jsonResponse({ content: [{ type: 'text', text }], model: result.model, usage: result.usage });
 }
 
@@ -148,7 +148,7 @@ async function callOpenAI(params, apiKey) {
   });
   if (!response.ok) {
     const err = await response.json().catch(() => ({}));
-    throw new Error('OpenAI ' + response.status + ': ' + (err.(error&&error.message) || 'Fehler'));
+    throw new Error('OpenAI ' + response.status + ': ' + (err?.error?.message || 'Fehler'));
   }
   return response.json();
 }

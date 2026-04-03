@@ -12,6 +12,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1, viewport-fit=cover">
 <title>Akte · PROVA</title>
 <script src="theme.js"></script>
+<script src="auth-guard.js"></script>
 <script src="nav.js"></script>
 <style>
 :root{
@@ -432,7 +433,7 @@ var pc={'Solo':'#4f8ef7','Team':'#a78bfa'}[paket]||'#4f8ef7';
   var el=document.getElementById('topbar-paket-badge');
   if(el){el.style.display='none';} // Paket steht in Sidebar unten
 })();
-if(!localStorage.getItem('prova_user')){window.location.href='app-login.html';return;}
+provaAuthGuard();
 
 /* ─── RECORD LADEN ─── */
 var recordId=sessionStorage.getItem('prova_record_id')||new URLSearchParams(window.location.search).get('id')||'';
@@ -593,7 +594,8 @@ function renderDokumente(f){
   }
   el.innerHTML=list.map(function(d){
     var actions=d.url?'<button class="dok-btn" onclick="window.open(\''+d.url+'\',\'_blank\')">⬇ Download</button>':'';
-    return '<div class="dok-item"><div class="dok-icon">'+d.icon+'</div><div style="flex:1;"><div class="dok-name">'+esc(d.name)+'</div><div class="dok-meta">'+esc(d.meta)+'</div></div><div class="dok-actions">'+actions+'</div></div>';
+    var caption=d.beschriftung?'<div style="font-size:10px;color:var(--text3);margin-top:2px;font-style:italic;">'+esc(d.beschriftung)+'</div>':'';
+    return '<div class="dok-item"><div class="dok-icon">'+d.icon+'</div><div style="flex:1;"><div class="dok-name">'+esc(d.name)+'</div><div class="dok-meta">'+esc(d.meta)+'</div>'+caption+'</div><div class="dok-actions">'+actions+'</div></div>';
   }).join('');
 }
 
@@ -648,10 +650,46 @@ async function handleDokUpload(files) {
       } catch (e) {
         console.log('KI-Klassifizierung fehlgeschlagen:', e);
       }
+    } else if (file.type.startsWith('image/')) {
+      // ── Foto-Captioning via KI ──
+      icon = '📷';
+      typLabel = 'Schadensfoto';
+      statusEl.textContent = '📷 KI beschriftet Foto: ' + file.name + '…';
+      try {
+        var imgB64 = await new Promise(function(res, rej) {
+          var r = new FileReader();
+          r.onload = function() { res(r.result.split(',')[1]); };
+          r.onerror = rej;
+          r.readAsDataURL(file);
+        });
+        var capRes = await fetch('/.netlify/functions/foto-captioning', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            imageBase64: imgB64,
+            mediaType: file.type,
+            aktenzeichen: az,
+            schadensart: sessionStorage.getItem('prova_current_schadenart') || localStorage.getItem('prova_schadenart') || ''
+          })
+        });
+        if (capRes.ok) {
+          var capData = await capRes.json();
+          if (capData.success && capData.metadata) {
+            var m = capData.metadata;
+            zusammenfassung = m.beschriftung || '';
+            if (m.bauteil) zusammenfassung += (zusammenfassung ? ' · ' : '') + m.bauteil;
+            if (m.raum)    zusammenfassung += ' · ' + m.raum;
+            var sgMap = { gering: '🟡', mittel: '🟠', schwer: '🔴', kritisch: '🆘' };
+            if (m.schweregrad && sgMap[m.schweregrad]) icon = sgMap[m.schweregrad] + ' 📷';
+            typLabel = 'Schadensfoto' + (m.schweregrad ? ' (' + m.schweregrad + ')' : '');
+          }
+        }
+      } catch (e) {
+        console.log('Foto-Captioning fehlgeschlagen:', e);
+      }
     } else {
-      // Bilder etc.
-      icon = file.type.startsWith('image/') ? '🖼️' : '📎';
-      typLabel = file.type.startsWith('image/') ? 'Scan/Foto' : 'Dokument';
+      icon = '📎';
+      typLabel = 'Dokument';
     }
 
     uploads.push({
@@ -660,7 +698,8 @@ async function handleDokUpload(files) {
       icon: icon,
       datum: new Date().toLocaleDateString('de-DE'),
       size: Math.round(file.size / 1024) + ' KB',
-      frist: frist
+      frist: frist,
+      beschriftung: zusammenfassung || undefined
     });
 
     localStorage.setItem('prova_akte_docs_' + az, JSON.stringify(uploads));
@@ -1085,8 +1124,8 @@ function baueBanner(kontext, aktuellerSchritt, istWerkzeug) {
         + 'background:' + naechster.farbe + '22;border:1px solid ' + naechster.farbe + '44;'
         + 'border-radius:999px;font-size:11px;font-weight:700;color:' + naechster.farbe + ';'
         + 'text-decoration:none;white-space:nowrap;transition:all .15s;'
-        + '" onmouseover="this.style.background='' + naechster.farbe + '33'"'
-        + ' onmouseout="this.style.background='' + naechster.farbe + '22'">'
+        + '" data-bg="' + naechster.farbe + '22" data-bgh="' + naechster.farbe + '33"'
+        + ' onmouseenter="this.style.background=this.dataset.bgh" onmouseleave="this.style.background=this.dataset.bg">'
         + naechster.icon + ' ' + naechster.name + ' →'
         + '</a>';
     }
