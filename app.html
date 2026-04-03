@@ -2444,6 +2444,7 @@ function sammleDaten() {
   return {
     schadenart:         document.getElementById('f-schadenart')?.value || '',
     schadensnummer:     document.getElementById('f-schadensnummer')?.value || '',
+    aktenzeichen:       document.getElementById('f-schadensnummer')?.value || '', // Alias für G1 Blueprint
     schadensdatum:      document.getElementById('f-schadensdatum')?.value || '',
     gerichts_az:        document.getElementById('f-gerichts-az')?.value || '',
     fristdatum:         document.getElementById('f-fristdatum')?.value || '',
@@ -2789,6 +2790,20 @@ async function sendeWebhook() {
     if(spinner) spinner.style.display='none';
     if(st) st.textContent='';
     if (res.ok) {
+      // ── KRITISCH: Response Body lesen und ki_entwurf persistieren ──
+      let responseData = {};
+      try { responseData = await res.clone().json(); } catch(e) {}
+      if (responseData.ki_entwurf) {
+        localStorage.setItem('prova_entwurf_text', responseData.ki_entwurf);
+      }
+      if (responseData.ki_stellungnahme_vorschlag) {
+        localStorage.setItem('prova_ki_stellungnahme_vorschlag', responseData.ki_stellungnahme_vorschlag);
+      }
+      if (responseData.airtable_id) {
+        localStorage.setItem('prova_airtable_id', responseData.airtable_id);
+        sessionStorage.setItem('prova_record_id', responseData.airtable_id);
+      }
+
       // Zeiterfassung abschließen
       const timing = TRACKING.ende();
       if (timing) {
@@ -3399,6 +3414,10 @@ window.weiterZuAnalyse = async function() {
     window.showToast && window.showToast('Bitte Diktat aufnehmen oder Text eingeben.', 'warning');
     return;
   }
+  // KRITISCH: Transkript für stellungnahme.html persistieren
+  localStorage.setItem('prova_transkript', window.transcriptText);
+  // Eingabequelle merken (diktat / manuell) — für stellungnahme.html
+  localStorage.setItem('prova_eingabe_quelle', manuellText ? 'manuell' : 'diktat');
   sessionStorage.setItem('prova_gutachten_vorlage_id',
     typeof defaultVorlageIdBySchadenart === 'function' ? defaultVorlageIdBySchadenart() : 'standard');
 

@@ -21,6 +21,7 @@ exports.handler = async function(event) {
     if (aufgabe === 'fachurteil_entwurf') return await handleFachurteilEntwurf(body, apiKey);
     if (aufgabe === 'qualitaetspruefung') return await handleQualitaetspruefung(body, apiKey);
     if (aufgabe === 'freitext') return await handleFreitext(body, apiKey);
+    if (aufgabe === 'assist_inline') return await handleAssistInline(body, apiKey);
     return await handleMessages(body, apiKey);
   } catch (e) {
     return { statusCode: 502, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }, body: JSON.stringify({ error: 'Upstream error', detail: e.message }) };
@@ -155,4 +156,48 @@ async function callOpenAI(params, apiKey) {
 
 function jsonResponse(data, status = 200) {
   return { statusCode: status, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }, body: JSON.stringify(data) };
+}
+
+/* ── KI-Assist Inline (§6 Fachurteil) ── */
+async function handleAssistInline(body, apiKey) {
+  const { 
+    prompt = '', 
+    user_prompt = '',
+    system_prompt = '',
+    schadenart = '',
+    kontext = {}
+  } = body;
+
+  const userMsg = user_prompt || prompt;
+  if (!userMsg || userMsg.length < 3) {
+    return jsonResponse({ vorschlag: '' });
+  }
+
+  // Experten-System-Prompt: entweder aus Body (neue stellungnahme.html v6)
+  // oder Fallback auf Standard-Prompt
+  const systemMsg = system_prompt || `Du bist ein öffentlich bestellter und vereidigter (ö.b.u.v.) Bausachverständiger mit 30 Jahren Praxiserfahrung und juristischer Zusatzausbildung. Du hilfst beim Verfassen von §6-Fachurteilen gemäß §407a ZPO.
+
+KERNREGEL: Befundschilderung = Indikativ | Schlussfolgerungen = Konjunktiv II
+BEISPIEL: "wurde festgestellt" (ok) vs. "dürfte zurückzuführen sein" (ok) vs. "ist die Ursache" (FALSCH)
+Schadensfall: ${schadenart}
+NUR korrigierten Text zurückgeben. Keine Kommentare, keine Einleitungen.`;
+
+  const res = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: { 'Authorization': 'Bearer ' + apiKey, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'gpt-4o-mini',
+      temperature: 0.12,
+      max_tokens: 400,
+      messages: [
+        { role: 'system', content: systemMsg },
+        { role: 'user', content: userMsg }
+      ]
+    })
+  });
+
+  if (!res.ok) throw new Error('OpenAI ' + res.status);
+  const data = await res.json();
+  const vorschlag = data.choices?.[0]?.message?.content?.trim() || '';
+  return jsonResponse({ vorschlag });
 }
