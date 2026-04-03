@@ -12,7 +12,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>PROVA — Zentrale</title>
 <script src="theme.js"></script>
-<script src="auth-guard.js"></script>
 <script src="nav.js" defer></script>
 <link rel="stylesheet" href="mobile.css">
   <style>
@@ -1547,7 +1546,10 @@ window.calNav=function(dir){
 ══════════════════════════════════════════════════ */
 zeigSkeleton();
 
-provaAuthGuard();
+// Auth check
+if(!localStorage.getItem('prova_user')){
+  // Kein Redirect — Zentrale zeigt Onboarding auch ohne Login
+}
 
 var svEmail=localStorage.getItem('prova_sv_email')||'';
 
@@ -1767,7 +1769,7 @@ function pwaDismiss() {
 /* ── AUFGABEN: sofort aus Cache, dann Airtable ── */
 
 /* ── PROFIL-VOLLSTÄNDIGKEIT ── */
-(function checkProfil() {
+function checkProfil() {
   var vorname = localStorage.getItem('prova_sv_vorname') || '';
   var firma   = localStorage.getItem('prova_sv_firma')   || '';
   var email   = localStorage.getItem('prova_sv_email')   || '';
@@ -1793,7 +1795,7 @@ function pwaDismiss() {
     
     feed.insertBefore(banner, feed.firstChild);
   }
-})();
+}
 
 function renderAufgabenSofort() {
   var feed = document.getElementById('aufgaben-feed');

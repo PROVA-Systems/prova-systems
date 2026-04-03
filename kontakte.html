@@ -528,15 +528,19 @@ function ladeKontakte() {
 async function syncKontakteVonAirtable() {
   var email = localStorage.getItem('prova_sv_email') || '';
   if (!email) return;
-  var filterFormula = email ? encodeURIComponent('{sv_email}="' + email + '"') : '';
+  // TRUE() holen, client-seitig nach sv_email filtern (verhindert 422 durch doppeltes Encoding)
   var path = '/v0/' + AT_BASE_K + '/' + AT_KONTAKTE
-    + '?maxRecords=200&sort[0][field]=Name&sort[0][direction]=asc'
-    + (filterFormula ? '&filterByFormula=' + filterFormula : '');
+    + '?maxRecords=200&filterByFormula=' + encodeURIComponent('TRUE()');
   var data = await atKontakte('GET', path);
   if (!data || !data.records || !data.records.length) return;
+  // Client-seitig filtern: nur eigene Kontakte
+  var eigeneRecords = data.records.filter(function(rec) {
+    return !rec.fields.sv_email || rec.fields.sv_email === email;
+  });
+  if (!eigeneRecords.length) return;
   // Merge: Airtable-Datensätze in lokale Liste — AT-Datensätze haben Vorrang
   var atIds = {};
-  data.records.forEach(function(rec) {
+  eigeneRecords.forEach(function(rec) {
     var f = rec.fields;
     var k = {
       id: rec.id, // Airtable Record-ID

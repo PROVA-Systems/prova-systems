@@ -122,7 +122,6 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
 }
 </style>
 <script src="theme.js"></script>
-<script src="auth-guard.js"></script>
 <script src="nav.js"></script>
 <script src="trial-guard.js"></script>
 </head>
@@ -227,7 +226,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
 })();
 
 // AUTH
-provaAuthGuard();
+if(!localStorage.getItem('prova_user')){window.location.href='app-login.html';}
 
 // PAKET
 (function(){
@@ -598,17 +597,17 @@ function setChip(val, el){
   if(val){
     // SA-Code → Kategorie-Name
     const saMap={'WS':'Wasserschaden','SC':'Schimmel/Feuchte','BS':'Brandschaden','SS':'Sturmschaden','ES':'Elementarschaden','BA':'Baumängel allgemein'};
-    document.getElementById('filterKat').value=saMap[val]||'';
+    var _fk=document.getElementById('filterKat'); if(_fk) _fk.value=saMap[val]||'';
   } else {
-    document.getElementById('filterKat').value='';
+    var _fk2=document.getElementById('filterKat'); if(_fk2) _fk2.value='';
   }
   renderPositionen();
 }
 
 function getFiltered(){
   const q=(document.getElementById('searchInput').value||'').toLowerCase().trim();
-  const kat=document.getElementById('filterKat').value;
-  const sub=document.getElementById('filterSub').value;
+  const kat=(document.getElementById('filterKat')||{value:''}).value;
+  const sub=(document.getElementById('filterSub')||{value:''}).value;
   return POSITIONEN_DB.filter(p=>{
     if(kat && p.kat!==kat) return false;
     if(sub && p.sub!==sub) return false;
