@@ -1114,9 +1114,9 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
 
             <!-- KI-Tipp -->
-            <div style="background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.2);border-radius:10px;padding:12px 14px;margin-bottom:14px;">
-              <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#f59e0b;margin-bottom:6px;">💡 Diktat-Tipp</div>
-              <div id="step2-tipp" style="font-size:12px;color:#1a2236;line-height:1.5;font-weight:500;">Beschreiben Sie: Lage des Schadens, gemessene Feuchte- oder Temperaturwerte, Bauphase und Baujahr.</div>
+            <div style="background:#1a2f52;border:1px solid rgba(79,142,247,.3);border-radius:10px;padding:12px 14px;margin-bottom:14px;">
+              <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#7eb3ff;margin-bottom:6px;">💡 Diktat-Tipp</div>
+              <div id="step2-tipp" style="font-size:12px;color:#cdd8ef;line-height:1.6;font-weight:400;">Beschreiben Sie: Lage des Schadens, gemessene Feuchte- oder Temperaturwerte, Bauphase und Baujahr.</div>
             </div>
 
             <!-- Buttons -->
@@ -3385,16 +3385,17 @@ window.sendeWebhookMitOfflineFallback = async function() {
 };
 
 // weiterZuAnalyse patchen damit es den Offline-Wrapper nutzt
-const _origWeiterZuAnalyse = window.weiterZuAnalyse;
 window.weiterZuAnalyse = async function() {
-  // Sync: falls Nutzer direkt im Transkript-Bereich getippt hat
-  const ta = document.getElementById('transcriptArea');
-  if (ta) window.transcriptText = ta.innerText.trim();
-  if (window.diktatMode === 'text') {
-    const manuellTa = document.getElementById('transcriptManuell');
-    window.transcriptText = (manuellTa && manuellTa.value) ? manuellTa.value.trim() : window.transcriptText;
-  }
-  if (!(window.transcriptText || '').trim()) {
+  // ── BEIDE Quellen prüfen — manuelle Eingabe hat Vorrang ──
+  var manuellTa = document.getElementById('transcriptManuell');
+  var manuellText = (manuellTa && manuellTa.value) ? manuellTa.value.trim() : '';
+  var taEl = document.getElementById('transcriptArea');
+  var diktatText = (taEl && taEl.innerText) ? taEl.innerText.trim() : '';
+  // Placeholder herausfiltern
+  if (diktatText === 'Aufnahme starten oder unten eingeben.') diktatText = '';
+  // Manuelle Eingabe hat Vorrang
+  window.transcriptText = manuellText || diktatText || (window.transcriptText || '').trim();
+  if (!window.transcriptText.trim()) {
     window.showToast && window.showToast('Bitte Diktat aufnehmen oder Text eingeben.', 'warning');
     return;
   }
