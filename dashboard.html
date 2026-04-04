@@ -706,7 +706,7 @@
         <!-- Paket Badge -->
         <span class="topbar-paket" id="topbar-paket-badge" style="display:none;"></span>
         <!-- Einstellungen -->
-        <a href="archiv.html" style="display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:8px;transition:background .12s;text-decoration:none;color:var(--text);" onmouseover="this.style.background='rgba(255,255,255,.04)'" onmouseout="this.style.background=''">
+        <a href="archiv.html" style="display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:8px;transition:background .12s;text-decoration:none;color:var(--text);" onmouseover="this.style.background='rgba(255,255,255,.04)'" onmouseout="this.style.background='rgba(0,0,0,0)'">
               <span style="font-size:16px;width:24px;text-align:center;">📂</span>
               <span style="font-size:13px;font-weight:500;">Alle Fälle</span>
             </a>
@@ -894,6 +894,7 @@ var vorname = localStorage.getItem('prova_sv_vorname') || '';
 var paketColors = {Solo:'#4f8ef7',Team:'#a78bfa',Starter:'#4f8ef7',Pro:'#4f8ef7',Enterprise:'#a78bfa'};
 var pc = paketColors[paket] || paketColors.Solo;
 var maxKontingent = paket==='Solo' ? 25 : paket==='Team' ? 75 : 5;
+window.maxKontingent = maxKontingent;
 
 /* ── Paket Badge ── */
 (function(){
@@ -1556,9 +1557,15 @@ var svEmail=localStorage.getItem('prova_sv_email')||'';
 async function ladeAlleDaten(){
   try{
     // Parallel laden
-    var filterFaelle=svEmail?'AND(NOT({Status}=""),{sv_email}="'+svEmail+'")':'NOT({Status}="")';
-    var filterTermine=svEmail?'{sv_email}="'+svEmail+'"':'NOT({termin_datum}="")';
-    var filterRechnungen=svEmail?'AND(OR({Status}="Offen",{Status}="Überfällig"),{sv_email}="'+svEmail+'")':'OR({Status}="Offen",{Status}="Überfällig")';
+    var svAtId = localStorage.getItem('prova_at_sv_record_id') || '';
+    // Filter: sv_email wenn gesetzt, sonst alle Records mit Aktenzeichen (Testphase)
+    var filterFaelle = svEmail
+      ? 'AND(NOT({Status}=""),OR({sv_email}="'+svEmail+'",{Aktenzeichen}!=""))'
+      : 'AND(NOT({Status}=""),{Aktenzeichen}!="")';
+    var filterTermine = svEmail ? '{sv_email}="'+svEmail+'"' : 'NOT({termin_datum}="")';
+    var filterRechnungen = svEmail
+      ? 'AND(OR({Status}="Offen",{Status}="Überfällig"),{sv_email}="'+svEmail+'")'
+      : 'OR({Status}="Offen",{Status}="Überfällig")';
 
     var results=await Promise.all([
       atFetch(AT_FAELLE,filterFaelle,100),
@@ -1800,6 +1807,8 @@ function checkProfil() {
 }
 
 function renderAufgabenSofort() {
+  var paket = localStorage.getItem('prova_paket') || 'Solo';
+  var maxKontingent = window.maxKontingent || (paket==='Solo' ? 25 : paket==='Team' ? 75 : 5);
   var feed = document.getElementById('aufgaben-feed');
   var skel = document.getElementById('aufgaben-skeleton');
   if (!feed) return;

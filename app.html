@@ -2460,39 +2460,33 @@ window.exportFotoAnlage = async function() {
 
   html += '<div class="footer">Erstellt mit PROVA Systems | ' + fotos.length + ' Fotos | ' + datum + '</div>'
     + '<scr' + 'ipt src="trial-guard.js"></' + 'script>'
-    + '
-<script>
-/* ── Auto-grow Textareas ── */
-function autoGrow(el) {
-  el.style.height = 'auto';
-  el.style.height = Math.max(120, el.scrollHeight) + 'px';
-}
-(function() {
-  var ids = ['transcriptManuell', 'transcriptArea', 'diktat-text', 'f-beweisfragen'];
-  ids.forEach(function(id) {
-    var el = document.getElementById(id);
-    if (!el) return;
-    el.style.overflow = 'hidden';
-    el.style.resize = 'none';
-    el.addEventListener('input', function() { autoGrow(this); });
-    autoGrow(el);
-  });
-  // MutationObserver für dynamisch geladene Felder
-  var obs = new MutationObserver(function() {
-    ids.forEach(function(id) {
-      var el = document.getElementById(id);
-      if (el && !el.dataset.autoGrow) {
-        el.dataset.autoGrow = '1';
-        el.style.overflow = 'hidden';
-        el.style.resize = 'none';
-        el.addEventListener('input', function() { autoGrow(this); });
-        autoGrow(el);
-      }
-    });
-  });
-  obs.observe(document.body, {childList: true, subtree: true});
+
 })();
 </script>
+
+<script>
+/* ── Auto-grow Textareas ── */
+(function() {
+  function grow(el) {
+    el.style.height = 'auto';
+    el.style.height = Math.max(80, el.scrollHeight) + 'px';
+  }
+  function attachGrow(el) {
+    if (el.dataset.ag) return;
+    el.dataset.ag = '1';
+    el.style.overflow = 'hidden';
+    el.style.resize = 'none';
+    el.addEventListener('input', function() { grow(this); });
+    grow(el);
+  }
+  function initAll() {
+    document.querySelectorAll('textarea').forEach(attachGrow);
+  }
+  document.addEventListener('DOMContentLoaded', initAll);
+  new MutationObserver(initAll).observe(document.body || document.documentElement, {childList:true, subtree:true});
+})();
+</script>
+
 
 <script>
 /* ════════════════════════════════════════════════════
@@ -2942,7 +2936,9 @@ function sammleDaten() {
     schadensflaeche:    document.getElementById('f-flaeche')?.value || '',
     schadenstiefe:      document.getElementById('f-tiefe')?.value || '',
     messgeraet:         document.getElementById('f-messgeraet')?.value || '',
-    paket:               'Solo',
+    paket:               localStorage.getItem('prova_paket') || 'Solo',
+    sv_email:            localStorage.getItem('prova_sv_email') || '',
+    sv_at_record_id:     localStorage.getItem('prova_at_sv_record_id') || '',
     unterschrift_base64: localStorage.getItem('prova_sv_signatur') || '',
     wl_name:             localStorage.getItem('prova_wl_name') || localStorage.getItem('prova_sv_firma') || '',
     wl_primary_color:    localStorage.getItem('prova_primary_color') || '#4f8ef7',
@@ -5084,7 +5080,8 @@ window.PROVA_AUDIT = (function() {
 <script src="auftragstyp.js"></script>
 <script src="prova-wizard.js"></script>
 <script src="support-chat.js"></script>
-<script src="trial-guard.js">
+<script src="trial-guard.js"></script>
+<script>
 /* ══ PROVA Versicherungen Autocomplete mit Pfeiltasten ══ */
 var VERS_DB = [
   'Allianz','Allianz Versicherung','ARAG','ARAG Versicherung',
