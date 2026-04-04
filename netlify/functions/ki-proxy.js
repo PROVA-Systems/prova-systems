@@ -196,7 +196,7 @@ Gib NUR den korrigierten deutschen Text zurück. Perfekte Grammatik und Zeichens
     body: JSON.stringify({
       model: 'gpt-4o',
       temperature: 0.10,
-      max_tokens: 800,
+      max_tokens: 2000,
       messages: [
         { role: 'system', content: systemMsg },
         { role: 'user', content: userMsg }
