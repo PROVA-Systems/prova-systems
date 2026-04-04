@@ -537,6 +537,8 @@ function renderAkte(){
 
   // Timeline
   renderTimeline(status,f);
+  // Progressive Disclosure: nur phasenrelevante Sections offen
+  applyPhaseVisibility(status);
 
   // Dokumente
   renderDokumente(f);
@@ -828,7 +830,12 @@ window.oeffneFreigabe=function(){
 /* ─── SECTION TOGGLE ─── */
 window.toggleSection=function(id){
   var el=document.getElementById(id);
-  if(el)el.classList.toggle('collapsed');
+  if(el){
+    el.classList.toggle('collapsed');
+    // User-Präferenz merken
+    var isOpen = !el.classList.contains('collapsed');
+    sessionStorage.setItem('prova_sec_' + id, isOpen ? '1' : '0');
+  }
 };
 
 /* ─── NOTIZ SPEICHERN ─── */
@@ -1328,27 +1335,38 @@ window.PROVA_KONTEXT = {
 
 /* ── Phase-basierte Progressive Disclosure ── */
 function applyPhaseVisibility(status) {
-  var phase = 1;
-  if (status === 'In Bearbeitung' || status === 'KI läuft') phase = 2;
-  else if (status === 'Entwurf fertig' || status === 'Freigabe') phase = 3;
-  else if (status === 'Freigegeben' || status === 'Abgeschlossen') phase = 4;
-  
-  // Sections basierend auf Phase öffnen
-  var sections = ['sec-stammdaten', 'sec-ki', 'sec-kosten', 'sec-notizen'];
-  sections.forEach(function(secId, idx) {
-    var sec = document.getElementById(secId);
+  // Phase bestimmen aus Status
+  var phase = 1; // Neu angelegt
+  if (status === 'In Bearbeitung' || status === 'KI läuft' || status === 'Diktat') phase = 2;
+  else if (status === 'Entwurf fertig') phase = 3;
+  else if (status === 'Freigabe' || status === 'Freigegeben' || status === 'Exportiert' || status === 'Abgeschlossen') phase = 4;
+
+  // Sektions-Konfiguration: welche Section in welcher Phase öffnen
+  var sectionConfig = [
+    { id: 'sec-stamm',    openFrom: 1, label: 'Stammdaten' },
+    { id: 'sec-timeline', openFrom: 2, label: 'Status' },
+    { id: 'sec-entwurf',  openFrom: 3, label: 'KI-Entwurf' },
+    { id: 'sec-docs',     openFrom: 3, label: 'Dokumente' },
+    { id: 'sec-notizen',  openFrom: 1, label: 'Notizen' },
+  ];
+
+  sectionConfig.forEach(function(cfg) {
+    var sec = document.getElementById(cfg.id);
     if (!sec) return;
-    var body = sec.querySelector('.section-body');
-    var btn  = sec.querySelector('.cockpit-sec-btn');
-    var shouldOpen = (idx + 1) <= phase;
-    
-    // sessionStorage: User-Präferenz überschreibt Phase
-    var userPref = sessionStorage.getItem('prova_sec_open_' + secId);
-    if (userPref !== null) shouldOpen = userPref === 'true';
-    
-    if (body) body.style.display = shouldOpen ? '' : 'none';
-    if (btn)  btn.setAttribute('aria-expanded', shouldOpen ? 'true' : 'false');
+
+    // User-Präferenz aus sessionStorage hat Vorrang (SV hat manuell geöffnet/geschlossen)
+    var userPref = sessionStorage.getItem('prova_sec_' + cfg.id);
+    var shouldOpen = userPref !== null ? (userPref === '1') : (phase >= cfg.openFrom);
+
+    sec.classList.toggle('collapsed', !shouldOpen);
   });
+
+  // Phase-Badge in Breadcrumb aktualisieren
+  var badge = document.getElementById('phase-badge');
+  if (badge) {
+    var phaseLabels = ['', 'Stammdaten', 'Diktat & KI', 'Entwurf prüfen', 'Abgeschlossen'];
+    badge.textContent = 'Phase ' + phase + ': ' + (phaseLabels[phase] || '');
+  }
 }
 
 </script><script>

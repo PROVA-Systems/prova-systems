@@ -469,6 +469,154 @@ tr:hover td{background:var(--gray-50);}
   border-bottom:1px solid #f3f4f6;color:#111827;}
 .ac-opt:last-child{border-bottom:none;}
 .ac-opt:hover,.ac-opt.hi{background:#eff6ff;color:#2563eb;}
+
+/* ════════════════════════════════════════════════════
+   STEP 2 — Responsive Layout + Touch-Optimierung
+════════════════════════════════════════════════════ */
+
+/* Desktop: 60/40 Split */
+.step2-layout {
+  display: grid;
+  grid-template-columns: 3fr 2fr;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+/* Keyboard-Hints nur auf Nicht-Touch-Geräten */
+.keyboard-hints { display: block; }
+
+/* Mobile Bottom Bar — unsichtbar auf Desktop */
+.mobile-step2-bar { display: none !important; }
+.mobile-record-fab { display: none; }
+
+/* ── Tablet (768–1024px): bleibt zweispaltig, etwas enger ── */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .step2-layout {
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+  .keyboard-hints { display: none; }
+}
+
+/* ── Mobile (< 768px): eine Spalte, Sidebar unten ── */
+@media (max-width: 767px) {
+  .step2-layout {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+  /* Sidebar nach unten (Order 2) */
+  .step2-layout > div:last-child {
+    order: 2;
+    margin-top: 16px;
+    /* Auf Mobile: kompakt, kein sticky */
+    position: static !important;
+    background: var(--navy, #1E3A5F);
+    border-radius: 12px;
+    padding: 14px;
+  }
+  /* Keyboard-Hints verstecken auf Touch */
+  .keyboard-hints { display: none !important; }
+  /* Mobile Bottom Bar einblenden */
+  .mobile-step2-bar {
+    display: flex !important;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 200;
+    padding: 12px 16px env(safe-area-inset-bottom, 12px);
+    background: var(--bg, #0b0d11);
+    border-top: 1px solid rgba(255,255,255,.08);
+    gap: 10px;
+    align-items: center;
+  }
+  /* Analyse-Button in Sidebar auf Mobile verstecken (Bottom Bar übernimmt) */
+  #btn-analyse-starten { display: none; }
+  /* Mehr Platz am Bottom für die Bar */
+  #step2-content { padding-bottom: 80px; }
+  /* Diktat Record-Button größer auf Mobile */
+  .record-btn-main { width: 80px !important; height: 80px !important; }
+}
+
+/* ── Mobile Bottom Bar Elemente ── */
+.mobile-bar-btn-sec {
+  padding: 12px 16px;
+  border-radius: 10px;
+  border: 1.5px solid rgba(255,255,255,.15);
+  background: transparent;
+  color: var(--text2, #8b93ab);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  min-height: 48px;
+  flex-shrink: 0;
+}
+.mobile-bar-btn-pri {
+  flex: 1;
+  padding: 14px;
+  border-radius: 10px;
+  border: none;
+  background: linear-gradient(135deg, #4f8ef7, #3a7be0);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  min-height: 48px;
+}
+.mobile-record-fab {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  border: none;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(239,68,68,.4);
+}
+.mobile-record-fab.recording {
+  background: linear-gradient(135deg, #f97316, #ea580c);
+  animation: pulse-fab 1s ease-in-out infinite;
+}
+@keyframes pulse-fab {
+  0%, 100% { box-shadow: 0 4px 12px rgba(239,68,68,.4); }
+  50% { box-shadow: 0 4px 20px rgba(239,68,68,.7); }
+}
+
+/* ── Touch-Target Mindestgrößen ── */
+@media (max-width: 1024px) {
+  button, a[role="button"] { min-height: 44px; }
+  .diktat-tab { padding: 12px 16px !important; font-size: 14px !important; }
+  input, select, textarea {
+    font-size: 16px !important; /* Verhindert iOS Auto-Zoom */
+    min-height: 44px;
+  }
+}
+
+/* ── Swipe-Indicator (Mobile) ── */
+@media (max-width: 767px) {
+  .step-dots {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 0 4px;
+  }
+  .step-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: rgba(255,255,255,.2);
+    transition: background .2s, transform .2s;
+  }
+  .step-dot.active {
+    background: var(--accent, #4f8ef7);
+    transform: scale(1.3);
+  }
+}
 </style>
 <link rel="icon" type="image/svg+xml" href="/icons/icon-192.svg">
 <link rel="stylesheet" href="mobile.css">
@@ -1021,7 +1169,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
       <!-- Step 2: Diktat & Fotos — Zweispaltig: Links 60% (Diktat, Bereich, Messwerte, Fotos), Rechts 40% sticky blau (Kurzübersicht + Buttons) -->
       <div id="step2-content" style="display:none">
-        <div style="display:grid;grid-template-columns:3fr 2fr;gap:1.5rem;align-items:start">
+        <div class="step2-layout">
           <!-- Linke Spalte (60%) -->
           <div>
             <!-- 1. Diktat-Card: MODERN DARK IMMERSIVE DESIGN -->
@@ -1272,16 +1420,39 @@ document.addEventListener('DOMContentLoaded', function() {
             <!-- KI-Tipp -->
             <div style="background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.2);border-radius:10px;padding:12px 14px;margin-bottom:14px;">
               <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#f59e0b;margin-bottom:6px;">💡 Diktat-Tipp</div>
-              <div id="step2-tipp" style="font-size:11px;color:var(--gray-600);line-height:1.5;">Beschreiben Sie: Lage des Schadens, gemessene Feuchte- oder Temperaturwerte, Bauphase und Baujahr.</div>
+              <div id="step2-tipp" style="font-size:11px;color:rgba(180,190,220,.6);line-height:1.5;">Beschreiben Sie: Lage des Schadens, gemessene Feuchte- oder Temperaturwerte, Bauphase und Baujahr.</div>
+            </div>
+
+            <!-- Auto-Save Indikator -->
+            <div id="step2-autosave" style="display:none;font-size:10px;color:rgba(16,185,129,.8);padding:4px 0 8px;display:flex;align-items:center;gap:5px;">
+              <span style="width:6px;height:6px;border-radius:50%;background:#10b981;display:inline-block;"></span>
+              <span id="step2-autosave-text">Gespeichert · gerade eben</span>
             </div>
 
             <!-- Buttons -->
             <div style="display:flex;flex-direction:column;gap:.6rem;">
-              <button type="button" onclick="goToStep(1)" style="padding:10px;border-radius:9px;border:1.5px solid var(--gray-300,#D1D5DB);background:transparent;color:var(--navy,#1E3A5F);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;">← Zurück zu Stammdaten</button>
-              <button type="button" id="btn-analyse-starten" onclick="weiterZuAnalyse()" style="padding:12px;border-radius:9px;border:none;background:linear-gradient(135deg,#4f8ef7,#3a7be0);color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;">Analyse starten →</button>
+              <button type="button" onclick="goToStep(1)" style="padding:10px;border-radius:9px;border:1.5px solid var(--gray-300,#D1D5DB);background:transparent;color:var(--navy,#1E3A5F);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;">← Stammdaten</button>
+              <button type="button" id="btn-analyse-starten" onclick="weiterZuAnalyse()" style="padding:14px;border-radius:9px;border:none;background:linear-gradient(135deg,#4f8ef7,#3a7be0);color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;min-height:48px;">Analyse starten →</button>
+            </div>
+
+            <!-- Keyboard-Hints (PC only, hidden on touch) -->
+            <div class="keyboard-hints">
+              <div style="font-size:10px;color:rgba(255,255,255,.35);margin-top:10px;line-height:1.8;">
+                <div><kbd style="background:rgba(255,255,255,.1);border-radius:3px;padding:1px 5px;font-size:9px;">Leertaste</kbd> Aufnahme starten/stoppen</div>
+                <div><kbd style="background:rgba(255,255,255,.1);border-radius:3px;padding:1px 5px;font-size:9px;">Strg+Enter</kbd> Analyse starten</div>
+              </div>
             </div>
           </div>
         </div>
+      </div>
+
+      <!-- Mobile Bottom Bar (Step 2) — nur auf Touch-Geräten sichtbar -->
+      <div class="mobile-step2-bar" id="mobile-step2-bar" style="display:none;">
+        <button onclick="goToStep(1)" class="mobile-bar-btn-sec">← Zurück</button>
+        <div class="mobile-record-fab" id="mobile-rec-fab" onclick="toggleRecord()">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/></svg>
+        </div>
+        <button onclick="weiterZuAnalyse()" class="mobile-bar-btn-pri">Analyse →</button>
       </div>
 
       <!-- Step 3: KI-Analyse -->
@@ -1875,13 +2046,20 @@ window.goToStep = function(n) {
   }
   for (let i = 1; i <= 4; i++) document.getElementById('conn-' + i)?.classList.toggle('done', i < n);
   if (n === 2) {
-    var az = document.getElementById('f-schadensnummer')?.value?.trim() || '—';
-    var sa = document.getElementById('f-schadenart')?.value || '—';
+    var az = document.getElementById('f-schadensnummer')?.value?.trim()
+           || sessionStorage.getItem('prova_current_az')
+           || localStorage.getItem('prova_letztes_az') || '—';
+    var sa = document.getElementById('f-schadenart')?.value
+           || sessionStorage.getItem('prova_current_schadenart')
+           || localStorage.getItem('prova_current_schadenart') || '—';
     var str = document.getElementById('f-strasse')?.value || '';
     var plz = document.getElementById('f-plz')?.value || '';
     var ort = document.getElementById('f-ort')?.value || '';
-    var adr = [str, plz, ort].filter(Boolean).join(', ') || '—';
-    var ag = document.getElementById('f-auftraggeber-name')?.value?.trim() || '—';
+    var adr = [str, plz, ort].filter(Boolean).join(', ')
+           || sessionStorage.getItem('prova_current_objekt')
+           || localStorage.getItem('prova_current_objekt') || '—';
+    var ag = document.getElementById('f-auftraggeber-name')?.value?.trim()
+           || localStorage.getItem('prova_letzter_auftraggeber') || '—';
     var elAz = document.getElementById('step2-az'); if (elAz) elAz.textContent = az;
     var elSa = document.getElementById('step2-schadenart'); if (elSa) elSa.textContent = sa;
     var elAdr = document.getElementById('step2-adresse'); if (elAdr) elAdr.textContent = adr;
@@ -2282,7 +2460,148 @@ window.exportFotoAnlage = async function() {
 
   html += '<div class="footer">Erstellt mit PROVA Systems | ' + fotos.length + ' Fotos | ' + datum + '</div>'
     + '<scr' + 'ipt src="trial-guard.js"></' + 'script>'
-    + '</body></html>';
+    + '
+<script>
+/* ── Auto-grow Textareas ── */
+function autoGrow(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.max(120, el.scrollHeight) + 'px';
+}
+(function() {
+  var ids = ['transcriptManuell', 'transcriptArea', 'diktat-text', 'f-beweisfragen'];
+  ids.forEach(function(id) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    el.style.overflow = 'hidden';
+    el.style.resize = 'none';
+    el.addEventListener('input', function() { autoGrow(this); });
+    autoGrow(el);
+  });
+  // MutationObserver für dynamisch geladene Felder
+  var obs = new MutationObserver(function() {
+    ids.forEach(function(id) {
+      var el = document.getElementById(id);
+      if (el && !el.dataset.autoGrow) {
+        el.dataset.autoGrow = '1';
+        el.style.overflow = 'hidden';
+        el.style.resize = 'none';
+        el.addEventListener('input', function() { autoGrow(this); });
+        autoGrow(el);
+      }
+    });
+  });
+  obs.observe(document.body, {childList: true, subtree: true});
+})();
+</script>
+
+<script>
+/* ════════════════════════════════════════════════════
+   PC KEYBOARD-SHORTCUTS + TOUCH/SWIPE NAVIGATION
+   Diktat & Fotos (Step 2)
+════════════════════════════════════════════════════ */
+(function() {
+  /* ── PC: Leertaste = Aufnahme toggle ── */
+  document.addEventListener('keydown', function(e) {
+    if (document.getElementById('step2-content')?.style.display === 'none') return;
+    var activeEl = document.activeElement;
+    var isInput = activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA' || activeEl.contentEditable === 'true');
+
+    // Leertaste = Aufnahme (nur wenn kein Textfeld fokussiert)
+    if (e.code === 'Space' && !isInput) {
+      e.preventDefault();
+      if (typeof toggleRecord === 'function') toggleRecord();
+    }
+    // Strg+Enter = Analyse starten
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+      e.preventDefault();
+      if (typeof weiterZuAnalyse === 'function') weiterZuAnalyse();
+    }
+    // Escape = zurück zu Step 1
+    if (e.key === 'Escape') {
+      var activeInput = document.activeElement;
+      if (!activeInput || activeInput.tagName === 'BODY') {
+        if (typeof goToStep === 'function') goToStep(1);
+      }
+    }
+  });
+
+  /* ── Mobile: FAB Sync mit Record-Zustand ── */
+  var origToggleRecord = window.toggleRecord;
+  if (origToggleRecord) {
+    window.toggleRecord = function() {
+      origToggleRecord.apply(this, arguments);
+      setTimeout(function() {
+        var fab = document.getElementById('mobile-rec-fab');
+        var recBtn = document.getElementById('recBtn');
+        if (fab && recBtn) {
+          var isRec = recBtn.classList.contains('recording');
+          fab.classList.toggle('recording', isRec);
+        }
+      }, 50);
+    };
+  }
+
+  /* ── Mobile: Touch-Swipe für Step-Navigation ── */
+  var touchStartX = 0;
+  var touchStartY = 0;
+  var swipeEl = document.getElementById('step2-content');
+
+  document.addEventListener('touchstart', function(e) {
+    touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
+  }, { passive: true });
+
+  document.addEventListener('touchend', function(e) {
+    if (document.getElementById('step2-content')?.style.display === 'none') return;
+    var dx = e.changedTouches[0].clientX - touchStartX;
+    var dy = e.changedTouches[0].clientY - touchStartY;
+    // Nur horizontale Swipes auswerten (vertikal = Scroll)
+    if (Math.abs(dx) < 60 || Math.abs(dy) > 80) return;
+    // Swipe von Textarea/Input ignorieren
+    var el = document.elementFromPoint(touchStartX, touchStartY);
+    if (el && (el.tagName === 'TEXTAREA' || el.tagName === 'INPUT')) return;
+    // Links-Swipe = Analyse (nur wenn genug Diktat vorhanden)
+    if (dx < -60) {
+      var diktat = localStorage.getItem('prova_transkript') || '';
+      if (diktat.length > 30 && typeof weiterZuAnalyse === 'function') {
+        weiterZuAnalyse();
+      }
+    }
+    // Rechts-Swipe = zurück zu Stammdaten
+    if (dx > 60 && typeof goToStep === 'function') {
+      goToStep(1);
+    }
+  }, { passive: true });
+
+  /* ── Auto-Save Indikator ── */
+  var _saveTimer = null;
+  function zeigeStep2AutoSave() {
+    var hint = document.getElementById('step2-autosave');
+    if (!hint) return;
+    hint.style.display = 'flex';
+    clearTimeout(_saveTimer);
+    _saveTimer = setTimeout(function() {
+      hint.style.display = 'none';
+    }, 3500);
+  }
+  // Hook in Transcript-Changes
+  document.addEventListener('input', function(e) {
+    if (e.target.id === 'transcriptManuell' || e.target.id === 'transcriptArea' || e.target.id === 'f-bereich') {
+      clearTimeout(_saveTimer);
+      _saveTimer = setTimeout(zeigeStep2AutoSave, 1500);
+    }
+  });
+
+  /* ── iOS: Font-Size Fix (verhindert Auto-Zoom beim Fokus) ── */
+  if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
+    document.querySelectorAll('input, select, textarea').forEach(function(el) {
+      el.style.fontSize = '16px';
+    });
+  }
+
+})();
+</script>
+</body></html>';
 
   var w = window.open('', '_blank');
   if (w) {
@@ -2859,6 +3178,14 @@ window.weiterZuAnalyse = async function() {
   }
   // ── KRITISCH: Diktat + Messwerte in localStorage für stellungnahme.html ──
   localStorage.setItem('prova_transkript', transcriptText);
+  // Manuelle Eingabe separat für stellungnahme.html 3-Quellen-Diktat
+  var manuellEl = document.getElementById('transcriptManuell');
+  var manuellText = manuellEl ? manuellEl.value.trim() : '';
+  if (manuellText) localStorage.setItem('prova_manuell_text', manuellText);
+  // Diktat-Nachtrag (leer beim ersten Durchgang — wird später in stellungnahme.html befüllt)
+  if (!localStorage.getItem('prova_diktat_nachtrag')) {
+    localStorage.setItem('prova_diktat_nachtrag', '');
+  }
   const az = document.getElementById('f-schadensnummer')?.value || '';
   const sa = document.getElementById('f-schadenart')?.value || '';
   const baujahr = document.getElementById('f-baujahr')?.value || '';
@@ -4229,10 +4556,15 @@ function starteAufnahmeLimit() {
     var current = azField.value.trim();
     var currentPrefix = current.split('-')[0];
     var neuerPrefix = KUERZEL[schadenart] || 'SON';
-    // AZ neu generieren wenn leer oder Prefix passt nicht zur Schadenart
-    if (!current || currentPrefix !== neuerPrefix) {
+    // AZ: nur Prefix tauschen wenn Nummer schon existiert — KEIN Inkrement
+    if (!current) {
       azField.value = generiereAZ(schadenart);
+    } else if (currentPrefix !== neuerPrefix) {
+      var parts = current.split('-');
+      parts[0] = neuerPrefix;
+      azField.value = parts.join('-');
     }
+    // gleiche Schadenart → AZ unverändert
   }
 
   document.addEventListener('DOMContentLoaded', function() {

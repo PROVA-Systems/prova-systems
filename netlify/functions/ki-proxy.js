@@ -22,6 +22,7 @@ exports.handler = async function(event) {
     if (aufgabe === 'qualitaetspruefung') return await handleQualitaetspruefung(body, apiKey);
     if (aufgabe === 'freitext') return await handleFreitext(body, apiKey);
     if (aufgabe === 'assist_inline') return await handleAssistInline(body, apiKey);
+    if (aufgabe === 'support_chat') return await handleSupportChat(body, apiKey);
     return await handleMessages(body, apiKey);
   } catch (e) {
     return { statusCode: 502, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }, body: JSON.stringify({ error: 'Upstream error', detail: e.message }) };
