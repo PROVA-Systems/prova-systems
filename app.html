@@ -455,6 +455,17 @@ tr:hover td{background:var(--gray-50);}
 @media(max-width:600px){
   .main-content{padding:.75rem .75rem 4.5rem;}
 }
+
+/* ── PROVA Autocomplete (Versicherungen / Gerichte) ── */
+.ac-wrap{position:relative;flex:1;}
+.ac-list{position:absolute;top:calc(100% + 2px);left:0;right:0;z-index:9999;
+  background:#fff;border:1px solid #d1d5db;border-radius:8px;
+  box-shadow:0 4px 16px rgba(0,0,0,.12);max-height:220px;overflow-y:auto;display:none;}
+.ac-list.open{display:block;}
+.ac-opt{padding:8px 12px;font-size:13px;cursor:pointer;
+  border-bottom:1px solid #f3f4f6;color:#111827;}
+.ac-opt:last-child{border-bottom:none;}
+.ac-opt:hover,.ac-opt.hi{background:#eff6ff;color:#2563eb;}
 </style>
 <link rel="icon" type="image/svg+xml" href="/icons/icon-192.svg">
 <link rel="stylesheet" href="mobile.css">
@@ -673,9 +684,9 @@ document.addEventListener('DOMContentLoaded', function() {
       <div class="steps">
         <div class="step active" id="step-1"><div class="step-circle">1</div><span class="step-label">Stammdaten</span></div>
         <div class="step-connector" id="conn-1"></div>
-        <div class="step" id="step-2" onclick="goToStep(2)" style="cursor:pointer;" title="Zu Diktat & Fotos"><div class="step-circle">2</div><span class="step-label">Diktat & Fotos</span></div>
+        <div class="step" id="step-2"><div class="step-circle">2</div><span class="step-label">Diktat & Fotos</span></div>
         <div class="step-connector" id="conn-2"></div>
-        <div class="step" id="step-3" onclick="goToStep(3)" style="cursor:pointer;" title="Zur Analyse"><div class="step-circle">3</div><span class="step-label">Analyse</span></div>
+        <div class="step" id="step-3"><div class="step-circle">3</div><span class="step-label">Analyse</span></div>
         <div class="step-connector" id="conn-3"></div>
         <div class="step" id="step-4"><div class="step-circle">4</div><span class="step-label">Freigabe</span></div>
         <div class="step-connector" id="conn-4"></div>
@@ -684,564 +695,176 @@ document.addEventListener('DOMContentLoaded', function() {
 
       <!-- Step 1: Stammdaten -->
       <div id="step1-content">
-        <div style="display:flex;flex-direction:column;gap:1.25rem;">
-
-          <!-- ═══ SEKTION 1: AUFTRAG & IDENTIFIKATION ═══ -->
-          <div class="card">
-            <div class="card-header" style="display:flex;align-items:center;gap:10px;">
-              <div style="width:28px;height:28px;border-radius:8px;background:rgba(79,142,247,.15);color:#4f8ef7;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;">A</div>
-              <h3 class="card-title" style="margin:0;">Auftrag &amp; Identifikation</h3>
-              <span style="margin-left:auto;font-size:10px;font-weight:600;color:#ef4444;background:rgba(239,68,68,.08);padding:2px 7px;border-radius:4px;">Pflicht</span>
-            </div>
-            <div class="card-body">
-              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
-                <div class="form-group">
-                  <label class="form-label form-label-required">Auftragsart</label>
-                  <!-- Auftragsart: aus Modal vorbelegt, nicht editierbar -->
-                  <div style="display:flex;align-items:center;gap:8px;padding:9px 12px;background:rgba(79,142,247,.06);border:1px solid rgba(79,142,247,.2);border-radius:8px;">
-                    <span id="f-auftragsart-icon" style="font-size:16px;">📋</span>
-                    <span id="f-auftragsart-label" style="font-size:13px;font-weight:600;color:var(--gray-800);">—</span>
-                    <button onclick="PROVA && PROVA.openAuftragstyp && PROVA.openAuftragstyp()" 
-                      style="margin-left:auto;font-size:10px;color:var(--primary-400);background:none;border:none;cursor:pointer;padding:2px 6px;border-radius:4px;font-family:inherit;">
-                      ändern
-                    </button>
-                  </div>
-                  <input type="hidden" id="f-auftragsart" name="auftragsart">
-                </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem">
+          <div>
+            <div class="card">
+              <div class="card-header"><h3 class="card-title">Schadensart & Auftrag</h3></div>
+              <div class="card-body">
                 <div class="form-group">
                   <label class="form-label form-label-required">Schadensart</label>
-                  <select class="form-select" id="f-schadenart" onchange="onSchadenartChange(this.value)">
+                  <select class="form-select" id="f-schadenart">
                     <option value="">Bitte wählen…</option>
+                    <option value="Schimmelbefall" selected>Schimmelbefall</option>
                     <option value="Wasserschaden">Wasserschaden</option>
-                    <option value="Schimmelbefall">Schimmelbefall</option>
-                    <option value="Brandschaden">Brandschaden</option>
                     <option value="Sturmschaden">Sturmschaden</option>
-                    <option value="Baumängel">Baumängel</option>
-                    <option value="Elementarschaden">Elementarschaden</option>
+                    <option value="Brandschaden">Brandschaden</option>
                     <option value="Einbruchschaden">Einbruchschaden</option>
-                    <option value="Sonstige">Sonstige</option>
+                    <option value="Sonstiger Schaden">Sonstiger Schaden</option>
                   </select>
+                  <div class="field-error" id="e-schadenart">Bitte Schadensart wählen</div>
                 </div>
-                <div class="form-group">
-                  <label class="form-label" style="display:flex;align-items:center;gap:5px;">
-                    Aktenzeichen
-                    <span style="font-size:9px;font-weight:600;color:#4f8ef7;background:rgba(79,142,247,.1);padding:1px 5px;border-radius:3px;">auto</span>
-                  </label>
-                  <input class="form-input" id="f-schadensnummer" type="text" placeholder="Wird automatisch vergeben" readonly style="background:rgba(79,142,247,.06);color:#4f8ef7;cursor:default;">
+                <div class="form-row">
+                  <div class="form-group"><label class="form-label">Aktenzeichen</label><input type="text" class="form-input" id="f-schadensnummer" placeholder="SCH-2026-001"></div>
+                  <div class="form-group"><label class="form-label">Schadensdatum</label><input type="date" class="form-input" id="f-schadensdatum"></div>
                 </div>
-              </div>
-              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:12px;">
-                <div class="form-group">
-                  <label class="form-label form-label-required">Schadensdatum</label>
-                  <input class="form-input" id="f-schadensdatum" type="date">
-                </div>
-                <div class="form-group">
-                  <label class="form-label">Auftragsdatum</label>
-                  <input class="form-input" id="f-auftragsdatum" type="date">
-                </div>
-                <div class="form-group">
-                  <label class="form-label" style="display:flex;align-items:center;gap:5px;">
-                    Frist zur Gutachtenabgabe
-                    <span id="f-fristdatum-wrap" style="display:none;" class="badge-auto">optional</span>
-                  </label>
-                  <input class="form-input" id="f-fristdatum" type="date">
-                  <div style="font-size:10px;color:var(--gray-500);margin-top:3px;">Erzeugt automatisch einen Kalender-Eintrag</div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- ═══ SEKTION 2: AUFTRAGGEBER ═══ -->
-          <div class="card">
-            <div class="card-header" style="display:flex;align-items:center;gap:10px;">
-              <div style="width:28px;height:28px;border-radius:8px;background:rgba(16,185,129,.1);color:#059669;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;">AG</div>
-              <h3 class="card-title" style="margin:0;">Auftraggeber</h3>
-              <span style="margin-left:auto;font-size:10px;font-weight:600;color:#ef4444;background:rgba(239,68,68,.08);padding:2px 7px;border-radius:4px;">Pflicht</span>
-            </div>
-            <div class="card-body">
-              <div style="display:grid;grid-template-columns:1fr 2fr;gap:12px;">
-                <div class="form-group">
-                  <label class="form-label form-label-required">Typ</label>
-                  <select class="form-select" id="f-auftraggeber-typ" onchange="onAGTypChange(this.value)">
-                    <option value="">Bitte wählen…</option>
-                    <option value="gericht">Gericht</option>
-                    <option value="versicherung">Versicherung</option>
-                    <option value="anwalt">Anwaltskanzlei</option>
-                    <option value="privat">Privatperson</option>
-                    <option value="unternehmen">Unternehmen</option>
-                    <option value="hausverwaltung">Hausverwaltung</option>
-                  </select>
-                </div>
-                <div class="form-group">
-                  <label class="form-label form-label-required">Name / Gericht / Versicherung</label>
-                  <div style="display:flex;gap:8px;">
-                    <div class="autocomplete-wrap">
-                      <input class="form-input" id="f-auftraggeber-name" type="text" 
-                        placeholder="Name oder Institution — tippen für Vorschläge"
-                        autocomplete="off"
-                        oninput="acSuche(this,'ac-auftraggeber')"
-                        onkeydown="acKeydown(event,'ac-auftraggeber','f-auftraggeber-name')"
-                        onblur="setTimeout(function(){acClose('ac-auftraggeber')},200)"
-                        style="width:100%;">
-                      <div class="autocomplete-list" id="ac-auftraggeber"></div>
-                    </div>
-                    <button type="button" onclick="openKontakteModal('auftraggeber')" style="white-space:nowrap;padding:0 12px;height:38px;border-radius:var(--radius-md);border:1px solid var(--border);background:var(--bg2);color:var(--text2);font-size:11px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:4px;">
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                      Aus Kontakten
-                    </button>
+                <!-- Fristenverwaltung (erscheint bei Gericht) -->
+                <div id="frist-block" style="display:none;background:rgba(79,142,247,.04);border:1px solid rgba(79,142,247,.12);border-radius:10px;padding:14px 16px;margin-bottom:16px;">
+                  <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#4f8ef7;margin-bottom:10px;">⚖️ Gerichtsgutachten — Fristen &amp; Beweisfragen</div>
+                  <div class="form-row">
+                    <div class="form-group"><label class="form-label">Gerichtsaktenzeichen</label><input type="text" class="form-input" id="f-gerichts-az" placeholder="7 OH 12/26"></div>
+                    <div class="form-group"><label class="form-label">Frist zur Gutachtenabgabe</label><input type="date" class="form-input" id="f-fristdatum" onchange="berechneFristWarnung()"></div>
                   </div>
-                  <div style="font-size:10px;color:var(--gray-500);margin-top:3px;">Aus Kontakten wählen oder direkt eingeben</div>
+                  <div id="frist-warnung" style="display:none;padding:8px 12px;border-radius:7px;margin-bottom:10px;font-size:12px;font-weight:600;"></div>
+                  <div class="form-group">
+                    <label class="form-label">Beweisfragen des Gerichts</label>
+                    <textarea class="form-input" id="f-beweisfragen" rows="4" placeholder="1. Liegt ein Mangel vor?&#10;2. Was ist die Ursache?&#10;3. Welche Kosten entstehen?" style="resize:vertical;min-height:80px;line-height:1.6;"></textarea>
+                    <div style="font-size:10px;color:var(--gray-500);margin-top:4px;">Jede Frage in eine neue Zeile. PROVA strukturiert das Gutachten automatisch nach den Beweisfragen.</div>
+                  </div>
                 </div>
-              </div>
-              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:12px;">
+                <script>
+                function berechneFristWarnung(){
+                  var fd=document.getElementById('f-fristdatum');
+                  var warn=document.getElementById('frist-warnung');
+                  if(!fd||!fd.value||!warn)return;
+                  var frist=new Date(fd.value);
+                  var heute=new Date();
+                  var tage=Math.ceil((frist-heute)/(1000*60*60*24));
+                  if(tage<0){
+                    warn.style.display='block';warn.style.background='rgba(239,68,68,.1)';warn.style.color='#ef4444';
+                    warn.textContent='⚠️ Frist überschritten! '+Math.abs(tage)+' Tage überfällig.';
+                  }else if(tage<=7){
+                    warn.style.display='block';warn.style.background='rgba(239,68,68,.1)';warn.style.color='#ef4444';
+                    warn.textContent='🔴 Nur noch '+tage+' Tage bis zur Frist!';
+                  }else if(tage<=21){
+                    warn.style.display='block';warn.style.background='rgba(245,158,11,.1)';warn.style.color='#f59e0b';
+                    warn.textContent='🟡 Noch '+tage+' Tage bis zur Frist.';
+                  }else{
+                    warn.style.display='block';warn.style.background='rgba(16,185,129,.08)';warn.style.color='#10b981';
+                    warn.textContent='✅ Noch '+tage+' Tage bis zur Frist.';
+                  }
+                }
+                // Frist-Block bei Gericht anzeigen
+                var _origSwitchAT = window.switchAuftraggeberTyp || function(){};
+                window.switchAuftraggeberTyp = function(val) {
+                  _origSwitchAT(val);
+                  var fb=document.getElementById('frist-block');
+                  if(fb) fb.style.display=(val==='Gericht')?'block':'none';
+                };
+                </script>
                 <div class="form-group">
-                  <label class="form-label" id="f-ag-ansprechpartner-label">Ansprechpartner / Richter</label>
-                  <input class="form-input" id="f-ansprechpartner" type="text" placeholder="Herr / Frau …">
+                  <label class="form-label form-label-required" style="display:flex;justify-content:space-between;align-items:center;">
+                    <span>Auftraggeber</span>
+                    <button type="button" onclick="oeffneKontaktPicker()" style="padding:3px 9px;background:rgba(79,142,247,.12);border:1px solid rgba(79,142,247,.3);border-radius:5px;color:#93C5FD;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;">👥 Aus Kontakten</button>
+                  </label>
+                  <select class="form-select" id="f-auftraggeber-typ" onchange="switchAuftraggeberTyp(this.value)">
+                    <option value="">Bitte wählen…</option>
+                    <option value="Versicherung">Versicherung</option>
+                    <option value="Privatperson">Privatperson</option>
+                    <option value="Vermieter / Verwaltung">Vermieter / Verwaltung</option>
+                    <option value="WEG / Hausverwaltung">WEG / Hausverwaltung</option>
+                    <option value="Anwaltskanzlei">Anwaltskanzlei</option>
+                    <option value="Gericht">Gericht</option>
+                    <option value="Bauherr">Bauherr</option>
+                    <option value="Wohnungsbaugesellschaft">Wohnungsbaugesellschaft</option>
+                  </select>
                 </div>
                 <div class="form-group">
-                  <label class="form-label form-label-required">E-Mail Auftraggeber</label>
-                  <input class="form-input" id="f-auftraggeber-email" type="email" placeholder="name@domain.de">
-                  <div style="font-size:10px;color:var(--gray-500);margin-top:3px;">Für automatischen E-Mail-Versand des Gutachtens</div>
+                  <label class="form-label form-label-required">Name / Firma</label>
+                  <!-- Immer sichtbares Suchfeld mit Autocomplete -->
+                  <div style="position:relative">
+                    <input type="text" class="form-input" id="f-auftraggeber-name"
+                      placeholder="Name oder Versicherung eingeben…"
+                      autocomplete="organization"
+                      oninput="handleAuftraggeberInput(this.value);acSuche(this,'ac-ag')"
+                      onkeydown="acKeydown(event,'ac-ag','f-auftraggeber-name')"
+                      onblur="setTimeout(()=>{const d=document.getElementById('ag-dropdown');if(d)d.style.display='none';acClose('ac-ag')},200)">
+                    <div id="ag-dropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid var(--gray-200);border-radius:var(--radius-md);box-shadow:0 4px 20px rgba(0,0,0,.12);max-height:220px;overflow-y:auto;z-index:500;"></div>
+                    <div class="ac-list" id="ac-ag"></div>
+                  </div>
+                  <div class="field-error" id="e-auftraggeber-name">Bitte Name oder Versicherung eingeben</div>
                 </div>
-                <div class="form-group">
-                  <label class="form-label">Telefon Auftraggeber</label>
-                  <input class="form-input" id="f-auftraggeber-telefon" type="tel" placeholder="+49 221 …">
-                </div>
-              </div>
-              <!-- Gericht-Name (konditional) -->
-              <div id="f-gericht-name-wrap" style="display:none;margin-top:12px;">
-                <div class="form-group">
-                  <label class="form-label">Gerichtsname (falls abweichend von Auftraggeber)</label>
-                  <input class="form-input" id="f-gericht-name" type="text" placeholder="z.B. Landgericht Köln">
-                </div>
+                <div class="form-group"><label class="form-label form-label-required">E-Mail Auftraggeber</label><input type="email" class="form-input" id="f-auftraggeber-email" placeholder="mueller@vers.de"><div class="field-error" id="e-auftraggeber-email">Bitte gültige E-Mail eingeben</div></div>
+                <div class="form-group"><label class="form-label">Ansprechpartner</label><input type="text" class="form-input" id="f-ansprechpartner" placeholder="Herr Müller"></div>
               </div>
             </div>
           </div>
 
-          <!-- ═══ SEKTION 3: GESCHÄDIGTER ═══ -->
-          <div class="card">
-            <div class="card-header" style="display:flex;align-items:center;gap:10px;">
-              <div style="width:28px;height:28px;border-radius:8px;background:rgba(245,158,11,.1);color:#d97706;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;">GS</div>
-              <h3 class="card-title" style="margin:0;">Geschädigter / Versicherungsnehmer</h3>
-              <span style="margin-left:auto;font-size:10px;color:var(--gray-500);background:var(--bg3);padding:2px 7px;border-radius:4px;">Optional</span>
-            </div>
-            <div class="card-body">
-              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
-                <div class="form-group">
-                  <label class="form-label">Name / Firma</label>
-                  <input class="form-input" id="f-geschaedigter" type="text" placeholder="Familie Schmidt">
+          <div>
+            <div class="card" style="margin-bottom:1.25rem">
+              <div class="card-header"><h3 class="card-title">Objekt / Schadensort</h3></div>
+              <div class="card-body">
+                <div class="form-group"><label class="form-label form-label-required">Straße & Hausnummer</label><input type="text" class="form-input" id="f-strasse" placeholder="Musterstraße 123"><div class="field-error" id="e-strasse">Bitte Straße eingeben</div></div>
+                <div class="form-row">
+                  <div class="form-group"><label class="form-label form-label-required">PLZ</label><input type="text" class="form-input" id="f-plz" placeholder="12345"><div class="field-error" id="e-plz">Pflichtfeld</div></div>
+                  <div class="form-group"><label class="form-label form-label-required">Ort</label><input type="text" class="form-input" id="f-ort" placeholder="Berlin"><div class="field-error" id="e-ort">Pflichtfeld</div></div>
                 </div>
-                <div class="form-group">
-                  <label class="form-label">E-Mail Geschädigter</label>
-                  <input class="form-input" id="f-geschaedigter-email" type="email" placeholder="familie@email.de">
-                  <div style="font-size:10px;color:var(--gray-500);margin-top:3px;">Für Zustellung und Berichts-E-Mail</div>
+                <div class="form-row">
+                  <div class="form-group"><label class="form-label">Gebäudetyp</label><select class="form-select" id="f-gebaeudetyp">
+                      <option value="">Bitte wählen…</option>
+                      <option value="Einfamilienhaus">Einfamilienhaus</option>
+                      <option value="Doppelhaushälfte">Doppelhaushälfte</option>
+                      <option value="Reihenhaus / Reihenmittelhaus">Reihenhaus / Reihenmittelhaus</option>
+                      <option value="Mehrfamilienhaus">Mehrfamilienhaus</option>
+                      <option value="Wohnung / ETW">Wohnung / ETW</option>
+                      <option value="Eigentümergemeinschaft (WEG)">Eigentümergemeinschaft (WEG)</option>
+                      <option value="Bürogebäude">Bürogebäude</option>
+                      <option value="Gewerbegebäude">Gewerbegebäude</option>
+                      <option value="Industriegebäude / Halle">Industriegebäude / Halle</option>
+                      <option value="Gastronomie / Hotel">Gastronomie / Hotel</option>
+                      <option value="Schulgebäude / Kita">Schulgebäude / Kita</option>
+                      <option value="Öffentliches Gebäude">Öffentliches Gebäude</option>
+                      <option value="Sonstiges">Sonstiges</option>
+                    </select></div>
+                  <div class="form-group"><label class="form-label">Baujahr</label><input type="number" class="form-input" id="f-baujahr" placeholder="1968"></div>
                 </div>
-                <div class="form-group">
-                  <label class="form-label">Telefon Geschädigter</label>
-                  <input class="form-input" id="f-geschaedigter-telefon" type="tel" placeholder="+49 …">
-                </div>
+                <div class="form-group"><label class="form-label">Geschädigter / Versicherungsnehmer</label><input type="text" class="form-input" id="f-geschaedigter" placeholder="Familie Schmidt"></div>
               </div>
             </div>
           </div>
+        </div>
 
-          <!-- ═══ SEKTION 4: SCHADENSORT & OBJEKT ═══ -->
-          <div class="card">
-            <div class="card-header" style="display:flex;align-items:center;gap:10px;">
-              <div style="width:28px;height:28px;border-radius:8px;background:rgba(139,92,246,.1);color:#7c3aed;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;">OB</div>
-              <h3 class="card-title" style="margin:0;">Schadensort &amp; Objekt</h3>
-              <span style="margin-left:auto;font-size:10px;font-weight:600;color:#ef4444;background:rgba(239,68,68,.08);padding:2px 7px;border-radius:4px;">Pflicht</span>
-            </div>
-            <div class="card-body">
+
+          <!-- ═══ WORKFLOW-KRITISCHE ZUSATZFELDER ═══ -->
+          <div style="margin-top:16px;padding-top:14px;border-top:1px solid rgba(255,255,255,.07);">
+            <div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);margin-bottom:10px;">Abrechnung & Gericht (optional)</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
               <div class="form-group">
-                <label class="form-label form-label-required">Straße &amp; Hausnummer</label>
-                <input class="form-input" id="f-strasse" type="text" placeholder="Musterstraße 123">
+                <label class="form-label">AG Telefon</label>
+                <input type="tel" id="f-auftraggeber-telefon" class="form-input" placeholder="+49 221 ...">
               </div>
-              <div style="display:grid;grid-template-columns:120px 1fr 1fr;gap:12px;margin-top:12px;">
-                <div class="form-group">
-                  <label class="form-label form-label-required">PLZ</label>
-                  <input class="form-input" id="f-plz" type="text" placeholder="12345" maxlength="5" oninput="autoFillOrt(this.value)">
-                </div>
-                <div class="form-group">
-                  <label class="form-label form-label-required">Ort</label>
-                  <input class="form-input" id="f-ort" type="text" placeholder="Berlin">
-                </div>
-                <div class="form-group">
-                  <label class="form-label">Bundesland</label>
-                  <select class="form-select" id="f-bundesland">
-                    <option value="">Bitte wählen…</option>
-                    <option>Baden-Württemberg</option><option>Bayern</option>
-                    <option>Berlin</option><option>Brandenburg</option>
-                    <option>Bremen</option><option>Hamburg</option>
-                    <option>Hessen</option><option>Mecklenburg-Vorpommern</option>
-                    <option>Niedersachsen</option><option selected>Nordrhein-Westfalen</option>
-                    <option>Rheinland-Pfalz</option><option>Saarland</option>
-                    <option>Sachsen</option><option>Sachsen-Anhalt</option>
-                    <option>Schleswig-Holstein</option><option>Thüringen</option>
-                  </select>
-                </div>
-              </div>
-              <div style="height:1px;background:var(--border);margin:14px 0;"></div>
-              <div style="display:grid;grid-template-columns:1fr 100px 1fr;gap:12px;">
-                <div class="form-group">
-                  <label class="form-label form-label-required">Gebäudetyp</label>
-                  <select class="form-select" id="f-gebaeudetyp">
-                    <option value="">Bitte wählen…</option>
-                    <option value="EFH">Einfamilienhaus (EFH)</option>
-                    <option value="MFH">Mehrfamilienhaus (MFH)</option>
-                    <option value="ETW">Wohnung / ETW</option>
-                    <option value="GEWBE">Gewerbe / Büro</option>
-                    <option value="INDUSTRIE">Industrie / Lager</option>
-                    <option value="SONDER">Sonderbau</option>
-                  </select>
-                </div>
-                <div class="form-group">
-                  <label class="form-label">Baujahr</label>
-                  <input class="form-input" id="f-baujahr" type="number" placeholder="1978" min="1800" max="2025">
-                </div>
-                <div class="form-group">
-                  <label class="form-label">Betroffener Bereich</label>
-                  <input class="form-input" id="f-bereich" type="text" placeholder="z.B. Schlafzimmer OG, Nordwand">
-                </div>
+              <div class="form-group">
+                <label class="form-label">Geschädigter E-Mail</label>
+                <input type="email" id="f-geschaedigter-email" class="form-input" placeholder="familie@email.de">
               </div>
             </div>
-          </div>
-
-          <!-- ═══ SEKTION 5: GERICHTLICHE ANGABEN (konditional) ═══ -->
-          <div class="card" id="sektion-gericht" style="display:none;border-color:rgba(239,68,68,.2);">
-            <div class="card-header" style="display:flex;align-items:center;gap:10px;background:rgba(239,68,68,.04);">
-              <div style="width:28px;height:28px;border-radius:8px;background:rgba(239,68,68,.1);color:#ef4444;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;">GR</div>
-              <h3 class="card-title" style="margin:0;">Gerichtliche Angaben</h3>
-              <span style="margin-left:auto;font-size:10px;font-weight:600;color:#ef4444;background:rgba(239,68,68,.08);padding:2px 7px;border-radius:4px;">Nur Gerichtsgutachten</span>
-            </div>
-            <div class="card-body">
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-                <div class="form-group">
-                  <label class="form-label">Gerichts-Aktenzeichen</label>
-                  <input class="form-input" id="f-gerichts-az" type="text" placeholder="12 O 123/26">
-                </div>
-                <div class="form-group">
-                  <label class="form-label">Beweisbeschluss vom</label>
-                  <input class="form-input" id="f-beweisbeschluss-datum" type="date">
-                </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+              <div class="form-group">
+                <label class="form-label">Honorarart</label>
+                <select id="f-honorar-art" class="form-select" onchange="document.getElementById('f-stundensatz-wrap').style.display=this.value!=='jveg'?'':'none'">
+                  <option value="jveg">JVEG (gesetzlich)</option>
+                  <option value="frei">Frei vereinbart</option>
+                  <option value="pauschal">Pauschal</option>
+                </select>
               </div>
-              <div class="form-group" style="margin-top:12px;">
-                <label class="form-label">Beweisfragen (aus Beweisbeschluss)</label>
-                <textarea class="form-input" id="f-beweisfragen" rows="3" style="resize:vertical;" placeholder="1. Liegt ein Baumangel vor?&#10;2. Welche Maßnahmen sind erforderlich?&#10;3. Wie hoch ist der Schaden?"></textarea>
-                <div style="font-size:10px;color:var(--gray-500);margin-top:3px;">Das Gutachten wird automatisch nach diesen Beweisfragen strukturiert</div>
+              <div class="form-group" id="f-stundensatz-wrap" style="display:none;">
+                <label class="form-label">Stundensatz (€/h)</label>
+                <input type="number" id="f-stundensatz" class="form-input" placeholder="120" min="50" max="500">
               </div>
             </div>
-          </div>
-
-
-          <!-- ═══ VERSICHERUNGSGUTACHTEN ═══ -->
-          <div class="card" id="sektion-versicherung" style="display:none;border-color:rgba(16,185,129,.2);">
-            <div class="card-header" style="display:flex;align-items:center;gap:10px;background:rgba(16,185,129,.04);">
-              <div style="width:28px;height:28px;border-radius:8px;background:rgba(16,185,129,.12);color:#059669;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;">VS</div>
-              <h3 class="card-title" style="margin:0;">Versicherungsangaben</h3>
-              <span style="margin-left:auto;font-size:10px;font-weight:600;color:#059669;background:rgba(16,185,129,.08);padding:2px 7px;border-radius:4px;">Nur Versicherungsgutachten</span>
+            <div class="form-group" id="f-gericht-name-wrap" style="display:none;">
+              <label class="form-label">Gericht</label>
+              <input type="text" id="f-gericht-name" class="form-input" placeholder="z.B. Landgericht Köln">
             </div>
-            <div class="card-body">
-              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
-                <div class="form-group">
-                  <label class="form-label">Versicherungsgesellschaft</label>
-                  <input class="form-input" id="f-vers-gesellschaft" type="text" placeholder="z.B. Allianz, AXA, ERGO">
-                </div>
-                <div class="form-group">
-                  <label class="form-label">Versicherungsscheinnummer</label>
-                  <input class="form-input" id="f-vers-scheinnr" type="text" placeholder="VS-123456789">
-                </div>
-                <div class="form-group">
-                  <label class="form-label">Schadennummer Versicherung</label>
-                  <input class="form-input" id="f-vers-schadennr" type="text" placeholder="SCH-2026-…">
-                </div>
-              </div>
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px;">
-                <div class="form-group">
-                  <label class="form-label">Schadensmeldung vom</label>
-                  <input class="form-input" id="f-vers-meldedatum" type="date">
-                </div>
-                <div class="form-group">
-                  <label class="form-label">Regulierungsbeauftragter</label>
-                  <input class="form-input" id="f-vers-regulierer" type="text" placeholder="Name des Regulierers">
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- ═══ SCHIEDSGUTACHTEN ═══ -->
-          <div class="card" id="sektion-schied" style="display:none;border-color:rgba(139,92,246,.2);">
-            <div class="card-header" style="display:flex;align-items:center;gap:10px;background:rgba(139,92,246,.04);">
-              <div style="width:28px;height:28px;border-radius:8px;background:rgba(139,92,246,.12);color:#7c3aed;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;">SG</div>
-              <h3 class="card-title" style="margin:0;">Schiedsangaben</h3>
-              <span style="margin-left:auto;font-size:10px;font-weight:600;color:#7c3aed;background:rgba(139,92,246,.08);padding:2px 7px;border-radius:4px;">Nur Schiedsgutachten</span>
-            </div>
-            <div class="card-body">
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-                <div class="form-group">
-                  <label class="form-label form-label-required">Partei 1 (Auftraggeber / Kläger)</label>
-                  <input class="form-input" id="f-schied-partei1" type="text" placeholder="Name Partei 1">
-                </div>
-                <div class="form-group">
-                  <label class="form-label form-label-required">Partei 2 (Beklagter / Gegner)</label>
-                  <input class="form-input" id="f-schied-partei2" type="text" placeholder="Name Partei 2">
-                </div>
-              </div>
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px;">
-                <div class="form-group">
-                  <label class="form-label">Schiedsvereinbarung vom</label>
-                  <input class="form-input" id="f-schied-datum" type="date">
-                </div>
-                <div class="form-group">
-                  <label class="form-label">Streitgegenstand</label>
-                  <input class="form-input" id="f-schied-gegenstand" type="text" placeholder="z.B. Werklohn, Mängelbeseitigung">
-                </div>
-              </div>
-              <div class="form-group" style="margin-top:12px;">
-                <label class="form-label">Schiedsfragen (verbindlich für beide Parteien)</label>
-                <textarea class="form-input" id="f-schied-fragen" rows="2" style="resize:vertical;" placeholder="1. Liegen Baumängel vor?&#10;2. Welche Kosten entstehen für die Mängelbeseitigung?"></textarea>
-              </div>
-            </div>
-          </div>
-
-          <!-- ═══ BAUBEGLEITUNG ═══ -->
-          <div class="card" id="sektion-baubegleitung" style="display:none;border-color:rgba(245,158,11,.2);">
-            <div class="card-header" style="display:flex;align-items:center;gap:10px;background:rgba(245,158,11,.04);">
-              <div style="width:28px;height:28px;border-radius:8px;background:rgba(245,158,11,.12);color:#d97706;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;">BB</div>
-              <h3 class="card-title" style="margin:0;">Baubegleitungs-Angaben</h3>
-              <span style="margin-left:auto;font-size:10px;font-weight:600;color:#d97706;background:rgba(245,158,11,.08);padding:2px 7px;border-radius:4px;">Nur Baubegleitung</span>
-            </div>
-            <div class="card-body">
-              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
-                <div class="form-group">
-                  <label class="form-label">Baubeginn</label>
-                  <input class="form-input" id="f-bau-beginn" type="date">
-                </div>
-                <div class="form-group">
-                  <label class="form-label">Geplantes Bauende</label>
-                  <input class="form-input" id="f-bau-ende" type="date">
-                </div>
-                <div class="form-group">
-                  <label class="form-label">Anzahl geplanter Begehungen</label>
-                  <input class="form-input" id="f-bau-begehungen" type="number" placeholder="z.B. 5" min="1" max="50">
-                </div>
-              </div>
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px;">
-                <div class="form-group">
-                  <label class="form-label">Bauvolumen (€ ca.)</label>
-                  <input class="form-input" id="f-bau-volumen" type="number" placeholder="250000">
-                </div>
-                <div class="form-group">
-                  <label class="form-label">Bauphase bei Beginn</label>
-                  <select class="form-select" id="f-bau-phase">
-                    <option value="">Bitte wählen…</option>
-                    <option>Rohbau</option>
-                    <option>Ausbau</option>
-                    <option>Haustechnik</option>
-                    <option>Fassade / Dach</option>
-                    <option>Innenausbau</option>
-                    <option>Fertigstellung</option>
-                  </select>
-                </div>
-              </div>
-              <div class="form-group" style="margin-top:12px;">
-                <label class="form-label">Baubeschreibung / Besonderheiten</label>
-                <textarea class="form-input" id="f-bau-beschreibung" rows="2" style="resize:vertical;" placeholder="Kurze Beschreibung des Bauvorhabens, besondere Herausforderungen…"></textarea>
-              </div>
-            </div>
-          </div>
-
-          <!-- ═══ BAUABNAHME ═══ -->
-          <div class="card" id="sektion-abnahme" style="display:none;border-color:rgba(16,185,129,.2);">
-            <div class="card-header" style="display:flex;align-items:center;gap:10px;background:rgba(16,185,129,.04);">
-              <div style="width:28px;height:28px;border-radius:8px;background:rgba(16,185,129,.12);color:#059669;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;">BA</div>
-              <h3 class="card-title" style="margin:0;">Bauabnahme-Angaben</h3>
-              <span style="margin-left:auto;font-size:10px;font-weight:600;color:#059669;background:rgba(16,185,129,.08);padding:2px 7px;border-radius:4px;">Nur Bauabnahme</span>
-            </div>
-            <div class="card-body">
-              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
-                <div class="form-group">
-                  <label class="form-label form-label-required">Abnahmetermin</label>
-                  <input class="form-input" id="f-abnahme-termin" type="date">
-                </div>
-                <div class="form-group">
-                  <label class="form-label">Checklisten-Typ</label>
-                  <select class="form-select" id="f-abnahme-checkliste">
-                    <option value="">Standard</option>
-                    <option value="efh">Einfamilienhaus komplett</option>
-                    <option value="etw">Eigentumswohnung</option>
-                    <option value="gewerbe">Gewerbe / Büro</option>
-                    <option value="rohbau">Rohbauabnahme</option>
-                    <option value="dach">Dach &amp; Fassade</option>
-                  </select>
-                </div>
-                <div class="form-group">
-                  <label class="form-label">Auftraggeber der Abnahme</label>
-                  <select class="form-select" id="f-abnahme-partei">
-                    <option value="kaeufer">Käufer / Bauherr</option>
-                    <option value="verkaeufer">Verkäufer / Bauträger</option>
-                    <option value="beide">Im Auftrag beider Parteien</option>
-                  </select>
-                </div>
-              </div>
-              <div class="form-group" style="margin-top:12px;">
-                <label class="form-label">Besondere Prüfpunkte</label>
-                <input class="form-input" id="f-abnahme-pruefpunkte" type="text" placeholder="z.B. Keller-Abdichtung, Treppe, Terrasse überprüfen">
-              </div>
-            </div>
-          </div>
-
-          <!-- ═══ BEWEISSICHERUNG ═══ -->
-          <div class="card" id="sektion-beweissicherung" style="display:none;border-color:rgba(79,142,247,.2);">
-            <div class="card-header" style="display:flex;align-items:center;gap:10px;background:rgba(79,142,247,.04);">
-              <div style="width:28px;height:28px;border-radius:8px;background:rgba(79,142,247,.12);color:#4f8ef7;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;">BW</div>
-              <h3 class="card-title" style="margin:0;">Beweissicherungs-Angaben</h3>
-              <span style="margin-left:auto;font-size:10px;font-weight:600;color:#4f8ef7;background:rgba(79,142,247,.08);padding:2px 7px;border-radius:4px;">Nur Beweissicherung</span>
-            </div>
-            <div class="card-body">
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-                <div class="form-group">
-                  <label class="form-label form-label-required">Dokumentationszweck</label>
-                  <select class="form-select" id="f-beweis-zweck">
-                    <option value="">Bitte wählen…</option>
-                    <option value="vor-bau">Vor Baubeginn (Nachbarschaft)</option>
-                    <option value="vor-kauf">Vor Kauf / Übergabe</option>
-                    <option value="streit">Zur Streitvorbeugung</option>
-                    <option value="gericht">Gerichtlich angeordnet</option>
-                    <option value="versicherung">Versicherungsfall</option>
-                  </select>
-                </div>
-                <div class="form-group">
-                  <label class="form-label">Sicherungsdatum</label>
-                  <input class="form-input" id="f-beweis-datum" type="date">
-                </div>
-              </div>
-              <div class="form-group" style="margin-top:12px;">
-                <label class="form-label">Zu sichernde Bereiche / Besonderheiten</label>
-                <textarea class="form-input" id="f-beweis-bereiche" rows="2" style="resize:vertical;" placeholder="z.B. Risse in Außenwand, Feuchtigkeitsflecken Kellerdecke, Bodenbelag EG…"></textarea>
-                <div style="font-size:10px;color:var(--gray-500);margin-top:3px;">Keine Bewertung — reine Dokumentation des Ist-Zustands</div>
-              </div>
-            </div>
-          </div>
-
-          <!-- ═══ KAUFBERATUNG ═══ -->
-          <div class="card" id="sektion-kaufberatung" style="display:none;border-color:rgba(245,158,11,.2);">
-            <div class="card-header" style="display:flex;align-items:center;gap:10px;background:rgba(245,158,11,.04);">
-              <div style="width:28px;height:28px;border-radius:8px;background:rgba(245,158,11,.12);color:#d97706;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;">KB</div>
-              <h3 class="card-title" style="margin:0;">Kaufberatungs-Angaben</h3>
-              <span style="margin-left:auto;font-size:10px;font-weight:600;color:#d97706;background:rgba(245,158,11,.08);padding:2px 7px;border-radius:4px;">Nur Kaufberatung</span>
-            </div>
-            <div class="card-body">
-              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
-                <div class="form-group">
-                  <label class="form-label">Kaufpreis (€ ca.)</label>
-                  <input class="form-input" id="f-kauf-preis" type="number" placeholder="450000">
-                </div>
-                <div class="form-group">
-                  <label class="form-label">Geplanter Kauftermin</label>
-                  <input class="form-input" id="f-kauf-termin" type="date">
-                </div>
-                <div class="form-group">
-                  <label class="form-label">Fokus der Prüfung</label>
-                  <select class="form-select" id="f-kauf-fokus">
-                    <option value="gesamt">Gesamtzustand</option>
-                    <option value="feuchtigkeit">Feuchtigkeit / Keller</option>
-                    <option value="dach">Dach &amp; Fassade</option>
-                    <option value="heizung">Haustechnik / Heizung</option>
-                    <option value="schimmel">Schimmel / Raumluft</option>
-                    <option value="statik">Statik &amp; Tragwerk</option>
-                  </select>
-                </div>
-              </div>
-              <div class="form-group" style="margin-top:12px;">
-                <label class="form-label">Besondere Käufer-Fragen</label>
-                <input class="form-input" id="f-kauf-fragen" type="text" placeholder="z.B. Ist eine Aufstockung möglich? Sind weitere Kosten zu erwarten?">
-              </div>
-            </div>
-          </div>
-
-          <!-- ═══ SANIERUNGSBERATUNG ═══ -->
-          <div class="card" id="sektion-sanierung" style="display:none;border-color:rgba(16,185,129,.2);">
-            <div class="card-header" style="display:flex;align-items:center;gap:10px;background:rgba(16,185,129,.04);">
-              <div style="width:28px;height:28px;border-radius:8px;background:rgba(16,185,129,.12);color:#059669;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;">SB</div>
-              <h3 class="card-title" style="margin:0;">Sanierungsberatungs-Angaben</h3>
-              <span style="margin-left:auto;font-size:10px;font-weight:600;color:#059669;background:rgba(16,185,129,.08);padding:2px 7px;border-radius:4px;">Nur Sanierungsberatung</span>
-            </div>
-            <div class="card-body">
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-                <div class="form-group">
-                  <label class="form-label">Sanierungsziel</label>
-                  <select class="form-select" id="f-san-ziel">
-                    <option value="">Bitte wählen…</option>
-                    <option value="energetisch">Energetische Sanierung</option>
-                    <option value="schaden">Schadensbehebung</option>
-                    <option value="modernisierung">Modernisierung</option>
-                    <option value="foerderung">Fördermittel-optimiert (BAFA/KfW)</option>
-                    <option value="umbau">Umbau / Umnutzung</option>
-                  </select>
-                </div>
-                <div class="form-group">
-                  <label class="form-label">Budgetrahmen (€ ca.)</label>
-                  <input class="form-input" id="f-san-budget" type="number" placeholder="80000">
-                </div>
-              </div>
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px;">
-                <div class="form-group">
-                  <label class="form-label">Förderprogramm gewünscht</label>
-                  <select class="form-select" id="f-san-foerderung">
-                    <option value="nein">Kein Förderprogramm</option>
-                    <option value="kfw">KfW (Bundeskredit)</option>
-                    <option value="bafa">BAFA (Bundesamt)</option>
-                    <option value="land">Länderprogramm NRW</option>
-                    <option value="unbekannt">Prüfung gewünscht</option>
-                  </select>
-                </div>
-                <div class="form-group">
-                  <label class="form-label">Dringlichkeit</label>
-                  <select class="form-select" id="f-san-dringlichkeit">
-                    <option value="normal">Normal (3–6 Monate)</option>
-                    <option value="bald">Bald (1–3 Monate)</option>
-                    <option value="dringend">Dringend (&lt; 1 Monat)</option>
-                    <option value="planung">Langfristig / Planung</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- ═══ SEKTION 6: ABRECHNUNG & HONORAR ═══ -->
-          <div class="card">
-            <div class="card-header" style="display:flex;align-items:center;gap:10px;">
-              <div style="width:28px;height:28px;border-radius:8px;background:var(--bg3);color:var(--text2);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;">€</div>
-              <h3 class="card-title" style="margin:0;">Abrechnung &amp; Honorar</h3>
-              <span style="margin-left:auto;font-size:10px;color:var(--gray-500);background:var(--bg3);padding:2px 7px;border-radius:4px;">Optional</span>
-            </div>
-            <div class="card-body">
-              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
-                <div class="form-group">
-                  <label class="form-label">Honorarart</label>
-                  <select class="form-select" id="f-honorar-art" onchange="onHonorarChange(this.value)">
-                    <option value="jveg">JVEG (gesetzlich)</option>
-                    <option value="stundensatz">Stundensatz (frei)</option>
-                    <option value="pauschal">Pauschalhonorar</option>
-                  </select>
-                </div>
-                <div class="form-group" id="f-stundensatz-wrap" style="display:none;">
-                  <label class="form-label">Stundensatz (€/h)</label>
-                  <input class="form-input" id="f-stundensatz" type="number" placeholder="120" min="50" max="500">
-                </div>
-                <div class="form-group">
-                  <label class="form-label">Kostenvorschuss beantragt</label>
-                  <select class="form-select" id="f-kostenvorschuss">
-                    <option value="nein">Nein</option>
-                    <option value="ja">Ja — Antrag gestellt</option>
-                    <option value="erhalten">Ja — bereits erhalten</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-          </div>
-
-        </div><!-- /flex col </div>
           </div>
 
         <div class="page-actions" style="position:sticky;bottom:0;z-index:50;background:var(--bg,#0b0d11);padding:14px 0;margin-top:16px;border-top:1px solid rgba(255,255,255,.08);">
@@ -1251,14 +874,6 @@ document.addEventListener('DOMContentLoaded', function() {
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
           </button>
         </div>
-      </div>
-
-      <!-- Weiter-Button UNTEN — sichtbar nach Scrollen durch Stammdaten -->
-      <div style="display:flex;justify-content:flex-end;padding:16px 0 8px;border-top:1px solid var(--gray-200);margin-top:8px;" id="step1-footer-bottom">
-        <button class="btn btn-primary" onclick="weiterZuSchritt2()" style="gap:8px;">
-          Weiter zu Diktat &amp; Fotos
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-        </button>
       </div>
 
       <!-- Step 2: Diktat & Fotos — Zweispaltig: Links 60% (Diktat, Bereich, Messwerte, Fotos), Rechts 40% sticky blau (Kurzübersicht + Buttons) -->
@@ -1508,13 +1123,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 <span id="step2-foto-dot" style="width:8px;height:8px;border-radius:50%;background:#d1d5db;display:inline-block;"></span>
                 <span id="step2-foto-label">Keine Fotos</span>
               </div>
-              <div id="step2-foto-mini" style="display:none;margin-top:8px;gap:4px;flex-wrap:wrap;"></div>
+              <div id="step2-foto-mini" style="display:none;margin-top:8px;display:flex;gap:4px;flex-wrap:wrap;"></div>
             </div>
 
             <!-- KI-Tipp -->
-            <div style="background:#1a2f52;border:1px solid rgba(79,142,247,.3);border-radius:10px;padding:12px 14px;margin-bottom:14px;">
-              <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#7eb3ff;margin-bottom:6px;">💡 Diktat-Tipp</div>
-              <div id="step2-tipp" style="font-size:12px;color:#cdd8ef;line-height:1.6;font-weight:400;">Beschreiben Sie: Lage des Schadens, gemessene Feuchte- oder Temperaturwerte, Bauphase und Baujahr.</div>
+            <div style="background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.2);border-radius:10px;padding:12px 14px;margin-bottom:14px;">
+              <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#f59e0b;margin-bottom:6px;">💡 Diktat-Tipp</div>
+              <div id="step2-tipp" style="font-size:11px;color:var(--gray-600);line-height:1.5;">Beschreiben Sie: Lage des Schadens, gemessene Feuchte- oder Temperaturwerte, Bauphase und Baujahr.</div>
             </div>
 
             <!-- Buttons -->
@@ -1545,31 +1160,29 @@ document.addEventListener('DOMContentLoaded', function() {
             <div class="ki-step pending" id="ki-s6"><span class="ki-step-icon">6</span><span>In PROVA gespeichert & Bestätigung gesendet</span></div>
           </div>
           <div id="kiStatusText" style="margin-top:1.25rem;font-size:.8rem;color:var(--gray-500);text-align:center;min-height:1.2em"></div>
-          <!-- FIX: CTA + Vorlage erst nach vollständiger Checkliste sichtbar -->
-          <div id="kiSuccessBox" style="display:none;margin-top:1.5rem;">
-
-            <!-- Vorlage-Wahl: VOR dem CTA (Fix 3) -->
-            <div id="gutachtenVorlageBox" style="margin-bottom:1rem;padding:14px 16px;background:var(--gray-50);border-radius:var(--radius-lg);border:1px solid var(--gray-200);">
-              <div style="font-size:12px;font-weight:600;color:var(--gray-700);margin-bottom:8px;display:flex;align-items:center;gap:6px;">
-                📋 Gutachten-Vorlage wählen
-                <span style="font-size:10px;font-weight:400;color:var(--gray-500);">— beeinflusst §1–§5 Struktur</span>
-              </div>
-              <div id="gutachtenVorlageRadios" class="form-group" style="margin:0;"></div>
-            </div>
-
-            <!-- Einzel-CTA (Fix 1: kein doppelter Heading, Fix 4: keine Normen-Buttons hier) -->
-            <div id="ki-naechste-schritte" style="display:flex;flex-direction:column;gap:8px;">
-              <button onclick="goToGate()" style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:14px 20px;background:linear-gradient(135deg,#4f8ef7,#3a7be0);color:#fff;border:none;border-radius:10px;font-size:.95rem;font-weight:700;cursor:pointer;letter-spacing:.01em;">
-                Weiter zum Fachurteil §6 →
-              </button>
-              <!-- Fix 5: Zur Fall-Akte als Textlink, klar getrennt -->
-              <div style="text-align:center;padding-top:2px;">
-                <a onclick="window.location.href='akte.html?az='+encodeURIComponent(localStorage.getItem('prova_letztes_az')||'')" style="font-size:12px;color:var(--gray-500);cursor:pointer;text-decoration:underline;text-underline-offset:2px;">
-                  Zur Fall-Akte
-                </a>
-              </div>
+          <div id="kiSuccessBox" style="display:none;background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.2);border-radius:.875rem;padding:1rem;margin-top:1.5rem;text-align:center">
+            <div style="font-size:1.1rem;font-weight:700;color:#065F46;margin-bottom:.25rem">✅ Entwurf erfolgreich erstellt!</div>
+            <div style="font-size:.825rem;color:var(--gray-600);margin-bottom:1rem">PROVA hat §1–§5 strukturiert. Jetzt Ihr Fachurteil §6 verfassen.</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin-top:4px;">
+              <button onclick="PROVA.openPanel('normen')" style="padding:6px 12px;border-radius:7px;background:rgba(79,142,247,.1);border:1px solid rgba(79,142,247,.2);color:#4f8ef7;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;">📚 Normen</button>
+              <button onclick="PROVA.openPanel('textbausteine')" style="padding:6px 12px;border-radius:7px;background:rgba(79,142,247,.1);border:1px solid rgba(79,142,247,.2);color:#4f8ef7;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;">📝 Textbausteine</button>
+              <button onclick="PROVA.openPanel('positionen')" style="padding:6px 12px;border-radius:7px;background:rgba(79,142,247,.1);border:1px solid rgba(79,142,247,.2);color:#4f8ef7;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;">🗂️ Positionen</button>
             </div>
           </div>
+          <div id="ki-naechste-schritte" style="display:none;margin-top:1rem;display:flex;flex-direction:column;gap:8px;">
+            <button onclick="goToGate()" style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:13px 20px;background:linear-gradient(135deg,#4f8ef7,#3a7be0);color:#fff;border:none;border-radius:10px;font-size:.9rem;font-weight:700;cursor:pointer;">
+              ⚖️ Weiter zum Fachurteil §6 →
+            </button>
+            <button onclick="window.location.href='akte.html?az='+encodeURIComponent(localStorage.getItem('prova_letztes_az')||'')" style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:10px 20px;background:rgba(79,142,247,.08);color:#4f8ef7;border:1px solid rgba(79,142,247,.25);border-radius:10px;font-size:.85rem;font-weight:600;cursor:pointer;">
+              📂 Zur Fall-Akte
+            </button>
+          </div>
+          <div id="gutachtenVorlageBox" style="display:none;margin-top:1.25rem;text-align:left;padding:1rem;background:var(--gray-50);border-radius:var(--radius-lg);border:1px solid var(--gray-200)">
+            <div style="font-weight:600;color:var(--gray-800);margin-bottom:.5rem">Gutachten-Vorlage wählen</div>
+            <div id="gutachtenVorlageRadios" class="form-group"></div>
+            <button type="button" class="btn btn-outline btn-sm" id="btnVorlageVorschau" onclick="vorlageVorschau()">Vorschau</button>
+          </div>
+          <!-- Buttons in ki-naechste-schritte oben sind ausreichend -->
         </div>
       </div>
     </div>
@@ -2515,24 +2128,7 @@ window.exportFotoAnlage = async function() {
     + '.foto-nr{font-weight:700;color:#2563eb;white-space:nowrap;}'
     + '.footer{text-align:center;font-size:9pt;color:#999;margin-top:30px;padding-top:10px;border-top:1px solid #ddd;}'
     + '@media print{body{margin:1.5cm;}}'
-    + '
-/* ── Autocomplete mit Pfeiltasten ── */
-.autocomplete-wrap { position:relative; flex:1; }
-.autocomplete-list {
-  position:absolute;top:100%;left:0;right:0;z-index:999;
-  background:var(--white);border:1px solid var(--gray-300);
-  border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.12);
-  max-height:220px;overflow-y:auto;display:none;margin-top:2px;
-}
-.autocomplete-list.open { display:block; }
-.ac-item {
-  padding:8px 12px;font-size:13px;cursor:pointer;
-  border-bottom:1px solid var(--gray-100);transition:background .1s;
-}
-.ac-item:last-child { border-bottom:none; }
-.ac-item:hover, .ac-item.focused { background:var(--primary-50);color:var(--primary-600); }
-
-</style></head><body>'
+    + '</style></head><body>'
     + '<div class="header"><h1>Fotodokumentation</h1>'
     + '<div class="sub">Aktenzeichen: ' + az + ' | Datum: ' + datum + (svName ? ' | SV: ' + svName : '') + '</div></div>';
 
@@ -2586,11 +2182,9 @@ window.switchDiktatTab = function(mode) {
   var eingabePanel = document.getElementById('eingabe-panel');
   var tabDiktat = document.getElementById('tab-diktat');
   var tabEingabe = document.getElementById('tab-eingabe');
-  var transSection = document.querySelector('.diktat-transcript-section');
   if (mode === 'diktat') {
     if (diktatPanel) diktatPanel.style.display = 'block';
     if (eingabePanel) eingabePanel.style.display = 'none';
-    if (transSection) transSection.style.display = 'block';
     if (tabDiktat) { tabDiktat.classList.add('active'); tabDiktat.setAttribute('aria-selected','true'); tabDiktat.tabIndex = 0; }
     if (tabEingabe) { tabEingabe.classList.remove('active'); tabEingabe.setAttribute('aria-selected','false'); tabEingabe.tabIndex = -1; }
     var ta = document.getElementById('transcriptManuell');
@@ -2598,7 +2192,6 @@ window.switchDiktatTab = function(mode) {
   } else {
     if (diktatPanel) diktatPanel.style.display = 'none';
     if (eingabePanel) eingabePanel.style.display = 'block';
-    if (transSection) transSection.style.display = 'none';
     if (tabDiktat) { tabDiktat.classList.remove('active'); tabDiktat.setAttribute('aria-selected','false'); tabDiktat.tabIndex = -1; }
     if (tabEingabe) { tabEingabe.classList.add('active'); tabEingabe.setAttribute('aria-selected','true'); tabEingabe.tabIndex = 0; }
     var ta = document.getElementById('transcriptManuell');
@@ -2608,14 +2201,7 @@ window.switchDiktatTab = function(mode) {
 
 window.syncManuellToTranscript = function() {
   var ta = document.getElementById('transcriptManuell');
-  if (ta) {
-    transcriptText = ta.value;
-    // Für stellungnahme.html: Freitext persistent speichern
-    if (ta.value && ta.value.trim().length > 5) {
-      localStorage.setItem('prova_manuell_text', ta.value.trim());
-    }
-  }
-  updateStep2Panel();
+  if (ta) transcriptText = ta.value;
 };
 
 // Tastatursteuerung für Tabs (←/→, Enter/Space)
@@ -2867,7 +2453,6 @@ function sammleDaten() {
   return {
     schadenart:         document.getElementById('f-schadenart')?.value || '',
     schadensnummer:     document.getElementById('f-schadensnummer')?.value || '',
-    aktenzeichen:       document.getElementById('f-schadensnummer')?.value || '', // Alias für G1 Blueprint
     schadensdatum:      document.getElementById('f-schadensdatum')?.value || '',
     gerichts_az:        document.getElementById('f-gerichts-az')?.value || '',
     fristdatum:         document.getElementById('f-fristdatum')?.value || '',
@@ -3113,15 +2698,13 @@ function bauKostenKontext(schadenart) {
    SCHRITT 2 → 3: WEBHOOK
 ============================================================ */
 window.weiterZuAnalyse = async function() {
-  // Sync: BEIDE Quellen prüfen — manuelle Eingabe hat Vorrang
-  var manuellTa = document.getElementById('transcriptManuell');
-  var manuellText = (manuellTa && manuellTa.value) ? manuellTa.value.trim() : '';
+  // Sync: falls Nutzer direkt im Transkript-Bereich getippt hat
   const ta = document.getElementById('transcriptArea');
-  var diktatText = (ta && ta.innerText) ? ta.innerText.trim() : '';
-  // Placeholder-Text herausfiltern
-  if (diktatText === 'Aufnahme starten oder unten eingeben.') diktatText = '';
-  // Manuelle Eingabe hat Vorrang, sonst Diktat
-  transcriptText = manuellText || diktatText || transcriptText.trim();
+  if (ta) transcriptText = ta.innerText.trim();
+  if (diktatMode === 'text') {
+    var manuellTa = document.getElementById('transcriptManuell');
+    transcriptText = (manuellTa && manuellTa.value) ? manuellTa.value.trim() : transcriptText;
+  }
   if (!transcriptText.trim()) {
     showToast('Bitte Diktat aufnehmen oder Text eingeben.', 'warning');
     return;
@@ -3213,20 +2796,6 @@ async function sendeWebhook() {
     if(spinner) spinner.style.display='none';
     if(st) st.textContent='';
     if (res.ok) {
-      // ── KRITISCH: Response Body lesen und ki_entwurf persistieren ──
-      let responseData = {};
-      try { responseData = await res.clone().json(); } catch(e) {}
-      if (responseData.ki_entwurf) {
-        localStorage.setItem('prova_entwurf_text', responseData.ki_entwurf);
-      }
-      if (responseData.ki_stellungnahme_vorschlag) {
-        localStorage.setItem('prova_ki_stellungnahme_vorschlag', responseData.ki_stellungnahme_vorschlag);
-      }
-      if (responseData.airtable_id) {
-        localStorage.setItem('prova_airtable_id', responseData.airtable_id);
-        sessionStorage.setItem('prova_record_id', responseData.airtable_id);
-      }
-
       // Zeiterfassung abschließen
       const timing = TRACKING.ende();
       if (timing) {
@@ -3273,19 +2842,14 @@ async function sendeWebhook() {
       
       const h2 = document.querySelector('#step3-content h2');
       const p  = document.querySelector('#step3-content .ki-header p');
-      // Fix: h2 bleibt als Erfolgs-Heading, kein Duplikat
       if (h2) h2.textContent = 'Entwurf erfolgreich erstellt!';
       if (p)  p.textContent  = 'Sie erhalten in Kürze eine Eingangsbestätigung per E-Mail.';
-      // Success-Box erscheint erst wenn ALLE Schritte done (ki-s6 abgeschlossen = hier)
       const box = document.getElementById('kiSuccessBox');
       if (box) box.style.display = 'block';
-      // Spinner ausblenden — alles fertig
-      const kiSpinner = document.getElementById('kiSpinner');
-      if (kiSpinner) kiSpinner.style.display = 'none';
-      // ki-naechste-schritte ist jetzt INNERHALB kiSuccessBox — kein separates display:flex nötig
-      // Vorlage-Box wird immer gezeigt (direkt vor CTA)
+      const naechste = document.getElementById('ki-naechste-schritte');
+      if (naechste) naechste.style.display = 'flex';
       const vorlageBox = document.getElementById('gutachtenVorlageBox');
-      if (vorlageBox) { renderGutachtenVorlageRadios(GUTACHTEN_VORLAGEN_STARTER_IDS); }
+      if (vorlageBox) { vorlageBox.style.display = 'block'; renderGutachtenVorlageRadios(GUTACHTEN_VORLAGEN_STARTER_IDS); }
       const btnF = document.getElementById('btnFreigabe'), btnN = document.getElementById('btnNeues');
       if (btnF) btnF.style.display = ''; if (btnN) btnN.style.display = '';
       fotos = [];
@@ -3589,56 +3153,37 @@ PROVA.requirePaket = function(feature, minPaket) {
 };
 
 // ── GATE: Nach Analyse → §6-Fachurteil ──
-
-/* ── Step Navigation ── */
+/* ── STEP NAVIGATION ── */
 function goToStep(n) {
-  // Alle Steps ausblenden
-  [1,2,3].forEach(function(i) {
+  for (var i = 1; i <= 5; i++) {
     var el = document.getElementById('step' + i + '-content');
     if (el) el.style.display = (i === n) ? 'block' : 'none';
-    var circle = document.getElementById('step-' + i);
-    if (circle) {
-      circle.classList.remove('active','completed');
-      if (i < n) circle.classList.add('completed');
-      else if (i === n) circle.classList.add('active');
+    var circ = document.getElementById('step-' + i);
+    if (circ) {
+      circ.classList.remove('active','done','completed');
+      if (i < n) circ.classList.add('done');
+      else if (i === n) circ.classList.add('active');
     }
     var conn = document.getElementById('conn-' + i);
-    if (conn) conn.classList.toggle('completed', i < n);
-  });
-  // Scroll nach oben
-  window.scrollTo({top:0, behavior:'smooth'});
-  // Tracking
-  if (window.TRACKING && window.TRACKING.schrittZeiten) {
-    window.TRACKING.schrittZeiten['schritt' + n + '_start'] = new Date().toISOString();
+    if (conn) conn.classList.toggle('done', i < n);
   }
+  window.scrollTo({top: 0, behavior: 'smooth'});
 }
-
+function weiterZuSchritt2() {
+  var sa = document.getElementById('f-schadenart');
+  if (!sa || !sa.value) {
+    if (window.showToast) showToast('Bitte Schadensart wählen', 'warn');
+    if (sa) sa.focus();
+    return;
+  }
+  goToStep(2);
+}
 function weiterZuAnalyse() {
-  // Alias: Step 2 → Step 3 (G1 Webhook senden)
   goToStep(3);
   setTimeout(function() {
     if (typeof sendeWebhook === 'function') sendeWebhook();
   }, 300);
 }
-
-function weiterZuSchritt2() {
-  // Pflichtfelder prüfen
-  var schadenart = document.getElementById('f-schadenart');
-  if (!schadenart || !schadenart.value) {
-    if (window.showToast) showToast('Bitte Schadensart wählen', 'warn');
-    if (schadenart) schadenart.focus();
-    return;
-  }
-  // Stammdaten in localStorage speichern
-  var auftragsart = document.getElementById('f-auftragsart');
-  if (auftragsart && auftragsart.value) {
-    localStorage.setItem('prova_auftragsart', auftragsart.value);
-  }
-  goToStep(2);
-}
-
-function zurueckZuSchritt1() { goToStep(1); }
-function zurueckZuSchritt2() { goToStep(2); }
 
 function goToGate() {
   var az = localStorage.getItem('prova_letztes_az') || '';
@@ -3728,22 +3273,20 @@ async function ladeUndRestoreEntwurf() {
     if (!eintrag || !eintrag.daten) return;
 
     const d = eintrag.daten;
-    // Bei frisch gestartetem Fall (via Auftragstyp-Auswahl) keine Kontakt/Adress-Daten übernehmen
-    const istNeuerFall = !!sessionStorage.getItem('prova_neuer_auftrag');
     const felder = [
       ['f-schadenart',         d.schadenart],
       ['f-schadensnummer',     d.schadensnummer],
       ['f-schadensdatum',      d.schadensdatum],
-      ['f-auftraggeber-typ',   istNeuerFall ? null : d.auftraggeber_typ],
-      ['f-auftraggeber-name',  istNeuerFall ? null : d.auftraggeber_name],
-      ['f-ansprechpartner',    istNeuerFall ? null : d.ansprechpartner],
-      ['f-auftraggeber-email', istNeuerFall ? null : d.auftraggeber_email],
-      ['f-strasse',            istNeuerFall ? null : d.strasse],
-      ['f-plz',                istNeuerFall ? null : d.plz],
-      ['f-ort',                istNeuerFall ? null : d.ort],
+      ['f-auftraggeber-typ',   d.auftraggeber_typ],
+      ['f-auftraggeber-name',  d.auftraggeber_name],
+      ['f-ansprechpartner',    d.ansprechpartner],
+      ['f-auftraggeber-email', d.auftraggeber_email],
+      ['f-strasse',            d.strasse],
+      ['f-plz',                d.plz],
+      ['f-ort',                d.ort],
       ['f-gebaeudetyp',        d.gebaeudetyp],
       ['f-baujahr',            d.baujahr],
-      ['f-geschaedigter',      istNeuerFall ? null : d.geschaedigter],
+      ['f-geschaedigter',      d.geschaedigter],
       ['f-bereich',            d.bereich],
       ['f-feuchte',            d.feuchtemessung],
       ['f-luftfeuchte',        d.luftfeuchtigkeit],
@@ -3775,23 +3318,9 @@ async function ladeUndRestoreEntwurf() {
     }
     if (restored > 0) {
       try { window.updateMesswerteLayout && window.updateMesswerteLayout(); } catch(e) {}
-      // Nur "Wiederhergestellt" wenn dieselbe AZ wie aktuell (echte Fortführung)
-      // Neuer Fall? → kein Wiederhergestellt-Toast
-      var istNeuerFall = sessionStorage.getItem('prova_neuer_fall') === '1';
-      var aktuelleAZ = document.getElementById('f-schadensnummer') && document.getElementById('f-schadensnummer').value;
-      var gespeicherteAZ = d.schadensnummer || '';
-      var istSelbeSession = !istNeuerFall && aktuelleAZ && gespeicherteAZ && aktuelleAZ === gespeicherteAZ;
-      var jetzt = new Date().toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'});
-      if (istSelbeSession) {
+      // Kein Toast bei neuem Fall
+      if (sessionStorage.getItem('prova_neuer_fall') !== '1') {
         window.showToast && window.showToast('Entwurf wiederhergestellt (' + new Date(eintrag.gespeichert_am).toLocaleTimeString('de-DE', {hour:'2-digit',minute:'2-digit'}) + ' Uhr)', 'default', 4000);
-      } else {
-        window.showToast && window.showToast('Sitzung gestartet: ' + jetzt + ' Uhr', 'default', 3000);
-      }
-    } else {
-      // Neuer Auftrag — keine Wiederherstellung
-      var jetzt2 = new Date().toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'});
-      if (sessionStorage.getItem('prova_neuer_auftrag')) {
-        window.showToast && window.showToast('Sitzung gestartet: ' + jetzt2 + ' Uhr', 'default', 3000);
       }
     }
   } catch (err) {
@@ -3896,24 +3425,19 @@ window.sendeWebhookMitOfflineFallback = async function() {
 };
 
 // weiterZuAnalyse patchen damit es den Offline-Wrapper nutzt
+const _origWeiterZuAnalyse = window.weiterZuAnalyse;
 window.weiterZuAnalyse = async function() {
-  // ── BEIDE Quellen prüfen — manuelle Eingabe hat Vorrang ──
-  var manuellTa = document.getElementById('transcriptManuell');
-  var manuellText = (manuellTa && manuellTa.value) ? manuellTa.value.trim() : '';
-  var taEl = document.getElementById('transcriptArea');
-  var diktatText = (taEl && taEl.innerText) ? taEl.innerText.trim() : '';
-  // Placeholder herausfiltern
-  if (diktatText === 'Aufnahme starten oder unten eingeben.') diktatText = '';
-  // Manuelle Eingabe hat Vorrang
-  window.transcriptText = manuellText || diktatText || (window.transcriptText || '').trim();
-  if (!window.transcriptText.trim()) {
+  // Sync: falls Nutzer direkt im Transkript-Bereich getippt hat
+  const ta = document.getElementById('transcriptArea');
+  if (ta) window.transcriptText = ta.innerText.trim();
+  if (window.diktatMode === 'text') {
+    const manuellTa = document.getElementById('transcriptManuell');
+    window.transcriptText = (manuellTa && manuellTa.value) ? manuellTa.value.trim() : window.transcriptText;
+  }
+  if (!(window.transcriptText || '').trim()) {
     window.showToast && window.showToast('Bitte Diktat aufnehmen oder Text eingeben.', 'warning');
     return;
   }
-  // KRITISCH: Transkript für stellungnahme.html persistieren
-  localStorage.setItem('prova_transkript', window.transcriptText);
-  // Eingabequelle merken (diktat / manuell) — für stellungnahme.html
-  localStorage.setItem('prova_eingabe_quelle', manuellText ? 'manuell' : 'diktat');
   sessionStorage.setItem('prova_gutachten_vorlage_id',
     typeof defaultVorlageIdBySchadenart === 'function' ? defaultVorlageIdBySchadenart() : 'standard');
 
@@ -4518,12 +4042,17 @@ function starteAufnahmeLimit() {
 /* ── AKTENZEICHEN AUTO-GENERATOR ── */
 (function(){
   var KUERZEL = {
-    'Schimmelbefall': 'SCH',
-    'Wasserschaden':  'WAS',
-    'Sturmschaden':   'STU',
-    'Brandschaden':   'BRA',
-    'Einbruchschaden':'EIN',
-    'Sonstiger Schaden':'SON'
+    'Schimmelbefall':    'SCH',
+    'Wasserschaden':     'WAS',
+    'Sturmschaden':      'STU',
+    'Brandschaden':      'BRA',
+    'Einbruchschaden':   'EIN',
+    'Baumängel':         'BAU',
+    'Elementarschaden':  'ELE',
+    'Beweissicherung':   'BWS',
+    'Kaufberatung':      'KAU',
+    'Sanierungsberatung':'SAN',
+    'Sonstiger Schaden': 'SON'
   };
 
   function generiereAZ(schadenart) {
@@ -4545,8 +4074,10 @@ function starteAufnahmeLimit() {
     if (!schadenart) return;
     // Nur generieren wenn Feld leer oder altes Format (PRO-V etc.)
     var current = azField.value.trim();
-    var hasOldFormat = /^[A-Z]+-[A-Z]+-\d{4}/.test(current);
-    if (!current || hasOldFormat) {
+    var currentPrefix = current.split('-')[0];
+    var neuerPrefix = KUERZEL[schadenart] || 'SON';
+    // AZ neu generieren wenn leer oder Prefix passt nicht zur Schadenart
+    if (!current || currentPrefix !== neuerPrefix) {
       azField.value = generiereAZ(schadenart);
     }
   }
@@ -4562,6 +4093,8 @@ function starteAufnahmeLimit() {
 
   window.generiereAZ = generiereAZ;
   window.aktualisiereAZ = aktualisiereAZ;
+  // Alias für onchange="onSchadenartChange()" im HTML
+  window.onSchadenartChange = function() { aktualisiereAZ(); };
 })();
 </script>
 
@@ -5067,314 +4600,85 @@ window.PROVA_AUDIT = (function() {
 <script src="prova-wizard.js"></script>
 <script src="support-chat.js"></script>
 <script src="trial-guard.js">
-/* ── Keyboard-Navigation ag-dropdown (Pfeil ↑↓ + Enter) ── */
-(function() {
-  var _idx = -1;
-  function getItems() {
-    var drop = document.getElementById('ag-dropdown');
-    return drop && drop.style.display !== 'none' ? Array.from(drop.querySelectorAll('[onmousedown]')) : [];
-  }
-  function highlight(items) {
-    items.forEach(function(el, i) {
-      el.style.background = i === _idx ? '#EFF6FF' : '';
-      el.style.fontWeight = i === _idx ? '700' : '';
-    });
-  }
-  document.addEventListener('keydown', function(e) {
-    var items = getItems();
-    if (!items.length) return;
-    if (e.key === 'ArrowDown') { e.preventDefault(); _idx = Math.min(_idx + 1, items.length - 1); highlight(items); }
-    else if (e.key === 'ArrowUp') { e.preventDefault(); _idx = Math.max(_idx - 1, 0); highlight(items); }
-    else if (e.key === 'Enter' && _idx >= 0) {
-      e.preventDefault();
-      items[_idx].dispatchEvent(new MouseEvent('mousedown', {bubbles:true}));
-      _idx = -1;
-    } else if (e.key === 'Escape') {
-      var drop = document.getElementById('ag-dropdown');
-      if (drop) { drop.style.display = 'none'; drop.innerHTML = ''; }
-      _idx = -1;
-    }
-  });
-  // Reset beim Tippen
-  var inp = document.getElementById('f-auftraggeber-name');
-  if (inp) inp.addEventListener('input', function() { _idx = -1; });
-})();
-
-
-/* ── Stammdaten Step 1 — neue Blueprint-Logik ── */
-function onAuftragsartChange() {
-  var val = (document.getElementById('f-auftragsart') || {}).value || '';
-
-  // Alle typ-spezifischen Sektionen aus/einblenden
-  var sektionenMap = {
-    gericht:       'sektion-gericht',
-    versicherung:  'sektion-versicherung',
-    schied:        'sektion-schied',
-    baubegleitung: 'sektion-baubegleitung',
-    abnahme:       'sektion-abnahme',
-    beweissicherung:'sektion-beweissicherung',
-    kaufberatung:  'sektion-kaufberatung',
-    sanierung:     'sektion-sanierung'
-  };
-  Object.keys(sektionenMap).forEach(function(typ) {
-    var el = document.getElementById(sektionenMap[typ]);
-    if (el) el.style.display = (val === typ) ? 'block' : 'none';
-  });
-
-  // Auftraggeber-Typ vorbelegen
-  var agTyp = document.getElementById('f-auftraggeber-typ');
-  if (agTyp && !agTyp.value) {
-    var agDefaults = {gericht:'gericht', versicherung:'versicherung', privat:'privat', schied:'privat', kaufberatung:'privat', sanierung:'privat'};
-    agTyp.value = agDefaults[val] || '';
-    if (agTyp.value) onAGTypChange(agTyp.value);
-  }
-
-  // Schadensart-Sichtbarkeit: bei Baubegleitung/Abnahme/Beweissicherung/Kauf/Sanierung optional
-  var saGrp = document.getElementById('f-schadenart') && document.getElementById('f-schadenart').closest('.form-group');
-  var saLabel = document.getElementById('f-schadenart') && document.getElementById('f-schadenart').previousElementSibling;
-  var ohneSchadenart = ['baubegleitung','abnahme','beweissicherung','kaufberatung','sanierung'];
-  if (saLabel) {
-    saLabel.querySelector('.form-label-required') && (saLabel.className = ohneSchadenart.includes(val) ? 'form-label' : 'form-label form-label-required');
-  }
-
-  // Toast mit Hinweis auf neue Felder
-  var toastMap = {
-    gericht: 'Gerichtsgutachten — Beweisbeschluss-Angaben sichtbar',
-    versicherung: 'Versicherungsgutachten — Versicherungsangaben sichtbar',
-    schied: 'Schiedsgutachten — Schiedsangaben sichtbar',
-    baubegleitung: 'Baubegleitung — Baubegleitungs-Angaben sichtbar',
-    abnahme: 'Bauabnahme — Abnahme-Angaben sichtbar',
-    beweissicherung: 'Beweissicherung — Dokumentationsangaben sichtbar',
-    kaufberatung: 'Kaufberatung — Kaufangaben sichtbar',
-    sanierung: 'Sanierungsberatung — Sanierungsangaben sichtbar'
-  };
-  if (val && toastMap[val] && typeof zeigToast === 'function') {
-    zeigToast(toastMap[val], 'info', 3000);
-  }
-}
-
-function onAGTypChange(typ) {
-  var label = document.getElementById('f-ag-ansprechpartner-label');
-  if (label) {
-    var labels = {gericht:'Richter / Kammervorsitzender', versicherung:'Sachbearbeiter', anwalt:'Rechtsanwalt', hausverwaltung:'Verwalter', privat:'Ansprechpartner'};
-    label.textContent = labels[typ] || 'Ansprechpartner';
-  }
-  var gerichtWrap = document.getElementById('f-gericht-name-wrap');
-  if (gerichtWrap) gerichtWrap.style.display = typ === 'gericht' ? 'block' : 'none';
-}
-
-function autoFillOrt(plz) {
-  // PLZ → Ort Auto-Fill (vereinfacht für bekannte PLZ-Bereiche)
-  if (plz.length !== 5) return;
-  var ortFeld = document.getElementById('f-ort');
-  var blFeld = document.getElementById('f-bundesland');
-  if (!ortFeld || ortFeld.value) return; // Nicht überschreiben wenn schon gefüllt
-  // Bundesland aus PLZ-Prefix
-  var prefix = parseInt(plz.substring(0, 2));
-  var blMap = {
-    1:'Berlin', 2:'Hamburg', 3:'Niedersachsen', 4:'Nordrhein-Westfalen',
-    5:'Nordrhein-Westfalen', 6:'Hessen', 7:'Baden-Württemberg', 8:'Bayern',
-    9:'Bayern'
-  };
-  var bl = blMap[parseInt(plz.substring(0, 1))];
-  if (bl && blFeld && !blFeld.value) {
-    var opts = blFeld.options;
-    for (var i = 0; i < opts.length; i++) {
-      if (opts[i].text === bl) { blFeld.selectedIndex = i; break; }
-    }
-  }
-}
-
-function openKontakteModal(typ) {
-  // Öffnet Kontakte-Auswahl (bestehende Logik)
-  if (typeof window._openKontakteAuswahl === 'function') {
-    window._openKontakteAuswahl(typ);
-  } else {
-    zeigToast('Kontakte werden geladen…', 'info');
-  }
-}
-
-</script>
-<script>
-// Auftragsart-Label aus sessionStorage befüllen
-(function() {
-  var typMap = {
-    'gerichtsgutachten':     { icon:'⚖️', label:'Gerichtsgutachten' },
-    'versicherungsgutachten':{ icon:'🛡️', label:'Versicherungsgutachten' },
-    'privatgutachten':       { icon:'👤', label:'Privatgutachten' },
-    'schiedsgutachten':      { icon:'⚔️', label:'Schiedsgutachten' },
-    'baubegleitung':         { icon:'🏗️', label:'Baubegleitung' },
-    'bauabnahme':            { icon:'✅', label:'Bauabnahme' },
-    'beweissicherung':       { icon:'📸', label:'Beweissicherung' },
-    'kaufberatung':          { icon:'🏠', label:'Kaufberatung' },
-    'sanierungsberatung':    { icon:'🔧', label:'Sanierungsberatung' },
-  };
-  document.addEventListener('DOMContentLoaded', function() {
-    var raw = sessionStorage.getItem('prova_neuer_auftrag') || '{}';
-    var data = {}; try { data = JSON.parse(raw); } catch(e) {}
-    var typ = (data.auftragstyp || localStorage.getItem('prova_auftragsart') || '').toLowerCase();
-    var info = typMap[typ];
-    var iconEl = document.getElementById('f-auftragsart-icon');
-    var lblEl  = document.getElementById('f-auftragsart-label');
-    var hidEl  = document.getElementById('f-auftragsart');
-    if (info) {
-      if (iconEl) iconEl.textContent = info.icon;
-      if (lblEl)  lblEl.textContent  = info.label;
-      if (hidEl)  hidEl.value        = typ;
-    } else if (lblEl) {
-      lblEl.textContent = 'Bitte Auftragsart wählen';
-      lblEl.style.color = '#d97706';
-    }
-  });
-})();
-
-/* ══ AUTOCOMPLETE — Deutsche Versicherungen + Pfeiltasten ══ */
-var VERSICHERUNGEN_DE = [
-  // A
-  'Allianz','Allianz Versicherung','Allianz Lebensversicherung',
-  'ARAG','ARAG Versicherung',
-  'Alte Leipziger','Alte Oldenburger',
-  'AXA','AXA Versicherung','AXA Krankenversicherung',
-  'AöV','Aachener und Münchener',
-  // B
-  'Barmenia','Barmenia Versicherung',
-  'Basler','Basler Versicherung',
-  'Bayerische','Bayerische Versicherung','Bayerische Beamtenkrankenkasse',
-  'Berliner Versicherung','BHW',
-  'BGAG','BGV',
-  // C
-  'Condor','Continentale',
-  // D
-  'Debeka','Devk','DEVK Versicherungen',
-  'DKV','DKV Krankenversicherung',
-  'Dortmunder Volksversicherung','Dialog',
-  // E
+/* ══ PROVA Versicherungen Autocomplete mit Pfeiltasten ══ */
+var VERS_DB = [
+  'Allianz','Allianz Versicherung','ARAG','ARAG Versicherung',
+  'Alte Leipziger','Alte Oldenburger','AXA','AXA Versicherung',
+  'Barmenia','Basler Versicherung','Bayerische Versicherung',
+  'BGV','BHW','Condor','Continentale','Debeka','DEVK','DEVK Versicherungen',
+  'DKV','DKV Krankenversicherung','Dialog Versicherung',
   'Ergo','Ergo Versicherung','Ergo Direkt',
-  // F
-  'Familienfürsorge','Feuersozietät',
-  'Frankfurter Versicherung',
-  // G
-  'Generali','GEV','GHV','Gothaer',
-  'Gothaer Versicherung','Grundeigentümer-Versicherung',
-  // H
-  'HafenCity Versicherung','Hamburg Mannheimer',
-  'HanseMerkur','Hannoversche',
-  'HDI','HDI Versicherung',
-  'Helvetia','HELAG',
+  'Generali','GEV','Gothaer','Gothaer Versicherung',
+  'Hamburg Mannheimer','HanseMerkur','Hannoversche',
+  'HDI','HDI Versicherung','Helvetia',
   'HUK-Coburg','HUK24',
-  // I
-  'Ideal Versicherung',
-  // J
-  'Janitos',
-  // K
-  'KS-Auxilia','Kravag',
-  // L
-  'LVM','LVM Versicherung',
-  'LBN','Landeskrankenhilfe',
-  // M
-  'Mannheimer','Mecklenburgische',
-  'Munich Re','Münchener Verein',
-  // N
+  'Janitos','KS-Auxilia','Kravag',
+  'LVM','LVM Versicherung','Mecklenburgische','Münchener Verein',
   'Nürnberger','Nürnberger Versicherung',
-  'Nürnberger Lebensversicherung',
-  'NV','Norddeutsche Versicherung',
-  // O
-  'ÖRAG','Ostangler','Öffentliche Versicherung',
-  // P
+  'Öffentliche Versicherung','ÖRAG',
   'Provinzial','Provinzial NordWest','Provinzial Rheinland',
-  // R
   'R+V','R+V Versicherung','R+V Allgemeine Versicherung',
-  'Roland Rechtsschutz','Rheinland Versicherungen',
-  // S
-  'S-Versicherung','Saarland Versicherung','Schwarzmeer und Ostsee',
-  'Signal Iduna','SV SparkassenVersicherung',
-  // T
-  'Talanx',
-  // U
-  'Universa','Uniqa',
-  // V
+  'Roland Rechtsschutz','S-Versicherung','Signal Iduna',
+  'SV SparkassenVersicherung','Talanx','Universa','Uniqa',
   'VGH','VHV','VHV Versicherungen',
-  'Versicherungskammer Bayern',
-  'Victoria','Volksfürsorge',
-  // W
-  'Württembergische','WWK',
-  'WGV','Würzburger Versicherung',
-  // Z
+  'Versicherungskammer Bayern','Victoria','Volksfürsorge',
+  'WGV','Württembergische','WWK',
   'Zurich','Zurich Versicherung',
-  // Gerichte (für Gerichtsgutachten)
+  /* Gerichte */
   'Amtsgericht','Landgericht','Oberlandesgericht',
   'Arbeitsgericht','Finanzgericht','Verwaltungsgericht',
-  'Sozialgericht','Bundesgerichtshof',
+  'Sozialgericht','Bundesgerichtshof','Bundesverwaltungsgericht',
 ];
-
-var _acFocused = -1;
+var _acIdx = -1;
 
 function acSuche(input, listId) {
   var q = (input.value || '').trim().toLowerCase();
   var list = document.getElementById(listId);
   if (!list) return;
-  _acFocused = -1;
+  _acIdx = -1;
   if (q.length < 1) { acClose(listId); return; }
-  
-  var treffer = VERSICHERUNGEN_DE.filter(function(v) {
-    return v.toLowerCase().indexOf(q) === 0; // Beginnt mit
-  }).concat(VERSICHERUNGEN_DE.filter(function(v) {
-    return v.toLowerCase().indexOf(q) > 0; // Enthält
-  }));
-  
-  // Duplikate entfernen, max 8
-  treffer = treffer.filter(function(v,i,a) { return a.indexOf(v)===i; }).slice(0,8);
-  
-  if (!treffer.length) { acClose(listId); return; }
-  
-  var inputId = input.id;
-  list.innerHTML = treffer.map(function(v, i) {
-    return '<div class="ac-item" data-idx="'+i+'" onmousedown="acWaehle(''+listId+'',''+inputId+'',''+v.replace(/'/g,"\'")+'')">'
-      + v.replace(new RegExp('('+q+')', 'gi'), '<strong>$1</strong>')
-      + '</div>';
+  var hits = VERS_DB.filter(function(v){ return v.toLowerCase().startsWith(q); })
+    .concat(VERS_DB.filter(function(v){ return !v.toLowerCase().startsWith(q) && v.toLowerCase().includes(q); }));
+  hits = hits.filter(function(v,i,a){ return a.indexOf(v)===i; }).slice(0,8);
+  if (!hits.length) { acClose(listId); return; }
+  var iid = input.id;
+  list.innerHTML = hits.map(function(v,i){
+    var hl = v.replace(new RegExp('(' + q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + ')', 'gi'), '<strong>$1</strong>');
+    return '<div class="ac-opt" data-v="' + v.replace(/"/g,'&quot;') + '" onmousedown="acPick(event,'' + listId + '','' + iid + '')">' + hl + '</div>';
   }).join('');
   list.classList.add('open');
 }
 
 function acKeydown(e, listId, inputId) {
   var list = document.getElementById(listId);
-  var items = list ? list.querySelectorAll('.ac-item') : [];
-  if (!list || !list.classList.contains('open') || !items.length) return;
-  
-  if (e.key === 'ArrowDown') {
-    e.preventDefault();
-    _acFocused = Math.min(_acFocused + 1, items.length - 1);
-    acHighlight(items);
-  } else if (e.key === 'ArrowUp') {
-    e.preventDefault();
-    _acFocused = Math.max(_acFocused - 1, 0);
-    acHighlight(items);
-  } else if (e.key === 'Enter' && _acFocused >= 0) {
-    e.preventDefault();
-    var val = items[_acFocused].textContent;
-    acWaehle(listId, inputId, val);
-  } else if (e.key === 'Escape') {
-    acClose(listId);
-  }
+  var opts = list ? list.querySelectorAll('.ac-opt') : [];
+  if (!list || !list.classList.contains('open') || !opts.length) return;
+  if (e.key === 'ArrowDown') { e.preventDefault(); _acIdx = Math.min(_acIdx+1, opts.length-1); acHL(opts); }
+  else if (e.key === 'ArrowUp') { e.preventDefault(); _acIdx = Math.max(_acIdx-1, 0); acHL(opts); }
+  else if (e.key === 'Enter' && _acIdx >= 0) { e.preventDefault(); var v = opts[_acIdx].getAttribute('data-v'); acSet(listId, inputId, v); }
+  else if (e.key === 'Escape') { acClose(listId); }
 }
 
-function acHighlight(items) {
-  items.forEach(function(item, i) {
-    item.classList.toggle('focused', i === _acFocused);
-    if (i === _acFocused) item.scrollIntoView({block:'nearest'});
-  });
+function acHL(opts) {
+  opts.forEach(function(o,i){ o.classList.toggle('hi', i===_acIdx); if(i===_acIdx) o.scrollIntoView({block:'nearest'}); });
 }
 
-function acWaehle(listId, inputId, val) {
-  var input = document.getElementById(inputId);
-  if (input) { input.value = val; input.dispatchEvent(new Event('input', {bubbles:true})); }
+function acPick(e, listId, inputId) {
+  e.preventDefault();
+  var v = e.currentTarget.getAttribute('data-v');
+  acSet(listId, inputId, v);
+}
+
+function acSet(listId, inputId, val) {
+  var inp = document.getElementById(inputId);
+  if (inp) { inp.value = val; inp.dispatchEvent(new Event('input',{bubbles:true})); }
   acClose(listId);
-  _acFocused = -1;
+  _acIdx = -1;
 }
 
 function acClose(listId) {
-  var list = document.getElementById(listId);
-  if (list) list.classList.remove('open');
+  var l = document.getElementById(listId);
+  if (l) l.classList.remove('open');
 }
 
 </script>
