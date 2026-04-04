@@ -11,7 +11,7 @@
   <link rel="apple-touch-icon" href="/icons/icon-192.png">
   <meta name="viewport" content="width=device-width,initial-scale=1, viewport-fit=cover">
 <title>Freigabe · PROVA</title>
-<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked@9.1.6/marked.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
 /* Gutachten Markdown Styling */
@@ -747,7 +747,20 @@ function renderDoc(){
   }
 
   const s6=localStorage.getItem('prova_stellungnahme_text')||'';
-  if(s6){ document.getElementById('section6-text').textContent=s6; document.getElementById('section6-block').style.display='block'; }
+  if(s6){
+    var s6El=document.getElementById('section6-text');
+    if(s6El){
+      if(typeof marked!=='undefined'){
+        marked.setOptions({breaks:true,gfm:true});
+        s6El.innerHTML=marked.parse(s6);
+        s6El.style.whiteSpace='normal';
+      } else {
+        s6El.innerHTML=s6.replace(/\n/g,'<br>');
+      }
+    }
+    var s6Block=document.getElementById('section6-block');
+    if(s6Block)s6Block.style.display='block';
+  }
 
   // §7 Offenlegungstext — ab Pro automatisch generieren
   const paket=localStorage.getItem('prova_paket')||'Solo';
@@ -783,8 +796,14 @@ Aktenzeichen: \${azOff} · Erstellt am: \${datumOff} · §5-Prüfbestätigung: \
   const offFinal=offGespeichert||offText;
 
   if(offFinal){
-    document.getElementById('section7-text').textContent=offFinal;
-    document.getElementById('section7-block').style.display='block';
+    var s7El=document.getElementById('section7-text');
+    if(s7El){
+      s7El.innerHTML=offFinal
+        .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+        .replace(/\n/g,'<br>');
+    }
+    var s7Block=document.getElementById('section7-block');
+    if(s7Block)s7Block.style.display='block';
     if(!offGespeichert) localStorage.setItem('prova_offenlegungstext', offText);
   }
 }
