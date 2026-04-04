@@ -1,0 +1,989 @@
+/* ════════════════════════════════════════════════════════════
+   PROVA textbausteine-logic.js
+   Textbausteine — Verwaltung, Speicherung, Preview
+   Extrahiert aus textbausteine.html
+════════════════════════════════════════════════════════════ */
+
+(function(){if(!localStorage.getItem("prova_user"))window.location.href="app-login.html";})();
+
+/* ─────────────────────────────────────────── */
+
+// ============================================================
+// DATEN & KONSTANTEN
+// ============================================================
+const TB_KEY = 'prova_textbausteine_v2'; // v2 = neue Bausteine
+const STARTER_LIMIT = 9999; // Kein Limit — alle Bausteine frei
+
+var KATEGORIEN = {
+  begehung:   {label:'Begehung & Aufnahme',    icon:'🚶', color:'rgba(79,142,247,.15)',  textColor:'#93C5FD'},
+  befund:     {label:'Schadenbeschreibung',     icon:'🔍', color:'rgba(16,185,129,.12)', textColor:'#6ee7b7'},
+  ursache:    {label:'Ursachenanalyse (§5)',    icon:'⚖️', color:'rgba(245,158,11,.12)', textColor:'#fcd34d'},
+  massnahmen: {label:'Maßnahmen & Empfehlung', icon:'🔧', color:'rgba(239,68,68,.1)',   textColor:'#fca5a5'},
+  normen:     {label:'Normzitate',             icon:'📐', color:'rgba(139,92,246,.12)', textColor:'#c4b5fd'},
+};
+
+// ── Standard-Bausteine (werden einmalig angelegt wenn leer) ──
+var STANDARD_BAUSTEINE = [
+  /* ─── BEGEHUNG & AUFNAHME ─── */
+  {kat:'begehung',tag:'',titel:'Ortstermin Standard',
+   text:'Am [DATUM] wurde das Schadensobjekt [ADRESSE] in Anwesenheit von [NAME] ([FUNKTION]) durch den Unterzeichner persönlich besichtigt und aufgenommen. Die örtlichen Verhältnisse wurden durch Lichtbildaufnahmen dokumentiert.',notiz:''},
+
+  {kat:'begehung',tag:'',titel:'Anwesenheitsliste Ortstermin',
+   text:'Bei der Ortsbesichtigung am [DATUM] waren anwesend:\n– [NAME] (Auftraggeber / Versicherungsnehmer)\n– [NAME] (Versicherungsvertreter)\n– [NAME] (Sachverständiger)\n\nWeitere Personen waren nicht zugegen.',notiz:'Ggf. ergänzen'},
+
+  {kat:'begehung',tag:'',titel:'Begehungsprotokoll Räume',
+   text:'Der Unterzeichner hat am [DATUM] die nachfolgend genannten Räumlichkeiten des [GEBÄUDETYP] in [ORT] begangen und aufgenommen:\n\n[RAUM 1]: [KURZBESCHREIBUNG]\n[RAUM 2]: [KURZBESCHREIBUNG]\n[RAUM 3]: [KURZBESCHREIBUNG]\n\nSämtliche Feststellungen beruhen auf dem Augenschein zum Zeitpunkt der Besichtigung.',notiz:''},
+
+  {kat:'begehung',tag:'',titel:'Messtechnik eingesetzt',
+   text:'Zur Beurteilung des Feuchtezustandes wurden folgende Messgeräte eingesetzt: Feuchtemessgerät [GERÄT] (Messmethode: [METHODE]), kalibriert am [DATUM]. Die Messungen erfolgten an repräsentativen Stellen gemäß WTA-Merkblatt 6-1.',notiz:'Kalibrierdatum aktuell halten'},
+
+  {kat:'begehung',tag:'',titel:'Beweissicherung vor Trocknung',
+   text:'Im Rahmen der Beweissicherung vor Beginn von Trocknungsmaßnahmen wurde der Schadensbereich fotografisch und messtechnisch dokumentiert. Eine Probenahme [wurde / wurde nicht] durchgeführt.',notiz:''},
+
+  {kat:'begehung',tag:'',titel:'Akteneinsicht / Unterlagenprüfung',
+   text:'Dem Unterzeichner lagen folgende Unterlagen vor: Baupläne vom [DATUM], Baugenehmigung vom [DATUM], Versicherungspolice Nr. [NUMMER]. Die Unterlagen wurden gesichtet; weiterführende Unterlagen [standen nicht zur Verfügung / wurden nachgereicht].',notiz:''},
+
+  /* ─── SCHADENBESCHREIBUNG ─── */
+  {kat:'befund',tag:'WS',titel:'Leitungswasserschaden Sichtbefund',
+   text:'Im Bereich [RAUM] waren deutliche Durchfeuchtungsspuren an [Decke / Wand / Boden] feststellbar. Die Verfärbungen und Ausblühungen deuten auf einen länger andauernden Feuchteeinfluss hin. Der betroffene Bereich umfasst ca. [FLAECHE] m².',notiz:'Messprotokoll beifügen'},
+
+  {kat:'befund',tag:'WS',titel:'Feuchtemessung Mauerwerk CM',
+   text:'Die Feuchtemessung am Mauerwerk im Bereich [RAUM] nach der Calciumcarbid-Methode (CM) ergab Werte von [MESSWERT] M.-%. Nach WTA-Merkblatt 6-1 gelten Werte über 3,0 M.-% für Mauerziegel als deutlich erhöht. Grenzwert für Trocknungsende: ≤ 3,0 M.-%.',notiz:''},
+
+  {kat:'befund',tag:'WS',titel:'Feuchtemessung Estrich CM',
+   text:'Die CM-Messung des Estrichs im Bereich [RAUM] ergab einen Feuchtegehalt von [MESSWERT] M.-%. Gemäß DIN 18560 und den Verlegehinweisen der Hersteller ist für Zementestriche ein Wert von ≤ 2,0 CM-% vor Belegung einzuhalten.',notiz:''},
+
+  {kat:'befund',tag:'WS',titel:'Feuchtemessung Holz elektrisch',
+   text:'Die Messung der Holzfeuchte im Bereich [RAUM] (Messgerät: [GERÄT], Messmethode: elektrisch-kapazitiv) ergab Werte von [MESSWERT] %. Der Grenzwert nach DIN 68800 für eingebautes Holz im Innenbereich beträgt 18 %. Werte über 20 % gelten als Gefährdungsbereich für Holzfäule.',notiz:''},
+
+  {kat:'befund',tag:'SC',titel:'Schimmelpilzbefall Sichtbefund',
+   text:'Im Bereich [RAUM] wurden auf einer Fläche von ca. [FLAECHE] m² schwarz-grünliche bis schwarze Verfärbungen festgestellt, die auf einen Schimmelpilzbefall hindeuten. Die Beurteilung erfolgt gemäß UBA-Leitfaden "Schimmelpilze in Innenräumen" (2017). Eine mikrobiologische Beprobung [wurde / wurde nicht] veranlasst.',notiz:'Nur Sichtbefund — Laboranalyse ggf. nachfordern'},
+
+  {kat:'befund',tag:'SC',titel:'Wärmebrücke Thermografie',
+   text:'Mittels Infrarot-Thermografie wurden im Bereich [RAUM] Oberflächentemperaturen von min. [MESSWERT] °C gemessen. Bei einer Raumtemperatur von [MESSWERT] °C und einer relativen Luftfeuchte von [MESSWERT] % liegt der Taupunkt bei ca. [MESSWERT] °C. Der Mindestoberflächentemperaturfaktor fRsi beträgt [MESSWERT] und liegt [oberhalb / unterhalb] des Grenzwerts von 0,70 nach DIN 4108-2.',notiz:'fRsi = (Tsi - Te) / (Ti - Te)'},
+
+  {kat:'befund',tag:'BS',titel:'Brandschaden Sichtbefund',
+   text:'Im Bereich [RAUM] wurden flächige Verrußungen, thermische Schädigungen an [Bauteil] sowie Geruchsbelastungen festgestellt. Der Brandbereich erstreckt sich auf ca. [FLAECHE] m². Statisch relevante Bauteile wurden augenscheinlich [nicht] beeinträchtigt; eine statische Überprüfung wird [empfohlen / ist erfolgt].',notiz:''},
+
+  {kat:'befund',tag:'ST',titel:'Sturmschaden Dach',
+   text:'Am Dach des Objektes [ADRESSE] wurden infolge des Sturmereignisses vom [DATUM] (Windstärke laut DWD: [WINDSTÄRKE]) folgende Schäden festgestellt: [BESCHREIBUNG]. Die Abdichtung / Eindeckung ist im Bereich [LAGE] beschädigt. Eindringendes Meteorwasser hat zu [FOLGESCHÄDEN] geführt.',notiz:'DWD-Auskunft beifügen'},
+
+  {kat:'befund',tag:'BA',titel:'Rissschaden Mauerwerk',
+   text:'Im Bereich [RAUM / FASSADE] wurden Risse mit einer Breite von [MESSWERT] mm und einer Länge von ca. [MESSWERT] cm festgestellt. Die Risscharakteristik (Verlauf, Breite, Tiefe) lässt auf [Setzungsrisse / Schwindrisse / Zwängrisse] schließen. Eine Rissbreitenmessung erfolgte gemäß DIN EN 12390.',notiz:''},
+
+  {kat:'befund',tag:'BA',titel:'Toleranzüberschreitung Ebenheit',
+   text:'Die Überprüfung der Ebenheit des Bodens / der Wand im Bereich [RAUM] nach DIN 18202 Tab. 3 ergab Abweichungen von max. [MESSWERT] mm auf einer Messlänge von [MESSLÄNGE] m. Der zulässige Grenzwert beträgt nach DIN 18202 Tab. 3, Zeile [ZEILE] maximal [GRENZWERT] mm und wird somit [eingehalten / überschritten].',notiz:'Stichmaßprotokoll beifügen'},
+
+  /* ─── URSACHENANALYSE §5 ─── */
+  {kat:'ursache',tag:'WS',titel:'Ursache Leitungswasser — Konjunktiv',
+   text:'Als schadensursächlich dürfte eine Undichtigkeit an [BAUTEIL / LEITUNG] in Betracht kommen. Die festgestellten Durchfeuchtungsmuster und die Schadenslokalisation sprechen dafür, dass das Wasser durch [STELLE] eingedrungen sein dürfte. Eine abschließende Ursachenklärung könnte erst nach vollständiger Freilegung der betreffenden Bauteile erfolgen.',notiz:'Konjunktiv II — rechtssicher nach §5 JVEG'},
+
+  {kat:'ursache',tag:'SC',titel:'Ursache Schimmel nutzungsbedingt — Konjunktiv',
+   text:'Die festgestellte Schimmelpilzbildung im Bereich [RAUM] dürfte auf eine Kombination aus baulichen und nutzungsbedingten Faktoren zurückzuführen sein. Das Vorhandensein einer Wärmebrücke im Anschlussbereich [STELLE] dürfte zu einer Absenkung der Oberflächentemperatur geführt haben, was bei der festgestellten Raumluftfeuchte zu Kondensation und in der Folge zu Schimmelpilzwachstum geführt haben dürfte.',notiz:''},
+
+  {kat:'ursache',tag:'SC',titel:'Ursache Schimmel baukonstruktiv — Konjunktiv',
+   text:'Nach den vorliegenden Messbefunden und dem Schadensbild dürfte die Schimmelpilzbildung primär auf baukonstruktive Mängel zurückzuführen sein. Konkret dürfte [BAUTEIL] nicht den Anforderungen der DIN 4108-2 entsprechen, sodass bei normaler Nutzung und üblicher Beheizung Kondensation an der Oberfläche nicht auszuschließen gewesen sein dürfte.',notiz:''},
+
+  {kat:'ursache',tag:'WS',titel:'Ursache ungeklärt — weiterer Klärungsbedarf',
+   text:'Die Schadensursache konnte im Rahmen der Besichtigung nicht abschließend festgestellt werden. Zur weiteren Klärung wären folgende Maßnahmen erforderlich: [MASSNAHME 1], [MASSNAHME 2]. Der Unterzeichner behält sich vor, nach Vorliegen weiterer Untersuchungsergebnisse ergänzend Stellung zu nehmen.',notiz:''},
+
+  {kat:'ursache',tag:'BA',titel:'Ursache Ausführungsmangel — Konjunktiv',
+   text:'Die festgestellten Schäden dürften ihre Ursache in einer nicht fachgerechten Ausführung der [GEWERK]-Arbeiten haben. Konkret dürfte [BESCHREIBUNG DES MANGELS] nicht den anerkannten Regeln der Technik entsprochen haben, was als auslösende Ursache des vorliegenden Schadens in Betracht kommt.',notiz:'Verweis auf VOB/C oder DIN'},
+
+  {kat:'ursache',tag:'BA',titel:'Planungsmangel — Konjunktiv',
+   text:'Nach Durchsicht der vorliegenden Planunterlagen und Auswertung des Schadenbildes dürfte ein Planungsfehler mitursächlich für den vorliegenden Schaden sein. Die in den Plänen vom [DATUM] vorgesehene Konstruktion dürfte den Anforderungen der [NORM] nicht entsprochen haben.',notiz:''},
+
+  {kat:'ursache',tag:'',titel:'Schadensteilung / Mitverschulden',
+   text:'Nach dem vorliegenden Befund dürften sowohl baukonstruktive als auch nutzungsbedingte Einflüsse zum Schadenseintritt beigetragen haben. Der Anteil der [baukonstruktiven / nutzungsbedingten] Einflüsse am Gesamtschaden wird nach sachverständiger Schätzung auf ca. [PROZENT] % veranschlagt.',notiz:'Juristische Einordnung ist Sache des Gerichts'},
+
+  /* ─── MASSNAHMEN & EMPFEHLUNGEN ─── */
+  {kat:'massnahmen',tag:'WS',titel:'Empfehlung Sofortmaßnahmen Wasser',
+   text:'Zur Schadensbegrenzung werden folgende Sofortmaßnahmen empfohlen:\n1. Unterbrechung der Wasserzufuhr [soweit noch nicht erfolgt]\n2. Sicherung gefährdeter Einrichtungsgegenstände\n3. Aufnahme von Staunässe\n4. Einleitung professioneller Trocknungsmaßnahmen (Fachunternehmen)\n\nMit Trocknungsmaßnahmen sollte unverzüglich begonnen werden, da anhaltende Feuchtigkeit zu weiteren Folgeschäden führen kann.',notiz:''},
+
+  {kat:'massnahmen',tag:'WS',titel:'Empfehlung Bautrocknung',
+   text:'Zur nachhaltigen Behebung des Feuchtigkeitsschadens wird empfohlen, unverzüglich mit einer professionellen Bautrocknung zu beginnen. Die Trocknungsdauer dürfte erfahrungsgemäß [MESSWERT] bis [MESSWERT] Wochen betragen, abhängig vom erreichten Feuchtegehalt und den bauphysikalischen Eigenschaften des Bauteils. Trocknungsfortschritte sollten wöchentlich messtechnisch dokumentiert werden.',notiz:'Trocknungsprotokoll anfordern'},
+
+  {kat:'massnahmen',tag:'SC',titel:'Empfehlung Schimmelsanierung',
+   text:'Die festgestellten Schimmelpilzbefälle sollten durch ein auf Schimmelsanierungen spezialisiertes Fachunternehmen gemäß UBA-Leitfaden (2017) beseitigt werden. Bei Befallsflächen über 0,5 m² sind Schutzmaßnahmen für die ausführenden Personen zwingend erforderlich. Nach Abschluss der Sanierung wird ein Freimessprotokoll durch einen unabhängigen Sachverständigen empfohlen.',notiz:'UBA-Leitfaden 2017 beachten'},
+
+  {kat:'massnahmen',tag:'SC',titel:'Empfehlung Lüftungsverhalten',
+   text:'Zur Vorbeugung erneuter Schimmelpilzbildung wird empfohlen, das Lüftungsverhalten anzupassen. Stoßlüften (mehrmals täglich, 5–10 Minuten) ist dem dauerhaften Kippen der Fenster vorzuziehen. Die relative Raumluftfeuchte sollte dauerhaft unter 60 % gehalten werden (Kontrollmessung mittels Hygrometer empfohlen).',notiz:''},
+
+  {kat:'massnahmen',tag:'BS',titel:'Empfehlung Brandsanierung',
+   text:'Die verrußten und thermisch geschädigten Bauteile sind durch ein auf Brandsanierungen spezialisiertes Fachunternehmen zu reinigen oder zurückzubauen. Statisch relevante Bauteile sind vor Wiederbenutzung durch einen Tragwerksplaner zu überprüfen. Die Schadstoffbelastung durch [Ruß / Löschwasser / Asbest] ist durch geeignete Messungen zu ermitteln.',notiz:''},
+
+  {kat:'massnahmen',tag:'BA',titel:'Empfehlung Rissüberwachung',
+   text:'Die festgestellten Risse sollten durch Gipsmarken oder Rissmonitore überwacht werden, um einen etwaigen Fortschritt zu dokumentieren. Eine erneute Begehung nach [ZEITRAUM] Monaten wird empfohlen. Bis zum Abschluss der Ursachenklärung sollte von Instandsetzungsmaßnahmen abgesehen werden.',notiz:''},
+
+  {kat:'massnahmen',tag:'',titel:'Empfehlung Fachplaner einschalten',
+   text:'Für die Planung und Überwachung der erforderlichen Instandsetzungsmaßnahmen wird die Hinzuziehung eines [Architekten / Fachplaners / Tragwerksplaners] empfohlen. Die Instandsetzungsarbeiten sollten durch ein geeignetes Fachunternehmen nach schriftlicher Angebotseinholung ausgeführt werden.',notiz:''},
+
+  {kat:'massnahmen',tag:'WS',titel:'Schadenshöhe / Kostenschätzung',
+   text:'Die Kosten für die erforderliche Instandsetzung werden auf Basis der vorliegenden Feststellungen überschlägig auf ca. [BETRAG] € (netto) geschätzt. Diese Schätzung basiert auf Erfahrungswerten und ersetzt kein förmliches Leistungsverzeichnis. Für eine verbindliche Kostenfeststellung ist ein Fachunternehmen zu beauftragen.',notiz:''},
+
+  /* ─── NORMZITATE ─── */
+  {kat:'normen',tag:'SC',titel:'DIN 4108-2 fRsi-Wert',
+   text:'Gemäß DIN 4108-2:2013-02, Abschnitt 4.3 ist an wärmeübertragenden Außenbauteilen ein Mindestoberflächentemperaturfaktor fRsi ≥ 0,70 einzuhalten. Bei einer Raumtemperatur von 20 °C und einer relativen Luftfeuchte von 50 % liegt der Taupunkt bei ca. 9,3 °C. Eine Oberflächentemperatur unter diesem Wert führt zu Kondensation und begünstigt Schimmelpilzwachstum.',notiz:'Immer bei Schimmelgutachten zitieren'},
+
+  {kat:'normen',tag:'WS',titel:'WTA-Merkblatt 6-1 Trocknungsziel',
+   text:'Nach WTA-Merkblatt 6-1-01/D (2011) gelten folgende Trocknungsziele für Mauerwerk: Ziegelmauerwerk ≤ 3,0 M.-% (CM), Porenbeton ≤ 6,0 M.-% (CM), Beton ≤ 3,0 M.-% (CM). Die Messung erfolgt nach dem CM-Verfahren (Calciumcarbid-Methode).',notiz:''},
+
+  {kat:'normen',tag:'WS',titel:'VdS 3151 Trocknungsgrenzwerte',
+   text:'Nach VdS 3151 (Leitfaden für die Schaden-Trocknung) gelten folgende Trocknungsziele: Holz ≤ 15 % Holzfeuchte (elektrisch gemessen), Mauerwerk und Beton ≤ 3,0 M.-% (CM-Methode), Estriche: Zementestrich ≤ 2,0 CM-%, Calciumsulfatestrich ≤ 0,5 CM-%.',notiz:''},
+
+  {kat:'normen',tag:'SC',titel:'UBA-Leitfaden Schimmel 2017',
+   text:'Gemäß UBA-Leitfaden "Schimmelpilze in Innenräumen — Nachweis, Bewertung, Qualitätssicherung" (2017) ist bereits ein sichtbarer Schimmelpilzbefall von mehr als 0,5 m² als erheblich zu bewerten und erfordert professionelle Sanierungsmaßnahmen. Für Flächen über 0,5 m² sind dabei persönliche Schutzmaßnahmen der ausführenden Personen zwingend vorgeschrieben.',notiz:''},
+
+  {kat:'normen',tag:'WS',titel:'DIN 18533 Abdichtung erdberührt',
+   text:'Die Abdichtung erdberührter Bauteile richtet sich nach DIN 18533:2017-07. Maßgebend ist die Lastfallklasse des einwirkenden Wassers (W1-E bis W4-E). Bei drückendem Wasser (W3-E, W4-E) ist eine wasserundurchlässige Stahlbetonkonstruktion (WU-Beton) oder eine Abdichtung mit flächig haftenden Abdichtungsstoffen vorzusehen.',notiz:''},
+
+  {kat:'normen',tag:'BA',titel:'DIN 18202 Toleranzen Hochbau',
+   text:'DIN 18202:2013-04 "Toleranzen im Hochbau" regelt die Grenzabmaße für fertige Bauteile. Für Fußböden (Tabelle 3) gelten bei einem Stichmaß auf 2 m Länge folgende Grenzwerte: Rohbau 10 mm, Feinputz / Estriche 5 mm, Bodenbeläge 4 mm. Überschreitungen gelten als Toleranzüberschreitung.',notiz:'Messtabelle beifügen'},
+
+  {kat:'normen',tag:'BA',titel:'VOB/B §13 Mängelhaftung',
+   text:'Gemäß VOB/B §13 Abs. 1 hat der Auftragnehmer dem Auftraggeber sein Werk zum Zeitpunkt der Abnahme frei von Sachmängeln zu übergeben. Ein Sachmangel liegt vor, wenn das Werk von der vereinbarten Beschaffenheit abweicht oder sich nicht für die nach dem Vertrag vorausgesetzte oder gewöhnliche Verwendung eignet. Die Verjährungsfrist für Mängel beträgt nach VOB/B §13 Abs. 4 grundsätzlich 4 Jahre für Bauwerke.',notiz:''},
+
+  {kat:'normen',tag:'',titel:'DIN 68800 Holzschutz',
+   text:'Gemäß DIN 68800-1:2011-10 und DIN 68800-3:2012-02 ist Holz vor biogenen Schäden (Pilze, Insekten) zu schützen. Im verbauten Zustand gilt eine Holzfeuchte ≤ 18 % als unbedenklich. Bei Überschreitung besteht Gefährdung durch holzzerstörende Pilze. Nach DIN 68800-3 sind bei erkennbarem Pilzbefall geeignete Schutzmaßnahmen einzuleiten.',notiz:''},
+
+  {kat:'normen',tag:'BS',titel:'DIN 4102 Brandschutz',
+   text:'Gemäß DIN 4102 werden Baustoffe in Baustoffklassen (A1, A2 nicht brennbar; B1 schwer entflammbar; B2 normal entflammbar; B3 leicht entflammbar) und Bauteile in Feuerwiderstandsklassen (F30 bis F180) eingeteilt. Thermisch geschädigte tragende Bauteile sind auf ihre Reststandsicherheit zu überprüfen.',notiz:''},
+
+  /* ─── ABSCHLUSSFORMULIERUNGEN ─── */
+  {kat:'begehung',tag:'',titel:'Vorbehalt Folgeschäden',
+   text:'Die vorliegende Begutachtung bezieht sich auf den Schadensumfang zum Zeitpunkt der Besichtigung am [DATUM]. Verdeckte Schäden, die erst nach Freilegung erkennbar werden, sind nicht Gegenstand dieses Berichts. Der Unterzeichner behält sich vor, nach Freigabe weiterer Bereiche ergänzend zu berichten.',notiz:''},
+
+  {kat:'begehung',tag:'',titel:'Berichtsgrundlagen und Vollständigkeit',
+   text:'Dieser Bericht beruht auf dem Ergebnis der Ortsbesichtigung, den vorgelegten Unterlagen sowie dem allgemeinen Fachwissen des Unterzeichners. Angaben zu verdeckten Bauteilen und nicht zugänglichen Bereichen beruhen auf Schlussfolgerungen aus dem Sichtbefund. Für die Vollständigkeit der vorgelegten Unterlagen übernimmt der Unterzeichner keine Gewähr.',notiz:''},
+
+  {kat:'ursache',tag:'',titel:'Kausalität und Beweislast',
+   text:'Die Frage der Kausalität — d.h. ob und in welchem Ausmaß das festgestellte Schadensereignis für den vorliegenden Schaden ursächlich ist — ist eine Rechtsfrage und dem Gericht vorbehalten. Der Unterzeichner beschränkt sich auf die Darstellung der technischen Zusammenhänge.',notiz:'Gilt besonders bei streitigen Fällen'},
+
+  {kat:'massnahmen',tag:'',titel:'Abschlussempfehlung / Zusammenfassung',
+   text:'Zusammenfassend empfiehlt der Unterzeichner:\n1. [MASSNAHME 1]\n2. [MASSNAHME 2]\n3. [MASSNAHME 3]\n\nDie vorgeschlagenen Maßnahmen sollten zeitnah und in der genannten Reihenfolge umgesetzt werden. Eine Abnahme der Instandsetzungsarbeiten durch einen Sachverständigen wird empfohlen.',notiz:''},
+
+  {kat:'massnahmen',tag:'',titel:'JVEG Honorarhinweis',
+   text:'Das vorliegende Gutachten wurde nach den Bestimmungen des Justizvergütungs- und -entschädigungsgesetzes (JVEG) erstellt. Die Vergütung richtet sich nach §9 JVEG. Der Stundensatz beträgt [BETRAG] €/h (Honorargruppe [GRUPPE]). Die Bearbeitungszeit wird separat abgerechnet.',notiz:'Nur bei Gerichtsgutachten'},
+
+  {kat:'normen',tag:'',titel:'Anerkannte Regeln der Technik',
+   text:'Die "anerkannten Regeln der Technik" umfassen technische Regelwerke wie DIN-Normen, VOB/C-Normen, VDE-Vorschriften und Merkblätter der Fachverbände, die in der Baupraxis als allgemein anerkannt gelten. Ein Abweichen von diesen Regeln begründet nicht zwingend einen Mangel, kann jedoch als Indiz für eine mangelhafte Ausführung herangezogen werden.',notiz:''},
+
+  {kat:'normen',tag:'WS',titel:'DIN EN 13187 Thermografie',
+   text:'Die thermografische Untersuchung erfolgte gemäß DIN EN 13187:1999-02. Für verwertbare Aufnahmen ist eine Temperaturdifferenz innen/außen von mindestens ΔT ≥ 10 K erforderlich; ΔT ≥ 15 K wird empfohlen. Die Aufnahmen wurden im stationären Zustand bei einer Außentemperatur von [MESSWERT] °C und einer Innentemperatur von [MESSWERT] °C erstellt.',notiz:''},
+];
+// ── State ──
+var _bausteine = [];
+var _aktivKat = 'alle';
+var _editId = null;
+var _paket = localStorage.getItem('prova_paket') || 'Solo';
+var _isPro = ['Solo','Team'].includes(_paket);
+
+// ============================================================
+// LADEN / SPEICHERN
+// ============================================================
+function ladeBausteine() {
+  try {
+    var raw = localStorage.getItem(TB_KEY);
+    if (raw) {
+      var parsed = JSON.parse(raw);
+      if (parsed && parsed.length > 0) { _bausteine = parsed.filter(function(b){return b && b.titel && b.text;}); return; }
+    }
+  } catch(e) {}
+  // Erstmalig: Standard-Bausteine anlegen
+  _bausteine = STANDARD_BAUSTEINE.map(function(b, i) {
+    return Object.assign({}, b, { id: 'std-' + i, erstellt: new Date().toISOString(), verwendungen: 0 });
+  });
+  speichereBausteine();
+}
+
+function speichereBausteine() {
+  localStorage.setItem(TB_KEY, JSON.stringify(_bausteine));
+}
+
+function genId() { return Date.now().toString(36) + Math.random().toString(36).slice(2,5); }
+
+// ============================================================
+// RENDER
+// ============================================================
+function renderBausteine() {
+  var suche = (document.getElementById('global-search').value || '').toLowerCase();
+  var gefiltert = _bausteine.filter(function(b) {
+    if (!b || !b.kat) return false;  // Null-Guard
+    if (_aktivKat !== 'alle' && b.kat !== _aktivKat) return false;
+    if (suche && !b.titel.toLowerCase().includes(suche) && !b.text.toLowerCase().includes(suche)) return false;
+    return true;
+  });
+
+  // Kategorie-Counts
+  var totalCountEl = document.getElementById('tb-count');
+  if(totalCountEl) totalCountEl.textContent = _bausteine.length;
+  document.getElementById('cnt-alle').textContent = _bausteine.length;
+  ['begehung','befund','ursache','massnahmen','normen'].forEach(function(k) {
+    var el = document.getElementById('cnt-' + k);
+    if (el) el.textContent = _bausteine.filter(function(b){return b && b.kat===k;}).length;
+  });
+
+  // Limit-Bar (Starter)
+  var limitBar = document.getElementById('limit-bar');
+  var limitText = document.getElementById('limit-text');
+  if (limitBar && limitText && !_isPro) {
+    limitBar.style.display = 'flex';
+    limitText.textContent = _bausteine.length + ' / ' + STARTER_LIMIT;
+  } else if (limitBar) {
+    limitBar.style.display = 'none';
+  }
+
+  var grid = document.getElementById('tb-grid');
+  var emptyEl = document.getElementById('tb-empty');
+  var emptyTitle = document.getElementById('tb-empty-title');
+  var emptySub = document.getElementById('tb-empty-sub');
+  if (!gefiltert.length) {
+    grid.innerHTML = '';
+    if(emptyEl) {
+      emptyEl.style.display = 'block';
+      if(emptyTitle) emptyTitle.textContent = suche ? 'Keine Treffer für "' + suche + '"' : 'Noch keine Bausteine';
+      if(emptySub) emptySub.textContent = suche ? 'Suchbegriff anpassen' : 'Legen Sie Ihren ersten Textbaustein an';
+    }
+    // update count
+    var countEl = document.getElementById('tb-count');
+    if(countEl) countEl.textContent = _bausteine.length;
+    return;
+  }
+  if(emptyEl) emptyEl.style.display = 'none';
+
+  grid.innerHTML = '';
+  // Update total count
+  var countEl = document.getElementById('tb-count');
+  if(countEl) countEl.textContent = _bausteine.length;
+  // Update chip counts
+  ['begehung','befund','ursache','massnahmen','normen'].forEach(function(k) {
+    var el = document.getElementById('cnt-' + k);
+    if(el) el.textContent = _bausteine.filter(function(b){return b && b.kat===k;}).length;
+  });
+  var allEl = document.getElementById('cnt-alle');
+  if(allEl) allEl.textContent = _bausteine.length;
+
+  gefiltert.forEach(function(b) {
+    var k = KATEGORIEN[b.kat] || {label:b.kat, icon:'📝', color:'rgba(255,255,255,.05)', textColor:'#9da3b4'};
+    var preview = markierePlatzhalter(escH(b.text));
+    var tagBadge = b.tag ? '<span class="bc-tag">' + escH(b.tag) + '</span>' : '';
+    var uses = (b.verwendet||0) > 0 ? '<span class="bc-uses">' + b.verwendet + 'x verwendet</span>' : '';
+
+    var card = document.createElement('div');
+    card.className = 'baustein-card';
+    card.innerHTML =
+      uses +
+      '<div class="bc-header">' +
+        '<span class="bc-kat-badge" style="background:' + k.color + ';color:' + k.textColor + ';">' + k.icon + ' ' + k.label + '</span>' +
+        tagBadge +
+      '</div>' +
+      '<div class="bc-titel">' + escH(b.titel) + '</div>' +
+      '<div class="bc-preview">' + preview + '</div>' +
+      (b.notiz ? '<div class="bc-notiz">💡 ' + escH(b.notiz) + '</div>' : '') +
+      '<div class="bc-actions">' +
+        '<button class="btn-einfuegen" onclick="bausteineEinfuegen(\'' + b.id + '\')">↗ Einfügen</button>' +
+        '<button class="btn-kopieren" onclick="kopiereText(\'' + b.id + '\')" title="Text kopieren">📋 Kopieren</button>' +
+        '<button class="btn-edit" onclick="openEditor(\'' + b.id + '\')" title="Bearbeiten">✎</button>' +
+      '</div>';
+    grid.appendChild(card);
+  });
+}
+
+function togglePreview(id) {
+  var el = document.getElementById('prev-' + id);
+  if (el) el.classList.toggle('open');
+}
+
+function markierePlatzhalter(text) {
+  return text.replace(/\[([A-Z_]+)\]/g, '<span class="tb-placeholder">[$1]</span>');
+}
+
+function setKat(kat, btn) {
+  _aktivKat = kat;
+  document.querySelectorAll('.stat-chip').forEach(function(b){ b.classList.remove('active'); });
+  btn.classList.add('active');
+  renderBausteine();
+}
+
+// ============================================================
+// CRUD
+// ============================================================
+function openEditor(id) {
+  _editId = id || null;
+  var modal = document.getElementById('modal-editor');
+  var titleEl = document.getElementById('modal-title');
+
+  if (id) {
+    var b = _bausteine.find(function(b){return b.id===id;});
+    if (!b) return;
+    titleEl.textContent = '✎ Baustein bearbeiten';
+    document.getElementById('e-titel').value = b.titel;
+    document.getElementById('e-kat').value = b.kat;
+    document.getElementById('e-tag').value = b.tag || '';
+    document.getElementById('e-text').value = b.text;
+    document.getElementById('e-notiz').value = b.notiz || '';
+  } else {
+    // Limit-Check Starter
+    if (!_isPro && _bausteine.length >= STARTER_LIMIT) {
+      showToast('Limit erreicht (20 Bausteine). Team-Paket für unbegrenzte Bausteine.', 'err');
+      return;
+    }
+    titleEl.textContent = '📝 Neuer Baustein';
+    ['e-titel','e-text','e-notiz'].forEach(function(id){ document.getElementById(id).value=''; });
+    document.getElementById('e-kat').value = 'befund';
+    document.getElementById('e-tag').value = '';
+  }
+  modal.classList.add('open');
+  setTimeout(function(){ document.getElementById('e-titel').focus(); }, 100);
+}
+
+function closeModal() {
+  document.getElementById('modal-editor').classList.remove('open');
+  _editId = null;
+}
+
+function speichereBaustein() {
+  var titel = document.getElementById('e-titel').value.trim();
+  var text  = document.getElementById('e-text').value.trim();
+  if (!titel || !text) { showToast('Titel und Text sind Pflichtfelder', 'err'); return; }
+
+  if (_editId) {
+    var b = _bausteine.find(function(b){return b.id===_editId;});
+    if (b) {
+      b.titel = titel; b.kat = document.getElementById('e-kat').value;
+      b.tag = document.getElementById('e-tag').value;
+      b.text = text; b.notiz = document.getElementById('e-notiz').value.trim();
+    }
+  } else {
+    _bausteine.unshift({
+      id: genId(), titel: titel,
+      kat: document.getElementById('e-kat').value,
+      tag: document.getElementById('e-tag').value,
+      text: text, notiz: document.getElementById('e-notiz').value.trim(),
+      erstellt: new Date().toISOString(), verwendungen: 0
+    });
+  }
+  speichereBausteine();
+  closeModal();
+  renderBausteine();
+  showToast(_editId ? 'Baustein aktualisiert ✅' : 'Baustein gespeichert ✅');
+}
+
+function loescheBaustein(id) {
+  if (!confirm('Baustein löschen?')) return;
+  _bausteine = _bausteine.filter(function(b){return b.id!==id;});
+  speichereBausteine();
+  renderBausteine();
+  showToast('Baustein gelöscht');
+}
+
+// ============================================================
+// PLATZHALTER IM EDITOR
+// ============================================================
+function platzhalterEinfuegen(ph) {
+  var ta = document.getElementById('e-text');
+  var start = ta.selectionStart, end = ta.selectionEnd;
+  ta.value = ta.value.slice(0,start) + ph + ta.value.slice(end);
+  ta.selectionStart = ta.selectionEnd = start + ph.length;
+  ta.focus();
+}
+
+// ============================================================
+// EINFÜGEN-FLOW (wird von stellungnahme.html aufgerufen)
+// ============================================================
+function bausteineEinfuegen(id) {
+  var b = _bausteine.find(function(b){return b.id===id;});
+  if (!b) return;
+
+  // Platzhalter mit Falldaten befüllen
+  var text = befuellePlatzhalter(b.text);
+
+  // Verwendungszähler
+  b.verwendungen = (b.verwendungen||0) + 1;
+  speichereBausteine();
+
+  // In sessionStorage + localStorage-Queue speichern
+  sessionStorage.setItem('prova_tb_einfuegen', text);
+  sessionStorage.setItem('prova_tb_einfuegen_id', id);
+
+  // In Normen-Queue-Struktur → stellungnahme.html liest beide
+  try {
+    var queue = JSON.parse(localStorage.getItem('prova_normen_queue') || '[]');
+    queue.push({ num: b.titel || 'Textbaustein', text: text, ts: new Date().toISOString(), typ: 'baustein' });
+    localStorage.setItem('prova_normen_queue', JSON.stringify(queue));
+  } catch(e) {}
+
+  navigator.clipboard.writeText(text).catch(function(){});
+
+  // Falls in Popup-Modus: zurück zur Stellungnahme
+  if (window.opener && !window.opener.closed) {
+    window.opener.postMessage({ type: 'prova_baustein', text: text, bausteinId: id }, '*');
+    zeigeInlineBanner('✅ ' + (b.titel||'Baustein') + ' eingefügt');
+    setTimeout(function(){window.close();}, 600);
+    return;
+  }
+
+  // Inline-Banner statt Toast
+  var az = localStorage.getItem('prova_aktiver_fall') || '';
+  zeigeInlineBanner(
+    '📋 ' + (b.titel||'Baustein') + ' gespeichert' + (az ? ' · Fall ' + az : ''),
+    az ? 'stellungnahme.html' : 'archiv.html',
+    az ? '→ Zur Stellungnahme' : '→ Fall auswählen'
+  );
+}
+
+function zeigeInlineBanner(msg, href, btnLabel) {
+  var old = document.getElementById('tb-insert-banner');
+  if (old) old.remove();
+  var banner = document.createElement('div');
+  banner.id = 'tb-insert-banner';
+  banner.style.cssText = 'position:fixed;top:70px;left:50%;transform:translateX(-50%);z-index:99999;' +
+    'background:#0a1f2e;border:2px solid #4f8ef7;border-radius:14px;padding:14px 20px;' +
+    'display:flex;align-items:center;gap:14px;min-width:300px;max-width:90vw;' +
+    'box-shadow:0 8px 32px rgba(0,0,0,.8);animation:slideDown .25s ease;';
+  banner.innerHTML =
+    '<span style="font-size:20px;">✅</span>' +
+    '<div style="flex:1;font-size:13px;font-weight:600;color:#e8eaf0;">' + msg + '</div>' +
+    (href ? '<a href="' + href + '" style="padding:6px 14px;background:#4f8ef7;color:#fff;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;white-space:nowrap;">' + (btnLabel||'→') + '</a>' : '') +
+    '<button onclick="this.parentElement.remove()" style="background:none;border:none;color:#6b7a99;font-size:18px;cursor:pointer;padding:0 4px;">×</button>';
+  document.body.appendChild(banner);
+  setTimeout(function(){ if(banner.parentElement){ banner.style.opacity='0'; banner.style.transition='opacity .4s'; setTimeout(function(){if(banner.parentElement)banner.remove();},400); }}, 4000);
+}
+
+function befuellePlatzhalter(text) {
+  // Falldaten aus localStorage / sessionStorage
+  var data = {
+    RAUM: localStorage.getItem('prova_letzter_raum') || '[RAUM]',
+    MESSWERT: localStorage.getItem('prova_letzter_messwert') || '[MESSWERT]',
+    DATUM: new Date().toLocaleDateString('de-DE', {day:'2-digit',month:'2-digit',year:'numeric'}),
+    NORM: '[NORM]',
+    FLAECHE: '[FLAECHE]',
+    NAME: localStorage.getItem('prova_sv_vorname') ? localStorage.getItem('prova_sv_vorname') + ' ' + (localStorage.getItem('prova_sv_nachname')||'') : '[NAME]',
+    SCHADENSART: localStorage.getItem('prova_schadenart') || '[SCHADENSART]',
+    GRENZWERT: '[GRENZWERT]',
+  };
+  return text.replace(/\[([A-Z_]+)\]/g, function(match, key) {
+    return data[key] || match;
+  });
+}
+
+// ── Einfügen-Modal (aus stellungnahme.html als Popup) ──
+function openEinfuegenModal() {
+  document.getElementById('ei-search').value = '';
+  renderEinfuegenListe();
+  document.getElementById('modal-einfuegen').classList.add('open');
+}
+
+function closeEinfuegenModal() {
+  document.getElementById('modal-einfuegen').classList.remove('open');
+}
+
+function renderEinfuegenListe() {
+  var suche = (document.getElementById('ei-search').value || '').toLowerCase();
+  var gefiltert = _bausteine.filter(function(b) {
+    if (!suche) return true;
+    return b.titel.toLowerCase().includes(suche) || b.text.toLowerCase().includes(suche);
+  }).slice(0,30);
+
+  var liste = document.getElementById('ei-liste');
+  if (!gefiltert.length) {
+    liste.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text3);font-size:13px;">Keine Treffer</div>';
+    return;
+  }
+
+  liste.innerHTML = gefiltert.map(function(b) {
+    var k = KATEGORIEN[b.kat] || {label:b.kat,icon:'📝',color:'rgba(255,255,255,.05)',textColor:'#9da3b4'};
+    return '<div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 12px;display:flex;align-items:center;gap:10px;">' +
+      '<div style="flex:1;min-width:0;">' +
+        '<div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:3px;">' + escH(b.titel) + '</div>' +
+        '<div style="font-size:11px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + escH(b.text.slice(0,80)) + '…</div>' +
+      '</div>' +
+      '<button onclick="bausteineEinfuegen(\'' + b.id + '\');closeEinfuegenModal();" style="padding:6px 12px;background:var(--accent);border:none;border-radius:6px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font-ui);white-space:nowrap;">↗ Einfügen</button>' +
+    '</div>';
+  }).join('');
+}
+
+// ============================================================
+// EXPORT / IMPORT
+// ============================================================
+window.exportBausteine = function() {
+  var json = JSON.stringify(_bausteine, null, 2);
+  var blob = new Blob([json], {type:'application/json'});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a'); a.href=url; a.download='PROVA_Textbausteine.json';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast('Export abgeschlossen ✅');
+};
+
+// ============================================================
+// HELPERS
+// ============================================================
+function escH(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+window.showToast = window.showToast || window.zeigToast || function(m){ alert(m); };
+
+// ============================================================
+// INIT
+// ============================================================
+document.addEventListener('DOMContentLoaded', function() {
+  ladeBausteine();
+  renderBausteine();
+
+  // URL-Parameter: ?modus=einfuegen → direkt Einfügen-Modal öffnen
+  var params = new URLSearchParams(window.location.search);
+  if (params.get('modus') === 'einfuegen') {
+    setTimeout(openEinfuegenModal, 200);
+  }
+});
+
+/* ─────────────────────────────────────────── */
+
+var _supT;
+var _SFAQ=[
+  {q:['pdf','download'],a:'PDFs werden nach der Freigabe automatisch erstellt und per E-Mail versendet.'},
+  {q:['rechnung','jveg'],a:'Im JVEG-Rechner können Sie Stunden erfassen und direkt "Als Rechnung übernehmen" klicken.'},
+  {q:['frist','termin','kalender'],a:'Unter Kalender können Sie alle Fristen und Termine einsehen und neu anlegen.'},
+  {q:['passwort','login'],a:'Das Passwort kann nur durch einen Administrator zurückgesetzt werden. Bitte wenden Sie sich an support@prova-systems.de.'}
+];
+function supAnalyse(){clearTimeout(_supT);_supT=setTimeout(function(){var txt=(document.getElementById('sup-betreff').value+' '+document.getElementById('sup-msg').value).toLowerCase();var f=_SFAQ.find(function(x){return x.q.some(function(w){return txt.includes(w);});});var box=document.getElementById('sup-faq-box');if(f){document.getElementById('sup-faq-txt').textContent=f.a;box.style.display='block';}else box.style.display='none';},600);}
+function supFaqOk(){document.getElementById('sup-form').style.display='none';document.getElementById('sup-faq-box').style.display='none';document.getElementById('sup-ok').style.display='block';}
+function supClose(){document.getElementById('sup-modal').classList.remove('open');document.getElementById('sup-ok').style.display='none';document.getElementById('sup-form').style.display='block';document.getElementById('sup-betreff').value='';document.getElementById('sup-msg').value='';}
+async function supSend(){var b=document.getElementById('sup-betreff').value.trim(),n=document.getElementById('sup-msg').value.trim();if(!b||!n){document.getElementById('sup-err').style.display='block';return;}document.getElementById('sup-err').style.display='none';var btn=document.getElementById('sup-btn');btn.disabled=true;btn.textContent='⏳ Wird gesendet...';try{await fetch('https://hook.eu1.make.com/lktuhugwcg5v37ib6bdaxjb1uiplnu8v',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({betreff:b,nachricht:n,sv_email:localStorage.getItem('prova_sv_email')||'',paket:localStorage.getItem('prova_paket')||'Solo',seite:window.location.pathname,ts:new Date().toISOString()})});}catch(e){}document.getElementById('sup-form').style.display='none';document.getElementById('sup-faq-box').style.display='none';document.getElementById('sup-ok').style.display='block';}
+
+/* ─────────────────────────────────────────── */
+
+(function(){
+  var paket=localStorage.getItem('prova_paket')||'Solo';
+  var pc={'Solo':'#4f8ef7','Team':'#a78bfa'}[paket]||'#4f8ef7';
+  var el=document.getElementById('topbar-paket-badge');
+  if(el){el.style.display='none';} // Paket steht in Sidebar unten
+  var appUrl=paket==='Team'?'app.html':paket==='Solo'?'app-pro.html':'app.html';
+})();
+
+/* ─────────────────────────────────────────── */
+
+function openSupportModal(){
+  var m=document.getElementById('support-modal');
+  if(!m)return;
+  var fb=document.getElementById('support-form-body');
+  var ok=document.getElementById('sup-ok');
+  if(fb)fb.style.display='block';
+  if(ok)ok.style.display='none';
+  var b=document.getElementById('sup-betreff');
+  var n=document.getElementById('sup-nachricht');
+  var btn=document.getElementById('sup-btn');
+  if(b)b.value='';if(n)n.value='';
+  if(btn){btn.disabled=false;btn.textContent='Nachricht senden';}
+  m.classList.add('open');
+}
+async function supSendModal(){
+  var b=(document.getElementById('sup-betreff').value||'').trim();
+  var n=(document.getElementById('sup-nachricht').value||'').trim();
+  if(!b||!n){document.getElementById('sup-err').style.display='block';return;}
+  document.getElementById('sup-err').style.display='none';
+  var btn=document.getElementById('sup-btn');
+  btn.disabled=true;btn.textContent='⏳ Wird gesendet…';
+  try{
+    await fetch('https://hook.eu1.make.com/lktuhugwcg5v37ib6bdaxjb1uiplnu8v',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        betreff:b,nachricht:n,
+        sv_email:localStorage.getItem('prova_sv_email')||'',
+        paket:localStorage.getItem('prova_paket')||'Solo',
+        seite:window.location.pathname,
+        ts:new Date().toISOString()
+      })
+    });
+  }catch(e){}
+  document.getElementById('support-form-body').style.display='none';
+  document.getElementById('sup-ok').style.display='block';
+}
+
+/* ─────────────────────────────────────────── */
+
+/* ── NAV ACTIVE STATE FIX ── */
+(function(){
+  var path = window.location.pathname.replace(/\/$/, '').split('/').pop() || 'dashboard';
+  var navMap = {
+    'dashboard':      'nav-zentrale',
+    'archiv':         'nav-faelle',
+    'termine':        'nav-kalender',
+    'rechnungen':     'nav-rechnungen',
+    'briefvorlagen':  'nav-briefe',
+    'jveg':           'nav-jveg',
+    'kostenermittlung':'nav-kosten',
+    'positionen':     'nav-positionen',
+    'textbausteine':  'nav-textbausteine',
+    'normen':         'nav-normen',
+    'kontakte':       'nav-kontakte',
+    'einstellungen':  'nav-einstellungen',
+  };
+  document.addEventListener('DOMContentLoaded', function(){
+    // Alle aktiven Klassen entfernen
+    document.querySelectorAll('.sidebar-link, .nav-link, [data-nav]').forEach(function(el){
+      el.classList.remove('active');
+    });
+    // Korrekte Seite markieren
+    var activeId = navMap[path];
+    if(activeId){
+      var el = document.getElementById(activeId);
+      if(el) el.classList.add('active');
+    }
+    // Fallback: per href matchen
+    document.querySelectorAll('a[href]').forEach(function(a){
+      var href = a.getAttribute('href');
+      if(href && href.indexOf(path) !== -1 && path.length > 2){
+        a.classList.add('active');
+      }
+    });
+  });
+})();
+
+// Reset-Funktion: Standard-Bausteine neu laden
+window.resetBausteine = function() {
+  if (!confirm('Standard-Bausteine zurücksetzen? Eigene Bausteine bleiben erhalten.')) return;
+  var eigene = _bausteine.filter(function(b) { return !b.id.startsWith('std-'); });
+  var standards = STANDARD_BAUSTEINE.map(function(b, i) {
+    return Object.assign({}, b, { id: 'std-' + i, erstellt: new Date().toISOString(), verwendungen: 0 });
+  });
+  _bausteine = standards.concat(eigene);
+  speichereBausteine();
+  renderBausteinListe();
+  if (typeof showToast === 'function') showToast('Standard-Bausteine wiederhergestellt ✅', 'success');
+};
+
+window.resetBausteine = function() {
+  if (!confirm('Standard-Bausteine zurücksetzen? Eigene Bausteine bleiben erhalten.')) return;
+  var eigene = _bausteine.filter(function(b){ return !String(b.id).startsWith('std-'); });
+  var std = STANDARD_BAUSTEINE.map(function(b,i){ return Object.assign({},b,{id:'std-'+i,erstellt:new Date().toISOString(),verwendungen:0}); });
+  _bausteine = std.concat(eigene);
+  speichereBausteine();
+  renderBausteinListe();
+  if(typeof showToast === 'function') showToast('Standard-Bausteine wiederhergestellt ✅', 'success');
+};
+
+/* ─────────────────────────────────────────── */
+
+/* ================================================================
+   PROVA Fall-Kontext-System v1.0
+   Zeigt auf jeder Workflow/Werkzeug-Seite den aktiven Fall-Kontext
+   und führt den SV zum nächsten Schritt.
+   
+   Aktiviert sich automatisch wenn ein aktiver Fall vorhanden ist.
+   Kein Eingriff in bestehende Seiten-Logik.
+================================================================ */
+
+(function() {
+'use strict';
+
+// ── WORKFLOW-KONFIGURATION ──────────────────────────────────────────────
+var WORKFLOW = [
+  {
+    schritt: 1,
+    name: 'Fall anlegen',
+    seite: 'app.html',
+    icon: '📋',
+    farbe: '#4f8ef7'
+  },
+  {
+    schritt: 2,
+    name: 'Diktat & Fotos',
+    seite: 'app-starter.html#step2',
+    icon: '🎙️',
+    farbe: '#4f8ef7'
+  },
+  {
+    schritt: 3,
+    name: 'KI-Analyse',
+    seite: 'app-starter.html#step3',
+    icon: '🤖',
+    farbe: '#6366f1'
+  },
+  {
+    schritt: 4,
+    name: '§6 Fachurteil',
+    seite: 'stellungnahme.html',
+    icon: '⚖️',
+    farbe: '#f59e0b'
+  },
+  {
+    schritt: 5,
+    name: 'Freigabe',
+    seite: 'freigabe.html',
+    icon: '✅',
+    farbe: '#10b981'
+  },
+  {
+    schritt: 6,
+    name: 'Rechnung',
+    seite: 'rechnungen.html',
+    icon: '💶',
+    farbe: '#10b981'
+  },
+  {
+    schritt: 7,
+    name: 'Abschluss',
+    seite: 'archiv.html',
+    icon: '📁',
+    farbe: '#6b7280'
+  }
+];
+
+// ── WERKZEUGE (kontextuell, kein fester Workflow-Schritt) ───────────────
+var WERKZEUGE = {
+  'normen.html':         { name: 'Normendatenbank',    icon: '📚', zurück: true },
+  'positionen.html':     { name: 'Positionsdatenbank', icon: '📦', zurück: true },
+  'textbausteine.html':  { name: 'Textbausteine',      icon: '✏️',  zurück: true },
+  'jveg.html':           { name: 'JVEG-Rechner',       icon: '⚖️',  zurück: false },
+  'kostenermittlung.html':{ name: 'Kosten & Aufmaß',   icon: '📐', zurück: true },
+  'briefvorlagen.html':  { name: 'Briefvorlagen',      icon: '✉️',  zurück: false }
+};
+
+// ── SEITE BESTIMMEN ─────────────────────────────────────────────────────
+var currentPage = window.location.pathname.split('/').pop() || 'dashboard.html';
+if (currentPage === '') currentPage = 'dashboard.html';
+
+// ── AKTUELLEN SCHRITT BESTIMMEN ─────────────────────────────────────────
+function getCurrentSchritt() {
+  var basePage = currentPage.split('#')[0];
+  for (var i = 0; i < WORKFLOW.length; i++) {
+    if (WORKFLOW[i].seite.split('#')[0] === basePage) {
+      return WORKFLOW[i].schritt;
+    }
+  }
+  return null;
+}
+
+// ── FALL-KONTEXT LADEN ──────────────────────────────────────────────────
+function ladeFallKontext() {
+  // Versuche aus URL-Parameter zu laden
+  var params = new URLSearchParams(window.location.search);
+  var urlAz   = params.get('az') || params.get('fall') || params.get('aktenzeichen');
+  
+  // Dann aus sessionStorage/localStorage
+  var az         = urlAz
+                 || sessionStorage.getItem('prova_current_az')
+                 || localStorage.getItem('prova_letztes_az')
+                 || '';
+  
+  var schadenart = sessionStorage.getItem('prova_current_schadenart')
+                 || localStorage.getItem('prova_schadenart')
+                 || '';
+  
+  var adresse    = sessionStorage.getItem('prova_current_objekt')
+                 || localStorage.getItem('prova_adresse')
+                 || '';
+  
+  var recordId   = sessionStorage.getItem('prova_record_id')
+                 || sessionStorage.getItem('prova_current_record_id')
+                 || '';
+  
+  if (!az) return null;
+  
+  return { az: az, schadenart: schadenart, adresse: adresse, recordId: recordId };
+}
+
+// ── NÄCHSTER SCHRITT ─────────────────────────────────────────────────────
+function naechsterSchritt(aktuellerSchritt) {
+  if (!aktuellerSchritt) return null;
+  for (var i = 0; i < WORKFLOW.length; i++) {
+    if (WORKFLOW[i].schritt === aktuellerSchritt + 1) {
+      return WORKFLOW[i];
+    }
+  }
+  return null;
+}
+
+// ── BANNER HTML BAUEN ───────────────────────────────────────────────────
+function baueBanner(kontext, aktuellerSchritt, istWerkzeug) {
+  var az        = kontext.az;
+  var sa        = kontext.schadenart;
+  var adr       = kontext.adresse;
+  var recordId  = kontext.recordId;
+  
+  // Schadensart Farbe
+  var saFarben = {
+    'Schimmelbefall': '#10b981',
+    'Wasserschaden':  '#3b82f6',
+    'Brandschaden':   '#ef4444',
+    'Sturmschaden':   '#8b5cf6',
+    'Baumängel':      '#f59e0b',
+    'Sonstiger Schaden': '#6b7280'
+  };
+  var saFarbe = saFarben[sa] || '#4f8ef7';
+  
+  // Akte-Link bauen
+  var akteLink = recordId
+    ? 'akte.html?id=' + recordId
+    : az
+      ? 'akte.html?az=' + encodeURIComponent(az)
+      : 'archiv.html';
+  
+  // Nächster-Schritt Button
+  var naechsterBtn = '';
+  if (!istWerkzeug && aktuellerSchritt) {
+    var naechster = naechsterSchritt(aktuellerSchritt);
+    if (naechster) {
+      var naechsterUrl = naechster.seite;
+      // AZ mitgeben wenn relevant
+      if (naechster.seite.indexOf('stellungnahme') >= 0 && az) {
+        naechsterUrl = naechster.seite + '?az=' + encodeURIComponent(az);
+      } else if (naechster.seite.indexOf('freigabe') >= 0 && recordId) {
+        naechsterUrl = naechster.seite + '?id=' + recordId;
+      } else if (naechster.seite.indexOf('rechnungen') >= 0 && az) {
+        naechsterUrl = naechster.seite + '?az=' + encodeURIComponent(az);
+      } else if (naechster.seite.indexOf('archiv') >= 0) {
+        naechsterUrl = naechster.seite;
+      }
+      
+      naechsterBtn = '<a href="' + naechsterUrl + '" style="'
+        + 'display:inline-flex;align-items:center;gap:5px;padding:4px 12px;'
+        + 'background:' + naechster.farbe + '22;border:1px solid ' + naechster.farbe + '44;'
+        + 'border-radius:999px;font-size:11px;font-weight:700;color:' + naechster.farbe + ';'
+        + 'text-decoration:none;white-space:nowrap;transition:all .15s;'
+        + '" onmouseover="this.style.background=\'" + naechster.farbe + "33\'"'
+        + ' onmouseout="this.style.background=\'" + naechster.farbe + "22\'">'
+        + naechster.icon + ' ' + naechster.name + ' →'
+        + '</a>';
+    }
+  }
+  
+  // Zurück-zu-Fall Button (für Werkzeuge)
+  var zurueckBtn = '';
+  if (istWerkzeug && WERKZEUGE[currentPage] && WERKZEUGE[currentPage].zurück) {
+    zurueckBtn = '<a href="' + akteLink + '" style="'
+      + 'display:inline-flex;align-items:center;gap:5px;padding:4px 10px;'
+      + 'background:rgba(79,142,247,.1);border:1px solid rgba(79,142,247,.25);'
+      + 'border-radius:999px;font-size:11px;font-weight:600;color:#4f8ef7;'
+      + 'text-decoration:none;white-space:nowrap;'
+      + '">← Zurück zu ' + az + '</a>';
+  }
+  
+  // Akte-Link in AZ
+  var azHtml = '<a href="' + akteLink + '" style="'
+    + 'font-weight:800;font-size:13px;color:var(--text, #e2e8f0);'
+    + 'text-decoration:none;letter-spacing:.02em;'
+    + 'border-bottom:1px solid rgba(255,255,255,.2);'
+    + '" title="Akte öffnen">' + az + '</a>';
+  
+  // Schrittanzeige
+  var schrittHtml = '';
+  if (aktuellerSchritt && !istWerkzeug) {
+    schrittHtml = '<span style="font-size:10px;color:rgba(255,255,255,.4);white-space:nowrap;">'
+      + 'Schritt ' + aktuellerSchritt + ' von 7'
+      + '</span>';
+    
+    // Mini-Progress (7 Punkte)
+    var dots = '';
+    for (var s = 1; s <= 7; s++) {
+      var dotColor = s < aktuellerSchritt
+        ? '#10b981'
+        : s === aktuellerSchritt
+          ? '#4f8ef7'
+          : 'rgba(255,255,255,.15)';
+      dots += '<span style="width:6px;height:6px;border-radius:50%;background:' + dotColor
+            + ';display:inline-block;' + (s < 7 ? 'margin-right:3px;' : '') + '"></span>';
+    }
+    schrittHtml += '<span style="display:inline-flex;align-items:center;margin-left:6px;">' + dots + '</span>';
+  }
+  
+  // Banner HTML
+  var html = '<div id="prova-fall-kontext-banner" style="'
+    + 'display:flex;align-items:center;gap:10px;flex-wrap:wrap;'
+    + 'padding:7px 16px 7px 20px;'
+    + 'background:linear-gradient(90deg,rgba(79,142,247,.12) 0%,rgba(10,15,28,.0) 100%);'
+    + 'border-bottom:1px solid rgba(79,142,247,.15);'
+    + 'font-family:inherit;position:relative;z-index:10;'
+    + 'min-height:36px;'
+    + '">'
+    
+    // AZ + Schadenart
+    + '<div style="display:flex;align-items:center;gap:8px;flex:1;min-width:0;">'
+    + '<span style="width:8px;height:8px;border-radius:50%;background:' + saFarbe + ';flex-shrink:0;"></span>'
+    + azHtml;
+    
+  if (sa) {
+    html += '<span style="font-size:11px;padding:2px 8px;border-radius:999px;background:' + saFarbe + '18;color:' + saFarbe + ';font-weight:600;white-space:nowrap;">' + sa + '</span>';
+  }
+  
+  if (adr && adr.length > 2 && adr !== '—') {
+    html += '<span style="font-size:11px;color:rgba(255,255,255,.35);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:200px;" title="' + adr + '">'
+          + adr.split(',')[0] // nur Straße, kürzer
+          + '</span>';
+  }
+  
+  html += '</div>'; // end flex-1
+  
+  // Mitte: Schritt-Anzeige
+  if (schrittHtml) {
+    html += '<div style="display:flex;align-items:center;gap:4px;">' + schrittHtml + '</div>';
+  }
+  
+  // Rechts: Werkzeug-Zurück oder Nächster-Schritt
+  if (zurueckBtn) {
+    html += '<div>' + zurueckBtn + '</div>';
+  }
+  if (naechsterBtn) {
+    html += '<div>' + naechsterBtn + '</div>';
+  }
+  
+  html += '</div>'; // end banner
+  
+  return html;
+}
+
+// ── BANNER EINFÜGEN ─────────────────────────────────────────────────────
+function einfuegenBanner() {
+  // Nicht auf Dashboard, Zentrale, Login, Onboarding
+  var ausnahmen = ['dashboard.html', 'archiv.html', 'app-login.html', 
+                   'onboarding.html', 'onboarding-schnellstart.html',
+                   'index.html', 'impressum.html', 'datenschutz.html',
+                   'agb.html', 'avv.html', 'termine.html', 'kontakte.html',
+                   'einstellungen.html'];
+  
+  if (ausnahmen.indexOf(currentPage) >= 0) return;
+  
+  var kontext = ladeFallKontext();
+  if (!kontext) return; // Kein aktiver Fall — kein Banner
+  
+  var aktuellerSchritt = getCurrentSchritt();
+  var istWerkzeug = !!WERKZEUGE[currentPage];
+  
+  var bannerHtml = baueBanner(kontext, aktuellerSchritt, istWerkzeug);
+  
+  // Einfüge-Strategie: nach <header class="topbar"> oder nach <div class="topbar">
+  // Suche den richtigen Einfügepunkt
+  var insertAfter = null;
+  
+  // Strategie 1: Nach topbar Header
+  var topbar = document.querySelector('header.topbar, div.topbar, .topbar');
+  if (topbar) {
+    insertAfter = topbar;
+  }
+  
+  // Strategie 2: Als erstes Child von main oder page-content
+  if (!insertAfter) {
+    insertAfter = document.querySelector('main, .page-content, .main, .page');
+    if (insertAfter) {
+      insertAfter.insertAdjacentHTML('afterbegin', bannerHtml);
+      return;
+    }
+  }
+}
+})();
+
+function kopiereText(bid) {
+  var b = _bausteine.find(function(x){return x.id===bid;});
+  if(!b) return;
+  if(navigator.clipboard) {
+    navigator.clipboard.writeText(b.text).then(function(){ showToast('📋 Text kopiert'); });
+  } else {
+    var ta = document.createElement('textarea');
+    ta.value = b.text;
+    document.body.appendChild(ta); ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    showToast('📋 Text kopiert');
+  }
+}

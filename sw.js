@@ -1,11 +1,11 @@
 /* ============================================================
-   PROVA Systems — Service Worker v33
+   PROVA Systems — Service Worker v39
    Strategie: Network-First für HTML (kein Zwischenbild mehr!)
               Cache-First für Assets (Fonts, JS, CSS)
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v33';
+const CACHE_VERSION = 'prova-v39';
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
