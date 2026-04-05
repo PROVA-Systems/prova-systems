@@ -613,6 +613,16 @@ document.addEventListener('keydown',function(e){
     e.preventDefault();var s=document.getElementById('bv-search');if(s){s.focus();s.select();}
   }
 });
-var bvSrch=document.getElementById('bv-search');
-if(bvSrch){
-  bvSrch.addEventListener('focus',function(){var k=document.getElementById
+var bvSrch = document.getElementById('bv-search');
+if (bvSrch) {
+  bvSrch.addEventListener('focus', function() {
+    var k = document.getElementById('bv-search-key');
+    if (k) { k.style.display = 'none'; }
+  });
+  bvSrch.addEventListener('blur', function() {
+    var k = document.getElementById('bv-search-key');
+    if (k) { k.style.display = 'flex'; }
+  });
+}
+
+})();

@@ -115,7 +115,7 @@ async function syncKontaktZuAirtable(k) {
   } else {
     // Neu anlegen
     var path2 = '/v0/' + AT_BASE_K + '/' + AT_KONTAKTE;
-    var res = await atKontakte('POST', path2, {fields: felder, typecast: true});
+    var res = await atKontakte('POST', path2, {records: [{fields: felder}], typecast: true});
     if (res && res.id) {
       // at_id merken
       var idx = _kontakte.findIndex(function(x){return x.id === k.id;});

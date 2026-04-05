@@ -419,7 +419,7 @@ var PLAN_DATA = {
     color: '#4f8ef7',
     colorBg: 'rgba(79,142,247,.1)',
     desc: 'Für den selbstständigen Sachverständigen',
-    preisMonatlich: 89,
+    preisMonatlich: 149,
     preisJaehrlich: 71, // -20%
     limit: 30,
     features: [
@@ -440,7 +440,7 @@ var PLAN_DATA = {
     color: '#8b5cf6',
     colorBg: 'rgba(139,92,246,.1)',
     desc: 'Für Büros mit mehreren Sachverständigen',
-    preisMonatlich: 179,
+    preisMonatlich: 279,
     preisJaehrlich: 143, // -20%
     limit: null, // unbegrenzt
     features: [
