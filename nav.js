@@ -35,9 +35,10 @@
 
   /* ── Nav-Items: workflow-orientierte Gruppierung ── */
   var ARBEIT = [
-    { href: 'dashboard.html',     icon: '⊞',  label: 'Zentrale' },
-    { href: 'archiv.html',        icon: '📂', label: 'Fälle' },
-    { href: 'termine.html',       icon: '📅', label: 'Kalender' },
+    { href: 'dashboard.html',          icon: '⊞',  label: 'Zentrale' },
+    { href: 'archiv.html',             icon: '📂', label: 'Fälle' },
+    { href: 'termine.html',            icon: '📅', label: 'Kalender' },
+    { href: 'benachrichtigungen.html', icon: '🔔', label: 'Benachrichtigungen' },
   ];
   // GUTACHTEN: Alle Werkzeuge die direkt im Gutachten-Workflow verwendet werden
   var GUTACHTEN = [
@@ -572,6 +573,7 @@ window.provaConfirm = function(msg, onYes) {
     { label: 'Fälle / Archiv', desc: 'Alle Fälle anzeigen', href: 'archiv.html', icon: '📂' },
     { label: 'Zentrale / Dashboard', desc: 'Was steht heute an?', href: 'dashboard.html', icon: '⊞' },
     { label: 'Kalender', desc: 'Termine und Fristen', href: 'termine.html', icon: '📅' },
+    { label: 'Benachrichtigungen', desc: 'Fristen, Hinweise und Systemmeldungen', href: 'benachrichtigungen.html', icon: '🔔' },
     { label: 'Normen-Datenbank', desc: 'DIN, VOB, WTA, ZPO', href: 'normen.html', icon: '📚' },
     { label: 'Textbausteine', desc: 'Wiederkehrende Formulierungen', href: 'textbausteine.html', icon: '📝' },
     { label: 'Positionen & Kosten', desc: 'BKI-Einheitspreise', href: 'positionen.html', icon: '🗂️' },

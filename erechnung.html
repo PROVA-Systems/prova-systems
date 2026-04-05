@@ -4,10 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>PROVA · E-Rechnung</title>
-<link rel="manifest" href="/manifest.json">
+<script src="prova-preise.js"></script>
+<script src="paket-guard.js"></script>
+<script src="auth-guard-v2.js"></script>
 <script src="theme.js"></script>
+<script src="trial-guard.js"></script>
 <script src="nav.js"></script>
 <script src="slide-panel.js"></script>
+
+<link rel="manifest" href="/manifest.json">
 <script src="/sw-register.js"></script>
 <style>
 :root{
@@ -88,8 +93,8 @@ table.er-table td{padding:6px 4px;vertical-align:middle}
 
 <!-- Format-Tabs -->
 <div class="fmt-tabs">
-  <button class="fmt-tab active" onclick="setFormat(this,'xrechnung')">⚖️ XRechnung (Behörden)</button>
-  <button class="fmt-tab" onclick="setFormat(this,'zugferd')">📄 ZUGFeRD 2.1 (Privat)</button>
+  <button class="fmt-tab active" onclick="window.setFormat(this,'xrechnung')">⚖️ XRechnung (Behörden)</button>
+  <button class="fmt-tab" onclick="window.setFormat(this,'zugferd')">📄 ZUGFeRD 2.1 (Privat)</button>
 </div>
 
 <!-- ═══ XRECHNUNG ═══ -->
@@ -212,7 +217,7 @@ table.er-table td{padding:6px 4px;vertical-align:middle}
         </thead>
         <tbody id="er-positionen">
           <tr class="er-position-row">
-            <td><input class="form-input er-leistung" placeholder="Gutachtenerstellung §9 JVEG" oninput="updateSummen()"></td>
+            <td><input class="form-input er-leistung" placeholder="Gutachtenerstellung §9 JVEG" oninput="window.updateSummen()"></td>
             <td><input class="form-input er-menge" type="number" value="1" min="0" step="0.5" style="width:70px" onchange="erCalcGP(this.closest('tr'))"></td>
             <td><select class="form-input er-einheit" style="width:80px">
               <option value="HUR">h</option>
@@ -226,7 +231,7 @@ table.er-table td{padding:6px 4px;vertical-align:middle}
           </tr>
         </tbody>
       </table>
-      <button class="btn-add" onclick="erAddPosition()">+ Position hinzufügen</button>
+      <button class="btn-add" onclick="window.erAddPosition()">+ Position hinzufügen</button>
       <div style="margin-top:10px;font-size:11px;color:var(--text3)">
         💡 JVEG-Honorar zuerst im <a href="jveg.html" style="color:var(--accent)">JVEG-Rechner</a> berechnen, dann hier als Position eintragen.
       </div>
@@ -245,10 +250,10 @@ table.er-table td{padding:6px 4px;vertical-align:middle}
       </div>
 
       <div style="margin-top:16px;display:flex;flex-direction:column;gap:8px">
-        <button class="btn-primary" onclick="generateAndDownload()" style="width:100%;justify-content:center">
+        <button class="btn-primary" onclick="window.generateAndDownload()" style="width:100%;justify-content:center">
           ⬇ XML generieren &amp; herunterladen
         </button>
-        <button class="btn-secondary" onclick="copyXML()" style="width:100%;justify-content:center">
+        <button class="btn-secondary" onclick="window.copyXML()" style="width:100%;justify-content:center">
           📋 XML in Zwischenablage
         </button>
       </div>
@@ -292,6 +297,9 @@ table.er-table td{padding:6px 4px;vertical-align:middle}
 <script src="erechnung-logic.js" defer></script>
 <script src="global-search.js" defer></script>
 <script src="auto-save.js" defer></script>
-<script src="trial-guard.js"></script>
+  <script src="prova-context.js"></script>
+  <script src="prova-error-handler.js"></script>
+  <script src="support-chat.js" defer></script>
+  <script src="sw-register.js" defer></script>
 </body>
 </html>

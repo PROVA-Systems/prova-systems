@@ -291,11 +291,7 @@ const tag = saTag(schadenart);
 
 /* ── Init ── */
 (function init() {
-  // Paket-Badge
-  const p = localStorage.getItem('prova_paket') || 'Solo';
-  const c = {'Solo':'#4f8ef7','Team':'#a78bfa'}[p]||'#4f8ef7';
-  const el = document.getElementById('topbarPaket');
-  if(el){el.style.display='none';} // Paket steht in Sidebar
+  // Badge-Hiding via prova-context.js
 
   // Header
   document.getElementById('badge-sa').textContent = '📋 ' + (schadenart || 'Alle Schadensarten');
@@ -863,16 +859,20 @@ var _SFAQ=[
 function supAnalyse(){clearTimeout(_supT);_supT=setTimeout(function(){var txt=(document.getElementById('sup-betreff').value+' '+document.getElementById('sup-msg').value).toLowerCase();var f=_SFAQ.find(function(x){return x.q.some(function(w){return txt.includes(w);});});var box=document.getElementById('sup-faq-box');if(f){document.getElementById('sup-faq-txt').textContent=f.a;box.style.display='block';}else box.style.display='none';},600);}
 function supFaqOk(){document.getElementById('sup-form').style.display='none';document.getElementById('sup-faq-box').style.display='none';document.getElementById('sup-ok').style.display='block';}
 function supClose(){document.getElementById('sup-modal').classList.remove('open');document.getElementById('sup-ok').style.display='none';document.getElementById('sup-form').style.display='block';document.getElementById('sup-betreff').value='';document.getElementById('sup-msg').value='';}
-async function supSend(){var b=document.getElementById('sup-betreff').value.trim(),n=document.getElementById('sup-msg').value.trim();if(!b||!n){document.getElementById('sup-err').style.display='block';return;}document.getElementById('sup-err').style.display='none';var btn=document.getElementById('sup-btn');btn.disabled=true;btn.textContent='⏳ Wird gesendet...';try{await fetch('https://hook.eu1.make.com/lktuhugwcg5v37ib6bdaxjb1uiplnu8v',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({betreff:b,nachricht:n,sv_email:localStorage.getItem('prova_sv_email')||'',paket:localStorage.getItem('prova_paket')||'Solo',seite:window.location.pathname,ts:new Date().toISOString()})});}catch(e){}document.getElementById('sup-form').style.display='none';document.getElementById('sup-faq-box').style.display='none';document.getElementById('sup-ok').style.display='block';}
+async function supSend(){var b=document.getElementById('sup-betreff').value.trim(),n=document.getElementById('sup-msg').value.trim();if(!b||!n){document.getElementById('sup-err').style.display='block';return;}document.getElementById('sup-err').style.display='none';var btn=document.getElementById('sup-btn');btn.disabled=true;btn.textContent='⏳ Wird gesendet...';try{await fetch('https://hook.eu1.make.com/lktuhugwcg5v37ib6bdaxjb1uiplnu8v',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({betreff:b,nachricht:n,sv_email:localStorage.getItem('prova_sv_email')||'',paket:paket,seite:window.location.pathname,ts:new Date().toISOString()})});}catch(e){}document.getElementById('sup-form').style.display='none';document.getElementById('sup-faq-box').style.display='none';document.getElementById('sup-ok').style.display='block';}
 
 /* ─────────────────────────────────────────── */
 
 (function(){
-  var paket=localStorage.getItem('prova_paket')||'Solo';
-  var pc={'Solo':'#4f8ef7','Team':'#a78bfa'}[paket]||'#4f8ef7';
-  var el=document.getElementById('topbar-paket-badge');
-  if(el){el.style.display='none';} // Paket steht in Sidebar unten
-  var appUrl=paket==='Team'?'app.html':paket==='Solo'?'app.html':'app.html';
+  /* ─── PROVA.ctx (DRY — prova-context.js) ─── */
+var paket = window.PROVA ? PROVA.ctx.paket : (localStorage.getItem('prova_paket') || 'Solo');
+var pc    = window.PROVA ? PROVA.ctx.paketColor : ({'Solo':'#4f8ef7','Team':'#a78bfa'}[paket] || '#4f8ef7');
+var AT_BASE = window.PROVA ? PROVA.AT.BASE : 'appJ7bLlAHZoxENWE';
+var appUrl  = window.PROVA ? PROVA.ctx.appUrl : (paket === 'Team' ? 'app.html' : 'app.html');
+/* Badge-Hiding: erledigt von prova-context.js */
+  
+   // Paket steht in Sidebar unten
+  
 })();
 
 /* ─────────────────────────────────────────── */

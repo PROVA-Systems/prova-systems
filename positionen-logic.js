@@ -14,15 +14,9 @@
 })();
 
 // AUTH
-if(!localStorage.getItem('prova_user')){window.location.href='app-login.html';}
+/* ─── AUTH via auth-guard-v2.js (läuft synchron im Head) ─── */
 
-// PAKET
-(function(){
-  var p=localStorage.getItem('prova_paket')||'Starter';
-  var c={Starter:'#4f8ef7',Pro:'#f59e0b',Enterprise:'#a78bfa'}[p]||'#4f8ef7';
-  var b=document.getElementById('topbarPaket');
-  if(b){b.textContent=p;b.style.cssText='background:'+c+'18;color:'+c+';border:1px solid '+c+'33;';}
-})();
+// Badge-Hiding via prova-context.js
 
 // POSITIONEN DB
 const POSITIONEN_DB = [
@@ -353,8 +347,6 @@ const POSITIONEN_DB = [
   {nr:'GE-006',kat:'Gerüst',sub:'Baustelleneinrichtung',bez:'Baucontainer (Büro/Lager) aufstellen, vorhalten 4 Wochen und abbauen',ein:'Psch',min:380,med:580,max:880,norm:'',sa:'BA'},
   {nr:'GE-007',kat:'Gerüst',sub:'Baustelleneinrichtung',bez:'Baustrom-Anschluss und Verteilung',ein:'Psch',min:280,med:420,max:680,norm:'DIN VDE 0100-704',sa:'BA'}
 ];
-
-
 
 let activeChip = '';
 

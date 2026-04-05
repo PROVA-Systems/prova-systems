@@ -5,6 +5,11 @@
 ============================================================ */
 (function() {
 
+/* ── Feature-Gate: nur Team (ZUGFeRD/XRechnung) ── */
+if (window.PaketGuard) {
+  PaketGuard.blockiereSeite('zugferd');
+}
+
 /* ── Tabs ── */
 window.setFormat = function(btn, fmt) {
   document.querySelectorAll('.fmt-tab').forEach(function(b) { b.classList.remove('active'); });
@@ -89,7 +94,7 @@ window.erAddPosition = function() {
     '</select></td>' +
     '<td><input class="form-input er-ep" type="number" placeholder="0,00" step="0.01" style="width:90px" onchange="erCalcGP(this.closest('tr'))"></td>' +
     '<td class="er-gp">0.00</td>' +
-    '<td><button class="btn-icon" onclick="this.closest('tr').remove();updateSummen();" title="Entfernen">×</button></td>';
+    '<td><button class="btn-icon" onclick="this.parentElement.remove();updateSummen();" title="Entfernen">×</button></td>';
   container.appendChild(row);
 };
 

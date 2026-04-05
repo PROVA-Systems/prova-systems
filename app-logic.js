@@ -73,11 +73,11 @@ function berechneFristWarnung(){
 /* ── Block 6 ── */
 /* ============================================================
    PROVA APP-STARTER — Echtes JavaScript
-   S1-Webhook: imn2n5xs7j251xicrmdmk17of042pt2t
+   G1-Webhook: imn2n5xs7j251xicrmdmk17of042pt2t
    Airtable Base: appJ7bLlAHZoxENWE / tblSxV8bsXwd1pwa0
 ============================================================ */
-const WEBHOOK_S1 = 'https://hook.eu1.make.com/imn2n5xs7j251xicrmdmk17of042pt2t';
-const WEBHOOK_S9 = 'https://hook.eu1.make.com/bslfuqmlud1vo8qems5ccn5z5f2eq4dl';
+const WEBHOOK_G1 = 'https://hook.eu1.make.com/imn2n5xs7j251xicrmdmk17of042pt2t';
+const WEBHOOK_K1 = 'https://hook.eu1.make.com/bslfuqmlud1vo8qems5ccn5z5f2eq4dl';
 const AIRTABLE_BASE = 'appJ7bLlAHZoxENWE';
 const AIRTABLE_TABLE = 'tblSxV8bsXwd1pwa0';
 const AIRTABLE_SV_TABLE = 'tbladqEQT3tmx4DIB';
@@ -176,7 +176,7 @@ window.SV_PROFIL = null;
 window.SV_RECORD_ID = null;
 
 async function airtableProxy(method, path, body = null) {
-  const res = await fetch('/.netlify/functions/airtable', {
+  const res = await ProvaError.safeFetch('/.netlify/functions/airtable', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ method, path, body })
@@ -259,7 +259,7 @@ window.showPage = function(name) {
 };
 
 /* ============================================================
-   BRIEFVORLAGEN (S9) — Starter+
+   BRIEFVORLAGEN (K1) — Starter+
 ============================================================ */
 const BRIEF_TEMPLATES = [
   { id: 'A-01', name: 'Angebot Gutachten', file: 'angebot-app.html', send: true },
@@ -384,7 +384,7 @@ window.sendeBrief = async function(templateId) {
     const html_body = replacePlaceholders(html, vars);
     const betreff = `${t.name} · ${vars.aktenzeichen}`;
 
-    await fetch(WEBHOOK_S9, {
+    await fetch(WEBHOOK_K1, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -2409,7 +2409,7 @@ window.PROVA_AUDIT = (function() {
     if (paket === 'Solo') return; // Starter nur localStorage
     
     try {
-      var res = await fetch('/.netlify/functions/airtable', {
+      var res = await ProvaError.safeFetch('/.netlify/functions/airtable', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({
@@ -3197,7 +3197,7 @@ async function sendeWebhook() {
   });
 
   try {
-    const res = await fetch(WEBHOOK_S1, {
+    const res = await fetch(WEBHOOK_G1, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(daten)
@@ -3303,7 +3303,7 @@ async function ladeGutachtenListe() {
   if (tbody) tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--gray-400);padding:2rem">Wird geladen…</td></tr>';
   try {
     const path = `/v0/${AIRTABLE_BASE}/${AIRTABLE_TABLE}?maxRecords=100&sort[0][field]=Timestamp&sort[0][direction]=desc`;
-    const res = await fetch('/.netlify/functions/airtable', {
+    const res = await ProvaError.safeFetch('/.netlify/functions/airtable', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ method: 'GET', path })
@@ -3371,7 +3371,7 @@ async function ladeArchivDaten() {
 
   try {
     const path = `/v0/${AIRTABLE_BASE}/${AIRTABLE_TABLE}?maxRecords=500&sort[0][field]=Timestamp&sort[0][direction]=desc`;
-    const res = await fetch('/.netlify/functions/airtable', {
+    const res = await ProvaError.safeFetch('/.netlify/functions/airtable', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ method: 'GET', path })

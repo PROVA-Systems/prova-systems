@@ -292,7 +292,7 @@ async function ladeListe(){
   try{
     var filter=svEmail?'AND(NOT({Status}=""),{sv_email}="'+svEmail+'")':'NOT({Status}="")';
     var path='/v0/'+AT_BASE+'/'+AT_RECHNUNGEN+'?filterByFormula='+encodeURIComponent(filter)+'&maxRecords=50&sort[0][field]=Timestamp&sort[0][direction]=desc';
-    var res=await fetch('/.netlify/functions/airtable',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({method:'GET',path:path})});
+    var res=await ProvaError.safeFetch('/.netlify/functions/airtable',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({method:'GET',path:path})});
     if(!res.ok)throw new Error('HTTP '+res.status);
     var data=await res.json();
     alleRechnungen=(data.records||[]).map(function(r){

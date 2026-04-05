@@ -2,1374 +2,1766 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1, viewport-fit=cover">
-<title>Einstellungen · PROVA</title>
-<script src="nav.js" defer></script>
-<script src="trial-guard.js" defer></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0a0e17">
+<title>Einstellungen — PROVA</title>
+<link rel="manifest" href="manifest.json">
+<script src="prova-preise.js"></script>
+<script src="paket-guard.js"></script>
+<script src="auth-guard-v2.js"></script>
+<script src="trial-guard.js"></script>
 <style>
-/* ═══ PROVA SIDEBAR SYSTEM ═══════════════════════════════════════════════ */
-:root{
-  --bg:#0b0d11;--bg2:#111318;--bg3:#161a22;
-  --surface:#1c2130;--surface2:#232a3a;
-  --border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.11);
-  --text:#eaecf4;--text2:#8b93ab;--text3:#4d5568;
-  --accent:#4f8ef7;--accent2:#3a7be0;
-  --success:#10b981;--warning:#f59e0b;--danger:#ef4444;--purple:#8b5cf6;
-  --font-ui:'DM Sans',system-ui,sans-serif;
-  --r-sm:6px;--r-md:10px;--r-lg:14px;
-  --shadow-sm:0 1px 3px rgba(0,0,0,.25);--shadow-md:0 4px 16px rgba(0,0,0,.35);
-}
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
-html{font-size:14px;scroll-behavior:smooth;}
-body{font-family:var(--font-ui);background:var(--bg);color:var(--text2);min-height:100vh;overflow-x:hidden;line-height:1.55;}
-a{text-decoration:none;color:inherit;}
-button,input,select,textarea{font-family:inherit;font-size:inherit;}
-*{-webkit-tap-highlight-color:transparent;}
-input,select,textarea{font-size:max(16px,1em);}
-
-/* ── SIDEBAR ── */
-.app-shell{display:flex;min-height:100vh;}
-
-/* ── TOPBAR ── */
-.topbar{height:52px;min-height:52px;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 24px;position:sticky;top:0;z-index:100;flex-shrink:0;}
-.topbar-left{display:flex;align-items:center;gap:12px;}
-.topbar-right{display:flex;align-items:center;gap:6px;}
-.breadcrumb{font-size:13px;color:var(--text3);display:flex;align-items:center;gap:6px;}
-.breadcrumb strong{color:var(--text2);font-weight:600;}
-.topbar-btn{display:flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:var(--r-sm);border:1px solid var(--border2);background:transparent;color:var(--text3);cursor:pointer;font-size:14px;transition:all .12s;}
-.topbar-btn:hover{color:var(--text2);background:rgba(255,255,255,.05);}
-.topbar-paket{font-size:10px;font-weight:700;padding:3px 9px;border-radius:10px;letter-spacing:.04em;}
-.burger{display:none;flex-direction:column;gap:4.5px;background:none;border:none;cursor:pointer;padding:8px;border-radius:6px;min-height:36px;align-items:center;justify-content:center;}
-.burger span{display:block;width:18px;height:2px;background:var(--text2);border-radius:2px;}
-
-/* ── EINSTELLUNGEN LAYOUT ── */
-.page-content{padding:0;flex:1;display:flex;flex-direction:column;}
-.einst-layout{display:grid;grid-template-columns:210px 1fr;flex:1;height:calc(100vh - 52px);overflow:hidden;}
-.einst-snav{background:var(--bg2);border-right:1px solid var(--border);padding:12px 8px;overflow-y:auto;display:flex;flex-direction:column;gap:1px;}
-.einst-snav::-webkit-scrollbar{width:3px;}
-.einst-smain{overflow-y:auto;padding:28px 32px 60px;}
-.snav-sec{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);padding:10px 10px 4px;margin-top:4px;}
-.snav-item{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:6px;color:var(--text3);font-size:13px;cursor:pointer;transition:all .12s;border:none;background:transparent;width:100%;text-align:left;font-family:var(--font-ui);font-weight:500;min-height:38px;}
-.snav-item:hover{color:var(--text2);background:rgba(255,255,255,.04);}
-.snav-item.active{color:var(--accent);background:rgba(79,142,247,.08);font-weight:600;}
-.snav-item .si{font-size:15px;width:20px;text-align:center;flex-shrink:0;}
-.snav-sep{height:1px;background:var(--border);margin:8px 0;}
-.sec{display:none;max-width:680px;}
-.sec.active{display:block!important;}
-
-/* ── CARDS / FORMS ── */
-.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;margin-bottom:16px;}
-.card-header{padding:13px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
-.card-title{font-size:13px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:8px;}
-.card-body{padding:18px;}
-.form-group{margin-bottom:14px;}
-.form-group:last-child{margin-bottom:0;}
-.form-label{display:block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text3);margin-bottom:5px;}
-.form-hint{font-size:11px;color:var(--text3);margin-top:3px;line-height:1.4;}
-.form-input,.form-select,.form-textarea{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r-md);padding:9px 12px;color:var(--text);font-family:var(--font-ui);outline:none;transition:border-color .15s;}
-.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--accent);}
-.form-input::placeholder,.form-textarea::placeholder{color:var(--text3);}
-.form-select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%234d5568' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:30px;}
-.form-select option{background:var(--bg2);}
-.form-textarea{resize:vertical;min-height:72px;line-height:1.6;}
-.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
-.form-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
-
-/* Buttons */
-.btn{padding:9px 16px;border-radius:var(--r-md);font-family:var(--font-ui);font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;border:none;display:inline-flex;align-items:center;gap:6px;min-height:38px;}
-.btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;}
-.btn-primary:hover{opacity:.9;transform:translateY(-1px);}
-.btn-primary:disabled{opacity:.4;cursor:not-allowed;transform:none;}
-.btn-secondary{background:var(--surface2);border:1px solid var(--border2);color:var(--text2);}
-.btn-secondary:hover{color:var(--text);border-color:var(--border2);}
-.btn-danger{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.25);color:var(--danger);}
-.btn-danger:hover{background:rgba(239,68,68,.18);}
-.save-bar{display:flex;justify-content:flex-end;gap:8px;margin-top:16px;padding-top:14px;border-top:1px solid var(--border);}
-
-/* Toggle Switch */
-.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;}
-.toggle-row + .toggle-row{border-top:1px solid var(--border);}
-.toggle-label{font-size:13px;color:var(--text2);font-weight:500;}
-.toggle-sub{font-size:11px;color:var(--text3);margin-top:2px;}
-.toggle{position:relative;display:inline-block;width:42px;height:24px;flex-shrink:0;}
-.toggle input{opacity:0;width:0;height:0;}
-.toggle-slider{position:absolute;cursor:pointer;inset:0;background:var(--surface2);border:1px solid var(--border2);border-radius:24px;transition:.2s;}
-.toggle-slider:before{position:absolute;content:"";height:16px;width:16px;left:3px;bottom:3px;background:var(--text3);border-radius:50%;transition:.2s;}
-.toggle input:checked + .toggle-slider{background:var(--accent);border-color:var(--accent);}
-.toggle input:checked + .toggle-slider:before{transform:translateX(18px);background:#fff;}
-
-/* Wochentag Checkboxen */
-.day-picker{display:flex;gap:6px;flex-wrap:wrap;}
-.day-btn{width:38px;height:38px;border-radius:var(--r-md);border:1px solid var(--border2);background:var(--bg3);color:var(--text3);font-size:11px;font-weight:700;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;}
-.day-btn.active{background:rgba(79,142,247,.15);border-color:var(--accent);color:var(--accent);}
-.day-btn:hover:not(.active){background:var(--surface2);color:var(--text2);}
-
-/* Informations-Box */
-.info-box{padding:12px 14px;background:rgba(79,142,247,.06);border:1px solid rgba(79,142,247,.15);border-radius:var(--r-md);font-size:12px;color:var(--text2);line-height:1.55;}
-.info-box strong{color:var(--accent);}
-.warn-box{padding:12px 14px;background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.2);border-left:3px solid var(--warning);border-radius:var(--r-md);font-size:12px;color:var(--text2);line-height:1.55;}
-.warn-box strong{color:var(--warning);}
-.lock-box{padding:12px 14px;background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.15);border-left:3px solid var(--danger);border-radius:var(--r-md);font-size:12px;color:var(--text2);line-height:1.55;}
-.lock-box strong{color:var(--danger);}
-
-/* Paket Grid */
-.paket-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px;}
-.pk{border:1px solid var(--border);border-radius:var(--r-lg);padding:14px;position:relative;transition:border-color .15s;}
-.pk.aktiv-starter{border-color:var(--accent);background:rgba(79,142,247,.04);}
-.pk.aktiv-pro{border-color:var(--warning);background:rgba(245,158,11,.04);}
-.pk.aktiv-ent{border-color:var(--purple);background:rgba(139,92,246,.04);}
-.pk-badge{position:absolute;top:8px;right:8px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;padding:2px 6px;border-radius:4px;}
-.pk-name{font-weight:700;font-size:13px;color:var(--text);margin-bottom:2px;}
-.pk-price{font-size:11px;color:var(--text3);margin-bottom:8px;}
-.pk-feat{font-size:11px;color:var(--text2);padding:2px 0;display:flex;align-items:center;gap:5px;}
-.pk-feat::before{content:"✓";color:var(--success);font-size:10px;flex-shrink:0;}
-.pk-feat.locked{color:var(--text3);}
-.pk-feat.locked::before{content:"🔒";font-size:9px;}
-
-/* Sync-Status Badge */
-.sync-badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:3px 8px;border-radius:10px;}
-.sync-badge.ok{background:rgba(16,185,129,.1);color:var(--success);border:1px solid rgba(16,185,129,.2);}
-.sync-badge.pending{background:rgba(245,158,11,.1);color:var(--warning);border:1px solid rgba(245,158,11,.2);}
-.sync-badge.err{background:rgba(239,68,68,.1);color:var(--danger);border:1px solid rgba(239,68,68,.2);}
-
-/* Toast */
-.toast-prova{position:fixed;bottom:24px;right:24px;z-index:600;padding:11px 18px;border-radius:var(--r-md);font-size:13px;font-weight:600;background:var(--surface2);border:1px solid rgba(16,185,129,.35);color:var(--success);transition:all .3s cubic-bezier(.34,1.56,.64,1);opacity:0;transform:translateY(16px);pointer-events:none;}
-.toast-prova.show{opacity:1;transform:translateY(0);}
-.toast-prova.err{border-color:rgba(239,68,68,.35);color:var(--danger);}
-
-/* Signatur */
-.sig-dropzone{border:2px dashed var(--border2);border-radius:var(--r-lg);padding:28px;text-align:center;cursor:pointer;transition:border-color .2s;}
-.sig-dropzone:hover{border-color:var(--accent);}
-
-/* Urlaubsmodus */
-.urlaub-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
-
-/* Responsive */
-@media(max-width:768px){
-  .burger{display:flex;}
-  .einst-layout{grid-template-columns:1fr;height:auto;overflow:visible;}
-  .einst-snav{flex-direction:row;flex-wrap:wrap;height:auto;border-right:none;border-bottom:1px solid var(--border);padding:10px;}
-  .snav-sec{display:none;}
-  .snav-item{width:auto;padding:6px 10px;font-size:12px;}
-  .einst-smain{padding:16px 16px 80px;}
-  .paket-grid{grid-template-columns:1fr;}
-  .form-row,.form-row-3{grid-template-columns:1fr;}
-}
-@keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
-.sec.active{animation:fadeIn .2s ease;}
-
-  /* ── SUPPORT FAB ── */
-  .support-fab{position:fixed;bottom:20px;right:20px;width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,var(--accent,#4f8ef7),#3a7be0);border:none;color:#fff;font-size:20px;cursor:pointer;box-shadow:0 4px 16px rgba(79,142,247,.4);z-index:300;transition:all .2s;display:flex;align-items:center;justify-content:center;}
-  .support-fab:hover{transform:scale(1.08);box-shadow:0 6px 22px rgba(79,142,247,.5);}
-  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:400;backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:20px;}
-  .modal-overlay.open{display:flex;}
-  .modal-box{background:var(--surface,#1c2537);border:1px solid var(--border2,rgba(255,255,255,.12));border-radius:16px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;}
-  .modal-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border,rgba(255,255,255,.07));}
-  .modal-title{font-size:15px;font-weight:700;color:var(--text,#e8eaf0);}
-  .modal-close{background:none;border:none;color:var(--text3,#6b7a99);font-size:18px;cursor:pointer;padding:4px;border-radius:4px;}
-  .modal-close:hover{color:var(--text,#e8eaf0);}
-  .modal-body{padding:20px;}
-  .sup-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text3,#6b7a99);margin-bottom:5px;}
-  .sup-input{width:100%;padding:9px 12px;background:var(--bg3,#161f30);border:1px solid var(--border2,rgba(255,255,255,.12));border-radius:8px;color:var(--text,#e8eaf0);font-size:13px;font-family:inherit;outline:none;margin-bottom:12px;}
-  .sup-input:focus{border-color:var(--accent,#4f8ef7);}
-  .sup-textarea{resize:vertical;min-height:90px;}
-  .sup-err{font-size:12px;color:var(--red,#ef4444);margin-bottom:8px;display:none;}
-  .sup-send-btn{width:100%;padding:11px;background:linear-gradient(135deg,var(--accent,#4f8ef7),#3a7be0);border:none;border-radius:8px;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;}
-  .sup-send-btn:disabled{opacity:.5;cursor:not-allowed;}
-  .sup-ok{display:none;text-align:center;padding:20px 0;}
-  .sup-ok-icon{font-size:36px;margin-bottom:8px;}
-  .sup-ok-title{font-size:15px;font-weight:700;color:var(--green,#10b981);margin-bottom:4px;}
-  .sup-ok-sub{font-size:12px;color:var(--text3,#6b7a99);}
-@media(max-width:768px){.bottom-nav{display:flex !important;}}
-
-/* ════════════════════════════════════════
-   PREMIUM THEME SWITCHER — Linear/Vercel Style
-   ════════════════════════════════════════ */
-.theme-card {
-  border: 2px solid var(--border);
-  border-radius: 12px;
-  overflow: hidden;
-  cursor: pointer;
-  transition: border-color .2s, transform .15s, box-shadow .2s;
-  background: var(--surface);
-  position: relative;
-}
-.theme-card:hover {
-  border-color: var(--accent, #4f8ef7);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(0,0,0,.35);
-}
-.theme-card.tc-active {
-  border-color: var(--accent, #4f8ef7);
-  box-shadow: 0 0 0 1px var(--accent, #4f8ef7), 0 6px 20px rgba(79,142,247,.2);
+/* ═══════════════════════════════════════════════════════
+   PROVA DESIGN SYSTEM — Einstellungen v2
+   Mobile-first · Sidebar · Tablet-optimized
+═══════════════════════════════════════════════════════ */
+:root {
+  --bg-primary:    #0a0e17;
+  --bg-secondary:  #111827;
+  --bg-card:       #141b2d;
+  --bg-hover:      #1a2235;
+  --border:        rgba(255,255,255,.07);
+  --border-active: rgba(79,142,247,.35);
+  --text-primary:  #e2e8f0;
+  --text-secondary:#94a3b8;
+  --text-muted:    #4b5563;
+  --accent-blue:   #4f8ef7;
+  --accent-purple: #a78bfa;
+  --accent-green:  #10b981;
+  --accent-red:    #ef4444;
+  --accent-amber:  #f59e0b;
+  --sidebar-w:     240px;
+  --topbar-h:      60px;
+  --radius:        12px;
+  --radius-sm:     8px;
+  --shadow:        0 4px 24px rgba(0,0,0,.4);
 }
 
-/* Mini UI Preview */
-.tc-preview {
-  height: 80px;
-  display: flex;
-  border-radius: 8px 8px 0 0;
-  overflow: hidden;
-}
-.tc-preview-dark { background: #0b0d11; }
-.tc-preview-light { background: #f4f5f7; }
-.tc-preview-system {
-  background: linear-gradient(135deg, #0b0d11 50%, #f4f5f7 50%);
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { font-size: 16px; -webkit-text-size-adjust: 100%; }
+
+body {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  line-height: 1.5;
+  min-height: 100vh;
+  min-height: -webkit-fill-available;
+  overflow-x: hidden;
 }
 
-/* Mini Sidebar */
-.tc-mini-sidebar {
-  width: 28px;
-  background: #111318;
-  padding: 5px 4px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  flex-shrink: 0;
-}
-.tc-mini-sidebar-light { background: #ffffff; border-right: 1px solid #e5e7eb; }
-.tc-mini-logo {
-  width: 16px; height: 8px;
-  background: #4f8ef7;
-  border-radius: 3px;
-  margin-bottom: 4px;
-}
-.tc-mini-logo-light { background: #2563eb; }
-.tc-mini-item {
-  height: 5px;
-  background: rgba(255,255,255,.12);
-  border-radius: 2px;
-}
-.tc-mini-item-light { background: rgba(0,0,0,.08); }
-.tc-mini-item-active {
-  background: rgba(79,142,247,.7);
-  border-radius: 2px;
-}
-.tc-mini-item-active-light { background: rgba(37,99,235,.2); }
-
-/* Mini Main Content */
-.tc-mini-main {
-  flex: 1;
-  background: #0b0d11;
-  padding: 6px;
-}
-.tc-mini-main-light { background: #f4f5f7; }
-.tc-mini-header {
-  height: 8px;
-  background: rgba(255,255,255,.08);
-  border-radius: 3px;
-  margin-bottom: 5px;
-}
-.tc-mini-header-light { background: rgba(0,0,0,.07); }
-.tc-mini-card {
-  height: 12px;
-  background: rgba(255,255,255,.06);
-  border-radius: 4px;
-  margin-bottom: 4px;
-  width: 100%;
-}
-.tc-mini-card-light { background: #ffffff; box-shadow: 0 1px 3px rgba(0,0,0,.1); }
-
-/* Label + Check */
-.tc-label {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 10px;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text2);
-  border-top: 1px solid var(--border);
-}
-.tc-check {
-  width: 16px; height: 16px;
-  border-radius: 50%;
-  border: 2px solid var(--border2);
-  background: transparent;
-  font-size: 9px;
-  display: flex; align-items: center; justify-content: center;
-  color: transparent;
-  transition: all .2s;
-  flex-shrink: 0;
-}
-.theme-card.tc-active .tc-check {
-  background: var(--accent, #4f8ef7);
-  border-color: var(--accent, #4f8ef7);
-  color: #fff;
-}
-
-/* ACCENT COLOR SWATCHES */
-.accent-swatch {
-  width: 28px; height: 28px;
-  border-radius: 50%;
-  background: var(--sc);
-  border: 3px solid transparent;
-  cursor: pointer;
-  transition: transform .15s, border-color .15s, box-shadow .15s;
-  position: relative;
-}
-.accent-swatch:hover {
-  transform: scale(1.15);
-  box-shadow: 0 2px 8px rgba(0,0,0,.4);
-}
-.accent-swatch.ac-active {
-  border-color: #fff;
-  box-shadow: 0 0 0 2px var(--sc), 0 2px 8px rgba(0,0,0,.4);
-}
-
-/* Transition für Theme-Wechsel */
-html { transition: background-color .25s, color .25s; }
-
-/* ════════════════════════════════════════════════════════
-   PREMIUM BILLING PAGE — Linear / Vercel / Raycast Style
-   ════════════════════════════════════════════════════════ */
-
-/* ── Current Plan Hero ── */
-.plan-hero {
-  border-radius: 16px;
-  padding: 22px 24px;
-  margin-bottom: 20px;
-  position: relative;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  flex-wrap: wrap;
-}
-.plan-hero-solo {
-  background: linear-gradient(135deg, rgba(79,142,247,.1) 0%, rgba(79,142,247,.04) 100%);
-  border: 1px solid rgba(79,142,247,.25);
-}
-.plan-hero-team {
-  background: linear-gradient(135deg, rgba(139,92,246,.12) 0%, rgba(139,92,246,.04) 100%);
-  border: 1px solid rgba(139,92,246,.3);
-}
-.plan-hero::before {
-  content: '';
-  position: absolute;
+/* ─── TOPBAR ─────────────────────────────────────────── */
+.topbar {
+  position: fixed;
   top: 0; left: 0; right: 0;
-  height: 2px;
-  background: linear-gradient(90deg, var(--plan-color, #4f8ef7), transparent);
-}
-.plan-hero-left { flex: 1; min-width: 0; }
-.plan-hero-badge {
-  display: inline-flex;
+  height: var(--topbar-h);
+  background: rgba(10,14,23,.95);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  display: flex;
   align-items: center;
-  gap: 5px;
-  padding: 3px 10px;
-  border-radius: 20px;
+  padding: 0 20px;
+  gap: 12px;
+  z-index: 400;
+}
+
+.topbar-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+}
+
+.topbar-logo svg { width: 28px; height: 28px; flex-shrink: 0; }
+
+.topbar-logo-text {
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: -.02em;
+  color: var(--text-primary);
+}
+
+.topbar-logo-text span { color: var(--accent-blue); }
+
+.topbar-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  padding-left: 12px;
+  border-left: 1px solid var(--border);
+  margin-left: 4px;
+}
+
+.topbar-spacer { flex: 1; }
+
+.topbar-paket-badge {
   font-size: 10px;
   font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 8px;
+  letter-spacing: .04em;
+  background: rgba(79,142,247,.12);
+  color: var(--accent-blue);
+  border: 1px solid rgba(79,142,247,.25);
+}
+
+/* Hamburger — nur Mobile */
+.topbar-hamburger {
+  display: none;
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 8px;
+  border-radius: var(--radius-sm);
+  transition: background .2s;
+  -webkit-tap-highlight-color: transparent;
+}
+.topbar-hamburger:hover { background: var(--bg-hover); }
+.topbar-hamburger svg { display: block; width: 22px; height: 22px; }
+
+/* ─── LAYOUT ─────────────────────────────────────────── */
+.layout {
+  display: flex;
+  padding-top: var(--topbar-h);
+  min-height: 100vh;
+}
+
+/* ─── SIDEBAR ────────────────────────────────────────── */
+.sidebar {
+  position: fixed;
+  top: var(--topbar-h);
+  left: 0;
+  width: var(--sidebar-w);
+  height: calc(100vh - var(--topbar-h));
+  background: var(--bg-secondary);
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+  overflow-x: hidden;
+  z-index: 300;
+  display: flex;
+  flex-direction: column;
+  transition: transform .28s cubic-bezier(.4,0,.2,1);
+  -webkit-overflow-scrolling: touch;
+}
+
+.sidebar::-webkit-scrollbar { width: 4px; }
+.sidebar::-webkit-scrollbar-track { background: transparent; }
+.sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,.1); border-radius: 2px; }
+
+.sidebar-nav { padding: 16px 0; flex: 1; }
+
+.sidebar-group-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .1em;
   text-transform: uppercase;
-  letter-spacing: .06em;
-  margin-bottom: 8px;
+  color: var(--text-muted);
+  padding: 12px 18px 6px;
 }
-.plan-hero-name {
-  font-size: 28px;
-  font-weight: 800;
-  letter-spacing: -.03em;
-  color: var(--text);
-  margin-bottom: 4px;
+
+.snav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 18px;
+  cursor: pointer;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+  color: var(--text-secondary);
+  font-size: 13.5px;
+  font-weight: 500;
+  border-radius: 0;
+  transition: background .15s, color .15s;
+  -webkit-tap-highlight-color: transparent;
+  min-height: 44px;
+  position: relative;
 }
-.plan-hero-sub {
-  font-size: 12px;
-  color: var(--text3);
-  line-height: 1.6;
+
+.snav-item:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
 }
-.plan-hero-price {
-  text-align: right;
+
+.snav-item.active {
+  background: rgba(79,142,247,.1);
+  color: var(--accent-blue);
+  font-weight: 600;
+}
+
+.snav-item.active::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 4px; bottom: 4px;
+  width: 3px;
+  background: var(--accent-blue);
+  border-radius: 0 2px 2px 0;
+}
+
+.snav-icon {
+  font-size: 16px;
+  width: 22px;
+  text-align: center;
   flex-shrink: 0;
 }
-.plan-hero-price .amount {
-  font-size: 32px;
-  font-weight: 800;
-  letter-spacing: -.03em;
-  color: var(--text);
-  line-height: 1;
-}
-.plan-hero-price .per {
-  font-size: 11px;
-  color: var(--text3);
-  margin-top: 2px;
+
+.snav-label { flex: 1; }
+
+.snav-badge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 6px;
+  background: rgba(167,139,250,.15);
+  color: var(--accent-purple);
+  border: 1px solid rgba(167,139,250,.2);
+  flex-shrink: 0;
 }
 
-/* ── Trial Countdown ── */
-.trial-countdown {
+/* Sidebar Footer */
+.sidebar-footer {
+  padding: 16px 18px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sidebar-footer-btn {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 14px 18px;
-  background: rgba(245,158,11,.07);
-  border: 1px solid rgba(245,158,11,.2);
-  border-radius: 12px;
-  margin-bottom: 20px;
-  gap: 12px;
-}
-.trial-countdown-left {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.trial-countdown-icon { font-size: 22px; }
-.trial-countdown-text { font-size: 13px; color: var(--text2); }
-.trial-countdown-days {
-  font-weight: 800;
-  color: #f59e0b;
-  font-size: 15px;
-}
-.trial-progress {
+  gap: 8px;
+  padding: 9px 12px;
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-size: 13px;
+  cursor: pointer;
   width: 100%;
-  height: 4px;
-  background: rgba(245,158,11,.15);
-  border-radius: 2px;
-  margin-top: 8px;
-}
-.trial-progress-fill {
-  height: 100%;
-  border-radius: 2px;
-  background: #f59e0b;
-  transition: width .5s ease;
+  text-align: left;
+  transition: background .15s, color .15s;
+  min-height: 40px;
+  -webkit-tap-highlight-color: transparent;
 }
 
-/* ── Usage Meters (Linear Style) ── */
-.usage-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-  margin-bottom: 20px;
+.sidebar-footer-btn:hover { background: var(--bg-hover); color: var(--text-primary); }
+
+.sidebar-footer-btn.danger:hover { background: rgba(239,68,68,.1); color: var(--accent-red); }
+
+/* Sidebar Overlay (Tablet/Mobile) */
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.6);
+  z-index: 290;
+  opacity: 0;
+  transition: opacity .28s;
 }
-.usage-card {
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 14px;
+
+.sidebar-overlay.visible { opacity: 1; }
+
+/* ─── MAIN CONTENT ───────────────────────────────────── */
+.main-content {
+  flex: 1;
+  margin-left: var(--sidebar-w);
+  min-width: 0;
+  padding: 32px;
+  max-width: 860px;
 }
-.usage-label {
-  font-size: 11px;
-  color: var(--text3);
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: .04em;
-  margin-bottom: 8px;
+
+/* ─── SECTION ────────────────────────────────────────── */
+.sec {
+  display: none;
 }
-.usage-value {
+.sec.active { display: block; }
+
+.sec-header {
+  margin-bottom: 28px;
+}
+
+.sec-title {
   font-size: 22px;
   font-weight: 800;
-  color: var(--text);
+  color: var(--text-primary);
   letter-spacing: -.02em;
   margin-bottom: 6px;
 }
-.usage-value span { font-size: 13px; font-weight: 500; color: var(--text3); }
-.usage-bar {
-  width: 100%;
-  height: 5px;
-  background: var(--border);
-  border-radius: 3px;
-  overflow: hidden;
-}
-.usage-bar-fill {
-  height: 100%;
-  border-radius: 3px;
-  background: var(--accent, #4f8ef7);
-  transition: width .6s cubic-bezier(.4,0,.2,1);
-}
-.usage-bar-fill.warn { background: #f59e0b; }
-.usage-bar-fill.danger { background: #ef4444; }
 
-/* ── Billing Cycle Toggle (Raycast Style) ── */
-.billing-toggle {
-  display: inline-flex;
-  align-items: center;
-  background: var(--surface2);
+.sec-subtitle {
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+/* ─── CARDS ──────────────────────────────────────────── */
+.card {
+  background: var(--bg-card);
   border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 3px;
-  gap: 2px;
-  margin-bottom: 16px;
-}
-.billing-toggle-btn {
-  padding: 6px 14px;
-  border-radius: 8px;
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  border: none;
-  background: transparent;
-  color: var(--text3);
-  transition: all .15s;
-  font-family: inherit;
-  position: relative;
-}
-.billing-toggle-btn.active {
-  background: var(--surface);
-  color: var(--text);
-  box-shadow: 0 1px 4px rgba(0,0,0,.3);
-}
-.billing-save-badge {
-  position: absolute;
-  top: -6px;
-  right: -2px;
-  background: #10b981;
-  color: #fff;
-  font-size: 8px;
-  font-weight: 800;
-  padding: 1px 4px;
-  border-radius: 4px;
-  letter-spacing: .03em;
-}
-
-/* ── Plan Cards (Vercel/Raycast Style) ── */
-.plan-cards {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
+  border-radius: var(--radius);
+  padding: 24px;
   margin-bottom: 20px;
 }
-.plan-card {
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 20px;
-  position: relative;
-  transition: all .2s;
-  cursor: pointer;
-  background: var(--surface);
-}
-.plan-card:hover { border-color: var(--border2); transform: translateY(-2px); }
-.plan-card.plan-active-solo {
-  border-color: rgba(79,142,247,.5);
-  background: rgba(79,142,247,.04);
-  box-shadow: 0 0 0 1px rgba(79,142,247,.2);
-}
-.plan-card.plan-active-team {
-  border-color: rgba(139,92,246,.5);
-  background: rgba(139,92,246,.04);
-  box-shadow: 0 0 0 1px rgba(139,92,246,.2);
-}
-.plan-card-badge {
-  position: absolute;
-  top: -1px; right: 16px;
-  padding: 3px 10px;
-  border-radius: 0 0 8px 8px;
-  font-size: 9px;
-  font-weight: 800;
+
+.card-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-secondary);
   text-transform: uppercase;
   letter-spacing: .06em;
-}
-.plan-card-name {
-  font-size: 18px;
-  font-weight: 800;
-  color: var(--text);
-  margin-bottom: 3px;
-}
-.plan-card-desc {
-  font-size: 11px;
-  color: var(--text3);
-  margin-bottom: 14px;
-  line-height: 1.5;
-}
-.plan-card-price {
-  display: flex;
-  align-items: baseline;
-  gap: 4px;
-  margin-bottom: 16px;
-}
-.plan-card-price .big {
-  font-size: 30px;
-  font-weight: 800;
-  letter-spacing: -.03em;
-  color: var(--text);
-}
-.plan-card-price .small {
-  font-size: 12px;
-  color: var(--text3);
-}
-.plan-card-price .strike {
-  font-size: 13px;
-  color: var(--text3);
-  text-decoration: line-through;
-}
-.plan-feature {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  font-size: 12px;
-  color: var(--text2);
-  margin-bottom: 6px;
-  line-height: 1.4;
-}
-.plan-feature-check {
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 8px;
-  flex-shrink: 0;
-  margin-top: 1px;
-}
-.plan-feature-check.yes { background: rgba(16,185,129,.15); color: #10b981; }
-.plan-feature-check.no { background: rgba(255,255,255,.05); color: var(--text3); }
-.plan-cta {
-  width: 100%;
-  padding: 10px;
-  border-radius: 9px;
-  font-size: 13px;
-  font-weight: 700;
-  cursor: pointer;
-  border: none;
-  font-family: inherit;
-  transition: all .15s;
-  margin-top: 16px;
-}
-.plan-cta-current {
-  background: var(--surface2);
-  border: 1px solid var(--border2);
-  color: var(--text3);
-  cursor: default;
-}
-.plan-cta-upgrade {
-  background: linear-gradient(135deg, #4f8ef7, #3a7be0);
-  color: #fff;
-}
-.plan-cta-upgrade:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 14px rgba(79,142,247,.45);
-}
-.plan-cta-team {
-  background: linear-gradient(135deg, #8b5cf6, #7c3aed);
-  color: #fff;
-}
-.plan-cta-team:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 14px rgba(139,92,246,.45);
+  margin-bottom: 20px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border);
 }
 
-/* ── FAQ ── */
-.billing-faq { margin-top: 12px; }
-.faq-item {
-  border-bottom: 1px solid var(--border);
-  padding: 12px 0;
+/* ─── FORM ELEMENTS ──────────────────────────────────── */
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
 }
-.faq-item:last-child { border-bottom: none; }
-.faq-q {
-  font-size: 13px;
+
+.form-grid.cols-1 { grid-template-columns: 1fr; }
+.form-grid.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-group.span-2 { grid-column: span 2; }
+
+.form-label {
+  font-size: 12px;
   font-weight: 600;
-  color: var(--text);
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+
+.form-label .required {
+  color: var(--accent-red);
+  margin-left: 3px;
+}
+
+.form-input, .form-select, .form-textarea {
+  width: 100%;
+  background: var(--bg-hover);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-size: 14px;
+  font-family: inherit;
+  padding: 11px 14px;
+  transition: border-color .2s, box-shadow .2s;
+  outline: none;
+  -webkit-appearance: none;
+  min-height: 44px; /* Touch-Target */
+}
+
+.form-input:focus, .form-select:focus, .form-textarea:focus {
+  border-color: var(--accent-blue);
+  box-shadow: 0 0 0 3px rgba(79,142,247,.15);
+}
+
+.form-input::placeholder { color: var(--text-muted); }
+.form-textarea { resize: vertical; min-height: 100px; }
+.form-select option { background: var(--bg-card); }
+
+.form-hint {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 3px;
+}
+
+/* ─── BUTTONS ────────────────────────────────────────── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 11px 22px;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 600;
   cursor: pointer;
+  border: none;
+  transition: opacity .2s, transform .1s;
+  text-decoration: none;
+  min-height: 44px;
+  -webkit-tap-highlight-color: transparent;
+  white-space: nowrap;
+}
+
+.btn:active { transform: scale(.97); }
+.btn:hover { opacity: .88; }
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--accent-blue), #6c47ff);
+  color: #fff;
+}
+
+.btn-secondary {
+  background: rgba(255,255,255,.06);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+}
+
+.btn-danger {
+  background: rgba(239,68,68,.12);
+  color: var(--accent-red);
+  border: 1px solid rgba(239,68,68,.25);
+}
+
+.btn-success {
+  background: rgba(16,185,129,.12);
+  color: var(--accent-green);
+  border: 1px solid rgba(16,185,129,.25);
+}
+
+.btn-sm { padding: 7px 14px; font-size: 12px; min-height: 36px; }
+.btn-full { width: 100%; }
+.btn[disabled] { opacity: .4; cursor: not-allowed; pointer-events: none; }
+
+/* ─── SAVE BAR ───────────────────────────────────────── */
+.save-bar {
+  position: sticky;
+  bottom: 0;
+  background: rgba(10,14,23,.96);
+  backdrop-filter: blur(12px);
+  border-top: 1px solid var(--border);
+  padding: 14px 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 24px;
+  z-index: 100;
+}
+
+/* ─── TOGGLE ─────────────────────────────────────────── */
+.toggle-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border);
+  gap: 16px;
 }
-.faq-q::after { content: '+'; font-size: 16px; color: var(--text3); flex-shrink: 0; }
-.faq-item.open .faq-q::after { content: '−'; }
-.faq-a {
-  display: none;
-  font-size: 12px;
-  color: var(--text3);
-  line-height: 1.7;
-  margin-top: 8px;
-}
-.faq-item.open .faq-a { display: block; }
 
-/* ── Trust Bar ── */
-.trust-bar {
+.toggle-row:last-child { border-bottom: none; padding-bottom: 0; }
+
+.toggle-info { flex: 1; }
+.toggle-label { font-size: 14px; font-weight: 600; color: var(--text-primary); }
+.toggle-desc  { font-size: 12px; color: var(--text-muted); margin-top: 3px; }
+
+.toggle-switch {
+  position: relative;
+  width: 46px;
+  height: 26px;
+  flex-shrink: 0;
+}
+
+.toggle-switch input { opacity: 0; width: 0; height: 0; }
+
+.toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  inset: 0;
+  background: rgba(255,255,255,.1);
+  border-radius: 26px;
+  transition: background .25s;
+}
+
+.toggle-slider::before {
+  content: '';
+  position: absolute;
+  height: 20px; width: 20px;
+  left: 3px; bottom: 3px;
+  background: #fff;
+  border-radius: 50%;
+  transition: transform .25s;
+}
+
+.toggle-switch input:checked + .toggle-slider {
+  background: var(--accent-blue);
+}
+
+.toggle-switch input:checked + .toggle-slider::before {
+  transform: translateX(20px);
+}
+
+/* Bigger touch target for toggle */
+.toggle-switch { min-width: 46px; }
+
+/* ─── ARBEITSTAGE BUTTONS ────────────────────────────── */
+.arbeitstage-grid {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+
+.tag-btn {
+  padding: 10px 16px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: var(--bg-hover);
+  color: var(--text-secondary);
+  transition: all .2s;
+  min-height: 44px;
+  min-width: 56px;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.tag-btn.active {
+  background: rgba(79,142,247,.15);
+  border-color: var(--accent-blue);
+  color: var(--accent-blue);
+}
+
+/* ─── PAKET-KARTE ────────────────────────────────────── */
+.paket-karte {
+  background: var(--bg-hover);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+}
+
+.paket-karte.aktiv {
+  border-color: var(--border-active);
+  background: rgba(79,142,247,.05);
+}
+
+.paket-badge-lg {
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: .04em;
+  flex-shrink: 0;
+}
+
+.paket-badge-lg.Solo   { background: rgba(79,142,247,.15);  color: var(--accent-blue);   border: 1px solid rgba(79,142,247,.3); }
+.paket-badge-lg.Team   { background: rgba(167,139,250,.15); color: var(--accent-purple); border: 1px solid rgba(167,139,250,.3); }
+
+.paket-info { flex: 1; min-width: 0; }
+.paket-name { font-size: 18px; font-weight: 800; color: var(--text-primary); margin-bottom: 6px; }
+.paket-preis { font-size: 24px; font-weight: 900; color: var(--text-primary); }
+.paket-preis span { font-size: 13px; font-weight: 400; color: var(--text-muted); }
+.paket-desc { font-size: 13px; color: var(--text-secondary); margin-top: 4px; }
+
+.paket-features {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 16px;
+}
+
+.paket-feature {
   display: flex;
   align-items: center;
-  gap: 16px;
-  padding: 12px 16px;
-  background: rgba(16,185,129,.05);
-  border: 1px solid rgba(16,185,129,.15);
-  border-radius: 10px;
-  font-size: 11px;
-  color: var(--text3);
-  margin-top: 16px;
-  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-secondary);
 }
-.trust-item { display: flex; align-items: center; gap: 5px; }
-.trust-item span:first-child { color: #10b981; }
 
-@media(max-width:700px) {
-  .plan-cards { grid-template-columns: 1fr; }
-  .usage-grid { grid-template-columns: 1fr; }
-  .plan-hero { flex-direction: column; align-items: flex-start; }
-  .plan-hero-price { text-align: left; }
+.paket-feature .check { color: var(--accent-green); font-size: 14px; }
+.paket-feature .cross { color: var(--text-muted); font-size: 14px; }
+
+/* ─── SYNC BADGE ─────────────────────────────────────── */
+.sync-badge {
+  display: none;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 6px;
+}
+
+.sync-badge.pending { background: rgba(245,158,11,.12); color: var(--accent-amber); border: 1px solid rgba(245,158,11,.25); }
+.sync-badge.ok      { background: rgba(16,185,129,.12);  color: var(--accent-green); border: 1px solid rgba(16,185,129,.25); }
+.sync-badge.err     { background: rgba(239,68,68,.12);   color: var(--accent-red);   border: 1px solid rgba(239,68,68,.25); }
+
+/* ─── TOAST ──────────────────────────────────────────── */
+.toast-prova {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(80px);
+  background: rgba(20,27,45,.96);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 13px 22px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  z-index: 9999;
+  transition: transform .3s cubic-bezier(.34,1.56,.64,1);
+  white-space: nowrap;
+  max-width: 90vw;
+  text-align: center;
+  backdrop-filter: blur(12px);
+  box-shadow: var(--shadow);
+}
+
+.toast-prova.show { transform: translateX(-50%) translateY(0); }
+.toast-prova.err  { border-color: rgba(239,68,68,.35); color: var(--accent-red); }
+.toast-prova.ok   { border-color: rgba(16,185,129,.35); color: var(--accent-green); }
+
+/* ─── AVATAR / PROFIL-BILD ───────────────────────────── */
+.avatar-section {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 20px 0;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 20px;
+}
+
+.avatar-circle {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent-blue), #6c47ff);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  font-weight: 800;
+  color: #fff;
+  flex-shrink: 0;
+  cursor: pointer;
+  transition: opacity .2s;
+  position: relative;
+  overflow: hidden;
+}
+
+.avatar-circle:hover { opacity: .85; }
+
+.avatar-info h3 { font-size: 16px; font-weight: 700; color: var(--text-primary); }
+.avatar-info p  { font-size: 13px; color: var(--text-muted); margin-top: 4px; }
+
+/* ─── DANGER ZONE ────────────────────────────────────── */
+.danger-zone {
+  border: 1px solid rgba(239,68,68,.25);
+  background: rgba(239,68,68,.04);
+  border-radius: var(--radius);
+  padding: 20px 24px;
+}
+
+.danger-zone h4 { font-size: 14px; font-weight: 700; color: var(--accent-red); margin-bottom: 8px; }
+.danger-zone p  { font-size: 13px; color: var(--text-secondary); margin-bottom: 16px; }
+
+/* ─── SIGNATUR PREVIEW ───────────────────────────────── */
+.signatur-preview {
+  background: #1e2533;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 20px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.7;
+  margin-top: 12px;
+  white-space: pre-wrap;
+  min-height: 80px;
+}
+
+/* ─── STAT MINI ──────────────────────────────────────── */
+.stats-mini {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.stat-mini-item {
+  background: var(--bg-hover);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 14px;
+  text-align: center;
+}
+
+.stat-mini-val  { font-size: 22px; font-weight: 900; color: var(--text-primary); }
+.stat-mini-label{ font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+
+/* ─── UPLOAD ZONE ────────────────────────────────────── */
+.upload-zone {
+  border: 2px dashed var(--border);
+  border-radius: var(--radius);
+  padding: 32px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color .2s, background .2s;
+  background: transparent;
+}
+
+.upload-zone:hover, .upload-zone.drag-over {
+  border-color: var(--accent-blue);
+  background: rgba(79,142,247,.04);
+}
+
+.upload-zone-icon { font-size: 36px; margin-bottom: 10px; }
+.upload-zone-text { font-size: 14px; color: var(--text-secondary); }
+.upload-zone-sub  { font-size: 12px; color: var(--text-muted); margin-top: 6px; }
+
+/* ═══════════════════════════════════════════════════════
+   RESPONSIVE — TABLET (768px – 1024px)
+═══════════════════════════════════════════════════════ */
+@media (max-width: 1024px) {
+  :root { --sidebar-w: 220px; }
+  .main-content { padding: 24px 20px; }
+}
+
+@media (max-width: 900px) {
+  .form-grid { grid-template-columns: 1fr; }
+  .form-grid.cols-3 { grid-template-columns: 1fr 1fr; }
+  .form-group.span-2 { grid-column: span 1; }
+  .stats-mini { grid-template-columns: 1fr 1fr; }
+}
+
+/* ═══════════════════════════════════════════════════════
+   RESPONSIVE — TABLET SMALL / MOBILE (< 768px)
+═══════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  :root { --sidebar-w: 280px; }
+
+  .topbar-hamburger { display: flex; }
+  .topbar-title { display: none; }
+
+  /* Sidebar: off-canvas auf Mobile/Tablet */
+  .sidebar {
+    transform: translateX(-100%);
+    box-shadow: var(--shadow);
+  }
+
+  .sidebar.open {
+    transform: translateX(0);
+  }
+
+  .sidebar-overlay { display: block; }
+
+  .main-content {
+    margin-left: 0;
+    padding: 20px 16px;
+    padding-bottom: 100px; /* Platz für Bottom-Nav */
+  }
+
+  .form-grid,
+  .form-grid.cols-3 {
+    grid-template-columns: 1fr;
+  }
+
+  .form-group.span-2 { grid-column: span 1; }
+
+  .stats-mini { grid-template-columns: 1fr 1fr; }
+
+  .paket-karte { flex-direction: column; gap: 14px; }
+  .paket-preis { font-size: 20px; }
+
+  .save-bar { flex-wrap: wrap; }
+  .save-bar .btn { flex: 1; min-width: 120px; }
+
+  .sec-title { font-size: 18px; }
+
+  .arbeitstage-grid { gap: 6px; }
+  .tag-btn { padding: 10px 12px; font-size: 12px; }
+
+  .card { padding: 18px 16px; }
+}
+
+@media (max-width: 480px) {
+  .topbar { padding: 0 14px; gap: 10px; }
+  .topbar-logo-text { font-size: 15px; }
+  .stats-mini { grid-template-columns: 1fr; }
+  .paket-features { gap: 8px; }
+}
+
+/* ─── SAFE AREA (iPhone notch) ───────────────────────── */
+@supports (padding: max(0px)) {
+  .topbar  { padding-left: max(20px, env(safe-area-inset-left)); padding-right: max(20px, env(safe-area-inset-right)); }
+  .sidebar { padding-bottom: env(safe-area-inset-bottom); }
+  .main-content { padding-left: max(16px, env(safe-area-inset-left)); padding-right: max(16px, env(safe-area-inset-right)); }
+}
+
+/* ─── PRINT ──────────────────────────────────────────── */
+@media print {
+  .topbar, .sidebar, .save-bar, .toast-prova { display: none !important; }
+  .main-content { margin: 0 !important; padding: 0 !important; }
+  .sec { display: block !important; }
 }
 </style>
-<link rel="icon" type="image/svg+xml" href="/icons/icon-192.svg">
-<link rel="stylesheet" href="mobile.css">
-<link rel="stylesheet" href="prova-design.css">
+<script src="https://sites.super.myninja.ai/_assets/ninja-daytona-script.js"></script>
 </head>
 <body>
-<div class="app-shell">
 
-<!-- ═══ SIDEBAR ═══ -->
-<nav class="sidebar" id="sidebar"></nav>
-<div class="sb-overlay" id="sb-overlay" onclick="closeMobileSidebar()"></div>
+<!-- ═══ TOPBAR ═══════════════════════════════════════════ -->
+<header class="topbar">
+  <a href="dashboard.html" class="topbar-logo" title="Zurück zur Zentrale">
+    <svg viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect width="28" height="28" rx="7" fill="#4f8ef7"/>
+      <path d="M7 9h14M7 14h9M7 19h11" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+    </svg>
+    <span class="topbar-logo-text">PRO<span>VA</span></span>
+  </a>
+  <span class="topbar-title">Einstellungen</span>
+  <div class="topbar-spacer"></div>
+  <span class="topbar-paket-badge" id="topbar-paket-badge">Solo</span>
+  <button class="topbar-hamburger" id="hamburger-btn" aria-label="Menü öffnen" title="Menü">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+      <line x1="3" y1="6" x2="21" y2="6"/>
+      <line x1="3" y1="12" x2="21" y2="12"/>
+      <line x1="3" y1="18" x2="21" y2="18"/>
+    </svg>
+  </button>
+</header>
 
-<!-- ═══ MAIN ═══ -->
-<div class="main-wrap" id="main-wrap">
+<!-- ═══ LAYOUT ════════════════════════════════════════════ -->
+<div class="layout">
 
-  <header class="topbar">
-    <div class="topbar-left">
-      <button class="burger" onclick="openMobileSidebar()"><span></span><span></span><span></span></button>
-      <div class="breadcrumb"><span>PROVA</span><span style="color:var(--text3)">›</span><strong>Einstellungen</strong></div>
-    </div>
-    <div class="topbar-right">
-      <span class="sync-badge" id="sync-status" style="display:none;"></span>
-      <span class="topbar-paket" id="topbar-paket-badge"></span>
-      <button class="topbar-btn" title="Einstellungen">⚙</button>
-    </div>
-  </header>
+<!-- ─── SIDEBAR ──────────────────────────────────────── -->
+<aside class="sidebar" id="sidebar">
+  <nav class="sidebar-nav">
 
-  <div class="page-content">
-    <div class="einst-layout">
+    <div class="sidebar-group-label">Profil</div>
+    <button class="snav-item active" onclick="showSec('profil', this)" id="snav-profil">
+      <span class="snav-icon">👤</span>
+      <span class="snav-label">Mein Profil</span>
+    </button>
+    <button class="snav-item" onclick="showSec('buero', this)" id="snav-buero">
+      <span class="snav-icon">🏢</span>
+      <span class="snav-label">Büro & Adresse</span>
+    </button>
+    <button class="snav-item" onclick="showSec('zertifikate', this)" id="snav-zertifikate">
+      <span class="snav-icon">🏅</span>
+      <span class="snav-label">Zertifikate & SV-Info</span>
+    </button>
+    <button class="snav-item" onclick="showSec('signatur', this)" id="snav-signatur">
+      <span class="snav-icon">✍️</span>
+      <span class="snav-label">E-Mail-Signatur</span>
+    </button>
 
-      <!-- ═══ SETTINGS SIDEBAR NAV ═══ -->
-      <div class="einst-snav">
-        <div class="snav-sec">Persönlich</div>
-        <button class="snav-item active" onclick="showSec('profil',this)"><span class="si">👤</span>Profil</button>
-        <button class="snav-item" onclick="showSec('arbeitsweise',this)"><span class="si">🎨</span>Arbeitsweise</button>
-        <button class="snav-item" onclick="showSec('benachrichtigungen',this)"><span class="si">🔔</span>Benachrichtigungen</button>
-        <div class="snav-sep"></div>
-        <div class="snav-sec">Büro</div>
-        <button class="snav-item" onclick="showSec('buero',this)"><span class="si">🏢</span>Büro & Rechnungen</button>
-        <button class="snav-item" onclick="showSec('signatur',this)"><span class="si">✍️</span>Unterschrift</button>
-        <button class="snav-item" onclick="showSec('signatur2',this)"><span class="si">🔴</span>Rundstempel</button>
-        <div class="snav-sep"></div>
-        <div class="snav-sec">System</div>
-        <button class="snav-item" onclick="showSec('paket',this)"><span class="si">📦</span>Paket</button>
-        <button class="snav-item" id="snav-enterprise" style="display:none;" onclick="showSec('enterprise',this)"><span class="si" style="color:var(--purple)">💎</span>Enterprise</button>
-        <div class="snav-sep"></div>
-        <button class="snav-item" onclick="logout()" style="color:var(--danger);margin-top:auto;"><span class="si">🚪</span>Abmelden</button>
+    <div class="sidebar-group-label">Abrechnung</div>
+    <button class="snav-item" onclick="showSec('paket', this)" id="snav-paket">
+      <span class="snav-icon">💎</span>
+      <span class="snav-label">Paket & Abrechnung</span>
+    </button>
+
+    <div class="sidebar-group-label">App</div>
+    <button class="snav-item" onclick="showSec('benachrichtigungen', this)" id="snav-benachrichtigungen">
+      <span class="snav-icon">🔔</span>
+      <span class="snav-label">Benachrichtigungen</span>
+    </button>
+    <button class="snav-item" onclick="showSec('arbeitstage', this)" id="snav-arbeitstage">
+      <span class="snav-icon">📅</span>
+      <span class="snav-label">Arbeitstage & Zeiten</span>
+    </button>
+    <button class="snav-item" onclick="showSec('design', this)" id="snav-design">
+      <span class="snav-icon">🎨</span>
+      <span class="snav-label">Darstellung</span>
+    </button>
+
+    <div class="sidebar-group-label">Datenschutz</div>
+    <button class="snav-item" onclick="showSec('datenschutz', this)" id="snav-datenschutz">
+      <span class="snav-icon">🔒</span>
+      <span class="snav-label">Datenschutz & Konto</span>
+    </button>
+
+  </nav>
+
+  <div class="sidebar-footer">
+    <a href="dashboard.html" class="sidebar-footer-btn">
+      <span>⬅️</span> Zur Zentrale
+    </a>
+    <button class="sidebar-footer-btn danger" onclick="logout()">
+      <span>🚪</span> Abmelden
+    </button>
+  </div>
+</aside>
+
+<!-- Overlay für Mobile -->
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+
+<!-- ─── MAIN ──────────────────────────────────────────── -->
+<main class="main-content" id="main-content">
+
+<!-- ═══ SEKTION: MEIN PROFIL ═══════════════════════════ -->
+<section class="sec active" id="sec-profil">
+  <div class="sec-header">
+    <h1 class="sec-title">Mein Profil</h1>
+    <p class="sec-subtitle">Name, E-Mail und persönliche Angaben</p>
+  </div>
+
+  <div class="card">
+    <div class="avatar-section">
+      <div class="avatar-circle" id="avatar-circle" title="Profilbild ändern (demnächst)">AB</div>
+      <div class="avatar-info">
+        <h3 id="avatar-name">–</h3>
+        <p id="avatar-email">–</p>
       </div>
+      <span class="sync-badge" id="sync-profil">⏳ Speichern…</span>
+    </div>
 
-      <!-- ═══ SETTINGS CONTENT ═══ -->
-      <div class="einst-smain">
+    <div class="form-grid">
+      <div class="form-group">
+        <label class="form-label">Vorname <span class="required">*</span></label>
+        <input class="form-input" id="e-vorname" type="text" placeholder="Max" autocomplete="given-name">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Nachname <span class="required">*</span></label>
+        <input class="form-input" id="e-nachname" type="text" placeholder="Mustermann" autocomplete="family-name">
+      </div>
+      <div class="form-group">
+        <label class="form-label">E-Mail-Adresse</label>
+        <input class="form-input" id="e-email" type="email" placeholder="sv@beispiel.de" readonly style="opacity:.6;cursor:not-allowed;" autocomplete="email">
+        <span class="form-hint">E-Mail kann nicht geändert werden (Netlify Identity)</span>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Telefon</label>
+        <input class="form-input" id="e-telefon" type="tel" placeholder="+49 89 123 456" autocomplete="tel">
+      </div>
+      <div class="form-group span-2">
+        <label class="form-label">Qualifikation / Fachgebiet</label>
+        <input class="form-input" id="e-quali" type="text" placeholder="Öffentlich bestellter und vereidigter Sachverständiger für…">
+      </div>
+    </div>
+  </div>
 
-        <!-- ─── PROFIL ─── -->
-        <div class="sec active" id="sec-profil">
-          <div class="card">
-            <div class="card-header">
-              <div class="card-title">👤 Persönliche Daten</div>
-              <span class="sync-badge ok" id="profil-sync-badge" style="display:none;">✓ Gespeichert</span>
-            </div>
-            <div class="card-body">
-              <div class="form-row">
-                <div class="form-group">
-                  <label class="form-label">Vorname</label>
-                  <input id="e-vorname" class="form-input" type="text" placeholder="Thomas">
-                </div>
-                <div class="form-group">
-                  <label class="form-label">Nachname</label>
-                  <input id="e-nachname" class="form-input" type="text" placeholder="Müller">
-                </div>
-              </div>
-              <div class="form-group">
-                <label class="form-label">E-Mail</label>
-                <input id="e-email" class="form-input" type="email" placeholder="sv@buero.de">
-                <div class="form-hint">Diese E-Mail empfängt alle PROVA-Benachrichtigungen und Erinnerungen.</div>
-              </div>
-              <div class="form-group">
-                <label class="form-label">Telefon</label>
-                <input id="e-telefon" class="form-input" type="tel" placeholder="+49 221 ...">
-              </div>
-              <div class="form-group">
-                <label class="form-label">Qualifikation / Zertifizierung</label>
-                <input id="e-quali" class="form-input" type="text" placeholder="ö.b.u.v. Sachverständiger IHK Köln">
-              </div>
-              <div class="save-bar">
-                <button class="btn btn-primary" onclick="speichereProfil()">Speichern</button>
-              </div>
-            </div>
+  <div class="card">
+    <div class="card-title">Passwort ändern</div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label class="form-label">Neues Passwort</label>
+        <input class="form-input" id="e-pw-new" type="password" placeholder="Mindestens 8 Zeichen" autocomplete="new-password">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Passwort bestätigen</label>
+        <input class="form-input" id="e-pw-confirm" type="password" placeholder="Wiederholen" autocomplete="new-password">
+      </div>
+    </div>
+    <div style="margin-top:16px;">
+      <button class="btn btn-secondary btn-sm" onclick="aenderePw()">🔑 Passwort ändern</button>
+    </div>
+  </div>
+
+  <div class="save-bar">
+    <button class="btn btn-primary" onclick="speichereProfil()">💾 Profil speichern</button>
+    <button class="btn btn-secondary" onclick="ladeProfil()">↺ Zurücksetzen</button>
+  </div>
+</section>
+
+<!-- ═══ SEKTION: BÜRO ════════════════════════════════════ -->
+<section class="sec" id="sec-buero">
+  <div class="sec-header">
+    <h1 class="sec-title">Büro & Adresse</h1>
+    <p class="sec-subtitle">Firma, Anschrift und Bankverbindung für Rechnungen</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Firmendaten</div>
+    <div class="form-grid">
+      <div class="form-group span-2">
+        <label class="form-label">Firmenname / Bürobezeichnung</label>
+        <input class="form-input" id="e-firma" type="text" placeholder="SV-Büro Max Mustermann" autocomplete="organization">
+      </div>
+      <div class="form-group span-2">
+        <label class="form-label">Straße und Hausnummer</label>
+        <input class="form-input" id="e-strasse" type="text" placeholder="Musterstraße 12" autocomplete="street-address">
+      </div>
+      <div class="form-group">
+        <label class="form-label">PLZ</label>
+        <input class="form-input" id="e-plz" type="text" placeholder="80333" autocomplete="postal-code" maxlength="5" inputmode="numeric">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Ort</label>
+        <input class="form-input" id="e-ort" type="text" placeholder="München" autocomplete="address-level2">
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Steuer & USt-ID</div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label class="form-label">Steuernummer</label>
+        <input class="form-input" id="e-steuernr" type="text" placeholder="123/456/78901" inputmode="numeric">
+      </div>
+      <div class="form-group">
+        <label class="form-label">USt-ID (optional)</label>
+        <input class="form-input" id="e-ustid" type="text" placeholder="DE123456789">
+        <span class="form-hint">Nur wenn Kleinunternehmer-Regelung nicht anwendbar</span>
+      </div>
+      <div class="form-group span-2">
+        <label class="form-label">Kleinunternehmer (§19 UStG)</label>
+        <div class="toggle-row" style="padding-top:0;border:none;">
+          <div class="toggle-info">
+            <div class="toggle-label">Kleinunternehmer-Regelung aktiv</div>
+            <div class="toggle-desc">Rechnungen ohne Mehrwertsteuer (§19 UStG)</div>
           </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="e-kleinunternehmer">
+            <span class="toggle-slider"></span>
+          </label>
         </div>
+      </div>
+    </div>
+  </div>
 
-        <!-- ─── ARBEITSWEISE ─── -->
-        <div class="sec" id="sec-arbeitsweise">
+  <div class="card">
+    <div class="card-title">Bankverbindung</div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label class="form-label">IBAN</label>
+        <input class="form-input" id="e-iban" type="text" placeholder="DE89 3704 0044 0532 0130 00" autocomplete="off" style="font-family:monospace;">
+      </div>
+      <div class="form-group">
+        <label class="form-label">BIC / SWIFT</label>
+        <input class="form-input" id="e-bic" type="text" placeholder="COBADEFFXXX" autocomplete="off">
+      </div>
+      <div class="form-group span-2">
+        <label class="form-label">Kreditinstitut</label>
+        <input class="form-input" id="e-bank" type="text" placeholder="Commerzbank AG">
+      </div>
+    </div>
+  </div>
 
-          <!-- ─── APPEARANCE: Premium Theme Switcher ─── -->
-          <div class="card" style="margin-bottom:16px;">
-            <div class="card-header">
-              <div class="card-title">🎨 Erscheinungsbild</div>
-              <div style="font-size:11px;color:var(--text3);">Wird sofort angewendet</div>
-            </div>
-            <div class="card-body">
+  <div class="save-bar">
+    <button class="btn btn-primary" onclick="speichereBuero()">💾 Büro speichern</button>
+    <button class="btn btn-secondary" onclick="ladeProfil()">↺ Zurücksetzen</button>
+  </div>
+</section>
 
-              <!-- THEME CARDS — Linear/Vercel Style -->
-              <div class="form-label" style="margin-bottom:12px;">Farbschema</div>
-              <div id="theme-cards" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px;">
+<!-- ═══ SEKTION: ZERTIFIKATE ════════════════════════════ -->
+<section class="sec" id="sec-zertifikate">
+  <div class="sec-header">
+    <h1 class="sec-title">Zertifikate & SV-Info</h1>
+    <p class="sec-subtitle">Bestellungsbehörde, Zertifikate und Spezialisierungen</p>
+  </div>
 
-                <!-- DUNKEL -->
-                <div class="theme-card" id="tc-dark" onclick="setTheme('dark')" data-theme="dark">
-                  <div class="tc-preview tc-preview-dark">
-                    <div class="tc-mini-sidebar">
-                      <div class="tc-mini-logo"></div>
-                      <div class="tc-mini-item tc-mini-item-active"></div>
-                      <div class="tc-mini-item"></div>
-                      <div class="tc-mini-item"></div>
-                    </div>
-                    <div class="tc-mini-main">
-                      <div class="tc-mini-header"></div>
-                      <div class="tc-mini-card"></div>
-                      <div class="tc-mini-card" style="width:70%;"></div>
-                    </div>
-                  </div>
-                  <div class="tc-label">
-                    <div class="tc-check" id="check-dark">✓</div>
-                    <span>Dunkel</span>
-                  </div>
-                </div>
+  <div class="card">
+    <div class="card-title">SV-Bestellung</div>
+    <div class="form-grid">
+      <div class="form-group span-2">
+        <label class="form-label">Bestellende Stelle / Kammer</label>
+        <input class="form-input" id="e-bestellstelle" type="text" placeholder="Industrie- und Handelskammer München">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Bestellungsnummer</label>
+        <input class="form-input" id="e-bestellnr" type="text" placeholder="SV-2023-0042">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Gültig bis</label>
+        <input class="form-input" id="e-bestellung-gueltig" type="date">
+      </div>
+    </div>
+  </div>
 
-                <!-- HELL -->
-                <div class="theme-card" id="tc-light" onclick="setTheme('light')" data-theme="light">
-                  <div class="tc-preview tc-preview-light">
-                    <div class="tc-mini-sidebar tc-mini-sidebar-light">
-                      <div class="tc-mini-logo tc-mini-logo-light"></div>
-                      <div class="tc-mini-item tc-mini-item-active-light"></div>
-                      <div class="tc-mini-item tc-mini-item-light"></div>
-                      <div class="tc-mini-item tc-mini-item-light"></div>
-                    </div>
-                    <div class="tc-mini-main tc-mini-main-light">
-                      <div class="tc-mini-header tc-mini-header-light"></div>
-                      <div class="tc-mini-card tc-mini-card-light"></div>
-                      <div class="tc-mini-card tc-mini-card-light" style="width:70%;"></div>
-                    </div>
-                  </div>
-                  <div class="tc-label">
-                    <div class="tc-check" id="check-light">✓</div>
-                    <span>Hell</span>
-                  </div>
-                </div>
+  <div class="card">
+    <div class="card-title">Sachgebiete</div>
+    <div class="form-grid cols-1">
+      <div class="form-group">
+        <label class="form-label">Hauptsachgebiet</label>
+        <input class="form-input" id="e-sachgebiet" type="text" placeholder="Bausachverständige · Schäden an Gebäuden">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Weitere Sachgebiete (kommagetrennt)</label>
+        <input class="form-input" id="e-sachgebiete-weitere" type="text" placeholder="Wasserschäden, Schimmel, Brandschäden">
+      </div>
+    </div>
+  </div>
 
-                <!-- SYSTEM -->
-                <div class="theme-card" id="tc-system" onclick="setTheme('system')" data-theme="system">
-                  <div class="tc-preview tc-preview-system">
-                    <div class="tc-mini-sidebar">
-                      <div class="tc-mini-logo"></div>
-                      <div class="tc-mini-item tc-mini-item-active"></div>
-                      <div class="tc-mini-item"></div>
-                    </div>
-                    <div class="tc-mini-main tc-mini-main-light" style="border-radius:0 6px 6px 0;">
-                      <div class="tc-mini-header tc-mini-header-light"></div>
-                      <div class="tc-mini-card tc-mini-card-light"></div>
-                    </div>
-                  </div>
-                  <div class="tc-label">
-                    <div class="tc-check" id="check-system">✓</div>
-                    <span>System</span>
-                  </div>
-                </div>
-              </div>
+  <div class="card">
+    <div class="card-title">Zertifikate-Upload</div>
+    <div class="upload-zone" id="upload-zone-zert">
+      <div class="upload-zone-icon">📄</div>
+      <div class="upload-zone-text">Zertifikate & Bestellungsurkunde hochladen</div>
+      <div class="upload-zone-sub">PDF, JPG, PNG · max. 5 MB</div>
+      <input type="file" id="file-zertifikate" multiple accept=".pdf,.jpg,.jpeg,.png" style="display:none;">
+    </div>
+    <div id="zert-file-list" style="margin-top:12px;"></div>
+  </div>
 
-              <!-- ACCENT COLOR PICKER -->
-              <div class="form-label" style="margin-bottom:10px;">Akzentfarbe</div>
-              <div id="accent-picker" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:4px;">
-                <button class="accent-swatch" data-accent="blue"   onclick="setAccent('blue')"   title="PROVA Blau"   style="--sc:#4f8ef7;"></button>
-                <button class="accent-swatch" data-accent="violet" onclick="setAccent('violet')" title="Violett"      style="--sc:#8b5cf6;"></button>
-                <button class="accent-swatch" data-accent="teal"   onclick="setAccent('teal')"   title="Petrol"       style="--sc:#14b8a6;"></button>
-                <button class="accent-swatch" data-accent="green"  onclick="setAccent('green')"  title="Grün"         style="--sc:#10b981;"></button>
-                <button class="accent-swatch" data-accent="orange" onclick="setAccent('orange')" title="Orange"       style="--sc:#f59e0b;"></button>
-                <button class="accent-swatch" data-accent="red"    onclick="setAccent('red')"    title="Rot"          style="--sc:#ef4444;"></button>
-              </div>
-              <div style="font-size:11px;color:var(--text3);margin-top:6px;">Akzentfarbe gilt für Buttons, aktive Nav-Items und Highlights.</div>
-            </div>
-          </div>
+  <div class="save-bar">
+    <button class="btn btn-primary" onclick="speichereZertifikate()">💾 Speichern</button>
+  </div>
+</section>
 
-          <!-- ─── INTERFACE ─── -->
-          <div class="card">
-            <div class="card-header"><div class="card-title">⚙️ Interface & Workflow</div></div>
-            <div class="card-body">
-              <div class="form-group">
-                <label class="form-label">Anrede</label>
-                <select id="e-anrede" class="form-select" onchange="speichereArbeitsweise()">
-                  <option value="Sie">Sie (formal)</option>
-                  <option value="Du">Du (informal)</option>
-                </select>
-                <div class="form-hint">Bestimmt wie PROVA Sie in der App anspricht.</div>
-              </div>
-              <div class="form-group">
-                <label class="form-label">Startseite nach Login</label>
-                <select id="e-startseite" class="form-select" onchange="speichereArbeitsweise()">
-                  <option value="dashboard.html">Zentrale (Standard)</option>
-                  <option value="archiv.html">Fälle</option>
-                  <option value="termine.html">Kalender</option>
-                  <option value="app-starter.html">Direkt: Neuer Fall</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label class="form-label">Standard-Fallliste</label>
-                <select id="e-listenansicht" class="form-select" onchange="speichereArbeitsweise()">
-                  <option value="liste">Listenansicht</option>
-                  <option value="kanban">Kanban-Board</option>
-                </select>
-              </div>
-            </div>
-          </div>
-          <div class="card">
-            <div class="card-header"><div class="card-title">🤖 KI-Einstellungen</div></div>
-            <div class="card-body">
-              <div class="form-group">
-                <label class="form-label">KI-Schreibstil für Gutachten</label>
-                <select id="e-ki-ton" class="form-select" onchange="speichereArbeitsweise()">
-                  <option value="formal">Formal & präzise</option>
-                  <option value="sachlich">Sachlich & knapp</option>
-                  <option value="ausfuehrlich">Ausführlich & detailliert</option>
-                </select>
-                <div class="form-hint">Die KI passt Formulierungen in §1–§5 an Ihren bevorzugten Stil an.</div>
-              </div>
-              <div class="toggle-row">
-                <div>
-                  <div class="toggle-label">Konjunktiv-II-Prüfung automatisch</div>
-                  <div class="toggle-sub">KI prüft §6 automatisch auf KJ-II-Fehler nach dem Speichern</div>
-                </div>
-                <label class="toggle">
-                  <input type="checkbox" id="e-kj2-auto" onchange="speichereArbeitsweise()" checked>
-                  <span class="toggle-slider"></span>
-                </label>
-              </div>
-            </div>
-          </div>
+<!-- ═══ SEKTION: SIGNATUR ════════════════════════════════ -->
+<section class="sec" id="sec-signatur">
+  <div class="sec-header">
+    <h1 class="sec-title">E-Mail-Signatur</h1>
+    <p class="sec-subtitle">Wird automatisch in Briefvorlagen und E-Mails eingefügt</p>
+  </div>
+
+  <div class="card">
+    <div class="form-grid cols-1">
+      <div class="form-group">
+        <label class="form-label">Signatur-Text</label>
+        <textarea class="form-textarea" id="e-signatur" rows="7" placeholder="Mit freundlichen Grüßen&#10;&#10;Max Mustermann&#10;Öffentlich bestellter und vereidigter Sachverständiger&#10;Tel: +49 89 123 456&#10;www.sv-mustermann.de"></textarea>
+      </div>
+    </div>
+    <div style="margin-top:12px;">
+      <button class="btn btn-secondary btn-sm" onclick="aktualisiereSignaturVorschau()">👁️ Vorschau aktualisieren</button>
+    </div>
+    <div class="signatur-preview" id="signatur-preview">Signatur-Vorschau erscheint hier…</div>
+  </div>
+
+  <div class="save-bar">
+    <button class="btn btn-primary" onclick="speichereSignatur()">💾 Signatur speichern</button>
+  </div>
+</section>
+
+<!-- ═══ SEKTION: PAKET ═══════════════════════════════════ -->
+<section class="sec" id="sec-paket">
+  <div class="sec-header">
+    <h1 class="sec-title">Paket & Abrechnung</h1>
+    <p class="sec-subtitle">Dein aktuelles PROVA-Paket, Upgrade und Rechnungen</p>
+  </div>
+
+  <div class="stats-mini">
+    <div class="stat-mini-item">
+      <div class="stat-mini-val" id="stat-gutachten">–</div>
+      <div class="stat-mini-label">Gutachten gesamt</div>
+    </div>
+    <div class="stat-mini-item">
+      <div class="stat-mini-val" id="stat-tage">–</div>
+      <div class="stat-mini-label">Tage aktiv</div>
+    </div>
+    <div class="stat-mini-item">
+      <div class="stat-mini-val" id="stat-ki">–</div>
+      <div class="stat-mini-label">KI-Credits verbl.</div>
+    </div>
+  </div>
+
+  <!-- Aktuelles Paket -->
+  <div class="card">
+    <div class="card-title">Dein aktuelles Paket</div>
+    <div class="paket-karte aktiv" id="paket-karte-aktuell">
+      <!-- Wird per JS befüllt -->
+    </div>
+  </div>
+
+  <!-- Upgrade -->
+  <div class="card" id="card-upgrade" style="display:none;">
+    <div class="card-title">Auf Team upgraden</div>
+    <div class="paket-karte">
+      <div style="flex:1;">
+        <div class="paket-name" style="font-size:16px;">Team-Paket</div>
+        <div class="paket-preis">299€ <span>/Monat</span></div>
+        <div class="paket-desc">KI-Foto-Analyse, ZUGFeRD, unbegrenzte SVs, Baubegleitung und mehr</div>
+        <div class="paket-features">
+          <div class="paket-feature"><span class="check">✓</span> KI-Foto-Analyse (spart 45 Min/Gutachten)</div>
+          <div class="paket-feature"><span class="check">✓</span> ZUGFeRD / XRechnung für Behörden</div>
+          <div class="paket-feature"><span class="check">✓</span> Unbegrenzte SVs einladen</div>
+          <div class="paket-feature"><span class="check">✓</span> DocEstate-Integration</div>
+          <div class="paket-feature"><span class="check">✓</span> 1.000 KI-Credits pro Monat</div>
         </div>
+      </div>
+    </div>
+    <div style="margin-top:20px; display:flex; gap:12px; flex-wrap:wrap;">
+      <button class="btn btn-primary" onclick="upgradeStarten('Team', 'monatlich')">🚀 Jetzt upgraden — 299€/Mo</button>
+      <button class="btn btn-secondary btn-sm" onclick="upgradeStarten('Team', 'jaehrlich')">📅 Jährlich 229€/Mo (spare 840€)</button>
+    </div>
+  </div>
 
-        <!-- ─── BENACHRICHTIGUNGEN ─── -->
-        <div class="sec" id="sec-benachrichtigungen">
+  <!-- Stripe Portal -->
+  <div class="card">
+    <div class="card-title">Abrechnung & Rechnungen</div>
+    <p style="font-size:14px;color:var(--text-secondary);margin-bottom:16px;">Zahlungsmethode ändern, vergangene Rechnungen herunterladen und Abonnement verwalten.</p>
+    <button class="btn btn-secondary" onclick="oeffneStripePortal()">💳 Abrechnungsportal öffnen</button>
+  </div>
+</section>
 
-          <!-- Arbeitszeiten -->
-          <div class="card">
-            <div class="card-header">
-              <div class="card-title">🕐 Arbeitszeiten</div>
-              <span class="sync-badge" id="notif-sync-badge" style="display:none;"></span>
-            </div>
-            <div class="card-body">
-              <p style="font-size:13px;color:var(--text2);margin-bottom:16px;line-height:1.6;">
-                PROVA sendet Erinnerungen und Hinweise nur innerhalb Ihrer Arbeitszeiten.
-                So werden Sie außerhalb Ihrer Bürozeiten nicht gestört.
-              </p>
-              <div class="form-group">
-                <label class="form-label">Erinnerungen senden von / bis</label>
-                <div class="form-row">
-                  <div>
-                    <input id="e-az-von" class="form-input" type="time" value="07:00">
-                    <div class="form-hint">Früheste Sendezeit</div>
-                  </div>
-                  <div>
-                    <input id="e-az-bis" class="form-input" type="time" value="19:00">
-                    <div class="form-hint">Späteste Sendezeit</div>
-                  </div>
-                </div>
-              </div>
-              <div class="form-group">
-                <label class="form-label">Arbeitstage</label>
-                <div class="day-picker" id="day-picker">
-                  <button type="button" class="day-btn active" data-day="Mo">Mo</button>
-                  <button type="button" class="day-btn active" data-day="Di">Di</button>
-                  <button type="button" class="day-btn active" data-day="Mi">Mi</button>
-                  <button type="button" class="day-btn active" data-day="Do">Do</button>
-                  <button type="button" class="day-btn active" data-day="Fr">Fr</button>
-                  <button type="button" class="day-btn" data-day="Sa">Sa</button>
-                  <button type="button" class="day-btn" data-day="So">So</button>
-                </div>
-                <div class="form-hint" style="margin-top:6px;">Aktive Tage = blaue Markierung. An nicht markierten Tagen werden keine Erinnerungen gesendet.</div>
-              </div>
-              <div class="save-bar">
-                <button class="btn btn-primary" onclick="speichereArbeitszeiten()">In PROVA speichern & synchronisieren</button>
-              </div>
-            </div>
-          </div>
+<!-- ═══ SEKTION: BENACHRICHTIGUNGEN ══════════════════════ -->
+<section class="sec" id="sec-benachrichtigungen">
+  <div class="sec-header">
+    <h1 class="sec-title">Benachrichtigungen</h1>
+    <p class="sec-subtitle">Wähle, worüber PROVA dich informieren soll</p>
+  </div>
 
-          <!-- Urlaubsmodus -->
-          <div class="card">
-            <div class="card-header"><div class="card-title">🏖️ Urlaubsmodus</div></div>
-            <div class="card-body">
-              <div class="toggle-row">
-                <div>
-                  <div class="toggle-label">Urlaubsmodus aktiv</div>
-                  <div class="toggle-sub">Alle nicht-kritischen Benachrichtigungen pausieren</div>
-                </div>
-                <label class="toggle">
-                  <input type="checkbox" id="e-urlaub-toggle" onchange="toggleUrlaubsmodus()">
-                  <span class="toggle-slider"></span>
-                </label>
-              </div>
-              <div id="urlaub-detail" style="margin-top:14px;display:none;">
-                <div class="form-group">
-                  <label class="form-label">Abwesend bis</label>
-                  <div class="urlaub-row">
-                    <input id="e-urlaub-bis" class="form-input" type="date" style="max-width:200px;">
-                    <button class="btn btn-secondary" onclick="speichereUrlaubsmodus()">Speichern</button>
-                  </div>
-                  <div class="form-hint">PROVA reaktiviert normale Erinnerungen ab diesem Datum automatisch.</div>
-                </div>
-              </div>
-              <div id="urlaub-aktiv-info" style="display:none;margin-top:12px;">
-                <div class="info-box">
-                  🏖️ <strong>Urlaubsmodus aktiv</strong> — Normale Benachrichtigungen pausiert bis <span id="urlaub-datum-anzeige"></span>.
-                  <br><a href="#" onclick="deaktiviereUrlaub();return false;" style="color:var(--accent);margin-top:4px;display:inline-block;">Jetzt beenden →</a>
-                </div>
-              </div>
-            </div>
-          </div>
+  <div class="card">
+    <div class="card-title">Push-Benachrichtigungen</div>
+    <div class="toggle-row">
+      <div class="toggle-info">
+        <div class="toggle-label">Fristenwarnungen</div>
+        <div class="toggle-desc">7, 3 und 1 Tag vor Ablauf einer Gutachten-Frist</div>
+      </div>
+      <label class="toggle-switch"><input type="checkbox" id="n-fristen" checked><span class="toggle-slider"></span></label>
+    </div>
+    <div class="toggle-row">
+      <div class="toggle-info">
+        <div class="toggle-label">Neue Aufträge</div>
+        <div class="toggle-desc">Bei neuen Gutachtenaufträgen im System</div>
+      </div>
+      <label class="toggle-switch"><input type="checkbox" id="n-auftraege" checked><span class="toggle-slider"></span></label>
+    </div>
+    <div class="toggle-row">
+      <div class="toggle-info">
+        <div class="toggle-label">Freigaben ausstehend</div>
+        <div class="toggle-desc">Wenn ein Mandant eine Gutachten-Freigabe erwartet</div>
+      </div>
+      <label class="toggle-switch"><input type="checkbox" id="n-freigaben"><span class="toggle-slider"></span></label>
+    </div>
+    <div class="toggle-row">
+      <div class="toggle-info">
+        <div class="toggle-label">PROVA System-Meldungen</div>
+        <div class="toggle-desc">Updates, neue Features und Wartungsarbeiten</div>
+      </div>
+      <label class="toggle-switch"><input type="checkbox" id="n-system" checked><span class="toggle-slider"></span></label>
+    </div>
+  </div>
 
-          <!-- Kritische Fristen — UNVERÄNDERLICH -->
-          <div class="lock-box">
-            <strong>🔒 Kritische Fristen — immer aktiv</strong><br>
-            Fristen, Gerichtstermine und Abgaben mit weniger als 24 Stunden werden <strong>immer</strong> benachrichtigt —
-            unabhängig von Ihren Arbeitszeiten und dem Urlaubsmodus.
-            So stellt PROVA sicher, dass Sie keine rechtlich relevanten Termine verpassen.
-            Diese Regel kann nicht deaktiviert werden.
-          </div>
+  <div class="card">
+    <div class="card-title">E-Mail-Digest</div>
+    <div class="toggle-row">
+      <div class="toggle-info">
+        <div class="toggle-label">Tägliche Zusammenfassung</div>
+        <div class="toggle-desc">Morgens um 07:30 Uhr: offene Fälle und anstehende Termine</div>
+      </div>
+      <label class="toggle-switch"><input type="checkbox" id="n-digest-daily"><span class="toggle-slider"></span></label>
+    </div>
+    <div class="toggle-row">
+      <div class="toggle-info">
+        <div class="toggle-label">Wöchentlicher Report</div>
+        <div class="toggle-desc">Montags: Erledigte Gutachten, offene Rechnungen, Umsatz</div>
+      </div>
+      <label class="toggle-switch"><input type="checkbox" id="n-digest-weekly" checked><span class="toggle-slider"></span></label>
+    </div>
+  </div>
 
-          <!-- Erinnerungs-Vorlaufzeit -->
-          <div class="card" style="margin-top:16px;">
-            <div class="card-header"><div class="card-title">⏱️ Erinnerungs-Vorlaufzeiten</div></div>
-            <div class="card-body">
-              <div class="form-group">
-                <label class="form-label">Vor Ortsterminen erinnern</label>
-                <select id="e-vl-ortstermin" class="form-select">
-                  <option value="1">1 Tag vorher</option>
-                  <option value="2" selected>2 Tage vorher</option>
-                  <option value="3">3 Tage vorher</option>
-                  <option value="7">1 Woche vorher</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label class="form-label">Vor Fristablauf warnen</label>
-                <select id="e-vl-frist" class="form-select">
-                  <option value="3">3 Tage vorher</option>
-                  <option value="5">5 Tage vorher</option>
-                  <option value="7" selected>7 Tage vorher</option>
-                  <option value="14">14 Tage vorher</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label class="form-label">Mahnwesen starten nach</label>
-                <select id="e-vl-mahnung" class="form-select">
-                  <option value="7">7 Tagen Zahlungsverzug</option>
-                  <option value="14" selected>14 Tagen Zahlungsverzug</option>
-                  <option value="21">21 Tagen Zahlungsverzug</option>
-                  <option value="30">30 Tagen Zahlungsverzug</option>
-                </select>
-              </div>
-              <div class="save-bar">
-                <button class="btn btn-primary" onclick="speichereVorlaufzeiten()">Speichern</button>
-              </div>
-            </div>
-          </div>
-        </div>
+  <div class="save-bar">
+    <button class="btn btn-primary" onclick="speichereNotifications()">💾 Einstellungen speichern</button>
+  </div>
+</section>
 
-        <!-- ─── BÜRO & RECHNUNGEN ─── -->
-        <div class="sec" id="sec-buero">
-          <div class="card">
-            <div class="card-header"><div class="card-title">🏢 Büro / Kanzlei</div></div>
-            <div class="card-body">
-              <div class="form-group">
-                <label class="form-label">Büroname / Firma</label>
-                <input id="e-firma" class="form-input" type="text" placeholder="SV-Büro Müller">
-              </div>
-              <div class="form-group">
-                <label class="form-label">Straße & Hausnummer</label>
-                <input id="e-strasse" class="form-input" type="text" placeholder="Musterstraße 1">
-              </div>
-              <div class="form-row">
-                <div class="form-group">
-                  <label class="form-label">PLZ</label>
-                  <input id="e-plz" class="form-input" type="text" placeholder="50667">
-                </div>
-                <div class="form-group">
-                  <label class="form-label">Ort</label>
-                  <input id="e-ort" class="form-input" type="text" placeholder="Köln">
-                </div>
-              </div>
-              <div class="save-bar">
-                <button class="btn btn-primary" onclick="speichereKanzlei()">Speichern</button>
-              </div>
-            </div>
-          </div>
-          <div class="card">
-            <div class="card-header"><div class="card-title">💶 Bankdaten & Steuer</div></div>
-            <div class="card-body">
-              <div class="form-group">
-                <label class="form-label">IBAN</label>
-                <input id="e-iban" class="form-input" type="text" placeholder="DE12 3456 7890 1234 5678 90">
-              </div>
-              <div class="form-group">
-                <label class="form-label">BIC / Bank</label>
-                <input id="e-bic" class="form-input" type="text" placeholder="COLSDE33XXX · Commerzbank">
-              </div>
-              <div class="form-row">
-                <div class="form-group">
-                  <label class="form-label">Steuernummer</label>
-                  <input id="e-steuernr" class="form-input" type="text" placeholder="214/5678/9012">
-                </div>
-                <div class="form-group">
-                  <label class="form-label">USt-ID (optional)</label>
-                  <input id="e-ustid" class="form-input" type="text" placeholder="DE 123456789">
-                </div>
-              </div>
-              <div class="form-group">
-                <label class="form-label">Standard-Zahlungsziel</label>
-                <select id="e-zahlungsziel" class="form-select">
-                  <option value="14">14 Tage</option>
-                  <option value="30" selected>30 Tage</option>
-                  <option value="60">60 Tage</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label class="form-label">Standard-Mehrwertsteuer</label>
-                <select id="e-mwst" class="form-select">
-                  <option value="19">19% MwSt</option>
-                  <option value="7">7% MwSt</option>
-                  <option value="0">§4 UStG (steuerfrei)</option>
-                </select>
-              </div>
-              <div class="save-bar">
-                <button class="btn btn-primary" onclick="speichereAbrechnung()">Speichern</button>
-              </div>
-            </div>
-          </div>
-        </div>
+<!-- ═══ SEKTION: ARBEITSTAGE ════════════════════════════ -->
+<section class="sec" id="sec-arbeitstage">
+  <div class="sec-header">
+    <h1 class="sec-title">Arbeitstage & Zeiten</h1>
+    <p class="sec-subtitle">Wird für JVEG-Berechnung und Terminplanung verwendet</p>
+  </div>
 
-        <!-- ─── UNTERSCHRIFT ─── -->
-        <div class="sec" id="sec-signatur">
-          <div class="card">
-            <div class="card-header"><div class="card-title">✍️ Unterschrift & Stempel</div></div>
-            <div class="card-body">
-              <p style="font-size:13px;color:var(--text2);margin-bottom:16px;line-height:1.6;">
-                Laden Sie Ihre Unterschrift als Bild hoch. Sie wird automatisch in alle PDFs eingesetzt.
-              </p>
-              <div id="sig-preview-wrap" style="display:none;margin-bottom:16px;padding:14px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:var(--r-md);text-align:center;">
-                <img id="sig-preview" src="" alt="Unterschrift" style="max-width:260px;max-height:80px;filter:invert(1);opacity:.85;">
-                <div style="font-size:10px;color:var(--text3);margin-top:6px;">Vorschau</div>
-              </div>
-              <div class="sig-dropzone" onclick="document.getElementById('sig-file').click()"
-                ondragover="event.preventDefault();this.style.borderColor='var(--accent)'"
-                ondragleave="this.style.borderColor='var(--border2)'"
-                ondrop="handleSigDrop(event)">
-                <div style="font-size:28px;margin-bottom:8px;">✍️</div>
-                <div style="font-size:13px;font-weight:600;color:var(--text2);margin-bottom:4px;">Unterschrift hochladen</div>
-                <div style="font-size:11px;color:var(--text3);">PNG, SVG oder JPG · max. 500 KB</div>
-                <input type="file" id="sig-file" accept=".png,.jpg,.jpeg,.svg" style="display:none;" onchange="ladeSigDatei(this.files[0])">
-              </div>
-              <div id="sig-status" style="display:none;margin-top:12px;padding:9px 12px;background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.2);border-radius:var(--r-md);font-size:12px;color:var(--success);">
-                ✅ Unterschrift gespeichert — wird in alle neuen PDFs eingesetzt
-              </div>
-              <div class="save-bar">
-                <button class="btn btn-danger" onclick="sigLoeschen()" id="btn-sig-loeschen" style="display:none;">Entfernen</button>
-                <button class="btn btn-primary" onclick="speichereSignatur()" id="btn-sig-save" disabled>Speichern</button>
-              </div>
-              <div class="info-box" style="margin-top:14px;">
-                <strong>Tipp:</strong> Unterschreiben auf weißem Papier → fotografieren → Hintergrund entfernen mit <a href="https://remove.bg" target="_blank" style="color:var(--accent)">remove.bg</a> → PNG hochladen.
-              </div>
-            </div>
-          </div>
-        </div>
+  <div class="card">
+    <div class="card-title">Arbeitstage</div>
+    <p style="font-size:14px;color:var(--text-secondary);margin-bottom:4px;">An welchen Tagen bist du üblicherweise verfügbar?</p>
+    <div class="arbeitstage-grid" id="arbeitstage-grid">
+      <button class="tag-btn active" data-tag="Mo">Mo</button>
+      <button class="tag-btn active" data-tag="Di">Di</button>
+      <button class="tag-btn active" data-tag="Mi">Mi</button>
+      <button class="tag-btn active" data-tag="Do">Do</button>
+      <button class="tag-btn active" data-tag="Fr">Fr</button>
+      <button class="tag-btn"        data-tag="Sa">Sa</button>
+      <button class="tag-btn"        data-tag="So">So</button>
+    </div>
+  </div>
 
-        <!-- ─── PAKET ─── -->
+  <div class="card">
+    <div class="card-title">Arbeitszeiten</div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label class="form-label">Arbeitsbeginn</label>
+        <input class="form-input" id="e-arbeit-von" type="time" value="08:00">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Arbeitsende</label>
+        <input class="form-input" id="e-arbeit-bis" type="time" value="18:00">
+      </div>
+    </div>
+  </div>
 
-        <!-- ─── RUNDSTEMPEL ─── -->
-        <div class="sec" id="sec-signatur2">
-          <div class="card">
-            <div class="card-header"><div class="card-title">🔴 Digitaler IHK-Rundstempel</div></div>
-            <div class="card-body">
-              <p style="font-size:13px;color:var(--text2);margin-bottom:12px;line-height:1.6;">
-                Laden Sie Ihren digitalen Rundstempel hoch. Er wird automatisch in alle Gutachten-PDFs eingesetzt — kein Stempeln, kein Scannen.
-              </p>
+  <div class="card">
+    <div class="card-title">JVEG-Einstellungen</div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label class="form-label">Std.-Honorar (§8 JVEG)</label>
+        <input class="form-input" id="e-jveg-honorar" type="number" value="100" min="60" max="165" step="5" inputmode="decimal">
+        <span class="form-hint">Standard: 100€/h · Max: 165€/h (SV-Spezialbereich)</span>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Fahrtkosten (§7 JVEG)</label>
+        <input class="form-input" id="e-jveg-km" type="number" value="0.42" step="0.01" min="0.30" max="0.60" inputmode="decimal">
+        <span class="form-hint">€ pro km · Aktuell: 0,42€ (2024)</span>
+      </div>
+    </div>
+  </div>
 
-              <div id="stempel-preview-wrap" style="display:none;margin-bottom:16px;padding:16px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:var(--r-md);text-align:center;">
-                <img id="stempel-preview" src="" alt="Rundstempel" style="max-width:180px;max-height:180px;border-radius:50%;">
-                <div style="font-size:10px;color:var(--text3);margin-top:6px;">Vorschau — wird rechts unten im PDF platziert</div>
-              </div>
+  <div class="save-bar">
+    <button class="btn btn-primary" onclick="speichereArbeitstage()">💾 Speichern</button>
+  </div>
+</section>
 
-              <div class="sig-dropzone" onclick="document.getElementById('stempel-file').click()"
-                ondragover="event.preventDefault();this.style.borderColor='var(--accent)'"
-                ondragleave="this.style.borderColor='var(--border2)'"
-                ondrop="handleStempelDrop(event)">
-                <div style="font-size:28px;margin-bottom:8px;">🔴</div>
-                <div style="font-size:13px;font-weight:600;color:var(--text2);margin-bottom:4px;">Rundstempel hochladen</div>
-                <div style="font-size:11px;color:var(--text3);">PNG mit transparentem Hintergrund · max. 500 KB</div>
-                <input type="file" id="stempel-file" accept=".png,.jpg,.jpeg" style="display:none;" onchange="ladeStempelDatei(this.files[0])">
-              </div>
+<!-- ═══ SEKTION: DESIGN ══════════════════════════════════ -->
+<section class="sec" id="sec-design">
+  <div class="sec-header">
+    <h1 class="sec-title">Darstellung</h1>
+    <p class="sec-subtitle">Theme, Schriftgröße und Ansichtsoptionen</p>
+  </div>
 
-              <div id="stempel-validierung" style="display:none;margin-top:12px;"></div>
+  <div class="card">
+    <div class="card-title">Farbschema</div>
+    <div class="toggle-row">
+      <div class="toggle-info">
+        <div class="toggle-label">Dunkles Design (Dark Mode)</div>
+        <div class="toggle-desc">Standardmäßig aktiv — optimal für Tablet-Nutzung</div>
+      </div>
+      <label class="toggle-switch">
+        <input type="checkbox" id="d-dark" checked>
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+    <div class="toggle-row">
+      <div class="toggle-info">
+        <div class="toggle-label">Kompakte Ansicht</div>
+        <div class="toggle-desc">Weniger Abstände — zeigt mehr Inhalte auf einmal</div>
+      </div>
+      <label class="toggle-switch">
+        <input type="checkbox" id="d-kompakt">
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+  </div>
 
-              <div id="stempel-status" style="display:none;margin-top:12px;padding:9px 12px;background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.2);border-radius:var(--r-md);font-size:12px;color:var(--success);">
-                ✅ Rundstempel gespeichert — wird in alle Gutachten-PDFs eingesetzt
-              </div>
+  <div class="card">
+    <div class="card-title">Schriftgröße</div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;">
+      <button class="btn btn-secondary btn-sm" onclick="setFontSize('small')">Klein</button>
+      <button class="btn btn-primary btn-sm"   onclick="setFontSize('normal')">Normal</button>
+      <button class="btn btn-secondary btn-sm" onclick="setFontSize('large')">Groß</button>
+    </div>
+    <p style="font-size:13px;color:var(--text-muted);margin-top:10px;">Größere Schrift für bessere Lesbarkeit auf Tablet empfohlen</p>
+  </div>
 
-              <div class="save-bar">
-                <button class="btn btn-danger" onclick="stempelLoeschen()" id="btn-stempel-loeschen" style="display:none;">Entfernen</button>
-                <button class="btn btn-primary" onclick="speichereStempel()" id="btn-stempel-save" disabled>Speichern</button>
-              </div>
+  <div class="save-bar">
+    <button class="btn btn-primary" onclick="speichereDesign()">💾 Speichern</button>
+  </div>
+</section>
 
-              <div style="margin-top:14px;padding:12px 14px;background:rgba(79,142,247,.06);border:1px solid rgba(79,142,247,.12);border-radius:var(--r-md);">
-                <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--accent);margin-bottom:6px;">Noch keinen digitalen Stempel?</div>
-                <div style="font-size:12px;color:var(--text2);line-height:1.6;">
-                  <strong>1.</strong> E-Mail an Ihre IHK/HWK: <em>"Bitte digitalen Rundstempel als PNG bereitstellen"</em><br>
-                  <strong>2.</strong> Oder: Foto vom physischen Stempel → Hintergrund entfernen mit <a href="https://www.remove.bg" target="_blank" style="color:var(--accent)">remove.bg</a> → PNG hochladen<br>
-                  <strong>3.</strong> IHK Köln: <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="493a3c3939263b3d09393b263f28643a303a3d2c243a672d2c">[email&#160;protected]</a> · 0221 2021-4242
-                </div>
-              </div>
+<!-- ═══ SEKTION: DATENSCHUTZ ════════════════════════════ -->
+<section class="sec" id="sec-datenschutz">
+  <div class="sec-header">
+    <h1 class="sec-title">Datenschutz & Konto</h1>
+    <p class="sec-subtitle">DSGVO-Einwilligungen, Daten-Export und Konto-Löschung</p>
+  </div>
 
-              <div class="form-group" style="margin-top:14px;">
-                <label class="form-label">IHK / HWK (für Stempelnachweis)</label>
-                <select id="e-ihk" class="form-select" onchange="localStorage.setItem('prova_ihk',this.value)">
-                  <option value="">Bitte wählen…</option>
-                  <option>IHK Köln</option><option>IHK Düsseldorf</option><option>IHK Aachen</option>
-                  <option>IHK Berlin</option><option>IHK München</option><option>IHK Frankfurt</option>
-                  <option>IHK Hamburg</option><option>IHK Stuttgart</option><option>IHK Hannover</option>
-                  <option>HWK Köln</option><option>HWK Düsseldorf</option><option>HWK München</option>
-                  <option>Andere</option>
-                </select>
-              </div>
-            </div>
-          </div>
-        </div>
+  <div class="card">
+    <div class="card-title">Meine Einwilligungen</div>
+    <div id="einwilligungen-liste">
+      <p style="font-size:14px;color:var(--text-muted);">Einwilligungen werden geladen…</p>
+    </div>
+  </div>
 
-                <div class="sec" id="sec-paket">
+  <div class="card">
+    <div class="card-title">Datenschutz-Einstellungen</div>
+    <div class="toggle-row">
+      <div class="toggle-info">
+        <div class="toggle-label">Anonyme Nutzungsstatistiken</div>
+        <div class="toggle-desc">Helfen dabei, PROVA zu verbessern (kein Personenbezug)</div>
+      </div>
+      <label class="toggle-switch"><input type="checkbox" id="p-analytics" checked><span class="toggle-slider"></span></label>
+    </div>
+    <div class="toggle-row">
+      <div class="toggle-info">
+        <div class="toggle-label">KI-Lernpool</div>
+        <div class="toggle-desc">Anonymisierte Texte für KI-Verbesserung freigeben (opt-in)</div>
+      </div>
+      <label class="toggle-switch"><input type="checkbox" id="p-ki-lernpool"><span class="toggle-slider"></span></label>
+    </div>
+  </div>
 
-          <!-- ── CURRENT PLAN HERO ── -->
-          <div id="plan-hero-wrap"></div>
+  <div class="card">
+    <div class="card-title">Meine Daten</div>
+    <p style="font-size:14px;color:var(--text-secondary);margin-bottom:16px;">Du hast das Recht auf Datenauskunft (Art. 15 DSGVO) und Datenportabilität (Art. 20 DSGVO).</p>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;">
+      <button class="btn btn-secondary" onclick="exportiereAlles()">📥 Alle Daten exportieren</button>
+      <a href="avv.html" class="btn btn-secondary" target="_blank">📋 AVV anzeigen</a>
+      <a href="datenschutz.html" class="btn btn-secondary" target="_blank">🔒 Datenschutzerklärung</a>
+    </div>
+  </div>
 
-          <!-- ── TRIAL COUNTDOWN (wenn Trial aktiv) ── -->
-          <div id="trial-countdown-wrap"></div>
+  <div class="card danger-zone">
+    <h4>⚠️ Konto löschen</h4>
+    <p>Alle deine Daten werden unwiderruflich gelöscht (Art. 17 DSGVO). Einwilligungsbelege werden gesetzlich aufbewahrt. Dieser Vorgang kann nicht rückgängig gemacht werden.</p>
+    <div class="form-group" style="margin-bottom:16px;">
+      <label class="form-label">Grund der Löschung (optional)</label>
+      <input class="form-input" id="loeschgrund" type="text" placeholder="Ich nutze PROVA nicht mehr weil…">
+    </div>
+    <button class="btn btn-danger" onclick="kontoLoeschenBestaetigen()">🗑️ Konto und alle Daten löschen</button>
+  </div>
+</section>
 
-          <!-- ── USAGE METERS ── -->
-          <div class="usage-grid" id="usage-grid-wrap"></div>
-
-          <!-- ── BILLING CYCLE TOGGLE ── -->
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
-            <div style="font-size:13px;font-weight:700;color:var(--text);">Pakete vergleichen</div>
-            <div class="billing-toggle" id="billing-toggle">
-              <button class="billing-toggle-btn active" id="btn-monthly" onclick="setBillingCycle('monthly')">Monatlich</button>
-              <button class="billing-toggle-btn" id="btn-yearly" onclick="setBillingCycle('yearly')">
-                Jährlich
-                <span class="billing-save-badge">−20%</span>
-              </button>
-            </div>
-          </div>
-
-          <!-- ── PLAN CARDS ── -->
-          <div class="plan-cards" id="plan-cards-wrap"></div>
-
-          <!-- ── TRUST BAR ── -->
-          <div class="trust-bar">
-            <div class="trust-item"><span>🔒</span><span>SSL-verschlüsselt</span></div>
-            <div class="trust-item"><span>🇩🇪</span><span>Daten in Deutschland</span></div>
-            <div class="trust-item"><span>↩️</span><span>Jederzeit kündbar</span></div>
-            <div class="trust-item"><span>📞</span><span>Support: <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="abc0c4c5dfcac0dfebdbd9c4ddca86d8d2d8dfcec6d885cfce">[email&#160;protected]</a></span></div>
-          </div>
-
-          <!-- ── FAQ ── -->
-          <div class="billing-faq" style="margin-top:20px;">
-            <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text3);margin-bottom:12px;">Häufige Fragen</div>
-            <div class="faq-item open" onclick="this.classList.toggle('open')">
-              <div class="faq-q">Kann ich jederzeit kündigen?</div>
-              <div class="faq-a">Ja — keine Mindestlaufzeit. Kündigung gilt zum Ende des aktuellen Abrechnungsmonats. Ihre Daten bleiben 30 Tage nach Kündigung abrufbar.</div>
-            </div>
-            <div class="faq-item" onclick="this.classList.toggle('open')">
-              <div class="faq-q">Was passiert nach dem Trial?</div>
-              <div class="faq-a">Nach 14 Tagen wird Ihr Konto auf einen Lesezugriff eingeschränkt. Alle Ihre Daten und Gutachten bleiben erhalten. Mit einem Upgrade haben Sie sofort wieder vollen Zugriff.</div>
-            </div>
-            <div class="faq-item" onclick="this.classList.toggle('open')">
-              <div class="faq-q">Kann ich von Solo auf Team wechseln?</div>
-              <div class="faq-a">Ja, jederzeit. Der Wechsel wird zum nächsten Monatsbeginn aktiv. Anteilige Erstattung für verbleibende Solo-Tage wird automatisch verrechnet.</div>
-            </div>
-            <div class="faq-item" onclick="this.classList.toggle('open')">
-              <div class="faq-q">Welche Zahlungsmethoden akzeptieren Sie?</div>
-              <div class="faq-a">Kreditkarte (Visa, Mastercard, Amex) und SEPA-Lastschrift über Stripe. PCI DSS Level 1 zertifiziert. Rechnungslegung nach §14 UStG automatisch per E-Mail.</div>
-            </div>
-          </div>
-
-        </div>
-
-
-
-        <!-- ─── ENTERPRISE ─── -->
-        <div class="sec" id="sec-enterprise">
-          <div class="card">
-            <div class="card-header" style="background:linear-gradient(135deg,rgba(139,92,246,.12),rgba(139,92,246,.04));border-bottom:1px solid rgba(139,92,246,.2);">
-              <div class="card-title" style="color:var(--purple);">💎 Team-Einstellungen</div>
-            </div>
-            <div class="card-body">
-              <div class="form-group">
-                <label class="form-label">Outbound-Webhook URL</label>
-                <div style="display:flex;gap:8px;align-items:center;">
-                  <input id="e-outbound-webhook" class="form-input" type="url" placeholder="https://ihr-system.de/webhook" style="flex:1;">
-                  <button onclick="testeOutboundWebhook()" class="btn btn-secondary">🧪 Test</button>
-                </div>
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:20px;">
-                <div style="padding:14px;background:rgba(79,142,247,.06);border:1px solid rgba(79,142,247,.18);border-radius:10px;font-size:12px;color:var(--text2);line-height:1.7;">
-                  <div style="font-size:10px;font-weight:700;text-transform:uppercase;color:var(--accent);margin-bottom:8px;">📋 Anleitung</div>
-                  <div>① Auf weißem Papier unterschreiben</div>
-                  <div>② Fotografieren oder scannen</div>
-                  <div>③ Hintergrund entfernen: <a href="https://remove.bg" target="_blank" style="color:var(--accent);">remove.bg</a></div>
-                  <div>④ Als PNG hochladen</div>
-                </div>
-                <div style="padding:14px;background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.18);border-radius:10px;font-size:12px;color:var(--text2);line-height:1.7;">
-                  <div style="font-size:10px;font-weight:700;text-transform:uppercase;color:var(--green);margin-bottom:8px;">✅ Eingesetzt in</div>
-                  <div>• Gutachten-PDFs</div>
-                  <div>• Briefvorlagen</div>
-                  <div>• Rechnungen</div>
-                </div>
-              </div>
-                <div class="form-hint">PROVA sendet JSON bei jeder Freigabe. Kompatibel mit Zapier, Make, n8n.</div>
-              <div id="payload-vorschau" style="display:none;margin-top:10px;background:rgba(0,0,0,.25);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:12px;font-size:11px;font-family:monospace;color:rgba(226,232,240,.7);white-space:pre;overflow-x:auto;max-height:220px;overflow-y:auto;"></div>
-              <button onclick="togglePayloadVorschau()" style="margin-top:6px;padding:4px 10px;background:rgba(79,142,247,.1);color:#4f8ef7;border:1px solid rgba(79,142,247,.2);border-radius:6px;font-size:11px;cursor:pointer;">{ } Payload-Vorschau</button>
-                <div id="webhook-test-result" style="display:none;margin-top:8px;padding:8px 10px;border-radius:var(--r-md);font-size:12px;"></div>
-              </div>
-              <div class="form-group">
-                <label class="form-label">White-Label: Büroname</label>
-                <input id="e-wl-name" class="form-input" type="text" placeholder="Ihr Büroname (erscheint in PDFs)">
-              </div>
-              <div class="form-group">
-                <label class="form-label">Primärfarbe</label>
-                <div style="display:flex;align-items:center;gap:10px;">
-                  <input id="e-primary-color" type="color" value="#4f8ef7" style="width:42px;height:36px;border:1px solid var(--border2);border-radius:var(--r-sm);background:none;cursor:pointer;padding:2px;">
-                  <span style="font-size:12px;color:var(--text3);">Erscheint in App-Akzenten und PDFs</span>
-                </div>
-              </div>
-              <div class="save-bar">
-                <button class="btn btn-primary" onclick="speichereEnterprise()">Team-Einstellungen speichern</button>
-              </div>
-            </div>
-          </div>
-          <div class="card">
-            <div class="card-header" style="border-bottom:1px solid rgba(139,92,246,.2);">
-              <div class="card-title" style="color:var(--purple);">📋 Webhook-Log</div>
-              <button onclick="ladeWebhookLog()" class="btn btn-secondary" style="padding:4px 10px;font-size:11px;">↻ Aktualisieren</button>
-            </div>
-            <div class="card-body" style="padding:0;">
-              <div id="webhook-log-inhalt" style="max-height:220px;overflow-y:auto;font-size:12px;padding:8px;color:var(--text3);">Lade…</div>
-            </div>
-          </div>
-        </div>
-
-      </div><!-- /einst-smain -->
-    </div><!-- /einst-layout -->
-  </div><!-- /page-content -->
-
-</div><!-- /main-wrap -->
-</div><!-- /app-shell -->
-
-<!-- Mobile Bottom Nav -->
-<nav class="bottom-nav" style="display:none;">
-  <a href="dashboard.html" class="bn-item"><span class="bn-icon">⊞</span><span>Zentrale</span></a>
-  <a href="archiv.html" class="bn-item"><span class="bn-icon">📁</span><span>Fälle</span></a>
-  <a href="rechnungen.html" class="bn-item"><span class="bn-icon">💶</span><span>Rechnungen</span></a>
-  <a href="einstellungen.html" class="bn-item active"><span class="bn-icon">⚙️</span><span>Einst.</span></a>
-</nav>
+</main>
+</div>
 
 <!-- Toast -->
 <div class="toast-prova" id="einst-toast"></div>
 
+<script src="nav.js" defer></script>
+<script src="einstellungen-logic.js" defer></script>
+<script>
+/* ──────────────────────────────────────────────────────
+   EINSTELLUNGEN v2 — UI-Logik (Sidebar, Navigation)
+   Alle Airtable-Sync-Funktionen in einstellungen-logic.js
+────────────────────────────────────────────────────── */
 
-  <script src="/sw-register.js"></script>
-  <script src="auto-save.js" defer></script>
-  <script src="global-search.js" defer></script>
-  <script src="auftragstyp.js"></script>
-  <script src="einstellungen-logic.js" defer></script>
+/* ── Auth-Check ──────────────────────────────────────── */
+(function() {
+  if (!localStorage.getItem('prova_user') && !localStorage.getItem('prova_sv_email')) {
+    window.location.href = 'app-login.html';
+  }
+})();
+
+/* ── Paket-Badge in Topbar ───────────────────────────── */
+(function() {
+  var paket = localStorage.getItem('prova_paket') || 'Solo';
+  var el = document.getElementById('topbar-paket-badge');
+  if (!el) return;
+  var colors = { Solo: '#4f8ef7', Team: '#a78bfa' };
+  var c = colors[paket] || colors.Solo;
+  el.textContent = paket;
+  el.style.cssText = 'font-size:10px;font-weight:700;padding:3px 10px;border-radius:8px;letter-spacing:.04em;background:' + c + '18;color:' + c + ';border:1px solid ' + c + '33;';
+})();
+
+/* ── Sidebar Navigation ──────────────────────────────── */
+window.showSec = function(id, btn) {
+  /* Alle Sektionen ausblenden */
+  document.querySelectorAll('.sec').forEach(function(s) { s.classList.remove('active'); });
+  document.querySelectorAll('.snav-item').forEach(function(b) { b.classList.remove('active'); });
+  
+  var sec = document.getElementById('sec-' + id);
+  if (sec) sec.classList.add('active');
+  if (btn) btn.classList.add('active');
+  
+  /* Auf Mobile: Sidebar schließen nach Auswahl */
+  if (window.innerWidth <= 768) {
+    closeSidebar();
+  }
+  
+  /* Scroll to top */
+  var main = document.getElementById('main-content');
+  if (main) main.scrollTop = 0;
+  window.scrollTo(0, 0);
+};
+
+/* ── Hamburger / Sidebar Mobile ──────────────────────── */
+var hamburger = document.getElementById('hamburger-btn');
+var sidebar   = document.getElementById('sidebar');
+var overlay   = document.getElementById('sidebar-overlay');
+
+if (hamburger) {
+  hamburger.addEventListener('click', function() {
+    var isOpen = sidebar.classList.contains('open');
+    if (isOpen) { closeSidebar(); } else { openSidebar(); }
+  });
+}
+
+window.openSidebar = function() {
+  sidebar.classList.add('open');
+  overlay.classList.add('visible');
+  document.body.style.overflow = 'hidden';
+  hamburger.setAttribute('aria-label', 'Menü schließen');
+};
+
+window.closeSidebar = function() {
+  sidebar.classList.remove('open');
+  overlay.classList.remove('visible');
+  document.body.style.overflow = '';
+  hamburger.setAttribute('aria-label', 'Menü öffnen');
+};
+
+/* Escape-Taste schließt Sidebar */
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeSidebar();
+});
+
+/* ── Logout ──────────────────────────────────────────── */
+window.logout = function() {
+  localStorage.removeItem('prova_user');
+  localStorage.removeItem('prova_sv_email');
+  window.location.href = 'app-login.html';
+};
+
+/* ── Toast ───────────────────────────────────────────── */
+window.zeigToast = function(msg, typ) {
+  var t = document.getElementById('einst-toast');
+  if (!t) return;
+  t.textContent = msg;
+  t.className = 'toast-prova' + (typ === 'err' ? ' err' : typ === 'ok' ? ' ok' : '');
+  void t.offsetWidth;
+  t.classList.add('show');
+  setTimeout(function() { t.classList.remove('show'); }, 3200);
+};
+
+/* ── Arbeitstage-Buttons ─────────────────────────────── */
+document.querySelectorAll('.tag-btn').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    this.classList.toggle('active');
+  });
+});
+
+/* ── Upload Zone ─────────────────────────────────────── */
+var uploadZone = document.getElementById('upload-zone-zert');
+var fileInput  = document.getElementById('file-zertifikate');
+
+if (uploadZone && fileInput) {
+  uploadZone.addEventListener('click', function() { fileInput.click(); });
+  uploadZone.addEventListener('dragover', function(e) {
+    e.preventDefault();
+    uploadZone.classList.add('drag-over');
+  });
+  uploadZone.addEventListener('dragleave', function() {
+    uploadZone.classList.remove('drag-over');
+  });
+  uploadZone.addEventListener('drop', function(e) {
+    e.preventDefault();
+    uploadZone.classList.remove('drag-over');
+    var files = e.dataTransfer.files;
+    zeigeUploadedFiles(files);
+  });
+  fileInput.addEventListener('change', function() {
+    zeigeUploadedFiles(this.files);
+  });
+}
+
+function zeigeUploadedFiles(files) {
+  var list = document.getElementById('zert-file-list');
+  if (!list || !files.length) return;
+  list.innerHTML = '';
+  Array.from(files).forEach(function(f) {
+    var item = document.createElement('div');
+    item.style.cssText = 'display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;color:var(--text-secondary);';
+    item.innerHTML = '📄 <span>' + f.name + '</span> <span style="color:var(--text-muted);margin-left:auto;">' + (f.size / 1024).toFixed(0) + ' KB</span>';
+    list.appendChild(item);
+  });
+}
+
+/* ── Signatur Vorschau ───────────────────────────────── */
+window.aktualisiereSignaturVorschau = function() {
+  var text = document.getElementById('e-signatur')?.value || '';
+  var preview = document.getElementById('signatur-preview');
+  if (preview) preview.textContent = text || 'Noch keine Signatur eingegeben.';
+};
+
+/* ── Schriftgröße ────────────────────────────────────── */
+window.setFontSize = function(size) {
+  var sizes = { small: '14px', normal: '16px', large: '18px' };
+  document.documentElement.style.fontSize = sizes[size] || '16px';
+  localStorage.setItem('prova_font_size', size);
+  zeigToast('Schriftgröße: ' + size, 'ok');
+};
+
+/* ── Paket-Karte befüllen ────────────────────────────── */
+(function() {
+  var paket  = localStorage.getItem('prova_paket') || 'Solo';
+  var status = localStorage.getItem('prova_status') || 'Trial';
+  var karte  = document.getElementById('paket-karte-aktuell');
+  if (!karte) return;
+
+  var preise = { Solo: 149, Team: 299 };
+  var preis  = preise[paket] || 149;
+  var farbe  = paket === 'Team' ? 'Team' : 'Solo';
+  var statusText = status === 'Aktiv' ? '✅ Aktiv' : '⏳ Trial';
+
+  karte.innerHTML = [
+    '<div>',
+      '<span class="paket-badge-lg ' + farbe + '">' + paket + '</span>',
+      '<div style="margin-top:6px;font-size:12px;color:var(--text-muted);">' + statusText + '</div>',
+    '</div>',
+    '<div class="paket-info">',
+      '<div class="paket-name">' + paket + '-Paket</div>',
+      '<div class="paket-preis">' + preis + '€ <span>/Monat</span></div>',
+      '<div class="paket-desc">Dein aktuelles Paket</div>',
+    '</div>',
+  ].join('');
+
+  // Upgrade-Card zeigen wenn Solo
+  if (paket === 'Solo') {
+    var upgradeCard = document.getElementById('card-upgrade');
+    if (upgradeCard) upgradeCard.style.display = 'block';
+  }
+
+  // Stats
+  var trialStart = localStorage.getItem('prova_trial_start');
+  if (trialStart) {
+    var tage = Math.floor((Date.now() - new Date(trialStart).getTime()) / 86400000);
+    var statTage = document.getElementById('stat-tage');
+    if (statTage) statTage.textContent = tage;
+  }
+  var kiCredits = PaketGuard ? PaketGuard.getLimit('ki_credits') : 0;
+  var statKi = document.getElementById('stat-ki');
+  if (statKi) statKi.textContent = kiCredits;
+})();
+
+/* ── Upgrade starten ─────────────────────────────────── */
+window.upgradeStarten = function(paket, intervall) {
+  var preise = (typeof PROVA_PREISE !== 'undefined') ? PROVA_PREISE : {};
+  var priceId = (preise[paket] || {})['stripe_price_' + (intervall === 'jaehrlich' ? 'jahr' : 'abo')] || '';
+  if (!priceId) {
+    zeigToast('Stripe-Konfiguration fehlt — bitte Kontakt aufnehmen.', 'err');
+    return;
+  }
+  fetch('/.netlify/functions/stripe-checkout', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      priceId:    priceId,
+      paket:      paket,
+      userEmail:  localStorage.getItem('prova_sv_email'),
+      successUrl: window.location.origin + '/dashboard.html?upgrade=success',
+      cancelUrl:  window.location.origin + '/einstellungen.html#sec-paket',
+    })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(d) {
+    if (d.url) window.location.href = d.url;
+    else zeigToast(d.error || 'Fehler beim Checkout', 'err');
+  })
+  .catch(function() { zeigToast('Verbindungsfehler', 'err'); });
+};
+
+/* ── Stripe-Portal öffnen ────────────────────────────── */
+window.oeffneStripePortal = function() {
+  zeigToast('Stripe-Portal wird geöffnet…');
+  fetch('/.netlify/functions/stripe-checkout', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      aktion:    'portal',
+      userEmail: localStorage.getItem('prova_sv_email'),
+      returnUrl: window.location.href,
+    })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(d) {
+    if (d.url) window.location.href = d.url;
+    else zeigToast('Portal nicht verfügbar', 'err');
+  })
+  .catch(function() { zeigToast('Verbindungsfehler', 'err'); });
+};
+
+/* ── Daten exportieren ───────────────────────────────── */
+window.exportiereAlles = function() {
+  var data = {};
+  for (var i = 0; i < localStorage.length; i++) {
+    var k = localStorage.key(i);
+    if (k && k.startsWith('prova_')) {
+      data[k] = localStorage.getItem(k);
+    }
+  }
+  var blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  var url  = URL.createObjectURL(blob);
+  var a    = document.createElement('a');
+  a.href     = url;
+  a.download = 'prova-daten-export-' + new Date().toISOString().split('T')[0] + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+  zeigToast('✅ Daten-Export gestartet', 'ok');
+};
+
+/* ── Konto löschen ───────────────────────────────────── */
+window.kontoLoeschenBestaetigen = function() {
+  var grund = document.getElementById('loeschgrund')?.value || '';
+  if (!confirm('⚠️ Wirklich alle Daten löschen? Diese Aktion kann nicht rückgängig gemacht werden.')) return;
+  if (!confirm('Letzte Bestätigung: Alle deine Gutachten, Termine und Kontakte werden unwiderruflich gelöscht.')) return;
+
+  zeigToast('Löschantrag wird verarbeitet…');
+
+  // A5 Webhook — DSGVO-Löschung Art. 17 (PROVA Make.com)
+  fetch('https://hook.eu1.make.com/mu7hi783bjaunbswdv9o4gwxypxkphsa'', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      email:     localStorage.getItem('prova_sv_email'),
+      grund:     grund,
+      timestamp: new Date().toISOString(),
+    })
+  })
+  .catch(function() {}) // Fehler ignorieren — trotzdem lokal löschen
+  .finally(function() {
+    localStorage.clear();
+    sessionStorage.clear();
+    window.location.href = 'index.html?deleted=1';
+  });
+};
+
+/* ── Passwort ändern ─────────────────────────────────── */
+window.aenderePw = function() {
+  var pw  = document.getElementById('e-pw-new')?.value || '';
+  var pw2 = document.getElementById('e-pw-confirm')?.value || '';
+  if (pw.length < 8)  { zeigToast('Passwort mindestens 8 Zeichen', 'err'); return; }
+  if (pw !== pw2)     { zeigToast('Passwörter stimmen nicht überein', 'err'); return; }
+
+  if (typeof netlifyIdentity !== 'undefined' && netlifyIdentity.currentUser) {
+    netlifyIdentity.currentUser().update({ password: pw })
+      .then(function() {
+        zeigToast('✅ Passwort erfolgreich geändert', 'ok');
+        document.getElementById('e-pw-new').value = '';
+        document.getElementById('e-pw-confirm').value = '';
+      })
+      .catch(function() { zeigToast('Fehler beim Passwort ändern', 'err'); });
+  } else {
+    zeigToast('Netlify Identity nicht geladen', 'err');
+  }
+};
+
+/* ── URL-Hash → Sektion öffnen ───────────────────────── */
+(function() {
+  var hash = window.location.hash.replace('#', '');
+  if (hash && document.getElementById('sec-' + hash)) {
+    var btn = document.getElementById('snav-' + hash);
+    showSec(hash, btn);
+  }
+})();
+
+/* ── Einwilligungen laden ────────────────────────────── */
+(function() {
+  var einw = document.getElementById('einwilligungen-liste');
+  if (!einw) return;
+
+  var email = localStorage.getItem('prova_sv_email');
+  if (!email) { einw.innerHTML = '<p style="font-size:14px;color:var(--text-muted);">Nicht angemeldet.</p>'; return; }
+
+  fetch('/.netlify/functions/airtable', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      method: 'GET',
+      path: '/v0/appJ7bLlAHZoxENWE/tblwgUQgtBWckPMHp?filterByFormula=' + encodeURIComponent('{SV_Email}="' + email + '"') + '&maxRecords=20',
+    })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(d) {
+    var records = d.records || [];
+    if (!records.length) {
+      einw.innerHTML = '<p style="font-size:14px;color:var(--text-muted);">Keine Einwilligungen gefunden.</p>';
+      return;
+    }
+    einw.innerHTML = records.map(function(r) {
+      var f = r.fields || {};
+      return '<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--border);gap:16px;">' +
+        '<div>' +
+          '<div style="font-size:14px;font-weight:600;color:var(--text-primary);">' + (f.typ || f.DokTyp || 'Einwilligung') + '</div>' +
+          '<div style="font-size:12px;color:var(--text-muted);">' + (f.datum || f.Zeitstempel || '') + '</div>' +
+        '</div>' +
+        '<span style="font-size:11px;font-weight:700;padding:3px 9px;border-radius:6px;background:rgba(16,185,129,.12);color:#10b981;border:1px solid rgba(16,185,129,.2);">✓ Erteilt</span>' +
+      '</div>';
+    }).join('');
+  })
+  .catch(function() {
+    einw.innerHTML = '<p style="font-size:13px;color:var(--text-muted);">Einwilligungen konnten nicht geladen werden.</p>';
+  });
+})();
+</script>
 </body>
 </html>

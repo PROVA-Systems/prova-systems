@@ -209,7 +209,7 @@ function ladeFaelle(){
   if(cache.length){bvRenderFaelle(cache,liste);return;}
   liste.innerHTML='<div style="text-align:center;padding:12px;font-size:12px;color:var(--text3);">Lädt…</div>';
   var sv=localStorage.getItem('prova_sv_email')||'';
-  fetch('/.netlify/functions/airtable',{method:'POST',headers:{'Content-Type':'application/json'},
+  ProvaError.safeFetch('/.netlify/functions/airtable',{method:'POST',headers:{'Content-Type':'application/json'},
     body:JSON.stringify({method:'GET',path:'/v0/'+AT_BASE+'/'+AT_FAELLE
       +'?pageSize=12&sort[0][field]=Timestamp&sort[0][direction]=desc'
       +(sv?'&filterByFormula='+encodeURIComponent('{sv_email}="'+sv+'"'):'')})

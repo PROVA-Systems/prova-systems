@@ -367,6 +367,48 @@
     return best;
   }
 
+
+  /* ── Ticket an Make.com senden ── */
+  function _supSendeTicket(text) {
+    var user = JSON.parse(localStorage.getItem('prova_user') || '{}');
+    var svEmail = (user.email || '').toLowerCase();
+    var svName  = (user.user_metadata && user.user_metadata.name) || svEmail || 'Unbekannt';
+    var aktiverFall = localStorage.getItem('prova_aktiver_fall') || '';
+    var seitenMap = {
+      'app.html':'Neues Gutachten','stellungnahme.html':'§6 Fachurteil',
+      'freigabe.html':'Freigabe','dashboard.html':'Zentrale',
+      'archiv.html':'Archiv','jveg.html':'JVEG-Rechner',
+      'erechnung.html':'E-Rechnung','rechnungen.html':'Rechnungen',
+      'normen.html':'Normen','einstellungen.html':'Einstellungen',
+      'statistiken.html':'Statistiken','hilfe.html':'Hilfe'
+    };
+    var seitenKey = Object.keys(seitenMap).find(function(k) {
+      return window.location.pathname.indexOf(k) >= 0;
+    });
+    var seite = seitenMap[seitenKey] || window.location.pathname;
+
+    var payload = {
+      typ: 'support',
+      prioritaet: 'NORMAL',
+      betreff: text.substring(0, 80),
+      nachricht: text,
+      sv_email: svEmail,
+      sv_name: svName,
+      paket: localStorage.getItem('prova_paket') || localStorage.getItem('netlify_plan') || 'Solo',
+      seite: seite,
+      aktiver_fall: aktiverFall,
+      timestamp: new Date().toISOString()
+    };
+
+    fetch(WEBHOOK_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    }).catch(function(e) { console.warn('Support-Webhook Fehler:', e); });
+
+    addBotMsg('✅ Ihre Frage wurde als Ticket an Marcel weitergeleitet. Antwort folgt innerhalb von 24h.');
+  }
+
   /* ── ESC schließt Chat ── */
   document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {

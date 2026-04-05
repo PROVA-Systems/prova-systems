@@ -1211,7 +1211,7 @@ function weiterZuFreigabe() {
     var recordId = sessionStorage.getItem('prova_record_id') || localStorage.getItem('prova_record_id') || '';
     var az_write = localStorage.getItem('prova_letztes_az') || '';
     if (recordId && az_write) {
-      fetch('/.netlify/functions/airtable', {
+      ProvaError.safeFetch('/.netlify/functions/airtable', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -1657,7 +1657,7 @@ document.addEventListener('keydown', function(e) {
     el.innerHTML = SLASH_ITEMS.map(function(item,i) {
       return '<div class="slash-item" data-idx="'+i+'" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:7px;cursor:pointer;font-size:13px;color:var(--text2,#c8d0e0);transition:background .1s;" onmouseover="this.style.background='var(--surface2,rgba(255,255,255,.06))'" onmouseout="this.style.background='';">'
         + '<span style="font-size:16px;width:20px;text-align:center;">'+item.icon+'</span>'
-        + '<span>'+item.label+'</span>'
+        + '<span>' + item.label + '</span>'
         + '</div>';
     }).join('');
     document.body.appendChild(el);

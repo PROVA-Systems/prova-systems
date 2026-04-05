@@ -53,7 +53,7 @@ async function loadData() {
       + '&sort[0][field]=' + AT_TS + '&sort[0][direction]=desc'
       + '&maxRecords=500';
 
-    var resp = await fetch('/.netlify/functions/airtable', {
+    var resp = await ProvaError.safeFetch('/.netlify/functions/airtable', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({method: 'GET', path: path, payload: null})

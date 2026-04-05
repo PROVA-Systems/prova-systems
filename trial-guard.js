@@ -138,31 +138,28 @@
     overlay.className = 'trial-overlay show';
     overlay.id = 'trial-overlay';
 
-    overlay.innerHTML = [
-      '<div class="trial-dialog">',
-      '<div style="font-size:40px;margin-bottom:12px;">⏰</div>',
-      '<h2>Ihr Testzeitraum ist abgelaufen</h2>',
-      '<p>Wählen Sie jetzt Ihr Paket und legen Sie direkt weiter los:</p>',
-      '<div class="trial-prices">',
-        '<div class="trial-price-card">',
-          '<h3>Solo</h3>',
-          '<div class="price">89€</div>',
-          '<div class="per">pro Monat</div>',
-          '<button class="stripe-overlay-btn" data-paket="Solo" style="width:100%;margin-top:10px;padding:8px;border-radius:6px;border:none;background:#4f8ef7;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">Solo wählen →</button>',
-        '</div>',
-        '<div class="trial-price-card">',
-          '<h3>Team</h3>',
-          '<div class="price">179€</div>',
-          '<div class="per">pro Monat · bis 5 SVs</div>',
-          '<button class="stripe-overlay-btn" data-paket="Team" style="width:100%;margin-top:10px;padding:8px;border-radius:6px;border:none;background:#a78bfa;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">Team wählen →</button>',
-        '</div>',
-      '</div>',
-      '<div style="margin-top:8px;">',
-        '<a href="archiv.html" class="trial-btn trial-btn-ghost">Nur Archiv ansehen</a>',
-      '</div>',
-      '<p style="margin-top:16px;font-size:11px;color:#6b7280;">Ihre Daten bleiben 30 Tage gespeichert. Fragen: kontakt@prova-systems.de</p>',
-      '</div>'
-    ].join('');
+    // Preise aus zentraler Quelle (prova-preise.js) — niemals hardcoden!
+    var overlayHTML = (typeof provaBuildTrialOverlay === 'function')
+      ? provaBuildTrialOverlay()
+      : [
+          '<div class="trial-dialog">',
+          '<div style="font-size:40px;margin-bottom:12px;">⏰</div>',
+          '<h2>Ihr Testzeitraum ist abgelaufen</h2>',
+          '<p>Wählen Sie jetzt Ihr Paket und legen Sie direkt weiter los:</p>',
+          '<div class="trial-prices">',
+            '<div class="trial-price-card"><h3>Solo</h3>',
+            '<div class="price">149€</div><div class="per">pro Monat</div>',
+            '<button class="stripe-overlay-btn" data-paket="Solo" style="width:100%;margin-top:10px;padding:8px;border-radius:6px;border:none;background:#4f8ef7;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">Solo wählen →</button></div>',
+            '<div class="trial-price-card"><h3>Team</h3>',
+            '<div class="price" style="color:#a78bfa;">279€</div><div class="per">pro Monat · bis 5 SVs</div>',
+            '<button class="stripe-overlay-btn" data-paket="Team" style="width:100%;margin-top:10px;padding:8px;border-radius:6px;border:none;background:#a78bfa;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">Team wählen →</button></div>',
+          '</div>',
+          '<div style="margin-top:8px;"><a href="archiv.html" class="trial-btn trial-btn-ghost">Nur Archiv ansehen</a></div>',
+          '<p style="margin-top:16px;font-size:11px;color:#6b7280;">Ihre Daten bleiben 30 Tage gespeichert. Fragen: kontakt@prova-systems.de</p>',
+          '</div>'
+        ].join('');
+
+    overlay.innerHTML = overlayHTML;
     // Event-Delegation für Stripe-Buttons
     overlay.addEventListener('click', function(e) {
       var btn = e.target.closest('.stripe-overlay-btn');

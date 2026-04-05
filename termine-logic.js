@@ -36,7 +36,7 @@ async function ladeTermine(){
   try{
     var filter=svEmail?'{sv_email}="'+svEmail+'"':'NOT({termin_datum}="")';
     var path='/v0/'+AT_BASE+'/'+AT_TERMINE+'?filterByFormula='+encodeURIComponent(filter)+'&maxRecords=200&sort[0][field]=termin_datum&sort[0][direction]=asc';
-    var res=await fetch('/.netlify/functions/airtable',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({method:'GET',path:path})});
+    var res=await ProvaError.safeFetch('/.netlify/functions/airtable',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({method:'GET',path:path})});
     if(!res.ok)throw new Error('HTTP '+res.status);
     var data=await res.json();
     var atTermine=(data.records||[]).map(function(r){
@@ -256,7 +256,7 @@ window.speichereTermin=async function(){
     var fields={titel:titel,termin_typ:typ,termin_datum:datum,uhrzeit:uhrzeit,aktenzeichen:az,notiz:notiz,sv_email:svEmail};
     var method=editId&&editId.startsWith('rec')?'PATCH':'POST';
     var path=editId&&editId.startsWith('rec')?'/v0/'+AT_BASE+'/'+AT_TERMINE+'/'+editId:'/v0/'+AT_BASE+'/'+AT_TERMINE;
-    await fetch('/.netlify/functions/airtable',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({method:method,path:path,payload:{fields:fields}})});
+    await ProvaError.safeFetch('/.netlify/functions/airtable',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({method:method,path:path,payload:{fields:fields}})});
   }catch(e){}
 };
 
@@ -301,7 +301,7 @@ window.importFristenAusFaellen = async function() {
     var filter=svEmail?'{sv_email}="'+svEmail+'"':'NOT({Aktenzeichen}="")';
     var path='/v0/'+AT_BASE+'/'+AT_FAELLE+'?filterByFormula='+encodeURIComponent(filter)
       +'&fields[]=Aktenzeichen&fields[]=Fristdatum&fields[]=Termin_Gericht&fields[]=Termin_Ortstermin&fields[]=Schadensart&fields[]=Auftraggeber_Name&maxRecords=50';
-    var res=await fetch('/.netlify/functions/airtable',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({method:'GET',path:path})});
+    var res=await ProvaError.safeFetch('/.netlify/functions/airtable',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({method:'GET',path:path})});
     if(!res.ok)throw new Error('HTTP '+res.status);
     var data=await res.json();
     var records=data.records||[];

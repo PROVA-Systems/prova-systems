@@ -24,15 +24,7 @@ const ALLOWED_TABLES = {
   // KI-Statistik: schreiben OK, lesen eingeschränkt
   tblv9F8LEnUC3mKru: { name: 'KI_STATISTIK', userField: null,      readOnly: false },
   // KI-Lernpool: nur schreiben
-  tbl4LEsMvcDKFCYaF: { name: 'KI_LERNPOOL',       userField: null,       readOnly: false },
-  // Einwilligungen (DSGVO/AVV): schreiben OK, lesen eigene
-  tblwgUQgtBWckPMHp: { name: 'EINWILLIGUNGEN',    userField: 'SV_Email', readOnly: false },
-  // Team-Interesse (Leads): nur schreiben
-  TEAM_INTERESSE:     { name: 'TEAM_INTERESSE',    userField: null,       readOnly: false }  // Schreib-only via team-interest.js,
-  // Kontakte: User-Filter
-  tblMKmPLjRelr6Hal: { name: 'KONTAKTE',           userField: 'SV_Email', readOnly: false },
-  // Textbausteine: User-Filter
-  // TEXTBAUSTEINE: localStorage-only, kein Airtable-Zugriff nötig
+  tbl4LEsMvcDKFCYaF: { name: 'KI_LERNPOOL', userField: null,       readOnly: false },
 };
 
 // ── Rate-Limiting (In-Memory, wird bei Function-Cold-Start zurückgesetzt) ──
