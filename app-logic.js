@@ -1,3 +1,14 @@
+
+/* ── FIX: Neues Gutachten → Aktiver Fall zurücksetzen ── */
+(function() {
+  var urlParams = new URLSearchParams(window.location.search);
+  var azParam = urlParams.get('az') || urlParams.get('AZ') || '';
+  if (!azParam) {
+    // Keine AZ in URL = neues Gutachten → aktiven Fall zurücksetzen
+    localStorage.removeItem('prova_aktiver_fall');
+    localStorage.removeItem('prova_letztes_az');
+  }
+})();
 /* ============================================================
    PROVA Systems — app-logic.js
    Ausgelagerte Business-Logik für app.html
@@ -1853,7 +1864,7 @@ async function starteWhisperKorrektur(audioBlob) {
         syncManuellToTranscript && syncManuellToTranscript();
 
         // Auch transcriptText (globale Variable) updaten
-        if(typeof transcriptText !== 'undefined') transcriptText = data.text.trim();
+        if(typeof window.transcriptText !== 'undefined') window.transcriptText = data.text.trim();
 
         // Live-Transcript-Area mit korrigiertem Text updaten
         var area = document.getElementById('transcriptArea');
@@ -2583,20 +2594,20 @@ window.switchDiktatTab = function(mode) {
     if (tabDiktat) { tabDiktat.classList.add('active'); tabDiktat.setAttribute('aria-selected','true'); tabDiktat.tabIndex = 0; }
     if (tabEingabe) { tabEingabe.classList.remove('active'); tabEingabe.setAttribute('aria-selected','false'); tabEingabe.tabIndex = -1; }
     var ta = document.getElementById('transcriptManuell');
-    if (ta && ta.value.trim()) transcriptText = ta.value.trim();
+    if (ta && ta.value.trim()) window.transcriptText = ta.value.trim();
   } else {
     if (diktatPanel) diktatPanel.style.display = 'none';
     if (eingabePanel) eingabePanel.style.display = 'block';
     if (tabDiktat) { tabDiktat.classList.remove('active'); tabDiktat.setAttribute('aria-selected','false'); tabDiktat.tabIndex = -1; }
     if (tabEingabe) { tabEingabe.classList.add('active'); tabEingabe.setAttribute('aria-selected','true'); tabEingabe.tabIndex = 0; }
     var ta = document.getElementById('transcriptManuell');
-    if (ta) ta.value = transcriptText;
+    if (ta) ta.value = window.transcriptText;
   }
 };
 
 window.syncManuellToTranscript = function() {
   var ta = document.getElementById('transcriptManuell');
-  if (ta) transcriptText = ta.value;
+  if (ta) window.transcriptText = ta.value;
 };
 
 // Tastatursteuerung für Tabs (←/→, Enter/Space)
@@ -2708,7 +2719,7 @@ async function starteAufnahme() {
       if (e.results[i].isFinal) {
         const text = e.results[i][0].transcript.trim();
         if (text) {
-          transcriptText += (transcriptText ? ' ' : '') + text;
+          window.transcriptText += (window.transcriptText ? ' ' : '') + text;
           const p = document.createElement('p');
           p.style.cssText = 'font-family:var(--font-body);font-size:.9375rem;line-height:1.7;color:var(--gray-700);margin-bottom:.5rem';
           p.textContent = text;
@@ -2760,7 +2771,7 @@ function stoppeAufnahme() {
   mediaRecorder = null;
 
   // Nach Aufnahme: Text bereinigen + Diktat nummerieren
-  if (transcriptText.trim().length > 20) {
+  if (window.transcriptText.trim().length > 20) {
     bereinigeDiktatText();
   }
 }
@@ -2771,7 +2782,7 @@ var aktivDiktatIdx = -1;
 
 async function bereinigeDiktatText() {
   var area = document.getElementById('transcriptArea');
-  var rawText = transcriptText.trim();
+  var rawText = window.transcriptText.trim();
   if (!rawText || rawText.length < 10) return;
 
   // Loading-Indikator
@@ -2798,7 +2809,7 @@ async function bereinigeDiktatText() {
       : (d.choices&&d.choices[0] ? d.choices[0].message.content.trim() : rawText);
 
     if (bereinigt && bereinigt.length > 10) {
-      transcriptText = bereinigt;
+      window.transcriptText = bereinigt;
       localStorage.setItem('prova_transkript', bereinigt);
 
       // Diktat zur Liste hinzufügen
@@ -3104,10 +3115,10 @@ function bauKostenKontext(schadenart) {
 window.weiterZuAnalyse = async function() {
   // Sync: falls Nutzer direkt im Transkript-Bereich getippt hat
   const ta = document.getElementById('transcriptArea');
-  if (ta) transcriptText = ta.innerText.trim();
+  if (ta) window.transcriptText = ta.innerText.trim();
   if (diktatMode === 'text') {
     var manuellTa = document.getElementById('transcriptManuell');
-    transcriptText = (manuellTa && manuellTa.value) ? manuellTa.value.trim() : transcriptText;
+    window.transcriptText = (manuellTa && manuellTa.value) ? manuellTa.value.trim() : window.transcriptText;
   }
   if (!(window.transcriptText || transcriptText || '').trim()) {
     showToast('Bitte Diktat aufnehmen oder Text eingeben.', 'warning');

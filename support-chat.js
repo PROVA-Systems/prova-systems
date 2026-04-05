@@ -63,6 +63,57 @@
       keywords: ['problem', 'fehler', 'hilfe', 'support', 'bug', 'funktioniert nicht', 'kaputt'],
       a: 'Beschreiben Sie Ihr Problem in diesem Chat — wir melden uns werktags innerhalb von 24 Stunden. Sie können auch direkt an <a href="mailto:kontakt@prova-systems.de" style="color:#4f8ef7;">kontakt@prova-systems.de</a> schreiben.'
     }
+,
+    {
+      q: 'Wie funktioniert der Konjunktiv II Check?',
+      keywords: ['konjunktiv', 'konjunktiv ii', 'check', 'prüfung', '§6', 'fachurteil', 'formulierung', 'muss'],
+      a: 'PROVA prüft Ihr §6-Fachurteil automatisch auf Konjunktiv II. Kausalaussagen wie „Die Ursache ist..." werden markiert. Korrekt: „Als Ursache käme ... in Betracht" oder „dürfte zurückzuführen sein". Dies ist Pflicht nach §407a ZPO.'
+    },
+    {
+      q: 'Was ist die Leitweg-ID?',
+      keywords: ['leitweg', 'leitweg-id', 'behörde', 'behörden', 'xrechnung', 'gericht rechnung', 'rechnungseingang'],
+      a: 'Die Leitweg-ID ist eine behördenspezifische Kennung für den Rechnungseingang (Format: 993-99999-99). Sie wird vom Gericht oder der Behörde vergeben. Ohne Leitweg-ID kann die XRechnung nicht zugestellt werden. Fragen Sie beim Auftraggeber nach.'
+    },
+    {
+      q: 'Wie lade ich einen Fall wieder auf?',
+      keywords: ['fall laden', 'weiter machen', 'fortsetzen', 'öffnen', 'archiv', 'bearbeiten', 'wiederaufnahme', 'weiterarbeiten'],
+      a: 'Öffnen Sie das <a href="archiv.html" style="color:#4f8ef7">Archiv</a> in der Sidebar. Klicken Sie auf Ihren Fall → „Diktat aufnehmen" führt Sie zurück in den Gutachten-Workflow. Der aktive Fall wird oben in der Sidebar angezeigt.'
+    },
+    {
+      q: 'Warum erscheint ein Wiederaufnahme-Banner?',
+      keywords: ['wiederaufnahme', 'banner', 'gespeichert', 'ungespeichert', 'alter fall', 'falscher fall'],
+      a: 'Wenn ein älterer Fall noch im Speicher war, erscheint dieser Banner. Klicken Sie auf „Verwerfen" für ein neues Gutachten oder „Wiederherstellen" um weiterzuarbeiten. Falls der Banner fälschlicherweise erscheint: Strg+Shift+R (Hard-Refresh).'
+    },
+    {
+      q: 'Wie finde ich Normen für meinen Fall?',
+      keywords: ['norm', 'normen', 'din', 'wta', 'zpo', 'bgb', 'standard', 'vorschrift', 'regelwerk'],
+      a: 'Unter <a href="normen.html" style="color:#4f8ef7">Normen</a> in der Sidebar finden Sie 163+ Normen (DIN, WTA, ZPO, BGB). Filtern nach Schadensart. Während der Gutachten-Erstellung können Normen direkt per Klick eingefügt werden.'
+    },
+    {
+      q: 'Seite lädt nicht oder zeigt alten Stand',
+      keywords: ['lädt nicht', 'alter stand', 'cache', 'refresh', 'aktualisieren', 'fehler', 'leer', 'blank', 'weiß'],
+      a: 'Bitte führen Sie einen Hard-Refresh durch: <strong>Strg+Shift+R</strong> (Windows) oder <strong>Cmd+Shift+R</strong> (Mac). Das leert den Cache und lädt die neueste Version. Falls das Problem bleibt, bitte ein Ticket erstellen.'
+    },
+    {
+      q: 'Wie berechne ich Fahrtkosten nach JVEG?',
+      keywords: ['fahrtkosten', 'fahrt', 'kilometer', 'km', 'jveg §8', 'fahrtpauschale', 'wegstrecke'],
+      a: 'Nach §8 JVEG erhalten Sie 0,42 €/km. Im <a href="jveg.html" style="color:#4f8ef7">JVEG-Rechner</a> einfach die gefahrenen Kilometer eingeben — der Betrag wird automatisch berechnet und kann in die E-Rechnung übernommen werden.'
+    },
+    {
+      q: 'Was tun wenn das PDF nicht erstellt wird?',
+      keywords: ['pdf', 'pdf fehler', 'erstellt nicht', 'download', 'drucken', 'exportieren', 'dokument'],
+      a: 'Prüfen Sie: 1. Alle Pflichtfelder in Schritt 1 ausgefüllt? 2. §6 Fachurteil mindestens 500 Zeichen? 3. Freigabe-Seite neu laden und erneut freigeben. PDF-Erstellung dauert 30–120 Sekunden. Falls weiterhin kein PDF: Aktenzeichen notieren und Ticket erstellen.'
+    },
+    {
+      q: 'Wie lange ist der Trial?',
+      keywords: ['trial', 'testphase', 'kostenlos', 'gratis', 'ausprobieren', 'test', '14 tage'],
+      a: 'Der Trial läuft 14 Tage kostenlos, ohne Kreditkarte. Sie erhalten den vollen Solo-Funktionsumfang: unbegrenzte Gutachten, alle KI-Funktionen, PDF-Generierung. Danach Solo (149 €/Monat) oder Team (279 €/Monat).'
+    },
+    {
+      q: 'Kann ich auf mehreren Geräten arbeiten?',
+      keywords: ['gerät', 'tablet', 'handy', 'ipad', 'mehrere geräte', 'mobil', 'smartphone', 'synchronisieren'],
+      a: 'Ja! PROVA ist eine Web-App — sie läuft auf jedem Gerät mit Browser. Melden Sie sich einfach auf dem neuen Gerät unter prova-systems.de an. Ihre Daten sind in der Cloud gespeichert und immer aktuell.'
+    }
   ];
 
   /* ── Webhook URL ── */
@@ -225,35 +276,76 @@
       return;
     }
 
-    // Kein FAQ-Match → Ticket senden
+    // Kein FAQ-Match → erst KI fragen, dann Ticket wenn gewünscht
     addUserMsg(text);
     inputEl.value = '';
     var btn = document.getElementById('sup-send-btn');
     if (btn) { btn.disabled = true; btn.textContent = '⏳'; }
 
-    var payload = {
-      betreff: 'Support-Chat: ' + text.substring(0, 60),
-      nachricht: text,
-      seite: window.location.pathname,
-      email: localStorage.getItem('prova_sv_email') || '',
-      name: localStorage.getItem('prova_sv_name') || '',
-      paket: localStorage.getItem('prova_paket') || 'Solo',
-      zeitpunkt: new Date().toISOString()
+    // Thinking-Indikator
+    addBotMsg('<span id="sup-ki-thinking" style="opacity:.6;">PROVA KI denkt…</span>');
+
+    var seitenMap = {
+      'app.html': 'Neues Gutachten (app.html)',
+      'stellungnahme.html': '§6 Fachurteil / Stellungnahme',
+      'freigabe.html': 'Freigabe & Export',
+      'dashboard.html': 'Zentrale / Dashboard',
+      'archiv.html': 'Archiv / Fälle',
+      'jveg.html': 'JVEG-Rechner',
+      'erechnung.html': 'E-Rechnung / XRechnung',
+      'rechnungen.html': 'Rechnungen',
+      'normen.html': 'Normen-Datenbank',
+      'einstellungen.html': 'Einstellungen',
+      'statistiken.html': 'Statistiken',
+      'hilfe.html': 'Hilfe-Center'
+    };
+    var aktuelleSeite = Object.keys(seitenMap).find(function(k) {
+      return window.location.pathname.indexOf(k) >= 0;
+    });
+    var aktiverFall = localStorage.getItem('prova_aktiver_fall') || '';
+    var seitenName = seitenMap[aktuelleSeite] || window.location.pathname;
+    var kiPayload = {
+      aufgabe: 'support_chat',
+      frage: text,
+      seite: seitenName,
+      paket: localStorage.getItem('prova_paket') || localStorage.getItem('netlify_plan') || 'Solo',
+      kontext: aktiverFall ? ('Aktiver Fall: ' + aktiverFall) : ''
     };
 
-    fetch(WEBHOOK_URL, {
+    fetch('/.netlify/functions/ki-proxy', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    }).then(function(res) {
-      if (res.ok) {
-        addBotMsg('✅ <strong>Nachricht gesendet!</strong> Wir melden uns werktags innerhalb von 24 Stunden per E-Mail bei Ihnen.');
+      body: JSON.stringify(kiPayload)
+    }).then(function(res) { return res.json(); })
+    .then(function(data) {
+      var kiAntwort = data.antwort || data.vorschlag || data.text || '';
+      var denkEl = document.getElementById('sup-ki-thinking');
+      if (denkEl) denkEl.parentElement.remove();
+
+      if (kiAntwort && kiAntwort.length > 20) {
+        // KI hat geantwortet
+        addBotMsg(kiAntwort);
+        setTimeout(function() {
+          addBotMsg('War das hilfreich? '
+            + '<button class="sup-faq-btn" onclick="window._supShowContact()" '
+            + 'style="margin-top:6px;margin-right:6px;display:inline-block;">✉️ Nein — Ticket schreiben</button>'
+            + '<button class="sup-faq-btn" onclick="this.parentElement.parentElement.remove()" '
+            + 'style="margin-top:6px;display:inline-block;background:rgba(16,185,129,.1);border-color:rgba(16,185,129,.3);color:#10b981;">✓ Ja, danke!</button>');
+        }, 400);
       } else {
-        addBotMsg('❌ Senden fehlgeschlagen. Bitte versuchen Sie es erneut oder schreiben Sie an <a href="mailto:kontakt@prova-systems.de">kontakt@prova-systems.de</a>.');
+        // KI hat keine gute Antwort → direkt Ticket
+        addBotMsg('Ich konnte Ihre Frage nicht vollständig beantworten. Ich leite sie an unser Team weiter.');
+        _supSendeTicket(text);
       }
-    }).catch(function() {
-      addBotMsg('❌ Keine Verbindung. Bitte schreiben Sie an <a href="mailto:kontakt@prova-systems.de">kontakt@prova-systems.de</a>.');
-    }).finally(function() {
+    })
+    .catch(function() {
+      var denkEl = document.getElementById('sup-ki-thinking');
+      if (denkEl) denkEl.parentElement.remove();
+      // Fallback: direkt Ticket
+      addBotMsg('KI momentan nicht verfügbar — Ihre Frage wird als Ticket weitergeleitet.');
+      _supSendeTicket(text);
+    })
+    .finally(function() {
       if (btn) { btn.disabled = false; btn.textContent = '→'; }
     });
   };
@@ -267,7 +359,7 @@
       f.keywords.forEach(function(kw) {
         if (lower.indexOf(kw) >= 0) score++;
       });
-      if (score >= 2 && score > bestScore) {
+      if (score >= 1 && score > bestScore) {
         best = f;
         bestScore = score;
       }
