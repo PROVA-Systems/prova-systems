@@ -1,187 +1,240 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1.0">
-  <title>PROVA — Baubegleitung</title>
-  <script src="/sw-register.js"></script>
-  <style>
-  /* ── TOKENS ── */
-  :root{
-    --bg:#0d0f14; --bg2:#13161d; --bg3:#181b24;
-    --surface:#1e2330; --surface2:#242838;
-    --border:rgba(255,255,255,0.07); --border2:rgba(255,255,255,0.12);
-    --text:#e8eaf0; --text2:#9da3b4; --text3:#6b7280;
-    --accent:#4f8ef7; --accent2:#3a7be0;
-    --green:#10B981; --green-bg:rgba(16,185,129,0.08);
-    --warn:#f59e0b; --warn-bg:rgba(245,158,11,0.08); --warn-border:rgba(245,158,11,0.25);
-    --red:#ef4444; --red-bg:rgba(239,68,68,0.08); --red-border:rgba(239,68,68,0.2);
-    --purple:#a78bfa; --purple-bg:rgba(167,139,250,0.08);
-    --font-ui:'DM Sans',system-ui,sans-serif;
-    --font-display:'DM Sans',system-ui,sans-serif;
-    --mono:'JetBrains Mono','Fira Mono',monospace;
-    --radius:10px; --nav-h:52px; --bot-h:60px;
-  }
-  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
-  html{font-size:14px;}
-  body{font-family:var(--font-ui);background:var(--bg);color:var(--text);min-height:100vh;}
-  input,select,textarea{font-size:max(16px,1em);}
-  a{text-decoration:none;color:inherit;}
-
-  /* ── TOPBAR ── */
-  .topbar{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 20px;height:var(--nav-h);min-height:var(--nav-h);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
-  .topbar-left{display:flex;align-items:center;gap:12px;}
-  .logo{font-family:var(--font-ui);font-weight:700;font-size:18px;color:var(--text);}
-  .logo span{color:var(--accent);}
-  .topnav{display:flex;gap:2px;}
-  .topnav a{padding:6px 11px;border-radius:6px;color:var(--text3);font-size:13px;font-weight:500;transition:all .15s;white-space:nowrap;min-height:44px;display:inline-flex;align-items:center;}
-  .topnav a:hover{color:var(--text2);background:rgba(255,255,255,.04);}
-  .topnav a.active{color:var(--accent);background:rgba(79,142,247,.1);}
-  .settings-link{font-size:16px;color:var(--text3);padding:6px 8px;border-radius:6px;min-height:44px;display:inline-flex;align-items:center;}
-  .paket-badge{padding:3px 8px;border-radius:4px;font-size:10px;font-weight:700;letter-spacing:.04em;}
-  .burger{display:none;flex-direction:column;gap:4px;background:none;border:none;cursor:pointer;padding:8px;}
-  .burger span{width:20px;height:2px;background:var(--text2);border-radius:2px;display:block;}
-
-  /* ── DRAWER ── */
-  .drawer-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;}
-  .drawer-overlay.open{display:block;}
-  .drawer{position:fixed;top:0;right:-280px;width:280px;height:100%;background:var(--bg2);border-left:1px solid var(--border);z-index:300;transition:right .25s cubic-bezier(.4,0,.2,1);padding:0;display:flex;flex-direction:column;}
-  .drawer.open{right:0;}
-  .drawer-header{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border);}
-  .drawer-close{background:none;border:none;color:var(--text3);font-size:18px;cursor:pointer;}
-  .drawer-nav{display:flex;flex-direction:column;padding:12px;flex:1;overflow-y:auto;}
-  .drawer-nav a{display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:8px;color:var(--text2);font-size:13px;transition:all .12s;}
-  .drawer-nav a:hover{color:var(--text);background:rgba(255,255,255,.04);}
-  .drawer-footer{padding:12px 18px;border-top:1px solid var(--border);}
-  .dnav-icon{font-size:15px;width:20px;text-align:center;}
-
-  /* ── BOTTOM NAV ── */
-  .bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;height:var(--bot-h);background:var(--bg2);border-top:1px solid var(--border);z-index:100;align-items:stretch;}
-  .bn-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:var(--text3);font-size:10px;font-weight:500;padding:6px 4px;}
-  .bn-item.active{color:var(--accent);}
-  .bn-icon{font-size:18px;}
-
-  /* ── MAIN LAYOUT ── */
-  .main{margin:0 auto;padding:24px 20px;}
-
-  /* ── PAGE HEADER ── */
-  .page-header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:24px;flex-wrap:wrap;}
-  .page-title{font-family:var(--font-ui);font-size:1.4rem;font-weight:800;color:var(--text);}
-  .page-sub{font-size:0.78rem;color:var(--text3);margin-top:4px;}
-  .btn{padding:9px 16px;border-radius:8px;font-family:var(--font-ui);font-size:13px;font-weight:600;cursor:pointer;border:none;transition:all .15s;}
-  .btn-primary{background:var(--accent);color:#fff;}
-  .btn-primary:hover{background:var(--accent2);}
-  .btn-ghost{background:rgba(255,255,255,.05);border:1px solid var(--border2);color:var(--text2);}
-  .btn-ghost:hover{color:var(--text);background:rgba(255,255,255,.08);}
-  .btn-danger{background:var(--red-bg);border:1px solid var(--red-border);color:var(--red);}
-
-  /* ── CARDS ── */
-  .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:16px;}
-  .card-header{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
-  .card-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text2);}
-  .card-body{padding:16px;}
-
-  /* ── PROJECT LIST ── */
-  .proj-list{display:flex;flex-direction:column;gap:10px;}
-  .proj-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:space-between;gap:12px;}
-  .proj-card:hover{border-color:var(--border2);background:var(--surface);}
-  .proj-card.active-proj{border-color:rgba(79,142,247,.4);background:rgba(79,142,247,.04);}
-  .proj-name{font-size:0.88rem;font-weight:700;color:var(--text);margin-bottom:3px;}
-  .proj-meta{font-size:0.72rem;color:var(--text3);}
-  .proj-status{font-size:0.7rem;font-weight:700;padding:3px 8px;border-radius:4px;}
-  .status-aktiv{background:var(--green-bg);color:var(--green);border:1px solid rgba(16,185,129,.25);}
-  .status-abgeschlossen{background:rgba(255,255,255,.04);color:var(--text3);border:1px solid var(--border);}
-  .proj-begehungen{font-size:0.72rem;color:var(--text3);text-align:right;}
-
-  /* ── BEGEHUNGEN ── */
-  .begehung-list{display:flex;flex-direction:column;gap:8px;}
-  .begehung-item{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;display:flex;gap:12px;align-items:flex-start;}
-  .begehung-nr{width:28px;height:28px;border-radius:50%;background:rgba(79,142,247,.15);border:1px solid rgba(79,142,247,.3);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--accent);flex-shrink:0;margin-top:2px;}
-  .begehung-body{flex:1;}
-  .begehung-datum{font-size:0.75rem;font-weight:600;color:var(--text2);margin-bottom:4px;}
-  .begehung-text{font-size:0.8rem;color:var(--text);line-height:1.55;}
-  .begehung-fotos{font-size:0.7rem;color:var(--text3);margin-top:5px;}
-  .begehung-actions{display:flex;gap:6px;flex-shrink:0;}
-
-  /* ── MODAL ── */
-  .modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:400;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px);}
-  .modal-bg.open{display:flex;}
-  .modal{background:var(--bg2);border:1px solid var(--border2);border-radius:14px;max-width:560px;width:100%;max-height:90vh;overflow-y:auto;padding:24px;}
-  .modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;}
-  .modal-title{font-size:15px;font-weight:700;color:var(--text);}
-  .modal-close{background:none;border:none;color:var(--text3);font-size:20px;cursor:pointer;line-height:1;}
-  .form-group{margin-bottom:14px;}
-  .form-label{display:block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);margin-bottom:5px;}
-  .form-input,.form-select,.form-textarea{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:7px;padding:9px 12px;color:var(--text);font-family:var(--font-ui);font-size:13px;outline:none;transition:border-color .15s;}
-  .form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--accent);}
-  .form-textarea{resize:vertical;min-height:90px;}
-  .modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:18px;}
-
-  /* ── PROGRESS BAR ── */
-  .progress-wrap{height:4px;background:var(--border);border-radius:2px;margin-bottom:8px;overflow:hidden;}
-  .progress-bar{height:100%;background:var(--accent);border-radius:2px;transition:width .4s ease;}
-
-  /* ── BERICHT-VORSCHAU ── */
-  .bericht-vorschau{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:16px;font-size:0.8rem;line-height:1.65;color:var(--text2);white-space:pre-wrap;}
-
-  /* ── EMPTY STATE ── */
-  .empty-state{text-align:center;padding:48px 24px;}
-  .empty-icon{font-size:40px;margin-bottom:12px;}
-  .empty-title{font-size:0.95rem;font-weight:700;color:var(--text2);margin-bottom:6px;}
-  .empty-sub{font-size:0.78rem;color:var(--text3);}
-
-  /* ── TOAST ── */
-  .toast{position:fixed;bottom:80px;right:20px;z-index:600;padding:10px 16px;border-radius:8px;font-size:13px;font-weight:500;background:var(--bg2);border:1px solid rgba(16,185,129,.4);color:var(--green);transition:all .3s;opacity:0;transform:translateY(10px);}
-  .toast.show{opacity:1;transform:translateY(0);}
-  .toast.err{border-color:var(--red-border);color:var(--red);}
-
-  /* ── RESPONSIVE ── */
-  @media(max-width:900px){
-    .topnav a{font-size:0;}
-    .topnav a::after{content:attr(data-short);font-size:12px;font-family:var(--font-ui);font-weight:500;}
-    .paket-badge{display:none;}
-    .bb-layout-grid{grid-template-columns:1fr!important;}
-  }
-  @media(max-width:600px){
-    .topnav{display:none;} .settings-link{display:none;}
-    .burger{display:flex;} .bottom-nav{display:flex;}
-    body{padding-bottom:var(--bot-h);}
-    .topbar{padding:0 14px;height:48px;} .logo{font-size:16px;}
-    --nav-h:48px; ::-webkit-scrollbar{display:none;} *{scrollbar-width:none;}
-    .main{padding:12px 12px 72px;}
-    .page-header{flex-direction:column;gap:10px;}
-    .bb-layout-grid{grid-template-columns:1fr!important;}
-  }
-  .bb-layout-grid{display:grid;grid-template-columns:300px 1fr;gap:16px;align-items:start;}
-  ::-webkit-scrollbar{width:3px;}
-  ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
-  @media(max-width:768px){.bottom-nav{display:flex !important;}}
-
-#ki-bericht-status{animation:pulse-text 1.5s ease-in-out infinite;}
-@keyframes pulse-text{0%,100%{opacity:.4}50%{opacity:1}}
-</style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Baubegleitung · PROVA</title>
 <script src="theme.js"></script>
 <script src="nav.js"></script>
+<style>
+:root{
+  --bg:#0b1220;--bg2:#111827;--bg3:#161f30;
+  --surface:#1c2537;--surface2:#222d42;--surface3:#2a3550;
+  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);
+  --text:#e8eaf0;--text2:#aab4cb;--text3:#6b7a99;
+  --accent:#4f8ef7;--accent2:#3a7be0;
+  --green:#10b981;--red:#ef4444;--red-bg:rgba(239,68,68,.08);--red-border:rgba(239,68,68,.25);
+  --warn:#f59e0b;--purple:#8b5cf6;
+  --r-sm:6px;--r-md:10px;--r-lg:14px;--r-xl:18px;
+  --font-ui:'DM Sans',system-ui,sans-serif;
+  --topbar-h:52px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--font-ui);font-size:14px;line-height:1.5;}
+.app-shell{min-height:100vh;}
+.main{display:flex;flex-direction:column;min-height:100vh;}
+.topbar{height:var(--topbar-h);background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 20px;position:sticky;top:0;z-index:50;}
+.topbar-title{font-size:15px;font-weight:700;}
+.topbar-right{display:flex;align-items:center;gap:10px;padding-right:160px;}
+.paket-badge{font-size:11px;font-weight:600;padding:3px 10px;border-radius:10px;}
+.bb-layout{display:flex;gap:0;flex:1;min-height:calc(100vh - var(--topbar-h));}
+/* Projektliste links */
+.proj-sidebar{width:300px;flex-shrink:0;border-right:1px solid var(--border);display:flex;flex-direction:column;background:var(--bg2);}
+.proj-sidebar-head{padding:16px;border-bottom:1px solid var(--border);}
+.proj-sidebar-head h2{font-size:14px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;}
+.proj-count-badge{font-size:11px;background:var(--surface);border:1px solid var(--border);padding:2px 8px;border-radius:10px;color:var(--text3);}
+.proj-suche-wrap{position:relative;}
+.proj-suche{width:100%;padding:8px 12px 8px 32px;background:var(--surface);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:12px;font-family:inherit;outline:none;}
+.proj-suche:focus{border-color:var(--accent);}
+.proj-suche-icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:13px;}
+.proj-list{flex:1;overflow-y:auto;padding:8px;}
+.proj-item{padding:12px;border-radius:10px;cursor:pointer;transition:all .15s;border:1px solid transparent;margin-bottom:4px;}
+.proj-item:hover{background:var(--surface);border-color:var(--border);}
+.proj-item.active{background:rgba(79,142,247,.1);border-color:rgba(79,142,247,.3);}
+.proj-item-name{font-size:13px;font-weight:600;color:var(--text);}
+.proj-item-sub{font-size:11px;color:var(--text3);margin-top:2px;}
+.proj-item-meta{display:flex;gap:6px;margin-top:4px;}
+.proj-meta-tag{font-size:10px;padding:1px 6px;border-radius:4px;background:var(--surface);border:1px solid var(--border);color:var(--text3);}
+.btn-neu-proj{width:100%;padding:10px;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:8px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:8px;}
+/* Detail rechts */
+.proj-detail{flex:1;overflow-y:auto;padding:24px;}
+.proj-detail-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:300px;color:var(--text3);text-align:center;}
+.proj-detail-empty .ei{font-size:48px;margin-bottom:12px;opacity:.4;}
+/* Projekt-Header */
+.pd-header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:24px;flex-wrap:wrap;}
+.pd-title{font-size:20px;font-weight:800;color:var(--text);}
+.pd-sub{font-size:12px;color:var(--text3);margin-top:2px;}
+.pd-actions{display:flex;gap:8px;}
+.btn-sm{padding:7px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;border:1px solid var(--border2);background:var(--surface2);color:var(--text2);transition:all .15s;}
+.btn-sm:hover{background:var(--surface3);color:var(--text);}
+.btn-sm.primary{background:var(--accent);border-color:var(--accent);color:#fff;}
+.btn-sm.primary:hover{background:var(--accent2);}
+/* Begehungs-Liste */
+.begehung-list{display:flex;flex-direction:column;gap:12px;}
+.begehung-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:16px;}
+.begehung-card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.bg-datum{font-size:13px;font-weight:700;color:var(--text);}
+.bg-phase{font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;background:rgba(79,142,247,.12);color:var(--accent);border:1px solid rgba(79,142,247,.2);}
+.bg-dringlichkeit{font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;}
+.bg-text{font-size:12px;color:var(--text2);line-height:1.7;white-space:pre-wrap;}
+/* Modals */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:400;backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:20px;}
+.modal-overlay.open{display:flex;}
+.modal-box{background:var(--surface);border:1px solid var(--border2);border-radius:16px;width:100%;max-width:520px;max-height:90vh;overflow-y:auto;}
+.modal-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border);}
+.modal-title{font-size:15px;font-weight:700;}
+.modal-close{background:none;border:none;color:var(--text3);font-size:18px;cursor:pointer;}
+.modal-body{padding:20px;}
+.form-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text3);margin-bottom:5px;display:block;}
+.form-input,.form-select,.form-textarea{width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;margin-bottom:14px;}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--accent);}
+.form-textarea{resize:vertical;min-height:120px;line-height:1.6;}
+.modal-footer{display:flex;gap:8px;padding:16px 20px;border-top:1px solid var(--border);}
+.btn-save{flex:1;padding:10px;background:var(--accent);border:none;border-radius:8px;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;}
+.btn-cancel{padding:10px 16px;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;color:var(--text2);font-size:13px;cursor:pointer;font-family:inherit;}
+.toast{position:fixed;bottom:24px;right:24px;padding:14px 18px;background:var(--bg2);border:1px solid var(--border2);border-radius:12px;color:var(--text);font-size:13px;font-weight:500;z-index:9999;transform:translateY(80px);opacity:0;transition:all .35s cubic-bezier(.34,1.56,.64,1);}
+.toast.show{transform:translateY(0);opacity:1;}
+::-webkit-scrollbar{width:5px;} ::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:3px;}
+@media(max-width:768px){.proj-sidebar{width:100%;border-right:none;border-bottom:1px solid var(--border);}.bb-layout{flex-direction:column;}}
+</style>
 </head>
 <body>
-
 <div class="app-shell">
-<nav class="sidebar" id="sidebar"></nav>
-<div class="sb-overlay" id="sb-overlay" onclick="closeMobileSidebar()"></div>
+  <nav class="sidebar" id="sidebar"></nav>
+  <div class="main" id="mainContent">
 
-<div class="main-wrap" id="main-wrap">
-<header class="topbar">
-  <div class="topbar-left">
-    <button class="burger" onclick="openMobileSidebar()" aria-label="Menü öffnen"><span></span><span></span><span></span></button>
-    <div class="breadcrumb"><span>PROVA</span><span style="color:var(--text3)">›</span><strong>Baubegleitung</strong></div>
+    <div class="topbar">
+      <div class="topbar-title">PROVA <span>· Baubegleitung</span></div>
+      <div class="topbar-right">
+        <span class="paket-badge" id="topbar-paket-badge"></span>
+      </div>
+    </div>
+
+    <div class="bb-layout" id="bb-layout">
+      <!-- Projektliste -->
+      <div class="proj-sidebar">
+        <div class="proj-sidebar-head">
+          <h2>Projekte <span class="proj-count-badge" id="proj-count">0</span></h2>
+          <div class="proj-suche-wrap">
+            <span class="proj-suche-icon">🔍</span>
+            <input type="text" class="proj-suche" id="proj-suche"
+                   placeholder="Projekt suchen…" oninput="renderProjektliste()">
+          </div>
+          <button class="btn-neu-proj" onclick="oeffneNeuProjekt()" style="margin-top:10px;">＋ Neues Projekt</button>
+        </div>
+        <div class="proj-list" id="proj-list"></div>
+      </div>
+
+      <!-- Projektdetail -->
+      <div class="proj-detail" id="proj-detail">
+        <div class="proj-detail-empty">
+          <div class="ei">🏗️</div>
+          <div style="font-size:15px;font-weight:600;color:var(--text2);margin-bottom:4px;">Kein Projekt ausgewählt</div>
+          <div style="font-size:12px;">Wählen Sie ein Projekt aus der Liste oder erstellen Sie ein neues.</div>
+        </div>
+      </div>
+    </div>
   </div>
-  <div class="topbar-right" style="display:flex;align-items:center;gap:8px;">
-    <span class="topbar-paket" id="topbar-paket-badge" style="display:none;"></span>
-    <a href="einstellungen.html"><button class="topbar-btn" style="display:flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:6px;border:1px solid rgba(255,255,255,.11);background:transparent;color:var(--text3);cursor:pointer;font-size:14px;">⚙</button></a>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- Modal: Neues Projekt -->
+<div class="modal-overlay" id="modal-proj">
+  <div class="modal-box">
+    <div class="modal-header">
+      <span class="modal-title" id="modal-proj-titel">Neues Projekt</span>
+      <button class="modal-close" onclick="schliesseProjektModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <label class="form-label">Projektname *</label>
+      <input type="text" class="form-input" id="mp-name" placeholder="z.B. Neubau Musterstraße 5">
+      <label class="form-label">Aktenzeichen</label>
+      <input type="text" class="form-input" id="mp-az" placeholder="z.B. BB-2026-001">
+      <div id="mp-az-edit" style="display:none;">
+        <label class="form-label">Aktenzeichen (aktuell)</label>
+        <input type="text" class="form-input" id="mp-az-edit-input" readonly style="color:var(--text3);">
+      </div>
+      <label class="form-label">Adresse</label>
+      <input type="text" class="form-input" id="mp-adresse" placeholder="Straße, PLZ Ort">
+      <label class="form-label">Auftraggeber</label>
+      <input type="text" class="form-input" id="mp-auftraggeber" placeholder="Name des Auftraggebers">
+      <label class="form-label">Projekttyp</label>
+      <select class="form-select" id="mp-typ">
+        <option value="Neubau">Neubau</option>
+        <option value="Sanierung">Sanierung</option>
+        <option value="Umbau">Umbau</option>
+        <option value="Instandhaltung">Instandhaltung</option>
+        <option value="Sonstiges">Sonstiges</option>
+      </select>
+      <label class="form-label">Baubeginn</label>
+      <input type="date" class="form-input" id="mp-beginn">
+      <label class="form-label">Geplante Abnahme</label>
+      <input type="date" class="form-input" id="mp-abnahme">
+      <label class="form-label">Notizen</label>
+      <textarea class="form-textarea" id="mp-notiz" placeholder="Besonderheiten, Ansprechpartner…"></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="schliesseProjektModal()">Abbrechen</button>
+      <button class="btn-save" onclick="speichereProjekt()">💾 Speichern</button>
+    </div>
   </div>
-</header>
+</div>
+
+<!-- Modal: Neue Begehung -->
+<div class="modal-overlay" id="modal-begehung">
+  <div class="modal-box">
+    <div class="modal-header">
+      <span class="modal-title" id="bericht-modal-titel">Neue Begehung</span>
+      <button class="modal-close" onclick="schliesseBegehungModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <label class="form-label">Datum *</label>
+      <input type="date" class="form-input" id="mb-datum">
+      <label class="form-label">Uhrzeit</label>
+      <input type="time" class="form-input" id="mb-uhrzeit">
+      <label class="form-label">Bauphase</label>
+      <select class="form-select" id="mb-phase">
+        <option value="">— auswählen —</option>
+        <option value="Erdarbeiten">Erdarbeiten</option>
+        <option value="Rohbau">Rohbau</option>
+        <option value="Dach">Dach</option>
+        <option value="Fassade">Fassade</option>
+        <option value="Innenausbau">Innenausbau</option>
+        <option value="Haustechnik">Haustechnik</option>
+        <option value="Abnahme">Abnahme</option>
+        <option value="Sonstiges">Sonstiges</option>
+      </select>
+      <label class="form-label">Dringlichkeit</label>
+      <select class="form-select" id="mb-dringlichkeit">
+        <option value="Normal">Normal</option>
+        <option value="Hinweis">Hinweis</option>
+        <option value="Mangel">Mangel</option>
+        <option value="Kritisch">Kritisch — sofort beheben</option>
+      </select>
+      <label class="form-label">Anwesende</label>
+      <input type="text" class="form-input" id="mb-anwesend" placeholder="z.B. Bauleiter Müller, AG Meier">
+      <label class="form-label">Beobachtungen / Mängel *</label>
+      <textarea class="form-textarea" id="bericht-text" rows="8"
+                placeholder="Befunde, Feststellungen, Maßnahmen…"></textarea>
+      <label class="form-label">Fotos</label>
+      <input type="file" class="form-input" id="mb-fotos" accept="image/*" multiple>
+      <div style="margin-top:8px;">
+        <button type="button" class="btn-sm primary" id="ki-bericht-btn" onclick="kiBegehungAssist()">✨ KI-Formulierungshilfe</button>
+        <span id="ki-bericht-status" style="font-size:11px;color:var(--text3);margin-left:8px;"></span>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="schliesseBegehungModal()">Abbrechen</button>
+      <button class="btn-save" onclick="speichereBegehung()">💾 Begehung speichern</button>
+    </div>
+  </div>
+</div>
+
+<!-- Support Modal -->
+<div class="modal-overlay" id="support-modal">
+  <div class="modal-box" style="max-width:480px;">
+    <div class="modal-header">
+      <span class="modal-title">Support</span>
+      <button class="modal-close" onclick="document.getElementById('support-modal').classList.remove('open')">✕</button>
+    </div>
+    <div class="modal-body" id="sup-modal">Wie können wir helfen?</div>
+  </div>
+</div>
 
   <script src="/sw-register.js" defer></script>
+  <script src="auto-save.js" defer></script>
+  <script src="global-search.js" defer></script>
   <script src="auftragstyp.js"></script>
   <script src="trial-guard.js"></script>
   <script src="baubegleitung-logic.js" defer></script>

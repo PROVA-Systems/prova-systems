@@ -888,7 +888,6 @@ window.exportFotoAnlage = async function() {
   }
 };
 
-})();
 
 /* ── Block 7 ── */
 /* ── Auto-grow Textareas ── */

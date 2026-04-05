@@ -2,1164 +2,206 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Briefe & Vorlagen · PROVA</title>
-<link rel="icon" type="image/svg+xml" href="/icons/icon-192.svg">
 <script src="theme.js"></script>
 <script src="nav.js" defer></script>
 <script src="trial-guard.js"></script>
-<link rel="stylesheet" href="mobile.css">
-<link rel="stylesheet" href="prova-design.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
 <style>
 :root{
-  --font-ui:'SF Pro Display',-apple-system,'Segoe UI',system-ui,sans-serif;
-  --font-mono:'SF Mono','Fira Code',monospace;
-  --r-sm:6px;--r-md:10px;--r-lg:14px;--r-xl:18px;
-  --transition:.15s cubic-bezier(.25,.46,.45,.94);
-  --shadow-sm:0 1px 3px rgba(0,0,0,.3);
-  --shadow-md:0 4px 16px rgba(0,0,0,.4);
-  --shadow-lg:0 12px 40px rgba(0,0,0,.5);
+  --bg:#0b1220;--bg2:#111827;--bg3:#161f30;
+  --surface:#1c2537;--surface2:#222d42;--surface3:#2a3550;
+  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);
+  --text:#e8eaf0;--text2:#aab4cb;--text3:#6b7a99;
+  --accent:#4f8ef7;--accent2:#3a7be0;
+  --green:#10b981;--red:#ef4444;--warn:#f59e0b;--purple:#8b5cf6;
+  --r-sm:6px;--r-md:10px;--r-lg:14px;
+  --font-ui:'DM Sans',system-ui,sans-serif;
+  --topbar-h:52px;
 }
-
-/* ── LAYOUT ── */
-
-/* ── LAYOUT FIX ── */
-.app-shell{display:flex;width:100%;min-height:100vh;overflow:hidden;}
-.main-wrap{flex:1;min-width:0;overflow-x:hidden;display:flex;flex-direction:column;}
-
-.page-content{padding:0;display:flex;flex-direction:column;height:100vh;overflow:hidden;}
-.bv-header{padding:20px 24px 0;flex-shrink:0;}
-.bv-title-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
-.bv-title{font-size:20px;font-weight:800;color:var(--text);letter-spacing:-.02em;}
-.bv-count-badge{font-size:11px;font-weight:700;padding:3px 9px;border-radius:10px;background:rgba(79,142,247,.1);color:var(--accent,#4f8ef7);border:1px solid rgba(79,142,247,.2);}
-
-/* ── SUCHE ── */
-.bv-search-wrap{position:relative;margin-bottom:12px;}
-.bv-search{
-  width:100%;padding:10px 14px 10px 40px;
-  background:var(--surface2);border:1px solid var(--border);
-  border-radius:var(--r-lg);font-size:13px;color:var(--text);
-  font-family:var(--font-ui);outline:none;
-  transition:border-color var(--transition),box-shadow var(--transition);
-  box-sizing:border-box;
-}
-.bv-search:focus{border-color:var(--accent,#4f8ef7);box-shadow:0 0 0 3px rgba(79,142,247,.12);}
-.bv-search-icon{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:14px;pointer-events:none;}
-.bv-search-kbd{
-  position:absolute;right:11px;top:50%;transform:translateY(-50%);
-  font-size:10px;color:var(--text3);background:var(--surface);
-  border:1px solid var(--border2);border-radius:4px;
-  padding:2px 6px;font-family:var(--font-mono);pointer-events:none;
-  transition:opacity var(--transition);
-}
-
-/* ── FILTER CHIPS ── */
-.bv-chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;}
-.bv-chip{
-  padding:5px 13px;border-radius:20px;font-size:11px;font-weight:600;
-  background:var(--surface2);border:1px solid var(--border);
-  color:var(--text3);cursor:pointer;white-space:nowrap;
-  transition:all var(--transition);font-family:var(--font-ui);
-}
-.bv-chip:hover{border-color:var(--accent);color:var(--accent);}
-.bv-chip.act{background:rgba(79,142,247,.12);border-color:rgba(79,142,247,.35);color:var(--accent,#4f8ef7);}
-
-/* ── SCROLL-BODY ── */
-.bv-body{flex:1;overflow-y:auto;padding:0 24px 24px;}
-.bv-body::-webkit-scrollbar{width:4px;}
-.bv-body::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
-
-/* ── KATEGORIE ── */
-.bv-cat{margin-bottom:24px;}
-.bv-cat-head{
-  display:flex;align-items:center;gap:8px;margin-bottom:10px;
-  position:sticky;top:0;background:var(--bg,#0b1220);
-  padding:8px 0 4px;z-index:10;
-}
-.bv-cat-bar{width:3px;height:14px;border-radius:2px;flex-shrink:0;}
-.bv-cat-name{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);}
-.bv-cat-n{font-size:10px;color:var(--text3);margin-left:auto;font-family:var(--font-mono);}
-.bv-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px;}
-
-/* ════════════════════════════════════════
-   TEMPLATE-KARTE — KERN DES REDESIGNS
-   ════════════════════════════════════════ */
-.tc{
-  position:relative;
-  background:var(--surface,#161b2e);
-  border:1px solid var(--border,rgba(255,255,255,.07));
-  border-radius:16px;padding:16px;
-  cursor:pointer;display:flex;flex-direction:column;
-  transition:border-color .18s,transform .18s,box-shadow .18s;
-  overflow:hidden;
-}
-/* Schimmer oben links */
-.tc::after{
-  content:'';position:absolute;top:0;left:0;right:0;height:1px;
-  background:linear-gradient(90deg,transparent,rgba(255,255,255,.08),transparent);
-  pointer-events:none;
-}
-.tc:hover{
-  border-color:rgba(79,142,247,.35);
-  transform:translateY(-3px);
-  box-shadow:0 8px 28px rgba(0,0,0,.4),0 0 0 1px rgba(79,142,247,.08);
-}
-
-/* Icon + Badge oben */
-.tc-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px;}
-.tc-icon{
-  width:40px;height:40px;border-radius:12px;
-  background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);
-  display:flex;align-items:center;justify-content:center;font-size:19px;
-  flex-shrink:0;
-}
-.tc-badges{display:flex;flex-direction:column;align-items:flex-end;gap:4px;}
-.tc-id{font-size:9px;font-family:var(--font-mono);color:var(--text3);letter-spacing:.06em;}
-.tc-tier{
-  font-size:9px;font-weight:700;padding:2px 7px;border-radius:10px;
-  text-transform:uppercase;letter-spacing:.05em;
-}
-.tc-tier-solo{background:rgba(79,142,247,.1);color:#4f8ef7;}
-.tc-tier-team{background:rgba(167,139,250,.1);color:#a78bfa;}
-
-/* Name + Beschreibung */
-.tc-name{font-size:13px;font-weight:700;color:var(--text);margin-bottom:5px;line-height:1.3;}
-.tc-desc{font-size:11px;color:var(--text3);line-height:1.5;flex:1;margin-bottom:14px;}
-
-/* ══════════════════════════════
-   BUTTONS — KLARER UNTERSCHIED
-   ══════════════════════════════ */
-.tc-btns{display:flex;gap:6px;}
-
-/* VERWENDEN → blau, klar, primär */
-.tc-btn-v{
-  flex:1;display:flex;align-items:center;justify-content:center;gap:5px;
-  padding:9px 10px;border-radius:9px;border:none;
-  background:var(--accent,#4f8ef7);color:#fff;
-  font-size:12px;font-weight:700;cursor:pointer;
-  font-family:var(--font-ui);
-  transition:background .12s,transform .1s,box-shadow .12s;
-  position:relative;overflow:hidden;
-}
-.tc-btn-v::before{
-  content:'';position:absolute;inset:0;
-  background:linear-gradient(180deg,rgba(255,255,255,.12),transparent);
-  pointer-events:none;border-radius:9px;
-}
-.tc-btn-v:hover{background:#3a7ef0;transform:translateY(-1px);box-shadow:0 4px 14px rgba(79,142,247,.45);}
-.tc-btn-v:active{transform:translateY(0);box-shadow:none;}
-
-/* KI → lila, deutlich ANDERS als blau */
-.tc-btn-ki{
-  display:flex;align-items:center;justify-content:center;gap:4px;
-  padding:9px 12px;border-radius:9px;border:none;
-  background:linear-gradient(135deg,#5b48f0,#8b5cf6);color:#fff;
-  font-size:12px;font-weight:700;cursor:pointer;
-  font-family:var(--font-ui);
-  transition:transform .12s,box-shadow .12s,filter .12s;
-  position:relative;overflow:hidden;white-space:nowrap;
-}
-.tc-btn-ki::before{
-  content:'';position:absolute;inset:0;
-  background:linear-gradient(180deg,rgba(255,255,255,.15),transparent);
-  pointer-events:none;border-radius:9px;
-}
-.tc-btn-ki:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(91,72,240,.5);filter:brightness(1.08);}
-.tc-btn-ki:active{transform:translateY(0);box-shadow:none;}
-
-/* Aktiver Klick-Zustand */
-.tc-btn-v.pressing,.tc-btn-ki.pressing{transform:scale(.96);opacity:.85;}
-
-/* Loading-Spinner */
-.tc-btn-v.busy,.tc-btn-ki.busy{pointer-events:none;opacity:.75;}
-.tc-btn-v.busy::after,.tc-btn-ki.busy::after{
-  content:'';display:inline-block;width:11px;height:11px;
-  border:2px solid rgba(255,255,255,.3);border-top-color:#fff;
-  border-radius:50%;animation:bvspin .65s linear infinite;margin-left:5px;
-}
-@keyframes bvspin{to{transform:rotate(360deg)}}
-
-/* Karte im aktiven Zustand */
-.tc.tc-highlight-v{border-color:rgba(79,142,247,.5);box-shadow:0 0 0 2px rgba(79,142,247,.15);}
-.tc.tc-highlight-ki{border-color:rgba(91,72,240,.5);box-shadow:0 0 0 2px rgba(91,72,240,.15);}
-
-/* ── EMPTY STATE ── */
-.bv-empty{text-align:center;padding:56px 24px;}
-.bv-empty-icon{font-size:40px;margin-bottom:14px;opacity:.35;}
-.bv-empty-title{font-size:14px;font-weight:700;color:var(--text);margin-bottom:6px;}
-.bv-empty-sub{font-size:12px;color:var(--text3);}
-
-/* ════════════════════════════
-   DRAWER — SIDE PANEL
-   ════════════════════════════ */
-.bv-ov{
-  position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:900;
-  opacity:0;pointer-events:none;transition:opacity .25s;backdrop-filter:blur(3px);
-}
-.bv-ov.show{opacity:1;pointer-events:all;}
-
-.bv-dr{
-  position:fixed;top:0;right:0;bottom:0;
-  width:min(540px,93vw);
-  background:var(--bg2,#111827);
-  border-left:1px solid var(--border2,rgba(255,255,255,.1));
-  z-index:901;display:flex;flex-direction:column;
-  transform:translateX(100%);
-  transition:transform .3s cubic-bezier(.32,.72,0,1);
-  box-shadow:-20px 0 56px rgba(0,0,0,.55);
-}
-.bv-dr.open{transform:translateX(0);}
-
-/* Drawer-Header */
-.bv-dr-hd{
-  display:flex;align-items:center;gap:12px;
-  padding:18px 20px;border-bottom:1px solid var(--border);flex-shrink:0;
-}
-.bv-dr-icon{
-  width:44px;height:44px;border-radius:13px;
-  display:flex;align-items:center;justify-content:center;font-size:21px;
-  flex-shrink:0;transition:background var(--transition),border-color var(--transition);
-}
-.bv-dr-icon.mode-v{background:rgba(79,142,247,.1);border:1px solid rgba(79,142,247,.2);}
-.bv-dr-icon.mode-ki{background:rgba(91,72,240,.1);border:1px solid rgba(91,72,240,.2);}
-.bv-dr-info{flex:1;min-width:0;}
-.bv-dr-title{font-size:15px;font-weight:800;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.bv-dr-mode{font-size:11px;margin-top:2px;}
-.bv-dr-mode.mode-v{color:var(--accent,#4f8ef7);}
-.bv-dr-mode.mode-ki{color:#8b5cf6;}
-.bv-dr-close{
-  width:32px;height:32px;border-radius:8px;border:none;
-  background:var(--surface2);color:var(--text3);
-  font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;
-  flex-shrink:0;transition:all var(--transition);
-}
-.bv-dr-close:hover{background:var(--surface3,rgba(255,255,255,.1));color:var(--text);}
-
-/* Step Progress */
-.bv-steps{
-  display:flex;align-items:center;padding:10px 20px;
-  border-bottom:1px solid var(--border);gap:4px;flex-shrink:0;
-}
-.bv-stp{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:600;color:var(--text3);}
-.bv-stp-n{
-  width:20px;height:20px;border-radius:50%;
-  background:var(--surface2);border:1px solid var(--border2);
-  display:flex;align-items:center;justify-content:center;
-  font-size:9px;font-weight:800;flex-shrink:0;transition:all var(--transition);
-}
-.bv-stp.act .bv-stp-n{background:var(--accent);border-color:var(--accent);color:#fff;}
-.bv-stp.done .bv-stp-n{background:#10b981;border-color:#10b981;color:#fff;}
-.bv-stp.act{color:var(--text);}
-.bv-stp.done{color:#10b981;}
-.bv-sep{flex:1;height:1px;background:var(--border);min-width:8px;}
-
-/* Drawer Body */
-.bv-dr-body{flex:1;overflow-y:auto;padding:16px 20px;}
-.bv-dr-body::-webkit-scrollbar{width:3px;}
-.bv-dr-body::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
-
-/* Panels */
-.bv-panel{display:none;}
-.bv-panel.act{display:block;}
-
-/* Fall-Items */
-.bv-fall{
-  display:flex;align-items:center;gap:10px;
-  padding:10px 12px;border-radius:10px;border:1px solid var(--border);
-  background:var(--surface);cursor:pointer;margin-bottom:6px;
-  transition:all var(--transition);
-}
-.bv-fall:hover,.bv-fall.sel{border-color:rgba(79,142,247,.4);background:rgba(79,142,247,.05);}
-.bv-fall-az{font-size:12px;font-weight:700;color:var(--accent);font-family:var(--font-mono);}
-.bv-fall-info{font-size:11px;color:var(--text3);}
-.bv-fall-ck{
-  margin-left:auto;width:18px;height:18px;border-radius:50%;
-  border:2px solid var(--border2);display:flex;align-items:center;
-  justify-content:center;font-size:9px;flex-shrink:0;
-  transition:all var(--transition);
-}
-.bv-fall.sel .bv-fall-ck{background:var(--accent);border-color:var(--accent);color:#fff;}
-
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--font-ui);font-size:14px;line-height:1.5;}
+.app-shell{min-height:100vh;}
+.main{display:flex;flex-direction:column;min-height:100vh;}
+.topbar{height:var(--topbar-h);background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 20px;position:sticky;top:0;z-index:50;}
+.topbar-title{font-size:15px;font-weight:700;}
+.topbar-title span{color:var(--text3);font-weight:400;}
+.topbar-right{display:flex;align-items:center;gap:10px;padding-right:160px;}
+.page{flex:1;padding:24px 24px 40px;max-width:1100px;}
+/* Layout: 2-spaltig — Overlay links, Editor rechts */
+.bv-layout{display:flex;gap:20px;align-items:flex-start;}
+/* Overlay/Selektor */
+.bv-ov{width:320px;flex-shrink:0;}
+.search-bar{margin-bottom:12px;position:relative;}
+.bv-search{width:100%;padding:9px 12px 9px 34px;background:var(--surface);border:1px solid var(--border2);border-radius:var(--r-md);color:var(--text);font-size:13px;font-family:inherit;outline:none;}
+.bv-search:focus{border-color:var(--accent);}
+.bv-search::placeholder{color:var(--text3);}
+.search-icon{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:14px;pointer-events:none;}
+.cat-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;}
+.cat-chip{padding:4px 12px;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid transparent;transition:all .15s;background:var(--surface);}
+.cat-chip.active,.cat-chip:hover{opacity:1;}
+.vorl-list{display:flex;flex-direction:column;gap:6px;max-height:calc(100vh - 220px);overflow-y:auto;}
+.vorl-item{padding:11px 14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;cursor:pointer;transition:all .15s;}
+.vorl-item:hover,.vorl-item.active{border-color:var(--accent);background:rgba(79,142,247,.07);}
+.vorl-name{font-size:13px;font-weight:600;color:var(--text);}
+.vorl-sub{font-size:11px;color:var(--text3);margin-top:2px;}
+.vorl-cat-dot{width:7px;height:7px;border-radius:50%;display:inline-block;margin-right:6px;flex-shrink:0;}
+/* Detail/Editor */
+.bv-dr{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;}
+.dr-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;}
+.dr-icon{font-size:22px;}
+.dr-title{font-size:15px;font-weight:700;color:var(--text);}
+.dr-mode{font-size:11px;color:var(--text3);}
+.dr-tabs{display:flex;border-bottom:1px solid var(--border);}
+.dr-tab{padding:10px 20px;font-size:12px;font-weight:600;cursor:pointer;color:var(--text3);border-bottom:2px solid transparent;transition:all .15s;}
+.dr-tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+.dr-panel{padding:20px;display:none;}
+.dr-panel.active{display:block;}
+/* Formular-Felder */
+.form-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text3);margin-bottom:4px;display:block;}
+.form-input,.form-select,.form-textarea{width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;margin-bottom:14px;}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--accent);}
+.form-textarea{resize:vertical;min-height:140px;line-height:1.7;}
+/* KI-Box */
+.ki-box{background:rgba(79,142,247,.06);border:1px solid rgba(79,142,247,.2);border-radius:10px;padding:14px;margin-bottom:16px;}
+.ki-box-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--accent);margin-bottom:8px;}
+.ki-area{font-size:13px;color:var(--text2);line-height:1.8;white-space:pre-wrap;min-height:60px;}
+.ki-edit{width:100%;margin-top:8px;padding:8px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:12px;font-family:inherit;outline:none;resize:vertical;min-height:80px;}
 /* Vorschau */
-.bv-prev{
-  background:var(--surface);border:1px solid var(--border);
-  border-radius:12px;padding:16px;font-size:12px;
-  color:var(--text2);line-height:1.8;min-height:180px;font-family:Georgia,serif;
-}
-
-/* KI-Status */
-.bv-ki-box{
-  display:none;align-items:center;gap:10px;
-  padding:12px 14px;border-radius:10px;
-  background:rgba(91,72,240,.08);border:1px solid rgba(91,72,240,.2);
-  font-size:12px;color:var(--text2);margin-bottom:12px;
-}
-.bv-ki-box.show{display:flex;}
-.bv-ki-dot{width:8px;height:8px;border-radius:50%;background:#8b5cf6;
-  animation:bvpulse 1.2s ease-in-out infinite;flex-shrink:0;}
-@keyframes bvpulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.65)}}
-
-/* Inputs */
-.bv-label{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;
-  letter-spacing:.07em;margin-bottom:5px;display:block;}
-.bv-textarea{
-  width:100%;padding:9px 12px;border-radius:8px;
-  background:var(--surface2);border:1px solid var(--border);
-  color:var(--text);font-size:13px;font-family:var(--font-ui);
-  outline:none;resize:vertical;min-height:130px;line-height:1.6;
-  transition:border-color var(--transition);box-sizing:border-box;
-}
-.bv-textarea:focus{border-color:var(--accent);}
-
-/* Drawer Footer */
-.bv-dr-ft{
-  padding:14px 20px;border-top:1px solid var(--border);
-  display:flex;gap:8px;flex-shrink:0;
-}
-.bv-btn-back{
-  padding:9px 18px;border-radius:9px;border:1px solid var(--border2);
-  background:transparent;color:var(--text3);font-size:13px;font-weight:600;
-  cursor:pointer;font-family:var(--font-ui);transition:all var(--transition);
-}
-.bv-btn-back:hover{background:var(--surface2);color:var(--text);}
-.bv-btn-next{
-  flex:1;padding:9px 18px;border-radius:9px;border:none;
-  background:var(--accent,#4f8ef7);color:#fff;font-size:13px;font-weight:700;
-  cursor:pointer;font-family:var(--font-ui);transition:all var(--transition);
-  display:flex;align-items:center;justify-content:center;gap:6px;
-}
-.bv-btn-next:hover{background:#3a7ef0;box-shadow:0 4px 14px rgba(79,142,247,.4);}
-.bv-btn-next:disabled{opacity:.45;cursor:not-allowed;box-shadow:none;}
-.bv-btn-send{
-  flex:1;padding:9px 18px;border-radius:9px;border:none;
-  background:linear-gradient(135deg,#10b981,#059669);color:#fff;
-  font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font-ui);
-  transition:all var(--transition);display:flex;align-items:center;justify-content:center;gap:6px;
-}
-.bv-btn-send:hover{box-shadow:0 4px 14px rgba(16,185,129,.4);}
-
+.preview-body{background:white;border-radius:8px;padding:28px 32px;font-family:Georgia,serif;font-size:13.5px;line-height:1.9;color:#1a1a1a;min-height:400px;white-space:pre-wrap;}
+/* Buttons */
+.btn-row{display:flex;gap:8px;padding:14px 20px;border-top:1px solid var(--border);flex-wrap:wrap;}
+.btn{padding:9px 18px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s;border:1px solid transparent;}
+.btn-primary{background:var(--accent);color:#fff;border-color:var(--accent);}
+.btn-primary:hover{background:var(--accent2);}
+.btn-secondary{background:var(--surface2);color:var(--text2);border-color:var(--border2);}
+.btn-secondary:hover{background:var(--surface3);color:var(--text);}
+.btn-ki{background:linear-gradient(135deg,#7c3aed,#4f8ef7);color:#fff;}
+/* Empfänger */
+.fall-liste{max-height:160px;overflow-y:auto;margin-bottom:14px;}
+.fall-item{padding:8px 12px;border-radius:8px;cursor:pointer;border:1px solid transparent;transition:all .15s;font-size:12px;color:var(--text2);}
+.fall-item:hover,.fall-item.selected{background:rgba(79,142,247,.08);border-color:rgba(79,142,247,.2);color:var(--text);}
+/* Send result */
+.send-result{padding:20px;text-align:center;}
+.send-summary{font-size:12px;color:var(--text3);margin-top:4px;}
 /* Toast */
-.bv-toast{
-  position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(16px);
-  background:var(--bg2,#1c2130);border:1px solid var(--border2);border-radius:10px;
-  padding:10px 20px;font-size:13px;font-weight:600;color:var(--text);
-  box-shadow:0 8px 32px rgba(0,0,0,.5);z-index:9999;
-  opacity:0;transition:all .25s cubic-bezier(.25,.46,.45,.94);
-  pointer-events:none;white-space:nowrap;
-}
-.bv-toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
-.bv-toast.success{border-color:rgba(16,185,129,.4);color:#10b981;}
-.bv-toast.error{border-color:rgba(239,68,68,.4);color:#ef4444;}
-
-/* Mobile */
-@media(max-width:768px){
-  .bv-header{padding:12px 12px 0;}
-  .bv-body{padding:0 12px 80px;}
-  .bv-grid{grid-template-columns:1fr;}
-  .bv-dr{width:100%;top:auto;height:93vh;border-radius:20px 20px 0 0;border-left:none;border-top:1px solid var(--border2);}
-  .bv-dr.open{transform:translateY(0);}
-  .bv-dr:not(.open){transform:translateY(100%);}
-  .bv-chips{overflow-x:auto;flex-wrap:nowrap;padding-bottom:6px;}
-  .bv-chips::-webkit-scrollbar{display:none;}
-}
-
-/* explicit dark background — Fallback falls theme.js noch nicht geladen */
-html, body {
-  background: var(--bg, #0b1220) !important;
-  color: var(--text, #eaecf4) !important;
-  min-height: 100vh;
-}
-
+.bv-toast{position:fixed;bottom:24px;right:24px;padding:12px 18px;background:var(--bg2);border:1px solid var(--border2);border-radius:10px;color:var(--text);font-size:13px;z-index:9999;opacity:0;transform:translateY(20px);transition:all .3s;pointer-events:none;}
+.bv-toast.show{opacity:1;transform:translateY(0);}
+/* Leer-Zustand */
+.bv-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:300px;color:var(--text3);text-align:center;padding:40px;}
+.bv-empty-icon{font-size:48px;margin-bottom:12px;opacity:.4;}
+::-webkit-scrollbar{width:5px;} ::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:3px;}
+@media(max-width:768px){.bv-layout{flex-direction:column;}.bv-ov{width:100%;}.topbar-right{padding-right:100px;}}
 </style>
 </head>
 <body>
 <div class="app-shell">
   <nav class="sidebar" id="sidebar"></nav>
-  <div class="main-wrap" id="main-wrap">
-  <main class="page-content">
+  <div class="main" id="mainContent">
 
-    <!-- ═══ HEADER ═══ -->
-    <div class="bv-header">
-      <div class="bv-title-row">
-        <div>
-          <div class="bv-title">Briefe & Vorlagen</div>
-        </div>
-        <span class="bv-count-badge" id="bv-count-badge">26</span>
-      </div>
-
-      <div class="bv-search-wrap">
-        <span class="bv-search-icon">🔍</span>
-        <input class="bv-search" id="bv-search" type="text"
-               placeholder="Vorlage suchen… (/ zum Fokussieren)"
-               oninput="bvFilter(this.value)"
-               onkeydown="if(event.key==='Escape'){this.value='';bvFilter('');}">
-        <span class="bv-search-kbd" id="bv-kbd">/</span>
-      </div>
-
-      <div class="bv-chips">
-        <button class="bv-chip act" data-c="all"          onclick="bvSetCat('all',this)">Alle</button>
-        <button class="bv-chip"     data-c="angebote"     onclick="bvSetCat('angebote',this)">📋 Angebote</button>
-        <button class="bv-chip"     data-c="ortstermin"   onclick="bvSetCat('ortstermin',this)">📍 Ortstermin</button>
-        <button class="bv-chip"     data-c="versicherung" onclick="bvSetCat('versicherung',this)">🏢 Versicherung</button>
-        <button class="bv-chip"     data-c="gericht"      onclick="bvSetCat('gericht',this)">⚖️ Gericht</button>
-        <button class="bv-chip"     data-c="intern"       onclick="bvSetCat('intern',this)">🗂️ Intern</button>
+    <div class="topbar">
+      <div class="topbar-title">PROVA <span>· Briefe & Vorlagen</span></div>
+      <div class="topbar-right">
+        <span id="topbar-paket-badge" class="paket-badge"></span>
       </div>
     </div>
 
-    <!-- ═══ GRID ═══ -->
-    <div class="bv-body" id="bv-container"></div>
+    <div class="page">
+      <!-- 2-spaltiges Layout -->
+      <div class="bv-layout" id="bv-container">
 
-  </main>
-  </div><!-- /main-wrap -->
+        <!-- Links: Vorlagen-Auswahl -->
+        <div class="bv-ov" id="bv-ov">
+          <div class="search-bar">
+            <span class="search-icon">🔍</span>
+            <input type="text" class="bv-search" id="bv-search"
+                   placeholder="Vorlage suchen… (/ zum Fokussieren)"
+                   oninput="filterVorlagen()">
+          </div>
+          <div class="cat-chips" id="cat-chips"></div>
+          <div class="vorl-list" id="vorl-list"></div>
+        </div>
+
+        <!-- Rechts: Editor + Vorschau -->
+        <div class="bv-dr" id="bv-dr">
+          <!-- Leer-Zustand -->
+          <div class="bv-empty" id="bv-empty">
+            <div class="bv-empty-icon">📄</div>
+            <div style="font-size:15px;font-weight:600;color:var(--text2);margin-bottom:6px;">Vorlage auswählen</div>
+            <div style="font-size:12px;">Wählen Sie links eine Briefvorlage aus.</div>
+          </div>
+
+          <!-- Header (versteckt bis Vorlage gewählt) -->
+          <div id="bv-detail" style="display:none;">
+            <div class="dr-header">
+              <span class="dr-icon" id="dr-icon">📄</span>
+              <div>
+                <div class="dr-title" id="dr-title">Vorlage</div>
+                <div class="dr-mode" id="dr-mode"></div>
+              </div>
+            </div>
+
+            <!-- Tabs -->
+            <div class="dr-tabs">
+              <div class="dr-tab active" id="tab-edit" onclick="switchTab('edit')">✏️ Bearbeiten</div>
+              <div class="dr-tab" id="tab-prev" onclick="switchTab('prev')">👁 Vorschau</div>
+            </div>
+
+            <!-- Tab: Bearbeiten -->
+            <div class="dr-panel active" id="tab-edit-panel">
+              <!-- Empfänger / Fall-Auswahl -->
+              <label class="form-label">Empfänger / Fall</label>
+              <input type="text" class="form-input" id="emp-name"
+                     placeholder="Name oder Aktenzeichen suchen…"
+                     oninput="filterFaelle()">
+              <div class="fall-liste" id="fall-liste"></div>
+
+              <!-- KI-Generierung -->
+              <div class="ki-box" id="ki-box">
+                <div class="ki-box-label">✨ KI-Entwurf</div>
+                <div class="ki-area" id="ki-area">Wählen Sie einen Empfänger und klicken Sie auf „KI generieren".</div>
+                <textarea class="ki-edit" id="ki-edit" placeholder="KI-Text hier bearbeiten…" style="display:none;"></textarea>
+                <div style="margin-top:8px;display:flex;gap:8px;">
+                  <button class="btn btn-ki" id="ki-gen-btn" onclick="starteKIGenerierung()">✨ KI generieren</button>
+                  <button class="btn btn-secondary" onclick="aktiviereKIEdit()" style="display:none;" id="ki-edit-btn">✏️ Bearbeiten</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Tab: Vorschau -->
+            <div class="dr-panel" id="tab-prev-panel">
+              <div class="preview-body" id="prev-body"></div>
+            </div>
+
+            <!-- Aktions-Leiste -->
+            <div class="btn-row">
+              <button class="btn btn-secondary" id="btn-back" onclick="zurueck()">← Zurück</button>
+              <button class="btn btn-primary" id="btn-next" onclick="weiter()">Weiter →</button>
+              <button class="btn btn-primary" id="btn-send-pdf" onclick="sendePDF()" style="display:none;">
+                📤 Als PDF senden
+              </button>
+            </div>
+
+            <!-- Sende-Ergebnis -->
+            <div class="send-result" id="send-result" style="display:none;">
+              <div style="font-size:24px;margin-bottom:8px;">✅</div>
+              <div style="font-size:14px;font-weight:700;color:var(--text);">Brief gesendet!</div>
+              <div class="send-summary" id="send-summary"></div>
+            </div>
+          </div>
+        </div>
+      </div><!-- /bv-layout -->
+    </div><!-- /page -->
+  </div><!-- /main -->
 </div><!-- /app-shell -->
 
-<!-- OVERLAY -->
-<div class="bv-ov" id="bv-ov" onclick="bvCloseDrawer()"></div>
-
-<!-- DRAWER -->
-<div class="bv-dr" id="bv-dr">
-  <div class="bv-dr-hd">
-    <div class="bv-dr-icon mode-v" id="dr-icon">📄</div>
-    <div class="bv-dr-info">
-      <div class="bv-dr-title" id="dr-title">Vorlage</div>
-      <div class="bv-dr-mode mode-v" id="dr-mode">Standard-Ausfüllung</div>
-    </div>
-    <button class="bv-dr-close" onclick="bvCloseDrawer()">✕</button>
-  </div>
-
-  <div class="bv-steps">
-    <div class="bv-stp act" id="si-1"><div class="bv-stp-n">1</div><span>Fall</span></div>
-    <div class="bv-sep"></div>
-    <div class="bv-stp" id="si-2"><div class="bv-stp-n">2</div><span>Vorschau</span></div>
-    <div class="bv-sep"></div>
-    <div class="bv-stp" id="si-3"><div class="bv-stp-n">3</div><span>Versand</span></div>
-  </div>
-
-  <div class="bv-dr-body">
-
-    <!-- SCHRITT 1 -->
-    <div class="bv-panel act" id="pnl-1">
-      <div class="bv-label" style="margin-bottom:10px;">Aktiven Fall zuordnen (optional)</div>
-      <div id="fall-liste"><div style="text-align:center;padding:16px;font-size:12px;color:var(--text3);">Fälle laden…</div></div>
-      <button onclick="bvOhneFall()" style="width:100%;margin-top:8px;padding:9px;border-radius:9px;background:var(--surface2);border:1px solid var(--border2);color:var(--text3);font-size:12px;cursor:pointer;font-family:var(--font-ui);transition:all .15s;" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--text3)'">Ohne Fall-Bezug weiter →</button>
-    </div>
-
-    <!-- SCHRITT 2 -->
-    <div class="bv-panel" id="pnl-2">
-
-      <!-- KI Ladeindikator -->
-      <div class="bv-ki-box" id="ki-box">
-        <div class="bv-ki-dot"></div>
-        <span id="ki-box-txt">KI schreibt Ihren Brieftext…</span>
-      </div>
-
-      <!-- Toggle: Vorschau / Bearbeiten -->
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text3);">Briefvorschau</div>
-        <div style="display:flex;gap:4px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:2px;">
-          <button id="tab-prev" onclick="bvShowTab('prev')" style="padding:4px 10px;border-radius:6px;font-size:11px;font-weight:600;border:none;cursor:pointer;font-family:var(--font-ui);background:#4f8ef7;color:#fff;transition:all .15s;">📧 E-Mail</button>
-          <button id="tab-edit" onclick="bvShowTab('edit')" style="padding:4px 10px;border-radius:6px;font-size:11px;font-weight:600;border:none;cursor:pointer;font-family:var(--font-ui);background:transparent;color:var(--text3);transition:all .15s;">✏️ Bearbeiten</button>
-        </div>
-      </div>
-
-      <!-- EMAIL VORSCHAU — exakt wie der Empfänger es sieht -->
-      <div id="tab-prev-panel">
-        <div style="background:#1a1f2e;border:1px solid var(--border2);border-radius:12px;overflow:hidden;font-family:'SF Pro Display',-apple-system,'Segoe UI',sans-serif;">
-
-          <!-- Email-Client Header -->
-          <div style="background:#13161d;padding:12px 16px;border-bottom:1px solid var(--border);">
-            <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-              <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#4f8ef7,#3a7be0);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0;" id="prev-avatar">M</div>
-              <div style="flex:1;min-width:0;">
-                <div style="font-size:12px;font-weight:700;color:#e8eaf0;" id="prev-from-name">Marcel Schreiber</div>
-                <div style="font-size:10px;color:#6b7a99;" id="prev-from-email"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="cca7a3a2b8ada7b88cbcbea3baade1bfb5bfb8a9a1bfe2a8a9">[email&#160;protected]</a></div>
-              </div>
-              <div style="font-size:10px;color:#4d5568;" id="prev-date">Heute, 10:00</div>
-            </div>
-            <div style="display:flex;align-items:baseline;gap:6px;">
-              <span style="font-size:10px;color:#6b7a99;flex-shrink:0;">An:</span>
-              <span style="font-size:11px;color:#9da3b4;" id="prev-to">—</span>
-            </div>
-            <div style="display:flex;align-items:baseline;gap:6px;margin-top:3px;">
-              <span style="font-size:10px;color:#6b7a99;flex-shrink:0;">Betreff:</span>
-              <span style="font-size:12px;font-weight:700;color:#e8eaf0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" id="prev-subject">—</span>
-            </div>
-          </div>
-
-          <!-- Email Body — weißer Hintergrund wie echter Client -->
-          <div style="background:#ffffff;padding:24px 20px;min-height:160px;">
-            <div id="prev-body" style="font-size:13px;color:#1a1a2e;line-height:1.9;white-space:pre-wrap;font-family:Georgia,'Times New Roman',serif;"></div>
-          </div>
-
-          <!-- Email Footer -->
-          <div style="background:#f8f9fa;padding:10px 16px;border-top:1px solid #e5e7eb;">
-            <div style="font-size:10px;color:#9ca3af;line-height:1.6;" id="prev-sig-footer"></div>
-          </div>
-        </div>
-
-        <!-- KI-Bereich unter Preview -->
-        <div id="ki-area" style="display:none;margin-top:12px;">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-            <div style="font-size:11px;font-weight:700;color:#8b5cf6;text-transform:uppercase;letter-spacing:.06em;">✨ KI hat einen Brieftext erstellt</div>
-            <button onclick="bvGenKI()" id="ki-gen-btn" style="padding:5px 12px;border-radius:7px;background:linear-gradient(135deg,#5b48f0,#8b5cf6);color:#fff;border:none;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font-ui);">↻ Neu</button>
-          </div>
-          <div style="font-size:11px;color:var(--text3);padding:6px 10px;background:rgba(91,72,240,.06);border:1px solid rgba(91,72,240,.15);border-radius:7px;">
-            💡 KI-Text ist in der Vorschau oben eingebaut. Im Tab „Bearbeiten" können Sie ihn anpassen.
-          </div>
-        </div>
-      </div>
-
-      <!-- BEARBEITEN TAB -->
-      <div id="tab-edit-panel" style="display:none;">
-        <textarea id="ki-edit" class="bv-textarea" placeholder="Brieftext hier bearbeiten…" style="min-height:220px;" oninput="bvSyncEditToPreview()"></textarea>
-        <div style="font-size:11px;color:var(--text3);margin-top:6px;">Änderungen werden sofort in der E-Mail-Vorschau übernommen.</div>
-      </div>
-
-    </div>
-
-    <!-- SCHRITT 3 -->
-    <div class="bv-panel" id="pnl-3">
-      <div style="text-align:center;padding:10px 0 16px;">
-        <div style="font-size:34px;margin-bottom:10px;">📬</div>
-        <div style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:5px;">Brief bereit zum Versand</div>
-        <div style="font-size:12px;color:var(--text3);">An: <strong id="emp-name" style="color:var(--text2);">—</strong></div>
-      </div>
-      <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:14px;">
-        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text3);margin-bottom:8px;">Zusammenfassung</div>
-        <div id="send-summary" style="font-size:12px;color:var(--text2);line-height:1.9;"></div>
-      </div>
-      <div style="display:flex;flex-direction:column;gap:7px;">
-        <button class="bv-btn-send" onclick="bvSend('email')">📧 Per E-Mail senden</button>
-        <button class="bv-btn-next" style="background:var(--surface2);border:1px solid var(--border2);color:var(--text2);" onclick="bvSend('pdf')">📄 Als PDF (via Make.com)</button>
-        <button class="bv-btn-next" style="background:var(--surface2);border:1px solid var(--border2);color:var(--text2);" onclick="bvSend('akte')">📁 In Akte speichern</button>
-      </div>
-      <div id="send-result" style="display:none;margin-top:12px;"></div>
-    </div>
-
-  </div>
-
-  <div class="bv-dr-ft">
-    <button class="bv-btn-back" id="btn-back" onclick="bvStepBack()" style="display:none;">← Zurück</button>
-    <button class="bv-btn-next" id="btn-next" onclick="bvStepNext()">Weiter →</button>
-  </div>
-</div>
-
 <div class="bv-toast" id="bv-toast"></div>
-<button class="support-fab" onclick="window.zeigToast&&zeigToast('Support: support@prova-systems.de')" title="Support">💬</button>
 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
-(function(){
-'use strict';
-
-var WEBHOOK='https://hook.eu1.make.com/bslfuqmlud1vo8qems5ccn5z5f2eq4dl';
-var AT_BASE='appJ7bLlAHZoxENWE';
-var AT_FAELLE='tblSxV8bsXwd1pwa0';
-
-if(!localStorage.getItem('prova_user')){window.location.href='app-login.html';return;}
-
-/* ── DATEN ── */
-var CATS=[
-  {id:'angebote',   name:'Angebote & Aufträge',  col:'#4f8ef7'},
-  {id:'ortstermin', name:'Ortstermin',            col:'#f59e0b'},
-  {id:'versicherung',name:'Versicherung',         col:'#10b981'},
-  {id:'gericht',    name:'Gericht & ZPO',         col:'#ef4444'},
-  {id:'intern',     name:'Intern & Dokumente',    col:'#8b5cf6'},
-];
-var TMPLS=[
-  {id:'A-01',name:'Angebot Gutachten',            desc:'Angebot für ein Gutachten an Auftraggeber.',        cat:'angebote',   tier:'Solo',icon:'📄'},
-  {id:'A-02',name:'Auftragsbestätigung',          desc:'Auftragsbestätigung an den Auftraggeber.',          cat:'angebote',   tier:'Solo',icon:'✅'},
-  {id:'A-03',name:'Honorarvereinbarung',          desc:'Vereinbarung zum Honorar mit dem Auftraggeber.',    cat:'angebote',   tier:'Solo',icon:'💰'},
-  {id:'O-01',name:'Einladung Ortstermin',         desc:'Einladung zu einem Ortstermin (Besichtigung).',     cat:'ortstermin', tier:'Solo',icon:'📅'},
-  {id:'O-02',name:'Einladung Ortstermin (Gericht)',desc:'Gerichtlicher Ortstermin.',                        cat:'ortstermin', tier:'Solo',icon:'⚖️'},
-  {id:'O-03',name:'Ortstermin-Protokoll',         desc:'Protokoll zum durchgeführten Ortstermin.',          cat:'ortstermin', tier:'Solo',icon:'📝'},
-  {id:'O-04',name:'Umladebrief Ortstermin',       desc:'Verlegung eines Ortstermins mit neuem Datum.',      cat:'ortstermin', tier:'Solo',icon:'🔄'},
-  {id:'V-01',name:'Erstbericht Versicherung',     desc:'Erstbericht an die Versicherung.',                  cat:'versicherung',tier:'Solo',icon:'📋'},
-  {id:'V-02',name:'Deckungsanfrage',              desc:'Anfrage zur Deckung an die Versicherung.',          cat:'versicherung',tier:'Solo',icon:'📄'},
-  {id:'V-03',name:'Kostenvoranschlag Sanierung',  desc:'Kostenvoranschlag für Sanierungsmaßnahmen.',        cat:'versicherung',tier:'Solo',icon:'📊'},
-  {id:'V-04',name:'Nachforderung Unterlagen',     desc:'Nachforderung von Unterlagen.',                     cat:'versicherung',tier:'Solo',icon:'📎'},
-  {id:'V-05',name:'Abschlussbericht Versicherung',desc:'Abschlussbericht an die Versicherung.',             cat:'versicherung',tier:'Solo',icon:'📑'},
-  {id:'G-07',name:'Beauftragungsbestätigung Gericht',desc:'Pflichtanzeige nach §407a Abs. 1 ZPO.',          cat:'gericht',    tier:'Solo',icon:'⚖️'},
-  {id:'G-08',name:'Fristverlängerungsantrag',     desc:'Antrag auf Fristverlängerung §411 Abs. 1 ZPO.',     cat:'gericht',    tier:'Solo',icon:'⏳'},
-  {id:'G-09',name:'Ergänzungsfragen-Antwort',     desc:'Beantwortung von Ergänzungsfragen §411 ZPO.',       cat:'gericht',    tier:'Solo',icon:'📝'},
-  {id:'G-10',name:'Kostenrahmenerhöhung',         desc:'Hinweis auf Kostenüberschreitung §407a Abs. 3.',    cat:'gericht',    tier:'Solo',icon:'💶'},
-  {id:'I-01',name:'Messprotokoll Feuchte',        desc:'Protokoll für Feuchtemessungen.',                   cat:'intern',     tier:'Solo',icon:'📐'},
-  {id:'I-02',name:'Checkliste Wasserschaden',     desc:'Checkliste bei Wasserschaden.',                     cat:'intern',     tier:'Solo',icon:'📋'},
-  {id:'I-03',name:'Checkliste Sturmschaden',      desc:'Checkliste bei Sturmschaden.',                      cat:'intern',     tier:'Solo',icon:'📋'},
-  {id:'I-04',name:'Einverständnis DSGVO',         desc:'Einverständniserklärung zur Datenverarbeitung.',    cat:'intern',     tier:'Solo',icon:'🔒'},
-  {id:'I-06',name:'Aktennotiz',                   desc:'Kurznotiz für die Akte.',                           cat:'intern',     tier:'Solo',icon:'📝'},
-  {id:'I-07',name:'Ortstermin-Arbeitsblatt',      desc:'Druckbares Formular für Vor-Ort-Aufnahme.',         cat:'intern',     tier:'Solo',icon:'📋'},
-  {id:'I-08',name:'Messprotokoll Risse',          desc:'Rissaufnahme nach DIN 52460.',                      cat:'intern',     tier:'Solo',icon:'📐'},
-  {id:'I-09',name:'Checkliste Brandschaden',      desc:'Vollständige Brandschadenaufnahme.',                cat:'intern',     tier:'Solo',icon:'🔥'},
-  {id:'A-06',name:'Gerichtsgutachten §407a',      desc:'Gerichtsgutachten inkl. §407a ZPO — Team.',         cat:'gericht',    tier:'Team',icon:'⚖️'},
-  {id:'B-02',name:'Beweissicherung §407a',        desc:'Beweissicherung mit §407a-Erklärung — Team.',       cat:'intern',     tier:'Team',icon:'📑'},
-];
-
-/* ── STATE ── */
-var _cat='all', _q='', _tpl=null, _fall=null, _felder={}, _step=1, _ki=false;
-var _toastTimer;
-
-/* ── RENDER GRID ── */
-function render(){
-  var c=document.getElementById('bv-container');
-  c.innerHTML='';
-  var vis=0;
-  CATS.forEach(function(cat){
-    if(_cat!=='all'&&_cat!==cat.id)return;
-    var items=TMPLS.filter(function(t){
-      if(t.cat!==cat.id)return false;
-      if(_q&&!t.name.toLowerCase().includes(_q)&&!t.desc.toLowerCase().includes(_q))return false;
-      return true;
-    });
-    if(!items.length)return;
-    vis+=items.length;
-    var sec=document.createElement('div');
-    sec.className='bv-cat';
-    sec.innerHTML='<div class="bv-cat-head">'
-      +'<div class="bv-cat-bar" style="background:'+cat.col+'"></div>'
-      +'<div class="bv-cat-name">'+cat.name+'</div>'
-      +'<div class="bv-cat-n">'+items.length+'</div>'
-      +'</div>'
-      +'<div class="bv-grid">'+items.map(function(t){
-        return '<div class="tc" id="tc-'+t.id+'">'
-          +'<div class="tc-top">'
-          +'<div class="tc-icon">'+t.icon+'</div>'
-          +'<div class="tc-badges">'
-          +'<div class="tc-id">'+t.id+'</div>'
-          +'<div class="tc-tier tc-tier-'+(t.tier==='Team'?'team':'solo')+'">'+t.tier+'</div>'
-          +'</div></div>'
-          +'<div class="tc-name">'+t.name+'</div>'
-          +'<div class="tc-desc">'+t.desc+'</div>'
-          +'<div class="tc-btns">'
-          +'<button class="tc-btn-v" id="btnv-'+t.id+'" onclick="bvVerwenden(\''+t.id+'\',event)" title="Vorlage ausfüllen und versenden">'
-          +'<span>Verwenden</span><span style="opacity:.7">→</span>'
-          +'</button>'
-          +'<button class="tc-btn-ki" id="btnki-'+t.id+'" onclick="bvKI(\''+t.id+'\',event)" title="KI schreibt den Brief automatisch">'
-          +'<span>✨</span><span>KI</span>'
-          +'</button>'
-          +'</div></div>';
-      }).join('')+'</div>';
-    c.appendChild(sec);
-  });
-  if(!vis){
-    c.innerHTML='<div class="bv-empty">'
-      +'<div class="bv-empty-icon">🔍</div>'
-      +'<div class="bv-empty-title">Keine Vorlagen gefunden</div>'
-      +'<div class="bv-empty-sub">Anderen Suchbegriff oder Filter versuchen</div>'
-      +'</div>';
-  }
-}
-
-// Initial-Render — synchron nach TMPLS-Definition
-if (typeof render === 'function') render();
-
-window.bvFilter=function(q){_q=q.toLowerCase().trim();render();};
-window.bvSetCat=function(cat,btn){
-  _cat=cat;
-  document.querySelectorAll('.bv-chip').forEach(function(c){c.classList.remove('act');});
-  if(btn)btn.classList.add('act');
-  render();
-};
-
-
-/* ── BUTTON KLICK MIT FEEDBACK ── */
-window.bvVerwenden=function(id,evt){
-  if(evt)evt.stopPropagation();
-  _ki=false;
-  var btn=document.getElementById('btnv-'+id);
-  var card=document.getElementById('tc-'+id);
-  // Visuelles Klick-Feedback
-  if(btn){btn.classList.add('pressing');setTimeout(function(){btn.classList.remove('pressing');},150);}
-  if(card){card.classList.add('tc-highlight-v');}
-  _tpl=TMPLS.find(function(t){return t.id===id;});
-  bvUpdateDrawerHeader();
-  setTimeout(function(){
-    if(card)card.classList.remove('tc-highlight-v');
-    bvOpenDrawer();
-    bvGoStep(1);
-    ladeFaelle();
-  },180);
-};
-
-window.bvKI=function(id,evt){
-  if(evt)evt.stopPropagation();
-  _ki=true;
-  var btn=document.getElementById('btnki-'+id);
-  var card=document.getElementById('tc-'+id);
-  if(btn){btn.classList.add('pressing');setTimeout(function(){btn.classList.remove('pressing');},150);}
-  if(card){card.classList.add('tc-highlight-ki');}
-  _tpl=TMPLS.find(function(t){return t.id===id;});
-  bvUpdateDrawerHeader();
-  setTimeout(function(){
-    if(card)card.classList.remove('tc-highlight-ki');
-    bvOpenDrawer();
-    bvGoStep(1);
-    ladeFaelle();
-  },180);
-};
-
-function bvUpdateDrawerHeader(){
-  if(!_tpl)return;
-  document.getElementById('dr-icon').textContent=_tpl.icon;
-  document.getElementById('dr-icon').className='bv-dr-icon '+(_ki?'mode-ki':'mode-v');
-  document.getElementById('dr-title').textContent=_tpl.name;
-  var modeEl=document.getElementById('dr-mode');
-  modeEl.textContent=_ki?'✨ KI-unterstützte Erstellung':'Standard-Ausfüllung';
-  modeEl.className='bv-dr-mode '+(_ki?'mode-ki':'mode-v');
-  document.getElementById('ki-area').style.display=_ki?'block':'none';
-}
-
-/* ── DRAWER ── */
-function bvOpenDrawer(){
-  document.getElementById('bv-dr').classList.add('open');
-  document.getElementById('bv-ov').classList.add('show');
-  document.body.style.overflow='hidden';
-}
-window.bvCloseDrawer=function(){
-  document.getElementById('bv-dr').classList.remove('open');
-  document.getElementById('bv-ov').classList.remove('show');
-  document.body.style.overflow='';
-  _tpl=null;_fall=null;_ki=false;_step=1;_felder={};
-};
-
-/* ── STEPS ── */
-function bvGoStep(n){
-  _step=n;
-  document.querySelectorAll('.bv-panel').forEach(function(p){p.classList.remove('act');});
-  var pnl=document.getElementById('pnl-'+n);
-  if(pnl)pnl.classList.add('act');
-  for(var i=1;i<=3;i++){
-    var si=document.getElementById('si-'+i);
-    if(!si)continue;
-    si.classList.remove('act','done');
-    if(i<n)si.classList.add('done');
-    else if(i===n)si.classList.add('act');
-  }
-  var bb=document.getElementById('btn-back');
-  var bn=document.getElementById('btn-next');
-  if(bb)bb.style.display=n>1?'':'none';
-  if(bn){
-    bn.style.display=n===3?'none':'';
-    bn.textContent=n===2?'Weiter zum Versand →':'Weiter →';
-  }
-  if(n===2){fuelleSV();fuelleFall();bvRenderVorschau();if(_ki)bvGenKI();}
-  if(n===3)bvRenderSendSummary();
-}
-window.bvStepNext=function(){bvGoStep(Math.min(_step+1,3));};
-window.bvStepBack=function(){bvGoStep(Math.max(_step-1,1));};
-window.bvOhneFall=function(){_fall=null;bvGoStep(2);};
-
-/* ── FALL-PICKER ── */
-function ladeFaelle(){
-  var liste=document.getElementById('fall-liste');
-  var cache=[];
-  try{cache=(JSON.parse(localStorage.getItem('prova_archiv_cache_v2')||'{}').data||[]).slice(0,12);}catch(e){}
-  if(cache.length){bvRenderFaelle(cache,liste);return;}
-  liste.innerHTML='<div style="text-align:center;padding:12px;font-size:12px;color:var(--text3);">Lädt…</div>';
-  var sv=localStorage.getItem('prova_sv_email')||'';
-  fetch('/.netlify/functions/airtable',{method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({method:'GET',path:'/v0/'+AT_BASE+'/'+AT_FAELLE
-      +'?pageSize=12&sort[0][field]=Timestamp&sort[0][direction]=desc'
-      +(sv?'&filterByFormula='+encodeURIComponent('{sv_email}="'+sv+'"'):'')})
-  }).then(function(r){return r.json();}).then(function(d){bvRenderFaelle(d.records||[],liste);})
-    .catch(function(){liste.innerHTML='<div style="font-size:12px;color:var(--text3);text-align:center;padding:12px;">Keine Verbindung</div>';});
-}
-function bvRenderFaelle(records,container){
-  if(!records.length){container.innerHTML='<div style="font-size:12px;color:var(--text3);text-align:center;padding:12px;">Keine Fälle vorhanden</div>';return;}
-  container.innerHTML=records.map(function(r){
-    var f=r.fields||{};
-    return '<div class="bv-fall" onclick="bvWaehle(\''+r.id+'\',this)">'
-      +'<div>'
-      +'<div class="bv-fall-az">'+(f.Aktenzeichen||'—')+'</div>'
-      +'<div class="bv-fall-info">'+(f.Schadenart||f.Schadensart||'')+((f.Schaden_Strasse||f.Adresse)?' · '+(f.Schaden_Strasse||f.Adresse):'')+'</div>'
-      +'</div>'
-      +'<div class="bv-fall-ck" id="fck-'+r.id+'"></div>'
-      +'</div>';
-  }).join('');
-}
-window.bvWaehle=function(id,el){
-  _fall=id;
-  document.querySelectorAll('.bv-fall').forEach(function(i){i.classList.remove('sel');var c=i.querySelector('.bv-fall-ck');if(c)c.innerHTML='';});
-  if(el){el.classList.add('sel');var ck=document.getElementById('fck-'+id);if(ck)ck.innerHTML='✓';}
-  fuelleFall();
-};
-
-/* ── FELDER ── */
-function fuelleSV(){
-  var l=localStorage;
-  _felder.sv_name=(l.getItem('prova_sv_vorname')||'')+' '+(l.getItem('prova_sv_nachname')||'');
-  _felder.sv_email=l.getItem('prova_sv_email')||'';
-  _felder.sv_tel=l.getItem('prova_sv_telefon')||'';
-  _felder.kanzlei=l.getItem('prova_kanzlei_name')||'';
-  _felder.datum=new Date().toLocaleDateString('de-DE');
-}
-function fuelleFall(){
-  if(!_fall)return;
-  try{
-    var cache=(JSON.parse(localStorage.getItem('prova_archiv_cache_v2')||'{}').data||[]);
-    var rec=cache.find(function(r){return r.id===_fall;});
-    if(rec){var f=rec.fields||{};
-      _felder.az=f.Aktenzeichen||'';_felder.schadenart=f.Schadenart||f.Schadensart||'';
-      _felder.adresse=f.Schaden_Strasse||f.Adresse||'';
-      _felder.ag_name=f.Auftraggeber_Name||'';_felder.ag_email=f.Auftraggeber_Email||'';
-    }
-  }catch(e){}
-}
-
-/* ── TAB SWITCHER ── */
-window.bvShowTab=function(tab){
-  var pp=document.getElementById('tab-prev-panel');
-  var ep=document.getElementById('tab-edit-panel');
-  var tb=document.getElementById('tab-prev');
-  var te=document.getElementById('tab-edit');
-  if(tab==='prev'){
-    if(pp)pp.style.display='';
-    if(ep)ep.style.display='none';
-    if(tb){tb.style.background='#4f8ef7';tb.style.color='#fff';}
-    if(te){te.style.background='transparent';te.style.color='var(--text3)';}
-  } else {
-    if(pp)pp.style.display='none';
-    if(ep)ep.style.display='';
-    if(tb){tb.style.background='transparent';tb.style.color='var(--text3)';}
-    if(te){te.style.background='#4f8ef7';te.style.color='#fff';}
-  }
-};
-
-/* ── SYNC: Edit → Preview ── */
-window.bvSyncEditToPreview=function(){
-  var edit=document.getElementById('ki-edit');
-  var body=document.getElementById('prev-body');
-  if(edit&&body) body.textContent=edit.value;
-};
-
-/* ── VORSCHAU ── */
-function bvRenderVorschau(){
-  if(!_tpl)return;
-  var az  = _felder.az      || '';
-  var ag  = _felder.ag_name || '';
-  var agE = _felder.ag_email|| '';
-  var adr = _felder.adresse || '';
-  var dat = _felder.datum   || new Date().toLocaleDateString('de-DE');
-  var nm  = _felder.sv_name || localStorage.getItem('prova_sv_vorname')+' '+localStorage.getItem('prova_sv_nachname');
-  var kz  = _felder.kanzlei || localStorage.getItem('prova_kanzlei_name') || 'Sachverständigenbüro';
-  var svE = _felder.sv_email|| localStorage.getItem('prova_sv_email') || '';
-  var svT = _felder.sv_tel  || localStorage.getItem('prova_sv_telefon') || '';
-
-  // Betreff-Logik
-  var subj = _tpl.name;
-  if(az) subj += ' — AZ: '+az;
-
-  // Body-Text
-  var txt = bvGetText(_tpl.id,{az:az||'[Aktenzeichen]',ag:ag||'[Auftraggeber]',adr:adr||'[Objekt-Adresse]',dat:dat,nm:nm.trim()});
-
-  // Avatar-Initiale
-  var initiale=(nm.trim()||'S').charAt(0).toUpperCase();
-
-  // Uhrzeit
-  var jetzt=new Date();
-  var zeit=jetzt.getHours().toString().padStart(2,'0')+':'+jetzt.getMinutes().toString().padStart(2,'0');
-
-  // Signatur-Footer
-  var sig=[kz,nm.trim(),svE,svT].filter(function(x){return x&&x.trim()&&x!=='null null';}).join('  ·  ');
-
-  // Felder setzen
-  function setEl(id,val){var el=document.getElementById(id);if(el)el.textContent=val;}
-  setEl('prev-avatar',    initiale);
-  setEl('prev-from-name', nm.trim()&&nm.trim()!=='null null' ? nm.trim() : 'Sachverständiger');
-  setEl('prev-from-email',svE||'—');
-  setEl('prev-date',      'Heute, '+zeit);
-  setEl('prev-to',        ag + (agE?' <'+agE+'>':'') || '—');
-  setEl('prev-subject',   subj);
-  setEl('prev-body',      txt);
-  setEl('prev-sig-footer',sig);
-
-  // Edit-Textarea synchron halten
-  var edit=document.getElementById('ki-edit');
-  if(edit&&!edit.value) edit.value=txt;
-}
-function bvGetText(id,d){
-  var T={
-    'A-01':'Sehr geehrte Damen und Herren,\n\nhiermit unterbreite ich Ihnen mein Angebot zur Erstellung eines Sachverständigengutachtens zum Objekt '+d.adr+'.\n\nAktenzeichen: '+d.az+'\n\nMein Honorar berechnet sich nach dem JVEG.\n\nMit freundlichen Grüßen\n'+d.nm,
-    'A-02':'Sehr geehrte Damen und Herren,\n\nhiermit bestätige ich die Auftragserteilung zur Erstellung eines Sachverständigengutachtens.\n\nAktenzeichen: '+d.az+'\nObjekt: '+d.adr+'\n\nMit freundlichen Grüßen\n'+d.nm,
-    'G-07':'An das Gericht\n\nSehr geehrte Damen und Herren,\n\nhiermit zeige ich gemäß §407a Abs. 1 ZPO an, dass ich den Gutachtenauftrag zum Aktenzeichen '+d.az+' angenommen habe.\n\nIch bestätige meine Unabhängigkeit und Fachkunde.\n\nMit freundlichen Grüßen\n'+d.nm,
-    'G-08':'An das Gericht\n\nSehr geehrte Damen und Herren,\n\nhiermit beantrage ich gemäß §411 Abs. 1 ZPO eine Fristverlängerung zur Erstattung des Gutachtens zum Aktenzeichen '+d.az+'.\n\nBegründung: [Begründung einfügen]\n\nMit freundlichen Grüßen\n'+d.nm,
-  };
-  return T[id]||'Sehr geehrte Damen und Herren,\n\nbezugnehmend auf obige Angelegenheit (AZ: '+d.az+') übersende ich Ihnen anliegend die gewünschten Unterlagen.\n\nMit freundlichen Grüßen\n'+d.nm;
-}
-
-/* ── KI GENERIEREN ── */
-/* ── TYP-SPEZIFISCHE SYSTEM-PROMPTS ── */
-var KI_PROMPTS = {
-
-  // ANGEBOTE & AUFTRÄGE
-  'A-01': {
-    sys: 'Du bist ö.b.u.v. Sachverständiger für Bau- und Gebäudeschäden. Schreibe den Rumpftext eines seriösen Angebotsschreibens. NUR der Fließtext — keine Anrede, keinen Briefkopf, keine Grußformel, kein Markdown. Maximal 4 Sätze. Sachlich, professionell, direkt.',
-    usr: function(f) {
-      return 'Vorlage: Angebot zur Gutachtenerstellung\n'
-        + 'Auftraggeber: '+f.ag_name+'\n'
-        + 'Objekt: '+f.adresse+'\n'
-        + 'Aktenzeichen: '+(f.az||'wird noch mitgeteilt')+'\n'
-        + 'Sachverständiger: '+f.sv_name+'\n'
-        + 'Datum: '+f.datum+'\n\n'
-        + 'Schreibe: Ich unterbreite hiermit mein Angebot zur Erstellung eines Sachverständigengutachtens für das Objekt [Adresse]. Honorar nach JVEG bzw. nach Vereinbarung. Keine Platzhalter wie X EUR.';
-    }
-  },
-
-  'A-02': {
-    sys: 'Du bist ö.b.u.v. Sachverständiger. Schreibe den Rumpftext einer Auftragsbestätigung. NUR Fließtext, keine Anrede, kein Briefkopf, keine Grußformel, kein Markdown. 3-4 Sätze.',
-    usr: function(f) {
-      return 'Vorlage: Auftragsbestätigung\n'
-        + 'Auftraggeber: '+f.ag_name+'\n'
-        + 'Objekt: '+f.adresse+'\n'
-        + 'Aktenzeichen: '+(f.az||'wird noch mitgeteilt')+'\n'
-        + 'Sachverständiger: '+f.sv_name+'\n'
-        + 'Datum: '+f.datum+'\n\n'
-        + 'Bestätige den Auftrag zur Gutachtenerstellung konkret mit AZ und Adresse. Erwähne dass der Ortstermin zeitnah vereinbart wird.';
-    }
-  },
-
-  'A-03': {
-    sys: 'Du bist ö.b.u.v. Sachverständiger. Schreibe den Rumpftext einer Honorarvereinbarung. NUR Fließtext, keine Anrede, kein Briefkopf, keine Grußformel, kein Markdown. 4-5 Sätze. Seriös, verbindlich.',
-    usr: function(f) {
-      return 'Vorlage: Honorarvereinbarung\n'
-        + 'Auftraggeber: '+f.ag_name+'\n'
-        + 'Objekt: '+f.adresse+'\n'
-        + 'Aktenzeichen: '+(f.az||'wird noch mitgeteilt')+'\n'
-        + 'Sachverständiger: '+f.sv_name+'\n\n'
-        + 'Halte fest: Honorar richtet sich nach JVEG oder nach schriftlicher Vereinbarung. Fahrtkosten, Auslagen, Kopierkosten werden gesondert berechnet. Abrechnung nach Abschluss des Gutachtens. Keine konkreten EUR-Beträge nennen.';
-    }
-  },
-
-  // ORTSTERMIN
-  'O-01': {
-    sys: 'Du bist ö.b.u.v. Sachverständiger. Schreibe eine Einladung zum Ortstermin (Besichtigung). NUR Fließtext, keine Anrede, kein Briefkopf, keine Grußformel, kein Markdown. 3-4 Sätze.',
-    usr: function(f) {
-      return 'Vorlage: Einladung Ortstermin\n'
-        + 'Auftraggeber/Eingeladene: '+f.ag_name+'\n'
-        + 'Objekt: '+f.adresse+'\n'
-        + 'Aktenzeichen: '+(f.az||'wird noch mitgeteilt')+'\n'
-        + 'Sachverständiger: '+f.sv_name+'\n\n'
-        + 'Lade zur Besichtigung des Objekts ein. Bitte um Terminbestätigung. Weise darauf hin dass relevante Unterlagen bereitgehalten werden sollen. Kein konkretes Datum (das wird manuell ergänzt).';
-    }
-  },
-
-  'O-02': {
-    sys: 'Du bist ö.b.u.v. Sachverständiger im gerichtlichen Auftrag. Schreibe eine förmliche Einladung zum gerichtlichen Ortstermin nach §404 ZPO. NUR Fließtext, keine Anrede, kein Briefkopf, keine Grußformel, kein Markdown. 4-5 Sätze. Formell-juristischer Ton.',
-    usr: function(f) {
-      return 'Vorlage: Einladung gerichtlicher Ortstermin\n'
-        + 'Aktenzeichen: '+(f.az||'[Gerichts-AZ]')+'\n'
-        + 'Objekt: '+f.adresse+'\n'
-        + 'Sachverständiger: '+f.sv_name+'\n\n'
-        + 'Förmliche Ladung aller Parteien zum Ortstermin gem. Gerichtsauftrag. Hinweis auf §407a ZPO-Pflichten. Parteien sind zur Mitwirkung verpflichtet. Kein konkretes Datum.';
-    }
-  },
-
-  'O-03': {
-    sys: 'Du bist ö.b.u.v. Sachverständiger. Schreibe den Einleitungstext eines Ortstermin-Protokolls. NUR Fließtext, keine Anrede, kein Briefkopf, keine Grußformel, kein Markdown. 3-4 Sätze. Sachlich-dokumentarisch.',
-    usr: function(f) {
-      return 'Vorlage: Ortstermin-Protokoll\n'
-        + 'Objekt: '+f.adresse+'\n'
-        + 'Aktenzeichen: '+(f.az||'wird noch mitgeteilt')+'\n'
-        + 'Sachverständiger: '+f.sv_name+'\n\n'
-        + 'Protokolleinleitung: Am [Datum] fand die Besichtigung des Objekts [Adresse] statt. Anwesende Parteien, Zweck, Begehungsumfang. Kein konkretes Datum eintragen.';
-    }
-  },
-
-  // GERICHT
-  'G-07': {
-    sys: 'Du bist ö.b.u.v. Sachverständiger im gerichtlichen Auftrag. Schreibe die Pflichtanzeige nach §407a Abs. 1 ZPO. NUR Fließtext, keine Anrede, kein Briefkopf, keine Grußformel, kein Markdown. 4-5 Sätze. Förmlich-juristisch, präzise.',
-    usr: function(f) {
-      return 'Vorlage: Beauftragungsbestätigung §407a ZPO\n'
-        + 'Gericht / Auftraggeber: '+f.ag_name+'\n'
-        + 'Aktenzeichen: '+(f.az||'[Gerichts-AZ]')+'\n'
-        + 'Sachverständiger: '+f.sv_name+'\n\n'
-        + 'Zeige gemäß §407a Abs.1 ZPO an: Gutachtenauftrag angenommen, AZ '+f.az+'. Bestätige persönliche Unabhängigkeit von den Parteien, Fachkunde, keine Ausschlussgründe nach §406 ZPO. Hinweis auf erwartete Bearbeitungszeit ohne konkretes Datum.';
-    }
-  },
-
-  'G-08': {
-    sys: 'Du bist ö.b.u.v. Sachverständiger. Schreibe einen Fristverlängerungsantrag nach §411 Abs.1 ZPO. NUR Fließtext, keine Anrede, kein Briefkopf, keine Grußformel, kein Markdown. 4-5 Sätze. Sachlich begründet, förmlich.',
-    usr: function(f) {
-      return 'Vorlage: Fristverlängerungsantrag §411 ZPO\n'
-        + 'Gericht: '+f.ag_name+'\n'
-        + 'Aktenzeichen: '+(f.az||'[Gerichts-AZ]')+'\n'
-        + 'Sachverständiger: '+f.sv_name+'\n\n'
-        + 'Beantrage gemäß §411 Abs.1 ZPO Fristverlängerung für Gutachten AZ '+f.az+'. Begründe mit Komplexität des Schadenbilds / noch ausstehenden Unterlagen / Untersuchungsaufwand. Kein konkretes neues Datum.';
-    }
-  },
-
-  'G-09': {
-    sys: 'Du bist ö.b.u.v. Sachverständiger. Schreibe den Einleitungstext für Ergänzungsfragen-Antwort gem. §411 ZPO. NUR Fließtext, keine Anrede, kein Briefkopf, keine Grußformel, kein Markdown. 3-4 Sätze.',
-    usr: function(f) {
-      return 'Vorlage: Ergänzungsfragen-Antwort §411 ZPO\n'
-        + 'Aktenzeichen: '+(f.az||'[Gerichts-AZ]')+'\n'
-        + 'Sachverständiger: '+f.sv_name+'\n\n'
-        + 'Nehme Stellung zu den Ergänzungsfragen des Gerichts / der Parteien im Verfahren AZ '+f.az+'. Verweise auf das bereits erstattete Gutachten. Beantworte die Fragen auf Basis der dortigen Feststellungen.';
-    }
-  },
-
-  'G-10': {
-    sys: 'Du bist ö.b.u.v. Sachverständiger. Schreibe einen Hinweis auf Kostenüberschreitung nach §407a Abs.3 ZPO. NUR Fließtext, keine Anrede, kein Briefkopf, keine Grußformel, kein Markdown. 4-5 Sätze. Sachlich, förmlich.',
-    usr: function(f) {
-      return 'Vorlage: Kostenrahmenerhöhung §407a Abs.3 ZPO\n'
-        + 'Gericht: '+f.ag_name+'\n'
-        + 'Aktenzeichen: '+(f.az||'[Gerichts-AZ]')+'\n'
-        + 'Sachverständiger: '+f.sv_name+'\n\n'
-        + 'Zeige gemäß §407a Abs.3 ZPO an dass der Aufwand den Kostenrahmen voraussichtlich übersteigt. Begründe sachlich (Untersuchungsumfang, Laboranalysen, Aktenlage). Bitte um gerichtliche Entscheidung zur Fortführung. Kein konkreter EUR-Betrag.';
-    }
-  },
-
-  // VERSICHERUNG
-  'V-01': {
-    sys: 'Du bist ö.b.u.v. Sachverständiger. Schreibe einen Erstbericht an eine Versicherung nach Schadensmeldung. NUR Fließtext, keine Anrede, kein Briefkopf, keine Grußformel, kein Markdown. 4-5 Sätze. Professionell, faktenorientiert.',
-    usr: function(f) {
-      return 'Vorlage: Erstbericht an Versicherung\n'
-        + 'Versicherung: '+f.ag_name+'\n'
-        + 'Objekt: '+f.adresse+'\n'
-        + 'Aktenzeichen: '+(f.az||'wird noch mitgeteilt')+'\n'
-        + 'Sachverständiger: '+f.sv_name+'\n\n'
-        + 'Berichte über die erste Inaugenscheinnahme des Schadensobjekts '+f.adresse+'. Schildere kurz den vorgefundenen Zustand, den Schadensumfang und die nächsten Schritte (Detailuntersuchung, Gutachtenerstellung). Kein abschließendes Urteil im Erstbericht.';
-    }
-  }
-};
-
-/* ── FALLBACK FÜR NICHT SPEZIFIZIERTE VORLAGEN ── */
-function kiGetPrompt(tplId, felder) {
-  var p = KI_PROMPTS[tplId];
-  if (p) {
-    return { sys: p.sys, usr: p.usr(felder) };
-  }
-  // Generischer Fallback
-  var cat = _tpl ? _tpl.cat : 'allgemein';
-  var catTon = {
-    gericht: 'förmlich-juristisch, §407a ZPO beachten',
-    versicherung: 'sachlich-technisch, faktenorientiert',
-    ortstermin: 'sachlich-dokumentarisch',
-    angebote: 'professionell-akquise',
-    intern: 'intern-dokumentarisch'
-  }[cat] || 'sachlich-professionell';
-
-  return {
-    sys: 'Du bist ö.b.u.v. Sachverständiger für Bau- und Gebäudeschäden. Schreibe den Rumpftext des angeforderten Briefes. NUR Fließtext — keine Anrede, keinen Briefkopf, keine Grußformel, kein Markdown. Ton: '+catTon+'. 3-5 Sätze. Konkret mit den gegebenen Falldaten, keine Platzhalter wie X, Y oder [...]..',
-    usr: 'Vorlage: '+(_tpl?_tpl.name:'Brief')+'\n'
-      +'Auftraggeber: '+(felder.ag_name||'—')+'\n'
-      +'Objekt: '+(felder.adresse||'—')+'\n'
-      +'Aktenzeichen: '+(felder.az||'—')+'\n'
-      +'Sachverständiger: '+(felder.sv_name||'—')+'\n'
-      +'Datum: '+(felder.datum||'—')+'\n\n'
-      +'Schreibe jetzt den konkreten Brieftext für diese Vorlage.'
-  };
-}
-
-window.bvGenKI=async function(){
-  var box=document.getElementById('ki-box');
-  var boxTxt=document.getElementById('ki-box-txt');
-  var edit=document.getElementById('ki-edit');
-  var btn=document.getElementById('ki-gen-btn');
-
-  box.classList.add('show');
-  if(boxTxt) boxTxt.textContent='KI schreibt Ihren Brief…';
-  if(btn) btn.disabled=true;
-
-  // Felder sicherstellen
-  fuelleSV();
-  if(_fall) fuelleFall();
-
-  // Prompt abrufen
-  var prompt = kiGetPrompt(_tpl?_tpl.id:'', _felder);
-
-  try{
-    var res=await fetch('/.netlify/functions/ki-proxy',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
-        model:'gpt-4o-mini',
-        max_tokens:500,
-        messages:[
-          {role:'system', content:prompt.sys},
-          {role:'user',   content:prompt.usr}
-        ]
-      })
-    });
-    if(!res.ok) throw new Error('HTTP '+res.status);
-    var data=await res.json();
-    var txt=(data.content&&data.content[0]&&data.content[0].text)||'';
-    if(!txt) throw new Error('Keine Antwort von KI');
-
-    box.classList.remove('show');
-
-    // Edit-Textarea befüllen
-    if(edit) edit.value=txt;
-
-    // Sofort in Email-Vorschau übernehmen
-    var body=document.getElementById('prev-body');
-    if(body) body.textContent=txt;
-
-    if(btn){btn.disabled=false;btn.textContent='↻ Neu generieren';}
-
-    // KI-Hinweisbox einblenden
-    var kiArea=document.getElementById('ki-area');
-    if(kiArea) kiArea.style.display='block';
-
-    bvToast('✅ Brief fertig — in Vorschau übernommen','success');
-
-  }catch(e){
-    box.classList.remove('show');
-    if(btn){btn.disabled=false;btn.textContent='↻ Neu generieren';}
-    bvToast('KI-Fehler: '+e.message,'error');
-  }
-};
-
-/* ── SEND SUMMARY ── */
-function bvRenderSendSummary(){
-  var s=document.getElementById('send-summary');
-  var e=document.getElementById('emp-name');
-  if(!_tpl)return;
-  if(e)e.textContent=_felder.ag_name||_felder.ag_email||'—';
-  if(s)s.innerHTML='<div style="display:flex;justify-content:space-between;border-bottom:1px solid var(--border);padding-bottom:6px;margin-bottom:6px;"><span style="color:var(--text3)">Vorlage</span><span>'+_tpl.name+'</span></div>'
-    +'<div style="display:flex;justify-content:space-between;border-bottom:1px solid var(--border);padding-bottom:6px;margin-bottom:6px;"><span style="color:var(--text3)">Aktenzeichen</span><span>'+(_felder.az||'—')+'</span></div>'
-    +'<div style="display:flex;justify-content:space-between;"><span style="color:var(--text3)">Modus</span><span>'+(_ki?'✨ KI-generiert':'Standard')+'</span></div>';
-}
-
-/* ── SENDEN ── */
-window.bvSend=async function(typ){
-  var result=document.getElementById('send-result');
-  var az=_felder.az||'',ag=_felder.ag_name||'',email=_felder.ag_email||'',svEmail=_felder.sv_email||'';
-  if(typ==='email'){
-    var subj=encodeURIComponent((_tpl?_tpl.name:'Brief')+' — '+az);
-    var edit=document.getElementById('ki-edit');
-    var body=encodeURIComponent(edit&&edit.value?edit.value:bvGetText(_tpl?_tpl.id:'',{az:az,ag:ag,adr:_felder.adresse||'',dat:_felder.datum||'',nm:_felder.sv_name||''}));
-    window.location.href='mailto:'+email+'?subject='+subj+'&body='+body;
-    bvToast('E-Mail-Client geöffnet ✅','success');return;
-  }
-  if(typ==='pdf'){
-    var btn=document.getElementById('btn-send-pdf')||{};
-    try{
-      var pay={vorlage_id:_tpl?_tpl.id:'',vorlage_name:_tpl?_tpl.name:'',aktenzeichen:az,auftraggeber:ag,ag_email:email,sv_email:svEmail,adresse:_felder.adresse||'',datum:_felder.datum||'',sv_name:_felder.sv_name||'',brieftext:(document.getElementById('ki-edit')||{value:''}).value||''};
-      var r=await fetch(WEBHOOK,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(pay)});
-      if(r.ok){if(result){result.style.display='block';result.innerHTML='<div style="padding:10px;background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.2);border-radius:8px;font-size:12px;color:#10b981;">✅ PDF wird generiert — per E-Mail an '+svEmail+'</div>';}bvToast('PDF wird erstellt ✅','success');}
-      else throw new Error('HTTP '+r.status);
-    }catch(e){bvToast('Fehler: '+e.message,'error');}
-    return;
-  }
-  if(typ==='akte'){bvToast('In Akte gespeichert ✅','success');setTimeout(bvCloseDrawer,1600);}
-};
-
-/* ── TOAST ── */
-function bvToast(msg,type){
-  var t=document.getElementById('bv-toast');
-  if(!t)return;
-  t.textContent=msg;t.className='bv-toast show'+(type?' '+type:'');
-  clearTimeout(_toastTimer);_toastTimer=setTimeout(function(){t.classList.remove('show');},3000);
-}
-window.zeigToast=bvToast;window.showToast=bvToast;
-
-/* ── KEYBOARD ── */
-document.addEventListener('keydown',function(e){
-  if(e.key==='Escape')bvCloseDrawer();
-  if(e.key==='/'&&!['INPUT','TEXTAREA'].includes(document.activeElement.tagName)){
-    e.preventDefault();var s=document.getElementById('bv-search');if(s){s.focus();s.select();}
-  }
-});
-var bvSrch=document.getElementById('bv-search');
-if(bvSrch){
-  bvSrch.addEventListener('focus',function(){var k=document.getElementById(
+  <script src="/sw-register.js" defer></script>
+  <script src="auto-save.js" defer></script>
+  <script src="global-search.js" defer></script>
+  <script src="auftragstyp.js"></script>
+  <script src="briefvorlagen-logic.js" defer></script>
+</body>
+</html>

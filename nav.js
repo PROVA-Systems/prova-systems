@@ -49,12 +49,15 @@
   var ABRECHNUNG = [
     { href: 'rechnungen.html',    icon: '💶', label: 'Rechnungen' },
     { href: 'jveg.html',          icon: '⚖️', label: 'JVEG-Rechner' },
+    { href: 'erechnung.html',     icon: '📄', label: 'E-Rechnung' },
+    { href: 'statistiken.html',   icon: '📈', label: 'Statistiken' },
   ];
   // BÜRO: Korrespondenz, Kontakte, Projekte
   var BUERO = [
     { href: 'briefvorlagen.html', icon: '✉️', label: 'Briefe & Vorlagen' },
     { href: 'kontakte.html',      icon: '👥', label: 'Kontakte' },
     { href: 'baubegleitung.html', icon: '🏗️', label: 'Baubegleitung' },
+    { href: 'hilfe.html',         icon: '❓', label: 'Hilfe' },
   ];
   // VERWALTUNG: Selten genutzte Admin-Funktionen
   var VERWALTUNG = [];
@@ -355,7 +358,7 @@
 
     + aktiverFallBlock()
 
-    + '<button onclick="window.provaOpenCmdPalette&&provaOpenCmdPalette()" '
+    + '<button id="sb-search-btn" onclick="window.PROVASearch&&PROVASearch.toggle()" '
     + 'style="display:flex;align-items:center;gap:8px;margin:0 8px 6px;padding:7px 12px;'
     + 'background:rgba(255,255,255,.04);border:1px solid var(--border,rgba(255,255,255,.07));'
     + 'border-radius:8px;color:var(--text3,#6b7280);font-size:12px;cursor:pointer;'
