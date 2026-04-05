@@ -1627,9 +1627,7 @@ document.addEventListener('keydown', function(e) {
     var ta4 = document.getElementById('svTextD') || document.querySelector('[data-sektion="4"] textarea') ||
               document.querySelectorAll('textarea')[3];
     if (ta4) {
-      ta4.value = (ta4.value ? ta4.value + '
-
-' : '') + kalkNotizen;
+      ta4.value = (ta4.value ? ta4.value + '\n' : '') + kalkNotizen;
       if (typeof showToast === 'function') showToast('Kostenberechnung in §4 eingefügt ✅', 'success');
     }
   }

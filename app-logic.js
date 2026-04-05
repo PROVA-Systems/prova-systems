@@ -2920,7 +2920,7 @@ function sammleDaten() {
 
       document.getElementById('f-mw-extra')?.value ? String(document.getElementById('f-mw-extra').value) : '',
     ].filter(Boolean).join(' | ') || '',
-    transkript:         transcriptText,
+    transkript:         window.transcriptText || transcriptText || '',
     fotos_anzahl:       fotos.length,
     fotos:              fotos.map((f, i) => ({ index: i+1, dataUrl: f.dataUrl, caption: f.caption || 'Foto '+(i+1), groesse_kb: Math.round(f.compSize/1024) })),
     timestamp:          nowIso,
@@ -3109,12 +3109,12 @@ window.weiterZuAnalyse = async function() {
     var manuellTa = document.getElementById('transcriptManuell');
     transcriptText = (manuellTa && manuellTa.value) ? manuellTa.value.trim() : transcriptText;
   }
-  if (!transcriptText.trim()) {
+  if (!(window.transcriptText || transcriptText || '').trim()) {
     showToast('Bitte Diktat aufnehmen oder Text eingeben.', 'warning');
     return;
   }
   // ── KRITISCH: Diktat + Messwerte in localStorage für stellungnahme.html ──
-  localStorage.setItem('prova_transkript', transcriptText);
+  localStorage.setItem('prova_transkript', window.transcriptText || transcriptText || '');
   // Manuelle Eingabe separat für stellungnahme.html 3-Quellen-Diktat
   var manuellEl = document.getElementById('transcriptManuell');
   var manuellText = manuellEl ? manuellEl.value.trim() : '';

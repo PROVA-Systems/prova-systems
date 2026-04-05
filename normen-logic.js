@@ -150,7 +150,45 @@ const NORMEN_DB = [
   {num:'DIN EN 1990',titel:'Eurocode 0 — Grundlagen Tragwerksplanung',bereich:'Statik',sa:'BA,BS',anw:'Basisnorm für alle Eurocodes. Grenzzustände GZT und GZG. Für Tragwerksschäden und Standsicherheitsbeurteilungen.',gw:'ULS: 1,35*Gk + 1,5*Qk | SLS: charakteristische Werte',mess:'Schadensaufnahme, Resttragfähigkeit, Verweis auf Tragwerksplaner'},
   {num:'VdS 2073',titel:'Leckageortung bei Wasserschäden',bereich:'Abdichtung',sa:'WS',anw:'Richtlinie für die Ortung verdeckter Wasserleckagen. Beschreibt Messverfahren (Korrelation, akustisch, thermisch). Grundlage für die Dokumentation der Leckageortung im Gutachten.',gw:'Korrelationsmessgenauigkeit: ± 0,5 m | Thermografie: Delta-T mind. 2°C für zuverlässige Ortung',mess:'Korrelationsmessung, akustische Ortung, Thermografie, Tracergas'},
   {num:'LAWA 2017',titel:'Länderarbeitsgemeinschaft Wasser — Hochwasserschutz',bereich:'Elementar',sa:'ES',anw:'Maßstab für Elementarschadengutachten bei Überschwemmung. Klassifizierung Hochwasserereignisse HQ10 bis HQ100 plus. Relevant für Versicherungsgutachten Elementarschäden.',gw:'HQ100: statistisch einmal in 100 Jahren | Schutzwerte je Bundesland verschieden',mess:'Pegelstände dokumentieren, Überschwemmungshöhe messen, Fotos mit Datum+Uhrzeit'}
+,
+  {num:'WTA 6-1-01/D',titel:'Schimmel: Grenzwerte Luftfeuchtigkeit und Materialfeuchte',bereich:'Schimmel',sa:'SC',anw:'Definiert Grenzwerte für Raumluftfeuchte und Materialfeuchte. Grundlage für Schimmelbewertung in Wohngebäuden.',gw:'Relative Raumfeuchte <60%, Wandfeuchte >20% kritisch, Holzfeuchte >18% Schimmelrisiko'},
+  {num:'§407a ZPO',titel:'Pflichten des Sachverständigen — Offenlegung KI-Nutzung',bereich:'Recht',sa:'all',anw:'SV muss persönlich tätig werden. KI-Nutzung ist offenzulegen. Fachliches Urteil (§6) bleibt allein beim SV.',gw:'Persönliche Erstattungspflicht. KI als Hilfsmittel erlaubt, Offenlegung Pflicht'},
+  {num:'§839a BGB',titel:'Haftung des gerichtlichen Sachverständigen',bereich:'Recht',sa:'all',anw:'Haftung bei grob fahrlässig unrichtigen Gutachten. Sorgfaltspflicht §276 BGB.',gw:'Grobe Fahrlässigkeit = Haftungsgrundlage. Vorsatz ebenfalls erfasst'},
+  {num:'BGH VII ZR 46/17',titel:'Beweislast bei Schimmelschäden',bereich:'Rechtsprechung',sa:'SC,WS',anw:'Anscheinsbeweis bei typischen Schadensbildern. Kausalitätsvermutung für Mieter.',gw:'Anscheinsbeweis greift bei typischem Schadensbild. Vermieter trägt Gegenbeweis'},
+  {num:'§13 VOB/B',titel:'Mängelansprüche im Bauvertrag',bereich:'Baurecht',sa:'BA,WS,SC,SS',anw:'Mängelansprüche und Gewährleistungsfrist 4 Jahre für Bauwerke. Grundlage Baumängel-Gutachten.',gw:'Gewährleistung 4 Jahre, Nacherfüllung, Selbstvornahme, Schadensersatz'},
+  {num:'DIN 1045',titel:'Tragwerke aus Beton, Stahlbeton und Spannbeton',bereich:'Konstruktion',sa:'BA,SS',anw:'Bemessung und Konstruktion von Betonbauteilen. Relevant bei Rissschäden und Tragwerksbeurteilung.',gw:'Mindestbetondeckung, Rissbreitenbeschränkung, Bewehrungsanforderungen'},
+  {num:'DIN 1055-4',titel:'Einwirkungen auf Tragwerke — Windlasten',bereich:'Konstruktion',sa:'SS,BA',anw:'Grundlage für die Beurteilung von sturmbedingten Schäden. Windzoneneinteilung Deutschland.',gw:'Windzone 1–4, Böengeschwindigkeitsdruck qp nach Region'},
+  {num:'DIN 18203',titel:'Toleranzen im Hochbau',bereich:'Baumängel',sa:'BA',anw:'Grenzabmaße für Mauerwerk, Beton, Stahl, Holz. Grundlage für Maßhaltigkeitsprüfung.',gw:'Ebenheitstoleranzen: ±5mm/2m bei Wänden, ±3mm/2m bei Böden'},
+  {num:'DIN 18230',titel:'Baulicher Brandschutz im Industriebau',bereich:'Brandschutz',sa:'BR,BA',anw:'Äquivalente Branddauer für Industriegebäude. Relevant bei Brandschadengutachten in Gewerbebauten.',gw:'Äquivalente Branddauer berechnet aus Brandlast und Öffnungsfaktor'},
+  {num:'DIN 276',titel:'Kosten im Bauwesen',bereich:'Kosten',sa:'BA,WS,SC,SS,BR',anw:'Kostengliederung nach Kostengruppen. Grundlage für Schadenskostenermittlung.',gw:'KG 300 Bauwerk-Baukonstruktionen, KG 400 Technische Anlagen'},
+  {num:'DIN 4020',titel:'Geotechnische Untersuchungen für bautechnische Zwecke',bereich:'Baugrund',sa:'BA,WS',anw:'Baugrunderkundung, Setzungsbeurteilung. Relevant bei Riss- und Setzungsschäden.',gw:'Mindestbohrtiefe, Probenentnahme nach Gebäudeklasse'},
+  {num:'DIN 52460',titel:'Fugen- und Anschlussabdichtungen im Hochbau',bereich:'Abdichtung',sa:'WS,SC',anw:'Anforderungen an Fugenabdichtungen. Grundlage bei Wasserschäden durch undichte Fugen.',gw:'Dauerhafte Dichtwirkung, Beständigkeit gegen Feuchtigkeit'},
+  {num:'DIN 68800-3',titel:'Holzschutz — Vorbeugender chemischer Holzschutz',bereich:'Holzschutz',sa:'SC,BA',anw:'Chemischer Schutz von Holzbauteilen. Relevant bei Schimmel und Holzzerstörung.',gw:'Gebrauchsklassen GK 1–5, Anforderungen nach Gefährdungslage'},
+  {num:'DIN EN 13501-2',titel:'Klassifizierung von Bauprodukten — Feuerwiderstand',bereich:'Brandschutz',sa:'BR,BA',anw:'Brandschutzklassen für Bauprodukte. Grundlage für Beurteilung von Brandschäden und Wiederaufbau.',gw:'REI 30/60/90/120: Tragfähigkeit, Raumabschluss, Wärmedämmung'},
+  {num:'DIN EN 1995',titel:'Eurocode 5: Bemessung und Konstruktion von Holzbauten',bereich:'Konstruktion',sa:'BA,SS',anw:'Bemessung von Holztragwerken. Relevant bei Sturmschäden und Holzbaumängeln.',gw:'Tragfähigkeits- und Gebrauchstauglichkeitsnachweise für Holz'},
+  {num:'DIN EN ISO 16000-1',titel:'Innenraumluftverunreinigungen — Probenahmestrategie',bereich:'Schimmel',sa:'SC',anw:'Probenahme für Schimmel- und Schadstoffmessungen in Innenräumen. Grundlage für Messprotokolle.',gw:'Probenahmeplanung, Mindestanzahl Messpunkte'},
+  {num:'GDV AFB 2010',titel:'Allgemeine Feuerversicherungs-Bedingungen',bereich:'Versicherungsrecht',sa:'BR',anw:'Standardbedingungen für Feuerversicherung. Relevant für Deckungsanfragen nach Brandereignis.',gw:'Gefahren des Feuers, Blitz, Explosion. Entschädigungsberechnung'},
+  {num:'GDV AWB 2010',titel:'Allgemeine Wohngebäudeversicherungs-Bedingungen',bereich:'Versicherungsrecht',sa:'WS,SC,SS,BR',anw:'Standardbedingungen Wohngebäudeversicherung. Basis für Deckungsanfragen.',gw:'Versicherte Gefahren: Feuer, Leitungswasser, Sturm/Hagel'},
+  {num:'VdS 2021',titel:'Richtlinien für Brandmeldeanlagen',bereich:'Brandschutz',sa:'BR,BA',anw:'Anforderungen an Brandmeldeanlagen. Relevant bei Bewertung von Brandschutzmaßnahmen.',gw:'Aufschaltung auf Feuerwehr, Wartungsintervalle, Prüfpflichten'},
+  {num:'VdS 2298',titel:'Leckageortung an wasserführenden Leitungen',bereich:'Wasserschaden',sa:'WS',anw:'Anforderungen an Leckageortung. Relevant bei Leitungswasserschäden.',gw:'Zerstörungsfreie Ortungsmethoden, Dokumentationsanforderungen'},
+  {num:'VdS 2311',titel:'Brandschutz in der Kunststoffverarbeitung',bereich:'Brandschutz',sa:'BR',anw:'Brandschutzanforderungen für Gewerbebetriebe. Relevant bei Brandschadenbegutachtung in Industriegebäuden.',gw:'Sprinkleranlagen, Brandabschnitte, Lagerhaltung'},
+  {num:'WTA 4-11-02/D',titel:'Messung der Feuchte von mineralischen Baustoffen',bereich:'Feuchte',sa:'WS,SC',anw:'Messverfahren für Bauteilfeuchte. Grundlage für Feuchtegutachten.',gw:'CM-Methode Grenzwerte: Beton <3%, Mauerwerk <6%, Estrich <2%'},
+  {num:'§404 ZPO',titel:'Auswahl des Sachverständigen',bereich:'Verfahrensrecht',sa:'all',anw:'Gericht wählt Sachverständigen aus. SV-Liste der IHK. Ablehnungsmöglichkeit durch Parteien.',gw:'Sachkunde und Neutralität als Auswahlkriterien'},
+  {num:'§411 ZPO',titel:'Gutachtenerstattung — Frist und Form',bereich:'Verfahrensrecht',sa:'all',anw:'Fristen für Gutachtenerstattung. Schriftform oder Protokollierung. Erinnerung durch Gericht.',gw:'Begründete Fristverlängerung möglich, Ordnungsgeld bei Versäumnis'},
+  {num:'§412 ZPO',titel:'Neues Gutachten — Weiterer Sachverständiger',bereich:'Verfahrensrecht',sa:'all',anw:'Gericht kann weiteren SV bestellen. Widersprüchliche Gutachten. Ergänzungsgutachten.',gw:'Ermessen des Gerichts, Antrag einer Partei möglich'},
+  {num:'§434 BGB',titel:'Sachmangel',bereich:'Baurecht',sa:'BA,WS',anw:'Definition des Sachmangels. Grundlage für Mängelbeurteilung bei Werkleistungen und Kaufverträgen.',gw:'Beschaffenheitsvereinbarung, übliche Beschaffenheit, Montage'},
+  {num:'§438 BGB',titel:'Verjährung der Mängelansprüche',bereich:'Baurecht',sa:'BA',anw:'Verjährungsfristen für Mängelansprüche. 5 Jahre bei Bauwerken. Grundlage für Zeitraum-Beurteilung.',gw:'5 Jahre Bauwerk, 2 Jahre bewegliche Sachen, 3 Jahre Regelverjährung'},
+  {num:'§485 ZPO',titel:'Selbständiges Beweisverfahren — Voraussetzungen',bereich:'Verfahrensrecht',sa:'all',anw:'Antrag auf Sicherung von Beweisen vor Klage. Zustand von Sachen, Ursache eines Schadens.',gw:'Antragsbefugnis, Zuständigkeit, Kostenentscheidung'},
+  {num:'§492 ZPO',titel:'Schiedsgutachterverfahren',bereich:'Verfahrensrecht',sa:'all',anw:'Grundlage für Schiedsgutachten. Bindungswirkung. Abgrenzung zu Gerichtsgutachten.',gw:'Bindend bei offenbarer Unbilligkeit. Vertraglich vereinbart'},
+  {num:'§633 BGB',titel:'Sach- und Rechtsmangel beim Werkvertrag',bereich:'Baurecht',sa:'BA,WS',anw:'Werkerfolg muss frei von Mängeln sein. Grundlage für werkvertragliche Mängelansprüche.',gw:'Vereinbarte Beschaffenheit, übliche Beschaffenheit, Verwendungseignung'},
+  {num:'§634 BGB',titel:'Rechte des Bestellers bei Mängeln',bereich:'Baurecht',sa:'BA,WS',anw:'Nacherfüllung, Selbstvornahme, Rücktritt, Minderung, Schadensersatz bei Baumängeln.',gw:'Fristsetzung vor Selbstvornahme. Unverhältnismäßigkeit als Einwand'},
+  {num:'§823 BGB',titel:'Schadensersatzpflicht — Deliktische Haftung',bereich:'Haftungsrecht',sa:'all',anw:'Haftung für vorsätzliche und fahrlässige Schäden. Relevant bei Gutachterhaftung und Schadensursache.',gw:'Rechtsgutverletzung, Kausalität, Verschulden als Haftungsvoraussetzungen'},
+  {num:'§444 BGB',titel:'Arglistiges Verschweigen von Mängeln',bereich:'Baurecht',sa:'BA',anw:'Keine Berufung auf Haftungsausschluss bei arglistigem Verschweigen. Relevant bei Verkaufsgutachten.',gw:'Arglist = positive Kenntnis des Mangels + Verschweigen'},
 ];
+
+
+// ── Globale Verfügbarkeit — Einzige Quelle der Wahrheit ──
+window.PROVA_NORMEN_DB = NORMEN_DB;
 
 
 
@@ -171,7 +209,9 @@ function setChip(val, el) {
 }
 
 function getFiltered() {
-  const q = (document.getElementById('searchInput').value||'').toLowerCase().trim();
+  var _si = document.getElementById('searchInput');
+  if (!_si) return NORMEN_DB; // Guard: nicht auf normen.html — alle zurückgeben
+  const q = (_si.value||'').toLowerCase().trim();
   const bereich = document.getElementById('filterBereich').value;
   const sa = document.getElementById('filterSA').value || activeChipSA;
   const hf = document.getElementById('filterHF').value || activeChipHF;
@@ -191,6 +231,7 @@ function getFiltered() {
 }
 
 function renderNormen() {
+  if (!document.getElementById('normenGrid')) return; // Guard: nur auf normen.html
   const filtered = getFiltered();
   const grid = document.getElementById('normenGrid');
   const empty = document.getElementById('emptyState');

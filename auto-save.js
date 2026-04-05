@@ -76,6 +76,12 @@ const AutoSave = {
       if (!raw) return;
       const data = JSON.parse(raw);
       if (!data._ts || Date.now() - data._ts > 86400000) return; // >24h
+      // Auf app.html: nur Restore zeigen wenn AZ bereits vorhanden (= Wiederaufnahme)
+      // Bei neuem Gutachten (kein AZ) → kein Banner
+      if (location.pathname.indexOf('app.html') >= 0 || location.pathname.endsWith('/app')) {
+        var az = localStorage.getItem('prova_aktiver_fall') || '';
+        if (!az) return; // Neues Gutachten → kein Restore
+      }
       this._showRestoreBar(data);
     } catch(e) {}
   },
@@ -90,7 +96,7 @@ const AutoSave = {
       'display:flex;align-items:center;justify-content:space-between',
       'padding:10px 20px;font-size:13px;font-family:var(--font-ui,system-ui)'
     ].join(';');
-    bar.innerHTML = '<span>Ungespeicherte Eingaben gefunden — gespeichert ' + ago + '</span>'
+    bar.innerHTML = '<span>' + (location.pathname.indexOf('app.html') >= 0 ? 'Wiederaufnahme — gespeichert ' : 'Ungespeicherte Eingaben gefunden — gespeichert ') + ago + '</span>'
       + '<span style="display:flex;gap:8px">'
       + '<button id="prova-restore-no" style="background:rgba(0,0,0,.2);border:none;color:#fff;padding:4px 12px;border-radius:6px;cursor:pointer;font-family:inherit">Verwerfen</button>'
       + '<button id="prova-restore-yes" style="background:#fff;border:none;color:var(--accent,#4f8ef7);padding:4px 12px;border-radius:6px;cursor:pointer;font-weight:700;font-family:inherit">Wiederherstellen</button>'

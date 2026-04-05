@@ -46,27 +46,27 @@ function filterByDays(records) {
 
 // ── Airtable laden ──────────────────────────────────────────
 async function loadData() {
-  var user = JSON.parse(localStorage.getItem('prova_user') || '{}');
-  var svEmail = user.email || '';
+  try {
+    // Via Netlify Function proxyen (wie alle anderen Seiten)
+    var path = '/v0/' + AT_BASE + '/' + AT_TABLE
+      + '?fields[]=' + [AT_KEY_FIELD, AT_STATUS, AT_SCHADEN, AT_AG_TYP, AT_FOTOS, AT_ZEIT, AT_TS, AT_PAKET].join('&fields[]=')
+      + '&sort[0][field]=' + AT_TS + '&sort[0][direction]=desc'
+      + '&maxRecords=500';
 
-  var url = 'https://api.airtable.com/v0/' + AT_BASE + '/' + AT_TABLE
-    + '?fields[]=' + [AT_KEY_FIELD, AT_STATUS, AT_SCHADEN, AT_AG_TYP, AT_FOTOS, AT_ZEIT, AT_TS, AT_PAKET].join('&fields[]=')
-    + '&sort[0][field]=' + AT_TS + '&sort[0][direction]=desc'
-    + '&maxRecords=1000';
+    var resp = await fetch('/.netlify/functions/airtable', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({method: 'GET', path: path, payload: null})
+    });
 
-  var resp = await fetch(url, {
-    headers: { Authorization: 'Bearer ' + (window.__AT_KEY || '') }
-  });
-
-  // Fallback: airtable.js wenn vorhanden
-  if (!resp.ok && window.airtableGet) {
-    var data = await window.airtableGet(AT_TABLE);
-    return data ? data.records.map(function(r) { return r.fields; }) : [];
+    if (!resp.ok) throw new Error('Airtable Error: ' + resp.status);
+    var json = await resp.json();
+    if (json.error) throw new Error(json.error);
+    return (json.records || []).map(function(r) { return r.fields || r; });
+  } catch(e) {
+    console.warn('Statistiken: Airtable nicht erreichbar, zeige Demo-Daten', e);
+    return getMockData();
   }
-
-  if (!resp.ok) return getMockData();
-  var json = await resp.json();
-  return json.records.map(function(r) { return r.fields; });
 }
 
 // ── Mock-Daten falls keine API-Verbindung ───────────────────
