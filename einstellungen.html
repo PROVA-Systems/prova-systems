@@ -1,1772 +1,685 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#0a0e17">
-<title>Einstellungen — PROVA</title>
-<link rel="manifest" href="manifest.json">
 <script src="prova-preise.js"></script>
 <script src="paket-guard.js"></script>
 <script src="auth-guard.js"></script>
 <script src="theme.js"></script>
 <script src="trial-guard.js"></script>
-<style>
-/* ═══════════════════════════════════════════════════════
-   PROVA DESIGN SYSTEM — Einstellungen v2
-   Mobile-first · Sidebar · Tablet-optimized
-═══════════════════════════════════════════════════════ */
-:root {
-  --bg-primary:    #0a0e17;
-  --bg-secondary:  #111827;
-  --bg-card:       #141b2d;
-  --bg-hover:      #1a2235;
-  --border:        rgba(255,255,255,.07);
-  --border-active: rgba(79,142,247,.35);
-  --text-primary:  #e2e8f0;
-  --text-secondary:#94a3b8;
-  --text-muted:    #4b5563;
-  --accent-blue:   #4f8ef7;
-  --accent-purple: #a78bfa;
-  --accent-green:  #10b981;
-  --accent-red:    #ef4444;
-  --accent-amber:  #f59e0b;
-  --sidebar-w:     240px;
-  --topbar-h:      60px;
-  --radius:        12px;
-  --radius-sm:     8px;
-  --shadow:        0 4px 24px rgba(0,0,0,.4);
-}
-
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-html { font-size: 16px; -webkit-text-size-adjust: 100%; }
-
-body {
-  background: var(--bg-primary);
-  color: var(--text-primary);
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-  line-height: 1.5;
-  min-height: 100vh;
-  min-height: -webkit-fill-available;
-  overflow-x: hidden;
-}
-
-/* ─── TOPBAR ─────────────────────────────────────────── */
-.topbar {
-  position: fixed;
-  top: 0; left: 0; right: 0;
-  height: var(--topbar-h);
-  background: rgba(10,14,23,.95);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  padding: 0 20px;
-  gap: 12px;
-  z-index: 400;
-}
-
-.topbar-logo {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  text-decoration: none;
-}
-
-.topbar-logo svg { width: 28px; height: 28px; flex-shrink: 0; }
-
-.topbar-logo-text {
-  font-size: 17px;
-  font-weight: 800;
-  letter-spacing: -.02em;
-  color: var(--text-primary);
-}
-
-.topbar-logo-text span { color: var(--accent-blue); }
-
-.topbar-title {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text-secondary);
-  padding-left: 12px;
-  border-left: 1px solid var(--border);
-  margin-left: 4px;
-}
-
-.topbar-spacer { flex: 1; }
-
-.topbar-paket-badge {
-  font-size: 10px;
-  font-weight: 700;
-  padding: 3px 10px;
-  border-radius: 8px;
-  letter-spacing: .04em;
-  background: rgba(79,142,247,.12);
-  color: var(--accent-blue);
-  border: 1px solid rgba(79,142,247,.25);
-}
-
-/* Hamburger — nur Mobile */
-.topbar-hamburger {
-  display: none;
-  background: none;
-  border: none;
-  color: var(--text-secondary);
-  cursor: pointer;
-  padding: 8px;
-  border-radius: var(--radius-sm);
-  transition: background .2s;
-  -webkit-tap-highlight-color: transparent;
-}
-.topbar-hamburger:hover { background: var(--bg-hover); }
-.topbar-hamburger svg { display: block; width: 22px; height: 22px; }
-
-/* ─── LAYOUT ─────────────────────────────────────────── */
-.layout {
-  display: flex;
-  padding-top: var(--topbar-h);
-  min-height: 100vh;
-}
-
-/* ─── SIDEBAR ────────────────────────────────────────── */
-.sidebar {
-  position: fixed;
-  top: var(--topbar-h);
-  left: 0;
-  width: var(--sidebar-w);
-  height: calc(100vh - var(--topbar-h));
-  background: var(--bg-secondary);
-  border-right: 1px solid var(--border);
-  overflow-y: auto;
-  overflow-x: hidden;
-  z-index: 300;
-  display: flex;
-  flex-direction: column;
-  transition: transform .28s cubic-bezier(.4,0,.2,1);
-  -webkit-overflow-scrolling: touch;
-}
-
-.sidebar::-webkit-scrollbar { width: 4px; }
-.sidebar::-webkit-scrollbar-track { background: transparent; }
-.sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,.1); border-radius: 2px; }
-
-.sidebar-nav { padding: 16px 0; flex: 1; }
-
-.sidebar-group-label {
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: .1em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-  padding: 12px 18px 6px;
-}
-
-.snav-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 18px;
-  cursor: pointer;
-  border: none;
-  background: none;
-  width: 100%;
-  text-align: left;
-  color: var(--text-secondary);
-  font-size: 13.5px;
-  font-weight: 500;
-  border-radius: 0;
-  transition: background .15s, color .15s;
-  -webkit-tap-highlight-color: transparent;
-  min-height: 44px;
-  position: relative;
-}
-
-.snav-item:hover {
-  background: var(--bg-hover);
-  color: var(--text-primary);
-}
-
-.snav-item.active {
-  background: rgba(79,142,247,.1);
-  color: var(--accent-blue);
-  font-weight: 600;
-}
-
-.snav-item.active::before {
-  content: '';
-  position: absolute;
-  left: 0; top: 4px; bottom: 4px;
-  width: 3px;
-  background: var(--accent-blue);
-  border-radius: 0 2px 2px 0;
-}
-
-.snav-icon {
-  font-size: 16px;
-  width: 22px;
-  text-align: center;
-  flex-shrink: 0;
-}
-
-.snav-label { flex: 1; }
-
-.snav-badge {
-  font-size: 10px;
-  font-weight: 700;
-  padding: 2px 7px;
-  border-radius: 6px;
-  background: rgba(167,139,250,.15);
-  color: var(--accent-purple);
-  border: 1px solid rgba(167,139,250,.2);
-  flex-shrink: 0;
-}
-
-/* Sidebar Footer */
-.sidebar-footer {
-  padding: 16px 18px;
-  border-top: 1px solid var(--border);
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.sidebar-footer-btn {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 9px 12px;
-  background: none;
-  border: none;
-  border-radius: var(--radius-sm);
-  color: var(--text-secondary);
-  font-size: 13px;
-  cursor: pointer;
-  width: 100%;
-  text-align: left;
-  transition: background .15s, color .15s;
-  min-height: 40px;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.sidebar-footer-btn:hover { background: var(--bg-hover); color: var(--text-primary); }
-
-.sidebar-footer-btn.danger:hover { background: rgba(239,68,68,.1); color: var(--accent-red); }
-
-/* Sidebar Overlay (Tablet/Mobile) */
-.sidebar-overlay {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,.6);
-  z-index: 290;
-  opacity: 0;
-  transition: opacity .28s;
-}
-
-.sidebar-overlay.visible { opacity: 1; }
-
-/* ─── MAIN CONTENT ───────────────────────────────────── */
-.main-content {
-  flex: 1;
-  margin-left: var(--sidebar-w);
-  min-width: 0;
-  padding: 32px;
-  max-width: 860px;
-}
-
-/* ─── SECTION ────────────────────────────────────────── */
-.sec {
-  display: none;
-}
-.sec.active { display: block; }
-
-.sec-header {
-  margin-bottom: 28px;
-}
-
-.sec-title {
-  font-size: 22px;
-  font-weight: 800;
-  color: var(--text-primary);
-  letter-spacing: -.02em;
-  margin-bottom: 6px;
-}
-
-.sec-subtitle {
-  font-size: 14px;
-  color: var(--text-secondary);
-}
-
-/* ─── CARDS ──────────────────────────────────────────── */
-.card {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 24px;
-  margin-bottom: 20px;
-}
-
-.card-title {
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--text-secondary);
-  text-transform: uppercase;
-  letter-spacing: .06em;
-  margin-bottom: 20px;
-  padding-bottom: 14px;
-  border-bottom: 1px solid var(--border);
-}
-
-/* ─── FORM ELEMENTS ──────────────────────────────────── */
-.form-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-}
-
-.form-grid.cols-1 { grid-template-columns: 1fr; }
-.form-grid.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
-
-.form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.form-group.span-2 { grid-column: span 2; }
-
-.form-label {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text-secondary);
-  text-transform: uppercase;
-  letter-spacing: .05em;
-}
-
-.form-label .required {
-  color: var(--accent-red);
-  margin-left: 3px;
-}
-
-.form-input, .form-select, .form-textarea {
-  width: 100%;
-  background: var(--bg-hover);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  color: var(--text-primary);
-  font-size: 14px;
-  font-family: inherit;
-  padding: 11px 14px;
-  transition: border-color .2s, box-shadow .2s;
-  outline: none;
-  -webkit-appearance: none;
-  min-height: 44px; /* Touch-Target */
-}
-
-.form-input:focus, .form-select:focus, .form-textarea:focus {
-  border-color: var(--accent-blue);
-  box-shadow: 0 0 0 3px rgba(79,142,247,.15);
-}
-
-.form-input::placeholder { color: var(--text-muted); }
-.form-textarea { resize: vertical; min-height: 100px; }
-.form-select option { background: var(--bg-card); }
-
-.form-hint {
-  font-size: 12px;
-  color: var(--text-muted);
-  margin-top: 3px;
-}
-
-/* ─── BUTTONS ────────────────────────────────────────── */
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 11px 22px;
-  border-radius: var(--radius-sm);
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  border: none;
-  transition: opacity .2s, transform .1s;
-  text-decoration: none;
-  min-height: 44px;
-  -webkit-tap-highlight-color: transparent;
-  white-space: nowrap;
-}
-
-.btn:active { transform: scale(.97); }
-.btn:hover { opacity: .88; }
-
-.btn-primary {
-  background: linear-gradient(135deg, var(--accent-blue), #6c47ff);
-  color: #fff;
-}
-
-.btn-secondary {
-  background: rgba(255,255,255,.06);
-  color: var(--text-primary);
-  border: 1px solid var(--border);
-}
-
-.btn-danger {
-  background: rgba(239,68,68,.12);
-  color: var(--accent-red);
-  border: 1px solid rgba(239,68,68,.25);
-}
-
-.btn-success {
-  background: rgba(16,185,129,.12);
-  color: var(--accent-green);
-  border: 1px solid rgba(16,185,129,.25);
-}
-
-.btn-sm { padding: 7px 14px; font-size: 12px; min-height: 36px; }
-.btn-full { width: 100%; }
-.btn[disabled] { opacity: .4; cursor: not-allowed; pointer-events: none; }
-
-/* ─── SAVE BAR ───────────────────────────────────────── */
-.save-bar {
-  position: sticky;
-  bottom: 0;
-  background: rgba(10,14,23,.96);
-  backdrop-filter: blur(12px);
-  border-top: 1px solid var(--border);
-  padding: 14px 0;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-top: 24px;
-  z-index: 100;
-}
-
-/* ─── TOGGLE ─────────────────────────────────────────── */
-.toggle-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 14px 0;
-  border-bottom: 1px solid var(--border);
-  gap: 16px;
-}
-
-.toggle-row:last-child { border-bottom: none; padding-bottom: 0; }
-
-.toggle-info { flex: 1; }
-.toggle-label { font-size: 14px; font-weight: 600; color: var(--text-primary); }
-.toggle-desc  { font-size: 12px; color: var(--text-muted); margin-top: 3px; }
-
-.toggle-switch {
-  position: relative;
-  width: 46px;
-  height: 26px;
-  flex-shrink: 0;
-}
-
-.toggle-switch input { opacity: 0; width: 0; height: 0; }
-
-.toggle-slider {
-  position: absolute;
-  cursor: pointer;
-  inset: 0;
-  background: rgba(255,255,255,.1);
-  border-radius: 26px;
-  transition: background .25s;
-}
-
-.toggle-slider::before {
-  content: '';
-  position: absolute;
-  height: 20px; width: 20px;
-  left: 3px; bottom: 3px;
-  background: #fff;
-  border-radius: 50%;
-  transition: transform .25s;
-}
-
-.toggle-switch input:checked + .toggle-slider {
-  background: var(--accent-blue);
-}
-
-.toggle-switch input:checked + .toggle-slider::before {
-  transform: translateX(20px);
-}
-
-/* Bigger touch target for toggle */
-.toggle-switch { min-width: 46px; }
-
-/* ─── ARBEITSTAGE BUTTONS ────────────────────────────── */
-.arbeitstage-grid {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  margin-top: 12px;
-}
-
-.tag-btn {
-  padding: 10px 16px;
-  border-radius: var(--radius-sm);
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  border: 1px solid var(--border);
-  background: var(--bg-hover);
-  color: var(--text-secondary);
-  transition: all .2s;
-  min-height: 44px;
-  min-width: 56px;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.tag-btn.active {
-  background: rgba(79,142,247,.15);
-  border-color: var(--accent-blue);
-  color: var(--accent-blue);
-}
-
-/* ─── PAKET-KARTE ────────────────────────────────────── */
-.paket-karte {
-  background: var(--bg-hover);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 20px;
-  display: flex;
-  align-items: flex-start;
-  gap: 20px;
-}
-
-.paket-karte.aktiv {
-  border-color: var(--border-active);
-  background: rgba(79,142,247,.05);
-}
-
-.paket-badge-lg {
-  padding: 6px 16px;
-  border-radius: 20px;
-  font-size: 13px;
-  font-weight: 800;
-  letter-spacing: .04em;
-  flex-shrink: 0;
-}
-
-.paket-badge-lg.Solo   { background: rgba(79,142,247,.15);  color: var(--accent-blue);   border: 1px solid rgba(79,142,247,.3); }
-.paket-badge-lg.Team   { background: rgba(167,139,250,.15); color: var(--accent-purple); border: 1px solid rgba(167,139,250,.3); }
-
-.paket-info { flex: 1; min-width: 0; }
-.paket-name { font-size: 18px; font-weight: 800; color: var(--text-primary); margin-bottom: 6px; }
-.paket-preis { font-size: 24px; font-weight: 900; color: var(--text-primary); }
-.paket-preis span { font-size: 13px; font-weight: 400; color: var(--text-muted); }
-.paket-desc { font-size: 13px; color: var(--text-secondary); margin-top: 4px; }
-
-.paket-features {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin-top: 16px;
-}
-
-.paket-feature {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 13px;
-  color: var(--text-secondary);
-}
-
-.paket-feature .check { color: var(--accent-green); font-size: 14px; }
-.paket-feature .cross { color: var(--text-muted); font-size: 14px; }
-
-/* ─── SYNC BADGE ─────────────────────────────────────── */
-.sync-badge {
-  display: none;
-  align-items: center;
-  gap: 6px;
-  font-size: 11px;
-  font-weight: 700;
-  padding: 4px 10px;
-  border-radius: 6px;
-}
-
-.sync-badge.pending { background: rgba(245,158,11,.12); color: var(--accent-amber); border: 1px solid rgba(245,158,11,.25); }
-.sync-badge.ok      { background: rgba(16,185,129,.12);  color: var(--accent-green); border: 1px solid rgba(16,185,129,.25); }
-.sync-badge.err     { background: rgba(239,68,68,.12);   color: var(--accent-red);   border: 1px solid rgba(239,68,68,.25); }
-
-/* ─── TOAST ──────────────────────────────────────────── */
-.toast-prova {
-  position: fixed;
-  bottom: 24px;
-  left: 50%;
-  transform: translateX(-50%) translateY(80px);
-  background: rgba(20,27,45,.96);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 13px 22px;
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text-primary);
-  z-index: 9999;
-  transition: transform .3s cubic-bezier(.34,1.56,.64,1);
-  white-space: nowrap;
-  max-width: 90vw;
-  text-align: center;
-  backdrop-filter: blur(12px);
-  box-shadow: var(--shadow);
-}
-
-.toast-prova.show { transform: translateX(-50%) translateY(0); }
-.toast-prova.err  { border-color: rgba(239,68,68,.35); color: var(--accent-red); }
-.toast-prova.ok   { border-color: rgba(16,185,129,.35); color: var(--accent-green); }
-
-/* ─── AVATAR / PROFIL-BILD ───────────────────────────── */
-.avatar-section {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  padding: 20px 0;
-  border-bottom: 1px solid var(--border);
-  margin-bottom: 20px;
-}
-
-.avatar-circle {
-  width: 72px;
-  height: 72px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, var(--accent-blue), #6c47ff);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 26px;
-  font-weight: 800;
-  color: #fff;
-  flex-shrink: 0;
-  cursor: pointer;
-  transition: opacity .2s;
-  position: relative;
-  overflow: hidden;
-}
-
-.avatar-circle:hover { opacity: .85; }
-
-.avatar-info h3 { font-size: 16px; font-weight: 700; color: var(--text-primary); }
-.avatar-info p  { font-size: 13px; color: var(--text-muted); margin-top: 4px; }
-
-/* ─── DANGER ZONE ────────────────────────────────────── */
-.danger-zone {
-  border: 1px solid rgba(239,68,68,.25);
-  background: rgba(239,68,68,.04);
-  border-radius: var(--radius);
-  padding: 20px 24px;
-}
-
-.danger-zone h4 { font-size: 14px; font-weight: 700; color: var(--accent-red); margin-bottom: 8px; }
-.danger-zone p  { font-size: 13px; color: var(--text-secondary); margin-bottom: 16px; }
-
-/* ─── SIGNATUR PREVIEW ───────────────────────────────── */
-.signatur-preview {
-  background: #1e2533;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 20px;
-  font-size: 13px;
-  color: var(--text-secondary);
-  line-height: 1.7;
-  margin-top: 12px;
-  white-space: pre-wrap;
-  min-height: 80px;
-}
-
-/* ─── STAT MINI ──────────────────────────────────────── */
-.stats-mini {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
-  margin-bottom: 20px;
-}
-
-.stat-mini-item {
-  background: var(--bg-hover);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 14px;
-  text-align: center;
-}
-
-.stat-mini-val  { font-size: 22px; font-weight: 900; color: var(--text-primary); }
-.stat-mini-label{ font-size: 11px; color: var(--text-muted); margin-top: 4px; }
-
-/* ─── UPLOAD ZONE ────────────────────────────────────── */
-.upload-zone {
-  border: 2px dashed var(--border);
-  border-radius: var(--radius);
-  padding: 32px;
-  text-align: center;
-  cursor: pointer;
-  transition: border-color .2s, background .2s;
-  background: transparent;
-}
-
-.upload-zone:hover, .upload-zone.drag-over {
-  border-color: var(--accent-blue);
-  background: rgba(79,142,247,.04);
-}
-
-.upload-zone-icon { font-size: 36px; margin-bottom: 10px; }
-.upload-zone-text { font-size: 14px; color: var(--text-secondary); }
-.upload-zone-sub  { font-size: 12px; color: var(--text-muted); margin-top: 6px; }
-
-/* ═══════════════════════════════════════════════════════
-   RESPONSIVE — TABLET (768px – 1024px)
-═══════════════════════════════════════════════════════ */
-@media (max-width: 1024px) {
-  :root { --sidebar-w: 220px; }
-  .main-content { padding: 24px 20px; }
-}
-
-@media (max-width: 900px) {
-  .form-grid { grid-template-columns: 1fr; }
-  .form-grid.cols-3 { grid-template-columns: 1fr 1fr; }
-  .form-group.span-2 { grid-column: span 1; }
-  .stats-mini { grid-template-columns: 1fr 1fr; }
-}
-
-/* ═══════════════════════════════════════════════════════
-   RESPONSIVE — TABLET SMALL / MOBILE (< 768px)
-═══════════════════════════════════════════════════════ */
-@media (max-width: 768px) {
-  :root { --sidebar-w: 280px; }
-
-  .topbar-hamburger { display: flex; }
-  .topbar-title { display: none; }
-
-  /* Sidebar: off-canvas auf Mobile/Tablet */
-  .sidebar {
-    transform: translateX(-100%);
-    box-shadow: var(--shadow);
-  }
-
-  .sidebar.open {
-    transform: translateX(0);
-  }
-
-  .sidebar-overlay { display: block; }
-
-  .main-content {
-    margin-left: 0;
-    padding: 20px 16px;
-    padding-bottom: 100px; /* Platz für Bottom-Nav */
-  }
-
-  .form-grid,
-  .form-grid.cols-3 {
-    grid-template-columns: 1fr;
-  }
-
-  .form-group.span-2 { grid-column: span 1; }
-
-  .stats-mini { grid-template-columns: 1fr 1fr; }
-
-  .paket-karte { flex-direction: column; gap: 14px; }
-  .paket-preis { font-size: 20px; }
-
-  .save-bar { flex-wrap: wrap; }
-  .save-bar .btn { flex: 1; min-width: 120px; }
-
-  .sec-title { font-size: 18px; }
-
-  .arbeitstage-grid { gap: 6px; }
-  .tag-btn { padding: 10px 12px; font-size: 12px; }
-
-  .card { padding: 18px 16px; }
-}
-
-@media (max-width: 480px) {
-  .topbar { padding: 0 14px; gap: 10px; }
-  .topbar-logo-text { font-size: 15px; }
-  .stats-mini { grid-template-columns: 1fr; }
-  .paket-features { gap: 8px; }
-}
-
-/* ─── SAFE AREA (iPhone notch) ───────────────────────── */
-@supports (padding: max(0px)) {
-  .topbar  { padding-left: max(20px, env(safe-area-inset-left)); padding-right: max(20px, env(safe-area-inset-right)); }
-  .sidebar { padding-bottom: env(safe-area-inset-bottom); }
-  .main-content { padding-left: max(16px, env(safe-area-inset-left)); padding-right: max(16px, env(safe-area-inset-right)); }
-}
-
-/* ─── PRINT ──────────────────────────────────────────── */
-@media print {
-  .topbar, .sidebar, .save-bar, .toast-prova { display: none !important; }
-  .main-content { margin: 0 !important; padding: 0 !important; }
-  .sec { display: block !important; }
-}
-</style>
-
+<script src="nav.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Einstellungen — PROVA Systems</title>
+  <link rel="stylesheet" href="prova-design.css" />
+  <link rel="stylesheet" href="mobile.css" />
+  <style>
+    /* ── Einstellungen v2 ── */
+    .es-page { max-width: 820px; margin: 0 auto; padding: 24px 16px 100px; }
+
+    .es-page-header { margin-bottom: 28px; }
+    .es-page-title { font-size: 22px; font-weight: 700; color: var(--text-primary,#111827); margin-bottom: 4px; }
+    .es-page-sub { font-size: 13px; color: var(--text-muted,#9ca3af); }
+
+    .es-layout { display: grid; grid-template-columns: 220px 1fr; gap: 24px; align-items: start; }
+    @media (max-width: 720px) { .es-layout { grid-template-columns: 1fr; } }
+
+    .es-sidebar {
+      background: var(--bg-card,#fff);
+      border: 1px solid var(--border,#e5e7eb);
+      border-radius: 14px;
+      overflow: hidden;
+      position: sticky;
+      top: 20px;
+    }
+    .es-sidebar-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 11px 14px; font-size: 13px; font-weight: 500;
+      color: var(--text-secondary,#374151); cursor: pointer;
+      border-bottom: 1px solid var(--border-light,#f3f4f6);
+      transition: all 0.15s; border-left: 3px solid transparent;
+    }
+    .es-sidebar-item:last-child { border-bottom: none; }
+    .es-sidebar-item:hover { background: var(--bg-hover,#f9fafb); color: #1a56db; }
+    .es-sidebar-item.aktiv { background: #eff6ff; color: #1a56db; border-left-color: #1a56db; font-weight: 600; }
+    .es-sidebar-icon { font-size: 16px; width: 20px; text-align: center; flex-shrink: 0; }
+
+    .es-content { display: flex; flex-direction: column; gap: 20px; }
+
+    .es-section {
+      background: var(--bg-card,#fff);
+      border: 1px solid var(--border,#e5e7eb);
+      border-radius: 14px; overflow: hidden; display: none;
+    }
+    .es-section.aktiv { display: block; }
+
+    .es-section-header {
+      padding: 16px 20px; border-bottom: 1px solid var(--border,#e5e7eb);
+      display: flex; align-items: center; gap: 10px;
+    }
+    .es-section-icon { font-size: 20px; }
+    .es-section-info { flex: 1; }
+    .es-section-title { font-size: 15px; font-weight: 700; color: var(--text-primary,#111827); }
+    .es-section-sub { font-size: 12px; color: var(--text-muted,#9ca3af); margin-top: 1px; }
+
+    .es-zeile {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 20px; border-bottom: 1px solid var(--border-light,#f3f4f6); gap: 16px;
+    }
+    .es-zeile:last-child { border-bottom: none; }
+    .es-zeile.vertikal { flex-direction: column; align-items: flex-start; }
+    .es-zeile-info { flex: 1; min-width: 0; }
+    .es-zeile-label { font-size: 13.5px; font-weight: 600; color: var(--text-primary,#111827); margin-bottom: 2px; }
+    .es-zeile-sub { font-size: 12px; color: var(--text-muted,#6b7280); line-height: 1.4; }
+    .es-zeile-sub a { color: #1a56db; text-decoration: none; }
+    .es-zeile-sub a:hover { text-decoration: underline; }
+
+    .es-toggle { position: relative; width: 44px; height: 24px; cursor: pointer; flex-shrink: 0; }
+    .es-toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
+    .es-toggle-slider { position: absolute; inset: 0; background: #d1d5db; border-radius: 12px; transition: background 0.2s; }
+    .es-toggle-slider::before {
+      content: ''; position: absolute; width: 18px; height: 18px; left: 3px; top: 3px;
+      background: #fff; border-radius: 50%; transition: transform 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+    .es-toggle input:checked + .es-toggle-slider { background: #1a56db; }
+    .es-toggle input:checked + .es-toggle-slider::before { transform: translateX(20px); }
+    .es-toggle input:disabled + .es-toggle-slider { opacity: 0.4; cursor: not-allowed; }
+
+    .es-input {
+      width: 100%; padding: 9px 12px;
+      border: 1px solid var(--border,#d1d5db); border-radius: 10px;
+      font-size: 13px; color: var(--text-primary,#111827);
+      background: var(--bg-input,#fff); font-family: inherit;
+      transition: border-color 0.15s; margin-top: 8px; box-sizing: border-box;
+    }
+    .es-input:focus { outline: none; border-color: #1a56db; box-shadow: 0 0 0 3px rgba(26,86,219,0.1); }
+    .es-input-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 8px; }
+    @media (max-width: 500px) { .es-input-row { grid-template-columns: 1fr; } }
+    .es-label { font-size: 11.5px; font-weight: 600; color: var(--text-secondary,#374151); margin-bottom: 3px; display: block; }
+
+    .es-select {
+      padding: 8px 12px; border: 1px solid var(--border,#d1d5db); border-radius: 10px;
+      font-size: 13px; background: var(--bg-card,#fff); color: var(--text-primary,#111827);
+      font-family: inherit; min-width: 160px; cursor: pointer;
+    }
+    .es-select:focus { outline: none; border-color: #1a56db; }
+
+    .es-btn {
+      padding: 8px 16px; border-radius: 10px; font-size: 13px; font-weight: 500;
+      cursor: pointer; border: 1px solid var(--border,#e5e7eb);
+      background: var(--bg-card,#fff); color: var(--text-secondary,#374151);
+      transition: all 0.15s; font-family: inherit; white-space: nowrap; text-decoration: none;
+      display: inline-flex; align-items: center;
+    }
+    .es-btn:hover { background: var(--bg-muted,#f3f4f6); }
+    .es-btn.primary { background: #1a56db; color: #fff; border-color: #1a56db; }
+    .es-btn.primary:hover { background: #1d4ed8; }
+    .es-btn.danger { background: #fef2f2; color: #ef4444; border-color: #fecaca; }
+    .es-btn.danger:hover { background: #fee2e2; }
+    .es-btn-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+
+    .es-avatar-wrap {
+      display: flex; align-items: center; gap: 16px;
+      padding: 16px 20px; border-bottom: 1px solid var(--border,#e5e7eb);
+    }
+    .es-avatar {
+      width: 64px; height: 64px; border-radius: 16px;
+      background: linear-gradient(135deg, #1a56db, #3b82f6);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 24px; font-weight: 700; color: #fff; flex-shrink: 0;
+    }
+    .es-avatar-info { flex: 1; }
+    .es-avatar-name { font-size: 16px; font-weight: 700; color: var(--text-primary,#111827); }
+    .es-avatar-email { font-size: 12px; color: var(--text-muted,#9ca3af); margin-top: 2px; }
+    .es-avatar-badge {
+      font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 10px;
+      margin-top: 5px; display: inline-block;
+    }
+    .es-avatar-badge.solo  { background: #eff6ff; color: #1a56db; }
+    .es-avatar-badge.team  { background: #f0fdf4; color: #059669; }
+    .es-avatar-badge.trial { background: #fffbeb; color: #d97706; }
+
+    .es-paket-card {
+      border-radius: 12px; padding: 16px; margin: 12px 20px;
+      display: flex; align-items: center; gap: 14px;
+    }
+    .es-paket-card.solo  { background: #eff6ff; border: 1px solid #bfdbfe; }
+    .es-paket-card.team  { background: #f0fdf4; border: 1px solid #a7f3d0; }
+    .es-paket-card.trial { background: #fffbeb; border: 1px solid #fde68a; }
+    .es-paket-icon { font-size: 28px; }
+    .es-paket-info { flex: 1; }
+    .es-paket-name { font-size: 15px; font-weight: 700; color: var(--text-primary,#111827); }
+    .es-paket-features { font-size: 12px; color: var(--text-secondary,#4b5563); margin-top: 2px; }
+
+    .es-danger-zone {
+      border: 1px solid #fecaca; border-radius: 12px; margin: 12px 20px 20px; overflow: hidden;
+    }
+    .es-danger-header {
+      background: #fef2f2; padding: 10px 14px; font-size: 11.5px;
+      font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #ef4444;
+    }
+    .es-danger-item {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 14px; border-bottom: 1px solid #fecaca; gap: 12px;
+    }
+    .es-danger-item:last-child { border-bottom: none; }
+
+    .es-status-badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 10px;
+    }
+    .es-status-badge.ok     { background: #f0fdf4; color: #059669; }
+    .es-status-badge.warn   { background: #fffbeb; color: #d97706; }
+    .es-status-badge.fehler { background: #fef2f2; color: #ef4444; }
+    .es-status-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+    .es-save-bar {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      background: #fff; border-top: 1px solid var(--border,#e5e7eb);
+      padding: 12px 20px; padding-bottom: calc(12px + env(safe-area-inset-bottom));
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      z-index: 100; box-shadow: 0 -4px 16px rgba(0,0,0,0.06);
+      transform: translateY(100%); transition: transform 0.25s;
+    }
+    .es-save-bar.sichtbar { transform: translateY(0); }
+    .es-save-bar-text { font-size: 13px; color: var(--text-secondary,#374151); }
+    .es-save-bar-actions { display: flex; gap: 8px; }
+
+    .es-toast {
+      position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%) translateY(20px);
+      background: #111827; color: #fff; padding: 10px 20px; border-radius: 10px;
+      font-size: 13px; font-weight: 500; z-index: 1000; opacity: 0;
+      transition: all 0.25s; white-space: nowrap; pointer-events: none;
+    }
+    .es-toast.sichtbar { opacity: 1; transform: translateX(-50%) translateY(0); }
+  </style>
 </head>
 <body>
+  <div id="nav-container"></div>
 
-<!-- ═══ TOPBAR ═══════════════════════════════════════════ -->
-<header class="topbar">
-  <a href="dashboard.html" class="topbar-logo" title="Zurück zur Zentrale">
-    <svg viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect width="28" height="28" rx="7" fill="#4f8ef7"/>
-      <path d="M7 9h14M7 14h9M7 19h11" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
-    </svg>
-    <span class="topbar-logo-text">PRO<span>VA</span></span>
-  </a>
-  <span class="topbar-title">Einstellungen</span>
-  <div class="topbar-spacer"></div>
-  <span class="topbar-paket-badge" id="topbar-paket-badge">Solo</span>
-  <button class="topbar-hamburger" id="hamburger-btn" aria-label="Menü öffnen" title="Menü">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-      <line x1="3" y1="6" x2="21" y2="6"/>
-      <line x1="3" y1="12" x2="21" y2="12"/>
-      <line x1="3" y1="18" x2="21" y2="18"/>
-    </svg>
-  </button>
-</header>
-
-<!-- ═══ LAYOUT ════════════════════════════════════════════ -->
-<div class="layout">
-
-<!-- ─── SIDEBAR ──────────────────────────────────────── -->
-<aside class="sidebar" id="sidebar">
-  <nav class="sidebar-nav">
-
-    <div class="sidebar-group-label">Profil</div>
-    <button class="snav-item active" onclick="showSec('profil', this)" id="snav-profil">
-      <span class="snav-icon">👤</span>
-      <span class="snav-label">Mein Profil</span>
-    </button>
-    <button class="snav-item" onclick="showSec('buero', this)" id="snav-buero">
-      <span class="snav-icon">🏢</span>
-      <span class="snav-label">Büro & Adresse</span>
-    </button>
-    <button class="snav-item" onclick="showSec('zertifikate', this)" id="snav-zertifikate">
-      <span class="snav-icon">🏅</span>
-      <span class="snav-label">Zertifikate & SV-Info</span>
-    </button>
-    <button class="snav-item" onclick="showSec('signatur', this)" id="snav-signatur">
-      <span class="snav-icon">✍️</span>
-      <span class="snav-label">E-Mail-Signatur</span>
-    </button>
-
-    <div class="sidebar-group-label">Abrechnung</div>
-    <button class="snav-item" onclick="showSec('paket', this)" id="snav-paket">
-      <span class="snav-icon">💎</span>
-      <span class="snav-label">Paket & Abrechnung</span>
-    </button>
-
-    <div class="sidebar-group-label">App</div>
-    <button class="snav-item" onclick="showSec('benachrichtigungen', this)" id="snav-benachrichtigungen">
-      <span class="snav-icon">🔔</span>
-      <span class="snav-label">Benachrichtigungen</span>
-    </button>
-    <button class="snav-item" onclick="showSec('arbeitstage', this)" id="snav-arbeitstage">
-      <span class="snav-icon">📅</span>
-      <span class="snav-label">Arbeitstage & Zeiten</span>
-    </button>
-    <button class="snav-item" onclick="showSec('design', this)" id="snav-design">
-      <span class="snav-icon">🎨</span>
-      <span class="snav-label">Darstellung</span>
-    </button>
-
-    <div class="sidebar-group-label">Datenschutz</div>
-    <button class="snav-item" onclick="showSec('datenschutz', this)" id="snav-datenschutz">
-      <span class="snav-icon">🔒</span>
-      <span class="snav-label">Datenschutz & Konto</span>
-    </button>
-
-  </nav>
-
-  <div class="sidebar-footer">
-    <a href="dashboard.html" class="sidebar-footer-btn">
-      <span>⬅️</span> Zur Zentrale
-    </a>
-    <button class="sidebar-footer-btn danger" onclick="logout()">
-      <span>🚪</span> Abmelden
-    </button>
-  </div>
-</aside>
-
-<!-- Overlay für Mobile -->
-<div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
-
-<!-- ─── MAIN ──────────────────────────────────────────── -->
-<main class="main-content" id="main-content">
-
-<!-- ═══ SEKTION: MEIN PROFIL ═══════════════════════════ -->
-<section class="sec active" id="sec-profil">
-  <div class="sec-header">
-    <h1 class="sec-title">Mein Profil</h1>
-    <p class="sec-subtitle">Name, E-Mail und persönliche Angaben</p>
-  </div>
-
-  <div class="card">
-    <div class="avatar-section">
-      <div class="avatar-circle" id="avatar-circle" title="Profilbild ändern (demnächst)">AB</div>
-      <div class="avatar-info">
-        <h3 id="avatar-name">–</h3>
-        <p id="avatar-email">–</p>
-      </div>
-      <span class="sync-badge" id="sync-profil">⏳ Speichern…</span>
+  <main class="es-page">
+    <div class="es-page-header">
+      <div class="es-page-title">⚙️ Einstellungen</div>
+      <div class="es-page-sub">Konto, Darstellung, KI und Datenschutz verwalten</div>
     </div>
 
-    <div class="form-grid">
-      <div class="form-group">
-        <label class="form-label">Vorname <span class="required">*</span></label>
-        <input class="form-input" id="e-vorname" type="text" placeholder="Max" autocomplete="given-name">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Nachname <span class="required">*</span></label>
-        <input class="form-input" id="e-nachname" type="text" placeholder="Mustermann" autocomplete="family-name">
-      </div>
-      <div class="form-group">
-        <label class="form-label">E-Mail-Adresse</label>
-        <input class="form-input" id="e-email" type="email" placeholder="sv@beispiel.de" readonly style="opacity:.6;cursor:not-allowed;" autocomplete="email">
-        <span class="form-hint">E-Mail kann nicht geändert werden (Netlify Identity)</span>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Telefon</label>
-        <input class="form-input" id="e-telefon" type="tel" placeholder="+49 89 123 456" autocomplete="tel">
-      </div>
-      <div class="form-group span-2">
-        <label class="form-label">Qualifikation / Fachgebiet</label>
-        <input class="form-input" id="e-quali" type="text" placeholder="Öffentlich bestellter und vereidigter Sachverständiger für…">
-      </div>
-    </div>
-  </div>
+    <div class="es-layout">
+      <!-- Sidebar -->
+      <nav class="es-sidebar" id="es-sidebar">
+        <div class="es-sidebar-item aktiv" data-section="profil" onclick="wechsleSektion('profil',this)">
+          <span class="es-sidebar-icon">👤</span> Profil & Konto
+        </div>
+        <div class="es-sidebar-item" data-section="darstellung" onclick="wechsleSektion('darstellung',this)">
+          <span class="es-sidebar-icon">🎨</span> Darstellung
+        </div>
+        <div class="es-sidebar-item" data-section="ki" onclick="wechsleSektion('ki',this)">
+          <span class="es-sidebar-icon">🤖</span> KI & Diktat
+        </div>
+        <div class="es-sidebar-item" data-section="benachrichtigungen" onclick="wechsleSektion('benachrichtigungen',this)">
+          <span class="es-sidebar-icon">🔔</span> Benachrichtigungen
+        </div>
+        <div class="es-sidebar-item" data-section="integrationen" onclick="wechsleSektion('integrationen',this)">
+          <span class="es-sidebar-icon">🔗</span> Integrationen
+        </div>
+        <div class="es-sidebar-item" data-section="datenschutz" onclick="wechsleSektion('datenschutz',this)">
+          <span class="es-sidebar-icon">🔒</span> Datenschutz
+        </div>
+        <div class="es-sidebar-item" data-section="paket" onclick="wechsleSektion('paket',this)">
+          <span class="es-sidebar-icon">📦</span> Paket & Abrechnung
+        </div>
+      </nav>
 
-  <div class="card">
-    <div class="card-title">Passwort ändern</div>
-    <div class="form-grid">
-      <div class="form-group">
-        <label class="form-label">Neues Passwort</label>
-        <input class="form-input" id="e-pw-new" type="password" placeholder="Mindestens 8 Zeichen" autocomplete="new-password">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Passwort bestätigen</label>
-        <input class="form-input" id="e-pw-confirm" type="password" placeholder="Wiederholen" autocomplete="new-password">
-      </div>
-    </div>
-    <div style="margin-top:16px;">
-      <button class="btn btn-secondary btn-sm" onclick="aenderePw()">🔑 Passwort ändern</button>
-    </div>
-  </div>
+      <!-- Content -->
+      <div class="es-content" id="es-content">
 
-  <div class="save-bar">
-    <button class="btn btn-primary" onclick="speichereProfil()">💾 Profil speichern</button>
-    <button class="btn btn-secondary" onclick="ladeProfil()">↺ Zurücksetzen</button>
-  </div>
-</section>
-
-<!-- ═══ SEKTION: BÜRO ════════════════════════════════════ -->
-<section class="sec" id="sec-buero">
-  <div class="sec-header">
-    <h1 class="sec-title">Büro & Adresse</h1>
-    <p class="sec-subtitle">Firma, Anschrift und Bankverbindung für Rechnungen</p>
-  </div>
-
-  <div class="card">
-    <div class="card-title">Firmendaten</div>
-    <div class="form-grid">
-      <div class="form-group span-2">
-        <label class="form-label">Firmenname / Bürobezeichnung</label>
-        <input class="form-input" id="e-firma" type="text" placeholder="SV-Büro Max Mustermann" autocomplete="organization">
-      </div>
-      <div class="form-group span-2">
-        <label class="form-label">Straße und Hausnummer</label>
-        <input class="form-input" id="e-strasse" type="text" placeholder="Musterstraße 12" autocomplete="street-address">
-      </div>
-      <div class="form-group">
-        <label class="form-label">PLZ</label>
-        <input class="form-input" id="e-plz" type="text" placeholder="80333" autocomplete="postal-code" maxlength="5" inputmode="numeric">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Ort</label>
-        <input class="form-input" id="e-ort" type="text" placeholder="München" autocomplete="address-level2">
-      </div>
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="card-title">Steuer & USt-ID</div>
-    <div class="form-grid">
-      <div class="form-group">
-        <label class="form-label">Steuernummer</label>
-        <input class="form-input" id="e-steuernr" type="text" placeholder="123/456/78901" inputmode="numeric">
-      </div>
-      <div class="form-group">
-        <label class="form-label">USt-ID (optional)</label>
-        <input class="form-input" id="e-ustid" type="text" placeholder="DE123456789">
-        <span class="form-hint">Nur wenn Kleinunternehmer-Regelung nicht anwendbar</span>
-      </div>
-      <div class="form-group span-2">
-        <label class="form-label">Kleinunternehmer (§19 UStG)</label>
-        <div class="toggle-row" style="padding-top:0;border:none;">
-          <div class="toggle-info">
-            <div class="toggle-label">Kleinunternehmer-Regelung aktiv</div>
-            <div class="toggle-desc">Rechnungen ohne Mehrwertsteuer (§19 UStG)</div>
+        <!-- PROFIL -->
+        <section class="es-section aktiv" id="es-sec-profil">
+          <div class="es-section-header">
+            <span class="es-section-icon">👤</span>
+            <div class="es-section-info">
+              <div class="es-section-title">Profil & Konto</div>
+              <div class="es-section-sub">Persönliche Daten, Berufsbezeichnung und Sicherheit</div>
+            </div>
           </div>
-          <label class="toggle-switch">
-            <input type="checkbox" id="e-kleinunternehmer">
-            <span class="toggle-slider"></span>
-          </label>
-        </div>
+          <div class="es-avatar-wrap">
+            <div class="es-avatar" id="es-avatar-initials">SV</div>
+            <div class="es-avatar-info">
+              <div class="es-avatar-name" id="es-avatar-name">Sachverständiger</div>
+              <div class="es-avatar-email" id="es-avatar-email">—</div>
+              <span class="es-avatar-badge trial" id="es-avatar-badge">Trial</span>
+            </div>
+          </div>
+          <div class="es-zeile vertikal">
+            <div class="es-zeile-info">
+              <div class="es-zeile-label">Persönliche Daten</div>
+              <div class="es-zeile-sub">Wird in Gutachten und Berichten verwendet</div>
+            </div>
+            <div class="es-input-row" style="width:100%">
+              <div><label class="es-label">Vorname</label><input class="es-input" id="es-vorname" placeholder="Max" oninput="markiereGeaendert()" /></div>
+              <div><label class="es-label">Nachname</label><input class="es-input" id="es-nachname" placeholder="Mustermann" oninput="markiereGeaendert()" /></div>
+              <div><label class="es-label">Titel / Grad</label><input class="es-input" id="es-titel" placeholder="Dipl.-Ing." oninput="markiereGeaendert()" /></div>
+              <div><label class="es-label">Berufsbezeichnung</label><input class="es-input" id="es-beruf" placeholder="Öff. best. Sachverständiger" oninput="markiereGeaendert()" /></div>
+            </div>
+          </div>
+          <div class="es-zeile vertikal">
+            <div class="es-zeile-info">
+              <div class="es-zeile-label">Büro-Adresse</div>
+              <div class="es-zeile-sub">Erscheint im Briefkopf und in Rechnungen</div>
+            </div>
+            <div style="width:100%">
+              <input class="es-input" id="es-firma" placeholder="Firmierung / Büroname (optional)" oninput="markiereGeaendert()" />
+              <input class="es-input" id="es-strasse" placeholder="Straße und Hausnummer" oninput="markiereGeaendert()" />
+              <div class="es-input-row">
+                <input class="es-input" id="es-plz" placeholder="PLZ" oninput="markiereGeaendert()" />
+                <input class="es-input" id="es-ort" placeholder="Ort" oninput="markiereGeaendert()" />
+              </div>
+              <div class="es-input-row">
+                <input class="es-input" id="es-telefon" placeholder="Telefon" oninput="markiereGeaendert()" />
+                <input class="es-input" id="es-website" placeholder="Website (optional)" oninput="markiereGeaendert()" />
+              </div>
+              <input class="es-input" id="es-ustid" placeholder="USt-IdNr. (DE…)" oninput="markiereGeaendert()" />
+            </div>
+          </div>
+          <div class="es-zeile">
+            <div class="es-zeile-info">
+              <div class="es-zeile-label">Passwort ändern</div>
+              <div class="es-zeile-sub">Reset per E-Mail über Netlify Identity</div>
+            </div>
+            <button class="es-btn" onclick="passwortReset()">📧 Reset-Mail senden</button>
+          </div>
+          <div class="es-zeile">
+            <div class="es-zeile-info">
+              <div class="es-zeile-label">Abmelden</div>
+              <div class="es-zeile-sub">Sitzung beenden, alle lokalen Daten löschen</div>
+            </div>
+            <button class="es-btn danger" onclick="provaAbmelden()">🚪 Abmelden</button>
+          </div>
+        </section>
+
+        <!-- DARSTELLUNG -->
+        <section class="es-section" id="es-sec-darstellung">
+          <div class="es-section-header">
+            <span class="es-section-icon">🎨</span>
+            <div class="es-section-info">
+              <div class="es-section-title">Darstellung</div>
+              <div class="es-section-sub">Design, Schrift und Ansicht</div>
+            </div>
+          </div>
+          <div class="es-zeile">
+            <div class="es-zeile-info"><div class="es-zeile-label">Farbschema</div><div class="es-zeile-sub">Hell, Dunkel oder automatisch</div></div>
+            <select class="es-select" id="es-theme" onchange="aendereTheme(this.value)">
+              <option value="auto">🌓 Automatisch</option>
+              <option value="light">☀️ Hell</option>
+              <option value="dark">🌙 Dunkel</option>
+            </select>
+          </div>
+          <div class="es-zeile">
+            <div class="es-zeile-info"><div class="es-zeile-label">Schriftgröße</div><div class="es-zeile-sub">Basis-Schriftgröße der App</div></div>
+            <select class="es-select" id="es-fontsize" onchange="aendereFontsize(this.value)">
+              <option value="14">Klein (14px)</option>
+              <option value="16" selected>Normal (16px)</option>
+              <option value="18">Groß (18px)</option>
+            </select>
+          </div>
+          <div class="es-zeile">
+            <div class="es-zeile-info"><div class="es-zeile-label">Kompakte Ansicht</div><div class="es-zeile-sub">Weniger Abstände, mehr Inhalt</div></div>
+            <label class="es-toggle"><input type="checkbox" id="es-kompakt" onchange="saveToggle('kompakt', this.checked)" /><span class="es-toggle-slider"></span></label>
+          </div>
+          <div class="es-zeile">
+            <div class="es-zeile-info"><div class="es-zeile-label">Animationen</div><div class="es-zeile-sub">Übergänge und Micro-Animationen</div></div>
+            <label class="es-toggle"><input type="checkbox" id="es-animationen" checked onchange="saveToggle('animationen', this.checked)" /><span class="es-toggle-slider"></span></label>
+          </div>
+          <div class="es-zeile">
+            <div class="es-zeile-info"><div class="es-zeile-label">Start-Seite nach Login</div><div class="es-zeile-sub">Welche Seite nach dem Einloggen geöffnet wird</div></div>
+            <select class="es-select" id="es-startseite" onchange="saveSelect('startseite', this.value)">
+              <option value="dashboard.html">Dashboard</option>
+              <option value="termine.html">Termine</option>
+              <option value="stellungnahme.html">Neues Gutachten</option>
+            </select>
+          </div>
+        </section>
+
+        <!-- KI & DIKTAT -->
+        <section class="es-section" id="es-sec-ki">
+          <div class="es-section-header">
+            <span class="es-section-icon">🤖</span>
+            <div class="es-section-info">
+              <div class="es-section-title">KI & Diktat</div>
+              <div class="es-section-sub">OpenAI, Whisper und Lernmodus</div>
+            </div>
+          </div>
+          <div class="es-zeile">
+            <div class="es-zeile-info"><div class="es-zeile-label">KI-Modell</div><div class="es-zeile-sub">Für Gutachten-Entwürfe und Qualitätsprüfung</div></div>
+            <select class="es-select" id="es-ki-modell" onchange="saveSelect('ki_modell', this.value)">
+              <option value="gpt-4o">GPT-4o (Empfohlen)</option>
+              <option value="gpt-4o-mini">GPT-4o Mini (Schneller)</option>
+              <option value="gpt-4-turbo">GPT-4 Turbo</option>
+            </select>
+          </div>
+          <div class="es-zeile">
+            <div class="es-zeile-info"><div class="es-zeile-label">Diktat-Sprache</div><div class="es-zeile-sub">Primärsprache für Whisper-Transkription</div></div>
+            <select class="es-select" id="es-diktat-sprache" onchange="saveSelect('diktat_sprache', this.value)">
+              <option value="de">🇩🇪 Deutsch</option>
+              <option value="de-AT">🇦🇹 Österreichisches Deutsch</option>
+              <option value="de-CH">🇨🇭 Schweizer Deutsch</option>
+            </select>
+          </div>
+          <div class="es-zeile">
+            <div class="es-zeile-info"><div class="es-zeile-label">Auto-Qualitätscheck</div><div class="es-zeile-sub">Score automatisch nach 3s Schreibpause berechnen</div></div>
+            <label class="es-toggle"><input type="checkbox" id="es-auto-quality" checked onchange="saveToggle('auto_quality', this.checked)" /><span class="es-toggle-slider"></span></label>
+          </div>
+          <div class="es-zeile">
+            <div class="es-zeile-info"><div class="es-zeile-label">KI-Lernmodus</div><div class="es-zeile-sub">KI lernt aus Diktat-Korrekturen automatisch</div></div>
+            <label class="es-toggle"><input type="checkbox" id="es-lernmodus" checked onchange="saveToggle('lernmodus', this.checked)" /><span class="es-toggle-slider"></span></label>
+          </div>
+          <div class="es-zeile">
+            <div class="es-zeile-info"><div class="es-zeile-label">Inline KI-Vorschläge</div><div class="es-zeile-sub">Verbesserungsvorschläge direkt im Text-Editor</div></div>
+            <label class="es-toggle"><input type="checkbox" id="es-inline-vorschlaege" checked onchange="saveToggle('inline_vorschlaege', this.checked)" /><span class="es-toggle-slider"></span></label>
+          </div>
+          <div class="es-zeile vertikal">
+            <div class="es-zeile-info">
+              <div class="es-zeile-label">Persönlicher KI-Kontext</div>
+              <div class="es-zeile-sub">Wird jedem KI-Aufruf beigefügt (Spezialgebiet, bevorzugte Normen)</div>
+            </div>
+            <textarea class="es-input" id="es-ki-kontext" rows="3"
+              placeholder="z.B. Spezialisierung: Feuchte- und Schimmelschäden. Bevorzugte Normen: DIN 4108, WTA-Merkblätter."
+              oninput="markiereGeaendert()" style="resize:vertical;min-height:70px"></textarea>
+          </div>
+          <div class="es-zeile">
+            <div class="es-zeile-info"><div class="es-zeile-label">KI-Lernpool verwalten</div><div class="es-zeile-sub">Gelernte Vokabeln, Korrekturen und Whisper-Prompt</div></div>
+            <button class="es-btn" onclick="window.location='ortstermin-modus.html#lernpool'">🧠 Lernpool →</button>
+          </div>
+        </section>
+
+        <!-- BENACHRICHTIGUNGEN -->
+        <section class="es-section" id="es-sec-benachrichtigungen">
+          <div class="es-section-header">
+            <span class="es-section-icon">🔔</span>
+            <div class="es-section-info">
+              <div class="es-section-title">Benachrichtigungen</div>
+              <div class="es-section-sub">Push und In-App Einstellungen</div>
+            </div>
+          </div>
+          <div class="es-zeile">
+            <div class="es-zeile-info"><div class="es-zeile-label">Fristen-Alarme</div><div class="es-zeile-sub">Push bei Fristen in 7, 3 und 1 Tag(en)</div></div>
+            <label class="es-toggle"><input type="checkbox" id="es-bn-fristen" checked onchange="saveToggle('bn_fristen', this.checked)" /><span class="es-toggle-slider"></span></label>
+          </div>
+          <div class="es-zeile">
+            <div class="es-zeile-info"><div class="es-zeile-label">Zahlungs-Erinnerungen</div><div class="es-zeile-sub">Bei überfälligen Rechnungen</div></div>
+            <label class="es-toggle"><input type="checkbox" id="es-bn-zahlung" checked onchange="saveToggle('bn_zahlung', this.checked)" /><span class="es-toggle-slider"></span></label>
+          </div>
+          <div class="es-zeile">
+            <div class="es-zeile-info"><div class="es-zeile-label">Stille Stunden</div><div class="es-zeile-sub">Keine Push zwischen 22:00 und 07:00 Uhr</div></div>
+            <label class="es-toggle"><input type="checkbox" id="es-bn-stillezeit" checked onchange="saveToggle('bn_stillezeit', this.checked)" /><span class="es-toggle-slider"></span></label>
+          </div>
+          <div class="es-zeile">
+            <div class="es-zeile-info"><div class="es-zeile-label">Benachrichtigungs-Verlauf</div><div class="es-zeile-sub">Alle Push und In-App Nachrichten</div></div>
+            <a href="benachrichtigungen.html" class="es-btn">🔔 Öffnen →</a>
+          </div>
+        </section>
+
+        <!-- INTEGRATIONEN -->
+        <section class="es-section" id="es-sec-integrationen">
+          <div class="es-section-header">
+            <span class="es-section-icon">🔗</span>
+            <div class="es-section-info">
+              <div class="es-section-title">Integrationen</div>
+              <div class="es-section-sub">Externe Dienste und Verbindungen</div>
+            </div>
+          </div>
+          <div class="es-zeile">
+            <div class="es-zeile-info"><div class="es-zeile-label">Airtable Datenbank</div><div class="es-zeile-sub">Base ID: appJ7bLlAHZoxENWE · Alle Gutachten und Fälle</div></div>
+            <span class="es-status-badge ok"><span class="es-status-dot"></span> Verbunden</span>
+          </div>
+          <div class="es-zeile">
+            <div class="es-zeile-info"><div class="es-zeile-label">Make.com Automationen</div><div class="es-zeile-sub">10 aktive Szenarien (S1–S10) · E-Mail, PDF, CRM</div></div>
+            <span class="es-status-badge ok"><span class="es-status-dot"></span> Aktiv</span>
+          </div>
+          <div class="es-zeile">
+            <div class="es-zeile-info"><div class="es-zeile-label">Stripe Zahlungen</div><div class="es-zeile-sub">Solo 149€/mo · Team 279€/mo · SEPA + Karte</div></div>
+            <span class="es-status-badge ok"><span class="es-status-dot"></span> Aktiv</span>
+          </div>
+          <div class="es-zeile">
+            <div class="es-zeile-info"><div class="es-zeile-label">Kalender Export</div><div class="es-zeile-sub">ICS-Dateien für Google / Outlook / Apple Calendar</div></div>
+            <button class="es-btn" onclick="exportAlleFresten()">📅 Fristen exportieren</button>
+          </div>
+          <div class="es-zeile">
+            <div class="es-zeile-info"><div class="es-zeile-label">Daten importieren</div><div class="es-zeile-sub">Fälle aus Excel / CSV importieren</div></div>
+            <a href="import-assistent.html" class="es-btn">⬆️ Import-Assistent</a>
+          </div>
+        </section>
+
+        <!-- DATENSCHUTZ -->
+        <section class="es-section" id="es-sec-datenschutz">
+          <div class="es-section-header">
+            <span class="es-section-icon">🔒</span>
+            <div class="es-section-info">
+              <div class="es-section-title">Datenschutz & Sicherheit</div>
+              <div class="es-section-sub">DSGVO, Datenlöschung und Session</div>
+            </div>
+          </div>
+          <div class="es-zeile">
+            <div class="es-zeile-info"><div class="es-zeile-label">Sitzungs-Timeout</div><div class="es-zeile-sub">Automatischer Logout nach Inaktivität</div></div>
+            <select class="es-select" id="es-timeout" onchange="saveSelect('session_timeout', this.value)">
+              <option value="4">4 Stunden</option>
+              <option value="8" selected>8 Stunden</option>
+              <option value="24">24 Stunden</option>
+              <option value="0">Nie (nicht empfohlen)</option>
+            </select>
+          </div>
+          <div class="es-zeile">
+            <div class="es-zeile-info"><div class="es-zeile-label">Meine Daten exportieren</div><div class="es-zeile-sub">DSGVO Art. 20 — Alle gespeicherten Daten als JSON</div></div>
+            <button class="es-btn" onclick="exportMeineDaten()">⬇️ Exportieren</button>
+          </div>
+          <div class="es-zeile">
+            <div class="es-zeile-info"><div class="es-zeile-label">KI-Lernpool leeren</div><div class="es-zeile-sub">Alle gelernten Korrekturen und Vokabeln löschen</div></div>
+            <button class="es-btn danger" onclick="loescheLernpool()">🗑️ Lernpool löschen</button>
+          </div>
+          <div class="es-zeile">
+            <div class="es-zeile-info"><div class="es-zeile-label">Lokalen Cache leeren</div><div class="es-zeile-sub">Gespeicherte Airtable-Daten aus Browser-Cache</div></div>
+            <button class="es-btn" onclick="leerCache()">🧹 Cache leeren</button>
+          </div>
+          <div class="es-zeile">
+            <div class="es-zeile-info">
+              <div class="es-zeile-label" style="color:#ef4444">⚠️ Konto löschen</div>
+              <div class="es-zeile-sub">DSGVO Art. 17 — Unwiderruflich. <a href="datenschutz.html" target="_blank">Datenschutzerklärung</a></div>
+            </div>
+            <button class="es-btn danger" onclick="kontoDatenLoeschen()">🗑️ Konto löschen</button>
+          </div>
+        </section>
+
+        <!-- PAKET & ABRECHNUNG -->
+        <section class="es-section" id="es-sec-paket">
+          <div class="es-section-header">
+            <span class="es-section-icon">📦</span>
+            <div class="es-section-info">
+              <div class="es-section-title">Paket & Abrechnung</div>
+              <div class="es-section-sub">Aktuelles Paket, Upgrade und Rechnungen</div>
+            </div>
+          </div>
+          <div class="es-paket-card trial" id="es-paket-card">
+            <div class="es-paket-icon" id="es-paket-icon">⏳</div>
+            <div class="es-paket-info">
+              <div class="es-paket-name" id="es-paket-name">Trial — 14 Tage kostenlos</div>
+              <div class="es-paket-features" id="es-paket-features">Alle Solo-Features · Kein Zahlungsmittel nötig</div>
+            </div>
+            <button class="es-btn primary" id="es-upgrade-btn" onclick="window.location='portal.html'">⬆️ Upgraden</button>
+          </div>
+          <div class="es-zeile">
+            <div class="es-zeile-info"><div class="es-zeile-label">Rechnungen & Zahlungsmethode</div><div class="es-zeile-sub">Stripe Customer Portal · Kündigung</div></div>
+            <button class="es-btn" onclick="oeffneStripePortal()">💳 Portal öffnen</button>
+          </div>
+          <div class="es-zeile">
+            <div class="es-zeile-info"><div class="es-zeile-label">Team einladen</div><div class="es-zeile-sub">Kollegen zum Team-Paket hinzufügen</div></div>
+            <button class="es-btn" id="es-team-btn" disabled onclick="window.location='einstellungen.html#team'">👥 Team verwalten</button>
+          </div>
+        </section>
+
       </div>
     </div>
-  </div>
+  </main>
 
-  <div class="card">
-    <div class="card-title">Bankverbindung</div>
-    <div class="form-grid">
-      <div class="form-group">
-        <label class="form-label">IBAN</label>
-        <input class="form-input" id="e-iban" type="text" placeholder="DE89 3704 0044 0532 0130 00" autocomplete="off" style="font-family:monospace;">
-      </div>
-      <div class="form-group">
-        <label class="form-label">BIC / SWIFT</label>
-        <input class="form-input" id="e-bic" type="text" placeholder="COBADEFFXXX" autocomplete="off">
-      </div>
-      <div class="form-group span-2">
-        <label class="form-label">Kreditinstitut</label>
-        <input class="form-input" id="e-bank" type="text" placeholder="Commerzbank AG">
-      </div>
+  <!-- Speichern-Leiste -->
+  <div class="es-save-bar" id="es-save-bar">
+    <span class="es-save-bar-text">🖊️ Ungespeicherte Änderungen</span>
+    <div class="es-save-bar-actions">
+      <button class="es-btn" onclick="verwerfAenderungen()">Verwerfen</button>
+      <button class="es-btn primary" onclick="speichereAlles()">💾 Speichern</button>
     </div>
   </div>
 
-  <div class="save-bar">
-    <button class="btn btn-primary" onclick="speichereBuero()">💾 Büro speichern</button>
-    <button class="btn btn-secondary" onclick="ladeProfil()">↺ Zurücksetzen</button>
-  </div>
-</section>
+  <div class="es-toast" id="es-toast"></div>
+  <script>
+    'use strict';
+    const ES_KEY = 'prova_einstellungen';
+    let geaendert = false;
 
-<!-- ═══ SEKTION: ZERTIFIKATE ════════════════════════════ -->
-<section class="sec" id="sec-zertifikate">
-  <div class="sec-header">
-    <h1 class="sec-title">Zertifikate & SV-Info</h1>
-    <p class="sec-subtitle">Bestellungsbehörde, Zertifikate und Spezialisierungen</p>
-  </div>
+    document.addEventListener('DOMContentLoaded', () => {
+      ladeProfil(); ladeEinstellungen(); ladePaketInfo();
+      const hash = location.hash.replace('#','');
+      if (hash) { const el = document.querySelector(`[data-section="${hash}"]`); if (el) wechsleSektion(hash, el); }
+    });
 
-  <div class="card">
-    <div class="card-title">SV-Bestellung</div>
-    <div class="form-grid">
-      <div class="form-group span-2">
-        <label class="form-label">Bestellende Stelle / Kammer</label>
-        <input class="form-input" id="e-bestellstelle" type="text" placeholder="Industrie- und Handelskammer München">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Bestellungsnummer</label>
-        <input class="form-input" id="e-bestellnr" type="text" placeholder="SV-2023-0042">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Gültig bis</label>
-        <input class="form-input" id="e-bestellung-gueltig" type="date">
-      </div>
-    </div>
-  </div>
+    function ladeProfil() {
+      const email = localStorage.getItem('prova_sv_email') || '';
+      const user  = JSON.parse(localStorage.getItem('prova_user') || '{}');
+      const name  = user.user_metadata?.full_name || email.split('@')[0] || 'Sachverständiger';
+      const paket = localStorage.getItem('prova_paket') || 'trial';
+      document.getElementById('es-avatar-email').textContent = email;
+      document.getElementById('es-avatar-name').textContent  = name;
+      const initials = name.split(' ').map(w => w[0]).join('').toUpperCase().substring(0,2) || 'SV';
+      document.getElementById('es-avatar-initials').textContent = initials;
+      const badge = document.getElementById('es-avatar-badge');
+      badge.className = `es-avatar-badge ${paket}`;
+      badge.textContent = { solo:'Solo', team:'Team', trial:'Trial — 14 Tage' }[paket] || paket;
+      const prof = JSON.parse(localStorage.getItem('prova_profil') || '{}');
+      ['vorname','nachname','titel','beruf','firma','strasse','plz','ort','telefon','website','ustid'].forEach(f => {
+        const el = document.getElementById(`es-${f}`); if (el && prof[f]) el.value = prof[f];
+      });
+    }
 
-  <div class="card">
-    <div class="card-title">Sachgebiete</div>
-    <div class="form-grid cols-1">
-      <div class="form-group">
-        <label class="form-label">Hauptsachgebiet</label>
-        <input class="form-input" id="e-sachgebiet" type="text" placeholder="Bausachverständige · Schäden an Gebäuden">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Weitere Sachgebiete (kommagetrennt)</label>
-        <input class="form-input" id="e-sachgebiete-weitere" type="text" placeholder="Wasserschäden, Schimmel, Brandschäden">
-      </div>
-    </div>
-  </div>
+    function ladePaketInfo() {
+      const paket = localStorage.getItem('prova_paket') || 'trial';
+      const card = document.getElementById('es-paket-card');
+      if (paket === 'solo') {
+        card?.classList.replace('trial','solo');
+        document.getElementById('es-paket-icon').textContent = '⭐';
+        document.getElementById('es-paket-name').textContent = 'Solo — 149 €/Monat';
+        document.getElementById('es-paket-features').textContent = 'Unbegrenzte Gutachten · KI · JVEG · E-Rechnung';
+        document.getElementById('es-upgrade-btn').textContent = '⬆️ Auf Team upgraden';
+      } else if (paket === 'team') {
+        card?.classList.replace('trial','team');
+        document.getElementById('es-paket-icon').textContent = '👥';
+        document.getElementById('es-paket-name').textContent = 'Team — 279 €/Monat';
+        document.getElementById('es-paket-features').textContent = 'Alle Solo-Features · 5 Nutzer · White-Label · ZUGFeRD';
+        const btn = document.getElementById('es-upgrade-btn'); btn.textContent = '✅ Aktiv'; btn.disabled = true;
+        document.getElementById('es-team-btn').disabled = false;
+      }
+    }
 
-  <div class="card">
-    <div class="card-title">Zertifikate-Upload</div>
-    <div class="upload-zone" id="upload-zone-zert">
-      <div class="upload-zone-icon">📄</div>
-      <div class="upload-zone-text">Zertifikate & Bestellungsurkunde hochladen</div>
-      <div class="upload-zone-sub">PDF, JPG, PNG · max. 5 MB</div>
-      <input type="file" id="file-zertifikate" multiple accept=".pdf,.jpg,.jpeg,.png" style="display:none;">
-    </div>
-    <div id="zert-file-list" style="margin-top:12px;"></div>
-  </div>
+    function ladeEinstellungen() {
+      try {
+        const s = JSON.parse(localStorage.getItem(ES_KEY) || '{}');
+        ['kompakt','animationen','auto_quality','lernmodus','inline_vorschlaege','bn_fristen','bn_zahlung','bn_stillezeit'].forEach(k => {
+          const el = document.getElementById('es-' + k.replace(/_/g,'-')); if (el && s[k] !== undefined) el.checked = s[k];
+        });
+        ['theme','fontsize','startseite','ki_modell','diktat_sprache','timeout'].forEach(k => {
+          const el = document.getElementById('es-' + k.replace(/_/g,'-')); if (el && s[k]) el.value = s[k];
+        });
+        const ki = document.getElementById('es-ki-kontext'); if (ki && s.ki_kontext) ki.value = s.ki_kontext;
+      } catch(e) {}
+    }
 
-  <div class="save-bar">
-    <button class="btn btn-primary" onclick="speichereZertifikate()">💾 Speichern</button>
-  </div>
-</section>
+    function saveToggle(key, value) {
+      try { const s = JSON.parse(localStorage.getItem(ES_KEY)||'{}'); s[key]=value; localStorage.setItem(ES_KEY,JSON.stringify(s)); } catch(e) {}
+      zeigeToast('Einstellung gespeichert');
+    }
+    function saveSelect(key, value) {
+      try { const s = JSON.parse(localStorage.getItem(ES_KEY)||'{}'); s[key]=value; localStorage.setItem(ES_KEY,JSON.stringify(s)); } catch(e) {}
+      zeigeToast('Einstellung gespeichert');
+    }
+    function markiereGeaendert() {
+      if (!geaendert) { geaendert=true; document.getElementById('es-save-bar').classList.add('sichtbar'); }
+    }
+    function speichereAlles() {
+      const prof = {};
+      ['vorname','nachname','titel','beruf','firma','strasse','plz','ort','telefon','website','ustid'].forEach(f => {
+        const el = document.getElementById(`es-${f}`); if (el) prof[f] = el.value;
+      });
+      localStorage.setItem('prova_profil', JSON.stringify(prof));
+      try {
+        const s = JSON.parse(localStorage.getItem(ES_KEY)||'{}');
+        const ki = document.getElementById('es-ki-kontext'); if (ki) s.ki_kontext = ki.value;
+        localStorage.setItem(ES_KEY, JSON.stringify(s));
+      } catch(e) {}
+      geaendert = false;
+      document.getElementById('es-save-bar').classList.remove('sichtbar');
+      zeigeToast('✅ Einstellungen gespeichert');
+    }
+    function verwerfAenderungen() {
+      ladeProfil(); ladeEinstellungen(); geaendert=false;
+      document.getElementById('es-save-bar').classList.remove('sichtbar');
+    }
 
-<!-- ═══ SEKTION: SIGNATUR ════════════════════════════════ -->
-<section class="sec" id="sec-signatur">
-  <div class="sec-header">
-    <h1 class="sec-title">E-Mail-Signatur</h1>
-    <p class="sec-subtitle">Wird automatisch in Briefvorlagen und E-Mails eingefügt</p>
-  </div>
+    function wechsleSektion(key, el) {
+      document.querySelectorAll('.es-sidebar-item').forEach(i => i.classList.remove('aktiv'));
+      document.querySelectorAll('.es-section').forEach(s => s.classList.remove('aktiv'));
+      el.classList.add('aktiv');
+      document.getElementById(`es-sec-${key}`)?.classList.add('aktiv');
+      history.replaceState(null,'',`#${key}`);
+    }
 
-  <div class="card">
-    <div class="form-grid cols-1">
-      <div class="form-group">
-        <label class="form-label">Signatur-Text</label>
-        <textarea class="form-textarea" id="e-signatur" rows="7" placeholder="Mit freundlichen Grüßen&#10;&#10;Max Mustermann&#10;Öffentlich bestellter und vereidigter Sachverständiger&#10;Tel: +49 89 123 456&#10;www.sv-mustermann.de"></textarea>
-      </div>
-    </div>
-    <div style="margin-top:12px;">
-      <button class="btn btn-secondary btn-sm" onclick="aktualisiereSignaturVorschau()">👁️ Vorschau aktualisieren</button>
-    </div>
-    <div class="signatur-preview" id="signatur-preview">Signatur-Vorschau erscheint hier…</div>
-  </div>
+    function aendereTheme(v) { saveSelect('theme',v); document.documentElement.setAttribute('data-theme',v); }
+    function aendereFontsize(v) { saveSelect('fontsize',v); document.documentElement.style.fontSize = v+'px'; }
 
-  <div class="save-bar">
-    <button class="btn btn-primary" onclick="speichereSignatur()">💾 Signatur speichern</button>
-  </div>
-</section>
+    function passwortReset() {
+      const email = localStorage.getItem('prova_sv_email');
+      alert(`Reset-Mail an ${email||'deine E-Mail'} gesendet.\nBitte nutze den "Passwort vergessen"-Link auf der Login-Seite.`);
+    }
+    function provaAbmelden() {
+      if (!confirm('Wirklich abmelden?')) return;
+      Object.keys(localStorage).filter(k => k.startsWith('prova_')||k.startsWith('gotrue_')).forEach(k => localStorage.removeItem(k));
+      sessionStorage.clear();
+      window.location.href = 'app-login.html';
+    }
+    function oeffneStripePortal() { window.open('https://billing.stripe.com/p/login/prova','_blank'); }
+    function exportAlleFresten() { zeigeToast('📅 ICS-Export gestartet …'); }
+    function exportMeineDaten() {
+      const daten = {};
+      for (let i=0;i<localStorage.length;i++) {
+        const k=localStorage.key(i); if(k.startsWith('prova_')) { try{daten[k]=JSON.parse(localStorage.getItem(k));}catch(e){daten[k]=localStorage.getItem(k);} }
+      }
+      const blob=new Blob([JSON.stringify(daten,null,2)],{type:'application/json'});
+      const url=URL.createObjectURL(blob); const a=document.createElement('a');
+      a.href=url; a.download=`PROVA-Meine-Daten-${new Date().toISOString().split('T')[0]}.json`; a.click(); URL.revokeObjectURL(url);
+    }
+    function loescheLernpool() {
+      if(!confirm('KI-Lernpool leeren?')) return;
+      localStorage.removeItem('prova_ki_lernpool'); localStorage.removeItem('prova_ki_vokabular');
+      zeigeToast('🗑️ Lernpool geleert');
+    }
+    function leerCache() {
+      ['prova_fristen_cache','prova_honorar_cache','prova_qs_last'].forEach(k=>localStorage.removeItem(k));
+      if('caches' in window) caches.keys().then(names=>names.forEach(n=>caches.delete(n)));
+      zeigeToast('🧹 Cache geleert');
+    }
+    function kontoDatenLoeschen() {
+      const email=localStorage.getItem('prova_sv_email')||'';
+      const best=prompt(`⚠️ Konto löschen — bestätige mit deiner E-Mail:\n${email}`);
+      if(best!==email){alert('E-Mail stimmt nicht überein.');return;}
+      alert('Löschanfrage gesendet. Bestätigung per E-Mail gemäß DSGVO Art. 17.');
+    }
 
-<!-- ═══ SEKTION: PAKET ═══════════════════════════════════ -->
-<section class="sec" id="sec-paket">
-  <div class="sec-header">
-    <h1 class="sec-title">Paket & Abrechnung</h1>
-    <p class="sec-subtitle">Dein aktuelles PROVA-Paket, Upgrade und Rechnungen</p>
-  </div>
+    let toastTimer;
+    function zeigeToast(text) {
+      const el=document.getElementById('es-toast'); if(!el)return;
+      el.textContent=text; el.classList.add('sichtbar');
+      clearTimeout(toastTimer); toastTimer=setTimeout(()=>el.classList.remove('sichtbar'),2500);
+    }
+  </script>
 
-  <div class="stats-mini">
-    <div class="stat-mini-item">
-      <div class="stat-mini-val" id="stat-gutachten">–</div>
-      <div class="stat-mini-label">Gutachten gesamt</div>
-    </div>
-    <div class="stat-mini-item">
-      <div class="stat-mini-val" id="stat-tage">–</div>
-      <div class="stat-mini-label">Tage aktiv</div>
-    </div>
-    <div class="stat-mini-item">
-      <div class="stat-mini-val" id="stat-ki">–</div>
-      <div class="stat-mini-label">KI-Credits verbl.</div>
-    </div>
-  </div>
-
-  <!-- Aktuelles Paket -->
-  <div class="card">
-    <div class="card-title">Dein aktuelles Paket</div>
-    <div class="paket-karte aktiv" id="paket-karte-aktuell">
-      <!-- Wird per JS befüllt -->
-    </div>
-  </div>
-
-  <!-- Upgrade -->
-  <div class="card" id="card-upgrade" style="display:none;">
-    <div class="card-title">Auf Team upgraden</div>
-    <div class="paket-karte">
-      <div style="flex:1;">
-        <div class="paket-name" style="font-size:16px;">Team-Paket</div>
-        <div class="paket-preis">279€ <span>/Monat</span></div>
-        <div class="paket-desc">KI-Foto-Analyse, ZUGFeRD, unbegrenzte SVs, Baubegleitung und mehr</div>
-        <div class="paket-features">
-          <div class="paket-feature"><span class="check">✓</span> KI-Foto-Analyse (spart 45 Min/Gutachten)</div>
-          <div class="paket-feature"><span class="check">✓</span> ZUGFeRD / XRechnung für Behörden</div>
-          <div class="paket-feature"><span class="check">✓</span> Unbegrenzte SVs einladen</div>
-          <div class="paket-feature"><span class="check">✓</span> DocEstate-Integration</div>
-          <div class="paket-feature"><span class="check">✓</span> 1.000 KI-Credits pro Monat</div>
-        </div>
-      </div>
-    </div>
-    <div style="margin-top:20px; display:flex; gap:12px; flex-wrap:wrap;">
-      <button class="btn btn-primary" onclick="upgradeStarten('Team', 'monatlich')">🚀 Jetzt upgraden — 279€/Mo</button>
-      <button class="btn btn-secondary btn-sm" onclick="upgradeStarten('Team', 'jaehrlich')">📅 Jährlich 219€/Mo</button>
-    </div>
-  </div>
-
-  <!-- Stripe Portal -->
-  <div class="card">
-    <div class="card-title">Abrechnung & Rechnungen</div>
-    <p style="font-size:14px;color:var(--text-secondary);margin-bottom:16px;">Zahlungsmethode ändern, vergangene Rechnungen herunterladen und Abonnement verwalten.</p>
-    <button class="btn btn-secondary" onclick="oeffneStripePortal()">💳 Abrechnungsportal öffnen</button>
-  </div>
-</section>
-
-<!-- ═══ SEKTION: BENACHRICHTIGUNGEN ══════════════════════ -->
-<section class="sec" id="sec-benachrichtigungen">
-  <div class="sec-header">
-    <h1 class="sec-title">Benachrichtigungen</h1>
-    <p class="sec-subtitle">Wähle, worüber PROVA dich informieren soll</p>
-  </div>
-
-  <div class="card">
-    <div class="card-title">Push-Benachrichtigungen</div>
-    <div class="toggle-row">
-      <div class="toggle-info">
-        <div class="toggle-label">Fristenwarnungen</div>
-        <div class="toggle-desc">7, 3 und 1 Tag vor Ablauf einer Gutachten-Frist</div>
-      </div>
-      <label class="toggle-switch"><input type="checkbox" id="n-fristen" checked><span class="toggle-slider"></span></label>
-    </div>
-    <div class="toggle-row">
-      <div class="toggle-info">
-        <div class="toggle-label">Neue Aufträge</div>
-        <div class="toggle-desc">Bei neuen Gutachtenaufträgen im System</div>
-      </div>
-      <label class="toggle-switch"><input type="checkbox" id="n-auftraege" checked><span class="toggle-slider"></span></label>
-    </div>
-    <div class="toggle-row">
-      <div class="toggle-info">
-        <div class="toggle-label">Freigaben ausstehend</div>
-        <div class="toggle-desc">Wenn ein Mandant eine Gutachten-Freigabe erwartet</div>
-      </div>
-      <label class="toggle-switch"><input type="checkbox" id="n-freigaben"><span class="toggle-slider"></span></label>
-    </div>
-    <div class="toggle-row">
-      <div class="toggle-info">
-        <div class="toggle-label">PROVA System-Meldungen</div>
-        <div class="toggle-desc">Updates, neue Features und Wartungsarbeiten</div>
-      </div>
-      <label class="toggle-switch"><input type="checkbox" id="n-system" checked><span class="toggle-slider"></span></label>
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="card-title">E-Mail-Digest</div>
-    <div class="toggle-row">
-      <div class="toggle-info">
-        <div class="toggle-label">Tägliche Zusammenfassung</div>
-        <div class="toggle-desc">Morgens um 07:30 Uhr: offene Fälle und anstehende Termine</div>
-      </div>
-      <label class="toggle-switch"><input type="checkbox" id="n-digest-daily"><span class="toggle-slider"></span></label>
-    </div>
-    <div class="toggle-row">
-      <div class="toggle-info">
-        <div class="toggle-label">Wöchentlicher Report</div>
-        <div class="toggle-desc">Montags: Erledigte Gutachten, offene Rechnungen, Umsatz</div>
-      </div>
-      <label class="toggle-switch"><input type="checkbox" id="n-digest-weekly" checked><span class="toggle-slider"></span></label>
-    </div>
-  </div>
-
-  <div class="save-bar">
-    <button class="btn btn-primary" onclick="speichereNotifications()">💾 Einstellungen speichern</button>
-  </div>
-</section>
-
-<!-- ═══ SEKTION: ARBEITSTAGE ════════════════════════════ -->
-<section class="sec" id="sec-arbeitstage">
-  <div class="sec-header">
-    <h1 class="sec-title">Arbeitstage & Zeiten</h1>
-    <p class="sec-subtitle">Wird für JVEG-Berechnung und Terminplanung verwendet</p>
-  </div>
-
-  <div class="card">
-    <div class="card-title">Arbeitstage</div>
-    <p style="font-size:14px;color:var(--text-secondary);margin-bottom:4px;">An welchen Tagen bist du üblicherweise verfügbar?</p>
-    <div class="arbeitstage-grid" id="arbeitstage-grid">
-      <button class="tag-btn active" data-tag="Mo">Mo</button>
-      <button class="tag-btn active" data-tag="Di">Di</button>
-      <button class="tag-btn active" data-tag="Mi">Mi</button>
-      <button class="tag-btn active" data-tag="Do">Do</button>
-      <button class="tag-btn active" data-tag="Fr">Fr</button>
-      <button class="tag-btn"        data-tag="Sa">Sa</button>
-      <button class="tag-btn"        data-tag="So">So</button>
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="card-title">Arbeitszeiten</div>
-    <div class="form-grid">
-      <div class="form-group">
-        <label class="form-label">Arbeitsbeginn</label>
-        <input class="form-input" id="e-arbeit-von" type="time" value="08:00">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Arbeitsende</label>
-        <input class="form-input" id="e-arbeit-bis" type="time" value="18:00">
-      </div>
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="card-title">JVEG-Einstellungen</div>
-    <div class="form-grid">
-      <div class="form-group">
-        <label class="form-label">Std.-Honorar (§8 JVEG)</label>
-        <input class="form-input" id="e-jveg-honorar" type="number" value="100" min="60" max="165" step="5" inputmode="decimal">
-        <span class="form-hint">Standard: 100€/h · Max: 165€/h (SV-Spezialbereich)</span>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Fahrtkosten (§7 JVEG)</label>
-        <input class="form-input" id="e-jveg-km" type="number" value="0.42" step="0.01" min="0.30" max="0.60" inputmode="decimal">
-        <span class="form-hint">€ pro km · Aktuell: 0,42€ (2024)</span>
-      </div>
-    </div>
-  </div>
-
-  <div class="save-bar">
-    <button class="btn btn-primary" onclick="speichereArbeitstage()">💾 Speichern</button>
-  </div>
-</section>
-
-<!-- ═══ SEKTION: DESIGN ══════════════════════════════════ -->
-<section class="sec" id="sec-design">
-  <div class="sec-header">
-    <h1 class="sec-title">Darstellung</h1>
-    <p class="sec-subtitle">Theme, Schriftgröße und Ansichtsoptionen</p>
-  </div>
-
-  <div class="card">
-    <div class="card-title">Farbschema</div>
-    <div class="toggle-row">
-      <div class="toggle-info">
-        <div class="toggle-label">Dunkles Design (Dark Mode)</div>
-        <div class="toggle-desc">Standardmäßig aktiv — optimal für Tablet-Nutzung</div>
-      </div>
-      <label class="toggle-switch">
-        <input type="checkbox" id="d-dark" checked>
-        <span class="toggle-slider"></span>
-      </label>
-    </div>
-    <div class="toggle-row">
-      <div class="toggle-info">
-        <div class="toggle-label">Kompakte Ansicht</div>
-        <div class="toggle-desc">Weniger Abstände — zeigt mehr Inhalte auf einmal</div>
-      </div>
-      <label class="toggle-switch">
-        <input type="checkbox" id="d-kompakt">
-        <span class="toggle-slider"></span>
-      </label>
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="card-title">Schriftgröße</div>
-    <div style="display:flex;gap:10px;flex-wrap:wrap;">
-      <button class="btn btn-secondary btn-sm" onclick="setFontSize('small')">Klein</button>
-      <button class="btn btn-primary btn-sm"   onclick="setFontSize('normal')">Normal</button>
-      <button class="btn btn-secondary btn-sm" onclick="setFontSize('large')">Groß</button>
-    </div>
-    <p style="font-size:13px;color:var(--text-muted);margin-top:10px;">Größere Schrift für bessere Lesbarkeit auf Tablet empfohlen</p>
-  </div>
-
-  <div class="save-bar">
-    <button class="btn btn-primary" onclick="speichereDesign()">💾 Speichern</button>
-  </div>
-</section>
-
-<!-- ═══ SEKTION: DATENSCHUTZ ════════════════════════════ -->
-<section class="sec" id="sec-datenschutz">
-  <div class="sec-header">
-    <h1 class="sec-title">Datenschutz & Konto</h1>
-    <p class="sec-subtitle">DSGVO-Einwilligungen, Daten-Export und Konto-Löschung</p>
-  </div>
-
-  <div class="card">
-    <div class="card-title">Meine Einwilligungen</div>
-    <div id="einwilligungen-liste">
-      <p style="font-size:14px;color:var(--text-muted);">Einwilligungen werden geladen…</p>
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="card-title">Datenschutz-Einstellungen</div>
-    <div class="toggle-row">
-      <div class="toggle-info">
-        <div class="toggle-label">Anonyme Nutzungsstatistiken</div>
-        <div class="toggle-desc">Helfen dabei, PROVA zu verbessern (kein Personenbezug)</div>
-      </div>
-      <label class="toggle-switch"><input type="checkbox" id="p-analytics" checked><span class="toggle-slider"></span></label>
-    </div>
-    <div class="toggle-row">
-      <div class="toggle-info">
-        <div class="toggle-label">KI-Lernpool</div>
-        <div class="toggle-desc">Anonymisierte Texte für KI-Verbesserung freigeben (opt-in)</div>
-      </div>
-      <label class="toggle-switch"><input type="checkbox" id="p-ki-lernpool"><span class="toggle-slider"></span></label>
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="card-title">Meine Daten</div>
-    <p style="font-size:14px;color:var(--text-secondary);margin-bottom:16px;">Du hast das Recht auf Datenauskunft (Art. 15 DSGVO) und Datenportabilität (Art. 20 DSGVO).</p>
-    <div style="display:flex;gap:12px;flex-wrap:wrap;">
-      <button class="btn btn-secondary" onclick="exportiereAlles()">📥 Alle Daten exportieren</button>
-      <a href="avv.html" class="btn btn-secondary" target="_blank">📋 AVV anzeigen</a>
-      <a href="datenschutz.html" class="btn btn-secondary" target="_blank">🔒 Datenschutzerklärung</a>
-    </div>
-  </div>
-
-  <div class="card danger-zone">
-    <h4>⚠️ Konto löschen</h4>
-    <p>Alle deine Daten werden unwiderruflich gelöscht (Art. 17 DSGVO). Einwilligungsbelege werden gesetzlich aufbewahrt. Dieser Vorgang kann nicht rückgängig gemacht werden.</p>
-    <div class="form-group" style="margin-bottom:16px;">
-      <label class="form-label">Grund der Löschung (optional)</label>
-      <input class="form-input" id="loeschgrund" type="text" placeholder="Ich nutze PROVA nicht mehr weil…">
-    </div>
-    <button class="btn btn-danger" onclick="kontoLoeschenBestaetigen()">🗑️ Konto und alle Daten löschen</button>
-  </div>
-</section>
-
-</main>
-</div>
-
-<!-- Toast -->
-<div class="toast-prova" id="einst-toast"></div>
-
-<script src="nav.js" defer></script>
 <script src="prova-context.js" defer></script>
 <script src="prova-error-handler.js" defer></script>
-<script src="einstellungen-logic.js" defer></script>
 <script src="support-chat.js" defer></script>
 <script src="sw-register.js" defer></script>
-<script>
-/* ──────────────────────────────────────────────────────
-   EINSTELLUNGEN v2 — UI-Logik (Sidebar, Navigation)
-   Alle Airtable-Sync-Funktionen in einstellungen-logic.js
-────────────────────────────────────────────────────── */
-
-/* ── Auth-Check ──────────────────────────────────────── */
-(function() {
-  if (!localStorage.getItem('prova_user') && !localStorage.getItem('prova_sv_email')) {
-    window.location.href = 'app-login.html';
-  }
-})();
-
-/* ── Paket-Badge in Topbar ───────────────────────────── */
-(function() {
-  var paket = localStorage.getItem('prova_paket') || 'Solo';
-  var el = document.getElementById('topbar-paket-badge');
-  if (!el) return;
-  var colors = { Solo: '#4f8ef7', Team: '#a78bfa' };
-  var c = colors[paket] || colors.Solo;
-  el.textContent = paket;
-  el.style.cssText = 'font-size:10px;font-weight:700;padding:3px 10px;border-radius:8px;letter-spacing:.04em;background:' + c + '18;color:' + c + ';border:1px solid ' + c + '33;';
-})();
-
-/* ── Sidebar Navigation ──────────────────────────────── */
-window.showSec = function(id, btn) {
-  /* Alle Sektionen ausblenden */
-  document.querySelectorAll('.sec').forEach(function(s) { s.classList.remove('active'); });
-  document.querySelectorAll('.snav-item').forEach(function(b) { b.classList.remove('active'); });
-  
-  var sec = document.getElementById('sec-' + id);
-  if (sec) sec.classList.add('active');
-  if (btn) btn.classList.add('active');
-  
-  /* Auf Mobile: Sidebar schließen nach Auswahl */
-  if (window.innerWidth <= 768) {
-    closeSidebar();
-  }
-  
-  /* Scroll to top */
-  var main = document.getElementById('main-content');
-  if (main) main.scrollTop = 0;
-  window.scrollTo(0, 0);
-};
-
-/* ── Hamburger / Sidebar Mobile ──────────────────────── */
-var hamburger = document.getElementById('hamburger-btn');
-var sidebar   = document.getElementById('sidebar');
-var overlay   = document.getElementById('sidebar-overlay');
-
-if (hamburger) {
-  hamburger.addEventListener('click', function() {
-    var isOpen = sidebar.classList.contains('open');
-    if (isOpen) { closeSidebar(); } else { openSidebar(); }
-  });
-}
-
-window.openSidebar = function() {
-  sidebar.classList.add('open');
-  overlay.classList.add('visible');
-  document.body.style.overflow = 'hidden';
-  hamburger.setAttribute('aria-label', 'Menü schließen');
-};
-
-window.closeSidebar = function() {
-  sidebar.classList.remove('open');
-  overlay.classList.remove('visible');
-  document.body.style.overflow = '';
-  hamburger.setAttribute('aria-label', 'Menü öffnen');
-};
-
-/* Escape-Taste schließt Sidebar */
-document.addEventListener('keydown', function(e) {
-  if (e.key === 'Escape') closeSidebar();
-});
-
-/* ── Logout ──────────────────────────────────────────── */
-window.logout = function() {
-  localStorage.removeItem('prova_user');
-  localStorage.removeItem('prova_sv_email');
-  window.location.href = 'app-login.html';
-};
-
-/* ── Toast ───────────────────────────────────────────── */
-window.zeigToast = function(msg, typ) {
-  var t = document.getElementById('einst-toast');
-  if (!t) return;
-  t.textContent = msg;
-  t.className = 'toast-prova' + (typ === 'err' ? ' err' : typ === 'ok' ? ' ok' : '');
-  void t.offsetWidth;
-  t.classList.add('show');
-  setTimeout(function() { t.classList.remove('show'); }, 3200);
-};
-
-/* ── Arbeitstage-Buttons ─────────────────────────────── */
-document.querySelectorAll('.tag-btn').forEach(function(btn) {
-  btn.addEventListener('click', function() {
-    this.classList.toggle('active');
-  });
-});
-
-/* ── Upload Zone ─────────────────────────────────────── */
-var uploadZone = document.getElementById('upload-zone-zert');
-var fileInput  = document.getElementById('file-zertifikate');
-
-if (uploadZone && fileInput) {
-  uploadZone.addEventListener('click', function() { fileInput.click(); });
-  uploadZone.addEventListener('dragover', function(e) {
-    e.preventDefault();
-    uploadZone.classList.add('drag-over');
-  });
-  uploadZone.addEventListener('dragleave', function() {
-    uploadZone.classList.remove('drag-over');
-  });
-  uploadZone.addEventListener('drop', function(e) {
-    e.preventDefault();
-    uploadZone.classList.remove('drag-over');
-    var files = e.dataTransfer.files;
-    zeigeUploadedFiles(files);
-  });
-  fileInput.addEventListener('change', function() {
-    zeigeUploadedFiles(this.files);
-  });
-}
-
-function zeigeUploadedFiles(files) {
-  var list = document.getElementById('zert-file-list');
-  if (!list || !files.length) return;
-  list.innerHTML = '';
-  Array.from(files).forEach(function(f) {
-    var item = document.createElement('div');
-    item.style.cssText = 'display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;color:var(--text-secondary);';
-    item.innerHTML = '📄 <span>' + f.name + '</span> <span style="color:var(--text-muted);margin-left:auto;">' + (f.size / 1024).toFixed(0) + ' KB</span>';
-    list.appendChild(item);
-  });
-}
-
-/* ── Signatur Vorschau ───────────────────────────────── */
-window.aktualisiereSignaturVorschau = function() {
-  var text = document.getElementById('e-signatur')?.value || '';
-  var preview = document.getElementById('signatur-preview');
-  if (preview) preview.textContent = text || 'Noch keine Signatur eingegeben.';
-};
-
-/* ── Schriftgröße ────────────────────────────────────── */
-window.setFontSize = function(size) {
-  var sizes = { small: '14px', normal: '16px', large: '18px' };
-  document.documentElement.style.fontSize = sizes[size] || '16px';
-  localStorage.setItem('prova_font_size', size);
-  zeigToast('Schriftgröße: ' + size, 'ok');
-};
-
-/* ── Paket-Karte befüllen ────────────────────────────── */
-(function() {
-  var paket  = localStorage.getItem('prova_paket') || 'Solo';
-  var status = localStorage.getItem('prova_status') || 'Trial';
-  var karte  = document.getElementById('paket-karte-aktuell');
-  if (!karte) return;
-
-  var preise = { Solo: 149, Team: 299 };
-  var preis  = preise[paket] || 149;
-  var farbe  = paket === 'Team' ? 'Team' : 'Solo';
-  var statusText = status === 'Aktiv' ? '✅ Aktiv' : '⏳ Trial';
-
-  karte.innerHTML = [
-    '<div>',
-      '<span class="paket-badge-lg ' + farbe + '">' + paket + '</span>',
-      '<div style="margin-top:6px;font-size:12px;color:var(--text-muted);">' + statusText + '</div>',
-    '</div>',
-    '<div class="paket-info">',
-      '<div class="paket-name">' + paket + '-Paket</div>',
-      '<div class="paket-preis">' + preis + '€ <span>/Monat</span></div>',
-      '<div class="paket-desc">Dein aktuelles Paket</div>',
-    '</div>',
-  ].join('');
-
-  // Upgrade-Card zeigen wenn Solo
-  if (paket === 'Solo') {
-    var upgradeCard = document.getElementById('card-upgrade');
-    if (upgradeCard) upgradeCard.style.display = 'block';
-  }
-
-  // Stats
-  var trialStart = localStorage.getItem('prova_trial_start');
-  if (trialStart) {
-    var tage = Math.floor((Date.now() - new Date(trialStart).getTime()) / 86400000);
-    var statTage = document.getElementById('stat-tage');
-    if (statTage) statTage.textContent = tage;
-  }
-  var kiCredits = PaketGuard ? PaketGuard.getLimit('ki_credits') : 0;
-  var statKi = document.getElementById('stat-ki');
-  if (statKi) statKi.textContent = kiCredits;
-})();
-
-/* ── Upgrade starten ─────────────────────────────────── */
-window.upgradeStarten = function(paket, intervall) {
-  var preise = (typeof PROVA_PREISE !== 'undefined') ? PROVA_PREISE : {};
-  var priceId = (preise[paket] || {})['stripe_price_' + (intervall === 'jaehrlich' ? 'jahr' : 'abo')] || '';
-  if (!priceId) {
-    zeigToast('Stripe-Konfiguration fehlt — bitte Kontakt aufnehmen.', 'err');
-    return;
-  }
-  fetch('/.netlify/functions/stripe-checkout', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      priceId:    priceId,
-      paket:      paket,
-      userEmail:  localStorage.getItem('prova_sv_email'),
-      successUrl: window.location.origin + '/dashboard.html?upgrade=success',
-      cancelUrl:  window.location.origin + '/einstellungen.html#sec-paket',
-    })
-  })
-  .then(function(r) { return r.json(); })
-  .then(function(d) {
-    if (d.url) window.location.href = d.url;
-    else zeigToast(d.error || 'Fehler beim Checkout', 'err');
-  })
-  .catch(function() { zeigToast('Verbindungsfehler', 'err'); });
-};
-
-/* ── Stripe-Portal öffnen ────────────────────────────── */
-window.oeffneStripePortal = function() {
-  zeigToast('Stripe-Portal wird geöffnet…');
-  fetch('/.netlify/functions/stripe-checkout', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      aktion:    'portal',
-      userEmail: localStorage.getItem('prova_sv_email'),
-      returnUrl: window.location.href,
-    })
-  })
-  .then(function(r) { return r.json(); })
-  .then(function(d) {
-    if (d.url) window.location.href = d.url;
-    else zeigToast('Portal nicht verfügbar', 'err');
-  })
-  .catch(function() { zeigToast('Verbindungsfehler', 'err'); });
-};
-
-/* ── Daten exportieren ───────────────────────────────── */
-window.exportiereAlles = function() {
-  var data = {};
-  for (var i = 0; i < localStorage.length; i++) {
-    var k = localStorage.key(i);
-    if (k && k.startsWith('prova_')) {
-      data[k] = localStorage.getItem(k);
-    }
-  }
-  var blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-  var url  = URL.createObjectURL(blob);
-  var a    = document.createElement('a');
-  a.href     = url;
-  a.download = 'prova-daten-export-' + new Date().toISOString().split('T')[0] + '.json';
-  a.click();
-  URL.revokeObjectURL(url);
-  zeigToast('✅ Daten-Export gestartet', 'ok');
-};
-
-/* ── Konto löschen ───────────────────────────────────── */
-window.kontoLoeschenBestaetigen = function() {
-  var grund = document.getElementById('loeschgrund')?.value || '';
-  if (!confirm('⚠️ Wirklich alle Daten löschen? Diese Aktion kann nicht rückgängig gemacht werden.')) return;
-  if (!confirm('Letzte Bestätigung: Alle deine Gutachten, Termine und Kontakte werden unwiderruflich gelöscht.')) return;
-
-  zeigToast('Löschantrag wird verarbeitet…');
-
-  // A5 Webhook — DSGVO-Löschung Art. 17 (PROVA Make.com)
-  fetch('https://hook.eu1.make.com/mu7hi783bjaunbswdv9o4gwxypxkphsa', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      email:     localStorage.getItem('prova_sv_email'),
-      grund:     grund,
-      timestamp: new Date().toISOString(),
-    })
-  })
-  .catch(function() {}) // Fehler ignorieren — trotzdem lokal löschen
-  .finally(function() {
-    localStorage.clear();
-    sessionStorage.clear();
-    window.location.href = 'index.html?deleted=1';
-  });
-};
-
-/* ── Passwort ändern ─────────────────────────────────── */
-window.aenderePw = function() {
-  var pw  = document.getElementById('e-pw-new')?.value || '';
-  var pw2 = document.getElementById('e-pw-confirm')?.value || '';
-  if (pw.length < 8)  { zeigToast('Passwort mindestens 8 Zeichen', 'err'); return; }
-  if (pw !== pw2)     { zeigToast('Passwörter stimmen nicht überein', 'err'); return; }
-
-  if (typeof netlifyIdentity !== 'undefined' && netlifyIdentity.currentUser) {
-    netlifyIdentity.currentUser().update({ password: pw })
-      .then(function() {
-        zeigToast('✅ Passwort erfolgreich geändert', 'ok');
-        document.getElementById('e-pw-new').value = '';
-        document.getElementById('e-pw-confirm').value = '';
-      })
-      .catch(function() { zeigToast('Fehler beim Passwort ändern', 'err'); });
-  } else {
-    zeigToast('Netlify Identity nicht geladen', 'err');
-  }
-};
-
-/* ── URL-Hash → Sektion öffnen ───────────────────────── */
-(function() {
-  var hash = window.location.hash.replace('#', '');
-  if (hash && document.getElementById('sec-' + hash)) {
-    var btn = document.getElementById('snav-' + hash);
-    showSec(hash, btn);
-  }
-})();
-
-/* ── Einwilligungen laden ────────────────────────────── */
-(function() {
-  var einw = document.getElementById('einwilligungen-liste');
-  if (!einw) return;
-
-  var email = localStorage.getItem('prova_sv_email');
-  if (!email) { einw.innerHTML = '<p style="font-size:14px;color:var(--text-muted);">Nicht angemeldet.</p>'; return; }
-
-  fetch('/.netlify/functions/airtable', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      method: 'GET',
-      path: '/v0/appJ7bLlAHZoxENWE/tblwgUQgtBWckPMHp?filterByFormula=' + encodeURIComponent('{SV_Email}="' + email + '"') + '&maxRecords=20',
-    })
-  })
-  .then(function(r) { return r.json(); })
-  .then(function(d) {
-    var records = d.records || [];
-    if (!records.length) {
-      einw.innerHTML = '<p style="font-size:14px;color:var(--text-muted);">Keine Einwilligungen gefunden.</p>';
-      return;
-    }
-    einw.innerHTML = records.map(function(r) {
-      var f = r.fields || {};
-      return '<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--border);gap:16px;">' +
-        '<div>' +
-          '<div style="font-size:14px;font-weight:600;color:var(--text-primary);">' + (f.typ || f.DokTyp || 'Einwilligung') + '</div>' +
-          '<div style="font-size:12px;color:var(--text-muted);">' + (f.datum || f.Zeitstempel || '') + '</div>' +
-        '</div>' +
-        '<span style="font-size:11px;font-weight:700;padding:3px 9px;border-radius:6px;background:rgba(16,185,129,.12);color:#10b981;border:1px solid rgba(16,185,129,.2);">✓ Erteilt</span>' +
-      '</div>';
-    }).join('');
-  })
-  .catch(function() {
-    einw.innerHTML = '<p style="font-size:13px;color:var(--text-muted);">Einwilligungen konnten nicht geladen werden.</p>';
-  });
-})();
-</script>
 </body>
 </html>

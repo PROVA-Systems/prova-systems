@@ -60,7 +60,7 @@ async function ladeGutachten(){
     url=`/v0/${AT_BASE}/${AT_TABLE}?filterByFormula=${encodeURIComponent('{KI_Entwurf}!=""')}&sort[0][field]=Timestamp&sort[0][direction]=desc&maxRecords=1`;
   }
   try {
-    const res=await ProvaError.safeFetch('/.netlify/functions/airtable',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({method:'GET',path:url})});
+    const res=await fetch('/.netlify/functions/airtable',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({method:'GET',path:url})});
     if(!res.ok) throw new Error('HTTP '+res.status);
     const data=await res.json();
     let rec=rid&&!fall ? data : data.records?.[0];
@@ -134,7 +134,7 @@ async function ladeSVProfil(){
   if(!email) return;
   try {
     const url=`/v0/${AT_BASE}/tbladqEQT3tmx4DIB?filterByFormula=${encodeURIComponent(`{SV_Email}="${email}"`)}&maxRecords=1`;
-    const res=await ProvaError.safeFetch('/.netlify/functions/airtable',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({method:'GET',path:url})});
+    const res=await fetch('/.netlify/functions/airtable',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({method:'GET',path:url})});
     if(!res.ok) return;
     const d=await res.json();
     if(d?.records?.length){ svProfil=d.records[0].fields; svProfil.email=email; }
@@ -592,7 +592,7 @@ async function approveGutachten(){
 
     // Airtable Status → "Freigegeben" (non-blocking)
     try {
-      ProvaError.safeFetch('/.netlify/functions/airtable', {
+      fetch('/.netlify/functions/airtable', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -692,7 +692,7 @@ async function speichereAenderungen(){
   if(!recId){zeigToast('Kein Datensatz.','err');return;}
   try {
     const url=`/v0/${AT_BASE}/${AT_TABLE}/${recId}`;
-    const res=await ProvaError.safeFetch('/.netlify/functions/airtable',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({method:'PATCH',path:url,payload:{fields:{KI_Entwurf:txt}}})});
+    const res=await fetch('/.netlify/functions/airtable',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({method:'PATCH',path:url,payload:{fields:{KI_Entwurf:txt}}})});
     if(!res.ok) throw new Error('HTTP '+res.status);
     if(recFields) recFields.KI_Entwurf=txt;
     localStorage.setItem('prova_entwurf_text',txt);

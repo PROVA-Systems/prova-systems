@@ -15,9 +15,7 @@
 <script src="paket-guard.js"></script>
 <script src="auth-guard.js"></script>
 <script src="theme.js"></script>
-<script src="trial-guard.js"></script>
-<script src="nav.js"></script>
-
+<script src="nav.js" defer></script>
 <link rel="stylesheet" href="mobile.css">
   <style>
   /* ═══════════════════════════════════════════════════
@@ -722,7 +720,8 @@
     </header>
 
     <!-- Page Content -->
-    <main class="page-content">
+    <div id="fg-banner-container"></div>
+<main class="page-content">
 
   <!-- ── HEADER ── -->
   <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:24px;flex-wrap:wrap;">
@@ -761,7 +760,11 @@
     <!-- LINKE SPALTE: Was steht an -->
     <div>
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-        <div style="font-size:13px;font-weight:700;color:var(--text);">Was steht an?</div>
+        <div style="font-size:13px;font-weight:700;color:var(--text);">
+    <!-- Honorar-Tracker Widget (I3) -->
+    <div id="ht-kpi" style="margin-bottom:16px;"></div>
+
+    <div class="dashboard-section-label">Was steht an?</div></div>
         <a href="archiv.html" style="font-size:11px;color:var(--accent);text-decoration:none;font-weight:600;">Alle Fälle →</a>
       </div>
       <div id="aufgaben-feed" style="display:flex;flex-direction:column;gap:8px;">
@@ -880,13 +883,32 @@
   </div>
 </div>
 
-<script src="global-search.js" defer></script>
-  <script src="auftragstyp.js" defer></script>
-<script src="onboarding-tour.js"></script>
-  <script src="prova-context.js"></script>
-  <script src="prova-error-handler.js"></script>
-  <script src="dashboard-logic.js" defer></script>
-  <script src="support-chat.js" defer></script>
+
+
   <script src="sw-register.js" defer></script>
+  <script src="global-search.js" defer></script>
+  <script src="auftragstyp.js"></script>
+  <script src="prova-context.js" defer></script>
+<script src="prova-error-handler.js" defer></script>
+<script src="support-chat.js"></script>
+  <script src="onboarding-tour.js"></script>
+  <script src="trial-guard.js"></script>
+  <script src="dashboard-logic.js" defer></script>
+
+  <script src="frist-guard.js" defer></script>
+  <script src="honorar-tracker.js" defer></script>
+
+  <script defer>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Honorar-Tracker initialisieren
+      if (typeof HonorarTracker !== 'undefined') {
+        HonorarTracker.init({ kpiId: 'ht-kpi' }).catch(function(){});
+      }
+      // Frist-Guard initialisieren
+      if (typeof FristGuard !== 'undefined') {
+        FristGuard.init({ bannerId: 'fg-banner-container', svEmail: localStorage.getItem('prova_sv_email') || '' }).catch(function(){});
+      }
+    });
+  </script>
 </body>
 </html>

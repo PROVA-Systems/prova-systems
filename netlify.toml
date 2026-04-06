@@ -1,132 +1,161 @@
-# ============================================
-# PROVA Systems — Netlify Konfiguration
-# ============================================
+# ══════════════════════════════════════════════════════════════════
+# PROVA Systems — netlify.toml v5.4
+# ══════════════════════════════════════════════════════════════════
 
 [build]
-  publish = "."
+  publish   = "."
   functions = "netlify/functions"
+
+[build.environment]
+  NODE_VERSION = "20"
 
 [build.processing]
   skip_processing = true
 
-# ---- REDIRECT RULES ----
+[functions]
+  directory    = "netlify/functions"
+  node_bundler = "esbuild"
+
+# ══════════════════════════════════════════════════════════════
+# REDIRECTS
+# ══════════════════════════════════════════════════════════════
+
 [[redirects]]
   from = "/"
-  to = "/index.html"
+  to   = "/index.html"
   status = 200
 
 [[redirects]]
-  from = "/app"
-  to = "/app-login.html"
+  from   = "/app"
+  to     = "/app-login.html"
   status = 200
 
 [[redirects]]
-  from = "/app/"
-  to = "/app-login.html"
+  from   = "/login"
+  to     = "/app-login.html"
+  status = 301
+
+[[redirects]]
+  from   = "/register"
+  to     = "/onboarding.html"
+  status = 301
+
+[[redirects]]
+  from   = "/logout"
+  to     = "/app-login.html"
+  status = 302
+
+[[redirects]]
+  from   = "/dashboard"
+  to     = "/dashboard.html"
+  status = 301
+
+[[redirects]]
+  from   = "/onboarding"
+  to     = "/onboarding.html"
   status = 200
 
 [[redirects]]
-  from = "/login"
-  to = "/app-login.html"
+  from   = "/freigabe"
+  to     = "/freigabe.html"
   status = 200
 
 [[redirects]]
-  from = "/register"
-  to = "/onboarding.html"
+  from   = "/einstellungen"
+  to     = "/einstellungen-v2.html"
+  status = 301
+
+[[redirects]]
+  from   = "/benachrichtigungen"
+  to     = "/benachrichtigungen-v2.html"
+  status = 301
+
+[[redirects]]
+  from   = "/ortstermin"
+  to     = "/ortstermin-modus.html"
+  status = 301
+
+[[redirects]]
+  from   = "/agb"
+  to     = "/agb.html"
   status = 200
 
 [[redirects]]
-  from = "/onboarding"
-  to = "/onboarding.html"
+  from   = "/datenschutz"
+  to     = "/datenschutz.html"
   status = 200
 
 [[redirects]]
-  from = "/dashboard"
-  to = "/dashboard.html"
+  from   = "/impressum"
+  to     = "/impressum.html"
   status = 200
 
 [[redirects]]
-  from = "/freigabe"
-  to = "/freigabe.html"
+  from   = "/avv"
+  to     = "/avv.html"
   status = 200
 
+# Stripe Webhook Alias
 [[redirects]]
-  from = "/agb"
-  to = "/agb.html"
+  from   = "/webhook/stripe"
+  to     = "/.netlify/functions/stripe-webhook"
   status = 200
 
+# 404 Fallback — KEIN SPA-Catchall (würde fehlende Dateien auf index.html leiten)
 [[redirects]]
-  from = "/datenschutz"
-  to = "/datenschutz.html"
-  status = 200
-
-[[redirects]]
-  from = "/impressum"
-  to = "/impressum.html"
-  status = 200
-
-[[redirects]]
-  from = "/avv"
-  to = "/avv.html"
-  status = 200
-
-# ---- 404 FALLBACK ----
-# KEIN SPA-Catchall — würde fehlende Dateien auf Landingpage weiterleiten
-# Netlify zeigt stattdessen eigene 404-Seite
-# [[redirects]]
-#   from = "/*"
-#   to = "/index.html"
-#   status = 200
-
-# Expliziter 404-Handler
-[[redirects]]
-  from = "/*"
-  to = "/404.html"
+  from   = "/*"
+  to     = "/404.html"
   status = 404
 
-# ---- SECURITY HEADERS ----
+# ══════════════════════════════════════════════════════════════
+# SECURITY HEADERS
+# ══════════════════════════════════════════════════════════════
+
 [[headers]]
   for = "/*"
   [headers.values]
-    X-Frame-Options = "SAMEORIGIN"
-    X-Content-Type-Options = "nosniff"
-    Referrer-Policy = "strict-origin-when-cross-origin"
-    Permissions-Policy = "camera=(), microphone=(self), geolocation=()"
     Strict-Transport-Security = "max-age=31536000; includeSubDomains"
-    # connect-src erlaubt Make.com eu1 Webhooks + Netlify Functions + Anthropic API + Airtable + Netlify Identity
-    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://identity.netlify.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.gstatic.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; media-src 'self' blob:; worker-src 'self' blob:; connect-src 'self' https://hook.eu1.make.com https://api.anthropic.com https://api.airtable.com https://*.netlify.com https://prova-systems.netlify.app https://*.netlify.app https://fonts.googleapis.com https://fonts.gstatic.com; frame-ancestors 'self';"
+    X-Frame-Options           = "SAMEORIGIN"
+    X-Content-Type-Options    = "nosniff"
+    Referrer-Policy           = "strict-origin-when-cross-origin"
+    Permissions-Policy        = "microphone=(self), camera=(self), geolocation=(), payment=(self 'https://js.stripe.com')"
+    Content-Security-Policy   = "default-src 'self'; script-src 'self' 'unsafe-inline' https://identity.netlify.com https://js.stripe.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; media-src 'self' blob:; worker-src 'self' blob:; frame-src 'self' https://*.stripe.com https://js.stripe.com https://hooks.stripe.com; connect-src 'self' https://*.netlify.app https://prova-systems.netlify.app https://identity.netlify.com https://api.netlify.com https://api.stripe.com https://api.airtable.com https://api.openai.com https://hook.eu1.make.com https://hook.eu2.make.com wss:; frame-ancestors 'self'; object-src 'none'; base-uri 'self';"
 
-# HTML nie gecacht
+# HTML: kein Cache
 [[headers]]
   for = "/*.html"
   [headers.values]
     Cache-Control = "no-cache, no-store, must-revalidate"
 
-# Service Worker: kein Cache, voller Scope
+# SW: kein Cache
 [[headers]]
   for = "/sw.js"
   [headers.values]
-    Cache-Control = "no-cache, no-store, must-revalidate"
+    Cache-Control         = "no-cache, no-store, must-revalidate"
     Service-Worker-Allowed = "/"
 
-# SW-Register + App-JS: kurz gecacht
+# JS/CSS: kurzer Cache
 [[headers]]
   for = "/sw-register.js"
   [headers.values]
     Cache-Control = "public, max-age=3600"
 
+# manifest.json
 [[headers]]
   for = "/manifest.json"
   [headers.values]
-    Content-Type = "application/manifest+json"
+    Cache-Control = "public, max-age=3600"
+    Content-Type  = "application/manifest+json"
 
-[[headers]]
-  for = "/sw.js"
-  [headers.values]
-    Cache-Control = "no-cache"
-    Content-Type = "application/javascript"
-
+# Icons: langer Cache
 [[headers]]
   for = "/icons/*"
   [headers.values]
     Cache-Control = "public, max-age=86400"
+
+# Functions: kein Cache
+[[headers]]
+  for = "/.netlify/functions/*"
+  [headers.values]
+    Cache-Control    = "no-cache, no-store, must-revalidate"
+    X-PROVA-Version  = "5.4"

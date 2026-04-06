@@ -210,3 +210,95 @@ Gib NUR den korrigierten deutschen Text zurück. Perfekte Grammatik und Zeichens
   const vorschlag = data.choices?.[0]?.message?.content?.trim() || '';
   return jsonResponse({ vorschlag });
 }
+
+async function handleSupportChat(body, apiKey) {
+  const {
+    nachricht    = '',
+    verlauf      = [],   // Array von { rolle: 'user'|'assistant', text: '...' }
+    kontext      = {},   // { seite, paket, fehler, az, browser }
+    sprache      = 'de'
+  } = body;
+
+  // Eingabe-Validierung
+  if (!nachricht || nachricht.length < 2) {
+    return jsonResponse({ antwort: 'Bitte geben Sie Ihre Frage ein.' });
+  }
+
+  if (nachricht.length > 1000) {
+    return jsonResponse({ antwort: 'Ihre Nachricht ist zu lang. Bitte kürzen Sie sie auf das Wesentliche.' });
+  }
+
+  // Kontext-Informationen aufbereiten
+  const kontextInfo = [
+    kontext.seite   ? `Seite: ${kontext.seite}`   : '',
+    kontext.paket   ? `Paket: ${kontext.paket}`   : '',
+    kontext.fehler  ? `Fehlermeldung: ${kontext.fehler}` : '',
+    kontext.az      ? `Aktenzeichen: ${kontext.az}` : '',
+  ].filter(Boolean).join(' | ');
+
+  const systemPrompt = `Du bist der PROVA-Support-Assistent — hilfsbereit, präzise, auf Deutsch.
+
+PROVA Systems ist ein KI-gestütztes Gutachten-System für öffentlich bestellte Bausachverständige (ö.b.u.v. SV) mit:
+• KI-Diktat: Spracheingabe → automatisch §1–§5 Gutachten-Entwurf
+• §407a ZPO-Integration (Sachverständigen-Erklärung)
+• JVEG §7–§9 Rechner (Stundensatz, Fahrkosten, Schreibgebühren)
+• E-Rechnung: XRechnung 3.0 + ZUGFeRD 2.4 (nur Team-Paket)
+• Baubegleitung: Mängel-Tracking über Projektphasen (nur Team-Paket)
+• Offline-Modus: PWA, funktioniert auch ohne Internet am Ortstermin
+• Pakete: Solo (149€/Mo, 1 SV) | Team (279€/Mo, bis 5 SVs)
+
+VERHALTENSREGELN:
+• Antworten maximal 3–4 Sätze (Gutachter sind beschäftigt)
+• Bei technischen Fehlern: konkrete Schritt-für-Schritt-Anleitung
+• Bei Abrechnungsfragen: immer auf JVEG-Rechner (jveg.html) verweisen  
+• Bei Feature-Fragen zu gesperrten Features: sachlich auf Paket-Upgrade hinweisen
+• Wenn unklar: "Bitte schreiben Sie uns: kontakt@prova-systems.de"
+• Keine Spekulationen über zukünftige Features
+• Niemals: "Ich weiß es nicht" — lieber konkret weiterleiten${kontextInfo ? `\n\nAKTUELLER KONTEXT: ${kontextInfo}` : ''}`;
+
+  // Verlauf aufbereiten (max. 6 letzte Nachrichten für Kontext)
+  const verlaufMessages = (verlauf || [])
+    .slice(-6)
+    .filter(m => m && m.rolle && m.text)
+    .map(function(m) {
+      return {
+        role:    m.rolle === 'assistant' ? 'assistant' : 'user',
+        content: String(m.text).slice(0, 500)  // Länge begrenzen
+      };
+    });
+
+  const messages = [
+    { role: 'system',  content: systemPrompt },
+    ...verlaufMessages,
+    { role: 'user',    content: nachricht }
+  ];
+
+  try {
+    const result = await callOpenAI({
+      model:       'gpt-4o-mini',
+      max_tokens:  350,
+      temperature: 0.25,  // Niedrig für konsistente, faktische Antworten
+      messages
+    }, apiKey);
+
+    const antwort = result.choices?.[0]?.message?.content?.trim();
+
+    if (!antwort) {
+      return jsonResponse({
+        antwort: 'Entschuldigung, ich konnte Ihre Anfrage nicht verarbeiten. Bitte versuchen Sie es erneut oder schreiben Sie uns: kontakt@prova-systems.de'
+      });
+    }
+
+    return jsonResponse({
+      antwort,
+      model:  result.model,
+      tokens: result.usage?.total_tokens || 0
+    });
+
+  } catch (e) {
+    console.error('[Support Chat] Fehler:', e.message);
+    return jsonResponse({
+      antwort: 'Der Support-Assistent ist momentan nicht erreichbar. Bitte schreiben Sie uns direkt: kontakt@prova-systems.de'
+    });
+  }
+}

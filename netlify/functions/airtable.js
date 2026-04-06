@@ -29,6 +29,7 @@ const ALLOWED_TABLES = {
   tblwgUQgtBWckPMHp: { name: 'EINWILLIGUNGEN',    userField: 'SV_Email', readOnly: false },
   // Team-Interesse (Leads): nur schreiben
   TEAM_INTERESSE:     { name: 'TEAM_INTERESSE',    userField: null,       readOnly: false }, // Schreib-only via team-interest.js
+  PUSH_SUBSCRIPTIONS: { name: 'PUSH_SUBSCRIPTIONS', userField: 'Email', readOnly: false },
   // Kontakte: User-Filter
   tblMKmPLjRelr6Hal: { name: 'KONTAKTE',           userField: 'SV_Email', readOnly: false },
   // Textbausteine: User-Filter

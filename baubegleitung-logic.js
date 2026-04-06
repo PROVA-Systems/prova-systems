@@ -16,11 +16,6 @@ function logout(){localStorage.removeItem('prova_user');localStorage.removeItem(
   window.PROVA=window.PROVA||{};PROVA.paket=p;PROVA.isPro=['Solo','Team'].includes(p);PROVA.isEnterprise=p==='Team';
 })();
 
-/* ── Feature-Gate: nur Team ── */
-if (window.PaketGuard) {
-  PaketGuard.blockiereSeite('baubegleitung');
-}
-
 /* ─────────────────────────────────────────── */
 
 // ============================================================
@@ -395,7 +390,7 @@ function speichereProjekt() {
     var _svE = localStorage.getItem('prova_sv_email')||'';
     var _aktP = _data.projekte.find(function(p){return p.id===(_editProjektId||_data.projekte[0].id);});
     if (_svE && _aktP) {
-      ProvaError.safeFetch('/.netlify/functions/airtable',{method:'POST',headers:{'Content-Type':'application/json'},
+      fetch('/.netlify/functions/airtable',{method:'POST',headers:{'Content-Type':'application/json'},
         body:JSON.stringify({method:'POST',path:'/v0/appJ7bLlAHZoxENWE/tblyMTTdtfGQjjmc2',
           payload:{records:[{fields:{titel:'BB: '+_aktP.name,termin_typ:'Baubegleitung',
             aktenzeichen:_aktP.az||'',sv_email:_svE,notiz:_aktP.adresse||''

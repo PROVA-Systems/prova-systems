@@ -183,20 +183,6 @@
     localStorage.setItem('prova_onboarding_done', 'true');
     // Airtable-Sync: SV-Datensatz anlegen
     syncOnboardingSV();
-    // L8 Webhook: Make.com → Willkommensmail + Airtable onboarding_done=true
-    try {
-      var svp2 = JSON.parse(localStorage.getItem('prova_sv_profil') || '{}');
-      fetch('https://hook.eu1.make.com/f5hvgtyl57iegnrpcf80k9g8t3naat4l', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email:   svp2.email || localStorage.getItem('prova_sv_email') || '',
-          vorname: svp2.vorname || localStorage.getItem('prova_sv_vorname') || '',
-          paket:   localStorage.getItem('prova_paket') || 'Solo',
-          timestamp: new Date().toISOString(),
-        })
-      }).catch(function() {}); // fire-and-forget
-    } catch(e) {}
   }
 
   async function syncOnboardingSV() {

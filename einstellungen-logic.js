@@ -18,10 +18,10 @@ var appUrl=paket==='Team'?'app-enterprise.html':paket==='Solo'?'app-pro.html':'a
 if(!localStorage.getItem('prova_user')){window.location.href='app-login.html';return;}
 
 /* ── LOGOUT ── */
-window.logout = function(){
-  localStorage.removeItem('prova_user');
-  localStorage.removeItem('prova_sv_email');
-  window.location.href='app-login.html';
+window.logout = function() {
+  if (typeof provaLogout === 'function') { provaLogout('app-login.html'); return; }
+  try { Object.keys(localStorage).filter(function(k){ return k.startsWith('prova_'); }).forEach(function(k){ localStorage.removeItem(k); }); sessionStorage.clear(); } catch(e){}
+  window.location.replace('app-login.html');
 };
 
 /* ── SECTION SWITCHER ── */

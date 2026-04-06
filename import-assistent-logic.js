@@ -530,8 +530,7 @@ function genId(){return Date.now().toString(36)+Math.random().toString(36).slice
 function escH(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function formatBytes(b){if(b<1024)return b+' B';if(b<1024*1024)return (b/1024).toFixed(0)+' KB';return (b/(1024*1024)).toFixed(1)+' MB';}
 
-window.showToast = window.showToast || window.zeigToast || function(m){ alert(m); };,280);},3500);
-}
+window.showToast = window.showToast || window.zeigToast || function(m){ alert(m); };
 
 // ============================================================
 // INIT

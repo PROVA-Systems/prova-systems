@@ -11,12 +11,6 @@
   <link rel="apple-touch-icon" href="/icons/icon-192.png">
   <meta name="viewport" content="width=device-width,initial-scale=1, viewport-fit=cover">
 <title>§6 Fachurteil · PROVA</title>
-<script src="prova-preise.js"></script>
-<script src="auth-guard-v2.js"></script>
-<script src="theme.js"></script>
-<script src="trial-guard.js"></script>
-<script src="nav.js" defer></script>
-
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
 :root{
@@ -379,6 +373,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-ui);min-heigh
 .ki-normen-chips{display:flex;gap:6px;flex-wrap:wrap;}
 .ki-normen-chip{padding:4px 10px;border-radius:10px;background:rgba(79,142,247,.08);border:1px solid rgba(79,142,247,.2);color:var(--accent,#4f8ef7);font-size:10px;font-weight:600;cursor:pointer;transition:all .12s;display:flex;align-items:center;gap:4px;}
 .ki-normen-chip:hover{background:rgba(79,142,247,.18);}
+
 
   /* ═══ NORMEN SLIDE PANEL ═══ */
   .normen-panel{position:fixed;top:0;right:-380px;width:360px;height:100vh;background:var(--surface);border-left:1px solid var(--border2);z-index:500;transition:right .25s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;box-shadow:-4px 0 24px rgba(0,0,0,.3);}
@@ -817,6 +812,12 @@ body.focus-mode .focus-toggle-btn { background:rgba(79,142,247,.12); color:var(-
 .autosave-hint{font-size:10px;color:var(--text3);padding:8px 14px;display:flex;align-items:center;gap:5px;}
 .autosave-dot{width:6px;height:6px;border-radius:50%;background:var(--green);}
 </style>
+<script src="prova-preise.js"></script>
+<script src="paket-guard.js"></script>
+<script src="auth-guard.js"></script>
+<script src="theme.js"></script>
+<script src="trial-guard.js"></script>
+<script src="nav.js" defer></script>
 <link rel="stylesheet" href="mobile.css">
 
 <link rel="icon" type="image/svg+xml" href="/icons/icon-192.svg">
@@ -1010,6 +1011,9 @@ body.focus-mode .focus-toggle-btn { background:rgba(79,142,247,.12); color:var(-
                 oninput="onInputA()" rows="14"
                 style="position:relative;z-index:2;background:transparent;"></textarea>
             </div>
+    <!-- §407a Rechtsprüfung (N3/N4) -->
+    <div id="rp-container" style="margin-top:12px;"></div>
+
             
               <!-- PROVA-Vorschlag Box -->
               <div class="prova-vorschlag" id="ki-vorschlag-box">
@@ -1271,14 +1275,27 @@ body.focus-mode .focus-toggle-btn { background:rgba(79,142,247,.12); color:var(-
 
 <div class="toast" id="toast"></div>
 
-<script src="auto-save.js" defer></script>
+
+  <script src="sw-register.js" defer></script>
+  <script src="auto-save.js" defer></script>
   <script src="auftragstyp.js"></script>
-  <script src="prova-context.js"></script>
-  <script src="prova-error-handler.js"></script>
   <script src="normen-logic.js" defer></script>
   <script src="stellungnahme-logic.js" defer></script>
   <script src="global-search.js" defer></script>
-  <script src="support-chat.js" defer></script>
-  <script src="sw-register.js" defer></script>
+<script src="prova-context.js" defer></script>
+<script src="prova-error-handler.js" defer></script>
+  <script src="ki-lernpool.js" defer></script>
+  <script src="rechtspruefung.js" defer></script>
+
+  <script defer>
+    document.addEventListener('DOMContentLoaded', function() {
+      if (typeof Rechtspruefung !== 'undefined') {
+        Rechtspruefung.init({
+          containerId: 'rp-container',
+          textareaId: 'svTextA'
+        });
+      }
+    });
+  </script>
 </body>
 </html>

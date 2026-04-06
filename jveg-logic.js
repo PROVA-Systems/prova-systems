@@ -11,18 +11,15 @@ if (!window.showToast && window.zeigToast) window.showToast = window.zeigToast;
 (function(){
 'use strict';
 
-/* ─── PROVA.ctx (DRY — prova-context.js) ─── */
-var paket = window.PROVA ? PROVA.ctx.paket : (localStorage.getItem('prova_paket') || 'Solo');
-var pc    = window.PROVA ? PROVA.ctx.paketColor : ({'Solo':'#4f8ef7','Team':'#a78bfa'}[paket] || '#4f8ef7');
-var AT_BASE = window.PROVA ? PROVA.AT.BASE : 'appJ7bLlAHZoxENWE';
-var appUrl  = window.PROVA ? PROVA.ctx.appUrl : (paket === 'Team' ? 'app.html' : 'app.html');
-/* Badge-Hiding: erledigt von prova-context.js */
-
+/* ─── SIDEBAR ─── */
+var paket=localStorage.getItem('prova_paket')||'Solo';
+var pc={'Solo':'#4f8ef7','Team':'#a78bfa'}[paket]||'#4f8ef7';
 (function(){
-   // Paket steht in Sidebar unten
-  
+  var el=document.getElementById('topbar-paket-badge');
+  if(el){el.style.display='none';} // Paket steht in Sidebar unten
+  var appUrl=paket==='Team'?'app-enterprise.html':paket==='Solo'?'app-pro.html':'app-starter.html';
 })();
-/* ─── AUTH via auth-guard-v2.js (läuft synchron im Head) ─── */
+if(!localStorage.getItem('prova_user')){window.location.href='app-login.html';return;}
 
 /* ─── BERECHNUNG ─── */
 var KM_SATZ=0.42;
@@ -278,7 +275,7 @@ async function supSendModal(){
       body:JSON.stringify({
         betreff:b,nachricht:n,
         sv_email:localStorage.getItem('prova_sv_email')||'',
-        paket:paket,
+        paket:localStorage.getItem('prova_paket')||'Solo',
         seite:window.location.pathname,
         ts:new Date().toISOString()
       })

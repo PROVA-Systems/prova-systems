@@ -85,9 +85,9 @@ const AIRTABLE_SV_TABLE = 'tbladqEQT3tmx4DIB';
 // Gutachten-Output-Templates (formulare/) — Auswahl in Schritt 3, S3/PDFMonkey
 const GUTACHTEN_VORLAGEN = [
   { id: 'standard',        label: 'Standard-Gutachten',   file: 'vorlage-01-standard.html' },
-  { id: 'kurzgutachten',   label: 'Kurzgutachten',        file: 'vorlage-02-kurzapp.html' },
+  { id: 'kurzgutachten',   label: 'Kurzgutachten',        file: 'vorlage-02-kurzgutachten.html' },
   { id: 'beweissicherung', label: 'Beweissicherung',      file: 'vorlage-03-beweissicherung.html' },
-  { id: 'gericht',         label: 'Gerichtsgutachten',    file: 'vorlage-04-gerichtsapp.html', enterpriseOnly: true },
+  { id: 'gericht',         label: 'Gerichtsgutachten',    file: 'vorlage-04-gerichtsgutachten.html', enterpriseOnly: true },
   { id: 'brand',           label: 'Brandschaden',         file: 'vorlage-05-brandschaden.html' },
   { id: 'feuchte',         label: 'Feuchte/Schimmel',    file: 'vorlage-06-feuchteschimmel.html' },
   { id: 'elementar',       label: 'Elementarschaden',    file: 'vorlage-07-elementarschaden.html' },
@@ -176,7 +176,7 @@ window.SV_PROFIL = null;
 window.SV_RECORD_ID = null;
 
 async function airtableProxy(method, path, body = null) {
-  const res = await ProvaError.safeFetch('/.netlify/functions/airtable', {
+  const res = await fetch('/.netlify/functions/airtable', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ method, path, body })
@@ -2409,7 +2409,7 @@ window.PROVA_AUDIT = (function() {
     if (paket === 'Solo') return; // Starter nur localStorage
     
     try {
-      var res = await ProvaError.safeFetch('/.netlify/functions/airtable', {
+      var res = await fetch('/.netlify/functions/airtable', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({
@@ -3303,7 +3303,7 @@ async function ladeGutachtenListe() {
   if (tbody) tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--gray-400);padding:2rem">Wird geladen…</td></tr>';
   try {
     const path = `/v0/${AIRTABLE_BASE}/${AIRTABLE_TABLE}?maxRecords=100&sort[0][field]=Timestamp&sort[0][direction]=desc`;
-    const res = await ProvaError.safeFetch('/.netlify/functions/airtable', {
+    const res = await fetch('/.netlify/functions/airtable', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ method: 'GET', path })
@@ -3371,7 +3371,7 @@ async function ladeArchivDaten() {
 
   try {
     const path = `/v0/${AIRTABLE_BASE}/${AIRTABLE_TABLE}?maxRecords=500&sort[0][field]=Timestamp&sort[0][direction]=desc`;
-    const res = await ProvaError.safeFetch('/.netlify/functions/airtable', {
+    const res = await fetch('/.netlify/functions/airtable', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ method: 'GET', path })

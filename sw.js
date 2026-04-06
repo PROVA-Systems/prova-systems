@@ -1,11 +1,11 @@
 /* ============================================================
-   PROVA Systems — Service Worker v51
+   PROVA Systems — Service Worker v57
    Strategie: Network-First für HTML (kein Zwischenbild mehr!)
               Cache-First für Assets (Fonts, JS, CSS)
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v51';
+const CACHE_VERSION = 'prova-v57';
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
@@ -34,6 +34,15 @@ const APP_SHELL = [
   '/nav.js',
   '/theme.js',
   '/trial-guard.js',
+  '/prova-preise.js',
+  '/paket-guard.js',
+  '/einstellungen-v2.html',
+  '/benachrichtigungen-v2.html',
+  '/ortstermin-modus.html',
+  '/frist-guard.js',
+  '/honorar-tracker.js',
+  '/ki-lernpool.js',
+  '/rechtspruefung.js',
 ];
 
 self.addEventListener('install', event => {

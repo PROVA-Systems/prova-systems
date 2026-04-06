@@ -171,9 +171,9 @@ const PROVASearch = {
 
   _searchCases(q) {
     try {
-      // Aus localStorage bekannte Fälle + prova_faelle_cache
+      // 1. Lokaler Cache (sofort)
       const cases = JSON.parse(localStorage.getItem('prova_faelle_cache') || '[]');
-      return cases.filter(c =>
+      const local = cases.filter(c =>
         c.az?.toLowerCase().includes(q) ||
         c.auftraggeber?.toLowerCase().includes(q) ||
         c.adresse?.toLowerCase().includes(q)
@@ -182,7 +182,65 @@ const PROVASearch = {
         href: 'akte.html?az=' + encodeURIComponent(c.az || ''),
         sub: [c.auftraggeber, c.adresse].filter(Boolean).join(' · ')
       }));
+      // 2. Airtable-Suche im Hintergrund (mit Debounce)
+      this._searchAirtable(q);
+      return local;
     } catch(e) { return []; }
+  },
+
+  _atSearchTimer: null,
+  _atSearchQ: '',
+
+  _searchAirtable(q) {
+    // Debounce: 400ms warten, dann suchen
+    clearTimeout(this._atSearchTimer);
+    this._atSearchQ = q;
+    this._atSearchTimer = setTimeout(() => {
+      if (q.length < 2 || q !== this._atSearchQ) return;
+      const svEmail = localStorage.getItem('prova_sv_email') || '';
+      if (!svEmail) return;
+      const formula = encodeURIComponent(
+        `AND(OR(FIND("${q}",LOWER({Aktenzeichen})),FIND("${q}",LOWER({Auftraggeber})),FIND("${q}",LOWER({Adresse}))),{SV_Email}="${svEmail}")`
+      );
+      fetch('/.netlify/functions/airtable', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          method: 'GET',
+          path: `/v0/appJ7bLlAHZoxENWE/tblSxV8bsXwd1pwa0?filterByFormula=${formula}&maxRecords=5&fields[]=Aktenzeichen&fields[]=Auftraggeber&fields[]=Adresse&fields[]=Schadenart`
+        })
+      }).then(r => r.json()).then(data => {
+        if (!data.records || !data.records.length) return;
+        // Nur anzeigen wenn Suche noch aktiv
+        if (q !== this._q) return;
+        const atResults = data.records.map(r => ({
+          type: 'case', label: r.fields.Aktenzeichen || '—', icon: '🔍',
+          href: 'akte.html?az=' + encodeURIComponent(r.fields.Aktenzeichen || ''),
+          sub: [r.fields.Auftraggeber, r.fields.Schadenart].filter(Boolean).join(' · ') + ' (Airtable)'
+        }));
+        // Ergebnisse ergänzen (doppelte entfernen)
+        const existing = document.querySelectorAll('.ps-item[data-href]');
+        const existingHrefs = [...existing].map(e => e.dataset.href);
+        const neu = atResults.filter(r => !existingHrefs.includes(r.href));
+        if (!neu.length) return;
+        const container = document.getElementById('prova-search-results');
+        if (!container) return;
+        // Trennlinie + neue Ergebnisse
+        const div = document.createElement('div');
+        div.className = 'ps-group';
+        div.textContent = 'Aus Airtable';
+        container.appendChild(div);
+        neu.forEach(r => {
+          const item = document.createElement('div');
+          item.className = 'ps-item';
+          item.dataset.href = r.href;
+          item.tabIndex = -1;
+          item.innerHTML = `<div class="ps-icon">${r.icon}</div><div style="flex:1;min-width:0"><div class="ps-label">${r.label}</div>${r.sub ? `<div class="ps-sub">${r.sub}</div>` : ''}</div><span class="ps-type">Fall</span>`;
+          item.addEventListener('click', () => { window.location.href = r.href; });
+          container.appendChild(item);
+        });
+      }).catch(() => {});
+    }, 400);
   },
 
   _activeIdx: -1,

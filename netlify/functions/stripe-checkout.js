@@ -5,14 +5,17 @@
 // ══════════════════════════════════════════════════
 
 const PRICE_MAP = {
-  // Neue Pakete: Solo / Team
-  Solo:       { abo: 'price_1TEHG68d1CNm0HvYFNx99Tq6', onboarding: 24900  }, // 149€/Mo, Onboarding 249€
-  Team:       { abo: 'price_1TEHH68d1CNm0HvYLeG1Or7T', onboarding: 59900  }, // 349€/Mo, Onboarding 599€
+  // Pakete: Solo / Team — Onboarding kostenlos (entfernt April 2026)
+  Solo:       { abo: 'price_1TEHG68d1CNm0HvYFNx99Tq6' }, // 149€/Mo
+  Team:       { abo: 'price_1TEHH68d1CNm0HvYLeG1Or7T' }, // 279€/Mo
   // Backward-Kompatibilität (alte Paketnamen → neue Preise)
-  Starter:    { abo: 'price_1TEHG68d1CNm0HvYFNx99Tq6', onboarding: 24900  },
-  Pro:        { abo: 'price_1TEHG68d1CNm0HvYFNx99Tq6', onboarding: 24900  },
-  Enterprise: { abo: 'price_1TEHH68d1CNm0HvYLeG1Or7T', onboarding: 59900  },
+  Starter:    { abo: 'price_1TEHG68d1CNm0HvYFNx99Tq6' },
+  Pro:        { abo: 'price_1TEHG68d1CNm0HvYFNx99Tq6' },
+  Enterprise: { abo: 'price_1TEHH68d1CNm0HvYLeG1Or7T' },
 };
+
+// L3 Webhook — Stripe Aktivierung → Airtable Status=Aktiv + Bestätigungsmail
+const L3_WEBHOOK = 'https://hook.eu1.make.com/u6otau1k1au199kv8ibbb37z0dhl40wv';
 
 // WICHTIG: Neue Stripe Price-Objekte in Stripe Dashboard anlegen:
 // Solo: 149 €/Monat (recurring) → price_id hier eintragen
@@ -60,21 +63,10 @@ exports.handler = async (event) => {
       });
     }
 
-    // Line Items: Abo + Onboarding als einmalige Gebühr
+    // Line Items: nur Abo (Onboarding kostenlos seit April 2026)
     const line_items = [
       {
         price: prices.abo,
-        quantity: 1,
-      },
-      {
-        price_data: {
-          currency: 'eur',
-          product_data: {
-            name: `PROVA ${paketNormalized} — Persönliches Einführungsgespräch`,
-            description: 'Einmalige Onboarding-Gebühr inkl. Einrichtung Ihres Büroprofils',
-          },
-          unit_amount: prices.onboarding,
-        },
         quantity: 1,
       },
     ];
@@ -103,6 +95,22 @@ exports.handler = async (event) => {
       customer_email: customer.email ? undefined : email,
       allow_promotion_codes: true,
     });
+
+    // L3 Webhook: Airtable Status=Aktiv setzen + Bestätigungsmail
+    try {
+      await fetch(L3_WEBHOOK, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email:                   email,
+          paket:                   paketNormalized,
+          stripe_customer_id:      customer.id,
+          stripe_subscription_id:  '', // wird nach Zahlung via Stripe Webhook gesetzt
+        }),
+      });
+    } catch (e) {
+      console.warn('[L3] Webhook-Fehler (nicht kritisch):', e.message);
+    }
 
     return {
       statusCode: 200,

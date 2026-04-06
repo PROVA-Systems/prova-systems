@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Auftragsverarbeitungsvertrag (AVV) — PROVA-Systems</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Source+Serif+4:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --navy:#0B1628; --navy-mid:#112240; --navy-light:#1A3356;
+      --accent:#4A90D9; --accent-dark:#2563EB;
+      --success:#10B981; --warning:#F59E0B;
+      --gray-100:#E9EEF5; --gray-200:#D1D9E6;
+      --gray-300:#A8B5C9; --gray-400:#7A8CA3; --gray-500:#5A6D84; --gray-600:#3D5166;
+      --font-sans:'DM Sans',sans-serif;
+      --font-serif:'Source Serif 4',serif;
+      --glass:rgba(255,255,255,0.04);
+      --glass-border:rgba(255,255,255,0.08);
+    }
+    *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+    body {
+      font-family:var(--font-sans);
+      background:var(--navy);
+      color:#C8D6E8;
+      line-height:1.8;
+    }
+
+    /* ---- TOP NAV ---- */
+    .legal-nav {
+      background:var(--navy-mid);
+      border-bottom:1px solid var(--glass-border);
+      padding:14px 48px;
+      display:flex; align-items:center; justify-content:space-between;
+      position:sticky; top:0; z-index:50;
+    }
+    .legal-nav a { color:var(--gray-400); text-decoration:none; font-size:0.8rem; transition:color 0.15s; }
+    .legal-nav a:hover { color:#fff; }
+    .legal-nav .logo { font-weight:800; font-size:1rem; color:#fff; letter-spacing:-0.02em; }
+    .legal-nav .logo span { color:var(--accent); }
+    .legal-nav .nav-links { display:flex; gap:20px; align-items:center; }
+
+    /* ---- CONTAINER ---- */
+    .legal-container { max-width:820px; margin:48px auto; padding:0 24px 80px; }
+
+    /* ---- HEADER ---- */
+    .legal-header {
+      background:linear-gradient(135deg,var(--navy-light),#1A4070);
+      border:1px solid var(--glass-border);
+      border-radius:16px; padding:40px 48px; color:#fff; margin-bottom:40px;
+    }
+    .legal-header .label {
+      font-size:0.68rem; font-weight:700; text-transform:uppercase;
+      letter-spacing:0.12em; color:rgba(255,255,255,0.45); margin-bottom:8px;
+    }
+    .legal-header h1 { font-size:2rem; font-weight:800; margin-bottom:8px; line-height:1.2; }
+    .legal-header .meta { font-size:0.8rem; color:rgba(255,255,255,0.45); }
+    .legal-header .badges {
+      display:flex; gap:8px; flex-wrap:wrap; margin-top:14px;
+    }
+    .badge-legal {
+      display:inline-flex; align-items:center; gap:5px;
+      padding:4px 12px; border-radius:20px;
+      font-size:0.68rem; font-weight:700;
+      background:rgba(74,144,217,0.18); color:#93C5FD;
+      border:1px solid rgba(74,144,217,0.3);
+    }
+
+    /* ---- TOC ---- */
+    .toc-card {
+      background:var(--navy-mid); border:1px solid var(--glass-border);
+      border-radius:12px; padding:22px 28px; margin-bottom:36px;
+    }
+    .toc-title { font-size:0.8rem; font-weight:700; color:#fff; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:12px; }
+    .toc-list { list-style:none; display:grid; grid-template-columns:1fr 1fr; gap:4px; }
+    .toc-list li a {
+      font-size:0.8rem; color:var(--accent); text-decoration:none;
+      padding:3px 0; display:block; transition:color 0.15s;
+    }
+    .toc-list li a:hover { color:#93C5FD; }
+    @media (max-width:600px) { .toc-list { grid-template-columns:1fr; } }
+
+    /* ---- SECTIONS ---- */
+    .legal-section { margin-bottom:36px; }
+    .legal-section h2 {
+      font-size:1rem; font-weight:800; color:#fff;
+      padding-bottom:10px; border-bottom:1px solid var(--glass-border);
+      margin-bottom:16px; display:flex; align-items:center; gap:10px;
+    }
+    .legal-section h2 .sec-num {
+      display:inline-flex; align-items:center; justify-content:center;
+      width:26px; height:26px; border-radius:50%;
+      background:rgba(74,144,217,0.2); color:var(--accent);
+      font-size:0.72rem; font-weight:800; flex-shrink:0;
+    }
+    .legal-section h3 {
+      font-size:0.875rem; font-weight:700; color:#E2E8F0;
+      margin:14px 0 8px;
+    }
+    .legal-section p { font-size:0.875rem; color:var(--gray-300); margin-bottom:10px; line-height:1.85; }
+    .legal-section ul, .legal-section ol {
+      margin:8px 0 12px 20px; font-size:0.875rem; color:var(--gray-300);
+    }
+    .legal-section li { margin-bottom:5px; line-height:1.7; }
+    .legal-section strong { color:#E2E8F0; font-weight:700; }
+
+    /* ---- INFO BOX ---- */
+    .info-box {
+      background:rgba(74,144,217,0.07); border:1px solid rgba(74,144,217,0.2);
+      border-left:3px solid var(--accent);
+      border-radius:8px; padding:14px 18px; margin:16px 0;
+      font-size:0.83rem; color:var(--gray-300); line-height:1.7;
+    }
+    .info-box strong { color:#93C5FD; }
+    .warn-box {
+      background:rgba(245,158,11,0.07); border:1px solid rgba(245,158,11,0.2);
+      border-left:3px solid var(--warning);
+      border-radius:8px; padding:14px 18px; margin:16px 0;
+      font-size:0.83rem; color:var(--gray-300); line-height:1.7;
+    }
+    .warn-box strong { color:#FCD34D; }
+
+    /* ---- SUBPROCESSORS TABLE ---- */
+    .sp-table { width:100%; border-collapse:collapse; margin:16px 0; }
+    .sp-table th {
+      background:var(--navy-light); color:#fff; padding:10px 14px;
+      text-align:left; font-size:0.75rem; font-weight:700;
+      text-transform:uppercase; letter-spacing:0.05em;
+    }
+    .sp-table td {
+      padding:11px 14px; font-size:0.82rem; color:var(--gray-300);
+      border-bottom:1px solid rgba(255,255,255,0.05); vertical-align:top;
+    }
+    .sp-table tr:last-child td { border-bottom:none; }
+    .sp-table tr:hover td { background:var(--glass); }
+    .sp-badge {
+      display:inline-block; padding:2px 8px; border-radius:4px;
+      font-size:0.68rem; font-weight:700;
+    }
+    .sp-badge.eu { background:rgba(16,185,129,0.15); color:#34D399; }
+    .sp-badge.us { background:rgba(245,158,11,0.15); color:#FCD34D; }
+
+    /* ---- SIGNATURE BLOCK ---- */
+    .signature-block {
+      background:var(--navy-mid); border:1px solid var(--glass-border);
+      border-radius:12px; padding:28px 32px; margin-top:40px;
+    }
+    .signature-block h3 { font-size:0.875rem; font-weight:700; color:#fff; margin-bottom:16px; }
+    .sig-grid { display:grid; grid-template-columns:1fr 1fr; gap:24px; }
+    .sig-party { }
+    .sig-party-title { font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:var(--gray-500); margin-bottom:10px; }
+    .sig-party p { font-size:0.82rem; color:var(--gray-300); line-height:1.8; }
+    .sig-line {
+      height:1px; background:rgba(255,255,255,0.15);
+      margin:20px 0 6px;
+    }
+    .sig-label { font-size:0.72rem; color:var(--gray-500); }
+    @media (max-width:600px) { .sig-grid { grid-template-columns:1fr; } }
+
+    /* ---- PRINT BTN ---- */
+    .print-btn {
+      display:inline-flex; align-items:center; gap:6px;
+      padding:9px 18px; border-radius:8px;
+      background:var(--navy-light); color:#fff;
+      border:1px solid var(--glass-border);
+      font-size:0.8rem; font-weight:600; cursor:pointer;
+      font-family:var(--font-sans); transition:background 0.15s;
+      text-decoration:none;
+    }
+    .print-btn:hover { background:var(--accent-dark); }
+
+    @media print { .legal-nav, .print-btn { display:none; } body { background:#fff; color:#1E293B; } }
+    @media (max-width:600px) { .legal-nav { padding:12px 20px; } .legal-header { padding:28px 24px; } .legal-container { padding:0 16px 60px; } }
+  </style>
+
+</head>
+<body>
+
+<!-- TOP NAV -->
+<nav class="legal-nav">
+  <a href="../index.html" class="logo">PRO<span>VA</span></a>
+  <div class="nav-links">
+    <a href="agb.html">AGB</a>
+    <a href="datenschutz.html">Datenschutz</a>
+    <a href="impressum.html">Impressum</a>
+    <a href="#" onclick="window.print()" class="print-btn">🖨 Drucken / PDF</a>
+  </div>
+</nav>
+
+<!-- MAIN CONTENT -->
+<div class="legal-container">
+
+  <!-- HEADER -->
+  <div class="legal-header">
+    <div class="label">Rechtsdokument · DSGVO Art. 28</div>
+    <h1>Auftragsverarbeitungsvertrag (AVV)</h1>
+    <div class="meta">Version 1.2 · Stand: März 2026 · Gilt für alle PROVA-Pakete</div>
+    <div class="badges">
+      <span class="badge-legal">📋 DSGVO Art. 28</span>
+      <span class="badge-legal">🇩🇪 Deutsches Recht</span>
+      <span class="badge-legal">🔒 DSGVO-konform</span>
+      <span class="badge-legal">✅ Rechtsverbindlich</span>
+    </div>
+  </div>
+
+  <!-- TOC -->
+  <div class="toc-card">
+    <div class="toc-title">Inhaltsverzeichnis</div>
+    <ul class="toc-list">
+      <li><a href="#praambel">Präambel</a></li>
+      <li><a href="#par1">§1 Gegenstand und Dauer</a></li>
+      <li><a href="#par2">§2 Art und Zweck der Verarbeitung</a></li>
+      <li><a href="#par3">§3 Pflichten des Auftragnehmers</a></li>
+      <li><a href="#par4">§4 Pflichten des Auftraggebers</a></li>
+      <li><a href="#par5">§5 Unterauftragsverarbeitung</a></li>
+      <li><a href="#par6">§6 Technische und organisatorische Maßnahmen</a></li>
+      <li><a href="#par7">§7 Betroffenenrechte</a></li>
+      <li><a href="#par8">§8 Datenpannen und Sicherheitsverletzungen</a></li>
+      <li><a href="#par9">§9 Löschung und Rückgabe</a></li>
+      <li><a href="#par10">§10 Kontrollrechte</a></li>
+      <li><a href="#par11">§11 Haftung</a></li>
+      <li><a href="#par12">§12 Schlussbestimmungen</a></li>
+      <li><a href="#anlage1">Anlage 1: Verarbeitungstätigkeiten</a></li>
+      <li><a href="#anlage2">Anlage 2: Unterauftragsverarbeiter</a></li>
+      <li><a href="#anlage3">Anlage 3: TOMs</a></li>
+    </ul>
+  </div>
+
+  <!-- PRÄAMBEL -->
+  <div class="legal-section" id="praambel">
+    <h2><span class="sec-num">§</span> Präambel</h2>
+    <p>Dieser Auftragsverarbeitungsvertrag (nachfolgend „AVV") wird geschlossen zwischen dem Nutzer der PROVA-Plattform (nachfolgend „<strong>Auftraggeber</strong>" oder „<strong>Verantwortlicher</strong>") und</p>
+    <div class="info-box">
+      <strong>PROVA-Systems GmbH</strong> (nachfolgend „<strong>Auftragnehmer</strong>" oder „<strong>Auftragsverarbeiter</strong>")<br>
+      Musterstraße 1 · 10115 Berlin · Deutschland<br>
+      E-Mail: <a href="mailto:kontakt@prova-systems.de">kontakt@prova-systems.de</a> · Telefon: +49 30 123 456
+    </div>
+    <p>Der AVV konkretisiert die datenschutzrechtlichen Pflichten und Rechte der Parteien gemäß Art. 28 der Verordnung (EU) 2016/679 (Datenschutz-Grundverordnung, „DSGVO") und ergänzt den zwischen den Parteien abgeschlossenen Hauptvertrag (Nutzungsvertrag / AGB der PROVA-Plattform).</p>
+    <p>Im Rahmen der Nutzung der PROVA-Plattform verarbeitet der Auftragnehmer personenbezogene Daten ausschließlich im Auftrag und nach Weisung des Auftraggebers. Der Auftraggeber bleibt jederzeit der datenschutzrechtlich Verantwortliche i.S.d. Art. 4 Nr. 7 DSGVO.</p>
+  </div>
+
+  <!-- §1 -->
+  <div class="legal-section" id="par1">
+    <h2><span class="sec-num">1</span> Gegenstand und Dauer der Auftragsverarbeitung</h2>
+    <h3>1.1 Gegenstand</h3>
+    <p>Gegenstand des AVV ist die Verarbeitung personenbezogener Daten durch den Auftragnehmer im Rahmen der Erbringung der vertraglich vereinbarten Leistungen der PROVA-Plattform, insbesondere:</p>
+    <ul>
+      <li>Erstellung und Verwaltung von KI-gestützten Gutachten (Sachverständigengutachten)</li>
+      <li>Verarbeitung von Sprachdiktaten und Audiodaten zur KI-Transkription (Whisper API, OpenAI Inc., USA) — nur nach ausdrücklicher Einwilligung des Nutzers; Audiodaten werden ausschließlich zur Transkription übermittelt und nicht dauerhaft bei OpenAI gespeichert</li>
+      <li>Hosting und Speicherung von Gutachtendaten, Dokumenten und Nutzerdaten</li>
+      <li>Bereitstellung von Analyse- und Reporting-Funktionen (Analytics-Dashboard)</li>
+      <li>Versendung von Gutachten und Freigabe-Links an Dritte</li>
+      <li>Verwaltung von Nutzerprofilen und Teamzugängen</li>
+    </ul>
+    <h3>1.2 Dauer</h3>
+    <p>Der AVV gilt für die Dauer des Hauptvertrags (Nutzungsvertrag). Bei Beendigung des Hauptvertrags gilt dieser AVV fort, bis der Auftragnehmer alle personenbezogenen Daten des Auftraggebers gelöscht oder zurückgegeben hat (vgl. §9).</p>
+  </div>
+
+  <!-- §2 -->
+  <div class="legal-section" id="par2">
+    <h2><span class="sec-num">2</span> Art, Umfang und Zweck der Verarbeitung</h2>
+    <h3>2.1 Art der Verarbeitung</h3>
+    <p>Der Auftragnehmer führt im Auftrag des Auftraggebers folgende Verarbeitungstätigkeiten durch: Erhebung, Speicherung, Übermittlung, Verarbeitung, Analyse, Darstellung und Löschung personenbezogener Daten.</p>
+    <h3>2.2 Betroffene Personengruppen</h3>
+    <ul>
+      <li><strong>Nutzer der Plattform:</strong> Sachverständige, Gutachter, Teammitglieder</li>
+      <li><strong>Kunden des Auftraggebers:</strong> Versicherungsgesellschaften, Auftraggeber von Gutachten, Geschädigte</li>
+      <li><strong>Dritte:</strong> Personen, die in Gutachten erwähnt werden (z.B. Versicherungsnehmer, Eigentümer)</li>
+    </ul>
+    <h3>2.3 Kategorien personenbezogener Daten</h3>
+    <ul>
+      <li>Stammdaten (Name, Adresse, Kontaktdaten)</li>
+      <li>Professionelle Daten (Berufsbezeichnung, Qualifikationen, Zertifikate)</li>
+      <li>Gutachtendaten (Schadensbeschreibungen, Kostenermittlungen, Fotos)</li>
+      <li>Audiodaten (Sprachdiktate, Aufnahmen) — werden ausschließlich zur Transkription an OpenAI Whisper API übertragen; keine Speicherung nach Abschluss der Transkription; Einwilligung des Nutzers wird vor erster Nutzung eingeholt</li>
+      <li>Authentifizierungsdaten (E-Mail, verschlüsselte Passwörter)</li>
+      <li>Nutzungsdaten (Log-Daten, Analytics, Geräteinformationen)</li>
+      <li>Finanzdaten (Rechnungsadressen, Zahlungsinformationen via Stripe)</li>
+    </ul>
+    <h3>2.4 Zweck der Verarbeitung</h3>
+    <p>Die Verarbeitung dient ausschließlich der Erbringung der vertraglich vereinbarten Leistungen der PROVA-Plattform. Eine Verarbeitung für eigene Zwecke des Auftragnehmers ist ausgeschlossen, soweit nicht eine gesetzliche Pflicht zur Verarbeitung besteht.</p>
+  </div>
+
+  <!-- §3 -->
+  <div class="legal-section" id="par3">
+    <h2><span class="sec-num">3</span> Pflichten des Auftragnehmers</h2>
+    <h3>3.1 Weisungsgebundenheit</h3>
+    <p>Der Auftragnehmer verarbeitet personenbezogene Daten ausschließlich auf dokumentierte Weisung des Auftraggebers. Der Hauptvertrag sowie dieser AVV gelten als solche dokumentierte Weisungen. Sollte der Auftragnehmer der Auffassung sein, dass eine Weisung gegen die DSGVO oder sonstige datenschutzrechtliche Vorschriften verstößt, teilt er dies dem Auftraggeber unverzüglich mit.</p>
+    <h3>3.2 Vertraulichkeit</h3>
+    <p>Der Auftragnehmer stellt sicher, dass sich alle zur Verarbeitung der personenbezogenen Daten befugten Personen zur Vertraulichkeit verpflichtet haben oder einer angemessenen gesetzlichen Verschwiegenheitspflicht unterliegen.</p>
+    <h3>3.3 Technische und organisatorische Maßnahmen</h3>
+    <p>Der Auftragnehmer trifft alle erforderlichen Maßnahmen gemäß Art. 32 DSGVO und den in Anlage 3 dieses AVV aufgeführten technischen und organisatorischen Maßnahmen (TOMs).</p>
+    <h3>3.4 Datenschutzbeauftragter</h3>
+    <p>Der Auftragnehmer hat einen betrieblichen Datenschutzbeauftragten benannt, erreichbar unter: <strong><a href="mailto:kontakt@prova-systems.de">kontakt@prova-systems.de</a></strong></p>
+    <h3>3.5 Unterstützungspflicht</h3>
+    <p>Der Auftragnehmer unterstützt den Auftraggeber bei der Erfüllung seiner Pflichten aus Art. 32–36 DSGVO (Datensicherheit, Datenpannen, Datenschutz-Folgenabschätzung, Konsultation der Aufsichtsbehörde) sowie bei der Beantwortung von Betroffenenanfragen.</p>
+  </div>
+
+  <!-- §4 -->
+  <div class="legal-section" id="par4">
+    
+    <h3>3.6 Besondere Pflichten bei Audiodaten (Sprachdiktat)</h3>
+    <p>Werden Sprachdiktate über die PROVA-Diktierfunktion erstellt, gilt folgendes:</p>
+    <ul>
+      <li>Der Auftragnehmer (PROVA) holt vor der ersten Nutzung der Diktierfunktion eine ausdrückliche Einwilligung des Nutzers gemäß Art. 6 Abs. 1 lit. a DSGVO ein.</li>
+      <li>Audiodaten werden ausschließlich zur Transkription an die OpenAI Whisper API (USA) übermittelt und nicht dauerhaft gespeichert.</li>
+      <li>Der Nutzer kann die Diktierfunktion jederzeit deaktivieren; bestehende Transkripte bleiben erhalten.</li>
+      <li>Die Übermittlung in die USA erfolgt auf Basis von EU-Standardvertragsklauseln (EU-SCCs) gemäß Art. 46 DSGVO.</li>
+      <li>Der Auftraggeber informiert betroffene Personen (Schadensgutachten-Parteien) über die mögliche Verarbeitung ihrer Daten durch Sprachdiktate im Rahmen seiner eigenen Datenschutzerklärung.</li>
+    </ul>
+    <h2><span class="sec-num">4</span> Pflichten des Auftraggebers</h2>
+    <p>Der Auftraggeber trägt als Verantwortlicher die volle datenschutzrechtliche Verantwortung für die Rechtmäßigkeit der Verarbeitung. Er hat insbesondere folgende Pflichten:</p>
+    <ul>
+      <li>Sicherstellung einer geeigneten Rechtsgrundlage für die Verarbeitung (Art. 6 DSGVO)</li>
+      <li>Erfüllung der Informationspflichten gegenüber Betroffenen (Art. 13, 14 DSGVO)</li>
+      <li>Erteilung von Weisungen ausschließlich in schriftlicher oder elektronischer Form</li>
+      <li>Unverzügliche Benachrichtigung des Auftragnehmers bei Feststellung von Datenpannen</li>
+      <li>Regelmäßige Überprüfung der Einhaltung dieses AVV durch Audits oder Kontrollen</li>
+      <li>Führung eines Verzeichnisses der Verarbeitungstätigkeiten gemäß Art. 30 DSGVO</li>
+    </ul>
+  </div>
+
+  <!-- §5 -->
+  <div class="legal-section" id="par5">
+    <h2><span class="sec-num">5</span> Unterauftragsverarbeitung</h2>
+    <h3>5.1 Allgemeine Genehmigung</h3>
+    <p>Der Auftraggeber erteilt mit Abschluss dieses AVV die allgemeine Genehmigung zur Einschaltung von Unterauftragsverarbeitern. Der Auftragnehmer informiert den Auftraggeber über beabsichtigte Änderungen im Hinblick auf die Hinzuziehung oder den Ersatz weiterer Unterauftragnehmer gemäß Art. 28 Abs. 2 DSGVO mit einer Vorankündigungsfrist von mindestens <strong>30 Tagen</strong>.</p>
+    <h3>5.2 Aktuell genehmigte Unterauftragsverarbeiter</h3>
+    <p>Zum Zeitpunkt des Vertragsschlusses sind folgende Unterauftragsverarbeiter genehmigt (vollständige Aufstellung in Anlage 2):</p>
+    <table class="sp-table">
+      <thead><tr><th>Anbieter</th><th>Leistung</th><th>Sitz</th><th>Schutz-niveau</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><strong>Airtable Inc.</strong></td>
+          <td>Datenbank-Backend, Strukturierung von Gutachtendaten</td>
+          <td>USA (San Francisco)</td>
+          <td><span class="sp-badge us">EU-SCCs</span></td>
+        </tr>
+        <tr>
+          <td><strong>Make.com (Celonis)</strong></td>
+          <td>Workflow-Automatisierung, Systemintegration</td>
+          <td>EU (Prag / Tschechien)</td>
+          <td><span class="sp-badge eu">DSGVO</span></td>
+        </tr>
+        <tr>
+          <td><strong>OpenAI, Inc.</strong></td>
+          <td>KI-Textgenerierung (PROVA Analyse-Engine) sowie KI-Sprachtranskription (Whisper API) — Verarbeitung von Audiodaten zur automatischen Texterkennung. Audiodaten werden nicht dauerhaft gespeichert.</td>
+          <td>USA (San Francisco)</td>
+          <td><span class="sp-badge us">EU-SCCs</span></td>
+        </tr>
+        <tr>
+          <td><strong>Stripe Inc.</strong></td>
+          <td>Zahlungsabwicklung</td>
+          <td>USA (San Francisco) / Irland</td>
+          <td><span class="sp-badge us">EU-SCCs</span></td>
+        </tr>
+        <tr>
+          <td><strong>Amazon Web Services (AWS)</strong></td>
+          <td>Cloud-Hosting, Datenspeicherung</td>
+          <td>EU (Frankfurt / Irland)</td>
+          <td><span class="sp-badge eu">DSGVO</span></td>
+        </tr>
+      </tbody>
+    </table>
+    <h3>5.3 Weitergabe von Pflichten</h3>
+    <p>Der Auftragnehmer verpflichtet Unterauftragsverarbeiter vertraglich zu denselben Datenschutzpflichten, wie sie in diesem AVV festgelegt sind. Die EU-Standardvertragsklauseln (SCCs) werden mit Anbietern in Drittländern ohne Angemessenheitsbeschluss abgeschlossen.</p>
+    <div class="warn-box">
+      <strong>Hinweis Drittlandtransfer:</strong> Für die Nutzung von Airtable und OpenAI werden personenbezogene Daten in die USA übertragen. Dies erfolgt auf Grundlage der EU-Standardvertragsklauseln (Art. 46 Abs. 2 lit. c DSGVO) in Verbindung mit einem Transfer Impact Assessment (TIA). Daten im Zusammenhang mit Gutachten werden vor der Übermittlung an OpenAI nach Möglichkeit pseudonymisiert.
+    </div>
+  </div>
+
+  <!-- §6 -->
+  <div class="legal-section" id="par6">
+    <h2><span class="sec-num">6</span> Technische und organisatorische Maßnahmen (TOMs)</h2>
+    <p>Der Auftragnehmer trifft gemäß Art. 32 DSGVO geeignete technische und organisatorische Maßnahmen zum Schutz der personenbezogenen Daten. Die detaillierte Aufstellung ist in Anlage 3 enthalten. Zusammenfassung der wichtigsten Maßnahmen:</p>
+    <h3>6.1 Zutrittskontrolle</h3>
+    <p>Serverräume und Rechenzentren sind physisch gesichert; Zutritt nur für befugtes Personal mit Zwei-Faktor-Authentifizierung. Nutzung von ISO 27001-zertifizierten Rechenzentren (AWS Frankfurt).</p>
+    <h3>6.2 Zugangskontrolle</h3>
+    <p>Alle Nutzerzugänge sind durch Passwortschutz und optionale Zwei-Faktor-Authentifizierung gesichert. Passwörter werden ausschließlich als bcrypt-Hash (Cost Factor 12) gespeichert. Automatische Sitzungsbeendigung nach Inaktivität.</p>
+    <h3>6.3 Zugriffskontrolle</h3>
+    <p>Rollenbasiertes Zugriffskonzept (RBAC): Zugriff auf Daten nur für Personen, die diese zur Erfüllung ihrer Aufgaben benötigen (Need-to-know-Prinzip). Strikte Mandantentrennung zwischen verschiedenen Kundenkonten.</p>
+    <h3>6.4 Übertragungskontrolle</h3>
+    <p>Alle Datenübertragungen erfolgen ausschließlich über verschlüsselte Verbindungen (TLS 1.2 oder höher). API-Kommunikation ist mit Bearer-Token-Authentifizierung gesichert.</p>
+    <h3>6.5 Eingabekontrolle</h3>
+    <p>Alle schreibenden Datenzugriffe werden geloggt. Audit-Logs werden für 12 Monate aufbewahrt und sind manipulationssicher gespeichert.</p>
+    <h3>6.6 Verfügbarkeitskontrolle</h3>
+    <p>Regelmäßige automatisierte Backups (täglich, 30-Tage-Aufbewahrung). Redundante Datenspeicherung in mindestens zwei geografisch getrennten AWS-Regionen innerhalb der EU. Monitoring und Alerting 24/7.</p>
+    <h3>6.7 Trennbarkeit</h3>
+    <p>Strikte logische Trennung der Daten verschiedener Auftraggeber durch Mandantenisolierung auf Datenbankebene.</p>
+  </div>
+
+  <!-- §7 -->
+  <div class="legal-section" id="par7">
+    <h2><span class="sec-num">7</span> Betroffenenrechte</h2>
+    <p>Der Auftragnehmer unterstützt den Auftraggeber bei der Erfüllung von Betroffenenrechten nach Art. 15–22 DSGVO (Auskunft, Berichtigung, Löschung, Einschränkung, Datenübertragbarkeit, Widerspruch). Der Auftragnehmer leitet Anfragen von Betroffenen, die direkt an ihn gerichtet werden, unverzüglich an den Auftraggeber weiter und ergreift keine eigenständigen Maßnahmen ohne Weisung des Auftraggebers, sofern nicht gesetzlich vorgeschrieben.</p>
+    <p>Auf Anfrage des Auftraggebers stellt der Auftragnehmer alle erforderlichen Daten für die Beantwortung von Betroffenenanfragen innerhalb von <strong>5 Werktagen</strong> zur Verfügung.</p>
+  </div>
+
+  <!-- §8 -->
+  <div class="legal-section" id="par8">
+    <h2><span class="sec-num">8</span> Datenpannen und Sicherheitsverletzungen</h2>
+    <p>Der Auftragnehmer informiert den Auftraggeber unverzüglich, spätestens jedoch innerhalb von <strong>24 Stunden</strong> nach Bekanntwerden einer Verletzung des Schutzes personenbezogener Daten i.S.d. Art. 4 Nr. 12 DSGVO. Die Meldung enthält mindestens:</p>
+    <ul>
+      <li>Beschreibung der Art der Verletzung</li>
+      <li>Kategorien und ungefähre Zahl der betroffenen Personen und Datensätze</li>
+      <li>Wahrscheinliche Folgen der Verletzung</li>
+      <li>Ergriffene oder vorgeschlagene Maßnahmen zur Behebung und Schadensminimierung</li>
+      <li>Namen und Kontaktdaten des Datenschutzbeauftragten oder einer Ansprechperson</li>
+    </ul>
+    <p>Der Auftraggeber ist für die Meldung an die zuständige Datenschutzaufsichtsbehörde (Art. 33 DSGVO, Frist: 72 Stunden) sowie ggf. die Benachrichtigung der Betroffenen (Art. 34 DSGVO) selbst verantwortlich. Der Auftragnehmer unterstützt ihn dabei.</p>
+    <div class="info-box">
+      <strong>Meldekontakt bei Datenpannen:</strong><br>
+      E-Mail: <a href="mailto:kontakt@prova-systems.de">kontakt@prova-systems.de</a> (Notfall-Hotline 24/7)<br>
+      Telefon: +49 30 123 456 (Durchwahl Datenschutz)
+    </div>
+  </div>
+
+  <!-- §9 -->
+  <div class="legal-section" id="par9">
+    <h2><span class="sec-num">9</span> Löschung und Rückgabe von Daten</h2>
+    <p>Nach Beendigung des Hauptvertrags oder auf schriftliche Anforderung des Auftraggebers löscht der Auftragnehmer alle personenbezogenen Daten des Auftraggebers vollständig und unwiderruflich oder gibt diese zurück, sofern nicht eine gesetzliche Aufbewahrungspflicht entgegensteht.</p>
+    <h3>9.1 Fristen und Verfahren</h3>
+    <ul>
+      <li>Export-Download durch Auftraggeber: innerhalb von <strong>30 Tagen</strong> nach Vertragsende möglich</li>
+      <li>Vollständige Datenlöschung: spätestens <strong>60 Tage</strong> nach Vertragsende</li>
+      <li>Backup-Löschung: spätestens <strong>90 Tage</strong> nach Vertragsende</li>
+      <li>Schriftliche Löschbestätigung wird dem Auftraggeber nach Abschluss übermittelt</li>
+    </ul>
+    <h3>9.2 Gesetzliche Aufbewahrungspflichten</h3>
+    <p>Soweit der Auftragnehmer zur Aufbewahrung bestimmter Daten gesetzlich verpflichtet ist (z.B. steuerrechtliche Aufbewahrungsfristen nach §147 AO), gilt die Löschungspflicht entsprechend beschränkt. Über solche Ausnahmen informiert der Auftragnehmer den Auftraggeber.</p>
+  </div>
+
+  <!-- §10 -->
+  <div class="legal-section" id="par10">
+    <h2><span class="sec-num">10</span> Kontrollrechte des Auftraggebers</h2>
+    <p>Der Auftraggeber hat das Recht, die Einhaltung dieses AVV durch den Auftragnehmer zu kontrollieren. Dies kann erfolgen durch:</p>
+    <ul>
+      <li>Anforderung von Nachweisen (z.B. Zertifizierungen, Audit-Berichte, Prüfprotokolle)</li>
+      <li>Fragebögen und schriftliche Auskunftsersuchen</li>
+      <li>Vor-Ort-Prüfungen nach vorheriger Ankündigung (mindestens 14 Werktage) und während der üblichen Geschäftszeiten</li>
+    </ul>
+    <p>Kosten für Kontrollen trägt der Auftraggeber selbst, sofern nicht Mängel der Leistungserbringung durch den Auftragnehmer festgestellt werden. Der Auftragnehmer kann alternativ anerkannte externe Prüfer (z.B. ISO 27001-Zertifizierer) als Nachweis akzeptieren lassen.</p>
+  </div>
+
+  <!-- §11 -->
+  <div class="legal-section" id="par11">
+    <h2><span class="sec-num">11</span> Haftung</h2>
+    <p>Die Haftungsregelungen des Hauptvertrags (AGB) gelten entsprechend. Im Verhältnis zwischen Auftraggeber und Auftragnehmer gilt: Jede Partei haftet gegenüber Betroffenen für den Schaden, den sie zu verantworten hat. Der Auftragnehmer kann sich von der Haftung befreien, wenn er nachweist, dass er keinerlei Verschulden an dem schadensbegründenden Umstand trägt (Art. 82 Abs. 3 DSGVO).</p>
+    <p>Im Außenverhältnis zu Betroffenen haften Auftraggeber und Auftragnehmer als Gesamtschuldner, sofern beide an derselben Verarbeitungsvorgabe beteiligt waren. Im Innenverhältnis gilt ein Ausgleich entsprechend dem Verursachungsanteil.</p>
+  </div>
+
+  <!-- §12 -->
+  <div class="legal-section" id="par12">
+    <h2><span class="sec-num">12</span> Schlussbestimmungen</h2>
+    <h3>12.1 Vorrang</h3>
+    <p>Bei Widersprüchen zwischen diesem AVV und dem Hauptvertrag (AGB) hat der AVV im Hinblick auf datenschutzrechtliche Regelungen Vorrang.</p>
+    <h3>12.2 Änderungen</h3>
+    <p>Änderungen dieses AVV bedürfen der Schriftform oder einer gleichwertigen elektronischen Form. Der Auftragnehmer ist berechtigt, den AVV bei gesetzlichen Änderungen anzupassen; der Auftraggeber wird mindestens <strong>30 Tage</strong> im Voraus informiert.</p>
+    <h3>12.3 Anwendbares Recht und Gerichtsstand</h3>
+    <p>Dieser AVV unterliegt dem Recht der Bundesrepublik Deutschland. Ausschließlicher Gerichtsstand für alle Streitigkeiten ist Berlin, soweit rechtlich zulässig.</p>
+    <h3>12.4 Salvatorische Klausel</h3>
+    <p>Sollten einzelne Bestimmungen dieses AVV unwirksam oder undurchführbar sein oder werden, berührt dies nicht die Wirksamkeit der übrigen Bestimmungen. Die Parteien verpflichten sich, unwirksame Bestimmungen durch wirksame Regelungen zu ersetzen, die dem wirtschaftlichen Zweck der unwirksamen Bestimmungen möglichst nahekommen.</p>
+    <h3>12.5 Inkrafttreten</h3>
+    <p>Der AVV tritt mit Abschluss des Hauptvertrags bzw. mit Beginn der Nutzung der PROVA-Plattform in Kraft und ist Bestandteil des Vertragsverhältnisses. Durch die Akzeptanz der AGB im Rahmen des Registrierungsprozesses erklärt der Auftraggeber auch seine Zustimmung zu diesem AVV.</p>
+  </div>
+
+  <!-- ANLAGE 1 -->
+  <div class="legal-section" id="anlage1">
+    <h2><span class="sec-num">A1</span> Anlage 1: Beschreibung der Verarbeitungstätigkeiten</h2>
+    <table class="sp-table">
+      <thead><tr><th>Verarbeitungstätigkeit</th><th>Zweck</th><th>Rechtsgrundlage</th><th>Datenkategorien</th></tr></thead>
+      <tbody>
+        <tr><td>Nutzerregistrierung &amp; Kontoverwaltung</td><td>Vertragserfüllung</td><td>Art. 6 Abs. 1 lit. b DSGVO</td><td>Name, E-Mail, Passwort-Hash</td></tr>
+        <tr><td>Sprachdiktat-Verarbeitung</td><td>KI-Transkription</td><td>Art. 6 Abs. 1 lit. b DSGVO</td><td>Audiodaten (temporär)</td></tr>
+        <tr><td>KI-Gutachtenerstellung</td><td>Kernleistung</td><td>Art. 6 Abs. 1 lit. b DSGVO</td><td>Gutachtendaten, Schadensdaten</td></tr>
+        <tr><td>Freigabe-Link-Versendung</td><td>Kundenkommunikation</td><td>Art. 6 Abs. 1 lit. b DSGVO</td><td>E-Mail-Adresse, Gutachtendaten</td></tr>
+        <tr><td>Analytics-Dashboard</td><td>Leistungsauswertung</td><td>Art. 6 Abs. 1 lit. b DSGVO</td><td>Nutzungs- und Leistungsdaten</td></tr>
+        <tr><td>Zahlungsabwicklung</td><td>Rechnungsstellung</td><td>Art. 6 Abs. 1 lit. b DSGVO</td><td>Rechnungsdaten (via Stripe)</td></tr>
+        <tr><td>Fehlerprotokollierung</td><td>Technischer Betrieb</td><td>Art. 6 Abs. 1 lit. f DSGVO</td><td>Log-Daten (pseudonymisiert)</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ANLAGE 2 -->
+  <div class="legal-section" id="anlage2">
+    <h2><span class="sec-num">A2</span> Anlage 2: Genehmigte Unterauftragsverarbeiter</h2>
+    <table class="sp-table">
+      <thead><tr><th>Anbieter</th><th>Leistung</th><th>Sitz</th><th>Schutz</th><th>Datenschutz</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><strong>Airtable Inc.</strong></td>
+          <td>Datenbank-Backend für Gutachtendaten, Workflow-Daten</td>
+          <td>USA · 799 Market St, San Francisco, CA 94103</td>
+          <td><span class="sp-badge us">EU-SCCs</span></td>
+          <td>airtable.com/privacy</td>
+        </tr>
+        <tr>
+          <td><strong>Make.com (Celonis SE)</strong></td>
+          <td>Automatisierung von Workflows zwischen PROVA, Airtable und OpenAI</td>
+          <td>EU · Václavské nám. 2132/47, 110 00 Prag, Tschechien</td>
+          <td><span class="sp-badge eu">DSGVO</span></td>
+          <td>make.com/en/privacy-notice</td>
+        </tr>
+        <tr>
+          <td><strong>OpenAI, Inc.</strong></td>
+          <td>KI-Textgenerierung für Gutachteninhalte (PROVA Analyse-Engine)</td>
+          <td>USA · 3180 18th St, San Francisco, CA 94110</td>
+          <td><span class="sp-badge us">EU-SCCs + DPA</span></td>
+          <td>openai.com/privacy</td>
+        </tr>
+        <tr>
+          <td><strong>Stripe Inc.</strong></td>
+          <td>Zahlungsverarbeitung (Kreditkarte, SEPA)</td>
+          <td>USA / Irland · 1 Grand Canal Street Lower, Dublin, Irland</td>
+          <td><span class="sp-badge eu">DSGVO</span></td>
+          <td>stripe.com/privacy</td>
+        </tr>
+        <tr>
+          <td><strong>Amazon Web Services EMEA SARL</strong></td>
+          <td>Cloud-Infrastruktur, Datenspeicherung, CDN</td>
+          <td>EU · 38 Avenue John F. Kennedy, L-1855 Luxemburg</td>
+          <td><span class="sp-badge eu">DSGVO</span></td>
+          <td>aws.amazon.com/privacy</td>
+        </tr>
+        <tr>
+          <td><strong>Google Workspace (Google LLC)</strong></td>
+          <td>Geschäftliche E-Mail-Kommunikation (intern)</td>
+          <td>USA · Mountain View, CA / EU-Datenprozessierung</td>
+          <td><span class="sp-badge us">EU-SCCs</span></td>
+          <td>policies.google.com/privacy</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="info-box">
+      <strong>Aktualisierungen:</strong> Diese Liste wird regelmäßig aktualisiert. Der Auftraggeber wird über Änderungen mit einer Vorankündigungsfrist von 30 Tagen per E-Mail informiert. Die aktuelle Liste ist stets unter prova-systems.de/legal/avv abrufbar.
+    </div>
+  </div>
+
+  <!-- ANLAGE 3 -->
+  <div class="legal-section" id="anlage3">
+    <h2><span class="sec-num">A3</span> Anlage 3: Technische und Organisatorische Maßnahmen (TOMs)</h2>
+    <h3>Pseudonymisierung und Verschlüsselung</h3>
+    <ul>
+      <li>Verschlüsselung aller gespeicherten Daten (AES-256 at rest)</li>
+      <li>TLS 1.2+ für alle Datenübertragungen</li>
+      <li>Pseudonymisierung von Audiodaten vor KI-Verarbeitung</li>
+      <li>Passwort-Hashing mit bcrypt (Cost Factor 12)</li>
+    </ul>
+    <h3>Vertraulichkeit</h3>
+    <ul>
+      <li>Strikte Zugriffskontrolle (RBAC) auf Applikations- und Datenbankebene</li>
+      <li>Alle Mitarbeiter mit Datenzugang unterzeichnen Vertraulichkeitsvereinbarungen</li>
+      <li>Schulungen zu Datenschutz und Informationssicherheit (jährlich)</li>
+      <li>VPN-Pflicht für Remote-Zugriff auf Produktionssysteme</li>
+    </ul>
+    <h3>Integrität</h3>
+    <ul>
+      <li>Vollständige Audit-Logs aller Datenzugriffe und -änderungen</li>
+      <li>Integrität

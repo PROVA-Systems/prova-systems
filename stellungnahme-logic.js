@@ -1211,7 +1211,7 @@ function weiterZuFreigabe() {
     var recordId = sessionStorage.getItem('prova_record_id') || localStorage.getItem('prova_record_id') || '';
     var az_write = localStorage.getItem('prova_letztes_az') || '';
     if (recordId && az_write) {
-      ProvaError.safeFetch('/.netlify/functions/airtable', {
+      fetch('/.netlify/functions/airtable', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -1654,12 +1654,17 @@ document.addEventListener('keydown', function(e) {
     var el = document.createElement('div');
     el.id = 'slash-menu';
     el.style.cssText = 'position:fixed;z-index:9999;background:var(--bg2,#1a1d2e);border:1px solid var(--border2,rgba(255,255,255,.15));border-radius:10px;box-shadow:0 8px 32px rgba(0,0,0,.4);padding:6px;min-width:240px;display:none;';
-    el.innerHTML = SLASH_ITEMS.map(function(item,i) {
-      return '<div class="slash-item" data-idx="'+i+'" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:7px;cursor:pointer;font-size:13px;color:var(--text2,#c8d0e0);transition:background .1s;" onmouseover="this.style.background='var(--surface2,rgba(255,255,255,.06))'" onmouseout="this.style.background='';">'
-        + '<span style="font-size:16px;width:20px;text-align:center;">'+item.icon+'</span>'
-        + '<span>' + item.label + '</span>'
-        + '</div>';
-    }).join('');
+    el.innerHTML = '';
+    SLASH_ITEMS.forEach(function(item, i) {
+      var d = document.createElement('div');
+      d.className = 'slash-item';
+      d.setAttribute('data-idx', i);
+      d.style.cssText = 'display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:7px;cursor:pointer;font-size:13px;color:var(--text2,#c8d0e0);transition:background .1s;';
+      d.innerHTML = '<span style="font-size:16px;width:20px;text-align:center;">' + item.icon + '</span><span>' + item.label + '</span>';
+      d.addEventListener('mouseenter', function() { this.style.background = 'var(--surface2,rgba(255,255,255,.06))'; });
+      d.addEventListener('mouseleave', function() { this.style.background = ''; });
+      el.appendChild(d);
+    });
     document.body.appendChild(el);
     return el;
   }
@@ -1790,13 +1795,17 @@ window.addEventListener('message', function(e) {
     // Chips
     var chipsEl = document.getElementById('np-chips');
     if (chipsEl) {
-      chipsEl.innerHTML = data.normen.map(function(n) {
-        return '<button class="np-chip" onclick="npCopyNorm('' + escNp(n.num) + '', '' + escNp(n.titel) + '')" title="Klick: In Zwischenablage kopieren\n' + escNp(n.titel) + '">'
-          + '<span>📌</span>'
-          + '<span>' + escNp(n.num) + '</span>'
-          + '<span class="np-chip-title">' + escNp(n.titel) + '</span>'
-          + '</button>';
-      }).join('');
+      chipsEl.innerHTML = '';
+      data.normen.forEach(function(n) {
+        var btn = document.createElement('button');
+        btn.className = 'np-chip';
+        btn.title = 'Klick: In Zwischenablage kopieren\n' + escNp(n.titel);
+        btn.setAttribute('data-num', escNp(n.num));
+        btn.setAttribute('data-titel', escNp(n.titel));
+        btn.onclick = function() { npCopyNorm(this.getAttribute('data-num'), this.getAttribute('data-titel')); };
+        btn.innerHTML = '<span>📌</span><span>' + escNp(n.num) + '</span><span class="np-chip-title">' + escNp(n.titel) + '</span>';
+        chipsEl.appendChild(btn);
+      });
     }
 
     // Hinweise
@@ -2129,8 +2138,7 @@ window.addEventListener('message', function(e) {
       if (e.key === '/' || (e.key !== 'Escape' && before.endsWith('/'))) {
         var charBefore = before.slice(0, -1);
         var isStart = charBefore.length === 0
-                   || /[\s
-]$/.test(charBefore);
+                   || /[\s\S]$/.test(charBefore);
 
         if (isStart) {
           _slashPos = pos - 1; // Position des '/'
@@ -2310,7 +2318,8 @@ function createAssistOverlay() {
     + '<div style="font-size:11px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;">🤖 KI-Formulierungshilfe — Nicht kopierbar</div>'
     + '<div id="ki-assist-text" style="font-size:13px;line-height:1.8;color:var(--text2);user-select:none;-webkit-user-select:none;background:rgba(79,142,247,.05);border-radius:8px;padding:14px;margin-bottom:14px;"></div>'
     + '<div style="font-size:11px;color:var(--text3);margin-bottom:12px;">Nutzen Sie diese Orientierung — schreiben Sie §6 in Ihren eigenen Worten.</div>'
-    + '<button onclick="document.getElementById('ki-assist-overlay').style.display='none'" style="padding:8px 18px;border-radius:7px;border:none;background:var(--accent);color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">Schließen</button>'
+    + '<button onclick="(function(){var o=document.getElementById(\'ki-assist-overlay\');if(o)o.style.display=\'none\'})()"'
+    + ' style="padding:8px 18px;border-radius:7px;border:none;background:var(--accent);color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">Schließen</button>'
     + '</div>';
   document.body.appendChild(el);
   return el;
@@ -2407,150 +2416,49 @@ var KI_PROMPTS = {
   assist: function(schadenart, typ) {
     var fk = _fachkontext(schadenart);
     var tn = _typNormen(typ || 'privat');
-    return 'Du bist öffentlich bestellter und vereidigter (ö.b.u.v.) Bausachverständiger mit 30 Jahren Gerichtserfahrung.
-
-'
-      + 'RECHTSRAHMEN: §407a ZPO — persönliche Erstattungspflicht. Du formulierst NIEMALS im Indikativ wenn es sich um Kausal-, Bewertungs- oder Prognoseaussagen handelt.
-
-'
-      + 'SCHADENART: ' + (schadenart || 'Baumängel') + '
-'
-      + 'RELEVANTE NORMEN: ' + fk.normen + '
-'
-      + 'TYP-SPEZIFISCH: ' + tn + '
-'
-      + 'GRENZWERTE: ' + fk.grenzwerte + '
-'
-      + 'FACHVOKABULAR: ' + fk.fachbegriffe + '
-
-'
-      + 'KONJUNKTIV II PFLICHT für alle Kausal-, Bewertungs- und Schlussfolgerungsaussagen:
-'
-      + '  ist (kausal) → dürfte sein | liegt → dürfte liegen | führt → dürfte führen
-'
-      + '  verursacht → dürfte verursacht haben | bedingt → dürfte bedingt sein
-'
-      + '  zeigt → dürfte zeigen | belegt → dürfte belegen | muss → wäre
-
-'
-      + 'VERBOTEN: "dürfte eindeutig", "dürfte offensichtlich", "dürfte klar" (logische Widersprüche)
-'
-      + 'ERLAUBT im Indikativ: Messwerte, Sichtbefunde, Laborergebnisse.
-
-'
-      + 'Formuliere 3–4 fachlich fundierte Sätze auf dem Niveau eines Gerichtsgutachtens. Nur den Text zurückgeben.';
+    return [
+      'Du bist ö.b.u.v. Bausachverständiger mit 30 Jahren Gerichtserfahrung.',
+      'RECHTSRAHMEN: §407a ZPO — persönliche Erstattungspflicht. NIEMALS Indikativ bei Kausal- oder Bewertungsaussagen.',
+      'SCHADENART: ' + (schadenart || 'Baumängel'),
+      'RELEVANTE NORMEN: ' + fk.normen,
+      'TYP-SPEZIFISCH: ' + tn,
+      'GRENZWERTE: ' + fk.grenzwerte,
+      'FACHVOKABULAR: ' + fk.fachbegriffe,
+      'KONJUNKTIV II für alle Kausal- und Schlussfolgerungsaussagen: ist→dürfte sein | liegt→dürfte liegen | führt→dürfte führen | verursacht→dürfte verursacht haben.',
+      'VERBOTEN: Indikativ bei Ursachenaussagen. ERLAUBT im Indikativ: Messwerte, Sichtbefunde.',
+      'Formuliere 3-4 fachlich fundierte Sätze auf Gerichtsgutachten-Niveau. Nur den Text zurückgeben.'
+    ].join('\n');
   },
 
   konjunktiv: function(schadenart) {
-    var fk = _fachkontext(schadenart);
-    return 'Wandle folgenden Text vollständig in korrekten Konjunktiv II um. Fachwissen über die Schadenart ' + (schadenart || '') + ' einbeziehen.
-
-'
-      + 'VOLLSTÄNDIGE VERB-LISTE (Indikativ → Konjunktiv II):
-'
-      + '  ist (kausal) → dürfte sein | sind → dürften sein
-'
-      + '  liegt → dürfte liegen | liegen → dürften liegen
-'
-      + '  führt → dürfte führen | führen → dürften führen
-'
-      + '  verursacht → dürfte verursacht haben
-'
-      + '  bedingt → dürfte bedingt sein | resultiert → dürfte resultieren
-'
-      + '  zeigt → dürfte zeigen | belegt → dürfte belegen
-'
-      + '  beweist → dürfte belegen | muss (kausal) → wäre
-'
-      + '  beigetragen hat → beigetragen haben dürfte
-'
-      + '  geführt hat → geführt haben dürfte
-'
-      + '  ist festzustellen → erscheint naheliegend
-'
-      + '  es steht fest → es erscheint naheliegend
-
-'
-      + 'WORTSTELLUNG: Modalverb (dürfte/könnte/wäre) an Position 2 im Hauptsatz.
-'
-      + 'NEBENSÄTZE: Modalverb ans Ende vor dem Infinitiv.
-'
-      + 'RELEVANTE NORMEN für diese Schadenart: ' + fk.normen + '
-
-'
-      + 'Nur den korrigierten Text zurückgeben. Keine Erklärungen. Perfekte Grammatik.';
+    return [
+      'Wandle den folgenden Text vollständig in korrekten Konjunktiv II um.',
+      'Fachwissen Schadenart: ' + (schadenart || 'Baumängel') + ' einbeziehen.',
+      'Regeln: ist→dürfte sein | liegt→dürfte liegen | führt→dürfte führen | verursacht→dürfte verursacht haben.',
+      'VERBOTEN: Indikativ bei Kausal- und Bewertungsaussagen.',
+      'ERLAUBT im Indikativ: Messwerte, Sichtbefunde, Laborergebnisse.',
+      'Nur den korrigierten Text zurückgeben, keine Erklärungen.'
+    ].join('\n');
   },
 
-  neutral: function(schadenart, typ) {
+  qualitaet: function(schadenart) {
     var fk = _fachkontext(schadenart);
-    var tn = _typNormen(typ || 'privat');
-    return 'Formuliere folgenden Text juristisch neutral und §407a ZPO-konform um.
-
-'
-      + 'REGEL: Indikativ NUR für Feststellungen (Messwerte, Sichtbefunde). Konjunktiv II für ALLE Kausal- und Bewertungsaussagen.
-
-'
-      + 'SCHADENART: ' + (schadenart || '') + '
-'
-      + 'NORMEN: ' + fk.normen + '
-'
-      + 'TYP: ' + tn + '
-'
-      + 'GRENZWERTE: ' + fk.grenzwerte + '
-
-'
-      + 'VERBOTEN: Schuldzuweisungen, absolute Kausalaussagen, Prognosen im Indikativ, strafrechtliche Begriffe.
-'
-      + 'Nur den neutralen Text zurückgeben.';
-  },
-
-  ausformulieren: function(schadenart) {
-    var fk = _fachkontext(schadenart);
-    return 'Formuliere folgende Stichpunkte zu vollständigen, professionellen Gutachten-Sätzen auf dem Niveau eines ö.b.u.v. Sachverständigen aus.
-
-'
-      + 'SCHADENART: ' + (schadenart || '') + '
-'
-      + 'EINZUBEZIEHENDE NORMEN: ' + fk.normen + '
-'
-      + 'FACHVOKABULAR: ' + fk.fachbegriffe + '
-'
-      + 'GRENZWERTE: ' + fk.grenzwerte + '
-
-'
-      + 'KONJUNKTIV II für alle Schlussfolgerungen (dürfte, könnte, wäre).
-'
-      + 'INDIKATIV für Messwerte und Sichtbefunde.
-'
-      + 'Nur den ausformulierten Text zurückgeben. Perfekte Grammatik. Max. 4 Sätze.';
-  },
-
-  kuerzen: function(schadenart) {
-    var fk = _fachkontext(schadenart);
-    return 'Präzisiere und kürze folgenden Text auf das juristisch Wesentliche.
-
-'
-      + 'SCHADENART: ' + (schadenart || '') + '
-'
-      + 'RELEVANTE NORMEN behalten: ' + fk.normen + '
-
-'
-      + 'BEHALTEN: alle Feststellungen, Messwerte, Normreferenzen, Kausalzusammenhänge.
-'
-      + 'ENTFERNEN: Füllwörter, Wiederholungen, nicht gutachtenrelevante Aussagen.
-'
-      + 'KONJUNKTIV II beibehalten. Maximal 2 Sätze. Nur den präzisierten Text zurückgeben.';
+    return [
+      'Du bist Qualitätsprüfer für Gerichtsgutachten nach §407a ZPO.',
+      'PRÜFKRITERIEN: Konjunktiv II bei allen Kausalaussagen | Keine Spekulation | Fachterminologie korrekt.',
+      'SCHADENART: ' + (schadenart || 'Baumängel'),
+      'NORMEN: ' + fk.normen,
+      'Bewerte den Text: Konjunktiv II korrekt verwendet? Alle Fakten belegt? Empfehlung: Freigeben/Überarbeiten.',
+      'Antwort: JSON {qualitaet: 0-100, konjunktiv_ok: bool, empfehlung: string, hinweise: [string]}'
+    ].join('\n');
   }
-};
 
+}
 
 window.kiAssist = async function(typ) {
   window._kjAktivTa = null; // Reset nach Aufruf
   var ta = (_kiAktiveTextarea && document.contains(_kiAktiveTextarea)) ? _kiAktiveTextarea : null;
   if (!ta) ta = document.getElementById('svTextA') || document.querySelector('textarea');
-        || _kiAktiveTextarea
-        || document.getElementById('svTextA')
-        || document.querySelector('textarea');
   var currentText = ta ? ta.value.trim() : '';
   
   var btn = event && event.currentTarget;
