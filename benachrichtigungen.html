@@ -1,456 +1,999 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>Benachrichtigungen · PROVA</title>
-  <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#0b0d11">
-  <script src="prova-preise.js"></script>
-  <script src="auth-guard.js"></script>
-  <script src="theme.js"></script>
-  <script src="trial-guard.js"></script>
-  <script src="paket-guard.js"></script>
-<script src="nav.js"></script>
-  <link rel="stylesheet" href="prova-design.css">
-  <link rel="stylesheet" href="mobile.css">
-  <script src="prova-context.js"></script>
-  <script src="prova-error-handler.js"></script>
+<script src="prova-preise.js"></script>
+<script src="paket-guard.js"></script>
+<script src="auth-guard.js"></script>
+<script src="theme.js"></script>
+<script src="trial-guard.js"></script>
+<script src="nav.js" defer></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Benachrichtigungen — PROVA Systems</title>
+  <link rel="stylesheet" href="prova-design.css" />
+  <link rel="stylesheet" href="mobile.css" />
+  <style>
+    /* ── Benachrichtigungen v2 ── */
+    .bn-page { max-width: 780px; margin: 0 auto; padding: 24px 16px 100px; }
 
+    /* Header */
+    .bn-page-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .bn-page-title {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text-primary, #111827);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .bn-unread-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 22px;
+      height: 22px;
+      padding: 0 6px;
+      background: #ef4444;
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      border-radius: 11px;
+    }
+    .bn-header-actions { display: flex; gap: 8px; }
+    .bn-btn {
+      padding: 8px 14px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      border: 1px solid var(--border, #e5e7eb);
+      background: var(--bg-card, #fff);
+      color: var(--text-secondary, #374151);
+      transition: all 0.15s;
+      font-family: inherit;
+    }
+    .bn-btn:hover { background: var(--bg-muted, #f3f4f6); }
+    .bn-btn.primary {
+      background: #1a56db; color: #fff; border-color: var(--accent,#4f8ef7);
+    }
+    .bn-btn.primary:hover { background: #1d4ed8; }
+
+    /* Push-Einstellungen Card */
+    .bn-push-card {
+      background: linear-gradient(135deg, #1a56db 0%, #3b82f6 100%);
+      border-radius: 16px;
+      padding: 20px 24px;
+      color: #fff;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .bn-push-icon { font-size: 36px; flex-shrink: 0; }
+    .bn-push-info { flex: 1; min-width: 200px; }
+    .bn-push-title { font-size: 16px; font-weight: 700; margin-bottom: 3px; }
+    .bn-push-sub { font-size: 12.5px; opacity: 0.85; }
+    .bn-push-toggle {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+    .bn-toggle-label { font-size: 13px; font-weight: 500; opacity: 0.9; }
+    /* Toggle Switch */
+    .bn-toggle {
+      position: relative; width: 46px; height: 26px;
+      cursor: pointer; flex-shrink: 0;
+    }
+    .bn-toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
+    .bn-toggle-slider {
+      position: absolute; inset: 0;
+      background: rgba(255,255,255,0.3);
+      border-radius: 13px;
+      transition: background 0.2s;
+    }
+    .bn-toggle-slider::before {
+      content: '';
+      position: absolute;
+      width: 20px; height: 20px;
+      left: 3px; top: 3px;
+      background: var(--surface,#1c2537);
+      border-radius: 50%;
+      transition: transform 0.2s;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+    }
+    .bn-toggle input:checked + .bn-toggle-slider { background: rgba(255,255,255,0.5); }
+    .bn-toggle input:checked + .bn-toggle-slider::before { transform: translateX(20px); }
+
+    /* Filter-Leiste */
+    .bn-filters {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 16px;
+      overflow-x: auto;
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+      padding-bottom: 2px;
+    }
+    .bn-filters::-webkit-scrollbar { display: none; }
+    .bn-filter-btn {
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 12.5px;
+      font-weight: 500;
+      cursor: pointer;
+      border: 1px solid var(--border, #e5e7eb);
+      background: var(--bg-card, #fff);
+      color: var(--text-muted, #6b7280);
+      white-space: nowrap;
+      transition: all 0.15s;
+      font-family: inherit;
+    }
+    .bn-filter-btn:hover { border-color: var(--accent,#4f8ef7); color: var(--accent,#4f8ef7); }
+    .bn-filter-btn.aktiv {
+      background: #1a56db; color: #fff; border-color: var(--accent,#4f8ef7);
+    }
+
+    /* Benachrichtigungs-Container */
+    .bn-container {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    /* Tages-Gruppe */
+    .bn-tag-gruppe { margin-bottom: 20px; }
+    .bn-tag-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted, #9ca3af);
+      padding: 0 4px;
+      margin-bottom: 8px;
+    }
+    .bn-tag-items {
+      background: var(--bg-card, #fff);
+      border: 1px solid var(--border, #e5e7eb);
+      border-radius: 14px;
+      overflow: hidden;
+    }
+
+    /* Einzelne Benachrichtigung */
+    .bn-item {
+      display: flex;
+      gap: 12px;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border-light, #f3f4f6);
+      cursor: pointer;
+      transition: background 0.1s;
+      position: relative;
+    }
+    .bn-item:last-child { border-bottom: none; }
+    .bn-item:hover { background: var(--bg-hover, #f9fafb); }
+    .bn-item.ungelesen { background: rgba(79,142,247,.12); }
+    .bn-item.ungelesen:hover { background: #dbeafe; }
+    .bn-item.ungelesen::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 3px;
+      background: #1a56db;
+      border-radius: 0 2px 2px 0;
+    }
+
+    .bn-item-icon-wrap {
+      width: 40px; height: 40px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+    .bn-item-icon-wrap.frist    { background: #fef2f2; }
+    .bn-item-icon-wrap.zahlung  { background: var(--surface,#1c2537)beb; }
+    .bn-item-icon-wrap.system   { background: #f0f9ff; }
+    .bn-item-icon-wrap.gutachten{ background: #f0fdf4; }
+    .bn-item-icon-wrap.ki       { background: #faf5ff; }
+    .bn-item-icon-wrap.team     { background: #f0fdf4; }
+
+    .bn-item-content { flex: 1; min-width: 0; }
+    .bn-item-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 2px;
+    }
+    .bn-item-titel {
+      font-size: 13.5px;
+      font-weight: 600;
+      color: var(--text-primary, #111827);
+      line-height: 1.3;
+    }
+    .bn-item.ungelesen .bn-item-titel { font-weight: 700; }
+    .bn-item-zeit {
+      font-size: 11px;
+      color: var(--text-muted, #9ca3af);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .bn-item-text {
+      font-size: 12.5px;
+      color: var(--text-secondary, #4b5563);
+      line-height: 1.4;
+      margin-bottom: 6px;
+    }
+    .bn-item-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+    .bn-item-action {
+      font-size: 11.5px;
+      padding: 4px 10px;
+      border-radius: 7px;
+      cursor: pointer;
+      border: 1px solid var(--border, #e5e7eb);
+      background: var(--bg-card, #fff);
+      color: var(--text-secondary, #374151);
+      font-weight: 500;
+      transition: all 0.1s;
+      font-family: inherit;
+    }
+    .bn-item-action:hover { background: var(--bg-muted, #f3f4f6); }
+    .bn-item-action.primary {
+      background: #1a56db; color: #fff; border-color: var(--accent,#4f8ef7);
+    }
+    .bn-item-action.primary:hover { background: #1d4ed8; }
+    .bn-item-action.danger {
+      color: #ef4444; border-color: #fecaca;
+    }
+
+    .bn-item-options {
+      position: absolute;
+      right: 12px;
+      top: 10px;
+      width: 28px; height: 28px;
+      border-radius: 6px;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg-muted, #f3f4f6);
+      border: none;
+      font-size: 14px;
+      color: var(--text-muted, #9ca3af);
+      cursor: pointer;
+    }
+    .bn-item:hover .bn-item-options { display: flex; }
+
+    /* Einstellungen-Panel */
+    .bn-settings-card {
+      background: var(--bg-card, #fff);
+      border: 1px solid var(--border, #e5e7eb);
+      border-radius: 14px;
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+    .bn-settings-header {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border, #e5e7eb);
+      font-weight: 600;
+      font-size: 13.5px;
+      color: var(--text-primary, #111827);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .bn-settings-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border-light, #f3f4f6);
+    }
+    .bn-settings-item:last-child { border-bottom: none; }
+    .bn-settings-info { flex: 1; }
+    .bn-settings-label {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-primary, #111827);
+      margin-bottom: 1px;
+    }
+    .bn-settings-sub { font-size: 11.5px; color: var(--text-muted, #9ca3af); }
+    /* App-Toggle (dunkler Hintergrund) */
+    .bn-app-toggle {
+      position: relative; width: 42px; height: 24px; cursor: pointer;
+    }
+    .bn-app-toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
+    .bn-app-toggle-slider {
+      position: absolute; inset: 0;
+      background: #d1d5db;
+      border-radius: 12px;
+      transition: background 0.2s;
+    }
+    .bn-app-toggle-slider::before {
+      content: '';
+      position: absolute;
+      width: 18px; height: 18px;
+      left: 3px; top: 3px;
+      background: var(--surface,#1c2537);
+      border-radius: 50%;
+      transition: transform 0.2s;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+    .bn-app-toggle input:checked + .bn-app-toggle-slider { background: #1a56db; }
+    .bn-app-toggle input:checked + .bn-app-toggle-slider::before { transform: translateX(18px); }
+
+    /* Leer-Zustand */
+    .bn-leer {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text-muted, #6b7280);
+    }
+    .bn-leer-icon { font-size: 56px; margin-bottom: 12px; }
+    .bn-leer-titel { font-size: 17px; font-weight: 600; color: var(--text-primary, #111827); margin-bottom: 6px; }
+    .bn-leer-text { font-size: 13px; line-height: 1.5; max-width: 320px; margin: 0 auto; }
+
+    /* Responsive */
+    @media (max-width: 600px) {
+      .bn-push-card { flex-direction: column; text-align: center; }
+      .bn-push-toggle { justify-content: center; }
+      .bn-item-options { display: flex; }
+    }
+  </style>
 </head>
-<body>
-<div id="sidebar" class="sidebar"></div>
-<div class="main-wrap">
+<body data-page="benachrichtigungen">
+  <div class="app-shell" id="app-shell">
+    <div class="main-wrap" id="main-wrap">
+      <div class="topbar" id="topbar"></div>
+      <div class="page-content">
+      <main class="bn-page" id="bn-page">
 
-  <!-- Topbar -->
-  <div class="topbar" style="position:sticky;top:0;z-index:100;display:flex;align-items:center;gap:12px;padding:0 20px;height:56px;background:var(--bg,#0b0d11);border-bottom:1px solid var(--border,rgba(255,255,255,.07));">
-    <button id="mobile-menu-btn" onclick="openMobileSidebar()" style="display:none;background:none;border:none;color:var(--text3);font-size:20px;cursor:pointer;padding:4px;">☰</button>
-    <div style="flex:1;">
-      <div class="p-page-title">Benachrichtigungen</div>
-      <div class="p-page-sub" id="notif-count-sub">Wird geladen…</div>
-    </div>
-    <button onclick="alleAlsGelesenMarkieren()" id="btn-alle-gelesen" style="display:none;padding:7px 14px;border-radius:8px;border:1px solid var(--border2,rgba(255,255,255,.12));background:transparent;color:var(--text2);font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font-ui,sans-serif);transition:all .15s;" onmouseover="this.style.background='rgba(255,255,255,.05)'" onmouseout="this.style.background='transparent'">
-      ✓ Alle als gelesen markieren
-    </button>
-    <button onclick="notifEinstellungen()" style="padding:7px 14px;border-radius:8px;border:1px solid var(--border2,rgba(255,255,255,.12));background:transparent;color:var(--text2);font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font-ui,sans-serif);transition:all .15s;" onmouseover="this.style.background='rgba(255,255,255,.05)'" onmouseout="this.style.background='transparent'">
-      ⚙️ Einstellungen
-    </button>
-  </div>
-
-  <div class="page-content" style="padding:20px;max-width:800px;margin:0 auto;">
-
-    <!-- Filter-Tabs -->
-    <div style="display:flex;gap:4px;margin-bottom:20px;background:var(--surface,#161b2e);border-radius:10px;padding:4px;width:fit-content;">
-      <button class="notif-tab active" data-filter="all" onclick="setFilter('all',this)" style="padding:6px 14px;border-radius:7px;border:none;background:var(--surface2,#1e2535);color:var(--text,#eaecf4);font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font-ui);transition:all .15s;">Alle</button>
-      <button class="notif-tab" data-filter="unread" onclick="setFilter('unread',this)" style="padding:6px 14px;border-radius:7px;border:none;background:transparent;color:var(--text3);font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font-ui);transition:all .15s;">Ungelesen <span id="unread-count-badge" style="display:none;margin-left:4px;padding:1px 6px;border-radius:10px;background:rgba(239,68,68,.15);color:#ef4444;font-size:10px;"></span></button>
-      <button class="notif-tab" data-filter="fristen" onclick="setFilter('fristen',this)" style="padding:6px 14px;border-radius:7px;border:none;background:transparent;color:var(--text3);font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font-ui);transition:all .15s;">Fristen</button>
-      <button class="notif-tab" data-filter="system" onclick="setFilter('system',this)" style="padding:6px 14px;border-radius:7px;border:none;background:transparent;color:var(--text3);font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font-ui);transition:all .15s;">System</button>
-    </div>
-
-    <!-- Benachrichtigungen-Liste -->
-    <div id="notif-list"></div>
-
-    <!-- Push-Einstellungen Banner -->
-    <div id="push-banner" style="display:none;margin-top:24px;padding:16px 20px;background:var(--surface,#161b2e);border:1px solid rgba(79,142,247,.2);border-radius:12px;">
-      <div style="display:flex;align-items:center;gap:12px;">
-        <div style="font-size:24px;">🔔</div>
-        <div style="flex:1;">
-          <div style="font-size:13px;font-weight:700;color:var(--text,#eaecf4);margin-bottom:2px;">Push-Benachrichtigungen aktivieren</div>
-          <div style="font-size:12px;color:var(--text3);">Erhalten Sie sofortige Benachrichtigungen für Fristenwarnungen und neue Aufträge.</div>
-        </div>
-        <button onclick="aktivierePush()" style="padding:8px 16px;border-radius:8px;border:none;background:#4f8ef7;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font-ui);">Aktivieren</button>
-        <button onclick="document.getElementById('push-banner').style.display='none'" style="background:none;border:none;color:var(--text3);font-size:18px;cursor:pointer;padding:0;line-height:1;">×</button>
+    <!-- Seitenheader -->
+    <div class="bn-page-header">
+      <div class="bn-page-title">
+        🔔 Benachrichtigungen
+        <span class="bn-unread-badge" id="bn-unread-badge" style="display:none">0</span>
+      </div>
+      <div class="bn-header-actions">
+        <button class="bn-btn" id="bn-alle-gelesen-btn" onclick="alleAlsGelesenMarkieren()">
+          ✓ Alle gelesen
+        </button>
+        <button class="bn-btn" onclick="toggleEinstellungen()">
+          ⚙️ Einstellungen
+        </button>
       </div>
     </div>
 
-  </div>
-</div>
-
-<!-- Einstellungen-Modal -->
-<div id="einstellungen-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:none;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px);">
-  <div style="background:var(--surface,#161b2e);border:1px solid var(--border2,rgba(255,255,255,.12));border-radius:16px;padding:24px;max-width:440px;width:100%;">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
-      <div style="font-size:15px;font-weight:700;color:var(--text);">Benachrichtigungs-Einstellungen</div>
-      <button onclick="schliesseEinstellungen()" style="background:none;border:none;color:var(--text3);font-size:20px;cursor:pointer;">×</button>
+    <!-- Push-Notifications Card -->
+    <div class="bn-push-card" id="bn-push-card">
+      <div class="bn-push-icon">🔔</div>
+      <div class="bn-push-info">
+        <div class="bn-push-title">Push-Benachrichtigungen</div>
+        <div class="bn-push-sub" id="bn-push-status-text">
+          Aktiviere Push, um Fristen-Alarme auch bei geschlossenem Browser zu erhalten.
+        </div>
+      </div>
+      <div class="bn-push-toggle">
+        <span class="bn-toggle-label" id="bn-push-toggle-label">Deaktiviert</span>
+        <label class="bn-toggle">
+          <input type="checkbox" id="bn-push-toggle" onchange="togglePush(this.checked)" />
+          <span class="bn-toggle-slider"></span>
+        </label>
+      </div>
     </div>
-    <div id="einstellungen-inhalt"></div>
-    <div style="margin-top:20px;display:flex;justify-content:flex-end;">
-      <button onclick="speichereEinstellungen()" style="padding:9px 20px;border-radius:8px;border:none;background:#4f8ef7;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font-ui);">Speichern</button>
+
+    <!-- Einstellungen Panel (versteckt) -->
+    <div class="bn-settings-card" id="bn-settings-panel" style="display:none">
+      <div class="bn-settings-header">⚙️ Benachrichtigungs-Einstellungen</div>
+
+      <div class="bn-settings-item">
+        <div class="bn-settings-info">
+          <div class="bn-settings-label">⏰ Fristen-Alarm</div>
+          <div class="bn-settings-sub">Push bei Fristen in 7, 3 und 1 Tag(en)</div>
+        </div>
+        <label class="bn-app-toggle">
+          <input type="checkbox" checked id="bn-set-fristen" onchange="saveEinstellung('fristen', this.checked)" />
+          <span class="bn-app-toggle-slider"></span>
+        </label>
+      </div>
+
+      <div class="bn-settings-item">
+        <div class="bn-settings-info">
+          <div class="bn-settings-label">💶 Zahlungs-Erinnerungen</div>
+          <div class="bn-settings-sub">Bei überfälligen Rechnungen</div>
+        </div>
+        <label class="bn-app-toggle">
+          <input type="checkbox" checked id="bn-set-zahlung" onchange="saveEinstellung('zahlung', this.checked)" />
+          <span class="bn-app-toggle-slider"></span>
+        </label>
+      </div>
+
+      <div class="bn-settings-item">
+        <div class="bn-settings-info">
+          <div class="bn-settings-label">📋 Gutachten-Updates</div>
+          <div class="bn-settings-sub">Statusänderungen, Freigaben, neue Kommentare</div>
+        </div>
+        <label class="bn-app-toggle">
+          <input type="checkbox" checked id="bn-set-gutachten" onchange="saveEinstellung('gutachten', this.checked)" />
+          <span class="bn-app-toggle-slider"></span>
+        </label>
+      </div>
+
+      <div class="bn-settings-item">
+        <div class="bn-settings-info">
+          <div class="bn-settings-label">🤖 KI-Hinweise</div>
+          <div class="bn-settings-sub">Qualitäts-Score Warnungen, Verbesserungs-Vorschläge</div>
+        </div>
+        <label class="bn-app-toggle">
+          <input type="checkbox" id="bn-set-ki" onchange="saveEinstellung('ki', this.checked)" />
+          <span class="bn-app-toggle-slider"></span>
+        </label>
+      </div>
+
+      <div class="bn-settings-item">
+        <div class="bn-settings-info">
+          <div class="bn-settings-label">👥 Team-Aktivitäten</div>
+          <div class="bn-settings-sub">Neue Mitglieder, zugewiesene Fälle (Team-Paket)</div>
+        </div>
+        <label class="bn-app-toggle">
+          <input type="checkbox" checked id="bn-set-team" onchange="saveEinstellung('team', this.checked)" />
+          <span class="bn-app-toggle-slider"></span>
+        </label>
+      </div>
+
+      <div class="bn-settings-item">
+        <div class="bn-settings-info">
+          <div class="bn-settings-label">🔇 Stille Stunden</div>
+          <div class="bn-settings-sub">Keine Push zwischen 22:00 und 07:00 Uhr</div>
+        </div>
+        <label class="bn-app-toggle">
+          <input type="checkbox" checked id="bn-set-stillezeit" onchange="saveEinstellung('stillezeit', this.checked)" />
+          <span class="bn-app-toggle-slider"></span>
+        </label>
+      </div>
     </div>
-  </div>
-</div>
 
-<script>
-// ══════════════════════════════════════════════════════
-// PROVA Benachrichtigungen — Logic
-// ══════════════════════════════════════════════════════
+    <!-- Filter-Leiste -->
+    <div class="bn-filters" id="bn-filters">
+      <button class="bn-filter-btn aktiv" data-filter="alle" onclick="setFilter('alle', this)">Alle</button>
+      <button class="bn-filter-btn" data-filter="ungelesen" onclick="setFilter('ungelesen', this)">Ungelesen</button>
+      <button class="bn-filter-btn" data-filter="frist" onclick="setFilter('frist', this)">⏰ Fristen</button>
+      <button class="bn-filter-btn" data-filter="zahlung" onclick="setFilter('zahlung', this)">💶 Zahlungen</button>
+      <button class="bn-filter-btn" data-filter="gutachten" onclick="setFilter('gutachten', this)">📋 Gutachten</button>
+      <button class="bn-filter-btn" data-filter="ki" onclick="setFilter('ki', this)">🤖 KI</button>
+      <button class="bn-filter-btn" data-filter="system" onclick="setFilter('system', this)">⚙️ System</button>
+    </div>
 
-// Auth-Check
-provaAuthGuard();
+    <!-- Benachrichtigungs-Liste -->
+    <div class="bn-container" id="bn-container">
+      <!-- wird via JS gefüllt -->
+      <div class="bn-leer" id="bn-leer" style="display:none">
+        <div class="bn-leer-icon">📭</div>
+        <div class="bn-leer-titel">Keine Benachrichtigungen</div>
+        <div class="bn-leer-text">Du bist auf dem neuesten Stand. Neue Benachrichtigungen erscheinen hier.</div>
+      </div>
+    </div>
 
-// ── Benachrichtigungs-Typen ──
-var NOTIF_TYPEN = {
-  frist_kritisch:  { icon: '🔴', farbe: '#ef4444', label: 'Kritische Frist'  },
-  frist_warnung:   { icon: '🟡', farbe: '#f59e0b', label: 'Fristwarnung'     },
-  frist_ok:        { icon: '✅', farbe: '#10b981', label: 'Frist OK'         },
-  neuer_auftrag:   { icon: '📋', farbe: '#4f8ef7', label: 'Neuer Auftrag'   },
-  rechnung_faellig:{ icon: '💶', farbe: '#a78bfa', label: 'Rechnung fällig'  },
-  system:          { icon: '⚙️', farbe: '#6b7280', label: 'System'           },
-  info:            { icon: '💡', farbe: '#4f8ef7', label: 'Info'             },
-};
+  </main>
 
-// ── Einstellungen ──
-var EINSTELLUNGEN_DEFAULTS = {
-  frist_kritisch:   true,
-  frist_warnung:    true,
-  frist_ok:         false,
-  neuer_auftrag:    true,
-  rechnung_faellig: true,
-  system:           true,
-  push_aktiviert:   false,
-  email_digest:     'wöchentlich', // 'täglich' | 'wöchentlich' | 'nie'
-};
+  <!-- Nav -->
 
-var einstellungen = JSON.parse(localStorage.getItem('prova_notif_einstellungen') || 'null') || EINSTELLUNGEN_DEFAULTS;
+  <script>
+    'use strict';
 
-// ── Benachrichtigungen laden ──
-var alleNotifs = [];
-var currentFilter = 'all';
+    // ── Konfiguration ──────────────────────────────────────────────
+    const BN_STORAGE_KEY   = 'prova_benachrichtigungen';
+    const BN_SETTINGS_KEY  = 'prova_bn_settings';
+    const BN_PUSH_KEY      = 'prova_push_subscribed';
 
-function ladeNotifications() {
-  // Aus localStorage + generierte Frist-Benachrichtigungen
-  var gespeichert = [];
-  try { gespeichert = JSON.parse(localStorage.getItem('prova_notifikationen') || '[]'); } catch(e) {}
+    let alleNachrichten = [];
+    let aktiverFilter   = 'alle';
 
-  // Frist-Benachrichtigungen aus Airtable-Cache generieren
-  var fristNotifs = generiereFreistNotifs();
+    // ── Demo / Echtdaten laden ──────────────────────────────────────
+    async function ladeNachrichten() {
+      // 1. Aus localStorage laden (gecacht + manuell hinzugefügt)
+      try {
+        const cached = JSON.parse(localStorage.getItem(BN_STORAGE_KEY) || '[]');
+        alleNachrichten = cached;
+      } catch (e) { alleNachrichten = []; }
 
-  alleNotifs = [...fristNotifs, ...gespeichert].sort(function(a, b) {
-    return new Date(b.ts) - new Date(a.ts);
-  });
-
-  // Duplikate entfernen (nach ID)
-  var seen = new Set();
-  alleNotifs = alleNotifs.filter(function(n) {
-    if (seen.has(n.id)) return false;
-    seen.add(n.id);
-    return true;
-  });
-
-  render();
-  aktualisiereZähler();
-  zeigPushBanner();
-}
-
-function generiereFreistNotifs() {
-  var notifs = [];
-  var heute  = new Date();
-
-  try {
-    var cache  = JSON.parse(localStorage.getItem('prova_archiv_cache_v2') || '{}');
-    var faelle = cache.data || [];
-
-    faelle.forEach(function(r) {
-      var f = r.fields || {};
-      if (!f.Fristdatum) return;
-
-      var frist = new Date(f.Fristdatum);
-      var tage  = Math.ceil((frist - heute) / (1000 * 60 * 60 * 24));
-      var az    = f.Aktenzeichen || '—';
-      var id    = 'frist_' + r.id;
-
-      var typ, text;
-      if (tage < 0) {
-        typ  = 'frist_kritisch';
-        text = az + ' — Frist seit ' + Math.abs(tage) + ' Tag' + (Math.abs(tage) === 1 ? '' : 'en') + ' überschritten!';
-      } else if (tage <= 3) {
-        typ  = 'frist_kritisch';
-        text = az + ' — Nur noch ' + tage + ' Tag' + (tage === 1 ? '' : 'e') + ' bis zur Frist!';
-      } else if (tage <= 7) {
-        typ  = 'frist_warnung';
-        text = az + ' — Frist in ' + tage + ' Tagen';
-      } else {
-        return; // Keine Notif für Fristen > 7 Tage
+      // 2. Fristen aus FristGuard laden (falls verfügbar)
+      if (typeof FristGuard !== 'undefined') {
+        try {
+          await FristGuard.ladeFristen();
+          const fristen = FristGuard.getFristenNaechste(FristGuard.fristen, 7);
+          fristen.forEach(f => {
+            if (!alleNachrichten.find(n => n.ref === f.id)) {
+              alleNachrichten.unshift({
+                id:        'fn_' + f.id,
+                ref:       f.id,
+                typ:       'frist',
+                icon:      '⏰',
+                titel:     f.titel,
+                text:      `Frist in ${f.tageDiff === 0 ? 'heute' : f.tageDiff + ' Tagen'} — ${f.datumText}`,
+                zeit:      new Date().toISOString(),
+                gelesen:   false,
+                aktionen:  [
+                  { label: 'Fristen öffnen', url: 'termine.html', primary: true },
+                  { label: f.fallId ? 'Fall öffnen' : null, url: f.fallId ? `akte.html?id=${f.fallId}` : null }
+                ].filter(a => a.label)
+              });
+            }
+          });
+        } catch(e) {}
       }
 
-      if (!einstellungen[typ]) return;
+      // 3. Honorar-Überfällige laden (falls verfügbar)
+      if (typeof HonorarTracker !== 'undefined') {
+        try {
+          const r = await HonorarTracker.ladeRechnungen();
+          const ueberfaellig = r.filter(x => ['UEBERFAELLIG','MAHNUNG_1','MAHNUNG_2','MAHNUNG_3'].includes(x.statusKey));
+          ueberfaellig.slice(0, 3).forEach(rech => {
+            if (!alleNachrichten.find(n => n.ref === rech.id)) {
+              alleNachrichten.unshift({
+                id:      'rn_' + rech.id,
+                ref:     rech.id,
+                typ:     'zahlung',
+                icon:    '💶',
+                titel:   `Rechnung überfällig: ${rech.empfaenger}`,
+                text:    `${rech.betragBrutto.toLocaleString('de-DE', {style:'currency',currency:'EUR'})} seit ${rech.tageOffen} Tagen offen`,
+                zeit:    new Date().toISOString(),
+                gelesen: false,
+                aktionen: [
+                  { label: 'Rechnung öffnen', url: `rechnungen.html?id=${rech.id}`, primary: true }
+                ]
+              });
+            }
+          });
+        } catch(e) {}
+      }
 
-      notifs.push({
-        id:      id,
-        typ:     typ,
-        text:    text,
-        detail:  f.Schadenart ? f.Schadenart + (f.Adresse ? ' · ' + f.Adresse.split(',')[0] : '') : '',
-        ts:      new Date().toISOString(),
-        gelesen: localStorage.getItem('prova_notif_gelesen_' + id) === '1',
-        link:    'akte.html?id=' + r.id,
+      // Fallback: Demo-Nachrichten wenn leer
+      if (alleNachrichten.length === 0) ladeDemoNachrichten();
+
+      speichereNachrichten();
+      rendern();
+    }
+
+    function ladeDemoNachrichten() {
+      const jetzt = new Date();
+      const vor = (h) => new Date(jetzt - h * 3600000).toISOString();
+
+      alleNachrichten = [
+        {
+          id: 'demo_1', typ: 'frist', icon: '⏰', gelesen: false,
+          titel: 'Gutachten-Abgabe in 2 Tagen',
+          text: 'Fall "Wasserschaden Müller" — Abgabefrist: ' + new Date(jetzt.getTime() + 2*86400000).toLocaleDateString('de-DE'),
+          zeit: vor(0.5),
+          aktionen: [{ label: 'Fall öffnen', url: '#', primary: true }]
+        },
+        {
+          id: 'demo_2', typ: 'zahlung', icon: '💶', gelesen: false,
+          titel: 'Rechnung überfällig: Allianz Versicherung',
+          text: '1.840,00 € — seit 12 Tagen offen. Mahnung empfohlen.',
+          zeit: vor(2),
+          aktionen: [
+            { label: 'Mahnung senden', url: '#', primary: true },
+            { label: 'Rechnung ansehen', url: 'rechnungen.html' }
+          ]
+        },
+        {
+          id: 'demo_3', typ: 'ki', icon: '🤖', gelesen: false,
+          titel: 'Qualitäts-Score gesunken: 68/100',
+          text: 'Gutachten "Brandschaden Keller" — Begründungstiefe unter Schwellenwert. KI empfiehlt Ergänzung der rechtlichen Herleitung.',
+          zeit: vor(5),
+          aktionen: [
+            { label: 'Gutachten öffnen', url: '#', primary: true },
+            { label: 'KI-Hinweise ansehen', url: '#' }
+          ]
+        },
+        {
+          id: 'demo_4', typ: 'gutachten', icon: '📋', gelesen: true,
+          titel: 'Gutachten freigegeben',
+          text: 'Auftraggeber Rechtsanwalt Dr. Berger hat das Gutachten "Baumangel Neubau" bestätigt.',
+          zeit: vor(26),
+          aktionen: [
+            { label: 'Freigabe ansehen', url: 'freigabe.html', primary: true }
+          ]
+        },
+        {
+          id: 'demo_5', typ: 'system', icon: '⚙️', gelesen: true,
+          titel: 'PROVA Update verfügbar',
+          text: 'Version 5.4 verfügbar: Verbesserter Qualitäts-Score, schnelleres Laden, Fristen-Widget auf Dashboard.',
+          zeit: vor(48),
+          aktionen: [
+            { label: 'Jetzt aktualisieren', url: '#', primary: true }
+          ]
+        },
+        {
+          id: 'demo_6', typ: 'frist', icon: '⏰', gelesen: true,
+          titel: 'Ortstermin morgen',
+          text: 'Fall "Schimmel Dachwohnung Schwabing" — 09:00 Uhr, Musterstr. 12, 80333 München.',
+          zeit: vor(72),
+          aktionen: [
+            { label: 'Navigation', url: '#' },
+            { label: 'Arbeitsblatt', url: 'ortstermin-arbeitsblatt.html', primary: true }
+          ]
+        }
+      ];
+    }
+
+    // ── Rendern ─────────────────────────────────────────────────────
+    function rendern() {
+      const container = document.getElementById('bn-container');
+      const leer      = document.getElementById('bn-leer');
+      if (!container) return;
+
+      // Filter anwenden
+      let gefiltert = alleNachrichten.filter(n => {
+        if (aktiverFilter === 'alle')     return true;
+        if (aktiverFilter === 'ungelesen') return !n.gelesen;
+        return n.typ === aktiverFilter;
       });
+
+      // Badge aktualisieren
+      const ungelesen = alleNachrichten.filter(n => !n.gelesen).length;
+      const badge = document.getElementById('bn-unread-badge');
+      if (badge) {
+        badge.style.display = ungelesen > 0 ? 'inline-flex' : 'none';
+        badge.textContent   = ungelesen > 9 ? '9+' : ungelesen;
+      }
+
+      if (gefiltert.length === 0) {
+        container.innerHTML = '';
+        if (leer) leer.style.display = 'block';
+        return;
+      }
+      if (leer) leer.style.display = 'none';
+
+      // Nach Datum gruppieren
+      const gruppen = gruppiereNachDatum(gefiltert);
+      container.innerHTML = gruppen.map(gruppe => `
+        <div class="bn-tag-gruppe">
+          <div class="bn-tag-label">${gruppe.label}</div>
+          <div class="bn-tag-items">
+            ${gruppe.items.map(n => renderItem(n)).join('')}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function gruppiereNachDatum(nachrichten) {
+      const heute     = new Date(); heute.setHours(0,0,0,0);
+      const gestern   = new Date(heute - 86400000);
+      const dieseWoche = new Date(heute - 7 * 86400000);
+
+      const gruppen = [
+        { label: 'Heute',      items: [], filter: d => d >= heute },
+        { label: 'Gestern',    items: [], filter: d => d >= gestern && d < heute },
+        { label: 'Diese Woche', items: [], filter: d => d >= dieseWoche && d < gestern },
+        { label: 'Älter',      items: [], filter: d => d < dieseWoche }
+      ];
+
+      nachrichten.forEach(n => {
+        const d = new Date(n.zeit); d.setHours(0,0,0,0);
+        for (const g of gruppen) {
+          if (g.filter(d)) { g.items.push(n); break; }
+        }
+      });
+
+      return gruppen.filter(g => g.items.length > 0);
+    }
+
+    function renderItem(n) {
+      const zeitText = zeitFormat(n.zeit);
+      return `
+        <div class="bn-item ${n.gelesen ? '' : 'ungelesen'}"
+             onclick="markiereGelesen('${n.id}'); ${n.aktionen?.[0]?.url ? `window.location='${n.aktionen[0].url}'` : ''}"
+             id="bn-item-${n.id}">
+          <div class="bn-item-icon-wrap ${n.typ}">${n.icon}</div>
+          <div class="bn-item-content">
+            <div class="bn-item-header">
+              <div class="bn-item-titel">${n.titel}</div>
+              <div class="bn-item-zeit">${zeitText}</div>
+            </div>
+            <div class="bn-item-text">${n.text}</div>
+            ${n.aktionen?.length ? `
+              <div class="bn-item-actions" onclick="event.stopPropagation()">
+                ${n.aktionen.map(a => `
+                  <button class="bn-item-action ${a.primary ? 'primary' : ''}"
+                    onclick="markiereGelesen('${n.id}'); ${a.url ? `window.location='${a.url}'` : ''}">
+                    ${a.label}
+                  </button>
+                `).join('')}
+                <button class="bn-item-action danger"
+                  onclick="event.stopPropagation(); loescheNachricht('${n.id}')">
+                  ✕
+                </button>
+              </div>
+            ` : ''}
+          </div>
+          <button class="bn-item-options"
+            onclick="event.stopPropagation(); itemOptions('${n.id}')">⋮</button>
+        </div>
+      `;
+    }
+
+    function zeitFormat(iso) {
+      const d   = new Date(iso);
+      const now = new Date();
+      const diff = Math.floor((now - d) / 60000);
+      if (diff < 1)   return 'Gerade eben';
+      if (diff < 60)  return `vor ${diff} Min.`;
+      if (diff < 1440) return `vor ${Math.floor(diff/60)} Std.`;
+      if (diff < 2880) return 'Gestern';
+      return d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' });
+    }
+
+    // ── Aktionen ────────────────────────────────────────────────────
+    function markiereGelesen(id) {
+      const n = alleNachrichten.find(x => x.id === id);
+      if (n) { n.gelesen = true; speichereNachrichten(); }
+      const el = document.getElementById(`bn-item-${id}`);
+      if (el) el.classList.remove('ungelesen');
+      const badge = document.getElementById('bn-unread-badge');
+      if (badge) {
+        const ungelesen = alleNachrichten.filter(n => !n.gelesen).length;
+        badge.style.display = ungelesen > 0 ? 'inline-flex' : 'none';
+        badge.textContent = ungelesen > 9 ? '9+' : ungelesen;
+      }
+    }
+
+    function alleAlsGelesenMarkieren() {
+      alleNachrichten.forEach(n => n.gelesen = true);
+      speichereNachrichten();
+      rendern();
+    }
+
+    function loescheNachricht(id) {
+      alleNachrichten = alleNachrichten.filter(n => n.id !== id);
+      speichereNachrichten();
+      const el = document.getElementById(`bn-item-${id}`);
+      if (el) {
+        el.style.opacity = '0';
+        el.style.transform = 'translateX(40px)';
+        el.style.transition = 'all 0.2s';
+        setTimeout(() => rendern(), 200);
+      }
+    }
+
+    function itemOptions(id) {
+      const n = alleNachrichten.find(x => x.id === id);
+      if (!n) return;
+      const action = confirm(`"${n.titel}"\n\nOK = Löschen | Abbrechen = Schließen`);
+      if (action) loescheNachricht(id);
+    }
+
+    function setFilter(filter, btn) {
+      aktiverFilter = filter;
+      document.querySelectorAll('.bn-filter-btn').forEach(b => b.classList.remove('aktiv'));
+      btn.classList.add('aktiv');
+      rendern();
+    }
+
+    function toggleEinstellungen() {
+      const panel = document.getElementById('bn-settings-panel');
+      if (!panel) return;
+      panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+      ladeEinstellungen();
+    }
+
+    // ── Push-Notifications ──────────────────────────────────────────
+    async function togglePush(aktivieren) {
+      const label = document.getElementById('bn-push-toggle-label');
+      const statusText = document.getElementById('bn-push-status-text');
+
+      if (aktivieren) {
+        if (!('Notification' in window) || !('serviceWorker' in navigator)) {
+          alert('Push-Benachrichtigungen werden in diesem Browser nicht unterstützt.');
+          document.getElementById('bn-push-toggle').checked = false;
+          return;
+        }
+
+        const permission = await Notification.requestPermission();
+        if (permission !== 'granted') {
+          if (label) label.textContent = 'Nicht erlaubt';
+          if (statusText) statusText.textContent = 'Bitte erlaube Benachrichtigungen in deinen Browser-Einstellungen.';
+          document.getElementById('bn-push-toggle').checked = false;
+          return;
+        }
+
+        try {
+          // VAPID Public Key vom Server holen
+          const vapidResp = await fetch('/.netlify/functions/push-notify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'vapid-key' })
+          });
+          const { publicKey } = await vapidResp.json();
+
+          const reg = await navigator.serviceWorker.ready;
+          const sub = await reg.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: urlBase64ToUint8Array(publicKey)
+          });
+
+          // Subscription auf Server speichern
+          const svEmail = localStorage.getItem('prova_sv_email') || '';
+          await fetch('/.netlify/functions/push-notify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              action: 'subscribe',
+              subscription: sub,
+              svEmail,
+              praeferenzen: ladeEinstellungenObjekt()
+            })
+          });
+
+          localStorage.setItem(BN_PUSH_KEY, 'true');
+          if (label) label.textContent = 'Aktiv';
+          if (statusText) statusText.textContent = '✅ Push-Benachrichtigungen sind aktiv. Fristen-Alarme werden gesendet.';
+          zeigePushTestBtn();
+
+        } catch (err) {
+          console.error('[Push]', err);
+          alert('Push konnte nicht aktiviert werden: ' + err.message);
+          document.getElementById('bn-push-toggle').checked = false;
+        }
+
+      } else {
+        // Deaktivieren
+        try {
+          const reg = await navigator.serviceWorker.ready;
+          const sub = await reg.pushManager.getSubscription();
+          if (sub) {
+            await fetch('/.netlify/functions/push-notify', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                action: 'unsubscribe',
+                endpoint: sub.endpoint,
+                svEmail: localStorage.getItem('prova_sv_email') || ''
+              })
+            });
+            await sub.unsubscribe();
+          }
+        } catch (e) {}
+        localStorage.removeItem(BN_PUSH_KEY);
+        if (label) label.textContent = 'Deaktiviert';
+        if (statusText) statusText.textContent = 'Push-Benachrichtigungen sind deaktiviert.';
+      }
+    }
+
+    function zeigePushTestBtn() {
+      const pushCard = document.getElementById('bn-push-card');
+      if (!pushCard || pushCard.querySelector('.bn-push-test')) return;
+      const btn = document.createElement('button');
+      btn.className = 'bn-btn';
+      btn.style.cssText = 'background:rgba(255,255,255,0.2);color:#fff;border-color:rgba(255,255,255,0.3);font-size:12px;padding:6px 12px';
+      btn.textContent = '🔔 Test senden';
+      btn.classList.add('bn-push-test');
+      btn.onclick = sendePushTest;
+      pushCard.appendChild(btn);
+    }
+
+    async function sendePushTest() {
+      try {
+        await fetch('/.netlify/functions/push-notify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'send',
+            svEmail: localStorage.getItem('prova_sv_email') || '',
+            titel: '🔔 Test-Benachrichtigung',
+            text: 'Push-Benachrichtigungen funktionieren korrekt.',
+            url: '/benachrichtigungen.html'
+          })
+        });
+      } catch(e) {}
+    }
+
+    function urlBase64ToUint8Array(base64String) {
+      const padding = '='.repeat((4 - base64String.length % 4) % 4);
+      const base64  = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+      const raw     = window.atob(base64);
+      return new Uint8Array([...raw].map(c => c.charCodeAt(0)));
+    }
+
+    // ── Einstellungen ───────────────────────────────────────────────
+    function ladeEinstellungen() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(BN_SETTINGS_KEY) || '{}');
+        Object.keys(saved).forEach(k => {
+          const el = document.getElementById(`bn-set-${k}`);
+          if (el) el.checked = saved[k];
+        });
+      } catch(e) {}
+    }
+
+    function ladeEinstellungenObjekt() {
+      try { return JSON.parse(localStorage.getItem(BN_SETTINGS_KEY) || '{}'); } catch(e) { return {}; }
+    }
+
+    function saveEinstellung(key, value) {
+      try {
+        const saved = ladeEinstellungenObjekt();
+        saved[key] = value;
+        localStorage.setItem(BN_SETTINGS_KEY, JSON.stringify(saved));
+      } catch(e) {}
+    }
+
+    // ── Storage ─────────────────────────────────────────────────────
+    function speichereNachrichten() {
+      try {
+        const zuSpeichern = alleNachrichten.slice(0, 100);
+        localStorage.setItem(BN_STORAGE_KEY, JSON.stringify(zuSpeichern));
+      } catch(e) {}
+    }
+
+    // ── Push-Status wiederherstellen ────────────────────────────────
+    async function pruefeExistierendePushSubscription() {
+      const toggle = document.getElementById('bn-push-toggle');
+      const label  = document.getElementById('bn-push-toggle-label');
+      const statusText = document.getElementById('bn-push-status-text');
+      if (!toggle) return;
+
+      const gespeichert = localStorage.getItem(BN_PUSH_KEY);
+      if (gespeichert === 'true' && 'serviceWorker' in navigator) {
+        try {
+          const reg = await navigator.serviceWorker.ready;
+          const sub = await reg.pushManager.getSubscription();
+          if (sub && Notification.permission === 'granted') {
+            toggle.checked = true;
+            if (label) label.textContent = 'Aktiv';
+            if (statusText) statusText.textContent = '✅ Push-Benachrichtigungen sind aktiv.';
+            zeigePushTestBtn();
+          } else {
+            localStorage.removeItem(BN_PUSH_KEY);
+          }
+        } catch(e) {}
+      }
+    }
+
+    // ── In-App Notification hinzufügen (für andere Seiten) ──────────
+    window.provaZeigeBenachrichtigung = function(opts = {}) {
+      const n = {
+        id:      'ia_' + Date.now(),
+        typ:     opts.typ     || 'system',
+        icon:    opts.icon    || '🔔',
+        titel:   opts.titel   || 'Benachrichtigung',
+        text:    opts.text    || '',
+        zeit:    new Date().toISOString(),
+        gelesen: false,
+        aktionen: opts.aktionen || []
+      };
+      alleNachrichten.unshift(n);
+      speichereNachrichten();
+
+      // Badge im Nav aktualisieren
+      const navBadge = document.querySelectorAll('[data-bn-badge]');
+      const ungelesen = alleNachrichten.filter(x => !x.gelesen).length;
+      navBadge.forEach(b => {
+        b.style.display = ungelesen > 0 ? 'inline-flex' : 'none';
+        b.textContent = ungelesen > 9 ? '9+' : ungelesen;
+      });
+
+      rendern();
+    };
+
+    // ── Init ────────────────────────────────────────────────────────
+    document.addEventListener('DOMContentLoaded', async () => {
+      await ladeNachrichten();
+      ladeEinstellungen();
+      await pruefeExistierendePushSubscription();
     });
-  } catch(e) {}
+  </script>
 
-  return notifs;
-}
-
-// ── Filter setzen ──
-function setFilter(filter, btn) {
-  currentFilter = filter;
-  document.querySelectorAll('.notif-tab').forEach(function(t) {
-    t.style.background = 'transparent';
-    t.style.color = 'var(--text3)';
-  });
-  btn.style.background = 'var(--surface2,#1e2535)';
-  btn.style.color = 'var(--text,#eaecf4)';
-  render();
-}
-
-// ── Rendern ──
-function render() {
-  var list = document.getElementById('notif-list');
-  var filtered = alleNotifs.filter(function(n) {
-    if (currentFilter === 'unread')  return !n.gelesen;
-    if (currentFilter === 'fristen') return n.typ.startsWith('frist');
-    if (currentFilter === 'system')  return n.typ === 'system' || n.typ === 'info';
-    return true;
-  });
-
-  if (!filtered.length) {
-    list.innerHTML = [
-      '<div style="text-align:center;padding:60px 20px;">',
-        '<div style="font-size:40px;margin-bottom:12px;opacity:.4;">🔔</div>',
-        '<div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:6px;">',
-          currentFilter === 'unread' ? 'Keine ungelesenen Nachrichten' : 'Keine Benachrichtigungen',
-        '</div>',
-        '<div style="font-size:13px;color:var(--text3);">',
-          currentFilter === 'unread' ? 'Sie sind auf dem neuesten Stand.' : 'Hier erscheinen Fristenwarnungen, Systemhinweise und mehr.',
-        '</div>',
-      '</div>'
-    ].join('');
-    return;
-  }
-
-  // Nach Datum gruppieren
-  var gruppen = {};
-  filtered.forEach(function(n) {
-    var d = new Date(n.ts);
-    var heute = new Date();
-    var gestern = new Date(heute);
-    gestern.setDate(gestern.getDate() - 1);
-
-    var key;
-    if (d.toDateString() === heute.toDateString())   key = 'Heute';
-    else if (d.toDateString() === gestern.toDateString()) key = 'Gestern';
-    else key = d.toLocaleDateString('de-DE', { day: '2-digit', month: 'long', year: 'numeric' });
-
-    if (!gruppen[key]) gruppen[key] = [];
-    gruppen[key].push(n);
-  });
-
-  list.innerHTML = Object.entries(gruppen).map(function(entry) {
-    var gruppenLabel = entry[0];
-    var items        = entry[1];
-    return [
-      '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);padding:16px 0 8px;">' + gruppenLabel + '</div>',
-      '<div style="display:flex;flex-direction:column;gap:4px;">',
-        items.map(renderNotif).join(''),
-      '</div>'
-    ].join('');
-  }).join('');
-
-  // Alle-Gelesen-Button ein/ausblenden
-  var hatUngelesen = alleNotifs.some(function(n){ return !n.gelesen; });
-  var btnAlleGelesen = document.getElementById('btn-alle-gelesen');
-  if (btnAlleGelesen) btnAlleGelesen.style.display = hatUngelesen ? 'block' : 'none';
-}
-
-function renderNotif(n) {
-  var typ     = NOTIF_TYPEN[n.typ] || NOTIF_TYPEN.info;
-  var ts      = new Date(n.ts).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
-  var ungelesen = !n.gelesen;
-
-  return [
-    '<div onclick="notifKlick(\'' + n.id + '\')" style="',
-      'display:flex;align-items:flex-start;gap:12px;',
-      'padding:14px 16px;border-radius:10px;cursor:pointer;',
-      'background:' + (ungelesen ? 'rgba(79,142,247,.05)' : 'var(--surface,#161b2e)') + ';',
-      'border:1px solid ' + (ungelesen ? 'rgba(79,142,247,.12)' : 'var(--border,rgba(255,255,255,.07))') + ';',
-      'transition:all .15s;position:relative;',
-    '" onmouseover="this.style.background=\'rgba(255,255,255,.04)\'" onmouseout="this.style.background=\'' + (ungelesen ? 'rgba(79,142,247,.05)' : 'var(--surface,#161b2e)') + '\'">',
-
-      // Ungelesen-Punkt
-      ungelesen ? '<div style="position:absolute;top:16px;left:8px;width:6px;height:6px;border-radius:50%;background:#4f8ef7;"></div>' : '',
-
-      // Icon
-      '<div style="width:36px;height:36px;border-radius:9px;background:rgba(' + hexToRgb(typ.farbe) + ',.12);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;">' + typ.icon + '</div>',
-
-      // Content
-      '<div style="flex:1;min-width:0;">',
-        '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:2px;">',
-          '<div style="font-size:13px;font-weight:' + (ungelesen ? '600' : '400') + ';color:var(--text,#eaecf4);line-height:1.4;">' + escapeHtml(n.text) + '</div>',
-          '<div style="font-size:11px;color:var(--text3);white-space:nowrap;flex-shrink:0;">' + ts + '</div>',
-        '</div>',
-        n.detail ? '<div style="font-size:11px;color:var(--text3);">' + escapeHtml(n.detail) + '</div>' : '',
-        '<div style="font-size:10px;font-weight:600;color:' + typ.farbe + ';margin-top:4px;text-transform:uppercase;letter-spacing:.05em;">' + typ.label + '</div>',
-      '</div>',
-
-      // Pfeil wenn Link
-      n.link ? '<div style="color:var(--text3);font-size:14px;flex-shrink:0;align-self:center;">›</div>' : '',
-
-    '</div>'
-  ].join('');
-}
-
-// ── Notif-Klick ──
-function notifKlick(id) {
-  var notif = alleNotifs.find(function(n){ return n.id === id; });
-  if (!notif) return;
-
-  // Als gelesen markieren
-  notif.gelesen = true;
-  localStorage.setItem('prova_notif_gelesen_' + id, '1');
-
-  // Navigieren wenn Link vorhanden
-  if (notif.link) {
-    window.location.href = notif.link;
-    return;
-  }
-
-  render();
-  aktualisiereZähler();
-}
-
-// ── Alle als gelesen markieren ──
-function alleAlsGelesenMarkieren() {
-  alleNotifs.forEach(function(n) {
-    n.gelesen = true;
-    localStorage.setItem('prova_notif_gelesen_' + n.id, '1');
-  });
-  render();
-  aktualisiereZähler();
-  showToast('✓ Alle Benachrichtigungen als gelesen markiert', 'success');
-}
-
-// ── Zähler aktualisieren ──
-function aktualisiereZähler() {
-  var ungelesen = alleNotifs.filter(function(n){ return !n.gelesen; }).length;
-  var sub = document.getElementById('notif-count-sub');
-  if (sub) sub.textContent = ungelesen > 0 ? ungelesen + ' ungelesen' : 'Alles gelesen ✓';
-
-  var badge = document.getElementById('unread-count-badge');
-  if (badge) {
-    if (ungelesen > 0) {
-      badge.textContent = ungelesen;
-      badge.style.display = 'inline';
-    } else {
-      badge.style.display = 'none';
-    }
-  }
-}
-
-// ── Push-Banner ──
-function zeigPushBanner() {
-  if ('Notification' in window && Notification.permission === 'default' && !einstellungen.push_aktiviert) {
-    document.getElementById('push-banner').style.display = 'block';
-  }
-}
-
-function aktivierePush() {
-  if (!('Notification' in window)) {
-    showToast('Push-Benachrichtigungen werden in diesem Browser nicht unterstützt.', 'warning');
-    return;
-  }
-  Notification.requestPermission().then(function(permission) {
-    if (permission === 'granted') {
-      einstellungen.push_aktiviert = true;
-      localStorage.setItem('prova_notif_einstellungen', JSON.stringify(einstellungen));
-      document.getElementById('push-banner').style.display = 'none';
-      showToast('🔔 Push-Benachrichtigungen aktiviert', 'success');
-    }
-  });
-}
-
-// ── Einstellungen-Modal ──
-function notifEinstellungen() {
-  var modal   = document.getElementById('einstellungen-modal');
-  var inhalt  = document.getElementById('einstellungen-inhalt');
-
-  var items = [
-    { key: 'frist_kritisch',   label: 'Kritische Fristen (< 3 Tage)', sub: 'Sofortige Benachrichtigung' },
-    { key: 'frist_warnung',    label: 'Fristwarnungen (< 7 Tage)',    sub: 'Erinnerung rechtzeitig' },
-    { key: 'frist_ok',         label: 'Fristen im grünen Bereich',    sub: 'Wöchentliche Übersicht' },
-    { key: 'neuer_auftrag',    label: 'Neue Aufträge',                 sub: 'Wenn neuer Fall eingegangen' },
-    { key: 'rechnung_faellig', label: 'Fällige Rechnungen',           sub: '30/14/7 Tage vor Fälligkeit' },
-    { key: 'system',           label: 'System-Updates',               sub: 'Neue Features und Meldungen' },
-  ];
-
-  inhalt.innerHTML = [
-    '<div style="display:flex;flex-direction:column;gap:12px;">',
-      items.map(function(item) {
-        var aktiv = einstellungen[item.key] !== false;
-        return [
-          '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border,rgba(255,255,255,.07));">',
-            '<div>',
-              '<div style="font-size:13px;font-weight:600;color:var(--text);">' + item.label + '</div>',
-              '<div style="font-size:11px;color:var(--text3);margin-top:2px;">' + item.sub + '</div>',
-            '</div>',
-            '<label style="position:relative;display:inline-block;width:40px;height:22px;">',
-              '<input type="checkbox" data-key="' + item.key + '" ' + (aktiv ? 'checked' : '') + ' style="opacity:0;width:0;height:0;" onchange="toggleEinstellung(\''+item.key+'\',this.checked)">',
-              '<span style="position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:' + (aktiv ? '#4f8ef7' : 'rgba(255,255,255,.1)') + ';border-radius:11px;transition:.3s;" id="toggle_'+item.key+'"></span>',
-              '<span style="position:absolute;content:\'\';height:16px;width:16px;left:' + (aktiv ? '21px' : '3px') + ';bottom:3px;background:white;border-radius:50%;transition:.3s;" id="thumb_'+item.key+'"></span>',
-            '</label>',
-          '</div>'
-        ].join('');
-      }).join(''),
-      '<div style="margin-top:8px;">',
-        '<div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:8px;">E-Mail Zusammenfassung</div>',
-        '<select id="email-digest-select" style="width:100%;padding:8px 10px;background:var(--surface2,#1e2535);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;">',
-          '<option value="täglich" ' + (einstellungen.email_digest === 'täglich' ? 'selected' : '') + '>Täglich</option>',
-          '<option value="wöchentlich" ' + (einstellungen.email_digest === 'wöchentlich' ? 'selected' : '') + '>Wöchentlich</option>',
-          '<option value="nie" ' + (einstellungen.email_digest === 'nie' ? 'selected' : '') + '>Nie</option>',
-        '</select>',
-      '</div>',
-    '</div>'
-  ].join('');
-
-  modal.style.display = 'flex';
-}
-
-function toggleEinstellung(key, aktiv) {
-  einstellungen[key] = aktiv;
-  var toggle = document.getElementById('toggle_' + key);
-  var thumb  = document.getElementById('thumb_'  + key);
-  if (toggle) toggle.style.background = aktiv ? '#4f8ef7' : 'rgba(255,255,255,.1)';
-  if (thumb)  thumb.style.left        = aktiv ? '21px' : '3px';
-}
-
-function schliesseEinstellungen() {
-  document.getElementById('einstellungen-modal').style.display = 'none';
-}
-
-function speichereEinstellungen() {
-  var select = document.getElementById('email-digest-select');
-  if (select) einstellungen.email_digest = select.value;
-  localStorage.setItem('prova_notif_einstellungen', JSON.stringify(einstellungen));
-  schliesseEinstellungen();
-  showToast('✓ Einstellungen gespeichert', 'success');
-  ladeNotifications();
-}
-
-// ── Helfer ──
-function hexToRgb(hex) {
-  var r = parseInt(hex.slice(1,3),16);
-  var g = parseInt(hex.slice(3,5),16);
-  var b = parseInt(hex.slice(5,7),16);
-  return r + ',' + g + ',' + b;
-}
-function escapeHtml(s) {
-  return String(s).replace(/&/g,'&').replace(/</g,'<').replace(/>/g,'>').replace(/"/g,'"');
-}
-
-// ── Init ──
-document.addEventListener('DOMContentLoaded', function() {
-  ladeNotifications();
-});
-</script>
-
+<script src="prova-context.js" defer></script>
+<script src="prova-error-handler.js" defer></script>
 <script src="support-chat.js" defer></script>
 <script src="sw-register.js" defer></script>
 </body>

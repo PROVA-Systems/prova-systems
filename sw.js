@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v57';
+const CACHE_VERSION = 'prova-v58';
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
@@ -36,8 +36,6 @@ const APP_SHELL = [
   '/trial-guard.js',
   '/prova-preise.js',
   '/paket-guard.js',
-  '/einstellungen-v2.html',
-  '/benachrichtigungen-v2.html',
   '/ortstermin-modus.html',
   '/frist-guard.js',
   '/honorar-tracker.js',
@@ -64,12 +62,7 @@ self.addEventListener('activate', event => {
         keys.filter(k => k !== CACHE_VERSION).map(k => caches.delete(k))
       )
     ).then(() => self.clients.claim())
-    .then(() => {
-      // Alle offenen Tabs nach Update benachrichtigen → auto-reload
-      self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(clients => {
-        clients.forEach(client => client.postMessage({ type: 'SW_UPDATED', version: CACHE_VERSION }));
-      });
-    })
+    // Kein auto-reload: Seite bleibt stabil, neuer SW wird beim nächsten Besuch aktiv
   );
 });
 

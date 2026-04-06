@@ -5,10 +5,7 @@
 ============================================================ */
 (function() {
 
-/* ── Feature-Gate: nur Team (ZUGFeRD/XRechnung) ── */
-if (window.PaketGuard) {
-  PaketGuard.blockiereSeite('zugferd');
-}
+/* E-Rechnung: verfügbar für Solo + Team */
 
 /* ── Tabs ── */
 window.setFormat = function(btn, fmt) {

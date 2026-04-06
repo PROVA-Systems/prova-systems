@@ -134,7 +134,16 @@ const AutoSave = {
 };
 
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', () => AutoSave.init());
-} else {
-  AutoSave.init();
-}
+  document.addEventListener('DOMContentLoaded', () => {
+    var _pg = (window.location.pathname.split('/').pop() || '');
+    var _skip = ['baubegleitung.html','briefvorlagen.html','archiv.html','dashboard.html',
+      'statistiken.html','normen.html','textbausteine.html','termine.html',
+      'kontakte.html','rechnungen.html','einstellungen.html','hilfe.html',
+      'positionen.html','kostenermittlung.html','jveg.html','jahresbericht.html',
+      'benachrichtigungen.html','erechnung.html'];
+    if (!_skip.includes(_pg)) AutoSave.init();
+  });
+  } else {
+    var _pg2 = (window.location.pathname.split('/').pop() || '');
+    if (!['baubegleitung.html','briefvorlagen.html','archiv.html','dashboard.html'].includes(_pg2)) AutoSave.init();
+  }

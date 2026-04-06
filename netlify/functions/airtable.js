@@ -36,6 +36,21 @@ const ALLOWED_TABLES = {
   // TEXTBAUSTEINE: localStorage-only, kein Airtable-Zugriff nötig
 };
 
+// ── Tabellen-Name → ID Mapping (für tabelle+filter Format) ──
+const TABLE_NAME_MAP = {
+  'FAELLE':           'tblSxV8bsXwd1pwa0',
+  'SCHADENSFAELLE':   'tblSxV8bsXwd1pwa0',
+  'SV':               'tbladqEQT3tmx4DIB',
+  'TERMINE':          'tblyMTTdtfGQjjmc2',
+  'RECHNUNGEN':       'tblF6MS7uiFAJDjiT',
+  'KI_STATISTIK':     'tblv9F8LEnUC3mKru',
+  'KI_LERNPOOL':      'tbl4LEsMvcDKFCYaF',
+  'EINWILLIGUNGEN':   'tblwgUQgtBWckPMHp',
+  'KONTAKTE':         'tblMKmPLjRelr6Hal',
+  'PUSH_SUBSCRIPTIONS': 'PUSH_SUBSCRIPTIONS'
+};
+const BASE_ID = 'appJ7bLlAHZoxENWE';
+
 // ── Rate-Limiting (In-Memory, wird bei Function-Cold-Start zurückgesetzt) ──
 const rateLimitMap = new Map();
 const RATE_LIMIT   = 100;  // Requests pro Fenster
@@ -160,7 +175,21 @@ exports.handler = async function(event) {
     return { statusCode: 400, headers, body: JSON.stringify({ error: 'Ungültiger JSON-Body' }) };
   }
 
-  const { method = 'GET', path, payload } = body;
+  let { method = 'GET', path, payload } = body;
+
+  // ── tabelle+filter Format → path konvertieren (honorar-tracker, frist-guard etc.) ──
+  if (!path && body.tabelle) {
+    const tblId = TABLE_NAME_MAP[body.tabelle] || body.tabelle;
+    let qs = '';
+    if (body.filter)  qs += (qs ? '&' : '?') + 'filterByFormula=' + encodeURIComponent(body.filter);
+    if (body.felder)  (Array.isArray(body.felder) ? body.felder : [body.felder]).forEach(f => { qs += (qs?'&':'?') + 'fields[]=' + encodeURIComponent(f); });
+    if (body.sort)    qs += (qs?'&':'?') + 'sort[0][field]=' + encodeURIComponent(body.sort) + '&sort[0][direction]=' + (body.sortDir||'desc');
+    if (body.limit)   qs += (qs?'&':'?') + 'maxRecords=' + body.limit;
+    if (body.record)  { path = '/v0/' + BASE_ID + '/' + tblId + '/' + body.record; }
+    else              { path = '/v0/' + BASE_ID + '/' + tblId + qs; }
+    method = body.methode || method;
+    if (body.daten)   payload = { fields: body.daten };
+  }
 
   // ── Pfad-Validierung ──
   if (!path || !path.startsWith('/v0/')) {

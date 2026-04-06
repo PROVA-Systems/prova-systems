@@ -18,8 +18,9 @@
             if (!newWorker) return;
             newWorker.addEventListener('statechange', () => {
               if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                // Neue Version verfügbar — SW sofort aktivieren
-                newWorker.postMessage({ type: 'SKIP_WAITING' });
+                // Neue Version verfügbar — stiller Update, kein auto-reload
+                // SW übernimmt beim nächsten Seitenaufruf
+                console.info('[PROVA SW] Update verfügbar — wird beim nächsten Start aktiv');
               }
             });
           });

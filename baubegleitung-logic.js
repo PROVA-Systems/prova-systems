@@ -86,6 +86,7 @@ function ladeProduktDetail(id) {
   if (!proj) return;
 
   var detail = document.getElementById('proj-detail');
+  if (!detail) { console.warn('[BB] proj-detail nicht gefunden'); return; }
   var begehungen = proj.begehungen || [];
   var fortschritt = begehungenFortschritt(proj);
 
@@ -305,7 +306,7 @@ function closeModal(id) { document.getElementById(id).classList.remove('open'); 
 
 function openModalProjekt() {
   _editProjektId = null;
-  document.getElementById('modal-proj-titel').textContent = '🏗 Neues Projekt';
+  document.getElementById('modal-projekt-titel').textContent = '🏗 Neues Projekt';
   ['mp-name','mp-auftraggeber','mp-az','mp-adresse','mp-notiz'].forEach(function(id){
     var el=document.getElementById(id); if(el) el.value='';
   });
@@ -319,7 +320,7 @@ function editiereProjekt(id) {
   var proj = _data.projekte.find(function(p){return p.id===id;});
   if (!proj) return;
   _editProjektId = id;
-  document.getElementById('modal-proj-titel').textContent = '✎ Projekt bearbeiten';
+  document.getElementById('modal-projekt-titel').textContent = '✎ Projekt bearbeiten';
   document.getElementById('mp-name').value = proj.name||'';
   document.getElementById('mp-auftraggeber').value = proj.auftraggeber||'';
   (document.getElementById('mp-az') || document.getElementById('mp-az-edit')).value = proj.az||'';
