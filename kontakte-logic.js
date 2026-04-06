@@ -32,7 +32,7 @@ const AT_BASE_K = 'appJ7bLlAHZoxENWE';
 const AT_KONTAKTE = 'tblMKmPLjRelr6Hal';
 async function atKontakte(method, path, body) {
   try {
-    var res = await ProvaError.safeFetch('/.netlify/functions/airtable', {
+    var res = await fetch('/.netlify/functions/airtable', {
       method: 'POST',
       headers: {'Content-Type':'application/json'},
       body: JSON.stringify({method: method, path: path, payload: body || null})
@@ -53,10 +53,9 @@ function ladeKontakte() {
 async function syncKontakteVonAirtable() {
   var email = localStorage.getItem('prova_sv_email') || '';
   if (!email) return;
-  var filterFormula = email ? encodeURIComponent('{sv_email}="' + email + '"') : '';
+  // airtable.js v2 fügt User-Filter server-seitig hinzu
   var path = '/v0/' + AT_BASE_K + '/' + AT_KONTAKTE
-    + '?maxRecords=200&sort[0][field]=Name&sort[0][direction]=asc'
-    + (filterFormula ? '&filterByFormula=' + filterFormula : '');
+    + '?maxRecords=200&sort[0][field]=Name&sort[0][direction]=asc';
   var data = await atKontakte('GET', path);
   if (!data || !data.records || !data.records.length) return;
   // Merge: Airtable-Datensätze in lokale Liste — AT-Datensätze haben Vorrang

@@ -1,14 +1,11 @@
 /* ============================================================
-   PROVA Systems — Service Worker v49
+   PROVA Systems — Service Worker v51
    Strategie: Network-First für HTML (kein Zwischenbild mehr!)
               Cache-First für Assets (Fonts, JS, CSS)
               Network-Only für APIs
-   Session 27: +prova-preise.js, +auth-guard-v2.js,
-               +prova-context.js, +prova-error-handler.js,
-               +benachrichtigungen.html, +support-chat.js
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v49';
+const CACHE_VERSION = 'prova-v51';
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
@@ -34,15 +31,9 @@ const APP_SHELL = [
   '/normen.html',
   '/positionen.html',
   '/baubegleitung.html',
-  '/benachrichtigungen.html',
   '/nav.js',
   '/theme.js',
   '/trial-guard.js',
-  '/prova-preise.js',
-  '/auth-guard-v2.js',
-  '/prova-context.js',
-  '/prova-error-handler.js',
-  '/support-chat.js',
 ];
 
 self.addEventListener('install', event => {
@@ -136,10 +127,10 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // PROVA Core JS → Network-First (alle .js + .css, ändern sich häufig)
-  // Session 27: +prova-preise, +auth-guard-v2, +prova-context, +prova-error-handler
+  // PROVA Core JS (nav, theme, trial-guard) → Network-First
+  // Diese Dateien ändern sich häufig → immer frisch holen
   const isCoreJs = ['/nav.js','/theme.js','/trial-guard.js','/sw-register.js','/mobile.css',
-  '/prova-wizard.js','/prova-preise.js','/auth-guard-v2.js','/prova-context.js','/prova-error-handler.js','/support-chat.js'].includes(url.pathname)
+  '/prova-wizard.js'].includes(url.pathname)
     || url.pathname.endsWith('.css')
     || (url.pathname.endsWith('.js') && !url.pathname.includes('netlify'));
   if (isCoreJs) {

@@ -5,14 +5,14 @@
 ════════════════════════════════════════════════════════════ */
 
 // ── AUTH ──
-/* ─── AUTH via auth-guard-v2.js (läuft synchron im Head) ─── */
+// Auth via auth-guard.js (synchron im <head> geladen)
 
 // ── PAKET ──
+var paket = localStorage.getItem('prova_paket')||'Solo';
 (function(){
-  var p = paket;
-  var c = {Solo:'#4f8ef7',Team:'#a78bfa',Starter:'#4f8ef7',Pro:'#4f8ef7',Enterprise:'#a78bfa'}[p]||'#4f8ef7';
+  var c = {Solo:'#4f8ef7',Team:'#a78bfa',Starter:'#4f8ef7',Pro:'#4f8ef7',Enterprise:'#a78bfa'}[paket]||'#4f8ef7';
   var badge = document.getElementById('topbarPaket');
-  if(badge){ badge.textContent=p; badge.style.cssText='background:'+c+'18;color:'+c+';border:1px solid '+c+'33;'; }
+  if(badge){ badge.textContent=paket; badge.style.cssText='background:'+c+'18;color:'+c+';border:1px solid '+c+'33;'; }
 })();
 
 // ── NORMEN DATENBANK ──
@@ -186,8 +186,11 @@ const NORMEN_DB = [
   {num:'§444 BGB',titel:'Arglistiges Verschweigen von Mängeln',bereich:'Baurecht',sa:'BA',anw:'Keine Berufung auf Haftungsausschluss bei arglistigem Verschweigen. Relevant bei Verkaufsgutachten.',gw:'Arglist = positive Kenntnis des Mangels + Verschweigen'},
 ];
 
+
 // ── Globale Verfügbarkeit — Einzige Quelle der Wahrheit ──
 window.PROVA_NORMEN_DB = NORMEN_DB;
+
+
 
 let activeChipSA = '';
 let activeChipHF = '';

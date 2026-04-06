@@ -35,10 +35,9 @@
 
   /* ── Nav-Items: workflow-orientierte Gruppierung ── */
   var ARBEIT = [
-    { href: 'dashboard.html',          icon: '⊞',  label: 'Zentrale' },
-    { href: 'archiv.html',             icon: '📂', label: 'Fälle' },
-    { href: 'termine.html',            icon: '📅', label: 'Kalender' },
-    { href: 'benachrichtigungen.html', icon: '🔔', label: 'Benachrichtigungen' },
+    { href: 'dashboard.html',     icon: '⊞',  label: 'Zentrale' },
+    { href: 'archiv.html',        icon: '📂', label: 'Fälle' },
+    { href: 'termine.html',       icon: '📅', label: 'Kalender' },
   ];
   // GUTACHTEN: Alle Werkzeuge die direkt im Gutachten-Workflow verwendet werden
   var GUTACHTEN = [
@@ -422,6 +421,38 @@
     var collapsed = localStorage.getItem('prova_sb_collapsed') === '1';
     if (collapsed) existing.classList.add('collapsed');
 
+    // ── Scroll-Position der Sidebar wiederherstellen ──
+    var nav = existing.querySelector('.sb-nav');
+    if (nav) {
+      var savedScroll = parseInt(localStorage.getItem('prova_sb_scroll') || '0', 10);
+      // Kurz warten bis DOM gerendert, dann Position setzen
+      requestAnimationFrame(function() {
+        nav.scrollTop = savedScroll;
+        // Aktives Element in View bringen (nur wenn außerhalb des sichtbaren Bereichs)
+        var active = nav.querySelector('.sb-item.active, .sb-item-active, a.active');
+        if (active) {
+          var navRect = nav.getBoundingClientRect();
+          var itemRect = active.getBoundingClientRect();
+          var isAbove = itemRect.top < navRect.top;
+          var isBelow = itemRect.bottom > navRect.bottom;
+          if (isAbove || isBelow) {
+            active.scrollIntoView({ block: 'nearest', behavior: 'auto' });
+          }
+        }
+      });
+      // Scroll-Position beim Verlassen speichern
+      window.addEventListener('beforeunload', function() {
+        localStorage.setItem('prova_sb_scroll', nav.scrollTop);
+      });
+      // Auch bei normalen Link-Klicks speichern (beforeunload feuert nicht immer)
+      nav.addEventListener('click', function(e) {
+        var link = e.target.closest('a[href]');
+        if (link && !link.getAttribute('href').startsWith('#')) {
+          localStorage.setItem('prova_sb_scroll', nav.scrollTop);
+        }
+      }, true);
+    }
+
     // Collapse-Button
     var btn = document.getElementById('sb-collapse-btn');
     if (btn) {
@@ -573,7 +604,6 @@ window.provaConfirm = function(msg, onYes) {
     { label: 'Fälle / Archiv', desc: 'Alle Fälle anzeigen', href: 'archiv.html', icon: '📂' },
     { label: 'Zentrale / Dashboard', desc: 'Was steht heute an?', href: 'dashboard.html', icon: '⊞' },
     { label: 'Kalender', desc: 'Termine und Fristen', href: 'termine.html', icon: '📅' },
-    { label: 'Benachrichtigungen', desc: 'Fristen, Hinweise und Systemmeldungen', href: 'benachrichtigungen.html', icon: '🔔' },
     { label: 'Normen-Datenbank', desc: 'DIN, VOB, WTA, ZPO', href: 'normen.html', icon: '📚' },
     { label: 'Textbausteine', desc: 'Wiederkehrende Formulierungen', href: 'textbausteine.html', icon: '📝' },
     { label: 'Positionen & Kosten', desc: 'BKI-Einheitspreise', href: 'positionen.html', icon: '🗂️' },
