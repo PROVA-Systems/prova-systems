@@ -61,7 +61,7 @@ async function ladeSVRecordId(){
   if(!email||_svRecordId)return _svRecordId;
   try{
     var path='/v0/'+AT_BASE+'/'+AT_SV_TABLE+'?filterByFormula='+encodeURIComponent('{Email}="'+email+'"')+'&maxRecords=1';
-    var res=await ProvaError.safeFetch('/.netlify/functions/airtable',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({method:'GET',path:path})});
+    var res=await fetch('/.netlify/functions/airtable',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({method:'GET',path:path})});
     if(!res.ok)return null;
     var data=await res.json();
     var rec=(data.records||[])[0];
@@ -75,7 +75,7 @@ async function updateAirtableFelder(felder){
   if(!recId){console.warn('Kein AT Record ID — Sync übersprungen');return false;}
   try{
     var path='/v0/'+AT_BASE+'/'+AT_SV_TABLE+'/'+recId;
-    var res=await ProvaError.safeFetch('/.netlify/functions/airtable',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({method:'PATCH',path:path,payload:{fields:felder}})});
+    var res=await fetch('/.netlify/functions/airtable',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({method:'PATCH',path:path,payload:{fields:felder}})});
     return res.ok;
   }catch(e){console.warn('AT PATCH Fehler:',e);return false;}
 }
@@ -420,7 +420,7 @@ var PLAN_DATA = {
     colorBg: 'rgba(79,142,247,.1)',
     desc: 'Für den selbstständigen Sachverständigen',
     preisMonatlich: 149,
-    preisJaehrlich: 71, // -20%
+    preisJaehrlich: 119, // -20%
     limit: 30,
     features: [
       { text: '1 Nutzer', yes: true },
@@ -441,7 +441,7 @@ var PLAN_DATA = {
     colorBg: 'rgba(139,92,246,.1)',
     desc: 'Für Büros mit mehreren Sachverständigen',
     preisMonatlich: 279,
-    preisJaehrlich: 143, // -20%
+    preisJaehrlich: 219, // -20%
     limit: null, // unbegrenzt
     features: [
       { text: 'Alles aus Solo', yes: true },
@@ -460,8 +460,10 @@ var PLAN_DATA = {
 
 window.setBillingCycle = function(cycle) {
   _billingCycle = cycle;
-  document.getElementById('btn-monthly').classList.toggle('active', cycle === 'monthly');
-  document.getElementById('btn-yearly').classList.toggle('active', cycle === 'yearly');
+  var bm = document.getElementById('btn-monthly');
+  var by = document.getElementById('btn-yearly');
+  if (bm) bm.classList.toggle('active', cycle === 'monthly');
+  if (by) by.classList.toggle('active', cycle === 'yearly');
   renderPlanCards();
 };
 

@@ -85,16 +85,17 @@ window.erAddPosition = function() {
   var idx = container.querySelectorAll('.er-position-row').length + 1;
   var row = document.createElement('tr');
   row.className = 'er-position-row';
-  row.innerHTML =
-    '<td><input class="form-input er-leistung" placeholder="Leistungsbeschreibung" oninput="updateSummen()"></td>' +
-    '<td><input class="form-input er-menge" type="number" value="1" min="0" step="0.5" style="width:70px" onchange="erCalcGP(this.closest('tr'))"></td>' +
-    '<td><select class="form-input er-einheit" style="width:80px">' +
-    '<option value="HUR">h</option><option value="KMT">km</option>' +
-    '<option value="EA">Stk</option><option value="DAY">Tag</option>' +
-    '</select></td>' +
-    '<td><input class="form-input er-ep" type="number" placeholder="0,00" step="0.01" style="width:90px" onchange="erCalcGP(this.closest('tr'))"></td>' +
-    '<td class="er-gp">0.00</td>' +
-    '<td><button class="btn-icon" onclick="this.parentElement.remove();updateSummen();" title="Entfernen">×</button></td>';
+  row.innerHTML = [
+    '<td><input class="form-input er-leistung" placeholder="Leistungsbeschreibung" oninput="updateSummen()"></td>',
+    '<td><input class="form-input er-menge" type="number" value="1" min="0" step="0.5" style="width:70px" onchange="erCalcGP(this.parentElement.parentElement)"></td>',
+    '<td><select class="form-input er-einheit" style="width:80px">',
+    '<option value="HUR">h</option><option value="KMT">km</option>',
+    '<option value="EA">Stk</option><option value="DAY">Tag</option>',
+    '</select></td>',
+    '<td><input class="form-input er-ep" type="number" placeholder="0,00" step="0.01" style="width:90px" onchange="erCalcGP(this.parentElement.parentElement)"></td>',
+    '<td class="er-gp">0.00</td>',
+    '<td><button class="btn-icon" onclick="this.parentElement.remove();updateSummen();" title="Entfernen">×</button></td>'
+  ].join('');
   container.appendChild(row);
 };
 
