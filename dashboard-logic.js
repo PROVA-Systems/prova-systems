@@ -686,10 +686,12 @@ async function ladeAlleDaten(){
   try{
     // Parallel laden
     var svAtId = localStorage.getItem('prova_at_sv_record_id') || '';
-    // Filter: sv_email wenn gesetzt, sonst alle Records mit Aktenzeichen (Testphase)
-    var filterFaelle = svEmail
-      ? 'AND(NOT({Status}=""),OR({sv_email}="'+svEmail+'",{Aktenzeichen}!=""))'
-      : 'AND(NOT({Status}=""),{Aktenzeichen}!="")';
+    // SICHERHEIT: Ohne sv_email werden KEINE Daten geladen
+    if (!svEmail) {
+      console.warn('[PROVA] Keine sv_email — kein Datenladen');
+      return;
+    }
+    var filterFaelle = 'AND({sv_email}="'+svEmail+'",NOT({Status}=""))';
     var filterTermine = svEmail ? '{sv_email}="'+svEmail+'"' : 'NOT({termin_datum}="")';
     var filterRechnungen = svEmail
       ? 'AND(OR({Status}="Offen",{Status}="Überfällig"),{sv_email}="'+svEmail+'")'

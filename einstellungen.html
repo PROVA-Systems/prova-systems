@@ -191,19 +191,7 @@
       transition: all 0.25s; white-space: nowrap; pointer-events: none;
     }
     .es-toast.sichtbar { opacity: 1; transform: translateX(-50%) translateY(0); }
-  
-    .smtp-provider-btn {
-      padding: 10px 8px; background: var(--bg3,#1a2035); border: 1px solid var(--border,#1e3a5f);
-      border-radius: 8px; color: var(--text2,#94a3b8); font-size: 11px; font-weight: 600;
-      cursor: pointer; text-align: center; transition: all .15s; font-family: inherit;
-    }
-    .smtp-provider-btn:hover { border-color: var(--accent,#4f8ef7); color: var(--accent,#4f8ef7); }
-    .smtp-provider-btn.aktiv { background: rgba(79,142,247,.12); border-color: var(--accent,#4f8ef7); color: var(--accent,#4f8ef7); }
-    .es-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--text3,#6b7a99); margin-bottom: 5px; display: block; }
-    .es-input { width: 100%; padding: 9px 12px; background: var(--bg3,#1a2035); border: 1px solid var(--border2,#1e3a5f); border-radius: 8px; color: var(--text,#e8eaf0); font-size: 13px; font-family: inherit; outline: none; box-sizing: border-box; }
-    .es-input:focus { border-color: var(--accent,#4f8ef7); }
-    .es-card { background: var(--surface,#111827); border: 1px solid var(--border,#1e3a5f); border-radius: 12px; padding: 16px; margin-bottom: 10px; }
-</style>
+  </style>
 </head>
 <body data-page="einstellungen">
   <div class="app-shell" id="app-shell">
@@ -531,92 +519,7 @@
 
       </div>
     </div>
-  
-        <section class="es-section" id="es-sec-email">
-          <div class="es-section-header">
-            <span class="es-section-icon">📧</span>
-            <div class="es-section-info">
-              <div class="es-section-title">E-Mail-Versand</div>
-              <div class="es-section-sub">Eigene E-Mail-Adresse für direkten Briefversand</div>
-            </div>
-          </div>
-
-          <div class="es-card" style="margin-bottom:12px;">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
-              <div style="display:flex;align-items:center;gap:10px;">
-                <div style="font-size:13px;font-weight:600;color:var(--text,#e8eaf0);">E-Mail-Provider wählen</div>
-                <div id="smtp-status-badge" style="font-size:11px;padding:2px 8px;border-radius:10px;background:rgba(239,68,68,.12);color:#ef4444;border:1px solid rgba(239,68,68,.2);">Nicht konfiguriert</div>
-              </div>
-              <button onclick="oeffneSmtpAnleitung()" style="display:flex;align-items:center;gap:5px;padding:5px 12px;background:rgba(79,142,247,.1);border:1px solid rgba(79,142,247,.3);border-radius:8px;color:var(--accent,#4f8ef7);font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;">
-                📖 Schritt-für-Schritt Anleitung
-              </button>
-            </div>
-
-            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:8px;margin-bottom:18px;" id="smtp-provider-grid">
-              <button class="smtp-provider-btn" data-provider="gmail" data-host="smtp.gmail.com" data-port="587" onclick="waehleProvider(this)">
-                <div style="font-size:18px;margin-bottom:4px;">G</div>Gmail
-              </button>
-              <button class="smtp-provider-btn" data-provider="gmx" data-host="mail.gmx.net" data-port="587" onclick="waehleProvider(this)">
-                <div style="font-size:18px;margin-bottom:4px;">G</div>GMX
-              </button>
-              <button class="smtp-provider-btn" data-provider="web" data-host="smtp.web.de" data-port="587" onclick="waehleProvider(this)">
-                <div style="font-size:18px;margin-bottom:4px;">W</div>Web.de
-              </button>
-              <button class="smtp-provider-btn" data-provider="ionos" data-host="smtp.ionos.de" data-port="587" onclick="waehleProvider(this)">
-                <div style="font-size:18px;margin-bottom:4px;">1</div>IONOS
-              </button>
-              <button class="smtp-provider-btn" data-provider="telekom" data-host="securesmtp.t-online.de" data-port="587" onclick="waehleProvider(this)">
-                <div style="font-size:18px;margin-bottom:4px;">T</div>Telekom
-              </button>
-              <button class="smtp-provider-btn" data-provider="outlook" data-host="smtp-mail.outlook.com" data-port="587" onclick="waehleProvider(this)">
-                <div style="font-size:18px;margin-bottom:4px;">O</div>Outlook
-              </button>
-              <button class="smtp-provider-btn" data-provider="custom" data-host="" data-port="587" onclick="waehleProvider(this)">
-                <div style="font-size:18px;margin-bottom:4px;">⚙</div>Eigener
-              </button>
-            </div>
-
-            <div id="smtp-anleitung" style="display:none;margin-bottom:14px;padding:10px 12px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2);border-radius:8px;font-size:12px;color:var(--text2,#94a3b8);line-height:1.6;"></div>
-
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;" id="smtp-server-fields">
-              <div>
-                <label class="es-label">SMTP-Server</label>
-                <input type="text" id="smtp-host" class="es-input" placeholder="smtp.gmail.com">
-              </div>
-              <div>
-                <label class="es-label">Port</label>
-                <input type="number" id="smtp-port" class="es-input" placeholder="587" value="587">
-              </div>
-            </div>
-
-            <label class="es-label">E-Mail-Adresse (Benutzername)</label>
-            <input type="email" id="smtp-user" class="es-input" placeholder="max.mustermann@gmail.com" style="margin-bottom:10px;">
-
-            <label class="es-label">Passwort / App-Passwort</label>
-            <div style="position:relative;margin-bottom:10px;">
-              <input type="password" id="smtp-pass" class="es-input" placeholder="App-Passwort oder normales Passwort" style="padding-right:44px;">
-              <button onclick="togglePasswortSichtbar()" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text3);cursor:pointer;font-size:16px;" title="Passwort anzeigen">👁</button>
-            </div>
-
-            <label class="es-label">Anzeigename (erscheint beim Empfänger)</label>
-            <input type="text" id="smtp-from-name" class="es-input" placeholder="Dipl.-Ing. Max Mustermann · Sachverständiger" style="margin-bottom:14px;">
-
-            <div style="display:flex;gap:8px;flex-wrap:wrap;">
-              <button class="es-btn" id="btn-smtp-test" onclick="testSmtpVerbindung()">🔌 Verbindung testen</button>
-              <button class="es-btn es-btn-primary" id="btn-smtp-save" onclick="speichereSmtpEinstellungen()">💾 Speichern</button>
-              <button class="es-btn" onclick="loescheSmtpEinstellungen()" style="color:var(--danger,#ef4444);border-color:rgba(239,68,68,.3);">🗑 Entfernen</button>
-            </div>
-            <div id="smtp-test-result" style="display:none;margin-top:10px;padding:10px 12px;border-radius:8px;font-size:12px;line-height:1.6;"></div>
-          </div>
-
-          <div class="es-card" style="background:rgba(79,142,247,.04);">
-            <div style="font-size:12px;font-weight:600;color:var(--accent,#4f8ef7);margin-bottom:6px;">🔒 Datenschutz & Sicherheit</div>
-            <div style="font-size:12px;color:var(--text3,#6b7a99);line-height:1.7;">
-              Ihr Passwort wird <strong style="color:var(--text2);">ausschließlich in Ihrem Browser</strong> gespeichert und niemals auf PROVA-Servern hinterlegt. Es reist verschlüsselt (HTTPS) nur im Moment des Versands. Wir empfehlen die Verwendung eines <strong style="color:var(--text2);">App-Passworts</strong> statt Ihres normalen Passworts — das können Sie jederzeit widerrufen ohne Ihr Hauptpasswort zu ändern.
-            </div>
-          </div>
-        </section>
-</main>
+  </main>
 
   <!-- Speichern-Leiste -->
   <div class="es-save-bar" id="es-save-bar">
@@ -781,14 +684,5 @@
 <script src="prova-error-handler.js" defer></script>
 <script src="support-chat.js" defer></script>
 <script src="sw-register.js" defer></script>
-
-<script>
-function oeffneSmtpAnleitung() {
-  var aktiv = document.querySelector('.smtp-provider-btn.aktiv');
-  var provider = aktiv ? aktiv.getAttribute('data-provider') : 'gmail';
-  window.open('smtp-einrichtung.html?provider=' + provider, 'smtp_anleitung',
-    'width=860,height=700,scrollbars=yes,resizable=yes,toolbar=no,menubar=no');
-}
-</script>
 </body>
 </html>

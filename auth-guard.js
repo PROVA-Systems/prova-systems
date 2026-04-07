@@ -33,6 +33,20 @@
     }
 
     refreshActivity();
+    
+    // Sicherheits-Check: sv_email MUSS gesetzt sein
+    // Ohne sv_email können keine Daten korrekt gefiltert werden
+    var currentEmail = localStorage.getItem('prova_sv_email') || '';
+    if (!currentEmail) {
+      // Email aus Session retten
+      try {
+        var sess = JSON.parse(localStorage.getItem('prova_session_v2') || '{}');
+        if (sess.user && sess.user.email) {
+          localStorage.setItem('prova_sv_email', sess.user.email);
+        }
+      } catch(e) {}
+    }
+    
     return true;
   };
 
@@ -143,7 +157,7 @@
   function buildToken(email, timestamp) {
     // Einfaches, nicht-kryptografisches Token für Client-Side Tamper-Detection
     // Echte Sicherheit liegt server-side in den Netlify Functions
-    var str = email + ':' + timestamp + ':PROVA_STATIC_SALT';
+    var str = email + ':' + timestamp + ':' + navigator.userAgent.slice(0, 20);
     var hash = 0;
     for (var i = 0; i < str.length; i++) {
       var chr = str.charCodeAt(i);
@@ -167,29 +181,16 @@
     } catch (e) {}
   }
 
-  /* ── Auto-Check bei Tab-Wechsel (NICHT bei F12/DevTools/Screenshots) ── */
-  // visibilitychange: feuert wenn Tab wirklich gewechselt wird (nicht bei DevTools)
-  // document.hidden = true bedeutet Tab ist im Hintergrund
-  // Wir prüfen NUR wenn Tab von hidden → visible wechselt (echter Tab-Wechsel)
-  var _lastVisibilityHidden = false;
-  document.addEventListener('visibilitychange', function() {
-    if (document.hidden) {
-      _lastVisibilityHidden = true;
-      return;
-    }
-    // Nur prüfen wenn Tab wirklich versteckt war (echter Browser-Tab-Wechsel)
-    if (!_lastVisibilityHidden) return;
-    _lastVisibilityHidden = false;
-    setTimeout(function() {
-      if (!isValidSession()) {
-        var page = window.location.pathname.split('/').pop() || '';
-        var publicPages = ['app-login.html', 'app-register.html', 'index.html', ''];
-        if (publicPages.indexOf(page) === -1) {
-          try { sessionStorage.setItem('prova_redirect_after_login', window.location.href); } catch(e) {}
-          window.location.replace('app-login.html');
-        }
+  /* ── Auto-Check bei Tab-Fokus ── */
+  window.addEventListener('focus', function () {
+    // Beim Zurückwechseln in den Tab prüfen ob Session noch gültig
+    if (!isValidSession()) {
+      var page = window.location.pathname.split('/').pop() || '';
+      var publicPages = ['app-login.html', 'app-register.html', 'index.html', ''];
+      if (publicPages.indexOf(page) === -1) {
+        window.location.replace('app-login.html');
       }
-    }, 500);
+    }
   });
 
   /* ── Inaktivitäts-Timer ── */
