@@ -24,32 +24,8 @@ const ALLOWED_TABLES = {
   // KI-Statistik: schreiben OK, lesen eingeschränkt
   tblv9F8LEnUC3mKru: { name: 'KI_STATISTIK', userField: null,      readOnly: false },
   // KI-Lernpool: nur schreiben
-  tbl4LEsMvcDKFCYaF: { name: 'KI_LERNPOOL',       userField: null,       readOnly: false },
-  // Einwilligungen (DSGVO/AVV): schreiben OK, lesen eigene
-  tblwgUQgtBWckPMHp: { name: 'EINWILLIGUNGEN',    userField: 'SV_Email', readOnly: false },
-  // Team-Interesse (Leads): nur schreiben
-  TEAM_INTERESSE:     { name: 'TEAM_INTERESSE',    userField: null,       readOnly: false }, // Schreib-only via team-interest.js
-  PUSH_SUBSCRIPTIONS: { name: 'PUSH_SUBSCRIPTIONS', userField: 'Email', readOnly: false },
-  // Kontakte: User-Filter
-  tblMKmPLjRelr6Hal: { name: 'KONTAKTE',           userField: 'SV_Email', readOnly: false },
-  // Textbausteine: User-Filter
-  // TEXTBAUSTEINE: localStorage-only, kein Airtable-Zugriff nötig
+  tbl4LEsMvcDKFCYaF: { name: 'KI_LERNPOOL', userField: null,       readOnly: false },
 };
-
-// ── Tabellen-Name → ID Mapping (für tabelle+filter Format) ──
-const TABLE_NAME_MAP = {
-  'FAELLE':           'tblSxV8bsXwd1pwa0',
-  'SCHADENSFAELLE':   'tblSxV8bsXwd1pwa0',
-  'SV':               'tbladqEQT3tmx4DIB',
-  'TERMINE':          'tblyMTTdtfGQjjmc2',
-  'RECHNUNGEN':       'tblF6MS7uiFAJDjiT',
-  'KI_STATISTIK':     'tblv9F8LEnUC3mKru',
-  'KI_LERNPOOL':      'tbl4LEsMvcDKFCYaF',
-  'EINWILLIGUNGEN':   'tblwgUQgtBWckPMHp',
-  'KONTAKTE':         'tblMKmPLjRelr6Hal',
-  'PUSH_SUBSCRIPTIONS': 'PUSH_SUBSCRIPTIONS'
-};
-const BASE_ID = 'appJ7bLlAHZoxENWE';
 
 // ── Rate-Limiting (In-Memory, wird bei Function-Cold-Start zurückgesetzt) ──
 const rateLimitMap = new Map();
@@ -175,21 +151,61 @@ exports.handler = async function(event) {
     return { statusCode: 400, headers, body: JSON.stringify({ error: 'Ungültiger JSON-Body' }) };
   }
 
-  let { method = 'GET', path, payload } = body;
+  // ── TABLE_NAME_MAP: Tabellenname → Airtable-ID ──
+  const TABLE_NAME_MAP = {
+    SCHADENSFAELLE:     'tblSxV8bsXwd1pwa0',
+    FAELLE:             'tblSxV8bsXwd1pwa0',
+    SV:                 'tbladqEQT3tmx4DIB',
+    SACHVERSTAENDIGE:   'tbladqEQT3tmx4DIB',
+    TERMINE:            'tblyMTTdtfGQjjmc2',
+    RECHNUNGEN:         'tblF6MS7uiFAJDjiT',
+    KONTAKTE:           'tblMKmPLjRelr6Hal',
+    KI_STATISTIK:       'tblv9F8LEnUC3mKru',
+    KI_LERNPOOL:        'tbl4LEsMvcDKFCYaF',
+    PUSH_SUBSCRIPTIONS: 'tblPUSH_PLACEHOLDER', // nach Airtable-Anlage ersetzen
+  };
+  const BASE_ID = 'appJ7bLlAHZoxENWE';
 
-  // ── tabelle+filter Format → path konvertieren (honorar-tracker, frist-guard etc.) ──
-  if (!path && body.tabelle) {
-    const tblId = TABLE_NAME_MAP[body.tabelle] || body.tabelle;
-    let qs = '';
-    if (body.filter)  qs += (qs ? '&' : '?') + 'filterByFormula=' + encodeURIComponent(body.filter);
-    if (body.felder)  (Array.isArray(body.felder) ? body.felder : [body.felder]).forEach(f => { qs += (qs?'&':'?') + 'fields[]=' + encodeURIComponent(f); });
-    if (body.sort)    qs += (qs?'&':'?') + 'sort[0][field]=' + encodeURIComponent(body.sort) + '&sort[0][direction]=' + (body.sortDir||'desc');
-    if (body.limit)   qs += (qs?'&':'?') + 'maxRecords=' + body.limit;
-    if (body.record)  { path = '/v0/' + BASE_ID + '/' + tblId + '/' + body.record; }
-    else              { path = '/v0/' + BASE_ID + '/' + tblId + qs; }
-    method = body.methode || method;
-    if (body.daten)   payload = { fields: body.daten };
+  // ── Format-Konverter: {action, tabelle, filter, felder, sort} → {method, path, payload} ──
+  let resolvedBody = body;
+  if (body.tabelle && !body.path) {
+    const tblId = TABLE_NAME_MAP[body.tabelle.toUpperCase()];
+    if (!tblId) {
+      return { statusCode: 400, headers, body: JSON.stringify({ error: `Unbekannte Tabelle: ${body.tabelle}` }) };
+    }
+    const action = (body.action || 'list').toLowerCase();
+
+    if (action === 'list' || action === 'get') {
+      // GET mit filterByFormula + fields[] + sort[]
+      const params = new URLSearchParams();
+      if (body.filter) params.set('filterByFormula', body.filter);
+      if (body.maxRecords) params.set('maxRecords', String(body.maxRecords));
+      if (Array.isArray(body.felder)) {
+        body.felder.forEach(f => params.append('fields[]', f));
+      }
+      if (Array.isArray(body.sort)) {
+        body.sort.forEach((s, i) => {
+          params.append(`sort[${i}][field]`, s.field);
+          params.append(`sort[${i}][direction]`, s.direction || 'asc');
+        });
+      }
+      const qs = params.toString();
+      resolvedBody = { method: 'GET', path: `/v0/${BASE_ID}/${tblId}${qs ? '?' + qs : ''}` };
+
+    } else if (action === 'create') {
+      resolvedBody = { method: 'POST', path: `/v0/${BASE_ID}/${tblId}`, payload: body.payload || body.data };
+
+    } else if (action === 'update' || action === 'patch') {
+      const recId = body.recordId || body.id;
+      resolvedBody = { method: 'PATCH', path: `/v0/${BASE_ID}/${tblId}/${recId}`, payload: body.payload || body.data };
+
+    } else if (action === 'delete') {
+      const recId = body.recordId || body.id;
+      resolvedBody = { method: 'DELETE', path: `/v0/${BASE_ID}/${tblId}/${recId}` };
+    }
   }
+
+  const { method = 'GET', path, payload } = resolvedBody;
 
   // ── Pfad-Validierung ──
   if (!path || !path.startsWith('/v0/')) {

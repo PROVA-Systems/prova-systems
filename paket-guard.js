@@ -36,7 +36,7 @@
       ki_fachurteil:      true,
       ki_qualitaet:       true,
       ki_foto_analyse:    false,   // Team only
-      ki_credits:         200,     // pro Monat
+      faelle_monat:       25,      // max. Fälle pro Monat
 
       // Gutachten & Workflow
       gutachten:          true,
@@ -79,7 +79,7 @@
       ki_fachurteil:      true,
       ki_qualitaet:       true,
       ki_foto_analyse:    true,    // Team only
-      ki_credits:         1000,
+      faelle_monat:       0,       // 0 = unbegrenzt
 
       // Gutachten & Workflow
       gutachten:          true,
@@ -122,7 +122,7 @@
       ki_fachurteil:      true,
       ki_qualitaet:       true,
       ki_foto_analyse:    true,
-      ki_credits:         500,
+      faelle_monat:       0,       // 0 = unbegrenzt
       gutachten:          true,
       jveg:               true,
       normen:             true,
@@ -497,6 +497,133 @@
     };
   }
 
+
+  /* ══════════════════════════════════════════════════════════
+     KONTINGENT: Fälle pro Monat zählen + Add-ons
+     
+     Speicherung: localStorage
+       prova_faelle_monat       → Zahl der Fälle diesen Monat
+       prova_faelle_reset       → ISO-Datum letztes Reset (YYYY-MM)
+       prova_faelle_zusatz      → Zusatz-Fälle aus Add-on-Kauf
+     
+     Airtable ist die Quelle der Wahrheit beim Login.
+     localStorage ist der schnelle lokale Cache.
+  ══════════════════════════════════════════════════════════ */
+
+  var KONTINGENT_KEY       = 'prova_faelle_monat';
+  var KONTINGENT_RESET_KEY = 'prova_faelle_reset';
+  var ZUSATZ_KEY           = 'prova_faelle_zusatz';
+
+  /* Aktuellen Monat als String (YYYY-MM) */
+  function aktuellerMonat() {
+    var d = new Date();
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+  }
+
+  /* Monat gewechselt? → Counter zurücksetzen */
+  function pruefeMonatsReset() {
+    var gespeicherterMonat = localStorage.getItem(KONTINGENT_RESET_KEY);
+    var monat = aktuellerMonat();
+    if (gespeicherterMonat !== monat) {
+      localStorage.setItem(KONTINGENT_KEY, '0');
+      localStorage.setItem(KONTINGENT_RESET_KEY, monat);
+      // Zusatz-Fälle bleiben erhalten — werden beim Kauf gesetzt und manuell verbraucht
+    }
+  }
+
+  /* Kontingent-Status lesen */
+  function getKontingentStatus() {
+    pruefeMonatsReset();
+    var paket     = getPaket();
+    var limit     = FEATURE_MAP[paket] ? FEATURE_MAP[paket].faelle_monat : 25;
+    var verbraucht = parseInt(localStorage.getItem(KONTINGENT_KEY) || '0', 10);
+    var zusatz     = parseInt(localStorage.getItem(ZUSATZ_KEY)     || '0', 10);
+    var gesamtLimit = limit === 0 ? 0 : limit + zusatz; // 0 = unbegrenzt (Team)
+    var verbleibend = limit === 0 ? null : Math.max(0, gesamtLimit - verbraucht);
+
+    return {
+      paket:       paket,
+      limit:       limit,          // Basis-Limit (25 Solo, 0=∞ Team)
+      verbraucht:  verbraucht,     // diesen Monat
+      zusatz:      zusatz,         // gekaufte Zusatz-Fälle
+      gesamtLimit: gesamtLimit,    // limit + zusatz
+      verbleibend: verbleibend,    // null = unbegrenzt
+      istUnbegrenzt: limit === 0,
+      istVoll: limit !== 0 && verbraucht >= gesamtLimit,
+      monat:   aktuellerMonat(),
+    };
+  }
+
+  /* Einen neuen Fall registrieren (Aufruf in app-logic.js beim Anlegen) */
+  function registriereNeuenFall() {
+    pruefeMonatsReset();
+    var status = getKontingentStatus();
+    if (status.istUnbegrenzt) return true; // Team: immer OK
+    if (status.istVoll) return false;      // Limit erreicht
+
+    // Erst Zusatz-Fälle verbrauchen
+    var zusatz = parseInt(localStorage.getItem(ZUSATZ_KEY) || '0', 10);
+    var basis  = parseInt(localStorage.getItem(KONTINGENT_KEY) || '0', 10);
+    var paket  = getPaket();
+    var limit  = FEATURE_MAP[paket] ? FEATURE_MAP[paket].faelle_monat : 25;
+
+    if (basis >= limit && zusatz > 0) {
+      // Basis aufgebraucht → Zusatz verbrauchen
+      localStorage.setItem(ZUSATZ_KEY, String(Math.max(0, zusatz - 1)));
+    } else {
+      localStorage.setItem(KONTINGENT_KEY, String(basis + 1));
+    }
+    return true;
+  }
+
+  /* Zusatz-Fälle nach Add-on-Kauf gutschreiben */
+  function gutschreibeZusatzFaelle(menge) {
+    var aktuell = parseInt(localStorage.getItem(ZUSATZ_KEY) || '0', 10);
+    localStorage.setItem(ZUSATZ_KEY, String(aktuell + menge));
+    console.log('[PaketGuard] Zusatz-Fälle gutgeschrieben: +' + menge + ' → ' + (aktuell + menge));
+  }
+
+  /* Kontingent prüfen — gibt false + Overlay wenn voll */
+  function pruefeKontingent(opts) {
+    var status = getKontingentStatus();
+    if (!status.istVoll) return true;
+
+    injectCSS();
+    opts = opts || {};
+    var old = document.getElementById('pg-overlay-kontingent');
+    if (old) old.remove();
+
+    var overlay = document.createElement('div');
+    overlay.className = 'pg-overlay';
+    overlay.id = 'pg-overlay-kontingent';
+    overlay.innerHTML = [
+      '<div class="pg-modal">',
+        '<div class="pg-icon">📋</div>',
+        '<h2>Monatliches Kontingent erreicht</h2>',
+        '<p>Sie haben diesen Monat alle <strong>' + status.gesamtLimit + ' Fälle</strong> verbraucht. ',
+        'Kaufen Sie ein Zusatz-Paket oder warten Sie auf das Monats-Reset.</p>',
+        '<div class="pg-btns">',
+          '<button class="pg-btn-upgrade" onclick="window.location.href=\"app-pro.html#addon\"">',
+            '➕ Zusatz-Fälle kaufen',
+          '</button>',
+          '<button class="pg-btn-back" id="pg-back-kontingent">← Zurück</button>',
+        '</div>',
+      '</div>',
+    ].join('');
+
+    document.body.appendChild(overlay);
+    var back = document.getElementById('pg-back-kontingent');
+    if (back) back.addEventListener('click', function() {
+      overlay.remove();
+      if (typeof opts.onAbbruch === 'function') opts.onAbbruch();
+      else history.back();
+    });
+    overlay.addEventListener('click', function(e) {
+      if (e.target === overlay) { overlay.remove(); if (typeof opts.onAbbruch === 'function') opts.onAbbruch(); }
+    });
+    return false;
+  }
+
   /* ══════════════════════════════════════════════════════════
      PUBLIC API
   ══════════════════════════════════════════════════════════ */
@@ -519,6 +646,14 @@
     getPaket:           getPaket,
     /** Vollständige Paket-Info (für Einstellungen/Dashboard) */
     getPaketInfo:       getPaketInfo,
+    /** Kontingent-Status lesen (verbraucht, verbleibend, zusatz) */
+    getKontingentStatus:  getKontingentStatus,
+    /** Neuen Fall registrieren — gibt false wenn Limit erreicht */
+    registriereNeuenFall: registriereNeuenFall,
+    /** Kontingent prüfen + ggf. Overlay anzeigen */
+    pruefeKontingent:     pruefeKontingent,
+    /** Zusatz-Fälle nach Kauf gutschreiben */
+    gutschreibeZusatzFaelle: gutschreibeZusatzFaelle,
     /** Feature-Map (für Debugging) */
     FEATURE_MAP:        FEATURE_MAP,
     /** Server-Feature-Map (für Netlify Functions) */

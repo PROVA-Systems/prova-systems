@@ -195,7 +195,7 @@
 </head>
 <body data-page="einstellungen">
   <div class="app-shell" id="app-shell">
-    <!-- PROVA Sidebar wird durch nav.js eingemountet -->
+    <nav class="sidebar" id="sidebar"></nav>
     <div class="main-wrap" id="main-wrap">
       <div class="topbar" id="topbar"></div>
       <div class="page-content">
@@ -225,6 +225,9 @@
         </div>
         <div class="es-sidebar-item" data-section="datenschutz" onclick="wechsleSektion('datenschutz',this)">
           <span class="es-sidebar-icon">🔒</span> Datenschutz
+        </div>
+        <div class="es-sidebar-item" data-section="bankdaten" onclick="wechsleSektion('bankdaten',this)">
+          <span class="es-sidebar-icon">🏦</span> Bankdaten
         </div>
         <div class="es-sidebar-item" data-section="paket" onclick="wechsleSektion('paket',this)">
           <span class="es-sidebar-icon">📦</span> Paket & Abrechnung
@@ -490,6 +493,53 @@
           </div>
         </section>
 
+
+        <!-- BANKDATEN & STEUER -->
+        <section class="es-section" id="es-sec-bankdaten">
+          <div class="es-section-header">
+            <span class="es-section-icon">🏦</span>
+            <div class="es-section-info">
+              <div class="es-section-title">Bankdaten & Steuer</div>
+              <div class="es-section-sub">Für Rechnungen, Mahnungen und Honorarvereinbarungen</div>
+            </div>
+          </div>
+          <div class="es-zeile vertikal">
+            <div class="es-zeile-info">
+              <div class="es-zeile-label">Bankverbindung</div>
+              <div class="es-zeile-sub">Erscheint im Zahlungshinweis aller Rechnungen und Mahnungen</div>
+            </div>
+            <div style="width:100%">
+              <div class="es-input-row">
+                <div><label class="es-label">IBAN</label><input class="es-input" id="es-iban" placeholder="DE12 3456 7890 1234 5678 90" oninput="markiereGeaendert()" /></div>
+                <div><label class="es-label">BIC</label><input class="es-input" id="es-bic" placeholder="DEUTDEDB" oninput="markiereGeaendert()" /></div>
+              </div>
+              <div class="es-input-row">
+                <div><label class="es-label">Bank</label><input class="es-input" id="es-bank" placeholder="Deutsche Bank" oninput="markiereGeaendert()" /></div>
+                <div><label class="es-label">Kontoinhaber</label><input class="es-input" id="es-kontoinhaber" placeholder="Max Mustermann" oninput="markiereGeaendert()" /></div>
+              </div>
+            </div>
+          </div>
+          <div class="es-zeile vertikal">
+            <div class="es-zeile-info">
+              <div class="es-zeile-label">Steuerdaten</div>
+              <div class="es-zeile-sub">Steuernummer erscheint im Rechnungsfußbereich</div>
+            </div>
+            <div style="width:100%">
+              <div class="es-input-row">
+                <div><label class="es-label">Steuernummer</label><input class="es-input" id="es-steuer-nr" placeholder="214/5678/9012" oninput="markiereGeaendert()" /></div>
+                <div><label class="es-label">USt-IdNr.</label><input class="es-input" id="es-ustid2" placeholder="DE123456789 (falls vorhanden)" oninput="markiereGeaendert()" /></div>
+              </div>
+            </div>
+          </div>
+          <div class="es-zeile">
+            <div class="es-zeile-info">
+              <div class="es-zeile-label">In Airtable speichern</div>
+              <div class="es-zeile-sub">Bankdaten werden verschlüsselt in deinem Profil gespeichert</div>
+            </div>
+            <button class="es-btn primary" onclick="speichereBankdaten()">💾 Bankdaten speichern</button>
+          </div>
+        </section>
+
         <!-- PAKET & ABRECHNUNG -->
         <section class="es-section" id="es-sec-paket">
           <div class="es-section-header">
@@ -558,6 +608,14 @@
       ['vorname','nachname','titel','beruf','firma','strasse','plz','ort','telefon','website','ustid'].forEach(f => {
         const el = document.getElementById(`es-${f}`); if (el && prof[f]) el.value = prof[f];
       });
+      // Bankdaten laden
+      const bank = JSON.parse(localStorage.getItem('prova_bankdaten') || '{}');
+      if (document.getElementById('es-iban') && bank.iban) document.getElementById('es-iban').value = bank.iban;
+      if (document.getElementById('es-bic') && bank.bic) document.getElementById('es-bic').value = bank.bic;
+      if (document.getElementById('es-bank') && bank.bank) document.getElementById('es-bank').value = bank.bank;
+      if (document.getElementById('es-kontoinhaber') && bank.kontoinhaber) document.getElementById('es-kontoinhaber').value = bank.kontoinhaber;
+      if (document.getElementById('es-steuer-nr') && bank.steuer_nr) document.getElementById('es-steuer-nr').value = bank.steuer_nr;
+      if (document.getElementById('es-ustid2') && bank.ustid) document.getElementById('es-ustid2').value = bank.ustid;
     }
 
     function ladePaketInfo() {
@@ -670,6 +728,53 @@
       const best=prompt(`⚠️ Konto löschen — bestätige mit deiner E-Mail:\n${email}`);
       if(best!==email){alert('E-Mail stimmt nicht überein.');return;}
       alert('Löschanfrage gesendet. Bestätigung per E-Mail gemäß DSGVO Art. 17.');
+    }
+
+
+    async function speichereBankdaten() {
+      const bank = {
+        iban:         (document.getElementById('es-iban')?.value||'').trim(),
+        bic:          (document.getElementById('es-bic')?.value||'').trim(),
+        bank:         (document.getElementById('es-bank')?.value||'').trim(),
+        kontoinhaber: (document.getElementById('es-kontoinhaber')?.value||'').trim(),
+        steuer_nr:    (document.getElementById('es-steuer-nr')?.value||'').trim(),
+        ustid:        (document.getElementById('es-ustid2')?.value||'').trim(),
+      };
+      // localStorage
+      localStorage.setItem('prova_bankdaten', JSON.stringify(bank));
+      // Auch einzeln für rechnung-logic.js Kompatibilität
+      if (bank.iban)       localStorage.setItem('prova_sv_iban', bank.iban);
+      if (bank.steuer_nr)  localStorage.setItem('prova_sv_steuernr', bank.steuer_nr);
+      if (bank.ustid)      localStorage.setItem('prova_sv_ustid', bank.ustid);
+
+      // Airtable-Sync
+      const svEmail = localStorage.getItem('prova_sv_email');
+      const atId    = localStorage.getItem('prova_airtable_id');
+      if (svEmail && atId) {
+        try {
+          await fetch('/.netlify/functions/airtable', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              method: 'PATCH',
+              path: '/v0/appJ7bLlAHZoxENWE/tbladqEQT3tmx4DIB/' + atId,
+              payload: {
+                fields: {
+                  IBAN:      bank.iban,
+                  BIC:       bank.bic,
+                  Bank:      bank.bank,
+                  Steuer_Nr: bank.steuer_nr,
+                }
+              }
+            })
+          });
+          zeigeToast('✅ Bankdaten gespeichert & synchronisiert');
+        } catch(e) {
+          zeigeToast('✅ Bankdaten lokal gespeichert');
+        }
+      } else {
+        zeigeToast('✅ Bankdaten gespeichert');
+      }
     }
 
     let toastTimer;

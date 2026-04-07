@@ -210,16 +210,21 @@ window.erstelleRechnung=async function(){
   var payload=bauePayload(reNr,betraege,false);
 
   try{
-    var res=await fetch(WEBHOOK_S6,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
-    if(res.ok){
+    // Webhook (Airtable-Speicherung)
+    fetch(WEBHOOK_S6,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+
+    // PDF via rechnung-pdf.js generieren
+    var pdfRes = await generierePDF(reNr, payload, betraege);
+    if(pdfRes && pdfRes.pdf_url){
+      zeigToast('✅ Rechnung '+reNr+' — PDF bereit');
+      zeigePdfButton(pdfRes.pdf_url, reNr);
+    } else {
       zeigToast('✅ Rechnung '+reNr+' erstellt — PDF folgt per E-Mail');
-      speichereLokal(reNr,ag,betraege.brutto,'Offen',datum);
-      await ladeListe();
-      resetForm();
-      zeigeAbschlussButton(reNr);
-    }else{
-      zeigToast('Fehler HTTP '+res.status,'err');
     }
+    speichereLokal(reNr,ag,betraege.brutto,'Offen',datum);
+    await ladeListe();
+    resetForm();
+    zeigeAbschlussButton(reNr);
   }catch(e){
     zeigToast('Netzwerkfehler: '+e.message,'err');
   }

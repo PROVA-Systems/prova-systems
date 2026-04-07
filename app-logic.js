@@ -3239,6 +3239,13 @@ async function sendeWebhook() {
       if (_az) { localStorage.setItem('prova_letztes_az', _az); localStorage.setItem('prova_aktiver_fall', _az); }
       if (_sa) localStorage.setItem('prova_schadenart', _sa);
       if (_adr) localStorage.setItem('prova_adresse', _adr);
+
+      // ── Kontingent: neuen Fall registrieren (fire-and-forget) ──
+      try {
+        if (typeof PaketGuard !== 'undefined' && typeof PaketGuard.registriereNeuenFall === 'function') {
+          PaketGuard.registriereNeuenFall();
+        }
+      } catch(e) { /* nicht kritisch */ }
       
       // Fristdaten in Fälle-Cache speichern (für Dashboard-Widget)
       if (_daten.fristdatum) {

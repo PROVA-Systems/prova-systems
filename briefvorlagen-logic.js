@@ -165,12 +165,10 @@ function bvUpdateDrawerHeader(){
 function bvOpenDrawer(){
   document.getElementById('bv-dr').classList.add('open');
   document.getElementById('bv-ov').classList.add('show');
-  document.body.style.overflow='hidden';
 }
 window.bvCloseDrawer=function(){
   document.getElementById('bv-dr').classList.remove('open');
   document.getElementById('bv-ov').classList.remove('show');
-  document.body.style.overflow='';
   _tpl=null;_fall=null;_ki=false;_step=1;_felder={};
 };
 

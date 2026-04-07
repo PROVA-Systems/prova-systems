@@ -430,7 +430,12 @@
     if (btn) {
       btn.onclick = function(e) {
         e.preventDefault();
-        PROVA.openAuftragstyp();
+        var fn = window.PROVA && window.PROVA.openAuftragstyp;
+        if (typeof fn === 'function') {
+          fn();
+        } else {
+          window.location.href = 'app.html';
+        }
       };
     } else {
       setTimeout(hookNewButton, 300);
