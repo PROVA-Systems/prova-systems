@@ -1,3 +1,187 @@
+
+/* ════════════════════════════════════════════════════════════
+   PROVA Eigene Textbausteine — Airtable-Sync System
+   Tabelle: TEXTBAUSTEINE_CUSTOM (muss manuell in Airtable angelegt werden)
+════════════════════════════════════════════════════════════ */
+var AT_CUSTOM_TABLE = 'TEXTBAUSTEINE_CUSTOM';
+var AT_BASE = 'appJ7bLlAHZoxENWE';
+var _customBausteine = [];
+var _customLaden = false;
+
+async function ladeCustomBausteine() {
+  if (_customLaden) return;
+  _customLaden = true;
+  var svEmail = localStorage.getItem('prova_sv_email') || '';
+  if (!svEmail) return;
+  try {
+    var r = await fetch('/.netlify/functions/airtable', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        method: 'GET',
+        path: '/v0/' + AT_BASE + '/' + AT_CUSTOM_TABLE
+          + '?filterByFormula=' + encodeURIComponent('{sv_email}="' + svEmail + '"')
+          + '&sort%5B0%5D%5Bfield%5D=erstellt_am&sort%5B0%5D%5Bdirection%5D=desc'
+          + '&maxRecords=100'
+      })
+    });
+    if (r.ok) {
+      var data = await r.json();
+      _customBausteine = (data.records || []).map(function(rec) {
+        return {
+          recordId: rec.id,
+          id: 'custom-' + rec.id,
+          titel: rec.fields.titel || '',
+          text: rec.fields.text || '',
+          kategorie: rec.fields.kategorie || 'Allgemein',
+          schadenart: rec.fields.schadenart || '',
+          notiz: rec.fields.notiz || ''
+        };
+      });
+      renderCustomSektion();
+    }
+  } catch(e) { console.warn('[TB-Custom] Laden fehlgeschlagen:', e.message); }
+}
+
+async function speichereCustomBaustein(daten) {
+  var svEmail = localStorage.getItem('prova_sv_email') || '';
+  var r = await fetch('/.netlify/functions/airtable', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      method: 'POST',
+      path: '/v0/' + AT_BASE + '/' + AT_CUSTOM_TABLE,
+      payload: {
+        records: [{
+          fields: {
+            sv_email: svEmail,
+            titel: daten.titel,
+            text: daten.text,
+            kategorie: daten.kategorie || 'Allgemein',
+            schadenart: daten.schadenart || '',
+            notiz: daten.notiz || ''
+          }
+        }]
+      }
+    })
+  });
+  return r.ok;
+}
+
+async function loescheCustomBaustein(recordId) {
+  var r = await fetch('/.netlify/functions/airtable', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      method: 'DELETE',
+      path: '/v0/' + AT_BASE + '/' + AT_CUSTOM_TABLE + '/' + recordId
+    })
+  });
+  return r.ok;
+}
+
+function renderCustomSektion() {
+  var container = document.getElementById('custom-bausteine-sektion');
+  if (!container) return;
+
+  if (!_customBausteine.length) {
+    container.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text3);font-size:12px;">Noch keine eigenen Bausteine gespeichert</div>';
+    return;
+  }
+
+  var html = '';
+  _customBausteine.forEach(function(b) {
+    html += '<div class="tb-custom-card" data-id="' + b.id + '">'
+      + '<div class="tb-custom-header">'
+        + '<div>'
+          + '<div class="tb-custom-titel">' + escHtml(b.titel) + '</div>'
+          + '<div class="tb-custom-meta">'
+            + '<span class="tb-chip">' + escHtml(b.kategorie) + '</span>'
+            + (b.schadenart ? '<span class="tb-chip">' + escHtml(b.schadenart) + '</span>' : '')
+          + '</div>'
+        + '</div>'
+        + '<div style="display:flex;gap:6px;">'
+          + '<button class="tb-btn-einfuegen" data-cid="' + b.id + '" onclick="customBausteinEinfuegen(this.dataset.cid)">Einfügen</button>'
+          + '<button class="tb-btn-del" data-rid="' + b.recordId + '" data-bid="' + b.id + '" onclick="customBausteinLoeschen(this.dataset.rid,this.dataset.bid)">✕</button>'
+        + '</div>'
+      + '</div>'
+      + '<div class="tb-custom-text">' + escHtml(b.text.substring(0, 140)) + (b.text.length > 140 ? '…' : '') + '</div>'
+    + '</div>';
+  });
+  container.innerHTML = html;
+}
+
+window.customBausteinEinfuegen = function(id) {
+  var b = _customBausteine.find(function(x){ return x.id === id; });
+  if (!b) return;
+  if (window.opener) {
+    window.opener.postMessage({ type: 'prova_baustein', text: b.text, bausteinId: id }, '*');
+    window.close();
+    return;
+  }
+  try { navigator.clipboard.writeText(b.text).then(function(){ if(typeof showToast==='function') showToast('Baustein kopiert ✓'); }); } catch(e) {}
+};
+
+window.customBausteinLoeschen = async function(recordId, id) {
+  if (!confirm('Baustein löschen?')) return;
+  var ok = await loescheCustomBaustein(recordId);
+  if (ok) {
+    _customBausteine = _customBausteine.filter(function(b){ return b.recordId !== recordId; });
+    renderCustomSektion();
+    if(typeof showToast==='function') showToast('Baustein gelöscht');
+  }
+};
+
+window.oeffneNeuenBausteinModal = function() {
+  var modal = document.getElementById('modal-neuer-baustein');
+  if (!modal) return;
+  modal.style.display = 'flex';
+  setTimeout(function(){ var t = document.getElementById('nb-titel'); if(t) t.focus(); }, 100);
+};
+
+window.schliesseNeuenBausteinModal = function() {
+  var modal = document.getElementById('modal-neuer-baustein');
+  if (modal) modal.style.display = 'none';
+};
+
+window.speichereNeuenBaustein = async function() {
+  var titel  = (document.getElementById('nb-titel')||{}).value || '';
+  var text   = (document.getElementById('nb-text')||{}).value || '';
+  var kat    = (document.getElementById('nb-kategorie')||{}).value || 'Allgemein';
+  var sa     = (document.getElementById('nb-schadenart')||{}).value || '';
+  var notiz  = (document.getElementById('nb-notiz')||{}).value || '';
+
+  if (!titel.trim() || !text.trim()) {
+    if(typeof showToast==='function') showToast('Titel und Text sind Pflichtfelder', 'error');
+    return;
+  }
+
+  var btn = document.getElementById('nb-save-btn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Wird gespeichert…'; }
+
+  var ok = await speichereCustomBaustein({ titel, text, kategorie: kat, schadenart: sa, notiz });
+
+  if (ok) {
+    schliesseNeuenBausteinModal();
+    _customLaden = false; // neu laden
+    await ladeCustomBausteine();
+    if(typeof showToast==='function') showToast('Baustein gespeichert ✅');
+    ['nb-titel','nb-text','nb-notiz'].forEach(function(id){ var el=document.getElementById(id); if(el) el.value=''; });
+  } else {
+    if(typeof showToast==='function') showToast('Speichern fehlgeschlagen', 'error');
+  }
+  if (btn) { btn.disabled = false; btn.textContent = 'Speichern'; }
+};
+
+function escHtml(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// Beim Start laden
+document.addEventListener('DOMContentLoaded', function() {
+  ladeCustomBausteine();
+});
+
 /* ════════════════════════════════════════════════════════════
    PROVA textbausteine-logic.js
    Textbausteine — Verwaltung, Speicherung, Preview

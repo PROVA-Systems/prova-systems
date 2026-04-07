@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>E-Mail-Versand einrichten · PROVA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#0b1120;--bg2:#111827;--bg3:#1a2035;
+  --surface:#1e2d47;--surface2:#233050;
+  --border:#1e3a5f;--border2:#2a4a70;
+  --text:#e8eaf0;--text2:#94a3b8;--text3:#64748b;
+  --accent:#4f8ef7;--accent2:#6366f1;
+  --green:#10b981;--amber:#f59e0b;--red:#ef4444;
+  --font:'DM Sans',system-ui,sans-serif;
+}
+body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14px;line-height:1.6;min-height:100vh;}
+
+/* HEADER */
+.header{background:var(--bg2);border-bottom:1px solid var(--border);padding:16px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+.header-logo{font-size:16px;font-weight:800;color:var(--text);}
+.header-logo span{color:var(--accent);}
+.header-title{font-size:14px;color:var(--text2);}
+.btn-close{padding:7px 14px;background:var(--surface);border:1px solid var(--border2);border-radius:8px;color:var(--text2);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;}
+.btn-close:hover{color:var(--text);border-color:var(--accent);}
+
+/* PROVIDER TABS */
+.provider-bar{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 24px;display:flex;gap:4px;overflow-x:auto;}
+.prov-tab{padding:12px 16px;font-size:12px;font-weight:600;color:var(--text3);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:all .15s;font-family:inherit;background:none;border-top:none;border-left:none;border-right:none;}
+.prov-tab:hover{color:var(--text2);}
+.prov-tab.aktiv{color:var(--accent);border-bottom-color:var(--accent);}
+
+/* LAYOUT */
+.container{max-width:780px;margin:0 auto;padding:32px 24px 60px;}
+
+/* SECTION */
+.section{display:none;}
+.section.aktiv{display:block;}
+
+.provider-hero{display:flex;align-items:center;gap:16px;margin-bottom:28px;padding:20px 24px;background:var(--surface);border:1px solid var(--border2);border-radius:14px;}
+.provider-logo{width:52px;height:52px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;flex-shrink:0;}
+.provider-hero-info h1{font-size:18px;font-weight:700;margin-bottom:3px;}
+.provider-hero-info p{font-size:13px;color:var(--text2);}
+.difficulty{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:3px 9px;border-radius:10px;margin-top:6px;}
+.diff-easy{background:rgba(16,185,129,.12);color:var(--green);}
+.diff-medium{background:rgba(245,158,11,.12);color:var(--amber);}
+
+/* STEPS */
+.steps{display:flex;flex-direction:column;gap:0;}
+.step{display:flex;gap:16px;position:relative;}
+.step:not(:last-child)::before{content:'';position:absolute;left:19px;top:44px;bottom:0;width:2px;background:var(--border);z-index:0;}
+.step-num{width:38px;height:38px;border-radius:50%;background:var(--accent);color:#fff;font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;position:relative;z-index:1;margin-top:2px;}
+.step-body{flex:1;padding-bottom:24px;}
+.step-title{font-size:14px;font-weight:700;color:var(--text);margin-bottom:6px;}
+.step-desc{font-size:13px;color:var(--text2);line-height:1.7;}
+.step-box{margin-top:10px;padding:12px 14px;border-radius:9px;font-size:12px;line-height:1.7;}
+.step-box-info{background:rgba(79,142,247,.07);border:1px solid rgba(79,142,247,.2);color:var(--text2);}
+.step-box-warn{background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.2);color:var(--amber);}
+.step-box-nav{background:var(--bg3);border:1px solid var(--border2);color:var(--text2);}
+.nav-path{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+.nav-step{background:var(--surface2);border:1px solid var(--border2);padding:3px 10px;border-radius:6px;font-size:11px;font-weight:600;color:var(--text);}
+.nav-arrow{color:var(--text3);font-size:12px;}
+.link-btn{display:inline-flex;align-items:center;gap:6px;margin-top:8px;padding:7px 14px;background:var(--accent);color:#fff;border-radius:8px;font-size:12px;font-weight:600;text-decoration:none;transition:opacity .15s;}
+.link-btn:hover{opacity:.85;}
+.link-btn-ghost{background:transparent;border:1px solid var(--border2);color:var(--text2);}
+.link-btn-ghost:hover{border-color:var(--accent);color:var(--accent);}
+
+/* INPUT DEMO */
+.input-demo{margin-top:10px;background:var(--bg3);border:1px solid var(--border2);border-radius:9px;padding:12px 14px;}
+.input-row{display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border);}
+.input-row:last-child{border-bottom:none;}
+.input-label{font-size:11px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.04em;}
+.input-val{font-size:12px;color:var(--accent);font-weight:600;font-family:monospace;}
+
+/* SECURITY BOX */
+.security-box{margin-top:28px;padding:16px 18px;background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.2);border-radius:12px;}
+.security-box h3{font-size:13px;font-weight:700;color:var(--green);margin-bottom:8px;}
+.security-box p{font-size:12px;color:var(--text2);line-height:1.7;}
+
+/* CTA */
+.cta-box{margin-top:28px;padding:20px;background:var(--surface);border:1px solid var(--border2);border-radius:12px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;}
+.cta-text h3{font-size:14px;font-weight:700;margin-bottom:3px;}
+.cta-text p{font-size:12px;color:var(--text2);}
+.btn-primary{padding:10px 20px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border:none;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div style="display:flex;align-items:center;gap:12px;">
+    <div class="header-logo"><span>P</span>ROVA</div>
+    <div class="header-title">E-Mail-Versand einrichten</div>
+  </div>
+  <button class="btn-close" onclick="window.close()">✕ Schließen</button>
+</div>
+
+<div class="provider-bar">
+  <button class="prov-tab aktiv" onclick="zeigProvider('gmail',this)">Gmail</button>
+  <button class="prov-tab" onclick="zeigProvider('gmx',this)">GMX</button>
+  <button class="prov-tab" onclick="zeigProvider('web',this)">Web.de</button>
+  <button class="prov-tab" onclick="zeigProvider('ionos',this)">IONOS / 1&amp;1</button>
+  <button class="prov-tab" onclick="zeigProvider('telekom',this)">Telekom</button>
+  <button class="prov-tab" onclick="zeigProvider('outlook',this)">Outlook</button>
+  <button class="prov-tab" onclick="zeigProvider('custom',this)">Eigener Server</button>
+</div>
+
+<div class="container">
+
+<!-- ══════════════════════════════════════════════════
+     GMAIL
+══════════════════════════════════════════════════ -->
+<div class="section aktiv" id="sec-gmail">
+  <div class="provider-hero">
+    <div class="provider-logo" style="background:#fce8e6;color:#d93025;">G</div>
+    <div class="provider-hero-info">
+      <h1>Gmail einrichten</h1>
+      <p>Google-Konto mit @gmail.com oder G Suite / Google Workspace</p>
+      <span class="difficulty diff-medium">⏱ Ca. 5 Minuten · erfordert App-Passwort</span>
+    </div>
+  </div>
+
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <div class="step-title">2-Faktor-Authentifizierung aktivieren</div>
+        <div class="step-desc">Gmail erfordert zwingend die 2-Faktor-Authentifizierung, bevor ein App-Passwort erstellt werden kann. Falls Sie diese bereits aktiviert haben, gehen Sie direkt zu Schritt 2.</div>
+        <div class="step-box step-box-nav">
+          <div class="nav-path">
+            <span class="nav-step">myaccount.google.com</span>
+            <span class="nav-arrow">→</span>
+            <span class="nav-step">Sicherheit</span>
+            <span class="nav-arrow">→</span>
+            <span class="nav-step">2-Schritt-Verifizierung</span>
+          </div>
+        </div>
+        <a href="https://myaccount.google.com/security" target="_blank" class="link-btn">→ Google Sicherheitseinstellungen öffnen</a>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <div class="step-title">App-Passwort erstellen</div>
+        <div class="step-desc">Ein App-Passwort ist ein spezielles 16-stelliges Passwort nur für PROVA — es ist sicherer als Ihr normales Passwort und kann jederzeit separat widerrufen werden.</div>
+        <div class="step-box step-box-nav">
+          <div class="nav-path">
+            <span class="nav-step">myaccount.google.com</span>
+            <span class="nav-arrow">→</span>
+            <span class="nav-step">Sicherheit</span>
+            <span class="nav-arrow">→</span>
+            <span class="nav-step">2-Schritt-Verifizierung</span>
+            <span class="nav-arrow">→</span>
+            <span class="nav-step">App-Passwörter</span>
+          </div>
+        </div>
+        <div class="step-box step-box-info" style="margin-top:10px;">
+          <strong>Auf der App-Passwort Seite:</strong><br>
+          1. Wählen Sie bei "App auswählen" → <strong>Sonstige (benutzerdefinierter Name)</strong><br>
+          2. Geben Sie ein: <strong>PROVA Gutachten-System</strong><br>
+          3. Klicken Sie auf <strong>Erstellen</strong><br>
+          4. Google zeigt Ihnen ein 16-stelliges Passwort (z.B. <span style="color:var(--accent);font-family:monospace;">abcd efgh ijkl mnop</span>)<br>
+          5. Kopieren Sie dieses Passwort — es wird nur einmal angezeigt
+        </div>
+        <a href="https://myaccount.google.com/apppasswords" target="_blank" class="link-btn">→ App-Passwörter direkt öffnen</a>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <div class="step-title">In PROVA eintragen</div>
+        <div class="step-desc">Tragen Sie die folgenden Werte in die PROVA-Einstellungen ein:</div>
+        <div class="input-demo">
+          <div class="input-row"><span class="input-label">SMTP-Server</span><span class="input-val">smtp.gmail.com</span></div>
+          <div class="input-row"><span class="input-label">Port</span><span class="input-val">587</span></div>
+          <div class="input-row"><span class="input-label">E-Mail-Adresse</span><span class="input-val">ihre.adresse@gmail.com</span></div>
+          <div class="input-row"><span class="input-label">Passwort</span><span class="input-val">App-Passwort aus Schritt 2</span></div>
+        </div>
+        <div class="step-box step-box-warn" style="margin-top:10px;">
+          ⚠️ <strong>Wichtig:</strong> Tragen Sie das <strong>App-Passwort</strong> ein — nicht Ihr normales Google-Passwort. Das App-Passwort enthält keine Leerzeichen, auch wenn Google es mit Leerzeichen anzeigt.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="security-box">
+    <h3>🔒 Warum ist das sicher?</h3>
+    <p>Ihr normales Google-Passwort wird niemals in PROVA eingegeben. Das App-Passwort gilt ausschließlich für PROVA und kann unter <strong>myaccount.google.com → Sicherheit → App-Passwörter</strong> jederzeit widerrufen werden, ohne Ihr Google-Konto zu gefährden. PROVA speichert das Passwort nur in Ihrem Browser — niemals auf fremden Servern.</p>
+  </div>
+
+  <div class="cta-box">
+    <div class="cta-text">
+      <h3>Bereit zum Einrichten?</h3>
+      <p>Gehen Sie zurück zu den Einstellungen und wählen Sie Gmail aus.</p>
+    </div>
+    <button class="btn-primary" onclick="window.close()">→ Zu den Einstellungen</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     GMX
+══════════════════════════════════════════════════ -->
+<div class="section" id="sec-gmx">
+  <div class="provider-hero">
+    <div class="provider-logo" style="background:#003d8f;color:#fff;">G</div>
+    <div class="provider-hero-info">
+      <h1>GMX einrichten</h1>
+      <p>GMX Mail mit @gmx.de, @gmx.net oder @gmx.at Adresse</p>
+      <span class="difficulty diff-easy">⏱ Ca. 2 Minuten · normales Passwort reicht</span>
+    </div>
+  </div>
+
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <div class="step-title">POP3/IMAP und SMTP aktivieren</div>
+        <div class="step-desc">Bei GMX muss der externe E-Mail-Zugriff einmalig aktiviert werden. Dies ermöglicht PROVA, E-Mails in Ihrem Namen zu senden.</div>
+        <div class="step-box step-box-nav">
+          <div class="nav-path">
+            <span class="nav-step">gmx.de</span>
+            <span class="nav-arrow">→</span>
+            <span class="nav-step">Einstellungen (⚙)</span>
+            <span class="nav-arrow">→</span>
+            <span class="nav-step">E-Mail</span>
+            <span class="nav-arrow">→</span>
+            <span class="nav-step">Mein Konto</span>
+            <span class="nav-arrow">→</span>
+            <span class="nav-step">POP3 &amp; IMAP</span>
+          </div>
+        </div>
+        <div class="step-box step-box-info" style="margin-top:10px;">
+          Setzen Sie den Haken bei <strong>"POP3 und IMAP Zugriff aktivieren"</strong> und speichern Sie.
+        </div>
+        <a href="https://www.gmx.net/mail/settings/pop-imap" target="_blank" class="link-btn">→ GMX Konto-Einstellungen öffnen</a>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <div class="step-title">In PROVA eintragen</div>
+        <div class="step-desc">Tragen Sie die folgenden Werte ein. Als Passwort verwenden Sie Ihr normales GMX-Passwort.</div>
+        <div class="input-demo">
+          <div class="input-row"><span class="input-label">SMTP-Server</span><span class="input-val">mail.gmx.net</span></div>
+          <div class="input-row"><span class="input-label">Port</span><span class="input-val">587</span></div>
+          <div class="input-row"><span class="input-label">E-Mail-Adresse</span><span class="input-val">ihre.adresse@gmx.de</span></div>
+          <div class="input-row"><span class="input-label">Passwort</span><span class="input-val">Ihr GMX-Passwort</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="security-box">
+    <h3>🔒 Sicherheitshinweis</h3>
+    <p>Ihr Passwort wird ausschließlich lokal in Ihrem Browser gespeichert und niemals an PROVA-Server übertragen — es reist nur verschlüsselt (HTTPS) im Moment des Versands. Falls Sie ein sichereres Verfahren bevorzugen, können Sie bei GMX unter Einstellungen → Sicherheit ein <strong>separates App-Passwort</strong> erstellen.</p>
+  </div>
+  <div class="cta-box">
+    <div class="cta-text"><h3>Bereit?</h3><p>GMX ist in 2 Minuten eingerichtet.</p></div>
+    <button class="btn-primary" onclick="window.close()">→ Zu den Einstellungen</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     WEB.DE
+══════════════════════════════════════════════════ -->
+<div class="section" id="sec-web">
+  <div class="provider-hero">
+    <div class="provider-logo" style="background:#ff6600;color:#fff;">W</div>
+    <div class="provider-hero-info">
+      <h1>Web.de einrichten</h1>
+      <p>Web.de Mail mit @web.de Adresse</p>
+      <span class="difficulty diff-easy">⏱ Ca. 2 Minuten · normales Passwort reicht</span>
+    </div>
+  </div>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <div class="step-title">Externen Zugriff aktivieren</div>
+        <div class="step-desc">Bei Web.de muss der externe Zugriff wie bei GMX einmalig aktiviert werden.</div>
+        <div class="step-box step-box-nav">
+          <div class="nav-path">
+            <span class="nav-step">web.de</span>
+            <span class="nav-arrow">→</span>
+            <span class="nav-step">Einstellungen</span>
+            <span class="nav-arrow">→</span>
+            <span class="nav-step">E-Mail-Programm</span>
+            <span class="nav-arrow">→</span>
+            <span class="nav-step">Zugriff</span>
+          </div>
+        </div>
+        <div class="step-box step-box-info" style="margin-top:10px;">Aktivieren Sie <strong>"Externen Zugriff erlauben"</strong> und speichern Sie.</div>
+        <a href="https://hilfe.web.de/pop-imap/web-de-e-mail-ueber-imap-empfangen/" target="_blank" class="link-btn link-btn-ghost">→ Web.de Hilfe</a>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <div class="step-title">In PROVA eintragen</div>
+        <div class="input-demo">
+          <div class="input-row"><span class="input-label">SMTP-Server</span><span class="input-val">smtp.web.de</span></div>
+          <div class="input-row"><span class="input-label">Port</span><span class="input-val">587</span></div>
+          <div class="input-row"><span class="input-label">E-Mail-Adresse</span><span class="input-val">ihre.adresse@web.de</span></div>
+          <div class="input-row"><span class="input-label">Passwort</span><span class="input-val">Ihr Web.de-Passwort</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="cta-box">
+    <div class="cta-text"><h3>Bereit?</h3><p>Web.de ist schnell eingerichtet.</p></div>
+    <button class="btn-primary" onclick="window.close()">→ Zu den Einstellungen</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     IONOS
+══════════════════════════════════════════════════ -->
+<div class="section" id="sec-ionos">
+  <div class="provider-hero">
+    <div class="provider-logo" style="background:#003d8f;color:#fff;font-size:18px;">1&1</div>
+    <div class="provider-hero-info">
+      <h1>IONOS / 1&amp;1 einrichten</h1>
+      <p>IONOS Mail oder 1&amp;1 Hostingpaket mit eigener Domain</p>
+      <span class="difficulty diff-easy">⏱ Ca. 2 Minuten · direkt einsatzbereit</span>
+    </div>
+  </div>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <div class="step-title">Keine Voreinrichtung nötig</div>
+        <div class="step-desc">IONOS und 1&amp;1 unterstützen SMTP standardmäßig. Sie benötigen nur Ihre E-Mail-Adresse und Ihr E-Mail-Passwort (nicht das IONOS-Kontrollcenter-Passwort).</div>
+        <div class="step-box step-box-info">
+          <strong>Wo finde ich mein E-Mail-Passwort?</strong><br>
+          Mein IONOS → E-Mail → E-Mail-Adressen → Ihre Adresse anklicken → <strong>Passwort anzeigen</strong><br><br>
+          Falls Sie das Passwort nicht mehr wissen, können Sie es im IONOS Kundencenter zurücksetzen.
+        </div>
+        <a href="https://www.ionos.de/hilfe/e-mail/e-mail-program-einrichten/imap-und-smtp-einstellungen/" target="_blank" class="link-btn link-btn-ghost">→ IONOS SMTP-Einstellungen</a>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <div class="step-title">In PROVA eintragen</div>
+        <div class="input-demo">
+          <div class="input-row"><span class="input-label">SMTP-Server</span><span class="input-val">smtp.ionos.de</span></div>
+          <div class="input-row"><span class="input-label">Port</span><span class="input-val">587</span></div>
+          <div class="input-row"><span class="input-label">E-Mail-Adresse</span><span class="input-val">name@ihredomain.de</span></div>
+          <div class="input-row"><span class="input-label">Passwort</span><span class="input-val">Ihr E-Mail-Passwort</span></div>
+        </div>
+        <div class="step-box step-box-info" style="margin-top:10px;">
+          Für <strong>1&amp;1 Hosting</strong> (ältere Pakete) kann der Server <span style="color:var(--accent);font-family:monospace;">smtp.1und1.de</span> sein. Testen Sie beide.
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="cta-box">
+    <div class="cta-text"><h3>Bereit?</h3><p>IONOS ist der einfachste Setup.</p></div>
+    <button class="btn-primary" onclick="window.close()">→ Zu den Einstellungen</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     TELEKOM
+══════════════════════════════════════════════════ -->
+<div class="section" id="sec-telekom">
+  <div class="provider-hero">
+    <div class="provider-logo" style="background:#e20074;color:#fff;">T</div>
+    <div class="provider-hero-info">
+      <h1>Telekom / T-Online einrichten</h1>
+      <p>T-Online E-Mail mit @t-online.de, @telekom.de oder @magenta.de</p>
+      <span class="difficulty diff-medium">⏱ Ca. 3 Minuten · Passwort-Einstellung beachten</span>
+    </div>
+  </div>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <div class="step-title">E-Mail-Passwort überprüfen</div>
+        <div class="step-desc">Bei Telekom gibt es ein separates <strong>E-Mail-Passwort</strong>, das sich vom Telekom-Login-Passwort unterscheiden kann. Prüfen Sie, ob Sie ein separates E-Mail-Passwort gesetzt haben.</div>
+        <div class="step-box step-box-nav">
+          <div class="nav-path">
+            <span class="nav-step">telekom.de/kundencenter</span>
+            <span class="nav-arrow">→</span>
+            <span class="nav-step">Mein Konto</span>
+            <span class="nav-arrow">→</span>
+            <span class="nav-step">E-Mail-Dienste</span>
+            <span class="nav-arrow">→</span>
+            <span class="nav-step">Passwort</span>
+          </div>
+        </div>
+        <a href="https://www.telekom.de/hilfe/e-mail-nachrichten/e-mail/t-online-e-mail-konto/zugangsdaten" target="_blank" class="link-btn link-btn-ghost">→ Telekom Hilfe</a>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <div class="step-title">In PROVA eintragen</div>
+        <div class="input-demo">
+          <div class="input-row"><span class="input-label">SMTP-Server</span><span class="input-val">securesmtp.t-online.de</span></div>
+          <div class="input-row"><span class="input-label">Port</span><span class="input-val">587</span></div>
+          <div class="input-row"><span class="input-label">E-Mail-Adresse</span><span class="input-val">name@t-online.de</span></div>
+          <div class="input-row"><span class="input-label">Passwort</span><span class="input-val">Ihr E-Mail-Passwort</span></div>
+        </div>
+        <div class="step-box step-box-warn" style="margin-top:10px;">
+          ⚠️ <strong>Wichtig:</strong> Verwenden Sie <strong>securesmtp.t-online.de</strong> (mit "secure" am Anfang), nicht smtp.t-online.de.
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="cta-box">
+    <div class="cta-text"><h3>Bereit?</h3><p>Telekom in 3 Minuten eingerichtet.</p></div>
+    <button class="btn-primary" onclick="window.close()">→ Zu den Einstellungen</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     OUTLOOK
+══════════════════════════════════════════════════ -->
+<div class="section" id="sec-outlook">
+  <div class="provider-hero">
+    <div class="provider-logo" style="background:#0078d4;color:#fff;">O</div>
+    <div class="provider-hero-info">
+      <h1>Outlook / Hotmail einrichten</h1>
+      <p>Microsoft-Konto mit @outlook.de, @hotmail.de oder @live.de</p>
+      <span class="difficulty diff-medium">⏱ Ca. 3 Minuten · App-Passwort empfohlen</span>
+    </div>
+  </div>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <div class="step-title">App-Passwort erstellen (empfohlen)</div>
+        <div class="step-desc">Für maximale Sicherheit empfehlen wir ein App-Passwort. Dafür muss die 2-Faktor-Authentifizierung aktiviert sein.</div>
+        <div class="step-box step-box-nav">
+          <div class="nav-path">
+            <span class="nav-step">account.microsoft.com</span>
+            <span class="nav-arrow">→</span>
+            <span class="nav-step">Sicherheit</span>
+            <span class="nav-arrow">→</span>
+            <span class="nav-step">Erweiterte Sicherheitsoptionen</span>
+            <span class="nav-arrow">→</span>
+            <span class="nav-step">App-Kennwörter</span>
+          </div>
+        </div>
+        <a href="https://account.microsoft.com/security" target="_blank" class="link-btn">→ Microsoft Sicherheitseinstellungen</a>
+        <div class="step-box step-box-info" style="margin-top:10px;">
+          Alternativ: Wenn Sie keine 2FA haben, funktioniert auch Ihr normales Microsoft-Passwort. Dafür muss unter account.microsoft.com → Sicherheit → <strong>"Weniger sichere Apps erlauben"</strong> aktiviert sein.
+        </div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <div class="step-title">In PROVA eintragen</div>
+        <div class="input-demo">
+          <div class="input-row"><span class="input-label">SMTP-Server</span><span class="input-val">smtp-mail.outlook.com</span></div>
+          <div class="input-row"><span class="input-label">Port</span><span class="input-val">587</span></div>
+          <div class="input-row"><span class="input-label">E-Mail-Adresse</span><span class="input-val">name@outlook.de</span></div>
+          <div class="input-row"><span class="input-label">Passwort</span><span class="input-val">App-Passwort oder normales Passwort</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="cta-box">
+    <div class="cta-text"><h3>Bereit?</h3><p>Outlook in wenigen Minuten eingerichtet.</p></div>
+    <button class="btn-primary" onclick="window.close()">→ Zu den Einstellungen</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     CUSTOM
+══════════════════════════════════════════════════ -->
+<div class="section" id="sec-custom">
+  <div class="provider-hero">
+    <div class="provider-logo" style="background:var(--surface2);color:var(--accent);">⚙</div>
+    <div class="provider-hero-info">
+      <h1>Eigener Mail-Server</h1>
+      <p>Eigene Domain mit professionellem Hosting (z.B. Hetzner, Strato, All-Inkl, eigener Server)</p>
+      <span class="difficulty diff-easy">⏱ Daten beim Hoster nachschlagen</span>
+    </div>
+  </div>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <div class="step-title">SMTP-Daten beim Hoster nachschlagen</div>
+        <div class="step-desc">Ihre SMTP-Zugangsdaten finden Sie im Kundencenter Ihres Hosting-Anbieters oder in der Willkommens-E-Mail. Suchen Sie nach "E-Mail einrichten", "SMTP-Server" oder "Outgoing Mail Server".</div>
+        <div class="step-box step-box-info">
+          <strong>Typische SMTP-Einstellungen bei gängigen Hostern:</strong><br><br>
+          <strong>Strato:</strong> smtp.strato.de · Port 587<br>
+          <strong>All-Inkl:</strong> w0123abc.kasserver.com · Port 587<br>
+          <strong>Hetzner:</strong> mail.your-server.de · Port 587<br>
+          <strong>Webgo:</strong> smtpausw.webgo.de · Port 587<br>
+          <strong>DomainFactory:</strong> smtp.df.eu · Port 587
+        </div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <div class="step-title">Manuell in PROVA eintragen</div>
+        <div class="step-desc">Wählen Sie in PROVA "Eigener Server" und tragen Sie die Daten Ihres Hosters ein. Der Port ist fast immer <strong>587 (STARTTLS)</strong>.</div>
+        <div class="step-box step-box-warn">
+          ⚠️ Falls Port 587 nicht funktioniert, versuchen Sie Port <strong>465</strong> (SSL/TLS). Beides sind sichere Verbindungen.
+        </div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <div class="step-title">Verbindung testen</div>
+        <div class="step-desc">Klicken Sie auf "Verbindung testen" in PROVA. Sie erhalten eine Test-Mail an Ihre eigene Adresse. Bei Fehler zeigt PROVA eine genaue Fehlermeldung mit Hinweis.</div>
+      </div>
+    </div>
+  </div>
+  <div class="cta-box">
+    <div class="cta-text"><h3>Bereit?</h3><p>Eigener Server einrichten.</p></div>
+    <button class="btn-primary" onclick="window.close()">→ Zu den Einstellungen</button>
+  </div>
+</div>
+
+</div><!-- /container -->
+
+<script>
+function zeigProvider(id, btn) {
+  document.querySelectorAll('.section').forEach(function(s){ s.classList.remove('aktiv'); });
+  document.querySelectorAll('.prov-tab').forEach(function(t){ t.classList.remove('aktiv'); });
+  var sec = document.getElementById('sec-' + id);
+  if (sec) sec.classList.add('aktiv');
+  if (btn) btn.classList.add('aktiv');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// Provider aus URL-Parameter vorauswählen (?provider=gmail)
+(function(){
+  var p = new URLSearchParams(window.location.search).get('provider');
+  if (p) {
+    var btn = document.querySelector('[onclick*="' + p + '"]');
+    if (btn) zeigProvider(p, btn);
+  }
+})();
+</script>
+</body>
+</html>

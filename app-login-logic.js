@@ -134,12 +134,11 @@ async function ladePaketUndWeiterleiten(email, ziel) {
   }
   var paket = 'Solo';
   if (!ziel) {
-    // Redirect-Target aus sessionStorage (gesetzt bei Auto-Logout durch focus-Event)
-    var redirectTarget = '';
-    try { redirectTarget = sessionStorage.getItem('prova_redirect_after_login') || ''; } catch(e) {}
-    if (redirectTarget && redirectTarget.includes('prova-systems.de') && !redirectTarget.includes('app-login')) {
-      ziel = redirectTarget;
-      try { sessionStorage.removeItem('prova_redirect_after_login'); } catch(e) {}
+    // Stripe-Rückkehr: direkt zu Dashboard (Paket bereits gesetzt)
+    if (localStorage.getItem('prova_stripe_erfolg') === '1') {
+      localStorage.removeItem('prova_stripe_erfolg');
+      localStorage.removeItem('prova_stripe_pending');
+      ziel = 'dashboard.html';
     } else {
       ziel = localStorage.getItem('prova_onboarding_done') ? 'dashboard.html' : 'onboarding-schnellstart.html';
     }
@@ -257,7 +256,35 @@ window.login = async function() {
               path: '/v0/appJ7bLlAHZoxENWE/tbladqEQT3tmx4DIB',
               payload: { fields: { trial_start: trialStart, trial_days: 14 } }
             })
-          }).catch(function(){});
+          }).catch
+/* ── STRIPE-RÜCKKEHR: Pending-Kauf abschließen ── */
+(function(){
+  var pending = null;
+  try { pending = JSON.parse(localStorage.getItem('prova_stripe_pending') || 'null'); } catch(e) {}
+
+  // Stripe=success in URL ODER pending Flag vorhanden (max 2h alt)
+  var params = new URLSearchParams(window.location.search);
+  var stripeSuccess = params.get('stripe') === 'success';
+  var pendingFrisch = pending && (Date.now() - pending.timestamp) < 7200000;
+
+  if (stripeSuccess || pendingFrisch) {
+    // Paket aus Pending oder URL setzen
+    var paket = (pending && pending.paket) || params.get('paket') || 'Solo';
+    localStorage.setItem('prova_paket', paket);
+    localStorage.setItem('prova_stripe_erfolg', '1');
+
+    // Erfolgsbanner in Login-Formular einfügen
+    document.addEventListener('DOMContentLoaded', function() {
+      var form = document.getElementById('login-form') || document.querySelector('form') || document.body;
+      var banner = document.createElement('div');
+      banner.style.cssText = 'margin-bottom:16px;padding:14px 16px;background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.3);border-radius:10px;font-size:13px;line-height:1.6;color:#10b981;text-align:center;';
+      banner.innerHTML = '✅ <strong>Zahlung erfolgreich!</strong><br><span style="font-size:12px;opacity:.9;">Paket: ' + paket + ' · Bitte einloggen um fortzufahren</span>';
+      form.insertBefore(banner, form.firstChild);
+    });
+  }
+})();
+
+(function(){});
         }
         await ladePaketUndWeiterleiten(email);
         return;

@@ -671,3 +671,48 @@ function einfuegenBanner() {
   }
 }
 })();
+
+/* ── JVEG → RECHNUNG (automatisch) ── */
+window.jvegZurRechnung = function() {
+  // Alle berechneten Werte aus dem DOM lesen
+  var nettoEl   = document.getElementById('jveg-netto')   || document.querySelector('.jveg-netto-total');
+  var bruttoEl  = document.getElementById('jveg-brutto')  || document.querySelector('.jveg-brutto-total');
+  var ustEl     = document.getElementById('jveg-ust')     || document.querySelector('.jveg-ust');
+  var az        = localStorage.getItem('prova_letztes_az') || '';
+  var ag        = localStorage.getItem('prova_letzter_auftraggeber') || '';
+  var agEmail   = localStorage.getItem('prova_letzter_auftraggeber_email') || '';
+
+  var netto  = parseFloat((nettoEl  || {}).textContent || '0') || 0;
+  var brutto = parseFloat((bruttoEl || {}).textContent || '0') || 0;
+  var ust    = parseFloat((ustEl    || {}).textContent || '0') || 0;
+
+  // Positionen aus Tabelle lesen
+  var positionen = [];
+  document.querySelectorAll('.jveg-position, .jveg-row, tr[data-jveg]').forEach(function(row) {
+    var bez  = (row.querySelector('.jveg-bez,  td:nth-child(1)') || {}).textContent || '';
+    var menge = (row.querySelector('.jveg-menge, td:nth-child(2)') || {}).textContent || '';
+    var ep   = (row.querySelector('.jveg-ep,   td:nth-child(3)') || {}).textContent || '';
+    var gesEl = (row.querySelector('.jveg-ges,  td:last-child') || {}).textContent || '';
+    var ges  = parseFloat(gesEl.replace(/[^0-9,.]/g, '').replace(',', '.')) || 0;
+    if (ges > 0) positionen.push({ bezeichnung: bez.trim(), menge: menge.trim(), ep: ep.trim(), gesamt: ges });
+  });
+
+  // An Rechnungen übergeben
+  try {
+    sessionStorage.setItem('prova_rechnung_jveg', JSON.stringify({
+      herkunft:       'jveg',
+      az:             az,
+      ag:             ag,
+      ag_email:       agEmail,
+      netto:          netto,
+      brutto:         brutto,
+      ust:            ust,
+      positionen:     positionen,
+      rechnungstyp:   'JVEG-Gerichtsrechnung',
+      erstellt_am:    new Date().toISOString()
+    }));
+  } catch(e) {}
+
+  window.location.href = 'rechnungen.html?from=jveg' + (az ? '&az=' + encodeURIComponent(az) : '');
+};
+

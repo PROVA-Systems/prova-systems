@@ -2,8 +2,6 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800&display=swap" rel="stylesheet">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Kalender · PROVA</title>
 <script src="prova-preise.js"></script>
@@ -246,6 +244,26 @@ a{text-decoration:none;color:inherit;}button,input,select,textarea{font-family:i
           border-radius:8px;color:var(--accent);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;">
           📥 Fristen aus Fällen
         </button>
+        <div style="position:relative;" id="export-menu-wrap">
+          <button onclick="document.getElementById('export-dropdown').classList.toggle('open')"
+            style="padding:7px 12px;border-radius:8px;background:rgba(79,142,247,.1);border:1px solid rgba(79,142,247,.3);color:var(--accent,#4f8ef7);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:5px;">
+            📅 Exportieren ▾
+          </button>
+          <div id="export-dropdown" style="display:none;position:absolute;top:calc(100% + 6px);right:0;background:var(--bg2,#111827);border:1px solid var(--border,#1e3a5f);border-radius:10px;min-width:200px;z-index:200;padding:6px;">
+            <button onclick="exportiereIcal(true);document.getElementById('export-dropdown').classList.remove('open')"
+              style="width:100%;text-align:left;padding:8px 12px;background:none;border:none;color:var(--text,#f1f5f9);font-size:12px;cursor:pointer;border-radius:6px;font-family:inherit;"
+              onmouseover="this.style.background='rgba(79,142,247,.1)'" onmouseout="this.style.background='none'">
+              📅 Kommende Termine (.ics)
+            </button>
+            <button onclick="exportiereIcal(false);document.getElementById('export-dropdown').classList.remove('open')"
+              style="width:100%;text-align:left;padding:8px 12px;background:none;border:none;color:var(--text,#f1f5f9);font-size:12px;cursor:pointer;border-radius:6px;font-family:inherit;"
+              onmouseover="this.style.background='rgba(79,142,247,.1)'" onmouseout="this.style.background='none'">
+              📋 Alle Termine (.ics)
+            </button>
+            <div style="border-top:1px solid var(--border,#1e3a5f);margin:4px 0;"></div>
+            <div style="padding:6px 12px;font-size:10px;color:var(--text3,#64748b);">Öffnet in Google, Apple & Outlook Kalender</div>
+          </div>
+        </div>
         <button class="btn-new" onclick="oeffneModal()">＋ Neuer Termin</button>
       </div>
     </div>
@@ -370,5 +388,16 @@ a{text-decoration:none;color:inherit;}button,input,select,textarea{font-family:i
 <script src="prova-error-handler.js" defer></script>
   <script src="frist-guard.js" defer></script>
   <script defer>document.addEventListener("DOMContentLoaded",function(){if(typeof FristGuard!=="undefined")FristGuard.init({bannerId:"fg-banner-container",widgetId:"fg-widget-main",svEmail:localStorage.getItem("prova_sv_email")||""}).catch(function(){});});</script>
+
+<script>
+document.addEventListener('click', function(e) {
+  var wrap = document.getElementById('export-menu-wrap');
+  if (wrap && !wrap.contains(e.target)) {
+    var dd = document.getElementById('export-dropdown');
+    if (dd) dd.classList.remove('open');
+  }
+});
+document.getElementById('export-dropdown') && document.getElementById('export-dropdown').addEventListener('click', function(e){ e.stopPropagation(); });
+</script>
 </body>
 </html>

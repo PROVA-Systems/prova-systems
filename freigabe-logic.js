@@ -574,9 +574,18 @@ async function approveGutachten(){
     bestaetigung_5pruef:localStorage.getItem('prova_5pruef_ts')||new Date().toISOString(),
     bestaetigung_5pruef_text:'KI-Kausalitätshypothesen §5 persönlich fachlich geprüft und bestätigt gemäß IHK-SVO §3',
     bestaetigung_407a_text:'Persönlich geprüft und fachliche Verantwortung übernommen gemäß §407a ZPO',
-    // EU AI Act Label für PDF-Template (TO-DO aus Session 4)
-    ki_label:'KI-gestützt erstellt, geprüft und verantwortet durch '
-      +([localStorage.getItem('prova_sv_vorname'),localStorage.getItem('prova_sv_nachname')].filter(Boolean).join(' ')||'den Sachverständigen'),
+    // EU AI Act Art. 13 + 14 — vollständiges KI-Label für PDFMonkey
+    ki_label: 'KI-gestützt erstellt, geprüft und verantwortet durch '
+      + ([localStorage.getItem('prova_sv_vorname'),localStorage.getItem('prova_sv_nachname')].filter(Boolean).join(' ') || 'den Sachverständigen'),
+    eu_ai_act_label: [
+      'Dieses Gutachten wurde unter Einsatz von KI-gestützten Assistenzfunktionen erstellt.',
+      'Alle Befunde, Kausalaussagen und Bewertungen wurden vom unterzeichnenden Sachverständigen',
+      'persönlich geprüft, fachlich verantwortet und eigenständig formuliert (§407a ZPO).',
+      'Offenlegung gemäß EU AI Act Art. 13 (Transparenzpflicht) und Art. 14 (menschliche Aufsicht),',
+      'Verordnung (EU) 2024/1689.'
+    ].join(' '),
+    eu_ai_act_datum: new Date().toLocaleDateString('de-DE', {day:'2-digit',month:'2-digit',year:'numeric'}),
+    ki_modell_label: 'PROVA KI-Assistent',
     gutachter_name:[localStorage.getItem('prova_sv_vorname'),localStorage.getItem('prova_sv_nachname')].filter(Boolean).join(' ')||'',
     paket:localStorage.getItem('prova_paket')||'Solo',
   };

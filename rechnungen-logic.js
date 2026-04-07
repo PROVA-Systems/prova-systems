@@ -210,21 +210,16 @@ window.erstelleRechnung=async function(){
   var payload=bauePayload(reNr,betraege,false);
 
   try{
-    // Webhook (Airtable-Speicherung)
-    fetch(WEBHOOK_S6,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
-
-    // PDF via rechnung-pdf.js generieren
-    var pdfRes = await generierePDF(reNr, payload, betraege);
-    if(pdfRes && pdfRes.pdf_url){
-      zeigToast('✅ Rechnung '+reNr+' — PDF bereit');
-      zeigePdfButton(pdfRes.pdf_url, reNr);
-    } else {
+    var res=await fetch(WEBHOOK_S6,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    if(res.ok){
       zeigToast('✅ Rechnung '+reNr+' erstellt — PDF folgt per E-Mail');
+      speichereLokal(reNr,ag,betraege.brutto,'Offen',datum);
+      await ladeListe();
+      resetForm();
+      zeigeAbschlussButton(reNr);
+    }else{
+      zeigToast('Fehler HTTP '+res.status,'err');
     }
-    speichereLokal(reNr,ag,betraege.brutto,'Offen',datum);
-    await ladeListe();
-    resetForm();
-    zeigeAbschlussButton(reNr);
   }catch(e){
     zeigToast('Netzwerkfehler: '+e.message,'err');
   }
@@ -543,3 +538,39 @@ async function supSendModal(){
     alert('Fehler. Bitte E-Mail an support@prova-systems.de');
   }
 }
+/* ── JVEG-IMPORT (von jveg.html) ── */
+(function() {
+  var params = new URLSearchParams(window.location.search);
+  if (params.get('from') !== 'jveg') return;
+
+  var jvegData = null;
+  try { jvegData = JSON.parse(sessionStorage.getItem('prova_rechnung_jveg') || 'null'); } catch(e) {}
+  if (!jvegData) return;
+
+  sessionStorage.removeItem('prova_rechnung_jveg');
+
+  document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(function() {
+      // Felder befüllen
+      var set = function(id, val) { var el = document.getElementById(id); if(el && val) { el.value = val; el.dispatchEvent(new Event('input')); }};
+      set('re-aktenzeichen', jvegData.az);
+      set('re-empfaenger',   jvegData.ag);
+      set('re-empfaenger-email', jvegData.ag_email);
+
+      var nettoEl  = document.getElementById('re-netto')  || document.getElementById('netto-input');
+      var bruttoEl = document.getElementById('re-brutto') || document.getElementById('brutto-input');
+      if (nettoEl)  { nettoEl.value  = jvegData.netto;  nettoEl.dispatchEvent(new Event('input')); }
+      if (bruttoEl) { bruttoEl.value = jvegData.brutto; bruttoEl.dispatchEvent(new Event('input')); }
+
+      // Banner zeigen
+      var banner = document.createElement('div');
+      banner.style.cssText = 'margin:12px 0;padding:12px 16px;background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.25);border-radius:9px;font-size:13px;color:#10b981;';
+      banner.innerHTML = '✅ <strong>JVEG-Daten importiert</strong> · Az.: ' + (jvegData.az || '—') + ' · Brutto: ' + jvegData.brutto.toFixed(2).replace('.', ',') + ' €';
+      var container = document.querySelector('.re-form, main, .content') || document.body;
+      container.insertBefore(banner, container.firstChild);
+
+      if (typeof showToast === 'function') showToast('JVEG-Rechnung importiert ✅');
+    }, 500);
+  });
+})();
+

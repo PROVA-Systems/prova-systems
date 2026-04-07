@@ -135,6 +135,17 @@
 <script src="auth-guard.js"></script>
 <script src="theme.js"></script>
 <script src="nav.js" defer></script>
+
+<style id="jahresbericht-print-css">
+@media print {
+  .topbar, .nav-sidebar, .page-actions, .btn-pdf-export, .no-print { display: none !important; }
+  body { background: #fff !important; color: #000 !important; font-size: 10pt; }
+  .card, .stat-card { break-inside: avoid; border: 1px solid #ddd !important; box-shadow: none !important; }
+  .page-content { max-width: 100% !important; padding: 0 !important; }
+  h1, h2, h3 { color: #1a1a1a !important; }
+  @page { margin: 15mm 20mm; size: A4; }
+}
+</style>
 </head>
 <body>
 
@@ -183,5 +194,22 @@
 <script src="prova-context.js" defer></script>
 <script src="prova-error-handler.js" defer></script>
 <script src="support-chat.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // PDF-Export Button
+  var btn = document.createElement('button');
+  btn.className = 'btn-pdf-export no-print';
+  btn.style.cssText = 'position:fixed;bottom:24px;right:24px;z-index:100;display:flex;align-items:center;gap:8px;padding:12px 20px;background:linear-gradient(135deg,#1a3a5c,#2563eb);color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 4px 20px rgba(26,58,92,.4);font-family:inherit;';
+  btn.innerHTML = '📄 Als PDF exportieren';
+  btn.onclick = function() {
+    btn.style.display = 'none';
+    document.title = 'PROVA Jahresbericht ' + new Date().getFullYear();
+    window.print();
+    setTimeout(function(){ btn.style.display = ''; }, 1000);
+  };
+  document.body.appendChild(btn);
+});
+</script>
 </body>
 </html>

@@ -777,3 +777,201 @@ window.setAccent = function(name) {
     document.documentElement.style.setProperty('--accent2', ACCENT_COLORS[savedAccent].accent2);
   }
 })();
+
+/* ════════════════════════════════════════════════════════════
+   PROVA SMTP-Einstellungen v1.0
+   Credentials nur im localStorage — niemals auf fremden Servern
+════════════════════════════════════════════════════════════ */
+
+var SMTP_PRESETS = {
+  gmail:   { host:'smtp.gmail.com',           port:587,
+    anleitung:'Gmail erfordert ein <strong>App-Passwort</strong>. Gehen Sie zu Ihrem Google-Konto → Sicherheit → 2-Schritt-Verifizierung → App-Passwörter. Normales Passwort funktioniert nicht.' },
+  gmx:     { host:'mail.gmx.net',             port:587,
+    anleitung:'GMX: Gehen Sie zu Einstellungen → E-Mail → Postfach → Sicherheit und aktivieren Sie "Externen SMTP-Zugriff". Ihr normales Passwort funktioniert dann.' },
+  web:     { host:'smtp.web.de',              port:587,
+    anleitung:'Web.de: Normales Passwort funktioniert. Falls nicht: Web.de Hilfe → "Externes E-Mail-Programm".' },
+  ionos:   { host:'smtp.ionos.de',            port:587,
+    anleitung:'IONOS / 1&1: Ihr normales E-Mail-Passwort verwenden. Server: smtp.ionos.de, Port: 587.' },
+  telekom: { host:'securesmtp.t-online.de',   port:587,
+    anleitung:'Telekom / T-Online: Ihr E-Mail-Passwort verwenden. Falls Fehler: Mein T-Online → Sicherheit → E-Mail-Einstellungen.' },
+  outlook: { host:'smtp-mail.outlook.com',    port:587,
+    anleitung:'Outlook/Hotmail: Ihr normales Passwort verwenden. Server: smtp-mail.outlook.com, Port: 587.' },
+  custom:  { host:'', port:587,
+    anleitung:'Tragen Sie die SMTP-Daten Ihres Providers ein. Diese finden Sie in den Einstellungen Ihres E-Mail-Anbieters.' }
+};
+
+(function initSmtpEinstellungen(){
+  // Gespeicherte Einstellungen laden
+  var smtp = ladeSMTP();
+  if (smtp.user) {
+    befuelleSmtpFelder(smtp);
+    updateSmtpStatusBadge(true, smtp.user);
+    // Provider-Button aktivieren
+    if (smtp.provider) {
+      var btn = document.querySelector('[data-provider="'+smtp.provider+'"]');
+      if (btn) btn.classList.add('aktiv');
+    }
+  }
+})();
+
+function ladeSMTP() {
+  try {
+    return JSON.parse(localStorage.getItem('prova_smtp') || '{}');
+  } catch(e) { return {}; }
+}
+
+function speichereSMTPLokal(smtp) {
+  try { localStorage.setItem('prova_smtp', JSON.stringify(smtp)); } catch(e) {}
+}
+
+function befuelleSmtpFelder(smtp) {
+  var set = function(id, val) { var el = document.getElementById(id); if(el) el.value = val || ''; };
+  set('smtp-host',      smtp.host);
+  set('smtp-port',      smtp.port || 587);
+  set('smtp-user',      smtp.user);
+  set('smtp-pass',      smtp.pass);
+  set('smtp-from-name', smtp.from_name);
+}
+
+function updateSmtpStatusBadge(aktiv, label) {
+  var badge = document.getElementById('smtp-status-badge');
+  if (!badge) return;
+  if (aktiv) {
+    badge.textContent = '✓ Konfiguriert — ' + (label || '');
+    badge.style.cssText = 'font-size:11px;padding:2px 8px;border-radius:10px;background:rgba(16,185,129,.12);color:#10b981;border:1px solid rgba(16,185,129,.2);';
+  } else {
+    badge.textContent = 'Nicht konfiguriert';
+    badge.style.cssText = 'font-size:11px;padding:2px 8px;border-radius:10px;background:rgba(239,68,68,.12);color:#ef4444;border:1px solid rgba(239,68,68,.2);';
+  }
+}
+
+window.waehleProvider = function(btn) {
+  document.querySelectorAll('.smtp-provider-btn').forEach(function(b){ b.classList.remove('aktiv'); });
+  btn.classList.add('aktiv');
+  var provider = btn.getAttribute('data-provider');
+  var preset   = SMTP_PRESETS[provider];
+  if (!preset) return;
+  var hostEl = document.getElementById('smtp-host');
+  var portEl = document.getElementById('smtp-port');
+  if (hostEl && preset.host) hostEl.value = preset.host;
+  if (portEl) portEl.value = preset.port;
+  // Kurzhinweis + Link zur ausführlichen Anleitung
+  var anlEl = document.getElementById('smtp-anleitung');
+  if (anlEl) {
+    anlEl.innerHTML = '<strong>' + btn.textContent.trim() + ':</strong> ' + preset.anleitung
+      + '<br><br><a onclick="if(window.oeffneSmtpAnleitung)oeffneSmtpAnleitung()" href="smtp-einrichtung.html?provider=' + provider + '" target="_blank" '
+      + 'style="display:inline-flex;align-items:center;gap:5px;margin-top:2px;color:var(--accent,#4f8ef7);font-weight:600;font-size:12px;text-decoration:none;">'
+      + '📖 Vollständige Schritt-für-Schritt Anleitung →</a>';
+    anlEl.style.display = 'block';
+  }
+  // Server-Felder nur bei Custom editierbar
+  var serverFields = document.getElementById('smtp-server-fields');
+  if (serverFields) {
+    var inputs = serverFields.querySelectorAll('input');
+    inputs.forEach(function(inp){ inp.readOnly = (provider !== 'custom'); inp.style.opacity = provider === 'custom' ? '1' : '.6'; });
+  }
+};
+
+window.togglePasswortSichtbar = function() {
+  var inp = document.getElementById('smtp-pass');
+  if (!inp) return;
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+};
+
+window.testSmtpVerbindung = async function() {
+  var btn    = document.getElementById('btn-smtp-test');
+  var result = document.getElementById('smtp-test-result');
+  var host   = (document.getElementById('smtp-host') || {}).value || '';
+  var port   = (document.getElementById('smtp-port') || {}).value || 587;
+  var user   = (document.getElementById('smtp-user') || {}).value || '';
+  var pass   = (document.getElementById('smtp-pass') || {}).value || '';
+  var fname  = (document.getElementById('smtp-from-name') || {}).value || '';
+
+  if (!host || !user || !pass) {
+    if (result) {
+      result.style.display = 'block';
+      result.style.cssText += ';background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);color:#ef4444;';
+      result.textContent = 'Bitte Host, E-Mail-Adresse und Passwort ausfüllen.';
+    }
+    return;
+  }
+
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Teste Verbindung…'; }
+  if (result) { result.style.display = 'block'; result.textContent = 'Verbinde…'; result.style.cssText += ';background:rgba(79,142,247,.06);border:1px solid rgba(79,142,247,.2);color:var(--accent,#4f8ef7);'; }
+
+  try {
+    var r = await fetch('/.netlify/functions/smtp-test', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ smtp_host: host, smtp_port: parseInt(port), smtp_user: user, smtp_pass: pass, from_name: fname })
+    });
+    var data = await r.json();
+
+    if (data.ok) {
+      if (result) {
+        result.style.cssText = 'display:block;margin-top:10px;padding:10px 12px;border-radius:8px;font-size:12px;line-height:1.6;background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.2);color:#10b981;';
+        result.innerHTML = '✅ <strong>Verbindung erfolgreich!</strong><br>' + data.meldung + '<br><span style="opacity:.7;">Server: ' + data.server + '</span>';
+      }
+      if (typeof showToast === 'function') showToast('Test erfolgreich ✅ — Test-Mail gesendet');
+    } else {
+      if (result) {
+        result.style.cssText = 'display:block;margin-top:10px;padding:10px 12px;border-radius:8px;font-size:12px;line-height:1.6;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);color:#ef4444;';
+        result.innerHTML = '❌ <strong>Verbindung fehlgeschlagen</strong><br>' + (data.fehler||'') + (data.tipp ? '<br><em style="opacity:.8;">Tipp: ' + data.tipp + '</em>' : '');
+      }
+    }
+  } catch(e) {
+    if (result) { result.textContent = 'Netzwerkfehler: ' + e.message; }
+  }
+
+  if (btn) { btn.disabled = false; btn.textContent = '🔌 Verbindung testen'; }
+};
+
+window.speichereSmtpEinstellungen = async function() {
+  var btn  = document.getElementById('btn-smtp-save');
+  var host = (document.getElementById('smtp-host') || {}).value || '';
+  var port = parseInt((document.getElementById('smtp-port') || {}).value) || 587;
+  var user = (document.getElementById('smtp-user') || {}).value || '';
+  var pass = (document.getElementById('smtp-pass') || {}).value || '';
+  var fname= (document.getElementById('smtp-from-name') || {}).value || '';
+  var prov = (document.querySelector('.smtp-provider-btn.aktiv') || {}).dataset?.provider || 'custom';
+
+  if (!user || !pass) {
+    if (typeof showToast === 'function') showToast('E-Mail-Adresse und Passwort sind Pflicht', 'error');
+    return;
+  }
+
+  var smtp = { host, port, user, pass, from_name: fname, provider: prov };
+  speichereSMTPLokal(smtp);
+  updateSmtpStatusBadge(true, user);
+
+  // smtp_host, smtp_port, smtp_user, smtp_from_name → Airtable (kein Passwort!)
+  if (btn) { btn.disabled = true; btn.textContent = 'Wird gespeichert…'; }
+  try {
+    var svEmail = localStorage.getItem('prova_sv_email') || '';
+    if (svEmail) {
+      await updateAirtableFelder({
+        smtp_host:      host,
+        smtp_port:      port,
+        smtp_user:      user,
+        smtp_from_name: fname,
+        smtp_provider:  prov
+      });
+    }
+    if (typeof showToast === 'function') showToast('E-Mail-Einstellungen gespeichert ✅');
+  } catch(e) {
+    if (typeof showToast === 'function') showToast('Lokal gespeichert (Airtable nicht erreichbar)');
+  }
+  if (btn) { btn.disabled = false; btn.textContent = '💾 Speichern'; }
+};
+
+window.loescheSmtpEinstellungen = function() {
+  if (!confirm('E-Mail-Einstellungen löschen?')) return;
+  localStorage.removeItem('prova_smtp');
+  ['smtp-host','smtp-port','smtp-user','smtp-pass','smtp-from-name'].forEach(function(id){
+    var el = document.getElementById(id); if(el) el.value = '';
+  });
+  document.querySelectorAll('.smtp-provider-btn').forEach(function(b){ b.classList.remove('aktiv'); });
+  updateSmtpStatusBadge(false);
+  if (typeof showToast === 'function') showToast('E-Mail-Einstellungen gelöscht');
+};
+

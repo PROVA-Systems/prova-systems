@@ -214,6 +214,12 @@
       });
       var data = await res.json();
       if (data.url) {
+        // Pending-Flag — überlebt Stripe-Tab (localStorage persistiert)
+        try {
+          localStorage.setItem('prova_stripe_pending', JSON.stringify({
+            paket: paketName, email: email, timestamp: Date.now()
+          }));
+        } catch(e) {}
         window.location.href = data.url;
       } else {
         throw new Error(data.error || 'Fehler');

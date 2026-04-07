@@ -372,7 +372,7 @@ function renderKPI(){
   let html='';
   for(const [k,icon] of Object.entries(cats)){
     const n = POSITIONEN_DB.filter(p=>p.kat===k).length;
-    html+=`<div class="kpi-chip">${icon} ${k.replace(' allgemein','')} <strong>${n} Pos.</strong></div>`;
+    html+=`<div class="kpi-chip">${icon} ${k.replace(' allgemein','')}<strong>${n} Pos.</strong></div>`;
   }
   bar.innerHTML=html;
 }

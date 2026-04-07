@@ -167,11 +167,20 @@
     } catch (e) {}
   }
 
-  /* ── Auto-Check bei Tab-Fokus ── */
-  var _focusTimer = null;
-  window.addEventListener('focus', function () {
-    clearTimeout(_focusTimer);
-    _focusTimer = setTimeout(function() {
+  /* ── Auto-Check bei Tab-Wechsel (NICHT bei F12/DevTools/Screenshots) ── */
+  // visibilitychange: feuert wenn Tab wirklich gewechselt wird (nicht bei DevTools)
+  // document.hidden = true bedeutet Tab ist im Hintergrund
+  // Wir prüfen NUR wenn Tab von hidden → visible wechselt (echter Tab-Wechsel)
+  var _lastVisibilityHidden = false;
+  document.addEventListener('visibilitychange', function() {
+    if (document.hidden) {
+      _lastVisibilityHidden = true;
+      return;
+    }
+    // Nur prüfen wenn Tab wirklich versteckt war (echter Browser-Tab-Wechsel)
+    if (!_lastVisibilityHidden) return;
+    _lastVisibilityHidden = false;
+    setTimeout(function() {
       if (!isValidSession()) {
         var page = window.location.pathname.split('/').pop() || '';
         var publicPages = ['app-login.html', 'app-register.html', 'index.html', ''];
@@ -180,7 +189,7 @@
           window.location.replace('app-login.html');
         }
       }
-    }, 800);
+    }, 500);
   });
 
   /* ── Inaktivitäts-Timer ── */

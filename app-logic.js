@@ -1074,7 +1074,70 @@ function weiterZuSchritt2() {
     if (sa) sa.focus();
     return;
   }
+
+  // Auftragsbestätigung anbieten (einmalig pro Fall)
+  var az  = localStorage.getItem('prova_letztes_az') || '';
+  var ag  = localStorage.getItem('prova_letzter_auftraggeber') || '';
+  var agE = localStorage.getItem('prova_letzter_auftraggeber_email') || '';
+  var flagKey = 'prova_ab_angeboten_' + az;
+
+  if (az && !sessionStorage.getItem(flagKey)) {
+    sessionStorage.setItem(flagKey, '1');
+    zeigeAuftragsbestaetigungPrompt(az, ag, agE, function(){ goToStep(2); });
+    return;
+  }
   goToStep(2);
+}
+
+function zeigeAuftragsbestaetigungPrompt(az, ag, agE, weiterFn) {
+  // Bestehendes Prompt entfernen falls vorhanden
+  var old = document.getElementById('ab-prompt-overlay');
+  if (old) old.remove();
+
+  var overlay = document.createElement('div');
+  overlay.id = 'ab-prompt-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9000;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px);';
+
+  var box = document.createElement('div');
+  box.style.cssText = 'background:var(--bg2,#111827);border:1px solid var(--border,#1e3a5f);border-radius:16px;padding:24px 26px;max-width:480px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.5);';
+
+  var smtpCfg = {};
+  try { smtpCfg = JSON.parse(localStorage.getItem('prova_smtp') || '{}'); } catch(e) {}
+  var hatSmtp = !!(smtpCfg.user && smtpCfg.pass);
+
+  var abUrl = 'briefvorlagen.html?vorlage=A-03&az=' + encodeURIComponent(az)
+    + (ag  ? '&ag=' + encodeURIComponent(ag)   : '')
+    + (agE ? '&agEmail=' + encodeURIComponent(agE) : '');
+
+  var mailtoBody = 'Sehr geehrte Damen und Herren,\n\nhiermit bestätigen wir den Eingang Ihres Auftrags bezüglich Aktenzeichen ' + az + '.\n\nMit freundlichen Grüßen';
+  var mailtoUrl  = 'mailto:' + encodeURIComponent(agE) + '?subject=' + encodeURIComponent('Auftragsbestätigung ' + az) + '&body=' + encodeURIComponent(mailtoBody);
+
+  box.innerHTML = '<div style="font-size:16px;font-weight:700;color:var(--text,#e8eaf0);margin-bottom:6px;">📬 Auftragsbestätigung senden?</div>'
+    + '<div style="font-size:13px;color:var(--text2,#94a3b8);margin-bottom:18px;line-height:1.6;">'
+    + 'Fall <strong style="color:var(--text,#e8eaf0);">' + az + '</strong> wurde angelegt'
+    + (ag ? ' für <strong style="color:var(--text,#e8eaf0);">' + ag + '</strong>' : '') + '.<br>'
+    + 'Möchten Sie eine Auftragsbestätigung versenden?'
+    + '</div>'
+    + '<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:18px;">'
+    + (hatSmtp
+        ? '<a href="' + abUrl + '" style="display:flex;align-items:center;gap:8px;padding:11px 14px;background:var(--accent,#4f8ef7);color:#fff;border-radius:9px;font-size:13px;font-weight:600;text-decoration:none;">📧 Auftragsbestätigung direkt senden (KI-generiert)</a>'
+        : '<a href="' + abUrl + '" style="display:flex;align-items:center;gap:8px;padding:11px 14px;background:var(--accent,#4f8ef7);color:#fff;border-radius:9px;font-size:13px;font-weight:600;text-decoration:none;">📝 Auftragsbestätigung öffnen &amp; versenden</a>'
+      )
+    + (agE ? '<a href="' + mailtoUrl + '" style="display:flex;align-items:center;gap:8px;padding:11px 14px;background:rgba(255,255,255,.06);border:1px solid var(--border,#1e3a5f);color:var(--text2,#94a3b8);border-radius:9px;font-size:13px;font-weight:600;text-decoration:none;">📮 Schnell per E-Mail-Programm</a>' : '')
+    + '</div>'
+    + '<button id="ab-skip-btn" style="width:100%;padding:10px;background:none;border:1px solid var(--border,#1e3a5f);border-radius:9px;color:var(--text3,#64748b);font-size:12px;cursor:pointer;font-family:inherit;">Jetzt überspringen — später in Briefvorlagen</button>';
+
+  overlay.appendChild(box);
+  document.body.appendChild(overlay);
+
+  document.getElementById('ab-skip-btn').onclick = function() {
+    overlay.remove();
+    weiterFn();
+  };
+  // Klick außerhalb schließt
+  overlay.onclick = function(e) {
+    if (e.target === overlay) { overlay.remove(); weiterFn(); }
+  };
 }
 function weiterZuAnalyse() {
   goToStep(3);
@@ -3239,13 +3302,6 @@ async function sendeWebhook() {
       if (_az) { localStorage.setItem('prova_letztes_az', _az); localStorage.setItem('prova_aktiver_fall', _az); }
       if (_sa) localStorage.setItem('prova_schadenart', _sa);
       if (_adr) localStorage.setItem('prova_adresse', _adr);
-
-      // ── Kontingent: neuen Fall registrieren (fire-and-forget) ──
-      try {
-        if (typeof PaketGuard !== 'undefined' && typeof PaketGuard.registriereNeuenFall === 'function') {
-          PaketGuard.registriereNeuenFall();
-        }
-      } catch(e) { /* nicht kritisch */ }
       
       // Fristdaten in Fälle-Cache speichern (für Dashboard-Widget)
       if (_daten.fristdatum) {

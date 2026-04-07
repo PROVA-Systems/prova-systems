@@ -342,7 +342,81 @@ window.importFristenAusFaellen = async function() {
   }
   if(btn){btn.disabled=false;btn.textContent='📥 Fristen aus Fällen';}
 };
-// Init
+
+/* ─── ICAL EXPORT ─── */
+window.exportiereIcal = function(nurKommende) {
+  var termine = nurKommende
+    ? alleTermine.filter(function(t){ return t.datum && t.datum >= new Date().toISOString().slice(0,10); })
+    : alleTermine;
+
+  if (!termine.length) { zeigToast('Keine Termine zum Exportieren','err'); return; }
+
+  var svName = (localStorage.getItem('prova_sv_vorname') || '') + ' ' + (localStorage.getItem('prova_sv_nachname') || '');
+  var svEmail = localStorage.getItem('prova_sv_email') || 'prova@prova-systems.de';
+
+  function icalDatum(dateStr, timeStr) {
+    if (!dateStr) return '';
+    var d = new Date(dateStr + (timeStr ? 'T' + timeStr + ':00' : 'T00:00:00'));
+    return d.toISOString().replace(/[-:]/g,'').split('.')[0] + (timeStr ? '' : '');
+  }
+
+  function icalText(s) {
+    var s2 = String(s || ''); s2 = s2.split('\n').join('\\n'); s2 = s2.split(',').join('\\,'); s2 = s2.split(';').join('\\;'); return s2;
+  }
+
+  var lines = [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//PROVA Systems//Terminkalender//DE',
+    'CALSCALE:GREGORIAN',
+    'X-WR-CALNAME:PROVA Termine',
+    'X-WR-TIMEZONE:Europe/Berlin'
+  ];
+
+  termine.forEach(function(t) {
+    var uid = (t.id || Date.now()) + '@prova-systems.de';
+    var dtstart = icalDatum(t.datum, t.uhrzeit || '');
+    var dtend   = icalDatum(t.datum, t.uhrzeit ? (String(parseInt(t.uhrzeit.split(':')[0]) + 1).padStart(2,'0') + ':' + t.uhrzeit.split(':')[1]) : '');
+    var summary = icalText((t.titel || t.typ || 'PROVA Termin') + (t.az ? ' [' + t.az + ']' : ''));
+    var desc    = icalText((t.notiz || '') + (t.az ? ' | AZ: ' + t.az : ''));
+
+    lines.push('BEGIN:VEVENT');
+    lines.push('UID:' + uid);
+    lines.push('DTSTAMP:' + new Date().toISOString().replace(/[-:]/g,'').split('.')[0] + 'Z');
+    if (t.uhrzeit) {
+      lines.push('DTSTART;TZID=Europe/Berlin:' + dtstart);
+      lines.push('DTEND;TZID=Europe/Berlin:' + dtend);
+    } else {
+      lines.push('DTSTART;VALUE=DATE:' + dtstart.slice(0,8));
+      lines.push('DTEND;VALUE=DATE:' + dtend.slice(0,8));
+    }
+    lines.push('SUMMARY:' + summary);
+    if (desc) lines.push('DESCRIPTION:' + desc);
+    lines.push('ORGANIZER;CN=' + icalText(svName.trim()) + ':mailto:' + svEmail);
+    lines.push('CATEGORIES:' + icalText(t.typ || 'Sonstiges'));
+    if (t.typ === 'Abgabefrist' || t.typ === 'Gerichtstermin') {
+      lines.push('BEGIN:VALARM');
+      lines.push('TRIGGER:-PT24H');
+      lines.push('ACTION:DISPLAY');
+      lines.push('DESCRIPTION:Erinnerung: ' + summary);
+      lines.push('END:VALARM');
+    }
+    lines.push('END:VEVENT');
+  });
+
+  lines.push('END:VCALENDAR');
+
+  var blob = new Blob([lines.join('\r\n')], { type: 'text/calendar;charset=utf-8' });
+  var url  = URL.createObjectURL(blob);
+  var a    = document.createElement('a');
+  a.href   = url;
+  a.download = 'PROVA-Termine-' + new Date().toISOString().slice(0,10) + '.ics';
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(function(){ document.body.removeChild(a); URL.revokeObjectURL(url); }, 1000);
+  zeigToast(termine.length + ' Termin' + (termine.length > 1 ? 'e' : '') + ' exportiert ✅');
+};
+
 // ── INIT ──
 document.addEventListener('DOMContentLoaded', function() {
   setView('kal');

@@ -1304,5 +1304,46 @@ function escHTML(s){
 <script src="prova-error-handler.js" defer></script>
 <script src="ki-lernpool.js" defer></script>
 <script src="sw-register.js" defer></script>
+<script src="foto-captioning.js" defer></script>
+
+<script>
+window.provaKICaption = async function(btn) {
+  var idx = parseInt(btn.getAttribute('data-idx'));
+  if (isNaN(idx) || !window._fotos || !window._fotos[idx]) return;
+  var foto = window._fotos[idx];
+  if (!foto.dataUrl) { if(typeof toast==='function') toast('Kein Foto-Daten vorhanden','warn'); return; }
+
+  btn.disabled = true; btn.textContent = '⏳ Analysiert…';
+
+  try {
+    var res = await fetch('/.netlify/functions/foto-captioning', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        image_base64: foto.dataUrl.split(',')[1],
+        schadenart: window._schadenart || localStorage.getItem('prova_schadenart') || '',
+        az: window._az || localStorage.getItem('prova_aktiver_fall') || ''
+      })
+    });
+    var data = await res.json();
+    var caption = data.caption || data.beschreibung || '';
+    if (!caption) throw new Error('Keine Beschriftung erhalten');
+
+    // Caption in Foto speichern und UI updaten
+    window._fotos[idx].caption = caption;
+    var captionEl = btn.parentElement.querySelector('.ot-foto-caption, textarea');
+    if (captionEl) {
+      if (captionEl.tagName === 'TEXTAREA') captionEl.value = caption;
+      else captionEl.textContent = caption;
+    }
+    if (typeof speichereDaten === 'function') speichereDaten();
+    btn.textContent = '✅ Beschriftet';
+    if (typeof toast === 'function') toast('KI-Beschriftung erstellt ✅', 'success');
+  } catch(e) {
+    btn.disabled = false; btn.textContent = '✨ KI-Beschriftung';
+    if (typeof toast === 'function') toast('KI-Fehler: ' + e.message, 'error');
+  }
+};
+</script>
 </body>
 </html>
