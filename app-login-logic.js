@@ -134,7 +134,15 @@ async function ladePaketUndWeiterleiten(email, ziel) {
   }
   var paket = 'Solo';
   if (!ziel) {
-    ziel = localStorage.getItem('prova_onboarding_done') ? 'dashboard.html' : 'onboarding-schnellstart.html';
+    // Redirect-Target aus sessionStorage (gesetzt bei Auto-Logout durch focus-Event)
+    var redirectTarget = '';
+    try { redirectTarget = sessionStorage.getItem('prova_redirect_after_login') || ''; } catch(e) {}
+    if (redirectTarget && redirectTarget.includes('prova-systems.de') && !redirectTarget.includes('app-login')) {
+      ziel = redirectTarget;
+      try { sessionStorage.removeItem('prova_redirect_after_login'); } catch(e) {}
+    } else {
+      ziel = localStorage.getItem('prova_onboarding_done') ? 'dashboard.html' : 'onboarding-schnellstart.html';
+    }
   }
   try {
     var res = await fetch('/.netlify/functions/airtable', {

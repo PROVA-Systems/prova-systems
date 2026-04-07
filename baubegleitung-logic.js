@@ -301,8 +301,10 @@ window.deleteMangel = function(projId, idx) {
 // ============================================================
 // MODALS
 // ============================================================
-function openModal(id) { document.getElementById(id).classList.add('open'); }
-function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+window.schliesseProjektModal=function(){closeModal('modal-projekt');};
+window.schliesseBegehungModal=function(){closeModal('modal-begehung');};
+function openModal(id) { var el=document.getElementById(id); if(el) el.classList.add('open'); }
+function closeModal(id) { var el=document.getElementById(id); if(el) el.classList.remove('open'); }
 
 function openModalProjekt() {
   _editProjektId = null;
@@ -332,7 +334,7 @@ function editiereProjekt(id) {
   openModal('modal-projekt');
 }
 
-function openModalBegehung() {
+window.openModalBegehung = function openModalBegehung() {
   if (!_aktivProjektId) return;
   document.getElementById('mb-datum').value = new Date().toISOString().slice(0,10);
   document.getElementById('mb-text').value = '';

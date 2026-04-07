@@ -143,7 +143,7 @@
   function buildToken(email, timestamp) {
     // Einfaches, nicht-kryptografisches Token für Client-Side Tamper-Detection
     // Echte Sicherheit liegt server-side in den Netlify Functions
-    var str = email + ':' + timestamp + ':' + navigator.userAgent.slice(0, 20);
+    var str = email + ':' + timestamp + ':PROVA_STATIC_SALT';
     var hash = 0;
     for (var i = 0; i < str.length; i++) {
       var chr = str.charCodeAt(i);
@@ -168,15 +168,19 @@
   }
 
   /* ── Auto-Check bei Tab-Fokus ── */
+  var _focusTimer = null;
   window.addEventListener('focus', function () {
-    // Beim Zurückwechseln in den Tab prüfen ob Session noch gültig
-    if (!isValidSession()) {
-      var page = window.location.pathname.split('/').pop() || '';
-      var publicPages = ['app-login.html', 'app-register.html', 'index.html', ''];
-      if (publicPages.indexOf(page) === -1) {
-        window.location.replace('app-login.html');
+    clearTimeout(_focusTimer);
+    _focusTimer = setTimeout(function() {
+      if (!isValidSession()) {
+        var page = window.location.pathname.split('/').pop() || '';
+        var publicPages = ['app-login.html', 'app-register.html', 'index.html', ''];
+        if (publicPages.indexOf(page) === -1) {
+          try { sessionStorage.setItem('prova_redirect_after_login', window.location.href); } catch(e) {}
+          window.location.replace('app-login.html');
+        }
       }
-    }
+    }, 800);
   });
 
   /* ── Inaktivitäts-Timer ── */
