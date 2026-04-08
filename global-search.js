@@ -200,14 +200,14 @@ const PROVASearch = {
       const svEmail = localStorage.getItem('prova_sv_email') || '';
       if (!svEmail) return;
       const formula = encodeURIComponent(
-        `AND(OR(FIND("${q}",LOWER({Aktenzeichen})),FIND("${q}",LOWER({Auftraggeber_Name})),FIND("${q}",LOWER({Schaden_Strasse}))),{sv_email}="${svEmail}")`
+        `AND(OR(FIND("${q}",LOWER({Aktenzeichen})),FIND("${q}",LOWER({Auftraggeber})),FIND("${q}",LOWER({Schaden_Strasse}))),{sv_email}="${svEmail}")`
       );
       fetch('/.netlify/functions/airtable', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           method: 'GET',
-          path: `/v0/appJ7bLlAHZoxENWE/tblSxV8bsXwd1pwa0?filterByFormula=${formula}&maxRecords=5&fields[]=Aktenzeichen&fields[]=Auftraggeber_Name&fields[]=Schaden_Strasse&fields[]=Schadensart`
+          path: `/v0/appJ7bLlAHZoxENWE/tblSxV8bsXwd1pwa0?filterByFormula=${formula}&maxRecords=5&fields[]=Aktenzeichen&fields[]=Auftraggeber&fields[]=Adresse&fields[]=Schadenart`
         })
       }).then(r => r.json()).then(data => {
         if (!data.records || !data.records.length) return;
@@ -216,7 +216,7 @@ const PROVASearch = {
         const atResults = data.records.map(r => ({
           type: 'case', label: r.fields.Aktenzeichen || '—', icon: '🔍',
           href: 'akte.html?az=' + encodeURIComponent(r.fields.Aktenzeichen || ''),
-          sub: [r.fields.Auftraggeber_Name, r.fields.Schadensart].filter(Boolean).join(' · ')
+          sub: [r.fields.Auftraggeber, r.fields.Schadensart].filter(Boolean).join(' · ') + ' (Airtable)'
         }));
         // Ergebnisse ergänzen (doppelte entfernen)
         const existing = document.querySelectorAll('.ps-item[data-href]');

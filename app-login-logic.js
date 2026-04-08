@@ -165,8 +165,8 @@ async function ladePaketUndWeiterleiten(email, ziel) {
           return;
         }
         // ── Profil-Sync: alle relevanten Felder aus Airtable ──────────────
-        if (f.sv_vorname)        localStorage.setItem('prova_sv_vorname',       f.sv_vorname);
-        if (f.sv_nachname)       localStorage.setItem('prova_sv_nachname',      f.sv_nachname);
+        if (f.Vorname)        localStorage.setItem('prova_sv_vorname',       f.Vorname);
+        if (f.Nachname)       localStorage.setItem('prova_sv_nachname',      f.Nachname);
         if (f.sv_qualifikation)  localStorage.setItem('prova_sv_qualifikation', f.sv_qualifikation);
         if (f.sv_bueronamen)     localStorage.setItem('prova_bueronamen',       f.sv_bueronamen);
         if (f.sv_telefon)        localStorage.setItem('prova_sv_telefon',       f.sv_telefon);

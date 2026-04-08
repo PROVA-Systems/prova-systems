@@ -494,9 +494,9 @@ const FristGuard = (() => {
         body: JSON.stringify({
           action: 'list',
           tabelle: 'TERMINE',
-          filter: `AND(NOT({Abgeschlossen}), {SV_Email}="${svEmail}")`,
-          sort: [{ field: 'Datum', direction: 'asc' }],
-          felder: ['Titel', 'Datum', 'Typ', 'FallID', 'FallTitel', 'Notiz', 'Prioritaet', 'Erinnerung_Tage']
+          filter: `AND({Status}!="Abgeschlossen", {sv_email}="${svEmail}")`,
+          sort: [{ field: 'termin_datum', direction: 'asc' }],
+          felder: ['aktenzeichen', 'termin_datum', 'termin_typ', 'aktenzeichen', 'objekt_adresse', 'notizen', 'termin_typ', 'erinnerung_24h']
         })
       });
 
@@ -518,7 +518,7 @@ const FristGuard = (() => {
 
   function normalisiereFrist(record) {
     const f = record.fields || {};
-    const datum = f.Datum ? new Date(f.Datum) : null;
+    const datum = f.termin_datum ? new Date(f.termin_datum) : null;
     const heute = new Date(); heute.setHours(0,0,0,0);
     const datumNorm = datum ? new Date(datum.setHours(0,0,0,0)) : null;
     const tageDiff = datumNorm ? Math.round((datumNorm - heute) / 86400000) : null;
@@ -532,22 +532,22 @@ const FristGuard = (() => {
       else                                             dringlichkeit = 'ok';
     }
 
-    const typ = (f.Typ || 'SONSTIGE').toUpperCase();
+    const typ = (f.termin_typ || 'SONSTIGE').toUpperCase();
 
     return {
       id:           record.id,
-      titel:        f.Titel || 'Unbenannte Frist',
+      titel:        f.aktenzeichen || 'Unbenannte Frist',
       datum:        datum,
       datumText:    datum ? datum.toLocaleDateString('de-DE', { weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric' }) : '—',
       tageDiff:     tageDiff,
       dringlichkeit,
       typ:          FRIST_TYPEN[typ] || FRIST_TYPEN.SONSTIGE,
       typKey:       typ,
-      fallId:       f.FallID || null,
-      fallTitel:    f.FallTitel || null,
-      notiz:        f.Notiz || '',
-      prioritaet:   f.Prioritaet || 5,
-      erinnerungTage: f.Erinnerung_Tage || CONFIG.WARN_TAGE_WICHTIG
+      fallId:       f.aktenzeichen || null,
+      fallTitel:    f.objekt_adresse || null,
+      notiz:        f.notizen || '',
+      prioritaet:   f.termin_typ || 5,
+      erinnerungTage: f.erinnerung_24h || CONFIG.WARN_TAGE_WICHTIG
     };
   }
 

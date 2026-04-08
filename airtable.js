@@ -14,13 +14,13 @@
 // ── Erlaubte Tabellen (Whitelist — niemals '*') ──
 const ALLOWED_TABLES = {
   // Fälle: User-Filter wird automatisch angehängt
-  tblSxV8bsXwd1pwa0: { name: 'FAELLE',      userField: 'SV_Email', readOnly: false },
+  tblSxV8bsXwd1pwa0: { name: 'FAELLE',      userField: 'sv_email', readOnly: false },
   // SV-Profil: nur eigenes Profil
   tbladqEQT3tmx4DIB: { name: 'SV',          userField: 'Email',    readOnly: false },
   // Termine: User-Filter
-  tblyMTTdtfGQjjmc2: { name: 'TERMINE',     userField: 'SV_Email', readOnly: false },
+  tblyMTTdtfGQjjmc2: { name: 'TERMINE',     userField: 'sv_email', readOnly: false },
   // Rechnungen: User-Filter
-  tblF6MS7uiFAJDjiT: { name: 'RECHNUNGEN',  userField: 'SV_Email', readOnly: false },
+  tblF6MS7uiFAJDjiT: { name: 'RECHNUNGEN',  userField: 'sv_email', readOnly: false },
   // KI-Statistik: schreiben OK, lesen eingeschränkt
   tblv9F8LEnUC3mKru: { name: 'KI_STATISTIK', userField: null,      readOnly: false },
   // KI-Lernpool: nur schreiben
@@ -151,7 +151,61 @@ exports.handler = async function(event) {
     return { statusCode: 400, headers, body: JSON.stringify({ error: 'Ungültiger JSON-Body' }) };
   }
 
-  const { method = 'GET', path, payload } = body;
+  // ── TABLE_NAME_MAP: Tabellenname → Airtable-ID ──
+  const TABLE_NAME_MAP = {
+    SCHADENSFAELLE:     'tblSxV8bsXwd1pwa0',
+    FAELLE:             'tblSxV8bsXwd1pwa0',
+    SV:                 'tbladqEQT3tmx4DIB',
+    SACHVERSTAENDIGE:   'tbladqEQT3tmx4DIB',
+    TERMINE:            'tblyMTTdtfGQjjmc2',
+    RECHNUNGEN:         'tblF6MS7uiFAJDjiT',
+    KONTAKTE:           'tblMKmPLjRelr6Hal',
+    KI_STATISTIK:       'tblv9F8LEnUC3mKru',
+    KI_LERNPOOL:        'tbl4LEsMvcDKFCYaF',
+    PUSH_SUBSCRIPTIONS: 'tblPUSH_PLACEHOLDER', // nach Airtable-Anlage ersetzen
+  };
+  const BASE_ID = 'appJ7bLlAHZoxENWE';
+
+  // ── Format-Konverter: {action, tabelle, filter, felder, sort} → {method, path, payload} ──
+  let resolvedBody = body;
+  if (body.tabelle && !body.path) {
+    const tblId = TABLE_NAME_MAP[body.tabelle.toUpperCase()];
+    if (!tblId) {
+      return { statusCode: 400, headers, body: JSON.stringify({ error: `Unbekannte Tabelle: ${body.tabelle}` }) };
+    }
+    const action = (body.action || 'list').toLowerCase();
+
+    if (action === 'list' || action === 'get') {
+      // GET mit filterByFormula + fields[] + sort[]
+      const params = new URLSearchParams();
+      if (body.filter) params.set('filterByFormula', body.filter);
+      if (body.maxRecords) params.set('maxRecords', String(body.maxRecords));
+      if (Array.isArray(body.felder)) {
+        body.felder.forEach(f => params.append('fields[]', f));
+      }
+      if (Array.isArray(body.sort)) {
+        body.sort.forEach((s, i) => {
+          params.append(`sort[${i}][field]`, s.field);
+          params.append(`sort[${i}][direction]`, s.direction || 'asc');
+        });
+      }
+      const qs = params.toString();
+      resolvedBody = { method: 'GET', path: `/v0/${BASE_ID}/${tblId}${qs ? '?' + qs : ''}` };
+
+    } else if (action === 'create') {
+      resolvedBody = { method: 'POST', path: `/v0/${BASE_ID}/${tblId}`, payload: body.payload || body.data };
+
+    } else if (action === 'update' || action === 'patch') {
+      const recId = body.recordId || body.id;
+      resolvedBody = { method: 'PATCH', path: `/v0/${BASE_ID}/${tblId}/${recId}`, payload: body.payload || body.data };
+
+    } else if (action === 'delete') {
+      const recId = body.recordId || body.id;
+      resolvedBody = { method: 'DELETE', path: `/v0/${BASE_ID}/${tblId}/${recId}` };
+    }
+  }
+
+  const { method = 'GET', path, payload } = resolvedBody;
 
   // ── Pfad-Validierung ──
   if (!path || !path.startsWith('/v0/')) {

@@ -17,7 +17,7 @@
 
   var SESSION_KEY    = 'prova_session_v2';
   var LEGACY_KEY     = 'prova_user';
-  var SESSION_TTL    = 8 * 60 * 60 * 1000;  // 8 Stunden
+  var SESSION_TTL    = 30 * 24 * 60 * 60 * 1000; // 30 Tage
   var ACTIVITY_KEY   = 'prova_last_activity';
 
   /* ── Öffentliche API ── */
@@ -33,20 +33,6 @@
     }
 
     refreshActivity();
-    
-    // Sicherheits-Check: sv_email MUSS gesetzt sein
-    // Ohne sv_email können keine Daten korrekt gefiltert werden
-    var currentEmail = localStorage.getItem('prova_sv_email') || '';
-    if (!currentEmail) {
-      // Email aus Session retten
-      try {
-        var sess = JSON.parse(localStorage.getItem('prova_session_v2') || '{}');
-        if (sess.user && sess.user.email) {
-          localStorage.setItem('prova_sv_email', sess.user.email);
-        }
-      } catch(e) {}
-    }
-    
     return true;
   };
 
@@ -91,16 +77,6 @@
   /* Logout */
   window.provaLogout = function (redirectTo) {
     clearSession();
-    // Alle user-spezifischen Caches löschen beim Logout
-    var keepKeys = ['prova_theme', 'prova_font_size', 'prova_accent_color'];
-    var allKeys = [];
-    for (var i = 0; i < localStorage.length; i++) allKeys.push(localStorage.key(i));
-    allKeys.forEach(function(k) {
-      if (k && k.startsWith('prova_') && keepKeys.indexOf(k) === -1) {
-        localStorage.removeItem(k);
-      }
-    });
-    sessionStorage.clear();
     window.location.href = redirectTo || 'app-login.html';
   };
 
@@ -120,10 +96,19 @@
           return false;
         }
 
-        // Expiry-Check
+        // Expiry-Check — verlängern wenn noch aktiv (letzte 24h)
         if (now > session.expires) {
-          console.info('[Auth] Session abgelaufen');
-          return false;
+          // Prüfe ob letzte Aktivität < 24h her ist → dann verlängern
+          var lastAct = parseInt(localStorage.getItem(ACTIVITY_KEY) || '0');
+          if (lastAct && (now - lastAct) < 24 * 60 * 60 * 1000) {
+            // Session verlängern statt ablaufen lassen
+            session.expires = now + SESSION_TTL;
+            try { localStorage.setItem(SESSION_KEY, JSON.stringify(session)); } catch(e){}
+            console.info('[Auth] Session automatisch verlängert');
+          } else {
+            console.info('[Auth] Session abgelaufen');
+            return false;
+          }
         }
 
         // Inaktivitäts-Check
@@ -194,12 +179,19 @@
   /* ── Auto-Check bei Tab-Fokus ── */
   window.addEventListener('focus', function () {
     // Beim Zurückwechseln in den Tab prüfen ob Session noch gültig
-    if (!isValidSession()) {
+    // Nur bei echter langer Inaktivität (> 7 Tage) redirecten
+    // Nicht bei kurzen Wechseln (Screenshot, anderer Tab)
+    var lastActivity = parseInt(localStorage.getItem(ACTIVITY_KEY) || '0');
+    var inaktivMs = Date.now() - lastActivity;
+    var INAKTIV_GRENZE = 7 * 24 * 60 * 60 * 1000; // 7 Tage
+    if (lastActivity && inaktivMs > INAKTIV_GRENZE && !isValidSession()) {
       var page = window.location.pathname.split('/').pop() || '';
       var publicPages = ['app-login.html', 'app-register.html', 'index.html', ''];
       if (publicPages.indexOf(page) === -1) {
         window.location.replace('app-login.html');
       }
+    } else if (isValidSession()) {
+      refreshActivity(); // Aktivität auffrischen
     }
   });
 

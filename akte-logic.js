@@ -90,7 +90,7 @@ function renderAkte(){
   // Stammdaten
   var metaItems=[
     {label:'Aktenzeichen',value:az,mono:true},
-    {label:'Schadenart',value:schadenart},
+    {label:'Schadensart',value:schadenart},
     {label:'Schadensdatum',value:f.Schadensdatum?formatDatum(f.Schadensdatum):'—'},
     {label:'Objekt-Adresse',value:adresse},
     {label:'PLZ / Ort',value:[f.PLZ,f.Ort].filter(Boolean).join(' ')||'—'},
@@ -136,7 +136,7 @@ function renderAkte(){
 
   // Notizen aus localStorage
   var notizKey='prova_notiz_'+recordId;
-  var notiz=localStorage.getItem(notizKey)||f.Notizen||'';
+  var notiz=localStorage.getItem(notizKey)||f.Notiz||'';
   document.getElementById('notiz-input').value=notiz;
 
   // Schnellaktionen
@@ -475,7 +475,7 @@ window.oeffneStellung = function() {
   var f = currentFields;
   var az = f.Aktenzeichen || '';
   var sa = f.Schadensart || f.schadenart || '';
-  var obj = (f.Schaden_Strasse||f.strasse||'') + (f.PLZ||f.plz ? ', '+(f.PLZ||f.plz)+' '+(f.Ort||f.ort||'') : (f.Ort||f.ort ? ', '+(f.Ort||f.ort) : ''));
+  var obj = (f.Strasse||f.strasse||'') + (f.PLZ||f.plz ? ', '+(f.PLZ||f.plz)+' '+(f.Ort||f.ort||'') : (f.Ort||f.ort ? ', '+(f.Ort||f.ort) : ''));
   if(az) sessionStorage.setItem('prova_current_az', az);
   if(sa) sessionStorage.setItem('prova_current_schadenart', sa);
   if(obj.trim()) sessionStorage.setItem('prova_current_objekt', obj.trim());

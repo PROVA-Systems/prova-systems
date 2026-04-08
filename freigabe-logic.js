@@ -73,8 +73,8 @@ async function ladeGutachten(){
     localStorage.setItem('prova_letztes_az', recFields.Aktenzeichen||'');
   // Breadcrumb + Status befüllen
   var _az = recFields.Aktenzeichen || recFields.Schadensnummer_Versicherung || '—';
-  var _sa = recFields.Schadenart || recFields.Schadensart || '—';
-  var _str = recFields.Adresse || recFields.Schaden_Strasse || '';
+  var _sa = recFields.Schadensart || recFields.Schadensart || '—';
+  var _str = recFields.Schaden_Strasse || recFields.Schaden_Strasse || '';
   var _adr = [_str, [recFields.PLZ, recFields.Ort].filter(Boolean).join(' ')].filter(Boolean).join(', ') || '—';
   befuelleBreadcrumb(_az, _sa, _adr);
   setStatusDot('ok');
@@ -130,10 +130,10 @@ async function ladeGutachten(){
 
 /* SV PROFIL */
 async function ladeSVProfil(){
-  const email=localStorage.getItem('prova_sv_email')||recFields.SV_Email||'';
+  const email=localStorage.getItem('prova_sv_email')||recFields.sv_email||'';
   if(!email) return;
   try {
-    const url=`/v0/${AT_BASE}/tbladqEQT3tmx4DIB?filterByFormula=${encodeURIComponent(`{SV_Email}="${email}"`)}&maxRecords=1`;
+    const url=`/v0/${AT_BASE}/tbladqEQT3tmx4DIB?filterByFormula=${encodeURIComponent(`{sv_email}="${email}"`)}&maxRecords=1`;
     const res=await fetch('/.netlify/functions/airtable',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({method:'GET',path:url})});
     if(!res.ok) return;
     const d=await res.json();
@@ -145,15 +145,15 @@ async function ladeSVProfil(){
 function renderDoc(){
   const f=recFields;
   const az=f.Aktenzeichen||f.Schadensnummer_Versicherung||'—';
-  const sa=f.Schadenart||f.Schadensart||'—';
-  const str=f.Adresse||f.Schaden_Strasse||'';
+  const sa=f.Schadensart||f.Schadensart||'—';
+  const str=f.Schaden_Strasse||f.Schaden_Strasse||'';
   const adr=[str,[f.PLZ,f.Ort].filter(Boolean).join(' ')].filter(Boolean).join(', ');
   const svV=(svProfil&&svProfil.SV_Vorname)||localStorage.getItem('prova_sv_vorname')||'';
   const svN=(svProfil&&svProfil.SV_Nachname)||localStorage.getItem('prova_sv_nachname')||'';
   const svName=(svProfil&&svProfil.Name)||[svV,svN].filter(Boolean).join(' ')||'Sachverständiger';
   const svQ=(svProfil&&svProfil.Qualifikation)||localStorage.getItem('prova_sv_qualifikation')||'Sachverständiger';
   const buero=(svProfil&&svProfil.Firma)||localStorage.getItem('prova_bueronamen')||'';
-  const svAdr=[(svProfil&&svProfil.Adresse),(svProfil&&svProfil.PLZ),(svProfil&&svProfil.Ort)].filter(Boolean).join(' · ');
+  const svAdr=[(svProfil&&svProfil.Schaden_Strasse),(svProfil&&svProfil.PLZ),(svProfil&&svProfil.Ort)].filter(Boolean).join(' · ');
   const ini=svName.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2)||'SV';
   const ts=f.Timestamp||''; const dtStr=ts?new Date(ts).toLocaleDateString('de-DE'):'—';
 
@@ -554,9 +554,9 @@ async function approveGutachten(){
   const payload={
     airtable_id:recId,
     aktenzeichen:(f.Aktenzeichen !== null && f.Aktenzeichen !== undefined && f.Aktenzeichen !== '' ? f.Aktenzeichen : ''),schadensdatum:(f.Schadensdatum !== null && f.Schadensdatum !== undefined && f.Schadensdatum !== '' ? f.Schadensdatum : ''),
-    schadensart:f.Schadenart||(f.Schadensart !== null && f.Schadensart !== undefined && f.Schadensart !== '' ? f.Schadensart : ''),
+    schadensart:f.Schadensart||(f.Schadensart !== null && f.Schadensart !== undefined && f.Schadensart !== '' ? f.Schadensart : ''),
     gebaeudetyp:(f.Gebaeude_Typ !== null && f.Gebaeude_Typ !== undefined && f.Gebaeude_Typ !== '' ? f.Gebaeude_Typ : ''),baujahr:(f.Baujahr !== null && f.Baujahr !== undefined && f.Baujahr !== '' ? f.Baujahr : ''),
-    strasse:f.Adresse||(f.Schaden_Strasse !== null && f.Schaden_Strasse !== undefined && f.Schaden_Strasse !== '' ? f.Schaden_Strasse : ''),
+    strasse:f.Schaden_Strasse||(f.Schaden_Strasse !== null && f.Schaden_Strasse !== undefined && f.Schaden_Strasse !== '' ? f.Schaden_Strasse : ''),
     plz:(f.PLZ !== null && f.PLZ !== undefined && f.PLZ !== '' ? f.PLZ : ''),ort:(f.Ort !== null && f.Ort !== undefined && f.Ort !== '' ? f.Ort : ''),
     geschaedigter:(f.Geschaedigter !== null && f.Geschaedigter !== undefined && f.Geschaedigter !== '' ? f.Geschaedigter : ''),
     auftraggeber_name:(f.Auftraggeber_Name !== null && f.Auftraggeber_Name !== undefined && f.Auftraggeber_Name !== '' ? f.Auftraggeber_Name : ''),
@@ -1228,52 +1228,3 @@ document.addEventListener('DOMContentLoaded', function() {
     if (dot) dot.classList.remove('status-dot-loading');
   }, 3000);
 });
-/* ── Template-Auswahl via window.PROVA_PDFMONKEY_TEMPLATES ── */
-(function() {
-  // prova-preise.js wird vorher geladen und hat alle Template-IDs
-  // Hier nur: Template-ID beim Laden in localStorage für G3-Payload setzen
-  document.addEventListener('DOMContentLoaded', function() {
-    var sa  = localStorage.getItem('prova_schadenart') || '';
-    var typ = localStorage.getItem('prova_gutachten_typ') || '';
-    var pkt = localStorage.getItem('prova_paket') || 'Solo';
-    if (window.PROVA_PDFMONKEY_TEMPLATES) {
-      var tplId = window.PROVA_PDFMONKEY_TEMPLATES.get(sa, typ, pkt);
-      localStorage.setItem('prova_pdfmonkey_template_id', tplId);
-      console.log('[PROVA] PDFMonkey Template:', tplId);
-    }
-  });
-})();
-
-/* ── Template-ID Auswahl aus echten PDFMonkey IDs ── */
-(function() {
-  var TEMPLATES = {
-    'jveg':            'S32BEA1F-9D1D-40CE-8A84-542C50B98437',
-    'rechnung_pausch': 'B1C3E69D-6710-4123-8670-6C52BB926058',
-    'rechnung_std':    'EA5CAC85-EE15-43BC-BC25-10C2C6368572',
-    'stellungnahme':   'C4BB257B-2841-4AF7-93C1-0C795FCA6BBC',
-    'gutschrift':      '64BFD7F0-E90A-4F03-A65C-AE0D32DBA9C3',
-    'mahnung_1':       '8ECAC2E4-D079-4B62-871C-BE0D12BBC020',
-    'mahnung_2':       'A4E57F73-F6E6-4AEB-B48C-56A4B698026B',
-    'mahnung_3':       '6ADE8D9A-8DF4-4482-98D6-188027A4B239',
-    'kurzgutachten':   'BA076019-40E8-41CB-82AE-08D3A77280DA',
-    'beweissicherung': '6FF656D3-9807-4F59-9305-1338D5D1AD9A',
-    'brandschaden':    '6B85ECFF-EA82-4518-8007-F5561AE20DB4',
-    'feuchte':         '4233F240-A3D4-4611-A787-FD8F86AACEFB',
-    'standard':        'EC64C790',
-  };
-
-  window.provaGetPDFMonkeyTemplate = function(typ) {
-    var schadensart = localStorage.getItem('prova_schadenart') || '';
-    // Schadensart-basiertes Mapping
-    if (!typ || typ === 'auto') {
-      if (schadensart.toLowerCase().includes('brand')) return TEMPLATES.brandschaden;
-      if (schadensart.toLowerCase().includes('feuchte') || schadensart.toLowerCase().includes('schimmel')) return TEMPLATES.feuchte;
-      if (schadensart.toLowerCase().includes('kurz')) return TEMPLATES.kurzgutachten;
-    }
-    return TEMPLATES[typ] || TEMPLATES.standard;
-  };
-
-  // Beim Laden: Template-ID in localStorage setzen für G3-Payload
-  var gutachtenTyp = localStorage.getItem('prova_gutachten_typ') || 'standard';
-  localStorage.setItem('prova_pdfmonkey_template_id', window.provaGetPDFMonkeyTemplate(gutachtenTyp));
-})();

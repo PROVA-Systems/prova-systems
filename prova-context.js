@@ -280,7 +280,7 @@
     var email = ctx.email;
     if (ctx.isAdmin) return extraFilter || 'TRUE()';
     if (!email) return 'FALSE()'; // Kein Email → nichts anzeigen (sicher!)
-    var baseFilter = '{SV_Email}="' + email.replace(/"/g, '') + '"';
+    var baseFilter = '{sv_email}="' + email.replace(/"/g, '') + '"';
     return extraFilter ? 'AND(' + baseFilter + ',' + extraFilter + ')' : baseFilter;
   }
 

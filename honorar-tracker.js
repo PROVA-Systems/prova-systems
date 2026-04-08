@@ -419,11 +419,11 @@ const HonorarTracker = (() => {
         body: JSON.stringify({
           action: 'list',
           tabelle: 'RECHNUNGEN',
-          filter: `{SV_Email}="${svEmail}"`,
-          sort: [{ field: 'Datum', direction: 'desc' }],
-          felder: ['Rechnungsnummer', 'Empfaenger', 'Betrag_Brutto', 'Betrag_Netto',
-                   'Datum', 'Faellig_Am', 'Status', 'FallID', 'FallTitel',
-                   'Mahnungen', 'Letzte_Mahnung', 'Typ', 'SV_Email']
+          filter: `{sv_email}="${svEmail}"`,
+          sort: [{ field: 'rechnungsdatum', direction: 'desc' }],
+          felder: ['Rechnungsnummer', 'empfaenger_name', 'brutto_betrag_eur', 'netto_betrag_eur',
+                   'rechnungsdatum', 'faellig_am', 'Status', 'aktenzeichen', 'empfaenger_name',
+                   'mahnstufe', 'mahngebuehren_eur', 'Rechnungstyp', 'sv_email']
         })
       });
 
@@ -446,8 +446,8 @@ const HonorarTracker = (() => {
   function normalisiereRechnung(record) {
     const f     = record.fields || {};
     const heute = new Date(); heute.setHours(0,0,0,0);
-    const datum  = f.Datum   ? new Date(f.Datum)    : null;
-    const faellig = f.Faellig_Am ? new Date(f.Faellig_Am) : null;
+    const datum  = f.rechnungsdatum   ? new Date(f.rechnungsdatum)    : null;
+    const faellig = f.faellig_am ? new Date(f.faellig_am) : null;
 
     const tageOffen = faellig
       ? Math.round((heute - faellig) / 86400000)
@@ -467,9 +467,9 @@ const HonorarTracker = (() => {
     return {
       id:            record.id,
       nr:            f.Rechnungsnummer || '—',
-      empfaenger:    f.Empfaenger     || 'Unbekannt',
-      betragBrutto:  parseFloat(f.Betrag_Brutto || 0),
-      betragNetto:   parseFloat(f.Betrag_Netto  || 0),
+      empfaenger:    f.empfaenger_name     || 'Unbekannt',
+      betragBrutto:  parseFloat(f.brutto_betrag_eur || 0),
+      betragNetto:   parseFloat(f.netto_betrag_eur  || 0),
       datum:         datum,
       faellig:       faellig,
       faelligText:   faellig ? faellig.toLocaleDateString('de-DE') : '—',
@@ -477,11 +477,11 @@ const HonorarTracker = (() => {
       tageOffen,
       status,
       statusKey,
-      fallId:        f.FallID    || null,
-      fallTitel:     f.FallTitel || null,
-      mahnungen:     parseInt(f.Mahnungen || 0),
-      letzeMahnung:  f.Letzte_Mahnung ? new Date(f.Letzte_Mahnung) : null,
-      typ:           f.Typ || 'PRIVAT'
+      fallId:        f.aktenzeichen    || null,
+      fallTitel:     f.empfaenger_name || null,
+      mahnungen:     parseInt(f.mahnstufe || 0),
+      letzeMahnung:  f.mahngebuehren_eur ? new Date(f.mahngebuehren_eur) : null,
+      typ:           f.Rechnungstyp || 'PRIVAT'
     };
   }
 
@@ -789,96 +789,32 @@ const HonorarTracker = (() => {
   }
 
   async function _sendeMahnung(rechnungId) {
-    const r = state.rechnungen.find(x => x.id === rechnungId);
+    const r = state.rechnungen.find(r => r.id === rechnungId);
     if (!r) return;
-    const stufe = Math.min(r.mahnungen + 1, 3);
-
-    const betragFmt = r.betragBrutto.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' });
-    if (!confirm(`${stufe}. Mahnung für ${r.empfaenger} über ${betragFmt} senden?\n\nPDF wird automatisch generiert.`)) return;
+    const stufe = r.mahnungen + 1;
+    if (!confirm(`${stufe}. Mahnung für ${r.empfaenger} über ${r.betragBrutto.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' })} senden?`)) return;
 
     try {
-      // ── 1. SV-Profil aus localStorage holen ────────────────────────
-      var svRaw = {};
-      try { svRaw = JSON.parse(localStorage.getItem('prova_sv_profil') || '{}'); } catch(e) {}
-
-      var sv = {
-        name:         [svRaw.Vorname, svRaw.Nachname].filter(Boolean).join(' ') || 'Sachverständiger',
-        firma:        svRaw.Firma        || '',
-        strasse:      svRaw.Strasse      || '',
-        plz:          String(svRaw.PLZ   || ''),
-        ort:          svRaw.Ort          || '',
-        telefon:      svRaw.Telefon      || '',
-        email:        svRaw.Email        || localStorage.getItem('prova_sv_email') || '',
-        iban:         svRaw.IBAN         || '',
-        bic:          svRaw.BIC          || '',
-        kontoinhaber: svRaw.Kontoinhaber || [svRaw.Vorname, svRaw.Nachname].filter(Boolean).join(' ') || '',
-      };
-
-      // ── 2. PDFMonkey PDF generieren ─────────────────────────────────
-      var pdfResp = await fetch('/.netlify/functions/mahnung-pdf', {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'same-origin',
-        body: JSON.stringify({
-          mahnstufe: stufe,
-          rechnung: {
-            id:           r.id,
-            nr:           r.nr,
-            empfaenger:   r.empfaenger,
-            fallTitel:    r.fallTitel,
-            fallId:       r.fallId,
-            betragBrutto: r.betragBrutto,
-            datum:        r.datum ? r.datum.toISOString() : null,
-            faellig:      r.faellig ? r.faellig.toISOString() : null,
-            empfStrasse:  '',
-            empfPlz:      '',
-            empfOrt:      '',
-          },
-          sv: sv,
-        }),
-      });
-
-      var pdfData = pdfResp.ok ? await pdfResp.json() : null;
-      var pdfUrl  = pdfData && pdfData.pdf_url ? pdfData.pdf_url : null;
-
-      // ── 3. Airtable aktualisieren ───────────────────────────────────
+      // Make.com Mahnung-Szenario triggern
       await fetch('/.netlify/functions/airtable', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'same-origin',
         body: JSON.stringify({
-          action:  'update',
+          action: 'update',
           tabelle: 'RECHNUNGEN',
-          recordId: rechnungId,
-          data: { fields: {
-            Status:         'Mahnung ' + stufe,
-            Mahnungen:      stufe,
-            Letzte_Mahnung: new Date().toISOString().split('T')[0],
-          }},
-        }),
+          id: rechnungId,
+          felder: {
+            Status: `Mahnung ${stufe}`,
+            Mahnungen: stufe,
+            Letzte_Mahnung: new Date().toISOString().split('T')[0]
+          }
+        })
       });
-
-      // ── 4. State aktualisieren ──────────────────────────────────────
-      var rRef = state.rechnungen.find(x => x.id === rechnungId);
-      if (rRef) {
-        rRef.mahnungen = stufe;
-        rRef.statusKey = 'MAHNUNG_' + stufe;
-        rRef.status    = { label: stufe + '. Mahnung', farbe: stufe === 1 ? '#f97316' : stufe === 2 ? '#dc2626' : '#7f1d1d', icon: stufe === 1 ? '⚠️' : stufe === 2 ? '🚨' : '🆘', klasse: 'mahnung' + (stufe > 1 ? stufe : '') };
-      }
-      _refreshUI && _refreshUI();
-
-      // ── 5. Ergebnis anzeigen ────────────────────────────────────────
-      if (pdfUrl) {
-        var oeffnen = confirm('✅ ' + stufe + '. Mahnung erstellt!\n\nPDF öffnen?');
-        if (oeffnen) window.open(pdfUrl, '_blank');
-      } else {
-        alert('✅ ' + stufe + '. Mahnung gespeichert.\nPDF wird noch generiert — bitte in PDFMonkey prüfen.');
-      }
-
-    } catch (err) {
-      console.error('[HonorarTracker] Mahnung Fehler:', err);
-      alert('Fehler beim Erstellen der Mahnung: ' + err.message);
-    }
+      alert(`✅ ${stufe}. Mahnung wurde gespeichert. Make.com Szenario wird ausgeführt.`);
+      const r_ref = state.rechnungen.find(r => r.id === rechnungId);
+      if (r_ref) r_ref.mahnungen = stufe;
+    } catch (err) { alert('Fehler: ' + err.message); }
   }
 
   async function _stornieren(rechnungId) {
@@ -914,7 +850,7 @@ const HonorarTracker = (() => {
     const offen = state.rechnungen.filter(r => !['BEZAHLT', 'STORNIERT'].includes(r.statusKey));
     if (!offen.length) { alert('Keine offenen Rechnungen zum Export.'); return; }
 
-    const header = ['Nummer', 'Empfänger', 'Fall', 'Datum', 'Fällig am', 'Betrag (Brutto)', 'Status', 'Tage überfällig'];
+    const header = ['Nummer', 'Empfänger', 'Fall', 'rechnungsdatum', 'Fällig am', 'Betrag (Brutto)', 'Status', 'Tage überfällig'];
     const zeilen = offen.map(r => [
       r.nr, r.empfaenger, r.fallTitel || '', r.datumText, r.faelligText,
       r.betragBrutto.toFixed(2).replace('.', ','),

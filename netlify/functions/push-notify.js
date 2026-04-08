@@ -158,7 +158,7 @@ async function handleFristenCheck(pat) {
     const formatDatum = (d) => d.toISOString().split('T')[0];
 
     // Alle Termine mit Frist in den nächsten 7 Tagen laden
-    const formel = `AND({frist_datum}>"${formatDatum(heute)}",{frist_datum}<="${formatDatum(in7Tagen)}",{Status}!="Abgeschlossen")`;
+    const formel = `AND({frist_datum}>"${formatDatum(heute)}",{frist_datum}<="${formatDatum(in7Tagen)}",{Status}!="Aktiv")`;
     const termine = await atFetch(pat,
       `/v0/${AT_BASE}/${AT_TERMINE}?filterByFormula=${encodeURIComponent(formel)}&fields[]=frist_datum&fields[]=SV_Email&fields[]=Betreff&fields[]=az`
     );
@@ -168,7 +168,7 @@ async function handleFristenCheck(pat) {
 
     for (const termin of (termine.records || [])) {
       const f       = termin.fields;
-      const email   = f.SV_Email;
+      const email   = f.sv_email;
       const frist   = new Date(f.frist_datum);
       const tage    = Math.ceil((frist - heute) / (1000 * 60 * 60 * 24));
       const betreff = f.Betreff || 'Frist';

@@ -175,7 +175,7 @@ function zeigOnboarding(){
         +'<div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px;">Was steht heute an?</div>'
         +offene.slice(0,3).map(function(r){
           var f=r.fields||{};var az=f.Aktenzeichen||'—';var sa=f.Schadensart||'Schadenfall';
-          var naechst=!f.KI_Entwurf?{icon:'🎤',label:'Diktat aufnehmen',col:'#4f8ef7',href:'app.html'}:!f.sv_stellungnahme_final?{icon:'⚖️',label:'§6 Fachurteil schreiben',col:'#f59e0b',href:'stellungnahme.html?az='+encodeURIComponent(az)}:{icon:'✅',label:'Freigeben & PDF erstellen',col:'#10b981',href:'freigabe.html?az='+encodeURIComponent(az)};
+          var naechst=!f.KI_Entwurf?{icon:'🎤',label:'Diktat aufnehmen',col:'#4f8ef7',href:'app.html'}:!f.Stellungnahme_Text?{icon:'⚖️',label:'§6 Fachurteil schreiben',col:'#f59e0b',href:'stellungnahme.html?az='+encodeURIComponent(az)}:{icon:'✅',label:'Freigeben & PDF erstellen',col:'#10b981',href:'freigabe.html?az='+encodeURIComponent(az)};
           return '<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;margin-bottom:8px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:10px;cursor:pointer;" data-href="akte.html?id='+r.id+'" onclick="window.location.href=this.dataset.href">'
             +'<span style="font-size:16px;">'+naechst.icon+'</span>'
             +'<div style="flex:1;min-width:0;"><div style="font-size:12px;font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+az+' · '+sa+'</div>'
@@ -203,7 +203,7 @@ function renderAufgaben(faelle, termine) {
     var f = r.fields || r;
     var az = f.Aktenzeichen || f.Aktenzeichen || '';
     var status = f.Status || 'In Bearbeitung';
-    var frist = f.abgabefrist ? new Date(f.abgabefrist) : null;
+    var frist = f.Fristdatum ? new Date(f.Fristdatum) : null;
     var tage = frist ? Math.ceil((frist - heute) / 86400000) : null;
     var prioritaet = 0;
     var aktion = null;
@@ -332,7 +332,7 @@ function renderKPIs(faelle, termine, rechnungen){
     var s=r.fields.Status||r.fields.status||'';
     return s==='Offen'||s==='Überfällig';
   });
-  var offenBetrag=offene.reduce(function(s,r){return s+(parseFloat(r.fields.betrag_brutto||r.fields.brutto_betrag_eur||0)||0);},0);
+  var offenBetrag=offene.reduce(function(s,r){return s+(parseFloat(r.fields.betrag_brutto||r.fields.Betrag||0)||0);},0);
   var hatUeber=offene.some(function(r){return (r.fields.Status||r.fields.status||'')==='Überfällig';});
   var kpiR=document.getElementById('kpi-rechnungen');
   if(kpiR){
@@ -468,7 +468,7 @@ function renderFeed(faelle, termine, rechnungen, stats){
     actions.push({
       prio:'red',
       title:(f.Rechnungsnummer||f.re_nr||'Rechnung')+' — '+(f.Auftraggeber_Name||f.auftraggeber||'Auftraggeber'),
-      meta:'Betrag: '+((parseFloat(f.betrag_brutto||f.brutto_betrag_eur||0)||0).toLocaleString('de-DE',{minimumFractionDigits:2}))+' € · Überfällig',
+      meta:'Betrag: '+((parseFloat(f.betrag_brutto||f.Betrag||0)||0).toLocaleString('de-DE',{minimumFractionDigits:2}))+' € · Überfällig',
       badge:'frist',badge_text:'Überfällig',
       href:'rechnungen.html',sort:0
     });
@@ -488,7 +488,7 @@ function renderFeed(faelle, termine, rechnungen, stats){
           var az=f.Aktenzeichen||'—';var sa=f.Schadensart||'Schadenfall';
           var ns=!f.KI_Entwurf
             ?{icon:'🎤',label:'Diktat aufnehmen',col:'#4f8ef7',href:'app.html',prio:'blue'}
-            :!(f.sv_stellungnahme_final&&f.sv_stellungnahme_final.length>30)
+            :!(f.Stellungnahme_Text&&f.Stellungnahme_Text.length>30)
             ?{icon:'⚖️',label:'§6 Fachurteil schreiben',col:'#f59e0b',href:'stellungnahme.html?az='+encodeURIComponent(az),prio:'warn'}
             :f.Status!=='Freigegeben'
             ?{icon:'✅',label:'Freigeben & PDF erstellen',col:'#10b981',href:'freigabe.html?az='+encodeURIComponent(az),prio:'green'}
@@ -971,10 +971,10 @@ function renderAufgabenSofort() {
 
     // Phase bestimmen
     var hat_diktat = !!(f.KI_Entwurf && f.KI_Entwurf.length > 50);
-    var hat_stell  = !!(f.sv_stellungnahme_final && f.sv_stellungnahme_final.length > 30);
+    var hat_stell  = !!(f.Stellungnahme_Text && f.Stellungnahme_Text.length > 30);
     var hat_freig  = f.Status === 'Freigegeben' || f.Status === 'Exportiert';
     // Phase-Feld direkt nutzen wenn vorhanden
-    var explPhase  = parseInt(f.Status || 0);
+    var explPhase  = parseInt(f.Phase || 0);
     if (explPhase >= 4) hat_stell = true;
     if (explPhase >= 3 || explPhase >= 2) hat_diktat = hat_diktat || explPhase >= 2;
 
@@ -1018,12 +1018,12 @@ function renderFristenMini() {
     var cache = JSON.parse(localStorage.getItem('prova_archiv_cache_v2') || '{}');
     (cache.data || []).forEach(function(r) {
       var f = r.fields || {};
-      if (f.abgabefrist) {
+      if (f.Fristdatum) {
         termine.push({
           id: r.id + '_frist',
           fields: {
             termin_typ: 'Frist',
-            termin_datum: f.abgabefrist,
+            termin_datum: f.Fristdatum,
             aktenzeichen: f.Aktenzeichen || '',
             notiz: 'Gutachten-Frist: ' + (f.Aktenzeichen || '—'),
             src: 'fall'

@@ -45,38 +45,6 @@ var TMPLS=[
   {id:'I-09',name:'Checkliste Brandschaden',      desc:'Vollständige Brandschadenaufnahme.',                cat:'intern',     tier:'Solo',icon:'🔥'},
   {id:'A-06',name:'Gerichtsgutachten §407a',      desc:'Gerichtsgutachten inkl. §407a ZPO — Team.',         cat:'gericht',    tier:'Team',icon:'⚖️'},
   {id:'B-02',name:'Beweissicherung §407a',        desc:'Beweissicherung mit §407a-Erklärung — Team.',       cat:'intern',     tier:'Team',icon:'📑'},
-  // ── NEUE BRIEFVORLAGEN ─────────────────────────────────────────────
-  {id:'mahnung-1',titel:'1. Mahnung',kat:'Honorar',icon:'💰',
-   desc:'Erste Mahnung für offene Honorarforderung',sa:'ALL'},
-  {id:'mahnung-2',titel:'2. Mahnung',kat:'Honorar',icon:'💰',
-   desc:'Zweite Mahnung mit Fristsetzung und Verzugszinsen',sa:'ALL'},
-  {id:'mahnung-3',titel:'Letzte Mahnung',kat:'Honorar',icon:'⚖️',
-   desc:'Letzte Mahnung vor gerichtlichem Vorgehen',sa:'ALL'},
-  {id:'widerspruch-gegengutachten',titel:'Widerspruch Gegengutachten',kat:'Gutachten',icon:'🔍',
-   desc:'Fachlicher Widerspruch gegen abweichendes Privatgutachten',sa:'ALL'},
-  {id:'stellungnahme-gegengutachten',titel:'Stellungnahme Gegengutachten',kat:'Gutachten',icon:'📝',
-   desc:'Detaillierte Stellungnahme zu Einwänden',sa:'ALL'},
-  {id:'auftrag-ablehnung',titel:'Auftragsablehnung',kat:'Auftrag',icon:'🚫',
-   desc:'Begründete Ablehnung eines Gutachtenauftrags',sa:'ALL'},
-  {id:'zwischenbericht',titel:'Zwischenbericht',kat:'Bericht',icon:'📊',
-   desc:'Sachstandsmitteilung an Auftraggeber',sa:'ALL'},
-  {id:'begehungsprotokoll',titel:'Begehungsprotokoll',kat:'Baubegleitung',icon:'🏗️',
-   desc:'Protokoll zur Baubegleitungsbegehung',sa:'BA'},
-  {id:'abnahmeprotokoll-formal',titel:'Förmliches Abnahmeprotokoll',kat:'Baubegleitung',icon:'✅',
-   desc:'Förmliche Bauleistungsabnahme nach VOB/BGB',sa:'BA'},
-  {id:'maengelanzeige',titel:'Mängelanzeige',kat:'Mängel',icon:'⚠️',
-   desc:'Formelle Mängelanzeige nach Ortstermin',sa:'ALL'},
-  {id:'rechnungskorrektur',titel:'Rechnungskorrektur',kat:'Honorar',icon:'🔄',
-   desc:'Rechnungsberichtigung / Gutschrift',sa:'ALL'},
-  {id:'terminabsage',titel:'Terminabsage',kat:'Termine',icon:'📅',
-   desc:'Terminabsage mit Alternativtermin',sa:'ALL'},
-  {id:'datenschutz-einwilligung-gericht',titel:'Datenschutz Gericht',kat:'Datenschutz',icon:'🔒',
-   desc:'DSGVO-Einwilligung für Gerichtsverfahren',sa:'ALL'},
-  {id:'vollmacht-sv',titel:'Vollmacht',kat:'Auftrag',icon:'📜',
-   desc:'Vollmacht zur Akteneinsicht und Datenerhebung',sa:'ALL'},
-  {id:'anforderung-unterlagen-erweitert',titel:'Erweiterte Unterlagen',kat:'Unterlagen',icon:'📋',
-   desc:'Detaillierte Anforderung umfangreicher Unterlagen',sa:'ALL'},
-
 ];
 
 /* ── STATE ── */
@@ -253,7 +221,7 @@ function bvRenderFaelle(records,container){
     return '<div class="bv-fall" onclick="bvWaehle(\''+r.id+'\',this)">'
       +'<div>'
       +'<div class="bv-fall-az">'+(f.Aktenzeichen||'—')+'</div>'
-      +'<div class="bv-fall-info">'+(f.Schadenart||f.Schadensart||'')+((f.Schaden_Strasse||f.Adresse)?' · '+(f.Schaden_Strasse||f.Adresse):'')+'</div>'
+      +'<div class="bv-fall-info">'+(f.Schadensart||f.Schadensart||'')+((f.Schaden_Strasse||f.Schaden_Strasse)?' · '+(f.Schaden_Strasse||f.Schaden_Strasse):'')+'</div>'
       +'</div>'
       +'<div class="bv-fall-ck" id="fck-'+r.id+'"></div>'
       +'</div>';
@@ -281,8 +249,8 @@ function fuelleFall(){
     var cache=(JSON.parse(localStorage.getItem('prova_archiv_cache_v2')||'{}').data||[]);
     var rec=cache.find(function(r){return r.id===_fall;});
     if(rec){var f=rec.fields||{};
-      _felder.az=f.Aktenzeichen||'';_felder.schadenart=f.Schadenart||f.Schadensart||'';
-      _felder.adresse=f.Schaden_Strasse||f.Adresse||'';
+      _felder.az=f.Aktenzeichen||'';_felder.schadenart=f.Schadensart||f.Schadensart||'';
+      _felder.adresse=f.Schaden_Strasse||f.Schaden_Strasse||'';
       _felder.ag_name=f.Auftraggeber_Name||'';_felder.ag_email=f.Auftraggeber_Email||'';
     }
   }catch(e){}
@@ -656,81 +624,3 @@ if (bvSrch) {
 }
 
 })();
-
-/* ── Brief in Airtable BRIEFE speichern (vollständig) ── */
-window.bvSpeichereBrief = async function(briefData) {
-  var svEmail = localStorage.getItem('prova_sv_email') || '';
-  if (!svEmail) { console.warn('[PROVA] kein sv_email'); return; }
-  
-  try {
-    await fetch('/.netlify/functions/airtable', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({
-        method: 'POST',
-        path: '/v0/appJ7bLlAHZoxENWE/tblSzxvnkRE6B0thx',
-        payload: { records: [{fields: {
-          sv_email:           svEmail,
-          empfaenger_name:    briefData.empfaenger || '',
-          empfaenger_email:   briefData.empfaenger_email || '',
-          betreff:            briefData.betreff || briefData.titel || '',
-          inhalt:             briefData.inhalt || '',
-          aktenzeichen:       briefData.az || localStorage.getItem('prova_letztes_az') || '',
-          brief_typ:          briefData.typ || '',
-          brief_vorlage_datei: briefData.datei || '',
-          brief_pdf_url:      briefData.pdf_url || '',
-          mahnstufe:          briefData.mahnstufe || 0,
-          versand_status:     briefData.versand_status || 'Entwurf',
-        }}]}
-      })
-    });
-    // Briefe_Anzahl im Fall hochzählen
-    var az = briefData.az || localStorage.getItem('prova_letztes_az') || '';
-    if (az) {
-      var res = await fetch('/.netlify/functions/airtable', {
-        method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({method:'GET',
-          path:'/v0/appJ7bLlAHZoxENWE/tblSxV8bsXwd1pwa0?filterByFormula=' +
-            encodeURIComponent('AND({Aktenzeichen}="'+az+'",{sv_email}="'+svEmail+'")')+'&maxRecords=1'})
-      });
-      var d = await res.json();
-      if (d.records && d.records[0]) {
-        var aktAZ = d.records[0];
-        var anzahl = (aktAZ.fields.Briefe_Anzahl || 0) + 1;
-        fetch('/.netlify/functions/airtable', {
-          method:'POST', headers:{'Content-Type':'application/json'},
-          body: JSON.stringify({method:'PATCH',
-            path:'/v0/appJ7bLlAHZoxENWE/tblSxV8bsXwd1pwa0/' + aktAZ.id,
-            payload:{fields:{Briefe_Anzahl: anzahl}}})
-        });
-      }
-    }
-    return true;
-  } catch(e) {
-    console.error('[PROVA Brief speichern]', e);
-    return false;
-  }
-};
-
-/* ── Mahnung: automatisch Mahnstufe in RECHNUNGEN hochsetzen ── */
-window.bvSetzeRechnungMahnstufe = async function(aktenzeichen, stufe) {
-  var svEmail = localStorage.getItem('prova_sv_email') || '';
-  if (!svEmail || !aktenzeichen) return;
-  
-  var filter = encodeURIComponent('AND({aktenzeichen}="'+aktenzeichen+'",{sv_email}="'+svEmail+'")');
-  var res = await fetch('/.netlify/functions/airtable', {
-    method:'POST', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({method:'GET',
-      path:'/v0/appJ7bLlAHZoxENWE/tblF6MS7uiFAJDjiT?filterByFormula='+filter+'&maxRecords=1'})
-  });
-  var d = await res.json();
-  if (d.records && d.records[0]) {
-    var mahngebuehren = stufe === 1 ? 0 : stufe === 2 ? 5 : 10; // 0/5/10€ Mahngebühren
-    fetch('/.netlify/functions/airtable', {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({method:'PATCH',
-        path:'/v0/appJ7bLlAHZoxENWE/tblF6MS7uiFAJDjiT/' + d.records[0].id,
-        payload:{fields:{mahnstufe: stufe, mahngebuehren_eur: mahngebuehren, status: stufe >= 3 ? 'Gemahnt' : 'Offen'}}})
-    });
-  }
-};

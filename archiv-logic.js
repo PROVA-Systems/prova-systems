@@ -66,10 +66,7 @@ async function ladeFaelle(){
     : svEmail
       ? 'TRUE()' // field name check — filter client-side
       : 'TRUE()';
-    var seitenGroesse = 25;
-    var offset = parseInt(localStorage.getItem('prova_archiv_offset') || '0');
-    var path='/v0/'+AT_BASE+'/'+AT_FAELLE+'?filterByFormula='+encodeURIComponent(filter)
-      +'&maxRecords='+seitenGroesse+'&sort[0][field]=Timestamp&sort[0][direction]=desc';
+    var path='/v0/'+AT_BASE+'/'+AT_FAELLE+'?filterByFormula='+encodeURIComponent(filter)+'&maxRecords=100&sort[0][field]=Timestamp&sort[0][direction]=desc';
     var res=await fetch('/.netlify/functions/airtable',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({method:'GET',path:path})});
     if(!res.ok)throw new Error('HTTP '+res.status);
     var data=await res.json();
@@ -101,7 +98,7 @@ window.filterUndRender=function(){
   gefiltert=alleRecords.filter(function(r){
     var f=r.fields||{};
     if(sa){
-      var art=(f.Schadenart||f.schadenart||f.Schadensart||'').toLowerCase();
+      var art=(f.Schadensart||f.schadenart||f.Schadensart||'').toLowerCase();
       if(!art.includes(sa.toLowerCase()))return false;
     }
     if(zr&&f.Timestamp){
@@ -117,7 +114,7 @@ window.filterUndRender=function(){
       var az=(f.Aktenzeichen||'').toLowerCase();
       var addr=[(f.Schaden_Strasse||''),(f.Ort||'')].join(' ').toLowerCase();
       var ag=(f.Auftraggeber_Name||'').toLowerCase();
-      var art2=(f.Schadenart||f.schadenart||f.Schadensart||'').toLowerCase();
+      var art2=(f.Schadensart||f.schadenart||f.Schadensart||'').toLowerCase();
       if(!az.includes(such)&&!addr.includes(such)&&!ag.includes(such)&&!art2.includes(such))return false;
     }
     return true;
@@ -163,7 +160,7 @@ function escHtml(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt
 function fallKarte(r){
   var f=r.fields||{};
   var az=f.Aktenzeichen||r.id.slice(-6).toUpperCase();
-  var schadenart=f.Schadenart||f.schadenart||f.Schadensart||'Schadenfall';
+  var schadenart=f.Schadensart||f.schadenart||f.Schadensart||'Schadenfall';
   var adresse=[f.Schaden_Strasse,f.Ort].filter(Boolean).join(', ')||'—';
   var status=f.Status||'In Bearbeitung';
   var datum=formatDatum(f.Timestamp||r.createdTime);
@@ -231,7 +228,7 @@ function renderListe(){
   body.innerHTML=gefiltert.map(function(r){
     var f=r.fields||{};
     var az=f.Aktenzeichen||r.id.slice(-6).toUpperCase();
-    var schadenart=f.Schadenart||f.schadenart||f.Schadensart||'Schadenfall';
+    var schadenart=f.Schadensart||f.schadenart||f.Schadensart||'Schadenfall';
     var adresse=[f.Schaden_Strasse,f.Ort].filter(Boolean).join(', ')||'—';
     var status=f.Status||'In Bearbeitung';
     var datum=formatDatum(f.Timestamp||r.createdTime);
@@ -507,66 +504,4 @@ async function supSendModal(){
     setTimeout(wrapCards, 200);
   }
 
-})();
-/* ── Archiv-Pagination ── */
-window.archivMehrLaden = async function() {
-  var btn = document.getElementById('archiv-mehr-btn');
-  if (btn) { btn.disabled = true; btn.textContent = '⏳ Lädt…'; }
-  
-  var svEmail = localStorage.getItem('prova_sv_email') || '';
-  var suchbegriff = (document.getElementById('archiv-search') || {}).value || '';
-  
-  try {
-    var offset = parseInt(localStorage.getItem('prova_archiv_offset') || '0') + 25;
-    localStorage.setItem('prova_archiv_offset', offset);
-    
-    var filter = '{sv_email}="' + svEmail + '"';
-    if (suchbegriff) {
-      filter = 'AND(' + filter + ',OR(FIND("' + suchbegriff.toLowerCase() + '",LOWER({Aktenzeichen})),FIND("' + suchbegriff.toLowerCase() + '",LOWER({Auftraggeber_Name}))))';
-    }
-    
-    var path = '/v0/appJ7bLlAHZoxENWE/tblSxV8bsXwd1pwa0?filterByFormula='
-      + encodeURIComponent(filter)
-      + '&maxRecords=25&sort[0][field]=Timestamp&sort[0][direction]=desc&offset=' + offset;
-    
-    var res = await fetch('/.netlify/functions/airtable', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ method: 'GET', path: path })
-    });
-    var data = await res.json();
-    var records = data.records || [];
-    
-    if (records.length === 0) {
-      if (btn) { btn.textContent = 'Alle geladen'; btn.disabled = true; }
-      return;
-    }
-    
-    // Records anhängen
-    var container = document.getElementById('archiv-liste') || document.querySelector('.archiv-cards');
-    if (container && typeof renderArchivKarte === 'function') {
-      records.forEach(function(r) {
-        var karte = renderArchivKarte(r);
-        if (karte) container.appendChild(karte);
-      });
-    }
-    
-    if (btn) { 
-      btn.disabled = false; 
-      btn.textContent = records.length < 25 ? 'Alle geladen' : '+ Mehr laden';
-      if (records.length < 25) btn.disabled = true;
-    }
-  } catch(e) {
-    if (btn) { btn.disabled = false; btn.textContent = '+ Mehr laden'; }
-    if (typeof showToast === 'function') showToast('Fehler beim Laden: ' + e.message, 'error');
-  }
-};
-
-// Reset Offset bei neuem Filter
-(function() {
-  var searchEl = document.getElementById('archiv-search');
-  if (searchEl) {
-    searchEl.addEventListener('input', function() {
-      localStorage.setItem('prova_archiv_offset', '0');
-    });
-  }
 })();

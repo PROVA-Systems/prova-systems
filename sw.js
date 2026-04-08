@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v79';
+const CACHE_VERSION = 'prova-v59';
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
@@ -82,21 +82,10 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // Google Fonts → Cache-First
+  // Google Fonts → KEIN Cache (CSP erlaubt kein fetch aus SW)
+  // Browser lädt Fonts direkt über <link>-Tag — SW darf nicht eingreifen
   if (url.hostname.includes('fonts.googleapis.com') || url.hostname.includes('fonts.gstatic.com')) {
-    event.respondWith(
-      caches.match(event.request).then(cached => {
-        if (cached) return cached;
-        return fetch(event.request).then(res => {
-          if (res.ok) {
-            const resClone = res.clone();
-            caches.open(CACHE_VERSION).then(c => c.put(event.request, resClone));
-          }
-          return res;
-        }).catch(() => new Response('', { status: 503 }));
-      })
-    );
-    return;
+    return; // SW ignoriert diese Requests — Browser handelt sie nativ
   }
 
   // HTML → Network-First: immer frisch, kein Zwischenbild
