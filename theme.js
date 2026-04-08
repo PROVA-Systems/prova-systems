@@ -1,17 +1,34 @@
 /* ============================================================
-   PROVA — Theme Manager (theme.js)
-   Einbinden in JEDE Seite: <script src="theme.js"></script>
-   Muss VOR nav.js und vor dem <body>-Content eingebunden werden
+   PROVA — Theme Manager v2 (theme.js)
+   Dark / Light / Auto + Schriftgröße wirklich anwenden
 ============================================================ */
 (function() {
-  var theme = localStorage.getItem('prova_theme') || 'dark';
-  applyTheme(theme);
+  // ── Schriftgröße anwenden ─────────────────────────────────
+  function applyFontSize(size) {
+    var map = { 'klein': '13px', 'normal': '14px', 'gross': '15px', 'sehr-gross': '16px' };
+    var px = map[size] || '14px';
+    document.documentElement.style.setProperty('--font-size-base', px);
+    document.documentElement.style.fontSize = px;
+  }
 
+  // ── Theme anwenden ────────────────────────────────────────
   function applyTheme(t) {
     var root = document.documentElement;
-    if (t === 'light') {
+    var effectiveTheme = t;
+    
+    // Auto: System-Präferenz
+    if (t === 'auto') {
+      effectiveTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      // Reagiert auf System-Wechsel
+      window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(e) {
+        if (localStorage.getItem('prova_theme') === 'auto') {
+          applyTheme('auto');
+        }
+      });
+    }
+
+    if (effectiveTheme === 'light') {
       root.setAttribute('data-theme', 'light');
-      // Light-Mode CSS-Variablen überschreiben
       injectLightCSS();
     } else {
       root.removeAttribute('data-theme');
@@ -24,7 +41,7 @@
     var style = document.createElement('style');
     style.id = 'prova-light-css';
     style.textContent = `
-      [data-theme="light"] {
+      :root[data-theme="light"] {
         --bg:       #f4f5f7;
         --bg2:      #ffffff;
         --bg3:      #f0f1f3;
@@ -40,45 +57,22 @@
         --accent2:  #1d4ed8;
         color-scheme: light;
       }
-      [data-theme="light"] .sidebar {
-        background: #ffffff;
-        border-right-color: rgba(0,0,0,.09);
+      [data-theme="light"] body { background: #f4f5f7; color: #111827; }
+      [data-theme="light"] .sidebar { background: #ffffff; border-right-color: rgba(0,0,0,.09); }
+      [data-theme="light"] .topbar { background: #ffffff; border-bottom-color: rgba(0,0,0,.09); }
+      [data-theme="light"] .card, [data-theme="light"] .feed-card, [data-theme="light"] .kpi-card {
+        background: #ffffff; border-color: rgba(0,0,0,.09);
       }
-      [data-theme="light"] .sb-item {
-        color: #6b7280;
-      }
-      [data-theme="light"] .sb-item:hover {
-        background: rgba(0,0,0,.04);
-        color: #374151;
-      }
-      [data-theme="light"] .sb-item.active {
-        color: #2563eb;
-        background: rgba(37,99,235,.08);
-      }
-      [data-theme="light"] .sb-section-label {
-        color: rgba(0,0,0,.4) !important;
-      }
-      [data-theme="light"] .topbar {
-        background: #ffffff;
-        border-bottom-color: rgba(0,0,0,.09);
-      }
-      [data-theme="light"] .card,
-      [data-theme="light"] .feed-card,
-      [data-theme="light"] .kpi-card {
-        background: #ffffff;
-        border-color: rgba(0,0,0,.09);
-      }
-      [data-theme="light"] body {
-        background: #f4f5f7;
+      [data-theme="light"] .sb-item { color: #6b7280; }
+      [data-theme="light"] .sb-item:hover { background: rgba(0,0,0,.04); color: #374151; }
+      [data-theme="light"] .sb-item.active { color: #2563eb; background: rgba(37,99,235,.08); }
+      [data-theme="light"] .sb-section-label { color: rgba(0,0,0,.4) !important; }
+      [data-theme="light"] input, [data-theme="light"] textarea, [data-theme="light"] select {
+        background: #f8f9fa; color: #111827; border-color: rgba(0,0,0,.15);
       }
     `;
-    // Vor dem ersten Stylesheet einfügen damit es überschrieben werden kann
-    var first = document.head.querySelector('style, link');
-    if (first) {
-      document.head.insertBefore(style, first);
-    } else {
-      document.head.appendChild(style);
-    }
+    var first = document.head.querySelector('link[rel="stylesheet"], style');
+    document.head.insertBefore(style, first || null);
   }
 
   function removeLightCSS() {
@@ -86,13 +80,19 @@
     if (el) el.remove();
   }
 
-  // Global verfügbar machen für Einstellungen-Seite
+  // ── Beim Laden sofort anwenden ────────────────────────────
+  var theme    = localStorage.getItem('prova_theme')     || 'dark';
+  var fontSize = localStorage.getItem('prova_font_size') || 'normal';
+  
+  applyTheme(theme);
+  applyFontSize(fontSize);
+
+  // ── Global verfügbar machen ───────────────────────────────
   window.PROVA_THEME = {
-    apply: applyTheme,
-    get: function() { return localStorage.getItem('prova_theme') || 'dark'; },
-    set: function(t) {
-      localStorage.setItem('prova_theme', t);
-      applyTheme(t);
-    }
+    apply:    applyTheme,
+    get:      function() { return localStorage.getItem('prova_theme') || 'dark'; },
+    set:      function(t) { localStorage.setItem('prova_theme', t); applyTheme(t); },
+    setFont:  function(s) { localStorage.setItem('prova_font_size', s); applyFontSize(s); },
+    getFont:  function() { return localStorage.getItem('prova_font_size') || 'normal'; }
   };
 })();

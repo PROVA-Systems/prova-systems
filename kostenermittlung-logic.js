@@ -564,59 +564,12 @@ function speichernUndWeiter() {
 
   localStorage.setItem('prova_kostenermittlung', JSON.stringify(payload));
   localStorage.setItem('prova_kostenermittlung_done', 'true');
-
-  // Positionen für Rechnungs-Übernahme in sessionStorage bereitstellen
-  try {
-    var rechnungsPositionen = items.map(function({pos, menge}) {
-      return {
-        bezeichnung: pos.bez,
-        einheit: pos.ei,
-        menge: menge,
-        ep: pos.me,
-        gesamt: Math.round(menge * pos.me * 100) / 100,
-        norm: pos.nr || ''
-      };
-    });
-    sessionStorage.setItem('prova_rechnung_positionen', JSON.stringify(rechnungsPositionen));
-    sessionStorage.setItem('prova_rechnung_az', aktenzeichen || '');
-    sessionStorage.setItem('prova_rechnung_from', 'kostenermittlung');
-  } catch(e) {}
-
   toast('Kostenermittlung gespeichert ✓', 'ok');
-
-  // Weiter-Optionen anzeigen statt sofort weiterleiten
-  var toastC = document.getElementById('toastC');
-  var actionBox = document.createElement('div');
-  actionBox.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:var(--surface,#1a2035);border:1px solid var(--border,#2a3550);border-radius:12px;padding:16px 20px;z-index:9999;display:flex;gap:10px;align-items:center;box-shadow:0 8px 32px rgba(0,0,0,.4);';
-  // Buttons via DOM-API (sicher, kein Quote-Problem)
-  var btnSpan = document.createElement('span');
-  btnSpan.style.cssText = 'font-size:13px;color:var(--text2,#94a3b8);margin-right:4px;';
-  btnSpan.textContent = 'Weiter:';
-  actionBox.appendChild(btnSpan);
-
-  var btnRechnung = document.createElement('button');
-  btnRechnung.style.cssText = 'padding:8px 14px;background:var(--accent,#4f8ef7);color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;';
-  btnRechnung.textContent = '💶 Rechnung erstellen';
-  btnRechnung.onclick = function() {
-    window.location.href = 'rechnungen.html?az=' + encodeURIComponent(aktenzeichen || '') + '&from=kostenermittlung';
-  };
-  actionBox.appendChild(btnRechnung);
-
-  var btnAkte = document.createElement('button');
-  btnAkte.style.cssText = 'padding:8px 14px;background:var(--surface2,#233050);color:var(--text2,#94a3b8);border:1px solid var(--border,#2a3550);border-radius:8px;font-size:12px;cursor:pointer;';
-  btnAkte.textContent = '→ Zur Akte';
-  btnAkte.onclick = function() {
-    window.location.href = aktenzeichen ? 'akte.html?az=' + encodeURIComponent(aktenzeichen) : 'archiv.html';
-  };
-  actionBox.appendChild(btnAkte);
-
-  var btnClose = document.createElement('button');
-  btnClose.style.cssText = 'padding:6px 8px;background:none;color:var(--text3,#64748b);border:none;font-size:16px;cursor:pointer;margin-left:4px;';
-  btnClose.textContent = '✕';
-  btnClose.onclick = function() { actionBox.remove(); };
-  actionBox.appendChild(btnClose);
-  document.body.appendChild(actionBox);
-  setTimeout(function() { if (actionBox.parentElement) actionBox.remove(); }, 8000);
+  setTimeout(() => {
+    var az = aktenzeichen;
+    if (az) { window.location.href = 'akte.html?az=' + encodeURIComponent(az); }
+    else { window.location.href = 'archiv.html'; }
+  }, 600);
 }
 
 function überspringen() {

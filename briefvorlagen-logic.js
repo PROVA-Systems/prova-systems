@@ -45,36 +45,38 @@ var TMPLS=[
   {id:'I-09',name:'Checkliste Brandschaden',      desc:'Vollständige Brandschadenaufnahme.',                cat:'intern',     tier:'Solo',icon:'🔥'},
   {id:'A-06',name:'Gerichtsgutachten §407a',      desc:'Gerichtsgutachten inkl. §407a ZPO — Team.',         cat:'gericht',    tier:'Team',icon:'⚖️'},
   {id:'B-02',name:'Beweissicherung §407a',        desc:'Beweissicherung mit §407a-Erklärung — Team.',       cat:'intern',     tier:'Team',icon:'📑'},
+  // ── NEUE BRIEFVORLAGEN ─────────────────────────────────────────────
+  {id:'mahnung-1',titel:'1. Mahnung',kat:'Honorar',icon:'💰',
+   desc:'Erste Mahnung für offene Honorarforderung',sa:'ALL'},
+  {id:'mahnung-2',titel:'2. Mahnung',kat:'Honorar',icon:'💰',
+   desc:'Zweite Mahnung mit Fristsetzung und Verzugszinsen',sa:'ALL'},
+  {id:'mahnung-3',titel:'Letzte Mahnung',kat:'Honorar',icon:'⚖️',
+   desc:'Letzte Mahnung vor gerichtlichem Vorgehen',sa:'ALL'},
+  {id:'widerspruch-gegengutachten',titel:'Widerspruch Gegengutachten',kat:'Gutachten',icon:'🔍',
+   desc:'Fachlicher Widerspruch gegen abweichendes Privatgutachten',sa:'ALL'},
+  {id:'stellungnahme-gegengutachten',titel:'Stellungnahme Gegengutachten',kat:'Gutachten',icon:'📝',
+   desc:'Detaillierte Stellungnahme zu Einwänden',sa:'ALL'},
+  {id:'auftrag-ablehnung',titel:'Auftragsablehnung',kat:'Auftrag',icon:'🚫',
+   desc:'Begründete Ablehnung eines Gutachtenauftrags',sa:'ALL'},
+  {id:'zwischenbericht',titel:'Zwischenbericht',kat:'Bericht',icon:'📊',
+   desc:'Sachstandsmitteilung an Auftraggeber',sa:'ALL'},
+  {id:'begehungsprotokoll',titel:'Begehungsprotokoll',kat:'Baubegleitung',icon:'🏗️',
+   desc:'Protokoll zur Baubegleitungsbegehung',sa:'BA'},
+  {id:'abnahmeprotokoll-formal',titel:'Förmliches Abnahmeprotokoll',kat:'Baubegleitung',icon:'✅',
+   desc:'Förmliche Bauleistungsabnahme nach VOB/BGB',sa:'BA'},
+  {id:'maengelanzeige',titel:'Mängelanzeige',kat:'Mängel',icon:'⚠️',
+   desc:'Formelle Mängelanzeige nach Ortstermin',sa:'ALL'},
+  {id:'rechnungskorrektur',titel:'Rechnungskorrektur',kat:'Honorar',icon:'🔄',
+   desc:'Rechnungsberichtigung / Gutschrift',sa:'ALL'},
+  {id:'terminabsage',titel:'Terminabsage',kat:'Termine',icon:'📅',
+   desc:'Terminabsage mit Alternativtermin',sa:'ALL'},
+  {id:'datenschutz-einwilligung-gericht',titel:'Datenschutz Gericht',kat:'Datenschutz',icon:'🔒',
+   desc:'DSGVO-Einwilligung für Gerichtsverfahren',sa:'ALL'},
+  {id:'vollmacht-sv',titel:'Vollmacht',kat:'Auftrag',icon:'📜',
+   desc:'Vollmacht zur Akteneinsicht und Datenerhebung',sa:'ALL'},
+  {id:'anforderung-unterlagen-erweitert',titel:'Erweiterte Unterlagen',kat:'Unterlagen',icon:'📋',
+   desc:'Detaillierte Anforderung umfangreicher Unterlagen',sa:'ALL'},
 
-];
-
-/* ── FERTIGE DOKUMENTE (HTML-Vorlagen direkt öffnen) ── */
-var DOKUMENT_VORLAGEN = [
-  {id:'D-01', name:'Auftragsbestätigung',           file:'auftragsbestaetigung.html',             cat:'auftrag',   icon:'📄'},
-  {id:'D-02', name:'Beauftragungsbestätigung Gericht', file:'beauftragungsbestaetigung-gericht.html', cat:'gericht',   icon:'⚖️'},
-  {id:'D-03', name:'Einladung Ortstermin',           file:'einladung-ortstermin.html',             cat:'termin',    icon:'📅'},
-  {id:'D-04', name:'Einladung Ortstermin (Gericht)', file:'einladung-ortstermin-gericht.html',     cat:'gericht',   icon:'⚖️'},
-  {id:'D-05', name:'Erstbericht Versicherung',       file:'erstbericht-versicherung.html',         cat:'versicherung', icon:'🏦'},
-  {id:'D-06', name:'Abschlussbericht Versicherung',  file:'abschlussbericht-versicherung.html',    cat:'versicherung', icon:'🏦'},
-  {id:'D-07', name:'Deckungsanfrage',                file:'deckungsanfrage.html',                  cat:'versicherung', icon:'🏦'},
-  {id:'D-08', name:'Nachforderung Unterlagen',       file:'nachforderung-unterlagen.html',         cat:'allgemein', icon:'📋'},
-  {id:'D-09', name:'Fristverläng. Antrag',           file:'fristverlaengerungsantrag.html',        cat:'gericht',   icon:'⚖️'},
-  {id:'D-10', name:'Kostenvorschuss Gericht',        file:'kostenvorschuss-gericht.html',          cat:'gericht',   icon:'⚖️'},
-  {id:'D-11', name:'Angebot Gutachten',              file:'angebot-gutachten.html',                cat:'auftrag',   icon:'📄'},
-  {id:'D-12', name:'Honorarvereinbarung',            file:'honorarvereinbarung.html',              cat:'abrechnung', icon:'💶'},
-  {id:'D-13', name:'Kostenvoranschlag Sanierung',    file:'kostenvoranschlag-sanierung.html',      cat:'abrechnung', icon:'💶'},
-  {id:'D-14', name:'Kostenrahmenerhöhung',           file:'kostenrahmen-erhoehung.html',           cat:'gericht',   icon:'⚖️'},
-  {id:'D-15', name:'Ergänzungsfragen Antwort',       file:'ergaenzungsfragen-antwort.html',        cat:'gericht',   icon:'⚖️'},
-  {id:'D-16', name:'Aktennotiz',                     file:'aktennotiz.html',                       cat:'allgemein', icon:'📝'},
-  {id:'D-17', name:'Datenschutz-Einwilligung',       file:'einverstaendnis-dsgvo.html',            cat:'allgemein', icon:'🔒'},
-  {id:'D-18', name:'Datenschutz-Mandant',            file:'datenschutz-mandant.html',              cat:'allgemein', icon:'🔒'},
-  {id:'D-19', name:'Messprotokoll Feuchte',          file:'messprotokoll-feuchte.html',            cat:'protokoll', icon:'📊'},
-  {id:'D-20', name:'Messprotokoll Risse',            file:'messprotokoll-risse.html',              cat:'protokoll', icon:'📊'},
-  {id:'D-21', name:'Ortstermin Arbeitsblatt',        file:'ortstermin-arbeitsblatt.html',          cat:'protokoll', icon:'📊'},
-  {id:'D-22', name:'Ortstermin Protokoll',           file:'ortstermin-protokoll.html',             cat:'protokoll', icon:'📊'},
-  {id:'D-23', name:'Checkliste Wasserschaden',       file:'checkliste-wasserschaden.html',         cat:'protokoll', icon:'📊'},
-  {id:'D-24', name:'Checkliste Brandschaden',        file:'checkliste-brandschaden.html',          cat:'protokoll', icon:'📊'},
-  {id:'D-25', name:'Checkliste Sturmschaden',        file:'checkliste-sturmschaden.html',          cat:'protokoll', icon:'📊'},
 ];
 
 /* ── STATE ── */
@@ -655,110 +657,80 @@ if (bvSrch) {
 
 })();
 
-
-/* ── Fertige Dokumente Sektion rendern ── */
-function renderDokumentenSektion() {
-  var container = document.getElementById('dokumente-sektion');
-  if (!container || typeof DOKUMENT_VORLAGEN === 'undefined') return;
-
-  var az  = (new URLSearchParams(window.location.search)).get('az') || localStorage.getItem('prova_letztes_az') || '';
-  var q   = (document.getElementById('bv-search') || {}).value || '';
-  var filtered = DOKUMENT_VORLAGEN;
-  if (q) {
-    var ql = q.toLowerCase();
-    filtered = filtered.filter(function(d){ return d.name.toLowerCase().includes(ql); });
-  }
-  if (!filtered.length) { container.innerHTML = ''; return; }
-
-  var html = '<div style="margin:20px 0 10px;border-top:1px solid var(--border,#1e3a5f);padding-top:16px;">'
-    + '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text3,#64748b);margin-bottom:12px;">Fertige Dokumente &amp; Formulare</div>'
-    + '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;">';
-
-  filtered.forEach(function(d) {
-    var url = d.file + (az ? '?az=' + encodeURIComponent(az) : '');
-    html += '<a href="' + url + '" target="_blank" style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--surface,#111827);border:1px solid var(--border,#1e3a5f);border-radius:9px;text-decoration:none;transition:border-color .15s;" '
-      + 'class="dok-card">'
-      + '<span style="font-size:16px;">' + d.icon + '</span>'
-      + '<span style="font-size:12px;font-weight:600;color:var(--text,#e8eaf0);">' + d.name + '</span>'
-      + '</a>';
-  });
-
-  html += '</div></div>';
-  container.innerHTML = html;
-}
-
-
-
-/* ── BRIEF ALS PDF VERSENDEN ── */
-window.bvSendBriefAlsPDF = async function() {
-  var btn = document.getElementById('bv-pdf-send-btn');
-  var result = document.getElementById('bv-send-result');
-  var betreff = (document.getElementById('bv-betreff') || {}).value || '';
-  var inhalt  = (document.getElementById('bv-inhalt')  || {}).value || (document.getElementById('bv-text') || {}).value || '';
-  var email   = (document.getElementById('bv-email')   || {}).value || '';
-  var ag      = (document.getElementById('bv-ag')      || {}).value || '';
-  var az      = localStorage.getItem('prova_letztes_az') || '';
+/* ── Brief in Airtable BRIEFE speichern (vollständig) ── */
+window.bvSpeichereBrief = async function(briefData) {
   var svEmail = localStorage.getItem('prova_sv_email') || '';
-
-  if (!email || !betreff || !inhalt) {
-    if (result) { result.style.display='block'; result.innerHTML='<div style="padding:10px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);border-radius:8px;font-size:12px;color:#ef4444;">Bitte E-Mail, Betreff und Text ausfüllen.</div>'; }
-    return;
-  }
-
-  // SMTP + SV-Profil aus localStorage
-  var smtpCfg = {};
-  try { smtpCfg = JSON.parse(localStorage.getItem('prova_smtp') || '{}'); } catch(e) {}
-
-  if (!smtpCfg.user || !smtpCfg.pass) {
-    if (result) { result.style.display='block'; result.innerHTML='<div style="padding:12px 14px;background:rgba(79,142,247,.06);border:1px solid rgba(79,142,247,.2);border-radius:10px;font-size:12px;line-height:1.7;"><strong>SMTP nicht eingerichtet</strong><br><a href="einstellungen.html#email" style="color:var(--accent,#4f8ef7);font-weight:600;">→ E-Mail-Versand einrichten</a></div>'; }
-    return;
-  }
-
-  if (btn) { btn.disabled = true; btn.textContent = '⏳ PDF wird erstellt…'; }
-  if (result) { result.style.display='block'; result.innerHTML='<div style="padding:10px;background:rgba(79,142,247,.06);border:1px solid rgba(79,142,247,.2);border-radius:8px;font-size:12px;color:var(--accent,#4f8ef7);">PDF wird generiert (ca. 5–10 Sek.)…</div>'; }
-
+  if (!svEmail) { console.warn('[PROVA] kein sv_email'); return; }
+  
   try {
-    var r = await fetch('/.netlify/functions/brief-pdf-senden', {
+    await fetch('/.netlify/functions/airtable', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {'Content-Type':'application/json'},
       body: JSON.stringify({
-        to: email, betreff: betreff, inhalt: inhalt,
-        empfaenger_name: ag,
-        aktenzeichen: az, brief_typ: 'Allgemein',
-        // SV-Profil
-        sv_name:      (localStorage.getItem('prova_sv_vorname') || '') + ' ' + (localStorage.getItem('prova_sv_nachname') || ''),
-        sv_firma:     localStorage.getItem('prova_sv_firma') || '',
-        sv_strasse:   localStorage.getItem('prova_sv_strasse') || '',
-        sv_plz:       localStorage.getItem('prova_sv_plz') || '',
-        sv_ort:       localStorage.getItem('prova_sv_ort') || '',
-        sv_telefon:   localStorage.getItem('prova_sv_telefon') || '',
-        sv_email:     svEmail,
-        sv_steuer_nr: localStorage.getItem('prova_sv_steuer_nr') || '',
-        sv_ort_fuer_sig: localStorage.getItem('prova_sv_ort') || '',
-        // SMTP
-        smtp_host: smtpCfg.host || '', smtp_port: smtpCfg.port || 587,
-        smtp_user: smtpCfg.user || '', smtp_pass: smtpCfg.pass || '',
-        smtp_from_name: smtpCfg.from_name || '',
-        // EU AI Act
-        eu_ai_act_label: 'Dieses Schreiben wurde unter Einsatz von KI-gestützten Assistenzfunktionen erstellt und vom Sachverständigen persönlich geprüft (EU AI Act Art. 13+14).',
-        ki_modell_label: 'PROVA KI-Assistent'
+        method: 'POST',
+        path: '/v0/appJ7bLlAHZoxENWE/tblSzxvnkRE6B0thx',
+        payload: { records: [{fields: {
+          sv_email:           svEmail,
+          empfaenger_name:    briefData.empfaenger || '',
+          empfaenger_email:   briefData.empfaenger_email || '',
+          betreff:            briefData.betreff || briefData.titel || '',
+          inhalt:             briefData.inhalt || '',
+          aktenzeichen:       briefData.az || localStorage.getItem('prova_letztes_az') || '',
+          brief_typ:          briefData.typ || '',
+          brief_vorlage_datei: briefData.datei || '',
+          brief_pdf_url:      briefData.pdf_url || '',
+          mahnstufe:          briefData.mahnstufe || 0,
+          versand_status:     briefData.versand_status || 'Entwurf',
+        }}]}
       })
     });
-    var data = await r.json();
-
-    if (r.ok && data.success) {
-      if (result) result.innerHTML = '<div style="padding:12px 14px;background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.25);border-radius:8px;font-size:12px;color:#10b981;line-height:1.6;">✅ <strong>PDF erstellt und versendet</strong><br>An: ' + email + '<br><small style="opacity:.7;">Mit PDF-Anhang · von: ' + smtpCfg.user + '</small></div>';
-      if (typeof bvToast === 'function') bvToast('Brief als PDF versendet ✅', 'success');
-      setTimeout(function(){ if(typeof bvCloseDrawer==='function') bvCloseDrawer(); }, 2500);
-    } else if (data.code === 'SMTP_NOT_CONFIGURED') {
-      if (result) result.innerHTML = '<div style="padding:12px;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);border-radius:8px;font-size:12px;color:#b45309;">⚙️ <a href="einstellungen.html#email" style="color:#f59e0b;font-weight:600;">E-Mail-Versand einrichten</a></div>';
-    } else {
-      if (result) result.innerHTML = '<div style="padding:12px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);border-radius:8px;font-size:12px;color:#ef4444;">❌ ' + (data.error || 'Fehler beim PDF-Versand') + '</div>';
+    // Briefe_Anzahl im Fall hochzählen
+    var az = briefData.az || localStorage.getItem('prova_letztes_az') || '';
+    if (az) {
+      var res = await fetch('/.netlify/functions/airtable', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({method:'GET',
+          path:'/v0/appJ7bLlAHZoxENWE/tblSxV8bsXwd1pwa0?filterByFormula=' +
+            encodeURIComponent('AND({Aktenzeichen}="'+az+'",{sv_email}="'+svEmail+'")')+'&maxRecords=1'})
+      });
+      var d = await res.json();
+      if (d.records && d.records[0]) {
+        var aktAZ = d.records[0];
+        var anzahl = (aktAZ.fields.Briefe_Anzahl || 0) + 1;
+        fetch('/.netlify/functions/airtable', {
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({method:'PATCH',
+            path:'/v0/appJ7bLlAHZoxENWE/tblSxV8bsXwd1pwa0/' + aktAZ.id,
+            payload:{fields:{Briefe_Anzahl: anzahl}}})
+        });
+      }
     }
+    return true;
   } catch(e) {
-    if (result) result.innerHTML = '<div style="padding:12px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);border-radius:8px;font-size:12px;color:#ef4444;">Netzwerkfehler: ' + e.message + '</div>';
+    console.error('[PROVA Brief speichern]', e);
+    return false;
   }
-
-  if (btn) { btn.disabled = false; btn.textContent = '📎 Als PDF senden'; }
 };
 
+/* ── Mahnung: automatisch Mahnstufe in RECHNUNGEN hochsetzen ── */
+window.bvSetzeRechnungMahnstufe = async function(aktenzeichen, stufe) {
+  var svEmail = localStorage.getItem('prova_sv_email') || '';
+  if (!svEmail || !aktenzeichen) return;
+  
+  var filter = encodeURIComponent('AND({aktenzeichen}="'+aktenzeichen+'",{sv_email}="'+svEmail+'")');
+  var res = await fetch('/.netlify/functions/airtable', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({method:'GET',
+      path:'/v0/appJ7bLlAHZoxENWE/tblF6MS7uiFAJDjiT?filterByFormula='+filter+'&maxRecords=1'})
+  });
+  var d = await res.json();
+  if (d.records && d.records[0]) {
+    var mahngebuehren = stufe === 1 ? 0 : stufe === 2 ? 5 : 10; // 0/5/10€ Mahngebühren
+    fetch('/.netlify/functions/airtable', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({method:'PATCH',
+        path:'/v0/appJ7bLlAHZoxENWE/tblF6MS7uiFAJDjiT/' + d.records[0].id,
+        payload:{fields:{mahnstufe: stufe, mahngebuehren_eur: mahngebuehren, status: stufe >= 3 ? 'Gemahnt' : 'Offen'}}})
+    });
+  }
+};

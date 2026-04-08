@@ -67,8 +67,8 @@ async function ladeRecord(){
 function renderAkte(){
   var f=currentFields;
   var az=f.Aktenzeichen||recordId.slice(-6).toUpperCase();
-  var schadenart=f.Schadenart||f.schadenart||f.Schadensart||'Schadenfall';
-  var adresse=f.Adresse||[f.Schaden_Strasse,f.Ort].filter(Boolean).join(', ')||'—';
+  var schadenart=f.Schadensart||f.schadenart||f.Schadensart||'Schadenfall';
+  var adresse=f.Schaden_Strasse||[f.Schaden_Strasse,f.Ort].filter(Boolean).join(', ')||'—';
   var status=f.Status||'In Bearbeitung';
 
   // Breadcrumb + Header
@@ -136,7 +136,7 @@ function renderAkte(){
 
   // Notizen aus localStorage
   var notizKey='prova_notiz_'+recordId;
-  var notiz=localStorage.getItem(notizKey)||f.Notiz||'';
+  var notiz=localStorage.getItem(notizKey)||f.Notizen||'';
   document.getElementById('notiz-input').value=notiz;
 
   // Schnellaktionen
@@ -176,14 +176,14 @@ function renderDokumente(f){
   if(f.PDF_URL||f.pdf_url){
     list.push({icon:'📄',name:'Gutachten PDF',meta:'Erstellt nach Freigabe',url:f.PDF_URL||f.pdf_url,typ:'pdf'});
   }
-  if(f.Foto_Anzahl&&f.Foto_Anzahl>0){
-    list.push({icon:'📷',name:f.Foto_Anzahl+' Fotos',meta:'Bilddokumentation',url:null,typ:'foto'});
+  if(f.Fotos_Anzahl&&f.Fotos_Anzahl>0){
+    list.push({icon:'📷',name:f.Fotos_Anzahl+' Fotos',meta:'Bilddokumentation',url:null,typ:'foto'});
   }
   if(f.Messwerte){
     list.push({icon:'📐',name:'Messwerte',meta:'Vor-Ort-Messungen',url:null,typ:'mess'});
   }
   // Lokale Uploads laden
-  var az = f.Aktenzeichen || f.AZ || '';
+  var az = f.Aktenzeichen || f.Aktenzeichen || '';
   var uploads = JSON.parse(localStorage.getItem('prova_akte_docs_' + az) || '[]');
   uploads.forEach(function(u) {
     list.push({icon:u.icon||'📎',name:u.name,meta:u.typ_label + (u.datum ? ' · ' + u.datum : ''),url:u.dataUrl||null,typ:'upload'});
@@ -474,8 +474,8 @@ window.oeffneStellung = function() {
   // Fall-Daten für gate.html in sessionStorage schreiben
   var f = currentFields;
   var az = f.Aktenzeichen || '';
-  var sa = f.Schadenart || f.schadenart || '';
-  var obj = (f.Strasse||f.strasse||'') + (f.PLZ||f.plz ? ', '+(f.PLZ||f.plz)+' '+(f.Ort||f.ort||'') : (f.Ort||f.ort ? ', '+(f.Ort||f.ort) : ''));
+  var sa = f.Schadensart || f.schadenart || '';
+  var obj = (f.Schaden_Strasse||f.strasse||'') + (f.PLZ||f.plz ? ', '+(f.PLZ||f.plz)+' '+(f.Ort||f.ort||'') : (f.Ort||f.ort ? ', '+(f.Ort||f.ort) : ''));
   if(az) sessionStorage.setItem('prova_current_az', az);
   if(sa) sessionStorage.setItem('prova_current_schadenart', sa);
   if(obj.trim()) sessionStorage.setItem('prova_current_objekt', obj.trim());

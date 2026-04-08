@@ -403,3 +403,85 @@ function logout() {
 
 // Init
 loadAll();
+/* ── Admin: SV-Aktionen ── */
+window.svStatusAendern = async function(recId, neuerStatus) {
+  if (!recId) return;
+  if (!confirm('SV-Status auf "' + neuerStatus + '" setzen?')) return;
+  try {
+    await fetch('/.netlify/functions/airtable', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        method:'PATCH',
+        path:'/v0/appJ7bLlAHZoxENWE/tbladqEQT3tmx4DIB/' + recId,
+        payload:{fields:{Status: neuerStatus}}
+      })
+    });
+    if(typeof zeigToast==='function') zeigToast('Status geändert: ' + neuerStatus + ' ✅');
+    if(typeof ladeSVListe==='function') ladeSVListe();
+    else location.reload();
+  } catch(e) {
+    if(typeof zeigToast==='function') zeigToast('Fehler: ' + e.message, 'error');
+  }
+};
+
+window.svSperren = function(recId) { window.svStatusAendern(recId, 'Gesperrt'); };
+window.svAktivieren = function(recId) { window.svStatusAendern(recId, 'Aktiv'); };
+window.svTestpilot = async function(recId) {
+  await fetch('/.netlify/functions/airtable', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({method:'PATCH',
+      path:'/v0/appJ7bLlAHZoxENWE/tbladqEQT3tmx4DIB/' + recId,
+      payload:{fields:{testpiloten: true}}})
+  });
+  if(typeof zeigToast==='function') zeigToast('Testpilot aktiviert ✅');
+};
+
+/* ── Admin: CSV-Export alle SVs ── */
+window.exportSVListe = async function() {
+  if(typeof zeigToast==='function') zeigToast('Exportiere SV-Liste…');
+  try {
+    var res = await fetch('/.netlify/functions/airtable', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({method:'GET',
+        path:'/v0/appJ7bLlAHZoxENWE/tbladqEQT3tmx4DIB?maxRecords=500&fields[]=Email&fields[]=Vorname&fields[]=Nachname&fields[]=Paket&fields[]=Status&fields[]=Onboarding_Datum&fields[]=Letzter_Login'})
+    });
+    var data = await res.json();
+    var records = data.records || [];
+    
+    var csv = 'Email;Vorname;Nachname;Paket;Status;Onboarding;Letzter Login\n';
+    records.forEach(function(r) {
+      var f = r.fields;
+      csv += [f.Email,f.Vorname,f.Nachname,f.Paket,f.Status,f.Onboarding_Datum,f.Letzter_Login]
+        .map(function(v){ return '"' + (v||'').toString().replace(/"/g,'""') + '"'; })
+        .join(';') + '\n';
+    });
+    
+    var blob = new Blob(['﻿'+csv], {type:'text/csv;charset=utf-8'});
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'PROVA-SVs-' + new Date().toISOString().slice(0,10) + '.csv';
+    a.click();
+    if(typeof zeigToast==='function') zeigToast(records.length + ' SVs exportiert ✅');
+  } catch(e) {
+    if(typeof zeigToast==='function') zeigToast('Fehler: ' + e.message, 'error');
+  }
+};
+
+/* ── Admin: Trial verlängern ── */
+window.trialVerlaengern = async function(recId, tage) {
+  tage = tage || 7;
+  var neuDatum = new Date();
+  neuDatum.setDate(neuDatum.getDate() + tage);
+  
+  try {
+    await fetch('/.netlify/functions/airtable', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({method:'PATCH',
+        path:'/v0/appJ7bLlAHZoxENWE/tbladqEQT3tmx4DIB/' + recId,
+        payload:{fields:{trial_end: neuDatum.toISOString()}}})
+    });
+    if(typeof zeigToast==='function') zeigToast('Trial um ' + tage + ' Tage verlängert ✅');
+  } catch(e) {
+    if(typeof zeigToast==='function') zeigToast('Fehler: ' + e.message, 'error');
+  }
+};

@@ -33,10 +33,44 @@
     badge.title = 'Du bist PROVA-Testpilot — kostenloser Zugang mit Sonderkonditionen';
     // Safety: body might not exist yet (script loaded in <head>)
   if (document.body) {
-    document.body.appendChild(badge);
+    // Badge IN Topbar einbauen (nicht floating — vermeidet Konflikt mit Support-Button)
+    var topbarRight = document.querySelector('.topbar-right');
+    if (topbarRight) {
+      badge.style.position = 'relative';
+      badge.style.top = '';
+      badge.style.right = '';
+      badge.style.zIndex = '';
+      topbarRight.insertBefore(badge, topbarRight.firstChild);
+    } else {
+      // Fallback: oben links wenn kein Topbar gefunden (nicht unten wo Support ist)
+      badge.style.position = 'fixed';
+      badge.style.top = '8px';
+      badge.style.left = '50%';
+      badge.style.transform = 'translateX(-50%)';
+      badge.style.right = 'auto';
+      badge.style.bottom = 'auto';
+      document.body.appendChild(badge);
+    }
   } else {
     document.addEventListener('DOMContentLoaded', function() {
+      // Badge IN Topbar einbauen (nicht floating — vermeidet Konflikt mit Support-Button)
+    var topbarRight = document.querySelector('.topbar-right');
+    if (topbarRight) {
+      badge.style.position = 'relative';
+      badge.style.top = '';
+      badge.style.right = '';
+      badge.style.zIndex = '';
+      topbarRight.insertBefore(badge, topbarRight.firstChild);
+    } else {
+      // Fallback: oben links wenn kein Topbar gefunden (nicht unten wo Support ist)
+      badge.style.position = 'fixed';
+      badge.style.top = '8px';
+      badge.style.left = '50%';
+      badge.style.transform = 'translateX(-50%)';
+      badge.style.right = 'auto';
+      badge.style.bottom = 'auto';
       document.body.appendChild(badge);
+    }
     });
   }
     return; // Alles frei — kein weiterer Check
@@ -107,10 +141,44 @@
 
   // Safety: body might not exist yet (script loaded in <head>)
   if (document.body) {
-    document.body.appendChild(badge);
+    // Badge IN Topbar einbauen (nicht floating — vermeidet Konflikt mit Support-Button)
+    var topbarRight = document.querySelector('.topbar-right');
+    if (topbarRight) {
+      badge.style.position = 'relative';
+      badge.style.top = '';
+      badge.style.right = '';
+      badge.style.zIndex = '';
+      topbarRight.insertBefore(badge, topbarRight.firstChild);
+    } else {
+      // Fallback: oben links wenn kein Topbar gefunden (nicht unten wo Support ist)
+      badge.style.position = 'fixed';
+      badge.style.top = '8px';
+      badge.style.left = '50%';
+      badge.style.transform = 'translateX(-50%)';
+      badge.style.right = 'auto';
+      badge.style.bottom = 'auto';
+      document.body.appendChild(badge);
+    }
   } else {
     document.addEventListener('DOMContentLoaded', function() {
+      // Badge IN Topbar einbauen (nicht floating — vermeidet Konflikt mit Support-Button)
+    var topbarRight = document.querySelector('.topbar-right');
+    if (topbarRight) {
+      badge.style.position = 'relative';
+      badge.style.top = '';
+      badge.style.right = '';
+      badge.style.zIndex = '';
+      topbarRight.insertBefore(badge, topbarRight.firstChild);
+    } else {
+      // Fallback: oben links wenn kein Topbar gefunden (nicht unten wo Support ist)
+      badge.style.position = 'fixed';
+      badge.style.top = '8px';
+      badge.style.left = '50%';
+      badge.style.transform = 'translateX(-50%)';
+      badge.style.right = 'auto';
+      badge.style.bottom = 'auto';
       document.body.appendChild(badge);
+    }
     });
   }
 

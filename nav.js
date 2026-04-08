@@ -1,3 +1,32 @@
+
+/* ── Safe localStorage — QuotaExceededError abfangen ── */
+(function() {
+  var _orig_set = Storage.prototype.setItem;
+  Storage.prototype.setItem = function(key, value) {
+    try {
+      _orig_set.call(this, key, value);
+    } catch(e) {
+      if (e.name === 'QuotaExceededError' || e.code === 22) {
+        // Cache-Einträge zuerst löschen
+        var toDelete = [];
+        for (var i = 0; i < localStorage.length; i++) {
+          var k = localStorage.key(i);
+          if (k && (k.includes('_cache') || k.includes('_archiv') || k.includes('_termine'))) {
+            toDelete.push(k);
+          }
+        }
+        toDelete.forEach(function(k){ try { localStorage.removeItem(k); } catch(e2){} });
+        // Nochmal versuchen
+        try { _orig_set.call(this, key, value); } catch(e3) {
+          console.warn('[PROVA] localStorage voll, Speicherung von "' + key + '" fehlgeschlagen');
+        }
+      } else {
+        throw e;
+      }
+    }
+  };
+})();
+
 /* ============================================================
    PROVA — Zentrale Navigation (nav.js) v2.0
    Einbinden in JEDE Seite:  <script src="nav.js"></script>
@@ -1175,3 +1204,24 @@ window.provaSbLogout = function() {
 
 })();
 /* ── END PROVA MOBILE SYSTEM ── */
+
+/* ════════════════════════════════════════════════════════════
+   PROVA Global Aliases — Namens-Mismatches reparieren
+   nav.js wird auf jeder Seite geladen — idealer Ort für Aliases
+════════════════════════════════════════════════════════════ */
+document.addEventListener('DOMContentLoaded', function() {
+  // einstellungen.html ruft wechsleSektion auf, Logic hat showSec
+  if (!window.wechsleSektion && window.showSec) window.wechsleSektion = window.showSec;
+  
+  // Support-Modal: openSupportModal → toggleChat (support-chat.js)
+  if (!window.openSupportModal) {
+    window.openSupportModal = function() {
+      var fab = document.getElementById('sup-fab');
+      if (fab) fab.click();
+      else {
+        var modal = document.getElementById('support-modal');
+        if (modal) modal.classList.add('open');
+      }
+    };
+  }
+});

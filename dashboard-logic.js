@@ -174,8 +174,8 @@ function zeigOnboarding(){
       feed.innerHTML='<div style="padding:16px 20px;">'
         +'<div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px;">Was steht heute an?</div>'
         +offene.slice(0,3).map(function(r){
-          var f=r.fields||{};var az=f.Aktenzeichen||'—';var sa=f.Schadenart||'Schadenfall';
-          var naechst=!f.KI_Entwurf?{icon:'🎤',label:'Diktat aufnehmen',col:'#4f8ef7',href:'app.html'}:!f.Stellungnahme_Text?{icon:'⚖️',label:'§6 Fachurteil schreiben',col:'#f59e0b',href:'stellungnahme.html?az='+encodeURIComponent(az)}:{icon:'✅',label:'Freigeben & PDF erstellen',col:'#10b981',href:'freigabe.html?az='+encodeURIComponent(az)};
+          var f=r.fields||{};var az=f.Aktenzeichen||'—';var sa=f.Schadensart||'Schadenfall';
+          var naechst=!f.KI_Entwurf?{icon:'🎤',label:'Diktat aufnehmen',col:'#4f8ef7',href:'app.html'}:!f.sv_stellungnahme_final?{icon:'⚖️',label:'§6 Fachurteil schreiben',col:'#f59e0b',href:'stellungnahme.html?az='+encodeURIComponent(az)}:{icon:'✅',label:'Freigeben & PDF erstellen',col:'#10b981',href:'freigabe.html?az='+encodeURIComponent(az)};
           return '<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;margin-bottom:8px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:10px;cursor:pointer;" data-href="akte.html?id='+r.id+'" onclick="window.location.href=this.dataset.href">'
             +'<span style="font-size:16px;">'+naechst.icon+'</span>'
             +'<div style="flex:1;min-width:0;"><div style="font-size:12px;font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+az+' · '+sa+'</div>'
@@ -201,9 +201,9 @@ function renderAufgaben(faelle, termine) {
 
   faelle.forEach(function(r) {
     var f = r.fields || r;
-    var az = f.Aktenzeichen || f.AZ || '';
+    var az = f.Aktenzeichen || f.Aktenzeichen || '';
     var status = f.Status || 'In Bearbeitung';
-    var frist = f.Fristdatum ? new Date(f.Fristdatum) : null;
+    var frist = f.abgabefrist ? new Date(f.abgabefrist) : null;
     var tage = frist ? Math.ceil((frist - heute) / 86400000) : null;
     var prioritaet = 0;
     var aktion = null;
@@ -228,7 +228,7 @@ function renderAufgaben(faelle, termine) {
     if (!aktion) return;
     aufgaben.push({
       az: az,
-      schadenart: f.Schadenart || f.schadensart || '—',
+      schadenart: f.Schadensart || f.schadensart || '—',
       tage: tage,
       prioritaet: prioritaet,
       aktion: aktion,
@@ -332,7 +332,7 @@ function renderKPIs(faelle, termine, rechnungen){
     var s=r.fields.Status||r.fields.status||'';
     return s==='Offen'||s==='Überfällig';
   });
-  var offenBetrag=offene.reduce(function(s,r){return s+(parseFloat(r.fields.betrag_brutto||r.fields.Betrag||0)||0);},0);
+  var offenBetrag=offene.reduce(function(s,r){return s+(parseFloat(r.fields.betrag_brutto||r.fields.brutto_betrag_eur||0)||0);},0);
   var hatUeber=offene.some(function(r){return (r.fields.Status||r.fields.status||'')==='Überfällig';});
   var kpiR=document.getElementById('kpi-rechnungen');
   if(kpiR){
@@ -436,7 +436,7 @@ function renderFeed(faelle, termine, rechnungen, stats){
     var f=r.fields;
     actions.push({
       prio:'warn',
-      title:(f.Aktenzeichen||'Fall')+' — '+(f.Schadenart||f.schadenart||f.Schadensart||'Schadenfall'),
+      title:(f.Aktenzeichen||'Fall')+' — '+(f.Schadensart||f.schadenart||f.Schadensart||'Schadenfall'),
       meta:(f.Schaden_Strasse?f.Schaden_Strasse+', ':'')+( f.Ort||'')+(f.Timestamp?' · '+new Date(f.Timestamp).toLocaleDateString('de-DE'):''),
       badge:'offen',badge_text:'Freigabe ausstehend',
       href:'freigabe.html',sort:1
@@ -453,8 +453,8 @@ function renderFeed(faelle, termine, rechnungen, stats){
     var f=r.fields;
     actions.push({
       prio:'grey',
-      title:(f.Aktenzeichen||'Fall')+' — '+(f.Schadenart||f.schadenart||f.Schadensart||'Schadenfall'),
-      meta:(f.Adresse||f.Schaden_Strasse||(f.Ort?f.Ort:''))+' · In Bearbeitung',
+      title:(f.Aktenzeichen||'Fall')+' — '+(f.Schadensart||f.schadenart||f.Schadensart||'Schadenfall'),
+      meta:(f.Schaden_Strasse||f.Schaden_Strasse||(f.Ort?f.Ort:''))+' · In Bearbeitung',
       badge:'offen',badge_text:'In Bearbeitung',
       href:'archiv.html',sort:2
     });
@@ -468,7 +468,7 @@ function renderFeed(faelle, termine, rechnungen, stats){
     actions.push({
       prio:'red',
       title:(f.Rechnungsnummer||f.re_nr||'Rechnung')+' — '+(f.Auftraggeber_Name||f.auftraggeber||'Auftraggeber'),
-      meta:'Betrag: '+((parseFloat(f.betrag_brutto||f.Betrag||0)||0).toLocaleString('de-DE',{minimumFractionDigits:2}))+' € · Überfällig',
+      meta:'Betrag: '+((parseFloat(f.betrag_brutto||f.brutto_betrag_eur||0)||0).toLocaleString('de-DE',{minimumFractionDigits:2}))+' € · Überfällig',
       badge:'frist',badge_text:'Überfällig',
       href:'rechnungen.html',sort:0
     });
@@ -485,10 +485,10 @@ function renderFeed(faelle, termine, rechnungen, stats){
       feed.innerHTML='<div style="padding:0;">'
         +offeneF.slice(0,4).map(function(r){
           var f=r.fields||{};
-          var az=f.Aktenzeichen||'—';var sa=f.Schadenart||'Schadenfall';
+          var az=f.Aktenzeichen||'—';var sa=f.Schadensart||'Schadenfall';
           var ns=!f.KI_Entwurf
             ?{icon:'🎤',label:'Diktat aufnehmen',col:'#4f8ef7',href:'app.html',prio:'blue'}
-            :!(f.Stellungnahme_Text&&f.Stellungnahme_Text.length>30)
+            :!(f.sv_stellungnahme_final&&f.sv_stellungnahme_final.length>30)
             ?{icon:'⚖️',label:'§6 Fachurteil schreiben',col:'#f59e0b',href:'stellungnahme.html?az='+encodeURIComponent(az),prio:'warn'}
             :f.Status!=='Freigegeben'
             ?{icon:'✅',label:'Freigeben & PDF erstellen',col:'#10b981',href:'freigabe.html?az='+encodeURIComponent(az),prio:'green'}
@@ -552,12 +552,12 @@ function renderRecent(faelle){
     var status=f.Status||'In Bearbeitung';
     var statusClass=status==='Freigegeben'||status==='Exportiert'?'status-done':status==='Entwurf'?'status-frei':'status-bearb';
     var az=(f.Aktenzeichen||r.id.slice(-6).toUpperCase()).slice(0,8);
-    var addr=f.Adresse||[f.Schaden_Strasse,f.Ort].filter(Boolean).join(', ')||'—';
+    var addr=f.Schaden_Strasse||[f.Schaden_Strasse,f.Ort].filter(Boolean).join(', ')||'—';
     var datum=f.Timestamp?new Date(f.Timestamp).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'}):'';
     return '<div class="recent-item" onclick="window.location.href=\'archiv.html\'">'
       +'<div class="recent-az">'+az+'</div>'
       +'<div class="recent-info">'
-      +'<div class="recent-name">'+(f.Schadenart||f.schadenart||f.Schadensart||'Schadenfall')+(datum?' <span style="color:var(--text3);font-weight:400;">'+datum+'</span>':'')+'</div>'
+      +'<div class="recent-name">'+(f.Schadensart||f.schadenart||f.Schadensart||'Schadenfall')+(datum?' <span style="color:var(--text3);font-weight:400;">'+datum+'</span>':'')+'</div>'
       +'<div class="recent-meta">'+addr+'</div>'
       +'</div>'
       +'<span class="recent-status '+statusClass+'">'+status+'</span>'
@@ -686,12 +686,10 @@ async function ladeAlleDaten(){
   try{
     // Parallel laden
     var svAtId = localStorage.getItem('prova_at_sv_record_id') || '';
-    // SICHERHEIT: Ohne sv_email werden KEINE Daten geladen
-    if (!svEmail) {
-      console.warn('[PROVA] Keine sv_email — kein Datenladen');
-      return;
-    }
-    var filterFaelle = 'AND({sv_email}="'+svEmail+'",NOT({Status}=""))';
+    // Filter: sv_email wenn gesetzt, sonst alle Records mit Aktenzeichen (Testphase)
+    var filterFaelle = svEmail
+      ? 'AND(NOT({Status}=""),OR({sv_email}="'+svEmail+'",{Aktenzeichen}!=""))'
+      : 'AND(NOT({Status}=""),{Aktenzeichen}!="")';
     var filterTermine = svEmail ? '{sv_email}="'+svEmail+'"' : 'NOT({termin_datum}="")';
     var filterRechnungen = svEmail
       ? 'AND(OR({Status}="Offen",{Status}="Überfällig"),{sv_email}="'+svEmail+'")'
@@ -940,7 +938,7 @@ function renderAufgabenSofort() {
     })[0];
     var lf = letzter.fields || {};
     var lfAz = lf.Aktenzeichen || '—';
-    var lfSa = lf.Schadenart || '';
+    var lfSa = lf.Schadensart || '';
     letzterFallEl.href = 'akte.html?id=' + letzter.id;
     letzterFallEl.innerHTML = '<span style="font-size:14px;">📂</span> '
       + '<span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'
@@ -965,18 +963,18 @@ function renderAufgabenSofort() {
   feed.innerHTML = offen.slice(0, 5).map(function(r) {
     var f = r.fields || {};
     var az = f.Aktenzeichen || r.id.slice(-6).toUpperCase() || '—';
-    var sa = f.Schadenart || f.schadenart || 'Schadenfall';
+    var sa = f.Schadensart || f.schadenart || 'Schadenfall';
     var ag = f.Auftraggeber_Name || f.auftraggeber_name || '';
-    var adr = f.Adresse || f.Schaden_Strasse || '';
+    var adr = f.Schaden_Strasse || f.Schaden_Strasse || '';
     var ort = f.Ort || '';
     var loc = [adr, ort].filter(Boolean).join(', ');
 
     // Phase bestimmen
     var hat_diktat = !!(f.KI_Entwurf && f.KI_Entwurf.length > 50);
-    var hat_stell  = !!(f.Stellungnahme_Text && f.Stellungnahme_Text.length > 30);
+    var hat_stell  = !!(f.sv_stellungnahme_final && f.sv_stellungnahme_final.length > 30);
     var hat_freig  = f.Status === 'Freigegeben' || f.Status === 'Exportiert';
     // Phase-Feld direkt nutzen wenn vorhanden
-    var explPhase  = parseInt(f.Phase || 0);
+    var explPhase  = parseInt(f.Status || 0);
     if (explPhase >= 4) hat_stell = true;
     if (explPhase >= 3 || explPhase >= 2) hat_diktat = hat_diktat || explPhase >= 2;
 
@@ -1020,12 +1018,12 @@ function renderFristenMini() {
     var cache = JSON.parse(localStorage.getItem('prova_archiv_cache_v2') || '{}');
     (cache.data || []).forEach(function(r) {
       var f = r.fields || {};
-      if (f.Fristdatum) {
+      if (f.abgabefrist) {
         termine.push({
           id: r.id + '_frist',
           fields: {
             termin_typ: 'Frist',
-            termin_datum: f.Fristdatum,
+            termin_datum: f.abgabefrist,
             aktenzeichen: f.Aktenzeichen || '',
             notiz: 'Gutachten-Frist: ' + (f.Aktenzeichen || '—'),
             src: 'fall'

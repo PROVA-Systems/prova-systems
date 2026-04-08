@@ -214,12 +214,6 @@
       });
       var data = await res.json();
       if (data.url) {
-        // Pending-Flag — überlebt Stripe-Tab (localStorage persistiert)
-        try {
-          localStorage.setItem('prova_stripe_pending', JSON.stringify({
-            paket: paketName, email: email, timestamp: Date.now()
-          }));
-        } catch(e) {}
         window.location.href = data.url;
       } else {
         throw new Error(data.error || 'Fehler');
@@ -243,3 +237,88 @@
   }
 
 })(window);
+/* ── Add-on Pakete ─────────────────────────────────────── */
+window.PROVA_ADDON_PREISE = {
+  FAELLE_5:  'price_1TJLnv8d1CNm0HvYy7ZrLRot',   // +5 Fälle Add-on
+  FAELLE_10: 'price_1TJLpG8d1CNm0HvY69Ph6oqY',   // +10 Fälle Add-on
+};
+
+
+/* ════════════════════════════════════════════════════════════
+   PROVA PDFMonkey Template-IDs — VOLLSTÄNDIG (alle 21 Templates)
+   Nie wieder kurze IDs verwenden — nur die vollständigen UUIDs
+════════════════════════════════════════════════════════════ */
+window.PROVA_PDFMONKEY_TEMPLATES = {
+  // ── Rechnungen ────────────────────────────────────────────
+  'jveg':              'S32BEA1F-9D1D-40CE-8A84-542C50B98437',  // F-01
+  'rechnung_pausch':   'B1C3E69D-6710-4123-8670-6C52BB926058',  // F-02
+  'rechnung_std':      'EA5CAC85-EE15-43BC-BC25-10C2C6368572',  // F-03
+
+  // ── Kommunikation ─────────────────────────────────────────
+  'kurzstellungnahme': 'C4BB257B-2841-4AF7-93C1-0C795FCA6BBC',  // F-04
+  'gutschrift':        '64BFD7F0-E90A-4F03-A65C-AE0D32DBA9C3',  // F-05
+
+  // ── Mahnungen ─────────────────────────────────────────────
+  'mahnung_1':         '8ECAC2E4-D079-4B62-871C-BE0D12BBC020',  // F-06
+  'mahnung_2':         'A4E57F73-F6E6-4AEB-B48C-56A4B698026B',  // F-07
+  'mahnung_3':         '6ADE8D9A-8DF4-4482-98D6-188027A4B239',  // F-08
+
+  // ── Gutachten (Schadensart-spezifisch) ───────────────────
+  'kurzgutachten':     'BA076019-40E8-41CB-82AE-08D3A77280DA',  // F-09
+  'beweissicherung':   '6FF656D3-9807-4F59-9305-1338D5D1AD9A',  // F-10
+  'brandschaden':      '6B85ECFF-EA82-4518-8007-F5561AE20DB4',  // F-11
+  'feuchte_schimmel':  '4233F240-A3D4-4611-A787-FD8F86AACEFB',  // F-12
+  'elementarschaden':  '8868A0E2-D859-4CB5-8ED9-BCE327340949',  // F-13
+  'baumaengel':        '3174576E-999B-4A39-9A0C-9139AD220C9E',  // F-14
+  'gericht':           '36E140DC-DD17-432F-B237-910C6462736E',  // F-15
+  'ergaenzung':        'A8D05FAB-521E-43BC-A4B5-F2B5F6BFA1ED',  // F-16
+  'schiedsgutachten':  '37CF6A57-F7C1-42F6-BF94-B91522615C13',  // F-17
+  'bauabnahme':        '4D81616B-1D99-4B6B-8EF4-B538DF71E9A5',  // F-18
+
+  // ── Medien & Dokumente ────────────────────────────────────
+  'fotodoku':          '0383BD85-FEA6-4AED-B477-48A2AA5F1373',  // FOTODOKU
+  'brief':             'BAD1170B-C2BC-4EE7-ACBB-CCBD158892C7',  // PROVA BRIEF
+
+  // ── Paket-abhängige Gutachten-Templates ──────────────────
+  // Starter → Solo (149€), Pro → Zwischenstufe, Enterprise → Team (279€)
+  'solo':              'EC64C790-3E04-4C66-BFF8-4A3BB0215B5F',  // GUTACHTEN STARTER/SOLO
+  'pro':               'B04958ED-39F8-433F-9A4D-E8243B5DA022',  // GUTACHTEN PRO
+  'team':              'E865E0CD-535A-4A25-85A8-917AC86E84F7',  // GUTACHTEN ENTERPRISE/TEAM
+
+  /**
+   * Gibt die korrekte Template-ID zurück basierend auf:
+   * 1. Schadensart (Vorrang)
+   * 2. Gutachten-Typ
+   * 3. Paket des SV (Solo/Team)
+   */
+  get: function(schadensart, typ, paket) {
+    var sa = (schadensart || '').toLowerCase();
+    var t  = (typ  || '').toLowerCase();
+    var p  = (paket || localStorage.getItem('prova_paket') || 'Solo').toLowerCase();
+
+    // Schadensart-basiert
+    if (sa.includes('brand'))                          return this.brandschaden;
+    if (sa.includes('feuchte') || sa.includes('schimmel')) return this.feuchte_schimmel;
+    if (sa.includes('elementar') || sa.includes('sturm'))  return this.elementarschaden;
+    if (sa.includes('mangel') || sa.includes('baumangel'))  return this.baumaengel;
+
+    // Typ-basiert
+    if (t === 'jveg')            return this.jveg;
+    if (t === 'kurzgutachten')   return this.kurzgutachten;
+    if (t === 'beweissicherung') return this.beweissicherung;
+    if (t === 'gericht')         return this.gericht;
+    if (t === 'ergaenzung')      return this.ergaenzung;
+    if (t === 'schiedsgutachten')return this.schiedsgutachten;
+    if (t === 'bauabnahme')      return this.bauabnahme;
+    if (t === 'brief')           return this.brief;
+    if (t === 'fotodoku')        return this.fotodoku;
+    if (t.includes('mahnung_1')) return this.mahnung_1;
+    if (t.includes('mahnung_2')) return this.mahnung_2;
+    if (t.includes('mahnung_3')) return this.mahnung_3;
+
+    // Paket-basiert (Standard-Vollgutachten)
+    if (p === 'team')  return this.team;
+    return this.solo; // Solo ist Standard
+  }
+};
+

@@ -91,6 +91,16 @@
   /* Logout */
   window.provaLogout = function (redirectTo) {
     clearSession();
+    // Alle user-spezifischen Caches löschen beim Logout
+    var keepKeys = ['prova_theme', 'prova_font_size', 'prova_accent_color'];
+    var allKeys = [];
+    for (var i = 0; i < localStorage.length; i++) allKeys.push(localStorage.key(i));
+    allKeys.forEach(function(k) {
+      if (k && k.startsWith('prova_') && keepKeys.indexOf(k) === -1) {
+        localStorage.removeItem(k);
+      }
+    });
+    sessionStorage.clear();
     window.location.href = redirectTo || 'app-login.html';
   };
 

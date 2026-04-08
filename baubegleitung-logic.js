@@ -301,10 +301,8 @@ window.deleteMangel = function(projId, idx) {
 // ============================================================
 // MODALS
 // ============================================================
-window.schliesseProjektModal=function(){closeModal('modal-projekt');};
-window.schliesseBegehungModal=function(){closeModal('modal-begehung');};
-function openModal(id) { var el=document.getElementById(id); if(el) el.classList.add('open'); }
-function closeModal(id) { var el=document.getElementById(id); if(el) el.classList.remove('open'); }
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
 
 function openModalProjekt() {
   _editProjektId = null;
@@ -334,7 +332,7 @@ function editiereProjekt(id) {
   openModal('modal-projekt');
 }
 
-window.openModalBegehung = function openModalBegehung() {
+function openModalBegehung() {
   if (!_aktivProjektId) return;
   document.getElementById('mb-datum').value = new Date().toISOString().slice(0,10);
   document.getElementById('mb-text').value = '';
@@ -668,3 +666,68 @@ document.addEventListener('DOMContentLoaded', function() {
   var m = document.getElementById('support-modal');
   if (m) m.addEventListener('click', function(e){ if(e.target===m) closeModal('support-modal'); });
 });
+/* ── Baubegleitung fehlende Funktionen ── */
+
+window.oeffneNeuProjekt = function() {
+  var modal = document.getElementById('modal-projekt') || document.getElementById('modal-projekt');
+  if (modal) {
+    modal.style.display = 'flex';
+    modal.classList.add('open');
+    // Felder zurücksetzen
+    modal.querySelectorAll('input, textarea, select').forEach(function(el){
+      if (el.type !== 'submit' && el.type !== 'button') el.value = '';
+    });
+  } else if (typeof showToast === 'function') {
+    showToast('Neues Projekt anlegen — Modal nicht gefunden', 'warn');
+  }
+};
+
+window.schliesseProjektModal = function() {
+  var modal = document.getElementById('modal-projekt') || document.getElementById('modal-projekt');
+  if (modal) { modal.style.display = 'none'; modal.classList.remove('open'); }
+};
+
+window.schliesseBegehungModal = function() {
+  var modal = document.getElementById('modal-begehung') || document.getElementById('modal-begehung');
+  if (modal) { modal.style.display = 'none'; modal.classList.remove('open'); }
+};
+
+window.kiBegehungAssist = async function() {
+  var notizen = (document.getElementById('mp-notiz') || document.getElementById('bb-notizen') || {}).value || '';
+  var projektName = (document.getElementById('modal-projekt-titel') || {}).textContent || '';
+  
+  if (!notizen || notizen.length < 20) {
+    if(typeof showToast==='function') showToast('Bitte zuerst Begehungs-Notizen eingeben', 'warn');
+    return;
+  }
+  
+  var btn = document.querySelector('[onclick*="kiBegehungAssist"]');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ KI analysiert…'; }
+  
+  try {
+    var res = await fetch('/.netlify/functions/ki-proxy', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        aufgabe: 'baubegleitung_bericht',
+        notizen: notizen,
+        projekt: projektName
+      })
+    });
+    var data = await res.json();
+    var text = data.text || data.bericht || data.inhalt || '';
+    
+    var output = document.getElementById('bb-ki-ergebnis') || document.getElementById('bb-ki-ergebnis');
+    if (output && text) {
+      output.value = text;
+      output.style.display = 'block';
+      if(typeof showToast==='function') showToast('KI-Begehungsbericht erstellt ✅');
+    } else {
+      if(typeof showToast==='function') showToast('KI hat keinen Bericht zurückgegeben', 'warn');
+    }
+  } catch(e) {
+    if(typeof showToast==='function') showToast('KI-Fehler: ' + e.message, 'error');
+  }
+  
+  if (btn) { btn.disabled = false; btn.textContent = '✨ KI-Assistent'; }
+};

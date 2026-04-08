@@ -442,6 +442,15 @@ function importAlles() {
   if (svEmail && faelleZuSync.length) {
     faelleZuSync.forEach(function(f) {
       try {
+        // Duplikat-Check: Aktenzeichen bereits vorhanden?
+      var checkFilter = encodeURIComponent('AND({Aktenzeichen}="' + (f.aktenzeichen||'') + '",{sv_email}="' + svEmail + '")');
+      fetch('/.netlify/functions/airtable', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({method:'GET', path:'/v0/'+AT_BASE+'/'+AT_FAELLE+'?filterByFormula='+checkFilter+'&maxRecords=1'})
+      }).then(function(r){return r.json();}).then(function(d){
+        if (d.records && d.records.length > 0) { console.log('[Import] Duplikat übersprungen:', f.aktenzeichen); return; }
+        // Kein Duplikat → schreiben
         fetch('/.netlify/functions/airtable', {
           method: 'POST',
           headers: {'Content-Type':'application/json'},
@@ -450,7 +459,7 @@ function importAlles() {
             path: '/v0/' + AT_BASE + '/' + AT_FAELLE,
             payload: { records: [{fields: {
               Aktenzeichen: f.aktenzeichen || '',
-              Schadenart:   f.schadenart || '',
+              Schadensart:  f.schadenart || '',
               Status:       f.status || 'Archiviert',
               Auftraggeber_Name: f.auftraggeber || '',
               sv_email:     svEmail,
@@ -458,7 +467,7 @@ function importAlles() {
               Import_Quelle: _selectedSw ? _selectedSw.id : 'Import'
             }}]}
           })
-        }).catch(function(e){ console.warn('Airtable sync:', e); });
+        }).catch(function(e){ console.warn('Airtable sync:', e); }); }).catch(function(){});
       } catch(e){}
     });
     _result.faelle_synced = faelleZuSync.length;

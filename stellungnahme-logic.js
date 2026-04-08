@@ -2580,3 +2580,18 @@ window.speichern = function() {
   if (_origSpeichern) _origSpeichern.apply(this, arguments);
   zeigeAutoSave();
 };
+
+/* ── speichereUndWeiter — Stellungnahme speichern und zu Freigabe ── */
+window.speichereUndWeiter = async function() {
+  // Erst speichern
+  if (typeof speichereStellungnahme === 'function') {
+    var ok = await speichereStellungnahme();
+    if (ok === false) return; // Fehler beim Speichern
+  }
+  // Dann weiter zur Freigabe
+  var recId = localStorage.getItem('prova_current_record_id') || '';
+  var az    = localStorage.getItem('prova_letztes_az') || localStorage.getItem('prova_current_az') || '';
+  if (recId) window.location.href = 'freigabe.html?id=' + recId;
+  else if (az) window.location.href = 'freigabe.html?az=' + encodeURIComponent(az);
+  else window.location.href = 'freigabe.html';
+};

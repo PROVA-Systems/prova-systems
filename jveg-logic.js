@@ -671,48 +671,34 @@ function einfuegenBanner() {
   }
 }
 })();
-
-/* ── JVEG → RECHNUNG (automatisch) ── */
-window.jvegZurRechnung = function() {
-  // Alle berechneten Werte aus dem DOM lesen
-  var nettoEl   = document.getElementById('jveg-netto')   || document.querySelector('.jveg-netto-total');
-  var bruttoEl  = document.getElementById('jveg-brutto')  || document.querySelector('.jveg-brutto-total');
-  var ustEl     = document.getElementById('jveg-ust')     || document.querySelector('.jveg-ust');
-  var az        = localStorage.getItem('prova_letztes_az') || '';
-  var ag        = localStorage.getItem('prova_letzter_auftraggeber') || '';
-  var agEmail   = localStorage.getItem('prova_letzter_auftraggeber_email') || '';
-
-  var netto  = parseFloat((nettoEl  || {}).textContent || '0') || 0;
-  var brutto = parseFloat((bruttoEl || {}).textContent || '0') || 0;
-  var ust    = parseFloat((ustEl    || {}).textContent || '0') || 0;
-
-  // Positionen aus Tabelle lesen
-  var positionen = [];
-  document.querySelectorAll('.jveg-position, .jveg-row, tr[data-jveg]').forEach(function(row) {
-    var bez  = (row.querySelector('.jveg-bez,  td:nth-child(1)') || {}).textContent || '';
-    var menge = (row.querySelector('.jveg-menge, td:nth-child(2)') || {}).textContent || '';
-    var ep   = (row.querySelector('.jveg-ep,   td:nth-child(3)') || {}).textContent || '';
-    var gesEl = (row.querySelector('.jveg-ges,  td:last-child') || {}).textContent || '';
-    var ges  = parseFloat(gesEl.replace(/[^0-9,.]/g, '').replace(',', '.')) || 0;
-    if (ges > 0) positionen.push({ bezeichnung: bez.trim(), menge: menge.trim(), ep: ep.trim(), gesamt: ges });
-  });
-
-  // An Rechnungen übergeben
+/* ── JVEG-Rechnung als PDF via PDFMonkey ── */
+window.erstelleJVEGRechnungPDF = async function() {
+  // Rechnung-Daten sammeln
+  var daten = {
+    template_id: 'S32BEA1F-9D1D-40CE-8A84-542C50B98437',  // JVEG-Gerichtsrechnung Template
+    sv_name:     [localStorage.getItem('prova_sv_vorname'), localStorage.getItem('prova_sv_nachname')].filter(Boolean).join(' '),
+    sv_email:    localStorage.getItem('prova_sv_email') || '',
+    sv_firma:    localStorage.getItem('prova_sv_firma') || '',
+    sv_strasse:  localStorage.getItem('prova_sv_strasse') || '',
+    sv_plz:      localStorage.getItem('prova_sv_plz') || '',
+    sv_ort:      localStorage.getItem('prova_sv_ort') || '',
+    sv_iban:     localStorage.getItem('prova_sv_iban') || '',
+    stundensatz: (document.getElementById('sachgebiet') || {}).value || '85',
+    gesamtbetrag: (document.getElementById('total-brutto') || {}).textContent || '',
+    datum:       new Date().toLocaleDateString('de-DE'),
+    az:          localStorage.getItem('prova_letztes_az') || ''
+  };
+  
+  if(typeof zeigToast==='function') zeigToast('Rechnung wird als PDF erstellt…');
+  
   try {
-    sessionStorage.setItem('prova_rechnung_jveg', JSON.stringify({
-      herkunft:       'jveg',
-      az:             az,
-      ag:             ag,
-      ag_email:       agEmail,
-      netto:          netto,
-      brutto:         brutto,
-      ust:            ust,
-      positionen:     positionen,
-      rechnungstyp:   'JVEG-Gerichtsrechnung',
-      erstellt_am:    new Date().toISOString()
-    }));
-  } catch(e) {}
-
-  window.location.href = 'rechnungen.html?from=jveg' + (az ? '&az=' + encodeURIComponent(az) : '');
+    // Über Make G3-Webhook oder direkt PDFMonkey
+    var res = await fetch('https://hook.eu1.make.com/44kqx7eo142aw7warqao4c4wqo1nw158', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ aktion: 'jveg_pdf', ...daten })
+    });
+    if(typeof zeigToast==='function') zeigToast('JVEG-Rechnung PDF erstellt ✅');
+  } catch(e) {
+    if(typeof zeigToast==='function') zeigToast('PDF-Fehler: ' + e.message, 'error');
+  }
 };
-

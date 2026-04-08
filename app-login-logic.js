@@ -1,3 +1,48 @@
+
+/* ── USER-WECHSEL SCHUTZ: bei anderem User alle Caches löschen ── */
+window.provaWechselUserCaches = function(neueEmail) {
+  var alteEmail = localStorage.getItem('prova_sv_email') || '';
+  if (!alteEmail || alteEmail === neueEmail) return; // gleicher User — nichts tun
+  
+  console.warn('[PROVA Security] User-Wechsel erkannt: ' + alteEmail + ' → ' + neueEmail);
+  
+  // Alle user-spezifischen Caches und Daten löschen
+  var zuLoeschen = [
+    'prova_faelle_cache', 'prova_archiv_cache_v2', 'prova_termine_cache',
+    'prova_aufmass_cache', 'prova_normen_cache', 'prova_fall_normen_',
+    'prova_akten', 'prova_audit_log', 'prova_at_sv_record_id',
+    'prova_letztes_az', 'prova_aktiver_fall', 'prova_current_az',
+    'prova_letzter_auftraggeber', 'prova_letzter_auftraggeber_email',
+    'prova_schadenart', 'prova_adresse', 'prova_diktat_ortstermin',
+    'prova_stellungnahme_text', 'prova_offenlegungstext',
+    'prova_407a_ts', 'prova_5pruef_ts', 'prova_erster_fall_erstellt',
+    'prova_onboarding_done', 'prova_paket', 'prova_status',
+    'prova_sv_vorname', 'prova_sv_nachname', 'prova_sv_firma',
+    'prova_sv_email', 'prova_sv_ort', 'prova_sv_strasse',
+    'prova_sv_plz', 'prova_sv_telefon', 'prova_sv_steuer_nr',
+    'prova_session_v2', 'prova_last_activity',
+    'prova_stripe_pending', 'prova_stripe_erfolg'
+  ];
+  
+  // Alle Keys aus localStorage durchsuchen und prova_* Keys löschen
+  // (außer theme-Einstellungen die gerätespezifisch sind)
+  var keepKeys = ['prova_theme', 'prova_font_size', 'prova_accent_color'];
+  var allKeys = [];
+  for (var i = 0; i < localStorage.length; i++) {
+    allKeys.push(localStorage.key(i));
+  }
+  allKeys.forEach(function(k) {
+    if (k && k.startsWith('prova_') && keepKeys.indexOf(k) === -1) {
+      localStorage.removeItem(k);
+    }
+  });
+  
+  // SessionStorage ebenfalls löschen
+  sessionStorage.clear();
+  
+  console.log('[PROVA Security] Caches gelöscht für User-Wechsel');
+};
+
 /* ════════════════════════════════════════════════════════════
    PROVA app-login-logic.js
    Login — Auth, Netlify Identity, Redirect
@@ -134,14 +179,7 @@ async function ladePaketUndWeiterleiten(email, ziel) {
   }
   var paket = 'Solo';
   if (!ziel) {
-    // Stripe-Rückkehr: direkt zu Dashboard (Paket bereits gesetzt)
-    if (localStorage.getItem('prova_stripe_erfolg') === '1') {
-      localStorage.removeItem('prova_stripe_erfolg');
-      localStorage.removeItem('prova_stripe_pending');
-      ziel = 'dashboard.html';
-    } else {
-      ziel = localStorage.getItem('prova_onboarding_done') ? 'dashboard.html' : 'onboarding-schnellstart.html';
-    }
+    ziel = localStorage.getItem('prova_onboarding_done') ? 'dashboard.html' : 'onboarding-schnellstart.html';
   }
   try {
     var res = await fetch('/.netlify/functions/airtable', {
@@ -239,6 +277,10 @@ window.login = async function() {
         // User existiert aber ist nicht bestätigt → direkt einloggen via Airtable
         console.log('PROVA: E-Mail nicht bestätigt, Fallback-Login via Airtable');
         localStorage.setItem('prova_user', JSON.stringify({email: email, name: email, token: 'fallback-login'}));
+        // User-Wechsel-Schutz: alten Cache löschen falls anderer User
+        if (typeof window.provaWechselUserCaches === 'function') {
+          window.provaWechselUserCaches(userData.email || '');
+        }
         localStorage.setItem('prova_sv_email', email);
         localStorage.setItem('prova_paket', 'Solo');
         localStorage.setItem('prova_status', 'Trial');
@@ -256,35 +298,7 @@ window.login = async function() {
               path: '/v0/appJ7bLlAHZoxENWE/tbladqEQT3tmx4DIB',
               payload: { fields: { trial_start: trialStart, trial_days: 14 } }
             })
-          }).catch
-/* ── STRIPE-RÜCKKEHR: Pending-Kauf abschließen ── */
-(function(){
-  var pending = null;
-  try { pending = JSON.parse(localStorage.getItem('prova_stripe_pending') || 'null'); } catch(e) {}
-
-  // Stripe=success in URL ODER pending Flag vorhanden (max 2h alt)
-  var params = new URLSearchParams(window.location.search);
-  var stripeSuccess = params.get('stripe') === 'success';
-  var pendingFrisch = pending && (Date.now() - pending.timestamp) < 7200000;
-
-  if (stripeSuccess || pendingFrisch) {
-    // Paket aus Pending oder URL setzen
-    var paket = (pending && pending.paket) || params.get('paket') || 'Solo';
-    localStorage.setItem('prova_paket', paket);
-    localStorage.setItem('prova_stripe_erfolg', '1');
-
-    // Erfolgsbanner in Login-Formular einfügen
-    document.addEventListener('DOMContentLoaded', function() {
-      var form = document.getElementById('login-form') || document.querySelector('form') || document.body;
-      var banner = document.createElement('div');
-      banner.style.cssText = 'margin-bottom:16px;padding:14px 16px;background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.3);border-radius:10px;font-size:13px;line-height:1.6;color:#10b981;text-align:center;';
-      banner.innerHTML = '✅ <strong>Zahlung erfolgreich!</strong><br><span style="font-size:12px;opacity:.9;">Paket: ' + paket + ' · Bitte einloggen um fortzufahren</span>';
-      form.insertBefore(banner, form.firstChild);
-    });
-  }
-})();
-
-(function(){});
+          }).catch(function(){});
         }
         await ladePaketUndWeiterleiten(email);
         return;

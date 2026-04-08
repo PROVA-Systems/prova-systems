@@ -997,5 +997,126 @@
 <script src="prova-error-handler.js" defer></script>
 <script src="support-chat.js" defer></script>
 <script src="sw-register.js" defer></script>
+
+<script>
+/* ── Benachrichtigungen — vollständige Implementierung ── */
+
+var _alleNachrichten = [];
+var _aktuellerFilter = 'alle';
+
+// Beim Laden: Nachrichten aus localStorage + Airtable laden
+document.addEventListener('DOMContentLoaded', function() {
+  ladeBenachrichtigungen();
+});
+
+async function ladeBenachrichtigungen() {
+  var svEmail = localStorage.getItem('prova_sv_email') || '';
+  
+  // Lokale System-Benachrichtigungen aus localStorage
+  var lokal = [];
+  try { lokal = JSON.parse(localStorage.getItem('prova_benachrichtigungen') || '[]'); } catch(e) {}
+  
+  // Fälle mit offenen Aktionen aus Airtable
+  if (svEmail) {
+    try {
+      var filter = encodeURIComponent('AND({sv_email}="'+svEmail+'",OR({Status}="In Bearbeitung",{Status}="Offen"))');
+      var res = await fetch('/.netlify/functions/airtable', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({method:'GET',
+          path:'/v0/appJ7bLlAHZoxENWE/tblSxV8bsXwd1pwa0?filterByFormula='+filter+'&maxRecords=20&fields[]=Aktenzeichen&fields[]=Status&fields[]=Schadensart&fields[]=Timestamp'})
+      });
+      var data = await res.json();
+      (data.records || []).forEach(function(r) {
+        lokal.push({
+          id: r.id, typ: 'fall', gelesen: false,
+          titel: 'Offener Fall: ' + (r.fields.Aktenzeichen || ''),
+          text: 'Status: ' + (r.fields.Status || '') + ' · ' + (r.fields.Schadensart || ''),
+          zeit: r.fields.Timestamp || new Date().toISOString(),
+          link: 'akte.html?az=' + encodeURIComponent(r.fields.Aktenzeichen || '')
+        });
+      });
+    } catch(e) {}
+  }
+  
+  _alleNachrichten = lokal;
+  renderBenachrichtigungen(_alleNachrichten);
+}
+
+function renderBenachrichtigungen(liste) {
+  var container = document.getElementById('benach-liste') || document.querySelector('.benach-container, .notification-list, main');
+  if (!container) return;
+  
+  var gefiltert = liste.filter(function(n) {
+    if (_aktuellerFilter === 'ungelesen') return !n.gelesen;
+    if (_aktuellerFilter === 'faelle') return n.typ === 'fall';
+    if (_aktuellerFilter === 'system') return n.typ === 'system';
+    return true;
+  });
+  
+  if (!gefiltert.length) {
+    container.innerHTML = '<div style="padding:40px;text-align:center;color:var(--text3,#6b7a99);font-size:14px;">Keine Benachrichtigungen</div>';
+    return;
+  }
+  
+  container.innerHTML = gefiltert.map(function(n, i) {
+    var zeit = '';
+    try { zeit = new Date(n.zeit).toLocaleDateString('de-DE', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}); } catch(e) {}
+    return '<div class="benach-item' + (n.gelesen?'':' ungelesen') + '" data-idx="'+i+'" style="padding:14px 16px;border-bottom:1px solid var(--border,#1e3a5f);display:flex;gap:12px;align-items:flex-start;">'
+      + '<div style="width:8px;height:8px;border-radius:50%;background:' + (n.gelesen?'transparent':'var(--accent,#4f8ef7)') + ';flex-shrink:0;margin-top:6px;"></div>'
+      + '<div style="flex:1;">'
+      + '<div style="font-size:13px;font-weight:'+(n.gelesen?'400':'600')+';color:var(--text,#e8eaf0);margin-bottom:3px;">' + (n.titel||'') + '</div>'
+      + '<div style="font-size:12px;color:var(--text3,#6b7a99);">' + (n.text||'') + '</div>'
+      + '<div style="font-size:11px;color:var(--text3,#6b7a99);margin-top:4px;">' + zeit + '</div>'
+      + '</div>'
+      + (n.link ? '<a href="'+n.link+'" style="font-size:11px;color:var(--accent,#4f8ef7);font-weight:600;white-space:nowrap;">Öffnen →</a>' : '')
+      + '<button onclick="loescheNachricht('+i+')" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:14px;padding:0 4px;">✕</button>'
+      + '</div>';
+  }).join('');
+}
+
+window.setFilter = function(filter, btn) {
+  _aktuellerFilter = filter;
+  document.querySelectorAll('.benach-filter-btn,[data-filter]').forEach(function(b){ b.classList.remove('aktiv','active'); });
+  if (btn) btn.classList.add('aktiv');
+  renderBenachrichtigungen(_alleNachrichten);
+};
+
+window.markiereGelesen = function(idx) {
+  if (_alleNachrichten[idx]) { _alleNachrichten[idx].gelesen = true; speichereLokale(); renderBenachrichtigungen(_alleNachrichten); }
+};
+
+window.alleAlsGelesenMarkieren = function() {
+  _alleNachrichten.forEach(function(n){ n.gelesen = true; });
+  speichereLokale();
+  renderBenachrichtigungen(_alleNachrichten);
+  if(typeof showToast==='function') showToast('Alle als gelesen markiert ✅');
+};
+
+window.loescheNachricht = function(idx) {
+  _alleNachrichten.splice(idx, 1);
+  speichereLokale();
+  renderBenachrichtigungen(_alleNachrichten);
+};
+
+window.itemOptions = function(idx) {
+  // Toggle: gelesen/ungelesen
+  if (_alleNachrichten[idx]) {
+    _alleNachrichten[idx].gelesen = !_alleNachrichten[idx].gelesen;
+    speichereLokale();
+    renderBenachrichtigungen(_alleNachrichten);
+  }
+};
+
+window.toggleEinstellungen = function() {
+  var panel = document.getElementById('benach-einstellungen') || document.querySelector('.benach-settings');
+  if (panel) panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+  else window.location.href = 'einstellungen.html#benachrichtigungen';
+};
+
+function speichereLokale() {
+  var lokale = _alleNachrichten.filter(function(n){ return n.typ !== 'fall'; });
+  try { localStorage.setItem('prova_benachrichtigungen', JSON.stringify(lokale.slice(0,50))); } catch(e) {}
+}
+</script>
 </body>
 </html>

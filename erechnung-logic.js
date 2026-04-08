@@ -386,3 +386,72 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 })();
+
+/* ── E-Rechnung: Fehlende Funktionen ── */
+
+window.generateAndDownload = function() {
+  var fmt = window._currentFormat || 'xrechnung';
+  var xml = '';
+  
+  if (fmt === 'zugferd') {
+    if (typeof generateZUGFeRDXML === 'function') xml = generateZUGFeRDXML();
+    else xml = generateXRechnungXML ? generateXRechnungXML().replace('XRechnung', 'ZUGFeRD') : '';
+  } else {
+    if (typeof generateXRechnungXML === 'function') xml = generateXRechnungXML();
+  }
+  
+  if (!xml) {
+    if(typeof zeigToast==='function') zeigToast('Fehler bei der XML-Generierung', 'error');
+    return;
+  }
+  
+  var reNr = (document.getElementById('re-nummer') || {}).value || 'RE';
+  var blob = new Blob([xml], {type: 'application/xml;charset=utf-8'});
+  var url  = URL.createObjectURL(blob);
+  var a    = document.createElement('a');
+  a.href   = url;
+  a.download = 'PROVA-' + fmt.toUpperCase() + '-' + reNr + '.xml';
+  a.click();
+  URL.revokeObjectURL(url);
+  
+  if(typeof zeigToast==='function') zeigToast(fmt === 'zugferd' ? 'ZUGFeRD-Datei heruntergeladen ✅' : 'XRechnung heruntergeladen ✅');
+  
+  // In Airtable als E-Rechnung markieren (non-blocking)
+  var az = (document.getElementById('re-aktenzeichen') || {}).value || '';
+  if (az) {
+    var svEmail = localStorage.getItem('prova_sv_email') || '';
+    fetch('/.netlify/functions/airtable', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({method:'GET',
+        path:'/v0/appJ7bLlAHZoxENWE/tblF6MS7uiFAJDjiT?filterByFormula=' + 
+          encodeURIComponent('{aktenzeichen}="' + az + '"') + '&maxRecords=1'})
+    }).then(function(r){return r.json();}).then(function(d){
+      if (d.records && d.records[0]) {
+        fetch('/.netlify/functions/airtable', {
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({method:'PATCH',
+            path:'/v0/appJ7bLlAHZoxENWE/tblF6MS7uiFAJDjiT/' + d.records[0].id,
+            payload:{fields:{status: 'E-Rechnung erstellt'}}})
+        });
+      }
+    }).catch(function(){});
+  }
+};
+
+window.copyXML = function() {
+  var fmt = window._currentFormat || 'xrechnung';
+  var xml = '';
+  if (typeof generateXRechnungXML === 'function') xml = generateXRechnungXML();
+  if (!xml) { if(typeof zeigToast==='function') zeigToast('XML nicht verfügbar', 'error'); return; }
+  
+  navigator.clipboard.writeText(xml).then(function() {
+    if(typeof zeigToast==='function') zeigToast('XML in Zwischenablage kopiert ✅');
+  }).catch(function() {
+    // Fallback
+    var ta = document.createElement('textarea');
+    ta.value = xml; document.body.appendChild(ta); ta.select();
+    document.execCommand('copy'); document.body.removeChild(ta);
+    if(typeof zeigToast==='function') zeigToast('XML kopiert ✅');
+  });
+};
+

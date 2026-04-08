@@ -546,3 +546,47 @@ renderPositionen();
 document.addEventListener('DOMContentLoaded', function() {
   if (typeof filterPositionen === 'function') filterPositionen();
 });
+/* ── Export-Funktionen für Positionen ── */
+
+window.exportExcel = function() {
+  var rows = document.querySelectorAll('.pos-row, .position-row, tr[data-pos]');
+  if (!rows.length) {
+    if(typeof showToast==='function') showToast('Keine Positionen zum Exportieren', 'warn');
+    return;
+  }
+  var lines = ['Position;Einheit;EP Min;EP Median;EP Max;Kategorie;Schadensart'];
+  rows.forEach(function(row) {
+    var cols = row.querySelectorAll('td, .pos-col');
+    var line = Array.from(cols).map(function(td){
+      return td.textContent.trim().replace(/;/g, ' ');
+    }).join(';');
+    lines.push(line);
+  });
+  var blob = new Blob(['\uFEFF' + lines.join('\n')], {type:'text/csv;charset=utf-8'});
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'PROVA-Positionen.csv';
+  a.click();
+  if(typeof showToast==='function') showToast('Excel-Export erstellt');
+};
+
+window.exportDATEV = function() {
+  if(typeof showToast==='function') showToast('DATEV-Export: Bitte Rechnungen nutzen');
+  window.location.href = 'rechnungen.html';
+};
+
+window.exportLexoffice = function() {
+  var rows = document.querySelectorAll('.pos-row, tr[data-pos]');
+  var positionen = [];
+  rows.forEach(function(row) {
+    var bez = (row.querySelector('.pos-bez, td:first-child') || {}).textContent || '';
+    var ep  = parseFloat((row.querySelector('.pos-ep, td:nth-child(4)') || {}).textContent) || 0;
+    if (bez) positionen.push({ name: bez.trim(), unitPrice: { currency: 'EUR', netAmount: ep.toFixed(2) } });
+  });
+  var blob = new Blob([JSON.stringify({lineItems: positionen}, null, 2)], {type:'application/json'});
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'PROVA-Positionen-Lexoffice.json';
+  a.click();
+  if(typeof showToast==='function') showToast('Lexoffice-Export erstellt');
+};

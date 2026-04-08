@@ -85,7 +85,7 @@ ${messwerte ? '\nMESSWERTE:\n' + messwerte : ''}${entwurf ? '\n§1–§5 ENTWURF
 
 WICHTIG: Analysiere AUSSCHLIESSLICH was im Diktat steht. Leere Arrays wenn zu wenig Info. Gib NUR JSON zurück.`;
 
-  const result = await callOpenAI({ model: 'gpt-4o', max_tokens: 1200, messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: userPrompt }] }, apiKey);
+  const result = await callOpenAI({ model: 'gpt-4o-mini', max_tokens: 1200, messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: userPrompt }] }, apiKey);
   const rawText = result.choices?.[0]?.message?.content || '';
   let parsed = {};
   try {
@@ -143,6 +143,50 @@ async function handleMessages(body, apiKey) {
 }
 
 async function callOpenAI(params, apiKey) {
+
+  // ── PDF-Extraktion (Dokument analysieren) ────────────────────────────
+  if (aufgabe === 'pdf_extraktion') {
+    systemPrompt = `Du bist ein Experte für Baugutachten. Analysiere den übergebenen Text aus einem PDF-Dokument.
+Extrahiere folgende Informationen als JSON:
+{
+  "aktenzeichen": "falls gefunden",
+  "datum": "Dokumentdatum falls gefunden",
+  "auftraggeber": "Name des Auftraggebers falls gefunden",
+  "schadenart": "Art des Schadens falls erkennbar",
+  "adresse": "Schadensadresse falls gefunden",
+  "zusammenfassung": "Kurze Zusammenfassung (2-3 Sätze)",
+  "relevante_fakten": ["Fakt 1", "Fakt 2"]
+}
+Antworte NUR mit dem JSON-Objekt.`;
+    userPrompt = `Analysiere diesen Dokumenttext:
+${body.text || body.diktat || ''}`;
+    maxTokens = 600;
+  }
+
+  // ── Baubegleitung Bericht ─────────────────────────────────────────────
+  if (aufgabe === 'baubegleitung_bericht') {
+    systemPrompt = `Du bist ein erfahrener Baugutachter. Erstelle aus den übergebenen Begehungsnotizen einen professionellen Begehungsbericht.
+Struktur: 1. Zusammenfassung, 2. Festgestellte Mängel, 3. Empfehlungen, 4. Nächste Schritte.
+Schreibe sachlich und präzise.`;
+    userPrompt = `Projekt: ${body.projekt || ''}
+Notizen:
+${body.notizen || ''}`;
+    maxTokens = 800;
+  }
+
+  // ── Brief-Generierung ─────────────────────────────────────────────────
+  if (aufgabe === 'brief_generierung') {
+    systemPrompt = `Du bist ein Sachverständiger für Baugutachten. Schreibe professionelle Briefe.
+Ton: förmlich, sachlich, rechtssicher. Beginne immer mit "Sehr geehrte Damen und Herren," 
+und ende mit "Mit freundlichen Grüßen". Kein KI-Hinweis im Brief selbst.`;
+    userPrompt = `Brieftyp: ${body.brief_typ || 'Allgemein'}
+Aktenzeichen: ${body.aktenzeichen || ''}
+Kontext: ${body.kontext || ''}
+Schreibe den vollständigen Brieftext.`;
+    maxTokens = 600;
+  }
+
+
   const response = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + apiKey },

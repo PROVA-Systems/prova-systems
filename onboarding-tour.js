@@ -195,3 +195,38 @@
   }
 
 })();
+
+/* ── Tour-Fortschritt ── */
+(function() {
+  var _origShowStep = window.PROVA_TOUR && window.PROVA_TOUR.showStep;
+  if (!_origShowStep && window.PROVA_TOUR) {
+    // Monkey-patch: nach jedem Schritt Fortschritt anzeigen
+    var observer = new MutationObserver(function() {
+      var tooltip = document.querySelector('.prova-tour-tooltip, .tour-tooltip, [class*="tour"][class*="tooltip"]');
+      if (!tooltip || tooltip.querySelector('.tour-progress')) return;
+      var total  = window.PROVA_TOUR.steps ? window.PROVA_TOUR.steps.length : 0;
+      var current = window.PROVA_TOUR.currentStep || 0;
+      if (!total) return;
+      
+      var prog = document.createElement('div');
+      prog.className = 'tour-progress';
+      prog.style.cssText = 'display:flex;gap:4px;align-items:center;margin-top:10px;padding-top:8px;border-top:1px solid rgba(255,255,255,.1);';
+      
+      for (var i = 0; i < total; i++) {
+        var dot = document.createElement('span');
+        dot.style.cssText = 'width:6px;height:6px;border-radius:50%;background:' + 
+          (i <= current ? 'var(--accent,#4f8ef7)' : 'rgba(255,255,255,.2)') + ';transition:background .2s;';
+        prog.appendChild(dot);
+      }
+      
+      var label = document.createElement('span');
+      label.style.cssText = 'font-size:10px;color:rgba(255,255,255,.5);margin-left:6px;';
+      label.textContent = (current + 1) + ' / ' + total;
+      prog.appendChild(label);
+      
+      tooltip.appendChild(prog);
+    });
+    
+    observer.observe(document.body, {childList: true, subtree: true});
+  }
+})();

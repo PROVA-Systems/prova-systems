@@ -574,18 +574,9 @@ async function approveGutachten(){
     bestaetigung_5pruef:localStorage.getItem('prova_5pruef_ts')||new Date().toISOString(),
     bestaetigung_5pruef_text:'KI-Kausalitätshypothesen §5 persönlich fachlich geprüft und bestätigt gemäß IHK-SVO §3',
     bestaetigung_407a_text:'Persönlich geprüft und fachliche Verantwortung übernommen gemäß §407a ZPO',
-    // EU AI Act Art. 13 + 14 — vollständiges KI-Label für PDFMonkey
-    ki_label: 'KI-gestützt erstellt, geprüft und verantwortet durch '
-      + ([localStorage.getItem('prova_sv_vorname'),localStorage.getItem('prova_sv_nachname')].filter(Boolean).join(' ') || 'den Sachverständigen'),
-    eu_ai_act_label: [
-      'Dieses Gutachten wurde unter Einsatz von KI-gestützten Assistenzfunktionen erstellt.',
-      'Alle Befunde, Kausalaussagen und Bewertungen wurden vom unterzeichnenden Sachverständigen',
-      'persönlich geprüft, fachlich verantwortet und eigenständig formuliert (§407a ZPO).',
-      'Offenlegung gemäß EU AI Act Art. 13 (Transparenzpflicht) und Art. 14 (menschliche Aufsicht),',
-      'Verordnung (EU) 2024/1689.'
-    ].join(' '),
-    eu_ai_act_datum: new Date().toLocaleDateString('de-DE', {day:'2-digit',month:'2-digit',year:'numeric'}),
-    ki_modell_label: 'PROVA KI-Assistent',
+    // EU AI Act Label für PDF-Template (TO-DO aus Session 4)
+    ki_label:'KI-gestützt erstellt, geprüft und verantwortet durch '
+      +([localStorage.getItem('prova_sv_vorname'),localStorage.getItem('prova_sv_nachname')].filter(Boolean).join(' ')||'den Sachverständigen'),
     gutachter_name:[localStorage.getItem('prova_sv_vorname'),localStorage.getItem('prova_sv_nachname')].filter(Boolean).join(' ')||'',
     paket:localStorage.getItem('prova_paket')||'Solo',
   };
@@ -1237,3 +1228,52 @@ document.addEventListener('DOMContentLoaded', function() {
     if (dot) dot.classList.remove('status-dot-loading');
   }, 3000);
 });
+/* ── Template-Auswahl via window.PROVA_PDFMONKEY_TEMPLATES ── */
+(function() {
+  // prova-preise.js wird vorher geladen und hat alle Template-IDs
+  // Hier nur: Template-ID beim Laden in localStorage für G3-Payload setzen
+  document.addEventListener('DOMContentLoaded', function() {
+    var sa  = localStorage.getItem('prova_schadenart') || '';
+    var typ = localStorage.getItem('prova_gutachten_typ') || '';
+    var pkt = localStorage.getItem('prova_paket') || 'Solo';
+    if (window.PROVA_PDFMONKEY_TEMPLATES) {
+      var tplId = window.PROVA_PDFMONKEY_TEMPLATES.get(sa, typ, pkt);
+      localStorage.setItem('prova_pdfmonkey_template_id', tplId);
+      console.log('[PROVA] PDFMonkey Template:', tplId);
+    }
+  });
+})();
+
+/* ── Template-ID Auswahl aus echten PDFMonkey IDs ── */
+(function() {
+  var TEMPLATES = {
+    'jveg':            'S32BEA1F-9D1D-40CE-8A84-542C50B98437',
+    'rechnung_pausch': 'B1C3E69D-6710-4123-8670-6C52BB926058',
+    'rechnung_std':    'EA5CAC85-EE15-43BC-BC25-10C2C6368572',
+    'stellungnahme':   'C4BB257B-2841-4AF7-93C1-0C795FCA6BBC',
+    'gutschrift':      '64BFD7F0-E90A-4F03-A65C-AE0D32DBA9C3',
+    'mahnung_1':       '8ECAC2E4-D079-4B62-871C-BE0D12BBC020',
+    'mahnung_2':       'A4E57F73-F6E6-4AEB-B48C-56A4B698026B',
+    'mahnung_3':       '6ADE8D9A-8DF4-4482-98D6-188027A4B239',
+    'kurzgutachten':   'BA076019-40E8-41CB-82AE-08D3A77280DA',
+    'beweissicherung': '6FF656D3-9807-4F59-9305-1338D5D1AD9A',
+    'brandschaden':    '6B85ECFF-EA82-4518-8007-F5561AE20DB4',
+    'feuchte':         '4233F240-A3D4-4611-A787-FD8F86AACEFB',
+    'standard':        'EC64C790',
+  };
+
+  window.provaGetPDFMonkeyTemplate = function(typ) {
+    var schadensart = localStorage.getItem('prova_schadenart') || '';
+    // Schadensart-basiertes Mapping
+    if (!typ || typ === 'auto') {
+      if (schadensart.toLowerCase().includes('brand')) return TEMPLATES.brandschaden;
+      if (schadensart.toLowerCase().includes('feuchte') || schadensart.toLowerCase().includes('schimmel')) return TEMPLATES.feuchte;
+      if (schadensart.toLowerCase().includes('kurz')) return TEMPLATES.kurzgutachten;
+    }
+    return TEMPLATES[typ] || TEMPLATES.standard;
+  };
+
+  // Beim Laden: Template-ID in localStorage setzen für G3-Payload
+  var gutachtenTyp = localStorage.getItem('prova_gutachten_typ') || 'standard';
+  localStorage.setItem('prova_pdfmonkey_template_id', window.provaGetPDFMonkeyTemplate(gutachtenTyp));
+})();
