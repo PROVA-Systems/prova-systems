@@ -165,8 +165,8 @@ async function ladePaketUndWeiterleiten(email, ziel) {
           return;
         }
         // ── Profil-Sync: alle relevanten Felder aus Airtable ──────────────
-        if (f.Vorname)        localStorage.setItem('prova_sv_vorname',       f.Vorname);
-        if (f.Nachname)       localStorage.setItem('prova_sv_nachname',      f.Nachname);
+        if (f.sv_vorname)        localStorage.setItem('prova_sv_vorname',       f.sv_vorname);
+        if (f.sv_nachname)       localStorage.setItem('prova_sv_nachname',      f.sv_nachname);
         if (f.sv_qualifikation)  localStorage.setItem('prova_sv_qualifikation', f.sv_qualifikation);
         if (f.sv_bueronamen)     localStorage.setItem('prova_bueronamen',       f.sv_bueronamen);
         if (f.sv_telefon)        localStorage.setItem('prova_sv_telefon',       f.sv_telefon);
@@ -582,3 +582,35 @@ if (window.innerWidth <= 800) {
   var ml = document.getElementById('mobile-logo');
   if (ml) ml.style.display = 'flex';
 }
+/* ── Letzter_Login → Airtable (bei jedem Login) ── */
+window.provaTrackLogin = async function(email) {
+  if (!email) return;
+  try {
+    var filter = encodeURIComponent('{Email}="' + email + '"');
+    var res = await fetch('/.netlify/functions/airtable', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ method: 'GET',
+        path: '/v0/appJ7bLlAHZoxENWE/tbladqEQT3tmx4DIB?filterByFormula=' + filter + '&maxRecords=1'
+      })
+    });
+    var d = await res.json();
+    if (!d.records || !d.records[0]) return;
+    var recId = d.records[0].id;
+    var heute = new Date().toISOString().split('T')[0];
+    await fetch('/.netlify/functions/airtable', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ method: 'PATCH',
+        path: '/v0/appJ7bLlAHZoxENWE/tbladqEQT3tmx4DIB/' + recId,
+        payload: { fields: {
+          Letzter_Login:      new Date().toISOString(),
+          Letzte_Aktivitaet: heute,
+        }}
+      })
+    });
+    console.log('[PROVA] Login-Tracking → Airtable ✅');
+  } catch(e) {
+    console.warn('[PROVA] Login-Tracking fehlgeschlagen:', e.message);
+  }
+};

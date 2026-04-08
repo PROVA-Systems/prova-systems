@@ -73,8 +73,8 @@ async function ladeGutachten(){
     localStorage.setItem('prova_letztes_az', recFields.Aktenzeichen||'');
   // Breadcrumb + Status befüllen
   var _az = recFields.Aktenzeichen || recFields.Schadensnummer_Versicherung || '—';
-  var _sa = recFields.Schadensart || recFields.Schadensart || '—';
-  var _str = recFields.Schaden_Strasse || recFields.Schaden_Strasse || '';
+  var _sa = recFields.Schadenart || recFields.Schadensart || '—';
+  var _str = recFields.Adresse || recFields.Schaden_Strasse || '';
   var _adr = [_str, [recFields.PLZ, recFields.Ort].filter(Boolean).join(' ')].filter(Boolean).join(', ') || '—';
   befuelleBreadcrumb(_az, _sa, _adr);
   setStatusDot('ok');
@@ -130,10 +130,10 @@ async function ladeGutachten(){
 
 /* SV PROFIL */
 async function ladeSVProfil(){
-  const email=localStorage.getItem('prova_sv_email')||recFields.sv_email||'';
+  const email=localStorage.getItem('prova_sv_email')||recFields.SV_Email||'';
   if(!email) return;
   try {
-    const url=`/v0/${AT_BASE}/tbladqEQT3tmx4DIB?filterByFormula=${encodeURIComponent(`{sv_email}="${email}"`)}&maxRecords=1`;
+    const url=`/v0/${AT_BASE}/tbladqEQT3tmx4DIB?filterByFormula=${encodeURIComponent(`{SV_Email}="${email}"`)}&maxRecords=1`;
     const res=await fetch('/.netlify/functions/airtable',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({method:'GET',path:url})});
     if(!res.ok) return;
     const d=await res.json();
@@ -145,15 +145,15 @@ async function ladeSVProfil(){
 function renderDoc(){
   const f=recFields;
   const az=f.Aktenzeichen||f.Schadensnummer_Versicherung||'—';
-  const sa=f.Schadensart||f.Schadensart||'—';
-  const str=f.Schaden_Strasse||f.Schaden_Strasse||'';
+  const sa=f.Schadenart||f.Schadensart||'—';
+  const str=f.Adresse||f.Schaden_Strasse||'';
   const adr=[str,[f.PLZ,f.Ort].filter(Boolean).join(' ')].filter(Boolean).join(', ');
   const svV=(svProfil&&svProfil.SV_Vorname)||localStorage.getItem('prova_sv_vorname')||'';
   const svN=(svProfil&&svProfil.SV_Nachname)||localStorage.getItem('prova_sv_nachname')||'';
   const svName=(svProfil&&svProfil.Name)||[svV,svN].filter(Boolean).join(' ')||'Sachverständiger';
   const svQ=(svProfil&&svProfil.Qualifikation)||localStorage.getItem('prova_sv_qualifikation')||'Sachverständiger';
   const buero=(svProfil&&svProfil.Firma)||localStorage.getItem('prova_bueronamen')||'';
-  const svAdr=[(svProfil&&svProfil.Schaden_Strasse),(svProfil&&svProfil.PLZ),(svProfil&&svProfil.Ort)].filter(Boolean).join(' · ');
+  const svAdr=[(svProfil&&svProfil.Adresse),(svProfil&&svProfil.PLZ),(svProfil&&svProfil.Ort)].filter(Boolean).join(' · ');
   const ini=svName.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2)||'SV';
   const ts=f.Timestamp||''; const dtStr=ts?new Date(ts).toLocaleDateString('de-DE'):'—';
 
@@ -554,9 +554,9 @@ async function approveGutachten(){
   const payload={
     airtable_id:recId,
     aktenzeichen:(f.Aktenzeichen !== null && f.Aktenzeichen !== undefined && f.Aktenzeichen !== '' ? f.Aktenzeichen : ''),schadensdatum:(f.Schadensdatum !== null && f.Schadensdatum !== undefined && f.Schadensdatum !== '' ? f.Schadensdatum : ''),
-    schadensart:f.Schadensart||(f.Schadensart !== null && f.Schadensart !== undefined && f.Schadensart !== '' ? f.Schadensart : ''),
+    schadensart:f.Schadenart||(f.Schadensart !== null && f.Schadensart !== undefined && f.Schadensart !== '' ? f.Schadensart : ''),
     gebaeudetyp:(f.Gebaeude_Typ !== null && f.Gebaeude_Typ !== undefined && f.Gebaeude_Typ !== '' ? f.Gebaeude_Typ : ''),baujahr:(f.Baujahr !== null && f.Baujahr !== undefined && f.Baujahr !== '' ? f.Baujahr : ''),
-    strasse:f.Schaden_Strasse||(f.Schaden_Strasse !== null && f.Schaden_Strasse !== undefined && f.Schaden_Strasse !== '' ? f.Schaden_Strasse : ''),
+    strasse:f.Adresse||(f.Schaden_Strasse !== null && f.Schaden_Strasse !== undefined && f.Schaden_Strasse !== '' ? f.Schaden_Strasse : ''),
     plz:(f.PLZ !== null && f.PLZ !== undefined && f.PLZ !== '' ? f.PLZ : ''),ort:(f.Ort !== null && f.Ort !== undefined && f.Ort !== '' ? f.Ort : ''),
     geschaedigter:(f.Geschaedigter !== null && f.Geschaedigter !== undefined && f.Geschaedigter !== '' ? f.Geschaedigter : ''),
     auftraggeber_name:(f.Auftraggeber_Name !== null && f.Auftraggeber_Name !== undefined && f.Auftraggeber_Name !== '' ? f.Auftraggeber_Name : ''),
@@ -1228,3 +1228,64 @@ document.addEventListener('DOMContentLoaded', function() {
     if (dot) dot.classList.remove('status-dot-loading');
   }, 3000);
 });
+/* ── AUDIT + STATISTIKEN bei Freigabe ── */
+window.provaFreigabeAudit = async function(data) {
+  var svEmail     = localStorage.getItem('prova_sv_email') || '';
+  var paket       = localStorage.getItem('prova_paket') || 'Solo';
+  var sv6Text     = data.sv_stellungnahme || '';
+  var ki6Text     = data.ki_vorschlag || '';
+  var az          = data.aktenzeichen || localStorage.getItem('prova_aktiver_fall') || '';
+
+  // Änderungsquote: wie viel hat der SV geändert vs KI-Vorschlag
+  var aenderung = 0;
+  if (ki6Text && sv6Text) {
+    var gleich = 0, total = Math.max(sv6Text.length, ki6Text.length);
+    for (var i = 0; i < Math.min(sv6Text.length, ki6Text.length); i++) {
+      if (sv6Text[i] === ki6Text[i]) gleich++;
+    }
+    aenderung = total > 0 ? Math.round((1 - gleich/total) * 100) : 0;
+  }
+
+  // AUDIT_TRAIL
+  if (typeof provaAuditLog === 'function') {
+    await provaAuditLog({
+      aktenzeichen:    az,
+      sv_email:        svEmail,
+      paket:           paket,
+      aktion:          'Gutachten_Freigegeben',
+      sv_validiert:    true,
+      output_laenge:   sv6Text.length,
+      aenderungsquote: aenderung,
+      offenlegungstext:'Gemäß §407a Abs. 3 ZPO und EU AI Act Art. 13 wurde KI-Unterstützung eingesetzt. §6 wurde vom Sachverständigen persönlich verfasst.',
+      notizen:         'Freigabe: ' + new Date().toLocaleString('de-DE'),
+    });
+  }
+
+  // STATISTIKEN
+  if (typeof provaStatLog === 'function') {
+    await provaStatLog({
+      aktenzeichen:          az,
+      paket:                 paket,
+      ereignis:              'Gutachten_Freigegeben',
+      schadensart:           data.schadensart || '',
+      plz:                   data.plz || '',
+      ort:                   data.ort || '',
+      auftraggeber_typ:      data.auftraggeber_typ || '',
+      foto_anzahl:           data.foto_anzahl || 0,
+      erstellungszeit_sekunden: data.erstellungszeit || 0,
+      transkript_laenge:     data.transkript_laenge || 0,
+    });
+  }
+
+  // KI_STATISTIK
+  if (typeof provaKILog === 'function') {
+    await provaKILog({
+      schadenart:         data.schadensart || '',
+      ursache_quelle:     'SV-validiert',
+      ursache_kategorien: data.schadensart || '',
+      eigentext_zeichen:  sv6Text.length,
+      weg:                'Freigabe',
+      diktat:             !!(data.transkript_laenge > 0),
+    });
+  }
+};

@@ -221,7 +221,7 @@ function bvRenderFaelle(records,container){
     return '<div class="bv-fall" onclick="bvWaehle(\''+r.id+'\',this)">'
       +'<div>'
       +'<div class="bv-fall-az">'+(f.Aktenzeichen||'—')+'</div>'
-      +'<div class="bv-fall-info">'+(f.Schadensart||f.Schadensart||'')+((f.Schaden_Strasse||f.Schaden_Strasse)?' · '+(f.Schaden_Strasse||f.Schaden_Strasse):'')+'</div>'
+      +'<div class="bv-fall-info">'+(f.Schadenart||f.Schadensart||'')+((f.Schaden_Strasse||f.Adresse)?' · '+(f.Schaden_Strasse||f.Adresse):'')+'</div>'
       +'</div>'
       +'<div class="bv-fall-ck" id="fck-'+r.id+'"></div>'
       +'</div>';
@@ -249,8 +249,8 @@ function fuelleFall(){
     var cache=(JSON.parse(localStorage.getItem('prova_archiv_cache_v2')||'{}').data||[]);
     var rec=cache.find(function(r){return r.id===_fall;});
     if(rec){var f=rec.fields||{};
-      _felder.az=f.Aktenzeichen||'';_felder.schadenart=f.Schadensart||f.Schadensart||'';
-      _felder.adresse=f.Schaden_Strasse||f.Schaden_Strasse||'';
+      _felder.az=f.Aktenzeichen||'';_felder.schadenart=f.Schadenart||f.Schadensart||'';
+      _felder.adresse=f.Schaden_Strasse||f.Adresse||'';
       _felder.ag_name=f.Auftraggeber_Name||'';_felder.ag_email=f.Auftraggeber_Email||'';
     }
   }catch(e){}
@@ -624,3 +624,36 @@ if (bvSrch) {
 }
 
 })();
+
+/* ── BRIEFE.versand_status nach K3-Versand auf "Gesendet" setzen ── */
+window.provaBriefGesendet = async function(briefId) {
+  if (!briefId) return;
+  try {
+    await fetch('/.netlify/functions/airtable', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        method: 'PATCH',
+        path: '/v0/appJ7bLlAHZoxENWE/tblSzxvnkRE6B0thx/' + briefId,
+        payload: { fields: {
+          versand_status: 'Gesendet',
+          gesendet_am:    new Date().toISOString(),
+        }}
+      })
+    });
+    console.log('[PROVA] BRIEFE.versand_status → Gesendet ✅');
+  } catch(e) {
+    console.warn('[PROVA] Brief-Status-Update fehlgeschlagen:', e.message);
+  }
+};
+
+/* ── Statistik bei Brief-Versand ── */
+window.provaBriefStatLog = async function(data) {
+  if (typeof provaStatLog === 'function') {
+    await provaStatLog({
+      aktenzeichen: data.aktenzeichen || '',
+      ereignis:     'Brief_Gesendet',
+      schadensart:  data.brief_typ   || '',
+    });
+  }
+};

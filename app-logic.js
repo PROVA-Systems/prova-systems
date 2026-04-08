@@ -2,7 +2,7 @@
 /* ── FIX: Neues Gutachten → Aktiver Fall zurücksetzen ── */
 (function() {
   var urlParams = new URLSearchParams(window.location.search);
-  var azParam = urlParams.get('az') || urlParams.get('Aktenzeichen') || '';
+  var azParam = urlParams.get('az') || urlParams.get('AZ') || '';
   if (!azParam) {
     // Keine AZ in URL = neues Gutachten → aktiven Fall zurücksetzen
     localStorage.removeItem('prova_aktiver_fall');
@@ -213,7 +213,7 @@ async function ladeSVProfil() {
       if (f['Nachname']) localStorage.setItem('prova_sv_nachname', f['Nachname']);
       if (f['Zertifizierung']) localStorage.setItem('prova_sv_quali', f['Zertifizierung']);
       if (f['Firma']) localStorage.setItem('prova_sv_firma', f['Firma']);
-      if (f['Schaden_Strasse']) localStorage.setItem('prova_sv_strasse', f['Schaden_Strasse']);
+      if (f['Strasse']) localStorage.setItem('prova_sv_strasse', f['Strasse']);
       if (f['PLZ']) localStorage.setItem('prova_sv_plz', String(f['PLZ']));
       if (f['Ort']) localStorage.setItem('prova_sv_ort', f['Ort']);
     } catch(e) {}
@@ -346,7 +346,7 @@ function buildBriefVars() {
     sv_firma: getSVVal('Firma', ''),
     sv_email: getSVVal('Email', ''),
     sv_telefon: getSVVal('Telefon', ''),
-    sv_strasse: getSVVal('Schaden_Strasse', ''),
+    sv_strasse: getSVVal('Strasse', ''),
     sv_plz: String(getSVVal('PLZ', '') || ''),
     sv_ort: getSVVal('Ort', ''),
     sv_qualifikation: getSVVal('Zertifizierung', ''),
@@ -3341,7 +3341,7 @@ function renderTabelle(records) {
     return `<tr>
       <td style="font-weight:600;font-family:monospace">${nr}</td>
       <td>${adresse}</td>
-      <td>${f.Schadensart||'—'}</td>
+      <td>${f.Schadenart||'—'}</td>
       <td>${datum}</td>
       <td><span class="badge ${badge}">${status}</span></td>
       <td><button class="btn btn-ghost btn-sm" onclick="window.location.href='freigabe.html?fall=${encodeURIComponent(nr)}'">Öffnen</button></td>
@@ -3354,7 +3354,7 @@ window.filterGutachten = function() {
   const st = document.getElementById('statusFilter')?.value||'';
   renderTabelle(alleGutachten.filter(r => {
     const f = r.fields||{};
-    const txt = [f.Schadensnummer,f.Strasse,f.Ort,f.Schadensart].join(' ').toLowerCase();
+    const txt = [f.Schadensnummer,f.Strasse,f.Ort,f.Schadenart].join(' ').toLowerCase();
     return (!st||f.Status===st) && (!s||txt.includes(s));
   }));
 };
@@ -3434,7 +3434,7 @@ function renderArchivTabelle(records) {
     return `<tr>
       <td style="font-weight:600;font-family:monospace;font-size:.8125rem">${nr}</td>
       <td style="font-size:.875rem">${adresse}</td>
-      <td style="font-size:.875rem">${f.Schadensart||'—'}</td>
+      <td style="font-size:.875rem">${f.Schadenart||'—'}</td>
       <td style="font-size:.875rem;color:var(--gray-500)">${auftraggeber}</td>
       <td style="font-size:.875rem">${datum}</td>
       <td style="font-size:.875rem;color:var(--gray-500)">${dauerText}</td>
@@ -3454,10 +3454,10 @@ window.filterArchiv = function() {
 
   const gefiltert = alleArchivDaten.filter(r => {
     const f = r.fields || {};
-    const txt = [f.Schadensnummer, f.Strasse, f.PLZ, f.Ort, f.Auftraggeber_Name, f.Schadensart].join(' ').toLowerCase();
+    const txt = [f.Schadensnummer, f.Strasse, f.PLZ, f.Ort, f.Auftraggeber_Name, f.Schadenart].join(' ').toLowerCase();
     const datumJahr = f.Timestamp ? new Date(f.Timestamp).getFullYear().toString() : '';
     return (!suche || txt.includes(suche))
-        && (!art || f.Schadensart === art)
+        && (!art || f.Schadenart === art)
         && (!jahr || datumJahr === jahr)
         && (!status || f.Status === status);
   });
@@ -3476,13 +3476,13 @@ window.resetArchivFilter = function() {
 window.exportiereCSV = function() {
   if (!alleArchivDaten.length) { showToast('Keine Daten zum Exportieren.', 'warning'); return; }
 
-  const header = ['Aktenzeichen','Schadensart','Straße','PLZ','Ort','Auftraggeber','Datum','Status','Erstellungszeit (Min.)'];
+  const header = ['Aktenzeichen','Schadenart','Straße','PLZ','Ort','Auftraggeber','Datum','Status','Erstellungszeit (Min.)'];
   const rows = alleArchivDaten.map(r => {
     const f = r.fields || {};
     const nr = f.Schadensnummer || r.id.slice(-6).toUpperCase();
     const datum = f.Timestamp ? new Date(f.Timestamp).toLocaleDateString('de-DE') : '';
     const dauer = f.Erstellungszeit_Sekunden ? Math.round(f.Erstellungszeit_Sekunden/60) : '';
-    return [nr, f.Schadensart||'', f.Strasse||'', f.PLZ||'', f.Ort||'', f.Auftraggeber_Name||'', datum, f.Status||'', dauer]
+    return [nr, f.Schadenart||'', f.Strasse||'', f.PLZ||'', f.Ort||'', f.Auftraggeber_Name||'', datum, f.Status||'', dauer]
       .map(v => '"' + String(v).replace(/"/g,'""') + '"').join(';');
   });
 
@@ -3553,3 +3553,55 @@ window.updateMesswerteLayout = function() {
 document.getElementById('f-schadenart')?.addEventListener('change', function() {
   try { window.updateMesswerteLayout(); } catch(e) {}
 });
+
+/* ── KONTAKTE.Faelle_Anzahl erhöhen wenn neuer Fall erstellt ── */
+window.provaKontaktFaelleErhoehen = async function(auftrNameOrEmail) {
+  if (!auftrNameOrEmail) return;
+  var svEmail = localStorage.getItem('prova_sv_email') || '';
+  if (!svEmail) return;
+
+  try {
+    // Kontakt per Name oder Email finden
+    var filter = encodeURIComponent(
+      'OR({Name}="' + auftrNameOrEmail + '",{Email}="' + auftrNameOrEmail + '")'
+    );
+    var res = await fetch('/.netlify/functions/airtable', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ method: 'GET',
+        path: '/v0/appJ7bLlAHZoxENWE/tblMKmPLjRelr6Hal?filterByFormula=' + filter + '&maxRecords=1'
+      })
+    });
+    var d = await res.json();
+    if (!d.records || !d.records[0]) return;
+
+    var rec    = d.records[0];
+    var aktuel = rec.fields.Faelle_Anzahl || 0;
+
+    await fetch('/.netlify/functions/airtable', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ method: 'PATCH',
+        path: '/v0/appJ7bLlAHZoxENWE/tblMKmPLjRelr6Hal/' + rec.id,
+        payload: { fields: { Faelle_Anzahl: aktuel + 1 }}
+      })
+    });
+    console.log('[PROVA] KONTAKTE.Faelle_Anzahl → ' + (aktuel + 1) + ' ✅');
+  } catch(e) {
+    console.warn('[PROVA] Kontakt-Faelle-Update fehlgeschlagen:', e.message);
+  }
+};
+
+/* ── STATISTIKEN bei Fall-Erstellung ── */
+window.provaFallErstelltLog = async function(data) {
+  if (typeof provaStatLog === 'function') {
+    await provaStatLog({
+      aktenzeichen:     data.aktenzeichen || '',
+      ereignis:         'Fall_Erstellt',
+      schadensart:      data.schadenart   || '',
+      plz:              data.plz          || '',
+      ort:              data.ort          || '',
+      auftraggeber_typ: data.auftraggeber_typ || '',
+    });
+  }
+};

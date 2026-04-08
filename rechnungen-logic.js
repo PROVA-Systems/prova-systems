@@ -538,3 +538,88 @@ async function supSendModal(){
     alert('Fehler. Bitte E-Mail an support@prova-systems.de');
   }
 }
+/* ══════════════════════════════════════════════════════════════
+   F1 — RECHNUNGS-PDF GENERIERUNG
+   Webhook: https://hook.eu1.make.com/lo0es88zq7rxmnx3jiwoonrv2chn47zy
+   Szenario: PROVA F1 (ID: 5192002)
+══════════════════════════════════════════════════════════════ */
+
+var WEBHOOK_F1 = 'https://hook.eu1.make.com/lo0es88zq7rxmnx3jiwoonrv2chn47zy';
+
+window.rechnungPDFGenerieren = async function(rechnungId) {
+  if (!rechnungId) { if(typeof zeigToast==='function') zeigToast('Keine Rechnungs-ID', 'error'); return; }
+
+  var svEmail    = localStorage.getItem('prova_sv_email')    || '';
+  var svVorname  = localStorage.getItem('prova_sv_vorname')  || '';
+  var svNachname = localStorage.getItem('prova_sv_nachname') || '';
+  var svFirma    = localStorage.getItem('prova_sv_firma')    || '';
+  var svStrasse  = localStorage.getItem('prova_sv_strasse')  || '';
+  var svPlz      = localStorage.getItem('prova_sv_plz')      || '';
+  var svOrt      = localStorage.getItem('prova_sv_ort')      || '';
+  var svTelefon  = localStorage.getItem('prova_sv_telefon')  || '';
+  var svIban     = localStorage.getItem('prova_sv_iban')     || '';
+  var svBic      = localStorage.getItem('prova_sv_bic')      || '';
+  var svSteuernr = localStorage.getItem('prova_sv_steuernr') || '';
+
+  // Rechnung aus Airtable laden
+  var res = await fetch('/.netlify/functions/airtable', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({method:'GET',
+      path:'/v0/appJ7bLlAHZoxENWE/tblF6MS7uiFAJDjiT/' + rechnungId
+    })
+  });
+  var rec = await res.json();
+  if (!rec.fields) {
+    if(typeof zeigToast==='function') zeigToast('Rechnung nicht gefunden', 'error');
+    return;
+  }
+  var f = rec.fields;
+
+  if(typeof zeigToast==='function') zeigToast('⏳ PDF wird generiert — dauert ca. 3 Minuten...');
+
+  // Webhook aufrufen
+  var payload = {
+    rechnung_id:       rechnungId,
+    rechnung_typ:      f.Rechnungstyp || 'Standard',
+    rechnungsnummer:   f.Rechnungsnummer || '',
+    aktenzeichen:      f.aktenzeichen || '',
+    leistungszeitraum: f.leistungszeitraum || '',
+    erstellungsdatum:  new Date().toLocaleDateString('de-DE'),
+    empfaenger_name:   f.empfaenger_name || '',
+    empfaenger_strasse:f.empfaenger_strasse || '',
+    empfaenger_plz:    f.empfaenger_plz || '',
+    empfaenger_ort:    f.empfaenger_ort || '',
+    netto_betrag_eur:  f.netto_betrag_eur || 0,
+    ust_satz:          f.ust_satz || 19,
+    brutto_betrag_eur: f.brutto_betrag_eur || 0,
+    zahlungsziel:      f.zahlungsziel_tage || 14,
+    positionen:        f.positionen || '[]',
+    sv_email:          svEmail,
+    sv_name:           (svVorname + ' ' + svNachname).trim(),
+    sv_firma:          svFirma,
+    sv_strasse:        svStrasse,
+    sv_plz:            svPlz,
+    sv_ort:            svOrt,
+    sv_telefon:        svTelefon,
+    sv_iban:           svIban,
+    sv_bic:            svBic,
+    sv_steuernr:       svSteuernr,
+  };
+
+  try {
+    var wh = await fetch(WEBHOOK_F1, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(payload)
+    });
+    var result = await wh.json();
+    if (result.success && result.pdf_url) {
+      if(typeof zeigToast==='function') zeigToast('✅ Rechnung-PDF erstellt und per Mail gesendet');
+      // Direkt als Download öffnen
+      window.open(result.pdf_url, '_blank');
+    } else {
+      if(typeof zeigToast==='function') zeigToast('PDF-Erstellung gestartet — Sie erhalten die Mail in ~3 Min.');
+    }
+  } catch(e) {
+    if(typeof zeigToast==='function') zeigToast('PDF-Auftrag übermittelt — Mail folgt in ~3 Minuten');
+  }
+};
