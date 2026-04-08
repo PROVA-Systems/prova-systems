@@ -1,50 +1,55 @@
-// ══════════════════════════════════════════════════
-// PROVA Systems — Identity Signup (Auto-Confirm + Airtable)
-// Netlify Function: identity-signup
+// ══════════════════════════════════════════════════════════════════
+// PROVA Systems — Identity Signup Handler
+// Netlify Identity Lifecycle Hook: läuft bei jeder Registrierung
 //
-// Wird automatisch von Netlify Identity aufgerufen.
-// 1. Bestätigt den User SOFORT (keine E-Mail nötig)
-// 2. Legt Eintrag in Airtable SACHVERSTAENDIGE an
+// FLOW:
+// 1. User registriert sich → Netlify sendet Bestätigungsmail
+// 2. Diese Function legt den Airtable-Record an (Status: "Trial")
+// 3. Nach E-Mail-Bestätigung kann der User sich einloggen
 //
-// WICHTIG: Die Response MUSS app_metadata enthalten
-// damit Netlify den User auto-confirmed.
-// ══════════════════════════════════════════════════
+// Netlify-Einstellung: Site Settings → Identity → "Registration"
+// → "Invite only" ODER "Open" + diese Function als Identity Hook
+// ══════════════════════════════════════════════════════════════════
 
 exports.handler = async function(event) {
   let payload;
   try {
     payload = JSON.parse(event.body);
   } catch(e) {
-    return {
-      statusCode: 200,
-      body: JSON.stringify({ app_metadata: { roles: ['user'] } })
-    };
+    return { statusCode: 200, body: JSON.stringify({ app_metadata: { roles: ['user'] } }) };
   }
 
-  const user = payload.user || {};
-  const email = user.email || '';
-  const meta = user.user_metadata || {};
-  const name = meta.full_name || '';
-  const vorname = meta.vorname || name.split(' ')[0] || '';
-  const nachname = meta.nachname || name.split(' ').slice(1).join(' ') || '';
+  const user      = payload.user || {};
+  const email     = user.email   || '';
+  const meta      = user.user_metadata || {};
+  const fullName  = meta.full_name || '';
+  const vorname   = meta.vorname  || fullName.split(' ')[0] || '';
+  const nachname  = meta.nachname || fullName.split(' ').slice(1).join(' ') || '';
 
-  console.log('PROVA Identity Signup:', email);
+  console.log('[PROVA Identity] Neue Registrierung:', email);
 
-  // Airtable-Eintrag anlegen (nicht-blockierend)
+  // ── Airtable-Record anlegen ─────────────────────────────────────
   try {
-    const pat = process.env.AIRTABLE_PAT;
+    const pat    = process.env.AIRTABLE_PAT || process.env.AIRTABLE_TOKEN;
     const baseId = 'appJ7bLlAHZoxENWE';
-    const tableId = 'tbladqEQT3tmx4DIB';
+    const tblSV  = 'tbladqEQT3tmx4DIB';
 
-    if (pat && email) {
+    if (!pat) {
+      console.warn('[PROVA Identity] AIRTABLE_PAT nicht gesetzt!');
+    } else if (email) {
+      // Prüfen ob Record schon existiert (Duplikat-Schutz)
       const checkRes = await fetch(
-        `https://api.airtable.com/v0/${baseId}/${tableId}?filterByFormula=${encodeURIComponent(`{Email}="${email}"`)}&maxRecords=1`,
+        `https://api.airtable.com/v0/${baseId}/${tblSV}?filterByFormula=${encodeURIComponent(`{Email}="${email}"`)}&maxRecords=1`,
         { headers: { 'Authorization': `Bearer ${pat}` } }
       );
       const checkData = await checkRes.json();
 
       if (!checkData.records || checkData.records.length === 0) {
-        await fetch(`https://api.airtable.com/v0/${baseId}/${tableId}`, {
+        // Trial-Ende: 14 Tage ab heute
+        const trialEnd = new Date();
+        trialEnd.setDate(trialEnd.getDate() + 14);
+
+        const createRes = await fetch(`https://api.airtable.com/v0/${baseId}/${tblSV}`, {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${pat}`,
@@ -52,30 +57,59 @@ exports.handler = async function(event) {
           },
           body: JSON.stringify({
             fields: {
-              Email: email,
-              sv_vorname: vorname,
-              sv_nachname: nachname,
-              Paket: 'Solo',
-              Status: 'Trial',
-              onboarding_done: false,
-              registriert_am: new Date().toISOString().split('T')[0]
+              // !! Korrekte Feldnamen aus Airtable-Schema !!
+              Email:            email,
+              Vorname:          vorname,
+              Nachname:         nachname,
+              Paket:            'Solo',
+              Status:           'Aktiv',
+              // Trial-Zeitraum
+              Trial_Start:      new Date().toISOString().split('T')[0],
+              trial_end:        trialEnd.toISOString(),
+              current_period_end: trialEnd.toISOString(),
+              subscription_status: 'trialing',
+              // Onboarding
+              onboarding_done:  false,
+              testpiloten:      false,
+              // Aktivitäts-Tracking
+              Onboarding_Datum: new Date().toISOString().split('T')[0],
+              Letzter_Login:    new Date().toISOString()
             }
           })
         });
-        console.log('Neuer SV in Airtable angelegt:', email);
+
+        const createData = await createRes.json();
+        if (createData.id) {
+          console.log('[PROVA Identity] Neuer SV angelegt:', email, '→', createData.id);
+        } else {
+          console.error('[PROVA Identity] Airtable-Fehler:', JSON.stringify(createData));
+        }
+      } else {
+        console.log('[PROVA Identity] SV bereits vorhanden:', email);
+        // Letzter Login aktualisieren
+        const recId = checkData.records[0].id;
+        await fetch(`https://api.airtable.com/v0/${baseId}/${tblSV}/${recId}`, {
+          method: 'PATCH',
+          headers: { 'Authorization': `Bearer ${pat}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ fields: { Letzter_Login: new Date().toISOString() } })
+        });
       }
     }
   } catch(e) {
-    console.error('Airtable Fehler (nicht kritisch):', e.message);
+    // Nie blockieren — Netlify-Antwort muss immer kommen
+    console.error('[PROVA Identity] Fehler (nicht kritisch):', e.message);
   }
 
-  // DIESE RESPONSE BESTÄTIGT DEN USER AUTOMATISCH
+  // ── Netlify Identity Response ───────────────────────────────────
+  // app_metadata wird dem User-Token hinzugefügt
+  // Ohne diese Response schlägt die Registrierung fehl!
   return {
     statusCode: 200,
     body: JSON.stringify({
       app_metadata: {
-        roles: ['user'],
-        provider: 'prova'
+        roles:    ['user'],
+        provider: 'prova',
+        paket:    'Solo'
       }
     })
   };

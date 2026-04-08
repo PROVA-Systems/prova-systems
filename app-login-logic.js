@@ -1,48 +1,3 @@
-
-/* ── USER-WECHSEL SCHUTZ: bei anderem User alle Caches löschen ── */
-window.provaWechselUserCaches = function(neueEmail) {
-  var alteEmail = localStorage.getItem('prova_sv_email') || '';
-  if (!alteEmail || alteEmail === neueEmail) return; // gleicher User — nichts tun
-  
-  console.warn('[PROVA Security] User-Wechsel erkannt: ' + alteEmail + ' → ' + neueEmail);
-  
-  // Alle user-spezifischen Caches und Daten löschen
-  var zuLoeschen = [
-    'prova_faelle_cache', 'prova_archiv_cache_v2', 'prova_termine_cache',
-    'prova_aufmass_cache', 'prova_normen_cache', 'prova_fall_normen_',
-    'prova_akten', 'prova_audit_log', 'prova_at_sv_record_id',
-    'prova_letztes_az', 'prova_aktiver_fall', 'prova_current_az',
-    'prova_letzter_auftraggeber', 'prova_letzter_auftraggeber_email',
-    'prova_schadenart', 'prova_adresse', 'prova_diktat_ortstermin',
-    'prova_stellungnahme_text', 'prova_offenlegungstext',
-    'prova_407a_ts', 'prova_5pruef_ts', 'prova_erster_fall_erstellt',
-    'prova_onboarding_done', 'prova_paket', 'prova_status',
-    'prova_sv_vorname', 'prova_sv_nachname', 'prova_sv_firma',
-    'prova_sv_email', 'prova_sv_ort', 'prova_sv_strasse',
-    'prova_sv_plz', 'prova_sv_telefon', 'prova_sv_steuer_nr',
-    'prova_session_v2', 'prova_last_activity',
-    'prova_stripe_pending', 'prova_stripe_erfolg'
-  ];
-  
-  // Alle Keys aus localStorage durchsuchen und prova_* Keys löschen
-  // (außer theme-Einstellungen die gerätespezifisch sind)
-  var keepKeys = ['prova_theme', 'prova_font_size', 'prova_accent_color'];
-  var allKeys = [];
-  for (var i = 0; i < localStorage.length; i++) {
-    allKeys.push(localStorage.key(i));
-  }
-  allKeys.forEach(function(k) {
-    if (k && k.startsWith('prova_') && keepKeys.indexOf(k) === -1) {
-      localStorage.removeItem(k);
-    }
-  });
-  
-  // SessionStorage ebenfalls löschen
-  sessionStorage.clear();
-  
-  console.log('[PROVA Security] Caches gelöscht für User-Wechsel');
-};
-
 /* ════════════════════════════════════════════════════════════
    PROVA app-login-logic.js
    Login — Auth, Netlify Identity, Redirect
@@ -277,10 +232,6 @@ window.login = async function() {
         // User existiert aber ist nicht bestätigt → direkt einloggen via Airtable
         console.log('PROVA: E-Mail nicht bestätigt, Fallback-Login via Airtable');
         localStorage.setItem('prova_user', JSON.stringify({email: email, name: email, token: 'fallback-login'}));
-        // User-Wechsel-Schutz: alten Cache löschen falls anderer User
-        if (typeof window.provaWechselUserCaches === 'function') {
-          window.provaWechselUserCaches(userData.email || '');
-        }
         localStorage.setItem('prova_sv_email', email);
         localStorage.setItem('prova_paket', 'Solo');
         localStorage.setItem('prova_status', 'Trial');
