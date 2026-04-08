@@ -1,0 +1,1122 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<script src="prova-preise.js"></script>
+<script src="paket-guard.js"></script>
+<script src="auth-guard.js"></script>
+<script src="theme.js"></script>
+<script src="trial-guard.js"></script>
+<script src="nav.js" defer></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Benachrichtigungen — PROVA Systems</title>
+  <link rel="stylesheet" href="prova-design.css" />
+  <link rel="stylesheet" href="mobile.css" />
+  <style>
+    /* ── Benachrichtigungen v2 ── */
+    .bn-page { max-width: 780px; margin: 0 auto; padding: 24px 16px 100px; }
+
+    /* Header */
+    .bn-page-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .bn-page-title {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text-primary, #111827);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .bn-unread-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 22px;
+      height: 22px;
+      padding: 0 6px;
+      background: #ef4444;
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      border-radius: 11px;
+    }
+    .bn-header-actions { display: flex; gap: 8px; }
+    .bn-btn {
+      padding: 8px 14px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      border: 1px solid var(--border, #e5e7eb);
+      background: var(--bg-card, #fff);
+      color: var(--text-secondary, #374151);
+      transition: all 0.15s;
+      font-family: inherit;
+    }
+    .bn-btn:hover { background: var(--bg-muted, #f3f4f6); }
+    .bn-btn.primary {
+      background: #1a56db; color: #fff; border-color: var(--accent,#4f8ef7);
+    }
+    .bn-btn.primary:hover { background: #1d4ed8; }
+
+    /* Push-Einstellungen Card */
+    .bn-push-card {
+      background: linear-gradient(135deg, #1a56db 0%, #3b82f6 100%);
+      border-radius: 16px;
+      padding: 20px 24px;
+      color: #fff;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .bn-push-icon { font-size: 36px; flex-shrink: 0; }
+    .bn-push-info { flex: 1; min-width: 200px; }
+    .bn-push-title { font-size: 16px; font-weight: 700; margin-bottom: 3px; }
+    .bn-push-sub { font-size: 12.5px; opacity: 0.85; }
+    .bn-push-toggle {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+    .bn-toggle-label { font-size: 13px; font-weight: 500; opacity: 0.9; }
+    /* Toggle Switch */
+    .bn-toggle {
+      position: relative; width: 46px; height: 26px;
+      cursor: pointer; flex-shrink: 0;
+    }
+    .bn-toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
+    .bn-toggle-slider {
+      position: absolute; inset: 0;
+      background: rgba(255,255,255,0.3);
+      border-radius: 13px;
+      transition: background 0.2s;
+    }
+    .bn-toggle-slider::before {
+      content: '';
+      position: absolute;
+      width: 20px; height: 20px;
+      left: 3px; top: 3px;
+      background: var(--surface,#1c2537);
+      border-radius: 50%;
+      transition: transform 0.2s;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+    }
+    .bn-toggle input:checked + .bn-toggle-slider { background: rgba(255,255,255,0.5); }
+    .bn-toggle input:checked + .bn-toggle-slider::before { transform: translateX(20px); }
+
+    /* Filter-Leiste */
+    .bn-filters {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 16px;
+      overflow-x: auto;
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+      padding-bottom: 2px;
+    }
+    .bn-filters::-webkit-scrollbar { display: none; }
+    .bn-filter-btn {
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 12.5px;
+      font-weight: 500;
+      cursor: pointer;
+      border: 1px solid var(--border, #e5e7eb);
+      background: var(--bg-card, #fff);
+      color: var(--text-muted, #6b7280);
+      white-space: nowrap;
+      transition: all 0.15s;
+      font-family: inherit;
+    }
+    .bn-filter-btn:hover { border-color: var(--accent,#4f8ef7); color: var(--accent,#4f8ef7); }
+    .bn-filter-btn.aktiv {
+      background: #1a56db; color: #fff; border-color: var(--accent,#4f8ef7);
+    }
+
+    /* Benachrichtigungs-Container */
+    .bn-container {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    /* Tages-Gruppe */
+    .bn-tag-gruppe { margin-bottom: 20px; }
+    .bn-tag-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted, #9ca3af);
+      padding: 0 4px;
+      margin-bottom: 8px;
+    }
+    .bn-tag-items {
+      background: var(--bg-card, #fff);
+      border: 1px solid var(--border, #e5e7eb);
+      border-radius: 14px;
+      overflow: hidden;
+    }
+
+    /* Einzelne Benachrichtigung */
+    .bn-item {
+      display: flex;
+      gap: 12px;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border-light, #f3f4f6);
+      cursor: pointer;
+      transition: background 0.1s;
+      position: relative;
+    }
+    .bn-item:last-child { border-bottom: none; }
+    .bn-item:hover { background: var(--bg-hover, #f9fafb); }
+    .bn-item.ungelesen { background: rgba(79,142,247,.12); }
+    .bn-item.ungelesen:hover { background: #dbeafe; }
+    .bn-item.ungelesen::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 3px;
+      background: #1a56db;
+      border-radius: 0 2px 2px 0;
+    }
+
+    .bn-item-icon-wrap {
+      width: 40px; height: 40px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+    .bn-item-icon-wrap.frist    { background: #fef2f2; }
+    .bn-item-icon-wrap.zahlung  { background: var(--surface,#1c2537)beb; }
+    .bn-item-icon-wrap.system   { background: #f0f9ff; }
+    .bn-item-icon-wrap.gutachten{ background: #f0fdf4; }
+    .bn-item-icon-wrap.ki       { background: #faf5ff; }
+    .bn-item-icon-wrap.team     { background: #f0fdf4; }
+
+    .bn-item-content { flex: 1; min-width: 0; }
+    .bn-item-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 2px;
+    }
+    .bn-item-titel {
+      font-size: 13.5px;
+      font-weight: 600;
+      color: var(--text-primary, #111827);
+      line-height: 1.3;
+    }
+    .bn-item.ungelesen .bn-item-titel { font-weight: 700; }
+    .bn-item-zeit {
+      font-size: 11px;
+      color: var(--text-muted, #9ca3af);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .bn-item-text {
+      font-size: 12.5px;
+      color: var(--text-secondary, #4b5563);
+      line-height: 1.4;
+      margin-bottom: 6px;
+    }
+    .bn-item-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+    .bn-item-action {
+      font-size: 11.5px;
+      padding: 4px 10px;
+      border-radius: 7px;
+      cursor: pointer;
+      border: 1px solid var(--border, #e5e7eb);
+      background: var(--bg-card, #fff);
+      color: var(--text-secondary, #374151);
+      font-weight: 500;
+      transition: all 0.1s;
+      font-family: inherit;
+    }
+    .bn-item-action:hover { background: var(--bg-muted, #f3f4f6); }
+    .bn-item-action.primary {
+      background: #1a56db; color: #fff; border-color: var(--accent,#4f8ef7);
+    }
+    .bn-item-action.primary:hover { background: #1d4ed8; }
+    .bn-item-action.danger {
+      color: #ef4444; border-color: #fecaca;
+    }
+
+    .bn-item-options {
+      position: absolute;
+      right: 12px;
+      top: 10px;
+      width: 28px; height: 28px;
+      border-radius: 6px;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg-muted, #f3f4f6);
+      border: none;
+      font-size: 14px;
+      color: var(--text-muted, #9ca3af);
+      cursor: pointer;
+    }
+    .bn-item:hover .bn-item-options { display: flex; }
+
+    /* Einstellungen-Panel */
+    .bn-settings-card {
+      background: var(--bg-card, #fff);
+      border: 1px solid var(--border, #e5e7eb);
+      border-radius: 14px;
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+    .bn-settings-header {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border, #e5e7eb);
+      font-weight: 600;
+      font-size: 13.5px;
+      color: var(--text-primary, #111827);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .bn-settings-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border-light, #f3f4f6);
+    }
+    .bn-settings-item:last-child { border-bottom: none; }
+    .bn-settings-info { flex: 1; }
+    .bn-settings-label {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-primary, #111827);
+      margin-bottom: 1px;
+    }
+    .bn-settings-sub { font-size: 11.5px; color: var(--text-muted, #9ca3af); }
+    /* App-Toggle (dunkler Hintergrund) */
+    .bn-app-toggle {
+      position: relative; width: 42px; height: 24px; cursor: pointer;
+    }
+    .bn-app-toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
+    .bn-app-toggle-slider {
+      position: absolute; inset: 0;
+      background: #d1d5db;
+      border-radius: 12px;
+      transition: background 0.2s;
+    }
+    .bn-app-toggle-slider::before {
+      content: '';
+      position: absolute;
+      width: 18px; height: 18px;
+      left: 3px; top: 3px;
+      background: var(--surface,#1c2537);
+      border-radius: 50%;
+      transition: transform 0.2s;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+    .bn-app-toggle input:checked + .bn-app-toggle-slider { background: #1a56db; }
+    .bn-app-toggle input:checked + .bn-app-toggle-slider::before { transform: translateX(18px); }
+
+    /* Leer-Zustand */
+    .bn-leer {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text-muted, #6b7280);
+    }
+    .bn-leer-icon { font-size: 56px; margin-bottom: 12px; }
+    .bn-leer-titel { font-size: 17px; font-weight: 600; color: var(--text-primary, #111827); margin-bottom: 6px; }
+    .bn-leer-text { font-size: 13px; line-height: 1.5; max-width: 320px; margin: 0 auto; }
+
+    /* Responsive */
+    @media (max-width: 600px) {
+      .bn-push-card { flex-direction: column; text-align: center; }
+      .bn-push-toggle { justify-content: center; }
+      .bn-item-options { display: flex; }
+    }
+  </style>
+</head>
+<body data-page="benachrichtigungen">
+  <div class="app-shell" id="app-shell">
+    <nav class="sidebar" id="sidebar"></nav>
+    <div class="main-wrap" id="main-wrap">
+      <div class="topbar" id="topbar"></div>
+      <div class="page-content">
+      <main class="bn-page" id="bn-page">
+
+    <!-- Seitenheader -->
+    <div class="bn-page-header">
+      <div class="bn-page-title">
+        🔔 Benachrichtigungen
+        <span class="bn-unread-badge" id="bn-unread-badge" style="display:none">0</span>
+      </div>
+      <div class="bn-header-actions">
+        <button class="bn-btn" id="bn-alle-gelesen-btn" onclick="alleAlsGelesenMarkieren()">
+          ✓ Alle gelesen
+        </button>
+        <button class="bn-btn" onclick="toggleEinstellungen()">
+          ⚙️ Einstellungen
+        </button>
+      </div>
+    </div>
+
+    <!-- Push-Notifications Card -->
+    <div class="bn-push-card" id="bn-push-card">
+      <div class="bn-push-icon">🔔</div>
+      <div class="bn-push-info">
+        <div class="bn-push-title">Push-Benachrichtigungen</div>
+        <div class="bn-push-sub" id="bn-push-status-text">
+          Aktiviere Push, um Fristen-Alarme auch bei geschlossenem Browser zu erhalten.
+        </div>
+      </div>
+      <div class="bn-push-toggle">
+        <span class="bn-toggle-label" id="bn-push-toggle-label">Deaktiviert</span>
+        <label class="bn-toggle">
+          <input type="checkbox" id="bn-push-toggle" onchange="togglePush(this.checked)" />
+          <span class="bn-toggle-slider"></span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Einstellungen Panel (versteckt) -->
+    <div class="bn-settings-card" id="bn-settings-panel" style="display:none">
+      <div class="bn-settings-header">⚙️ Benachrichtigungs-Einstellungen</div>
+
+      <div class="bn-settings-item">
+        <div class="bn-settings-info">
+          <div class="bn-settings-label">⏰ Fristen-Alarm</div>
+          <div class="bn-settings-sub">Push bei Fristen in 7, 3 und 1 Tag(en)</div>
+        </div>
+        <label class="bn-app-toggle">
+          <input type="checkbox" checked id="bn-set-fristen" onchange="saveEinstellung('fristen', this.checked)" />
+          <span class="bn-app-toggle-slider"></span>
+        </label>
+      </div>
+
+      <div class="bn-settings-item">
+        <div class="bn-settings-info">
+          <div class="bn-settings-label">💶 Zahlungs-Erinnerungen</div>
+          <div class="bn-settings-sub">Bei überfälligen Rechnungen</div>
+        </div>
+        <label class="bn-app-toggle">
+          <input type="checkbox" checked id="bn-set-zahlung" onchange="saveEinstellung('zahlung', this.checked)" />
+          <span class="bn-app-toggle-slider"></span>
+        </label>
+      </div>
+
+      <div class="bn-settings-item">
+        <div class="bn-settings-info">
+          <div class="bn-settings-label">📋 Gutachten-Updates</div>
+          <div class="bn-settings-sub">Statusänderungen, Freigaben, neue Kommentare</div>
+        </div>
+        <label class="bn-app-toggle">
+          <input type="checkbox" checked id="bn-set-gutachten" onchange="saveEinstellung('gutachten', this.checked)" />
+          <span class="bn-app-toggle-slider"></span>
+        </label>
+      </div>
+
+      <div class="bn-settings-item">
+        <div class="bn-settings-info">
+          <div class="bn-settings-label">🤖 KI-Hinweise</div>
+          <div class="bn-settings-sub">Qualitäts-Score Warnungen, Verbesserungs-Vorschläge</div>
+        </div>
+        <label class="bn-app-toggle">
+          <input type="checkbox" id="bn-set-ki" onchange="saveEinstellung('ki', this.checked)" />
+          <span class="bn-app-toggle-slider"></span>
+        </label>
+      </div>
+
+      <div class="bn-settings-item">
+        <div class="bn-settings-info">
+          <div class="bn-settings-label">👥 Team-Aktivitäten</div>
+          <div class="bn-settings-sub">Neue Mitglieder, zugewiesene Fälle (Team-Paket)</div>
+        </div>
+        <label class="bn-app-toggle">
+          <input type="checkbox" checked id="bn-set-team" onchange="saveEinstellung('team', this.checked)" />
+          <span class="bn-app-toggle-slider"></span>
+        </label>
+      </div>
+
+      <div class="bn-settings-item">
+        <div class="bn-settings-info">
+          <div class="bn-settings-label">🔇 Stille Stunden</div>
+          <div class="bn-settings-sub">Keine Push zwischen 22:00 und 07:00 Uhr</div>
+        </div>
+        <label class="bn-app-toggle">
+          <input type="checkbox" checked id="bn-set-stillezeit" onchange="saveEinstellung('stillezeit', this.checked)" />
+          <span class="bn-app-toggle-slider"></span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Filter-Leiste -->
+    <div class="bn-filters" id="bn-filters">
+      <button class="bn-filter-btn aktiv" data-filter="alle" onclick="setFilter('alle', this)">Alle</button>
+      <button class="bn-filter-btn" data-filter="ungelesen" onclick="setFilter('ungelesen', this)">Ungelesen</button>
+      <button class="bn-filter-btn" data-filter="frist" onclick="setFilter('frist', this)">⏰ Fristen</button>
+      <button class="bn-filter-btn" data-filter="zahlung" onclick="setFilter('zahlung', this)">💶 Zahlungen</button>
+      <button class="bn-filter-btn" data-filter="gutachten" onclick="setFilter('gutachten', this)">📋 Gutachten</button>
+      <button class="bn-filter-btn" data-filter="ki" onclick="setFilter('ki', this)">🤖 KI</button>
+      <button class="bn-filter-btn" data-filter="system" onclick="setFilter('system', this)">⚙️ System</button>
+    </div>
+
+    <!-- Benachrichtigungs-Liste -->
+    <div class="bn-container" id="bn-container">
+      <!-- wird via JS gefüllt -->
+      <div class="bn-leer" id="bn-leer" style="display:none">
+        <div class="bn-leer-icon">📭</div>
+        <div class="bn-leer-titel">Keine Benachrichtigungen</div>
+        <div class="bn-leer-text">Du bist auf dem neuesten Stand. Neue Benachrichtigungen erscheinen hier.</div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Nav -->
+
+  <script>
+    'use strict';
+
+    // ── Konfiguration ──────────────────────────────────────────────
+    const BN_STORAGE_KEY   = 'prova_benachrichtigungen';
+    const BN_SETTINGS_KEY  = 'prova_bn_settings';
+    const BN_PUSH_KEY      = 'prova_push_subscribed';
+
+    let alleNachrichten = [];
+    let aktiverFilter   = 'alle';
+
+    // ── Demo / Echtdaten laden ──────────────────────────────────────
+    async function ladeNachrichten() {
+      // 1. Aus localStorage laden (gecacht + manuell hinzugefügt)
+      try {
+        const cached = JSON.parse(localStorage.getItem(BN_STORAGE_KEY) || '[]');
+        alleNachrichten = cached;
+      } catch (e) { alleNachrichten = []; }
+
+      // 2. Fristen aus FristGuard laden (falls verfügbar)
+      if (typeof FristGuard !== 'undefined') {
+        try {
+          await FristGuard.ladeFristen();
+          const fristen = FristGuard.getFristenNaechste(FristGuard.fristen, 7);
+          fristen.forEach(f => {
+            if (!alleNachrichten.find(n => n.ref === f.id)) {
+              alleNachrichten.unshift({
+                id:        'fn_' + f.id,
+                ref:       f.id,
+                typ:       'frist',
+                icon:      '⏰',
+                titel:     f.titel,
+                text:      `Frist in ${f.tageDiff === 0 ? 'heute' : f.tageDiff + ' Tagen'} — ${f.datumText}`,
+                zeit:      new Date().toISOString(),
+                gelesen:   false,
+                aktionen:  [
+                  { label: 'Fristen öffnen', url: 'termine.html', primary: true },
+                  { label: f.fallId ? 'Fall öffnen' : null, url: f.fallId ? `akte.html?id=${f.fallId}` : null }
+                ].filter(a => a.label)
+              });
+            }
+          });
+        } catch(e) {}
+      }
+
+      // 3. Honorar-Überfällige laden (falls verfügbar)
+      if (typeof HonorarTracker !== 'undefined') {
+        try {
+          const r = await HonorarTracker.ladeRechnungen();
+          const ueberfaellig = r.filter(x => ['UEBERFAELLIG','MAHNUNG_1','MAHNUNG_2','MAHNUNG_3'].includes(x.statusKey));
+          ueberfaellig.slice(0, 3).forEach(rech => {
+            if (!alleNachrichten.find(n => n.ref === rech.id)) {
+              alleNachrichten.unshift({
+                id:      'rn_' + rech.id,
+                ref:     rech.id,
+                typ:     'zahlung',
+                icon:    '💶',
+                titel:   `Rechnung überfällig: ${rech.empfaenger}`,
+                text:    `${rech.betragBrutto.toLocaleString('de-DE', {style:'currency',currency:'EUR'})} seit ${rech.tageOffen} Tagen offen`,
+                zeit:    new Date().toISOString(),
+                gelesen: false,
+                aktionen: [
+                  { label: 'Rechnung öffnen', url: `rechnungen.html?id=${rech.id}`, primary: true }
+                ]
+              });
+            }
+          });
+        } catch(e) {}
+      }
+
+      // Fallback: Demo-Nachrichten wenn leer
+      if (alleNachrichten.length === 0) ladeDemoNachrichten();
+
+      speichereNachrichten();
+      rendern();
+    }
+
+    function ladeDemoNachrichten() {
+      const jetzt = new Date();
+      const vor = (h) => new Date(jetzt - h * 3600000).toISOString();
+
+      alleNachrichten = [
+        {
+          id: 'demo_1', typ: 'frist', icon: '⏰', gelesen: false,
+          titel: 'Gutachten-Abgabe in 2 Tagen',
+          text: 'Fall "Wasserschaden Müller" — Abgabefrist: ' + new Date(jetzt.getTime() + 2*86400000).toLocaleDateString('de-DE'),
+          zeit: vor(0.5),
+          aktionen: [{ label: 'Fall öffnen', url: '#', primary: true }]
+        },
+        {
+          id: 'demo_2', typ: 'zahlung', icon: '💶', gelesen: false,
+          titel: 'Rechnung überfällig: Allianz Versicherung',
+          text: '1.840,00 € — seit 12 Tagen offen. Mahnung empfohlen.',
+          zeit: vor(2),
+          aktionen: [
+            { label: 'Mahnung senden', url: '#', primary: true },
+            { label: 'Rechnung ansehen', url: 'rechnungen.html' }
+          ]
+        },
+        {
+          id: 'demo_3', typ: 'ki', icon: '🤖', gelesen: false,
+          titel: 'Qualitäts-Score gesunken: 68/100',
+          text: 'Gutachten "Brandschaden Keller" — Begründungstiefe unter Schwellenwert. KI empfiehlt Ergänzung der rechtlichen Herleitung.',
+          zeit: vor(5),
+          aktionen: [
+            { label: 'Gutachten öffnen', url: '#', primary: true },
+            { label: 'KI-Hinweise ansehen', url: '#' }
+          ]
+        },
+        {
+          id: 'demo_4', typ: 'gutachten', icon: '📋', gelesen: true,
+          titel: 'Gutachten freigegeben',
+          text: 'Auftraggeber Rechtsanwalt Dr. Berger hat das Gutachten "Baumangel Neubau" bestätigt.',
+          zeit: vor(26),
+          aktionen: [
+            { label: 'Freigabe ansehen', url: 'freigabe.html', primary: true }
+          ]
+        },
+        {
+          id: 'demo_5', typ: 'system', icon: '⚙️', gelesen: true,
+          titel: 'PROVA Update verfügbar',
+          text: 'Version 5.4 verfügbar: Verbesserter Qualitäts-Score, schnelleres Laden, Fristen-Widget auf Dashboard.',
+          zeit: vor(48),
+          aktionen: [
+            { label: 'Jetzt aktualisieren', url: '#', primary: true }
+          ]
+        },
+        {
+          id: 'demo_6', typ: 'frist', icon: '⏰', gelesen: true,
+          titel: 'Ortstermin morgen',
+          text: 'Fall "Schimmel Dachwohnung Schwabing" — 09:00 Uhr, Musterstr. 12, 80333 München.',
+          zeit: vor(72),
+          aktionen: [
+            { label: 'Navigation', url: '#' },
+            { label: 'Arbeitsblatt', url: 'ortstermin-arbeitsblatt.html', primary: true }
+          ]
+        }
+      ];
+    }
+
+    // ── Rendern ─────────────────────────────────────────────────────
+    function rendern() {
+      const container = document.getElementById('bn-container');
+      const leer      = document.getElementById('bn-leer');
+      if (!container) return;
+
+      // Filter anwenden
+      let gefiltert = alleNachrichten.filter(n => {
+        if (aktiverFilter === 'alle')     return true;
+        if (aktiverFilter === 'ungelesen') return !n.gelesen;
+        return n.typ === aktiverFilter;
+      });
+
+      // Badge aktualisieren
+      const ungelesen = alleNachrichten.filter(n => !n.gelesen).length;
+      const badge = document.getElementById('bn-unread-badge');
+      if (badge) {
+        badge.style.display = ungelesen > 0 ? 'inline-flex' : 'none';
+        badge.textContent   = ungelesen > 9 ? '9+' : ungelesen;
+      }
+
+      if (gefiltert.length === 0) {
+        container.innerHTML = '';
+        if (leer) leer.style.display = 'block';
+        return;
+      }
+      if (leer) leer.style.display = 'none';
+
+      // Nach Datum gruppieren
+      const gruppen = gruppiereNachDatum(gefiltert);
+      container.innerHTML = gruppen.map(gruppe => `
+        <div class="bn-tag-gruppe">
+          <div class="bn-tag-label">${gruppe.label}</div>
+          <div class="bn-tag-items">
+            ${gruppe.items.map(n => renderItem(n)).join('')}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function gruppiereNachDatum(nachrichten) {
+      const heute     = new Date(); heute.setHours(0,0,0,0);
+      const gestern   = new Date(heute - 86400000);
+      const dieseWoche = new Date(heute - 7 * 86400000);
+
+      const gruppen = [
+        { label: 'Heute',      items: [], filter: d => d >= heute },
+        { label: 'Gestern',    items: [], filter: d => d >= gestern && d < heute },
+        { label: 'Diese Woche', items: [], filter: d => d >= dieseWoche && d < gestern },
+        { label: 'Älter',      items: [], filter: d => d < dieseWoche }
+      ];
+
+      nachrichten.forEach(n => {
+        const d = new Date(n.zeit); d.setHours(0,0,0,0);
+        for (const g of gruppen) {
+          if (g.filter(d)) { g.items.push(n); break; }
+        }
+      });
+
+      return gruppen.filter(g => g.items.length > 0);
+    }
+
+    function renderItem(n) {
+      const zeitText = zeitFormat(n.zeit);
+      return `
+        <div class="bn-item ${n.gelesen ? '' : 'ungelesen'}"
+             onclick="markiereGelesen('${n.id}'); ${n.aktionen?.[0]?.url ? `window.location='${n.aktionen[0].url}'` : ''}"
+             id="bn-item-${n.id}">
+          <div class="bn-item-icon-wrap ${n.typ}">${n.icon}</div>
+          <div class="bn-item-content">
+            <div class="bn-item-header">
+              <div class="bn-item-titel">${n.titel}</div>
+              <div class="bn-item-zeit">${zeitText}</div>
+            </div>
+            <div class="bn-item-text">${n.text}</div>
+            ${n.aktionen?.length ? `
+              <div class="bn-item-actions" onclick="event.stopPropagation()">
+                ${n.aktionen.map(a => `
+                  <button class="bn-item-action ${a.primary ? 'primary' : ''}"
+                    onclick="markiereGelesen('${n.id}'); ${a.url ? `window.location='${a.url}'` : ''}">
+                    ${a.label}
+                  </button>
+                `).join('')}
+                <button class="bn-item-action danger"
+                  onclick="event.stopPropagation(); loescheNachricht('${n.id}')">
+                  ✕
+                </button>
+              </div>
+            ` : ''}
+          </div>
+          <button class="bn-item-options"
+            onclick="event.stopPropagation(); itemOptions('${n.id}')">⋮</button>
+        </div>
+      `;
+    }
+
+    function zeitFormat(iso) {
+      const d   = new Date(iso);
+      const now = new Date();
+      const diff = Math.floor((now - d) / 60000);
+      if (diff < 1)   return 'Gerade eben';
+      if (diff < 60)  return `vor ${diff} Min.`;
+      if (diff < 1440) return `vor ${Math.floor(diff/60)} Std.`;
+      if (diff < 2880) return 'Gestern';
+      return d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' });
+    }
+
+    // ── Aktionen ────────────────────────────────────────────────────
+    function markiereGelesen(id) {
+      const n = alleNachrichten.find(x => x.id === id);
+      if (n) { n.gelesen = true; speichereNachrichten(); }
+      const el = document.getElementById(`bn-item-${id}`);
+      if (el) el.classList.remove('ungelesen');
+      const badge = document.getElementById('bn-unread-badge');
+      if (badge) {
+        const ungelesen = alleNachrichten.filter(n => !n.gelesen).length;
+        badge.style.display = ungelesen > 0 ? 'inline-flex' : 'none';
+        badge.textContent = ungelesen > 9 ? '9+' : ungelesen;
+      }
+    }
+
+    function alleAlsGelesenMarkieren() {
+      alleNachrichten.forEach(n => n.gelesen = true);
+      speichereNachrichten();
+      rendern();
+    }
+
+    function loescheNachricht(id) {
+      alleNachrichten = alleNachrichten.filter(n => n.id !== id);
+      speichereNachrichten();
+      const el = document.getElementById(`bn-item-${id}`);
+      if (el) {
+        el.style.opacity = '0';
+        el.style.transform = 'translateX(40px)';
+        el.style.transition = 'all 0.2s';
+        setTimeout(() => rendern(), 200);
+      }
+    }
+
+    function itemOptions(id) {
+      const n = alleNachrichten.find(x => x.id === id);
+      if (!n) return;
+      const action = confirm(`"${n.titel}"\n\nOK = Löschen | Abbrechen = Schließen`);
+      if (action) loescheNachricht(id);
+    }
+
+    function setFilter(filter, btn) {
+      aktiverFilter = filter;
+      document.querySelectorAll('.bn-filter-btn').forEach(b => b.classList.remove('aktiv'));
+      btn.classList.add('aktiv');
+      rendern();
+    }
+
+    function toggleEinstellungen() {
+      const panel = document.getElementById('bn-settings-panel');
+      if (!panel) return;
+      panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+      ladeEinstellungen();
+    }
+
+    // ── Push-Notifications ──────────────────────────────────────────
+    async function togglePush(aktivieren) {
+      const label = document.getElementById('bn-push-toggle-label');
+      const statusText = document.getElementById('bn-push-status-text');
+
+      if (aktivieren) {
+        if (!('Notification' in window) || !('serviceWorker' in navigator)) {
+          alert('Push-Benachrichtigungen werden in diesem Browser nicht unterstützt.');
+          document.getElementById('bn-push-toggle').checked = false;
+          return;
+        }
+
+        const permission = await Notification.requestPermission();
+        if (permission !== 'granted') {
+          if (label) label.textContent = 'Nicht erlaubt';
+          if (statusText) statusText.textContent = 'Bitte erlaube Benachrichtigungen in deinen Browser-Einstellungen.';
+          document.getElementById('bn-push-toggle').checked = false;
+          return;
+        }
+
+        try {
+          // VAPID Public Key vom Server holen
+          const vapidResp = await fetch('/.netlify/functions/push-notify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'vapid-key' })
+          });
+          const { publicKey } = await vapidResp.json();
+
+          const reg = await navigator.serviceWorker.ready;
+          const sub = await reg.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: urlBase64ToUint8Array(publicKey)
+          });
+
+          // Subscription auf Server speichern
+          const svEmail = localStorage.getItem('prova_sv_email') || '';
+          await fetch('/.netlify/functions/push-notify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              action: 'subscribe',
+              subscription: sub,
+              svEmail,
+              praeferenzen: ladeEinstellungenObjekt()
+            })
+          });
+
+          localStorage.setItem(BN_PUSH_KEY, 'true');
+          if (label) label.textContent = 'Aktiv';
+          if (statusText) statusText.textContent = '✅ Push-Benachrichtigungen sind aktiv. Fristen-Alarme werden gesendet.';
+          zeigePushTestBtn();
+
+        } catch (err) {
+          console.error('[Push]', err);
+          alert('Push konnte nicht aktiviert werden: ' + err.message);
+          document.getElementById('bn-push-toggle').checked = false;
+        }
+
+      } else {
+        // Deaktivieren
+        try {
+          const reg = await navigator.serviceWorker.ready;
+          const sub = await reg.pushManager.getSubscription();
+          if (sub) {
+            await fetch('/.netlify/functions/push-notify', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                action: 'unsubscribe',
+                endpoint: sub.endpoint,
+                svEmail: localStorage.getItem('prova_sv_email') || ''
+              })
+            });
+            await sub.unsubscribe();
+          }
+        } catch (e) {}
+        localStorage.removeItem(BN_PUSH_KEY);
+        if (label) label.textContent = 'Deaktiviert';
+        if (statusText) statusText.textContent = 'Push-Benachrichtigungen sind deaktiviert.';
+      }
+    }
+
+    function zeigePushTestBtn() {
+      const pushCard = document.getElementById('bn-push-card');
+      if (!pushCard || pushCard.querySelector('.bn-push-test')) return;
+      const btn = document.createElement('button');
+      btn.className = 'bn-btn';
+      btn.style.cssText = 'background:rgba(255,255,255,0.2);color:#fff;border-color:rgba(255,255,255,0.3);font-size:12px;padding:6px 12px';
+      btn.textContent = '🔔 Test senden';
+      btn.classList.add('bn-push-test');
+      btn.onclick = sendePushTest;
+      pushCard.appendChild(btn);
+    }
+
+    async function sendePushTest() {
+      try {
+        await fetch('/.netlify/functions/push-notify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'send',
+            svEmail: localStorage.getItem('prova_sv_email') || '',
+            titel: '🔔 Test-Benachrichtigung',
+            text: 'Push-Benachrichtigungen funktionieren korrekt.',
+            url: '/benachrichtigungen.html'
+          })
+        });
+      } catch(e) {}
+    }
+
+    function urlBase64ToUint8Array(base64String) {
+      const padding = '='.repeat((4 - base64String.length % 4) % 4);
+      const base64  = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+      const raw     = window.atob(base64);
+      return new Uint8Array([...raw].map(c => c.charCodeAt(0)));
+    }
+
+    // ── Einstellungen ───────────────────────────────────────────────
+    function ladeEinstellungen() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(BN_SETTINGS_KEY) || '{}');
+        Object.keys(saved).forEach(k => {
+          const el = document.getElementById(`bn-set-${k}`);
+          if (el) el.checked = saved[k];
+        });
+      } catch(e) {}
+    }
+
+    function ladeEinstellungenObjekt() {
+      try { return JSON.parse(localStorage.getItem(BN_SETTINGS_KEY) || '{}'); } catch(e) { return {}; }
+    }
+
+    function saveEinstellung(key, value) {
+      try {
+        const saved = ladeEinstellungenObjekt();
+        saved[key] = value;
+        localStorage.setItem(BN_SETTINGS_KEY, JSON.stringify(saved));
+      } catch(e) {}
+    }
+
+    // ── Storage ─────────────────────────────────────────────────────
+    function speichereNachrichten() {
+      try {
+        const zuSpeichern = alleNachrichten.slice(0, 100);
+        localStorage.setItem(BN_STORAGE_KEY, JSON.stringify(zuSpeichern));
+      } catch(e) {}
+    }
+
+    // ── Push-Status wiederherstellen ────────────────────────────────
+    async function pruefeExistierendePushSubscription() {
+      const toggle = document.getElementById('bn-push-toggle');
+      const label  = document.getElementById('bn-push-toggle-label');
+      const statusText = document.getElementById('bn-push-status-text');
+      if (!toggle) return;
+
+      const gespeichert = localStorage.getItem(BN_PUSH_KEY);
+      if (gespeichert === 'true' && 'serviceWorker' in navigator) {
+        try {
+          const reg = await navigator.serviceWorker.ready;
+          const sub = await reg.pushManager.getSubscription();
+          if (sub && Notification.permission === 'granted') {
+            toggle.checked = true;
+            if (label) label.textContent = 'Aktiv';
+            if (statusText) statusText.textContent = '✅ Push-Benachrichtigungen sind aktiv.';
+            zeigePushTestBtn();
+          } else {
+            localStorage.removeItem(BN_PUSH_KEY);
+          }
+        } catch(e) {}
+      }
+    }
+
+    // ── In-App Notification hinzufügen (für andere Seiten) ──────────
+    window.provaZeigeBenachrichtigung = function(opts = {}) {
+      const n = {
+        id:      'ia_' + Date.now(),
+        typ:     opts.typ     || 'system',
+        icon:    opts.icon    || '🔔',
+        titel:   opts.titel   || 'Benachrichtigung',
+        text:    opts.text    || '',
+        zeit:    new Date().toISOString(),
+        gelesen: false,
+        aktionen: opts.aktionen || []
+      };
+      alleNachrichten.unshift(n);
+      speichereNachrichten();
+
+      // Badge im Nav aktualisieren
+      const navBadge = document.querySelectorAll('[data-bn-badge]');
+      const ungelesen = alleNachrichten.filter(x => !x.gelesen).length;
+      navBadge.forEach(b => {
+        b.style.display = ungelesen > 0 ? 'inline-flex' : 'none';
+        b.textContent = ungelesen > 9 ? '9+' : ungelesen;
+      });
+
+      rendern();
+    };
+
+    // ── Init ────────────────────────────────────────────────────────
+    document.addEventListener('DOMContentLoaded', async () => {
+      await ladeNachrichten();
+      ladeEinstellungen();
+      await pruefeExistierendePushSubscription();
+    });
+  </script>
+
+<script src="prova-context.js" defer></script>
+<script src="prova-error-handler.js" defer></script>
+<script src="support-chat.js" defer></script>
+<script src="sw-register.js" defer></script>
+
+<script>
+/* ── Benachrichtigungen — vollständige Implementierung ── */
+
+var _alleNachrichten = [];
+var _aktuellerFilter = 'alle';
+
+// Beim Laden: Nachrichten aus localStorage + Airtable laden
+document.addEventListener('DOMContentLoaded', function() {
+  ladeBenachrichtigungen();
+});
+
+async function ladeBenachrichtigungen() {
+  var svEmail = localStorage.getItem('prova_sv_email') || '';
+  
+  // Lokale System-Benachrichtigungen aus localStorage
+  var lokal = [];
+  try { lokal = JSON.parse(localStorage.getItem('prova_benachrichtigungen') || '[]'); } catch(e) {}
+  
+  // Fälle mit offenen Aktionen aus Airtable
+  if (svEmail) {
+    try {
+      var filter = encodeURIComponent('AND({sv_email}="'+svEmail+'",OR({Status}="In Bearbeitung",{Status}="Offen"))');
+      var res = await fetch('/.netlify/functions/airtable', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({method:'GET',
+          path:'/v0/appJ7bLlAHZoxENWE/tblSxV8bsXwd1pwa0?filterByFormula='+filter+'&maxRecords=20&fields[]=Aktenzeichen&fields[]=Status&fields[]=Schadensart&fields[]=Timestamp'})
+      });
+      var data = await res.json();
+      (data.records || []).forEach(function(r) {
+        lokal.push({
+          id: r.id, typ: 'fall', gelesen: false,
+          titel: 'Offener Fall: ' + (r.fields.Aktenzeichen || ''),
+          text: 'Status: ' + (r.fields.Status || '') + ' · ' + (r.fields.Schadensart || ''),
+          zeit: r.fields.Timestamp || new Date().toISOString(),
+          link: 'akte.html?az=' + encodeURIComponent(r.fields.Aktenzeichen || '')
+        });
+      });
+    } catch(e) {}
+  }
+  
+  _alleNachrichten = lokal;
+  renderBenachrichtigungen(_alleNachrichten);
+}
+
+function renderBenachrichtigungen(liste) {
+  var container = document.getElementById('benach-liste') || document.querySelector('.benach-container, .notification-list, main');
+  if (!container) return;
+  
+  var gefiltert = liste.filter(function(n) {
+    if (_aktuellerFilter === 'ungelesen') return !n.gelesen;
+    if (_aktuellerFilter === 'faelle') return n.typ === 'fall';
+    if (_aktuellerFilter === 'system') return n.typ === 'system';
+    return true;
+  });
+  
+  if (!gefiltert.length) {
+    container.innerHTML = '<div style="padding:40px;text-align:center;color:var(--text3,#6b7a99);font-size:14px;">Keine Benachrichtigungen</div>';
+    return;
+  }
+  
+  container.innerHTML = gefiltert.map(function(n, i) {
+    var zeit = '';
+    try { zeit = new Date(n.zeit).toLocaleDateString('de-DE', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}); } catch(e) {}
+    return '<div class="benach-item' + (n.gelesen?'':' ungelesen') + '" data-idx="'+i+'" style="padding:14px 16px;border-bottom:1px solid var(--border,#1e3a5f);display:flex;gap:12px;align-items:flex-start;">'
+      + '<div style="width:8px;height:8px;border-radius:50%;background:' + (n.gelesen?'transparent':'var(--accent,#4f8ef7)') + ';flex-shrink:0;margin-top:6px;"></div>'
+      + '<div style="flex:1;">'
+      + '<div style="font-size:13px;font-weight:'+(n.gelesen?'400':'600')+';color:var(--text,#e8eaf0);margin-bottom:3px;">' + (n.titel||'') + '</div>'
+      + '<div style="font-size:12px;color:var(--text3,#6b7a99);">' + (n.text||'') + '</div>'
+      + '<div style="font-size:11px;color:var(--text3,#6b7a99);margin-top:4px;">' + zeit + '</div>'
+      + '</div>'
+      + (n.link ? '<a href="'+n.link+'" style="font-size:11px;color:var(--accent,#4f8ef7);font-weight:600;white-space:nowrap;">Öffnen →</a>' : '')
+      + '<button onclick="loescheNachricht('+i+')" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:14px;padding:0 4px;">✕</button>'
+      + '</div>';
+  }).join('');
+}
+
+window.setFilter = function(filter, btn) {
+  _aktuellerFilter = filter;
+  document.querySelectorAll('.benach-filter-btn,[data-filter]').forEach(function(b){ b.classList.remove('aktiv','active'); });
+  if (btn) btn.classList.add('aktiv');
+  renderBenachrichtigungen(_alleNachrichten);
+};
+
+window.markiereGelesen = function(idx) {
+  if (_alleNachrichten[idx]) { _alleNachrichten[idx].gelesen = true; speichereLokale(); renderBenachrichtigungen(_alleNachrichten); }
+};
+
+window.alleAlsGelesenMarkieren = function() {
+  _alleNachrichten.forEach(function(n){ n.gelesen = true; });
+  speichereLokale();
+  renderBenachrichtigungen(_alleNachrichten);
+  if(typeof showToast==='function') showToast('Alle als gelesen markiert ✅');
+};
+
+window.loescheNachricht = function(idx) {
+  _alleNachrichten.splice(idx, 1);
+  speichereLokale();
+  renderBenachrichtigungen(_alleNachrichten);
+};
+
+window.itemOptions = function(idx) {
+  // Toggle: gelesen/ungelesen
+  if (_alleNachrichten[idx]) {
+    _alleNachrichten[idx].gelesen = !_alleNachrichten[idx].gelesen;
+    speichereLokale();
+    renderBenachrichtigungen(_alleNachrichten);
+  }
+};
+
+window.toggleEinstellungen = function() {
+  var panel = document.getElementById('benach-einstellungen') || document.querySelector('.benach-settings');
+  if (panel) panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+  else window.location.href = 'einstellungen.html#benachrichtigungen';
+};
+
+function speichereLokale() {
+  var lokale = _alleNachrichten.filter(function(n){ return n.typ !== 'fall'; });
+  try { localStorage.setItem('prova_benachrichtigungen', JSON.stringify(lokale.slice(0,50))); } catch(e) {}
+}
+</script>
+</body>
+</html>

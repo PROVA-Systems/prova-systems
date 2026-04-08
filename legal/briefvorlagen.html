@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Briefe & Vorlagen · PROVA</title>
+<script src="prova-preise.js"></script>
+<script src="paket-guard.js"></script>
+<script src="auth-guard.js"></script>
+<script src="theme.js"></script>
+<script src="nav.js" defer></script>
+<script src="trial-guard.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<style>
+:root{
+  --bg:#0b1220;--bg2:#111827;--bg3:#161f30;
+  --surface:#1c2537;--surface2:#222d42;--surface3:#2a3550;
+  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);
+  --text:#e8eaf0;--text2:#aab4cb;--text3:#6b7a99;
+  --accent:#4f8ef7;--accent2:#3a7be0;
+  --green:#10b981;--red:#ef4444;--warn:#f59e0b;--purple:#8b5cf6;
+  --r-sm:6px;--r-md:10px;--r-lg:14px;
+  --font-ui:'DM Sans',system-ui,sans-serif;
+  --topbar-h:52px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--font-ui);font-size:14px;line-height:1.5;}
+.app-shell{min-height:100vh;}
+.main{display:flex;flex-direction:column;min-height:100vh;}
+.topbar{height:var(--topbar-h);background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 20px;position:sticky;top:0;z-index:50;}
+.topbar-title{font-size:15px;font-weight:700;}
+.topbar-title span{color:var(--text3);font-weight:400;}
+.topbar-right{display:flex;align-items:center;gap:10px;padding-right:160px;}
+.page{flex:1;padding:24px 24px 40px;max-width:1100px;}
+/* Layout: 2-spaltig — Overlay links, Editor rechts */
+.bv-layout{display:flex;flex-direction:column;gap:0;}
+/* Overlay/Selektor */
+.bv-ov{width:100%;margin-bottom:16px;}
+.search-bar{margin-bottom:12px;position:relative;}
+.bv-search{width:100%;padding:9px 12px 9px 34px;background:var(--surface);border:1px solid var(--border2);border-radius:var(--r-md);color:var(--text);font-size:13px;font-family:inherit;outline:none;}
+.bv-search:focus{border-color:var(--accent);}
+.bv-search::placeholder{color:var(--text3);}
+.search-icon{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:14px;pointer-events:none;}
+.cat-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;}
+.cat-chip{padding:4px 12px;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid transparent;transition:all .15s;background:var(--surface);}
+.cat-chip.active,.cat-chip:hover{opacity:1;}
+.vorl-list{display:none;}
+.vorl-item{padding:11px 14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;cursor:pointer;transition:all .15s;}
+.vorl-item:hover,.vorl-item.active{border-color:var(--accent);background:rgba(79,142,247,.07);}
+.vorl-name{font-size:13px;font-weight:600;color:var(--text);}
+.vorl-sub{font-size:11px;color:var(--text3);margin-top:2px;}
+.vorl-cat-dot{width:7px;height:7px;border-radius:50%;display:inline-block;margin-right:6px;flex-shrink:0;}
+/* Detail/Editor */
+.bv-dr{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);overflow-y:auto;}
+.dr-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;}
+.dr-icon{font-size:22px;}
+.dr-title{font-size:15px;font-weight:700;color:var(--text);}
+.dr-mode{font-size:11px;color:var(--text3);}
+.dr-tabs{display:flex;border-bottom:1px solid var(--border);}
+.dr-tab{padding:10px 20px;font-size:12px;font-weight:600;cursor:pointer;color:var(--text3);border-bottom:2px solid transparent;transition:all .15s;}
+.dr-tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+.dr-panel{padding:20px;display:none;}
+.dr-panel.active{display:block;}
+/* Formular-Felder */
+.form-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text3);margin-bottom:4px;display:block;}
+.form-input,.form-select,.form-textarea{width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;margin-bottom:14px;}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--accent);}
+.form-textarea{resize:vertical;min-height:140px;line-height:1.7;}
+/* KI-Box */
+.ki-box{background:rgba(79,142,247,.06);border:1px solid rgba(79,142,247,.2);border-radius:10px;padding:14px;margin-bottom:16px;}
+.ki-box-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--accent);margin-bottom:8px;}
+.ki-area{font-size:13px;color:var(--text2);line-height:1.8;white-space:pre-wrap;min-height:60px;}
+.ki-edit{width:100%;margin-top:8px;padding:8px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:12px;font-family:inherit;outline:none;resize:vertical;min-height:80px;}
+/* Vorschau */
+.preview-body{background:white;border-radius:8px;padding:28px 32px;font-family:Georgia,serif;font-size:13.5px;line-height:1.9;color:#1a1a1a;min-height:400px;white-space:pre-wrap;}
+/* Buttons */
+.btn-row{display:flex;gap:8px;padding:14px 20px;border-top:1px solid var(--border);flex-wrap:wrap;}
+.btn{padding:9px 18px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s;border:1px solid transparent;}
+.btn-primary{background:var(--accent);color:#fff;border-color:var(--accent);}
+.btn-primary:hover{background:var(--accent2);}
+.btn-secondary{background:var(--surface2);color:var(--text2);border-color:var(--border2);}
+.btn-secondary:hover{background:var(--surface3);color:var(--text);}
+.btn-ki{background:linear-gradient(135deg,#7c3aed,#4f8ef7);color:#fff;}
+/* Empfänger */
+.fall-liste{max-height:160px;overflow-y:auto;margin-bottom:14px;}
+.fall-item{padding:8px 12px;border-radius:8px;cursor:pointer;border:1px solid transparent;transition:all .15s;font-size:12px;color:var(--text2);}
+.fall-item:hover,.fall-item.selected{background:rgba(79,142,247,.08);border-color:rgba(79,142,247,.2);color:var(--text);}
+/* Send result */
+.send-result{padding:20px;text-align:center;}
+.send-summary{font-size:12px;color:var(--text3);margin-top:4px;}
+/* Toast */
+.bv-toast{position:fixed;bottom:24px;right:24px;padding:12px 18px;background:var(--bg2);border:1px solid var(--border2);border-radius:10px;color:var(--text);font-size:13px;z-index:9999;opacity:0;transform:translateY(20px);transition:all .3s;pointer-events:none;}
+.bv-toast.show{opacity:1;transform:translateY(0);}
+/* Leer-Zustand */
+.bv-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:300px;color:var(--text3);text-align:center;padding:40px;}
+.bv-empty-icon{font-size:48px;margin-bottom:12px;opacity:.4;}
+::-webkit-scrollbar{width:5px;} ::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:3px;}
+@media(max-width:768px){.bv-layout{flex-direction:column;}.bv-ov{width:100%;margin-bottom:16px;}.topbar-right{padding-right:100px;}}
+
+/* ── BRIEFVORLAGEN CARD-GRID ──────────────────────────── */
+.bv-container{flex:1;overflow-y:auto;}
+.bv-cat{margin-bottom:28px;}
+.bv-cat-head{display:flex;align-items:center;gap:10px;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border);}
+.bv-cat-bar{width:4px;height:20px;border-radius:2px;flex-shrink:0;}
+.bv-cat-name{font-size:14px;font-weight:700;color:var(--text);}
+.bv-cat-n{font-size:11px;background:var(--surface);border:1px solid var(--border2);padding:2px 8px;border-radius:10px;color:var(--text3);}
+.bv-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;}
+.tc{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:6px;transition:all .15s;position:relative;}
+.tc:hover{border-color:var(--accent);background:var(--surface2);transform:translateY(-1px);box-shadow:0 4px 16px rgba(0,0,0,.25);}
+.tc-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:4px;}
+.tc-icon{font-size:22px;line-height:1;}
+.tc-badges{display:flex;flex-direction:column;gap:3px;align-items:flex-end;}
+.tc-id{font-size:9px;font-weight:700;color:var(--text3);letter-spacing:.08em;font-family:monospace;}
+.tc-tier{font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;letter-spacing:.04em;}
+.tc-tier-solo{background:rgba(16,185,129,.12);color:#10b981;}
+.tc-tier-team{background:rgba(139,92,246,.12);color:#8b5cf6;}
+.tc-name{font-size:13px;font-weight:700;color:var(--text);line-height:1.3;}
+.tc-desc{font-size:11px;color:var(--text3);line-height:1.5;flex:1;}
+.tc-btns{display:flex;gap:6px;margin-top:6px;}
+.tc-btn-v{flex:1;display:flex;align-items:center;justify-content:center;gap:5px;padding:7px 10px;background:var(--accent);border:none;border-radius:7px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .12s;}
+.tc-btn-v:hover{background:var(--accent2);}
+.tc-btn-ki{display:flex;align-items:center;justify-content:center;gap:4px;padding:7px 10px;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.25);border-radius:7px;color:#f59e0b;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .12s;}
+.tc-btn-ki:hover{background:rgba(245,158,11,.2);}
+.tc-highlight-v{border-color:var(--accent);box-shadow:0 0 0 2px rgba(79,142,247,.25);}
+.tc-highlight-ki{border-color:#f59e0b;box-shadow:0 0 0 2px rgba(245,158,11,.25);}
+.bv-empty{text-align:center;padding:60px 20px;color:var(--text3);}
+.bv-empty-icon{font-size:36px;margin-bottom:12px;opacity:.5;}
+.bv-empty-title{font-size:15px;font-weight:700;color:var(--text2);margin-bottom:4px;}
+.bv-empty-sub{font-size:12px;}
+
+</style>
+</head>
+<body>
+<div class="app-shell">
+  <nav class="sidebar" id="sidebar"></nav>
+  <div class="main" id="mainContent">
+
+    <div class="topbar">
+      <div class="topbar-title">PROVA <span>· Briefe & Vorlagen</span></div>
+      <div class="topbar-right">
+        <span id="topbar-paket-badge" class="paket-badge"></span>
+      </div>
+    </div>
+
+    <div class="page">
+      <!-- 2-spaltiges Layout -->
+      <div class="bv-layout" id="bv-wrapper">
+
+        <!-- Links: Vorlagen-Auswahl -->
+        <div class="bv-ov" id="bv-ov">
+          <div class="search-bar">
+            <span class="search-icon">🔍</span>
+            <input type="text" class="bv-search" id="bv-search"
+                   placeholder="Vorlage suchen… (/ zum Fokussieren)"
+                   oninput="filterVorlagen()">
+          </div>
+          <div class="cat-chips" id="cat-chips"></div>
+          <div class="vorl-list" id="vorl-list"></div>
+        </div><!-- /bv-ov -->
+        <div class="bv-container" id="bv-container">
+        <!-- Grid wird durch briefvorlagen-logic.js befüllt -->
+        </div>
+
+        <!-- Rechts: Editor + Vorschau -->
+        <div class="bv-dr" id="bv-dr">
+          <!-- Leer-Zustand -->
+          <div class="bv-empty" id="bv-empty">
+            <div class="bv-empty-icon">📄</div>
+            <div style="font-size:15px;font-weight:600;color:var(--text2);margin-bottom:6px;">Vorlage auswählen</div>
+            <div style="font-size:12px;">Wählen Sie links eine Briefvorlage aus.</div>
+          </div>
+
+          <!-- Header (versteckt bis Vorlage gewählt) -->
+          <div id="bv-detail" style="display:none;">
+            <div class="dr-header">
+              <span class="dr-icon" id="dr-icon">📄</span>
+              <div>
+                <div class="dr-title" id="dr-title">Vorlage</div>
+                <div class="dr-mode" id="dr-mode"></div>
+              </div>
+            </div>
+
+            <!-- Tabs -->
+            <div class="dr-tabs">
+              <div class="dr-tab active" id="tab-edit" onclick="switchTab('edit')">✏️ Bearbeiten</div>
+              <div class="dr-tab" id="tab-prev" onclick="switchTab('prev')">👁 Vorschau</div>
+            </div>
+
+            <!-- Tab: Bearbeiten -->
+            <div class="dr-panel active" id="tab-edit-panel">
+              <!-- Empfänger / Fall-Auswahl -->
+              <label class="form-label">Empfänger / Fall</label>
+              <input type="text" class="form-input" id="emp-name"
+                     placeholder="Name oder Aktenzeichen suchen…"
+                     oninput="filterFaelle()">
+              <div class="fall-liste" id="fall-liste"></div>
+
+              <!-- KI-Generierung -->
+              <div class="ki-box" id="ki-box">
+                <div class="ki-box-label">✨ KI-Entwurf</div>
+                <div class="ki-area" id="ki-area">Wählen Sie einen Empfänger und klicken Sie auf „KI generieren".</div>
+                <textarea class="ki-edit" id="ki-edit" placeholder="KI-Text hier bearbeiten…" style="display:none;"></textarea>
+                <div style="margin-top:8px;display:flex;gap:8px;">
+                  <button class="btn btn-ki" id="ki-gen-btn" onclick="starteKIGenerierung()">✨ KI generieren</button>
+                  <button class="btn btn-secondary" onclick="aktiviereKIEdit()" style="display:none;" id="ki-edit-btn">✏️ Bearbeiten</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Tab: Vorschau -->
+            <div class="dr-panel" id="tab-prev-panel">
+              <div class="preview-body" id="prev-body"></div>
+            </div>
+
+            <!-- Aktions-Leiste -->
+            <div class="btn-row">
+              <button class="btn btn-secondary" id="btn-back" onclick="zurueck()">← Zurück</button>
+              <button class="btn btn-primary" id="btn-next" onclick="weiter()">Weiter →</button>
+              <button class="btn btn-primary" id="btn-send-pdf" onclick="sendePDF()" style="display:none;">
+                📤 Als PDF senden
+              </button>
+            </div>
+
+            <!-- Sende-Ergebnis -->
+            <div class="send-result" id="send-result" style="display:none;">
+              <div style="font-size:24px;margin-bottom:8px;">✅</div>
+              <div style="font-size:14px;font-weight:700;color:var(--text);">Brief gesendet!</div>
+              <div class="send-summary" id="send-summary"></div>
+            </div>
+          </div>
+        </div>
+        </div><!-- /bv-container -->
+      </div><!-- /bv-wrapper -->
+    </div><!-- /page -->
+  </div><!-- /main -->
+</div><!-- /app-shell -->
+
+<div class="bv-toast" id="bv-toast"></div>
+
+  <script src="sw-register.js" defer></script>
+  <script src="auto-save.js" defer></script>
+  <script src="global-search.js" defer></script>
+  <script src="auftragstyp.js"></script>
+  <script src="briefvorlagen-logic.js" defer></script>
+<script src="prova-context.js" defer></script>
+<script src="prova-error-handler.js" defer></script>
+</body>
+</html>

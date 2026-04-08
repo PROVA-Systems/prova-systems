@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width,initial-scale=1, viewport-fit=cover">
+<title>Rechnungen · PROVA</title>
+<script src="prova-preise.js"></script>
+<script src="paket-guard.js"></script>
+<script src="auth-guard.js"></script>
+<script src="theme.js"></script>
+<script src="nav.js" defer></script>
+<link rel="stylesheet" href="mobile.css">
+<script src="trial-guard.js"></script>
+<style>
+:root{
+  --bg:#0b0d11;--bg2:#111318;--bg3:#161a22;
+  --surface:#1c2130;--surface2:#232a3a;
+  --border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.11);
+  --text:#eaecf4;--text2:#8b93ab;--text3:#4d5568;
+  --accent:#4f8ef7;--accent2:#3a7be0;
+  --success:#10b981;--warning:#f59e0b;--danger:#ef4444;--purple:#8b5cf6;
+  --font-ui:'DM Sans',system-ui,sans-serif;
+  --font-mono:ui-monospace,Consolas,monospace;
+  --r-sm:6px;--r-md:10px;--r-lg:14px;
+  --shadow-md:0 4px 16px rgba(0,0,0,.35);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{font-size:14px;}body{font-family:var(--font-ui);background:var(--bg);color:var(--text2);min-height:100vh;overflow-x:hidden;line-height:1.55;}
+a{text-decoration:none;color:inherit;}button,input,select,textarea{font-family:inherit;font-size:inherit;}
+*{-webkit-tap-highlight-color:transparent;}input,select,textarea{font-size:max(16px,1em);}
+
+/* SIDEBAR */
+.app-shell{display:flex;min-height:100vh;}
+.topbar{height:52px;min-height:52px;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 24px;position:sticky;top:0;z-index:100;flex-shrink:0;}
+.topbar-left{display:flex;align-items:center;gap:12px;}
+.topbar-right{display:flex;align-items:center;gap:6px;}
+.breadcrumb{font-size:13px;color:var(--text3);display:flex;align-items:center;gap:6px;}
+.breadcrumb strong{color:var(--text2);font-weight:600;}
+.topbar-btn{display:flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:var(--r-sm);border:1px solid var(--border2);background:transparent;color:var(--text3);cursor:pointer;font-size:14px;transition:all .12s;}
+.topbar-btn:hover{color:var(--text2);background:rgba(255,255,255,.05);}
+.topbar-paket{font-size:10px;font-weight:700;padding:3px 9px;border-radius:10px;letter-spacing:.04em;}
+.burger{display:none;flex-direction:column;gap:4.5px;background:none;border:none;cursor:pointer;padding:8px;border-radius:6px;min-height:36px;align-items:center;justify-content:center;}
+.burger span{display:block;width:18px;height:2px;background:var(--text2);border-radius:2px;}
+
+/* PAGE */
+.page-content{padding:24px 28px 48px;width:100%;}
+.page-title{font-size:20px;font-weight:800;letter-spacing:-.025em;color:var(--text);margin-bottom:20px;}
+
+/* STATS */
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px;}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:14px 16px;}
+.stat-card.red{border-color:rgba(239,68,68,.25);background:rgba(239,68,68,.04);}
+.stat-card.warn{border-color:rgba(245,158,11,.25);background:rgba(245,158,11,.04);}
+.stat-card.green{border-color:rgba(16,185,129,.25);background:rgba(16,185,129,.04);}
+.stat-num{font-size:22px;font-weight:800;color:var(--text);letter-spacing:-.02em;margin-bottom:2px;font-family:var(--font-mono);}
+.stat-num.red{color:var(--danger);}
+.stat-num.warn{color:var(--warning);}
+.stat-num.green{color:var(--success);}
+.stat-label{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;}
+
+/* MAIN GRID */
+.rech-grid{display:grid;grid-template-columns:320px 1fr;gap:20px;align-items:start;}
+
+/* LISTE */
+.liste-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;}
+.liste-header{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--border);}
+.liste-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text3);}
+.rechnung-item{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .12s;}
+.rechnung-item:hover{background:rgba(255,255,255,.025);}
+.rechnung-item.selected{background:rgba(79,142,247,.07);border-left:3px solid var(--accent);}
+.rechnung-item:last-child{border-bottom:none;}
+.re-no{font-size:11px;font-weight:700;font-family:var(--font-mono);color:var(--accent);}
+.re-client{font-size:12px;font-weight:600;color:var(--text2);margin-top:1px;}
+.re-date{font-size:10px;color:var(--text3);}
+.re-amount{font-size:13px;font-weight:800;font-family:var(--font-mono);color:var(--text);}
+.status-badge{display:inline-flex;align-items:center;font-size:9px;font-weight:700;padding:2px 7px;border-radius:10px;text-transform:uppercase;letter-spacing:.04em;margin-top:4px;}
+.st-offen{background:rgba(79,142,247,.12);color:var(--accent);}
+.st-ueberfaellig{background:rgba(239,68,68,.12);color:var(--danger);}
+.st-bezahlt{background:rgba(16,185,129,.12);color:var(--success);}
+.st-gemahnt{background:rgba(245,158,11,.12);color:var(--warning);}
+.liste-empty{padding:32px;text-align:center;font-size:12px;color:var(--text3);}
+
+/* FORMULAR */
+.form-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:22px;}
+.form-card-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text3);margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.form-group{margin-bottom:0;}
+.form-group.span2{grid-column:span 2;}
+.form-label{display:block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);margin-bottom:4px;}
+.form-input,.form-select{width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r-md);color:var(--text);font-size:13px;outline:none;transition:border-color .15s;}
+.form-input:focus,.form-select:focus{border-color:var(--accent);}
+.form-input::placeholder{color:var(--text3);}
+.form-input.prefilled{border-color:rgba(16,185,129,.35);background:rgba(16,185,129,.04);}
+.form-select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%234d5568' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;background-color:var(--bg3);padding-right:30px;}
+.form-select option{background:var(--bg2);}
+.form-input[readonly]{color:var(--text3);cursor:not-allowed;}
+
+/* JVEG-Prefill Banner */
+.jveg-banner{display:none;grid-column:span 2;padding:12px 14px;background:rgba(16,185,129,.07);border:1px solid rgba(16,185,129,.2);border-radius:var(--r-md);font-size:12px;color:var(--success);align-items:center;gap:10px;flex-wrap:wrap;}
+.jveg-banner.show{display:flex;}
+.jveg-banner strong{color:var(--text);}
+.jveg-discard{background:none;border:none;color:var(--text3);font-size:16px;cursor:pointer;margin-left:auto;}
+
+/* Positionen */
+.pos-row{display:grid;grid-template-columns:2fr 60px 90px 90px 28px;gap:6px;align-items:center;margin-bottom:6px;}
+.pos-input{padding:7px 8px;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r-sm);color:var(--text);font-size:12px;outline:none;width:100%;}
+.pos-input:focus{border-color:var(--accent);}
+.pos-del{background:none;border:none;color:rgba(239,68,68,.5);cursor:pointer;font-size:16px;padding:2px;transition:color .12s;}
+.pos-del:hover{color:var(--danger);}
+.pos-summe{display:flex;justify-content:space-between;padding:8px 10px;background:rgba(255,255,255,.03);border-radius:var(--r-sm);font-size:12px;margin-top:4px;}
+
+/* MwSt Toggle */
+.ust-wrap{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r-md);}
+.toggle-switch{position:relative;width:36px;height:20px;flex-shrink:0;}
+.toggle-switch input{opacity:0;width:0;height:0;position:absolute;}
+.toggle-track{position:absolute;inset:0;background:var(--surface2);border-radius:10px;cursor:pointer;transition:background .15s;}
+.toggle-switch input:checked ~ .toggle-track{background:var(--accent);}
+.toggle-thumb{position:absolute;top:3px;left:3px;width:14px;height:14px;background:#fff;border-radius:50%;transition:transform .15s;}
+.toggle-switch input:checked ~ .toggle-track .toggle-thumb{transform:translateX(16px);}
+
+/* Brutto-Ergebnis */
+.brutto-result{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.18);border-radius:var(--r-md);margin-top:14px;}
+.brutto-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--success);}
+.brutto-val{font-size:22px;font-weight:800;color:var(--success);font-family:var(--font-mono);}
+
+/* Buttons */
+.btn-row{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap;}
+.btn-primary{flex:1;padding:11px 14px;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:var(--r-md);color:#fff;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;transition:all .15s;min-width:140px;}
+.btn-primary:hover{opacity:.9;transform:translateY(-1px);}
+.btn-primary:disabled{opacity:.4;cursor:not-allowed;transform:none;}
+.btn-secondary{padding:11px 14px;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--r-md);color:var(--text2);font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:7px;transition:all .12s;}
+.btn-secondary:hover{border-color:var(--accent);color:var(--accent);}
+
+/* Abschnitt-Trenner */
+.section-sep{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text3);grid-column:span 2;padding-top:8px;padding-bottom:4px;border-top:1px solid var(--border);margin-top:4px;}
+
+/* Toast */
+.toast{position:fixed;bottom:24px;right:24px;z-index:600;padding:11px 18px;border-radius:var(--r-md);font-size:13px;font-weight:600;background:var(--surface2);border:1px solid rgba(16,185,129,.35);color:var(--success);transition:all .3s cubic-bezier(.34,1.56,.64,1);opacity:0;transform:translateY(16px);}
+.toast.show{opacity:1;transform:translateY(0);}
+.toast.err{border-color:rgba(239,68,68,.35);color:var(--danger);}
+.support-fab{position:fixed;bottom:24px;right:24px;z-index:400;width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));box-shadow:0 4px 16px rgba(79,142,247,.4);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;border:none;color:#fff;}
+
+/* Responsive */
+@media(max-width:1100px){.rech-grid{grid-template-columns:1fr;}}
+@media(max-width:768px){
+  .burger{display:flex;}
+  .page-content{padding:16px 16px 72px;}
+  .topbar{padding:0 16px;}
+  .stats-row{grid-template-columns:1fr 1fr;}
+  .form-grid{grid-template-columns:1fr;}
+  .form-group.span2{grid-column:span 1;}
+  .section-sep{grid-column:span 1;}
+  .jveg-banner{grid-column:span 1;}
+}
+@media(max-width:600px){
+  .page-content{padding:12px 12px 72px;}
+  .stats-row{grid-template-columns:1fr;}
+}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+.page-content{animation:fadeIn .22s ease;}
+
+  /* ── SUPPORT FAB ── */
+  .support-fab{position:fixed;bottom:20px;right:20px;width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,var(--accent,#4f8ef7),#3a7be0);border:none;color:#fff;font-size:20px;cursor:pointer;box-shadow:0 4px 16px rgba(79,142,247,.4);z-index:300;transition:all .2s;display:flex;align-items:center;justify-content:center;}
+  .support-fab:hover{transform:scale(1.08);box-shadow:0 6px 22px rgba(79,142,247,.5);}
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:400;backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:20px;}
+  .modal-overlay.open{display:flex;}
+  .modal-box{background:var(--surface,#1c2537);border:1px solid var(--border2,rgba(255,255,255,.12));border-radius:16px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;}
+  .modal-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border,rgba(255,255,255,.07));}
+  .modal-title{font-size:15px;font-weight:700;color:var(--text,#e8eaf0);}
+  .modal-close{background:none;border:none;color:var(--text3,#6b7a99);font-size:18px;cursor:pointer;padding:4px;border-radius:4px;}
+  .modal-close:hover{color:var(--text,#e8eaf0);}
+  .modal-body{padding:20px;}
+  .sup-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text3,#6b7a99);margin-bottom:5px;}
+  .sup-input{width:100%;padding:9px 12px;background:var(--bg3,#161f30);border:1px solid var(--border2,rgba(255,255,255,.12));border-radius:8px;color:var(--text,#e8eaf0);font-size:13px;font-family:inherit;outline:none;margin-bottom:12px;}
+  .sup-input:focus{border-color:var(--accent,#4f8ef7);}
+  .sup-textarea{resize:vertical;min-height:90px;}
+  .sup-err{font-size:12px;color:var(--red,#ef4444);margin-bottom:8px;display:none;}
+  .sup-send-btn{width:100%;padding:11px;background:linear-gradient(135deg,var(--accent,#4f8ef7),#3a7be0);border:none;border-radius:8px;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;}
+  .sup-send-btn:disabled{opacity:.5;cursor:not-allowed;}
+  .sup-ok{display:none;text-align:center;padding:20px 0;}
+  .sup-ok-icon{font-size:36px;margin-bottom:8px;}
+  .sup-ok-title{font-size:15px;font-weight:700;color:var(--green,#10b981);margin-bottom:4px;}
+  .sup-ok-sub{font-size:12px;color:var(--text3,#6b7a99);}
+@media(max-width:768px){.bottom-nav{display:flex !important;}}
+</style>
+
+<link rel="icon" type="image/svg+xml" href="/icons/icon-192.svg">
+</head>
+<body>
+<div class="app-shell">
+
+<nav class="sidebar" id="sidebar"></nav>
+<div class="sb-overlay" id="sb-overlay" onclick="closeMobileSidebar()"></div>
+
+<header class="topbar">
+  <button id="mobile-menu-btn" aria-label="Menü öffnen" style="display:none;align-items:center;justify-content:center;width:40px;height:40px;border:none;background:none;color:var(--text2);font-size:20px;cursor:pointer;border-radius:8px;flex-shrink:0;">☰</button>
+    <div class="topbar-left">
+      <button class="burger" onclick="openMobileSidebar()"><span></span><span></span><span></span></button>
+      <div class="breadcrumb"><span>PROVA</span><span style="color:var(--text3)">›</span><strong>Rechnungen</strong></div>
+    </div>
+    <div class="topbar-right">
+      <span class="topbar-paket" id="topbar-paket-badge" style="display:none;"></span>
+      <a href="einstellungen.html"><button class="topbar-btn">⚙</button></a>
+    </div>
+  </header>
+
+  <main class="page-content">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+      <div class="page-title" style="margin-bottom:0;">Rechnungen</div>
+      <button onclick="exportDatevCSV()" title="Für Steuerberater: DATEV-kompatibles CSV"
+        style="display:flex;align-items:center;gap:6px;padding:7px 14px;
+        background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.25);
+        border-radius:8px;color:#10b981;font-size:12px;font-weight:600;
+        cursor:pointer;font-family:inherit;">
+        📊 DATEV-Export
+      </button>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-row" style="grid-template-columns:repeat(4,1fr);">
+      <div class="stat-card red">
+        <div class="stat-num red" id="stat-ueberfaellig">—</div>
+        <div class="stat-label">Überfällig (€)</div>
+      </div>
+      <div class="stat-card warn">
+        <div class="stat-num warn" id="stat-offen">—</div>
+        <div class="stat-label">Offen (€)</div>
+      </div>
+      <div class="stat-card green">
+        <div class="stat-num green" id="stat-bezahlt">—</div>
+        <div class="stat-label">Bezahlt 30 Tage (€)</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="stat-jahresumsatz" style="color:var(--accent);">—</div>
+        <div class="stat-label">Jahresumsatz (€)</div>
+      </div>
+    </div>
+
+    <div class="rech-grid">
+
+      <!-- LINKE SPALTE: Rechnungsliste -->
+      <div class="liste-card">
+        <div class="liste-header">
+          <span class="liste-title">Rechnungen</span>
+          <span style="font-size:11px;color:var(--text3)" id="liste-count">—</span>
+        </div>
+        <div id="rechnung-liste">
+          <div class="liste-empty">⏳ Wird geladen…</div>
+        </div>
+      </div>
+
+      <!-- RECHTE SPALTE: Formular -->
+      <div class="form-card" id="form-card">
+        <div class="form-card-title">
+          <span id="form-titel">Neue Rechnung</span>
+          <button onclick="resetForm()" style="background:none;border:none;color:var(--text3);font-size:11px;cursor:pointer;font-weight:600;">Zurücksetzen</button>
+        </div>
+
+        <div class="form-grid">
+
+          <!-- JVEG Prefill Banner -->
+          <div class="jveg-banner" id="jveg-banner">
+            ✅ JVEG-Daten übernommen: <strong id="jveg-banner-info">—</strong>
+            <button class="jveg-discard" onclick="verwerfeJveg()" title="JVEG-Daten verwerfen">✕</button>
+          </div>
+
+          <!-- Rechnungstyp -->
+          <div class="form-group span2">
+            <label class="form-label">Rechnungstyp</label>
+            <select class="form-select" id="rechnung-typ" onchange="onTypChange()">
+              <option value="Pauschal">📄 Pauschalrechnung</option>
+              <option value="Stunde">⏱ Stundenrechnung</option>
+              <option value="Kurz">📋 Kurzrechnung</option>
+              <option value="Gutschrift">💳 Gutschrift</option>
+            </select>
+            <div style="margin-top:6px;font-size:11px;color:var(--text3);">⚖️ JVEG-Rechnungen über den <a href="jveg.html" style="color:var(--accent);">JVEG-Rechner →</a> erstellen</div>
+          </div>
+
+          <div class="section-sep">Empfänger</div>
+
+          <div class="form-group">
+            <label class="form-label">Auftraggeber / Firma *</label>
+            <input class="form-input" id="r-auftraggeber" type="text" placeholder="Muster Versicherung AG" onkeydown="if(event.key==='Enter')speichereLokal()">
+          </div>
+          <div class="form-group">
+            <label class="form-label">E-Mail Empfänger *</label>
+            <input class="form-input" id="r-email" type="email" placeholder="schaden@versicherung.de" onkeydown="if(event.key==='Enter')speichereLokal()">
+          </div>
+          <div class="form-group span2">
+            <label class="form-label">Straße & Hausnummer</label>
+            <input class="form-input" id="r-strasse" type="text" placeholder="Musterstraße 1" onkeydown="if(event.key==='Enter')speichereLokal()">
+          </div>
+          <div class="form-group">
+            <label class="form-label">PLZ</label>
+            <input class="form-input" id="r-plz" type="text" placeholder="50667" onkeydown="if(event.key==='Enter')speichereLokal()">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Ort</label>
+            <input class="form-input" id="r-ort" type="text" placeholder="Köln" onkeydown="if(event.key==='Enter')speichereLokal()">
+          </div>
+
+          <div class="section-sep">Fallbezug</div>
+
+          <div class="form-group">
+            <label class="form-label">Aktenzeichen</label>
+            <input class="form-input" id="r-aktenzeichen" type="text" placeholder="PROVA-S-2026-001" onkeydown="if(event.key==='Enter')speichereLokal()">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Schadensnummer</label>
+            <input class="form-input" id="r-schadensnummer" type="text" placeholder="VS-2026-001">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Rechnungsdatum *</label>
+            <input class="form-input" id="r-datum" type="date" onkeydown="if(event.key==='Enter')speichereLokal()">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Zahlungsziel</label>
+            <select class="form-select" id="r-zahlungsziel">
+              <option value="14">14 Tage</option>
+              <option value="21">21 Tage</option>
+              <option value="30" selected>30 Tage</option>
+              <option value="45">45 Tage</option>
+              <option value="60">60 Tage</option>
+            </select>
+          </div>
+
+          <div class="section-sep">Leistungen & Betrag</div>
+
+          <!-- Positionen -->
+          <div class="form-group span2">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+              <label class="form-label" style="margin:0;">Positionen</label>
+              <button onclick="addPosition()" style="padding:4px 10px;background:rgba(79,142,247,.1);border:1px solid rgba(79,142,247,.25);border-radius:5px;color:var(--accent);font-size:11px;cursor:pointer;font-weight:600;">+ Position</button>
+            </div>
+            <div style="display:grid;grid-template-columns:2fr 60px 90px 90px 28px;gap:6px;margin-bottom:6px;">
+              <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);">Bezeichnung</div>
+              <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);text-align:center;">Menge</div>
+              <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);text-align:right;">E-Preis €</div>
+              <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);text-align:right;">G-Preis €</div>
+              <div></div>
+            </div>
+            <div id="jveg-position-tipp" style="display:none;padding:8px 12px;background:rgba(74,144,217,.08);border:1px solid rgba(74,144,217,.2);border-radius:8px;font-size:.78rem;color:rgba(226,232,240,.7);margin-bottom:10px;">
+    💡 Stunden aus dem <a href="jveg.html" style="color:#7EC8FF;text-decoration:underline;">JVEG-Rechner</a> übernehmen → Einzelpreis eintragen
+  </div>
+  <div id="positionen-container"></div>
+            <div class="pos-summe">
+              <span>Netto gesamt</span>
+              <strong id="pos-netto-gesamt" style="font-family:var(--font-mono);">0,00 €</strong>
+            </div>
+          </div>
+
+          <!-- MwSt -->
+          <div class="form-group span2">
+            <label class="form-label">MwSt / USt</label>
+            <div class="ust-wrap">
+              <label class="toggle-switch">
+                <input type="checkbox" id="ust-toggle" checked onchange="berechneBrutto()">
+                <div class="toggle-track"><div class="toggle-thumb"></div></div>
+              </label>
+              <div style="font-size:12px;color:var(--text2);">
+                <span id="ust-label">19 % MwSt. anwenden</span>
+                <span style="font-size:10px;color:var(--text3);display:block;" id="ust-hint">Standard für Sachverständige</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Leitweg-ID -->
+          <div class="form-group span2">
+            <label class="form-label">Leitweg-ID <span style="font-weight:400;text-transform:none;color:var(--text3);">(nur Behörden / Gerichte)</span></label>
+            <input class="form-input" id="r-leitweg" type="text" placeholder="z.B. 991-12345678-06">
+          </div>
+        </div>
+
+        <!-- Brutto Ergebnis -->
+        <div class="brutto-result">
+          <div>
+            <div class="brutto-label">Gesamtbetrag (Brutto)</div>
+            <div style="font-size:11px;color:var(--text3);margin-top:2px;" id="brutto-detail">0,00 € netto + 0,00 € MwSt.</div>
+          </div>
+          <div class="brutto-val" id="brutto-display">0,00 €</div>
+        </div>
+
+        <!-- ZUGFeRD Toggle -->
+        <div style="margin-bottom:12px;padding:10px 14px;background:rgba(79,142,247,.06);border:1px solid rgba(79,142,247,.12);border-radius:8px;display:flex;align-items:center;gap:10px;">
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12px;color:var(--text2);">
+            <input type="checkbox" id="zugferd-toggle" checked style="accent-color:var(--accent);">
+            ZUGFeRD/XRechnung (E-Rechnung)
+          </label>
+          <select id="zugferd-format" style="background:var(--bg2);border:1px solid var(--border);border-radius:5px;padding:4px 8px;color:var(--text);font-size:11px;">
+            <option value="zugferd">ZUGFeRD (PDF+XML)</option>
+            <option value="xrechnung">XRechnung (nur XML)</option>
+          </select>
+        </div>
+
+        <!-- Buttons -->
+        <div class="btn-row">
+          <button class="btn-primary" id="btn-erstellen" onclick="erstelleRechnung()">
+            📄 Rechnung erstellen & PDF
+          </button>
+          <button class="btn-secondary" onclick="sendePerEmail()">
+            📧 Per E-Mail
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+</div>
+
+<nav class="bottom-nav" style="display:none;">
+  <a href="dashboard.html" class="bn-item"><span class="bn-icon">⊞</span><span>Zentrale</span></a>
+  <a href="archiv.html" class="bn-item"><span class="bn-icon">📁</span><span>Fälle</span></a>
+  <a href="rechnungen.html" class="bn-item active"><span class="bn-icon">💶</span><span>Rechnungen</span></a>
+  <a href="jveg.html" class="bn-item"><span class="bn-icon">⚖️</span><span>JVEG</span></a>
+  <a href="einstellungen.html" class="bn-item"><span class="bn-icon">⚙️</span><span>Einstellungen</span></a>
+</nav>
+
+<div class="toast" id="toast"></div>
+<button class="support-fab" onclick="openSupportModal()" title="Support">💬</button>
+
+  <script src="sw-register.js" defer></script>
+  <script src="auto-save.js" defer></script>
+  <script src="global-search.js" defer></script>
+  <script src="auftragstyp.js"></script>
+  <script src="rechnungen-logic.js" defer></script>
+<script src="prova-context.js" defer></script>
+<script src="prova-error-handler.js" defer></script>
+</body>
+</html>

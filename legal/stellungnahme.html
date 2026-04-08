@@ -1,0 +1,1303 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800&display=swap" rel="stylesheet">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="PROVA">
+  <meta name="theme-color" content="#111827">
+  <link rel="apple-touch-icon" href="/icons/icon-192.png">
+  <meta name="viewport" content="width=device-width,initial-scale=1, viewport-fit=cover">
+<title>§6 Fachurteil · PROVA</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#0b1220;--bg2:#111827;--bg3:#141e2f;
+  --surface:#1c2537;--surface2:#222d42;
+  --border:rgba(255,255,255,.07);--border2:rgba(255,255,255,.12);
+  --text:#e8eaf0;--text2:#aab4cb;--text3:#6b7a99;
+  --accent:#4f8ef7;--accent2:#3a7be0;
+  --green:#10b981;--warn:#f59e0b;--red:#ef4444;
+  --r-md:10px;--r-lg:14px;
+  --font-ui:'DM Sans',system-ui,sans-serif;
+}
+body{background:var(--bg);color:var(--text);font-family:var(--font-ui);min-height:100vh;}
+
+/* ── FLOW HEADER ── */
+.flow-header{
+  position:sticky;top:0;z-index:200;
+  background:var(--bg2);border-bottom:1px solid var(--border);
+  height:52px;display:flex;align-items:center;
+  padding:0 20px;gap:0;
+}
+.flow-back{display:flex;align-items:center;gap:6px;color:var(--text3);
+  font-size:13px;text-decoration:none;white-space:nowrap;}
+.flow-back:hover{color:var(--text2);}
+.flow-steps{display:flex;align-items:center;gap:0;flex:1;justify-content:center;padding:0 12px;}
+.flow-step{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:600;
+  color:var(--text3);white-space:nowrap;}
+.flow-step.active{color:var(--text);}
+.flow-step.done{color:var(--green);}
+.flow-dot{width:26px;height:26px;border-radius:50%;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:800;
+  background:var(--surface2);color:var(--text3);border:1px solid var(--border2);}
+.flow-step.active .flow-dot{background:var(--accent);color:#fff;border-color:var(--accent);}
+.flow-step.done .flow-dot{background:var(--green);color:#fff;border-color:var(--green);}
+.flow-sep{width:28px;height:2px;background:var(--border2);margin:0 3px;transition:background .3s;}
+.flow-sep.done{background:var(--green);}
+.flow-az{font-size:12px;color:var(--text3);white-space:nowrap;
+  padding:4px 10px;background:var(--surface);border-radius:6px;
+  border:1px solid var(--border);}
+
+/* ── MAIN LAYOUT ── */
+.main{padding:24px 20px 60px;margin:0 auto;}
+
+/* Fall-Banner */
+.fall-banner{
+  display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+  padding:10px 16px;background:var(--surface);
+  border:1px solid var(--border);border-radius:var(--r-md);
+  margin-bottom:20px;font-size:12px;
+}
+.fall-banner-item{color:var(--text3);}
+.fall-banner-item strong{color:var(--text2);font-weight:600;}
+.fall-banner-sep{color:var(--border2);}
+
+/* §6 Hinweis-Leiste */
+.diktat-hinweis{
+  display:flex;align-items:flex-start;gap:8px;
+  padding:8px 14px;margin-bottom:16px;
+  background:rgba(79,142,247,.05);
+  border-left:3px solid rgba(79,142,247,.3);
+  border-radius:0 6px 6px 0;
+  font-size:12px;color:var(--text3);line-height:1.5;
+}
+.diktat-hinweis-icon{flex-shrink:0;margin-top:1px;font-size:13px;}
+
+/* ── 2-SPALTEN GRID ── */
+.two-col{display:grid;grid-template-columns:1fr 340px;gap:20px;align-items:start;}
+@media(max-width:900px){.two-col{grid-template-columns:1fr;}}
+
+/* ── LINKE SPALTE — SCHREIBEN ── */
+.card{
+  background:var(--surface);border:1px solid var(--border2);
+  border-radius:var(--r-lg);overflow:hidden;margin-bottom:16px;
+}
+.card-header{
+  padding:14px 18px 12px;
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.card-title{font-size:13px;font-weight:700;color:var(--text);}
+.card-sub{font-size:11px;color:var(--text3);margin-top:2px;}
+.card-body{padding:16px 18px;}
+
+/* Typ-Auswahl */
+.typ-row{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
+.typ-btn{
+  flex:1;min-width:100px;padding:9px 12px;
+  background:var(--surface2);border:1.5px solid var(--border2);
+  border-radius:8px;color:var(--text3);
+  font-size:12px;font-weight:600;cursor:pointer;
+  font-family:var(--font-ui);text-align:center;transition:all .15s;
+}
+.typ-btn:hover{border-color:var(--accent);color:var(--text2);}
+.typ-btn.active{border-color:var(--accent);background:rgba(79,142,247,.12);color:var(--accent);}
+
+/* Weg-Tabs */
+.weg-tabs{display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:16px;}
+.weg-tab{
+  padding:9px 18px;font-size:12px;font-weight:600;
+  background:transparent;border:none;border-bottom:2px solid transparent;
+  color:var(--text3);cursor:pointer;font-family:var(--font-ui);
+  transition:all .15s;
+}
+.weg-tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+.weg-tab:hover{color:var(--text2);}
+
+/* Textarea */
+.sv-textarea{
+  width:100%;padding:12px 14px;
+  background:var(--bg3);border:1.5px solid var(--border2);
+  border-radius:var(--r-md);color:var(--text);
+  font-size:13px;font-family:var(--font-ui);
+  line-height:1.7;resize:vertical;outline:none;
+  transition:border-color .15s;min-height:320px;
+}
+.sv-textarea:focus{border-color:var(--accent);}
+.char-count{font-size:11px;color:var(--text3);margin-top:6px;text-align:right;}
+.char-count.ok{color:var(--green);}
+.char-count.warn{color:var(--warn);}
+.char-count.bad{color:var(--red);}
+
+/* Weg B Felder */
+.feld-label{
+  font-size:10px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.07em;color:var(--text3);margin-bottom:6px;
+  display:flex;align-items:center;gap:6px;
+}
+.feld-num{
+  width:18px;height:18px;border-radius:50%;
+  background:var(--accent);color:#fff;
+  font-size:10px;font-weight:800;
+  display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.feld-block{margin-bottom:14px;}
+
+/* KJ2-Check */
+.kj-check{
+  display:flex;align-items:center;gap:8px;
+  padding:8px 12px;border-radius:8px;
+  font-size:12px;margin-top:8px;
+  background:var(--surface2);color:var(--text3);
+}
+.kj-check.ok{background:rgba(16,185,129,.08);color:#10b981;}
+.kj-check.warn{background:rgba(239,68,68,.08);color:#ef4444;}
+.kj-check.idle{background:var(--surface2);color:var(--text3);}
+
+/* Highlight-Overlay */
+.textarea-wrap{position:relative;overflow:hidden;}
+.textarea-wrap{background:var(--bg3);border-radius:var(--r-md);}
+.textarea-wrap textarea{position:relative;z-index:2;background:transparent !important;caret-color:var(--text);border:none !important;}
+.textarea-wrap:focus-within{outline:1.5px solid var(--accent);border-radius:var(--r-md);}
+.textarea-highlight{background:var(--bg3);}
+.textarea-highlight{
+  position:absolute;top:0;left:0;right:0;bottom:0;z-index:1;pointer-events:none;
+  font-family:var(--font-ui);font-size:13px;line-height:1.6;
+  padding:10px 12px;white-space:pre-wrap;word-wrap:break-word;
+  color:transparent;border-radius:var(--r-md);overflow:hidden;
+}
+.textarea-highlight mark.indikativ{
+  background:rgba(239,68,68,0.28);border-radius:3px;color:transparent;
+  border-bottom:2px solid rgba(239,68,68,0.7);
+}
+
+/* Hüpfender Denkanstoß */
+.ki-hint-bubble{
+  display:none;margin-top:8px;padding:12px 14px 10px;
+  background:linear-gradient(135deg,rgba(79,142,247,.08),rgba(139,92,246,.06));
+  border:1px solid rgba(79,142,247,.2);border-radius:10px;
+  font-size:12px;color:var(--text2);line-height:1.6;
+  animation:hüpf .4s cubic-bezier(.34,1.56,.64,1);position:relative;
+}
+.ki-hint-bubble.show{display:block;}
+.ki-hint-bubble::before{
+  content:'💡';position:absolute;top:-11px;left:14px;
+  font-size:16px;animation:kiBounce 1.8s ease infinite;
+}
+@keyframes hüpf{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+@keyframes kiBounce{0%,100%{transform:translateY(0);}50%{transform:translateY(-5px);}}
+.ki-hint-label{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);margin-bottom:5px;padding-left:20px;}
+.ki-hint-text{color:var(--text2);padding-left:4px;margin-bottom:6px;}
+.ki-hint-fix{
+  display:inline-block;margin-top:4px;margin-right:6px;
+  padding:3px 10px;background:rgba(79,142,247,.12);
+  border:1px solid rgba(79,142,247,.25);border-radius:20px;
+  font-size:11px;font-weight:600;color:var(--accent);
+  cursor:pointer;transition:background .15s;user-select:none;
+}
+.ki-hint-fix:hover{background:rgba(79,142,247,.22);}
+
+/* KI-Inspiration Box */
+.ki-insp-wrap{
+  margin-top:14px;border:1px dashed rgba(79,142,247,.25);
+  border-radius:var(--r-md);overflow:hidden;
+}
+.ki-insp-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:9px 14px;background:rgba(79,142,247,.06);
+  border-bottom:1px dashed rgba(79,142,247,.15);cursor:pointer;
+}
+.ki-insp-label{font-size:11px;font-weight:700;color:var(--accent);
+  display:flex;align-items:center;gap:6px;}
+.ki-insp-note{font-size:10px;color:var(--text3);}
+.ki-insp-body{padding:12px 14px;display:none;}
+.ki-insp-text{font-size:12px;color:var(--text2);line-height:1.7;
+  user-select:none;-webkit-user-select:none;}
+.ki-insp-btn{
+  margin-top:10px;padding:7px 14px;
+  background:rgba(79,142,247,.1);border:1px solid rgba(79,142,247,.2);
+  border-radius:7px;color:var(--accent);font-size:12px;font-weight:600;
+  cursor:pointer;font-family:var(--font-ui);
+}
+.ki-insp-btn:hover{background:rgba(79,142,247,.18);}
+.ki-spinner{
+  width:18px;height:18px;border:2px solid var(--border2);
+  border-top-color:var(--accent);border-radius:50%;
+  animation:spin .7s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* §407a Bestätigung */
+.confirm-box{
+  margin-top:16px;padding:14px 16px;
+  background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.2);
+  border-radius:var(--r-md);
+}
+.confirm-row{display:flex;align-items:flex-start;gap:10px;}
+.confirm-row input[type=checkbox]{
+  width:16px;height:16px;flex-shrink:0;margin-top:2px;
+  accent-color:var(--green);cursor:pointer;
+}
+.confirm-text{font-size:12px;color:var(--text2);line-height:1.6;cursor:pointer;}
+.confirm-law{font-size:10px;color:var(--text3);margin-top:6px;font-style:italic;}
+
+/* CTA */
+.btn-primary{
+  width:100%;padding:14px 20px;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  border:none;border-radius:var(--r-md);
+  color:#fff;font-size:15px;font-weight:700;
+  cursor:pointer;font-family:var(--font-ui);
+  transition:all .2s;display:flex;align-items:center;
+  justify-content:center;gap:10px;margin-top:16px;
+}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 6px 24px rgba(79,142,247,.35);}
+.btn-primary:disabled{opacity:.45;cursor:not-allowed;transform:none;box-shadow:none;}
+.btn-secondary{
+  width:100%;padding:10px;margin-top:8px;
+  background:transparent;border:1px solid var(--border2);
+  border-radius:var(--r-md);color:var(--text3);
+  font-size:13px;cursor:pointer;font-family:var(--font-ui);
+  transition:all .15s;
+}
+.btn-secondary:hover{background:var(--surface2);color:var(--text2);}
+
+/* ── RECHTE SPALTE ── */
+.right-col{display:flex;flex-direction:column;gap:14px;}
+
+/* Fall-Kontext */
+.ctx-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r-lg);padding:14px 16px;
+}
+.ctx-title{font-size:10px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.08em;color:var(--text3);margin-bottom:10px;}
+.ctx-row{display:flex;justify-content:space-between;
+  padding:6px 0;border-bottom:1px solid var(--border);
+  font-size:12px;}
+.ctx-row:last-child{border-bottom:none;}
+.ctx-key{color:var(--text3);}
+.ctx-val{color:var(--text2);font-weight:600;text-align:right;max-width:60%;}
+
+/* Normen-Vorschläge */
+.normen-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r-lg);overflow:hidden;
+}
+.normen-header{
+  padding:11px 14px;border-bottom:1px solid var(--border);
+  font-size:11px;font-weight:700;color:var(--text3);
+  display:flex;align-items:center;gap:6px;
+}
+.norm-item{
+  padding:10px 14px;border-bottom:1px solid var(--border);
+  cursor:pointer;transition:background .12s;
+}
+.norm-item:last-child{border-bottom:none;}
+.norm-item:hover{background:rgba(79,142,247,.06);}
+.norm-item-nr{font-size:12px;font-weight:700;color:var(--accent);}
+.norm-item-txt{font-size:11px;color:var(--text3);margin-top:2px;line-height:1.4;}
+.norm-item-g{font-size:10px;color:var(--text3);font-style:italic;margin-top:3px;}
+.norm-add-btn{
+  font-size:10px;padding:3px 8px;
+  background:rgba(79,142,247,.1);border:1px solid rgba(79,142,247,.2);
+  border-radius:5px;color:var(--accent);cursor:pointer;
+  font-family:var(--font-ui);font-weight:600;margin-top:5px;
+  display:inline-block;
+}
+
+/* Konjunktiv-Bausteine */
+.phrase-wrap{padding:12px 14px;display:flex;flex-wrap:wrap;gap:6px;}
+.phrase{
+  font-size:11px;padding:4px 9px;
+  background:var(--surface2);border:1px solid var(--border2);
+  border-radius:20px;color:var(--text3);cursor:pointer;
+  transition:all .12s;white-space:nowrap;
+}
+.phrase:hover{background:rgba(79,142,247,.1);color:var(--accent);border-color:rgba(79,142,247,.3);}
+
+/* Toast */
+.toast{
+  position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
+  background:#1c2537;border:1px solid var(--border2);
+  border-radius:10px;padding:11px 20px;
+  font-size:13px;color:var(--text);
+  box-shadow:0 8px 32px rgba(0,0,0,.5);
+  z-index:999;display:none;white-space:nowrap;
+}
+.toast.ok{border-color:rgba(16,185,129,.4);background:rgba(16,185,129,.1);color:#10b981;}
+.toast.err{border-color:rgba(239,68,68,.4);background:rgba(239,68,68,.1);color:#ef4444;}
+.toast.warn{border-color:rgba(245,158,11,.4);background:rgba(245,158,11,.1);color:#f59e0b;}
+
+/* ═══ NORMEN-SLIDE-PANEL ═══ */
+.normen-panel-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:400;backdrop-filter:blur(2px);}
+.normen-panel-overlay.open{display:block;}
+.normen-slide-panel{position:fixed;top:0;right:-420px;width:380px;height:100vh;background:var(--bg2,#111318);border-left:1px solid var(--border2,rgba(255,255,255,.11));z-index:401;transition:right .28s cubic-bezier(.4,0,.2,1);overflow-y:auto;display:flex;flex-direction:column;}
+.normen-slide-panel.open{right:0;}
+.nsp-head{padding:16px 20px;border-bottom:1px solid var(--border,rgba(255,255,255,.06));display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--bg2,#111318);z-index:1;}
+.nsp-title{font-size:14px;font-weight:700;color:var(--text,#eaecf4);}
+.nsp-close{background:none;border:none;color:var(--text3,#4d5568);font-size:20px;cursor:pointer;padding:4px 8px;border-radius:6px;}
+.nsp-close:hover{color:var(--text,#eaecf4);background:rgba(255,255,255,.05);}
+.nsp-search{padding:12px 16px;border-bottom:1px solid var(--border,rgba(255,255,255,.06));}
+.nsp-search input{width:100%;padding:8px 12px;background:var(--bg3,#161a22);border:1px solid var(--border2,rgba(255,255,255,.11));border-radius:8px;color:var(--text,#eaecf4);font-size:12px;outline:none;font-family:inherit;}
+.nsp-search input:focus{border-color:var(--accent,#4f8ef7);}
+.nsp-filter{display:flex;gap:6px;padding:10px 16px;border-bottom:1px solid var(--border,rgba(255,255,255,.06));flex-wrap:wrap;}
+.nsp-filter-btn{padding:4px 10px;border-radius:10px;border:1px solid var(--border2,rgba(255,255,255,.11));background:transparent;color:var(--text3,#4d5568);font-size:10px;font-weight:600;cursor:pointer;transition:all .12s;}
+.nsp-filter-btn.active{background:rgba(79,142,247,.15);border-color:rgba(79,142,247,.4);color:var(--accent,#4f8ef7);}
+.nsp-list{flex:1;padding:12px 16px;}
+.nsp-norm-card{padding:12px;border:1px solid var(--border,rgba(255,255,255,.06));border-radius:10px;margin-bottom:8px;cursor:pointer;transition:all .15s;}
+.nsp-norm-card:hover{border-color:rgba(79,142,247,.3);background:rgba(79,142,247,.05);}
+.nsp-norm-num{font-size:11px;font-weight:700;color:var(--accent,#4f8ef7);font-family:var(--font-mono,monospace);margin-bottom:3px;}
+.nsp-norm-titel{font-size:12px;color:var(--text,#eaecf4);margin-bottom:4px;font-weight:600;}
+.nsp-norm-gw{font-size:11px;color:var(--text2,#8b93ab);margin-bottom:6px;}
+.nsp-norm-actions{display:flex;gap:6px;}
+.nsp-norm-insert{padding:4px 10px;border-radius:6px;background:rgba(79,142,247,.12);border:1px solid rgba(79,142,247,.25);color:var(--accent,#4f8ef7);font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .12s;}
+.nsp-norm-insert:hover{background:rgba(79,142,247,.22);}
+.nsp-norm-copy{padding:4px 10px;border-radius:6px;background:transparent;border:1px solid var(--border2,rgba(255,255,255,.11));color:var(--text3,#4d5568);font-size:10px;cursor:pointer;font-family:inherit;}
+.nsp-empty{text-align:center;padding:40px 20px;color:var(--text3,#4d5568);font-size:12px;}
+
+/* NORMEN-FAB BUTTON */
+.normen-fab{position:fixed;right:20px;bottom:80px;z-index:200;width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,rgba(79,142,247,.9),rgba(58,123,224,.9));border:1px solid rgba(79,142,247,.4);color:#fff;font-size:18px;cursor:pointer;box-shadow:0 4px 16px rgba(79,142,247,.3);display:flex;align-items:center;justify-content:center;transition:all .2s;}
+.normen-fab:hover{transform:scale(1.08);}
+.normen-fab-label{position:absolute;right:54px;background:var(--bg2,#111318);border:1px solid var(--border2,rgba(255,255,255,.11));color:var(--text,#eaecf4);padding:4px 10px;border-radius:6px;font-size:11px;font-weight:600;white-space:nowrap;opacity:0;transition:opacity .2s;}
+.normen-fab:hover .normen-fab-label{opacity:1;}
+
+/* KI-Inline-Vorschläge beim Tippen */
+.ki-normen-inline{margin-top:8px;display:none;}
+.ki-normen-inline.show{display:block;}
+.ki-normen-inline-title{font-size:10px;font-weight:700;color:var(--accent,#4f8ef7);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;display:flex;align-items:center;gap:4px;}
+.ki-normen-chips{display:flex;gap:6px;flex-wrap:wrap;}
+.ki-normen-chip{padding:4px 10px;border-radius:10px;background:rgba(79,142,247,.08);border:1px solid rgba(79,142,247,.2);color:var(--accent,#4f8ef7);font-size:10px;font-weight:600;cursor:pointer;transition:all .12s;display:flex;align-items:center;gap:4px;}
+.ki-normen-chip:hover{background:rgba(79,142,247,.18);}
+
+
+  /* ═══ NORMEN SLIDE PANEL ═══ */
+  .normen-panel{position:fixed;top:0;right:-380px;width:360px;height:100vh;background:var(--surface);border-left:1px solid var(--border2);z-index:500;transition:right .25s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;box-shadow:-4px 0 24px rgba(0,0,0,.3);}
+  .normen-panel.open{right:0;}
+  .normen-panel-header{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--bg2);flex-shrink:0;}
+  .normen-panel-title{font-size:14px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:8px;}
+  .normen-panel-close{background:none;border:none;color:var(--text3);font-size:20px;cursor:pointer;padding:0 4px;line-height:1;}
+  .normen-panel-search{padding:10px 12px;border-bottom:1px solid var(--border);flex-shrink:0;}
+  .normen-panel-input{width:100%;padding:8px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:12px;font-family:inherit;outline:none;}
+  .normen-panel-input:focus{border-color:var(--accent);}
+  .normen-panel-list{flex:1;overflow-y:auto;padding:8px;}
+  .normen-panel-item{padding:10px 12px;border-radius:8px;margin-bottom:4px;cursor:pointer;border:1px solid transparent;transition:all .12s;}
+  .normen-panel-item:hover{background:rgba(79,142,247,.06);border-color:rgba(79,142,247,.15);}
+  .normen-panel-item-num{font-size:11px;font-weight:700;color:var(--accent);margin-bottom:2px;}
+  .normen-panel-item-titel{font-size:11px;color:var(--text2);margin-bottom:3px;line-height:1.4;}
+  .normen-panel-item-gw{font-size:10px;color:var(--text3);}
+  .normen-panel-item-btn{display:flex;gap:4px;margin-top:6px;}
+  .normen-einfuegen-btn{padding:3px 10px;border-radius:5px;border:none;background:var(--accent);color:#fff;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;}
+  .normen-einfuegen-btn:hover{opacity:.85;}
+  .normen-grp-header{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);padding:8px 12px 4px;margin-top:4px;}
+
+  /* ═══ NORMEN FAB BUTTON ═══ */
+  .normen-fab{position:fixed;right:20px;bottom:80px;width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#3a7be0);border:none;color:#fff;font-size:20px;cursor:pointer;box-shadow:0 4px 16px rgba(79,142,247,.4);z-index:200;transition:all .2s;display:flex;align-items:center;justify-content:center;}
+  .normen-fab:hover{transform:scale(1.08);box-shadow:0 6px 22px rgba(79,142,247,.5);}
+  .normen-fab-label{position:absolute;right:54px;white-space:nowrap;background:var(--surface);border:1px solid var(--border2);border-radius:6px;padding:3px 8px;font-size:11px;font-weight:600;color:var(--text);opacity:0;transition:opacity .2s;pointer-events:none;}
+  .normen-fab:hover .normen-fab-label{opacity:1;}
+
+  /* KI-Suggestion Strip */
+  .ki-norm-strip{padding:8px 12px;background:rgba(79,142,247,.06);border-top:1px solid var(--border);flex-shrink:0;}
+  .ki-norm-strip-title{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;}
+  .ki-norm-chip{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:10px;border:1px solid rgba(79,142,247,.25);background:rgba(79,142,247,.08);color:var(--accent);font-size:11px;font-weight:600;cursor:pointer;margin:2px;transition:all .12s;}
+  .ki-norm-chip:hover{background:var(--accent);color:#fff;}
+
+  /* Normen-Panel Overlay */
+  .normen-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:499;}
+  .normen-overlay.open{display:block;}
+
+/* nav.js Integration in stellungnahme */
+.app-shell .main-wrap { padding-top: 0; }
+.sidebar { z-index: 300; }
+@media(max-width:768px){ #main-wrap { margin-left: 0 !important; } }
+
+@media(max-width:768px){#flow-burger{display:block!important}}
+
+/* ════════════════════════════════════════════════════════
+   NORMEN-PINNWAND — Feature F
+   ════════════════════════════════════════════════════════ */
+.normen-pinnwand {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 16px;
+  background: linear-gradient(135deg, rgba(79,142,247,.06), rgba(79,142,247,.02));
+  border: 1px solid rgba(79,142,247,.15);
+  border-radius: 12px;
+  margin: 8px 16px 12px;
+  position: relative;
+  transition: all .2s;
+}
+.normen-pinnwand.collapsed {
+  padding: 8px 16px;
+  background: rgba(79,142,247,.03);
+}
+.normen-pinnwand-icon {
+  font-size: 16px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.normen-pinnwand-body { flex: 1; min-width: 0; }
+.normen-pinnwand-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  cursor: pointer;
+}
+.normen-pinnwand-title {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--accent, #4f8ef7);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.normen-pinnwand-toggle {
+  font-size: 10px;
+  color: var(--text3);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: inherit;
+  transition: color .12s;
+}
+.normen-pinnwand-toggle:hover { color: var(--text2); }
+.normen-pinnwand-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+.normen-pinnwand.collapsed .normen-pinnwand-chips { display: none; }
+.np-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  background: rgba(79,142,247,.08);
+  border: 1px solid rgba(79,142,247,.2);
+  color: var(--accent, #4f8ef7);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .15s;
+  font-family: inherit;
+  white-space: nowrap;
+}
+.np-chip:hover {
+  background: rgba(79,142,247,.16);
+  border-color: rgba(79,142,247,.4);
+  transform: translateY(-1px);
+}
+.np-chip:active { transform: translateY(0); }
+.np-chip-title {
+  font-size: 10px;
+  color: var(--text3);
+  font-weight: 400;
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.normen-pinnwand-hinweise {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(79,142,247,.1);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.normen-pinnwand.collapsed .normen-pinnwand-hinweise { display: none; }
+.np-hinweis {
+  font-size: 10px;
+  color: var(--text3);
+  padding: 2px 8px;
+  background: rgba(255,255,255,.04);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+.np-copy-toast {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%) translateY(10px);
+  background: rgba(16,185,129,.15);
+  border: 1px solid rgba(16,185,129,.3);
+  color: #10b981;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 8px 16px;
+  border-radius: 8px;
+  z-index: 9999;
+  opacity: 0;
+  transition: all .2s;
+  pointer-events: none;
+  white-space: nowrap;
+}
+.np-copy-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ════════════════════════════════════════════════════════
+   SLASH COMMANDS — Raycast/Notion Style
+   ════════════════════════════════════════════════════════ */
+.slash-menu {
+  position: fixed;
+  z-index: 9000;
+  background: var(--surface, #1c2130);
+  border: 1px solid var(--border2, rgba(255,255,255,.14));
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0,0,0,.55), 0 2px 8px rgba(0,0,0,.35);
+  width: 320px;
+  max-height: 360px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: slashIn .15s cubic-bezier(.25,.46,.45,.94);
+}
+@keyframes slashIn {
+  from { opacity:0; transform:translateY(-6px) scale(.97); }
+  to   { opacity:1; transform:translateY(0) scale(1); }
+}
+.slash-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border, rgba(255,255,255,.07));
+  flex-shrink: 0;
+}
+.slash-search-icon { font-size: 13px; color: var(--text3); flex-shrink: 0; }
+.slash-search-input {
+  flex: 1;
+  background: none;
+  border: none;
+  outline: none;
+  font-size: 13px;
+  color: var(--text);
+  font-family: inherit;
+  caret-color: var(--accent);
+}
+.slash-search-input::placeholder { color: var(--text3); }
+.slash-search-kbd {
+  font-size: 9px;
+  color: var(--text3);
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 4px;
+  padding: 2px 5px;
+  font-family: monospace;
+  flex-shrink: 0;
+}
+.slash-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 6px;
+}
+.slash-body::-webkit-scrollbar { width: 3px; }
+.slash-body::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+.slash-section-label {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--text3);
+  padding: 6px 8px 3px;
+}
+.slash-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 7px 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background .1s;
+}
+.slash-item:hover, .slash-item.slash-active {
+  background: rgba(79,142,247,.1);
+}
+.slash-item-icon {
+  width: 28px; height: 28px;
+  border-radius: 8px;
+  background: rgba(255,255,255,.06);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px;
+  flex-shrink: 0;
+}
+.slash-item-icon.norm { background: rgba(79,142,247,.1); }
+.slash-item-icon.baustein { background: rgba(16,185,129,.1); }
+.slash-item-icon.phrase { background: rgba(245,158,11,.1); }
+.slash-item-body { flex: 1; min-width: 0; }
+.slash-item-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.slash-item-sub {
+  font-size: 10px;
+  color: var(--text3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 1px;
+}
+.slash-item-badge {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: rgba(79,142,247,.12);
+  color: var(--accent);
+  flex-shrink: 0;
+}
+.slash-empty {
+  text-align: center;
+  padding: 20px;
+  font-size: 12px;
+  color: var(--text3);
+}
+.slash-footer {
+  padding: 6px 12px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  gap: 12px;
+  flex-shrink: 0;
+}
+.slash-footer-hint {
+  font-size: 10px;
+  color: var(--text3);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.slash-footer-hint kbd {
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 3px;
+  padding: 1px 4px;
+  font-family: monospace;
+  font-size: 9px;
+}
+
+/* ════════════════════════════════════════════════════════
+   FOCUS MODE — iA Writer / Notion Style
+   ════════════════════════════════════════════════════════ */
+body.focus-mode .flow-header        { opacity:0; pointer-events:none; transition:opacity .3s; }
+body.focus-mode .fall-banner        { display:none !important; }
+body.focus-mode .normen-pinnwand    { display:none !important; }
+body.focus-mode .diktat-hinweis     { display:none !important; }
+body.focus-mode #kiAnalyseBox       { display:none !important; }
+body.focus-mode .sidebar            { transform:translateX(-100%) !important; transition:transform .3s !important; }
+body.focus-mode .main-wrap          { margin-left:0 !important; transition:margin-left .3s; }
+body.focus-mode .weg-tabs           { display:none !important; }
+body.focus-mode .ki-normen-inline   { display:none !important; }
+body.focus-mode .card-header .typ-btn { display:none; }
+
+/* Fokus-Overlay: dunkler Rand um Textarea */
+body.focus-mode .textarea-wrap {
+  box-shadow: 0 0 0 100vmax rgba(0,0,0,.45);
+  border-radius: 8px;
+  position: relative;
+  z-index: 50;
+}
+body.focus-mode .sv-textarea {
+  font-size: 16px !important;
+  line-height: 1.9 !important;
+  padding: 20px !important;
+  min-height: 60vh !important;
+  border-color: rgba(79,142,247,.3) !important;
+  background: var(--bg2, #111318) !important;
+}
+
+/* Fokus-Leiste oben */
+.focus-bar {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: 44px;
+  background: rgba(11,13,17,.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(255,255,255,.06);
+  z-index: 500;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+}
+body.focus-mode .focus-bar { display:flex; }
+body.focus-mode .main-wrap { padding-top: 44px; }
+.focus-bar-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text3);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.focus-bar-title span { color: var(--accent); }
+.focus-bar-exit {
+  padding: 5px 12px;
+  border-radius: 7px;
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.1);
+  color: var(--text3);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all .15s;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.focus-bar-exit:hover { background:rgba(255,255,255,.1); color:var(--text); }
+.focus-bar-chars {
+  font-size: 11px;
+  color: var(--text3);
+  font-variant-numeric: tabular-nums;
+}
+.focus-bar-chars.ok { color: #10b981; }
+
+/* Focus-Toggle-Button im §6 Header */
+.focus-toggle-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 7px;
+  background: rgba(255,255,255,.05);
+  border: 1px solid var(--border);
+  color: var(--text3);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all .15s;
+}
+.focus-toggle-btn:hover { background:rgba(79,142,247,.1); color:var(--accent); border-color:rgba(79,142,247,.3); }
+body.focus-mode .focus-toggle-btn { background:rgba(79,142,247,.12); color:var(--accent); border-color:rgba(79,142,247,.3); }
+
+/* ── KI-Assist Sidebar Panel ── */
+.ki-sidebar-panel{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:12px;}
+.ki-sidebar-title{display:flex;align-items:center;gap:7px;padding:10px 14px;background:rgba(91,72,240,.08);border-bottom:1px solid rgba(91,72,240,.15);font-size:11px;font-weight:700;color:#a78bfa;text-transform:uppercase;letter-spacing:.06em;}
+.ki-action-btn{display:flex;align-items:flex-start;gap:10px;width:100%;padding:10px 14px;background:none;border:none;border-bottom:1px solid var(--border);cursor:pointer;text-align:left;font-family:inherit;transition:background .12s;}
+.ki-action-btn:last-child{border-bottom:none;}
+.ki-action-btn:hover{background:rgba(79,142,247,.06);}
+.ki-action-icon{width:24px;height:24px;border-radius:6px;background:rgba(91,72,240,.15);color:#a78bfa;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;margin-top:1px;}
+.ki-action-name{font-size:12px;font-weight:600;color:var(--text);margin-bottom:2px;}
+.ki-action-desc{font-size:10px;color:var(--text3);line-height:1.4;}
+.ki-shortcut-hint{font-size:10px;color:var(--text3);padding:8px 14px;text-align:center;border-top:1px solid var(--border);}
+/* ── PROVA-Vorschlag Box ── */
+.prova-vorschlag{display:none;margin-top:12px;border:1px solid rgba(91,72,240,.3);border-radius:10px;overflow:hidden;}
+.prova-vorschlag-header{display:flex;align-items:center;justify-content:space-between;padding:9px 14px;background:rgba(91,72,240,.08);border-bottom:1px solid rgba(91,72,240,.15);}
+.prova-vorschlag-label{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:700;color:#8b5cf6;text-transform:uppercase;letter-spacing:.06em;}
+.prova-vorschlag-text{padding:14px 16px;font-size:13px;line-height:1.7;color:var(--text2);user-select:none;-webkit-user-select:none;}
+.prova-vorschlag-actions{display:flex;gap:8px;padding:10px 14px;background:rgba(0,0,0,.1);border-top:1px solid rgba(91,72,240,.1);}
+.btn-einfuegen{padding:7px 14px;border-radius:7px;background:rgba(91,72,240,.15);border:1px solid rgba(91,72,240,.3);color:#a78bfa;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;}
+.btn-verwerfen{padding:7px 14px;border-radius:7px;background:none;border:1px solid var(--border);color:var(--text3);font-size:12px;cursor:pointer;font-family:inherit;}
+.btn-einfuegen:hover{background:rgba(91,72,240,.25);}
+/* ── Auto-Save Indikator ── */
+.autosave-hint{font-size:10px;color:var(--text3);padding:8px 14px;display:flex;align-items:center;gap:5px;}
+.autosave-dot{width:6px;height:6px;border-radius:50%;background:var(--green);}
+</style>
+<script src="prova-preise.js"></script>
+<script src="paket-guard.js"></script>
+<script src="auth-guard.js"></script>
+<script src="theme.js"></script>
+<script src="trial-guard.js"></script>
+<script src="nav.js" defer></script>
+<link rel="stylesheet" href="mobile.css">
+
+<link rel="icon" type="image/svg+xml" href="/icons/icon-192.svg">
+</head>
+<body>
+<!-- FOCUS BAR (erscheint nur im Focus Mode) -->
+<div class="focus-bar" id="focus-bar">
+  <div class="focus-bar-title">
+    <span>✍️</span> Fokus-Modus · §6 Fachurteil
+    <span style="font-size:9px;padding:2px 6px;background:rgba(79,142,247,.15);border-radius:4px;">ESC beendet</span>
+  </div>
+  <div class="focus-bar-chars" id="focus-char-count">0 Zeichen</div>
+  <button class="focus-bar-exit" onclick="toggleFocusMode()">✕ Fokus beenden</button>
+</div>
+
+<div class="app-shell main-wrap" id="app-shell">
+<!-- FLOW HEADER -->
+<header class="flow-header">
+  <button class="burger" onclick="openMobileSidebar()" style="background:none;border:none;cursor:pointer;padding:4px 8px;margin-right:4px;display:none;flex-shrink:0;" id="flow-burger">
+    <span style="display:block;width:18px;height:2px;background:var(--text2,#c8d0e0);margin:3px 0;border-radius:1px;"></span>
+    <span style="display:block;width:18px;height:2px;background:var(--text2,#c8d0e0);margin:3px 0;border-radius:1px;"></span>
+    <span style="display:block;width:18px;height:2px;background:var(--text2,#c8d0e0);margin:3px 0;border-radius:1px;"></span>
+  </button>
+  <a href="dashboard.html" style="display:flex;align-items:center;gap:7px;text-decoration:none;" title="Zur Zentrale"><div style="width:24px;height:24px;background:linear-gradient(135deg,#4f8ef7,#3a7be0);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;">P</div><span style="font-size:14px;font-weight:800;color:#eaecf4;letter-spacing:-.02em;">PR<span style="color:#4f8ef7">O</span>VA</span></a>
+  <a class="flow-back" href="javascript:goBack()" id="backBtn">← Zurück</a>
+  <div class="flow-steps">
+    <div class="flow-step done">
+      <div class="flow-dot">✓</div>
+      <span>Stammdaten</span>
+    </div>
+    <div class="flow-sep done"></div>
+    <div class="flow-step done">
+      <div class="flow-dot">✓</div>
+      <span>Diktat &amp; Fotos</span>
+    </div>
+    <div class="flow-sep done"></div>
+    <div class="flow-step done">
+      <div class="flow-dot">✓</div>
+      <span>Analyse</span>
+    </div>
+    <div class="flow-sep done"></div>
+    <div class="flow-step active">
+      <div class="flow-dot">4</div>
+      <span>§6 Fachurteil</span>
+    </div>
+    <div class="flow-sep"></div>
+    <div class="flow-step" id="flow-step-freigabe">
+      <div class="flow-dot">5</div>
+      <span>Freigabe</span>
+    </div>
+  </div>
+  <div class="flow-az" id="headerAz">—</div>
+</header>
+
+<div class="main-wrap" id="main-wrap"><div class="main" id="stell-main">
+
+  <!-- FALL-BANNER -->
+  <div class="fall-banner">
+    <div class="fall-banner-item"><strong id="bannerAz">—</strong></div>
+    <div class="fall-banner-sep">·</div>
+    <div class="fall-banner-item" id="bannerSa">—</div>
+    <div class="fall-banner-sep">·</div>
+    <div class="fall-banner-item" id="bannerObj">—</div>
+  </div>
+
+  <!-- ── F: NORMEN-PINNWAND ── -->
+  <div class="normen-pinnwand" id="normen-pinnwand" style="display:none;">
+    <div class="normen-pinnwand-icon">📚</div>
+    <div class="normen-pinnwand-body">
+      <div class="normen-pinnwand-header" onclick="toggleNormenPinnwand()">
+        <div class="normen-pinnwand-title">
+          <span id="np-schadenart-label">Referenz-Normen</span>
+          <span id="np-count" style="background:rgba(79,142,247,.15);color:var(--accent);border-radius:8px;padding:1px 6px;font-size:9px;">0</span>
+        </div>
+        <button class="normen-pinnwand-toggle" id="np-toggle-btn">▲ Einklappen</button>
+      </div>
+      <div class="normen-pinnwand-chips" id="np-chips"></div>
+      <div class="normen-pinnwand-hinweise" id="np-hinweise"></div>
+    </div>
+  </div>
+  <div class="np-copy-toast" id="np-copy-toast"></div>
+
+  <!-- §6 DIKTAT-HINWEIS -->
+  <div class="diktat-hinweis">
+    <div class="diktat-hinweis-icon">ℹ️</div>
+    <div><strong>Ihr Schritt:</strong> §6 Fachurteil schreiben. §1–§5 hat die KI bereits ausformuliert — <button onclick="document.getElementById('kiAnalyseBox').querySelector('button').click()" style="background:none;border:none;color:var(--accent);font-size:inherit;cursor:pointer;text-decoration:underline;padding:0;">KI-Entwurf ansehen ↓</button></div>
+  </div>
+
+  <!-- KI-ANALYSE-BOX (Guided Writing v3.1) -->
+  <div class="card" id="kiAnalyseBox" style="border:1px solid rgba(79,142,247,.15);background:linear-gradient(135deg,rgba(79,142,247,.04),rgba(79,142,247,.01));" data-collapsed="true">
+    <div class="card-header" style="border-bottom:1px solid rgba(79,142,247,.1);">
+      <div>
+        <div class="card-title" style="color:#4f8ef7;">🔬 KI-Analyse — Daten aus Ihrem Fall</div>
+        <div class="card-sub">Nur zur Orientierung · Nicht kopierbar</div>
+      </div>
+      <button onclick="ladeKIAnalyse()" id="btnKIAnalyse" style="padding:6px 14px;border-radius:8px;background:rgba(79,142,247,.1);border:1px solid rgba(79,142,247,.2);color:#4f8ef7;font-size:11px;font-weight:600;cursor:pointer;">↓ KI-Daten anzeigen</button>
+      <button onclick="toggleKIBox()" id="btnKIToggle" style="display:block;padding:6px 14px;border-radius:8px;background:rgba(255,255,255,.05);border:1px solid var(--border);color:var(--text3);font-size:11px;cursor:pointer;">▲ Einklappen</button>
+    </div>
+    <div class="card-body" id="kiAnalyseContent" style="user-select:none;-webkit-user-select:none;display:none;">
+
+      <!-- Messwert-Analyse -->
+      <div id="messwertAnalyse" style="display:none;margin-bottom:16px;">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--accent);margin-bottom:8px;">📊 Messwert-Analyse</div>
+        <div id="messwertListe" style="font-size:12px;line-height:1.7;color:var(--text2);"></div>
+      </div>
+
+      <!-- Ursachenkategorien -->
+      <div id="ursachenBox" style="display:none;margin-bottom:16px;">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--accent);margin-bottom:8px;">💡 Mögliche Ursachenkategorien</div>
+        <div id="ursachenListe" style="display:flex;flex-direction:column;gap:6px;"></div>
+        <div style="margin-top:10px;display:flex;gap:8px;align-items:center;">
+          <input type="checkbox" id="ursacheAndere" onchange="toggleAndereUrsache()">
+          <label for="ursacheAndere" style="font-size:12px;color:var(--text2);cursor:pointer;">Andere Ursache:</label>
+          <input type="text" id="ursacheAndereText" placeholder="Eigene Ursache eingeben…" disabled
+            style="flex:1;padding:6px 10px;border-radius:6px;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-size:12px;font-family:inherit;">
+        </div>
+      </div>
+
+      <!-- Diktat-Extrakte -->
+      <div id="diktatExtrakte" style="display:none;margin-bottom:12px;">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--green);margin-bottom:8px;">🎙️ Aus Ihrem Diktat</div>
+        <div id="diktatExtraktText" style="font-size:12px;line-height:1.7;color:var(--text2);"></div>
+      </div>
+
+      <!-- Loading/Empty state -->
+      <div id="kiAnalyseLoading" style="padding:16px;text-align:center;font-size:12px;color:var(--text3);">
+        Klicken Sie auf "Analyse laden" oder beginnen Sie direkt mit Ihrem Fachurteil.
+      </div>
+    </div>
+  </div>
+
+  <!-- ERGÄNZUNGS-DIKTAT -->
+  <div style="display:flex;gap:10px;margin-bottom:16px;align-items:center;">
+    <button onclick="starteErgaenzungsDiktat()" id="btnErgDiktat" style="display:flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.2);color:var(--green);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;">
+      🎙️ Ergänzung diktieren
+    </button>
+    <span style="font-size:11px;color:var(--text3);">Auch nachträglich von zu Hause oder unterwegs</span>
+  </div>
+
+  <!-- EIGENLEISTUNG-FORTSCHRITTSBALKEN -->
+  <div id="eigenleistungBar" style="margin-bottom:16px;padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+      <span style="font-size:11px;font-weight:600;color:var(--text2);">✏️ Ihre Eigenleistung</span>
+      <span id="eigenleistungCount" style="font-size:11px;font-weight:700;color:var(--red);">0 / 700 Zeichen</span>
+    </div>
+    <div style="height:5px;border-radius:5px;background:rgba(255,255,255,.06);overflow:hidden;">
+      <div id="eigenleistungFill" style="height:100%;border-radius:5px;background:var(--red);transition:width .3s,background .3s;width:0%;"></div>
+    </div>
+  </div>
+
+  <!-- 2-SPALTEN-LAYOUT -->
+  <div class="two-col">
+
+    <!-- LINKE SPALTE: SCHREIBEN -->
+    <div class="left-col">
+
+      <!-- §6 FACHURTEIL — Hauptelement -->
+      <div class="card">
+        <div class="card-header" style="flex-direction:column;align-items:flex-start;gap:8px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;width:100%;">
+            <div>
+              <div class="card-title">§6 Fachurteil — Ihre persönliche Einschätzung</div>
+              <div class="card-sub">Pflicht nach §407a Abs. 3 ZPO · Konjunktiv II wird live geprüft</div>
+            </div>
+            <!-- Verwendungszweck: kompakte Pills direkt im Header -->
+            <div style="display:flex;gap:6px;flex-shrink:0;align-items:center;">
+              <button class="typ-btn active" id="typ-gericht" onclick="setTyp('gericht')" style="padding:4px 10px;font-size:10px;min-width:auto;">⚖️ Gericht</button>
+              <button class="typ-btn" id="typ-versicherung" onclick="setTyp('versicherung')" style="padding:4px 10px;font-size:10px;min-width:auto;">🏢 Versicherung</button>
+              <button class="typ-btn" id="typ-privat" onclick="setTyp('privat')" style="padding:4px 10px;font-size:10px;min-width:auto;">🏠 Privat</button>
+              <div style="width:1px;height:18px;background:var(--border);margin:0 2px;"></div>
+              <button class="focus-toggle-btn" id="focus-btn" onclick="toggleFocusMode()" title="Fokus-Modus (F)">
+                <span id="focus-btn-icon">⛶</span>
+                <span id="focus-btn-label">Fokus</span>
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="card-body">
+          <!-- Weg-Tabs -->
+          <div class="weg-tabs">
+            <button class="weg-tab active" id="tab-a" onclick="setWeg('A')">✍️ Freitext</button>
+            <button class="weg-tab" id="tab-b" onclick="setWeg('B')">🔗 Kausalkette (3 Felder)</button>
+          </div>
+
+          <!-- Weg A -->
+          <div id="weg-a">
+            <div class="textarea-wrap" style="position:relative;">
+              <div class="textarea-highlight" id="hlA" style="pointer-events:none;z-index:1;"></div>
+              <textarea class="sv-textarea" id="svTextA"
+                placeholder="Die Ursache dürfte auf … zurückzuführen sein. Die Beweislast dürfte … liegen. Es wäre zu empfehlen, …"
+                oninput="onInputA()" rows="14"
+                style="position:relative;z-index:2;background:transparent;"></textarea>
+            </div>
+    <!-- §407a Rechtsprüfung (N3/N4) -->
+    <div id="rp-container" style="margin-top:12px;"></div>
+
+            
+              <!-- PROVA-Vorschlag Box -->
+              <div class="prova-vorschlag" id="ki-vorschlag-box">
+                <div class="prova-vorschlag-header">
+                  <div class="prova-vorschlag-label"><span>✦</span><span>PROVA-Vorschlag — bitte prüfen</span></div>
+                  <button onclick="schliesseVorschlag()" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:18px;line-height:1;padding:0;">✕</button>
+                </div>
+                <div id="ki-vorschlag-text" class="prova-vorschlag-text"></div>
+                <div class="prova-vorschlag-actions">
+                  <button class="btn-einfuegen" onclick="kiVorschlagUebernehmen()">In Feld einfügen →</button>
+                  <button class="btn-verwerfen" onclick="schliesseVorschlag()">Verwerfen</button>
+                </div>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;">
+                <div class="char-count bad" id="charA">0 / mind. 700 Zeichen</div>
+                <button type="button" onclick="starteKIAssist('freitext')"
+                  style="padding:4px 12px;border-radius:6px;border:1px solid rgba(79,142,247,.3);
+                  background:rgba(79,142,247,.1);color:#93c5fd;font-size:11px;font-weight:600;
+                  cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:5px;">
+                  🤖 KI-Formulierungshilfe
+                </button>
+              </div>
+            <div id="autosave-ind" style="font-size:11px;color:#10b981;opacity:0;transition:opacity .5s;margin-top:3px;">✓ gespeichert</div>
+            <div id="freigabe-cta" style="display:none;margin-top:10px;">
+              <button onclick="speichereUndWeiter()" style="width:100%;padding:10px 16px;border-radius:8px;background:linear-gradient(135deg,#10b981,#059669);border:none;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font-ui,inherit);letter-spacing:.02em;">
+                ✅ §6 abschließen &amp; Freigabe starten →
+              </button>
+            </div>
+            <div class="ki-normen-inline" id="ki-normen-inline">
+              <div class="ki-normen-inline-title">🤖 Passende Normen erkannt</div>
+              <div class="ki-normen-chips" id="ki-normen-chips"></div>
+            </div>
+            <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap;">
+              <button onclick="window.open('textbausteine.html','tb_popup','width=800,height=600,resizable')"
+                style="padding:5px 11px;border-radius:6px;background:var(--surface2);border:1px solid var(--border2);color:var(--text3);font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;"
+                title="Textbaustein einfügen">📝 Textbaustein</button>
+              <button onclick="window.open('normen.html','norm_popup','width=900,height=700,resizable')"
+                style="padding:5px 11px;border-radius:6px;background:var(--surface2);border:1px solid var(--border2);color:var(--text3);font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;"
+                title="Norm einfügen">📚 Norm</button>
+              <span style="font-size:10px;color:var(--text3);padding:5px 6px;align-self:center;">oder <kbd style="background:var(--surface2);border:1px solid var(--border2);border-radius:3px;padding:1px 5px;font-size:10px;">/</kbd> tippen</span>
+            </div>
+            <div class="kj-check idle" id="kjCheckA">
+              <span>⏳</span><span>Konjunktiv II wird geprüft sobald Sie schreiben…</span>
+            </div>
+            <!-- Verstöße-Liste: klickbar, springt zur Stelle -->
+            <div id="kjFehlerListeA" style="display:none;margin-top:6px;"></div>
+            <!-- KI-Konjunktiv Fix Button -->
+            <div id="kjFixBtnA" style="display:none;margin-top:8px;">
+              <button onclick="_kjAktivTa='svTextA';kiAssist('konjunktiv')"
+                style="padding:6px 14px;border-radius:7px;border:1px solid rgba(91,72,240,.3);
+                background:rgba(91,72,240,.08);color:#a78bfa;font-size:11px;font-weight:600;
+                cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px;">
+                ⚖ KI-Korrektur anwenden — Konjunktiv II →
+              </button>
+            </div>
+          </div>
+
+          <!-- Weg B -->
+          <div id="weg-b" style="display:none;">
+            <div class="feld-block">
+              <div class="feld-label"><span class="feld-num">1</span> Was haben Sie vor Ort festgestellt?</div>
+              <div class="textarea-wrap">
+                <div class="textarea-highlight" id="hlB1"></div>
+                <textarea class="sv-textarea" id="svB1"
+                  placeholder="z.B. Im Schlafzimmer OG wurde Schimmelbefall ca. 0,5 m² festgestellt…"
+                  oninput="onInputB()" onfocus="setAktivFeld('B1')" rows="3" style="min-height:80px;"></textarea>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px;">
+                <div class="char-count bad" id="charB1">0/250</div>
+                <button type="button" onclick="starteKIAssist('befund')"
+                  style="padding:3px 10px;border-radius:5px;border:1px solid rgba(79,142,247,.25);
+                  background:rgba(79,142,247,.08);color:#93c5fd;font-size:10px;cursor:pointer;font-family:inherit;">
+                  🤖 KI-Hilfe
+                </button>
+              </div>
+              <div class="ki-hint-bubble" id="hintB1">
+                <div class="ki-hint-label">KI-Denkanstoß</div>
+                <div class="ki-hint-text" id="hintB1text"></div>
+              </div>
+            </div>
+            <div class="feld-block">
+              <div class="feld-label"><span class="feld-num">2</span> Was schließen <em>Sie</em> daraus? <small style="color:var(--accent);font-style:normal;">(Ihre Kausalaussage)</small></div>
+              <div class="textarea-wrap">
+                <div class="textarea-highlight" id="hlB2"></div>
+                <textarea class="sv-textarea" id="svB2"
+                  placeholder="z.B. Die Ursache dürfte auf unzureichende Beheizung und Lüftung zurückzuführen sein…"
+                  oninput="onInputB()" onfocus="setAktivFeld('B2')" rows="3" style="min-height:80px;"></textarea>
+              </div>
+              <div class="char-count bad" id="charB2">0/350</div>
+              <div class="kj-check idle" id="kjCheckB">
+                <span>⏳</span><span>Konjunktiv II wird geprüft…</span>
+              </div>
+              <div class="ki-hint-bubble" id="hintB2">
+                <div class="ki-hint-label">KI-Denkanstoß</div>
+                <div class="ki-hint-text" id="hintB2text"></div>
+              </div>
+            </div>
+            <div class="feld-block">
+              <div class="feld-label"><span class="feld-num">3</span> Was empfehlen Sie?</div>
+              <div class="textarea-wrap">
+                <div class="textarea-highlight" id="hlB3"></div>
+                <textarea class="sv-textarea" id="svB3"
+                  placeholder="z.B. Es wäre zu empfehlen, die Außenwand thermisch zu sanieren…"
+                  oninput="onInputB()" onfocus="setAktivFeld('B3')" rows="2" style="min-height:70px;"></textarea>
+              </div>
+              <div class="char-count bad" id="charB3">0/150</div>
+              <div class="ki-hint-bubble" id="hintB3">
+                <div class="ki-hint-label">KI-Denkanstoß</div>
+                <div class="ki-hint-text" id="hintB3text"></div>
+              </div>
+            </div>
+
+            <!-- KI-Ausformulieren -->
+            <button id="btnAusform" onclick="ausformulieren()" style="display:none;
+              width:100%;padding:10px;margin-top:4px;
+              background:rgba(79,142,247,.1);border:1px solid rgba(79,142,247,.25);
+              border-radius:8px;color:var(--accent);font-size:13px;font-weight:600;
+              cursor:pointer;font-family:var(--font-ui);">
+              ✨ Meine Stichpunkte formulieren lassen
+            </button>
+
+            <!-- Ausformulierten Text bearbeiten -->
+            <div id="ausform-wrap" style="display:none;margin-top:12px;">
+              <div style="font-size:11px;color:var(--text3);margin-bottom:6px;">
+                KI-Formulierung — bitte überarbeiten und als Ihren Text anpassen:
+              </div>
+              <textarea class="sv-textarea" id="svTextEdit"
+                placeholder="Überarbeiten Sie den Text…"
+                oninput="onInputEdit()" rows="6" style="min-height:140px;"></textarea>
+              <div class="char-count" id="charEdit">0 Zeichen</div>
+              <div class="kj-check idle" id="kjCheckEdit">
+                <span>⏳</span><span>Konjunktiv II wird geprüft…</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- KI-Inspiration (dezent, immer verfügbar) -->
+          <div class="ki-insp-wrap" id="kiInspWrap" style="margin-top:10px;">
+            <div class="ki-insp-header" onclick="toggleInsp()" style="padding:6px 10px;border-radius:8px;background:rgba(79,142,247,.05);border:1px solid rgba(79,142,247,.1);cursor:pointer;">
+              <div class="ki-insp-label" style="font-size:11px;">
+                <span>💡</span>
+                <span style="font-weight:600;color:var(--accent);">KI-Denkanstoß</span>
+                <span style="font-size:10px;font-weight:400;color:var(--text3);">— nur zur Orientierung · Nicht kopierbar</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <span class="ki-insp-note">Nicht kopierbar · Nur Inspiration</span>
+                <span id="insp-toggle-icon" style="color:var(--text3);font-size:10px;">▼ einblenden</span>
+              </div>
+            </div>
+            <div class="ki-insp-body" id="kiInspBody">
+              <div id="kiInspLoading" style="display:flex;align-items:center;gap:10px;color:var(--text3);font-size:12px;padding:4px 0;">
+                <div class="ki-spinner"></div>
+                <span>Analysiere den Fall…</span>
+              </div>
+              <div class="ki-insp-text" id="kiInspText" style="display:none;"></div>
+              <button class="ki-insp-btn" id="kiInspRefresh" onclick="ladeKiInsp()" style="display:none;">
+                🔄 Neuer Denkanstoß
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- §407a Bestätigung + Weiter -->
+      <div class="card">
+        <div class="card-body">
+          <div class="confirm-box">
+            <div class="confirm-row">
+              <input type="checkbox" id="confirm407a" onchange="checkReady()">
+              <label for="confirm407a" class="confirm-text">
+                Ich habe dieses Gutachten <strong>persönlich geprüft</strong> und übernehme die
+                <strong>fachliche Verantwortung</strong> gemäß §407a ZPO. Die KI-Offenlegung
+                gemäß EU AI Act ist im Gutachten enthalten.
+              </label>
+            </div>
+            <div class="confirm-law">§407a Abs. 3 ZPO · EU AI Act (VO 2024/1689) · Audit-Trail wird automatisch gesichert</div>
+          </div>
+          <button class="btn-primary" id="btnWeiter" onclick="weiterZuFreigabe()" disabled>
+            Fachurteil bestätigen &amp; zur Freigabe →
+          </button>
+          <button class="btn-secondary" onclick="goBack()">← Zurück zur Akte</button>
+        </div>
+      </div>
+
+    </div><!-- /left-col -->
+
+    <!-- RECHTE SPALTE: KONTEXT + NORMEN -->
+    <div class="right-col">
+
+      <!-- Fall-Kontext -->
+      <div class="ctx-card">
+        <div class="ctx-title">📋 Fall-Kontext</div>
+        <div class="ctx-row"><span class="ctx-key">Aktenzeichen</span><span class="ctx-val" id="ctxAz">—</span></div>
+        <div class="ctx-row"><span class="ctx-key">Schadenart</span><span class="ctx-val" id="ctxSa">—</span></div>
+        <div class="ctx-row"><span class="ctx-key">Objekt</span><span class="ctx-val" id="ctxObj">—</span></div>
+        <div class="ctx-row"><span class="ctx-key">Begehung</span><span class="ctx-val" id="ctxDatum">—</span></div>
+      </div>
+
+      <!-- Normen-Vorschläge -->
+      <div class="normen-card">
+        <div class="normen-header">
+          📐 Passende Normen
+          <span style="font-size:10px;font-weight:400;margin-left:4px;">— Klick fügt in §6 ein</span>
+        </div>
+        <div id="normenListe">
+          <div style="padding:12px 14px;font-size:11px;color:var(--text3);">
+            Wird nach Schadenart geladen…
+          </div>
+        </div>
+      </div>
+
+      <!-- KI-Assist Panel -->
+      <div class="ki-sidebar-panel">
+        <div class="ki-sidebar-title"><span>✦</span> KI-Assist</div>
+        <button class="ki-action-btn" onclick="kiAssist('assist')">
+          <div class="ki-action-icon">✦</div>
+          <div><div class="ki-action-name">KI-Assist</div><div class="ki-action-desc">Vorschlag erscheint im Feld — SV entscheidet</div></div>
+        </button>
+        <button class="ki-action-btn" onclick="kiAssist('konjunktiv')">
+          <div class="ki-action-icon">⚖</div>
+          <div><div class="ki-action-name">Konjunktiv II anwenden</div><div class="ki-action-desc">Indikativ im aktiven Feld korrigieren</div></div>
+        </button>
+        <button class="ki-action-btn" onclick="kiAssist('neutral')">
+          <div class="ki-action-icon">⚖</div>
+          <div><div class="ki-action-name">Juristisch neutral</div><div class="ki-action-desc">§407a-konforme Formulierung</div></div>
+        </button>
+        <button class="ki-action-btn" onclick="kiAssist('ausformulieren')">
+          <div class="ki-action-icon">✦</div>
+          <div><div class="ki-action-name">Ausformulieren</div><div class="ki-action-desc">Stichpunkte → vollständige Sätze</div></div>
+        </button>
+        <button class="ki-action-btn" onclick="kiAssist('kuerzen')">
+          <div class="ki-action-icon">◈</div>
+          <div><div class="ki-action-name">Präzisieren</div><div class="ki-action-desc">Kürzen auf juristische Kernaussage</div></div>
+        </button>
+        <div class="ki-shortcut-hint">Strg+Enter im Textfeld = KI-Assist · Tab = nächstes Feld</div>
+      </div>
+      <!-- Auto-Save -->
+      <div class="autosave-hint" id="autosaveHint" style="display:none;">
+        <div class="autosave-dot"></div><span id="autosaveText">Gespeichert · gerade eben</span>
+      </div>
+      <!-- Konjunktiv II — Bausteine (kompakt) -->
+      <div class="normen-card">
+        <div class="normen-header">⚖️ Konjunktiv II — Bausteine</div>
+        <div class="phrase-wrap">
+          <span class="phrase" onclick="insertPhrase('dürfte zurückzuführen sein auf')">dürfte zurückzuführen sein auf</span>
+          <span class="phrase" onclick="insertPhrase('könnte auf … hindeuten')">könnte auf … hindeuten</span>
+          <span class="phrase" onclick="insertPhrase('wäre naheliegend')">wäre naheliegend</span>
+          <span class="phrase" onclick="insertPhrase('ließe sich vermuten')">ließe sich vermuten</span>
+          <span class="phrase" onclick="insertPhrase('wäre zu empfehlen')">wäre zu empfehlen</span>
+          <span class="phrase" onclick="insertPhrase('Beweislast dürfte beim … liegen')">Beweislast dürfte … liegen</span>
+          <span class="phrase" onclick="insertPhrase('dürfte erforderlich sein')">dürfte erforderlich sein</span>
+        </div>
+      </div>
+
+    </div><!-- /right-col -->
+  </div><!-- /two-col -->
+</div><!-- /main -->
+
+<div class="toast" id="toast"></div>
+
+
+  <script src="sw-register.js" defer></script>
+  <script src="auto-save.js" defer></script>
+  <script src="auftragstyp.js"></script>
+  <script src="normen-logic.js" defer></script>
+  <script src="stellungnahme-logic.js" defer></script>
+  <script src="global-search.js" defer></script>
+<script src="prova-context.js" defer></script>
+<script src="prova-error-handler.js" defer></script>
+  <script src="ki-lernpool.js" defer></script>
+  <script src="rechtspruefung.js" defer></script>
+
+  <script defer>
+    document.addEventListener('DOMContentLoaded', function() {
+      if (typeof Rechtspruefung !== 'undefined') {
+        Rechtspruefung.init({
+          containerId: 'rp-container',
+          textareaId: 'svTextA'
+        });
+      }
+    });
+  </script>
+</body>
+</html>

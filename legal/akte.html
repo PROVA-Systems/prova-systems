@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="PROVA">
+  <meta name="theme-color" content="#111827">
+  <link rel="apple-touch-icon" href="/icons/icon-192.png">
+  <meta name="viewport" content="width=device-width,initial-scale=1, viewport-fit=cover">
+<title>Akte · PROVA</title>
+<script src="prova-preise.js"></script>
+<script src="paket-guard.js"></script>
+<script src="theme.js"></script>
+<script src="auth-guard.js"></script>
+<script src="nav.js" defer></script>
+<style>
+:root{
+  --bg:#0b0d11;--bg2:#111318;--bg3:#161a22;
+  --surface:#1c2130;--surface2:#232a3a;
+  --border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.11);
+  --text:#eaecf4;--text2:#8b93ab;--text3:#4d5568;
+  --accent:#4f8ef7;--accent2:#3a7be0;
+  --success:#10b981;--warning:#f59e0b;--danger:#ef4444;--purple:#8b5cf6;
+  --font-ui:'DM Sans',system-ui,sans-serif;
+  --font-mono:ui-monospace,Consolas,monospace;
+  --r-sm:6px;--r-md:10px;--r-lg:14px;
+  --shadow-md:0 4px 16px rgba(0,0,0,.35);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{font-size:14px;}body{font-family:var(--font-ui);background:var(--bg);color:var(--text2);min-height:100vh;overflow-x:hidden;line-height:1.55;}
+a{text-decoration:none;color:inherit;}button,input,select,textarea{font-family:inherit;font-size:inherit;}
+*{-webkit-tap-highlight-color:transparent;}
+
+/* LAYOUT (sidebar handled by nav.js) */
+.app-shell{display:flex;min-height:100vh;}
+/* margin-left wird von nav.js via .sidebar ~ .main-wrap mit !important gesetzt */
+.main-wrap{flex:1;min-width:0;display:flex;flex-direction:column;min-height:100vh;}
+.topbar{height:52px;min-height:52px;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 24px;position:sticky;top:0;z-index:100;flex-shrink:0;}
+.topbar-left{display:flex;align-items:center;gap:12px;}
+.topbar-right{display:flex;align-items:center;gap:6px;}
+.breadcrumb{font-size:13px;color:var(--text3);display:flex;align-items:center;gap:6px;}
+.breadcrumb strong{color:var(--text2);font-weight:600;}
+.topbar-btn{display:flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:var(--r-sm);border:1px solid var(--border2);background:transparent;color:var(--text3);cursor:pointer;font-size:14px;transition:all .12s;}
+.topbar-btn:hover{color:var(--text2);background:rgba(255,255,255,.05);}
+.topbar-paket{font-size:10px;font-weight:700;padding:3px 9px;border-radius:10px;letter-spacing:.04em;}
+.burger{display:none;flex-direction:column;gap:4.5px;background:none;border:none;cursor:pointer;padding:8px;border-radius:6px;min-height:36px;align-items:center;justify-content:center;}
+.burger span{display:block;width:18px;height:2px;background:var(--text2);border-radius:2px;}
+.sb-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:190;backdrop-filter:blur(2px);}
+.sb-overlay.open{display:block;}
+.bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;height:56px;background:var(--bg2);border-top:1px solid var(--border);z-index:150;flex-direction:row;align-items:stretch;justify-content:space-around;padding:0 4px;}
+.bn-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;text-decoration:none;color:var(--text3);padding:4px 0;font-size:9px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;}
+.bn-item.active{color:var(--accent);}
+.bn-icon{font-size:17px;}
+
+/* ─── AKTE PAGE ─── */
+.page-content{padding:24px 28px 48px;max-width:1200px;width:100%;}
+
+/* HEADER */
+.akte-header{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;margin-bottom:24px;flex-wrap:wrap;}
+.akte-header-left{display:flex;align-items:flex-start;gap:16px;}
+.back-btn{display:flex;align-items:center;gap:6px;padding:8px 12px;border-radius:var(--r-md);border:1px solid var(--border2);background:transparent;color:var(--text2);font-size:12px;font-weight:600;cursor:pointer;transition:all .12s;white-space:nowrap;}
+.back-btn:hover{border-color:var(--accent);color:var(--accent);}
+.akte-title-block{}
+.akte-az{font-size:11px;font-weight:700;font-family:var(--font-mono);color:var(--accent);letter-spacing:.04em;margin-bottom:4px;}
+.akte-title{font-size:22px;font-weight:800;letter-spacing:-.025em;color:var(--text);margin-bottom:4px;}
+.akte-sub{font-size:13px;color:var(--text3);}
+.akte-header-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.status-select{padding:7px 12px;background:var(--surface);border:1px solid var(--border2);border-radius:var(--r-md);color:var(--text2);font-size:12px;font-weight:600;outline:none;cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%234d5568' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;padding-right:26px;}
+.status-select option{background:var(--bg2);}
+.action-btn{display:flex;align-items:center;gap:6px;padding:8px 14px;border-radius:var(--r-md);border:none;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;white-space:nowrap;}
+.btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;}
+.btn-primary:hover{opacity:.9;transform:translateY(-1px);}
+.btn-ghost{background:var(--surface);border:1px solid var(--border2);color:var(--text2);}
+.btn-ghost:hover{border-color:var(--border2);background:var(--surface2);}
+.btn-danger{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.25);color:var(--danger);}
+.btn-danger:hover{background:rgba(239,68,68,.18);}
+
+/* MAIN GRID */
+.akte-grid{display:grid;grid-template-columns:1fr 320px;gap:20px;align-items:start;}
+
+/* SECTIONS */
+.section-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);margin-bottom:16px;overflow:hidden;}
+.section-header{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border);cursor:pointer;}
+.section-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text3);display:flex;align-items:center;gap:8px;}
+.section-title-icon{font-size:15px;}
+.section-toggle{font-size:11px;color:var(--text3);transition:transform .15s;}
+.section-card.collapsed .section-body{display:none;}
+.section-card.collapsed .section-toggle{transform:rotate(-90deg);}
+.section-body{padding:16px 18px;}
+
+/* STAMMDATEN */
+.meta-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.meta-item{display:flex;flex-direction:column;gap:3px;}
+.meta-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);}
+.meta-value{font-size:13px;font-weight:600;color:var(--text);}
+.meta-value.mono{font-family:var(--font-mono);}
+.meta-value.empty{color:var(--text3);font-weight:400;}
+.meta-edit{font-size:11px;color:var(--accent);cursor:pointer;margin-left:6px;}
+
+/* TIMELINE / STATUS */
+.timeline{display:flex;flex-direction:column;gap:0;}
+.tl-item{display:flex;align-items:flex-start;gap:14px;padding-bottom:16px;position:relative;}
+.tl-item:last-child{padding-bottom:0;}
+.tl-item::before{content:'';position:absolute;left:11px;top:24px;bottom:0;width:1px;background:var(--border);z-index:0;}
+.tl-item:last-child::before{display:none;}
+.tl-dot{width:22px;height:22px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;z-index:1;}
+.tl-dot.done{background:rgba(16,185,129,.15);border:2px solid var(--success);color:var(--success);}
+.tl-dot.active{background:rgba(79,142,247,.15);border:2px solid var(--accent);color:var(--accent);}
+.tl-dot.pending{background:var(--bg3);border:2px solid var(--border2);color:var(--text3);}
+.tl-content{flex:1;}
+.tl-title{font-size:12px;font-weight:700;color:var(--text);margin-bottom:2px;}
+.tl-meta{font-size:11px;color:var(--text3);}
+
+/* SCHNELLAKTIONEN */
+.quick-actions{display:flex;flex-direction:column;gap:8px;}
+.qa-btn{display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r-md);cursor:pointer;transition:all .15s;text-decoration:none;}
+.qa-btn:hover{border-color:var(--border2);background:var(--surface2);}
+.qa-icon{font-size:18px;width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.qa-label{font-size:13px;font-weight:600;color:var(--text);}
+.qa-sub{font-size:11px;color:var(--text3);}
+.qa-arrow{margin-left:auto;color:var(--text3);font-size:14px;}
+
+/* DOKUMENTE */
+.dokument-list{display:flex;flex-direction:column;gap:8px;}
+.dok-item{display:flex;align-items:center;gap:12px;padding:10px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r-md);}
+.dok-icon{font-size:18px;flex-shrink:0;}
+.dok-name{font-size:12px;font-weight:600;color:var(--text);flex:1;}
+.dok-meta{font-size:10px;color:var(--text3);}
+.dok-actions{display:flex;gap:4px;}
+.dok-btn{padding:4px 8px;border-radius:5px;border:1px solid var(--border2);background:transparent;color:var(--text3);font-size:11px;cursor:pointer;transition:all .12s;}
+.dok-btn:hover{border-color:var(--accent);color:var(--accent);}
+.dok-empty{padding:20px;text-align:center;font-size:12px;color:var(--text3);}
+
+/* NOTIZEN */
+.notiz-area{width:100%;padding:10px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r-md);color:var(--text);font-size:13px;outline:none;resize:vertical;min-height:80px;line-height:1.6;transition:border-color .15s;}
+.notiz-area:focus{border-color:var(--accent);}
+.notiz-save{margin-top:8px;padding:7px 14px;border-radius:var(--r-sm);border:none;background:var(--accent);color:#fff;font-size:12px;font-weight:600;cursor:pointer;}
+
+/* RECHTE SPALTE */
+.right-col{display:flex;flex-direction:column;gap:14px;}
+.info-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:16px;}
+.info-card-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text3);margin-bottom:12px;}
+
+/* STATUS BADGE */
+.status-badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;padding:4px 10px;border-radius:10px;}
+.st-bearb{background:rgba(79,142,247,.12);color:var(--accent);}
+.st-entwurf{background:rgba(245,158,11,.12);color:var(--warning);}
+.st-freig{background:rgba(16,185,129,.12);color:var(--success);}
+.st-export{background:rgba(139,92,246,.12);color:var(--purple);}
+.st-archiv{background:rgba(255,255,255,.04);color:var(--text3);}
+
+/* LOADING */
+.skeleton{background:linear-gradient(90deg,var(--surface) 25%,var(--surface2) 50%,var(--surface) 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:6px;}
+@keyframes shimmer{0%{background-position:200% 0;}100%{background-position:-200% 0;}}
+.loading-state{padding:48px;text-align:center;}
+.loading-icon{font-size:32px;margin-bottom:12px;opacity:.3;}
+.not-found{padding:60px 20px;text-align:center;}
+
+/* Toast */
+.toast{position:fixed;bottom:24px;right:24px;z-index:600;padding:11px 18px;border-radius:var(--r-md);font-size:13px;font-weight:600;background:var(--surface2);border:1px solid rgba(16,185,129,.35);color:var(--success);transition:all .3s cubic-bezier(.34,1.56,.64,1);opacity:0;transform:translateY(16px);}
+.toast.show{opacity:1;transform:translateY(0);}
+.toast.err{border-color:rgba(239,68,68,.35);color:var(--danger);}
+.support-fab{position:fixed;bottom:24px;right:24px;z-index:400;width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));box-shadow:0 4px 16px rgba(79,142,247,.4);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;border:none;color:#fff;}
+
+/* Responsive */
+@media(max-width:1000px){.akte-grid{grid-template-columns:1fr;}}
+@media(max-width:768px){
+  .burger{display:flex;}
+  .page-content{padding:16px 16px 72px;}
+  .topbar{padding:0 16px;}
+  .meta-grid{grid-template-columns:1fr;}
+  .akte-header{flex-direction:column;}
+  .akte-header-right{width:100%;}
+}
+@media(max-width:600px){
+  .page-content{padding:12px 12px 72px;}
+}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+.page-content{animation:fadeIn .22s ease;}
+
+  /* ── SUPPORT FAB ── */
+  .support-fab{position:fixed;bottom:20px;right:20px;width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,var(--accent,#4f8ef7),#3a7be0);border:none;color:#fff;font-size:20px;cursor:pointer;box-shadow:0 4px 16px rgba(79,142,247,.4);z-index:300;transition:all .2s;display:flex;align-items:center;justify-content:center;}
+  .support-fab:hover{transform:scale(1.08);box-shadow:0 6px 22px rgba(79,142,247,.5);}
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:400;backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:20px;}
+  .modal-overlay.open{display:flex;}
+  .modal-box{background:var(--surface,#1c2537);border:1px solid var(--border2,rgba(255,255,255,.12));border-radius:16px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;}
+  .modal-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border,rgba(255,255,255,.07));}
+  .modal-title{font-size:15px;font-weight:700;color:var(--text,#e8eaf0);}
+  .modal-close{background:none;border:none;color:var(--text3,#6b7a99);font-size:18px;cursor:pointer;padding:4px;border-radius:4px;}
+  .modal-close:hover{color:var(--text,#e8eaf0);}
+  .modal-body{padding:20px;}
+  .sup-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text3,#6b7a99);margin-bottom:5px;}
+  .sup-input{width:100%;padding:9px 12px;background:var(--bg3,#161f30);border:1px solid var(--border2,rgba(255,255,255,.12));border-radius:8px;color:var(--text,#e8eaf0);font-size:13px;font-family:inherit;outline:none;margin-bottom:12px;}
+  .sup-input:focus{border-color:var(--accent,#4f8ef7);}
+  .sup-textarea{resize:vertical;min-height:90px;}
+  .sup-err{font-size:12px;color:var(--red,#ef4444);margin-bottom:8px;display:none;}
+  .sup-send-btn{width:100%;padding:11px;background:linear-gradient(135deg,var(--accent,#4f8ef7),#3a7be0);border:none;border-radius:8px;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;}
+  .sup-send-btn:disabled{opacity:.5;cursor:not-allowed;}
+  .sup-ok{display:none;text-align:center;padding:20px 0;}
+  .sup-ok-icon{font-size:36px;margin-bottom:8px;}
+  .sup-ok-title{font-size:15px;font-weight:700;color:var(--green,#10b981);margin-bottom:4px;}
+  .sup-ok-sub{font-size:12px;color:var(--text3,#6b7a99);}
+@media(max-width:768px){.bottom-nav{display:flex !important;}}
+</style>
+<link rel="icon" type="image/svg+xml" href="/icons/icon-192.svg">
+<link rel="stylesheet" href="mobile.css">
+<link rel="stylesheet" href="prova-design.css">
+</head>
+<body>
+<div class="app-shell">
+
+<nav class="sidebar" id="sidebar"></nav>
+<div class="sb-overlay" id="sb-overlay" onclick="closeMobileSidebar()"></div>
+
+<div class="main-wrap" id="main-wrap">
+  <header class="topbar">
+    <div class="topbar-left">
+      <button class="burger" onclick="openMobileSidebar()"><span></span><span></span><span></span></button>
+      <div class="breadcrumb">
+        <span>PROVA</span><span style="color:var(--text3)">›</span>
+        <a href="archiv.html" style="color:var(--text3);">Fälle</a>
+        <span style="color:var(--text3)">›</span>
+        <strong id="bc-az">Akte</strong>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <span class="topbar-paket" id="topbar-paket-badge" style="display:none;"></span>
+      <a href="einstellungen.html"><button class="topbar-btn">⚙</button></a>
+    </div>
+  </header>
+
+  <main class="page-content" id="page-main">
+    <!-- Loading State -->
+    <div id="loading-state" class="loading-state">
+      <div class="loading-icon">📂</div>
+      <div style="font-size:14px;color:var(--text2);margin-bottom:6px;">Akte wird geladen…</div>
+      <div style="font-size:12px;color:var(--text3);">Daten werden geladen…</div>
+    </div>
+
+    <!-- Content (hidden while loading) -->
+    <div id="akte-content" style="display:none;">
+
+      <!-- HEADER -->
+      <div class="akte-header">
+        <div class="akte-header-left">
+          <button class="back-btn" onclick="window.location.href='archiv.html'">← Fälle</button>
+          <div class="akte-title-block">
+            <div class="akte-az" id="h-az">—</div>
+            <div class="akte-title" id="h-title">Schadenfall</div>
+            <div class="akte-sub" id="h-sub">Wird geladen…</div>
+          </div>
+        </div>
+        <div class="akte-header-right">
+          <select class="status-select" id="status-select" onchange="aktualisiereStatus()">
+            <option value="In Bearbeitung">In Bearbeitung</option>
+            <option value="Entwurf">Entwurf fertig</option>
+            <option value="Freigegeben">Freigegeben</option>
+            <option value="Exportiert">Exportiert</option>
+            <option value="Archiviert">Archiviert</option>
+          </select>
+          <button class="action-btn btn-primary" onclick="oeffneGutachten()">📄 Gutachten öffnen</button>
+          <button class="action-btn btn-ghost" onclick="exportWordAkte()" title="Als Word-Dokument herunterladen">📝 Word (.doc)</button>
+          <button class="action-btn btn-ghost" onclick="oeffneFreigabe()">✅ Freigabe</button>
+        </div>
+      </div>
+
+      <!-- MAIN GRID -->
+      <div class="akte-grid">
+
+        <!-- LINKE SPALTE -->
+        <div>
+
+          <!-- STAMMDATEN -->
+          <div class="section-card" id="sec-stamm">
+            <div class="section-header" onclick="toggleSection('sec-stamm')">
+              <div class="section-title"><span class="section-title-icon">📋</span>Stammdaten</div>
+              <span class="section-toggle">▾</span>
+            </div>
+            <div class="section-body">
+              <div class="meta-grid" id="meta-grid">
+                <!-- Wird per JS befüllt -->
+              </div>
+            </div>
+          </div>
+
+          <!-- STATUS-TIMELINE -->
+          <div class="section-card" id="sec-timeline">
+            <div class="section-header" onclick="toggleSection('sec-timeline')">
+              <div class="section-title"><span class="section-title-icon">🔄</span>Bearbeitungs-Status</div>
+              <span class="section-toggle">▾</span>
+            </div>
+            <div class="section-body">
+              <div class="timeline" id="timeline-body">
+                <!-- Wird per JS befüllt -->
+              </div>
+            </div>
+          </div>
+
+          <!-- DOKUMENTE -->
+          <div class="section-card" id="sec-docs">
+            <div class="section-header" onclick="toggleSection('sec-docs')">
+              <div class="section-title"><span class="section-title-icon">📄</span>Dokumente & PDFs</div>
+              <span class="section-toggle">▾</span>
+            </div>
+            <div class="section-body">
+              <!-- Upload Zone -->
+              <div id="dok-upload-zone" style="padding:16px;border:2px dashed var(--border2,rgba(255,255,255,.12));border-radius:8px;text-align:center;margin-bottom:12px;cursor:pointer;transition:all .2s;"
+                ondragover="event.preventDefault();this.style.borderColor='var(--accent)';this.style.background='rgba(79,142,247,.05)'"
+                ondragleave="this.style.borderColor='';this.style.background=''"
+                ondrop="event.preventDefault();this.style.borderColor='';this.style.background='';handleDokUpload(event.dataTransfer.files)"
+                onclick="document.getElementById('dok-file-input').click()">
+                <div style="font-size:20px;margin-bottom:4px;">📂</div>
+                <div style="font-size:12px;color:var(--text2);">Dokument hochladen (PDF, Scan, Brief)</div>
+                <div style="font-size:10px;color:var(--text3);margin-top:2px;">Drag & Drop oder klicken — KI erkennt Typ + Fristen</div>
+                <input type="file" id="dok-file-input" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" multiple style="display:none" onchange="handleDokUpload(this.files)">
+              </div>
+              <div id="dok-upload-status" style="display:none;font-size:12px;color:#4f8ef7;padding:8px;margin-bottom:8px;">⏳ KI analysiert…</div>
+              <!-- Frist-Vorschlag Banner -->
+              <div id="dok-frist-banner" style="display:none;padding:10px 14px;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);border-radius:8px;margin-bottom:10px;font-size:12px;">
+                <strong style="color:#f59e0b;">📅 Frist erkannt:</strong> <span id="dok-frist-text"></span>
+                <button onclick="uebernimmFrist()" style="margin-left:8px;padding:3px 10px;border-radius:5px;background:#f59e0b;border:none;color:#fff;font-size:11px;font-weight:600;cursor:pointer;">In Kalender übernehmen</button>
+                <button onclick="document.getElementById('dok-frist-banner').style.display='none'" style="margin-left:4px;padding:3px 8px;border-radius:5px;background:transparent;border:1px solid rgba(245,158,11,.3);color:#f59e0b;font-size:11px;cursor:pointer;">✕</button>
+              </div>
+              <div class="dokument-list" id="dok-list">
+                <!-- Wird per JS befüllt -->
+              </div>
+            </div>
+          </div>
+
+          <!-- GUTACHTEN-ENTWURF PREVIEW -->
+          <div class="section-card" id="sec-entwurf" style="display:none;">
+            <div class="section-header" onclick="toggleSection('sec-entwurf')">
+              <div class="section-title"><span class="section-title-icon">📝</span>KI-Entwurf (Vorschau)</div>
+              <span class="section-toggle">▾</span>
+            </div>
+            <div class="section-body">
+              <div id="entwurf-preview" style="font-size:12px;color:var(--text2);line-height:1.7;white-space:pre-wrap;max-height:300px;overflow-y:auto;background:var(--bg3);padding:14px;border-radius:var(--r-md);border:1px solid var(--border);"></div>
+              <div style="margin-top:10px;display:flex;gap:8px;">
+                <button class="action-btn btn-primary" onclick="oeffneFreigabe()" style="font-size:12px;padding:7px 12px;">✅ Zur Freigabe</button>
+                <button class="action-btn btn-ghost" onclick="kopiereEntwurf()" style="font-size:12px;padding:7px 12px;">📋 Kopieren</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- NOTIZEN -->
+          <div class="section-card" id="sec-notizen">
+            <div class="section-header" onclick="toggleSection('sec-notizen')">
+              <div class="section-title"><span class="section-title-icon">💬</span>Interne Notizen</div>
+              <span class="section-toggle">▾</span>
+            </div>
+            <div class="section-body">
+              <textarea class="notiz-area" id="notiz-input" placeholder="Interne Notizen zu diesem Fall (werden nicht im Gutachten angezeigt)…"></textarea>
+              <button class="notiz-save" onclick="speichereNotiz()">Notiz speichern</button>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- RECHTE SPALTE -->
+        <div class="right-col">
+
+          <!-- STATUS KARTE -->
+          <div class="info-card">
+            <div class="info-card-title">Status</div>
+            <div id="status-display" style="margin-bottom:12px;"></div>
+            <div style="font-size:11px;color:var(--text3);line-height:1.6;" id="status-hint">—</div>
+          </div>
+
+          <!-- AUFTRAGGEBER -->
+          <div class="info-card">
+            <div class="info-card-title">Auftraggeber</div>
+            <div id="ag-card">
+              <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px;" id="ag-name">—</div>
+              <div style="font-size:11px;color:var(--text3);line-height:1.7;" id="ag-details"></div>
+              <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;" id="ag-actions"></div>
+            </div>
+          </div>
+
+          <!-- SCHNELLAKTIONEN -->
+          <div class="info-card">
+            <div class="info-card-title">Schnellaktionen</div>
+            <div class="quick-actions" id="quick-actions">
+              <!-- Wird per JS je Status befüllt -->
+            </div>
+          </div>
+
+          <!-- FRISTEN & TERMINE -->
+          <div class="info-card">
+            <div class="info-card-title">Fristen & Termine</div>
+            <div id="fristen-list" style="font-size:12px;color:var(--text3);">Keine Termine verknüpft.</div>
+            <button onclick="window.location.href='termine.html'" style="margin-top:10px;width:100%;padding:8px;border-radius:var(--r-md);border:1px dashed var(--border2);background:transparent;color:var(--text3);font-size:11px;cursor:pointer;">+ Termin anlegen</button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Not Found -->
+    <div id="not-found" style="display:none;" class="not-found">
+      <div style="font-size:48px;margin-bottom:16px;opacity:.3;">🔍</div>
+      <div style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:8px;">Fall nicht gefunden</div>
+      <div style="font-size:13px;color:var(--text3);margin-bottom:20px;">Möglicherweise wurde der Fall gelöscht oder Sie haben keine Berechtigung.</div>
+      <button class="action-btn btn-primary" onclick="window.location.href='archiv.html'">← Zurück zu Fälle</button>
+    </div>
+  </main>
+</div>
+</div>
+
+<nav class="bottom-nav" style="display:none;">
+  <a href="dashboard.html" class="bn-item"><span class="bn-icon">⊞</span><span>Zentrale</span></a>
+  <a href="archiv.html" class="bn-item active"><span class="bn-icon">📁</span><span>Fälle</span></a>
+  <a href="rechnungen.html" class="bn-item"><span class="bn-icon">💶</span><span>Rechnungen</span></a>
+  <a href="termine.html" class="bn-item"><span class="bn-icon">📅</span><span>Kalender</span></a>
+  <a href="einstellungen.html" class="bn-item"><span class="bn-icon">⚙️</span><span>Einstellungen</span></a>
+</nav>
+
+<div class="toast" id="toast"></div>
+<button class="support-fab" onclick="openSupportModal()" title="Support">💬</button>
+
+  <script src="sw-register.js" defer></script>
+  <script src="global-search.js" defer></script>
+  <script src="auftragstyp.js"></script>
+  <script src="slide-panel.js"></script>
+  <script src="trial-guard.js"></script>
+  <script src="akte-logic.js" defer></script>
+<script src="prova-context.js" defer></script>
+<script src="prova-error-handler.js" defer></script>
+</body>
+</html>

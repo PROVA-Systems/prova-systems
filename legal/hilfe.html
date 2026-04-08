@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PROVA · Hilfe</title>
+<link rel="manifest" href="/manifest.json">
+<script src="prova-preise.js"></script>
+<script src="paket-guard.js"></script>
+<script src="auth-guard.js"></script>
+<script src="theme.js"></script>
+<script src="nav.js" defer></script>
+<script src="slide-panel.js"></script>
+<script src="sw-register.js"></script>
+<style>
+:root{
+  --bg:#0b1220;--bg2:#111827;--bg3:#161f30;
+  --surface:#1c2537;--surface2:#222d42;--surface3:#2a3550;
+  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);
+  --text:#e8eaf0;--text2:#aab4cb;--text3:#6b7a99;
+  --accent:#4f8ef7;--accent2:#3a7be0;
+  --green:#10b981;
+  --font-ui:"Inter",system-ui,sans-serif;
+  --topbar-h:52px;--sb-w:228px;--radius:10px;--radius-sm:6px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--font-ui);font-size:14px;line-height:1.5;min-height:100vh}
+.app-shell{display:flex;min-height:100vh}
+.main-content{flex:1;margin-left:var(--sb-w);padding:28px 36px;max-width:820px}
+.page-title{font-size:20px;font-weight:700;margin-bottom:20px;color:var(--text)}
+
+/* Suche */
+.hilfe-search{width:100%;padding:10px 16px;background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius);color:var(--text);font-size:14px;font-family:inherit;margin-bottom:28px}
+.hilfe-search:focus{outline:none;border-color:var(--accent)}
+.hilfe-search::placeholder{color:var(--text3)}
+
+/* Schnellzugriff */
+.quick-links{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:28px}
+.quick-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;cursor:pointer;transition:all .15s;text-decoration:none;display:block}
+.quick-card:hover{border-color:var(--accent);background:var(--surface2)}
+.quick-card-icon{font-size:22px;margin-bottom:6px}
+.quick-card-title{font-size:13px;font-weight:700;color:var(--accent)}
+.quick-card-sub{font-size:11px;color:var(--text3);margin-top:2px}
+
+/* FAQ */
+.faq-section{margin-bottom:28px}
+.faq-section-title{font-size:13px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.7px;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+.faq-item{border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:6px;overflow:hidden;transition:border-color .15s}
+.faq-item.open{border-color:var(--border2)}
+.faq-q{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;cursor:pointer;font-size:13px;font-weight:600;color:var(--text);user-select:none;gap:12px}
+.faq-q:hover{background:var(--surface2)}
+.faq-chevron{font-size:14px;color:var(--text3);transition:transform .2s;flex-shrink:0;display:inline-block}
+.faq-item.open .faq-chevron{transform:rotate(90deg)}
+.faq-a{display:none;padding:0 16px 14px;font-size:13px;color:var(--text2);line-height:1.7;border-top:1px solid var(--border)}
+.faq-item.open .faq-a{display:block}
+.faq-a a{color:var(--accent)}
+.faq-a strong{color:var(--text)}
+.faq-a kbd{background:var(--surface2);border:1px solid var(--border2);border-radius:4px;padding:1px 6px;font-size:11px;font-family:monospace}
+
+/* Support-Cards */
+.support-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:8px}
+.support-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px}
+.support-card-icon{font-size:20px;margin-bottom:6px}
+.support-card-label{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px}
+.support-card-value{font-size:13px;color:var(--text);font-weight:600}
+
+@media(max-width:900px){.main-content{margin-left:0;padding:16px}}
+@media(max-width:600px){.quick-links{grid-template-columns:1fr 1fr}.support-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="app-shell">
+<div class="sidebar" id="sidebar"></div>
+<main class="main-content">
+
+  <h1 class="page-title">PROVA · Hilfe</h1>
+
+  <input class="hilfe-search" placeholder="🔍 Hilfe durchsuchen…" oninput="filterFaq(this.value)" id="hilfe-suche">
+
+  <!-- Schnellzugriff -->
+  <div class="quick-links">
+    <a class="quick-card" href="app.html">
+      <div class="quick-card-icon">📋</div>
+      <div class="quick-card-title">Gutachten starten</div>
+      <div class="quick-card-sub">Schritt 1 — Stammdaten</div>
+    </a>
+    <a class="quick-card" href="normen.html">
+      <div class="quick-card-icon">📚</div>
+      <div class="quick-card-title">Normen nachschlagen</div>
+      <div class="quick-card-sub">163 DIN / WTA / ZPO</div>
+    </a>
+    <a class="quick-card" href="jveg.html">
+      <div class="quick-card-icon">⚖️</div>
+      <div class="quick-card-title">JVEG-Rechner</div>
+      <div class="quick-card-sub">Honorar berechnen</div>
+    </a>
+  </div>
+
+  <!-- ═══ ERSTE SCHRITTE ═══ -->
+  <div class="faq-section">
+    <div class="faq-section-title">Erste Schritte</div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">Wie erstelle ich mein erstes Gutachten?<span class="faq-chevron">›</span></div>
+      <div class="faq-a">
+        <ol style="padding-left:18px;margin:8px 0">
+          <li>Sidebar → <strong>„+ Neuer Fall"</strong> klicken</li>
+          <li>Schritt 1: Stammdaten — Auftraggeber, Adresse, Schadenart</li>
+          <li>Schritt 2: Diktat aufnehmen oder Text eintippen</li>
+          <li>Schritt 3: KI-Analyse startet automatisch</li>
+          <li>Schritt 4: §6 Fachurteil persönlich verfassen</li>
+          <li>Schritt 5: Freigabe → PDF automatisch erstellt</li>
+        </ol>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">Wie funktioniert die Diktat-Funktion?<span class="faq-chevron">›</span></div>
+      <div class="faq-a">In Schritt 2 auf den Mikrofon-Button tippen. Der Browser fragt nach Mikrofonerlaubnis — einmalig erlauben. Sprechen Sie Ihre Befunde, Messwerte und Beobachtungen. Alternativ: Tab „Eingabe" → Text direkt eintippen.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">Was ist im Trial-Zeitraum enthalten?<span class="faq-chevron">›</span></div>
+      <div class="faq-a">Der Trial läuft <strong>14 Tage kostenlos</strong>, keine Kreditkarte erforderlich. Voller Solo-Funktionsumfang: unbegrenzte Gutachten, alle KI-Funktionen, PDF-Generierung. Danach: Solo (149 €/Monat) oder Team (279 €/Monat).</div>
+    </div>
+  </div>
+
+  <!-- ═══ GUTACHTEN & KI ═══ -->
+  <div class="faq-section">
+    <div class="faq-section-title">Gutachten &amp; KI</div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">Was ist der §6-Konjunktiv-II-Check?<span class="faq-chevron">›</span></div>
+      <div class="faq-a">Nach §407a ZPO muss der Sachverständige Kausalaussagen im Konjunktiv II formulieren: <em>„Als Ursache käme … in Betracht"</em>, <em>„könnte zurückzuführen sein"</em>. PROVA prüft dies automatisch und markiert Indikativ-Fehler.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">Die KI-Analyse dauert sehr lange — was tun?<span class="faq-chevron">›</span></div>
+      <div class="faq-a">Mit Fotos: 60–120 Sekunden (GPT-4o Vision). Ohne Fotos: 20–40 Sekunden. <strong>Seite nicht neu laden</strong> — der Webhook läuft im Hintergrund. Nach 3 Minuten kein Ergebnis: Archiv → Korrektur-Modus.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">Was ist das Halluzinationsverbot?<span class="faq-chevron">›</span></div>
+      <div class="faq-a">Die KI darf ausschließlich Informationen aus Ihrem Diktat verwenden. Straßen, Namen, Messwerte die nicht im Diktat stehen werden mit <em>[fehlt]</em> markiert — nie erfunden.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">Das PDF wird nicht erstellt — Fehlersuche<span class="faq-chevron">›</span></div>
+      <div class="faq-a">
+        <ol style="padding-left:18px;margin:8px 0">
+          <li>Alle Pflichtfelder in Schritt 1 ausgefüllt?</li>
+          <li>§6 Fachurteil mindestens 500 Zeichen?</li>
+          <li>PDF-Generator benötigt 30–120 Sekunden</li>
+          <li>Freigabe-Seite neu laden und erneut freigeben</li>
+          <li>Weiterhin Fehler: Aktenzeichen notieren und Support kontaktieren</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ ABRECHNUNG & JVEG ═══ -->
+  <div class="faq-section">
+    <div class="faq-section-title">Abrechnung &amp; JVEG</div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">Wie berechne ich mein Gerichts-Honorar nach JVEG?<span class="faq-chevron">›</span></div>
+      <div class="faq-a">Öffnen Sie den <a href="jveg.html">JVEG-Rechner</a> in der Sidebar. Geben Sie Stunden, Fahrtkilometer (0,42 €/km) und Wartezeit ein. Das Ergebnis kann direkt als E-Rechnung übernommen werden.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">Wann brauche ich eine E-Rechnung?<span class="faq-chevron">›</span></div>
+      <div class="faq-a">XRechnung ist Pflicht für Rechnungen an Gerichte und Behörden seit 2020 (Bund) / 2023 (Länder). Für Versicherungen und Privatpersonen genügt eine normale Rechnung oder ZUGFeRD-PDF.</div>
+    </div>
+  </div>
+
+  <!-- ═══ TECHNISCHE PROBLEME ═══ -->
+  <div class="faq-section">
+    <div class="faq-section-title">Technische Probleme</div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">Seite zeigt alten Stand / lädt nicht korrekt<span class="faq-chevron">›</span></div>
+      <div class="faq-a"><strong>Hard-Refresh:</strong> <kbd>Strg+Shift+R</kbd> (Windows) oder <kbd>Cmd+Shift+R</kbd> (Mac). Leert den Browser-Cache und Service-Worker.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">Mikrofon funktioniert nicht<span class="faq-chevron">›</span></div>
+      <div class="faq-a">Adressleiste → Schloss-Symbol → Mikrofon → <strong>Erlauben</strong>. Chrome oder Safari empfohlen. Seite danach neu laden.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">Wiederaufnahme-Banner erscheint bei neuem Gutachten<span class="faq-chevron">›</span></div>
+      <div class="faq-a">Klicken Sie auf <strong>„Verwerfen"</strong> für ein neues leeres Gutachten. Falls der Banner fälschlicherweise erscheint: <kbd>Strg+Shift+R</kbd> (Hard-Refresh).</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">KI-Analyse schlägt fehl<span class="faq-chevron">›</span></div>
+      <div class="faq-a">30 Sekunden warten und erneut versuchen. Diktat vorhanden? (mind. 10 Zeichen). Bei dauerhaftem Fehler: Korrektur-Modus im Archiv nutzen.</div>
+    </div>
+  </div>
+
+  <!-- ═══ E-RECHNUNG ═══ -->
+  <div class="faq-section">
+    <div class="faq-section-title">E-Rechnung &amp; XRechnung</div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">Was ist die Leitweg-ID und wo bekomme ich sie?<span class="faq-chevron">›</span></div>
+      <div class="faq-a">Die Leitweg-ID ist eine Kennung des Rechnungsempfängers (Format: 993-99999-99). Sie wird vom Gericht oder der Behörde vergeben. Einfach anfragen: <em>„Bitte teilen Sie mir Ihre Leitweg-ID für E-Rechnungen mit."</em></div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">Wie prüfe ich ob meine XRechnung gültig ist?<span class="faq-chevron">›</span></div>
+      <div class="faq-a">Nach dem Download: <a href="https://erechnungs-validator.de" target="_blank">erechnungs-validator.de</a> — XML hochladen, sofortiger Prüfbericht. Kostenlos, kein Login. <strong>Immer vor dem Versand prüfen!</strong></div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">Welche E-Mail des Empfängers wird benötigt?<span class="faq-chevron">›</span></div>
+      <div class="faq-a">Seit XRechnung 3.0.1 ist die Rechnungseingangs-E-Mail des Gerichts Pflicht (BT-49). Z.B. rechnungseingang@lg-koeln.de — beim Auftraggeber erfragen.</div>
+    </div>
+  </div>
+
+  <!-- ═══ SUPPORT ═══ -->
+  <div class="faq-section">
+    <div class="faq-section-title">Support kontaktieren</div>
+    <div class="support-grid">
+      <div class="support-card">
+        <div class="support-card-icon">✉️</div>
+        <div class="support-card-label">E-Mail</div>
+        <div class="support-card-value">support@prova-systems.de</div>
+      </div>
+      <div class="support-card">
+        <div class="support-card-icon">⏱</div>
+        <div class="support-card-label">Reaktionszeit</div>
+        <div class="support-card-value">Mo–Fr, innerhalb 24 Stunden</div>
+      </div>
+    </div>
+  </div>
+
+</main>
+</div>
+
+<script>
+function filterFaq(q) {
+  var lower = q.toLowerCase().trim();
+  document.querySelectorAll('.faq-item').forEach(function(item) {
+    var text = item.textContent.toLowerCase();
+    item.style.display = (!lower || text.includes(lower)) ? '' : 'none';
+  });
+  document.querySelectorAll('.faq-section').forEach(function(sec) {
+    var visible = Array.from(sec.querySelectorAll('.faq-item')).some(function(i) { return i.style.display !== 'none'; });
+    sec.style.display = visible ? '' : 'none';
+  });
+}
+</script>
+<script src="global-search.js" defer></script>
+<script src="auto-save.js" defer></script>
+<script src="prova-context.js" defer></script>
+<script src="prova-error-handler.js" defer></script>
+<script src="support-chat.js"></script>
+<script src="trial-guard.js"></script>
+<script src="hilfe-logic.js" defer></script>
+</body>
+</html>

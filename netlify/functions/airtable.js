@@ -13,18 +13,28 @@
 
 // ── Erlaubte Tabellen (Whitelist — niemals '*') ──
 const ALLOWED_TABLES = {
-  // Fälle: User-Filter wird automatisch angehängt
-  tblSxV8bsXwd1pwa0: { name: 'FAELLE',      userField: 'SV_Email', readOnly: false },
-  // SV-Profil: nur eigenes Profil
-  tbladqEQT3tmx4DIB: { name: 'SV',          userField: 'Email',    readOnly: false },
-  // Termine: User-Filter
-  tblyMTTdtfGQjjmc2: { name: 'TERMINE',     userField: 'SV_Email', readOnly: false },
-  // Rechnungen: User-Filter
-  tblF6MS7uiFAJDjiT: { name: 'RECHNUNGEN',  userField: 'SV_Email', readOnly: false },
-  // KI-Statistik: schreiben OK, lesen eingeschränkt
-  tblv9F8LEnUC3mKru: { name: 'KI_STATISTIK', userField: null,      readOnly: false },
-  // KI-Lernpool: nur schreiben
-  tbl4LEsMvcDKFCYaF: { name: 'KI_LERNPOOL', userField: null,       readOnly: false },
+  // Fälle: User-Filter automatisch
+  tblSxV8bsXwd1pwa0: { name: 'FAELLE',            userField: 'sv_email', readOnly: false },
+  // SV-Profil
+  tbladqEQT3tmx4DIB: { name: 'SV',                userField: 'Email',    readOnly: false },
+  // Termine
+  tblyMTTdtfGQjjmc2: { name: 'TERMINE',            userField: 'sv_email', readOnly: false },
+  // Rechnungen
+  tblF6MS7uiFAJDjiT: { name: 'RECHNUNGEN',         userField: 'sv_email', readOnly: false },
+  // Kontakte — User-Filter
+  tblMKmPLjRelr6Hal: { name: 'KONTAKTE',           userField: null,       readOnly: false },
+  // Briefe — User-Filter
+  tblSzxvnkRE6B0thx: { name: 'BRIEFE',             userField: 'sv_email', readOnly: false },
+  // Textbausteine — User-Filter
+  tblDS8NQxzceGedJO: { name: 'TEXTBAUSTEINE',      userField: 'sv_email', readOnly: false },
+  // KI-Statistik
+  tblv9F8LEnUC3mKru: { name: 'KI_STATISTIK',       userField: null,       readOnly: false },
+  // KI-Lernpool
+  tbl4LEsMvcDKFCYaF: { name: 'KI_LERNPOOL',        userField: null,       readOnly: false },
+  // Push-Subscriptions
+  tblAiF38HeS1R1Umj: { name: 'PUSH_SUBSCRIPTIONS', userField: 'Email',    readOnly: false },
+  // Gutachten-Templates (readonly für alle)
+  tblW1DGrXIKoSTvJN: { name: 'GUTACHTEN_TEMPLATES',userField: null,       readOnly: true  },
 };
 
 // ── Rate-Limiting (In-Memory, wird bei Function-Cold-Start zurückgesetzt) ──
@@ -162,7 +172,10 @@ exports.handler = async function(event) {
     KONTAKTE:           'tblMKmPLjRelr6Hal',
     KI_STATISTIK:       'tblv9F8LEnUC3mKru',
     KI_LERNPOOL:        'tbl4LEsMvcDKFCYaF',
-    PUSH_SUBSCRIPTIONS: 'tblPUSH_PLACEHOLDER', // nach Airtable-Anlage ersetzen
+    BRIEFE:             'tblSzxvnkRE6B0thx',
+    TEXTBAUSTEINE:      'tblDS8NQxzceGedJO',
+    GUTACHTEN_TEMPLATES:'tblW1DGrXIKoSTvJN',
+    PUSH_SUBSCRIPTIONS: 'tblAiF38HeS1R1Umj',
   };
   const BASE_ID = 'appJ7bLlAHZoxENWE';
 

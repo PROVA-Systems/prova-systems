@@ -361,3 +361,32 @@
       if (radio) radio.checked = true;
     }
   });
+/* ── L8 Onboarding-Abschluss → Make Webhook ── */
+window.provaOnboardingAbschluss = async function() {
+  var email   = localStorage.getItem('prova_sv_email')   || '';
+  var vorname = localStorage.getItem('prova_sv_vorname') || '';
+  var paket   = localStorage.getItem('prova_paket')      || 'Solo';
+
+  // L8 Webhook: PROVA_L8_WEBHOOK oder MAKE_WEBHOOK_KAUF (aus ENV)
+  var L8_HOOK = 'https://hook.eu1.make.com/f5hvgtyl57iegnrpcf80k9g8t3naat4l';
+
+  // onboarding_done in Airtable setzen (falls nicht schon gesetzt)
+  localStorage.setItem('prova_onboarding_done', '1');
+
+  // L8 triggern
+  try {
+    await fetch(L8_HOOK, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email:   email,
+        vorname: vorname,
+        paket:   paket,
+        datum:   new Date().toISOString(),
+      })
+    });
+    console.log('[PROVA] L8 Onboarding-Webhook getriggert ✅');
+  } catch(e) {
+    console.warn('[PROVA] L8 Webhook fehlgeschlagen:', e.message);
+  }
+};

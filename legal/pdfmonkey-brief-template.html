@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Arial', Helvetica, sans-serif; font-size: 10pt; color: #1a1a1a; 
+         background: white; padding: 0; }
+  
+  .page { width: 210mm; min-height: 297mm; padding: 20mm 25mm 20mm 25mm; position: relative; }
+  
+  /* Briefkopf DIN 5008 */
+  .briefkopf { display: flex; justify-content: space-between; margin-bottom: 8mm; }
+  .absender-block { font-size: 9pt; }
+  .absender-block .name { font-size: 12pt; font-weight: bold; color: #1a3a6b; }
+  .absender-block .qualifikation { font-size: 8pt; color: #666; margin-bottom: 4mm; }
+  
+  .logo-block { text-align: right; }
+  .logo-block .kammer { font-size: 7pt; color: #888; border: 1px solid #ddd; 
+                         padding: 4px 8px; border-radius: 4px; }
+  
+  /* Trennlinie */
+  .trennlinie { border-top: 2px solid #1a3a6b; margin: 4mm 0; }
+  .trennlinie-thin { border-top: 1px solid #ddd; margin: 3mm 0; }
+  
+  /* Anschrift nach DIN 5008 */
+  .absender-klein { font-size: 7pt; color: #888; text-decoration: underline; 
+                    margin-bottom: 2mm; }
+  .empfaenger-block { min-height: 45mm; }
+  .empfaenger-block .name { font-weight: bold; }
+  
+  /* Informationsblock rechts */
+  .info-block { position: absolute; right: 25mm; top: 55mm; 
+                text-align: right; font-size: 9pt; }
+  .info-block .label { font-size: 7pt; color: #888; text-transform: uppercase; 
+                        letter-spacing: 0.5px; }
+  .info-block .value { font-weight: 600; margin-bottom: 3mm; }
+  .info-block .az { color: #1a3a6b; font-size: 11pt; font-weight: bold; }
+  
+  /* Betreff */
+  .betreff { font-weight: bold; font-size: 11pt; margin: 8mm 0 6mm 0; }
+  
+  /* Brieftext */
+  .brieftext { line-height: 1.6; font-size: 10pt; }
+  .brieftext p { margin-bottom: 4mm; }
+  .brieftext ul { margin: 3mm 0 3mm 6mm; }
+  .brieftext li { margin-bottom: 2mm; }
+  .brieftext strong { font-weight: 600; }
+  
+  /* Grußformel */
+  .grussformel { margin-top: 8mm; }
+  .grussformel .abstand { margin-top: 20mm; }
+  .grussformel .unterschrift-linie { border-top: 1px solid #333; 
+                                      width: 60mm; margin-top: 0; }
+  .grussformel .sv-name { font-weight: bold; margin-top: 2mm; }
+  .grussformel .sv-titel { font-size: 8pt; color: #666; }
+  
+  /* Fußzeile */
+  .fusszeile { position: fixed; bottom: 10mm; left: 25mm; right: 25mm;
+               border-top: 1px solid #ddd; padding-top: 3mm;
+               display: flex; justify-content: space-between;
+               font-size: 7pt; color: #888; }
+  
+  /* EU AI Act Label */
+  .ai-label { font-size: 6pt; color: #aaa; margin-top: 2mm; text-align: right; }
+  
+  @media print { .page { padding: 0; } }
+</style>
+</head>
+<body>
+<div class="page">
+  
+  <!-- BRIEFKOPF -->
+  <div class="briefkopf">
+    <div class="absender-block">
+      <div class="name">{{sv_titel}} {{sv_vorname}} {{sv_nachname}}</div>
+      <div class="qualifikation">Öffentlich bestellter und vereidigter Sachverständiger für {{sv_qualifikation}}</div>
+      <div>{{sv_strasse}} · {{sv_plz}} {{sv_ort}}</div>
+      <div>Tel.: {{sv_telefon}} · {{sv_email}}</div>
+      {% if sv_website %}<div>{{sv_website}}</div>{% endif %}
+    </div>
+    <div class="logo-block">
+      {% if sv_stempel_url %}
+        <img src="{{sv_stempel_url}}" alt="SV-Stempel" style="height:25mm;">
+      {% else %}
+        <div class="kammer">IHK-bestellt<br>ö.b.u.v. SV</div>
+      {% endif %}
+    </div>
+  </div>
+  
+  <div class="trennlinie"></div>
+  
+  <!-- ANSCHRIFTFELD DIN 5008 -->
+  <div class="absender-klein">{{sv_vorname}} {{sv_nachname}} · {{sv_strasse}} · {{sv_plz}} {{sv_ort}}</div>
+  <div class="empfaenger-block">
+    <div class="name">{{empfaenger_name}}</div>
+    <div>{{empfaenger_strasse}}</div>
+    <div>{{empfaenger_plz}} {{empfaenger_ort}}</div>
+  </div>
+  
+  <!-- INFOBLOCK RECHTS -->
+  <div class="info-block">
+    <div class="label">Datum</div>
+    <div class="value">{{datum}}</div>
+    <div class="label">Mein Zeichen</div>
+    <div class="value az">{{aktenzeichen}}</div>
+    {% if gericht_az %}
+    <div class="label">Ihr Zeichen</div>
+    <div class="value">{{gericht_az}}</div>
+    {% endif %}
+    {% if sv_steuernr %}
+    <div class="label">Steuer-Nr.</div>
+    <div class="value" style="font-size:8pt;">{{sv_steuernr}}</div>
+    {% endif %}
+  </div>
+  
+  <!-- BETREFF -->
+  <div class="betreff">{{betreff}}</div>
+  <div class="trennlinie-thin"></div>
+  
+  <!-- BRIEFTEXT -->
+  <div class="brieftext">
+    {{brief_inhalt}}
+  </div>
+  
+  <!-- GRUSSFORMEL -->
+  <div class="grussformel">
+    <p>Mit freundlichen Grüßen</p>
+    <div class="abstand"></div>
+    <div class="unterschrift-linie"></div>
+    <div class="sv-name">{{sv_titel}} {{sv_vorname}} {{sv_nachname}}</div>
+    <div class="sv-titel">Öffentlich bestellter und vereidigter Sachverständiger</div>
+    {% if sv_qualifikation %}<div class="sv-titel">{{sv_qualifikation}}</div>{% endif %}
+  </div>
+  
+  <!-- ANLAGEN -->
+  {% if anlagen %}
+  <div style="margin-top:6mm; font-size:9pt;">
+    <strong>Anlage(n):</strong> {{anlagen}}
+  </div>
+  {% endif %}
+
+  <!-- FUSSZEILE -->
+  <div class="fusszeile">
+    <div>
+      <strong>{{sv_firma_oder_name}}</strong> · {{sv_strasse}} · {{sv_plz}} {{sv_ort}}<br>
+      IBAN: {{sv_iban}} · BIC: {{sv_bic}} · {{sv_bank}}
+    </div>
+    <div style="text-align:right;">
+      USt-IdNr.: {{sv_ustid}}<br>
+      Steuer-Nr.: {{sv_steuernr}}
+    </div>
+  </div>
+  
+  <!-- EU AI ACT (nur wenn KI genutzt) -->
+  {% if ki_genutzt %}
+  <div class="ai-label">Erstellt unter Verwendung von KI-Unterstützung gemäß EU AI Act · {{ki_modell_label}} · {{eu_ai_act_datum}}</div>
+  {% endif %}
+
+</div>
+</body>
+</html>

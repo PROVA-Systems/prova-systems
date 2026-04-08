@@ -1,0 +1,1349 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="PROVA Ortstermin">
+<meta name="theme-color" content="#0b0d11">
+<title>Ortstermin · PROVA</title>
+<link rel="manifest" href="/manifest.json">
+<script src="prova-preise.js"></script>
+<script src="auth-guard.js"></script>
+<script src="trial-guard.js"></script>
+<script src="paket-guard.js"></script>
+<script src="theme.js"></script>
+<style>
+/* ══════════════════════════════════════════════════════════════════
+   PROVA ORTSTERMIN-MODUS
+   Optimiert für iPad + iPhone am Baustellen-Einsatz
+   Große Touch-Targets, Offline-fähig, Kamera-direkt
+══════════════════════════════════════════════════════════════════ */
+
+:root {
+  --bg:       #0b0d11;
+  --bg2:      #111318;
+  --bg3:      #161a22;
+  --surface:  #1c2130;
+  --surface2: #232a3a;
+  --border:   rgba(255,255,255,0.07);
+  --border2:  rgba(255,255,255,0.13);
+  --text:     #eaecf4;
+  --text2:    #8b93ab;
+  --text3:    #4d5568;
+  --accent:   #4f8ef7;
+  --success:  #10b981;
+  --warning:  #f59e0b;
+  --danger:   #ef4444;
+  --purple:   #8b5cf6;
+  --font-ui:  'DM Sans', system-ui, sans-serif;
+  --r-sm:6px; --r-md:10px; --r-lg:14px; --r-xl:18px;
+}
+
+*,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
+html { font-size:15px; height:100%; }
+body {
+  font-family: var(--font-ui);
+  background: var(--bg);
+  color: var(--text);
+  height: 100%;
+  overflow: hidden;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+/* ── LAYOUT ──────────────────────────────────────────────────── */
+.ot-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  height: calc(var(--vh, 1vh) * 100);
+  padding-top: env(safe-area-inset-top, 0);
+  padding-bottom: env(safe-area-inset-bottom, 0);
+  padding-left: env(safe-area-inset-left, 0);
+  padding-right: env(safe-area-inset-right, 0);
+}
+
+/* ── TOPBAR ──────────────────────────────────────────────────── */
+.ot-top {
+  height: 56px;
+  min-height: 56px;
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  gap: 12px;
+  flex-shrink: 0;
+}
+.ot-back {
+  display: flex; align-items:center; justify-content:center;
+  width: 40px; height: 40px;
+  border: 1px solid var(--border2);
+  border-radius: var(--r-md);
+  background: transparent;
+  color: var(--text2);
+  cursor: pointer;
+  font-size: 18px;
+  flex-shrink: 0;
+  transition: all .12s;
+}
+.ot-back:active { background: rgba(255,255,255,.06); }
+
+.ot-top-info { flex: 1; min-width: 0; }
+.ot-top-az { font-size: 14px; font-weight: 700; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ot-top-sub { font-size: 11px; color: var(--text3); margin-top: 1px; }
+
+.ot-offline-badge {
+  display: none;
+  align-items: center;
+  gap: 5px;
+  background: rgba(245,158,11,.1);
+  border: 1px solid rgba(245,158,11,.2);
+  color: var(--warning);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+.ot-offline-badge.show { display: flex; }
+
+.ot-sync-badge {
+  display: none;
+  align-items: center;
+  gap: 5px;
+  background: rgba(16,185,129,.1);
+  border: 1px solid rgba(16,185,129,.2);
+  color: var(--success);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 20px;
+}
+.ot-sync-badge.show { display: flex; }
+
+/* ── TAB-NAVIGATION ──────────────────────────────────────────── */
+.ot-tabs {
+  display: flex;
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.ot-tabs::-webkit-scrollbar { display: none; }
+.ot-tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 10px 18px;
+  border: none;
+  background: none;
+  color: var(--text3);
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  border-bottom: 2px solid transparent;
+  transition: all .12s;
+  letter-spacing: .04em;
+  min-width: 70px;
+  text-transform: uppercase;
+}
+.ot-tab span.icon { font-size: 20px; }
+.ot-tab.active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+.ot-tab:active { background: rgba(255,255,255,.04); }
+
+/* ── CONTENT AREA ────────────────────────────────────────────── */
+.ot-content {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+.ot-panel { display: none; padding: 16px; }
+.ot-panel.active { display: block; }
+
+/* ── DIKTAT PANEL ────────────────────────────────────────────── */
+.diktat-btn-wrap {
+  display: flex;
+  justify-content: center;
+  padding: 24px 0 20px;
+}
+.diktat-main-btn {
+  width: 160px;
+  height: 160px;
+  border-radius: 50%;
+  border: 3px solid var(--accent);
+  background: rgba(79,142,247,.08);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all .15s;
+  position: relative;
+  -webkit-tap-highlight-color: transparent;
+}
+.diktat-main-btn:active,
+.diktat-main-btn.recording {
+  background: rgba(239,68,68,.12);
+  border-color: var(--danger);
+  transform: scale(0.97);
+}
+.diktat-main-btn.recording { animation: pulse-ring 1.5s infinite; }
+.diktat-btn-icon { font-size: 52px; line-height: 1; }
+.diktat-btn-label { font-size: 13px; font-weight: 800; color: var(--text); letter-spacing: .04em; }
+.diktat-btn-sub { font-size: 10px; color: var(--text3); }
+
+@keyframes pulse-ring {
+  0%   { box-shadow: 0 0 0 0 rgba(239,68,68,.4); }
+  70%  { box-shadow: 0 0 0 20px rgba(239,68,68,0); }
+  100% { box-shadow: 0 0 0 0 rgba(239,68,68,0); }
+}
+
+.diktat-timer {
+  text-align: center;
+  font-size: 32px;
+  font-weight: 800;
+  color: var(--danger);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -.02em;
+  min-height: 44px;
+  display: none;
+}
+.diktat-timer.show { display: block; }
+
+.diktat-waveform {
+  display: none;
+  justify-content: center;
+  align-items: center;
+  gap: 3px;
+  height: 40px;
+  margin: 8px 0;
+}
+.diktat-waveform.show { display: flex; }
+.wave-bar {
+  width: 4px;
+  border-radius: 2px;
+  background: var(--danger);
+  animation: wave-anim 0.8s ease-in-out infinite;
+}
+.wave-bar:nth-child(2) { animation-delay: .1s; }
+.wave-bar:nth-child(3) { animation-delay: .2s; }
+.wave-bar:nth-child(4) { animation-delay: .15s; }
+.wave-bar:nth-child(5) { animation-delay: .05s; }
+.wave-bar:nth-child(6) { animation-delay: .25s; }
+.wave-bar:nth-child(7) { animation-delay: .12s; }
+@keyframes wave-anim {
+  0%,100% { height: 8px; }
+  50%      { height: 30px; }
+}
+
+.diktat-result {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 16px;
+  margin-top: 12px;
+}
+.diktat-result-label {
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--text3);
+  margin-bottom: 8px;
+}
+.diktat-result-text {
+  font-size: 14px;
+  color: var(--text);
+  line-height: 1.65;
+  min-height: 60px;
+  outline: none;
+  white-space: pre-wrap;
+}
+.diktat-result-text:focus {
+  border-radius: var(--r-sm);
+  box-shadow: inset 0 0 0 1px rgba(79,142,247,.3);
+}
+.diktat-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+.diktat-action-btn {
+  flex: 1;
+  min-width: 120px;
+  padding: 11px 16px;
+  border-radius: var(--r-md);
+  border: 1px solid var(--border2);
+  background: var(--surface2);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 48px;
+  transition: all .12s;
+}
+.diktat-action-btn.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+.diktat-action-btn:active { opacity: .8; transform: scale(.98); }
+
+/* ── FOTO PANEL ──────────────────────────────────────────────── */
+.foto-camera-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 20px;
+  background: rgba(79,142,247,.07);
+  border: 2px dashed rgba(79,142,247,.3);
+  border-radius: var(--r-xl);
+  color: var(--accent);
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  min-height: 80px;
+  transition: all .15s;
+}
+.foto-camera-btn:active { background: rgba(79,142,247,.12); }
+.foto-camera-btn .cam-icon { font-size: 32px; }
+
+.foto-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 10px;
+  margin-top: 14px;
+}
+.foto-item {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: var(--r-md);
+  overflow: hidden;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  cursor: pointer;
+}
+.foto-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.foto-item-del {
+  position: absolute;
+  top: 4px; right: 4px;
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  background: rgba(0,0,0,.7);
+  border: none;
+  color: #fff;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex; align-items:center; justify-content:center;
+}
+.foto-item-caption {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  background: rgba(0,0,0,.7);
+  color: #fff;
+  font-size: 10px;
+  padding: 4px 6px;
+  line-height: 1.3;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+.foto-ki-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 12px 16px;
+  margin-top: 12px;
+  background: rgba(139,92,246,.08);
+  border: 1px solid rgba(139,92,246,.2);
+  border-radius: var(--r-md);
+  color: var(--purple);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  min-height: 48px;
+  transition: all .12s;
+}
+.foto-ki-btn:active { background: rgba(139,92,246,.14); }
+
+/* ── MESSPROTOKOLL PANEL ─────────────────────────────────────── */
+.mess-section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  margin-bottom: 12px;
+  overflow: hidden;
+}
+.mess-section-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  cursor: pointer;
+  border-bottom: 1px solid var(--border);
+  transition: background .12s;
+}
+.mess-section-head:active { background: rgba(255,255,255,.03); }
+.mess-icon { font-size: 22px; }
+.mess-label { font-size: 14px; font-weight: 700; color: var(--text); flex: 1; }
+.mess-count { font-size: 11px; color: var(--text3); background: var(--surface2); padding: 2px 8px; border-radius: 10px; }
+.mess-chevron { color: var(--text3); font-size: 12px; transition: transform .15s; }
+.mess-section.open .mess-chevron { transform: rotate(90deg); }
+.mess-body { display: none; padding: 12px 16px; }
+.mess-section.open .mess-body { display: block; }
+
+.mess-row {
+  display: grid;
+  grid-template-columns: 1fr 90px 90px;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 10px;
+}
+.mess-row-label { font-size: 12px; color: var(--text2); font-weight: 600; }
+.mess-input {
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: var(--r-sm);
+  padding: 10px;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 14px;
+  text-align: center;
+  width: 100%;
+  min-height: 44px;
+  transition: border-color .12s;
+}
+.mess-input:focus { outline: none; border-color: var(--accent); }
+.mess-unit { font-size: 11px; color: var(--text3); text-align: center; }
+.mess-ampel {
+  display: inline-block;
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  margin-left: 6px;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+.mess-ampel.ok { background: var(--success); }
+.mess-ampel.warn { background: var(--warning); }
+.mess-ampel.err { background: var(--danger); }
+
+.mess-add-btn {
+  width: 100%;
+  padding: 10px;
+  background: transparent;
+  border: 1px dashed rgba(255,255,255,.12);
+  border-radius: var(--r-sm);
+  color: var(--text3);
+  font-family: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  min-height: 44px;
+  margin-top: 6px;
+  transition: all .12s;
+}
+.mess-add-btn:active { border-color: var(--accent); color: var(--accent); }
+
+/* ── NOTIZEN PANEL ───────────────────────────────────────────── */
+.notiz-raum-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.notiz-raum-select {
+  flex: 1;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: var(--r-md);
+  padding: 10px 14px;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 14px;
+  min-height: 48px;
+}
+.notiz-add-raum {
+  padding: 10px 14px;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: var(--r-md);
+  color: var(--accent);
+  font-family: inherit;
+  font-size: 20px;
+  cursor: pointer;
+  min-height: 48px;
+  min-width: 48px;
+  transition: all .12s;
+}
+.notiz-add-raum:active { background: rgba(79,142,247,.1); }
+
+.notiz-textarea {
+  width: 100%;
+  min-height: 220px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 14px;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 15px;
+  line-height: 1.65;
+  resize: none;
+  transition: border-color .12s;
+}
+.notiz-textarea:focus { outline: none; border-color: var(--accent); }
+
+.notiz-save-btn {
+  width: 100%;
+  margin-top: 10px;
+  padding: 14px;
+  background: var(--accent);
+  border: none;
+  border-radius: var(--r-lg);
+  color: #fff;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  min-height: 52px;
+  transition: all .12s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.notiz-save-btn:active { background: var(--accent2); transform: scale(.99); }
+.notiz-save-btn.saved { background: var(--success); }
+
+/* ── SECTION LABEL ──────────────────────────────────────────── */
+.sec-label {
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--text3);
+  margin-bottom: 10px;
+  margin-top: 4px;
+  padding-left: 2px;
+}
+
+/* ── SCHNELL-INFO KARTE ──────────────────────────────────────── */
+.info-karte {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 14px 16px;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.info-karte-icon { font-size: 24px; flex-shrink: 0; }
+.info-karte-body { flex: 1; min-width: 0; }
+.info-karte-title { font-size: 13px; font-weight: 700; color: var(--text); }
+.info-karte-sub { font-size: 12px; color: var(--text3); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.info-karte-badge { font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 20px; white-space: nowrap; }
+
+/* ── TOAST ───────────────────────────────────────────────────── */
+.ot-toast {
+  position: fixed;
+  bottom: calc(20px + env(safe-area-inset-bottom, 0));
+  left: 50%; transform: translateX(-50%) translateY(80px);
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 30px;
+  padding: 10px 20px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  z-index: 900;
+  transition: transform .25s cubic-bezier(.34,1.56,.64,1), opacity .2s;
+  opacity: 0;
+  white-space: nowrap;
+  pointer-events: none;
+}
+.ot-toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+.ot-toast.success { border-color: rgba(16,185,129,.3); color: var(--success); }
+.ot-toast.error   { border-color: rgba(239,68,68,.3);   color: var(--danger); }
+
+/* ── LOADING SPINNER ─────────────────────────────────────────── */
+.ot-spin {
+  display: inline-block;
+  width: 16px; height: 16px;
+  border: 2px solid rgba(255,255,255,.2);
+  border-top-color: currentColor;
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── INPUT CAMERA (hidden) ───────────────────────────────────── */
+#foto-input-kamera, #foto-input-galerie { display: none; }
+</style>
+</head>
+
+<body>
+<div class="ot-shell">
+
+  <!-- ── TOPBAR ── -->
+  <div class="ot-top">
+    <button class="ot-back" onclick="history.back()" title="Zurück">←</button>
+    <div class="ot-top-info">
+      <div class="ot-top-az" id="ot-az">Ortstermin</div>
+      <div class="ot-top-sub" id="ot-sub">Wird geladen…</div>
+    </div>
+    <div class="ot-offline-badge" id="ot-offline-badge">📴 Offline</div>
+    <div class="ot-sync-badge"    id="ot-sync-badge">⬆︎ Sync</div>
+  </div>
+
+  <!-- ── TABS ── -->
+  <div class="ot-tabs" id="ot-tabs">
+    <button class="ot-tab active" data-panel="diktat" onclick="zeigePanel('diktat',this)">
+      <span class="icon">🎤</span>Diktat
+    </button>
+    <button class="ot-tab" data-panel="foto" onclick="zeigePanel('foto',this)">
+      <span class="icon">📷</span>Fotos
+    </button>
+    <button class="ot-tab" data-panel="mess" onclick="zeigePanel('mess',this)">
+      <span class="icon">📐</span>Messung
+    </button>
+    <button class="ot-tab" data-panel="notiz" onclick="zeigePanel('notiz',this)">
+      <span class="icon">📋</span>Notizen
+    </button>
+  </div>
+
+  <!-- ── CONTENT ── -->
+  <div class="ot-content">
+
+    <!-- DIKTAT PANEL -->
+    <div class="ot-panel active" id="panel-diktat">
+      <div class="sec-label">Sprachaufnahme → KI §4 Befund</div>
+
+      <div class="diktat-btn-wrap">
+        <button class="diktat-main-btn" id="diktat-btn" onclick="toggleDiktat()">
+          <span class="diktat-btn-icon" id="diktat-icon">🎤</span>
+          <span class="diktat-btn-label" id="diktat-label">Diktat</span>
+          <span class="diktat-btn-sub" id="diktat-sub">Tippen zum Starten</span>
+        </button>
+      </div>
+
+      <div class="diktat-timer" id="diktat-timer">0:00</div>
+      <div class="diktat-waveform" id="diktat-waveform">
+        <div class="wave-bar" style="height:12px"></div>
+        <div class="wave-bar" style="height:20px"></div>
+        <div class="wave-bar" style="height:28px"></div>
+        <div class="wave-bar" style="height:16px"></div>
+        <div class="wave-bar" style="height:22px"></div>
+        <div class="wave-bar" style="height:10px"></div>
+        <div class="wave-bar" style="height:18px"></div>
+      </div>
+
+      <div class="diktat-result" id="diktat-result" style="display:none">
+        <div class="diktat-result-label">Transkript — zum Bearbeiten tippen</div>
+        <div class="diktat-result-text" id="diktat-text" contenteditable="true" spellcheck="true"></div>
+        <div class="diktat-actions">
+          <button class="diktat-action-btn" onclick="ditktatNeustart()">🔄 Neu aufnehmen</button>
+          <button class="diktat-action-btn primary" id="ki-btn" onclick="sendeAnKI()">
+            <span id="ki-btn-text">✨ KI §4 erstellen</span>
+          </button>
+        </div>
+      </div>
+
+      <div id="ki-result-box" style="display:none;margin-top:12px;">
+        <div class="diktat-result" style="border-color:rgba(139,92,246,.2)">
+          <div class="diktat-result-label" style="color:var(--purple)">KI — §4 Befund (Entwurf)</div>
+          <div class="diktat-result-text" id="ki-result-text" contenteditable="true"></div>
+          <div class="diktat-actions">
+            <button class="diktat-action-btn" onclick="kopiereKIErgebnis()">📋 Kopieren</button>
+            <button class="diktat-action-btn primary" onclick="weiterZuGutachten()">→ Im Gutachten übernehmen</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FOTO PANEL -->
+    <div class="ot-panel" id="panel-foto">
+      <div class="sec-label">Schadensfotos aufnehmen</div>
+
+      <div style="display:flex;gap:10px;margin-bottom:14px;">
+        <button class="foto-camera-btn" style="flex:1" onclick="document.getElementById('foto-input-kamera').click()">
+          <span class="cam-icon">📷</span>
+          <span>Kamera</span>
+        </button>
+        <button class="foto-camera-btn" style="flex:1;border-style:solid;background:rgba(255,255,255,.03)" onclick="document.getElementById('foto-input-galerie').click()">
+          <span class="cam-icon">🖼️</span>
+          <span>Galerie</span>
+        </button>
+      </div>
+
+      <button class="foto-ki-btn" id="ki-foto-btn" onclick="analysiereAlleFotos()">
+        <span style="font-size:18px;">✨</span>
+        <span>KI-Analyse: Alle Fotos automatisch beschriften</span>
+      </button>
+
+      <div class="sec-label" style="margin-top:14px;" id="foto-count-label">Keine Fotos</div>
+      <div class="foto-grid" id="foto-grid"></div>
+
+      <input type="file" id="foto-input-kamera" accept="image/*" capture="environment" multiple onchange="fotoHinzufuegen(event)">
+      <input type="file" id="foto-input-galerie" accept="image/*" multiple onchange="fotoHinzufuegen(event)">
+    </div>
+
+    <!-- MESSPROTOKOLL PANEL -->
+    <div class="ot-panel" id="panel-mess">
+      <div class="sec-label">Messwerte erfassen</div>
+
+      <!-- Feuchtemessung -->
+      <div class="mess-section open" id="mess-feuchte">
+        <div class="mess-section-head" onclick="toggleMessSection('feuchte')">
+          <span class="mess-icon">💧</span>
+          <span class="mess-label">Feuchtemessung</span>
+          <span class="mess-count" id="mess-feuchte-count">0 Messwerte</span>
+          <span class="mess-chevron">›</span>
+        </div>
+        <div class="mess-body">
+          <div style="display:grid;grid-template-columns:1fr 90px 90px;gap:8px;margin-bottom:8px;">
+            <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;">Bauteil / Raum</div>
+            <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;text-align:center;">Wert</div>
+            <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;text-align:center;">Einheit</div>
+          </div>
+          <div id="mess-feuchte-rows"></div>
+          <button class="mess-add-btn" onclick="addMesszeile('feuchte', '% u. H.')">+ Messwert hinzufügen</button>
+        </div>
+      </div>
+
+      <!-- Raumklima -->
+      <div class="mess-section" id="mess-klima">
+        <div class="mess-section-head" onclick="toggleMessSection('klima')">
+          <span class="mess-icon">🌡️</span>
+          <span class="mess-label">Raumklima</span>
+          <span class="mess-count" id="mess-klima-count">0 Messwerte</span>
+          <span class="mess-chevron">›</span>
+        </div>
+        <div class="mess-body">
+          <div id="mess-klima-rows"></div>
+          <button class="mess-add-btn" onclick="addMesszeile('klima', '°C')">+ Messwert hinzufügen</button>
+        </div>
+      </div>
+
+      <!-- Risse -->
+      <div class="mess-section" id="mess-risse">
+        <div class="mess-section-head" onclick="toggleMessSection('risse')">
+          <span class="mess-icon">🔍</span>
+          <span class="mess-label">Rissbreiten</span>
+          <span class="mess-count" id="mess-risse-count">0 Messwerte</span>
+          <span class="mess-chevron">›</span>
+        </div>
+        <div class="mess-body">
+          <div id="mess-risse-rows"></div>
+          <button class="mess-add-btn" onclick="addMesszeile('risse', 'mm')">+ Rissbreite hinzufügen</button>
+          <div style="margin-top:10px;padding:10px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.15);border-radius:8px;font-size:11px;color:var(--text3);">
+            ⚠️ Grenzwert: >0,2 mm kritisch (DIN 52460)
+          </div>
+        </div>
+      </div>
+
+      <!-- Speichern -->
+      <button class="notiz-save-btn" style="margin-top:16px" onclick="speichereMesswerte()">
+        💾 Messwerte speichern
+      </button>
+    </div>
+
+    <!-- NOTIZEN PANEL -->
+    <div class="ot-panel" id="panel-notiz">
+      <div class="sec-label">Raum-Notizen</div>
+
+      <div class="notiz-raum-header">
+        <select class="notiz-raum-select" id="notiz-raum-select" onchange="ladeRaumNotiz()">
+          <option value="allgemein">Allgemein</option>
+          <option value="keller">Keller</option>
+          <option value="erdgeschoss">Erdgeschoss</option>
+          <option value="obergeschoss">Obergeschoss</option>
+          <option value="dach">Dach / Dachgeschoss</option>
+          <option value="fassade">Fassade / Außen</option>
+        </select>
+        <button class="notiz-add-raum" onclick="raumHinzufuegen()" title="Raum hinzufügen">+</button>
+      </div>
+
+      <textarea class="notiz-textarea" id="notiz-textarea" 
+        placeholder="Befund-Notizen für diesen Raum…&#10;&#10;Tip: Sprachaufnahme im Diktat-Tab, dann hier manuell ergänzen."
+        oninput="autoSaveNotiz()"></textarea>
+
+      <button class="notiz-save-btn" id="notiz-save-btn" onclick="speichereNotiz()">
+        💾 Notiz speichern
+      </button>
+    </div>
+
+  </div><!-- /.ot-content -->
+</div><!-- /.ot-shell -->
+
+<div class="ot-toast" id="ot-toast"></div>
+
+<script>
+(function(){
+'use strict';
+
+/* ── State ──────────────────────────────────────────────────────────────── */
+var _az          = localStorage.getItem('prova_aktiver_fall') || '';
+var _schadenart  = localStorage.getItem('prova_schadenart')   || '';
+var _adresse     = localStorage.getItem('prova_adresse')      || '';
+var _fotos       = [];
+var _messwerte   = { feuchte:[], klima:[], risse:[] };
+var _notizen     = {};
+var _isRecording = false;
+var _recorder    = null;
+var _audioChunks = [];
+var _timerInt    = null;
+var _timerSek    = 0;
+var _autoSaveTimer = null;
+
+/* ── Initialisierung ────────────────────────────────────────────────────── */
+(function init(){
+  // Header befüllen
+  var azEl  = document.getElementById('ot-az');
+  var subEl = document.getElementById('ot-sub');
+  if (azEl)  azEl.textContent  = _az      || 'Ortstermin';
+  if (subEl) subEl.textContent = [_schadenart, _adresse].filter(Boolean).join(' · ') || 'Kein Fall aktiv';
+
+  // Offline-Status
+  updateOnlineStatus();
+  window.addEventListener('online',  updateOnlineStatus);
+  window.addEventListener('offline', updateOnlineStatus);
+
+  // Viewport-Höhe Fix (iOS)
+  function fixVH() {
+    document.documentElement.style.setProperty('--vh', (window.innerHeight * 0.01) + 'px');
+  }
+  fixVH();
+  window.addEventListener('resize', fixVH);
+
+  // Gespeicherte Daten laden
+  ladeDaten();
+
+  // Erste Messzeilen
+  addMesszeile('feuchte', '% u. H.');
+  addMesszeile('klima', '°C');
+  addMesszeile('risse', 'mm');
+})();
+
+function updateOnlineStatus(){
+  var offline = !navigator.onLine;
+  document.getElementById('ot-offline-badge').classList.toggle('show', offline);
+}
+
+/* ── Panel-Navigation ───────────────────────────────────────────────────── */
+window.zeigePanel = function(id, btn){
+  document.querySelectorAll('.ot-panel').forEach(function(p){ p.classList.remove('active'); });
+  document.querySelectorAll('.ot-tab').forEach(function(t){ t.classList.remove('active'); });
+  var panel = document.getElementById('panel-' + id);
+  if (panel) panel.classList.add('active');
+  if (btn)   btn.classList.add('active');
+};
+
+/* ── Toast ──────────────────────────────────────────────────────────────── */
+function toast(msg, typ, dauer){
+  var el = document.getElementById('ot-toast');
+  el.textContent = msg;
+  el.className = 'ot-toast show' + (typ ? ' '+typ : '');
+  clearTimeout(el._t);
+  el._t = setTimeout(function(){ el.classList.remove('show'); }, dauer || 2200);
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   DIKTAT
+══════════════════════════════════════════════════════════════════════════ */
+window.toggleDiktat = function(){
+  if (_isRecording) stoppeDiktat();
+  else              starteDiktat();
+};
+
+async function starteDiktat(){
+  try {
+    var stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+    _recorder = new MediaRecorder(stream, { mimeType: 'audio/webm;codecs=opus' });
+    _audioChunks = [];
+
+    _recorder.ondataavailable = function(e){ if(e.data.size > 0) _audioChunks.push(e.data); };
+    _recorder.onstop = function(){ verarbeiteDiktat(stream); };
+
+    _recorder.start(100);
+    _isRecording = true;
+    _timerSek = 0;
+    starteTimer();
+    zeigeDiktatUI(true);
+
+  } catch(e){
+    if (e.name === 'NotAllowedError'){
+      toast('🎤 Mikrofon-Zugriff verweigert', 'error');
+    } else {
+      toast('Mikrofon nicht verfügbar: ' + e.message, 'error');
+    }
+  }
+}
+
+function stoppeDiktat(){
+  if (_recorder && _recorder.state !== 'inactive'){
+    _recorder.stop();
+  }
+  _isRecording = false;
+  stoppeTimer();
+  zeigeDiktatUI(false);
+  toast('⏳ Aufnahme wird verarbeitet…');
+}
+
+async function verarbeiteDiktat(stream){
+  // Mikrofon freigeben
+  stream.getTracks().forEach(function(t){ t.stop(); });
+
+  if (_audioChunks.length === 0){
+    toast('Keine Aufnahme', 'error');
+    return;
+  }
+
+  var blob = new Blob(_audioChunks, { type: 'audio/webm' });
+
+  // Web Speech API Fallback (Browser-Transkription)
+  // In Produktion: Whisper API via Netlify Function
+  // Hier: SpeechRecognition als Demo
+  var transcript = await transkribiere(blob);
+
+  document.getElementById('diktat-text').textContent = transcript;
+  document.getElementById('diktat-result').style.display = 'block';
+  document.getElementById('ki-result-box').style.display  = 'none';
+  toast('✅ Aufnahme fertig', 'success');
+}
+
+async function transkribiere(blob){
+  try {
+    var base64 = await new Promise(function(res, rej) {
+      var reader = new FileReader();
+      reader.onload = function() { res(reader.result.split(',')[1]); };
+      reader.onerror = rej;
+      reader.readAsDataURL(blob);
+    });
+    var res = await fetch('/.netlify/functions/whisper-diktat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        audioBase64: base64,
+        mediaType: blob.type || 'audio/webm',
+        sprache: 'de',
+        schadenart: _schadenart || ''
+      })
+    });
+    var data = await res.json();
+    if (data.transkript) {
+      // KI-Lernpool: Transkript speichern für Vokabular-Lernen
+      if (typeof KILernpool !== 'undefined') {
+        KILernpool.transkriptGespeichert(data.transkript);
+      }
+      return data.transkript;
+    }
+    return '[Transkription fehlgeschlagen — bitte erneut versuchen]';
+  } catch(e) {
+    console.error('[Whisper] Fehler:', e);
+    return '[Diktat konnte nicht verarbeitet werden — Internetverbindung prüfen]';
+  }
+}
+
+window.ditktatNeustart = function(){
+  document.getElementById('diktat-result').style.display = 'none';
+  document.getElementById('ki-result-box').style.display  = 'none';
+  document.getElementById('diktat-text').textContent = '';
+};
+
+window.sendeAnKI = async function(){
+  var text = document.getElementById('diktat-text').textContent.trim();
+  if (!text || text.length < 10){
+    toast('Bitte zuerst Diktat aufnehmen', 'error');
+    return;
+  }
+
+  var btn = document.getElementById('ki-btn-text');
+  btn.innerHTML = '<span class="ot-spin"></span> KI analysiert…';
+
+  try {
+    var res = await fetch('/.netlify/functions/ki-proxy', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        aufgabe:      'fachurteil_entwurf',
+        diktat:       text,
+        schadenart:   _schadenart,
+        az:           _az,
+        verwendungszweck: 'gericht'
+      })
+    });
+    var data = await res.json();
+
+    // §4 Befund aus KI-Response extrahieren
+    var befund = '';
+    if (data.diktat_extrakte && data.diktat_extrakte.feststellungen){
+      befund = data.diktat_extrakte.feststellungen;
+    } else if (data.ursachenkategorien && data.ursachenkategorien.length){
+      befund = data.ursachenkategorien.map(function(u){ return u.bezeichnung || u; }).join('\n');
+    } else {
+      befund = 'KI-Analyse abgeschlossen. Bitte Diktat manuell im Gutachten-Workflow verwenden.';
+    }
+
+    document.getElementById('ki-result-text').textContent = befund;
+    document.getElementById('ki-result-box').style.display = 'block';
+    toast('✨ KI-Befund erstellt', 'success');
+
+  } catch(e){
+    toast('KI nicht erreichbar: ' + e.message, 'error');
+  } finally {
+    btn.innerHTML = '✨ KI §4 erstellen';
+  }
+};
+
+window.kopiereKIErgebnis = function(){
+  var text = document.getElementById('ki-result-text').textContent;
+  navigator.clipboard.writeText(text).then(function(){
+    toast('📋 Kopiert', 'success');
+  }).catch(function(){
+    toast('Kopieren nicht möglich', 'error');
+  });
+};
+
+window.weiterZuGutachten = function(){
+  var text = document.getElementById('ki-result-text').textContent;
+  if (text) localStorage.setItem('prova_diktat_ortstermin', text);
+  var url = 'app.html' + (_az ? '?az=' + encodeURIComponent(_az) : '');
+  window.location.href = url;
+};
+
+function zeigeDiktatUI(recording){
+  var btn   = document.getElementById('diktat-btn');
+  var icon  = document.getElementById('diktat-icon');
+  var label = document.getElementById('diktat-label');
+  var sub   = document.getElementById('diktat-sub');
+  var timer = document.getElementById('diktat-timer');
+  var wave  = document.getElementById('diktat-waveform');
+
+  if (recording){
+    btn.classList.add('recording');
+    icon.textContent  = '⏹️';
+    label.textContent = 'Stopp';
+    sub.textContent   = 'Tippen zum Beenden';
+    timer.classList.add('show');
+    wave.classList.add('show');
+  } else {
+    btn.classList.remove('recording');
+    icon.textContent  = '🎤';
+    label.textContent = 'Diktat';
+    sub.textContent   = 'Tippen zum Starten';
+    timer.classList.remove('show');
+    wave.classList.remove('show');
+  }
+}
+
+function starteTimer(){
+  _timerInt = setInterval(function(){
+    _timerSek++;
+    var m = Math.floor(_timerSek / 60);
+    var s = _timerSek % 60;
+    document.getElementById('diktat-timer').textContent = m + ':' + (s < 10 ? '0' : '') + s;
+  }, 1000);
+}
+function stoppeTimer(){ clearInterval(_timerInt); }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   FOTOS
+══════════════════════════════════════════════════════════════════════════ */
+window.fotoHinzufuegen = function(event){
+  var files = Array.from(event.target.files || []);
+  if (!files.length) return;
+
+  files.forEach(function(file){
+    var reader = new FileReader();
+    reader.onload = function(e){
+      var foto = { id: Date.now() + Math.random(), dataUrl: e.target.result, caption: '', datei: file.name };
+      _fotos.push(foto);
+      renderFotoGrid();
+      speichereDaten();
+    };
+    reader.readAsDataURL(file);
+  });
+
+  // Input zurücksetzen damit gleiche Datei nochmal gewählt werden kann
+  event.target.value = '';
+};
+
+function renderFotoGrid(){
+  var grid  = document.getElementById('foto-grid');
+  var label = document.getElementById('foto-count-label');
+
+  label.textContent = _fotos.length ? _fotos.length + ' Foto' + (_fotos.length===1?'':'s') : 'Keine Fotos';
+
+  grid.innerHTML = _fotos.map(function(f, i){
+    return '<div class="foto-item" id="foto-'+f.id+'">' +
+      '<img src="'+f.dataUrl+'" alt="Foto '+( i+1)+'" loading="lazy">' +
+      '<button class="foto-item-del" onclick="loescheFoto(\''+f.id+'\')" title="Foto löschen">✕</button>' +
+      (f.caption ? '<div class="foto-item-caption">'+escHTML(f.caption)+'</div>' : '') +
+      '</div>';
+  }).join('');
+}
+
+window.loescheFoto = function(id){
+  _fotos = _fotos.filter(function(f){ return String(f.id) !== String(id); });
+  renderFotoGrid();
+  speichereDaten();
+  toast('Foto gelöscht');
+};
+
+window.analysiereAlleFotos = async function(){
+  if (!_fotos.length){
+    toast('Keine Fotos vorhanden', 'error');
+    return;
+  }
+
+  var btn = document.getElementById('ki-foto-btn');
+  btn.innerHTML = '<span class="ot-spin"></span> KI analysiert ' + _fotos.length + ' Fotos…';
+  btn.disabled  = true;
+
+  var updated = 0;
+  for (var i = 0; i < _fotos.length; i++){
+    var foto = _fotos[i];
+    if (foto.caption) continue; // Bereits beschriftet überspringen
+
+    try {
+      var base64 = foto.dataUrl.split(',')[1];
+      var mediaType = foto.dataUrl.split(';')[0].split(':')[1] || 'image/jpeg';
+
+      var res = await fetch('/.netlify/functions/foto-captioning', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ imageBase64: base64, mediaType: mediaType, aktenzeichen: _az, schadensart: _schadenart })
+      });
+      var data = await res.json();
+
+      if (data.success && data.metadata && data.metadata.beschriftung){
+        foto.caption = data.metadata.beschriftung;
+        updated++;
+      }
+    } catch(e){
+      console.warn('Foto-Analyse Fehler:', e);
+    }
+  }
+
+  renderFotoGrid();
+  speichereDaten();
+  btn.innerHTML = '✨ KI-Analyse: Alle Fotos automatisch beschriften';
+  btn.disabled  = false;
+  toast(updated + ' Fotos beschriftet', 'success');
+};
+
+/* ══════════════════════════════════════════════════════════════════════════
+   MESSWERTE
+══════════════════════════════════════════════════════════════════════════ */
+window.addMesszeile = function(typ, einheitDefault){
+  var container = document.getElementById('mess-' + typ + '-rows');
+  if (!container) return;
+
+  var id  = 'mess-' + typ + '-' + Date.now();
+  var row = document.createElement('div');
+  row.className = 'mess-row';
+  row.id = id;
+  row.innerHTML =
+    '<input class="mess-input" placeholder="Bauteil/Raum…" style="text-align:left;font-size:13px;">' +
+    '<input class="mess-input" type="number" step="0.1" placeholder="0.0" oninput="pruefeMesswert(this,\''+typ+'\',\''+einheitDefault+'\')">' +
+    '<div style="display:flex;align-items:center;justify-content:center;gap:4px;">' +
+      '<span style="font-size:11px;color:var(--text3);">'+einheitDefault+'</span>' +
+      '<span class="mess-ampel" id="ampel-'+id+'"></span>' +
+    '</div>';
+  container.appendChild(row);
+  updateMessCount(typ);
+};
+
+window.pruefeMesswert = function(input, typ, einheit){
+  var val  = parseFloat(input.value);
+  var rowEl = input.closest('.mess-row');
+  if (!rowEl) return;
+  var ampel = document.getElementById('ampel-' + rowEl.id);
+  if (!ampel) return;
+
+  if (isNaN(val)){ ampel.className = 'mess-ampel'; return; }
+
+  var status = 'ok';
+  if (typ === 'feuchte'){ // % u. H. — Holzfeuchte
+    if (val > 20)  status = 'err';
+    else if (val > 18) status = 'warn';
+  } else if (typ === 'klima'){ // rel. Feuchte oder Temp
+    if (einheit === '%' && val > 65) status = 'err';
+    else if (einheit === '%' && val > 55) status = 'warn';
+  } else if (typ === 'risse'){ // mm
+    if (val > 0.3) status = 'err';
+    else if (val > 0.2) status = 'warn';
+  }
+  ampel.className = 'mess-ampel ' + status;
+};
+
+window.toggleMessSection = function(typ){
+  var sec = document.getElementById('mess-' + typ);
+  if (sec) sec.classList.toggle('open');
+};
+
+function updateMessCount(typ){
+  var rows = document.querySelectorAll('#mess-' + typ + '-rows .mess-row');
+  var countEl = document.getElementById('mess-' + typ + '-count');
+  if (countEl) countEl.textContent = rows.length + ' Messwert' + (rows.length===1?'':'e');
+}
+
+window.speichereMesswerte = function(){
+  speichereDaten();
+  toast('💾 Messwerte gespeichert', 'success');
+};
+
+/* ══════════════════════════════════════════════════════════════════════════
+   NOTIZEN
+══════════════════════════════════════════════════════════════════════════ */
+window.ladeRaumNotiz = function(){
+  var raum  = document.getElementById('notiz-raum-select').value;
+  var text  = _notizen[raum] || '';
+  document.getElementById('notiz-textarea').value = text;
+};
+
+window.raumHinzufuegen = function(){
+  var name = prompt('Raum-Bezeichnung:');
+  if (!name) return;
+  var sel  = document.getElementById('notiz-raum-select');
+  var opt  = document.createElement('option');
+  opt.value = name.toLowerCase().replace(/\s+/g,'-');
+  opt.textContent = name;
+  sel.appendChild(opt);
+  sel.value = opt.value;
+  ladeRaumNotiz();
+};
+
+window.autoSaveNotiz = function(){
+  clearTimeout(_autoSaveTimer);
+  _autoSaveTimer = setTimeout(function(){ speichereNotiz(true); }, 1500);
+};
+
+window.speichereNotiz = function(silent){
+  var raum = document.getElementById('notiz-raum-select').value;
+  var text = document.getElementById('notiz-textarea').value;
+  _notizen[raum] = text;
+  speichereDaten();
+  if (!silent){
+    var btn = document.getElementById('notiz-save-btn');
+    btn.classList.add('saved');
+    btn.textContent = '✅ Gespeichert';
+    setTimeout(function(){ btn.classList.remove('saved'); btn.innerHTML = '💾 Notiz speichern'; }, 1800);
+    toast('Notiz gespeichert', 'success');
+  }
+};
+
+/* ══════════════════════════════════════════════════════════════════════════
+   PERSISTENZ (localStorage)
+══════════════════════════════════════════════════════════════════════════ */
+function speichereDaten(){
+  if (!_az) return;
+  var key = 'prova_ortstermin_' + _az.replace(/[^a-z0-9]/gi,'-');
+  try {
+    localStorage.setItem(key, JSON.stringify({
+      fotos:     _fotos.map(function(f){ return { id:f.id, caption:f.caption, datei:f.datei }; }),
+      notizen:   _notizen,
+      gespeichert: new Date().toISOString()
+    }));
+  } catch(e){
+    if (e.name === 'QuotaExceededError') toast('Speicher voll — Fotos zu groß', 'error', 4000);
+  }
+}
+
+function ladeDaten(){
+  if (!_az) return;
+  var key  = 'prova_ortstermin_' + _az.replace(/[^a-z0-9]/gi,'-');
+  var raw  = localStorage.getItem(key);
+  if (!raw) return;
+  try {
+    var data = JSON.parse(raw);
+    _notizen = data.notizen || {};
+    // Fotos ohne dataUrl (zu groß für localStorage) — werden beim Neustart neu aufgenommen
+    ladeRaumNotiz();
+  } catch(e){}
+}
+
+/* ── Helper ──────────────────────────────────────────────────────────────── */
+function escHTML(s){
+  return String(s).replace(/&/g,'&').replace(/</g,'<').replace(/>/g,'>');
+}
+
+})();
+</script>
+<script src="prova-context.js" defer></script>
+<script src="prova-error-handler.js" defer></script>
+<script src="ki-lernpool.js" defer></script>
+<script src="sw-register.js" defer></script>
+<script src="foto-captioning.js" defer></script>
+
+<script>
+window.provaKICaption = async function(btn) {
+  var idx = parseInt(btn.getAttribute('data-idx'));
+  if (isNaN(idx) || !window._fotos || !window._fotos[idx]) return;
+  var foto = window._fotos[idx];
+  if (!foto.dataUrl) { if(typeof toast==='function') toast('Kein Foto-Daten vorhanden','warn'); return; }
+
+  btn.disabled = true; btn.textContent = '⏳ Analysiert…';
+
+  try {
+    var res = await fetch('/.netlify/functions/foto-captioning', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        image_base64: foto.dataUrl.split(',')[1],
+        schadenart: window._schadenart || localStorage.getItem('prova_schadenart') || '',
+        az: window._az || localStorage.getItem('prova_aktiver_fall') || ''
+      })
+    });
+    var data = await res.json();
+    var caption = data.caption || data.beschreibung || '';
+    if (!caption) throw new Error('Keine Beschriftung erhalten');
+
+    // Caption in Foto speichern und UI updaten
+    window._fotos[idx].caption = caption;
+    var captionEl = btn.parentElement.querySelector('.ot-foto-caption, textarea');
+    if (captionEl) {
+      if (captionEl.tagName === 'TEXTAREA') captionEl.value = caption;
+      else captionEl.textContent = caption;
+    }
+    if (typeof speichereDaten === 'function') speichereDaten();
+    btn.textContent = '✅ Beschriftet';
+    if (typeof toast === 'function') toast('KI-Beschriftung erstellt ✅', 'success');
+  } catch(e) {
+    btn.disabled = false; btn.textContent = '✨ KI-Beschriftung';
+    if (typeof toast === 'function') toast('KI-Fehler: ' + e.message, 'error');
+  }
+};
+</script>
+</body>
+</html>

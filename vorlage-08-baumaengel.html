@@ -1,0 +1,1137 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vorlage 08 – Baumängelgutachten | PROVA System</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Source+Serif+4:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy:        #0B1628;
+    --navy-mid:    #112240;
+    --navy-light:  #1A3356;
+    --accent:      #E11D48;      /* Rose — Baumängel */
+    --accent-dim:  rgba(225,29,72,0.15);
+    --accent-glow: rgba(225,29,72,0.30);
+    --glass:       rgba(255,255,255,0.04);
+    --glass-border:rgba(255,255,255,0.08);
+    --text:        #E2E8F0;
+    --text-muted:  #94A3B8;
+    --text-faint:  #64748B;
+    --success:     #10B981;
+    --warning:     #F59E0B;
+    --danger:      #EF4444;
+    --enterprise:  #F59E0B;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'Montserrat', system-ui, sans-serif;
+    background: var(--navy);
+    color: var(--text);
+    min-height: 100vh;
+    line-height: 1.6;
+  }
+
+  /* ── NAV ── */
+  nav {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(11,22,40,0.95);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--glass-border);
+    padding: 0 2rem;
+    height: 60px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .nav-logo { font-size: 1.1rem; font-weight: 700; color: var(--text); letter-spacing: -0.02em; }
+  .nav-logo span { color: var(--accent); }
+  .nav-links { display: flex; gap: 0.5rem; align-items: center; }
+  .nav-links a {
+    color: var(--text-muted); text-decoration: none; font-size: 0.82rem;
+    padding: 0.35rem 0.75rem; border-radius: 6px;
+    transition: all 0.2s;
+  }
+  .nav-links a:hover { color: var(--text); background: var(--glass); }
+  .nav-back {
+    background: var(--glass) !important;
+    border: 1px solid var(--glass-border) !important;
+    color: var(--text) !important;
+    font-size: 0.82rem;
+  }
+
+  /* ── HEADER STRIP ── */
+  .page-header {
+    background: linear-gradient(135deg, var(--navy-mid) 0%, var(--navy) 100%);
+    border-bottom: 1px solid var(--glass-border);
+    padding: 2.5rem 2rem 2rem;
+    position: relative; overflow: hidden;
+  }
+  .page-header::before {
+    content: '';
+    position: absolute; top: -80px; right: -80px;
+    width: 300px; height: 300px;
+    background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .header-inner { max-width: 1280px; margin: 0 auto; position: relative; }
+  .header-badges { display: flex; gap: 0.5rem; margin-bottom: 1rem; flex-wrap: wrap; }
+  .badge {
+    display: inline-flex; align-items: center; gap: 0.35rem;
+    padding: 0.3rem 0.75rem; border-radius: 20px;
+    font-size: 0.72rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase;
+  }
+  .badge-enterprise {
+    background: rgba(245,158,11,0.15);
+    border: 1px solid rgba(245,158,11,0.4);
+    color: var(--enterprise);
+  }
+  .badge-rose {
+    background: var(--accent-dim);
+    border: 1px solid rgba(225,29,72,0.4);
+    color: var(--accent);
+  }
+  .badge-vorlage {
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    color: var(--text-muted);
+  }
+  .page-title { font-size: 2rem; font-weight: 800; letter-spacing: -0.03em; margin-bottom: 0.5rem; }
+  .page-title .accent { color: var(--accent); }
+  .page-subtitle { color: var(--text-muted); font-size: 0.95rem; max-width: 680px; }
+
+  /* ── INFO STRIP ── */
+  .info-strip {
+    background: var(--navy-mid);
+    border-bottom: 1px solid var(--glass-border);
+    padding: 0.85rem 2rem;
+  }
+  .info-strip-inner {
+    max-width: 1280px; margin: 0 auto;
+    display: flex; gap: 2.5rem; flex-wrap: wrap;
+  }
+  .info-item { display: flex; align-items: center; gap: 0.5rem; }
+  .info-label { font-size: 0.72rem; color: var(--text-faint); text-transform: uppercase; letter-spacing: 0.05em; }
+  .info-value { font-size: 0.82rem; color: var(--text); font-weight: 500; }
+  .info-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .dot-rose   { background: var(--accent); }
+  .dot-gold   { background: var(--enterprise); }
+
+  /* ── MAIN LAYOUT ── */
+  .main-wrap { max-width: 1280px; margin: 0 auto; padding: 2rem; }
+  .two-col { display: grid; grid-template-columns: 1fr 340px; gap: 1.5rem; align-items: start; }
+
+  /* ── CARD ── */
+  .card {
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .card-header {
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--glass-border);
+    display: flex; align-items: center; gap: 0.6rem;
+  }
+  .card-header h3 { font-size: 0.88rem; font-weight: 600; }
+  .card-icon { font-size: 1rem; }
+  .card-body { padding: 1.25rem; }
+
+  /* ── DOCUMENT PREVIEW ── */
+  .doc-preview {
+    background: #F8F7F4;
+    border-radius: 8px;
+    padding: 2.5rem 3rem;
+    color: #1a1a2e;
+    font-family: 'Georgia', 'Times New Roman', serif;
+    font-size: 0.78rem;
+    line-height: 1.55;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.3);
+    position: relative;
+  }
+  .doc-preview::before {
+    content: 'DOKUMENT-VORSCHAU';
+    position: absolute; top: 10px; right: 14px;
+    font-size: 0.55rem; font-family: 'Montserrat', system-ui, sans-serif;
+    color: #aaa; letter-spacing: 0.1em;
+  }
+  .doc-watermark {
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%,-50%) rotate(-35deg);
+    font-size: 3.5rem; font-weight: 900; color: rgba(225,29,72,0.06);
+    letter-spacing: 0.1em; pointer-events: none; white-space: nowrap;
+    font-family: 'Montserrat', system-ui, sans-serif;
+  }
+  .doc-header-bar {
+    display: flex; justify-content: space-between; align-items: flex-start;
+    padding-bottom: 1.2rem; margin-bottom: 1.2rem;
+    border-bottom: 3px solid #E11D48;
+  }
+  .doc-logo-area { display: flex; flex-direction: column; gap: 0.2rem; }
+  .doc-logo-text { font-size: 1.1rem; font-weight: 900; color: #E11D48; letter-spacing: -0.02em; font-family: 'Montserrat',system-ui,sans-serif; }
+  .doc-logo-sub  { font-size: 0.62rem; color: #666; font-family: 'Montserrat',system-ui,sans-serif; text-transform: uppercase; letter-spacing: 0.06em; }
+  .doc-meta-top  { text-align: right; font-size: 0.68rem; color: #555; font-family: 'Montserrat',system-ui,sans-serif; }
+  .doc-meta-top strong { display: block; font-size: 0.75rem; color: #222; }
+  .doc-gutachten-type {
+    background: linear-gradient(135deg, #E11D48, #BE185D);
+    color: white;
+    padding: 0.35rem 0.9rem;
+    border-radius: 4px;
+    font-size: 0.65rem;
+    font-family: 'Montserrat',system-ui,sans-serif;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    display: inline-block;
+    margin-bottom: 1rem;
+  }
+  .doc-enterprise-banner {
+    background: rgba(245,158,11,0.1);
+    border: 1px solid rgba(245,158,11,0.3);
+    border-radius: 4px;
+    padding: 0.4rem 0.75rem;
+    font-size: 0.65rem;
+    color: #F59E0B;
+    font-family: 'Montserrat',system-ui,sans-serif;
+    text-align: center;
+    margin-bottom: 1rem;
+  }
+  .doc-title-block { margin-bottom: 1.2rem; }
+  .doc-title-block h1 {
+    font-size: 1rem; font-weight: 700; color: #1a1a2e;
+    margin-bottom: 0.25rem; font-family: 'Montserrat',system-ui,sans-serif;
+  }
+  .doc-title-block .sub { font-size: 0.7rem; color: #666; }
+  .doc-section { margin-bottom: 1rem; }
+  .doc-section h2 {
+    font-size: 0.72rem; font-weight: 700; color: #E11D48;
+    text-transform: uppercase; letter-spacing: 0.06em;
+    margin-bottom: 0.4rem; font-family: 'Montserrat',system-ui,sans-serif;
+    padding-bottom: 0.25rem; border-bottom: 1px solid rgba(225,29,72,0.2);
+  }
+  .doc-section h3 {
+    font-size: 0.7rem; font-weight: 600; color: #333;
+    margin: 0.5rem 0 0.25rem; font-family: 'Montserrat',system-ui,sans-serif;
+  }
+  .doc-section p { font-size: 0.72rem; color: #444; margin-bottom: 0.3rem; }
+  .doc-var {
+    background: rgba(225,29,72,0.08);
+    border: 1px solid rgba(225,29,72,0.2);
+    border-radius: 3px;
+    padding: 0.05rem 0.3rem;
+    font-family: 'Courier New', monospace;
+    font-size: 0.68rem;
+    color: #E11D48;
+  }
+  .doc-mangel-table {
+    width: 100%; border-collapse: collapse;
+    font-size: 0.65rem; margin: 0.5rem 0;
+    font-family: 'Montserrat',system-ui,sans-serif;
+  }
+  .doc-mangel-table th {
+    background: #2d1a20; color: #E11D48;
+    padding: 0.3rem 0.4rem; text-align: left;
+    font-weight: 600; font-size: 0.6rem; text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .doc-mangel-table td {
+    padding: 0.3rem 0.4rem;
+    border-bottom: 1px solid rgba(0,0,0,0.06);
+    color: #333; vertical-align: top;
+  }
+  .doc-mangel-table tr:nth-child(even) td { background: rgba(0,0,0,0.02); }
+  .badge-erheblich { background: #FEE2E2; color: #991B1B; padding: 0.1rem 0.35rem; border-radius: 3px; font-size: 0.58rem; font-weight: 600; }
+  .badge-mittel    { background: #FEF3C7; color: #92400E; padding: 0.1rem 0.35rem; border-radius: 3px; font-size: 0.58rem; font-weight: 600; }
+  .badge-gering    { background: #D1FAE5; color: #065F46; padding: 0.1rem 0.35rem; border-radius: 3px; font-size: 0.58rem; font-weight: 600; }
+  .doc-din-box {
+    background: rgba(225,29,72,0.05);
+    border-left: 3px solid #E11D48;
+    padding: 0.5rem 0.75rem;
+    margin: 0.5rem 0;
+    border-radius: 0 4px 4px 0;
+    font-size: 0.68rem;
+  }
+  .doc-din-box strong { display: block; color: #E11D48; font-family: 'Montserrat',system-ui,sans-serif; font-size: 0.65rem; margin-bottom: 0.2rem; }
+  .doc-kosten-box {
+    background: rgba(245,158,11,0.06);
+    border: 1px solid rgba(245,158,11,0.25);
+    border-radius: 4px;
+    padding: 0.75rem;
+    margin-top: 0.75rem;
+  }
+  .doc-kosten-box h3 {
+    font-family: 'Montserrat',system-ui,sans-serif; font-size: 0.68rem;
+    color: #F59E0B; margin-bottom: 0.5rem;
+  }
+  .kosten-row {
+    display: flex; justify-content: space-between;
+    font-size: 0.65rem; color: #555;
+    padding: 0.2rem 0;
+    border-bottom: 1px solid rgba(0,0,0,0.04);
+    font-family: 'Montserrat',system-ui,sans-serif;
+  }
+  .kosten-row.total { color: #333; font-weight: 700; border-bottom: none; margin-top: 0.3rem; border-top: 1px solid rgba(0,0,0,0.15); padding-top: 0.3rem; }
+  .doc-foto-grid {
+    display: grid; grid-template-columns: repeat(3,1fr);
+    gap: 0.35rem; margin-top: 0.5rem;
+  }
+  .doc-foto-cell {
+    aspect-ratio: 4/3;
+    background: linear-gradient(135deg, #e8e4e0, #d4cfc8);
+    border-radius: 3px;
+    display: flex; align-items: flex-end;
+    padding: 0.2rem;
+  }
+  .doc-foto-cell span {
+    font-size: 0.52rem; color: #666;
+    font-family: 'Montserrat',system-ui,sans-serif;
+    background: rgba(255,255,255,0.8);
+    padding: 0.1rem 0.25rem; border-radius: 2px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;
+  }
+  .doc-bewertung-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 0.4rem; margin: 0.5rem 0;
+  }
+  .doc-bewertung-cell {
+    background: rgba(0,0,0,0.04);
+    border-radius: 4px;
+    padding: 0.4rem 0.5rem;
+  }
+  .doc-bewertung-cell .bw-label { font-size: 0.6rem; color: #888; font-family: 'Montserrat',system-ui,sans-serif; }
+  .doc-bewertung-cell .bw-value { font-size: 0.7rem; color: #333; font-weight: 600; font-family: 'Montserrat',system-ui,sans-serif; }
+  .doc-407a {
+    background: rgba(0,0,0,0.04);
+    border: 1px solid rgba(0,0,0,0.08);
+    border-radius: 4px;
+    padding: 0.6rem 0.75rem;
+    font-size: 0.65rem;
+    color: #555;
+    margin-top: 0.75rem;
+    font-style: italic;
+  }
+  .doc-sig-area {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 1rem; margin-top: 1rem;
+    padding-top: 0.75rem; border-top: 1px solid rgba(0,0,0,0.1);
+  }
+  .sig-line { border-bottom: 1px solid #888; margin-bottom: 0.25rem; height: 1.5rem; }
+  .sig-label { font-size: 0.6rem; color: #666; font-family: 'Montserrat',system-ui,sans-serif; }
+
+  /* ── SIDEBAR CARDS ── */
+  .sidebar { display: flex; flex-direction: column; gap: 1rem; }
+
+  .var-list { display: flex; flex-direction: column; gap: 0.4rem; }
+  .var-item {
+    display: flex; align-items: flex-start; gap: 0.6rem;
+    padding: 0.5rem 0.6rem;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid var(--glass-border);
+    border-radius: 6px;
+    font-size: 0.75rem;
+  }
+  .var-code {
+    font-family: 'Courier New', monospace;
+    color: var(--accent);
+    font-size: 0.7rem;
+    flex-shrink: 0;
+    min-width: 160px;
+    font-weight: 500;
+  }
+  .var-desc { color: var(--text-muted); font-size: 0.72rem; }
+
+  .route-box {
+    background: rgba(225,29,72,0.08);
+    border: 1px solid rgba(225,29,72,0.25);
+    border-radius: 8px;
+    padding: 1rem;
+  }
+  .route-label { font-size: 0.65rem; color: var(--text-faint); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.35rem; }
+  .route-value { font-size: 0.88rem; font-weight: 700; color: var(--accent); font-family: 'Courier New', monospace; margin-bottom: 0.75rem; }
+  .route-condition {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--glass-border);
+    border-radius: 6px;
+    padding: 0.6rem 0.75rem;
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    margin-bottom: 0.5rem;
+    font-family: 'Courier New', monospace;
+  }
+  .route-condition .cond-label { font-family: 'Montserrat',system-ui,sans-serif; font-size: 0.65rem; color: var(--text-faint); margin-bottom: 0.25rem; }
+
+  .diff-list { display: flex; flex-direction: column; gap: 0.5rem; }
+  .diff-item {
+    display: flex; align-items: flex-start; gap: 0.6rem;
+    font-size: 0.75rem;
+  }
+  .diff-icon { font-size: 0.9rem; flex-shrink: 0; margin-top: 0.05rem; }
+  .diff-text { color: var(--text-muted); }
+  .diff-text strong { color: var(--text); display: block; font-size: 0.73rem; margin-bottom: 0.1rem; }
+
+  .section-chip {
+    display: inline-flex; align-items: center; gap: 0.4rem;
+    background: var(--accent-dim);
+    border: 1px solid rgba(225,29,72,0.25);
+    border-radius: 20px;
+    padding: 0.25rem 0.65rem;
+    font-size: 0.68rem; color: var(--accent); font-weight: 600;
+    margin: 0.2rem;
+  }
+
+  .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; }
+  .stat-cell {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--glass-border);
+    border-radius: 8px;
+    padding: 0.75rem;
+    text-align: center;
+  }
+  .stat-num { font-size: 1.35rem; font-weight: 800; color: var(--accent); }
+  .stat-lbl { font-size: 0.65rem; color: var(--text-faint); margin-top: 0.15rem; }
+
+  .norm-table {
+    width: 100%; border-collapse: collapse; font-size: 0.73rem;
+  }
+  .norm-table th {
+    padding: 0.4rem 0.6rem;
+    text-align: left; font-weight: 600; font-size: 0.65rem;
+    color: var(--text-faint); text-transform: uppercase; letter-spacing: 0.04em;
+    border-bottom: 1px solid var(--glass-border);
+  }
+  .norm-table td {
+    padding: 0.4rem 0.6rem;
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+    color: var(--text-muted);
+    vertical-align: top;
+  }
+  .norm-table tr:last-child td { border-bottom: none; }
+  .norm-code { font-family: 'Courier New',monospace; color: var(--accent); font-size: 0.7rem; }
+
+  .tip-box {
+    background: rgba(16,185,129,0.08);
+    border: 1px solid rgba(16,185,129,0.25);
+    border-radius: 8px;
+    padding: 0.85rem 1rem;
+    font-size: 0.76rem;
+    color: #6EE7B7;
+  }
+  .tip-box .tip-title { font-weight: 700; font-size: 0.72rem; margin-bottom: 0.4rem; color: #34D399; }
+
+  /* ── SECTION HEADING ── */
+  .section-heading {
+    font-size: 0.65rem; font-weight: 700; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--text-faint);
+    margin-bottom: 0.75rem; margin-top: 0.25rem;
+    padding-left: 0.1rem;
+  }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 900px) {
+    .two-col { grid-template-columns: 1fr; }
+    .sidebar { order: -1; }
+    .doc-preview { padding: 1.5rem; }
+  }
+</style>
+
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">PROVA<span>.</span>system</div>
+  <div class="nav-links">
+    <a href="../index.html">← Home</a>
+    <a href="vorlage-07-elementarschaden.html">‹ Vorlage 07</a>
+    <a href="#variables">Variablen</a>
+    <a href="#routing">Make.com</a>
+    <a href="#normen">DIN-Normen</a>
+  </div>
+</nav>
+
+<!-- PAGE HEADER -->
+<div class="page-header">
+  <div class="header-inner">
+    <div class="header-badges">
+      <span class="badge badge-vorlage">Vorlage 08 / 08</span>
+      <span class="badge badge-enterprise">⭐ Enterprise</span>
+      <span class="badge badge-rose">🏗 Baumängelgutachten</span>
+    </div>
+    <h1 class="page-title">Baumängel<span class="accent">gutachten</span></h1>
+    <p class="page-subtitle">
+      Technische Bewertung von Bauausführungsfehlern, Planungsmängeln und Werkvertragsmängeln
+      nach VOB/B, BGB §634 und einschlägigen DIN-Normen. Mit Mängeltabelle, Kostenschätzung
+      und Gewährleistungsfristen-Übersicht.
+    </p>
+  </div>
+</div>
+
+<!-- INFO STRIP -->
+<div class="info-strip">
+  <div class="info-strip-inner">
+    <div class="info-item">
+      <div class="info-dot dot-gold"></div>
+      <span class="info-label">Paket</span>
+      <span class="info-value">Enterprise</span>
+    </div>
+    <div class="info-item">
+      <div class="info-dot dot-rose"></div>
+      <span class="info-label">Typ</span>
+      <span class="info-value">Baumängelgutachten</span>
+    </div>
+    <div class="info-item">
+      <span class="info-label">Seiten</span>
+      <span class="info-value">8–22 Seiten</span>
+    </div>
+    <div class="info-item">
+      <span class="info-label">Erstellungszeit</span>
+      <span class="info-value">25–45 Min.</span>
+    </div>
+    <div class="info-item">
+      <span class="info-label">Auftraggeber</span>
+      <span class="info-value">Bauherr, Eigentümer, Anwalt, Gericht</span>
+    </div>
+    <div class="info-item">
+      <span class="info-label">Make.com Route</span>
+      <span class="info-value" style="font-family:monospace;">Route H — vorlage_typ = "baumaengel"</span>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<main class="main-wrap">
+  <div class="two-col">
+
+    <!-- LEFT: DOCUMENT PREVIEW -->
+    <div>
+      <p class="section-heading">📄 Dokumentvorschau — PDFMonkey Ausgabe</p>
+
+      <div class="card">
+        <div class="card-header">
+          <span class="card-icon">🏗</span>
+          <h3>Baumängelgutachten — Vollständige Vorlage mit {{Handlebars-Variablen}}</h3>
+        </div>
+        <div class="card-body">
+          <div class="doc-preview">
+            <div class="doc-watermark">MUSTER</div>
+
+            <!-- ENTERPRISE HEADER CUSTOMIZABLE -->
+            <div class="doc-header-bar">
+              <div class="doc-logo-area">
+                <!-- Enterprise: Eigenes Logo via {{kunde_logo_url}} -->
+                <div class="doc-logo-text">{{sv_kanzlei_name}}</div>
+                <div class="doc-logo-sub">Öffentlich bestellter u. vereidigter Sachverständiger</div>
+              </div>
+              <div class="doc-meta-top">
+                <strong>Gutachten-Nr.: <span class="doc-var">{{gutachten_nr}}</span></strong>
+                Datum: <span class="doc-var">{{gutachten_datum}}</span><br>
+                Bearbeiter: <span class="doc-var">{{sv_name}}</span><br>
+                Fachgebiet: <span class="doc-var">{{sv_fachgebiet}}</span>
+              </div>
+            </div>
+
+            <div class="doc-gutachten-type">Baumängelgutachten</div>
+            <div class="doc-enterprise-banner">
+              ⭐ Enterprise — Individuelle Kopf-/Fußzeile &amp; Logo des Sachverständigen
+            </div>
+
+            <!-- DECKBLATT -->
+            <div class="doc-title-block">
+              <h1>BAUMÄNGELGUTACHTEN</h1>
+              <p class="sub">gem. BGB §§ 633–634a, VOB/B §§ 12–13 und einschlägigen DIN-Normen</p>
+            </div>
+
+            <!-- AUFTRAGSDATEN -->
+            <div class="doc-section">
+              <h2>A. Auftrag und Objekt</h2>
+              <div class="doc-bewertung-grid">
+                <div class="doc-bewertung-cell">
+                  <div class="bw-label">Auftraggeber</div>
+                  <div class="bw-value"><span class="doc-var">{{auftraggeber_name}}</span></div>
+                </div>
+                <div class="doc-bewertung-cell">
+                  <div class="bw-label">Auftragnehmer (Baufirma)</div>
+                  <div class="bw-value"><span class="doc-var">{{baufirma_name}}</span></div>
+                </div>
+                <div class="doc-bewertung-cell">
+                  <div class="bw-label">Bauvorhaben / Objekt</div>
+                  <div class="bw-value"><span class="doc-var">{{objekt_bezeichnung}}</span></div>
+                </div>
+                <div class="doc-bewertung-cell">
+                  <div class="bw-label">Bauphase / Abnahmestatus</div>
+                  <div class="bw-value"><span class="doc-var">{{abnahme_status}}</span></div>
+                </div>
+              </div>
+              <p style="margin-top:0.5rem; font-size:0.7rem; color:#555;">
+                Objekt: <span class="doc-var">{{objekt_adresse}}</span> ·
+                Baujahr / Bauzeit: <span class="doc-var">{{baujahr}}</span> ·
+                Bauvertrag vom: <span class="doc-var">{{bauvertrag_datum}}</span>
+              </p>
+            </div>
+
+            <!-- ORTSTERMIN -->
+            <div class="doc-section">
+              <h2>B. Ortsbesichtigung</h2>
+              <p>Ortstermin am <span class="doc-var">{{ortstermin_datum}}</span> um <span class="doc-var">{{ortstermin_uhrzeit}}</span> Uhr.
+              Anwesend: <span class="doc-var">{{anwesende_personen}}</span>.</p>
+              <p>Witterung: <span class="doc-var">{{witterung_ortstermin}}</span> · Vorliegende Unterlagen: <span class="doc-var">{{vorliegende_unterlagen}}</span></p>
+            </div>
+
+            <!-- MÄNGELLISTE (Kernstück) -->
+            <div class="doc-section">
+              <h2>C. Mängelfeststellungen</h2>
+              <table class="doc-mangel-table">
+                <thead>
+                  <tr>
+                    <th>Pos.</th>
+                    <th>Bauteil / Ort</th>
+                    <th>Mangelbeschreibung</th>
+                    <th>Schwere</th>
+                    <th>DIN-Ref.</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>M-01</td>
+                    <td><span class="doc-var">{{mangel_1_ort}}</span></td>
+                    <td><span class="doc-var">{{mangel_1_beschreibung}}</span></td>
+                    <td><span class="badge-erheblich">Erheblich</span></td>
+                    <td><span class="doc-var">{{mangel_1_din}}</span></td>
+                  </tr>
+                  <tr>
+                    <td>M-02</td>
+                    <td><span class="doc-var">{{mangel_2_ort}}</span></td>
+                    <td><span class="doc-var">{{mangel_2_beschreibung}}</span></td>
+                    <td><span class="badge-mittel">Mittel</span></td>
+                    <td><span class="doc-var">{{mangel_2_din}}</span></td>
+                  </tr>
+                  <tr>
+                    <td>M-03</td>
+                    <td><span class="doc-var">{{mangel_3_ort}}</span></td>
+                    <td><span class="doc-var">{{mangel_3_beschreibung}}</span></td>
+                    <td><span class="badge-gering">Gering</span></td>
+                    <td><span class="doc-var">{{mangel_3_din}}</span></td>
+                  </tr>
+                  <tr>
+                    <td style="color:#aaa; font-style:italic;" colspan="5">… weitere Mängel via {{mangel_N_*}} Variablen …</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- DIN NORMEN -->
+            <div class="doc-section">
+              <h2>D. Technische Bewertung &amp; DIN-Normen</h2>
+              <div class="doc-din-box">
+                <strong>Maßgebliche Normen und Regelwerke:</strong>
+                <span class="doc-var">{{angewandte_normen}}</span>
+              </div>
+              <p>Ursache: <span class="doc-var">{{mangelursache_bewertung}}</span></p>
+              <p>Verantwortlichkeit: <span class="doc-var">{{verantwortlichkeit}}</span> (Ausführungsfehler / Planungsfehler / Materialfehler)</p>
+              <p>Nachbesserungsmöglichkeit: <span class="doc-var">{{nachbesserung_moeglich}}</span></p>
+            </div>
+
+            <!-- KOSTENSCHÄTZUNG -->
+            <div class="doc-kosten-box">
+              <h3>💰 Kostenschätzung Mängelbeseitigung (netto)</h3>
+              <div class="kosten-row"><span>Pos. M-01: <span class="doc-var">{{kosten_mangel_1}}</span></span><span></span></div>
+              <div class="kosten-row"><span>Pos. M-02: <span class="doc-var">{{kosten_mangel_2}}</span></span><span></span></div>
+              <div class="kosten-row"><span>Pos. M-03: <span class="doc-var">{{kosten_mangel_3}}</span></span><span></span></div>
+              <div class="kosten-row"><span>Nebenkosten (Gerüst, Deponierung etc.)</span><span><span class="doc-var">{{kosten_nebenkosten}}</span></span></div>
+              <div class="kosten-row total">
+                <span>Gesamtkosten Mängelbeseitigung (netto)</span>
+                <span><span class="doc-var">{{kosten_gesamt}}</span></span>
+              </div>
+            </div>
+
+            <!-- GEWÄHRLEISTUNG -->
+            <div class="doc-section" style="margin-top:1rem;">
+              <h2>E. Gewährleistung &amp; Fristen</h2>
+              <p>Abnahmedatum: <span class="doc-var">{{abnahme_datum}}</span> ·
+              Gewährleistungsfrist: <span class="doc-var">{{gewaehrleistung_frist}}</span> ·
+              Fristablauf: <span class="doc-var">{{gewaehrleistung_ablauf}}</span></p>
+              <p>Verjährungsstatus: <span class="doc-var">{{verjaehrungsstatus}}</span></p>
+            </div>
+
+            <!-- FOTOS -->
+            <div class="doc-section">
+              <h2>F. Fotodokumentation</h2>
+              <div class="doc-foto-grid">
+                <div class="doc-foto-cell"><span>{{foto_mangel_1}}</span></div>
+                <div class="doc-foto-cell"><span>{{foto_mangel_2}}</span></div>
+                <div class="doc-foto-cell"><span>{{foto_mangel_3}}</span></div>
+                <div class="doc-foto-cell"><span>{{foto_mangel_4}}</span></div>
+                <div class="doc-foto-cell"><span>{{foto_mangel_5}}</span></div>
+                <div class="doc-foto-cell"><span>{{foto_mangel_6}}</span></div>
+              </div>
+            </div>
+
+            <!-- ZUSAMMENFASSUNG -->
+            <div class="doc-section">
+              <h2>G. Zusammenfassung &amp; Empfehlung</h2>
+              <p><span class="doc-var">{{zusammenfassung}}</span></p>
+              <p style="margin-top:0.4rem;"><strong>Empfehlung:</strong> <span class="doc-var">{{handlungsempfehlung}}</span></p>
+            </div>
+
+            <!-- §407a ZPO -->
+            <div class="doc-407a">
+              <strong style="font-style:normal; color:#E11D48; font-size:0.65rem; font-family:'Montserrat',system-ui,sans-serif;">§ 407a ZPO — Erklärung (bei Gerichtsauftrag):</strong><br>
+              Ich versichere, dass ich das Gutachten unparteiisch und nach bestem Wissen und Gewissen erstattet habe
+              und bereit bin, es ggf. mündlich zu erläutern. Ich bin gemäß § 407a Abs. 2 ZPO nicht anderweitig
+              sachverständig tätig und in der Lage, das Gutachten innerhalb der gesetzten Frist zu erstatten.
+            </div>
+
+            <!-- SIGNATUR -->
+            <div class="doc-sig-area">
+              <div>
+                <div class="sig-line"></div>
+                <div class="sig-label">Ort, Datum: <span class="doc-var">{{gutachten_ort}}</span>, <span class="doc-var">{{gutachten_datum}}</span></div>
+              </div>
+              <div>
+                <div class="sig-line"></div>
+                <div class="sig-label">Unterschrift &amp; Stempel SV: <span class="doc-var">{{sv_name}}</span></div>
+              </div>
+            </div>
+
+          </div><!-- /doc-preview -->
+        </div>
+      </div><!-- /card -->
+    </div><!-- /left col -->
+
+    <!-- RIGHT: SIDEBAR -->
+    <div class="sidebar" id="variables">
+
+      <!-- STATS -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-icon">📊</span>
+          <h3>Kennzahlen</h3>
+        </div>
+        <div class="card-body">
+          <div class="stat-grid">
+            <div class="stat-cell">
+              <div class="stat-num">⭐⭐⭐</div>
+              <div class="stat-lbl">Häufigkeit</div>
+            </div>
+            <div class="stat-cell">
+              <div class="stat-num">8–22</div>
+              <div class="stat-lbl">Seiten typ.</div>
+            </div>
+            <div class="stat-cell">
+              <div class="stat-num">8</div>
+              <div class="stat-lbl">Vorlage Nr.</div>
+            </div>
+            <div class="stat-cell">
+              <div class="stat-num">H</div>
+              <div class="stat-lbl">Make.com Route</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ROUTING -->
+      <div class="card" id="routing">
+        <div class="card-header">
+          <span class="card-icon">🔀</span>
+          <h3>Make.com Routing</h3>
+        </div>
+        <div class="card-body">
+          <div class="route-box">
+            <div class="route-label">Route H — Filter-Bedingung</div>
+            <div class="route-value">vorlage_typ = "baumaengel"</div>
+            <div class="route-condition">
+              <div class="cond-label">Webhook-Payload Pflichtfelder:</div>
+              vorlage_typ: "baumaengel"<br>
+              paket: "enterprise"<br>
+              gutachten_nr: string<br>
+              mangel_count: number
+            </div>
+            <div class="route-condition">
+              <div class="cond-label">PDFMonkey Template-ID:</div>
+              TEMPLATE_ID_BAUMAENGEL<br>
+              <span style="color:var(--text-faint); font-size:0.65rem;">(in Make.com → PDFMonkey Modul eintragen)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PDFMONKEY VARIABLES -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-icon">🔧</span>
+          <h3>PDFMonkey Variablen</h3>
+        </div>
+        <div class="card-body">
+          <p class="section-heading">Stammdaten &amp; SV</p>
+          <div class="var-list">
+            <div class="var-item">
+              <div class="var-code">{{gutachten_nr}}</div>
+              <div class="var-desc">Eindeutige Gutachten-Nummer</div>
+            </div>
+            <div class="var-item">
+              <div class="var-code">{{gutachten_datum}}</div>
+              <div class="var-desc">Ausstellungsdatum</div>
+            </div>
+            <div class="var-item">
+              <div class="var-code">{{sv_name}}</div>
+              <div class="var-desc">Name des Sachverständigen</div>
+            </div>
+            <div class="var-item">
+              <div class="var-code">{{sv_kanzlei_name}}</div>
+              <div class="var-desc">Büro/Kanzleiname (Enterprise Logo-Header)</div>
+            </div>
+            <div class="var-item">
+              <div class="var-code">{{sv_fachgebiet}}</div>
+              <div class="var-desc">SV-Fachgebiet (z.B. Hochbau, TGA)</div>
+            </div>
+            <div class="var-item">
+              <div class="var-code">{{kunde_logo_url}}</div>
+              <div class="var-desc">Enterprise: eigenes Logo (URL)</div>
+            </div>
+            <div class="var-item">
+              <div class="var-code">{{gutachten_ort}}</div>
+              <div class="var-desc">Ausstellungsort</div>
+            </div>
+          </div>
+
+          <p class="section-heading" style="margin-top:1rem;">Objekt &amp; Auftrag</p>
+          <div class="var-list">
+            <div class="var-item">
+              <div class="var-code">{{auftraggeber_name}}</div>
+              <div class="var-desc">Auftraggeber (Bauherr / Anwalt)</div>
+            </div>
+            <div class="var-item">
+              <div class="var-code">{{baufirma_name}}</div>
+              <div class="var-desc">Name der Baufirma / AN</div>
+            </div>
+            <div class="var-item">
+              <div class="var-code">{{objekt_bezeichnung}}</div>
+              <div class="var-desc">Bezeichnung des Bauvorhabens</div>
+            </div>
+            <div class="var-item">
+              <div class="var-code">{{objekt_adresse}}</div>
+              <div class="var-desc">Adresse des Bauobjekts</div>
+            </div>
+            <div class="var-item">
+              <div class="var-code">{{baujahr}}</div>
+              <div class="var-desc">Baujahr / Bauzeitraum</div>
+            </div>
+            <div class="var-item">
+              <div class="var-code">{{bauvertrag_datum}}</div>
+              <div class="var-desc">Datum Bauvertrag</div>
+            </div>
+            <div class="var-item">
+              <div class="var-code">{{abnahme_status}}</div>
+              <div class="var-desc">Abnahmestatus (förmlich/konkludent/ausstehend)</div>
+            </div>
+          </div>
+
+          <p class="section-heading" style="margin-top:1rem;">Ortstermin</p>
+          <div class="var-list">
+            <div class="var-item">
+              <div class="var-code">{{ortstermin_datum}}</div>
+              <div class="var-desc">Datum Ortsbesichtigung</div>
+            </div>
+            <div class="var-item">
+              <div class="var-code">{{ortstermin_uhrzeit}}</div>
+              <div class="var-desc">Uhrzeit Ortsbesichtigung</div>
+            </div>
+            <div class="var-item">
+              <div class="var-code">{{anwesende_personen}}</div>
+              <div class="var-desc">Anwesende beim Ortstermin</div>
+            </div>
+            <div class="var-item">
+              <div class="var-code">{{witterung_ortstermin}}</div>
+              <div class="var-desc">Witterungsbedingungen</div>
+            </div>
+            <div class="var-item">
+              <div class="var-code">{{vorliegende_unterlagen}}</div>
+              <div class="var-desc">Vorgelegte Pläne, Verträge, Fotos</div>
+            </div>
+          </div>
+
+          <p class="section-heading" style="margin-top:1rem;">Mängel (skalierbar M-01 bis M-N)</p>
+          <div class="var-list">
+            <div class="var-item">
+              <div class="var-code">{{mangel_N_ort}}</div>
+              <div class="var-desc">Bauteil / Ort des Mangels</div>
+            </div>
+            <div class="var-item">
+              <div class="var-code">{{mangel_N_beschreibung}}</div>
+              <div class="var-desc">Detaillierte Mangelbeschreibung</div>
+            </div>
+            <div class="var-item">
+              <div class="var-code">{{mangel_N_schwere}}</div>
+              <div class="var-desc">Erheblich / Mittel / Gering</div>
+            </div>
+            <div class="var-item">
+              <div class="var-code">{{mangel_N_din}}</div>
+              <div class="var-desc">Referenzierte DIN-Norm</div>
+            </div>
+            <div class="var-item">
+              <div class="var-code">{{kosten_mangel_N}}</div>
+              <div class="var-desc">Beseitigungskosten je Mangel</div>
+            </div>
+          </div>
+
+          <p class="section-heading" style="margin-top:1rem;">Technische Bewertung</p>
+          <div class="var-list">
+            <div class="var-item">
+              <div class="var-code">{{angewandte_normen}}</div>
+              <div class="var-desc">Alle angewandten DIN-/VOB-Normen</div>
+            </div>
+            <div class="var-item">
+              <div class="var-code">{{mangelursache_bewertung}}</div>
+              <div class="var-desc">Ursachenbewertung (Ausführung/Planung)</div>
+            </div>
+            <div class="var-item">
+              <div class="var-code">{{verantwortlichkeit}}</div>
+              <div class="var-desc">Verantwortlicher (AN/AG/Planer)</div>
+            </div>
+            <div class="var-item">
+              <div class="var-code">{{nachbesserung_moeglich}}</div>
+              <div class="var-desc">Ja / Nein / Nur teilweise</div>
+            </div>
+          </div>
+
+          <p class="section-heading" style="margin-top:1rem;">Kosten &amp; Gewährleistung</p>
+          <div class="var-list">
+            <div class="var-item">
+              <div class="var-code">{{kosten_nebenkosten}}</div>
+              <div class="var-desc">Nebenkosten (Gerüst, Deponierung)</div>
+            </div>
+            <div class="var-item">
+              <div class="var-code">{{kosten_gesamt}}</div>
+              <div class="var-desc">Gesamtkosten Mängelbeseitigung</div>
+            </div>
+            <div class="var-item">
+              <div class="var-code">{{abnahme_datum}}</div>
+              <div class="var-desc">Datum der förmlichen Abnahme</div>
+            </div>
+            <div class="var-item">
+              <div class="var-code">{{gewaehrleistung_frist}}</div>
+              <div class="var-desc">Frist in Jahren (BGB: 5J, VOB/B: 4J)</div>
+            </div>
+            <div class="var-item">
+              <div class="var-code">{{gewaehrleistung_ablauf}}</div>
+              <div class="var-desc">Berechnetes Ablaufdatum</div>
+            </div>
+            <div class="var-item">
+              <div class="var-code">{{verjaehrungsstatus}}</div>
+              <div class="var-desc">Aktiv / Abgelaufen / Gehemmt</div>
+            </div>
+          </div>
+
+          <p class="section-heading" style="margin-top:1rem;">Fotos &amp; Ergebnis</p>
+          <div class="var-list">
+            <div class="var-item">
+              <div class="var-code">{{foto_mangel_N}}</div>
+              <div class="var-desc">Foto-URL je Mangelposition</div>
+            </div>
+            <div class="var-item">
+              <div class="var-code">{{zusammenfassung}}</div>
+              <div class="var-desc">Gutachterliche Zusammenfassung</div>
+            </div>
+            <div class="var-item">
+              <div class="var-code">{{handlungsempfehlung}}</div>
+              <div class="var-desc">Konkrete Empfehlung (Nachbesserung/Minderung/Rücktritt)</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DIN NORMEN -->
+      <div class="card" id="normen">
+        <div class="card-header">
+          <span class="card-icon">📐</span>
+          <h3>Häufige DIN-Normen</h3>
+        </div>
+        <div class="card-body">
+          <table class="norm-table">
+            <thead>
+              <tr>
+                <th>Norm</th>
+                <th>Anwendungsbereich</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="norm-code">DIN 18195</span></td>
+                <td>Bauwerksabdichtungen (Keller, Flachdach)</td>
+              </tr>
+              <tr>
+                <td><span class="norm-code">DIN 18550</span></td>
+                <td>Putzarbeiten / Außenputz</td>
+              </tr>
+              <tr>
+                <td><span class="norm-code">DIN 18560</span></td>
+                <td>Estriche im Bauwesen</td>
+              </tr>
+              <tr>
+                <td><span class="norm-code">DIN 18300</span></td>
+                <td>VOB/C Erdarbeiten</td>
+              </tr>
+              <tr>
+                <td><span class="norm-code">DIN 4108</span></td>
+                <td>Wärmeschutz (Wärmebrücken, Luftdichtheit)</td>
+              </tr>
+              <tr>
+                <td><span class="norm-code">DIN 4109</span></td>
+                <td>Schallschutz im Hochbau</td>
+              </tr>
+              <tr>
+                <td><span class="norm-code">DIN 18202</span></td>
+                <td>Maßtoleranzen im Hochbau</td>
+              </tr>
+              <tr>
+                <td><span class="norm-code">VOB/B §13</span></td>
+                <td>Mängelansprüche beim Bauvertrag</td>
+              </tr>
+              <tr>
+                <td><span class="norm-code">BGB §634a</span></td>
+                <td>Verjährungsfristen Werkvertrag</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- UNTERSCHIEDE ZU ANDEREN VORLAGEN -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-icon">⚡</span>
+          <h3>Besonderheiten dieser Vorlage</h3>
+        </div>
+        <div class="card-body">
+          <div class="diff-list">
+            <div class="diff-item">
+              <span class="diff-icon">🏗</span>
+              <div class="diff-text">
+                <strong>Skalierbare Mängeltabelle</strong>
+                Beliebig viele Mängelpos. (M-01..M-N) mit Schweregrad-Badges (Erheblich / Mittel / Gering) und DIN-Norm-Referenz.
+              </div>
+            </div>
+            <div class="diff-item">
+              <span class="diff-icon">📐</span>
+              <div class="diff-text">
+                <strong>DIN-Normen-Block</strong>
+                Dedizierter Block für alle angewandten Normen (DIN 18195, 18202, 4108 etc.) — differenziert nach Ursache (Ausführung / Planung / Material).
+              </div>
+            </div>
+            <div class="diff-item">
+              <span class="diff-icon">⚖️</span>
+              <div class="diff-text">
+                <strong>Gewährleistungsfristen-Tracker</strong>
+                Automatische Berechnung Fristablauf aus Abnahmedatum + Frist (BGB: 5 Jahre, VOB/B: 4 Jahre).
+              </div>
+            </div>
+            <div class="diff-item">
+              <span class="diff-icon">💰</span>
+              <div class="diff-text">
+                <strong>Kostenschätzung je Mangel</strong>
+                Einzelkosten pro Mangelposition + Nebenkosten = Gesamtsumme für Verhandlung und Klage.
+              </div>
+            </div>
+            <div class="diff-item">
+              <span class="diff-icon">🏢</span>
+              <div class="diff-text">
+                <strong>Enterprise White-Label</strong>
+                {{sv_kanzlei_name}} + {{kunde_logo_url}} in Kopfzeile — individuelle SV-Kanzlei-Marke.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RECHTLICHER KONTEXT -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-icon">⚖️</span>
+          <h3>Rechtlicher Kontext</h3>
+        </div>
+        <div class="card-body">
+          <div class="diff-list">
+            <div class="diff-item">
+              <span class="diff-icon">📜</span>
+              <div class="diff-text">
+                <strong>§ 634 BGB — Rechte des Bestellers</strong>
+                Nacherfüllung, Selbstvornahme, Minderung, Rücktritt, Schadensersatz — alle Optionen benötigen gutachterliche Grundlage.
+              </div>
+            </div>
+            <div class="diff-item">
+              <span class="diff-icon">📜</span>
+              <div class="diff-text">
+                <strong>§ 634a BGB — Verjährungsfristen</strong>
+                Bauwerke: 5 Jahre nach Abnahme (BGB), 4 Jahre nach VOB/B. Arglistige Täuschung: 30 Jahre.
+              </div>
+            </div>
+            <div class="diff-item">
+              <span class="diff-icon">📜</span>
+              <div class="diff-text">
+                <strong>VOB/B § 12–13 — Abnahme &amp; Mängel</strong>
+                Abnahmeprotokoll ist Grundlage für Gewährleistungsfrist. Förmliche Abnahme empfohlen.
+              </div>
+            </div>
+            <div class="diff-item">
+              <span class="diff-icon">⚠️</span>
+              <div class="diff-text">
+                <strong>Abgrenzung: Planungsfehler vs. Ausführungsfehler</strong>
+                Kritische Unterscheidung für Haftung: Architekt (§ 650p BGB) vs. Baufirma (§ 631 BGB).
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DOKUMENTSTRUKTUR -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-icon">📋</span>
+          <h3>Dokumentstruktur (A–G)</h3>
+        </div>
+        <div class="card-body">
+          <div style="display:flex; flex-wrap:wrap; margin: -0.2rem;">
+            <span class="section-chip">A. Auftrag &amp; Objekt</span>
+            <span class="section-chip">B. Ortsbesichtigung</span>
+            <span class="section-chip">C. Mängelfeststellungen</span>
+            <span class="section-chip">D. Technische Bewertung</span>
+            <span class="section-chip">E. Gewährleistung</span>
+            <span class="section-chip">F. Fotodokumentation</span>
+            <span class="section-chip">G. Zusammenfassung</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- AIRTABLE MAPPING TIP -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-icon">🗄</span>
+          <h3>Airtable → Make.com Mapping</h3>
+        </div>
+        <div class="card-body">
+          <div class="tip-box">
+            <div class="tip-title">💡 Empfohlene Airtable-Felder (SCHADENSFAELLE)</div>
+            Neue Felder ergänzen: <strong>baufirma_name</strong>, <strong>bauvertrag_datum</strong>, <strong>abnahme_datum</strong>, <strong>abnahme_status</strong>, <strong>mangel_liste</strong> (Long text / JSON), <strong>gewaehrleistung_frist</strong>, <strong>kosten_gesamt</strong>.<br><br>
+            Mangelliste als JSON-Array im Airtable-Feld speichern → Make.com Iterator → PDFMonkey Handlebars <code>{{#each maengel}}...{{/each}}</code> Loop.
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /sidebar -->
+  </div><!-- /two-col -->
+</main>
+
+<script>
+  // Highlight active nav link
+  document.querySelectorAll('.nav-links a').forEach(a => {
+    if (a.getAttribute('href') === '#variables' || a.getAttribute('href') === '#routing' || a.getAttribute('href') === '#normen') {
+      a.addEventListener('click', function() {
+        document.querySelectorAll('.nav-links a').forEach(x => x.style.background = '');
+        this.style.background = 'rgba(225,29,72,0.15)';
+        this.style.color = '#FDA4AF';
+      });
+    }
+  });
+</script>
+
+</body>
+</html>
