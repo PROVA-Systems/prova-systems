@@ -21,9 +21,17 @@ if(!localStorage.getItem('prova_user')){window.location.href='app-login.html';re
 var svEmail=localStorage.getItem('prova_sv_email')||'';
 var alleTermine=[];
 var kalDatum=new Date();
-var WEBHOOK_S8='https://hook.eu1.make.com/lktuhugwcg5v37ib6bdaxjb1uiplnu8v';
+var MAKE_KEY_SUPPORT='support';
 var AT_BASE='appJ7bLlAHZoxENWE';
 var AT_TERMINE='tblyMTTdtfGQjjmc2';
+
+async function makeProxy(key, payload){
+  return fetch('/.netlify/functions/make-proxy', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ key: key, payload: payload || {} })
+  });
+}
 
 function ladeAusLS(){
   try{return JSON.parse(localStorage.getItem('prova_termine')||'[]');}catch(e){return[];}

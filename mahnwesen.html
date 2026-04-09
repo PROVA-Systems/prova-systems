@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>PROVA — Mahnwesen</title>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=Instrument+Sans:wght@400;500;600&family=Montserrat:wght@500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{--bg:#0d0f14;--bg2:#13161d;--text:#e8eaf0;--text2:#9da3b4;--accent:#4f8ef7;--border:rgba(255,255,255,0.08);}
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:'Montserrat',system-ui,sans-serif;background:var(--bg);color:var(--text2);min-height:100vh;font-size:14px;}
+    .topbar{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 20px;height:52px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;}
+    .logo{font-family:'Fraunces',serif;font-weight:700;font-size:18px;color:var(--text);text-decoration:none;}
+    .logo span{color:var(--accent);}
+    .topnav{display:flex;gap:4px;flex-wrap:wrap;}
+    .topnav a{padding:6px 10px;border-radius:6px;color:var(--text2);font-size:13px;text-decoration:none;}
+    .topnav a:hover{background:rgba(255,255,255,0.05);}
+    .topnav a.active{color:var(--accent);background:rgba(79,142,247,0.12);}
+    .main{max-width:1100px;margin:0 auto;padding:24px;}
+    h1{font-family:'Fraunces',serif;color:var(--text);font-size:24px;margin-bottom:8px;}
+    .sub{font-size:13px;margin-bottom:20px;}
+    table{width:100%;border-collapse:collapse;font-size:13px;}
+    th{text-align:left;padding:10px 8px;color:#6b7280;font-size:11px;text-transform:uppercase;border-bottom:1px solid var(--border);}
+    td{padding:12px 8px;border-bottom:1px solid rgba(255,255,255,0.06);vertical-align:middle;}
+    .ampel{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;}
+    .ampel-gruen{background:#10b981;}
+    .ampel-gelb{background:#f59e0b;}
+    .ampel-rot{background:#ef4444;}
+    .btn{padding:6px 10px;border-radius:8px;border:1px solid rgba(255,255,255,0.12);background:rgba(79,142,247,0.2);color:#fff;font-size:12px;font-weight:700;cursor:pointer;margin:2px;}
+    .btn:hover{background:rgba(79,142,247,0.35);}
+    .mono{font-family:ui-monospace,monospace;}
+    .badge{font-size:11px;padding:2px 8px;border-radius:999px;font-weight:700;}
+    .st-offen{background:rgba(245,158,11,0.15);color:#fbbf24;}
+    .st-m1{background:rgba(59,130,246,0.15);color:#93c5fd;}
+    .st-m2{background:rgba(167,139,250,0.15);color:#c4b5fd;}
+    .st-m3{background:rgba(239,68,68,0.15);color:#fca5a5;}
+    .st-ink{background:rgba(127,29,29,0.35);color:#fecaca;}
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <a href="dashboard.html" class="logo">PRO<span>VA</span></a>
+    <nav class="topnav">
+      <a href="rechnungen.html">Rechnungen</a>
+      <a href="mahnwesen.html" class="active">Mahnwesen</a>
+      <a href="jveg.html">JVEG</a>
+      <a href="archiv.html">Archiv</a>
+    </nav>
+  </div>
+  <main class="main">
+    <h1>Automatisches Mahnwesen</h1>
+    <p class="sub">Offene Posten aus lokalen Rechnungen. Status: Offen → Mahnung 1–3 → Inkasso. Verzugszins ab Mahnung 2 nach §288 BGB (Basiszinssatz + 9 %-Punkte). Make.com kann täglich dieselben Stufen prüfen.</p>
+    <div style="overflow:auto;">
+      <table>
+        <thead>
+          <tr>
+            <th>Ampel</th>
+            <th>Rechnung</th>
+            <th>Auftraggeber</th>
+            <th>Betrag netto</th>
+            <th>Tage seit Fälligkeit</th>
+            <th>Status</th>
+            <th>Aktion</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+    <p class="sub" style="margin-top:16px;">Hinweis: Airtable-Feld <code>Mahnung_Status</code> kann über Make.com mit <code>prova_rechnungen_local</code> synchronisiert werden.</p>
+  </main>
+  <script src="mahnwesen-logic.js"></script>
+  <script>
+  (function(){
+    var api = window.MahnwesenAPI;
+    if(!api){document.getElementById('tbody').innerHTML='<tr><td colspan="7">mahnwesen-logic.js fehlt</td></tr>';return;}
+    var rows = api.loadRows().filter(function(r){return r.status!=='bezahlt';});
+    if(!rows.length){
+      document.getElementById('tbody').innerHTML='<tr><td colspan="7">Keine offenen Rechnungen. <a href="rechnungen.html" style="color:#4f8ef7">Rechnungen anlegen</a></td></tr>';
+      return;
+    }
+    var html = '';
+    window.__mahnOpenRows = rows;
+    rows.forEach(function(r, idx){
+      var n = api.daysOpen(r);
+      var amp = api.ampelClass(n);
+      var nr = r.rechnungsnummer || r.nr || '—';
+      var esc = String(nr).replace(/&/g,'&amp;').replace(/</g,'&lt;');
+      var st = r.mahn_status || 'Offen';
+      var sb = 'st-offen';
+      if(st==='Mahnung1') sb='st-m1';
+      else if(st==='Mahnung2') sb='st-m2';
+      else if(st==='Mahnung3') sb='st-m3';
+      else if(st==='Inkasso') sb='st-ink';
+      html += '<tr><td><span class="ampel '+amp+'"></span></td><td class="mono">'+esc+'</td><td>'+(String(r.empfaenger_name||'—').replace(/</g,'&lt;'))+'</td><td>'+(r.netto!=null?Number(r.netto).toFixed(2):'—')+' €</td><td>'+n+'</td><td><span class="badge '+sb+'">'+st+'</span></td><td>';
+      html += '<button type="button" class="btn mahn-btn" data-idx="'+idx+'" data-stufe="1">Mahnung 1</button> ';
+      html += '<button type="button" class="btn mahn-btn" data-idx="'+idx+'" data-stufe="2">Mahnung 2</button> ';
+      html += '<button type="button" class="btn mahn-btn" data-idx="'+idx+'" data-stufe="3">Mahnung 3</button>';
+      html += '</td></tr>';
+    });
+    document.getElementById('tbody').innerHTML = html;
+    document.getElementById('tbody').addEventListener('click', function(ev){
+      var b = ev.target.closest('.mahn-btn');
+      if(!b) return;
+      var idx = parseInt(b.getAttribute('data-idx')||'-1',10);
+      var row = window.__mahnOpenRows && window.__mahnOpenRows[idx];
+      if(!row) return;
+      var nr = row.rechnungsnummer || row.nr || '';
+      var stufe = parseInt(b.getAttribute('data-stufe')||'1',10);
+      api.setMahnStatus(nr, stufe===1?'Mahnung1':stufe===2?'Mahnung2':'Mahnung3');
+      window.location.href = 'mahnung.html?nr='+encodeURIComponent(nr)+'&stufe='+stufe;
+    });
+  })();
+  </script>
+</body>
+</html>

@@ -6,8 +6,8 @@ const nodemailer = require('nodemailer');
 exports.handler = async function(event) {
   const cors = {
     'Content-Type': 'application/json',
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Origin': process.env.URL || 'https://prova-systems.de',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     'Access-Control-Allow-Methods': 'POST, OPTIONS'
   };
 
@@ -16,6 +16,11 @@ exports.handler = async function(event) {
   let body;
   try { body = JSON.parse(event.body); }
   catch(e) { return { statusCode: 400, headers: cors, body: JSON.stringify({ ok: false, fehler: 'Invalid JSON' }) }; }
+
+  const jwtEmail = event.clientContext && event.clientContext.user && event.clientContext.user.email
+    ? String(event.clientContext.user.email).toLowerCase()
+    : '';
+  if (!jwtEmail) return { statusCode: 401, headers: cors, body: JSON.stringify({ ok: false, fehler: 'UNAUTHORIZED' }) };
 
   const { smtp_host, smtp_port, smtp_user, smtp_pass, from_name } = body;
 

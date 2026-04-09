@@ -4,9 +4,17 @@
 (function(){
 'use strict';
 
-var WEBHOOK='https://hook.eu1.make.com/bslfuqmlud1vo8qems5ccn5z5f2eq4dl';
+var MAKE_KEY_K1='k1';
 var AT_BASE='appJ7bLlAHZoxENWE';
 var AT_FAELLE='tblSxV8bsXwd1pwa0';
+
+async function makeProxy(key, payload){
+  return fetch('/.netlify/functions/make-proxy', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ key: key, payload: payload || {} })
+  });
+}
 
 if(!localStorage.getItem('prova_user')){window.location.href='app-login.html';return;}
 
@@ -586,7 +594,7 @@ window.bvSend=async function(typ){
     var btn=document.getElementById('btn-send-pdf')||{};
     try{
       var pay={vorlage_id:_tpl?_tpl.id:'',vorlage_name:_tpl?_tpl.name:'',aktenzeichen:az,auftraggeber:ag,ag_email:email,sv_email:svEmail,adresse:_felder.adresse||'',datum:_felder.datum||'',sv_name:_felder.sv_name||'',brieftext:(document.getElementById('ki-edit')||{value:''}).value||''};
-      var r=await fetch(WEBHOOK,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(pay)});
+      var r=await makeProxy(MAKE_KEY_K1, pay);
       if(r.ok){if(result){result.style.display='block';result.innerHTML='<div style="padding:10px;background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.2);border-radius:8px;font-size:12px;color:#10b981;">✅ PDF wird generiert — per E-Mail an '+svEmail+'</div>';}bvToast('PDF wird erstellt ✅','success');}
       else throw new Error('HTTP '+r.status);
     }catch(e){bvToast('Fehler: '+e.message,'error');}

@@ -686,14 +686,17 @@ async function ladeAlleDaten(){
   try{
     // Parallel laden
     var svAtId = localStorage.getItem('prova_at_sv_record_id') || '';
-    // Filter: sv_email wenn gesetzt, sonst alle Records mit Aktenzeichen (Testphase)
-    var filterFaelle = svEmail
-      ? 'AND(NOT({Status}=""),OR({sv_email}="'+svEmail+'",{Aktenzeichen}!=""))'
-      : 'AND(NOT({Status}=""),{Aktenzeichen}!="")';
-    var filterTermine = svEmail ? '{sv_email}="'+svEmail+'"' : 'NOT({termin_datum}="")';
-    var filterRechnungen = svEmail
-      ? 'AND(OR({Status}="Offen",{Status}="Überfällig"),{sv_email}="'+svEmail+'")'
-      : 'OR({Status}="Offen",{Status}="Überfällig")';
+    // Datenschutz: Immer mandantensicher filtern. Ohne sv_email keine Daten laden.
+    if (!svEmail) {
+      zeigOnboarding();
+      renderKPIs([],[],[]);
+      renderCal([]);
+      return;
+    }
+
+    var filterFaelle = 'AND(NOT({Status}=""),{sv_email}="'+svEmail+'")';
+    var filterTermine = '{sv_email}="'+svEmail+'"';
+    var filterRechnungen = 'AND(OR({Status}="Offen",{Status}="Überfällig"),{sv_email}="'+svEmail+'")';
 
     var results=await Promise.all([
       atFetch(AT_FAELLE,filterFaelle,100),
@@ -793,7 +796,7 @@ window.sendSupport=async function(){
   if(!b||!n){document.getElementById('support-err').style.display='block';return;}
   document.getElementById('support-err').style.display='none';
   var btn=document.getElementById('sup-btn');btn.disabled=true;btn.textContent='⏳ Wird gesendet...';
-  try{await fetch('https://hook.eu1.make.com/lktuhugwcg5v37ib6bdaxjb1uiplnu8v',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({betreff:b,nachricht:n,sv_email:svEmail,paket:paket,seite:'dashboard.html',ts:new Date().toISOString()})});}catch(e){}
+  try{await fetch('/.netlify/functions/make-proxy',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:'support',payload:{betreff:b,nachricht:n,sv_email:svEmail,paket:paket,seite:'dashboard.html',ts:new Date().toISOString()}})});}catch(e){}
   document.getElementById('support-form-body').style.display='none';
   document.getElementById('support-ok').style.display='block';
 };

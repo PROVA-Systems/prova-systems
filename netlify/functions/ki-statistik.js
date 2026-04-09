@@ -29,8 +29,8 @@ const POOL_FIELDS = {
 
 exports.handler = async (event) => {
   const headers = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Origin': process.env.URL || 'https://prova-systems.de',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     'Content-Type': 'application/json'
   };
 
@@ -41,6 +41,12 @@ exports.handler = async (event) => {
   if (!PAT) return { statusCode: 500, headers, body: JSON.stringify({ error: 'AIRTABLE_PAT nicht konfiguriert' }) };
 
   try {
+    // Nur eingeloggte User (JWT via Netlify Identity) — verhindert Missbrauch
+    const jwtEmail = event.clientContext && event.clientContext.user && event.clientContext.user.email
+      ? String(event.clientContext.user.email).toLowerCase()
+      : '';
+    if (!jwtEmail) return { statusCode: 401, headers, body: JSON.stringify({ error: 'UNAUTHORIZED' }) };
+
     const input = JSON.parse(event.body || '{}');
     const results = {};
 

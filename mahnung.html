@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>PROVA — Mahnung</title>
+  <style>
+    body{font-family:system-ui,sans-serif;max-width:720px;margin:40px auto;padding:20px;line-height:1.6;color:#111;}
+    h1{font-size:1.25rem;}
+    .box{border:1px solid #e5e7eb;border-radius:12px;padding:20px;background:#fafafa;}
+    .mono{font-family:ui-monospace,monospace;}
+    a{color:#2563eb;}
+  </style>
+</head>
+<body>
+  <p><a href="mahnwesen.html">← Mahnwesen</a></p>
+  <div id="content"></div>
+  <script src="mahnwesen-logic.js"></script>
+  <script>
+  (function(){
+    var p = new URLSearchParams(location.search);
+    var nr = p.get('nr') || '';
+    var stufe = parseInt(p.get('stufe') || '1', 10);
+    var api = window.MahnwesenAPI;
+    var rows = api ? api.loadRows() : [];
+    var r = rows.find(function(x){ return (x.rechnungsnummer||x.nr)===nr; }) || {};
+    var brutto = (Number(r.netto)||0) * (1 + (Number(r.ust_satz||19)/100)));
+    var tage = api ? api.daysOpen(r) : 0;
+    var zins = stufe >= 2 && api ? api.verzugszins(brutto, tage) : 0;
+    var titel = stufe===1 ? 'Zahlungserinnerung (Mahnung 1)' : stufe===2 ? 'Mahnung 2 — Verzugszins §288 BGB' : 'Mahnung 3 — Inkasso-Hinweis';
+    var html = '<h1>'+titel+'</h1><div class="box">';
+    html += '<p>Sehr geehrte Damen und Herren,</p>';
+    html += '<p>wir fordern Sie auf, den offenen Betrag zur Rechnung <strong class="mono">'+nr+'</strong> ';
+    html += 'unverzüglich zu begleichen.</p>';
+    if(stufe>=2){
+      html += '<p><strong>Verzugszins (§288 Abs. 2 BGB, Basiszinssatz + 9 %-Punkte, geschätzt für '+tage+' Tage): ca. '+zins.toFixed(2)+' €</strong> (ohne Gewähr, rechnerisch).</p>';
+    }
+    if(stufe>=3){
+      html += '<p><strong>Hinweis:</strong> Bei weiterem Zahlungsverzug behalten wir uns die Weiterleitung an ein Inkassounternehmen vor.</p>';
+    }
+    html += '<p>Betrag (netto laut Liste): <strong>'+(r.netto!=null?Number(r.netto).toFixed(2):'—')+' €</strong></p>';
+    html += '<p style="margin-top:24px;">Mit freundlichen Grüßen<br>Ihr Sachverständigenbüro</p>';
+    html += '</div><p style="margin-top:16px;font-size:13px;color:#6b7280;">Dieses Schreiben ist eine Vorlage — Versand per E-Mail/Brief in Ihrem Mailprogramm. Status wurde in <code>prova_rechnungen_local</code> gesetzt.</p>';
+    document.getElementById('content').innerHTML = html;
+    if (navigator.clipboard && document.getElementById('content')) {
+      var b = document.createElement('button');
+      b.textContent = 'Text kopieren';
+      b.onclick = function(){ navigator.clipboard.writeText(document.getElementById('content').innerText); };
+      document.body.insertBefore(b, document.getElementById('content'));
+    }
+  })();
+  </script>
+</body>
+</html>

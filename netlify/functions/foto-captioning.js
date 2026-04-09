@@ -7,8 +7,8 @@ exports.handler = async function(event) {
     return {
       statusCode: 200,
       headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Headers': 'Content-Type',
+        'Access-Control-Allow-Origin': process.env.URL || 'https://prova-systems.de',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
         'Access-Control-Allow-Methods': 'POST, OPTIONS'
       },
       body: ''
@@ -17,6 +17,27 @@ exports.handler = async function(event) {
 
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: JSON.stringify({ error: 'Method not allowed' }) };
+  }
+
+  // Nur eingeloggte User (JWT via Netlify Identity)
+  const jwtEmail = event.clientContext && event.clientContext.user && event.clientContext.user.email
+    ? String(event.clientContext.user.email).toLowerCase()
+    : '';
+  if (!jwtEmail) {
+    return { statusCode: 401, headers: { 'Access-Control-Allow-Origin': process.env.URL || 'https://prova-systems.de', 'Access-Control-Allow-Headers': 'Content-Type, Authorization', 'Content-Type': 'application/json' }, body: JSON.stringify({ error: 'UNAUTHORIZED' }) };
+  }
+
+  // ── Rate limit (in-memory) ──
+  const RATE_LIMIT = parseInt(process.env.FOTO_CAPTION_RATE_LIMIT_PER_MIN || '20', 10);
+  const WINDOW_MS = 60_000;
+  global.__provaFotoCaptionRate = global.__provaFotoCaptionRate || new Map();
+  const now = Date.now();
+  const entry = global.__provaFotoCaptionRate.get(jwtEmail) || { windowStart: now, count: 0 };
+  if (now - entry.windowStart > WINDOW_MS) { entry.windowStart = now; entry.count = 0; }
+  entry.count++;
+  global.__provaFotoCaptionRate.set(jwtEmail, entry);
+  if (entry.count > RATE_LIMIT) {
+    return { statusCode: 429, headers: { 'Access-Control-Allow-Origin': process.env.URL || 'https://prova-systems.de', 'Access-Control-Allow-Headers': 'Content-Type, Authorization', 'Content-Type': 'application/json', 'Retry-After': '60' }, body: JSON.stringify({ error: 'RATE_LIMIT' }) };
   }
 
   const apiKey = process.env.OPENAI_API_KEY;
@@ -88,7 +109,7 @@ Gib das JSON-Objekt zurück.`;
     if (!response.ok) {
       return {
         statusCode: 502,
-        headers: { 'Access-Control-Allow-Origin': '*', 'Content-Type': 'application/json' },
+        headers: { 'Access-Control-Allow-Origin': process.env.URL || 'https://prova-systems.de', 'Access-Control-Allow-Headers': 'Content-Type, Authorization', 'Content-Type': 'application/json' },
         body: JSON.stringify({ error: 'OpenAI Fehler', detail: (data.error&&data.error.message) || 'Unbekannt' })
       };
     }
@@ -110,7 +131,8 @@ Gib das JSON-Objekt zurück.`;
       statusCode: 200,
       headers: {
         'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
+        'Access-Control-Allow-Origin': process.env.URL || 'https://prova-systems.de',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization'
       },
       body: JSON.stringify({
         success: true,
@@ -122,7 +144,7 @@ Gib das JSON-Objekt zurück.`;
   } catch (e) {
     return {
       statusCode: 502,
-      headers: { 'Access-Control-Allow-Origin': '*', 'Content-Type': 'application/json' },
+      headers: { 'Access-Control-Allow-Origin': process.env.URL || 'https://prova-systems.de', 'Access-Control-Allow-Headers': 'Content-Type, Authorization', 'Content-Type': 'application/json' },
       body: JSON.stringify({ error: 'Upstream error', detail: e.message })
     };
   }

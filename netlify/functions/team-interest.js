@@ -10,21 +10,36 @@
 
 const HEADERS = {
   'Content-Type': 'application/json',
-  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Origin': process.env.URL || 'https://prova-systems.de',
   'Access-Control-Allow-Headers': 'Content-Type',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 
-// Make.com L4 Webhook — SV Auto-Antwort
-const MAKE_L4_WEBHOOK = 'https://hook.eu1.make.com/kplexov12f2qxxlb1k73tyq24gyumzb6';
-// Make.com L5 Webhook — Marcel Benachrichtigung bei neuem Lead
-const MAKE_L5_WEBHOOK = 'https://hook.eu1.make.com/qhz3sm97i6dqm1wbxx737hd19k35pmro';
+// Make.com L4/L5 Webhooks (nur via ENV; keine Fallback-URLs im Repo)
+const MAKE_L4_WEBHOOK = process.env.MAKE_WEBHOOK_L4 || '';
+const MAKE_L5_WEBHOOK = process.env.MAKE_WEBHOOK_L5 || '';
 
 // Airtable
 const AT_BASE  = 'appJ7bLlAHZoxENWE';
 const AT_TABLE = 'TEAM_INTERESSE';
 
 exports.handler = async (event) => {
+  // ── Rate limit (public endpoint) ──
+  const clientIP = (event.headers && (event.headers['x-forwarded-for'] || event.headers['x-nf-client-connection-ip']))
+    ? String((event.headers['x-forwarded-for'] || event.headers['x-nf-client-connection-ip'])).split(',')[0].trim()
+    : 'unknown';
+  const WINDOW_MS = 60_000;
+  const LIMIT = parseInt(process.env.TEAM_INTEREST_RATE_LIMIT_IP_PER_MIN || '10', 10);
+  global.__provaTeamInterestRate = global.__provaTeamInterestRate || new Map();
+  const now = Date.now();
+  const e = global.__provaTeamInterestRate.get(clientIP) || { windowStart: now, count: 0 };
+  if (now - e.windowStart > WINDOW_MS) { e.windowStart = now; e.count = 0; }
+  e.count++;
+  global.__provaTeamInterestRate.set(clientIP, e);
+  if (e.count > LIMIT) {
+    return { statusCode: 429, headers: HEADERS, body: JSON.stringify({ error: 'RATE_LIMIT' }) };
+  }
+
   // CORS Preflight
   if (event.httpMethod === 'OPTIONS') {
     return { statusCode: 200, headers: HEADERS, body: '' };
@@ -98,7 +113,11 @@ exports.handler = async (event) => {
   try {
     const makeRes = await fetch(MAKE_L4_WEBHOOK, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        // einfacher Abuse-Schutz (Make muss dieses Secret prüfen)
+        ...(process.env.TEAM_INTEREST_SECRET ? { 'X-PROVA-Secret': process.env.TEAM_INTEREST_SECRET } : {})
+      },
       body: JSON.stringify({
         name:         name || 'Interessent',
         email,

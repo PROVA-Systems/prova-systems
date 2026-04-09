@@ -10,14 +10,21 @@ exports.handler = async (event) => {
   }
 
   const headers = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Origin': process.env.URL || 'https://prova-systems.de',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     'Content-Type': 'application/json',
   };
 
   // CORS preflight
   if (event.httpMethod === 'OPTIONS') {
     return { statusCode: 200, headers, body: '' };
+  }
+
+  const jwtEmail = event.clientContext && event.clientContext.user && event.clientContext.user.email
+    ? String(event.clientContext.user.email).toLowerCase()
+    : '';
+  if (!jwtEmail) {
+    return { statusCode: 401, headers, body: JSON.stringify({ error: 'UNAUTHORIZED' }) };
   }
 
   const API_KEY = process.env.PDFMONKEY_API_KEY;

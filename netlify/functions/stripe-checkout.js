@@ -36,7 +36,7 @@ const ADDON_MAP = {
   },
 };
 
-const L3_WEBHOOK = 'https://hook.eu1.make.com/u6otau1k1au199kv8ibbb37z0dhl40wv';
+const L3_WEBHOOK = process.env.MAKE_WEBHOOK_L3 || '';
 const TRIAL_DAYS = 14;
 const BASE_URL   = process.env.URL || 'https://prova-systems.de';
 
@@ -49,11 +49,22 @@ exports.handler = async (event) => {
   }
 
   try {
+    // Nur eingeloggte User dürfen Checkout-Sessions erstellen (Missbrauch verhindern)
+    const jwtEmail = event.clientContext && event.clientContext.user && event.clientContext.user.email
+      ? String(event.clientContext.user.email).toLowerCase()
+      : '';
+    if (!jwtEmail) {
+      return { statusCode: 401, headers: corsHeaders(), body: JSON.stringify({ error: 'UNAUTHORIZED' }) };
+    }
+
     const body = JSON.parse(event.body || '{}');
     const { typ = 'abo', email } = body;
 
     if (!email) {
       return { statusCode: 400, headers: corsHeaders(), body: JSON.stringify({ error: 'E-Mail fehlt' }) };
+    }
+    if (String(email).toLowerCase() !== jwtEmail) {
+      return { statusCode: 403, headers: corsHeaders(), body: JSON.stringify({ error: 'FORBIDDEN' }) };
     }
 
     const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
@@ -180,8 +191,8 @@ async function handleAddon(stripe, customer, body, email) {
 function corsHeaders() {
   return {
     'Content-Type': 'application/json',
-    'Access-Control-Allow-Origin':  '*',
-    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Origin':  process.env.URL || 'https://prova-systems.de',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
   };
 }

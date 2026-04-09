@@ -31,6 +31,10 @@ const ALLOWED_TABLES = {
   tblv9F8LEnUC3mKru: { name: 'KI_STATISTIK',       userField: null,       readOnly: false },
   // KI-Lernpool
   tbl4LEsMvcDKFCYaF: { name: 'KI_LERNPOOL',        userField: null,       readOnly: false },
+  // Jahresbericht / Analytics
+  tblb0j9qOhMExVEFH: { name: 'STATISTIKEN',        userField: null,       readOnly: false },
+  // §407a ZPO Audit-Trail
+  tblqQmMwJKxltXXXl: { name: 'AUDIT_TRAIL',        userField: null,       readOnly: false },
   // Push-Subscriptions
   tblAiF38HeS1R1Umj: { name: 'PUSH_SUBSCRIPTIONS', userField: 'Email',    readOnly: false },
   // Gutachten-Templates (readonly für alle)
@@ -80,6 +84,16 @@ function getUserEmailFromEvent(event) {
     }
   } catch (e) {}
 
+  return null;
+}
+
+// ── Trusted Email nur aus Netlify Identity JWT ──
+function getJwtEmailFromEvent(event) {
+  try {
+    const context = event.clientContext || {};
+    const user    = context.user;
+    if (user && user.email) return String(user.email).toLowerCase();
+  } catch (e) {}
   return null;
 }
 
@@ -172,6 +186,8 @@ exports.handler = async function(event) {
     KONTAKTE:           'tblMKmPLjRelr6Hal',
     KI_STATISTIK:       'tblv9F8LEnUC3mKru',
     KI_LERNPOOL:        'tbl4LEsMvcDKFCYaF',
+    STATISTIKEN:        'tblb0j9qOhMExVEFH',
+    AUDIT_TRAIL:        'tblqQmMwJKxltXXXl',
     BRIEFE:             'tblSzxvnkRE6B0thx',
     TEXTBAUSTEINE:      'tblDS8NQxzceGedJO',
     GUTACHTEN_TEMPLATES:'tblW1DGrXIKoSTvJN',
@@ -218,7 +234,12 @@ exports.handler = async function(event) {
     }
   }
 
-  const { method = 'GET', path, payload } = resolvedBody;
+  const methodRaw = resolvedBody.method || 'GET';
+  const method = methodRaw;
+  const path = resolvedBody.path;
+  // Legacy-Clients senden Airtable-Body als "body"; neuere als "payload"
+  const payload =
+    resolvedBody.payload !== undefined ? resolvedBody.payload : resolvedBody.body;
 
   // ── Pfad-Validierung ──
   if (!path || !path.startsWith('/v0/')) {
@@ -235,19 +256,86 @@ exports.handler = async function(event) {
   const tableId = getTableIdFromPath(path);
   const tableConfig = tableId ? ALLOWED_TABLES[tableId] : null;
   
-  if (tableId && !tableConfig && !isAdmin(getUserEmailFromEvent(event))) {
+  // Admin-Bypass nur über JWT (nicht über _userEmail aus dem Body)
+  if (tableId && !tableConfig && !isAdmin(getJwtEmailFromEvent(event))) {
     console.warn(`[Airtable] Tabelle nicht in Whitelist: ${tableId}`);
     return { statusCode: 403, headers, body: JSON.stringify({ error: 'Tabellenzugriff nicht erlaubt' }) };
   }
 
   // ── User-Email ermitteln ──
-  const userEmail = getUserEmailFromEvent(event);
-  const adminUser = isAdmin(userEmail);
+  const jwtEmail  = getJwtEmailFromEvent(event);
+  const bodyEmail = (body && typeof body._userEmail === 'string') ? body._userEmail.toLowerCase().trim() : null;
+  const userEmail = jwtEmail || bodyEmail;
+  const isTrusted = !!jwtEmail;
+  const adminUser = isAdmin(jwtEmail);
 
   // ── User-Filter für GET-Anfragen (Datentrennung!) ──
+  // Ohne userEmail würde injectUserFilter die URL unverändert lassen → ALLE Fälle sichtbar (DSGVO-Leck).
   let finalPath = path;
-  if (method.toUpperCase() === 'GET' && tableConfig && tableConfig.userField && !adminUser) {
-    finalPath = injectUserFilter(path, userEmail, tableConfig.userField);
+  const methodUp = method.toUpperCase();
+  /** Einzelrecord-GET: Airtable erlaubt kein filterByFormula in /table/recId — Besitz nach Response prüfen */
+  let singleRecordOwnershipCheck = false;
+  if (tableConfig && tableConfig.userField && !adminUser) {
+    // Mandantengetrennte Tabellen sind nur mit verifiziertem Identity-User sicher.
+    // Ausnahme: SV-Onboarding darf SV-Record via _userEmail pflegen (kein Zugriff auf Fälle!)
+    const SV_TABLE_ID = 'tbladqEQT3tmx4DIB';
+    const allowUntrusted = (!isTrusted && tableId === SV_TABLE_ID);
+
+    if (!userEmail) {
+      return {
+        statusCode: 401,
+        headers,
+        body: JSON.stringify({ error: 'UNAUTHORIZED' })
+      };
+    }
+
+    if (!isTrusted && !allowUntrusted) {
+      return {
+        statusCode: 401,
+        headers,
+        body: JSON.stringify({ error: 'UNAUTHORIZED' })
+      };
+    }
+
+    // Writes: erzwinge Mandantenfeld, damit niemand fremde sv_email schreiben kann
+    if (['POST', 'PATCH', 'PUT', 'DELETE'].includes(methodUp) && !allowUntrusted) {
+      // Für POST/PATCH erwarten wir Airtable-Format {records:[{fields:{...}}]} oder {fields:{...}}
+      const enforceFields = (fields) => {
+        if (!fields || typeof fields !== 'object') return;
+        fields[tableConfig.userField] = userEmail;
+      };
+      try {
+        if (payload && payload.fields) enforceFields(payload.fields);
+        if (payload && Array.isArray(payload.records)) {
+          payload.records.forEach(r => { if (r && r.fields) enforceFields(r.fields); });
+        }
+      } catch (e) {}
+    }
+
+    if (methodUp === 'GET') {
+      const pathNoQuery = path.split('?')[0];
+      if (/^\/v0\/[^/]+\/[^/]+\/rec[a-zA-Z0-9]{14,}$/.test(pathNoQuery)) {
+        finalPath = path;
+        singleRecordOwnershipCheck = true;
+      } else if (allowUntrusted) {
+        // Untrusted GET nur erlaubt, wenn es EXAKT der eigene SV-Record per Email-Filter ist
+        try {
+          const u = new URL('https://dummy' + path);
+          const f = u.searchParams.get('filterByFormula') || '';
+          const decoded = decodeURIComponent(f);
+          const want = `{${tableConfig.userField}}="${userEmail.replace(/"/g, '')}"`;
+          const norm = (s) => String(s || '').replace(/\s+/g, '');
+          if (norm(decoded) !== norm(want)) {
+            return { statusCode: 403, headers, body: JSON.stringify({ error: 'FORBIDDEN' }) };
+          }
+        } catch (e) {
+          return { statusCode: 403, headers, body: JSON.stringify({ error: 'FORBIDDEN' }) };
+        }
+        finalPath = path;
+      } else {
+        finalPath = injectUserFilter(path, userEmail, tableConfig.userField);
+      }
+    }
   }
 
   // ── Payload-Größenlimit ──
@@ -286,6 +374,18 @@ exports.handler = async function(event) {
   try {
     const response = await fetch(url, fetchOptions);
     const data     = await response.json();
+
+    if (singleRecordOwnershipCheck && response.ok && data && data.fields && tableConfig && tableConfig.userField) {
+      const norm = (v) => String(v || '').toLowerCase().trim();
+      const fv = data.fields[tableConfig.userField];
+      if (norm(fv) !== norm(userEmail)) {
+        return {
+          statusCode: 404,
+          headers: { ...headers },
+          body: JSON.stringify({ error: 'NOT_FOUND' })
+        };
+      }
+    }
 
     return {
       statusCode: response.status,

@@ -96,11 +96,14 @@ const AutoSave = {
       'display:flex;align-items:center;justify-content:space-between',
       'padding:10px 20px;font-size:13px;font-family:var(--font-ui,system-ui)'
     ].join(';');
-    bar.innerHTML = '<span>' + (location.pathname.indexOf('app.html') >= 0 ? 'Wiederaufnahme — gespeichert ' : 'Ungespeicherte Eingaben gefunden — gespeichert ') + ago + '</span>'
+    bar.innerHTML = ''
+      + '<span id="prova-restore-text"></span>'
       + '<span style="display:flex;gap:8px">'
       + '<button id="prova-restore-no" style="background:rgba(0,0,0,.2);border:none;color:#fff;padding:4px 12px;border-radius:6px;cursor:pointer;font-family:inherit">Verwerfen</button>'
       + '<button id="prova-restore-yes" style="background:#fff;border:none;color:var(--accent,#4f8ef7);padding:4px 12px;border-radius:6px;cursor:pointer;font-weight:700;font-family:inherit">Wiederherstellen</button>'
       + '</span>';
+    var t = document.getElementById('prova-restore-text');
+    if (t) t.textContent = (location.pathname.indexOf('app.html') >= 0 ? 'Wiederaufnahme — gespeichert ' : 'Ungespeicherte Eingaben gefunden — gespeichert ') + ago;
     document.body.insertBefore(bar, document.body.firstChild);
     document.getElementById('prova-restore-yes').onclick = () => this._doRestore(data);
     document.getElementById('prova-restore-no').onclick = () => { localStorage.removeItem(this._key()); bar.remove(); };

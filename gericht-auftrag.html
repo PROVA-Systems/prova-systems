@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>PROVA — Gerichtsauftrag & Beweisfragen</title>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{--bg:#0d0f14;--bg2:#13161d;--text:#e8eaf0;--text2:#9da3b4;--accent:#4f8ef7;--border:rgba(255,255,255,0.08);}
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:'Montserrat',system-ui,sans-serif;background:var(--bg);color:var(--text2);min-height:100vh;font-size:14px;}
+    .topbar{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 20px;height:52px;display:flex;align-items:center;justify-content:space-between;}
+    .logo{font-family:'Fraunces',serif;font-weight:700;font-size:18px;color:var(--text);text-decoration:none;}
+    .logo span{color:var(--accent);}
+    .topnav a{padding:6px 10px;border-radius:6px;color:var(--text2);font-size:13px;text-decoration:none;}
+    .topnav a:hover{background:rgba(255,255,255,0.05);}
+    .main{max-width:960px;margin:0 auto;padding:24px;}
+    h1{font-family:'Fraunces',serif;color:var(--text);font-size:24px;margin-bottom:8px;}
+    .sub{font-size:13px;margin-bottom:20px;line-height:1.5;}
+    .card{background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:16px;}
+    .card h2{font-size:15px;color:var(--text);margin-bottom:12px;}
+    label{display:block;font-size:12px;font-weight:700;color:var(--text2);margin-bottom:6px;}
+    input[type="text"],input[type="date"],input[type="number"],textarea,select{
+      width:100%;padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:rgba(0,0,0,0.2);color:var(--text);font-size:14px;
+    }
+    textarea{min-height:120px;resize:vertical;font-family:inherit;}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+    @media(max-width:640px){.row{grid-template-columns:1fr;}}
+    .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10px 16px;border-radius:10px;border:1px solid rgba(255,255,255,0.12);
+      background:rgba(79,142,247,0.22);color:#fff;font-weight:700;cursor:pointer;font-size:13px;margin:4px 4px 4px 0;}
+    .btn:hover{background:rgba(79,142,247,0.35);}
+    .btn-sec{background:rgba(255,255,255,0.06);}
+    #fragenOut{font-size:13px;line-height:1.55;white-space:pre-wrap;}
+    .frage-item{border-left:3px solid var(--accent);padding:8px 12px;margin:8px 0;background:rgba(79,142,247,0.08);border-radius:0 8px 8px 0;}
+    .err{color:#f87171;font-size:13px;margin-top:8px;}
+    .ok{color:#6ee7b7;font-size:13px;margin-top:8px;}
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <a href="dashboard.html" class="logo">PRO<span>VA</span></a>
+    <nav class="topnav">
+      <a href="archiv.html">Archiv</a>
+      <a href="termine.html">Termine</a>
+      <a href="akte.html">Akte</a>
+    </nav>
+  </div>
+  <main class="main">
+    <h1>Gerichtsauftrag · Beweisfragen & Kostenvorschuss</h1>
+    <p class="sub">PDF-Beschluss hochladen oder Text einfügen. KI extrahiert Beweisfragen (OpenAI über <code>/.netlify/functions/ki-proxy</code>, <code>OPENAI_API_KEY</code> erforderlich). Kostenvorschuss lokal merken — Erinnerung z. B. über Termine/Make.</p>
+
+    <div class="card">
+      <h2>Stammdaten</h2>
+      <div class="row">
+        <div>
+          <label for="aktenzeichen">Aktenzeichen</label>
+          <input type="text" id="aktenzeichen" placeholder="z. B. 12 O 34/25">
+        </div>
+        <div>
+          <label for="gericht">Gericht</label>
+          <input type="text" id="gericht" placeholder="Amtsgericht …">
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Beschluss (PDF oder Text)</h2>
+      <input type="file" id="pdfFile" accept=".pdf,application/pdf" style="margin-bottom:10px;">
+      <button type="button" class="btn" id="btnPdfText">PDF → Text</button>
+      <label for="rohtext" style="margin-top:14px;">Text für KI</label>
+      <textarea id="rohtext" placeholder="Gerichtstext hier einfügen oder aus PDF laden…"></textarea>
+      <button type="button" class="btn" id="btnKiFragen">Beweisfragen extrahieren (KI)</button>
+      <div id="kiMsg"></div>
+    </div>
+
+    <div class="card">
+      <h2>Ergebnis</h2>
+      <div id="fragenOut"></div>
+    </div>
+
+    <div class="card">
+      <h2>Kostenvorschuss (Tracking)</h2>
+      <div class="row">
+        <div>
+          <label for="kv_betrag">Betrag € (angefordert)</label>
+          <input type="number" id="kv_betrag" step="0.01" min="0" placeholder="0">
+        </div>
+        <div>
+          <label for="kv_faellig">Fälligkeit / Ziel</label>
+          <input type="date" id="kv_faellig">
+        </div>
+      </div>
+      <label for="kv_notiz" style="margin-top:10px;">Notiz</label>
+      <input type="text" id="kv_notiz" placeholder="z. B. Antrag gestellt am …">
+      <button type="button" class="btn" id="btnKvSave" style="margin-top:12px;">Lokal speichern</button>
+      <p class="sub" style="margin-top:10px;">Gespeichert unter <code>prova_kostenvorschuss_&lt;Aktenzeichen&gt;</code> (localStorage).</p>
+    </div>
+  </main>
+  <script src="pdf-analyse.js"></script>
+  <script>
+  (function(){
+    var pdfIn = document.getElementById('pdfFile');
+    var roh = document.getElementById('rohtext');
+    document.getElementById('btnPdfText').addEventListener('click', function(){
+      var f = pdfIn && pdfIn.files && pdfIn.files[0];
+      if (!f) { document.getElementById('kiMsg').innerHTML = '<p class="err">Bitte PDF wählen.</p>'; return; }
+      document.getElementById('kiMsg').innerHTML = '<p class="ok">PDF wird gelesen…</p>';
+      window.PROVAPdfAnalyse.extractTextFromFile(f).then(function(t){
+        roh.value = (t || '').trim();
+        document.getElementById('kiMsg').innerHTML = '<p class="ok">Text extrahiert (' + roh.value.length + ' Zeichen).</p>';
+      }).catch(function(e){
+        document.getElementById('kiMsg').innerHTML = '<p class="err">' + (e && e.message ? e.message : 'PDF-Fehler') + '</p>';
+      });
+    });
+    document.getElementById('btnKiFragen').addEventListener('click', function(){
+      var text = (roh.value || '').trim();
+      document.getElementById('kiMsg').innerHTML = '';
+      if (text.length < 30) { document.getElementById('kiMsg').innerHTML = '<p class="err">Text zu kurz.</p>'; return; }
+      document.getElementById('kiMsg').innerHTML = '<p class="ok">KI arbeitet…</p>';
+      fetch('/.netlify/functions/ki-proxy', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'beweisfragen_text', text: text })
+      }).then(function(r){ return r.json(); }).then(function(data){
+        document.getElementById('kiMsg').innerHTML = '';
+        if (data.error) {
+          document.getElementById('kiMsg').innerHTML = '<p class="err">' + data.error + '</p>';
+          return;
+        }
+        var html = '';
+        if (data.aktenzeichen_gericht) html += '<p><strong>Gericht/AZ (KI):</strong> ' + String(data.aktenzeichen_gericht) + '</p>';
+        var fr = data.fragen || [];
+        if (!fr.length) {
+          document.getElementById('fragenOut').textContent = JSON.stringify(data, null, 2);
+          return;
+        }
+        fr.forEach(function(f){
+          html += '<div class="frage-item"><strong>' + (f.nr != null ? f.nr + '. ' : '') + '</strong>' + (f.text || '') + '</div>';
+        });
+        if (data._prova_ki_meta) {
+          html += '<p style="margin-top:12px;font-size:11px;color:#6b7280;">KI-Meta: ' + JSON.stringify(data._prova_ki_meta) + '</p>';
+        }
+        document.getElementById('fragenOut').innerHTML = html;
+      }).catch(function(e){
+        document.getElementById('kiMsg').innerHTML = '<p class="err">' + (e.message || String(e)) + '</p>';
+      });
+    });
+    document.getElementById('btnKvSave').addEventListener('click', function(){
+      var az = (document.getElementById('aktenzeichen').value || 'ohne_az').replace(/[^\w\-./]/g, '_');
+      var o = {
+        betrag: document.getElementById('kv_betrag').value,
+        faellig: document.getElementById('kv_faellig').value,
+        notiz: document.getElementById('kv_notiz').value,
+        saved: new Date().toISOString()
+      };
+      try {
+        localStorage.setItem('prova_kostenvorschuss_' + az, JSON.stringify(o));
+        document.getElementById('kiMsg').innerHTML = '<p class="ok">Kostenvorschuss gespeichert.</p>';
+      } catch (e) {
+        document.getElementById('kiMsg').innerHTML = '<p class="err">Speichern fehlgeschlagen.</p>';
+      }
+    });
+    try {
+      var az0 = localStorage.getItem('prova_letztes_az');
+      if (az0 && document.getElementById('aktenzeichen')) document.getElementById('aktenzeichen').value = az0;
+    } catch (e) {}
+  })();
+  </script>
+</body>
+</html>

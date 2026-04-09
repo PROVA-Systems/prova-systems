@@ -3,8 +3,24 @@
 // NUR EINMALIG verwenden, danach deaktivieren
 
 exports.handler = async function(event) {
-  const cors = { 'Access-Control-Allow-Origin': '*', 'Content-Type': 'application/json' };
+  const cors = {
+    'Access-Control-Allow-Origin': process.env.URL || 'https://prova-systems.de',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    'Content-Type': 'application/json'
+  };
   if (event.httpMethod === 'OPTIONS') return { statusCode: 200, headers: cors, body: '' };
+  if (event.httpMethod !== 'POST') return { statusCode: 405, headers: cors, body: JSON.stringify({ error: 'Method not allowed' }) };
+
+  // Nur Admin + zusätzliches Secret (Einmal-Setup)
+  const jwtEmail = event.clientContext && event.clientContext.user && event.clientContext.user.email
+    ? String(event.clientContext.user.email).toLowerCase()
+    : '';
+  const isAdmin = jwtEmail.endsWith('@prova-systems.de') || jwtEmail === 'admin@prova-systems.de';
+  if (!isAdmin) return { statusCode: 401, headers: cors, body: JSON.stringify({ error: 'UNAUTHORIZED' }) };
+  const secret = event.headers['x-prova-setup-secret'] || event.headers['X-PROVA-SETUP-SECRET'];
+  if (!process.env.PROVA_SETUP_SECRET || String(secret || '') !== String(process.env.PROVA_SETUP_SECRET)) {
+    return { statusCode: 403, headers: cors, body: JSON.stringify({ error: 'FORBIDDEN' }) };
+  }
 
   const AT_TOKEN = process.env.AIRTABLE_PAT || process.env.AIRTABLE_TOKEN;
   const AT_BASE  = 'appJ7bLlAHZoxENWE';

@@ -27,6 +27,21 @@ exports.handler = async (event) => {
     return { statusCode: 405, headers: corsHeaders(), body: 'Method Not Allowed' };
   }
 
+  // ── Rate limit (in-memory, per IP + per user) ──
+  const clientIP = (event.headers && (event.headers['x-forwarded-for'] || event.headers['x-nf-client-connection-ip'])) ? String((event.headers['x-forwarded-for'] || event.headers['x-nf-client-connection-ip'])).split(',')[0].trim() : 'unknown';
+  const WINDOW_MS = 60_000;
+  const LIMIT_IP = parseInt(process.env.PUSH_RATE_LIMIT_IP_PER_MIN || '120', 10);
+  global.__provaPushRate = global.__provaPushRate || new Map();
+  const keyIp = 'ip:' + clientIP;
+  const now = Date.now();
+  const ent = global.__provaPushRate.get(keyIp) || { windowStart: now, count: 0 };
+  if (now - ent.windowStart > WINDOW_MS) { ent.windowStart = now; ent.count = 0; }
+  ent.count++;
+  global.__provaPushRate.set(keyIp, ent);
+  if (ent.count > LIMIT_IP) {
+    return { statusCode: 429, headers: { ...corsHeaders(), 'Retry-After': '60' }, body: JSON.stringify({ error: 'RATE_LIMIT' }) };
+  }
+
   const pat = process.env.AIRTABLE_PAT;
   if (!pat) {
     return { statusCode: 500, headers: corsHeaders(), body: JSON.stringify({ error: 'AIRTABLE_PAT fehlt' }) };
@@ -37,6 +52,29 @@ exports.handler = async (event) => {
   catch (e) { return { statusCode: 400, headers: corsHeaders(), body: JSON.stringify({ error: 'Ungültiger JSON' }) }; }
 
   const { aktion, email, subscription, titel, nachricht, url } = body;
+
+  // Schutz:
+  // - subscribe/unsubscribe: nur eingeloggter User, email muss JWT-email entsprechen
+  // - send: nur Admin oder Secret
+  // - send-fristen: nur Secret (Make)
+  const jwtEmail = event.clientContext && event.clientContext.user && event.clientContext.user.email
+    ? String(event.clientContext.user.email).toLowerCase()
+    : '';
+  const isAdmin = jwtEmail.endsWith('@prova-systems.de') || jwtEmail === 'admin@prova-systems.de';
+  const secret = event.headers['x-prova-secret'] || '';
+  const okSecret = process.env.PUSH_NOTIFY_SECRET && secret === process.env.PUSH_NOTIFY_SECRET;
+  const emailNorm = String(email || '').toLowerCase().trim();
+
+  if (aktion === 'subscribe' || aktion === 'unsubscribe') {
+    if (!jwtEmail) return { statusCode: 401, headers: corsHeaders(), body: JSON.stringify({ error: 'UNAUTHORIZED' }) };
+    if (emailNorm && emailNorm !== jwtEmail) return { statusCode: 403, headers: corsHeaders(), body: JSON.stringify({ error: 'FORBIDDEN' }) };
+  }
+  if (aktion === 'send') {
+    if (!isAdmin && !okSecret) return { statusCode: 401, headers: corsHeaders(), body: JSON.stringify({ error: 'UNAUTHORIZED' }) };
+  }
+  if (aktion === 'send-fristen') {
+    if (!okSecret) return { statusCode: 401, headers: corsHeaders(), body: JSON.stringify({ error: 'UNAUTHORIZED' }) };
+  }
 
   switch (aktion) {
     case 'subscribe':    return await handleSubscribe(pat, email, subscription);
@@ -298,8 +336,8 @@ async function atDelete(pat, path) {
 function corsHeaders() {
   return {
     'Content-Type': 'application/json',
-    'Access-Control-Allow-Origin':  '*',
-    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Origin':  process.env.URL || 'https://prova-systems.de',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
   };
 }

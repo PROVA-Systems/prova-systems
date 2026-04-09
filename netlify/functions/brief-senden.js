@@ -4,12 +4,17 @@
 exports.handler = async function(event) {
   const cors = {
     'Content-Type': 'application/json',
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Origin': process.env.URL || 'https://prova-systems.de',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     'Access-Control-Allow-Methods': 'POST, OPTIONS'
   };
 
   if (event.httpMethod === 'OPTIONS') return { statusCode: 200, headers: cors, body: '' };
+  // Nur eingeloggte User (SMTP wird weiter unten erneut abgesichert)
+  const jwtEmail = event.clientContext && event.clientContext.user && event.clientContext.user.email
+    ? String(event.clientContext.user.email).toLowerCase()
+    : '';
+  if (!jwtEmail) return { statusCode: 401, headers: cors, body: JSON.stringify({ error: 'UNAUTHORIZED' }) };
 
   let body;
   try { body = JSON.parse(event.body); }

@@ -1,20 +1,58 @@
 // PROVA Systems — KI-Proxy Netlify Function v3.0
 // Aufgaben-Router: messages-Format + aufgabe-Format
 // API-Key: Netlify Env Var OPENAI_API_KEY
+//
+// SECURITY:
+// - JWT required (Netlify Identity)
+// - Rate limit per user to prevent OpenAI cost abuse
 
 exports.handler = async function(event) {
+  const ORIGIN = process.env.URL || 'https://prova-systems.de';
   if (event.httpMethod === 'OPTIONS') {
-    return { statusCode: 200, headers: { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'Content-Type', 'Access-Control-Allow-Methods': 'POST, OPTIONS' }, body: '' };
+    return { statusCode: 200, headers: { 'Access-Control-Allow-Origin': ORIGIN, 'Access-Control-Allow-Headers': 'Content-Type, Authorization', 'Access-Control-Allow-Methods': 'POST, OPTIONS' }, body: '' };
   }
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: JSON.stringify({ error: 'Method not allowed' }) };
   }
+  // Nur eingeloggte User (JWT via Netlify Identity)
+  const jwtEmail = event.clientContext && event.clientContext.user && event.clientContext.user.email
+    ? String(event.clientContext.user.email).toLowerCase()
+    : '';
+  if (!jwtEmail) {
+    return { statusCode: 401, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': ORIGIN }, body: JSON.stringify({ error: 'UNAUTHORIZED' }) };
+  }
+
+  // ── Rate limit (token bucket, in-memory) ──
+  // Default: 100 req/min/user (tunable via ENV)
+  const CAPACITY = parseInt(process.env.KI_RATE_LIMIT_PER_MIN || '100', 10);
+  const REFILL_PER_SEC = CAPACITY / 60;
+  global.__provaKiBucket = global.__provaKiBucket || new Map();
+  const now = Date.now();
+  const b = global.__provaKiBucket.get(jwtEmail) || { tokens: CAPACITY, last: now };
+  const elapsedSec = Math.max(0, (now - b.last) / 1000);
+  b.tokens = Math.min(CAPACITY, b.tokens + elapsedSec * REFILL_PER_SEC);
+  b.last = now;
+  if (b.tokens < 1) {
+    global.__provaKiBucket.set(jwtEmail, b);
+    return {
+      statusCode: 429,
+      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': ORIGIN, 'Retry-After': '60' },
+      body: JSON.stringify({ error: 'RATE_LIMIT' })
+    };
+  }
+  b.tokens -= 1;
+  global.__provaKiBucket.set(jwtEmail, b);
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) return { statusCode: 500, body: JSON.stringify({ error: 'OPENAI_API_KEY nicht konfiguriert' }) };
 
   let body;
   try { body = JSON.parse(event.body); }
   catch (e) { return { statusCode: 400, body: JSON.stringify({ error: 'Invalid JSON' }) }; }
+  // Hard limits (PII & Abuse)
+  try {
+    if (body && body.diktat && String(body.diktat).length > 20000) body.diktat = String(body.diktat).slice(0, 20000);
+    if (body && body.prompt && String(body.prompt).length > 20000) body.prompt = String(body.prompt).slice(0, 20000);
+  } catch (e) {}
 
   try {
     const aufgabe = body.aufgabe || 'messages';
@@ -23,11 +61,54 @@ exports.handler = async function(event) {
     if (aufgabe === 'freitext') return await handleFreitext(body, apiKey);
     if (aufgabe === 'assist_inline') return await handleAssistInline(body, apiKey);
     if (aufgabe === 'support_chat') return await handleSupportChat(body, apiKey);
+    if (aufgabe === 'foto_analyse') return await handleFotoAnalyse(body, apiKey);
     return await handleMessages(body, apiKey);
   } catch (e) {
-    return { statusCode: 502, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }, body: JSON.stringify({ error: 'Upstream error', detail: e.message }) };
+    return { statusCode: 502, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': ORIGIN }, body: JSON.stringify({ error: 'Upstream error', detail: e.message }) };
   }
 };
+
+async function handleFotoAnalyse(body, apiKey) {
+  const { image_base64 = '', mediaType = 'image/jpeg', az = '', schadensart = '' } = body || {};
+  if (!image_base64 || String(image_base64).length < 200) return jsonResponse({ error: 'Kein Bild erhalten' }, 400);
+
+  const system = `Du bist ein öffentlich bestellter und vereidigter Sachverständiger für Schäden an Gebäuden.
+Analysiere ein einzelnes Baustellenfoto.
+
+OUTPUT: NUR JSON im Format:
+{
+  "beschreibung": "1-2 Sätze, neutral, fachlich",
+  "schadenart": "Wasserschaden|Schimmel|Brand|Sturm|Elementar|Baumängel|Unklar",
+  "messwert_hinweis": "konkreter Messwert-Hinweis (z.B. Oberflächenfeuchte, Luftfeuchte, Temperatur) oder leer",
+  "normen_hinweis": "konkreter Norm/Merkblatt Hinweis oder leer"
+}
+
+REGELN:
+- Keine Halluzination: wenn etwas nicht erkennbar ist → \"Unklar\" bzw. leer.
+- Keine personenbezogenen Daten erfinden.
+- Kurz, handlungsorientiert.`;
+
+  const userText = `Kontext: AZ=${az||'—'} | Schadensart (vom SV): ${schadensart||'—'}.
+Analysiere das Foto und liefere das JSON.`;
+
+  const result = await callOpenAI({
+    model: 'gpt-4o-mini',
+    max_tokens: 500,
+    messages: [
+      { role: 'system', content: system },
+      { role: 'user', content: [
+        { type: 'text', text: userText },
+        { type: 'image_url', image_url: { url: 'data:' + mediaType + ';base64,' + image_base64, detail: 'low' } }
+      ] }
+    ]
+  }, apiKey);
+
+  const raw = result.choices?.[0]?.message?.content || '';
+  let parsed = {};
+  try { const m = raw.match(/\{[\s\S]*\}/); if (m) parsed = JSON.parse(m[0]); }
+  catch(e) { parsed = { beschreibung: raw.substring(0, 300), schadenart: 'Unklar', messwert_hinweis: '', normen_hinweis: '' }; }
+  return jsonResponse(parsed);
+}
 
 async function handleFachurteilEntwurf(body, apiKey) {
   const { diktat = '', schadenart = '', messwerte = '', verwendungszweck = 'gericht', paragraphen = null, az = '', objekt = '', baujahr = '', auftraggeber = '' } = body;
@@ -156,7 +237,8 @@ async function callOpenAI(params, apiKey) {
 }
 
 function jsonResponse(data, status = 200) {
-  return { statusCode: status, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }, body: JSON.stringify(data) };
+  const ORIGIN = process.env.URL || 'https://prova-systems.de';
+  return { statusCode: status, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': ORIGIN }, body: JSON.stringify(data) };
 }
 
 /* ── KI-Assist Inline (§6 Fachurteil) ── */

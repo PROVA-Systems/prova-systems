@@ -12,13 +12,13 @@ const WEBHOOKS = {
   willkommen:         process.env.MAKE_WEBHOOK_WILLKOMMEN || '',
   trial_erinnerung:   process.env.MAKE_WEBHOOK_TRIAL || '',
   kauf_bestaetigung:  process.env.MAKE_WEBHOOK_KAUF || '',
-  support:            process.env.MAKE_WEBHOOK_SUPPORT || 'https://hook.eu1.make.com/lktuhugwcg5v37ib6bdaxjb1uiplnu8v',
+  support:            process.env.MAKE_WEBHOOK_SUPPORT || '',
 };
 
 exports.handler = async (event) => {
   const headers = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Origin': process.env.URL || 'https://prova-systems.de',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-PROVA-Secret',
     'Content-Type': 'application/json',
   };
 
@@ -41,6 +41,17 @@ exports.handler = async (event) => {
     }
 
     // An Make.com weiterleiten
+    // Schutz: interne Typen nur mit Secret oder JWT-Admin
+    const jwtEmail = event.clientContext && event.clientContext.user && event.clientContext.user.email
+      ? String(event.clientContext.user.email).toLowerCase()
+      : '';
+    const isAdmin = jwtEmail.endsWith('@prova-systems.de') || jwtEmail === 'admin@prova-systems.de';
+    const secret = event.headers['x-prova-secret'] || '';
+    const okSecret = process.env.EMAILS_SECRET && secret === process.env.EMAILS_SECRET;
+    if (typ !== 'support' && !isAdmin && !okSecret) {
+      return { statusCode: 401, headers, body: JSON.stringify({ ok: false, error: 'UNAUTHORIZED' }) };
+    }
+
     const res = await fetch(webhookUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

@@ -11,6 +11,19 @@ exports.handler = async function(event) {
     };
   }
 
+  // Nur Admins (Netlify Identity JWT) dürfen Einladungen verschicken
+  const jwtEmail = event.clientContext && event.clientContext.user && event.clientContext.user.email
+    ? String(event.clientContext.user.email).toLowerCase()
+    : '';
+  const isAdmin = jwtEmail.endsWith('@prova-systems.de') || jwtEmail === 'admin@prova-systems.de';
+  if (!isAdmin) {
+    return {
+      statusCode: 401,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ error: 'UNAUTHORIZED' })
+    };
+  }
+
   const siteId = process.env.NETLIFY_SITE_ID;
   const token  = process.env.NETLIFY_ACCESS_TOKEN;
 

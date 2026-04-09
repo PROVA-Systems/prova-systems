@@ -7,8 +7,8 @@ const nodemailer = require('nodemailer');
 exports.handler = async function(event) {
   const cors = {
     'Content-Type': 'application/json',
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Origin': process.env.URL || 'https://prova-systems.de',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     'Access-Control-Allow-Methods': 'POST, OPTIONS'
   };
 
@@ -30,6 +30,20 @@ exports.handler = async function(event) {
 
   if (!to || !betreff || !inhalt) {
     return { statusCode: 400, headers: cors, body: JSON.stringify({ error: 'to, betreff und inhalt sind Pflicht' }) };
+  }
+
+  // Nur eingeloggte User dürfen SMTP nutzen (Missbrauch / Spam verhindern)
+  const jwtEmail = event.clientContext && event.clientContext.user && event.clientContext.user.email
+    ? String(event.clientContext.user.email).toLowerCase()
+    : '';
+  if (!jwtEmail) {
+    return { statusCode: 401, headers: cors, body: JSON.stringify({ error: 'UNAUTHORIZED' }) };
+  }
+
+  // sv_email darf nicht frei behauptet werden
+  const svEmailNorm = String(sv_email || '').toLowerCase().trim();
+  if (svEmailNorm && svEmailNorm !== jwtEmail) {
+    return { statusCode: 403, headers: cors, body: JSON.stringify({ error: 'FORBIDDEN' }) };
   }
 
   // ── SMTP-Konfiguration: SV-eigener Account hat Vorrang ──────────────────

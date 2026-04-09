@@ -1,676 +1,560 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-<script src="prova-preise.js"></script>
-<script src="paket-guard.js"></script>
-<script src="auth-guard.js"></script>
-<script src="theme.js"></script>
-<script src="trial-guard.js"></script>
-<script src="nav.js" defer></script>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>Einstellungen — PROVA Systems</title>
-  <link rel="stylesheet" href="prova-design.css" />
-  <link rel="stylesheet" href="mobile.css" />
-  <style>
-    /* ── Einstellungen v2 ── */
-    .es-page { max-width: 820px; margin: 0 auto; padding: 24px 16px 100px; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Einstellungen · PROVA</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Fraunces:wght@300;500;700&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════════
+   PROVA SHARED CSS — identisch in allen Seiten
+   ═══════════════════════════════════════════════ */
+:root {
+  --bg:#0d0f14;--bg2:#13161d;--bg3:#1a1e28;
+  --surface:#1e2330;--surface2:#252a38;
+  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);
+  --text:#e8eaf0;--text2:#9da3b4;--text3:#6b7280;
+  --accent:#4f8ef7;--accent2:#3d7ae0;
+  --green:#10b981;--green-bg:rgba(16,185,129,0.08);--green-border:rgba(16,185,129,0.2);
+  --warn:#f59e0b;--warn-bg:rgba(245,158,11,0.08);--warn-border:rgba(245,158,11,0.25);
+  --red:#ef4444;--red-bg:rgba(239,68,68,0.08);--red-border:rgba(239,68,68,0.2);
+  --purple:#a78bfa;--purple-bg:rgba(167,139,250,0.08);--purple-border:rgba(167,139,250,0.2);
+  --mono:'IBM Plex Mono',monospace;--display:'Fraunces',serif;--sans:'Instrument Sans',sans-serif;
+  --nav-h:52px;--bot-h:56px;--radius:8px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14px;
+  min-height:100vh;-webkit-tap-highlight-color:transparent;}
+input,select,textarea{font-size:max(16px,1em);}
 
-    .es-page-header { margin-bottom: 28px; }
-    .es-page-title { font-size: 22px; font-weight: 700; color: var(--text,#e8eaf0); margin-bottom: 4px; }
-    .es-page-sub { font-size: 13px; color: var(--text3,#6b7a99); }
+/* ── TOPBAR ── */
+.topbar{background:var(--bg2);border-bottom:1px solid var(--border);
+  padding:0 20px;height:var(--nav-h);display:flex;align-items:center;
+  justify-content:space-between;position:sticky;top:0;z-index:100;
+  user-select:none;-webkit-user-select:none;}
+.topbar-left{display:flex;align-items:center;gap:16px;}
+.topbar-right{display:flex;align-items:center;gap:8px;}
+.logo{font-family:var(--display);font-weight:700;font-size:18px;
+  color:var(--text);text-decoration:none;flex-shrink:0;letter-spacing:-0.01em;}
+.logo span{color:var(--accent);}
 
-    .es-layout { display: grid; grid-template-columns: 220px 1fr; gap: 24px; align-items: start; }
-    @media (max-width: 720px) { .es-layout { grid-template-columns: 1fr; } }
+/* ── TOP NAV ── */
+.topnav{display:flex;gap:2px;}
+.topnav a{padding:6px 11px;border-radius:6px;color:var(--text3);font-size:13px;
+  font-family:var(--sans);font-weight:500;text-decoration:none;
+  transition:all 0.15s;white-space:nowrap;min-height:44px;
+  display:inline-flex;align-items:center;}
+.topnav a:hover{color:var(--text2);background:rgba(255,255,255,0.04);}
+.topnav a.active{color:var(--accent);background:rgba(79,142,247,0.1);}
 
-    .es-sidebar {
-      background: var(--surface,#1c2537);
-      border: 1px solid var(--border,rgba(255,255,255,.07));
-      border-radius: 14px;
-      overflow: hidden;
-      position: sticky;
-      top: 20px;
-    }
-    .es-sidebar-item {
-      display: flex; align-items: center; gap: 10px;
-      padding: 11px 14px; font-size: 13px; font-weight: 500;
-      color: var(--text-secondary,#374151); cursor: pointer;
-      border-bottom: 1px solid var(--border,rgba(255,255,255,.07));
-      transition: all 0.15s; border-left: 3px solid transparent;
-    }
-    .es-sidebar-item:last-child { border-bottom: none; }
-    .es-sidebar-item:hover { background: rgba(255,255,255,.06); color: var(--accent,#4f8ef7); }
-    .es-sidebar-item.aktiv { background: rgba(79,142,247,.12); color: var(--accent,#4f8ef7); border-left-color: var(--accent,#4f8ef7); font-weight: 600; }
-    .es-sidebar-icon { font-size: 16px; width: 20px; text-align: center; flex-shrink: 0; }
+/* ── PAKET BADGE ── */
+.paket-badge{font-size:10px;font-weight:600;padding:2px 8px;
+  border-radius:10px;white-space:nowrap;flex-shrink:0;}
 
-    .es-content { display: flex; flex-direction: column; gap: 20px; }
+/* ── SETTINGS ── */
+.settings-link{font-size:16px;color:var(--text3);text-decoration:none;
+  padding:6px 8px;border-radius:6px;transition:all 0.15s;
+  min-height:44px;display:inline-flex;align-items:center;}
+.settings-link:hover{color:var(--text2);background:rgba(255,255,255,0.04);}
 
-    .es-section {
-      background: var(--surface,#1c2537);
-      border: 1px solid var(--border,rgba(255,255,255,.07));
-      border-radius: 14px; overflow: hidden; display: none;
-    }
-    .es-section.aktiv { display: block; }
+/* ── BURGER ── */
+.burger{display:none;flex-direction:column;gap:5px;background:none;
+  border:none;cursor:pointer;padding:8px;border-radius:6px;
+  min-height:44px;min-width:44px;align-items:center;justify-content:center;}
+.burger span{display:block;width:20px;height:2px;background:var(--text2);
+  border-radius:2px;transition:all 0.2s;}
+.burger:hover span{background:var(--text);}
 
-    .es-section-header {
-      padding: 16px 20px; border-bottom: 1px solid var(--border,rgba(255,255,255,.07));
-      display: flex; align-items: center; gap: 10px;
-    }
-    .es-section-icon { font-size: 20px; }
-    .es-section-info { flex: 1; }
-    .es-section-title { font-size: 15px; font-weight: 700; color: var(--text,#e8eaf0); }
-    .es-section-sub { font-size: 12px; color: var(--text3,#6b7a99); margin-top: 1px; }
+/* ── DRAWER OVERLAY ── */
+.drawer-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);
+  z-index:200;backdrop-filter:blur(2px);}
+.drawer-overlay.open{display:block;}
 
-    .es-zeile {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 14px 20px; border-bottom: 1px solid var(--border,rgba(255,255,255,.07)); gap: 16px;
-    }
-    .es-zeile:last-child { border-bottom: none; }
-    .es-zeile.vertikal { flex-direction: column; align-items: flex-start; }
-    .es-zeile-info { flex: 1; min-width: 0; }
-    .es-zeile-label { font-size: 13.5px; font-weight: 600; color: var(--text,#e8eaf0); margin-bottom: 2px; }
-    .es-zeile-sub { font-size: 12px; color: var(--text-muted,#6b7280); line-height: 1.4; }
-    .es-zeile-sub a { color: var(--accent,#4f8ef7); text-decoration: none; }
-    .es-zeile-sub a:hover { text-decoration: underline; }
+/* ── DRAWER ── */
+.drawer{position:fixed;top:0;left:0;bottom:0;width:272px;
+  background:var(--bg2);border-right:1px solid var(--border2);
+  z-index:201;transform:translateX(-100%);
+  transition:transform 0.25s cubic-bezier(0.4,0,0.2,1);
+  display:flex;flex-direction:column;}
+.drawer.open{transform:translateX(0);}
+.drawer-header{padding:16px;display:flex;align-items:center;
+  justify-content:space-between;border-bottom:1px solid var(--border);}
+.drawer-close{background:none;border:none;color:var(--text3);
+  font-size:18px;cursor:pointer;padding:6px 10px;border-radius:5px;
+  min-height:44px;min-width:44px;display:flex;align-items:center;justify-content:center;}
+.drawer-close:hover{color:var(--text);background:var(--surface);}
+.drawer-nav{flex:1;padding:10px;overflow-y:auto;display:flex;
+  flex-direction:column;gap:3px;}
+.drawer-nav a{display:flex;align-items:center;gap:13px;padding:12px 13px;
+  border-radius:7px;color:var(--text2);font-family:var(--sans);
+  font-size:14px;font-weight:500;text-decoration:none;transition:all 0.12s;
+  min-height:48px;}
+.drawer-nav a:hover{background:var(--surface);color:var(--text);}
+.drawer-nav a.active{background:rgba(79,142,247,0.1);color:var(--accent);}
+.di{font-size:17px;width:24px;text-align:center;flex-shrink:0;}
+.drawer-footer{padding:14px 16px;border-top:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.drawer-settings{font-size:13px;color:var(--text3);text-decoration:none;
+  display:flex;align-items:center;gap:6px;transition:color 0.15s;
+  min-height:44px;}
+.drawer-settings:hover{color:var(--text2);}
 
-    .es-toggle { position: relative; width: 44px; height: 24px; cursor: pointer; flex-shrink: 0; }
-    .es-toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
-    .es-toggle-slider { position: absolute; inset: 0; background: #d1d5db; border-radius: 12px; transition: background 0.2s; }
-    .es-toggle-slider::before {
-      content: ''; position: absolute; width: 18px; height: 18px; left: 3px; top: 3px;
-      background: var(--surface,#1c2537); border-radius: 50%; transition: transform 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-    }
-    .es-toggle input:checked + .es-toggle-slider { background: var(--accent,#4f8ef7); }
-    .es-toggle input:checked + .es-toggle-slider::before { transform: translateX(20px); }
-    .es-toggle input:disabled + .es-toggle-slider { opacity: 0.4; cursor: not-allowed; }
+/* ── BOTTOM NAV ── */
+.bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;
+  height:var(--bot-h);background:var(--bg2);border-top:1px solid var(--border);
+  z-index:100;padding:0 4px;user-select:none;}
+.bn-item{flex:1;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:2px;text-decoration:none;color:var(--text3);
+  font-family:var(--sans);padding:5px 2px;border-radius:7px;
+  transition:all 0.15s;position:relative;}
+.bn-item:hover{color:var(--text2);}
+.bn-item.active{color:var(--accent);}
+.bn-item.active::after{content:'';position:absolute;bottom:3px;
+  width:16px;height:2px;background:var(--accent);border-radius:2px;}
+.bn-i{font-size:19px;line-height:1;}
+.bn-l{font-size:9px;font-weight:600;text-transform:uppercase;
+  letter-spacing:0.05em;line-height:1;}
 
-    .es-input {
-      width: 100%; padding: 9px 12px;
-      border: 1px solid var(--border,#d1d5db); border-radius: 10px;
-      font-size: 13px; color: var(--text,#e8eaf0);
-      background: var(--surface,#1c2537); font-family: inherit;
-      transition: border-color 0.15s; margin-top: 8px; box-sizing: border-box;
-    }
-    .es-input:focus { outline: none; border-color: var(--accent,#4f8ef7); box-shadow: 0 0 0 3px rgba(26,86,219,0.1); }
-    .es-input-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 8px; }
-    @media (max-width: 500px) { .es-input-row { grid-template-columns: 1fr; } }
-    .es-label { font-size: 11.5px; font-weight: 600; color: var(--text3,#6b7a99); margin-bottom: 3px; display: block; }
+/* ── SHARED COMPONENTS ── */
+.card{background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);overflow:hidden;margin-bottom:14px;}
+.card-header{padding:11px 15px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;}
+.card-title{font-size:12px;font-weight:600;color:var(--text);}
+.card-body{padding:15px;}
+.form-group{margin-bottom:13px;}
+.form-group:last-child{margin-bottom:0;}
+.form-label{display:block;font-size:10px;font-weight:600;
+  text-transform:uppercase;letter-spacing:0.07em;color:var(--text3);margin-bottom:5px;}
+.form-input,.form-select,.form-textarea{width:100%;background:var(--bg3);
+  border:1px solid var(--border2);border-radius:6px;padding:8px 11px;
+  color:var(--text);font-family:var(--sans);outline:none;transition:border-color 0.15s;}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--accent);}
+.form-select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;}
+.form-select option{background:var(--bg2);}
+.form-textarea{resize:vertical;min-height:72px;line-height:1.6;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.form-hint{font-size:10px;color:var(--text3);margin-top:3px;}
+.btn{padding:8px 15px;border-radius:6px;font-family:var(--sans);font-size:13px;
+  font-weight:500;cursor:pointer;transition:all 0.15s;border:none;
+  display:inline-flex;align-items:center;gap:6px;min-height:36px;}
+.btn-primary{background:var(--accent);color:#fff;}
+.btn-primary:hover{background:var(--accent2);}
+.btn-primary:disabled{opacity:0.4;cursor:not-allowed;}
+.btn-secondary{background:var(--surface2);border:1px solid var(--border2);color:var(--text2);}
+.btn-secondary:hover{color:var(--text);border-color:var(--border2);}
+.btn-danger{background:var(--red-bg);border:1px solid var(--red-border);color:var(--red);}
+.btn-danger:hover{background:rgba(239,68,68,0.15);}
+.page-title{font-family:var(--display);font-size:22px;font-weight:500;margin-bottom:4px;}
+.page-sub{font-size:12px;color:var(--text3);margin-bottom:22px;}
+.section-label{font-size:10px;font-weight:600;text-transform:uppercase;
+  letter-spacing:0.08em;color:var(--text3);}
+.toast{position:fixed;bottom:20px;right:20px;padding:10px 16px;
+  background:var(--surface2);border:1px solid var(--green-border);
+  border-radius:7px;color:var(--green);font-size:12px;font-weight:500;
+  z-index:999;transform:translateY(60px);opacity:0;
+  transition:all 0.3s cubic-bezier(0.34,1.56,0.64,1);}
+.toast.show{transform:translateY(0);opacity:1;}
+.toast.err{border-color:var(--red-border);color:var(--red);}
+::-webkit-scrollbar{width:3px;}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
 
-    .es-select {
-      padding: 8px 12px; border: 1px solid var(--border,#d1d5db); border-radius: 10px;
-      font-size: 13px; background: var(--surface,#1c2537); color: var(--text,#e8eaf0);
-      font-family: inherit; min-width: 160px; cursor: pointer;
-    }
-    .es-select:focus { outline: none; border-color: var(--accent,#4f8ef7); }
+/* ── RESPONSIVE ── */
+@media(max-width:900px){
+  .topnav a{font-size:0;}
+  .topnav a::after{content:attr(data-short);font-size:12px;
+    font-family:var(--sans);font-weight:500;}
+  .paket-badge{display:none;}
+}
+@media(max-width:600px){
+  .topnav{display:none;}
+  .settings-link{display:none;}
+  .burger{display:flex;}
+  .bottom-nav{display:flex;}
+  body{padding-bottom:var(--bot-h);}
+  .topbar{padding:0 14px;height:48px;}
+  .logo{font-size:16px;}
+  --nav-h:48px;
+  ::-webkit-scrollbar{display:none;}
+  *{scrollbar-width:none;}
+}
 
-    .es-btn {
-      padding: 8px 16px; border-radius: 10px; font-size: 13px; font-weight: 500;
-      cursor: pointer; border: 1px solid var(--border,rgba(255,255,255,.07));
-      background: var(--surface,#1c2537); color: var(--text-secondary,#374151);
-      transition: all 0.15s; font-family: inherit; white-space: nowrap; text-decoration: none;
-      display: inline-flex; align-items: center;
-    }
-    .es-btn:hover { background: var(--bg-muted,#f3f4f6); }
-    .es-btn.primary { background: var(--accent,#4f8ef7); color: #fff; border-color: var(--accent,#4f8ef7); }
-    .es-btn.primary:hover { background: var(--accent2,#3a7be0); }
-    .es-btn.danger { background: rgba(239,68,68,.1); color: #ef4444; border-color: rgba(239,68,68,.25); }
-    .es-btn.danger:hover { background: rgba(239,68,68,.18); }
-    .es-btn-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+/* ── NAV JS (inline shared) ── */
 
-    .es-avatar-wrap {
-      display: flex; align-items: center; gap: 16px;
-      padding: 16px 20px; border-bottom: 1px solid var(--border,rgba(255,255,255,.07));
-    }
-    .es-avatar {
-      width: 64px; height: 64px; border-radius: 16px;
-      background: linear-gradient(135deg, #1a56db, #3b82f6);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 24px; font-weight: 700; color: #fff; flex-shrink: 0;
-    }
-    .es-avatar-info { flex: 1; }
-    .es-avatar-name { font-size: 16px; font-weight: 700; color: var(--text,#e8eaf0); }
-    .es-avatar-email { font-size: 12px; color: var(--text3,#6b7a99); margin-top: 2px; }
-    .es-avatar-badge {
-      font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 10px;
-      margin-top: 5px; display: inline-block;
-    }
-    .es-avatar-badge.solo  { background: rgba(79,142,247,.12); color: var(--accent,#4f8ef7); }
-    .es-avatar-badge.team  { background: #f0fdf4; color: #059669; }
-    .es-avatar-badge.trial { background: rgba(245,158,11,.12); color: #f59e0b; }
-
-    .es-paket-card {
-      border-radius: 12px; padding: 16px; margin: 12px 20px;
-      display: flex; align-items: center; gap: 14px;
-    }
-    .es-paket-card.solo  { background: rgba(79,142,247,.12); border: 1px solid #bfdbfe; }
-    .es-paket-card.team  { background: rgba(16,185,129,.1); border: 1px solid rgba(16,185,129,.3); }
-    .es-paket-card.trial { background: var(--surface,#1c2537)beb; border: 1px solid #fde68a; }
-    .es-paket-icon { font-size: 28px; }
-    .es-paket-info { flex: 1; }
-    .es-paket-name { font-size: 15px; font-weight: 700; color: var(--text,#e8eaf0); }
-    .es-paket-features { font-size: 12px; color: var(--text3,#6b7a99); margin-top: 2px; }
-
-    .es-danger-zone {
-      border: 1px solid rgba(239,68,68,.3); border-radius: 12px; margin: 12px 20px 20px; overflow: hidden;
-    }
-    .es-danger-header {
-      background: rgba(239,68,68,.08); padding: 10px 14px; font-size: 11.5px;
-      font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #ef4444;
-    }
-    .es-danger-item {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 12px 14px; border-bottom: 1px solid rgba(239,68,68,.2); gap: 12px;
-    }
-    .es-danger-item:last-child { border-bottom: none; }
-
-    .es-status-badge {
-      display: inline-flex; align-items: center; gap: 4px;
-      font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 10px;
-    }
-    .es-status-badge.ok     { background: rgba(5,150,105,.12); color: #10b981; }
-    .es-status-badge.warn   { background: rgba(245,158,11,.12); color: #f59e0b; }
-    .es-status-badge.fehler { background: rgba(239,68,68,.12); color: #ef4444; }
-    .es-status-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
-
-    .es-save-bar {
-      position: fixed; bottom: 0; left: 0; right: 0;
-      background: var(--surface,#1c2537); border-top: 1px solid var(--border,rgba(255,255,255,.07));
-      padding: 12px 20px; padding-bottom: calc(12px + env(safe-area-inset-bottom));
-      display: flex; align-items: center; justify-content: space-between; gap: 12px;
-      z-index: 100; box-shadow: 0 -4px 16px rgba(0,0,0,0.06);
-      transform: translateY(100%); transition: transform 0.25s;
-    }
-    .es-save-bar.sichtbar { transform: translateY(0); }
-    .es-save-bar-text { font-size: 13px; color: var(--text2,#a0aec0); }
-    .es-save-bar-actions { display: flex; gap: 8px; }
-
-    .es-toast {
-      position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%) translateY(20px);
-      background: #111827; color: #fff; padding: 10px 20px; border-radius: 10px;
-      font-size: 13px; font-weight: 500; z-index: 1000; opacity: 0;
-      transition: all 0.25s; white-space: nowrap; pointer-events: none;
-    }
-    .es-toast.sichtbar { opacity: 1; transform: translateX(-50%) translateY(0); }
-  </style>
+.layout{display:grid;grid-template-columns:200px 1fr;height:calc(100vh - var(--nav-h));overflow:hidden;}
+.snav{background:var(--bg2);border-right:1px solid var(--border);padding:12px 8px;overflow-y:auto;}
+.smain{overflow-y:auto;padding:24px;}
+.snav-sec{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--text3);padding:8px 10px 4px;margin-top:8px;}
+.snav-sec:first-of-type{margin-top:0;}
+.snav-item{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:6px;color:var(--text3);font-size:12px;cursor:pointer;transition:all 0.12s;border:none;background:transparent;width:100%;text-align:left;font-family:var(--sans);font-weight:500;min-height:40px;}
+.snav-item:hover{color:var(--text2);background:rgba(255,255,255,0.03);}
+.snav-item.active{color:var(--accent);background:rgba(79,142,247,0.08);}
+.snav-item .si{font-size:14px;width:18px;text-align:center;flex-shrink:0;}
+.snav-item.locked{opacity:0.45;}
+.sec{display:none;max-width:660px;}
+.sec.active{display:block;}
+.av-row{display:flex;align-items:center;gap:14px;margin-bottom:16px;}
+.av{width:48px;height:48px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-family:var(--display);font-size:18px;font-weight:500;color:#fff;flex-shrink:0;}
+.paket-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:14px;}
+.pk{border:1px solid var(--border);border-radius:var(--radius);padding:13px;position:relative;}
+.pk.a-s{border-color:var(--accent);background:rgba(79,142,247,0.04);}
+.pk.a-p{border-color:var(--warn);background:var(--warn-bg);}
+.pk.a-e{border-color:var(--purple);background:var(--purple-bg);}
+.pk-name{font-weight:600;font-size:13px;margin-bottom:1px;}
+.pk-price{font-family:var(--mono);font-size:10px;color:var(--text3);margin-bottom:7px;}
+.pk-feat{font-size:11px;color:var(--text2);padding:2px 0;display:flex;align-items:center;gap:4px;}
+.pk-feat::before{content:"✓";color:var(--green);font-size:9px;flex-shrink:0;}
+.pk-feat.lk{color:var(--text3);}
+.pk-feat.lk::before{content:"🔒";font-size:8px;}
+.pk-cur{position:absolute;top:7px;right:7px;font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;padding:2px 5px;border-radius:3px;}
+.ft{width:100%;border-collapse:collapse;font-size:11px;}
+.ft th{text-align:left;padding:6px 9px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text3);border-bottom:1px solid var(--border);}
+.ft th:not(:first-child){text-align:center;}
+.ft td{padding:7px 9px;border-bottom:1px solid var(--border);color:var(--text2);}
+.ft td:not(:first-child){text-align:center;}
+.ft .cat td{background:var(--bg3);color:var(--text3);font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;padding:4px 9px;}
+.ft tr:last-child td{border-bottom:none;}
+.ck{color:var(--green);}.cx{color:var(--border2);}
+.save-bar{display:flex;justify-content:flex-end;gap:8px;margin-top:14px;}
+.info-box{padding:9px 12px;background:rgba(79,142,247,0.06);border:1px solid rgba(79,142,247,0.15);border-radius:6px;font-size:11px;color:var(--text2);line-height:1.5;margin-top:10px;}
+.info-box strong{color:var(--accent);}
+.warn-box{padding:9px 12px;background:var(--warn-bg);border:1px solid var(--warn-border);border-radius:6px;font-size:11px;color:var(--warn);line-height:1.5;margin-bottom:12px;}
+.wh-row{display:flex;gap:8px;}
+.color-row{display:flex;gap:8px;align-items:center;}
+.color-row input[type=color]{width:38px;height:34px;border:1px solid var(--border2);border-radius:5px;background:none;cursor:pointer;padding:2px;}
+@media(max-width:600px){
+  .layout{grid-template-columns:1fr;height:auto;overflow:visible;}
+  .snav{display:flex;flex-wrap:wrap;gap:4px;height:auto;border-right:none;border-bottom:1px solid var(--border);padding:10px;}
+  .snav-sec{display:none;}
+  .snav-item{width:auto;padding:6px 10px;font-size:11px;}
+  .smain{padding:14px;}
+  .paket-grid{grid-template-columns:1fr;}
+}
+</style>
 </head>
-<body data-page="einstellungen">
-  <div class="app-shell" id="app-shell">
-    <nav class="sidebar" id="sidebar"></nav>
-    <div class="main-wrap" id="main-wrap">
-      <div class="topbar" id="topbar"></div>
-      <div class="page-content">
-      <main class="es-page">
-    <div class="es-page-header">
-      <div class="es-page-title">⚙️ Einstellungen</div>
-      <div class="es-page-sub">Konto, Darstellung, KI und Datenschutz verwalten</div>
+<body>
+<!-- GEMEINSAMES NAV-FRAGMENT — in alle 4 Seiten identisch -->
+<!-- Topbar -->
+<div class="topbar">
+  <div class="topbar-left">
+    <a href="app-starter.html" class="logo">PRO<span>VA</span></a>
+    <nav class="topnav">
+      <a href="app-starter.html" data-short="Gutachten">Neues Gutachten</a>
+      <a href="archiv.html"        data-short="Archiv">Archiv</a>
+      <a href="termine.html"       data-short="Termine">Termine</a>
+      <a href="briefvorlagen.html" data-short="Vorlagen">Briefvorlagen</a>
+      <a href="jveg.html"          data-short="JVEG">JVEG</a>
+    </nav>
+  </div>
+  <div class="topbar-right">
+    <span class="paket-badge" id="topbarPaket"></span>
+    <a href="einstellungen.html" class="active settings-link" title="Einstellungen">⚙</a>
+    <button class="burger" id="burgerBtn" onclick="toggleDrawer()" aria-label="Menü öffnen">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</div>
+<!-- Overlay -->
+<div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
+<!-- Drawer -->
+<div class="drawer" id="drawer">
+  <div class="drawer-header">
+    <div class="logo">PRO<span>VA</span></div>
+    <button class="drawer-close" onclick="closeDrawer()">✕</button>
+  </div>
+  <nav class="drawer-nav">
+    <a href="app-starter.html"><span class="di">📄</span>Neues Gutachten</a>
+    <a href="archiv.html"><span class="di">📂</span>Archiv</a>
+    <a href="termine.html"><span class="di">📅</span>Termine</a>
+    <a href="briefvorlagen.html"><span class="di">✉️</span>Briefvorlagen</a>
+    <a href="jveg.html"><span class="di">💶</span>JVEG</a>
+  </nav>
+  <div class="drawer-footer">
+    <a href="einstellungen.html" class="active drawer-settings">⚙ Einstellungen</a>
+    <span class="paket-badge" id="drawerPaket"></span>
+  </div>
+</div>
+<!-- Bottom Nav -->
+<nav class="bottom-nav">
+  <a href="app-starter.html" class="bn-item"><span class="bn-i">📄</span><span class="bn-l">Gutachten</span></a>
+  <a href="archiv.html"      class="bn-item"><span class="bn-i">📂</span><span class="bn-l">Archiv</span></a>
+  <a href="termine.html"     class="bn-item"><span class="bn-i">📅</span><span class="bn-l">Termine</span></a>
+  <a href="briefvorlagen.html" class="bn-item"><span class="bn-i">✉️</span><span class="bn-l">Vorlagen</span></a>
+  <a href="einstellungen.html" class="active bn-item"><span class="bn-i">⚙</span><span class="bn-l">Einstellg.</span></a>
+</nav>
+
+<div class="layout">
+  <div class="snav">
+    <div class="snav-sec">Konto</div>
+    <button class="snav-item active" onclick="showSec('profil',this)"><span class="si">👤</span>Profil</button>
+    <button class="snav-item" onclick="showSec('paket',this)"><span class="si">📦</span>Paket</button>
+    <div class="snav-sec">App</div>
+    <button class="snav-item" onclick="showSec('briefkopf',this)"><span class="si">🏢</span>Briefkopf</button>
+    <button class="snav-item" onclick="showSec('gutachten',this)"><span class="si">📄</span>Gutachten</button>
+    <button class="snav-item" onclick="showSec('notif',this)"><span class="si">🔔</span>Benachricht.</button>
+    <div class="snav-sec">Finanzen</div>
+    <button class="snav-item" onclick="showSec('konto',this)"><span class="si">🏦</span>Bankdaten & Steuer</button>
+    <div class="snav-sec">Enterprise</div>
+    <button class="snav-item" id="navWH" onclick="showSec('webhook',this)"><span class="si">🔗</span>Webhook</button>
+    <button class="snav-item" id="navWL" onclick="showSec('wl',this)"><span class="si">🎨</span>White-Label</button>
+  </div>
+  <div class="smain">
+
+    <div class="sec active" id="sec-profil">
+      <div class="page-title">Mein Profil</div>
+      <div class="page-sub">Persönliche Daten und Sachverständigen-Angaben</div>
+      <div class="card"><div class="card-header"><div class="card-title">Persönliche Daten</div></div><div class="card-body">
+        <div class="av-row"><div class="av" id="avI">SV</div><div><div style="font-size:14px;font-weight:600;" id="avN">Sachverständiger</div><div style="font-size:11px;color:var(--text3);" id="avP">Starter-Paket</div></div></div>
+        <div class="form-row"><div class="form-group"><label class="form-label">Vorname</label><input type="text" class="form-input" id="pVN" placeholder="Max" oninput="upAv()"></div><div class="form-group"><label class="form-label">Nachname</label><input type="text" class="form-input" id="pNN" placeholder="Mustermann" oninput="upAv()"></div></div>
+        <div class="form-group"><label class="form-label">E-Mail (für Gutachten-Versand)</label><input type="email" class="form-input" id="pMail" placeholder="sv@beispiel.de"><div class="form-hint">An diese Adresse werden fertige Gutachten geschickt</div></div>
+        <div class="form-row"><div class="form-group"><label class="form-label">Telefon</label><input type="tel" class="form-input" id="pTel" placeholder="+49 221 ..."></div><div class="form-group"><label class="form-label">Mobil</label><input type="tel" class="form-input" id="pMob" placeholder="+49 151 ..."></div></div>
+      </div></div>
+      <div class="card"><div class="card-header"><div class="card-title">Sachverständigen-Angaben</div></div><div class="card-body">
+        <div class="form-group"><label class="form-label">Berufsbezeichnung</label><input type="text" class="form-input" id="pTit" placeholder="Öffentlich bestellter und vereidigter Sachverständiger für Schäden an Gebäuden"></div>
+        <div class="form-row"><div class="form-group"><label class="form-label">Zertifizierung</label><input type="text" class="form-input" id="pZert" placeholder="EIPOSCERT / DGuSV / IHK"></div><div class="form-group"><label class="form-label">Zertifizierungsnummer</label><input type="text" class="form-input" id="pZNr" placeholder="2024-NRW-0123"></div></div>
+        <div class="form-row"><div class="form-group"><label class="form-label">Stundensatz (€/h)</label><input type="number" class="form-input" id="pSatz" placeholder="100" min="60" max="200" step="5"></div><div class="form-group"><label class="form-label">Gutachten/Monat</label><input type="number" class="form-input" id="pGM" placeholder="8" min="1"></div></div>
+      </div></div>
+      <div class="save-bar"><button class="btn btn-secondary" onclick="loadAll()">Verwerfen</button><button class="btn btn-primary" onclick="saveProfil()">Profil speichern</button></div>
     </div>
 
-    <div class="es-layout">
-      <!-- Sidebar -->
-      <nav class="es-sidebar" id="es-sidebar">
-        <div class="es-sidebar-item aktiv" data-section="profil" onclick="wechsleSektion('profil',this)">
-          <span class="es-sidebar-icon">👤</span> Profil & Konto
+    <div class="sec" id="sec-paket">
+      <div class="page-title">Paket & Features</div>
+      <div class="page-sub">Ihr aktives Paket und verfügbare Features</div>
+      <div class="card"><div class="card-header"><div class="card-title">Aktives Paket</div></div><div class="card-body">
+        <div class="paket-grid">
+          <div class="pk" id="pkS"><div class="pk-name" style="color:var(--accent);">Starter</div><div class="pk-price">179 €/Mo</div><div class="pk-feat">KI-Gutachten</div><div class="pk-feat">17 Briefvorlagen</div><div class="pk-feat">Foto-Analyse Basis</div><div class="pk-feat">JVEG, Termine, Rechnungen</div><div class="pk-feat lk">KI-Brieftext</div><div class="pk-feat lk">§407a-Modul</div></div>
+          <div class="pk" id="pkP"><div class="pk-name" style="color:var(--warn);">Pro</div><div class="pk-price">369 €/Mo · 3 Seats</div><div class="pk-feat">Alles aus Starter</div><div class="pk-feat">KI-Brieftext alle Vorlagen</div><div class="pk-feat">Foto-Analyse erweitert</div><div class="pk-feat">Chef-Freigabe</div><div class="pk-feat lk">§407a-Vollmodul</div><div class="pk-feat lk">Jahresbericht</div></div>
+          <div class="pk" id="pkE"><div class="pk-name" style="color:var(--purple);">Enterprise</div><div class="pk-price">699 €+/Mo · unbegr.</div><div class="pk-feat">Alles aus Pro</div><div class="pk-feat">§407a-Vollmodul</div><div class="pk-feat">Foto-Forensik KI</div><div class="pk-feat">Jahresbericht-Generator</div><div class="pk-feat">Outbound-Webhook</div><div class="pk-feat">White-Label</div></div>
         </div>
-        <div class="es-sidebar-item" data-section="darstellung" onclick="wechsleSektion('darstellung',this)">
-          <span class="es-sidebar-icon">🎨</span> Darstellung
-        </div>
-        <div class="es-sidebar-item" data-section="ki" onclick="wechsleSektion('ki',this)">
-          <span class="es-sidebar-icon">🤖</span> KI & Diktat
-        </div>
-        <div class="es-sidebar-item" data-section="benachrichtigungen" onclick="wechsleSektion('benachrichtigungen',this)">
-          <span class="es-sidebar-icon">🔔</span> Benachrichtigungen
-        </div>
-        <div class="es-sidebar-item" data-section="integrationen" onclick="wechsleSektion('integrationen',this)">
-          <span class="es-sidebar-icon">🔗</span> Integrationen
-        </div>
-        <div class="es-sidebar-item" data-section="datenschutz" onclick="wechsleSektion('datenschutz',this)">
-          <span class="es-sidebar-icon">🔒</span> Datenschutz
-        </div>
-        <div class="es-sidebar-item" data-section="paket" onclick="wechsleSektion('paket',this)">
-          <span class="es-sidebar-icon">📦</span> Paket & Abrechnung
-        </div>
-      </nav>
+        <div class="info-box"><strong>Paket ändern:</strong> Schreiben Sie uns an <strong>kontakt@prova-systems.de</strong></div>
+      </div></div>
+      <div class="card"><div class="card-header"><div class="card-title">Feature-Übersicht</div></div><div class="card-body" style="padding:0;">
+        <table class="ft"><thead><tr><th>Feature</th><th>Starter</th><th>Pro</th><th>Enterprise</th></tr></thead><tbody>
+          <tr class="cat"><td colspan="4">KI-Gutachten</td></tr>
+          <tr><td>KI-Gutachten Erstellung</td><td><span class="ck">✓</span></td><td><span class="ck">✓</span></td><td><span class="ck">✓</span></td></tr>
+          <tr><td>§6 Stellungnahme-Editor</td><td><span class="ck">✓</span></td><td><span class="ck">✓</span></td><td><span class="ck">✓</span></td></tr>
+          <tr><td>Lektor-Modul</td><td><span class="ck">✓</span></td><td><span class="ck">✓</span></td><td><span class="ck">✓</span></td></tr>
+          <tr class="cat"><td colspan="4">Foto-Analyse</td></tr>
+          <tr><td>Foto-Beschreibung Sichtbefund</td><td><span class="ck">✓</span></td><td><span class="ck">✓</span></td><td><span class="ck">✓</span></td></tr>
+          <tr><td>Schadensgrad + DIN-Einordnung</td><td><span class="cx">—</span></td><td><span class="ck">✓</span></td><td><span class="ck">✓</span></td></tr>
+          <tr><td>Forensische Vollanalyse</td><td><span class="cx">—</span></td><td><span class="cx">—</span></td><td><span class="ck">✓</span></td></tr>
+          <tr class="cat"><td colspan="4">Kommunikation</td></tr>
+          <tr><td>17 Briefvorlagen</td><td><span class="ck">✓</span></td><td><span class="ck">✓</span></td><td><span class="ck">✓</span></td></tr>
+          <tr><td>KI-Brieftext (individuell)</td><td><span class="cx">—</span></td><td><span class="ck">✓</span></td><td><span class="ck">✓</span></td></tr>
+          <tr><td>§407a-Vollmodul (A-06 + B-02)</td><td><span class="cx">—</span></td><td><span class="cx">—</span></td><td><span class="ck">✓</span></td></tr>
+          <tr class="cat"><td colspan="4">Verwaltung</td></tr>
+          <tr><td>Termine, JVEG, Rechnungen, Mahnwesen</td><td><span class="ck">✓</span></td><td><span class="ck">✓</span></td><td><span class="ck">✓</span></td></tr>
+          <tr><td>Chef-Freigabe (Multi-User)</td><td><span class="cx">—</span></td><td><span class="ck">✓</span></td><td><span class="ck">✓</span></td></tr>
+          <tr><td>Jahresbericht-Generator</td><td><span class="cx">—</span></td><td><span class="cx">—</span></td><td><span class="ck">✓</span></td></tr>
+          <tr class="cat"><td colspan="4">Enterprise</td></tr>
+          <tr><td>Outbound-Webhook</td><td><span class="cx">—</span></td><td><span class="cx">—</span></td><td><span class="ck">✓</span></td></tr>
+          <tr><td>White-Label (Logo + Farbe)</td><td><span class="cx">—</span></td><td><span class="cx">—</span></td><td><span class="ck">✓</span></td></tr>
+          <tr><td>Audit-Trail</td><td><span class="cx">—</span></td><td><span class="cx">—</span></td><td><span class="ck">✓</span></td></tr>
+        </tbody></table>
+      </div></div>
+    </div>
 
-      <!-- Content -->
-      <div class="es-content" id="es-content">
+    <div class="sec" id="sec-briefkopf">
+      <div class="page-title">Briefkopf</div>
+      <div class="page-sub">Erscheint auf allen PDFs und E-Mails</div>
+      <div class="card"><div class="card-header"><div class="card-title">Büro-/Firmenadresse</div></div><div class="card-body">
+        <div class="form-group"><label class="form-label">Firma / Büroname</label><input type="text" class="form-input" id="bFirma" placeholder="Sachverständigenbüro Mustermann"></div>
+        <div class="form-group"><label class="form-label">Straße</label><input type="text" class="form-input" id="bStr" placeholder="Musterstraße 12"></div>
+        <div class="form-row"><div class="form-group"><label class="form-label">PLZ</label><input type="text" class="form-input" id="bPLZ" placeholder="50667"></div><div class="form-group"><label class="form-label">Ort</label><input type="text" class="form-input" id="bOrt" placeholder="Köln"></div></div>
+        <div class="form-row"><div class="form-group"><label class="form-label">USt-IdNr.</label><input type="text" class="form-input" id="bUSt" placeholder="DE123456789"></div><div class="form-group"><label class="form-label">Steuernummer</label><input type="text" class="form-input" id="bStNr" placeholder="213/456/78901"></div></div>
+        <div class="form-group"><label class="form-label">Bankverbindung</label><input type="text" class="form-input" id="bBank" placeholder="IBAN: DE12 3456 ... · BIC: COLSDE33"></div>
+        <div class="form-group"><label class="form-label">PDF-Fußzeile</label><textarea class="form-textarea" id="bFuss" placeholder="Mitglied im DGuSV · Öffentlich bestellt von der IHK Köln"></textarea></div>
+      </div></div>
+      <div class="save-bar"><button class="btn btn-secondary" onclick="loadAll()">Verwerfen</button><button class="btn btn-primary" onclick="saveBrief()">Briefkopf speichern</button></div>
+    </div>
 
-        <!-- PROFIL -->
-        <section class="es-section aktiv" id="es-sec-profil">
-          <div class="es-section-header">
-            <span class="es-section-icon">👤</span>
-            <div class="es-section-info">
-              <div class="es-section-title">Profil & Konto</div>
-              <div class="es-section-sub">Persönliche Daten, Berufsbezeichnung und Sicherheit</div>
-            </div>
-          </div>
-          <div class="es-avatar-wrap">
-            <div class="es-avatar" id="es-avatar-initials">SV</div>
-            <div class="es-avatar-info">
-              <div class="es-avatar-name" id="es-avatar-name">Sachverständiger</div>
-              <div class="es-avatar-email" id="es-avatar-email">—</div>
-              <span class="es-avatar-badge trial" id="es-avatar-badge">Trial</span>
-            </div>
-          </div>
-          <div class="es-zeile vertikal">
-            <div class="es-zeile-info">
-              <div class="es-zeile-label">Persönliche Daten</div>
-              <div class="es-zeile-sub">Wird in Gutachten und Berichten verwendet</div>
-            </div>
-            <div class="es-input-row" style="width:100%">
-              <div><label class="es-label">Vorname</label><input class="es-input" id="es-vorname" placeholder="Max" oninput="markiereGeaendert()" /></div>
-              <div><label class="es-label">Nachname</label><input class="es-input" id="es-nachname" placeholder="Mustermann" oninput="markiereGeaendert()" /></div>
-              <div><label class="es-label">Titel / Grad</label><input class="es-input" id="es-titel" placeholder="Dipl.-Ing." oninput="markiereGeaendert()" /></div>
-              <div><label class="es-label">Berufsbezeichnung</label><input class="es-input" id="es-beruf" placeholder="Öff. best. Sachverständiger" oninput="markiereGeaendert()" /></div>
-            </div>
-          </div>
-          <div class="es-zeile vertikal">
-            <div class="es-zeile-info">
-              <div class="es-zeile-label">Büro-Adresse</div>
-              <div class="es-zeile-sub">Erscheint im Briefkopf und in Rechnungen</div>
-            </div>
-            <div style="width:100%">
-              <input class="es-input" id="es-firma" placeholder="Firmierung / Büroname (optional)" oninput="markiereGeaendert()" />
-              <input class="es-input" id="es-strasse" placeholder="Straße und Hausnummer" oninput="markiereGeaendert()" />
-              <div class="es-input-row">
-                <input class="es-input" id="es-plz" placeholder="PLZ" oninput="markiereGeaendert()" />
-                <input class="es-input" id="es-ort" placeholder="Ort" oninput="markiereGeaendert()" />
-              </div>
-              <div class="es-input-row">
-                <input class="es-input" id="es-telefon" placeholder="Telefon" oninput="markiereGeaendert()" />
-                <input class="es-input" id="es-website" placeholder="Website (optional)" oninput="markiereGeaendert()" />
-              </div>
-              <input class="es-input" id="es-ustid" placeholder="USt-IdNr. (DE…)" oninput="markiereGeaendert()" />
-            </div>
-          </div>
-          <div class="es-zeile">
-            <div class="es-zeile-info">
-              <div class="es-zeile-label">Passwort ändern</div>
-              <div class="es-zeile-sub">Reset per E-Mail über Netlify Identity</div>
-            </div>
-            <button class="es-btn" onclick="passwortReset()">📧 Reset-Mail senden</button>
-          </div>
-          <div class="es-zeile">
-            <div class="es-zeile-info">
-              <div class="es-zeile-label">Abmelden</div>
-              <div class="es-zeile-sub">Sitzung beenden, alle lokalen Daten löschen</div>
-            </div>
-            <button class="es-btn danger" onclick="provaAbmelden()">🚪 Abmelden</button>
-          </div>
-        </section>
+    <div class="sec" id="sec-gutachten">
+      <div class="page-title">Gutachten-Einstellungen</div>
+      <div class="page-sub">Standards für die KI-Gutachten-Erstellung</div>
+      <div class="card"><div class="card-header"><div class="card-title">Standards</div></div><div class="card-body">
+        <div class="form-group"><label class="form-label">Standard-Schadensarten</label><input type="text" class="form-input" id="gSch" placeholder="Schimmelbefall, Wasserschaden, Brandschaden, Sturmschaden, Einbruchschaden"><div class="form-hint">Komma-getrennt — erscheinen als Schnellauswahl in der App</div></div>
+        <div class="form-group"><label class="form-label">Standard-Honorargruppe (JVEG)</label><select class="form-select" id="gHG"><option value="5">Gruppe 5 — 100 €/h (Standard)</option><option value="6">Gruppe 6 — 110 €/h</option><option value="7">Gruppe 7 — 125 €/h</option></select></div>
+        <div class="form-row"><div class="form-group"><label class="form-label">Aktenzeichen-Präfix</label><input type="text" class="form-input" id="gAZ" placeholder="PROVA-WS"><div class="form-hint">AZ wird automatisch generiert</div></div><div class="form-group"><label class="form-label">Zahlungsziel (Tage)</label><input type="number" class="form-input" id="gZZ" placeholder="14" min="7" max="60"></div></div>
+      </div></div>
+      <div class="save-bar"><button class="btn btn-secondary" onclick="loadAll()">Verwerfen</button><button class="btn btn-primary" onclick="saveGutachten()">Speichern</button></div>
+    </div>
 
-        <!-- DARSTELLUNG -->
-        <section class="es-section" id="es-sec-darstellung">
-          <div class="es-section-header">
-            <span class="es-section-icon">🎨</span>
-            <div class="es-section-info">
-              <div class="es-section-title">Darstellung</div>
-              <div class="es-section-sub">Design, Schrift und Ansicht</div>
-            </div>
-          </div>
-          <div class="es-zeile">
-            <div class="es-zeile-info"><div class="es-zeile-label">Farbschema</div><div class="es-zeile-sub">Hell, Dunkel oder automatisch</div></div>
-            <select class="es-select" id="es-theme" onchange="aendereTheme(this.value)">
-              <option value="auto">🌓 Automatisch</option>
-              <option value="light">☀️ Hell</option>
-              <option value="dark">🌙 Dunkel</option>
+    <div class="sec" id="sec-notif">
+      <div class="page-title">Benachrichtigungen</div>
+      <div class="page-sub">E-Mail-Benachrichtigungen aus Make.com S8/S7</div>
+      <div class="card"><div class="card-header"><div class="card-title">E-Mail-Einstellungen</div></div><div class="card-body">
+        <div class="form-group"><label class="form-label">Terminerinnerung 24h vorher</label><select class="form-select" id="n24"><option value="1">Aktiviert</option><option value="0">Deaktiviert</option></select></div>
+        <div class="form-group"><label class="form-label">Terminerinnerung 2h vorher</label><select class="form-select" id="n2"><option value="0">Deaktiviert</option><option value="1">Aktiviert</option></select></div>
+        <div class="form-group"><label class="form-label">Automatisches Mahnwesen</label><select class="form-select" id="nM"><option value="1">Aktiviert (tägl. 09:00 Uhr)</option><option value="0">Deaktiviert</option></select></div>
+      </div></div>
+      <div class="save-bar"><button class="btn btn-primary" onclick="saveNotif()">Speichern</button></div>
+    </div>
+
+    <div class="sec" id="sec-konto">
+      <div class="page-title">Bankdaten & Steuer</div>
+      <div class="page-sub">Für Rechnungen und DATEV — wird mit Airtable synchronisiert (SACHVERSTAENDIGE)</div>
+      <div class="card"><div class="card-header"><div class="card-title">Zahlungsdaten</div></div><div class="card-body">
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">IBAN</label><input type="text" class="form-input" id="kIBAN" placeholder="DE89 3704 0044 0532 0130 00" autocomplete="off"></div>
+          <div class="form-group"><label class="form-label">BIC</label><input type="text" class="form-input" id="kBIC" placeholder="COBADEFFXXX"></div>
+        </div>
+        <div class="form-group"><label class="form-label">Bank</label><input type="text" class="form-input" id="kBank" placeholder="Commerzbank"></div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Steuernummer</label><input type="text" class="form-input" id="kStNr"></div>
+          <div class="form-group"><label class="form-label">USt-IdNr.</label><input type="text" class="form-input" id="kUStId"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">MwSt-Satz</label>
+            <select class="form-select" id="kMwSt">
+              <option value="19">19 %</option>
+              <option value="7">7 %</option>
+              <option value="0">0 %</option>
             </select>
           </div>
-          <div class="es-zeile">
-            <div class="es-zeile-info"><div class="es-zeile-label">Schriftgröße</div><div class="es-zeile-sub">Basis-Schriftgröße der App</div></div>
-            <select class="es-select" id="es-fontsize" onchange="aendereFontsize(this.value)">
-              <option value="14">Klein (14px)</option>
-              <option value="16" selected>Normal (16px)</option>
-              <option value="18">Groß (18px)</option>
+          <div class="form-group"><label class="form-label">Zahlungsziel</label>
+            <select class="form-select" id="kZahl">
+              <option value="14">14 Tage</option>
+              <option value="21">21 Tage</option>
+              <option value="30">30 Tage</option>
+              <option value="45">45 Tage</option>
             </select>
           </div>
-          <div class="es-zeile">
-            <div class="es-zeile-info"><div class="es-zeile-label">Kompakte Ansicht</div><div class="es-zeile-sub">Weniger Abstände, mehr Inhalt</div></div>
-            <label class="es-toggle"><input type="checkbox" id="es-kompakt" onchange="saveToggle('kompakt', this.checked)" /><span class="es-toggle-slider"></span></label>
-          </div>
-          <div class="es-zeile">
-            <div class="es-zeile-info"><div class="es-zeile-label">Animationen</div><div class="es-zeile-sub">Übergänge und Micro-Animationen</div></div>
-            <label class="es-toggle"><input type="checkbox" id="es-animationen" checked onchange="saveToggle('animationen', this.checked)" /><span class="es-toggle-slider"></span></label>
-          </div>
-          <div class="es-zeile">
-            <div class="es-zeile-info"><div class="es-zeile-label">Start-Seite nach Login</div><div class="es-zeile-sub">Welche Seite nach dem Einloggen geöffnet wird</div></div>
-            <select class="es-select" id="es-startseite" onchange="saveSelect('startseite', this.value)">
-              <option value="dashboard.html">Dashboard</option>
-              <option value="termine.html">Termine</option>
-              <option value="stellungnahme.html">Neues Gutachten</option>
-            </select>
-          </div>
-        </section>
+        </div>
+        <div class="form-group"><label class="form-label">RE-Prefix (max. 6 Zeichen)</label><input type="text" class="form-input" id="kREPrefix" maxlength="6" placeholder="RE"></div>
+      </div></div>
+      <div class="save-bar"><button class="btn btn-primary" onclick="saveKonto()">Bankdaten speichern</button></div>
+    </div>
 
-        <!-- KI & DIKTAT -->
-        <section class="es-section" id="es-sec-ki">
-          <div class="es-section-header">
-            <span class="es-section-icon">🤖</span>
-            <div class="es-section-info">
-              <div class="es-section-title">KI & Diktat</div>
-              <div class="es-section-sub">PROVA KI, Spracherkennung und Lernmodus</div>
-            </div>
-          </div>
-          <div class="es-zeile">
-              <option value="de-CH">🇨🇭 Schweizer Deutsch</option>
-            </select>
-          </div>
-          <div class="es-zeile">
-            <div class="es-zeile-info"><div class="es-zeile-label">Auto-Qualitätscheck</div><div class="es-zeile-sub">Score automatisch nach 3s Schreibpause berechnen</div></div>
-            <label class="es-toggle"><input type="checkbox" id="es-auto-quality" checked onchange="saveToggle('auto_quality', this.checked)" /><span class="es-toggle-slider"></span></label>
-          </div>
-          <div class="es-zeile">
-            <div class="es-zeile-info"><div class="es-zeile-label">KI-Lernmodus</div><div class="es-zeile-sub">KI lernt aus Diktat-Korrekturen automatisch</div></div>
-            <label class="es-toggle"><input type="checkbox" id="es-lernmodus" checked onchange="saveToggle('lernmodus', this.checked)" /><span class="es-toggle-slider"></span></label>
-          </div>
-          <div class="es-zeile">
-            <div class="es-zeile-info"><div class="es-zeile-label">Inline KI-Vorschläge</div><div class="es-zeile-sub">Verbesserungsvorschläge direkt im Text-Editor</div></div>
-            <label class="es-toggle"><input type="checkbox" id="es-inline-vorschlaege" checked onchange="saveToggle('inline_vorschlaege', this.checked)" /><span class="es-toggle-slider"></span></label>
-          </div>
-          <div class="es-zeile vertikal">
-            <div class="es-zeile-info">
-              <div class="es-zeile-label">Persönlicher KI-Kontext</div>
-              <div class="es-zeile-sub">Wird jedem KI-Aufruf beigefügt (Spezialgebiet, bevorzugte Normen)</div>
-            </div>
-            <textarea class="es-input" id="es-ki-kontext" rows="3"
-              placeholder="z.B. Spezialisierung: Feuchte- und Schimmelschäden. Bevorzugte Normen: DIN 4108, WTA-Merkblätter."
-              oninput="markiereGeaendert()" style="resize:vertical;min-height:70px"></textarea>
-          </div>
-          <div class="es-zeile">
-            <div class="es-zeile-info"><div class="es-zeile-label">KI-Lernpool verwalten</div><div class="es-zeile-sub">Gelernte Vokabeln, Korrekturen und Spracherkennung-Prompt</div></div>
-            <button class="es-btn" onclick="window.location='ortstermin-modus.html#lernpool'">🧠 Lernpool →</button>
-          </div>
-        </section>
-
-        <!-- BENACHRICHTIGUNGEN -->
-        <section class="es-section" id="es-sec-benachrichtigungen">
-          <div class="es-section-header">
-            <span class="es-section-icon">🔔</span>
-            <div class="es-section-info">
-              <div class="es-section-title">Benachrichtigungen</div>
-              <div class="es-section-sub">Push und In-App Einstellungen</div>
-            </div>
-          </div>
-          <div class="es-zeile">
-            <div class="es-zeile-info"><div class="es-zeile-label">Fristen-Alarme</div><div class="es-zeile-sub">Push bei Fristen in 7, 3 und 1 Tag(en)</div></div>
-            <label class="es-toggle"><input type="checkbox" id="es-bn-fristen" checked onchange="saveToggle('bn_fristen', this.checked)" /><span class="es-toggle-slider"></span></label>
-          </div>
-          <div class="es-zeile">
-            <div class="es-zeile-info"><div class="es-zeile-label">Zahlungs-Erinnerungen</div><div class="es-zeile-sub">Bei überfälligen Rechnungen</div></div>
-            <label class="es-toggle"><input type="checkbox" id="es-bn-zahlung" checked onchange="saveToggle('bn_zahlung', this.checked)" /><span class="es-toggle-slider"></span></label>
-          </div>
-          <div class="es-zeile">
-            <div class="es-zeile-info"><div class="es-zeile-label">Stille Stunden</div><div class="es-zeile-sub">Keine Push zwischen 22:00 und 07:00 Uhr</div></div>
-            <label class="es-toggle"><input type="checkbox" id="es-bn-stillezeit" checked onchange="saveToggle('bn_stillezeit', this.checked)" /><span class="es-toggle-slider"></span></label>
-          </div>
-          <div class="es-zeile">
-            <div class="es-zeile-info"><div class="es-zeile-label">Benachrichtigungs-Verlauf</div><div class="es-zeile-sub">Alle Push und In-App Nachrichten</div></div>
-            <a href="benachrichtigungen.html" class="es-btn">🔔 Öffnen →</a>
-          </div>
-        </section>
-
-        <!-- INTEGRATIONEN -->
-        <section class="es-section" id="es-sec-integrationen">
-          <div class="es-section-header">
-            <span class="es-section-icon">🔗</span>
-            <div class="es-section-info">
-              <div class="es-section-title">Integrationen</div>
-              <div class="es-section-sub">Externe Dienste und Verbindungen</div>
-            </div>
-          </div>
-          <div class="es-zeile">
-            <div class="es-zeile-info"><div class="es-zeile-label">Airtable Datenbank</div><div class="es-zeile-sub">Base ID: appJ7bLlAHZoxENWE · Alle Gutachten und Fälle</div></div>
-            <span class="es-status-badge ok"><span class="es-status-dot"></span> Verbunden</span>
-          </div>
-          <div class="es-zeile">
-            <div class="es-zeile-info"><div class="es-zeile-label">Make.com Automationen</div><div class="es-zeile-sub">10 aktive Szenarien (S1–S10) · E-Mail, PDF, CRM</div></div>
-            <span class="es-status-badge ok"><span class="es-status-dot"></span> Aktiv</span>
-          </div>
-          <div class="es-zeile">
-            <div class="es-zeile-info"><div class="es-zeile-label">Stripe Zahlungen</div><div class="es-zeile-sub">Solo 149€/mo · Team 279€/mo · SEPA + Karte</div></div>
-            <span class="es-status-badge ok"><span class="es-status-dot"></span> Aktiv</span>
-          </div>
-          <div class="es-zeile">
-            <div class="es-zeile-info"><div class="es-zeile-label">Kalender Export</div><div class="es-zeile-sub">ICS-Dateien für Google / Outlook / Apple Calendar</div></div>
-            <button class="es-btn" onclick="exportAlleFresten()">📅 Fristen exportieren</button>
-          </div>
-          <div class="es-zeile">
-            <div class="es-zeile-info"><div class="es-zeile-label">Daten importieren</div><div class="es-zeile-sub">Fälle aus Excel / CSV importieren</div></div>
-            <a href="import-assistent.html" class="es-btn">⬆️ Import-Assistent</a>
-          </div>
-        </section>
-
-        <!-- DATENSCHUTZ -->
-        <section class="es-section" id="es-sec-datenschutz">
-          <div class="es-section-header">
-            <span class="es-section-icon">🔒</span>
-            <div class="es-section-info">
-              <div class="es-section-title">Datenschutz & Sicherheit</div>
-              <div class="es-section-sub">DSGVO, Datenlöschung und Session</div>
-            </div>
-          </div>
-          <div class="es-zeile">
-            <div class="es-zeile-info"><div class="es-zeile-label">Sitzungs-Timeout</div><div class="es-zeile-sub">Automatischer Logout nach Inaktivität</div></div>
-            <select class="es-select" id="es-timeout" onchange="saveSelect('session_timeout', this.value)">
-              <option value="4">4 Stunden</option>
-              <option value="8" selected>8 Stunden</option>
-              <option value="24">24 Stunden</option>
-              <option value="0">Nie (nicht empfohlen)</option>
-            </select>
-          </div>
-          <div class="es-zeile">
-            <div class="es-zeile-info"><div class="es-zeile-label">Meine Daten exportieren</div><div class="es-zeile-sub">DSGVO Art. 20 — Alle gespeicherten Daten als JSON</div></div>
-            <button class="es-btn" onclick="exportMeineDaten()">⬇️ Exportieren</button>
-          </div>
-          <div class="es-zeile">
-            <div class="es-zeile-info"><div class="es-zeile-label">KI-Lernpool leeren</div><div class="es-zeile-sub">Alle gelernten Korrekturen und Vokabeln löschen</div></div>
-            <button class="es-btn danger" onclick="loescheLernpool()">🗑️ Lernpool löschen</button>
-          </div>
-          <div class="es-zeile">
-            <div class="es-zeile-info"><div class="es-zeile-label">Lokalen Cache leeren</div><div class="es-zeile-sub">Gespeicherte Airtable-Daten aus Browser-Cache</div></div>
-            <button class="es-btn" onclick="leerCache()">🧹 Cache leeren</button>
-          </div>
-          <div class="es-zeile">
-            <div class="es-zeile-info">
-              <div class="es-zeile-label" style="color:#ef4444">⚠️ Konto löschen</div>
-              <div class="es-zeile-sub">DSGVO Art. 17 — Unwiderruflich. <a href="datenschutz.html" target="_blank">Datenschutzerklärung</a></div>
-            </div>
-            <button class="es-btn danger" onclick="kontoDatenLoeschen()">🗑️ Konto löschen</button>
-          </div>
-        </section>
-
-        <!-- PAKET & ABRECHNUNG -->
-        <section class="es-section" id="es-sec-paket">
-          <div class="es-section-header">
-            <span class="es-section-icon">📦</span>
-            <div class="es-section-info">
-              <div class="es-section-title">Paket & Abrechnung</div>
-              <div class="es-section-sub">Aktuelles Paket, Upgrade und Rechnungen</div>
-            </div>
-          </div>
-          <div class="es-paket-card trial" id="es-paket-card">
-            <div class="es-paket-icon" id="es-paket-icon">⏳</div>
-            <div class="es-paket-info">
-              <div class="es-paket-name" id="es-paket-name">Trial — 14 Tage kostenlos</div>
-              <div class="es-paket-features" id="es-paket-features">Alle Solo-Features · Kein Zahlungsmittel nötig</div>
-            </div>
-            <button class="es-btn primary" id="es-upgrade-btn" onclick="window.location='portal.html'">⬆️ Upgraden</button>
-          </div>
-          <div class="es-zeile">
-            <div class="es-zeile-info"><div class="es-zeile-label">Rechnungen & Zahlungsmethode</div><div class="es-zeile-sub">Stripe Customer Portal · Kündigung</div></div>
-            <button class="es-btn" onclick="oeffneStripePortal()">💳 Portal öffnen</button>
-          </div>
-          <div class="es-zeile">
-            <div class="es-zeile-info"><div class="es-zeile-label">Team einladen</div><div class="es-zeile-sub">Kollegen zum Team-Paket hinzufügen</div></div>
-            <button class="es-btn" id="es-team-btn" disabled onclick="window.location='einstellungen.html#team'">👥 Team verwalten</button>
-          </div>
-        </section>
-
+    <div class="sec" id="sec-webhook">
+      <div class="page-title">Outbound-Webhook</div>
+      <div class="page-sub">PROVA sendet bei Gutachten-Freigabe automatisch JSON an Ihre URL</div>
+      <div id="whLocked" class="warn-box" style="display:none;">🔒 Nur im Enterprise-Paket verfügbar.</div>
+      <div id="whContent">
+        <div class="card"><div class="card-header"><div class="card-title">Webhook-Konfiguration</div><span style="font-size:10px;color:var(--purple);">Enterprise</span></div><div class="card-body">
+          <div class="form-group"><label class="form-label">Ihre Webhook-URL</label><div class="wh-row"><input type="url" class="form-input" id="wURL" placeholder="https://ihre-domain.de/webhook/prova"><button class="btn btn-secondary" onclick="testWH()" style="flex-shrink:0;">Testen</button></div></div>
+          <div class="form-group"><label class="form-label">Secret-Header (optional)</label><input type="text" class="form-input" id="wSec" placeholder="X-PROVA-Secret: ihr-schlüssel"></div>
+          <div class="info-box"><strong>Payload:</strong> aktenzeichen, schadenart, adresse, gutachten_text, pdf_url, freigabe_datum</div>
+        </div></div>
+        <div class="save-bar"><button class="btn btn-primary" onclick="saveWH()">Webhook speichern</button></div>
       </div>
     </div>
-  </main>
 
-  <!-- Speichern-Leiste -->
-  <div class="es-save-bar" id="es-save-bar">
-    <span class="es-save-bar-text">🖊️ Ungespeicherte Änderungen</span>
-    <div class="es-save-bar-actions">
-      <button class="es-btn" onclick="verwerfAenderungen()">Verwerfen</button>
-      <button class="es-btn primary" onclick="speichereAlles()">💾 Speichern</button>
+    <div class="sec" id="sec-wl">
+      <div class="page-title">White-Label</div>
+      <div class="page-sub">Ihr Logo und Ihre Farben in PDFs und E-Mails</div>
+      <div id="wlLocked" class="warn-box" style="display:none;">🔒 Nur im Enterprise-Paket verfügbar.</div>
+      <div id="wlContent">
+        <div class="card"><div class="card-header"><div class="card-title">Branding</div><span style="font-size:10px;color:var(--purple);">Enterprise</span></div><div class="card-body">
+          <div class="form-group"><label class="form-label">Logo-URL</label><input type="url" class="form-input" id="wlLogo" placeholder="https://ihre-domain.de/logo.png"><div class="form-hint">PNG oder SVG, min. 200×60px</div></div>
+          <div class="form-group"><label class="form-label">Primärfarbe</label><div class="color-row"><input type="color" id="wlCP" value="#4f8ef7" oninput="document.getElementById('wlHex').value=this.value"><input type="text" class="form-input" id="wlHex" placeholder="#4f8ef7" style="font-family:var(--mono);font-size:12px;" oninput="if(/^#[0-9A-Fa-f]{6}$/.test(this.value))document.getElementById('wlCP').value=this.value"></div><div class="form-hint">Erscheint in PDFs und E-Mails. "Powered by PROVA" bleibt erhalten.</div></div>
+        </div></div>
+        <div class="save-bar"><button class="btn btn-primary" onclick="saveWL()">White-Label speichern</button></div>
+      </div>
     </div>
+
   </div>
+</div>
+<div class="toast" id="toast"></div>
+<script src="prova-sv-airtable.js"></script>
+<script>
+const SK="prova_settings";
+function gs(){try{return JSON.parse(localStorage.getItem(SK)||"{}")}catch(e){return {}}}
+function ss(o){const s=gs();Object.assign(s,o);localStorage.setItem(SK,JSON.stringify(s));}
+function showSec(id,btn){
+  document.querySelectorAll(".sec").forEach(s=>s.classList.remove("active"));
+  document.querySelectorAll(".snav-item").forEach(b=>b.classList.remove("active"));
+  const sec=document.getElementById("sec-"+id);
+  if(sec)sec.classList.add("active");
+  if(btn)btn.classList.add("active");
+  const vn=document.getElementById("pVN")?.value||"";
+  const nn=document.getElementById("pNN")?.value||"";
+  const avI=document.getElementById("avI");
+  if(avI)avI.textContent=((vn[0]||"")+(nn[0]||"")).toUpperCase()||"SV";
+  const avN=document.getElementById("avN");
+  if(avN)avN.textContent=[vn,nn].filter(Boolean).join(" ")||"Sachverständiger";
+}
+function loadAll(){
+  const s=gs();
+  const pf=[["pVN","pVorname"],["pNN","pNachname"],["pMail","pEmail"],["pTel","pTel"],["pMob","pMob"],["pTit","pTitel"],["pZert","pZert"],["pZNr","pZNr"],["pSatz","pSatz"],["pGM","pGM"]];
+  pf.forEach(([id,k])=>{const el=document.getElementById(id);if(el)el.value=s[k]||"";});
+  const bf=[["bFirma","bFirma"],["bStr","bStr"],["bPLZ","bPLZ"],["bOrt","bOrt"],["bUSt","bUSt"],["bStNr","bStNr"],["bBank","bBank"],["bFuss","bFuss"]];
+  bf.forEach(([id,k])=>{const el=document.getElementById(id);if(el)el.value=s[k]||"";});
+  if(document.getElementById("gSch"))document.getElementById("gSch").value=s.gSch||"Schimmelbefall, Wasserschaden, Brandschaden, Sturmschaden, Einbruchschaden";
+  if(document.getElementById("gHG"))document.getElementById("gHG").value=s.gHG||"5";
+  if(document.getElementById("gAZ"))document.getElementById("gAZ").value=s.gAZ||"PROVA-WS";
+  if(document.getElementById("gZZ"))document.getElementById("gZZ").value=s.gZZ||"14";
+  if(s.wURL&&document.getElementById("wURL"))document.getElementById("wURL").value=s.wURL;
+  if(s.wlLogo&&document.getElementById("wlLogo"))document.getElementById("wlLogo").value=s.wlLogo;
+  if(s.wlHex&&document.getElementById("wlHex")){document.getElementById("wlHex").value=s.wlHex;document.getElementById("wlCP").value=s.wlHex;}
+  try{
+    const kd=JSON.parse(localStorage.getItem("prova_kontodaten")||"null");
+    if(kd&&document.getElementById("kIBAN")){
+      if(document.getElementById("kIBAN"))document.getElementById("kIBAN").value=kd.iban||"";
+      if(document.getElementById("kBIC"))document.getElementById("kBIC").value=kd.bic||"";
+      if(document.getElementById("kBank"))document.getElementById("kBank").value=kd.bank||"";
+      if(document.getElementById("kStNr"))document.getElementById("kStNr").value=kd.steuernr||"";
+      if(document.getElementById("kUStId"))document.getElementById("kUStId").value=kd.ustid||"";
+      if(document.getElementById("kMwSt"))document.getElementById("kMwSt").value=kd.mwst||"19";
+      if(document.getElementById("kZahl"))document.getElementById("kZahl").value=kd.zahlungsziel||"30";
+      if(document.getElementById("kREPrefix"))document.getElementById("kREPrefix").value=(kd.re_prefix||"RE").slice(0,6);
+    }
+  }catch(e){}
+  upAv();
+}
+function saveProfil(){const d={};[["pVN","pVorname"],["pNN","pNachname"],["pMail","pEmail"],["pTel","pTel"],["pMob","pMob"],["pTit","pTitel"],["pZert","pZert"],["pZNr","pZNr"],["pSatz","pSatz"],["pGM","pGM"]].forEach(([id,k])=>{const el=document.getElementById(id);if(el)d[k]=el.value;});ss(d);if(d.pEmail)localStorage.setItem("prova_sv_email",d.pEmail);showToast("Profil gespeichert ✅");}
+function saveBrief(){const d={};[["bFirma","bFirma"],["bStr","bStr"],["bPLZ","bPLZ"],["bOrt","bOrt"],["bUSt","bUSt"],["bStNr","bStNr"],["bBank","bBank"],["bFuss","bFuss"]].forEach(([id,k])=>{const el=document.getElementById(id);if(el)d[k]=el.value;});ss(d);showToast("Briefkopf gespeichert ✅");}
+function saveGutachten(){ss({gSch:document.getElementById("gSch").value,gHG:document.getElementById("gHG").value,gAZ:document.getElementById("gAZ").value,gZZ:document.getElementById("gZZ").value});showToast("Einstellungen gespeichert ✅");}
+function saveNotif(){ss({n24:document.getElementById("n24").value,n2:document.getElementById("n2").value,nM:document.getElementById("nM").value});showToast("Benachrichtigungen gespeichert ✅");}
+async function saveKonto(){
+  const recId=localStorage.getItem("prova_at_sv_record_id");
+  if(!recId){showToast("Bitte zuerst anmelden — SV-Datensatz fehlt.",true);return;}
+  const fields={
+    IBAN:document.getElementById("kIBAN").value.trim(),
+    BIC:document.getElementById("kBIC").value.trim(),
+    Bank:document.getElementById("kBank").value.trim(),
+    Steuernummer:document.getElementById("kStNr").value.trim(),
+    USt_IdNr:document.getElementById("kUStId").value.trim(),
+    MwSt_Satz:Number(document.getElementById("kMwSt").value)||0,
+    Zahlungsziel_Tage:Number(document.getElementById("kZahl").value)||30,
+    Re_Prefix:(document.getElementById("kREPrefix").value||"RE").slice(0,6)
+  };
+  try{
+    const res=await fetch("/.netlify/functions/airtable",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({method:"PATCH",path:"/v0/appJ7bLlAHZoxENWE/tbladqEQT3tmx4DIB/"+recId,payload:{fields}})});
+    if(!res.ok)throw new Error("HTTP "+res.status);
+    localStorage.setItem("prova_kontodaten",JSON.stringify({iban:fields.IBAN,bic:fields.BIC,bank:fields.Bank,steuernr:fields.Steuernummer,ustid:fields.USt_IdNr,mwst:String(fields.MwSt_Satz),zahlungsziel:String(fields.Zahlungsziel_Tage),re_prefix:fields.Re_Prefix}));
+    showToast("Bankdaten gespeichert ✅");
+  }catch(e){showToast("Speichern fehlgeschlagen",true);}
+}
+function saveWH(){if(!PROVA.isEnterprise){PROVA.requirePaket("outbound_webhook","Enterprise");return;}ss({wURL:document.getElementById("wURL").value,wSec:document.getElementById("wSec").value});showToast("Webhook gespeichert ✅");}
+async function testWH(){const url=document.getElementById("wURL").value;if(!url){showToast("Bitte URL eingeben",true);return;}try{await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({test:true,source:"PROVA",ts:new Date().toISOString()})});showToast("Test-Request gesendet ✅");}catch(e){showToast("Verbindung fehlgeschlagen",true);}}
+function saveWL(){if(!PROVA.isEnterprise){PROVA.requirePaket("whitelabel","Enterprise");return;}ss({wlLogo:document.getElementById("wlLogo").value,wlHex:document.getElementById("wlHex").value});showToast("White-Label gespeichert ✅");}
+function applyPaket(){
+  const p=PROVA.paket;
+  document.getElementById("avP").textContent=p+"-Paket";
+  [["pkS","a-s","Starter"],["pkP","a-p","Pro"],["pkE","a-e","Enterprise"]].forEach(([id,cls,name])=>{
+    const el=document.getElementById(id);el.className="pk"+(p===name?" "+cls:"");
+    el.querySelector(".pk-cur")?.remove();
+    if(p===name){const b=document.createElement("div");b.className="pk-cur";b.style.cssText=cls==="a-s"?"background:#4f8ef718;color:#4f8ef7":cls==="a-p"?"background:#f59e0b18;color:#f59e0b":"background:#a78bfa18;color:#a78bfa";b.textContent="Aktiv";el.appendChild(b);}
+  });
+  const isE=PROVA.isEnterprise;
+  document.getElementById("navWH").classList.toggle("locked",!isE);
+  document.getElementById("navWL").classList.toggle("locked",!isE);
+  document.getElementById("whLocked").style.display=isE?"none":"block";
+  document.getElementById("whContent").style.display=isE?"block":"none";
+  document.getElementById("wlLocked").style.display=isE?"none":"block";
+  document.getElementById("wlContent").style.display=isE?"block":"none";
+}
 
-  <div class="es-toast" id="es-toast"></div>
-  <script>
-    'use strict';
-    const ES_KEY = 'prova_einstellungen';
-    let geaendert = false;
+function toggleDrawer(){document.getElementById("drawer").classList.toggle("open");document.getElementById("drawerOverlay").classList.toggle("open");document.body.style.overflow=document.getElementById("drawer").classList.contains("open")?"hidden":"";}
+function closeDrawer(){document.getElementById("drawer").classList.remove("open");document.getElementById("drawerOverlay").classList.remove("open");document.body.style.overflow="";}
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeDrawer();});
+(function(){const p=localStorage.getItem("prova_paket")||"Starter";const c={Starter:"#4f8ef7",Pro:"#f59e0b",Enterprise:"#a78bfa"}[p];const s="background:"+c+"18;color:"+c+";border:1px solid "+c+"33";["topbarPaket","drawerPaket"].forEach(id=>{const el=document.getElementById(id);if(el){el.textContent=p;el.setAttribute("style",s);}});window.PROVA={paket:p,get isPro(){return["Pro","Enterprise"].includes(this.paket);},get isEnterprise(){return this.paket==="Enterprise";},requirePaket(f,min){const pr=["ki_brieftext","chef_freigabe","foto_erweitert"],en=["paragraph_407a","jahresbericht","outbound_webhook","whitelabel","foto_forensik"];const ok=en.includes(f)?this.isEnterprise:pr.includes(f)?this.isPro:true;if(!ok)alert((min==="Enterprise"?"🔒 Nur im Enterprise-Paket":"🔒 Nur im Pro- oder Enterprise-Paket")+"\n\nEinstellungen → Paket & Features");return ok;}};})();
+function showToast(m,e=false){const t=document.getElementById("toast");t.textContent=m;t.className="toast"+(e?" err":"");t.classList.add("show");setTimeout(()=>t.classList.remove("show"),2600);}
 
-    document.addEventListener('DOMContentLoaded', () => {
-      ladeProfil(); ladeEinstellungen(); ladePaketInfo();
-      const hash = location.hash.replace('#','');
-      if (hash) { const el = document.querySelector(`[data-section="${hash}"]`); if (el) wechsleSektion(hash, el); }
-    });
-
-    function ladeProfil() {
-      const email = localStorage.getItem('prova_sv_email') || '';
-      const user  = JSON.parse(localStorage.getItem('prova_user') || '{}');
-      const name  = user.user_metadata?.full_name || email.split('@')[0] || 'Sachverständiger';
-      const paket = localStorage.getItem('prova_paket') || 'trial';
-      document.getElementById('es-avatar-email').textContent = email;
-      document.getElementById('es-avatar-name').textContent  = name;
-      const initials = name.split(' ').map(w => w[0]).join('').toUpperCase().substring(0,2) || 'SV';
-      document.getElementById('es-avatar-initials').textContent = initials;
-      const badge = document.getElementById('es-avatar-badge');
-      badge.className = `es-avatar-badge ${paket}`;
-      badge.textContent = { solo:'Solo', team:'Team', trial:'Trial — 14 Tage' }[paket] || paket;
-      const prof = JSON.parse(localStorage.getItem('prova_profil') || '{}');
-      ['vorname','nachname','titel','beruf','firma','strasse','plz','ort','telefon','website','ustid'].forEach(f => {
-        const el = document.getElementById(`es-${f}`); if (el && prof[f]) el.value = prof[f];
-      });
-    }
-
-    function ladePaketInfo() {
-      const paket = localStorage.getItem('prova_paket') || 'trial';
-      const card = document.getElementById('es-paket-card');
-      if (paket === 'solo') {
-        card?.classList.replace('trial','solo');
-        document.getElementById('es-paket-icon').textContent = '⭐';
-        document.getElementById('es-paket-name').textContent = 'Solo — 149 €/Monat';
-        document.getElementById('es-paket-features').textContent = 'Unbegrenzte Gutachten · KI · JVEG · E-Rechnung';
-        document.getElementById('es-upgrade-btn').textContent = '⬆️ Auf Team upgraden';
-      } else if (paket === 'team') {
-        card?.classList.replace('trial','team');
-        document.getElementById('es-paket-icon').textContent = '👥';
-        document.getElementById('es-paket-name').textContent = 'Team — 279 €/Monat';
-        document.getElementById('es-paket-features').textContent = 'Alle Solo-Features · 5 Nutzer · White-Label · ZUGFeRD';
-        const btn = document.getElementById('es-upgrade-btn'); btn.textContent = '✅ Aktiv'; btn.disabled = true;
-        document.getElementById('es-team-btn').disabled = false;
-      }
-    }
-
-    function ladeEinstellungen() {
-      try {
-        const s = JSON.parse(localStorage.getItem(ES_KEY) || '{}');
-        ['kompakt','animationen','auto_quality','lernmodus','inline_vorschlaege','bn_fristen','bn_zahlung','bn_stillezeit'].forEach(k => {
-          const el = document.getElementById('es-' + k.replace(/_/g,'-')); if (el && s[k] !== undefined) el.checked = s[k];
-        });
-        ['theme','fontsize','startseite','ki_modell','diktat_sprache','timeout'].forEach(k => {
-          const el = document.getElementById('es-' + k.replace(/_/g,'-')); if (el && s[k]) el.value = s[k];
-        });
-        const ki = document.getElementById('es-ki-kontext'); if (ki && s.ki_kontext) ki.value = s.ki_kontext;
-      } catch(e) {}
-    }
-
-    function saveToggle(key, value) {
-      try { const s = JSON.parse(localStorage.getItem(ES_KEY)||'{}'); s[key]=value; localStorage.setItem(ES_KEY,JSON.stringify(s)); } catch(e) {}
-      zeigeToast('Einstellung gespeichert');
-    }
-    function saveSelect(key, value) {
-      try { const s = JSON.parse(localStorage.getItem(ES_KEY)||'{}'); s[key]=value; localStorage.setItem(ES_KEY,JSON.stringify(s)); } catch(e) {}
-      zeigeToast('Einstellung gespeichert');
-    }
-    function markiereGeaendert() {
-      if (!geaendert) { geaendert=true; document.getElementById('es-save-bar').classList.add('sichtbar'); }
-    }
-    function speichereAlles() {
-      const prof = {};
-      ['vorname','nachname','titel','beruf','firma','strasse','plz','ort','telefon','website','ustid'].forEach(f => {
-        const el = document.getElementById(`es-${f}`); if (el) prof[f] = el.value;
-      });
-      localStorage.setItem('prova_profil', JSON.stringify(prof));
-      try {
-        const s = JSON.parse(localStorage.getItem(ES_KEY)||'{}');
-        const ki = document.getElementById('es-ki-kontext'); if (ki) s.ki_kontext = ki.value;
-        localStorage.setItem(ES_KEY, JSON.stringify(s));
-      } catch(e) {}
-      geaendert = false;
-      document.getElementById('es-save-bar').classList.remove('sichtbar');
-      zeigeToast('✅ Einstellungen gespeichert');
-    }
-    function verwerfAenderungen() {
-      ladeProfil(); ladeEinstellungen(); geaendert=false;
-      document.getElementById('es-save-bar').classList.remove('sichtbar');
-    }
-
-    function wechsleSektion(key, el) {
-      document.querySelectorAll('.es-sidebar-item').forEach(i => i.classList.remove('aktiv'));
-      document.querySelectorAll('.es-section').forEach(s => s.classList.remove('aktiv'));
-      el.classList.add('aktiv');
-      document.getElementById(`es-sec-${key}`)?.classList.add('aktiv');
-      history.replaceState(null,'',`#${key}`);
-    }
-
-    function aendereTheme(v) { saveSelect('theme',v); document.documentElement.setAttribute('data-theme',v); }
-    function aendereFontsize(v) { saveSelect('fontsize',v); document.documentElement.style.fontSize = v+'px'; }
-
-    function passwortReset() {
-      const email = localStorage.getItem('prova_sv_email');
-      alert(`Reset-Mail an ${email||'deine E-Mail'} gesendet.\nBitte nutze den "Passwort vergessen"-Link auf der Login-Seite.`);
-    }
-    function provaAbmelden() {
-      if (!confirm('Wirklich abmelden?')) return;
-      Object.keys(localStorage).filter(k => k.startsWith('prova_')||k.startsWith('gotrue_')).forEach(k => localStorage.removeItem(k));
-      sessionStorage.clear();
-      window.location.href = 'app-login.html';
-    }
-    function oeffneStripePortal() { window.open('https://billing.stripe.com/p/login/prova','_blank'); }
-    function exportAlleFresten() { zeigeToast('📅 ICS-Export gestartet …'); }
-    function exportMeineDaten() {
-      const daten = {};
-      for (let i=0;i<localStorage.length;i++) {
-        const k=localStorage.key(i); if(k.startsWith('prova_')) { try{daten[k]=JSON.parse(localStorage.getItem(k));}catch(e){daten[k]=localStorage.getItem(k);} }
-      }
-      const blob=new Blob([JSON.stringify(daten,null,2)],{type:'application/json'});
-      const url=URL.createObjectURL(blob); const a=document.createElement('a');
-      a.href=url; a.download=`PROVA-Meine-Daten-${new Date().toISOString().split('T')[0]}.json`; a.click(); URL.revokeObjectURL(url);
-    }
-    function loescheLernpool() {
-      if(!confirm('KI-Lernpool leeren?')) return;
-      localStorage.removeItem('prova_ki_lernpool'); localStorage.removeItem('prova_ki_vokabular');
-      zeigeToast('🗑️ Lernpool geleert');
-    }
-    function leerCache() {
-      ['prova_fristen_cache','prova_honorar_cache','prova_qs_last'].forEach(k=>localStorage.removeItem(k));
-      if('caches' in window) caches.keys().then(names=>names.forEach(n=>caches.delete(n)));
-      zeigeToast('🧹 Cache geleert');
-    }
-    function kontoDatenLoeschen() {
-      const email=localStorage.getItem('prova_sv_email')||'';
-      const best=prompt(`⚠️ Konto löschen — bestätige mit deiner E-Mail:\n${email}`);
-      if(best!==email){alert('E-Mail stimmt nicht überein.');return;}
-      alert('Löschanfrage gesendet. Bestätigung per E-Mail gemäß DSGVO Art. 17.');
-    }
-
-    let toastTimer;
-    function zeigeToast(text) {
-      const el=document.getElementById('es-toast'); if(!el)return;
-      el.textContent=text; el.classList.add('sichtbar');
-      clearTimeout(toastTimer); toastTimer=setTimeout(()=>el.classList.remove('sichtbar'),2500);
-    }
-  </script>
-
-<script src="prova-context.js" defer></script>
-<script src="prova-error-handler.js" defer></script>
-<script src="support-chat.js" defer></script>
-<script src="sw-register.js" defer></script>
+loadAll();
+applyPaket();
+</script>
+<script src="prova-notifications.js" defer></script>
 </body>
 </html>

@@ -70,6 +70,8 @@
   ];
   // GUTACHTEN: Alle Werkzeuge die direkt im Gutachten-Workflow verwendet werden
   var GUTACHTEN = [
+    { href: 'gericht-auftrag.html',     icon: '🏛️', label: 'Gerichtsauftrag' },
+    { href: 'ergaenzung.html',          icon: '🧩', label: 'Ergänzung (§411)' },
     { href: 'normen.html',            icon: '📚', label: 'Normen' },
     { href: 'textbausteine.html',     icon: '📝', label: 'Textbausteine' },
     { href: 'positionen.html',        icon: '🗂️', label: 'Positionen & Kosten' },
@@ -77,6 +79,7 @@
   // ABRECHNUNG: Alles was mit Honorar + Rechnung zu tun hat
   var ABRECHNUNG = [
     { href: 'rechnungen.html',    icon: '💶', label: 'Rechnungen' },
+    { href: 'mahnwesen.html',     icon: '📨', label: 'Mahnwesen' },
     { href: 'jveg.html',          icon: '⚖️', label: 'JVEG-Rechner' },
     { href: 'erechnung.html',     icon: '📄', label: 'E-Rechnung' },
     { href: 'statistiken.html',   icon: '📈', label: 'Statistiken' },
@@ -86,6 +89,7 @@
     { href: 'briefvorlagen.html', icon: '✉️', label: 'Briefe & Vorlagen' },
     { href: 'kontakte.html',      icon: '👥', label: 'Kontakte' },
     { href: 'baubegleitung.html', icon: '🏗️', label: 'Baubegleitung' },
+    { href: 'nachforderung-unterlagen.html', icon: '📎', label: 'Unterlagen anfordern' },
     { href: 'hilfe.html',         icon: '❓', label: 'Hilfe' },
   ];
   // VERWALTUNG: Selten genutzte Admin-Funktionen

@@ -7,7 +7,7 @@ const nodemailer = require('nodemailer');
 exports.handler = async function(event) {
   const cors = {
     'Content-Type': 'application/json',
-    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Origin': process.env.URL || 'https://prova-systems.de',
     'Access-Control-Allow-Headers': 'Content-Type, X-PROVA-Secret',
     'Access-Control-Allow-Methods': 'POST, OPTIONS'
   };

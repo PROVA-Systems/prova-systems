@@ -11,7 +11,7 @@ if (!window.showToast && window.zeigToast) window.showToast = window.zeigToast;
 (function(){
 'use strict';
 
-var WEBHOOK_S6='https://hook.eu1.make.com/b2tsqcvjgxhk9lrv3yyo9qht46k16kcq';
+var MAKE_KEY_S6='s6';
 var AT_BASE='appJ7bLlAHZoxENWE';
 var AT_RECHNUNGEN='tblF6MS7uiFAJDjiT';
 var AT_FAELLE='tblSxV8bsXwd1pwa0';
@@ -29,6 +29,14 @@ if(!localStorage.getItem('prova_user')){window.location.href='app-login.html';re
 var svEmail=localStorage.getItem('prova_sv_email')||'';
 var alleRechnungen=[];
 var posCounter=0;
+
+async function makeProxy(key, payload){
+  return fetch('/.netlify/functions/make-proxy', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ key: key, payload: payload || {} })
+  });
+}
 
 /* ─── JVEG PREFILL ─── */
 (function(){
@@ -108,6 +116,61 @@ var posCounter=0;
   })();
 })();
 
+/* ─── BAUBEGLEITUNG PREFILL (Zwischenrechnung) ─── */
+(function(){
+  var params=new URLSearchParams(window.location.search);
+  if(params.get('from')!=='bb')return;
+  var raw=null;try{raw=JSON.parse(sessionStorage.getItem('prova_rechnung_prefill_bb')||'null');}catch(e){}
+  if(!raw||raw.typ!=='BB')return;
+
+  try{
+    // Form reset
+    if(typeof resetForm==='function') resetForm();
+  }catch(e){}
+
+  // Typ setzen
+  var typ = raw.rechnungstyp || raw.rechnung_type || raw.rechnung_typ || 'Stunde';
+  var typEl = document.getElementById('rechnung-typ');
+  if(typEl){ typEl.value = typ; }
+  try{ if(typeof onTypChange==='function') onTypChange(); }catch(e){}
+
+  // Felder setzen
+  if(raw.aktenzeichen){
+    var azEl=document.getElementById('r-aktenzeichen');
+    if(azEl){azEl.value=raw.aktenzeichen;azEl.classList.add('prefilled');}
+  }
+  if(raw.auftraggeber_name){
+    var agEl=document.getElementById('r-auftraggeber');
+    if(agEl){agEl.value=raw.auftraggeber_name;agEl.classList.add('prefilled');}
+  }
+  if(raw.auftraggeber_email){
+    var emailEl=document.getElementById('r-email');
+    if(emailEl){emailEl.value=raw.auftraggeber_email;emailEl.classList.add('prefilled');}
+  }
+  if(raw.rechnungsdatum){
+    var dEl=document.getElementById('r-datum');
+    if(dEl){dEl.value=raw.rechnungsdatum;dEl.classList.add('prefilled');}
+  }
+
+  // Position(en)
+  try{ document.getElementById('positionen-container').innerHTML=''; posCounter=0; }catch(e){}
+  if(raw.position){
+    addPosition(raw.position.bezeichnung||'Baubegleitung (Zwischenrechnung)', raw.position.menge||1, raw.position.ep||0);
+  } else {
+    addPosition('Baubegleitung (Zwischenrechnung)', 1, 0);
+  }
+
+  // MwSt
+  if(typeof raw.mit_mwst !== 'undefined'){
+    document.getElementById('ust-toggle').checked = raw.mit_mwst !== false;
+  }
+  berechneBrutto();
+
+  // Aufräumen + Hinweis
+  sessionStorage.removeItem('prova_rechnung_prefill_bb');
+  try{ if(typeof zeigToast==='function') zeigToast('Baubegleitung-Zwischenrechnung vorausgefüllt ✅'); }catch(e){}
+})();
+
 window.verwerfeJveg=function(){
   document.getElementById('jveg-banner').classList.remove('show');
   resetForm();
@@ -172,7 +235,7 @@ window.berechneBrutto=berechneBrutto;
 /* ─── TYP-CHANGE ─── */
 window.onTypChange=function(){
   var typ=document.getElementById('rechnung-typ').value;
-  document.getElementById('form-titel').textContent={JVEG:'JVEG-Rechnung',Pauschal:'Pauschalrechnung',Stunde:'Stundenrechnung',Kurz:'Kurzrechnung',Gutschrift:'Gutschrift'}[typ]||'Neue Rechnung';
+  document.getElementById('form-titel').textContent={JVEG:'JVEG-Rechnung',Pauschal:'Pauschalrechnung',Stunde:'Stundenrechnung',Kurz:'Kurzrechnung',Telefon:'Telefonberatung',Beratung:'Kurzberatung',Gutschrift:'Gutschrift'}[typ]||'Neue Rechnung';
   // Standardposition je Typ
   if(document.querySelectorAll('#positionen-container .pos-row').length===0){
     if(typ==='JVEG'){addPosition('Gutachterhonorar §9 JVEG',1,0);
@@ -183,6 +246,8 @@ window.onTypChange=function(){
     else if(typ==='Pauschal')addPosition('Gutachterhonorar (Pauschal)',1,0);
     else if(typ==='Stunde')addPosition('Sachverständigenleistung',1,95);
     else if(typ==='Kurz')addPosition('Kurzgutachten',1,0);
+    else if(typ==='Telefon')addPosition('Telefonberatung',1,0);
+    else if(typ==='Beratung')addPosition('Kurzberatung',1,0);
     else addPosition('Position',1,0);
   }
 };
@@ -210,7 +275,7 @@ window.erstelleRechnung=async function(){
   var payload=bauePayload(reNr,betraege,false);
 
   try{
-    var res=await fetch(WEBHOOK_S6,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    var res=await makeProxy(MAKE_KEY_S6, payload);
     if(res.ok){
       zeigToast('✅ Rechnung '+reNr+' erstellt — PDF folgt per E-Mail');
       speichereLokal(reNr,ag,betraege.brutto,'Offen',datum);
@@ -233,7 +298,7 @@ window.sendePerEmail=async function(){
   var reNr=genRechnungsnummer();
   var payload=bauePayload(reNr,betraege,true);
   try{
-    await fetch(WEBHOOK_S6,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    await makeProxy(MAKE_KEY_S6, payload);
     zeigToast('📧 Rechnung '+reNr+' wird per E-Mail versendet');
     speichereLokal(reNr,document.getElementById('r-auftraggeber').value.trim(),betraege.brutto,'Offen',document.getElementById('r-datum').value);
     await ladeListe();
@@ -330,7 +395,16 @@ async function ladeListe(){
   setText('liste-count',alleRechnungen.length+' Rechnungen');
 
   if(alleRechnungen.length===0){
-    liste.innerHTML='<div class="liste-empty">Noch keine Rechnungen.<br><br><a href="jveg.html" style="color:var(--accent);font-size:12px;">JVEG-Rechner öffnen →</a></div>';
+    liste.innerHTML=''
+      +'<div class="liste-empty" style="text-align:center;padding:22px 18px;">'
+      +'<div style="font-size:34px;line-height:1;margin-bottom:10px;">🧾</div>'
+      +'<div style="font-size:14px;font-weight:700;margin-bottom:6px;">Noch keine Rechnungen</div>'
+      +'<div style="font-size:12px;color:var(--text3);margin-bottom:14px;">Starten Sie mit Ihrer ersten Rechnung oder nutzen Sie den JVEG‑Rechner.</div>'
+      +'<div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">'
+      +'<button onclick="scrollToRechnungForm()" style="padding:8px 14px;border-radius:8px;background:rgba(79,142,247,.12);border:1px solid rgba(79,142,247,.25);color:var(--accent);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">Erste Rechnung erstellen →</button>'
+      +'<a href="jveg.html" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:8px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:var(--text);font-size:12px;font-weight:700;text-decoration:none;">⚖️ JVEG‑Rechner</a>'
+      +'</div>'
+      +'</div>';
     return;
   }
   liste.innerHTML=alleRechnungen.map(function(r){
@@ -342,6 +416,17 @@ async function ladeListe(){
       +'</div>';
   }).join('');
 }
+
+window.scrollToRechnungForm = function() {
+  try {
+    var el = document.getElementById('form-card');
+    if (el && el.scrollIntoView) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    setTimeout(function(){
+      var f = document.getElementById('rechnung-typ') || document.querySelector('#form-card input, #form-card select, #form-card textarea');
+      if (f && f.focus) f.focus();
+    }, 250);
+  } catch(e) {}
+};
 
 window.waehleSpalte=function(id){
   document.querySelectorAll('.rechnung-item').forEach(function(el){el.classList.remove('selected');});
@@ -519,16 +604,16 @@ async function supSendModal(){
   var btn=document.getElementById('sup-btn');
   btn.disabled=true;btn.textContent='⏳ Wird gesendet…';
   try{
-    await fetch('https://hook.eu1.make.com/lktuhugwcg5v37ib6bdaxjb1uiplnu8v',{
+    await fetch('/.netlify/functions/make-proxy',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
+      body:JSON.stringify({key:'support',payload:{
         betreff:b,
         nachricht:n,
         sv_email:localStorage.getItem('prova_sv_email')||'',
         paket:localStorage.getItem('prova_paket')||'Solo',
         seite:window.location.pathname
-      })
+      }})
     });
     document.getElementById('support-form-body').style.display='none';
     document.getElementById('sup-ok').style.display='block';
@@ -539,12 +624,10 @@ async function supSendModal(){
   }
 }
 /* ══════════════════════════════════════════════════════════════
-   F1 — RECHNUNGS-PDF GENERIERUNG
-   Webhook: https://hook.eu1.make.com/lo0es88zq7rxmnx3jiwoonrv2chn47zy
-   Szenario: PROVA F1 (ID: 5192002)
+   F1 — RECHNUNGS-PDF GENERIERUNG (via Make proxy key: f1)
 ══════════════════════════════════════════════════════════════ */
 
-var WEBHOOK_F1 = 'https://hook.eu1.make.com/lo0es88zq7rxmnx3jiwoonrv2chn47zy';
+var MAKE_KEY_F1 = 'f1';
 
 window.rechnungPDFGenerieren = async function(rechnungId) {
   if (!rechnungId) { if(typeof zeigToast==='function') zeigToast('Keine Rechnungs-ID', 'error'); return; }
@@ -607,9 +690,9 @@ window.rechnungPDFGenerieren = async function(rechnungId) {
   };
 
   try {
-    var wh = await fetch(WEBHOOK_F1, {
+    var wh = await fetch('/.netlify/functions/make-proxy', {
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify(payload)
+      body: JSON.stringify({ key: MAKE_KEY_F1, payload: payload })
     });
     var result = await wh.json();
     if (result.success && result.pdf_url) {

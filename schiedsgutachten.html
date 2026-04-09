@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>PROVA — Schiedsgutachten</title>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Instrument+Sans:wght@400;500;600&family=Montserrat:wght@500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{--bg:#0d0f14;--bg2:#13161d;--text:#e8eaf0;--text2:#9da3b4;--accent:#4f8ef7;--border:rgba(255,255,255,0.1);--r:12px;}
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:'Montserrat',system-ui,sans-serif;background:var(--bg);color:var(--text2);min-height:100vh;font-size:14px;line-height:1.55;}
+    a{color:inherit;text-decoration:none;}
+    .topbar{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 20px;height:52px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;}
+    .logo{font-family:'Fraunces',serif;font-weight:700;font-size:18px;color:var(--text);} .logo span{color:var(--accent);}
+    .main{max-width:880px;margin:0 auto;padding:28px 20px;}
+    h1{font-family:'Fraunces',serif;font-size:26px;color:var(--text);margin-bottom:8px;}
+    .sub{margin-bottom:22px;font-size:13px;color:var(--text2);}
+    .card{background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:var(--r);padding:20px;margin-bottom:18px;}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+    @media(max-width:640px){.row{grid-template-columns:1fr;}}
+    label{display:block;font-size:12px;font-weight:700;color:var(--text2);margin-bottom:6px;}
+    input,select{width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:rgba(0,0,0,.2);color:var(--text);font:inherit;}
+    .split{display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin:14px 0;}
+    .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 1rem;border-radius:12px;border:1px solid rgba(255,255,255,0.12);background:rgba(79,142,247,0.2);color:#fff;font-weight:800;cursor:pointer;font:inherit;}
+    .btn:hover{background:rgba(79,142,247,0.3);}
+    .btn-sec{background:rgba(255,255,255,0.06);}
+    .hint{font-size:12px;color:var(--text2);margin-top:12px;line-height:1.5;}
+    .mono{font-family:ui-monospace,monospace;font-size:12px;background:rgba(0,0,0,.25);padding:12px;border-radius:8px;white-space:pre-wrap;max-height:160px;overflow:auto;}
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <a href="dashboard.html" class="logo">PRO<span>VA</span></a>
+    <nav style="display:flex;gap:12px;padding-right:8px;">
+      <a href="rechnungen.html" style="font-size:13px;color:var(--text2);">Rechnungen</a>
+      <a href="app-starter.html" style="font-size:13px;color:var(--text2);">Gutachten</a>
+    </nav>
+  </div>
+  <main class="main">
+    <h1>Schiedsgutachten</h1>
+    <p class="sub">Zwei Auftraggeber, Kostenaufteilung und zwei Rechnungen mit einem Klick. Neutralitätsvermerk für das Gutachten.</p>
+
+    <div class="card">
+      <div class="row">
+        <div>
+          <label for="ag-a">Partei A (Auftraggeber)</label>
+          <input id="ag-a" type="text" placeholder="Name / Firma">
+        </div>
+        <div>
+          <label for="ag-b">Partei B (Auftraggeber)</label>
+          <input id="ag-b" type="text" placeholder="Name / Firma">
+        </div>
+      </div>
+      <div style="margin-top:14px;">
+        <label>Kostenaufteilung</label>
+        <div class="split">
+          <label><input type="radio" name="split" value="5050" checked> 50 / 50</label>
+          <label><input type="radio" name="split" value="custom"> Individuell</label>
+        </div>
+        <div class="row" id="custom-split" style="display:none;margin-top:8px;">
+          <div>
+            <label for="pct-a">Anteil A (%)</label>
+            <input id="pct-a" type="number" min="0" max="100" step="1" value="50">
+          </div>
+          <div>
+            <label for="pct-b">Anteil B (%)</label>
+            <input id="pct-b" type="number" min="0" max="100" step="1" value="50">
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:14px;">
+        <label for="netto">Gesamt netto (€) — Aufteilung</label>
+        <input id="netto" type="number" step="0.01" value="1000" min="0">
+      </div>
+      <div style="margin-top:18px;display:flex;flex-wrap:wrap;gap:10px;">
+        <button type="button" class="btn" id="btn-zwei-re">Zwei Rechnungen vorbereiten</button>
+        <button type="button" class="btn btn-sec" id="btn-neutral">Neutralitätsvermerk ins Gutachten</button>
+      </div>
+      <p class="hint">„Zwei Rechnungen“ speichert zwei Rechnungsentwürfe in <code>sessionStorage</code> und öffnet die Rechnungsseite. „Neutralitätsvermerk“ übernimmt den Text in die App (Transkript).</p>
+      <div id="preview" class="mono" style="display:none;margin-top:12px;"></div>
+    </div>
+  </main>
+  <script src="prova-notifications.js" defer></script>
+  <script>
+  (function(){
+    var splitCustom = document.getElementById('custom-split');
+    document.querySelectorAll('input[name="split"]').forEach(function(r){
+      r.addEventListener('change', function(){
+        splitCustom.style.display = r.value === 'custom' ? 'grid' : 'none';
+      });
+    });
+
+    function neutralText() {
+      var a = document.getElementById('ag-a').value.trim() || 'Partei A';
+      var b = document.getElementById('ag-b').value.trim() || 'Partei B';
+      return 'Das vorliegende Schiedsgutachten wurde im Auftrag beider Parteien (' + a + ' und ' + b + ') erstellt. Der Sachverständige ist gegenüber beiden Parteien unverparteilich tätig und erhält keine Anweisungen zu einer einseitigen Ergebnisorientierung.';
+    }
+
+    document.getElementById('btn-neutral').addEventListener('click', function(){
+      var t = neutralText();
+      try { localStorage.setItem('prova_neutralitaets_block', t); } catch(e) {}
+      alert('Neutralitätsvermerk wurde gespeichert. Beim nächsten Öffnen der App wird er ins Transkript übernommen.');
+      window.location.href = 'app-starter.html';
+    });
+
+    document.getElementById('btn-zwei-re').addEventListener('click', function(){
+      var netto = parseFloat(document.getElementById('netto').value) || 0;
+      var a = document.getElementById('ag-a').value.trim();
+      var b = document.getElementById('ag-b').value.trim();
+      if (!a || !b) { alert('Bitte beide Auftraggeber eintragen.'); return; }
+      var pa = 0.5, pb = 0.5;
+      if (document.querySelector('input[name="split"]:checked').value === 'custom') {
+        pa = (parseFloat(document.getElementById('pct-a').value) || 0) / 100;
+        pb = (parseFloat(document.getElementById('pct-b').value) || 0) / 100;
+        var s = pa + pb;
+        if (Math.abs(s - 1) > 0.02) { alert('Anteile sollen zusammen 100 % ergeben.'); return; }
+      }
+      var n1 = (netto * pa).toFixed(2);
+      var n2 = (netto * pb).toFixed(2);
+      var p = {
+        typ: 'schieds',
+        teil: [
+          { ag: a, netto: n1, text: 'Anteil Schiedsgutachten gem. Kostenaufteilung: ' + Math.round(pa * 100) + '%' },
+          { ag: b, netto: n2, text: 'Anteil Schiedsgutachten gem. Kostenaufteilung: ' + Math.round(pb * 100) + '%' }
+        ]
+      };
+      try { sessionStorage.setItem('prova_schieds_rechnungen', JSON.stringify(p)); } catch(e) {}
+      var pr = document.getElementById('preview');
+      pr.style.display = 'block';
+      pr.textContent = JSON.stringify(p, null, 2);
+      window.location.href = 'rechnungen.html?schieds=1';
+    });
+  })();
+  </script>
+</body>
+</html>

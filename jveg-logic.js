@@ -270,15 +270,15 @@ async function supSendModal(){
   var btn=document.getElementById('sup-btn');
   btn.disabled=true;btn.textContent='⏳ Wird gesendet…';
   try{
-    await fetch('https://hook.eu1.make.com/lktuhugwcg5v37ib6bdaxjb1uiplnu8v',{
+    await fetch('/.netlify/functions/make-proxy',{
       method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
+      body:JSON.stringify({key:'support',payload:{
         betreff:b,nachricht:n,
         sv_email:localStorage.getItem('prova_sv_email')||'',
         paket:localStorage.getItem('prova_paket')||'Solo',
         seite:window.location.pathname,
         ts:new Date().toISOString()
-      })
+      }})
     });
   }catch(e){}
   document.getElementById('support-form-body').style.display='none';
@@ -693,9 +693,9 @@ window.erstelleJVEGRechnungPDF = async function() {
   
   try {
     // Über Make G3-Webhook oder direkt PDFMonkey
-    var res = await fetch('https://hook.eu1.make.com/44kqx7eo142aw7warqao4c4wqo1nw158', {
+    var res = await fetch('/.netlify/functions/make-proxy', {
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ aktion: 'jveg_pdf', ...daten })
+      body: JSON.stringify({ key: 's3', payload: Object.assign({ aktion: 'jveg_pdf' }, daten) })
     });
     if(typeof zeigToast==='function') zeigToast('JVEG-Rechnung PDF erstellt ✅');
   } catch(e) {

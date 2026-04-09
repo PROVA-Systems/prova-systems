@@ -17,6 +17,31 @@ exports.handler = async (event) => {
     return { statusCode: 405, headers: corsHeaders(), body: 'Method Not Allowed' };
   }
 
+  // Nur eingeloggte User (JWT via Netlify Identity)
+  const jwtEmail = event.clientContext && event.clientContext.user && event.clientContext.user.email
+    ? String(event.clientContext.user.email).toLowerCase()
+    : '';
+  if (!jwtEmail) {
+    return { statusCode: 401, headers: corsHeaders(), body: JSON.stringify({ error: 'UNAUTHORIZED' }) };
+  }
+
+  // ── Rate limit (token bucket, in-memory) ──
+  // Default: 12 req/min/user (tunable via ENV)
+  const CAPACITY = parseInt(process.env.WHISPER_RATE_LIMIT_PER_MIN || '12', 10);
+  const REFILL_PER_SEC = CAPACITY / 60;
+  global.__provaWhisperBucket = global.__provaWhisperBucket || new Map();
+  const now = Date.now();
+  const b = global.__provaWhisperBucket.get(jwtEmail) || { tokens: CAPACITY, last: now };
+  const elapsedSec = Math.max(0, (now - b.last) / 1000);
+  b.tokens = Math.min(CAPACITY, b.tokens + elapsedSec * REFILL_PER_SEC);
+  b.last = now;
+  if (b.tokens < 1) {
+    global.__provaWhisperBucket.set(jwtEmail, b);
+    return { statusCode: 429, headers: corsHeaders(), body: JSON.stringify({ error: 'RATE_LIMIT' }) };
+  }
+  b.tokens -= 1;
+  global.__provaWhisperBucket.set(jwtEmail, b);
+
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
     return { statusCode: 500, headers: corsHeaders(), body: JSON.stringify({ error: 'OPENAI_API_KEY nicht konfiguriert' }) };
@@ -44,6 +69,12 @@ exports.handler = async (event) => {
   // Dateigröße prüfen (Max 25MB = ~33MB Base64)
   if (audioBase64.length > 33 * 1024 * 1024) {
     return { statusCode: 413, headers: corsHeaders(), body: JSON.stringify({ error: 'Audio zu groß (max 25MB)' }) };
+  }
+
+  // MIME-Type Whitelist (nur audio/*, video/*)
+  const mt = String(mediaType || '').toLowerCase();
+  if (!(mt.startsWith('audio/') || mt.startsWith('video/'))) {
+    return { statusCode: 415, headers: corsHeaders(), body: JSON.stringify({ error: 'Unsupported mediaType' }) };
   }
 
   try {
@@ -152,8 +183,8 @@ exports.handler = async (event) => {
 function corsHeaders() {
   return {
     'Content-Type': 'application/json',
-    'Access-Control-Allow-Origin':  '*',
-    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Origin':  process.env.URL || 'https://prova-systems.de',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
   };
 }

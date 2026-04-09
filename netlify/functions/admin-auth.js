@@ -12,8 +12,8 @@ const bcrypt = require('bcryptjs');
 
 exports.handler = async (event) => {
   const headers = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Origin': process.env.URL || 'https://prova-systems.de',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     'Content-Type': 'application/json',
   };
 
@@ -21,6 +21,15 @@ exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') return { statusCode: 405, headers, body: '{"error":"Method Not Allowed"}' };
 
   try {
+    // Nur mit verifiziertem Netlify-Identity User (JWT)
+    const jwtEmail = event.clientContext && event.clientContext.user && event.clientContext.user.email
+      ? String(event.clientContext.user.email).toLowerCase()
+      : '';
+    const isAdmin = jwtEmail.endsWith('@prova-systems.de') || jwtEmail === 'admin@prova-systems.de';
+    if (!isAdmin) {
+      return { statusCode: 401, headers, body: JSON.stringify({ ok: false, error: 'UNAUTHORIZED' }) };
+    }
+
     const { password } = JSON.parse(event.body || '{}');
 
     if (!password) {

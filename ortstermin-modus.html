@@ -949,13 +949,19 @@ async function transkribiere(blob){
       reader.onerror = rej;
       reader.readAsDataURL(blob);
     });
+    var _spr = 'de';
+    try {
+      var _es = JSON.parse(localStorage.getItem('prova_einstellungen') || '{}');
+      var _d = _es.diktat_sprache || 'de';
+      _spr = (_d && _d.indexOf('de') === 0) ? 'de' : (_d.split('-')[0] || 'de');
+    } catch (e) {}
     var res = await fetch('/.netlify/functions/whisper-diktat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         audioBase64: base64,
         mediaType: blob.type || 'audio/webm',
-        sprache: 'de',
+        sprache: _spr,
         schadenart: _schadenart || ''
       })
     });
@@ -1086,10 +1092,12 @@ window.fotoHinzufuegen = function(event){
   files.forEach(function(file){
     var reader = new FileReader();
     reader.onload = function(e){
-      var foto = { id: Date.now() + Math.random(), dataUrl: e.target.result, caption: '', datei: file.name };
+      var foto = { id: Date.now() + Math.random(), dataUrl: e.target.result, caption: '', datei: file.name, ki: null };
       _fotos.push(foto);
       renderFotoGrid();
       speichereDaten();
+      // Auto-KI Analyse (Vision) direkt nach Upload
+      try { analysiereFotoAuto(foto); } catch(ex) {}
     };
     reader.readAsDataURL(file);
   });
@@ -1105,13 +1113,64 @@ function renderFotoGrid(){
   label.textContent = _fotos.length ? _fotos.length + ' Foto' + (_fotos.length===1?'':'s') : 'Keine Fotos';
 
   grid.innerHTML = _fotos.map(function(f, i){
+    var ki = f.ki || {};
+    var hints = '';
+    if (ki.messwert_hinweis) {
+      hints += '<button class="btn-mini" onclick="event.stopPropagation();uebernehmeFotoMesswert('+i+')" style="margin-top:6px;padding:6px 10px;border-radius:10px;border:1px solid rgba(16,185,129,.2);background:rgba(16,185,129,.08);color:#10b981;font-size:11px;font-weight:800;cursor:pointer;">💧 Messwert-Hinweis übernehmen</button>';
+    }
+    if (ki.normen_hinweis) {
+      hints += '<div style="margin-top:6px;font-size:11px;color:rgba(139,92,246,.9);font-weight:700;">📚 ' + escHTML(ki.normen_hinweis) + '</div>';
+    }
     return '<div class="foto-item" id="foto-'+f.id+'">' +
       '<img src="'+f.dataUrl+'" alt="Foto '+( i+1)+'" loading="lazy">' +
       '<button class="foto-item-del" onclick="loescheFoto(\''+f.id+'\')" title="Foto löschen">✕</button>' +
       (f.caption ? '<div class="foto-item-caption">'+escHTML(f.caption)+'</div>' : '') +
+      (ki && ki.beschreibung ? '<div style="margin-top:6px;font-size:11px;color:var(--text3);line-height:1.4;">' + escHTML(ki.beschreibung) + '</div>' : '') +
+      hints +
       '</div>';
   }).join('');
 }
+
+async function analysiereFotoAuto(foto){
+  if (!foto || !foto.dataUrl) return;
+  // nicht doppelt
+  if (foto.ki && (foto.ki.beschreibung || foto.ki.normen_hinweis || foto.ki.messwert_hinweis)) return;
+  try {
+    var base64 = foto.dataUrl.split(',')[1];
+    var mediaType = foto.dataUrl.split(';')[0].split(':')[1] || 'image/jpeg';
+    var res = await fetch('/.netlify/functions/ki-proxy', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ aufgabe:'foto_analyse', image_base64: base64, mediaType: mediaType, az: _az, schadensart: _schadenart })
+    });
+    var data = await res.json().catch(function(){return {};});
+    if (res.ok && data) {
+      foto.ki = data;
+      if (!foto.caption && data.beschreibung) foto.caption = data.beschreibung;
+      renderFotoGrid();
+      speichereDaten();
+    }
+  } catch(e) {}
+}
+
+window.uebernehmeFotoMesswert = function(idx){
+  try{
+    var f = _fotos[idx];
+    if(!f || !f.ki || !f.ki.messwert_hinweis) return;
+    // Messwerte Panel öffnen
+    try { var t=document.querySelector('.ot-tab[data-panel=\"mess\"]'); if(t) zeigePanel('mess', t); else zeigePanel('mess'); } catch(e){}
+    // neue Zeile + Bauteil-Feld befüllen
+    addMesszeile('feuchte', '% u. H.');
+    setTimeout(function(){
+      var rows = document.querySelectorAll('#mess-feuchte-rows .mess-row');
+      if (!rows.length) return;
+      var last = rows[rows.length-1];
+      var inp = last.querySelector('input');
+      if (inp) inp.value = 'Foto-Hinweis: ' + String(f.ki.messwert_hinweis);
+      toast('Messwert-Hinweis übernommen', 'success');
+    }, 50);
+  }catch(e){}
+};
 
 window.loescheFoto = function(id){
   _fotos = _fotos.filter(function(f){ return String(f.id) !== String(id); });
@@ -1133,21 +1192,22 @@ window.analysiereAlleFotos = async function(){
   var updated = 0;
   for (var i = 0; i < _fotos.length; i++){
     var foto = _fotos[i];
-    if (foto.caption) continue; // Bereits beschriftet überspringen
+    if (foto.caption && foto.ki) continue; // Bereits beschriftet überspringen
 
     try {
       var base64 = foto.dataUrl.split(',')[1];
       var mediaType = foto.dataUrl.split(';')[0].split(':')[1] || 'image/jpeg';
 
-      var res = await fetch('/.netlify/functions/foto-captioning', {
+      var res = await fetch('/.netlify/functions/ki-proxy', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ imageBase64: base64, mediaType: mediaType, aktenzeichen: _az, schadensart: _schadenart })
+        body: JSON.stringify({ aufgabe:'foto_analyse', image_base64: base64, mediaType: mediaType, az: _az, schadensart: _schadenart })
       });
       var data = await res.json();
 
-      if (data.success && data.metadata && data.metadata.beschriftung){
-        foto.caption = data.metadata.beschriftung;
+      if (res.ok && data && (data.beschreibung || data.normen_hinweis || data.messwert_hinweis)){
+        foto.ki = data;
+        if (!foto.caption && data.beschreibung) foto.caption = data.beschreibung;
         updated++;
       }
     } catch(e){

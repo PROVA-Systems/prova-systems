@@ -37,7 +37,32 @@ function berechneFristWarnung(){
           }
           function onAuftragsartChange(val){
             var fb=document.getElementById('frist-block');
-            if(fb) fb.style.display=(val==='Gerichtsgutachten')?'block':'none';
+            if(fb) fb.style.display=(val==='Gerichtsgutachten' || String(val||'').toLowerCase().includes('eilfall'))?'block':'none';
+
+            // Eilfall / Beweissicherung: 24h Erstbericht + Template vorwählen
+            if (String(val||'').toLowerCase().includes('eilfall')) {
+              try {
+                var fd = document.getElementById('f-fristdatum');
+                if (fd) {
+                  var d = new Date(); d.setDate(d.getDate() + 1);
+                  fd.value = d.toISOString().slice(0,10);
+                  try { berechneFristWarnung(); } catch(e) {}
+                }
+              } catch(e) {}
+              try {
+                sessionStorage.setItem('prova_gutachten_vorlage_id', 'beweissicherung');
+                localStorage.setItem('prova_gutachten_vorlage_id', 'beweissicherung');
+                localStorage.setItem('prova_eilfall', '1');
+              } catch(e) {}
+              // Auto-Reminder (Make a5) — non-blocking
+              try {
+                fetch('/.netlify/functions/make-proxy', {
+                  method:'POST',
+                  headers:{'Content-Type':'application/json'},
+                  body: JSON.stringify({ key:'a5', payload:{ typ:'eilfall_24h', az:(localStorage.getItem('prova_aktiver_fall')||localStorage.getItem('prova_letztes_az')||''), frist: (document.getElementById('f-fristdatum')||{}).value || '' } })
+                }).catch(function(){});
+              } catch(e) {}
+            }
           }
           var _origSwitchAT = window.switchAuftraggeberTyp || function(){};
           window.switchAuftraggeberTyp = function(val) {
@@ -76,8 +101,8 @@ function berechneFristWarnung(){
    G1-Webhook: imn2n5xs7j251xicrmdmk17of042pt2t
    Airtable Base: appJ7bLlAHZoxENWE / tblSxV8bsXwd1pwa0
 ============================================================ */
-const WEBHOOK_G1 = 'https://hook.eu1.make.com/imn2n5xs7j251xicrmdmk17of042pt2t';
-const WEBHOOK_K1 = 'https://hook.eu1.make.com/bslfuqmlud1vo8qems5ccn5z5f2eq4dl';
+const MAKE_KEY_G1 = 'g1';
+const MAKE_KEY_K1 = 'k1';
 const AIRTABLE_BASE = 'appJ7bLlAHZoxENWE';
 const AIRTABLE_TABLE = 'tblSxV8bsXwd1pwa0';
 const AIRTABLE_SV_TABLE = 'tbladqEQT3tmx4DIB';
@@ -186,6 +211,14 @@ async function airtableProxy(method, path, body = null) {
   const data = isJson ? JSON.parse(text || '{}') : text;
   if (!res.ok) throw new Error((data && data.error) ? data.error : ('HTTP ' + res.status));
   return data;
+}
+
+async function makeProxy(key, payload) {
+  return fetch('/.netlify/functions/make-proxy', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ key: key, payload: payload || {} })
+  });
 }
 
 window.setSVEmail = async function() {
@@ -384,10 +417,7 @@ window.sendeBrief = async function(templateId) {
     const html_body = replacePlaceholders(html, vars);
     const betreff = `${t.name} · ${vars.aktenzeichen}`;
 
-    await fetch(WEBHOOK_K1, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
+    await makeProxy(MAKE_KEY_K1, {
         template_id: t.id,
         empfaenger_email: vars.empfaenger_email,
         betreff,
@@ -406,7 +436,6 @@ window.sendeBrief = async function(templateId) {
         empfaenger_plz: vars.empfaenger_plz,
         empfaenger_ort: vars.empfaenger_ort,
         datum: vars.datum
-      })
     });
     showToast('Brief versendet.', 'success');
   } catch (e) {
@@ -1301,10 +1330,7 @@ window.sendeWebhookMitOfflineFallback = async function() {
   // Offline: In Queue speichern
   if (typeof sammleDaten === 'function') {
     const daten = sammleDaten();
-    await queueHinzufügen(
-      'https://hook.eu1.make.com/imn2n5xs7j251xicrmdmk17of042pt2t',
-      daten
-    );
+    await queueHinzufügen('make:' + MAKE_KEY_G1, daten);
   }
   // UI: Offline-Feedback anzeigen (Schritt 3 bleibt sichtbar)
   const h2 = document.querySelector('#step3-content h2');
@@ -1756,10 +1782,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
 /* ══════════════════════════════════════════════════════════
    OPTION 4: WEB SPEECH (live) + WHISPER-KORREKTUR
-   S11 Webhook: https://hook.eu1.make.com/h019rspppkvc4m146sv1opxs74h9dp3x
+   Whisper legacy (via Make proxy key: s11)
    ══════════════════════════════════════════════════════════ */
 
-var WHISPER_WEBHOOK = 'https://hook.eu1.make.com/h019rspppkvc4m146sv1opxs74h9dp3x';
+var MAKE_KEY_S11 = 's11';
 var mediaRecorder = null;
 var audioChunks = [];
 var whisperLaeuft = false;
@@ -1846,10 +1872,10 @@ async function starteWhisperKorrektur(audioBlob) {
     else if(audioBlob.type.includes('wav')) filename = 'diktat.wav';
 
     // An S11 senden
-    var resp = await fetch(WHISPER_WEBHOOK, {
+    var resp = await fetch('/.netlify/functions/make-proxy', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ audio_base64: base64, filename: filename })
+      body: JSON.stringify({ key: MAKE_KEY_S11, payload: { audio_base64: base64, filename: filename } })
     });
 
     if(!resp.ok) throw new Error('S11 HTTP ' + resp.status);
@@ -3197,11 +3223,7 @@ async function sendeWebhook() {
   });
 
   try {
-    const res = await fetch(WEBHOOK_G1, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(daten)
-    });
+    const res = await makeProxy(MAKE_KEY_G1, daten);
     clearInterval(iv);
     schritte.forEach(id => {
       const el = document.getElementById(id); if (!el) return;

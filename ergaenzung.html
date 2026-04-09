@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>PROVA — Ergänzungsgutachten §411 ZPO</title>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root{--bg:#0d0f14;--bg2:#13161d;--text:#e8eaf0;--text2:#9da3b4;--accent:#4f8ef7;--border:rgba(255,255,255,0.08);}
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:'Montserrat',sans-serif;background:var(--bg);color:var(--text2);min-height:100vh;font-size:14px;}
+    .topbar{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 20px;height:52px;display:flex;align-items:center;justify-content:space-between;}
+    .logo{font-family:'Fraunces',serif;font-weight:700;font-size:18px;color:var(--text);text-decoration:none;}
+    .logo span{color:var(--accent);}
+    .topnav a{padding:6px 10px;color:var(--text2);font-size:13px;text-decoration:none;}
+    .main{max-width:800px;margin:0 auto;padding:24px;}
+    h1{font-family:'Fraunces',serif;color:var(--text);font-size:24px;margin-bottom:8px;}
+    .sub{font-size:13px;margin-bottom:18px;line-height:1.55;}
+    .card{background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:16px;}
+    label{display:block;font-size:12px;font-weight:700;margin-bottom:6px;}
+    input,textarea,select{width:100%;padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:rgba(0,0,0,0.2);color:var(--text);}
+    textarea{min-height:100px;}
+    .btn{padding:10px 16px;border-radius:10px;border:none;background:rgba(79,142,247,0.28);color:#fff;font-weight:700;cursor:pointer;margin-top:12px;}
+    .btn:hover{background:rgba(79,142,247,0.4);}
+    table{width:100%;font-size:13px;border-collapse:collapse;}
+    th,td{padding:10px 8px;border-bottom:1px solid var(--border);text-align:left;}
+    .mono{font-family:ui-monospace,monospace;}
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <a href="dashboard.html" class="logo">PRO<span>VA</span></a>
+    <nav class="topnav">
+      <a href="gericht-auftrag.html">Gericht</a>
+      <a href="akte.html">Akte</a>
+    </nav>
+  </div>
+  <main class="main">
+    <h1>Ergänzungsgutachten (§411 ZPO)</h1>
+    <p class="sub">Bezieht sich auf ein bestehendes Hauptgutachten. Vorlage: <a href="formulare/vorlage-09-ergaenzungsgutachten.html" style="color:var(--accent)">vorlage-09-ergaenzungsgutachten.html</a>. Daten werden lokal gespeichert.</p>
+
+    <div class="card">
+      <label for="parent_az">Aktenzeichen Hauptgutachten</label>
+      <input type="text" id="parent_az" placeholder="PROVA-S-2026-…">
+      <label for="grund" style="margin-top:12px;">Anlass / Beweisauftrag</label>
+      <textarea id="grund" placeholder="Kurz: welche Ergänzungsfragen / welche neue Begehung…"></textarea>
+      <label for="termin" style="margin-top:12px;">Geplanter Termin</label>
+      <input type="date" id="termin">
+      <button type="button" class="btn" id="btnSave">Eintrag speichern</button>
+    </div>
+
+    <div class="card">
+      <h2 style="color:var(--text);font-size:16px;margin-bottom:10px;">Gespeicherte Ergänzungen</h2>
+      <table>
+        <thead><tr><th>ID</th><th>Parent-AZ</th><th>Termin</th><th>Anlass (Auszug)</th></tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </main>
+  <script src="ergaenzung-logic.js"></script>
+  <script>
+  (function(){
+    var api = window.ErgaenzungAPI;
+    function refresh(){
+      var rows = api.loadAll();
+      var tb = document.getElementById('tbody');
+      tb.innerHTML = rows.map(function(r){
+        return '<tr><td class="mono">'+(r.id||'')+'</td><td>'+(r.parent_az||'')+'</td><td>'+(r.termin||'—')+'</td><td>'+String(r.grund||'').slice(0,80)+'</td></tr>';
+      }).join('') || '<tr><td colspan="4">Noch keine Einträge.</td></tr>';
+    }
+    document.getElementById('btnSave').addEventListener('click', function(){
+      api.addRow({
+        parent_az: document.getElementById('parent_az').value.trim(),
+        grund: document.getElementById('grund').value.trim(),
+        termin: document.getElementById('termin').value
+      });
+      refresh();
+    });
+    try {
+      var az = localStorage.getItem('prova_letztes_az');
+      if (az) document.getElementById('parent_az').value = az;
+    } catch(e){}
+    refresh();
+  })();
+  </script>
+</body>
+</html>

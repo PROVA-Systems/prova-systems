@@ -116,8 +116,9 @@
     }
   ];
 
-  /* ── Webhook URL ── */
-  var WEBHOOK_URL = 'https://hook.eu1.make.com/lktuhugwcg5v37ib6bdaxjb1uiplnu8v';
+  /* ── Make Proxy Key (no webhook URL in browser) ── */
+  // Kritischer Fix: Support läuft über K2
+  var MAKE_KEY = 'k2';
 
   /* ── CSS ── */
   if (!document.getElementById('prova-support-css')) {
@@ -400,10 +401,10 @@
       timestamp: new Date().toISOString()
     };
 
-    fetch(WEBHOOK_URL, {
+    fetch('/.netlify/functions/make-proxy?key=k2', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
+      body: JSON.stringify({ key: MAKE_KEY, payload: payload })
     }).catch(function(e) { console.warn('Support-Webhook Fehler:', e); });
 
     addBotMsg('✅ Ihre Frage wurde als Ticket an Marcel weitergeleitet. Antwort folgt innerhalb von 24h.');

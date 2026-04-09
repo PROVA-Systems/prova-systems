@@ -31,6 +31,14 @@ exports.handler = async (event) => {
     return { statusCode: 405, headers: corsHeaders(), body: 'Method Not Allowed' };
   }
 
+  // Nur eingeloggte User (JWT via Netlify Identity)
+  const jwtEmail = event.clientContext && event.clientContext.user && event.clientContext.user.email
+    ? String(event.clientContext.user.email).toLowerCase()
+    : '';
+  if (!jwtEmail) {
+    return { statusCode: 401, headers: corsHeaders(), body: JSON.stringify({ error: 'UNAUTHORIZED' }) };
+  }
+
   const apiKey = process.env.PDFMONKEY_API_KEY;
   if (!apiKey) {
     return { statusCode: 500, headers: corsHeaders(), body: JSON.stringify({ error: 'PDFMONKEY_API_KEY fehlt' }) };
@@ -380,8 +388,8 @@ async function buildGutschriftPayload(r, sv, empf, fmtDE, fmtDatum) {
 function corsHeaders() {
   return {
     'Content-Type':                'application/json',
-    'Access-Control-Allow-Origin':  '*',
-    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Origin':  process.env.URL || 'https://prova-systems.de',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
   };
 }
