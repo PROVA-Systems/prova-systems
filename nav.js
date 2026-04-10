@@ -31,8 +31,7 @@
     if (base === 'stellungnahme.html') {
       return (
         current === 'stellungnahme.html' ||
-        current === 'stellungnahme-gate.html' ||
-        current === 'stellungnahme-v3.1.html'
+        current === 'stellungnahme-gate.html'
       );
     }
     if (base === 'mahnwesen.html') {
