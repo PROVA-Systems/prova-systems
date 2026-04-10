@@ -616,27 +616,54 @@ window.register = async function register() {
       btn.textContent = 'Konto erstellen & loslegen';
       return;
     }
-    // Erfolg: direkt einloggen (email confirmation ist Optional)
-    if (data.access_token) {
-      // Netlify Identity Widget mit Token synchronisieren
-      if (typeof netlifyIdentity !== 'undefined' && netlifyIdentity.store) {
-        try { netlifyIdentity.store.user = data; } catch(e) {}
+    // Signup erfolgreich — jetzt sofort einloggen
+    var displayName = name;
+    try {
+      // Direkt Login nach Signup
+      var loginRes = await fetch('/.netlify/identity/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: 'grant_type=password&username=' + encodeURIComponent(email) + '&password=' + encodeURIComponent(pw)
+      });
+      var loginData = await loginRes.json();
+
+      if (loginRes.ok && loginData.access_token) {
+        // Login erfolgreich — Session anlegen
+        localStorage.setItem('prova_user', JSON.stringify({ email: email, name: displayName }));
+        localStorage.setItem('prova_sv_email', email);
+        localStorage.setItem('prova_show_tour', '1');
+        localStorage.setItem('netlify-identity-token', JSON.stringify({
+          access_token: loginData.access_token,
+          token_type: 'bearer',
+          expires_in: loginData.expires_in,
+          refresh_token: loginData.refresh_token
+        }));
+        if (typeof window.provaCreateSession === 'function') {
+          window.provaCreateSession({ email: email, name: displayName });
+        }
+        sucEl.textContent = '✅ Konto erstellt! Weiterleitung…';
+        sucEl.style.display = 'block';
+        setTimeout(function() { window.location.href = 'onboarding.html'; }, 800);
+        return;
       }
-      var displayName = (data.user_metadata && data.user_metadata.full_name) || name;
+    } catch(loginErr) {}
+
+    // Fallback: Token speichern falls im Signup-Response
+    if (data.access_token) {
       localStorage.setItem('prova_user', JSON.stringify({ email: email, name: displayName }));
       localStorage.setItem('prova_sv_email', email);
       localStorage.setItem('prova_show_tour', '1');
       if (typeof window.provaCreateSession === 'function') {
         window.provaCreateSession({ email: email, name: displayName });
       }
-      // Kurze Erfolgsmeldung dann Redirect
-      sucEl.textContent = '✅ Konto erstellt! Weiterleitung zum Dashboard…';
+      sucEl.textContent = '✅ Konto erstellt! Weiterleitung…';
       sucEl.style.display = 'block';
-      setTimeout(function() { window.location.href = 'onboarding.html'; }, 1200);
+      setTimeout(function() { window.location.href = 'onboarding.html'; }, 800);
     } else {
-      // Kein Token = Email Confirmation aktiv (Fallback)
-      sucEl.textContent = '✅ Konto erstellt! Bitte E-Mail bestätigen und dann anmelden.';
+      // Letzter Fallback: manuell anmelden
+      sucEl.textContent = '✅ Konto erstellt! Bitte jetzt mit E-Mail und Passwort anmelden.';
       sucEl.style.display = 'block';
+      setTimeout(function() { showTab('login'); }, 2000);
       btn.disabled = false;
       btn.textContent = 'Konto erstellen & loslegen';
     }
