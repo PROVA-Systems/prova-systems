@@ -1,5 +1,5 @@
-/* PROVA — Service Worker v85 (Cache-Busting / PWA-Basis) */
-const CACHE_NAME = 'prova-v85';
+/* PROVA — Service Worker v87 (Cache-Busting / PWA-Basis) */
+const CACHE_NAME = 'prova-v87';
 
 self.addEventListener('install', function (e) {
   self.skipWaiting();

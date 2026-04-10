@@ -1,6 +1,24 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
+<script>
+  window.__PROVA_ENV = 'production';
+  window.onerror = function(msg, src, line, col, err) {
+    if (!navigator.onLine) return;
+    fetch('/.netlify/functions/error-log', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        msg: String(msg).slice(0,500),
+        src: src, line: line,
+        page: window.location.pathname,
+        user: localStorage.getItem('prova_sv_email')||'unbekannt',
+        ua: navigator.userAgent.slice(0,100),
+        ts: new Date().toISOString()
+      })
+    }).catch(function(){});
+  };
+</script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1.0">
   <title>PROVA — SV-Effizienz</title>
@@ -33,6 +51,11 @@
     .main{max-width:1200px;margin:0 auto;padding:24px;}
     .page-title{font-family:var(--display);font-size:26px;font-weight:700;color:var(--text);margin:18px 0 8px;}
     .subtle{color:var(--text3);font-size:13px;margin-bottom:20px;}
+    .filter-row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px;}
+    .filter-btn{padding:8px 14px;border-radius:999px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.05);color:var(--text2);font-weight:700;font-size:12px;cursor:pointer;}
+    .filter-btn.active{background:rgba(79,142,247,0.22);border-color:rgba(79,142,247,0.4);color:#fff;}
+    .bar-row{display:flex;align-items:center;gap:8px;margin:6px 0;font-size:12px;}
+    .bar-fill{height:8px;border-radius:4px;background:rgba(79,142,247,0.55);min-width:4px;}
     .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;}
     .card{background:rgba(255,255,255,0.03);border:1px solid var(--glass-border);border-radius:var(--radius-lg);padding:16px;border-top:3px solid rgba(79,142,247,0.55);}
     .card h3{font-size:13px;font-weight:800;color:var(--text);margin-bottom:10px;}
@@ -41,133 +64,130 @@
     table{width:100%;border-collapse:collapse;font-size:13px;margin-top:8px;}
     th{text-align:left;color:var(--text3);font-size:11px;padding:8px 6px;border-bottom:1px solid rgba(255,255,255,0.08);}
     td{padding:8px 6px;border-bottom:1px solid rgba(255,255,255,0.05);}
+    .drawer-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:200;}.drawer-overlay.open{display:block;}
+    .drawer{position:fixed;top:0;left:0;bottom:0;width:260px;background:var(--bg2);border-right:1px solid var(--border);z-index:201;transform:translateX(-100%);transition:transform .25s ease;display:flex;flex-direction:column;}
+    .drawer.open{transform:translateX(0);}.drawer-header{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+    .drawer-close{background:none;border:none;color:var(--text2);font-size:18px;cursor:pointer;}
+    .burger{display:none;background:none;border:none;cursor:pointer;flex-direction:column;gap:4px;padding:6px;}
+    .burger span{display:block;width:20px;height:2px;background:var(--text2);}
+    .bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;height:56px;background:var(--bg2);border-top:1px solid var(--border);z-index:100;justify-content:space-around;align-items:stretch;}
+    @media(max-width:900px){.topnav{display:none;}.burger{display:flex;}.bottom-nav{display:flex;}body{padding-bottom:56px;}}
   </style>
+  <link rel="stylesheet" href="prova-nav.css">
 </head>
 <body>
+  <script src="prova-account-gate.js"></script>
+  <script src="paket-guard.js"></script>
+  <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+  <script>if(typeof netlifyIdentity!=='undefined')netlifyIdentity.init();</script>
+  <script src="prova-auth-api.js"></script>
+  <script src="prova-airtable-api.js"></script>
   <div class="topbar">
     <div class="topbar-left">
-      <a href="app-starter.html" class="logo">PRO<span>VA</span></a>
+      <a href="dashboard.html" class="logo">PRO<span>VA</span></a>
       <nav class="topnav">
-        <a href="dashboard.html">Dashboard</a>
-        <a href="archiv.html">Archiv</a>
+        <a href="dashboard.html">Zentrale</a>
         <a href="rechnungen.html">Rechnungen</a>
         <a href="effizienz.html" class="active">Effizienz</a>
-        <a href="jveg.html">JVEG</a>
+        <a href="einstellungen.html">Mehr</a>
       </nav>
     </div>
     <div class="topbar-right">
       <span class="paket-badge" id="topbarPaket"></span>
       <a href="einstellungen.html" class="settings-link">⚙</a>
+      <button type="button" class="burger" onclick="toggleDrawer()" aria-label="Menü"><span></span><span></span><span></span></button>
     </div>
   </div>
+  <div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
+  <div class="drawer" id="drawer">
+    <div class="drawer-header">
+      <a href="dashboard.html" class="logo">PRO<span>VA</span></a>
+      <button type="button" class="drawer-close" onclick="closeDrawer()">✕</button>
+    </div>
+    <div id="provaDrawerMount"></div>
+  </div>
+  <nav class="bottom-nav" id="provaBottomNav"></nav>
+  <script>
+  function toggleDrawer(){var d=document.getElementById('drawer'),o=document.getElementById('drawerOverlay');if(!d)return;d.classList.toggle('open');o.classList.toggle('open');document.body.style.overflow=d.classList.contains('open')?'hidden':'';}
+  function closeDrawer(){var d=document.getElementById('drawer'),o=document.getElementById('drawerOverlay');if(d)d.classList.remove('open');if(o)o.classList.remove('open');document.body.style.overflow='';}
+  document.addEventListener('keydown',function(e){if(e.key==='Escape')closeDrawer();});
+  </script>
+  <script src="nav.js" defer></script>
   <main class="main">
     <div class="page-title">SV-Effizienz-Dashboard</div>
-    <p class="subtle">Aus Archiv-Cache, Zeiterfassung und Rechnungen (lokal). Für Airtable-Auswertungen Daten in Make verknüpfen.</p>
-    <div class="grid" id="effizienz-grid"></div>
+    <p class="subtle">KPIs aus Airtable (<code>SCHADENSFAELLE</code>: Zeiterfassung_Min / Erstellungszeit_Sekunden, Gutachtentyp; <code>RECHNUNGEN</code>: Betrag_Netto, Status).</p>
+    <div class="filter-row" id="eff-filter">
+      <button type="button" class="filter-btn active" data-range="week">Diese Woche</button>
+      <button type="button" class="filter-btn" data-range="month">Dieser Monat</button>
+      <button type="button" class="filter-btn" data-range="year">Dieses Jahr</button>
+    </div>
+    <div class="grid" id="effizienz-grid"><div class="card"><h3>Laden…</h3><div class="hint">Airtable</div></div></div>
   </main>
+  <script src="effizienz-logic.js"></script>
   <script src="prova-notifications.js" defer></script>
   <script>
   (function(){
-    var p=localStorage.getItem('prova_paket')||'Starter';
-    var c={Starter:'#4f8ef7',Pro:'#f59e0b',Enterprise:'#a78bfa'}[p]||'#4f8ef7';
+    if(!window.PROVA)return;
+    if (window.PaketGuard && PaketGuard.blockiereSeite('effizienz')) return;
+    var c=PROVA.paketColor();
     var el=document.getElementById('topbarPaket');
-    if(el){el.textContent=p;el.setAttribute('style','background:'+c+'18;color:'+c+';border:1px solid '+c+'33');}
-
-    function num(n){return typeof n==='number'&&isFinite(n)?n:null;}
-
-    var archiv = [];
-    try {
-      var c0 = JSON.parse(localStorage.getItem('prova_archiv_cache_v1')||'{}');
-      archiv = Array.isArray(c0.data) ? c0.data : [];
-    } catch(e){}
-
-    var byArt = {};
-    var zeitSum = 0, zeitN = 0;
-    archiv.forEach(function(rec){
-      var f = rec.fields || rec || {};
-      var art = f.Schadenart || f.schadenart || 'Sonstiges';
-      var sek = num(f.Erstellungszeit_Sekunden) || num(f.erstellungszeit_sekunden);
-      if (!byArt[art]) byArt[art] = { sum:0, n:0 };
-      if (sek != null) {
-        byArt[art].sum += sek;
-        byArt[art].n += 1;
-        zeitSum += sek;
-        zeitN += 1;
-      }
-    });
-
-    var artRows = Object.keys(byArt).map(function(k){
-      var b = byArt[k];
-      var avgMin = b.n ? Math.round(b.sum / b.n / 60) : 0;
-      return { art: k, avg: avgMin };
-    }).sort(function(a,b){return b.avg - a.avg;});
-
-    var rechnungen = [];
-    try { rechnungen = JSON.parse(localStorage.getItem('prova_rechnungen_local')||'[]'); } catch(e){}
-    var umsatz = 0, offen = 0;
-    rechnungen.forEach(function(r){
-      var n = Number(r.netto)||0;
-      if (r.status !== 'bezahlt') offen += n + (Number(r.mwst)||0);
-      umsatz += n;
-    });
-    var stunden = zeitN ? (zeitSum / 3600) : 0;
-    var honorarH = stunden > 0 ? (umsatz / stunden) : 0;
-
-    var termine = [];
-    try { termine = JSON.parse(localStorage.getItem('prova_termine_v2')||'[]'); } catch(e){}
-    var now = new Date();
-    var startW = new Date(now); startW.setDate(now.getDate() - now.getDay() + 1);
-    var startP = new Date(startW); startP.setDate(startW.getDate() - 7);
-    function countBusy(t0, t1) {
-      return termine.filter(function(t){
-        if (!t || !t.datum || t.erledigt) return false;
-        var d = new Date(t.datum + 'T12:00:00');
-        return d >= t0 && d < t1;
-      }).length;
-    }
-    var w1 = countBusy(startW, new Date(startW.getTime() + 7*86400000));
-    var w0 = countBusy(startP, startW);
-
-    var agMap = {};
-    rechnungen.forEach(function(r){
-      var name = r.empfaenger_name || '—';
-      agMap[name] = (agMap[name]||0) + (Number(r.netto)||0);
-    });
-    var topAg = Object.keys(agMap).map(function(k){ return { name:k, sum:agMap[k] }; }).sort(function(a,b){return b.sum-a.sum;}).slice(0,5);
+    if(el){el.textContent=PROVA.paketLabel();el.setAttribute('style','background:'+c+'18;color:'+c+';border:1px solid '+c+'33');}
 
     var grid = document.getElementById('effizienz-grid');
+    var api = window.EffizienzAPI;
+    function escapeHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
     function card(title, val, hint) {
       var d = document.createElement('div');
       d.className = 'card';
       d.innerHTML = '<h3>'+title+'</h3><div class="val">'+val+'</div><div class="hint">'+(hint||'')+'</div>';
       return d;
     }
-    grid.appendChild(card('Ø Bearbeitungszeit pro Gutachtentyp', artRows[0] ? (artRows[0].avg + ' Min · ' + artRows[0].art) : '—', 'Gewichtet aus Archiv-Einträgen mit Erstellungszeit_Sekunden.'));
-    grid.appendChild(card('Honorar / Stunde (netto)', honorarH ? (honorarH.toFixed(0) + ' €') : '—', 'Umsatz netto ÷ Summe erfasster Stunden (Archiv).'));
-    grid.appendChild(card('Auslastung Termine', 'Woche ' + w1 + ' vs. Vorwoche ' + w0, 'Anzahl Termine im jeweiligen 7-Tage-Fenster.'));
-    grid.appendChild(card('Offene Forderungen', offen.toFixed(2).replace('.', ',') + ' €', 'Summe aus prova_rechnungen_local (nicht bezahlt).'));
+    function render(d) {
+      grid.innerHTML = '';
+      var typ0 = d.typRows && d.typRows[0];
+      grid.appendChild(card('Ø Bearbeitungszeit (Typ)', typ0 ? (typ0.avg + ' Min · ' + typ0.typ) : '—', 'Aus Zeiterfassung_Min bzw. Erstellungszeit_Sekunden / 60.'));
+      grid.appendChild(card('Honorar / Stunde (netto)', d.honorarH ? (d.honorarH.toFixed(0) + ' €') : '—', 'Summe Rechnungs-Netto ÷ Stunden (Zeiterfassung).'));
+      grid.appendChild(card('Offene Forderungen', d.offen.toFixed(2).replace('.', ',') + ' €', 'Rechnungen ohne Bezahlt-Status.'));
+      grid.appendChild(card('Datensätze', d.faelleCount + ' Fälle / ' + d.rechnCount + ' Rechn.', 'Im gewählten Zeitraum (gefiltert).'));
 
-    var tcard = document.createElement('div');
-    tcard.className = 'card';
-    tcard.style.gridColumn = '1 / -1';
-    var thtml = '<h3>Top-Auftraggeber nach Umsatz (netto)</h3><table><thead><tr><th>Auftraggeber</th><th>Umsatz</th></tr></thead><tbody>';
-    if (!topAg.length) thtml += '<tr><td colspan="2">—</td></tr>';
-    else topAg.forEach(function(x){ thtml += '<tr><td>'+escapeHtml(x.name)+'</td><td>'+x.sum.toFixed(2).replace('.',',')+' €</td></tr>'; });
-    thtml += '</tbody></table><div class="hint">Quelle: lokal gespeicherte Rechnungen.</div>';
-    tcard.innerHTML = thtml;
-    grid.appendChild(tcard);
+      var maxBar = 0;
+      (d.typRows||[]).forEach(function(x){ if(x.avg>maxBar) maxBar=x.avg; });
+      var chart = document.createElement('div');
+      chart.className = 'card';
+      chart.style.gridColumn = '1 / -1';
+      var ch = '<h3>Bearbeitungszeit nach Typ (Balken)</h3>';
+      if (!d.typRows || !d.typRows.length) ch += '<div class="hint">Keine Zeiterfassung in Airtable.</div>';
+      else d.typRows.slice(0,8).forEach(function(x){
+        var w = maxBar ? Math.round((x.avg/maxBar)*100) : 0;
+        ch += '<div class="bar-row"><span style="min-width:120px;">'+escapeHtml(x.typ)+'</span><div class="bar-fill" style="width:'+w+'%;max-width:100%"></div><span>'+x.avg+' min</span></div>';
+      });
+      chart.innerHTML = ch;
+      grid.appendChild(chart);
 
-    var t2 = document.createElement('div');
-    t2.className = 'card';
-    t2.style.gridColumn = '1 / -1';
-    var h2 = '<h3>Ø Zeit je Schadensart (Min.)</h3><table><thead><tr><th>Typ</th><th>Min</th></tr></thead><tbody>';
-    if (!artRows.length) h2 += '<tr><td colspan="2">Keine Zeiten im Archiv-Cache.</td></tr>';
-    else artRows.forEach(function(x){ h2 += '<tr><td>'+escapeHtml(x.art)+'</td><td>'+x.avg+'</td></tr>'; });
-    h2 += '</tbody></table>';
-    t2.innerHTML = h2;
-    grid.appendChild(t2);
-
-    function escapeHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+      var tcard = document.createElement('div');
+      tcard.className = 'card';
+      tcard.style.gridColumn = '1 / -1';
+      var thtml = '<h3>Auftraggeber-Ranking (Rechnungen netto)</h3><table><thead><tr><th>Auftraggeber</th><th>Umsatz</th></tr></thead><tbody>';
+      if (!d.topAg || !d.topAg.length) thtml += '<tr><td colspan="2">—</td></tr>';
+      else d.topAg.forEach(function(x){ thtml += '<tr><td>'+escapeHtml(x.name)+'</td><td>'+x.sum.toFixed(2).replace('.',',')+' €</td></tr>'; });
+      thtml += '</tbody></table>';
+      tcard.innerHTML = thtml;
+      grid.appendChild(tcard);
+    }
+    function load(range) {
+      grid.innerHTML = '<div class="card"><h3>Laden…</h3></div>';
+      api.loadDashboard(range).then(render).catch(function(e){
+        grid.innerHTML = '<div class="card"><h3>Fehler</h3><div class="hint">' + escapeHtml(e.message||String(e)) + '</div></div>';
+      });
+    }
+    document.getElementById('eff-filter').addEventListener('click', function(ev){
+      var b = ev.target.closest('.filter-btn');
+      if (!b) return;
+      document.querySelectorAll('#eff-filter .filter-btn').forEach(function(x){ x.classList.remove('active'); });
+      b.classList.add('active');
+      load(b.getAttribute('data-range') || 'week');
+    });
+    load('week');
   })();
   </script>
 </body>

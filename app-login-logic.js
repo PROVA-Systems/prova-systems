@@ -164,7 +164,15 @@ async function ladePaketUndWeiterleiten(email, ziel) {
         var paketMap = {'Starter':'Solo','starter':'Solo','STARTER':'Solo','Pro':'Solo','pro':'Solo','PRO':'Solo','Enterprise':'Team','enterprise':'Team','ENTERPRISE':'Team'};
         paket = paketMap[paket] || paket;
         if (!['Solo','Team'].includes(paket)) paket = 'Solo';
-        var status = (f.Status && f.Status.name) ? f.Status.name : (f.Status || 'Aktiv');
+        var status = (f.Status && f.Status.name) ? f.Status.name : (f.Status || 'Trial');
+        // Trial-Daten aus Airtable in localStorage laden
+        if (f.trial_end) {
+          localStorage.setItem('prova_trial_end', f.trial_end);
+        }
+        if (f.Trial_Start) {
+          localStorage.setItem('prova_trial_start', f.Trial_Start);
+        }
+        localStorage.setItem('prova_trial_days', '14');
         if (status === 'Gesperrt' || status === 'Gekuendigt') {
           localStorage.clear();
           window.location.href = 'app-login.html?reason=account_locked';

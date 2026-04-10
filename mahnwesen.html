@@ -1,6 +1,24 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
+<script>
+  window.__PROVA_ENV = 'production';
+  window.onerror = function(msg, src, line, col, err) {
+    if (!navigator.onLine) return;
+    fetch('/.netlify/functions/error-log', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        msg: String(msg).slice(0,500),
+        src: src, line: line,
+        page: window.location.pathname,
+        user: localStorage.getItem('prova_sv_email')||'unbekannt',
+        ua: navigator.userAgent.slice(0,100),
+        ts: new Date().toISOString()
+      })
+    }).catch(function(){});
+  };
+</script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1.0">
   <title>PROVA — Mahnwesen</title>
@@ -35,21 +53,74 @@
     .st-m2{background:rgba(167,139,250,0.15);color:#c4b5fd;}
     .st-m3{background:rgba(239,68,68,0.15);color:#fca5a5;}
     .st-ink{background:rgba(127,29,29,0.35);color:#fecaca;}
+    .drawer-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:200;}.drawer-overlay.open{display:block;}
+    .drawer{position:fixed;top:0;left:0;bottom:0;width:260px;background:var(--bg2);border-right:1px solid var(--border);z-index:201;transform:translateX(-100%);transition:transform .25s ease;display:flex;flex-direction:column;}
+    .drawer.open{transform:translateX(0);}.drawer-header{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+    .drawer-close{background:none;border:none;color:var(--text2);font-size:18px;cursor:pointer;}
+    .topbar-left{display:flex;align-items:center;gap:14px;}
+    .burger{display:none;background:none;border:none;cursor:pointer;flex-direction:column;gap:4px;padding:6px;}
+    .burger span{display:block;width:20px;height:2px;background:var(--text2);}
+    .bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;height:56px;background:var(--bg2);border-top:1px solid var(--border);z-index:100;justify-content:space-around;align-items:stretch;}
+    .paket-badge{font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;}
+    .kpi-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:20px;}
+    .kpi-card{background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:12px;padding:14px 16px;}
+    .kpi-label{font-size:11px;text-transform:uppercase;color:#6b7280;margin-bottom:6px;}
+    .kpi-val{font-family:'Fraunces',serif;font-size:22px;color:var(--text);}
+    .skel{height:14px;border-radius:6px;background:linear-gradient(90deg,rgba(255,255,255,0.06),rgba(255,255,255,0.12),rgba(255,255,255,0.06));background-size:200% 100%;animation:sk 1.2s ease-in-out infinite;}
+    @keyframes sk{0%{background-position:200% 0}100%{background-position:-200% 0}}
+    .skel-row td{padding:14px 8px;}
+    #errBox{display:none;padding:12px 14px;border-radius:10px;background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.35);color:#fecaca;margin-bottom:16px;font-size:13px;}
+    @media(max-width:900px){.topnav{display:none;}.burger{display:flex;}.bottom-nav{display:flex;}body{padding-bottom:56px;}}
   </style>
+  <link rel="stylesheet" href="prova-nav.css">
 </head>
 <body>
+  <script src="prova-account-gate.js"></script>
+  <script src="paket-guard.js"></script>
+  <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+  <script>if(typeof netlifyIdentity!=='undefined')netlifyIdentity.init();</script>
+  <script src="prova-auth-api.js"></script>
+  <script src="prova-airtable-api.js"></script>
   <div class="topbar">
-    <a href="dashboard.html" class="logo">PRO<span>VA</span></a>
-    <nav class="topnav">
-      <a href="rechnungen.html">Rechnungen</a>
-      <a href="mahnwesen.html" class="active">Mahnwesen</a>
-      <a href="jveg.html">JVEG</a>
-      <a href="archiv.html">Archiv</a>
-    </nav>
+    <div class="topbar-left">
+      <a href="dashboard.html" class="logo">PRO<span>VA</span></a>
+      <nav class="topnav">
+        <a href="rechnungen.html">Rechnungen</a>
+        <a href="mahnwesen.html" class="active">Mahnwesen</a>
+        <a href="archiv.html">Fälle</a>
+        <a href="einstellungen.html">Mehr</a>
+      </nav>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <span class="paket-badge" id="topbarPaket"></span>
+      <a href="einstellungen.html" style="color:var(--text2);text-decoration:none;padding:6px;">⚙</a>
+      <button type="button" class="burger" onclick="toggleDrawer()" aria-label="Menü"><span></span><span></span><span></span></button>
+    </div>
   </div>
+  <div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
+  <div class="drawer" id="drawer">
+    <div class="drawer-header">
+      <a href="dashboard.html" class="logo">PRO<span>VA</span></a>
+      <button type="button" class="drawer-close" onclick="closeDrawer()">✕</button>
+    </div>
+    <div id="provaDrawerMount"></div>
+  </div>
+  <nav class="bottom-nav" id="provaBottomNav"></nav>
+  <script>
+  function toggleDrawer(){var d=document.getElementById('drawer'),o=document.getElementById('drawerOverlay');d.classList.toggle('open');o.classList.toggle('open');document.body.style.overflow=d.classList.contains('open')?'hidden':'';}
+  function closeDrawer(){var d=document.getElementById('drawer'),o=document.getElementById('drawerOverlay');d.classList.remove('open');o.classList.remove('open');document.body.style.overflow='';}
+  document.addEventListener('keydown',function(e){if(e.key==='Escape')closeDrawer();});
+  (function(){if(!window.PROVA)return;var c=PROVA.paketColor();var el=document.getElementById('topbarPaket');if(el){el.textContent=PROVA.paketLabel();el.setAttribute('style','background:'+c+'18;color:'+c+';border:1px solid '+c+'33');}})();
+  </script>
+  <script src="nav.js" defer></script>
   <main class="main">
     <h1>Automatisches Mahnwesen</h1>
-    <p class="sub">Offene Posten aus lokalen Rechnungen. Status: Offen → Mahnung 1–3 → Inkasso. Verzugszins ab Mahnung 2 nach §288 BGB (Basiszinssatz + 9 %-Punkte). Make.com kann täglich dieselben Stufen prüfen.</p>
+    <p class="sub">Offene Rechnungen aus Airtable (Tabelle RECHNUNGEN, Status Offen/Überfällig, Filter <code>sv_email</code>). Mahnung setzt <code>Mahn_Status</code> per PATCH. Verzugszins ab Stufe 2: §288 BGB (vereinfacht Basiszinssatz + 9 %-Punkte p.a.).</p>
+    <div id="errBox"></div>
+    <div class="kpi-row" id="kpiRow">
+      <div class="kpi-card"><div class="kpi-label">Offene Forderungen (netto)</div><div class="kpi-val" id="kpiOffen">—</div></div>
+      <div class="kpi-card"><div class="kpi-label">Anzahl offen</div><div class="kpi-val" id="kpiAnzahl">—</div></div>
+    </div>
     <div style="overflow:auto;">
       <table>
         <thead>
@@ -59,6 +130,7 @@
             <th>Auftraggeber</th>
             <th>Betrag netto</th>
             <th>Tage seit Fälligkeit</th>
+            <th>Verzugszins (ca.)</th>
             <th>Status</th>
             <th>Aktion</th>
           </tr>
@@ -66,48 +138,78 @@
         <tbody id="tbody"></tbody>
       </table>
     </div>
-    <p class="sub" style="margin-top:16px;">Hinweis: Airtable-Feld <code>Mahnung_Status</code> kann über Make.com mit <code>prova_rechnungen_local</code> synchronisiert werden.</p>
+    <p class="sub" style="margin-top:16px;">Felder in Airtable: <code>Status</code>, <code>sv_email</code>, <code>Mahn_Status</code>, optional <code>Mahnung_Datum</code>, <code>Verzugszinsen</code>, <code>Belegdatum</code>, <code>Zahlungsziel_Tage</code>.</p>
   </main>
   <script src="mahnwesen-logic.js"></script>
   <script>
   (function(){
     var api = window.MahnwesenAPI;
-    if(!api){document.getElementById('tbody').innerHTML='<tr><td colspan="7">mahnwesen-logic.js fehlt</td></tr>';return;}
-    var rows = api.loadRows().filter(function(r){return r.status!=='bezahlt';});
-    if(!rows.length){
-      document.getElementById('tbody').innerHTML='<tr><td colspan="7">Keine offenen Rechnungen. <a href="rechnungen.html" style="color:#4f8ef7">Rechnungen anlegen</a></td></tr>';
-      return;
+    var tbody = document.getElementById('tbody');
+    var errBox = document.getElementById('errBox');
+    if(!api || !tbody){return;}
+    function skelHtml(){
+      var h = '';
+      for(var i=0;i<5;i++){
+        h += '<tr class="skel-row"><td><div class="skel" style="width:12px;height:12px;border-radius:50%"></div></td>';
+        for(var j=0;j<7;j++) h += '<td><div class="skel" style="width:90%"></div></td>';
+        h += '</tr>';
+      }
+      return h;
     }
-    var html = '';
-    window.__mahnOpenRows = rows;
-    rows.forEach(function(r, idx){
-      var n = api.daysOpen(r);
-      var amp = api.ampelClass(n);
-      var nr = r.rechnungsnummer || r.nr || '—';
-      var esc = String(nr).replace(/&/g,'&amp;').replace(/</g,'&lt;');
-      var st = r.mahn_status || 'Offen';
-      var sb = 'st-offen';
-      if(st==='Mahnung1') sb='st-m1';
-      else if(st==='Mahnung2') sb='st-m2';
-      else if(st==='Mahnung3') sb='st-m3';
-      else if(st==='Inkasso') sb='st-ink';
-      html += '<tr><td><span class="ampel '+amp+'"></span></td><td class="mono">'+esc+'</td><td>'+(String(r.empfaenger_name||'—').replace(/</g,'&lt;'))+'</td><td>'+(r.netto!=null?Number(r.netto).toFixed(2):'—')+' €</td><td>'+n+'</td><td><span class="badge '+sb+'">'+st+'</span></td><td>';
-      html += '<button type="button" class="btn mahn-btn" data-idx="'+idx+'" data-stufe="1">Mahnung 1</button> ';
-      html += '<button type="button" class="btn mahn-btn" data-idx="'+idx+'" data-stufe="2">Mahnung 2</button> ';
-      html += '<button type="button" class="btn mahn-btn" data-idx="'+idx+'" data-stufe="3">Mahnung 3</button>';
-      html += '</td></tr>';
+    function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;'); }
+    tbody.innerHTML = skelHtml();
+    api.loadOpenFromAirtable().then(function(rows){
+      window.__mahnOpenRows = rows;
+      var sum = 0;
+      rows.forEach(function(r){ sum += Number(r.netto)||0; });
+      document.getElementById('kpiOffen').textContent = rows.length ? sum.toFixed(2).replace('.',',') + ' €' : '0,00 €';
+      document.getElementById('kpiAnzahl').textContent = String(rows.length);
+      if(!rows.length){
+        tbody.innerHTML = '<tr><td colspan="8">Keine offenen Rechnungen in Airtable. <a href="rechnungen.html" style="color:#4f8ef7">Rechnungen</a></td></tr>';
+        return;
+      }
+      var html = '';
+      rows.forEach(function(r, idx){
+        r.faellig = r.faellig || '';
+        var n = api.daysOpen(r);
+        var amp = api.ampelClass(n);
+        var nr = r.rechnungsnummer || r.nr || '—';
+        var brutto = Number(r.brutto) || (Number(r.netto)||0) * (1 + (Number(r.ust_satz)||19)/100);
+        var zins = n > 0 ? api.verzugszins(brutto, n) : 0;
+        var st = r.mahn_status || 'Offen';
+        var sb = 'st-offen';
+        if(st==='Mahnung1') sb='st-m1';
+        else if(st==='Mahnung2') sb='st-m2';
+        else if(st==='Mahnung3') sb='st-m3';
+        else if(st==='Inkasso') sb='st-ink';
+        html += '<tr><td><span class="ampel '+amp+'"></span></td><td class="mono">'+esc(nr)+'</td><td>'+esc(r.empfaenger_name||'—')+'</td><td>'+(r.netto!=null?Number(r.netto).toFixed(2):'—')+' €</td><td>'+n+'</td><td>'+(n>0?zins.toFixed(2)+' €':'—')+'</td><td><span class="badge '+sb+'">'+esc(st)+'</span></td><td>';
+        html += '<button type="button" class="btn mahn-btn" data-idx="'+idx+'" data-stufe="1">Mahnung 1</button> ';
+        html += '<button type="button" class="btn mahn-btn" data-idx="'+idx+'" data-stufe="2">Mahnung 2</button> ';
+        html += '<button type="button" class="btn mahn-btn" data-idx="'+idx+'" data-stufe="3">Mahnung 3</button>';
+        html += '</td></tr>';
+      });
+      tbody.innerHTML = html;
+    }).catch(function(e){
+      errBox.style.display = 'block';
+      errBox.textContent = (e && e.message) ? e.message : String(e);
+      tbody.innerHTML = '<tr><td colspan="8">Daten konnten nicht geladen werden.</td></tr>';
     });
-    document.getElementById('tbody').innerHTML = html;
-    document.getElementById('tbody').addEventListener('click', function(ev){
+    tbody.addEventListener('click', function(ev){
       var b = ev.target.closest('.mahn-btn');
       if(!b) return;
       var idx = parseInt(b.getAttribute('data-idx')||'-1',10);
       var row = window.__mahnOpenRows && window.__mahnOpenRows[idx];
-      if(!row) return;
-      var nr = row.rechnungsnummer || row.nr || '';
+      if(!row || !row.airtable_id) return;
       var stufe = parseInt(b.getAttribute('data-stufe')||'1',10);
-      api.setMahnStatus(nr, stufe===1?'Mahnung1':stufe===2?'Mahnung2':'Mahnung3');
-      window.location.href = 'mahnung.html?nr='+encodeURIComponent(nr)+'&stufe='+stufe;
+      var nr = row.rechnungsnummer || row.nr || '';
+      b.disabled = true;
+      api.patchMahnStatus(row.airtable_id, stufe).then(function(){
+        try { sessionStorage.setItem('prova_mahn_last_row', JSON.stringify(row)); } catch(x) {}
+        window.location.href = 'mahnung.html?nr='+encodeURIComponent(nr)+'&stufe='+stufe+'&rec='+encodeURIComponent(row.airtable_id);
+      }).catch(function(err){
+        alert(err && err.message ? err.message : err);
+        b.disabled = false;
+      });
     });
   })();
   </script>

@@ -1,140 +1,209 @@
-// PROVA smtp-senden.js — Direktversand via SV-eigenem SMTP (nodemailer)
-// Credentials kommen vom Browser, werden nie gespeichert
-// Fallback: PROVA-eigener IONOS-Account
-
+/**
+ * PROVA — SMTP (IONOS) mit Netlify Identity JWT + BRIEFE-Protokoll + Make K3
+ * POST JSON: { az, empfaenger, to | empfaenger_email, betreff, typ, html_body, text_body? }
+ * sv_email nur aus JWT — niemals aus dem Client übernehmen.
+ */
 const nodemailer = require('nodemailer');
+const { hasProvaAccess } = require('./lib/prova-subscription');
 
-exports.handler = async function(event) {
-  const cors = {
-    'Content-Type': 'application/json',
-    'Access-Control-Allow-Origin': process.env.URL || 'https://prova-systems.de',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS'
+const AIRTABLE_API = 'https://api.airtable.com';
+const BASE_ID = process.env.AIRTABLE_BASE_ID || 'appJ7bLlAHZoxENWE';
+const TABLE_BRIEFE = process.env.AIRTABLE_BRIEFE_TABLE || 'tblSzxvnkRE6B0thx';
+
+function json(status, obj) {
+  return {
+    statusCode: status,
+    headers: {
+      'Content-Type': 'application/json; charset=utf-8',
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Headers': 'Authorization, Content-Type',
+      'Access-Control-Allow-Methods': 'POST, OPTIONS'
+    },
+    body: JSON.stringify(obj)
   };
+}
 
-  if (event.httpMethod === 'OPTIONS') return { statusCode: 200, headers: cors, body: '' };
-  if (event.httpMethod !== 'POST') return { statusCode: 405, headers: cors, body: JSON.stringify({ error: 'Method not allowed' }) };
-
-  let body;
-  try { body = JSON.parse(event.body); }
-  catch(e) { return { statusCode: 400, headers: cors, body: JSON.stringify({ error: 'Invalid JSON' }) }; }
-
-  const {
-    // Mail-Inhalt
-    to, betreff, inhalt, from_name, from_email,
-    // SMTP-Credentials des SV (optional — Fallback auf PROVA-SMTP)
-    smtp_host, smtp_port, smtp_user, smtp_pass,
-    // Metadaten für Log
-    sv_email, aktenzeichen, brief_typ
-  } = body;
-
-  if (!to || !betreff || !inhalt) {
-    return { statusCode: 400, headers: cors, body: JSON.stringify({ error: 'to, betreff und inhalt sind Pflicht' }) };
+async function appendBriefe(pat, fields) {
+  const url = AIRTABLE_API + '/v0/' + BASE_ID + '/' + TABLE_BRIEFE;
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: {
+      Authorization: 'Bearer ' + pat,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ fields: fields })
+  });
+  if (!res.ok) {
+    const t = await res.text().catch(function () {
+      return '';
+    });
+    throw new Error('BRIEFE Airtable: ' + res.status + ' ' + t.slice(0, 400));
   }
+}
 
-  // Nur eingeloggte User dürfen SMTP nutzen (Missbrauch / Spam verhindern)
-  const jwtEmail = event.clientContext && event.clientContext.user && event.clientContext.user.email
-    ? String(event.clientContext.user.email).toLowerCase()
-    : '';
-  if (!jwtEmail) {
-    return { statusCode: 401, headers: cors, body: JSON.stringify({ error: 'UNAUTHORIZED' }) };
-  }
-
-  // sv_email darf nicht frei behauptet werden
-  const svEmailNorm = String(sv_email || '').toLowerCase().trim();
-  if (svEmailNorm && svEmailNorm !== jwtEmail) {
-    return { statusCode: 403, headers: cors, body: JSON.stringify({ error: 'FORBIDDEN' }) };
-  }
-
-  // ── SMTP-Konfiguration: SV-eigener Account hat Vorrang ──────────────────
-  let transportConfig;
-  let absenderEmail;
-  let absenderName;
-
-  const svHatSMTP = smtp_host && smtp_user && smtp_pass;
-
-  if (svHatSMTP) {
-    // SV's eigener SMTP — Mail kommt von seiner echten Adresse
-    const port = parseInt(smtp_port) || 587;
-    transportConfig = {
-      host:   smtp_host,
-      port:   port,
-      secure: port === 465,
-      auth:   { user: smtp_user, pass: smtp_pass },
-      tls:    { rejectUnauthorized: false }
-    };
-    absenderEmail = from_email || smtp_user;
-    absenderName  = from_name  || sv_email || '';
-  } else {
-    // Kein eigenes SMTP konfiguriert → klare Fehlermeldung mit direktem Link
-    return { statusCode: 422, headers: cors, body: JSON.stringify({
-      error: 'E-Mail-Versand nicht eingerichtet',
-      code:  'SMTP_NOT_CONFIGURED',
-      hinweis: 'Bitte richten Sie Ihren E-Mail-Account unter Einstellungen → E-Mail-Versand ein.',
-      link: '/einstellungen.html#email'
-    })};
-  }
-
-  // ── Mail senden ──────────────────────────────────────────────────────────
-  let gesendet = false;
-  let fehler    = null;
-
+async function appendAudit(pat, email, az, typ) {
+  var tableAudit =
+    process.env.PROVA_AUDIT_TRAIL_TABLE || process.env.AIRTABLE_AUDIT_TRAIL_TABLE || 'tbloeYUDuu0wRxpM8';
   try {
-    const transporter = nodemailer.createTransport(transportConfig);
+    await fetch(AIRTABLE_API + '/v0/' + BASE_ID + '/' + tableAudit, {
+      method: 'POST',
+      headers: { Authorization: 'Bearer ' + pat, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        fields: {
+          Typ: 'Brief',
+          Email: email,
+          AZ: az || '',
+          Details: JSON.stringify({ brief_typ: typ || 'Sonstiges' }),
+          Zeitstempel: new Date().toISOString(),
+          IP_Hint: ''
+        }
+      })
+    });
+  } catch (e) {}
+}
 
-    // Verbindung prüfen (max 8s Timeout)
-    await Promise.race([
-      transporter.verify(),
-      new Promise((_, rej) => setTimeout(() => rej(new Error('SMTP Timeout (8s)')), 8000))
-    ]);
-
-    const mail = {
-      from:    '"' + absenderName.replace(/"/g, '') + '" <' + absenderEmail + '>',
-      to:      to,
-      subject: betreff,
-      text:    inhalt,
-      html:    '<div style="font-family:Arial,sans-serif;font-size:14px;line-height:1.6;white-space:pre-wrap;">' + inhalt.replace(/\n/g,'<br>') + '</div>',
-      replyTo: svHatSMTP ? absenderEmail : (sv_email || absenderEmail)
-    };
-
-    await transporter.sendMail(mail);
-    gesendet = true;
-
-  } catch(e) {
-    fehler = e.message;
-    console.error('[smtp-senden] Fehler:', e.message);
+async function forwardMakeK3(payload) {
+  const secret = process.env.PROVA_INTERNAL_WRITE_SECRET || '';
+  const site = (process.env.URL || process.env.DEPLOY_PRIME_URL || '').replace(/\/$/, '');
+  if (site && secret) {
+    try {
+      await fetch(site + '/.netlify/functions/make-proxy?key=k3', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-prova-internal': secret
+        },
+        body: JSON.stringify(payload)
+      });
+      return;
+    } catch (e) {
+      /* fallback direct */
+    }
   }
-
-  // ── K3 Webhook für Airtable-Log (async, egal ob Send OK oder nicht) ─────
-  const K3 = process.env.MAKE_K3_WEBHOOK;
-  if (K3) {
-    fetch(K3, {
+  const wh = process.env.MAKE_WEBHOOK_K3 || '';
+  if (!wh) return;
+  try {
+    await fetch(wh, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        sv_email:         sv_email || absenderEmail,
-        empfaenger_email: to,
-        betreff:          betreff,
-        inhalt:           inhalt.slice(0, 2000),
-        aktenzeichen:     aktenzeichen || '',
-        brief_typ:        brief_typ || 'Allgemein',
-        status:           gesendet ? 'Gesendet' : 'Fehler'
-      })
-    }).catch(() => {});
+      body: JSON.stringify(payload)
+    });
+  } catch (e2) {
+    /* ignore */
+  }
+}
+
+exports.handler = async function (event, context) {
+  if (event.httpMethod === 'OPTIONS') {
+    return {
+      statusCode: 204,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Headers': 'Authorization, Content-Type',
+        'Access-Control-Allow-Methods': 'POST, OPTIONS'
+      },
+      body: ''
+    };
+  }
+  if (event.httpMethod !== 'POST') {
+    return json(405, { error: 'Method Not Allowed' });
   }
 
-  if (!gesendet) {
-    return { statusCode: 502, headers: cors, body: JSON.stringify({
-      error: fehler,
-      smtp_host: smtp_host || 'PROVA-Fallback',
-      tipp: smtp_pass ? 'Bitte App-Passwort prüfen' : 'SMTP-Passwort fehlt'
-    })};
+  const user = context.clientContext && context.clientContext.user;
+  if (!user || !user.email) {
+    return json(401, { error: 'Anmeldung erforderlich (Authorization: Bearer …)' });
   }
 
-  return { statusCode: 200, headers: cors, body: JSON.stringify({
-    success:     true,
-    absender:    absenderEmail,
-    empfaenger:  to,
-    via:         svHatSMTP ? 'eigener-smtp' : 'prova-fallback'
-  })};
+  const pat = process.env.AIRTABLE_PAT;
+  if (!pat) {
+    return json(500, { error: 'AIRTABLE_PAT nicht konfiguriert' });
+  }
+
+  const access = await hasProvaAccess(String(user.email).trim().toLowerCase(), pat);
+  if (!access.ok) {
+    return json(403, { error: 'Kein Zugriff — Testphase beendet oder kein aktives Abo', reason: access.reason });
+  }
+
+  let body = {};
+  try {
+    body = JSON.parse(event.body || '{}');
+  } catch (e) {
+    return json(400, { error: 'Ungültiger JSON-Body' });
+  }
+
+  const svEmail = String(user.email).trim().toLowerCase();
+  const to = String(body.to || body.empfaenger_email || '').trim();
+  const betreff = String(body.betreff || '').trim();
+  const htmlBody = String(body.html_body || body.html || '');
+  const textBody = String(body.text_body || body.text || '').trim();
+  const az = String(body.az || '').trim();
+  const empfaengerName = String(body.empfaenger || '').trim().slice(0, 500);
+  const typ = String(body.typ || 'Sonstiges').trim().slice(0, 200);
+
+  if (!to || !betreff) {
+    return json(400, { error: 'to (E-Mail) und betreff sind Pflicht' });
+  }
+  if (!htmlBody && !textBody) {
+    return json(400, { error: 'html_body oder text_body erforderlich' });
+  }
+
+  const host = process.env.PROVA_SMTP_HOST || process.env.SMTP_HOST || '';
+  const port = parseInt(process.env.PROVA_SMTP_PORT || process.env.SMTP_PORT || '587', 10);
+  const smtpUser = process.env.PROVA_SMTP_USER || process.env.SMTP_USER || '';
+  const smtpPass = process.env.PROVA_SMTP_PASS || process.env.SMTP_PASS || process.env.IONOS_SMTP_PASS || '';
+  const fromAddr = (process.env.PROVA_SMTP_FROM || process.env.SMTP_FROM || smtpUser || '').trim();
+
+  if (!host || !smtpUser || !smtpPass || !fromAddr) {
+    return json(500, { error: 'SMTP nicht konfiguriert (PROVA_SMTP_HOST, PROVA_SMTP_USER, PROVA_SMTP_PASS, PROVA_SMTP_FROM)' });
+  }
+
+  const transporter = nodemailer.createTransport({
+    host: host,
+    port: port,
+    secure: port === 465,
+    auth: { user: smtpUser, pass: smtpPass }
+  });
+
+  const gesendetAmIso = new Date().toISOString();
+
+  try {
+    await transporter.sendMail({
+      from: fromAddr,
+      to: to,
+      subject: betreff,
+      text: textBody || undefined,
+      html: htmlBody || undefined
+    });
+  } catch (err) {
+    return json(502, { ok: false, error: 'SMTP-Versand fehlgeschlagen: ' + String(err && err.message ? err.message : err) });
+  }
+
+  const briefeFields = {
+    AZ: az,
+    sv_email: svEmail,
+    Empfaenger: empfaengerName || to.split('@')[0] || 'Empfänger',
+    Betreff: betreff.slice(0, 500),
+    Typ: typ,
+    Gesendet_Am: gesendetAmIso.slice(0, 10),
+    Status: 'Gesendet'
+  };
+
+  try {
+    await appendBriefe(pat, briefeFields);
+  } catch (e1) {
+    /* protokollieren trotzdem über Make */
+  }
+
+  await forwardMakeK3({
+    az: az,
+    sv_email: svEmail,
+    typ: typ,
+    empfaenger: briefeFields.Empfaenger,
+    betreff: betreff,
+    gesendet_am: gesendetAmIso
+  });
+
+  await appendAudit(pat, svEmail, az, typ);
+
+  return json(200, { ok: true });
 };

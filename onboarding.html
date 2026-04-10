@@ -1,6 +1,24 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
+<script>
+  window.__PROVA_ENV = 'production';
+  window.onerror = function(msg, src, line, col, err) {
+    if (!navigator.onLine) return;
+    fetch('/.netlify/functions/error-log', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        msg: String(msg).slice(0,500),
+        src: src, line: line,
+        page: window.location.pathname,
+        user: localStorage.getItem('prova_sv_email')||'unbekannt',
+        ua: navigator.userAgent.slice(0,100),
+        ts: new Date().toISOString()
+      })
+    }).catch(function(){});
+  };
+</script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1.0">
   <title>PROVA Systems — Onboarding</title>
@@ -165,7 +183,7 @@
     .step.active{display:block;}
 
     /* Package cards (radio + label CSS) */
-    .pkg-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+    .pkg-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;max-width:640px;margin:0 auto;}
     @media(max-width:900px){.pkg-grid{grid-template-columns:1fr;}}
     input[type="radio"].pkg-radio{position:absolute;opacity:0;pointer-events:none;}
     .pkg-card{
@@ -226,8 +244,9 @@
   </style>
 </head>
 <body>
+  <script src="prova-account-gate.js"></script>
   <div class="topbar">
-    <a href="dashboard.html" class="logo">PRO<span>VA</span></a>
+    <a href="index.html" class="logo">PRO<span>VA</span></a>
   </div>
 
   <div class="wrap">
@@ -236,8 +255,8 @@
         <!-- STEP 1 -->
         <section class="step active" id="ob-step-1" aria-label="Schritt 1">
           <div class="progress-row">
-            <div class="progress-text">1/6</div>
-            <div class="progress-bar" aria-hidden="true"><div class="progress-fill" style="width:17%;"></div></div>
+            <div class="progress-text">1/5</div>
+            <div class="progress-bar" aria-hidden="true"><div class="progress-fill" style="width:20%;"></div></div>
           </div>
           <div class="ob-title">Willkommen bei PROVA Systems</div>
           <div class="ob-subtitle">Ihr KI-Assistent für Baugutachten. In 4 Minuten startklar.</div>
@@ -249,8 +268,8 @@
         <!-- STEP 2 -->
         <section class="step" id="ob-step-2" aria-label="Schritt 2">
           <div class="progress-row">
-            <div class="progress-text">2/6</div>
-            <div class="progress-bar" aria-hidden="true"><div class="progress-fill" style="width:33%;"></div></div>
+            <div class="progress-text">2/5</div>
+            <div class="progress-bar" aria-hidden="true"><div class="progress-fill" style="width:40%;"></div></div>
           </div>
           <div class="ob-title">Ihr Profil einrichten</div>
           <div class="ob-subtitle">Damit Ihre Gutachten im richtigen Kontext gestartet werden können.</div>
@@ -289,26 +308,25 @@
         <!-- STEP 3 -->
         <section class="step" id="ob-step-3" aria-label="Schritt 3">
           <div class="progress-row">
-            <div class="progress-text">3/6</div>
-            <div class="progress-bar" aria-hidden="true"><div class="progress-fill" style="width:50%;"></div></div>
+            <div class="progress-text">3/5</div>
+            <div class="progress-bar" aria-hidden="true"><div class="progress-fill" style="width:60%;"></div></div>
           </div>
           <div class="ob-title">Welches Paket passt zu Ihnen?</div>
           <div class="ob-subtitle">Wählen Sie die passende Basis für Ihren Arbeitsalltag.</div>
 
           <div class="pkg-grid" role="radiogroup" aria-label="Paket wählen">
-            <input class="pkg-radio" type="radio" name="paket" id="paket-radio-starter" value="Solo" checked>
-            <label class="pkg-card" id="paket-starter" for="paket-radio-starter">
+            <input class="pkg-radio" type="radio" name="paket" id="paket-radio-solo" value="Solo" checked>
+            <label class="pkg-card" id="paket-solo" for="paket-radio-solo">
               <div class="pkg-name">Solo</div>
-              <div class="pkg-price">89€/Mo</div>
-              <div class="pkg-meta">1 Sachverständiger · 30 Gutachten/Mo · ideal Solo-SV</div>
+              <div class="pkg-price">149&nbsp;€ / Monat</div>
+              <div class="pkg-meta">Einzelgutachter · voller Funktionsumfang für eine Person · Bezahlung später per Stripe</div>
             </label>
 
-            
-            <input class="pkg-radio" type="radio" name="paket" id="paket-radio-enterprise" value="Team">
-            <label class="pkg-card" id="paket-enterprise" for="paket-radio-enterprise">
+            <input class="pkg-radio" type="radio" name="paket" id="paket-radio-team" value="Team">
+            <label class="pkg-card" id="paket-team" for="paket-radio-team">
               <div class="pkg-name">Team</div>
-              <div class="pkg-price">179€/Mo</div>
-              <div class="pkg-meta">bis 5 Sachverständige · unbegrenzt · Büro</div>
+              <div class="pkg-price">279&nbsp;€ / Monat</div>
+              <div class="pkg-meta">Mehrere Accounts · Webhooks · White-Label &amp; erweiterte Team-Funktionen</div>
             </label>
           </div>
 
@@ -318,66 +336,11 @@
           </div>
         </section>
 
-        <!-- STEP 4 — RECHTLICHES / AVV -->
+        <!-- STEP 4 -->
         <section class="step" id="ob-step-4" aria-label="Schritt 4">
           <div class="progress-row">
-            <div class="progress-text">4/6</div>
-            <div class="progress-bar" aria-hidden="true"><div class="progress-fill" style="width:67%;"></div></div>
-          </div>
-          <div class="ob-title">Rechtliche Grundlagen</div>
-          <div class="ob-subtitle">Bitte lesen und bestätigen Sie die folgenden Vereinbarungen — einmalig erforderlich.</div>
-
-          <!-- AVV Kompakt -->
-          <div style="background:rgba(79,142,247,.05);border:1px solid rgba(79,142,247,.15);border-radius:12px;padding:16px 18px;margin:16px 0;font-size:12px;color:#aab4cb;line-height:1.7;max-height:180px;overflow-y:auto;">
-            <div style="font-size:13px;font-weight:700;color:#e8eaf0;margin-bottom:8px;">Auftragsverarbeitungsvertrag (AVV) — Kurzfassung</div>
-            <strong style="color:#e8eaf0;">Verantwortlicher:</strong> PROVA Systems, vertreten durch Marcel Schreiber.<br>
-            <strong style="color:#e8eaf0;">Zweck:</strong> Verarbeitung personenbezogener Daten zur Erstellung von Baugutachten im Auftrag des Sachverständigen.<br>
-            <strong style="color:#e8eaf0;">Unterauftragnehmer:</strong> OpenAI (Transkription/KI, EU-SCCs), Airtable (Datenspeicherung), Netlify (Hosting), Make.com (Automatisierung).<br>
-            <strong style="color:#e8eaf0;">Datenlöschung:</strong> Audiodaten werden nach Transkription sofort gelöscht. Gutachten-Daten nach Vertragsende auf Anfrage.<br>
-            <strong style="color:#e8eaf0;">Ihre Rechte:</strong> Auskunft, Berichtigung, Löschung gemäß DSGVO Art. 15–17.<br>
-            <a href="avv.html" target="_blank" style="color:#4f8ef7;">&#8599; Vollständige AVV lesen</a>
-          </div>
-
-          <!-- Checkboxen -->
-          <div style="display:flex;flex-direction:column;gap:12px;margin:16px 0;">
-            <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;">
-              <input type="checkbox" id="ob-avv-check" onchange="pruefeAvvWeiter()"
-                style="width:17px;height:17px;flex-shrink:0;margin-top:2px;accent-color:#4f8ef7;cursor:pointer;">
-              <span style="font-size:12px;color:#aab4cb;line-height:1.6;">
-                Ich habe den <a href="avv.html" target="_blank" style="color:#4f8ef7;">Auftragsverarbeitungsvertrag (AVV)</a> gelesen und stimme der Verarbeitung meiner Daten gemäß DSGVO zu. <span style="color:#ef4444;">*</span>
-              </span>
-            </label>
-            <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;">
-              <input type="checkbox" id="ob-dsgvo-check" onchange="pruefeAvvWeiter()"
-                style="width:17px;height:17px;flex-shrink:0;margin-top:2px;accent-color:#4f8ef7;cursor:pointer;">
-              <span style="font-size:12px;color:#aab4cb;line-height:1.6;">
-                Ich habe die <a href="datenschutz.html" target="_blank" style="color:#4f8ef7;">Datenschutzerklärung</a> zur Kenntnis genommen. <span style="color:#ef4444;">*</span>
-              </span>
-            </label>
-            <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;">
-              <input type="checkbox" id="ob-agb-check" onchange="pruefeAvvWeiter()"
-                style="width:17px;height:17px;flex-shrink:0;margin-top:2px;accent-color:#4f8ef7;cursor:pointer;">
-              <span style="font-size:12px;color:#aab4cb;line-height:1.6;">
-                Ich habe die <a href="agb.html" target="_blank" style="color:#4f8ef7;">AGB</a> gelesen und akzeptiere sie. <span style="color:#ef4444;">*</span>
-              </span>
-            </label>
-          </div>
-
-          <div style="font-size:11px;color:var(--text3,#6b7a99);margin-bottom:16px;">
-            <span style="color:#ef4444;">*</span> Pflichtfelder — ohne Bestätigung ist eine Nutzung von PROVA nicht möglich.
-          </div>
-
-          <div class="btn-row" style="justify-content:flex-end;">
-            <button class="btn btn-ghost" type="button" onclick="showStep(3)">&#8592; Zurück</button>
-            <button class="btn btn-accent" type="button" id="ob-avv-weiter" onclick="showStep(5)" disabled style="opacity:.4;cursor:not-allowed;">Zustimmen &amp; weiter &#8594;</button>
-          </div>
-        </section>
-
-        <!-- STEP 5 — früher Step 4 -->
-        <section class="step" id="ob-step-5" aria-label="Schritt 5">
-          <div class="progress-row">
-            <div class="progress-text">5/6</div>
-            <div class="progress-bar" aria-hidden="true"><div class="progress-fill" style="width:83%;"></div></div>
+            <div class="progress-text">4/5</div>
+            <div class="progress-bar" aria-hidden="true"><div class="progress-fill" style="width:80%;"></div></div>
           </div>
           <div class="ob-title">So erstellen Sie Ihr erstes Gutachten</div>
           <div class="ob-subtitle">Kurzer Überblick über die nächsten Schritte.</div>
@@ -404,15 +367,15 @@
             </div>
           </div>
           <div class="btn-row" style="justify-content:flex-end;">
-            <button class="btn btn-ghost" type="button" onclick="showStep(4)">&#8592; Zurück</button>
-            <button class="btn btn-accent" type="button" onclick="showStep(6)">Verstanden &#8594;</button>
+            <button class="btn btn-ghost" type="button" onclick="showStep(3)">← Zurück</button>
+            <button class="btn btn-accent" type="button" onclick="showStep(5)">Verstanden →</button>
           </div>
         </section>
 
-        <!-- STEP 6 — früher Step 5 -->
-        <section class="step" id="ob-step-6" aria-label="Schritt 6">
+        <!-- STEP 5 -->
+        <section class="step" id="ob-step-5" aria-label="Schritt 5">
           <div class="progress-row">
-            <div class="progress-text">6/6</div>
+            <div class="progress-text">5/5</div>
             <div class="progress-bar" aria-hidden="true"><div class="progress-fill" style="width:100%;"></div></div>
           </div>
           <div class="success-wrap">
@@ -421,12 +384,7 @@
             <div class="success-text">Ihr erstes Gutachten wartet. Starten Sie jetzt.</div>
             <div class="btn-row" style="justify-content:center;">
               <a class="btn btn-accent" href="dashboard.html">Zum Dashboard →</a>
-              <a class="btn" href="app.html" id="ob-app-link">Erstes Gutachten erstellen →</a>
-            </div>
-            <div style="margin-top:20px;padding:16px;background:rgba(79,142,247,0.06);border:1px solid rgba(79,142,247,0.15);border-radius:12px;text-align:center;">
-              <div style="font-size:13px;font-weight:700;color:#e8eaf0;margin-bottom:6px;">📦 Vorherige Software nutzen?</div>
-              <div style="font-size:12px;color:#9da3b4;margin-bottom:12px;">Kontakte, Fälle und Rechnungen aus GM, Bauexpert, Outlook oder Excel in 4 Schritten importieren.</div>
-              <a href="import-assistent.html" style="display:inline-block;padding:9px 20px;background:rgba(79,142,247,0.15);border:1px solid rgba(79,142,247,0.3);border-radius:8px;color:#93C5FD;font-size:13px;font-weight:700;text-decoration:none;">⬆ Daten importieren →</a>
+              <a class="btn" href="app-starter.html" id="ob-app-link">Erstes Gutachten erstellen →</a>
             </div>
           </div>
         </section>
@@ -434,8 +392,232 @@
     </div>
   </div>
 
-  <script src="sw-register.js" defer></script>
-  <script src="trial-guard.js"></script>
-  <script src="onboarding-logic.js" defer></script>
+  <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+  <script>if (typeof netlifyIdentity !== 'undefined') netlifyIdentity.init();</script>
+  <script src="prova-auth-api.js"></script>
+  <script src="prova-sv-airtable.js"></script>
+  <script>
+  /* ============================================================
+     PROVA Onboarding — Connect-Block
+     Speichert Profil + Paket in localStorage
+     Leitet nach Schritt 5 korrekt weiter je nach Paket
+  ============================================================ */
+
+  function showStep(n) {
+    // Vor Schritt-Wechsel: Daten speichern
+    if (n === 4) speichereProfilSchritt2();   // Profil speichern wenn weiter von Schritt 3
+    if (n === 5) speicherePaketSchritt3();    // Paket speichern wenn weiter von Schritt 4
+    if (n === 5) bereiteFertigSchritt5();     // Weiter-Links anpassen
+
+    for (var i = 1; i <= 5; i++) {
+      var el = document.getElementById('ob-step-' + i);
+      if (el) el.classList.toggle('active', i === n);
+    }
+    window.scrollTo(0, 0);
+  }
+
+  /* Schritt 2 → Profildaten in localStorage */
+  function speichereProfilSchritt2() {
+    var felder = {
+      prova_sv_vorname:  document.getElementById('ob-vorname')?.value.trim()  || '',
+      prova_sv_nachname: document.getElementById('ob-nachname')?.value.trim() || '',
+      prova_sv_email:    document.getElementById('ob-email')?.value.trim()    || '',
+      prova_sv_telefon:  document.getElementById('ob-telefon')?.value.trim()  || '',
+      prova_sv_firma:    document.getElementById('ob-firma')?.value.trim()    || '',
+      prova_sv_quali:    document.getElementById('ob-quali')?.value.trim()    || ''
+    };
+    Object.entries(felder).forEach(function(kv) {
+      if (kv[1]) localStorage.setItem(kv[0], kv[1]);
+    });
+    // Kombi-Key für SV_PROFIL (wird von ladeSVProfil() in App-Seiten gelesen)
+    localStorage.setItem('prova_sv_profil', JSON.stringify({
+      Vorname:            felder.prova_sv_vorname,
+      Nachname:           felder.prova_sv_nachname,
+      Email:              felder.prova_sv_email,
+      Telefon:            felder.prova_sv_telefon,
+      Firma:              felder.prova_sv_firma,
+      Zertifizierung:     felder.prova_sv_quali
+    }));
+  }
+
+  /* Schritt 3 → Paket in localStorage */
+  function speicherePaketSchritt3() {
+    var radio = document.querySelector('input[name="paket"]:checked');
+    var paket = radio ? radio.value : 'Solo';
+    localStorage.setItem('prova_paket', paket);
+
+    window.PROVA = window.PROVA || {};
+    window.PROVA.paket = paket;
+    var obTier = { Starter: 'Solo', Pro: 'Solo', Enterprise: 'Team', Solo: 'Solo', Team: 'Team' }[paket] || 'Solo';
+    window.PROVA.tier = obTier;
+  }
+
+  /* Schritt 5 — Weiter-Links je nach Paket anpassen */
+  function bereiteFertigSchritt5() {
+    var paket = localStorage.getItem('prova_paket') || 'Solo';
+    var appLink = document.getElementById('ob-app-link');
+    if (appLink) {
+      var ziel = 'app-starter.html';
+      if (paket === 'Pro') ziel = 'app-pro.html';
+      else if (paket === 'Team' || paket === 'Enterprise') ziel = 'app-enterprise.html';
+      else if (paket === 'Solo' || paket === 'Starter') ziel = 'app-starter.html';
+      appLink.href = ziel;
+      appLink.textContent = 'Erstes Gutachten erstellen →';
+    }
+    // Trial-Start setzen wenn noch nicht gesetzt
+    if (!localStorage.getItem('prova_trial_start')) {
+      localStorage.setItem('prova_trial_start', Date.now().toString());
+    }
+    // Onboarding als abgeschlossen markieren
+    localStorage.setItem('prova_onboarding_done', 'true');
+    try { localStorage.setItem('prova_show_tour', '1'); } catch (e2) {}
+    syncOnboardingSV().then(function () {
+      if (window.provaSetOnboardingDone) return window.provaSetOnboardingDone();
+    }).catch(function () {});
+    // L8: Welcome/Onboarding Abschluss
+    try {
+      var sp = JSON.parse(localStorage.getItem('prova_sv_profil') || '{}');
+      fetch('/.netlify/functions/make-proxy?key=l8', {
+        method: 'POST',
+        headers: window.provaAuthHeaders ? window.provaAuthHeaders() : { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sv_email: sp.email || localStorage.getItem('prova_sv_email') || '',
+          vorname: sp.vorname || '',
+          paket: localStorage.getItem('prova_paket') || 'Solo',
+          onboarding_datum: new Date().toISOString().slice(0, 10)
+        })
+      }).catch(function () {});
+    } catch (e3) {}
+  }
+
+  async function syncOnboardingSV() {
+    try {
+      var svp = JSON.parse(localStorage.getItem('prova_sv_profil') || '{}');
+      var paket = localStorage.getItem('prova_paket') || 'Solo';
+      if (!svp.email) return;
+      var fields = {
+        Name:          svp.name  || '',
+        Email:         svp.email || '',
+        Telefon:       svp.telefon || '',
+        Qualifikation: svp.qualifikation || '',
+        Paket:         paket,
+        Onboarding:    new Date().toISOString().slice(0, 10)
+      };
+      // Erst prüfen ob schon vorhanden
+      var checkRes = await provaFetchAirtable({
+        method: 'GET',
+        path: '/v0/appJ7bLlAHZoxENWE/tbladqEQT3tmx4DIB?filterByFormula=' +
+              encodeURIComponent('{Email}="' + svp.email + '"') + '&maxRecords=1'
+      });
+      if (checkRes.ok) {
+        var checkData = await checkRes.json();
+        if (checkData.records && checkData.records.length > 0) {
+          try {
+            localStorage.setItem('prova_at_sv_record_id', checkData.records[0].id);
+          } catch (e0) {}
+          return;
+        }
+      }
+      var postRes = await provaFetchAirtable({
+        method: 'POST',
+        path: '/v0/appJ7bLlAHZoxENWE/tbladqEQT3tmx4DIB',
+        body: { records: [{ fields: fields }] }
+      });
+      if (postRes.ok) {
+        var postData = await postRes.json();
+        if (postData.records && postData.records[0] && postData.records[0].id) {
+          try {
+            localStorage.setItem('prova_at_sv_record_id', postData.records[0].id);
+          } catch (e1) {}
+        }
+      }
+    } catch(e) {
+      console.warn('Onboarding Airtable sync:', e.message);
+      // Stille Fehler — Onboarding trotzdem abgeschlossen
+    }
+  }
+
+  /* Validierung Schritt 2 — E-Mail Pflichtfeld */
+  function validiereSchritt2() {
+    var email = document.getElementById('ob-email')?.value.trim() || '';
+    var vorname = document.getElementById('ob-vorname')?.value.trim() || '';
+    if (!vorname) {
+      document.getElementById('ob-vorname').focus();
+      zeigeHinweis('Bitte Vorname eingeben.');
+      return false;
+    }
+    if (!email || !email.includes('@')) {
+      document.getElementById('ob-email').focus();
+      zeigeHinweis('Bitte gültige E-Mail eingeben.');
+      return false;
+    }
+    return true;
+  }
+
+  function zeigeHinweis(text) {
+    var h = document.getElementById('ob-hinweis');
+    if (!h) {
+      h = document.createElement('div');
+      h.id = 'ob-hinweis';
+      h.style.cssText = 'margin-top:12px;padding:10px 14px;background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.3);border-radius:8px;color:#fca5a5;font-size:13px;';
+      var step2 = document.getElementById('ob-step-2');
+      if (step2) step2.querySelector('.btn-row').before(h);
+    }
+    h.textContent = '⚠ ' + text;
+    h.style.display = 'block';
+    setTimeout(function() { h.style.display = 'none'; }, 3000);
+  }
+
+  /* Schritt 2 Weiter-Button mit Validierung */
+  document.addEventListener('DOMContentLoaded', function() {
+    // Weiter-Button in Schritt 2 mit Validierung versehen
+    var step2Weiter = document.querySelector('#ob-step-2 .btn-accent');
+    if (step2Weiter) {
+      step2Weiter.onclick = function() {
+        if (validiereSchritt2()) showStep(3);
+      };
+    }
+
+    // Profil aus localStorage wiederherstellen falls vorhanden (bei erneutem Besuch)
+    var gespeichert = localStorage.getItem('prova_sv_profil');
+    if (gespeichert) {
+      try {
+        var p = JSON.parse(gespeichert);
+        var map = {
+          'ob-vorname':  p.Vorname,
+          'ob-nachname': p.Nachname,
+          'ob-email':    p.Email,
+          'ob-telefon':  p.Telefon,
+          'ob-firma':    p.Firma,
+          'ob-quali':    p.Zertifizierung
+        };
+        Object.entries(map).forEach(function(kv) {
+          var el = document.getElementById(kv[0]);
+          if (el && kv[1]) el.value = kv[1];
+        });
+      } catch (e) {}
+    }
+
+    // Gespeichertes Paket: ältere Bezeichner auf Solo/Team-Radios abbilden
+    var gespeichertesPaket = localStorage.getItem('prova_paket');
+    if (gespeichertesPaket) {
+      var mapLegacy = { Starter: 'Solo', Pro: 'Solo', Enterprise: 'Team' };
+      var norm = mapLegacy[gespeichertesPaket] || gespeichertesPaket;
+      var radio = document.querySelector('input[name="paket"][value="' + norm + '"]');
+      if (radio) radio.checked = true;
+    }
+
+    var params = new URLSearchParams(window.location.search);
+    var plan = (params.get('plan') || '').toLowerCase();
+    if (plan === 'team' || plan === 'enterprise') {
+      var rTeam = document.getElementById('paket-radio-team');
+      if (rTeam) rTeam.checked = true;
+    } else if (plan === 'solo' || plan === 'starter' || plan === 'pro' || plan === 'plus') {
+      var rSolo = document.getElementById('paket-radio-solo');
+      if (rSolo) rSolo.checked = true;
+    }
+  });
+  </script>
 </body>
 </html>
+

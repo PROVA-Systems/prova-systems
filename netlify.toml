@@ -6,6 +6,25 @@
   publish = "."
   functions = "netlify/functions"
 
+# ---- UMGEBUNGSVARIABLEN (Dokumentation, keine Secrets hier eintragen) ----
+# In Netlify: Site settings → Environment variables setzen.
+#
+# make-proxy (/.netlify/functions/make-proxy?key=…)
+#   MAKE_WEBHOOK_K3  - Brief-Protokoll etc.; nur serverseitig, Aufruf mit Header x-prova-internal
+#   MAKE_WEBHOOK_A5  - DSGVO-Loeschung; Aufruf mit Netlify Identity JWT
+#   MAKE_WEBHOOK_F1  - Rechnungs-PDF (PDFMonkey); JWT
+#   MAKE_WEBHOOK_G3  - Gutachten-Freigabe / PDF / Mail; JWT (freigabe.html)
+#   MAKE_WEBHOOK_S1  - Korrekturanfrage (freigabe.html); JWT; Pflicht in Env (keine URL im Frontend)
+#   MAKE_WEBHOOK_L8  - Onboarding-Abschluss / Willkommen; JWT
+#
+#   PROVA_INTERNAL_WRITE_SECRET - muss mit x-prova-internal bei key=k3 uebereinstimmen
+#
+# Airtable (optional ueberschreiben)
+#   PROVA_AUDIT_TRAIL_TABLE oder AIRTABLE_AUDIT_TRAIL_TABLE - AUDIT_TRAIL Table-ID, Default siehe Functions
+#   AIRTABLE_PAT, AIRTABLE_BASE_ID — wie bereits für andere Functions
+#
+# Weitere Variablen: siehe jeweilige netlify/functions/*.js (Stripe, SMTP, …).
+
 # ---- REDIRECT RULES ----
 [[redirects]]
   from = "/"
@@ -20,6 +39,11 @@
 [[redirects]]
   from = "/login"
   to = "/app-login.html"
+  status = 200
+
+[[redirects]]
+  from = "/account-gesperrt"
+  to = "/account-gesperrt.html"
   status = 200
 
 [[redirects]]
@@ -44,22 +68,22 @@
 
 [[redirects]]
   from = "/agb"
-  to = "/agb.html"
+  to = "/legal/agb.html"
   status = 200
 
 [[redirects]]
   from = "/datenschutz"
-  to = "/datenschutz.html"
+  to = "/legal/datenschutz.html"
   status = 200
 
 [[redirects]]
   from = "/impressum"
-  to = "/impressum.html"
+  to = "/legal/impressum.html"
   status = 200
 
 [[redirects]]
   from = "/avv"
-  to = "/avv.html"
+  to = "/legal/avv.html"
   status = 200
 
 # ---- 404 FALLBACK ----
@@ -84,7 +108,7 @@
     Permissions-Policy = "camera=(), microphone=(self), geolocation=()"
     Strict-Transport-Security = "max-age=31536000; includeSubDomains"
     # connect-src erlaubt Make.com eu1 Webhooks + Netlify Functions + Anthropic API + Airtable + Netlify Identity
-    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://identity.netlify.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.gstatic.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; media-src 'self' blob:; connect-src 'self' https://hook.eu1.make.com https://api.anthropic.com https://api.airtable.com https://*.netlify.com https://*.netlify.app https://identity.netlify.com https://fonts.googleapis.com https://fonts.gstatic.com; frame-ancestors 'self';"
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://identity.netlify.com https://js.stripe.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.gstatic.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; media-src 'self' blob:; connect-src 'self' https://hook.eu1.make.com https://api.anthropic.com https://api.airtable.com https://api.stripe.com https://*.netlify.com https://*.netlify.app https://identity.netlify.com https://fonts.googleapis.com https://fonts.gstatic.com; frame-ancestors 'self'; frame-src https://js.stripe.com https://hooks.stripe.com;"
 
 # HTML nie gecacht
 [[headers]]

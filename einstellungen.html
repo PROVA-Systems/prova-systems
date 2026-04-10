@@ -1,10 +1,29 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
+<script>
+  window.__PROVA_ENV = 'production';
+  window.onerror = function(msg, src, line, col, err) {
+    if (!navigator.onLine) return;
+    fetch('/.netlify/functions/error-log', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        msg: String(msg).slice(0,500),
+        src: src, line: line,
+        page: window.location.pathname,
+        user: localStorage.getItem('prova_sv_email')||'unbekannt',
+        ua: navigator.userAgent.slice(0,100),
+        ts: new Date().toISOString()
+      })
+    }).catch(function(){});
+  };
+</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Einstellungen · PROVA</title>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Fraunces:wght@300;500;700&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="prova-nav.css">
 <style>
 /* ═══════════════════════════════════════════════
    PROVA SHARED CSS — identisch in allen Seiten
@@ -234,17 +253,18 @@ input,select,textarea{font-size:max(16px,1em);}
 </style>
 </head>
 <body>
+<script src="prova-account-gate.js"></script>
+<script src="paket-guard.js"></script>
 <!-- GEMEINSAMES NAV-FRAGMENT — in alle 4 Seiten identisch -->
 <!-- Topbar -->
 <div class="topbar">
   <div class="topbar-left">
-    <a href="app-starter.html" class="logo">PRO<span>VA</span></a>
+    <a href="dashboard.html" class="logo">PRO<span>VA</span></a>
     <nav class="topnav">
-      <a href="app-starter.html" data-short="Gutachten">Neues Gutachten</a>
-      <a href="archiv.html"        data-short="Archiv">Archiv</a>
-      <a href="termine.html"       data-short="Termine">Termine</a>
-      <a href="briefvorlagen.html" data-short="Vorlagen">Briefvorlagen</a>
-      <a href="jveg.html"          data-short="JVEG">JVEG</a>
+      <a href="dashboard.html" data-short="Zentrale">Zentrale</a>
+      <a href="app.html" data-short="Gutachten">Gutachten</a>
+      <a href="archiv.html" data-short="Archiv">Fälle</a>
+      <a href="einstellungen.html" class="active" data-short="Mehr">Mehr</a>
     </nav>
   </div>
   <div class="topbar-right">
@@ -260,29 +280,12 @@ input,select,textarea{font-size:max(16px,1em);}
 <!-- Drawer -->
 <div class="drawer" id="drawer">
   <div class="drawer-header">
-    <div class="logo">PRO<span>VA</span></div>
+    <a href="dashboard.html" class="logo">PRO<span>VA</span></a>
     <button class="drawer-close" onclick="closeDrawer()">✕</button>
   </div>
-  <nav class="drawer-nav">
-    <a href="app-starter.html"><span class="di">📄</span>Neues Gutachten</a>
-    <a href="archiv.html"><span class="di">📂</span>Archiv</a>
-    <a href="termine.html"><span class="di">📅</span>Termine</a>
-    <a href="briefvorlagen.html"><span class="di">✉️</span>Briefvorlagen</a>
-    <a href="jveg.html"><span class="di">💶</span>JVEG</a>
-  </nav>
-  <div class="drawer-footer">
-    <a href="einstellungen.html" class="active drawer-settings">⚙ Einstellungen</a>
-    <span class="paket-badge" id="drawerPaket"></span>
-  </div>
+  <div id="provaDrawerMount"></div>
 </div>
-<!-- Bottom Nav -->
-<nav class="bottom-nav">
-  <a href="app-starter.html" class="bn-item"><span class="bn-i">📄</span><span class="bn-l">Gutachten</span></a>
-  <a href="archiv.html"      class="bn-item"><span class="bn-i">📂</span><span class="bn-l">Archiv</span></a>
-  <a href="termine.html"     class="bn-item"><span class="bn-i">📅</span><span class="bn-l">Termine</span></a>
-  <a href="briefvorlagen.html" class="bn-item"><span class="bn-i">✉️</span><span class="bn-l">Vorlagen</span></a>
-  <a href="einstellungen.html" class="active bn-item"><span class="bn-i">⚙</span><span class="bn-l">Einstellg.</span></a>
-</nav>
+<nav class="bottom-nav" id="provaBottomNav"></nav>
 
 <div class="layout">
   <div class="snav">
@@ -295,9 +298,11 @@ input,select,textarea{font-size:max(16px,1em);}
     <button class="snav-item" onclick="showSec('notif',this)"><span class="si">🔔</span>Benachricht.</button>
     <div class="snav-sec">Finanzen</div>
     <button class="snav-item" onclick="showSec('konto',this)"><span class="si">🏦</span>Bankdaten & Steuer</button>
-    <div class="snav-sec">Enterprise</div>
+    <div class="snav-sec">Team</div>
     <button class="snav-item" id="navWH" onclick="showSec('webhook',this)"><span class="si">🔗</span>Webhook</button>
     <button class="snav-item" id="navWL" onclick="showSec('wl',this)"><span class="si">🎨</span>White-Label</button>
+    <div class="snav-sec">Datenschutz</div>
+    <button class="snav-item" onclick="showSec('dsgvo',this)"><span class="si">🛡️</span>Datenschutz & Löschung</button>
   </div>
   <div class="smain">
 
@@ -305,7 +310,7 @@ input,select,textarea{font-size:max(16px,1em);}
       <div class="page-title">Mein Profil</div>
       <div class="page-sub">Persönliche Daten und Sachverständigen-Angaben</div>
       <div class="card"><div class="card-header"><div class="card-title">Persönliche Daten</div></div><div class="card-body">
-        <div class="av-row"><div class="av" id="avI">SV</div><div><div style="font-size:14px;font-weight:600;" id="avN">Sachverständiger</div><div style="font-size:11px;color:var(--text3);" id="avP">Starter-Paket</div></div></div>
+        <div class="av-row"><div class="av" id="avI">SV</div><div><div style="font-size:14px;font-weight:600;" id="avN">Sachverständiger</div><div style="font-size:11px;color:var(--text3);" id="avP">Solo</div></div></div>
         <div class="form-row"><div class="form-group"><label class="form-label">Vorname</label><input type="text" class="form-input" id="pVN" placeholder="Max" oninput="upAv()"></div><div class="form-group"><label class="form-label">Nachname</label><input type="text" class="form-input" id="pNN" placeholder="Mustermann" oninput="upAv()"></div></div>
         <div class="form-group"><label class="form-label">E-Mail (für Gutachten-Versand)</label><input type="email" class="form-input" id="pMail" placeholder="sv@beispiel.de"><div class="form-hint">An diese Adresse werden fertige Gutachten geschickt</div></div>
         <div class="form-row"><div class="form-group"><label class="form-label">Telefon</label><input type="tel" class="form-input" id="pTel" placeholder="+49 221 ..."></div><div class="form-group"><label class="form-label">Mobil</label><input type="tel" class="form-input" id="pMob" placeholder="+49 151 ..."></div></div>
@@ -322,35 +327,34 @@ input,select,textarea{font-size:max(16px,1em);}
       <div class="page-title">Paket & Features</div>
       <div class="page-sub">Ihr aktives Paket und verfügbare Features</div>
       <div class="card"><div class="card-header"><div class="card-title">Aktives Paket</div></div><div class="card-body">
-        <div class="paket-grid">
-          <div class="pk" id="pkS"><div class="pk-name" style="color:var(--accent);">Starter</div><div class="pk-price">179 €/Mo</div><div class="pk-feat">KI-Gutachten</div><div class="pk-feat">17 Briefvorlagen</div><div class="pk-feat">Foto-Analyse Basis</div><div class="pk-feat">JVEG, Termine, Rechnungen</div><div class="pk-feat lk">KI-Brieftext</div><div class="pk-feat lk">§407a-Modul</div></div>
-          <div class="pk" id="pkP"><div class="pk-name" style="color:var(--warn);">Pro</div><div class="pk-price">369 €/Mo · 3 Seats</div><div class="pk-feat">Alles aus Starter</div><div class="pk-feat">KI-Brieftext alle Vorlagen</div><div class="pk-feat">Foto-Analyse erweitert</div><div class="pk-feat">Chef-Freigabe</div><div class="pk-feat lk">§407a-Vollmodul</div><div class="pk-feat lk">Jahresbericht</div></div>
-          <div class="pk" id="pkE"><div class="pk-name" style="color:var(--purple);">Enterprise</div><div class="pk-price">699 €+/Mo · unbegr.</div><div class="pk-feat">Alles aus Pro</div><div class="pk-feat">§407a-Vollmodul</div><div class="pk-feat">Foto-Forensik KI</div><div class="pk-feat">Jahresbericht-Generator</div><div class="pk-feat">Outbound-Webhook</div><div class="pk-feat">White-Label</div></div>
+        <div class="paket-grid" style="grid-template-columns:repeat(2,1fr);max-width:720px;">
+          <div class="pk" id="pkSolo"><div class="pk-name" style="color:var(--accent);">Solo</div><div class="pk-price">149 €/Mo</div><div class="pk-feat">Einzelgutachter · voller Kern-Workflow</div><div class="pk-feat">KI-Gutachten, Normen, Brieftext &amp; Archiv</div><div class="pk-feat">Briefvorlagen, JVEG, Termine, Rechnungen</div><div class="pk-feat">Jahresbericht, Statistiken</div><div class="pk-feat lk">Team: Foto-KI, Webhooks, White-Label, DATEV …</div></div>
+          <div class="pk" id="pkTeam"><div class="pk-name" style="color:var(--purple);">Team</div><div class="pk-price">279 €/Mo</div><div class="pk-feat">Mehrere Gutachter-Accounts</div><div class="pk-feat">Alles aus Solo</div><div class="pk-feat">KI-Foto-Analyse &amp; Beweisfragen-Extraktor</div><div class="pk-feat">Outbound-Webhook &amp; White-Label</div><div class="pk-feat">ZUGFeRD, DATEV, Effizienz-Dashboard</div><div class="pk-feat">Live-Chat-Support</div></div>
         </div>
-        <div class="info-box"><strong>Paket ändern:</strong> Schreiben Sie uns an <strong>kontakt@prova-systems.de</strong></div>
+        <div class="info-box"><strong>Paket upgraden:</strong> Nach Login unter <a href="account-gesperrt.html" style="color:var(--accent);">Testphase beendet</a> oder nach Ablauf des Trials direkt per <strong>Stripe-Checkout</strong> (Buttons auf der Sperrseite). Sonst: <strong>kontakt@prova-systems.de</strong></div>
+        <div class="info-box" style="margin-top:10px;">Ältere Einträge in Airtable werden beim Login als <strong>Solo</strong> oder <strong>Team</strong> übernommen.</div>
       </div></div>
       <div class="card"><div class="card-header"><div class="card-title">Feature-Übersicht</div></div><div class="card-body" style="padding:0;">
-        <table class="ft"><thead><tr><th>Feature</th><th>Starter</th><th>Pro</th><th>Enterprise</th></tr></thead><tbody>
-          <tr class="cat"><td colspan="4">KI-Gutachten</td></tr>
-          <tr><td>KI-Gutachten Erstellung</td><td><span class="ck">✓</span></td><td><span class="ck">✓</span></td><td><span class="ck">✓</span></td></tr>
-          <tr><td>§6 Stellungnahme-Editor</td><td><span class="ck">✓</span></td><td><span class="ck">✓</span></td><td><span class="ck">✓</span></td></tr>
-          <tr><td>Lektor-Modul</td><td><span class="ck">✓</span></td><td><span class="ck">✓</span></td><td><span class="ck">✓</span></td></tr>
-          <tr class="cat"><td colspan="4">Foto-Analyse</td></tr>
-          <tr><td>Foto-Beschreibung Sichtbefund</td><td><span class="ck">✓</span></td><td><span class="ck">✓</span></td><td><span class="ck">✓</span></td></tr>
-          <tr><td>Schadensgrad + DIN-Einordnung</td><td><span class="cx">—</span></td><td><span class="ck">✓</span></td><td><span class="ck">✓</span></td></tr>
-          <tr><td>Forensische Vollanalyse</td><td><span class="cx">—</span></td><td><span class="cx">—</span></td><td><span class="ck">✓</span></td></tr>
-          <tr class="cat"><td colspan="4">Kommunikation</td></tr>
-          <tr><td>17 Briefvorlagen</td><td><span class="ck">✓</span></td><td><span class="ck">✓</span></td><td><span class="ck">✓</span></td></tr>
-          <tr><td>KI-Brieftext (individuell)</td><td><span class="cx">—</span></td><td><span class="ck">✓</span></td><td><span class="ck">✓</span></td></tr>
-          <tr><td>§407a-Vollmodul (A-06 + B-02)</td><td><span class="cx">—</span></td><td><span class="cx">—</span></td><td><span class="ck">✓</span></td></tr>
-          <tr class="cat"><td colspan="4">Verwaltung</td></tr>
-          <tr><td>Termine, JVEG, Rechnungen, Mahnwesen</td><td><span class="ck">✓</span></td><td><span class="ck">✓</span></td><td><span class="ck">✓</span></td></tr>
-          <tr><td>Chef-Freigabe (Multi-User)</td><td><span class="cx">—</span></td><td><span class="ck">✓</span></td><td><span class="ck">✓</span></td></tr>
-          <tr><td>Jahresbericht-Generator</td><td><span class="cx">—</span></td><td><span class="cx">—</span></td><td><span class="ck">✓</span></td></tr>
-          <tr class="cat"><td colspan="4">Enterprise</td></tr>
-          <tr><td>Outbound-Webhook</td><td><span class="cx">—</span></td><td><span class="cx">—</span></td><td><span class="ck">✓</span></td></tr>
-          <tr><td>White-Label (Logo + Farbe)</td><td><span class="cx">—</span></td><td><span class="cx">—</span></td><td><span class="ck">✓</span></td></tr>
-          <tr><td>Audit-Trail</td><td><span class="cx">—</span></td><td><span class="cx">—</span></td><td><span class="ck">✓</span></td></tr>
+        <table class="ft"><thead><tr><th>Feature</th><th>Solo</th><th>Team</th></tr></thead><tbody>
+          <tr class="cat"><td colspan="3">KI-Gutachten</td></tr>
+          <tr><td>KI-Gutachten Erstellung</td><td><span class="ck">✓</span></td><td><span class="ck">✓</span></td></tr>
+          <tr><td>§6 Stellungnahme-Editor</td><td><span class="ck">✓</span></td><td><span class="ck">✓</span></td></tr>
+          <tr><td>Lektor-Modul</td><td><span class="ck">✓</span></td><td><span class="ck">✓</span></td></tr>
+          <tr class="cat"><td colspan="3">Foto-Analyse</td></tr>
+          <tr><td>Foto-Beschreibung Sichtbefund</td><td><span class="ck">✓</span></td><td><span class="ck">✓</span></td></tr>
+          <tr><td>KI-Foto-Analyse (GPT-4o Vision, Schaden/Normen)</td><td><span class="cx">—</span></td><td><span class="ck">✓</span></td></tr>
+          <tr class="cat"><td colspan="3">Kommunikation</td></tr>
+          <tr><td>Briefvorlagen &amp; KI-Brieftext</td><td><span class="ck">✓</span></td><td><span class="ck">✓</span></td></tr>
+          <tr><td>Gericht / §407a-Vorlagen</td><td><span class="ck">✓</span></td><td><span class="ck">✓</span></td></tr>
+          <tr><td>Beweisfragen-Extraktor (PDF → §411 ZPO)</td><td><span class="cx">—</span></td><td><span class="ck">✓</span></td></tr>
+          <tr class="cat"><td colspan="3">Verwaltung &amp; Schnittstellen</td></tr>
+          <tr><td>Termine, JVEG, Rechnungen, Mahnwesen</td><td><span class="ck">✓</span></td><td><span class="ck">✓</span></td></tr>
+          <tr><td>Jahresbericht, Statistiken</td><td><span class="ck">✓</span></td><td><span class="ck">✓</span></td></tr>
+          <tr><td>ZUGFeRD / XRechnung, DATEV-Export</td><td><span class="cx">—</span></td><td><span class="ck">✓</span></td></tr>
+          <tr><td>Chef-Freigabe, Team-Dashboard, Einladungen</td><td><span class="cx">—</span></td><td><span class="ck">✓</span></td></tr>
+          <tr><td>Outbound-Webhook &amp; White-Label</td><td><span class="cx">—</span></td><td><span class="ck">✓</span></td></tr>
+          <tr><td>Effizienz-Dashboard, Unterlagen-Tracking</td><td><span class="cx">—</span></td><td><span class="ck">✓</span></td></tr>
+          <tr><td>Live-Chat Support</td><td><span class="cx">—</span></td><td><span class="ck">✓</span></td></tr>
         </tbody></table>
       </div></div>
     </div>
@@ -429,9 +433,9 @@ input,select,textarea{font-size:max(16px,1em);}
     <div class="sec" id="sec-webhook">
       <div class="page-title">Outbound-Webhook</div>
       <div class="page-sub">PROVA sendet bei Gutachten-Freigabe automatisch JSON an Ihre URL</div>
-      <div id="whLocked" class="warn-box" style="display:none;">🔒 Nur im Enterprise-Paket verfügbar.</div>
+      <div id="whLocked" class="warn-box" style="display:none;">🔒 Nur im Team-Paket verfügbar.</div>
       <div id="whContent">
-        <div class="card"><div class="card-header"><div class="card-title">Webhook-Konfiguration</div><span style="font-size:10px;color:var(--purple);">Enterprise</span></div><div class="card-body">
+        <div class="card"><div class="card-header"><div class="card-title">Webhook-Konfiguration</div><span style="font-size:10px;color:var(--purple);">Team</span></div><div class="card-body">
           <div class="form-group"><label class="form-label">Ihre Webhook-URL</label><div class="wh-row"><input type="url" class="form-input" id="wURL" placeholder="https://ihre-domain.de/webhook/prova"><button class="btn btn-secondary" onclick="testWH()" style="flex-shrink:0;">Testen</button></div></div>
           <div class="form-group"><label class="form-label">Secret-Header (optional)</label><input type="text" class="form-input" id="wSec" placeholder="X-PROVA-Secret: ihr-schlüssel"></div>
           <div class="info-box"><strong>Payload:</strong> aktenzeichen, schadenart, adresse, gutachten_text, pdf_url, freigabe_datum</div>
@@ -443,9 +447,9 @@ input,select,textarea{font-size:max(16px,1em);}
     <div class="sec" id="sec-wl">
       <div class="page-title">White-Label</div>
       <div class="page-sub">Ihr Logo und Ihre Farben in PDFs und E-Mails</div>
-      <div id="wlLocked" class="warn-box" style="display:none;">🔒 Nur im Enterprise-Paket verfügbar.</div>
+      <div id="wlLocked" class="warn-box" style="display:none;">🔒 Nur im Team-Paket verfügbar.</div>
       <div id="wlContent">
-        <div class="card"><div class="card-header"><div class="card-title">Branding</div><span style="font-size:10px;color:var(--purple);">Enterprise</span></div><div class="card-body">
+        <div class="card"><div class="card-header"><div class="card-title">Branding</div><span style="font-size:10px;color:var(--purple);">Team</span></div><div class="card-body">
           <div class="form-group"><label class="form-label">Logo-URL</label><input type="url" class="form-input" id="wlLogo" placeholder="https://ihre-domain.de/logo.png"><div class="form-hint">PNG oder SVG, min. 200×60px</div></div>
           <div class="form-group"><label class="form-label">Primärfarbe</label><div class="color-row"><input type="color" id="wlCP" value="#4f8ef7" oninput="document.getElementById('wlHex').value=this.value"><input type="text" class="form-input" id="wlHex" placeholder="#4f8ef7" style="font-family:var(--mono);font-size:12px;" oninput="if(/^#[0-9A-Fa-f]{6}$/.test(this.value))document.getElementById('wlCP').value=this.value"></div><div class="form-hint">Erscheint in PDFs und E-Mails. "Powered by PROVA" bleibt erhalten.</div></div>
         </div></div>
@@ -453,9 +457,39 @@ input,select,textarea{font-size:max(16px,1em);}
       </div>
     </div>
 
+    <div class="sec" id="sec-dsgvo">
+      <div class="page-title">Datenschutz & Löschung</div>
+      <div class="page-sub">Art. 15 (Auskunft), Art. 17 (Löschung) und persönliches Aktivitätsprotokoll.</div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">DSGVO-Rechte</div></div>
+        <div class="card-body">
+          <div class="warn-box">⚠️ Alle Ihre Daten werden unwiderruflich gelöscht. Dieser Vorgang kann nicht rückgängig gemacht werden.</div>
+          <div class="save-bar" style="justify-content:flex-start;margin-top:0;">
+            <button class="btn btn-secondary" onclick="downloadDsgvoAuskunft()">Meine Daten herunterladen (Art. 15)</button>
+            <button class="btn btn-danger" onclick="deleteMyAccountDsgvo()">Mein Konto löschen (Art. 17 DSGVO)</button>
+          </div>
+          <div class="info-box">Verzeichnis der Verarbeitungstätigkeiten: <a href="legal/datenschutz-intern.html" style="color:var(--accent);">öffnen</a></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">Mein Aktivitätsprotokoll</div></div>
+        <div class="card-body">
+          <button class="btn btn-secondary" onclick="loadMyAudit()" style="margin-bottom:10px;">Aktualisieren</button>
+          <div id="myAuditList" style="font-size:12px;color:var(--text2);line-height:1.6;">Noch nicht geladen.</div>
+        </div>
+      </div>
+      <div style="font-size:11px;color:var(--text3);margin-top:10px;">
+        <a href="legal/datenschutz-intern.html" style="color:var(--accent);">Verzeichnis der Verarbeitungstätigkeiten</a>
+      </div>
+    </div>
+
   </div>
 </div>
 <div class="toast" id="toast"></div>
+<script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+<script>if(typeof netlifyIdentity!=='undefined')netlifyIdentity.init();</script>
+<script src="prova-auth-api.js"></script>
+<script src="prova-audit.js"></script>
 <script src="prova-sv-airtable.js"></script>
 <script>
 const SK="prova_settings";
@@ -490,14 +524,14 @@ function loadAll(){
   try{
     const kd=JSON.parse(localStorage.getItem("prova_kontodaten")||"null");
     if(kd&&document.getElementById("kIBAN")){
-      if(document.getElementById("kIBAN"))document.getElementById("kIBAN").value=kd.iban||"";
-      if(document.getElementById("kBIC"))document.getElementById("kBIC").value=kd.bic||"";
-      if(document.getElementById("kBank"))document.getElementById("kBank").value=kd.bank||"";
-      if(document.getElementById("kStNr"))document.getElementById("kStNr").value=kd.steuernr||"";
-      if(document.getElementById("kUStId"))document.getElementById("kUStId").value=kd.ustid||"";
-      if(document.getElementById("kMwSt"))document.getElementById("kMwSt").value=kd.mwst||"19";
-      if(document.getElementById("kZahl"))document.getElementById("kZahl").value=kd.zahlungsziel||"30";
-      if(document.getElementById("kREPrefix"))document.getElementById("kREPrefix").value=(kd.re_prefix||"RE").slice(0,6);
+      if(document.getElementById("kIBAN"))document.getElementById("kIBAN").value=kd.IBAN||kd.iban||"";
+      if(document.getElementById("kBIC"))document.getElementById("kBIC").value=kd.BIC||kd.bic||"";
+      if(document.getElementById("kBank"))document.getElementById("kBank").value=kd.Bank||kd.bank||"";
+      if(document.getElementById("kStNr"))document.getElementById("kStNr").value=kd.Steuernummer||kd.steuernr||"";
+      if(document.getElementById("kUStId"))document.getElementById("kUStId").value=kd.USt_IdNr||kd.ustid||"";
+      if(document.getElementById("kMwSt"))document.getElementById("kMwSt").value=kd.MwSt_Satz||kd.mwst||"19";
+      if(document.getElementById("kZahl"))document.getElementById("kZahl").value=kd.Zahlungsziel_Tage||kd.zahlungsziel||"30";
+      if(document.getElementById("kREPrefix"))document.getElementById("kREPrefix").value=(kd.Re_Prefix||kd.re_prefix||"RE").slice(0,6);
     }
   }catch(e){}
   upAv();
@@ -520,24 +554,27 @@ async function saveKonto(){
     Re_Prefix:(document.getElementById("kREPrefix").value||"RE").slice(0,6)
   };
   try{
-    const res=await fetch("/.netlify/functions/airtable",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({method:"PATCH",path:"/v0/appJ7bLlAHZoxENWE/tbladqEQT3tmx4DIB/"+recId,payload:{fields}})});
+    const res=await provaFetchAirtable({method:"PATCH",path:"/v0/appJ7bLlAHZoxENWE/tbladqEQT3tmx4DIB/"+recId,payload:{fields}});
     if(!res.ok)throw new Error("HTTP "+res.status);
-    localStorage.setItem("prova_kontodaten",JSON.stringify({iban:fields.IBAN,bic:fields.BIC,bank:fields.Bank,steuernr:fields.Steuernummer,ustid:fields.USt_IdNr,mwst:String(fields.MwSt_Satz),zahlungsziel:String(fields.Zahlungsziel_Tage),re_prefix:fields.Re_Prefix}));
+    localStorage.setItem("prova_kontodaten",JSON.stringify({IBAN:fields.IBAN,BIC:fields.BIC,Bank:fields.Bank,Steuernummer:fields.Steuernummer,USt_IdNr:fields.USt_IdNr,MwSt_Satz:String(fields.MwSt_Satz),Zahlungsziel_Tage:String(fields.Zahlungsziel_Tage),Re_Prefix:fields.Re_Prefix}));
     showToast("Bankdaten gespeichert ✅");
   }catch(e){showToast("Speichern fehlgeschlagen",true);}
 }
-function saveWH(){if(!PROVA.isEnterprise){PROVA.requirePaket("outbound_webhook","Enterprise");return;}ss({wURL:document.getElementById("wURL").value,wSec:document.getElementById("wSec").value});showToast("Webhook gespeichert ✅");}
+function saveWH(){if(PROVA.tier!=="Team"){PROVA.requirePaket("outbound_webhook");return;}ss({wURL:document.getElementById("wURL").value,wSec:document.getElementById("wSec").value});showToast("Webhook gespeichert ✅");}
 async function testWH(){const url=document.getElementById("wURL").value;if(!url){showToast("Bitte URL eingeben",true);return;}try{await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({test:true,source:"PROVA",ts:new Date().toISOString()})});showToast("Test-Request gesendet ✅");}catch(e){showToast("Verbindung fehlgeschlagen",true);}}
-function saveWL(){if(!PROVA.isEnterprise){PROVA.requirePaket("whitelabel","Enterprise");return;}ss({wlLogo:document.getElementById("wlLogo").value,wlHex:document.getElementById("wlHex").value});showToast("White-Label gespeichert ✅");}
+function saveWL(){if(PROVA.tier!=="Team"){PROVA.requirePaket("whitelabel");return;}ss({wlLogo:document.getElementById("wlLogo").value,wlHex:document.getElementById("wlHex").value});showToast("White-Label gespeichert ✅");}
 function applyPaket(){
   const p=PROVA.paket;
   document.getElementById("avP").textContent=p+"-Paket";
-  [["pkS","a-s","Starter"],["pkP","a-p","Pro"],["pkE","a-e","Enterprise"]].forEach(([id,cls,name])=>{
-    const el=document.getElementById(id);el.className="pk"+(p===name?" "+cls:"");
+  const teamAktiv=PROVA.tier==="Team";
+  const soloVis=!teamAktiv;
+  [["pkSolo","a-s",soloVis],["pkTeam","a-e",teamAktiv]].forEach(([id,cls,on])=>{
+    const el=document.getElementById(id);if(!el)return;
+    el.className="pk"+(on?" "+cls:"");
     el.querySelector(".pk-cur")?.remove();
-    if(p===name){const b=document.createElement("div");b.className="pk-cur";b.style.cssText=cls==="a-s"?"background:#4f8ef718;color:#4f8ef7":cls==="a-p"?"background:#f59e0b18;color:#f59e0b":"background:#a78bfa18;color:#a78bfa";b.textContent="Aktiv";el.appendChild(b);}
+    if(on){const b=document.createElement("div");b.className="pk-cur";b.style.cssText=cls==="a-s"?"background:#4f8ef718;color:#4f8ef7":"background:#a78bfa18;color:#a78bfa";b.textContent="Aktiv";el.appendChild(b);}
   });
-  const isE=PROVA.isEnterprise;
+  const isE=PROVA.tier==="Team";
   document.getElementById("navWH").classList.toggle("locked",!isE);
   document.getElementById("navWL").classList.toggle("locked",!isE);
   document.getElementById("whLocked").style.display=isE?"none":"block";
@@ -549,12 +586,62 @@ function applyPaket(){
 function toggleDrawer(){document.getElementById("drawer").classList.toggle("open");document.getElementById("drawerOverlay").classList.toggle("open");document.body.style.overflow=document.getElementById("drawer").classList.contains("open")?"hidden":"";}
 function closeDrawer(){document.getElementById("drawer").classList.remove("open");document.getElementById("drawerOverlay").classList.remove("open");document.body.style.overflow="";}
 document.addEventListener("keydown",e=>{if(e.key==="Escape")closeDrawer();});
-(function(){const p=localStorage.getItem("prova_paket")||"Starter";const c={Starter:"#4f8ef7",Pro:"#f59e0b",Enterprise:"#a78bfa"}[p];const s="background:"+c+"18;color:"+c+";border:1px solid "+c+"33";["topbarPaket","drawerPaket"].forEach(id=>{const el=document.getElementById(id);if(el){el.textContent=p;el.setAttribute("style",s);}});window.PROVA={paket:p,get isPro(){return["Pro","Enterprise"].includes(this.paket);},get isEnterprise(){return this.paket==="Enterprise";},requirePaket(f,min){const pr=["ki_brieftext","chef_freigabe","foto_erweitert"],en=["paragraph_407a","jahresbericht","outbound_webhook","whitelabel","foto_forensik"];const ok=en.includes(f)?this.isEnterprise:pr.includes(f)?this.isPro:true;if(!ok)alert((min==="Enterprise"?"🔒 Nur im Enterprise-Paket":"🔒 Nur im Pro- oder Enterprise-Paket")+"\n\nEinstellungen → Paket & Features");return ok;}};})();
+(function(){if(!window.PROVA)return;const c=PROVA.paketColor();const s="background:"+c+"18;color:"+c+";border:1px solid "+c+"33";const el=document.getElementById("topbarPaket");if(el){el.textContent=PROVA.paketLabel();el.setAttribute("style",s);}})();
 function showToast(m,e=false){const t=document.getElementById("toast");t.textContent=m;t.className="toast"+(e?" err":"");t.classList.add("show");setTimeout(()=>t.classList.remove("show"),2600);}
+
+async function downloadDsgvoAuskunft(){
+  try{
+    const res = await fetch('/.netlify/functions/dsgvo-auskunft',{method:'GET',headers:window.provaAuthHeaders?window.provaAuthHeaders():{}});
+    const data = await res.json();
+    if(!res.ok) throw new Error(data.error||('HTTP '+res.status));
+    const blob = new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'prova-dsgvo-auskunft-' + new Date().toISOString().slice(0,10) + '.json';
+    document.body.appendChild(a); a.click(); a.remove();
+    showToast('Ihre Daten wurden als JSON heruntergeladen');
+  }catch(e){ showToast('Auskunft fehlgeschlagen: '+(e.message||e),true); }
+}
+async function deleteMyAccountDsgvo(){
+  var conf = prompt('Bitte zur Bestätigung exakt "LÖSCHEN" eingeben:');
+  if(conf!=='LÖSCHEN') return;
+  var email=(localStorage.getItem('prova_sv_email')||'').trim();
+  if(!email){ showToast('Bitte erneut anmelden.',true); return; }
+  try{
+    await fetch('/.netlify/functions/make-proxy?key=a5',{
+      method:'POST',
+      headers:window.provaAuthHeaders?window.provaAuthHeaders():{'Content-Type':'application/json'},
+      body:JSON.stringify({sv_email:email,grund:'Nutzerantrag'})
+    });
+    try{ if(window.provaAuditLog) await window.provaAuditLog({typ:'Loeschung',email:email,details:{grund:'Nutzerantrag'}}); }catch(_){}
+    if(window.netlifyIdentity && netlifyIdentity.logout) await netlifyIdentity.logout();
+    localStorage.clear(); sessionStorage.clear();
+    window.location.href='index.html';
+  }catch(e){ showToast('Löschung konnte nicht gestartet werden.',true); }
+}
+async function loadMyAudit(){
+  var el=document.getElementById('myAuditList');
+  if(!el) return;
+  el.textContent='Lädt…';
+  try{
+    const res=await fetch('/.netlify/functions/mein-aktivitaetsprotokoll',{method:'GET',headers:window.provaAuthHeaders?window.provaAuthHeaders():{}});
+    const data=await res.json();
+    const rows=(data.records||[]);
+    if(!rows.length){el.textContent='Keine Einträge.';return;}
+    el.innerHTML=rows.map(function(r){
+      var f=r.fields||{};
+      var t=f.Zeitstempel||f.Timestamp||'';
+      var typ=f.Typ||f.Aktion||'Event';
+      var az=f.AZ||'';
+      return '<div style="padding:6px 0;border-bottom:1px solid var(--border);"><strong>'+typ+'</strong>'+(az?' · '+az:'')+'<br><span style="color:var(--text3)">'+t+'</span></div>';
+    }).join('');
+  }catch(e){el.textContent='Fehler beim Laden.';}
+}
 
 loadAll();
 applyPaket();
 </script>
+<script src="nav.js" defer></script>
 <script src="prova-notifications.js" defer></script>
 </body>
 </html>

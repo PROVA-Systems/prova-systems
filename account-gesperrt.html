@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<script>
+  window.__PROVA_ENV = 'production';
+  window.onerror = function(msg, src, line, col, err) {
+    if (!navigator.onLine) return;
+    fetch('/.netlify/functions/error-log', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        msg: String(msg).slice(0,500),
+        src: src, line: line,
+        page: window.location.pathname,
+        user: localStorage.getItem('prova_sv_email')||'unbekannt',
+        ua: navigator.userAgent.slice(0,100),
+        ts: new Date().toISOString()
+      })
+    }).catch(function(){});
+  };
+</script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PROVA — Testphase beendet</title>
+  <style>
+    :root { --navy:#0D2544; --accent:#4A90D9; --text:#E2E8F0; --muted:#94A3B8; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: linear-gradient(135deg, #0D2544 0%, #1B3F6B 100%);
+      min-height: 100vh;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+    }
+    .card {
+      max-width: 480px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 16px;
+      padding: 2rem;
+    }
+    h1 { font-size: 1.35rem; margin-bottom: 0.75rem; }
+    p { font-size: 0.9rem; line-height: 1.6; color: var(--muted); margin-bottom: 1rem; }
+    .actions { display: flex; flex-direction: column; gap: 10px; margin-top: 1.25rem; }
+    a.btn, button.btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 12px 16px;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 0.9rem;
+      text-decoration: none;
+      cursor: pointer;
+      border: none;
+      font-family: inherit;
+    }
+    a.primary { background: var(--accent); color: #fff; }
+    a.secondary { background: rgba(255,255,255,0.1); color: var(--text); border: 1px solid rgba(255,255,255,0.15); }
+    button.ghost { background: transparent; color: var(--muted); border: 1px solid rgba(255,255,255,0.2); }
+  </style>
+</head>
+<body>
+  <script src="prova-account-gate.js"></script>
+  <div class="card">
+    <h1>Testphase beendet</h1>
+    <p>Ihre 14 Tage Test sind vorbei. Sie können weiterhin Ihr <strong>Archiv</strong> und angelegte Daten einsehen — neue Gutachten, KI, Kalender und weitere Funktionen sind gesperrt, bis Sie ein Paket wählen (Solo oder Team).</p>
+    <div class="actions">
+      <button type="button" class="btn primary" id="btnCheckoutSolo">Jetzt upgraden — Solo · 149&nbsp;€ / Monat</button>
+      <button type="button" class="btn primary" id="btnCheckoutTeam" style="background:#2563eb;">Jetzt upgraden — Team · 279&nbsp;€ / Monat</button>
+      <a class="btn secondary" href="archiv.html">Zum Archiv</a>
+      <a class="btn secondary" href="index.html#preise">Pakete &amp; Preise</a>
+      <a class="btn secondary" href="einstellungen.html">Einstellungen</a>
+      <button type="button" class="btn ghost" id="btnLogout">Abmelden</button>
+    </div>
+    <p id="checkoutMsg" style="font-size:0.8rem;color:var(--muted);margin-top:0.75rem;display:none;"></p>
+  </div>
+  <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+  <script>
+  if (typeof netlifyIdentity !== 'undefined') netlifyIdentity.init();
+  </script>
+  <script src="prova-auth-api.js"></script>
+  <script>
+  function startCheckout(plan) {
+    var msg = document.getElementById('checkoutMsg');
+    msg.style.display = 'block';
+    msg.textContent = 'Checkout wird vorbereitet…';
+    fetch('/.netlify/functions/create-checkout-session', {
+      method: 'POST',
+      headers: window.provaAuthHeaders(),
+      body: JSON.stringify({ plan: plan })
+    })
+      .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
+      .then(function (x) {
+        if (!x.ok || !x.j.url) {
+          msg.textContent = (x.j && x.j.error) ? x.j.error : 'Checkout nicht möglich. Bitte anmelden.';
+          return;
+        }
+        window.location.href = x.j.url;
+      })
+      .catch(function () {
+        msg.textContent = 'Netzwerkfehler.';
+      });
+  }
+  document.getElementById('btnCheckoutSolo').addEventListener('click', function () { startCheckout('solo'); });
+  document.getElementById('btnCheckoutTeam').addEventListener('click', function () { startCheckout('team'); });
+  document.getElementById('btnLogout').addEventListener('click', function () {
+    try {
+      Object.keys(localStorage).forEach(function (k) {
+        if (k.indexOf('prova_') === 0) localStorage.removeItem(k);
+      });
+    } catch (e) {}
+    if (typeof netlifyIdentity !== 'undefined') netlifyIdentity.logout();
+    window.location.href = 'app-login.html';
+  });
+  </script>
+</body>
+</html>

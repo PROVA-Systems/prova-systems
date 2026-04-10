@@ -1,54 +1,163 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
+<script>
+  window.__PROVA_ENV = 'production';
+  window.onerror = function(msg, src, line, col, err) {
+    if (!navigator.onLine) return;
+    fetch('/.netlify/functions/error-log', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        msg: String(msg).slice(0,500),
+        src: src, line: line,
+        page: window.location.pathname,
+        user: localStorage.getItem('prova_sv_email')||'unbekannt',
+        ua: navigator.userAgent.slice(0,100),
+        ts: new Date().toISOString()
+      })
+    }).catch(function(){});
+  };
+</script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1.0">
   <title>PROVA — Mahnung</title>
+  <link rel="stylesheet" href="prova-nav.css">
   <style>
-    body{font-family:system-ui,sans-serif;max-width:720px;margin:40px auto;padding:20px;line-height:1.6;color:#111;}
-    h1{font-size:1.25rem;}
-    .box{border:1px solid #e5e7eb;border-radius:12px;padding:20px;background:#fafafa;}
-    .mono{font-family:ui-monospace,monospace;}
-    a{color:#2563eb;}
+    :root{--bg:#0d0f14;--bg2:#13161d;--text:#e8eaf0;--text2:#9da3b4;--text3:#6b7280;--accent:#4f8ef7;--border:rgba(255,255,255,0.08);}
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:system-ui,sans-serif;background:var(--bg);color:var(--text2);min-height:100vh;font-size:15px;line-height:1.6;}
+    .topbar{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 20px;height:52px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+    .logo{font-weight:800;font-size:18px;color:var(--text);text-decoration:none;}
+    .logo span{color:var(--accent);}
+    .topnav{display:flex;gap:8px;flex-wrap:wrap;}
+    .topnav a{padding:6px 10px;border-radius:6px;color:var(--text3);font-size:13px;text-decoration:none;}
+    .topnav a:hover{background:rgba(255,255,255,0.05);color:var(--text2);}
+    .topnav a.active{color:var(--accent);background:rgba(79,142,247,0.12);}
+    .topbar-left{display:flex;align-items:center;gap:14px;}
+    .paket-badge{font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;}
+    .drawer-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:200;}
+    .drawer-overlay.open{display:block;}
+    .drawer{position:fixed;top:0;left:0;bottom:0;width:260px;background:var(--bg2);border-right:1px solid var(--border);z-index:201;transform:translateX(-100%);transition:transform .25s ease;display:flex;flex-direction:column;}
+    .drawer.open{transform:translateX(0);}
+    .drawer-header{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+    .drawer-close{background:none;border:none;color:var(--text3);font-size:18px;cursor:pointer;}
+    .burger{display:none;background:none;border:none;cursor:pointer;flex-direction:column;gap:4px;padding:6px;}
+    .burger span{display:block;width:20px;height:2px;background:var(--text2);}
+    .bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;height:56px;background:var(--bg2);border-top:1px solid var(--border);z-index:100;justify-content:space-around;align-items:stretch;}
+    @media(max-width:900px){.topnav{display:none;}.burger{display:flex;}.bottom-nav{display:flex;}body{padding-bottom:56px;}}
+    .main{max-width:720px;margin:0 auto;padding:24px 20px 48px;}
+    .back{margin-bottom:16px;}
+    .back a{color:var(--accent);text-decoration:none;font-size:14px;}
+    .back a:hover{text-decoration:underline;}
+    .paper{border:1px solid var(--border);border-radius:12px;padding:22px;background:rgba(255,255,255,0.04);color:var(--text);}
+    .paper h1{font-size:1.25rem;color:var(--text);margin-bottom:12px;}
+    .paper .mono{font-family:ui-monospace,monospace;}
+    .hint{margin-top:16px;font-size:13px;color:var(--text3);}
+    .copy-btn{margin-top:12px;padding:10px 16px;border-radius:10px;border:1px solid rgba(255,255,255,0.12);background:rgba(79,142,247,0.2);color:#fff;font-weight:600;cursor:pointer;font:inherit;}
+    .copy-btn:hover{background:rgba(79,142,247,0.3);}
   </style>
 </head>
 <body>
-  <p><a href="mahnwesen.html">← Mahnwesen</a></p>
-  <div id="content"></div>
+  <script src="prova-account-gate.js"></script>
+  <script src="paket-guard.js"></script>
+  <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+  <script>if(typeof netlifyIdentity!=='undefined')netlifyIdentity.init();</script>
+  <script src="prova-auth-api.js"></script>
+  <script src="prova-airtable-api.js"></script>
+  <div class="topbar">
+    <div class="topbar-left">
+      <a href="dashboard.html" class="logo">PRO<span>VA</span></a>
+      <nav class="topnav">
+        <a href="rechnungen.html">Rechnungen</a>
+        <a href="mahnwesen.html" class="active">Mahnwesen</a>
+        <a href="archiv.html">Fälle</a>
+      </nav>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <span class="paket-badge" id="topbarPaket"></span>
+      <a href="einstellungen.html" style="color:var(--text3);text-decoration:none;padding:6px;">⚙</a>
+      <button type="button" class="burger" onclick="toggleDrawer()" aria-label="Menü"><span></span><span></span><span></span></button>
+    </div>
+  </div>
+  <div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
+  <div class="drawer" id="drawer">
+    <div class="drawer-header">
+      <a href="dashboard.html" class="logo">PRO<span>VA</span></a>
+      <button type="button" class="drawer-close" onclick="closeDrawer()">✕</button>
+    </div>
+    <div id="provaDrawerMount"></div>
+  </div>
+  <nav class="bottom-nav" id="provaBottomNav"></nav>
+  <script>
+  function toggleDrawer(){var d=document.getElementById('drawer'),o=document.getElementById('drawerOverlay');d.classList.toggle('open');o.classList.toggle('open');document.body.style.overflow=d.classList.contains('open')?'hidden':'';}
+  function closeDrawer(){var d=document.getElementById('drawer'),o=document.getElementById('drawerOverlay');d.classList.remove('open');o.classList.remove('open');document.body.style.overflow='';}
+  document.addEventListener('keydown',function(e){if(e.key==='Escape')closeDrawer();});
+  (function(){if(!window.PROVA)return;var c=PROVA.paketColor();var el=document.getElementById('topbarPaket');if(el){el.textContent=PROVA.paketLabel();el.setAttribute('style','background:'+c+'18;color:'+c+';border:1px solid '+c+'33');}})();
+  </script>
+  <script src="nav.js" defer></script>
+
+  <div class="main">
+    <p class="back"><a href="mahnwesen.html">← Mahnwesen</a></p>
+    <div id="content"></div>
+  </div>
   <script src="mahnwesen-logic.js"></script>
   <script>
   (function(){
     var p = new URLSearchParams(location.search);
     var nr = p.get('nr') || '';
+    var rec = p.get('rec') || '';
     var stufe = parseInt(p.get('stufe') || '1', 10);
     var api = window.MahnwesenAPI;
-    var rows = api ? api.loadRows() : [];
-    var r = rows.find(function(x){ return (x.rechnungsnummer||x.nr)===nr; }) || {};
-    var brutto = (Number(r.netto)||0) * (1 + (Number(r.ust_satz||19)/100)));
-    var tage = api ? api.daysOpen(r) : 0;
-    var zins = stufe >= 2 && api ? api.verzugszins(brutto, tage) : 0;
-    var titel = stufe===1 ? 'Zahlungserinnerung (Mahnung 1)' : stufe===2 ? 'Mahnung 2 — Verzugszins §288 BGB' : 'Mahnung 3 — Inkasso-Hinweis';
-    var html = '<h1>'+titel+'</h1><div class="box">';
-    html += '<p>Sehr geehrte Damen und Herren,</p>';
-    html += '<p>wir fordern Sie auf, den offenen Betrag zur Rechnung <strong class="mono">'+nr+'</strong> ';
-    html += 'unverzüglich zu begleichen.</p>';
-    if(stufe>=2){
-      html += '<p><strong>Verzugszins (§288 Abs. 2 BGB, Basiszinssatz + 9 %-Punkte, geschätzt für '+tage+' Tage): ca. '+zins.toFixed(2)+' €</strong> (ohne Gewähr, rechnerisch).</p>';
+    var wrap = document.getElementById('content');
+    function render(r){
+      r = r || {};
+      var nrd = nr || r.rechnungsnummer || r.nr || '';
+      var brutto = (Number(r.netto)||0) * (1 + (Number(r.ust_satz||19)/100));
+      var tage = api ? api.daysOpen(r) : 0;
+      var zins = stufe >= 2 && api ? api.verzugszins(brutto, tage) : 0;
+      var titel = stufe===1 ? 'Zahlungserinnerung (Mahnung 1)' : stufe===2 ? 'Mahnung 2 — Verzugszins §288 BGB' : 'Mahnung 3 — Inkasso-Hinweis';
+      var html = '<div class="paper"><h1>'+titel+'</h1>';
+      html += '<p>Sehr geehrte Damen und Herren,</p>';
+      html += '<p>wir fordern Sie auf, den offenen Betrag zur Rechnung <strong class="mono">'+nrd+'</strong> ';
+      html += 'unverzüglich zu begleichen.</p>';
+      if(stufe>=2){
+        html += '<p><strong>Verzugszins (§288 Abs. 2 BGB, Basiszinssatz + 9 %-Punkte p.a., geschätzt für '+tage+' Tage): ca. '+zins.toFixed(2)+' €</strong> (ohne Gewähr).</p>';
+      }
+      if(stufe>=3){
+        html += '<p><strong>Hinweis:</strong> Bei weiterem Zahlungsverzug behalten wir uns die Weiterleitung an ein Inkassounternehmen vor.</p>';
+      }
+      html += '<p>Betrag (netto): <strong>'+(r.netto!=null?Number(r.netto).toFixed(2):'—')+' €</strong></p>';
+      html += '<p style="margin-top:24px;">Mit freundlichen Grüßen<br>Ihr Sachverständigenbüro</p></div>';
+      html += '<p class="hint">Vorlage — Versand per E-Mail/Brief. <code>Mahn_Status</code> wurde in Airtable aktualisiert.</p>';
+      wrap.innerHTML = html;
+      if (navigator.clipboard && wrap) {
+        var b = document.createElement('button');
+        b.className = 'copy-btn';
+        b.textContent = 'Text kopieren';
+        b.onclick = function(){ navigator.clipboard.writeText(wrap.innerText); };
+        wrap.insertBefore(b, wrap.firstChild);
+      }
     }
-    if(stufe>=3){
-      html += '<p><strong>Hinweis:</strong> Bei weiterem Zahlungsverzug behalten wir uns die Weiterleitung an ein Inkassounternehmen vor.</p>';
-    }
-    html += '<p>Betrag (netto laut Liste): <strong>'+(r.netto!=null?Number(r.netto).toFixed(2):'—')+' €</strong></p>';
-    html += '<p style="margin-top:24px;">Mit freundlichen Grüßen<br>Ihr Sachverständigenbüro</p>';
-    html += '</div><p style="margin-top:16px;font-size:13px;color:#6b7280;">Dieses Schreiben ist eine Vorlage — Versand per E-Mail/Brief in Ihrem Mailprogramm. Status wurde in <code>prova_rechnungen_local</code> gesetzt.</p>';
-    document.getElementById('content').innerHTML = html;
-    if (navigator.clipboard && document.getElementById('content')) {
-      var b = document.createElement('button');
-      b.textContent = 'Text kopieren';
-      b.onclick = function(){ navigator.clipboard.writeText(document.getElementById('content').innerText); };
-      document.body.insertBefore(b, document.getElementById('content'));
+    var r0 = {};
+    try {
+      var raw = sessionStorage.getItem('prova_mahn_last_row');
+      if (raw) r0 = JSON.parse(raw);
+    } catch(e) {}
+    if (r0 && (r0.rechnungsnummer || r0.nr)) {
+      render(r0);
+    } else if (rec && window.PROVA_AIRTABLE && api) {
+      wrap.innerHTML = '<p class="hint">Lade Rechnung…</p>';
+      var path = '/v0/' + PROVA_AIRTABLE.BASE + '/' + PROVA_AIRTABLE.TABLE_RECHNUNGEN + '/' + rec;
+      PROVA_AIRTABLE.fetchJson('GET', path).then(function(data){
+        var recObj = { id: data.id, fields: data.fields || {} };
+        render(api.normalizeRechnung(recObj));
+      }).catch(function(){ render({}); });
+    } else {
+      render({});
     }
   })();
   </script>
 </body>
 </html>
+

@@ -80,7 +80,9 @@
           { text: 'Weiter', action: function () {
             try { sessionStorage.setItem('prova_tour_resume', 'app'); } catch (e) {}
             var p = localStorage.getItem('prova_paket') || 'Starter';
-            var app = p === 'Pro' ? 'app-pro.html' : (p === 'Enterprise' ? 'app-enterprise.html' : 'app-starter.html');
+            var isPlus = p === 'Pro';
+            var isTeam = p === 'Enterprise' || p === 'Team';
+            var app = isPlus ? 'app-pro.html' : (isTeam ? 'app-enterprise.html' : 'app-starter.html');
             window.location.href = app + '?provaTour=3';
             return tour.hide();
           } }

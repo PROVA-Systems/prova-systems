@@ -1,12 +1,31 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
+<script>
+  window.__PROVA_ENV = 'production';
+  window.onerror = function(msg, src, line, col, err) {
+    if (!navigator.onLine) return;
+    fetch('/.netlify/functions/error-log', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        msg: String(msg).slice(0,500),
+        src: src, line: line,
+        page: window.location.pathname,
+        user: localStorage.getItem('prova_sv_email')||'unbekannt',
+        ua: navigator.userAgent.slice(0,100),
+        ts: new Date().toISOString()
+      })
+    }).catch(function(){});
+  };
+</script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PROVA App – Starter</title>
+  <title>PROVA App – Solo</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Instrument+Sans:wght@400;500;600&family=Montserrat:wght@400;500;600;700;800&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="prova-nav.css">
 
 <style>
 :root{
@@ -106,8 +125,8 @@ input,select,textarea{font-size:max(16px,1em);}
 /* BADGES */
 .badge{display:inline-flex;align-items:center;gap:.375rem;padding:.2rem .6rem;font-size:.7rem;font-weight:700;border-radius:var(--radius-full);letter-spacing:.02em;}
 .badge-starter{background:rgba(107,114,128,.1);color:var(--gray-500);border:1px solid var(--gray-200);}
-.badge-pro{background:rgba(74,144,217,.1);color:var(--accent-dark);border:1px solid rgba(74,144,217,.2);}
-.badge-enterprise{background:rgba(245,158,11,.1);color:#92400E;border:1px solid rgba(245,158,11,.2);}
+.badge-plus{background:rgba(74,144,217,.1);color:var(--accent-dark);border:1px solid rgba(74,144,217,.2);}
+.badge-team,.badge-enterprise{background:rgba(245,158,11,.1);color:#92400E;border:1px solid rgba(245,158,11,.2);}
 .badge-success{background:rgba(16,185,129,.1);color:#065F46;}
 .badge-warning{background:rgba(245,158,11,.1);color:#92400E;}
 .badge-error{background:rgba(239,68,68,.1);color:#991B1B;}
@@ -265,33 +284,20 @@ tr:hover td{background:var(--gray-50);}
 }
 </style>
 </head>
-<body data-user-package="starter">
+<body data-user-package="solo">
+  <script src="prova-account-gate.js"></script>
+  <script src="paket-guard.js"></script>
+  <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+  <script>if (typeof netlifyIdentity !== 'undefined') netlifyIdentity.init();</script>
+  <script src="prova-auth-api.js"></script>
+  <script src="prova-audit.js"></script>
 <script>
-window.PROVA = window.PROVA || {};
-PROVA.paket = localStorage.getItem('prova_paket') || 'Starter';
-PROVA.isPro = ['Pro','Enterprise'].includes(PROVA.paket);
-PROVA.isEnterprise = PROVA.paket === 'Enterprise';
-PROVA.canUse = function(feature) {
-  const proFeatures = ['ki_brieftext','chef_freigabe','auto_erstbericht','auftraggeber_db','foto_erweitert','3_seats'];
-  const enterpriseFeatures = ['paragraph_407a','jahresbericht','audit_trail','outbound_webhook','whitelabel','foto_forensik'];
-  if (enterpriseFeatures.includes(feature)) return PROVA.isEnterprise;
-  if (proFeatures.includes(feature)) return PROVA.isPro;
-  return true;
-};
-PROVA.requirePaket = function(feature, minPaket) {
-  if (!PROVA.canUse(feature)) {
-    const msg = minPaket === 'Enterprise' ? '🔒 Nur im Enterprise-Paket verfügbar' : '🔒 Nur im Pro- oder Enterprise-Paket verfügbar';
-    alert(msg + '\n\nPaket upgraden unter Einstellungen → Paket & Features');
-    return false;
-  }
-  return true;
-};
 document.addEventListener('DOMContentLoaded', function() {
-  var _p = PROVA.paket, _pc = { Starter: '#4f8ef7', Pro: '#f59e0b', Enterprise: '#a78bfa' }[_p] || '#4f8ef7';
+  var _pc = PROVA.paketColor();
   var style = 'font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;background:' + _pc + '18;color:' + _pc + ';border:1px solid ' + _pc + '33;';
-  ['topbarPaket','drawerPaket'].forEach(function(id){ var el = document.getElementById(id); if (el) { el.textContent = _p; el.setAttribute('style', style); } });
+  var elP = document.getElementById('topbarPaket'); if (elP) { elP.textContent = PROVA.paketLabel(); elP.setAttribute('style', style); }
   var fh = document.getElementById('fotoPaketHinweis');
-  if (fh && PROVA.paket === 'Starter') fh.style.display = 'block';
+  if (fh && (PROVA.paket === 'Starter' || PROVA.paket === 'Solo')) fh.style.display = 'block';
   var eb = document.getElementById('eilfall-banner');
   if (eb && sessionStorage.getItem('prova_eilfall_banner') === '1') eb.style.display = 'block';
 });
@@ -299,13 +305,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <div class="topbar">
   <div class="topbar-left">
-    <a href="app-starter.html" class="logo">PRO<span>VA</span></a>
+    <a href="dashboard.html" class="logo">PRO<span>VA</span></a>
     <nav class="topnav">
-      <a href="#" data-short="Gutachten" class="active">Neues Gutachten</a>
-      <a href="archiv.html" data-short="Archiv">Archiv</a>
-      <a href="termine.html" data-short="Termine">Termine</a>
-      <a href="briefvorlagen.html" data-short="Vorlagen">Briefvorlagen</a>
-      <a href="jveg.html" data-short="JVEG">JVEG</a>
+      <a href="dashboard.html" data-short="Zentrale">Zentrale</a>
+      <a href="app.html" data-short="Gutachten" class="active">Gutachten</a>
+      <a href="archiv.html" data-short="Archiv">Fälle</a>
+      <a href="termine.html" data-short="Termine">Kalender</a>
+      <a href="rechnungen.html" data-short="Rechn.">Rechn.</a>
+      <a href="einstellungen.html" data-short="Mehr">Mehr</a>
     </nav>
   </div>
   <div class="topbar-right">
@@ -317,34 +324,19 @@ document.addEventListener('DOMContentLoaded', function() {
 <div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
 <div class="drawer" id="drawer">
   <div class="drawer-header">
-    <a href="app-starter.html" class="logo">PRO<span>VA</span></a>
+    <a href="dashboard.html" class="logo">PRO<span>VA</span></a>
     <button class="drawer-close" onclick="closeDrawer()">✕</button>
   </div>
-  <nav class="drawer-nav">
-    <a href="#" class="active"><span class="dnav-icon">📄</span>Neues Gutachten</a>
-    <a href="archiv.html"><span class="dnav-icon">📂</span>Archiv</a>
-    <a href="termine.html"><span class="dnav-icon">📅</span>Termine</a>
-    <a href="briefvorlagen.html"><span class="dnav-icon">✉️</span>Briefvorlagen</a>
-    <a href="jveg.html"><span class="dnav-icon">💶</span>JVEG</a>
-  </nav>
-  <div class="drawer-footer">
-    <a href="einstellungen.html" class="drawer-settings">⚙ Einstellungen</a>
-    <span class="paket-badge" id="drawerPaket"></span>
-  </div>
+  <div id="provaDrawerMount"></div>
 </div>
-<nav class="bottom-nav">
-  <a href="#" class="bn-item active"><span class="bn-icon">📄</span><span class="bn-label">Gutachten</span></a>
-  <a href="archiv.html" class="bn-item"><span class="bn-icon">📂</span><span class="bn-label">Archiv</span></a>
-  <a href="termine.html" class="bn-item"><span class="bn-icon">📅</span><span class="bn-label">Termine</span></a>
-  <a href="briefvorlagen.html" class="bn-item"><span class="bn-icon">✉️</span><span class="bn-label">Vorlagen</span></a>
-  <a href="einstellungen.html" class="bn-item"><span class="bn-icon">⚙</span><span class="bn-label">Einstellungen</span></a>
-</nav><!-- /bottom-nav -->
+<nav class="bottom-nav" id="provaBottomNav"></nav><!-- /bottom-nav -->
 <script>
 function toggleDrawer(){var d=document.getElementById('drawer'),o=document.getElementById('drawerOverlay');d.classList.toggle('open');o.classList.toggle('open');document.body.style.overflow=d.classList.contains('open')?'hidden':'';}
 function closeDrawer(){document.getElementById('drawer').classList.remove('open');document.getElementById('drawerOverlay').classList.remove('open');document.body.style.overflow='';}
 document.addEventListener('keydown',function(e){if(e.key==='Escape')closeDrawer();});
-(function(){var p=localStorage.getItem('prova_paket')||'Starter';var c={Starter:'#4f8ef7',Pro:'#f59e0b',Enterprise:'#a78bfa'}[p]||'#4f8ef7';var s='background:'+c+'18;color:'+c+';border:1px solid '+c+'33';['topbarPaket','drawerPaket'].forEach(function(id){var el=document.getElementById(id);if(el){el.textContent=p;el.setAttribute('style',s);}});})();
+(function(){if(!window.PROVA)return;var c=PROVA.paketColor();var s='background:'+c+'18;color:'+c+';border:1px solid '+c+'33';var el=document.getElementById('topbarPaket');if(el){el.textContent=PROVA.paketLabel();el.setAttribute('style',s);}})();
 </script>
+<script src="nav.js" defer></script>
   <main class="main-content">
 
     <!-- Page: New Gutachten -->
@@ -464,7 +456,7 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape')closeDrawer(
               </div>
             </div>
             <div style="font-size:.78rem;color:var(--gray-400);text-align:center;padding:.75rem;border:1px dashed var(--gray-200);border-radius:var(--radius-md);margin-top:.5rem">
-              🔒 <a href="index.html#preise" style="color:var(--accent)">Pro &amp; Enterprise</a>: Dashboard, Team-Accounts, digitale Signatur
+              🔒 <a href="index.html#preise" style="color:var(--accent)">Team</a>: Dashboard, Team-Accounts, digitale Signatur
             </div>
           </div>
         </div>
@@ -627,7 +619,7 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape')closeDrawer(
                 <div id="uploadStatus" class="upload-status" style="display:none;margin-top:.5rem;font-size:.8rem;color:var(--gray-500);align-items:center;gap:.5rem"><span>⏳</span><span id="uploadStatusText">Wird optimiert…</span></div>
                 <div id="fotoGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:.5rem;margin-top:.75rem"></div>
                 <div id="fotoKeineHinweis" style="font-size:.8rem;color:var(--gray-400);margin-top:.5rem">Keine Fotos — können nachgereicht werden</div>
-                <div id="fotoPaketHinweis" style="display:none;margin-top:.65rem;font-size:.75rem;padding:.5rem .75rem;background:rgba(74,144,217,.1);border:1px solid rgba(74,144,217,.2);border-radius:8px;color:var(--gray-600);line-height:1.45">Basis-Analyse aktiv — Pro für Schadensgrad + DIN</div>
+                <div id="fotoPaketHinweis" style="display:none;margin-top:.65rem;font-size:.75rem;padding:.5rem .75rem;background:rgba(74,144,217,.1);border:1px solid rgba(74,144,217,.2);border-radius:8px;color:var(--gray-600);line-height:1.45">Basis-Analyse aktiv — Team-Paket für KI-Foto-Analyse (Schadensgrad, Normen)</div>
               </div>
             </div>
           </div>
@@ -855,7 +847,7 @@ const GUTACHTEN_VORLAGEN = [
   { id: 'standard',        label: 'Standard-Gutachten',   file: 'vorlage-01-standard.html' },
   { id: 'kurzgutachten',   label: 'Kurzgutachten',        file: 'vorlage-02-kurzgutachten.html' },
   { id: 'beweissicherung', label: 'Beweissicherung',      file: 'vorlage-03-beweissicherung.html' },
-  { id: 'gericht',         label: 'Gerichtsgutachten',    file: 'vorlage-04-gerichtsgutachten.html', enterpriseOnly: true },
+  { id: 'gericht',         label: 'Gerichtsgutachten',    file: 'vorlage-04-gerichtsgutachten.html', teamOnly: true },
   { id: 'brand',           label: 'Brandschaden',         file: 'vorlage-05-brandschaden.html' },
   { id: 'feuchte',         label: 'Feuchte/Schimmel',    file: 'vorlage-06-feuchteschimmel.html' },
   { id: 'elementar',       label: 'Elementarschaden',    file: 'vorlage-07-elementarschaden.html' },
@@ -962,11 +954,7 @@ window.SV_PROFIL = null;
 window.SV_RECORD_ID = null;
 
 async function airtableProxy(method, path, body = null) {
-  const res = await fetch('/.netlify/functions/airtable', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ method, path, body })
-  });
+  const res = await provaFetchAirtable({ method, path, body });
   const text = await res.text();
   const isJson = (res.headers.get('content-type') || '').includes('application/json');
   const data = isJson ? JSON.parse(text || '{}') : text;
@@ -1594,7 +1582,7 @@ function sammleDaten() {
       document.getElementById('mw-feuchte')?.style.display !== 'none' && document.getElementById('f-feuchte')?.value ? 'Materialfeuchte (%): ' + document.getElementById('f-feuchte').value : '',
       document.getElementById('f-mw-extra')?.value ? String(document.getElementById('f-mw-extra').value) : '',
     ].filter(Boolean).join(' | ');
-    localStorage.setItem('prova_messwerte_strukturiert', JSON.stringify({ paket: localStorage.getItem('prova_paket') || 'Starter', messwerte: _mw, zeit: nowIso }));
+    localStorage.setItem('prova_messwerte_strukturiert', JSON.stringify({ paket: localStorage.getItem('prova_paket') || 'Solo', messwerte: _mw, zeit: nowIso }));
   } catch (_e) {}
 
   return {
@@ -1673,7 +1661,7 @@ function sammleDaten() {
     erstellungszeit_sekunden: dauerSek,
 
     gutachten_vorlage_id: getSelectedGutachtenVorlageId(),
-    paket: localStorage.getItem('prova_paket') || 'Starter'
+    paket: localStorage.getItem('prova_paket') || 'Solo'
   };
 }
 
@@ -1790,6 +1778,13 @@ async function sendeWebhook() {
         localStorage.removeItem('prova_stellungnahme_text');
         localStorage.removeItem('prova_stellungnahme_kj2_ok');
         localStorage.removeItem('prova_ki_stellungnahme_vorschlag');
+        if (window.provaAuditLog) {
+          window.provaAuditLog({
+            typ: 'Gutachten_Erstellt',
+            az: _az || '',
+            details: { vorlage: getSelectedGutachtenVorlageId ? getSelectedGutachtenVorlageId() : '' }
+          });
+        }
       } catch(_e) {}
       showToast('Gutachten übermittelt!', 'success');
     } else {
@@ -1818,11 +1813,7 @@ async function ladeGutachtenListe() {
   if (tbody) tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--gray-400);padding:2rem">Wird geladen…</td></tr>';
   try {
     const path = `/v0/${AIRTABLE_BASE}/${AIRTABLE_TABLE}?maxRecords=100&sort[0][field]=Timestamp&sort[0][direction]=desc`;
-    const res = await fetch('/.netlify/functions/airtable', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ method: 'GET', path })
-    });
+    const res = await provaFetchAirtable({ method: 'GET', path });
     if (!res.ok) throw new Error(res.status);
     const data = await res.json();
     alleGutachten = data.records || [];
@@ -1886,11 +1877,7 @@ async function ladeArchivDaten() {
 
   try {
     const path = `/v0/${AIRTABLE_BASE}/${AIRTABLE_TABLE}?maxRecords=500&sort[0][field]=Timestamp&sort[0][direction]=desc`;
-    const res = await fetch('/.netlify/functions/airtable', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ method: 'GET', path })
-    });
+    const res = await provaFetchAirtable({ method: 'GET', path });
     if (!res.ok) throw new Error(res.status);
     const data = await res.json();
     alleArchivDaten = data.records || [];
@@ -2015,7 +2002,7 @@ window.exportiereCSV = function() {
 ============================================================ */
 window.zeigeUpgradeHint = function(e, featureName) {
   e.preventDefault();
-  showToast(`${featureName} ist ab dem Pro-Paket verfügbar. → prova-systems.de/onboarding`, 'default', 4000);
+  showToast(`${featureName} ist mit Team verfügbar. → prova-systems.de/onboarding`, 'default', 4000);
 };
 
 
@@ -2070,28 +2057,6 @@ document.getElementById('f-schadenart')?.addEventListener('change', function() {
 });
 </script>
 <script>
-window.PROVA = window.PROVA || {};
-PROVA.paket = localStorage.getItem('prova_paket') || 'Starter';
-PROVA.isPro = ['Pro','Enterprise'].includes(PROVA.paket);
-PROVA.isEnterprise = PROVA.paket === 'Enterprise';
-PROVA.canUse = function(feature) {
-  const proFeatures = ['ki_brieftext','chef_freigabe','auto_erstbericht','auftraggeber_db','foto_erweitert','3_seats'];
-  const enterpriseFeatures = ['paragraph_407a','jahresbericht','audit_trail','outbound_webhook','whitelabel','foto_forensik'];
-  if (enterpriseFeatures.includes(feature)) return PROVA.isEnterprise;
-  if (proFeatures.includes(feature)) return PROVA.isPro;
-  return true;
-};
-PROVA.requirePaket = function(feature, minPaket) {
-  if (!PROVA.canUse(feature)) {
-    const msg = minPaket === 'Enterprise'
-      ? '🔒 Nur im Enterprise-Paket verfügbar'
-      : '🔒 Nur im Pro- oder Enterprise-Paket verfügbar';
-    alert(msg + '\n\nPaket upgraden unter Einstellungen → Paket & Features');
-    return false;
-  }
-  return true;
-};
-
 // ── GATE: Nach Analyse → §6-Fachurteil ──
 function goToGate() {
   var az = localStorage.getItem('prova_letztes_az') || '';
@@ -2101,6 +2066,12 @@ function goToGate() {
 }
 
 document.addEventListener('DOMContentLoaded', function () {
+  try {
+    if (!localStorage.getItem('prova_hint_mandantendaten_newcase')) {
+      showToast('Hinweis: Mandantendaten werden in der EU gespeichert (Airtable, DSGVO-konform). Für Gerichtsgutachten gilt §203 StGB.', 'default', 7000);
+      localStorage.setItem('prova_hint_mandantendaten_newcase', '1');
+    }
+  } catch (eHint) {}
   try {
     var n = localStorage.getItem('prova_neutralitaets_block');
     if (!n) return;

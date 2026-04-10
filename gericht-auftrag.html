@@ -1,6 +1,24 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
+<script>
+  window.__PROVA_ENV = 'production';
+  window.onerror = function(msg, src, line, col, err) {
+    if (!navigator.onLine) return;
+    fetch('/.netlify/functions/error-log', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        msg: String(msg).slice(0,500),
+        src: src, line: line,
+        page: window.location.pathname,
+        user: localStorage.getItem('prova_sv_email')||'unbekannt',
+        ua: navigator.userAgent.slice(0,100),
+        ts: new Date().toISOString()
+      })
+    }).catch(function(){});
+  };
+</script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1.0">
   <title>PROVA — Gerichtsauftrag & Beweisfragen</title>
@@ -34,17 +52,56 @@
     .frage-item{border-left:3px solid var(--accent);padding:8px 12px;margin:8px 0;background:rgba(79,142,247,0.08);border-radius:0 8px 8px 0;}
     .err{color:#f87171;font-size:13px;margin-top:8px;}
     .ok{color:#6ee7b7;font-size:13px;margin-top:8px;}
+    .drawer-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:200;}.drawer-overlay.open{display:block;}
+    .drawer{position:fixed;top:0;left:0;bottom:0;width:260px;background:var(--bg2);border-right:1px solid var(--border);z-index:201;transform:translateX(-100%);transition:transform .25s ease;display:flex;flex-direction:column;}
+    .drawer.open{transform:translateX(0);}.drawer-header{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+    .drawer-close{background:none;border:none;color:var(--text2);font-size:18px;cursor:pointer;}
+    .topbar-left{display:flex;align-items:center;gap:14px;}
+    .burger{display:none;background:none;border:none;cursor:pointer;flex-direction:column;gap:4px;padding:6px;}
+    .burger span{display:block;width:20px;height:2px;background:var(--text2);}
+    .bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;height:56px;background:var(--bg2);border-top:1px solid var(--border);z-index:100;justify-content:space-around;align-items:stretch;}
+    .paket-badge{font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;}
+    @media(max-width:900px){.topnav{display:none;}.burger{display:flex;}.bottom-nav{display:flex;}body{padding-bottom:56px;}}
   </style>
+  <link rel="stylesheet" href="prova-nav.css">
 </head>
 <body>
+  <script src="prova-account-gate.js"></script>
+  <script src="paket-guard.js"></script>
+  <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+  <script>if (typeof netlifyIdentity !== 'undefined') netlifyIdentity.init();</script>
+  <script src="prova-auth-api.js"></script>
   <div class="topbar">
-    <a href="dashboard.html" class="logo">PRO<span>VA</span></a>
-    <nav class="topnav">
-      <a href="archiv.html">Archiv</a>
-      <a href="termine.html">Termine</a>
-      <a href="akte.html">Akte</a>
-    </nav>
+    <div class="topbar-left">
+      <a href="dashboard.html" class="logo">PRO<span>VA</span></a>
+      <nav class="topnav">
+        <a href="gericht-auftrag.html" style="color:var(--accent);">Gericht</a>
+        <a href="akte.html">Akte</a>
+        <a href="archiv.html">Fälle</a>
+      </nav>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <span class="paket-badge" id="topbarPaket"></span>
+      <a href="einstellungen.html" style="color:var(--text2);text-decoration:none;padding:6px;">⚙</a>
+      <button type="button" class="burger" onclick="toggleDrawer()" aria-label="Menü"><span></span><span></span><span></span></button>
+    </div>
   </div>
+  <div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
+  <div class="drawer" id="drawer">
+    <div class="drawer-header">
+      <a href="dashboard.html" class="logo">PRO<span>VA</span></a>
+      <button type="button" class="drawer-close" onclick="closeDrawer()">✕</button>
+    </div>
+    <div id="provaDrawerMount"></div>
+  </div>
+  <nav class="bottom-nav" id="provaBottomNav"></nav>
+  <script>
+  function toggleDrawer(){var d=document.getElementById('drawer'),o=document.getElementById('drawerOverlay');d.classList.toggle('open');o.classList.toggle('open');document.body.style.overflow=d.classList.contains('open')?'hidden':'';}
+  function closeDrawer(){var d=document.getElementById('drawer'),o=document.getElementById('drawerOverlay');d.classList.remove('open');o.classList.remove('open');document.body.style.overflow='';}
+  document.addEventListener('keydown',function(e){if(e.key==='Escape')closeDrawer();});
+  (function(){if(!window.PROVA)return;var c=PROVA.paketColor();var el=document.getElementById('topbarPaket');if(el){el.textContent=PROVA.paketLabel();el.setAttribute('style','background:'+c+'18;color:'+c+';border:1px solid '+c+'33');}})();
+  </script>
+  <script src="nav.js" defer></script>
   <main class="main">
     <h1>Gerichtsauftrag · Beweisfragen & Kostenvorschuss</h1>
     <p class="sub">PDF-Beschluss hochladen oder Text einfügen. KI extrahiert Beweisfragen (OpenAI über <code>/.netlify/functions/ki-proxy</code>, <code>OPENAI_API_KEY</code> erforderlich). Kostenvorschuss lokal merken — Erinnerung z. B. über Termine/Make.</p>
@@ -117,11 +174,7 @@
       document.getElementById('kiMsg').innerHTML = '';
       if (text.length < 30) { document.getElementById('kiMsg').innerHTML = '<p class="err">Text zu kurz.</p>'; return; }
       document.getElementById('kiMsg').innerHTML = '<p class="ok">KI arbeitet…</p>';
-      fetch('/.netlify/functions/ki-proxy', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'beweisfragen_text', text: text })
-      }).then(function(r){ return r.json(); }).then(function(data){
+      provaFetchKiProxy({ action: 'beweisfragen_text', text: text }).then(function(r){ return r.json(); }).then(function(data){
         document.getElementById('kiMsg').innerHTML = '';
         if (data.error) {
           document.getElementById('kiMsg').innerHTML = '<p class="err">' + data.error + '</p>';
@@ -146,6 +199,7 @@
       });
     });
     document.getElementById('btnKvSave').addEventListener('click', function(){
+      if (window.PROVA && !PROVA.canUse('kv_tracker')) { PROVA.requirePaket('kv_tracker'); return; }
       var az = (document.getElementById('aktenzeichen').value || 'ohne_az').replace(/[^\w\-./]/g, '_');
       var o = {
         betrag: document.getElementById('kv_betrag').value,

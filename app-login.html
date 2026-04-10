@@ -1,6 +1,24 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
+<script>
+  window.__PROVA_ENV = 'production';
+  window.onerror = function(msg, src, line, col, err) {
+    if (!navigator.onLine) return;
+    fetch('/.netlify/functions/error-log', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        msg: String(msg).slice(0,500),
+        src: src, line: line,
+        page: window.location.pathname,
+        user: localStorage.getItem('prova_sv_email')||'unbekannt',
+        ua: navigator.userAgent.slice(0,100),
+        ts: new Date().toISOString()
+      })
+    }).catch(function(){});
+  };
+</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>PROVA Systems — Anmelden</title>
@@ -287,6 +305,7 @@ body::after {
 </style>
 </head>
 <body>
+<script src="prova-account-gate.js"></script>
 
 <div class="card">
   <div class="card-header">
@@ -306,7 +325,7 @@ body::after {
 
     <!-- Abgelaufen-Banner (wird per JS gesetzt) -->
     <div id="expired-banner" class="expired-banner">
-      ⏰ Ihre 14-tägige Testversion ist abgelaufen. Registrieren Sie sich um weiterzuarbeiten.
+      ⏰ Ihre Testphase ist beendet. Sie können Ihr Archiv weiter einsehen — voller Zugang nach Upgrade (Solo oder Team).
     </div>
 
     <!-- Tabs -->
@@ -385,42 +404,50 @@ body::after {
   </div>
 </div>
 
-<script src="prova-sv-airtable.js"></script>
-<!-- Netlify Identity Widget — wird aktiviert wenn Netlify Identity eingerichtet ist -->
+<!-- Netlify Identity — Registrierung, Login, E-Mail-Bestätigung (Netlify Dashboard aktivieren) -->
 <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+<script src="prova-auth-api.js"></script>
+<script src="prova-sv-airtable.js"></script>
+<script src="prova-audit.js"></script>
 <script>
-// Netlify Identity — invite_token + recovery_token verarbeiten
 if (typeof netlifyIdentity !== 'undefined') {
-  netlifyIdentity.on('init', function(user) {
-    var hash = window.location.hash;
-    if (hash && hash.indexOf('invite_token') !== -1) {
-      netlifyIdentity.open('signup');
-    }
-    if (hash && hash.indexOf('recovery_token') !== -1) {
-      netlifyIdentity.open('recovery');
+  netlifyIdentity.on('init', function (user) {
+    var hash = window.location.hash || '';
+    if (hash.indexOf('invite_token') !== -1) netlifyIdentity.open('signup');
+    if (hash.indexOf('recovery_token') !== -1) netlifyIdentity.open('recovery');
+    if (user && window.location.pathname.indexOf('app-login') >= 0 && hash.indexOf('recovery') === -1) {
+      window.location.href = 'dashboard.html';
     }
   });
-  netlifyIdentity.on('login', function(user) {
+  netlifyIdentity.on('login', async function (user) {
     var meta = user.user_metadata || {};
     var displayName = meta.full_name || user.email;
     Object.keys(localStorage).forEach(function (k) {
       if (k.indexOf('prova_') === 0) localStorage.removeItem(k);
     });
-    localStorage.setItem('prova_user', JSON.stringify({
-      email: user.email,
-      name: displayName
-    }));
+    localStorage.setItem('prova_user', JSON.stringify({ email: user.email, name: displayName }));
     try {
+      localStorage.setItem('prova_sv_email', user.email);
       localStorage.setItem('prova_show_tour', '1');
+      sessionStorage.setItem('prova_email', user.email);
     } catch (e) {}
-    var go = function () { window.location.href = 'dashboard.html'; };
-    if (typeof window.provaLoadSVProfilNachLogin === 'function') {
-      window.provaLoadSVProfilNachLogin(user.email).then(go).catch(go);
-    } else {
-      go();
+    try {
+      if (typeof window.provaAfterIdentityLogin === 'function') {
+        await window.provaAfterIdentityLogin(user.email, user);
+      } else if (typeof window.provaLoadSVProfilNachLogin === 'function') {
+        await window.provaLoadSVProfilNachLogin(user.email);
+      }
+    } catch (e2) {
+      console.warn('provaAfterIdentityLogin', e2);
     }
+    try {
+      if (window.provaAuditLog) {
+        await window.provaAuditLog({ typ: 'Login', email: user.email, details: {} });
+      }
+    } catch (e3) {}
+    window.location.href = 'dashboard.html';
   });
-  netlifyIdentity.on('error', function(err) {
+  netlifyIdentity.on('error', function (err) {
     console.error('Netlify Identity Fehler:', err);
   });
   netlifyIdentity.init();
@@ -428,24 +455,20 @@ if (typeof netlifyIdentity !== 'undefined') {
 </script>
 
 <script>
-/* ============================================================
-   PROVA Login
-============================================================ */
-
-// Trial-Status prüfen
-(function() {
-  const params = new URLSearchParams(window.location.search);
+(function () {
+  var params = new URLSearchParams(window.location.search);
   if (params.get('reason') === 'trial_expired') {
-    document.getElementById('expired-banner').style.display = 'block';
-    showTab('register');
+    var b = document.getElementById('expired-banner');
+    if (b) b.style.display = 'block';
+    showTab('login');
   }
 })();
 
 function showTab(tab) {
-  document.getElementById('form-login').style.display    = tab === 'login'    ? 'block' : 'none';
+  document.getElementById('form-login').style.display = tab === 'login' ? 'block' : 'none';
   document.getElementById('form-register').style.display = tab === 'register' ? 'block' : 'none';
-  document.getElementById('form-reset').style.display    = tab === 'reset'    ? 'block' : 'none';
-  document.getElementById('tab-login').classList.toggle('active',    tab === 'login');
+  document.getElementById('form-reset').style.display = tab === 'reset' ? 'block' : 'none';
+  document.getElementById('tab-login').classList.toggle('active', tab === 'login');
   document.getElementById('tab-register').classList.toggle('active', tab === 'register');
 }
 
@@ -454,107 +477,92 @@ function zeigePasswortReset() {
   document.getElementById('form-reset').style.display = 'block';
 }
 
-/* --- Testversion starten (kein Login) --- */
 function starteTestversion() {
-  const KEY = 'prova_trial_start';
-  if (!localStorage.getItem(KEY)) {
-    localStorage.setItem(KEY, Date.now().toString());
-  }
+  var KEY = 'prova_trial_start';
+  if (!localStorage.getItem(KEY)) localStorage.setItem(KEY, Date.now().toString());
   window.location.href = 'app-starter.html';
 }
 
-/* --- Login (explizit auf window: onclick + Parser-Fehler in anderen Skripten umgehen) --- */
 window.login = async function login() {
   var email = document.getElementById('login-email').value.trim();
-  var pw    = document.getElementById('login-pw').value;
+  var pw = document.getElementById('login-pw').value;
   var errEl = document.getElementById('login-error');
-  var btn   = document.getElementById('login-btn');
-
+  var btn = document.getElementById('login-btn');
   errEl.style.display = 'none';
-
   if (!email || !pw) {
-    errEl.textContent   = 'Bitte E-Mail und Passwort eingeben.';
+    errEl.textContent = 'Bitte E-Mail und Passwort eingeben.';
     errEl.style.display = 'block';
     return;
   }
-
   if (typeof netlifyIdentity === 'undefined') {
-    errEl.textContent   = 'Anmeldedienst wird nicht geladen. Bitte Seite neu laden oder VPN/Firewall prüfen.';
+    errEl.textContent = 'Anmeldedienst wird nicht geladen. Bitte Seite neu laden.';
     errEl.style.display = 'block';
     return;
   }
-
-  btn.disabled    = true;
+  btn.disabled = true;
   btn.textContent = '⏳ Anmelden…';
-
   try {
-    var user = await netlifyIdentity.login(email, pw);
-    var meta = user.user_metadata || {};
-    var displayName = meta.full_name || email;
-    Object.keys(localStorage).forEach(function (k) {
-      if (k.indexOf('prova_') === 0) localStorage.removeItem(k);
-    });
-    localStorage.setItem('prova_user', JSON.stringify({
-      email: user.email,
-      name: displayName
-    }));
-    try {
-      localStorage.setItem('prova_show_tour', '1');
-    } catch (e2) {}
-    if (typeof window.provaLoadSVProfilNachLogin === 'function') {
-      await window.provaLoadSVProfilNachLogin(user.email);
-    }
-    window.location.href = 'dashboard.html';
+    await netlifyIdentity.login(email, pw);
   } catch (e) {
-    errEl.textContent   = 'E-Mail oder Passwort falsch. Bitte erneut versuchen.';
+    errEl.textContent = 'E-Mail oder Passwort falsch — oder E-Mail noch nicht bestätigt.';
     errEl.style.display = 'block';
-    btn.disabled        = false;
-    btn.textContent     = 'Anmelden';
+    btn.disabled = false;
+    btn.textContent = 'Anmelden';
   }
 };
 
-/* --- Registrierung (kein await im Callback — nur synchron / setTimeout) --- */
-window.register = function register() {
-  var name  = document.getElementById('reg-name').value.trim();
+window.register = async function register() {
+  var name = document.getElementById('reg-name').value.trim();
   var email = document.getElementById('reg-email').value.trim();
-  var pw    = document.getElementById('reg-pw').value;
+  var pw = document.getElementById('reg-pw').value;
   var errEl = document.getElementById('reg-error');
   var sucEl = document.getElementById('reg-success');
-  var btn   = document.getElementById('reg-btn');
-
+  var btn = document.getElementById('reg-btn');
   errEl.style.display = 'none';
   sucEl.style.display = 'none';
-
   if (!name || !email || pw.length < 8) {
-    errEl.textContent   = !name || !email ? 'Bitte alle Felder ausfüllen.' : 'Passwort muss mind. 8 Zeichen haben.';
+    errEl.textContent = !name || !email ? 'Bitte alle Felder ausfüllen.' : 'Passwort muss mind. 8 Zeichen haben.';
     errEl.style.display = 'block';
     return;
   }
-
-  btn.disabled    = true;
-  btn.textContent = '⏳ Konto wird erstellt…';
-
-  setTimeout(function () {
-    Object.keys(localStorage).forEach(function (k) {
-      if (k.indexOf('prova_') === 0) localStorage.removeItem(k);
-    });
-    localStorage.setItem('prova_trial_start', Date.now().toString());
-    localStorage.setItem('prova_user', JSON.stringify({ name: name, email: email }));
-    localStorage.setItem('prova_sv_email', email);
-    try {
-      localStorage.setItem('prova_show_tour', '1');
-    } catch (e) {}
-    window.location.href = 'dashboard.html';
-  }, 800);
+  if (typeof netlifyIdentity === 'undefined') {
+    errEl.textContent = 'Anmeldedienst wird nicht geladen.';
+    errEl.style.display = 'block';
+    return;
+  }
+  btn.disabled = true;
+  btn.textContent = '⏳ wird gesendet…';
+  try {
+    if (typeof netlifyIdentity.signup === 'function') {
+      await netlifyIdentity.signup({ email: email, password: pw, data: { full_name: name } });
+    } else {
+      netlifyIdentity.open('signup');
+      sucEl.textContent =
+        'Bitte Registrierung im Fenster abschließen. Sie erhalten eine E-Mail mit Bestätigungslink — danach erscheint Ihr Datensatz in Airtable (Trial 14 Tage).';
+      sucEl.style.display = 'block';
+      btn.disabled = false;
+      btn.textContent = 'Konto erstellen & loslegen';
+      return;
+    }
+    sucEl.textContent =
+      '✅ Bestätigungs-Mail ist unterwegs. Bitte Link in der E-Mail anklicken — danach anmelden. Erst dann wird Ihr SV-Datensatz angelegt (14 Tage Trial).';
+    sucEl.style.display = 'block';
+  } catch (e) {
+    errEl.textContent = (e && e.message) ? e.message : 'Registrierung fehlgeschlagen.';
+    errEl.style.display = 'block';
+  }
+  btn.disabled = false;
+  btn.textContent = 'Konto erstellen & loslegen';
 };
 
-/* --- Passwort Reset --- */
 function resetPasswort() {
-  const email = document.getElementById('reset-email').value.trim();
+  var email = document.getElementById('reset-email').value.trim();
   if (!email) return;
+  if (typeof netlifyIdentity !== 'undefined' && netlifyIdentity.open) {
+    netlifyIdentity.open('recovery');
+  }
   document.getElementById('reset-success').style.display = 'block';
 }
-
 </script>
 </body>
 </html>
