@@ -52,9 +52,9 @@ exports.handler = async function (event) {
       Vorname: vorname,
       Nachname: nachname,
       Status: 'Trial',
-      Trial_End: trialEndStr,
+      trial_end: trialEnd.toISOString(),
       Onboarding_Datum: todayStr,
-      Paket: 'Trial',
+      Paket: 'Solo',
       subscription_status: 'trialing'
     };
 
@@ -71,8 +71,8 @@ exports.handler = async function (event) {
         Vorname: vorname,
         Nachname: nachname,
         Status: 'Trial',
-        Paket: 'Trial',
-        Trial_End: trialEndStr
+        Paket: 'Solo',
+        trial_end: trialEnd.toISOString()
       };
       const r2 = await fetch(AIRTABLE_API + '/v0/' + BASE_ID + '/' + TABLE_SV, {
         method: 'POST',

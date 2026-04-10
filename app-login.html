@@ -313,6 +313,16 @@ body::after {
   line-height: 1; user-select: none;
 }
 .pw-toggle:hover { color: var(--gray-700); }
+
+/* Browser-eigenes Passwort-Auge deaktivieren (Edge/Chrome/IE) */
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear,
+input[type="password"]::-webkit-contacts-auto-fill-button,
+input[type="password"]::-webkit-credentials-auto-fill-button { 
+  display: none !important; 
+  visibility: hidden;
+  pointer-events: none;
+}
 </style>
 </head>
 <body>
@@ -497,6 +507,10 @@ if (typeof netlifyIdentity !== 'undefined') {
 
 <script>
 (function () {
+  // Hash #register → direkt Tab Registrieren öffnen
+  if (window.location.hash === '#register') {
+    showTab('register');
+  }
   var params = new URLSearchParams(window.location.search);
   if (params.get('reason') === 'trial_expired') {
     var b = document.getElementById('expired-banner');
