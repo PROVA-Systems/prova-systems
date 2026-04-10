@@ -581,43 +581,72 @@ window.register = async function register() {
     errEl.style.display = 'block';
     return;
   }
-  if (typeof netlifyIdentity === 'undefined') {
-    errEl.textContent = 'Anmeldedienst wird nicht geladen.';
-    errEl.style.display = 'block';
-    return;
-  }
   btn.disabled = true;
-  btn.textContent = '⏳ wird gesendet…';
+  btn.textContent = '⏳ Konto wird erstellt…';
   try {
-    if (typeof netlifyIdentity.signup === 'function') {
-      await netlifyIdentity.signup({ email: email, password: pw, data: { full_name: name } });
-    } else {
-      netlifyIdentity.open('signup');
-      sucEl.textContent =
-        'Bitte Registrierung im Fenster abschließen. Sie erhalten eine E-Mail mit Bestätigungslink — danach erscheint Ihr Datensatz in Airtable (Trial 14 Tage).';
-      sucEl.style.display = 'block';
+    // Direkt gegen Netlify Identity API — kein Widget-Modal
+    var res = await fetch('/.netlify/identity/signup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: email, password: pw, data: { full_name: name } })
+    });
+    var data = await res.json();
+    if (!res.ok) {
+      var msg = (data && data.msg) ? data.msg : 'Registrierung fehlgeschlagen.';
+      if (msg.toLowerCase().includes('already registered')) {
+        msg = 'Diese E-Mail ist bereits registriert. Bitte anmelden oder Passwort zurücksetzen.';
+      }
+      errEl.textContent = msg;
+      errEl.style.display = 'block';
       btn.disabled = false;
       btn.textContent = 'Konto erstellen & loslegen';
       return;
     }
-    sucEl.textContent =
-      '✅ Bestätigungs-Mail ist unterwegs. Bitte Link in der E-Mail anklicken — danach anmelden. Erst dann wird Ihr SV-Datensatz angelegt (14 Tage Trial).';
-    sucEl.style.display = 'block';
+    // Erfolg: direkt einloggen (email confirmation ist Optional)
+    if (data.access_token) {
+      // Netlify Identity Widget mit Token synchronisieren
+      if (typeof netlifyIdentity !== 'undefined' && netlifyIdentity.store) {
+        try { netlifyIdentity.store.user = data; } catch(e) {}
+      }
+      var displayName = (data.user_metadata && data.user_metadata.full_name) || name;
+      localStorage.setItem('prova_user', JSON.stringify({ email: email, name: displayName }));
+      localStorage.setItem('prova_sv_email', email);
+      localStorage.setItem('prova_show_tour', '1');
+      if (typeof window.provaCreateSession === 'function') {
+        window.provaCreateSession({ email: email, name: displayName });
+      }
+      // Kurze Erfolgsmeldung dann Redirect
+      sucEl.textContent = '✅ Konto erstellt! Weiterleitung zum Dashboard…';
+      sucEl.style.display = 'block';
+      setTimeout(function() { window.location.href = 'onboarding.html'; }, 1200);
+    } else {
+      // Kein Token = Email Confirmation aktiv (Fallback)
+      sucEl.textContent = '✅ Konto erstellt! Bitte E-Mail bestätigen und dann anmelden.';
+      sucEl.style.display = 'block';
+      btn.disabled = false;
+      btn.textContent = 'Konto erstellen & loslegen';
+    }
   } catch (e) {
-    errEl.textContent = (e && e.message) ? e.message : 'Registrierung fehlgeschlagen.';
+    errEl.textContent = 'Verbindungsfehler — bitte erneut versuchen.';
     errEl.style.display = 'block';
+    btn.disabled = false;
+    btn.textContent = 'Konto erstellen & loslegen';
   }
-  btn.disabled = false;
-  btn.textContent = 'Konto erstellen & loslegen';
 };
 
-function resetPasswort() {
+async function resetPasswort() {
   var email = document.getElementById('reset-email').value.trim();
+  var sucEl = document.getElementById('reset-success');
   if (!email) return;
-  if (typeof netlifyIdentity !== 'undefined' && netlifyIdentity.open) {
-    netlifyIdentity.open('recovery');
-  }
-  document.getElementById('reset-success').style.display = 'block';
+  try {
+    await fetch('/.netlify/identity/recover', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: email })
+    });
+  } catch(e) {}
+  sucEl.textContent = '📬 E-Mail gesendet! Bitte Posteingang prüfen.';
+  sucEl.style.display = 'block';
 }
 </script>
 </body>
