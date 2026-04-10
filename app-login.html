@@ -302,6 +302,17 @@ body::after {
   text-align: center;
   display: none;
 }
+
+.pw-wrap { position: relative; }
+.pw-wrap .form-input { padding-right: 44px; }
+.pw-toggle {
+  position: absolute; right: 12px; top: 50%;
+  transform: translateY(-50%);
+  background: none; border: none; cursor: pointer;
+  color: var(--gray-400); font-size: 18px; padding: 4px;
+  line-height: 1; user-select: none;
+}
+.pw-toggle:hover { color: var(--gray-700); }
 </style>
 </head>
 <body>
@@ -342,7 +353,10 @@ body::after {
       </div>
       <div class="form-group">
         <label class="form-label">Passwort</label>
-        <input type="password" class="form-input" id="login-pw" placeholder="••••••••" autocomplete="current-password">
+        <div class="pw-wrap">
+          <input type="password" class="form-input" id="login-pw" placeholder="••••••••" autocomplete="current-password">
+          <button type="button" class="pw-toggle" onclick="togglePw('login-pw',this)" title="Passwort anzeigen">👁</button>
+        </div>
         <div class="forgot-link"><a href="#" onclick="zeigePasswortReset()">Passwort vergessen?</a></div>
       </div>
       <div class="error-msg" id="login-error">E-Mail oder Passwort falsch. Bitte nochmal versuchen.</div>
@@ -374,7 +388,10 @@ body::after {
       </div>
       <div class="form-group">
         <label class="form-label">Passwort <span style="color:var(--gray-400);font-weight:400">(mind. 8 Zeichen)</span></label>
-        <input type="password" class="form-input" id="reg-pw" placeholder="Sicheres Passwort wählen" autocomplete="new-password">
+        <div class="pw-wrap">
+          <input type="password" class="form-input" id="reg-pw" placeholder="Sicheres Passwort wählen" autocomplete="new-password">
+          <button type="button" class="pw-toggle" onclick="togglePw('reg-pw',this)" title="Passwort anzeigen">👁</button>
+        </div>
       </div>
       <div class="error-msg" id="reg-error">Bitte alle Felder ausfüllen.</div>
       <button class="btn btn-primary" id="reg-btn" onclick="register()" style="margin-top:.5rem">
@@ -414,6 +431,23 @@ body::after {
 if (typeof netlifyIdentity !== 'undefined') {
   netlifyIdentity.on('init', function (user) {
     var hash = window.location.hash || '';
+
+    // Bestätigungslink: Token automatisch verarbeiten → direkt einloggen
+    if (hash.indexOf('confirmation_token') !== -1) {
+      // Netlify Identity verarbeitet den Token automatisch beim init
+      // Zeige dem User eine Meldung
+      var errEl = document.getElementById('login-error');
+      if (errEl) {
+        errEl.style.display = 'block';
+        errEl.style.background = '#d1fae5';
+        errEl.style.color = '#065f46';
+        errEl.style.border = '1px solid #6ee7b7';
+        errEl.textContent = '✅ E-Mail bestätigt! Sie werden automatisch eingeloggt…';
+      }
+      // Netlify Identity loggt nach confirm automatisch ein → on('login') greift
+      return;
+    }
+
     if (hash.indexOf('invite_token') !== -1) netlifyIdentity.open('signup');
     if (hash.indexOf('recovery_token') !== -1) netlifyIdentity.open('recovery');
     if (user && window.location.pathname.indexOf('app-login') >= 0 && hash.indexOf('recovery') === -1) {
@@ -431,6 +465,12 @@ if (typeof netlifyIdentity !== 'undefined') {
       localStorage.setItem('prova_sv_email', user.email);
       localStorage.setItem('prova_show_tour', '1');
       sessionStorage.setItem('prova_email', user.email);
+    } catch (e) {}
+    // Session V2 anlegen damit auth-guard.js auf allen Folgeseiten grünes Licht gibt
+    try {
+      if (typeof window.provaCreateSession === 'function') {
+        window.provaCreateSession({ email: user.email, name: displayName });
+      }
     } catch (e) {}
     try {
       if (typeof window.provaAfterIdentityLogin === 'function') {
@@ -471,6 +511,21 @@ function showTab(tab) {
   document.getElementById('form-reset').style.display = tab === 'reset' ? 'block' : 'none';
   document.getElementById('tab-login').classList.toggle('active', tab === 'login');
   document.getElementById('tab-register').classList.toggle('active', tab === 'register');
+}
+
+
+function togglePw(id, btn) {
+  var input = document.getElementById(id);
+  if (!input) return;
+  if (input.type === 'password') {
+    input.type = 'text';
+    btn.textContent = '🙈';
+    btn.title = 'Passwort verbergen';
+  } else {
+    input.type = 'password';
+    btn.textContent = '👁';
+    btn.title = 'Passwort anzeigen';
+  }
 }
 
 function zeigePasswortReset() {
