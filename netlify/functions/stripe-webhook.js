@@ -4,8 +4,8 @@
  * Paket in Airtable: Solo | Team (anhand Stripe-Price-ID, optional ENV-Override)
  */
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY || '');
-const { AIRTABLE_API, BASE_ID, TABLE_SV } = require('./lib/prova-subscription');
-const { resolveSoloPriceId, resolveTeamPriceId } = require('./lib/prova-stripe-prices');
+const { AIRTABLE_API, BASE_ID, TABLE_SV } = require('./lib/prova-subscription.js');
+const { resolveSoloPriceId, resolveTeamPriceId } = require('./lib/prova-stripe-prices.js');
 
 function todayStr() {
   return new Date().toISOString().slice(0, 10);

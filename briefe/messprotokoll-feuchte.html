@@ -94,38 +94,5 @@
       </div>
     </div>
   </div>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-  // SV-Daten aus PROVA-Profil automatisch einsetzen
-  var svName  = [localStorage.getItem('prova_sv_vorname'),localStorage.getItem('prova_sv_nachname')].filter(Boolean).join(' ');
-  var svFirma = localStorage.getItem('prova_sv_firma') || '';
-  var svStr   = localStorage.getItem('prova_sv_strasse') || '';
-  var svPlz   = localStorage.getItem('prova_sv_plz') || '';
-  var svOrt   = localStorage.getItem('prova_sv_ort') || '';
-  var svTel   = localStorage.getItem('prova_sv_telefon') || '';
-  var az      = new URLSearchParams(window.location.search).get('az') || localStorage.getItem('prova_letztes_az') || '';
-  var datum   = new Date().toLocaleDateString('de-DE');
-
-  // Felder befüllen (verschiedene mögliche IDs/Klassen)
-  var setField = function(selectors, value) {
-    selectors.forEach(function(sel) {
-      document.querySelectorAll(sel).forEach(function(el) {
-        if (!el.value && value) {
-          if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') el.value = value;
-          else if (el.textContent === '' || el.textContent === sel) el.textContent = value;
-        }
-      });
-    });
-  };
-
-  setField(['.sv-name','#sv-name','[data-field="sv_name"]'], svName);
-  setField(['.sv-firma','#sv-firma'], svFirma);
-  setField(['.sv-adresse','#sv-adresse'], [svStr,svPlz,svOrt].filter(Boolean).join(', '));
-  setField(['.sv-telefon','#sv-telefon'], svTel);
-  setField(['.aktenzeichen','#aktenzeichen','.az-feld'], az);
-  setField(['.datum','#datum','.heutiges-datum'], datum);
-  setField(['.datum-begehung','#datum-begehung'], datum);
-});
-</script></body>
+</body>
 </html>

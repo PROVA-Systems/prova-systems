@@ -1,6 +1,6 @@
 /**
- * PROVA — SMTP über /.netlify/functions/smtp-senden (JWT)
- * Protokollierung (BRIEFE / Make K3) erfolgt nur serverseitig — kein Klienten-Doppel-Log.
+ * PROVA ï¿½ SMTP ï¿½ber /.netlify/functions/smtp-senden (JWT)
+ * Protokollierung (BRIEFE / Make K3) erfolgt nur serverseitig ï¿½ kein Klienten-Doppel-Log.
  */
 (function () {
   window.provaSmtpSenden = async function (payload) {

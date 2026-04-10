@@ -1,9 +1,11 @@
-const { AIRTABLE_API, BASE_ID, TABLE_SV } = require('./lib/prova-subscription');
-
-const TABLE_FAELLE = 'tblSxV8bsXwd1pwa0';
-const TABLE_RECHNUNGEN = 'tblF6MS7uiFAJDjiT';
-const TABLE_AUDIT =
-  process.env.PROVA_AUDIT_TRAIL_TABLE || process.env.AIRTABLE_AUDIT_TRAIL_TABLE || 'tblqQmMwJKxltXXXl';
+const {
+  AIRTABLE_API,
+  BASE_ID,
+  TABLE_SV,
+  TABLE_FAELLE,
+  TABLE_RECHNUNGEN,
+  TABLE_AUDIT
+} = require('./lib/prova-subscription.js');
 
 function json(statusCode, obj) {
   return {

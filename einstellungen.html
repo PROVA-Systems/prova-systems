@@ -489,6 +489,7 @@ input,select,textarea{font-size:max(16px,1em);}
 <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
 <script>if(typeof netlifyIdentity!=='undefined')netlifyIdentity.init();</script>
 <script src="prova-auth-api.js"></script>
+<script src="prova-airtable-api.js"></script>
 <script src="prova-audit.js"></script>
 <script src="prova-sv-airtable.js"></script>
 <script>
@@ -554,7 +555,8 @@ async function saveKonto(){
     Re_Prefix:(document.getElementById("kREPrefix").value||"RE").slice(0,6)
   };
   try{
-    const res=await provaFetchAirtable({method:"PATCH",path:"/v0/appJ7bLlAHZoxENWE/tbladqEQT3tmx4DIB/"+recId,payload:{fields}});
+    const AT=window.PROVA_AIRTABLE||{};
+    const res=await provaFetchAirtable({method:"PATCH",path:"/v0/"+(AT.BASE||"appJ7bLlAHZoxENWE")+"/"+(AT.TABLE_SV||"tbladqEQT3tmx4DIB")+"/"+recId,payload:{fields}});
     if(!res.ok)throw new Error("HTTP "+res.status);
     localStorage.setItem("prova_kontodaten",JSON.stringify({IBAN:fields.IBAN,BIC:fields.BIC,Bank:fields.Bank,Steuernummer:fields.Steuernummer,USt_IdNr:fields.USt_IdNr,MwSt_Satz:String(fields.MwSt_Satz),Zahlungsziel_Tage:String(fields.Zahlungsziel_Tage),Re_Prefix:fields.Re_Prefix}));
     showToast("Bankdaten gespeichert ✅");

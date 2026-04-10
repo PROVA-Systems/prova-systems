@@ -1,7 +1,4 @@
-const { AIRTABLE_API, BASE_ID } = require('./lib/prova-subscription');
-
-const TABLE_AUDIT =
-  process.env.PROVA_AUDIT_TRAIL_TABLE || process.env.AIRTABLE_AUDIT_TRAIL_TABLE || 'tblqQmMwJKxltXXXl';
+const { AIRTABLE_API, BASE_ID, TABLE_AUDIT } = require('./lib/prova-subscription.js');
 
 function json(statusCode, obj) {
   return {

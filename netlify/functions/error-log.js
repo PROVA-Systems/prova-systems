@@ -3,11 +3,7 @@
  * Rate-Limit: 10 POSTs / Minute / Client-IP
  * Antwort immer 200 (UI nicht blockieren)
  */
-const AIRTABLE_API = 'https://api.airtable.com';
-const BASE_ID = process.env.AIRTABLE_BASE_ID || 'appJ7bLlAHZoxENWE';
-/** AUDIT_TRAIL: Default = admin-dashboard AUDIT_LOG; in Produktion bei abweichender Tabelle PROVA_AUDIT_TRAIL_TABLE setzen. */
-const TABLE_AUDIT =
-  process.env.PROVA_AUDIT_TRAIL_TABLE || process.env.AIRTABLE_AUDIT_TRAIL_TABLE || 'tblqQmMwJKxltXXXl';
+const { AIRTABLE_API, BASE_ID, TABLE_AUDIT } = require('./lib/prova-subscription.js');
 
 const rateBuckets = new Map();
 const WINDOW_MS = 60 * 1000;

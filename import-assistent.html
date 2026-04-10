@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="de"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Import-Assistent</title><script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script><link rel="stylesheet" href="prova-nav.css">
 <style>body{margin:0;background:#0d0f14;color:#cbd5e1;font-family:system-ui}.main{max-width:1100px;margin:0 auto;padding:16px}.card{background:#111827;border:1px solid #2b3342;border-radius:12px;padding:12px;margin-bottom:10px}.row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}select,input{width:100%;padding:8px;border-radius:8px;border:1px solid #334155;background:#0b1220;color:#fff}table{width:100%;border-collapse:collapse}th,td{padding:8px;border-bottom:1px solid #2b3342;text-align:left}.btn{padding:8px 12px;background:#1d4ed8;border:none;color:#fff;border-radius:8px;cursor:pointer}.bar{height:10px;background:#0b1220;border:1px solid #334155;border-radius:999px;overflow:hidden}.fill{height:100%;width:0;background:#22c55e}</style></head>
-<body><script src="prova-account-gate.js"></script><script src="prova-auth-api.js"></script><script src="nav.js" defer></script><div id="provaDrawerMount"></div><nav id="provaBottomNav"></nav>
+<body><script src="prova-account-gate.js"></script><script src="prova-auth-api.js"></script><script src="prova-airtable-api.js"></script><script src="nav.js" defer></script><div id="provaDrawerMount"></div><nav id="provaBottomNav"></nav>
 <main class="main">
   <h1>Import-Assistent</h1>
   <div class="card"><input id="file" type="file" accept=".csv,.txt,.xls,.xlsx"><small>CSV wird direkt unterstuetzt. Excel bitte als CSV exportieren.</small></div>
@@ -26,7 +26,8 @@
     Papa.parse(f,{header:true,skipEmptyLines:true,complete:function(res){rows=res.data||[];headers=res.meta.fields||Object.keys(rows[0]||{});mkMapping();preview();}});
   });
   async function postRecord(fields){
-    var res=await fetch('/.netlify/functions/airtable',{method:'POST',headers:window.provaAuthHeaders?window.provaAuthHeaders():{'Content-Type':'application/json'},body:JSON.stringify({table:'tblSxV8bsXwd1pwa0',fields:fields})});
+    var T=(window.PROVA_AIRTABLE&&window.PROVA_AIRTABLE.TABLE_SCHADENSFAELLE)||'tblSxV8bsXwd1pwa0';
+    var res=await fetch('/.netlify/functions/airtable',{method:'POST',headers:window.provaAuthHeaders?window.provaAuthHeaders():{'Content-Type':'application/json'},body:JSON.stringify({table:T,fields:fields})});
     if(!res.ok) throw new Error('HTTP '+res.status);
   }
   q('start').onclick=async function(){

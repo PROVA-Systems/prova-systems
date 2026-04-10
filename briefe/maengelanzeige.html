@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Mängelanzeige · PROVA</title>
+  <script src="../brief-senden.js"></script>
+  <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+  <script>if (typeof netlifyIdentity !== 'undefined') netlifyIdentity.init();</script>
+  <script src="../prova-auth-api.js"></script>
+  <script src="../smtp-senden.js"></script>
+  <script src="../briefvorlagen-logic.js"></script>
+  <style>
+    @media print {
+      .no-print { display: none !important; }
+      body { background: #fff !important; color: #111 !important; }
+    }
+    body { margin: 0; background: #f6f8fb; font-family: Arial, Helvetica, sans-serif; color: #111827; font-size: 15px; line-height: 1.55; }
+    .wrap { max-width: 720px; margin: 0 auto; padding: 24px; }
+    .card { background: #fff; border: 1px solid #e5e7eb; border-radius: 14px; overflow: hidden; }
+    .head { padding: 18px 22px; background: #0b1628; color: #fff; }
+    .head small { opacity: 0.85; font-size: 12px; }
+    .head h1 { font-size: 18px; margin: 8px 0 0; }
+    .body { padding: 22px; }
+    label { display: block; font-size: 12px; font-weight: 700; color: #374151; margin: 14px 0 6px; }
+    input, textarea { width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 10px; font: inherit; box-sizing: border-box; }
+    textarea { min-height: 100px; }
+    .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    @media (max-width: 560px) { .row2 { grid-template-columns: 1fr; } }
+    .actions { margin-top: 18px; display: flex; flex-wrap: wrap; gap: 10px; }
+    .btn { padding: 10px 18px; border-radius: 10px; border: none; background: #1d4ed8; color: #fff; font-weight: 700; cursor: pointer; font: inherit; }
+    .btn-sec { background: #e5e7eb; color: #111827; }
+    .paper { margin-top: 24px; padding: 22px; border: 1px dashed #d1d5db; border-radius: 12px; background: #fafafa; }
+    .paper h2 { font-size: 15px; margin: 0 0 14px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="no-print card">
+      <div class="head">
+        <small>PROVA · Briefvorlage</small>
+        <h1>Mängelanzeige</h1>
+      </div>
+      <div class="body">
+        <p style="margin:0 0 14px;color:#4b5563;font-size:14px;">Felder aus URL (<code>?empf=…&amp;objekt=…</code>) oder localStorage werden vorausgefüllt.</p>
+        <label for="empf_name">Empfänger (Name / Firma)</label>
+        <input type="text" id="empf_name" placeholder="Auftragnehmer / Verwalter">
+        <label for="empf_adr">Empfänger-Adresse</label>
+        <textarea id="empf_adr" rows="2" placeholder="Straße, PLZ Ort"></textarea>
+        <label for="empf_mail">E-Mail Empfänger (für Versand über PROVA-SMTP)</label>
+        <input type="email" id="empf_mail" placeholder="name@example.de">
+        <label for="objekt">Objekt-Adresse</label>
+        <input type="text" id="objekt" placeholder="Schadensobjekt">
+        <label for="maengel">Beschreibung der Mängel</label>
+        <textarea id="maengel" placeholder="Darstellung der festgestellten Mängel …"></textarea>
+        <div class="row2">
+          <div>
+            <label for="frist">Frist zur Beseitigung</label>
+            <input type="date" id="frist">
+          </div>
+          <div style="display:flex;align-items:flex-end;padding-bottom:8px;">
+            <label style="display:flex;align-items:center;gap:8px;font-weight:600;cursor:pointer;">
+              <input type="checkbox" id="beweis"> Hinweis Beweissicherung (Fotos / Gutachten)
+            </label>
+          </div>
+        </div>
+        <div class="actions">
+          <button type="button" class="btn" id="btnVorschau">Vorschau aktualisieren</button>
+          <button type="button" class="btn btn-sec" id="btnSend">Brief senden (E-Mail)</button>
+          <button type="button" class="btn btn-sec" id="btnPrint">Drucken</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="paper" id="briefOut">
+      <h2>Brieftext</h2>
+      <div id="briefText"></div>
+    </div>
+  </div>
+  <script>
+  (function(){
+    function qs(n){ return new URLSearchParams(location.search).get(n)||''; }
+    function pad(){ try { return localStorage.getItem('prova_sv_name')||''; } catch(e){ return ''; } }
+    function padAdr(){
+      try {
+        var s = localStorage.getItem('prova_sv_strasse')||'';
+        var plz = localStorage.getItem('prova_sv_plz')||'';
+        var o = localStorage.getItem('prova_sv_ort')||'';
+        return [s, plz + ' ' + o].filter(Boolean).join(', ');
+      } catch(e){ return ''; }
+    }
+    document.getElementById('empf_name').value = qs('empf') || '';
+    document.getElementById('objekt').value = qs('objekt') || '';
+    try {
+      var az = localStorage.getItem('prova_letztes_az');
+      if (az && !document.getElementById('objekt').value) document.getElementById('objekt').value = 'AZ ' + az;
+    } catch(e){}
+    var fr = document.getElementById('frist');
+    var d = new Date();
+    d.setDate(d.getDate() + 14);
+    fr.value = d.toISOString().slice(0,10);
+
+    function build(){
+      var en = document.getElementById('empf_name').value.trim();
+      var ea = document.getElementById('empf_adr').value.trim();
+      var ob = document.getElementById('objekt').value.trim();
+      var mg = document.getElementById('maengel').value.trim();
+      var fd = document.getElementById('frist').value;
+      var fdDe = fd ? fd.split('-').reverse().join('.') : '—';
+      var bw = document.getElementById('beweis').checked;
+      var heute = new Date().toLocaleDateString('de-DE');
+      var sv = pad();
+      var sva = padAdr();
+      var lines = [
+        en || '…',
+        ea,
+        '',
+        heute,
+        '',
+        'Betreff: Mängelanzeige — Objekt ' + (ob || '—'),
+        '',
+        'Sehr geehrte Damen und Herren,',
+        '',
+        'hiermit zeigen wir Ihnen im Namen unseres Auftraggebers folgende Mängel am Objekt ' + (ob || '…') + ' an:',
+        '',
+        mg || '(Mängelbeschreibung)',
+        '',
+        'Wir fordern Sie auf, die Mängel bis zum ' + fdDe + ' zu beseitigen.'
+      ];
+      if (bw) lines.push('', 'Unter Vorbehalt weitergehender Ansprüche weisen wir auf die Möglichkeit der Beweissicherung (z. B. fotografische Dokumentation / SV-Gutachten) hin.');
+      lines.push('', 'Mit freundlichen Grüßen', '', sv || '…', sva);
+      return lines.join('\n');
+    }
+    function render(){ document.getElementById('briefText').innerHTML = '<pre style="white-space:pre-wrap;font:inherit;">'+build().replace(/</g,'&lt;')+'</pre>'; }
+    document.getElementById('btnVorschau').addEventListener('click', render);
+    document.getElementById('btnPrint').addEventListener('click', function(){ window.print(); });
+    document.getElementById('btnSend').addEventListener('click', async function(){
+      var mail = document.getElementById('empf_mail').value.trim();
+      var en = document.getElementById('empf_name').value.trim();
+      var obj = document.getElementById('objekt').value.trim();
+      var subj = 'Mängelanzeige ' + (obj || '');
+      if (mail && window.provaBriefvorlageNachSmtp) {
+        var az = '';
+        try { az = localStorage.getItem('prova_letztes_az') || ''; } catch (e) {}
+        await provaBriefvorlageNachSmtp({
+          az: az,
+          empfaenger: en || 'Empfänger',
+          to: mail,
+          betreff: subj,
+          typ: 'Mängelanzeige',
+          text_body: build()
+        });
+        return;
+      }
+      if (window.provaBriefSenden) provaBriefSenden({ subject: subj, body: build() });
+    });
+    render();
+  })();
+  </script>
+</body>
+</html>

@@ -4,7 +4,7 @@
  * ENV: OPENAI_API_KEY, AIRTABLE_PAT
  */
 const OPENAI_URL = 'https://api.openai.com/v1/chat/completions';
-const { hasProvaAccess } = require('./lib/prova-subscription');
+const { hasProvaAccess, AIRTABLE_API, BASE_ID, TABLE_AUDIT } = require('./lib/prova-subscription.js');
 
 function json(status, obj) {
   return {
@@ -21,10 +21,8 @@ function json(status, obj) {
 }
 
 async function logKiAudit(pat, email, action, az, tokensApprox) {
-  const tableAudit =
-    process.env.PROVA_AUDIT_TRAIL_TABLE || process.env.AIRTABLE_AUDIT_TRAIL_TABLE || 'tbloeYUDuu0wRxpM8';
   try {
-    await fetch('https://api.airtable.com/v0/' + (process.env.AIRTABLE_BASE_ID || 'appJ7bLlAHZoxENWE') + '/' + tableAudit, {
+    await fetch(AIRTABLE_API + '/v0/' + BASE_ID + '/' + TABLE_AUDIT, {
       method: 'POST',
       headers: { Authorization: 'Bearer ' + pat, 'Content-Type': 'application/json' },
       body: JSON.stringify({

@@ -295,6 +295,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:1
 <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
 <script>if (typeof netlifyIdentity !== 'undefined') netlifyIdentity.init();</script>
 <script src="prova-auth-api.js"></script>
+<script src="prova-airtable-api.js"></script>
 
 <div class="topbar">
   <div class="topbar-left">
@@ -1135,9 +1136,12 @@ async function syncAirtable(ts) {
     return;
   }
   try {
+    var _AT = window.PROVA_AIRTABLE || {};
+    var _ab = _AT.BASE || 'appJ7bLlAHZoxENWE';
+    var _tbl = _AT.TABLE_SCHADENSFAELLE || 'tblSxV8bsXwd1pwa0';
     const res = await provaFetchAirtable({
         method:'PATCH',
-        path:`/v0/appJ7bLlAHZoxENWE/tblSxV8bsXwd1pwa0/${airtableId}`,
+        path:`/v0/${_ab}/${_tbl}/${airtableId}`,
         body:{ fields:{
           sv_stellungnahme_original: auditLog.sv_original||'',
           sv_stellungnahme_final: finalText,

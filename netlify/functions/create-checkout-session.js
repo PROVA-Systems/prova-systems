@@ -2,7 +2,7 @@
  * Stripe Checkout — Solo / Team (STRIPE_SECRET_KEY; STRIPE_PRICE_SOLO/TEAM optional, Defaults in lib/prova-stripe-prices.js)
  */
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY || '');
-const { resolveSoloPriceId, resolveTeamPriceId } = require('./lib/prova-stripe-prices');
+const { resolveSoloPriceId, resolveTeamPriceId } = require('./lib/prova-stripe-prices.js');
 
 function json(statusCode, obj) {
   return {

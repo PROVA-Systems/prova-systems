@@ -20,7 +20,9 @@
 #   PROVA_INTERNAL_WRITE_SECRET - muss mit x-prova-internal bei key=k3 uebereinstimmen
 #
 # Airtable (optional ueberschreiben)
-#   PROVA_AUDIT_TRAIL_TABLE oder AIRTABLE_AUDIT_TRAIL_TABLE - AUDIT_TRAIL Table-ID, Default siehe Functions
+#   PROVA_AUDIT_TRAIL_TABLE oder AIRTABLE_AUDIT_TRAIL_TABLE - AUDIT_TRAIL Table-ID, Default siehe lib/prova-subscription.js
+#   AIRTABLE_BRIEFE_TABLE - BRIEFE-Tabelle (smtp-senden), Default siehe lib/prova-subscription.js
+#   AIRTABLE_TABLE_SV - SV-Tabelle (Identity/Stripe/Proxy), Default siehe lib/prova-subscription.js
 #   AIRTABLE_PAT, AIRTABLE_BASE_ID — wie bereits für andere Functions
 #
 # Weitere Variablen: siehe jeweilige netlify/functions/*.js (Stripe, SMTP, …).
@@ -86,8 +88,23 @@
   to = "/legal/avv.html"
   status = 200
 
+# Legacy: eine kanonische Stellungnahme-Seite (stellungnahme.html)
+[[redirects]]
+  from = "/stellungnahme-v3.1.html"
+  to = "/stellungnahme.html"
+  status = 301
+
+[[redirects]]
+  from = "/stellungnahme-v3.1"
+  to = "/stellungnahme.html"
+  status = 301
+
 # ---- 404 FALLBACK ----
 # Netlify Functions explizit ausschließen — sonst werden /.netlify/functions/* auf index.html umgeleitet
+[[redirects]]
+  from = "/.netlify/*"
+  to = "/.netlify/:splat"
+  status = 200
 
 [[redirects]]
   from = "/*"
@@ -111,3 +128,8 @@
   for = "/*.html"
   [headers.values]
     Cache-Control = "no-cache, no-store, must-revalidate"
+
+[[redirects]]
+  from = "/auftrag-ablehnen.html"
+  to = "/auftrag-ablehnung.html"
+  status = 301

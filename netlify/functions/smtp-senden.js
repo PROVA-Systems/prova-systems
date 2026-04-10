@@ -4,11 +4,7 @@
  * sv_email nur aus JWT — niemals aus dem Client übernehmen.
  */
 const nodemailer = require('nodemailer');
-const { hasProvaAccess } = require('./lib/prova-subscription');
-
-const AIRTABLE_API = 'https://api.airtable.com';
-const BASE_ID = process.env.AIRTABLE_BASE_ID || 'appJ7bLlAHZoxENWE';
-const TABLE_BRIEFE = process.env.AIRTABLE_BRIEFE_TABLE || 'tblSzxvnkRE6B0thx';
+const { hasProvaAccess, AIRTABLE_API, BASE_ID, TABLE_BRIEFE, TABLE_AUDIT } = require('./lib/prova-subscription.js');
 
 function json(status, obj) {
   return {
@@ -42,10 +38,8 @@ async function appendBriefe(pat, fields) {
 }
 
 async function appendAudit(pat, email, az, typ) {
-  var tableAudit =
-    process.env.PROVA_AUDIT_TRAIL_TABLE || process.env.AIRTABLE_AUDIT_TRAIL_TABLE || 'tbloeYUDuu0wRxpM8';
   try {
-    await fetch(AIRTABLE_API + '/v0/' + BASE_ID + '/' + tableAudit, {
+    await fetch(AIRTABLE_API + '/v0/' + BASE_ID + '/' + TABLE_AUDIT, {
       method: 'POST',
       headers: { Authorization: 'Bearer ' + pat, 'Content-Type': 'application/json' },
       body: JSON.stringify({

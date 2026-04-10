@@ -4,9 +4,7 @@
  *
  * Airtable: Felder Status, Trial_End, Email, Vorname, Nachname anlegen
  */
-const AIRTABLE_API = 'https://api.airtable.com';
-const BASE_ID = 'appJ7bLlAHZoxENWE';
-const TABLE_SV = 'tbladqEQT3tmx4DIB';
+const { AIRTABLE_API, BASE_ID, TABLE_SV } = require('./lib/prova-subscription.js');
 
 exports.handler = async function (event) {
   const pat = process.env.AIRTABLE_PAT;

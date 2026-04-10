@@ -7,9 +7,7 @@
  * Erwartet Airtable-Felder (mind.): Email, Vorname, Nachname, Paket
  * Optional (in Airtable anlegen): Trial_End (Datum), Onboarding_Datum (Datum)
  */
-const AIRTABLE_API = 'https://api.airtable.com';
-const BASE_ID = 'appJ7bLlAHZoxENWE';
-const TABLE_SV = 'tbladqEQT3tmx4DIB';
+const { AIRTABLE_API, BASE_ID, TABLE_SV } = require('./lib/prova-subscription.js');
 
 function json(statusCode, obj) {
   return {

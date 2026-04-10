@@ -426,6 +426,7 @@
   <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
   <script>if (typeof netlifyIdentity !== 'undefined') netlifyIdentity.init();</script>
   <script src="prova-auth-api.js"></script>
+  <script src="prova-airtable-api.js"></script>
   <script src="prova-audit.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -655,8 +656,10 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape')closeDrawer(
 /* ============================================================
    PROVA FREIGABE — Airtable-Integration
 ============================================================ */
-const AIRTABLE_BASE  = 'appJ7bLlAHZoxENWE';
-const AIRTABLE_TABLE = 'tblSxV8bsXwd1pwa0';
+var _AT = window.PROVA_AIRTABLE || {};
+const AIRTABLE_BASE  = _AT.BASE || 'appJ7bLlAHZoxENWE';
+const AIRTABLE_TABLE = _AT.TABLE_SCHADENSFAELLE || 'tblSxV8bsXwd1pwa0';
+const AIRTABLE_SV_TABLE = _AT.TABLE_SV || 'tbladqEQT3tmx4DIB';
 /** Make-URLs nur serverseitig (Netlify Env); Frontend ruft ausschließlich make-proxy auf. */
 const MAKE_PROXY_KORREKTUR_S1 = '/.netlify/functions/make-proxy?key=s1';
 const MAKE_PROXY_FREIGABE_G3 = '/.netlify/functions/make-proxy?key=g3';
@@ -668,7 +671,7 @@ let editModus = false;
 
 async function ladeSVProfil() {
   try {
-    const path = `/v0/${AIRTABLE_BASE}/tbladqEQT3tmx4DIB?maxRecords=1&sort[0][field]=Onboarding_Datum&sort[0][direction]=desc`;
+    const path = `/v0/${AIRTABLE_BASE}/${AIRTABLE_SV_TABLE}?maxRecords=1&sort[0][field]=Onboarding_Datum&sort[0][direction]=desc`;
     const res = await provaFetchAirtable({ method: 'GET', path });
     if (!res.ok) return;
     const data = await res.json();

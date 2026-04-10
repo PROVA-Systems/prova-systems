@@ -1,10 +1,9 @@
-// PROVA — Airtable Proxy; SV-Tabelle (tbladqEQT3tmx4DIB): nur mit gültigem Abo/Trial (serverseitig)
+// PROVA — Airtable Proxy; SV-Tabelle: nur mit gültigem Abo/Trial (serverseitig)
 const AIRTABLE_BASE_URL = 'https://api.airtable.com';
-const SV_TABLE_FRAGMENT = 'tbladqEQT3tmx4DIB';
-const { hasProvaAccess } = require('./lib/prova-subscription');
+const { hasProvaAccess, TABLE_SV } = require('./lib/prova-subscription.js');
 
 function isSvTablePath(path) {
-  return typeof path === 'string' && path.indexOf(SV_TABLE_FRAGMENT) >= 0;
+  return typeof path === 'string' && path.indexOf(TABLE_SV) >= 0;
 }
 
 exports.handler = async function (event, context) {
@@ -59,7 +58,7 @@ exports.handler = async function (event, context) {
     }
   }
 
-  const url = AIRTABLE_BASE_URL + path;
+  const url = AIRTABLE_API + path;
 
   const fetchOptions = {
     method,

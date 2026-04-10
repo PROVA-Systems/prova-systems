@@ -2,8 +2,9 @@
  * PROVA — SV-Datensatz (SACHVERSTAENDIGE) Airtable + Trial-Status
  */
 (function () {
-  var BASE = 'appJ7bLlAHZoxENWE';
-  var TBL_SV = 'tbladqEQT3tmx4DIB';
+  var P = window.PROVA_AIRTABLE || {};
+  var BASE = P.BASE || 'appJ7bLlAHZoxENWE';
+  var TBL_SV = P.TABLE_SV || 'tbladqEQT3tmx4DIB';
 
   function airtableFetch(bodyObj) {
     if (typeof window.provaFetchAirtable === 'function') {

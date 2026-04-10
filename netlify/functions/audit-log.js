@@ -2,11 +2,7 @@
  * PROVA — AUDIT_TRAIL logging endpoint
  * Writes lightweight metadata only.
  */
-const AIRTABLE_API = 'https://api.airtable.com';
-const BASE_ID = process.env.AIRTABLE_BASE_ID || 'appJ7bLlAHZoxENWE';
-/** Default = admin-dashboard AUDIT_LOG; sonst PROVA_AUDIT_TRAIL_TABLE in Netlify setzen. */
-const TABLE_AUDIT =
-  process.env.PROVA_AUDIT_TRAIL_TABLE || process.env.AIRTABLE_AUDIT_TRAIL_TABLE || 'tblqQmMwJKxltXXXl';
+const { AIRTABLE_API, BASE_ID, TABLE_AUDIT } = require('./lib/prova-subscription.js');
 
 function json(statusCode, obj) {
   return {

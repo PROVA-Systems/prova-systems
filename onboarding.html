@@ -395,6 +395,7 @@
   <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
   <script>if (typeof netlifyIdentity !== 'undefined') netlifyIdentity.init();</script>
   <script src="prova-auth-api.js"></script>
+  <script src="prova-airtable-api.js"></script>
   <script src="prova-sv-airtable.js"></script>
   <script>
   /* ============================================================
@@ -504,9 +505,12 @@
         Onboarding:    new Date().toISOString().slice(0, 10)
       };
       // Erst prüfen ob schon vorhanden
+      var AT = window.PROVA_AIRTABLE || {};
+      var base = AT.BASE || 'appJ7bLlAHZoxENWE';
+      var svT = AT.TABLE_SV || 'tbladqEQT3tmx4DIB';
       var checkRes = await provaFetchAirtable({
         method: 'GET',
-        path: '/v0/appJ7bLlAHZoxENWE/tbladqEQT3tmx4DIB?filterByFormula=' +
+        path: '/v0/' + base + '/' + svT + '?filterByFormula=' +
               encodeURIComponent('{Email}="' + svp.email + '"') + '&maxRecords=1'
       });
       if (checkRes.ok) {
@@ -520,7 +524,7 @@
       }
       var postRes = await provaFetchAirtable({
         method: 'POST',
-        path: '/v0/appJ7bLlAHZoxENWE/tbladqEQT3tmx4DIB',
+        path: '/v0/' + base + '/' + svT,
         body: { records: [{ fields: fields }] }
       });
       if (postRes.ok) {
