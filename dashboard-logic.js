@@ -67,7 +67,7 @@ async function atFetch(table, formula, maxRecords){
       +'&sort[0][field]=Timestamp&sort[0][direction]=desc';
     var res=await fetch('/.netlify/functions/airtable',{
       method:'POST',
-      headers:{'Content-Type':'application/json'},
+      headers:Object.assign({'Content-Type':'application/json'}, window.provaAuthHeaders ? window.provaAuthHeaders() : {}),
       body:JSON.stringify({method:'GET',path:path})
     });
 
@@ -112,7 +112,7 @@ function zeigOnboarding(){
       if(atRecId) {
         fetch('/.netlify/functions/airtable',{
           method:'POST',
-          headers:{'Content-Type':'application/json'},
+          headers:Object.assign({'Content-Type':'application/json'}, window.provaAuthHeaders ? window.provaAuthHeaders() : {}),
           body:JSON.stringify({
             method:'PATCH',
             path:'/v0/appJ7bLlAHZoxENWE/tbladqEQT3tmx4DIB/'+atRecId,
@@ -793,7 +793,7 @@ window.sendSupport=async function(){
   if(!b||!n){document.getElementById('support-err').style.display='block';return;}
   document.getElementById('support-err').style.display='none';
   var btn=document.getElementById('sup-btn');btn.disabled=true;btn.textContent='⏳ Wird gesendet...';
-  try{await fetch('https://hook.eu1.make.com/lktuhugwcg5v37ib6bdaxjb1uiplnu8v',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({betreff:b,nachricht:n,sv_email:svEmail,paket:paket,seite:'dashboard.html',ts:new Date().toISOString()})});}catch(e){}
+  try{await fetch('https://hook.eu1.make.com/lktuhugwcg5v37ib6bdaxjb1uiplnu8v',{method:'POST',headers:Object.assign({'Content-Type':'application/json'}, window.provaAuthHeaders ? window.provaAuthHeaders() : {}),body:JSON.stringify({betreff:b,nachricht:n,sv_email:svEmail,paket:paket,seite:'dashboard.html',ts:new Date().toISOString()})});}catch(e){}
   document.getElementById('support-form-body').style.display='none';
   document.getElementById('support-ok').style.display='block';
 };

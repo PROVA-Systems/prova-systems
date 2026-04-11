@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vorlage 1 — Standard Schadensgutachten · PROVA Pro</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Source+Serif+4:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+  <style>
+    :root{--navy:#0B1628;--navy-mid:#112240;--navy-light:#1A3356;--accent:#4A90D9;--accent-dim:rgba(74,144,217,0.15);--glass:rgba(255,255,255,0.04);--glass-border:rgba(255,255,255,0.08);--text-primary:#F0F4FF;--text-secondary:rgba(255,255,255,0.6);--text-muted:rgba(255,255,255,0.35);--green:#10B981;--gold:#F59E0B;--red:#EF4444;}
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{font-family:'Montserrat',sans-serif;background:var(--navy);color:var(--text-primary);min-height:100vh;}
+    .top-nav{background:rgba(11,22,40,0.95);backdrop-filter:blur(12px);border-bottom:1px solid var(--glass-border);padding:12px 32px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+    .nav-logo{font-weight:800;font-size:0.95rem;color:#fff;text-decoration:none;}
+    .nav-logo span{color:var(--accent);}
+    .nav-actions{display:flex;gap:10px;align-items:center;}
+    .btn{padding:8px 16px;border-radius:8px;font-size:0.8rem;font-weight:600;cursor:pointer;border:none;font-family:inherit;transition:all 0.2s;}
+    .btn-outline{background:transparent;border:1.5px solid var(--glass-border);color:var(--text-secondary);}
+    .btn-outline:hover{border-color:var(--accent);color:var(--accent);}
+    .btn-primary{background:var(--accent);color:#fff;}
+    .btn-primary:hover{background:#2563EB;}
+    .badge{display:inline-block;font-size:0.65rem;font-weight:700;padding:3px 8px;border-radius:12px;letter-spacing:0.06em;}
+    .badge-pro{background:rgba(74,144,217,0.15);border:1px solid rgba(74,144,217,0.3);color:var(--accent);}
+    .badge-main{background:rgba(74,144,217,0.2);border:1px solid rgba(74,144,217,0.4);color:#93C5FD;}
+    .page-wrapper{max-width:1100px;margin:0 auto;padding:32px 24px 80px;}
+
+    /* HEADER */
+    .template-header{background:linear-gradient(135deg,rgba(74,144,217,0.14),rgba(11,22,40,0.8));border:1px solid rgba(74,144,217,0.25);border-radius:16px;padding:32px 40px;margin-bottom:28px;position:relative;overflow:hidden;display:flex;align-items:center;gap:28px;}
+    .template-header::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--accent),rgba(74,144,217,0.3));}
+    .template-icon-big{width:64px;height:64px;background:rgba(74,144,217,0.12);border:1px solid rgba(74,144,217,0.3);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.8rem;flex-shrink:0;}
+    .template-header-text h1{font-size:1.5rem;font-weight:800;color:#fff;margin-bottom:6px;}
+    .template-header-text p{font-size:0.875rem;color:var(--text-secondary);margin-bottom:12px;line-height:1.6;}
+    .header-tags{display:flex;gap:8px;flex-wrap:wrap;}
+
+    /* INFO STRIP */
+    .info-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:28px;}
+    .info-card{background:var(--glass);border:1px solid var(--glass-border);border-radius:10px;padding:14px 16px;}
+    .info-label{font-size:0.66rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--accent);margin-bottom:5px;}
+    .info-value{font-size:0.875rem;font-weight:600;color:var(--text-primary);}
+    .info-sub{font-size:0.72rem;color:var(--text-secondary);margin-top:2px;}
+
+    /* LAYOUT */
+    .two-col{display:grid;grid-template-columns:1fr 340px;gap:20px;align-items:start;}
+    .section-card{background:var(--glass);border:1px solid var(--glass-border);border-radius:12px;padding:22px 24px;margin-bottom:16px;}
+    .section-card:last-child{margin-bottom:0;}
+    .section-title{font-size:0.78rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--accent);margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+    .section-title .num{background:rgba(74,144,217,0.1);border:1px solid rgba(74,144,217,0.25);color:var(--accent);font-size:0.65rem;padding:2px 7px;border-radius:10px;}
+
+    /* DOC PREVIEW */
+    .doc-preview{background:#FAFBFF;border-radius:12px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,0.4);}
+    .doc-topbar{background:var(--navy-mid);border-bottom:1px solid var(--glass-border);padding:10px 16px;display:flex;align-items:center;gap:8px;}
+    .doc-dot{width:10px;height:10px;border-radius:50%;}
+    .doc-title-bar{font-size:0.72rem;color:var(--text-secondary);margin-left:4px;}
+    .doc-content{padding:24px;font-family:'Source Serif 4',serif;color:#1E293B;}
+    .doc-letterhead{display:grid;grid-template-columns:1fr auto;gap:16px;margin-bottom:16px;padding-bottom:12px;border-bottom:2px solid #1B3F6B;}
+    .doc-logo-area{display:flex;align-items:center;gap:10px;}
+    .doc-logo-box{width:32px;height:32px;background:#1B3F6B;border-radius:6px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:0.55rem;font-weight:800;font-family:'Montserrat',sans-serif;}
+    .doc-firm-name{font-size:0.78rem;font-weight:700;color:#1B3F6B;font-family:'Montserrat',sans-serif;}
+    .doc-firm-sub{font-size:0.62rem;color:#64748B;font-family:'Montserrat',sans-serif;}
+    .doc-meta-right{font-size:0.68rem;color:#64748B;text-align:right;font-family:'Montserrat',sans-serif;line-height:1.6;}
+    .doc-h1{font-size:0.95rem;font-weight:700;color:#1B3F6B;text-align:center;margin:12px 0 2px;text-transform:uppercase;letter-spacing:0.04em;font-family:'Montserrat',sans-serif;}
+    .doc-h1-sub{font-size:0.68rem;color:#64748B;text-align:center;margin-bottom:14px;font-family:'Montserrat',sans-serif;}
+    .doc-section-head{font-size:0.72rem;font-weight:700;color:#1B3F6B;text-transform:uppercase;letter-spacing:0.06em;margin:12px 0 5px;padding-bottom:3px;border-bottom:1px solid #E2E8F0;font-family:'Montserrat',sans-serif;}
+    .doc-field-row{display:flex;gap:8px;margin-bottom:3px;font-size:0.7rem;}
+    .doc-field-label{color:#64748B;min-width:90px;font-family:'Montserrat',sans-serif;font-weight:500;}
+    .doc-field-value{color:#1E293B;font-family:'Montserrat',sans-serif;}
+    .doc-divider{border-top:1px solid #E2E8F0;margin:10px 0;}
+    .doc-text{font-size:0.72rem;line-height:1.7;color:#374151;margin-bottom:8px;}
+    .doc-callout{background:#EFF6FF;border-left:3px solid #1B3F6B;padding:8px 12px;border-radius:0 6px 6px 0;font-size:0.68rem;color:#1E3A5F;margin:8px 0;font-family:'Montserrat',sans-serif;line-height:1.6;}
+
+    /* KOSTENTABELLE */
+    .doc-table{width:100%;border-collapse:collapse;font-size:0.63rem;font-family:'Montserrat',sans-serif;margin:8px 0;}
+    .doc-table th{background:#1B3F6B;color:#fff;padding:5px 8px;text-align:left;font-weight:600;}
+    .doc-table th:last-child,.doc-table td:last-child{text-align:right;}
+    .doc-table td{padding:4px 8px;border-bottom:1px solid #E2E8F0;color:#374151;}
+    .doc-table tr:nth-child(even) td{background:#F8FAFC;}
+    .doc-table .total-row td{font-weight:700;background:#EFF6FF;color:#1B3F6B;}
+
+    /* §407a */
+    .doc-zpo-box{background:#FEF9C3;border:1px solid #FDE047;border-radius:5px;padding:8px 12px;font-size:0.63rem;color:#713F12;font-family:'Montserrat',sans-serif;margin:8px 0;line-height:1.6;}
+    .doc-sig-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px;}
+    .doc-sig-line{border-top:1px solid #CBD5E1;padding-top:5px;font-size:0.62rem;color:#64748B;font-family:'Montserrat',sans-serif;text-align:center;}
+
+    /* STRUKTUR-LISTE */
+    .struct-item{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.05);}
+    .struct-num{min-width:24px;height:24px;background:rgba(74,144,217,0.1);border:1px solid rgba(74,144,217,0.25);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;color:var(--accent);flex-shrink:0;}
+    .struct-text{font-size:0.8rem;color:var(--text-secondary);line-height:1.6;}
+    .struct-text strong{color:var(--text-primary);display:block;margin-bottom:2px;}
+
+    /* SIDEBAR */
+    .sidebar-sticky{position:sticky;top:80px;}
+    .sidebar-card{background:var(--glass);border:1px solid var(--glass-border);border-radius:12px;padding:18px 20px;margin-bottom:14px;}
+    .sidebar-title{font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--accent);margin-bottom:12px;}
+    .var-chip{display:inline-block;background:rgba(74,144,217,0.08);border:1px solid rgba(74,144,217,0.2);color:var(--accent);font-size:0.65rem;padding:2px 8px;border-radius:6px;margin:2px 3px 2px 0;font-family:monospace;}
+    .callout-box{background:rgba(74,144,217,0.06);border:1px solid rgba(74,144,217,0.15);border-radius:8px;padding:12px 14px;font-size:0.78rem;color:var(--text-secondary);line-height:1.7;}
+    .callout-box code{background:rgba(74,144,217,0.1);padding:1px 5px;border-radius:4px;font-size:0.72rem;color:var(--accent);}
+
+    /* FEATURE GRID */
+    .feature-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px;}
+    .feature-item{background:rgba(74,144,217,0.05);border:1px solid rgba(74,144,217,0.12);border-radius:8px;padding:10px 12px;}
+    .feature-icon{font-size:1.1rem;margin-bottom:5px;}
+    .feature-title{font-size:0.73rem;font-weight:700;color:var(--text-primary);margin-bottom:3px;}
+    .feature-desc{font-size:0.68rem;color:var(--text-secondary);line-height:1.5;}
+
+    @media(max-width:900px){
+      .two-col{grid-template-columns:1fr;}
+      .sidebar-sticky{position:static;}
+      .info-strip{grid-template-columns:1fr 1fr;}
+    }
+    @media(max-width:600px){
+      .template-header{flex-direction:column;padding:24px 20px;}
+      .info-strip{grid-template-columns:1fr;}
+      .feature-grid{grid-template-columns:1fr;}
+    }
+  </style>
+</head>
+<body>
+
+<nav class="top-nav">
+  <a href="../index.html" class="nav-logo">PRO<span>VA</span></a>
+  <div class="nav-actions">
+    <span class="badge badge-main">⭐ Meistgenutzt</span>
+    <a href="vorlage-02-kurzgutachten.html" class="btn btn-outline">Vorlage 2 →</a>
+    <a href="../app-pro.html" class="btn btn-primary">In App verwenden</a>
+  </div>
+</nav>
+
+<div class="page-wrapper">
+
+  <!-- HEADER -->
+  <div class="template-header">
+    <div class="template-icon-big">📋</div>
+    <div class="template-header-text">
+      <h1>Standard Schadensgutachten</h1>
+      <p>Die universelle Vorlage für Wasser-, Schimmel-, Sturm- und Brandschäden. Vollständig nach § 407a ZPO strukturiert — für Versicherungen, Privatauftraggeber und Gerichtsverfahren gleichwertig einsetzbar.</p>
+      <div class="header-tags">
+        <span class="badge badge-pro">Pro-Paket</span>
+        <span class="badge badge-main">⭐ Meistgenutzt</span>
+        <span style="background:rgba(255,255,255,0.05);border:1px solid var(--glass-border);color:var(--text-secondary);font-size:0.65rem;font-weight:700;padding:3px 8px;border-radius:12px;">Versicherung · Privat · Gericht · Wasser · Schimmel · Sturm</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- INFO STRIP -->
+  <div class="info-strip">
+    <div class="info-card">
+      <div class="info-label">Seitenumfang</div>
+      <div class="info-value">4 – 8 Seiten</div>
+      <div class="info-sub">vollständiges Gutachten</div>
+    </div>
+    <div class="info-card">
+      <div class="info-label">Erstellungszeit</div>
+      <div class="info-value">12 – 20 Min.</div>
+      <div class="info-sub">statt 2–4 Stunden</div>
+    </div>
+    <div class="info-card">
+      <div class="info-label">Einsatzbereiche</div>
+      <div class="info-value">Wasser · Schimmel · Sturm</div>
+      <div class="info-sub">Versicherung, Privat, Gericht</div>
+    </div>
+    <div class="info-card">
+      <div class="info-label">PDFMonkey Variable</div>
+      <div class="info-value">vorlage_typ: "standard"</div>
+      <div class="info-sub">im Webhook-Payload</div>
+    </div>
+  </div>
+
+  <div class="two-col">
+    <div>
+
+      <!-- DOKUMENT-VORSCHAU -->
+      <div class="section-card">
+        <div class="section-title"><span class="num">1</span> Dokument-Vorschau (Standard, 4–8 Seiten)</div>
+        <div class="doc-preview">
+          <div class="doc-topbar">
+            <div class="doc-dot" style="background:#EF4444;"></div>
+            <div class="doc-dot" style="background:#F59E0B;"></div>
+            <div class="doc-dot" style="background:#10B981;"></div>
+            <span class="doc-title-bar">SCHADENSGUTACHTEN_AV-2026-0312.pdf</span>
+          </div>
+          <div class="doc-content">
+
+            <!-- Briefkopf -->
+            <div class="doc-letterhead">
+              <div class="doc-logo-area">
+                <div class="doc-logo-box">SV</div>
+                <div>
+                  <div class="doc-firm-name">{{kanzlei_name}}</div>
+                  <div class="doc-firm-sub">Öffentl. best. u. vereid. Sachverständiger · {{kanzlei_adresse}}</div>
+                </div>
+              </div>
+              <div class="doc-meta-right">
+                Az.: <strong>{{aktenzeichen}}</strong><br>
+                Erstellt: {{erstellungsdatum}}<br>
+                Schadensdatum: {{schadensdatum}}
+              </div>
+            </div>
+
+            <div class="doc-h1">Schadensgutachten</div>
+            <div class="doc-h1-sub">{{schadensart}} · {{objekt_adresse}}</div>
+
+            <!-- Auftrag -->
+            <div class="doc-callout">
+              <strong>Auftrag:</strong> {{auftraggeber_name}} ({{auftraggeber_typ}}) &nbsp;·&nbsp; Schadennr. Versicherung: {{schadensnummer_versicherung}}
+            </div>
+
+            <!-- Objekt -->
+            <div class="doc-section-head">1. Schadensobjekt</div>
+            <div class="doc-field-row"><span class="doc-field-label">Adresse</span><span class="doc-field-value">{{objekt_adresse}}</span></div>
+            <div class="doc-field-row"><span class="doc-field-label">Gebäudetyp</span><span class="doc-field-value">{{gebaeudetyp}}, Baujahr {{baujahr}}</span></div>
+            <div class="doc-field-row"><span class="doc-field-label">Geschädigter</span><span class="doc-field-value">{{geschaedigter}}</span></div>
+            <div class="doc-field-row"><span class="doc-field-label">Bereich</span><span class="doc-field-value">{{bereich}}</span></div>
+            <div class="doc-divider"></div>
+
+            <!-- Feststellungen -->
+            <div class="doc-section-head">2. Technische Feststellungen</div>
+            <div class="doc-text">{{technische_feststellungen}}</div>
+
+            <!-- Messwerte -->
+            <div class="doc-section-head">3. Messwerte</div>
+            <div class="doc-field-row"><span class="doc-field-label">Feuchtemessung</span><span class="doc-field-value">{{feuchtemessung_werte}}</span></div>
+            <div class="doc-field-row"><span class="doc-field-label">Luftfeuchtigkeit</span><span class="doc-field-value">{{luftfeuchtigkeit}}</span></div>
+            <div class="doc-field-row"><span class="doc-field-label">Temperatur</span><span class="doc-field-value">{{temperatur}}</span></div>
+            <div class="doc-divider"></div>
+
+            <!-- Kostenkalkulation -->
+            <div class="doc-section-head">4. Schadensumfang &amp; Kostenkalkulation</div>
+            <table class="doc-table">
+              <thead>
+                <tr><th>Position</th><th>Menge</th><th>EP (€)</th><th>GP (€)</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>{{pos_1_bezeichnung}}</td><td>{{pos_1_menge}}</td><td>{{pos_1_ep}}</td><td>{{pos_1_gp}}</td></tr>
+                <tr><td>{{pos_2_bezeichnung}}</td><td>{{pos_2_menge}}</td><td>{{pos_2_ep}}</td><td>{{pos_2_gp}}</td></tr>
+                <tr><td>{{pos_3_bezeichnung}}</td><td>{{pos_3_menge}}</td><td>{{pos_3_ep}}</td><td>{{pos_3_gp}}</td></tr>
+                <tr class="total-row"><td colspan="3"><strong>Gesamtschaden netto</strong></td><td>{{gesamtschaden_netto}} €</td></tr>
+                <tr class="total-row"><td colspan="3">MwSt. 19 %</td><td>{{mwst_betrag}} €</td></tr>
+                <tr class="total-row"><td colspan="3"><strong>Gesamtschaden brutto</strong></td><td>{{gesamtschaden_brutto}} €</td></tr>
+              </tbody>
+            </table>
+
+            <!-- §407a -->
+            <div class="doc-section-head">5. Erklärung nach § 407a ZPO</div>
+            <div class="doc-zpo-box">
+              Ich versichere, das vorliegende Gutachten unparteiisch und nach bestem Wissen und Gewissen erstattet zu haben. Ich bin mir bewusst, dass ein unrichtiges Gutachten strafrechtliche Folgen haben kann (§ 153 StGB). Das Gutachten wurde unter Verwendung von KI-unterstützten Werkzeugen (PROVA) erstellt und von mir inhaltlich vollständig überprüft und verantwortet. — {{sachverstaendiger_name}}, {{sachverstaendiger_qualifikation}}
+            </div>
+
+            <!-- Fotos -->
+            <div class="doc-section-head">6. Fotodokumentation</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:6px 0;">
+              <div style="background:#F1F5F9;border:1px dashed #CBD5E1;border-radius:4px;aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;font-size:0.55rem;color:#94A3B8;font-family:'Montserrat',sans-serif;">📷 {{foto_urls[0]}}</div>
+              <div style="background:#F1F5F9;border:1px dashed #CBD5E1;border-radius:4px;aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;font-size:0.55rem;color:#94A3B8;font-family:'Montserrat',sans-serif;">📷 {{foto_urls[1]}}</div>
+              <div style="background:#F1F5F9;border:1px dashed #CBD5E1;border-radius:4px;aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;font-size:0.55rem;color:#94A3B8;font-family:'Montserrat',sans-serif;">📷 {{foto_urls[2]}}</div>
+              <div style="background:#F1F5F9;border:1px dashed #CBD5E1;border-radius:4px;aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;font-size:0.55rem;color:#94A3B8;font-family:'Montserrat',sans-serif;">📷 {{foto_urls[3]}}</div>
+            </div>
+            <div style="font-size:0.6rem;color:#94A3B8;font-family:'Montserrat',sans-serif;text-align:center;margin-bottom:8px;">Alle Fotos gespeichert unter: {{foto_drive_url}}</div>
+
+            <!-- Unterschrift -->
+            <div class="doc-sig-row">
+              <div class="doc-sig-line">{{ort}}, {{erstellungsdatum}}<br>Ort, Datum</div>
+              <div class="doc-sig-line">{{unterschrift_url}}<br>{{sachverstaendiger_name}}</div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- GUTACHTEN-STRUKTUR -->
+      <div class="section-card">
+        <div class="section-title"><span class="num">2</span> Vollständige Gutachten-Struktur (10 Abschnitte)</div>
+        <div class="struct-item">
+          <div class="struct-num">1</div>
+          <div class="struct-text"><strong>Briefkopf &amp; Auftragsdaten</strong>Kanzlei links, Aktenzeichen + Datum rechts, Trennlinie in PROVA-Blau. Schadensdatum und Auftraggebernummer auf einen Blick.</div>
+        </div>
+        <div class="struct-item">
+          <div class="struct-num">2</div>
+          <div class="struct-text"><strong>Schadensobjekt (tabellarisch)</strong>Adresse, Gebäudetyp, Baujahr, Geschädigter, betroffener Bereich — 5 Zeilen, sofort lesbar.</div>
+        </div>
+        <div class="struct-item">
+          <div class="struct-num">3</div>
+          <div class="struct-text"><strong>Schadenshergang / Ursache</strong>Freitext aus dem PROVA-Entwurf ({{schadensursache}}) — vom Diktat zur fertigen Prosa.</div>
+        </div>
+        <div class="struct-item">
+          <div class="struct-num">4</div>
+          <div class="struct-text"><strong>Technische Feststellungen</strong>PROVA-generierter Fließtext mit Fachbegriffen ({{technische_feststellungen}}) — die Kernleistung der KI.</div>
+        </div>
+        <div class="struct-item">
+          <div class="struct-num">5</div>
+          <div class="struct-text"><strong>Messwerte-Tabelle</strong>Feuchtemessung, Luftfeuchtigkeit, Temperatur — direkt aus den Formularfeldern befüllt.</div>
+        </div>
+        <div class="struct-item">
+          <div class="struct-num">6</div>
+          <div class="struct-text"><strong>Kostenkalkulation (Positionstabelle)</strong>EP/Menge/GP pro Position, automatisch summiert — netto + MwSt. + brutto. Basiert auf BKI-Kostenkennwerten im PROVA-Prompt.</div>
+        </div>
+        <div class="struct-item">
+          <div class="struct-num">7</div>
+          <div class="struct-text"><strong>Gutachterliche Stellungnahme</strong>Bewertung und Empfehlungen in Textform ({{massnahmen_empfehlung}}).</div>
+        </div>
+        <div class="struct-item">
+          <div class="struct-num">8</div>
+          <div class="struct-text"><strong>§ 407a ZPO Erklärung</strong>Pflichttext mit PROVA-Hinweis + Sachverständigenname — immer korrekt, nie vergessen.</div>
+        </div>
+        <div class="struct-item">
+          <div class="struct-num">9</div>
+          <div class="struct-text"><strong>Fotodokumentation (2-spaltig, bis 20 Fotos)</strong>Fotos aus Google Drive via {{foto_urls[]}} — automatisch eingebunden, Drive-Link als Nachweis.</div>
+        </div>
+        <div class="struct-item" style="border-bottom:none;">
+          <div class="struct-num">10</div>
+          <div class="struct-text"><strong>Unterschrift &amp; Stempel</strong>Ort/Datum links, Signatur-Bild rechts — rechtssicher und professionell.</div>
+        </div>
+      </div>
+
+      <!-- WARUM STANDARD -->
+      <div class="section-card">
+        <div class="section-title"><span class="num">3</span> Warum diese Vorlage für 80% aller Aufträge reicht</div>
+        <div class="feature-grid">
+          <div class="feature-item">
+            <div class="feature-icon">💧</div>
+            <div class="feature-title">Wasserschäden</div>
+            <div class="feature-desc">Rohrbruch, Leitungswasser, Überschwemmung — deckt alle Leitungswasser-Schadensbilder ab.</div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon">🍄</div>
+            <div class="feature-title">Schimmel &amp; Feuchte</div>
+            <div class="feature-desc">Schimmelbefall, Kondensatfeuchte, Baufeuchte — mit Messwerte-Block für Hygrometrie.</div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon">🌪️</div>
+            <div class="feature-title">Sturmschäden</div>
+            <div class="feature-desc">Dachschäden, Fassade, Fenster — Positionstabelle passt sich an Schadensumfang an.</div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon">⚖️</div>
+            <div class="feature-title">Gerichts- &amp; Versicherungsfest</div>
+            <div class="feature-desc">§ 407a ZPO integriert — das Gutachten ist sowohl bei Versicherungen als auch vor Gericht einsetzbar.</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- SIDEBAR -->
+    <div class="sidebar-sticky">
+
+      <div class="sidebar-card">
+        <div class="sidebar-title">PDFMonkey Variablen</div>
+        <p style="font-size:0.75rem;color:var(--text-secondary);margin-bottom:12px;">Alle Variablen die dieses Template befüllen:</p>
+        <div style="margin-bottom:10px;">
+          <div style="font-size:0.7rem;color:var(--text-muted);margin-bottom:5px;">STAMMDATEN</div>
+          <span class="var-chip">{{aktenzeichen}}</span>
+          <span class="var-chip">{{erstellungsdatum}}</span>
+          <span class="var-chip">{{schadensdatum}}</span>
+          <span class="var-chip">{{sachverstaendiger_name}}</span>
+          <span class="var-chip">{{sachverstaendiger_qualifikation}}</span>
+          <span class="var-chip">{{kanzlei_name}}</span>
+          <span class="var-chip">{{kanzlei_adresse}}</span>
+        </div>
+        <div style="margin-bottom:10px;">
+          <div style="font-size:0.7rem;color:var(--text-muted);margin-bottom:5px;">AUFTRAGGEBER</div>
+          <span class="var-chip">{{auftraggeber_name}}</span>
+          <span class="var-chip">{{auftraggeber_typ}}</span>
+          <span class="var-chip">{{schadensnummer_versicherung}}</span>
+        </div>
+        <div style="margin-bottom:10px;">
+          <div style="font-size:0.7rem;color:var(--text-muted);margin-bottom:5px;">OBJEKT</div>
+          <span class="var-chip">{{objekt_adresse}}</span>
+          <span class="var-chip">{{gebaeudetyp}}</span>
+          <span class="var-chip">{{baujahr}}</span>
+          <span class="var-chip">{{geschaedigter}}</span>
+          <span class="var-chip">{{bereich}}</span>
+        </div>
+        <div style="margin-bottom:10px;">
+          <div style="font-size:0.7rem;color:var(--text-muted);margin-bottom:5px;">KI-INHALTE</div>
+          <span class="var-chip">{{technische_feststellungen}}</span>
+          <span class="var-chip">{{schadensursache}}</span>
+          <span class="var-chip">{{kostenkalkulation}}</span>
+          <span class="var-chip">{{massnahmen_empfehlung}}</span>
+          <span class="var-chip">{{gesamtschaden_netto}}</span>
+          <span class="var-chip">{{gesamtschaden_brutto}}</span>
+        </div>
+        <div style="margin-bottom:10px;">
+          <div style="font-size:0.7rem;color:var(--text-muted);margin-bottom:5px;">MESSWERTE</div>
+          <span class="var-chip">{{feuchtemessung_werte}}</span>
+          <span class="var-chip">{{luftfeuchtigkeit}}</span>
+          <span class="var-chip">{{temperatur}}</span>
+        </div>
+        <div>
+          <div style="font-size:0.7rem;color:var(--text-muted);margin-bottom:5px;">FOTOS &amp; SIGNATUR</div>
+          <span class="var-chip">{{foto_urls[0..19]}}</span>
+          <span class="var-chip">{{foto_drive_url}}</span>
+          <span class="var-chip">{{unterschrift_url}}</span>
+          <span class="var-chip">{{ort}}</span>
+        </div>
+      </div>
+
+      <div class="sidebar-card">
+        <div class="sidebar-title">Make.com Routing</div>
+        <p style="font-size:0.75rem;color:var(--text-secondary);margin-bottom:10px;">S3 Router — Route A (Default):</p>
+        <div style="background:rgba(74,144,217,0.08);border:1px solid rgba(74,144,217,0.2);border-radius:8px;padding:10px 12px;font-size:0.75rem;color:rgba(255,255,255,0.7);">
+          <strong style="color:var(--accent);">Bedingung:</strong><br>
+          <code style="color:var(--accent);font-size:0.72rem;">vorlage_typ = "standard"</code><br>
+          <code style="color:var(--text-muted);font-size:0.72rem;">(oder leer/default)</code><br><br>
+          <strong style="color:var(--accent);">PDFMonkey Template ID:</strong><br>
+          <code style="color:var(--text-muted);">[TEMPLATE_ID_STANDARD]</code>
+        </div>
+      </div>
+
+      <div class="sidebar-card">
+        <div class="sidebar-title">KI-Prompt Anpassung</div>
+        <div class="callout-box">
+          <strong>GPT-4o System Prompt für Standard:</strong><br><br>
+          In Make.com S1 — wenn <code>vorlage_typ = "standard"</code> oder leer — den Standard-Prompt verwenden:<br><br>
+          <em style="font-size:0.72rem;">"Erstelle einen vollständigen Gutachten-Entwurf mit §407a ZPO Struktur, Kostenkalkulation nach BKI-Kennwerten und technischen Feststellungen. Fließtext, vollständige Positionstabelle, mindestens 400 Wörter."</em>
+        </div>
+      </div>
+
+      <div class="callout-box" style="border-radius:8px;">
+        <strong>💡 Verkaufsargument:</strong><br>
+        "Diese Vorlage deckt 80% aller Aufträge ab. Wasserschaden, Schimmel, Sturm — ein Diktat, 15 Minuten, ein rechtssicheres PDF. Genau das, was Sachverständige täglich brauchen."
+      </div>
+
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

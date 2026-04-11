@@ -414,7 +414,7 @@ const HonorarTracker = (() => {
 
       const resp = await fetch('/.netlify/functions/airtable', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: Object.assign({ 'Content-Type': 'application/json' }, window.provaAuthHeaders ? window.provaAuthHeaders() : {}),
         credentials: 'same-origin',
         body: JSON.stringify({
           action: 'list',
@@ -772,7 +772,7 @@ const HonorarTracker = (() => {
     try {
       await fetch('/.netlify/functions/airtable', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: Object.assign({ 'Content-Type': 'application/json' }, window.provaAuthHeaders ? window.provaAuthHeaders() : {}),
         credentials: 'same-origin',
         body: JSON.stringify({
           action: 'update',
@@ -798,7 +798,7 @@ const HonorarTracker = (() => {
       // Make.com Mahnung-Szenario triggern
       await fetch('/.netlify/functions/airtable', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: Object.assign({ 'Content-Type': 'application/json' }, window.provaAuthHeaders ? window.provaAuthHeaders() : {}),
         credentials: 'same-origin',
         body: JSON.stringify({
           action: 'update',
@@ -822,7 +822,7 @@ const HonorarTracker = (() => {
     try {
       await fetch('/.netlify/functions/airtable', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: Object.assign({ 'Content-Type': 'application/json' }, window.provaAuthHeaders ? window.provaAuthHeaders() : {}),
         credentials: 'same-origin',
         body: JSON.stringify({
           action: 'update',

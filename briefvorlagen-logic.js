@@ -631,7 +631,7 @@ window.provaBriefGesendet = async function(briefId) {
   try {
     await fetch('/.netlify/functions/airtable', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: Object.assign({ 'Content-Type': 'application/json' }, window.provaAuthHeaders ? window.provaAuthHeaders() : {}),
       body: JSON.stringify({
         method: 'PATCH',
         path: '/v0/appJ7bLlAHZoxENWE/tblSzxvnkRE6B0thx/' + briefId,

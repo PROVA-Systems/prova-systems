@@ -489,7 +489,7 @@ const FristGuard = (() => {
 
       const resp = await fetch('/.netlify/functions/airtable', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: Object.assign({ 'Content-Type': 'application/json' }, window.provaAuthHeaders ? window.provaAuthHeaders() : {}),
         credentials: 'same-origin',
         body: JSON.stringify({
           action: 'list',
@@ -950,7 +950,7 @@ const FristGuard = (() => {
     try {
       const resp = await fetch('/.netlify/functions/airtable', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: Object.assign({ 'Content-Type': 'application/json' }, window.provaAuthHeaders ? window.provaAuthHeaders() : {}),
         credentials: 'same-origin',
         body: JSON.stringify({
           action: 'create',
@@ -991,7 +991,7 @@ const FristGuard = (() => {
     try {
       await fetch('/.netlify/functions/airtable', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: Object.assign({ 'Content-Type': 'application/json' }, window.provaAuthHeaders ? window.provaAuthHeaders() : {}),
         credentials: 'same-origin',
         body: JSON.stringify({
           action: 'update',

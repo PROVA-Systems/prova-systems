@@ -231,7 +231,7 @@ async function handleDokUpload(files) {
 
         var kiRes = await fetch('/.netlify/functions/ki-proxy', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: Object.assign({ 'Content-Type': 'application/json' }, window.provaAuthHeaders ? window.provaAuthHeaders() : {}),
           body: JSON.stringify({ aufgabe: 'pdf_extraktion', pdf_base64: b64, dateiname: file.name })
         });
 
@@ -266,7 +266,7 @@ async function handleDokUpload(files) {
         });
         var capRes = await fetch('/.netlify/functions/foto-captioning', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: Object.assign({ 'Content-Type': 'application/json' }, window.provaAuthHeaders ? window.provaAuthHeaders() : {}),
           body: JSON.stringify({
             imageBase64: imgB64,
             mediaType: file.type,
