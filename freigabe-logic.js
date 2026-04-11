@@ -12,18 +12,10 @@ if (!window.showToast && window.zeigToast) window.showToast = window.zeigToast;
 if(!localStorage.getItem('prova_user')) location.href='app-login.html';
 
 const AT_BASE='appJ7bLlAHZoxENWE', AT_TABLE='tblSxV8bsXwd1pwa0';
-const MAKE_KEY_S3='s3';
-const MAKE_KEY_S1='g1';
+const WH_S3='https://hook.eu1.make.com/44kqx7eo142aw7warqao4c4wqo1nw158';
+const WH_S1='https://hook.eu1.make.com/imn2n5xs7j251xicrmdmk17of042pt2t';
 
 let recId=null, recFields=null, svProfil=null, editMode=false;
-
-async function makeProxy(key, payload){
-  return fetch('/.netlify/functions/make-proxy', {
-    method: 'POST',
-    headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({ key: key, payload: payload || {} })
-  });
-}
 
 /* INIT */
 window.addEventListener('DOMContentLoaded',()=>{
@@ -74,13 +66,6 @@ async function ladeGutachten(){
     let rec=rid&&!fall ? data : data.records?.[0];
     if(!rec) throw new Error('Kein Gutachten gefunden.');
     recId=rec.id; recFields=rec.fields||{};
-    // §407a Checkbox initial aus Airtable setzen (falls vorhanden)
-    try {
-      var cb = document.getElementById('cb407a');
-      if (cb) {
-        cb.checked = !!(recFields.par407a_bestaetigt || recFields.bestaetigung_407a);
-      }
-    } catch(e) {}
     await ladeSVProfil();
     renderDoc();
     document.getElementById('loading-indicator').style.display='none';
@@ -558,37 +543,11 @@ function toggle407a(){
   } else {
     localStorage.removeItem('prova_5pruef_ts');
   }
-
-  // §407a Checkbox server-seitig speichern (Airtable: par407a_bestaetigt)
-  try {
-    if (typeof recId !== 'undefined' && recId && cb407) {
-      fetch('/.netlify/functions/airtable', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          method: 'PATCH',
-          path: '/v0/' + AT_BASE + '/' + AT_TABLE + '/' + recId,
-          payload: { fields: { par407a_bestaetigt: !!cb407.checked, bestaetigung_407a: cb407.checked ? now : '' } }
-        })
-      }).catch(function(){});
-    }
-  } catch(e) {}
 }
 
 /* FREIGEBEN */
 async function approveGutachten(){
   if(!recId||!recFields){zeigToast('Kein Datensatz geladen.','err');return;}
-  // Hard block: §407a muss serverseitig bestätigt sein
-  try {
-    if (!recFields.par407a_bestaetigt) {
-      // Fallback: wenn Checkbox gerade gesetzt ist, trotzdem blocken bis Patch durch ist
-      var cb = document.getElementById('cb407a');
-      if (!cb || !cb.checked) {
-        zeigToast('Bitte §407a bestätigen, bevor Sie freigeben.', 'err');
-        return;
-      }
-    }
-  } catch(e) {}
   const btn=document.getElementById('btnFreigeben');
   btn.disabled=true; btn.textContent='Einen Moment…';
   const f=recFields;
@@ -622,7 +581,7 @@ async function approveGutachten(){
     paket:localStorage.getItem('prova_paket')||'Solo',
   };
   try {
-    const res=await makeProxy(MAKE_KEY_S3, payload);
+    const res=await fetch(WH_S3,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
     if(!res.ok) throw new Error('HTTP '+res.status);
     document.getElementById('approve-content').style.display='none';
     document.getElementById('erfolg').classList.add('show');
@@ -643,8 +602,7 @@ async function approveGutachten(){
             fields: {
               Status: 'Freigegeben',
               Freigabe_Datum: new Date().toISOString().split('T')[0],
-              Freigabe_Durch: localStorage.getItem('prova_sv_email') || '',
-              par407a_bestaetigt: true
+              Freigabe_Durch: localStorage.getItem('prova_sv_email') || ''
             }
           }
         })
@@ -710,7 +668,7 @@ async function rejectGutachten(){
   if(!txt){zeigToast('Bitte Korrekturhinweis eingeben.','warn');return;}
   if(!recId){zeigToast('Kein Datensatz.','err');return;}
   try {
-    const res=await makeProxy(MAKE_KEY_S1, {airtable_id:recId,aktenzeichen:(recFields&&recFields.Aktenzeichen)||'',korrektur_hinweise:txt,sv_email:localStorage.getItem('prova_sv_email')||''});
+    const res=await fetch(WH_S1,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({airtable_id:recId,aktenzeichen:(recFields&&recFields.Aktenzeichen)||'',korrektur_hinweise:txt,sv_email:localStorage.getItem('prova_sv_email')||''})});
     if(!res.ok) throw new Error('HTTP '+res.status);
     zeigToast('Korrektur angefordert ✅','ok');
     document.getElementById('korrekturSub').classList.remove('open');

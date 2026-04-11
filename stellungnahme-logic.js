@@ -498,31 +498,6 @@ ladeNormen();
   } catch(e) {}
 })();
 
-// Normen-Auswahl aus normen.html in §5 übernehmen (sessionStorage)
-(function() {
-  try {
-    var raw = null;
-    try { raw = JSON.parse(sessionStorage.getItem('prova_normen_auswahl') || 'null'); } catch(e) { raw = null; }
-    if (!Array.isArray(raw) || raw.length === 0) return;
-
-    var lines = raw.map(function(n){
-      var nr = (n && (n.norm_nr || n.id)) ? String(n.norm_nr || n.id) : '';
-      var bez = (n && n.bezeichnung) ? String(n.bezeichnung) : '';
-      return '- ' + nr + (bez ? (' — ' + bez) : '');
-    }).filter(Boolean);
-    if (!lines.length) return;
-
-    var add = '\n\n§5 Normenbezug (aus Normendatenbank):\n' + lines.join('\n') + '\n';
-    var entwurf = localStorage.getItem('prova_entwurf_text') || '';
-    localStorage.setItem('prova_entwurf_text', (entwurf || '') + add);
-    try { sessionStorage.removeItem('prova_normen_auswahl'); } catch(e) {}
-
-    // UI: Analyse neu laden + Toast
-    try { setTimeout(ladeKIAnalyse, 300); } catch(e) {}
-    try { if (typeof zeigToast === 'function') zeigToast(lines.length + ' Normen aus Normendatenbank übernommen'); } catch(e) {}
-  } catch(e) {}
-})();
-
 /* ── NAVIGATION ── */
 function goBack() {
   localStorage.setItem('prova_stellungnahme_return', window.location.href);

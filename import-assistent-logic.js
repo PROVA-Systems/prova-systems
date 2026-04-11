@@ -171,7 +171,28 @@ function parseAlles() {
 
 function leseFile(file, kategorie) {
   return new Promise(function(resolve) {
-    var reader = new FileReader();
+    // PDF und Word: als Archiv-Eintrag importieren (Metadaten, kein Volltext)
+  if (file.type === 'application/pdf' || file.name.endsWith('.pdf') ||
+      file.type.includes('wordprocessingml') || file.name.endsWith('.docx') || file.name.endsWith('.doc')) {
+    if (kat === 'faelle') {
+      var archivEintrag = {
+        aktenzeichen: file.name.replace(/\.(pdf|docx?|txt)$/i, '').replace(/[_\s]+/g,' ').trim(),
+        schadenart: '',
+        status: 'Archiviert (Import)',
+        auftraggeber: '',
+        schadensdatum: new Date().toISOString().split('T')[0],
+        import_dateiname: file.name,
+        import_typ: file.type.includes('pdf') ? 'PDF' : 'Word',
+        import_datum: new Date().toISOString(),
+        _sel: true
+      };
+      if (!_parsed.faelle) _parsed.faelle = [];
+      _parsed.faelle.push(archivEintrag);
+      renderVorschau();
+      return;
+    }
+  }
+  var reader = new FileReader();
     reader.onload = function(e) {
       var text = e.target.result;
       if (kategorie === 'kontakte' && file.name.toLowerCase().endsWith('.vcf')) {
@@ -384,15 +405,44 @@ function updateSelCount(kat){
 // SCHRITT 4 — IMPORT
 // ============================================================
 function importAlles() {
-  // KONTAKTE
+  // KONTAKTE — localStorage + Airtable
+  var svEmail = localStorage.getItem('prova_sv_email') || '';
   var kontakteImport=_parsed.kontakte.filter(function(r){return r._sel;});
   var vorhandene=JSON.parse(localStorage.getItem('prova_kontakte')||'[]');
   var neuK=0,dupK=0;
+  var AT_BASE_K = 'appJ7bLlAHZoxENWE';
+  var AT_KONTAKTE = 'tblMKmPLjRelr6Hal';
   kontakteImport.forEach(function(r){
     var dup=vorhandene.find(function(k){return k.name.toLowerCase()===r.name.toLowerCase()&&(!r.email||k.email===r.email);});
     if(dup){dupK++;return;}
-    vorhandene.unshift(Object.assign({id:genId(),erstellt:new Date().toISOString(),faelle_anzahl:0},r));
+    var newK = Object.assign({id:genId(),erstellt:new Date().toISOString(),faelle_anzahl:0},r);
+    vorhandene.unshift(newK);
     neuK++;
+    // Airtable-Sync
+    if (svEmail) {
+      fetch('/.netlify/functions/airtable', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({
+          method: 'POST',
+          path: '/v0/' + AT_BASE_K + '/' + AT_KONTAKTE,
+          payload: { records: [{ fields: {
+            Name:           r.name || '',
+            Vorname:        r.vorname || '',
+            Typ:            r.typ || 'Sonstiges',
+            Firma:          r.firma || '',
+            Strasse:        r.strasse || '',
+            PLZ:            String(r.plz || ''),
+            Ort:            r.ort || '',
+            Telefon:        r.telefon || '',
+            Email:          r.email || '',
+            Notizen:        r.notizen || '',
+            Import_Quelle:  _selectedSw ? _selectedSw.id : 'Import',
+            sv_email:       svEmail
+          }}]}
+        })
+      }).catch(function(e){ console.warn('[Import] Kontakt Airtable sync:', e); });
+    }
   });
   localStorage.setItem('prova_kontakte',JSON.stringify(vorhandene));
   _result.kontakte=neuK;
@@ -438,7 +488,7 @@ function importAlles() {
   var svEmail = localStorage.getItem('prova_sv_email') || '';
   var AT_BASE = 'appJ7bLlAHZoxENWE';
   var AT_FAELLE = 'tblSxV8bsXwd1pwa0';
-  var faelleZuSync = _parsed.faelle.filter(function(r){return r._sel;}).slice(0,20); // max 20 auf einmal
+  var faelleZuSync = _parsed.faelle.filter(function(r){return r._sel;}); // kein Limit mehr
   if (svEmail && faelleZuSync.length) {
     faelleZuSync.forEach(function(f) {
       try {

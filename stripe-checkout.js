@@ -36,7 +36,7 @@ const ADDON_MAP = {
   },
 };
 
-const MAKE_KEY_L3 = 'l3';
+const L3_WEBHOOK = 'https://hook.eu1.make.com/u6otau1k1au199kv8ibbb37z0dhl40wv';
 const TRIAL_DAYS = 14;
 const BASE_URL   = process.env.URL || 'https://prova-systems.de';
 
@@ -112,10 +112,10 @@ async function handleAbo(stripe, customer, body, email) {
   });
 
   // L3: Airtable Status setzen + Bestätigungsmail
-  fetch('/.netlify/functions/make-proxy', {
+  fetch(L3_WEBHOOK, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ key: MAKE_KEY_L3, payload: { email, paket: paketNorm, stripe_customer_id: customer.id } }),
+    body: JSON.stringify({ email, paket: paketNorm, stripe_customer_id: customer.id }),
   }).catch(e => console.warn('[L3]', e.message));
 
   return {

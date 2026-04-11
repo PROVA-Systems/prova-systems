@@ -290,6 +290,7 @@ tr:hover td{background:var(--gray-50);}
   <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
   <script>if (typeof netlifyIdentity !== 'undefined') netlifyIdentity.init();</script>
   <script src="prova-auth-api.js"></script>
+  <script src="prova-sv-airtable.js"></script>
   <script src="prova-airtable-api.js"></script>
   <script src="prova-audit.js"></script>
 <script>
@@ -972,7 +973,7 @@ window.setSVEmail = async function() {
 };
 
 async function ladeSVProfil() {
-  const email = (sessionStorage.getItem('prova_email') || localStorage.getItem('prova_email') || '').trim();
+  const email = (localStorage.getItem('prova_sv_email') || sessionStorage.getItem('prova_email') || localStorage.getItem('prova_email') || '').trim();
   if (!email) return null;
   const path = `/v0/${AIRTABLE_BASE}/${AIRTABLE_SV_TABLE}?filterByFormula=${encodeURIComponent(`Email=\"${email}\"`)}&maxRecords=1`;
   const data = await airtableProxy('GET', path);
@@ -2090,5 +2091,6 @@ document.addEventListener('DOMContentLoaded', function () {
 </script>
   <script src="prova-notifications.js" defer></script>
   <script src="prova-onboarding-tour.js" defer></script>
+<script src="support-chat.js" defer></script>
 </body>
 </html>

@@ -24,7 +24,7 @@ async function fetchSvByEmail(email, pat) {
     TABLE_SV +
     '?filterByFormula=' +
     filter +
-    '&maxRecords=1&fields[]=Status&fields[]=Trial_End&fields[]=subscription_status&fields[]=Paket';
+    '&maxRecords=1&fields[]=Status&fields[]=trial_end&fields[]=subscription_status&fields[]=Paket';
   const res = await fetch(url, { headers: { Authorization: 'Bearer ' + pat } });
   if (!res.ok) return null;
   const data = await res.json();
@@ -44,7 +44,7 @@ async function hasProvaAccess(email, pat) {
   const sub = String(f.subscription_status || f.Subscription_Status || '')
     .trim()
     .toLowerCase();
-  const trialEnd = f.Trial_End;
+  const trialEnd = f.trial_end || f.Trial_End;
   const paket = String(f.Paket || '').trim();
 
   if (status === 'Gekündigt' || sub === 'canceled' || sub === 'cancelled') {

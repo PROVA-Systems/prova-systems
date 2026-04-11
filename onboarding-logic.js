@@ -181,7 +181,6 @@
     }
     // Onboarding als abgeschlossen markieren
     localStorage.setItem('prova_onboarding_done', 'true');
-    try { if (window.provaSetOnboardingDone) window.provaSetOnboardingDone(); } catch(e) {}
     // Airtable-Sync: SV-Datensatz anlegen
     syncOnboardingSV();
   }
@@ -201,15 +200,13 @@
         avv_signed_ts: localStorage.getItem('prova_avv_ts') || new Date().toISOString()
       };
       // Erst prüfen ob schon vorhanden
-      var emNorm = String(svp.email || '').toLowerCase().trim();
       var checkRes = await fetch('/.netlify/functions/airtable', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          _userEmail: emNorm,
           method: 'GET',
           path: '/v0/appJ7bLlAHZoxENWE/tbladqEQT3tmx4DIB?filterByFormula=' +
-                encodeURIComponent('{Email}="' + String(svp.email).replace(/"/g, '\\"') + '"') + '&maxRecords=1'
+                encodeURIComponent('{Email}="' + svp.email + '"') + '&maxRecords=1'
         })
       });
       if (checkRes.ok) {
@@ -222,7 +219,6 @@
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              _userEmail: emNorm,
               method: 'PATCH',
               path: '/v0/appJ7bLlAHZoxENWE/tbladqEQT3tmx4DIB/' + existingId,
               payload: {
@@ -244,7 +240,6 @@
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          _userEmail: emNorm,
           method: 'POST',
           path: '/v0/appJ7bLlAHZoxENWE/tbladqEQT3tmx4DIB',
           payload: { records: [{ fields: fields }] }
@@ -366,56 +361,3 @@
       if (radio) radio.checked = true;
     }
   });
-/* ── L8 Onboarding-Abschluss → Make Webhook ── */
-window.provaOnboardingAbschluss = async function() {
-  var email   = localStorage.getItem('prova_sv_email')   || '';
-  var vorname = localStorage.getItem('prova_sv_vorname') || '';
-  var paket   = localStorage.getItem('prova_paket')      || 'Solo';
-
-  // L8 via Make Proxy (key-based, no webhook URL in browser)
-  var MAKE_KEY_L8 = 'l8';
-
-  // onboarding_done in Airtable setzen (falls nicht schon gesetzt)
-  localStorage.setItem('prova_onboarding_done', '1');
-
-  // Airtable: onboarding_done=true patchen (geräteübergreifend)
-  try {
-    if (typeof provaSetOnboardingDone === 'function') {
-      await provaSetOnboardingDone();
-    }
-  } catch(e) {}
-
-  // L8 triggern
-  try {
-    await fetch('/.netlify/functions/make-proxy', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ key: MAKE_KEY_L8, payload: {
-        email:   email,
-        vorname: vorname,
-        paket:   paket,
-        datum:   new Date().toISOString(),
-      }})
-    });
-    console.log('[PROVA] L8 Onboarding-Webhook getriggert ✅');
-  } catch(e) {
-    console.warn('[PROVA] L8 Webhook fehlgeschlagen:', e.message);
-  }
-};
-
-// Airtable: onboarding_done setzen (SV Datensatz)
-window.provaSetOnboardingDone = async function() {
-  try {
-    var svRecId = localStorage.getItem('prova_at_sv_record_id') || '';
-    if (!svRecId) return;
-    await fetch('/.netlify/functions/airtable', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        method: 'PATCH',
-        path: '/v0/appJ7bLlAHZoxENWE/tbladqEQT3tmx4DIB/' + svRecId,
-        payload: { fields: { onboarding_done: true } }
-      })
-    });
-  } catch(e) {}
-};

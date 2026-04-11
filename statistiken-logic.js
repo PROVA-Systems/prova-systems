@@ -48,9 +48,12 @@ function filterByDays(records) {
 async function loadData() {
   try {
     // Via Netlify Function proxyen (wie alle anderen Seiten)
+    var svEmail = localStorage.getItem('prova_sv_email') || '';
+    var emailFilter = svEmail ? encodeURIComponent('{sv_email}="' + svEmail.replace(/"/g, '\"') + '"') : '';
     var path = '/v0/' + AT_BASE + '/' + AT_TABLE
       + '?fields[]=' + [AT_KEY_FIELD, AT_STATUS, AT_SCHADEN, AT_AG_TYP, AT_FOTOS, AT_ZEIT, AT_TS, AT_PAKET].join('&fields[]=')
       + '&sort[0][field]=' + AT_TS + '&sort[0][direction]=desc'
+      + (emailFilter ? '&filterByFormula=' + emailFilter : '')
       + '&maxRecords=500';
 
     var resp = await fetch('/.netlify/functions/airtable', {
@@ -199,73 +202,3 @@ function renderAll(allRecords) {
     renderAll(_allData);
   });
 })();
-
-// ── Jahresbericht PDF Export (PDFMonkey F-01) ─────────────────
-window.exportJahresberichtPDF = async function(){
-  var btn = document.getElementById('btn-jahresbericht-pdf');
-  var prevTxt = btn ? btn.textContent : '';
-  function setBusy(on){
-    if(!btn) return;
-    btn.disabled = !!on;
-    btn.textContent = on ? '⏳ PDF wird erstellt…' : (prevTxt || '📄 Als PDF exportieren');
-  }
-  try {
-    var year = new Date().getFullYear();
-    var data = Array.isArray(_allData) ? _allData : [];
-    // Nur aktuelles Jahr (Timestamp Feld)
-    var yr = data.filter(function(r){
-      var ts = r[AT_TS];
-      if(!ts) return false;
-      try { return (new Date(ts)).getFullYear() === year; } catch(e) { return false; }
-    });
-    if(!yr.length) { alert('Keine Daten im aktuellen Jahr.'); return; }
-
-    setBusy(true);
-
-    // Umsatz: aus RECHNUNGEN dieses Jahres summieren (brutto)
-    var umsatz = 0;
-    try {
-      var svEmail = localStorage.getItem('prova_sv_email') || '';
-      var fromIso = year + '-01-01';
-      var toIso   = year + '-12-31';
-      var filt = 'AND({sv_email}="' + svEmail + '",IS_AFTER({Rechnungsdatum},"' + fromIso + '"),IS_BEFORE({Rechnungsdatum},"' + toIso + '"))';
-      var pathR = '/v0/appJ7bLlAHZoxENWE/tblF6MS7uiFAJDjiT?fields[]=brutto_betrag_eur&fields[]=Rechnungsdatum&fields[]=sv_email'
-        + '&filterByFormula=' + encodeURIComponent(filt) + '&maxRecords=500';
-      var rResp = await fetch('/.netlify/functions/airtable', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({method:'GET', path: pathR}) });
-      if (rResp.ok) {
-        var rJson = await rResp.json();
-        (rJson.records||[]).forEach(function(rec){
-          var f = rec.fields||{};
-          umsatz += parseFloat(f.brutto_betrag_eur||0) || 0;
-        });
-      }
-    } catch(e) {}
-
-    // Schadensarten-Verteilung
-    var dist = {};
-    yr.forEach(function(r){
-      var sa = r[AT_SCHADEN] || 'Unbekannt';
-      dist[sa] = (dist[sa]||0) + 1;
-    });
-    var distArr = Object.keys(dist).sort(function(a,b){return dist[b]-dist[a];}).map(function(k){ return {label:k,count:dist[k]}; });
-
-    var resp = await fetch('/.netlify/functions/jahresbericht-pdf', {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({
-        year: year,
-        gutachten_anzahl: yr.length,
-        umsatz_eur: Math.round(umsatz * 100) / 100,
-        schadensarten: distArr
-      })
-    });
-    var out = await resp.json().catch(function(){ return {}; });
-    if(!resp.ok){ alert('PDF Fehler: HTTP '+resp.status); return; }
-    if(out && out.pdf_url){ window.open(out.pdf_url, '_blank', 'noopener'); }
-    else { alert('PDF wird generiert. Bitte später erneut versuchen.'); }
-  } catch(e) {
-    alert('Export fehlgeschlagen: ' + (e && e.message ? e.message : 'unbekannt'));
-  } finally {
-    setBusy(false);
-  }
-};

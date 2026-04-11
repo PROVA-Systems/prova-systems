@@ -107,7 +107,6 @@ function ladeProduktDetail(id) {
         // Meta-Zeile
         '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-bottom:16px;">' +
           metaBox('Auftraggeber', proj.auftraggeber||'—') +
-          (proj.auftraggeber_email ? metaBox('E-Mail', proj.auftraggeber_email) : '') +
           metaBox('Aktenzeichen', proj.az||'—') +
           metaBox('Beginn', formatDatum(proj.beginn)) +
           metaBox('Gepl. Abnahme', formatDatum(proj.abnahme)) +
@@ -170,7 +169,6 @@ function renderBegehungenHtml(begehungen, projId) {
           (b.fotos>0 ? '<div class="begehung-fotos">📷 '+b.fotos+' Foto'+(b.fotos===1?'':'s')+'</div>' : '') +
         '</div>' +
         '<div class="begehung-actions">' +
-          '<button title="Zwischenrechnung" onclick="zwischenrechnungBB(\'' + projId + '\',' + i + ')" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:14px;padding:4px;">💶</button>' +
           '<button title="Löschen" onclick="loescheBegehung(\'' + projId + '\',' + i + ')" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:14px;padding:4px;">🗑</button>' +
         '</div>' +
       '</div>';
@@ -309,7 +307,7 @@ function closeModal(id) { document.getElementById(id).classList.remove('open'); 
 function openModalProjekt() {
   _editProjektId = null;
   document.getElementById('modal-projekt-titel').textContent = '🏗 Neues Projekt';
-  ['mp-name','mp-auftraggeber','mp-auftraggeber-email','mp-az','mp-adresse','mp-notiz'].forEach(function(id){
+  ['mp-name','mp-auftraggeber','mp-az','mp-adresse','mp-notiz'].forEach(function(id){
     var el=document.getElementById(id); if(el) el.value='';
   });
   document.getElementById('mp-beginn').value = new Date().toISOString().slice(0,10);
@@ -325,7 +323,6 @@ function editiereProjekt(id) {
   document.getElementById('modal-projekt-titel').textContent = '✎ Projekt bearbeiten';
   document.getElementById('mp-name').value = proj.name||'';
   document.getElementById('mp-auftraggeber').value = proj.auftraggeber||'';
-  if (document.getElementById('mp-auftraggeber-email')) document.getElementById('mp-auftraggeber-email').value = proj.auftraggeber_email||'';
   (document.getElementById('mp-az') || document.getElementById('mp-az-edit')).value = proj.az||'';
   document.getElementById('mp-adresse').value = proj.adresse||'';
   document.getElementById('mp-beginn').value = proj.beginn||'';
@@ -342,8 +339,6 @@ function openModalBegehung() {
   document.getElementById('mb-anwesend').value = '';
   document.getElementById('mb-fotos').value = '0';
   document.getElementById('mb-dringlichkeit').value = 'normal';
-  if (document.getElementById('mb-stunden')) document.getElementById('mb-stunden').value = '';
-  if (document.getElementById('mb-km')) document.getElementById('mb-km').value = '';
   openModal('modal-begehung');
   setTimeout(function(){ document.getElementById('mb-text').focus(); }, 100);
 }
@@ -354,14 +349,12 @@ function openModalBegehung() {
 function speichereProjekt() {
   var name = document.getElementById('mp-name').value.trim();
   if (!name) { zeigToast('Projektname ist Pflichtfeld', 'err'); return; }
-  var agEmail = (document.getElementById('mp-auftraggeber-email')||{}).value ? document.getElementById('mp-auftraggeber-email').value.trim() : '';
 
   if (_editProjektId) {
     var proj = _data.projekte.find(function(p){return p.id===_editProjektId;});
     if (proj) {
       proj.name = name;
       proj.auftraggeber = document.getElementById('mp-auftraggeber').value.trim();
-      proj.auftraggeber_email = agEmail;
       proj.az = document.getElementById('mp-az') || document.getElementById('mp-az-edit').value.trim();
       proj.adresse = document.getElementById('mp-adresse').value.trim();
       proj.beginn = document.getElementById('mp-beginn').value;
@@ -376,7 +369,6 @@ function speichereProjekt() {
       id: genId(),
       name: name,
       auftraggeber: document.getElementById('mp-auftraggeber').value.trim(),
-      auftraggeber_email: agEmail,
       az: az,
       adresse: document.getElementById('mp-adresse').value.trim(),
       beginn: document.getElementById('mp-beginn').value,
@@ -426,8 +418,6 @@ function speichereBegehung() {
     text: text,
     anwesend: document.getElementById('mb-anwesend').value.trim(),
     fotos: parseInt(document.getElementById('mb-fotos').value)||0,
-    stunden: parseFloat((document.getElementById('mb-stunden')||{}).value)||0,
-    km: parseFloat((document.getElementById('mb-km')||{}).value)||0,
     dringlichkeit: document.getElementById('mb-dringlichkeit').value,
     erfasst: new Date().toISOString()
   });
@@ -436,32 +426,6 @@ function speichereBegehung() {
   ladeProduktDetail(_aktivProjektId);
   zeigToast('Begehung erfasst ✅');
 }
-
-// ───────────────────────────────────────────
-// Zwischenrechnung pro Begehung/Phase
-// ───────────────────────────────────────────
-window.zwischenrechnungBB = function(projId, idx){
-  var proj = _data.projekte.find(function(p){return p.id===projId;});
-  if(!proj) return;
-  var b = (proj.begehungen||[])[idx];
-  var posText = 'Baubegleitung';
-  if(b){
-    var ph = (b.phase||'').trim();
-    posText = 'Baubegleitung' + (ph ? ' · ' + ph : '') + ' · Begehung ' + formatDatum(b.datum);
-  }
-  var prefill = {
-    typ: 'BB',
-    rechnungstyp: 'Stunde',
-    aktenzeichen: proj.az || '',
-    auftraggeber_name: proj.auftraggeber || '',
-    auftraggeber_email: proj.auftraggeber_email || '',
-    rechnungsdatum: (new Date()).toISOString().slice(0,10),
-    mit_mwst: true,
-    position: { bezeichnung: posText, menge: 1, ep: 95 }
-  };
-  try{ sessionStorage.setItem('prova_rechnung_prefill_bb', JSON.stringify(prefill)); }catch(e){}
-  window.location.href = 'rechnungen.html?from=bb&az=' + encodeURIComponent(proj.az || '');
-};
 
 function loescheBegehung(projId, idx) {
   if (!confirm('Begehung löschen?')) return;

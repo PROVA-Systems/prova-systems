@@ -21,17 +21,9 @@ if(!localStorage.getItem('prova_user')){window.location.href='app-login.html';re
 var svEmail=localStorage.getItem('prova_sv_email')||'';
 var alleTermine=[];
 var kalDatum=new Date();
-var MAKE_KEY_SUPPORT='support';
+var WEBHOOK_S8='https://hook.eu1.make.com/lktuhugwcg5v37ib6bdaxjb1uiplnu8v';
 var AT_BASE='appJ7bLlAHZoxENWE';
 var AT_TERMINE='tblyMTTdtfGQjjmc2';
-
-async function makeProxy(key, payload){
-  return fetch('/.netlify/functions/make-proxy', {
-    method: 'POST',
-    headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({ key: key, payload: payload || {} })
-  });
-}
 
 function ladeAusLS(){
   try{return JSON.parse(localStorage.getItem('prova_termine')||'[]');}catch(e){return[];}
@@ -261,7 +253,7 @@ window.speichereTermin=async function(){
 
   // Async: In Airtable speichern
   try{
-    var fields={titel:titel,termin_typ:typ,termin_datum:datum,uhrzeit:uhrzeit,aktenzeichen:az,notiz:notiz,sv_email:svEmail};
+    var fields={termin_typ:typ,termin_datum:datum,aktenzeichen:az||titel||"",notizen:notiz,sv_email:svEmail};
     var method=editId&&editId.startsWith('rec')?'PATCH':'POST';
     var path=editId&&editId.startsWith('rec')?'/v0/'+AT_BASE+'/'+AT_TERMINE+'/'+editId:'/v0/'+AT_BASE+'/'+AT_TERMINE;
     await fetch('/.netlify/functions/airtable',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({method:method,path:path,payload:{fields:fields}})});

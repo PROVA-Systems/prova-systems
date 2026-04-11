@@ -1,73 +1,147 @@
-// PROVA — Airtable Proxy; SV-Tabelle: nur mit gültigem Abo/Trial (serverseitig)
+// PROVA — Airtable Proxy v2
+// Fixes: Ownership-Check PATCH/DELETE, kein Body._userEmail-Fallback,
+//        KI_STATISTIK/KI_LERNPOOL SV_Email-Filter, Table-Whitelist
 const AIRTABLE_BASE_URL = 'https://api.airtable.com';
-const { hasProvaAccess, TABLE_SV } = require('./lib/prova-subscription.js');
+const { hasProvaAccess, TABLE_SV, BASE_ID } = require('./lib/prova-subscription.js');
+
+// ── Erlaubte Tabellen + welches Feld als User-Filter gilt ──────────────────
+const ALLOWED_TABLES = {
+  tblSxV8bsXwd1pwa0: { name: 'SCHADENSFAELLE',   userField: 'sv_email' },
+  tbladqEQT3tmx4DIB: { name: 'SACHVERSTAENDIGE',  userField: null },
+  tblqQmMwJKxltXXXl: { name: 'AUDIT_TRAIL',       userField: 'Email' },
+  tblv9F8LEnUC3mKru: { name: 'KI_STATISTIK',      userField: 'SV_Email' },
+  tbl4LEsMvcDKFCYaF: { name: 'KI_LERNPOOL',       userField: 'SV_Email' },
+  tblMKmPLjRelr6Hal: { name: 'KONTAKTE',           userField: 'sv_email' }, // Multi-Tenant
+  tblF6MS7uiFAJDjiT: { name: 'RECHNUNGEN',         userField: 'sv_email' },
+  tblyMTTdtfGQjjmc2: { name: 'TERMINE',            userField: 'sv_email' },
+  tblDS8NQxzceGedJO: { name: 'TEXTBAUSTEINE',      userField: 'sv_email' },
+  tblSzxvnkRE6B0thx: { name: 'BRIEFE',             userField: 'sv_email' },
+};
 
 function isSvTablePath(path) {
-  return typeof path === 'string' && path.indexOf(TABLE_SV) >= 0;
+  return typeof path === 'string' && TABLE_SV && path.indexOf(TABLE_SV) >= 0;
 }
 
-exports.handler = async function (event, context) {
+function getAllowedTable(path) {
+  for (const [tableId, info] of Object.entries(ALLOWED_TABLES)) {
+    if (path.indexOf(tableId) >= 0) return { tableId, ...info };
+  }
+  return null;
+}
+
+// ── Ownership prüfen: Gehört der Record dem anfragenden User? ────────────────
+async function checkOwnership(pat, path, userEmail) {
+  try {
+    // Record-ID aus Pfad extrahieren (z.B. /v0/appXXX/tblXXX/recXXXXXXXXXXXXXXX)
+    const recMatch = path.match(/\/(rec[A-Za-z0-9]{14})/);
+    if (!recMatch) return true; // Kein Record-ID = kein Check nötig (z.B. POST auf Tabelle)
+    const recordId = recMatch[1];
+
+    const tableInfo = getAllowedTable(path);
+    if (!tableInfo || !tableInfo.userField) return true; // Kein userField = kein Ownership-Check
+
+    // Record aus Airtable lesen
+    const url = AIRTABLE_BASE_URL + '/v0/' + BASE_ID + '/' + tableInfo.tableId + '/' + recordId;
+    const res = await fetch(url, {
+      headers: { Authorization: 'Bearer ' + pat }
+    });
+    if (!res.ok) return false;
+    const data = await res.json();
+    const recordEmail = ((data.fields || {})[tableInfo.userField] || '').toString().trim().toLowerCase();
+    return recordEmail === userEmail.trim().toLowerCase();
+  } catch(e) {
+    return false;
+  }
+}
+
+exports.handler = async function(event, context) {
+  // CORS
+  const origin = event.headers['origin'] || '';
+  const allowedOrigin = process.env.URL || 'https://prova-systems.de';
+  const corsHeaders = {
+    'Access-Control-Allow-Origin': origin.includes('prova-systems.de') ? origin : allowedOrigin,
+    'Access-Control-Allow-Headers': 'Authorization, Content-Type',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  };
+
+  if (event.httpMethod === 'OPTIONS') {
+    return { statusCode: 204, headers: corsHeaders, body: '' };
+  }
   if (event.httpMethod !== 'POST') {
-    return { statusCode: 405, body: JSON.stringify({ error: 'Method Not Allowed' }) };
+    return { statusCode: 405, headers: corsHeaders, body: JSON.stringify({ error: 'Method Not Allowed' }) };
   }
 
   const pat = process.env.AIRTABLE_PAT;
   if (!pat) {
-    return { statusCode: 500, body: JSON.stringify({ error: 'AIRTABLE_PAT nicht konfiguriert' }) };
+    return { statusCode: 500, headers: corsHeaders, body: JSON.stringify({ error: 'AIRTABLE_PAT nicht konfiguriert' }) };
   }
 
   let clientPayload;
   try {
     clientPayload = JSON.parse(event.body || '{}');
-  } catch (e) {
-    return { statusCode: 400, body: JSON.stringify({ error: 'Ungültiger Request-Body' }) };
+  } catch(e) {
+    return { statusCode: 400, headers: corsHeaders, body: JSON.stringify({ error: 'Ungültiger Request-Body' }) };
   }
 
   const method = (clientPayload.method || 'GET').toUpperCase();
-  const path = clientPayload.path || '';
+  const path   = clientPayload.path || '';
   const bodyForAirtable = Object.prototype.hasOwnProperty.call(clientPayload, 'body')
-    ? clientPayload.body
-    : clientPayload.payload;
+    ? clientPayload.body : clientPayload.payload;
 
   if (!path.startsWith('/v0/')) {
-    return { statusCode: 400, body: JSON.stringify({ error: 'Ungültiger Pfad' }) };
+    return { statusCode: 400, headers: corsHeaders, body: JSON.stringify({ error: 'Ungültiger Pfad' }) };
   }
 
-  const internal =
-    (event.headers['x-prova-internal'] || event.headers['X-Prova-Internal'] || '').trim();
-  const internalOk =
-    process.env.PROVA_INTERNAL_WRITE_SECRET &&
-    internal === process.env.PROVA_INTERNAL_WRITE_SECRET;
+  // ── Internes Secret (Make.com → Netlify) ────────────────────────────────
+  const internal = (event.headers['x-prova-internal'] || '').trim();
+  const internalOk = process.env.PROVA_INTERNAL_WRITE_SECRET &&
+                     internal === process.env.PROVA_INTERNAL_WRITE_SECRET;
 
-  if (isSvTablePath(path)) {
-    if (!internalOk) {
-      const user = context.clientContext && context.clientContext.user;
-      if (!user || !user.email) {
-        return {
-          statusCode: 401,
-          body: JSON.stringify({ error: 'Anmeldung erforderlich (Authorization: Bearer …)' })
-        };
-      }
-      const access = await hasProvaAccess(String(user.email).trim().toLowerCase(), pat);
-      if (!access.ok) {
+  // ── JWT-Pflicht: KEIN _userEmail Body-Fallback ──────────────────────────
+  const user = context.clientContext && context.clientContext.user;
+  const userEmail = user && user.email ? String(user.email).trim().toLowerCase() : null;
+
+  if (!internalOk) {
+    if (!userEmail) {
+      return {
+        statusCode: 401,
+        headers: corsHeaders,
+        body: JSON.stringify({ error: 'Anmeldung erforderlich — gültiger JWT notwendig' })
+      };
+    }
+
+    // Abo/Trial-Check nur für SV-eigene Tabellen
+    if (isSvTablePath(path)) {
+      const accessResult = await hasProvaAccess(userEmail, pat);
+      const accessOk = typeof accessResult === 'boolean' ? accessResult : (accessResult && accessResult.ok);
+      if (!accessOk) {
         return {
           statusCode: 403,
-          body: JSON.stringify({ error: 'Kein Zugriff — Testphase beendet oder kein aktives Abo', reason: access.reason })
+          headers: corsHeaders,
+          body: JSON.stringify({ error: 'Kein Zugriff — Trial abgelaufen oder kein aktives Abo' })
+        };
+      }
+    }
+
+    // ── OWNERSHIP-CHECK bei PATCH/DELETE ─────────────────────────────────
+    if (method === 'PATCH' || method === 'PUT' || method === 'DELETE') {
+      const ownerOk = await checkOwnership(pat, path, userEmail);
+      if (!ownerOk) {
+        return {
+          statusCode: 403,
+          headers: corsHeaders,
+          body: JSON.stringify({ error: 'Kein Zugriff — Record gehört einem anderen Nutzer' })
         };
       }
     }
   }
 
-  const url = AIRTABLE_API + path;
-
+  // ── Airtable-Request ausführen ───────────────────────────────────────────
+  const url = AIRTABLE_BASE_URL + path;
   const fetchOptions = {
     method,
-    headers: {
-      Authorization: 'Bearer ' + pat,
-      'Content-Type': 'application/json'
-    }
+    headers: { Authorization: 'Bearer ' + pat, 'Content-Type': 'application/json' }
   };
-
   if (bodyForAirtable != null && method !== 'GET') {
     fetchOptions.body = JSON.stringify(bodyForAirtable);
   }
@@ -75,15 +149,15 @@ exports.handler = async function (event, context) {
   try {
     const res = await fetch(url, fetchOptions);
     const text = await res.text();
-
     return {
       statusCode: res.status,
-      headers: { 'Content-Type': 'application/json' },
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       body: text
     };
-  } catch (err) {
+  } catch(err) {
     return {
       statusCode: 502,
+      headers: corsHeaders,
       body: JSON.stringify({ error: 'Airtable nicht erreichbar: ' + err.message })
     };
   }

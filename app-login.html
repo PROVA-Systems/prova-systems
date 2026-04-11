@@ -305,6 +305,7 @@ body::after {
 </style>
 </head>
 <body>
+<script src="auth-guard.js"></script>
 <script src="prova-account-gate.js"></script>
 
 <div class="card">
@@ -503,7 +504,25 @@ window.login = async function login() {
   btn.disabled = true;
   btn.textContent = '⏳ Anmelden…';
   try {
-    await netlifyIdentity.login(email, pw);
+    var res = await fetch('/.netlify/identity/token', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+      body: 'grant_type=password&username=' + encodeURIComponent(email) + '&password=' + encodeURIComponent(pw)
+    });
+    var data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.error_description || 'Login fehlgeschlagen');
+    }
+    localStorage.setItem('prova_user', JSON.stringify({email: email, name: email.split('@')[0]}));
+    localStorage.setItem('prova_sv_email', email);
+    localStorage.setItem('netlify-identity-token', JSON.stringify({
+      access_token: data.access_token, token_type: 'bearer',
+      expires_in: data.expires_in, refresh_token: data.refresh_token
+    }));
+    if (typeof window.provaCreateSession === 'function') {
+      window.provaCreateSession({email: email});
+    }
+    window.location.href = 'dashboard.html';
   } catch (e) {
     errEl.textContent = 'E-Mail oder Passwort falsch — oder E-Mail noch nicht bestätigt.';
     errEl.style.display = 'block';

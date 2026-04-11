@@ -1,66 +1,53 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-<script>
-  window.__PROVA_ENV = 'production';
-  window.onerror = function(msg, src, line, col, err) {
-    if (!navigator.onLine) return;
-    fetch('/.netlify/functions/error-log', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({
-        msg: String(msg).slice(0,500),
-        src: src, line: line,
-        page: window.location.pathname,
-        user: localStorage.getItem('prova_sv_email')||'unbekannt',
-        ua: navigator.userAgent.slice(0,100),
-        ts: new Date().toISOString()
-      })
-    }).catch(function(){});
-  };
-</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>PROVA Admin</title>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Fraunces:wght@300;700&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#0d0f14;--bg2:#13161d;--bg3:#1a1e28;
-  --surface:#1e2330;--border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.14);
+  --bg:#0b0d11;--bg2:#13161d;
+  --surface:#1c2130;--border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.14);
   --text:#e8eaf0;--text2:#9da3b4;--text3:#6b7280;
   --accent:#4f8ef7;--red:#ef4444;
-  --mono:'IBM Plex Mono',monospace;--display:'Fraunces',serif;--sans:'Instrument Sans',sans-serif;
+  --font-ui:'DM Sans',system-ui,sans-serif;
 }
 *{box-sizing:border-box;margin:0;padding:0;}
-body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;
+body{background:var(--bg);color:var(--text);font-family:var(--font-ui);min-height:100vh;
   display:flex;align-items:center;justify-content:center;padding:20px;
   background-image:radial-gradient(ellipse at 20% 50%,rgba(79,142,247,0.06) 0%,transparent 60%),
                    radial-gradient(ellipse at 80% 20%,rgba(167,139,250,0.04) 0%,transparent 50%);}
 .card{width:100%;max-width:400px;}
-.logo{font-family:var(--display);font-weight:700;font-size:26px;color:var(--text);
-  text-align:center;margin-bottom:6px;letter-spacing:-0.02em;}
+.logo{font-weight:800;font-size:26px;color:var(--text);text-align:center;margin-bottom:6px;letter-spacing:-0.02em;}
 .logo span{color:var(--accent);}
 .subtitle{font-size:12px;color:var(--text3);text-align:center;letter-spacing:.12em;
-  text-transform:uppercase;margin-bottom:36px;font-family:var(--mono);}
+  text-transform:uppercase;margin-bottom:36px;}
 .form-box{background:var(--surface);border:1px solid var(--border2);border-radius:14px;padding:28px;}
 .form-label{font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;
   letter-spacing:.08em;display:block;margin-bottom:6px;}
+.pw-wrap{position:relative;margin-bottom:16px;}
 .form-input{width:100%;background:var(--bg2);border:1px solid var(--border);border-radius:8px;
-  padding:10px 14px;color:var(--text);font-size:14px;font-family:var(--sans);outline:none;
-  transition:border-color .2s;margin-bottom:16px;}
+  padding:10px 44px 10px 14px;color:var(--text);font-size:14px;font-family:var(--font-ui);outline:none;
+  transition:border-color .2s;}
 .form-input:focus{border-color:var(--accent);}
 .form-input::placeholder{color:var(--text3);}
+.pw-toggle{position:absolute;right:12px;top:50%;transform:translateY(-50%);
+  background:none;border:none;cursor:pointer;color:var(--text3);font-size:16px;
+  padding:4px;line-height:1;transition:color .15s;}
+.pw-toggle:hover{color:var(--text2);}
 .btn{width:100%;padding:11px;border-radius:8px;font-size:14px;font-weight:600;
-  cursor:pointer;border:none;font-family:var(--sans);transition:all .2s;
+  cursor:pointer;border:none;font-family:var(--font-ui);transition:all .2s;
   background:var(--accent);color:#fff;letter-spacing:.01em;}
-.btn:hover{background:#3d7ae0;transform:translateY(-1px);}
-.btn:active{transform:translateY(0);}
-.btn:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+.btn:hover:not(:disabled){background:#3d7ae0;transform:translateY(-1px);}
+.btn:disabled{opacity:.5;cursor:not-allowed;}
 .err{font-size:12px;color:var(--red);margin-bottom:14px;padding:8px 12px;
   background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);
   border-radius:6px;display:none;}
 .lock-icon{text-align:center;font-size:32px;margin-bottom:20px;}
-.hint{font-size:11px;color:var(--text3);text-align:center;margin-top:16px;font-family:var(--mono);}
+.hint{font-size:11px;color:var(--text3);text-align:center;margin-top:16px;}
+.security-badge{display:flex;align-items:center;justify-content:center;gap:6px;margin-top:12px;font-size:10px;color:var(--text3);}
+.security-badge span{color:#10b981;}
 </style>
 </head>
 <body>
@@ -71,43 +58,65 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:1
     <div class="lock-icon">🔐</div>
     <div class="err" id="err">Falsches Passwort.</div>
     <label class="form-label" for="pw">Admin-Passwort</label>
-    <input type="password" class="form-input" id="pw" placeholder="••••••••••••"
-      autocomplete="current-password" onkeydown="if(event.key==='Enter')login()">
+    <div class="pw-wrap">
+      <input type="password" class="form-input" id="pw" placeholder="••••••••••••"
+        autocomplete="current-password" onkeydown="if(event.key==='Enter')login()">
+      <button type="button" class="pw-toggle" id="pw-eye" onclick="togglePw()" title="Passwort anzeigen">👁</button>
+    </div>
     <button class="btn" id="btn" onclick="login()">Einloggen</button>
+    <div class="security-badge"><span>🔒</span> bcrypt-verschlüsselt · Server-Side Auth</div>
   </div>
   <div class="hint">Nur für interne Nutzung · PROVA Systems</div>
 </div>
-
 <script>
-// Admin-Passwort: SHA-256 Hash — ändere ADMIN_HASH auf deinen eigenen Hash
-// Hash erzeugen: https://emn178.github.io/online-tools/sha256.html
-// Standard-Passwort: "prova-admin-2026" → Hash unten
-const ADMIN_HASH = 'a7f3d2b8c94e15f6a2d8b3c7e4f9a1d5b6c2e8f4a9d3b7c1e5f2a8d4b6c3e9f7';
-// WICHTIG: Ändere diesen Hash! Geh auf https://emn178.github.io/online-tools/sha256.html
-// gib dein Wunsch-Passwort ein und ersetze den Hash oben.
-
-async function sha256(msg) {
-  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(msg));
-  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+function togglePw(){
+  var inp=document.getElementById('pw'),eye=document.getElementById('pw-eye');
+  if(inp.type==='password'){inp.type='text';eye.textContent='🙈';}
+  else{inp.type='password';eye.textContent='👁';}
 }
 
-async function login() {
-  const pw = document.getElementById('pw').value;
-  const err = document.getElementById('err');
-  const btn = document.getElementById('btn');
-  if (!pw) { err.textContent='Bitte Passwort eingeben.'; err.style.display='block'; return; }
-  btn.disabled = true; btn.textContent = '⏳ Prüfe…';
-  err.style.display = 'none';
-  const hash = await sha256(pw);
-  if (hash === ADMIN_HASH) {
-    sessionStorage.setItem('prova_admin', btoa(Date.now().toString()));
-    window.location.href = 'admin-dashboard.html';
-  } else {
-    err.textContent = 'Falsches Passwort.';
-    err.style.display = 'block';
-    btn.disabled = false; btn.textContent = 'Einloggen';
-    document.getElementById('pw').value = '';
-    document.getElementById('pw').focus();
+async function login(){
+  var pwEl=document.getElementById('pw');
+  pwEl.blur();
+  var pw=pwEl.value;
+  var err=document.getElementById('err');
+  var btn=document.getElementById('btn');
+
+  if(!pw){err.textContent='Bitte Passwort eingeben.';err.style.display='block';pwEl.focus();return;}
+
+  btn.disabled=true;btn.textContent='⏳ Prüfe…';err.style.display='none';
+
+  try {
+    // Passwort wird an Server geschickt → bcrypt-Vergleich serverseitig
+    // Passwort geht über HTTPS → sicher verschlüsselt in Transit
+    var res = await fetch('/.netlify/functions/admin-auth', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ password: pw })
+    });
+
+    if (res.ok) {
+      var data = await res.json();
+      if (data.ok) {
+        sessionStorage.setItem('prova_admin', btoa(Date.now().toString()));
+        window.location.href = 'admin-dashboard.html';
+        return;
+      }
+    }
+
+    // Fehlgeschlagen
+    err.textContent='Falsches Passwort.';
+    err.style.display='block';
+    btn.disabled=false;
+    btn.textContent='Einloggen';
+    pwEl.value='';
+    pwEl.focus();
+
+  } catch(e) {
+    err.textContent='Verbindungsfehler: ' + e.message;
+    err.style.display='block';
+    btn.disabled=false;
+    btn.textContent='Einloggen';
   }
 }
 </script>

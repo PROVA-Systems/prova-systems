@@ -1,59 +1,404 @@
-<!doctype html>
-<html lang="de"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>PROVA Termine</title><link rel="stylesheet" href="prova-nav.css">
-<style>body{margin:0;background:#0d0f14;color:#cbd5e1;font-family:system-ui}.main{max-width:980px;margin:0 auto;padding:16px}.card{background:#111827;border:1px solid #2b3342;border-radius:12px;padding:12px;margin-bottom:10px}input,select,textarea{width:100%;padding:9px;border-radius:8px;border:1px solid #334155;background:#0b1220;color:#fff}.row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.btn{padding:8px 12px;border-radius:8px;background:#1d4ed8;border:none;color:#fff;cursor:pointer}table{width:100%;border-collapse:collapse}th,td{padding:8px;border-bottom:1px solid #2b3342;text-align:left}@media(max-width:800px){.row{grid-template-columns:1fr}}</style></head>
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Kalender · PROVA</title>
+<script src="prova-preise.js"></script>
+<script src="paket-guard.js"></script>
+<script src="auth-guard.js"></script>
+<script src="theme.js"></script>
+<script src="nav.js" defer></script>
+<script src="trial-guard.js"></script>
+<style>
+:root{
+  --bg:#0b0d11;--bg2:#111318;--bg3:#161a22;
+  --surface:#1c2130;--surface2:#232a3a;
+  --border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.11);
+  --text:#eaecf4;--text2:#8b93ab;--text3:#4d5568;
+  --accent:#4f8ef7;--accent2:#3a7be0;
+  --success:#10b981;--warning:#f59e0b;--danger:#ef4444;--purple:#8b5cf6;
+  --font-ui:'DM Sans',system-ui,sans-serif;
+  --r-sm:6px;--r-md:10px;--r-lg:14px;
+  --shadow-sm:0 1px 3px rgba(0,0,0,.25);--shadow-md:0 4px 16px rgba(0,0,0,.35);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{font-size:14px;}body{font-family:var(--font-ui);background:var(--bg);color:var(--text2);min-height:100vh;overflow-x:hidden;line-height:1.55;}
+a{text-decoration:none;color:inherit;}button,input,select,textarea{font-family:inherit;font-size:inherit;}
+*{-webkit-tap-highlight-color:transparent;}input,select,textarea{font-size:max(16px,1em);}
+
+/* ─── SIDEBAR ─── */
+.app-shell{display:flex;min-height:100vh;}
+.topbar{height:52px;min-height:52px;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 24px;position:sticky;top:0;z-index:100;flex-shrink:0;}
+.topbar-left{display:flex;align-items:center;gap:12px;}
+.topbar-right{display:flex;align-items:center;gap:6px;}
+.breadcrumb{font-size:13px;color:var(--text3);display:flex;align-items:center;gap:6px;}
+.breadcrumb strong{color:var(--text2);font-weight:600;}
+.topbar-btn{display:flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:var(--r-sm);border:1px solid var(--border2);background:transparent;color:var(--text3);cursor:pointer;font-size:14px;transition:all .12s;}
+.topbar-btn:hover{color:var(--text2);background:rgba(255,255,255,.05);}
+.topbar-paket{font-size:10px;font-weight:700;padding:3px 9px;border-radius:10px;letter-spacing:.04em;}
+.burger{display:none;flex-direction:column;gap:4.5px;background:none;border:none;cursor:pointer;padding:8px;border-radius:6px;min-height:36px;align-items:center;justify-content:center;}
+.burger span{display:block;width:18px;height:2px;background:var(--text2);border-radius:2px;}
+
+/* ─── PAGE ─── */
+.page-content{padding:24px 28px 48px;width:100%;}
+.toolbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:20px;flex-wrap:wrap;}
+.toolbar-left{display:flex;align-items:center;gap:10px;}
+.toolbar-right{display:flex;align-items:center;gap:8px;}
+.page-title{font-size:20px;font-weight:800;letter-spacing:-.025em;color:var(--text);}
+
+/* Stats */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px;}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:14px 16px;cursor:pointer;transition:all .15s;}
+.stat-card:hover{border-color:var(--border2);}
+.stat-card.red{border-color:rgba(239,68,68,.25);background:rgba(239,68,68,.05);}
+.stat-card.red .stat-num{color:var(--danger);}
+.stat-card.warn{border-color:rgba(245,158,11,.25);background:rgba(245,158,11,.05);}
+.stat-card.warn .stat-num{color:var(--warning);}
+.stat-card.blue{border-color:rgba(79,142,247,.25);background:rgba(79,142,247,.05);}
+.stat-card.blue .stat-num{color:var(--accent);}
+.stat-num{font-size:26px;font-weight:800;color:var(--text);letter-spacing:-.03em;margin-bottom:2px;}
+.stat-label{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;}
+
+/* Tabs */
+.tabs{display:flex;gap:3px;background:var(--surface);border-radius:var(--r-md);padding:3px;width:fit-content;}
+.tab{padding:6px 14px;border-radius:var(--r-sm);border:none;background:transparent;color:var(--text3);font-size:13px;font-weight:500;cursor:pointer;transition:all .12s;}
+.tab.active{background:var(--surface2);color:var(--text2);font-weight:600;}
+
+/* Neuer Termin Btn */
+.btn-new{display:flex;align-items:center;gap:7px;padding:8px 16px;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:var(--r-md);color:#fff;font-weight:700;font-size:13px;cursor:pointer;transition:all .15s;}
+.btn-new:hover{opacity:.9;transform:translateY(-1px);}
+
+/* ─── KALENDER ─── */
+.kal-wrap{display:none;}
+.kal-wrap.active{display:block;}
+.kal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.kal-month{font-size:18px;font-weight:800;color:var(--text);}
+.kal-nav{display:flex;align-items:center;gap:8px;}
+.kal-nav-btn{width:34px;height:34px;border-radius:var(--r-sm);border:1px solid var(--border2);background:var(--surface);color:var(--text2);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:all .12s;}
+.kal-nav-btn:hover{border-color:var(--accent);color:var(--accent);}
+.kal-today-btn{padding:6px 12px;border-radius:var(--r-sm);border:1px solid var(--border2);background:var(--surface);color:var(--text2);font-size:12px;font-weight:600;cursor:pointer;}
+.kal-today-btn:hover{border-color:var(--accent);color:var(--accent);}
+.kal-grid-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;}
+.kal-weekdays{display:grid;grid-template-columns:repeat(7,1fr);border-bottom:1px solid var(--border);}
+.kal-wd{padding:8px 0;text-align:center;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text3);}
+.kal-days{display:grid;grid-template-columns:repeat(7,1fr);}
+.kal-cell{min-height:90px;padding:6px;border-right:1px solid var(--border);border-bottom:1px solid var(--border);cursor:pointer;transition:background .12s;display:flex;flex-direction:column;gap:2px;}
+@media(min-width:1200px){.kal-cell{min-height:120px;}}
+.kal-cell:hover{background:rgba(255,255,255,.025);}
+.kal-cell:nth-child(7n){border-right:none;}
+.kal-cell.other-month{opacity:.3;}
+.kal-cell.today{background:rgba(79,142,247,.06);}
+.kal-cell.today .kal-num{color:var(--accent);background:var(--accent);color:#fff;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;}
+.kal-num{font-size:12px;font-weight:600;color:var(--text2);margin-bottom:3px;width:22px;height:22px;display:flex;align-items:center;justify-content:center;}
+.kal-event{font-size:10px;font-weight:600;padding:2px 5px;border-radius:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;}
+.kal-event.Ortstermin{background:rgba(79,142,247,.15);color:var(--accent);}
+.kal-event.Frist{background:rgba(239,68,68,.15);color:var(--danger);}
+.kal-event.Gerichtstermin{background:rgba(139,92,246,.15);color:var(--purple);}
+.kal-event.Abgabe{background:rgba(245,158,11,.15);color:var(--warning);}
+.kal-event.Sonstiges{background:rgba(16,185,129,.15);color:var(--success);}
+.kal-more{font-size:10px;color:var(--text3);padding:1px 4px;}
+
+/* ─── LISTE ─── */
+.liste-wrap{display:none;}
+.liste-wrap.active{display:block;}
+.section-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text3);padding:14px 0 8px;display:flex;align-items:center;gap:8px;}
+.section-label::after{content:'';flex:1;height:1px;background:var(--border);}
+.termin-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);padding:13px 16px;display:grid;grid-template-columns:52px 1fr auto;gap:14px;align-items:center;transition:all .15s;cursor:pointer;margin-bottom:6px;}
+.termin-card:hover{border-color:var(--border2);transform:translateX(2px);}
+.termin-card.overdue{border-color:rgba(239,68,68,.3);background:rgba(239,68,68,.04);}
+.termin-card.today{border-color:rgba(245,158,11,.3);background:rgba(245,158,11,.04);}
+.date-box{text-align:center;background:var(--bg3);border-radius:var(--r-sm);padding:5px;flex-shrink:0;}
+.date-day{font-size:20px;font-weight:800;color:var(--text);line-height:1;}
+.date-mon{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);margin-top:1px;}
+.termin-card.overdue .date-day{color:var(--danger);}
+.termin-card.today .date-day{color:var(--warning);}
+.termin-info{min-width:0;}
+.termin-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.termin-meta{font-size:11px;color:var(--text3);display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.termin-typ{display:inline-flex;align-items:center;font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;text-transform:uppercase;letter-spacing:.04em;}
+.typ-Ortstermin{background:rgba(79,142,247,.12);color:var(--accent);}
+.typ-Frist{background:rgba(239,68,68,.12);color:var(--danger);}
+.typ-Gerichtstermin{background:rgba(139,92,246,.12);color:var(--purple);}
+.typ-Abgabe{background:rgba(245,158,11,.12);color:var(--warning);}
+.typ-Sonstiges{background:rgba(16,185,129,.12);color:var(--success);}
+.termin-right{display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0;}
+.termin-uhrzeit{font-size:12px;font-weight:700;color:var(--text2);}
+.termin-del{width:28px;height:28px;border-radius:6px;border:1px solid var(--border2);background:transparent;color:var(--text3);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px;opacity:0;transition:all .12s;}
+.termin-card:hover .termin-del{opacity:1;}
+.termin-del:hover{border-color:var(--danger);color:var(--danger);}
+.empty-state{text-align:center;padding:48px 20px;color:var(--text3);}
+.empty-icon{font-size:36px;margin-bottom:12px;opacity:.4;}
+
+/* ─── MODAL ─── */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:500;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px);}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--r-lg);max-width:480px;width:100%;padding:26px;max-height:90vh;overflow-y:auto;}
+.modal-title{font-size:16px;font-weight:700;color:var(--text);margin-bottom:18px;display:flex;align-items:center;gap:10px;}
+.fg{margin-bottom:13px;}
+.fl{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);margin-bottom:4px;display:block;}
+.fi,.fs,.fta{width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r-md);color:var(--text);font-size:13px;outline:none;transition:border-color .15s;}
+.fi:focus,.fs:focus,.fta:focus{border-color:var(--accent);}
+.fi::placeholder,.fta::placeholder{color:var(--text3);}
+.fs{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%234d5568' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;background-color:var(--bg3);padding-right:30px;}
+.fs option{background:var(--bg2);}
+.fta{resize:vertical;min-height:60px;}
+.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.modal-footer{display:flex;gap:8px;margin-top:18px;}
+.btn-save{flex:1;padding:11px;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:var(--r-md);color:#fff;font-size:14px;font-weight:700;cursor:pointer;}
+.btn-save:hover{opacity:.9;}
+.btn-cancel{padding:11px 16px;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--r-md);color:var(--text3);font-size:13px;cursor:pointer;}
+
+/* Toast */
+.toast{position:fixed;bottom:24px;right:24px;z-index:600;padding:11px 18px;border-radius:var(--r-md);font-size:13px;font-weight:600;background:var(--surface2);border:1px solid rgba(16,185,129,.35);color:var(--success);transition:all .3s cubic-bezier(.34,1.56,.64,1);opacity:0;transform:translateY(16px);}
+.toast.show{opacity:1;transform:translateY(0);}
+.toast.err{border-color:rgba(239,68,68,.35);color:var(--danger);}
+
+/* Support FAB */
+.support-fab{position:fixed;bottom:24px;right:24px;z-index:400;width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));box-shadow:0 4px 16px rgba(79,142,247,.4);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;border:none;color:#fff;}
+
+/* Responsive */
+@media(max-width:900px){
+  .stats-row{grid-template-columns:repeat(2,1fr);}
+}
+@media(max-width:768px){
+  .burger{display:flex;}
+  .page-content{padding:16px 16px 72px;}
+  .topbar{padding:0 16px;}
+  .stats-row{grid-template-columns:1fr 1fr;}
+  .kal-cell{min-height:52px;}
+  .kal-event{display:none;}
+  .kal-cell.has-events::after{content:'•';font-size:14px;color:var(--accent);display:block;text-align:center;}
+}
+@media(max-width:600px){
+  .page-content{padding:12px 12px 72px;}
+  .stats-row{grid-template-columns:1fr 1fr;}
+}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+.page-content{animation:fadeIn .22s ease;}
+
+  /* ── SUPPORT FAB ── */
+  .support-fab{position:fixed;bottom:20px;right:20px;width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,var(--accent,#4f8ef7),#3a7be0);border:none;color:#fff;font-size:20px;cursor:pointer;box-shadow:0 4px 16px rgba(79,142,247,.4);z-index:300;transition:all .2s;display:flex;align-items:center;justify-content:center;}
+  .support-fab:hover{transform:scale(1.08);box-shadow:0 6px 22px rgba(79,142,247,.5);}
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:400;backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:20px;}
+  .modal-overlay.open{display:flex;}
+  .modal-box{background:var(--surface,#1c2537);border:1px solid var(--border2,rgba(255,255,255,.12));border-radius:16px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;}
+  .modal-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border,rgba(255,255,255,.07));}
+  .modal-title{font-size:15px;font-weight:700;color:var(--text,#e8eaf0);}
+  .modal-close{background:none;border:none;color:var(--text3,#6b7a99);font-size:18px;cursor:pointer;padding:4px;border-radius:4px;}
+  .modal-close:hover{color:var(--text,#e8eaf0);}
+  .modal-body{padding:20px;}
+  .sup-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text3,#6b7a99);margin-bottom:5px;}
+  .sup-input{width:100%;padding:9px 12px;background:var(--bg3,#161f30);border:1px solid var(--border2,rgba(255,255,255,.12));border-radius:8px;color:var(--text,#e8eaf0);font-size:13px;font-family:inherit;outline:none;margin-bottom:12px;}
+  .sup-input:focus{border-color:var(--accent,#4f8ef7);}
+  .sup-textarea{resize:vertical;min-height:90px;}
+  .sup-err{font-size:12px;color:var(--red,#ef4444);margin-bottom:8px;display:none;}
+  .sup-send-btn{width:100%;padding:11px;background:linear-gradient(135deg,var(--accent,#4f8ef7),#3a7be0);border:none;border-radius:8px;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;}
+  .sup-send-btn:disabled{opacity:.5;cursor:not-allowed;}
+  .sup-ok{display:none;text-align:center;padding:20px 0;}
+  .sup-ok-icon{font-size:36px;margin-bottom:8px;}
+  .sup-ok-title{font-size:15px;font-weight:700;color:var(--green,#10b981);margin-bottom:4px;}
+  .sup-ok-sub{font-size:12px;color:var(--text3,#6b7a99);}
+@media(max-width:768px){.bottom-nav{display:flex !important;}}
+
+/* ── LAYOUT FIX ── */
+.app-shell{display:flex;width:100%;min-height:100vh;overflow:hidden;}
+.main-wrap,.main{flex:1;min-width:0;overflow-x:hidden;}
+</style>
+</head>
 <body>
-<script src="prova-account-gate.js"></script><script src="paket-guard.js"></script><script src="prova-auth-api.js"></script><script src="prova-airtable-api.js"></script><script src="push-notify.js"></script><script src="nav.js" defer></script>
-<div id="provaDrawerMount"></div><nav id="provaBottomNav"></nav>
-<main class="main">
-  <h1>Termine</h1>
-  <div class="card">
-    <div class="row">
-      <div><label>Titel</label><input id="tTitel"></div>
-      <div><label>Typ</label><select id="tTyp"><option>Ortstermin</option><option>Gerichtstermin</option><option>Telefonat</option><option>Besprechung</option><option>Abgabefrist</option><option>Sonstiges</option></select></div>
-      <div><label>Datum</label><input type="date" id="tDatum"></div>
+<div class="app-shell">
+
+<nav class="sidebar" id="sidebar"></nav>
+<div class="sb-overlay" id="sb-overlay" onclick="closeMobileSidebar()"></div>
+
+<div class="main">
+
+
+<header class="topbar">
+    <div class="topbar-left">
+      <button class="burger" onclick="openMobileSidebar()"><span></span><span></span><span></span></button>
+      <div class="breadcrumb"><span>PROVA</span><span style="color:var(--text3)">›</span><strong>Kalender</strong></div>
     </div>
-    <div class="row" style="margin-top:8px">
-      <div><label>Uhrzeit</label><input type="time" id="tZeit"></div>
-      <div><label>Aktenzeichen</label><input id="tAz"></div>
-      <div><label>Ort</label><input id="tOrt"></div>
+    <div class="topbar-right">
+      <span class="topbar-paket" id="topbar-paket-badge" style="display:none;"></span>
+      <button class="topbar-btn" onclick="exportIcal()" title="Kalender exportieren (.ics)">📅</button>
+      <a href="einstellungen.html"><button class="topbar-btn">⚙</button></a>
     </div>
-    <button class="btn" id="saveT" style="margin-top:10px">Termin speichern</button>
+  </header>
+
+  <div id="fg-banner-container"></div>
+<main class="page-content">
+    <!-- Toolbar -->
+    <div class="toolbar">
+      <div class="toolbar-left">
+        <span class="page-title">Kalender</span>
+        <div class="tabs">
+          <button class="tab active" id="tab-kal" onclick="setView('kal')">📅 Monat</button>
+          <button class="tab" id="tab-list" onclick="setView('list')">☰ Liste</button>
+        </div>
+      </div>
+      <div class="toolbar-right" style="display:flex;gap:8px;align-items:center;">
+        <button onclick="importFristenAusFaellen()" title="Fristen aus Ihren Fällen importieren"
+          style="padding:7px 12px;background:rgba(79,142,247,.1);border:1px solid rgba(79,142,247,.2);
+          border-radius:8px;color:var(--accent);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;">
+          📥 Fristen aus Fällen
+        </button>
+        <div style="position:relative;" id="export-menu-wrap">
+          <button onclick="document.getElementById('export-dropdown').classList.toggle('open')"
+            style="padding:7px 12px;border-radius:8px;background:rgba(79,142,247,.1);border:1px solid rgba(79,142,247,.3);color:var(--accent,#4f8ef7);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:5px;">
+            📅 Exportieren ▾
+          </button>
+          <div id="export-dropdown" style="display:none;position:absolute;top:calc(100% + 6px);right:0;background:var(--bg2,#111827);border:1px solid var(--border,#1e3a5f);border-radius:10px;min-width:200px;z-index:200;padding:6px;">
+            <button onclick="exportiereIcal(true);document.getElementById('export-dropdown').classList.remove('open')"
+              style="width:100%;text-align:left;padding:8px 12px;background:none;border:none;color:var(--text,#f1f5f9);font-size:12px;cursor:pointer;border-radius:6px;font-family:inherit;"
+              onmouseover="this.style.background='rgba(79,142,247,.1)'" onmouseout="this.style.background='none'">
+              📅 Kommende Termine (.ics)
+            </button>
+            <button onclick="exportiereIcal(false);document.getElementById('export-dropdown').classList.remove('open')"
+              style="width:100%;text-align:left;padding:8px 12px;background:none;border:none;color:var(--text,#f1f5f9);font-size:12px;cursor:pointer;border-radius:6px;font-family:inherit;"
+              onmouseover="this.style.background='rgba(79,142,247,.1)'" onmouseout="this.style.background='none'">
+              📋 Alle Termine (.ics)
+            </button>
+            <div style="border-top:1px solid var(--border,#1e3a5f);margin:4px 0;"></div>
+            <div style="padding:6px 12px;font-size:10px;color:var(--text3,#64748b);">Öffnet in Google, Apple & Outlook Kalender</div>
+          </div>
+        </div>
+        <button class="btn-new" onclick="oeffneModal()">＋ Neuer Termin</button>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-row">
+      <div class="stat-card red" onclick="setView('list');filterStatus='overdue';renderListe()">
+        <div class="stat-num" id="stat-overdue">0</div>
+        <div class="stat-label">Überfällig</div>
+      </div>
+      <div class="stat-card warn" onclick="setView('list')">
+        <div class="stat-num" id="stat-heute">0</div>
+        <div class="stat-label">Heute</div>
+      </div>
+      <div class="stat-card blue" onclick="setView('list')">
+        <div class="stat-num" id="stat-woche">0</div>
+        <div class="stat-label">Diese Woche</div>
+      </div>
+      <div class="stat-card" onclick="setView('list')">
+        <div class="stat-num" id="stat-gesamt">0</div>
+        <div class="stat-label">Gesamt offen</div>
+      </div>
+    </div>
+
+    <!-- Kalender -->
+    <div class="kal-wrap active" id="kal-wrap">
+      <div class="kal-header">
+        <div class="kal-month" id="kal-month">März 2026</div>
+        <div class="kal-nav">
+          <button class="kal-today-btn" onclick="kalHeute()">Heute</button>
+          <button class="kal-nav-btn" onclick="kalNav(-1)">‹</button>
+          <button class="kal-nav-btn" onclick="kalNav(1)">›</button>
+        </div>
+      </div>
+      <div class="kal-grid-wrap">
+        <div class="kal-weekdays">
+          <div class="kal-wd">Mo</div><div class="kal-wd">Di</div><div class="kal-wd">Mi</div>
+          <div class="kal-wd">Do</div><div class="kal-wd">Fr</div>
+          <div class="kal-wd" style="color:rgba(255,255,255,.25)">Sa</div>
+          <div class="kal-wd" style="color:rgba(255,255,255,.25)">So</div>
+        </div>
+        <div class="kal-days" id="kal-days"></div>
+      </div>
+    </div>
+
+    <!-- Liste -->
+    <div class="liste-wrap" id="liste-wrap">
+      <div id="liste-body"></div>
+    </div>
+  </main>
+</div>
+</div>
+
+<!-- Mobile Bottom Nav -->
+<nav class="bottom-nav" style="display:none;">
+  <a href="dashboard.html" class="bn-item"><span class="bn-icon">⊞</span><span>Zentrale</span></a>
+  <a href="archiv.html" class="bn-item"><span class="bn-icon">📁</span><span>Fälle</span></a>
+  <a href="termine.html" class="bn-item active"><span class="bn-icon">📅</span><span>Kalender</span></a>
+  <a href="rechnungen.html" class="bn-item"><span class="bn-icon">💶</span><span>Rechnungen</span></a>
+  <a href="einstellungen.html" class="bn-item"><span class="bn-icon">⚙️</span><span>Einstellungen</span></a>
+</nav>
+
+<!-- Modal: Neuer Termin -->
+<div class="modal-overlay" id="termin-modal" onclick="if(event.target===this)schliesseModal()">
+  <div class="modal">
+    <div class="modal-title">📅 <span id="modal-titel">Neuer Termin</span></div>
+    <input type="hidden" id="edit-id">
+    <div class="fg">
+      <label class="fl">Titel *</label>
+      <input class="fi" id="t-titel" type="text" placeholder="z.B. Ortstermin Musterstraße 5">
+    </div>
+    <div class="fgrid">
+      <div class="fg">
+        <label class="fl">Typ *</label>
+        <select class="fs" id="t-typ">
+          <option value="Ortstermin">🏠 Ortstermin</option>
+          <option value="Gerichtstermin">🏛️ Gerichtstermin</option>
+          <option value="Abgabefrist">📋 Abgabefrist Gutachten</option>
+          <option value="Ladungstermin">📨 Ladungstermin Beteiligte</option>
+          <option value="Bürotermin">💼 Bürotermin</option>
+          <option value="Frist">⚖️ Rechtliche Frist</option>
+          <option value="Erinnerung">🔔 Erinnerung</option>
+          <option value="Sonstiges">Sonstiges</option>
+        </select>
+      </div>
+      <div class="fg">
+        <label class="fl">Datum *</label>
+        <input class="fi" id="t-datum" type="date">
+      </div>
+    </div>
+    <div class="fgrid">
+      <div class="fg">
+        <label class="fl">Uhrzeit</label>
+        <input class="fi" id="t-uhrzeit" type="time" placeholder="09:00">
+      </div>
+      <div class="fg">
+        <label class="fl">Aktenzeichen</label>
+        <input class="fi" id="t-az" type="text" placeholder="PROVA-S-2026-001">
+      </div>
+    </div>
+    <div class="fg">
+      <label class="fl">Notiz</label>
+      <textarea class="fta" id="t-notiz" placeholder="Weitere Angaben…"></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="schliesseModal()">Abbrechen</button>
+      <button class="btn-save" onclick="speichereTermin()">Termin speichern</button>
+    </div>
   </div>
-  <div class="card"><table><thead><tr><th>Datum</th><th>Typ</th><th>AZ</th><th>Ort</th></tr></thead><tbody id="tb"></tbody></table></div>
-</main>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+<button class="support-fab" onclick="openSupportModal()" title="Support">💬</button>
+
+  <script src="sw-register.js" defer></script>
+  <script src="auto-save.js" defer></script>
+  <script src="global-search.js" defer></script>
+  <script src="auftragstyp.js"></script>
+  <script src="termine-logic.js" defer></script>
+<script src="prova-context.js" defer></script>
+<script src="prova-error-handler.js" defer></script>
+  <script src="frist-guard.js" defer></script>
+  <script defer>document.addEventListener("DOMContentLoaded",function(){if(typeof FristGuard!=="undefined")FristGuard.init({bannerId:"fg-banner-container",widgetId:"fg-widget-main",svEmail:localStorage.getItem("prova_sv_email")||""}).catch(function(){});});</script>
+
 <script>
-(function(){
-  function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;')}
-  function sv(){return (window.PROVA_AIRTABLE&&PROVA_AIRTABLE.getSvEmail&&PROVA_AIRTABLE.getSvEmail())||(localStorage.getItem('prova_sv_email')||'').trim().toLowerCase()}
-  function q(id){return document.getElementById(id)}
-  var azQ=new URLSearchParams(location.search).get('az')||localStorage.getItem('prova_letztes_az')||''; q('tAz').value=azQ; q('tDatum').value=new Date().toISOString().slice(0,10);
-  async function load(){
-    if(!window.PROVA_AIRTABLE) return;
-    var mail=sv(); if(!mail) return;
-    var p='/v0/'+PROVA_AIRTABLE.BASE+'/'+PROVA_AIRTABLE.TABLE_TERMINE+'?maxRecords=200&sort[0][field]=Datum&sort[0][direction]=asc&filterByFormula='+encodeURIComponent('{sv_email}="'+mail.replace(/"/g,'\\"')+'"');
-    var r=await PROVA_AIRTABLE.fetchJson('GET',p); var rows=(r.records||[]).map(function(x){return x.fields||{}});
-    q('tb').innerHTML=rows.map(function(f){
-      var extra = (f.Typ==='Gerichtstermin'&&f.AZ)?' <a href="gericht-auftrag.html?az='+encodeURIComponent(f.AZ)+'">Gericht</a>':'';
-      return '<tr><td>'+esc(f.Datum)+' '+esc(f.Uhrzeit||'')+'</td><td>'+esc(f.Typ)+extra+'</td><td>'+esc(f.AZ||'')+'</td><td>'+esc(f.Ort||'')+'</td></tr>';
-    }).join('')||'<tr><td colspan="4">Keine Termine</td></tr>';
-    fristGuard(rows);
+document.addEventListener('click', function(e) {
+  var wrap = document.getElementById('export-menu-wrap');
+  if (wrap && !wrap.contains(e.target)) {
+    var dd = document.getElementById('export-dropdown');
+    if (dd) dd.classList.remove('open');
   }
-  function fristGuard(rows){
-    var today=new Date(); today.setHours(0,0,0,0);
-    rows.forEach(function(f){
-      if(!f.Datum) return; var d=new Date(f.Datum+'T00:00:00'); var diff=Math.round((d-today)/86400000);
-      if(f.Typ==='Abgabefrist'&&(diff===14||diff===7||diff===3)){ if(window.provaPushNotify) window.provaPushNotify('Frist-Guard', (f.AZ||'')+' in '+diff+' Tagen'); }
-      if(diff===0){ try{ if(!sessionStorage.getItem('frist_today_'+(f.AZ||f.Datum))) { alert('Termin heute: '+(f.Titel||f.Typ)); sessionStorage.setItem('frist_today_'+(f.AZ||f.Datum),'1'); } }catch(e){} }
-    });
-  }
-  q('saveT').onclick=async function(){
-    var body={fields:{Titel:q('tTitel').value.trim(),Typ:q('tTyp').value,Datum:q('tDatum').value,Uhrzeit:q('tZeit').value,AZ:q('tAz').value.trim(),Ort:q('tOrt').value.trim(),sv_email:sv()}};
-    if(!body.fields.Titel||!body.fields.Datum){alert('Titel und Datum sind Pflicht');return;}
-    await PROVA_AIRTABLE.fetchJson('POST','/v0/'+PROVA_AIRTABLE.BASE+'/'+PROVA_AIRTABLE.TABLE_TERMINE,body);
-    localStorage.setItem('prova_letztes_az', body.fields.AZ||'');
-    load();
-  };
-  load();
-})();
+});
+document.getElementById('export-dropdown') && document.getElementById('export-dropdown').addEventListener('click', function(e){ e.stopPropagation(); });
 </script>
-</body></html>
+<script src="support-chat.js" defer></script>
+</body>
+</html>

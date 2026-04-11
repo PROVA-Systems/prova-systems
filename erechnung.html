@@ -1,93 +1,305 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-<script>
-  window.__PROVA_ENV = 'production';
-  window.onerror = function(msg, src, line, col, err) {
-    if (!navigator.onLine) return;
-    fetch('/.netlify/functions/error-log', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({
-        msg: String(msg).slice(0,500),
-        src: src, line: line,
-        page: window.location.pathname,
-        user: localStorage.getItem('prova_sv_email')||'unbekannt',
-        ua: navigator.userAgent.slice(0,100),
-        ts: new Date().toISOString()
-      })
-    }).catch(function(){});
-  };
-</script>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>E-Rechnung · PROVA</title>
-  <link rel="stylesheet" href="prova-nav.css">
-  <style>
-    :root { --bg:#0d0f14; --bg2:#13161d; --text:#e8eaf0; --text2:#9da3b4; --text3:#6b7280; --accent:#4f8ef7; --border:rgba(255,255,255,0.08); --sans:'Instrument Sans',system-ui,sans-serif; --nav-h:52px; --bot-h:56px; }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: var(--sans); background: var(--bg); color: var(--text2); min-height: 100vh; padding-bottom: 0; }
-    .topbar { background: var(--bg2); border-bottom: 1px solid var(--border); padding: 0 20px; height: var(--nav-h); display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
-    .topbar-left { display: flex; align-items: center; gap: 16px; }
-    .logo { font-weight: 800; font-size: 18px; color: var(--text); text-decoration: none; }
-    .logo span { color: var(--accent); }
-    .topnav { display: flex; gap: 4px; }
-    .topnav a { padding: 6px 10px; border-radius: 6px; color: var(--text3); font-size: 13px; text-decoration: none; min-height: 44px; display: inline-flex; align-items: center; }
-    .topnav a:hover { background: rgba(255,255,255,0.05); color: var(--text2); }
-    .paket-badge { font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 10px; }
-    .settings-link { color: var(--text3); padding: 6px 8px; font-size: 16px; text-decoration: none; }
-    .burger { display: none; background: none; border: none; cursor: pointer; flex-direction: column; gap: 5px; padding: 8px; }
-    .burger span { display: block; width: 20px; height: 2px; background: var(--text2); }
-    .drawer-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 200; }
-    .drawer-overlay.open { display: block; }
-    .drawer { position: fixed; top: 0; left: 0; bottom: 0; width: 260px; background: var(--bg2); border-right: 1px solid var(--border); z-index: 201; transform: translateX(-100%); transition: transform 0.25s ease; display: flex; flex-direction: column; }
-    .drawer.open { transform: translateX(0); }
-    .drawer-header { padding: 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
-    .drawer-close { background: none; border: none; color: var(--text3); font-size: 18px; cursor: pointer; }
-    .bottom-nav { display: none; position: fixed; bottom: 0; left: 0; right: 0; height: var(--bot-h); background: var(--bg2); border-top: 1px solid var(--border); z-index: 100; justify-content: space-around; align-items: stretch; }
-    @media (max-width: 900px) { .topnav { display: none; } .burger { display: flex; } .bottom-nav { display: flex; } body { padding-bottom: var(--bot-h); } }
-    .main { max-width: 720px; margin: 0 auto; padding: 28px 20px 48px; }
-    .page-title { font-size: 24px; font-weight: 800; color: var(--text); margin-bottom: 8px; }
-    .page-sub { font-size: 14px; color: var(--text3); line-height: 1.6; }
-  </style>
+<meta charset="UTF-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PROVA · E-Rechnung</title>
+<link rel="manifest" href="/manifest.json">
+<script src="prova-preise.js"></script>
+<script src="paket-guard.js"></script>
+<script src="auth-guard.js"></script>
+<script src="theme.js"></script>
+<script src="nav.js" defer></script>
+<script src="slide-panel.js"></script>
+<script src="sw-register.js"></script>
+<style>
+:root{
+  --bg:#0b1220;--bg2:#111827;--bg3:#161f30;
+  --surface:#1c2537;--surface2:#222d42;--surface3:#2a3550;
+  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);
+  --text:#e8eaf0;--text2:#aab4cb;--text3:#6b7a99;
+  --accent:#4f8ef7;--accent2:#3a7be0;
+  --green:#10b981;--green-bg:rgba(16,185,129,0.1);
+  --orange:#f59e0b;--orange-bg:rgba(245,158,11,0.1);
+  --red:#ef4444;--red-bg:rgba(239,68,68,0.1);
+  --font-ui:'Inter',system-ui,sans-serif;
+  --topbar-h:52px;--sb-w:228px;
+  --radius:10px;--radius-sm:6px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--font-ui);font-size:14px;line-height:1.5;height:100%;overflow-x:hidden}
+.app-shell{display:flex;min-height:100vh}
+.main-content{flex:1;margin-left:var(--sb-w);padding:24px 32px;max-width:1100px}
+.page-title{font-size:20px;font-weight:700;margin-bottom:4px}
+.page-subtitle{font-size:13px;color:var(--text3);margin-bottom:24px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px}
+.card-title{font-size:13px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:16px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.form-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.form-full{grid-column:1/-1}
+.form-group{display:flex;flex-direction:column;gap:4px}
+.form-label{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px}
+.form-label .pflicht{color:var(--red);margin-left:2px}
+.form-input{background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;width:100%;transition:border-color .15s}
+.form-input:focus{outline:none;border-color:var(--accent)}
+select.form-input{cursor:pointer}
+/* Tabs */
+.fmt-tabs{display:flex;gap:2px;background:var(--surface2);border-radius:var(--radius);padding:4px;margin-bottom:20px;width:fit-content}
+.fmt-tab{padding:8px 20px;border-radius:8px;border:none;background:transparent;color:var(--text2);font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;font-family:inherit}
+.fmt-tab.active{background:var(--accent);color:#fff}
+.fmt-tab:hover:not(.active){background:var(--surface3);color:var(--text)}
+/* Summen */
+.summen-box{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:16px}
+.summen-row{display:flex;justify-content:space-between;padding:4px 0;font-size:13px;color:var(--text2)}
+.summen-row.total{font-size:16px;font-weight:700;color:var(--text);border-top:1px solid var(--border);margin-top:8px;padding-top:12px}
+/* Positionen-Tabelle */
+table.er-table{width:100%;border-collapse:collapse;font-size:13px}
+table.er-table th{text-align:left;color:var(--text3);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;padding:6px 8px;border-bottom:1px solid var(--border)}
+table.er-table td{padding:6px 4px;vertical-align:middle}
+.er-gp{text-align:right;color:var(--text);font-weight:600;min-width:70px;padding-right:8px}
+.btn-add{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;background:var(--surface2);border:1px dashed var(--border2);border-radius:var(--radius-sm);color:var(--text2);font-size:12px;cursor:pointer;margin-top:10px;font-family:inherit;transition:all .15s}
+.btn-add:hover{border-color:var(--accent);color:var(--accent)}
+.btn-icon{background:none;border:none;color:var(--red);cursor:pointer;font-size:16px;padding:4px 8px}
+/* Buttons */
+.btn-primary{display:inline-flex;align-items:center;gap:6px;padding:10px 20px;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:var(--radius-sm);color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:opacity .15s}
+.btn-primary:hover{opacity:.9}
+.btn-secondary{display:inline-flex;align-items:center;gap:6px;padding:10px 20px;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-sm);color:var(--text);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s}
+.btn-secondary:hover{border-color:var(--accent);color:var(--accent)}
+/* Pflichtfeld-Hinweis */
+.pflicht-info{background:rgba(79,142,247,.07);border:1px solid rgba(79,142,247,.2);border-radius:var(--radius);padding:12px 16px;font-size:12px;color:var(--text2);margin-bottom:16px;line-height:1.6}
+.pflicht-info strong{color:var(--accent)}
+/* Validator-Banner */
+.validator-banner{background:rgba(16,185,129,.07);border:1px solid rgba(16,185,129,.2);border-radius:var(--radius);padding:12px 16px;font-size:12px;color:var(--text2);margin-top:16px;display:flex;align-items:center;gap:10px}
+.validator-banner a{color:var(--green);text-decoration:none;font-weight:600}
+/* SV-Bereich */
+.sv-section{border-left:3px solid var(--accent);padding-left:14px}
+/* Warnung */
+.warn-box{background:var(--orange-bg);border:1px solid var(--orange);border-radius:var(--radius);padding:10px 14px;font-size:12px;color:var(--orange);margin-bottom:12px}
+/* Responsive */
+@media(max-width:900px){.main-content{margin-left:0;padding:16px}}
+@media(max-width:600px){.form-grid,.form-grid-3{grid-template-columns:1fr}}
+</style>
 </head>
 <body>
-  <script src="prova-account-gate.js"></script>
-  <script src="paket-guard.js"></script>
-  <div class="topbar">
-    <div class="topbar-left">
-      <a href="dashboard.html" class="logo">PRO<span>VA</span></a>
-      <nav class="topnav">
-        <a href="dashboard.html">Zentrale</a>
-        <a href="rechnungen.html">Rechnungen</a>
-        <a href="erechnung.html" style="color:var(--accent);">E-Rechnung</a>
-      </nav>
+<div class="app-shell">
+<div class="sidebar" id="sidebar"></div>
+<main class="main-content">
+<div class="page-header">
+  <h1 class="page-title">E-Rechnung</h1>
+  <p class="page-subtitle">XRechnung 3.0.2 (EN 16931) · ZUGFeRD 2.4.0 · Pflicht für Behörden &amp; Gerichte</p>
+</div>
+
+<!-- Format-Tabs -->
+<div class="fmt-tabs">
+  <button class="fmt-tab active" onclick="window.setFormat(this,'xrechnung')">⚖️ XRechnung (Behörden)</button>
+  <button class="fmt-tab" onclick="window.setFormat(this,'zugferd')">📄 ZUGFeRD 2.1 (Privat)</button>
+</div>
+
+<!-- ═══ XRECHNUNG ═══ -->
+<div id="er-xrechnung" class="format-section">
+
+  <div class="pflicht-info">
+    <strong>XRechnung 3.0.2</strong> — Pflicht für Rechnungen an Gerichte und Behörden (§4 E-RechV).
+    Felder mit <span style="color:var(--red)">*</span> sind Pflichtfelder nach EN 16931.
+    Nach dem Download: XML unter <a href="https://erechnungs-validator.de" target="_blank" style="color:var(--accent)">erechnungs-validator.de</a> prüfen.
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 340px;gap:20px;align-items:start">
+  <div>
+
+    <!-- Rechnungsdaten -->
+    <div class="card">
+      <div class="card-title">Rechnungsdaten</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Rechnungsnummer<span class="pflicht">*</span></label>
+          <input id="er-rnr" class="form-input" placeholder="PROVA-2026-001">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Rechnungsdatum<span class="pflicht">*</span></label>
+          <input id="er-datum" class="form-input" type="date">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Aktenzeichen</label>
+          <input id="er-az" class="form-input" placeholder="z.B. SCH-2026-001">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Leistungszeitraum</label>
+          <input id="er-lstzr" class="form-input" placeholder="z.B. März 2026">
+        </div>
+        <div class="form-group form-full">
+          <label class="form-label">Leitweg-ID des Empfängers<span class="pflicht">*</span> <span style="color:var(--text3);font-weight:400;text-transform:none">(vom Gericht/Behörde, z.B. 993-99999-99)</span></label>
+          <input id="er-leitweg" class="form-input" placeholder="993-99999-99">
+        </div>
+      </div>
     </div>
-    <div class="topbar-right" style="display:flex;align-items:center;gap:8px;">
-      <span class="paket-badge" id="topbarPaket"></span>
-      <a href="einstellungen.html" class="settings-link">⚙</a>
-      <button type="button" class="burger" onclick="toggleDrawer()" aria-label="Menü"><span></span><span></span><span></span></button>
+
+    <!-- Ihre Daten (Sachverständiger) -->
+    <div class="card">
+      <div class="card-title">Ihre Daten (Sachverständiger)</div>
+      <div class="sv-section">
+        <div class="form-grid">
+          <div class="form-group form-full">
+            <label class="form-label">Name / Firma<span class="pflicht">*</span></label>
+            <input id="sv-name" class="form-input" placeholder="Max Mustermann">
+          </div>
+          <div class="form-group form-full">
+            <label class="form-label">Straße &amp; Hausnummer<span class="pflicht">*</span></label>
+            <input id="sv-strasse" class="form-input" placeholder="Musterstraße 1">
+          </div>
+          <div class="form-group">
+            <label class="form-label">PLZ<span class="pflicht">*</span></label>
+            <input id="sv-plz" class="form-input" placeholder="12345">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Ort<span class="pflicht">*</span></label>
+            <input id="sv-ort" class="form-input" placeholder="Musterstadt">
+          </div>
+          <div class="form-group form-full">
+            <label class="form-label">E-Mail<span class="pflicht">*</span> <span style="color:var(--text3);font-weight:400;text-transform:none">(BT-34 — neu seit XRechnung 3.0.1)</span></label>
+            <input id="sv-email" class="form-input" type="email" placeholder="ihre@email.de">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Steuernummer oder USt-IdNr.<span class="pflicht">*</span></label>
+            <input id="sv-steuernr" class="form-input" placeholder="DE123456789 oder 123/456/789">
+          </div>
+          <div class="form-group">
+            <label class="form-label">IBAN<span class="pflicht">*</span></label>
+            <input id="sv-iban" class="form-input" placeholder="DE12 3456 7890 1234 5678 90">
+          </div>
+        </div>
+        <div style="margin-top:10px;font-size:11px;color:var(--text3)">💡 Diese Daten können unter Einstellungen dauerhaft hinterlegt werden.</div>
+      </div>
+    </div>
+
+    <!-- Empfänger -->
+    <div class="card">
+      <div class="card-title">Empfänger (Gericht / Behörde)</div>
+      <div class="form-grid">
+        <div class="form-group form-full">
+          <label class="form-label">Name / Behörde<span class="pflicht">*</span></label>
+          <input id="er-empf-name" class="form-input" placeholder="Landgericht Köln">
+        </div>
+        <div class="form-group form-full">
+          <label class="form-label">E-Mail des Empfängers<span class="pflicht">*</span> <span style="color:var(--text3);font-weight:400;text-transform:none">(BT-49 — neu seit 3.0.1)</span></label>
+          <input id="er-empf-email" class="form-input" type="email" placeholder="rechnungseingang@gericht.de">
+        </div>
+        <div class="form-group form-full">
+          <label class="form-label">Straße &amp; Hausnummer<span class="pflicht">*</span></label>
+          <input id="er-empf-str" class="form-input" placeholder="Luxemburger Str. 101">
+        </div>
+        <div class="form-group">
+          <label class="form-label">PLZ<span class="pflicht">*</span></label>
+          <input id="er-empf-plz" class="form-input" placeholder="50939">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Ort<span class="pflicht">*</span></label>
+          <input id="er-empf-ort" class="form-input" placeholder="Köln">
+        </div>
+      </div>
+    </div>
+
+    <!-- Positionen -->
+    <div class="card">
+      <div class="card-title">Positionen<span class="pflicht">*</span></div>
+      <table class="er-table">
+        <thead>
+          <tr>
+            <th style="width:40%">Leistung</th>
+            <th style="width:10%">Menge</th>
+            <th style="width:10%">Einheit</th>
+            <th style="width:12%">EP (€)</th>
+            <th style="width:12%;text-align:right">GP (€)</th>
+            <th style="width:5%"></th>
+          </tr>
+        </thead>
+        <tbody id="er-positionen">
+          <tr class="er-position-row">
+            <td><input class="form-input er-leistung" placeholder="Gutachtenerstellung §9 JVEG" oninput="window.updateSummen()"></td>
+            <td><input class="form-input er-menge" type="number" value="1" min="0" step="0.5" style="width:70px" onchange="erCalcGP(this.closest('tr'))"></td>
+            <td><select class="form-input er-einheit" style="width:80px">
+              <option value="HUR">h</option>
+              <option value="KMT">km</option>
+              <option value="EA">Stk</option>
+              <option value="DAY">Tag</option>
+            </select></td>
+            <td><input class="form-input er-ep" type="number" placeholder="0,00" step="0.01" style="width:90px" onchange="erCalcGP(this.closest('tr'))"></td>
+            <td class="er-gp">0.00</td>
+            <td><button class="btn-icon" onclick="this.closest('tr').remove();updateSummen();">×</button></td>
+          </tr>
+        </tbody>
+      </table>
+      <button class="btn-add" onclick="window.erAddPosition()">+ Position hinzufügen</button>
+      <div style="margin-top:10px;font-size:11px;color:var(--text3)">
+        💡 JVEG-Honorar zuerst im <a href="jveg.html" style="color:var(--accent)">JVEG-Rechner</a> berechnen, dann hier als Position eintragen.
+      </div>
+    </div>
+
+  </div><!-- /left -->
+
+  <!-- Rechte Spalte: Summen + Download -->
+  <div>
+    <div class="card" style="position:sticky;top:24px">
+      <div class="card-title">Rechnungsübersicht</div>
+      <div class="summen-box">
+        <div class="summen-row"><span>Nettobetrag</span><span id="er-netto">0,00 €</span></div>
+        <div class="summen-row"><span>MwSt 19 %</span><span id="er-mwst">0,00 €</span></div>
+        <div class="summen-row total"><span>Gesamt</span><span id="er-brutto">0,00 €</span></div>
+      </div>
+
+      <div style="margin-top:16px;display:flex;flex-direction:column;gap:8px">
+        <button class="btn-primary" onclick="window.generateAndDownload()" style="width:100%;justify-content:center">
+          ⬇ XML generieren &amp; herunterladen
+        </button>
+        <button class="btn-secondary" onclick="window.copyXML()" style="width:100%;justify-content:center">
+          📋 XML in Zwischenablage
+        </button>
+      </div>
+
+      <div class="validator-banner">
+        <span style="font-size:18px">✅</span>
+        <div>Nach dem Download:<br>
+        <a href="https://erechnungs-validator.de" target="_blank">erechnungs-validator.de</a> — kostenlos prüfen</div>
+      </div>
+
+      <div style="margin-top:12px;font-size:11px;color:var(--text3);line-height:1.6">
+        Basiert auf EN 16931 · XRechnung 3.0.2<br>
+        Pflicht für Behörden seit 2020 (Bund) / 2023 (Länder)
+      </div>
     </div>
   </div>
-  <div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
-  <div class="drawer" id="drawer">
-    <div class="drawer-header">
-      <a href="dashboard.html" class="logo">PRO<span>VA</span></a>
-      <button type="button" class="drawer-close" onclick="closeDrawer()">✕</button>
-    </div>
-    <div id="provaDrawerMount"></div>
+
+  </div><!-- /grid -->
+</div><!-- /xrechnung -->
+
+<!-- ═══ ZUGFERD ═══ -->
+<div id="er-zugferd" class="format-section" style="display:none">
+  <div class="pflicht-info">
+    <strong>ZUGFeRD 2.1</strong> — Hybrid-Format: PDF + eingebettetes XML. Für private Auftraggeber (Versicherungen, Privatpersonen).
+    ZUGFeRD-Erstellung erfordert eine PDF-Bibliothek auf dem Server. Aktuell: Formular ausfüllen → XRechnung XML → mit <a href="https://www.mustangproject.org" target="_blank" style="color:var(--accent)">Mustang-Lib</a> in PDF einbetten.
   </div>
-  <nav class="bottom-nav" id="provaBottomNav"></nav>
-  <script>
-    function toggleDrawer(){var d=document.getElementById('drawer'),o=document.getElementById('drawerOverlay');d.classList.toggle('open');o.classList.toggle('open');document.body.style.overflow=d.classList.contains('open')?'hidden':'';}
-    function closeDrawer(){var d=document.getElementById('drawer'),o=document.getElementById('drawerOverlay');d.classList.remove('open');o.classList.remove('open');document.body.style.overflow='';}
-    document.addEventListener('keydown',function(e){if(e.key==='Escape')closeDrawer();});
-    (function(){if(!window.PROVA)return;var c=PROVA.paketColor();var s='background:'+c+'18;color:'+c+';border:1px solid '+c+'33';var el=document.getElementById('topbarPaket');if(el){el.textContent=PROVA.paketLabel();el.setAttribute('style',s);}})();
-  </script>
-  <script src="nav.js" defer></script>
-  <main class="main">
-    <h1 class="page-title">E-Rechnung</h1>
-    <p class="page-sub">ZUGFeRD / XRechnung (Team) — Anbindung folgt.</p>
-  </main>
+  <div class="card">
+    <div class="card-title">ZUGFeRD — In Kürze verfügbar</div>
+    <p style="color:var(--text2);font-size:13px;line-height:1.7">
+      ZUGFeRD 2.1 (aktuell: 2.4.0) bettet ein XML-Dokument in ein PDF ein. Die Erstellung erfordert serverseitige PDF-Verarbeitung.
+      <br><br>
+      <strong>Für private Auftraggeber empfohlen:</strong> Gleiche Daten wie XRechnung, als PDF übermittelbar.
+      <br><br>
+      Dieser Tab wird in einer kommenden Version aktiviert. Bis dahin: XRechnung XML exportieren und beim Auftraggeber nachfragen ob dieses Format akzeptiert wird.
+    </p>
+  </div>
+</div>
+
+</main>
+</div>
+<script src="erechnung-logic.js" defer></script>
+<script src="global-search.js" defer></script>
+<script src="auto-save.js" defer></script>
+<script src="trial-guard.js"></script>
+<script src="prova-context.js" defer></script>
+<script src="prova-error-handler.js" defer></script>
+<script src="support-chat.js"></script>
 </body>
 </html>

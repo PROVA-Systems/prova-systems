@@ -1,9 +1,18 @@
 /**
  * PROVA — Authorization-Header für Netlify Functions (Identity JWT)
- * Erfordert netlify-identity-widget geladen und netlifyIdentity.init() vor Aufrufen.
+ * Unterstützt: netlifyIdentity Widget + direkter API-Login (localStorage)
  */
 (function () {
   function getToken() {
+    // 1. Direkt-Login Token aus localStorage (app-login.html direkte API)
+    try {
+      var stored = localStorage.getItem('netlify-identity-token');
+      if (stored) {
+        var parsed = JSON.parse(stored);
+        if (parsed && parsed.access_token) return parsed.access_token;
+      }
+    } catch(e) {}
+    // 2. Netlify Identity Widget (Fallback)
     if (window.netlifyIdentity && typeof netlifyIdentity.currentUser === 'function') {
       var u = netlifyIdentity.currentUser();
       if (u && u.token && u.token.access_token) return u.token.access_token;
@@ -34,3 +43,10 @@
     });
   };
 })();
+
+// Session-Helper für direkten Login
+window.provaCreateSession = function(user) {
+  if (!user || !user.email) return;
+  localStorage.setItem('prova_sv_email', user.email);
+  localStorage.setItem('prova_user', JSON.stringify(user));
+};

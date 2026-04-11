@@ -277,7 +277,7 @@ window.sendSupport=async function(){
   var b=document.getElementById('sup-betreff').value.trim();
   var n=document.getElementById('sup-nachricht').value.trim();
   if(!b||!n)return;
-  try{await fetch('/.netlify/functions/make-proxy',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:'support',payload:{betreff:b,nachricht:n,sv_email:svEmail,paket:paket,seite:'archiv.html',ts:new Date().toISOString()}})});}catch(e){}
+  try{await fetch('https://hook.eu1.make.com/lktuhugwcg5v37ib6bdaxjb1uiplnu8v',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({betreff:b,nachricht:n,sv_email:svEmail,paket:paket,seite:'archiv.html',ts:new Date().toISOString()})});}catch(e){}
   document.getElementById('sup-modal').classList.remove('open');
 };
 
@@ -325,16 +325,16 @@ async function supSendModal(){
   var btn=document.getElementById('sup-btn');
   btn.disabled=true;btn.textContent='⏳ Wird gesendet…';
   try{
-    await fetch('/.netlify/functions/make-proxy',{
+    await fetch('https://hook.eu1.make.com/lktuhugwcg5v37ib6bdaxjb1uiplnu8v',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({key:'support',payload:{
+      body:JSON.stringify({
         betreff:b,
         nachricht:n,
         sv_email:localStorage.getItem('prova_sv_email')||'',
         paket:localStorage.getItem('prova_paket')||'Solo',
         seite:window.location.pathname
-      }})
+      })
     });
     document.getElementById('support-form-body').style.display='none';
     document.getElementById('support-ok').style.display='block';

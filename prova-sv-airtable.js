@@ -20,7 +20,7 @@
   function applyAccountStatusFromFields(f) {
     var status = String(f.Status || '').trim();
     var paket = String(f.Paket || 'Starter').trim();
-    var trialEnd = f.Trial_End;
+    var trialEnd = f.trial_end;
     var sub = String(f.subscription_status || f.Subscription_Status || '')
       .trim()
       .toLowerCase();

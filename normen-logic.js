@@ -317,7 +317,6 @@ window.PROVA_NORMEN_DB = NORMEN_DB;
 let activeChipSA = '';
 let activeChipHF = '';
 let expandedId = null;
-let selectedNormen = new Set();
 
 // Schadenart → Langname
 const SA_LABEL = {WS:'Wasserschaden',SC:'Schimmel',BS:'Brand',SS:'Sturm',ES:'Elementar',BA:'Baumängel'};
@@ -385,7 +384,6 @@ function renderNormen() {
   grid.innerHTML = filtered.map((n,i) => {
     const saArr = n.sa.split(',').filter(Boolean);
     const expanded = expandedId === n.num;
-    const checked = selectedNormen.has(n.num) ? 'checked' : '';
     return `<div class="normen-card${expanded?' expanded':''}" onclick="toggleCard('${n.num}',event)" data-id="${n.num}">
       <div class="card-header">
         <div class="card-num">${n.num}</div>
@@ -414,52 +412,13 @@ function renderNormen() {
           <span class="hint-text">${escHtml(n.hint)}</span>
         </div>
         <div class="card-actions" onclick="event.stopPropagation()">
-          <label style="display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:8px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);cursor:pointer;">
-            <input type="checkbox" ${checked} onchange="toggleNormSelect('${n.num}', this.checked)" style="width:16px;height:16px;accent-color:var(--accent);">
-            <span style="font-size:11px;font-weight:800;color:var(--text);">In §5 übernehmen</span>
-          </label>
           <button class="btn-insert" onclick="insertInStellung('${n.num}')">📝 In §6 einfügen</button>
           <button class="btn-copy" onclick="copyZitat('${n.num}')">📋 Zitat kopieren</button>
         </div>
       </div>
     </div>`;
   }).join('');
-
-  updateAuswahlBar();
 }
-
-function updateAuswahlBar() {
-  var bar = document.getElementById('normen-auswahl-bar');
-  var cnt = document.getElementById('normen-auswahl-count');
-  if (cnt) cnt.textContent = String(selectedNormen.size);
-  if (bar) bar.style.display = selectedNormen.size > 0 ? 'flex' : 'none';
-}
-
-window.toggleNormSelect = function(normNum, on) {
-  if (on) selectedNormen.add(normNum);
-  else selectedNormen.delete(normNum);
-  updateAuswahlBar();
-};
-
-window.clearNormenAuswahl = function() {
-  selectedNormen = new Set();
-  renderNormen();
-};
-
-window.uebernehmeNormenAuswahl = function() {
-  try {
-    var arr = Array.from(selectedNormen).map(function(num){
-      var n = NORMEN_DB.find(function(x){ return x.num === num; });
-      return n ? { id: n.num, bezeichnung: n.titel, norm_nr: n.num, kategorie: n.bereich } : null;
-    }).filter(Boolean);
-    sessionStorage.setItem('prova_normen_auswahl', JSON.stringify(arr));
-  } catch(e) {}
-
-  try {
-    if (window.opener) { window.opener.focus(); window.close(); return; }
-  } catch(e) {}
-  window.location.href = 'stellungnahme.html';
-};
 
 function toggleCard(id, e) {
   if(e && e.target.closest('.card-actions')) return;

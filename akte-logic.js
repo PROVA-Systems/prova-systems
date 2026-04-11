@@ -25,7 +25,6 @@ var recordId=sessionStorage.getItem('prova_record_id')||new URLSearchParams(wind
 var aktenzeichen=new URLSearchParams(window.location.search).get('az')||'';
 var currentRecord=null;
 var currentFields={};
-var _unterlagen = [];
 
 async function ladeRecord(){
   // Wenn nur az= übergeben (kein Record-ID) → per Aktenzeichen suchen
@@ -119,9 +118,6 @@ function renderAkte(){
     agActions+='<a href="mailto:'+esc(f.Auftraggeber_Email)+'" class="dok-btn" style="font-size:11px;">✉️ E-Mail</a>';
   }
   agActions+='<button class="dok-btn" onclick="window.location.href=\'briefvorlagen.html\'">📝 Brief</button>';
-
-  // Unterlagen laden/rendern
-  try { ladeUnterlagen(); renderUnterlagen(); } catch(e) {}
   document.getElementById('ag-actions').innerHTML=agActions;
 
   // Timeline
@@ -150,88 +146,6 @@ function renderAkte(){
   document.getElementById('loading-state').style.display='none';
   document.getElementById('akte-content').style.display='block';
 }
-
-function ladeUnterlagen(){
-  var az = (currentFields.Aktenzeichen||recordId||'').toString();
-  var raw = '';
-  // Airtable-Feld bevorzugt (wenn vorhanden)
-  if (currentFields.Unterlagen_JSON) raw = currentFields.Unterlagen_JSON;
-  if (!raw) raw = localStorage.getItem('prova_unterlagen_' + az) || '';
-  var arr = [];
-  try { arr = JSON.parse(raw || '[]'); } catch(e) { arr = []; }
-  if (!Array.isArray(arr)) arr = [];
-  _unterlagen = arr;
-  if (_unterlagen.length === 0) {
-    _unterlagen = [
-      { dokument: 'Beweisbeschluss', von: 'Gericht', erhalten_am: '', status: 'fehlt' },
-      { dokument: 'Akten / Unterlagen', von: 'Auftraggeber', erhalten_am: '', status: 'angefordert' }
-    ];
-  }
-}
-
-function renderUnterlagen(){
-  var body = document.getElementById('unterlagen-body');
-  if (!body) return;
-  if (!_unterlagen || !_unterlagen.length) {
-    body.innerHTML = '<tr><td colspan="5" style="padding:14px 6px;color:var(--text3);text-align:center;">Keine Unterlagen</td></tr>';
-    return;
-  }
-  body.innerHTML = _unterlagen.map(function(u, idx){
-    var st = (u.status||'fehlt');
-    return '<tr>'
-      + '<td style="padding:10px 6px;border-bottom:1px solid var(--border);"><input class="dok-input" style="width:100%;padding:8px;border-radius:8px;border:1px solid var(--border2);background:rgba(255,255,255,.03);color:var(--text2);" value="'+esc(u.dokument||'')+'" oninput="_unterlagen['+idx+'].dokument=this.value"></td>'
-      + '<td style="padding:10px 6px;border-bottom:1px solid var(--border);"><input class="dok-input" style="width:100%;padding:8px;border-radius:8px;border:1px solid var(--border2);background:rgba(255,255,255,.03);color:var(--text2);" value="'+esc(u.von||'')+'" oninput="_unterlagen['+idx+'].von=this.value"></td>'
-      + '<td style="padding:10px 6px;border-bottom:1px solid var(--border);"><input type="date" style="width:100%;padding:8px;border-radius:8px;border:1px solid var(--border2);background:rgba(255,255,255,.03);color:var(--text2);" value="'+esc(u.erhalten_am||'')+'" onchange="_unterlagen['+idx+'].erhalten_am=this.value"></td>'
-      + '<td style="padding:10px 6px;border-bottom:1px solid var(--border);">'
-      +   '<select style="width:100%;padding:8px;border-radius:8px;border:1px solid var(--border2);background:rgba(255,255,255,.03);color:var(--text2);" onchange="_unterlagen['+idx+'].status=this.value">'
-      +     '<option value="vorhanden" '+(st==='vorhanden'?'selected':'')+'>vorhanden</option>'
-      +     '<option value="fehlt" '+(st==='fehlt'?'selected':'')+'>fehlt</option>'
-      +     '<option value="angefordert" '+(st==='angefordert'?'selected':'')+'>angefordert</option>'
-      +   '</select>'
-      + '</td>'
-      + '<td style="padding:10px 6px;border-bottom:1px solid var(--border);"><button class="dok-btn" onclick="unterlagenRemove('+idx+')">🗑️</button></td>'
-      + '</tr>';
-  }).join('');
-}
-
-window.unterlagenAdd = function(){
-  _unterlagen.push({ dokument:'', von:'', erhalten_am:'', status:'fehlt' });
-  renderUnterlagen();
-};
-window.unterlagenRemove = function(idx){
-  _unterlagen.splice(idx,1);
-  renderUnterlagen();
-};
-
-window.unterlagenSave = async function(){
-  var az = (currentFields.Aktenzeichen||recordId||'').toString();
-  var json = JSON.stringify(_unterlagen || []);
-  try { localStorage.setItem('prova_unterlagen_' + az, json); } catch(e) {}
-
-  // Airtable PATCH (wenn Feld existiert, sonst harmless fail)
-  try {
-    await fetch('/.netlify/functions/airtable', {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ method:'PATCH', path:'/v0/'+AT_BASE+'/'+AT_FAELLE+'/'+recordId, payload:{ fields:{ Unterlagen_JSON: json } } })
-    });
-  } catch(e) {}
-
-  try { if(typeof zeigToast==='function') zeigToast('Unterlagen gespeichert'); } catch(e) {}
-};
-
-window.unterlagenAnfordern = function(){
-  try{
-    var az = (currentFields.Aktenzeichen||recordId||'').toString();
-    sessionStorage.setItem('prova_unterlagen_request', JSON.stringify({
-      az: az,
-      recordId: recordId,
-      empfaenger_email: currentFields.Auftraggeber_Email || '',
-      empfaenger_name: currentFields.Auftraggeber_Name || ''
-    }));
-  }catch(e){}
-  window.location.href = 'nachforderung-unterlagen.html';
-};
 
 /* ─── TIMELINE ─── */
 function renderTimeline(status,f){

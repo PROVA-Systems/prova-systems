@@ -1,33 +1,155 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-<script>
-  window.__PROVA_ENV = 'production';
-  window.onerror = function(msg, src, line, col, err) {
-    if (!navigator.onLine) return;
-    fetch('/.netlify/functions/error-log', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({
-        msg: String(msg).slice(0,500),
-        src: src, line: line,
-        page: window.location.pathname,
-        user: localStorage.getItem('prova_sv_email')||'unbekannt',
-        ua: navigator.userAgent.slice(0,100),
-        ts: new Date().toISOString()
-      })
-    }).catch(function(){});
-  };
-</script>
-  <meta charset="UTF-8">
-  <title>Mahnung 2</title>
-  <script>
-    (function () {
-      var q = new URLSearchParams(location.search);
-      q.set('stufe', '2');
-      location.replace('mahnung.html?' + q.toString());
-    })();
-  </script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>2. Mahnung · PROVA</title>
+<link rel="stylesheet" href="prova-design.css">
+<link rel="stylesheet" href="mobile.css">
+<script src="theme.js"></script>
+<script src="nav.js"></script>
+<script src="auth-guard.js"></script>
 </head>
-<body><p><a href="mahnung.html?stufe=2">Weiter…</a></p></body>
+<body>
+<div id="nav-placeholder"></div>
+<main class="page-content" style="max-width:800px;margin:0 auto;padding:24px 16px;">
+
+<div style="display:flex;align-items:center;gap:12px;margin-bottom:24px;">
+  <button onclick="history.back()" class="p-btn p-btn-ghost" style="font-size:13px;">← Zurück</button>
+  <div>
+    <h1 style="font-size:20px;font-weight:800;color:var(--text);margin:0;">2. Mahnung</h1>
+    <p style="font-size:12px;color:var(--text3);margin:4px 0 0;">Mit Nachfrist und Verzugszinsen</p>
+  </div>
+  <div style="margin-left:auto;display:flex;gap:8px;">
+    <button onclick="window.print()" class="p-btn p-btn-ghost" style="font-size:12px;">🖨️ Drucken</button>
+    <button onclick="kopierenInZwischenablage()" class="p-btn" style="font-size:12px;">📋 Kopieren</button>
+  </div>
+</div>
+
+<!-- Briefkopf -->
+<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px;">
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+    <div>
+      <div style="font-size:11px;color:var(--text3);margin-bottom:4px;">ABSENDER</div>
+      <div id="sv-name-display" style="font-weight:700;color:var(--text);font-size:14px;"></div>
+      <div id="sv-firma-display" style="font-size:12px;color:var(--text2);"></div>
+      <div id="sv-adresse-display" style="font-size:12px;color:var(--text3);"></div>
+    </div>
+    <div style="text-align:right;">
+      <div style="font-size:11px;color:var(--text3);margin-bottom:4px;">DATUM</div>
+      <div id="datum-display" style="font-size:14px;color:var(--text);"></div>
+      <div style="font-size:11px;color:var(--text3);margin-top:8px;">AKTENZEICHEN</div>
+      <div id="az-display" style="font-size:14px;color:var(--accent);font-weight:700;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Empfänger -->
+<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:16px;">
+  <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:6px;">EMPFÄNGER</label>
+  <textarea id="empfaenger" rows="4" class="p-input" style="width:100%;font-family:inherit;" 
+    placeholder="Name&#10;Straße&#10;PLZ Ort"></textarea>
+</div>
+
+<!-- Betreff -->
+<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:16px;">
+  <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:6px;">BETREFF</label>
+  <input type="text" id="betreff" class="p-input" style="width:100%;font-weight:700;" 
+    value="2. Mahnung – Az.: ">
+</div>
+
+<!-- Briefinhalt -->
+<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px;">
+  <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:12px;">BRIEFTEXT</label>
+  <div id="briefinhalt" contenteditable="true" 
+    style="min-height:300px;font-size:14px;line-height:1.8;color:var(--text);outline:none;font-family:inherit;">
+<p>sehr geehrte Damen und Herren,</p>
+<p>mit meiner 1. Mahnung vom <strong>[Datum 1. Mahnung]</strong> hatte ich Sie um Zahlung meiner Rechnung Nr. <strong>[Rechnungsnummer]</strong> über <strong>[Betrag] €</strong> gebeten.</p>
+<p>Leider ist der Betrag bis heute nicht auf meinem Konto eingegangen.</p>
+<p>Ich setze Ihnen hiermit eine letzte Frist bis zum <strong>[Nachfrist-Datum]</strong>. Ab dem Verzugseintritt schulden Sie gemäß §§ 286, 288 BGB Verzugszinsen in Höhe von <strong>9 Prozentpunkten</strong> über dem Basiszinssatz.</p>
+<p>Sollte ich bis zu dem genannten Termin keine Zahlung erhalten, sehe ich mich leider gezwungen, den Betrag gerichtlich geltend zu machen oder ein Inkassobüro einzuschalten.</p>
+  </div>
+</div>
+
+<!-- Grußformel -->
+<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:24px;">
+  <div style="font-size:14px;color:var(--text);">Mit freundlichen Grüßen</div>
+  <div style="margin-top:40px;border-top:1px solid var(--border);padding-top:8px;">
+    <div id="sv-name-signatur" style="font-weight:700;font-size:14px;color:var(--text);"></div>
+    <div style="font-size:12px;color:var(--text3);">Öffentlich bestellter und vereidigter Sachverständiger</div>
+  </div>
+</div>
+
+<button onclick="sendeBriefAnAktiveFall()" class="p-btn p-btn-primary" style="width:100%;padding:14px;">
+  💾 Brief speichern und zur Akte
+</button>
+
+</main>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  var svVorname  = localStorage.getItem('prova_sv_vorname') || '';
+  var svNachname = localStorage.getItem('prova_sv_nachname') || '';
+  var svName     = [svVorname, svNachname].filter(Boolean).join(' ');
+  var svFirma    = localStorage.getItem('prova_sv_firma') || '';
+  var svStr      = localStorage.getItem('prova_sv_strasse') || '';
+  var svPlz      = localStorage.getItem('prova_sv_plz') || '';
+  var svOrt      = localStorage.getItem('prova_sv_ort') || '';
+  var az         = new URLSearchParams(window.location.search).get('az') || localStorage.getItem('prova_letztes_az') || '';
+  var datum      = new Date().toLocaleDateString('de-DE', {day:'2-digit',month:'2-digit',year:'numeric'});
+
+  var el = function(id) { return document.getElementById(id); };
+  if (el('sv-name-display')) el('sv-name-display').textContent = svName;
+  if (el('sv-firma-display')) el('sv-firma-display').textContent = svFirma;
+  if (el('sv-adresse-display')) el('sv-adresse-display').textContent = [svStr, svPlz + ' ' + svOrt].filter(Boolean).join(' · ');
+  if (el('datum-display')) el('datum-display').textContent = datum;
+  if (el('az-display')) el('az-display').textContent = az || '–';
+  if (el('sv-name-signatur')) el('sv-name-signatur').textContent = svName;
+  if (el('betreff') && az) el('betreff').value = el('betreff').value + az;
+});
+
+window.kopierenInZwischenablage = function() {
+  var text = document.getElementById('briefinhalt').innerText;
+  navigator.clipboard.writeText(text).then(function() {
+    if (typeof showToast === 'function') showToast('Brief kopiert ✅');
+  }).catch(function() {
+    var ta = document.createElement('textarea');
+    ta.value = text; document.body.appendChild(ta); ta.select();
+    document.execCommand('copy'); document.body.removeChild(ta);
+    if (typeof showToast === 'function') showToast('Brief kopiert ✅');
+  });
+};
+
+window.sendeBriefAnAktiveFall = async function() {
+  var svEmail = localStorage.getItem('prova_sv_email') || '';
+  var az      = new URLSearchParams(window.location.search).get('az') || localStorage.getItem('prova_letztes_az') || '';
+  var betreff = (document.getElementById('betreff') || {}).value || '2. Mahnung';
+  var inhalt  = (document.getElementById('briefinhalt') || {}).innerText || '';
+  
+  if (!svEmail) { if(typeof showToast==='function') showToast('Nicht eingeloggt', 'error'); return; }
+  
+  try {
+    await fetch('/.netlify/functions/airtable', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({method:'POST',
+        path:'/v0/appJ7bLlAHZoxENWE/tblSzxvnkRE6B0thx',
+        payload:{fields:{
+          aktenzeichen: az, sv_email: svEmail,
+          brief_typ: '2. Mahnung', betreff: betreff,
+          inhalt: inhalt.substring(0, 2000),
+          datum: new Date().toISOString().slice(0,10),
+          status: 'Entwurf'
+        }}})
+    });
+    if(typeof showToast==='function') showToast('Brief gespeichert ✅');
+    if (az) setTimeout(function(){window.location.href='akte.html?az='+encodeURIComponent(az);}, 1500);
+  } catch(e) {
+    if(typeof showToast==='function') showToast('Fehler: ' + e.message, 'error');
+  }
+};
+</script>
+
+<script src="support-chat.js"></script>
+<script src="trial-guard.js"></script>
+</body>
 </html>

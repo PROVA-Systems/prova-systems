@@ -132,12 +132,6 @@ async function ladePaketUndWeiterleiten(email, ziel) {
     localStorage.removeItem('prova_is_admin');
     return;
   }
-  // Datenschutz: vor dem ersten setItem nach Login alle prova_* Keys entfernen
-  try {
-    Object.keys(localStorage).forEach(function(k){
-      if (String(k||'').startsWith('prova_')) localStorage.removeItem(k);
-    });
-  } catch(e) {}
   var paket = 'Solo';
   if (!ziel) {
     ziel = localStorage.getItem('prova_onboarding_done') ? 'dashboard.html' : 'onboarding-schnellstart.html';
@@ -164,15 +158,7 @@ async function ladePaketUndWeiterleiten(email, ziel) {
         var paketMap = {'Starter':'Solo','starter':'Solo','STARTER':'Solo','Pro':'Solo','pro':'Solo','PRO':'Solo','Enterprise':'Team','enterprise':'Team','ENTERPRISE':'Team'};
         paket = paketMap[paket] || paket;
         if (!['Solo','Team'].includes(paket)) paket = 'Solo';
-        var status = (f.Status && f.Status.name) ? f.Status.name : (f.Status || 'Trial');
-        // Trial-Daten aus Airtable in localStorage laden
-        if (f.trial_end) {
-          localStorage.setItem('prova_trial_end', f.trial_end);
-        }
-        if (f.Trial_Start) {
-          localStorage.setItem('prova_trial_start', f.Trial_Start);
-        }
-        localStorage.setItem('prova_trial_days', '14');
+        var status = (f.Status && f.Status.name) ? f.Status.name : (f.Status || 'Aktiv');
         if (status === 'Gesperrt' || status === 'Gekuendigt') {
           localStorage.clear();
           window.location.href = 'app-login.html?reason=account_locked';
@@ -208,54 +194,12 @@ async function ladePaketUndWeiterleiten(email, ziel) {
         }
         // Primärfarbe / Branding
         if (f.primary_color) localStorage.setItem('prova_primary_color', f.primary_color);
-
-        // ── Zusätzliche Profilfelder ───────────────────────────────────────
-        if (f.Anrede)             localStorage.setItem('prova_sv_anrede', String(f.Anrede));
-        if (f.Titel)              localStorage.setItem('prova_sv_titel', String(f.Titel));
-        if (f.Berufsbezeichnung)  localStorage.setItem('prova_sv_beruf', String(f.Berufsbezeichnung));
-        if (f.Website)            localStorage.setItem('prova_sv_website', String(f.Website));
-        if (f.app_theme)          localStorage.setItem('prova_theme', String(f.app_theme));
-        if (f.app_fontsize)       localStorage.setItem('prova_fontsize_px', String(f.app_fontsize));
-
-        // ── Kontodaten laden (prova_kontodaten) ────────────────────────────
-        try {
-          var konto = {
-            iban: f.IBAN || '',
-            bic: f.BIC || '',
-            bank: f.Bank || '',
-            steuernr: f.Steuernummer || '',
-            ustid: f.USt_IdNr || '',
-            mwst: String(f.MwSt_Satz || '19'),
-            zahlungsziel: String(f.Zahlungsziel_Tage || '30'),
-            re_prefix: f.Re_Prefix || 'RE'
-          };
-          if (Object.values(konto).some(function(v){ return v && v !== '19' && v !== '30' && v !== 'RE'; })) {
-            localStorage.setItem('prova_kontodaten', JSON.stringify(konto));
-          }
-        } catch(e) {}
       }
     }
   } catch(e) { console.warn('Paket-Abfrage fehlgeschlagen:', e); }
   localStorage.setItem('prova_paket', paket);
   window.location.href = ziel;
 }
-
-// Airtable: onboarding_done setzen (SV Datensatz)
-window.provaSetOnboardingDone = async function(){
-  try {
-    var recId = localStorage.getItem('prova_at_sv_record_id');
-    if (!recId) return;
-    await fetch('/.netlify/functions/airtable', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        method: 'PATCH',
-        path: '/v0/appJ7bLlAHZoxENWE/tbladqEQT3tmx4DIB/' + recId,
-        payload: { fields: { onboarding_done: true } }
-      })
-    });
-  } catch(e) {}
-};
 
 /* ────────────────────────────────────────────
    FLOW ③ — LOGIN
