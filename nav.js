@@ -66,48 +66,58 @@
      Prinzip: Täglich sichtbar · Selten = ausklappbar ── */
 
   // ── TÄGLICH: Was jeder SV jeden Tag braucht (max. 4 Items) ──
+  /* ══════════════════════════════════════════════════════════════
+   PROVA NAV-STRUKTUR — nach SV-Workflow & SaaS-Best-Practices
+   Inspiriert von: DAT/Audatex (Kfz-SV), DATEV (Steuerberater),
+                   Stripe (Abrechnung), Linear (Aufgaben)
+   Prinzip: Max 4-5 Items/Gruppe · Workflow-logisch · Nie alphabetisch
+   ═══════════════════════════════════════════════════════════════ */
+
+  // ── ÜBERSICHT: Tagesstart — was ist heute wichtig? ──────────
   var ARBEIT = [
-    { href: 'dashboard.html',   icon: '⊞',  label: 'Zentrale' },
-    { href: 'archiv.html',      icon: '📂', label: 'Alle Fälle' },
-    { href: 'termine.html',     icon: '📅', label: 'Kalender' },
-    { href: 'rechnungen.html',  icon: '💶', label: 'Rechnungen' },
+    { href: 'dashboard.html',     icon: '⊞',  label: 'Zentrale' },
+    { href: 'archiv.html',        icon: '📂', label: 'Meine Fälle' },
+    { href: 'termine.html',       icon: '📅', label: 'Kalender' },
   ];
 
-  // ── WERKZEUGE: Hilfsmittel die bei jedem Gutachten gebraucht werden ──
-  var WERKZEUGE = [
-    { href: 'normen.html',        icon: '📚', label: 'Normen-Datenbank' },
-    { href: 'textbausteine.html', icon: '📝', label: 'Textbausteine' },
-    { href: 'positionen.html',    icon: '🗂️', label: 'Positionen & Preise' },
-    { href: 'briefvorlagen.html', icon: '✉️', label: 'Briefe & Vorlagen' },
-  ];
-
-  // ── SPEZIAL-GUTACHTEN: Ausklappbar — für erfahrene SVs ──
-  // Korrekte Fachbegriffe aus dem Sachverständigen-Wesen
+  // ── GUTACHTEN: Spezielle Gutachten-Arten (nach KFZ-Vorbild) ─
+  // Normale Gutachten entstehen via "Neues Gutachten" CTA oben
   var GUTACHTEN = [
     { href: 'freigabe.html',              icon: '✅', label: 'Freigabe & PDF-Versand' },
-    { href: 'jveg.html',                  icon: '🧮', label: 'JVEG-Honorarrechner' },
-    { href: 'mahnwesen.html',             icon: '📨', label: 'Mahnwesen' },
-    { href: 'statistiken.html',           icon: '📈', label: 'Auswertungen' },
-    { href: 'erechnung.html',             icon: '📄', label: 'E-Rechnung (XRechnung)' },
-    { href: 'kontakte.html',              icon: '👥', label: 'Kontakte' },
-    { href: 'import-assistent.html',      icon: '📥', label: 'Daten importieren' },
-    // Spezielle Gutachten-Arten (gängige SV-Fachbegriffe)
     { href: 'ergaenzung.html',            icon: '🧩', label: 'Ergänzungsgutachten' },
+    { href: 'stellungnahme.html',         icon: '📋', label: 'Techn. Stellungnahme' },
+    { href: 'widerspruch-gutachten.html', icon: '↩️', label: 'Gegengutachten' },
     { href: 'schiedsgutachten.html',      icon: '⚖️', label: 'Schiedsgutachten' },
-    { href: 'stellungnahme.html',         icon: '📋', label: 'Technische Stellungnahme' },
-    { href: 'widerspruch-gutachten.html', icon: '↩️', label: 'Gegengutachten / Erwiderung' },
     { href: 'gericht-auftrag.html',       icon: '🏛️', label: 'Gerichtsauftrag' },
     { href: 'baubegleitung.html',         icon: '🏗️', label: 'Baubegleitung' },
   ];
 
-  // ── IMMER SICHTBAR UNTEN: Einstellungen + Hilfe (wie Linear/Stripe) ──
-  var FOOTER_ITEMS = [
-    { href: 'einstellungen.html', icon: '⚙️', label: 'Einstellungen' },
-    { href: 'hilfe.html',         icon: '❓', label: 'Hilfe & Support' },
+  // ── ABRECHNUNG: Honorar, Rechnungen, Mahnwesen ──────────────
+  // (wie DAT/Audatex: Abrechnung als eigener Bereich)
+  var ABRECHNUNG = [
+    { href: 'rechnungen.html',    icon: '💶', label: 'Rechnungen' },
+    { href: 'jveg.html',          icon: '🧮', label: 'JVEG-Rechner' },
+    { href: 'mahnwesen.html',     icon: '📨', label: 'Mahnwesen' },
+    { href: 'erechnung.html',     icon: '📄', label: 'E-Rechnung (XRechnung)' },
+    { href: 'statistiken.html',   icon: '📈', label: 'Auswertungen' },
   ];
 
-  var ABRECHNUNG = [];
-  var BUERO = [];
+  // ── BÜRO: Korrespondenz & Organisation ──────────────────────
+  // (wie DATEV: Briefe + Kontakte + Verwaltung = Büro)
+  var BUERO = [
+    { href: 'briefvorlagen.html',   icon: '✉️', label: 'Briefe & Vorlagen' },
+    { href: 'kontakte.html',        icon: '👥', label: 'Kontakte' },
+    { href: 'import-assistent.html',icon: '📥', label: 'Daten importieren' },
+  ];
+
+  // ── WERKZEUGE: Fachliche Hilfsmittel ────────────────────────
+  // (wie Befundio: Normen, Preise, Textbausteine = separate Gruppe)
+  var WERKZEUGE = [
+    { href: 'normen.html',        icon: '📚', label: 'Normen-Datenbank' },
+    { href: 'textbausteine.html', icon: '📝', label: 'Textbausteine' },
+    { href: 'positionen.html',    icon: '🗂️', label: 'Positionen & Preise' },
+  ];
+
   var VERWALTUNG = [];
 
 
@@ -419,9 +429,11 @@
     + '</button>'
 
     + '<div class="sb-nav">'
-    +   makeGroup('Täglich', ARBEIT)
+    +   makeGroup('Übersicht', ARBEIT)
+    +   makeGroup('Gutachten', GUTACHTEN)
+    +   makeGroup('Abrechnung', ABRECHNUNG)
+    +   makeGroup('Büro', BUERO)
     +   makeGroup('Werkzeuge', WERKZEUGE)
-    +   makeGroup('Weitere Funktionen', GUTACHTEN)
     + '</div>'
 
     + '<div class="sb-footer">'
