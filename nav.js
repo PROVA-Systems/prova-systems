@@ -76,6 +76,7 @@
   // ── ÜBERSICHT: Tagesstart — was ist heute wichtig? ──────────
   var ARBEIT = [
     { href: 'dashboard.html',     icon: '⊞',  label: 'Zentrale' },
+    { href: 'vor-ort.html',       icon: '📍', label: 'Vor-Ort starten' },
     { href: 'archiv.html',        icon: '📂', label: 'Meine Fälle' },
     { href: 'termine.html',       icon: '📅', label: 'Kalender' },
   ];
@@ -445,7 +446,7 @@
     +     '<div class="paket-dot" style="background:' + pc + '"></div>'
     +     '<span class="paket-name" style="color:' + pc + '">' + paket + '</span>'
     +   '</div>'
-    +   '<div style="border-top:1px solid rgba(255,255,255,.06);margin:8px 0 4px;"></div>'
+    +   '<div style="border-top:1px solid rgba(255,255,255,.08);margin:6px 8px 4px;"></div>'
     +   '<a href="einstellungen.html" class="sb-footer-link">'
     +     '<span class="sb-footer-icon">⚙️</span>'
     +     '<span>Einstellungen</span>'

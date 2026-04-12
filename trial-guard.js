@@ -79,14 +79,28 @@
   // Gründerkreis bekommt 90 Tage
   if (isGruenderkreis) trialDays = 90;
 
-  // Kein Trial-Start → kein Trial aktiv (wahrscheinlich bezahlender Kunde)
-  if (!trialStart || status === 'Aktiv' || status === 'aktiv') return;
+  if (status === 'Aktiv' || status === 'aktiv') return;
 
   var now = Date.now();
-  var start = new Date(trialStart).getTime();
-  var end = start + (trialDays * 24 * 60 * 60 * 1000);
-  var tageVerbleibend = Math.ceil((end - now) / (24 * 60 * 60 * 1000));
-  var trialAbgelaufen = tageVerbleibend <= 0;
+  var tageVerbleibend, trialAbgelaufen;
+
+  // Primär: trial_end aus Airtable (YYYY-MM-DD) — gesetzt von prova-sv-airtable.js
+  var trialEndStr = localStorage.getItem('prova_trial_end');
+  if (trialEndStr) {
+    var endDate = new Date(trialEndStr + 'T23:59:59');
+    tageVerbleibend = Math.ceil((endDate.getTime() - now) / (24 * 60 * 60 * 1000));
+  } else if (trialStart) {
+    // Fallback: trial_start + trialDays
+    var start = new Date(parseInt(trialStart) || trialStart).getTime();
+    if (isNaN(start)) start = now; // Sicherheit gegen NaN
+    var end = start + (trialDays * 24 * 60 * 60 * 1000);
+    tageVerbleibend = Math.ceil((end - now) / (24 * 60 * 60 * 1000));
+  } else {
+    // Kein Trial aktiv
+    return;
+  }
+  if (isNaN(tageVerbleibend)) tageVerbleibend = trialDays; // NaN-Schutz
+  trialAbgelaufen = tageVerbleibend <= 0;
 
   /* ── CSS ── */
   if (!document.getElementById('prova-trial-css')) {

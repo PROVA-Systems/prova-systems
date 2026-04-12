@@ -222,7 +222,62 @@ ${text.slice(0, 28000)}`;
       return json(200, Object.assign(parsed, { _prova_ki_meta: meta }));
     }
 
-    return json(400, { error: 'Unbekannte action: ' + action, _prova_ki_meta: meta });
+    /* ══════════════════════════════════════════════════════
+       FOTO + SKIZZE: Kontextbezogene Beschriftung
+       ════════════════════════════════════════════════════ */
+    if (action === 'foto_analyse_mit_skizze') {
+      const b64       = body.imageBase64 || body.b64;
+      const skizzeB64 = body.skizzeBase64;
+      const fotoNr    = body.fotoNr || 1;
+      const gesamt    = body.gesamtFotos || 1;
+      if (!b64) return json(400, { error: 'imageBase64 fehlt' });
+
+      const skizzeHinweis = skizzeB64
+        ? 'Der Sachverständige hat zusätzlich eine Handskizze des Grundrisses beigefügt (letztes Bild). ' +
+          'Stelle einen räumlichen Bezug her: In welchem Bereich der Skizze wurde dieses Foto aufgenommen? ' +
+          'Gib einen konkreten Lagehinweis an (z.B. "Nordwand, Bereich A in der Skizze").'
+        : '';
+
+      const promptMitSkizze = `Analysiere dieses Foto (Foto ${fotoNr} von ${gesamt}) als ö.b.u.v. Sachverständiger.
+
+${skizzeHinweis}
+
+Erstelle eine strukturierte Befundaufnahme als JSON:
+{
+  "befund": "Präzise sachverständige Beschreibung des Sichtbefundes",
+  "schadensart": "Klassifizierung oder leer",
+  "skizzen_bezug": "Räumliche Einordnung anhand der Skizze (nur wenn Skizze vorhanden)",
+  "normen_relevant": ["Relevante DIN/WTA-Normen"],
+  "messverfahren_empfohlen": ["Empfohlene Messungen"],
+  "dringlichkeit": "sofort/kurzfristig/mittelfristig/beobachten",
+  "nicht_beurteilbar": ["Was ohne Messung unklar bleibt"]
+}
+
+HALLUZINATIONSVERBOT. Konjunktiv II für Kausalaussagen.`;
+
+      const content = [{ type: 'text', text: promptMitSkizze },
+                       { type: 'image_url', image_url: { url: 'data:' + (body.mimeType||'image/jpeg') + ';base64,' + b64, detail: 'high' } }];
+      if (skizzeB64) {
+        content.push({ type: 'image_url', image_url: { url: 'data:image/png;base64,' + skizzeB64, detail: 'low' } });
+      }
+
+      const res = await fetch(OPENAI_URL, {
+        method: 'POST',
+        headers: { Authorization: 'Bearer ' + key, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ model: 'gpt-4o', max_tokens: 1200,
+          messages: [{ role: 'system', content: SV_SYSTEM_PROMPT }, { role: 'user', content }] })
+      });
+      const raw  = await res.text();
+      if (!res.ok) return json(res.status, { error: raw.slice(0,500), _prova_ki_meta: meta });
+      const data = JSON.parse(raw);
+      const txt  = data.choices?.[0]?.message?.content || '';
+      let parsed = {};
+      try { const m = txt.match(/\{[\s\S]*\}/); parsed = m ? JSON.parse(m[0]) : { befund: txt }; } catch(e2) { parsed = { befund: txt }; }
+      await logKiAudit(process.env.AIRTABLE_PAT, body._prova_user_email, 'foto_analyse_mit_skizze', body.az||'', 1200);
+      return json(200, Object.assign(parsed, { _prova_ki_meta: meta }));
+    }
+
+        return json(400, { error: 'Unbekannte action: ' + action, _prova_ki_meta: meta });
 
   } catch(err) {
     return json(502, { error: err.message || String(err), _prova_ki_meta: meta });

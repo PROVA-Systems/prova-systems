@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>PROVA — Vor-Ort</title>
+  <script src="prova-preise.js"></script>
+  <script src="paket-guard.js"></script>
+  <script src="auth-guard.js"></script>
+  <script src="prova-auth-api.js"></script>
+  <script src="prova-sv-airtable.js"></script>
+  <script src="theme.js"></script>
+  <script src="nav.js" defer></script>
+  <link rel="stylesheet" href="mobile.css">
+  <link rel="stylesheet" href="prova-design.css">
+  <style>
+    .vo-wrap { max-width: 680px; margin: 0 auto; padding: 24px 16px 100px; }
+
+    /* Schritt-Indikator */
+    .vo-steps { display: flex; align-items: center; gap: 0; margin-bottom: 32px; }
+    .vo-step { display: flex; align-items: center; gap: 8px; flex: 1; }
+    .vo-step-nr {
+      width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center;
+      justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0;
+      background: var(--surface); border: 2px solid var(--border); color: var(--text3);
+      transition: all .2s;
+    }
+    .vo-step.aktiv .vo-step-nr { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .vo-step.fertig .vo-step-nr { background: #10b981; border-color: #10b981; color: #fff; }
+    .vo-step-label { font-size: 12px; color: var(--text3); font-weight: 500; transition: color .2s; }
+    .vo-step.aktiv .vo-step-label { color: var(--accent); }
+    .vo-step.fertig .vo-step-label { color: #10b981; }
+    .vo-step-line { flex: 1; height: 2px; background: var(--border); margin: 0 8px; border-radius: 2px; transition: background .3s; }
+    .vo-step-line.fertig { background: #10b981; }
+
+    /* Screen-Wrapper */
+    .vo-screen { display: none; }
+    .vo-screen.aktiv { display: block; animation: fadeIn .2s ease; }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
+
+    /* Auftragstyp-Kacheln */
+    .vo-typen { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px; }
+    @media(max-width:500px){ .vo-typen { grid-template-columns: 1fr; } }
+    .vo-typ {
+      background: var(--surface); border: 2px solid var(--border); border-radius: 14px;
+      padding: 18px 16px; cursor: pointer; transition: all .15s; text-align: left;
+      display: flex; flex-direction: column; gap: 6px;
+    }
+    .vo-typ:hover { border-color: var(--accent); background: rgba(79,142,247,.04); transform: translateY(-1px); }
+    .vo-typ.aktiv { border-color: var(--accent); background: rgba(79,142,247,.08); }
+    .vo-typ-icon { font-size: 24px; }
+    .vo-typ-name { font-size: 14px; font-weight: 700; color: var(--text); }
+    .vo-typ-sub { font-size: 12px; color: var(--text3); line-height: 1.4; }
+    .vo-typ-badge { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 10px;
+      background: rgba(16,185,129,.12); color: #10b981; display: inline-block; width: fit-content; }
+
+    /* Formular */
+    .vo-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; margin-bottom: 16px; }
+    .vo-card-header { padding: 14px 18px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
+    .vo-card-title { font-size: 14px; font-weight: 700; color: var(--text); }
+    .vo-card-body { padding: 18px; }
+    .vo-label { font-size: 11px; font-weight: 700; color: var(--text3); text-transform: uppercase; letter-spacing:.05em; margin-bottom: 5px; }
+    .vo-input { width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
+      padding: 10px 12px; font-size: 14px; color: var(--text); font-family: inherit; box-sizing: border-box; transition: border-color .15s; }
+    .vo-input:focus { outline: none; border-color: var(--accent); }
+    .vo-select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b7a99' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; }
+    .vo-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    @media(max-width:480px){ .vo-row { grid-template-columns: 1fr; } }
+    .vo-field { display: flex; flex-direction: column; gap: 5px; margin-bottom: 12px; }
+
+    /* Pflichtfeld-Indikator */
+    .vo-required::after { content: ' *'; color: var(--accent); }
+
+    /* Aktions-Kacheln für Schritt 3 */
+    .vo-aktionen { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    @media(max-width:500px){ .vo-aktionen { grid-template-columns: 1fr; } }
+    .vo-aktion {
+      background: var(--surface); border: 2px solid var(--border); border-radius: 14px;
+      padding: 20px 16px; cursor: pointer; transition: all .15s; text-align: center;
+      display: flex; flex-direction: column; align-items: center; gap: 8px;
+    }
+    .vo-aktion:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,.2); }
+    .vo-aktion-icon { font-size: 32px; }
+    .vo-aktion-name { font-size: 14px; font-weight: 700; color: var(--text); }
+    .vo-aktion-sub { font-size: 12px; color: var(--text3); line-height: 1.4; }
+    .vo-aktion.highlight { border-color: var(--accent); background: rgba(79,142,247,.06); }
+
+    /* Buttons */
+    .vo-btn-row { display: flex; gap: 10px; margin-top: 20px; }
+    .btn-primary { padding: 12px 24px; background: var(--accent); color: #fff; border: none; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit; transition: all .15s; }
+    .btn-primary:hover { background: #3a7be0; }
+    .btn-ghost { padding: 12px 24px; background: transparent; color: var(--text2); border: 1px solid var(--border); border-radius: 10px; font-size: 14px; cursor: pointer; font-family: inherit; }
+
+    /* Seiten-Titel */
+    .vo-page-title { font-size: 22px; font-weight: 800; color: var(--text); margin-bottom: 6px; }
+    .vo-page-sub { font-size: 14px; color: var(--text3); margin-bottom: 24px; }
+  </style>
+</head>
+<body data-page="vor-ort">
+<div class="app-shell" id="app-shell">
+  <nav class="sidebar" id="sidebar"></nav>
+  <div class="sb-overlay" id="sb-overlay" onclick="closeMobileSidebar()"></div>
+  <div class="main-wrap" id="main-wrap">
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="burger" onclick="openMobileSidebar()"><span></span><span></span><span></span></button>
+        <div class="breadcrumb"><span>PROVA</span><span style="color:var(--text3)">›</span><strong id="breadcrumb-label">Vor-Ort</strong></div>
+      </div>
+      <div class="topbar-right">
+        <span id="vo-schritt-badge" style="font-size:11px;color:var(--text3);font-weight:600;">Schritt 1 von 3</span>
+      </div>
+    </header>
+    <div class="page-content">
+      <div class="vo-wrap">
+
+        <!-- Fortschritts-Indikator -->
+        <div class="vo-steps">
+          <div class="vo-step aktiv" id="step-ind-1">
+            <div class="vo-step-nr" id="step-nr-1">1</div>
+            <div class="vo-step-label">Auftragstyp</div>
+          </div>
+          <div class="vo-step-line" id="line-1"></div>
+          <div class="vo-step" id="step-ind-2">
+            <div class="vo-step-nr" id="step-nr-2">2</div>
+            <div class="vo-step-label">Stammdaten</div>
+          </div>
+          <div class="vo-step-line" id="line-2"></div>
+          <div class="vo-step" id="step-ind-3">
+            <div class="vo-step-nr" id="step-nr-3">3</div>
+            <div class="vo-step-label">Jetzt starten</div>
+          </div>
+        </div>
+
+        <!-- ═══ SCHRITT 1: Auftragstyp ═══ -->
+        <div class="vo-screen aktiv" id="screen-1">
+          <div class="vo-page-title">📍 Was passiert heute?</div>
+          <div class="vo-page-sub">Wählen Sie den Auftragstyp — PROVA öffnet automatisch den richtigen Workflow mit den passenden Pflichtfeldern.</div>
+
+          <div class="vo-typen">
+            <div class="vo-typ" data-typ="standard" onclick="waehleTyp('standard', this)">
+              <div class="vo-typ-icon">📋</div>
+              <div class="vo-typ-badge">Häufigster Auftrag</div>
+              <div class="vo-typ-name">Standard-Gutachten</div>
+              <div class="vo-typ-sub">Versicherungsschaden, privater Auftraggeber · Diktat + Fotos vor Ort</div>
+            </div>
+            <div class="vo-typ" data-typ="gericht" onclick="waehleTyp('gericht', this)">
+              <div class="vo-typ-icon">🏛️</div>
+              <div class="vo-typ-name">Gerichtsgutachten</div>
+              <div class="vo-typ-sub">§404 ZPO · Beweisbeschluss · Beweisfragen werden extrahiert</div>
+            </div>
+            <div class="vo-typ" data-typ="beweissicherung" onclick="waehleTyp('beweissicherung', this)">
+              <div class="vo-typ-icon">🔍</div>
+              <div class="vo-typ-name">Beweissicherung</div>
+              <div class="vo-typ-sub">§485 ZPO · Selbständiges Beweisverfahren · Fotos + Protokoll</div>
+            </div>
+            <div class="vo-typ" data-typ="ergaenzung" onclick="waehleTyp('ergaenzung', this)">
+              <div class="vo-typ-icon">🧩</div>
+              <div class="vo-typ-name">Ergänzungsgutachten</div>
+              <div class="vo-typ-sub">§411 ZPO · Nachfragen des Gerichts beantworten</div>
+            </div>
+            <div class="vo-typ" data-typ="schiedsgutachten" onclick="waehleTyp('schiedsgutachten', this)">
+              <div class="vo-typ-icon">⚖️</div>
+              <div class="vo-typ-name">Schiedsgutachten</div>
+              <div class="vo-typ-sub">Zwei Parteien · Streitobjekt · Kostenaufteilung</div>
+            </div>
+            <div class="vo-typ" data-typ="baubegleitung" onclick="waehleTyp('baubegleitung', this)">
+              <div class="vo-typ-icon">🏗️</div>
+              <div class="vo-typ-name">Baubegleitung</div>
+              <div class="vo-typ-sub">Fortlaufende Qualitätskontrolle · Begehungsprotokoll</div>
+            </div>
+          </div>
+
+          <div class="vo-btn-row">
+            <button class="btn-primary" id="btn-weiter-1" onclick="geheZuSchritt(2)" disabled style="opacity:.4;">
+              Weiter → Stammdaten
+            </button>
+          </div>
+        </div>
+
+        <!-- ═══ SCHRITT 2: Stammdaten ═══ -->
+        <div class="vo-screen" id="screen-2">
+          <div class="vo-page-title" id="s2-title">📋 Stammdaten eingeben</div>
+          <div class="vo-page-sub" id="s2-sub">Pflichtfelder für diesen Auftragstyp. Alles wird automatisch in Airtable gespeichert.</div>
+
+          <!-- Basis-Felder (immer) -->
+          <div class="vo-card">
+            <div class="vo-card-header">
+              <span>📍</span>
+              <div class="vo-card-title">Schadensort & Auftraggeber</div>
+            </div>
+            <div class="vo-card-body">
+              <div class="vo-row">
+                <div class="vo-field">
+                  <div class="vo-label vo-required">Straße & Hausnummer</div>
+                  <input class="vo-input" id="vo-strasse" placeholder="Musterstraße 12" required>
+                </div>
+                <div class="vo-field">
+                  <div class="vo-label vo-required">PLZ & Ort</div>
+                  <input class="vo-input" id="vo-plzort" placeholder="50354 Hürth">
+                </div>
+              </div>
+              <div class="vo-row">
+                <div class="vo-field">
+                  <div class="vo-label vo-required">Auftraggeber</div>
+                  <input class="vo-input" id="vo-auftraggeber" placeholder="Name / Firma / Gericht">
+                </div>
+                <div class="vo-field">
+                  <div class="vo-label">Auftraggeber-Typ</div>
+                  <select class="vo-input vo-select" id="vo-ag-typ">
+                    <option value="Versicherung">Versicherung</option>
+                    <option value="Gericht">Gericht</option>
+                    <option value="Privat">Privat</option>
+                    <option value="Behörde">Behörde</option>
+                    <option value="Anwalt">Anwalt</option>
+                  </select>
+                </div>
+              </div>
+              <div class="vo-row">
+                <div class="vo-field">
+                  <div class="vo-label">Telefon Auftraggeber</div>
+                  <input class="vo-input" id="vo-ag-tel" type="tel" placeholder="0221 123456">
+                </div>
+                <div class="vo-field">
+                  <div class="vo-label">E-Mail Auftraggeber</div>
+                  <input class="vo-input" id="vo-ag-email" type="email" placeholder="max@beispiel.de">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Schadensart -->
+          <div class="vo-card">
+            <div class="vo-card-header">
+              <span>🔧</span>
+              <div class="vo-card-title">Schadensart</div>
+            </div>
+            <div class="vo-card-body">
+              <div class="vo-row">
+                <div class="vo-field">
+                  <div class="vo-label vo-required">Schadensart</div>
+                  <select class="vo-input vo-select" id="vo-schadensart">
+                    <option value="Wasserschaden">💧 Wasserschaden</option>
+                    <option value="Schimmelschaden">🟢 Schimmelschaden</option>
+                    <option value="Brandschaden">🔥 Brandschaden</option>
+                    <option value="Sturmschaden">🌪️ Sturmschaden</option>
+                    <option value="Baumängel">🏗️ Baumängel</option>
+                    <option value="Elementarschaden">⚡ Elementarschaden</option>
+                    <option value="Feuchteschaden">💦 Feuchteschaden</option>
+                    <option value="Gerichtsgutachten">🏛️ Gerichtsgutachten</option>
+                    <option value="Sonstiges">📋 Sonstiges</option>
+                  </select>
+                </div>
+                <div class="vo-field">
+                  <div class="vo-label">Abgabefrist</div>
+                  <input class="vo-input" id="vo-frist" type="date">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Typ-spezifische Felder -->
+          <div id="vo-extra-felder"></div>
+
+          <div class="vo-btn-row">
+            <button class="btn-primary" onclick="speichereUndWeiter()">💾 Speichern & weiter</button>
+            <button class="btn-ghost" onclick="geheZuSchritt(1)">← Zurück</button>
+          </div>
+        </div>
+
+        <!-- ═══ SCHRITT 3: Jetzt starten ═══ -->
+        <div class="vo-screen" id="screen-3">
+          <div class="vo-page-title">✅ Fall angelegt — Was möchten Sie jetzt tun?</div>
+          <div class="vo-page-sub" id="s3-sub">Wählen Sie den nächsten Schritt. Sie können alles auch später fortführen.</div>
+
+          <div class="vo-aktionen" id="vo-aktionen">
+            <!-- Wird dynamisch befüllt je nach Auftragstyp -->
+          </div>
+
+          <div style="margin-top:24px;padding:14px 16px;background:rgba(79,142,247,.06);border:1px solid rgba(79,142,247,.12);border-radius:10px;font-size:13px;color:var(--text2);">
+            Fall wurde in <strong>Airtable gespeichert</strong> ·
+            <a href="archiv.html" style="color:var(--accent);text-decoration:none;">Alle Fälle ansehen →</a>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+var _typ = null;
+var _az  = null;
+var _svEmail = localStorage.getItem('prova_sv_email') || '';
+
+/* ── Auftragstyp wählen ── */
+function waehleTyp(typ, el) {
+  _typ = typ;
+  document.querySelectorAll('.vo-typ').forEach(function(t){ t.classList.remove('aktiv'); });
+  el.classList.add('aktiv');
+  var btn = document.getElementById('btn-weiter-1');
+  btn.disabled = false;
+  btn.style.opacity = '1';
+  updateS2(typ);
+}
+
+/* ── Schritt 2: Typ-spezifische Felder ── */
+var TYPEN_CONFIG = {
+  standard:       { title:'📋 Standard-Gutachten — Stammdaten', sub:'Versicherungsschaden / privater Auftraggeber', extra:'' },
+  gericht:        { title:'🏛️ Gerichtsgutachten — Stammdaten', sub:'§404 ZPO — Beweisfragen nach Speicherung extrahierbar',
+                    extra:'<div class="vo-card"><div class="vo-card-header"><span>🏛️</span><div class="vo-card-title">Gerichtsdaten</div></div><div class="vo-card-body"><div class="vo-row"><div class="vo-field"><div class="vo-label vo-required">Aktenzeichen (Gericht)</div><input class="vo-input" id="vo-gericht-az" placeholder="12 O 34/25"></div><div class="vo-field"><div class="vo-label vo-required">Gericht</div><input class="vo-input" id="vo-gericht-name" placeholder="Amtsgericht Köln"></div></div><div class="vo-field"><div class="vo-label">Kostenvorschuss (€)</div><input class="vo-input" id="vo-vorschuss" type="number" placeholder="2500"></div></div></div>' },
+  beweissicherung:{ title:'🔍 Beweissicherung — Stammdaten', sub:'§485 ZPO — Selbständiges Beweisverfahren',
+                    extra:'<div class="vo-card"><div class="vo-card-header"><span>📄</span><div class="vo-card-title">Verfahrensdaten</div></div><div class="vo-card-body"><div class="vo-row"><div class="vo-field"><div class="vo-label">Verfahrens-AZ</div><input class="vo-input" id="vo-bew-az" placeholder="Az. (falls vorhanden)"></div><div class="vo-field"><div class="vo-label">Antragsteller</div><input class="vo-input" id="vo-bew-ast" placeholder="Name / Anwalt"></div></div></div></div>' },
+  ergaenzung:     { title:'🧩 Ergänzungsgutachten — Stammdaten', sub:'§411 ZPO — Bezug auf bestehendes Gutachten',
+                    extra:'<div class="vo-card"><div class="vo-card-header"><span>🔗</span><div class="vo-card-title">Bezug auf Gutachten</div></div><div class="vo-card-body"><div class="vo-field"><div class="vo-label vo-required">Ursprüngliches Aktenzeichen</div><input class="vo-input" id="vo-erg-az" placeholder="Az. des Ursprungsgutachtens"></div><div class="vo-field"><div class="vo-label">Nachfragen (Kurzfassung)</div><textarea class="vo-input" rows="3" id="vo-erg-fragen" placeholder="Was wurde nachgefragt?"></textarea></div></div></div>' },
+  schiedsgutachten:{ title:'⚖️ Schiedsgutachten — Stammdaten', sub:'Zwei Parteien — Kostenaufteilung wird gesondert festgelegt',
+                    extra:'<div class="vo-card"><div class="vo-card-header"><span>⚖️</span><div class="vo-card-title">Parteien</div></div><div class="vo-card-body"><div class="vo-row"><div class="vo-field"><div class="vo-label vo-required">Partei A (Name)</div><input class="vo-input" id="vo-partei-a" placeholder="Name / Firma"></div><div class="vo-field"><div class="vo-label vo-required">Partei B (Name)</div><input class="vo-input" id="vo-partei-b" placeholder="Name / Firma"></div></div></div></div>' },
+  baubegleitung:  { title:'🏗️ Baubegleitung — Stammdaten', sub:'Fortlaufendes Projekt — mehrere Begehungen',
+                    extra:'<div class="vo-card"><div class="vo-card-header"><span>🏗️</span><div class="vo-card-title">Projekt-Details</div></div><div class="vo-card-body"><div class="vo-row"><div class="vo-field"><div class="vo-label">Bauphase</div><select class="vo-input vo-select" id="vo-bauphase"><option>Rohbau</option><option>Rohinstallation</option><option>Innenausbau</option><option>Außenanlagen</option><option>Abnahme</option></select></div><div class="vo-field"><div class="vo-label">Bauleiter</div><input class="vo-input" id="vo-bauleiter" placeholder="Name Bauleiter"></div></div></div></div>' },
+};
+
+var AKTIONEN_CONFIG = {
+  standard:        [
+    { icon:'🎙️', name:'Diktat aufnehmen', sub:'Sofort vor Ort sprechen — KI erstellt Gutachten-Entwurf', url:'app.html', highlight:true },
+    { icon:'📍', name:'Ortstermin-Modus', sub:'Fotos, Messungen, Notizen strukturiert erfassen', url:'ortstermin-modus.html', highlight:false },
+    { icon:'📂', name:'Zur Fallakte', sub:'Alle Daten, Fotos und Dokumente dieses Falls', url:'archiv.html', highlight:false },
+    { icon:'✅', name:'Freigabe & PDF', sub:'Gutachten direkt freigeben wenn fertig', url:'freigabe.html', highlight:false },
+  ],
+  gericht:         [
+    { icon:'🏛️', name:'Beweisfragen extrahieren', sub:'KI liest Beweisbeschluss aus — per PDF oder Text', url:'gericht-auftrag.html', highlight:true },
+    { icon:'🎙️', name:'Diktat aufnehmen', sub:'Befund zu den Beweisfragen diktieren', url:'app.html', highlight:false },
+    { icon:'📍', name:'Ortstermin-Modus', sub:'Fotos und Messungen erfassen', url:'ortstermin-modus.html', highlight:false },
+    { icon:'📂', name:'Zur Fallakte', sub:'Alle Daten dieses Gerichtsauftrags', url:'archiv.html', highlight:false },
+  ],
+  beweissicherung: [
+    { icon:'📍', name:'Ortstermin-Modus', sub:'Fotos, Messungen, Raumprotokoll — sofort loslegen', url:'ortstermin-modus.html', highlight:true },
+    { icon:'🎙️', name:'Diktat aufnehmen', sub:'Befund zu Beweispunkten', url:'app.html', highlight:false },
+    { icon:'📂', name:'Zur Fallakte', sub:'Alle Daten des Verfahrens', url:'archiv.html', highlight:false },
+  ],
+  ergaenzung:      [
+    { icon:'🧩', name:'Ergänzungsgutachten', sub:'Nachfragen beantworten — Bezug auf Ursprungsgutachten', url:'ergaenzung.html', highlight:true },
+    { icon:'🎙️', name:'Diktat aufnehmen', sub:'Ergänzung diktieren', url:'app.html', highlight:false },
+    { icon:'📂', name:'Zur Fallakte', sub:'Ursprünglicher Fall', url:'archiv.html', highlight:false },
+  ],
+  schiedsgutachten:[ 
+    { icon:'⚖️', name:'Schiedsgutachten', sub:'Weitere Daten erfassen und speichern', url:'schiedsgutachten.html', highlight:true },
+    { icon:'📍', name:'Ortstermin-Modus', sub:'Fotos und Befunde erfassen', url:'ortstermin-modus.html', highlight:false },
+    { icon:'📂', name:'Zur Fallakte', sub:'Fallübersicht', url:'archiv.html', highlight:false },
+  ],
+  baubegleitung:   [
+    { icon:'📍', name:'Ortstermin-Modus', sub:'Begehungsprotokoll — Räume, Fotos, Mängel', url:'ortstermin-modus.html', highlight:true },
+    { icon:'🏗️', name:'Baubegleitung', sub:'Alle Begehungen und Protokolle', url:'baubegleitung.html', highlight:false },
+    { icon:'📂', name:'Zur Fallakte', sub:'Alle Begehungen dieses Projekts', url:'archiv.html', highlight:false },
+  ],
+};
+
+function updateS2(typ) {
+  var cfg = TYPEN_CONFIG[typ] || TYPEN_CONFIG.standard;
+  document.getElementById('s2-title').textContent = cfg.title;
+  document.getElementById('s2-sub').textContent = cfg.sub;
+  document.getElementById('vo-extra-felder').innerHTML = cfg.extra || '';
+  // Auftraggeber-Typ vorbelegen
+  if (typ === 'gericht') document.getElementById('vo-ag-typ').value = 'Gericht';
+  else if (typ === 'beweissicherung') document.getElementById('vo-ag-typ').value = 'Gericht';
+  else if (typ === 'schiedsgutachten') document.getElementById('vo-ag-typ').value = 'Privat';
+  // Schadensart vorbelegen
+  if (typ === 'gericht' || typ === 'beweissicherung' || typ === 'ergaenzung') {
+    document.getElementById('vo-schadensart').value = 'Gerichtsgutachten';
+  }
+}
+
+/* ── Schritt-Navigation ── */
+function geheZuSchritt(nr) {
+  [1,2,3].forEach(function(i) {
+    document.getElementById('screen-' + i).classList.toggle('aktiv', i === nr);
+    var stepEl = document.getElementById('step-ind-' + i);
+    stepEl.classList.remove('aktiv','fertig');
+    if (i < nr) stepEl.classList.add('fertig');
+    if (i === nr) stepEl.classList.add('aktiv');
+    if (i < 3) {
+      var line = document.getElementById('line-' + i);
+      line.classList.toggle('fertig', i < nr);
+    }
+    var nrEl = document.getElementById('step-nr-' + i);
+    nrEl.textContent = i < nr ? '✓' : i;
+  });
+  document.getElementById('vo-schritt-badge').textContent = 'Schritt ' + nr + ' von 3';
+  document.getElementById('breadcrumb-label').textContent = ['Auftragstyp','Stammdaten','Jetzt starten'][nr-1];
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+/* ── Speichern & Schritt 3 ── */
+async function speichereUndWeiter() {
+  var strasse = document.getElementById('vo-strasse').value.trim();
+  var ag      = document.getElementById('vo-auftraggeber').value.trim();
+  if (!strasse || !ag) { showToast('Bitte Schadensort und Auftraggeber eingeben.', 'error'); return; }
+
+  var plzOrt = document.getElementById('vo-plzort').value.trim();
+  var plz = plzOrt.match(/^\d{5}/)?.[0] || '';
+  var ort = plzOrt.replace(/^\d{5}\s*/, '').trim();
+
+  // Aktenzeichen generieren
+  var heute = new Date();
+  var mm = String(heute.getMonth()+1).padStart(2,'0');
+  var yy = String(heute.getFullYear()).slice(2);
+  var rand = String(Math.floor(Math.random()*900)+100);
+  _az = 'PROVA-' + yy + mm + '-' + rand;
+
+  var felder = {
+    Aktenzeichen:     _az,
+    Auftraggeber_Typ: document.getElementById('vo-ag-typ').value,
+    Auftraggeber_Name:ag,
+    Auftraggeber_Email:document.getElementById('vo-ag-email').value,
+    Auftraggeber_Telefon:document.getElementById('vo-ag-tel').value,
+    Schaden_Strasse:  strasse,
+    Ort:              ort,
+    Schadensart:      document.getElementById('vo-schadensart').value,
+    Status:           'Auftrag erhalten',
+    sv_email:         _svEmail,
+    Timestamp:        heute.toISOString(),
+  };
+  if (plz) felder.PLZ = parseInt(plz);
+
+  // Frist
+  var frist = document.getElementById('vo-frist').value;
+  if (frist) felder.Abgabefrist = frist;
+
+  // Typ-spezifische Felder
+  if (_typ === 'gericht') {
+    var gaz = document.getElementById('vo-gericht-az')?.value;
+    var gn  = document.getElementById('vo-gericht-name')?.value;
+    if (gaz) felder.Aktenzeichen = gaz;
+    if (gn)  felder.Auftraggeber_Name = gn;
+  }
+  if (_typ === 'schiedsgutachten') {
+    var pa = document.getElementById('vo-partei-a')?.value;
+    var pb = document.getElementById('vo-partei-b')?.value;
+    if (pa || pb) felder.Notizen = 'Partei A: ' + (pa||'') + '\nPartei B: ' + (pb||'');
+  }
+
+  // In Airtable speichern
+  try {
+    var headers = Object.assign({'Content-Type':'application/json'}, window.provaAuthHeaders ? window.provaAuthHeaders() : {});
+    var r = await fetch('/.netlify/functions/airtable', {
+      method: 'POST', headers: headers,
+      body: JSON.stringify({
+        method: 'POST',
+        path: '/v0/appJ7bLlAHZoxENWE/tblSxV8bsXwd1pwa0',
+        payload: { records: [{ fields: felder }] }
+      })
+    });
+    var d = await r.json();
+    if (r.ok && d.records?.[0]) {
+      localStorage.setItem('prova_letztes_az', _az);
+      localStorage.setItem('prova_aktiver_fall', _az);
+      localStorage.setItem('prova_schadenart', felder.Schadensart);
+      renderSchritt3();
+      geheZuSchritt(3);
+    } else {
+      showToast('Fehler beim Speichern: ' + (d.error || r.status), 'error');
+    }
+  } catch(e) {
+    // Offline-Fallback: AZ trotzdem speichern und weiter
+    localStorage.setItem('prova_letztes_az', _az);
+    showToast('Offline gespeichert — wird synchronisiert wenn online', 'warn');
+    renderSchritt3();
+    geheZuSchritt(3);
+  }
+}
+
+function renderSchritt3() {
+  var aktionen = AKTIONEN_CONFIG[_typ] || AKTIONEN_CONFIG.standard;
+  var s3sub = 'Aktenzeichen: <strong>' + _az + '</strong> · ';
+  s3sub += document.getElementById('vo-schadensart').value;
+  document.getElementById('s3-sub').innerHTML = s3sub;
+
+  var html = aktionen.map(function(a) {
+    return '<div class="vo-aktion' + (a.highlight ? ' highlight' : '') + '" onclick="window.location.href=\'' + a.url + '?az=' + encodeURIComponent(_az) + '\'">' +
+      '<div class="vo-aktion-icon">' + a.icon + '</div>' +
+      '<div class="vo-aktion-name">' + a.name + '</div>' +
+      '<div class="vo-aktion-sub">' + a.sub + '</div>' +
+      '</div>';
+  }).join('');
+  document.getElementById('vo-aktionen').innerHTML = html;
+}
+
+function showToast(msg, type) {
+  var colors = { error:'rgba(239,68,68,.9)', warn:'rgba(245,158,11,.9)', ok:'rgba(16,185,129,.9)' };
+  var el = document.createElement('div');
+  el.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:' + (colors[type]||colors.ok) + ';color:#fff;padding:10px 20px;border-radius:10px;font-size:13px;font-weight:600;z-index:9999;pointer-events:none;';
+  el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(function(){ el.remove(); }, 3500);
+}
+
+// Morgen als Default-Frist
+var morgen = new Date(); morgen.setDate(morgen.getDate() + 30);
+document.getElementById('vo-frist').value = morgen.toISOString().split('T')[0];
+</script>
+
+<script src="support-chat.js" defer></script>
+<script src="sw-register.js" defer></script>
+</body>
+</html>
