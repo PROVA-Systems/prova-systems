@@ -54,6 +54,7 @@ const AutoSave = {
         data[k] = (el.type === 'checkbox' || el.type === 'radio') ? el.checked : el.value;
       });
       localStorage.setItem(this._key(), JSON.stringify(data));
+    localStorage.setItem(this._key() + '_meta', JSON.stringify({ts: Date.now()}));
       this.lastSave = Date.now();
       this._flash('✓ Automatisch gespeichert');
     } catch(e) { this._cleanup(); }
@@ -75,13 +76,15 @@ const AutoSave = {
       const raw = localStorage.getItem(this._key());
       if (!raw) return;
       const data = JSON.parse(raw);
-      if (!data._ts || Date.now() - data._ts > 86400000) return; // >24h
+      if (!data._ts || Date.now() - data._ts > 7200000) return; // >2h: verwerfen
       // Auf app.html: nur Restore zeigen wenn AZ bereits vorhanden (= Wiederaufnahme)
-      // Bei neuem Gutachten (kein AZ) → kein Banner
       if (location.pathname.indexOf('app.html') >= 0 || location.pathname.endsWith('/app')) {
         var az = localStorage.getItem('prova_aktiver_fall') || '';
         if (!az) return; // Neues Gutachten → kein Restore
       }
+      // Auf reinen Kalender/Abrechnungs-Seiten: kein Banner (nur Formulare die echte Eingaben haben)
+      const noRestorePages = ['termine.html','erechnung.html','rechnungen.html'];
+      if (noRestorePages.some(function(p){ return location.pathname.indexOf(p) >= 0; })) return;
       this._showRestoreBar(data);
     } catch(e) {}
   },

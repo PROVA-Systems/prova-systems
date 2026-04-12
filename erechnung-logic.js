@@ -373,7 +373,7 @@ document.addEventListener('DOMContentLoaded', function() {
   /* Datum vorbelegen */
   var datumEl = document.getElementById('er-datum');
   if (datumEl && !datumEl.value) {
-    datumEl.value = new Date().toLocaleDateString('de-DE');
+    datumEl.value = new Date().toISOString().split('T')[0];
   }
 
   /* Rechnungsnummer vorbelegen */

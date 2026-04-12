@@ -1,224 +1,274 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-<script>
-  window.__PROVA_ENV = 'production';
-  window.onerror = function(msg, src, line, col, err) {
-    if (!navigator.onLine) return;
-    fetch('/.netlify/functions/error-log', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({
-        msg: String(msg).slice(0,500),
-        src: src, line: line,
-        page: window.location.pathname,
-        user: localStorage.getItem('prova_sv_email')||'unbekannt',
-        ua: navigator.userAgent.slice(0,100),
-        ts: new Date().toISOString()
-      })
-    }).catch(function(){});
-  };
-</script>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1.0">
-  <title>PROVA — Gerichtsauftrag & Beweisfragen</title>
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <style>
-    :root{--bg:#0d0f14;--bg2:#13161d;--text:#e8eaf0;--text2:#9da3b4;--accent:#4f8ef7;--border:rgba(255,255,255,0.08);}
-    *{box-sizing:border-box;margin:0;padding:0;}
-    body{font-family:'Montserrat',system-ui,sans-serif;background:var(--bg);color:var(--text2);min-height:100vh;font-size:14px;}
-    .topbar{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 20px;height:52px;display:flex;align-items:center;justify-content:space-between;}
-    .logo{font-family:'Fraunces',serif;font-weight:700;font-size:18px;color:var(--text);text-decoration:none;}
-    .logo span{color:var(--accent);}
-    .topnav a{padding:6px 10px;border-radius:6px;color:var(--text2);font-size:13px;text-decoration:none;}
-    .topnav a:hover{background:rgba(255,255,255,0.05);}
-    .main{max-width:960px;margin:0 auto;padding:24px;}
-    h1{font-family:'Fraunces',serif;color:var(--text);font-size:24px;margin-bottom:8px;}
-    .sub{font-size:13px;margin-bottom:20px;line-height:1.5;}
-    .card{background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:16px;}
-    .card h2{font-size:15px;color:var(--text);margin-bottom:12px;}
-    label{display:block;font-size:12px;font-weight:700;color:var(--text2);margin-bottom:6px;}
-    input[type="text"],input[type="date"],input[type="number"],textarea,select{
-      width:100%;padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:rgba(0,0,0,0.2);color:var(--text);font-size:14px;
-    }
-    textarea{min-height:120px;resize:vertical;font-family:inherit;}
-    .row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
-    @media(max-width:640px){.row{grid-template-columns:1fr;}}
-    .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10px 16px;border-radius:10px;border:1px solid rgba(255,255,255,0.12);
-      background:rgba(79,142,247,0.22);color:#fff;font-weight:700;cursor:pointer;font-size:13px;margin:4px 4px 4px 0;}
-    .btn:hover{background:rgba(79,142,247,0.35);}
-    .btn-sec{background:rgba(255,255,255,0.06);}
-    #fragenOut{font-size:13px;line-height:1.55;white-space:pre-wrap;}
-    .frage-item{border-left:3px solid var(--accent);padding:8px 12px;margin:8px 0;background:rgba(79,142,247,0.08);border-radius:0 8px 8px 0;}
-    .err{color:#f87171;font-size:13px;margin-top:8px;}
-    .ok{color:#6ee7b7;font-size:13px;margin-top:8px;}
-    .drawer-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:200;}.drawer-overlay.open{display:block;}
-    .drawer{position:fixed;top:0;left:0;bottom:0;width:260px;background:var(--bg2);border-right:1px solid var(--border);z-index:201;transform:translateX(-100%);transition:transform .25s ease;display:flex;flex-direction:column;}
-    .drawer.open{transform:translateX(0);}.drawer-header{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
-    .drawer-close{background:none;border:none;color:var(--text2);font-size:18px;cursor:pointer;}
-    .topbar-left{display:flex;align-items:center;gap:14px;}
-    .burger{display:none;background:none;border:none;cursor:pointer;flex-direction:column;gap:4px;padding:6px;}
-    .burger span{display:block;width:20px;height:2px;background:var(--text2);}
-    .bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;height:56px;background:var(--bg2);border-top:1px solid var(--border);z-index:100;justify-content:space-around;align-items:stretch;}
-    .paket-badge{font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;}
-    @media(max-width:900px){.topnav{display:none;}.burger{display:flex;}.bottom-nav{display:flex;}body{padding-bottom:56px;}}
-  </style>
-  <link rel="stylesheet" href="prova-nav.css">
-</head>
-<body>
-  <script src="prova-account-gate.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>PROVA — Gerichtsauftrag</title>
+  <script src="prova-preise.js"></script>
   <script src="paket-guard.js"></script>
-  <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
-  <script>if (typeof netlifyIdentity !== 'undefined') netlifyIdentity.init();</script>
+  <script src="auth-guard.js"></script>
   <script src="prova-auth-api.js"></script>
-  <div class="topbar">
-    <div class="topbar-left">
-      <a href="dashboard.html" class="logo">PRO<span>VA</span></a>
-      <nav class="topnav">
-        <a href="gericht-auftrag.html" style="color:var(--accent);">Gericht</a>
-        <a href="akte.html">Akte</a>
-        <a href="archiv.html">Fälle</a>
-      </nav>
-    </div>
-    <div style="display:flex;align-items:center;gap:8px;">
-      <span class="paket-badge" id="topbarPaket"></span>
-      <a href="einstellungen.html" style="color:var(--text2);text-decoration:none;padding:6px;">⚙</a>
-      <button type="button" class="burger" onclick="toggleDrawer()" aria-label="Menü"><span></span><span></span><span></span></button>
-    </div>
-  </div>
-  <div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
-  <div class="drawer" id="drawer">
-    <div class="drawer-header">
-      <a href="dashboard.html" class="logo">PRO<span>VA</span></a>
-      <button type="button" class="drawer-close" onclick="closeDrawer()">✕</button>
-    </div>
-    <div id="provaDrawerMount"></div>
-  </div>
-  <nav class="bottom-nav" id="provaBottomNav"></nav>
-  <script>
-  function toggleDrawer(){var d=document.getElementById('drawer'),o=document.getElementById('drawerOverlay');d.classList.toggle('open');o.classList.toggle('open');document.body.style.overflow=d.classList.contains('open')?'hidden':'';}
-  function closeDrawer(){var d=document.getElementById('drawer'),o=document.getElementById('drawerOverlay');d.classList.remove('open');o.classList.remove('open');document.body.style.overflow='';}
-  document.addEventListener('keydown',function(e){if(e.key==='Escape')closeDrawer();});
-  (function(){if(!window.PROVA)return;var c=PROVA.paketColor();var el=document.getElementById('topbarPaket');if(el){el.textContent=PROVA.paketLabel();el.setAttribute('style','background:'+c+'18;color:'+c+';border:1px solid '+c+'33');}})();
-  </script>
+  <script src="prova-sv-airtable.js"></script>
+  <script src="theme.js"></script>
   <script src="nav.js" defer></script>
-  <main class="main">
-    <h1>Gerichtsauftrag · Beweisfragen & Kostenvorschuss</h1>
-    <p class="sub">PDF-Beschluss hochladen oder Text einfügen. KI extrahiert Beweisfragen (OpenAI über <code>/.netlify/functions/ki-proxy</code>, <code>OPENAI_API_KEY</code> erforderlich). Kostenvorschuss lokal merken — Erinnerung z. B. über Termine/Make.</p>
+  <script src="global-search.js" defer></script>
+  <link rel="stylesheet" href="mobile.css">
+  <link rel="stylesheet" href="prova-design.css">
+  <style>
+    .ga-wrap { max-width: 800px; margin: 0 auto; padding: 24px 16px 100px; }
+    .ga-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; margin-bottom: 16px; }
+    .ga-card-header { padding: 16px 20px; border-bottom: 1px solid var(--border); }
+    .ga-card-title { font-size: 15px; font-weight: 700; color: var(--text); }
+    .ga-card-sub { font-size: 12px; color: var(--text3); margin-top: 2px; }
+    .ga-body { padding: 20px; }
+    .ga-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    @media(max-width:600px){ .ga-grid { grid-template-columns: 1fr; } }
+    .ga-label { font-size: 11px; font-weight: 700; color: var(--text3); text-transform: uppercase; letter-spacing:.05em; margin-bottom: 5px; }
+    .ga-input { width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
+      padding: 9px 12px; font-size: 13px; color: var(--text); font-family: inherit; box-sizing: border-box;
+      transition: border-color .15s; }
+    .ga-input:focus { outline: none; border-color: var(--accent); }
+    .ga-textarea { min-height: 120px; resize: vertical; }
+    .frage-item { background: var(--bg); border: 1px solid var(--border); border-radius: 10px;
+      padding: 12px 14px; margin-bottom: 8px; display: flex; gap: 10px; align-items: flex-start; }
+    .frage-nr { font-size: 12px; font-weight: 700; color: var(--accent); width: 24px; flex-shrink: 0; margin-top: 2px; }
+    .frage-text { font-size: 13px; color: var(--text2); line-height: 1.5; flex: 1; }
+    .frage-empty { font-size: 13px; color: var(--text3); text-align: center; padding: 20px; }
+    .status-badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+    .badge-warn { background: rgba(245,158,11,.12); color: #f59e0b; }
+    .badge-ok { background: rgba(16,185,129,.12); color: #10b981; }
+    .btn-primary { padding: 10px 20px; background: var(--accent); color: #fff; border: none; border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; }
+    .btn-ghost { padding: 10px 20px; background: transparent; color: var(--text2); border: 1px solid var(--border); border-radius: 10px; font-size: 13px; cursor: pointer; font-family: inherit; }
+    .upload-zone { border: 2px dashed var(--border); border-radius: 10px; padding: 24px; text-align: center; cursor: pointer; transition: all .15s; }
+    .upload-zone:hover { border-color: var(--accent); background: rgba(79,142,247,.04); }
+    .upload-zone input { display: none; }
+    #beweisfragen-result { margin-top: 12px; }
+  </style>
+</head>
+<body data-page="gericht-auftrag">
+<div class="app-shell" id="app-shell">
+  <nav class="sidebar" id="sidebar"></nav>
+  <div class="sb-overlay" id="sb-overlay" onclick="closeMobileSidebar()"></div>
+  <div class="main-wrap" id="main-wrap">
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="burger" onclick="openMobileSidebar()"><span></span><span></span><span></span></button>
+        <div class="breadcrumb"><span>PROVA</span><span style="color:var(--text3)">›</span><strong>Gerichtsauftrag</strong></div>
+      </div>
+      <div class="topbar-right">
+        <span class="status-badge badge-warn" id="status-badge">⏳ Vorbereitung</span>
+      </div>
+    </header>
+    <div class="page-content">
+      <div class="ga-wrap">
 
-    <div class="card">
-      <h2>Stammdaten</h2>
-      <div class="row">
-        <div>
-          <label for="aktenzeichen">Aktenzeichen</label>
-          <input type="text" id="aktenzeichen" placeholder="z. B. 12 O 34/25">
+        <!-- Stammdaten -->
+        <div class="ga-card">
+          <div class="ga-card-header">
+            <div class="ga-card-title">🏛️ Gerichtsauftrag — Stammdaten</div>
+            <div class="ga-card-sub">§404 ZPO · Öffentlich bestellter und vereidigter Sachverständiger</div>
+          </div>
+          <div class="ga-body">
+            <div class="ga-grid">
+              <div>
+                <div class="ga-label">Aktenzeichen (Gericht)</div>
+                <input class="ga-input" id="ga-az" placeholder="z. B. 12 O 34/25">
+              </div>
+              <div>
+                <div class="ga-label">Gericht</div>
+                <input class="ga-input" id="ga-gericht" placeholder="z. B. Amtsgericht Köln">
+              </div>
+              <div>
+                <div class="ga-label">Beauftragungsdatum</div>
+                <input class="ga-input" id="ga-datum" type="date">
+              </div>
+              <div>
+                <div class="ga-label">Abgabefrist Gutachten</div>
+                <input class="ga-input" id="ga-frist" type="date">
+              </div>
+              <div>
+                <div class="ga-label">Kläger</div>
+                <input class="ga-input" id="ga-klaeger" placeholder="Name / Firma">
+              </div>
+              <div>
+                <div class="ga-label">Beklagter</div>
+                <input class="ga-input" id="ga-beklagter" placeholder="Name / Firma">
+              </div>
+            </div>
+            <div style="margin-top:12px;">
+              <div class="ga-label">Objekt / Schadensort</div>
+              <input class="ga-input" id="ga-objekt" placeholder="Straße, PLZ Ort">
+            </div>
+            <div style="margin-top:12px;">
+              <div class="ga-label">Kostenvorschuss (€)</div>
+              <input class="ga-input" id="ga-vorschuss" type="number" placeholder="z. B. 2500" style="max-width:200px;">
+            </div>
+          </div>
         </div>
-        <div>
-          <label for="gericht">Gericht</label>
-          <input type="text" id="gericht" placeholder="Amtsgericht …">
+
+        <!-- Beweisbeschluss / KI-Extraktion -->
+        <div class="ga-card">
+          <div class="ga-card-header">
+            <div class="ga-card-title">📄 Beweisbeschluss — Beweisfragen extrahieren</div>
+            <div class="ga-card-sub">PDF oder Text einfügen · KI extrahiert die Beweisfragen automatisch</div>
+          </div>
+          <div class="ga-body">
+            <div class="upload-zone" onclick="document.getElementById('pdf-file').click()">
+              <input type="file" id="pdf-file" accept=".pdf,.txt" onchange="handlePdfUpload(this)">
+              <div style="font-size:28px;margin-bottom:8px;">📑</div>
+              <div style="font-size:14px;font-weight:600;color:var(--text2);">Beweisbeschluss hochladen</div>
+              <div style="font-size:12px;color:var(--text3);margin-top:4px;">.pdf · .txt · oder Text unten einfügen</div>
+            </div>
+            <div style="text-align:center;margin:12px 0;font-size:12px;color:var(--text3);">— oder —</div>
+            <textarea class="ga-input ga-textarea" id="ga-beschluss-text" 
+              placeholder="Gerichtstext hier einfügen (Beweisbeschluss oder Beweisanordnung)..." 
+              style="min-height:100px;"></textarea>
+            <div style="margin-top:12px;display:flex;gap:8px;">
+              <button class="btn-primary" onclick="extrahiereBeweisfragen()">🤖 Beweisfragen extrahieren (KI)</button>
+              <button class="btn-ghost" onclick="document.getElementById('ga-beschluss-text').value=''">Leeren</button>
+            </div>
+            <div id="ki-status" style="display:none;margin-top:12px;padding:10px 14px;border-radius:8px;background:rgba(79,142,247,.08);border:1px solid rgba(79,142,247,.2);font-size:13px;color:var(--accent);">
+              ⏳ KI analysiert Beweisbeschluss…
+            </div>
+            <div id="beweisfragen-result"></div>
+          </div>
         </div>
+
+        <!-- Manuelle Beweisfragen -->
+        <div class="ga-card">
+          <div class="ga-card-header">
+            <div class="ga-card-title">❓ Beweisfragen</div>
+            <div class="ga-card-sub">Manuell ergänzen oder von KI extrahiert</div>
+          </div>
+          <div class="ga-body">
+            <div id="fragen-liste"><div class="frage-empty">Noch keine Beweisfragen — Beweisbeschluss hochladen oder manuell hinzufügen.</div></div>
+            <div style="margin-top:12px;display:flex;gap:8px;">
+              <input class="ga-input" id="neue-frage" placeholder="Neue Beweisfrage eingeben..." style="flex:1;">
+              <button class="btn-primary" onclick="fragHinzufuegen()">+ Hinzufügen</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Speichern -->
+        <div style="display:flex;gap:10px;">
+          <button class="btn-primary" onclick="speichereAuftrag()">💾 In Airtable speichern</button>
+          <button class="btn-ghost" onclick="history.back()">← Zurück</button>
+        </div>
+
       </div>
     </div>
+  </div>
+</div>
 
-    <div class="card">
-      <h2>Beschluss (PDF oder Text)</h2>
-      <input type="file" id="pdfFile" accept=".pdf,application/pdf" style="margin-bottom:10px;">
-      <button type="button" class="btn" id="btnPdfText">PDF → Text</button>
-      <label for="rohtext" style="margin-top:14px;">Text für KI</label>
-      <textarea id="rohtext" placeholder="Gerichtstext hier einfügen oder aus PDF laden…"></textarea>
-      <button type="button" class="btn" id="btnKiFragen">Beweisfragen extrahieren (KI)</button>
-      <div id="kiMsg"></div>
-    </div>
+<script>
+var _fragen = [];
 
-    <div class="card">
-      <h2>Ergebnis</h2>
-      <div id="fragenOut"></div>
-    </div>
+function handlePdfUpload(input) {
+  var file = input.files[0];
+  if (!file) return;
+  if (file.type === 'text/plain') {
+    var r = new FileReader();
+    r.onload = function(e) { document.getElementById('ga-beschluss-text').value = e.target.result; };
+    r.readAsText(file, 'utf-8');
+  } else {
+    showMsg('PDF hochgeladen — Text manuell einfügen oder KI-Extraktion starten.', 'info');
+  }
+}
 
-    <div class="card">
-      <h2>Kostenvorschuss (Tracking)</h2>
-      <div class="row">
-        <div>
-          <label for="kv_betrag">Betrag € (angefordert)</label>
-          <input type="number" id="kv_betrag" step="0.01" min="0" placeholder="0">
-        </div>
-        <div>
-          <label for="kv_faellig">Fälligkeit / Ziel</label>
-          <input type="date" id="kv_faellig">
-        </div>
-      </div>
-      <label for="kv_notiz" style="margin-top:10px;">Notiz</label>
-      <input type="text" id="kv_notiz" placeholder="z. B. Antrag gestellt am …">
-      <button type="button" class="btn" id="btnKvSave" style="margin-top:12px;">Lokal speichern</button>
-      <p class="sub" style="margin-top:10px;">Gespeichert unter <code>prova_kostenvorschuss_&lt;Aktenzeichen&gt;</code> (localStorage).</p>
-    </div>
-  </main>
-  <script src="pdf-analyse.js"></script>
-  <script>
-  (function(){
-    var pdfIn = document.getElementById('pdfFile');
-    var roh = document.getElementById('rohtext');
-    document.getElementById('btnPdfText').addEventListener('click', function(){
-      var f = pdfIn && pdfIn.files && pdfIn.files[0];
-      if (!f) { document.getElementById('kiMsg').innerHTML = '<p class="err">Bitte PDF wählen.</p>'; return; }
-      document.getElementById('kiMsg').innerHTML = '<p class="ok">PDF wird gelesen…</p>';
-      window.PROVAPdfAnalyse.extractTextFromFile(f).then(function(t){
-        roh.value = (t || '').trim();
-        document.getElementById('kiMsg').innerHTML = '<p class="ok">Text extrahiert (' + roh.value.length + ' Zeichen).</p>';
-      }).catch(function(e){
-        document.getElementById('kiMsg').innerHTML = '<p class="err">' + (e && e.message ? e.message : 'PDF-Fehler') + '</p>';
-      });
+async function extrahiereBeweisfragen() {
+  var text = document.getElementById('ga-beschluss-text').value.trim();
+  if (!text || text.length < 20) { showMsg('Bitte Gerichtstext eingeben.', 'error'); return; }
+  document.getElementById('ki-status').style.display = 'block';
+  try {
+    var headers = Object.assign({'Content-Type':'application/json'}, window.provaAuthHeaders ? window.provaAuthHeaders() : {});
+    var res = await fetch('/.netlify/functions/ki-proxy', {
+      method: 'POST',
+      headers: headers,
+      body: JSON.stringify({ action: 'beweisfragen_text', text: text })
     });
-    document.getElementById('btnKiFragen').addEventListener('click', function(){
-      var text = (roh.value || '').trim();
-      document.getElementById('kiMsg').innerHTML = '';
-      if (text.length < 30) { document.getElementById('kiMsg').innerHTML = '<p class="err">Text zu kurz.</p>'; return; }
-      document.getElementById('kiMsg').innerHTML = '<p class="ok">KI arbeitet…</p>';
-      provaFetchKiProxy({ action: 'beweisfragen_text', text: text }).then(function(r){ return r.json(); }).then(function(data){
-        document.getElementById('kiMsg').innerHTML = '';
-        if (data.error) {
-          document.getElementById('kiMsg').innerHTML = '<p class="err">' + data.error + '</p>';
-          return;
-        }
-        var html = '';
-        if (data.aktenzeichen_gericht) html += '<p><strong>Gericht/AZ (KI):</strong> ' + String(data.aktenzeichen_gericht) + '</p>';
-        var fr = data.fragen || [];
-        if (!fr.length) {
-          document.getElementById('fragenOut').textContent = JSON.stringify(data, null, 2);
-          return;
-        }
-        fr.forEach(function(f){
-          html += '<div class="frage-item"><strong>' + (f.nr != null ? f.nr + '. ' : '') + '</strong>' + (f.text || '') + '</div>';
-        });
-        if (data._prova_ki_meta) {
-          html += '<p style="margin-top:12px;font-size:11px;color:#6b7280;">KI-Meta: ' + JSON.stringify(data._prova_ki_meta) + '</p>';
-        }
-        document.getElementById('fragenOut').innerHTML = html;
-      }).catch(function(e){
-        document.getElementById('kiMsg').innerHTML = '<p class="err">' + (e.message || String(e)) + '</p>';
-      });
-    });
-    document.getElementById('btnKvSave').addEventListener('click', function(){
-      if (window.PROVA && !PROVA.canUse('kv_tracker')) { PROVA.requirePaket('kv_tracker'); return; }
-      var az = (document.getElementById('aktenzeichen').value || 'ohne_az').replace(/[^\w\-./]/g, '_');
-      var o = {
-        betrag: document.getElementById('kv_betrag').value,
-        faellig: document.getElementById('kv_faellig').value,
-        notiz: document.getElementById('kv_notiz').value,
-        saved: new Date().toISOString()
-      };
-      try {
-        localStorage.setItem('prova_kostenvorschuss_' + az, JSON.stringify(o));
-        document.getElementById('kiMsg').innerHTML = '<p class="ok">Kostenvorschuss gespeichert.</p>';
-      } catch (e) {
-        document.getElementById('kiMsg').innerHTML = '<p class="err">Speichern fehlgeschlagen.</p>';
+    var d = await res.json();
+    document.getElementById('ki-status').style.display = 'none';
+    if (d.fragen && d.fragen.length) {
+      d.fragen.forEach(function(f) { _fragen.push(f.text || f.nr + '. ' + f.text); });
+      if (d.aktenzeichen_gericht && !document.getElementById('ga-az').value) {
+        document.getElementById('ga-az').value = d.aktenzeichen_gericht;
       }
+      renderFragen();
+      showMsg('✅ ' + d.fragen.length + ' Beweisfragen extrahiert', 'ok');
+    } else {
+      showMsg('Keine Beweisfragen erkannt — bitte manuell ergänzen.', 'warn');
+    }
+  } catch(e) {
+    document.getElementById('ki-status').style.display = 'none';
+    showMsg('KI-Fehler: ' + e.message, 'error');
+  }
+}
+
+function fragHinzufuegen() {
+  var inp = document.getElementById('neue-frage');
+  var t = inp.value.trim();
+  if (!t) return;
+  _fragen.push(t);
+  inp.value = '';
+  renderFragen();
+}
+
+function renderFragen() {
+  var el = document.getElementById('fragen-liste');
+  if (!_fragen.length) { el.innerHTML = '<div class="frage-empty">Noch keine Beweisfragen.</div>'; return; }
+  el.innerHTML = _fragen.map(function(f, i) {
+    return '<div class="frage-item"><div class="frage-nr">' + (i+1) + '.</div>' +
+           '<div class="frage-text">' + f + '</div>' +
+           '<button onclick="_fragen.splice(' + i + ',1);renderFragen()" style="border:none;background:none;color:var(--text3);cursor:pointer;font-size:14px;flex-shrink:0;">✕</button>' +
+           '</div>';
+  }).join('');
+}
+
+async function speichereAuftrag() {
+  var az = document.getElementById('ga-az').value.trim();
+  var svEmail = localStorage.getItem('prova_sv_email') || '';
+  if (!az) { showMsg('Bitte Aktenzeichen eingeben.', 'error'); return; }
+  var felder = {
+    Aktenzeichen:         az,
+    Auftraggeber_Typ:     'Gericht',
+    Auftraggeber_Name:    document.getElementById('ga-gericht').value,
+    Schaden_Strasse:      document.getElementById('ga-objekt').value,
+    Status:               'Auftrag erhalten',
+    Notizen:              'Kläger: ' + document.getElementById('ga-klaeger').value +
+                          '\nBeklagter: ' + document.getElementById('ga-beklagter').value +
+                          '\nBeweisfragen:\n' + _fragen.map(function(f,i){ return (i+1)+'. '+f; }).join('\n'),
+    Abgabefrist:          document.getElementById('ga-frist').value || undefined,
+    sv_email:             svEmail,
+    Schadensart:          'Gerichtsgutachten'
+  };
+  try {
+    var headers = Object.assign({'Content-Type':'application/json'}, window.provaAuthHeaders ? window.provaAuthHeaders() : {});
+    var r = await fetch('/.netlify/functions/airtable', {
+      method: 'POST', headers: headers,
+      body: JSON.stringify({ method:'POST', path:'/v0/appJ7bLlAHZoxENWE/tblSxV8bsXwd1pwa0', payload:{records:[{fields:felder}]} })
     });
-    try {
-      var az0 = localStorage.getItem('prova_letztes_az');
-      if (az0 && document.getElementById('aktenzeichen')) document.getElementById('aktenzeichen').value = az0;
-    } catch (e) {}
-  })();
-  </script>
+    if (r.ok) {
+      document.getElementById('status-badge').className = 'status-badge badge-ok';
+      document.getElementById('status-badge').textContent = '✅ Gespeichert';
+      showMsg('✅ Gerichtsauftrag in Airtable gespeichert!', 'ok');
+      setTimeout(function(){ window.location.href='archiv.html'; }, 1500);
+    } else { showMsg('Fehler beim Speichern.', 'error'); }
+  } catch(e) { showMsg('Fehler: ' + e.message, 'error'); }
+}
+
+function showMsg(txt, type) {
+  var colors = { ok:'rgba(16,185,129,.12)', error:'rgba(239,68,68,.12)', warn:'rgba(245,158,11,.12)', info:'rgba(79,142,247,.08)' };
+  var textC  = { ok:'#10b981', error:'#f87171', warn:'#f59e0b', info:'var(--accent)' };
+  var el = document.getElementById('beweisfragen-result');
+  el.innerHTML = '<div style="padding:10px 14px;border-radius:8px;background:' + (colors[type]||colors.info) + ';color:' + (textC[type]||textC.info) + ';font-size:13px;margin-top:8px;">' + txt + '</div>';
+  setTimeout(function(){ el.innerHTML=''; }, 4000);
+}
+
+// Heute als Standard-Datum
+document.getElementById('ga-datum').value = new Date().toISOString().split('T')[0];
+</script>
+
+<script src="support-chat.js" defer></script>
+<script src="sw-register.js" defer></script>
 </body>
 </html>

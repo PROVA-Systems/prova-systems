@@ -1,77 +1,170 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Stellungnahme zu Privatgutachten / Widerspruch</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>PROVA — Gegengutachten / Erwiderung</title>
+  <script src="prova-preise.js"></script>
+  <script src="paket-guard.js"></script>
+  <script src="auth-guard.js"></script>
+  <script src="prova-auth-api.js"></script>
+  <script src="prova-sv-airtable.js"></script>
+  <script src="theme.js"></script>
+  <script src="nav.js" defer></script>
+  <script src="global-search.js" defer></script>
+  <link rel="stylesheet" href="mobile.css">
+  <link rel="stylesheet" href="prova-design.css">
   <style>
-    @media print { .no-print { display:none; } body { background:#fff!important; } }
-    body { margin:0;padding:0;background:#f6f8fb;font-family:Arial,Helvetica,sans-serif;color:#111827; }
-    .container { max-width:720px;margin:0 auto;padding:24px; }
-    .card { background:#fff;border:1px solid #e5e7eb;border-radius:14px;overflow:hidden; }
-    .card-header { padding:18px 22px;background:#0b1628;color:#fff; }
-    .card-header .sub { font-size:12px;opacity:.8; }
-    .card-header .title { font-size:18px;font-weight:700;margin-top:6px; }
-    .card-body { padding:22px; }
-    .info-box { padding:14px 16px;border:1px solid #e5e7eb;border-radius:12px;background:#f9fafb;margin:18px 0; }
-    .info-label { font-size:12px;color:#6b7280;margin-bottom:6px; }
-    .sig { margin-top:14px;padding-top:14px;border-top:1px solid #e5e7eb;line-height:1.6; }
-    p { margin:0 0 14px;line-height:1.6; }
-    .btn { display:inline-block;margin-top:16px;padding:9px 18px;background:#0b1628;color:#fff;border:none;border-radius:8px;font-size:13px;cursor:pointer;font-family:inherit; }
+    @media print { .app-shell > nav, .topbar, .no-print { display:none!important; } .main-wrap { margin:0!important; } }
+    .doku-wrap { max-width: 760px; margin: 0 auto; padding: 24px 16px 100px; }
+    .doku-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; margin-bottom: 16px; }
+    .doku-header { padding: 18px 22px; border-bottom: 1px solid var(--border); }
+    .doku-header-title { font-size: 17px; font-weight: 700; color: var(--text); }
+    .doku-header-sub { font-size: 12px; color: var(--text3); margin-top: 3px; }
+    .doku-body { padding: 22px; }
+    .doku-text { font-size: 14px; color: var(--text2); line-height: 1.8; margin-bottom: 14px; }
+    .doku-field-label { font-size: 11px; font-weight: 700; color: var(--text3); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 6px; }
+    .doku-input { width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
+      padding: 10px 12px; font-size: 13px; color: var(--text); font-family: inherit; box-sizing: border-box;
+      transition: border-color .15s; }
+    .doku-input:focus { outline: none; border-color: var(--accent); }
+    .doku-textarea { min-height: 100px; resize: vertical; }
+    .doku-inline { display: inline; border: none; border-bottom: 1px solid var(--border); background: transparent;
+      color: var(--text); font-family: inherit; font-size: 14px; padding: 2px 6px; width: 180px; }
+    .doku-inline:focus { outline: none; border-color: var(--accent); }
+    .doku-sig { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); font-size: 13px; color: var(--text2); line-height: 1.8; }
+    .doku-section { margin-bottom: 20px; }
+    .btn-primary { padding: 10px 20px; background: var(--accent); color: #fff; border: none; border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; }
+    .btn-ghost { padding: 10px 20px; background: transparent; color: var(--text2); border: 1px solid var(--border); border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; margin-left: 8px; }
   </style>
 </head>
-<body>
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-  var sv = {
-    name:  [localStorage.getItem('prova_sv_vorname'),localStorage.getItem('prova_sv_nachname')].filter(Boolean).join(' '),
-    firma: localStorage.getItem('prova_sv_firma')||'',
-    str:   localStorage.getItem('prova_sv_strasse')||'',
-    plz:   localStorage.getItem('prova_sv_plz')||'',
-    ort:   localStorage.getItem('prova_sv_ort')||'',
-    tel:   localStorage.getItem('prova_sv_telefon')||'',
-    email: localStorage.getItem('prova_sv_email')||''
-  };
-  var az = new URLSearchParams(window.location.search).get('az') || localStorage.getItem('prova_letztes_az')||'';
-  var ag = new URLSearchParams(window.location.search).get('ag') || localStorage.getItem('prova_letzter_auftraggeber')||'';
-  var datum = new Date().toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric'});
-  
-  document.querySelectorAll('[data-sv]').forEach(function(el) {
-    var key = el.getAttribute('data-sv');
-    if (sv[key]) el.textContent = sv[key];
-  });
-  document.querySelectorAll('[data-az]').forEach(function(el) { if(az) el.textContent = az; });
-  document.querySelectorAll('[data-ag]').forEach(function(el) { if(ag) el.textContent = ag; });
-  document.querySelectorAll('[data-datum]').forEach(function(el) { el.textContent = datum; });
-});
-</script>
-<div class="container"><div class="card">
-  <div class="card-header">
-    <div class="sub">PROVA Systems · Fachliche Korrespondenz</div>
-    <div class="title">Stellungnahme zu Privatgutachten / Widerspruch</div>
+<body data-page="widerspruch-gutachten">
+  <div class="app-shell" id="app-shell">
+    <nav class="sidebar" id="sidebar"></nav>
+    <div class="sb-overlay" id="sb-overlay" onclick="closeMobileSidebar()"></div>
+    <div class="main-wrap" id="main-wrap">
+      <header class="topbar">
+        <div class="topbar-left">
+          <button class="burger" onclick="openMobileSidebar()"><span></span><span></span><span></span></button>
+          <div class="breadcrumb"><span>PROVA</span><span style="color:var(--text3)">›</span><strong>Gegengutachten / Erwiderung</strong></div>
+        </div>
+        <div class="topbar-right">
+          <button class="btn-primary no-print" onclick="window.print()" style="padding:7px 14px;font-size:12px;">🖨 Drucken / PDF</button>
+        </div>
+      </header>
+      <div class="page-content">
+        <div class="doku-wrap">
+
+          <!-- Metadaten -->
+          <div class="doku-card">
+            <div class="doku-header">
+              <div class="doku-header-title">↩️ Gegengutachten / Stellungnahme zum Privatgutachten</div>
+              <div class="doku-header-sub">Fachliche Erwiderung nach §412 ZPO · Wird automatisch mit SV-Daten befüllt</div>
+            </div>
+            <div class="doku-body">
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+                <div>
+                  <div class="doku-field-label">Aktenzeichen</div>
+                  <input class="doku-input" id="inp-az" placeholder="z. B. PROVA-S-2026-001">
+                </div>
+                <div>
+                  <div class="doku-field-label">Gegengutachter / Privatgutachter</div>
+                  <input class="doku-input" id="inp-gutachter" placeholder="Name des Gegengutachters, Datum">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Brief-Inhalt -->
+          <div class="doku-card">
+            <div class="doku-header">
+              <div class="doku-header-title">📄 Stellungnahme</div>
+            </div>
+            <div class="doku-body">
+              <div class="doku-text">Sehr geehrte Damen und Herren,</div>
+              <div class="doku-text">
+                zu dem Privatgutachten des <input class="doku-inline" id="inp-gutachter2" placeholder="Gutachter, Datum">
+                im Vorgang Az. <strong id="az-display">—</strong> nehme ich wie folgt Stellung:
+              </div>
+
+              <div class="doku-section">
+                <div class="doku-field-label">Formale Einwände</div>
+                <div class="doku-text" style="font-size:12px;color:var(--text3);margin-bottom:8px;">Fehlende Qualifikation, unzureichende Befunderhebung, fehlende Normzitate etc.</div>
+                <textarea class="doku-input doku-textarea" id="inp-formal" placeholder="Ihre Ausführungen..."></textarea>
+              </div>
+
+              <div class="doku-section">
+                <div class="doku-field-label">Inhaltliche Einwände</div>
+                <div class="doku-text" style="font-size:12px;color:var(--text3);margin-bottom:8px;">Abweichende Befunde, andere Ursachenbewertung, normabweichende Schlussfolgerungen</div>
+                <textarea class="doku-input doku-textarea" id="inp-inhalt" placeholder="Ihre Ausführungen..."></textarea>
+              </div>
+
+              <div class="doku-section">
+                <div class="doku-field-label">Technische Gegendarstellung (optional)</div>
+                <textarea class="doku-input doku-textarea" id="inp-technik" placeholder="Messwerte, Normen, Berechnungen..."></textarea>
+              </div>
+
+              <div class="doku-text">
+                Meine Einschätzung bleibt wie im Gutachten vom
+                <input class="doku-inline" id="inp-datum-orig" placeholder="Datum" style="width:120px">
+                dargelegt. Für Rückfragen stehe ich gerne zur Verfügung.
+              </div>
+              <div class="doku-text">Mit freundlichen Grüßen</div>
+
+              <div class="doku-sig" id="sv-sig">
+                <strong id="sv-name">Sachverständiger</strong><br>
+                <span id="sv-firma"></span><br>
+                <span id="sv-adresse"></span><br>
+                Tel: <span id="sv-tel"></span> · <span id="sv-email"></span>
+              </div>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:8px;" class="no-print">
+            <button class="btn-primary" onclick="window.print()">🖨 Drucken / Als PDF speichern</button>
+            <button class="btn-ghost" onclick="history.back()">← Zurück</button>
+          </div>
+
+        </div>
+      </div>
+    </div>
   </div>
-  <div class="card-body">
-    <p>Sehr geehrte Damen und Herren,</p>
-    <p>zu dem Privatgutachten des <input type="text" style="border:1px solid #e5e7eb;border-radius:6px;padding:4px 8px;width:200px;" placeholder="Gutachter, Datum"> im Vorgang <strong><span data-az>Az.</span></strong> nehme ich wie folgt Stellung:</p>
-    <div class="info-box">
-      <div class="info-label">Formale Einwände</div>
-      <p style="margin:0;color:#6b7280;font-size:13px;">Fehlende Qualifikation, unzureichende Befunderhebung, fehlende Normzitate etc.</p>
-      <textarea style="width:100%;border:1px solid #e5e7eb;border-radius:8px;padding:8px;margin-top:8px;min-height:80px;font-family:inherit;font-size:13px;" placeholder="Ihre Ausführungen..."></textarea>
-    </div>
-    <div class="info-box">
-      <div class="info-label">Inhaltliche Einwände</div>
-      <p style="margin:0;color:#6b7280;font-size:13px;">Abweichende Befunde, andere Ursachenbewertung, normabweichende Schlussfolgerungen</p>
-      <textarea style="width:100%;border:1px solid #e5e7eb;border-radius:8px;padding:8px;margin-top:8px;min-height:100px;font-family:inherit;font-size:13px;" placeholder="Ihre Ausführungen..."></textarea>
-    </div>
-    <p>Meine Einschätzung bleibt wie im Gutachten vom <input type="text" style="border:none;border-bottom:1px solid #ccc;padding:2px 4px;width:120px;" placeholder="Datum"> dargelegt. Für Rückfragen stehe ich gerne zur Verfügung.</p>
-    <p>Mit freundlichen Grüßen</p>    <div class="sig">
-      <strong><span data-sv="name">Sachverständiger</span></strong><br>
-      <span data-sv="firma"></span><br>
-      <span data-sv="str"></span> · <span data-sv="plz"></span> <span data-sv="ort"></span><br>
-      Tel: <span data-sv="tel"></span> · <span data-sv="email"></span>
-    </div>
-    <button class="btn no-print" onclick="window.print()">🖨 Drucken / PDF</button>
-  </div>
-</div></div>
-<script src="support-chat.js" defer></script>
-</body></html>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      var az  = new URLSearchParams(location.search).get('az') || localStorage.getItem('prova_letztes_az') || '';
+      var azEl = document.getElementById('az-display');
+      if (az) { azEl.textContent = az; document.getElementById('inp-az').value = az; }
+      document.getElementById('inp-az').addEventListener('input', function() {
+        azEl.textContent = this.value || '—';
+        document.getElementById('inp-gutachter2').placeholder = 'Gutachter, Datum';
+      });
+      document.getElementById('inp-gutachter').addEventListener('input', function() {
+        document.getElementById('inp-gutachter2').value = this.value;
+      });
+      // SV-Profil
+      if (window.SV_PROFIL || window.ladeSVProfil) {
+        var profil = function(p) {
+          if (!p) return;
+          var n = ((p.Vorname||'') + ' ' + (p.Nachname||'')).trim();
+          if (n) document.getElementById('sv-name').textContent = (p.Titel ? p.Titel + ' ' : '') + n;
+          if (p.Firma) document.getElementById('sv-firma').textContent = p.Firma;
+          var adr = [p.Strasse, (p.PLZ||'')+' '+(p.Ort||'')].filter(Boolean).join(' · ');
+          document.getElementById('sv-adresse').textContent = adr;
+          document.getElementById('sv-tel').textContent = p.Telefon || '';
+          document.getElementById('sv-email').textContent = p.Email || localStorage.getItem('prova_sv_email') || '';
+        };
+        if (window.SV_PROFIL) profil(window.SV_PROFIL);
+        else if (window.ladeSVProfil) window.ladeSVProfil().then(function(p){ profil(p); });
+      } else {
+        // Fallback aus localStorage
+        var vn = localStorage.getItem('prova_sv_vorname') || '';
+        var nn = localStorage.getItem('prova_sv_nachname') || '';
+        if (vn || nn) document.getElementById('sv-name').textContent = (vn + ' ' + nn).trim();
+        document.getElementById('sv-email').textContent = localStorage.getItem('prova_sv_email') || '';
+      }
+    });
+  </script>
+  <script src="support-chat.js" defer></script>
+  <script src="sw-register.js" defer></script>
+</body>
+</html>

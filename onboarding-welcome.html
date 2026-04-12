@@ -7,10 +7,57 @@
 <script src="theme.js"></script>
 <script src="trial-guard.js"></script>
 <script src="nav.js" defer></script>
+  <script src="global-search.js" defer></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Willkommen bei PROVA — Dein Onboarding-Guide</title>
 <style>
+  /* ═══ PROVA DESIGN TOKENS — einheitlich auf allen Seiten ═══ */
+  :root {
+    --bg:       #0b1220;
+    --surface:  #141c2e;
+    --surface2: #1c2540;
+    --border:   rgba(255,255,255,.08);
+    --border2:  rgba(255,255,255,.12);
+    --text:     #e8eaf0;
+    --text2:    #a0aec0;
+    --text3:    #6b7a99;
+    --accent:   #4f8ef7;
+    --accent2:  #3a7be0;
+    --font-ui:  'DM Sans', system-ui, -apple-system, sans-serif;
+    --radius:   12px;
+    --radius-sm:8px;
+  }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font-family:var(--font-ui); }
+  /* Einheitliche Karten */
+  .prova-card { background:var(--surface); border:1px solid var(--border); border-radius:14px; overflow:hidden; margin-bottom:16px; }
+  .prova-card-header { padding:14px 18px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:10px; }
+  .prova-card-title { font-size:14px; font-weight:700; color:var(--text); }
+  .prova-card-body { padding:18px; }
+  /* Einheitliche Formular-Elemente */
+  .prova-label { font-size:11px; font-weight:700; color:var(--text3); text-transform:uppercase; letter-spacing:.05em; margin-bottom:5px; display:block; }
+  .prova-input { width:100%; background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:10px 12px; font-size:14px; color:var(--text); font-family:var(--font-ui); transition:border-color .15s; }
+  .prova-input:focus { outline:none; border-color:var(--accent); }
+  textarea.prova-input { resize:vertical; min-height:100px; }
+  .prova-select { appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b7a99' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 12px center; padding-right:32px; }
+  .prova-grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  @media(max-width:600px){ .prova-grid-2 { grid-template-columns:1fr; } }
+  .prova-field { display:flex; flex-direction:column; gap:5px; margin-bottom:12px; }
+  /* Einheitliche Buttons */
+  .btn-primary { padding:10px 20px; background:var(--accent); color:#fff; border:none; border-radius:10px; font-size:13px; font-weight:600; cursor:pointer; font-family:var(--font-ui); transition:background .15s; }
+  .btn-primary:hover { background:var(--accent2); }
+  .btn-ghost { padding:10px 20px; background:transparent; color:var(--text2); border:1px solid var(--border); border-radius:10px; font-size:13px; cursor:pointer; font-family:var(--font-ui); }
+  .btn-ghost:hover { background:rgba(255,255,255,.04); }
+  .btn-danger { padding:10px 20px; background:rgba(239,68,68,.1); color:#f87171; border:1px solid rgba(239,68,68,.2); border-radius:10px; font-size:13px; font-weight:600; cursor:pointer; font-family:var(--font-ui); }
+  /* Einheitlicher Inhalts-Wrapper */
+  .prova-content { max-width:800px; margin:0 auto; padding:24px 16px 100px; }
+  /* Status-Badges */
+  .badge { display:inline-flex; align-items:center; gap:5px; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:700; }
+  .badge-blue   { background:rgba(79,142,247,.12); color:var(--accent); }
+  .badge-green  { background:rgba(16,185,129,.12); color:#10b981; }
+  .badge-yellow { background:rgba(245,158,11,.12); color:#f59e0b; }
+  .badge-red    { background:rgba(239,68,68,.12); color:#ef4444; }
 /* ═══════════════════════════════════════════════════════
    PROVA Onboarding Welcome — Professionelles Dokument
    Druckbar als PDF · A4 · PROVA Design System

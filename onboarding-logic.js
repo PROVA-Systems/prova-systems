@@ -202,7 +202,7 @@
       // Erst prüfen ob schon vorhanden
       var checkRes = await fetch('/.netlify/functions/airtable', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: Object.assign({ 'Content-Type': 'application/json' }, window.provaAuthHeaders ? window.provaAuthHeaders() : {}),
         body: JSON.stringify({
           method: 'GET',
           path: '/v0/appJ7bLlAHZoxENWE/tbladqEQT3tmx4DIB?filterByFormula=' +
@@ -217,7 +217,7 @@
           localStorage.setItem('prova_sv_record_id', existingId);
           await fetch('/.netlify/functions/airtable', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: Object.assign({ 'Content-Type': 'application/json' }, window.provaAuthHeaders ? window.provaAuthHeaders() : {}),
             body: JSON.stringify({
               method: 'PATCH',
               path: '/v0/appJ7bLlAHZoxENWE/tbladqEQT3tmx4DIB/' + existingId,
@@ -238,7 +238,7 @@
       fields.onboarding_done = true;
       await fetch('/.netlify/functions/airtable', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: Object.assign({ 'Content-Type': 'application/json' }, window.provaAuthHeaders ? window.provaAuthHeaders() : {}),
         body: JSON.stringify({
           method: 'POST',
           path: '/v0/appJ7bLlAHZoxENWE/tbladqEQT3tmx4DIB',
@@ -272,7 +272,7 @@
       };
       await fetch('/.netlify/functions/airtable', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: Object.assign({ 'Content-Type': 'application/json' }, window.provaAuthHeaders ? window.provaAuthHeaders() : {}),
         body: JSON.stringify({
           method: 'POST',
           path: '/v0/appJ7bLlAHZoxENWE/tblK7a3mBdsrxsrp5',

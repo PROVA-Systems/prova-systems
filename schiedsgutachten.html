@@ -1,29 +1,21 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-<script>
-  window.__PROVA_ENV = 'production';
-  window.onerror = function(msg, src, line, col, err) {
-    if (!navigator.onLine) return;
-    fetch('/.netlify/functions/error-log', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({
-        msg: String(msg).slice(0,500),
-        src: src, line: line,
-        page: window.location.pathname,
-        user: localStorage.getItem('prova_sv_email')||'unbekannt',
-        ua: navigator.userAgent.slice(0,100),
-        ts: new Date().toISOString()
-      })
-    }).catch(function(){});
-  };
-</script>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>PROVA — Schiedsgutachten</title>
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Instrument+Sans:wght@400;500;600&family=Montserrat:wght@500;600;700&display=swap" rel="stylesheet">
+  <script src="prova-preise.js"></script>
+  <script src="paket-guard.js"></script>
+  <script src="auth-guard.js"></script>
+  <script src="prova-auth-api.js"></script>
+  <script src="prova-sv-airtable.js"></script>
+  <script src="theme.js"></script>
+  <script src="nav.js" defer></script>
+  <script src="global-search.js" defer></script>
+  <link rel="stylesheet" href="mobile.css">
+  <link rel="stylesheet" href="prova-design.css">
   <style>
+
     :root{--bg:#0d0f14;--bg2:#13161d;--text:#e8eaf0;--text2:#9da3b4;--accent:#4f8ef7;--border:rgba(255,255,255,0.1);--r:12px;}
     *{box-sizing:border-box;margin:0;padding:0;}
     body{font-family:'Montserrat',system-ui,sans-serif;background:var(--bg);color:var(--text2);min-height:100vh;font-size:14px;line-height:1.55;}
@@ -44,9 +36,9 @@
     .btn-sec{background:rgba(255,255,255,0.06);}
     .hint{font-size:12px;color:var(--text2);margin-top:12px;line-height:1.5;}
     .mono{font-family:ui-monospace,monospace;font-size:12px;background:rgba(0,0,0,.25);padding:12px;border-radius:8px;white-space:pre-wrap;max-height:160px;overflow:auto;}
-    .topnav{display:flex;gap:8px;flex-wrap:wrap;}
-    .topnav a{font-size:13px;color:var(--text2);padding:6px 8px;border-radius:6px;}
-    .topnav a:hover{background:rgba(255,255,255,0.05);}
+    
+    
+    
     .drawer-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:200;}.drawer-overlay.open{display:block;}
     .drawer{position:fixed;top:0;left:0;bottom:0;width:260px;background:var(--bg2);border-right:1px solid var(--border);z-index:201;transform:translateX(-100%);transition:transform .25s ease;display:flex;flex-direction:column;}
     .drawer.open{transform:translateX(0);}.drawer-header{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
@@ -56,50 +48,23 @@
     .burger span{display:block;width:20px;height:2px;background:var(--text2);}
     .bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;height:56px;background:var(--bg2);border-top:1px solid var(--border);z-index:100;justify-content:space-around;align-items:stretch;}
     .paket-badge{font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;}
-    @media(max-width:900px){.topnav{display:none;}.burger{display:flex;}.bottom-nav{display:flex;}body{padding-bottom:56px;}}
+    @media(max-width:900px){.burger{display:flex;}.bottom-nav{display:flex;}body{padding-bottom:56px;}}
+  
   </style>
-  <link rel="stylesheet" href="prova-nav.css">
 </head>
-<body>
-  <script src="prova-account-gate.js"></script>
-  <script src="paket-guard.js"></script>
-  <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
-  <script>if(typeof netlifyIdentity!=='undefined')netlifyIdentity.init();</script>
-  <script src="prova-auth-api.js"></script>
-<script src="prova-sv-airtable.js"></script>
-  <script src="prova-airtable-api.js"></script>
-  <div class="topbar">
-    <div class="topbar-left">
-      <a href="dashboard.html" class="logo">PRO<span>VA</span></a>
-      <nav class="topnav">
-        <a href="schiedsgutachten.html" style="color:var(--accent);">Schieds</a>
-        <a href="rechnungen.html">Rechnungen</a>
-        <a href="app.html">Gutachten</a>
-      </nav>
-    </div>
-    <div style="display:flex;align-items:center;gap:8px;">
-      <span class="paket-badge" id="topbarPaket"></span>
-      <a href="einstellungen.html" style="color:var(--text2);padding:6px;">⚙</a>
-      <button type="button" class="burger" onclick="toggleDrawer()" aria-label="Menü"><span></span><span></span><span></span></button>
-    </div>
-  </div>
-  <div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
-  <div class="drawer" id="drawer">
-    <div class="drawer-header">
-      <a href="dashboard.html" class="logo">PRO<span>VA</span></a>
-      <button type="button" class="drawer-close" onclick="closeDrawer()">✕</button>
-    </div>
-    <div id="provaDrawerMount"></div>
-  </div>
-  <nav class="bottom-nav" id="provaBottomNav"></nav>
-  <script>
-  function toggleDrawer(){var d=document.getElementById('drawer'),o=document.getElementById('drawerOverlay');d.classList.toggle('open');o.classList.toggle('open');document.body.style.overflow=d.classList.contains('open')?'hidden':'';}
-  function closeDrawer(){var d=document.getElementById('drawer'),o=document.getElementById('drawerOverlay');d.classList.remove('open');o.classList.remove('open');document.body.style.overflow='';}
-  document.addEventListener('keydown',function(e){if(e.key==='Escape')closeDrawer();});
-  (function(){if(!window.PROVA)return;var c=PROVA.paketColor();var el=document.getElementById('topbarPaket');if(el){el.textContent=PROVA.paketLabel();el.setAttribute('style','background:'+c+'18;color:'+c+';border:1px solid '+c+'33');}})();
-  </script>
-  <script src="nav.js" defer></script>
-  <main class="main">
+<body data-page="schiedsgutachten">
+<div class="app-shell" id="app-shell">
+  <nav class="sidebar" id="sidebar"></nav>
+  <div class="sb-overlay" id="sb-overlay" onclick="closeMobileSidebar()"></div>
+  <div class="main-wrap" id="main-wrap">
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="burger" onclick="openMobileSidebar()"><span></span><span></span><span></span></button>
+        <div class="breadcrumb"><span>PROVA</span><span style="color:var(--text3)">›</span><strong>Schiedsgutachten</strong></div>
+      </div>
+    </header>
+    <div class="page-content" style="padding:24px 16px;">
+<div class="schieds-wrap" style="max-width:760px;margin:0 auto;">
     <h1>Schiedsgutachten</h1>
     <p class="sub">Parteien, Streitobjekt, Honorar und Kostenaufteilung — Speicherung in Airtable (<code>Auftragstyp=Schieds</code>). Zwei Rechnungen nacheinander über die Rechnungsseite.</p>
     <div id="schieds-err" style="display:none;padding:12px;border-radius:10px;background:rgba(239,68,68,0.12);color:#fecaca;margin-bottom:14px;font-size:13px;"></div>
@@ -147,7 +112,7 @@
       <p class="hint">Neutralität: gesetzlicher Kurzvermerk plus optionaler Kontext. Nach „In Airtable speichern“ steht das neue Aktenzeichen für „Gutachten starten“ bereit.</p>
       <p id="schieds-az-hint" class="hint" style="color:var(--accent);"></p>
     </div>
-  </main>
+  </div>
   <script src="schiedsgutachten-logic.js"></script>
   <script src="prova-notifications.js" defer></script>
   <script>
@@ -246,5 +211,11 @@
     });
   })();
   </script>
+
+    </div><!-- page-content -->
+  </div><!-- main-wrap -->
+</div><!-- app-shell -->
+<script src="support-chat.js" defer></script>
+<script src="sw-register.js" defer></script>
 </body>
 </html>
