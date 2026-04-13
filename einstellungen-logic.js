@@ -9,13 +9,18 @@
 
 /* ── SIDEBAR ── */
 var paket = localStorage.getItem('prova_paket')||'Solo';
-var pc = {'Solo':'#4f8ef7','Team':'#a78bfa','Solo':'#4f8ef7','Pro':'#4f8ef7','Enterprise':'#a78bfa'}[paket]||'#4f8ef7';
+var pc = {'Solo':'#4f8ef7','Team':'#a78bfa','Pro':'#4f8ef7','Enterprise':'#a78bfa','Trial':'#64748b'}[paket]||'#4f8ef7'; // BUG #013 FIX: Duplikat-Key entfernt
 var el = document.getElementById('topbar-paket-badge');
 if(el){el.textContent=paket;el.style.cssText='font-size:10px;font-weight:700;padding:3px 9px;border-radius:10px;letter-spacing:.04em;background:'+pc+'18;color:'+pc+';border:1px solid '+pc+'33;';}
 var appUrl=paket==='Team'?'app-enterprise.html':paket==='Solo'?'app-pro.html':'app-starter.html';
 
 /* ── AUTH ── */
-if(!localStorage.getItem('prova_user')){window.location.href='app-login.html';return;}
+// BUG #017 FIX: Nutzt jetzt provaAuthGuard() statt direkten localStorage-Check
+if(typeof provaAuthGuard==='function'){
+  if(!provaAuthGuard({silent:true})){window.location.replace('app-login.html');return;}
+}else if(!localStorage.getItem('prova_user')&&!localStorage.getItem('prova_session_v2')){
+  window.location.replace('app-login.html');return;
+}
 
 /* ── LOGOUT ── */
 window.logout = function() {

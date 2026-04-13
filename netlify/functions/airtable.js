@@ -7,7 +7,7 @@ const { hasProvaAccess, TABLE_SV, BASE_ID } = require('./lib/prova-subscription.
 // ── Erlaubte Tabellen + welches Feld als User-Filter gilt ──────────────────
 const ALLOWED_TABLES = {
   tblSxV8bsXwd1pwa0: { name: 'SCHADENSFAELLE',   userField: 'sv_email' },
-  tbladqEQT3tmx4DIB: { name: 'SACHVERSTAENDIGE',  userField: null },
+  tbladqEQT3tmx4DIB: { name: 'SACHVERSTAENDIGE',  userField: 'Email' }, // Ownership via Email-Feld
   tblqQmMwJKxltXXXl: { name: 'AUDIT_TRAIL',       userField: 'Email' },
   tblv9F8LEnUC3mKru: { name: 'KI_STATISTIK',      userField: 'SV_Email' },
   tbl4LEsMvcDKFCYaF: { name: 'KI_LERNPOOL',       userField: 'SV_Email' },
@@ -137,7 +137,48 @@ exports.handler = async function(event, context) {
   }
 
   // ── Airtable-Request ausführen ───────────────────────────────────────────
-  const url = AIRTABLE_BASE_URL + path;
+  // ══════════════════════════════════════════════════════════════════════════
+  // BUG #001 FIX: SERVER-SEITIGER SV_EMAIL FILTER INJECTION (GET-Requests)
+  // Verhindert Multi-Tenant Datenleck — NIEMALS entfernen!
+  // Jeder eingeloggte User sieht NUR seine eigenen Records.
+  // ══════════════════════════════════════════════════════════════════════════
+  function injectUserEmailFilter(urlString, email, tableConf) {
+    if (!email || !tableConf || !tableConf.userField) return urlString;
+    try {
+      const u = new URL(urlString);
+      const field        = tableConf.userField;
+      const escapedEmail = email.replace(/"/g, '\\"');
+      const emailFilter  = `{${field}}="${escapedEmail}"`;
+      const existing     = u.searchParams.get('filterByFormula');
+      const isTrivial    = !existing || existing === 'TRUE()' || existing === '';
+      const newFilter    = isTrivial ? emailFilter : `AND(${emailFilter},${existing})`;
+      u.searchParams.set('filterByFormula', newFilter);
+      return u.toString();
+    } catch (e) {
+      throw new Error('GET-Filter-Injektion fehlgeschlagen: ' + e.message);
+    }
+  }
+
+  // Bei GET-Requests: SV_Email-Filter server-seitig injizieren
+  let finalPath = path;
+  if (method === 'GET' && !internalOk && userEmail) {
+    const tableConf = getAllowedTable(path);
+    if (tableConf && tableConf.userField) {
+      try {
+        const withBase = AIRTABLE_BASE_URL + path;
+        finalPath = injectUserEmailFilter(withBase, userEmail, tableConf)
+          .replace(AIRTABLE_BASE_URL, '');
+      } catch (filterErr) {
+        return {
+          statusCode: 403,
+          headers: corsHeaders,
+          body: JSON.stringify({ error: 'Zugriff verweigert — Filter-Fehler: ' + filterErr.message })
+        };
+      }
+    }
+  }
+
+  const url = AIRTABLE_BASE_URL + finalPath;
   const fetchOptions = {
     method,
     headers: { Authorization: 'Bearer ' + pat, 'Content-Type': 'application/json' }

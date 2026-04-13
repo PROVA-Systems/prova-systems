@@ -270,7 +270,7 @@ async function supSendModal(){
   var btn=document.getElementById('sup-btn');
   btn.disabled=true;btn.textContent='⏳ Wird gesendet…';
   try{
-    await fetch('https://hook.eu1.make.com/lktuhugwcg5v37ib6bdaxjb1uiplnu8v',{
+    await fetch('/.netlify/functions/make-proxy?key=sup',{
       method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
         betreff:b,nachricht:n,
@@ -693,7 +693,7 @@ window.erstelleJVEGRechnungPDF = async function() {
   
   try {
     // Über Make G3-Webhook oder direkt PDFMonkey
-    var res = await fetch('https://hook.eu1.make.com/44kqx7eo142aw7warqao4c4wqo1nw158', {
+    var res = await fetch('/.netlify/functions/make-proxy?key=s3', {
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({ aktion: 'jveg_pdf', ...daten })
     });

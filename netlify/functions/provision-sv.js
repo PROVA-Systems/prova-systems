@@ -8,6 +8,7 @@
  * Optional (in Airtable anlegen): Trial_End (Datum), Onboarding_Datum (Datum)
  */
 const { AIRTABLE_API, BASE_ID, TABLE_SV } = require('./lib/prova-subscription.js');
+const { getCorsHeaders, corsOptionsResponse, jsonResponse } = require('./lib/cors-helper');
 
 function json(statusCode, obj) {
   return {
@@ -19,7 +20,7 @@ function json(statusCode, obj) {
 
 exports.handler = async function (event, context) {
   if (event.httpMethod === 'OPTIONS') {
-    return { statusCode: 204, headers: { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'Authorization, Content-Type' }, body: '' };
+    return corsOptionsResponse(event);
   }
   if (event.httpMethod !== 'POST') {
     return json(405, { error: 'Method Not Allowed' });

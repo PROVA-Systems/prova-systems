@@ -76,8 +76,8 @@ function berechneFristWarnung(){
    G1-Webhook: imn2n5xs7j251xicrmdmk17of042pt2t
    Airtable Base: appJ7bLlAHZoxENWE / tblSxV8bsXwd1pwa0
 ============================================================ */
-const WEBHOOK_G1 = 'https://hook.eu1.make.com/imn2n5xs7j251xicrmdmk17of042pt2t';
-const WEBHOOK_K1 = 'https://hook.eu1.make.com/bslfuqmlud1vo8qems5ccn5z5f2eq4dl';
+const WEBHOOK_G1 = '/.netlify/functions/make-proxy?key=g1';
+const WEBHOOK_K1 = '/.netlify/functions/make-proxy?key=k1';
 const AIRTABLE_BASE = 'appJ7bLlAHZoxENWE';
 const AIRTABLE_TABLE = 'tblSxV8bsXwd1pwa0';
 const AIRTABLE_SV_TABLE = 'tbladqEQT3tmx4DIB';
@@ -1302,7 +1302,7 @@ window.sendeWebhookMitOfflineFallback = async function() {
   if (typeof sammleDaten === 'function') {
     const daten = sammleDaten();
     await queueHinzufügen(
-      'https://hook.eu1.make.com/imn2n5xs7j251xicrmdmk17of042pt2t',
+      '/.netlify/functions/make-proxy?key=g1',
       daten
     );
   }
@@ -1756,10 +1756,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
 /* ══════════════════════════════════════════════════════════
    OPTION 4: WEB SPEECH (live) + WHISPER-KORREKTUR
-   S11 Webhook: https://hook.eu1.make.com/h019rspppkvc4m146sv1opxs74h9dp3x
+   S11 Webhook: /.netlify/functions/make-proxy?key=wh
    ══════════════════════════════════════════════════════════ */
 
-var WHISPER_WEBHOOK = 'https://hook.eu1.make.com/h019rspppkvc4m146sv1opxs74h9dp3x';
+var WHISPER_WEBHOOK = '/.netlify/functions/make-proxy?key=wh';
 var mediaRecorder = null;
 var audioChunks = [];
 var whisperLaeuft = false;
@@ -1814,9 +1814,46 @@ function zeigeWhisperConsent(callback) {
   };
 }
 
-/* ── WHISPER KORREKTUR ── */
+/* ── WHISPER KORREKTUR (mit Offline-Queue) ── */
 async function starteWhisperKorrektur(audioBlob) {
   if(!audioBlob || audioBlob.size < 1000) return;
+
+  // OFFLINE-CHECK: Diktat in IndexedDB speichern wenn kein Netz
+  if (!navigator.onLine) {
+    var az = localStorage.getItem('prova_letztes_az') || ('OFFLINE-' + Date.now());
+    if (window.PROVA_OFFLINE && window.PROVA_OFFLINE.diktatSpeichern) {
+      try {
+        await window.PROVA_OFFLINE.diktatSpeichern(az, audioBlob, audioBlob.type, 'diktat.webm');
+        // Status anzeigen
+        var st = document.getElementById('recStatus');
+        if(st) st.textContent = '💾 Offline — Diktat gespeichert';
+        var badge = document.getElementById('whisper-badge');
+        if(badge) { badge.style.display = 'flex'; badge.textContent = '💾 Offline gespeichert'; }
+        // Toast
+        window.showToast && window.showToast('📵 Offline — Diktat wird verarbeitet sobald Verbindung besteht', 'warning', 5000);
+        // Listener für Reconnect
+        window.addEventListener('online', function onOnline() {
+          window.removeEventListener('online', onOnline);
+          window.showToast && window.showToast('📶 Online — Diktat wird jetzt verarbeitet…', 'info', 3000);
+          if (window.PROVA_OFFLINE && window.PROVA_OFFLINE.syncStarten) {
+            window.PROVA_OFFLINE.syncStarten(az);
+          }
+          // Nochmal versuchen zu senden
+          setTimeout(function() { starteWhisperKorrektur(audioBlob); }, 1500);
+        }, { once: true });
+        return;
+      } catch(e) {
+        console.warn('[Offline-Queue] Speichern fehlgeschlagen:', e);
+      }
+    }
+    // Fallback wenn keine Queue: Fehlermeldung
+    window.showToast && window.showToast('📵 Kein Internet — bitte Verbindung herstellen und erneut versuchen', 'error', 6000);
+    var st2 = document.getElementById('recStatus');
+    if(st2) st2.textContent = '📵 Offline — bitte Verbindung herstellen';
+    whisperLaeuft = false;
+    return;
+  }
+
   whisperLaeuft = true;
 
   // Status-Anzeige

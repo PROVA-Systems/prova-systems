@@ -4,6 +4,7 @@
  * Antwort immer 200 (UI nicht blockieren)
  */
 const { AIRTABLE_API, BASE_ID, TABLE_AUDIT } = require('./lib/prova-subscription.js');
+const { getCorsHeaders, corsOptionsResponse, jsonResponse } = require('./lib/cors-helper');
 
 const rateBuckets = new Map();
 const WINDOW_MS = 60 * 1000;
@@ -12,7 +13,7 @@ const MAX_PER_WINDOW = 10;
 function corsHeaders() {
   return {
     'Content-Type': 'application/json; charset=utf-8',
-    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Origin': (event && event.headers && event.headers.origin && (event.headers.origin.includes('prova-systems') || event.headers.origin.includes('localhost')) ? event.headers.origin : (process.env.URL || 'https://prova-systems.de')),
     'Access-Control-Allow-Headers': 'Content-Type',
     'Access-Control-Allow-Methods': 'POST, OPTIONS'
   };

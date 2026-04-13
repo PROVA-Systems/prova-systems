@@ -669,7 +669,7 @@ window.provaConfirm = function(msg, onYes) {
   var overlay, input, results, visible = false;
 
   var AKTIONEN = [
-    { label: '+ Neuer Fall', desc: 'Neues Gutachten anlegen', href: 'app.html', icon: '📋' },
+    { label: '+ Neuer Fall', desc: 'Neues Gutachten anlegen', href: 'vor-ort.html', icon: '📋' },
     { label: 'Fälle / Archiv', desc: 'Alle Fälle anzeigen', href: 'archiv.html', icon: '📂' },
     { label: 'Zentrale / Dashboard', desc: 'Was steht heute an?', href: 'dashboard.html', icon: '⊞' },
     { label: 'Kalender', desc: 'Termine und Fristen', href: 'termine.html', icon: '📅' },

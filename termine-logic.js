@@ -21,7 +21,7 @@ if(!localStorage.getItem('prova_user')){window.location.href='app-login.html';re
 var svEmail=localStorage.getItem('prova_sv_email')||'';
 var alleTermine=[];
 var kalDatum=new Date();
-var WEBHOOK_S8='https://hook.eu1.make.com/lktuhugwcg5v37ib6bdaxjb1uiplnu8v';
+var WEBHOOK_S8='/.netlify/functions/make-proxy?key=sup';
 var AT_BASE='appJ7bLlAHZoxENWE';
 var AT_TERMINE='tblyMTTdtfGQjjmc2';
 

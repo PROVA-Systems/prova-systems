@@ -2,6 +2,7 @@
  * Stripe Checkout — Solo / Team (STRIPE_SECRET_KEY; STRIPE_PRICE_SOLO/TEAM optional, Defaults in lib/prova-stripe-prices.js)
  */
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY || '');
+const { getCorsHeaders, corsOptionsResponse, jsonResponse } = require('./lib/cors-helper');
 const { resolveSoloPriceId, resolveTeamPriceId } = require('./lib/prova-stripe-prices.js');
 
 function json(statusCode, obj) {
@@ -9,7 +10,7 @@ function json(statusCode, obj) {
     statusCode,
     headers: {
       'Content-Type': 'application/json; charset=utf-8',
-      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Origin': (event && event.headers && event.headers.origin && (event.headers.origin.includes('prova-systems') || event.headers.origin.includes('localhost')) ? event.headers.origin : (process.env.URL || 'https://prova-systems.de')),
       'Access-Control-Allow-Headers': 'Authorization, Content-Type',
       'Access-Control-Allow-Methods': 'POST, OPTIONS'
     },
@@ -19,7 +20,7 @@ function json(statusCode, obj) {
 
 exports.handler = async function (event, context) {
   if (event.httpMethod === 'OPTIONS') {
-    return { statusCode: 204, headers: { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'Authorization, Content-Type' }, body: '' };
+    return { statusCode: 204, headers: { 'Access-Control-Allow-Origin': (event && event.headers && event.headers.origin && (event.headers.origin.includes('prova-systems') || event.headers.origin.includes('localhost')) ? event.headers.origin : (process.env.URL || 'https://prova-systems.de')), 'Access-Control-Allow-Headers': 'Authorization, Content-Type' }, body: '' };
   }
   if (event.httpMethod !== 'POST') {
     return json(405, { error: 'Method Not Allowed' });

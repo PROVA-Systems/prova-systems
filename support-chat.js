@@ -117,7 +117,7 @@
   ];
 
   /* ── Webhook URL ── */
-  var WEBHOOK_URL = 'https://hook.eu1.make.com/lktuhugwcg5v37ib6bdaxjb1uiplnu8v';
+  var WEBHOOK_URL = '/.netlify/functions/make-proxy?key=sup';
 
   /* ── CSS ── */
   if (!document.getElementById('prova-support-css')) {

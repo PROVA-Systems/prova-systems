@@ -61,11 +61,11 @@ async function ladeFaelle(){
   try{
     var isAdmin = localStorage.getItem('prova_is_admin')==='true'
     || (svEmail.toLowerCase()==='admin@prova-systems.de');
+  // BUG #001 FIX: Server-seitiger SV_Email-Filter in airtable.js erzwingt Datentrennung.
+  // Client sendet nur einen Basis-Filter — airtable.js ergänzt AND({sv_email}="...") automatisch.
   var filter = isAdmin
-    ? 'TRUE()'
-    : svEmail
-      ? 'TRUE()' // field name check — filter client-side
-      : 'TRUE()';
+    ? 'TRUE()'                        // Admin: alle Records (airtable.js Admin-Check)
+    : 'NOT({Aktenzeichen}="")';       // Normal-SV: Proxy ergänzt sv_email-Filter server-seitig
     var path='/v0/'+AT_BASE+'/'+AT_FAELLE+'?filterByFormula='+encodeURIComponent(filter)+'&maxRecords=100&sort[0][field]=Timestamp&sort[0][direction]=desc';
     var res=await fetch('/.netlify/functions/airtable',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({method:'GET',path:path})});
     if(!res.ok)throw new Error('HTTP '+res.status);
@@ -277,7 +277,7 @@ window.sendSupport=async function(){
   var b=document.getElementById('sup-betreff').value.trim();
   var n=document.getElementById('sup-nachricht').value.trim();
   if(!b||!n)return;
-  try{await fetch('https://hook.eu1.make.com/lktuhugwcg5v37ib6bdaxjb1uiplnu8v',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({betreff:b,nachricht:n,sv_email:svEmail,paket:paket,seite:'archiv.html',ts:new Date().toISOString()})});}catch(e){}
+  try{await fetch('/.netlify/functions/make-proxy?key=sup',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({betreff:b,nachricht:n,sv_email:svEmail,paket:paket,seite:'archiv.html',ts:new Date().toISOString()})});}catch(e){}
   document.getElementById('sup-modal').classList.remove('open');
 };
 
@@ -325,7 +325,7 @@ async function supSendModal(){
   var btn=document.getElementById('sup-btn');
   btn.disabled=true;btn.textContent='⏳ Wird gesendet…';
   try{
-    await fetch('https://hook.eu1.make.com/lktuhugwcg5v37ib6bdaxjb1uiplnu8v',{
+    await fetch('/.netlify/functions/make-proxy?key=sup',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({

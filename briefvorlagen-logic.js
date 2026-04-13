@@ -4,7 +4,7 @@
 (function(){
 'use strict';
 
-var WEBHOOK='https://hook.eu1.make.com/bslfuqmlud1vo8qems5ccn5z5f2eq4dl';
+var WEBHOOK='/.netlify/functions/make-proxy?key=k1';
 var AT_BASE='appJ7bLlAHZoxENWE';
 var AT_FAELLE='tblSxV8bsXwd1pwa0';
 

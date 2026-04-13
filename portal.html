@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Abonnement verwalten · PROVA</title>
+<script src="prova-preise.js"></script>
+<script src="paket-guard.js"></script>
+<script src="auth-guard.js"></script>
+<script src="prova-auth-api.js"></script>
+<script src="prova-sv-airtable.js"></script>
+<script src="theme.js"></script>
+<script src="nav.js" defer></script>
+<link rel="stylesheet" href="prova-design.css">
+<link rel="stylesheet" href="mobile.css">
+<style>
+.portal-wrap {
+  max-width: 560px;
+  margin: 40px auto;
+  padding: 0 20px;
+}
+.portal-card {
+  background: var(--surface, #161b2e);
+  border: 1px solid var(--border, rgba(255,255,255,.07));
+  border-radius: 18px;
+  padding: 28px;
+  margin-bottom: 16px;
+}
+.portal-card-title {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--text, #eaecf4);
+  margin-bottom: 6px;
+}
+.portal-card-sub {
+  font-size: 13px;
+  color: var(--text3, rgba(255,255,255,.4));
+  line-height: 1.5;
+  margin-bottom: 20px;
+}
+.portal-paket-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  background: rgba(79,142,247,.12);
+  color: #4f8ef7;
+  border: 1px solid rgba(79,142,247,.2);
+  margin-bottom: 20px;
+}
+.portal-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 22px;
+  border-radius: 12px;
+  border: none;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: var(--font-ui, 'DM Sans', sans-serif);
+  transition: all .15s;
+  text-decoration: none;
+  width: 100%;
+  justify-content: center;
+}
+.portal-btn-primary {
+  background: var(--accent, #4f8ef7);
+  color: #fff;
+}
+.portal-btn-primary:hover { background: #3a7ef0; transform: translateY(-1px); box-shadow: 0 4px 16px rgba(79,142,247,.4); }
+.portal-btn-secondary {
+  background: rgba(255,255,255,.06);
+  color: var(--text2, rgba(255,255,255,.7));
+  border: 1px solid rgba(255,255,255,.1);
+  margin-top: 10px;
+}
+.portal-btn-secondary:hover { background: rgba(255,255,255,.09); }
+.portal-btn:disabled { opacity: .5; cursor: not-allowed; transform: none !important; }
+.portal-info {
+  font-size: 12px;
+  color: var(--text3);
+  text-align: center;
+  margin-top: 12px;
+  line-height: 1.5;
+}
+.portal-spinner {
+  width: 18px; height: 18px;
+  border: 2px solid rgba(255,255,255,.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin .65s linear infinite;
+  display: inline-block;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+<div class="app-shell">
+  <div class="main-wrap">
+    <div class="topbar">
+      <div class="topbar-left">
+        <button class="burger" onclick="openMobileSidebar()"><span></span><span></span><span></span></button>
+        <div class="breadcrumb">
+          <a href="einstellungen.html" style="color:var(--text3);text-decoration:none;">Einstellungen</a>
+          <span style="color:var(--text3);margin:0 6px;">›</span>
+          <strong id="breadcrumb-label">Abonnement</strong>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <span class="topbar-paket" id="topbar-paket-name"></span>
+      </div>
+    </div>
+
+    <div class="page-content" style="padding:0 24px 40px;">
+      <div class="portal-wrap">
+
+        <div style="margin-bottom:28px;">
+          <div class="p-page-title">💳 Abonnement verwalten</div>
+          <div class="p-page-sub">Paket, Zahlungsmethode und Rechnungen</div>
+        </div>
+
+        <!-- Aktuelles Paket -->
+        <div class="portal-card">
+          <div class="portal-card-title">Aktuelles Paket</div>
+          <div class="portal-paket-badge" id="current-plan">⏳ Lädt…</div>
+          <div class="portal-card-sub" id="plan-details">Ihre Abo-Details werden geladen…</div>
+          <button class="portal-btn portal-btn-primary" id="btn-portal" onclick="oeffnePortal()" disabled>
+            <div class="portal-spinner" id="portal-spinner"></div>
+            <span id="btn-portal-label">Stripe-Portal öffnen…</span>
+          </button>
+          <div class="portal-info">
+            Sie werden zu Stripe weitergeleitet — dem sicheren Zahlungsanbieter von PROVA.
+            Dort können Sie Ihr Paket ändern, Zahlungsmittel aktualisieren und Rechnungen herunterladen.
+          </div>
+        </div>
+
+        <!-- Upgrade -->
+        <div class="portal-card" id="upgrade-card" style="display:none;">
+          <div class="portal-card-title">⬆️ Auf Team upgraden</div>
+          <div class="portal-card-sub">
+            PROVA Team — 279 €/Monat<br>
+            Unbegrenzte Fälle, Teamzugang, erweiterte Auswertungen.
+          </div>
+          <button class="portal-btn portal-btn-primary" onclick="window.location.href='einstellungen.html?tab=paket'">
+            Paket wechseln →
+          </button>
+        </div>
+
+        <!-- Zurück -->
+        <button class="portal-btn portal-btn-secondary" onclick="window.location.href='einstellungen.html'">
+          ← Zurück zu Einstellungen
+        </button>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+var _paket = localStorage.getItem('prova_paket') || 'Solo';
+var _email = localStorage.getItem('prova_sv_email') || '';
+
+document.addEventListener('DOMContentLoaded', function() {
+  // Paket anzeigen
+  var badge = document.getElementById('current-plan');
+  var details = document.getElementById('plan-details');
+  var btn = document.getElementById('btn-portal');
+  var spinner = document.getElementById('portal-spinner');
+  var btnLabel = document.getElementById('btn-portal-label');
+
+  if (badge) badge.textContent = '✅ PROVA ' + _paket;
+  
+  var preise = { Solo: '149 €/Monat · bis 25 Fälle', Team: '279 €/Monat · unbegrenzte Fälle' };
+  if (details) details.textContent = (preise[_paket] || _paket) + ' · Abrechnung über Stripe';
+
+  // Upgrade-Card nur für Solo anzeigen
+  var upgradeCard = document.getElementById('upgrade-card');
+  if (upgradeCard && _paket !== 'Team') upgradeCard.style.display = 'block';
+
+  // Portal-Button aktivieren
+  if (spinner) spinner.style.display = 'none';
+  if (btnLabel) btnLabel.textContent = '🔗 Stripe-Portal öffnen';
+  if (btn) btn.disabled = false;
+});
+
+async function oeffnePortal() {
+  var btn = document.getElementById('btn-portal');
+  var spinner = document.getElementById('portal-spinner');
+  var label = document.getElementById('btn-portal-label');
+
+  if (btn) btn.disabled = true;
+  if (spinner) spinner.style.display = 'inline-block';
+  if (label) label.textContent = 'Weiterleitung…';
+
+  try {
+    var headers = window.provaAuthHeaders ? window.provaAuthHeaders() : {'Content-Type':'application/json'};
+    var r = await fetch('/.netlify/functions/stripe-checkout', {
+      method: 'POST',
+      headers: headers,
+      body: JSON.stringify({
+        action: 'portal',
+        email:  _email,
+        returnUrl: window.location.origin + '/einstellungen.html'
+      })
+    });
+    var d = await r.json().catch(function(){ return {}; });
+    if (r.ok && d.url) {
+      window.location.href = d.url;
+    } else {
+      zeigeToast('Stripe-Portal nicht verfügbar: ' + (d.error || r.status), 'error');
+      if (btn) btn.disabled = false;
+      if (spinner) spinner.style.display = 'none';
+      if (label) label.textContent = '🔗 Stripe-Portal öffnen';
+    }
+  } catch(e) {
+    zeigeToast('Netzwerkfehler: ' + e.message, 'error');
+    if (btn) btn.disabled = false;
+    if (spinner) spinner.style.display = 'none';
+    if (label) label.textContent = '🔗 Stripe-Portal öffnen';
+  }
+}
+
+function zeigeToast(msg, type) {
+  var el = document.createElement('div');
+  var bg = type === 'error' ? 'rgba(239,68,68,.9)' : 'rgba(16,185,129,.9)';
+  el.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:' + bg + ';color:#fff;padding:10px 20px;border-radius:10px;font-size:13px;font-weight:600;z-index:9999;pointer-events:none;';
+  el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(function(){ el.remove(); }, 4000);
+}
+</script>
+</body>
+</html>

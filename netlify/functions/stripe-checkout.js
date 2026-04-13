@@ -76,7 +76,16 @@ exports.handler = async (event) => {
       ? existing.data[0]
       : await stripe.customers.create({ email, metadata: { quelle: 'prova-systems' } });
 
-    // ── ROUTING: Abo vs. Add-on ───────────────────────────────────────────────
+    // ── ROUTING: Portal vs. Abo vs. Add-on ──────────────────────────────────
+    // Stripe Billing Portal — für Abo-Verwaltung, Zahlungsmittel, Rechnungen
+    if (body.action === 'portal') {
+      const session = await stripe.billingPortal.sessions.create({
+        customer:   customer.id,
+        return_url: body.returnUrl || BASE_URL + '/einstellungen.html',
+      });
+      return { statusCode: 200, headers: corsHeaders(), body: JSON.stringify({ url: session.url }) };
+    }
+
     if (typ === 'addon') {
       return await handleAddon(stripe, customer, body, email);
     } else {

@@ -16,9 +16,9 @@ const HEADERS = {
 };
 
 // Make.com L4 Webhook — SV Auto-Antwort
-const MAKE_L4_WEBHOOK = 'https://hook.eu1.make.com/kplexov12f2qxxlb1k73tyq24gyumzb6';
+const MAKE_L4_WEBHOOK = '/.netlify/functions/make-proxy?key=l4';
 // Make.com L5 Webhook — Marcel Benachrichtigung bei neuem Lead
-const MAKE_L5_WEBHOOK = 'https://hook.eu1.make.com/qhz3sm97i6dqm1wbxx737hd19k35pmro';
+const MAKE_L5_WEBHOOK = '/.netlify/functions/make-proxy?key=l5';
 
 // Airtable
 const AT_BASE  = 'appJ7bLlAHZoxENWE';

@@ -17,7 +17,7 @@
 
   var SESSION_KEY    = 'prova_session_v2';
   var LEGACY_KEY     = 'prova_user';
-  var SESSION_TTL    = 30 * 24 * 60 * 60 * 1000; // 30 Tage
+  var SESSION_TTL = 8 * 60 * 60 * 1000 // 8 Stunden (gefixt von 30 Tagen); // 30 Tage
   var ACTIVITY_KEY   = 'prova_last_activity';
 
   /* ── Öffentliche API ── */

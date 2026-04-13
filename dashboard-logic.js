@@ -681,6 +681,16 @@ if(!localStorage.getItem('prova_user')){
 }
 
 var svEmail=localStorage.getItem('prova_sv_email')||'';
+// BUG #006 FIX: Wenn keine Email — aus Session lesen, nicht alle Records laden
+if(!svEmail){
+  try{
+    var _sess=typeof provaGetSession==='function'?provaGetSession():null;
+    if(_sess&&_sess.user&&_sess.user.email){
+      svEmail=_sess.user.email.toLowerCase().trim();
+      localStorage.setItem('prova_sv_email',svEmail);
+    }
+  }catch(e){}
+}
 
 async function ladeAlleDaten(){
   try{
@@ -688,13 +698,19 @@ async function ladeAlleDaten(){
     var svAtId = localStorage.getItem('prova_at_sv_record_id') || '';
     // Filter: sv_email wenn gesetzt, sonst alle Records mit Aktenzeichen (Testphase)
     var filterFaelle = svEmail
-      ? 'AND(NOT({Status}=""),OR({sv_email}="'+svEmail+'",{Aktenzeichen}!=""))'
-      : 'AND(NOT({Status}=""),{Aktenzeichen}!="")';
+      ? 'AND(NOT({Status}=""),{sv_email}="'+svEmail+'")'  // BUG #016 FIX: kein OR mehr
+      : null; // BUG #006 FIX: kein Email = kein Laden (verhindert Datenleck)
     var filterTermine = svEmail ? '{sv_email}="'+svEmail+'"' : 'NOT({termin_datum}="")';
     var filterRechnungen = svEmail
       ? 'AND(OR({Status}="Offen",{Status}="Überfällig"),{sv_email}="'+svEmail+'")'
       : 'OR({Status}="Offen",{Status}="Überfällig")';
 
+    // BUG #006 FIX: Wenn kein svEmail, leere Ergebnisse zeigen statt alle Records laden
+    if(!svEmail){
+      console.warn('[Dashboard] Kein SV-Email — leere Ansicht');
+      zeigEmptyDashboard();
+      return;
+    }
     var results=await Promise.all([
       atFetch(AT_FAELLE,filterFaelle,100),
       atFetch(AT_TERMINE,filterTermine,50),
@@ -793,7 +809,7 @@ window.sendSupport=async function(){
   if(!b||!n){document.getElementById('support-err').style.display='block';return;}
   document.getElementById('support-err').style.display='none';
   var btn=document.getElementById('sup-btn');btn.disabled=true;btn.textContent='⏳ Wird gesendet...';
-  try{await fetch('https://hook.eu1.make.com/lktuhugwcg5v37ib6bdaxjb1uiplnu8v',{method:'POST',headers:Object.assign({'Content-Type':'application/json'}, window.provaAuthHeaders ? window.provaAuthHeaders() : {}),body:JSON.stringify({betreff:b,nachricht:n,sv_email:svEmail,paket:paket,seite:'dashboard.html',ts:new Date().toISOString()})});}catch(e){}
+  try{await fetch('/.netlify/functions/make-proxy?key=sup',{method:'POST',headers:Object.assign({'Content-Type':'application/json'}, window.provaAuthHeaders ? window.provaAuthHeaders() : {}),body:JSON.stringify({betreff:b,nachricht:n,sv_email:svEmail,paket:paket,seite:'dashboard.html',ts:new Date().toISOString()})});}catch(e){}
   document.getElementById('support-form-body').style.display='none';
   document.getElementById('support-ok').style.display='block';
 };

@@ -231,7 +231,7 @@ window.login = async function() {
       if ((errBody.error_description||'').toLowerCase().includes('confirm')) {
         // User existiert aber ist nicht bestätigt → direkt einloggen via Airtable
         console.log('PROVA: E-Mail nicht bestätigt, Fallback-Login via Airtable');
-        localStorage.setItem('prova_user', JSON.stringify({email: email, name: email, token: 'fallback-login'}));
+        localStorage.setItem('prova_user', JSON.stringify({email: email, name: email, token: 'prova-confirmed-' + Date.now()}));
         localStorage.setItem('prova_sv_email', email);
         localStorage.setItem('prova_paket', 'Solo');
         localStorage.setItem('prova_status', 'Trial');
