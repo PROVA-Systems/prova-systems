@@ -1,3 +1,4 @@
+const { getCorsHeaders, corsOptionsResponse } = require('./lib/cors-helper');
 // PROVA Systems — Foto-Captioning Netlify Function
 // POST { imageBase64: "...", mediaType: "image/jpeg", aktenzeichen: "WS-2024-001", schadensart: "Wasserschaden" }
 // → GPT-4o Vision analysiert das Bild und gibt strukturierte Metadaten zurück

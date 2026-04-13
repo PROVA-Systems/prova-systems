@@ -14,6 +14,8 @@
  */
 const crypto = require('crypto');
 const { getCorsHeaders, corsOptionsResponse } = require('./lib/cors-helper');
+const { fetchWithRetry } = require('./lib/fetch-with-timeout');
+const { provaFetch } = require('./lib/prova-fetch');
 
 const AT_BASE  = process.env.AIRTABLE_BASE_ID  || 'appJ7bLlAHZoxENWE';
 const AT_SV    = process.env.AIRTABLE_TABLE_SV  || 'tbladqEQT3tmx4DIB';
@@ -48,7 +50,7 @@ function decrypt(stored) {
 }
 
 async function atFetch(path, options) {
-  return fetch(AT_URL + path, {
+  return fetchWithRetry(AT_URL + path, {
     ...options,
     headers: { Authorization: 'Bearer ' + AT_PAT, 'Content-Type': 'application/json', ...(options.headers||{}) }
   });

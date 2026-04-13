@@ -1,3 +1,6 @@
+const { fetchWithRetry } = require('./lib/fetch-with-timeout');
+const { getCorsHeaders, corsOptionsResponse } = require('./lib/cors-helper');
+const { provaFetch } = require('./lib/prova-fetch');
 // ══════════════════════════════════════════════════════════════════════════════
 // PROVA Systems — Rechnung PDF Generator
 // Netlify Function: rechnung-pdf

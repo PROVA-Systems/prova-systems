@@ -1,3 +1,4 @@
+const { getCorsHeaders, corsOptionsResponse } = require('./lib/cors-helper');
 // ══════════════════════════════════════════════════════════════
 // PROVA Systems — Team Interesse Function
 // /.netlify/functions/team-interest

@@ -1,3 +1,5 @@
+const { fetchWithRetry } = require('./lib/fetch-with-timeout');
+const { getCorsHeaders, corsOptionsResponse } = require('./lib/cors-helper');
 // ══════════════════════════════════════════════════
 // PROVA Systems — Foto-Anlage PDF Generator
 // Netlify Function: foto-anlage-pdf

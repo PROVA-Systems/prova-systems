@@ -3,6 +3,7 @@
 // Sendet von PROVA-System-E-Mail (nicht SV-eigene SMTP — kein Passwort nötig)
 
 const nodemailer = require('nodemailer');
+const { getCorsHeaders, corsOptionsResponse } = require('./lib/cors-helper');
 
 exports.handler = async function(event) {
   const cors = {

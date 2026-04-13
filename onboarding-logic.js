@@ -26,9 +26,9 @@
 
   /* AVV-Checkbox prüfen — Weiter-Button freischalten */
   function pruefeAvvWeiter() {
-    var avv  = document.getElementById('ob-avv-check')?.checked;
-    var dsgvo = document.getElementById('ob-dsgvo-check')?.checked;
-    var agb  = document.getElementById('ob-agb-check')?.checked;
+    var avv  = (document.getElementById('ob-avv-check') ? document.getElementById('ob-avv-check').checked : undefined);
+    var dsgvo = (document.getElementById('ob-dsgvo-check') ? document.getElementById('ob-dsgvo-check').checked : undefined);
+    var agb  = (document.getElementById('ob-agb-check') ? document.getElementById('ob-agb-check').checked : undefined);
     var btn  = document.getElementById('ob-avv-weiter');
     if (!btn) return;
     var ok = avv && dsgvo && agb;
@@ -92,9 +92,9 @@
 
   /* AVV-Signatur speichern — localStorage + Airtable EINWILLIGUNGEN */
   async function speichereAvvSchritt4() {
-    var avv  = document.getElementById('ob-avv-check')?.checked;
-    var dsgvo = document.getElementById('ob-dsgvo-check')?.checked;
-    var agb  = document.getElementById('ob-agb-check')?.checked;
+    var avv  = (document.getElementById('ob-avv-check') ? document.getElementById('ob-avv-check').checked : undefined);
+    var dsgvo = (document.getElementById('ob-dsgvo-check') ? document.getElementById('ob-dsgvo-check').checked : undefined);
+    var agb  = (document.getElementById('ob-agb-check') ? document.getElementById('ob-agb-check').checked : undefined);
     if (!avv || !dsgvo || !agb) return;
 
     var ts = new Date().toISOString();
@@ -126,12 +126,12 @@
   /* Schritt 2 → Profildaten in localStorage */
   function speichereProfilSchritt2() {
     var felder = {
-      prova_sv_vorname:  document.getElementById('ob-vorname')?.value.trim()  || '',
-      prova_sv_nachname: document.getElementById('ob-nachname')?.value.trim() || '',
-      prova_sv_email:    document.getElementById('ob-email')?.value.trim()    || '',
-      prova_sv_telefon:  document.getElementById('ob-telefon')?.value.trim()  || '',
-      prova_sv_firma:    document.getElementById('ob-firma')?.value.trim()    || '',
-      prova_sv_quali:    document.getElementById('ob-quali')?.value.trim()    || ''
+      prova_sv_vorname:  (document.getElementById('ob-vorname') ? document.getElementById('ob-vorname').value : undefined).trim()  || '',
+      prova_sv_nachname: (document.getElementById('ob-nachname') ? document.getElementById('ob-nachname').value : undefined).trim() || '',
+      prova_sv_email:    (document.getElementById('ob-email') ? document.getElementById('ob-email').value : undefined).trim()    || '',
+      prova_sv_telefon:  (document.getElementById('ob-telefon') ? document.getElementById('ob-telefon').value : undefined).trim()  || '',
+      prova_sv_firma:    (document.getElementById('ob-firma') ? document.getElementById('ob-firma').value : undefined).trim()    || '',
+      prova_sv_quali:    (document.getElementById('ob-quali') ? document.getElementById('ob-quali').value : undefined).trim()    || ''
     };
     Object.entries(felder).forEach(function(kv) {
       if (kv[1]) localStorage.setItem(kv[0], kv[1]);
@@ -286,8 +286,8 @@
 
   /* Validierung Schritt 2 — E-Mail Pflichtfeld */
   function validiereSchritt2() {
-    var email = document.getElementById('ob-email')?.value.trim() || '';
-    var vorname = document.getElementById('ob-vorname')?.value.trim() || '';
+    var email = (document.getElementById('ob-email') ? document.getElementById('ob-email').value : undefined).trim() || '';
+    var vorname = (document.getElementById('ob-vorname') ? document.getElementById('ob-vorname').value : undefined).trim() || '';
     if (!vorname) {
       document.getElementById('ob-vorname').focus();
       zeigeHinweis('Bitte Vorname eingeben.');

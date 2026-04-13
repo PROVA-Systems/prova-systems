@@ -39,10 +39,10 @@ function parsePositionen() {
   var rows = document.querySelectorAll('.er-position-row');
   var items = [];
   rows.forEach(function(row, idx) {
-    var leistung = row.querySelector('.er-leistung')?.value?.trim() || '';
-    var menge    = parseFloat(row.querySelector('.er-menge')?.value) || 0;
-    var einheit  = row.querySelector('.er-einheit')?.value || 'HUR';
-    var ep       = parseFloat(row.querySelector('.er-ep')?.value) || 0;
+    var leistung = (row.querySelector('.er-leistung') ? row.querySelector('.er-leistung').value : '').trim() || '';
+    var menge    = parseFloat((row.querySelector('.er-menge') ? row.querySelector('.er-menge').value : undefined)) || 0;
+    var einheit  = (row.querySelector('.er-einheit') ? row.querySelector('.er-einheit').value : undefined) || 'HUR';
+    var ep       = parseFloat((row.querySelector('.er-ep') ? row.querySelector('.er-ep').value : undefined)) || 0;
     if (leistung && menge) {
       items.push({ id: idx + 1, leistung, menge, einheit, ep, gp: Math.round(menge * ep * 100) / 100 });
     }
@@ -69,8 +69,8 @@ function updateSummen() {
 
 /* ── GP berechnen ── */
 window.erCalcGP = function(row) {
-  var menge = parseFloat(row.querySelector('.er-menge')?.value) || 0;
-  var ep    = parseFloat(row.querySelector('.er-ep')?.value) || 0;
+  var menge = parseFloat((row.querySelector('.er-menge') ? row.querySelector('.er-menge').value : undefined)) || 0;
+  var ep    = parseFloat((row.querySelector('.er-ep') ? row.querySelector('.er-ep').value : undefined)) || 0;
   var gpEl  = row.querySelector('.er-gp');
   if (gpEl) gpEl.textContent = (menge * ep).toFixed(2);
   updateSummen();

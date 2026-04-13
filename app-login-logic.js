@@ -301,9 +301,9 @@ window.register = async function() {
   var isInviteFlow = !!(inviteToken || confirmToken);
 
   // Felder lesen
-  var name  = (document.getElementById('reg-name')?.value || '').trim();
-  var email = (document.getElementById('reg-email')?.value || '').trim();
-  var pw    = (document.getElementById('reg-pw')?.value || '');
+  var name  = ((document.getElementById('reg-name') ? document.getElementById('reg-name').value : '') || '').trim();
+  var email = ((document.getElementById('reg-email') ? document.getElementById('reg-email').value : '') || '').trim();
+  var pw    = ((document.getElementById('reg-pw') ? document.getElementById('reg-pw').value : '') || '');
 
   // Validierung
   if (!isInviteFlow) {
@@ -528,7 +528,7 @@ window.resetPasswort = async function() {
     if (hint) { hint.textContent = '✅ Ihre E-Mail-Adresse wurde bestätigt.'; hint.style.display = 'block'; }
     var nameGroup  = document.getElementById('reg-name-group');
     var emailGroup = document.getElementById('reg-email-group');
-    var pwGroup    = document.getElementById('reg-pw')?.closest('.form-group');
+    var pwGroup    = (document.getElementById('reg-pw') ? document.getElementById('reg-pw').closest('.form-group') : null);
     if (nameGroup)  nameGroup.style.display  = 'none';
     if (emailGroup) emailGroup.style.display = 'none';
     if (pwGroup)    pwGroup.style.display    = 'none';

@@ -1,3 +1,4 @@
+const { getCorsHeaders, corsOptionsResponse } = require('./lib/cors-helper');
 // ══════════════════════════════════════════════════════════════════════════════
 // PROVA Systems — Jahresbericht PDF Export
 // Netlify Function: jahresbericht-pdf

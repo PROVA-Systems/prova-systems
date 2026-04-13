@@ -258,10 +258,10 @@ window.addMangel = function(projId) {
 };
 
 window.saveMangel = function(projId) {
-  var text = document.getElementById('mf-text-' + projId)?.value.trim();
+  var text = document.getElementById('mf-text-' + projId && 'mf-text-' + projId.value).trim();
   if (!text) return;
-  var gewerk = document.getElementById('mf-gewerk-' + projId)?.value || '';
-  var prio = document.getElementById('mf-prio-' + projId)?.value || 'normal';
+  var gewerk = document.getElementById('mf-gewerk-' + projId && 'mf-gewerk-' + projId.value) || '';
+  var prio = document.getElementById('mf-prio-' + projId && 'mf-prio-' + projId.value) || 'normal';
 
   var proj = _data.projekte.find(function(p){return p.id===projId;});
   if (!proj) return;

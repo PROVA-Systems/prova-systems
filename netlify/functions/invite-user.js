@@ -3,6 +3,7 @@
 // Env Vars: NETLIFY_SITE_ID, NETLIFY_ACCESS_TOKEN
 
 exports.handler = async function(event) {
+  if (event.httpMethod === 'OPTIONS') return corsOptionsResponse(event);
   if (event.httpMethod !== 'POST') {
     return {
       statusCode: 405,

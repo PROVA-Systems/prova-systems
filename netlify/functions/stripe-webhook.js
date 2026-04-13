@@ -4,7 +4,8 @@
  * Paket in Airtable: Solo | Team (anhand Stripe-Price-ID, optional ENV-Override)
  */
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY || '');
-const { AIRTABLE_API, BASE_ID, TABLE_SV } = require('./lib/prova-subscription.js');
+const { AIRTABLE_API, BASE_ID, TABLE_SV, hasProvaAccess, clearAccessCache } = require('./lib/prova-subscription.js');
+const log = require('./lib/prova-logger');
 const { resolveSoloPriceId, resolveTeamPriceId } = require('./lib/prova-stripe-prices.js');
 
 function todayStr() {
@@ -81,6 +82,8 @@ async function handleSubscriptionActive(email, sub, pat) {
 
 exports.handler = async function (event) {
   const pat = process.env.AIRTABLE_PAT;
+  const _sw_t0 = Date.now();
+  log.info({fn:'stripe-webhook',event:'webhook_received',method:event.httpMethod});
   const whSecret = process.env.STRIPE_WEBHOOK_SECRET;
   const key = process.env.STRIPE_SECRET_KEY;
 

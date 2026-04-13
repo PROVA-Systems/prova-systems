@@ -59,12 +59,16 @@ window.maxKontingent = maxKontingent;
 /* ══════════════════════════════════════════════════
    AIRTABLE FETCH via Netlify Proxy
 ══════════════════════════════════════════════════ */
-async function atFetch(table, formula, maxRecords){
+async function atFetch(table, formula, maxRecords, fields){
   try{
     var path='/v0/'+AT_BASE+'/'+table
       +'?filterByFormula='+encodeURIComponent(formula)
       +'&maxRecords='+(maxRecords||50)
       +'&sort[0][field]=Timestamp&sort[0][direction]=desc';
+    /* fields[]= Filterung: nur benötigte Felder laden (60-80% weniger Daten) */
+    if(fields && fields.length){
+      fields.forEach(function(f){ path += '&fields[]=' + encodeURIComponent(f); });
+    }
     var res=await fetch('/.netlify/functions/airtable',{
       method:'POST',
       headers:Object.assign({'Content-Type':'application/json'}, window.provaAuthHeaders ? window.provaAuthHeaders() : {}),
@@ -712,8 +716,8 @@ async function ladeAlleDaten(){
       return;
     }
     var results=await Promise.all([
-      atFetch(AT_FAELLE,filterFaelle,100),
-      atFetch(AT_TERMINE,filterTermine,50),
+      atFetch(AT_FAELLE, filterFaelle, 100, ['Aktenzeichen','Status','Schadensart','Auftraggeber_Name','Adresse_Schadensort','Fristdatum','sv_email','erstellt_am','Phase']),
+      atFetch(AT_TERMINE, filterTermine, 50, ['Aktenzeichen','termin_datum','termin_uhrzeit','betreff','typ','sv_email']),
       atFetch(AT_RECHNUNGEN,filterRechnungen,50)
     ]);
 

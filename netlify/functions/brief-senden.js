@@ -40,6 +40,7 @@ exports.handler = async function(event) {
 
   // Intern an smtp-senden weiterleiten
   const { handler } = require('./smtp-senden');
+const { getCorsHeaders, corsOptionsResponse } = require('./lib/cors-helper');
   return handler({
     httpMethod: 'POST',
     body: JSON.stringify(smtpPayload)

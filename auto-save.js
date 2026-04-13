@@ -117,7 +117,7 @@ const AutoSave = {
       else el.value = data[k];
       el.dispatchEvent(new Event('input', { bubbles: true }));
     });
-    document.getElementById('prova-restore-bar')?.remove();
+    (function(){var _el=document.getElementById('prova-restore-bar');if(_el)_el.remove();})();
     this._flash('✓ Eingaben wiederhergestellt');
   },
 

@@ -1,3 +1,4 @@
+const { getCorsHeaders, corsOptionsResponse } = require('./lib/cors-helper');
 // PROVA setup-tabellen.js — Einmalig BRIEFE + TEXTBAUSTEINE_CUSTOM anlegen
 // Aufruf: POST /.netlify/functions/setup-tabellen mit Admin-Token
 // NUR EINMALIG verwenden, danach deaktivieren

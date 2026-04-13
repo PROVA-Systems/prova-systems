@@ -15,7 +15,7 @@
 
 'use strict';
 
-const FristGuard = (() => {
+const FristGuard = (function() {
 
   // ── Konfiguration ──────────────────────────────────────────────
   const CONFIG = {
@@ -555,7 +555,7 @@ const FristGuard = (() => {
   function speicherFristenInCache(fristen) {
     try {
       localStorage.setItem(CONFIG.STORAGE_KEY, JSON.stringify({
-        fristen: fristen.map(f => ({ ...f, datum: f.datum?.toISOString() })),
+        fristen: fristen.map(f => ({ ...f, datum: (f.datum ? f.datum.toISOString() : null) })),
         timestamp: Date.now()
       }));
     } catch (e) {}
@@ -757,7 +757,7 @@ const FristGuard = (() => {
             </div>` : ''}
           </div>
           <div class="fg-overlay-actions">
-            <button class="fg-overlay-btn primary" onclick="FristGuard.oeffneModal(); document.getElementById('fg-overlay-backdrop')?.remove()">
+            <button class="fg-overlay-btn primary" onclick="FristGuard.oeffneModal(); (function(){var _e=document.getElementById('fg-overlay-backdrop');if(_e)_e.remove();})();">
               📋 Fristen verwalten
             </button>
             <button class="fg-overlay-btn secondary" onclick="FristGuard._dismissOverlay()">
@@ -775,7 +775,7 @@ const FristGuard = (() => {
   }
 
   function _dismissOverlay() {
-    document.getElementById('fg-overlay-backdrop')?.remove();
+    (function(){var _e=document.getElementById('fg-overlay-backdrop');if(_e)_e.remove();})();;
     try {
       localStorage.setItem(CONFIG.DISMISSED_KEY, JSON.stringify({ letzteAnzeige: Date.now() }));
     } catch (e) {}
@@ -792,7 +792,7 @@ const FristGuard = (() => {
       <div class="fg-modal">
         <div class="fg-modal-header">
           <div class="fg-modal-title">⏰ Fristen-Manager</div>
-          <button class="fg-modal-close" onclick="document.getElementById('fg-modal-backdrop')?.remove()">✕</button>
+          <button class="fg-modal-close" onclick="(function(){var _e=document.getElementById('fg-modal-backdrop');if(_e)_e.remove();})();">✕</button>
         </div>
         <div class="fg-modal-body" id="fg-modal-body">
           ${renderModalInhalt(fristen, fokusId)}
@@ -807,9 +807,9 @@ const FristGuard = (() => {
 
     // Zum fokussierten Element scrollen
     if (fokusId) {
-      setTimeout(() => {
-        const el = document.getElementById(`fg-k-${fokusId}`);
-        el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      setTimeout(function() {
+        const el = document.getElementById('fg-k-'+(fokusId));
+        if(el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }, 100);
     }
   }
@@ -932,11 +932,11 @@ const FristGuard = (() => {
 
   // ── Neue Frist speichern ────────────────────────────────────────
   async function _neueFristSpeichern() {
-    const titel     = document.getElementById('fg-neu-titel')?.value.trim();
-    const datum     = document.getElementById('fg-neu-datum')?.value;
-    const typ       = document.getElementById('fg-neu-typ')?.value;
-    const erinnerung = document.getElementById('fg-neu-erinnerung')?.value;
-    const notiz     = document.getElementById('fg-neu-notiz')?.value.trim();
+    const titel     = (document.getElementById('fg-neu-titel') ? document.getElementById('fg-neu-titel').value : undefined).trim();
+    const datum     = (document.getElementById('fg-neu-datum') ? document.getElementById('fg-neu-datum').value : undefined);
+    const typ       = (document.getElementById('fg-neu-typ') ? document.getElementById('fg-neu-typ').value : undefined);
+    const erinnerung = (document.getElementById('fg-neu-erinnerung') ? document.getElementById('fg-neu-erinnerung').value : undefined);
+    const notiz     = (document.getElementById('fg-neu-notiz') ? document.getElementById('fg-neu-notiz').value : undefined).trim();
 
     if (!titel || !datum) {
       alert('Bitte Bezeichnung und Datum eingeben.');
@@ -1005,9 +1005,9 @@ const FristGuard = (() => {
       speicherFristenInCache(state.fristen);
       aktualisiereBadge(state.fristen);
       // Karte aus Modal entfernen
-      document.getElementById(`fg-k-${fristId}`)?.closest('.fg-modal-section')
-        ?.querySelector(`#fg-k-${fristId}`)?.remove();
-      document.getElementById(`fg-k-${fristId}`)?.remove();
+      document.getElementById('fg-k-'+(fristId) && 'fg-k-'+(fristId).closest)('.fg-modal-section')
+        ? document.querySelector('#fg-k-'+fristId) : null; if(_rm) _rm.remove();
+      document.getElementById('fg-k-'+(fristId)) && (function(el){if(el)el.remove();})(el);
     } catch (err) {
       alert('Fehler: ' + err.message);
     }
@@ -1050,7 +1050,7 @@ const FristGuard = (() => {
   // ── Stündlicher Check-Timer ─────────────────────────────────────
   function starteCheckTimer() {
     if (state.checkTimer) return;
-    state.checkTimer = setInterval(async () => {
+    state.checkTimer = setInterval(async function() {
       await ladeFristen(true);
       aktualisiereBadge(state.fristen);
     }, CONFIG.CHECK_INTERVAL_H * 3600000);
@@ -1065,7 +1065,7 @@ const FristGuard = (() => {
     if (opts.bannerId)  zeigeBanner(opts.bannerId, fristen);
     if (opts.widgetId)  renderWidget(opts.widgetId, fristen, opts);
     if (opts.badge !== false) aktualisiereBadge(fristen);
-    if (opts.overlay !== false) setTimeout(() => pruefeUndZeigeOverlay(fristen), 1500);
+    if (opts.overlay !== false) setTimeout(function() { pruefeUndZeigeOverlay(fristen); }, 1500);
 
     starteCheckTimer();
     return fristen;

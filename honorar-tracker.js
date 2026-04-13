@@ -491,9 +491,9 @@ const HonorarTracker = (() => {
       localStorage.setItem(CONFIG.STORAGE_KEY, JSON.stringify({
         rechnungen: rechnungen.map(r => ({
           ...r,
-          datum:  r.datum?.toISOString(),
-          faellig: r.faellig?.toISOString(),
-          letzeMahnung: r.letzeMahnung?.toISOString()
+          datum:  (r.datum ? r.datum.toISOString() : null),
+          faellig: (r.faellig ? r.faellig.toISOString() : null),
+          letzeMahnung: (r.letzeMahnung ? r.letzeMahnung.toISOString() : null)
         })),
         timestamp: Date.now()
       }));

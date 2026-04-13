@@ -6,6 +6,10 @@
  */
 const OPENAI_URL = 'https://api.openai.com/v1/chat/completions';
 const { hasProvaAccess, AIRTABLE_API, BASE_ID, TABLE_AUDIT } = require('./lib/prova-subscription.js');
+const { getCorsHeaders, corsOptionsResponse } = require('./lib/cors-helper');
+const log = require('./lib/prova-logger');
+const { fetchWithRetry } = require('./lib/fetch-with-timeout');
+const { provaFetch } = require('./lib/prova-fetch');
 
 /* ── Pseudonymisierung: Namen + Adressen vor OpenAI entfernen ── */
 function pseudonymisiere(text) {
@@ -59,7 +63,7 @@ function json(status, obj) {
 
 async function logKiAudit(pat, email, action, az, tokensApprox) {
   try {
-    await fetch(AIRTABLE_API + '/v0/' + BASE_ID + '/' + TABLE_AUDIT, {
+    await provaFetch(AIRTABLE_API + '/v0/' + BASE_ID + '/' + TABLE_AUDIT, {
       method: 'POST',
       headers: { Authorization: 'Bearer ' + pat, 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -76,6 +80,10 @@ async function logKiAudit(pat, email, action, az, tokensApprox) {
 }
 
 exports.handler = async function(event, context) {
+  const _t0 = Date.now();
+  const _kp_t0 = Date.now();
+  const _kp_u = ((context.clientContext||{}).user||{}).email||'anon';
+  log.info({fn:'ki-proxy',event:'start',user:_kp_u.split('@')[0]+'@…'});
   if (event.httpMethod === 'OPTIONS') {
     return { statusCode: 204, headers: { 'Access-Control-Allow-Origin': process.env.URL || 'https://prova-systems.de', 'Access-Control-Allow-Headers': 'Authorization, Content-Type', 'Access-Control-Allow-Methods': 'POST, OPTIONS' }, body: '' };
   }
@@ -139,7 +147,7 @@ Erstelle eine strukturierte Befundaufnahme im JSON-Format:
 
 PFLICHT: Kausalaussagen nur im Konjunktiv II. HALLUZINATIONSVERBOT.`;
 
-      const res = await fetch(OPENAI_URL, {
+      const res = await provaFetch(OPENAI_URL, {
         method: 'POST',
         headers: { Authorization: 'Bearer ' + key, 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -153,7 +161,7 @@ PFLICHT: Kausalaussagen nur im Konjunktiv II. HALLUZINATIONSVERBOT.`;
             ]}
           ]
         })
-      });
+      }, { service: 'ai' });
 
       const raw = await res.text();
       if (!res.ok) return json(res.status, { error: raw.slice(0, 500), _prova_ki_meta: meta });
@@ -199,7 +207,7 @@ Text:
 ---
 ${text.slice(0, 28000)}`;
 
-      const res = await fetch(OPENAI_URL, {
+      const res = await provaFetch(OPENAI_URL, {
         method: 'POST',
         headers: { Authorization: 'Bearer ' + key, 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -209,7 +217,7 @@ ${text.slice(0, 28000)}`;
             { role: 'system', content: SV_SYSTEM_PROMPT },
             { role: 'user', content: beweisPrompt }
           ]
-        })
+        }, { service: 'ai' })
       });
 
       const raw = await res.text();
@@ -261,11 +269,11 @@ HALLUZINATIONSVERBOT. Konjunktiv II für Kausalaussagen.`;
         content.push({ type: 'image_url', image_url: { url: 'data:image/png;base64,' + skizzeB64, detail: 'low' } });
       }
 
-      const res = await fetch(OPENAI_URL, {
+      const res = await provaFetch(OPENAI_URL, {
         method: 'POST',
         headers: { Authorization: 'Bearer ' + key, 'Content-Type': 'application/json' },
         body: JSON.stringify({ model: 'gpt-4o', max_tokens: 1200,
-          messages: [{ role: 'system', content: SV_SYSTEM_PROMPT }, { role: 'user', content }] })
+          messages: [{ role: 'system', content: SV_SYSTEM_PROMPT }, { role: 'user', content }] }, { service: 'ai' })
       });
       const raw  = await res.text();
       if (!res.ok) return json(res.status, { error: raw.slice(0,500), _prova_ki_meta: meta });

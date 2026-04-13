@@ -35,10 +35,22 @@ async function fetchSvByEmail(email, pat) {
 /**
  * @returns {{ ok: boolean, reason?: string, trial?: boolean }}
  */
+/* In-Memory Cache für SV-Zugriffsprüfung: 60s TTL */
+const _accessCache = new Map();
+
 async function hasProvaAccess(email, pat) {
   if (!email || !pat) return { ok: false, reason: 'config' };
+
+  /* Cache-Check: jede Function-Instanz cached 60s */
+  const cacheKey = 'access:' + email.toLowerCase();
+  const cached = _accessCache.get(cacheKey);
+  if (cached && Date.now() < cached.expires) return cached.value;
   const rec = await fetchSvByEmail(email, pat);
-  if (!rec) return { ok: false, reason: 'no_record' };
+  if (!rec) {
+    const v = { ok: false, reason: 'no_record' };
+    _accessCache.set(cacheKey, { value: v, expires: Date.now() + 30000 });
+    return v;
+  }
   const f = rec.fields || {};
   const status = String(f.Status || '').trim();
   const sub = String(f.subscription_status || f.Subscription_Status || '')
@@ -50,8 +62,8 @@ async function hasProvaAccess(email, pat) {
   if (status === 'Gekündigt' || sub === 'canceled' || sub === 'cancelled') {
     return { ok: false, reason: 'canceled' };
   }
-  if (status === 'Aktiv') return { ok: true };
-  if (sub === 'active') return { ok: true };
+  if (status === 'Aktiv') { const v={ok:true}; _accessCache.set(cacheKey,{value:v,expires:Date.now()+60000}); return v; }
+  if (sub === 'active') { const v={ok:true}; _accessCache.set(cacheKey,{value:v,expires:Date.now()+60000}); return v; }
 
   if (status === 'Trial' || paket === 'Trial') {
     if (!trialEnd) return { ok: true, trial: true };
@@ -66,11 +78,21 @@ async function hasProvaAccess(email, pat) {
     return { ok: true };
   }
 
-  return { ok: false, reason: 'inactive' };
+  const _final = { ok: false, reason: 'inactive' };
+  _accessCache.set(cacheKey, { value: _final, expires: Date.now() + 60000 });
+  return _final;
+}
+
+/* Cache-Invalidierung nach Abo-Änderungen (stripe-webhook, admin) */
+function clearAccessCache(email) {
+  if (!email) return;
+  const key = 'access:' + email.toLowerCase();
+  _accessCache.delete(key);
 }
 
 module.exports = {
   hasProvaAccess,
+  clearAccessCache,
   fetchSvByEmail,
   AIRTABLE_API,
   BASE_ID,

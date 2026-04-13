@@ -98,7 +98,7 @@ exports.handler = async (event) => {
 
     if (!response.ok) {
       const errData = await response.json().catch(() => ({}));
-      const errMsg  = errData?.error?.message || `Whisper API Fehler ${response.status}`;
+      const errMsg  = (errData && errData.error && errData.error.message) || `Whisper API Fehler ${response.status}`;
       console.error('[Whisper] API Fehler:', errMsg);
       return {
         statusCode: 502,
@@ -110,7 +110,7 @@ exports.handler = async (event) => {
     const result = await response.json();
 
     // Transkript aufbereiten
-    const transkript = result.text?.trim() || '';
+    const transkript = (result.text ? result.text.trim() : null) || '';
     const dauer      = result.duration   || 0;
     const segmente   = result.segments   || [];
 
@@ -134,7 +134,7 @@ exports.handler = async (event) => {
         segmente: segmente.map(s => ({
           start: s.start,
           ende:  s.end,
-          text:  s.text?.trim(),
+          text:  (s.text ? s.text.trim() : null),
         })),
       }),
     };

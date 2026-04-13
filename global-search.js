@@ -137,9 +137,9 @@ const PROVASearch = {
       // Normen durchsuchen
       if (window.PROVA_NORMEN_DB) {
         const normen = window.PROVA_NORMEN_DB.filter(n =>
-          n.num?.toLowerCase().includes(this._q) ||
-          n.titel?.toLowerCase().includes(this._q) ||
-          n.bereich?.toLowerCase().includes(this._q)
+          (n.num ? n.num.toLowerCase() : null).includes(this._q) ||
+          (n.titel ? n.titel.toLowerCase() : null).includes(this._q) ||
+          (n.bereich ? n.bereich.toLowerCase() : null).includes(this._q)
         ).slice(0, 5);
         if (normen.length) {
           results.push({ group: 'Normen' });
@@ -174,9 +174,9 @@ const PROVASearch = {
       // 1. Lokaler Cache (sofort)
       const cases = JSON.parse(localStorage.getItem('prova_faelle_cache') || '[]');
       const local = cases.filter(c =>
-        c.az?.toLowerCase().includes(q) ||
-        c.auftraggeber?.toLowerCase().includes(q) ||
-        c.adresse?.toLowerCase().includes(q)
+        (c.az ? c.az.toLowerCase() : null).includes(q) ||
+        (c.auftraggeber ? c.auftraggeber.toLowerCase() : null).includes(q) ||
+        (c.adresse ? c.adresse.toLowerCase() : null).includes(q)
       ).slice(0, 5).map(c => ({
         type: 'case', label: c.az, icon: '📋',
         href: 'akte.html?az=' + encodeURIComponent(c.az || ''),

@@ -9,6 +9,7 @@
 // ══════════════════════════════════════════════════
 
 const bcrypt = require('bcryptjs');
+const { getCorsHeaders, corsOptionsResponse } = require('./lib/cors-helper');
 
 exports.handler = async (event) => {
   const headers = {

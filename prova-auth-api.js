@@ -34,8 +34,34 @@
      Alle Requests zu /.netlify/functions/* erhalten automatisch den JWT-Header.
      Bestehende Authorization-Header werden nicht überschrieben.
   ── */
+  /* ── Request Deduplication ─────────────────────────────────────
+     Verhindert doppelte identische GET-Requests (z.B. bei schnellen Tab-Wechseln).
+     Wirkt auf ALLE fetch()-Calls zu Netlify Functions — kein manuelles PROVA_API nötig.
+  ── */
+  var _dedupMap = {};
+
   var _originalFetch = window.fetch;
   window.fetch = function(url, options) {
+    var urlStr = String(url || '');
+    var method = (options && options.method || 'GET').toUpperCase();
+
+    /* Nur GET-artige Airtable-Calls deduplizieren */
+    var isAirtableGet = urlStr.indexOf('/.netlify/functions/airtable') !== -1
+      && method === 'POST'; /* Airtable-Calls sind immer POST mit method:'GET' im Body */
+
+    if (isAirtableGet && options && options.body) {
+      try {
+        var b = JSON.parse(options.body);
+        if (b.method === 'GET') {
+          var dedupKey = b.path || urlStr;
+          if (_dedupMap[dedupKey]) return _dedupMap[dedupKey];
+          var promise = _originalFetch.apply(window, arguments);
+          _dedupMap[dedupKey] = promise;
+          promise.finally(function() { delete _dedupMap[dedupKey]; });
+          return promise;
+        }
+      } catch(e) {}
+    }
     var urlStr = String(url || '');
     if (urlStr.indexOf('/.netlify/functions/') !== -1) {
       var token = getToken();

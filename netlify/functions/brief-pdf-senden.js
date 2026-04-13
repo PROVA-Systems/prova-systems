@@ -3,6 +3,7 @@
 // SMTP-Credentials kommen vom Browser, PDFMonkey-Key aus ENV
 
 const nodemailer = require('nodemailer');
+const { getCorsHeaders, corsOptionsResponse } = require('./lib/cors-helper');
 
 const PDFMONKEY_KEY  = process.env.PDFMONKEY_API_KEY;
 const BRIEF_TPL_ID   = process.env.PDFMONKEY_BRIEF_TEMPLATE_ID;

@@ -206,7 +206,7 @@ var _erkFrist = null;
 async function handleDokUpload(files) {
   if (!files || !files.length) return;
   var statusEl = document.getElementById('dok-upload-status');
-  var az = document.getElementById('akte-az')?.textContent || localStorage.getItem('prova_letztes_az') || '';
+  var az = (document.getElementById('akte-az') ? document.getElementById('akte-az').textContent : '') || localStorage.getItem('prova_letztes_az') || '';
   var uploads = JSON.parse(localStorage.getItem('prova_akte_docs_' + az) || '[]');
 
   for (var i = 0; i < files.length; i++) {
@@ -322,7 +322,7 @@ async function handleDokUpload(files) {
 function uebernimmFrist() {
   if (!_erkFrist) return;
   // In localStorage speichern (Fristenverwaltung liest das)
-  var az = document.getElementById('akte-az')?.textContent || '';
+  var az = (document.getElementById('akte-az') ? document.getElementById('akte-az').textContent : '') || '';
   var cache = JSON.parse(localStorage.getItem('prova_faelle_cache') || '{}');
   if (cache[az]) {
     cache[az].fristdatum = _erkFrist;

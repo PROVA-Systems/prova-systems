@@ -1,3 +1,4 @@
+const { getCorsHeaders, corsOptionsResponse } = require('./lib/cors-helper');
 // ══════════════════════════════════════════════════
 // PROVA Systems — KI-Statistik Sync
 // Netlify Function: ki-statistik

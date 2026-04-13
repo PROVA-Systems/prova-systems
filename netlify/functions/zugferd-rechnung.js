@@ -1,3 +1,4 @@
+const { getCorsHeaders, corsOptionsResponse } = require('./lib/cors-helper');
 // ══════════════════════════════════════════════════
 // PROVA Systems — ZUGFeRD/XRechnung Generator
 // Netlify Function: zugferd-rechnung

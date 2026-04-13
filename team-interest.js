@@ -81,7 +81,7 @@ exports.handler = async (event) => {
 
       if (atRes.ok) {
         const atData = await atRes.json();
-        airtableId = atData.records?.[0]?.id;
+        airtableId = (atData.records && atData.records[0] && atData.records[0].id);
         console.log('[PROVA] Team Interesse in Airtable gespeichert:', airtableId);
       } else {
         const err = await atRes.text();

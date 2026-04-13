@@ -85,7 +85,7 @@ exports.handler = async function(event) {
       })
     });
     const genData = await genRes.json();
-    const docId = genData.document?.id;
+    const docId = (genData.document && genData.document.id);
     if (!docId) throw new Error('PDFMonkey: Kein Dokument-ID erhalten');
 
     // Polling bis PDF fertig (max 15s)
@@ -95,7 +95,7 @@ exports.handler = async function(event) {
         headers: { 'Authorization': 'Bearer ' + PDFMONKEY_KEY }
       });
       const pollData = await pollRes.json();
-      const status = pollData.document?.status;
+      const status = (pollData.document && pollData.document.status);
       if (status === 'success') { pdfUrl = pollData.document.download_url; break; }
       if (status === 'error') throw new Error('PDFMonkey Generierungsfehler: ' + JSON.stringify(pollData.document.errors));
     }

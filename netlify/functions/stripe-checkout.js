@@ -68,6 +68,7 @@ exports.handler = async (event) => {
     }
 
     const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+const { getCorsHeaders, corsOptionsResponse } = require('./lib/cors-helper');
 
     // ── Stripe Customer anlegen oder wiederverwenden ──────────────────────────
     let customer;

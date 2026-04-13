@@ -2,6 +2,8 @@
 // Sendet eine Test-Mail an den SV selbst
 
 const nodemailer = require('nodemailer');
+const { fetchWithRetry } = require('./lib/fetch-with-timeout');
+const { getCorsHeaders, corsOptionsResponse } = require('./lib/cors-helper');
 
 exports.handler = async function(event) {
   const cors = {

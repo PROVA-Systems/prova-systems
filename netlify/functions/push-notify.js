@@ -286,6 +286,7 @@ async function sendPush(webpush, subscription, { titel, nachricht, url, badge, t
 function requireWebPush() {
   try {
     const webpush = require('web-push');
+const { getCorsHeaders, corsOptionsResponse } = require('./lib/cors-helper');
     const pub  = process.env.VAPID_PUBLIC_KEY;
     const priv = process.env.VAPID_PRIVATE_KEY;
     const subj = process.env.VAPID_SUBJECT || 'mailto:hallo@prova-systems.de';

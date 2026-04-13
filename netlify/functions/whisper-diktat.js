@@ -94,6 +94,7 @@ exports.handler = async (event) => {
 
     // FormData aufbauen (Whisper erwartet multipart/form-data)
     const FormData = require('form-data');
+const { getCorsHeaders, corsOptionsResponse } = require('./lib/cors-helper');
     const formData = new FormData();
 
     formData.append('file', audioBuffer, {

@@ -3,6 +3,10 @@
 //        KI_STATISTIK/KI_LERNPOOL SV_Email-Filter, Table-Whitelist
 const AIRTABLE_BASE_URL = 'https://api.airtable.com';
 const { hasProvaAccess, TABLE_SV, BASE_ID } = require('./lib/prova-subscription.js');
+const { getCorsHeaders, corsOptionsResponse } = require('./lib/cors-helper');
+const log = require('./lib/prova-logger');
+const cache = require('./lib/prova-cache');
+const { fetchWithRetry } = require('./lib/fetch-with-timeout');
 
 // ── Erlaubte Tabellen + welches Feld als User-Filter gilt ──────────────────
 const ALLOWED_TABLES = {
@@ -106,7 +110,7 @@ exports.handler = async function(event, context) {
       return {
         statusCode: 401,
         headers: corsHeaders,
-        body: JSON.stringify({ error: 'Anmeldung erforderlich — gültiger JWT notwendig' })
+        body: (log.warn({fn:'airtable',event:'no_jwt',method:_method}), JSON.stringify({ error: 'Anmeldung erforderlich — gültiger JWT notwendig' }))
       };
     }
 
@@ -118,7 +122,7 @@ exports.handler = async function(event, context) {
         return {
           statusCode: 403,
           headers: corsHeaders,
-          body: JSON.stringify({ error: 'Kein Zugriff — Trial abgelaufen oder kein aktives Abo' })
+          body: (log.warn({fn:'airtable',event:'no_access',user:userEmail}), JSON.stringify({ error: 'Kein Zugriff — Trial abgelaufen oder kein aktives Abo' }))
         };
       }
     }
@@ -130,7 +134,7 @@ exports.handler = async function(event, context) {
         return {
           statusCode: 403,
           headers: corsHeaders,
-          body: JSON.stringify({ error: 'Kein Zugriff — Record gehört einem anderen Nutzer' })
+          body: (log.warn({fn:'airtable',event:'ownership_fail',user:userEmail,method:_method,path:_path}), JSON.stringify({ error: 'Kein Zugriff — Record gehört einem anderen Nutzer' }))
         };
       }
     }
@@ -172,7 +176,7 @@ exports.handler = async function(event, context) {
         return {
           statusCode: 403,
           headers: corsHeaders,
-          body: JSON.stringify({ error: 'Zugriff verweigert — Filter-Fehler: ' + filterErr.message })
+          body: (log.error({fn:'airtable',event:'filter_error',err:filterErr.message}), JSON.stringify({ error: 'Zugriff verweigert — Filter-Fehler: ' + filterErr.message }))
         };
       }
     }

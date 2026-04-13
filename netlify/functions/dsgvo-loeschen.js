@@ -8,6 +8,8 @@
  * POST { confirm: true, reason: "..." }
  */
 const { getCorsHeaders, corsOptionsResponse } = require('./lib/cors-helper');
+const { fetchWithRetry } = require('./lib/fetch-with-timeout');
+const { provaFetch } = require('./lib/prova-fetch');
 
 const AT_BASE = process.env.AIRTABLE_BASE_ID  || 'appJ7bLlAHZoxENWE';
 const AT_PAT  = process.env.AIRTABLE_PAT      || process.env.AIRTABLE_TOKEN || '';
@@ -28,7 +30,7 @@ const LOESCHBARE_TABELLEN = [
 // SACHVERSTAENDIGE wird anonymisiert, nicht gelöscht
 
 async function atGet(path) {
-  const res = await fetch(AT_URL + path, {
+  const res = await fetchWithRetry(AT_URL + path, {
     headers: { Authorization: 'Bearer ' + AT_PAT }
   });
   return res.json();
@@ -41,7 +43,7 @@ async function atDelete(tableId, recordIds) {
   let deleted = 0;
   for (const chunk of chunks) {
     const params = chunk.map(id => `records[]=${id}`).join('&');
-    const res = await fetch(`${AT_URL}/v0/${AT_BASE}/${tableId}?${params}`, {
+    const res = await provaFetch(`${AT_URL}/v0/${AT_BASE}/${tableId}?${params}`, {
       method: 'DELETE',
       headers: { Authorization: 'Bearer ' + AT_PAT }
     });
@@ -105,7 +107,7 @@ exports.handler = async function(event, context) {
     const svRes = await atGet(`/v0/${AT_BASE}/tbladqEQT3tmx4DIB?filterByFormula=${encodeURIComponent(`{Email}="${email}"`)}&maxRecords=1`);
     if (svRes.records && svRes.records[0]) {
       const recId = svRes.records[0].id;
-      await fetch(`${AT_URL}/v0/${AT_BASE}/tbladqEQT3tmx4DIB/${recId}`, {
+      await provaFetch(`${AT_URL}/v0/${AT_BASE}/tbladqEQT3tmx4DIB/${recId}`, {
         method: 'PATCH',
         headers: { Authorization: 'Bearer ' + AT_PAT, 'Content-Type': 'application/json' },
         body: JSON.stringify({ fields: {

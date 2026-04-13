@@ -1,4 +1,19 @@
 
+/* ═══════════════════════════════════════════════════════════════
+   PROVA Core-Scripts — automatisch laden wenn nicht vorhanden
+   Layout Config + API Client = auf jeder Seite verfügbar
+═══════════════════════════════════════════════════════════════ */
+(function() {
+  function loadScript(src) {
+    var s = document.createElement('script');
+    s.src = src;
+    s.async = false;
+    document.head.appendChild(s);
+  }
+  if (!window.PROVA_LAYOUT) loadScript('/prova-layout.config.js');
+  // prova-api.js wird direkt in HTML eingebunden (kein dynamisches Laden nötig)
+})();
+
 /* ── Safe localStorage — QuotaExceededError abfangen ── */
 (function() {
   var _orig_set = Storage.prototype.setItem;
@@ -472,6 +487,13 @@
 
   /* ── In DOM einfügen ── */
   function injectNav() {
+    /* Layout-Config prüfen: Wizard/Mobile/Print → kein Sidebar */
+    if (window.PROVA_LAYOUT && window.PROVA_LAYOUT.getType) {
+      var _lt = window.PROVA_LAYOUT.getType();
+      if (_lt === 'wizard' || _lt === 'mobile' || _lt === 'print' || _lt === 'preauth') {
+        return; /* Früher Ausstieg — diese Seite hat eigenen Header */
+      }
+    }
     var existing = document.getElementById('sidebar');
     if (!existing) return;
     existing.innerHTML = html;

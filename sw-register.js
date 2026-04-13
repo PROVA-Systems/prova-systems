@@ -29,7 +29,7 @@
 
       // SW-Nachrichten empfangen (z.B. Sync-Erfolg)
       navigator.serviceWorker.addEventListener('message', event => {
-        if (event.data?.type === 'SYNC_SUCCESS') {
+        if ((event.data && event.data.type) === 'SYNC_SUCCESS') {
           window.dispatchEvent(new CustomEvent('prova:sync_success', { detail: event.data }));
         }
       });

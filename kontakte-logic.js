@@ -741,12 +741,12 @@ window.exportAlleVCF = function() {
 
   var vcf = alle.map(function(k) {
     var lines = ['BEGIN:VCARD', 'VERSION:3.0'];
-    var name = k.name || k.fields?.Name || '';
-    var firma = k.firma || k.fields?.Firma || '';
-    var email = k.email || k.fields?.Email || '';
-    var tel   = k.telefon || k.fields?.Telefon || '';
-    var typ   = k.typ || k.fields?.Typ || '';
-    var adr   = k.adresse || k.fields?.Adresse || '';
+    var name = k.name || (k.fields && k.fields.Name) || '';
+    var firma = k.firma || (k.fields && k.fields.Firma) || '';
+    var email = k.email || (k.fields && k.fields.Email) || '';
+    var tel   = k.telefon || (k.fields && k.fields.Telefon) || '';
+    var typ   = k.typ || (k.fields && k.fields.Typ) || '';
+    var adr   = k.adresse || (k.fields && k.fields.Adresse) || '';
 
     if (name) {
       var parts = name.trim().split(/\s+/);

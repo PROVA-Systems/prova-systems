@@ -5,8 +5,10 @@
  * Airtable: Felder Status, Trial_End, Email, Vorname, Nachname anlegen
  */
 const { AIRTABLE_API, BASE_ID, TABLE_SV } = require('./lib/prova-subscription.js');
+const { getCorsHeaders, corsOptionsResponse } = require('./lib/cors-helper');
 
 exports.handler = async function (event) {
+  if (event.httpMethod === 'OPTIONS') return corsOptionsResponse(event);
   const pat = process.env.AIRTABLE_PAT;
   if (!pat) {
     console.error('identity-signup: AIRTABLE_PAT fehlt');

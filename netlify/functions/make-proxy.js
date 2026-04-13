@@ -4,6 +4,8 @@
  * v97: alle 18 Webhook-Keys + cors-helper
  */
 const { getCorsHeaders, corsOptionsResponse } = require('./lib/cors-helper');
+const { fetchWithRetry } = require('./lib/fetch-with-timeout');
+const { provaFetch } = require('./lib/prova-fetch');
 
 function json(event, status, obj) {
   return {
@@ -69,7 +71,7 @@ exports.handler = async function (event, context) {
   }
 
   try {
-    const res = await fetch(webhook, {
+    const res = await provaFetch(webhook, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: event.body || '{}'

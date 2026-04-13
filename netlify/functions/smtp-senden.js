@@ -7,6 +7,9 @@
  */
 const nodemailer = require('nodemailer');
 const { getCorsHeaders, corsOptionsResponse } = require('./lib/cors-helper');
+const log = require('./lib/prova-logger');
+const { fetchWithRetry } = require('./lib/fetch-with-timeout');
+const { provaFetch } = require('./lib/prova-fetch');
 
 function json(event, status, obj) {
   return {
@@ -43,7 +46,7 @@ exports.handler = async function(event, context) {
 
   let creds;
   try {
-    const credsRes = await fetch(credsUrl, {
+    const credsRes = await provaFetch(credsUrl, {
       method: 'GET',
       headers: {
         Authorization: authToken,
@@ -86,11 +89,11 @@ exports.handler = async function(event, context) {
       html: html || undefined
     });
 
-    return json(event, 200, { ok: true, message: 'E-Mail versendet an ' + to });
+    log.info({fn:'smtp',event:'sent',to:to.replace(/@.*/,'@…')}); return json(event, 200, { ok: true, message: 'E-Mail versendet an ' + to });
   } catch(e) {
     let tipp = '';
     if (e.message.includes('535') || e.message.includes('Authentication')) tipp = 'SMTP-Passwort prüfen.';
     else if (e.message.includes('ECONNREFUSED')) tipp = 'SMTP-Server nicht erreichbar.';
-    return json(event, 502, { ok: false, error: e.message, tipp });
+    log.error({fn:'smtp',event:'send_failed',err:e.message}); return json(event, 502, { ok: false, error: e.message, tipp });
   }
 };
