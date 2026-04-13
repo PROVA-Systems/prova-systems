@@ -1,5 +1,5 @@
 /* PROVA — Service Worker v92 (App-Shell Caching + Offline-First) */
-const CACHE_NAME = 'prova-v110';
+const CACHE_NAME = 'prova-v111';
 
 /* App-Shell: alle statischen Kern-Dateien */
 const APP_SHELL = [

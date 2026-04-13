@@ -431,8 +431,8 @@
     +     '<div class="sb-logo-mark">P</div>'
     +     '<div class="sb-logo-text">PR<span>O</span>VA</div>'
     +   '</div>'
-    +   '<button class="sb-collapse" id="sb-collapse-btn" title="Sidebar einklappen" style="flex-shrink:0;">'
-    +     '<span class="sb-toggle-icon">‹</span>'
+    +   '<button class="sb-collapse" id="sb-collapse-btn" title="Sidebar einklappen/aufklappen" style="flex-shrink:0;width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;">'
+    +     '<span class="sb-toggle-icon" style="font-size:16px;line-height:1;">‹</span>'
     +   '</button>'
     + '</div>'
 
@@ -1136,6 +1136,20 @@ window.provaSbLogout = function() {
 
   /* ── Responsive: Sidebar bei Browser-Resize anpassen ── */
   var _mq = window.matchMedia('(max-width: 768px)');
+  var _mqMedium = window.matchMedia('(max-width: 1100px)');
+  function _onResizeMedium(e) {
+    var sb = document.querySelector('.sidebar');
+    if (!sb) return;
+    if (e.matches && !sb.classList.contains('mobile-open')) {
+      // Mittleres Fenster: Sidebar automatisch kollabieren
+      sb.classList.add('collapsed');
+      document.body.classList.add('sb-collapsed');
+      var btn = document.getElementById('sb-collapse-btn');
+      if (btn) btn.setAttribute('title', 'Sidebar aufklappen');
+    }
+  }
+  if (_mqMedium.addEventListener) _mqMedium.addEventListener('change', _onResizeMedium);
+  else if (_mqMedium.addListener) _mqMedium.addListener(_onResizeMedium);
   function _onResize(e) {
     var nowMobile = e.matches;
     var sb = document.querySelector('.sidebar');
