@@ -94,6 +94,7 @@
     { href: 'vor-ort.html',       icon: '📍', label: 'Vor-Ort starten' },
     { href: 'archiv.html',        icon: '📂', label: 'Meine Fälle' },
     { href: 'termine.html',       icon: '📅', label: 'Kalender' },
+    { href: 'statistiken.html',   icon: '📈', label: 'Auswertungen' },
   ];
 
   // ── GUTACHTEN: Spezielle Gutachten-Arten (nach KFZ-Vorbild) ─
@@ -115,7 +116,6 @@
     { href: 'jveg.html',          icon: '🧮', label: 'JVEG-Rechner' },
     { href: 'mahnwesen.html',     icon: '📨', label: 'Mahnwesen' },
     { href: 'erechnung.html',     icon: '📄', label: 'E-Rechnung (XRechnung)' },
-    { href: 'statistiken.html',   icon: '📈', label: 'Auswertungen' },
   ];
 
   // ── BÜRO: Korrespondenz & Organisation ──────────────────────
@@ -325,7 +325,12 @@
       + '}'
 
       /* ─── FOOTER: EINSTELLUNGEN + PAKET + COLLAPSE ─── */
-      + '.sb-footer{margin-top:auto;flex-shrink:0;border-top:1px solid var(--border,rgba(255,255,255,.07));}'
+      + '.sb-footer{margin-top:auto;flex-shrink:0;border-top:1px solid var(--border,rgba(255,255,255,.07));padding-bottom:4px;}'
+      + '.sb-footer-link{display:flex;align-items:center;gap:8px;padding:7px 14px;border-radius:8px;text-decoration:none;color:var(--text3,rgba(255,255,255,.5));font-size:12px;font-weight:500;transition:background .15s,color .15s;width:100%;box-sizing:border-box;}'
+      + '.sb-footer-link:hover{background:rgba(255,255,255,.05);color:var(--text2,#8b93ab);}'
+      + '.sb-footer-icon{font-size:14px;flex-shrink:0;width:20px;text-align:center;}'
+      + '.sidebar.collapsed .sb-footer-link span:last-child{opacity:0;width:0;overflow:hidden;}'
+      + '.sidebar.collapsed .sb-footer-link{justify-content:center;padding:7px;}'
       
       /* Einstellungen Link */
       + '.sb-settings{'
@@ -421,9 +426,14 @@
   };
 
   var html = ''
-    + '<div class="sb-logo" onclick="window.location.href=\'dashboard.html\'" title="Zur Zentrale">'
-    +   '<div class="sb-logo-mark">P</div>'
-    +   '<div class="sb-logo-text">PR<span>O</span>VA</div>'
+    + '<div class="sb-top-bar" style="display:flex;align-items:center;justify-content:space-between;padding-right:4px;">'
+    +   '<div class="sb-logo" onclick="window.location.href=\'dashboard.html\'" title="Zur Zentrale" style="flex:1;">'
+    +     '<div class="sb-logo-mark">P</div>'
+    +     '<div class="sb-logo-text">PR<span>O</span>VA</div>'
+    +   '</div>'
+    +   '<button class="sb-collapse" id="sb-collapse-btn" title="Sidebar einklappen" style="flex-shrink:0;">'
+    +     '<span class="sb-toggle-icon">‹</span>'
+    +   '</button>'
     + '</div>'
 
     + '<button class="sb-new-btn" id="sb-new-btn" onclick="provaResetFall();window.location.href=\'' + appUrl + '\'">'
@@ -475,11 +485,7 @@
     +     '<span style="font-size:11px;color:var(--text3);">Schnellsuche</span>'
     +     '<kbd style="font-size:10px;padding:2px 6px;border-radius:4px;background:var(--surface2);border:1px solid var(--border2);color:var(--text3);font-family:var(--font-mono);">⌘K</kbd>'
     +   '</div>'
-    +   '<button class="sb-collapse" id="sb-collapse-btn">'
-    +     '<span class="sb-toggle-icon">‹</span>'
-    +     '<span class="sb-collapse-label">Einklappen</span>'
-    +   '</button>'
-    + '</div>'
+      + '</div>'
   ;
 
   /* ── In DOM einfügen ── */
@@ -1127,6 +1133,23 @@ window.provaSbLogout = function() {
 
   /* ─── DEVICE DETECTION ─── */
   var isMobile  = window.matchMedia('(max-width: 768px)').matches;
+
+  /* ── Responsive: Sidebar bei Browser-Resize anpassen ── */
+  var _mq = window.matchMedia('(max-width: 768px)');
+  function _onResize(e) {
+    var nowMobile = e.matches;
+    var sb = document.querySelector('.sidebar');
+    if (!sb) return;
+    if (nowMobile) {
+      sb.classList.remove('collapsed');
+      document.body.classList.remove('sb-collapsed');
+      if (document.getElementById('main-wrap')) {
+        document.getElementById('main-wrap').style.marginLeft = '';
+      }
+    }
+  }
+  if (_mq.addEventListener) _mq.addEventListener('change', _onResize);
+  else if (_mq.addListener) _mq.addListener(_onResize);
   var isTablet  = window.matchMedia('(min-width: 769px) and (max-width: 1024px)').matches;
   var isIOS     = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
   var isAndroid = /Android/.test(navigator.userAgent);

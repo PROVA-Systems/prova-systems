@@ -417,13 +417,8 @@ const HonorarTracker = (() => {
         headers: Object.assign({ 'Content-Type': 'application/json' }, window.provaAuthHeaders ? window.provaAuthHeaders() : {}),
         credentials: 'same-origin',
         body: JSON.stringify({
-          action: 'list',
-          tabelle: 'RECHNUNGEN',
-          filter: `{sv_email}="${svEmail}"`,
-          sort: [{ field: 'rechnungsdatum', direction: 'desc' }],
-          felder: ['Rechnungsnummer', 'empfaenger_name', 'brutto_betrag_eur', 'netto_betrag_eur',
-                   'rechnungsdatum', 'faellig_am', 'Status', 'aktenzeichen', 'empfaenger_name',
-                   'mahnstufe', 'mahngebuehren_eur', 'Rechnungstyp', 'sv_email']
+          method: 'GET',
+          path: '/v0/appJ7bLlAHZoxENWE/tblF6MS7uiFAJDjiT?filterByFormula=' + encodeURIComponent('{sv_email}"' + svEmail + '"') + '&sort[0][field]=rechnungsdatum&sort[0][direction]=desc&fields[]=Rechnungsnummer&fields[]=empfaenger_name&fields[]=brutto_betrag_eur&fields[]=netto_betrag_eur&fields[]=rechnungsdatum&fields[]=faellig_am&fields[]=Status&fields[]=aktenzeichen&fields[]=mahnstufe&fields[]=mahngebuehren_eur&fields[]=Rechnungstyp&fields[]=sv_email'
         })
       });
 

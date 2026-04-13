@@ -1,65 +1,82 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Zur Freigabe · PROVA</title>
-<script src="prova-layout.config.js"></script>
-<script src="prova-api.js"></script>
-<link rel="stylesheet" href="prova-design.css">
-<link rel="stylesheet" href="mobile.css">
-<script src="theme.js"></script>
-<script src="auth-guard.js"></script>
-<script src="prova-auth-api.js"></script>
-<script src="prova-sv-airtable.js"></script>
-<script src="nav.js" defer></script>
+  <meta charset="UTF-8">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="PROVA">
+  <meta name="theme-color" content="#111827">
+  <link rel="apple-touch-icon" href="/icons/icon-192.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>PROVA — Zur Freigabe</title>
+  <script src="prova-preise.js"></script>
+  <script src="paket-guard.js"></script>
+  <script src="auth-guard.js"></script>
+  <script src="prova-auth-api.js"></script>
+  <script src="prova-sv-airtable.js"></script>
+  <script src="theme.js"></script>
+  <script src="prova-layout.config.js"></script>
+  <script src="prova-api.js"></script>
+  <script src="nav.js" defer></script>
+  <script src="trial-guard.js" defer></script>
+  <link rel="stylesheet" href="prova-design.css">
+  <link rel="stylesheet" href="mobile.css">
 </head>
-<body>
-<div class="app-shell">
+<body data-page="freigabe-queue">
+<div class="app-shell" id="app-shell">
   <nav class="sidebar" id="sidebar"></nav>
+  <div class="sb-overlay" id="sb-overlay" onclick="closeMobileSidebar()"></div>
   <div class="main-wrap" id="main-wrap">
-    <div class="topbar">
+
+    <header class="topbar">
       <div class="topbar-left">
-        <span class="topbar-breadcrumb">PROVA › <strong>Zur Freigabe</strong></span>
-      </div>
-    </div>
-    <div class="page-content" style="padding:24px 28px;max-width:860px;">
-
-      <div style="margin-bottom:24px;">
-        <h1 style="font-size:22px;font-weight:700;color:var(--text);margin:0 0 6px;">
-          ✅ Zur Freigabe
-        </h1>
-        <p style="font-size:13px;color:var(--text3);margin:0;">
-          Gutachten die fertig geschrieben sind und auf Ihre Freigabe + PDF-Versand warten.
-        </p>
-      </div>
-
-      <!-- Lade-Zustand -->
-      <div id="fq-loading" style="text-align:center;padding:48px;color:var(--text3);font-size:13px;">
-        <div style="font-size:24px;margin-bottom:8px;">⏳</div>
-        Fälle werden geladen…
-      </div>
-
-      <!-- Leer-Zustand -->
-      <div id="fq-empty" style="display:none;text-align:center;padding:64px 24px;">
-        <div style="font-size:48px;margin-bottom:16px;">✅</div>
-        <div style="font-size:16px;font-weight:600;color:var(--text);margin-bottom:8px;">Alles erledigt</div>
-        <div style="font-size:13px;color:var(--text3);">
-          Keine Gutachten warten auf Freigabe.<br>
-          Neue Fälle starten Sie über <a href="vor-ort.html" style="color:var(--accent);">+ Neuer Fall</a>.
+        <button class="burger" onclick="openMobileSidebar()"><span></span><span></span><span></span></button>
+        <div class="breadcrumb">
+          <span>PROVA</span>
+          <span style="color:var(--text3)">›</span>
+          <strong>Zur Freigabe</strong>
         </div>
       </div>
+    </header>
 
-      <!-- Fälle-Liste -->
-      <div id="fq-liste"></div>
+    <div class="page-content">
+      <div style="max-width:860px;margin:0 auto;">
 
+        <div style="margin-bottom:24px;">
+          <h1 style="font-size:22px;font-weight:700;color:var(--text);margin:0 0 6px;">
+            ✅ Zur Freigabe
+          </h1>
+          <p style="font-size:13px;color:var(--text3);margin:0;">
+            Gutachten die fertig geschrieben sind und auf Ihre Freigabe + PDF-Versand warten.
+          </p>
+        </div>
+
+        <div id="fq-loading" style="text-align:center;padding:64px;color:var(--text3);font-size:13px;">
+          <div style="font-size:32px;margin-bottom:12px;">⏳</div>
+          Fälle werden geladen…
+        </div>
+
+        <div id="fq-empty" style="display:none;text-align:center;padding:64px 24px;">
+          <div style="font-size:48px;margin-bottom:16px;">✅</div>
+          <div style="font-size:16px;font-weight:600;color:var(--text);margin-bottom:8px;">Alles erledigt</div>
+          <div style="font-size:13px;color:var(--text3);">
+            Keine Gutachten warten auf Freigabe.<br>
+            Neue Fälle starten Sie über <a href="vor-ort.html" style="color:var(--accent);">+ Neuer Fall</a>.
+          </div>
+        </div>
+
+        <div id="fq-liste"></div>
+
+      </div>
     </div>
   </div>
 </div>
 
 <script>
 (function() {
-  var AT_BASE  = 'appJ7bLlAHZoxENWE';
+  var AT_BASE   = 'appJ7bLlAHZoxENWE';
   var AT_FAELLE = 'tblSxV8bsXwd1pwa0';
 
   function zeigeLoading(ja) {
@@ -80,7 +97,7 @@
     card.style.cssText = [
       'background:var(--surface);border:1px solid var(--border);border-radius:14px',
       'padding:18px 20px;margin-bottom:12px;display:flex;align-items:center',
-      'justify-content:space-between;gap:16px;transition:border-color .15s;cursor:pointer'
+      'justify-content:space-between;gap:16px;transition:border-color .15s'
     ].join(';');
     card.onmouseover = function() { this.style.borderColor = 'var(--accent)'; };
     card.onmouseout  = function() { this.style.borderColor = 'var(--border)'; };
@@ -92,13 +109,13 @@
           sa +
         '</div>' +
         '<div style="font-size:12px;color:var(--text3);">' +
-          '👤 ' + ag + ' &nbsp;·&nbsp; 📍 ' + adr + ' &nbsp;·&nbsp; 📅 ' + erstellt +
+          '\u{1F464} ' + ag + ' &nbsp;·&nbsp; \u{1F4CD} ' + adr + ' &nbsp;·&nbsp; \u{1F4C5} ' + erstellt +
         '</div>' +
       '</div>' +
       '<a href="freigabe.html?az=' + encodeURIComponent(az) + '" ' +
         'style="background:var(--accent);color:#fff;padding:9px 18px;border-radius:10px;' +
         'font-size:13px;font-weight:700;text-decoration:none;white-space:nowrap;flex-shrink:0;">' +
-        '✅ Jetzt freigeben →' +
+        '\u2705 Jetzt freigeben \u2192' +
       '</a>';
 
     return card;
@@ -109,13 +126,15 @@
     if (!svEmail) { zeigeLoading(false); zeigeEmpty(true); return; }
 
     try {
-      var headers = window.provaAuthHeaders ? window.provaAuthHeaders() : {'Content-Type':'application/json'};
-      var filter  = encodeURIComponent('{Phase}="5"');
-      var fields  = ['Aktenzeichen','Schadensart','Auftraggeber_Name','Adresse_Schadensort','erstellt_am','sv_email','Status','Phase'];
-      var path    = '/v0/' + AT_BASE + '/' + AT_FAELLE +
-                    '?filterByFormula=' + filter +
-                    '&sort[0][field]=erstellt_am&sort[0][direction]=desc&maxRecords=50' +
-                    fields.map(function(f){ return '&fields[]=' + encodeURIComponent(f); }).join('');
+      var headers = { 'Content-Type': 'application/json' };
+      if (window.provaAuthHeaders) Object.assign(headers, window.provaAuthHeaders());
+
+      var fields = ['Aktenzeichen','Schadensart','Auftraggeber_Name','Adresse_Schadensort','erstellt_am','sv_email','Status','Phase'];
+      var filter = encodeURIComponent('AND({Phase}="5",{sv_email}="' + svEmail + '")');
+      var path = '/v0/' + AT_BASE + '/' + AT_FAELLE +
+                 '?filterByFormula=' + filter +
+                 '&sort[0][field]=erstellt_am&sort[0][direction]=desc&maxRecords=50' +
+                 fields.map(function(f){ return '&fields[]=' + encodeURIComponent(f); }).join('');
 
       var res  = await fetch('/.netlify/functions/airtable', {
         method: 'POST', headers: headers,
@@ -125,10 +144,6 @@
       var records = data.records || [];
 
       zeigeLoading(false);
-
-      // Badge in Sidebar aktualisieren
-      var badge = document.getElementById('fq-badge');
-      if (badge) badge.textContent = records.length || '';
 
       if (records.length === 0) { zeigeEmpty(true); return; }
 
@@ -140,7 +155,7 @@
     } catch(e) {
       zeigeLoading(false);
       document.getElementById('fq-liste').innerHTML =
-        '<div style="color:#ef4444;padding:24px;text-align:center;">Fehler beim Laden: ' + e.message + '</div>';
+        '<div style="color:#ef4444;padding:24px;text-align:center;">Fehler beim Laden — bitte Seite neu laden.</div>';
     }
   }
 

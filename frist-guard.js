@@ -492,11 +492,8 @@ const FristGuard = (function() {
         headers: Object.assign({ 'Content-Type': 'application/json' }, window.provaAuthHeaders ? window.provaAuthHeaders() : {}),
         credentials: 'same-origin',
         body: JSON.stringify({
-          action: 'list',
-          tabelle: 'TERMINE',
-          filter: `AND({Status}!="Abgeschlossen", {sv_email}="${svEmail}")`,
-          sort: [{ field: 'termin_datum', direction: 'asc' }],
-          felder: ['aktenzeichen', 'termin_datum', 'termin_typ', 'aktenzeichen', 'objekt_adresse', 'notizen', 'termin_typ', 'erinnerung_24h']
+          method: 'GET',
+          path: '/v0/appJ7bLlAHZoxENWE/tblyMTTdtfGQjjmc2?filterByFormula=' + encodeURIComponent('AND({Status}!="Abgeschlossen",{sv_email}="' + svEmail + '")') + '&sort[0][field]=termin_datum&sort[0][direction]=asc&fields[]=aktenzeichen&fields[]=termin_datum&fields[]=termin_typ&fields[]=objekt_adresse&fields[]=notizen&fields[]=erinnerung_24h&fields[]=sv_email&fields[]=Status'
         })
       });
 

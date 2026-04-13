@@ -83,7 +83,7 @@ const AutoSave = {
         if (!az) return; // Neues Gutachten → kein Restore
       }
       // Auf reinen Kalender/Abrechnungs-Seiten: kein Banner (nur Formulare die echte Eingaben haben)
-      const noRestorePages = ['termine.html','erechnung.html','rechnungen.html'];
+      const noRestorePages = ['termine.html','erechnung.html','rechnungen.html','jveg.html','statistiken.html','normen.html','kontakte.html','textbausteine.html','positionen.html','mahnwesen.html'];
       if (noRestorePages.some(function(p){ return location.pathname.indexOf(p) >= 0; })) return;
       this._showRestoreBar(data);
     } catch(e) {}

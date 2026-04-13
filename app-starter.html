@@ -1195,7 +1195,7 @@ window.speichereAktennotiz = async function(templateId) {
     const findPath = `/v0/${AIRTABLE_BASE}/${AIRTABLE_TABLE}?filterByFormula=${encodeURIComponent(`OR({Schadensnummer}=\"${vars.aktenzeichen}\",{Aktenzeichen}=\"${vars.aktenzeichen}\")`)}&maxRecords=1`;
     const data = await airtableProxy('GET', findPath);
     const rec = (data.records || [])[0];
-    if (!rec) { showToast('Fall nicht gefunden (Airtable).', 'error'); return; }
+    if (!rec) { showToast('Fall nicht gefunden.', 'error'); return; }
 
     const existing = (rec.fields?.Aktennotiz || rec.fields?.Notiz || rec.fields?.Notizen || '').trim();
     const stamp = new Date().toLocaleString('de-DE');
@@ -2076,7 +2076,7 @@ function goToGate() {
 document.addEventListener('DOMContentLoaded', function () {
   try {
     if (!localStorage.getItem('prova_hint_mandantendaten_newcase')) {
-      showToast('Hinweis: Mandantendaten werden in der EU gespeichert (Airtable, DSGVO-konform). Für Gerichtsgutachten gilt §203 StGB.', 'default', 7000);
+      showToast('Hinweis: Ihre Daten werden DSGVO-konform in der EU gespeichert. Für Gerichtsgutachten gilt §203 StGB.', 'default', 7000);
       localStorage.setItem('prova_hint_mandantendaten_newcase', '1');
     }
   } catch (eHint) {}

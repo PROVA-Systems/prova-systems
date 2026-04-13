@@ -1061,28 +1061,25 @@
         .then(function(d) {
           if (!d.records || d.records.length === 0) { zeigeToast('Keine Termine gefunden'); return; }
           // ICS generieren
-          var ics = 'BEGIN:VCALENDAR
-VERSION:2.0
-PRODID:-//PROVA Systems//DE
-';
+          var ics = 'BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//PROVA Systems//DE\r\n';
           d.records.forEach(function(rec) {
             var f = rec.fields;
             var dt = f.termin_datum ? f.termin_datum.replace(/-/g,'').slice(0,8) : '19700101';
             var uid = rec.id + '@prova-systems.de';
-            ics += 'BEGIN:VEVENT
-';
-            ics += 'UID:' + uid + '
-';
-            ics += 'DTSTART;VALUE=DATE:' + dt + '
-';
-            ics += 'DTEND;VALUE=DATE:' + dt + '
-';
-            ics += 'SUMMARY:' + (f.betreff || f.Aktenzeichen || 'Termin') + '
-';
-            ics += 'DESCRIPTION:' + (f.notiz || '') + '
-';
-            ics += 'END:VEVENT
-';
+            ics += 'BEGIN:VEVENT\r\n';
+
+            ics += 'UID:' + uid + '\r\n';
+
+            ics += 'DTSTART;VALUE=DATE:' + dt + '\r\n';
+
+            ics += 'DTEND;VALUE=DATE:' + dt + '\r\n';
+
+            ics += 'SUMMARY:' + (f.betreff || f.Aktenzeichen || 'Termin') + '\r\n';
+
+            ics += 'DESCRIPTION:' + (f.notiz || '') + '\r\n';
+
+            ics += 'END:VEVENT\r\n';
+
           });
           ics += 'END:VCALENDAR';
           var blob = new Blob([ics], {type:'text/calendar'});
