@@ -73,9 +73,13 @@ done
 
 # ── 3. sw.js Version ──────────────────────────────────────────────
 echo ""
-echo -e "${BLUE}▸ sw.js Cache-Version...${NC}"
-SW_VER=$(grep -o "prova-v[0-9]*" sw.js 2>/dev/null | head -1)
-[ -n "$SW_VER" ] && pass "$SW_VER" || fail "sw.js Version nicht gefunden"
+echo -e "${BLUE}▸ sw.js Cache-Version (auto-increment)...${NC}"
+SW_CURRENT=$(grep -o "prova-v[0-9]*" sw.js 2>/dev/null | head -1)
+SW_NUM=$(echo "$SW_CURRENT" | grep -o "[0-9]*$")
+SW_NEXT=$((SW_NUM + 1))
+SW_NEW="prova-v${SW_NEXT}"
+sed -i "s/${SW_CURRENT}/${SW_NEW}/g" sw.js
+pass "${SW_CURRENT} → ${SW_NEW}"
 
 # ── 4. Kritische Dateien ──────────────────────────────────────────
 echo ""

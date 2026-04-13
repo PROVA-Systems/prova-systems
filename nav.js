@@ -99,9 +99,9 @@
   // ── GUTACHTEN: Spezielle Gutachten-Arten (nach KFZ-Vorbild) ─
   // Normale Gutachten entstehen via "Neues Gutachten" CTA oben
   var GUTACHTEN = [
-    { href: 'freigabe.html',              icon: '✅', label: 'Freigabe & PDF-Versand' },
+    { href: 'freigabe-queue.html',         icon: '✅', label: 'Zur Freigabe', badge: 'fq-badge' },
     { href: 'ergaenzung.html',            icon: '🧩', label: 'Ergänzungsgutachten' },
-    { href: 'stellungnahme.html',         icon: '📋', label: 'Techn. Stellungnahme' },
+    { href: 'stellungnahme-gegengutachten.html', icon: '📋', label: 'Techn. Stellungnahme' },
     { href: 'widerspruch-gutachten.html', icon: '↩️', label: 'Gegengutachten' },
     { href: 'schiedsgutachten.html',      icon: '⚖️', label: 'Schiedsgutachten' },
     { href: 'gericht-auftrag.html',       icon: '🏛️', label: 'Gerichtsauftrag' },
@@ -361,7 +361,8 @@
       + '.sidebar.collapsed .sb-collapse-label{opacity:0;width:0;}'
 
       /* ─── MAIN CONTENT OFFSET ─── */
-      + '.main-wrap{margin-left:var(--sb-w);transition:margin-left .22s cubic-bezier(.4,0,.2,1);background:var(--bg,#0b0d11);min-height:100vh;}'
+      + '.sidebar ~ .main-wrap{margin-left:var(--sb-w);transition:margin-left .22s cubic-bezier(.4,0,.2,1);}'
+      + '.main-wrap{background:var(--bg,#0b0d11);min-height:100vh;}'
       + '.sidebar.collapsed ~ .main-wrap{margin-left:var(--sb-w-col);}'
       + '.main{margin-left:var(--sb-w);transition:margin-left .22s cubic-bezier(.4,0,.2,1);}'
       + '.sidebar.collapsed ~ .main{margin-left:var(--sb-w-col);}'
@@ -462,10 +463,6 @@
     +     '<span class="paket-name" style="color:' + pc + '">' + paket + '</span>'
     +   '</div>'
     +   '<div style="border-top:1px solid rgba(255,255,255,.08);margin:6px 8px 4px;"></div>'
-    +   '<a href="einstellungen.html" class="sb-footer-link">'
-    +     '<span class="sb-footer-icon">⚙️</span>'
-    +     '<span>Einstellungen</span>'
-    +   '</a>'
     +   '<a href="hilfe.html" class="sb-footer-link">'
     +     '<span class="sb-footer-icon">❓</span>'
     +     '<span>Hilfe & Support</span>'

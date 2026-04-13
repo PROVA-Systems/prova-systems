@@ -29,7 +29,7 @@ var TYP_CONFIG = {
 // ============================================================
 // ── Airtable-Proxy für Kontakte ──
 const AT_BASE_K = 'appJ7bLlAHZoxENWE';
-const AT_KONTAKTE = 'tblMKmPLjRelr6Hal';
+var AT_KONTAKTE = 'tblMKmPLjRelr6Hal';
 async function atKontakte(method, path, body) {
   try {
     var res = await fetch('/.netlify/functions/airtable', {

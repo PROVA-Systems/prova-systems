@@ -21,8 +21,8 @@ const MAKE_L4_WEBHOOK = '/.netlify/functions/make-proxy?key=l4';
 const MAKE_L5_WEBHOOK = '/.netlify/functions/make-proxy?key=l5';
 
 // Airtable
-const AT_BASE  = 'appJ7bLlAHZoxENWE';
-const AT_TABLE = 'TEAM_INTERESSE';
+var AT_BASE  = 'appJ7bLlAHZoxENWE';
+var AT_TABLE = 'TEAM_INTERESSE';
 
 exports.handler = async (event) => {
   // CORS Preflight

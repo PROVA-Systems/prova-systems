@@ -78,6 +78,7 @@
        Eigener Step-Indicator im Header statt Standard-Topbar.
     ── */
     wizard: [
+      'freigabe-queue.html',  // Zur Freigabe — Queue-Ansicht
       'freigabe.html',        // §407a Freigabe + PDF-Versand — kritischste Aktion
       'stellungnahme.html',   // §6 Fachurteil schreiben — Fokus-Schreibmodus
       'stellungnahme-v3.1.html',

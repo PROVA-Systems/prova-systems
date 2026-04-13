@@ -5,9 +5,9 @@
 // Env: AIRTABLE_PAT
 // ══════════════════════════════════════════════════
 
-const AT_BASE = 'appJ7bLlAHZoxENWE';
-const AT_KI_STATISTIK = 'tblv9F8LEnUC3mKru';
-const AT_KI_LERNPOOL = 'tbl4LEsMvcDKFCYaF';
+var AT_BASE = 'appJ7bLlAHZoxENWE';
+var AT_KI_STATISTIK = 'tblv9F8LEnUC3mKru';
+var AT_KI_LERNPOOL = 'tbl4LEsMvcDKFCYaF';
 
 // Field IDs — KI_STATISTIK
 const STAT_FIELDS = {

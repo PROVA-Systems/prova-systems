@@ -11,11 +11,11 @@ if (!window.showToast && window.zeigToast) window.showToast = window.zeigToast;
 'use strict';
 if(!localStorage.getItem('prova_user')) location.href='app-login.html';
 
-const AT_BASE='appJ7bLlAHZoxENWE', AT_TABLE='tblSxV8bsXwd1pwa0';
-const WH_S3='/.netlify/functions/make-proxy?key=s3';
-const WH_S1='/.netlify/functions/make-proxy?key=g1';
+var AT_BASE='appJ7bLlAHZoxENWE', AT_TABLE='tblSxV8bsXwd1pwa0';
+var WH_S3='/.netlify/functions/make-proxy?key=s3';
+var WH_S1='/.netlify/functions/make-proxy?key=g1';
 
-let recId=null, recFields=null, svProfil=null, editMode=false;
+var recId=null, recFields=null, svProfil=null, editMode=false;
 
 /* INIT */
 window.addEventListener('DOMContentLoaded',()=>{

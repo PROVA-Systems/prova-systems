@@ -14,10 +14,10 @@
 //   npx web-push generate-vapid-keys
 // ══════════════════════════════════════════════════════════════════════════════
 
-const AT_BASE        = 'appJ7bLlAHZoxENWE';
+var AT_BASE        = 'appJ7bLlAHZoxENWE';
 const AT_PUSH_TABLE  = 'PUSH_SUBSCRIPTIONS';   // Neue Tabelle anlegen
-const AT_FAELLE      = 'tblSxV8bsXwd1pwa0';
-const AT_TERMINE     = 'tblyMTTdtfGQjjmc2';
+var AT_FAELLE      = 'tblSxV8bsXwd1pwa0';
+var AT_TERMINE     = 'tblyMTTdtfGQjjmc2';
 
 exports.handler = async (event) => {
   if (event.httpMethod === 'OPTIONS') {

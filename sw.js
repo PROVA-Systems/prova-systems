@@ -1,5 +1,5 @@
 /* PROVA — Service Worker v92 (App-Shell Caching + Offline-First) */
-const CACHE_NAME = 'prova-v103';
+const CACHE_NAME = 'prova-v106';
 
 /* App-Shell: alle statischen Kern-Dateien */
 const APP_SHELL = [
@@ -16,7 +16,6 @@ const APP_SHELL = [
   '/prova-layout.config.js', '/prova-auth-api.js',
   '/prova-sv-airtable.js', '/prova-account-gate.js',
   '/frist-guard.js', '/support-chat.js', '/sw-register.js',
-  '/trial-guard.js', '/ortstermin-modus.html',
   '/manifest.json', '/offline.html'
 ];
 
