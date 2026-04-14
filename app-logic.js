@@ -76,8 +76,8 @@ function berechneFristWarnung(){
    G1-Webhook: imn2n5xs7j251xicrmdmk17of042pt2t
    Airtable Base: appJ7bLlAHZoxENWE / tblSxV8bsXwd1pwa0
 ============================================================ */
-const WEBHOOK_G1 = 'https://hook.eu1.make.com/imn2n5xs7j251xicrmdmk17of042pt2t';
-const WEBHOOK_K1 = 'https://hook.eu1.make.com/bslfuqmlud1vo8qems5ccn5z5f2eq4dl';
+const WEBHOOK_G1 = '/.netlify/functions/make-proxy?key=g1';
+const WEBHOOK_K1 = '/.netlify/functions/make-proxy?key=k1';
 const AIRTABLE_BASE = 'appJ7bLlAHZoxENWE';
 const AIRTABLE_TABLE = 'tblSxV8bsXwd1pwa0';
 const AIRTABLE_SV_TABLE = 'tbladqEQT3tmx4DIB';
@@ -97,7 +97,7 @@ const GUTACHTEN_VORLAGEN = [
 const GUTACHTEN_VORLAGEN_STARTER_IDS = ['standard', 'kurzgutachten', 'feuchte'];
 
 function defaultVorlageIdBySchadenart() {
-  const v = document.getElementById('f-schadenart')?.value || '';
+  const v = (document.getElementById('f-schadenart') ? document.getElementById('f-schadenart').value : undefined) || '';
   if (v === 'Schimmelbefall' || v === 'Wasserschaden') return 'feuchte';
   if (v === 'Brandschaden') return 'brand';
   if (v === 'Sturmschaden') return 'elementar';
@@ -127,12 +127,12 @@ window.vorlageVorschau = function() {
   const vorlage = GUTACHTEN_VORLAGEN.find(v => v.id === id);
   if (!vorlage) { showToast('Bitte zuerst eine Vorlage wählen.', 'warning'); return; }
   const params = new URLSearchParams({
-    aktenzeichen: document.getElementById('f-schadensnummer')?.value || '',
-    schadenart: document.getElementById('f-schadenart')?.value || '',
-    strasse: document.getElementById('f-strasse')?.value || '',
-    plz: document.getElementById('f-plz')?.value || '',
-    ort: document.getElementById('f-ort')?.value || '',
-    auftraggeber: document.getElementById('f-auftraggeber-name')?.value || ''
+    aktenzeichen: (document.getElementById('f-schadensnummer') ? document.getElementById('f-schadensnummer').value : undefined) || '',
+    schadenart: (document.getElementById('f-schadenart') ? document.getElementById('f-schadenart').value : undefined) || '',
+    strasse: (document.getElementById('f-strasse') ? document.getElementById('f-strasse').value : undefined) || '',
+    plz: (document.getElementById('f-plz') ? document.getElementById('f-plz').value : undefined) || '',
+    ort: (document.getElementById('f-ort') ? document.getElementById('f-ort').value : undefined) || '',
+    auftraggeber: (document.getElementById('f-auftraggeber-name') ? document.getElementById('f-auftraggeber-name').value : undefined) || ''
   });
   window.open('formulare/' + vorlage.file + (params.toString() ? '?' + params.toString() : ''), '_blank', 'noopener');
 };
@@ -167,7 +167,7 @@ const TRACKING = {
 
 const $ = (s, c = document) => c.querySelector(s);
 const $$ = (s, c = document) => [...c.querySelectorAll(s)];
-const on = (el, ev, fn) => el?.addEventListener(ev, fn);
+var on = function(el,ev,fn){if(el)el.addEventListener(ev,fn);};
 
 /* ============================================================
    SV PROFIL — via Netlify Airtable Proxy
@@ -189,7 +189,7 @@ async function airtableProxy(method, path, body = null) {
 }
 
 window.setSVEmail = async function() {
-  const v = (document.getElementById('svEmailInput')?.value || '').trim();
+  const v = ((document.getElementById('svEmailInput') ? document.getElementById('svEmailInput').value : undefined) || '').trim();
   if (!v) { showToast('Bitte SV E-Mail eintragen.', 'warning'); return; }
   sessionStorage.setItem('prova_email', v);
   await ladeSVProfil();
@@ -223,7 +223,7 @@ async function ladeSVProfil() {
 
 function getSVVal(key, fallback = '') {
   const f = window.SV_PROFIL || {};
-  return (f[key] ?? fallback) || fallback;
+  return (f[key] != null ? f[key] : fallback) || fallback;
 }
 
 function fmtHeute() {
@@ -231,7 +231,7 @@ function fmtHeute() {
 }
 
 function replacePlaceholders(html, vars) {
-  return html.replace(/\{\{\s*([a-zA-Z0-9_]+)\s*\}\}/g, (_, k) => (vars[k] ?? ''));
+  return html.replace(/\{\{\s*([a-zA-Z0-9_]+)\s*\}\}/g, (_, k) => (vars[k] != null ? vars[k] : ''));
 }
 
 /* TOAST */
@@ -277,9 +277,9 @@ const BRIEF_TEMPLATES = [
 
 function initBriefPage() {
   // Defaults aus aktuellem Fall ziehen (sofern vorhanden)
-  const az = document.getElementById('f-schadensnummer')?.value || '';
-  const empMail = document.getElementById('f-auftraggeber-email')?.value || '';
-  const empName = document.getElementById('f-auftraggeber-name')?.value || '';
+  const az = (document.getElementById('f-schadensnummer') ? document.getElementById('f-schadensnummer').value : undefined) || '';
+  const empMail = (document.getElementById('f-auftraggeber-email') ? document.getElementById('f-auftraggeber-email').value : undefined) || '';
+  const empName = (document.getElementById('f-auftraggeber-name') ? document.getElementById('f-auftraggeber-name').value : undefined) || '';
   const azEl = document.getElementById('brief-aktenzeichen');
   const emEl = document.getElementById('brief-empfaenger-email');
   const nmEl = document.getElementById('brief-empfaenger-name');
@@ -318,10 +318,10 @@ async function ladeBriefTemplateHtml(file) {
 }
 
 function buildBriefVars() {
-  const az = (document.getElementById('brief-aktenzeichen')?.value || '').trim();
-  const empfaenger_email = (document.getElementById('brief-empfaenger-email')?.value || '').trim();
-  const empfaenger_name = (document.getElementById('brief-empfaenger-name')?.value || '').trim();
-  const empfaenger_addr = (document.getElementById('brief-empfaenger-addr')?.value || '').trim();
+  const az = ((document.getElementById('brief-aktenzeichen') ? document.getElementById('brief-aktenzeichen').value : undefined) || '').trim();
+  const empfaenger_email = ((document.getElementById('brief-empfaenger-email') ? document.getElementById('brief-empfaenger-email').value : undefined) || '').trim();
+  const empfaenger_name = ((document.getElementById('brief-empfaenger-name') ? document.getElementById('brief-empfaenger-name').value : undefined) || '').trim();
+  const empfaenger_addr = ((document.getElementById('brief-empfaenger-addr') ? document.getElementById('brief-empfaenger-addr').value : undefined) || '').trim();
   const addrParts = empfaenger_addr.split(',').map(s => s.trim()).filter(Boolean);
   const empfaenger_strasse = addrParts[0] || '';
   const plzOrt = (addrParts[1] || '').split(' ').filter(Boolean);
@@ -429,7 +429,7 @@ window.speichereAktennotiz = async function(templateId) {
     const rec = (data.records || [])[0];
     if (!rec) { showToast('Fall nicht gefunden (Airtable).', 'error'); return; }
 
-    const existing = (rec.fields?.Aktennotiz || rec.fields?.Notiz || rec.fields?.Notizen || '').trim();
+    const existing = ((rec.fields && rec.fields.Aktennotiz) || (rec.fields && rec.fields.Notiz) || (rec.fields && rec.fields.Notizen) || '').trim();
     const stamp = new Date().toLocaleString('de-DE');
     const newEntry = `[${stamp}] ${note}`;
     const combined = existing ? (newEntry + '\n\n---\n\n' + existing) : newEntry;
@@ -449,7 +449,7 @@ window.goToStep = function(n) {
   if (n === 1) { try { TRACKING.starte(); } catch(e) {} }
   // Bei Schritt 2: wenn neue AZ → alten Diktat-Kontext löschen
   if (n === 2) {
-    var neueAz = document.getElementById('f-schadensnummer')?.value || '';
+    var neueAz = (document.getElementById('f-schadensnummer') ? document.getElementById('f-schadensnummer').value : undefined) || '';
     var alteAz = localStorage.getItem('prova_letztes_az') || '';
     if (neueAz && neueAz !== alteAz) {
       localStorage.removeItem('prova_transkript');
@@ -472,21 +472,21 @@ window.goToStep = function(n) {
     s.classList.toggle('active', i === n);
     s.classList.toggle('done', i < n);
   }
-  for (let i = 1; i <= 4; i++) document.getElementById('conn-' + i)?.classList.toggle('done', i < n);
+  for (let i = 1; i <= 4; i++) (function(el){if(el)el.classList.toggle('done',i<n);})(document.getElementById('conn-'+i));
   if (n === 2) {
-    var az = document.getElementById('f-schadensnummer')?.value?.trim()
+    var az = (document.getElementById('f-schadensnummer') ? document.getElementById('f-schadensnummer').value : '').trim()
            || sessionStorage.getItem('prova_current_az')
            || localStorage.getItem('prova_letztes_az') || '—';
-    var sa = document.getElementById('f-schadenart')?.value
+    var sa = (document.getElementById('f-schadenart') ? document.getElementById('f-schadenart').value : undefined)
            || sessionStorage.getItem('prova_current_schadenart')
            || localStorage.getItem('prova_current_schadenart') || '—';
-    var str = document.getElementById('f-strasse')?.value || '';
-    var plz = document.getElementById('f-plz')?.value || '';
-    var ort = document.getElementById('f-ort')?.value || '';
+    var str = (document.getElementById('f-strasse') ? document.getElementById('f-strasse').value : undefined) || '';
+    var plz = (document.getElementById('f-plz') ? document.getElementById('f-plz').value : undefined) || '';
+    var ort = (document.getElementById('f-ort') ? document.getElementById('f-ort').value : undefined) || '';
     var adr = [str, plz, ort].filter(Boolean).join(', ')
            || sessionStorage.getItem('prova_current_objekt')
            || localStorage.getItem('prova_current_objekt') || '—';
-    var ag = document.getElementById('f-auftraggeber-name')?.value?.trim()
+    var ag = (document.getElementById('f-auftraggeber-name') ? document.getElementById('f-auftraggeber-name').value : '').trim()
            || localStorage.getItem('prova_letzter_auftraggeber') || '—';
     var elAz = document.getElementById('step2-az'); if (elAz) elAz.textContent = az;
     var elSa = document.getElementById('step2-schadenart'); if (elSa) elSa.textContent = sa;
@@ -579,7 +579,7 @@ window.switchAuftraggeberTyp = function(val) {
 
 /* Autocomplete — nur bei Typ Versicherung; Klick auf Vorschlag füllt Feld und schließt Dropdown */
 window.handleAuftraggeberInput = function(val) {
-  const typ = document.getElementById('f-auftraggeber-typ')?.value;
+  const typ = (document.getElementById('f-auftraggeber-typ') ? document.getElementById('f-auftraggeber-typ').value : undefined);
   const drop = document.getElementById('ag-dropdown');
   if (!drop) return;
   if (typ !== 'Versicherung' || !val.trim()) { drop.innerHTML = ''; drop.style.display = 'none'; return; }
@@ -592,7 +592,7 @@ window.handleAuftraggeberInput = function(val) {
   drop.style.display = 'block';
 };
 
-document.getElementById('f-auftraggeber-typ')?.addEventListener('change', function() {
+(document.getElementById('f-auftraggeber-typ') ? document.getElementById('f-auftraggeber-typ').addEventListener : undefined)('change', function() {
   window.switchAuftraggeberTyp(this.value);
 });
 
@@ -683,7 +683,7 @@ async function autoCaption(idx) {
 
   var b64  = foto.dataUrl.replace(/^data:image\/[a-z]+;base64,/, '');
   var mime = (foto.dataUrl.match(/^data:(image\/[a-z]+);base64,/) || [])[1] || 'image/jpeg';
-  var az   = document.getElementById('f-schadensnummer')?.value
+  var az   = (document.getElementById('f-schadensnummer') ? document.getElementById('f-schadensnummer').value : undefined)
              || localStorage.getItem('prova_letztes_az') || '';
   var schadenart = (document.getElementById('f-schadenart') || {}).value || '';
 
@@ -838,7 +838,7 @@ function updateStep2Panel() {
 /* FOTO-ANLAGE EXPORT als druckbares HTML */
 window.exportFotoAnlage = async function() {
   if (!fotos.length) { showToast('Keine Fotos vorhanden.', 'warning'); return; }
-  var az = document.getElementById('f-schadensnummer')?.value || localStorage.getItem('prova_letztes_az') || 'Ohne AZ';
+  var az = (document.getElementById('f-schadensnummer') ? document.getElementById('f-schadensnummer').value : undefined) || localStorage.getItem('prova_letztes_az') || 'Ohne AZ';
   var svName = localStorage.getItem('prova_sv_name') || '';
   var datum = new Date().toLocaleDateString('de-DE');
 
@@ -930,7 +930,7 @@ window.exportFotoAnlage = async function() {
 (function() {
   /* ── PC: Leertaste = Aufnahme toggle ── */
   document.addEventListener('keydown', function(e) {
-    if (document.getElementById('step2-content')?.style.display === 'none') return;
+    if ((document.getElementById('step2-content') ? document.getElementById('step2-content').style : undefined).display === 'none') return;
     var activeEl = document.activeElement;
     var isInput = activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA' || activeEl.contentEditable === 'true');
 
@@ -980,7 +980,7 @@ window.exportFotoAnlage = async function() {
   }, { passive: true });
 
   document.addEventListener('touchend', function(e) {
-    if (document.getElementById('step2-content')?.style.display === 'none') return;
+    if ((document.getElementById('step2-content') ? document.getElementById('step2-content').style : undefined).display === 'none') return;
     var dx = e.changedTouches[0].clientX - touchStartX;
     var dy = e.changedTouches[0].clientY - touchStartY;
     // Nur horizontale Swipes auswerten (vertikal = Scroll)
@@ -1302,7 +1302,7 @@ window.sendeWebhookMitOfflineFallback = async function() {
   if (typeof sammleDaten === 'function') {
     const daten = sammleDaten();
     await queueHinzufügen(
-      'https://hook.eu1.make.com/imn2n5xs7j251xicrmdmk17of042pt2t',
+      '/.netlify/functions/make-proxy?key=g1',
       daten
     );
   }
@@ -1397,7 +1397,7 @@ window.addEventListener('online', async () => {
   // Queue abarbeiten
   await sendeOfflineQueue();
   // SW informieren (Background Sync triggern)
-  if (navigator.serviceWorker?.controller) {
+  if ((navigator.serviceWorker && navigator.serviceWorker.controller)) {
     navigator.serviceWorker.controller.postMessage({ type: 'TRIGGER_SYNC' });
   }
 });
@@ -1756,10 +1756,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
 /* ══════════════════════════════════════════════════════════
    OPTION 4: WEB SPEECH (live) + WHISPER-KORREKTUR
-   S11 Webhook: https://hook.eu1.make.com/h019rspppkvc4m146sv1opxs74h9dp3x
+   S11 Webhook: /.netlify/functions/make-proxy?key=wh
    ══════════════════════════════════════════════════════════ */
 
-var WHISPER_WEBHOOK = 'https://hook.eu1.make.com/h019rspppkvc4m146sv1opxs74h9dp3x';
+var WHISPER_WEBHOOK = '/.netlify/functions/make-proxy?key=wh';
 var mediaRecorder = null;
 var audioChunks = [];
 var whisperLaeuft = false;
@@ -1814,9 +1814,46 @@ function zeigeWhisperConsent(callback) {
   };
 }
 
-/* ── WHISPER KORREKTUR ── */
+/* ── WHISPER KORREKTUR (mit Offline-Queue) ── */
 async function starteWhisperKorrektur(audioBlob) {
   if(!audioBlob || audioBlob.size < 1000) return;
+
+  // OFFLINE-CHECK: Diktat in IndexedDB speichern wenn kein Netz
+  if (!navigator.onLine) {
+    var az = localStorage.getItem('prova_letztes_az') || ('OFFLINE-' + Date.now());
+    if (window.PROVA_OFFLINE && window.PROVA_OFFLINE.diktatSpeichern) {
+      try {
+        await window.PROVA_OFFLINE.diktatSpeichern(az, audioBlob, audioBlob.type, 'diktat.webm');
+        // Status anzeigen
+        var st = document.getElementById('recStatus');
+        if(st) st.textContent = '💾 Offline — Diktat gespeichert';
+        var badge = document.getElementById('whisper-badge');
+        if(badge) { badge.style.display = 'flex'; badge.textContent = '💾 Offline gespeichert'; }
+        // Toast
+        window.showToast && window.showToast('📵 Offline — Diktat wird verarbeitet sobald Verbindung besteht', 'warning', 5000);
+        // Listener für Reconnect
+        window.addEventListener('online', function onOnline() {
+          window.removeEventListener('online', onOnline);
+          window.showToast && window.showToast('📶 Online — Diktat wird jetzt verarbeitet…', 'info', 3000);
+          if (window.PROVA_OFFLINE && window.PROVA_OFFLINE.syncStarten) {
+            window.PROVA_OFFLINE.syncStarten(az);
+          }
+          // Nochmal versuchen zu senden
+          setTimeout(function() { starteWhisperKorrektur(audioBlob); }, 1500);
+        }, { once: true });
+        return;
+      } catch(e) {
+        console.warn('[Offline-Queue] Speichern fehlgeschlagen:', e);
+      }
+    }
+    // Fallback wenn keine Queue: Fehlermeldung
+    window.showToast && window.showToast('📵 Kein Internet — bitte Verbindung herstellen und erneut versuchen', 'error', 6000);
+    var st2 = document.getElementById('recStatus');
+    if(st2) st2.textContent = '📵 Offline — bitte Verbindung herstellen';
+    whisperLaeuft = false;
+    return;
+  }
+
   whisperLaeuft = true;
 
   // Status-Anzeige
@@ -2844,50 +2881,50 @@ async function bereinigeDiktatText() {
 ============================================================ */
 function sammleDaten() {
   const nowIso = new Date().toISOString();
-  const startMs = (typeof TRACKING?.start === 'number' && TRACKING.start > 0) ? TRACKING.start : null;
+  const startMs = (typeof (TRACKING && TRACKING.start) === 'number' && TRACKING.start > 0) ? TRACKING.start : null;
   const dauerSek = startMs ? Math.round((Date.now() - startMs) / 1000) : null;
   const dauerMin = dauerSek !== null ? Math.round((dauerSek / 60) * 10) / 10 : null;
 
   try {
     const _mw = [
-      document.getElementById('mw-feuchte')?.style.display !== 'none' && document.getElementById('f-feuchte')?.value ? 'Materialfeuchte (%): ' + document.getElementById('f-feuchte').value : '',
-      document.getElementById('f-mw-extra')?.value ? String(document.getElementById('f-mw-extra').value) : '',
+      (document.getElementById('mw-feuchte') ? document.getElementById('mw-feuchte').style : undefined).display !== 'none' && (document.getElementById('f-feuchte') ? document.getElementById('f-feuchte').value : undefined) ? 'Materialfeuchte (%): ' + document.getElementById('f-feuchte').value : '',
+      (document.getElementById('f-mw-extra') ? document.getElementById('f-mw-extra').value : undefined) ? String(document.getElementById('f-mw-extra').value) : '',
     ].filter(Boolean).join(' | ');
     localStorage.setItem('prova_messwerte_strukturiert', JSON.stringify({ paket: localStorage.getItem('prova_paket') || 'Solo', messwerte: _mw, zeit: nowIso }));
   } catch (_e) {}
 
   return {
-    auftragsart:        document.getElementById('f-auftragsart')?.value || '',
-    schadenart:         document.getElementById('f-schadenart')?.value || '',
-    schadensnummer:     document.getElementById('f-schadensnummer')?.value || '',
-    schadennummer_ag:   document.getElementById('f-schadennummer-ag')?.value || '',
-    schadensdatum:      document.getElementById('f-schadensdatum')?.value || '',
-    ortstermin_datum:   document.getElementById('f-ortstermin-datum')?.value || '',
-    gerichts_az:        document.getElementById('f-gerichts-az')?.value || '',
-    fristdatum:         document.getElementById('f-fristdatum')?.value || '',
-    beweisfragen:       document.getElementById('f-beweisfragen')?.value || '',
-    auftraggeber_typ:   document.getElementById('f-auftraggeber-typ')?.value || '',
-    auftraggeber_name:  document.getElementById('f-auftraggeber-name')?.value || '',
-    ansprechpartner:    document.getElementById('f-ansprechpartner')?.value || '',
-    auftraggeber_email: document.getElementById('f-auftraggeber-email')?.value || '',
-    auftraggeber_telefon: document.getElementById('f-auftraggeber-telefon')?.value || '',
-    strasse:            document.getElementById('f-strasse')?.value || '',
-    plz:                document.getElementById('f-plz')?.value || '',
-    ort:                document.getElementById('f-ort')?.value || '',
-    gebaeudetyp:        document.getElementById('f-gebaeudetyp')?.value || '',
-    baujahr:            document.getElementById('f-baujahr')?.value || '',
-    etage:              document.getElementById('f-etage')?.value || '',
-    geschaedigter:      document.getElementById('f-geschaedigter')?.value || '',
-    geschaedigter_email:  document.getElementById('f-geschaedigter-email')?.value || '',
-    geschaedigter_telefon: document.getElementById('f-geschaedigter-telefon')?.value || '',
-    bereich:            document.getElementById('f-bereich')?.value || '',
-    feuchtemessung:     document.getElementById('f-feuchte')?.value || '',
-    luftfeuchtigkeit:   document.getElementById('f-luftfeuchte')?.value || '',
-    temperatur:         document.getElementById('f-temperatur')?.value || '',
-    taupunkt:           document.getElementById('f-taupunkt')?.value || '',
-    schadensflaeche:    document.getElementById('f-flaeche')?.value || '',
-    schadenstiefe:      document.getElementById('f-tiefe')?.value || '',
-    messgeraet:         document.getElementById('f-messgeraet')?.value || '',
+    auftragsart:        (document.getElementById('f-auftragsart') ? document.getElementById('f-auftragsart').value : undefined) || '',
+    schadenart:         (document.getElementById('f-schadenart') ? document.getElementById('f-schadenart').value : undefined) || '',
+    schadensnummer:     (document.getElementById('f-schadensnummer') ? document.getElementById('f-schadensnummer').value : undefined) || '',
+    schadennummer_ag:   (document.getElementById('f-schadennummer-ag') ? document.getElementById('f-schadennummer-ag').value : undefined) || '',
+    schadensdatum:      (document.getElementById('f-schadensdatum') ? document.getElementById('f-schadensdatum').value : undefined) || '',
+    ortstermin_datum:   (document.getElementById('f-ortstermin-datum') ? document.getElementById('f-ortstermin-datum').value : undefined) || '',
+    gerichts_az:        (document.getElementById('f-gerichts-az') ? document.getElementById('f-gerichts-az').value : undefined) || '',
+    fristdatum:         (document.getElementById('f-fristdatum') ? document.getElementById('f-fristdatum').value : undefined) || '',
+    beweisfragen:       (document.getElementById('f-beweisfragen') ? document.getElementById('f-beweisfragen').value : undefined) || '',
+    auftraggeber_typ:   (document.getElementById('f-auftraggeber-typ') ? document.getElementById('f-auftraggeber-typ').value : undefined) || '',
+    auftraggeber_name:  (document.getElementById('f-auftraggeber-name') ? document.getElementById('f-auftraggeber-name').value : undefined) || '',
+    ansprechpartner:    (document.getElementById('f-ansprechpartner') ? document.getElementById('f-ansprechpartner').value : undefined) || '',
+    auftraggeber_email: (document.getElementById('f-auftraggeber-email') ? document.getElementById('f-auftraggeber-email').value : undefined) || '',
+    auftraggeber_telefon: (document.getElementById('f-auftraggeber-telefon') ? document.getElementById('f-auftraggeber-telefon').value : undefined) || '',
+    strasse:            (document.getElementById('f-strasse') ? document.getElementById('f-strasse').value : undefined) || '',
+    plz:                (document.getElementById('f-plz') ? document.getElementById('f-plz').value : undefined) || '',
+    ort:                (document.getElementById('f-ort') ? document.getElementById('f-ort').value : undefined) || '',
+    gebaeudetyp:        (document.getElementById('f-gebaeudetyp') ? document.getElementById('f-gebaeudetyp').value : undefined) || '',
+    baujahr:            (document.getElementById('f-baujahr') ? document.getElementById('f-baujahr').value : undefined) || '',
+    etage:              (document.getElementById('f-etage') ? document.getElementById('f-etage').value : undefined) || '',
+    geschaedigter:      (document.getElementById('f-geschaedigter') ? document.getElementById('f-geschaedigter').value : undefined) || '',
+    geschaedigter_email:  (document.getElementById('f-geschaedigter-email') ? document.getElementById('f-geschaedigter-email').value : undefined) || '',
+    geschaedigter_telefon: (document.getElementById('f-geschaedigter-telefon') ? document.getElementById('f-geschaedigter-telefon').value : undefined) || '',
+    bereich:            (document.getElementById('f-bereich') ? document.getElementById('f-bereich').value : undefined) || '',
+    feuchtemessung:     (document.getElementById('f-feuchte') ? document.getElementById('f-feuchte').value : undefined) || '',
+    luftfeuchtigkeit:   (document.getElementById('f-luftfeuchte') ? document.getElementById('f-luftfeuchte').value : undefined) || '',
+    temperatur:         (document.getElementById('f-temperatur') ? document.getElementById('f-temperatur').value : undefined) || '',
+    taupunkt:           (document.getElementById('f-taupunkt') ? document.getElementById('f-taupunkt').value : undefined) || '',
+    schadensflaeche:    (document.getElementById('f-flaeche') ? document.getElementById('f-flaeche').value : undefined) || '',
+    schadenstiefe:      (document.getElementById('f-tiefe') ? document.getElementById('f-tiefe').value : undefined) || '',
+    messgeraet:         (document.getElementById('f-messgeraet') ? document.getElementById('f-messgeraet').value : undefined) || '',
     paket:               localStorage.getItem('prova_paket') || 'Solo',
     sv_email:            localStorage.getItem('prova_sv_email') || '',
     sv_at_record_id:     localStorage.getItem('prova_at_sv_record_id') || '',
@@ -2895,41 +2932,41 @@ function sammleDaten() {
     wl_name:             localStorage.getItem('prova_wl_name') || localStorage.getItem('prova_sv_firma') || '',
     wl_primary_color:    localStorage.getItem('prova_primary_color') || '#4f8ef7',
     messwerte:          [
-      document.getElementById('mw-feuchte')?.style.display !== 'none' && document.getElementById('f-feuchte')?.value ? 'Materialfeuchte (%): ' + document.getElementById('f-feuchte').value : '',
-      document.getElementById('mw-feuchte')?.style.display !== 'none' && document.getElementById('f-luftfeuchte')?.value ? 'Luftfeuchtigkeit (%): ' + document.getElementById('f-luftfeuchte').value : '',
-      document.getElementById('mw-feuchte')?.style.display !== 'none' && document.getElementById('f-temperatur')?.value ? 'Raumtemperatur (°C): ' + document.getElementById('f-temperatur').value : '',
-      document.getElementById('mw-feuchte')?.style.display !== 'none' && document.getElementById('f-taupunkt')?.value ? 'Taupunkt (°C): ' + document.getElementById('f-taupunkt').value : '',
-      document.getElementById('mw-feuchte')?.style.display !== 'none' && document.getElementById('f-flaeche')?.value ? 'Befallene Fläche (m²): ' + document.getElementById('f-flaeche').value : '',
-      document.getElementById('mw-feuchte')?.style.display !== 'none' && document.getElementById('f-tiefe')?.value ? 'Schadenstiefe (cm): ' + document.getElementById('f-tiefe').value : '',
-      document.getElementById('mw-feuchte')?.style.display !== 'none' && document.getElementById('f-messgeraet')?.value ? 'Messgerät: ' + document.getElementById('f-messgeraet').value : '',
+      (document.getElementById('mw-feuchte') ? document.getElementById('mw-feuchte').style : undefined).display !== 'none' && (document.getElementById('f-feuchte') ? document.getElementById('f-feuchte').value : undefined) ? 'Materialfeuchte (%): ' + document.getElementById('f-feuchte').value : '',
+      (document.getElementById('mw-feuchte') ? document.getElementById('mw-feuchte').style : undefined).display !== 'none' && (document.getElementById('f-luftfeuchte') ? document.getElementById('f-luftfeuchte').value : undefined) ? 'Luftfeuchtigkeit (%): ' + document.getElementById('f-luftfeuchte').value : '',
+      (document.getElementById('mw-feuchte') ? document.getElementById('mw-feuchte').style : undefined).display !== 'none' && (document.getElementById('f-temperatur') ? document.getElementById('f-temperatur').value : undefined) ? 'Raumtemperatur (°C): ' + document.getElementById('f-temperatur').value : '',
+      (document.getElementById('mw-feuchte') ? document.getElementById('mw-feuchte').style : undefined).display !== 'none' && (document.getElementById('f-taupunkt') ? document.getElementById('f-taupunkt').value : undefined) ? 'Taupunkt (°C): ' + document.getElementById('f-taupunkt').value : '',
+      (document.getElementById('mw-feuchte') ? document.getElementById('mw-feuchte').style : undefined).display !== 'none' && (document.getElementById('f-flaeche') ? document.getElementById('f-flaeche').value : undefined) ? 'Befallene Fläche (m²): ' + document.getElementById('f-flaeche').value : '',
+      (document.getElementById('mw-feuchte') ? document.getElementById('mw-feuchte').style : undefined).display !== 'none' && (document.getElementById('f-tiefe') ? document.getElementById('f-tiefe').value : undefined) ? 'Schadenstiefe (cm): ' + document.getElementById('f-tiefe').value : '',
+      (document.getElementById('mw-feuchte') ? document.getElementById('mw-feuchte').style : undefined).display !== 'none' && (document.getElementById('f-messgeraet') ? document.getElementById('f-messgeraet').value : undefined) ? 'Messgerät: ' + document.getElementById('f-messgeraet').value : '',
 
-      document.getElementById('mw-brand')?.style.display !== 'none' && document.getElementById('f-brand-russtiefe')?.value ? 'Rußtiefe (mm): ' + document.getElementById('f-brand-russtiefe').value : '',
-      document.getElementById('mw-brand')?.style.display !== 'none' && document.getElementById('f-brand-flaeche')?.value ? 'Betroffene Fläche (m²): ' + document.getElementById('f-brand-flaeche').value : '',
-      document.getElementById('mw-brand')?.style.display !== 'none' && document.getElementById('f-brand-geruch')?.value ? 'Geruchsintensität (1–10): ' + document.getElementById('f-brand-geruch').value : '',
-      document.getElementById('mw-brand')?.style.display !== 'none' && document.getElementById('f-brand-temp')?.value ? 'Temperatureinwirkung (°C): ' + document.getElementById('f-brand-temp').value : '',
-      document.getElementById('mw-brand')?.style.display !== 'none' && document.getElementById('f-brand-entfernung')?.value ? 'Entfernung zum Brandherd (m): ' + document.getElementById('f-brand-entfernung').value : '',
-      document.getElementById('mw-brand')?.style.display !== 'none' && document.getElementById('f-brand-messgeraet')?.value ? 'Messgerät: ' + document.getElementById('f-brand-messgeraet').value : '',
+      (document.getElementById('mw-brand') ? document.getElementById('mw-brand').style : undefined).display !== 'none' && (document.getElementById('f-brand-russtiefe') ? document.getElementById('f-brand-russtiefe').value : undefined) ? 'Rußtiefe (mm): ' + document.getElementById('f-brand-russtiefe').value : '',
+      (document.getElementById('mw-brand') ? document.getElementById('mw-brand').style : undefined).display !== 'none' && (document.getElementById('f-brand-flaeche') ? document.getElementById('f-brand-flaeche').value : undefined) ? 'Betroffene Fläche (m²): ' + document.getElementById('f-brand-flaeche').value : '',
+      (document.getElementById('mw-brand') ? document.getElementById('mw-brand').style : undefined).display !== 'none' && (document.getElementById('f-brand-geruch') ? document.getElementById('f-brand-geruch').value : undefined) ? 'Geruchsintensität (1–10): ' + document.getElementById('f-brand-geruch').value : '',
+      (document.getElementById('mw-brand') ? document.getElementById('mw-brand').style : undefined).display !== 'none' && (document.getElementById('f-brand-temp') ? document.getElementById('f-brand-temp').value : undefined) ? 'Temperatureinwirkung (°C): ' + document.getElementById('f-brand-temp').value : '',
+      (document.getElementById('mw-brand') ? document.getElementById('mw-brand').style : undefined).display !== 'none' && (document.getElementById('f-brand-entfernung') ? document.getElementById('f-brand-entfernung').value : undefined) ? 'Entfernung zum Brandherd (m): ' + document.getElementById('f-brand-entfernung').value : '',
+      (document.getElementById('mw-brand') ? document.getElementById('mw-brand').style : undefined).display !== 'none' && (document.getElementById('f-brand-messgeraet') ? document.getElementById('f-brand-messgeraet').value : undefined) ? 'Messgerät: ' + document.getElementById('f-brand-messgeraet').value : '',
 
-      document.getElementById('mw-sturm')?.style.display !== 'none' && document.getElementById('f-sturm-flaeche')?.value ? 'Betroffene Fläche (m²): ' + document.getElementById('f-sturm-flaeche').value : '',
-      document.getElementById('mw-sturm')?.style.display !== 'none' && document.getElementById('f-sturm-oeffnung')?.value ? 'Öffnungsgröße (m²): ' + document.getElementById('f-sturm-oeffnung').value : '',
-      document.getElementById('mw-sturm')?.style.display !== 'none' && document.getElementById('f-sturm-eindring')?.value ? 'Eindringtiefe (cm): ' + document.getElementById('f-sturm-eindring').value : '',
-      document.getElementById('mw-sturm')?.style.display !== 'none' && document.getElementById('f-sturm-windlast')?.value ? 'Windlastzone: ' + document.getElementById('f-sturm-windlast').value : '',
-      document.getElementById('mw-sturm')?.style.display !== 'none' && document.getElementById('f-sturm-dach')?.value ? 'Dachabdeckung (%): ' + document.getElementById('f-sturm-dach').value : '',
-      document.getElementById('mw-sturm')?.style.display !== 'none' && document.getElementById('f-sturm-messgeraet')?.value ? 'Messgerät: ' + document.getElementById('f-sturm-messgeraet').value : '',
+      (document.getElementById('mw-sturm') ? document.getElementById('mw-sturm').style : undefined).display !== 'none' && (document.getElementById('f-sturm-flaeche') ? document.getElementById('f-sturm-flaeche').value : undefined) ? 'Betroffene Fläche (m²): ' + document.getElementById('f-sturm-flaeche').value : '',
+      (document.getElementById('mw-sturm') ? document.getElementById('mw-sturm').style : undefined).display !== 'none' && (document.getElementById('f-sturm-oeffnung') ? document.getElementById('f-sturm-oeffnung').value : undefined) ? 'Öffnungsgröße (m²): ' + document.getElementById('f-sturm-oeffnung').value : '',
+      (document.getElementById('mw-sturm') ? document.getElementById('mw-sturm').style : undefined).display !== 'none' && (document.getElementById('f-sturm-eindring') ? document.getElementById('f-sturm-eindring').value : undefined) ? 'Eindringtiefe (cm): ' + document.getElementById('f-sturm-eindring').value : '',
+      (document.getElementById('mw-sturm') ? document.getElementById('mw-sturm').style : undefined).display !== 'none' && (document.getElementById('f-sturm-windlast') ? document.getElementById('f-sturm-windlast').value : undefined) ? 'Windlastzone: ' + document.getElementById('f-sturm-windlast').value : '',
+      (document.getElementById('mw-sturm') ? document.getElementById('mw-sturm').style : undefined).display !== 'none' && (document.getElementById('f-sturm-dach') ? document.getElementById('f-sturm-dach').value : undefined) ? 'Dachabdeckung (%): ' + document.getElementById('f-sturm-dach').value : '',
+      (document.getElementById('mw-sturm') ? document.getElementById('mw-sturm').style : undefined).display !== 'none' && (document.getElementById('f-sturm-messgeraet') ? document.getElementById('f-sturm-messgeraet').value : undefined) ? 'Messgerät: ' + document.getElementById('f-sturm-messgeraet').value : '',
 
-      document.getElementById('mw-einbruch')?.style.display !== 'none' && document.getElementById('f-einbruch-anzahl')?.value ? 'Anzahl Schadensstellen: ' + document.getElementById('f-einbruch-anzahl').value : '',
-      document.getElementById('mw-einbruch')?.style.display !== 'none' && document.getElementById('f-einbruch-flaeche')?.value ? 'Betroffene Fläche (m²): ' + document.getElementById('f-einbruch-flaeche').value : '',
-      document.getElementById('mw-einbruch')?.style.display !== 'none' && document.getElementById('f-einbruch-tiefe')?.value ? 'Schadenstiefe (cm): ' + document.getElementById('f-einbruch-tiefe').value : '',
-      document.getElementById('mw-einbruch')?.style.display !== 'none' && document.getElementById('f-einbruch-verlust')?.value ? 'Materialverlust (kg): ' + document.getElementById('f-einbruch-verlust').value : '',
-      document.getElementById('mw-einbruch')?.style.display !== 'none' && document.getElementById('f-einbruch-bauteile')?.value ? 'Betroffene Bauteile: ' + document.getElementById('f-einbruch-bauteile').value : '',
+      (document.getElementById('mw-einbruch') ? document.getElementById('mw-einbruch').style : undefined).display !== 'none' && (document.getElementById('f-einbruch-anzahl') ? document.getElementById('f-einbruch-anzahl').value : undefined) ? 'Anzahl Schadensstellen: ' + document.getElementById('f-einbruch-anzahl').value : '',
+      (document.getElementById('mw-einbruch') ? document.getElementById('mw-einbruch').style : undefined).display !== 'none' && (document.getElementById('f-einbruch-flaeche') ? document.getElementById('f-einbruch-flaeche').value : undefined) ? 'Betroffene Fläche (m²): ' + document.getElementById('f-einbruch-flaeche').value : '',
+      (document.getElementById('mw-einbruch') ? document.getElementById('mw-einbruch').style : undefined).display !== 'none' && (document.getElementById('f-einbruch-tiefe') ? document.getElementById('f-einbruch-tiefe').value : undefined) ? 'Schadenstiefe (cm): ' + document.getElementById('f-einbruch-tiefe').value : '',
+      (document.getElementById('mw-einbruch') ? document.getElementById('mw-einbruch').style : undefined).display !== 'none' && (document.getElementById('f-einbruch-verlust') ? document.getElementById('f-einbruch-verlust').value : undefined) ? 'Materialverlust (kg): ' + document.getElementById('f-einbruch-verlust').value : '',
+      (document.getElementById('mw-einbruch') ? document.getElementById('mw-einbruch').style : undefined).display !== 'none' && (document.getElementById('f-einbruch-bauteile') ? document.getElementById('f-einbruch-bauteile').value : undefined) ? 'Betroffene Bauteile: ' + document.getElementById('f-einbruch-bauteile').value : '',
 
-      document.getElementById('mw-bau')?.style.display !== 'none' && document.getElementById('f-bau-soll')?.value ? 'Abweichung vom Sollmaß (mm): ' + document.getElementById('f-bau-soll').value : '',
-      document.getElementById('mw-bau')?.style.display !== 'none' && document.getElementById('f-bau-flaeche')?.value ? 'Betroffene Fläche (m²): ' + document.getElementById('f-bau-flaeche').value : '',
-      document.getElementById('mw-bau')?.style.display !== 'none' && document.getElementById('f-bau-din')?.value ? 'DIN-Referenz: ' + document.getElementById('f-bau-din').value : '',
-      document.getElementById('mw-bau')?.style.display !== 'none' && document.getElementById('f-bau-toleranz')?.value ? 'Toleranzüberschreitung (mm): ' + document.getElementById('f-bau-toleranz').value : '',
-      document.getElementById('mw-bau')?.style.display !== 'none' && document.getElementById('f-bau-betrieb')?.value ? 'Betriebszustand: ' + document.getElementById('f-bau-betrieb').value : '',
+      (document.getElementById('mw-bau') ? document.getElementById('mw-bau').style : undefined).display !== 'none' && (document.getElementById('f-bau-soll') ? document.getElementById('f-bau-soll').value : undefined) ? 'Abweichung vom Sollmaß (mm): ' + document.getElementById('f-bau-soll').value : '',
+      (document.getElementById('mw-bau') ? document.getElementById('mw-bau').style : undefined).display !== 'none' && (document.getElementById('f-bau-flaeche') ? document.getElementById('f-bau-flaeche').value : undefined) ? 'Betroffene Fläche (m²): ' + document.getElementById('f-bau-flaeche').value : '',
+      (document.getElementById('mw-bau') ? document.getElementById('mw-bau').style : undefined).display !== 'none' && (document.getElementById('f-bau-din') ? document.getElementById('f-bau-din').value : undefined) ? 'DIN-Referenz: ' + document.getElementById('f-bau-din').value : '',
+      (document.getElementById('mw-bau') ? document.getElementById('mw-bau').style : undefined).display !== 'none' && (document.getElementById('f-bau-toleranz') ? document.getElementById('f-bau-toleranz').value : undefined) ? 'Toleranzüberschreitung (mm): ' + document.getElementById('f-bau-toleranz').value : '',
+      (document.getElementById('mw-bau') ? document.getElementById('mw-bau').style : undefined).display !== 'none' && (document.getElementById('f-bau-betrieb') ? document.getElementById('f-bau-betrieb').value : undefined) ? 'Betriebszustand: ' + document.getElementById('f-bau-betrieb').value : '',
 
-      document.getElementById('f-mw-extra')?.value ? String(document.getElementById('f-mw-extra').value) : '',
+      (document.getElementById('f-mw-extra') ? document.getElementById('f-mw-extra').value : undefined) ? String(document.getElementById('f-mw-extra').value) : '',
     ].filter(Boolean).join(' | ') || '',
     transkript:         window.transcriptText || '',
     fotos_anzahl:       fotos.length,
@@ -2937,9 +2974,9 @@ function sammleDaten() {
     timestamp:          nowIso,
 
     // Zeiterfassung (für Airtable/Analytics in Make.com)
-    zeiterfassung_start:    TRACKING?.schrittZeiten?.schritt1_start || null,
-    zeiterfassung_schritt2: TRACKING?.schrittZeiten?.schritt2_start || null,
-    zeiterfassung_schritt3: TRACKING?.schrittZeiten?.schritt3_start || null,
+    zeiterfassung_start:    (TRACKING && TRACKING.schrittZeiten && TRACKING.schrittZeiten.schritt1_start) || null,
+    zeiterfassung_schritt2: (TRACKING && TRACKING.schrittZeiten && TRACKING.schrittZeiten.schritt2_start) || null,
+    zeiterfassung_schritt3: (TRACKING && TRACKING.schrittZeiten && TRACKING.schrittZeiten.schritt3_start) || null,
     zeiterfassung_fertig:   null,
     dauer_gesamt_sekunden:  dauerSek,
     dauer_gesamt_minuten:   dauerMin,
@@ -2951,13 +2988,13 @@ function sammleDaten() {
     paket: localStorage.getItem('prova_paket') || 'Solo',
 
     // KI-Anreicherung: Normen + Kosten gefiltert nach Schadensart
-    normen_kontext:  bauNormenKontext(document.getElementById('f-schadenart')?.value || ''),
-    kosten_kontext:  bauKostenKontext(document.getElementById('f-schadenart')?.value || ''),
+    normen_kontext:  bauNormenKontext((document.getElementById('f-schadenart') ? document.getElementById('f-schadenart').value : undefined) || ''),
+    kosten_kontext:  bauKostenKontext((document.getElementById('f-schadenart') ? document.getElementById('f-schadenart').value : undefined) || ''),
     
     // Beweisfragen-Assistent: Gutachten nach Beweisfragen strukturieren
-    beweisfragen:    (document.getElementById('f-beweisfragen')?.value || '').trim(),
-    gerichts_az:     (document.getElementById('f-gerichts-az')?.value || '').trim(),
-    ist_gerichtsgutachten: !!(document.getElementById('f-beweisfragen')?.value || '').trim()
+    beweisfragen:    ((document.getElementById('f-beweisfragen') ? document.getElementById('f-beweisfragen').value : undefined) || '').trim(),
+    gerichts_az:     ((document.getElementById('f-gerichts-az') ? document.getElementById('f-gerichts-az').value : undefined) || '').trim(),
+    ist_gerichtsgutachten: !!((document.getElementById('f-beweisfragen') ? document.getElementById('f-beweisfragen').value : undefined) || '').trim()
   };
 }
 
@@ -3134,16 +3171,16 @@ window.weiterZuAnalyse = async function() {
   if (!localStorage.getItem('prova_diktat_nachtrag')) {
     localStorage.setItem('prova_diktat_nachtrag', '');
   }
-  const az = document.getElementById('f-schadensnummer')?.value || '';
-  const sa = document.getElementById('f-schadenart')?.value || '';
-  const baujahr = document.getElementById('f-baujahr')?.value || '';
+  const az = (document.getElementById('f-schadensnummer') ? document.getElementById('f-schadensnummer').value : undefined) || '';
+  const sa = (document.getElementById('f-schadenart') ? document.getElementById('f-schadenart').value : undefined) || '';
+  const baujahr = (document.getElementById('f-baujahr') ? document.getElementById('f-baujahr').value : undefined) || '';
   if(az) { localStorage.setItem('prova_letztes_az', az); localStorage.setItem('prova_aktiver_fall', az); }
   if(sa) localStorage.setItem('prova_schadenart', sa);
   if(baujahr) localStorage.setItem('prova_baujahr', baujahr);
   // Messwerte sammeln
-  const mwFeuchte = document.getElementById('f-feuchte')?.value || '';
-  const mwLuft = document.getElementById('f-luftfeuchte')?.value || '';
-  const mwTemp = document.getElementById('f-temperatur')?.value || '';
+  const mwFeuchte = (document.getElementById('f-feuchte') ? document.getElementById('f-feuchte').value : undefined) || '';
+  const mwLuft = (document.getElementById('f-luftfeuchte') ? document.getElementById('f-luftfeuchte').value : undefined) || '';
+  const mwTemp = (document.getElementById('f-temperatur') ? document.getElementById('f-temperatur').value : undefined) || '';
   const mwListe = [
     mwFeuchte ? 'Materialfeuchte: ' + mwFeuchte + ' %' : '',
     mwLuft    ? 'Luftfeuchtigkeit: ' + mwLuft + ' %' : '',
@@ -3350,8 +3387,8 @@ function renderTabelle(records) {
 }
 
 window.filterGutachten = function() {
-  const s = document.getElementById('searchInput')?.value.toLowerCase()||'';
-  const st = document.getElementById('statusFilter')?.value||'';
+  const s = (document.getElementById('searchInput') ? document.getElementById('searchInput').value : undefined).toLowerCase()||'';
+  const st = (document.getElementById('statusFilter') ? document.getElementById('statusFilter').value : undefined)||'';
   renderTabelle(alleGutachten.filter(r => {
     const f = r.fields||{};
     const txt = [f.Schadensnummer,f.Strasse,f.Ort,f.Schadenart].join(' ').toLowerCase();
@@ -3382,12 +3419,12 @@ async function ladeArchivDaten() {
 
     // Statistiken berechnen
     const gesamt = alleArchivDaten.length;
-    const freigegeben = alleArchivDaten.filter(r => ['Freigegeben','Exportiert'].includes(r.fields?.Status)).length;
+    const freigegeben = alleArchivDaten.filter(r => ['Freigegeben','Exportiert'].includes((r.fields && r.fields.Status))).length;
     const offen = gesamt - freigegeben;
 
     // Durchschnittliche Erstellungszeit aus Tracking-Daten
     const zeiten = alleArchivDaten
-      .map(r => r.fields?.Erstellungszeit_Sekunden)
+      .map(r => (r.fields && r.fields.Erstellungszeit_Sekunden))
       .filter(z => z && z > 0);
     const avgMin = zeiten.length ? Math.round(zeiten.reduce((a,b) => a+b, 0) / zeiten.length / 60) : null;
 
@@ -3447,10 +3484,10 @@ function renderArchivTabelle(records) {
 }
 
 window.filterArchiv = function() {
-  const suche = document.getElementById('archivSearch')?.value.toLowerCase() || '';
-  const art = document.getElementById('archivSchadenart')?.value || '';
-  const jahr = document.getElementById('archivJahr')?.value || '';
-  const status = document.getElementById('archivStatus')?.value || '';
+  const suche = (document.getElementById('archivSearch') ? document.getElementById('archivSearch').value : undefined).toLowerCase() || '';
+  const art = (document.getElementById('archivSchadenart') ? document.getElementById('archivSchadenart').value : undefined) || '';
+  const jahr = (document.getElementById('archivJahr') ? document.getElementById('archivJahr').value : undefined) || '';
+  const status = (document.getElementById('archivStatus') ? document.getElementById('archivStatus').value : undefined) || '';
 
   const gefiltert = alleArchivDaten.filter(r => {
     const f = r.fields || {};
@@ -3528,7 +3565,7 @@ window.toggleMesswerte = function() {
 
 /* Messwerte-Felder je nach Schadensart anzeigen */
 window.updateMesswerteLayout = function() {
-  const sa = (document.getElementById('f-schadenart')?.value || '').toLowerCase();
+  const sa = ((document.getElementById('f-schadenart') ? document.getElementById('f-schadenart').value : undefined) || '').toLowerCase();
   const blocks = [
     { id: 'mw-feuchte',  on: (sa.includes('schimmel') || sa.includes('wasser') || sa.includes('feucht')) },
     { id: 'mw-brand',    on: (sa.includes('brand')) },
@@ -3550,7 +3587,7 @@ window.updateMesswerteLayout = function() {
   }
 };
 
-document.getElementById('f-schadenart')?.addEventListener('change', function() {
+(document.getElementById('f-schadenart') ? document.getElementById('f-schadenart').addEventListener : undefined)('change', function() {
   try { window.updateMesswerteLayout(); } catch(e) {}
 });
 
