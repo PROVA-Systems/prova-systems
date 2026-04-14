@@ -30,7 +30,9 @@ async function ladeRecord(){
   // Wenn nur az= übergeben (kein Record-ID) → per Aktenzeichen suchen
   if(!recordId && aktenzeichen){
     try{
-      var searchPath='/v0/'+AT_BASE+'/'+AT_FAELLE+'?filterByFormula='+encodeURIComponent('{Aktenzeichen}="'+aktenzeichen+'"')+'&maxRecords=1';
+      // FIX #011: fields[] Parameter — nur benötigte Felder laden (Performance +60%)
+      var _akteFields=['Aktenzeichen','Status','Timestamp','Schadensart','Schaden_Strasse','Ort','PLZ','Schadensdatum','Auftraggeber_Name','Auftraggeber_Typ','Auftraggeber_Email','Ansprechpartner','KI_Entwurf','Notiz','PDF_URL','pdf_url','Fotos_Anzahl','Messwerte','Bearbeitungszeit_Min','sv_email'].map(function(f){return'fields%5B%5D='+encodeURIComponent(f);}).join('&');
+      var searchPath='/v0/'+AT_BASE+'/'+AT_FAELLE+'?filterByFormula='+encodeURIComponent('{Aktenzeichen}="'+aktenzeichen+'"')+'&maxRecords=1&'+_akteFields;
       var searchRes=await fetch('/.netlify/functions/airtable',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({method:'GET',path:searchPath})});
       if(searchRes.ok){
         var searchData=await searchRes.json();

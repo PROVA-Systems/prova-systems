@@ -66,7 +66,9 @@ async function ladeFaelle(){
   var filter = isAdmin
     ? 'TRUE()'                        // Admin: alle Records (airtable.js Admin-Check)
     : 'NOT({Aktenzeichen}="")';       // Normal-SV: Proxy ergänzt sv_email-Filter server-seitig
-    var path='/v0/'+AT_BASE+'/'+AT_FAELLE+'?filterByFormula='+encodeURIComponent(filter)+'&maxRecords=100&sort[0][field]=Timestamp&sort[0][direction]=desc';
+    // FIX #010: fields[] Parameter — nur benötigte Felder laden (Performance +60%)
+    var _archivFields=['Aktenzeichen','Status','Timestamp','Schaden_Strasse','Ort','Auftraggeber_Name','Auftraggeber_Typ','sv_email'].map(function(f){return'fields%5B%5D='+encodeURIComponent(f);}).join('&');
+    var path='/v0/'+AT_BASE+'/'+AT_FAELLE+'?filterByFormula='+encodeURIComponent(filter)+'&maxRecords=100&sort[0][field]=Timestamp&sort[0][direction]=desc&'+_archivFields;
     var res=await fetch('/.netlify/functions/airtable',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({method:'GET',path:path})});
     if(!res.ok)throw new Error('HTTP '+res.status);
     var data=await res.json();

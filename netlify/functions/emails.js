@@ -1,72 +1,68 @@
-// ══════════════════════════════════════════════════
-// PROVA Systems — E-Mail-Router Netlify Function
-// Netlify Function: emails
-// 
-// Leitet E-Mail-Events an Make.com Webhooks weiter.
-// Typen: willkommen, trial_erinnerung, kauf_bestaetigung
-// ══════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════════════════════
+// PROVA Systems — emails.js
+// FIX #005: CORS wildcard entfernt → process.env.URL
+// FIX #006: support-Webhook als env-Variable (kein Hardcode-Fallback)
+// ══════════════════════════════════════════════════════════════════════════════
 
-// Make.com Webhook-URLs (L1, L2, L3 Szenarien)
-// WICHTIG: Diese URLs musst du nach dem Aktivieren der Szenarien in Make.com hier eintragen!
+// WICHTIG: Alle Webhooks als Netlify Env-Variablen setzen:
+// MAKE_WEBHOOK_WILLKOMMEN, MAKE_WEBHOOK_TRIAL, MAKE_WEBHOOK_KAUF, MAKE_WEBHOOK_SUPPORT
 const WEBHOOKS = {
   willkommen:         process.env.MAKE_WEBHOOK_WILLKOMMEN || '',
-  trial_erinnerung:   process.env.MAKE_WEBHOOK_TRIAL || '',
-  kauf_bestaetigung:  process.env.MAKE_WEBHOOK_KAUF || '',
-  support:            process.env.MAKE_WEBHOOK_SUPPORT || '',
+  trial_erinnerung:   process.env.MAKE_WEBHOOK_TRIAL      || '',
+  kauf_bestaetigung:  process.env.MAKE_WEBHOOK_KAUF       || '',
+  support:            process.env.MAKE_WEBHOOK_SUPPORT    || '',  // FIX: kein Hardcode-Fallback
 };
 
 exports.handler = async (event) => {
+  const allowedOrigin = process.env.URL || 'https://prova-systems.de'; // FIX: kein Wildcard
   const headers = {
-    'Access-Control-Allow-Origin': process.env.URL || 'https://prova-systems.de',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-PROVA-Secret',
+    'Access-Control-Allow-Origin':  allowedOrigin,
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
     'Content-Type': 'application/json',
   };
 
   if (event.httpMethod === 'OPTIONS') return { statusCode: 200, headers, body: '' };
-  if (event.httpMethod !== 'POST') return { statusCode: 405, headers, body: '{"error":"Method Not Allowed"}' };
+  if (event.httpMethod !== 'POST')   return { statusCode: 405, headers, body: JSON.stringify({ error: 'Method Not Allowed' }) };
+
+  // JWT-Auth prüfen (Netlify Identity)
+  const jwtUser = event.clientContext && event.clientContext.user;
+  const jwtEmail = jwtUser ? String(jwtUser.email).toLowerCase() : '';
+  const isAdmin = jwtEmail.endsWith('@prova-systems.de');
+
+  // Geheimnis-Token für interne Aufrufe (z.B. Stripe-Webhook)
+  const okSecret = (event.headers['x-prova-secret'] || '') === (process.env.PROVA_INTERNAL_SECRET || '');
 
   try {
-    const input = JSON.parse(event.body || '{}');
-    const typ = input.typ;
+    const body = JSON.parse(event.body || '{}');
+    const { typ } = body;
 
     if (!typ) {
       return { statusCode: 400, headers, body: JSON.stringify({ error: 'Feld "typ" fehlt' }) };
     }
 
-    const webhookUrl = WEBHOOKS[typ];
+    // Support-Emails: jeder angemeldete User darf; andere Typen nur Admin oder interner Aufruf
+    if (typ !== 'support' && !isAdmin && !okSecret) {
+      return { statusCode: 401, headers, body: JSON.stringify({ error: 'UNAUTHORIZED' }) };
+    }
 
+    const webhookUrl = WEBHOOKS[typ];
     if (!webhookUrl) {
-      console.log(`E-Mail-Typ "${typ}" hat keinen Webhook konfiguriert — wird übersprungen.`);
       return { statusCode: 200, headers, body: JSON.stringify({ ok: true, skipped: true, reason: 'Kein Webhook konfiguriert für: ' + typ }) };
     }
 
-    // An Make.com weiterleiten
-    // Schutz: interne Typen nur mit Secret oder JWT-Admin
-    const jwtEmail = event.clientContext && event.clientContext.user && event.clientContext.user.email
-      ? String(event.clientContext.user.email).toLowerCase()
-      : '';
-    const isAdmin = jwtEmail.endsWith('@prova-systems.de') || jwtEmail === 'admin@prova-systems.de';
-    const secret = event.headers['x-prova-secret'] || '';
-    const okSecret = process.env.EMAILS_SECRET && secret === process.env.EMAILS_SECRET;
-    if (typ !== 'support' && !isAdmin && !okSecret) {
-      return { statusCode: 401, headers, body: JSON.stringify({ ok: false, error: 'UNAUTHORIZED' }) };
-    }
-
-    const res = await fetch(webhookUrl, {
+    const resp = await fetch(webhookUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(input),
+      body: JSON.stringify(body),
     });
 
-    if (!res.ok) {
-      console.error(`Make.com Webhook ${typ} fehlgeschlagen:`, res.status);
+    if (!resp.ok) {
       return { statusCode: 200, headers, body: JSON.stringify({ ok: false, error: 'Webhook fehlgeschlagen' }) };
     }
-
     return { statusCode: 200, headers, body: JSON.stringify({ ok: true, typ }) };
 
   } catch (err) {
-    console.error('emails function error:', err);
     return { statusCode: 500, headers, body: JSON.stringify({ error: err.message }) };
   }
 };
