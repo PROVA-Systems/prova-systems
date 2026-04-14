@@ -77,10 +77,11 @@ const AutoSave = {
       if (!raw) return;
       const data = JSON.parse(raw);
       if (!data._ts || Date.now() - data._ts > 7200000) return; // >2h: verwerfen
-      // Auf app.html: nur Restore zeigen wenn AZ bereits vorhanden (= Wiederaufnahme)
+      // Auf app.html: Restore-Bar nur bei echter Wiederaufnahme (Airtable-Record vorhanden)
       if (location.pathname.indexOf('app.html') >= 0 || location.pathname.endsWith('/app')) {
+        if (sessionStorage.getItem('prova_neuer_fall') === '1') return; // Neuer Fall
         var az = localStorage.getItem('prova_aktiver_fall') || '';
-        if (!az) return; // Neues Gutachten → kein Restore
+        if (!az) return; // Kein Airtable-Record → kein Restore
       }
       // Auf reinen Kalender/Abrechnungs-Seiten: kein Banner (nur Formulare die echte Eingaben haben)
       const noRestorePages = ['termine.html','erechnung.html','rechnungen.html','jveg.html','statistiken.html','normen.html','kontakte.html','textbausteine.html','positionen.html','mahnwesen.html'];

@@ -592,9 +592,12 @@ window.handleAuftraggeberInput = function(val) {
   drop.style.display = 'block';
 };
 
-(document.getElementById('f-auftraggeber-typ') ? document.getElementById('f-auftraggeber-typ').addEventListener : undefined)('change', function() {
-  window.switchAuftraggeberTyp(this.value);
-});
+(function() {
+  var _typEl = document.getElementById('f-auftraggeber-typ');
+  if (_typEl) _typEl.addEventListener('change', function() {
+    window.switchAuftraggeberTyp(this.value);
+  });
+})();
 
 /* ENTWURF SPEICHERN */
 window.speichereEntwurf = function() {
@@ -1215,16 +1218,19 @@ async function ladeUndRestoreEntwurf() {
     }
     if (restored > 0) {
       try { window.updateMesswerteLayout && window.updateMesswerteLayout(); } catch(e) {}
-      // Kein Toast bei neuem Fall
-      var istNeu = sessionStorage.getItem('prova_neuer_fall') === '1';
-      var zeitStr = new Date().toLocaleTimeString('de-DE', {hour:'2-digit',minute:'2-digit'});
-      if (istNeu) {
-        window.showToast && window.showToast('Start ' + zeitStr + ' Uhr', 'success', 3000);
-        sessionStorage.removeItem('prova_neuer_fall');
-      } else {
-        window.showToast && window.showToast('Wiederaufnahme um ' + zeitStr + ' Uhr', 'default', 4000);
-      }
     }
+    var zeitStr = new Date().toLocaleTimeString('de-DE', {hour:'2-digit',minute:'2-digit'});
+    var istNeu = sessionStorage.getItem('prova_neuer_fall') === '1';
+    // "Wiederaufnahme" NUR wenn echter Airtable-Record existiert
+    var aktiverFall = localStorage.getItem('prova_aktiver_fall') || '';
+    if (istNeu) {
+      window.showToast && window.showToast('Gutachten gestartet — ' + zeitStr + ' Uhr', 'success', 3000);
+      sessionStorage.removeItem('prova_neuer_fall');
+      localStorage.setItem('prova_start_ts', new Date().toISOString());
+    } else if (restored > 0 && aktiverFall) {
+      window.showToast && window.showToast('Wiederaufnahme um ' + zeitStr + ' Uhr', 'info', 4000);
+    }
+    // Kein Toast wenn weder neuer Fall noch echter Airtable-Record
   } catch (err) {
     console.warn('[PROVA IDB] Restore fehlgeschlagen:', err);
   }
