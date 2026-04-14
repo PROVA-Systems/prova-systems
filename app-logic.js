@@ -1340,7 +1340,7 @@ window.weiterZuAnalyse = async function() {
   if (ta) window.transcriptText = ta.innerText.trim();
   if (window.diktatMode === 'text') {
     const manuellTa = document.getElementById('transcriptManuell');
-    window.transcriptText = (manuellTa && manuellTa.value) ? manuellTa.value.trim() : window.transcriptText;
+    window.manuellText = (manuellTa && manuellTa.value) ? manuellTa.value.trim() : (window.manuellText || '');
   }
   if (!(window.transcriptText || '').trim()) {
     window.showToast && window.showToast('Bitte Diktat aufnehmen oder Text eingeben.', 'warning');
@@ -1765,7 +1765,7 @@ document.addEventListener('DOMContentLoaded', function() {
    S11 Webhook: /.netlify/functions/make-proxy?key=wh
    ══════════════════════════════════════════════════════════ */
 
-var WHISPER_WEBHOOK = '/.netlify/functions/make-proxy?key=wh';
+var WHISPER_WEBHOOK = 'https://hook.eu1.make.com/h019rspppkvc4m146sv1opxs74h9dp3x'; // S11 direkt — kein JWT nötig
 var mediaRecorder = null;
 var audioChunks = [];
 var whisperLaeuft = false;
@@ -2650,7 +2650,7 @@ window.switchDiktatTab = function(mode) {
 
 window.syncManuellToTranscript = function() {
   var ta = document.getElementById('transcriptManuell');
-  if (ta) window.transcriptText = ta.value;
+  if (ta) window.manuellText = ta.value; // Separat speichern — transcriptText NICHT überschreiben
 };
 
 // Tastatursteuerung für Tabs (←/→, Enter/Space)
@@ -2687,12 +2687,10 @@ window.toggleRecord = async function() {
 async function starteAufnahme() {
   // 1. Browser-Kompatibilitätsprüfung
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  // Firefox/Safari: kein Live-Transcript aber Whisper-Aufnahme funktioniert trotzdem
+  var liveTranscriptOk = !!SR;
   if (!SR) {
-    showToast('Spracherkennung erfordert Chrome oder Edge. Bitte Browser wechseln.', 'error');
-    // Zeige dauerhaften Hinweis
-    var hint = document.getElementById('diktat-browser-hint');
-    if(hint) hint.style.display='block';
-    return;
+    showToast('Live-Vorschau nicht verfügbar (Firefox). Aufnahme + Whisper-Korrektur laufen.', 'info', 4000);
   }
   // 2. HTTPS-Check
   if(location.protocol !== 'https:' && location.hostname !== 'localhost') {
@@ -2974,7 +2972,15 @@ function sammleDaten() {
 
       (document.getElementById('f-mw-extra') ? document.getElementById('f-mw-extra').value : undefined) ? String(document.getElementById('f-mw-extra').value) : '',
     ].filter(Boolean).join(' | ') || '',
-    transkript:         window.transcriptText || '',
+    transkript_diktat:   (window.transcriptText || '').trim(),
+    transkript_manuell:  (window.manuellText || '').trim(),
+    // Kombiniert: Diktat + Manuell — KI bekommt alles, priorisiert nicht-leere Quelle
+    transkript: (function() {
+      var d = (window.transcriptText || '').trim();
+      var m = (window.manuellText || '').trim();
+      if (d && m) return d + '\n\n[MANUELLE ERGÄNZUNG DES SV:]\n' + m;
+      return d || m || '';
+    })(),
     fotos_anzahl:       fotos.length,
     fotos:              fotos.map((f, i) => ({ index: i+1, dataUrl: f.dataUrl, caption: f.caption || 'Foto '+(i+1), groesse_kb: Math.round(f.compSize/1024) })),
     timestamp:          nowIso,
@@ -3161,14 +3167,20 @@ window.weiterZuAnalyse = async function() {
   if (ta) window.transcriptText = ta.innerText.trim();
   if (diktatMode === 'text') {
     var manuellTa = document.getElementById('transcriptManuell');
-    window.transcriptText = (manuellTa && manuellTa.value) ? manuellTa.value.trim() : window.transcriptText;
+    window.manuellText = (manuellTa && manuellTa.value) ? manuellTa.value.trim() : (window.manuellText || '');
   }
   if (!(window.transcriptText || '').trim()) {
     showToast('Bitte Diktat aufnehmen oder Text eingeben.', 'warning');
     return;
   }
   // ── KRITISCH: Diktat + Messwerte in localStorage für stellungnahme.html ──
-  localStorage.setItem('prova_transkript', window.transcriptText || '');
+  // Kombiniert speichern für Stellungnahme
+  var _d = (window.transcriptText || '').trim();
+  var _m = (window.manuellText || '').trim();
+  var _kombiniert = (_d && _m) ? _d + '\n\n[MANUELLE ERGÄNZUNG:]\n' + _m : (_d || _m || '');
+  localStorage.setItem('prova_transkript', _kombiniert);
+  if (_d) localStorage.setItem('prova_transkript_diktat', _d);
+  if (_m) localStorage.setItem('prova_transkript_manuell', _m);
   // Manuelle Eingabe separat für stellungnahme.html 3-Quellen-Diktat
   var manuellEl = document.getElementById('transcriptManuell');
   var manuellText = manuellEl ? manuellEl.value.trim() : '';

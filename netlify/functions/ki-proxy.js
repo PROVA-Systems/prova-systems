@@ -1,293 +1,364 @@
-/**
- * PROVA — KI-Proxy (OpenAI GPT-4o)
- * Actions: foto_analyse | beweisfragen_text | metadata_ping
- * §407a ZPO: KI assistiert, SV entscheidet. HALLUZINATIONSVERBOT.
- * DSGVO: Personendaten werden vor OpenAI-Übermittlung pseudonymisiert.
- */
-const OPENAI_URL = 'https://api.openai.com/v1/chat/completions';
-const { hasProvaAccess, AIRTABLE_API, BASE_ID, TABLE_AUDIT } = require('./lib/prova-subscription.js');
-const { getCorsHeaders, corsOptionsResponse } = require('./lib/cors-helper');
-const log = require('./lib/prova-logger');
-const { fetchWithRetry } = require('./lib/fetch-with-timeout');
-const { provaFetch } = require('./lib/prova-fetch');
+// PROVA Systems — KI-Proxy Netlify Function v3.0
+// Aufgaben-Router: messages-Format + aufgabe-Format
+// API-Key: Netlify Env Var OPENAI_API_KEY
 
-/* ── Pseudonymisierung: Namen + Adressen vor OpenAI entfernen ── */
-function pseudonymisiere(text) {
-  if (!text) return text;
-  return text
-    .replace(/\b(Herr|Frau|Dr\.|Dipl\.-Ing\.|Prof\.)\s+[A-ZÄÖÜ][a-zäöüß]+-?[A-ZÄÖÜ]?[a-zäöüß]*\b/g, '[PERSON]')
-    .replace(/\b[A-ZÄÖÜ][a-zäöüß]+(straße|str\.|gasse|weg|allee|platz|ring)\s*\d+[a-z]?\b/gi, '[ADRESSE]')
-    .replace(/\b\d{5}\s+[A-ZÄÖÜ][a-zäöüß]+\b/g, '[PLZ ORT]')
-    .replace(/\b[\w.+-]+@[\w-]+\.[a-z]{2,}\b/gi, '[EMAIL]')
-    .replace(/\b(\+49|0)\d{3,5}[\s/-]?\d{4,10}\b/g, '[TELEFON]')
-    .replace(/\bDE\d{2}\s?\d{4}\s?\d{4}\s?\d{4}\s?\d{4}\s?\d{2}\b/g, '[IBAN]');
-}
-
-/* ── System-Prompt: Erfahrener öb.u.v. Sachverständiger ── */
-const SV_SYSTEM_PROMPT = `Du bist ein öffentlich bestellter und vereidigter Sachverständiger (ö.b.u.v. SV) für Schäden an Gebäuden mit 25 Jahren Berufserfahrung.
-
-DEIN FACHWISSEN umfasst:
-- Schadensarten: Feuchteschäden, Schimmelschäden (inkl. Mykologie), Tauwasserausfall, kapillare Feuchte, aufsteigende Bodenfeuchte, Leckagen, Brandschäden, Sturmschäden, Baumängel, Setzungsrisse, Schallschutzdefizite
-- Normen: DIN 4108 (Wärmeschutz), DIN 18195 (Abdichtung), DIN 68800 (Holzschutz), DIN 18550 (Putz), DIN EN ISO 13788 (Feuchteschutz), WTA-Merkblätter (2-2, 2-6, 2-7, 4-5, 6-1), DIN 18202 (Toleranzen), VOB/B §13, BGB §633ff, ZPO §§402-414
-- Messverfahren: CM-Messung (Calciumcarbid), kapazitive Feuchtemessung, Thermografie (aktiv/passiv), Endoskopie, Rissbreitenmessung (DIN 1045), Schallpegelmessung (DIN 4109)
-- JVEG §§7-12 Honorarberechnung
-
-PFLICHTEN NACH §407a ZPO:
-- Du lieferst AUSSCHLIESSLICH fachliche Grundlagen und strukturierte Beobachtungen
-- Der Sachverständige trifft alle fachlichen Entscheidungen selbst
-- Kausalaussagen NUR im Konjunktiv II: "könnte", "dürfte", "wäre denkbar", "lässt sich nicht ausschließen"
-- KEIN Konjunktiv bei objektiven Tatsachen (z.B. Messwerten die direkt sichtbar sind)
-
-HALLUZINATIONSVERBOT (absolut):
-- Erfinde KEINE Messwerte, Normenangaben oder Fakten die nicht im Bild/Text erkennbar sind
-- Wenn etwas nicht erkennbar ist: "Nicht beurteilbar ohne [Messverfahren]" schreiben
-- Keine Diagnosesicherheit vortäuschen
-
-QUALITÄTSSTANDARD:
-Deine Ausgabe muss vor einem Obergericht bestehen können.`;
-
-function json(status, obj) {
-  return {
-    statusCode: status,
-    headers: {
-      'Content-Type': 'application/json',
-      'X-PROVA-AI': 'Assisted',
-      'X-PROVA-407a': 'SV-Decision-Required',
-      'Access-Control-Allow-Origin': process.env.URL || 'https://prova-systems.de',
-      'Access-Control-Allow-Headers': 'Authorization, Content-Type',
-      'Access-Control-Allow-Methods': 'POST, OPTIONS'
-    },
-    body: JSON.stringify(obj)
-  };
-}
-
-async function logKiAudit(pat, email, action, az, tokensApprox) {
-  try {
-    await provaFetch(AIRTABLE_API + '/v0/' + BASE_ID + '/' + TABLE_AUDIT, {
-      method: 'POST',
-      headers: { Authorization: 'Bearer ' + pat, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        fields: {
-          Typ: 'KI',
-          Email: email || 'unbekannt',
-          AZ: az || '',
-          Details: JSON.stringify({ aufgabe: action || '', tokens_approx: tokensApprox || 0, pseudonymisiert: true }),
-          Zeitstempel: new Date().toISOString()
-        }
-      })
-    });
-  } catch(e) {}
-}
-
-exports.handler = async function(event, context) {
-  const _t0 = Date.now();
-  const _kp_t0 = Date.now();
-  const _kp_u = ((context.clientContext||{}).user||{}).email||'anon';
-  log.info({fn:'ki-proxy',event:'start',user:_kp_u.split('@')[0]+'@…'});
+exports.handler = async function(event) {
   if (event.httpMethod === 'OPTIONS') {
-    return { statusCode: 204, headers: { 'Access-Control-Allow-Origin': process.env.URL || 'https://prova-systems.de', 'Access-Control-Allow-Headers': 'Authorization, Content-Type', 'Access-Control-Allow-Methods': 'POST, OPTIONS' }, body: '' };
+    return { statusCode: 200, headers: { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'Content-Type', 'Access-Control-Allow-Methods': 'POST, OPTIONS' }, body: '' };
   }
-  if (event.httpMethod !== 'POST') return json(405, { error: 'Method Not Allowed' });
-
-  const key = process.env.OPENAI_API_KEY;
-  if (!key) return json(500, { error: 'OPENAI_API_KEY nicht gesetzt' });
+  if (event.httpMethod !== 'POST') {
+    return { statusCode: 405, body: JSON.stringify({ error: 'Method not allowed' }) };
+  }
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) return { statusCode: 500, body: JSON.stringify({ error: 'OPENAI_API_KEY nicht konfiguriert' }) };
 
   let body;
-  try { body = JSON.parse(event.body || '{}'); } catch(e) { return json(400, { error: 'Ungültiger JSON-Body' }); }
-
-  const meta = {
-    ki_modell: 'PROVA KI (GPT-4o)',
-    ki_datum: new Date().toISOString(),
-    ki_version: '2.0',
-    eu_ai_act_art52: true,
-    paragraph_407a: 'SV-Entscheidung erforderlich',
-    pseudonymisiert: true
-  };
-
-  const action = body.action || body.aufgabe || '';
-
-  if (action !== 'metadata_ping' && action !== 'eu_ai_label') {
-    const pat = process.env.AIRTABLE_PAT;
-    const user = context.clientContext && context.clientContext.user;
-    if (!pat || !user || !user.email) return json(401, { error: 'Anmeldung erforderlich', _prova_ki_meta: meta });
-    const access = await hasProvaAccess(String(user.email).trim().toLowerCase(), pat);
-    const accessOk = typeof access === 'boolean' ? access : (access && access.ok);
-    if (!accessOk) return json(403, { error: 'Kein Zugriff — Testphase beendet oder kein aktives Abo', _prova_ki_meta: meta });
-    body._prova_user_email = String(user.email).trim().toLowerCase();
-  }
+  try { body = JSON.parse(event.body); }
+  catch (e) { return { statusCode: 400, body: JSON.stringify({ error: 'Invalid JSON' }) }; }
 
   try {
-    if (action === 'metadata_ping' || action === 'eu_ai_label') {
-      return json(200, { ok: true, _prova_ki_meta: meta });
-    }
-
-    /* ════════════════════════════════════════════════
-       FOTO-ANALYSE: Sachverständige Bildauswertung
-       ════════════════════════════════════════════════ */
-    if (action === 'foto_analyse' || body.aufgabe === 'foto_analyse') {
-      const b64 = body.imageBase64 || body.b64;
-      const mime = body.mimeType || 'image/jpeg';
-      if (!b64) return json(400, { error: 'imageBase64 fehlt' });
-
-      const fotoPrompt = `Analysiere dieses Bild als ö.b.u.v. Sachverständiger für Gebäudeschäden.
-
-Erstelle eine strukturierte Befundaufnahme im JSON-Format:
-{
-  "befund": "Präzise sachverständige Beschreibung des Sichtbefundes (was ist tatsächlich erkennbar, keine Interpretation)",
-  "schadensart": "Klassifizierung des Schadens (z.B. 'Feuchteschaden mit Schimmelpilzbefall', 'Rissbildung' etc.) oder '' wenn kein Schaden erkennbar",
-  "auspraegung": "Umfang und Schweregrad: lokalisiert/flächig, oberflächlich/tiefgreifend",
-  "potentielle_ursachen": ["Mögliche Ursache 1 (Konjunktiv II!)", "Mögliche Ursache 2"],
-  "auszuschliessen": ["Was aufgrund des Bildes unwahrscheinlich erscheint"],
-  "normen_relevant": ["DIN/WTA-Norm die zu prüfen wäre"],
-  "messverfahren_empfohlen": ["CM-Messung", "Thermografie" etc.],
-  "dringlichkeit": "sofort/kurzfristig/mittelfristig/beobachten",
-  "nicht_beurteilbar": ["Was ohne Messung/Öffnung nicht beurteilt werden kann"],
-  "foto_qualitaet_hinweis": "Hinweis wenn Bildqualität/Winkel die Beurteilung einschränkt"
-}
-
-PFLICHT: Kausalaussagen nur im Konjunktiv II. HALLUZINATIONSVERBOT.`;
-
-      const res = await provaFetch(OPENAI_URL, {
-        method: 'POST',
-        headers: { Authorization: 'Bearer ' + key, 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: 'gpt-4o',
-          max_tokens: 1500,
-          messages: [
-            { role: 'system', content: SV_SYSTEM_PROMPT },
-            { role: 'user', content: [
-              { type: 'text', text: fotoPrompt },
-              { type: 'image_url', image_url: { url: 'data:' + mime + ';base64,' + b64, detail: 'high' } }
-            ]}
-          ]
-        })
-      }, { service: 'ai' });
-
-      const raw = await res.text();
-      if (!res.ok) return json(res.status, { error: raw.slice(0, 500), _prova_ki_meta: meta });
-      const data = JSON.parse(raw);
-      const txt = data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
-      let parsed = {};
-      try { const m = txt.match(/\{[\s\S]*\}/); parsed = m ? JSON.parse(m[0]) : { befund: txt }; } catch(e2) { parsed = { befund: txt || '' }; }
-      await logKiAudit(process.env.AIRTABLE_PAT, body._prova_user_email, 'foto_analyse', body.az || '', 1500);
-      return json(200, Object.assign(parsed, { _prova_ki_meta: meta }));
-    }
-
-    /* ════════════════════════════════════════════════
-       BEWEISFRAGEN: Gerichtsbeschluss auswerten
-       ════════════════════════════════════════════════ */
-    if (action === 'beweisfragen_text' || body.aufgabe === 'beweisfragen') {
-      const rawText = body.text || body.pdfText || '';
-      if (!rawText || rawText.length < 20) return json(400, { error: 'text zu kurz — Beweisbeschluss einfügen' });
-
-      /* Pseudonymisieren vor OpenAI */
-      const text = pseudonymisiere(rawText);
-
-      const beweisPrompt = `Du erhältst einen Gerichtstext (Beweisbeschluss oder Beweisanordnung).
-
-Aufgabe:
-1. Extrahiere alle Beweisfragen/Beweisthemen präzise und vollständig
-2. Identifiziere den Gutachtentyp (Bauschaden, Mietminderung, Verkehrswert etc.)
-3. Erkenne relevante Fristen und Anforderungen an den SV
-
-Antworte NUR als JSON:
-{
-  "fragen": [
-    { "nr": 1, "text": "Vollständiger Wortlaut der Beweisfrage", "thema": "Kurzbezeichnung", "sv_relevant": true }
-  ],
-  "aktenzeichen_gericht": "AZ oder null",
-  "gericht": "Name des Gerichts oder null",
-  "gutachtentyp": "Art des Gutachtens",
-  "fristen": ["Erkannte Fristen"],
-  "besondere_anforderungen": ["Besondere Anforderungen an den SV"],
-  "hinweis": "Besondere Hinweise zur Auftragserfüllung"
-}
-
-Text:
----
-${text.slice(0, 28000)}`;
-
-      const res = await provaFetch(OPENAI_URL, {
-        method: 'POST',
-        headers: { Authorization: 'Bearer ' + key, 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: 'gpt-4o',
-          max_tokens: 4000,
-          messages: [
-            { role: 'system', content: SV_SYSTEM_PROMPT },
-            { role: 'user', content: beweisPrompt }
-          ]
-        }, { service: 'ai' })
-      });
-
-      const raw = await res.text();
-      if (!res.ok) return json(res.status, { error: raw.slice(0, 500), _prova_ki_meta: meta });
-      const data = JSON.parse(raw);
-      const txt = data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
-      let parsed = { fragen: [], rohtext: txt };
-      try { const m = txt.match(/\{[\s\S]*\}/); if (m) parsed = JSON.parse(m[0]); } catch(e3) {}
-      await logKiAudit(process.env.AIRTABLE_PAT, body._prova_user_email, 'beweisfragen_text', '', 4000);
-      return json(200, Object.assign(parsed, { _prova_ki_meta: meta }));
-    }
-
-    /* ══════════════════════════════════════════════════════
-       FOTO + SKIZZE: Kontextbezogene Beschriftung
-       ════════════════════════════════════════════════════ */
-    if (action === 'foto_analyse_mit_skizze') {
-      const b64       = body.imageBase64 || body.b64;
-      const skizzeB64 = body.skizzeBase64;
-      const fotoNr    = body.fotoNr || 1;
-      const gesamt    = body.gesamtFotos || 1;
-      if (!b64) return json(400, { error: 'imageBase64 fehlt' });
-
-      const skizzeHinweis = skizzeB64
-        ? 'Der Sachverständige hat zusätzlich eine Handskizze des Grundrisses beigefügt (letztes Bild). ' +
-          'Stelle einen räumlichen Bezug her: In welchem Bereich der Skizze wurde dieses Foto aufgenommen? ' +
-          'Gib einen konkreten Lagehinweis an (z.B. "Nordwand, Bereich A in der Skizze").'
-        : '';
-
-      const promptMitSkizze = `Analysiere dieses Foto (Foto ${fotoNr} von ${gesamt}) als ö.b.u.v. Sachverständiger.
-
-${skizzeHinweis}
-
-Erstelle eine strukturierte Befundaufnahme als JSON:
-{
-  "befund": "Präzise sachverständige Beschreibung des Sichtbefundes",
-  "schadensart": "Klassifizierung oder leer",
-  "skizzen_bezug": "Räumliche Einordnung anhand der Skizze (nur wenn Skizze vorhanden)",
-  "normen_relevant": ["Relevante DIN/WTA-Normen"],
-  "messverfahren_empfohlen": ["Empfohlene Messungen"],
-  "dringlichkeit": "sofort/kurzfristig/mittelfristig/beobachten",
-  "nicht_beurteilbar": ["Was ohne Messung unklar bleibt"]
-}
-
-HALLUZINATIONSVERBOT. Konjunktiv II für Kausalaussagen.`;
-
-      const content = [{ type: 'text', text: promptMitSkizze },
-                       { type: 'image_url', image_url: { url: 'data:' + (body.mimeType||'image/jpeg') + ';base64,' + b64, detail: 'high' } }];
-      if (skizzeB64) {
-        content.push({ type: 'image_url', image_url: { url: 'data:image/png;base64,' + skizzeB64, detail: 'low' } });
-      }
-
-      const res = await provaFetch(OPENAI_URL, {
-        method: 'POST',
-        headers: { Authorization: 'Bearer ' + key, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ model: 'gpt-4o', max_tokens: 1200,
-          messages: [{ role: 'system', content: SV_SYSTEM_PROMPT }, { role: 'user', content }] }, { service: 'ai' })
-      });
-      const raw  = await res.text();
-      if (!res.ok) return json(res.status, { error: raw.slice(0,500), _prova_ki_meta: meta });
-      const data = JSON.parse(raw);
-      const txt  = data.choices?.[0]?.message?.content || '';
-      let parsed = {};
-      try { const m = txt.match(/\{[\s\S]*\}/); parsed = m ? JSON.parse(m[0]) : { befund: txt }; } catch(e2) { parsed = { befund: txt }; }
-      await logKiAudit(process.env.AIRTABLE_PAT, body._prova_user_email, 'foto_analyse_mit_skizze', body.az||'', 1200);
-      return json(200, Object.assign(parsed, { _prova_ki_meta: meta }));
-    }
-
-        return json(400, { error: 'Unbekannte action: ' + action, _prova_ki_meta: meta });
-
-  } catch(err) {
-    return json(502, { error: err.message || String(err), _prova_ki_meta: meta });
+    const aufgabe = body.aufgabe || 'messages';
+    if (aufgabe === 'fachurteil_entwurf') return await handleFachurteilEntwurf(body, apiKey);
+    if (aufgabe === 'qualitaetspruefung') return await handleQualitaetspruefung(body, apiKey);
+    if (aufgabe === 'freitext') return await handleFreitext(body, apiKey);
+    if (aufgabe === 'assist_inline') return await handleAssistInline(body, apiKey);
+    if (aufgabe === 'support_chat') return await handleSupportChat(body, apiKey);
+    return await handleMessages(body, apiKey);
+  } catch (e) {
+    return { statusCode: 502, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }, body: JSON.stringify({ error: 'Upstream error', detail: e.message }) };
   }
 };
+
+async function handleFachurteilEntwurf(body, apiKey) {
+  const { diktat = '', diktat_manuell = '', schadenart = '', messwerte = '', verwendungszweck = 'gericht', paragraphen = null, az = '', objekt = '', baujahr = '', auftraggeber = '' } = body;
+  const entwurf = paragraphen ? (paragraphen.gesamt || '') : '';
+  const gesamtKontext = (diktat + ' ' + diktat_manuell + ' ' + messwerte + ' ' + entwurf).trim();
+
+  if (gesamtKontext.length < 50) {
+    return jsonResponse({ ursachenkategorien: [], messwert_analyse: [], normen_vorschlaege: [], diktat_extrakte: { feststellungen: '', hat_ursachen: false, hat_empfehlungen: false }, hinweis: 'DIKTAT_ZU_KURZ' });
+  }
+
+  const systemPrompt = `Du bist ein öffentlich bestellter und vereidigter Sachverständiger für Schäden an Gebäuden mit 30 Jahren Berufserfahrung. Du analysierst Schadensfälle für das PROVA Gutachten-Assistenzsystem.
+
+EXPERTISE: Wasserschaden, Schimmel/Feuchte, Brandschaden, Sturm, Elementar, Baumängel. DIN 4108-2/3/7, WTA 6-1-01/D, DIN 68800, DIN EN ISO 13788, DIN 18195, VOB/B §13, §§823/906 BGB. BGH-Rspr. zu Beweislast und Kausalität.
+
+GRENZWERTE: fRsi ≥ 0,70 (DIN 4108-2) | Holzfeuchte <18% unkritisch, >20% kritisch (DIN 68800-1) | Raumluftfeuchte >60% rel.F. kritisch | Taupunkt nach Magnus-Formel | Rissbreite >0,2mm nach DIN 52460.
+
+══════════════ HALLUZINATIONSVERBOT ══════════════
+NIEMALS Informationen erfinden die nicht im ORIGINAL-DIKTAT stehen.
+• Straßen, Hausnummern, Städte NUR aus Diktat übernehmen — niemals ergänzen.
+• Messwerte NUR aus Diktat — niemals schätzen oder interpolieren.
+• Namen, Firmen, Daten NUR wenn explizit im Diktat genannt.
+• Wenn eine Information fehlt: "[fehlt]" schreiben, NICHT erfinden.
+══════════════════════════════════════════════════
+
+KONJUNKTIV II PFLICHT für §5 Ursachen:
+• Alle Ursachenhypothesen MÜSSEN im Konjunktiv II formuliert sein.
+• RICHTIG: "Als Ursache käme ... in Betracht", "könnte ... zurückzuführen sein"
+• FALSCH: "Die Ursache ist...", "Es handelt sich um..." (Indikativ verboten)
+• Ausnahme: Sichtbefunde aus §4 dürfen im Indikativ stehen.
+
+QUELLE-TRENNUNG (kritisch):
+• §4 Befund: NUR was der SV sagt (ORIGINAL-DIKTAT)
+• §5 Ursache: KI-Analyse mit KONJUNKTIV II + Normen
+• §6 Stellungnahme: Wird vom SV selbst geschrieben — NICHT von KI
+
+STRUKTUR (§1–§5):
+• §1 Vorbemerkungen: Auftrag, Beteiligte, Termine
+• §2 Unterlagen: Vom SV erhaltene Dokumente
+• §3 Örtlichkeit: Objekt, Baujahr, Gebäudetyp
+• §4 Befund: Sichtbefunde in Fachsprache (aus Diktat)
+• §5 Ursache: Fachliche Hypothesen im KONJUNKTIV II + Normen
+
+OUTPUT: Gülitges JSON-Objekt.`;
+
+
+
+  const gutTypMap = { gericht: 'Gerichtsgutachten', versicherung: 'Versicherungsgutachten', privat: 'Privatgutachten' };
+  const userPrompt = `FALLANALYSE:
+AZ: ${az || '—'} | Schadensart: ${schadenart || '—'} | Objekt: ${objekt || '—'}${baujahr ? ' | Baujahr: ' + baujahr : ''}${auftraggeber ? ' | Auftraggeber: ' + auftraggeber : ''}
+Gutachtentyp: ${gutTypMap[verwendungszweck] || verwendungszweck}
+
+DIKTAT DES SACHVERSTÄNDIGEN (Sprachaufnahme):
+${diktat || '(kein Sprachdiktat)'}
+${diktat_manuell ? '\nMANUELLE ERGÄNZUNG DES SV (Freitext):\n' + diktat_manuell : ''}
+${messwerte ? '\nMESSWERTE:\n' + messwerte : ''}${entwurf ? '\n§1–§5 ENTWURF (erste 1200 Zeichen):\n' + entwurf.substring(0, 1200) : ''}
+
+WICHTIG: Analysiere AUSSCHLIESSLICH was im Diktat steht. Leere Arrays wenn zu wenig Info. Gib NUR JSON zurück.`;
+
+  const result = await callOpenAI({ model: 'gpt-4o-mini', max_tokens: 1200, messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: userPrompt }] }, apiKey);
+  const rawText = result.choices?.[0]?.message?.content || '';
+  let parsed = {};
+  try {
+    const match = rawText.match(/\{[\s\S]*\}/);
+    if (match) parsed = JSON.parse(match[0]);
+  } catch (e) {
+    parsed = { ursachenkategorien: [], messwert_analyse: [], normen_vorschlaege: [], diktat_extrakte: { feststellungen: rawText.substring(0, 200), hat_ursachen: false, hat_empfehlungen: false } };
+  }
+  return jsonResponse(parsed);
+}
+
+async function handleQualitaetspruefung(body, apiKey) {
+  const { gutachten_text = '', beweisfragen = '' } = body;
+  if (!gutachten_text || gutachten_text.length < 100) return jsonResponse({ pruefpunkte: [], gesamt_bewertung: 'TEXT_ZU_KURZ' });
+
+  const result = await callOpenAI({ model: 'gpt-4o-mini', max_tokens: 600, messages: [
+    { role: 'system', content: 'Du bist ein Oberlandesgericht-Sachverständiger. Prüfe §6-Fachurteilstexte auf: 1. Konjunktiv II korrekt? 2. Keine unzulässigen Indikativ-Kausalaussagen? 3. Beweislast korrekt? 4. Normverweise vorhanden? 5. Sanierungsempfehlung konkret? ANTWORT NUR JSON: {"pruefpunkte":[{"typ":"ok|warnung|fehler","text":"Beschreibung"}],"konjunktiv_ok":true,"gesamt_bewertung":"gut|verbesserungswuerdig|ueberarbeiten"}' },
+    { role: 'user', content: 'Prüfe:\n\n' + gutachten_text.substring(0, 2000) + (beweisfragen ? '\n\nBeweisfragen:\n' + beweisfragen : '') }
+  ] }, apiKey);
+
+  const rawText = result.choices?.[0]?.message?.content || '';
+  let parsed = {};
+  try { const m = rawText.match(/\{[\s\S]*\}/); if (m) parsed = JSON.parse(m[0]); }
+  catch (e) { parsed = { pruefpunkte: [{ typ: 'warnung', text: 'Manuelle Prüfung erforderlich.' }], gesamt_bewertung: 'verbesserungswuerdig' }; }
+  return jsonResponse(parsed);
+}
+
+async function handleFreitext(body, apiKey) {
+  const result = await callOpenAI({ model: body.model || 'gpt-4o-mini', max_tokens: body.max_tokens || 500, messages: [
+    { role: 'system', content: body.system || 'Du bist ein Assistent für öffentlich bestellte Sachverständige.' },
+    { role: 'user', content: body.prompt || '' }
+  ] }, apiKey);
+  const text = result.choices?.[0]?.message?.content || '';
+  return jsonResponse({ text, content: [{ type: 'text', text }] });
+}
+
+async function handleMessages(body, apiKey) {
+  const messages = (body.messages || []).map(msg => {
+    if (!Array.isArray(msg.content)) return msg;
+    const content = msg.content.map(part => {
+      if (part.type === 'text') return { type: 'text', text: part.text };
+      if (part.type === 'image' && part.source) return { type: 'image_url', image_url: { url: 'data:' + part.source.media_type + ';base64,' + part.source.data, detail: 'low' } };
+      return part;
+    });
+    return { role: msg.role, content };
+  });
+  if (!messages.length) return jsonResponse({ error: 'Keine messages angegeben' }, 400);
+
+  let model = body.model || 'gpt-4o-mini';
+  if (model.includes('haiku') || model.includes('sonnet') || model.includes('opus')) model = 'gpt-4o-mini';
+
+  const result = await callOpenAI({ model, max_tokens: body.max_tokens || 500, messages }, apiKey);
+  const text = result.choices?.[0]?.message?.content || '';
+  return jsonResponse({ content: [{ type: 'text', text }], model: result.model, usage: result.usage });
+}
+
+
+async function handleSupportChat(body, apiKey) {
+  const { frage = '', seite = '', paket = 'Solo', kontext = '' } = body;
+
+  if (!frage || frage.trim().length < 3) {
+    return jsonResponse({ antwort: 'Bitte stellen Sie Ihre Frage etwas ausführlicher.' });
+  }
+
+  const seitenKontext = seite ? `Der SV befindet sich gerade auf: ${seite}` : '';
+
+  const systemPrompt = `Du bist der freundliche KI-Support-Assistent von PROVA Systems — einer SaaS-Plattform für öffentlich bestellte und vereidigte Sachverständige (SV) im Bauwesen.
+
+Deine Aufgabe: Beantworte Fragen von Sachverständigen präzise, freundlich und auf Deutsch. Antworte AUSSCHLIESSLICH auf Basis dieses Handbuchs. Wenn du eine Frage nicht beantworten kannst, sage es klar und empfehle die direkte Kontaktaufnahme. ERFINDE NIEMALS Features oder Aussagen die hier nicht stehen.
+
+═══════════════════════════════════════════════
+PROVA WISSENSHANDBUCH — VOLLSTÄNDIG
+═══════════════════════════════════════════════
+
+## GUTACHTEN ERSTELLEN (app.html)
+
+**Neues Gutachten starten:** Sidebar → "+ Neuer Fall" → 5-Schritte-Workflow: Stammdaten → Diktat & Fotos → Analyse → Freigabe → Export.
+
+**Schritt 1 — Stammdaten:** Auftragsart (Gerichts-/Versicherungs-/Privatgutachten), Schadenart, Auftraggeber-Daten, Objektadresse, Ortstermin-Datum. Alle Pflichtfelder müssen ausgefüllt sein bevor Schritt 2 zugänglich wird.
+
+**Schritt 2 — Diktat & Fotos:** Mikrofon-Button antippen → Browser fragt nach Mikrofonerlaubnis → sprechen → Aufnahme stoppt automatisch. Alternativ: Textfeld "Eingabe" für manuelles Tippen. Betroffenen Bereich eintragen (z.B. "Schlafzimmer"). Fotos hochladen per Drag & Drop, Kamera oder Galerie. Max. 20 Fotos, JPG/PNG.
+
+**Diktat-Tipps:** Lage des Schadens, gemessene Feuchte/Temperaturen, Bauphase, Baujahr, sichtbare Befunde. Fachurteil §6 NICHT ins Diktat — das schreibt der SV persönlich in Schritt 4.
+
+**Schritt 3 — KI-Analyse:** Startet nach Klick auf "Analyse starten". Dauer: ohne Fotos 20-40 Sekunden, mit Fotos 60-120 Sekunden (GPT-4o Vision). Seite NICHT neu laden — der Webhook läuft im Hintergrund. Bei Timeout nach 3 Minuten: Archiv → Korrektur-Modus nutzen.
+
+**Schritt 4 — §6 Fachurteil schreiben:** Die KI zeigt eine Analyse-Box (nicht kopierbar, nur zur Orientierung). Der SV schreibt sein §6 Fachurteil persönlich — Mindestlänge 500 Zeichen. Konjunktiv II ist Pflicht für Kausalaussagen (§407a ZPO). PROVA prüft automatisch auf Konjunktiv-Fehler.
+
+**Schritt 5 — Freigabe & Export:** Gutachten freigeben → PDF wird automatisch erstellt. Bei §407a ZPO muss der SV bestätigen dass er das Gutachten persönlich verantwortet.
+
+## DIKTAT-PROBLEME
+
+**Mikrofon funktioniert nicht:** Browser-Einstellungen → Kamera/Mikrofon → PROVA erlauben. Chrome/Safari empfohlen. HTTPS erforderlich (prova-systems.de ist HTTPS).
+
+**Transkription ist leer:** Aufnahme prüfen (Zeichen-Zähler in der Statusbox). Mindestens 10 Sekunden sprechen. Alternativ: Tab "Eingabe" → Text manuell eintippen.
+
+**Live-Transkription erscheint nicht:** Die Transkription läuft im Hintergrund. Ergebnis erst nach Analyse sichtbar.
+
+**Wiederaufnahme-Banner erscheint bei neuem Fall:** Bekanntes Problem, behoben in sw v46. Hard-Refresh (Strg+Shift+R) erzwingen.
+
+## KI UND HALLUZINATIONEN
+
+**Was macht die KI?** GPT-4o analysiert das Diktat und erstellt §1-§5 des Gutachtens. §6 schreibt der SV persönlich.
+
+**Halluzinationsverbot:** Die KI darf nur Informationen aus dem Diktat verwenden. Straßen, Namen, Messwerte die nicht im Diktat stehen werden mit [fehlt] markiert.
+
+**Konjunktiv II Pflicht:** Alle Ursachenhypothesen (§5) müssen im Konjunktiv II stehen: "könnte zurückzuführen sein", "käme in Betracht". PROVA prüft dies automatisch.
+
+**KI-Analyse dauert zu lange:** Normal bei Fotos (bis 120s). Seite nicht neu laden. Nach 3 Minuten: Archiv → Korrektur.
+
+## §407a ZPO — RECHTLICHE GRUNDLAGE
+
+§407a ZPO regelt die persönliche Verantwortung des Sachverständigen. Der SV muss das Gutachten persönlich verfassen und verantworten — KI-Assistenz ist erlaubt, aber der SV trägt die fachliche Verantwortung. PROVA erzwingt dies durch die Eigenleistungs-Pflicht im §6-Fachurteil (min. 500 Zeichen eigener Text).
+
+## JVEG-ABRECHNUNG (jveg.html)
+
+Öffnen: Sidebar → ABRECHNUNG → JVEG-Rechner. Sachgebiet/Honorargruppe wählen (M1-M9 nach §9 JVEG). Stunden eintragen, Fahrtkilometer (0,42 €/km nach §8 JVEG), Wartezeit, Schreibauslagen (0,90 €/Seite nach §12 Nr.1). Ergebnis mit "Als Rechnung übernehmen" in die E-Rechnung übertragen.
+
+Aktuelle JVEG-Sätze (Stand 1.1.2024): M1: 85 €/h, M2: 95 €/h, M3: 100 €/h, M4: 110 €/h, M5: 115 €/h, M6: 120 €/h, M7: 125 €/h, M8: 130 €/h, M9: 140 €/h.
+
+## E-RECHNUNG / XRECHNUNG (erechnung.html)
+
+XRechnung 3.0.2 ist Pflicht für Rechnungen an Gerichte und Behörden (§4 E-RechV) seit 2020 (Bund) / 2023 (Länder). Formular ausfüllen: Eigene Daten (Name, E-Mail, IBAN, Steuernummer), Empfänger-Daten (E-Mail des Gerichts Pflicht!), Leitweg-ID des Empfängers (Format: 993-99999-99, vom Gericht zu erfragen). Nach Download: unter erechnungs-validator.de prüfen.
+
+ZUGFeRD 2.1: Hybrid-PDF für private Auftraggeber (Versicherungen). Aktuell in Entwicklung.
+
+## NORMEN UND TEXTBAUSTEINE
+
+Normen (normen.html): 163+ Normen, DIN, WTA, ZPO, BGB. Filterfunktion nach Schadensart. Normen können per Klick in Stellungnahmen eingefügt werden.
+
+Textbausteine (textbausteine.html): Vorgefertigte Texte für wiederkehrende Formulierungen. Eigene Bausteine anlegen und speichern.
+
+## ARCHIV UND FÄLLE (archiv.html)
+
+Alle erstellten Gutachten mit Status: In Bearbeitung, Analyse, Freigabe, Exportiert. Korrektur-Modus: Bearbeitetes Gutachten öffnen und Text direkt bearbeiten. Suche und Filter nach Aktenzeichen, Datum, Schadensart.
+
+## RECHNUNGEN (rechnungen.html)
+
+Rechnungsverwaltung: Liste aller Rechnungen mit Status (offen, bezahlt, überfällig). Neue Rechnung erstellen: Pauschalrechnung oder aus JVEG-Rechner übernehmen. Export als PDF.
+
+## STATISTIKEN (statistiken.html)
+
+KPIs: Gutachten gesamt, Abschlussquote, Bearbeitungszeit, Fotos analysiert. Diagramme: Gutachten pro Monat, Schadensarten-Verteilung, Status-Verteilung, Auftraggeber-Typen.
+
+## PAKETE UND TRIAL
+
+Trial: 14 Tage kostenlos, kein Kreditkarte, voller Solo-Funktionsumfang bis 25 Gutachten.
+
+Solo-Paket: 149 €/Monat. 1 Nutzer, unbegrenzte Gutachten, alle KI-Funktionen, PDF-Generierung.
+
+Team-Paket: 279 €/Monat. Mehrere Nutzer, Chef-Freigabe-Workflow, Team-Dashboard, geteilte Textbausteine.
+
+Paket ändern: Einstellungen → Paket & Features. Jederzeit kündbar, keine Mindestlaufzeit.
+
+## TECHNISCHE PROBLEME
+
+**Seite lädt nicht:** Strg+Shift+R (Hard-Refresh) — löscht Service-Worker-Cache.
+
+**"Wiederaufnahme"-Banner bei neuem Fall:** Hard-Refresh erzwingen (Strg+Shift+R).
+
+**PDF wird nicht erstellt:** Alle Pflichtfelder prüfen (Schritt 1). PDFMonkey benötigt 30-120 Sekunden. Freigabe-Seite neu laden und erneut freigeben. Falls weiterhin Fehler: Aktenzeichen notieren und Marcel kontaktieren.
+
+**Mikrofon nicht verfügbar:** Browser-Berechtigungen → PROVA erlauben. HTTPS erforderlich.
+
+**KI antwortet mit 502:** Kurzzeitiger Server-Fehler. 30 Sekunden warten und erneut versuchen.
+
+**Analyse startet nicht:** Diktat-Text muss vorhanden sein (mindestens 10 Zeichen). Mikrofon-Status prüfen.
+
+## DATENSCHUTZ
+
+Alle Daten werden auf Netlify (EU-Server) und Airtable (EU-Region) gespeichert. DSGVO-konform. Keine Weitergabe an Dritte. Diktat-Audio wird nur für Transkription verwendet und nicht dauerhaft gespeichert.
+
+## KONTAKT / SUPPORT
+
+Bei Fragen die dieser Assistent nicht beantworten kann: support@prova-systems.de oder über diesen Chat ein Ticket erstellen. Marcel antwortet in der Regel innerhalb von 24 Stunden.
+
+
+AKTUELLE SITUATION:
+- SV-Paket: ${paket}
+- ${seitenKontext}
+
+ANTWORT-REGELN:
+1. Antworte auf Deutsch, freundlich und präzise
+2. Maximal 3-4 Sätze, außer bei komplexen Themen
+3. Verwende HTML-Links wenn du auf PROVA-Seiten verlinkst: <a href="seite.html" style="color:#4f8ef7">Text</a>
+4. Wenn du die Antwort nicht kennst: Sage "Ich leite Ihre Frage an Marcel weiter." — NIEMALS erfinden
+5. Bei technischen Problemen: Immer Hard-Refresh (Strg+Shift+R) als ersten Schritt nennen`;
+
+  const result = await callOpenAI({
+    model: 'gpt-4o-mini',
+    max_tokens: 300,
+    temperature: 0.3,
+    messages: [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: frage }
+    ]
+  }, apiKey);
+
+  const antwort = result.choices?.[0]?.message?.content?.trim() || '';
+
+  if (!antwort || antwort.length < 10) {
+    return jsonResponse({ antwort: '' }); // Trigger Ticket-Eskalation
+  }
+
+  return jsonResponse({ antwort });
+}
+
+async function callOpenAI(params, apiKey) {
+  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + apiKey },
+    body: JSON.stringify(params)
+  });
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error('OpenAI ' + response.status + ': ' + (err?.error?.message || 'Fehler'));
+  }
+  return response.json();
+}
+
+function jsonResponse(data, status = 200) {
+  return { statusCode: status, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }, body: JSON.stringify(data) };
+}
+
+/* ── KI-Assist Inline (§6 Fachurteil) ── */
+async function handleAssistInline(body, apiKey) {
+  const { 
+    prompt = '', 
+    user_prompt = '',
+    system_prompt = '',
+    schadenart = '',
+    kontext = {}
+  } = body;
+
+  const userMsg = user_prompt || prompt;
+  if (!userMsg || userMsg.length < 3) {
+    return jsonResponse({ vorschlag: '' });
+  }
+
+  // Experten-System-Prompt: entweder aus Body (neue stellungnahme.html v6)
+  // oder Fallback auf Standard-Prompt
+  const systemMsg = system_prompt || `Du bist ein öffentlich bestellter und vereidigter (ö.b.u.v.) Bausachverständiger mit 30 Jahren Gerichtserfahrung (§407a ZPO).
+
+INDIKATIV NUR FÜR: wurde festgestellt, wurde gemessen, wurde vorgefunden, beträgt, ist sichtbar, ist vorhanden
+KONJUNKTIV II PFLICHT FÜR ALLE Kausal-, Bewertungs- und Beweislast-Aussagen.
+
+VOLLSTÄNDIGE LISTE DER ZU KORRIGIERENDEN INDIKATIV-VERBEN:
+ist (kausal) → dürfte sein | sind → dürften sein | liegt → dürfte liegen | führt → dürfte führen | verursacht → dürfte verursacht haben | bedingt → dürfte bedingt sein | resultiert → dürfte resultieren | beruht → dürfte beruhen | zeigt → dürfte zeigen | belegt → dürfte belegen | beweist → dürfte belegen | muss (kausal) → wäre | wird unterschritten → dürfte unterschritten werden
+
+WORTSTELLUNG: Modalverb (dürfte/könnte/wäre) IMMER an Position 2 im Hauptsatz.
+NEBENSÄTZE: Modalverb ans Ende vor dem Infinitiv.
+VERBOTEN: "dürfte eindeutig", "dürfte offensichtlich", "dürfte klar" — logische Widersprüche.
+
+Schadensfall: \${schadenart}
+Gib NUR den korrigierten deutschen Text zurück. Perfekte Grammatik und Zeichensetzung.`;
+
+  const res = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: { 'Authorization': 'Bearer ' + apiKey, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'gpt-4o',
+      temperature: 0.10,
+      max_tokens: 2000,
+      messages: [
+        { role: 'system', content: systemMsg },
+        { role: 'user', content: userMsg }
+      ]
+    })
+  });
+
+  if (!res.ok) throw new Error('OpenAI ' + res.status);
+  const data = await res.json();
+  const vorschlag = data.choices?.[0]?.message?.content?.trim() || '';
+  return jsonResponse({ vorschlag });
+}
