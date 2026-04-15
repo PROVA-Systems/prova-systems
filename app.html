@@ -1171,31 +1171,33 @@ document.addEventListener('DOMContentLoaded', function() {
                     </div>
                     <span id="recStatus" style="display:none">Bereit</span>
                   </div>
-                  <!-- Whisper badge (nur im Diktat-Modus) -->
-                  <div id="whisper-badge" class="diktat-whisper-badge">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="animation:spin 1.2s linear infinite;flex-shrink:0"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
-                    <span>KI verfeinert Transkription…</span>
+                </div>
+
+                <!-- Whisper badge -->
+                <div id="whisper-badge" class="diktat-whisper-badge">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="animation:spin 1.2s linear infinite;flex-shrink:0"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+                  <span>KI verfeinert Transkription…</span>
+                </div>
+
+<!-- Transcript -->
+                <div class="diktat-transcript-section">
+                  <div class="diktat-transcript-label">
+                    <span>Live-Transkription</span>
+                    <div class="diktat-transcript-dot" id="transcriptDot"></div>
                   </div>
-                  <!-- Live-Transkription (nur im Diktat-Modus) -->
-                  <div class="diktat-transcript-section">
-                    <div class="diktat-transcript-label">
-                      <span>Live-Transkription</span>
-                      <div class="diktat-transcript-dot" id="transcriptDot"></div>
-                    </div>
-                    <div id="transcriptArea" class="diktat-transcript" contenteditable="true" oninput="transcriptText = this.innerText.trim()">
-                      <div class="transcript-empty">
-                        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" style="opacity:.3"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/></svg>
-                        <p>Aufnahme starten oder unten eingeben.</p>
-                      </div>
+                  <div id="transcriptArea" class="diktat-transcript" contenteditable="true" oninput="transcriptText = this.innerText.trim()">
+                    <div class="transcript-empty">
+                      <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" style="opacity:.3"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/></svg>
+                      <p>Aufnahme starten oder unten eingeben.</p>
                     </div>
                   </div>
                 </div>
-                <!-- Eingabe Panel: ein Feld, auto-wachsend -->
+                <!-- Eingabe Panel -->
                 <div id="eingabe-panel" role="tabpanel" aria-labelledby="tab-eingabe" style="display:none">
-                  <textarea id="transcriptManuell" class="diktat-textarea"
-                    placeholder="Befund hier eintippen…"
-                    oninput="syncManuellToTranscript();this.style.height='auto';this.style.height=Math.max(180,this.scrollHeight)+'px'"
-                    style="width:100%;min-height:180px;resize:none;overflow:hidden;box-sizing:border-box;"></textarea>
+                  <div style="font-size:11px;color:var(--text3,#6b7a99);margin-bottom:8px;line-height:1.6;">
+                  ✍️ Beschreiben Sie Ihre <strong style="color:var(--text2)">Befunde und Messwerte</strong> direkt als Text. Das §6 Fachurteil schreiben Sie nach der KI-Analyse separat.
+                </div>
+                <textarea id="transcriptManuell" class="diktat-textarea" placeholder="Befund hier eintippen…" oninput="syncManuellToTranscript()"></textarea>
                 </div>
 
               </div>
@@ -1620,6 +1622,6 @@ document.addEventListener('DOMContentLoaded', function() {
   <script src="global-search.js" defer></script>
   <script src="auto-save.js" defer></script>
   <script src="ki-lernpool.js" defer></script>
-  <script defer>document.addEventListener("DOMContentLoaded",function(){if(typeof KILernpool!=="undefined")KILernpool.init().catch(function(){});});</script>
+  <script defer>document.addEventListener("DOMContentLoaded",function(){if(typeof KILernpool!=="undefined"&&typeof KILernpool.laden==="function")KILernpool.laden();});</script>
 </body>
 </html>

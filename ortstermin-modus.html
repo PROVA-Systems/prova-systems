@@ -11,12 +11,9 @@
 <link rel="manifest" href="/manifest.json">
 <script src="prova-preise.js"></script>
 <script src="auth-guard.js"></script>
-<script src="prova-auth-api.js"></script>
-<script src="prova-sv-airtable.js"></script>
 <script src="trial-guard.js"></script>
 <script src="paket-guard.js"></script>
 <script src="theme.js"></script>
-<script src="nav.js" defer></script>
 <style>
 /* ══════════════════════════════════════════════════════════════════
    PROVA ORTSTERMIN-MODUS
@@ -440,7 +437,7 @@ body {
   padding: 10px;
   color: var(--text);
   font-family: inherit;
-  font-size: 16px /* iOS Zoom Fix */;
+  font-size: 14px;
   text-align: center;
   width: 100%;
   min-height: 44px;
@@ -491,7 +488,7 @@ body {
   padding: 10px 14px;
   color: var(--text);
   font-family: inherit;
-  font-size: 16px /* iOS Zoom Fix */;
+  font-size: 14px;
   min-height: 48px;
 }
 .notiz-add-raum {
@@ -612,9 +609,6 @@ body {
 /* ── INPUT CAMERA (hidden) ───────────────────────────────────── */
 #foto-input-kamera, #foto-input-galerie { display: none; }
 </style>
-
-<link rel="stylesheet" href="prova-design.css">
-<link rel="stylesheet" href="mobile.css">
 </head>
 
 <body>
@@ -628,7 +622,6 @@ body {
       <div class="ot-top-sub" id="ot-sub">Wird geladen…</div>
     </div>
     <div class="ot-offline-badge" id="ot-offline-badge">📴 Offline</div>
-    <div id="ot-offline-queue-badge" style="display:none;position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:rgba(79,142,247,.9);color:#fff;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:700;z-index:600;white-space:nowrap;">💾 Fotos gespeichert</div>
     <div class="ot-sync-badge"    id="ot-sync-badge">⬆︎ Sync</div>
   </div>
 
@@ -641,10 +634,7 @@ body {
       <span class="icon">📷</span>Fotos
     </button>
     <button class="ot-tab" data-panel="mess" onclick="zeigePanel('mess',this)">
-      <span class="icon">✏️</span>Skizze
-      </button>
-      <button class="ot-tab" data-tab="messung" onclick="tabWechseln('messung')">
-        <span class="icon">📐</span>Messung
+      <span class="icon">📐</span>Messung
     </button>
     <button class="ot-tab" data-panel="notiz" onclick="zeigePanel('notiz',this)">
       <span class="icon">📋</span>Notizen
@@ -705,7 +695,7 @@ body {
       <div class="sec-label">Schadensfotos aufnehmen</div>
 
       <div style="display:flex;gap:10px;margin-bottom:14px;">
-        <button class="foto-camera-btn" style="flex:1" onclick="document.getElementById('foto-input-kamera').click()">
+        <button class="foto-camera-btn" style="flex:1" onclick="ProvaKamera.aufnehmen()">
           <span class="cam-icon">📷</span>
           <span>Kamera</span>
         </button>
@@ -826,14 +816,6 @@ var _az          = localStorage.getItem('prova_aktiver_fall') || '';
 var _schadenart  = localStorage.getItem('prova_schadenart')   || '';
 var _adresse     = localStorage.getItem('prova_adresse')      || '';
 var _fotos       = [];
-
-/* PROVA FOTO-IDB — dataUrls in IndexedDB, überleben Reload */
-var _fotoDB=null;
-function fotoDBOpen(){if(_fotoDB)return Promise.resolve(_fotoDB);return new Promise(function(res,rej){var req=indexedDB.open('prova_fotos',1);req.onupgradeneeded=function(e){var db=e.target.result;if(!db.objectStoreNames.contains('fotos'))db.createObjectStore('fotos',{keyPath:'key'});};req.onsuccess=function(e){_fotoDB=e.target.result;res(_fotoDB);};req.onerror=function(e){rej(e.target.error);};});}
-function _fotoKey(){return 'fotos_'+(_az||'default').replace(/[^a-z0-9]/gi,'-');}
-function fotoDBSave(){fotoDBOpen().then(function(db){var tx=db.transaction('fotos','readwrite');tx.objectStore('fotos').put({key:_fotoKey(),fotos:_fotos,ts:Date.now()});}).catch(function(){});}
-function fotoDBLoad(){return fotoDBOpen().then(function(db){return new Promise(function(res){var req=db.transaction('fotos','readonly').objectStore('fotos').get(_fotoKey());req.onsuccess=function(e){var r=e.target.result;if(r&&r.fotos&&r.fotos.length){_fotos=r.fotos;renderFotoGrid();var n=_fotos.length;toast(n+' Foto'+(n===1?'':'s')+' wiederhergestellt','ok',3000);}res();};req.onerror=function(){res();};});}).catch(function(){});}
-function fotoDBDelete(){fotoDBOpen().then(function(db){db.transaction('fotos','readwrite').objectStore('fotos').delete(_fotoKey());}).catch(function(){});}
 var _messwerte   = { feuchte:[], klima:[], risse:[] };
 var _notizen     = {};
 var _isRecording = false;
@@ -1104,8 +1086,7 @@ window.fotoHinzufuegen = function(event){
   files.forEach(function(file){
     var reader = new FileReader();
     reader.onload = function(e){
-      var kb = Math.round(file.size / 1024);
-      var foto = { id: Date.now() + Math.random(), dataUrl: e.target.result, caption: '', datei: file.name, groesse_kb: kb };
+      var foto = { id: Date.now() + Math.random(), dataUrl: e.target.result, caption: '', datei: file.name };
       _fotos.push(foto);
       renderFotoGrid();
       speichereDaten();
@@ -1113,6 +1094,7 @@ window.fotoHinzufuegen = function(event){
     reader.readAsDataURL(file);
   });
 
+  // Input zurücksetzen damit gleiche Datei nochmal gewählt werden kann
   event.target.value = '';
 };
 
@@ -1288,9 +1270,14 @@ function speichereDaten(){
   if (!_az) return;
   var key = 'prova_ortstermin_' + _az.replace(/[^a-z0-9]/gi,'-');
   try {
-    localStorage.setItem(key, JSON.stringify({fotos_count:_fotos.length,notizen:_notizen,gespeichert:new Date().toISOString()}));
-  } catch(e){}
-  fotoDBSave();
+    localStorage.setItem(key, JSON.stringify({
+      fotos:     _fotos.map(function(f){ return { id:f.id, caption:f.caption, datei:f.datei }; }),
+      notizen:   _notizen,
+      gespeichert: new Date().toISOString()
+    }));
+  } catch(e){
+    if (e.name === 'QuotaExceededError') toast('Speicher voll — Fotos zu groß', 'error', 4000);
+  }
 }
 
 function ladeDaten(){
@@ -1301,9 +1288,8 @@ function ladeDaten(){
   try {
     var data = JSON.parse(raw);
     _notizen = data.notizen || {};
+    // Fotos ohne dataUrl (zu groß für localStorage) — werden beim Neustart neu aufgenommen
     ladeRaumNotiz();
-    // Fotos aus IndexedDB laden (vollständige dataUrls)
-    fotoDBLoad();
   } catch(e){}
 }
 
@@ -1359,6 +1345,7 @@ window.provaKICaption = async function(btn) {
   }
 };
 </script>
-<script src="support-chat.js" defer></script>
+<script src="ortstermin-kamera-fix.js" defer></script>
+<script src="foto-archiv.js" defer></script>
 </body>
 </html>

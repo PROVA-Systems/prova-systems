@@ -418,7 +418,7 @@ const HonorarTracker = (() => {
         credentials: 'same-origin',
         body: JSON.stringify({
           method: 'GET',
-          path: '/v0/appJ7bLlAHZoxENWE/tblF6MS7uiFAJDjiT?filterByFormula=' + encodeURIComponent('{sv_email}"' + svEmail + '"') + '&sort[0][field]=rechnungsdatum&sort[0][direction]=desc&fields[]=Rechnungsnummer&fields[]=empfaenger_name&fields[]=brutto_betrag_eur&fields[]=netto_betrag_eur&fields[]=rechnungsdatum&fields[]=faellig_am&fields[]=Status&fields[]=aktenzeichen&fields[]=mahnstufe&fields[]=mahngebuehren_eur&fields[]=Rechnungstyp&fields[]=sv_email'
+          path: '/v0/appJ7bLlAHZoxENWE/tblF6MS7uiFAJDjiT?filterByFormula=' + encodeURIComponent('{sv_email}="' + svEmail + '"') + '&sort[0][field]=rechnungsdatum&sort[0][direction]=desc&fields[]=Rechnungsnummer&fields[]=empfaenger_name&fields[]=brutto_betrag_eur&fields[]=netto_betrag_eur&fields[]=rechnungsdatum&fields[]=faellig_am&fields[]=Status&fields[]=aktenzeichen&fields[]=mahnstufe&fields[]=mahngebuehren_eur&fields[]=Rechnungstyp&fields[]=sv_email'
         })
       });
 

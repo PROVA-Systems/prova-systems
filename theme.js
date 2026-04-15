@@ -4,19 +4,39 @@
    Muss VOR nav.js und vor dem <body>-Content eingebunden werden
 ============================================================ */
 (function() {
-  var theme = localStorage.getItem('prova_theme') || 'dark';
+  // 3-Way: 'dark' | 'light' | 'system'
+  // 'system' folgt dem OS-Setting automatisch
+  var stored = localStorage.getItem('prova_theme');
+  var theme = stored || 'system';
   applyTheme(theme);
+
+  // System-Theme: auf OS-Änderungen reagieren
+  if (window.matchMedia) {
+    var sysMq = window.matchMedia('(prefers-color-scheme: light)');
+    var _onSysChange = function() {
+      if ((localStorage.getItem('prova_theme') || 'system') === 'system') {
+        applyTheme('system');
+      }
+    };
+    if (sysMq.addEventListener) sysMq.addEventListener('change', _onSysChange);
+    else if (sysMq.addListener) sysMq.addListener(_onSysChange);
+  }
 
   function applyTheme(t) {
     var root = document.documentElement;
-    if (t === 'light') {
+    var effectiveTheme = t;
+    if (t === 'system') {
+      effectiveTheme = (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) ? 'light' : 'dark';
+    }
+    if (effectiveTheme === 'light') {
       root.setAttribute('data-theme', 'light');
-      // Light-Mode CSS-Variablen überschreiben
       injectLightCSS();
     } else {
       root.removeAttribute('data-theme');
       removeLightCSS();
     }
+    // Data-Attribut für CSS-Selektoren
+    root.setAttribute('data-effective-theme', effectiveTheme);
   }
 
   function injectLightCSS() {
@@ -93,6 +113,10 @@
     set: function(t) {
       localStorage.setItem('prova_theme', t);
       applyTheme(t);
+    },
+    // Gibt den tatsächlich angewendeten Theme zurück (light/dark), nie 'system'
+    getEffective: function() {
+      return document.documentElement.getAttribute('data-effective-theme') || 'dark';
     }
   };
 })();

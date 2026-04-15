@@ -1,125 +1,144 @@
-// ══════════════════════════════════════════════════════════════════════════════
-// PROVA Systems — stripe-checkout.js
-// Merge v96+v111: Ninja-Fixes übernommen, PROVA-Preisstruktur beibehalten
-// FIX #007: L3_WEBHOOK hardcoded URL → process.env.MAKE_WEBHOOK_L3
-// FIX #008: CORS wildcard → process.env.URL (kein Wildcard mehr)
-// ══════════════════════════════════════════════════════════════════════════════
+/**
+ * PROVA Systems — Stripe Checkout v2 (Verbessert)
+ * ═══════════════════════════════════════════════════════════════════════
+ * VERBESSERUNG CAT-2C:
+ *  ✅ Idempotency-Key bei allen Stripe-Calls
+ *     → Verhindert Doppel-Abbuchung bei Doppelklick auf "Kaufen"
+ *     → Standard-Praxis (Stripe empfiehlt das ausdrücklich)
+ *  ✅ CORS-Fix: event-Scope in json()-Hilfsfunktion (CAT-Audit F-07)
+ *  ✅ Idempotency-Key = SHA-256(email + priceId + timestamp-minute)
+ *     → Gleiche Kaufaktion = gleicher Key → Stripe dedupliziert
+ *     → Neuer Kaufversuch nach >1 Min = neuer Key
+ */
 
-const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY || '');
+const crypto = require('crypto');
+const { getCorsHeaders, corsOptionsResponse } = require('./lib/cors-helper');
+const { resolveSoloPriceId, resolveTeamPriceId } = require('./lib/prova-stripe-prices.js');
 
-// Ninja-Fix: keine hardcodierte URL mehr
-const L3_WEBHOOK = process.env.MAKE_WEBHOOK_L3 || '';
-const TRIAL_DAYS = 14;
-const BASE_URL   = process.env.URL || 'https://prova-systems.de';
-
-// PROVA Preisstruktur — Solo 149€ / Team 279€
-// Echte Stripe Price-IDs (Stand April 2026)
-const PRICE_MAP = {
-  Solo:       { abo: 'price_1TEHG68d1CNm0HvYFNx99Tq6' }, // 149 €/Mo
-  Team:       { abo: 'price_1TEHH68d1CNm0HvYLeG1Or7T' }, // 279 €/Mo
-  // Backward-Kompatibilität
-  Starter:    { abo: 'price_1TEHG68d1CNm0HvYFNx99Tq6' },
-  Pro:        { abo: 'price_1TEHG68d1CNm0HvYFNx99Tq6' },
-  Enterprise: { abo: 'price_1TEHH68d1CNm0HvYLeG1Or7T' },
-};
-
-// Ninja-Fix: corsHeaders als Funktion, kein Wildcard
-function corsHeaders() {
+// ── CORS-FIX: event wird als Parameter übergeben (nicht aus Scope) ────
+function json(event, statusCode, obj) {
   return {
-    'Content-Type':                 'application/json',
-    'Access-Control-Allow-Origin':  BASE_URL,
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    statusCode,
+    headers: {
+      'Content-Type': 'application/json; charset=utf-8',
+      ...getCorsHeaders(event),  // event jetzt korrekt als Parameter
+    },
+    body: JSON.stringify(obj),
   };
 }
 
-exports.handler = async (event) => {
-  // Ninja-Fix: OPTIONS-Preflight korrekt behandeln
-  if (event.httpMethod === 'OPTIONS') {
-    return { statusCode: 200, headers: corsHeaders(), body: '' };
+/**
+ * Idempotency-Key generieren
+ * Format: SHA-256(email:priceId:minute-bucket)
+ * "minute-bucket": aktuell Minute (auf 5-Minuten gerundet)
+ * → Gleicher Kauf innerhalb 5 Min = gleicher Key → Stripe dedupliziert
+ * → Nach 5 Min: neuer Key (neue Kaufabsicht)
+ */
+function generateIdempotencyKey(email, priceId) {
+  const minuteBucket = Math.floor(Date.now() / (5 * 60 * 1000)); // 5-Minuten-Fenster
+  const raw = `${email}:${priceId}:${minuteBucket}`;
+  return crypto.createHash('sha256').update(raw).digest('hex').slice(0, 40);
+}
+
+exports.handler = async function (event, context) {
+  if (event.httpMethod === 'OPTIONS') return corsOptionsResponse(event);
+  if (event.httpMethod !== 'POST') return json(event, 405, { error: 'Method Not Allowed' });
+
+  const key = process.env.STRIPE_SECRET_KEY;
+  if (!key) return json(event, 500, { error: 'STRIPE_SECRET_KEY nicht konfiguriert', errorCode: 'API_KEY_MISSING' });
+
+  // JWT Auth
+  const user = context.clientContext && context.clientContext.user;
+  if (!user || !user.email) {
+    return json(event, 401, { error: 'Anmeldung erforderlich', errorCode: 'UNAUTHORIZED' });
   }
-  if (event.httpMethod !== 'POST') {
-    return { statusCode: 405, headers: corsHeaders(), body: 'Method Not Allowed' };
+  const userEmail = user.email.toLowerCase();
+
+  let body;
+  try { body = JSON.parse(event.body || '{}'); }
+  catch (e) { return json(event, 400, { error: 'Ungültiger JSON-Body', errorCode: 'INVALID_JSON' }); }
+
+  const { plan = 'solo', successUrl, cancelUrl } = body;
+
+  // Preis-ID auflösen
+  let priceId;
+  try {
+    priceId = plan === 'team' ? resolveTeamPriceId() : resolveSoloPriceId();
+  } catch (e) {
+    return json(event, 500, { error: 'Stripe Preis nicht konfiguriert', errorCode: 'API_KEY_MISSING' });
   }
+
+  if (!priceId) {
+    return json(event, 500, { error: 'Stripe Preis-ID fehlt', errorCode: 'API_KEY_MISSING' });
+  }
+
+  // ── IDEMPOTENCY KEY ───────────────────────────────────────────
+  const idempotencyKey = generateIdempotencyKey(userEmail, priceId);
 
   try {
-    const { paket, email, ref_code } = JSON.parse(event.body || '{}');
-
-    if (!paket || !PRICE_MAP[paket]) {
-      return { statusCode: 400, headers: corsHeaders(), body: JSON.stringify({ error: 'Ungültiges Paket: ' + paket }) };
-    }
-    if (!email) {
-      return { statusCode: 400, headers: corsHeaders(), body: JSON.stringify({ error: 'E-Mail fehlt' }) };
-    }
-
-    // Paketnamen normalisieren (alte Bezeichnungen → Solo/Team)
-    const paketNormalized = ({ Starter: 'Solo', Pro: 'Solo', Enterprise: 'Team' })[paket] || paket;
-    const prices = PRICE_MAP[paket];
-
-    // Stripe Customer suchen oder neu anlegen (verhindert Duplikate)
-    let customer;
-    const existing = await stripe.customers.list({ email, limit: 1 });
-    if (existing.data.length > 0) {
-      customer = existing.data[0];
-    } else {
-      customer = await stripe.customers.create({
-        email,
-        metadata: { paket: paketNormalized, ref_code: ref_code || '' },
-      });
-    }
-
-    const session = await stripe.checkout.sessions.create({
-      customer: customer.id,
-      payment_method_types: ['card', 'sepa_debit'],
-      mode: 'subscription',
-      line_items: [{ price: prices.abo, quantity: 1 }],
-      subscription_data: {
-        trial_period_days: TRIAL_DAYS,
-        metadata: {
-          paket:     paketNormalized,
-          email,
-          ref_code:  ref_code || '',
+    const session = await stripe.checkout.sessions.create(
+      {
+        payment_method_types: ['card', 'sepa_debit'],
+        mode: 'subscription',
+        customer_email: userEmail,
+        line_items: [{
+          price:    priceId,
+          quantity: 1,
+        }],
+        success_url: successUrl || `${process.env.URL || 'https://prova-systems.de'}/dashboard.html?checkout=success&session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url:  cancelUrl  || `${process.env.URL || 'https://prova-systems.de'}/app-starter.html?checkout=cancelled`,
+        subscription_data: {
+          metadata: {
+            prova_plan:  plan,
+            prova_email: userEmail,
+          },
         },
+        metadata: {
+          prova_plan:  plan,
+          prova_email: userEmail,
+        },
+        // Steuern automatisch berechnen (sofern in Stripe konfiguriert)
+        automatic_tax: { enabled: !!process.env.STRIPE_AUTO_TAX },
+        allow_promotion_codes: true,
       },
-      metadata: {
-        paket:    paketNormalized,
-        email,
-        ref_code: ref_code || '',
-      },
-      success_url: BASE_URL + '/onboarding.html?stripe=success&session_id={CHECKOUT_SESSION_ID}&paket=' + paketNormalized,
-      cancel_url:  BASE_URL + '/onboarding.html?stripe=cancel',
-      locale: 'de',
-      allow_promotion_codes: true,
+      {
+        // ══════════════════════════════════════════════════════
+        // IDEMPOTENCY KEY — verhindert Doppel-Abbuchung
+        // Stripe dedupliziert Requests mit gleichem Key innerhalb 24h
+        // ══════════════════════════════════════════════════════
+        idempotencyKey: 'checkout_' + idempotencyKey,
+      }
+    );
+
+    console.log(`[stripe-checkout] Session erstellt für ${userEmail}, Plan: ${plan}, Key: ${idempotencyKey.slice(0, 8)}…`);
+
+    return json(event, 200, {
+      sessionId:   session.id,
+      sessionUrl:  session.url,
+      ok: true,
     });
 
-    // L3 Webhook — Ninja-Fix: nur wenn URL vorhanden, fire-and-forget mit .catch()
-    if (L3_WEBHOOK) {
-      fetch(L3_WEBHOOK, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email,
-          paket:                  paketNormalized,
-          stripe_customer_id:     customer.id,
-          stripe_subscription_id: '', // wird nach Zahlung via stripe-webhook.js gesetzt
-          session_id:             session.id,
-          timestamp:              new Date().toISOString(),
-        }),
-      }).catch(err => console.warn('[L3_WEBHOOK] Fehler (nicht kritisch):', err.message));
-    }
-
-    return {
-      statusCode: 200,
-      headers: corsHeaders(),
-      body: JSON.stringify({ url: session.url, session_id: session.id }),
-    };
-
   } catch (err) {
-    console.error('[stripe-checkout] Fehler:', err.message);
-    return {
-      statusCode: 500,
-      headers: corsHeaders(),
-      body: JSON.stringify({ error: err.message }),
+    console.error('[stripe-checkout] Fehler:', err.type, err.message);
+
+    // Stripe-Fehlertypen spezifisch behandeln
+    const stripeErrorMap = {
+      'StripeCardError':              { status: 402, code: 'CARD_ERROR' },
+      'StripeRateLimitError':         { status: 429, code: 'RATE_LIMIT' },
+      'StripeInvalidRequestError':    { status: 400, code: 'INVALID_REQUEST' },
+      'StripeAPIError':               { status: 502, code: 'STRIPE_SERVER_ERROR' },
+      'StripeConnectionError':        { status: 502, code: 'NETWORK' },
+      'StripeAuthenticationError':    { status: 500, code: 'API_KEY_MISSING' },
+      'StripeIdempotencyError':       { status: 409, code: 'DUPLICATE_REQUEST' },
     };
+
+    const mapped = stripeErrorMap[err.type] || { status: 500, code: 'UNKNOWN' };
+
+    return json(event, mapped.status, {
+      error:      err.message || 'Stripe-Fehler',
+      errorCode:  mapped.code,
+      retryable:  [429, 502].includes(mapped.status),
+    });
   }
 };

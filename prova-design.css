@@ -906,3 +906,113 @@ button { font-family: var(--font-ui) !important; }
 @media(max-width:768px) {
   .page-content { padding: 12px 12px 80px; }
 }
+
+
+/* ═══════════════════════════════════════════════════════════
+   CONTENT LAYOUT — max-width + zentriert (SaaS Standard)
+   Verhindert dass Content auf breiten Screens ausblutet
+   ═══════════════════════════════════════════════════════════ */
+
+/* Hauptinhalt-Wrapper: max-width + zentriert */
+.main-wrap,
+.main {
+  /* Maximale Content-Breite: 1440px — danach zentriert */
+  /* Die Sidebar schluckt 228px/56px — der Rest ist Content */
+  background: var(--bg, #0b0d11);
+  min-height: 100vh;
+}
+
+/* Innerer Content-Bereich: begrenzte Breite */
+.p-content,
+.page-content,
+.content-inner {
+  max-width: 1280px;
+  width: 100%;
+}
+
+/* Topbar immer volle Breite */
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+/* ═══ RESPONSIVE BREAKPOINTS (Linear-Modell) ═══
+
+   ≥ 1280px  → Sidebar aufgeklappt (228px), Content voll
+   1024-1279px → Sidebar auto-collapsed (56px), Content breiter
+   769-1023px  → Sidebar collapsed (56px), Content max-width reduziert
+   ≤ 768px   → Sidebar als Overlay, Content volle Breite
+   ════════════════════════════════════════════════════════════ */
+
+@media (max-width: 1280px) {
+  .p-content,
+  .page-content {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 1024px) {
+  .p-content,
+  .page-content {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+}
+
+@media (max-width: 768px) {
+  .p-content,
+  .page-content {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+}
+
+/* ═══ SIDEBAR RESPONSIVE VERBESSERUNGEN ═══ */
+
+/* Sidebar-Transition glatt */
+.sidebar {
+  transition: width .22s cubic-bezier(.4,0,.2,1),
+              min-width .22s cubic-bezier(.4,0,.2,1);
+  will-change: width;
+}
+
+/* main-wrap Transition glatt */
+.sidebar ~ .main-wrap,
+.sidebar ~ .main {
+  transition: margin-left .22s cubic-bezier(.4,0,.2,1);
+  will-change: margin-left;
+}
+
+/* Tablet: Sidebar-Breiten CSS-Vars anpassen */
+@media (max-width: 1024px) and (min-width: 769px) {
+  :root {
+    /* Bei Tablet-Größe: collapsed ist Standard — vars bleiben gleich */
+    --sb-w-col: 56px;
+  }
+}
+
+/* ═══ CARD / SURFACE VERBESSERUNGEN ═══ */
+
+/* Karten haben konsistenten Schatten */
+.card,
+.p-card {
+  background: var(--surface, #131620);
+  border: 1px solid var(--border, rgba(255,255,255,.07));
+  border-radius: var(--r-lg, 14px);
+  transition: border-color var(--t-fast);
+}
+
+.card:hover,
+.p-card:hover {
+  border-color: var(--border2, rgba(255,255,255,.12));
+}
+
+/* ═══ SCROLLBAR (WebKit) — dezent ═══ */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,.1); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,.2); }
+
+[data-theme="light"] ::-webkit-scrollbar-thumb { background: rgba(0,0,0,.12); }
+[data-theme="light"] ::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,.22); }

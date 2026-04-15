@@ -52,16 +52,16 @@ exports.handler = async function (event, context) {
     k1:  process.env.MAKE_WEBHOOK_K1,
     k2:  process.env.MAKE_WEBHOOK_K2      || process.env.MAKE_WEBHOOK_KAUF,
     l3:  process.env.MAKE_WEBHOOK_L3      || process.env.MAKE_S3_WEBHOOK,
-    l4:  process.env.MAKE_WEBHOOK_L4      || 'https://hook.eu1.make.com/kplexov12f2qxxlb1k73tyq24gyumzb6',
-    l5:  process.env.MAKE_WEBHOOK_L5      || 'https://hook.eu1.make.com/qhz3sm97i6dqm1wbxx737hd19k35pmro',
+    l4:  process.env.MAKE_WEBHOOK_L4,   // ENV: MAKE_WEBHOOK_L4 setzen
+    l5:  process.env.MAKE_WEBHOOK_L5,   // ENV: MAKE_WEBHOOK_L5 setzen
     l8:  process.env.MAKE_WEBHOOK_L8,
     l9:  process.env.MAKE_WEBHOOK_L9,
     l10: process.env.MAKE_WEBHOOK_L10     || process.env.MAKE_S4_WEBHOOK,
     s1:  process.env.MAKE_WEBHOOK_S1,
     s3:  process.env.MAKE_WEBHOOK_S3,
-    s6:  process.env.MAKE_WEBHOOK_S6      || 'https://hook.eu1.make.com/b2tsqcvjgxhk9lrv3yyo9qht46k16kcq',
-    sup: process.env.MAKE_WEBHOOK_SUPPORT || 'https://hook.eu1.make.com/lktuhugwcg5v37ib6bdaxjb1uiplnu8v',
-    wh:  process.env.MAKE_WEBHOOK_WHISPER || 'https://hook.eu1.make.com/h019rspppkvc4m146sv1opxs74h9dp3x',
+    s6:  process.env.MAKE_WEBHOOK_S6,      // ENV: MAKE_WEBHOOK_S6 setzen
+    sup: process.env.MAKE_WEBHOOK_SUPPORT, // ENV: MAKE_WEBHOOK_SUPPORT setzen
+    wh:  process.env.MAKE_WEBHOOK_WHISPER,
   };
 
   const webhook = WEBHOOKS[key] || '';

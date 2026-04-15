@@ -559,6 +559,7 @@ async function speichereUndWeiter() {
     localStorage.setItem('prova_aktiver_fall', _az);
     localStorage.setItem('prova_schadenart', felder.Schadensart);
     sessKill();
+    if (felder.Abgabefrist) fristAlsTermin(_az, felder.Abgabefrist, felder.Schadensart, felder.Auftraggeber_Name);
     renderSchritt3();
     geheZuSchritt(3);
   };
@@ -734,6 +735,33 @@ window.addEventListener('DOMContentLoaded', function() {
     }, 2000);
   }
 });
+
+
+/* ─── Abgabefrist automatisch als Termin anlegen ─── */
+async function fristAlsTermin(az, datum, schadensart, auftraggeber) {
+  try {
+    var svEmail = localStorage.getItem('prova_sv_email') || '';
+    if (!svEmail || !datum) return;
+    var termin = {
+      termin_titel: 'Abgabe: ' + az + (schadensart ? ' · ' + schadensart : ''),
+      termin_typ:   'Abgabefrist',
+      termin_datum:  datum,
+      aktenzeichen:  az,
+      notiz:        auftraggeber ? 'Auftraggeber: ' + auftraggeber : '',
+      sv_email:      svEmail
+    };
+    var local = [];
+    try { local = JSON.parse(localStorage.getItem('prova_termine') || '[]'); } catch(e) {}
+    local.push(Object.assign({ id: 'frist_' + az.replace(/[^a-z0-9]/gi,'-'), src: 'auto' }, termin));
+    localStorage.setItem('prova_termine', JSON.stringify(local));
+    var hdrs = Object.assign({'Content-Type':'application/json'}, window.provaAuthHeaders ? window.provaAuthHeaders() : {});
+    fetch('/.netlify/functions/airtable', {
+      method: 'POST', headers: hdrs,
+      body: JSON.stringify({ method: 'POST', path: '/v0/appJ7bLlAHZoxENWE/tblyMTTdtfGQjjmc2', payload: { records: [{ fields: termin }] } })
+    }).catch(function() {});
+    showToast('Abgabefrist im Kalender gespeichert ✓', 'ok', 3000);
+  } catch(e) {}
+}
 
 // Sitzungs-Check beim Start
 setTimeout(sessInit, 200);

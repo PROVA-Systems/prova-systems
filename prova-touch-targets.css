@@ -1,0 +1,292 @@
+/**
+ * PROVA Systems — prova-touch-targets.css
+ * ══════════════════════════════════════════════════════════════════════
+ * Category 4 Mobile UX Fix — WCAG 2.5.5 Touch Target Compliance
+ *
+ * PROBLEM:  Touch-Ziele sind global <44px — WCAG 2.5.5 schreibt min.
+ *           44×44px vor. Betrifft: Buttons, Links, Inputs, Checkboxen,
+ *           Radio-Buttons, Select-Felder und Icon-Buttons.
+ *
+ * LÖSUNG:   Globale min-height/min-width + position-relative padding-
+ *           Technik für Elemente die optisch klein bleiben sollen aber
+ *           trotzdem einen ausreichend großen Touch-Bereich haben.
+ *
+ * EINBINDEN: <link rel="stylesheet" href="prova-touch-targets.css">
+ *            Muss nach allen anderen CSS-Dateien eingebunden werden.
+ *            Nur auf mobilen Geräten aktiv (@media (pointer: coarse)).
+ * ══════════════════════════════════════════════════════════════════════
+ */
+
+/* ══ WCAG 2.5.5 Touch Targets — Nur auf Touch-Geräten aktiv ════════ */
+@media (pointer: coarse) {
+
+  /* ── Buttons ────────────────────────────────────────────────────── */
+  button,
+  [role="button"],
+  [type="button"],
+  [type="submit"],
+  [type="reset"] {
+    min-height: 44px;
+    min-width:  44px;
+    /* Padding statt height um Layout nicht zu brechen */
+    padding-top:    max(var(--touch-pad-v, 8px), calc((44px - 1lh) / 2));
+    padding-bottom: max(var(--touch-pad-v, 8px), calc((44px - 1lh) / 2));
+  }
+
+  /* ── Links als Navigations-Elemente ────────────────────────────── */
+  a:not(.no-touch-fix) {
+    min-height: 44px;
+    display:    inline-flex;
+    align-items: center;
+  }
+
+  /* ── Navigations-Links (sidebar, topbar, tabs) ──────────────────── */
+  nav a,
+  .nav-item,
+  .nav-link,
+  .sidebar-link,
+  .tab-item,
+  .tab-btn,
+  .ot-tab {
+    min-height: 44px !important;
+    min-width:  44px !important;
+    display:    flex !important;
+    align-items: center !important;
+  }
+
+  /* ── Form-Inputs ────────────────────────────────────────────────── */
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="number"],
+  input[type="search"],
+  input[type="tel"],
+  input[type="url"],
+  input[type="date"],
+  input[type="time"],
+  input[type="datetime-local"],
+  textarea,
+  select {
+    min-height: 44px;
+    font-size:  16px !important; /* Verhindert iOS Auto-Zoom bei <16px */
+    padding:    10px 12px;
+  }
+
+  /* ── Checkbox & Radio — Pseudo-Element für größeren Touch-Bereich ─ */
+  input[type="checkbox"],
+  input[type="radio"] {
+    position:   relative;
+    width:       20px;
+    height:      20px;
+    cursor:      pointer;
+    /* Unsichtbarer Touch-Bereich um das Element */
+    appearance: none;
+    -webkit-appearance: none;
+  }
+
+  input[type="checkbox"]::before,
+  input[type="radio"]::before {
+    content:  '';
+    position: absolute;
+    top:      50%;
+    left:     50%;
+    transform: translate(-50%, -50%);
+    width:    44px;
+    height:   44px;
+    /* Visuell unsichtbar, aber Touch-Ziel vorhanden */
+  }
+
+  /* ── Checkbox/Radio mit Label — Label ist das Touch-Ziel ─────────  */
+  label:has(input[type="checkbox"]),
+  label:has(input[type="radio"]) {
+    min-height: 44px;
+    display:    flex;
+    align-items: center;
+    gap:        8px;
+    cursor:     pointer;
+  }
+
+  /* ── Icon-Buttons (Close, Dropdown, etc.) ────────────────────────  */
+  .icon-btn,
+  .btn-icon,
+  .btn-close,
+  .toast-close,
+  .modal-close,
+  [class*="btn-x"],
+  [class*="close-btn"] {
+    min-width:  44px !important;
+    min-height: 44px !important;
+    display:    inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  /* ── PROVA-spezifische Elemente ──────────────────────────────────  */
+
+  /* Sidebar Navigation */
+  .sidebar-nav .nav-item,
+  .sidebar-nav a {
+    min-height: 48px !important; /* Etwas größer für Sidebar */
+    padding:    12px 16px !important;
+  }
+
+  /* Aktions-Buttons in Karten */
+  .btn-tool,
+  .action-btn,
+  .karte-btn,
+  .feed-btn {
+    min-height: 44px !important;
+    padding:    10px 16px !important;
+  }
+
+  /* Foto-Buttons (ortstermin-modus.html) */
+  .foto-camera-btn {
+    min-height: 80px !important; /* Großes Touch-Ziel für Kamera */
+  }
+
+  /* Feld-Eingaben in Formularen */
+  .form-input,
+  .field-input,
+  [class*="input-"] {
+    min-height: 44px !important;
+  }
+
+  /* Tab-Navigation (Vor-Ort) */
+  .tab-bar .tab,
+  .bottom-tabs .tab,
+  .ot-tabs .ot-tab {
+    min-height: 56px !important; /* Thumb-Zone optimiert */
+    padding:    8px 4px !important;
+  }
+
+  /* Dropdown/Select-Custom-Elemente */
+  .custom-select,
+  .dropdown-toggle,
+  .select-trigger {
+    min-height: 44px !important;
+  }
+
+  /* Chip/Badge-Buttons (Filter, Tags) */
+  .chip:not(.no-touch-fix),
+  .badge-btn,
+  .filter-chip {
+    min-height: 36px !important; /* 36px akzeptabel für sekundäre Aktionen */
+    padding:    6px 12px !important;
+  }
+
+  /* ── Offscreen-Touch-Erweiterung für kleine Icon-Buttons ─────────  */
+  /* Technik: position:relative + ::after für größeres hitbox */
+  .small-btn,
+  .btn-sm:not([class*="btn-primary"]):not([class*="btn-secondary"]) {
+    position: relative;
+  }
+
+  .small-btn::after,
+  .btn-sm::after {
+    content:  '';
+    position: absolute;
+    top:      50%;
+    left:     50%;
+    transform: translate(-50%, -50%);
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  /* ── Separator: Elemente die NICHT größer werden sollen ──────────  */
+  .no-touch-fix,
+  .decorative,
+  [aria-hidden="true"] {
+    min-height: unset !important;
+    min-width:  unset !important;
+  }
+
+} /* end @media (pointer: coarse) */
+
+/* ══ Offline-Indikator (vor-ort.html + alle Seiten) ════════════════ */
+#prova-offline-banner {
+  position:   fixed;
+  top:        0;
+  left:       0;
+  right:      0;
+  z-index:    10000;
+  background: #1a1a2e;
+  border-bottom: 2px solid #ef4444;
+  color:      #fff;
+  font-size:  13px;
+  font-weight: 700;
+  padding:    10px 16px;
+  display:    flex;
+  align-items: center;
+  justify-content: space-between;
+  gap:        12px;
+  transform:  translateY(-100%);
+  transition: transform 0.3s ease;
+}
+
+#prova-offline-banner.visible {
+  transform:  translateY(0);
+}
+
+#prova-offline-banner .offline-icon {
+  font-size:  18px;
+  flex-shrink: 0;
+}
+
+#prova-offline-banner .offline-text {
+  flex:       1;
+}
+
+#prova-offline-banner .offline-badge {
+  background: #ef4444;
+  color:      #fff;
+  font-size:  10px;
+  font-weight: 800;
+  padding:    2px 8px;
+  border-radius: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  flex-shrink: 0;
+}
+
+/* Online-Badge (kurz sichtbar wenn Verbindung wieder da) */
+#prova-online-badge {
+  position:   fixed;
+  bottom:     80px;
+  left:       50%;
+  transform:  translateX(-50%) translateY(20px);
+  z-index:    10000;
+  background: #10b981;
+  color:      #fff;
+  font-size:  12px;
+  font-weight: 700;
+  padding:    8px 16px;
+  border-radius: 20px;
+  opacity:    0;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+#prova-online-badge.visible {
+  opacity:    1;
+  transform:  translateX(-50%) translateY(0);
+}
+
+/* ══ Body-Versatz wenn Offline-Banner sichtbar ist ══════════════════ */
+body.prova-offline {
+  padding-top: 44px !important;
+}
+
+/* ══ Save-Button Offline-State (vor-ort.html) ═══════════════════════ */
+.btn-save.offline,
+[id*="save"].offline,
+[class*="speichern"].offline {
+  background:  rgba(107, 114, 128, 0.3) !important;
+  border-color: rgba(107, 114, 128, 0.5) !important;
+  color:        #9ca3af !important;
+  cursor:       not-allowed !important;
+}
+
+.btn-save.offline::after {
+  content:  ' 📵';
+}

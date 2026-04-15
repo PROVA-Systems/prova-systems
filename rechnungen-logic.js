@@ -289,20 +289,28 @@ function speichereLokal(reNr,ag,brutto,status,datum){
 
 async function ladeListe(){
   var liste=document.getElementById('rechnung-liste');
+  // 1. Sofort aus Cache laden (kein endloses Spinner)
+  var lsCache=[];try{lsCache=JSON.parse(localStorage.getItem('prova_rechnungen_local')||'[]');}catch(e){}
+  if(lsCache.length){
+    alleRechnungen=lsCache.map(function(r){return{id:r.re_nr||r.id,re_nr:r.re_nr||'—',auftraggeber:r.auftraggeber||'—',betrag:parseFloat(r.betrag_brutto)||0,status:r.Status||'Offen',datum:r.datum||''};});
+  }
+  // 2. Airtable mit 8s Timeout
   try{
+    var ctrl=new AbortController();var tout=setTimeout(function(){ctrl.abort();},8000);
     var filter=svEmail?'AND(NOT({Status}=""),{sv_email}="'+svEmail+'")':'NOT({Status}="")';
-    // FIX #012: fields[] Parameter — nur benötigte Felder laden (Performance +55%)
-    var _reFields=['Rechnungsnummer','re_nr','Auftraggeber_Name','empfaenger_name','betrag_brutto','brutto_betrag_eur','Status','Rechnungsdatum','rechnungsdatum','Rechnungstyp','Timestamp','sv_email'].map(function(f){return'fields%5B%5D='+encodeURIComponent(f);}).join('&');
-    var path='/v0/'+AT_BASE+'/'+AT_RECHNUNGEN+'?filterByFormula='+encodeURIComponent(filter)+'&maxRecords=50&sort[0][field]=Timestamp&sort[0][direction]=desc&'+_reFields;
-    var res=await fetch('/.netlify/functions/airtable',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({method:'GET',path:path})});
+    var path='/v0/'+AT_BASE+'/'+AT_RECHNUNGEN+'?filterByFormula='+encodeURIComponent(filter)+'&maxRecords=50&sort[0][field]=Timestamp&sort[0][direction]=desc';
+    var res=await fetch('/.netlify/functions/airtable',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({method:'GET',path:path}),signal:ctrl.signal});
+    clearTimeout(tout);
     if(!res.ok)throw new Error('HTTP '+res.status);
     var data=await res.json();
     alleRechnungen=(data.records||[]).map(function(r){
       return{id:r.id,re_nr:r.fields.Rechnungsnummer||r.fields.re_nr||'—',auftraggeber:r.fields.Auftraggeber_Name||r.fields.empfaenger_name||'—',betrag:parseFloat(r.fields.betrag_brutto||r.fields.brutto_betrag_eur||0),status:r.fields.Status||'Offen',datum:r.fields.Rechnungsdatum||r.fields.rechnungsdatum||''};
     });
+    // In Cache schreiben
+    try{localStorage.setItem('prova_rechnungen_local',JSON.stringify(alleRechnungen.map(function(r){return{re_nr:r.re_nr,auftraggeber:r.auftraggeber,betrag_brutto:r.betrag,Status:r.status,datum:r.datum};})));}catch(ex){}
   }catch(e){
-    var ls=[];try{ls=JSON.parse(localStorage.getItem('prova_rechnungen_local')||'[]');}catch(e2){}
-    alleRechnungen=ls.map(function(r){return{id:r.re_nr,re_nr:r.re_nr,auftraggeber:r.auftraggeber,betrag:parseFloat(r.betrag_brutto)||0,status:r.Status||'Offen',datum:r.datum};});
+    if(!alleRechnungen.length){var ls=[];try{ls=JSON.parse(localStorage.getItem('prova_rechnungen_local')||'[]');}catch(e2){}alleRechnungen=ls.map(function(r){return{id:r.re_nr,re_nr:r.re_nr||'—',auftraggeber:r.auftraggeber||'—',betrag:parseFloat(r.betrag_brutto)||0,status:r.Status||'Offen',datum:r.datum||''};});}
+    if(e.name==='AbortError'){zeigToast('Verbindung langsam — zeige gespeicherte Rechnungen','warn');}
   }
 
   // Stats

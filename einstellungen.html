@@ -6,10 +6,7 @@
 <script src="auth-guard.js"></script>
 <script src="theme.js"></script>
 <script src="trial-guard.js"></script>
-<script src="prova-layout.config.js"></script>
-<script src="prova-api.js"></script>
 <script src="nav.js" defer></script>
-  <script src="global-search.js" defer></script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Einstellungen — PROVA Systems</title>
@@ -221,22 +218,22 @@
           <span class="es-sidebar-icon">🤖</span> KI & Diktat
         </div>
         <div class="es-sidebar-item" data-section="benachrichtigungen" onclick="wechsleSektion('benachrichtigungen',this)">
-          <span class="es-sidebar-icon">🔔</span> Benachrichtigungen
+          <span class="es-sidebar-icon">🔔</span> 
+<!-- ── Push-Benachrichtigungen ──────────────────────────── -->
+<div class="settings-section" id="push-optin-section" style="margin-top:24px;">
+  <div class="settings-section-title">🔔 Push-Benachrichtigungen</div>
+  <div id="prova-push-container">
+    <!-- push-optin.js rendert hier automatisch -->
+  </div>
+</div>
+
+Benachrichtigungen
         </div>
         <div class="es-sidebar-item" data-section="integrationen" onclick="wechsleSektion('integrationen',this)">
           <span class="es-sidebar-icon">🔗</span> Integrationen
         </div>
         <div class="es-sidebar-item" data-section="datenschutz" onclick="wechsleSektion('datenschutz',this)">
           <span class="es-sidebar-icon">🔒</span> Datenschutz
-        </div>
-        <div class="es-sidebar-item" data-section="bankdaten" onclick="wechsleSektion('bankdaten',this)">
-          <span class="es-sidebar-icon">🏦</span> Bankdaten & Steuer
-        </div>
-        <div class="es-sidebar-item" data-section="dsgvo" onclick="wechsleSektion('dsgvo',this)">
-          <span class="es-sidebar-icon">🗑️</span> Konto löschen
-        </div>
-        <div class="es-sidebar-item" data-section="smtp" onclick="wechsleSektion('smtp',this)">
-          <span class="es-sidebar-icon">📧</span> E-Mail (SMTP)
         </div>
         <div class="es-sidebar-item" data-section="paket" onclick="wechsleSektion('paket',this)">
           <span class="es-sidebar-icon">📦</span> Paket & Abrechnung
@@ -330,10 +327,9 @@
           <div class="es-zeile">
             <div class="es-zeile-info"><div class="es-zeile-label">Schriftgröße</div><div class="es-zeile-sub">Basis-Schriftgröße der App</div></div>
             <select class="es-select" id="es-fontsize" onchange="aendereFontsize(this.value)">
-              <option value="klein">Klein (13px)</option>
-              <option value="normal" selected>Normal (15px)</option>
-              <option value="gross">Groß (17px)</option>
-              <option value="xgross">Sehr groß (19px)</option>
+              <option value="14">Klein (14px)</option>
+              <option value="16" selected>Normal (16px)</option>
+              <option value="18">Groß (18px)</option>
             </select>
           </div>
           <div class="es-zeile">
@@ -491,104 +487,6 @@
           </div>
         </section>
 
-
-        <!-- BANKDATEN & STEUER -->
-        <section class="es-section" id="es-sec-bankdaten">
-          <div class="es-section-header">
-            <span class="es-section-icon">🏦</span>
-            <div class="es-section-info">
-              <div class="es-section-title">Bankdaten & Steuer</div>
-              <div class="es-section-sub">Werden automatisch in Rechnungen eingesetzt</div>
-            </div>
-          </div>
-          <div class="es-zeile vertikal">
-            <div class="es-zeile-info">
-              <div class="es-zeile-label">Bankverbindung</div>
-              <div class="es-zeile-sub">Für Rechnungen und SEPA-Mahnungen</div>
-            </div>
-            <div class="es-input-row" style="width:100%">
-              <div><label class="es-label">IBAN</label><input class="es-input" id="es-iban" placeholder="DE89 3704 0044 0532 0130 00" autocomplete="off" oninput="markiereGeaendert()" /></div>
-              <div><label class="es-label">BIC</label><input class="es-input" id="es-bic" placeholder="COBADEFFXXX" oninput="markiereGeaendert()" /></div>
-              <div><label class="es-label">Bank / Institut</label><input class="es-input" id="es-bank" placeholder="Commerzbank" oninput="markiereGeaendert()" /></div>
-              <div><label class="es-label">Kontoinhaber</label><input class="es-input" id="es-kontoinhaber" placeholder="Max Mustermann" oninput="markiereGeaendert()" /></div>
-            </div>
-          </div>
-          <div class="es-zeile vertikal">
-            <div class="es-zeile-info">
-              <div class="es-zeile-label">Steuer</div>
-              <div class="es-zeile-sub">Für Rechnungen und USt-Ausweis</div>
-            </div>
-            <div class="es-input-row" style="width:100%">
-              <div><label class="es-label">Steuernummer</label><input class="es-input" id="es-steuernr" placeholder="123/456/78901" oninput="markiereGeaendert()" /></div>
-              <div><label class="es-label">USt-IdNr. (optional)</label><input class="es-input" id="es-ustidnr" placeholder="DE 123456789" oninput="markiereGeaendert()" /></div>
-              <div>
-                <label class="es-label">MwSt-Satz</label>
-                <select class="es-select" id="es-mwst" style="width:100%;margin-top:0" onchange="markiereGeaendert()">
-                  <option value="19">19% (Regelsteuersatz)</option>
-                  <option value="0">0% (Kleinunternehmer §19 UStG)</option>
-                </select>
-              </div>
-              <div>
-                <label class="es-label">Zahlungsziel (Tage)</label>
-                <select class="es-select" id="es-zahlungsziel" style="width:100%;margin-top:0" onchange="markiereGeaendert()">
-                  <option value="7">7 Tage</option>
-                  <option value="14" selected>14 Tage</option>
-                  <option value="21">21 Tage</option>
-                  <option value="30">30 Tage</option>
-                </select>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <!-- SMTP / E-MAIL -->
-        <section class="es-section" id="es-sec-smtp">
-          <div class="es-section-header">
-            <span class="es-section-icon">📧</span>
-            <div class="es-section-info">
-              <div class="es-section-title">E-Mail Versand (SMTP)</div>
-              <div class="es-section-sub">Briefe direkt aus PROVA versenden · Passwort nur lokal</div>
-            </div>
-          </div>
-          <div class="es-zeile vertikal">
-            <div class="es-zeile-info"><div class="es-zeile-label">Provider Voreinstellung</div></div>
-            <div style="width:100%">
-              <select class="es-select" id="es-smtp-provider" style="width:100%" onchange="smtpPreset(this.value)">
-                <option value="">Manuell eingeben</option>
-                <option value="ionos">IONOS / 1&1</option>
-                <option value="gmail">Gmail (App-Passwort)</option>
-                <option value="gmx">GMX</option>
-                <option value="web">WEB.DE</option>
-                <option value="telekom">Telekom</option>
-                <option value="outlook">Outlook / Office 365</option>
-              </select>
-            </div>
-          </div>
-          <div class="es-zeile vertikal">
-            <div class="es-zeile-info"><div class="es-zeile-label">Verbindung</div></div>
-            <div class="es-input-row" style="width:100%">
-              <div><label class="es-label">SMTP-Server</label><input class="es-input" id="es-smtp-host" placeholder="smtp.ionos.de" oninput="markiereGeaendert()" /></div>
-              <div><label class="es-label">Port</label><input class="es-input" id="es-smtp-port" type="number" value="587" placeholder="587" oninput="markiereGeaendert()" /></div>
-              <div><label class="es-label">Benutzername (E-Mail)</label><input class="es-input" id="es-smtp-user" placeholder="kontakt@prova-systems.de" oninput="markiereGeaendert()" /></div>
-              <div><label class="es-label">Absendername</label><input class="es-input" id="es-smtp-from-name" placeholder="PROVA Systems" oninput="markiereGeaendert()" /></div>
-            </div>
-          </div>
-          <div class="es-zeile vertikal">
-            <div class="es-zeile-info">
-              <div class="es-zeile-label">App-Passwort <span style="font-size:11px;opacity:.6;font-weight:400">(nur lokal gespeichert, nie auf Servern)</span></div>
-            </div>
-            <input class="es-input" id="es-smtp-pass" type="password" placeholder="•••••••••••••••" autocomplete="new-password" style="max-width:340px" />
-          </div>
-          <div class="es-zeile">
-            <div class="es-zeile-info"><div class="es-zeile-label">Verbindung testen</div><div class="es-zeile-sub" id="es-smtp-test-result">—</div></div>
-            <button class="es-btn" onclick="testSmtp()">🔌 Testen</button>
-          </div>
-          <div style="margin:0 20px 16px;padding:10px 14px;background:rgba(79,142,247,.06);border:1px solid rgba(79,142,247,.15);border-radius:10px;font-size:12px;color:var(--text3,#6b7a99);">
-            💡 Für Gmail/GMX benötigen Sie ein <strong>App-Passwort</strong> — nicht Ihr normales Passwort.
-            <a href="smtp-einrichtung.html" style="color:var(--accent,#4f8ef7)">Anleitung →</a>
-          </div>
-        </section>
-
         <!-- PAKET & ABRECHNUNG -->
         <section class="es-section" id="es-sec-paket">
           <div class="es-section-header">
@@ -645,7 +543,7 @@
       const email = localStorage.getItem('prova_sv_email') || '';
       const user  = JSON.parse(localStorage.getItem('prova_user') || '{}');
       const name  = user.user_metadata?.full_name || email.split('@')[0] || 'Sachverständiger';
-      const paket = (localStorage.getItem('prova_paket') || 'trial').toLowerCase();
+      const paket = localStorage.getItem('prova_paket') || 'trial';
       document.getElementById('es-avatar-email').textContent = email;
       document.getElementById('es-avatar-name').textContent  = name;
       const initials = name.split(' ').map(w => w[0]).join('').toUpperCase().substring(0,2) || 'SV';
@@ -657,50 +555,6 @@
       ['vorname','nachname','titel','beruf','firma','strasse','plz','ort','telefon','website','ustid'].forEach(f => {
         const el = document.getElementById(`es-${f}`); if (el && prof[f]) el.value = prof[f];
       });
-      // Aus Airtable SV-Record laden (asynchron)
-      ladeAirtableSVDaten();
-    }
-
-    async function ladeAirtableSVDaten() {
-      const AT = window.PROVA_AIRTABLE;
-      if (!AT || !AT.fetchJson) return;
-      const email = localStorage.getItem('prova_sv_email') || '';
-      if (!email) return;
-      try {
-        const esc = email.replace(/"/g, '\\"');
-        const path = '/v0/' + AT.BASE + '/' + AT.TABLE_SV + '?filterByFormula=' + encodeURIComponent('{Email}="' + esc + '"') + '&maxRecords=1';
-        const res = await AT.fetchJson('GET', path);
-        const rec = (res.records || [])[0];
-        if (!rec) return;
-        const f = rec.fields || {};
-        localStorage.setItem('prova_at_sv_record_id', rec.id);
-        // Profil-Felder
-        const map = {Vorname:'vorname',Nachname:'nachname',Titel:'titel',Berufsbezeichnung:'beruf',
-          Firma:'firma',Strasse:'strasse',PLZ:'plz',Ort:'ort',Telefon:'telefon',Website:'website',USt_IdNr:'ustid'};
-        Object.entries(map).forEach(([at, el]) => {
-          const input = document.getElementById('es-' + el);
-          if (input && f[at] && !input.value) input.value = f[at];
-        });
-        // Bankdaten
-        if (f.IBAN && document.getElementById('es-iban')) document.getElementById('es-iban').value = f.IBAN;
-        if (f.BIC && document.getElementById('es-bic')) document.getElementById('es-bic').value = f.BIC;
-        if (f.Bank && document.getElementById('es-bank')) document.getElementById('es-bank').value = f.Bank;
-        if (f.Steuer_Nr && document.getElementById('es-steuernr')) document.getElementById('es-steuernr').value = f.Steuer_Nr;
-        if (f.MwSt_Satz && document.getElementById('es-mwst')) document.getElementById('es-mwst').value = f.MwSt_Satz;
-        if (f.Zahlungsziel_Tage && document.getElementById('es-zahlungsziel')) document.getElementById('es-zahlungsziel').value = f.Zahlungsziel_Tage;
-        // SMTP
-        if (f.smtp_host && document.getElementById('es-smtp-host')) document.getElementById('es-smtp-host').value = f.smtp_host;
-        if (f.smtp_port && document.getElementById('es-smtp-port')) document.getElementById('es-smtp-port').value = f.smtp_port;
-        if (f.smtp_user && document.getElementById('es-smtp-user')) document.getElementById('es-smtp-user').value = f.smtp_user;
-        if (f.smtp_from_name && document.getElementById('es-smtp-from-name')) document.getElementById('es-smtp-from-name').value = f.smtp_from_name;
-        if (f.smtp_provider && document.getElementById('es-smtp-provider')) document.getElementById('es-smtp-provider').value = f.smtp_provider;
-        // Passwort wird NICHT aus localStorage geladen (nie dort gespeichert)
-        // Placeholder zeigt Status
-        const smtpConfigured = localStorage.getItem('prova_smtp_user');
-        if (smtpConfigured && document.getElementById('es-smtp-pass')) {
-          document.getElementById('es-smtp-pass').placeholder = '••••••••• (konfiguriert — neu eingeben zum Ändern)';
-        }
-      } catch(e) { console.warn('Einstellungen: Airtable nicht erreichbar', e); }
     }
 
     function ladePaketInfo() {
@@ -724,13 +578,7 @@
 
     function ladeEinstellungen() {
       try {
-        const s = JSON.parse(localStorage.getItem(ES_KEY) || '{}')
-        /* Schriftgröße sofort anwenden */;
-        const _fs = localStorage.getItem('prova_fontsize') || s['fontsize'] || 'normal';
-        if (_fs && window.PROVA_FONT_MAP) { aendereFontsize(_fs); }
-        /* Theme Select syncen (theme.js hat es bereits angewendet) */
-        const _th = localStorage.getItem('prova_theme') || 'dark';
-        const _thSel = document.getElementById('es-theme'); if(_thSel) _thSel.value = _th;
+        const s = JSON.parse(localStorage.getItem(ES_KEY) || '{}');
         ['kompakt','animationen','auto_quality','lernmodus','inline_vorschlaege','bn_fristen','bn_zahlung','bn_stillezeit'].forEach(k => {
           const el = document.getElementById('es-' + k.replace(/_/g,'-')); if (el && s[k] !== undefined) el.checked = s[k];
         });
@@ -743,19 +591,6 @@
 
     function saveToggle(key, value) {
       try { const s = JSON.parse(localStorage.getItem(ES_KEY)||'{}'); s[key]=value; localStorage.setItem(ES_KEY,JSON.stringify(s)); } catch(e) {}
-      /* Sofortige Effekte anwenden */
-      if (key === 'kompakt') {
-        document.body.classList.toggle('prova-kompakt', value);
-        document.documentElement.classList.toggle('prova-kompakt', value);
-      }
-      if (key === 'animationen') {
-        document.documentElement.style.setProperty('--t-base', value ? '.18s' : '0s');
-        document.documentElement.style.setProperty('--t-fast', value ? '.1s' : '0s');
-        document.documentElement.style.setProperty('--t-slow', value ? '.3s' : '0s');
-      }
-      if (['bn_fristen','bn_zahlung','bn_stillezeit','auto_quality','lernmodus','inline_vorschlaege'].includes(key)) {
-        localStorage.setItem('prova_' + key, value ? '1' : '0');
-      }
       zeigeToast('Einstellung gespeichert');
     }
     function saveSelect(key, value) {
@@ -766,94 +601,19 @@
       if (!geaendert) { geaendert=true; document.getElementById('es-save-bar').classList.add('sichtbar'); }
     }
     function speichereAlles() {
-      // Profil
       const prof = {};
       ['vorname','nachname','titel','beruf','firma','strasse','plz','ort','telefon','website','ustid'].forEach(f => {
         const el = document.getElementById(`es-${f}`); if (el) prof[f] = el.value;
       });
       localStorage.setItem('prova_profil', JSON.stringify(prof));
-      // App-Einstellungen
       try {
         const s = JSON.parse(localStorage.getItem(ES_KEY)||'{}');
         const ki = document.getElementById('es-ki-kontext'); if (ki) s.ki_kontext = ki.value;
         localStorage.setItem(ES_KEY, JSON.stringify(s));
       } catch(e) {}
-      // SMTP: Passwort sicher via smtp-credentials.js speichern (AES-256 verschlüsselt in Airtable)
-      // Das Passwort wird NIEMALS in localStorage gespeichert (Sicherheit)
-      const smtpPass = document.getElementById('es-smtp-pass') ? document.getElementById('es-smtp-pass').value : '';
-      const smtpHost2 = document.getElementById('es-smtp-host') ? document.getElementById('es-smtp-host').value : '';
-      const smtpUser2 = document.getElementById('es-smtp-user') ? document.getElementById('es-smtp-user').value : '';
-      const smtpPort2 = document.getElementById('es-smtp-port') ? document.getElementById('es-smtp-port').value : '587';
-      const smtpName2 = document.getElementById('es-smtp-from-name') ? document.getElementById('es-smtp-from-name').value : '';
-      // Nur nicht-sensitive Felder in localStorage (für UI-Anzeige)
-      if (smtpHost2) localStorage.setItem('prova_smtp_host', smtpHost2);
-      if (smtpUser2) localStorage.setItem('prova_smtp_user', smtpUser2);
-      if (smtpPort2) localStorage.setItem('prova_smtp_port', smtpPort2);
-      if (smtpName2) localStorage.setItem('prova_smtp_from_name', smtpName2);
-      // Passwort: verschlüsselt in Airtable (smtp-credentials.js)
-      if (smtpPass) {
-        fetch('/.netlify/functions/smtp-credentials', {
-          method: 'POST',
-          headers: window.provaAuthHeaders ? window.provaAuthHeaders() : {'Content-Type':'application/json'},
-          body: JSON.stringify({
-            smtp_pass: smtpPass,
-            smtp_host: smtpHost2,
-            smtp_port: parseInt(smtpPort2) || 587,
-            smtp_user: smtpUser2,
-            smtp_from_name: smtpName2
-          })
-        }).then(function(r) { return r.json(); })
-          .then(function(d) {
-            if (d.ok) zeigeToast('✅ SMTP-Passwort sicher gespeichert (verschlüsselt)');
-            else zeigeToast('⚠️ SMTP-Passwort konnte nicht gespeichert werden: ' + (d.error || ''), 'error');
-          }).catch(function() { zeigeToast('⚠️ SMTP-Passwort-Speicherung fehlgeschlagen', 'error'); });
-      }
-      // Sicherheit: Passwort-Feld nach dem Speichern leeren
-      if (smtpPass && document.getElementById('es-smtp-pass')) {
-        document.getElementById('es-smtp-pass').value = '';
-        document.getElementById('es-smtp-pass').placeholder = '••••••••• (gespeichert)';
-      }
-      // Airtable: Profil + Bankdaten + SMTP
-      const recId = localStorage.getItem('prova_at_sv_record_id');
-      if (recId && window.provaFetchAirtable && window.PROVA_AIRTABLE) {
-        const AT = window.PROVA_AIRTABLE;
-        const airtableFelder = {
-          Vorname:          document.getElementById('es-vorname')?.value || '',
-          Nachname:         document.getElementById('es-nachname')?.value || '',
-          Titel:            document.getElementById('es-titel')?.value || '',
-          Berufsbezeichnung:document.getElementById('es-beruf')?.value || '',
-          Firma:            document.getElementById('es-firma')?.value || '',
-          Strasse:          document.getElementById('es-strasse')?.value || '',
-          PLZ:              Number(document.getElementById('es-plz')?.value) || undefined,
-          Ort:              document.getElementById('es-ort')?.value || '',
-          Telefon:          document.getElementById('es-telefon')?.value || '',
-          Website:          document.getElementById('es-website')?.value || '',
-          USt_IdNr:         document.getElementById('es-ustidnr')?.value || document.getElementById('es-ustid')?.value || '',
-          IBAN:             document.getElementById('es-iban')?.value || '',
-          BIC:              document.getElementById('es-bic')?.value || '',
-          Bank:             document.getElementById('es-bank')?.value || '',
-          Steuer_Nr:        document.getElementById('es-steuernr')?.value || '',
-          MwSt_Satz:        Number(document.getElementById('es-mwst')?.value) || 19,
-          Zahlungsziel_Tage:Number(document.getElementById('es-zahlungsziel')?.value) || 14,
-          smtp_host:        document.getElementById('es-smtp-host')?.value || '',
-          smtp_port:        Number(document.getElementById('es-smtp-port')?.value) || 587,
-          smtp_user:        document.getElementById('es-smtp-user')?.value || '',
-          smtp_from_name:   document.getElementById('es-smtp-from-name')?.value || '',
-          smtp_provider:    document.getElementById('es-smtp-provider')?.value || '',
-        };
-        // PLZ als number nur wenn vorhanden
-        if (!airtableFelder.PLZ) delete airtableFelder.PLZ;
-        provaFetchAirtable({
-          method: 'PATCH',
-          path: '/v0/' + AT.BASE + '/' + AT.TABLE_SV + '/' + recId,
-          body: { fields: airtableFelder }
-        }).then(() => zeigeToast('✅ Einstellungen gespeichert (Airtable)'))
-          .catch(() => zeigeToast('✅ Lokal gespeichert'));
-      } else {
-        zeigeToast('✅ Einstellungen gespeichert');
-      }
       geaendert = false;
       document.getElementById('es-save-bar').classList.remove('sichtbar');
+      zeigeToast('✅ Einstellungen gespeichert');
     }
     function verwerfAenderungen() {
       ladeProfil(); ladeEinstellungen(); geaendert=false;
@@ -868,36 +628,8 @@
       history.replaceState(null,'',`#${key}`);
     }
 
-    /* ── Theme: PROVA_THEME.set() für korrektes Light-CSS ── */
-    function aendereTheme(v) {
-      saveSelect('theme', v);
-      if (window.PROVA_THEME && window.PROVA_THEME.set) {
-        window.PROVA_THEME.set(v === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : v);
-      } else {
-        var root = document.documentElement;
-        if (v === 'dark' || (v === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-          root.removeAttribute('data-theme');
-          var el = document.getElementById('prova-light-css'); if(el) el.remove();
-        } else {
-          root.setAttribute('data-theme','light');
-        }
-      }
-      localStorage.setItem('prova_theme', v);
-      var sel = document.getElementById('es-theme'); if(sel) sel.value = v;
-      zeigeToast({dark:'🌙 Dunkel aktiviert', light:'☀️ Hell aktiviert', auto:'🌓 Automatisch'}[v] || 'Theme geändert');
-    }
-
-    /* ── Schriftgröße: passende Px-Werte aus FONT_SIZES Mapping ── */
-    var PROVA_FONT_MAP = { klein:'13px', normal:'15px', gross:'17px', xgross:'19px' };
-    function aendereFontsize(v) {
-      saveSelect('fontsize', v);
-      var size = PROVA_FONT_MAP[v] || '15px';
-      document.documentElement.style.fontSize = size;
-      document.documentElement.style.setProperty('--font-base', size);
-      localStorage.setItem('prova_fontsize', v);
-      var sel = document.getElementById('es-fontsize'); if(sel) sel.value = v;
-      zeigeToast('Schriftgröße: ' + {klein:'Klein (13px)',normal:'Normal (15px)',gross:'Groß (17px)',xgross:'Sehr groß (19px)'}[v]);
-    }
+    function aendereTheme(v) { saveSelect('theme',v); document.documentElement.setAttribute('data-theme',v); }
+    function aendereFontsize(v) { saveSelect('fontsize',v); document.documentElement.style.fontSize = v+'px'; }
 
     function passwortReset() {
       const email = localStorage.getItem('prova_sv_email');
@@ -937,191 +669,7 @@
       alert('Löschanfrage gesendet. Bestätigung per E-Mail gemäß DSGVO Art. 17.');
     }
 
-
-    function smtpPreset(p) {
-      const presets = {
-        ionos: {host:'smtp.ionos.de', port:587},
-        gmail: {host:'smtp.gmail.com', port:587},
-        gmx: {host:'mail.gmx.net', port:587},
-        web: {host:'smtp.web.de', port:587},
-        telekom: {host:'securesmtp.t-online.de', port:465},
-        outlook: {host:'smtp.office365.com', port:587}
-      };
-      const pr = presets[p];
-      if (pr) {
-        const h = document.getElementById('es-smtp-host'); if(h) h.value = pr.host;
-        const po = document.getElementById('es-smtp-port'); if(po) po.value = pr.port;
-        markiereGeaendert();
-      }
-    }
-    async function testSmtp() {
-      const host = document.getElementById('es-smtp-host')?.value.trim();
-      const user = document.getElementById('es-smtp-user')?.value.trim();
-      const pass = document.getElementById('es-smtp-pass')?.value;
-      const res = document.getElementById('es-smtp-test-result');
-      if (!host || !user || !pass) { if(res) res.textContent = '⚠️ Bitte Server, User und Passwort eingeben'; return; }
-      if(res) res.textContent = '⏳ Teste Verbindung…';
-      try {
-        const r = await fetch('/.netlify/functions/smtp-test', {
-          method:'POST',
-          headers: window.provaAuthHeaders ? window.provaAuthHeaders() : {'Content-Type':'application/json'},
-          body: JSON.stringify({smtp_host:host, smtp_port:Number(document.getElementById('es-smtp-port')?.value)||587, smtp_user:user, smtp_pass:pass})
-        });
-        const d = await r.json().catch(()=>({}));
-        if(res) res.textContent = (r.ok && d.ok) ? '✅ Verbindung erfolgreich!' : '❌ Fehler: ' + (d.error||'Verbindung fehlgeschlagen');
-      } catch(e) {
-        if(res) res.textContent = '❌ Netzwerkfehler: ' + e.message;
-      }
-    }
-
-    /* ══════════════════════════════════════════════════════
-       FEHLENDE EINSTELLUNGS-FUNKTIONEN — alle mit Funktion
-    ══════════════════════════════════════════════════════ */
-
-    /* Cache leeren */
-    function leerCache() {
-      if (!confirm('Browser-Cache und Service-Worker-Cache leeren? Die Seite wird danach neu geladen.')) return;
-      // localStorage App-Cache-Keys entfernen (nicht Auth)
-      var keysToRemove = Object.keys(localStorage).filter(function(k) {
-        return k.startsWith('prova_cache_') || k.startsWith('prova_airtable_');
-      });
-      keysToRemove.forEach(function(k) { localStorage.removeItem(k); });
-      // Service Worker Cache leeren
-      if ('caches' in window) {
-        caches.keys().then(function(names) {
-          names.forEach(function(n) { caches.delete(n); });
-        });
-      }
-      zeigeToast('✅ Cache geleert — Seite wird neu geladen…');
-      setTimeout(function() { window.location.reload(true); }, 1500);
-    }
-
-    /* Konto löschen → DSGVO Sektion öffnen */
-    function kontoDatenLoeschen() {
-      // Zur DSGVO-Sektion navigieren (hat die vollständige Lösch-UI)
-      var el = document.querySelector('[data-section="dsgvo"]');
-      if (el) {
-        wechsleSektion('dsgvo', el);
-        el.scrollIntoView({ behavior: 'smooth' });
-        zeigeToast('⚠️ Bitte die Löschung unten bestätigen');
-      } else {
-        if (confirm('Konto wirklich unwiderruflich löschen?')) {
-          kontoLoeschen && kontoLoeschen();
-        }
-      }
-    }
-
-    /* Lernpool leeren */
-    function loescheLernpool() {
-      if (!confirm('Alle KI-Lernpool Daten löschen? Dieser Vorgang ist nicht rückgängig zu machen.')) return;
-      var svEmail = localStorage.getItem('prova_sv_email') || '';
-      if (!svEmail) { zeigeToast('Nicht eingeloggt', 'error'); return; }
-      var headers = window.provaAuthHeaders ? window.provaAuthHeaders() : {'Content-Type':'application/json'};
-      fetch('/.netlify/functions/airtable', {
-        method: 'POST', headers: headers,
-        body: JSON.stringify({
-          method: 'GET',
-          path: '/v0/appJ7bLlAHZoxENWE/tbl4LEsMvcDKFCYaF?filterByFormula=' +
-                encodeURIComponent('{SV_Email}="' + svEmail + '"') + '&fields[]=SV_Email'
-        })
-      }).then(function(r) { return r.json(); })
-        .then(function(d) {
-          if (!d.records || d.records.length === 0) { zeigeToast('Lernpool ist bereits leer ✅'); return; }
-          // Records einzeln löschen (max 10 pro Request)
-          var ids = d.records.map(function(r) { return r.id; });
-          var deletePromises = [];
-          for (var i = 0; i < ids.length; i += 10) {
-            var chunk = ids.slice(i, i + 10);
-            var params = chunk.map(function(id) { return 'records[]=' + id; }).join('&');
-            deletePromises.push(fetch('/.netlify/functions/airtable', {
-              method: 'POST', headers: headers,
-              body: JSON.stringify({ method: 'DELETE', path: '/v0/appJ7bLlAHZoxENWE/tbl4LEsMvcDKFCYaF?' + params })
-            }));
-          }
-          Promise.all(deletePromises).then(function() {
-            zeigeToast('✅ Lernpool gelöscht (' + ids.length + ' Einträge)');
-          });
-        }).catch(function(e) { zeigeToast('Fehler: ' + e.message, 'error'); });
-    }
-
-    /* Fristen als ICS exportieren */
-    function exportAlleFresten() {
-      var svEmail = localStorage.getItem('prova_sv_email') || '';
-      if (!svEmail) { zeigeToast('Nicht eingeloggt', 'error'); return; }
-      var headers = window.provaAuthHeaders ? window.provaAuthHeaders() : {'Content-Type':'application/json'};
-      zeigeToast('📅 Fristen werden geladen…');
-      fetch('/.netlify/functions/airtable', {
-        method: 'POST', headers: headers,
-        body: JSON.stringify({
-          method: 'GET',
-          path: '/v0/appJ7bLlAHZoxENWE/tblyMTTdtfGQjjmc2?filterByFormula=' +
-                encodeURIComponent('{sv_email}="' + svEmail + '"') + '&maxRecords=200'
-        })
-      }).then(function(r) { return r.json(); })
-        .then(function(d) {
-          if (!d.records || d.records.length === 0) { zeigeToast('Keine Termine gefunden'); return; }
-          // ICS generieren
-          var ics = 'BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//PROVA Systems//DE\r\n';
-          d.records.forEach(function(rec) {
-            var f = rec.fields;
-            var dt = f.termin_datum ? f.termin_datum.replace(/-/g,'').slice(0,8) : '19700101';
-            var uid = rec.id + '@prova-systems.de';
-            ics += 'BEGIN:VEVENT\r\n';
-
-            ics += 'UID:' + uid + '\r\n';
-
-            ics += 'DTSTART;VALUE=DATE:' + dt + '\r\n';
-
-            ics += 'DTEND;VALUE=DATE:' + dt + '\r\n';
-
-            ics += 'SUMMARY:' + (f.betreff || f.Aktenzeichen || 'Termin') + '\r\n';
-
-            ics += 'DESCRIPTION:' + (f.notiz || '') + '\r\n';
-
-            ics += 'END:VEVENT\r\n';
-
-          });
-          ics += 'END:VCALENDAR';
-          var blob = new Blob([ics], {type:'text/calendar'});
-          var url = URL.createObjectURL(blob);
-          var a = document.createElement('a');
-          a.href = url; a.download = 'prova-termine.ics'; a.click();
-          URL.revokeObjectURL(url);
-          zeigeToast('✅ ' + d.records.length + ' Termine exportiert');
-        }).catch(function(e) { zeigeToast('Export fehlgeschlagen: ' + e.message, 'error'); });
-    }
-
-    /* Passwort zurücksetzen */
-    function passwortReset() {
-      var email = localStorage.getItem('prova_sv_email');
-      if (!email) { zeigeToast('E-Mail nicht gefunden', 'error'); return; }
-      if (window.netlifyIdentity) {
-        window.netlifyIdentity.requestPasswordRecovery(email);
-        zeigeToast('✉️ Passwort-Reset-Mail gesendet an ' + email);
-      } else {
-        // Fallback: Netlify Identity API direkt
-        fetch('https://prova-systems.de/.netlify/identity/recover', {
-          method: 'POST',
-          headers: {'Content-Type':'application/json'},
-          body: JSON.stringify({email: email})
-        }).then(function() {
-          zeigeToast('✉️ Passwort-Reset-Mail gesendet an ' + email);
-        }).catch(function() { zeigeToast('Bitte direkt bei support@prova-systems.de melden', 'error'); });
-      }
-    }
-
     let toastTimer;
-    // Keyboard Shortcuts
-    document.addEventListener('keydown', e => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 's') {
-        e.preventDefault();
-        if (geaendert) speichereAlles();
-        else zeigeToast('Keine Änderungen');
-      }
-      if (e.key === 'Escape') {
-        if (geaendert) { if(confirm('Änderungen verwerfen?')) verwerfAenderungen(); }
-      }
-    });
     function zeigeToast(text) {
       const el=document.getElementById('es-toast'); if(!el)return;
       el.textContent=text; el.classList.add('sichtbar');
@@ -1129,114 +677,10 @@
     }
   </script>
 
-<script src="prova-auth-api.js"></script>
-<script src="prova-sv-airtable.js"></script>
-<script src="prova-airtable-api.js"></script>
 <script src="prova-context.js" defer></script>
 <script src="prova-error-handler.js" defer></script>
 <script src="support-chat.js" defer></script>
 <script src="sw-register.js" defer></script>
-
-        <!-- DSGVO ART. 17 — KONTO LÖSCHEN -->
-        <section class="es-section" id="es-sec-dsgvo">
-          <div class="es-section-header">
-            <div class="es-section-title">🗑️ Konto & Daten löschen</div>
-            <div class="es-section-sub">DSGVO Art. 17 — Recht auf Vergessenwerden</div>
-          </div>
-
-          <div style="padding:16px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2);border-radius:12px;margin-bottom:16px;">
-            <div style="font-size:13px;font-weight:700;color:#f59e0b;margin-bottom:8px;">⚖️ Wichtiger Hinweis zu Löschfristen</div>
-            <div style="font-size:13px;color:var(--text2);line-height:1.7;">
-              Gem. <strong>§257 HGB</strong> und <strong>§147 AO</strong> besteht für Rechnungen, Buchungsbelege und Geschäftskorrespondenz eine gesetzliche <strong>Aufbewahrungspflicht von 10 Jahren</strong>.
-              Diese Dokumente können daher nicht vor Ablauf der Frist gelöscht werden und verbleiben anonymisiert in unserem System.<br><br>
-              Alle anderen Daten (Fälle, Termine, Kontakte, KI-Verläufe, Ihr Profil) werden <strong>sofort und unwiderruflich</strong> gelöscht.
-              Diese Entscheidung liegt allein bei Ihnen.
-            </div>
-          </div>
-
-          <div style="padding:16px;background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.2);border-radius:12px;margin-bottom:20px;">
-            <div style="font-size:13px;font-weight:700;color:#ef4444;margin-bottom:10px;">🔴 Was wird gelöscht?</div>
-            <ul style="font-size:13px;color:var(--text2);line-height:1.9;margin:0;padding-left:20px;">
-              <li>Alle Gutachten-Fälle (SCHADENSFAELLE)</li>
-              <li>Alle Termine und Fristen</li>
-              <li>Alle Kontakte (Auftraggeber)</li>
-              <li>Textbausteine, Briefe, KI-Statistiken</li>
-              <li>Ihr Profil (Name, Adresse, IBAN, SMTP-Zugangsdaten)</li>
-              <li>Ihr Login-Account</li>
-            </ul>
-          </div>
-
-          <div style="padding:16px;background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.2);border-radius:12px;margin-bottom:20px;">
-            <div style="font-size:13px;font-weight:700;color:#10b981;margin-bottom:8px;">✅ Was bleibt (gesetzlich erforderlich)?</div>
-            <div style="font-size:13px;color:var(--text2);line-height:1.7;">
-              Rechnungen — anonymisiert, ohne Namensnennung — für 10 Jahre gem. §257 HGB / §147 AO.
-            </div>
-          </div>
-
-          <div class="es-form-group" style="margin-bottom:14px;">
-            <label class="es-label">Grund der Löschung (optional)</label>
-            <textarea class="es-input" id="dsgvo-grund" rows="2" placeholder="z.B. Berufswechsel, Nutzung beendet..."></textarea>
-          </div>
-
-          <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:20px;">
-            <input type="checkbox" id="dsgvo-confirm-check" style="margin-top:3px;accent-color:#ef4444;">
-            <label for="dsgvo-confirm-check" style="font-size:13px;color:var(--text2);cursor:pointer;line-height:1.6;">
-              Ich bestätige, dass ich alle meine Daten unwiderruflich löschen möchte. Ich verstehe, dass diese Aktion nicht rückgängig gemacht werden kann.
-            </label>
-          </div>
-
-          <button onclick="kontoLoeschen()" style="background:rgba(239,68,68,.1);color:#ef4444;border:1px solid rgba(239,68,68,.3);padding:11px 22px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;width:100%;transition:all .15s;" id="dsgvo-loeschen-btn">
-            🗑️ Mein Konto und alle Daten löschen
-          </button>
-          <div id="dsgvo-status" style="font-size:12px;color:var(--text3);margin-top:8px;text-align:center;"></div>
-        </section>
-
-        <script>
-        // DSGVO-Löschung
-        async function kontoLoeschen() {
-          var check = document.getElementById('dsgvo-confirm-check');
-          if (!check || !check.checked) {
-            alert('Bitte bestätigen Sie zuerst die Checkbox.');
-            return;
-          }
-          if (!confirm('Letzte Sicherheitsabfrage: Alle Daten wirklich unwiderruflich löschen?')) return;
-
-          var btn = document.getElementById('dsgvo-loeschen-btn');
-          var status = document.getElementById('dsgvo-status');
-          btn.disabled = true;
-          btn.textContent = '⏳ Löschung wird durchgeführt…';
-          if(status) status.textContent = '';
-
-          var grund = (document.getElementById('dsgvo-grund') || {}).value || '';
-
-          try {
-            var headers = window.provaAuthHeaders ? window.provaAuthHeaders() : {'Content-Type':'application/json'};
-            var r = await fetch('/.netlify/functions/dsgvo-loeschen', {
-              method: 'POST', headers: headers,
-              body: JSON.stringify({ confirm: true, reason: grund })
-            });
-            var d = await r.json();
-
-            if (d.ok) {
-              // Logout und localStorage leeren
-              localStorage.clear();
-              if(status) status.innerHTML = '<span style="color:#10b981;">✅ Alle Daten gelöscht. Sie werden abgemeldet…</span>';
-              setTimeout(function() {
-                if(window.netlifyIdentity) window.netlifyIdentity.logout();
-                window.location.href = '/index.html';
-              }, 3000);
-            } else {
-              btn.disabled = false;
-              btn.textContent = '🗑️ Mein Konto und alle Daten löschen';
-              if(status) status.innerHTML = '<span style="color:#ef4444;">⚠️ Teilweise Fehler: ' + (d.fehler || []).join(', ') + '</span>';
-            }
-          } catch(e) {
-            btn.disabled = false;
-            btn.textContent = '🗑️ Mein Konto und alle Daten löschen';
-            if(status) status.innerHTML = '<span style="color:#ef4444;">Fehler: ' + e.message + '</span>';
-          }
-        }
-        </script>
-
+<script src="push-optin.js" defer></script>
 </body>
 </html>

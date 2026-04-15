@@ -210,7 +210,7 @@
     style.id = 'prova-nav-css';
     style.textContent = ''
       /* Root vars */
-      + ':root{--sb-w:228px;--sb-w-col:0px;}'
+      + ':root{--sb-w:228px;--sb-w-col:56px;}'
 
       /* ─── SIDEBAR SHELL ─── */
       + '.sidebar{'
@@ -220,7 +220,7 @@
       +   'transition:width .22s cubic-bezier(.4,0,.2,1),min-width .22s cubic-bezier(.4,0,.2,1);'
       +   'overflow:hidden;font-family:var(--font-ui,"DM Sans",system-ui,sans-serif);'
       + '}'
-      + '.sidebar.collapsed{width:0;min-width:0;overflow:hidden;border:none;}'
+      + '.sidebar.collapsed{width:var(--sb-w-col);min-width:var(--sb-w-col);}'
 
       /* ─── LOGO ─── */
       + '.sb-logo{'
@@ -364,20 +364,13 @@
       + '.sidebar.collapsed .sb-toggle-icon{transform:rotate(180deg);}'
       + '.sb-collapse-label{white-space:nowrap;overflow:hidden;transition:opacity .18s;}'
       + '.sidebar.collapsed .sb-collapse-label{opacity:0;width:0;}'
-      + '.sb-edge-tab{position:fixed;left:0;top:50%;transform:translateY(-50%);z-index:1200;'
-      + 'width:18px;height:52px;background:var(--bg2,#1a2035);border-radius:0 8px 8px 0;'
-      + 'display:flex;align-items:center;justify-content:center;cursor:pointer;'
-      + 'border:1px solid var(--border2,rgba(255,255,255,.1));border-left:none;'
-      + 'color:var(--text2,#8b93ab);font-size:11px;transition:all .2s;opacity:0;pointer-events:none;}'
-      + '.sidebar.collapsed ~ .sb-edge-tab,.sidebar.collapsed+*~.sb-edge-tab{opacity:1;pointer-events:auto;}'
-      + '.sb-edge-tab:hover{width:24px;background:var(--accent,#4f8ef7);color:#fff;}'
 
       /* ─── MAIN CONTENT OFFSET ─── */
       + '.sidebar ~ .main-wrap{margin-left:var(--sb-w);transition:margin-left .22s cubic-bezier(.4,0,.2,1);}'
       + '.main-wrap{background:var(--bg,#0b0d11);min-height:100vh;}'
-      + '.sidebar.collapsed ~ .main-wrap{margin-left:0;}'
+      + '.sidebar.collapsed ~ .main-wrap{margin-left:var(--sb-w-col);}'
       + '.main{margin-left:var(--sb-w);transition:margin-left .22s cubic-bezier(.4,0,.2,1);}'
-      + '.sidebar.collapsed ~ .main{margin-left:0;}'
+      + '.sidebar.collapsed ~ .main{margin-left:var(--sb-w-col);}'
 
       /* ─── MOBILE ─── */
       + '.sb-overlay{'
@@ -430,16 +423,6 @@
       if (key && key.startsWith('prova_foto_metadata_')) toRemove.push(key);
     }
     toRemove.forEach(function(k){ localStorage.removeItem(k); });
-    // IDB-Entwurf loeschen damit kein alter Entwurf als Wiederaufnahme erscheint
-    try {
-      var idbReq = indexedDB.open('prova_db', 1);
-      idbReq.onsuccess = function(e) {
-        var db = e.target.result;
-        if (!db.objectStoreNames.contains('entwuerfe')) return;
-        var tx = db.transaction('entwuerfe', 'readwrite');
-        tx.objectStore('entwuerfe').delete('aktueller_entwurf');
-      };
-    } catch(e) {}
   };
 
   var html = ''
@@ -529,8 +512,11 @@
     }
 
     // Collapse-State aus localStorage wiederherstellen
-    var collapsed = localStorage.getItem('prova_sb_collapsed') === '1';
-    if (collapsed) existing.classList.add('collapsed');
+    // Logik: User-Präferenz hat Vorrang. Falls keine Präferenz → auto-collapse bei ≤ 1024px
+    var userPref = localStorage.getItem('prova_sb_collapsed');
+    var viewportNarrow = window.matchMedia('(max-width: 1024px)').matches;
+    var collapsed = userPref === '1' || (userPref === null && viewportNarrow);
+    if (collapsed && !isMobile) existing.classList.add('collapsed');
 
     // ── Scroll-Position der Sidebar wiederherstellen ──
     var nav = existing.querySelector('.sb-nav');
@@ -564,33 +550,16 @@
       }, true);
     }
 
-    // Collapse-Button (im Sidebar-Header)
+    // Collapse-Button
     var btn = document.getElementById('sb-collapse-btn');
-    function toggleCollapse() {
-      existing.classList.toggle('collapsed');
-      var isCol = existing.classList.contains('collapsed');
-      localStorage.setItem('prova_sb_collapsed', isCol ? '1' : '0');
-      // Edge-Tab position aktualisieren
-      var tab = document.getElementById('sb-edge-tab');
-      if (tab) tab.style.opacity = isCol ? '1' : '0';
-    }
-    if (btn) btn.addEventListener('click', toggleCollapse);
-
-    // Schwebender Edge-Tab am linken Rand (sichtbar wenn collapsed)
-    if (!document.getElementById('sb-edge-tab')) {
-      var edgeTab = document.createElement('div');
-      edgeTab.id = 'sb-edge-tab';
-      edgeTab.className = 'sb-edge-tab';
-      edgeTab.title = 'Sidebar einblenden';
-      edgeTab.innerHTML = '<span style="writing-mode:vertical-rl;font-size:10px;letter-spacing:.5px;color:inherit;">›</span>';
-      edgeTab.addEventListener('click', toggleCollapse);
-      document.body.appendChild(edgeTab);
-    }
-    // Initialen State des Edge-Tabs setzen
-    var _tab = document.getElementById('sb-edge-tab');
-    if (_tab) {
-      _tab.style.opacity = collapsed ? '1' : '0';
-      _tab.style.pointerEvents = collapsed ? 'auto' : 'none';
+    if (btn) {
+      btn.addEventListener('click', function () {
+        existing.classList.toggle('collapsed');
+        var isCol = existing.classList.contains('collapsed');
+        // User-Präferenz explizit speichern — übersteuert auto-collapse
+        localStorage.setItem('prova_sb_collapsed', isCol ? '1' : '0');
+        document.body.classList.toggle('sb-collapsed', isCol);
+      });
     }
   }
 
@@ -1172,16 +1141,27 @@ window.provaSbLogout = function() {
 
   /* ── Responsive: Sidebar bei Browser-Resize anpassen ── */
   var _mq = window.matchMedia('(max-width: 768px)');
-  var _mqMedium = window.matchMedia('(max-width: 1100px)');
+  var _mqMedium = window.matchMedia('(max-width: 1024px)');
   function _onResizeMedium(e) {
     var sb = document.querySelector('.sidebar');
     if (!sb) return;
-    if (e.matches && !sb.classList.contains('mobile-open')) {
-      // Mittleres Fenster: Sidebar automatisch kollabieren
-      sb.classList.add('collapsed');
-      document.body.classList.add('sb-collapsed');
-      var btn = document.getElementById('sb-collapse-btn');
-      if (btn) btn.setAttribute('title', 'Sidebar aufklappen');
+    var userPref = localStorage.getItem('prova_sb_collapsed');
+    if (e.matches) {
+      // Fenster wird schmaler (≤ 1024px): auto-collapse wenn kein expliziter User-Wunsch
+      if (!sb.classList.contains('mobile-open') && userPref !== '0') {
+        sb.classList.add('collapsed');
+        document.body.classList.add('sb-collapsed');
+        var btn = document.getElementById('sb-collapse-btn');
+        if (btn) btn.setAttribute('title', 'Sidebar aufklappen');
+      }
+    } else {
+      // Fenster wird breiter (> 1024px): auto-expand wenn kein expliziter User-Wunsch
+      if (userPref !== '1') {
+        sb.classList.remove('collapsed');
+        document.body.classList.remove('sb-collapsed');
+        var btn2 = document.getElementById('sb-collapse-btn');
+        if (btn2) btn2.setAttribute('title', 'Sidebar einklappen');
+      }
     }
   }
   if (_mqMedium.addEventListener) _mqMedium.addEventListener('change', _onResizeMedium);
