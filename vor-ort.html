@@ -15,7 +15,7 @@
   <script src="theme.js"></script>
   <script src="prova-layout.config.js"></script>
 <script src="prova-api.js"></script>
-<script src="nav.js" defer></script>
+<!-- nav.js nicht geladen in vor-ort.html — eigenes Drawer+Nav System -->
 <script src="vor-ort-logic.js" defer></script>
   <script src="global-search.js" defer></script>
   <link rel="stylesheet" href="mobile.css">
@@ -117,7 +117,6 @@
 <body data-page="vor-ort">
 <div class="app-shell" id="app-shell">
   <nav class="sidebar" id="sidebar"></nav>
-  <div class="sb-overlay" id="sb-overlay" onclick="closeMobileSidebar()"></div>
   <div class="main-wrap" id="main-wrap">
     <header class="topbar">
       <div class="topbar-left">
@@ -309,6 +308,10 @@
 var _typ = null;
 var _az  = null;
 var _svEmail = localStorage.getItem('prova_sv_email') || '';
+var _aktuellerSchritt = 1;
+var _sessionTyp = 'ersterfassung';
+var _sessionStartTs = new Date().toISOString();
+var _sessionWiederaufnahmeTs = null;
 
 /* ── Auftragstyp wählen ── */
 function waehleTyp(typ, el) {
@@ -387,6 +390,82 @@ function updateS2(typ) {
 }
 
 /* ── Schritt-Navigation ── */
+/* Session-Persistenz-Funktionen */
+var SESS_KEY = 'prova_vort_session';
+
+function sessSave() {
+  try {
+    var daten = { ts: Date.now(), typ: _typ, schritt: _aktuellerSchritt };
+    ['vo-strasse','vo-plzort','vo-auftraggeber','vo-ag-typ','vo-ag-tel','vo-ag-email',
+     'vo-schadensart','vo-frist','vo-gericht-az','vo-gericht-name','vo-vorschuss',
+     'vo-erg-az','vo-erg-fragen','vo-partei-a','vo-partei-b'].forEach(function(id) {
+      var el = document.getElementById(id);
+      if (el) daten[id] = el.value;
+    });
+    localStorage.setItem(SESS_KEY, JSON.stringify(daten));
+  } catch(e) {}
+}
+
+function sessKill() { localStorage.removeItem(SESS_KEY); }
+
+function sessLade() {
+  try {
+    var d = JSON.parse(localStorage.getItem(SESS_KEY) || 'null');
+    if (!d || !d.ts) return null;
+    if ((Date.now() - d.ts) / 3600000 > 24) { sessKill(); return null; }
+    return d;
+  } catch(e) { return null; }
+}
+
+function sessRestore(d) {
+  if (d.typ) {
+    _typ = d.typ;
+    var typEl = document.querySelector('[data-typ="' + d.typ + '"]');
+    if (typEl) {
+      document.querySelectorAll('.vo-typ').forEach(function(t){ t.classList.remove('aktiv'); });
+      typEl.classList.add('aktiv');
+      var btn = document.getElementById('btn-weiter-1');
+      if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
+      if (typeof updateS2 === 'function') updateS2(d.typ);
+    }
+  }
+  ['vo-strasse','vo-plzort','vo-auftraggeber','vo-ag-typ','vo-ag-tel','vo-ag-email',
+   'vo-schadensart','vo-frist','vo-gericht-az','vo-gericht-name','vo-vorschuss',
+   'vo-erg-az','vo-erg-fragen','vo-partei-a','vo-partei-b'].forEach(function(id) {
+    if (d[id] !== undefined) { var el = document.getElementById(id); if (el) el.value = d[id]; }
+  });
+  if (d.schritt >= 2) geheZuSchritt(d.schritt);
+}
+
+function sessZeigeDialog(d) {
+  var min = Math.round((Date.now() - d.ts) / 60000);
+  var alterText = min < 1 ? 'gerade eben' : min < 60 ? 'vor ' + min + ' Min.' : 'vor ' + Math.round(min/60) + ' Std.';
+  var vorschau = [d['vo-auftraggeber'], d['vo-strasse'] ? d['vo-strasse'] + (d['vo-plzort'] ? ', ' + d['vo-plzort'] : '') : ''].filter(Boolean).join(' · ') || 'Unvollständiger Fall';
+  var ov = document.createElement('div');
+  ov.id = 'sess-ov';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:5000;display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box;';
+  ov.innerHTML = '<div style="background:var(--bg2,#1a2035);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:28px 24px;max-width:380px;width:100%;">' +
+    '<div style="font-size:11px;font-weight:700;color:var(--accent,#4f8ef7);letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px;">Vorherige Sitzung gefunden</div>' +
+    '<div style="font-size:16px;font-weight:700;color:var(--text,#e8eaf0);margin-bottom:4px;">' + vorschau + '</div>' +
+    '<div style="font-size:13px;color:var(--text3,#6b7a99);margin-bottom:24px;">Gespeichert ' + alterText + '</div>' +
+    '<div style="display:flex;flex-direction:column;gap:10px;">' +
+      '<button id="sess-ja" style="padding:14px;background:var(--accent,#4f8ef7);border:none;border-radius:10px;color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;">Sitzung fortsetzen</button>' +
+      '<button id="sess-nein" style="padding:14px;background:transparent;border:1px solid rgba(255,255,255,.15);border-radius:10px;color:var(--text3,#9da3b4);font-size:14px;cursor:pointer;font-family:inherit;">Neues Gutachten starten</button>' +
+    '</div></div>';
+  document.body.appendChild(ov);
+  document.getElementById('sess-ja').onclick = function() {
+    ov.remove(); _sessionTyp = 'wiederaufnahme'; _sessionWiederaufnahmeTs = new Date().toISOString();
+    sessRestore(d); showToast('Sitzung wiederhergestellt', 'ok');
+  };
+  document.getElementById('sess-nein').onclick = function() {
+    ov.remove(); _sessionTyp = 'ersterfassung'; _sessionStartTs = new Date().toISOString(); sessKill();
+    ['vo-strasse','vo-plzort','vo-auftraggeber','vo-ag-tel','vo-ag-email','vo-gericht-az',
+     'vo-gericht-name','vo-erg-az','vo-erg-fragen','vo-partei-a','vo-partei-b'].forEach(function(id){
+      var el = document.getElementById(id); if (el) el.value = '';
+    });
+  };
+}
+
 function geheZuSchritt(nr) {
   [1,2,3].forEach(function(i) {
     document.getElementById('screen-' + i).classList.toggle('aktiv', i === nr);
@@ -403,14 +482,24 @@ function geheZuSchritt(nr) {
   });
   document.getElementById('vo-schritt-badge').textContent = 'Schritt ' + nr + ' von 3';
   document.getElementById('breadcrumb-label').textContent = ['Auftragstyp','Stammdaten','Jetzt starten'][nr-1];
-  window.scrollTo({top:0, behavior:'smooth'});
+  _aktuellerSchritt = nr; sessSave();
+  window.scrollTo({top:0, behavior:'smooth'}); document.body.style.paddingBottom='60px';
 }
 
 /* ── Speichern & Schritt 3 ── */
 async function speichereUndWeiter() {
   var strasse = document.getElementById('vo-strasse').value.trim();
+  var plzOrtVal = document.getElementById('vo-plzort').value.trim();
   var ag      = document.getElementById('vo-auftraggeber').value.trim();
-  if (!strasse || !ag) { showToast('Bitte Schadensort und Auftraggeber eingeben.', 'error'); return; }
+  if (!strasse || !plzOrtVal || !ag) {
+    if (!strasse) document.getElementById('vo-strasse').style.borderColor = 'var(--error, #ef4444)';
+    if (!plzOrtVal) document.getElementById('vo-plzort').style.borderColor = 'var(--error, #ef4444)';
+    if (!ag) document.getElementById('vo-auftraggeber').style.borderColor = 'var(--error, #ef4444)';
+    showToast('Bitte Schadensort, PLZ/Ort und Auftraggeber eingeben.', 'error');
+    return;
+  }
+  // Felder zurücksetzen
+  ['vo-strasse','vo-plzort','vo-auftraggeber'].forEach(function(id){ document.getElementById(id).style.borderColor=''; });
 
   var plzOrt = document.getElementById('vo-plzort').value.trim();
   var plz = plzOrt.match(/^\d{5}/)?.[0] || '';
@@ -435,6 +524,9 @@ async function speichereUndWeiter() {
     Status:           'Auftrag erhalten',
     sv_email:         _svEmail,
     Timestamp:        heute.toISOString(),
+    Session_Typ:      _sessionTyp,
+    Session_Start:    _sessionStartTs,
+    Session_Wiederaufnahme: _sessionWiederaufnahmeTs || null,
   };
   if (plz) felder.PLZ = parseInt(plz);
 
@@ -455,34 +547,50 @@ async function speichereUndWeiter() {
     if (pa || pb) felder.Notizen = 'Partei A: ' + (pa||'') + '\nPartei B: ' + (pb||'');
   }
 
-  // In Airtable speichern
-  try {
-    var headers = Object.assign({'Content-Type':'application/json'}, window.provaAuthHeaders ? window.provaAuthHeaders() : {});
-    var r = await fetch('/.netlify/functions/airtable', {
-      method: 'POST', headers: headers,
-      body: JSON.stringify({
-        method: 'POST',
-        path: '/v0/appJ7bLlAHZoxENWE/tblSxV8bsXwd1pwa0',
-        payload: { records: [{ fields: felder }] }
-      })
-    });
-    var d = await r.json();
-    if (r.ok && d.records?.[0]) {
-      localStorage.setItem('prova_letztes_az', _az);
-      localStorage.setItem('prova_aktiver_fall', _az);
-      localStorage.setItem('prova_schadenart', felder.Schadensart);
-      renderSchritt3();
-      geheZuSchritt(3);
-    } else {
-      showToast('Fehler beim Speichern: ' + (d.error || r.status), 'error');
-    }
-  } catch(e) {
-    // Offline-Fallback: AZ trotzdem speichern und weiter
+  // Airtable-Payload vorbereiten
+  var atPayload = {
+    method: 'POST',
+    path: '/v0/appJ7bLlAHZoxENWE/tblSxV8bsXwd1pwa0',
+    payload: { records: [{ fields: felder }] }
+  };
+
+  var _weiterMitErfolg = function() {
     localStorage.setItem('prova_letztes_az', _az);
-    showToast('Offline gespeichert — wird synchronisiert wenn online', 'warn');
+    localStorage.setItem('prova_aktiver_fall', _az);
+    localStorage.setItem('prova_schadenart', felder.Schadensart);
+    sessKill();
     renderSchritt3();
     geheZuSchritt(3);
+  };
+
+  // Online → direkt senden
+  if (navigator.onLine) {
+    try {
+      var headers = Object.assign({'Content-Type':'application/json'}, window.provaAuthHeaders ? window.provaAuthHeaders() : {});
+      var r = await fetch('/.netlify/functions/airtable', {
+        method: 'POST', headers: headers,
+        body: JSON.stringify(atPayload)
+      });
+      var d = await r.json();
+      if (r.ok && d.records && d.records[0]) {
+        _weiterMitErfolg();
+        return;
+      }
+      // Server-Fehler → Queue
+      showToast('Server nicht erreichbar — lokal gespeichert', 'warn', 5000);
+    } catch(e) {
+      // Netz-Fehler → Queue
+    }
   }
+
+  // Offline / Fehler → Queue + trotzdem weiter
+  try {
+    await queueAdd(atPayload);
+    showToast('Offline — wird automatisch synchronisiert wenn online', 'warn', 6000);
+  } catch(qe) {
+    showToast('Lokal gespeichert — bitte manuell erneut senden', 'warn', 5000);
+  }
+  _weiterMitErfolg();
 }
 
 function renderSchritt3() {
@@ -513,8 +621,155 @@ function showToast(msg, type) {
 // Morgen als Default-Frist
 var morgen = new Date(); morgen.setDate(morgen.getDate() + 30);
 document.getElementById('vo-frist').value = morgen.toISOString().split('T')[0];
+
+// Auto-Save auf alle Eingabefelder binden
+(function bindAutoSave() {
+  ['vo-strasse','vo-plzort','vo-auftraggeber','vo-ag-typ','vo-ag-tel','vo-ag-email',
+   'vo-schadensart','vo-frist'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener('input', sessSave);
+    el.addEventListener('change', sessSave);
+  });
+  window.addEventListener('beforeunload', sessSave);
+  window.addEventListener('pagehide', sessSave);
+})();
+
+// waehleTyp patchen: auch nach Typwahl speichern
+var _origWaehleTyp = window.waehleTyp;
+window.waehleTyp = function(typ, el) {
+  _origWaehleTyp(typ, el);
+  sessSave();
+};
+
+
+/* ════════════════════════════════════════════════════════
+   PROVA VOR-ORT — Offline-Queue
+   Wenn Airtable nicht erreichbar → Request in IDB queuen
+   Automatisch senden sobald Netz zurück
+════════════════════════════════════════════════════════ */
+var _queueDB = null;
+var QUEUE_DB  = 'prova_vort_queue';
+var QUEUE_STR = 'requests';
+
+function queueDBOpen() {
+  if (_queueDB) return Promise.resolve(_queueDB);
+  return new Promise(function(res, rej) {
+    var req = indexedDB.open(QUEUE_DB, 1);
+    req.onupgradeneeded = function(e) {
+      var db = e.target.result;
+      if (!db.objectStoreNames.contains(QUEUE_STR))
+        db.createObjectStore(QUEUE_STR, { keyPath: 'id', autoIncrement: true });
+    };
+    req.onsuccess = function(e) { _queueDB = e.target.result; res(_queueDB); };
+    req.onerror   = function(e) { rej(e.target.error); };
+  });
+}
+
+function queueAdd(payload) {
+  return queueDBOpen().then(function(db) {
+    return new Promise(function(res, rej) {
+      var tx = db.transaction(QUEUE_STR, 'readwrite');
+      tx.objectStore(QUEUE_STR).add({
+        url:     '/.netlify/functions/airtable',
+        payload: payload,
+        ts:      Date.now()
+      });
+      tx.oncomplete = function() { res(); };
+      tx.onerror    = function(e) { rej(e); };
+    });
+  });
+}
+
+function queueFlush() {
+  queueDBOpen().then(function(db) {
+    var tx  = db.transaction(QUEUE_STR, 'readonly');
+    var req = tx.objectStore(QUEUE_STR).getAll();
+    req.onsuccess = function(e) {
+      var alle = e.target.result || [];
+      if (!alle.length) return;
+      alle.forEach(function(eintrag) {
+        var headers = Object.assign({'Content-Type':'application/json'}, window.provaAuthHeaders ? window.provaAuthHeaders() : {});
+        fetch(eintrag.url, {
+          method: 'POST',
+          headers: headers,
+          body: JSON.stringify(eintrag.payload)
+        }).then(function(r) {
+          if (r.ok) {
+            // Erfolgreich gesendet — aus Queue löschen
+            queueDBOpen().then(function(db2) {
+              db2.transaction(QUEUE_STR, 'readwrite').objectStore(QUEUE_STR).delete(eintrag.id);
+            });
+            showToast('Daten erfolgreich synchronisiert', 'ok', 4000);
+          }
+        }).catch(function() { /* noch kein Netz */ });
+      });
+    };
+  }).catch(function() {});
+}
+
+function queueCount(callback) {
+  queueDBOpen().then(function(db) {
+    var req = db.transaction(QUEUE_STR, 'readonly').objectStore(QUEUE_STR).count();
+    req.onsuccess = function(e) { callback(e.target.result || 0); };
+    req.onerror   = function()  { callback(0); };
+  }).catch(function() { callback(0); });
+}
+
+// Automatisch senden wenn Netz zurückkommt
+window.addEventListener('online', function() {
+  setTimeout(queueFlush, 1500);
+});
+
+// Beim Laden prüfen ob Queue-Einträge vorhanden
+window.addEventListener('DOMContentLoaded', function() {
+  if (navigator.onLine) {
+    setTimeout(function() {
+      queueCount(function(n) {
+        if (n > 0) {
+          showToast(n + ' gespeicherte Anfrage(n) werden jetzt synchronisiert…', 'warn', 4000);
+          queueFlush();
+        }
+      });
+    }, 2000);
+  }
+});
+
+// Sitzungs-Check beim Start
+setTimeout(sessInit, 200);
+
+function sessInit() {
+  if (sessionStorage.getItem('prova_neuer_fall') === '1') {
+    sessionStorage.removeItem('prova_neuer_fall');
+    sessKill(); _sessionTyp = 'ersterfassung'; _sessionStartTs = new Date().toISOString();
+    return;
+  }
+  var d = sessLade();
+  if (d && (d['vo-strasse'] || d['vo-auftraggeber'] || d['vo-plzort'])) {
+    sessZeigeDialog(d);
+  } else {
+    _sessionTyp = 'ersterfassung'; _sessionStartTs = new Date().toISOString();
+  }
+}
 </script>
 
+
+<style>
+.prova-bav{display:none;position:fixed;bottom:0;left:0;right:0;height:60px;background:var(--bg2,#1a2035);border-top:1px solid rgba(255,255,255,.1);z-index:300;align-items:stretch;justify-content:space-around;}
+@media(max-width:768px){.prova-bav{display:flex;}}
+.prova-bav a,.prova-bav button{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;gap:2px;font-size:10px;color:#9da3b4;text-decoration:none;border:none;background:none;cursor:pointer;font-family:inherit;padding:6px 2px;min-height:44px;transition:color .15s;}
+.prova-bav a:hover,.prova-bav button:hover{color:#fff;}
+.prova-bav a.active{color:var(--accent,#4f8ef7);}
+.prova-bav .bav-neu{background:var(--accent,#4f8ef7);border-radius:10px;padding:6px 14px;color:#fff!important;margin:8px 4px;}
+.prova-bav span.bav-icon{font-size:18px;line-height:1;}
+</style>
+<nav class="prova-bav" role="navigation" aria-label="Hauptnavigation">
+  <a href="dashboard.html"><span class="bav-icon">⊞</span><span>Zentrale</span></a>
+  <a href="archiv.html"><span class="bav-icon">📂</span><span>Fälle</span></a>
+  <a href="vor-ort.html" class="bav-neu active"><span class="bav-icon">➕</span><span>Neu</span></a>
+  <a href="termine.html"><span class="bav-icon">📅</span><span>Termine</span></a>
+  <a href="dashboard.html?menu=1"><span class="bav-icon">☰</span><span>Menü</span></a>
+</nav>
 <script src="support-chat.js" defer></script>
 <script src="sw-register.js" defer></script>
 </body>

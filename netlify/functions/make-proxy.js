@@ -61,7 +61,7 @@ exports.handler = async function (event, context) {
     s3:  process.env.MAKE_WEBHOOK_S3,
     s6:  process.env.MAKE_WEBHOOK_S6      || 'https://hook.eu1.make.com/b2tsqcvjgxhk9lrv3yyo9qht46k16kcq',
     sup: process.env.MAKE_WEBHOOK_SUPPORT || 'https://hook.eu1.make.com/lktuhugwcg5v37ib6bdaxjb1uiplnu8v',
-    wh:  process.env.MAKE_WEBHOOK_WHISPER,
+    wh:  process.env.MAKE_WEBHOOK_WHISPER || 'https://hook.eu1.make.com/h019rspppkvc4m146sv1opxs74h9dp3x',
   };
 
   const webhook = WEBHOOKS[key] || '';

@@ -342,7 +342,33 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape')closeDrawer(
 (function(){if(!window.PROVA)return;var c=PROVA.paketColor();var s='background:'+c+'18;color:'+c+';border:1px solid '+c+'33';var el=document.getElementById('topbarPaket');if(el){el.textContent=PROVA.paketLabel();el.setAttribute('style',s);}})();
 </script>
 <script src="theme.js"></script>
-<script src="nav.js" defer></script>
+<!-- nav.js bewusst NICHT geladen — app-starter hat eigenes Drawer+BottomNav System -->
+<script>
+// Bottom-Nav via prova-bav CSS-Klasse (kein nav.js)
+document.addEventListener('DOMContentLoaded', function() {
+  var bn = document.getElementById('provaBottomNav');
+  if (!bn) return;
+  var items = [
+    {icon:'⊞',label:'Zentrale',href:'dashboard.html'},
+    {icon:'📂',label:'Fälle',href:'archiv.html'},
+    {icon:'➕',label:'Neu',href:'app-starter.html',highlight:true},
+    {icon:'📅',label:'Termine',href:'termine.html'},
+    {icon:'☰',label:'Menü',href:'#menu'}
+  ];
+  bn.style.cssText='display:flex;position:fixed;bottom:0;left:0;right:0;height:64px;background:var(--bg2);border-top:1px solid var(--border);z-index:100;align-items:stretch;justify-content:space-around;';
+  items.forEach(function(it){
+    var el = it.href==='#menu' ? document.createElement('button') : document.createElement('a');
+    el.style.cssText='display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;gap:3px;font-size:10px;color:var(--text3);text-decoration:none;border:none;background:none;cursor:pointer;font-family:var(--sans),sans-serif;padding:8px 2px;min-height:44px;';
+    if(it.highlight) el.style.cssText+='color:var(--accent);';
+    if(it.href!=='#menu') el.href=it.href;
+    else el.onclick=function(){toggleDrawer();};
+    el.innerHTML='<span style="font-size:18px;">'+it.icon+'</span><span>'+it.label+'</span>';
+    bn.appendChild(el);
+  });
+  // Body padding damit Inhalt nicht hinter Nav verschwindet
+  document.body.style.paddingBottom='64px';
+});
+</script>
   <script src="global-search.js" defer></script>
   <main class="main-content">
 
@@ -425,7 +451,7 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape')closeDrawer(
                   </div>
                   <div class="field-error" id="e-auftraggeber-name">Bitte Name oder Versicherung eingeben</div>
                 </div>
-                <div class="form-group"><label class="form-label form-label-required">E-Mail Auftraggeber</label><input type="email" class="form-input" id="f-auftraggeber-email" placeholder="mueller@vers.de"><div class="field-error" id="e-auftraggeber-email">Bitte gültige E-Mail eingeben</div></div>
+                <div class="form-group"><label class="form-label">E-Mail Auftraggeber</label><input type="email" class="form-input" id="f-auftraggeber-email" placeholder="mueller@vers.de"><div class="field-error" id="e-auftraggeber-email">Bitte gültige E-Mail eingeben</div></div>
                 <div class="form-group"><label class="form-label">Ansprechpartner</label><input type="text" class="form-input" id="f-ansprechpartner" placeholder="Herr Müller"></div>
               </div>
             </div>
@@ -1269,7 +1295,7 @@ window.weiterZuSchritt2 = function() {
 
   chk('f-schadenart',        'e-schadenart');
   chk('f-auftraggeber-name', 'e-auftraggeber-name');
-  chk('f-auftraggeber-email','e-auftraggeber-email');
+  // E-Mail optional — SV hat oft keine Auftraggeber-E-Mail vor Ort
   chk('f-strasse',           'e-strasse');
   chk('f-plz',               'e-plz');
   chk('f-ort',               'e-ort');
@@ -2097,5 +2123,22 @@ document.addEventListener('DOMContentLoaded', function () {
   <script src="prova-notifications.js" defer></script>
   <script src="prova-onboarding-tour.js" defer></script>
 <script src="support-chat.js" defer></script>
+
+<style>
+.prova-bav{display:none;position:fixed;bottom:0;left:0;right:0;height:60px;background:var(--bg2,#1a2035);border-top:1px solid rgba(255,255,255,.1);z-index:300;align-items:stretch;justify-content:space-around;}
+@media(max-width:768px){.prova-bav{display:flex;}}
+.prova-bav a,.prova-bav button{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;gap:2px;font-size:10px;color:#9da3b4;text-decoration:none;border:none;background:none;cursor:pointer;font-family:inherit;padding:6px 2px;min-height:44px;transition:color .15s;}
+.prova-bav a:hover,.prova-bav button:hover{color:#fff;}
+.prova-bav a.active{color:var(--accent,#4f8ef7);}
+.prova-bav .bav-neu{background:var(--accent,#4f8ef7);border-radius:10px;padding:6px 14px;color:#fff!important;margin:8px 4px;}
+.prova-bav span.bav-icon{font-size:18px;line-height:1;}
+</style>
+<nav class="prova-bav" role="navigation" aria-label="Hauptnavigation">
+  <a href="dashboard.html"><span class="bav-icon">⊞</span><span>Zentrale</span></a>
+  <a href="archiv.html"><span class="bav-icon">📂</span><span>Fälle</span></a>
+  <a href="vor-ort.html" class="bav-neu"><span class="bav-icon">➕</span><span>Neu</span></a>
+  <a href="termine.html"><span class="bav-icon">📅</span><span>Termine</span></a>
+  <a href="dashboard.html?menu=1"><span class="bav-icon">☰</span><span>Menü</span></a>
+</nav>
 </body>
 </html>

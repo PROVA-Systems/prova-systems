@@ -1765,7 +1765,7 @@ document.addEventListener('DOMContentLoaded', function() {
    S11 Webhook: /.netlify/functions/make-proxy?key=wh
    ══════════════════════════════════════════════════════════ */
 
-var WHISPER_WEBHOOK = 'https://hook.eu1.make.com/h019rspppkvc4m146sv1opxs74h9dp3x'; // S11 direkt — kein JWT nötig
+var WHISPER_WEBHOOK = '/.netlify/functions/make-proxy?key=wh'; // Server-seitig via make-proxy
 var mediaRecorder = null;
 var audioChunks = [];
 var whisperLaeuft = false;

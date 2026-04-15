@@ -4,7 +4,7 @@
 
 exports.handler = async function(event) {
   if (event.httpMethod === 'OPTIONS') {
-    return { statusCode: 200, headers: { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'Content-Type', 'Access-Control-Allow-Methods': 'POST, OPTIONS' }, body: '' };
+    return { statusCode: 200, headers: { 'Access-Control-Allow-Origin': process.env.URL || 'https://prova-systems.de', 'Access-Control-Allow-Headers': 'Content-Type', 'Access-Control-Allow-Methods': 'POST, OPTIONS' }, body: '' };
   }
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: JSON.stringify({ error: 'Method not allowed' }) };
@@ -25,7 +25,7 @@ exports.handler = async function(event) {
     if (aufgabe === 'support_chat') return await handleSupportChat(body, apiKey);
     return await handleMessages(body, apiKey);
   } catch (e) {
-    return { statusCode: 502, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }, body: JSON.stringify({ error: 'Upstream error', detail: e.message }) };
+    return { statusCode: 502, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': process.env.URL || 'https://prova-systems.de' }, body: JSON.stringify({ error: 'Upstream error', detail: e.message }) };
   }
 };
 
@@ -308,7 +308,7 @@ async function callOpenAI(params, apiKey) {
 }
 
 function jsonResponse(data, status = 200) {
-  return { statusCode: status, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }, body: JSON.stringify(data) };
+  return { statusCode: status, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': process.env.URL || 'https://prova-systems.de' }, body: JSON.stringify(data) };
 }
 
 /* ── KI-Assist Inline (§6 Fachurteil) ── */
