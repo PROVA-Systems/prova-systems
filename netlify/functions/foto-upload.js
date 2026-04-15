@@ -125,7 +125,7 @@ async function findRecordId(aktenzeichen, jwtEmail, atKey) {
   const res  = await fetch(searchUrl, { headers: { 'Authorization': `Bearer ${atKey}` } });
   if (!res.ok) throw new Error(`Suche ${res.status}`);
   const data = await res.json();
-  if (!data.records?.[0]) throw new Error('Record nicht gefunden');
+  if (!data.records || !data.records[0]) throw new Error('Record nicht gefunden');
   return data.records[0].id;
 }
 
@@ -134,8 +134,8 @@ exports.handler = async function(event, context) {
   if (event.httpMethod !== 'POST')    return json(event, 405, { error: 'Method Not Allowed' });
 
   // JWT-Pflicht
-  const user = context.clientContext?.user;
-  if (!user?.email) return json(event, 401, { error: 'Anmeldung erforderlich' });
+  const user = context.clientContext && context.clientContext.user;
+  if (!user || !user.email) return json(event, 401, { error: 'Anmeldung erforderlich' });
   const jwtEmail = user.email.toLowerCase().trim();
 
   const atKey = process.env.AIRTABLE_PAT || process.env.AIRTABLE_TOKEN || '';
@@ -180,7 +180,7 @@ exports.handler = async function(event, context) {
   }
 
   // Attachment URL: entweder vom Upload oder als data-URL Fallback
-  const attachmentUrl = uploadResult?.url || `data:${mimeType};base64,${base64Data}`;
+  const attachmentUrl = (uploadResult && uploadResult.url) || ('data:' + mimeType + ';base64,' + base64Data);
 
   // In Record schreiben
   try {

@@ -176,7 +176,7 @@
     document.querySelectorAll('[data-foto-record], .foto-thumbnail, .dok-item-foto').forEach(function(el, i) {
       el.style.cursor = 'pointer';
       el.addEventListener('click', function() {
-        var recordId = el.getAttribute('data-foto-record') || el.closest('[data-record-id]')?.getAttribute('data-record-id');
+        var recordId = el.getAttribute('data-foto-record') || (el.closest('[data-record-id]') ? el.closest('[data-record-id]').getAttribute('data-record-id') : null);
         var idx      = parseInt(el.getAttribute('data-foto-index') || '0');
         if (recordId) openFromRecord(recordId, idx);
       });
