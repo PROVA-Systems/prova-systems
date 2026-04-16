@@ -187,9 +187,9 @@ const PROVASearch = {
       // 1. Lokaler Cache (sofort)
       const cases = JSON.parse(localStorage.getItem('prova_faelle_cache') || '[]');
       const local = cases.filter(c =>
-        c.az?.toLowerCase().includes(q) ||
-        c.auftraggeber?.toLowerCase().includes(q) ||
-        c.adresse?.toLowerCase().includes(q)
+        (c.az && c.az.toLowerCase().includes(q)) ||
+        (c.auftraggeber && c.auftraggeber.toLowerCase().includes(q)) ||
+        (c.adresse && c.adresse.toLowerCase().includes(q))
       ).slice(0, 5).map(c => ({
         type: 'case', label: c.az, icon: '📋',
         href: 'akte.html?az=' + encodeURIComponent(c.az || ''),

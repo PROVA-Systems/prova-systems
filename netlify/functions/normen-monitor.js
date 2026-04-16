@@ -60,7 +60,7 @@ function bereinigen(html, maxLen = 3000) {
 exports.handler = async (event) => {
   const headers = {
     'Content-Type': 'application/json',
-    'Access-Control-Allow-Origin': '*'
+    'Access-Control-Allow-Origin': 'https://prova-systems.de'
   };
 
   const quellen = [
