@@ -1,48 +1,86 @@
-// PROVA N1 — Normen-Monitor Proxy
-// Empfängt Rohdaten von Make.com, bereinigt sie und ruft OpenAI korrekt auf
+// PROVA N1 — Normen-Monitor
+// Scrapt 4 Quellen selbst, bereinigt Text, ruft OpenAI auf
+// Kompatibel mit Node.js 16+ auf Netlify
+
+const https = require('https');
+
+function httpsGet(url) {
+  return new Promise((resolve, reject) => {
+    const options = {
+      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; PROVA-Monitor/1.0)' },
+      timeout: 15000,
+      rejectUnauthorized: false
+    };
+    const req = https.get(url, options, (res) => {
+      let data = '';
+      res.on('data', chunk => data += chunk);
+      res.on('end', () => resolve(data));
+    });
+    req.on('error', reject);
+    req.on('timeout', () => { req.destroy(); reject(new Error('Timeout')); });
+  });
+}
+
+function httpsPost(hostname, path, data, apiKey) {
+  return new Promise((resolve, reject) => {
+    const body = JSON.stringify(data);
+    const options = {
+      hostname,
+      path,
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Length': Buffer.byteLength(body)
+      }
+    };
+    const req = https.request(options, (res) => {
+      let responseData = '';
+      res.on('data', chunk => responseData += chunk);
+      res.on('end', () => resolve({ status: res.statusCode, body: responseData }));
+    });
+    req.on('error', reject);
+    req.write(body);
+    req.end();
+  });
+}
+
+function bereinigen(html, maxLen = 3000) {
+  return html
+    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, ' ')
+    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, ' ')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"').replace(/&#39;/g, "'")
+    .replace(/\s+/g, ' ').trim()
+    .substring(0, maxLen);
+}
 
 exports.handler = async (event) => {
-  if (event.httpMethod !== 'POST') {
-    return { statusCode: 405, body: 'Method Not Allowed' };
-  }
+  const headers = {
+    'Content-Type': 'application/json',
+    'Access-Control-Allow-Origin': '*'
+  };
+
+  const quellen = [
+    { name: 'Beuth/DIN', url: 'https://www.beuth.de/de/neuerscheinungen' },
+    { name: 'WTA', url: 'https://wta.de' },
+    { name: 'VDI News', url: 'https://www.vdi.de/news' },
+    { name: 'ZVDH', url: 'https://www.zvdh.de' }
+  ];
 
   try {
-    const body = JSON.parse(event.body);
-    const { quelle1 = '', quelle2 = '', quelle3 = '', quelle4 = '' } = body;
+    // Parallel scrapen
+    const texte = await Promise.all(
+      quellen.map(q => httpsGet(q.url).then(bereinigen).catch(e => `[Fehler: ${e.message}]`))
+    );
 
-    // Text bereinigen: HTML-Tags entfernen, Sonderzeichen für JSON escapen
-    function bereinigen(text, maxLen = 3000) {
-      return text
-        .replace(/<[^>]*>/g, ' ')      // HTML-Tags entfernen
-        .replace(/&nbsp;/g, ' ')        // HTML-Entities
-        .replace(/&amp;/g, '&')
-        .replace(/&lt;/g, '<')
-        .replace(/&gt;/g, '>')
-        .replace(/\s+/g, ' ')           // Mehrfach-Whitespace
-        .trim()
-        .substring(0, maxLen);          // Auf maxLen begrenzen
-    }
-
-    const q1 = bereinigen(quelle1);
-    const q2 = bereinigen(quelle2);
-    const q3 = bereinigen(quelle3);
-    const q4 = bereinigen(quelle4);
-
-    const userContent = `Analysiere folgende Webseiteninhalte auf Norm-Aenderungen fuer o.b.u.v. Sachverstaendige fuer Gebaeudeochaeden.
-
-QUELLE 1 - Beuth/DIN (offizieller DIN-Vertrieb):
-${q1}
-
-QUELLE 2 - WTA (Wissenschaftlich-Technische Arbeitsgemeinschaft):
-${q2}
-
-QUELLE 3 - VDI (Verein Deutscher Ingenieure):
-${q3}
-
-QUELLE 4 - ZVDH (Zentralverband des Deutschen Dachdeckerhandwerks):
-${q4}
-
-Gib das Ergebnis als JSON zurueck. Wenn keine relevanten Aenderungen gefunden: leere aenderungen-Liste und handlungsbedarf=false.`;
+    let userContent = 'Analysiere folgende Webseiteninhalte auf Norm-Aenderungen fuer o.b.u.v. Sachverstaendige:\n\n';
+    quellen.forEach((q, i) => {
+      userContent += `=== QUELLE ${i + 1}: ${q.name} ===\n${texte[i]}\n\n`;
+    });
+    userContent += 'Gib Ergebnis als JSON zurueck. Wenn keine Aenderungen: leere aenderungen-Liste, handlungsbedarf=false.';
 
     const openaiPayload = {
       model: 'gpt-4o',
@@ -52,69 +90,29 @@ Gib das Ergebnis als JSON zurueck. Wenn keine relevanten Aenderungen gefunden: l
       messages: [
         {
           role: 'system',
-          content: `Du bist ein hochspezialisierter Normen-Analyst fuer oeffentlich bestellte und vereidigte Sachverstaendige fuer Gebaeudeochaeden in Deutschland.
-
-Analysiere die uebermittelten Webseiteninhalte auf Norm-Aenderungen. Relevante Normen:
-DIN 4108-2 | DIN 4108-3 | DIN 4108-7 | DIN EN ISO 13788 | DIN EN 13187 | DIN 18533 | DIN 18534 | DIN 18531 | DIN 18550 | DIN 18353 | DIN 18202 | DIN 68800-1 | DIN 68800-2 | DIN 68800-4 | DIN 18338 | DIN 18460 | DIN 1946-6 | DIN 4109 | DIN VDE 0100 | DIN EN 14604 | DIN 4102-4 | DIN EN 13501-1 | DIN 14675 | WTA 2-9-04/D | WTA 6-3-05/D | VDI 6022 | GEG 2024 | DIN 18157 | DIN EN 13813 | DIN 18180 | DIN 18195 | DIN 55699 | DIN 18560 | TRGS 519 | TRGS 521
-
-HALLUZINATIONSVERBOT: Nenne AUSSCHLIESSLICH Normen die im Text tatsaechlich erwaehnt werden. Erfinde KEINE Aenderungen.
-
-Antworte AUSSCHLIESSLICH mit diesem JSON-Format:
-{
-  "scan_datum": "YYYY-MM-DD",
-  "aenderungen_gefunden": true,
-  "aenderungen": [
-    {
-      "norm_nummer": "DIN 4108-2",
-      "aenderungstyp": "REVISION",
-      "neue_ausgabe": "DIN 4108-2:2025-01",
-      "kurzbeschreibung": "Beschreibung der Aenderung",
-      "relevanz_fuer_sv": "hoch",
-      "empfohlene_aktion": "AKTUALISIEREN",
-      "quelle_beleg": "Exakter Textabschnitt aus dem Quelltext"
-    }
-  ],
-  "zusammenfassung": "Kurze Zusammenfassung aller Aenderungen",
-  "handlungsbedarf": true
-}`
+          content: `Du bist Normen-Analyst fuer o.b.u.v. Sachverstaendige fuer Gebaeudeochaeden. Ueberwachte Normen: DIN 4108-2, DIN 4108-3, DIN 4108-7, DIN EN ISO 13788, DIN 18533, DIN 18534, DIN 18531, DIN 68800-1, DIN 68800-2, DIN 1946-6, DIN 4109, DIN EN 13501-1, WTA 2-9-04/D, WTA 6-3-05/D, GEG 2024, TRGS 519, TRGS 521. HALLUZINATIONSVERBOT: Nur Normen nennen die tatsaechlich im Text erwaehnt werden. Antworte NUR als JSON: {"scan_datum":"YYYY-MM-DD","aenderungen_gefunden":true,"aenderungen":[{"norm_nummer":"DIN 4108-2","aenderungstyp":"REVISION","neue_ausgabe":"DIN 4108-2:2025-01","kurzbeschreibung":"Text","relevanz_fuer_sv":"hoch","empfohlene_aktion":"AKTUALISIEREN","quelle_name":"Beuth/DIN","quelle_beleg":"Textabschnitt"}],"zusammenfassung":"Text","handlungsbedarf":true}`
         },
-        {
-          role: 'user',
-          content: userContent
-        }
+        { role: 'user', content: userContent }
       ]
     };
 
-    const openaiRes = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(openaiPayload)
-    });
+    const result = await httpsPost(
+      'api.openai.com',
+      '/v1/chat/completions',
+      openaiPayload,
+      process.env.OPENAI_API_KEY
+    );
 
-    if (!openaiRes.ok) {
-      const err = await openaiRes.text();
-      return {
-        statusCode: 502,
-        body: JSON.stringify({ error: 'OpenAI Fehler', details: err })
-      };
+    if (result.status !== 200) {
+      return { statusCode: 502, headers, body: JSON.stringify({ error: 'OpenAI Fehler', status: result.status, details: result.body }) };
     }
 
-    const openaiData = await openaiRes.json();
-    const result = openaiData.choices?.[0]?.message?.content || '{}';
+    const data = JSON.parse(result.body);
+    const content = data.choices?.[0]?.message?.content || '{"handlungsbedarf":false,"aenderungen":[],"zusammenfassung":"Kein Ergebnis"}';
 
-    return {
-      statusCode: 200,
-      headers: { 'Content-Type': 'application/json' },
-      body: result
-    };
+    return { statusCode: 200, headers, body: content };
 
   } catch (err) {
-    return {
-      statusCode: 500,
-      body: JSON.stringify({ error: err.message })
-    };
+    return { statusCode: 500, headers, body: JSON.stringify({ error: err.message, stack: err.stack }) };
   }
 };

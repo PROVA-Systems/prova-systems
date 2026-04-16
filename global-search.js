@@ -1,464 +1,304 @@
-var PROVA_NORMEN_INLINE=[{"n": "DIN 4108-2", "t": "Wärmeschutz und Energie-Einsparung in Gebäuden – Mindestanforderungen", "b": "Wärme", "g": "Mindestoberflächentemperaturfaktor fRsi ≥ 0,70 bei Wohngebäuden | Taupunkttemper"}, {"n": "DIN 4108-3", "t": "Wärmeschutz und Energie-Einsparung – Klimabedingter Feuchteschutz", "b": "Wärme", "g": "Tauwassermenge an Dampfsperre max. 1,0 kg/m² je Tauperiode | Verdunstung im Somm"}, {"n": "DIN 4108-7", "t": "Wärmeschutz – Luftdichtheit von Gebäuden", "b": "Wärme", "g": "n50-Wert ≤ 3,0 h⁻¹ ohne RLT | n50-Wert ≤ 1,5 h⁻¹ mit RLT nach GEG"}, {"n": "DIN EN ISO 13788", "t": "Wärme- und feuchtetechnisches Verhalten von Bauteilen – Raumseitige Oberflächentemperatur", "b": "Wärme", "g": "fRsi ≥ 0,70 für normales Wohnklima (20°C/50% rF) | Kritische Oberflächenfeuchte "}, {"n": "DIN EN 13187", "t": "Wärmetechnisches Verhalten von Gebäuden – Nachweis von Wärmebrücken (Thermografie)", "b": "Wärme", "g": "Mindest-Temperaturdifferenz innen/außen ΔT ≥ 10 K für verwertbare Thermografieau"}, {"n": "DIN 18533", "t": "Abdichtung von erdberührten Bauteilen", "b": "Abdichtung", "g": "Lastfall W1-E (Bodenfeuchte) bis W4-E (aufstauendes Sickerwasser) | Abdichtungsd"}, {"n": "DIN 18534", "t": "Abdichtung von Innenräumen", "b": "Abdichtung", "g": "Beanspruchungsklasse A0 (gelegentlich nass) bis A3 (häufig nass mit Warmwasser)"}, {"n": "DIN 18531", "t": "Abdichtung von Dächern und anderen Flächen", "b": "Abdichtung", "g": "Mindest-Abdichtungsdicke Bitumenbahnen 2-lagig ≥ 6 mm | Foliensysteme ≥ 1,5 mm |"}, {"n": "DIN 18550", "t": "Planung, Zubereitung und Ausführung von Innen- und Außenputzsystemen", "b": "Putz", "g": "Mindestdicke Unterputz 10 mm | Mindestdicke Außenputz 15 mm | Putzdicke im Schla"}, {"n": "DIN 18353", "t": "Estricharbeiten (VOB Teil C)", "b": "Estrich", "g": "Belegreife Zementestrich CM-Wert ≤ 2,0 % | Anhydritestrich ≤ 0,5 % | Mindestdick"}, {"n": "DIN 18202", "t": "Toleranzen im Hochbau", "b": "Abdichtung", "g": "Ebenheitstoleranz Fußboden mit Bodenbelag: max. 5 mm bei 4 m Abstand | ohne Bela"}, {"n": "DIN 68800-1", "t": "Holzschutz – Teil 1: Allgemeines", "b": "Holz", "g": "Gebrauchsklasse GK 0 (kein Kontakt mit Feuchte) bis GK 5 (ständig nass/im Wasser"}, {"n": "DIN 68800-2", "t": "Holzschutz – Teil 2: Vorbeugende bauliche Maßnahmen", "b": "Holz", "g": "Holzfeuchte bei Einbau max. 20 % | Dauerfeuchte im Einbauzustand max. 18 %"}, {"n": "DIN 68800-4", "t": "Holzschutz – Teil 4: Bekämpfende Maßnahmen", "b": "Holz", "g": "Erkennbarer Schimmelpilzbefall an Holz ist ab Befall sanierungspflichtig | Echte"}, {"n": "DIN 18338", "t": "Dachdeckungsarbeiten (VOB Teil C)", "b": "Dach", "g": "Mindestdachneigung Tonziegel ab 22° | Betondachstein ab 15° | Mindestüberdeckung"}, {"n": "DIN 18460", "t": "Dachentwässerungsarbeiten (VOB Teil C)", "b": "Dach", "g": "Rinnengefälle mindestens 3 mm/m (0,3%) | Niederschlagsintensität r15 = 300 l/(s·"}, {"n": "DIN 1946-6", "t": "Raumlufttechnik – Lüftung von Wohnungen", "b": "Feuchte", "g": "Lüftungsstufe 1 (Feuchteschutz) bis Lüftungsstufe 4 (Intensivlüftung) | q_Feucht"}, {"n": "DIN 4109", "t": "Schallschutz im Hochbau", "b": "Schall", "g": "Messunsicherheit Feld ca. ±2 dB | mindestens 5 Frequenzbänder von 100-3150 Hz me"}, {"n": "DIN VDE 0100", "t": "Errichten von Niederspannungsanlagen", "b": "Elektro", "g": "Isolationswiderstand ≥ 1 MΩ bei 500V Prüfspannung | RCCB-Auslösestrom ≤ 30 mA be"}, {"n": "DIN EN 14604", "t": "Rauchwarnmelder", "b": "Brand", "g": "Rauchwarnmelder müssen DIN EN 14604 entsprechen | Standzeit max. 10 Jahre | jähr"}, {"n": "DIN 4102-4", "t": "Brandverhalten von Baustoffen – Teil 4: Klassifizierung", "b": "Brand", "g": "Baustoffklasse A1/A2 (nicht brennbar) bis B3 (leicht entflammbar) | F30/F60/F90 "}, {"n": "DIN EN 13501-1", "t": "Klassifizierung von Bauprodukten und Bauarten – Brandverhalten", "b": "Brand", "g": "Euroklasse A1/A2 (nichtbrennbar) bis F (brennbar) | s1 (kein/geringer Rauch) bis"}, {"n": "DIN 14675", "t": "Brandmeldeanlagen – Planung und Einbau", "b": "Brand", "g": "BMA muss nach DIN 14675 geplant und von anerkanntem Errichter installiert sein |"}, {"n": "WTA 2-9-04/D", "t": "Sanierputzsysteme (WTA-Merkblatt)", "b": "Feuchte", "g": "Wasseraufnahme Sanierputz w ≤ 0,5 kg/(m²·h⁰˙⁵) | Wasserdampfdurchlässigkeit µ ≤ "}, {"n": "WTA 6-3-05/D", "t": "Wärmebrücken – Planung und Bewertung", "b": "Feuchte", "g": "Temperaturfaktor fRsi ≥ 0,70 für Wohnbedingungen Normklima | bei erhöhter Raumfe"}, {"n": "UBA-Leitfaden", "t": "Schimmelpilze in Innenräumen (Umweltbundesamt Leitfaden)", "b": "Feuchte", "g": "Schimmelbefall >0,5 m² in Wohnräumen gilt als erheblicher Mangel | Sanierung bei"}, {"n": "VDI 6022", "t": "Raumlufttechnik – Hygieneanforderungen", "b": "Feuchte", "g": "Lüftungsanlage nach >2 Jahren ohne Reinigung gilt als hygienisch bedenklich | Ke"}, {"n": "DIN ISO 16000-1", "t": "Innenraumluftverunreinigungen – Probenahmestrategie", "b": "Feuchte", "g": "Mindestprobenahmezeitraum 8 h für integrierende Probenahme | Raumvolumen bestimm"}, {"n": "DIN ISO 16000-17", "t": "Innenraumluft – Nachweis und Zählung von Schimmelpilzen", "b": "Feuchte", "g": "Keine gesetzlichen Grenzwerte | Orientierungswerte: Belastung gering <100 KBE/m³"}, {"n": "DIN EN ISO 12572", "t": "Wärme- und feuchtetechnisches Verhalten von Baustoffen – Bestimmung der Wasserdampfdurchlässigkeit", "b": "Feuchte", "g": "µ-Wert Mineralwolle ca. 1 | Holz 40-200 | PE-Folie >100.000 | Beton ca. 70-150"}, {"n": "DIN EN ISO 6946", "t": "Bauteile – Wärmedurchlasswiderstand und Wärmedurchgangskoeffizient", "b": "Wärme", "g": "U-Wert Außenwand Neubau nach GEG max. 0,24 W/(m²K) | Fenster max. 1,3 W/(m²K)"}, {"n": "GEG 2024", "t": "Gebäudeenergiegesetz", "b": "Wärme", "g": "U-Wert Außenwand ≤ 0,24 W/(m²K) | Dach ≤ 0,20 | Kellerdecke ≤ 0,30 | Fenster ≤ 1"}, {"n": "DIN 1053-1", "t": "Mauerwerk – Berechnung und Ausführung", "b": "Statik", "g": "Druckfestigkeit Mauerstein MZ je nach Klasse | Mindestwanddicke tragendes Mauerw"}, {"n": "DIN EN 1992-1-1", "t": "Eurocode 2 – Bemessung von Stahlbetontragwerken", "b": "Statik", "g": "Betondeckung Mindestmaß cmin nach Expositionsklasse | XC1 (trocken) min. 10 mm b"}, {"n": "DIN EN ISO 14688", "t": "Benennung und Beschreibung von Boden", "b": "Statik", "g": "Bodenklassifikation nach Korngröße | Schotterböden >63mm | Kies 2-63mm | Sand 0,"}, {"n": "DIN 4095", "t": "Dränung zum Schutz baulicher Anlagen", "b": "Abdichtung", "g": "Filterkies Permeabilität k ≥ 1×10⁻⁴ m/s | Drainageleitung Gefälle mind. 0,5% | R"}, {"n": "DIN 18157", "t": "Ausführung von Fliesenarbeiten (VOB Teil C)", "b": "Estrich", "g": "Zugfestigkeit Untergrund ≥ 1,0 N/mm² | Restfeuchte Zementestrich ≤ 2 CM% | Hohll"}, {"n": "DIN EN 13813", "t": "Estrichmörtel, Estrichmassen und Estriche", "b": "Estrich", "g": "Druckfestigkeit CT C25 ≥ 25 N/mm² | Biegezugfestigkeit F4 ≥ 4 N/mm² | Oberfläche"}, {"n": "DIN 18180", "t": "Gipskartonplatten – Arten und Anforderungen", "b": "Putz", "g": "GKF (feuchtbeständig) für Nassräume | GKB (Standard) nur in trockenen Bereichen "}, {"n": "VOB/B §13", "t": "Mängelansprüche", "b": "VOB-Recht", "g": "Gewährleistung Bauwerk 4 Jahre | bewegliche Sachen 2 Jahre | bei arglistiger Ver"}, {"n": "VOB/B §4", "t": "Ausführung von Bauleistungen", "b": "VOB-Recht", "g": "Prüf- und Hinweispflicht vor Ausführung | bei fehlender Anzeige ggf. Mitverschul"}, {"n": "VOB/B §17", "t": "Sicherheitsleistung", "b": "VOB-Recht", "g": "Höhe Sicherheitsleistung max. 10% der Auftragssumme | Bürgschaft oder Bareinbeha"}, {"n": "ZPO §404", "t": "Auswahl des Sachverständigen", "b": "VOB-Recht", "g": "SV muss für das Fachgebiet öffentlich bestellt oder besonders sachkundig sein"}, {"n": "ZPO §407a", "t": "Pflichten des Sachverständigen", "b": "VOB-Recht", "g": "Persönliche Erstattung | keine Delegation | unverzügliche Anzeige bei Überforder"}, {"n": "ZPO §411", "t": "Schriftliches Gutachten", "b": "VOB-Recht", "g": "Begründungspflicht | Tatsachengrundlage benennen | Schlussfolgerungen nachvollzi"}, {"n": "DIN 18195", "t": "Bauwerksabdichtungen (Bestandsbau-Referenz, ersetzt durch DIN 18531-18535)", "b": "Abdichtung", "g": "Dickschicht bituminös min. 4 mm | Dünnschicht 2-lagig | Druckwasserdicht ab 3 m "}, {"n": "DIN 55699", "t": "WDVS – Wärmedämm-Verbundsysteme", "b": "Wärme", "g": "Haftfestigkeit Dämmplatte am Untergrund ≥ 0,25 N/mm² | Dübelanzahl nach Zulassun"}, {"n": "ZVDH Fachregeln", "t": "Fachregeln für Dachdeckungen – Zentralverband des Deutschen Dachdeckerhandwerks", "b": "Dach", "g": "Mindestüberdeckung Dachziegel nach Dachneigung und Windlastzone | Firstanschluss"}, {"n": "ZVDH Flachdach-Richtlinie", "t": "Flachdachrichtlinie des ZVDH", "b": "Dach", "g": "Mindestneigung Flachdach 2% (1,15°) | Mindestaufkantung Dachrand 150 mm"}, {"n": "DIN 18330", "t": "Mauerarbeiten (VOB Teil C)", "b": "Statik", "g": "Mindestmörteldicke Lagerfuge 10-15 mm | Stoßfugen vermörtelt oder unvermörtelt n"}, {"n": "DIN 18300", "t": "Erdarbeiten (VOB Teil C)", "b": "Statik", "g": "Bodenverdichtungsgrad Dpr ≥ 97% (Straße) bzw. 95% (Grundstück) | Setzungsgrenzwe"}, {"n": "DIN EN ISO 4628", "t": "Beschichtungen – Beurteilung von Beschichtungsschäden", "b": "Putz", "g": "Rostgrad Ri 0 (kein Rost) bis Ri 5 (sehr starker Rost) | Blasengrad B 0 bis B 5"}, {"n": "DIN 18363", "t": "Malerarbeiten (VOB Teil C)", "b": "Putz", "g": "Untergrundfeuchte max. 3 CM% für Anstriche | Haftzugfestigkeit Untergrund mind. "}, {"n": "DIN 18365", "t": "Bodenbelagarbeiten (VOB Teil C)", "b": "Estrich", "g": "CM-Wert Zementestrich ≤ 2,0% | Anhydrit ≤ 0,5% | Ebenheitsabweichung nach DIN 18"}, {"n": "DIN 18560", "t": "Estriche im Bauwesen", "b": "Estrich", "g": "Mindestdicke schwimmender Estrich auf EPS 20mm: 45mm (Zement) | 35mm (Anhydrit) "}, {"n": "DIN EN 1329", "t": "Kunststoff-Rohrleitungssysteme für Ablaufinstallationen", "b": "Abdichtung", "g": "Wanddicke nach Druckklasse | Dichtheitsprüfung mit Wasser oder Luft nach Einbau"}, {"n": "DIN EN 1057", "t": "Kupfer und Kupferlegierungen – Kupferrohre", "b": "Abdichtung", "g": "Mindestwanddicke je Außendurchmesser | Druckprüfung 1,5-facher Betriebsdruck"}, {"n": "DIN 18540", "t": "Abdichten von Außenwandfugen", "b": "Abdichtung", "g": "Fugentiefe/Fugenbreite = 1:1 | Mindestfugenbreite 10 mm | Dichtstoffhaftung ≥ 0,"}, {"n": "DIN EN 806", "t": "Trinkwasserinstallationen in Gebäuden", "b": "Abdichtung", "g": "Fließdruck mind. 1 bar an jeder Entnahmestelle | Druckprüfung 1,5-facher Betrieb"}, {"n": "DIN EN 1264", "t": "Fußboden-Heizung und -Kühlung", "b": "Estrich", "g": "Betriebsdruck Fußbodenheizung 0,5-0,6 MPa | Druckprüfung 1,3-facher Betriebsdruc"}, {"n": "AVV", "t": "Abfallverzeichnis-Verordnung (Entsorgungsnachweis)", "b": "Brand", "g": "Asbest-Abfall (17 06 01*) gefährlicher Abfall | teerhaltiger Bauschutt (17 03 01"}, {"n": "DIN EN ISO 16000-6", "t": "Innenraumluftverunreinigungen – VOC-Messung", "b": "Feuchte", "g": "Summe VOC (TVOC) Richtwert II (Sanierungsbedarf) = 10 mg/m³ | Richtwert I (Zielw"}, {"n": "DIN EN 13564", "t": "Rückstauverschlüsse", "b": "Abdichtung", "g": "Rückstauebene = Straßenoberkante | unterhalb: Rückstauschutz Pflicht"}, {"n": "DIN EN 12056", "t": "Schwerkraftentwässerungsanlagen innerhalb von Gebäuden", "b": "Abdichtung", "g": "Dimensionierung nach Bemessungsdurchfluss | Gefälle Leitungen mind. 0,5%"}, {"n": "DIN 18461", "t": "Klempnerarbeiten (VOB Teil C)", "b": "Dach", "g": "Blechdicke Zink mind. 0,8 mm | Kupfer 0,6 mm | Anschlusshöhe Wandanschluss mind."}, {"n": "DIN 4102-1", "t": "Brandverhalten von Baustoffen – Baustoffklassen", "b": "Brand", "g": "A1 nichtbrennbar (Beton, Ziegel) | B1 schwer entflammbar | B2 normal entflammbar"}, {"n": "VdS 3151", "t": "Leitfaden zur Schadensanierung nach Wasser- und Sturmschäden", "b": "Feuchte", "g": "Grenzwert Materialfeuchte vor Trocknungsende je nach Baustoff | Holz ≤ 15% | Mau"}, {"n": "DIN EN 14351-1", "t": "Fenster und Türen – Produktnorm", "b": "Feuchte", "g": "Schlagregenwiderstand Klasse 4A (übliche Wohngebäude) bis E1050 | Luftdurchlässi"}, {"n": "DIN 18055", "t": "Fensteranschlüsse – Anforderungen an Wärme- und Feuchteschutz", "b": "Wärme", "g": "Innenabdichtung sd ≥ 0,3 m (dampfbremsend) | Außenabdichtung sd ≤ 0,3 m (diffusi"}, {"n": "DIN EN ISO 9972", "t": "Wärmetechnisches Verhalten von Gebäuden – Luftdurchlässigkeit (Blower-Door)", "b": "Wärme", "g": "Messung bei 50 Pa | n50-Wert in h⁻¹ | q50-Wert in m³/(h·m²)"}, {"n": "DIN EN 15026", "t": "Hygrothermische Simulation von Bauteilen", "b": "Wärme", "g": "Kritische Feuchtegehalt für Schimmelwachstum RH > 80% an Oberfläche über 30 Tage"}, {"n": "DIN EN 206", "t": "Beton – Festlegung, Eigenschaften, Herstellung", "b": "Statik", "g": "Expositionsklasse XC3/XC4 für Außenbauteile | w/z-Wert ≤ 0,50 | Mindestdruckfest"}, {"n": "DIN EN 12390", "t": "Prüfung von Festbeton", "b": "Statik", "g": "Druckfestigkeit Bohrkern mind. 85% der Würfelfestigkeit | Korrekturfaktor für Sc"}, {"n": "DIN EN 771", "t": "Festlegungen für Mauersteine", "b": "Statik", "g": "Druckfestigkeit Mauerziegel nach Klasse | NM (Normalmörtel) Fugendicke 10-15 mm"}, {"n": "DIN EN 1996-1-1", "t": "Eurocode 6 – Bemessung und Konstruktion von Mauerwerksbauten", "b": "Statik", "g": "Mindestquerschnitt tragend | Mindestexzentrizität | Wandschlankheit"}, {"n": "DIN 18335", "t": "Zimmerarbeiten (VOB Teil C)", "b": "Holz", "g": "Holzfeuchte bei Einbau max. 20% | Geradheit ≤ 3 mm/m | Anschlussdetails nach ZVD"}, {"n": "DIN VDE 0185-305", "t": "Blitzschutz", "b": "Elektro", "g": "Schutzklasse I bis IV | Maschenweite Fangeinrichtung nach Klasse | Erdungswiders"}, {"n": "DIN 18232", "t": "Rauch- und Wärmeabzugsanlagen", "b": "Brand", "g": "RWA-Fläche 1% der Grundfläche in Aufenthaltsräumen > 200 m²"}, {"n": "DIN EN 1991-1-4", "t": "Eurocode 1 – Einwirkungen auf Tragwerke – Windlasten", "b": "Statik", "g": "Windlastzone Deutschland 1-4 | Böengeschwindigkeitsdruck 0,32-1,1 kN/m²"}, {"n": "TRWI", "t": "Technische Regeln für Trinkwasserinstallationen", "b": "Abdichtung", "g": "Stagnationswasser max. 3 Tage | Kaltwasser max. 25°C | Warmwasser mind. 55°C"}, {"n": "DIN 4109-2", "t": "Schallschutz im Hochbau – Rechnerische Nachweise", "b": "Schall", "g": "Korrekturterm K für Flankenübertragung | Rechenwert ≥ Anforderungswert + 2 dB Vo"}, {"n": "DIN 18533-2", "t": "Abdichtung erdberührter Bauteile – Teil 2: Bahnenwerkstoffe", "b": "Abdichtung", "g": "Überlappungsbreite Bitumenbahn ≥ 100 mm | Kunststoffbahn ≥ 100 mm | Anschluss au"}, {"n": "ZDB-Merkblatt", "t": "Verbundabdichtungen – Zentralverband des Deutschen Baugewerbes", "b": "Abdichtung", "g": "Verbundabdichtung erforderlich in allen Nassräumen | mind. 1 Lage unter Wanne/Du"}, {"n": "DIN EN 998-1", "t": "Festlegungen für Mörtel im Mauerwerksbau – Teil 1: Putzmörtel", "b": "Putz", "g": "CS I (0,4-2,5 N/mm²) bis CS IV (≥ 6 N/mm²) | w-Wert Wasseraufnahme"}, {"n": "DIN EN 520", "t": "Gipskartonplatten – Anforderungen", "b": "Putz", "g": "GKF Feuchtigkeitsbeständigkeit | GKFI Feuerschutz und feuchtigkeitsbeständig"}, {"n": "DIN EN 1542", "t": "Produkte für den Schutz von Betonbauwerken – Haftfestigkeit", "b": "Statik", "g": "Haftzugfestigkeit nach Instandsetzung ≥ 1,5 N/mm² (Klasse B2) | Abreißversuch mi"}, {"n": "DIN 18532", "t": "Abdichtung von befahrbaren Verkehrsflächen", "b": "Abdichtung", "g": "Mindestdicke Abdichtung 4 mm | Nutzschicht Betonpflaster mind. 80 mm | Entwässer"}, {"n": "DIN EN 15651", "t": "Fugendichtstoffe für Fassaden und Glasarbeiten", "b": "Abdichtung", "g": "Klasse F (Fassade) Bewegungsaufnahme ±25% der Fugenbreite | Klasse G (Verglasung"}, {"n": "DIN EN 1991-1-3", "t": "Eurocode 1 – Einwirkungen auf Tragwerke – Schneelasten", "b": "Statik", "g": "Schneelastzone Deutschland 1-3 | Charakteristische Schneelast 0,65-1,25 kN/m² in"}, {"n": "DIN 18317", "t": "Verkehrswegebauarbeiten – Pflasterdecken (VOB Teil C)", "b": "Statik", "g": "Gefälle Pflasterfläche mind. 1,5% für Wasserableitung | Bettungsdicke 3-5 cm"}, {"n": "DIN 18315", "t": "Verkehrswegebauarbeiten – Oberbauschichten (VOB Teil C)", "b": "Statik", "g": "Verdichtungsgrad nach Schicht | Asphalt 97% nach Prüfung"}, {"n": "DIN 18322", "t": "Kabelanlagen (VOB Teil C)", "b": "Elektro", "g": "Verlegetiefe mind. 0,6 m unter Gelände | Schutzrohr bei mechanischer Gefährdung"}, {"n": "DIN EN ISO 11600", "t": "Hochbau – Fugendichtstoffe", "b": "Abdichtung", "g": "Fugenbreite 6-40 mm | Dehnung ≥ 25% (Klasse 25) oder 12,5% (Klasse 12,5)"}, {"n": "DIN 18182", "t": "Zubehör für die Verarbeitung von Gipskartonplatten", "b": "Putz", "g": "Unterkonstruktion Metallständer C-Profil | Befestigung nach Norm"}, {"n": "DIN 18550-2", "t": "Planung und Ausführung von Außenputzsystemen", "b": "Putz", "g": "Unterputz mind. 10 mm | Oberputz mind. 5 mm | Deckputz mind. 2 mm | Haftbrücke b"}, {"n": "DIN EN 13914", "t": "Außen- und Innenputze", "b": "Putz", "g": "Untergrundvorbereitung | Haftbrücke bei glattem Untergrund | Stärke je Schicht n"}, {"n": "DIN EN 10255", "t": "Stahlrohre für allgemeine Zwecke", "b": "Abdichtung", "g": "Wanddicke und Druckstufe je Rohrdimension | Korrosionsschutzanforderung innen un"}, {"n": "DIN EN 12831", "t": "Heizungsanlagen in Gebäuden – Raumheizlastberechnung", "b": "Wärme", "g": "Mindestraumtemperatur 20°C für Wohnräume | 24°C für Bäder"}, {"n": "DIN EN 1627", "t": "Türen, Fenster – Einbruchhemmung", "b": "Brand", "g": "RC2 empfohlen für Wohngebäude | RC3 für erhöhten Einbruchschutz"}, {"n": "DIN EN ISO 7730", "t": "Ergonomie der thermischen Umgebung", "b": "Wärme", "g": "PMV-Wert (Predicted Mean Vote) -0,5 bis +0,5 für Behaglichkeit | operative Raumt"}, {"n": "DIN 18041", "t": "Hörsamkeit in Räumen", "b": "Schall", "g": "Nachhallzeit T nach Raumnutzung | Unterrichtsräume T ≤ 0,8 s | Büros ≤ 0,6 s"}, {"n": "DIN EN ISO 6781", "t": "Wärmetechnisches Verhalten von Gebäuden – Qualitative Erkennung von Feuchte", "b": "Wärme", "g": "Temperaturdifferenz ΔT mind. 10 K | Messabstand und Emissionsgrad dokumentieren"}, {"n": "DIN 18310", "t": "Naturwerksteinarbeiten (VOB Teil C)", "b": "Estrich", "g": "Druckfestigkeit Naturstein ≥ 60 N/mm² | Biegebruchfestigkeit nach Gesteinsart"}, {"n": "DIN 18200", "t": "Übereinstimmungsnachweis für Bauprodukte", "b": "Statik", "g": "CE-Kennzeichnung mit Leistungserklärung | ÜZ-Zeichen für nationale Produkte"}, {"n": "DIN EN ISO 13793", "t": "Wärmetechnisches Verhalten von Gebäuden – Thermische Gestaltung von Fundamenten", "b": "Wärme", "g": "Frostfreie Tiefe in Deutschland 0,8-1,2 m unter GOK je nach Region"}, {"n": "DIN 18320", "t": "Landschaftsbauarbeiten (VOB Teil C)", "b": "Dach", "g": "Stammumfang | Wurzelballengröße | Standsicherheitsbeurteilung Bäume"}, {"n": "DIN EN 12350", "t": "Prüfung von Frischbeton", "b": "Statik", "g": "Setzmaß nach Konsistenzklasse | Luftgehalt nach Expositionsklasse"}, {"n": "DIN EN ISO 4628", "t": "Beschichtungen – Beurteilung von Beschichtungsschäden (Ergänzungsnorm)", "b": "Putz", "g": "Rostgrad Ri 0 (kein Rost) bis Ri 5 (sehr starker Rost) | Blasengrad B 0 bis B 5"}, {"n": "DIN 18531-3", "t": "Abdichtung von Dächern – Teil 3: Stoffe", "b": "Abdichtung", "g": "Bitumendachbahn min. Klasse E3 (3 mm dick, Polyestervlies) | Kunststoffdachbahn "}, {"n": "DIN 4159", "t": "Rohre aus weichmacherfreiem Polyvinylchlorid PVC-U", "b": "Abdichtung", "g": "Rohrsteifigkeit nach Klasse | Dichtheit nach DIN EN 1401"}, {"n": "DIN EN 1401", "t": "Kunststoff-Rohrleitungssysteme – PVC-U für Entwässerung außerhalb von Gebäuden", "b": "Abdichtung", "g": "Ringsteifigkeit SN 4 (Garten) | SN 8 (Straße) | Dichtheit nach Druckprüfung"}, {"n": "DIN 18360", "t": "Metallbauarbeiten (VOB Teil C)", "b": "Dach", "g": "Korrosionsschutzklassen C1-C5 | Beschichtungsdicke nach Klasse"}, {"n": "DIN EN 450", "t": "Flugasche für Beton", "b": "Statik", "g": "Glühverlust max. 7% | Feinheit nach Norm"}, {"n": "DIN 18555", "t": "Prüfung von Mörteln mit mineralischen Bindemitteln", "b": "Putz", "g": "Frischmörtelkonsistenz | Druckfestigkeit nach 28 Tagen je Mörtelklasse"}, {"n": "DIN 18252", "t": "Steckdosen und Schalter – Einbautoleranzen", "b": "Elektro", "g": "Einbautiefe Unterputz | Lage genau"}, {"n": "DIN EN 1264-4", "t": "Fußbodenheizung – Teil 4: Installation", "b": "Estrich", "g": "Mindestüberdeckung Heizrohr mit Estrich 45 mm | Rohrabstand nach Heizlast"}, {"n": "DIN 18531-2", "t": "Abdichtung von Dächern – Teil 2: Planung", "b": "Abdichtung", "g": "Entwässerungsquerschnitt Notüberläufe | Dachablauf Dimensionierung | Ausdehnungs"}, {"n": "DIN EN 12056-3", "t": "Schwerkraftentwässerung – Dachentwässerung", "b": "Abdichtung", "g": "Bemessungsregenspende r5(2) für Standort | Dachabläufe mindestens 2 je Dach"}, {"n": "DIN 4108-10", "t": "Wärmeschutz – Anwendungsbezogene Anforderungen an Wärmedämmstoffe", "b": "Wärme", "g": "Druckspannungsklasse CS (10) bis CS (100) für druckbelastete Dämmung | WL-Klasse"}, {"n": "BGB §536", "t": "Mietminderung bei Mängeln der Mietsache", "b": "Recht", "g": "5-30% bei Feuchte/Schimmel | bis 100% bei Unbewohnbarkeit"}, {"n": "DIN 18195-1", "t": "Bauwerksabdichtungen – Begriffe", "b": "Abdichtung", "g": "Keine Messwerte – Begriffsnorm"}, {"n": "DIN 18532", "t": "Abdichtung befahrbarer Verkehrsflächen aus Beton", "b": "Abdichtung", "g": "Rissbreiten max. 0,2 mm ohne Abdichtung | Schichtdicke Abdichtung mind. 4 mm"}, {"n": "DIN EN ISO 16000-1", "t": "Innenraumluftverunreinigungen – Allgemeines", "b": "Feuchte", "g": "Schimmel-Grenzwert innen: keine einheitliche gesetzliche Grenze | Orientierungsw"}, {"n": "WTA 6-1", "t": "Leitfaden für hygrothermische Simulationsberechnungen", "b": "Feuchte", "g": "Simulationsergebnis: Tauwassermengen und Schimmelindikator als Ergebnisgröße"}, {"n": "WTA 6-2", "t": "Simulation wärme- und feuchtetechnischer Prozesse", "b": "Feuchte", "g": "Wärmebrücken-Verlustkoeffizient L2D nach DIN EN ISO 10211"}, {"n": "DIN EN ISO 10211", "t": "Wärmebrücken – Berechnung der Wärmeströme", "b": "Wärme", "g": "Temperaturfaktor fRsi ≥ 0,70 an allen Oberflächen | Wärmebrückenverlustkoeffizie"}, {"n": "DIN EN ISO 9346", "t": "Wärme- und feuchtetechnisches Verhalten – Größen und Symbole", "b": "Feuchte", "g": "Keine Messwerte – Begriffsnorm"}, {"n": "DIN EN 13829", "t": "Bestimmung der Luftdurchlässigkeit – Druckdifferenzverfahren", "b": "Wärme", "g": "n50-Wert ≤ 3 h⁻¹ ohne RLT | ≤ 1,5 h⁻¹ mit RLT"}, {"n": "DIN 18540", "t": "Abdichten von Außenwandfugen", "b": "Abdichtung", "g": "Fugenbreite 5-40 mm | Tiefenverhältnis Fugenbreite:Fugentiefe = 1:1 bis 2:1"}, {"n": "DIN EN 14187-3", "t": "Kaltflüssige Fugenmassen für Fugen in Betonbauteilen", "b": "Abdichtung", "g": "Dehnung ≥ 25% | Anpassung an Fugenbewegungen"}, {"n": "DIN 18349", "t": "VOB Teil C – Betoninstandsetzungsarbeiten", "b": "Abdichtung", "g": "Carbonatisierungstiefe > Betondeckung = kritisch | Chloridgehalt > 0,4 M.-% = kr"}, {"n": "DIN EN 1504-9", "t": "Produkte und Systeme für den Schutz von Betonbauwerken", "b": "Abdichtung", "g": "Instandsetzungsprinzip nach Schadensursache | Mindesthaftfestigkeit Instandsetzu"}, {"n": "DIN 18157", "t": "Ausführung keramischer Bekleidungen – Dünnbettverfahren", "b": "Abdichtung", "g": "Haftfestigkeit ≥ 0,5 MPa (C1) oder ≥ 1,0 MPa (C2) | Nullfugenanteil ≤ 5%"}, {"n": "DIN EN 12004", "t": "Mörtel und Klebstoffe für Fliesen – Anforderungen", "b": "Abdichtung", "g": "Klasse C1 (Normkleber): Haftfestigkeit ≥ 0,5 N/mm² | Klasse C2 (Verbessert): ≥ 1"}, {"n": "DIN EN 1991-1-3", "t": "Eurocode 1 – Einwirkungen auf Tragwerke: Schneelasten", "b": "Statik", "g": "Schneelastzone 1-3 (0,65-2,3 kN/m²) | Dachform-Beiwert μ nach Dachneigung"}, {"n": "DIN EN 1991-1-4", "t": "Eurocode 1 – Einwirkungen auf Tragwerke: Windlasten", "b": "Statik", "g": "Windzone 1-4 (Basisgeschwindigkeit 22,5-30 m/s) | Böengeschwindigkeitsdruck qp n"}, {"n": "DIN EN 1991-1-2", "t": "Eurocode 1 – Einwirkungen auf Tragwerke: Brandeinwirkungen", "b": "Statik", "g": "Einheits-Temperaturkurve ETK | Natürliche Brandentwurfsszenarien"}, {"n": "DIN EN 1997-1", "t": "Eurocode 7 – Entwurf, Berechnung und Bemessung in der Geotechnik", "b": "Statik", "g": "Grundbruchsicherheit η ≥ 1,1 (GEO) | Gleitsicherheit η ≥ 1,3"}, {"n": "DIN 4149", "t": "Bauten in deutschen Erdbebengebieten", "b": "Statik", "g": "Erdbebenzone 0-3 in Deutschland | Bemessungsspektrum nach Untergrundklasse"}, {"n": "DIN EN 13670", "t": "Ausführung von Tragwerken aus Beton", "b": "Statik", "g": "Betongüte nach C-Klassen | Betondeckung c_min + Δc_dev | Expositionsklassen XC b"}, {"n": "DIN EN 12390-3", "t": "Prüfung von Festbeton – Druckfestigkeit", "b": "Statik", "g": "Charakteristische Druckfestigkeit fck nach Betonklasse | C25/30: fck = 25 N/mm²"}, {"n": "DIN 4102-4", "t": "Brandverhalten von Baustoffen – Klassifizierung", "b": "Brand", "g": "Nichtbrennbar A1/A2 | Schwerentflammbar B1 | Normalentflammbar B2 | Leichtentfla"}, {"n": "DIN 4102-3", "t": "Brandwände und nichttragende Außenwände", "b": "Brand", "g": "Brandwand: Feuerwiderstandsklasse REI 90/EI 90 | Hochhäuser REI 90-M"}, {"n": "DIN EN 13501-1", "t": "Klassifizierung von Bauprodukten – Brandverhalten", "b": "Brand", "g": "Klasse A1: kein Beitrag zum Brand | B: sehr geringer Beitrag | F: keine Leistung"}, {"n": "DIN EN 13501-2", "t": "Klassifizierung – Feuerwiderstandsfähigkeit", "b": "Brand", "g": "R=Tragfähigkeit | E=Raumabschluss | I=Wärmedämmung | Zeitangabe in Minuten (30,6"}, {"n": "M-LBO 2019", "t": "Musterbauordnung (Landesbauordnungen)", "b": "Brand", "g": "GK 5 Hochhaus (> 22m) | GK 4 (13-22m) | GK 3 (7-13m) | GK 1-2 (< 7m)"}, {"n": "VdS CEA 4001", "t": "Sprinkleranlagen – Planung und Einbau", "b": "Brand", "g": "Mindest-Flächenleistung je nach Brandgefährdung | Auslösetemperatur 68°C Standar"}, {"n": "DIN 14604", "t": "Rauchwarnmelder für Wohnhäuser", "b": "Brand", "g": "Optischer Rauchwarnmelder mit EN 14604-Zulassung | Jährliche Prüfung | 10-Jahres"}, {"n": "DIN 18339", "t": "VOB Teil C – Klempnerarbeiten", "b": "Dach", "g": "Mindestquerschnitt Regenrohr nach Einzugsfläche | Gefälle Kastenrinne mind. 0,5%"}, {"n": "DIN EN 534", "t": "Wellplatten aus Bitumen – Anforderungen", "b": "Dach", "g": "Dachneigung mind. 10° | Mindestüberdeckung 150 mm | Nagelpositionen"}, {"n": "DIN EN 544", "t": "Bitumen-Dachbahnen – Anforderungen", "b": "Dach", "g": "Zugfestigkeit und Dehnung nach Typ | Schälwiderstand Schweißnaht mind. 100 N/50m"}, {"n": "Fachregel Klempnerhandwerk", "t": "Fachregel des deutschen Klempnerhandwerks", "b": "Dach", "g": "Mindestgefälle Traufstreifen 2° | Bewegungsfuge alle 8 m | Mindestwandstärke Kup"}, {"n": "DIN 18161-1", "t": "Dachabdichtungen – Anwendungsbedingungen", "b": "Dach", "g": "Nutzungsklasse A-C (nicht genutzt bis Fahrbahn) | Mindestgefälle 2% empfohlen"}, {"n": "DIN EN 13813", "t": "Estrichmörtel – Eigenschaften und Anforderungen", "b": "Estrich", "g": "Druckfestigkeit je nach Klasse: C12 bis C80 | Biegezugfestigkeit F3 bis F10"}, {"n": "DIN 18560-2", "t": "Estriche im Bauwesen – Teil 2: Estriche und Heizestriche auf Dämmschichten", "b": "Estrich", "g": "Mindestdicke schwimmender Estrich CT/CA: 45 mm | Heizestrich: 45 mm (bei Fußbode"}, {"n": "DIN 18560-3", "t": "Estriche im Bauwesen – Teil 3: Verbundestriche", "b": "Estrich", "g": "Haftfestigkeit ≥ 1,5 N/mm² | Mindestdicke 25 mm | Untergrundvorbereitung Sägen +"}, {"n": "DIN 18560-7", "t": "Estriche im Bauwesen – Hochbeanspruchte Estriche", "b": "Estrich", "g": "Biegezugfestigkeit mind. F7 | Druckfestigkeit mind. C35 | Abriebwiderstand"}, {"n": "DIN 4109-4", "t": "Schallschutz im Hochbau – Bauakustische Prüfungen", "b": "Schall", "g": "Messgenauigkeit ±2 dB(A) | Mindestanzahl Messpositionen | Korrekturen für Raumak"}, {"n": "DIN EN ISO 717-1", "t": "Bewertung des Schallschutzes – Luftschalldämmung", "b": "Schall", "g": "Bewertetes Schalldämm-Maß Rw aus Terzbandmessung | Korrekturen C und Ctr"}, {"n": "DIN EN ISO 717-2", "t": "Bewertung des Schallschutzes – Trittschalldämmung", "b": "Schall", "g": "Bewerteter Norm-Trittschallpegel L\\'nw ≤ 53 dB für Wohngebäude (DIN 4109)"}, {"n": "DIN EN ISO 10140-2", "t": "Akustik – Messung der Schalldämmung von Bauteilen im Prüfstand", "b": "Schall", "g": "Prüfstand-Messung ohne Flankenübertragung | Reproduzierbarkeit ±1 dB(A)"}, {"n": "VDI 3819", "t": "Schallschutz im Wohnungsbau", "b": "Schall", "g": "Empfehlung für erhöhten Schallschutz über Mindestniveau | Installationsgeräusche"}, {"n": "DIN EN ISO 3382-2", "t": "Akustik – Messung von Raumakustikparametern", "b": "Schall", "g": "Nachhallzeit T20 oder T30 nach Raumnutzung | Büro empfohlen: < 0,8 s | Klassenra"}, {"n": "DIN 68800-3", "t": "Holzschutz – Teil 3: Vorbeugender chemischer Holzschutz", "b": "Holz", "g": "Retention je Gebrauchsklasse | GK 2: ≥ 8 kg/m³ Wirkstoffkonzentration | GK 3: ≥ "}, {"n": "DIN EN 335", "t": "Dauerhaftigkeit von Holz – Gebrauchsklassen", "b": "Holz", "g": "GK 1: trocken innen | GK 2: geschützt außen | GK 3: ungeschützt außen | GK 4: Er"}, {"n": "DIN EN 350", "t": "Dauerhaftigkeit von Holz – Natürliche Dauerhaftigkeit", "b": "Holz", "g": "Dauerhaftigkeitsklasse 1 (sehr dauerhaft: Teak, Eiche) bis 5 (nicht dauerhaft: F"}, {"n": "DIN EN 408", "t": "Tragwerke aus Holz – Prüfverfahren für Holz", "b": "Holz", "g": "Biegefestigkeit fm,k | E-Modul E0,mean nach Festigkeitsklasse C24, C30 etc."}, {"n": "ÖNORM B 3010", "t": "Holzschutz im Hochbau (Österreich – anerkannte Regel)", "b": "Holz", "g": "Grenzholzfeuchte 20% | Mindestabstand Holz/Erdreich 30 cm"}, {"n": "DIN EN 1912", "t": "Bauholz – Zuordnung von Sortierklassen", "b": "Holz", "g": "S10 entspricht C30 | S13 entspricht C35 | Astanteil, Äste, Risse als Sortiermerk"}, {"n": "§414 ZPO", "t": "Sachverständiger als sachkundige Auskunftsperson", "b": "Verfahrensrecht", "g": "Keine Messwerte – Rechtsnorm"}, {"n": "§485 ZPO", "t": "Selbständiges Beweisverfahren", "b": "Verfahrensrecht", "g": "Keine Messwerte – Rechtsnorm"}, {"n": "§493 ZPO", "t": "Verwertung des Gutachtens aus dem selbständigen Beweisverfahren", "b": "Verfahrensrecht", "g": "Keine Messwerte – Rechtsnorm"}, {"n": "VOB/B §13", "t": "Sachmängelansprüche (VOB Teil B)", "b": "VOB-Recht", "g": "Verjährungsfrist VOB/B: 4 Jahre (Werke an Bauwerken) | Arglistig verschwiegene M"}, {"n": "VOB/B §4", "t": "Ausführung der Leistung (VOB Teil B)", "b": "VOB-Recht", "g": "Anerkannte Regeln der Technik einzuhalten | Bedenken schriftlich anmelden"}, {"n": "DIN EN ISO 6946", "t": "Wärmedurchgangswiderstand und Wärmedurchgangskoeffizient", "b": "Energie", "g": "U-Wert = 1/(Rsi + ΣR + Rse) | Innenwiderstand Rsi = 0,13 m²K/W | Außenwiderstand"}, {"n": "DIN EN ISO 13790", "t": "Berechnung des Heizenergiebedarfs", "b": "Energie", "g": "Jahresheizwärmebedarf Qh nach Gebäudehülle, Anlagentechnik und Nutzung"}, {"n": "DIN EN 832", "t": "Berechnung des Heizenergiebedarfs – Wohngebäude (historisch)", "b": "Energie", "g": "Jahresheizwärmebedarf Qh nach vereinfachtem Verfahren"}, {"n": "KfW 55 EH", "t": "KfW-Effizienzhaus 55 Standard", "b": "Energie", "g": "Jahresprimärenergiebedarf ≤ 55% GEG-Referenzgebäude | Transmissionswärmeverlust "}, {"n": "DIN 18040-3", "t": "Barrierefreies Bauen – Öffentlicher Verkehrsraum", "b": "Barrierefrei", "g": "Gehweg-Breite mind. 1,50 m (besser 1,80 m) | Querneigung max. 2% | Längsneigung "}, {"n": "ASR A1.8", "t": "Technische Regeln für Arbeitsstätten – Verkehrswege", "b": "Barrierefrei", "g": "Rettungsweg-Breite mind. 1,00 m | Ganghöhe mind. 2,00 m | Fußböden rutschfest"}, {"n": "DIN 32975", "t": "Gestaltung visueller Informationen im öffentlichen Raum", "b": "Barrierefrei", "g": "Leuchtdichtekontrast K ≥ 0,4 zwischen Schrift und Hintergrund"}, {"n": "DGUV Information 208-041", "t": "Bodenbeläge für nassbelastete Barfußbereiche", "b": "Barrierefrei", "g": "Bewertungsgruppe A (barfuß trocken) bis C (barfuß nass) | Gleitreibungskoeffizie"}, {"n": "WTA 4-11", "t": "Messung der Feuchte in Bauteilen", "b": "Feuchte", "g": "CM-Methode: Calcium-Carbid-Methode für Estriche | Ergebnisangabe in M.-%"}, {"n": "WTA 4-5", "t": "Beurteilung von Mauerwerk – Wassergehalt", "b": "Feuchte", "g": "Grenzwerte nach Mauerwerksart: Ziegel < 3 M.-% | Beton < 4 M.-% für trocken"}, {"n": "ISO 16000-21", "t": "Innenraumluft – Probenahme von Schimmelpilzen", "b": "Feuchte", "g": "Luftkeimmessung Impaktion | mind. 3 Proben je Raum | Außenluftprobe als Referenz"}, {"n": "UBA Leitfaden 2017", "t": "Leitfaden zur Vorbeugung, Erfassung und Sanierung von Schimmelbefall", "b": "Feuchte", "g": "Schimmelpilze im Innenraum: Befall immer als Mangel zu bewerten unabhängig von G"}, {"n": "VDI 6022 Blatt 1", "t": "Raumlufttechnik – Anforderungen an Raumlufttechnische Anlagen", "b": "Feuchte", "g": "Inspektion und Wartung alle 2 Jahre | Keimgehalt Luft ≤ 500 KBE/m³"}, {"n": "DIN EN ISO 12572", "t": "Bestimmung von Wasserdampfdurchlässigkeit", "b": "Feuchte", "g": "Diffusionswiderstandszahl µ: Beton 70-150 | Mineralwolle 1 | Dampfsperre PE > 10"}, {"n": "DIN 18174", "t": "Schaumglas als Dämmstoff – Anforderungen", "b": "Feuchte", "g": "Druckfestigkeit mind. 0,7 N/mm² | Wärmeleitfähigkeit λ = 0,038-0,050 W/mK"}, {"n": "ZPO §287", "t": "Schadensschätzung durch das Gericht", "b": "Verfahrensrecht", "g": "Keine Messwerte – Rechtsnorm"}, {"n": "HOAI 2021", "t": "Honorarordnung für Architekten und Ingenieure", "b": "Honorar", "g": "Honorarzonen I-V | Anrechenbare Kosten aus DIN 276 | Leistungsphasen 1-9"}, {"n": "BauGB §34", "t": "Zulässigkeit von Vorhaben im Innenbereich", "b": "Baurecht", "g": "Einfügen in vorhandene Bebauung | Erschließung gesichert | Keine Verunstaltung"}, {"n": "BGB §633", "t": "Sachmangel beim Werkvertrag", "b": "Baurecht", "g": "Keine Messwerte – Rechtsnorm"}, {"n": "BGB §634", "t": "Rechte des Bestellers bei Mängeln", "b": "Baurecht", "g": "Verjährung 5 Jahre für Bauwerke (§ 634a BGB) | 2 Jahre für sonstige Werke"}, {"n": "WTA 6-1", "t": "Leitfaden zur Beurteilung und Sanierung feuchter Mauerwerke", "b": "Feuchte", "g": "Feuchtegehalt kapillar gesättigtes Mauerwerk ca. 20-30 Vol% je nach Material | A"}, {"n": "WTA 6-2", "t": "Sanierung von Mauerfeuchtigkeit", "b": "Feuchte", "g": "Sanierputz SP muss nach WTA 2-9 zugelassen sein | Putzdicke Sanierputz mind. 20 "}, {"n": "WTA 4-11", "t": "Messung der Feuchte von mineralischen Baustoffen", "b": "Feuchte", "g": "CM-Messung Richtwert Zementputz trocken < 3 CM% | kapillar gesättigt ca. 8-12 CM"}, {"n": "DIN EN ISO 13788", "t": "Raumseitige Oberflächentemperatur zur Vermeidung von Schimmelpilzbildung", "b": "Feuchte", "g": "fRsi ≥ 0,70 bei normales Wohnklima | kritische Oberflächenfeuchte 80% rF"}, {"n": "VDI 6022-1", "t": "Raumlufttechnik – Hygieneanforderungen an Lüftungsanlagen", "b": "Feuchte", "g": "Inspektionsintervall Wohnraumlüftung 2 Jahre | Filter-Wechselintervall nach Hers"}, {"n": "DIN EN 13501-1", "t": "Klassifizierung von Bauprodukten — Brandverhalten", "b": "Brandschutz", "g": "Klasse A1 (nicht brennbar) bis F (keine Leistung bestimmt) | A2,s1,d0 = schwer e"}, {"n": "DIN 18232", "t": "Rauch- und Wärmefreihaltung", "b": "Brandschutz", "g": "NRA: Geometrisch-aerodynamische Fläche mind. 1% der Grundfläche | Auslöseschwell"}, {"n": "MBO", "t": "Musterbauordnung", "b": "Baurecht", "g": "Keine einheitlichen Messwerte – rechtliche Grundnorm | Konkretisierung durch Lan"}, {"n": "DIN EN 1990", "t": "Eurocode 0 – Grundlagen der Tragwerksplanung", "b": "Statik", "g": "Bemessungssituation ständig/vorübergehend/außergewöhnlich | Zuverlässigkeitsklas"}, {"n": "DIN EN 1991-1-1", "t": "Eurocode 1 – Einwirkungen: Wichten, Eigenlasten, Nutzlasten", "b": "Statik", "g": "Wohnnutzlast 1,5-2,0 kN/m² | Büronutzlast 3,0 kN/m² | Dachzugang begrenzt 0,75 k"}, {"n": "DIN EN 1992-1-1", "t": "Eurocode 2 – Bemessung Stahlbetontragwerke", "b": "Statik", "g": "Betondeckung min. c_min nach Expositionsklasse | Rissbreite w_max 0,2-0,4 mm je "}, {"n": "DIN 1054", "t": "Baugrund – Sicherheitsnachweise im Erd- und Grundbau", "b": "Statik", "g": "Grenzzustände GZ 1A/1B (Versagen) und GZ 2 (Verformung) | Setzungsgrenzwert nach"}, {"n": "DIN EN 1991-1-4", "t": "Eurocode 1 – Windlasten", "b": "Statik", "g": "Windzone Deutschland: WZ 1 (21 m/s) bis WZ 4 (30 m/s) Grundwindgeschwindigkeit |"}, {"n": "DIN 1055-4 (alt)", "t": "Windlasten (historisch, bis 2010)", "b": "Statik", "g": "Staudrucktabellen nach Gebäudehöhe und Windzone | Windzone 1-4 nach alter Eintei"}, {"n": "ZVDH-Regelwerk", "t": "Zentralverband Deutsches Dachdeckerhandwerk – Regelwerk", "b": "Dach", "g": "Mindestdachneigungen je Dachdeckungsart | Lattabstände | Unterspannbahn-Anforder"}, {"n": "DIN EN 1991-1-3", "t": "Eurocode 1 – Schneelasten", "b": "Statik", "g": "Schneelastzone 1 (0,65 kN/m²) bis 3 (1,50 kN/m²) auf dem Boden | Dach je nach Ne"}, {"n": "VdS 2030", "t": "Richtlinien für die Wasserführung in Gebäuden", "b": "Versicherung", "g": "Absperreinrichtungen mind. pro Wohneinheit | Wasserstoppsysteme bei Abwesenheit "}, {"n": "VdS 2100", "t": "VdS-Richtlinie Blitzschutz", "b": "Versicherung", "g": "Blitzschutzsystem LPL I-IV je nach Gebäude und Risikobewertung | Erdwiderstand <"}, {"n": "DIN EN ISO 717-1", "t": "Bewertung der Schalldämmung – Luftschall", "b": "Schall", "g": "Einzahlangabe Rw (Labor) | Bau-Rw (Bau) durch Korrekturen K1/K2 abgeleitet"}, {"n": "DIN EN ISO 717-2", "t": "Bewertung der Schalldämmung – Trittschall", "b": "Schall", "g": "Norm-Trittschallpegel L\\'nw (kleiner = besser) | DIN 4109-1: L\\'nw ≤ 53 dB in Wo"}, {"n": "DIN 18041", "t": "Hörsamkeit in Räumen – Anforderungen", "b": "Barrierefrei", "g": "Nachhalldauer T in Schulräumen < 0,8 s | in Kirchen/Konzertsälen je nach Nutzung"}, {"n": "DIN 32975", "t": "Gestaltung visueller Informationen im öffentlichen Raum", "b": "Barrierefrei", "g": "Luminanzkontrast ≥ 0,4 (Mikado-Kontrast) für Orientierungshilfen | Beleuchtungss"}, {"n": "DIN V 18599", "t": "Energetische Bewertung von Gebäuden", "b": "Energie", "g": "Transmissionswärmeverlust HT nach Referenzgebäude | U-Werte Außenbauteile nach A"}, {"n": "DIN 4108-6", "t": "Wärmeschutz – Berechnung des Jahresheizwärmebedarfs", "b": "Energie", "g": "Jahresheizwärmebedarf Neubau nach GEG begrenzt | U-Werte nach Bauteilkatalog"}, {"n": "DIN 4108-10", "t": "Wärmeschutz – Anwendungsbezogene Anforderungen an Wärmedämmstoffe", "b": "Energie", "g": "Druckbelastung Perimeterdämmung EPS-P oder XPS mind. 100 kPa | Wasseraufnahme Fa"}, {"n": "BGB §823", "t": "Schadensersatzpflicht — Deliktsrecht", "b": "Recht", "g": "Kausalität muss gutachterlich festgestellt werden"}, {"n": "HOAI 2021", "t": "Honorarordnung Architekten und Ingenieure", "b": "Honorar", "g": "LPH 4+5 besonders haftungsrelevant | Honorarzone I-V"}, {"n": "JVEG §7", "t": "Honorar für Sachverstaendige — Stundensaetze", "b": "Honorar", "g": "H13: 130 EUR/h | H12: 110 EUR/h | Fahrtzeit: 70 EUR/h"}, {"n": "TRGS 519", "t": "Asbest — Abbruch-, Sanierungs- und Instandhaltungsarbeiten", "b": "Schadstoff", "g": "KRL-Wert: 500 F/m³ Innenraum | > 1.000 F/m³ Gefaehrdungsbeurteilung"}, {"n": "TRGS 521", "t": "Kuenstliche Mineralfasern (KMF)", "b": "Schadstoff", "g": "Alte bio-persistente KMF erhoeht krebserregend | REACH-Kennzeichnungspflicht"}, {"n": "GEG 2024", "t": "Gebaeudeenergiegesetz", "b": "Energie", "g": "Primärenergiebedarf Neubau max. 55% Referenzgebäude | U-Wert Außenwand neu max. "}, {"n": "DIN 18040-1", "t": "Barrierefreies Bauen — Öffentliche Gebäude", "b": "Barrierefrei", "g": "Türbreite min. 90 cm | Bewegungsfläche 150x150 cm | Rampe max. 6% | Schwelle max"}, {"n": "VDI 3882", "t": "Olfaktometrie — Geruchsbelästigung", "b": "Feuchte", "g": "Schimmelpilze: typisch > 2 GE/m³ | Bewohnbarkeit: < 5 GE/m³"}, {"n": "DIN EN 1990", "t": "Eurocode 0 — Grundlagen Tragwerksplanung", "b": "Statik", "g": "ULS: 1,35*Gk + 1,5*Qk | SLS: charakteristische Werte"}, {"n": "VdS 2073", "t": "Leckageortung bei Wasserschäden", "b": "Abdichtung", "g": "Korrelationsmessgenauigkeit: ± 0,5 m | Thermografie: Delta-T mind. 2°C für zuver"}, {"n": "LAWA 2017", "t": "Länderarbeitsgemeinschaft Wasser — Hochwasserschutz", "b": "Elementar", "g": "HQ100: statistisch einmal in 100 Jahren | Schutzwerte je Bundesland verschieden"}, {"n": "WTA 6-1-01/D", "t": "Schimmel: Grenzwerte Luftfeuchtigkeit und Materialfeuchte", "b": "Schimmel", "g": "Relative Raumfeuchte <60%, Wandfeuchte >20% kritisch, Holzfeuchte >18% Schimmelr"}, {"n": "§407a ZPO", "t": "Pflichten des Sachverständigen — Offenlegung KI-Nutzung", "b": "Recht", "g": "Persönliche Erstattungspflicht. KI als Hilfsmittel erlaubt, Offenlegung Pflicht"}, {"n": "§839a BGB", "t": "Haftung des gerichtlichen Sachverständigen", "b": "Recht", "g": "Grobe Fahrlässigkeit = Haftungsgrundlage. Vorsatz ebenfalls erfasst"}, {"n": "BGH VII ZR 46/17", "t": "Beweislast bei Schimmelschäden", "b": "Rechtsprechung", "g": "Anscheinsbeweis greift bei typischem Schadensbild. Vermieter trägt Gegenbeweis"}, {"n": "§13 VOB/B", "t": "Mängelansprüche im Bauvertrag", "b": "Baurecht", "g": "Gewährleistung 4 Jahre, Nacherfüllung, Selbstvornahme, Schadensersatz"}, {"n": "DIN 1045", "t": "Tragwerke aus Beton, Stahlbeton und Spannbeton", "b": "Konstruktion", "g": "Mindestbetondeckung, Rissbreitenbeschränkung, Bewehrungsanforderungen"}, {"n": "DIN 1055-4", "t": "Einwirkungen auf Tragwerke — Windlasten", "b": "Konstruktion", "g": "Windzone 1–4, Böengeschwindigkeitsdruck qp nach Region"}, {"n": "DIN 18203", "t": "Toleranzen im Hochbau", "b": "Baumängel", "g": "Ebenheitstoleranzen: ±5mm/2m bei Wänden, ±3mm/2m bei Böden"}, {"n": "DIN 18230", "t": "Baulicher Brandschutz im Industriebau", "b": "Brandschutz", "g": "Äquivalente Branddauer berechnet aus Brandlast und Öffnungsfaktor"}, {"n": "DIN 276", "t": "Kosten im Bauwesen", "b": "Kosten", "g": "KG 300 Bauwerk-Baukonstruktionen, KG 400 Technische Anlagen"}, {"n": "DIN 4020", "t": "Geotechnische Untersuchungen für bautechnische Zwecke", "b": "Baugrund", "g": "Mindestbohrtiefe, Probenentnahme nach Gebäudeklasse"}, {"n": "DIN 52460", "t": "Fugen- und Anschlussabdichtungen im Hochbau", "b": "Abdichtung", "g": "Dauerhafte Dichtwirkung, Beständigkeit gegen Feuchtigkeit"}, {"n": "DIN 68800-3", "t": "Holzschutz — Vorbeugender chemischer Holzschutz", "b": "Holzschutz", "g": "Gebrauchsklassen GK 1–5, Anforderungen nach Gefährdungslage"}, {"n": "DIN EN 13501-2", "t": "Klassifizierung von Bauprodukten — Feuerwiderstand", "b": "Brandschutz", "g": "REI 30/60/90/120: Tragfähigkeit, Raumabschluss, Wärmedämmung"}, {"n": "DIN EN 1995", "t": "Eurocode 5: Bemessung und Konstruktion von Holzbauten", "b": "Konstruktion", "g": "Tragfähigkeits- und Gebrauchstauglichkeitsnachweise für Holz"}, {"n": "DIN EN ISO 16000-1", "t": "Innenraumluftverunreinigungen — Probenahmestrategie", "b": "Schimmel", "g": "Probenahmeplanung, Mindestanzahl Messpunkte"}, {"n": "GDV AFB 2010", "t": "Allgemeine Feuerversicherungs-Bedingungen", "b": "Versicherungsrecht", "g": "Gefahren des Feuers, Blitz, Explosion. Entschädigungsberechnung"}, {"n": "GDV AWB 2010", "t": "Allgemeine Wohngebäudeversicherungs-Bedingungen", "b": "Versicherungsrecht", "g": "Versicherte Gefahren: Feuer, Leitungswasser, Sturm/Hagel"}, {"n": "VdS 2021", "t": "Richtlinien für Brandmeldeanlagen", "b": "Brandschutz", "g": "Aufschaltung auf Feuerwehr, Wartungsintervalle, Prüfpflichten"}, {"n": "VdS 2298", "t": "Leckageortung an wasserführenden Leitungen", "b": "Wasserschaden", "g": "Zerstörungsfreie Ortungsmethoden, Dokumentationsanforderungen"}, {"n": "VdS 2311", "t": "Brandschutz in der Kunststoffverarbeitung", "b": "Brandschutz", "g": "Sprinkleranlagen, Brandabschnitte, Lagerhaltung"}, {"n": "WTA 4-11-02/D", "t": "Messung der Feuchte von mineralischen Baustoffen", "b": "Feuchte", "g": "CM-Methode Grenzwerte: Beton <3%, Mauerwerk <6%, Estrich <2%"}, {"n": "§404 ZPO", "t": "Auswahl des Sachverständigen", "b": "Verfahrensrecht", "g": "Sachkunde und Neutralität als Auswahlkriterien"}, {"n": "§411 ZPO", "t": "Gutachtenerstattung — Frist und Form", "b": "Verfahrensrecht", "g": "Begründete Fristverlängerung möglich, Ordnungsgeld bei Versäumnis"}, {"n": "§412 ZPO", "t": "Neues Gutachten — Weiterer Sachverständiger", "b": "Verfahrensrecht", "g": "Ermessen des Gerichts, Antrag einer Partei möglich"}, {"n": "§434 BGB", "t": "Sachmangel", "b": "Baurecht", "g": "Beschaffenheitsvereinbarung, übliche Beschaffenheit, Montage"}, {"n": "§438 BGB", "t": "Verjährung der Mängelansprüche", "b": "Baurecht", "g": "5 Jahre Bauwerk, 2 Jahre bewegliche Sachen, 3 Jahre Regelverjährung"}, {"n": "§485 ZPO", "t": "Selbständiges Beweisverfahren — Voraussetzungen", "b": "Verfahrensrecht", "g": "Antragsbefugnis, Zuständigkeit, Kostenentscheidung"}, {"n": "§492 ZPO", "t": "Schiedsgutachterverfahren", "b": "Verfahrensrecht", "g": "Bindend bei offenbarer Unbilligkeit. Vertraglich vereinbart"}, {"n": "§633 BGB", "t": "Sach- und Rechtsmangel beim Werkvertrag", "b": "Baurecht", "g": "Vereinbarte Beschaffenheit, übliche Beschaffenheit, Verwendungseignung"}, {"n": "§634 BGB", "t": "Rechte des Bestellers bei Mängeln", "b": "Baurecht", "g": "Fristsetzung vor Selbstvornahme. Unverhältnismäßigkeit als Einwand"}, {"n": "§823 BGB", "t": "Schadensersatzpflicht — Deliktische Haftung", "b": "Haftungsrecht", "g": "Rechtsgutverletzung, Kausalität, Verschulden als Haftungsvoraussetzungen"}, {"n": "§444 BGB", "t": "Arglistiges Verschweigen von Mängeln", "b": "Baurecht", "g": "Arglist = positive Kenntnis des Mangels + Verschweigen"}];
-var PROVA_POS_DB=[{"nr": "WS-001", "k": "Wasserschaden", "s": "Trocknung", "b": "Trocknungsgerät Kondensationstrockner Aufstellung und Betrieb je Tag", "p": "18-42 €"}, {"nr": "WS-002", "k": "Wasserschaden", "s": "Trocknung", "b": "Trocknungsgerät Großgerät (Baukondensator) je Tag", "p": "45-95 €"}, {"nr": "WS-003", "k": "Wasserschaden", "s": "Trocknung", "b": "Luftentfeuchter Kleingerät bis 20 l/Tag je Tag", "p": "12-28 €"}, {"nr": "WS-004", "k": "Wasserschaden", "s": "Trocknung", "b": "Infrarot-Flächenheizung Wandtrocknung je Tag", "p": "35-78 €"}, {"nr": "WS-005", "k": "Wasserschaden", "s": "Trocknung", "b": "Mikrowellen-Trocknungsgerät Estrich/Wand je Tag", "p": "55-130 €"}, {"nr": "WS-006", "k": "Wasserschaden", "s": "Trocknung", "b": "Injektionstrocknung Horizontalsperre nachträglich je lfm", "p": "28-68 €"}, {"nr": "WS-007", "k": "Wasserschaden", "s": "Trocknung", "b": "Warmluftgebläse Bauteiltrocknung je Tag", "p": "22-55 €"}, {"nr": "WS-008", "k": "Wasserschaden", "s": "Trocknung", "b": "Feuchtemesskampagne Aufnahme und Protokoll", "p": "120-280 €"}, {"nr": "WS-009", "k": "Wasserschaden", "s": "Trocknung", "b": "Trocknungsbegleitung und Dokumentation je Begehung", "p": "95-220 €"}, {"nr": "WS-010", "k": "Wasserschaden", "s": "Trocknung", "b": "Lüftungsgerät Zuluft/Abluft Bauteiltrocknung je Tag", "p": "25-58 €"}, {"nr": "WS-011", "k": "Wasserschaden", "s": "Trocknung", "b": "Trocknungsprotokoll komplett inkl. Messberichte", "p": "150-380 €"}, {"nr": "WS-012", "k": "Wasserschaden", "s": "Trocknung", "b": "Kernbohrung Trocknungskanal Estrich je Bohrung", "p": "18-42 €"}, {"nr": "WS-013", "k": "Wasserschaden", "s": "Trocknung", "b": "Estrichrandschlitz für Trocknungsschläuche je lfm", "p": "8-22 €"}, {"nr": "WS-014", "k": "Wasserschaden", "s": "Trocknung", "b": "Restfeuchtemesung Dielenboden Protokoll je Fläche", "p": "85-195 €"}, {"nr": "WS-015", "k": "Wasserschaden", "s": "Estrichöffnung", "b": "Estrich aufbrechen und entsorgen Zementestrich bis 60mm je m²", "p": "28-68 €"}, {"nr": "WS-016", "k": "Wasserschaden", "s": "Estrichöffnung", "b": "Estrich aufbrechen und entsorgen Anhydritestrich bis 50mm je m²", "p": "25-62 €"}, {"nr": "WS-017", "k": "Wasserschaden", "s": "Estrichöffnung", "b": "Estrich aufbrechen Teilfläche bis 5 m² Mindermengenzuschlag", "p": "180-420 €"}, {"nr": "WS-018", "k": "Wasserschaden", "s": "Estrichöffnung", "b": "Schwimmender Estrich komplett entfernen inkl. Dämmung je m²", "p": "35-82 €"}, {"nr": "WS-019", "k": "Wasserschaden", "s": "Estrichöffnung", "b": "Fußbodenheizungsestrich öffnen Trocknungsfenster je Stk", "p": "45-105 €"}, {"nr": "WS-020", "k": "Wasserschaden", "s": "Estrichöffnung", "b": "Wannenestrich aufstemmen Feuchtenest lokalisieren", "p": "120-295 €"}, {"nr": "WS-021", "k": "Wasserschaden", "s": "Estrichöffnung", "b": "Estrichmörtel neu einbringen Zement C25 je m²", "p": "32-76 €"}, {"nr": "WS-022", "k": "Wasserschaden", "s": "Estrichöffnung", "b": "Estrich Anhydrit Reparatur je m²", "p": "28-68 €"}, {"nr": "WS-023", "k": "Wasserschaden", "s": "Estrichöffnung", "b": "Verbundestrich neu einbringen je m²", "p": "38-88 €"}, {"nr": "WS-024", "k": "Wasserschaden", "s": "Estrichöffnung", "b": "Dehnfuge Estrich einschneiden und neu verfüllen je lfm", "p": "12-28 €"}, {"nr": "WS-025", "k": "Wasserschaden", "s": "Leitungserneuerung", "b": "Wasserleitung Kupfer DN 15 Unterputz erneuern je lfm", "p": "48-115 €"}, {"nr": "WS-026", "k": "Wasserschaden", "s": "Leitungserneuerung", "b": "Wasserleitung Kunststoff PE-X DN 20 UP erneuern je lfm", "p": "38-88 €"}, {"nr": "WS-027", "k": "Wasserschaden", "s": "Leitungserneuerung", "b": "Heizungsrohr Stahl DN 20 UP erneuern je lfm", "p": "52-125 €"}, {"nr": "WS-028", "k": "Wasserschaden", "s": "Leitungserneuerung", "b": "Abwasserleitung HT-Rohr DN 50 erneuern je lfm", "p": "42-105 €"}, {"nr": "WS-029", "k": "Wasserschaden", "s": "Leitungserneuerung", "b": "Abwasserleitung HT-Rohr DN 100 erneuern je lfm", "p": "55-135 €"}, {"nr": "WS-030", "k": "Wasserschaden", "s": "Leitungserneuerung", "b": "Rohrmanschette Leckstelle reparieren Kupfer", "p": "45-108 €"}, {"nr": "WS-031", "k": "Wasserschaden", "s": "Leitungserneuerung", "b": "Leitungsschlitz aufstämmen Mauerwerk je lfm", "p": "22-55 €"}, {"nr": "WS-032", "k": "Wasserschaden", "s": "Leitungserneuerung", "b": "Leitungsschlitz schließen verputzen je lfm", "p": "18-43 €"}, {"nr": "WS-033", "k": "Wasserschaden", "s": "Leitungserneuerung", "b": "Wasseruhr Hauswasserzähler austauschen", "p": "125-295 €"}, {"nr": "WS-034", "k": "Wasserschaden", "s": "Leitungserneuerung", "b": "Kugelhahn Absperrarmatur DN 25 tauschen", "p": "85-205 €"}, {"nr": "WS-035", "k": "Wasserschaden", "s": "Bodenbeläge", "b": "Fliesen und Fliesenbelag inkl. Klebemörtel entfernen je m²", "p": "18-43 €"}, {"nr": "WS-036", "k": "Wasserschaden", "s": "Bodenbeläge", "b": "Parkettboden Diele entfernen und entsorgen je m²", "p": "15-38 €"}, {"nr": "WS-037", "k": "Wasserschaden", "s": "Bodenbeläge", "b": "Laminatboden entfernen und entsorgen je m²", "p": "8-22 €"}, {"nr": "WS-038", "k": "Wasserschaden", "s": "Bodenbeläge", "b": "PVC-Belag/Vinylboden entfernen je m²", "p": "10-26 €"}, {"nr": "WS-039", "k": "Wasserschaden", "s": "Bodenbeläge", "b": "Teppichboden entfernen und entsorgen je m²", "p": "6-15 €"}, {"nr": "WS-040", "k": "Wasserschaden", "s": "Bodenbeläge", "b": "Fliesen neu verlegen Standardfliese bis 30x30cm je m²", "p": "45-105 €"}, {"nr": "WS-041", "k": "Wasserschaden", "s": "Bodenbeläge", "b": "Fliesen neu verlegen Großformat ab 60x60cm je m²", "p": "65-155 €"}, {"nr": "WS-042", "k": "Wasserschaden", "s": "Bodenbeläge", "b": "Parkettboden Stabparkett neu verlegen je m²", "p": "52-125 €"}, {"nr": "WS-043", "k": "Wasserschaden", "s": "Bodenbeläge", "b": "Laminatboden neu verlegen mit Trittschalldämmung je m²", "p": "28-68 €"}, {"nr": "WS-044", "k": "Wasserschaden", "s": "Bodenbeläge", "b": "PVC-Designbelag neu verlegen je m²", "p": "32-76 €"}, {"nr": "WS-045", "k": "Wasserschaden", "s": "Wände", "b": "Tapete und Unterputz Lehmputz entfernen je m²", "p": "12-28 €"}, {"nr": "WS-046", "k": "Wasserschaden", "s": "Wände", "b": "Putz Unterputz Kalkzementputz abtragen je m²", "p": "15-38 €"}, {"nr": "WS-047", "k": "Wasserschaden", "s": "Wände", "b": "Putz Innenputz neu aufbringen Kalkgipsputz je m²", "p": "22-52 €"}, {"nr": "WS-048", "k": "Wasserschaden", "s": "Wände", "b": "Sanierputz Feuchtigkeitsschutz aufbringen je m²", "p": "28-68 €"}, {"nr": "WS-049", "k": "Wasserschaden", "s": "Wände", "b": "Mauerwerk austrocknen Injektionsmittel Horizontalsperre je lfm", "p": "32-78 €"}, {"nr": "WS-050", "k": "Wasserschaden", "s": "Wände", "b": "Tapete entfernen einfachlagig je m²", "p": "4-10 €"}, {"nr": "WS-051", "k": "Wasserschaden", "s": "Wände", "b": "Tapezieren neu einfache Raufasertapete je m²", "p": "8-19 €"}, {"nr": "WS-052", "k": "Wasserschaden", "s": "Wände", "b": "Anstrich Dispersionsfarbe 2-fach je m²", "p": "5-13 €"}, {"nr": "WS-053", "k": "Wasserschaden", "s": "Wände", "b": "Gipskartonwand nass erneuern komplett je m²", "p": "45-108 €"}, {"nr": "WS-054", "k": "Wasserschaden", "s": "Wände", "b": "Fliesen Wandfliesen entfernen je m²", "p": "16-40 €"}, {"nr": "WS-055", "k": "Wasserschaden", "s": "Wände", "b": "Fliesen Wandfliesen neu verlegen je m²", "p": "48-115 €"}, {"nr": "WS-056", "k": "Wasserschaden", "s": "Decken", "b": "Gipskartondecke abbauen und entsorgen je m²", "p": "18-43 €"}, {"nr": "WS-057", "k": "Wasserschaden", "s": "Decken", "b": "Gipskartondecke neu einbauen je m²", "p": "42-105 €"}, {"nr": "WS-058", "k": "Wasserschaden", "s": "Decken", "b": "Rigips Deckenputz abschlagen je m²", "p": "14-34 €"}, {"nr": "WS-059", "k": "Wasserschaden", "s": "Decken", "b": "Deckenputz neu aufbringen Kalkgips je m²", "p": "20-48 €"}, {"nr": "WS-060", "k": "Wasserschaden", "s": "Decken", "b": "Dämmung Decke Mineralwolle entfernen je m²", "p": "12-28 €"}, {"nr": "WS-061", "k": "Wasserschaden", "s": "Sanitär", "b": "Waschtisch demontieren und entsorgen", "p": "65-155 €"}, {"nr": "WS-062", "k": "Wasserschaden", "s": "Sanitär", "b": "WC-Komplettanlage demontieren und entsorgen", "p": "85-205 €"}, {"nr": "WS-063", "k": "Wasserschaden", "s": "Sanitär", "b": "Badewanne demontieren und entsorgen", "p": "95-230 €"}, {"nr": "WS-064", "k": "Wasserschaden", "s": "Sanitär", "b": "Duschkabine inkl. Acrylwanne demontieren und entsorgen", "p": "115-280 €"}, {"nr": "WS-065", "k": "Wasserschaden", "s": "Sanitär", "b": "Waschtisch Standard neu liefern und montieren", "p": "185-450 €"}, {"nr": "WS-066", "k": "Wasserschaden", "s": "Sanitär", "b": "WC-Kombination Standard neu liefern und montieren", "p": "225-550 €"}, {"nr": "WS-067", "k": "Wasserschaden", "s": "Sanitär", "b": "Dusche bodengleich inkl. Ablauf neu herstellen", "p": "650-1550 €"}, {"nr": "WS-068", "k": "Wasserschaden", "s": "Sanitär", "b": "Siphon/Geruchsverschluss tauschen", "p": "35-85 €"}, {"nr": "WS-069", "k": "Wasserschaden", "s": "Elektro", "b": "Steckdose Unterputz nass demontieren und neu installieren", "p": "45-108 €"}, {"nr": "WS-070", "k": "Wasserschaden", "s": "Elektro", "b": "Unterverteilung LS-Schalter nach Wasserschaden prüfen und freigeben", "p": "120-295 €"}, {"nr": "WS-071", "k": "Wasserschaden", "s": "Elektro", "b": "Elektroleitungen UP erneuern je lfm", "p": "18-43 €"}, {"nr": "WS-072", "k": "Wasserschaden", "s": "Elektro", "b": "Leuchtmittel Einbaustrahler nach Nässeschaden tauschen", "p": "28-68 €"}, {"nr": "WS-073", "k": "Wasserschaden", "s": "Elektro", "b": "E-Prüfung nach Wasserschaden VDE-Protokoll", "p": "185-445 €"}, {"nr": "WS-074", "k": "Wasserschaden", "s": "Demontage", "b": "Mobiliar ausräumen und zwischenlagern je m²", "p": "8-22 €"}, {"nr": "WS-075", "k": "Wasserschaden", "s": "Demontage", "b": "Sockelleisten entfernen je lfm", "p": "4-10 €"}, {"nr": "WS-076", "k": "Wasserschaden", "s": "Demontage", "b": "Türzarge demontieren und wiedereinbauen", "p": "65-155 €"}, {"nr": "WS-077", "k": "Wasserschaden", "s": "Demontage", "b": "Schutzmaßnahmen Staubschutzwand aufbauen je m²", "p": "8-19 €"}, {"nr": "WS-078", "k": "Wasserschaden", "s": "Demontage", "b": "Entsorgung Bauschutt bis 2m³ Container", "p": "185-445 €"}, {"nr": "WS-079", "k": "Wasserschaden", "s": "Demontage", "b": "Geruchsneutralisation nach Nässeschaden je m²", "p": "6-15 €"}, {"nr": "WS-080", "k": "Wasserschaden", "s": "Demontage", "b": "Bautrocknung Abschlussbericht Feuchteatlas", "p": "220-540 €"}, {"nr": "WSBS-001", "k": "Brandschaden", "s": "Rußreinigung", "b": "Rußreinigung Wände trocken Schwamm je m²", "p": "8-22 €"}, {"nr": "BS-002", "k": "Brandschaden", "s": "Rußreinigung", "b": "Rußreinigung Decken trocken Schwamm je m²", "p": "10-25 €"}, {"nr": "BS-003", "k": "Brandschaden", "s": "Rußreinigung", "b": "Rußreinigung nass chemisch Wände je m²", "p": "12-30 €"}, {"nr": "BS-004", "k": "Brandschaden", "s": "Rußreinigung", "b": "Rußreinigung Holzbalken Dachstuhl je m²", "p": "15-38 €"}, {"nr": "BS-005", "k": "Brandschaden", "s": "Rußreinigung", "b": "Hochdruckreinigung brandbeschädigte Flächen je m²", "p": "6-15 €"}, {"nr": "BS-006", "k": "Brandschaden", "s": "Rußreinigung", "b": "Industriesauger Feinstaub Feinreinigung je h", "p": "65-145 €"}, {"nr": "BS-007", "k": "Brandschaden", "s": "Rußreinigung", "b": "Rußreinigung Heizungsanlage Kessel und Rohre", "p": "285-695 €"}, {"nr": "BS-008", "k": "Brandschaden", "s": "Rußreinigung", "b": "Lüftungsanlage Brandgase reinigen komplett", "p": "450-1095 €"}, {"nr": "BS-009", "k": "Brandschaden", "s": "Rußreinigung", "b": "Rußreinigung Möbel/Einbauschränke je Stk", "p": "45-108 €"}, {"nr": "BS-010", "k": "Brandschaden", "s": "Rußreinigung", "b": "Rußschadenprotokoll inkl. Fotodokumentation", "p": "180-440 €"}, {"nr": "BS-011", "k": "Brandschaden", "s": "Geruchsneutralisation", "b": "Ozonbehandlung je m³ Raumvolumen", "p": "1-3 €"}, {"nr": "BS-012", "k": "Brandschaden", "s": "Geruchsneutralisation", "b": "Hydroxyl-Generator Betrieb je Tag", "p": "65-155 €"}, {"nr": "BS-013", "k": "Brandschaden", "s": "Geruchsneutralisation", "b": "Thermische Nebelverfahren je m² Fläche", "p": "3-8 €"}, {"nr": "BS-014", "k": "Brandschaden", "s": "Geruchsneutralisation", "b": "Geruchsneutralisierer Sprühverfahren je m²", "p": "4-10 €"}, {"nr": "BS-015", "k": "Brandschaden", "s": "Geruchsneutralisation", "b": "Einschlusslackierung Geruchssperrschicht je m²", "p": "8-22 €"}, {"nr": "BS-016", "k": "Brandschaden", "s": "Geruchsneutralisation", "b": "Aktivkohlefilter Raumluft je Tag", "p": "35-85 €"}, {"nr": "BS-017", "k": "Brandschaden", "s": "Geruchsneutralisation", "b": "Geruchsmessung Protokoll nach Sanierung", "p": "145-360 €"}, {"nr": "BS-018", "k": "Brandschaden", "s": "Demontage Brandschaden", "b": "Brandschutt entfernen und entsorgen bis 5m³", "p": "380-925 €"}, {"nr": "BS-019", "k": "Brandschaden", "s": "Demontage Brandschaden", "b": "Brandschutt Sonderabfall kontaminiert Entsorgungsnachweis", "p": "580-1415 €"}, {"nr": "BS-020", "k": "Brandschaden", "s": "Demontage Brandschaden", "b": "Dachstuhl brandgeschädigt Teilabbruch je m²", "p": "35-85 €"}, {"nr": "BS-021", "k": "Brandschaden", "s": "Demontage Brandschaden", "b": "Dachstuhl komplett abreißen je m²", "p": "55-135 €"}, {"nr": "BS-022", "k": "Brandschaden", "s": "Demontage Brandschaden", "b": "Gipskartonwände brandbeschädigt entfernen je m²", "p": "18-43 €"}, {"nr": "BS-023", "k": "Brandschaden", "s": "Demontage Brandschaden", "b": "Holzdielung brandbeschädigt entfernen je m²", "p": "22-55 €"}, {"nr": "BS-024", "k": "Brandschaden", "s": "Demontage Brandschaden", "b": "Estrich brandbeschädigt aufbrechen je m²", "p": "28-68 €"}, {"nr": "BS-025", "k": "Brandschaden", "s": "Demontage Brandschaden", "b": "Fenster brandbeschädigt ausbauen je Stk", "p": "85-210 €"}, {"nr": "BS-026", "k": "Brandschaden", "s": "Demontage Brandschaden", "b": "Außentür brandbeschädigt ausbauen je Stk", "p": "125-305 €"}, {"nr": "BS-027", "k": "Brandschaden", "s": "Demontage Brandschaden", "b": "Innentür inkl. Zarge brandbeschädigt ausbauen", "p": "68-168 €"}, {"nr": "BS-028", "k": "Brandschaden", "s": "Demontage Brandschaden", "b": "Dämmung brandbeschädigt entfernen Mineralwolle je m²", "p": "15-38 €"}, {"nr": "BS-029", "k": "Brandschaden", "s": "Demontage Brandschaden", "b": "Holztreppe brandbeschädigt demontieren", "p": "280-685 €"}, {"nr": "BS-030", "k": "Brandschaden", "s": "Demontage Brandschaden", "b": "Küche Einbauküche abbauen und entsorgen", "p": "380-925 €"}, {"nr": "BS-031", "k": "Brandschaden", "s": "Wiederherstellung Wände", "b": "Wände nach Brand neu verputzen Kalkzement je m²", "p": "22-55 €"}, {"nr": "BS-032", "k": "Brandschaden", "s": "Wiederherstellung Wände", "b": "Gipskartonwand nach Brand neu erstellen je m²", "p": "45-108 €"}, {"nr": "BS-033", "k": "Brandschaden", "s": "Wiederherstellung Wände", "b": "Brandschutzwand F90 neu erstellen je m²", "p": "85-210 €"}, {"nr": "BS-034", "k": "Brandschaden", "s": "Wiederherstellung Wände", "b": "Mauerwerk Ziegel neu aufmauern je m²", "p": "55-135 €"}, {"nr": "BS-035", "k": "Brandschaden", "s": "Wiederherstellung Wände", "b": "Sperrschicht Brandgeruchsblocker Anstrich je m²", "p": "8-22 €"}, {"nr": "BS-036", "k": "Brandschaden", "s": "Wiederherstellung Wände", "b": "Tapezieren und Anstreichen nach Brand je m²", "p": "12-28 €"}, {"nr": "BS-037", "k": "Brandschaden", "s": "Wiederherstellung Decken", "b": "Deckenputz erneuern nach Brand je m²", "p": "20-48 €"}, {"nr": "BS-038", "k": "Brandschaden", "s": "Wiederherstellung Decken", "b": "Gipskartondecke neu erstellen nach Brand je m²", "p": "42-105 €"}, {"nr": "BS-039", "k": "Brandschaden", "s": "Wiederherstellung Decken", "b": "Holzbalkendecke Balken beurteilen und teiltauschen je lfm", "p": "95-230 €"}, {"nr": "BS-040", "k": "Brandschaden", "s": "Wiederherstellung Decken", "b": "Betondecke sichtbar reinigen und versiegeln je m²", "p": "15-38 €"}, {"nr": "BS-041", "k": "Brandschaden", "s": "Wiederherstellung Böden", "b": "Estrich nach Brand neu einbringen Zementestrich je m²", "p": "32-78 €"}, {"nr": "BS-042", "k": "Brandschaden", "s": "Wiederherstellung Böden", "b": "Fliesen nach Brand neu verlegen je m²", "p": "48-115 €"}, {"nr": "BS-043", "k": "Brandschaden", "s": "Wiederherstellung Böden", "b": "Parkettboden nach Brand neu verlegen je m²", "p": "55-135 €"}, {"nr": "BS-044", "k": "Brandschaden", "s": "Wiederherstellung Böden", "b": "Laminatboden nach Brand neu verlegen je m²", "p": "28-68 €"}, {"nr": "BS-045", "k": "Brandschaden", "s": "Wiederherstellung Böden", "b": "Holzdielung neu verlegen nach Brand je m²", "p": "65-155 €"}, {"nr": "BS-046", "k": "Brandschaden", "s": "Elektro", "b": "Elektroinstallation Wohnung komplett erneuern je m²", "p": "55-135 €"}, {"nr": "BS-047", "k": "Brandschaden", "s": "Elektro", "b": "Unterverteilung Sicherungskasten neu liefern und montieren", "p": "385-945 €"}, {"nr": "BS-048", "k": "Brandschaden", "s": "Elektro", "b": "Rauchmelder nach Brand tauschen je Stk", "p": "28-68 €"}, {"nr": "BS-049", "k": "Brandschaden", "s": "Elektro", "b": "Brandmeldeanlage BMA überprüfen und instandsetzen", "p": "485-1195 €"}, {"nr": "BS-050", "k": "Brandschaden", "s": "Elektro", "b": "Lichtschalter/Steckdosen UP brandbeschädigt tauschen je Stk", "p": "38-92 €"}, {"nr": "BS-051", "k": "Brandschaden", "s": "Dach", "b": "Dacheindeckung Dachziegel brandbeschädigt erneuern je m²", "p": "55-135 €"}, {"nr": "BS-052", "k": "Brandschaden", "s": "Dach", "b": "Dachstuhl Holzkonstruktion Teilsanierung je m²", "p": "95-230 €"}, {"nr": "BS-053", "k": "Brandschaden", "s": "Dach", "b": "Dachstuhl Neubau Vollholz je m²", "p": "125-305 €"}, {"nr": "BS-054", "k": "Brandschaden", "s": "Dach", "b": "Dachdämmung erneuern Mineralwolle je m²", "p": "32-78 €"}, {"nr": "BS-055", "k": "Brandschaden", "s": "Dach", "b": "Dachfenster nach Brand erneuern je Stk", "p": "385-945 €"}, {"nr": "BS-056", "k": "Brandschaden", "s": "Dach", "b": "Dachrinne/Fallrohr nach Brand erneuern je lfm", "p": "28-68 €"}, {"nr": "BS-057", "k": "Brandschaden", "s": "Dach", "b": "Notabdichtung Dach Folienplane je m²", "p": "8-22 €"}, {"nr": "BS-058", "k": "Brandschaden", "s": "Dach", "b": "Gerüst für Dachinstandsetzung je m² je Monat", "p": "6-15 €"}, {"nr": "BS-059", "k": "Brandschaden", "s": "Dach", "b": "Dachlattung erneuern je m²", "p": "18-43 €"}, {"nr": "BS-060", "k": "Brandschaden", "s": "Dach", "b": "Unterspannbahn erneuern je m²", "p": "12-28 €"}, {"nr": "BSSS-001", "k": "Sturmschaden", "s": "Dach", "b": "Dachziegel Tonziegel Einzelstück tauschen je Stk", "p": "18-43 €"}, {"nr": "SS-002", "k": "Sturmschaden", "s": "Dach", "b": "Dachziegel Betondachstein tauschen je Stk", "p": "12-28 €"}, {"nr": "SS-003", "k": "Sturmschaden", "s": "Dach", "b": "Dacheindeckung Teilfläche bis 10m² neu eindecken", "p": "55-135 €"}, {"nr": "SS-004", "k": "Sturmschaden", "s": "Dach", "b": "Dacheindeckung Vollsanierung Ziegel je m²", "p": "68-168 €"}, {"nr": "SS-005", "k": "Sturmschaden", "s": "Dach", "b": "Firstziegel erneuern je lfm", "p": "28-68 €"}, {"nr": "SS-006", "k": "Sturmschaden", "s": "Dach", "b": "Dachrinne Halbrunne Zink erneuern je lfm", "p": "28-68 €"}, {"nr": "SS-007", "k": "Sturmschaden", "s": "Dach", "b": "Fallrohr Zinkblech erneuern je lfm", "p": "22-55 €"}, {"nr": "SS-008", "k": "Sturmschaden", "s": "Dach", "b": "Dachlattung Sturmschaden reparieren je m²", "p": "18-43 €"}, {"nr": "SS-009", "k": "Sturmschaden", "s": "Dach", "b": "Unterspannbahn tauschen Teilfläche je m²", "p": "12-28 €"}, {"nr": "SS-010", "k": "Sturmschaden", "s": "Dach", "b": "Ortgang Windsicherung erneuern je lfm", "p": "22-55 €"}, {"nr": "SS-011", "k": "Sturmschaden", "s": "Dach", "b": "Notabdichtung Dachfolie aufbringen je m²", "p": "8-22 €"}, {"nr": "SS-012", "k": "Sturmschaden", "s": "Dach", "b": "Dachstuhl Sturmschaden Auflager reparieren je Stk", "p": "145-360 €"}, {"nr": "SS-013", "k": "Sturmschaden", "s": "Dach", "b": "Schornstein Sturmschaden Kappe reparieren", "p": "285-695 €"}, {"nr": "SS-014", "k": "Sturmschaden", "s": "Dach", "b": "Dachfenster Velux/Roto Sturmschaden erneuern je Stk", "p": "485-1195 €"}, {"nr": "SS-015", "k": "Sturmschaden", "s": "Dach", "b": "Gauben Blechverkleidung Sturmschaden reparieren je m²", "p": "65-155 €"}, {"nr": "SS-016", "k": "Sturmschaden", "s": "Fassade", "b": "Außenputz abgeplatzter Bereich reparieren je m²", "p": "22-55 €"}, {"nr": "SS-017", "k": "Sturmschaden", "s": "Fassade", "b": "WDVS Sturmschaden Fassadendämmplatten erneuern je m²", "p": "55-135 €"}, {"nr": "SS-018", "k": "Sturmschaden", "s": "Fassade", "b": "Klinkerriemchen abgelöst neu aufmauern je m²", "p": "68-168 €"}, {"nr": "SS-019", "k": "Sturmschaden", "s": "Fassade", "b": "Fassadenanstrich Teilfläche nach Sturmschaden je m²", "p": "8-22 €"}, {"nr": "SS-020", "k": "Sturmschaden", "s": "Fassade", "b": "Holzschalung Fassade Sturmschaden reparieren je m²", "p": "45-108 €"}, {"nr": "SS-021", "k": "Sturmschaden", "s": "Fenster", "b": "Fenster Holz/Kunststoff Sturmschaden erneuern je m²", "p": "285-695 €"}, {"nr": "SS-022", "k": "Sturmschaden", "s": "Fenster", "b": "Fensterglas Einfachscheibe tauschen je m²", "p": "55-135 €"}, {"nr": "SS-023", "k": "Sturmschaden", "s": "Fenster", "b": "Fensterglas Isolierverglasung 2-fach tauschen je m²", "p": "85-210 €"}, {"nr": "SS-024", "k": "Sturmschaden", "s": "Fenster", "b": "Rollladenkasten Sturmschaden reparieren je Stk", "p": "145-360 €"}, {"nr": "SS-025", "k": "Sturmschaden", "s": "Fenster", "b": "Fensterbank außen Sturmschaden erneuern je lfm", "p": "45-108 €"}, {"nr": "SS-026", "k": "Sturmschaden", "s": "Fenster", "b": "Notabdichtung Fensteröffnung Folie/Sperrholz", "p": "45-108 €"}, {"nr": "SS-027", "k": "Sturmschaden", "s": "Außenanlagen", "b": "Carport Sturmschaden Dach reparieren", "p": "380-925 €"}, {"nr": "SS-028", "k": "Sturmschaden", "s": "Außenanlagen", "b": "Gartenzaun Sturmschaden reparieren je lfm", "p": "35-85 €"}, {"nr": "SS-029", "k": "Sturmschaden", "s": "Außenanlagen", "b": "Baum Sturmschaden Fällarbeiten je Stk", "p": "185-455 €"}, {"nr": "SS-030", "k": "Sturmschaden", "s": "Außenanlagen", "b": "Terrassendach Sturmschaden reparieren je m²", "p": "65-155 €"}, {"nr": "SS-031", "k": "Sturmschaden", "s": "Außenanlagen", "b": "Mauerwerk Einfriedung Sturmschaden reparieren je m²", "p": "55-135 €"}, {"nr": "SS-032", "k": "Sturmschaden", "s": "Außenanlagen", "b": "Lichtschacht Kellerfenster Sturmschaden abdichten", "p": "85-210 €"}, {"nr": "SS-033", "k": "Sturmschaden", "s": "Notabdichtung", "b": "Notabdichtung Dach Planen inkl. Sicherung je m²", "p": "8-22 €"}, {"nr": "SS-034", "k": "Sturmschaden", "s": "Notabdichtung", "b": "Notabdichtung Fassade Folie je m²", "p": "6-15 €"}, {"nr": "SS-035", "k": "Sturmschaden", "s": "Notabdichtung", "b": "Pumpentrocknung nach Sturmregen je Tag", "p": "85-210 €"}, {"nr": "SS-036", "k": "Sturmschaden", "s": "Notabdichtung", "b": "Wasserschaden-Sofortmaßnahme nach Sturm Pauschal", "p": "280-685 €"}, {"nr": "SS-037", "k": "Sturmschaden", "s": "Dach", "b": "Blitzableiteranlage Sturmschaden prüfen und reparieren", "p": "185-455 €"}, {"nr": "SS-038", "k": "Sturmschaden", "s": "Fassade", "b": "Gerüst für Fassadeninstandsetzung je m² je Monat", "p": "6-15 €"}, {"nr": "SS-039", "k": "Sturmschaden", "s": "Außenanlagen", "b": "Eingangsüberdachung Vordach Sturmschaden reparieren", "p": "285-695 €"}, {"nr": "SS-040", "k": "Sturmschaden", "s": "Dach", "b": "Flachdach Aufkantung Sturmschaden reparieren je lfm", "p": "45-108 €"}, {"nr": "SC-001", "k": "Schimmel/Feuchte", "s": "Befundung", "b": "Schimmelanalyse Oberflächenabklatsch Laborbefund je Stk", "p": "85-210 €"}, {"nr": "SC-002", "k": "Schimmel/Feuchte", "s": "Befundung", "b": "Luftkeimmessung Schimmel Volumenmethode je Raum", "p": "145-360 €"}, {"nr": "SC-003", "k": "Schimmel/Feuchte", "s": "Befundung", "b": "Feuchtemesskampagne Raum Protokoll je Raum", "p": "95-230 €"}, {"nr": "SC-004", "k": "Schimmel/Feuchte", "s": "Befundung", "b": "Thermografieuntersuchung Wärmebrücken je m²", "p": "8-22 €"}, {"nr": "SC-005", "k": "Schimmel/Feuchte", "s": "Befundung", "b": "Bauteilöffnung Probenahme Innenraum je Stk", "p": "125-305 €"}, {"nr": "SC-006", "k": "Schimmel/Feuchte", "s": "Befundung", "b": "Materialprobe Schimmelanalyse Labor je Stk", "p": "65-155 €"}, {"nr": "SC-007", "k": "Schimmel/Feuchte", "s": "Sanierung", "b": "Schimmelbefall entfernen kleiner Bereich bis 0,5 m²", "p": "85-210 €"}, {"nr": "SC-008", "k": "Schimmel/Feuchte", "s": "Sanierung", "b": "Schimmelbefall entfernen größerer Bereich bis 2 m²", "p": "145-360 €"}, {"nr": "SC-009", "k": "Schimmel/Feuchte", "s": "Sanierung", "b": "Schimmelbefall Totalreinigung Raum inkl. Desinfektion je m²", "p": "18-43 €"}, {"nr": "SC-010", "k": "Schimmel/Feuchte", "s": "Sanierung", "b": "Schimmelkontaminiertes Baumaterial entfernen und entsorgen je m²", "p": "45-108 €"}, {"nr": "SC-011", "k": "Schimmel/Feuchte", "s": "Sanierung", "b": "Schimmelsanierung Holzbalken Chemisch je m²", "p": "28-68 €"}, {"nr": "SC-012", "k": "Schimmel/Feuchte", "s": "Sanierung", "b": "Schimmelsanierung Wand Trockeneis-Strahlen je m²", "p": "35-85 €"}, {"nr": "SC-013", "k": "Schimmel/Feuchte", "s": "Sanierung", "b": "Biozidbehandlung nach Schimmelsanierung je m²", "p": "8-22 €"}, {"nr": "SC-014", "k": "Schimmel/Feuchte", "s": "Sanierung", "b": "Schutzanstrich Schimmelschutzfarbe je m²", "p": "12-28 €"}, {"nr": "SC-015", "k": "Schimmel/Feuchte", "s": "Sanierung", "b": "Raumluftmessung nach Sanierung Freimessung", "p": "185-455 €"}, {"nr": "SC-016", "k": "Schimmel/Feuchte", "s": "Sanierung", "b": "Überdruck-Schutzmaßnahme Sanierung je Raum", "p": "145-360 €"}, {"nr": "SC-017", "k": "Schimmel/Feuchte", "s": "Abdichtung", "b": "Kellerwandabdichtung innen bituminös je m²", "p": "28-68 €"}, {"nr": "SC-018", "k": "Schimmel/Feuchte", "s": "Abdichtung", "b": "Kellerwandabdichtung außen bituminös je m²", "p": "45-108 €"}, {"nr": "SC-019", "k": "Schimmel/Feuchte", "s": "Abdichtung", "b": "Perimeterdämmung außen XPS je m²", "p": "32-78 €"}, {"nr": "SC-020", "k": "Schimmel/Feuchte", "s": "Abdichtung", "b": "Drainagepappe außen Keller je m²", "p": "18-43 €"}, {"nr": "SC-021", "k": "Schimmel/Feuchte", "s": "Abdichtung", "b": "Horizontalsperre nachträglich Injektion je lfm", "p": "32-78 €"}, {"nr": "SC-022", "k": "Schimmel/Feuchte", "s": "Abdichtung", "b": "Sanierputzsystem Innen WTA je m²", "p": "28-68 €"}, {"nr": "SC-023", "k": "Schimmel/Feuchte", "s": "Abdichtung", "b": "Flüssigabdichtung Nasszelle Verbundabdichtung je m²", "p": "25-62 €"}, {"nr": "SC-024", "k": "Schimmel/Feuchte", "s": "Abdichtung", "b": "Balkonabdichtung Flüssigkunststoff je m²", "p": "35-85 €"}, {"nr": "SC-025", "k": "Schimmel/Feuchte", "s": "Abdichtung", "b": "Terrassenabdichtung Foliensystem je m²", "p": "45-108 €"}, {"nr": "SC-026", "k": "Schimmel/Feuchte", "s": "Abdichtung", "b": "Kellerfußboden Abdichtung Innen je m²", "p": "32-78 €"}, {"nr": "SC-027", "k": "Schimmel/Feuchte", "s": "Lüftung", "b": "Lüftungsanlage dezentral je Raum einbauen", "p": "485-1195 €"}, {"nr": "SC-028", "k": "Schimmel/Feuchte", "s": "Lüftung", "b": "Ventilator Einzelraumventilator mit Feuchtesteuerung", "p": "145-360 €"}, {"nr": "SC-029", "k": "Schimmel/Feuchte", "s": "Lüftung", "b": "Lüftungskonzept Planung nach DIN 1946-6", "p": "285-695 €"}, {"nr": "SC-030", "k": "Schimmel/Feuchte", "s": "Lüftung", "b": "Lüftungsanlage zentral mit WRG je m² Wohnfläche", "p": "28-68 €"}, {"nr": "SC-031", "k": "Schimmel/Feuchte", "s": "Lüftung", "b": "Lüftungskanal reinigen Querschnitt bis 200mm je lfm", "p": "12-28 €"}, {"nr": "SC-032", "k": "Schimmel/Feuchte", "s": "Lüftung", "b": "Luftfeuchtemessung Dauerprotokoll je Gerät pro Woche", "p": "18-43 €"}, {"nr": "SC-033", "k": "Schimmel/Feuchte", "s": "Abdichtung", "b": "Dachflächenfenster Wärmedämmung verbessern je Stk", "p": "285-695 €"}, {"nr": "SC-034", "k": "Schimmel/Feuchte", "s": "Befundung", "b": "Taupunktanalyse Bauteil Berechnung", "p": "145-360 €"}, {"nr": "SC-035", "k": "Schimmel/Feuchte", "s": "Sanierung", "b": "Schimmelkontaminiertes Holz Austausch je m²", "p": "55-135 €"}, {"nr": "SC-036", "k": "Schimmel/Feuchte", "s": "Befundung", "b": "VOC-Messung Raumluft Labor", "p": "285-695 €"}, {"nr": "SC-037", "k": "Schimmel/Feuchte", "s": "Abdichtung", "b": "Fugenabdichtung Sanitärbereich Silikon erneuern je lfm", "p": "8-22 €"}, {"nr": "SC-038", "k": "Schimmel/Feuchte", "s": "Sanierung", "b": "PSA Vollschutz Sanierungskolonne je h", "p": "8-22 €"}, {"nr": "SC-039", "k": "Schimmel/Feuchte", "s": "Sanierung", "b": "Sachverständigenbegleitung Schimmelsanierung je Begehung", "p": "145-360 €"}, {"nr": "SC-040", "k": "Schimmel/Feuchte", "s": "Abdichtung", "b": "Dampfbremse Einbau Dachschräge je m²", "p": "22-55 €"}, {"nr": "BA-001", "k": "Baumängel allgemein", "s": "Risse", "b": "Rissprotokoll Aufnahme Rissbild je Bauteil", "p": "95-230 €"}, {"nr": "BA-002", "k": "Baumängel allgemein", "s": "Risse", "b": "Riss Haarriss schließen Injektionsharz je lfm", "p": "22-55 €"}, {"nr": "BA-003", "k": "Baumängel allgemein", "s": "Risse", "b": "Riss Mauerwerk Injektionsnadeln je lfm", "p": "35-85 €"}, {"nr": "BA-004", "k": "Baumängel allgemein", "s": "Risse", "b": "Rissmonitoring Gipsmarke Setzung je Stk", "p": "18-43 €"}, {"nr": "BA-005", "k": "Baumängel allgemein", "s": "Risse", "b": "Riss verputzen Innen je lfm", "p": "12-28 €"}, {"nr": "BA-006", "k": "Baumängel allgemein", "s": "Risse", "b": "Riss Fassade schließen Außenputz je lfm", "p": "18-43 €"}, {"nr": "BA-007", "k": "Baumängel allgemein", "s": "Risse", "b": "Riss Betonkonstruktion Epoxidharzinjektion je lfm", "p": "55-135 €"}, {"nr": "BA-008", "k": "Baumängel allgemein", "s": "Risse", "b": "Setzriss Schwelle Unterfangen lokaler Bereich", "p": "485-1195 €"}, {"nr": "BA-009", "k": "Baumängel allgemein", "s": "Risse", "b": "Rissbreitenmessung Rissmaßstab Protokoll", "p": "85-210 €"}, {"nr": "BA-010", "k": "Baumängel allgemein", "s": "Risse", "b": "Risstiefenmessung Ultraschall Beton", "p": "145-360 €"}, {"nr": "BA-011", "k": "Baumängel allgemein", "s": "Setzungen", "b": "Setzungsprotokoll Bestandsaufnahme Nivellement", "p": "285-695 €"}, {"nr": "BA-012", "k": "Baumängel allgemein", "s": "Setzungen", "b": "Fundamentunterfangung Teilbereich je lfm", "p": "485-1195 €"}, {"nr": "BA-013", "k": "Baumängel allgemein", "s": "Setzungen", "b": "Bodenpressung Baugrundgutachten", "p": "1485-3650 €"}, {"nr": "BA-014", "k": "Baumängel allgemein", "s": "Setzungen", "b": "Setznagel setzen Beobachtungsnagel je Stk", "p": "28-68 €"}, {"nr": "BA-015", "k": "Baumängel allgemein", "s": "Abdichtung Keller", "b": "Kellerwandabdichtung innen Sanierputz je m²", "p": "28-68 €"}, {"nr": "BA-016", "k": "Baumängel allgemein", "s": "Abdichtung Keller", "b": "Kellerwandabdichtung außen bituminös Dickschicht je m²", "p": "45-108 €"}, {"nr": "BA-017", "k": "Baumängel allgemein", "s": "Abdichtung Keller", "b": "Kellerdrainageleitung erneuern je lfm", "p": "55-135 €"}, {"nr": "BA-018", "k": "Baumängel allgemein", "s": "Abdichtung Keller", "b": "Kellerfußbodenabdichtung PE-Folie je m²", "p": "12-28 €"}, {"nr": "BA-019", "k": "Baumängel allgemein", "s": "Abdichtung Keller", "b": "Schachtring Kelleraußenabdichtung Revisionsöffnung", "p": "285-695 €"}, {"nr": "BA-020", "k": "Baumängel allgemein", "s": "Abdichtung Keller", "b": "Lichtschacht abdichten versiegeln je Stk", "p": "85-210 €"}, {"nr": "BA-021", "k": "Baumängel allgemein", "s": "Balkon", "b": "Balkonabdichtung Flüssigkunststoff PMMA je m²", "p": "35-85 €"}, {"nr": "BA-022", "k": "Baumängel allgemein", "s": "Balkon", "b": "Balkonabdichtung Foliensystem je m²", "p": "45-108 €"}, {"nr": "BA-023", "k": "Baumängel allgemein", "s": "Balkon", "b": "Balkonfliesen entfernen und Untergrund sanieren je m²", "p": "38-92 €"}, {"nr": "BA-024", "k": "Baumängel allgemein", "s": "Balkon", "b": "Balkongeländer Anschluss abdichten je lfm", "p": "28-68 €"}, {"nr": "BA-025", "k": "Baumängel allgemein", "s": "Balkon", "b": "Balkongefälle korrigieren je m²", "p": "55-135 €"}, {"nr": "BA-026", "k": "Baumängel allgemein", "s": "Balkon", "b": "Balkonbrüstung Beton instandsetzen je lfm", "p": "65-155 €"}, {"nr": "BA-027", "k": "Baumängel allgemein", "s": "Fenster/Türen", "b": "Fensterbank innen erneuern je lfm", "p": "32-78 €"}, {"nr": "BA-028", "k": "Baumängel allgemein", "s": "Fenster/Türen", "b": "Fensterbank außen Alu erneuern je lfm", "p": "55-135 €"}, {"nr": "BA-029", "k": "Baumängel allgemein", "s": "Fenster/Türen", "b": "Fensterdichtung tauschen je lfm", "p": "8-22 €"}, {"nr": "BA-030", "k": "Baumängel allgemein", "s": "Fenster/Türen", "b": "Fensterrahmen Anschluss abdichten Innen/Außen je lfm", "p": "12-28 €"}, {"nr": "BA-031", "k": "Baumängel allgemein", "s": "Fenster/Türen", "b": "Fenster justieren/einstellen je Stk", "p": "45-108 €"}, {"nr": "BA-032", "k": "Baumängel allgemein", "s": "Fenster/Türen", "b": "Haustür Einbruchhemmung nachrüsten", "p": "285-695 €"}, {"nr": "BA-033", "k": "Baumängel allgemein", "s": "Fenster/Türen", "b": "Innentür schleifen und lackieren", "p": "85-210 €"}, {"nr": "BA-034", "k": "Baumängel allgemein", "s": "Fenster/Türen", "b": "Türzarge reparieren je Stk", "p": "68-168 €"}, {"nr": "BA-035", "k": "Baumängel allgemein", "s": "Estrich/Boden", "b": "Estrichhohlstelle Injektion je m²", "p": "22-55 €"}, {"nr": "BA-036", "k": "Baumängel allgemein", "s": "Estrich/Boden", "b": "Estrichaufschüsselung schleifen je m²", "p": "18-43 €"}, {"nr": "BA-037", "k": "Baumängel allgemein", "s": "Estrich/Boden", "b": "Bodenbelag aufschüsseln reparieren je m²", "p": "28-68 €"}, {"nr": "BA-038", "k": "Baumängel allgemein", "s": "Estrich/Boden", "b": "Trittschalldämmung erneuern je m²", "p": "22-55 €"}, {"nr": "BA-039", "k": "Baumängel allgemein", "s": "Dach/Flachdach", "b": "Flachdachabdichtung Blasen reparieren je m²", "p": "28-68 €"}, {"nr": "BA-040", "k": "Baumängel allgemein", "s": "Dach/Flachdach", "b": "Attika Blechabdeckung abdichten je lfm", "p": "35-85 €"}, {"nr": "BA-041", "k": "Baumängel allgemein", "s": "Dach/Flachdach", "b": "Dachablauf reinigen und dichten je Stk", "p": "65-155 €"}, {"nr": "BA-042", "k": "Baumängel allgemein", "s": "Dach/Flachdach", "b": "Flachdach Gefälleestrich reparieren je m²", "p": "42-105 €"}, {"nr": "BA-043", "k": "Baumängel allgemein", "s": "Putz/Fassade", "b": "Außenputz Reparatur bis 1 m² je Stk", "p": "85-210 €"}, {"nr": "BA-044", "k": "Baumängel allgemein", "s": "Putz/Fassade", "b": "WDVS Putzschicht reparieren je m²", "p": "35-85 €"}, {"nr": "BA-045", "k": "Baumängel allgemein", "s": "Putz/Fassade", "b": "Fassadenanstrich komplett je m²", "p": "12-28 €"}, {"nr": "BA-046", "k": "Baumängel allgemein", "s": "Putz/Fassade", "b": "Innenputz Fehlstelle reparieren je m²", "p": "22-55 €"}, {"nr": "BA-047", "k": "Baumängel allgemein", "s": "Schall", "b": "Schallmessung Luftschall je Raum", "p": "285-695 €"}, {"nr": "BA-048", "k": "Baumängel allgemein", "s": "Schall", "b": "Schallmessung Trittschall je Raum", "p": "285-695 €"}, {"nr": "BA-049", "k": "Baumängel allgemein", "s": "Schall", "b": "Trittschalldämmung unter Estrich nachrüsten je m²", "p": "28-68 €"}, {"nr": "BA-050", "k": "Baumängel allgemein", "s": "Sonstiges", "b": "Gutachterkosten Feststellung Baumangel Pauschal", "p": "485-1195 €"}, {"nr": "ES-001", "k": "Elementarschaden", "s": "Überschwemmung", "b": "Aufräumarbeiten nach Überflutung je m²", "p": "18-43 €"}, {"nr": "ES-002", "k": "Elementarschaden", "s": "Überschwemmung", "b": "Schlamm und Sediment entfernen je m²", "p": "22-55 €"}, {"nr": "ES-003", "k": "Elementarschaden", "s": "Überschwemmung", "b": "Keller auspumpen Pumpeneinsatz je h", "p": "85-210 €"}, {"nr": "ES-004", "k": "Elementarschaden", "s": "Überschwemmung", "b": "Schmutzwasser Absaugung Tanklöschfahrzeug je h", "p": "185-455 €"}, {"nr": "ES-005", "k": "Elementarschaden", "s": "Überschwemmung", "b": "Sanierungsanstrich nach Überschwemmung Keller je m²", "p": "12-28 €"}, {"nr": "ES-006", "k": "Elementarschaden", "s": "Überschwemmung", "b": "Heizungsanlage nach Hochwasser spülen und instandsetzen", "p": "480-1185 €"}, {"nr": "ES-007", "k": "Elementarschaden", "s": "Überschwemmung", "b": "Elektroanlage nach Hochwasser prüfen und freigeben", "p": "285-695 €"}, {"nr": "ES-008", "k": "Elementarschaden", "s": "Überschwemmung", "b": "Rückstauklappe einbauen DN 100", "p": "485-1195 €"}, {"nr": "ES-009", "k": "Elementarschaden", "s": "Überschwemmung", "b": "Rückstauklappe DN 150 einbauen", "p": "580-1415 €"}, {"nr": "ES-010", "k": "Elementarschaden", "s": "Überschwemmung", "b": "Hochwasserschutzelemente Türdichtung montieren", "p": "285-695 €"}, {"nr": "ES-011", "k": "Elementarschaden", "s": "Überschwemmung", "b": "Hochwasserschutzfolie Lichtschacht je Stk", "p": "85-210 €"}, {"nr": "ES-012", "k": "Elementarschaden", "s": "Überschwemmung", "b": "Bodenbeschichtung Keller nach Hochwasser je m²", "p": "18-43 €"}, {"nr": "ES-013", "k": "Elementarschaden", "s": "Überschwemmung", "b": "Wandaufbau Keller nach Hochwasser je m²", "p": "38-92 €"}, {"nr": "ES-014", "k": "Elementarschaden", "s": "Überschwemmung", "b": "Bautrocknung nach Überschwemmung großflächig je m²", "p": "8-22 €"}, {"nr": "ES-015", "k": "Elementarschaden", "s": "Überschwemmung", "b": "Trocknungsprotokoll Hochwasserschaden komplett", "p": "285-695 €"}, {"nr": "ES-016", "k": "Elementarschaden", "s": "Erdrutsch", "b": "Hangsicherung Böschung Gabionen je m²", "p": "85-210 €"}, {"nr": "ES-017", "k": "Elementarschaden", "s": "Erdrutsch", "b": "Hangstabilisierung Erdnägel je Stk", "p": "285-695 €"}, {"nr": "ES-018", "k": "Elementarschaden", "s": "Erdrutsch", "b": "Drainageleitung Hang einbauen je lfm", "p": "45-108 €"}, {"nr": "ES-019", "k": "Elementarschaden", "s": "Erdrutsch", "b": "Stützmauer Beton neu errichten je m²", "p": "185-455 €"}, {"nr": "ES-020", "k": "Elementarschaden", "s": "Erdrutsch", "b": "Erdmassen abtragen und entsorgen je m³", "p": "28-68 €"}, {"nr": "ES-021", "k": "Elementarschaden", "s": "Erdrutsch", "b": "Fundamentfreilegung Schadensaufnahme je lfm", "p": "85-210 €"}, {"nr": "ES-022", "k": "Elementarschaden", "s": "Erdrutsch", "b": "Geotextil Erosionsschutz je m²", "p": "8-22 €"}, {"nr": "ES-023", "k": "Elementarschaden", "s": "Frost", "b": "Frostschaden Wasserleitung Kupfer reparieren je lfm", "p": "55-135 €"}, {"nr": "ES-024", "k": "Elementarschaden", "s": "Frost", "b": "Frostschaden Heizungsanlage Vorlaufleitung reparieren", "p": "285-695 €"}, {"nr": "ES-025", "k": "Elementarschaden", "s": "Frost", "b": "Frostschutz Rohrbegleitheizung einbauen je lfm", "p": "28-68 €"}, {"nr": "ES-026", "k": "Elementarschaden", "s": "Frost", "b": "Frostschaden Putz Außenwand reparieren je m²", "p": "22-55 €"}, {"nr": "ES-027", "k": "Elementarschaden", "s": "Frost", "b": "Frostschaden Pflaster/Terasse reparieren je m²", "p": "35-85 €"}, {"nr": "ES-028", "k": "Elementarschaden", "s": "Frost", "b": "Frostschaden Druckleitung Betonrohr erneuern je lfm", "p": "65-155 €"}, {"nr": "ES-029", "k": "Elementarschaden", "s": "Frost", "b": "Rohrbruch Frostschaden Schnellkupplung Notabdichtung", "p": "85-210 €"}, {"nr": "ES-030", "k": "Elementarschaden", "s": "Frost", "b": "Frostschaden Dachrinne/Fallrohr erneuern je lfm", "p": "28-68 €"}, {"nr": "ESWS-081", "k": "Wasserschaden", "s": "Trocknung", "b": "Bautrocknung Zwischenbericht Feuchteprofil je Begehung", "p": "95-220 €"}, {"nr": "BS-061", "k": "Brandschaden", "s": "Rußreinigung", "b": "Rußreinigung Treppenhaus komplett inkl. Geländer je m²", "p": "14-34 €"}, {"nr": "SS-041", "k": "Sturmschaden", "s": "Außenanlagen", "b": "Streifenfundament Gartenmauer Sturmschaden reparieren je lfm", "p": "85-210 €"}, {"nr": "SS-001", "k": "Schadstoff", "s": "Asbest", "b": "Asbestprobe entnehmen und Laboranalyse (inkl. REM)", "p": "180-420 €"}, {"nr": "SS-002", "k": "Schadstoff", "s": "Asbest", "b": "Asbestkataster erstellen", "p": "450-1200 €"}, {"nr": "SS-003", "k": "Schadstoff", "s": "Asbest", "b": "Asbestzementplatten Dach demontieren und entsorgen (inkl. Container)", "p": "45-95 €"}, {"nr": "SS-004", "k": "Schadstoff", "s": "Asbest", "b": "Asbesthaltige Bodenfliesen (Vinylplatten) demontieren und entsorgen", "p": "35-78 €"}, {"nr": "SS-005", "k": "Schadstoff", "s": "Asbest", "b": "Asbesthaltige Putze/Spachtelmassen (Spritzasbest) entfernen — Schutzklasse 3", "p": "85-195 €"}, {"nr": "SS-006", "k": "Schadstoff", "s": "Mineralfasern", "b": "KMF-Altwolle (bio-persistent) entfernen und entsorgen", "p": "28-68 €"}, {"nr": "SS-007", "k": "Schadstoff", "s": "Mineralfasern", "b": "KMF-Probe und Laboranalyse (Fasereinstufung WHO)", "p": "120-290 €"}, {"nr": "SS-008", "k": "Schadstoff", "s": "PCB/PAK", "b": "PCB-Probe (Polychlorierte Biphenyle) und Laboranalyse", "p": "220-520 €"}, {"nr": "SS-009", "k": "Schadstoff", "s": "PCB/PAK", "b": "PAK-haltige Fugendichtstoffe entfernen (Spezialbetrieb)", "p": "55-130 €"}, {"nr": "SS-010", "k": "Schadstoff", "s": "Blei", "b": "Bleihaltige Farbe — Probe und Laboranalyse", "p": "150-350 €"}, {"nr": "SS-011", "k": "Schadstoff", "s": "Entsorgung", "b": "Sonderabfallentsorgung gefährlicher Baustoffe — Kleinmengen (bis 1t)", "p": "280-680 €"}, {"nr": "SS-012", "k": "Schadstoff", "s": "Entsorgung", "b": "Schadstoffgutachten / Schadstoffkataster Vollerhebung Gebäude", "p": "800-2200 €"}, {"nr": "GE-001", "k": "Gerüst", "s": "Fassadengerüst", "b": "Fassadengerüst aufbauen, vorhalten (4 Wochen) und abbauen", "p": "18-38 €"}, {"nr": "GE-002", "k": "Gerüst", "s": "Fassadengerüst", "b": "Gerüst Verlängerungsmiete je Woche", "p": "1-3 €"}, {"nr": "GE-003", "k": "Gerüst", "s": "Dachgerüst", "b": "Fanggerüst / Dachschutzwand aufbauen, vorhalten und abbauen", "p": "45-105 €"}, {"nr": "GE-004", "k": "Gerüst", "s": "Einhausung", "b": "Wetterschutzplane / Einhausung (Vollschutz)", "p": "12-28 €"}, {"nr": "GE-005", "k": "Gerüst", "s": "Baustelleneinrichtung", "b": "Baustellenabsperrung (Absperrgitter inkl. Aufstellen)", "p": "8-18 €"}, {"nr": "GE-006", "k": "Gerüst", "s": "Baustelleneinrichtung", "b": "Baucontainer (Büro/Lager) aufstellen, vorhalten 4 Wochen und abbauen", "p": "380-880 €"}, {"nr": "GE-007", "k": "Gerüst", "s": "Baustelleneinrichtung", "b": "Baustrom-Anschluss und Verteilung", "p": "280-680 €"}];
-var PROVA_DOK_DB=[{"l": "Standard-Gutachten", "i": "📋", "h": "vorlage-01-standard.html", "g": "Gutachten"}, {"l": "Kurzgutachten", "i": "📋", "h": "vorlage-02-kurzgutachten.html", "g": "Gutachten"}, {"l": "Beweissicherung §485 ZPO", "i": "🔍", "h": "vorlage-03-beweissicherung.html", "g": "Gutachten"}, {"l": "Gerichtsgutachten §404 ZPO", "i": "🏛️", "h": "vorlage-04-gerichtsgutachten.html", "g": "Gutachten"}, {"l": "Brandschaden-Gutachten", "i": "🔥", "h": "vorlage-05-brandschaden.html", "g": "Gutachten"}, {"l": "Feuchte/Schimmel-Gutachten", "i": "💧", "h": "vorlage-06-feuchteschimmel.html", "g": "Gutachten"}, {"l": "Elementarschaden-Gutachten", "i": "⚡", "h": "vorlage-07-elementarschaden.html", "g": "Gutachten"}, {"l": "Baumängel-Gutachten", "i": "🏗️", "h": "vorlage-08-baumaengel.html", "g": "Gutachten"}, {"l": "Ergänzungsgutachten §411 ZPO", "i": "🧩", "h": "vorlage-09-ergaenzungsgutachten.html", "g": "Gutachten"}, {"l": "Schiedsgutachten", "i": "⚖️", "h": "vorlage-10-schiedsgutachten.html", "g": "Gutachten"}, {"l": "Bauabnahmeprotokoll", "i": "✅", "h": "vorlage-11-bauabnahmeprotokoll.html", "g": "Gutachten"}, {"l": "Auftragsbestätigung", "i": "✉️", "h": "auftragsbestaetigung.html", "g": "Brief"}, {"l": "Auftragsablehnung", "i": "✉️", "h": "auftrag-ablehnung.html", "g": "Brief"}, {"l": "Angebot Gutachten", "i": "💼", "h": "angebot-gutachten.html", "g": "Brief"}, {"l": "Deckungsanfrage Versicherung", "i": "🛡️", "h": "deckungsanfrage.html", "g": "Brief"}, {"l": "Erstbericht Versicherung", "i": "📨", "h": "erstbericht-versicherung.html", "g": "Brief"}, {"l": "Abschlussbericht Versicherung", "i": "📨", "h": "abschlussbericht-versicherung.html", "g": "Brief"}, {"l": "Einladung Ortstermin", "i": "📅", "h": "einladung-ortstermin.html", "g": "Brief"}, {"l": "Einladung Ortstermin Gericht", "i": "🏛️", "h": "einladung-ortstermin-gericht.html", "g": "Brief"}, {"l": "Fristüberschreitung/Fristverlängerung", "i": "⏱️", "h": "fristverlaengerungsantrag.html", "g": "Brief"}, {"l": "Nachforderung Unterlagen", "i": "📎", "h": "nachforderung-unterlagen.html", "g": "Brief"}, {"l": "Anforderung Unterlagen (erweitert)", "i": "📎", "h": "anforderung-unterlagen-erweitert.html", "g": "Brief"}, {"l": "Ergänzungsfragen Antwort §411 ZPO", "i": "🧩", "h": "ergaenzungsfragen-antwort.html", "g": "Brief"}, {"l": "Kostenvorschuss Gericht", "i": "💶", "h": "kostenvorschuss-gericht.html", "g": "Brief"}, {"l": "Kostenrahmenerhöhung", "i": "💶", "h": "kostenrahmen-erhoehung.html", "g": "Brief"}, {"l": "Kostenvoranschlag Sanierung", "i": "💶", "h": "kostenvoranschlag-sanierung.html", "g": "Brief"}, {"l": "Honorarvereinbarung", "i": "🤝", "h": "honorarvereinbarung.html", "g": "Brief"}, {"l": "Beauftragungsbestätigung Gericht", "i": "🏛️", "h": "beauftragungsbestaetigung-gericht.html", "g": "Brief"}, {"l": "Akteneinsicht Antrag", "i": "📁", "h": "akteneinsicht-antrag.html", "g": "Brief"}, {"l": "Terminsverlegung Antrag", "i": "📅", "h": "terminsverlegung-antrag.html", "g": "Brief"}, {"l": "Terminsbestätigung", "i": "📅", "h": "terminsbestaetigung.html", "g": "Brief"}, {"l": "Terminabsage", "i": "📅", "h": "terminabsage.html", "g": "Brief"}, {"l": "Umladebrief Ortstermin", "i": "✉️", "h": "umladebrief-ortstermin.html", "g": "Brief"}, {"l": "Erinnerungsschreiben", "i": "🔔", "h": "erinnerungsschreiben.html", "g": "Brief"}, {"l": "Mahnung 1. Stufe", "i": "💶", "h": "mahnung-1.html", "g": "Brief"}, {"l": "Mahnung 2. Stufe", "i": "💶", "h": "mahnung-2.html", "g": "Brief"}, {"l": "Mahnung 3. Stufe", "i": "💶", "h": "mahnung-3.html", "g": "Brief"}, {"l": "Rechnungskorrektur", "i": "📄", "h": "rechnungskorrektur.html", "g": "Brief"}, {"l": "Schlussrechnung Aufstellung", "i": "📄", "h": "schlussrechnung-aufstellung.html", "g": "Brief"}, {"l": "Sicherheitsbedenken Mitteilung", "i": "⚠️", "h": "sicherheitsbedenken.html", "g": "Brief"}, {"l": "Kündigung Auftrag", "i": "✉️", "h": "kuendigung-auftrag.html", "g": "Brief"}, {"l": "Mängelanzeige", "i": "⚠️", "h": "maengelanzeige.html", "g": "Brief"}, {"l": "Mängelrüge", "i": "⚠️", "h": "maengelruege.html", "g": "Brief"}, {"l": "Gutachten-Zusammenfassung", "i": "📋", "h": "gutachten-zusammenfassung.html", "g": "Brief"}, {"l": "DSGVO Einwilligungserklärung", "i": "🔒", "h": "einverstaendnis-dsgvo.html", "g": "Dokument"}, {"l": "Datenschutz Mandant", "i": "🔒", "h": "datenschutz-mandant.html", "g": "Dokument"}, {"l": "Datenschutz Einwilligung Gericht", "i": "🔒", "h": "datenschutz-einwilligung-gericht.html", "g": "Dokument"}, {"l": "Vollmacht Sachverständiger", "i": "📄", "h": "vollmacht-sv.html", "g": "Dokument"}, {"l": "Abnahmeprotokoll formal", "i": "✅", "h": "abnahmeprotokoll-formal.html", "g": "Protokoll"}, {"l": "Begehungsprotokoll", "i": "🚶", "h": "begehungsprotokoll.html", "g": "Protokoll"}, {"l": "Ortstermin Arbeitsblatt", "i": "📍", "h": "ortstermin-arbeitsblatt.html", "g": "Protokoll"}, {"l": "Ortstermin Protokoll", "i": "📍", "h": "ortstermin-protokoll.html", "g": "Protokoll"}, {"l": "Ortsbesichtigung Protokoll Gericht", "i": "🏛️", "h": "ortsbesichtigung-protokoll-gericht.html", "g": "Protokoll"}, {"l": "Messprotokoll Feuchte", "i": "💧", "h": "messprotokoll-feuchte.html", "g": "Protokoll"}, {"l": "Messprotokoll Risse", "i": "📏", "h": "messprotokoll-risse.html", "g": "Protokoll"}, {"l": "Aktennotiz", "i": "📝", "h": "aktennotiz.html", "g": "Protokoll"}, {"l": "Zwischenbericht", "i": "📋", "h": "zwischenbericht.html", "g": "Bericht"}, {"l": "Checkliste Wasserschaden", "i": "📋", "h": "checkliste-wasserschaden.html", "g": "Checkliste"}, {"l": "Checkliste Brandschaden", "i": "🔥", "h": "checkliste-brandschaden.html", "g": "Checkliste"}, {"l": "Checkliste Sturmschaden", "i": "🌪️", "h": "checkliste-sturmschaden.html", "g": "Checkliste"}, {"l": "Widerspruch gegen Gutachten", "i": "⚖️", "h": "widerspruch-gutachten.html", "g": "Brief"}, {"l": "Gegengutachten Stellungnahme", "i": "⚖️", "h": "widerspruch-gegengutachten.html", "g": "Brief"}, {"l": "Fristverlegungsantrag", "i": "⏱️", "h": "fristverlaengerungsantrag.html", "g": "Brief"}, {"l": "Vergütungsanzeige Gericht", "i": "💶", "h": "verguetungsanzeige.html", "g": "Brief"}];
+/* ════════════════════════════════════════════════════════════
+   PROVA global-search.js
+   Globale Suche — Cmd+K / Ctrl+K
+   Sucht: Fälle (localStorage), Normen (PROVA_NORMEN_DB), Seiten
+════════════════════════════════════════════════════════════ */
 
-/* ════════════════════════════════════════════════════════════════
-   PROVA Global Search v3 — Vollständige System-Suche
-   Quellen: Normen · Positionen · Dokumente · Fälle · Rechnungen
-            Kontakte · Termine · Textbausteine · Seiten
-   Öffnen: Cmd+K / Ctrl+K oder Sidebar-Button
-════════════════════════════════════════════════════════════════ */
+const PROVASearch = {
+  isOpen: false,
+  _q: '',
 
-var AT_BS = 'appJ7bLlAHZoxENWE';
-var AT_FA = 'tblSxV8bsXwd1pwa0';
-var AT_RE = 'tblF6MS7uiFAJDjiT';
-var AT_KO = 'tblMKmPLjRelr6Hal';
-var AT_TE = 'tblyMTTdtfGQjjmc2';
-var TB_KEY = 'prova_textbausteine_v2';
-
-var PROVASearch = {
-
+  // Statische Seiten-Einträge
   PAGES: [
-    {l:'Dashboard / Zentrale',   i:'⊞', h:'dashboard.html'},
-    {l:'Archiv / Alle Fälle',    i:'📂', h:'archiv.html'},
-    {l:'Neues Gutachten',        i:'✚', h:'vor-ort.html'},
-    {l:'Diktat & Fotos',         i:'🎤', h:'app.html'},
-    {l:'Stellungnahme',          i:'✍️', h:'stellungnahme.html'},
-    {l:'Freigabe & PDF',         i:'✅', h:'freigabe.html'},
-    {l:'Rechnungen',             i:'💶', h:'rechnungen.html'},
-    {l:'Mahnwesen',              i:'📨', h:'mahnwesen.html'},
-    {l:'E-Rechnung (XRechnung)', i:'📄', h:'erechnung.html'},
-    {l:'JVEG-Rechner',           i:'⚖️', h:'jveg.html'},
-    {l:'Termine / Kalender',     i:'📅', h:'termine.html'},
-    {l:'Kontakte',               i:'👥', h:'kontakte.html'},
-    {l:'Normen & Vorschriften',  i:'📐', h:'normen.html'},
-    {l:'Textbausteine',          i:'📝', h:'textbausteine.html'},
-    {l:'Briefe & Vorlagen',      i:'✉️', h:'briefvorlagen.html'},
-    {l:'Positionen / Preisliste',i:'💰', h:'positionen.html'},
-    {l:'Statistiken',            i:'📊', h:'statistiken.html'},
-    {l:'Einstellungen',          i:'⚙️', h:'einstellungen.html'},
-    {l:'Ortstermin-Modus',       i:'📍', h:'ortstermin-modus.html'},
-    {l:'Jahresbericht',          i:'📆', h:'jahresbericht.html'},
+    { type: 'page', label: 'Zentrale / Dashboard', icon: '⊞', href: 'dashboard.html' },
+    { type: 'page', label: 'Neues Gutachten', icon: '✚', href: 'app.html' },
+    { type: 'page', label: 'Fälle / Archiv', icon: '📂', href: 'archiv.html' },
+    { type: 'page', label: 'Normen-Datenbank', icon: '📚', href: 'normen.html' },
+    { type: 'page', label: 'Textbausteine', icon: '📝', href: 'textbausteine.html' },
+    { type: 'page', label: 'Positionen & Kosten', icon: '🗂️', href: 'positionen.html' },
+    { type: 'page', label: 'Rechnungen', icon: '💶', href: 'rechnungen.html' },
+    { type: 'page', label: 'JVEG-Rechner', icon: '⚖️', href: 'jveg.html' },
+    { type: 'page', label: 'E-Rechnung', icon: '📄', href: 'erechnung.html' },
+    { type: 'page', label: 'Statistiken', icon: '📈', href: 'statistiken.html' },
+    { type: 'page', label: 'Briefe & Vorlagen', icon: '✉️', href: 'briefvorlagen.html' },
+    { type: 'page', label: 'Kontakte', icon: '👥', href: 'kontakte.html' },
+    { type: 'page', label: 'Kalender / Termine', icon: '📅', href: 'termine.html' },
+    { type: 'page', label: 'Baubegleitung', icon: '🏗️', href: 'baubegleitung.html' },
+    { type: 'page', label: 'Hilfe-Center', icon: '❓', href: 'hilfe.html' },
+    { type: 'page', label: 'Einstellungen', icon: '⚙️', href: 'einstellungen.html' },
   ],
 
-  _q: '', _words: [], _atTimer: null, _activeIdx: -1,
-
-  init: function() {
-    if (document.getElementById('ps-overlay')) return;
-    this._inject();
-    this._keys();
-  },
-
-  /* ─── UI AUFBAUEN ──────────────────────────────────────────── */
-  _inject: function() {
-    var s = document.createElement('style');
-    s.textContent = [
-      '#ps-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);z-index:9000;display:none;align-items:flex-start;justify-content:center;padding-top:12vh}',
-      '#ps-overlay.open{display:flex}',
-      '#ps-box{background:var(--bg2,#1a2035);border:1px solid rgba(255,255,255,.12);border-radius:14px;width:100%;max-width:640px;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,.7);margin:0 16px}',
-      '#ps-row{display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid rgba(255,255,255,.07)}',
-      '#ps-row svg{flex-shrink:0;opacity:.4}',
-      '#ps-field{flex:1;background:none;border:none;outline:none;color:var(--text,#e8eaf0);font-size:16px;font-family:inherit}',
-      '#ps-field::placeholder{color:var(--text3,#6b7a99)}',
-      '#ps-esc{font-size:10px;padding:2px 6px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:5px;color:var(--text3);font-family:monospace;cursor:pointer}',
-      '#ps-results{max-height:460px;overflow-y:auto;padding:6px}',
-      '#ps-results::-webkit-scrollbar{width:4px}',
-      '#ps-results::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:2px}',
-      '.ps-group{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text3,#6b7a99);padding:10px 14px 4px;user-select:none}',
-      '.ps-item{display:flex;align-items:center;gap:10px;padding:9px 14px;border-radius:8px;cursor:pointer;color:var(--text2,#c2c8da)}',
-      '.ps-item:hover,.ps-item.active{background:rgba(79,142,247,.12);color:var(--text,#e8eaf0)}',
-      '.ps-ico{font-size:16px;flex-shrink:0;width:22px;text-align:center}',
-      '.ps-lbl{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
-      '.ps-sub{font-size:11px;color:var(--text3,#6b7a99);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
-      '.ps-tag{font-size:10px;padding:2px 7px;background:rgba(255,255,255,.06);border-radius:99px;color:var(--text3);flex-shrink:0;margin-left:auto}',
-      '.ps-empty{padding:24px;text-align:center;color:var(--text3);font-size:13px}',
-      '#ps-foot{padding:8px 18px;border-top:1px solid rgba(255,255,255,.07);display:flex;align-items:center;gap:14px;font-size:11px;color:var(--text3)}',
-      '#ps-foot kbd{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:4px;padding:1px 5px;font-family:monospace;font-size:10px}',
-      '#ps-status{margin-left:auto;font-size:11px;color:var(--text3)}',
-      'mark{background:rgba(79,142,247,.3);color:inherit;border-radius:2px;padding:0 1px}'
-    ].join('');
-    document.head.appendChild(s);
-
-    var ov = document.createElement('div');
-    ov.id = 'ps-overlay';
-    ov.innerHTML = '<div id="ps-box">' +
-      '<div id="ps-row">' +
-        '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>' +
-        '<input id="ps-field" placeholder="Suchen — Normen, Fälle, Briefe, Rechnungen, Kontakte, Positionen…" autocomplete="off" spellcheck="false">' +
-        '<span id="ps-esc">ESC</span>' +
-      '</div>' +
-      '<div id="ps-results"></div>' +
-      '<div id="ps-foot"><kbd>↑↓</kbd> navigieren &nbsp;<kbd>↵</kbd> öffnen &nbsp;<kbd>ESC</kbd> schließen<span id="ps-status"></span></div>' +
-    '</div>';
-    document.body.appendChild(ov);
-
-    var self = this;
-    ov.addEventListener('click', function(e){ if (e.target === ov) self.close(); });
-    document.getElementById('ps-esc').addEventListener('click', function(){ self.close(); });
-    document.getElementById('ps-field').addEventListener('input', function(e){ self._search(e.target.value); });
-    document.getElementById('ps-field').addEventListener('keydown', function(e){ self._arrow(e); });
-  },
-
-  _keys: function() {
-    var self = this;
-    document.addEventListener('keydown', function(e) {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); self.open(); }
-      if (e.key === 'Escape') self.close();
+  init() {
+    this._buildUI();
+    document.addEventListener('keydown', e => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); this.toggle(); }
+      if (e.key === 'Escape' && this.isOpen) this.close();
+      if (this.isOpen) this._handleArrow(e);
     });
-    document.addEventListener('click', function(e) {
-      if (e.target.closest('#sb-search-btn') || e.target.closest('[data-search-trigger]')) {
-        e.preventDefault(); self.open();
-      }
+    // Auch den Suchen-Button in der Sidebar verdrahten
+    document.addEventListener('click', e => {
+      if (e.target.closest('#sb-search-btn')) { e.preventDefault(); this.open(); }
     });
   },
 
-  /* ─── PUBLIC ────────────────────────────────────────────────── */
-  toggle: function() {
-    var ov = document.getElementById('ps-overlay');
-    if (ov && ov.classList.contains('open')) this.close(); else this.open();
+  _buildUI() {
+    const css = `
+#prova-search-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(4px);z-index:5000;display:none;align-items:flex-start;justify-content:center;padding-top:15vh}
+#prova-search-overlay.open{display:flex}
+#prova-search-box{background:var(--surface);border:1px solid var(--border2);border-radius:14px;width:100%;max-width:600px;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,.6)}
+#prova-search-input-wrap{display:flex;align-items:center;gap:12px;padding:14px 18px;border-bottom:1px solid var(--border,rgba(255,255,255,.07))}
+#prova-search-input-wrap svg{flex-shrink:0;opacity:.5}
+#prova-search-field{flex:1;background:none;border:none;outline:none;color:var(--text);font-size:16px;font-family:var(--font-ui)}
+#prova-search-field::placeholder{color:var(--text3)}
+#prova-search-esc{font-size:10px;padding:2px 6px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:5px;color:var(--text3);font-family:monospace;flex-shrink:0}
+#prova-search-results{max-height:420px;overflow-y:auto;padding:6px}
+#prova-search-results::-webkit-scrollbar{width:4px}
+#prova-search-results::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:2px}
+.ps-item{display:flex;align-items:center;gap:12px;padding:9px 12px;border-radius:8px;cursor:pointer;transition:background .1s}
+.ps-item:hover,.ps-item.active{background:rgba(79,142,247,.12)}
+.ps-icon{width:28px;height:28px;border-radius:7px;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.ps-label{flex:1;font-size:13px;color:var(--text);font-weight:500}
+.ps-sub{font-size:11px;color:var(--text3)}
+.ps-type{font-size:10px;color:var(--text3);padding:1px 6px;border-radius:4px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);flex-shrink:0}
+.ps-group{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text3);padding:10px 12px 4px}
+#prova-search-footer{padding:8px 18px;border-top:1px solid var(--border,rgba(255,255,255,.07));display:flex;align-items:center;gap:12px;font-size:11px;color:var(--text3)}
+#prova-search-footer kbd{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:4px;padding:1px 5px;font-family:monospace;font-size:10px}
+`;
+    const style = document.createElement('style');
+    style.textContent = css;
+    document.head.appendChild(style);
+
+    const overlay = document.createElement('div');
+    overlay.id = 'prova-search-overlay';
+    overlay.innerHTML = `
+<div id="prova-search-box">
+  <div id="prova-search-input-wrap">
+    <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+      <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+    </svg>
+    <input id="prova-search-field" placeholder="Suchen… Fälle, Normen, Seiten" autocomplete="off" spellcheck="false">
+    <span id="prova-search-esc">ESC</span>
+  </div>
+  <div id="prova-search-results"></div>
+  <div id="prova-search-footer">
+    <span><kbd>↑↓</kbd> Navigieren</span>
+    <span><kbd>↵</kbd> Öffnen</span>
+    <span><kbd>ESC</kbd> Schließen</span>
+  </div>
+</div>`;
+    overlay.onclick = e => { if (e.target === overlay) this.close(); };
+    document.body.appendChild(overlay);
+
+    this._input = document.getElementById('prova-search-field');
+    this._results = document.getElementById('prova-search-results');
+    this._input.addEventListener('input', () => this._search(this._input.value));
   },
 
-  open: function() {
-    document.getElementById('ps-overlay').classList.add('open');
-    var f = document.getElementById('ps-field');
-    f.value = '';
-    var self = this;
-    setTimeout(function(){ f.focus(); }, 50);
+  toggle() { this.isOpen ? this.close() : this.open(); },
+
+  open() {
+    this.isOpen = true;
+    document.getElementById('prova-search-overlay').classList.add('open');
+    this._input.value = '';
     this._search('');
+    setTimeout(() => this._input.focus(), 50);
   },
 
-  close: function() {
-    var ov = document.getElementById('ps-overlay');
-    if (ov) ov.classList.remove('open');
-    this._q = '';
+  close() {
+    this.isOpen = false;
+    document.getElementById('prova-search-overlay').classList.remove('open');
   },
 
-  /* ─── KERN-SUCHE ─────────────────────────────────────────────── */
-  _search: function(raw) {
-    this._q = raw.trim().toLowerCase();
-    this._words = this._q ? this._q.split(/\s+/).filter(Boolean) : [];
-    var R = [], self = this;
+  _search(q) {
+    this._q = q.trim().toLowerCase();
+    const results = [];
 
     if (!this._q) {
-      R.push({g:'Schnellaktionen'});
-      R.push({t:'action',l:'Neues Gutachten starten',i:'✚',h:'vor-ort.html',s:'Auftragstyp wählen'});
-      R.push({t:'action',l:'Normen nachschlagen',i:'📐',h:'normen.html',s:'263 DIN · WTA · ZPO · JVEG Normen'});
-      R.push({t:'action',l:'Briefe & Vorlagen',i:'✉️',h:'briefvorlagen.html',s:'64 Vorlagen, Protokolle, Checklisten'});
-      R.push({t:'action',l:'Kostenpositionen',i:'💰',h:'positionen.html',s:'322 kalkulierte Schadenspositionen'});
-      var recent = this._recent();
-      if (recent.length) { R.push({g:'Zuletzt gearbeitet'}); recent.forEach(function(r){R.push(r);}); }
+      // Leer: Schnellaktionen zeigen
+      results.push({ group: 'Schnellaktionen' });
+      results.push({ type: 'action', label: 'Neues Gutachten starten', icon: '✚', href: 'app.html', sub: 'Schritt 1: Stammdaten' });
+      results.push({ type: 'action', label: 'Neuer Fall / Auftraggeber', icon: '📂', href: 'archiv.html', sub: 'Fallliste öffnen' });
+      results.push({ type: 'action', label: 'Normen nachschlagen', icon: '📚', href: 'normen.html', sub: '163 DIN/WTA/ZPO Normen' });
+
+      // Letzte Fälle
+      const recent = this._getRecentCases();
+      if (recent.length) {
+        results.push({ group: 'Zuletzt gearbeitet' });
+        recent.forEach(r => results.push(r));
+      }
     } else {
-      var n = this._normen();     if (n.length) { R.push({g:'Normen & Vorschriften'});         n.forEach(function(x){R.push(x);}); }
-      var d = this._dokumente();  if (d.length) { R.push({g:'Briefe, Formulare & Protokolle'}); d.forEach(function(x){R.push(x);}); }
-      var p = this._positionen(); if (p.length) { R.push({g:'Kostenpositionen'});               p.forEach(function(x){R.push(x);}); }
-      var tb= this._textbaust();  if (tb.length){ R.push({g:'Textbausteine'});                  tb.forEach(function(x){R.push(x);}); }
-      var pg= this._pages();      if (pg.length){ R.push({g:'Seiten & Module'});                pg.forEach(function(x){R.push(x);}); }
-      var fa= this._faelleLokal();if (fa.length){ R.push({g:'Fälle (lokal)'});                  fa.forEach(function(x){R.push(x);}); }
-      var re= this._reLokal();    if (re.length){ R.push({g:'Rechnungen (lokal)'});              re.forEach(function(x){R.push(x);}); }
-      var ko= this._koLokal();    if (ko.length){ R.push({g:'Kontakte (lokal)'});                ko.forEach(function(x){R.push(x);}); }
-      var te= this._termineLokal();if(te.length){ R.push({g:'Termine'});                        te.forEach(function(x){R.push(x);}); }
-      if (!R.length) R.push({t:'empty',l:'Keine lokalen Treffer — Airtable wird durchsucht…'});
-      this._atSearch(this._q);
-    }
-    this._render(R);
-  },
+      // Seiten durchsuchen
+      const pages = this.PAGES.filter(p => p.label.toLowerCase().includes(this._q));
+      if (pages.length) {
+        results.push({ group: 'Seiten' });
+        pages.forEach(p => results.push(p));
+      }
 
-  /* ─── HELPERS ───────────────────────────────────────────────── */
-  /* ─── FUZZY-SUCHE (übernommen von NinjaAI v97) ─────────────────
-     Umlaut-Normalisierung + Levenshtein-Distanz + Score-System
-     "Schimml" → findet "Schimmel", "feuchte" → findet "Feuchtigkeit"
-  ────────────────────────────────────────────────────────────────── */
-  _normalize: function(str) {
-    if (!str) return '';
-    return String(str).toLowerCase()
-      .replace(/ä/g,'ae').replace(/ö/g,'oe').replace(/ü/g,'ue')
-      .replace(/ß/g,'ss').replace(/à|á|â|ã|å/g,'a')
-      .replace(/è|é|ê|ë/g,'e').replace(/ì|í|î|ï/g,'i')
-      .replace(/ò|ó|ô|õ/g,'o').replace(/ù|ú|û/g,'u')
-      .replace(/ñ/g,'n').replace(/ç/g,'c')
-      .replace(/[^a-z0-9\s\-\.\/ ]/g,' ')
-      .replace(/\s+/g,' ').trim();
-  },
+      // Normen durchsuchen — NUR Norm-Nummer und Titel, mit Relevanz-Ranking
+      if (window.PROVA_NORMEN_DB) {
+        const _q = this._q;
+        // Zahlenfolge erkannt? Dann NUR in Norm-Nummer suchen
+        const isNumericQuery = /[0-9]/.test(_q);
+        const scored = window.PROVA_NORMEN_DB
+          .map(n => {
+            const num = (n.num || '').toLowerCase();
+            const titel = (n.titel || '').toLowerCase();
+            let score = 0;
+            if (num.startsWith(_q)) score = 100;
+            else if (num.includes(_q)) score = 80;
+            else if (!isNumericQuery && titel.includes(_q)) score = 60;
+            return { n, score };
+          })
+          .filter(x => x.score > 0)
+          .sort((a, b) => b.score - a.score)
+          .slice(0, 8)
+          .map(x => x.n);
+        const normen = scored;
+        if (normen.length) {
+          results.push({ group: 'Normen & Vorschriften' });
+          normen.forEach(n => results.push({ type: 'norm', label: n.num, icon: '📐', href: 'normen.html', sub: n.titel }));
+        }
+      }
 
-  _levenshtein: function(a, b) {
-    if (!a) return b ? b.length : 0;
-    if (!b) return a.length;
-    var m=a.length, n=b.length;
-    if (Math.abs(m-n) > 4) return 99;
-    var dp = [];
-    for (var i=0; i<=m; i++) { dp[i]=[i]; }
-    for (var j=0; j<=n; j++) { dp[0][j]=j; }
-    for (var i=1; i<=m; i++) {
-      for (var j=1; j<=n; j++) {
-        dp[i][j] = a[i-1]===b[j-1] ? dp[i-1][j-1] : 1+Math.min(dp[i-1][j],dp[i][j-1],dp[i-1][j-1]);
+      // Lokale Fälle durchsuchen
+      const cases = this._searchCases(this._q);
+      if (cases.length) {
+        results.push({ group: 'Fälle' });
+        cases.forEach(c => results.push(c));
       }
     }
-    return dp[m][n];
+
+    this._render(results);
   },
 
-  _score: function(text, query) {
-    if (!text||!query) return 999;
-    var t=this._normalize(text), q=this._normalize(query);
-    if (!t||!q) return 999;
-    if (t===q) return 0;
-    if (t.startsWith(q)) return 1;
-    if (t.includes(q)) return 2;
-    var qw=q.split(/\s+/).filter(function(w){return w.length>1;});
-    var tw=t.split(/\s+/);
-    if (qw.length>0 && qw.every(function(w){return tw.some(function(tx){return tx.includes(w)||tx.startsWith(w);});})) return 3;
-    var maxD=q.length<=4?1:q.length<=7?2:3;
-    for (var i=0;i<tw.length;i++) {
-      if (Math.abs(tw[i].length-q.length)<=maxD) {
-        var d=this._levenshtein(tw[i],q);
-        if (d<=maxD) return 4+d;
-      }
-    }
-    return 999;
-  },
-
-  _fuzzyMatch: function(fields, words) {
-    // Kombiniert AND-Logik (alle Wörter müssen matchen) mit Fuzzy-Toleranz
-    var self=this;
-    var combined=fields.filter(Boolean).join(' ');
-    return words.length && words.every(function(w) {
-      return self._score(combined, w) < 999;
-    });
-  },
-
-
-  _ok: function(fields) {
-    // Zuerst Fuzzy-Match versuchen, dann AND-Fallback
-    if (this._words.length && typeof this._fuzzyMatch === 'function') {
-      return this._fuzzyMatch(fields, this._words);
-    }
-    var w = this._words;
-    var combined = fields.filter(Boolean).join(' ').toLowerCase();
-    return w.length && w.every(function(word){ return combined.includes(word); });
-  },
-
-  _hl: function(text) {
-    if (!this._words.length || !text) return text || '';
-    var self = this;
-    var result = String(text);
-    this._words.forEach(function(w) {
-      // Auch normalisiert suchen (ue → ü etc.)
-      var idx = result.toLowerCase().indexOf(w);
-      if (idx < 0) {
-        // Fallback: normalisiert suchen
-        var norm = self._normalize(result);
-        var normW = self._normalize(w);
-        idx = norm.indexOf(normW);
-      }
-      if (idx < 0) return;
-      result = result.slice(0,idx) + '<mark>' + result.slice(idx, idx+w.length) + '</mark>' + result.slice(idx+w.length);
-    });
-    return result;
-  },
-
-  _tag: function(t) {
-    return {case:'Fall',norm:'Norm',textbaustein:'Textbaustein',rechnung:'Rechnung',
-            kontakt:'Kontakt',termin:'Termin',dokument:'Vorlage',position:'Position',
-            page:'Seite',action:'Aktion'}[t] || t;
-  },
-
-  /* ─── LOKALE QUELLEN ────────────────────────────────────────── */
-  _normen: function() {
-    var self = this;
-    var db = (typeof PROVA_NORMEN_INLINE !== 'undefined' ? PROVA_NORMEN_INLINE : []);
-    if (!db.length && window.PROVA_NORMEN_DB) db = window.PROVA_NORMEN_DB.map(function(n){return{n:n.num,t:n.titel,b:n.bereich,g:n.gw||''};});
-    return db.filter(function(n){ return self._ok([n.n,n.t,n.b,n.g]); })
-      .slice(0,8).map(function(n){ return {t:'norm',l:n.n,i:'📐',h:'normen.html',s:n.t+(n.g?' · '+n.g.substring(0,55):'')}; });
-  },
-
-  _dokumente: function() {
-    var self = this;
-    return PROVA_DOK_DB.filter(function(d){ return self._ok([d.l, d.g]); })
-      .slice(0,6).map(function(d){ return {t:'dokument',l:d.l,i:d.i,h:d.h,s:d.g}; });
-  },
-
-  _positionen: function() {
-    var self = this;
-    return PROVA_POS_DB.filter(function(p){ return self._ok([p.b,p.k,p.s,p.nr]); })
-      .slice(0,5).map(function(p){ return {t:'position',l:p.b.substring(0,55),i:'💰',h:'positionen.html',s:p.k+' · '+p.s+' · '+p.p}; });
-  },
-
-  _textbaust: function() {
-    var self = this;
+  _getRecentCases() {
     try {
-      var arr = JSON.parse(localStorage.getItem(TB_KEY) || '[]');
-      return arr.filter(function(b){ return self._ok([b.titel,b.text,b.kat,b.tag]); })
-        .slice(0,5).map(function(b){ return {t:'textbaustein',l:b.titel||'Ohne Titel',i:'📝',h:'textbausteine.html',s:(b.text||'').substring(0,65).replace(/\n/g,' ')+'…'}; });
-    } catch(e){ return []; }
+      const recent = JSON.parse(localStorage.getItem('prova_recent_cases') || '[]');
+      return recent.slice(0, 3).map(c => ({
+        type: 'case', label: c.az || 'Unbekannt', icon: '📋',
+        href: 'akte.html?az=' + encodeURIComponent(c.az || ''),
+        sub: [c.sa, c.adr].filter(Boolean).join(' · ')
+      }));
+    } catch(e) { return []; }
   },
 
-  _pages: function() {
-    var q = this._q;
-    return this.PAGES.filter(function(p){ return p.l.toLowerCase().includes(q); })
-      .slice(0,4).map(function(p){ return {t:'page',l:p.l,i:p.i,h:p.h,s:''}; });
-  },
-
-  _faelleLokal: function() {
-    var self = this;
+  _searchCases(q) {
     try {
-      // prova_archiv_cache_v2 ist der korrekte Key
-      var raw = localStorage.getItem('prova_archiv_cache_v2');
-      var arr = [];
-      try { var parsed = JSON.parse(raw||'{}'); arr = parsed.data||parsed||[]; if (!Array.isArray(arr)) arr=[]; } catch(e){}
-      if (!arr.length) { try { arr = JSON.parse(localStorage.getItem('prova_faelle_cache')||'[]'); } catch(e){} }
-      return arr.map(function(c) {
-        if (c.fields) return {az:c.fields.Aktenzeichen,auftraggeber:c.fields.Auftraggeber_Name,adresse:[c.fields.Schaden_Strasse,c.fields.Ort].filter(Boolean).join(', '),sa:c.fields.Schadensart};
-        return c;
-      }).filter(function(c){ return self._ok([c.az,c.auftraggeber,c.adresse,c.sa]); })
-      .slice(0,4).map(function(c){ return {t:'case',l:c.az||'—',i:'📋',h:'akte.html?az='+encodeURIComponent(c.az||''),s:[c.sa,c.auftraggeber,c.adresse].filter(Boolean).join(' · ')}; });
-    } catch(e){ return []; }
+      // 1. Lokaler Cache (sofort)
+      const cases = JSON.parse(localStorage.getItem('prova_faelle_cache') || '[]');
+      const local = cases.filter(c =>
+        c.az?.toLowerCase().includes(q) ||
+        c.auftraggeber?.toLowerCase().includes(q) ||
+        c.adresse?.toLowerCase().includes(q)
+      ).slice(0, 5).map(c => ({
+        type: 'case', label: c.az, icon: '📋',
+        href: 'akte.html?az=' + encodeURIComponent(c.az || ''),
+        sub: [c.auftraggeber, c.adresse].filter(Boolean).join(' · ')
+      }));
+      // 2. Airtable-Suche im Hintergrund (mit Debounce)
+      this._searchAirtable(q);
+      return local;
+    } catch(e) { return []; }
   },
 
-  _reLokal: function() {
-    var self = this;
-    try {
-      var arr = JSON.parse(localStorage.getItem('prova_rechnungen_local')||'[]');
-      return arr.filter(function(r){ return self._ok([r.re_nr,r.auftraggeber,r.az]); })
-        .slice(0,3).map(function(r){ return {t:'rechnung',l:r.re_nr||'—',i:'💶',h:'rechnungen.html',s:[r.auftraggeber,r.betrag_brutto?r.betrag_brutto.toFixed(2).replace('.',',')+'€':'',r.Status].filter(Boolean).join(' · ')}; });
-    } catch(e){ return []; }
-  },
+  _atSearchTimer: null,
+  _atSearchQ: '',
 
-  _koLokal: function() {
-    var self = this;
-    try {
-      var arr = JSON.parse(localStorage.getItem('prova_kontakte')||'[]');
-      return arr.filter(function(k){ return self._ok([k.name,k.firma,k.email,k.telefon]); })
-        .slice(0,3).map(function(k){ return {t:'kontakt',l:k.name||k.firma||'—',i:'👤',h:'kontakte.html',s:[k.firma,k.typ,k.email].filter(Boolean).join(' · ')}; });
-    } catch(e){ return []; }
-  },
-
-  _termineLokal: function() {
-    var self = this;
-    try {
-      var t1=[]; try{t1=JSON.parse(localStorage.getItem('prova_termine')||'[]');}catch(e){}
-      var t2=[]; try{t2=JSON.parse(localStorage.getItem('prova_termine_cache')||'[]');}catch(e){}
-      var ids = {}; t1.forEach(function(t){ids[t.id]=1;});
-      var alle = t1.concat(t2.filter(function(t){return !ids[t.id];}));
-      return alle.filter(function(t){ return self._ok([t.titel,t.typ,t.az,t.datum,t.notiz]); })
-        .slice(0,4).map(function(t){ return {t:'termin',l:t.titel||'Termin',i:'📅',h:'termine.html',s:[t.typ,t.datum,t.az].filter(Boolean).join(' · ')}; });
-    } catch(e){ return []; }
-  },
-
-  _recent: function() {
-    try {
-      return JSON.parse(localStorage.getItem('prova_recent_cases')||'[]').slice(0,4)
-        .map(function(c){ return {t:'case',l:c.az||'—',i:'📋',h:'akte.html?az='+encodeURIComponent(c.az||''),s:[c.sa,c.adr].filter(Boolean).join(' · ')}; });
-    } catch(e){ return []; }
-  },
-
-  /* ─── AIRTABLE (async, parallel) ───────────────────────────── */
-  _atSearch: function(q) {
-    var self = this;
-    clearTimeout(this._atTimer);
-    this._atTimer = setTimeout(function() {
-      if (q !== self._q || q.length < 2) return;
-      var svEmail = localStorage.getItem('prova_sv_email') || '';
+  _searchAirtable(q) {
+    // Debounce: 400ms warten, dann suchen
+    clearTimeout(this._atSearchTimer);
+    this._atSearchQ = q;
+    this._atSearchTimer = setTimeout(() => {
+      if (q.length < 2 || q !== this._atSearchQ) return;
+      const svEmail = localStorage.getItem('prova_sv_email') || '';
       if (!svEmail) return;
-      self._setStatus('Suche…');
-      var hdrs = Object.assign({'Content-Type':'application/json'}, window.provaAuthHeaders ? window.provaAuthHeaders() : {});
-
-      function mkFilter(email, words, fields) {
-        var wf = words.map(function(w){ return 'OR('+fields.map(function(f){ return 'FIND("'+w+'",LOWER('+f+'))'; }).join(',')+')'}).join(',');
-        return encodeURIComponent('AND({sv_email}="'+email+'"'+(wf?','+wf:'')+')');
-      }
-
-      // Fälle
-      fetch('/.netlify/functions/airtable',{method:'POST',headers:hdrs,body:JSON.stringify({method:'GET',path:'/v0/'+AT_BS+'/'+AT_FA+'?filterByFormula='+mkFilter(svEmail,self._words,['{Aktenzeichen}','{Auftraggeber_Name}','{Schaden_Strasse}','{Schadensart}','{Ort}','{Status}'])+'&maxRecords=5&fields[]=Aktenzeichen&fields[]=Auftraggeber_Name&fields[]=Schadensart&fields[]=Schaden_Strasse&fields[]=Ort&fields[]=Status'})})
-      .then(function(r){return r.json();}).then(function(d){
-        if (q!==self._q||!d.records) return;
-        self._append(d.records.map(function(r){return {t:'case',l:r.fields.Aktenzeichen||'—',i:'🔍',h:'akte.html?az='+encodeURIComponent(r.fields.Aktenzeichen||''),s:[r.fields.Schadensart,r.fields.Auftraggeber_Name,[r.fields.Schaden_Strasse,r.fields.Ort].filter(Boolean).join(', ')].filter(Boolean).join(' · ')};}), 'Fälle (Airtable)');
-      }).catch(function(){});
-
-      // Rechnungen
-      fetch('/.netlify/functions/airtable',{method:'POST',headers:hdrs,body:JSON.stringify({method:'GET',path:'/v0/'+AT_BS+'/'+AT_RE+'?filterByFormula='+mkFilter(svEmail,self._words,['{Rechnungsnummer}','{Auftraggeber}','{Aktenzeichen}'])+'&maxRecords=4&fields[]=Rechnungsnummer&fields[]=Auftraggeber&fields[]=Betrag_Brutto&fields[]=Status'})})
-      .then(function(r){return r.json();}).then(function(d){
-        if (q!==self._q||!d.records) return;
-        self._append(d.records.map(function(r){return {t:'rechnung',l:r.fields.Rechnungsnummer||'—',i:'💶',h:'rechnungen.html',s:[r.fields.Auftraggeber,r.fields.Betrag_Brutto?Number(r.fields.Betrag_Brutto).toFixed(2).replace('.',',')+'€':'',r.fields.Status].filter(Boolean).join(' · ')};}), 'Rechnungen (Airtable)');
-      }).catch(function(){});
-
-      // Kontakte
-      fetch('/.netlify/functions/airtable',{method:'POST',headers:hdrs,body:JSON.stringify({method:'GET',path:'/v0/'+AT_BS+'/'+AT_KO+'?filterByFormula='+mkFilter(svEmail,self._words,['{Name}','{Firma}','{Email}','{Telefon}'])+'&maxRecords=4&fields[]=Name&fields[]=Firma&fields[]=Typ&fields[]=Email&fields[]=Telefon'})})
-      .then(function(r){return r.json();}).then(function(d){
-        if (q!==self._q||!d.records) return;
-        self._append(d.records.map(function(r){return {t:'kontakt',l:r.fields.Name||r.fields.Firma||'—',i:'👤',h:'kontakte.html',s:[r.fields.Firma,r.fields.Typ&&(r.fields.Typ.name||r.fields.Typ),r.fields.Email].filter(Boolean).join(' · ')};}), 'Kontakte (Airtable)');
-      }).catch(function(){});
-
-      // Termine
-      fetch('/.netlify/functions/airtable',{method:'POST',headers:hdrs,body:JSON.stringify({method:'GET',path:'/v0/'+AT_BS+'/'+AT_TE+'?filterByFormula='+mkFilter(svEmail,self._words,['{termin_titel}','{aktenzeichen}','{notiz}'])+'&maxRecords=3&fields[]=termin_titel&fields[]=termin_typ&fields[]=termin_datum&fields[]=aktenzeichen'})})
-      .then(function(r){return r.json();}).then(function(d){
-        if (q!==self._q||!d.records) return;
-        self._append(d.records.map(function(r){return {t:'termin',l:r.fields.termin_titel||'Termin',i:'📅',h:'termine.html',s:[r.fields.termin_typ,r.fields.termin_datum,r.fields.aktenzeichen].filter(Boolean).join(' · ')};}), 'Termine (Airtable)');
-      }).catch(function(){});
-
-      setTimeout(function(){ if (q===self._q) self._setStatus(''); }, 2500);
-    }, 350);
+      const formula = encodeURIComponent(
+        `AND(OR(FIND("${q}",LOWER({Aktenzeichen})),FIND("${q}",LOWER({Auftraggeber})),FIND("${q}",LOWER({Schaden_Strasse}))),{sv_email}="${svEmail}")`
+      );
+      fetch('/.netlify/functions/airtable', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          method: 'GET',
+          path: `/v0/appJ7bLlAHZoxENWE/tblSxV8bsXwd1pwa0?filterByFormula=${formula}&maxRecords=5&fields[]=Aktenzeichen&fields[]=Auftraggeber&fields[]=Adresse&fields[]=Schadenart`
+        })
+      }).then(r => r.json()).then(data => {
+        if (!data.records || !data.records.length) return;
+        // Nur anzeigen wenn Suche noch aktiv
+        if (q !== this._q) return;
+        const atResults = data.records.map(r => ({
+          type: 'case', label: r.fields.Aktenzeichen || '—', icon: '🔍',
+          href: 'akte.html?az=' + encodeURIComponent(r.fields.Aktenzeichen || ''),
+          sub: [r.fields.Auftraggeber, r.fields.Schadensart].filter(Boolean).join(' · ') + ' (Airtable)'
+        }));
+        // Ergebnisse ergänzen (doppelte entfernen)
+        const existing = document.querySelectorAll('.ps-item[data-href]');
+        const existingHrefs = [...existing].map(e => e.dataset.href);
+        const neu = atResults.filter(r => !existingHrefs.includes(r.href));
+        if (!neu.length) return;
+        const container = document.getElementById('prova-search-results');
+        if (!container) return;
+        // Trennlinie + neue Ergebnisse
+        const div = document.createElement('div');
+        div.className = 'ps-group';
+        div.textContent = 'Aus Airtable';
+        container.appendChild(div);
+        neu.forEach(r => {
+          const item = document.createElement('div');
+          item.className = 'ps-item';
+          item.dataset.href = r.href;
+          item.tabIndex = -1;
+          item.innerHTML = `<div class="ps-icon">${r.icon}</div><div style="flex:1;min-width:0"><div class="ps-label">${r.label}</div>${r.sub ? `<div class="ps-sub">${r.sub}</div>` : ''}</div><span class="ps-type">Fall</span>`;
+          item.addEventListener('click', () => { window.location.href = r.href; });
+          container.appendChild(item);
+        });
+      }).catch(() => {});
+    }, 400);
   },
 
-  /* ─── RENDER ────────────────────────────────────────────────── */
-  _render: function(items) {
+  _activeIdx: -1,
+
+  _render(items) {
     this._activeIdx = -1;
-    var self = this;
-    var container = document.getElementById('ps-results');
-    container.innerHTML = items.map(function(item) {
-      if (item.t === 'empty') return '<div class="ps-empty">'+item.l+'</div>';
-      if (item.g) return '<div class="ps-group">'+item.g+'</div>';
-      return '<div class="ps-item" data-href="'+(item.h||'')+'" tabindex="-1">' +
-        '<div class="ps-ico">'+item.i+'</div>' +
-        '<div style="flex:1;min-width:0">' +
-          '<div class="ps-lbl">'+self._hl(item.l)+'</div>' +
-          (item.s ? '<div class="ps-sub">'+item.s+'</div>' : '') +
-        '</div>' +
-        '<span class="ps-tag">'+self._tag(item.t)+'</span>' +
-      '</div>';
+    this._results.innerHTML = items.map((item, i) => {
+      if (item.group) return '<div class="ps-group">' + item.group + '</div>';
+      return '<div class="ps-item" data-href="' + (item.href||'') + '" tabindex="-1">'
+        + '<div class="ps-icon">' + item.icon + '</div>'
+        + '<div style="flex:1;min-width:0">'
+        + '<div class="ps-label">' + this._hl(item.label) + '</div>'
+        + (item.sub ? '<div class="ps-sub">' + item.sub + '</div>' : '')
+        + '</div>'
+        + '<span class="ps-type">' + (item.type === 'case' ? 'Fall' : item.type === 'norm' ? 'Norm' : 'Seite') + '</span>'
+        + '</div>';
     }).join('');
-    container.querySelectorAll('.ps-item').forEach(function(el) {
-      el.addEventListener('click', function(){ window.location.href = el.dataset.href; self.close(); });
+
+    this._results.querySelectorAll('.ps-item').forEach(el => {
+      el.onclick = () => { window.location.href = el.dataset.href; this.close(); };
     });
   },
 
-  _append: function(items, group) {
-    if (!items.length) return;
-    var self = this;
-    var container = document.getElementById('ps-results');
-    if (!container) return;
-    var existing = new Set(Array.from(container.querySelectorAll('.ps-item[data-href]')).map(function(e){ return e.dataset.href; }));
-    var neu = items.filter(function(r){ return !existing.has(r.h); });
-    if (!neu.length) return;
-    var empty = container.querySelector('.ps-empty');
-    if (empty) empty.remove();
-    var g = document.createElement('div');
-    g.className = 'ps-group'; g.textContent = group;
-    container.appendChild(g);
-    neu.forEach(function(r) {
-      var el = document.createElement('div');
-      el.className = 'ps-item'; el.dataset.href = r.h; el.tabIndex = -1;
-      el.innerHTML = '<div class="ps-ico">'+r.i+'</div><div style="flex:1;min-width:0"><div class="ps-lbl">'+self._hl(r.l)+'</div>'+(r.s?'<div class="ps-sub">'+r.s+'</div>':'')+' </div><span class="ps-tag">'+self._tag(r.t)+'</span>';
-      el.addEventListener('click', function(){ window.location.href = r.h; self.close(); });
-      container.appendChild(el);
-    });
+  _hl(text) {
+    if (!this._q) return text;
+    const idx = text.toLowerCase().indexOf(this._q);
+    if (idx < 0) return text;
+    return text.slice(0, idx)
+      + '<mark style="background:rgba(79,142,247,.3);color:inherit;border-radius:2px">' + text.slice(idx, idx + this._q.length) + '</mark>'
+      + text.slice(idx + this._q.length);
   },
 
-  _setStatus: function(text) { var el=document.getElementById('ps-status'); if(el) el.textContent=text; },
-
-  _arrow: function(e) {
-    var items = Array.from(document.getElementById('ps-results').querySelectorAll('.ps-item'));
+  _handleArrow(e) {
+    const items = [...this._results.querySelectorAll('.ps-item')];
     if (!items.length) return;
-    if (e.key==='ArrowDown'){ e.preventDefault(); this._activeIdx=Math.min(this._activeIdx+1,items.length-1); }
-    if (e.key==='ArrowUp')  { e.preventDefault(); this._activeIdx=Math.max(this._activeIdx-1,0); }
-    if (e.key==='Enter' && this._activeIdx>=0) { items[this._activeIdx].click(); return; }
-    items.forEach(function(el,i){ el.classList.toggle('active', i===self._activeIdx); });
-    var self = this;
-    items.forEach(function(el,i){ el.classList.toggle('active', i===self._activeIdx); });
-    if (this._activeIdx>=0) items[this._activeIdx].scrollIntoView({block:'nearest'});
+    if (e.key === 'ArrowDown') { e.preventDefault(); this._activeIdx = Math.min(this._activeIdx + 1, items.length - 1); }
+    if (e.key === 'ArrowUp')   { e.preventDefault(); this._activeIdx = Math.max(this._activeIdx - 1, 0); }
+    if (e.key === 'Enter' && this._activeIdx >= 0) { items[this._activeIdx].click(); return; }
+    items.forEach((el, i) => el.classList.toggle('active', i === this._activeIdx));
+    if (this._activeIdx >= 0) items[this._activeIdx].scrollIntoView({ block: 'nearest' });
   }
 };
 
-if (document.readyState==='loading') {
-  document.addEventListener('DOMContentLoaded', function(){ PROVASearch.init(); });
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => PROVASearch.init());
 } else {
   PROVASearch.init();
 }
