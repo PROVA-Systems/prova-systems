@@ -76,8 +76,8 @@ function berechneFristWarnung(){
    G1-Webhook: imn2n5xs7j251xicrmdmk17of042pt2t
    Airtable Base: appJ7bLlAHZoxENWE / tblSxV8bsXwd1pwa0
 ============================================================ */
-const WEBHOOK_G1 = 'https://hook.eu1.make.com/imn2n5xs7j251xicrmdmk17of042pt2t';
-const WEBHOOK_K1 = 'https://hook.eu1.make.com/bslfuqmlud1vo8qems5ccn5z5f2eq4dl';
+const WEBHOOK_G1 = '/.netlify/functions/make-proxy?key=g1';
+const WEBHOOK_K1 = '/.netlify/functions/make-proxy?key=k1';
 const AIRTABLE_BASE = 'appJ7bLlAHZoxENWE';
 const AIRTABLE_TABLE = 'tblSxV8bsXwd1pwa0';
 const AIRTABLE_SV_TABLE = 'tbladqEQT3tmx4DIB';
@@ -1304,7 +1304,7 @@ window.sendeWebhookMitOfflineFallback = async function() {
   if (typeof sammleDaten === 'function') {
     const daten = sammleDaten();
     await queueHinzufügen(
-      'https://hook.eu1.make.com/imn2n5xs7j251xicrmdmk17of042pt2t',
+      '/.netlify/functions/make-proxy?key=g1',
       daten
     );
   }
@@ -1766,10 +1766,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
 /* ══════════════════════════════════════════════════════════
    OPTION 4: WEB SPEECH (live) + WHISPER-KORREKTUR
-   S11 Webhook: https://hook.eu1.make.com/h019rspppkvc4m146sv1opxs74h9dp3x
+   S11 Webhook: via make-proxy (ENV: MAKE_WEBHOOK_WHISPER)
    ══════════════════════════════════════════════════════════ */
 
-var WHISPER_WEBHOOK = 'https://hook.eu1.make.com/h019rspppkvc4m146sv1opxs74h9dp3x';
+var WHISPER_WEBHOOK = '/.netlify/functions/make-proxy?key=wh';
 var mediaRecorder = null;
 var audioChunks = [];
 var whisperLaeuft = false;

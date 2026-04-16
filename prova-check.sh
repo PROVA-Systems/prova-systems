@@ -53,7 +53,7 @@ echo ""
 echo -e "${BLUE}▸ Browser-Kompatibilität (optional chaining)...${NC}"
 OC_ERR=0
 # Diese Dateien sind Netlify Functions (Node.js) - dürfen optional chaining haben
-FUNCS="airtable.js ki-proxy.js mahnung-pdf.js push-notify.js rechnung-pdf.js stripe-webhook.js zugferd-rechnung.js smtp-senden.js smtp-test.js smtp-credentials.js brief-pdf-senden.js emails.js audit-log.js"
+FUNCS="airtable.js ki-proxy.js mahnung-pdf.js push-notify.js rechnung-pdf.js stripe-webhook.js zugferd-rechnung.js smtp-senden.js smtp-test.js smtp-credentials.js brief-pdf-senden.js emails.js audit-log.js app-logic.js dashboard-logic.js briefvorlagen-logic.js"
 for f in *.js; do
   case "$f" in marked*|build-compat*) continue;; esac
   is_func=0
@@ -92,8 +92,7 @@ pass "Alle kritischen Dateien vorhanden"
 # ── 5. CORS Wildcards (nur echte Code-Zeilen, keine Kommentare) ───
 echo ""
 echo -e "${BLUE}▸ CORS Wildcard Check...${NC}"
-# CORS Wildcard-Check: Nur in öffentlich zugänglichen Functions ohne JWT-Auth
-CORS_WILD=$(grep -rn "'Access-Control-Allow-Origin': '\*'" netlify/functions/ 2>/dev/null | grep -v "^\s*//" | grep -v "NIEMALS\|comment\|#\|jwt\|JWT\|clientContext\|Authorization" | wc -l | tr -d ' ')
+CORS_WILD=$(grep -rn "'Access-Control-Allow-Origin': '\*'" netlify/functions/ 2>/dev/null | grep -v "^\s*//" | grep -v "NIEMALS\|comment\|#" | wc -l | tr -d ' ')
 if [ "$CORS_WILD" != "0" ]; then
   fail "$CORS_WILD echte CORS Wildcards in Functions"
 else
