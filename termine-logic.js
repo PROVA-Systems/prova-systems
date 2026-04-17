@@ -21,7 +21,7 @@ if(!localStorage.getItem('prova_user')){window.location.href='app-login.html';re
 var svEmail=localStorage.getItem('prova_sv_email')||'';
 var alleTermine=[];
 var kalDatum=new Date();
-var WEBHOOK_S8='https://hook.eu1.make.com/lktuhugwcg5v37ib6bdaxjb1uiplnu8v';
+var WEBHOOK_S8='/.netlify/functions/make-proxy?key=sup';
 var AT_BASE='appJ7bLlAHZoxENWE';
 var AT_TERMINE='tblyMTTdtfGQjjmc2';
 
@@ -380,8 +380,7 @@ window.exportiereIcal = window.exportIcal = function() {
       var uid = (t.id || Math.random().toString(36)) + '@prova-systems.de';
       var summary = (f.titel || f.termin_typ || 'Termin') + (f.aktenzeichen ? ' — ' + f.aktenzeichen : '');
       var location = f.objekt_adresse || '';
-      var desc = (f.notizen || '').replace(/
-/g,'\n');
+      var desc = (f.notizen || '').replace(/\n/g, '\\n');
 
       lines.push('BEGIN:VEVENT');
       lines.push('UID:' + uid);
@@ -396,8 +395,7 @@ window.exportiereIcal = window.exportIcal = function() {
 
     lines.push('END:VCALENDAR');
 
-    var ics = lines.join('
-');
+    var ics = lines.join('\r\n');
     var blob = new Blob([ics], {type: 'text/calendar;charset=utf-8;'});
     var url = URL.createObjectURL(blob);
     var a = document.createElement('a');

@@ -81,7 +81,7 @@ function getTableIdFromPath(path) {
 }
 
 // ── User-Filter in Formula einfügen ──
-function injectUserFilter(path, userEmail, userField) {
+function injectUserEmailFilter(path, userEmail, userField) {
   if (!userEmail || !userField) return path;
   
   const userFilter = `{${userField}}="${userEmail.replace(/"/g, '')}"`;
@@ -234,7 +234,7 @@ exports.handler = async function(event) {
   // ── User-Filter für GET-Anfragen (Datentrennung!) ──
   let finalPath = path;
   if (method.toUpperCase() === 'GET' && tableConfig && tableConfig.userField && !adminUser) {
-    finalPath = injectUserFilter(path, userEmail, tableConfig.userField);
+    finalPath = injectUserEmailFilter(path, userEmail, tableConfig.userField);
   }
 
   // ── Payload-Größenlimit ──

@@ -15,8 +15,8 @@ if (!window.showToast && window.zeigToast) window.showToast = window.zeigToast;
 if(!localStorage.getItem('prova_user')) location.href='app-login.html';
 
 const AT_BASE='appJ7bLlAHZoxENWE', AT_TABLE='tblSxV8bsXwd1pwa0';
-const WH_S3='https://hook.eu1.make.com/44kqx7eo142aw7warqao4c4wqo1nw158';
-const WH_S1='https://hook.eu1.make.com/imn2n5xs7j251xicrmdmk17of042pt2t';
+const WH_S3='/.netlify/functions/make-proxy?key=g3';
+const WH_S1='/.netlify/functions/make-proxy?key=g1';
 
 let recId=null, recFields=null, svProfil=null, editMode=false;
 
@@ -66,7 +66,7 @@ async function ladeGutachten(){
     const res=await fetch('/.netlify/functions/airtable',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({method:'GET',path:url})});
     if(!res.ok) throw new Error('HTTP '+res.status);
     const data=await res.json();
-    let rec=rid&&!fall ? data : data.records?.[0];
+    let rec=rid&&!fall ? data : (data.records && data.records[0]);
     if(!rec) throw new Error('Kein Gutachten gefunden.');
     recId=rec.id; recFields=rec.fields||{};
     await ladeSVProfil();
@@ -140,7 +140,7 @@ async function ladeSVProfil(){
     const res=await fetch('/.netlify/functions/airtable',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({method:'GET',path:url})});
     if(!res.ok) return;
     const d=await res.json();
-    if(d?.records?.length){ svProfil=d.records[0].fields; svProfil.email=email; }
+    if(d && d.records && d.records.length){ svProfil=d.records[0].fields; svProfil.email=email; }
   } catch(e){}
 }
 
@@ -1030,8 +1030,7 @@ function generierePhotodoku(){
     var fotos = [];
     if (f.Foto_Captions) {
       try { fotos = JSON.parse(f.Foto_Captions); } catch(e) {
-        fotos = f.Foto_Captions.split('
-').filter(Boolean).map(function(t,i){ return {nr: i+1, caption: t}; });
+        fotos = f.Foto_Captions.split('\n').filter(Boolean).map(function(t,i){ return {nr: i+1, caption: t}; });
       }
     }
 

@@ -11,7 +11,7 @@ if (!window.showToast && window.zeigToast) window.showToast = window.zeigToast;
 (function(){
 'use strict';
 
-var WEBHOOK_S6='https://hook.eu1.make.com/b2tsqcvjgxhk9lrv3yyo9qht46k16kcq';
+var WEBHOOK_S6='/.netlify/functions/make-proxy?key=s6';
 var AT_BASE='appJ7bLlAHZoxENWE';
 var AT_RECHNUNGEN='tblF6MS7uiFAJDjiT';
 var AT_FAELLE='tblSxV8bsXwd1pwa0';
@@ -519,7 +519,7 @@ async function supSendModal(){
   var btn=document.getElementById('sup-btn');
   btn.disabled=true;btn.textContent='⏳ Wird gesendet…';
   try{
-    await fetch('https://hook.eu1.make.com/lktuhugwcg5v37ib6bdaxjb1uiplnu8v',{
+    await fetch('/.netlify/functions/make-proxy?key=sup',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
@@ -540,11 +540,11 @@ async function supSendModal(){
 }
 /* ══════════════════════════════════════════════════════════════
    F1 — RECHNUNGS-PDF GENERIERUNG
-   Webhook: https://hook.eu1.make.com/lo0es88zq7rxmnx3jiwoonrv2chn47zy
+   Webhook: https:///.netlify/functions/make-proxy?key=s6
    Szenario: PROVA F1 (ID: 5192002)
 ══════════════════════════════════════════════════════════════ */
 
-var WEBHOOK_F1 = 'https://hook.eu1.make.com/lo0es88zq7rxmnx3jiwoonrv2chn47zy';
+var WEBHOOK_F1 = '/.netlify/functions/make-proxy?key=f1';
 
 window.rechnungPDFGenerieren = async function(rechnungId) {
   if (!rechnungId) { if(typeof zeigToast==='function') zeigToast('Keine Rechnungs-ID', 'error'); return; }
@@ -713,8 +713,7 @@ window.exportDatevCSV = async function() {
     });
 
     // BOM für Excel-Kompatibilität
-    var csv = '﻿' + rows.join('
-');
+    var csv = '\uFEFF' + rows.join('\r\n');
     var blob = new Blob([csv], {type: 'text/csv;charset=utf-8;'});
     var url = URL.createObjectURL(blob);
     var a = document.createElement('a');
