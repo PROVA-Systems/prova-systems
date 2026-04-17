@@ -258,10 +258,10 @@ window.addMangel = function(projId) {
 };
 
 window.saveMangel = function(projId) {
-  var text = document.getElementById('mf-text-' + projId)?.value.trim();
+  var text = (function(){var _e=document.getElementById('mf-text-' + projId);return _e?_e.value:undefined;})() .trim();
   if (!text) return;
-  var gewerk = document.getElementById('mf-gewerk-' + projId)?.value || '';
-  var prio = document.getElementById('mf-prio-' + projId)?.value || 'normal';
+  var gewerk = (function(){var _e=document.getElementById('mf-gewerk-' + projId);return _e?_e.value:undefined;})()  || '';
+  var prio = (function(){var _e=document.getElementById('mf-prio-' + projId);return _e?_e.value:undefined;})()  || 'normal';
 
   var proj = _data.projekte.find(function(p){return p.id===projId;});
   if (!proj) return;
@@ -699,7 +699,7 @@ window.kiBegehungAssist = async function() {
       })
     });
     var data = await res.json();
-    var vorschlag = data.choices?.[0]?.message?.content || data.content?.[0]?.text || '';
+    var vorschlag = data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content || data.content && data.content[0] && data.content[0].text || '';
     if (vorschlag && befund) {
       befund.value = vorschlag;
       if(typeof showToast==='function') showToast('✅ KI-Formulierung übernommen');

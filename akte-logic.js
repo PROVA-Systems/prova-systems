@@ -206,7 +206,7 @@ var _erkFrist = null;
 async function handleDokUpload(files) {
   if (!files || !files.length) return;
   var statusEl = document.getElementById('dok-upload-status');
-  var az = document.getElementById('akte-az')?.textContent || localStorage.getItem('prova_letztes_az') || '';
+  var az = (function(){var _e=document.getElementById('akte-az');return _e?_e.textContent:undefined;})()  || localStorage.getItem('prova_letztes_az') || '';
   var uploads = JSON.parse(localStorage.getItem('prova_akte_docs_' + az) || '[]');
 
   for (var i = 0; i < files.length; i++) {
@@ -322,7 +322,7 @@ async function handleDokUpload(files) {
 function uebernimmFrist() {
   if (!_erkFrist) return;
   // In localStorage speichern (Fristenverwaltung liest das)
-  var az = document.getElementById('akte-az')?.textContent || '';
+  var az = (function(){var _e=document.getElementById('akte-az');return _e?_e.textContent:undefined;})()  || '';
   var cache = JSON.parse(localStorage.getItem('prova_faelle_cache') || '{}');
   if (cache[az]) {
     cache[az].fristdatum = _erkFrist;
@@ -868,7 +868,7 @@ window.exportWordAkte = async function() {
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({
         az, sv_email: svEmail, sv_name: svName,
-        fall:    fallData.records?.[0]?.fields || {},
+        fall:    fallData.records && fallData.records[0] && fallData.records[0].fields || {},
         briefe:  briefeData.records || []
       })
     });

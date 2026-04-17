@@ -792,8 +792,8 @@ const KILernpool = (() => {
 
   // ── Benutzer-Aktionen ─────────────────────────────────────────────
   function _korrekturEingabe() {
-    const original  = document.getElementById('kl-input-original')?.value.trim();
-    const korrektur = document.getElementById('kl-input-korrektur')?.value.trim();
+    const original  = (function(){var _e=document.getElementById('kl-input-original');return _e?_e.value:undefined;})() .trim();
+    const korrektur = (function(){var _e=document.getElementById('kl-input-korrektur');return _e?_e.value:undefined;})() .trim();
     if (!original || !korrektur) { alert('Bitte beide Felder ausfüllen.'); return; }
 
     korrekturSpeichern(original, korrektur);
@@ -818,13 +818,13 @@ const KILernpool = (() => {
     if (!form) return;
     form.classList.toggle('sichtbar');
     if (form.classList.contains('sichtbar')) {
-      document.getElementById('kl-add-wort')?.focus();
+      (function(){var _e=document.getElementById('kl-add-wort');return _e?_e.focus:undefined;})() ();
     }
   }
 
   function _addVokabel() {
-    const wort      = document.getElementById('kl-add-wort')?.value.trim();
-    const kategorie = document.getElementById('kl-add-kategorie')?.value;
+    const wort      = (function(){var _e=document.getElementById('kl-add-wort');return _e?_e.value:undefined;})() .trim();
+    const kategorie = (function(){var _e=document.getElementById('kl-add-kategorie');return _e?_e.value:undefined;})() ;
     if (!wort) { alert('Bitte einen Begriff eingeben.'); return; }
 
     const ok = vokabularHinzufuegen(wort, kategorie, true);
