@@ -58,13 +58,20 @@ window.maxKontingent = maxKontingent;
 
 /* ══════════════════════════════════════════════════
    AIRTABLE FETCH via Netlify Proxy
+   
+   Session 3 Fix: Sort optional (war vorher hart auf
+   'Timestamp' gesetzt → 422-Errors auf TERMINE und
+   RECHNUNGEN, weil die kein Timestamp-Feld haben).
 ══════════════════════════════════════════════════ */
-async function atFetch(table, formula, maxRecords){
+async function atFetch(table, formula, maxRecords, sortField){
   try{
     var path='/v0/'+AT_BASE+'/'+table
       +'?filterByFormula='+encodeURIComponent(formula)
-      +'&maxRecords='+(maxRecords||50)
-      +'&sort[0][field]=Timestamp&sort[0][direction]=desc';
+      +'&maxRecords='+(maxRecords||50);
+    // Sort nur wenn explizit angegeben — verhindert 422
+    if(sortField){
+      path += '&sort[0][field]='+encodeURIComponent(sortField)+'&sort[0][direction]=desc';
+    }
     var res=await fetch('/.netlify/functions/airtable',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
@@ -675,10 +682,9 @@ window.calNav=function(dir){
 ══════════════════════════════════════════════════ */
 zeigSkeleton();
 
-// Auth check
-if(!localStorage.getItem('prova_user')){
-  // Kein Redirect — Zentrale zeigt Onboarding auch ohne Login
-}
+// Auth-Check passiert zentral in auth-guard.js (Session 3 Fix #1+#2).
+// Kein Inline-Guard mehr nötig — auth-guard.js redirected automatisch
+// wenn die Seite nicht in der PUBLIC_PAGES-Liste steht.
 
 var svEmail=localStorage.getItem('prova_sv_email')||'';
 
@@ -793,7 +799,7 @@ window.sendSupport=async function(){
   if(!b||!n){document.getElementById('support-err').style.display='block';return;}
   document.getElementById('support-err').style.display='none';
   var btn=document.getElementById('sup-btn');btn.disabled=true;btn.textContent='⏳ Wird gesendet...';
-  try{await fetch('/.netlify/functions/make-proxy?key=sup',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({betreff:b,nachricht:n,sv_email:svEmail,paket:paket,seite:'dashboard.html',ts:new Date().toISOString()})});}catch(e){}
+  try{await fetch('https://hook.eu1.make.com/lktuhugwcg5v37ib6bdaxjb1uiplnu8v',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({betreff:b,nachricht:n,sv_email:svEmail,paket:paket,seite:'dashboard.html',ts:new Date().toISOString()})});}catch(e){}
   document.getElementById('support-form-body').style.display='none';
   document.getElementById('support-ok').style.display='block';
 };

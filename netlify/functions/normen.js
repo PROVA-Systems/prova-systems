@@ -32,8 +32,10 @@ const CORS = {
 
 async function fetchPage(pat, offset) {
   // Aktiv ist ein Checkbox-Feld → TRUE() für aktive Datensätze
+  // returnFieldsByFieldId=true: Airtable liefert Feld-IDs als Keys im Response
+  //   (sonst Feldnamen — dann schlägt FIELD_MAP-Lookup fehl und alle Felder sind leer)
   const filter = encodeURIComponent('{Aktiv}=TRUE()');
-  const url = `https://api.airtable.com/v0/${AIRTABLE_BASE}/${AIRTABLE_TABLE}?${FIELDS}&filterByFormula=${filter}&pageSize=100${offset ? '&offset=' + encodeURIComponent(offset) : ''}`;
+  const url = `https://api.airtable.com/v0/${AIRTABLE_BASE}/${AIRTABLE_TABLE}?${FIELDS}&filterByFormula=${filter}&pageSize=100&returnFieldsByFieldId=true${offset ? '&offset=' + encodeURIComponent(offset) : ''}`;
   const res = await fetch(url, {
     headers: { Authorization: `Bearer ${pat}` }
   });

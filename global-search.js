@@ -473,7 +473,11 @@ const PROVASearch = {
         const normen = scored;
         if (normen.length) {
           results.push({ group: 'Normen & Vorschriften' });
-          normen.forEach(n => results.push({ type: 'norm', label: n.num, icon: '📐', href: 'normen.html', sub: n.titel }));
+          normen.forEach(n => results.push({
+            type: 'norm', label: n.num, icon: '📐',
+            href: 'normen.html?q=' + encodeURIComponent(n.num || ''),
+            sub: n.titel
+          }));
         }
       }
 
@@ -777,13 +781,27 @@ const PROVASearch = {
         + '<div class="ps-label">' + this._hl(item.label) + '</div>'
         + (item.sub ? '<div class="ps-sub">' + item.sub + '</div>' : '')
         + '</div>'
-        + '<span class="ps-type">' + (item.type === 'case' ? 'Fall' : item.type === 'norm' ? 'Norm' : 'Seite') + '</span>'
+        + '<span class="ps-type">' + this._typeLabel(item.type) + '</span>'
         + '</div>';
     }).join('');
 
     this._results.querySelectorAll('.ps-item').forEach(el => {
       el.onclick = () => { window.location.href = el.dataset.href; this.close(); };
     });
+  },
+
+  _typeLabel(type) {
+    // Label-Mapping für die Badge rechts am Suchergebnis.
+    // Deckt alle Typen ab, die _search + Lokal-Quellen + Airtable-Quellen vergeben.
+    const map = {
+      'case':     'Fall',
+      'norm':     'Norm',
+      'baustein': 'Textbaustein',
+      'position': 'Position',
+      'action':   'Aktion',
+      'page':     'Seite',
+    };
+    return map[type] || 'Seite';
   },
 
   _hl(text) {

@@ -168,15 +168,36 @@
     if (overlayEl) { overlayEl.style.opacity = '0'; setTimeout(function() { overlayEl.remove(); }, 300); }
     if (highlightEl) highlightEl.remove();
     if (tooltipEl) tooltipEl.remove();
+    overlayEl = highlightEl = tooltipEl = null;
   }
+
+  /* Session 3 Fix: Defensive Cleanup-API — falls Overlay
+     irgendwie verwaist (z.B. doppeltes Init, Hot-Reload), kann
+     externes Skript / DevTools-Konsole es entfernen */
+  window.provaTourCleanup = function() {
+    document.querySelectorAll('.tour-overlay,.tour-highlight,.tour-tooltip').forEach(function(el){
+      el.remove();
+    });
+    overlayEl = highlightEl = tooltipEl = null;
+    localStorage.setItem('prova_tour_done', '1');
+  };
 
   // ESC beendet Tour
   document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape' && overlayEl) endTour();
   });
 
+  // Klick auf Overlay (außerhalb Tooltip) beendet Tour — verhindert Hänger
+  document.addEventListener('click', function(e) {
+    if (!overlayEl) return;
+    // Nur reagieren wenn Klick exakt auf Overlay (nicht auf Tooltip-Inhalte)
+    if (e.target === overlayEl) endTour();
+  });
+
   // Tour starten nach kurzer Verzögerung (DOM muss bereit sein + nav.js geladen)
   function init() {
+    // Doppel-Check: Wenn Flag mittlerweile gesetzt wurde (z.B. durch Cleanup), abbrechen
+    if (localStorage.getItem('prova_tour_done') === '1') return;
     // Nur auf Dashboard starten
     var page = window.location.pathname.split('/').pop() || 'dashboard.html';
     if (page !== 'dashboard.html') return;

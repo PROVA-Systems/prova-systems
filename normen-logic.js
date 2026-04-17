@@ -587,7 +587,20 @@ function showToastMitCTA(msg, ctaLabel, ctaHref) {
 
 // Init
 document.addEventListener('DOMContentLoaded', function() {
-  ladeNormenVonAirtable();
+  ladeNormenVonAirtable().then(function() {
+    // URL-Parameter ?q=DIN%204108 aus Global-Search auswerten
+    try {
+      var urlParams = new URLSearchParams(window.location.search);
+      var initialQuery = urlParams.get('q');
+      if (initialQuery) {
+        var searchInput = document.getElementById('searchInput');
+        if (searchInput) {
+          searchInput.value = initialQuery;
+          if (typeof renderNormen === 'function') renderNormen();
+        }
+      }
+    } catch(e) {}
+  });
 });
 
 // Schadenart aus sessionStorage vorauswählen (wenn von app-starter etc. geöffnet)

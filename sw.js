@@ -1,113 +1,206 @@
-/* PROVA — Service Worker v92 (App-Shell Caching + Offline-First) */
-const CACHE_NAME = 'prova-v124';
+/* ============================================================
+   PROVA Systems — Service Worker v59
+   Strategie: Network-First für HTML (kein Zwischenbild mehr!)
+              Cache-First für Assets (Fonts, JS, CSS)
+              Network-Only für APIs
+============================================================ */
 
-/* App-Shell: alle statischen Kern-Dateien */
+const CACHE_VERSION = 'prova-v141';
+const SYNC_TAG = 'prova-sync-queue';
+
 const APP_SHELL = [
-  '/', '/dashboard.html', '/archiv.html', '/termine.html',
-  '/app-login.html', '/app.html', '/app-starter.html',
-  '/vor-ort.html', '/ortstermin-modus.html',
-  '/normen.html', '/textbausteine.html', '/positionen.html',
-  '/rechnungen.html', '/jveg.html', '/einstellungen.html',
-  '/hilfe.html', '/briefvorlagen.html', '/freigabe.html',
-  '/stellungnahme.html', '/kontakte.html', '/statistiken.html',
-  '/nav.js', '/theme.js', '/prova-design.css', '/mobile.css',
-  '/prova-airtable-api.js',
-  '/prova-api.js',
-  '/prova-layout.config.js', '/prova-auth-api.js',
-  '/prova-sv-airtable.js', '/prova-account-gate.js',
-  '/frist-guard.js', '/support-chat.js', '/sw-register.js',
-  '/manifest.json', '/offline.html'
+  '/',
+  '/app-login.html',
+  '/app-register.html',
+  '/onboarding.html',
+  '/onboarding-schnellstart.html',
+  '/dashboard.html',
+  '/archiv.html',
+  '/akte.html',
+  '/app.html',
+  '/freigabe.html',
+  '/stellungnahme.html',
+  '/briefvorlagen.html',
+  '/rechnungen.html',
+  '/termine.html',
+  '/jveg.html',
+  '/einstellungen.html',
+  '/kontakte.html',
+  '/kostenermittlung.html',
+  '/textbausteine.html',
+  '/normen.html',
+  '/positionen.html',
+  '/baubegleitung.html',
+  '/nav.js',
+  '/theme.js',
+  '/trial-guard.js',
+  '/prova-preise.js',
+  '/paket-guard.js',
+  '/ortstermin-modus.html',
+  '/frist-guard.js',
+  '/honorar-tracker.js',
+  '/ki-lernpool.js',
+  '/rechtspruefung.js',
 ];
 
-/* Install: App-Shell sofort cachen */
-self.addEventListener('install', function(e) {
-  e.waitUntil(
-    caches.open(CACHE_NAME).then(function(cache) {
-      return cache.addAll(APP_SHELL.map(function(url) {
-        return new Request(url, { cache: 'reload' });
-      })).catch(function(err) {
-        console.warn('PROVA SW: Teilweise Cache-Fehler (normal bei erstem Install)', err);
-      });
-    }).then(function() {
-      return self.skipWaiting();
-    })
-  );
-});
-
-/* Activate: alten Cache löschen */
-self.addEventListener('activate', function(e) {
-  e.waitUntil(
-    caches.keys().then(function(keys) {
-      return Promise.all(
-        keys.map(function(k) {
-          if (k !== CACHE_NAME) {
-            console.log('PROVA SW: Alter Cache gelöscht:', k);
-            return caches.delete(k);
-          }
-        })
+self.addEventListener('install', event => {
+  event.waitUntil(
+    caches.open(CACHE_VERSION).then(cache => {
+      return Promise.allSettled(
+        APP_SHELL.map(url => cache.add(url).catch(() => {
+          console.warn('[SW] Konnte nicht cachen:', url);
+        }))
       );
-    }).then(function() {
-      return self.clients.claim();
-    })
+    }).then(() => self.skipWaiting())
   );
 });
 
-/* Fetch: Stale-While-Revalidate für App-Shell, Network-First für APIs */
-self.addEventListener('fetch', function(e) {
-  const url = e.request.url;
+self.addEventListener('activate', event => {
+  event.waitUntil(
+    caches.keys().then(keys =>
+      Promise.all(
+        keys.filter(k => k !== CACHE_VERSION).map(k => caches.delete(k))
+      )
+    ).then(() => self.clients.claim())
+    // Kein auto-reload: Seite bleibt stabil, neuer SW wird beim nächsten Besuch aktiv
+  );
+});
 
-  /* Netlify Functions + externe APIs: IMMER Network, kein Cache */
-  if (url.indexOf('/.netlify/') !== -1 ||
-      url.indexOf('api.airtable.com') !== -1 ||
-      url.indexOf('api.openai.com') !== -1 ||
-      url.indexOf('hook.eu1.make.com') !== -1 ||
-      url.indexOf('api.stripe.com') !== -1) {
-    return; /* Browser übernimmt — kein SW-Eingriff */
+self.addEventListener('fetch', event => {
+  const url = new URL(event.request.url);
+
+  if (
+    url.pathname.startsWith('/.netlify/') ||
+    url.pathname.startsWith('/cdn-cgi/') ||
+    url.hostname.includes('make.com') ||
+    url.hostname.includes('airtable.com') ||
+    url.hostname.includes('openai.com') ||
+    url.hostname.includes('pdfmonkey.io') ||
+    url.hostname.includes('stripe.com') ||
+    event.request.method !== 'GET'
+  ) {
+    return;
   }
 
-  /* Nur GET-Requests cachen */
-  if (e.request.method !== 'GET') return;
+  // Google Fonts → KEIN Cache (CSP erlaubt kein fetch aus SW)
+  // Browser lädt Fonts direkt über <link>-Tag — SW darf nicht eingreifen
+  if (url.hostname.includes('fonts.googleapis.com') || url.hostname.includes('fonts.gstatic.com')) {
+    return; // SW ignoriert diese Requests — Browser handelt sie nativ
+  }
 
-  /* App-Shell: Cache-First mit Netzwerk-Fallback */
-  e.respondWith(
-    caches.open(CACHE_NAME).then(function(cache) {
-      return cache.match(e.request).then(function(cached) {
-        const networkFetch = fetch(e.request).then(function(response) {
-          /* Nur erfolgreiche Responses cachen */
-          if (response && response.status === 200 && response.type !== 'opaque') {
-            cache.put(e.request, response.clone());
-          }
-          return response;
-        }).catch(function() {
-          /* Offline: cached Version zurückgeben */
-          return cached;
-        });
+  // HTML → Network-First: immer frisch, kein Zwischenbild
+  // Icons: ewig cachen (ändern sich nie → maximale Performance)
+  if (url.pathname.startsWith('/icons/') || url.pathname.match(/favicon/)) {
+    event.respondWith(
+      caches.match(event.request).then(cached => {
+        if (cached) return cached;
+        return fetch(event.request).then(res => {
+          if (res.ok) { const ri = res.clone(); caches.open(CACHE_VERSION).then(c => c.put(event.request, ri)); }
+          return res;
+        }).catch(() => new Response('', {status: 404}));
+      })
+    );
+    return;
+  }
 
-        /* Cached Version sofort zurückgeben (schnell),
-           im Hintergrund aktualisieren (frisch) */
-        return cached || networkFetch;
-      });
-    })
+  if (url.pathname.endsWith('.html') || url.pathname === '/' || url.pathname === '') {
+    event.respondWith(
+      fetch(event.request)
+        .then(res => {
+          if (res.ok) { const rc = res.clone(); caches.open(CACHE_VERSION).then(c => c.put(event.request, rc)); }
+          return res;
+        })
+        .catch(() => caches.match(event.request).then(cached =>
+          cached || new Response('<h1>Offline</h1><p>Bitte Internetverbindung prüfen.</p>',
+            { headers: { 'Content-Type': 'text/html' } })
+        ))
+    );
+    return;
+  }
+
+  // PROVA Core JS (nav, theme, trial-guard) → Network-First
+  // Diese Dateien ändern sich häufig → immer frisch holen
+  const isCoreJs = ['/nav.js','/theme.js','/trial-guard.js','/sw-register.js','/mobile.css',
+  '/prova-wizard.js'].includes(url.pathname)
+    || url.pathname.endsWith('.css')
+    || (url.pathname.endsWith('.js') && !url.pathname.includes('netlify'));
+  if (isCoreJs) {
+    event.respondWith(
+      fetch(event.request)
+        .then(res => {
+          if (res.ok) { const rj = res.clone(); caches.open(CACHE_VERSION).then(c => c.put(event.request, rj)); }
+          return res;
+        })
+        .catch(() => caches.match(event.request))
+    );
+    return;
+  }
+
+  // Andere JS/CSS/Assets → Cache-First mit Background-Update
+  event.respondWith(
+    caches.open(CACHE_VERSION).then(cache =>
+      cache.match(event.request).then(cached => {
+        // Background-Revalidation (kein Clone-Konflikt da nicht im critical path)
+        fetch(event.request).then(res => {
+          if (res && res.ok) cache.put(event.request, res.clone());
+        }).catch(() => {});
+        // Sofort aus Cache liefern wenn vorhanden
+        if (cached) return cached;
+        // Sonst Netz
+        return fetch(event.request).then(res => {
+          if (res && res.ok) cache.put(event.request, res.clone());
+          return res;
+        }).catch(() => new Response('', { status: 503 }));
+      })
+    )
   );
 });
 
-/* Push-Benachrichtigungen */
-self.addEventListener('push', function(e) {
-  let data = { title: 'PROVA Systems', body: 'Neue Benachrichtigung' };
-  try { data = e.data ? e.data.json() : data; } catch(x) {}
-  e.waitUntil(
-    self.registration.showNotification(data.title || 'PROVA Systems', {
-      body: data.body || '',
-      icon: '/icons/icon-192.png',
-      badge: '/icons/icon-192.png',
-      tag: 'prova-push',
-      data: { url: data.url || '/dashboard.html' }
-    })
-  );
+self.addEventListener('sync', event => {
+  if (event.tag === SYNC_TAG) event.waitUntil(verarbeiteOfflineQueue());
 });
 
-self.addEventListener('notificationclick', function(e) {
-  e.notification.close();
-  const target = (e.notification.data && e.notification.data.url) || '/dashboard.html';
-  e.waitUntil(clients.openWindow(target));
+async function verarbeiteOfflineQueue() {
+  const db = await openDB();
+  const alle = await getAllFromStore(db.transaction('offline_queue', 'readwrite').objectStore('offline_queue'));
+  for (const e of alle) {
+    try {
+      const res = await fetch(e.url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(e.payload) });
+      if (res.ok) {
+        const tx2 = db.transaction('offline_queue', 'readwrite');
+        tx2.objectStore('offline_queue').delete(e.id);
+        notifiziereClients({ type: 'SYNC_SUCCESS', id: e.id });
+      }
+    } catch (err) { console.warn('[SW] Retry:', e.id); }
+  }
+}
+
+self.addEventListener('message', event => {
+  if ((event.data&&event.data.type) === 'SKIP_WAITING') self.skipWaiting();
+  if ((event.data&&event.data.type) === 'TRIGGER_SYNC') {
+    self.registration.sync.register(SYNC_TAG).catch(() => verarbeiteOfflineQueue());
+  }
 });
+
+function openDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open('prova_offline', 2);
+    req.onupgradeneeded = e => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains('entwuerfe')) db.createObjectStore('entwuerfe', { keyPath: 'id' });
+      if (!db.objectStoreNames.contains('offline_queue')) db.createObjectStore('offline_queue', { keyPath: 'id', autoIncrement: true });
+    };
+    req.onsuccess = e => resolve(e.target.result);
+    req.onerror = e => reject(e.target.error);
+  });
+}
+function getAllFromStore(store) {
+  return new Promise((resolve, reject) => {
+    const req = store.getAll();
+    req.onsuccess = e => resolve(e.target.result || []);
+    req.onerror = e => reject(e.target.error);
+  });
+}
+function notifiziereClients(msg) {
+  self.clients.matchAll({ type: 'window' }).then(cs => cs.forEach(c => c.postMessage(msg)));
+}

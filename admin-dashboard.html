@@ -175,6 +175,262 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14
 <script src="prova-error-handler.js" defer></script>
 <script src="sw-register.js" defer></script>
   <script src="admin-auth.js"></script>
+
+<div class="main" style="padding:var(--content-pad-y, 20px) var(--content-pad-x, 24px);max-width:1400px;margin:0 auto;">
+
+  <!-- Header -->
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;">
+    <div>
+      <h1 style="font-size:22px;font-weight:800;margin:0;color:var(--text);letter-spacing:-.02em;">
+        PROVA Admin-Dashboard
+      </h1>
+      <div style="font-size:12px;color:var(--text3);margin-top:4px;font-family:var(--mono);">
+        Zuletzt aktualisiert: <span id="lastRefresh">—</span>
+      </div>
+    </div>
+    <button class="refresh-btn" onclick="loadAll()">↻ Aktualisieren</button>
+  </div>
+
+  <!-- Tab-Navigation -->
+  <div class="tab-nav" style="display:flex;gap:2px;margin-bottom:20px;border-bottom:1px solid var(--border);">
+    <button class="tab-btn active" data-tab="overview" onclick="showTab('overview', this)" style="background:none;border:none;padding:10px 16px;font-size:13px;font-weight:600;color:var(--text);border-bottom:2px solid var(--accent);cursor:pointer;font-family:inherit;">Übersicht</button>
+    <button class="tab-btn" data-tab="kunden" onclick="showTab('kunden', this)" style="background:none;border:none;padding:10px 16px;font-size:13px;font-weight:600;color:var(--text3);border-bottom:2px solid transparent;cursor:pointer;font-family:inherit;">Kunden</button>
+    <button class="tab-btn" data-tab="finanzen" onclick="showTab('finanzen', this)" style="background:none;border:none;padding:10px 16px;font-size:13px;font-weight:600;color:var(--text3);border-bottom:2px solid transparent;cursor:pointer;font-family:inherit;">Finanzen</button>
+    <button class="tab-btn" data-tab="ki-stats" onclick="showTab('ki-stats', this)" style="background:none;border:none;padding:10px 16px;font-size:13px;font-weight:600;color:var(--text3);border-bottom:2px solid transparent;cursor:pointer;font-family:inherit;">KI & Workflow</button>
+    <button class="tab-btn" data-tab="tickets" onclick="showTab('tickets', this)" style="background:none;border:none;padding:10px 16px;font-size:13px;font-weight:600;color:var(--text3);border-bottom:2px solid transparent;cursor:pointer;font-family:inherit;">Support</button>
+    <button class="tab-btn" data-tab="health" onclick="showTab('health', this)" style="background:none;border:none;padding:10px 16px;font-size:13px;font-weight:600;color:var(--text3);border-bottom:2px solid transparent;cursor:pointer;font-family:inherit;">Health</button>
+  </div>
+
+  <!-- TAB: ÜBERSICHT -->
+  <div id="tab-overview" class="tab-panel">
+    <!-- KPI-Grid -->
+    <div class="kpi-grid">
+      <div class="kpi blue">
+        <div class="kpi-label">MRR</div>
+        <div class="kpi-value" id="kpiMrr">—</div>
+        <div class="kpi-sub" id="kpiMrrSub">ARR —</div>
+      </div>
+      <div class="kpi green">
+        <div class="kpi-label">Aktive Kunden</div>
+        <div class="kpi-value" id="kpiKunden">—</div>
+        <div class="kpi-sub" id="kpiKundenSub">— gesamt</div>
+      </div>
+      <div class="kpi warn">
+        <div class="kpi-label">Offene Tickets</div>
+        <div class="kpi-value" id="kpiTickets">—</div>
+        <div class="kpi-sub" id="kpiTicketsSub">Support</div>
+      </div>
+      <div class="kpi purple">
+        <div class="kpi-label">Pipeline</div>
+        <div class="kpi-value" id="kpiPipeline">—</div>
+        <div class="kpi-sub" id="kpiPipelineSub">Akquise</div>
+      </div>
+    </div>
+
+    <!-- 2-Col: Paket-Verteilung + Neueste Kunden -->
+    <div class="grid2">
+      <div class="card" style="padding:18px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+          <div style="font-size:13px;font-weight:700;color:var(--text);">Paket-Verteilung</div>
+        </div>
+        <div id="paketVerteilung" class="paket-bars"><div class="loading"><div class="spin"></div>Lade…</div></div>
+      </div>
+
+      <div class="card" style="padding:18px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+          <div style="font-size:13px;font-weight:700;color:var(--text);">Neueste Kunden</div>
+        </div>
+        <div id="neuesteKunden"><div class="loading"><div class="spin"></div>Lade…</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: KUNDEN -->
+  <div id="tab-kunden" class="tab-panel" style="display:none;">
+    <div class="card" style="padding:18px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:12px;">
+        <div style="font-size:13px;font-weight:700;color:var(--text);">Alle Kunden</div>
+        <input type="text" id="kundenSearch" placeholder="Suche Name, Email, Firma…"
+          oninput="filterKunden()"
+          style="flex:1;max-width:280px;padding:6px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px;font-family:inherit;">
+      </div>
+      <div id="kundenTable"><div class="loading"><div class="spin"></div>Lade Kunden…</div></div>
+    </div>
+  </div>
+
+  <!-- TAB: FINANZEN -->
+  <div id="tab-finanzen" class="tab-panel" style="display:none;">
+    <div class="grid3">
+      <div class="kpi blue"><div class="kpi-label">MRR (Monatl.)</div><div class="kpi-value" id="finMrr">—</div></div>
+      <div class="kpi green"><div class="kpi-label">ARR (Jahr)</div><div class="kpi-value" id="finArr">—</div></div>
+      <div class="kpi warn"><div class="kpi-label">Setup-Fees</div><div class="kpi-value" id="finSetup">—</div></div>
+    </div>
+    <div class="card" style="padding:18px;">
+      <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:12px;">Finanzen-Übersicht</div>
+      <div id="finanzenTable"><div class="loading"><div class="spin"></div>Lade…</div></div>
+    </div>
+  </div>
+
+  <!-- TAB: KI & WORKFLOW (NEU in Session 2) -->
+  <div id="tab-ki-stats" class="tab-panel" style="display:none;">
+    <!-- KI-KPIs -->
+    <div class="grid3">
+      <div class="kpi purple">
+        <div class="kpi-label">KI-Calls (30 Tage)</div>
+        <div class="kpi-value" id="kiTotalCalls">—</div>
+        <div class="kpi-sub" id="kiAvgDuration">Ø Dauer —</div>
+      </div>
+      <div class="kpi blue">
+        <div class="kpi-label">Ø Bearbeitungsdauer</div>
+        <div class="kpi-value" id="avgBearbeitung">—</div>
+        <div class="kpi-sub">Min je Gutachten</div>
+      </div>
+      <div class="kpi green">
+        <div class="kpi-label">Erfolgsrate Core-Flow</div>
+        <div class="kpi-value" id="flowSuccess">—</div>
+        <div class="kpi-sub">Diktat → PDF</div>
+      </div>
+    </div>
+
+    <div class="grid2">
+      <!-- Workflow-Funnel: Wie viele Fälle erreichen welche Stufe? -->
+      <div class="card" style="padding:18px;">
+        <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:14px;">Workflow-Funnel (Letzte 30 Tage)</div>
+        <div id="workflowFunnel" class="paket-bars"><div class="loading"><div class="spin"></div>Lade…</div></div>
+      </div>
+
+      <!-- KI-Nutzung nach Typ -->
+      <div class="card" style="padding:18px;">
+        <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:14px;">KI-Nutzung nach Typ</div>
+        <div id="kiByType" class="paket-bars"><div class="loading"><div class="spin"></div>Lade…</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: SUPPORT -->
+  <div id="tab-tickets" class="tab-panel" style="display:none;">
+    <div class="card" style="padding:18px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:12px;">
+        <div style="font-size:13px;font-weight:700;color:var(--text);">Support-Tickets</div>
+        <select id="ticketFilter" onchange="filterTickets()" style="padding:6px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px;font-family:inherit;">
+          <option value="">Alle</option>
+          <option value="Offen">Offen</option>
+          <option value="In Bearbeitung">In Bearbeitung</option>
+          <option value="Gelöst">Gelöst</option>
+        </select>
+      </div>
+      <div id="ticketsTable"><div class="loading"><div class="spin"></div>Lade Tickets…</div></div>
+    </div>
+  </div>
+
+  <!-- TAB: KI & WORKFLOW -->
+  <div id="tab-ki-stats" class="tab-panel" style="display:none;">
+    <!-- KI-Nutzungs-KPIs -->
+    <div class="kpi-grid" style="margin-bottom:20px;">
+      <div class="kpi blue">
+        <div class="kpi-label">KI-Calls (7 Tage)</div>
+        <div class="kpi-value" id="kiCalls7d">—</div>
+        <div class="kpi-sub" id="kiCallsSub">Whisper + GPT-4o</div>
+      </div>
+      <div class="kpi green">
+        <div class="kpi-label">Tokens verbraucht</div>
+        <div class="kpi-value" id="kiTokens7d">—</div>
+        <div class="kpi-sub" id="kiTokensSub">gesamt / 7 Tage</div>
+      </div>
+      <div class="kpi warn">
+        <div class="kpi-label">Ø Bearbeitungsdauer</div>
+        <div class="kpi-value" id="kiBearbeitung">—</div>
+        <div class="kpi-sub">Min. pro Gutachten</div>
+      </div>
+      <div class="kpi purple">
+        <div class="kpi-label">Hallu-Rate (Konjunktiv II)</div>
+        <div class="kpi-value" id="kiHallu">—</div>
+        <div class="kpi-sub">Ø Verstöße / Entwurf</div>
+      </div>
+    </div>
+
+    <!-- Workflow-Funnel -->
+    <div class="card" style="padding:18px;margin-bottom:16px;">
+      <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:14px;">
+        Workflow-Funnel (letzte 30 Tage)
+      </div>
+      <div id="workflowFunnel">
+        <div class="loading"><div class="spin"></div>Lade Status-Verteilung…</div>
+      </div>
+    </div>
+
+    <!-- Nutzungs-Tabelle pro Kunde -->
+    <div class="card" style="padding:18px;">
+      <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:14px;">
+        Top-Nutzer (nach KI-Calls)
+      </div>
+      <div id="kiTopNutzer">
+        <div class="loading"><div class="spin"></div>Lade KI-Statistik…</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: HEALTH -->
+  <div id="tab-health" class="tab-panel" style="display:none;">
+    <div class="grid2">
+      <div class="card" style="padding:18px;">
+        <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:14px;">System-Health</div>
+        <div class="health-row">
+          <div class="health-dot green" id="h-airtable"></div>
+          <div class="health-name">Airtable-API</div>
+          <div class="health-status green">OK</div>
+        </div>
+        <div class="health-row">
+          <div class="health-dot green" id="h-s1"></div>
+          <div class="health-name">Make S1 (Gutachten)</div>
+          <div class="health-status green" id="h-s1-txt">OK</div>
+        </div>
+        <div class="health-row">
+          <div class="health-dot green" id="h-s3"></div>
+          <div class="health-name">Make S3 (Freigabe)</div>
+          <div class="health-status green" id="h-s3-txt">OK</div>
+        </div>
+      </div>
+      <div class="card" style="padding:18px;">
+        <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:14px;">Pipeline (Akquise)</div>
+        <div id="pipelineTable"><div class="loading"><div class="spin"></div>Lade…</div></div>
+      </div>
+    </div>
+    <div class="card" style="padding:18px;margin-top:16px;">
+      <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:14px;">Audit-Log (letzte Events)</div>
+      <div id="auditTable"><div class="loading"><div class="spin"></div>Lade…</div></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// Tab-Switcher — minimal, ohne Dependencies
+function showTab(name, btn) {
+  document.querySelectorAll('.tab-panel').forEach(function(p){ p.style.display = 'none'; });
+  var panel = document.getElementById('tab-' + name);
+  if (panel) panel.style.display = 'block';
+  document.querySelectorAll('.tab-btn').forEach(function(b){
+    b.style.color = 'var(--text3)';
+    b.style.borderBottomColor = 'transparent';
+  });
+  if (btn) {
+    btn.style.color = 'var(--text)';
+    btn.style.borderBottomColor = 'var(--accent)';
+  }
+  // Tab-spezifisches Lazy-Loading
+  if (name === 'kunden' && typeof loadKunden === 'function') loadKunden();
+  if (name === 'finanzen' && typeof loadFinanzen === 'function') loadFinanzen();
+  if (name === 'ki-stats' && typeof loadKIStats === 'function') loadKIStats();
+  if (name === 'tickets' && typeof loadTickets === 'function') loadTickets();
+}
+
+// Auto-Load bei Seitenstart
+document.addEventListener('DOMContentLoaded', function() {
+  if (typeof loadAll === 'function') loadAll();
+});
+</script>
+
   <script src="admin-dashboard-logic.js" defer></script>
 </body>
 </html>

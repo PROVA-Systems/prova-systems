@@ -17,7 +17,7 @@
 
   var SESSION_KEY    = 'prova_session_v2';
   var LEGACY_KEY     = 'prova_user';
-  var SESSION_TTL = 8 * 60 * 60 * 1000 // 8 Stunden (gefixt von 30 Tagen); // 30 Tage
+  var SESSION_TTL    = 30 * 24 * 60 * 60 * 1000; // 30 Tage
   var ACTIVITY_KEY   = 'prova_last_activity';
 
   /* ── Öffentliche API ── */
@@ -206,5 +206,47 @@
       }, 30000); // Maximal alle 30s schreiben
     }, { passive: true });
   });
+
+  /* ════════════════════════════════════════════════════════════════
+     SELBST-AKTIVIERUNG (Session 3, Fix #1+#2)
+     
+     Sobald auth-guard.js geladen wird, ruft sich der Guard
+     automatisch für alle nicht-öffentlichen Seiten auf.
+     
+     Vorher: 30+ Seiten luden auth-guard.js, riefen aber nie
+     provaAuthGuard() auf → kein Schutz. Insbesondere dashboard.html
+     hatte einen DEAKTIVIERTEN Inline-Guard (leerer If-Block).
+     
+     Jetzt: Eine zentrale Regel. Marcel's Anforderung
+     "es soll sich immer eingeloggt werden" wird hier durchgesetzt.
+     ════════════════════════════════════════════════════════════════ */
+  var PUBLIC_PAGES = [
+    '',                              // root
+    'index.html',
+    'app-login.html',
+    'app-register.html',
+    'onboarding.html',
+    'onboarding-schnellstart.html',
+    'onboarding-welcome.html',
+    'agb.html',
+    'datenschutz.html',
+    'datenschutz-mandant.html',
+    'impressum.html',
+    'avv.html',
+    '404.html',
+    'admin-login.html'
+  ];
+
+  var currentPage = (window.location.pathname.split('/').pop() || '').toLowerCase();
+
+  if (PUBLIC_PAGES.indexOf(currentPage) === -1) {
+    // Geschützte Seite → Guard aktivieren
+    // redirectTo: ?reason=not_logged_in zur Klarheit, ?next= für Rück-Redirect nach Login
+    var redirectTarget = 'app-login.html?reason=not_logged_in';
+    if (currentPage) {
+      redirectTarget += '&next=' + encodeURIComponent(currentPage + window.location.search);
+    }
+    window.provaAuthGuard({ redirectTo: redirectTarget });
+  }
 
 })();
