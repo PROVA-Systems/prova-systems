@@ -135,6 +135,19 @@ const PROVASearch = {
       }
 
       // Normen durchsuchen — NUR Norm-Nummer und Titel, mit Relevanz-Ranking
+      // Normen laden falls nicht vorhanden (nur einmal)
+      if (!window.PROVA_NORMEN_DB && !window._provaLoadingNormen) {
+        window._provaLoadingNormen = true;
+        fetch('/.netlify/functions/normen')
+          .then(function(r) { return r.json(); })
+          .then(function(d) {
+            if (d.normen && d.normen.length) {
+              window.PROVA_NORMEN_DB = d.normen;
+            }
+            window._provaLoadingNormen = false;
+          })
+          .catch(function() { window._provaLoadingNormen = false; });
+      }
       if (window.PROVA_NORMEN_DB) {
         const _q = this._q;
         // Zahlenfolge erkannt? Dann NUR in Norm-Nummer suchen
