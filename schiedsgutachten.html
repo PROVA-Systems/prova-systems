@@ -1,249 +1,197 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>PROVA — Schiedsgutachten</title>
-  <script src="prova-preise.js"></script>
-  <script src="paket-guard.js"></script>
-  <script src="auth-guard.js"></script>
-  <script src="prova-auth-api.js"></script>
-  <script src="prova-sv-airtable.js"></script>
-  <script src="theme.js"></script>
-  <script src="prova-layout.config.js"></script>
-<script src="prova-airtable-api.js"></script>
-<script src="prova-api.js"></script>
-<script src="nav.js" defer></script>
-  <script src="global-search.js" defer></script>
-  <style>
-:root{
-  --bg:#0b0d11;--bg2:#111318;--bg3:#161a22;
-  --surface:#1c2130;--surface2:#232a3a;
-  --border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.11);
-  --text:#eaecf4;--text2:#8b93ab;--text3:#4d5568;
-  --accent:#4f8ef7;--accent2:#3a7be0;
-  --success:#10b981;--warning:#f59e0b;--danger:#ef4444;--purple:#8b5cf6;
-  --font-ui:'DM Sans',system-ui,sans-serif;
-  --font-mono:ui-monospace,Consolas,monospace;
-  --r-sm:6px;--r-md:10px;--r-lg:14px;--r-xl:18px;
-  --topbar-h:56px;--sb-w:228px;--sb-w-col:56px;
-}
-html{font-size:14px;}
-body{font-family:var(--font-ui);background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;line-height:1.55;}
-
-    .card { background:#fff; border:1px solid #e5e7eb; border-radius:14px; overflow:hidden; margin-bottom:20px; }
-    .card-header { padding:18px 22px; background:#0b1628; color:#fff; }
-    .card-header .sub { font-size:12px; opacity:.8; }
-    .card-header .title { font-size:18px; font-weight:700; margin-top:6px; }
-    .card-body { padding:22px; }
-    .info-box { padding:14px 16px; border:1px solid #e5e7eb; border-radius:12px; background:#f9fafb; margin:18px 0; }
-    .btn { display:inline-block; margin-top:16px; padding:9px 18px; background:#0b1628; color:#fff; border:none; border-radius:8px; font-size:13px; cursor:pointer; }
-
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Schiedsgutachten · PROVA</title>
+<link rel="stylesheet" href="prova-design.css">
 <link rel="stylesheet" href="mobile.css">
-  <link rel="stylesheet" href="prova-design.css">
-  <style>
-
-    :root{--bg:#0d0f14;--bg2:#13161d;--text:#e8eaf0;--text2:#9da3b4;--accent:#4f8ef7;--border:rgba(255,255,255,0.1);--r:12px;}
-    *{box-sizing:border-box;margin:0;padding:0;}
-    body{font-family:'Montserrat',system-ui,sans-serif;background:var(--bg);color:var(--text2);min-height:100vh;font-size:14px;line-height:1.55;}
-    a{color:inherit;text-decoration:none;}
-    .topbar{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 20px;height:52px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;}
-    .logo{font-family:'Fraunces',serif;font-weight:700;font-size:18px;color:var(--text);} .logo span{color:var(--accent);}
-    .main{max-width:880px;margin:0 auto;padding:28px 20px;}
-    h1{font-family:'Fraunces',serif;font-size:26px;color:var(--text);margin-bottom:8px;}
-    .sub{margin-bottom:22px;font-size:13px;color:var(--text2);}
-    .card{background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:var(--r);padding:20px;margin-bottom:18px;}
-    .row{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
-    @media(max-width:640px){.row{grid-template-columns:1fr;}}
-    label{display:block;font-size:12px;font-weight:700;color:var(--text2);margin-bottom:6px;}
-    input,select{width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:rgba(0,0,0,.2);color:var(--text);font:inherit;}
-    .split{display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin:14px 0;}
-    .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 1rem;border-radius:12px;border:1px solid rgba(255,255,255,0.12);background:rgba(79,142,247,0.2);color:#fff;font-weight:800;cursor:pointer;font:inherit;}
-    .btn:hover{background:rgba(79,142,247,0.3);}
-    .btn-sec{background:rgba(255,255,255,0.06);}
-    .hint{font-size:12px;color:var(--text2);margin-top:12px;line-height:1.5;}
-    .mono{font-family:ui-monospace,monospace;font-size:12px;background:rgba(0,0,0,.25);padding:12px;border-radius:8px;white-space:pre-wrap;max-height:160px;overflow:auto;}
-    
-    
-    
-    .drawer-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:200;}.drawer-overlay.open{display:block;}
-    .drawer{position:fixed;top:0;left:0;bottom:0;width:260px;background:var(--bg2);border-right:1px solid var(--border);z-index:201;transform:translateX(-100%);transition:transform .25s ease;display:flex;flex-direction:column;}
-    .drawer.open{transform:translateX(0);}.drawer-header{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
-    .drawer-close{background:none;border:none;color:var(--text2);font-size:18px;cursor:pointer;}
-    .topbar-left{display:flex;align-items:center;gap:14px;}
-    .burger{display:none;background:none;border:none;cursor:pointer;flex-direction:column;gap:4px;padding:6px;}
-    .burger span{display:block;width:20px;height:2px;background:var(--text2);}
-    .bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;height:56px;background:var(--bg2);border-top:1px solid var(--border);z-index:100;justify-content:space-around;align-items:stretch;}
-    .paket-badge{font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;}
-    @media(max-width:900px){.burger{display:flex;}.bottom-nav{display:flex;}body{padding-bottom:56px;}}
-  
-  </style>
+<script src="theme.js"></script>
+<script src="nav.js"></script>
+<script src="auth-guard.js"></script>
+<style>
+  .card-block { background:var(--surface); border:1px solid var(--border); border-radius:14px; overflow:hidden; margin-bottom:16px; }
+  .card-block-header { background:#0b1628; color:#fff; padding:14px 20px; display:flex; align-items:center; gap:10px; }
+  .card-block-header .ch-title { font-size:14px; font-weight:700; }
+  .card-block-header .ch-sub { font-size:11px; opacity:.7; margin-top:2px; }
+  .card-block-body { padding:20px; }
+  .field-label { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:rgba(255,255,255,.72); margin-bottom:6px; display:block; }
+  .field-group { margin-bottom:16px; }
+  .field-group:last-child { margin-bottom:0; }
+  .field-row { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  .page-desc { font-size:12px; color:var(--text3); margin-bottom:20px; background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:12px 16px; }
+  .page-desc code { font-size:11px; background:rgba(79,142,247,.12); color:var(--accent); padding:1px 6px; border-radius:4px; }
+</style>
 </head>
-<body data-page="schiedsgutachten">
-<div class="app-shell" id="app-shell">
-  <nav class="sidebar" id="sidebar"></nav>
-  <div class="sb-overlay" id="sb-overlay" onclick="closeMobileSidebar()"></div>
-  <div class="main-wrap" id="main-wrap">
-    <header class="topbar">
-      <div class="topbar-left">
-        <button class="burger" onclick="openMobileSidebar()"><span></span><span></span><span></span></button>
-        <div class="breadcrumb"><span>PROVA</span><span style="color:var(--text3)">›</span><strong>Schiedsgutachten</strong></div>
-      </div>
-    </header>
-    <div class="page-content" style="padding:24px 16px;">
-<div class="schieds-wrap" style="max-width:760px;margin:0 auto;">
-    <h1>Schiedsgutachten</h1>
-    <p class="sub">Parteien, Streitobjekt, Honorar und Kostenaufteilung — Speicherung in Airtable (<code>Auftragstyp=Schieds</code>). Zwei Rechnungen nacheinander über die Rechnungsseite.</p>
-    <div id="schieds-err" style="display:none;padding:12px;border-radius:10px;background:rgba(239,68,68,0.12);color:#fecaca;margin-bottom:14px;font-size:13px;"></div>
-    <div class="card">
-      <h2 style="color:var(--text);font-size:15px;margin-bottom:12px;">Partei A</h2>
-      <div class="row">
-        <div><label for="name-a">Name</label><input id="name-a" type="text" placeholder="Name / Firma"></div>
-        <div><label for="email-a">E-Mail</label><input id="email-a" type="email" placeholder="a@…"></div>
-      </div>
-      <label for="addr-a" style="margin-top:10px;display:block;">Adresse</label>
-      <input id="addr-a" type="text" placeholder="Straße, PLZ Ort">
-      <h2 style="color:var(--text);font-size:15px;margin:18px 0 12px;">Partei B</h2>
-      <div class="row">
-        <div><label for="name-b">Name</label><input id="name-b" type="text" placeholder="Name / Firma"></div>
-        <div><label for="email-b">E-Mail</label><input id="email-b" type="email" placeholder="b@…"></div>
-      </div>
-      <label for="addr-b" style="margin-top:10px;display:block;">Adresse</label>
-      <input id="addr-b" type="text" placeholder="Straße, PLZ Ort">
-      <div class="row" style="margin-top:14px;">
-        <div><label for="streitobjekt">Streitobjekt (Adresse)</label><input id="streitobjekt" type="text" placeholder="Objektadresse"></div>
-        <div><label for="schadensart">Schadensart</label><input id="schadensart" type="text" placeholder="z. B. Wasserschaden"></div>
-      </div>
-      <label for="honorar" style="margin-top:12px;display:block;">Honorar gesamt (netto €)</label>
-      <input id="honorar" type="number" step="0.01" min="0" value="1000">
-      <div style="margin-top:14px;">
-        <label>Kostenaufteilung</label>
-        <div class="split">
-          <label><input type="radio" name="split" value="5050" checked> 50 / 50</label>
-          <label><input type="radio" name="split" value="custom"> Individuell (%)</label>
-        </div>
-        <div class="row" id="custom-split" style="display:none;margin-top:8px;">
-          <div><label for="pct-a">Anteil A (%)</label><input id="pct-a" type="number" min="0" max="100" step="1" value="50"></div>
-          <div><label for="pct-b">Anteil B (%)</label><input id="pct-b" type="number" min="0" max="100" step="1" value="50"></div>
-        </div>
-      </div>
-      <label for="netto" style="margin-top:12px;display:block;">Aufteilungs-Basis netto (€) — i. d. R. = Honorar</label>
-      <input id="netto" type="number" step="0.01" value="1000" min="0">
-      <div class="mono" style="margin-top:14px;padding:12px;border-radius:8px;line-height:1.5;" id="neutral-preview"></div>
-      <div style="margin-top:18px;display:flex;flex-wrap:wrap;gap:10px;">
-        <button type="button" class="btn" id="btn-airtable">In Airtable speichern</button>
-        <button type="button" class="btn btn-sec" id="btn-zwei-re">Beide Rechnungen erstellen (Start RE-A)</button>
-        <button type="button" class="btn btn-sec" id="btn-neutral">Neutralitätsvermerk (§36 GewO)</button>
-        <button type="button" class="btn" id="btn-gutachten">Gutachten starten</button>
-      </div>
-      <p class="hint">Neutralität: gesetzlicher Kurzvermerk plus optionaler Kontext. Nach „In Airtable speichern“ steht das neue Aktenzeichen für „Gutachten starten“ bereit.</p>
-      <p id="schieds-az-hint" class="hint" style="color:var(--accent);"></p>
+<body>
+<div id="nav-placeholder"></div>
+<main class="page-content" style="max-width:800px;margin:0 auto;padding:24px 16px;">
+
+<div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+  <button onclick="history.back()" class="p-btn p-btn-ghost" style="font-size:13px;">← Zurück</button>
+  <div>
+    <h1 style="font-size:20px;font-weight:800;color:var(--text);margin:0;">Schiedsgutachten</h1>
+    <p style="font-size:12px;color:var(--text3);margin:3px 0 0;">Außergerichtliche Streitbeilegung · §317 BGB</p>
+  </div>
+</div>
+
+<div class="page-desc">
+  Parteien, Streitobjekt, Honorar und Kostenaufteilung —
+  Speicherung in Airtable (<code>Auftragstyp=Schieds</code>).
+  Zwei Rechnungen nacheinander über die Rechnungsseite.
+</div>
+
+<!-- Partei A -->
+<div class="card-block">
+  <div class="card-block-header">
+    <span style="font-size:18px;">👤</span>
+    <div>
+      <div class="ch-title">Partei A</div>
+      <div class="ch-sub">Auftraggeber / Antragsteller</div>
     </div>
   </div>
-  <script src="schiedsgutachten-logic.js"></script>
-  <script src="prova-notifications.js" defer></script>
-  <script>
-  (function(){
-    var api = window.SchiedsAPI;
-    var splitCustom = document.getElementById('custom-split');
-    var lastAz = '';
-    var errEl = document.getElementById('schieds-err');
-    function showErr(m){ errEl.style.display='block'; errEl.textContent=m; }
-    function clearErr(){ errEl.style.display='none'; }
-    document.querySelectorAll('input[name="split"]').forEach(function(r){
-      r.addEventListener('change', function(){
-        splitCustom.style.display = r.value === 'custom' ? 'grid' : 'none';
-      });
-    });
-    function syncHonorar(){
-      var h = parseFloat(document.getElementById('honorar').value,10);
-      if(isFinite(h)) document.getElementById('netto').value = String(h);
-    }
-    document.getElementById('honorar').addEventListener('input', syncHonorar);
-    function updateNeutralPreview(){
-      var base = api ? api.neutralText() : '';
-      var a = document.getElementById('name-a').value.trim()||'Partei A';
-      var b = document.getElementById('name-b').value.trim()||'Partei B';
-      document.getElementById('neutral-preview').textContent = base + '\n\n(Zusatz) Das Gutachten erfolgt im Auftrag von ' + a + ' und ' + b + '.';
-    }
-    ['name-a','name-b'].forEach(function(id){ document.getElementById(id).addEventListener('input', updateNeutralPreview); });
-    updateNeutralPreview();
+  <div class="card-block-body">
+    <div class="field-row">
+      <div class="field-group">
+        <label class="field-label" for="a-name">Name / Firma *</label>
+        <input type="text" id="a-name" class="p-input" style="width:100%;" placeholder="Name / Firma">
+      </div>
+      <div class="field-group">
+        <label class="field-label" for="a-email">E-Mail</label>
+        <input type="email" id="a-email" class="p-input" style="width:100%;" placeholder="a@...">
+      </div>
+    </div>
+    <div class="field-group">
+      <label class="field-label" for="a-adresse">Adresse</label>
+      <input type="text" id="a-adresse" class="p-input" style="width:100%;" placeholder="Straße, PLZ Ort">
+    </div>
+  </div>
+</div>
 
-    document.getElementById('btn-neutral').addEventListener('click', function(){
-      var t = document.getElementById('neutral-preview').textContent;
-      try { localStorage.setItem('prova_neutralitaets_block', t); } catch(e) {}
-      alert('Neutralitätsvermerk gespeichert.');
-      window.location.href = api.appHref();
-    });
+<!-- Partei B -->
+<div class="card-block">
+  <div class="card-block-header">
+    <span style="font-size:18px;">👤</span>
+    <div>
+      <div class="ch-title">Partei B</div>
+      <div class="ch-sub">Antragsgegner</div>
+    </div>
+  </div>
+  <div class="card-block-body">
+    <div class="field-row">
+      <div class="field-group">
+        <label class="field-label" for="b-name">Name / Firma *</label>
+        <input type="text" id="b-name" class="p-input" style="width:100%;" placeholder="Name / Firma">
+      </div>
+      <div class="field-group">
+        <label class="field-label" for="b-email">E-Mail</label>
+        <input type="email" id="b-email" class="p-input" style="width:100%;" placeholder="b@...">
+      </div>
+    </div>
+    <div class="field-group">
+      <label class="field-label" for="b-adresse">Adresse</label>
+      <input type="text" id="b-adresse" class="p-input" style="width:100%;" placeholder="Straße, PLZ Ort">
+    </div>
+  </div>
+</div>
 
-    document.getElementById('btn-zwei-re').addEventListener('click', function(){
-      var netto = parseFloat(document.getElementById('netto').value) || 0;
-      var a = document.getElementById('name-a').value.trim();
-      var b = document.getElementById('name-b').value.trim();
-      if (!a || !b) { showErr('Bitte Namen Partei A und B.'); return; }
-      clearErr();
-      var pa = 0.5, pb = 0.5;
-      if (document.querySelector('input[name="split"]:checked').value === 'custom') {
-        pa = (parseFloat(document.getElementById('pct-a').value) || 0) / 100;
-        pb = (parseFloat(document.getElementById('pct-b').value) || 0) / 100;
-        if (Math.abs(pa + pb - 1) > 0.02) { showErr('Anteile zusammen 100 %.'); return; }
+<!-- Streitobjekt & Honorar -->
+<div class="card-block">
+  <div class="card-block-header">
+    <span style="font-size:18px;">⚖️</span>
+    <div>
+      <div class="ch-title">Streitobjekt & Honorar</div>
+      <div class="ch-sub">Objekt, Schadensart und Vergütung</div>
+    </div>
+  </div>
+  <div class="card-block-body">
+    <div class="field-row">
+      <div class="field-group">
+        <label class="field-label" for="streit-adresse">Streitobjekt (Adresse) *</label>
+        <input type="text" id="streit-adresse" class="p-input" style="width:100%;" placeholder="Objektadresse">
+      </div>
+      <div class="field-group">
+        <label class="field-label" for="schadensart">Schadensart</label>
+        <input type="text" id="schadensart" class="p-input" style="width:100%;" placeholder="z. B. Wasserschaden">
+      </div>
+    </div>
+    <div class="field-row">
+      <div class="field-group">
+        <label class="field-label" for="honorar">Honorar gesamt (netto €) *</label>
+        <input type="number" id="honorar" class="p-input" style="width:100%;" placeholder="0.00" min="0" step="0.01">
+      </div>
+      <div class="field-group">
+        <label class="field-label" for="kostenaufteilung">Kostenaufteilung</label>
+        <select id="kostenaufteilung" class="p-input" style="width:100%;">
+          <option value="50/50">50 % / 50 % (je Partei)</option>
+          <option value="100A">100 % Partei A</option>
+          <option value="100B">100 % Partei B</option>
+          <option value="individuell">Individuell</option>
+        </select>
+      </div>
+    </div>
+    <div class="field-group">
+      <label class="field-label" for="ortstermin-schieds">Ortstermin</label>
+      <input type="date" id="ortstermin-schieds" class="p-input" style="width:100%;">
+    </div>
+  </div>
+</div>
+
+<!-- Speichern -->
+<button onclick="speichern()" class="p-btn p-btn-primary" style="width:100%;padding:14px;font-size:14px;">
+  💾 Schiedsgutachten in Airtable anlegen
+</button>
+
+</main>
+
+<script>
+function speichern() {
+  var aN = document.getElementById('a-name').value.trim();
+  var bN = document.getElementById('b-name').value.trim();
+  var sa = document.getElementById('streit-adresse').value.trim();
+  var hon = document.getElementById('honorar').value;
+
+  if (!aN || !bN) { alert('Bitte beide Parteien eintragen.'); return; }
+  if (!sa) { alert('Bitte Streitobjekt eintragen.'); return; }
+  if (!hon) { alert('Bitte Honorar eintragen.'); return; }
+
+  var svEmail = localStorage.getItem('prova_sv_email') || '';
+
+  fetch('/.netlify/functions/airtable', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({
+      action: 'create',
+      table: 'SCHADENSFAELLE',
+      fields: {
+        Auftragstyp: 'Schieds',
+        Auftraggeber_Name: aN,
+        Auftraggeber_Email: document.getElementById('a-email').value.trim(),
+        Auftraggeber_Adresse: document.getElementById('a-adresse').value.trim(),
+        Partei_B_Name: bN,
+        Partei_B_Email: document.getElementById('b-email').value.trim(),
+        Partei_B_Adresse: document.getElementById('b-adresse').value.trim(),
+        Objekt_Adresse: sa,
+        Schadenart: document.getElementById('schadensart').value.trim(),
+        Honorar_Netto: parseFloat(hon) || 0,
+        Kostenaufteilung: document.getElementById('kostenaufteilung').value,
+        Ortstermin: document.getElementById('ortstermin-schieds').value || null,
+        Status: 'Neu',
+        sv_email: svEmail
       }
-      var n1 = (netto * pa).toFixed(2);
-      var n2 = (netto * pb).toFixed(2);
-      var p = { typ:'schieds', teil:[
-        { ag:a, netto:n1, text:'Anteil Schiedsgutachten '+Math.round(pa*100)+'% (RE-A)' },
-        { ag:b, netto:n2, text:'Anteil Schiedsgutachten '+Math.round(pb*100)+'% (RE-B)' }
-      ]};
-      sessionStorage.setItem('prova_schieds_rechnungen', JSON.stringify(p));
-      sessionStorage.setItem('prova_schieds_queue', JSON.stringify(['1','2']));
-      window.location.href = 'rechnungen.html?schieds=1';
-    });
-
-    document.getElementById('btn-airtable').addEventListener('click', function(){
-      clearErr();
-      var honorar = parseFloat(document.getElementById('honorar').value,10)||0;
-      var netto = parseFloat(document.getElementById('netto').value,10)||honorar;
-      var pa = 0.5, pb = 0.5;
-      if (document.querySelector('input[name="split"]:checked').value === 'custom') {
-        pa = (parseFloat(document.getElementById('pct-a').value)||0)/100;
-        pb = (parseFloat(document.getElementById('pct-b').value)||0)/100;
-      }
-      var btn = this;
-      btn.disabled = true;
-      api.createSchiedsFall({
-        name_a: document.getElementById('name-a').value.trim(),
-        email_a: document.getElementById('email-a').value.trim(),
-        addr_a: document.getElementById('addr-a').value.trim(),
-        name_b: document.getElementById('name-b').value.trim(),
-        email_b: document.getElementById('email-b').value.trim(),
-        addr_b: document.getElementById('addr-b').value.trim(),
-        streitobjekt: document.getElementById('streitobjekt').value.trim(),
-        schadensart: document.getElementById('schadensart').value.trim(),
-        honorar: honorar,
-        pct_a: pa*100,
-        pct_b: pb*100,
-        kosten_a: netto * pa,
-        kosten_b: netto * pb
-      }).then(function(res){
-        var f = res.fields||{};
-        lastAz = String(f.Aktenzeichen||f.Schadensnummer||res.id||'').trim();
-        document.getElementById('schieds-az-hint').textContent = 'Gespeichert. Aktenzeichen: '+(lastAz||'bitte in Airtable prüfen');
-        try { localStorage.setItem('prova_letztes_az', lastAz); } catch(x){}
-      }).catch(function(e){ showErr(e.message||String(e)); }).finally(function(){ btn.disabled=false; });
-    });
-
-    document.getElementById('btn-gutachten').addEventListener('click', function(){
-      if(!lastAz){ showErr('Zuerst „In Airtable speichern“ — danach erscheint das Aktenzeichen.'); return; }
-      window.location.href = api.appHref() + '?az=' + encodeURIComponent(lastAz);
-    });
-  })();
-  </script>
-
-    </div><!-- page-content -->
-  </div><!-- main-wrap -->
-</div><!-- app-shell -->
-<script src="support-chat.js" defer></script>
-<script src="sw-register.js" defer></script>
+    })
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(data) {
+    if (data.id) {
+      alert('✅ Schiedsgutachten angelegt: ' + (data.fields && data.fields.Aktenzeichen || data.id));
+      window.location.href = 'archiv.html';
+    } else {
+      alert('Fehler: ' + JSON.stringify(data));
+    }
+  })
+  .catch(function(e){ alert('Fehler: ' + e.message); });
+}
+</script>
 </body>
 </html>

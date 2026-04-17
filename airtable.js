@@ -14,13 +14,13 @@
 // ── Erlaubte Tabellen (Whitelist — niemals '*') ──
 const ALLOWED_TABLES = {
   // Fälle: User-Filter wird automatisch angehängt
-  tblSxV8bsXwd1pwa0: { name: 'FAELLE',      userField: 'SV_Email', readOnly: false },
+  tblSxV8bsXwd1pwa0: { name: 'FAELLE',      userField: 'sv_email', readOnly: false },
   // SV-Profil: nur eigenes Profil
   tbladqEQT3tmx4DIB: { name: 'SV',          userField: 'Email',    readOnly: false },
   // Termine: User-Filter
-  tblyMTTdtfGQjjmc2: { name: 'TERMINE',     userField: 'SV_Email', readOnly: false },
+  tblyMTTdtfGQjjmc2: { name: 'TERMINE',     userField: 'sv_email', readOnly: false },
   // Rechnungen: User-Filter
-  tblF6MS7uiFAJDjiT: { name: 'RECHNUNGEN',  userField: 'SV_Email', readOnly: false },
+  tblF6MS7uiFAJDjiT: { name: 'RECHNUNGEN',  userField: 'sv_email', readOnly: false },
   // KI-Statistik: schreiben OK, lesen eingeschränkt
   tblv9F8LEnUC3mKru: { name: 'KI_STATISTIK', userField: null,      readOnly: false },
   // KI-Lernpool: nur schreiben
@@ -162,7 +162,7 @@ exports.handler = async function(event) {
     KONTAKTE:           'tblMKmPLjRelr6Hal',
     KI_STATISTIK:       'tblv9F8LEnUC3mKru',
     KI_LERNPOOL:        'tbl4LEsMvcDKFCYaF',
-    PUSH_SUBSCRIPTIONS: 'tblPUSH_PLACEHOLDER', // nach Airtable-Anlage ersetzen
+    PUSH_SUBSCRIPTIONS: 'tblAiF38HeS1R1Umj', // PUSH_SUBSCRIPTIONS — korrekte ID
   };
   const BASE_ID = 'appJ7bLlAHZoxENWE';
 

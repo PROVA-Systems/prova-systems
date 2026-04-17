@@ -48,12 +48,9 @@ function filterByDays(records) {
 async function loadData() {
   try {
     // Via Netlify Function proxyen (wie alle anderen Seiten)
-    var svEmail = localStorage.getItem('prova_sv_email') || '';
-    var emailFilter = svEmail ? encodeURIComponent('{sv_email}="' + svEmail.replace(/"/g, '\"') + '"') : '';
     var path = '/v0/' + AT_BASE + '/' + AT_TABLE
       + '?fields[]=' + [AT_KEY_FIELD, AT_STATUS, AT_SCHADEN, AT_AG_TYP, AT_FOTOS, AT_ZEIT, AT_TS, AT_PAKET].join('&fields[]=')
       + '&sort[0][field]=' + AT_TS + '&sort[0][direction]=desc'
-      + (emailFilter ? '&filterByFormula=' + emailFilter : '')
       + '&maxRecords=500';
 
     var resp = await fetch('/.netlify/functions/airtable', {
@@ -202,3 +199,61 @@ function renderAll(allRecords) {
     renderAll(_allData);
   });
 })();
+
+
+// ── Statistiken-Export ──
+window.exportStatistikenCSV = async function() {
+  try {
+    var svEmail = localStorage.getItem('prova_sv_email') || '';
+    var rows = [['Monat','Ereignis','Schadenart','Auftraggeber-Typ','Fotos','Erstellungszeit (Sek)','PLZ','Ort']];
+
+    if (svEmail) {
+      try {
+        var res = await fetch('/.netlify/functions/airtable', {
+          method: 'POST', headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({
+            method: 'GET',
+            path: '/v0/appJ7bLlAHZoxENWE/tblb0j9qOhMExVEFH?filterByFormula=' +
+                  encodeURIComponent('{Aktenzeichen_Ref}!=""') +
+                  '&maxRecords=500&sort[0][field]=Datum&sort[0][direction]=desc' +
+                  '&fields[]=Monat&fields[]=Ereignis&fields[]=Schadensart' +
+                  '&fields[]=Auftraggeber_Typ&fields[]=Foto_Anzahl' +
+                  '&fields[]=Erstellungszeit_Sekunden&fields[]=PLZ&fields[]=Ort'
+          })
+        });
+        var data = await res.json();
+        (data.records || []).forEach(function(r) {
+          var f = r.fields || {};
+          rows.push([
+            f.Monat||'', f.Ereignis||'', f.Schadensart||'',
+            f.Auftraggeber_Typ||'', f.Foto_Anzahl||0,
+            f.Erstellungszeit_Sekunden||0, f.PLZ||'', f.Ort||''
+          ].map(function(v){ return '"' + String(v).replace(/"/g, '""') + '"'; }));
+        });
+      } catch(fetchErr) {
+        console.warn('[Statistiken] Airtable-Fetch:', fetchErr);
+      }
+    }
+
+    if (rows.length <= 1) {
+      if (typeof showToast === 'function') showToast('Keine Statistiken vorhanden', 'error');
+      return;
+    }
+
+    var csv = '\uFEFF' + rows.join('\r\n');
+    var blob = new Blob([csv], {type: 'text/csv;charset=utf-8;'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'PROVA-Statistiken-' + new Date().toISOString().slice(0,10) + '.csv';
+    document.body.appendChild(a); a.click();
+    document.body.removeChild(a); URL.revokeObjectURL(url);
+    if (typeof showToast === 'function') showToast('\u2705 Statistiken exportiert (' + (rows.length-1) + ' Eintr\u00e4ge)');
+  } catch(e) {
+    if (typeof showToast === 'function') showToast('Fehler: ' + e.message, 'error');
+  }
+};;
+
+window.exportStatistikenPDF = function() {
+  window.print();
+};

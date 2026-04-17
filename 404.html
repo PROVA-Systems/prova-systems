@@ -152,6 +152,39 @@ body{background:#0b1220;color:#e8eaf0;font-family:'Instrument Sans',system-ui,sa
 
 // Support Modal
 function openSupportModal(){
+  // supSend404 — Support-Formular auf 404-Seite
+  window.supSend404 = async function() {
+    var betreff  = (document.getElementById('sup-betreff')  || {}).value || '404-Fehler';
+    var nachricht = (document.getElementById('sup-nachricht') || {}).value || '';
+    var btn = document.getElementById('sup-btn');
+    if (!nachricht.trim()) { alert('Bitte Beschreibung eingeben.'); return; }
+    if (btn) { btn.disabled = true; btn.textContent = 'Wird gesendet…'; }
+    try {
+      var svEmail = localStorage.getItem('prova_sv_email') || 'unbekannt';
+      await fetch('/.netlify/functions/airtable', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          method: 'POST',
+          path: '/v0/appJ7bLlAHZoxENWE/tblEb3A4dukGX8GFs',
+          payload: { records: [{ fields: {
+            Betreff:  '404: ' + betreff,
+            Nachricht: nachricht + '\nURL: ' + window.location.href,
+            Typ: 'Fehler',
+            'SV-Email': svEmail,
+            Datum: new Date().toISOString().slice(0,10),
+            Status: 'Offen'
+          }}]}
+        })
+      });
+      var fb = document.getElementById('support-form-body');
+      if (fb) fb.innerHTML = '<div style="padding:20px;text-align:center;"><div style="font-size:32px;margin-bottom:12px;">✅</div><div style="color:#10b981;font-weight:600;">Nachricht gesendet — wir melden uns.</div></div>';
+    } catch(e) {
+      if (btn) { btn.disabled = false; btn.textContent = 'Absenden'; }
+      alert('Fehler: ' + e.message);
+    }
+  };
+
   var m = document.getElementById('support-modal');
   var fb = document.getElementById('support-form-body');
   var ok = document.getElementById('sup-ok');

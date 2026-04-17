@@ -1,54 +1,46 @@
-// ══════════════════════════════════════════════════════════════
 // PROVA — normen.js Netlify Function
-// Lädt alle aktiven Normen aus Airtable NORMEN-Tabelle
-// Unterstützt Paginierung für 230+ Normen
-// ══════════════════════════════════════════════════════════════
+// Lädt alle aktiven Normen aus Airtable NORMEN-Tabelle (tblnceVJIW7BjHsPF)
+// Korrekte Feld-IDs aus Airtable-Schema — Stand 17.04.2026
 
-const { getCorsHeaders, corsOptionsResponse } = require('./lib/cors-helper');
+const AIRTABLE_BASE  = 'appJ7bLlAHZoxENWE';
+const AIRTABLE_TABLE = 'tblnceVJIW7BjHsPF';
 
-const AIRTABLE_BASE  = process.env.AIRTABLE_BASE_ID || 'appJ7bLlAHZoxENWE';
-const AIRTABLE_TABLE = 'tblFVcMxntQhusY2i'; // NORMEN
-const AIRTABLE_PAT   = process.env.AIRTABLE_PAT;
-
-// Airtable Feld-IDs → JS-Objekt-Keys
+// Echte Feld-IDs aus Airtable (via list_tables_for_base ermittelt)
 const FIELD_MAP = {
-  'fldyfHaL0ajQSbgeu': 'num',
-  'fldcrhYniqdutfgxH': 'titel',
-  'fld67tEzJPxJx9f2q': 'bereich',
-  'fld5rdDlEzYbOYEWf': 'sa',
-  'fldA3gcGvxbDPRnSx': 'anw',
-  'fld8CLXyY8pcsByfT': 'gw',
-  'fldP4e59fYiDlWkIS': 'mess',
-  'fld6CRXiEAt8rkfRO': 'hf',
-  'fldqR77SIunE5wV5z': 'hint',
-  'fld8XmI7kpjk4WfBV': 'aktiv',
-  'fldH3q7cZhbiknKaX': 'status',
-  'fldMYoztCqevCM1a1': 'aenderungshinweis',
+  'fldyeReuP8JN2ysfX': 'num',       // \ufeffNorm-Nummer (BOM-Zeichen!)
+  'fldOoZMoaGeVvRrex': 'titel',
+  'fldGi6sTQjrcFfkfc': 'bereich',
+  'fld9fmLn0GyA9SDf9': 'sa',        // Schadensarten (multipleSelects)
+  'flduiGXOUlExoE9PV': 'anw',       // Anwendung
+  'fldSfEeDIFHWRX26u': 'gw',        // Grenzwerte
+  'fldWwYKqbcRilMPoY': 'mess',      // Messtechnik
+  'fldRb3LIxS7kbKJft': 'hint',      // Gutachter-Hinweis
+  'fldket7RgxYYMFBrw': 'hf',        // Häufigkeit (singleSelect)
+  'fldK4QeLnSDAbkQ8N': 'status',    // Status
+  'fldbPPZwyU2BlyTco': 'aktiv',     // Aktiv (checkbox)
 };
 
 const FIELDS = Object.keys(FIELD_MAP).map(id => `fields[]=${encodeURIComponent(id)}`).join('&');
 
-function json(event, status, obj) {
-  return {
-    statusCode: status,
-    headers: {
-      'Content-Type': 'application/json; charset=utf-8',
-      'Cache-Control': 'public, max-age=300', // 5 Minuten cachen
-      ...getCorsHeaders(event),
-    },
-    body: JSON.stringify(obj),
-  };
-}
+const CORS = {
+  'Content-Type': 'application/json; charset=utf-8',
+  'Access-Control-Allow-Origin': 'https://prova-systems.de',
+  'Access-Control-Allow-Methods': 'GET,OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type',
+  'Cache-Control': 'public, max-age=300'
+};
 
-async function fetchPage(offset) {
-  const url = `https://api.airtable.com/v0/${AIRTABLE_BASE}/${AIRTABLE_TABLE}?${FIELDS}&filterByFormula=${encodeURIComponent('{Aktiv}=1')}&pageSize=100${offset ? '&offset=' + offset : ''}`;
+async function fetchPage(pat, offset) {
+  // Aktiv ist ein Checkbox-Feld → TRUE() für aktive Datensätze
+  const filter = encodeURIComponent('{Aktiv}=TRUE()');
+  const url = `https://api.airtable.com/v0/${AIRTABLE_BASE}/${AIRTABLE_TABLE}?${FIELDS}&filterByFormula=${filter}&pageSize=100${offset ? '&offset=' + encodeURIComponent(offset) : ''}`;
   const res = await fetch(url, {
-    headers: {
-      Authorization: `Bearer ${AIRTABLE_PAT}`,
-      'Content-Type': 'application/json',
-    },
+    headers: { Authorization: `Bearer ${pat}` }
   });
-  if (!res.ok) throw new Error(`Airtable HTTP ${res.status}`);
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`Airtable HTTP ${res.status}: ${err.substring(0, 200)}`);
+  }
   return res.json();
 }
 
@@ -59,53 +51,48 @@ function mapRecord(rec) {
     let val = f[fieldId];
     // singleSelect → String
     if (val && typeof val === 'object' && val.name) val = val.name;
-    mapped[key] = val !== undefined ? val : '';
+    // multipleSelects → komma-separierter String
+    if (Array.isArray(val)) val = val.map(v => v.name || v).join(',');
+    mapped[key] = val !== undefined && val !== null ? val : '';
   }
   return mapped;
 }
 
-exports.handler = async function (event) {
-  if (event.httpMethod === 'OPTIONS') return corsOptionsResponse(event);
+exports.handler = async function(event) {
+  if (event.httpMethod === 'OPTIONS') {
+    return { statusCode: 204, headers: CORS, body: '' };
+  }
 
-  if (!AIRTABLE_PAT) {
-    return json(event, 500, { error: 'AIRTABLE_PAT nicht konfiguriert' });
+  const pat = process.env.AIRTABLE_PAT || process.env.AIRTABLE_TOKEN;
+  if (!pat) {
+    return { statusCode: 500, headers: CORS, body: JSON.stringify({ error: 'AIRTABLE_PAT nicht gesetzt' }) };
   }
 
   try {
-    const allNormen = [];
+    let all = [];
     let offset = null;
 
-    // Paginierung: alle Seiten laden
     do {
-      const page = await fetchPage(offset);
-      const records = page.records || [];
-      records.forEach(rec => {
-        const n = mapRecord(rec);
-        // Nur aktive, vollständige Einträge
-        if (n.num && n.titel && n.aktiv !== false) {
-          allNormen.push(n);
-        }
-      });
-      offset = page.offset || null;
+      const data = await fetchPage(pat, offset);
+      const records = (data.records || []).map(mapRecord);
+      all = all.concat(records);
+      offset = data.offset || null;
     } while (offset);
 
-    // Sortierung: Häufigkeit hoch → mittel → niedrig, dann alphabetisch
-    const HF_ORDER = { hoch: 0, mittel: 1, niedrig: 2 };
-    allNormen.sort((a, b) => {
-      const ha = HF_ORDER[a.hf] !== undefined ? HF_ORDER[a.hf] : 9;
-      const hb = HF_ORDER[b.hf] !== undefined ? HF_ORDER[b.hf] : 9;
-      if (ha !== hb) return ha - hb;
-      return (a.num || '').localeCompare(b.num || '', 'de');
-    });
+    // Sortierung: hoch → mittel → niedrig
+    const HF_ORDER = { 'hoch': 0, 'mittel': 1, 'niedrig': 2 };
+    all.sort((a, b) => (HF_ORDER[a.hf] ?? 9) - (HF_ORDER[b.hf] ?? 9));
 
-    return json(event, 200, {
-      normen: allNormen,
-      count: allNormen.length,
-      timestamp: new Date().toISOString(),
-    });
-
+    return {
+      statusCode: 200,
+      headers: CORS,
+      body: JSON.stringify({ normen: all, total: all.length, timestamp: new Date().toISOString() })
+    };
   } catch (err) {
-    console.error('[normen] Fehler:', err.message);
-    return json(event, 500, { error: err.message });
+    return {
+      statusCode: 500,
+      headers: CORS,
+      body: JSON.stringify({ error: err.message })
+    };
   }
 };

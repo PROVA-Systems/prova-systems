@@ -1,188 +1,210 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>PROVA — Ergänzungsgutachten</title>
-  <script src="prova-preise.js"></script>
-  <script src="paket-guard.js"></script>
-  <script src="auth-guard.js"></script>
-  <script src="prova-auth-api.js"></script>
-  <script src="prova-sv-airtable.js"></script>
-  <script src="theme.js"></script>
-  <script src="prova-layout.config.js"></script>
-<script src="prova-airtable-api.js"></script>
-<script src="prova-api.js"></script>
-<script src="nav.js" defer></script>
-  <script src="global-search.js" defer></script>
-  <style>
-:root{
-  --bg:#0b0d11;--bg2:#111318;--bg3:#161a22;
-  --surface:#1c2130;--surface2:#232a3a;
-  --border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.11);
-  --text:#eaecf4;--text2:#8b93ab;--text3:#4d5568;
-  --accent:#4f8ef7;--accent2:#3a7be0;
-  --success:#10b981;--warning:#f59e0b;--danger:#ef4444;--purple:#8b5cf6;
-  --font-ui:'DM Sans',system-ui,sans-serif;
-  --font-mono:ui-monospace,Consolas,monospace;
-  --r-sm:6px;--r-md:10px;--r-lg:14px;--r-xl:18px;
-  --topbar-h:56px;--sb-w:228px;--sb-w-col:56px;
-}
-html{font-size:14px;}
-body{font-family:var(--font-ui);background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;line-height:1.55;}
-</style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ergänzungsgutachten · PROVA</title>
+<link rel="stylesheet" href="prova-design.css">
 <link rel="stylesheet" href="mobile.css">
-  <link rel="stylesheet" href="prova-design.css">
-  <style>
-    :root{--bg:#0d0f14;--bg2:#13161d;--text:#e8eaf0;--text2:#9da3b4;--accent:#4f8ef7;--border:rgba(255,255,255,0.08);}
-    *{box-sizing:border-box;margin:0;padding:0;}
-    body{font-family:'Montserrat',sans-serif;background:var(--bg);color:var(--text2);min-height:100vh;font-size:14px;}
-    .topbar{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 20px;height:52px;display:flex;align-items:center;justify-content:space-between;}
-    .logo{font-family:'Fraunces',serif;font-weight:700;font-size:18px;color:var(--text);text-decoration:none;}
-    .logo span{color:var(--accent);}
-    
-    .main{max-width:800px;margin:0 auto;padding:24px;}
-    h1{font-family:'Fraunces',serif;color:var(--text);font-size:24px;margin-bottom:8px;}
-    .sub{font-size:13px;margin-bottom:18px;line-height:1.55;}
-    .card{background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:16px;}
-    label{display:block;font-size:12px;font-weight:700;margin-bottom:6px;}
-    input,textarea,select{width:100%;padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:rgba(0,0,0,0.2);color:var(--text);}
-    textarea{min-height:100px;}
-    .btn{padding:10px 16px;border-radius:10px;border:none;background:rgba(79,142,247,0.28);color:#fff;font-weight:700;cursor:pointer;margin-top:12px;margin-right:8px;}
-    .btn:hover{background:rgba(79,142,247,0.4);}
-    .btn-sec{background:rgba(255,255,255,0.08);}
-    #ergErr{display:none;padding:10px 12px;border-radius:8px;background:rgba(239,68,68,0.15);color:#fecaca;margin-bottom:12px;font-size:13px;}
-    #fristOut{margin-top:10px;font-size:13px;color:var(--accent);}
-    .skel{height:36px;border-radius:8px;background:rgba(255,255,255,0.06);margin-bottom:8px;}
-    table{width:100%;font-size:13px;border-collapse:collapse;}
-    th,td{padding:10px 8px;border-bottom:1px solid var(--border);text-align:left;}
-    .mono{font-family:ui-monospace,monospace;}
-    .drawer-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:200;}.drawer-overlay.open{display:block;}
-    .drawer{position:fixed;top:0;left:0;bottom:0;width:260px;background:var(--bg2);border-right:1px solid var(--border);z-index:201;transform:translateX(-100%);transition:transform .25s ease;display:flex;flex-direction:column;}
-    .drawer.open{transform:translateX(0);}.drawer-header{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
-    .drawer-close{background:none;border:none;color:var(--text2);font-size:18px;cursor:pointer;}
-    .topbar-left{display:flex;align-items:center;gap:14px;}
-    .burger{display:none;background:none;border:none;cursor:pointer;flex-direction:column;gap:4px;padding:6px;}
-    .burger span{display:block;width:20px;height:2px;background:var(--text2);}
-    
-    .paket-badge{font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;}
-    @media(max-width:900px){.burger{display:flex;}body{padding-bottom:56px;}}
-  </style>
+<script src="theme.js"></script>
+<script src="nav.js"></script>
+<script src="auth-guard.js"></script>
+<style>
+  .card-block { background:var(--surface); border:1px solid var(--border); border-radius:14px; overflow:hidden; margin-bottom:16px; }
+  .card-block-header { background:#0b1628; color:#fff; padding:14px 20px; display:flex; align-items:center; gap:10px; }
+  .card-block-header .ch-title { font-size:14px; font-weight:700; }
+  .card-block-header .ch-sub { font-size:11px; opacity:.7; margin-top:2px; }
+  .card-block-body { padding:20px; }
+  .field-label { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:rgba(255,255,255,.72); margin-bottom:6px; display:block; }
+  .field-group { margin-bottom:16px; }
+  .field-group:last-child { margin-bottom:0; }
+  .field-row { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  .page-desc { font-size:12px; color:var(--text3); margin-bottom:20px; background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:12px 16px; }
+  .page-desc code { font-size:11px; background:rgba(79,142,247,.12); color:var(--accent); padding:1px 6px; border-radius:4px; }
+</style>
 </head>
-<body data-page="ergaenzung">
-<div class="app-shell" id="app-shell">
-  <nav class="sidebar" id="sidebar"></nav>
-  <div class="sb-overlay" id="sb-overlay" onclick="closeMobileSidebar()"></div>
-  <div class="main-wrap" id="main-wrap">
-    <header class="topbar">
-      <div class="topbar-left">
-        <button class="burger" onclick="openMobileSidebar()"><span></span><span></span><span></span></button>
-        <div class="breadcrumb"><span>PROVA</span><span style="color:var(--text3)">›</span><strong>Ergänzungsgutachten</strong></div>
-      </div>
-    </header>
-    <div class="page-content" style="padding:24px 16px;">
-<div class="prova-content">
-    <h1>Ergänzungsgutachten (§411 ZPO)</h1>
-    <p class="sub">Hauptgutachten aus Airtable wählen, Ergänzungsfall anlegen (<code>Auftragstyp=Ergaenzung</code>, <code>Parent_AZ</code>, <code>Beweisfragen</code>, <code>Status=Neu</code>). Vorlage: <a href="formulare/vorlage-09-ergaenzungsgutachten.html" style="color:var(--accent)">vorlage-09</a>.</p>
-    <div id="ergErr"></div>
-    <div class="card">
-      <label for="fall_select">Hauptgutachten</label>
-      <select id="fall_select" style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:rgba(0,0,0,0.2);color:var(--text);">
-        <option value="">— Fälle werden geladen…</option>
-      </select>
-      <label for="parent_az" style="margin-top:12px;">Parent-AZ (editierbar)</label>
-      <input type="text" id="parent_az" placeholder="PROVA-S-2026-…">
-      <label for="beweis" style="margin-top:12px;">Neue Beweisfragen</label>
-      <textarea id="beweis" placeholder="Beweisfragen des Gerichts / zu klärende Punkte…"></textarea>
-      <label for="anlass" style="margin-top:12px;">Anlass der Ergänzung</label>
-      <textarea id="anlass" placeholder="Kurzbegründung…" style="min-height:72px;"></textarea>
-      <label for="termin" style="margin-top:12px;">Termin Ergänzungsbegehung</label>
-      <input type="date" id="termin">
-      <label for="stunden" style="margin-top:12px;">Geschätzte Stunden (Ortstermin)</label>
-      <input type="number" id="stunden" min="0" step="0.5" value="2" style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:rgba(0,0,0,0.2);color:var(--text);">
-      <label for="frist_start" style="margin-top:12px;">§411 Frist-Berechnung ab Datum</label>
-      <input type="date" id="frist_start" style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:rgba(0,0,0,0.2);color:var(--text);">
-      <div id="fristOut"></div>
-      <div style="margin-top:14px;display:flex;flex-wrap:wrap;gap:8px;">
-        <button type="button" class="btn" id="btnFrist">§411 Frist (+56 Tage)</button>
-        <button type="button" class="btn btn-sec" id="btnRechnung">Eigene Rechnung (Positionen)</button>
-        <button type="button" class="btn" id="btnCreate">Ergänzungsfall in Airtable speichern</button>
-        <button type="button" class="btn btn-sec" id="btnStart">Ergänzungsgutachten starten</button>
-      </div>
-      <p class="sub" style="margin-top:12px;" id="lastAzNote"></p>
+<body>
+<div id="nav-placeholder"></div>
+<main class="page-content" style="max-width:800px;margin:0 auto;padding:24px 16px;">
+
+<div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+  <button onclick="history.back()" class="p-btn p-btn-ghost" style="font-size:13px;">← Zurück</button>
+  <div>
+    <h1 style="font-size:20px;font-weight:800;color:var(--text);margin:0;">Ergänzungsgutachten</h1>
+    <p style="font-size:12px;color:var(--text3);margin:3px 0 0;">§411 ZPO · Gerichtliches Ergänzungsverfahren</p>
+  </div>
+</div>
+
+<div class="page-desc">
+  Hauptgutachten aus Airtable wählen, Ergänzungsfall anlegen
+  (<code>Auftragstyp=Ergaenzung</code>, <code>Parent_AZ</code>, <code>Beweisfragen</code>, <code>Status=Neu</code>).
+  Vorlage: <a href="vorlage-09-ergaenzungsgutachten.html" style="color:var(--accent);">vorlage-09</a>
+</div>
+
+<!-- Hauptgutachten -->
+<div class="card-block">
+  <div class="card-block-header">
+    <span style="font-size:18px;">🔗</span>
+    <div>
+      <div class="ch-title">Verknüpfung Hauptgutachten</div>
+      <div class="ch-sub">Wählen Sie das zugehörige Hauptgutachten</div>
     </div>
   </div>
-  <script src="ergaenzung-logic.js"></script>
-  <script>
-  (function(){
-    var api = window.ErgaenzungAPI;
-    var err = document.getElementById('ergErr');
-    var sel = document.getElementById('fall_select');
-    var lastNewAz = '';
-    function showErr(m){ err.style.display='block'; err.textContent=m; }
-    function clearErr(){ err.style.display='none'; }
-    if(!api){ showErr('ergaenzung-logic.js fehlt'); return; }
-    sel.innerHTML = '<option value="">Lade Fälle…</option>';
-    api.loadHauptfaelle().then(function(faelle){
-      sel.innerHTML = '<option value="">— Bitte Hauptgutachten wählen —</option>';
-      faelle.forEach(function(f){
-        var o = document.createElement('option');
-        o.value = f.aktenzeichen || f.airtable_id;
-        o.setAttribute('data-id', f.airtable_id);
-        o.textContent = f.label || f.aktenzeichen;
-        sel.appendChild(o);
-      });
-    }).catch(function(e){ showErr(e.message||String(e)); sel.innerHTML='<option value="">Fehler beim Laden</option>'; });
-    sel.addEventListener('change', function(){
-      var opt = sel.options[sel.selectedIndex];
-      var az = opt && opt.value ? opt.value : '';
-      document.getElementById('parent_az').value = az;
-    });
-    try {
-      var az0 = localStorage.getItem('prova_letztes_az');
-      if (az0) document.getElementById('parent_az').value = az0;
-    } catch(e){}
-    document.getElementById('btnFrist').addEventListener('click', function(){
-      var d = document.getElementById('frist_start').value || new Date().toISOString().slice(0,10);
-      var end = api.frist411Plus56(d);
-      document.getElementById('fristOut').textContent = 'Fristende (Zustellung + 56 Tage, vereinfacht): ' + end.split('-').reverse().join('.');
-    });
-    document.getElementById('btnRechnung').addEventListener('click', function(){
-      var az = document.getElementById('parent_az').value.trim();
-      api.prefillRechnungErgänzung(az, document.getElementById('stunden').value);
-      window.location.href = 'rechnungen.html?prefill=ergaenzung';
-    });
-    document.getElementById('btnCreate').addEventListener('click', function(){
-      clearErr();
-      var parent_az = document.getElementById('parent_az').value.trim();
-      if(!parent_az){ showErr('Bitte Parent-AZ wählen oder eintragen.'); return; }
-      var btn = this;
-      btn.disabled = true;
-      api.createErgaenzungsFall({
-        parent_az: parent_az,
-        beweisfragen: document.getElementById('beweis').value.trim(),
-        anlass: document.getElementById('anlass').value.trim(),
-        termin: document.getElementById('termin').value,
-        stunden: document.getElementById('stunden').value
-      }).then(function(res){
-        var f = res.fields || {};
-        lastNewAz = String(f.Aktenzeichen || f.Schadensnummer || f.schadensnummer || '').trim() || (res.id || '');
-        document.getElementById('lastAzNote').textContent = 'Gespeichert. Neues Aktenzeichen (falls von Airtable gesetzt): ' + (lastNewAz || '— bitte in Airtable prüfen');
-        try { localStorage.setItem('prova_letztes_az', lastNewAz || parent_az); } catch(x){}
-      }).catch(function(e){ showErr(e.message||String(e)); }).finally(function(){ btn.disabled=false; });
-    });
-    document.getElementById('btnStart').addEventListener('click', function(){
-      var az = lastNewAz || document.getElementById('parent_az').value.trim();
-      if(!az){ showErr('Zuerst Fall speichern oder AZ eintragen.'); return; }
-      window.location.href = api.appHref() + '?az=' + encodeURIComponent(az);
-    });
-  })();
-  </script>
-
+  <div class="card-block-body">
+    <div class="field-group">
+      <label class="field-label" for="hauptgutachten">Hauptgutachten *</label>
+      <select id="hauptgutachten" class="p-input" style="width:100%;">
+        <option value="">— Bitte Hauptgutachten wählen —</option>
+      </select>
+    </div>
+    <div class="field-group">
+      <label class="field-label" for="parent-az">Parent-AZ (editierbar)</label>
+      <input type="text" id="parent-az" class="p-input" style="width:100%;" placeholder="PROVA-S-2026-...">
     </div>
   </div>
 </div>
-<script src="support-chat.js" defer></script>
-<script src="sw-register.js" defer></script>
+
+<!-- Beweisfragen & Anlass -->
+<div class="card-block">
+  <div class="card-block-header">
+    <span style="font-size:18px;">📋</span>
+    <div>
+      <div class="ch-title">Ergänzungsinhalt</div>
+      <div class="ch-sub">Neue Beweisfragen und Anlass der Ergänzung</div>
+    </div>
+  </div>
+  <div class="card-block-body">
+    <div class="field-group">
+      <label class="field-label" for="beweisfragen">Neue Beweisfragen *</label>
+      <textarea id="beweisfragen" class="p-input" style="width:100%;min-height:120px;resize:vertical;"
+        placeholder="Beweisfragen des Gerichts / zu klärende Punkte…"></textarea>
+    </div>
+    <div class="field-group">
+      <label class="field-label" for="anlass">Anlass der Ergänzung</label>
+      <textarea id="anlass" class="p-input" style="width:100%;min-height:80px;resize:vertical;"
+        placeholder="Kurzbegründung…"></textarea>
+    </div>
+  </div>
+</div>
+
+<!-- Termin & Zeit -->
+<div class="card-block">
+  <div class="card-block-header">
+    <span style="font-size:18px;">📅</span>
+    <div>
+      <div class="ch-title">Termin & Zeitaufwand</div>
+      <div class="ch-sub">Ergänzungsbegehung und geschätzte Dauer</div>
+    </div>
+  </div>
+  <div class="card-block-body">
+    <div class="field-row">
+      <div class="field-group">
+        <label class="field-label" for="termin">Termin Ergänzungsbegehung</label>
+        <input type="date" id="termin" class="p-input" style="width:100%;">
+      </div>
+      <div class="field-group">
+        <label class="field-label" for="stunden">Geschätzte Stunden (Ortstermin)</label>
+        <input type="number" id="stunden" class="p-input" style="width:100%;" value="2" min="0.5" step="0.5">
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Speichern -->
+<button onclick="speichern()" class="p-btn p-btn-primary" style="width:100%;padding:14px;font-size:14px;">
+  💾 Ergänzungsfall in Airtable anlegen
+</button>
+
+</main>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Hauptgutachten aus Airtable laden
+  var token = localStorage.getItem('prova_airtable_pat') || '';
+  if (!token) return;
+  
+  fetch('/.netlify/functions/airtable', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({
+      action: 'list',
+      table: 'SCHADENSFAELLE',
+      fields: ['Aktenzeichen','Auftragstyp','Status'],
+      filterByFormula: "AND({Auftragstyp}!='Ergaenzung',{Status}!='Abgeschlossen')",
+      maxRecords: 50
+    })
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(data) {
+    var sel = document.getElementById('hauptgutachten');
+    (data.records || []).forEach(function(r) {
+      var opt = document.createElement('option');
+      opt.value = r.id;
+      opt.textContent = r.fields.Aktenzeichen || r.id;
+      sel.appendChild(opt);
+    });
+    // URL-Parameter vorausfüllen
+    var az = new URLSearchParams(window.location.search).get('az');
+    if (az) {
+      for (var i = 0; i < sel.options.length; i++) {
+        if (sel.options[i].textContent === az) { sel.selectedIndex = i; fuelleAZ(); break; }
+      }
+    }
+  })
+  .catch(function(){});
+  
+  document.getElementById('hauptgutachten').addEventListener('change', fuelleAZ);
+});
+
+function fuelleAZ() {
+  var sel = document.getElementById('hauptgutachten');
+  var txt = sel.options[sel.selectedIndex] ? sel.options[sel.selectedIndex].textContent : '';
+  document.getElementById('parent-az').value = txt || '';
+}
+
+function speichern() {
+  var sel = document.getElementById('hauptgutachten');
+  var parentId = sel.value;
+  var parentAZ = document.getElementById('parent-az').value.trim();
+  var beweisfragen = document.getElementById('beweisfragen').value.trim();
+  var anlass = document.getElementById('anlass').value.trim();
+  var termin = document.getElementById('termin').value;
+  var stunden = document.getElementById('stunden').value;
+
+  if (!parentId) { alert('Bitte Hauptgutachten wählen.'); return; }
+  if (!beweisfragen) { alert('Bitte Beweisfragen eintragen.'); return; }
+
+  var svEmail = localStorage.getItem('prova_sv_email') || '';
+
+  fetch('/.netlify/functions/airtable', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({
+      action: 'create',
+      table: 'SCHADENSFAELLE',
+      fields: {
+        Auftragstyp: 'Ergaenzung',
+        Parent_AZ: parentAZ,
+        Beweisfragen: beweisfragen,
+        Anlass_Ergaenzung: anlass,
+        Ortstermin: termin || null,
+        Geschaetzte_Stunden: parseFloat(stunden) || 2,
+        Status: 'Neu',
+        sv_email: svEmail
+      }
+    })
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(data) {
+    if (data.id) {
+      alert('✅ Ergänzungsfall angelegt: ' + (data.fields && data.fields.Aktenzeichen || data.id));
+      window.location.href = 'archiv.html';
+    } else {
+      alert('Fehler: ' + JSON.stringify(data));
+    }
+  })
+  .catch(function(e){ alert('Fehler: ' + e.message); });
+}
+</script>
 </body>
 </html>

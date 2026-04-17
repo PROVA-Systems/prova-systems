@@ -30,9 +30,7 @@ async function ladeRecord(){
   // Wenn nur az= übergeben (kein Record-ID) → per Aktenzeichen suchen
   if(!recordId && aktenzeichen){
     try{
-      // FIX #011: fields[] Parameter — nur benötigte Felder laden (Performance +60%)
-      var _akteFields=['Aktenzeichen','Status','Timestamp','Schadensart','Schaden_Strasse','Ort','PLZ','Schadensdatum','Auftraggeber_Name','Auftraggeber_Typ','Auftraggeber_Email','Ansprechpartner','KI_Entwurf','Notiz','PDF_URL','pdf_url','Fotos_Anzahl','Messwerte','Bearbeitungszeit_Min','sv_email'].map(function(f){return'fields%5B%5D='+encodeURIComponent(f);}).join('&');
-      var searchPath='/v0/'+AT_BASE+'/'+AT_FAELLE+'?filterByFormula='+encodeURIComponent('{Aktenzeichen}="'+aktenzeichen+'"')+'&maxRecords=1&'+_akteFields;
+      var searchPath='/v0/'+AT_BASE+'/'+AT_FAELLE+'?filterByFormula='+encodeURIComponent('{Aktenzeichen}="'+aktenzeichen+'"')+'&maxRecords=1';
       var searchRes=await fetch('/.netlify/functions/airtable',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({method:'GET',path:searchPath})});
       if(searchRes.ok){
         var searchData=await searchRes.json();
@@ -208,7 +206,7 @@ var _erkFrist = null;
 async function handleDokUpload(files) {
   if (!files || !files.length) return;
   var statusEl = document.getElementById('dok-upload-status');
-  var az = (document.getElementById('akte-az') ? document.getElementById('akte-az').textContent : '') || localStorage.getItem('prova_letztes_az') || '';
+  var az = document.getElementById('akte-az')?.textContent || localStorage.getItem('prova_letztes_az') || '';
   var uploads = JSON.parse(localStorage.getItem('prova_akte_docs_' + az) || '[]');
 
   for (var i = 0; i < files.length; i++) {
@@ -233,7 +231,7 @@ async function handleDokUpload(files) {
 
         var kiRes = await fetch('/.netlify/functions/ki-proxy', {
           method: 'POST',
-          headers: Object.assign({ 'Content-Type': 'application/json' }, window.provaAuthHeaders ? window.provaAuthHeaders() : {}),
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ aufgabe: 'pdf_extraktion', pdf_base64: b64, dateiname: file.name })
         });
 
@@ -268,7 +266,7 @@ async function handleDokUpload(files) {
         });
         var capRes = await fetch('/.netlify/functions/foto-captioning', {
           method: 'POST',
-          headers: Object.assign({ 'Content-Type': 'application/json' }, window.provaAuthHeaders ? window.provaAuthHeaders() : {}),
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             imageBase64: imgB64,
             mediaType: file.type,
@@ -324,7 +322,7 @@ async function handleDokUpload(files) {
 function uebernimmFrist() {
   if (!_erkFrist) return;
   // In localStorage speichern (Fristenverwaltung liest das)
-  var az = (document.getElementById('akte-az') ? document.getElementById('akte-az').textContent : '') || '';
+  var az = document.getElementById('akte-az')?.textContent || '';
   var cache = JSON.parse(localStorage.getItem('prova_faelle_cache') || '{}');
   if (cache[az]) {
     cache[az].fristdatum = _erkFrist;
@@ -834,3 +832,63 @@ window.PROVA_KONTEXT = {
 };
 
 })();
+window.exportWordAkte = async function() {
+  var az = new URLSearchParams(window.location.search).get('az') || 
+           localStorage.getItem('prova_letztes_az') || '';
+  var svEmail = localStorage.getItem('prova_sv_email') || '';
+  var svName  = [localStorage.getItem('prova_sv_vorname')||'', 
+                 localStorage.getItem('prova_sv_nachname')||''].join(' ').trim();
+
+  if (!az) { if(typeof showToast==='function') showToast('Kein Aktenzeichen gefunden', 'error'); return; }
+  if(typeof showToast==='function') showToast('Akte wird exportiert…');
+
+  try {
+    // Falldaten laden
+    var [fallRes, briefeRes] = await Promise.all([
+      fetch('/.netlify/functions/airtable', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({method:'GET',
+          path:'/v0/appJ7bLlAHZoxENWE/tblSxV8bsXwd1pwa0?filterByFormula=' +
+               encodeURIComponent('AND({Aktenzeichen}="'+az+'",{sv_email}="'+svEmail+'")') +
+               '&maxRecords=1'})
+      }),
+      fetch('/.netlify/functions/airtable', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({method:'GET',
+          path:'/v0/appJ7bLlAHZoxENWE/tblSzxvnkRE6B0thx?filterByFormula=' +
+               encodeURIComponent('AND({aktenzeichen}="'+az+'",{sv_email}="'+svEmail+'")') +
+               '&fields[]=brief_typ&fields[]=gesendet_am&fields[]=versand_status&maxRecords=20'})
+      })
+    ]);
+
+    var fallData   = await fallRes.json();
+    var briefeData = await briefeRes.json();
+
+    var res = await fetch('/.netlify/functions/akte-export', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        az, sv_email: svEmail, sv_name: svName,
+        fall:    fallData.records?.[0]?.fields || {},
+        briefe:  briefeData.records || []
+      })
+    });
+
+    var data = await res.json();
+    if (!data.success) throw new Error(data.error || 'Export fehlgeschlagen');
+
+    // Download triggern
+    var bytes = Uint8Array.from(atob(data.content_base64), function(c){return c.charCodeAt(0);});
+    var blob  = new Blob([bytes], {type: data.content_type});
+    var url   = URL.createObjectURL(blob);
+    var a     = document.createElement('a');
+    a.href    = url;
+    a.download = data.filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    if(typeof showToast==='function') showToast('✅ Akte exportiert — Datei im Download-Ordner');
+  } catch(e) {
+    if(typeof showToast==='function') showToast('Fehler: ' + e.message, 'error');
+  }
+};

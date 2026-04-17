@@ -1,6 +1,9 @@
 /**
  * PROVA Systems — KI-Lernpool
- * Diktat-Lernmodus: KI lernt aus Korrekturen des Sachverständigen
+ * Diktat-Lernmodus: Fachvokabular-Datenbank wächst mit Korrekturen des Sachverständigen
+ * WICHTIG: Kein Machine-Learning — KI_LERNPOOL ist eine Airtable-Datenbank für
+ * benutzerspezifisches Fachvokabular (Eigennamen, Abkürzungen, Fachbegriffe).
+ * Die Datenbank wird als Kontext an GPT-4o übergeben, nicht zum Training verwendet.
  *
  * Features:
  * - Korrekturen aus Whisper-Transkription speichern (Original → Korrektur)
@@ -729,7 +732,7 @@ const KILernpool = (() => {
           <!-- Tags -->
           <div class="kl-vokabular-tags" id="kl-vokabular-tags">
             ${userVokabular.length === 0
-              ? '<span style="font-size:11px;color:#9ca3af;padding:4px">Noch keine benutzerdefinierten Einträge. KI lernt aus deinen Diktat-Korrekturen automatisch.</span>'
+              ? '<span style="font-size:11px;color:#9ca3af;padding:4px">Noch keine benutzerdefinierten Einträge. Fachvokabular wächst aus deinen Diktat-Korrekturen automatisch.</span>'
               : userVokabular.map(v => renderTag(v)).join('')
             }
           </div>
@@ -789,8 +792,8 @@ const KILernpool = (() => {
 
   // ── Benutzer-Aktionen ─────────────────────────────────────────────
   function _korrekturEingabe() {
-    const original  = (document.getElementById('kl-input-original') ? document.getElementById('kl-input-original').value : undefined).trim();
-    const korrektur = (document.getElementById('kl-input-korrektur') ? document.getElementById('kl-input-korrektur').value : undefined).trim();
+    const original  = document.getElementById('kl-input-original')?.value.trim();
+    const korrektur = document.getElementById('kl-input-korrektur')?.value.trim();
     if (!original || !korrektur) { alert('Bitte beide Felder ausfüllen.'); return; }
 
     korrekturSpeichern(original, korrektur);
@@ -815,13 +818,13 @@ const KILernpool = (() => {
     if (!form) return;
     form.classList.toggle('sichtbar');
     if (form.classList.contains('sichtbar')) {
-      (function(){var _e=document.getElementById('kl-add-wort');if(_e)_e.focus();})();;
+      document.getElementById('kl-add-wort')?.focus();
     }
   }
 
   function _addVokabel() {
-    const wort      = (document.getElementById('kl-add-wort') ? document.getElementById('kl-add-wort').value : undefined).trim();
-    const kategorie = (document.getElementById('kl-add-kategorie') ? document.getElementById('kl-add-kategorie').value : undefined);
+    const wort      = document.getElementById('kl-add-wort')?.value.trim();
+    const kategorie = document.getElementById('kl-add-kategorie')?.value;
     if (!wort) { alert('Bitte einen Begriff eingeben.'); return; }
 
     const ok = vokabularHinzufuegen(wort, kategorie, true);

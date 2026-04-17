@@ -139,13 +139,17 @@ const PROVASearch = {
         const _q = this._q;
         // Zahlenfolge erkannt? Dann NUR in Norm-Nummer suchen
         const isNumericQuery = /[0-9]/.test(_q);
+        const _qNorm = _q.replace(/ /g, '');
         const scored = window.PROVA_NORMEN_DB
           .map(n => {
             const num = (n.num || '').toLowerCase();
+            const numNorm = num.replace(/ /g, '');
             const titel = (n.titel || '').toLowerCase();
             let score = 0;
             if (num.startsWith(_q)) score = 100;
+            else if (numNorm.startsWith(_qNorm)) score = 95;
             else if (num.includes(_q)) score = 80;
+            else if (numNorm.includes(_qNorm)) score = 75;
             else if (!isNumericQuery && titel.includes(_q)) score = 60;
             return { n, score };
           })

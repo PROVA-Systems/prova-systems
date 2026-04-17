@@ -11,7 +11,7 @@ if (!window.showToast && window.zeigToast) window.showToast = window.zeigToast;
 (function(){
 'use strict';
 
-var WEBHOOK_S6='/.netlify/functions/make-proxy?key=s6';
+var WEBHOOK_S6='https://hook.eu1.make.com/b2tsqcvjgxhk9lrv3yyo9qht46k16kcq';
 var AT_BASE='appJ7bLlAHZoxENWE';
 var AT_RECHNUNGEN='tblF6MS7uiFAJDjiT';
 var AT_FAELLE='tblSxV8bsXwd1pwa0';
@@ -289,28 +289,18 @@ function speichereLokal(reNr,ag,brutto,status,datum){
 
 async function ladeListe(){
   var liste=document.getElementById('rechnung-liste');
-  // 1. Sofort aus Cache laden (kein endloses Spinner)
-  var lsCache=[];try{lsCache=JSON.parse(localStorage.getItem('prova_rechnungen_local')||'[]');}catch(e){}
-  if(lsCache.length){
-    alleRechnungen=lsCache.map(function(r){return{id:r.re_nr||r.id,re_nr:r.re_nr||'—',auftraggeber:r.auftraggeber||'—',betrag:parseFloat(r.betrag_brutto)||0,status:r.Status||'Offen',datum:r.datum||''};});
-  }
-  // 2. Airtable mit 8s Timeout
   try{
-    var ctrl=new AbortController();var tout=setTimeout(function(){ctrl.abort();},8000);
     var filter=svEmail?'AND(NOT({Status}=""),{sv_email}="'+svEmail+'")':'NOT({Status}="")';
     var path='/v0/'+AT_BASE+'/'+AT_RECHNUNGEN+'?filterByFormula='+encodeURIComponent(filter)+'&maxRecords=50&sort[0][field]=Timestamp&sort[0][direction]=desc';
-    var res=await fetch('/.netlify/functions/airtable',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({method:'GET',path:path}),signal:ctrl.signal});
-    clearTimeout(tout);
+    var res=await fetch('/.netlify/functions/airtable',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({method:'GET',path:path})});
     if(!res.ok)throw new Error('HTTP '+res.status);
     var data=await res.json();
     alleRechnungen=(data.records||[]).map(function(r){
       return{id:r.id,re_nr:r.fields.Rechnungsnummer||r.fields.re_nr||'—',auftraggeber:r.fields.Auftraggeber_Name||r.fields.empfaenger_name||'—',betrag:parseFloat(r.fields.betrag_brutto||r.fields.brutto_betrag_eur||0),status:r.fields.Status||'Offen',datum:r.fields.Rechnungsdatum||r.fields.rechnungsdatum||''};
     });
-    // In Cache schreiben
-    try{localStorage.setItem('prova_rechnungen_local',JSON.stringify(alleRechnungen.map(function(r){return{re_nr:r.re_nr,auftraggeber:r.auftraggeber,betrag_brutto:r.betrag,Status:r.status,datum:r.datum};})));}catch(ex){}
   }catch(e){
-    if(!alleRechnungen.length){var ls=[];try{ls=JSON.parse(localStorage.getItem('prova_rechnungen_local')||'[]');}catch(e2){}alleRechnungen=ls.map(function(r){return{id:r.re_nr,re_nr:r.re_nr||'—',auftraggeber:r.auftraggeber||'—',betrag:parseFloat(r.betrag_brutto)||0,status:r.Status||'Offen',datum:r.datum||''};});}
-    if(e.name==='AbortError'){zeigToast('Verbindung langsam — zeige gespeicherte Rechnungen','warn');}
+    var ls=[];try{ls=JSON.parse(localStorage.getItem('prova_rechnungen_local')||'[]');}catch(e2){}
+    alleRechnungen=ls.map(function(r){return{id:r.re_nr,re_nr:r.re_nr,auftraggeber:r.auftraggeber,betrag:parseFloat(r.betrag_brutto)||0,status:r.Status||'Offen',datum:r.datum};});
   }
 
   // Stats
@@ -529,7 +519,7 @@ async function supSendModal(){
   var btn=document.getElementById('sup-btn');
   btn.disabled=true;btn.textContent='⏳ Wird gesendet…';
   try{
-    await fetch('/.netlify/functions/make-proxy?key=sup',{
+    await fetch('https://hook.eu1.make.com/lktuhugwcg5v37ib6bdaxjb1uiplnu8v',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
@@ -550,11 +540,11 @@ async function supSendModal(){
 }
 /* ══════════════════════════════════════════════════════════════
    F1 — RECHNUNGS-PDF GENERIERUNG
-   Webhook: /.netlify/functions/make-proxy?key=f1
+   Webhook: https://hook.eu1.make.com/lo0es88zq7rxmnx3jiwoonrv2chn47zy
    Szenario: PROVA F1 (ID: 5192002)
 ══════════════════════════════════════════════════════════════ */
 
-var WEBHOOK_F1 = '/.netlify/functions/make-proxy?key=f1';
+var WEBHOOK_F1 = 'https://hook.eu1.make.com/lo0es88zq7rxmnx3jiwoonrv2chn47zy';
 
 window.rechnungPDFGenerieren = async function(rechnungId) {
   if (!rechnungId) { if(typeof zeigToast==='function') zeigToast('Keine Rechnungs-ID', 'error'); return; }
@@ -631,5 +621,111 @@ window.rechnungPDFGenerieren = async function(rechnungId) {
     }
   } catch(e) {
     if(typeof zeigToast==='function') zeigToast('PDF-Auftrag übermittelt — Mail folgt in ~3 Minuten');
+  }
+};
+
+window.exportDatevCSV = async function() {
+  var svEmail = localStorage.getItem('prova_sv_email') || '';
+  if (!svEmail) { if(typeof zeigToast==='function') zeigToast('Nicht eingeloggt','error'); return; }
+
+  try {
+    if(typeof zeigToast==='function') zeigToast('DATEV-Export wird vorbereitet…');
+
+    // Rechnungen direkt aus Airtable laden
+    var res = await fetch('/.netlify/functions/airtable', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        method: 'GET',
+        path: '/v0/appJ7bLlAHZoxENWE/tblF6MS7uiFAJDjiT?filterByFormula=' +
+              encodeURIComponent('{sv_email}="' + svEmail + '"') +
+              '&maxRecords=100&sort[0][field]=Timestamp&sort[0][direction]=desc' +
+              '&fields[]=Rechnungsnummer&fields[]=empfaenger_name&fields[]=rechnungsdatum' +
+              '&fields[]=netto_betrag_eur&fields[]=brutto_betrag_eur&fields[]=ust_satz' +
+              '&fields[]=status&fields[]=aktenzeichen'
+      })
+    });
+    var data = await res.json();
+    var records = data.records || [];
+
+    if (!records.length) {
+      if(typeof zeigToast==='function') zeigToast('Keine Rechnungen gefunden','error');
+      return;
+    }
+
+    // DATEV EXTF Format
+    var heute = new Date();
+    var datumStr = [
+      String(heute.getDate()).padStart(2,'0'),
+      String(heute.getMonth()+1).padStart(2,'0'),
+      heute.getFullYear()
+    ].join('');
+
+    var svName = [localStorage.getItem('prova_sv_vorname')||'',
+                  localStorage.getItem('prova_sv_nachname')||''].join(' ').trim();
+
+    // EXTF Header Zeile 1
+    var header1 = [
+      '"EXTF"','141','21','"Buchungsstapel"','9','','','','',
+      '"' + datumStr + '"','','"' + svName + '"',
+      '','','70000','70000',
+      '"' + datumStr + '"','"' + datumStr + '"',
+      '0','','','"EUR"'
+    ].join(';');
+
+    // EXTF Spaltenheader Zeile 2
+    var header2 = [
+      'Umsatz (ohne Soll/Haben-Kz)','Soll/Haben-Kennzeichen','WKZ Umsatz',
+      'Kurs','Basis-Umsatz','WKZ Basis-Umsatz','Konto',
+      'Gegenkonto (ohne BU-Schlüssel)','BU-Schlüssel','Belegdatum',
+      'Belegfeld 1','Belegfeld 2','Skonto','Buchungstext','Beleginfo-Art 1',
+      'Beleginfo-Inhalt 1'
+    ].join(';');
+
+    var rows = [header1, header2];
+
+    records.forEach(function(r) {
+      var f = r.fields || {};
+      var brutto = parseFloat(f.brutto_betrag_eur || 0);
+      if (!brutto) return;
+
+      var datum = (f.rechnungsdatum || '').replace(/-/g,'');
+      var datumKurz = datum ? datum.slice(6,8) + datum.slice(4,6) : datumStr.slice(0,4);
+      var rNr = (f.Rechnungsnummer || '').replace(/;/g,' ');
+      var empf = (f.empfaenger_name || '').replace(/;/g,' ').replace(/"/g,'');
+      var az = (f.aktenzeichen || '').replace(/;/g,' ');
+      var text = ('Honorar Gutachten ' + az).replace(/;/g,' ');
+
+      rows.push([
+        brutto.toFixed(2).replace('.',','),  // Umsatz
+        'S',                                   // Soll
+        'EUR','','','',                        // Währung
+        '8400',                                // Erlöskonto Freiberufler
+        '10000',                               // Sammelkonto Debitoren
+        '',                                    // BU-Schlüssel (leer = normal)
+        datumKurz,                             // Belegdatum TTMM
+        '"' + rNr + '"',                       // Belegfeld 1 = Rechnungsnummer
+        '',                                    // Belegfeld 2
+        '',                                    // Skonto
+        '"' + text + '"',                      // Buchungstext
+        '"Gutachtenhonorar"',                  // Beleginfo-Art
+        '"' + empf + '"'                       // Beleginfo-Inhalt
+      ].join(';'));
+    });
+
+    // BOM für Excel-Kompatibilität
+    var csv = '﻿' + rows.join('
+');
+    var blob = new Blob([csv], {type: 'text/csv;charset=utf-8;'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'PROVA-DATEV-' + heute.getFullYear() + '-' +
+                 String(heute.getMonth()+1).padStart(2,'0') + '.csv';
+    document.body.appendChild(a); a.click();
+    document.body.removeChild(a); URL.revokeObjectURL(url);
+    if(typeof zeigToast==='function') zeigToast('✅ DATEV EXTF exportiert (' + records.length + ' Buchungen)');
+  } catch(e) {
+    if(typeof zeigToast==='function') zeigToast('Fehler: ' + e.message,'error');
+    console.error('[DATEV]', e);
   }
 };

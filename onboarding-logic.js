@@ -26,9 +26,9 @@
 
   /* AVV-Checkbox prüfen — Weiter-Button freischalten */
   function pruefeAvvWeiter() {
-    var avv  = (document.getElementById('ob-avv-check') ? document.getElementById('ob-avv-check').checked : undefined);
-    var dsgvo = (document.getElementById('ob-dsgvo-check') ? document.getElementById('ob-dsgvo-check').checked : undefined);
-    var agb  = (document.getElementById('ob-agb-check') ? document.getElementById('ob-agb-check').checked : undefined);
+    var avv  = document.getElementById('ob-avv-check') && document.getElementById('ob-avv-check').checked;
+    var dsgvo = document.getElementById('ob-dsgvo-check') && document.getElementById('ob-dsgvo-check').checked;
+    var agb  = document.getElementById('ob-agb-check') && document.getElementById('ob-agb-check').checked;
     var btn  = document.getElementById('ob-avv-weiter');
     if (!btn) return;
     var ok = avv && dsgvo && agb;
@@ -92,9 +92,9 @@
 
   /* AVV-Signatur speichern — localStorage + Airtable EINWILLIGUNGEN */
   async function speichereAvvSchritt4() {
-    var avv  = (document.getElementById('ob-avv-check') ? document.getElementById('ob-avv-check').checked : undefined);
-    var dsgvo = (document.getElementById('ob-dsgvo-check') ? document.getElementById('ob-dsgvo-check').checked : undefined);
-    var agb  = (document.getElementById('ob-agb-check') ? document.getElementById('ob-agb-check').checked : undefined);
+    var avv  = document.getElementById('ob-avv-check') && document.getElementById('ob-avv-check').checked;
+    var dsgvo = document.getElementById('ob-dsgvo-check') && document.getElementById('ob-dsgvo-check').checked;
+    var agb  = document.getElementById('ob-agb-check') && document.getElementById('ob-agb-check').checked;
     if (!avv || !dsgvo || !agb) return;
 
     var ts = new Date().toISOString();
@@ -126,12 +126,12 @@
   /* Schritt 2 → Profildaten in localStorage */
   function speichereProfilSchritt2() {
     var felder = {
-      prova_sv_vorname:  (document.getElementById('ob-vorname') ? document.getElementById('ob-vorname').value : undefined).trim()  || '',
-      prova_sv_nachname: (document.getElementById('ob-nachname') ? document.getElementById('ob-nachname').value : undefined).trim() || '',
-      prova_sv_email:    (document.getElementById('ob-email') ? document.getElementById('ob-email').value : undefined).trim()    || '',
-      prova_sv_telefon:  (document.getElementById('ob-telefon') ? document.getElementById('ob-telefon').value : undefined).trim()  || '',
-      prova_sv_firma:    (document.getElementById('ob-firma') ? document.getElementById('ob-firma').value : undefined).trim()    || '',
-      prova_sv_quali:    (document.getElementById('ob-quali') ? document.getElementById('ob-quali').value : undefined).trim()    || ''
+      prova_sv_vorname:  document.getElementById('ob-vorname') && document.getElementById('ob-vorname').value.trim()  || '',
+      prova_sv_nachname: document.getElementById('ob-nachname') && document.getElementById('ob-nachname').value.trim() || '',
+      prova_sv_email:    document.getElementById('ob-email') && document.getElementById('ob-email').value.trim()    || '',
+      prova_sv_telefon:  document.getElementById('ob-telefon') && document.getElementById('ob-telefon').value.trim()  || '',
+      prova_sv_firma:    document.getElementById('ob-firma') && document.getElementById('ob-firma').value.trim()    || '',
+      prova_sv_quali:    document.getElementById('ob-quali') && document.getElementById('ob-quali').value.trim()    || ''
     };
     Object.entries(felder).forEach(function(kv) {
       if (kv[1]) localStorage.setItem(kv[0], kv[1]);
@@ -196,13 +196,13 @@
         Telefon:       svp.telefon || '',
         Qualifikation: svp.qualifikation || '',
         Paket:         paket,
-        Onboarding:    new Date().toISOString().slice(0, 10),
+        Onboarding_Datum: new Date().toISOString().slice(0, 10),
         avv_signed_ts: localStorage.getItem('prova_avv_ts') || new Date().toISOString()
       };
       // Erst prüfen ob schon vorhanden
       var checkRes = await fetch('/.netlify/functions/airtable', {
         method: 'POST',
-        headers: Object.assign({ 'Content-Type': 'application/json' }, window.provaAuthHeaders ? window.provaAuthHeaders() : {}),
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           method: 'GET',
           path: '/v0/appJ7bLlAHZoxENWE/tbladqEQT3tmx4DIB?filterByFormula=' +
@@ -217,7 +217,7 @@
           localStorage.setItem('prova_sv_record_id', existingId);
           await fetch('/.netlify/functions/airtable', {
             method: 'POST',
-            headers: Object.assign({ 'Content-Type': 'application/json' }, window.provaAuthHeaders ? window.provaAuthHeaders() : {}),
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               method: 'PATCH',
               path: '/v0/appJ7bLlAHZoxENWE/tbladqEQT3tmx4DIB/' + existingId,
@@ -225,7 +225,7 @@
                 fields: {
                   onboarding_done: true,
                   Paket: localStorage.getItem('prova_paket') || 'Solo',
-                  Onboarding: new Date().toISOString().slice(0, 10),
+                  Onboarding_Datum: new Date().toISOString().slice(0, 10),
                   avv_signed_ts: localStorage.getItem('prova_avv_ts') || new Date().toISOString()
                 }
               }
@@ -238,7 +238,7 @@
       fields.onboarding_done = true;
       await fetch('/.netlify/functions/airtable', {
         method: 'POST',
-        headers: Object.assign({ 'Content-Type': 'application/json' }, window.provaAuthHeaders ? window.provaAuthHeaders() : {}),
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           method: 'POST',
           path: '/v0/appJ7bLlAHZoxENWE/tbladqEQT3tmx4DIB',
@@ -272,7 +272,7 @@
       };
       await fetch('/.netlify/functions/airtable', {
         method: 'POST',
-        headers: Object.assign({ 'Content-Type': 'application/json' }, window.provaAuthHeaders ? window.provaAuthHeaders() : {}),
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           method: 'POST',
           path: '/v0/appJ7bLlAHZoxENWE/tblK7a3mBdsrxsrp5',
@@ -286,8 +286,8 @@
 
   /* Validierung Schritt 2 — E-Mail Pflichtfeld */
   function validiereSchritt2() {
-    var email = (document.getElementById('ob-email') ? document.getElementById('ob-email').value : undefined).trim() || '';
-    var vorname = (document.getElementById('ob-vorname') ? document.getElementById('ob-vorname').value : undefined).trim() || '';
+    var email = document.getElementById('ob-email') && document.getElementById('ob-email').value.trim() || '';
+    var vorname = document.getElementById('ob-vorname') && document.getElementById('ob-vorname').value.trim() || '';
     if (!vorname) {
       document.getElementById('ob-vorname').focus();
       zeigeHinweis('Bitte Vorname eingeben.');

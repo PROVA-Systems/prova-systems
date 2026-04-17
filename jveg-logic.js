@@ -270,7 +270,7 @@ async function supSendModal(){
   var btn=document.getElementById('sup-btn');
   btn.disabled=true;btn.textContent='⏳ Wird gesendet…';
   try{
-    await fetch('/.netlify/functions/make-proxy?key=sup',{
+    await fetch('https://hook.eu1.make.com/lktuhugwcg5v37ib6bdaxjb1uiplnu8v',{
       method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
         betreff:b,nachricht:n,
@@ -693,7 +693,7 @@ window.erstelleJVEGRechnungPDF = async function() {
   
   try {
     // Über Make G3-Webhook oder direkt PDFMonkey
-    var res = await fetch('/.netlify/functions/make-proxy?key=s3', {
+    var res = await fetch('https://hook.eu1.make.com/44kqx7eo142aw7warqao4c4wqo1nw158', {
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({ aktion: 'jveg_pdf', ...daten })
     });
@@ -701,4 +701,33 @@ window.erstelleJVEGRechnungPDF = async function() {
   } catch(e) {
     if(typeof zeigToast==='function') zeigToast('PDF-Fehler: ' + e.message, 'error');
   }
+};
+
+window.jvegZurRechnung = function() {
+  var az = localStorage.getItem('prova_letztes_az') || '';
+  // JVEG-Daten für Rechnung vorbereiten
+  try {
+    var netto = 0;
+    document.querySelectorAll('.jveg-row-total').forEach(function(el) {
+      netto += parseFloat(el.dataset.netto || '0') || 0;
+    });
+    // Fallback: Gesamtsumme aus UI lesen
+    if (!netto) {
+      var totalEl = document.getElementById('total-netto') || document.querySelector('[id*="netto"]');
+      if (totalEl) netto = parseFloat(totalEl.textContent.replace(/[^0-9,.]/g, '').replace(',', '.')) || 0;
+    }
+    var prefill = {
+      az: az,
+      herkunft: 'jveg',
+      netto: netto,
+      betreff: 'JVEG-Vergütung Gutachten ' + az,
+      timestamp: Date.now()
+    };
+    sessionStorage.setItem('prova_rechnung_prefill', JSON.stringify(prefill));
+    console.log('[JVEG] Prefill gesetzt:', prefill);
+  } catch(e) {
+    console.warn('[JVEG] Prefill-Fehler:', e.message);
+  }
+  var ziel = 'rechnungen.html?from=jveg' + (az ? '&az=' + encodeURIComponent(az) : '');
+  window.location.href = ziel;
 };

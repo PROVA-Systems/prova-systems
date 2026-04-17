@@ -21,7 +21,7 @@ if(!localStorage.getItem('prova_user')){window.location.href='app-login.html';re
 var svEmail=localStorage.getItem('prova_sv_email')||'';
 var alleTermine=[];
 var kalDatum=new Date();
-var WEBHOOK_S8='/.netlify/functions/make-proxy?key=sup';
+var WEBHOOK_S8='https://hook.eu1.make.com/lktuhugwcg5v37ib6bdaxjb1uiplnu8v';
 var AT_BASE='appJ7bLlAHZoxENWE';
 var AT_TERMINE='tblyMTTdtfGQjjmc2';
 
@@ -253,7 +253,7 @@ window.speichereTermin=async function(){
 
   // Async: In Airtable speichern
   try{
-    var fields={termin_typ:typ,termin_datum:datum,aktenzeichen:az||titel||"",notizen:notiz,sv_email:svEmail};
+    var fields={titel:titel,termin_typ:typ,termin_datum:datum,uhrzeit:uhrzeit,aktenzeichen:az,notiz:notiz,sv_email:svEmail};
     var method=editId&&editId.startsWith('rec')?'PATCH':'POST';
     var path=editId&&editId.startsWith('rec')?'/v0/'+AT_BASE+'/'+AT_TERMINE+'/'+editId:'/v0/'+AT_BASE+'/'+AT_TERMINE;
     await fetch('/.netlify/functions/airtable',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({method:method,path:path,payload:{fields:fields}})});
@@ -351,3 +351,64 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 })();
+window.exportiereIcal = window.exportIcal = function() {
+  try {
+    var termine = [];
+    try { termine = JSON.parse(localStorage.getItem('prova_termine_cache') || '[]'); } catch(e){}
+    if (!termine.length) {
+      if (typeof showToast === 'function') showToast('Keine Termine vorhanden', 'error');
+      return;
+    }
+
+    var lines = [
+      'BEGIN:VCALENDAR',
+      'VERSION:2.0',
+      'PRODID:-//PROVA Systems//Termine//DE',
+      'CALSCALE:GREGORIAN',
+      'METHOD:PUBLISH',
+      'X-WR-CALNAME:PROVA Termine',
+      'X-WR-TIMEZONE:Europe/Berlin'
+    ];
+
+    termine.forEach(function(t) {
+      var f = t.fields || {};
+      if (!f.termin_datum) return;
+      var dt = new Date(f.termin_datum);
+      var dtStr = dt.toISOString().replace(/[-:]/g,'').split('.')[0] + 'Z';
+      var dtEnd = new Date(dt.getTime() + 2*60*60*1000);
+      var dtEndStr = dtEnd.toISOString().replace(/[-:]/g,'').split('.')[0] + 'Z';
+      var uid = (t.id || Math.random().toString(36)) + '@prova-systems.de';
+      var summary = (f.titel || f.termin_typ || 'Termin') + (f.aktenzeichen ? ' — ' + f.aktenzeichen : '');
+      var location = f.objekt_adresse || '';
+      var desc = (f.notizen || '').replace(/
+/g,'\n');
+
+      lines.push('BEGIN:VEVENT');
+      lines.push('UID:' + uid);
+      lines.push('DTSTART:' + dtStr);
+      lines.push('DTEND:' + dtEndStr);
+      lines.push('SUMMARY:' + summary);
+      if (location) lines.push('LOCATION:' + location);
+      if (desc) lines.push('DESCRIPTION:' + desc);
+      lines.push('STATUS:CONFIRMED');
+      lines.push('END:VEVENT');
+    });
+
+    lines.push('END:VCALENDAR');
+
+    var ics = lines.join('
+');
+    var blob = new Blob([ics], {type: 'text/calendar;charset=utf-8;'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'PROVA-Termine-' + new Date().toISOString().slice(0,10) + '.ics';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    if (typeof showToast === 'function') showToast('✅ Kalender exportiert — jetzt in Outlook/Apple Calendar importieren');
+  } catch(e) {
+    if (typeof showToast === 'function') showToast('Fehler: ' + e.message, 'error');
+  }
+};
