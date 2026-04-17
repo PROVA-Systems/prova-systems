@@ -103,15 +103,17 @@
   async function atFetch(table, formula, opts) {
     opts = opts || {};
     var maxRecords = opts.maxRecords || 100;
-    var sort       = opts.sort || 'Timestamp';
+    // Session 5 Fix: Sort NICHT mehr default-hart auf 'Timestamp' — das gibt 422
+    // für Tabellen ohne Timestamp-Feld (z.B. TERMINE). Aufrufer muss Sort explizit
+    // setzen wenn gewünscht (analog zu dashboard-logic.js atFetch()).
+    var sort       = opts.sort || null;
     var sortDir    = opts.sortDir || 'desc';
     var fields     = opts.fields ? opts.fields.map(function(f){ return '&fields[]=' + encodeURIComponent(f); }).join('') : '';
 
     var path = '/v0/' + AT.BASE + '/' + table
       + '?filterByFormula=' + encodeURIComponent(formula || 'TRUE()')
       + '&maxRecords=' + maxRecords
-      + '&sort[0][field]=' + encodeURIComponent(sort)
-      + '&sort[0][direction]=' + sortDir
+      + (sort ? '&sort[0][field]=' + encodeURIComponent(sort) + '&sort[0][direction]=' + sortDir : '')
       + fields;
 
     try {

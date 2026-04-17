@@ -1,12 +1,8 @@
 /* ════════════════════════════════════════════════════════════
-   PROVA 02-authenticated-smoke.spec.js v4
-   KORREKTUREN ggü. v3:
-   - Globale Suche: window.PROVASearch.open() direkt aufrufen
-     statt Cmd+K — robuster, kein Keyboard-Mapping-Problem
-   - JVEG/Hilfe/Statistiken: 403 wird als WARN geloggt, nicht
-     mehr als FAIL (Cloudflare/Netlify-Rate-Limit-Issue, kein Code-Bug)
-   - Session 3 Fix #1+#2: PUBLIC_PAGES-Liste für auth-guard
-     berücksichtigt — wir testen nur geschützte Seiten
+   PROVA 02-authenticated-smoke.spec.js v5 (Session 4)
+   FIXES ggü. v4:
+   - Bug B: PROVASearch.open() warten bis init() fertig — Race-Condition
+   - Bug C: normen.html — auf konkrete Karten warten (AJAX-Load)
 ════════════════════════════════════════════════════════════ */
 const { test, expect } = require('@playwright/test');
 require('dotenv').config({ path: '.env.local' });
@@ -59,10 +55,9 @@ test.describe('Authenticated Smoke: Hauptseiten nach Login', () => {
 
       const response = await page.goto(BASE + pg.path);
 
-      // 403/503: Netlify/Cloudflare Rate-Limit → WARN, nicht FAIL
       if (response.status() === 403 || response.status() === 503) {
         console.log(`    ⚠ ${pg.name}: HTTP ${response.status()} (Cloudflare/Netlify Rate-Limit, kein Code-Bug)`);
-        return; // Test-Skip — diese Iteration zählt nicht als Fail
+        return;
       }
 
       expect(response.status()).toBeLessThan(400);
@@ -93,7 +88,7 @@ test.describe('Authenticated Smoke: Hauptseiten nach Login', () => {
         !e.includes('ERR_BLOCKED_BY_CLIENT') &&
         !e.includes('net::ERR_FAILED') &&
         !e.includes('401') &&
-        !e.includes('403')  // Cloudflare-Rate-Limit auf Sub-Resources, separat behandelt
+        !e.includes('403')
       );
       if (criticalErrors.length > 0) {
         console.log(`    ⚠ ${pg.name}: ${criticalErrors.length} Fehler:`);
@@ -110,7 +105,14 @@ test.describe('Normen-Test: Daten werden geladen', () => {
     await page.waitForLoadState('networkidle', { timeout: 15000 });
 
     expect(page.url()).toContain('normen.html');
-    await page.waitForTimeout(2000);
+
+    // v5 Fix: Auf konkrete Norm-Karten warten — Karten kommen via AJAX
+    await page.waitForFunction(() => {
+      const cards = document.querySelectorAll('[class*="norm"], [class*="Norm"], [data-norm]');
+      return cards.length >= 10;
+    }, { timeout: 10000 }).catch(() => {
+      console.log('    ⚠ Karten kamen nicht innerhalb 10s — möglicherweise Airtable-Lag');
+    });
 
     const pageText = await page.locator('body').innerText();
     const counterMatch = pageText.match(/(\d+)\s*Normen/i);
@@ -126,19 +128,26 @@ test.describe('Normen-Test: Daten werden geladen', () => {
   test('Globale Suche findet DIN 4108', async ({ page }) => {
     await page.goto(BASE + '/dashboard.html');
     await page.waitForLoadState('networkidle', { timeout: 10000 });
-    await page.waitForTimeout(2000); // PROVASearch init braucht Zeit
 
-    // v4: Suche direkt via API öffnen (nicht via Keyboard) — robuster
+    // v5 Fix: Auf PROVASearch.init() warten (Race-Condition)
+    // Das Modal-DOM wird erst NACH DOMContentLoaded async aufgebaut
+    await page.waitForFunction(() => {
+      return window.PROVASearch
+        && typeof window.PROVASearch.open === 'function'
+        && document.getElementById('prova-search-overlay') !== null;
+    }, { timeout: 10000 }).catch(() => {
+      console.log('    ⚠ PROVASearch nicht initialisiert nach 10s');
+    });
+
+    // Tour-Overlay-Reste defensiv entfernen
     await page.evaluate(() => {
-      // Tour-Overlay-Reste entfernen falls vorhanden
       document.querySelectorAll('.tour-overlay, .tour-popup, .tour-tooltip, .tour-highlight').forEach(el => el.remove());
-      // PROVASearch direkt aufrufen
       if (window.PROVASearch && typeof window.PROVASearch.open === 'function') {
         window.PROVASearch.open();
       }
     });
 
-    await page.waitForTimeout(500);
+    await page.waitForTimeout(800);
 
     const searchInput = page.locator('#prova-search-field');
     await expect(searchInput, 'Such-Modal muss sichtbar sein nach PROVASearch.open()').toBeVisible({ timeout: 5000 });
@@ -160,17 +169,25 @@ test.describe('Normen-Test: Daten werden geladen', () => {
 test.describe('Session 3: Auth-Guard Self-Executing', () => {
 
   test('Geschützte Seite ohne Session → Redirect zu Login', async ({ browser }) => {
-    // Frischer Context OHNE Session-Injection
     const ctx = await browser.newContext();
     const page = await ctx.newPage();
 
     await page.goto(BASE + '/dashboard.html');
-    await page.waitForTimeout(3000); // Auf den Redirect warten
+    await page.waitForTimeout(3000);
 
     const finalUrl = page.url();
     console.log(`    ℹ️  dashboard.html ohne Session führt zu: ${finalUrl}`);
-    expect(finalUrl, 'Dashboard ohne Session MUSS zu app-login.html redirecten').toContain('app-login.html');
 
+    // Wenn Test fehlschlägt → entweder Code nicht deployed ODER Service Worker hat alte Version gecached
+    if (!finalUrl.includes('app-login.html')) {
+      console.log('    ❌ ERWARTET app-login.html — bekam: ' + finalUrl);
+      console.log('    💡 Mögliche Ursachen:');
+      console.log('       1. session3-fixes ZIP ist NICHT deployed (git push fehlt)');
+      console.log('       2. Service Worker cached alte auth-guard.js (Hard-Refresh nötig)');
+      console.log('       3. Verifizier mit: curl https://prova-systems.de/auth-guard.js | grep SELBST-AKTIVIERUNG');
+    }
+
+    expect(finalUrl, 'Dashboard ohne Session MUSS zu app-login.html redirecten').toContain('app-login.html');
     await ctx.close();
   });
 
@@ -184,7 +201,6 @@ test.describe('Session 3: Auth-Guard Self-Executing', () => {
     const finalUrl = page.url();
     console.log(`    ℹ️  archiv.html ohne Session führt zu: ${finalUrl}`);
     expect(finalUrl).toContain('app-login.html');
-    // ?next= sollte gesetzt sein für Rück-Redirect
     if (finalUrl.includes('next=')) {
       console.log('    ✅ ?next= Parameter gesetzt — Rück-Redirect möglich');
     }

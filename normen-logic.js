@@ -16,16 +16,7 @@ var paket = localStorage.getItem('prova_paket')||'Solo';
 })();
 
 // ── NORMEN DATENBANK ──
-
-/* ══════════════════════════════════════════════════════════════
-   PROVA Normen-Datenbank — live aus Airtable
-   Wird von /.netlify/functions/normen geladen
-   Fallback: leeres Array → Fehlermeldung
-════════════════════════════════════════════════════════════════ */
-let NORMEN_DB = [];
-
-// Fallback-Datenbank (eingebettet für Offline-Betrieb)
-const NORMEN_DB_FALLBACK = [
+const NORMEN_DB = [
   {num:'DIN 4108-2',titel:'Wärmeschutz und Energie-Einsparung in Gebäuden – Mindestanforderungen',bereich:'Wärme',sa:'WS,SC,BA',anw:'Legt Mindestanforderungen an den Wärmeschutz von Außenbauteilen fest. Verhindert Tauwasserbildung an Oberflächen und im Bauteil. Grundlage für Beurteilung von Wärmebrücken und Schimmelrisiko.',gw:'Mindestoberflächentemperaturfaktor fRsi ≥ 0,70 bei Wohngebäuden | Taupunkttemperatur bei 20°C/50% rF liegt bei ca. 9,3°C',mess:'Thermografieaufnahme nach DIN EN 13187 | Oberflächentemperaturmessung mit Strahlungsthermometer | Berechnung nach DIN EN ISO 13788',hf:'hoch',hint:'Immer zitieren bei Schimmelschäden und Wärmebrücken. fRsi-Wert berechnen und mit Grenzwert 0,70 vergleichen. Prüfen ob Taupunktunterschreitung vorliegt.'},
   {num:'DIN 4108-3',titel:'Wärmeschutz und Energie-Einsparung – Klimabedingter Feuchteschutz',bereich:'Wärme',sa:'WS,SC,BA',anw:'Regelt den Schutz von Bauteilen gegen klimabedingte Feuchte durch Dampfdiffusion. Enthält Anforderungen an Dampfsperren und Dampfbremsen sowie Berechnungsverfahren für Tauwassermengen.',gw:'Tauwassermenge an Dampfsperre max. 1,0 kg/m² je Tauperiode | Verdunstung im Sommer muss Tauwasser übersteigen',mess:'Glaser-Diagramm nach DIN 4108-3 | Bauteilschichtaufbau dokumentieren | Dampfdiffusionswiderstand µ bestimmen',hf:'mittel',hint:'Bei Klagemängeln Flachdach und belüftete Konstruktionen relevant. Tauwasserberechnung Glaser-Verfahren als Anlage beifügen.'},
   {num:'DIN 4108-7',titel:'Wärmeschutz – Luftdichtheit von Gebäuden',bereich:'Wärme',sa:'WS,SC,BA',anw:'Regelt die Anforderungen an die Luftdichtheit der Gebäudehülle. Grundlage für Blower-Door-Tests und Beurteilung von Luftundichtigkeiten als Ursache für Schimmelschäden und Wärmeverluste.',gw:'n50-Wert ≤ 3,0 h⁻¹ ohne RLT | n50-Wert ≤ 1,5 h⁻¹ mit RLT nach GEG',mess:'Blower-Door-Test nach DIN EN ISO 9972 | Differenzdruck 50 Pa | Leckageortung mit Nebelgenerator',hf:'mittel',hint:'Bei unklaren Feuchteschäden Luftdichtigkeitsmängel als Ursache prüfen. Blower-Door-Ergebnis dokumentieren und Schwachstellen lokalisieren.'},
@@ -318,63 +309,7 @@ const NORMEN_DB_FALLBACK = [
 ];
 
 
-
-async function ladeNormenVonAirtable() {
-  var grid = document.getElementById('normenGrid');
-  var counter = document.getElementById('normenCount');
-  
-  // Loading-State zeigen
-  if (grid) {
-    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--text2);">' +
-      '<div style="font-size:32px;margin-bottom:12px;">⏳</div>' +
-      '<div style="font-size:14px;">Normen werden geladen…</div>' +
-      '</div>';
-  }
-  if (counter) counter.textContent = '…';
-
-  try {
-    var res = await fetch('/.netlify/functions/normen');
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    var data = await res.json();
-    
-    if (!data.normen || !data.normen.length) throw new Error('Keine Normen');
-    
-    // NORMEN_DB befüllen
-    NORMEN_DB = data.normen;
-    window.PROVA_NORMEN_DB = NORMEN_DB;
-    
-    // Aenderungshinweise sammeln
-    var updates = NORMEN_DB.filter(function(n) { return n.aenderungshinweis; });
-    if (updates.length > 0) {
-      zeigeAenderungsHinweis(updates);
-    }
-    
-    // Rendern
-    if (typeof renderNormen === 'function') renderNormen();
-    
-  } catch (err) {
-    console.warn('[PROVA] Airtable nicht erreichbar, lade lokale Fallback-Daten:', err.message);
-    // Fallback: Eingebettete Normen-Datenbank
-    NORMEN_DB = NORMEN_DB_FALLBACK;
-    window.PROVA_NORMEN_DB = NORMEN_DB;
-    if (typeof renderNormen === 'function') renderNormen();
-  }
-}
-
-function zeigeAenderungsHinweis(updates) {
-  var banner = document.createElement('div');
-  banner.style.cssText = 'background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.3);' +
-    'border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:12px;color:var(--text2);';
-  banner.innerHTML = '<span style="font-size:14px;">🔔</span> <strong style="color:#f59e0b;">' +
-    updates.length + ' Norm' + (updates.length > 1 ? 'en' : '') + ' aktualisiert:</strong> ' +
-    updates.map(function(n) { return n.num + ' — ' + n.aenderungshinweis; }).join(' · ');
-  var grid = document.getElementById('normenGrid');
-  if (grid && grid.parentElement) {
-    grid.parentElement.insertBefore(banner, grid);
-  }
-}
-
-
+// ── Globale Verfügbarkeit — Einzige Quelle der Wahrheit ──
 window.PROVA_NORMEN_DB = NORMEN_DB;
 
 
@@ -424,6 +359,12 @@ function renderNormen() {
   const empty = document.getElementById('emptyState');
   const q = (document.getElementById('searchInput').value||'').trim();
   document.getElementById('normenCount').textContent = filtered.length + ' Normen';
+
+  // Session 5 Fix: chip-all dynamisch auf NORMEN_DB.length setzen.
+  // Vorher hart "120" in normen.html — das widersprach dem oberen Counter
+  // (der dynamisch 190 zeigt). Jetzt konsistent.
+  var chipAll = document.getElementById('chip-all');
+  if (chipAll) chipAll.textContent = NORMEN_DB.length;
 
   // Figma-Style: Zuletzt genutzte Normen oben (wenn kein Filter)
   var recentSection = '';
@@ -587,20 +528,7 @@ function showToastMitCTA(msg, ctaLabel, ctaHref) {
 
 // Init
 document.addEventListener('DOMContentLoaded', function() {
-  ladeNormenVonAirtable().then(function() {
-    // URL-Parameter ?q=DIN%204108 aus Global-Search auswerten
-    try {
-      var urlParams = new URLSearchParams(window.location.search);
-      var initialQuery = urlParams.get('q');
-      if (initialQuery) {
-        var searchInput = document.getElementById('searchInput');
-        if (searchInput) {
-          searchInput.value = initialQuery;
-          if (typeof renderNormen === 'function') renderNormen();
-        }
-      }
-    } catch(e) {}
-  });
+  if (typeof renderNormen === 'function') renderNormen();
 });
 
 // Schadenart aus sessionStorage vorauswählen (wenn von app-starter etc. geöffnet)

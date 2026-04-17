@@ -51,7 +51,9 @@ function renderProjektliste() {
   document.getElementById('proj-count').textContent = _data.projekte.length;
 
   if (!liste.length) {
-    container.innerHTML = '<div class="empty-state"><div class="empty-icon">🏗</div><div class="empty-title">Keine Projekte</div><div class="empty-sub">+ Neues Projekt anlegen</div></div>';
+    // Session 5 Fix: "+ Neues Projekt anlegen" NICHT nochmal hier als Empty-State-Hint —
+    // oben steht bereits ein vollwertiger "+ Neues Projekt"-Button. Doppelter CTA verwirrt.
+    container.innerHTML = '<div class="empty-state"><div class="empty-icon">🏗</div><div class="empty-title">Noch keine Projekte</div><div class="empty-sub">Starten Sie mit einem neuen Baubegleitungsprojekt</div></div>';
     return;
   }
   container.innerHTML = '';
@@ -258,10 +260,10 @@ window.addMangel = function(projId) {
 };
 
 window.saveMangel = function(projId) {
-  var text = (function(){var _e=document.getElementById('mf-text-' + projId);return _e?_e.value:undefined;})() .trim();
+  var text = document.getElementById('mf-text-' + projId)?.value.trim();
   if (!text) return;
-  var gewerk = (function(){var _e=document.getElementById('mf-gewerk-' + projId);return _e?_e.value:undefined;})()  || '';
-  var prio = (function(){var _e=document.getElementById('mf-prio-' + projId);return _e?_e.value:undefined;})()  || 'normal';
+  var gewerk = document.getElementById('mf-gewerk-' + projId)?.value || '';
+  var prio = document.getElementById('mf-prio-' + projId)?.value || 'normal';
 
   var proj = _data.projekte.find(function(p){return p.id===projId;});
   if (!proj) return;
@@ -666,47 +668,3 @@ document.addEventListener('DOMContentLoaded', function() {
   var m = document.getElementById('support-modal');
   if (m) m.addEventListener('click', function(e){ if(e.target===m) closeModal('support-modal'); });
 });
-
-// ── Alias-Funktionen für HTML-Button-Kompatibilität ──
-window.oeffneNeuProjekt    = openModalProjekt;
-window.schliesseProjektModal = function() { closeModal('modal-projekt'); };
-window.schliesseBegehungModal = function() { closeModal('modal-begehung'); };
-
-window.oeffneNeuProjekt    = openModalProjekt;
-window.schliesseProjektModal = function() { closeModal('modal-projekt'); };
-window.schliesseBegehungModal = function() { closeModal('modal-begehung'); };
-window.kiBegehungAssist = async function() {
-  var btn = document.getElementById('ki-bericht-btn');
-  var befund = document.getElementById('mb-befund');
-  var text = befund ? befund.value.trim() : '';
-
-  if (!text) {
-    if(typeof showToast==='function') showToast('Bitte Befund eingeben', 'error');
-    return;
-  }
-
-  if(btn) { btn.disabled=true; btn.textContent='KI formuliert…'; }
-
-  try {
-    var res = await fetch('/.netlify/functions/ki-proxy', {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({
-        messages:[{
-          role:'user',
-          content:'Formuliere folgenden Baubefund in professioneller SV-Sprache (Konjunktiv II, DIN-Normen wenn relevant, max. 3 Sätze):\n\n' + text
-        }],
-        max_tokens:300
-      })
-    });
-    var data = await res.json();
-    var vorschlag = data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content || data.content && data.content[0] && data.content[0].text || '';
-    if (vorschlag && befund) {
-      befund.value = vorschlag;
-      if(typeof showToast==='function') showToast('✅ KI-Formulierung übernommen');
-    }
-  } catch(e) {
-    if(typeof showToast==='function') showToast('KI-Fehler: ' + e.message, 'error');
-  } finally {
-    if(btn) { btn.disabled=false; btn.textContent='✨ KI-Formulierungshilfe'; }
-  }
-};
