@@ -133,10 +133,10 @@ async function ladeGutachten(){
 
 /* SV PROFIL */
 async function ladeSVProfil(){
-  const email=localStorage.getItem('prova_sv_email')||recFields.SV_Email||'';
+  const email=localStorage.getItem('prova_sv_email')||recFields.sv_email||'';
   if(!email) return;
   try {
-    const url=`/v0/${AT_BASE}/tbladqEQT3tmx4DIB?filterByFormula=${encodeURIComponent(`{SV_Email}="${email}"`)}&maxRecords=1`;
+    const url=`/v0/${AT_BASE}/tbladqEQT3tmx4DIB?filterByFormula=${encodeURIComponent(`{Email}="${email}"`)}&maxRecords=1`;
     const res=await fetch('/.netlify/functions/airtable',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({method:'GET',path:url})});
     if(!res.ok) return;
     const d=await res.json();

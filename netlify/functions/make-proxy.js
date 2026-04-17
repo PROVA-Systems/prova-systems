@@ -20,7 +20,7 @@ const ALLOWED_KEYS = [
   'f1','g1','g3',
   'k1','k2',
   'l3','l4','l5','l8','l9','l10',
-  's1','s3','s6',
+  's1','s3','s6','s9',
   'sup','wh'
 ];
 
@@ -60,6 +60,7 @@ exports.handler = async function (event, context) {
     s1:  process.env.MAKE_WEBHOOK_S1,
     s3:  process.env.MAKE_WEBHOOK_S3,
     s6:  process.env.MAKE_WEBHOOK_S6,      // ENV: MAKE_WEBHOOK_S6 setzen
+    s9:  process.env.MAKE_WEBHOOK_S9,      // ENV: MAKE_WEBHOOK_S9 setzen (Foto-/Gutachten-Workflow)
     sup: process.env.MAKE_WEBHOOK_SUPPORT, // ENV: MAKE_WEBHOOK_SUPPORT setzen
     wh:  process.env.MAKE_WEBHOOK_WHISPER,
   };

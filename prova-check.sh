@@ -102,11 +102,18 @@ fi
 # ── 6. Webhook-URLs im Frontend ───────────────────────────────────
 echo ""
 echo -e "${BLUE}▸ Webhook-Sicherheit...${NC}"
-WH=$(grep -rl "hook\.eu1\.make\.com" *.js 2>/dev/null | grep -v "sw\.js\|stripe-checkout\|emails\." | tr '\n' ' ')
+# Scannt *.js UND *.html im Root — hardcoded hook.eu1.make.com URLs dürfen nirgends im Frontend stehen.
+# Ausnahmen: sw.js (nur String-Match zur Erkennung), stripe-checkout.js + emails.js (Backend-Helpers mit Fallback-URL),
+# netlify/functions/* (laufen serverseitig, URL darf dort stehen).
+WH=$(grep -rl "hook\.eu1\.make\.com" --include="*.js" --include="*.html" . 2>/dev/null \
+     | grep -v "\.git/" \
+     | grep -v "^\./netlify/" \
+     | grep -vE "^\./(sw\.js|stripe-checkout\.js|emails\.js)$" \
+     | tr '\n' ' ')
 if [ -n "$WH" ]; then
   fail "Webhook-URLs in Frontend: $WH"
 else
-  pass "Keine Webhook-URLs im Frontend"
+  pass "Keine Webhook-URLs im Frontend (JS + HTML geprüft)"
 fi
 
 # ── 7. Multi-Tenant Sicherheit ────────────────────────────────────
@@ -126,6 +133,18 @@ if [ "$SMTP_LS" != "0" ]; then
   warn "prova_smtp_pass in $SMTP_LS Dateien (Kommentare/Lesezugriff prüfen)"
 else
   pass "Kein Klartext-Passwort im localStorage"
+fi
+
+# ── 9. Tote-Buttons-Audit (nur Info, kein Blocker) ────────────────
+if [ -f "scripts/audit-tote-buttons.py" ] && command -v python3 >/dev/null 2>&1; then
+  echo ""
+  echo -e "${BLUE}▸ Tote-Buttons-Audit (informativ)...${NC}"
+  DEAD_COUNT=$(python3 scripts/audit-tote-buttons.py 2>/dev/null | grep -E "potentiell tote Buttons" | grep -oE "[0-9]+" | head -1)
+  if [ -z "$DEAD_COUNT" ] || [ "$DEAD_COUNT" = "0" ]; then
+    pass "Alle Buttons aktiv"
+  else
+    warn "$DEAD_COUNT potentiell tote Buttons — Details: python3 scripts/audit-tote-buttons.py"
+  fi
 fi
 
 # ── ERGEBNIS ──────────────────────────────────────────────────────

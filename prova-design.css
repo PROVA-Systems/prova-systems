@@ -11,6 +11,42 @@
   --font-ui: 'DM Sans', system-ui, sans-serif;
   --font-mono: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
 
+  /* ═══════════════════════════════════════════════════════════════════
+     FARB-TOKENS — zentraler Design-Standard
+     Werte identisch zu dashboard.html, jetzt EINMAL an einer Stelle.
+     Dark Mode Psychology: kein reines Schwarz, WCAG AA-Kontrast.
+     Einzelne Seiten können lokal mit gleichem :root-Block überschreiben,
+     nutzen aber besser diese Tokens als Single Source of Truth.
+     ═══════════════════════════════════════════════════════════════════ */
+  /* Hintergrund-Ebenen (Elevation: dunkel → hell = unten → oben) */
+  --bg:        #0b0d11;                /* Haupthintergrund (Body) */
+  --bg2:       #111318;                /* Leicht angehoben */
+  --bg3:       #161a22;                /* 2. Stufe angehoben */
+  --bg-elev:   #111318;                /* Alias für Sidebar/Topbar (= --bg2) */
+
+  /* Oberflächen (Karten, Inputs — heller als bg) */
+  --surface:   #1c2130;                /* Karten-Standard */
+  --surface2:  #232a3a;                /* Inputs, Sub-Cards */
+  --surface3:  #2a3142;                /* Hover-State, Focus-Surface */
+
+  /* Borders */
+  --border:    rgba(255,255,255,0.06);
+  --border2:   rgba(255,255,255,0.11);
+  --border-focus: rgba(79,142,247,.40);
+
+  /* Text — Kontrast-geprüft (WCAG AA) */
+  --text:      #eaecf4;                /* Haupttext ~14:1 auf --bg */
+  --text2:     #8b93ab;                /* Sekundärtext ~6:1 */
+  --text3:     #4d5568;                /* Tertiärtext ~4.5:1 */
+
+  /* Akzent-Farben */
+  --accent:    #4f8ef7;
+  --accent2:   #3a7be0;
+  --success:   #10b981;
+  --warning:   #f59e0b;
+  --danger:    #ef4444;
+  --purple:    #8b5cf6;
+
   /* Radii */
   --r-xs: 4px;
   --r-sm: 6px;
@@ -19,12 +55,13 @@
   --r-xl: 18px;
   --r-2xl: 24px;
 
-  /* Schatten */
-  --shadow-xs: 0 1px 2px rgba(0,0,0,.2);
-  --shadow-sm: 0 1px 6px rgba(0,0,0,.3);
-  --shadow-md: 0 4px 16px rgba(0,0,0,.4);
-  --shadow-lg: 0 12px 40px rgba(0,0,0,.5);
-  --shadow-xl: 0 20px 60px rgba(0,0,0,.6);
+  /* Schatten — für dunklen Hintergrund kalibriert */
+  --shadow-xs: 0 1px 2px rgba(0,0,0,.3);
+  --shadow-sm: 0 2px 8px rgba(0,0,0,.4);
+  --shadow-md: 0 4px 16px rgba(0,0,0,.5);
+  --shadow-lg: 0 12px 40px rgba(0,0,0,.6);
+  --shadow-xl: 0 20px 60px rgba(0,0,0,.7);
+  --shadow-glow: 0 0 20px rgba(79,142,247,.15);
 
   /* Übergänge */
   --ease: cubic-bezier(.25,.46,.45,.94);
@@ -33,12 +70,77 @@
   --t-base: .18s var(--ease);
   --t-slow: .3s var(--ease);
 
-  /* Farben (ergänzen bestehende Theme-Vars) */
+  /* RGB-Varianten für rgba()-Nutzung */
   --accent-rgb: 79,142,247;
   --danger-rgb: 239,68,68;
   --success-rgb: 16,185,129;
   --warning-rgb: 245,158,11;
   --purple-rgb: 139,92,246;
+
+  /* Content-Padding — gleichmäßige Abstände zur Sidebar (Fix #9) */
+  --content-pad-x: 24px;
+  --content-pad-y: 20px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   BASIS-LAYER — nur für Seiten, die keine eigenen Werte setzen
+   (body/sidebar/main/.card als Defaults, niedrige Spezifizität,
+    damit page-spezifische Styles problemlos überschreiben können)
+   ═══════════════════════════════════════════════════════════════════ */
+body {
+  font-family: var(--font-ui);
+  background: var(--bg);
+  color: var(--text);
+}
+
+/* Globale Karten-Regel — überschreibt alte weiße .card-Styles, außer
+   wenn eine Page-spezifische Regel mit höherer Spezifizität greift.
+   KEIN !important — Pages mit bewusstem Override bleiben intakt. */
+.card {
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: var(--r-xl);
+  transition: border-color var(--t-base), box-shadow var(--t-base);
+}
+.card:hover { border-color: var(--border2); }
+
+/* Card-Header (z.B. in baubegleitung): dunkel statt dunkelblau-Sonderton */
+.card-header {
+  background: var(--bg3);
+  color: var(--text);
+  padding: 16px 22px;
+}
+.card-body {
+  background: var(--surface);
+  color: var(--text);
+  padding: 20px 22px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   LAYOUT — gleichmäßige Abstände zur Sidebar (Fix #9)
+   Standard-Padding für alle Haupt-Content-Container. Seiten können
+   mit höherer Spezifizität überschreiben, der Default ist konsistent.
+   Tokens: --content-pad-x (24px), --content-pad-y (20px)
+   ═══════════════════════════════════════════════════════════════════ */
+.main,
+.main-wrap,
+.main-content,
+.doku-wrap,
+.page-content {
+  padding: var(--content-pad-y) var(--content-pad-x) calc(var(--content-pad-y) * 3);
+  min-width: 0;  /* Flex-Kind darf schrumpfen — Overflow-Bug verhindern */
+}
+
+/* Mobile: knappere Abstände, extra Bottom für Safe-Area */
+@media (max-width: 768px) {
+  .main,
+  .main-wrap,
+  .main-content,
+  .doku-wrap,
+  .page-content {
+    padding: 12px 14px calc(72px + env(safe-area-inset-bottom, 0px));
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════
