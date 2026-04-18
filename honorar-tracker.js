@@ -412,15 +412,44 @@ const HonorarTracker = (() => {
       const svEmail = localStorage.getItem('prova_sv_email') || '';
       if (!svEmail) return cached;
 
-      const resp = await fetch('/.netlify/functions/airtable', {
-        method: 'POST',
-        headers: Object.assign({ 'Content-Type': 'application/json' }, window.provaAuthHeaders ? window.provaAuthHeaders() : {}),
-        credentials: 'same-origin',
-        body: JSON.stringify({
-          method: 'GET',
-          path: '/v0/appJ7bLlAHZoxENWE/tblF6MS7uiFAJDjiT?filterByFormula=' + encodeURIComponent('{sv_email}="' + svEmail + '"') + '&sort[0][field]=rechnungsdatum&sort[0][direction]=desc&fields[]=Rechnungsnummer&fields[]=empfaenger_name&fields[]=brutto_betrag_eur&fields[]=netto_betrag_eur&fields[]=rechnungsdatum&fields[]=faellig_am&fields[]=Status&fields[]=aktenzeichen&fields[]=mahnstufe&fields[]=mahngebuehren_eur&fields[]=Rechnungstyp&fields[]=sv_email'
-        })
-      });
+      // Session 24: Zwei-Phase-Ansatz gegen 422-Fehler bei fehlenden Airtable-Feldern.
+      // Phase 1: Mit allen Feldern anfragen — funktioniert voll sobald Marcel die
+      //          5 erweiterten Felder in RECHNUNGEN anlegt.
+      // Phase 2: Bei 422 (Airtable-Schema-Mismatch) Retry mit nur Core-Feldern —
+      //          Dashboard bleibt funktional, nur Mahnstufen/Beträge werden über
+      //          Fallbacks in normalisiereRechnung auf 0 gesetzt.
+      const CORE_FELDER = ['Rechnungsnummer', 'empfaenger_name', 'rechnungsdatum',
+                           'faellig_am', 'Status', 'aktenzeichen', 'sv_email'];
+      const OPT_FELDER  = ['brutto_betrag_eur', 'netto_betrag_eur',
+                           'mahnstufe', 'mahngebuehren_eur', 'Rechnungstyp'];
+
+      async function ladenMitFeldern(felder) {
+        return fetch('/.netlify/functions/airtable', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'same-origin',
+          body: JSON.stringify({
+            action: 'list',
+            tabelle: 'RECHNUNGEN',
+            filter: `{sv_email}="${svEmail}"`,
+            sort: [{ field: 'rechnungsdatum', direction: 'desc' }],
+            felder: felder
+          })
+        });
+      }
+
+      let resp = await ladenMitFeldern([...CORE_FELDER, ...OPT_FELDER]);
+
+      // Schema-Mismatch (422) → Retry nur mit Core — einmalig pro Session warnen
+      if (resp.status === 422) {
+        if (!state._schemaWarningShown) {
+          console.warn('[HonorarTracker] Airtable-Schema der Tabelle RECHNUNGEN unvollständig ' +
+                       '(Felder fehlen: brutto_betrag_eur, netto_betrag_eur, mahnstufe, mahngebuehren_eur, Rechnungstyp). ' +
+                       'Dashboard läuft mit reduzierten Daten — Marcel kann die Felder in Airtable anlegen.');
+          state._schemaWarningShown = true;
+        }
+        resp = await ladenMitFeldern(CORE_FELDER);
+      }
 
       if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
       const data   = await resp.json();
@@ -486,9 +515,9 @@ const HonorarTracker = (() => {
       localStorage.setItem(CONFIG.STORAGE_KEY, JSON.stringify({
         rechnungen: rechnungen.map(r => ({
           ...r,
-          datum:  (r.datum ? r.datum.toISOString() : null),
-          faellig: (r.faellig ? r.faellig.toISOString() : null),
-          letzeMahnung: (r.letzeMahnung ? r.letzeMahnung.toISOString() : null)
+          datum:  r.datum?.toISOString(),
+          faellig: r.faellig?.toISOString(),
+          letzeMahnung: r.letzeMahnung?.toISOString()
         })),
         timestamp: Date.now()
       }));
@@ -767,7 +796,7 @@ const HonorarTracker = (() => {
     try {
       await fetch('/.netlify/functions/airtable', {
         method: 'POST',
-        headers: Object.assign({ 'Content-Type': 'application/json' }, window.provaAuthHeaders ? window.provaAuthHeaders() : {}),
+        headers: { 'Content-Type': 'application/json' },
         credentials: 'same-origin',
         body: JSON.stringify({
           action: 'update',
@@ -793,7 +822,7 @@ const HonorarTracker = (() => {
       // Make.com Mahnung-Szenario triggern
       await fetch('/.netlify/functions/airtable', {
         method: 'POST',
-        headers: Object.assign({ 'Content-Type': 'application/json' }, window.provaAuthHeaders ? window.provaAuthHeaders() : {}),
+        headers: { 'Content-Type': 'application/json' },
         credentials: 'same-origin',
         body: JSON.stringify({
           action: 'update',
@@ -817,7 +846,7 @@ const HonorarTracker = (() => {
     try {
       await fetch('/.netlify/functions/airtable', {
         method: 'POST',
-        headers: Object.assign({ 'Content-Type': 'application/json' }, window.provaAuthHeaders ? window.provaAuthHeaders() : {}),
+        headers: { 'Content-Type': 'application/json' },
         credentials: 'same-origin',
         body: JSON.stringify({
           action: 'update',

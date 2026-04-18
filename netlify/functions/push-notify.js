@@ -36,13 +36,15 @@ exports.handler = async (event) => {
   try { body = JSON.parse(event.body || '{}'); }
   catch (e) { return { statusCode: 400, headers: corsHeaders(), body: JSON.stringify({ error: 'Ungültiger JSON' }) }; }
 
-  const { aktion, email, subscription, titel, nachricht, url } = body;
+  const { aktion, email, subscription, titel, nachricht, url, typ, prefs } = body;
 
   switch (aktion) {
     case 'subscribe':    return await handleSubscribe(pat, email, subscription);
     case 'unsubscribe':  return await handleUnsubscribe(pat, email);
-    case 'send':         return await handleSend(pat, email, { titel, nachricht, url });
+    case 'send':         return await handleSend(pat, email, { titel, nachricht, url, typ });
     case 'send-fristen': return await handleFristenCheck(pat);
+    case 'save-prefs':   return await handleSavePrefs(pat, email, prefs || {});
+    case 'get-prefs':    return await handleGetPrefs(pat, email);
     case 'vapid-key':    return handleVapidKey();
     default:
       return { statusCode: 400, headers: corsHeaders(), body: JSON.stringify({ error: `Unbekannte Aktion: ${aktion}` }) };
@@ -56,6 +58,98 @@ function handleVapidKey() {
     return { statusCode: 500, headers: corsHeaders(), body: JSON.stringify({ error: 'VAPID_PUBLIC_KEY nicht konfiguriert' }) };
   }
   return { statusCode: 200, headers: corsHeaders(), body: JSON.stringify({ publicKey: key }) };
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// BENACHRICHTIGUNGS-PRÄFERENZEN v1.0 (Session 18)
+// ══════════════════════════════════════════════════════════════════════════
+// Speichert die Einstellungen pro User (bn_fristen/bn_zahlung/bn_stillezeit)
+// als JSON-String im Feld `Prefs` der PUSH_SUBSCRIPTIONS-Tabelle.
+//
+// Wenn das Feld in Airtable nicht existiert, wird die Präferenz einfach nicht
+// persistiert — das System fällt dann auf Defaults zurück (alles aktiv, keine
+// Stillezeit). Marcel kann das Feld `Prefs` vom Typ "Long text" anlegen.
+// ══════════════════════════════════════════════════════════════════════════
+
+const DEFAULT_PREFS = {
+  bn_fristen:    true,   // Default: Fristen-Pushes aktiv
+  bn_zahlung:    true,   // Default: Zahlungs-Pushes aktiv
+  bn_stillezeit: false,  // Default: keine Stillezeit (User muss aktivieren)
+};
+
+function parsePrefs(prefsField) {
+  if (!prefsField) return { ...DEFAULT_PREFS };
+  try {
+    const parsed = typeof prefsField === 'string' ? JSON.parse(prefsField) : prefsField;
+    return { ...DEFAULT_PREFS, ...(parsed || {}) };
+  } catch (e) {
+    return { ...DEFAULT_PREFS };
+  }
+}
+
+function istStillezeit(prefs) {
+  if (!prefs.bn_stillezeit) return false;
+  // Europe/Berlin-Approximation — Netlify läuft in UTC, daher +1/+2h
+  const nowUtc = new Date();
+  const hour   = (nowUtc.getUTCHours() + 2) % 24;  // Sommerzeit-Offset; bei Bedarf dynamisch
+  // Stillezeit: 22:00-08:00
+  return hour >= 22 || hour < 8;
+}
+
+function shouldSend(prefs, typ) {
+  if (istStillezeit(prefs)) return false;
+  if (typ === 'fristen' && prefs.bn_fristen === false) return false;
+  if (typ === 'zahlung' && prefs.bn_zahlung === false) return false;
+  return true;
+}
+
+async function handleSavePrefs(pat, email, prefs) {
+  if (!email) {
+    return { statusCode: 400, headers: corsHeaders(), body: JSON.stringify({ error: 'email erforderlich' }) };
+  }
+  try {
+    const existing = await atFetch(pat,
+      `/v0/${AT_BASE}/${AT_PUSH_TABLE}?filterByFormula=${encodeURIComponent(`{Email}="${email}"`)}&maxRecords=1`
+    );
+    const cleanPrefs = {
+      bn_fristen:    prefs.bn_fristen    !== false,
+      bn_zahlung:    prefs.bn_zahlung    !== false,
+      bn_stillezeit: prefs.bn_stillezeit === true,
+    };
+    const prefsJson = JSON.stringify(cleanPrefs);
+
+    if (existing.records && existing.records.length > 0) {
+      // Update existierende Subscription
+      await atPatch(pat, `/v0/${AT_BASE}/${AT_PUSH_TABLE}/${existing.records[0].id}`, {
+        fields: { Prefs: prefsJson }
+      });
+    } else {
+      // Noch kein Subscription-Record — Prefs parken ohne Subscription
+      await atCreate(pat, `/v0/${AT_BASE}/${AT_PUSH_TABLE}`, {
+        fields: { Email: email, Prefs: prefsJson, Aktiv: false }
+      });
+    }
+    return { statusCode: 200, headers: corsHeaders(), body: JSON.stringify({ success: true, prefs: cleanPrefs }) };
+  } catch (e) {
+    // Airtable-Feld fehlt evtl. — trotzdem nicht blockieren
+    return { statusCode: 200, headers: corsHeaders(), body: JSON.stringify({ success: false, warning: e.message, prefs: DEFAULT_PREFS }) };
+  }
+}
+
+async function handleGetPrefs(pat, email) {
+  if (!email) {
+    return { statusCode: 400, headers: corsHeaders(), body: JSON.stringify({ error: 'email erforderlich' }) };
+  }
+  try {
+    const result = await atFetch(pat,
+      `/v0/${AT_BASE}/${AT_PUSH_TABLE}?filterByFormula=${encodeURIComponent(`{Email}="${email}"`)}&maxRecords=1`
+    );
+    const record = result.records?.[0];
+    const prefs  = record ? parsePrefs(record.fields?.Prefs) : { ...DEFAULT_PREFS };
+    return { statusCode: 200, headers: corsHeaders(), body: JSON.stringify({ prefs }) };
+  } catch (e) {
+    return { statusCode: 200, headers: corsHeaders(), body: JSON.stringify({ prefs: DEFAULT_PREFS, warning: e.message }) };
+  }
 }
 
 // ── Push-Subscription speichern ─────────────────────────────────────────────
@@ -91,18 +185,6 @@ async function handleSubscribe(pat, email, subscription) {
     return { statusCode: 200, headers: corsHeaders(), body: JSON.stringify({ success: true }) };
 
   } catch (e) {
-    // Airtable-Fehler sauber durchreichen mit klarer Diagnose für den Client
-    if (e instanceof AirtableError) {
-      console.error('[Push] Airtable-Fehler beim Subscribe:', e.status, e.body);
-      const hint = (e.status === 404 || e.status === 403)
-        ? `Airtable-Tabelle "${AT_PUSH_TABLE}" existiert nicht oder ist nicht erreichbar. Bitte in Airtable anlegen mit Feldern: Email (Text), Subscription (Long text), Endpoint (URL), Aktiv (Checkbox), Erstellt (Date), UserAgent (Text).`
-        : 'Airtable-Zugriff fehlgeschlagen — bitte AIRTABLE_PAT-Env-Variable prüfen.';
-      return {
-        statusCode: 503,
-        headers: corsHeaders(),
-        body: JSON.stringify({ error: 'Push-Infrastruktur nicht konfiguriert', hint, airtable_status: e.status })
-      };
-    }
     console.error('[Push] Subscribe Fehler:', e.message);
     return { statusCode: 500, headers: corsHeaders(), body: JSON.stringify({ error: e.message }) };
   }
@@ -126,7 +208,7 @@ async function handleUnsubscribe(pat, email) {
 }
 
 // ── Push-Notification senden ─────────────────────────────────────────────────
-async function handleSend(pat, email, { titel, nachricht, url }) {
+async function handleSend(pat, email, { titel, nachricht, url, typ }) {
   if (!email || !titel) {
     return { statusCode: 400, headers: corsHeaders(), body: JSON.stringify({ error: 'email und titel erforderlich' }) };
   }
@@ -141,6 +223,16 @@ async function handleSend(pat, email, { titel, nachricht, url }) {
 
     if (!result.records?.length) {
       return { statusCode: 404, headers: corsHeaders(), body: JSON.stringify({ error: 'Keine aktive Subscription für diesen User' }) };
+    }
+
+    // Präferenzen des Users prüfen — Typ-basiertes Filtering + Stillezeit
+    const prefs = parsePrefs(result.records[0].fields?.Prefs);
+    if (!shouldSend(prefs, typ)) {
+      return {
+        statusCode: 200,
+        headers:    corsHeaders(),
+        body: JSON.stringify({ success: true, gesendet: false, grund: istStillezeit(prefs) ? 'stillezeit' : 'pref_deaktiviert', typ: typ || 'allgemein' }),
+      };
     }
 
     const sub  = JSON.parse(result.records[0].fields.Subscription || '{}');
@@ -189,12 +281,16 @@ async function handleFristenCheck(pat) {
       // Nur bei 7, 3, 1 Tag(en) notifizieren
       if (![7, 3, 1].includes(tage)) continue;
 
-      // Subscription laden
+      // Subscription + Prefs laden
       const subResult = await atFetch(pat,
         `/v0/${AT_BASE}/${AT_PUSH_TABLE}?filterByFormula=${encodeURIComponent(`AND({Email}="${email}",{Aktiv}=TRUE())`)}&maxRecords=1`
       );
 
       if (!subResult.records?.length) continue;
+
+      // User-Präferenzen prüfen — respektiert bn_fristen und Stillezeit
+      const prefs = parsePrefs(subResult.records[0].fields?.Prefs);
+      if (!shouldSend(prefs, 'fristen')) continue;
 
       const sub = JSON.parse(subResult.records[0].fields.Subscription || '{}');
       if (!sub.endpoint) continue;
@@ -277,22 +373,12 @@ function requireWebPush() {
   }
 }
 
-// ── Airtable Helpers (mit Status-Check, damit Fehler nicht silent durchlaufen) ─
-class AirtableError extends Error {
-  constructor(status, body) {
-    super(`Airtable ${status}: ${typeof body === 'string' ? body : JSON.stringify(body)}`);
-    this.status = status;
-    this.body   = body;
-  }
-}
-
+// ── Airtable Helpers ─────────────────────────────────────────────────────────
 async function atFetch(pat, path) {
   const res = await fetch(`https://api.airtable.com${path}`, {
     headers: { 'Authorization': `Bearer ${pat}` }
   });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new AirtableError(res.status, data);
-  return data;
+  return res.json();
 }
 async function atPost(pat, path, payload) {
   const res = await fetch(`https://api.airtable.com${path}`, {
@@ -300,9 +386,7 @@ async function atPost(pat, path, payload) {
     headers: { 'Authorization': `Bearer ${pat}`, 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)
   });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new AirtableError(res.status, data);
-  return data;
+  return res.json();
 }
 async function atPatch(pat, path, payload) {
   const res = await fetch(`https://api.airtable.com${path}`, {
@@ -310,19 +394,13 @@ async function atPatch(pat, path, payload) {
     headers: { 'Authorization': `Bearer ${pat}`, 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)
   });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new AirtableError(res.status, data);
-  return data;
+  return res.json();
 }
 async function atDelete(pat, path) {
-  const res = await fetch(`https://api.airtable.com${path}`, {
+  await fetch(`https://api.airtable.com${path}`, {
     method: 'DELETE',
     headers: { 'Authorization': `Bearer ${pat}` }
   });
-  if (!res.ok) {
-    const data = await res.json().catch(() => ({}));
-    throw new AirtableError(res.status, data);
-  }
 }
 
 function corsHeaders() {

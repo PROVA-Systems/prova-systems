@@ -176,24 +176,46 @@
     } catch (e) {}
   }
 
-  /* ── Auto-Check bei Tab-Fokus ── */
-  window.addEventListener('focus', function () {
-    // Beim Zurückwechseln in den Tab prüfen ob Session noch gültig
-    // Nur bei echter langer Inaktivität (> 7 Tage) redirecten
-    // Nicht bei kurzen Wechseln (Screenshot, anderer Tab)
-    var lastActivity = parseInt(localStorage.getItem(ACTIVITY_KEY) || '0');
+  /* ── Session-Timeout (Session 23) ─────────────────────────────────
+     Liest aus Einstellungen → Sicherheit → Sitzungs-Timeout.
+     Werte: 4, 8, 24 (Stunden) oder 0 (= Nie, hardcoded 7 Tage Legacy).
+     Default bei fehlender Einstellung: 8 Stunden. */
+  function getInaktivGrenze() {
+    try {
+      var es = JSON.parse(localStorage.getItem('prova_einstellungen') || '{}');
+      var stunden = parseInt(es.session_timeout, 10);
+      if (!isNaN(stunden)) {
+        if (stunden === 0) return null; // "Nie" — kein Auto-Logout
+        if (stunden >= 1 && stunden <= 168) return stunden * 60 * 60 * 1000;
+      }
+    } catch(e) {}
+    return 8 * 60 * 60 * 1000; // Default 8 Stunden
+  }
+
+  function checkInaktivitaet() {
+    var grenze = getInaktivGrenze();
+    if (grenze === null) return; // "Nie" gewählt → nichts tun
+    var lastActivity = parseInt(localStorage.getItem(ACTIVITY_KEY) || '0', 10);
+    if (!lastActivity) return;
     var inaktivMs = Date.now() - lastActivity;
-    var INAKTIV_GRENZE = 7 * 24 * 60 * 60 * 1000; // 7 Tage
-    if (lastActivity && inaktivMs > INAKTIV_GRENZE && !isValidSession()) {
+    if (inaktivMs > grenze) {
       var page = window.location.pathname.split('/').pop() || '';
       var publicPages = ['app-login.html', 'app-register.html', 'index.html', ''];
       if (publicPages.indexOf(page) === -1) {
-        window.location.replace('app-login.html');
+        try { localStorage.setItem('prova_logout_grund', 'inaktivitaet'); } catch(e) {}
+        window.location.replace('app-login.html?reason=inactivity');
       }
-    } else if (isValidSession()) {
-      refreshActivity(); // Aktivität auffrischen
     }
+  }
+
+  /* ── Auto-Check bei Tab-Fokus ── */
+  window.addEventListener('focus', function () {
+    checkInaktivitaet();
+    if (isValidSession()) refreshActivity();
   });
+
+  /* ── Periodischer Check (alle 60s) ── */
+  setInterval(checkInaktivitaet, 60 * 1000);
 
   /* ── Inaktivitäts-Timer ── */
   var activityThrottleTimer;
@@ -206,47 +228,5 @@
       }, 30000); // Maximal alle 30s schreiben
     }, { passive: true });
   });
-
-  /* ════════════════════════════════════════════════════════════════
-     SELBST-AKTIVIERUNG (Session 3, Fix #1+#2)
-     
-     Sobald auth-guard.js geladen wird, ruft sich der Guard
-     automatisch für alle nicht-öffentlichen Seiten auf.
-     
-     Vorher: 30+ Seiten luden auth-guard.js, riefen aber nie
-     provaAuthGuard() auf → kein Schutz. Insbesondere dashboard.html
-     hatte einen DEAKTIVIERTEN Inline-Guard (leerer If-Block).
-     
-     Jetzt: Eine zentrale Regel. Marcel's Anforderung
-     "es soll sich immer eingeloggt werden" wird hier durchgesetzt.
-     ════════════════════════════════════════════════════════════════ */
-  var PUBLIC_PAGES = [
-    '',                              // root
-    'index.html',
-    'app-login.html',
-    'app-register.html',
-    'onboarding.html',
-    'onboarding-schnellstart.html',
-    'onboarding-welcome.html',
-    'agb.html',
-    'datenschutz.html',
-    'datenschutz-mandant.html',
-    'impressum.html',
-    'avv.html',
-    '404.html',
-    'admin-login.html'
-  ];
-
-  var currentPage = (window.location.pathname.split('/').pop() || '').toLowerCase();
-
-  if (PUBLIC_PAGES.indexOf(currentPage) === -1) {
-    // Geschützte Seite → Guard aktivieren
-    // redirectTo: ?reason=not_logged_in zur Klarheit, ?next= für Rück-Redirect nach Login
-    var redirectTarget = 'app-login.html?reason=not_logged_in';
-    if (currentPage) {
-      redirectTarget += '&next=' + encodeURIComponent(currentPage + window.location.search);
-    }
-    window.provaAuthGuard({ redirectTo: redirectTarget });
-  }
 
 })();

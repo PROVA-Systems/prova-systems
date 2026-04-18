@@ -134,7 +134,19 @@ async function ladePaketUndWeiterleiten(email, ziel) {
   }
   var paket = 'Solo';
   if (!ziel) {
-    ziel = localStorage.getItem('prova_onboarding_done') ? 'dashboard.html' : 'onboarding-schnellstart.html';
+    // Session 23: Bevorzugte Start-Seite aus Einstellungen respektieren (Allowlist)
+    var _esZiel = 'dashboard.html';
+    try {
+      var _esRaw = localStorage.getItem('prova_einstellungen');
+      if (_esRaw) {
+        var _esObj = JSON.parse(_esRaw);
+        var _erlaubt = ['dashboard.html', 'termine.html', 'stellungnahme.html', 'app.html'];
+        if (_esObj.startseite && _erlaubt.indexOf(_esObj.startseite) !== -1) {
+          _esZiel = _esObj.startseite;
+        }
+      }
+    } catch(e) {}
+    ziel = localStorage.getItem('prova_onboarding_done') ? _esZiel : 'onboarding-schnellstart.html';
   }
   try {
     var res = await fetch('/.netlify/functions/airtable', {
@@ -182,7 +194,20 @@ async function ladePaketUndWeiterleiten(email, ziel) {
           localStorage.setItem('prova_onboarding_done',       'true');
           localStorage.setItem('prova_welcome_seen',          '1');
           localStorage.setItem('prova_erster_fall_erstellt',  '1');
-          ziel = 'dashboard.html';
+          // Session 23: Bevorzugte Start-Seite aus Einstellungen respektieren.
+          // Nur erlaubte Werte (Allowlist) akzeptieren — keine Open-Redirect-Lücke.
+          var startseite = 'dashboard.html';
+          try {
+            var esRaw = localStorage.getItem('prova_einstellungen');
+            if (esRaw) {
+              var esObj = JSON.parse(esRaw);
+              var erlaubt = ['dashboard.html', 'termine.html', 'stellungnahme.html', 'app.html'];
+              if (esObj.startseite && erlaubt.indexOf(esObj.startseite) !== -1) {
+                startseite = esObj.startseite;
+              }
+            }
+          } catch(e) {}
+          ziel = startseite;
         }
         if (f.kontakte_importiert) localStorage.setItem('prova_kontakte_importiert', '1');
         // Testpilot-Flag: dauerhaft Sonderkonditionen, kein Stripe
@@ -231,7 +256,7 @@ window.login = async function() {
       if ((errBody.error_description||'').toLowerCase().includes('confirm')) {
         // User existiert aber ist nicht bestätigt → direkt einloggen via Airtable
         console.log('PROVA: E-Mail nicht bestätigt, Fallback-Login via Airtable');
-        localStorage.setItem('prova_user', JSON.stringify({email: email, name: email, token: 'fallback-login', ts: Date.now()}));
+        localStorage.setItem('prova_user', JSON.stringify({email: email, name: email, token: 'fallback-login'}));
         localStorage.setItem('prova_sv_email', email);
         localStorage.setItem('prova_paket', 'Solo');
         localStorage.setItem('prova_status', 'Trial');
@@ -272,7 +297,7 @@ window.login = async function() {
     var userData = userRes.ok ? await userRes.json() : {};
     var md   = userData.user_metadata || {};
     var name = md.full_name || email;
-    localStorage.setItem('prova_user', JSON.stringify({email: userData.email||email, name: name, token: data.access_token, ts: Date.now()}));
+    localStorage.setItem('prova_user',     JSON.stringify({email: userData.email||email, name: name, token: data.access_token}));
     localStorage.setItem('prova_sv_email', userData.email||email);
     if (md.full_name) {
       var parts = name.split(' ');
@@ -301,9 +326,9 @@ window.register = async function() {
   var isInviteFlow = !!(inviteToken || confirmToken);
 
   // Felder lesen
-  var name  = (document.getElementById('reg-name') && document.getElementById('reg-name').value || '').trim();
-  var email = (document.getElementById('reg-email') && document.getElementById('reg-email').value || '').trim();
-  var pw    = (document.getElementById('reg-pw') && document.getElementById('reg-pw').value || '');
+  var name  = (document.getElementById('reg-name')?.value || '').trim();
+  var email = (document.getElementById('reg-email')?.value || '').trim();
+  var pw    = (document.getElementById('reg-pw')?.value || '');
 
   // Validierung
   if (!isInviteFlow) {
@@ -339,7 +364,7 @@ window.register = async function() {
         var resolvedEmail = (user && user.email) || '';
         var parts = resolvedName.split(' ');
         sessionStorage.removeItem('prova_invite_token');
-        localStorage.setItem('prova_user', JSON.stringify({name: resolvedName, email: resolvedEmail, token: 'netlify', ts: Date.now()}));
+        localStorage.setItem('prova_user',        JSON.stringify({name: resolvedName, email: resolvedEmail, token: 'netlify'}));
         localStorage.setItem('prova_sv_email',    resolvedEmail);
         localStorage.setItem('prova_sv_vorname',  parts[0] || '');
         localStorage.setItem('prova_sv_nachname', parts.slice(1).join(' ') || '');
@@ -528,7 +553,7 @@ window.resetPasswort = async function() {
     if (hint) { hint.textContent = '✅ Ihre E-Mail-Adresse wurde bestätigt.'; hint.style.display = 'block'; }
     var nameGroup  = document.getElementById('reg-name-group');
     var emailGroup = document.getElementById('reg-email-group');
-    var pwGroup    = document.getElementById('reg-pw') && document.getElementById('reg-pw').closest('.form-group');
+    var pwGroup    = document.getElementById('reg-pw')?.closest('.form-group');
     if (nameGroup)  nameGroup.style.display  = 'none';
     if (emailGroup) emailGroup.style.display = 'none';
     if (pwGroup)    pwGroup.style.display    = 'none';
@@ -550,7 +575,7 @@ window.resetPasswort = async function() {
   if (typeof netlifyIdentity !== 'undefined') {
     netlifyIdentity.on('login', function(user) {
       var md = user.user_metadata || {};
-      localStorage.setItem('prova_user', JSON.stringify({email: user.email, name: md.full_name || user.email, token: 'netlify', ts: Date.now()}));
+      localStorage.setItem('prova_user', JSON.stringify({email: user.email, name: md.full_name || user.email, token: 'netlify'}));
       if (md.full_name) {
         var parts = md.full_name.split(' ');
         localStorage.setItem('prova_sv_vorname',  parts[0] || '');
@@ -571,13 +596,6 @@ window.resetPasswort = async function() {
       localStorage.removeItem('prova_paket');
       localStorage.removeItem('prova_is_admin');
       return;
-    }
-    // Token-Alter prüfen: älter als 30 Tage → neu einloggen
-    var tokenAge = stored.ts ? Date.now() - stored.ts : 0;
-    var MAX_AGE = 30 * 24 * 60 * 60 * 1000; // 30 Tage
-    if (stored.ts && tokenAge > MAX_AGE) {
-      localStorage.removeItem('prova_user');
-      return; // Neu einloggen
     }
     ladePaketUndWeiterleiten(stored.email);
   }

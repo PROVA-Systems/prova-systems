@@ -1,9 +1,6 @@
 /**
  * PROVA Systems — KI-Lernpool
- * Diktat-Lernmodus: Fachvokabular-Datenbank wächst mit Korrekturen des Sachverständigen
- * WICHTIG: Kein Machine-Learning — KI_LERNPOOL ist eine Airtable-Datenbank für
- * benutzerspezifisches Fachvokabular (Eigennamen, Abkürzungen, Fachbegriffe).
- * Die Datenbank wird als Kontext an GPT-4o übergeben, nicht zum Training verwendet.
+ * Diktat-Lernmodus: KI lernt aus Korrekturen des Sachverständigen
  *
  * Features:
  * - Korrekturen aus Whisper-Transkription speichern (Original → Korrektur)
@@ -26,8 +23,19 @@ const KILernpool = (() => {
     MAX_EINTRAEGE:   500,
     MAX_VOKABULAR:   200,
     KONFIDENZ_SCHWELLE: 3,  // Nach 3 Korrekturen → hohes Vertrauen
-    VERSION: '1.0'
+    VERSION: '1.1'
   };
+
+  // ── Lernmodus-Guard (Session 22) ─────────────────────────────────
+  // Respektiert den Toggle aus Einstellungen → KI & Diktat → "KI-Lernmodus".
+  // Default: aktiv. Nur wenn User explizit false setzt, werden Write-Operationen
+  // blockiert (Lese- und Render-Funktionen bleiben unberührt).
+  function lernmodusAktiv() {
+    try {
+      var s = JSON.parse(localStorage.getItem('prova_einstellungen') || '{}');
+      return s.lernmodus !== false;
+    } catch(e) { return true; }
+  }
 
   // ── Kategorie-System ─────────────────────────────────────────────
   const KATEGORIEN = {
@@ -476,6 +484,7 @@ const KILernpool = (() => {
 
   // ── Korrektur speichern ───────────────────────────────────────────
   function korrekturSpeichern(original, korrektur, kontext = '') {
+    if (!lernmodusAktiv()) return false;
     laden();
     if (!original || !korrektur || original === korrektur) return false;
 
@@ -514,6 +523,9 @@ const KILernpool = (() => {
 
   // ── Vokabular verwalten ───────────────────────────────────────────
   function vokabularHinzufuegen(wort, kategorie = null, manuell = false) {
+    // Session 22: Automatisches Lernen nur wenn Lernmodus aktiv.
+    // Manuelle Einträge (Button „Hinzufügen") bleiben immer erlaubt.
+    if (!manuell && !lernmodusAktiv()) return false;
     laden();
     const normiert = wort.trim();
     if (!normiert) return false;
@@ -732,7 +744,7 @@ const KILernpool = (() => {
           <!-- Tags -->
           <div class="kl-vokabular-tags" id="kl-vokabular-tags">
             ${userVokabular.length === 0
-              ? '<span style="font-size:11px;color:#9ca3af;padding:4px">Noch keine benutzerdefinierten Einträge. Fachvokabular wächst aus deinen Diktat-Korrekturen automatisch.</span>'
+              ? '<span style="font-size:11px;color:#9ca3af;padding:4px">Noch keine benutzerdefinierten Einträge. KI lernt aus deinen Diktat-Korrekturen automatisch.</span>'
               : userVokabular.map(v => renderTag(v)).join('')
             }
           </div>
@@ -792,8 +804,8 @@ const KILernpool = (() => {
 
   // ── Benutzer-Aktionen ─────────────────────────────────────────────
   function _korrekturEingabe() {
-    const original  = (function(){var _e=document.getElementById('kl-input-original');return _e?_e.value:undefined;})() .trim();
-    const korrektur = (function(){var _e=document.getElementById('kl-input-korrektur');return _e?_e.value:undefined;})() .trim();
+    const original  = document.getElementById('kl-input-original')?.value.trim();
+    const korrektur = document.getElementById('kl-input-korrektur')?.value.trim();
     if (!original || !korrektur) { alert('Bitte beide Felder ausfüllen.'); return; }
 
     korrekturSpeichern(original, korrektur);
@@ -818,13 +830,13 @@ const KILernpool = (() => {
     if (!form) return;
     form.classList.toggle('sichtbar');
     if (form.classList.contains('sichtbar')) {
-      (function(){var _e=document.getElementById('kl-add-wort');return _e?_e.focus:undefined;})() ();
+      document.getElementById('kl-add-wort')?.focus();
     }
   }
 
   function _addVokabel() {
-    const wort      = (function(){var _e=document.getElementById('kl-add-wort');return _e?_e.value:undefined;})() .trim();
-    const kategorie = (function(){var _e=document.getElementById('kl-add-kategorie');return _e?_e.value:undefined;})() ;
+    const wort      = document.getElementById('kl-add-wort')?.value.trim();
+    const kategorie = document.getElementById('kl-add-kategorie')?.value;
     if (!wort) { alert('Bitte einen Begriff eingeben.'); return; }
 
     const ok = vokabularHinzufuegen(wort, kategorie, true);
@@ -949,6 +961,7 @@ const KILernpool = (() => {
 
   // ── Diktat-Integration: Korrekturen aus Diff lernen ──────────────
   function lernAusDiff(originalText, korrigiertText) {
+    if (!lernmodusAktiv()) return 0;
     if (!originalText || !korrigiertText) return 0;
     const aenderungen = berechneDiff(originalText, korrigiertText);
     let gelernt = 0;

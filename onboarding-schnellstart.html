@@ -185,10 +185,6 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:1
 }
 .btn-small:hover{background:rgba(79,142,247,.18);}
 </style>
-
-<link rel="stylesheet" href="prova-design.css">
-<link rel="stylesheet" href="mobile.css">
-<script src="theme.js"></script>
 </head>
 <body>
 
@@ -549,8 +545,13 @@ function speichereOnboardingDoneAirtable() {
 }
 
 function starten(){
-  localStorage.setItem('prova_onboarding_done','true');
-  speichereOnboardingDoneAirtable();
+  // Session 26: Zentraler Helper statt duplizierter Logik
+  if (typeof window.provaMarkOnboardingDone === 'function') {
+    window.provaMarkOnboardingDone();
+  } else {
+    localStorage.setItem('prova_onboarding_done','true');
+    speichereOnboardingDoneAirtable();
+  }
   window.location.href='app.html';
 }
 
@@ -559,7 +560,13 @@ function überspringen(){
   var nn=document.getElementById('ob-nachname').value.trim();
   if(v) localStorage.setItem('prova_sv_vorname',v);
   if(nn) localStorage.setItem('prova_sv_nachname',nn);
-  localStorage.setItem('prova_onboarding_done','true');
+  // Session 26: Airtable-Sync fehlte hier komplett — jetzt nachgezogen
+  if (typeof window.provaMarkOnboardingDone === 'function') {
+    window.provaMarkOnboardingDone();
+  } else {
+    localStorage.setItem('prova_onboarding_done','true');
+    speichereOnboardingDoneAirtable();
+  }
 
   // Sample-Fall anlegen damit Dashboard nicht leer ist
   try {

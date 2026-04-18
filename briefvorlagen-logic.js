@@ -4,7 +4,7 @@
 (function(){
 'use strict';
 
-var WEBHOOK='/.netlify/functions/make-proxy?key=k1';
+var WEBHOOK='https://hook.eu1.make.com/bslfuqmlud1vo8qems5ccn5z5f2eq4dl';
 var AT_BASE='appJ7bLlAHZoxENWE';
 var AT_FAELLE='tblSxV8bsXwd1pwa0';
 
@@ -623,6 +623,13 @@ if (bvSrch) {
   });
 }
 
+/* ── INITIAL RENDER: Template-Galerie aufbauen beim Seitenladen ── */
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', render);
+} else {
+  render();
+}
+
 })();
 
 /* ── BRIEFE.versand_status nach K3-Versand auf "Gesendet" setzen ── */
@@ -657,10 +664,3 @@ window.provaBriefStatLog = async function(data) {
     });
   }
 };
-
-window.switchTab    = function(tab) { if(typeof bvGoStep==='function') bvGoStep(tab); };
-window.weiter       = function()    { if(typeof bvGoStep==='function') bvGoStep(1); };
-window.zurueck      = function()    { if(typeof bvGoStep==='function') bvGoStep(-1); };
-window.starteKIGenerierung = function() { if(typeof kiGetPrompt==='function') kiGetPrompt(); };
-window.sendePDF     = function()    { if(typeof bvRenderSendSummary==='function') bvRenderSendSummary(); };
-window.aktiviereKIEdit = function() { if(typeof bvOpenDrawer==='function') bvOpenDrawer(); };

@@ -368,6 +368,13 @@
             <label class="es-toggle"><input type="checkbox" id="es-auto-quality" checked onchange="saveToggle('auto_quality', this.checked)" /><span class="es-toggle-slider"></span></label>
           </div>
           <div class="es-zeile">
+            <div class="es-zeile-info"><div class="es-zeile-label">KI-Analyse-Modus</div><div class="es-zeile-sub">Schnell = kürzere Wartezeit · Präzise = ausführlichere Analyse</div></div>
+            <select class="es-select" id="es-ki-modell" onchange="saveSelect('ki_modell', this.value)">
+              <option value="schnell">⚡ Schnell (Standard)</option>
+              <option value="praezise">🎯 Präzise</option>
+            </select>
+          </div>
+          <div class="es-zeile">
             <div class="es-zeile-info"><div class="es-zeile-label">KI-Lernmodus</div><div class="es-zeile-sub">KI lernt aus Diktat-Korrekturen automatisch</div></div>
             <label class="es-toggle"><input type="checkbox" id="es-lernmodus" checked onchange="saveToggle('lernmodus', this.checked)" /><span class="es-toggle-slider"></span></label>
           </div>
@@ -386,7 +393,7 @@
           </div>
           <div class="es-zeile">
             <div class="es-zeile-info"><div class="es-zeile-label">KI-Lernpool verwalten</div><div class="es-zeile-sub">Gelernte Vokabeln, Korrekturen und Spracherkennung-Prompt</div></div>
-            <button class="es-btn" onclick="window.location='ortstermin-modus.html#lernpool'">🧠 Lernpool →</button>
+            <button class="es-btn" onclick="oeffneLernpoolModal()">🧠 Lernpool öffnen</button>
           </div>
         </section>
 
@@ -582,9 +589,26 @@
         ['kompakt','animationen','auto_quality','lernmodus','inline_vorschlaege','bn_fristen','bn_zahlung','bn_stillezeit'].forEach(k => {
           const el = document.getElementById('es-' + k.replace(/_/g,'-')); if (el && s[k] !== undefined) el.checked = s[k];
         });
-        ['theme','fontsize','startseite','ki_modell','diktat_sprache','timeout'].forEach(k => {
+        ['startseite','ki_modell','diktat_sprache'].forEach(k => {
           const el = document.getElementById('es-' + k.replace(/_/g,'-')); if (el && s[k]) el.value = s[k];
         });
+        // Session 23: Fontsize aus dedizieretem Key lesen (Migration in theme.js)
+        const fsEl = document.getElementById('es-fontsize');
+        if (fsEl) {
+          const fs = localStorage.getItem('prova_fontsize') || s.fontsize || '16';
+          fsEl.value = fs;
+        }
+        // Session 23: Timeout-Dropdown aus richtigem Key (session_timeout) laden
+        const toEl = document.getElementById('es-timeout');
+        if (toEl && s.session_timeout !== undefined) {
+          toEl.value = s.session_timeout;
+        }
+        // Session 21: Theme-Dropdown aus dem echten Theme-Key laden, nicht aus ES_KEY
+        const themeEl = document.getElementById('es-theme');
+        if (themeEl) {
+          const aktuell = localStorage.getItem('prova_theme') || 'dark';
+          themeEl.value = aktuell;
+        }
         const ki = document.getElementById('es-ki-kontext'); if (ki && s.ki_kontext) ki.value = s.ki_kontext;
       } catch(e) {}
     }
@@ -592,6 +616,75 @@
     function saveToggle(key, value) {
       try { const s = JSON.parse(localStorage.getItem(ES_KEY)||'{}'); s[key]=value; localStorage.setItem(ES_KEY,JSON.stringify(s)); } catch(e) {}
       zeigeToast('Einstellung gespeichert');
+      // Benachrichtigungs-Toggles → zusätzlich an Backend (push-notify Prefs)
+      if (key === 'bn_fristen' || key === 'bn_zahlung' || key === 'bn_stillezeit') {
+        syncBenachrichtigungsPrefs();
+      }
+      // Session 20: UI-Toggles — Animationen + Kompakt live auf gesamte Seite anwenden
+      if (key === 'animationen' || key === 'kompakt') {
+        if (typeof window.provaApplyUIToggles === 'function') {
+          window.provaApplyUIToggles();
+        }
+      }
+    }
+
+    /* ── Session 18: Benachrichtigungs-Prefs mit Backend synchronisieren ── */
+    async function syncBenachrichtigungsPrefs() {
+      try {
+        const email = localStorage.getItem('prova_sv_email') || '';
+        if (!email) return;
+        const s = JSON.parse(localStorage.getItem(ES_KEY) || '{}');
+        const prefs = {
+          bn_fristen:    s.bn_fristen    !== false,
+          bn_zahlung:    s.bn_zahlung    !== false,
+          bn_stillezeit: s.bn_stillezeit === true,
+        };
+        await fetch('/.netlify/functions/push-notify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ aktion: 'save-prefs', email, prefs }),
+        });
+      } catch (e) {
+        console.warn('[PROVA] Push-Prefs-Sync fehlgeschlagen:', e.message);
+      }
+    }
+
+    /* ── Beim Seitenladen: Prefs vom Backend holen, falls lokal nichts vorhanden ── */
+    async function ladeBenachrichtigungsPrefs() {
+      try {
+        const email = localStorage.getItem('prova_sv_email') || '';
+        if (!email) return;
+        const local = JSON.parse(localStorage.getItem(ES_KEY) || '{}');
+        // Nur laden wenn keine lokalen Werte existieren (sonst Benutzer-Änderung respektieren)
+        if (local.bn_fristen === undefined || local.bn_zahlung === undefined || local.bn_stillezeit === undefined) {
+          const r = await fetch('/.netlify/functions/push-notify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ aktion: 'get-prefs', email }),
+          });
+          if (r.ok) {
+            const { prefs } = await r.json();
+            if (prefs) {
+              const s = JSON.parse(localStorage.getItem(ES_KEY) || '{}');
+              if (local.bn_fristen    === undefined) s.bn_fristen    = prefs.bn_fristen;
+              if (local.bn_zahlung    === undefined) s.bn_zahlung    = prefs.bn_zahlung;
+              if (local.bn_stillezeit === undefined) s.bn_stillezeit = prefs.bn_stillezeit;
+              localStorage.setItem(ES_KEY, JSON.stringify(s));
+              // UI aktualisieren
+              const setChk = (id, v) => { const el = document.getElementById(id); if (el) el.checked = !!v; };
+              setChk('es-bn-fristen',    s.bn_fristen    !== false);
+              setChk('es-bn-zahlung',    s.bn_zahlung    !== false);
+              setChk('es-bn-stillezeit', s.bn_stillezeit === true);
+            }
+          }
+        }
+      } catch (e) { /* silent — Seite funktioniert auch ohne Server-Sync */ }
+    }
+    // Beim Öffnen der Seite Prefs holen
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', ladeBenachrichtigungsPrefs);
+    } else {
+      ladeBenachrichtigungsPrefs();
     }
     function saveSelect(key, value) {
       try { const s = JSON.parse(localStorage.getItem(ES_KEY)||'{}'); s[key]=value; localStorage.setItem(ES_KEY,JSON.stringify(s)); } catch(e) {}
@@ -628,8 +721,30 @@
       history.replaceState(null,'',`#${key}`);
     }
 
-    function aendereTheme(v) { saveSelect('theme',v); document.documentElement.setAttribute('data-theme',v); }
-    function aendereFontsize(v) { saveSelect('fontsize',v); document.documentElement.style.fontSize = v+'px'; }
+    function aendereTheme(v) {
+      // Session 21: Single source of truth via theme.js API.
+      // Schreibt in localStorage['prova_theme'] UND injiziert Light-CSS
+      // (bzw. entfernt es) bei einem einzigen Aufruf.
+      if (window.PROVA_THEME && typeof window.PROVA_THEME.set === 'function') {
+        window.PROVA_THEME.set(v);
+      } else {
+        // Fallback falls theme.js nicht geladen
+        localStorage.setItem('prova_theme', v);
+      }
+      // Zusätzlich in Einstellungen-Struktur mitführen (harmlos, Migration greift)
+      saveSelect('theme', v);
+    }
+    function aendereFontsize(v) {
+      // Session 23: Nutzt zentrale Applikation aus theme.js —
+      // schreibt in prova_fontsize (wo theme.js auf allen Seiten liest)
+      // und wendet sofort an.
+      if (typeof window.provaApplyFontsize === 'function') {
+        window.provaApplyFontsize(v);
+      } else {
+        document.documentElement.style.fontSize = v + 'px';
+      }
+      saveSelect('fontsize', v);
+    }
 
     function passwortReset() {
       const email = localStorage.getItem('prova_sv_email');
@@ -707,5 +822,216 @@
 <script src="prova-error-handler.js" defer></script>
 <script src="support-chat.js" defer></script>
 <script src="sw-register.js" defer></script>
+<!-- ═══════════════════════════════════════════════════════════════
+     KI-LERNPOOL Modal — im gleichen Einstellungen-Look & Feel
+     Zeigt gelernte Vokabeln + Korrekturen + Statistik aus localStorage
+     ═══════════════════════════════════════════════════════════════ -->
+<div id="lernpool-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);backdrop-filter:blur(4px);z-index:9500;align-items:center;justify-content:center;padding:20px;">
+  <div style="background:var(--surface);border:1px solid var(--border2);border-radius:16px;width:100%;max-width:720px;max-height:88vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.5);">
+    <!-- Header -->
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--border);flex-shrink:0;">
+      <div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="font-size:22px;">🧠</span>
+          <div style="font-size:17px;font-weight:700;color:var(--text);">KI-Lernpool</div>
+        </div>
+        <div style="font-size:12px;color:var(--text3);margin-top:4px;">Gelernte Vokabeln, Korrekturen und Spracherkennung</div>
+      </div>
+      <button onclick="schliesseLernpoolModal()" style="background:none;border:none;color:var(--text3);font-size:22px;cursor:pointer;padding:4px 10px;border-radius:6px;" onmouseover="this.style.background='rgba(255,255,255,.06)'" onmouseout="this.style.background='transparent'">✕</button>
+    </div>
+
+    <!-- Tabs -->
+    <div style="display:flex;gap:0;border-bottom:1px solid var(--border);flex-shrink:0;padding:0 22px;">
+      <button class="lp-tab lp-tab-active" data-tab="uebersicht" onclick="zeigeLernpoolTab('uebersicht', this)" style="background:none;border:none;padding:12px 14px;color:var(--text);font-size:13px;font-weight:600;cursor:pointer;border-bottom:2px solid var(--accent,#4f8ef7);">📊 Übersicht</button>
+      <button class="lp-tab" data-tab="vokabular" onclick="zeigeLernpoolTab('vokabular', this)" style="background:none;border:none;padding:12px 14px;color:var(--text3);font-size:13px;font-weight:500;cursor:pointer;border-bottom:2px solid transparent;">📖 Fachvokabular</button>
+      <button class="lp-tab" data-tab="korrekturen" onclick="zeigeLernpoolTab('korrekturen', this)" style="background:none;border:none;padding:12px 14px;color:var(--text3);font-size:13px;font-weight:500;cursor:pointer;border-bottom:2px solid transparent;">✏️ Korrekturen</button>
+    </div>
+
+    <!-- Content -->
+    <div id="lp-content" style="overflow-y:auto;padding:22px;flex:1;">
+      <!-- wird dynamisch gefüllt -->
+    </div>
+
+    <!-- Footer -->
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 22px;border-top:1px solid var(--border);flex-shrink:0;gap:10px;">
+      <button class="es-btn" onclick="exportiereLernpool()" style="font-size:12px;">📥 Export JSON</button>
+      <div style="display:flex;gap:8px;">
+        <button class="es-btn" onclick="leereLernpool()" style="font-size:12px;color:#ef4444;border-color:rgba(239,68,68,.3);">🗑 Leeren</button>
+        <button class="es-btn" onclick="schliesseLernpoolModal()" style="font-size:12px;">Schließen</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════
+   KI-LERNPOOL MODAL — Logik
+   Liest aus localStorage: prova_ki_lernpool + prova_ki_vokabular
+   ═══════════════════════════════════════════════════════════════ */
+function oeffneLernpoolModal() {
+  var m = document.getElementById('lernpool-modal');
+  if (!m) return;
+  m.style.display = 'flex';
+  zeigeLernpoolTab('uebersicht', document.querySelector('.lp-tab[data-tab="uebersicht"]'));
+}
+
+function schliesseLernpoolModal() {
+  var m = document.getElementById('lernpool-modal');
+  if (m) m.style.display = 'none';
+}
+
+function zeigeLernpoolTab(tab, btn) {
+  // Tab-Styling
+  document.querySelectorAll('.lp-tab').forEach(function(t){
+    t.classList.remove('lp-tab-active');
+    t.style.color = 'var(--text3)';
+    t.style.fontWeight = '500';
+    t.style.borderBottomColor = 'transparent';
+  });
+  if (btn) {
+    btn.classList.add('lp-tab-active');
+    btn.style.color = 'var(--text)';
+    btn.style.fontWeight = '600';
+    btn.style.borderBottomColor = 'var(--accent,#4f8ef7)';
+  }
+
+  // Content je Tab
+  var c = document.getElementById('lp-content');
+  if (!c) return;
+
+  var lernpool  = ladeLernpoolDaten();
+  var vokabular = ladeVokabularDaten();
+
+  if (tab === 'uebersicht') {
+    c.innerHTML = ''
+      + '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:22px;">'
+      +   renderLpStat('📖', vokabular.length, 'Vokabeln')
+      +   renderLpStat('✏️', lernpool.length,  'Korrekturen')
+      +   renderLpStat('⭐', lernpool.filter(function(x){return (x.anzahl||1) >= 3;}).length, 'Bestätigt (3+)')
+      + '</div>'
+      + '<div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:16px;font-size:13px;line-height:1.6;color:var(--text2);">'
+      +   '<strong style="color:var(--text);">Was ist der Lernpool?</strong><br>'
+      +   'Jede Diktat-Korrektur, die Sie im Ortstermin-Modus machen, wird hier gespeichert. '
+      +   'Wird ein Begriff dreimal korrigiert, übernimmt ihn die KI in den Spracherkennungs-Prompt '
+      +   'und vermeidet den Fehler beim nächsten Diktat automatisch.<br><br>'
+      +   '<strong style="color:var(--text);">DSGVO-Hinweis:</strong> Alles nur lokal in Ihrem Browser — '
+      +   'keine Übertragung an Server, kein Training.'
+      + '</div>';
+
+  } else if (tab === 'vokabular') {
+    if (!vokabular.length) {
+      c.innerHTML = lpEmptyState('📖', 'Noch kein Fachvokabular gelernt', 'Sobald Sie im Ortstermin diktieren und Korrekturen machen, füllt sich der Vokabular-Pool hier automatisch.');
+    } else {
+      c.innerHTML = '<div style="display:flex;flex-direction:column;gap:6px;">'
+        + vokabular.map(function(v){
+            var eintrag = typeof v === 'string' ? { begriff: v, kategorie: 'SONSTIGES' } : v;
+            return ''
+              + '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;">'
+              +   '<div style="display:flex;align-items:center;gap:10px;min-width:0;">'
+              +     '<span style="font-size:14px;flex-shrink:0;">' + (eintrag.icon || '📘') + '</span>'
+              +     '<span style="font-size:13px;color:var(--text);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + escHtml(eintrag.begriff || '') + '</span>'
+              +   '</div>'
+              +   '<span style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;flex-shrink:0;margin-left:12px;">' + escHtml(eintrag.kategorie || 'Sonstiges') + '</span>'
+              + '</div>';
+          }).join('')
+        + '</div>';
+    }
+
+  } else if (tab === 'korrekturen') {
+    if (!lernpool.length) {
+      c.innerHTML = lpEmptyState('✏️', 'Noch keine Korrekturen gespeichert', 'Wenn Sie im Ortstermin ein transkribiertes Wort ändern, wird das Paar Original → Korrektur hier festgehalten.');
+    } else {
+      c.innerHTML = '<div style="display:flex;flex-direction:column;gap:8px;">'
+        + lernpool.slice(0, 100).map(function(k){
+            var count = k.anzahl || 1;
+            var ok = count >= 3;
+            return ''
+              + '<div style="display:grid;grid-template-columns:1fr auto 1fr auto;gap:12px;align-items:center;padding:10px 14px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;">'
+              +   '<div style="font-size:13px;color:var(--text3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + escHtml(k.original || '') + '</div>'
+              +   '<span style="font-size:14px;color:var(--text3);">→</span>'
+              +   '<div style="font-size:13px;color:var(--text);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + escHtml(k.korrektur || '') + '</div>'
+              +   '<span title="' + count + 'x korrigiert" style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;background:' + (ok ? 'rgba(16,185,129,.12)' : 'rgba(245,158,11,.12)') + ';color:' + (ok ? '#10b981' : '#f59e0b') + ';flex-shrink:0;">' + count + '×</span>'
+              + '</div>';
+          }).join('')
+        + '</div>'
+        + (lernpool.length > 100 ? '<div style="font-size:12px;color:var(--text3);text-align:center;margin-top:14px;">… nur die ersten 100 von ' + lernpool.length + ' Einträgen gezeigt</div>' : '');
+    }
+  }
+}
+
+function renderLpStat(icon, zahl, label) {
+  return ''
+    + '<div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px;text-align:center;">'
+    +   '<div style="font-size:20px;margin-bottom:4px;">' + icon + '</div>'
+    +   '<div style="font-size:22px;font-weight:800;color:var(--text);line-height:1.1;">' + zahl + '</div>'
+    +   '<div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-top:4px;">' + label + '</div>'
+    + '</div>';
+}
+
+function lpEmptyState(icon, title, sub) {
+  return ''
+    + '<div style="text-align:center;padding:40px 20px;color:var(--text3);">'
+    +   '<div style="font-size:36px;margin-bottom:12px;">' + icon + '</div>'
+    +   '<div style="font-size:15px;font-weight:600;color:var(--text2);margin-bottom:6px;">' + title + '</div>'
+    +   '<div style="font-size:13px;max-width:380px;margin:0 auto;line-height:1.5;">' + sub + '</div>'
+    + '</div>';
+}
+
+function ladeLernpoolDaten() {
+  try { return JSON.parse(localStorage.getItem('prova_ki_lernpool') || '[]'); }
+  catch(e) { return []; }
+}
+function ladeVokabularDaten() {
+  try { return JSON.parse(localStorage.getItem('prova_ki_vokabular') || '[]'); }
+  catch(e) { return []; }
+}
+
+function escHtml(s) {
+  return String(s).replace(/[<>&"']/g, function(c){
+    return { '<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&#39;' }[c];
+  });
+}
+
+function exportiereLernpool() {
+  var daten = {
+    exportiert_am: new Date().toISOString(),
+    vokabular:    ladeVokabularDaten(),
+    korrekturen:  ladeLernpoolDaten()
+  };
+  var blob = new Blob([JSON.stringify(daten, null, 2)], { type: 'application/json' });
+  var url  = URL.createObjectURL(blob);
+  var a    = document.createElement('a');
+  a.href   = url;
+  a.download = 'PROVA-KI-Lernpool-' + new Date().toISOString().split('T')[0] + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+  if (typeof zeigeToast === 'function') zeigeToast('📥 Lernpool exportiert');
+}
+
+function leereLernpool() {
+  if (!confirm('KI-Lernpool komplett leeren? Alle gelernten Vokabeln und Korrekturen gehen verloren.\n\nDas Standard-Fachvokabular (DIN-Normen, ZPO-Paragraphen, etc.) bleibt erhalten.')) return;
+  localStorage.removeItem('prova_ki_lernpool');
+  localStorage.removeItem('prova_ki_vokabular');
+  if (typeof zeigeToast === 'function') zeigeToast('🗑 Lernpool geleert');
+  // Aktiven Tab neu rendern
+  var aktiv = document.querySelector('.lp-tab-active');
+  if (aktiv) zeigeLernpoolTab(aktiv.getAttribute('data-tab'), aktiv);
+}
+
+// Backdrop-Click schließt Modal
+document.addEventListener('click', function(e) {
+  var m = document.getElementById('lernpool-modal');
+  if (m && e.target === m) schliesseLernpoolModal();
+});
+
+// Escape-Key schließt Modal
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    var m = document.getElementById('lernpool-modal');
+    if (m && m.style.display !== 'none') schliesseLernpoolModal();
+  }
+});
+</script>
+
 </body>
 </html>

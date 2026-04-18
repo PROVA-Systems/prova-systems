@@ -372,9 +372,15 @@ function renderKPI(){
   let html='';
   for(const [k,icon] of Object.entries(cats)){
     const n = POSITIONEN_DB.filter(p=>p.kat===k).length;
-    html+=`<div class="kpi-chip">${icon} ${k.replace(' allgemein','')}<strong>${n} Pos.</strong></div>`;
+    html+=`<div class="kpi-chip">${icon} ${k.replace(' allgemein','')} <strong>${n} Pos.</strong></div>`;
   }
   bar.innerHTML=html;
+  // Dynamisch die Gesamt-Anzahl auch im "Alle"-Chip und im Header setzen,
+  // damit keine Diskrepanz entsteht (Header: 322 vs Chip: 303 hardcoded).
+  var chipAll = document.getElementById('chip-all');
+  if (chipAll) chipAll.textContent = POSITIONEN_DB.length;
+  var posCountEl = document.getElementById('posCount');
+  if (posCountEl) posCountEl.textContent = POSITIONEN_DB.length;
 }
 
 function setChipKat(val, el){ setChip(val, el); }

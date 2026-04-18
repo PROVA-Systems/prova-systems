@@ -825,11 +825,8 @@ var _timerInt    = null;
 var _timerSek    = 0;
 var _autoSaveTimer = null;
 
-/* ── Initialisierung ──────────────────────────────────────────────────────
-   Wichtig: init() läuft NACH dem outer IIFE via DOMContentLoaded bzw. nächstem
-   Tick. Nur so sind die `window.addMesszeile`/`window.zeigePanel`/... Funktionen
-   bereits definiert, die weiter unten im Script an window gehängt werden. */
-function init(){
+/* ── Initialisierung ────────────────────────────────────────────────────── */
+(function init(){
   // Header befüllen
   var azEl  = document.getElementById('ot-az');
   var subEl = document.getElementById('ot-sub');
@@ -855,15 +852,7 @@ function init(){
   addMesszeile('feuchte', '% u. H.');
   addMesszeile('klima', '°C');
   addMesszeile('risse', 'mm');
-}
-
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', init);
-} else {
-  // DOM ist bereits bereit — auf nächsten Tick vertagen, damit
-  // alle window.xyz-Zuweisungen unten im Script noch durchlaufen.
-  setTimeout(init, 0);
-}
+})();
 
 function updateOnlineStatus(){
   var offline = !navigator.onLine;
@@ -1315,8 +1304,9 @@ function escHTML(s){
 <script src="prova-error-handler.js" defer></script>
 <script src="ki-lernpool.js" defer></script>
 <script src="sw-register.js" defer></script>
-<!-- foto-captioning.js ist eine NETLIFY FUNCTION, kein Frontend-Script.
-     Sie wird via fetch('/.netlify/functions/foto-captioning') aufgerufen (siehe Zeile ~1142). -->
+<!-- Session 27: foto-captioning.js war faelschlich als Frontend-Script geladen,
+     ist aber eine Netlify Function (exports.handler). Frontend-Calls gehen
+     direkt an /.netlify/functions/foto-captioning — keine Script-Einbindung noetig. -->
 
 <script>
 window.provaKICaption = async function(btn) {

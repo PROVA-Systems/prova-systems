@@ -342,6 +342,9 @@ async function starteQualitaetspruefung() {
     btn.disabled = false; btn.textContent = '🔍 Erneut prüfen';
   }
 }
+// Session 22: Auf window exposen, damit der Auto-Qualitätscheck in freigabe.html greift
+// (DOMContentLoaded-Hook ruft window.starteQualitaetspruefung() bei aktivem auto_quality-Toggle)
+window.starteQualitaetspruefung = starteQualitaetspruefung;
 
 /* ── AUDIT-LOG TIMELINE ── */
 window.toggleAuditLog = function() {
@@ -1289,27 +1292,3 @@ window.provaFreigabeAudit = async function(data) {
     });
   }
 };
-
-/* ═════════════════════════════════════════════════════════════════════════
-   §407a ZPO Pre-Send: Freigabe-Button nur aktiv wenn Pflicht-Checkbox gesetzt
-   — eingeführt Session 10 Runde 3 (ö.b.u.v. SV-Bestätigungspflicht vor Versand)
-   ═════════════════════════════════════════════════════════════════════════ */
-window.toggleFreigabeBtn = function() {
-  var chk = document.getElementById('chk-407a-bestaetigt');
-  var btn = document.getElementById('btnFreigeben');
-  if (!chk || !btn) return;
-  if (chk.checked) {
-    btn.disabled      = false;
-    btn.style.opacity = '1';
-    btn.style.cursor  = 'pointer';
-  } else {
-    btn.disabled      = true;
-    btn.style.opacity = '.35';
-    btn.style.cursor  = 'not-allowed';
-  }
-};
-
-// Beim Laden: sicherstellen dass Button initial deaktiviert ist
-document.addEventListener('DOMContentLoaded', function() {
-  if (typeof window.toggleFreigabeBtn === 'function') window.toggleFreigabeBtn();
-});

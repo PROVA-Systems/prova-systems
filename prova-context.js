@@ -103,17 +103,15 @@
   async function atFetch(table, formula, opts) {
     opts = opts || {};
     var maxRecords = opts.maxRecords || 100;
-    // Session 5 Fix: Sort NICHT mehr default-hart auf 'Timestamp' — das gibt 422
-    // für Tabellen ohne Timestamp-Feld (z.B. TERMINE). Aufrufer muss Sort explizit
-    // setzen wenn gewünscht (analog zu dashboard-logic.js atFetch()).
-    var sort       = opts.sort || null;
+    var sort       = opts.sort || 'Timestamp';
     var sortDir    = opts.sortDir || 'desc';
     var fields     = opts.fields ? opts.fields.map(function(f){ return '&fields[]=' + encodeURIComponent(f); }).join('') : '';
 
     var path = '/v0/' + AT.BASE + '/' + table
       + '?filterByFormula=' + encodeURIComponent(formula || 'TRUE()')
       + '&maxRecords=' + maxRecords
-      + (sort ? '&sort[0][field]=' + encodeURIComponent(sort) + '&sort[0][direction]=' + sortDir : '')
+      + '&sort[0][field]=' + encodeURIComponent(sort)
+      + '&sort[0][direction]=' + sortDir
       + fields;
 
     try {
@@ -322,5 +320,135 @@
   global.provaCtx       = ctx;
   global.provaAtFetch   = atFetch;
   global.provaFormatDatum = formatDatum;
+
+  /* ═════════════════════════════════════════════════════════════════
+     PERSÖNLICHER KI-KONTEXT — v2.1
+     
+     Liest den vom SV in "Einstellungen → Persönlicher KI-Kontext"
+     hinterlegten Text (Spezialisierung, bevorzugte Normen etc.) und
+     hängt ihn AUTOMATISCH an JEDEN Aufruf von /.netlify/functions/ki-proxy
+     als Feld `user_kontext` an. Die 6 Frontend-Call-Sites müssen dafür
+     NICHT angepasst werden — der Interceptor wirkt transparent.
+     ═════════════════════════════════════════════════════════════════ */
+
+  function getProvaKiKontext() {
+    try {
+      var s = JSON.parse(localStorage.getItem('prova_einstellungen') || '{}');
+      return ((s.ki_kontext || '') + '').trim().slice(0, 1000); // max 1000 Zeichen
+    } catch (e) {
+      return '';
+    }
+  }
+  global.getProvaKiKontext = getProvaKiKontext;
+  ctx.kiKontext = getProvaKiKontext();
+
+  // Session 22: KI-Analyse-Modus (schnell/praezise) → wird vom Server in gpt-4o-mini / gpt-4o übersetzt
+  function getProvaKiAnalyseModus() {
+    try {
+      var s = JSON.parse(localStorage.getItem('prova_einstellungen') || '{}');
+      return s.ki_modell === 'praezise' ? 'praezise' : 'schnell';
+    } catch (e) { return 'schnell'; }
+  }
+  global.getProvaKiAnalyseModus = getProvaKiAnalyseModus;
+
+  /* Fetch-Interceptor: packt user_kontext + ki_analyse_modus an jeden ki-proxy-Call */
+  if (!global.__provaKiKontextInterceptorInstalled) {
+    global.__provaKiKontextInterceptorInstalled = true;
+    var origFetch = global.fetch.bind(global);
+    global.fetch = function (resource, init) {
+      try {
+        var urlStr = typeof resource === 'string' ? resource :
+                     (resource && resource.url) ? resource.url : '';
+        if (urlStr && urlStr.indexOf('/ki-proxy') !== -1 && init && init.body && typeof init.body === 'string') {
+          var body = JSON.parse(init.body);
+          if (body && typeof body === 'object') {
+            var modified = false;
+            if (!body.user_kontext) {
+              var k = getProvaKiKontext();
+              if (k) { body.user_kontext = k; modified = true; }
+            }
+            if (!body.ki_analyse_modus) {
+              body.ki_analyse_modus = getProvaKiAnalyseModus();
+              modified = true;
+            }
+            if (modified) init = Object.assign({}, init, { body: JSON.stringify(body) });
+          }
+        }
+      } catch (e) { /* silent — Interceptor darf niemals den Call brechen */ }
+      return origFetch(resource, init);
+    };
+  }
+
+  /* ═════════════════════════════════════════════════════════════════
+     SESSION 26: Zentraler Onboarding-Sync-Helper
+     Ersetzt 3 duplizierte Stellen (onboarding-logic, dashboard-logic,
+     onboarding-schnellstart) durch einen einheitlichen Aufruf.
+
+     window.provaMarkOnboardingDone() macht:
+     1. localStorage['prova_onboarding_done'] = 'true'
+     2. Airtable-Patch mit onboarding_done: true auf SV-Record (via Email-Lookup)
+     3. Idempotent: doppelter Call schadet nicht
+     4. Fehlertolerant: wenn kein Netz, nur localStorage — kein Block für den User
+     ═════════════════════════════════════════════════════════════════ */
+  global.provaMarkOnboardingDone = async function() {
+    // Lokal IMMER setzen — auch bei Netzwerk-Ausfall
+    try { localStorage.setItem('prova_onboarding_done', 'true'); } catch(e) {}
+
+    // Airtable-Patch — fehlertolerant
+    try {
+      var email = localStorage.getItem('prova_sv_email') || '';
+      if (!email) return { ok: false, grund: 'keine_email' };
+
+      var atId = localStorage.getItem('prova_at_sv_record_id') ||
+                 localStorage.getItem('prova_sv_record_id') || '';
+
+      // Wenn Record-ID schon bekannt: direkter PATCH
+      if (atId) {
+        await fetch('/.netlify/functions/airtable', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            method:  'PATCH',
+            path:    '/v0/appJ7bLlAHZoxENWE/tbladqEQT3tmx4DIB/' + atId,
+            payload: { fields: { onboarding_done: true } }
+          })
+        });
+        return { ok: true, via: 'direkt' };
+      }
+
+      // Sonst: erst Record-ID per Email-Lookup holen, dann patchen
+      var findRes = await fetch('/.netlify/functions/airtable', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          method: 'GET',
+          path:   '/v0/appJ7bLlAHZoxENWE/tbladqEQT3tmx4DIB' +
+                  '?filterByFormula=' + encodeURIComponent('{Email}="' + email + '"') +
+                  '&maxRecords=1'
+        })
+      });
+      if (!findRes.ok) return { ok: false, grund: 'lookup_http_' + findRes.status };
+      var findData = await findRes.json();
+      var records = findData.records || [];
+      if (!records.length) return { ok: false, grund: 'kein_record' };
+
+      var recId = records[0].id;
+      try { localStorage.setItem('prova_at_sv_record_id', recId); } catch(e) {}
+
+      await fetch('/.netlify/functions/airtable', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          method:  'PATCH',
+          path:    '/v0/appJ7bLlAHZoxENWE/tbladqEQT3tmx4DIB/' + recId,
+          payload: { fields: { onboarding_done: true } }
+        })
+      });
+      return { ok: true, via: 'lookup' };
+    } catch(e) {
+      console.warn('[PROVA] Onboarding-Airtable-Sync fehlgeschlagen:', e.message);
+      return { ok: false, grund: 'exception', error: e.message };
+    }
+  };
 
 })(window);

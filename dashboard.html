@@ -17,7 +17,6 @@
 <script src="theme.js"></script>
 <script src="nav.js" defer></script>
 <link rel="stylesheet" href="mobile.css">
-<link rel="stylesheet" href="prova-design.css">
   <style>
   /* ═══════════════════════════════════════════════════
      PROVA DESIGN SYSTEM — TOKENS
@@ -679,12 +678,38 @@
 .topbar { position: relative; z-index: 50; flex-wrap: wrap; min-height: 48px; }
 .topbar-right { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
 .trial-badge, .paket-badge { white-space: nowrap; }
+/* Session 25: Topbar-Link Hover via CSS statt inline onmouseover/onmouseout */
+.topbar-link { transition: background .12s; }
+.topbar-link:hover { background: rgba(255,255,255,.04); }
 @media (max-width: 600px) {
   .topbar { padding: 8px 12px; gap: 6px; }
   .topbar-right { gap: 4px; }
   .trial-badge span, .paket-badge span { font-size: 10px; }
 }
-</style></head>
+</style>
+<script>
+/* Session 25: Globaler Error-Listener — hilft zukünftige Parse-Fehler
+   präzise zu lokalisieren. Error geht in console UND localStorage,
+   damit Marcel ihn über DevTools → Application → Local Storage ansehen kann
+   wenn Chrome den Fehler zu schnell wegwischt. */
+window.addEventListener('error', function(ev) {
+  try {
+    var info = {
+      zeit:     new Date().toISOString(),
+      message:  ev.message || '',
+      quelle:   ev.filename || '',
+      zeile:    ev.lineno || 0,
+      spalte:   ev.colno || 0,
+      stack:    (ev.error && ev.error.stack) ? ev.error.stack.substring(0, 500) : ''
+    };
+    console.error('[PROVA Debug]', info);
+    var log = JSON.parse(localStorage.getItem('prova_error_log') || '[]');
+    log.unshift(info);
+    if (log.length > 20) log = log.slice(0, 20);
+    localStorage.setItem('prova_error_log', JSON.stringify(log));
+  } catch(e) {}
+});
+</script></head>
 <body>
 
 <div class="app-shell">
@@ -715,19 +740,18 @@
       <div class="topbar-right">
         <!-- Notifications -->
         <div class="notif-wrap">
-          <a href="benachrichtigungen.html" class="topbar-btn" title="Benachrichtigungen" style="display:inline-flex;align-items:center;justify-content:center;text-decoration:none;">🔔</a>
+          <button class="topbar-btn" title="Benachrichtigungen">🔔</button>
           <div class="notif-dot" id="notif-dot" style="display:none;"></div>
         </div>
         <!-- Paket Badge -->
         <span class="topbar-paket" id="topbar-paket-badge" style="display:none;"></span>
-        <!-- Einstellungen -->
-        <a href="archiv.html" style="display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:8px;transition:background .12s;text-decoration:none;color:var(--text);" onmouseover="this.style.background='rgba(255,255,255,.04)'" onmouseout="this.style.background='rgba(0,0,0,0)'">
-              <span style="font-size:16px;width:24px;text-align:center;">📂</span>
-              <span style="font-size:13px;font-weight:500;">Alle Fälle</span>
-            </a>
-            <a href="einstellungen.html">
-          <button class="topbar-btn" title="Einstellungen">⚙</button>
+        <!-- Alle Fälle (Link mit Hover-Klasse statt inline-JS) -->
+        <a href="archiv.html" class="topbar-link" style="display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:8px;text-decoration:none;color:var(--text);">
+          <span style="font-size:16px;width:24px;text-align:center;">📂</span>
+          <span style="font-size:13px;font-weight:500;">Alle Fälle</span>
         </a>
+        <!-- Einstellungen (als reiner Button mit direktem Navigations-Handler, kein verschachteltes <a>) -->
+        <button class="topbar-btn" title="Einstellungen" onclick="window.location.href='einstellungen.html'">⚙</button>
       </div>
     </header>
 
@@ -753,7 +777,7 @@
       <div id="kpi-aktiv" style="font-size:22px;font-weight:800;color:var(--accent);"><span class="kpi-loading">000</span></div>
     </div>
     <div onclick="window.location.href='termine.html'" style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;cursor:pointer;transition:border-color .15s;" onmouseover="this.style.borderColor='var(--border2)'" onmouseout="this.style.borderColor='var(--border)'">
-      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);margin-bottom:6px;">Heute fällig</div>
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);margin-bottom:6px;">Fristen diese Woche</div>
       <div id="kpi-heute" style="font-size:22px;font-weight:800;color:var(--warning,#f59e0b);"><span class="kpi-loading">000</span></div>
     </div>
     <div onclick="window.location.href='rechnungen.html'" style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;cursor:pointer;transition:border-color .15s;" onmouseover="this.style.borderColor='var(--border2)'" onmouseout="this.style.borderColor='var(--border)'">
