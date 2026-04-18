@@ -27,21 +27,6 @@ exports.handler = async (event) => {
     return { statusCode: 405, headers: corsHeaders(), body: 'Method Not Allowed' };
   }
 
-  // ── Rate limit (in-memory, per IP + per user) ──
-  const clientIP = (event.headers && (event.headers['x-forwarded-for'] || event.headers['x-nf-client-connection-ip'])) ? String((event.headers['x-forwarded-for'] || event.headers['x-nf-client-connection-ip'])).split(',')[0].trim() : 'unknown';
-  const WINDOW_MS = 60_000;
-  const LIMIT_IP = parseInt(process.env.PUSH_RATE_LIMIT_IP_PER_MIN || '120', 10);
-  global.__provaPushRate = global.__provaPushRate || new Map();
-  const keyIp = 'ip:' + clientIP;
-  const now = Date.now();
-  const ent = global.__provaPushRate.get(keyIp) || { windowStart: now, count: 0 };
-  if (now - ent.windowStart > WINDOW_MS) { ent.windowStart = now; ent.count = 0; }
-  ent.count++;
-  global.__provaPushRate.set(keyIp, ent);
-  if (ent.count > LIMIT_IP) {
-    return { statusCode: 429, headers: { ...corsHeaders(), 'Retry-After': '60' }, body: JSON.stringify({ error: 'RATE_LIMIT' }) };
-  }
-
   const pat = process.env.AIRTABLE_PAT;
   if (!pat) {
     return { statusCode: 500, headers: corsHeaders(), body: JSON.stringify({ error: 'AIRTABLE_PAT fehlt' }) };
@@ -52,29 +37,6 @@ exports.handler = async (event) => {
   catch (e) { return { statusCode: 400, headers: corsHeaders(), body: JSON.stringify({ error: 'Ungültiger JSON' }) }; }
 
   const { aktion, email, subscription, titel, nachricht, url } = body;
-
-  // Schutz:
-  // - subscribe/unsubscribe: nur eingeloggter User, email muss JWT-email entsprechen
-  // - send: nur Admin oder Secret
-  // - send-fristen: nur Secret (Make)
-  const jwtEmail = event.clientContext && event.clientContext.user && event.clientContext.user.email
-    ? String(event.clientContext.user.email).toLowerCase()
-    : '';
-  const isAdmin = jwtEmail.endsWith('@prova-systems.de') || jwtEmail === 'admin@prova-systems.de';
-  const secret = event.headers['x-prova-secret'] || '';
-  const okSecret = process.env.PUSH_NOTIFY_SECRET && secret === process.env.PUSH_NOTIFY_SECRET;
-  const emailNorm = String(email || '').toLowerCase().trim();
-
-  if (aktion === 'subscribe' || aktion === 'unsubscribe') {
-    if (!jwtEmail) return { statusCode: 401, headers: corsHeaders(), body: JSON.stringify({ error: 'UNAUTHORIZED' }) };
-    if (emailNorm && emailNorm !== jwtEmail) return { statusCode: 403, headers: corsHeaders(), body: JSON.stringify({ error: 'FORBIDDEN' }) };
-  }
-  if (aktion === 'send') {
-    if (!isAdmin && !okSecret) return { statusCode: 401, headers: corsHeaders(), body: JSON.stringify({ error: 'UNAUTHORIZED' }) };
-  }
-  if (aktion === 'send-fristen') {
-    if (!okSecret) return { statusCode: 401, headers: corsHeaders(), body: JSON.stringify({ error: 'UNAUTHORIZED' }) };
-  }
 
   switch (aktion) {
     case 'subscribe':    return await handleSubscribe(pat, email, subscription);
@@ -129,6 +91,18 @@ async function handleSubscribe(pat, email, subscription) {
     return { statusCode: 200, headers: corsHeaders(), body: JSON.stringify({ success: true }) };
 
   } catch (e) {
+    // Airtable-Fehler sauber durchreichen mit klarer Diagnose für den Client
+    if (e instanceof AirtableError) {
+      console.error('[Push] Airtable-Fehler beim Subscribe:', e.status, e.body);
+      const hint = (e.status === 404 || e.status === 403)
+        ? `Airtable-Tabelle "${AT_PUSH_TABLE}" existiert nicht oder ist nicht erreichbar. Bitte in Airtable anlegen mit Feldern: Email (Text), Subscription (Long text), Endpoint (URL), Aktiv (Checkbox), Erstellt (Date), UserAgent (Text).`
+        : 'Airtable-Zugriff fehlgeschlagen — bitte AIRTABLE_PAT-Env-Variable prüfen.';
+      return {
+        statusCode: 503,
+        headers: corsHeaders(),
+        body: JSON.stringify({ error: 'Push-Infrastruktur nicht konfiguriert', hint, airtable_status: e.status })
+      };
+    }
     console.error('[Push] Subscribe Fehler:', e.message);
     return { statusCode: 500, headers: corsHeaders(), body: JSON.stringify({ error: e.message }) };
   }
@@ -286,7 +260,6 @@ async function sendPush(webpush, subscription, { titel, nachricht, url, badge, t
 function requireWebPush() {
   try {
     const webpush = require('web-push');
-const { getCorsHeaders, corsOptionsResponse } = require('./lib/cors-helper');
     const pub  = process.env.VAPID_PUBLIC_KEY;
     const priv = process.env.VAPID_PRIVATE_KEY;
     const subj = process.env.VAPID_SUBJECT || 'mailto:hallo@prova-systems.de';
@@ -304,12 +277,22 @@ const { getCorsHeaders, corsOptionsResponse } = require('./lib/cors-helper');
   }
 }
 
-// ── Airtable Helpers ─────────────────────────────────────────────────────────
+// ── Airtable Helpers (mit Status-Check, damit Fehler nicht silent durchlaufen) ─
+class AirtableError extends Error {
+  constructor(status, body) {
+    super(`Airtable ${status}: ${typeof body === 'string' ? body : JSON.stringify(body)}`);
+    this.status = status;
+    this.body   = body;
+  }
+}
+
 async function atFetch(pat, path) {
   const res = await fetch(`https://api.airtable.com${path}`, {
     headers: { 'Authorization': `Bearer ${pat}` }
   });
-  return res.json();
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new AirtableError(res.status, data);
+  return data;
 }
 async function atPost(pat, path, payload) {
   const res = await fetch(`https://api.airtable.com${path}`, {
@@ -317,7 +300,9 @@ async function atPost(pat, path, payload) {
     headers: { 'Authorization': `Bearer ${pat}`, 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)
   });
-  return res.json();
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new AirtableError(res.status, data);
+  return data;
 }
 async function atPatch(pat, path, payload) {
   const res = await fetch(`https://api.airtable.com${path}`, {
@@ -325,20 +310,26 @@ async function atPatch(pat, path, payload) {
     headers: { 'Authorization': `Bearer ${pat}`, 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)
   });
-  return res.json();
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new AirtableError(res.status, data);
+  return data;
 }
 async function atDelete(pat, path) {
-  await fetch(`https://api.airtable.com${path}`, {
+  const res = await fetch(`https://api.airtable.com${path}`, {
     method: 'DELETE',
     headers: { 'Authorization': `Bearer ${pat}` }
   });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new AirtableError(res.status, data);
+  }
 }
 
 function corsHeaders() {
   return {
     'Content-Type': 'application/json',
-    'Access-Control-Allow-Origin':  process.env.URL || 'https://prova-systems.de',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    'Access-Control-Allow-Origin':  '*',
+    'Access-Control-Allow-Headers': 'Content-Type',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
   };
 }

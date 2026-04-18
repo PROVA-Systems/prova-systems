@@ -1,126 +1,109 @@
+#!/usr/bin/env node
 /**
- * migrate-kontakte-sv-email.js
+ * PROVA Systems — Einmaliges Migrations-Script
  *
- * Einmalige Migration: Trägt auf allen bestehenden KONTAKTE-Records ein sv_email-Feld nach.
+ * Schreibt sv_email = marcel_schreiber891@gmx.de auf alle bestehenden KONTAKTE-Records
+ * die das Feld noch leer haben. Idempotent — mehrfaches Ausführen schadet nicht.
  *
- * Hintergrund: Bis Session 8 hatte die KONTAKTE-Tabelle kein sv_email-Feld.
- * Nach Session 8 wird airtable.js den sv_email-Filter server-seitig anhängen —
- * das hätte bestehende Kontakte unsichtbar gemacht.
+ * Voraussetzung: AIRTABLE_PAT in .env.local
  *
- * Voraussetzungen:
- *   1. In Airtable: In der KONTAKTE-Tabelle ein Feld "sv_email" (Typ: E-Mail oder Einzeiliger Text)
- *      manuell anlegen, BEVOR dieses Script läuft.
- *   2. .env.local enthält AIRTABLE_PAT.
- *
- * Aufruf:
+ * Aufruf (aus Repo-Root):
  *   node scripts/migrate-kontakte-sv-email.js
  *
- * Idempotent: Überschreibt niemals existierende sv_email-Werte.
+ * Nach erfolgreicher Migration kann das Script gelöscht werden.
  */
 
-require('dotenv').config({ path: '.env.local' });
+const fs = require('fs');
+const path = require('path');
 
-const AIRTABLE_PAT = process.env.AIRTABLE_PAT || process.env.AIRTABLE_TOKEN;
-const BASE_ID    = 'appJ7bLlAHZoxENWE';
-const TABLE_ID   = 'tblMKmPLjRelr6Hal'; // KONTAKTE
-const DEFAULT_SV = 'marcel_schreiber891@gmx.de'; // einziger Founder-Account
+// .env.local laden (ohne externe Deps)
+const envPath = path.join(__dirname, '..', '.env.local');
+if (fs.existsSync(envPath)) {
+  const envContent = fs.readFileSync(envPath, 'utf8');
+  envContent.split('\n').forEach(line => {
+    const m = line.match(/^\s*([A-Z_][A-Z0-9_]*)\s*=\s*(.+?)\s*$/);
+    if (m && !process.env[m[1]]) {
+      process.env[m[1]] = m[2].replace(/^["']|["']$/g, '');
+    }
+  });
+}
 
-if (!AIRTABLE_PAT) {
-  console.error('✗ AIRTABLE_PAT fehlt in .env.local');
+const PAT          = process.env.AIRTABLE_PAT || process.env.AIRTABLE_TOKEN;
+const BASE_ID      = 'appJ7bLlAHZoxENWE';
+const TABLE_ID     = 'tblMKmPLjRelr6Hal';   // KONTAKTE
+const TARGET_EMAIL = 'marcel_schreiber891@gmx.de';
+
+if (!PAT) {
+  console.error('❌ FEHLER: AIRTABLE_PAT fehlt. Bitte in .env.local setzen.');
   process.exit(1);
 }
 
-const AT_HEADERS = {
-  'Authorization': `Bearer ${AIRTABLE_PAT}`,
-  'Content-Type': 'application/json',
-};
-
-async function fetchAllRecords() {
-  let all = [];
-  let offset;
+async function listAllRecords() {
+  const records = [];
+  let offset = null;
   do {
-    const qs = new URLSearchParams({ pageSize: '100' });
-    if (offset) qs.set('offset', offset);
-    const res = await fetch(
-      `https://api.airtable.com/v0/${BASE_ID}/${TABLE_ID}?${qs.toString()}`,
-      { headers: AT_HEADERS }
-    );
+    const url = new URL(`https://api.airtable.com/v0/${BASE_ID}/${TABLE_ID}`);
+    url.searchParams.set('pageSize', '100');
+    if (offset) url.searchParams.set('offset', offset);
+
+    const res = await fetch(url, { headers: { Authorization: `Bearer ${PAT}` } });
     if (!res.ok) {
-      const txt = await res.text();
-      throw new Error(`GET ${TABLE_ID} → HTTP ${res.status}: ${txt}`);
+      console.error(`❌ GET ${url} → HTTP ${res.status}`);
+      console.error(await res.text());
+      process.exit(1);
     }
     const data = await res.json();
-    all = all.concat(data.records || []);
-    offset = data.offset;
+    records.push(...data.records);
+    offset = data.offset || null;
   } while (offset);
-  return all;
+  return records;
 }
 
-async function patchBatch(updates) {
-  // Airtable max. 10 Records pro PATCH
-  const res = await fetch(
-    `https://api.airtable.com/v0/${BASE_ID}/${TABLE_ID}`,
-    {
-      method: 'PATCH',
-      headers: AT_HEADERS,
-      body: JSON.stringify({ records: updates, typecast: true }),
-    }
-  );
+async function patchBatch(recs) {
+  const url = `https://api.airtable.com/v0/${BASE_ID}/${TABLE_ID}`;
+  const res = await fetch(url, {
+    method:  'PATCH',
+    headers: { Authorization: `Bearer ${PAT}`, 'Content-Type': 'application/json' },
+    body:    JSON.stringify({ records: recs, typecast: true })
+  });
   if (!res.ok) {
-    const txt = await res.text();
-    throw new Error(`PATCH → HTTP ${res.status}: ${txt}`);
+    console.error(`❌ PATCH fehlgeschlagen → HTTP ${res.status}`);
+    console.error(await res.text());
+    process.exit(1);
   }
   return res.json();
 }
 
 (async () => {
-  console.log('═══════════════════════════════════════════════════════');
-  console.log('  KONTAKTE-Migration: sv_email nachtragen');
-  console.log('═══════════════════════════════════════════════════════');
-  console.log(`  Default sv_email für alle:  ${DEFAULT_SV}`);
-  console.log('');
+  console.log('📥 Lade alle KONTAKTE-Records ...');
+  const all = await listAllRecords();
+  console.log(`   Gefunden: ${all.length} Records`);
 
-  try {
-    console.log('→ Lade alle KONTAKTE-Records…');
-    const records = await fetchAllRecords();
-    console.log(`  Gefunden: ${records.length} Records`);
+  const ohneEmail = all.filter(r => !r.fields.sv_email);
+  console.log(`   Davon ohne sv_email: ${ohneEmail.length}`);
 
-    const missing = records.filter(r => !r.fields.sv_email);
-    const already = records.length - missing.length;
-    console.log(`  Bereits mit sv_email: ${already}`);
-    console.log(`  Zu migrieren:         ${missing.length}`);
-
-    if (!missing.length) {
-      console.log('');
-      console.log('✓ Nichts zu tun — alle Records haben bereits sv_email.');
-      return;
-    }
-
-    console.log('');
-    console.log('→ Migriere in Batches à 10…');
-
-    let done = 0;
-    for (let i = 0; i < missing.length; i += 10) {
-      const batch = missing.slice(i, i + 10);
-      const updates = batch.map(r => ({
-        id: r.id,
-        fields: { sv_email: DEFAULT_SV },
-      }));
-      await patchBatch(updates);
-      done += updates.length;
-      console.log(`  Batch ${Math.floor(i/10) + 1}: ${updates.length} Records ✓  (Gesamt: ${done}/${missing.length})`);
-      // Rate-Limit-Puffer
-      await new Promise(r => setTimeout(r, 220));
-    }
-
-    console.log('');
-    console.log(`✓ Migration fertig. ${done} Records aktualisiert.`);
-    console.log('');
-    console.log('Nächster Schritt: Teste den KONTAKTE-Sync im UI — alle Kontakte');
-    console.log('müssen weiter sichtbar sein, und der Security-Test #2 sollte grün werden.');
-  } catch (e) {
-    console.error('');
-    console.error('✗ Migration fehlgeschlagen:', e.message);
-    process.exit(1);
+  if (!ohneEmail.length) {
+    console.log('✅ Nichts zu tun — alle Records haben bereits sv_email.');
+    return;
   }
-})();
+
+  console.log(`✏️  Schreibe sv_email="${TARGET_EMAIL}" auf ${ohneEmail.length} Records ...`);
+
+  const batches = [];
+  for (let i = 0; i < ohneEmail.length; i += 10) batches.push(ohneEmail.slice(i, i + 10));
+
+  let done = 0;
+  for (const batch of batches) {
+    const payload = batch.map(r => ({ id: r.id, fields: { sv_email: TARGET_EMAIL } }));
+    await patchBatch(payload);
+    done += batch.length;
+    console.log(`   ${done}/${ohneEmail.length} aktualisiert ...`);
+    await new Promise(r => setTimeout(r, 250));   // Airtable-Ratenlimit schonen
+  }
+
+  console.log(`✅ Fertig. ${done} Records migriert.`);
+  console.log('→ Kannst das Script jetzt löschen oder für spätere Tenants behalten.');
+})().catch(err => {
+  console.error('❌ Unerwarteter Fehler:', err);
+  process.exit(1);
+});

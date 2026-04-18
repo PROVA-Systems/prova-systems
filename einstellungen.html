@@ -218,16 +218,7 @@
           <span class="es-sidebar-icon">🤖</span> KI & Diktat
         </div>
         <div class="es-sidebar-item" data-section="benachrichtigungen" onclick="wechsleSektion('benachrichtigungen',this)">
-          <span class="es-sidebar-icon">🔔</span> 
-<!-- ── Push-Benachrichtigungen ──────────────────────────── -->
-<div class="settings-section" id="push-optin-section" style="margin-top:24px;">
-  <div class="settings-section-title">🔔 Push-Benachrichtigungen</div>
-  <div id="prova-push-container">
-    <!-- push-optin.js rendert hier automatisch -->
-  </div>
-</div>
-
-Benachrichtigungen
+          <span class="es-sidebar-icon">🔔</span> Benachrichtigungen
         </div>
         <div class="es-sidebar-item" data-section="integrationen" onclick="wechsleSektion('integrationen',this)">
           <span class="es-sidebar-icon">🔗</span> Integrationen
@@ -360,7 +351,16 @@ Benachrichtigungen
             </div>
           </div>
           <div class="es-zeile">
+            <div class="es-zeile-info">
+              <div class="es-zeile-label">Diktat-Sprache</div>
+              <div class="es-zeile-sub">Sprache für die Whisper-Spracherkennung</div>
+            </div>
+            <select class="es-select" id="es-diktat-sprache" onchange="saveSelect('diktat_sprache', this.value)">
+              <option value="de-DE">🇩🇪 Deutsch (Deutschland)</option>
+              <option value="de-AT">🇦🇹 Österreichisch</option>
               <option value="de-CH">🇨🇭 Schweizer Deutsch</option>
+              <option value="en-US">🇺🇸 Englisch (USA)</option>
+              <option value="en-GB">🇬🇧 Englisch (UK)</option>
             </select>
           </div>
           <div class="es-zeile">
@@ -641,7 +641,33 @@ Benachrichtigungen
       sessionStorage.clear();
       window.location.href = 'app-login.html';
     }
-    function oeffneStripePortal() { window.open('https://billing.stripe.com/p/login/prova','_blank'); }
+    async function oeffneStripePortal() {
+      const email = (localStorage.getItem('prova_sv_email') || '').toLowerCase();
+      if (!email) {
+        if (typeof zeigeToast === 'function') zeigeToast('❌ Nicht eingeloggt');
+        return;
+      }
+      try {
+        if (typeof zeigeToast === 'function') zeigeToast('⏳ Portal wird geöffnet …');
+        const res = await fetch('/.netlify/functions/stripe-portal', {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body:    JSON.stringify({ email, return_url: window.location.href })
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !data.url) {
+          const msg = data.error || `HTTP ${res.status}`;
+          if (typeof zeigeToast === 'function') zeigeToast('❌ Stripe-Portal: ' + msg);
+          console.error('[StripePortal]', data);
+          return;
+        }
+        // Session-URL in neuem Tab öffnen
+        window.open(data.url, '_blank', 'noopener');
+      } catch (e) {
+        console.error('[StripePortal]', e);
+        if (typeof zeigeToast === 'function') zeigeToast('❌ Verbindungsfehler zum Stripe-Portal');
+      }
+    }
     function exportAlleFresten() { zeigeToast('📅 ICS-Export gestartet …'); }
     function exportMeineDaten() {
       const daten = {};
@@ -681,6 +707,5 @@ Benachrichtigungen
 <script src="prova-error-handler.js" defer></script>
 <script src="support-chat.js" defer></script>
 <script src="sw-register.js" defer></script>
-<script src="push-optin.js" defer></script>
 </body>
 </html>

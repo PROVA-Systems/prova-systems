@@ -1,6 +1,3 @@
-// EU AI Act Offenlegungstext (Art. 14 VO 2024/1689)
-const EU_AI_ACT_TEXT = 'Dieses Gutachten wurde unter Einsatz des KI-Assistenzsystems PROVA Systems (Anthropic Claude) erstellt. Die Nutzung erfolgt gemäß Art. 14 EU AI Act (VO 2024/1689) unter menschlicher Aufsicht. Der Sachverständige hat alle KI-generierten Inhalte eigenverantwortlich geprüft, korrigiert und freigegeben. Die fachliche Verantwortung verbleibt ausschließlich beim unterzeichnenden Sachverständigen (§407a ZPO).';
-
 /* ════════════════════════════════════════════════════════════
    PROVA freigabe-logic.js
    Freigabe — PDF-Flow, §407a, G3-Webhook, Deploy-Steps
@@ -15,8 +12,8 @@ if (!window.showToast && window.zeigToast) window.showToast = window.zeigToast;
 if(!localStorage.getItem('prova_user')) location.href='app-login.html';
 
 const AT_BASE='appJ7bLlAHZoxENWE', AT_TABLE='tblSxV8bsXwd1pwa0';
-const WH_S3='/.netlify/functions/make-proxy?key=g3';
-const WH_S1='/.netlify/functions/make-proxy?key=g1';
+const WH_S3='https://hook.eu1.make.com/44kqx7eo142aw7warqao4c4wqo1nw158';
+const WH_S1='https://hook.eu1.make.com/imn2n5xs7j251xicrmdmk17of042pt2t';
 
 let recId=null, recFields=null, svProfil=null, editMode=false;
 
@@ -66,7 +63,7 @@ async function ladeGutachten(){
     const res=await fetch('/.netlify/functions/airtable',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({method:'GET',path:url})});
     if(!res.ok) throw new Error('HTTP '+res.status);
     const data=await res.json();
-    let rec=rid&&!fall ? data : (data.records && data.records[0]);
+    let rec=rid&&!fall ? data : data.records?.[0];
     if(!rec) throw new Error('Kein Gutachten gefunden.');
     recId=rec.id; recFields=rec.fields||{};
     await ladeSVProfil();
@@ -133,14 +130,14 @@ async function ladeGutachten(){
 
 /* SV PROFIL */
 async function ladeSVProfil(){
-  const email=localStorage.getItem('prova_sv_email')||recFields.sv_email||'';
+  const email=localStorage.getItem('prova_sv_email')||recFields.SV_Email||'';
   if(!email) return;
   try {
-    const url=`/v0/${AT_BASE}/tbladqEQT3tmx4DIB?filterByFormula=${encodeURIComponent(`{Email}="${email}"`)}&maxRecords=1`;
+    const url=`/v0/${AT_BASE}/tbladqEQT3tmx4DIB?filterByFormula=${encodeURIComponent(`{SV_Email}="${email}"`)}&maxRecords=1`;
     const res=await fetch('/.netlify/functions/airtable',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({method:'GET',path:url})});
     if(!res.ok) return;
     const d=await res.json();
-    if(d && d.records && d.records.length){ svProfil=d.records[0].fields; svProfil.email=email; }
+    if(d?.records?.length){ svProfil=d.records[0].fields; svProfil.email=email; }
   } catch(e){}
 }
 
@@ -605,8 +602,7 @@ async function approveGutachten(){
             fields: {
               Status: 'Freigegeben',
               Freigabe_Datum: new Date().toISOString().split('T')[0],
-              Freigabe_Durch: localStorage.getItem('prova_sv_email') || '',
-              ki_offenlegung: EU_AI_ACT_TEXT
+              Freigabe_Durch: localStorage.getItem('prova_sv_email') || ''
             }
           }
         })
@@ -996,74 +992,7 @@ function exportiereAlsWord(){
   zeigToast('Word-Download gestartet ✅','ok');
 }
 
-function generierePhotodoku(){
-  var az = new URLSearchParams(window.location.search).get('id') ||
-           localStorage.getItem('prova_letztes_az') || '';
-  var svEmail = localStorage.getItem('prova_sv_email') || '';
-  var svName  = [localStorage.getItem('prova_sv_vorname')||'',
-                 localStorage.getItem('prova_sv_nachname')||''].join(' ').trim();
-
-  if (!az) {
-    if(typeof zeigToast==='function') zeigToast('Kein Aktenzeichen gefunden','error');
-    return;
-  }
-
-  if(typeof zeigToast==='function') zeigToast('Fotodokumentation wird vorbereitet…','ok');
-
-  // Falldaten laden
-  fetch('/.netlify/functions/airtable', {
-    method: 'POST', headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({
-      method: 'GET',
-      path: '/v0/appJ7bLlAHZoxENWE/tblSxV8bsXwd1pwa0?filterByFormula=' +
-            encodeURIComponent('AND({Aktenzeichen}="' + az + '",{sv_email}="' + svEmail + '")') +
-            '&fields[]=Auftraggeber_Name&fields[]=Schaden_Strasse&fields[]=PLZ&fields[]=Ort' +
-            '&fields[]=Schadenart&fields[]=Foto_Captions&maxRecords=1'
-    })
-  })
-  .then(function(r){ return r.json(); })
-  .then(function(data){
-    var f = (data.records && data.records[0] && data.records[0].fields) || {};
-    var adresse = [f.Schaden_Strasse, (f.PLZ||'') + ' ' + (f.Ort||'')].filter(Boolean).join(', ');
-
-    // Foto-Captions parsen
-    var fotos = [];
-    if (f.Foto_Captions) {
-      try { fotos = JSON.parse(f.Foto_Captions); } catch(e) {
-        fotos = f.Foto_Captions.split('\n').filter(Boolean).map(function(t,i){ return {nr: i+1, caption: t}; });
-      }
-    }
-
-    // foto-pdf.js Function aufrufen
-    return fetch('/.netlify/functions/foto-pdf', {
-      method: 'POST', headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({
-        az: az,
-        sv_name: svName,
-        auftraggeber: f.Auftraggeber_Name || '',
-        objekt_adresse: adresse,
-        schadenart: f.Schadenart || '',
-        datum: new Date().toLocaleDateString('de-DE'),
-        fotos: fotos
-      })
-    });
-  })
-  .then(function(r){ return r.json(); })
-  .then(function(data){
-    if (data && data.pdf_url) {
-      window.open(data.pdf_url, '_blank');
-      if(typeof zeigToast==='function') zeigToast('✅ Fotodokumentation PDF erstellt','ok');
-    } else if (data && data.pending) {
-      if(typeof zeigToast==='function') zeigToast('PDF wird generiert — DocID: ' + data.doc_id,'ok');
-    } else {
-      if(typeof zeigToast==='function') zeigToast('Fehler beim PDF-Export','error');
-    }
-  })
-  .catch(function(e){
-    if(typeof zeigToast==='function') zeigToast('Fehler: ' + e.message,'error');
-    console.error('[FotoPDF]', e);
-  });
-}
+function generierePhotodoku(){ zeigToast('Fotodokumentation wird vorbereitet…','ok'); }
 
 /* TOAST */
 let _tt;
@@ -1360,3 +1289,27 @@ window.provaFreigabeAudit = async function(data) {
     });
   }
 };
+
+/* ═════════════════════════════════════════════════════════════════════════
+   §407a ZPO Pre-Send: Freigabe-Button nur aktiv wenn Pflicht-Checkbox gesetzt
+   — eingeführt Session 10 Runde 3 (ö.b.u.v. SV-Bestätigungspflicht vor Versand)
+   ═════════════════════════════════════════════════════════════════════════ */
+window.toggleFreigabeBtn = function() {
+  var chk = document.getElementById('chk-407a-bestaetigt');
+  var btn = document.getElementById('btnFreigeben');
+  if (!chk || !btn) return;
+  if (chk.checked) {
+    btn.disabled      = false;
+    btn.style.opacity = '1';
+    btn.style.cursor  = 'pointer';
+  } else {
+    btn.disabled      = true;
+    btn.style.opacity = '.35';
+    btn.style.cursor  = 'not-allowed';
+  }
+};
+
+// Beim Laden: sicherstellen dass Button initial deaktiviert ist
+document.addEventListener('DOMContentLoaded', function() {
+  if (typeof window.toggleFreigabeBtn === 'function') window.toggleFreigabeBtn();
+});

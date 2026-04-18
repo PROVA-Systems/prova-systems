@@ -332,3 +332,7 @@ if (document.readyState === 'loading') {
 } else {
   PROVASearch.init();
 }
+
+// Global am window verfügbar machen — wird von auth-guard.js, Cmd+K-Handler
+// und Playwright-Tests referenziert.
+window.PROVASearch = PROVASearch;

@@ -53,9 +53,11 @@ function ladeKontakte() {
 async function syncKontakteVonAirtable() {
   var email = localStorage.getItem('prova_sv_email') || '';
   if (!email) return;
-  // airtable.js v2 fügt User-Filter server-seitig hinzu
+  // DSGVO-Multi-Tenant: sv_email-Filter clientseitig in URL eintragen (Konsistenz mit dashboard-logic.js)
+  var filter = '{sv_email}="' + String(email).replace(/"/g, '') + '"';
   var path = '/v0/' + AT_BASE_K + '/' + AT_KONTAKTE
-    + '?maxRecords=200&sort[0][field]=Name&sort[0][direction]=asc';
+    + '?maxRecords=200&filterByFormula=' + encodeURIComponent(filter)
+    + '&sort[0][field]=Name&sort[0][direction]=asc';
   var data = await atKontakte('GET', path);
   if (!data || !data.records || !data.records.length) return;
   // Merge: Airtable-Datensätze in lokale Liste — AT-Datensätze haben Vorrang
@@ -95,7 +97,7 @@ function speichereKontakte() {
 
 // Kontakt in Airtable speichern/aktualisieren
 async function syncKontaktZuAirtable(k) {
-  var svEmail = (localStorage.getItem('prova_sv_email') || '').toLowerCase();
+  var svEmail = String(localStorage.getItem('prova_sv_email') || '').toLowerCase();
   var felder = {
     Name: k.name || '',
     Firma: k.firma || '',
@@ -107,7 +109,7 @@ async function syncKontaktZuAirtable(k) {
     Ort: k.ort || '',
     Ansprechpartner: k.ansprechpartner || '',
     Notizen: k.notizen || '',
-    sv_email: svEmail  // DSGVO: Multi-Tenant-Trennung
+    sv_email: svEmail       // DSGVO-Multi-Tenant: immer mit eigener SV-Email schreiben
   };
   if (k.at_id && k.at_id.startsWith('rec')) {
     // Update

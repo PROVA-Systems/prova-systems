@@ -4,39 +4,19 @@
    Muss VOR nav.js und vor dem <body>-Content eingebunden werden
 ============================================================ */
 (function() {
-  // 3-Way: 'dark' | 'light' | 'system'
-  // 'system' folgt dem OS-Setting automatisch
-  var stored = localStorage.getItem('prova_theme');
-  var theme = stored || 'system';
+  var theme = localStorage.getItem('prova_theme') || 'dark';
   applyTheme(theme);
-
-  // System-Theme: auf OS-Änderungen reagieren
-  if (window.matchMedia) {
-    var sysMq = window.matchMedia('(prefers-color-scheme: light)');
-    var _onSysChange = function() {
-      if ((localStorage.getItem('prova_theme') || 'system') === 'system') {
-        applyTheme('system');
-      }
-    };
-    if (sysMq.addEventListener) sysMq.addEventListener('change', _onSysChange);
-    else if (sysMq.addListener) sysMq.addListener(_onSysChange);
-  }
 
   function applyTheme(t) {
     var root = document.documentElement;
-    var effectiveTheme = t;
-    if (t === 'system') {
-      effectiveTheme = (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) ? 'light' : 'dark';
-    }
-    if (effectiveTheme === 'light') {
+    if (t === 'light') {
       root.setAttribute('data-theme', 'light');
+      // Light-Mode CSS-Variablen überschreiben
       injectLightCSS();
     } else {
       root.removeAttribute('data-theme');
       removeLightCSS();
     }
-    // Data-Attribut für CSS-Selektoren
-    root.setAttribute('data-effective-theme', effectiveTheme);
   }
 
   function injectLightCSS() {
@@ -91,6 +71,192 @@
       [data-theme="light"] body {
         background: #f4f5f7;
       }
+
+      /* ── Einstellungen-Seite (es-*) ── */
+      [data-theme="light"] .es-section,
+      [data-theme="light"] .es-nav,
+      [data-theme="light"] .es-content {
+        background: #ffffff;
+        border-color: rgba(0,0,0,.09);
+      }
+      [data-theme="light"] .es-section-title,
+      [data-theme="light"] .es-zeile-label {
+        color: #111827;
+      }
+      [data-theme="light"] .es-section-sub,
+      [data-theme="light"] .es-zeile-sub {
+        color: #6b7280;
+      }
+      [data-theme="light"] .es-zeile {
+        border-bottom-color: rgba(0,0,0,.06);
+      }
+      [data-theme="light"] .es-nav-item {
+        color: #374151;
+      }
+      [data-theme="light"] .es-nav-item:hover {
+        background: rgba(0,0,0,.04);
+      }
+      [data-theme="light"] .es-nav-item.active {
+        background: rgba(37,99,235,.08);
+        color: #1d4ed8;
+      }
+
+      /* ── Form-Controls allgemein ── */
+      [data-theme="light"] .es-select,
+      [data-theme="light"] input[type="text"],
+      [data-theme="light"] input[type="email"],
+      [data-theme="light"] input[type="password"],
+      [data-theme="light"] input[type="number"],
+      [data-theme="light"] input[type="search"],
+      [data-theme="light"] select,
+      [data-theme="light"] textarea {
+        background: #ffffff;
+        color: #111827;
+        border-color: rgba(0,0,0,.13);
+      }
+      [data-theme="light"] .es-btn {
+        color: #111827;
+        border-color: rgba(0,0,0,.13);
+        background: #ffffff;
+      }
+      [data-theme="light"] .es-btn.primary {
+        background: #2563eb;
+        color: #ffffff;
+        border-color: #2563eb;
+      }
+
+      /* ═════════════════════════════════════════════════════════════════
+         Dashboard, Archiv, Termine, Rechnungen, Kontakte, Briefvorlagen,
+         Normen, Textbausteine, JVEG, E-Rechnung, Statistiken, Hilfe
+         — alle Seiten mit Standard-Dashboard-Layout
+         ═════════════════════════════════════════════════════════════════ */
+
+      /* Haupt-Content-Bereich */
+      [data-theme="light"] .main-content,
+      [data-theme="light"] .page-content,
+      [data-theme="light"] .main,
+      [data-theme="light"] .main-wrap {
+        background: #f4f5f7;
+        color: #111827;
+      }
+
+      /* Überschriften */
+      [data-theme="light"] h1,
+      [data-theme="light"] h2,
+      [data-theme="light"] h3,
+      [data-theme="light"] h4,
+      [data-theme="light"] .page-title,
+      [data-theme="light"] .section-title {
+        color: #111827;
+      }
+
+      /* Sekundärtext / Subtitle / Hints */
+      [data-theme="light"] .subtitle,
+      [data-theme="light"] .hint,
+      [data-theme="light"] .muted,
+      [data-theme="light"] .meta,
+      [data-theme="light"] small {
+        color: #6b7280;
+      }
+
+      /* Alle Kartentypen die es im Projekt gibt */
+      [data-theme="light"] .stat-card,
+      [data-theme="light"] .info-card,
+      [data-theme="light"] .list-card,
+      [data-theme="light"] .tile,
+      [data-theme="light"] .panel,
+      [data-theme="light"] .row-card,
+      [data-theme="light"] .akte-card,
+      [data-theme="light"] .termin-card,
+      [data-theme="light"] .rechnung-row,
+      [data-theme="light"] .kontakt-row,
+      [data-theme="light"] .brief-card,
+      [data-theme="light"] .norm-card,
+      [data-theme="light"] .textbaustein-card,
+      [data-theme="light"] .hilfe-card {
+        background: #ffffff;
+        color: #111827;
+        border-color: rgba(0,0,0,.09);
+      }
+
+      /* Tabellen */
+      [data-theme="light"] table {
+        background: #ffffff;
+        color: #111827;
+      }
+      [data-theme="light"] th {
+        background: #f9fafb;
+        color: #374151;
+        border-bottom-color: rgba(0,0,0,.09);
+      }
+      [data-theme="light"] td {
+        border-bottom-color: rgba(0,0,0,.06);
+      }
+      [data-theme="light"] tr:hover td {
+        background: rgba(0,0,0,.02);
+      }
+
+      /* Such-Inputs, Filter-Bars */
+      [data-theme="light"] .search-input,
+      [data-theme="light"] .filter-input,
+      [data-theme="light"] .search-bar input {
+        background: #ffffff;
+        color: #111827;
+        border-color: rgba(0,0,0,.13);
+      }
+
+      /* Topbar-Elements */
+      [data-theme="light"] .topbar-title {
+        color: #111827;
+      }
+      [data-theme="light"] .topbar-icon,
+      [data-theme="light"] .notification-icon {
+        color: #374151;
+      }
+
+      /* Modals, Popups, Dropdowns */
+      [data-theme="light"] .modal-box,
+      [data-theme="light"] .modal-inner,
+      [data-theme="light"] .popup,
+      [data-theme="light"] .dropdown-menu,
+      [data-theme="light"] [id$="-modal"] > div {
+        background: #ffffff;
+        color: #111827;
+        border-color: rgba(0,0,0,.13);
+      }
+      [data-theme="light"] .modal-overlay,
+      [data-theme="light"] .overlay {
+        background: rgba(0,0,0,.4);
+      }
+
+      /* Buttons: generisch */
+      [data-theme="light"] .btn,
+      [data-theme="light"] button.secondary {
+        background: #ffffff;
+        color: #374151;
+        border: 1px solid rgba(0,0,0,.13);
+      }
+      [data-theme="light"] .btn:hover {
+        background: #f9fafb;
+      }
+      [data-theme="light"] .btn-primary,
+      [data-theme="light"] button.primary {
+        background: #2563eb;
+        color: #ffffff;
+        border-color: #2563eb;
+      }
+      [data-theme="light"] .btn-primary:hover {
+        background: #1d4ed8;
+      }
+
+      /* Status-Badges neutraler auf Light */
+      [data-theme="light"] .badge,
+      [data-theme="light"] .tag,
+      [data-theme="light"] .chip {
+        background: #f3f4f6;
+        color: #374151;
+        border-color: rgba(0,0,0,.09);
+      }
     `;
     // Vor dem ersten Stylesheet einfügen damit es überschrieben werden kann
     var first = document.head.querySelector('style, link');
@@ -113,10 +279,6 @@
     set: function(t) {
       localStorage.setItem('prova_theme', t);
       applyTheme(t);
-    },
-    // Gibt den tatsächlich angewendeten Theme zurück (light/dark), nie 'system'
-    getEffective: function() {
-      return document.documentElement.getAttribute('data-effective-theme') || 'dark';
     }
   };
 })();

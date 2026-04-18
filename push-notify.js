@@ -14,10 +14,10 @@
 //   npx web-push generate-vapid-keys
 // ══════════════════════════════════════════════════════════════════════════════
 
-var AT_BASE        = 'appJ7bLlAHZoxENWE';
+const AT_BASE        = 'appJ7bLlAHZoxENWE';
 const AT_PUSH_TABLE  = 'PUSH_SUBSCRIPTIONS';   // Neue Tabelle anlegen
-var AT_FAELLE      = 'tblSxV8bsXwd1pwa0';
-var AT_TERMINE     = 'tblyMTTdtfGQjjmc2';
+const AT_FAELLE      = 'tblSxV8bsXwd1pwa0';
+const AT_TERMINE     = 'tblyMTTdtfGQjjmc2';
 
 exports.handler = async (event) => {
   if (event.httpMethod === 'OPTIONS') {
@@ -91,6 +91,18 @@ async function handleSubscribe(pat, email, subscription) {
     return { statusCode: 200, headers: corsHeaders(), body: JSON.stringify({ success: true }) };
 
   } catch (e) {
+    // Airtable-Fehler sauber durchreichen mit klarer Diagnose für den Client
+    if (e instanceof AirtableError) {
+      console.error('[Push] Airtable-Fehler beim Subscribe:', e.status, e.body);
+      const hint = (e.status === 404 || e.status === 403)
+        ? `Airtable-Tabelle "${AT_PUSH_TABLE}" existiert nicht oder ist nicht erreichbar. Bitte in Airtable anlegen mit Feldern: Email (Text), Subscription (Long text), Endpoint (URL), Aktiv (Checkbox), Erstellt (Date), UserAgent (Text).`
+        : 'Airtable-Zugriff fehlgeschlagen — bitte AIRTABLE_PAT-Env-Variable prüfen.';
+      return {
+        statusCode: 503,
+        headers: corsHeaders(),
+        body: JSON.stringify({ error: 'Push-Infrastruktur nicht konfiguriert', hint, airtable_status: e.status })
+      };
+    }
     console.error('[Push] Subscribe Fehler:', e.message);
     return { statusCode: 500, headers: corsHeaders(), body: JSON.stringify({ error: e.message }) };
   }
@@ -265,12 +277,22 @@ function requireWebPush() {
   }
 }
 
-// ── Airtable Helpers ─────────────────────────────────────────────────────────
+// ── Airtable Helpers (mit Status-Check, damit Fehler nicht silent durchlaufen) ─
+class AirtableError extends Error {
+  constructor(status, body) {
+    super(`Airtable ${status}: ${typeof body === 'string' ? body : JSON.stringify(body)}`);
+    this.status = status;
+    this.body   = body;
+  }
+}
+
 async function atFetch(pat, path) {
   const res = await fetch(`https://api.airtable.com${path}`, {
     headers: { 'Authorization': `Bearer ${pat}` }
   });
-  return res.json();
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new AirtableError(res.status, data);
+  return data;
 }
 async function atPost(pat, path, payload) {
   const res = await fetch(`https://api.airtable.com${path}`, {
@@ -278,7 +300,9 @@ async function atPost(pat, path, payload) {
     headers: { 'Authorization': `Bearer ${pat}`, 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)
   });
-  return res.json();
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new AirtableError(res.status, data);
+  return data;
 }
 async function atPatch(pat, path, payload) {
   const res = await fetch(`https://api.airtable.com${path}`, {
@@ -286,13 +310,19 @@ async function atPatch(pat, path, payload) {
     headers: { 'Authorization': `Bearer ${pat}`, 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)
   });
-  return res.json();
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new AirtableError(res.status, data);
+  return data;
 }
 async function atDelete(pat, path) {
-  await fetch(`https://api.airtable.com${path}`, {
+  const res = await fetch(`https://api.airtable.com${path}`, {
     method: 'DELETE',
     headers: { 'Authorization': `Bearer ${pat}` }
   });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new AirtableError(res.status, data);
+  }
 }
 
 function corsHeaders() {

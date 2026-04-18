@@ -695,7 +695,7 @@ body {
       <div class="sec-label">Schadensfotos aufnehmen</div>
 
       <div style="display:flex;gap:10px;margin-bottom:14px;">
-        <button class="foto-camera-btn" style="flex:1" onclick="ProvaKamera.aufnehmen()">
+        <button class="foto-camera-btn" style="flex:1" onclick="document.getElementById('foto-input-kamera').click()">
           <span class="cam-icon">📷</span>
           <span>Kamera</span>
         </button>
@@ -825,8 +825,11 @@ var _timerInt    = null;
 var _timerSek    = 0;
 var _autoSaveTimer = null;
 
-/* ── Initialisierung ────────────────────────────────────────────────────── */
-(function init(){
+/* ── Initialisierung ──────────────────────────────────────────────────────
+   Wichtig: init() läuft NACH dem outer IIFE via DOMContentLoaded bzw. nächstem
+   Tick. Nur so sind die `window.addMesszeile`/`window.zeigePanel`/... Funktionen
+   bereits definiert, die weiter unten im Script an window gehängt werden. */
+function init(){
   // Header befüllen
   var azEl  = document.getElementById('ot-az');
   var subEl = document.getElementById('ot-sub');
@@ -852,7 +855,15 @@ var _autoSaveTimer = null;
   addMesszeile('feuchte', '% u. H.');
   addMesszeile('klima', '°C');
   addMesszeile('risse', 'mm');
-})();
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  // DOM ist bereits bereit — auf nächsten Tick vertagen, damit
+  // alle window.xyz-Zuweisungen unten im Script noch durchlaufen.
+  setTimeout(init, 0);
+}
 
 function updateOnlineStatus(){
   var offline = !navigator.onLine;
@@ -1304,7 +1315,8 @@ function escHTML(s){
 <script src="prova-error-handler.js" defer></script>
 <script src="ki-lernpool.js" defer></script>
 <script src="sw-register.js" defer></script>
-<script src="foto-captioning.js" defer></script>
+<!-- foto-captioning.js ist eine NETLIFY FUNCTION, kein Frontend-Script.
+     Sie wird via fetch('/.netlify/functions/foto-captioning') aufgerufen (siehe Zeile ~1142). -->
 
 <script>
 window.provaKICaption = async function(btn) {
@@ -1345,7 +1357,5 @@ window.provaKICaption = async function(btn) {
   }
 };
 </script>
-<script src="ortstermin-kamera-fix.js" defer></script>
-<script src="foto-archiv.js" defer></script>
 </body>
 </html>
