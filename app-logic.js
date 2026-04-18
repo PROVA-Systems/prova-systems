@@ -76,8 +76,8 @@ function berechneFristWarnung(){
    G1-Webhook: imn2n5xs7j251xicrmdmk17of042pt2t
    Airtable Base: appJ7bLlAHZoxENWE / tblSxV8bsXwd1pwa0
 ============================================================ */
-const WEBHOOK_G1 = '/.netlify/functions/make-proxy?key=g1';
-const WEBHOOK_K1 = '/.netlify/functions/make-proxy?key=k1';
+const WEBHOOK_G1 = 'https://hook.eu1.make.com/imn2n5xs7j251xicrmdmk17of042pt2t';
+const WEBHOOK_K1 = 'https://hook.eu1.make.com/bslfuqmlud1vo8qems5ccn5z5f2eq4dl';
 const AIRTABLE_BASE = 'appJ7bLlAHZoxENWE';
 const AIRTABLE_TABLE = 'tblSxV8bsXwd1pwa0';
 const AIRTABLE_SV_TABLE = 'tbladqEQT3tmx4DIB';
@@ -804,7 +804,7 @@ function updateStep2Panel() {
       if (tipp) tipp.textContent = 'Gut! Sie können jetzt die Analyse starten oder weitere Fotos anhängen.';
     } else {
       dotD.style.background = '#f59e0b';
-      lblD.textContent = 'Kein Text vorhanden — bitte sprechen oder eintippen';
+      lblD.textContent = 'Diktat noch leer — bitte sprechen oder eintippen';
       lblD.style.color = '#f59e0b';
     }
   }
@@ -990,10 +990,8 @@ window.exportFotoAnlage = async function() {
     if (el && (el.tagName === 'TEXTAREA' || el.tagName === 'INPUT')) return;
     // Links-Swipe = Analyse (nur wenn genug Diktat vorhanden)
     if (dx < -60) {
-      var diktat = localStorage.getItem('prova_transkript') || window.transcriptText || '';
-      var manuellEl = document.getElementById('transcriptManuell');
-      var manuellText = manuellEl ? manuellEl.value.trim() : '';
-      if ((diktat.length > 30 || manuellText.length > 30) && typeof weiterZuAnalyse === 'function') {
+      var diktat = localStorage.getItem('prova_transkript') || '';
+      if (diktat.length > 30 && typeof weiterZuAnalyse === 'function') {
         weiterZuAnalyse();
       }
     }
@@ -1304,7 +1302,7 @@ window.sendeWebhookMitOfflineFallback = async function() {
   if (typeof sammleDaten === 'function') {
     const daten = sammleDaten();
     await queueHinzufügen(
-      '/.netlify/functions/make-proxy?key=g1',
+      'https://hook.eu1.make.com/imn2n5xs7j251xicrmdmk17of042pt2t',
       daten
     );
   }
@@ -1752,24 +1750,16 @@ function normIgnorieren(normNr) {
 
 // Init nach DOM-Ready
 document.addEventListener('DOMContentLoaded', function() {
-  // transcriptArea live-update: Status sofort zeigen wenn Text getippt wird
-  var taArea = document.getElementById('transcriptArea');
-  if (taArea) {
-    taArea.addEventListener('input', function() {
-      window.transcriptText = this.innerText.trim();
-      if (typeof updateStep2Panel === 'function') updateStep2Panel();
-    });
-  }
   setTimeout(initNormenVorschlag, 500);
 });
 
 
 /* ══════════════════════════════════════════════════════════
    OPTION 4: WEB SPEECH (live) + WHISPER-KORREKTUR
-   S11 Webhook: via make-proxy (ENV: MAKE_WEBHOOK_WHISPER)
+   S11 Webhook: https://hook.eu1.make.com/h019rspppkvc4m146sv1opxs74h9dp3x
    ══════════════════════════════════════════════════════════ */
 
-var WHISPER_WEBHOOK = '/.netlify/functions/make-proxy?key=wh';
+var WHISPER_WEBHOOK = 'https://hook.eu1.make.com/h019rspppkvc4m146sv1opxs74h9dp3x';
 var mediaRecorder = null;
 var audioChunks = [];
 var whisperLaeuft = false;
@@ -2617,16 +2607,7 @@ window.switchDiktatTab = function(mode) {
 
 window.syncManuellToTranscript = function() {
   var ta = document.getElementById('transcriptManuell');
-  if (ta) {
-    window.transcriptText = ta.value;
-    // Auch transcriptArea synchronisieren (wird für Status-Check genutzt)
-    var area = document.getElementById('transcriptArea');
-    if (area && ta.value.trim()) {
-      // Nur wenn transcriptArea leer ist — nicht überschreiben
-      if (!area.innerText.trim()) area.innerText = ta.value;
-    }
-  }
-  if (typeof updateStep2Panel === 'function') updateStep2Panel();
+  if (ta) window.transcriptText = ta.value;
 };
 
 // Tastatursteuerung für Tabs (←/→, Enter/Space)
@@ -2809,6 +2790,25 @@ async function bereinigeDiktatText() {
   if (badge) { badge.textContent = '⟳ Wird aufbereitet…'; badge.style.background = 'rgba(245,158,11,.2)'; }
 
   try {
+    // Session 7 DSGVO-Fix: Pseudonymisierung vor OpenAI-Transfer (USA/Drittland).
+    // IBAN, Telefon, E-Mail, Adressen, Namen werden durch Platzhalter ersetzt.
+    // Der Audit-Report wird für AUDIT_TRAIL gespeichert.
+    var textFuerKi = rawText;
+    if (typeof ProvaPseudo !== 'undefined' && typeof ProvaPseudo.apply === 'function') {
+      textFuerKi = ProvaPseudo.apply(rawText);
+      if (ProvaPseudo.lastReport && typeof window.provaAudit !== 'undefined') {
+        try {
+          window.provaAudit.log({
+            aktion: 'ki_proxy_pseudonymisierung',
+            details: ProvaPseudo.formatReport(ProvaPseudo.lastReport),
+            kontext: 'diktat_bereinigung'
+          });
+        } catch(_e) { /* Audit darf KI-Call nicht blockieren */ }
+      }
+    } else {
+      console.warn('[PROVA DSGVO] ProvaPseudo nicht verfügbar — Diktat wird UNGESCHÜTZT an KI gesendet.');
+    }
+
     var res = await fetch('/.netlify/functions/ki-proxy', {
       method: 'POST',
       headers: {'Content-Type':'application/json'},
@@ -2816,8 +2816,8 @@ async function bereinigeDiktatText() {
         model: 'gpt-4o-mini',
         max_tokens: 600,
         messages: [
-          {role:'system', content:'Du bist ein Textkorrektur-Assistent. Formatiere den folgenden Sprach-zu-Text-Diktat-Text: setze Kommas, Punkte und Großschreibung korrekt. Korrigiere offensichtliche Spracherkennungsfehler ("zirka" statt "zirkr", Zahlen ausschreiben wenn klar). Behalte ALLE inhaltlichen Angaben exakt bei — ändere keine Zahlen, Messwerte oder Fakten. Antworte NUR mit dem korrigierten Fließtext, keine Erklärungen.'},
-          {role:'user', content: rawText}
+          {role:'system', content:'Du bist ein Textkorrektur-Assistent. Formatiere den folgenden Sprach-zu-Text-Diktat-Text: setze Kommas, Punkte und Großschreibung korrekt. Korrigiere offensichtliche Spracherkennungsfehler ("zirka" statt "zirkr", Zahlen ausschreiben wenn klar). Behalte ALLE inhaltlichen Angaben exakt bei — ändere keine Zahlen, Messwerte oder Fakten. Platzhalter wie [IBAN], [TELEFON], [EMAIL], [PERSON], [ADRESSE] bleiben UNVERÄNDERT im Text. Antworte NUR mit dem korrigierten Fließtext, keine Erklärungen.'},
+          {role:'user', content: textFuerKi}
         ]
       })
     });
@@ -2950,12 +2950,7 @@ function sammleDaten() {
 
       document.getElementById('f-mw-extra')?.value ? String(document.getElementById('f-mw-extra').value) : '',
     ].filter(Boolean).join(' | ') || '',
-    transkript:         (function() {
-      var t = window.transcriptText || '';
-      if (!t) { var area = document.getElementById('transcriptArea'); if (area) t = area.innerText.trim(); }
-      if (!t) { var mEl = document.getElementById('transcriptManuell'); if (mEl) t = mEl.value.trim(); }
-      return t;
-    })(),
+    transkript:         window.transcriptText || transcriptText || '',
     fotos_anzahl:       fotos.length,
     fotos:              fotos.map((f, i) => ({ index: i+1, dataUrl: f.dataUrl, caption: f.caption || 'Foto '+(i+1), groesse_kb: Math.round(f.compSize/1024) })),
     timestamp:          nowIso,
@@ -3188,6 +3183,14 @@ window.weiterZuAnalyse = async function() {
   goToStep(3);
   await sendeWebhook();
 };
+
+// Session 7: Doppelklick-Schutz um weiterZuAnalyse herum.
+// Verhindert dass ungeduldige User durch Rapid-Klick mehrfach ki-proxy/Webhook triggern
+// (→ doppelte Airtable-Fälle + doppelte OpenAI-Kosten).
+// Cooldown 3 Sek weil der eigentliche KI-Call mehrere Sekunden dauert.
+if (typeof ProvaClickGuard !== 'undefined' && typeof ProvaClickGuard.wrap === 'function') {
+  window.weiterZuAnalyse = ProvaClickGuard.wrap('weiterZuAnalyse', window.weiterZuAnalyse, 3000);
+}
 
 async function sendeWebhook() {
   const daten = sammleDaten();

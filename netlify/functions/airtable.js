@@ -21,6 +21,8 @@ const ALLOWED_TABLES = {
   tblyMTTdtfGQjjmc2: { name: 'TERMINE',     userField: 'sv_email', readOnly: false },
   // Rechnungen: User-Filter
   tblF6MS7uiFAJDjiT: { name: 'RECHNUNGEN',  userField: 'sv_email', readOnly: false },
+  // Kontakte: User-Filter (DSGVO — Multi-Tenant-Trennung)
+  tblMKmPLjRelr6Hal: { name: 'KONTAKTE',    userField: 'sv_email', readOnly: false },
   // KI-Statistik: schreiben OK, lesen eingeschränkt
   tblv9F8LEnUC3mKru: { name: 'KI_STATISTIK', userField: null,      readOnly: false },
   // KI-Lernpool: nur schreiben
@@ -81,7 +83,7 @@ function getTableIdFromPath(path) {
 }
 
 // ── User-Filter in Formula einfügen ──
-function injectUserEmailFilter(path, userEmail, userField) {
+function injectUserFilter(path, userEmail, userField) {
   if (!userEmail || !userField) return path;
   
   const userFilter = `{${userField}}="${userEmail.replace(/"/g, '')}"`;
@@ -162,7 +164,7 @@ exports.handler = async function(event) {
     KONTAKTE:           'tblMKmPLjRelr6Hal',
     KI_STATISTIK:       'tblv9F8LEnUC3mKru',
     KI_LERNPOOL:        'tbl4LEsMvcDKFCYaF',
-    PUSH_SUBSCRIPTIONS: 'tblAiF38HeS1R1Umj', // PUSH_SUBSCRIPTIONS — korrekte ID
+    PUSH_SUBSCRIPTIONS: 'tblPUSH_PLACEHOLDER', // nach Airtable-Anlage ersetzen
   };
   const BASE_ID = 'appJ7bLlAHZoxENWE';
 
@@ -234,7 +236,7 @@ exports.handler = async function(event) {
   // ── User-Filter für GET-Anfragen (Datentrennung!) ──
   let finalPath = path;
   if (method.toUpperCase() === 'GET' && tableConfig && tableConfig.userField && !adminUser) {
-    finalPath = injectUserEmailFilter(path, userEmail, tableConfig.userField);
+    finalPath = injectUserFilter(path, userEmail, tableConfig.userField);
   }
 
   // ── Payload-Größenlimit ──

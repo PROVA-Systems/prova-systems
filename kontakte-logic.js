@@ -29,7 +29,7 @@ var TYP_CONFIG = {
 // ============================================================
 // ── Airtable-Proxy für Kontakte ──
 const AT_BASE_K = 'appJ7bLlAHZoxENWE';
-var AT_KONTAKTE = 'tblMKmPLjRelr6Hal';
+const AT_KONTAKTE = 'tblMKmPLjRelr6Hal';
 async function atKontakte(method, path, body) {
   try {
     var res = await fetch('/.netlify/functions/airtable', {
@@ -95,6 +95,7 @@ function speichereKontakte() {
 
 // Kontakt in Airtable speichern/aktualisieren
 async function syncKontaktZuAirtable(k) {
+  var svEmail = (localStorage.getItem('prova_sv_email') || '').toLowerCase();
   var felder = {
     Name: k.name || '',
     Firma: k.firma || '',
@@ -105,7 +106,8 @@ async function syncKontaktZuAirtable(k) {
     PLZ: k.plz || '',
     Ort: k.ort || '',
     Ansprechpartner: k.ansprechpartner || '',
-    Notizen: k.notizen || ''
+    Notizen: k.notizen || '',
+    sv_email: svEmail  // DSGVO: Multi-Tenant-Trennung
   };
   if (k.at_id && k.at_id.startsWith('rec')) {
     // Update
@@ -718,7 +720,7 @@ var _SFAQ=[
 function supAnalyse(){clearTimeout(_supT);_supT=setTimeout(function(){var txt=(document.getElementById('sup-betreff').value+' '+document.getElementById('sup-msg').value).toLowerCase();var f=_SFAQ.find(function(x){return x.q.some(function(w){return txt.includes(w);});});var box=document.getElementById('sup-faq-box');if(f){document.getElementById('sup-faq-txt').textContent=f.a;box.style.display='block';}else box.style.display='none';},600);}
 function supFaqOk(){document.getElementById('sup-form').style.display='none';document.getElementById('sup-faq-box').style.display='none';document.getElementById('sup-ok').style.display='block';}
 function supClose(){document.getElementById('sup-modal').classList.remove('open');document.getElementById('sup-ok').style.display='none';document.getElementById('sup-form').style.display='block';document.getElementById('sup-betreff').value='';document.getElementById('sup-msg').value='';}
-async function supSend(){var b=document.getElementById('sup-betreff').value.trim(),n=document.getElementById('sup-msg').value.trim();if(!b||!n){document.getElementById('sup-err').style.display='block';return;}document.getElementById('sup-err').style.display='none';var btn=document.getElementById('sup-btn');btn.disabled=true;btn.textContent='⏳ Wird gesendet...';try{await fetch('/.netlify/functions/make-proxy?key=sup',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({betreff:b,nachricht:n,sv_email:localStorage.getItem('prova_sv_email')||'',paket:localStorage.getItem('prova_paket')||'Solo',seite:window.location.pathname,ts:new Date().toISOString()})});}catch(e){}document.getElementById('sup-form').style.display='none';document.getElementById('sup-faq-box').style.display='none';document.getElementById('sup-ok').style.display='block';}
+async function supSend(){var b=document.getElementById('sup-betreff').value.trim(),n=document.getElementById('sup-msg').value.trim();if(!b||!n){document.getElementById('sup-err').style.display='block';return;}document.getElementById('sup-err').style.display='none';var btn=document.getElementById('sup-btn');btn.disabled=true;btn.textContent='⏳ Wird gesendet...';try{await fetch('https://hook.eu1.make.com/lktuhugwcg5v37ib6bdaxjb1uiplnu8v',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({betreff:b,nachricht:n,sv_email:localStorage.getItem('prova_sv_email')||'',paket:localStorage.getItem('prova_paket')||'Solo',seite:window.location.pathname,ts:new Date().toISOString()})});}catch(e){}document.getElementById('sup-form').style.display='none';document.getElementById('sup-faq-box').style.display='none';document.getElementById('sup-ok').style.display='block';}
 
 /* ─────────────────────────────────────────── */
 
@@ -741,12 +743,12 @@ window.exportAlleVCF = function() {
 
   var vcf = alle.map(function(k) {
     var lines = ['BEGIN:VCARD', 'VERSION:3.0'];
-    var name = k.name || (k.fields && k.fields.Name) || '';
-    var firma = k.firma || (k.fields && k.fields.Firma) || '';
-    var email = k.email || (k.fields && k.fields.Email) || '';
-    var tel   = k.telefon || (k.fields && k.fields.Telefon) || '';
-    var typ   = k.typ || (k.fields && k.fields.Typ) || '';
-    var adr   = k.adresse || (k.fields && k.fields.Adresse) || '';
+    var name = k.name || k.fields?.Name || '';
+    var firma = k.firma || k.fields?.Firma || '';
+    var email = k.email || k.fields?.Email || '';
+    var tel   = k.telefon || k.fields?.Telefon || '';
+    var typ   = k.typ || k.fields?.Typ || '';
+    var adr   = k.adresse || k.fields?.Adresse || '';
 
     if (name) {
       var parts = name.trim().split(/\s+/);
