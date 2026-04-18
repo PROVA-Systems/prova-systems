@@ -62,33 +62,52 @@
   // Übergangsphase: noch separate Dateien, später gutachten.html
   var appUrl = paket === 'Team' ? 'app-enterprise.html' : 'app.html';
 
-  /* ── Nav-Items: workflow-orientierte Gruppierung ── */
+  /* ── Nav-Items: SV-Workflow-orientierte Gruppierung (Session 28) ──
+     Reihenfolge folgt dem Tagesablauf:
+     1. ARBEIT    - "wo stehe ich?" (daily landing)
+     2. GUTACHTEN - die eigentliche Hauptarbeit
+     3. WERKZEUGE - Nachschlagewerke waehrend der Arbeit
+     4. ABRECHNUNG - Geld-Flow nach Abschluss
+     5. BUERO     - seltene Verwaltung
+     Footer (immer sichtbar): Einstellungen + Hilfe + Abmelden
+  */
   var ARBEIT = [
-    { href: 'dashboard.html',     icon: '⊞',  label: 'Zentrale' },
-    { href: 'archiv.html',        icon: '📂', label: 'Fälle' },
-    { href: 'termine.html',       icon: '📅', label: 'Kalender' },
+    { href: 'dashboard.html',        icon: '⊞',  label: 'Zentrale' },
+    { href: 'archiv.html',           icon: '📂', label: 'Meine Fälle' },
+    { href: 'termine.html',          icon: '📅', label: 'Kalender' },
+    { href: 'ortstermin-modus.html', icon: '📍', label: 'Ortstermin' },
   ];
-  // GUTACHTEN: Alle Werkzeuge die direkt im Gutachten-Workflow verwendet werden
+  // GUTACHTEN: Die sieben SV-Arbeitstypen (keine Werkzeuge!)
   var GUTACHTEN = [
-    { href: 'normen.html',            icon: '📚', label: 'Normen' },
-    { href: 'textbausteine.html',     icon: '📝', label: 'Textbausteine' },
-    { href: 'positionen.html',        icon: '🗂️', label: 'Positionen & Kosten' },
+    { href: 'freigabe.html',                     icon: '✅', label: 'Zur Freigabe' },
+    { href: 'vorlage-09-ergaenzungsgutachten.html', icon: '🧩', label: 'Ergänzungsgutachten' },
+    { href: 'stellungnahme.html',                icon: '📋', label: 'Technische Stellungnahme' },
+    { href: 'stellungnahme-gegengutachten.html', icon: '↩️', label: 'Gegengutachten' },
+    { href: 'vorlage-10-schiedsgutachten.html',  icon: '⚖️', label: 'Schiedsgutachten' },
+    { href: 'vorlage-04-gerichtsgutachten.html', icon: '🏛️', label: 'Gerichtsauftrag' },
+    { href: 'baubegleitung.html',                icon: '🏗️', label: 'Baubegleitung' },
   ];
-  // ABRECHNUNG: Alles was mit Honorar + Rechnung zu tun hat
+  // WERKZEUGE: Nachschlagewerke, die WAEHREND der Arbeit genutzt werden
+  var WERKZEUGE = [
+    { href: 'normen.html',         icon: '📚',  label: 'Normen' },
+    { href: 'textbausteine.html',  icon: '📝',  label: 'Textbausteine' },
+    { href: 'positionen.html',     icon: '🗂️', label: 'Positionen & Preise' },
+    { href: 'jveg.html',           icon: '⚖️',  label: 'JVEG-Rechner' },
+  ];
+  // ABRECHNUNG: Geld-Flow nach Gutachten-Abschluss
   var ABRECHNUNG = [
-    { href: 'rechnungen.html',    icon: '💶', label: 'Rechnungen' },
-    { href: 'jveg.html',          icon: '⚖️', label: 'JVEG-Rechner' },
-    { href: 'erechnung.html',     icon: '📄', label: 'E-Rechnung' },
-    { href: 'statistiken.html',   icon: '📈', label: 'Statistiken' },
+    { href: 'rechnungen.html',              icon: '💶', label: 'Rechnungen' },
+    { href: 'erechnung.html',               icon: '📄', label: 'E-Rechnung (XRechnung)' },
+    { href: 'rechnungen.html?view=mahnung', icon: '📣', label: 'Mahnwesen' },
   ];
-  // BÜRO: Korrespondenz, Kontakte, Projekte
+  // BUERO: Seltene Verwaltung und Office-Funktionen
   var BUERO = [
-    { href: 'briefvorlagen.html', icon: '✉️', label: 'Briefe & Vorlagen' },
-    { href: 'kontakte.html',      icon: '👥', label: 'Kontakte' },
-    { href: 'baubegleitung.html', icon: '🏗️', label: 'Baubegleitung' },
-    { href: 'hilfe.html',         icon: '❓', label: 'Hilfe' },
+    { href: 'briefvorlagen.html',  icon: '✉️', label: 'Briefe & Vorlagen' },
+    { href: 'kontakte.html',       icon: '👥', label: 'Kontakte' },
+    { href: 'import-assistent.html', icon: '📥', label: 'Daten importieren' },
+    { href: 'jahresbericht.html',  icon: '📊', label: 'Jahresbericht' },
   ];
-  // VERWALTUNG: Selten genutzte Admin-Funktionen
+  // VERWALTUNG entfernt (Session 28) - war ohnehin leer
   var VERWALTUNG = [];
 
 
@@ -196,9 +215,6 @@
       + '}'
       + '.sb-logo-text span{color:var(--accent,#4f8ef7);}'
       + '.sidebar.collapsed .sb-logo-text{opacity:0;width:0;}'
-      /* Collapsed: Logo zentriert ohne seitliches Padding,
-         damit das 30px-Markenzeichen in die 56px-Spalte passt */
-      + '.sidebar.collapsed .sb-logo{padding:14px 0;justify-content:center;gap:0;}'
 
       /* ─── NEUER FALL BUTTON ─── */
       + '.sb-new-btn{'
@@ -232,6 +248,12 @@
       +   'user-select:none;line-height:1.2;'
       + '}'
       + '.sb-section-label:first-child{margin-top:4px;}'
+      // Session 28: trennende Linie vor Footer (meta-sektion)
+      + '.sb-footer-divider{height:1px;background:var(--border,rgba(255,255,255,.08));margin:8px 12px 6px;transition:opacity .18s;}'
+      + '.sidebar.collapsed .sb-footer-divider{margin:8px 8px 6px;}'
+      // Session 28 Fix #2: Suchfeld darf Text nicht ueberlaufen (das "S" vom "Suchen")
+      + '.sidebar.collapsed .sb-search-input,.sidebar.collapsed .sb-search{overflow:hidden !important;}'
+      + '.sidebar.collapsed .sb-search-input{padding-left:0 !important;padding-right:0 !important;text-indent:-9999px !important;}'
       + '.sidebar.collapsed .sb-section-label{opacity:0;height:0;padding:0;margin:0;overflow:hidden;}'
 
       /* ─── NAV ITEMS — NO LAYOUT SHIFT ─── */
@@ -306,90 +328,17 @@
       + '}'
       + '.sidebar.collapsed .paket-name{opacity:0;width:0;}'
 
-      /* Collapse toggle — PanelLeft-Icon (Linear/Notion/VS-Code-Pattern) */
+      /* Collapse toggle */
       + '.sb-collapse{'
-      +   'display:flex;align-items:center;gap:10px;padding:10px 14px;width:auto;margin:6px 10px 8px;'
+      +   'display:flex;align-items:center;gap:8px;padding:9px 14px;width:100%;'
       +   'color:var(--text3,#4d5568);font-size:12px;cursor:pointer;'
-      +   'background:none;border:none;border-radius:8px;font-family:inherit;'
-      +   'transition:color .15s,background .15s;flex-shrink:0;'
+      +   'background:none;border:none;font-family:inherit;transition:color .12s;flex-shrink:0;'
       + '}'
-      + '.sb-collapse:hover{color:var(--text,#eaecf4);background:rgba(255,255,255,.05);}'
-      + '.sb-collapse:active{background:rgba(255,255,255,.08);}'
-      + '.sb-toggle-icon{'
-      +   'flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;'
-      +   'width:20px;height:20px;color:inherit;'
-      + '}'
-      + '.sb-toggle-icon svg{display:block;transition:transform .25s cubic-bezier(.4,0,.2,1);}'
-      /* Beim Einklappen wird das Icon horizontal gespiegelt — Panel-Linie und Chevron
-         zeigen dann in die richtige Richtung (Linear-/Notion-Stil). */
-      + '.sidebar.collapsed .sb-toggle-icon svg{transform:scaleX(-1);}'
-      + '.sb-collapse-label{white-space:nowrap;overflow:hidden;flex:1;text-align:left;transition:opacity .18s;}'
+      + '.sb-collapse:hover{color:var(--text2,#8b93ab);}'
+      + '.sb-toggle-icon{font-size:14px;transition:transform .22s;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;width:22px;}'
+      + '.sidebar.collapsed .sb-toggle-icon{transform:rotate(180deg);}'
+      + '.sb-collapse-label{white-space:nowrap;overflow:hidden;transition:opacity .18s;}'
       + '.sidebar.collapsed .sb-collapse-label{opacity:0;width:0;}'
-      + '.sb-collapse-kbd{'
-      +   'font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;'
-      +   'background:var(--surface2,rgba(255,255,255,.04));border:1px solid var(--border2,rgba(255,255,255,.1));'
-      +   'color:var(--text3);font-family:var(--font-mono,ui-monospace,monospace);'
-      +   'white-space:nowrap;flex-shrink:0;transition:opacity .18s;'
-      + '}'
-      + '.sidebar.collapsed .sb-collapse-kbd{opacity:0;width:0;padding:0;border:0;}'
-
-      /* ─── FIRST-TIME HINWEIS-BALLON ───
-         Zeigt beim ersten Besuch einmalig, dass und wie die Sidebar geklappt wird.
-         Erklärt das PROVA-Fold-Icon explizit — danach verschwindet der Hint
-         und wird in localStorage als gesehen markiert. */
-      + '.sb-collapse-hint{'
-      +   'position:absolute;left:calc(100% + 14px);bottom:18px;z-index:250;'
-      +   'background:var(--surface,#1c2130);border:1px solid var(--accent,#4f8ef7);'
-      +   'border-radius:12px;padding:14px 16px;width:280px;'
-      +   'box-shadow:0 12px 40px rgba(0,0,0,.4),0 0 0 4px rgba(79,142,247,.12);'
-      +   'font-family:var(--font-ui,"DM Sans",system-ui,sans-serif);'
-      +   'animation:provaSlideIn .35s cubic-bezier(.4,0,.2,1);'
-      + '}'
-      + '.sb-collapse-hint-arrow{'
-      +   'position:absolute;left:-7px;bottom:22px;width:12px;height:12px;'
-      +   'background:var(--surface,#1c2130);border-left:1px solid var(--accent,#4f8ef7);'
-      +   'border-bottom:1px solid var(--accent,#4f8ef7);transform:rotate(45deg);'
-      + '}'
-      + '.sb-collapse-hint-title{'
-      +   'font-size:13px;font-weight:700;color:var(--text,#eaecf4);margin-bottom:6px;'
-      +   'display:flex;align-items:center;gap:8px;'
-      + '}'
-      + '.sb-collapse-hint-title::before{'
-      +   'content:"";display:block;width:6px;height:6px;border-radius:50%;'
-      +   'background:var(--accent,#4f8ef7);box-shadow:0 0 8px rgba(79,142,247,.8);'
-      + '}'
-      + '.sb-collapse-hint-text{'
-      +   'font-size:12px;line-height:1.55;color:var(--text2,#8b93ab);margin-bottom:12px;'
-      + '}'
-      + '.sb-collapse-hint-text kbd{'
-      +   'display:inline-block;font-size:10px;font-weight:600;padding:1px 5px;border-radius:3px;'
-      +   'background:var(--surface2,rgba(255,255,255,.06));border:1px solid var(--border2,rgba(255,255,255,.12));'
-      +   'color:var(--text,#eaecf4);font-family:var(--font-mono,ui-monospace,monospace);margin:0 1px;'
-      + '}'
-      + '.sb-collapse-hint-ok{'
-      +   'padding:6px 12px;background:var(--accent,#4f8ef7);color:#fff;'
-      +   'border:none;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;'
-      +   'font-family:inherit;transition:background .15s;'
-      + '}'
-      + '.sb-collapse-hint-ok:hover{background:var(--accent2,#3a7be0);}'
-      /* Pulse-Ring um den Button herum solange der Hint sichtbar ist */
-      + '.sb-collapse.pulse{position:relative;}'
-      + '.sb-collapse.pulse::after{'
-      +   'content:"";position:absolute;inset:-4px;border-radius:12px;'
-      +   'border:2px solid var(--accent,#4f8ef7);opacity:0;pointer-events:none;'
-      +   'animation:provaPulse 1.8s ease-out infinite;'
-      + '}'
-      + '@keyframes provaPulse{'
-      +   '0%{opacity:.7;transform:scale(.95);}'
-      +   '70%{opacity:0;transform:scale(1.08);}'
-      +   '100%{opacity:0;transform:scale(1.08);}'
-      + '}'
-      + '@keyframes provaSlideIn{'
-      +   'from{opacity:0;transform:translateX(-8px);}'
-      +   'to{opacity:1;transform:translateX(0);}'
-      + '}'
-      /* Im eingeklappten Zustand den Hint ausblenden (platztechnisch sinnlos) */
-      + '.sidebar.collapsed .sb-collapse-hint{display:none !important;}'
 
       /* ─── MAIN CONTENT OFFSET ─── */
       + '.main-wrap{margin-left:var(--sb-w);transition:margin-left .22s cubic-bezier(.4,0,.2,1);background:var(--bg,#0b0d11);min-height:100vh;}'
@@ -404,26 +353,6 @@
       +   'opacity:0;transition:opacity .25s;'
       + '}'
       + '.sb-overlay.open{display:block;opacity:1;}'
-
-      /* Zwischen-Breakpoint: bei halbierten Desktop-Fenstern / kleinen Laptops
-         Sidebar automatisch einklappen. Wirkt wie Linear/Notion/Stripe:
-         schmaler Viewport → mehr Platz für Content, Sidebar zeigt nur Icons.
-         Oberhalb der Mobile-Schwelle (769px) bis ca. Laptop-Breite (1100px). */
-      + '@media(min-width:769px) and (max-width:1100px){'
-      +   '.sidebar{width:var(--sb-w-col);min-width:var(--sb-w-col);}'
-      +   '.sidebar .sb-logo{padding:14px 0;justify-content:center;gap:0;}'
-      +   '.sidebar .sb-logo-text,'
-      +   '.sidebar .sb-label,'
-      +   '.sidebar .sb-section-label,'
-      +   '.sidebar .paket-name,'
-      +   '.sidebar .btn-label,'
-      +   '.sidebar .sb-collapse-label{opacity:0;width:0;height:0;padding:0;margin:0;overflow:hidden;}'
-      +   '.sidebar .sb-new-btn{justify-content:center;padding:10px;margin:12px 8px 6px;}'
-      +   '.sidebar .sb-item{justify-content:center;padding:0;min-height:40px;}'
-      +   '.main-wrap,.main{margin-left:var(--sb-w-col);}'
-      +   '.sb-collapse-hint{display:none !important;}'
-      + '}'
-
       + '@media(max-width:768px){'
       +   '.sidebar{transform:translateX(-100%);transition:transform .25s cubic-bezier(.4,0,.2,1);}'
       +   '.sidebar.mobile-open{transform:translateX(0);width:var(--sb-w);min-width:var(--sb-w);}'
@@ -498,14 +427,20 @@
     + '<div class="sb-nav">'
     +   makeGroup('Arbeit', ARBEIT)
     +   makeGroup('Gutachten', GUTACHTEN)
+    +   makeGroup('Werkzeuge', WERKZEUGE)
     +   makeGroup('Abrechnung', ABRECHNUNG)
     +   makeGroup('Büro', BUERO)
     + '</div>'
 
     + '<div class="sb-footer">'
+    +   '<div class="sb-footer-divider"></div>'
     +   '<a href="einstellungen.html" class="sb-settings' + settingsActive + '" title="Einstellungen">'
     +     '<span class="sb-icon" aria-hidden="true">⚙️</span>'
     +     '<span class="sb-label">Einstellungen</span>'
+    +   '</a>'
+    +   '<a href="hilfe.html" class="sb-settings' + (page === 'hilfe.html' ? ' sb-active' : '') + '" title="Hilfe &amp; Support">'
+    +     '<span class="sb-icon" aria-hidden="true">❓</span>'
+    +     '<span class="sb-label">Hilfe &amp; Support</span>'
     +   '</a>'
     +   '<div class="sb-paket">'
     +     '<div class="paket-dot" style="background:' + pc + '"></div>'
@@ -519,24 +454,10 @@
     +     '<span style="font-size:11px;color:var(--text3);">Schnellsuche</span>'
     +     '<kbd style="font-size:10px;padding:2px 6px;border-radius:4px;background:var(--surface2);border:1px solid var(--border2);color:var(--text3);font-family:var(--font-mono);">⌘K</kbd>'
     +   '</div>'
-    +   '<button class="sb-collapse" id="sb-collapse-btn" title="Sidebar ein-/ausklappen (Strg+\\)">'
-    +     '<span class="sb-toggle-icon" aria-hidden="true">'
-    +       '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'
-    +         '<path d="M3 5h7l2 2h9v12H3z"/>'
-    +         '<path d="M10 5v14"/>'
-    +       '</svg>'
-    +     '</span>'
+    +   '<button class="sb-collapse" id="sb-collapse-btn">'
+    +     '<span class="sb-toggle-icon">‹</span>'
     +     '<span class="sb-collapse-label">Einklappen</span>'
-    +     '<kbd class="sb-collapse-kbd">Strg \\</kbd>'
     +   '</button>'
-    +   '<div class="sb-collapse-hint" id="sb-collapse-hint" style="display:none;">'
-    +     '<div class="sb-collapse-hint-arrow"></div>'
-    +     '<div class="sb-collapse-hint-body">'
-    +       '<div class="sb-collapse-hint-title">Sidebar ein-/ausklappen</div>'
-    +       '<div class="sb-collapse-hint-text">Mit diesem Button oder <kbd>Strg</kbd> + <kbd>\\</kbd> klappst du die Seitenleiste ein — mehr Platz für deine Arbeit.</div>'
-    +       '<button class="sb-collapse-hint-ok" onclick="window.provaCloseCollapseHint && window.provaCloseCollapseHint()">Verstanden</button>'
-    +     '</div>'
-    +   '</div>'
     + '</div>'
   ;
 
@@ -557,7 +478,18 @@
     }
 
     // Collapse-State aus localStorage wiederherstellen
-    var collapsed = localStorage.getItem('prova_sb_collapsed') === '1';
+    // Session 28 Fix #1: Auto-Collapse bei schmalen Fenstern (< 1100px)
+    // wenn der User noch keine eigene Entscheidung getroffen hat.
+    // So passt die Sidebar bei halbem Desktop-Fenster auf iPads/kleine Laptops.
+    var savedCollapse = localStorage.getItem('prova_sb_collapsed');
+    var collapsed;
+    if (savedCollapse === '1' || savedCollapse === '0') {
+      // User hat eigene Wahl getroffen - respektieren
+      collapsed = savedCollapse === '1';
+    } else {
+      // Erste Sitzung: Auto-Collapse bei schmalen Fenstern
+      collapsed = window.innerWidth < 1100 && window.innerWidth > 768;
+    }
     if (collapsed) existing.classList.add('collapsed');
 
     // ── Scroll-Position der Sidebar wiederherstellen ──
@@ -592,59 +524,15 @@
       }, true);
     }
 
-    // Collapse-Button + Keyboard-Shortcut (Strg+\ bzw. Cmd+\) — Pattern wie Notion/VS Code
-    function toggleSidebarCollapsed() {
-      existing.classList.toggle('collapsed');
-      var isCol = existing.classList.contains('collapsed');
-      localStorage.setItem('prova_sb_collapsed', isCol ? '1' : '0');
-      // Hint spätestens jetzt schließen — User hat verstanden
-      if (window.provaCloseCollapseHint) window.provaCloseCollapseHint();
-    }
+    // Collapse-Button
     var btn = document.getElementById('sb-collapse-btn');
     if (btn) {
-      btn.addEventListener('click', toggleSidebarCollapsed);
+      btn.addEventListener('click', function () {
+        existing.classList.toggle('collapsed');
+        var isCol = existing.classList.contains('collapsed');
+        localStorage.setItem('prova_sb_collapsed', isCol ? '1' : '0');
+      });
     }
-    // Keyboard-Shortcut — nur wenn nicht in Input/Textarea getippt wird
-    document.addEventListener('keydown', function(e) {
-      var isMeta = (e.ctrlKey || e.metaKey);
-      var inField = ['INPUT','TEXTAREA','SELECT'].includes((document.activeElement||{}).tagName)
-                 || (document.activeElement && document.activeElement.isContentEditable);
-      if (isMeta && e.key === '\\' && !inField) {
-        e.preventDefault();
-        toggleSidebarCollapsed();
-      }
-    });
-
-    // ── First-Time-Hinweis: zeigt beim ersten Besuch einmalig den Hinweis-Ballon ──
-    // Dismissed per Klick auf "Verstanden", Klick auf den Button selbst, oder nach 8s.
-    // Status wird in localStorage unter 'prova_sb_hint_seen' persistiert.
-    var hintTimer = null;
-    window.provaCloseCollapseHint = function() {
-      var h = document.getElementById('sb-collapse-hint');
-      if (h) h.style.display = 'none';
-      if (btn) btn.classList.remove('pulse');
-      if (hintTimer) { clearTimeout(hintTimer); hintTimer = null; }
-      try { localStorage.setItem('prova_sb_hint_seen', '1'); } catch(e) {}
-    };
-    try {
-      var bereitsGesehen = localStorage.getItem('prova_sb_hint_seen') === '1';
-      // "schmal" deckt Mobile (<768) + Auto-Collapse-Zone (769-1100) ab —
-      // in beiden Fällen wäre der Hint-Ballon falsch positioniert oder überflüssig.
-      var istSchmal      = window.matchMedia('(max-width: 1100px)').matches;
-      var istCollapsed   = existing.classList.contains('collapsed');
-      if (!bereitsGesehen && !istSchmal && !istCollapsed) {
-        // Kurze Verzögerung damit die Seite erst mal ruhig lädt
-        setTimeout(function() {
-          var h = document.getElementById('sb-collapse-hint');
-          if (h) h.style.display = 'block';
-          if (btn) btn.classList.add('pulse');
-          // Auto-Dismiss nach 8 Sekunden
-          hintTimer = setTimeout(function() {
-            if (window.provaCloseCollapseHint) window.provaCloseCollapseHint();
-          }, 8000);
-        }, 1200);
-      }
-    } catch(e) {}
   }
 
   /* ── Mobile Sidebar Funktionen (global) ── */

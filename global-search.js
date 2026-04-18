@@ -102,49 +102,6 @@ const PROVASearch = {
     this._input.value = '';
     this._search('');
     setTimeout(() => this._input.focus(), 50);
-    // Defensive Nachladung: wenn PROVA_NORMEN_DB zu klein (Sync noch nicht durch),
-    // versuche Normen direkt vom Server zu holen. Läuft async, blockiert UI nicht.
-    this._refreshNormenIfStale();
-  },
-
-  async _refreshNormenIfStale() {
-    const current = (window.PROVA_NORMEN_DB || []).length;
-    // Wenn mehr als 200 Normen im Speicher → Sync ist durch, nichts zu tun
-    if (current >= 200) return;
-    // Schutz gegen Mehrfachabruf
-    if (this._normenFetchInFlight) return;
-    this._normenFetchInFlight = true;
-    try {
-      const res = await fetch('/.netlify/functions/normen?max=500');
-      if (!res.ok) return;
-      const data = await res.json();
-      const recs = data && (data.records || data.normen || data);
-      if (!Array.isArray(recs) || !recs.length) return;
-      // Normalisieren: Airtable-Records haben .fields, direkte Objekte nicht
-      const normalized = recs.map(r => {
-        const f = r.fields || r;
-        return {
-          num:     f.Num || f.num || f.Nummer || '',
-          titel:   f.Titel || f.titel || f.Title || '',
-          bereich: f.Bereich || f.bereich || '',
-          sa:      f.SA || f.sa || '',
-          anw:     f.Anwendung || f.anw || '',
-          gw:      f.Grenzwerte || f.gw || '',
-          mess:    f.Messung || f.mess || '',
-          hf:      f.Haeufigkeit || f.hf || '',
-          hint:    f.Hinweis || f.hint || ''
-        };
-      }).filter(n => n.num);
-      if (normalized.length > current) {
-        window.PROVA_NORMEN_DB = normalized;
-        // Wenn der User schon etwas getippt hat, Suche refreshen
-        if (this._q) this._search(this._q);
-      }
-    } catch(e) {
-      // Silent fail — Suche bleibt auf dem was an Normen lokal da ist
-    } finally {
-      this._normenFetchInFlight = false;
-    }
   },
 
   close() {
@@ -186,7 +143,9 @@ const PROVASearch = {
         ).slice(0, 5);
         if (normen.length) {
           results.push({ group: 'Normen' });
-          normen.forEach(n => results.push({ type: 'norm', label: n.num, icon: '📐', href: 'normen.html', sub: n.titel }));
+          // Session 28 Fix #5: Normnummer als ?q=...-Query-Parameter mitgeben,
+          // damit normen.html direkt auf die gesuchte Norm filtert.
+          normen.forEach(n => results.push({ type: 'norm', label: n.num, icon: '📐', href: 'normen.html?q=' + encodeURIComponent(n.num), sub: n.titel }));
         }
       }
 
@@ -332,7 +291,3 @@ if (document.readyState === 'loading') {
 } else {
   PROVASearch.init();
 }
-
-// Global am window verfügbar machen — wird von auth-guard.js, Cmd+K-Handler
-// und Playwright-Tests referenziert.
-window.PROVASearch = PROVASearch;

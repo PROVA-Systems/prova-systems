@@ -360,12 +360,6 @@ function renderNormen() {
   const q = (document.getElementById('searchInput').value||'').trim();
   document.getElementById('normenCount').textContent = filtered.length + ' Normen';
 
-  // Session 5 Fix: chip-all dynamisch auf NORMEN_DB.length setzen.
-  // Vorher hart "120" in normen.html — das widersprach dem oberen Counter
-  // (der dynamisch 190 zeigt). Jetzt konsistent.
-  var chipAll = document.getElementById('chip-all');
-  if (chipAll) chipAll.textContent = NORMEN_DB.length;
-
   // Figma-Style: Zuletzt genutzte Normen oben (wenn kein Filter)
   var recentSection = '';
   if (!q && !document.getElementById('filterBereich').value) {
@@ -528,6 +522,15 @@ function showToastMitCTA(msg, ctaLabel, ctaHref) {
 
 // Init
 document.addEventListener('DOMContentLoaded', function() {
+  // Session 28 Fix #5: Wenn ?q=... in URL → Suche vorfuellen
+  // Ermoeglicht Deep-Linking aus Global-Search: normen.html?q=DIN%204108
+  try {
+    var urlQuery = new URLSearchParams(window.location.search).get('q');
+    if (urlQuery) {
+      var searchEl = document.getElementById('searchInput');
+      if (searchEl) searchEl.value = urlQuery;
+    }
+  } catch(e) {}
   if (typeof renderNormen === 'function') renderNormen();
 });
 

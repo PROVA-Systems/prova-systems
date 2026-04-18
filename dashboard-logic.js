@@ -58,20 +58,17 @@ window.maxKontingent = maxKontingent;
 
 /* ══════════════════════════════════════════════════
    AIRTABLE FETCH via Netlify Proxy
-   
-   Session 3 Fix: Sort optional (war vorher hart auf
-   'Timestamp' gesetzt → 422-Errors auf TERMINE und
-   RECHNUNGEN, weil die kein Timestamp-Feld haben).
 ══════════════════════════════════════════════════ */
 async function atFetch(table, formula, maxRecords, sortField){
   try{
+    // Session 28 Fix #6: Sort-Feld pro Tabelle waehlbar.
+    // RECHNUNGEN hat kein 'Timestamp'-Feld → musste 422 werfen.
+    // Jetzt gibt der Aufrufer das richtige Sortierfeld an (oder keines).
+    var sort = sortField === null ? '' : '&sort[0][field]=' + encodeURIComponent(sortField || 'Timestamp') + '&sort[0][direction]=desc';
     var path='/v0/'+AT_BASE+'/'+table
       +'?filterByFormula='+encodeURIComponent(formula)
-      +'&maxRecords='+(maxRecords||50);
-    // Sort nur wenn explizit angegeben — verhindert 422
-    if(sortField){
-      path += '&sort[0][field]='+encodeURIComponent(sortField)+'&sort[0][direction]=desc';
-    }
+      +'&maxRecords='+(maxRecords||50)
+      +sort;
     var res=await fetch('/.netlify/functions/airtable',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
@@ -682,9 +679,10 @@ window.calNav=function(dir){
 ══════════════════════════════════════════════════ */
 zeigSkeleton();
 
-// Auth-Check passiert zentral in auth-guard.js (Session 3 Fix #1+#2).
-// Kein Inline-Guard mehr nötig — auth-guard.js redirected automatisch
-// wenn die Seite nicht in der PUBLIC_PAGES-Liste steht.
+// Auth check
+if(!localStorage.getItem('prova_user')){
+  // Kein Redirect — Zentrale zeigt Onboarding auch ohne Login
+}
 
 var svEmail=localStorage.getItem('prova_sv_email')||'';
 
@@ -703,8 +701,8 @@ async function ladeAlleDaten(){
 
     var results=await Promise.all([
       atFetch(AT_FAELLE,filterFaelle,100),
-      atFetch(AT_TERMINE,filterTermine,50),
-      atFetch(AT_RECHNUNGEN,filterRechnungen,50)
+      atFetch(AT_TERMINE,filterTermine,50,'termin_datum'),
+      atFetch(AT_RECHNUNGEN,filterRechnungen,50,'rechnungsdatum')
     ]);
 
     var faelle=results[0]||[];
