@@ -80,6 +80,8 @@
       }
       _state.objekt = objektDatenSammeln();
       speichern();
+      // Sprint 4: Normen-Liste laden (Flow B — statisch, kein KI-Spinner nötig)
+      if (typeof ladeWertgutachtenNormen === 'function') ladeWertgutachtenNormen();
     } else if (step === 3) {
       // Validierung Step 2
       if (!_state.verfahrenSet.length) { toast('Bitte mindestens ein Verfahren wählen', 'err'); return; }
@@ -706,24 +708,31 @@
   var MARKT_PROMPT = [
     'Du bist Assistent eines ö.b.u.v. Sachverständigen für Immobilienwertermittlung.',
     '',
-    'ABSOLUTE REGELN:',
-    '1. HALLUZINATIONSVERBOT: Keine erfundenen Zahlen, Preise, Trends oder Mikrolage-Details. Nur Hypothesen aus allgemeinem Fachwissen zur Region/Objektart.',
-    '2. Alle Einschätzungen im Konjunktiv II: "könnte", "dürfte", "wäre zu erwarten".',
-    '3. Keine konkreten Quadratmeterpreise oder Prognosen — nur strukturelle Marktüberlegungen.',
-    '4. § 407a ZPO: Du lieferst Hypothesen, der SV prüft und entscheidet.',
+    'RECHTSRAHMEN (zu berücksichtigen, aber nicht zu zitieren):',
+    '• Verkehrswert nach §§ 194-199 BauGB',
+    '• Allgemeine Grundsätze nach § 1 ImmoWertV',
+    '• Verfahrenswahl nach § 8 ImmoWertV',
+    '• Bindung an § 407a ZPO (höchstpersönliche Erstattung durch SV)',
     '',
-    'AUFGABE: Strukturiere relevante Marktüberlegungen zu Lage, Objektart und Zustand.',
+    'ABSOLUTE REGELN:',
+    '1. HALLUZINATIONSVERBOT: Keine erfundenen Zahlen, Preise, Trends, Adressen oder Mikrolage-Details. Keine konkreten Bodenrichtwerte, keine €/m²-Prognosen. Nur STRUKTURELLE Marktüberlegungen aus allgemeinem Fachwissen zur Region/Objektart.',
+    '2. Konjunktiv II für ALLE Einschätzungen: "könnte", "dürfte", "wäre zu erwarten", "ließe sich vermuten". Kein Indikativ bei Bewertungsaussagen.',
+    '3. Lagewissen nur auf Ebene Bundesland/Region ("Ballungsraum", "ländlicher Raum", "A-Stadt vs. C-Lage"). Keine Straßennamen, keine konkreten Stadtteil-Preise.',
+    '4. § 407a ZPO-Hinweis: Du lieferst Hypothesen als Gedanken-Anstöße — der SV prüft, recherchiert und entscheidet eigenhändig. Kennzeichne spekulative Aussagen explizit.',
+    '5. Bei fehlenden Angaben: Ausdrücklich benennen, welche Information für eine Einschätzung fehlt.',
+    '',
+    'AUFGABE: Strukturiere relevante Marktüberlegungen zu Lage, Objektart und Zustand — auf dem Niveau eines erfahrenen SV, der sich in die Sache einliest.',
     '',
     'ANTWORTE ausschließlich mit JSON:',
     '{',
-    '  "makrolage": "1–2 Sätze im Konjunktiv II zur Großraum-Einschätzung",',
-    '  "mikrolage": "1–2 Sätze im Konjunktiv II zur unmittelbaren Umgebung",',
-    '  "objekttyp_hinweise": ["string, Hinweise zum Objekttyp, 2–4 Bulletpoints im Konjunktiv II"],',
+    '  "makrolage": "1–2 Sätze im Konjunktiv II zur Großraum-Einschätzung (regionstyp, wirtschaftliche Stellung)",',
+    '  "mikrolage": "1–2 Sätze im Konjunktiv II zur unmittelbaren Umgebung (soweit aus SV-Lagebeschreibung ableitbar)",',
+    '  "objekttyp_hinweise": ["string, strukturelle Hinweise zum Objekttyp, 2–4 Bulletpoints im Konjunktiv II"],',
     '  "zustand_implikationen": ["string, was der Modernisierungsgrad für Marktakzeptanz bedeuten könnte"],',
     '  "risiken_chancen": ["string, was im Gutachten besonders zu prüfen wäre"],',
-    '  "offene_fragen": ["string, was der SV noch recherchieren könnte"]',
+    '  "offene_fragen": ["string, was der SV noch recherchieren könnte — z.B. BORIS-Abfrage, Gutachterausschuss-Daten, Vergleichsverkäufe"]',
     '}',
-    'Keine Einleitung, keine Erklärung.'
+    'Keine Einleitung, keine Erklärung, kein Markdown.'
   ].join('\n');
 
   window.wgKIMarktanalyse = async function() {
@@ -1295,6 +1304,79 @@
     // KI-Marktanalyse rehydrieren
     if (_state.ki_markt) renderMarktAnalyse(_state.ki_markt);
   }
+
+  // ═══════════════════════════════════════════════════════
+  // Sprint 4: Normen-Picker (Flow B)
+  //
+  // Ruft /normen-picker mit flow=B + zweck + objektart auf.
+  // Keine Progressive Disclosure nötig — Flow B ist statisch schnell (~50ms).
+  // Bei Backend-Ausfall: Block bleibt leer mit dezentem Fallback-Text.
+  // ═══════════════════════════════════════════════════════
+  async function ladeWertgutachtenNormen() {
+    var el = $('wgNormenListe');
+    if (!el) return;
+
+    var zweck     = val('wg-zweck') || 'privat';
+    var objektart = val('wg-objektart') || 'efh';
+
+    // Spinner
+    el.innerHTML = '<div style="padding:8px 10px;font-size:11px;color:var(--text3);display:flex;align-items:center;gap:6px;">'
+      + '<span style="display:inline-block;width:10px;height:10px;border-radius:50%;border:2px solid var(--accent);border-top-color:transparent;animation:spin .6s linear infinite;"></span>'
+      + 'Lade Normen für ' + _zweckLabel(zweck) + ' / ' + _objektartLabel(objektart) + '…'
+      + '</div>';
+
+    try {
+      var res = await fetch('/.netlify/functions/normen-picker', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          flow: 'B',
+          zweck: zweck,
+          objektart: objektart,
+          max: 12
+        })
+      });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      var data = await res.json();
+      var normen = Array.isArray(data.normen) ? data.normen : [];
+
+      if (!normen.length) {
+        el.innerHTML = '<div style="padding:8px 10px;font-size:11px;color:var(--text3);font-style:italic;">Keine Normen geladen — Backend prüfen</div>';
+        return;
+      }
+
+      el.innerHTML = normen.map(_renderWGNormItem).join('');
+    } catch (e) {
+      console.warn('[wertgutachten-normen] Fehler:', e.message);
+      el.innerHTML = '<div style="padding:8px 10px;font-size:11px;color:var(--text3);font-style:italic;">Normen-Übersicht momentan nicht verfügbar (Offline-Modus)</div>';
+    }
+  }
+
+  function _renderWGNormItem(n) {
+    // Zusätzliche HTML-Escape-Sicherheit
+    function esc(v) { return String(v == null ? '' : v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+    var nr    = esc(n.n || '');
+    var titel = esc(n.t || '');
+    var gw    = esc(n.g || '');
+    return '<div style="padding:8px 10px;background:rgba(255,255,255,.02);border:1px solid rgba(59,130,246,.1);border-radius:6px;font-size:11px;line-height:1.5;">'
+      +   '<div style="font-weight:700;color:var(--accent);">' + nr + '</div>'
+      +   '<div style="color:var(--text2);margin-top:2px;">' + titel + '</div>'
+      +   (gw ? '<div style="color:var(--text3);margin-top:3px;font-size:10px;">' + gw + '</div>' : '')
+      + '</div>';
+  }
+
+  function _zweckLabel(z) {
+    var map = { privat: 'Privatgutachten', gericht: 'Gerichtsgutachten', bank: 'Bankgutachten', versicherung: 'Versicherungsgutachten', steuer: 'Steuergutachten' };
+    return map[z] || z;
+  }
+
+  function _objektartLabel(o) {
+    var map = { efh: 'EFH', dhh: 'DHH', rh: 'Reihenhaus', mfh: 'MFH', etw: 'ETW', geh: 'Gewerbe', gru: 'Grundstück' };
+    return map[o] || o;
+  }
+
+  // Re-trigger bei Zweck-/Objektart-Wechsel (wenn User Step 1 ändert und wieder in Step 2 geht)
+  // Wird automatisch via wgNextStep(2) erneut aufgerufen.
 
   if (document.readyState !== 'loading') init();
   else document.addEventListener('DOMContentLoaded', init);

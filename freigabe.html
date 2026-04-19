@@ -645,7 +645,12 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-ui);min-heigh
         var konRes = document.getElementById('konsistenz-result');
         if (konRes) konRes.innerHTML = '<div style="padding:10px;font-size:12px;color:var(--text3);">⏳ KI-Konsistenz-Check §4 ↔ §6…</div>';
         try {
-          var konsistenz = await PROVA.konsistenzCheck(p4, p6);
+          // v3.4: Schadensart aus localStorage durchreichen → KI bekommt typ-passende Normen
+          // Fallback-Chain konsistent mit anderen Modulen (stellungnahme-logic, jveg-logic)
+          var saForCheck = sessionStorage.getItem('prova_current_schadenart')
+                        || localStorage.getItem('prova_schadenart')
+                        || '';
+          var konsistenz = await PROVA.konsistenzCheck(p4, p6, saForCheck);
           renderKonsistenzPanel(konsistenz);
         } catch(e) {
           if (konRes) konRes.innerHTML = '<div style="padding:8px;font-size:11px;color:var(--text3);font-style:italic;">Konsistenz-Check übersprungen: ' + e.message + '</div>';

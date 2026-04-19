@@ -1,9 +1,14 @@
-// PROVA Systems — KI-Proxy Netlify Function v3.3
+// PROVA Systems — KI-Proxy Netlify Function v3.5
 // Aufgaben-Router: messages-Format + aufgabe-Format
 // Neu v3.1: user_kontext (aus Einstellungen) wird automatisch in jeden System-Prompt eingewebt.
 // Neu v3.2: ki_analyse_modus ('schnell'|'praezise') wählt gpt-4o-mini vs gpt-4o — nur für schwere Aufgaben.
 // Neu v3.3: Fachwissen-Provider (prova-fachwissen.js) liefert Live-Normen aus Airtable
 //           mit 3-Schicht-Fallback. Bei Provider-Fehler läuft der Original-Prompt unverändert weiter.
+// Neu v3.4: handleMessages liest optional body.schadensart + body.paragraph_nr und injiziert
+//           paragraphen-spezifische Fachwissen-Normen. Trigger ist rein opt-in (Felder fehlen
+//           = exakt heutiges Verhalten). Nutzer: paragraph-generator.js § 1-7.
+// Neu v3.5: handleAssistInline (stellungnahme-logic) bekommt Fachwissen-Injection.
+//           Trigger: body.schadenart (vorhanden schon im heutigen Aufruf). Konservativ: 5 Normen.
 // API-Key: Netlify Env Var OPENAI_API_KEY
 
 // ── Fachwissen-Provider: liefert Airtable-Live-Normen mit Fallback-Kaskade
@@ -214,6 +219,43 @@ async function handleMessages(body, apiKey) {
   let model = body.model || 'gpt-4o-mini';
   if (model.includes('haiku') || model.includes('sonnet') || model.includes('opus')) model = 'gpt-4o-mini';
 
+  // ── FACHWISSEN-INJECTION v3.4 (opt-in via body.schadensart / body.paragraph_nr)
+  // SAFE: wenn Felder fehlen → messages bleiben unverändert → exakt heutiges Verhalten
+  // Konsumenten: paragraph-generator.js (§§ 1-7)
+  const wantsFachwissen = body.schadensart || body.paragraph_nr;
+  if (wantsFachwissen) {
+    // Paragraph-abhängige Normen-Anzahl (SV-fachlich kuratiert)
+    //   §1-3 Kontextparagraphen    → 3 Normen (nur grobe Orientierung)
+    //   §4 Befund, §7 Beweisfragen → 5 Normen (Mess- und Beweisnormen)
+    //   §5 Ursache, §6 Fachurteil  → 8 Normen (volle fachliche Tiefe)
+    const pnr = parseInt(body.paragraph_nr, 10);
+    let maxNormen = 5;
+    if ([1,2,3].includes(pnr)) maxNormen = 3;
+    else if ([5,6].includes(pnr)) maxNormen = 8;
+
+    try {
+      const fw = await FW.buildPromptKontext({
+        schadensart: body.schadensart || '',
+        typ: 'paragraph_gen',
+        maxNormen: maxNormen
+      });
+      if (fw && fw.text) {
+        const fachwissenBlock = '\n\n══════════════ AKTUELLE FACHNORMEN (kuratiert, aus PROVA-Datenbank) ══════════════\n' + fw.text + '\n════════════════════════════════════════════════════════════════════════════════\n';
+        // System-Message erweitern (append) — alle anderen messages unverändert
+        const sysIdx = messages.findIndex(m => m.role === 'system');
+        if (sysIdx >= 0) {
+          const m = messages[sysIdx];
+          const origText = typeof m.content === 'string' ? m.content
+                         : (Array.isArray(m.content) ? m.content.map(p => p.text || '').join('\n') : '');
+          messages[sysIdx] = { role: 'system', content: origText + fachwissenBlock };
+        }
+        console.log(`[ki-proxy:messages §${pnr||'?'}] Fachwissen-Quelle: ${fw.source} | Normen: ${fw.anzahl} | SA: ${body.schadensart || '—'}`);
+      }
+    } catch (e) {
+      console.warn('[ki-proxy:messages] Fachwissen-Fehler (Original-Prompt bleibt aktiv):', e.message);
+    }
+  }
+
   const result = await callOpenAI({ model, max_tokens: body.max_tokens || 500, messages }, apiKey);
   const text = result.choices?.[0]?.message?.content || '';
   return jsonResponse({ content: [{ type: 'text', text }], model: result.model, usage: result.usage });
@@ -268,6 +310,28 @@ VERBOTEN: "dürfte eindeutig", "dürfte offensichtlich", "dürfte klar" — logi
 Schadensfall: \${schadenart}
 Gib NUR den korrigierten deutschen Text zurück. Perfekte Grammatik und Zeichensetzung.`;
 
+  // ── FACHWISSEN-INJECTION v3.5 (Sprint 3.5)
+  // SAFE: bei Fehler oder fehlender schadenart → Original-Prompt bleibt
+  // Konservativ: 5 Normen (Inline-Assist ist kleinteiliger als Fachurteil-Entwurf)
+  let systemMsgFinal = systemMsg;
+  let fwSource = 'none';
+  if (schadenart) {
+    try {
+      const fw = await FW.buildPromptKontext({
+        schadensart: schadenart,
+        typ: 'assist_inline',
+        maxNormen: 5
+      });
+      if (fw && fw.text) {
+        systemMsgFinal = systemMsg + '\n\n══════════════ AKTUELLE FACHNORMEN (kuratiert, aus PROVA-Datenbank) ══════════════\n' + fw.text + '\n════════════════════════════════════════════════════════════════════════════════\n';
+        fwSource = fw.source;
+      }
+    } catch (e) {
+      console.warn('[ki-proxy:assistInline] Fachwissen-Fehler (Original-Prompt bleibt aktiv):', e.message);
+    }
+  }
+  console.log(`[ki-proxy:assistInline] Fachwissen-Quelle: ${fwSource} | SA: ${schadenart || '—'}`);
+
   const res = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
     headers: { 'Authorization': 'Bearer ' + apiKey, 'Content-Type': 'application/json' },
@@ -276,7 +340,7 @@ Gib NUR den korrigierten deutschen Text zurück. Perfekte Grammatik und Zeichens
       temperature: 0.10,
       max_tokens: 2000,
       messages: [
-        { role: 'system', content: appendUserContext(systemMsg, body.user_kontext) },
+        { role: 'system', content: appendUserContext(systemMsgFinal, body.user_kontext) },
         { role: 'user', content: userMsg }
       ]
     })

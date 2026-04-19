@@ -944,6 +944,9 @@ AUFGABE: Schreibe einen professionellen §6-Denkanstoß der AUSSCHLIESSLICH auf 
       body:JSON.stringify({
         model: 'gpt-4o-mini',
         max_tokens: 600,
+        // v3.5: Fachwissen-Kontext triggern (§6 → 8 Normen volle Tiefe)
+        schadensart: sa !== '—' ? sa : '',
+        paragraph_nr: 6,
         messages:[
           {role:'system', content: systemPrompt},
           {role:'user',   content: userPrompt}
@@ -985,6 +988,9 @@ async function ausformulieren() {
       body:JSON.stringify({
         model:'gpt-4o-mini',
         max_tokens:700,
+        // v3.5: Fachwissen-Kontext triggern (Weg B — Ausformulieren §6)
+        schadensart: sa !== '—' ? sa : '',
+        paragraph_nr: 6,
         messages:[
           {role:'system', content:`Du bist ein öffentlich bestellter und vereidigter Sachverständiger für Schäden an Gebäuden mit 30 Jahren Berufserfahrung. Du formulierst §6 Fachurteile für Gutachten.
 
@@ -1047,57 +1053,113 @@ async function ladeNormen() {
   const el = document.getElementById('normenListe');
   if(!el) return;
 
-  // Erste Stufe: statische Vorauswahl sofort zeigen
+  // ═══════════════════════════════════════════════════════
+  // Sprint 3.6: Progressive Disclosure
+  //
+  // PHASE 1 (SOFORT, ~150ms): Provider liefert 5 typ-passende Normen aus 264
+  //   → rendert sofort, User sieht nie Spinner/Leere
+  // PHASE 2 (nach ~1.1s): KI wählt aus denselben 264 die kontext-relevanten
+  //   → tauscht Liste nur aus wenn User noch nichts ausgewählt hat
+  // FALLBACK: Bei Backend-Fehler lokale NORMEN_DB (50 Normen, Offline-Safe)
+  //
+  // Race-Safe: _pickerState trackt ob User schon eine Norm eingefügt hat
+  // ═══════════════════════════════════════════════════════
+
+  // Lokaler Fallback bei Backend-Ausfall
   const tag = SA_TAGS[sa];
-  const statisch = tag
-    ? NORMEN_DB.filter(n => n.sa.includes(tag)).slice(0,3)
-    : NORMEN_DB.slice(0,3);
+  const lokalStatisch = tag
+    ? NORMEN_DB.filter(n => n.sa.includes(tag)).slice(0,5)
+    : NORMEN_DB.slice(0,5);
 
-  el.innerHTML = '<div style="padding:8px 12px;font-size:11px;color:var(--text3);display:flex;align-items:center;gap:6px;"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;border:2px solid var(--accent);border-top-color:transparent;animation:spin .6s linear infinite;"></span>KI analysiert Diktat…</div>'
-    + statisch.map(n => renderNormItem(n)).join('');
+  // Race-Safe-State: global am window, damit normEinfuegen es lesen kann
+  window._normenPickerState = { userPicked: false, phase: 'init' };
 
-  // Zweite Stufe: KI liest Diktat und schlägt spezifische Normen vor
+  const saForPicker = sa !== '—' ? sa : '';
   const diktat  = (localStorage.getItem('prova_transkript') || '').trim();
   const entwurf = (localStorage.getItem('prova_entwurf_text') || '').substring(0,800).trim();
   const kontext = diktat || entwurf;
 
+  // ─── PHASE 1: fast-Call (~150ms, User schaut noch woanders hin) ───
+  // Während Phase 1 läuft: Spinner mit typ-passenden Lokalnormen als Backup
+  el.innerHTML = '<div style="padding:8px 12px;font-size:11px;color:var(--text3);display:flex;align-items:center;gap:6px;"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;border:2px solid var(--accent);border-top-color:transparent;animation:spin .6s linear infinite;"></span>Lade Normen…</div>'
+    + lokalStatisch.map(n => renderNormItem(n)).join('');
+
+  let phase1Normen = null;
+  try {
+    const r1 = await fetch('/.netlify/functions/normen-picker', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ schadensart: saForPicker, mode: 'fast', max: 5 })
+    });
+    if (r1.ok) {
+      const d1 = await r1.json();
+      if (Array.isArray(d1.normen) && d1.normen.length) {
+        phase1Normen = d1.normen;
+      }
+    }
+  } catch(e) {
+    console.warn('[normen-picker] Phase 1 fehlgeschlagen, nutze lokalen Fallback:', e.message);
+  }
+
+  // Phase 1 gerendert — mit Backend-Ergebnis oder lokalem Fallback
+  const phase1Display = phase1Normen || lokalStatisch;
+  el.innerHTML = phase1Display.map(n => renderNormItem(n)).join('')
+    + '<div id="norm-picker-hint" style="padding:4px 10px;font-size:10px;color:var(--text3);display:flex;align-items:center;gap:6px;opacity:.7;"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;border:2px solid var(--accent);border-top-color:transparent;animation:spin .6s linear infinite;"></span>KI verfeinert Auswahl…</div>';
+  window._normenPickerState.phase = 'fast-done';
+
+  // Ohne Kontext kein KI-Refinement nötig
   if(!kontext) {
-    // Nur statische Normen zeigen
-    el.innerHTML = statisch.map(n => renderNormItem(n)).join('');
+    const hint = document.getElementById('norm-picker-hint');
+    if (hint) hint.remove();
+    window._normenPickerState.phase = 'done-no-ki';
     return;
   }
 
+  // ─── PHASE 2: smart-Call (KI-Verfeinerung, ~1.1s im Hintergrund) ───
   try {
-    const normenListe = NORMEN_DB.map(n => n.n + ' — ' + n.t + (n.g?' ('+n.g+')':'')).join('\n');
-    const res = await fetch('/.netlify/functions/ki-proxy', {
+    const r2 = await fetch('/.netlify/functions/normen-picker', {
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({
-        model:'gpt-4o-mini',
-        max_tokens:200,
-        messages:[
-          {role:'system', content:'Du bist ein erfahrener Bausachverständiger. Antworte NUR mit einem JSON-Array der Norm-Bezeichnungen, z.B. ["DIN 4108-2","WTA 6-1-01/D"]. Keine Erklärungen, kein Markdown.'},
-          {role:'user', content:'Wähle aus der folgenden Liste die 3-5 relevantesten Normen für diesen Fall aus.\n\nFall: '+sa+'\nDiktat/Sichtbefunde:\n'+kontext.substring(0,600)+'\n\nVerfügbare Normen:\n'+normenListe+'\n\nGib NUR ein JSON-Array zurück.'}
-        ]
+        schadensart: saForPicker,
+        kontext: kontext,
+        mode: 'smart',
+        max: 5
       })
     });
-    if(!res.ok) throw new Error('HTTP '+res.status);
-    const d = await res.json();
-    const txt = (d.content&&d.content[0]&&d.content[0].text)||
-                (d.choices&&(d.choices[0]&&d.choices[0].message&&d.choices[0].message.content))||'';
+    if (!r2.ok) throw new Error('HTTP '+r2.status);
+    const d2 = await r2.json();
+    const smartNormen = Array.isArray(d2.normen) ? d2.normen : [];
 
-    let vorschlag = [];
-    try {
-      const match = txt.match(/\[.*?\]/s);
-      if(match) vorschlag = JSON.parse(match[0]);
-    } catch(e) {}
+    // Race-Safe: Nur austauschen wenn User noch nichts eingefügt hat
+    if (window._normenPickerState.userPicked) {
+      // User hat schon gewählt — respektieren, nur Hinweis entfernen
+      const hint = document.getElementById('norm-picker-hint');
+      if (hint) hint.remove();
+      window._normenPickerState.phase = 'done-user-picked';
+      return;
+    }
 
-    const kiNormen = vorschlag.length
-      ? vorschlag.map(nr => NORMEN_DB.find(n => n.n===nr)).filter(Boolean)
-      : statisch;
-
-    el.innerHTML = kiNormen.map(n => renderNormItem(n)).join('');
+    if (smartNormen.length) {
+      // Verfeinerte KI-Auswahl einsetzen
+      el.innerHTML = smartNormen.map(n => renderNormItem(n)).join('')
+        + '<div style="padding:4px 10px;font-size:10px;color:var(--accent);opacity:.75;">✨ Auswahl KI-verfeinert</div>';
+      // Nach 3s Badge ausblenden, damit es nicht ewig steht
+      setTimeout(() => {
+        const ref = document.querySelector('#normenListe > div:last-child');
+        if (ref && ref.textContent.includes('KI-verfeinert')) ref.style.display = 'none';
+      }, 3000);
+      window._normenPickerState.phase = 'done-smart';
+    } else {
+      // Smart-Mode lieferte nichts Sinnvolles → Phase-1-Normen bleiben
+      const hint = document.getElementById('norm-picker-hint');
+      if (hint) hint.remove();
+      window._normenPickerState.phase = 'done-no-smart';
+    }
   } catch(e) {
-    el.innerHTML = statisch.map(n => renderNormItem(n)).join('');
+    // Smart fehlgeschlagen → Phase 1 bleibt bestehen, Hinweis entfernen
+    console.warn('[normen-picker] Phase 2 fehlgeschlagen:', e.message);
+    const hint = document.getElementById('norm-picker-hint');
+    if (hint) hint.remove();
+    window._normenPickerState.phase = 'done-smart-error';
   }
 }
 
@@ -1111,6 +1173,12 @@ function renderNormItem(n) {
 }
 
 function normEinfuegen(nr, titel) {
+  // Sprint 3.6: Race-Safe — Progressive Disclosure respektiert User-Choice
+  // Sobald der User eine Norm klickt, wird die Phase-2-Verfeinerung nicht mehr überschrieben.
+  if (window._normenPickerState) {
+    window._normenPickerState.userPicked = true;
+  }
+
   const insert = `\n(gem. ${nr} – ${titel})`;
   const ta = selectedWeg==='A' ? document.getElementById('svTextA') :
     (document.getElementById('ausform-wrap').style.display!=='none' ?

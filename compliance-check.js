@@ -201,9 +201,10 @@
    * KI-basierter Konsistenz-Check zwischen §4 und §6 eines Gutachtens.
    * @param {string} text_p4 - § 4 Befund-Text
    * @param {string} text_p6 - § 6 Fachurteil-Text
+   * @param {string} [schadensart] - Schadensart (Text oder Code), optional — triggert Fachwissen-Kontext im KI-Prompt
    * @returns {Promise<object>} {konsistent, issues:[], zusammenfassung}
    */
-  PROVA.konsistenzCheck = async function(text_p4, text_p6) {
+  PROVA.konsistenzCheck = async function(text_p4, text_p6, schadensart) {
     if (!text_p4 || !text_p6) {
       throw new Error('§ 4 und § 6 werden beide benötigt');
     }
@@ -217,6 +218,10 @@
           model: 'gpt-4o-mini',
           max_tokens: 1500,
           temperature: 0.1,
+          // v3.4: Fachwissen-Kontext — schadensart durchreichen (Server normalisiert)
+          // Konsistenz-Check behandelt §4↔§6 → paragraph_nr: 6 für volle Normen-Tiefe (8 Normen)
+          schadensart: schadensart || '',
+          paragraph_nr: 6,
           messages: [
             { role: 'system', content: KONSISTENZ_SYSTEM_PROMPT },
             { role: 'user',   content: userMsg }

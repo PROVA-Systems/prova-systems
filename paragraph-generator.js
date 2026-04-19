@@ -273,6 +273,9 @@
           model: 'gpt-4o-mini',
           max_tokens: 1200,
           temperature: 0.2,
+          // v3.4: Fachwissen-Kontext triggern (Server injiziert typ-abhängige Normen)
+          schadensart: (ctx && ctx.schadensart) || '',
+          paragraph_nr: nr,
           messages: [
             { role: 'system', content: prompt.system },
             { role: 'user',   content: userMsg }
@@ -309,6 +312,9 @@
           model: 'gpt-4o-mini',
           max_tokens: 1500,
           temperature: 0.15,
+          // v3.4: Fachwissen-Kontext triggern (§ 6 Fachurteil → max. 8 Normen)
+          schadensart: (ctx && ctx.schadensart) || '',
+          paragraph_nr: 6,
           messages: [
             { role: 'system', content: prompt.system },
             { role: 'user',   content: userMsg }

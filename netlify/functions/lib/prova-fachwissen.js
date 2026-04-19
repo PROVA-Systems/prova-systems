@@ -157,11 +157,68 @@ async function getNormen() {
  * Filtert Normen nach Schadensart-Code (WS, SC, BS, SS, BA, ES, BR, ALL).
  * Mehrere Codes komma-separiert möglich: "WS,SC"
  */
-async function normenFuerSchadensart(saCode) {
-  const { normen, source } = await getNormen();
-  if (!saCode) return { normen, source };
+// ══════════════════════════════════════════════════════════════
+// SCHADENSART-NORMALISIERUNG (v3 — Sprint 3)
+//
+// Akzeptiert sowohl Codes ("WS") als auch volle Texte ("Wasserschaden"),
+// einzeln oder komma-separiert. Unbekannte Werte werden unverändert
+// durchgelassen (kein stiller Fail — safe by default).
+//
+// Warum: Die Browser-Module speichern Schadensart als Text in localStorage
+// (z.B. "Wasserschaden"). Die NORMEN-DB nutzt Codes (z.B. "WS"). Dieser
+// Normalisierer überbrückt beide Welten transparent für alle Aufrufer.
+// ══════════════════════════════════════════════════════════════
+const SA_TEXT_TO_CODE = {
+  // Wasserschaden
+  'WASSERSCHADEN': 'WS', 'WASSERSCHÄDEN': 'WS', 'WASSER': 'WS', 'LEITUNGSWASSER': 'WS',
+  // Schimmel/Feuchte
+  'SCHIMMEL': 'SC', 'SCHIMMELPILZ': 'SC', 'SCHIMMELPILZE': 'SC', 'FEUCHTE': 'SC', 'FEUCHTIGKEIT': 'SC',
+  // Brandschaden
+  'BRANDSCHADEN': 'BS', 'BRAND': 'BS', 'FEUER': 'BS', 'FEUERSCHADEN': 'BS',
+  // Sturmschaden
+  'STURMSCHADEN': 'SS', 'STURM': 'SS', 'HAGELSCHADEN': 'SS', 'HAGEL': 'SS',
+  // Baumangel
+  'BAUMANGEL': 'BA', 'BAUMÄNGEL': 'BA', 'MANGEL': 'BA', 'MÄNGEL': 'BA',
+  // Elementarschaden
+  'ELEMENTARSCHADEN': 'ES', 'ELEMENTAR': 'ES', 'ÜBERSCHWEMMUNG': 'ES', 'HOCHWASSER': 'ES',
+  // Barrierefrei
+  'BARRIEREFREI': 'BR', 'BARRIEREFREIHEIT': 'BR'
+};
 
-  const codes = String(saCode).toUpperCase().split(',').map(s => s.trim()).filter(Boolean);
+/**
+ * Normalisiert eine Schadensart-Eingabe zu Codes.
+ * Akzeptiert: "Wasserschaden", "WS", "Wasserschaden,Schimmel", "WS,SC", gemischt.
+ * @param {string} input
+ * @returns {string} komma-separierte Codes, uppercase, z.B. "WS,SC"
+ */
+function normalizeSaInput(input) {
+  if (!input) return '';
+  const parts = String(input).split(/[,;|]/).map(s => s.trim()).filter(Boolean);
+  const codes = parts.map(p => {
+    const up = p.toUpperCase();
+    // Bereits Code-Format (2-3 Zeichen, nur Buchstaben)?
+    if (/^[A-Z]{2,3}$/.test(up)) return up;
+    // Text-Mapping
+    if (SA_TEXT_TO_CODE[up]) return SA_TEXT_TO_CODE[up];
+    // Fuzzy-Match: "Wasserschaden, Leitungswasser" → suche Teil-String
+    for (const [text, code] of Object.entries(SA_TEXT_TO_CODE)) {
+      if (up.includes(text)) return code;
+    }
+    // Unbekannt → Original durchlassen (Suche wird dann vermutlich nichts finden, aber kein Fehler)
+    return up;
+  });
+  // Dedup
+  return [...new Set(codes)].join(',');
+}
+
+async function normenFuerSchadensart(saInput) {
+  const { normen, source } = await getNormen();
+  if (!saInput) return { normen, source };
+
+  const normalizedCodes = normalizeSaInput(saInput);
+  if (!normalizedCodes) return { normen, source };
+
+  const codes = normalizedCodes.split(',').filter(Boolean);
   const filtered = normen.filter(n => {
     const nsa = String(n.sa || '').toUpperCase();
     if (nsa.includes('ALL')) return true;
@@ -233,11 +290,73 @@ function _resetCache() {
   _cache = { data: null, timestamp: 0, source: null };
 }
 
+// ══════════════════════════════════════════════════════════════
+// FLOW B — WERTGUTACHTEN-NORMEN (Sprint 4)
+//
+// Statische Normen-Matrix für Immobilienwertermittlung. Diese Normen
+// sind stabile Rechtsvorschriften die sich sehr selten ändern
+// (ImmoWertV-Novelle 2022 war die letzte große Anpassung).
+// Daher kein Airtable-Sync nötig — hier als kuratierte Referenz.
+//
+// Struktur: { num, titel, gw, zweck }
+//   zweck: "alle" | "bank" | "gericht" | "steuer"
+// ══════════════════════════════════════════════════════════════
+const WERTGUTACHTEN_NORMEN = [
+  // ─── Kern-Normen (IMMER, egal Zweck/Objektart) ───
+  { num: '§§ 194-199 BauGB', titel: 'Verkehrswert — Begriff und Ermittlung', gw: 'Verkehrswert = Preis zum Stichtag im gewöhnlichen Geschäftsverkehr', zweck: 'alle' },
+  { num: '§ 1 ImmoWertV',    titel: 'Allgemeine Grundsätze der Wertermittlung', gw: 'Modellkonformität, Marktanpassung, Berücksichtigung wertrelevanter Umstände', zweck: 'alle' },
+  { num: '§ 8 ImmoWertV',    titel: 'Verfahrenswahl und Gewichtung', gw: 'Wahl nach Marktgepflogenheiten; mehrere Verfahren möglich', zweck: 'alle' },
+  { num: '§§ 24-26 ImmoWertV', titel: 'Vergleichswertverfahren', gw: 'Mind. 3 Vergleichsobjekte; Anpassungsfaktoren dokumentieren', zweck: 'alle' },
+  { num: '§§ 27-34 ImmoWertV', titel: 'Ertragswertverfahren', gw: 'Rohertrag, Bewirtschaftungskosten, Liegenschaftszins, Restnutzungsdauer', zweck: 'alle' },
+  { num: '§§ 35-39 ImmoWertV', titel: 'Sachwertverfahren', gw: 'Bodenwert + Gebäudesachwert (NHK 2010) − Alterswertminderung', zweck: 'alle' },
+  { num: '§ 407a ZPO',       titel: 'Pflichten des Sachverständigen', gw: 'Unverzügliche Anzeige bei Überforderung, höchstpersönliche Erstattung', zweck: 'alle' },
+  { num: 'WoFlV',            titel: 'Wohnflächenverordnung', gw: 'Balkone 25%, Dachschrägen nach lichter Höhe 1-2m zu 50%, <1m 0%', zweck: 'alle' },
+  { num: 'DIN 277',          titel: 'Grundflächen und Rauminhalte', gw: 'BGF, BRI, NGF nach Bauwerksteilen', zweck: 'alle' },
+  { num: 'NHK 2010',         titel: 'Normalherstellungskosten (Anlage 4 ImmoWertV)', gw: 'Kostenkennwerte €/m² BGF nach Gebäudestandards 1-5', zweck: 'alle' },
+  { num: 'SVV 2021',         titel: 'Sachverständigenverordnung', gw: 'Bestellungsvoraussetzungen, Pflichten ö.b.u.v. SV', zweck: 'alle' },
+
+  // ─── Zweck: Bankgutachten (Beleihungswert) ───
+  { num: '§ 16 BelWertV',    titel: 'Beleihungswert — Begriff', gw: 'Langfristig nachhaltig erzielbarer Wert unter Ausschluss spekulativer Elemente', zweck: 'bank' },
+  { num: '§§ 17-21 BelWertV', titel: 'Beleihungswertverfahren', gw: 'Sachwert- und Ertragswertverfahren separat, Sicherheitsabschläge', zweck: 'bank' },
+  { num: '§ 22 BelWertV',    titel: 'Bewirtschaftungskosten', gw: 'Mindestansätze für Instandhaltung, Mietausfallwagnis, Verwaltung', zweck: 'bank' },
+  { num: 'PfandBG',          titel: 'Pfandbriefgesetz — Deckungsanforderungen', gw: 'Beleihungsgrenze 60% des Beleihungswerts', zweck: 'bank' },
+
+  // ─── Zweck: Gerichtsgutachten ───
+  { num: '§ 404 ZPO',        titel: 'Auswahl des Sachverständigen', gw: 'Bevorzugt öffentlich bestellte SV', zweck: 'gericht' },
+  { num: '§ 411 ZPO',        titel: 'Schriftliches Gutachten', gw: 'Frist, Unterschrift, Stempel; Rückfragen-Pflicht', zweck: 'gericht' },
+  { num: '§ 412 ZPO',        titel: 'Neues Gutachten', gw: 'Bei Widerspruch oder Ergänzungsbedarf', zweck: 'gericht' },
+
+  // ─── Zweck: Steuergutachten ───
+  { num: '§§ 151-157 BewG',  titel: 'Grundbesitzwert für Erbschaft/Schenkung', gw: 'Typisierende Bewertung für steuerliche Zwecke', zweck: 'steuer' },
+  { num: 'R B 179 ErbStR',   titel: 'Niedrigerer gemeiner Wert', gw: 'Nachweis durch Gutachten nach § 198 BewG möglich', zweck: 'steuer' }
+];
+
+/**
+ * Liefert Wertgutachten-Normen gefiltert nach Zweck.
+ * Kern-Normen (zweck:"alle") sind immer dabei.
+ *
+ * @param {string} zweck - "alle" | "privat" | "bank" | "gericht" | "steuer" | "versicherung"
+ * @returns {Array} Gefilterte Normen-Liste
+ */
+function wertgutachtenNormen(zweck) {
+  const z = String(zweck || 'alle').toLowerCase();
+  // privat + versicherung = nur Kern-Normen
+  if (z === 'privat' || z === 'versicherung' || z === 'alle' || z === '') {
+    return WERTGUTACHTEN_NORMEN.filter(n => n.zweck === 'alle');
+  }
+  // Alle anderen Zwecke: Kern + Zweck-spezifisch
+  return WERTGUTACHTEN_NORMEN.filter(n => n.zweck === 'alle' || n.zweck === z);
+}
+
 module.exports = {
   getNormen,
   normenFuerSchadensart,
   buildPromptKontext,
+  normalizeSaInput,
+  wertgutachtenNormen,
   BASIS_FALLBACK,
+  SA_TEXT_TO_CODE,
+  WERTGUTACHTEN_NORMEN,
   _getCacheState,
   _resetCache
 };
