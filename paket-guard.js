@@ -603,7 +603,7 @@
         '<p>Sie haben diesen Monat alle <strong>' + status.gesamtLimit + ' Fälle</strong> verbraucht. ',
         'Kaufen Sie ein Zusatz-Paket oder warten Sie auf das Monats-Reset.</p>',
         '<div class="pg-btns">',
-          '<button class="pg-btn-upgrade" onclick="window.location.href=\"app-pro.html#addon\"">',
+          '<button class="pg-btn-upgrade" onclick="window.location.href=\"app.html#addon\"">',
             '➕ Zusatz-Fälle kaufen',
           '</button>',
           '<button class="pg-btn-back" id="pg-back-kontingent">← Zurück</button>',

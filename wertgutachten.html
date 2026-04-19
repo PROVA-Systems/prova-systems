@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wertgutachten · PROVA</title>
+<script src="prova-preise.js"></script>
+<script src="paket-guard.js"></script>
+<script src="auth-guard.js"></script>
+<script src="theme.js"></script>
+<script src="nav.js" defer></script>
+<link rel="stylesheet" href="prova-design.css">
+<style>
+:root{
+  --bg:#0b1220;--bg2:#111827;--bg3:#161f30;
+  --surface:#1c2537;--surface2:#222d42;--surface3:#2a3550;
+  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);
+  --text:#e8eaf0;--text2:#aab4cb;--text3:#6b7a99;
+  --accent:#4f8ef7;--accent2:#3a7be0;
+  --green:#10b981;--red:#ef4444;--warn:#f59e0b;--purple:#8b5cf6;
+  --r-sm:6px;--r-md:10px;--r-lg:14px;--r-xl:18px;
+  --font-ui:'DM Sans',system-ui,sans-serif;
+  --topbar-h:52px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--font-ui);font-size:14px;line-height:1.5;}
+.app-shell{min-height:100vh;}
+.main{display:flex;flex-direction:column;min-height:100vh;}
+.topbar{height:var(--topbar-h);background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 20px;position:sticky;top:0;z-index:50;}
+.topbar-title{font-size:15px;font-weight:700;}
+.topbar-title span{color:var(--text3);font-weight:400;}
+.page{flex:1;padding:24px 24px 40px;max-width:1100px;margin:0 auto;width:100%;}
+
+h1{font-size:22px;font-weight:700;margin-bottom:6px;}
+.page-sub{font-size:13px;color:var(--text3);margin-bottom:24px;}
+
+/* Wizard-Steps */
+.wizard-steps{display:flex;gap:0;margin-bottom:24px;}
+.wz-step{flex:1;display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--surface);border:1px solid var(--border);border-right:none;font-size:12px;font-weight:600;color:var(--text3);}
+.wz-step:first-child{border-radius:10px 0 0 10px;}
+.wz-step:last-child{border-radius:0 10px 10px 0;border-right:1px solid var(--border);}
+.wz-step.active{background:rgba(139,92,246,.1);border-color:rgba(139,92,246,.3);color:var(--purple);}
+.wz-step.done{color:var(--green);}
+.wz-step-num{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;background:var(--bg3);border:1.5px solid currentColor;}
+
+/* Panel */
+.wz-panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:20px;margin-bottom:16px;}
+.wz-panel[hidden]{display:none;}
+.panel-title{font-size:16px;font-weight:700;margin-bottom:4px;}
+.panel-legal{font-size:11px;color:var(--text3);margin-bottom:16px;line-height:1.5;}
+
+/* Form */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
+.form-grid-1{display:grid;grid-template-columns:1fr;gap:12px;margin-bottom:12px;}
+.form-grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:12px;}
+label{font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px;display:block;}
+input[type=text],input[type=number],input[type=date],select,textarea{width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;}
+textarea{min-height:80px;resize:vertical;}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent);}
+.hint{font-size:10px;color:var(--text3);margin-top:2px;font-style:italic;}
+
+/* Verfahren-Wahl */
+.verf-choice{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px;}
+.verf-card{padding:16px;background:var(--bg3);border:2px solid var(--border);border-radius:10px;cursor:pointer;transition:all .15s;text-align:center;position:relative;}
+.verf-card:hover{border-color:var(--border2);}
+.verf-card.selected{border-color:var(--purple);background:rgba(139,92,246,.06);}
+.verf-card.selected::after{content:'✓';position:absolute;top:6px;right:8px;color:var(--purple);font-weight:700;font-size:14px;}
+.verf-card.soon{opacity:.45;cursor:not-allowed;}
+.verf-icon{font-size:26px;margin-bottom:8px;}
+.verf-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:2px;}
+.verf-sub{font-size:10px;color:var(--text3);}
+.verf-badge-soon{display:inline-block;margin-top:6px;font-size:9px;font-weight:700;background:rgba(245,158,11,.15);color:var(--warn);padding:2px 6px;border-radius:4px;text-transform:uppercase;letter-spacing:.04em;}
+
+/* Ergebnis */
+.ergebnis-box{background:linear-gradient(135deg,rgba(139,92,246,.08),rgba(139,92,246,.02));border:1px solid rgba(139,92,246,.25);border-radius:12px;padding:16px 20px;margin-top:16px;}
+.ergebnis-zeile{display:flex;justify-content:space-between;align-items:baseline;padding:6px 0;border-bottom:1px solid rgba(139,92,246,.1);}
+.ergebnis-zeile:last-child{border-bottom:none;padding-top:12px;margin-top:4px;border-top:2px solid rgba(139,92,246,.3);}
+.ergebnis-label{font-size:12px;color:var(--text2);}
+.ergebnis-value{font-size:15px;font-weight:700;color:var(--text);font-variant-numeric:tabular-nums;}
+.ergebnis-zeile:last-child .ergebnis-value{font-size:22px;color:var(--purple);}
+
+/* Aktionen */
+.actions{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap;justify-content:flex-end;}
+.btn{padding:10px 16px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s;}
+.btn:hover{border-color:var(--border2);}
+.btn-primary{background:var(--purple);border-color:var(--purple);color:#fff;}
+.btn-primary:hover{filter:brightness(1.1);}
+.btn-ghost{background:transparent;}
+
+/* Toast */
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--surface);border:1px solid var(--border);padding:10px 18px;border-radius:10px;font-size:13px;color:var(--text);box-shadow:0 8px 24px rgba(0,0,0,.4);opacity:0;pointer-events:none;transition:opacity .2s;z-index:9999;}
+.toast.show{opacity:1;}
+
+/* Soon-Hinweis */
+.soon-banner{padding:12px 16px;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.25);border-radius:10px;margin-bottom:16px;font-size:12px;color:var(--warn);}
+.soon-banner strong{color:var(--text);}
+
+/* Vergleichsobjekte */
+.vg-row{display:grid;grid-template-columns:1.3fr 100px 100px 110px 110px 28px;gap:8px;align-items:center;padding:8px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;margin-bottom:6px;}
+.vg-row input{padding:6px 8px;font-size:12px;}
+.vg-row-header{display:grid;grid-template-columns:1.3fr 100px 100px 110px 110px 28px;gap:8px;padding:4px 10px;font-size:10px;text-transform:uppercase;color:var(--text3);font-weight:700;letter-spacing:.04em;margin-top:8px;}
+.btn-del{background:none;border:none;color:var(--text3);cursor:pointer;font-size:16px;padding:2px 6px;}
+.btn-del:hover{color:var(--red);}
+.vg-ergebnis-cell{font-size:11px;font-weight:700;color:var(--purple);padding:6px 8px;text-align:right;}
+</style>
+</head>
+<body>
+<div class="app-shell">
+  <nav class="sidebar" id="sidebar"></nav>
+  <div class="main" id="mainContent">
+
+    <div class="topbar">
+      <div class="topbar-title">PROVA <span>· Wertgutachten</span></div>
+      <span class="paket-badge" id="topbar-paket-badge"></span>
+    </div>
+
+    <div class="page">
+      <h1>📊 Wertgutachten</h1>
+      <div class="page-sub" id="wg-subtitle">Nach §§ 194–199 BauGB und ImmoWertV 2022.</div>
+
+      <div class="wizard-steps">
+        <div class="wz-step active" id="ws-1"><div class="wz-step-num">1</div>Objektdaten</div>
+        <div class="wz-step" id="ws-2"><div class="wz-step-num">2</div>Verfahren</div>
+        <div class="wz-step" id="ws-3"><div class="wz-step-num">3</div>Ergebnis</div>
+      </div>
+
+      <!-- ══ STEP 1: OBJEKTDATEN ══ -->
+      <div class="wz-panel" id="panel-1">
+        <div class="panel-title">1. Objektdaten erfassen</div>
+        <div class="panel-legal">Erfassung der Grunddaten nach § 4 ImmoWertV. Alle Angaben bezogen auf den Wertermittlungsstichtag.</div>
+
+        <div class="form-grid">
+          <div>
+            <label>Aktenzeichen</label>
+            <input type="text" id="wg-az" placeholder="z.B. WG-2026-001">
+          </div>
+          <div>
+            <label>Wertermittlungsstichtag *</label>
+            <input type="date" id="wg-stichtag">
+          </div>
+        </div>
+
+        <div class="form-grid">
+          <div>
+            <label>Auftraggeber</label>
+            <input type="text" id="wg-auftraggeber" placeholder="Name">
+          </div>
+          <div>
+            <label>Zweck der Wertermittlung</label>
+            <select id="wg-zweck">
+              <option value="privat">Privat (Verkauf, Kauf, Erbauseinandersetzung)</option>
+              <option value="gericht">Gerichtsgutachten</option>
+              <option value="bank">Bankenfinanzierung</option>
+              <option value="versicherung">Versicherung</option>
+              <option value="steuer">Steuerliche Zwecke</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-grid-1">
+          <div>
+            <label>Objekt-Adresse *</label>
+            <input type="text" id="wg-adresse" placeholder="Straße Hausnr., PLZ Ort">
+          </div>
+        </div>
+
+        <div class="form-grid-3">
+          <div>
+            <label>Objektart</label>
+            <select id="wg-objektart">
+              <option value="efh">Einfamilienhaus</option>
+              <option value="dhh">Doppelhaushälfte</option>
+              <option value="rh">Reihenhaus</option>
+              <option value="mfh">Mehrfamilienhaus</option>
+              <option value="etw">Eigentumswohnung</option>
+              <option value="geh">Gewerbeobjekt</option>
+              <option value="gru">Unbebautes Grundstück</option>
+            </select>
+          </div>
+          <div>
+            <label>Baujahr *</label>
+            <input type="number" id="wg-baujahr" min="1800" max="2030" placeholder="z.B. 1985">
+          </div>
+          <div>
+            <label>Modernisierungsgrad</label>
+            <select id="wg-modern">
+              <option value="keine">Keine (Originalzustand)</option>
+              <option value="teil">Teilmodernisiert</option>
+              <option value="umfassend">Umfassend modernisiert</option>
+              <option value="kernsaniert">Kernsaniert</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-grid-3">
+          <div>
+            <label>Grundstücksfläche (m²) *</label>
+            <input type="number" id="wg-gr-flaeche" min="0" step="0.01" placeholder="z.B. 580">
+          </div>
+          <div>
+            <label>Bodenrichtwert (€/m²) *</label>
+            <input type="number" id="wg-brw" min="0" step="1" placeholder="z.B. 450">
+            <div class="hint">Aus Gutachterausschuss-Datenbank (BORIS)</div>
+          </div>
+          <div>
+            <label>Wohnfläche (m²)</label>
+            <input type="number" id="wg-wfl" min="0" step="0.01" placeholder="z.B. 142">
+            <div class="hint">Optional — aus WoFlV-Werkzeug</div>
+          </div>
+        </div>
+
+        <div class="form-grid">
+          <div>
+            <label>Bruttogrundfläche BGF (m²)</label>
+            <input type="number" id="wg-bgf" min="0" step="0.01" placeholder="z.B. 180">
+            <div class="hint">Für Sachwertverfahren</div>
+          </div>
+          <div>
+            <label>Gesamtnutzungsdauer (Jahre)</label>
+            <input type="number" id="wg-gnd" min="20" max="120" value="80">
+            <div class="hint">Anlage 1 ImmoWertV: Wohn 80, Gewerbe 30–50</div>
+          </div>
+        </div>
+
+        <div class="form-grid-1">
+          <div>
+            <label>Lagebeschreibung &amp; Besonderheiten</label>
+            <textarea id="wg-lage" placeholder="Mikro-/Makrolage, Verkehrsanbindung, Besonderheiten…"></textarea>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button class="btn btn-primary" onclick="wgNextStep(2)">Weiter zu Verfahren →</button>
+        </div>
+      </div>
+
+      <!-- ══ STEP 2: VERFAHREN WÄHLEN ══ -->
+      <div class="wz-panel" id="panel-2" hidden>
+        <div class="panel-title">2. Wertermittlungsverfahren wählen</div>
+        <div class="panel-legal">Nach § 8 ImmoWertV. Mehrere Verfahren können parallel berechnet werden — ein Verfahrensmix ist bei geeigneter Datenlage empfohlen (§ 6 Abs. 1 ImmoWertV). Der SV entscheidet final.</div>
+
+        <div class="verf-choice">
+          <div class="verf-card" data-verf="sachwert" onclick="wgToggleVerfahren('sachwert')">
+            <div class="verf-icon">🏗️</div>
+            <div class="verf-title">Sachwertverfahren</div>
+            <div class="verf-sub">§§ 35–39 ImmoWertV</div>
+            <div class="verf-sub" style="margin-top:4px;">Bodenwert + Gebäudesachwert</div>
+          </div>
+          <div class="verf-card" data-verf="vergleich" onclick="wgToggleVerfahren('vergleich')">
+            <div class="verf-icon">🔁</div>
+            <div class="verf-title">Vergleichswertverfahren</div>
+            <div class="verf-sub">§§ 24–26 ImmoWertV</div>
+            <div class="verf-sub" style="margin-top:4px;">Vergleichsobjekte-Durchschnitt</div>
+          </div>
+          <div class="verf-card" data-verf="ertrag" onclick="wgToggleVerfahren('ertrag')">
+            <div class="verf-icon">💼</div>
+            <div class="verf-title">Ertragswertverfahren</div>
+            <div class="verf-sub">§§ 27–34 ImmoWertV</div>
+            <div class="verf-sub" style="margin-top:4px;">Rohertrag + Bodenwert-Verzinsung</div>
+          </div>
+        </div>
+
+        <!-- ─── SACHWERT-EINGABEN ─── -->
+        <div id="sachwert-form" hidden>
+          <div class="panel-title" style="margin-top:20px;margin-bottom:4px;font-size:14px;">🏗️ Sachwertverfahren — Eingaben</div>
+          <div class="panel-legal">Normalherstellungskosten NHK 2010, fortgeschrieben mit Baupreisindex. SV-Anpassung möglich.</div>
+
+          <div class="form-grid">
+            <div>
+              <label>NHK 2010 (€/m² BGF) *</label>
+              <input type="number" id="sw-nhk" min="0" step="1" value="900" oninput="wgBerechneSachwert()">
+              <div class="hint">EFH Standard: ~900 €/m² | Ziegel hoher Standard: ~1200 €/m²</div>
+            </div>
+            <div>
+              <label>Baupreisindex-Faktor *</label>
+              <input type="number" id="sw-bpi" min="0" step="0.01" value="1.45" oninput="wgBerechneSachwert()">
+              <div class="hint">Destatis BPI aktuelles Jahr ÷ 2010 (~145% in 2026)</div>
+            </div>
+          </div>
+
+          <div class="form-grid">
+            <div>
+              <label>Regionalfaktor</label>
+              <input type="number" id="sw-region" min="0.5" max="2" step="0.05" value="1.0" oninput="wgBerechneSachwert()">
+              <div class="hint">Anlage 3 ImmoWertV: 0.8–1.4 je nach Region</div>
+            </div>
+            <div>
+              <label>Alterswertminderung (%)</label>
+              <input type="number" id="sw-awm" min="0" max="100" step="0.5" value="0" oninput="wgBerechneSachwert()">
+              <div class="hint">Aus Restnutzungsdauer — wird auch autom. berechnet</div>
+            </div>
+          </div>
+
+          <div class="form-grid">
+            <div>
+              <label>Besondere Bauteil-Zuschläge (€)</label>
+              <input type="number" id="sw-zuschlag" min="0" step="100" value="0" oninput="wgBerechneSachwert()">
+              <div class="hint">Garage, Carport, Terrasse, hochwertige Küche</div>
+            </div>
+            <div>
+              <label>Sachwert-Marktanpassungsfaktor</label>
+              <input type="number" id="sw-smf" min="0.5" max="2" step="0.05" value="1.0" oninput="wgBerechneSachwert()">
+              <div class="hint">§ 36 Abs. 3 ImmoWertV — aus Ausschuss-Daten</div>
+            </div>
+          </div>
+
+          <div class="ergebnis-box">
+            <div class="ergebnis-zeile"><span class="ergebnis-label">Bodenwert</span><span class="ergebnis-value" id="sw-bodenwert">0 €</span></div>
+            <div class="ergebnis-zeile"><span class="ergebnis-label">Gebäude-Neubauwert (NHK × BPI × Region × BGF)</span><span class="ergebnis-value" id="sw-neuwert">0 €</span></div>
+            <div class="ergebnis-zeile"><span class="ergebnis-label">abzüglich Alterswertminderung</span><span class="ergebnis-value" id="sw-awm-abzug">0 €</span></div>
+            <div class="ergebnis-zeile"><span class="ergebnis-label">Gebäudesachwert</span><span class="ergebnis-value" id="sw-gsw">0 €</span></div>
+            <div class="ergebnis-zeile"><span class="ergebnis-label">Besondere Bauteile</span><span class="ergebnis-value" id="sw-zuschlag-anz">0 €</span></div>
+            <div class="ergebnis-zeile"><span class="ergebnis-label">Sachwert vor Marktanpassung</span><span class="ergebnis-value" id="sw-vor-smf">0 €</span></div>
+            <div class="ergebnis-zeile"><span class="ergebnis-label">Verkehrswert (Marktangepasst)</span><span class="ergebnis-value" id="sw-verkehrswert">0 €</span></div>
+          </div>
+        </div>
+
+        <!-- ─── VERGLEICHSWERT-EINGABEN ─── -->
+        <div id="vergleich-form" hidden>
+          <div class="panel-title" style="margin-top:24px;margin-bottom:4px;font-size:14px;">🔁 Vergleichswertverfahren — Vergleichsobjekte</div>
+          <div class="panel-legal">§§ 24–26 ImmoWertV. Mindestens 3 zeitnah verkaufte Objekte aus ähnlicher Lage, vergleichbarer Art, Größe und Zustand. Bereinigung um Abweichungen mittels Zu-/Abschlägen.</div>
+
+          <div class="form-grid">
+            <div>
+              <label>Objekttyp für Vergleich</label>
+              <input type="text" id="vg-typ-label" placeholder="z.B. EFH, 5 Zi., 140 m²" value="">
+            </div>
+            <div>
+              <label>Bezugsgröße</label>
+              <select id="vg-bezug" onchange="wgBerechneVergleich()">
+                <option value="qm">€/m² Wohnfläche</option>
+                <option value="gesamt">Gesamtpreis €</option>
+              </select>
+            </div>
+          </div>
+
+          <div id="vg-objekte-list"></div>
+          <button class="btn btn-ghost" onclick="wgVergleichAdd()" style="margin-top:8px;margin-bottom:12px;font-size:12px;">+ Vergleichsobjekt hinzufügen</button>
+
+          <div class="ergebnis-box">
+            <div class="ergebnis-zeile"><span class="ergebnis-label">Anzahl Vergleichsobjekte</span><span class="ergebnis-value" id="vg-anzahl">0</span></div>
+            <div class="ergebnis-zeile"><span class="ergebnis-label">Mittelwert (bereinigt)</span><span class="ergebnis-value" id="vg-mittel">0 €</span></div>
+            <div class="ergebnis-zeile"><span class="ergebnis-label">Standardabweichung</span><span class="ergebnis-value" id="vg-streuung">— €</span></div>
+            <div class="ergebnis-zeile"><span class="ergebnis-label">Vergleichswert</span><span class="ergebnis-value" id="vg-verkehrswert">0 €</span></div>
+          </div>
+        </div>
+
+        <!-- ─── ERTRAGSWERT-EINGABEN ─── -->
+        <div id="ertrag-form" hidden>
+          <div class="panel-title" style="margin-top:24px;margin-bottom:4px;font-size:14px;">💼 Ertragswertverfahren — Eingaben</div>
+          <div class="panel-legal">§§ 27–34 ImmoWertV. Maßgeblich bei Renditeobjekten. Barwert der Bodenwertverzinsung + Barwert des Gebäudereinertrags.</div>
+
+          <div class="form-grid-3">
+            <div>
+              <label>Jahresrohertrag (€ p.a.) *</label>
+              <input type="number" id="ew-rohertrag" min="0" step="100" value="0" oninput="wgBerechneErtrag()">
+              <div class="hint">Nettokaltmiete × 12 + Stellplätze etc.</div>
+            </div>
+            <div>
+              <label>Bewirtschaftungskosten (%) *</label>
+              <input type="number" id="ew-bwk" min="0" max="60" step="0.5" value="18" oninput="wgBerechneErtrag()">
+              <div class="hint">Inst. + Mietausfall + Verwaltung (i.d.R. 15–25%)</div>
+            </div>
+            <div>
+              <label>Liegenschaftszinssatz (% p.a.) *</label>
+              <input type="number" id="ew-lzs" min="0.5" max="10" step="0.1" value="3.5" oninput="wgBerechneErtrag()">
+              <div class="hint">Anlage 1 ImmoWertV: EFH ~2.5% | MFH ~3.5% | Gewerbe ~5–7%</div>
+            </div>
+          </div>
+
+          <div class="form-grid">
+            <div>
+              <label>Restnutzungsdauer RND (Jahre)</label>
+              <input type="number" id="ew-rnd" min="5" max="100" step="1" value="" placeholder="auto aus Objektdaten" oninput="wgBerechneErtrag()">
+              <div class="hint">Wird automatisch aus Baujahr + Modernisierung geschätzt</div>
+            </div>
+            <div>
+              <label>Ertragswert-Marktanpassung</label>
+              <input type="number" id="ew-emf" min="0.5" max="2" step="0.05" value="1.0" oninput="wgBerechneErtrag()">
+              <div class="hint">Nach § 37 Abs. 3 ImmoWertV</div>
+            </div>
+          </div>
+
+          <div class="ergebnis-box">
+            <div class="ergebnis-zeile"><span class="ergebnis-label">Jahresrohertrag</span><span class="ergebnis-value" id="ew-anz-roh">0 €</span></div>
+            <div class="ergebnis-zeile"><span class="ergebnis-label">− Bewirtschaftungskosten</span><span class="ergebnis-value" id="ew-anz-bwk">0 €</span></div>
+            <div class="ergebnis-zeile"><span class="ergebnis-label">= Jahresreinertrag</span><span class="ergebnis-value" id="ew-anz-reinertrag">0 €</span></div>
+            <div class="ergebnis-zeile"><span class="ergebnis-label">− Bodenwertverzinsung</span><span class="ergebnis-value" id="ew-anz-bwv">0 €</span></div>
+            <div class="ergebnis-zeile"><span class="ergebnis-label">= Gebäudereinertrag</span><span class="ergebnis-value" id="ew-anz-grer">0 €</span></div>
+            <div class="ergebnis-zeile"><span class="ergebnis-label">× Vervielfältiger (RND / LZS)</span><span class="ergebnis-value" id="ew-anz-vervielf">— </span></div>
+            <div class="ergebnis-zeile"><span class="ergebnis-label">Gebäudeertragswert</span><span class="ergebnis-value" id="ew-anz-gebaew">0 €</span></div>
+            <div class="ergebnis-zeile"><span class="ergebnis-label">+ Bodenwert</span><span class="ergebnis-value" id="ew-anz-boden">0 €</span></div>
+            <div class="ergebnis-zeile"><span class="ergebnis-label">Ertragswert</span><span class="ergebnis-value" id="ew-verkehrswert">0 €</span></div>
+          </div>
+        </div>
+
+        <!-- ─── BELEIHUNGSWERT-SPEZIFISCH (nur bei typ=beleihungswert) ─── -->
+        <div id="beleihung-form" hidden>
+          <div class="panel-title" style="margin-top:24px;margin-bottom:4px;font-size:14px;">🏦 Beleihungswert-Anpassung (BelWertV)</div>
+          <div class="panel-legal">§ 16 Abs. 2 BelWertV: Der Beleihungswert darf den Verkehrswert nicht überschreiten. Üblicher Sicherheitsabschlag 10–15 % auf den Marktwert.</div>
+
+          <div class="form-grid">
+            <div>
+              <label>Sicherheitsabschlag (%)</label>
+              <input type="number" id="bw-abschlag" min="0" max="30" step="0.5" value="10" oninput="wgBerechneBeleihung()">
+              <div class="hint">§ 16 BelWertV: üblich 10–15 %, je nach Marktvolatilität</div>
+            </div>
+            <div>
+              <label>Besonderheits-Korrektur (%)</label>
+              <input type="number" id="bw-sonst" min="-20" max="20" step="0.5" value="0" oninput="wgBerechneBeleihung()">
+              <div class="hint">Zusätzliche SV-Anpassung bei Nachhaltigkeitsrisiken</div>
+            </div>
+          </div>
+
+          <div class="ergebnis-box">
+            <div class="ergebnis-zeile"><span class="ergebnis-label">Verkehrswert-Ausgang</span><span class="ergebnis-value" id="bw-ausgang">0 €</span></div>
+            <div class="ergebnis-zeile"><span class="ergebnis-label">− Sicherheitsabschlag</span><span class="ergebnis-value" id="bw-abschlag-anz">0 €</span></div>
+            <div class="ergebnis-zeile"><span class="ergebnis-label">+/− Besonderheits-Korrektur</span><span class="ergebnis-value" id="bw-sonst-anz">0 €</span></div>
+            <div class="ergebnis-zeile"><span class="ergebnis-label">Beleihungswert (§ 16 BelWertV)</span><span class="ergebnis-value" id="bw-beleihungswert">0 €</span></div>
+          </div>
+        </div>
+
+        <!-- ─── MIETWERT-MODUS ─── -->
+        <div id="mietwert-form" hidden>
+          <div class="panel-title" style="margin-top:24px;margin-bottom:4px;font-size:14px;">🔑 Mietwert-Ermittlung</div>
+          <div class="panel-legal">Ortsübliche Vergleichsmiete nach § 558 BGB. Ansatz: Mietspiegel-Mittelwert + SV-Zu-/Abschläge für Lage-, Ausstattungs- und Zustandsmerkmale.</div>
+
+          <div class="form-grid">
+            <div>
+              <label>Mietspiegel-Mittelwert (€/m²) *</label>
+              <input type="number" id="mw-spiegel" min="0" step="0.10" value="0" oninput="wgBerechneMiet()">
+              <div class="hint">Ortsüblicher Nettokalt-Wert aus lokalem Mietspiegel</div>
+            </div>
+            <div>
+              <label>Spannbreite (±%)</label>
+              <input type="number" id="mw-spann" min="0" max="50" step="0.5" value="15" oninput="wgBerechneMiet()">
+              <div class="hint">Typisch 10–20 % in Mietspiegeln</div>
+            </div>
+          </div>
+
+          <label style="margin-top:8px;">Zu-/Abschläge für Wohnwertmerkmale</label>
+          <div class="form-grid-3">
+            <div>
+              <label>Lage (%)</label>
+              <input type="number" id="mw-lage" min="-15" max="15" step="0.5" value="0" oninput="wgBerechneMiet()">
+            </div>
+            <div>
+              <label>Ausstattung (%)</label>
+              <input type="number" id="mw-aus" min="-15" max="15" step="0.5" value="0" oninput="wgBerechneMiet()">
+            </div>
+            <div>
+              <label>Zustand (%)</label>
+              <input type="number" id="mw-zst" min="-15" max="15" step="0.5" value="0" oninput="wgBerechneMiet()">
+            </div>
+          </div>
+
+          <div class="ergebnis-box">
+            <div class="ergebnis-zeile"><span class="ergebnis-label">Mietspiegel-Ausgang (€/m²)</span><span class="ergebnis-value" id="mw-spiegel-anz">0 €</span></div>
+            <div class="ergebnis-zeile"><span class="ergebnis-label">Spannbreite</span><span class="ergebnis-value" id="mw-spann-anz">— / —</span></div>
+            <div class="ergebnis-zeile"><span class="ergebnis-label">Gesamt-Zuschlag Wohnwert</span><span class="ergebnis-value" id="mw-zuschlag-total">0 %</span></div>
+            <div class="ergebnis-zeile"><span class="ergebnis-label">Ortsübliche Vergleichsmiete (€/m²)</span><span class="ergebnis-value" id="mw-miete-qm">0 €</span></div>
+            <div class="ergebnis-zeile"><span class="ergebnis-label">Monatsmiete netto bei Wohnfläche</span><span class="ergebnis-value" id="mw-miete-monat">0 €</span></div>
+          </div>
+        </div>
+
+        <!-- ─── KI-MARKTANALYSE (optional) ─── -->
+        <div style="margin-top:24px;padding:16px;background:rgba(139,92,246,.05);border:1px solid rgba(139,92,246,.2);border-radius:10px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:12px;flex-wrap:wrap;">
+            <div>
+              <div style="font-size:13px;font-weight:700;color:var(--purple);">✨ KI-Marktanalyse (optional)</div>
+              <div style="font-size:11px;color:var(--text3);margin-top:2px;">Hypothesen zu Lage/Markt im Konjunktiv II · DSGVO-pseudonymisiert · § 407a ZPO-konform</div>
+            </div>
+            <button class="btn" onclick="wgKIMarktanalyse()" id="btn-ki-markt" style="font-size:12px;background:rgba(139,92,246,.1);border-color:rgba(139,92,246,.3);color:var(--purple);">🧠 Analyse anfordern</button>
+          </div>
+          <div id="ki-markt-result" style="font-size:12px;color:var(--text2);line-height:1.7;margin-top:10px;"></div>
+        </div>
+
+        <div class="actions">
+          <button class="btn btn-ghost" onclick="wgNextStep(1)">← Zurück</button>
+          <button class="btn btn-primary" id="btn-zu-ergebnis" onclick="wgNextStep(3)" disabled style="opacity:.4;cursor:not-allowed;">Weiter zu Ergebnis →</button>
+        </div>
+      </div>
+
+      <!-- ══ STEP 3: ERGEBNIS ══ -->
+      <div class="wz-panel" id="panel-3" hidden>
+        <div class="panel-title">3. Ergebnis &amp; Zusammenfassung</div>
+        <div class="panel-legal">§ 407a ZPO: Finale Bewertung bleibt SV-Eigenleistung. Das Ergebnis ist ein technischer Rechen-Nachweis.</div>
+
+        <div id="ergebnis-render"></div>
+
+        <div class="actions">
+          <button class="btn btn-ghost" onclick="wgNextStep(2)">← Zurück</button>
+          <button class="btn" onclick="wgReset()">🔄 Neues Gutachten</button>
+          <button class="btn btn-primary" onclick="wgPdfVersenden()">📄 Gutachten als PDF versenden</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="sw-register.js" defer></script>
+<script src="global-search.js" defer></script>
+<script src="auftragstyp.js"></script>
+<script src="trial-guard.js"></script>
+<script src="wertgutachten-logic.js" defer></script>
+<script src="prova-context.js" defer></script>
+<script src="prova-error-handler.js" defer></script>
+</body>
+</html>

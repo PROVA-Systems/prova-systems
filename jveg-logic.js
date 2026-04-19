@@ -17,7 +17,7 @@ var pc={'Solo':'#4f8ef7','Team':'#a78bfa'}[paket]||'#4f8ef7';
 (function(){
   var el=document.getElementById('topbar-paket-badge');
   if(el){el.style.display='none';} // Paket steht in Sidebar unten
-  var appUrl=paket==='Team'?'app-enterprise.html':paket==='Solo'?'app-pro.html':'app-starter.html';
+  var appUrl='app.html'; // Session 30 Legacy-Cleanup
 })();
 if(!localStorage.getItem('prova_user')){window.location.href='app-login.html';return;}
 
@@ -387,21 +387,21 @@ var WORKFLOW = [
   {
     schritt: 1,
     name: 'Fall anlegen',
-    seite: 'app-starter.html',
+    seite: 'app.html',
     icon: '📋',
     farbe: '#4f8ef7'
   },
   {
     schritt: 2,
     name: 'Diktat & Fotos',
-    seite: 'app-starter.html#step2',
+    seite: 'app.html#step2',
     icon: '🎙️',
     farbe: '#4f8ef7'
   },
   {
     schritt: 3,
     name: 'KI-Analyse',
-    seite: 'app-starter.html#step3',
+    seite: 'app.html#step3',
     icon: '🤖',
     farbe: '#6366f1'
   },

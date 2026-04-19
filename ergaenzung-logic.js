@@ -75,7 +75,7 @@
 
   function appHref() {
     var t = (window.PROVA && PROVA.tier) || 'Solo';
-    return t === 'Team' ? 'app-enterprise.html' : 'app-starter.html';
+    return 'app.html'; // Session 30 Legacy-Cleanup
   }
 
   function prefillRechnungErgänzung(parentAz, stunden) {

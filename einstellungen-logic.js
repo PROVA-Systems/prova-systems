@@ -12,7 +12,7 @@ var paket = localStorage.getItem('prova_paket')||'Solo';
 var pc = {'Solo':'#4f8ef7','Team':'#a78bfa','Pro':'#4f8ef7','Enterprise':'#a78bfa','Trial':'#64748b'}[paket]||'#4f8ef7'; // BUG #013 FIX: Duplikat-Key entfernt
 var el = document.getElementById('topbar-paket-badge');
 if(el){el.textContent=paket;el.style.cssText='font-size:10px;font-weight:700;padding:3px 9px;border-radius:10px;letter-spacing:.04em;background:'+pc+'18;color:'+pc+';border:1px solid '+pc+'33;';}
-var appUrl=paket==='Team'?'app-enterprise.html':paket==='Solo'?'app-pro.html':'app-starter.html';
+var appUrl='app.html'; // Session 30 Legacy-Cleanup
 
 /* ── AUTH ── */
 // BUG #017 FIX: Nutzt jetzt provaAuthGuard() statt direkten localStorage-Check

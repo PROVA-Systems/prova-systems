@@ -434,6 +434,21 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-ui);min-heigh
             <div class="deploy-step-item pending" id="ds-4"><div class="deploy-dot"></div>Akte aktualisieren</div>
           </div>
 
+          <!-- Session 30 / S34: §407a + Konsistenz-Check vor Freigabe -->
+          <div id="compliance-panel" style="margin-bottom:14px;">
+            <button type="button" id="btnComplianceCheck" onclick="runComplianceCheck()"
+                    style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;
+                           padding:11px 14px;border-radius:10px;
+                           background:rgba(79,142,247,.08);border:1px solid rgba(79,142,247,.25);
+                           color:var(--accent,#4f8ef7);font-size:13px;font-weight:700;
+                           cursor:pointer;font-family:inherit;transition:all .15s;">
+              <span>🔍</span>
+              <span id="btnComplianceCheckText">§ 407a-Check + Konsistenz prüfen (empfohlen)</span>
+            </button>
+            <div id="compliance-result" style="margin-top:10px;"></div>
+            <div id="konsistenz-result" style="margin-top:10px;"></div>
+          </div>
+
           <!-- STRIPE: Trust signal -->
           <div class="trust-signal" id="trust-signal" style="display:none;">
             <span class="trust-signal-icon">🔒</span>
@@ -570,6 +585,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-ui);min-heigh
 <script src="prova-error-handler.js" defer></script>
 <script src="support-chat.js"></script>
     <script src="prova-audit.js"></script>
+<script src="compliance-check.js" defer></script>
 <script src="freigabe-logic.js" defer></script>
 <script defer>
   // Session 22: Auto-Qualitätsprüfung beim Öffnen der Freigabe-Seite,
@@ -581,10 +597,103 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-ui);min-heigh
       if (aktiv && typeof window.starteQualitaetspruefung === 'function') {
         setTimeout(function() {
           try { window.starteQualitaetspruefung(); } catch(e) { console.warn('[auto_quality] Fehler:', e.message); }
-        }, 800); // kurze Verzögerung damit der Text-Editor fertig gerendert ist
+        }, 800);
       }
     } catch(e) {}
   });
+
+  /* Session 30 / S34: § 407a-Compliance + §4↔§6 Konsistenz-Check */
+  window.runComplianceCheck = async function() {
+    if (!window.PROVA || typeof PROVA.complianceCheck !== 'function') {
+      alert('Compliance-Modul nicht geladen — Seite neu laden.');
+      return;
+    }
+    var btnEl = document.getElementById('btnComplianceCheckText');
+    var origText = btnEl ? btnEl.textContent : '';
+    if (btnEl) btnEl.textContent = '⏳ Prüfe…';
+
+    try {
+      // Volltext aus Freigabe-Editor holen (mehrere mögliche Quellen)
+      var editor = document.getElementById('editor')
+                || document.getElementById('freigabe-editor')
+                || document.querySelector('[contenteditable="true"]')
+                || document.querySelector('textarea');
+      var text = '';
+      if (editor) text = editor.innerText || editor.value || editor.textContent || '';
+
+      if (!text || text.length < 50) {
+        alert('Kein Gutachten-Text gefunden. Bitte erst Entwurf laden.');
+        return;
+      }
+
+      // Fall-Typ aus localStorage — wenn Gerichtsgutachten, §407a strenger prüfen
+      var typ = (localStorage.getItem('prova_aktiver_auftragstyp') || '').toLowerCase();
+      var istGericht = typ.indexOf('gericht') !== -1;
+
+      // 1. Regex-basierter §407a + Konjunktiv-Check (lokal, schnell)
+      var result = PROVA.complianceCheck(text, {
+        istGerichtsgutachten: istGericht,
+        checkKonjunktiv: true
+      });
+      PROVA.renderComplianceReview(result, 'compliance-result');
+
+      // 2. Optional: KI-basierter §4↔§6 Konsistenz-Check wenn Textstellen extrahierbar
+      // Heuristik: §4 und §6 im Text finden (erste deutliche Überschriften)
+      var p4 = extractParagraph(text, 4);
+      var p6 = extractParagraph(text, 6);
+      if (p4 && p6 && p4.length > 80 && p6.length > 80) {
+        var konRes = document.getElementById('konsistenz-result');
+        if (konRes) konRes.innerHTML = '<div style="padding:10px;font-size:12px;color:var(--text3);">⏳ KI-Konsistenz-Check §4 ↔ §6…</div>';
+        try {
+          var konsistenz = await PROVA.konsistenzCheck(p4, p6);
+          renderKonsistenzPanel(konsistenz);
+        } catch(e) {
+          if (konRes) konRes.innerHTML = '<div style="padding:8px;font-size:11px;color:var(--text3);font-style:italic;">Konsistenz-Check übersprungen: ' + e.message + '</div>';
+        }
+      }
+    } catch(e) {
+      alert('Check fehlgeschlagen: ' + e.message);
+    } finally {
+      if (btnEl) btnEl.textContent = origText || '§ 407a-Check + Konsistenz prüfen (empfohlen)';
+    }
+  };
+
+  function extractParagraph(text, nummer) {
+    // Einfache Heuristik: Finde "§ N" oder "§N" als Überschrift und lies bis zum nächsten § oder Ende
+    var re = new RegExp('§\\s*' + nummer + '\\b[^\\n]*\\n([\\s\\S]*?)(?=§\\s*' + (nummer+1) + '\\b|§\\s*\\d+\\b|$)', 'i');
+    var m = text.match(re);
+    return m ? (m[1] || '').trim() : '';
+  }
+
+  function renderKonsistenzPanel(k) {
+    var el = document.getElementById('konsistenz-result');
+    if (!el || !k) return;
+    function esc(v){return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+    var col = k.konsistent ? '#10b981' : '#f59e0b';
+    var icon = k.konsistent ? '✓' : '⚠';
+    var html = '<div style="background:var(--bg3,#181b24);border:1px solid ' + col + '33;border-radius:10px;padding:14px 16px;">'
+      + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">'
+      +   '<span style="font-size:16px;color:' + col + ';">' + icon + '</span>'
+      +   '<span style="font-size:12px;font-weight:700;color:var(--text);">§ 4 ↔ § 6 Konsistenz-Check</span>'
+      + '</div>'
+      + '<div style="font-size:12px;color:var(--text2);margin-bottom:10px;">' + esc(k.zusammenfassung) + '</div>';
+    if (k.issues && k.issues.length) {
+      k.issues.forEach(function(i) {
+        var schwereCol = i.schwere === 'error' ? '#ef4444' : i.schwere === 'warn' ? '#f59e0b' : '#6b7280';
+        html += '<div style="padding:8px 10px;background:' + schwereCol + '10;border-left:3px solid ' + schwereCol + ';border-radius:4px;margin-bottom:6px;font-size:11px;">'
+          + '<div style="color:' + schwereCol + ';font-weight:700;margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em;font-size:10px;">' + esc(i.typ || '') + '</div>'
+          + '<div style="color:var(--text2);margin-bottom:4px;">' + esc(i.hinweis || '') + '</div>'
+          + (i.stelle_p4 ? '<div style="font-family:monospace;font-size:10px;color:var(--text3);">§4: „' + esc(i.stelle_p4) + '"</div>' : '')
+          + (i.stelle_p6 ? '<div style="font-family:monospace;font-size:10px;color:var(--text3);">§6: „' + esc(i.stelle_p6) + '"</div>' : '')
+          + '</div>';
+      });
+    } else if (k.konsistent) {
+      html += '<div style="padding:8px;font-size:12px;color:#10b981;">Keine Inkonsistenzen gefunden.</div>';
+    }
+    html += '<div style="margin-top:10px;font-size:10px;color:var(--text3);font-style:italic;">§ 407a ZPO: KI-Hinweise ersetzen keine SV-Prüfung. Finale Bewertung bleibt SV-Eigenleistung.</div>';
+    html += '</div>';
+    el.innerHTML = html;
+  }
 </script>
 </body>
 </html>

@@ -120,6 +120,10 @@ function renderAkte(){
   agActions+='<button class="dok-btn" onclick="window.location.href=\'briefvorlagen.html\'">📝 Brief</button>';
   document.getElementById('ag-actions').innerHTML=agActions;
 
+  // Session 30: Globale Refs für Phase-Handler in der Timeline
+  window._currentAkteId = recordId;
+  window._currentAkteFields = f;
+
   // Timeline
   renderTimeline(status,f);
   // Progressive Disclosure: nur phasenrelevante Sections offen
@@ -147,28 +151,185 @@ function renderAkte(){
   document.getElementById('akte-content').style.display='block';
 }
 
-/* ─── TIMELINE ─── */
+/* ─── TIMELINE — 9 Phasen (Flow A), Session 30 ─── */
+// Phasen-Definition laut Transport-Report §3
+var AKTE_PHASEN = [
+  {n:1, key:'auftragsannahme', label:'Auftragsannahme',     ki:'PDF-OCR, §407a-Plausibilität, Honorar-Auto',        skip:false, mussFlow:['A','B','C','D']},
+  {n:2, key:'ortstermin',      label:'Ortstermin',           ki:'Diktat→Struktur, Foto-Caption, WTA-Grenzwerte',    skip:true,  skipHint:'Aktengutachten §411a',       mussFlow:['A','B','D']},
+  {n:3, key:'messung',         label:'Messung & Dokumentation', ki:'Messwert-Plausibilität',                        skip:true,  skipHint:'Reine §411-Ergänzung',        mussFlow:['A']},
+  {n:4, key:'recherche',       label:'Recherche',            ki:'Norm-Vorschläge, Textbaustein-Match',              skip:true,  skipHint:'Erfahrungs-SV',               mussFlow:['A','B']},
+  {n:5, key:'schreiben',       label:'Schreiben §§1–§7',     ki:'Vorentwurf §1–5, §7 · §6 nur SV',                  skip:false, mussFlow:['A','B','C','D']},
+  {n:6, key:'qualitaet',       label:'Qualitätsprüfung',     ki:'Konsistenz-Check §4↔§6, §407a-Check',              skip:true,  skipHint:'Eigener Review ausreichend',  mussFlow:['A','B']},
+  {n:7, key:'freigabe',        label:'Freigabe + PDF',       ki:'PDFMonkey-Template, Anhänge',                      skip:false, mussFlow:['A','B','C','D']},
+  {n:8, key:'versand',         label:'Versand',              ki:'E-Mail/Post/ERV, Fristen-Alarm',                   skip:false, mussFlow:['A','B','C','D']},
+  {n:9, key:'rechnung',        label:'Rechnung',             ki:'JVEG-Rechner oder Pauschal, XRechnung',            skip:false, mussFlow:['A','B','C','D']}
+];
+
+// Aktuelle Phase aus Record ableiten (gleiche Logic wie archiv-logic.js)
+function getAktePhase(f){
+  if(f.Phase){
+    var p=parseInt(f.Phase,10);
+    if(!isNaN(p)&&p>=1&&p<=9)return p;
+  }
+  var st=(f.Status||'').toLowerCase();
+  var map={'neuer auftrag':1,'auftrag erhalten':1,'in bearbeitung':5,'ortstermin':2,'messung':3,
+    'recherche':4,'schreiben':5,'entwurf fertig':6,'qualitätsprüfung':6,'zur freigabe':7,
+    'freigegeben':7,'pdf erstellt':7,'versendet':8,'abgeschlossen':9,'exportiert':9};
+  for(var k in map){if(st.indexOf(k)!==-1)return map[k];}
+  return 1; // Default: erste Phase
+}
+
+function getAkteFlow(f){
+  if(f.Flow)return String(f.Flow).toUpperCase().charAt(0);
+  var art=(f.Auftragstyp||'').toLowerCase();
+  var m={'gerichtsgutachten':'A','versicherungsgutachten':'A','privatgutachten':'A',
+    'schiedsgutachten':'A','beweissicherung':'A','ergaenzungsgutachten':'A','gegengutachten':'A',
+    'kaufberatung':'C','sanierungsberatung':'C','baubegleitung':'D','bauabnahme':'D'};
+  return m[art]||'A';
+}
+
+// Skip-Begründungen pro Fall-Record aus localStorage
+function ladeSkipBegruendungen(recordId){
+  try { return JSON.parse(localStorage.getItem('prova_phase_skips_'+recordId)||'{}'); }
+  catch(e){ return {}; }
+}
+function speichereSkipBegruendung(recordId, phaseN, begruendung){
+  var data=ladeSkipBegruendungen(recordId);
+  if(begruendung){ data[phaseN]=begruendung; } else { delete data[phaseN]; }
+  localStorage.setItem('prova_phase_skips_'+recordId, JSON.stringify(data));
+}
+
 function renderTimeline(status,f){
-  var schritte=[
-    {key:'erfassung',label:'Fallerfassung',meta:'Stammdaten + Fotos',done:true},
-    {key:'ki',label:'KI-Analyse',meta:f.KI_Entwurf?'Entwurf vorhanden':'Noch nicht gestartet',done:!!f.KI_Entwurf},
-    {key:'stellungnahme',label:'§6 Stellungnahme',meta:localStorage.getItem('prova_stellungnahme_done')==='true'?'Fertiggestellt':'Ausstehend',done:localStorage.getItem('prova_stellungnahme_done')==='true'},
-    {key:'freigabe',label:'Freigabe',meta:status==='Freigegeben'||status==='Exportiert'?'Freigegeben':'Ausstehend',done:status==='Freigegeben'||status==='Exportiert'},
-    {key:'pdf',label:'PDF & Versand',meta:status==='Exportiert'?'PDF erstellt und versendet':'Ausstehend',done:status==='Exportiert'}
-  ];
-  var aktivIndex=schritte.findIndex(function(s){return !s.done;});
-  document.getElementById('timeline-body').innerHTML=schritte.map(function(s,i){
-    var cls=s.done?'done':(i===aktivIndex?'active':'pending');
-    var icon=s.done?'✓':(i===aktivIndex?'→':'○');
-    return '<div class="tl-item">'
-      +'<div class="tl-dot '+cls+'">'+icon+'</div>'
-      +'<div class="tl-content">'
-      +'<div class="tl-title">'+s.label+'</div>'
-      +'<div class="tl-meta">'+s.meta+'</div>'
-      +'</div>'
-      +'</div>';
+  var recordId = (f && f._recordId) || window._currentAkteId || '';
+  var aktuellePhase = getAktePhase(f);
+  var flow = getAkteFlow(f);
+  var skips = recordId ? ladeSkipBegruendungen(recordId) : {};
+
+  // Nur Phasen anzeigen die zu diesem Flow gehören
+  var phasen = AKTE_PHASEN.filter(function(p){ return p.mussFlow.indexOf(flow)!==-1; });
+
+  document.getElementById('timeline-body').innerHTML = phasen.map(function(ph){
+    var istSkipped = !!skips[ph.n];
+    var istDone   = ph.n < aktuellePhase && !istSkipped;
+    var istAktiv  = ph.n === aktuellePhase && !istSkipped;
+    var istPending= ph.n > aktuellePhase && !istSkipped;
+
+    var cls, icon, meta;
+    if(istSkipped){
+      cls='skipped'; icon='⏭';
+      meta='Übersprungen' + (skips[ph.n] ? ' · '+escHtmlLocal(skips[ph.n]) : '');
+    } else if(istDone){
+      cls='done'; icon='✓';
+      meta=ph.ki;
+    } else if(istAktiv){
+      cls='active'; icon='→';
+      meta=ph.ki;
+    } else {
+      cls='pending'; icon='○';
+      meta=ph.ki;
+    }
+
+    // Action-Buttons bei aktiver Phase
+    var actions='';
+    if(istAktiv){
+      actions += '<button class="phase-btn phase-btn-primary" onclick="phaseAbschliessen('+ph.n+')" '
+        + 'style="margin-left:auto;padding:5px 11px;border:none;border-radius:6px;background:var(--accent,#4f8ef7);'
+        + 'color:#fff;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">Abschließen →</button>';
+      if(ph.skip){
+        actions += '<button class="phase-btn phase-btn-ghost" onclick="phaseSkippen('+ph.n+',\''+escAttr(ph.label)+'\',\''+escAttr(ph.skipHint||'')+'\')" '
+          + 'style="margin-left:6px;padding:5px 11px;border:1px solid var(--border2,rgba(255,255,255,.12));'
+          + 'border-radius:6px;background:transparent;color:var(--text3,#6b7280);font-size:11px;font-weight:600;'
+          + 'cursor:pointer;font-family:inherit;" title="Phase überspringen ('+escAttr(ph.skipHint||'')+')">⏭ Skip</button>';
+      }
+    }
+    if(istSkipped){
+      actions += '<button class="phase-btn" onclick="phaseSkipRueckgaengig('+ph.n+')" '
+        + 'style="margin-left:auto;padding:4px 9px;border:1px dashed var(--border2,rgba(255,255,255,.12));'
+        + 'border-radius:6px;background:transparent;color:var(--text3,#6b7280);font-size:10px;cursor:pointer;'
+        + 'font-family:inherit;">↩ Rückgängig</button>';
+    }
+
+    var pflichtTag = ph.skip
+      ? ''
+      : '<span title="Pflicht-Phase" style="font-size:8px;font-weight:800;padding:1px 5px;border-radius:3px;background:rgba(239,68,68,.1);color:#ef4444;margin-left:6px;letter-spacing:.04em;">PFLICHT</span>';
+
+    return '<div class="tl-item" data-phase="'+ph.n+'" data-state="'+cls+'" style="display:flex;align-items:flex-start;gap:12px;padding:10px 0;border-bottom:1px solid var(--border,rgba(255,255,255,.05));">'
+      + '<div class="tl-dot '+cls+'" style="flex-shrink:0;">'+icon+'</div>'
+      + '<div class="tl-content" style="flex:1;min-width:0;">'
+      +   '<div class="tl-title" style="display:flex;align-items:center;flex-wrap:wrap;">'
+      +     '<span style="font-size:9px;opacity:.6;font-weight:700;margin-right:6px;">PH '+ph.n+'</span>'
+      +     '<span>'+escHtmlLocal(ph.label)+'</span>'
+      +     pflichtTag
+      +   '</div>'
+      +   '<div class="tl-meta">'+escHtmlLocal(meta)+'</div>'
+      + '</div>'
+      + actions
+      + '</div>';
   }).join('');
 }
+
+/* Kleine lokale Helper — Kollisionen mit anderen esc()-Varianten vermeiden */
+function escHtmlLocal(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function escAttr(s){return String(s||'').replace(/'/g,"\\'").replace(/"/g,'&quot;');}
+
+/* ── Phase-Aktionen (global für onclick) ── */
+window.phaseAbschliessen = async function(phaseN){
+  var recordId = window._currentAkteId;
+  if(!recordId){ alert('Kein aktiver Fall gefunden.'); return; }
+  var naechstePhase = phaseN + 1;
+  if(naechstePhase > 9){
+    alert('Alle Phasen abgeschlossen. Fall kann archiviert werden.');
+    return;
+  }
+  // Airtable-Update der Phase
+  try {
+    var res = await fetch('/.netlify/functions/airtable', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        method:'PATCH',
+        path:'/v0/appJ7bLlAHZoxENWE/tblSxV8bsXwd1pwa0/'+recordId,
+        payload:{ fields: { Phase: naechstePhase } }
+      })
+    });
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    // Lokal re-render
+    if(window._currentAkteFields){ window._currentAkteFields.Phase = naechstePhase; }
+    // Cache invalidieren damit archiv.html den neuen Stand lädt
+    try { localStorage.removeItem('prova_archiv_cache_v2'); } catch(e){}
+    if(window._currentAkteFields) renderTimeline(null, window._currentAkteFields);
+    if(typeof provaToast==='function') provaToast('✅ Phase '+phaseN+' abgeschlossen','success');
+  } catch(e) {
+    alert('Phase konnte nicht gespeichert werden: '+e.message);
+  }
+};
+
+window.phaseSkippen = function(phaseN, phaseLabel, hint){
+  var recordId = window._currentAkteId;
+  if(!recordId) return;
+  var begruendung = prompt(
+    'Phase „'+phaseLabel+'" überspringen.\n'
+    + (hint ? 'Typischer Grund: '+hint+'\n' : '')
+    + '\nBegründung (Pflicht für Audit-Trail):',
+    hint || ''
+  );
+  if(!begruendung || !begruendung.trim()) return;
+  speichereSkipBegruendung(recordId, phaseN, begruendung.trim());
+  // Dieser Phase überspringen = aktuelle Phase auf phaseN+1 rücken, aber nur wenn sie die aktive war
+  var aktuellePhase = getAktePhase(window._currentAkteFields||{});
+  if(aktuellePhase === phaseN){
+    window.phaseAbschliessen(phaseN); // rückt auf phaseN+1
+  } else {
+    if(window._currentAkteFields) renderTimeline(null, window._currentAkteFields);
+  }
+};
+
+window.phaseSkipRueckgaengig = function(phaseN){
+  var recordId = window._currentAkteId;
+  if(!recordId) return;
+  speichereSkipBegruendung(recordId, phaseN, null);
+  if(window._currentAkteFields) renderTimeline(null, window._currentAkteFields);
+};
 
 /* ─── DOKUMENTE ─── */
 function renderDokumente(f){

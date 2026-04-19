@@ -51,9 +51,7 @@ function renderProjektliste() {
   document.getElementById('proj-count').textContent = _data.projekte.length;
 
   if (!liste.length) {
-    // Session 5 Fix: "+ Neues Projekt anlegen" NICHT nochmal hier als Empty-State-Hint —
-    // oben steht bereits ein vollwertiger "+ Neues Projekt"-Button. Doppelter CTA verwirrt.
-    container.innerHTML = '<div class="empty-state"><div class="empty-icon">🏗</div><div class="empty-title">Noch keine Projekte</div><div class="empty-sub">Starten Sie mit einem neuen Baubegleitungsprojekt</div></div>';
+    container.innerHTML = '<div class="empty-state"><div class="empty-icon">🏗</div><div class="empty-title">Keine Projekte</div><div class="empty-sub">+ Neues Projekt anlegen</div></div>';
     return;
   }
   container.innerHTML = '';
@@ -306,6 +304,12 @@ window.deleteMangel = function(projId, idx) {
 function openModal(id) { document.getElementById(id).classList.add('open'); }
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
 
+/* Session 30 Sprint 4 — Naming-Aliases für HTML-Onclicks */
+window.oeffneNeuProjekt       = function() { _editProjektId = null; openModalProjekt(); };
+window.oeffneNeueBegehung     = function() { openModalBegehung(); };
+window.schliesseProjektModal  = function() { closeModal('modal-projekt'); };
+window.schliesseBegehungModal = function() { closeModal('modal-begehung'); };
+
 function openModalProjekt() {
   _editProjektId = null;
   document.getElementById('modal-projekt-titel').textContent = '🏗 Neues Projekt';
@@ -352,12 +356,15 @@ function speichereProjekt() {
   var name = document.getElementById('mp-name').value.trim();
   if (!name) { zeigToast('Projektname ist Pflichtfeld', 'err'); return; }
 
+  // Session 30 Sprint 4: AZ-Element korrekt auslesen (war undefined.trim()-Crash)
+  var azEingabe = (document.getElementById('mp-az') || {value:''}).value.trim();
+
   if (_editProjektId) {
     var proj = _data.projekte.find(function(p){return p.id===_editProjektId;});
     if (proj) {
       proj.name = name;
       proj.auftraggeber = document.getElementById('mp-auftraggeber').value.trim();
-      proj.az = document.getElementById('mp-az') || document.getElementById('mp-az-edit').value.trim();
+      proj.az = azEingabe || proj.az || '';
       proj.adresse = document.getElementById('mp-adresse').value.trim();
       proj.beginn = document.getElementById('mp-beginn').value;
       proj.abnahme = document.getElementById('mp-abnahme').value;
@@ -365,8 +372,7 @@ function speichereProjekt() {
       proj.notiz = document.getElementById('mp-notiz').value.trim();
     }
   } else {
-    var az = document.getElementById('mp-az') || document.getElementById('mp-az-edit').value.trim();
-    if (!az) az = 'PROVA-BB-' + new Date().getFullYear() + '-' + String((_data.projekte.length+1)).padStart(4,'0');
+    var az = azEingabe || 'PROVA-BB-' + new Date().getFullYear() + '-' + String((_data.projekte.length+1)).padStart(4,'0');
     _data.projekte.unshift({
       id: genId(),
       name: name,
@@ -379,6 +385,7 @@ function speichereProjekt() {
       notiz: document.getElementById('mp-notiz').value.trim(),
       status: 'Aktiv',
       begehungen: [],
+      flow: 'D',             // Session 30 Sprint 4: Flow-Tag
       erstellt: new Date().toISOString()
     });
     _aktivProjektId = _data.projekte[0].id;
@@ -388,15 +395,24 @@ function speichereProjekt() {
   renderProjektliste();
   if (_aktivProjektId) ladeProduktDetail(_aktivProjektId);
   zeigToast(_editProjektId ? 'Projekt aktualisiert ✅' : 'Projekt angelegt ✅');
-  // Airtable-Sync (non-blocking)
+
+  // Session 30 Sprint 4: Airtable-Sync erweitert für Flow D — schreibt in SCHADENSFAELLE
   try {
     var _svE = localStorage.getItem('prova_sv_email')||'';
     var _aktP = _data.projekte.find(function(p){return p.id===(_editProjektId||_data.projekte[0].id);});
     if (_svE && _aktP) {
       fetch('/.netlify/functions/airtable',{method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({method:'POST',path:'/v0/appJ7bLlAHZoxENWE/tblyMTTdtfGQjjmc2',
-          payload:{records:[{fields:{titel:'BB: '+_aktP.name,termin_typ:'Baubegleitung',
-            aktenzeichen:_aktP.az||'',sv_email:_svE,notiz:_aktP.adresse||''
+        body:JSON.stringify({method:'POST',path:'/v0/appJ7bLlAHZoxENWE/tblSxV8bsXwd1pwa0',
+          payload:{records:[{fields:{
+            Aktenzeichen: _aktP.az||'',
+            Flow: 'D',
+            Auftragstyp: 'baubegleitung',
+            Phase: 'Projekt angelegt',
+            Status: 'Baubegleitung — laufend',
+            Auftraggeber_Name: _aktP.auftraggeber||'',
+            Schaden_Strasse: _aktP.adresse||'',
+            Notizen: (_aktP.typ||'')+' · Baubeginn '+(_aktP.beginn||'?')+' · gepl. Abnahme '+(_aktP.abnahme||'?'),
+            sv_email: _svE
           }}]}
         })
       }).catch(function(){});
@@ -406,24 +422,56 @@ function speichereProjekt() {
 
 function speichereBegehung() {
   if (!_aktivProjektId) return;
-  var text = document.getElementById('mb-text').value.trim();
+  // Session 30 Sprint 4: HTML-Input heißt 'bericht-text', mit Fallback für mb-text
+  var text = (document.getElementById('bericht-text') || document.getElementById('mb-text') || {value:''}).value.trim();
   var datum = document.getElementById('mb-datum').value;
   if (!text || !datum) { zeigToast('Datum und Feststellungen sind Pflicht', 'err'); return; }
 
   var proj = _data.projekte.find(function(p){return p.id===_aktivProjektId;});
   if (!proj) return;
   proj.begehungen = proj.begehungen || [];
+
+  // Session 30 Sprint 4: Foto-Count korrekt aus File-Input holen (.files.length statt .value)
+  var fotoInput = document.getElementById('mb-fotos');
+  var fotoAnzahl = 0;
+  if (fotoInput && fotoInput.files) fotoAnzahl = fotoInput.files.length;
+
   proj.begehungen.push({
     datum: datum,
     uhrzeit: document.getElementById('mb-uhrzeit').value,
     phase: document.getElementById('mb-phase').value,
     text: text,
     anwesend: document.getElementById('mb-anwesend').value.trim(),
-    fotos: parseInt(document.getElementById('mb-fotos').value)||0,
+    fotos: fotoAnzahl,
     dringlichkeit: document.getElementById('mb-dringlichkeit').value,
     erfasst: new Date().toISOString()
   });
   speichereDaten(_data);
+
+  // Session 30 Sprint 4: Airtable-Sync der Begehung (non-blocking, SCHADENSFAELLE)
+  try {
+    var _svE = localStorage.getItem('prova_sv_email')||'';
+    if (_svE) {
+      var begehungsSync = proj.begehungen[proj.begehungen.length-1];
+      fetch('/.netlify/functions/airtable',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({method:'POST',path:'/v0/appJ7bLlAHZoxENWE/tblSxV8bsXwd1pwa0',
+          payload:{records:[{fields:{
+            Aktenzeichen: proj.az||'',
+            Flow: 'D',
+            Auftragstyp: 'baubegleitung',
+            Phase: begehungsSync.phase||'',
+            Status: 'Baubegleitung — Begehung ' + proj.begehungen.length,
+            Auftraggeber_Name: proj.auftraggeber||'',
+            Schaden_Strasse: proj.adresse||'',
+            Timestamp_Iso: begehungsSync.erfasst,
+            Notizen: 'Begehung vom ' + begehungsSync.datum + ' — ' + (begehungsSync.phase||'keine Phase') + '\n\n' + begehungsSync.text,
+            sv_email: _svE
+          }}]}
+        })
+      }).catch(function(){});
+    }
+  } catch(e) {}
+
   closeModal('modal-begehung');
   ladeProduktDetail(_aktivProjektId);
   zeigToast('Begehung erfasst ✅');
@@ -621,6 +669,42 @@ function berichtKopieren() {
     zeigToast('Kopieren nicht möglich — bitte manuell markieren', 'err');
   });
 }
+
+/* Session 30 Sprint 4 — KI-Begehungs-Formulierungshilfe
+   (routet zum neuen Polish-Modul mit DSGVO-Pseudonymisierung + Konjunktiv II) */
+window.kiBegehungAssist = async function() {
+  var btn = document.getElementById('ki-bericht-btn');
+  var textEl = document.getElementById('bericht-text');
+  var status = document.getElementById('ki-bericht-status');
+  if (!btn || !textEl) return;
+
+  var roh = (textEl.value || textEl.textContent || '').trim();
+  if (!roh) { zeigToast('Bitte zuerst Text eingeben', 'err'); return; }
+  if (!window.PROVA || typeof PROVA.kiBegehungsFormulierung !== 'function') {
+    zeigToast('Polish-Modul nicht geladen — Seite neu laden', 'err'); return;
+  }
+
+  var phaseEl = document.getElementById('mb-phase');
+  var phase = phaseEl ? phaseEl.value : '';
+
+  btn.disabled = true;
+  var orig = btn.textContent;
+  btn.textContent = '⏳ KI formuliert…';
+  if (status) { status.textContent = 'DSGVO-pseudonymisiert · Konjunktiv II'; }
+
+  try {
+    var result = await PROVA.kiBegehungsFormulierung(roh, phase);
+    if ('value' in textEl) textEl.value = result;
+    else textEl.textContent = result;
+    zeigToast('✓ Text formuliert — bitte prüfen');
+  } catch (e) {
+    zeigToast('Fehler: ' + e.message, 'err');
+  } finally {
+    btn.textContent = orig;
+    btn.disabled = false;
+    if (status) status.textContent = '';
+  }
+};
 
 // ============================================================
 // HELPERS

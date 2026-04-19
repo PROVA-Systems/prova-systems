@@ -2028,14 +2028,14 @@ var WORKFLOW = [
   {
     schritt: 2,
     name: 'Diktat & Fotos',
-    seite: 'app-starter.html#step2',
+    seite: 'app.html#step2',
     icon: '🎙️',
     farbe: '#4f8ef7'
   },
   {
     schritt: 3,
     name: 'KI-Analyse',
-    seite: 'app-starter.html#step3',
+    seite: 'app.html#step3',
     icon: '🤖',
     farbe: '#6366f1'
   },

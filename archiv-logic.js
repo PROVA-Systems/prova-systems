@@ -12,7 +12,7 @@ var paket=localStorage.getItem('prova_paket')||'Solo';
 var pc={'Solo':'#4f8ef7','Team':'#a78bfa','Solo':'#4f8ef7','Pro':'#4f8ef7','Enterprise':'#a78bfa'}[paket]||'#4f8ef7';
 var el=document.getElementById('topbar-paket-badge');
 if(el){el.textContent=paket;el.style.cssText='font-size:10px;font-weight:700;padding:3px 9px;border-radius:10px;letter-spacing:.04em;background:'+pc+'18;color:'+pc+';border:1px solid '+pc+'33;';}
-var appUrl=paket==='Team'?'app.html':paket==='Solo'?'app-pro.html':'app.html';
+var appUrl='app.html'; // Session 30: Legacy-Varianten sind Redirects auf app.html
 
 /* ── AUTH ── */
 if(!localStorage.getItem('prova_user')){window.location.href='app-login.html';return;}
@@ -67,7 +67,8 @@ async function ladeFaelle(){
     ? 'TRUE()'                        // Admin: alle Records (airtable.js Admin-Check)
     : 'NOT({Aktenzeichen}="")';       // Normal-SV: Proxy ergänzt sv_email-Filter server-seitig
     // FIX #010: fields[] Parameter — nur benötigte Felder laden (Performance +60%)
-    var _archivFields=['Aktenzeichen','Status','Timestamp','Schaden_Strasse','Ort','Auftraggeber_Name','Auftraggeber_Typ','sv_email'].map(function(f){return'fields%5B%5D='+encodeURIComponent(f);}).join('&');
+    // Session 30: Flow, Auftragstyp, Phase ergänzt für 4-Flow-Architektur-Filter
+    var _archivFields=['Aktenzeichen','Status','Timestamp','Schaden_Strasse','Ort','Auftraggeber_Name','Auftraggeber_Typ','sv_email','Schadensart','Flow','Auftragstyp','Phase'].map(function(f){return'fields%5B%5D='+encodeURIComponent(f);}).join('&');
     var path='/v0/'+AT_BASE+'/'+AT_FAELLE+'?filterByFormula='+encodeURIComponent(filter)+'&maxRecords=100&sort[0][field]=Timestamp&sort[0][direction]=desc&'+_archivFields;
     var res=await fetch('/.netlify/functions/airtable',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({method:'GET',path:path})});
     if(!res.ok)throw new Error('HTTP '+res.status);
@@ -93,15 +94,32 @@ async function ladeFaelle(){
 var gefiltert=[];
 window.filterUndRender=function(){
   var such=(document.getElementById('suche').value||'').toLowerCase().trim();
+  var flow=(document.getElementById('f-flow')||{}).value||'';
+  var art=((document.getElementById('f-art')||{}).value||'').toLowerCase();
+  var phase=(document.getElementById('f-phase')||{}).value||'';
   var sa=document.getElementById('f-schadenart').value;
   var zr=document.getElementById('f-zeitraum').value;
   var now=Date.now();
 
   gefiltert=alleRecords.filter(function(r){
     var f=r.fields||{};
+    // Session 30: Neue Filter Flow/Art/Phase
+    if(flow){
+      var recFlow=getFlowFromRecord(r);
+      if(recFlow!==flow)return false;
+    }
+    if(art){
+      var recArt=getArtFromRecord(r);
+      if(recArt!==art)return false;
+    }
+    if(phase){
+      var recPhase=getPhaseFromRecord(r);
+      if(String(recPhase)!==phase)return false;
+    }
+    // Bestehende Filter
     if(sa){
-      var art=(f.Schadensart||f.schadenart||f.Schadensart||'').toLowerCase();
-      if(!art.includes(sa.toLowerCase()))return false;
+      var saField=(f.Schadensart||f.schadenart||'').toLowerCase();
+      if(!saField.includes(sa.toLowerCase()))return false;
     }
     if(zr&&f.Timestamp){
       var ts=new Date(f.Timestamp).getTime();
@@ -116,8 +134,9 @@ window.filterUndRender=function(){
       var az=(f.Aktenzeichen||'').toLowerCase();
       var addr=[(f.Schaden_Strasse||''),(f.Ort||'')].join(' ').toLowerCase();
       var ag=(f.Auftraggeber_Name||'').toLowerCase();
-      var art2=(f.Schadensart||f.schadenart||f.Schadensart||'').toLowerCase();
-      if(!az.includes(such)&&!addr.includes(such)&&!ag.includes(such)&&!art2.includes(such))return false;
+      var art2=(f.Schadensart||f.schadenart||'').toLowerCase();
+      var at=(f.Auftragstyp||'').toLowerCase();
+      if(!az.includes(such)&&!addr.includes(such)&&!ag.includes(such)&&!art2.includes(such)&&!at.includes(such))return false;
     }
     return true;
   });
@@ -138,6 +157,64 @@ function schadenartClass(sa){
   if(s.includes('bau')||s.includes('mängel'))return'sa-baum';
   return'sa-sonstig';
 }
+
+/* Session 30: Helper — Flow/Art/Phase aus Record ableiten.
+   Robust gegen fehlende Airtable-Felder: Default = "" (matcht in Filter "Alle"). */
+
+// Mapping Auftragstyp → Flow (für Fallback wenn Flow-Feld leer)
+var ART_ZU_FLOW = {
+  'gerichtsgutachten':'A','versicherungsgutachten':'A','privatgutachten':'A',
+  'schiedsgutachten':'A','beweissicherung':'A','ergaenzungsgutachten':'A','gegengutachten':'A',
+  'kaufberatung':'C','sanierungsberatung':'C','bauherrenberatung':'C',
+  'baubegleitung':'D','bauabnahme':'D',
+  'verkehrswert':'B','beleihungswert':'B','mietwert':'B'
+};
+
+function getFlowFromRecord(r){
+  var f=r.fields||{};
+  if(f.Flow)return String(f.Flow).toUpperCase().charAt(0);  // "A" / "B" / "C" / "D"
+  var art=(f.Auftragstyp||'').toLowerCase();
+  return ART_ZU_FLOW[art]||'';
+}
+
+function getArtFromRecord(r){
+  var f=r.fields||{};
+  return (f.Auftragstyp||'').toLowerCase();
+}
+
+// Status → grobe Phase-Zuordnung (Fallback wenn Phase-Feld leer)
+var STATUS_ZU_PHASE = {
+  'neuer auftrag':1, 'auftrag erhalten':1,
+  'in bearbeitung':5, 'ortstermin':2, 'messung':3, 'recherche':4, 'schreiben':5,
+  'entwurf fertig':6, 'qualitätsprüfung':6, 'zur freigabe':7,
+  'freigegeben':7, 'pdf erstellt':7,
+  'versendet':8, 'abgeschlossen':9, 'exportiert':9
+};
+
+function getPhaseFromRecord(r){
+  var f=r.fields||{};
+  if(f.Phase){
+    var p=parseInt(f.Phase,10);
+    if(!isNaN(p)&&p>=1&&p<=9)return p;
+  }
+  // Fallback: Status mappen
+  var st=(f.Status||'').toLowerCase();
+  for(var key in STATUS_ZU_PHASE){
+    if(st.indexOf(key)!==-1)return STATUS_ZU_PHASE[key];
+  }
+  return 0; // unbekannt
+}
+
+var PHASE_LABEL = {
+  1:'Auftragsannahme', 2:'Ortstermin', 3:'Messung', 4:'Recherche',
+  5:'Schreiben', 6:'Qualitätsprüfung', 7:'Freigabe + PDF', 8:'Versand', 9:'Rechnung'
+};
+
+var PHASE_COLOR = {
+  1:'#4f8ef7', 2:'#f59e0b', 3:'#0ea5e9', 4:'#8b5cf6',
+  5:'#ec4899', 6:'#14b8a6', 7:'#a78bfa', 8:'#10b981', 9:'#22c55e'
+};
+
 function statusClass(st){
   var s=(st||'').toLowerCase();
   if(s.includes('bearbeitung'))return'st-bearb';
@@ -162,7 +239,7 @@ function escHtml(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt
 function fallKarte(r){
   var f=r.fields||{};
   var az=f.Aktenzeichen||r.id.slice(-6).toUpperCase();
-  var schadenart=f.Schadensart||f.schadenart||f.Schadensart||'Schadenfall';
+  var schadenart=f.Schadensart||f.schadenart||'Schadenfall';
   var adresse=[f.Schaden_Strasse,f.Ort].filter(Boolean).join(', ')||'—';
   var status=f.Status||'In Bearbeitung';
   var datum=formatDatum(f.Timestamp||r.createdTime);
@@ -176,11 +253,37 @@ function fallKarte(r){
   var schritt=schrittMap[status]||2;
   var fortschritt=Math.round((schritt/4)*100);
   var fortColor={'Abgeschlossen':'#10b981','Exportiert':'#10b981','Entwurf fertig':'#f59e0b'}[status]||'#4f8ef7';
+
+  /* Session 30: Flow + Phase Badges */
+  var flowLetter=getFlowFromRecord(r);
+  var phase=getPhaseFromRecord(r);
+  var phaseBadge='';
+  if(phase&&PHASE_LABEL[phase]){
+    var col=PHASE_COLOR[phase];
+    phaseBadge=''
+      +'<span title="Phase '+phase+' · '+PHASE_LABEL[phase]+'" '
+      +'style="display:inline-flex;align-items:center;gap:4px;font-size:9px;font-weight:700;'
+      +'padding:2px 7px;border-radius:4px;background:'+col+'18;color:'+col+';'
+      +'border:1px solid '+col+'33;letter-spacing:.02em;margin-right:6px;">'
+      +'<span style="font-size:8px;opacity:.8;">PH '+phase+'</span>'
+      +'<span>'+escHtml(PHASE_LABEL[phase])+'</span>'
+      +'</span>';
+  }
+  var flowTag='';
+  if(flowLetter){
+    flowTag=''
+      +'<span title="Flow '+flowLetter+'" '
+      +'style="display:inline-block;font-size:9px;font-weight:800;padding:1px 5px;'
+      +'border-radius:3px;background:rgba(255,255,255,.06);color:var(--text3);margin-right:4px;">'
+      +flowLetter+'</span>';
+  }
+
   return '<div class="fall-card" onclick="oeffneFall(\'' + r.id + '\')" style="cursor:pointer;">'
     +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">'
-    +'<span class="fall-az" style="font-size:11px;font-weight:800;letter-spacing:.04em;">'+escHtml(az)+'</span>'
+    +'<span class="fall-az" style="font-size:11px;font-weight:800;letter-spacing:.04em;">'+flowTag+escHtml(az)+'</span>'
     +'<span class="fall-schadenart '+saClass+'" style="font-size:9px;padding:2px 7px;border-radius:4px;font-weight:700;">'+escHtml(saKurz)+'</span>'
     +'</div>'
+    +(phaseBadge?'<div style="margin-bottom:8px;">'+phaseBadge+'</div>':'')
     +'<div style="margin-bottom:10px;">'
     +'<div style="font-size:13px;font-weight:600;margin-bottom:3px;">'+escHtml(ag||adresse.split(',')[0]||schadenart)+'</div>'
     +(agTyp?'<div style="font-size:10px;color:var(--text3);margin-bottom:2px;">'+escHtml(agTyp)+'</div>':'')

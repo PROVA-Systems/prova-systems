@@ -16,7 +16,7 @@
     {
       q: 'Wie starte ich ein neues Gutachten?',
       keywords: ['neues gutachten', 'gutachten erstellen', 'neuer fall', 'anfangen', 'starten'],
-      a: 'Klicken Sie in der Sidebar auf <strong>„+ Neuer Fall"</strong> oder öffnen Sie die <a href="app-starter.html" style="color:#4f8ef7;">Gutachten-Seite</a>. Dort geben Sie Stammdaten ein, diktieren Ihren Befund und PROVA erstellt den KI-Entwurf.'
+      a: 'Klicken Sie in der Sidebar auf <strong>„+ Neuer Fall"</strong> oder öffnen Sie die <a href="app.html" style="color:#4f8ef7;">Gutachten-Seite</a>. Dort geben Sie Stammdaten ein, diktieren Ihren Befund und PROVA erstellt den KI-Entwurf.'
     },
     {
       q: 'Wie funktioniert das Diktat?',

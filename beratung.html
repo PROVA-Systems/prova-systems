@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Beratung · PROVA</title>
+<script src="prova-preise.js"></script>
+<script src="paket-guard.js"></script>
+<script src="auth-guard.js"></script>
+<script src="prova-auth-api.js"></script>
+<script src="prova-sv-airtable.js"></script>
+<script src="theme.js"></script>
+<script src="prova-layout.config.js"></script>
+<script src="prova-api.js"></script>
+<script src="nav.js" defer></script>
+<script src="auftragstyp.js"></script>
+<script src="paragraph-generator.js" defer></script>
+<script src="trial-guard.js"></script>
+<link rel="stylesheet" href="prova-design.css">
+<link rel="stylesheet" href="mobile.css">
+<style>
+:root{
+  --bg:#0b1220;--bg2:#111827;--bg3:#161f30;
+  --surface:#1c2537;--surface2:#222d42;--surface3:#2a3550;
+  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);
+  --text:#e8eaf0;--text2:#aab4cb;--text3:#6b7a99;
+  --accent:#4f8ef7;--accent2:#3a7be0;
+  --green:#10b981;--red:#ef4444;--warn:#f59e0b;--purple:#8b5cf6;
+  --r-sm:6px;--r-md:10px;--r-lg:14px;
+  --font-ui:'DM Sans',system-ui,sans-serif;
+  --topbar-h:52px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--font-ui);font-size:14px;line-height:1.5;}
+.app-shell{min-height:100vh;}
+.main{display:flex;flex-direction:column;min-height:100vh;}
+.topbar{height:var(--topbar-h);background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 20px;position:sticky;top:0;z-index:50;}
+.topbar-title{font-size:15px;font-weight:700;}
+.topbar-title span{color:var(--text3);font-weight:400;}
+.page{flex:1;padding:24px 24px 40px;max-width:1200px;margin:0 auto;width:100%;}
+
+/* Phasen-Indikator */
+.br-phases{display:flex;gap:0;margin-bottom:24px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;align-items:center;flex-wrap:wrap;}
+.br-phase{display:flex;align-items:center;gap:8px;padding:6px 12px;border-radius:8px;flex:1;min-width:0;}
+.br-phase.done{color:var(--green);}
+.br-phase.active{color:var(--accent);background:rgba(79,142,247,.08);font-weight:600;}
+.br-phase.pending{color:var(--text3);}
+.br-phase-dot{width:22px;height:22px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;}
+.br-phase.done .br-phase-dot{background:rgba(16,185,129,.15);color:var(--green);border:2px solid var(--green);}
+.br-phase.active .br-phase-dot{background:rgba(79,142,247,.15);color:var(--accent);border:2px solid var(--accent);}
+.br-phase.pending .br-phase-dot{background:var(--bg3);color:var(--text3);border:2px solid var(--border2);}
+.br-phase-arrow{color:var(--text3);flex-shrink:0;}
+
+/* Layout 2-spaltig */
+.br-grid{display:grid;grid-template-columns:minmax(0, 340px) 1fr;gap:20px;}
+@media(max-width:900px){.br-grid{grid-template-columns:1fr;}}
+
+/* Card */
+.br-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:16px;}
+.br-card-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.br-card-title{font-size:13px;font-weight:700;color:var(--text);}
+.br-card-sub{font-size:11px;color:var(--text3);margin-top:2px;}
+
+/* Form */
+.br-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);margin-bottom:4px;display:block;}
+.br-input,.br-select,.br-textarea{width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;margin-bottom:12px;}
+.br-input:focus,.br-select:focus,.br-textarea:focus{border-color:var(--accent);}
+.br-textarea{resize:vertical;min-height:200px;line-height:1.7;}
+
+/* Timer */
+.br-timer{text-align:center;padding:18px;background:var(--bg3);border:1px solid var(--border);border-radius:12px;margin-bottom:12px;}
+.br-timer-display{font-size:32px;font-weight:800;font-variant-numeric:tabular-nums;color:var(--text);font-family:monospace;margin-bottom:6px;}
+.br-timer-label{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:12px;}
+.br-timer-running .br-timer-display{color:var(--green);}
+.br-timer-btn{padding:10px 20px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;border:none;transition:all .15s;}
+.br-timer-btn-start{background:var(--green);color:#fff;}
+.br-timer-btn-start:hover{background:#0a9668;}
+.br-timer-btn-stop{background:var(--red);color:#fff;}
+.br-timer-btn-stop:hover{background:#cf3a3a;}
+
+/* Stunden-Eintrag */
+.br-eintrag{display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;margin-bottom:6px;font-size:12px;}
+.br-eintrag-dauer{font-variant-numeric:tabular-nums;font-weight:700;color:var(--accent);flex-shrink:0;}
+.br-eintrag-beschreibung{color:var(--text2);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.br-eintrag-del{background:none;border:none;color:var(--text3);cursor:pointer;padding:2px 6px;border-radius:4px;font-size:14px;}
+.br-eintrag-del:hover{color:var(--red);background:rgba(239,68,68,.08);}
+
+/* Summary */
+.br-sum{background:linear-gradient(135deg,rgba(79,142,247,.08),rgba(79,142,247,.02));border:1px solid rgba(79,142,247,.2);border-radius:10px;padding:12px 14px;margin-top:12px;}
+.br-sum-row{display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;}
+.br-sum-row.total{font-size:14px;font-weight:700;color:var(--accent);padding-top:6px;border-top:1px solid var(--border);margin-top:6px;}
+
+/* Buttons */
+.br-btn-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px;}
+.br-btn{padding:10px 18px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;border:1px solid transparent;transition:all .15s;}
+.br-btn-primary{background:var(--accent);color:#fff;border-color:var(--accent);}
+.br-btn-primary:hover{background:var(--accent2);}
+.br-btn-secondary{background:var(--surface2);color:var(--text2);border-color:var(--border2);}
+.br-btn-secondary:hover{background:var(--surface3);color:var(--text);}
+.br-btn-ghost{background:transparent;color:var(--text3);border-color:var(--border);}
+.br-btn-ghost:hover{color:var(--text);border-color:var(--text3);}
+.br-btn-success{background:var(--green);color:#fff;border-color:var(--green);}
+.br-btn-success:hover{background:#0a9668;}
+
+/* Badge für Beratungstyp */
+.br-typ-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:6px;font-size:11px;font-weight:700;background:rgba(249,115,22,.12);color:#f97316;border:1px solid rgba(249,115,22,.25);}
+
+/* Toast */
+.br-toast{position:fixed;bottom:20px;right:20px;padding:12px 20px;border-radius:10px;background:var(--bg2);border:1px solid var(--border2);color:var(--text);font-size:13px;z-index:9999;opacity:0;transform:translateY(20px);transition:all .3s;}
+.br-toast.show{opacity:1;transform:translateY(0);}
+.br-toast.success{border-color:rgba(16,185,129,.4);}
+.br-toast.error{border-color:rgba(239,68,68,.4);}
+
+/* Empty state */
+.br-empty{text-align:center;padding:30px 20px;color:var(--text3);font-size:12px;}
+
+/* KI-Box */
+.br-ki-box{background:linear-gradient(135deg,rgba(139,92,246,.04),rgba(79,142,247,.02));border:1px solid rgba(139,92,246,.15);border-radius:10px;padding:12px 14px;margin-top:12px;margin-bottom:12px;}
+.br-ki-head{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:700;color:var(--purple);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;}
+</style>
+</head>
+<body>
+<div class="app-shell">
+  <nav class="sidebar" id="sidebar"></nav>
+  <div class="main" id="mainContent">
+    <div class="topbar">
+      <div class="topbar-title">PROVA <span>· Beratung (Flow C)</span></div>
+      <div class="topbar-right"><span id="topbar-paket-badge" class="paket-badge"></span></div>
+    </div>
+
+    <div class="page">
+      <!-- Phasen-Indikator -->
+      <div class="br-phases">
+        <div class="br-phase" id="ph-1">
+          <div class="br-phase-dot">1</div>
+          <div>
+            <div style="font-size:11px;font-weight:700;">Auftragsannahme</div>
+            <div style="font-size:10px;color:var(--text3);">Stammdaten</div>
+          </div>
+        </div>
+        <span class="br-phase-arrow">→</span>
+        <div class="br-phase" id="ph-2">
+          <div class="br-phase-dot">2</div>
+          <div>
+            <div style="font-size:11px;font-weight:700;">Beratungstermin</div>
+            <div style="font-size:10px;color:var(--text3);">Zeit + Protokoll</div>
+          </div>
+        </div>
+        <span class="br-phase-arrow">→</span>
+        <div class="br-phase" id="ph-3">
+          <div class="br-phase-dot">3</div>
+          <div>
+            <div style="font-size:11px;font-weight:700;">Abschluss</div>
+            <div style="font-size:10px;color:var(--text3);">Protokoll + Rechnung</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2-spaltiges Layout -->
+      <div class="br-grid">
+
+        <!-- LINKE SPALTE: Fall-Daten + Stunden-Tracker -->
+        <div>
+
+          <!-- Stammdaten -->
+          <div class="br-card">
+            <div class="br-card-h">
+              <div>
+                <div class="br-card-title">Beratungs-Fall</div>
+                <div class="br-card-sub"><span id="br-typ-badge" class="br-typ-badge">—</span></div>
+              </div>
+            </div>
+            <label class="br-label">Aktenzeichen</label>
+            <input type="text" class="br-input" id="br-az" placeholder="z.B. 2026-042">
+            <label class="br-label">Auftraggeber</label>
+            <input type="text" class="br-input" id="br-ag" placeholder="Name / Firma">
+            <label class="br-label">E-Mail Auftraggeber</label>
+            <input type="email" class="br-input" id="br-ag-email" placeholder="kontakt@beispiel.de">
+            <label class="br-label">Objekt-Adresse</label>
+            <input type="text" class="br-input" id="br-obj" placeholder="Straße, PLZ Ort">
+            <label class="br-label">Beratungs-Thema</label>
+            <input type="text" class="br-input" id="br-thema" placeholder="z.B. Feuchteprüfung vor Kauf, Sanierungskonzept Dach">
+          </div>
+
+          <!-- Stunden-Tracker -->
+          <div class="br-card" style="margin-top:16px;">
+            <div class="br-card-h">
+              <div class="br-card-title">⏱ Stunden-Tracker</div>
+              <span id="br-stundensatz" style="font-size:11px;color:var(--text3);">—</span>
+            </div>
+            <div class="br-timer" id="br-timer">
+              <div class="br-timer-display" id="br-timer-display">00:00:00</div>
+              <div class="br-timer-label" id="br-timer-label">Nicht laufend</div>
+              <button class="br-timer-btn br-timer-btn-start" id="br-timer-btn" onclick="timerToggle()">▶ Start</button>
+            </div>
+            <div id="br-timer-beschreibung-wrap" style="display:none;margin-bottom:10px;">
+              <input type="text" class="br-input" id="br-timer-beschreibung" placeholder="Was wurde besprochen? (wird beim Stop gespeichert)" style="margin-bottom:0;">
+            </div>
+            <button class="br-btn br-btn-ghost" onclick="manuellerEintrag()" style="width:100%;">+ Manueller Eintrag</button>
+          </div>
+
+          <!-- Eingetragene Zeiten -->
+          <div class="br-card" style="margin-top:16px;">
+            <div class="br-card-h">
+              <div class="br-card-title">Zeiterfassung</div>
+              <span id="br-eintraege-count" style="font-size:11px;color:var(--text3);">0 Einträge</span>
+            </div>
+            <div id="br-eintraege-list">
+              <div class="br-empty">Noch keine Zeiten erfasst.</div>
+            </div>
+            <div class="br-sum" id="br-sum" style="display:none;">
+              <div class="br-sum-row"><span style="color:var(--text3);">Summe Zeit</span><span id="br-sum-zeit">—</span></div>
+              <div class="br-sum-row"><span style="color:var(--text3);">Stundensatz</span><span id="br-sum-satz">—</span></div>
+              <div class="br-sum-row total"><span>Honorar (netto)</span><span id="br-sum-total">—</span></div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- RECHTE SPALTE: Protokoll -->
+        <div>
+
+          <div class="br-card">
+            <div class="br-card-h">
+              <div>
+                <div class="br-card-title">Beratungs-Protokoll</div>
+                <div class="br-card-sub">Stichpunkte oder Fließtext — KI kann strukturieren</div>
+              </div>
+              <span id="br-autosave" style="font-size:10px;color:var(--text3);">Auto-Save aktiv</span>
+            </div>
+
+            <label class="br-label">Anwesende</label>
+            <input type="text" class="br-input" id="br-anwesende" placeholder="z.B. Herr Müller, Frau Meyer, SV Schmidt">
+
+            <label class="br-label">Termin-Datum</label>
+            <input type="date" class="br-input" id="br-termin-datum">
+
+            <label class="br-label">Protokoll-Text</label>
+            <textarea class="br-textarea" id="br-protokoll" placeholder="Was wurde besprochen? Beobachtungen, Empfehlungen, offene Fragen…"></textarea>
+
+            <!-- KI-Strukturierung -->
+            <div class="br-ki-box">
+              <div class="br-ki-head">✨ KI-Assistenz</div>
+              <div style="font-size:12px;color:var(--text2);margin-bottom:8px;">
+                KI strukturiert Stichpunkte in ein formelles Beratungsprotokoll — <strong>Sie prüfen und passen an</strong>.
+              </div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                <button class="br-btn br-btn-secondary" onclick="kiStrukturiere()">🧩 Protokoll strukturieren</button>
+                <button class="br-btn br-btn-ghost" onclick="kiEmpfehlungen()">💡 Empfehlungen vorschlagen</button>
+              </div>
+              <div id="br-ki-output" style="margin-top:10px;"></div>
+            </div>
+
+            <div class="br-btn-row">
+              <button class="br-btn br-btn-secondary" onclick="speichereFall()">💾 Speichern</button>
+              <button class="br-btn br-btn-primary" onclick="erstelleProtokollPDF()">📄 Protokoll als PDF</button>
+              <button class="br-btn br-btn-primary" onclick="erstelleRechnung()">💶 Rechnung erstellen</button>
+              <button class="br-btn br-btn-success" onclick="fallAbschliessen()">✓ Abschließen</button>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="br-toast" id="br-toast"></div>
+
+<script src="beratung-logic.js" defer></script>
+<script src="sw-register.js" defer></script>
+<script src="auto-save.js" defer></script>
+<script src="global-search.js" defer></script>
+<script src="prova-context.js" defer></script>
+<script src="prova-error-handler.js" defer></script>
+<script src="support-chat.js" defer></script>
+</body>
+</html>

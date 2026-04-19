@@ -81,7 +81,7 @@
     },
 
     get appUrl() {
-      return paket === 'Team' ? 'app-enterprise.html' : 'app.html';
+      return 'app.html'; // Session 30 Legacy-Cleanup
     },
 
     get kontingent() {
@@ -96,7 +96,7 @@
     SV:         'tbladqEQT3tmx4DIB',
     TERMINE:    'tblyMTTdtfGQjjmc2',
     RECHNUNGEN: 'tblF6MS7uiFAJDjiT',
-    NORMEN:     'tblNormenDb',
+    NORMEN:     'tblnceVJIW7BjHsPF',
   };
 
   /* ── Zentraler Airtable-Proxy-Fetch ── */

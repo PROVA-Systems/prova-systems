@@ -82,7 +82,7 @@
             var p = localStorage.getItem('prova_paket') || 'Starter';
             var isPlus = p === 'Pro';
             var isTeam = p === 'Enterprise' || p === 'Team';
-            var app = isPlus ? 'app-pro.html' : (isTeam ? 'app-enterprise.html' : 'app-starter.html');
+            var app = 'app.html'; // Session 30 Legacy-Cleanup
             window.location.href = app + '?provaTour=3';
             return tour.hide();
           } }

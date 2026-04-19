@@ -87,7 +87,7 @@ exports.handler = async function (event, context) {
           quantity: 1,
         }],
         success_url: successUrl || `${process.env.URL || 'https://prova-systems.de'}/dashboard.html?checkout=success&session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url:  cancelUrl  || `${process.env.URL || 'https://prova-systems.de'}/app-starter.html?checkout=cancelled`,
+        cancel_url:  cancelUrl  || `${process.env.URL || 'https://prova-systems.de'}/app.html?checkout=cancelled`,
         subscription_data: {
           metadata: {
             prova_plan:  plan,

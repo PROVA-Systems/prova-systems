@@ -13,7 +13,7 @@ var pc={'Solo':'#4f8ef7','Team':'#a78bfa'}[paket]||'#4f8ef7';
 (function(){
   var el=document.getElementById('topbar-paket-badge');
   if(el){el.style.display='none';} // Paket steht in Sidebar unten
-  var appUrl=paket==='Team'?'app.html':paket==='Solo'?'app-pro.html':'app.html';
+  var appUrl='app.html'; // Session 30 Legacy-Cleanup
 })();
 if(!localStorage.getItem('prova_user')){window.location.href='app-login.html';return;}
 

@@ -58,17 +58,19 @@
   if (paketMap[rawPaket]) localStorage.setItem('prova_paket', paket);
   var paketColors = { Solo: '#4f8ef7', Team: '#a78bfa' };
   var pc = paketColors[paket] || paketColors.Solo;
-  
-  // Übergangsphase: noch separate Dateien, später gutachten.html
-  var appUrl = paket === 'Team' ? 'app-enterprise.html' : 'app.html';
 
-  /* ── Nav-Items: SV-Workflow-orientierte Gruppierung (Session 28) ──
+  // Session 30: Einheitliche App-URL — Legacy-Dateien (app-starter/pro/enterprise) sind
+  // jetzt Redirects auf app.html, daher keine Paket-Verzweigung mehr.
+  var appUrl = 'app.html';
+
+  /* ── Nav-Items: SV-Workflow-orientierte Gruppierung (Session 30 — final) ──
+     Nach 4-Flow-Architektur-Entscheidung sind Flow-/Arten-Links nicht mehr
+     in der Sidebar — sie werden über "+ Neuer Fall" (auftragstyp.js) erreicht.
      Reihenfolge folgt dem Tagesablauf:
-     1. ARBEIT    - "wo stehe ich?" (daily landing)
-     2. GUTACHTEN - die eigentliche Hauptarbeit
-     3. WERKZEUGE - Nachschlagewerke waehrend der Arbeit
-     4. ABRECHNUNG - Geld-Flow nach Abschluss
-     5. BUERO     - seltene Verwaltung
+     1. ARBEIT    - "wo stehe ich?" (daily landing + Workflow-Status)
+     2. WERKZEUGE - Nachschlagewerke waehrend der Arbeit
+     3. DOKUMENTE - was erstellt & versendet wird (Rechnungen, Briefe, E-Rechnung)
+     4. BUERO     - seltene Verwaltung (Kontakte, Import, Jahresbericht)
      Footer (immer sichtbar): Einstellungen + Hilfe + Abmelden
   */
   var ARBEIT = [
@@ -76,38 +78,31 @@
     { href: 'archiv.html',           icon: '📂', label: 'Meine Fälle' },
     { href: 'termine.html',          icon: '📅', label: 'Kalender' },
     { href: 'ortstermin-modus.html', icon: '📍', label: 'Ortstermin' },
-  ];
-  // GUTACHTEN: Die sieben SV-Arbeitstypen (keine Werkzeuge!)
-  var GUTACHTEN = [
-    { href: 'freigabe.html',                     icon: '✅', label: 'Zur Freigabe' },
-    { href: 'vorlage-09-ergaenzungsgutachten.html', icon: '🧩', label: 'Ergänzungsgutachten' },
-    { href: 'stellungnahme.html',                icon: '📋', label: 'Technische Stellungnahme' },
-    { href: 'stellungnahme-gegengutachten.html', icon: '↩️', label: 'Gegengutachten' },
-    { href: 'vorlage-10-schiedsgutachten.html',  icon: '⚖️', label: 'Schiedsgutachten' },
-    { href: 'vorlage-04-gerichtsgutachten.html', icon: '🏛️', label: 'Gerichtsauftrag' },
-    { href: 'baubegleitung.html',                icon: '🏗️', label: 'Baubegleitung' },
+    { href: 'freigabe.html',         icon: '✅', label: 'Zur Freigabe' },
   ];
   // WERKZEUGE: Nachschlagewerke, die WAEHREND der Arbeit genutzt werden
   var WERKZEUGE = [
-    { href: 'normen.html',         icon: '📚',  label: 'Normen' },
-    { href: 'textbausteine.html',  icon: '📝',  label: 'Textbausteine' },
-    { href: 'positionen.html',     icon: '🗂️', label: 'Positionen & Preise' },
-    { href: 'jveg.html',           icon: '⚖️',  label: 'JVEG-Rechner' },
+    { href: 'normen.html',           icon: '📚',  label: 'Normen' },
+    { href: 'textbausteine.html',    icon: '📝',  label: 'Textbausteine' },
+    { href: 'positionen.html',       icon: '🗂️', label: 'Positionen & Preise' },
+    { href: 'jveg.html',             icon: '⚖️',  label: 'JVEG-Rechner' },
+    { href: 'bescheinigungen.html',  icon: '📐',  label: 'Bescheinigungen' },
   ];
-  // ABRECHNUNG: Geld-Flow nach Gutachten-Abschluss
-  var ABRECHNUNG = [
+  // DOKUMENTE (Session 30): was erstellt & versendet wird — Rechnungen + Briefe
+  var DOKUMENTE = [
     { href: 'rechnungen.html',              icon: '💶', label: 'Rechnungen' },
     { href: 'erechnung.html',               icon: '📄', label: 'E-Rechnung (XRechnung)' },
     { href: 'rechnungen.html?view=mahnung', icon: '📣', label: 'Mahnwesen' },
+    { href: 'briefvorlagen.html',           icon: '✉️', label: 'Briefe & Vorlagen' },
   ];
-  // BUERO: Seltene Verwaltung und Office-Funktionen
+  // BUERO: Seltene Verwaltung
   var BUERO = [
-    { href: 'briefvorlagen.html',  icon: '✉️', label: 'Briefe & Vorlagen' },
-    { href: 'kontakte.html',       icon: '👥', label: 'Kontakte' },
+    { href: 'kontakte.html',         icon: '👥', label: 'Kontakte' },
     { href: 'import-assistent.html', icon: '📥', label: 'Daten importieren' },
-    { href: 'jahresbericht.html',  icon: '📊', label: 'Jahresbericht' },
+    { href: 'jahresbericht.html',    icon: '📊', label: 'Jahresbericht' },
   ];
-  // VERWALTUNG entfernt (Session 28) - war ohnehin leer
+  // GUTACHTEN-Gruppe entfernt (Session 30) - Zugriff über "+ Neuer Fall"
+  // ABRECHNUNG-Gruppe entfernt (Session 30) - Inhalte in DOKUMENTE konsolidiert
   var VERWALTUNG = [];
 
 
@@ -426,9 +421,8 @@
 
     + '<div class="sb-nav">'
     +   makeGroup('Arbeit', ARBEIT)
-    +   makeGroup('Gutachten', GUTACHTEN)
     +   makeGroup('Werkzeuge', WERKZEUGE)
-    +   makeGroup('Abrechnung', ABRECHNUNG)
+    +   makeGroup('Dokumente', DOKUMENTE)
     +   makeGroup('Büro', BUERO)
     + '</div>'
 

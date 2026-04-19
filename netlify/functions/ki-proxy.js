@@ -1,8 +1,14 @@
-// PROVA Systems — KI-Proxy Netlify Function v3.2
+// PROVA Systems — KI-Proxy Netlify Function v3.3
 // Aufgaben-Router: messages-Format + aufgabe-Format
 // Neu v3.1: user_kontext (aus Einstellungen) wird automatisch in jeden System-Prompt eingewebt.
 // Neu v3.2: ki_analyse_modus ('schnell'|'praezise') wählt gpt-4o-mini vs gpt-4o — nur für schwere Aufgaben.
+// Neu v3.3: Fachwissen-Provider (prova-fachwissen.js) liefert Live-Normen aus Airtable
+//           mit 3-Schicht-Fallback. Bei Provider-Fehler läuft der Original-Prompt unverändert weiter.
 // API-Key: Netlify Env Var OPENAI_API_KEY
+
+// ── Fachwissen-Provider: liefert Airtable-Live-Normen mit Fallback-Kaskade
+// SAFE BY DESIGN: wirft nie — bei Total-Fehlschlag leerer Kontext, ki-proxy läuft wie heute weiter
+const FW = require('./lib/prova-fachwissen');
 
 /**
  * Wählt das Modell basierend auf der User-Präferenz (aus Body) und der Aufgabe.
@@ -109,6 +115,26 @@ OUTPUT: Gülitges JSON-Objekt.`;
 
 
 
+  // ── FACHWISSEN-INJECTION (v3.3)
+  // Zieht typ-abhängige Normen aus Airtable (mit Cache & Fallback).
+  // SAFE: bei Fehler läuft der original systemPrompt weiter — 0 Degradation.
+  let fachwissenBlock = '';
+  let fachwissenSource = 'none';
+  try {
+    const fw = await FW.buildPromptKontext({
+      schadensart: schadenart || '',
+      typ: 'fachurteil_entwurf',
+      maxNormen: 8
+    });
+    if (fw && fw.text) {
+      fachwissenBlock = '\n\n══════════════ AKTUELLE FACHNORMEN (kuratiert, aus PROVA-Datenbank) ══════════════\n' + fw.text + '\n════════════════════════════════════════════════════════════════════════════════\n';
+      fachwissenSource = fw.source;
+    }
+  } catch (e) {
+    console.warn('[ki-proxy:fachurteil] Fachwissen-Provider-Fehler (Original-Prompt bleibt aktiv):', e.message);
+  }
+  const systemPromptFinal = systemPrompt + fachwissenBlock;
+
   const gutTypMap = { gericht: 'Gerichtsgutachten', versicherung: 'Versicherungsgutachten', privat: 'Privatgutachten' };
   const userPrompt = `FALLANALYSE:
 AZ: ${az || '—'} | Schadensart: ${schadenart || '—'} | Objekt: ${objekt || '—'}${baujahr ? ' | Baujahr: ' + baujahr : ''}${auftraggeber ? ' | Auftraggeber: ' + auftraggeber : ''}
@@ -120,7 +146,10 @@ ${messwerte ? '\nMESSWERTE:\n' + messwerte : ''}${entwurf ? '\n§1–§5 ENTWURF
 
 WICHTIG: Analysiere AUSSCHLIESSLICH was im Diktat steht. Leere Arrays wenn zu wenig Info. Gib NUR JSON zurück.`;
 
-  const result = await callOpenAI({ model: chooseModel(body, 'fachurteil_entwurf', 'gpt-4o-mini'), max_tokens: 1200, messages: [{ role: 'system', content: appendUserContext(systemPrompt, body.user_kontext) }, { role: 'user', content: userPrompt }] }, apiKey);
+  // Telemetrie im Response-Header (optional, hilft beim Monitoring)
+  console.log(`[ki-proxy:fachurteil] Fachwissen-Quelle: ${fachwissenSource}`);
+
+  const result = await callOpenAI({ model: chooseModel(body, 'fachurteil_entwurf', 'gpt-4o-mini'), max_tokens: 1200, messages: [{ role: 'system', content: appendUserContext(systemPromptFinal, body.user_kontext) }, { role: 'user', content: userPrompt }] }, apiKey);
   const rawText = result.choices?.[0]?.message?.content || '';
   let parsed = {};
   try {

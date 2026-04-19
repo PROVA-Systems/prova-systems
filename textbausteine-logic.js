@@ -559,7 +559,7 @@ async function supSend(){var b=document.getElementById('sup-betreff').value.trim
   var pc={'Solo':'#4f8ef7','Team':'#a78bfa'}[paket]||'#4f8ef7';
   var el=document.getElementById('topbar-paket-badge');
   if(el){el.style.display='none';} // Paket steht in Sidebar unten
-  var appUrl=paket==='Team'?'app.html':paket==='Solo'?'app-pro.html':'app.html';
+  var appUrl='app.html'; // Session 30 Legacy-Cleanup
 })();
 
 /* ─────────────────────────────────────────── */
@@ -690,14 +690,14 @@ var WORKFLOW = [
   {
     schritt: 2,
     name: 'Diktat & Fotos',
-    seite: 'app-starter.html#step2',
+    seite: 'app.html#step2',
     icon: '🎙️',
     farbe: '#4f8ef7'
   },
   {
     schritt: 3,
     name: 'KI-Analyse',
-    seite: 'app-starter.html#step3',
+    seite: 'app.html#step3',
     icon: '🤖',
     farbe: '#6366f1'
   },

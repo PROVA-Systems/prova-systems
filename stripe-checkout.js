@@ -106,7 +106,7 @@ async function handleAbo(stripe, customer, body, email) {
     },
     metadata:   { paket: paketNorm, email, ref_code, typ: 'abo' },
     success_url: `${BASE_URL}/onboarding.html?stripe=success&session_id={CHECKOUT_SESSION_ID}&paket=${paketNorm}`,
-    cancel_url:  `${BASE_URL}/app-pro.html?stripe=cancel`,
+    cancel_url:  `${BASE_URL}/app.html?stripe=cancel`,
     locale:      'de',
     allow_promotion_codes: true,
   });
@@ -163,8 +163,8 @@ async function handleAddon(stripe, customer, body, email) {
       menge:     String(addon.menge),
       email,
     },
-    success_url: `${BASE_URL}/app-pro.html?addon=success&menge=${addon.menge}`,
-    cancel_url:  `${BASE_URL}/app-pro.html?addon=cancel`,
+    success_url: `${BASE_URL}/app.html?addon=success&menge=${addon.menge}`,
+    cancel_url:  `${BASE_URL}/app.html?addon=cancel`,
     locale: 'de',
   });
 

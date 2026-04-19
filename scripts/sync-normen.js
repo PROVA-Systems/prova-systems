@@ -2,7 +2,7 @@
 /**
  * PROVA — Normen-Sync
  *
- * Liest NORMEN_DB_FALLBACK aus normen-logic.js und führt einen
+ * Liest NORMEN_DB aus normen-logic.js und führt einen
  * Upsert gegen die Airtable NORMEN-Tabelle (tblnceVJIW7BjHsPF) durch.
  *
  * Benutzung:
@@ -30,8 +30,8 @@ function extractFallback() {
     path.join(__dirname, '..', 'normen-logic.js'),
     'utf8'
   );
-  const start = logic.indexOf('const NORMEN_DB_FALLBACK = [');
-  if (start < 0) throw new Error('NORMEN_DB_FALLBACK nicht gefunden');
+  const start = logic.indexOf('const NORMEN_DB = [');
+  if (start < 0) throw new Error('NORMEN_DB nicht gefunden');
   const arrStart = logic.indexOf('[', start);
   let depth = 0, i = arrStart, end = -1;
   while (i < logic.length) {

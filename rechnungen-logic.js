@@ -113,6 +113,64 @@ window.verwerfeJveg=function(){
   resetForm();
 };
 
+/* ─── BERATUNG PREFILL (Session 30 / Sprint 3) ─── */
+(function(){
+  var params = new URLSearchParams(window.location.search);
+  if (params.get('neu') !== 'beratung') return;
+  var raw = null;
+  try { raw = JSON.parse(sessionStorage.getItem('prova_rechnung_draft') || 'null'); } catch(e){}
+  if (!raw || raw.quelle !== 'beratung') return;
+
+  // Rechnungs-Typ auf Pauschal setzen (Beratung = Honorarrechnung)
+  var typEl = document.getElementById('rechnung-typ');
+  if (typEl) typEl.value = 'Pauschal';
+  var titelEl = document.getElementById('form-titel');
+  if (titelEl) titelEl.textContent = 'Beratungs-Honorar';
+
+  // AZ
+  if (raw.aktenzeichen) {
+    var azEl = document.getElementById('r-aktenzeichen') || document.getElementById('rechnung-az');
+    if (azEl) { azEl.value = raw.aktenzeichen; azEl.classList.add('prefilled'); }
+  }
+
+  // Auftraggeber
+  if (raw.auftraggeber_name) {
+    var agEl = document.getElementById('r-auftraggeber');
+    if (agEl) { agEl.value = raw.auftraggeber_name; agEl.classList.add('prefilled'); }
+  }
+  if (raw.auftraggeber_email) {
+    var emailEl = document.getElementById('r-email');
+    if (emailEl) { emailEl.value = raw.auftraggeber_email; emailEl.classList.add('prefilled'); }
+  }
+
+  // Positionen: jeder Zeit-Eintrag wird ein Posten
+  if (Array.isArray(raw.posten) && raw.posten.length && typeof addPosition === 'function') {
+    raw.posten.forEach(function(p) {
+      addPosition(p.beschreibung || 'Beratungsleistung', p.menge || 1, p.einzelpreis || 0);
+    });
+  }
+
+  // MwSt default an
+  var ust = document.getElementById('ust-toggle');
+  if (ust) { ust.checked = true; }
+  if (typeof berechneBrutto === 'function') berechneBrutto();
+
+  // Rückweg-Link zur Beratung
+  if (raw.record_id) {
+    var banner = document.createElement('div');
+    banner.style.cssText = 'position:fixed;top:64px;left:50%;transform:translateX(-50%);z-index:99998;background:#0a1e2e;border:1.5px solid #4f8ef7;border-radius:12px;padding:12px 20px;display:flex;align-items:center;gap:12px;box-shadow:0 8px 32px rgba(0,0,0,.7);max-width:90vw;font-family:var(--font-ui,sans-serif);';
+    banner.innerHTML = '<span style="font-size:18px;">💼</span>'
+      + '<div style="font-size:13px;font-weight:600;color:#4f8ef7;">Beratungs-Rechnung vorausgefüllt aus Zeiterfassung — bitte prüfen</div>'
+      + '<a href="beratung.html?id=' + encodeURIComponent(raw.record_id) + '" style="font-size:12px;color:#4f8ef7;text-decoration:none;font-weight:600;">← Zur Beratung</a>'
+      + '<button onclick="this.parentElement.remove()" style="background:none;border:none;color:rgba(255,255,255,.4);font-size:18px;cursor:pointer;padding:0;">×</button>';
+    document.body.appendChild(banner);
+    setTimeout(function() { if (banner.parentNode) banner.remove(); }, 10000);
+  }
+
+  // sessionStorage aufräumen
+  sessionStorage.removeItem('prova_rechnung_draft');
+})();
+
 /* ─── POSITIONEN ─── */
 window.addPosition=function(bez,menge,ep){
   posCounter++;
