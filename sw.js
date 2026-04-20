@@ -1,11 +1,11 @@
 /* ============================================================
-   PROVA Systems — Service Worker v59
+   PROVA Systems — Service Worker v60 (Sprint K1)
    Strategie: Network-First für HTML (kein Zwischenbild mehr!)
               Cache-First für Assets (Fonts, JS, CSS)
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v179';
+const CACHE_VERSION = 'prova-v180';
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
@@ -53,6 +53,12 @@ const APP_SHELL = [
   '/honorar-tracker.js',
   '/ki-lernpool.js',
   '/rechtspruefung.js',
+
+  // ── Sprint K1 Files (20.04.2026, Fix) ──
+  '/zpo-anzeige.html',
+  '/widerrufs-flow.js',
+  '/fab.js',
+  '/gericht-auftrag-logic.js',
 ];
 
 self.addEventListener('install', event => {

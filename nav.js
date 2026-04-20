@@ -91,6 +91,7 @@
   // DOKUMENTE (Session 30): was erstellt & versendet wird — Rechnungen + Briefe
   var DOKUMENTE = [
     { href: 'rechnungen.html',              icon: '💶', label: 'Rechnungen' },
+    { href: 'schnelle-rechnung.html',       icon: '⚡', label: 'Schnellrechnung (ohne Fall)' },
     { href: 'erechnung.html',               icon: '📄', label: 'E-Rechnung (XRechnung)' },
     { href: 'rechnungen.html?view=mahnung', icon: '📣', label: 'Mahnwesen' },
     { href: 'briefvorlagen.html',           icon: '✉️', label: 'Briefe & Vorlagen' },
@@ -666,6 +667,8 @@ window.provaConfirm = function(msg, onYes) {
 
   var AKTIONEN = [
     { label: '+ Neuer Fall', desc: 'Neues Gutachten anlegen', href: 'app.html', icon: '📋' },
+    { label: 'Schnellrechnung', desc: 'Rechnung ohne Fall erstellen', href: 'schnelle-rechnung.html', icon: '⚡' },
+    { label: '§407a ZPO Anzeige', desc: 'KI-Anzeige an Gericht (Pflicht vor Gerichtsgutachten)', href: 'zpo-anzeige.html', icon: '⚖️' },
     { label: 'Fälle / Archiv', desc: 'Alle Fälle anzeigen', href: 'archiv.html', icon: '📂' },
     { label: 'Zentrale / Dashboard', desc: 'Was steht heute an?', href: 'dashboard.html', icon: '⊞' },
     { label: 'Kalender', desc: 'Termine und Fristen', href: 'termine.html', icon: '📅' },
@@ -1261,3 +1264,68 @@ document.addEventListener('DOMContentLoaded', function() {
     };
   }
 });
+
+
+/* ════════════════════════════════════════════════════════════════════════
+   PROVA FAB-Loader — Sprint K1 (20.04.2026)
+   Lädt fab.js dynamisch auf allen ARBEITSSEITEN
+   NICHT auf: Ortstermin-Modus, Druck-Vorschauen, Login-Seiten, PDF-Templates
+   ════════════════════════════════════════════════════════════════════════ */
+(function() {
+  var page = (window.location.pathname.split('/').pop() || '').toLowerCase();
+
+  var skip = [
+    'ortstermin-modus.html',
+    'zpo-anzeige.html',
+    'freigabe.html',
+    'app-login.html',
+    'app-register.html',
+    'admin-login.html',
+    'onboarding.html',
+    'onboarding-welcome.html',
+    'onboarding-schnellstart.html',
+    '404.html',
+    ''
+  ];
+
+  if (skip.indexOf(page) !== -1) return;
+  if (page.indexOf('pdfmonkey-') === 0) return;
+  if (page.indexOf('vorlage-') === 0) return;
+  if (page.indexOf('checkliste-') === 0) return;
+
+  if (!document.getElementById('prova-fab-script')) {
+    var s = document.createElement('script');
+    s.id  = 'prova-fab-script';
+    s.src = 'fab.js';
+    s.defer = true;
+    document.head.appendChild(s);
+  }
+})();
+
+/* ════════════════════════════════════════════════════════════════════════
+   PROVA Widerrufs-Flow-Loader — Sprint K1 Fix (20.04.2026)
+   Lädt widerrufs-flow.js dynamisch auf Arbeitsseiten wo Fälle angelegt
+   werden können. Horcht auf Event 'prova:fall-erstellt'.
+   Rechtsgrundlage: §312g BGB + §356 Abs. 3 BGB
+   ════════════════════════════════════════════════════════════════════════ */
+(function() {
+  var page = (window.location.pathname.split('/').pop() || '').toLowerCase();
+
+  // Nur auf Seiten wo Fälle angelegt/bearbeitet werden
+  var allow = [
+    'app.html',
+    'akte.html',
+    'dashboard.html',
+    'archiv.html'
+  ];
+
+  if (allow.indexOf(page) === -1) return;
+
+  if (!document.getElementById('prova-widerruf-script')) {
+    var s = document.createElement('script');
+    s.id  = 'prova-widerruf-script';
+    s.src = 'widerrufs-flow.js';
+    s.defer = true;
+    document.head.appendChild(s);
+  }
+})();

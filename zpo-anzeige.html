@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>§407a ZPO Anzeige · PROVA</title>
+<script src="prova-preise.js"></script>
+<script src="paket-guard.js"></script>
+<script src="auth-guard.js"></script>
+<script src="theme.js"></script>
+<script src="nav.js" defer></script>
+<link rel="stylesheet" href="prova-design.css">
+<style>
+html{font-size:14px;}
+body{font-family:var(--font-ui,'DM Sans',system-serif);background:var(--bg,#0b0d11);color:var(--text,#eaecf4);min-height:100vh;overflow-x:hidden;line-height:1.55;}
+.app-shell{display:flex;min-height:100vh;}
+.main-wrap{flex:1;min-width:0;display:flex;flex-direction:column;min-height:100vh;}
+.topbar{height:52px;background:var(--bg2,#111318);border-bottom:1px solid var(--border,rgba(255,255,255,.06));display:flex;align-items:center;justify-content:space-between;padding:0 24px;position:sticky;top:0;z-index:100;}
+.topbar-left{display:flex;align-items:center;gap:12px;}
+.page-content{padding:28px;max-width:860px;width:100%;}
+.page-title{font-size:20px;font-weight:800;color:var(--text);margin-bottom:4px;display:flex;align-items:center;gap:10px;}
+.page-sub{font-size:13px;color:var(--text3,#4d5568);margin-bottom:28px;}
+
+/* Rechtsstatus-Badge */
+.legal-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.04em;}
+.badge-critical{background:rgba(239,68,68,.12);color:#ef4444;border:1px solid rgba(239,68,68,.25);}
+.badge-ok{background:rgba(16,185,129,.12);color:#10b981;border:1px solid rgba(16,185,129,.25);}
+.badge-warn{background:rgba(245,158,11,.12);color:#f59e0b;border:1px solid rgba(245,158,11,.25);}
+
+/* Info-Box */
+.info-box{background:var(--surface,#1c2130);border:1px solid var(--border2,rgba(255,255,255,.11));border-radius:12px;padding:16px 20px;margin-bottom:20px;}
+.info-box.critical{border-color:rgba(239,68,68,.3);background:rgba(239,68,68,.04);}
+.info-box.success{border-color:rgba(16,185,129,.3);background:rgba(16,185,129,.04);}
+.info-box-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:6px;display:flex;align-items:center;gap:8px;}
+.info-box-text{font-size:12.5px;color:var(--text2,#8b93ab);line-height:1.6;}
+
+/* Cards */
+.card{background:var(--surface,#1c2130);border:1px solid var(--border,rgba(255,255,255,.06));border-radius:14px;overflow:hidden;margin-bottom:20px;}
+.card-header{padding:16px 20px;border-bottom:1px solid var(--border,rgba(255,255,255,.06));display:flex;align-items:center;justify-content:space-between;}
+.card-title{font-size:14px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:8px;}
+.card-body{padding:20px;}
+
+/* Formular */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+@media(max-width:600px){.form-grid{grid-template-columns:1fr;}}
+.form-group{display:flex;flex-direction:column;gap:5px;}
+.form-group.full{grid-column:1/-1;}
+.form-label{font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;}
+.form-input{background:var(--bg2,#111318);border:1px solid var(--border2,rgba(255,255,255,.11));border-radius:8px;padding:9px 12px;font-size:13px;color:var(--text);font-family:inherit;transition:border-color .15s;width:100%;box-sizing:border-box;}
+.form-input:focus{outline:none;border-color:var(--accent,#4f8ef7);}
+.form-input::placeholder{color:var(--text3);opacity:.7;}
+.form-textarea{min-height:90px;resize:vertical;}
+.form-hint{font-size:11px;color:var(--text3);margin-top:2px;}
+
+/* Brief-Vorschau */
+.brief-preview{background:var(--bg2,#111318);border:1px solid var(--border2,rgba(255,255,255,.11));border-radius:10px;padding:24px 28px;font-size:13px;line-height:1.8;color:var(--text2);white-space:pre-wrap;font-family:'SF Mono','Fira Code',monospace;font-size:12px;max-height:600px;overflow-y:auto;}
+.brief-preview .ph{color:var(--accent);font-style:italic;}
+
+/* Buttons */
+.btn-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px;}
+.btn{display:inline-flex;align-items:center;gap:7px;padding:10px 18px;border-radius:9px;border:none;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s;white-space:nowrap;}
+.btn-primary{background:var(--accent,#4f8ef7);color:#fff;}
+.btn-primary:hover{opacity:.9;transform:translateY(-1px);}
+.btn-ghost{background:var(--surface2,#232a3a);border:1px solid var(--border2,rgba(255,255,255,.11));color:var(--text2);}
+.btn-ghost:hover{border-color:var(--accent,#4f8ef7);color:var(--accent);}
+.btn-success{background:rgba(16,185,129,.15);border:1px solid rgba(16,185,129,.35);color:#10b981;}
+.btn-success:hover{background:rgba(16,185,129,.25);}
+
+/* Checkbox */
+.ki-option{display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border-radius:8px;border:1px solid var(--border);background:var(--bg3,#161a22);cursor:pointer;transition:border-color .15s;margin-bottom:8px;}
+.ki-option:hover{border-color:var(--border2);}
+.ki-option input[type=checkbox]{width:16px;height:16px;flex-shrink:0;margin-top:1px;accent-color:var(--accent);}
+.ki-option-label{font-size:13px;font-weight:600;color:var(--text);}
+.ki-option-desc{font-size:11.5px;color:var(--text3);margin-top:2px;}
+
+/* Status-Zeile */
+.status-bar{display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:10px;background:var(--surface2,#232a3a);border:1px solid var(--border);margin-bottom:20px;flex-wrap:wrap;}
+.status-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.dot-sent{background:#10b981;}
+.dot-pending{background:#f59e0b;}
+.dot-missing{background:#ef4444;}
+.status-text{font-size:12px;color:var(--text2);flex:1;}
+
+/* Timeline */
+.timeline{display:flex;flex-direction:column;gap:0;}
+.tl-item{display:flex;gap:14px;position:relative;padding-bottom:16px;}
+.tl-item:last-child{padding-bottom:0;}
+.tl-left{display:flex;flex-direction:column;align-items:center;width:24px;flex-shrink:0;}
+.tl-dot{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;z-index:1;}
+.tl-dot-done{background:rgba(16,185,129,.2);color:#10b981;border:1px solid rgba(16,185,129,.4);}
+.tl-dot-active{background:rgba(79,142,247,.2);color:#4f8ef7;border:1px solid rgba(79,142,247,.4);}
+.tl-dot-todo{background:var(--surface2);color:var(--text3);border:1px solid var(--border);}
+.tl-line{width:1px;flex:1;background:var(--border);margin:4px 0;}
+.tl-content{flex:1;padding-top:2px;}
+.tl-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:2px;}
+.tl-desc{font-size:12px;color:var(--text3);}
+
+@media(max-width:768px){.page-content{padding:16px;}}
+</style>
+</head>
+<body>
+<div class="app-shell">
+  <div class="main-wrap">
+
+    <!-- TOPBAR -->
+    <div class="topbar">
+      <div class="topbar-left">
+        <button class="btn btn-ghost" style="padding:7px 12px;font-size:12px;" onclick="history.back()">← Zurück</button>
+        <div style="font-size:13px;color:var(--text3);">
+          <span id="fall-az-crumb" style="color:var(--text2);font-weight:600;"></span>
+          <span style="margin:0 6px;">·</span>
+          <span>§407a ZPO Anzeige</span>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span id="topbar-paket-badge"></span>
+      </div>
+    </div>
+
+    <!-- HAUPTINHALT -->
+    <div class="page-content" style="margin:0 auto;">
+
+      <div class="page-title">
+        ⚖️ §407a Abs. 3 ZPO — KI-Anzeige an das Gericht
+        <span class="legal-badge badge-critical">KRITISCH</span>
+      </div>
+      <div class="page-sub">
+        Pflichtanzeige vor Beginn der Gutachten-Erstellung · LG Darmstadt 19 O 527/16 (10.11.2025)
+      </div>
+
+      <!-- RECHTLICHER HINWEIS -->
+      <div class="info-box critical">
+        <div class="info-box-title">⚠️ Rechtliche Pflicht — Vorab-Anzeige erforderlich</div>
+        <div class="info-box-text">
+          Nach §407a Abs. 3 ZPO und dem Urteil des LG Darmstadt (10.11.2025) müssen Sie dem Gericht <strong>vor Beginn Ihrer gutachterlichen Tätigkeit</strong> schriftlich anzeigen, welche KI-Systeme und Hilfsmittel Sie einsetzen.<br><br>
+          Eine nachträgliche Erwähnung im Gutachten heilt die fehlende Vorab-Anzeige <strong>nicht</strong>. Das Gutachten kann formal zurückgewiesen werden.
+        </div>
+      </div>
+
+      <!-- STATUS -->
+      <div id="anzeige-status" class="status-bar">
+        <div class="status-dot dot-missing" id="status-dot"></div>
+        <div class="status-text" id="status-text">⚡ Anzeige noch nicht versendet — bitte generieren und versenden</div>
+      </div>
+
+      <!-- SCHRITT 1: FALL-DATEN -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">📋 Schritt 1 — Fall- und Gerichtsdaten</div>
+          <div class="legal-badge badge-warn">Pflichtfelder</div>
+        </div>
+        <div class="card-body">
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label">Gericht</label>
+              <input class="form-input" id="za-gericht" type="text" placeholder="z.B. Landgericht Köln">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Gerichtliches Aktenzeichen</label>
+              <input class="form-input" id="za-az-gericht" type="text" placeholder="z.B. 19 O 123/26">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Parteien (Kläger / Beklagter)</label>
+              <input class="form-input" id="za-parteien" type="text" placeholder="z.B. Müller ./. Schulze GmbH">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Datum Beweisbeschluss</label>
+              <input class="form-input" id="za-beschluss-datum" type="date">
+            </div>
+            <div class="form-group">
+              <label class="form-label">SV-Name (vollständig)</label>
+              <input class="form-input" id="za-sv-name" type="text" placeholder="z.B. Dipl.-Ing. Hans Mustermann">
+            </div>
+            <div class="form-group">
+              <label class="form-label">IHK / Bestellungskörperschaft</label>
+              <input class="form-input" id="za-ihk" type="text" placeholder="z.B. IHK zu Köln">
+            </div>
+            <div class="form-group full">
+              <label class="form-label">Bestellungstenor (Fachgebiet)</label>
+              <input class="form-input" id="za-tenor" type="text" placeholder="z.B. Schäden an Gebäuden">
+            </div>
+            <div class="form-group">
+              <label class="form-label">SV-Adresse</label>
+              <input class="form-input" id="za-sv-adresse" type="text" placeholder="z.B. Musterstraße 1, 50667 Köln">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Datum der Anzeige</label>
+              <input class="form-input" id="za-datum" type="date">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SCHRITT 2: KI-EINSATZ KONFIGURIEREN -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">🤖 Schritt 2 — Eingesetzter KI-Einsatz (Häkchen setzen)</div>
+          <div class="legal-badge badge-warn">Art. 50 EU AI Act</div>
+        </div>
+        <div class="card-body">
+          <div style="margin-bottom:14px;font-size:12px;color:var(--text3);">
+            Wählen Sie alle Funktionen die Sie in diesem Gutachten tatsächlich nutzen werden. Nur angekreuzte Punkte erscheinen im Brief.
+          </div>
+
+          <label class="ki-option">
+            <input type="checkbox" id="ki-whisper" checked>
+            <div>
+              <div class="ki-option-label">🎙️ Spracherkennung (Whisper)</div>
+              <div class="ki-option-desc">Transkription der Ortstermin-Diktate zu strukturierten Befundlisten</div>
+            </div>
+          </label>
+
+          <label class="ki-option">
+            <input type="checkbox" id="ki-normen" checked>
+            <div>
+              <div class="ki-option-label">📚 KI-Normen-Vorschlag</div>
+              <div class="ki-option-desc">Vorschlag einschlägiger technischer Normen (DIN, WTA, VOB) zu Befunden</div>
+            </div>
+          </label>
+
+          <label class="ki-option">
+            <input type="checkbox" id="ki-struktur" checked>
+            <div>
+              <div class="ki-option-label">📝 KI-Strukturierungshilfe</div>
+              <div class="ki-option-desc">Vorentwurf der Kapitel 1–3 und 5 (Sach- und Tatsachendarstellung) auf Basis der Befunde</div>
+            </div>
+          </label>
+
+          <label class="ki-option">
+            <input type="checkbox" id="ki-lektorat" checked>
+            <div>
+              <div class="ki-option-label">✍️ KI-Lektorat und Konsistenzprüfung</div>
+              <div class="ki-option-desc">Rechtschreibprüfung, Konsistenz von Angaben (Datum, Aktenzeichen, Namen)</div>
+            </div>
+          </label>
+
+          <label class="ki-option">
+            <input type="checkbox" id="ki-fotos">
+            <div>
+              <div class="ki-option-label">📸 KI-Foto-Beschriftungsvorschläge</div>
+              <div class="ki-option-desc">Automatische Vorschläge für Foto-Beschriftungen (Bild-Erkennung)</div>
+            </div>
+          </label>
+
+          <label class="ki-option">
+            <input type="checkbox" id="ki-kosten">
+            <div>
+              <div class="ki-option-label">💰 KI-Kostenschätzungs-Vorschläge</div>
+              <div class="ki-option-desc">Vorschlag von Sanierungskosten auf Basis BKI-Einheitspreisen</div>
+            </div>
+          </label>
+
+          <div class="info-box" style="margin-top:12px;">
+            <div class="info-box-title">ℹ️ Was die KI NICHT tut (wird automatisch in Brief erwähnt)</div>
+            <div class="info-box-text">
+              Das Fachurteil (Ursachenanalyse, Bewertung der Beweisfragen, Schlussfolgerungen) sowie die Gesamtverantwortung für das Gutachten verbleiben ausschließlich beim unterzeichnenden Sachverständigen. Die KI formuliert keine Kausalurteile.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SCHRITT 3: BRIEF-VORSCHAU -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">👁️ Schritt 3 — Brief-Vorschau</div>
+          <button class="btn btn-ghost" onclick="generiereVorschau()" style="font-size:12px;padding:6px 14px;">
+            🔄 Vorschau aktualisieren
+          </button>
+        </div>
+        <div class="card-body">
+          <div class="brief-preview" id="brief-vorschau">
+            [Bitte Felder ausfüllen und dann "Vorschau aktualisieren" klicken]
+          </div>
+        </div>
+      </div>
+
+      <!-- SCHRITT 4: VERSAND -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">📤 Schritt 4 — Versand und Dokumentation</div>
+          <div class="legal-badge badge-warn">Pflicht: VOR Gutachten-Beginn</div>
+        </div>
+        <div class="card-body">
+
+          <div class="timeline">
+            <div class="tl-item">
+              <div class="tl-left">
+                <div class="tl-dot tl-dot-active" id="tl-1-dot">1</div>
+                <div class="tl-line"></div>
+              </div>
+              <div class="tl-content">
+                <div class="tl-title">Brief generieren und prüfen</div>
+                <div class="tl-desc">Vorschau oben lesen, ggf. anpassen, Brief final prüfen</div>
+              </div>
+            </div>
+            <div class="tl-item">
+              <div class="tl-left">
+                <div class="tl-dot tl-dot-todo" id="tl-2-dot">2</div>
+                <div class="tl-line"></div>
+              </div>
+              <div class="tl-content">
+                <div class="tl-title">PDF erstellen und ausdrucken / senden</div>
+                <div class="tl-desc">Per Fax, Post oder beA ans Gericht (beA ab 2026 bevorzugt)</div>
+              </div>
+            </div>
+            <div class="tl-item">
+              <div class="tl-left">
+                <div class="tl-dot tl-dot-todo" id="tl-3-dot">3</div>
+                <div class="tl-line"></div>
+              </div>
+              <div class="tl-content">
+                <div class="tl-title">Versand in PROVA dokumentieren</div>
+                <div class="tl-desc">Versanddatum und -art eintragen — Beweissicherung für Compliance</div>
+              </div>
+            </div>
+            <div class="tl-item">
+              <div class="tl-left">
+                <div class="tl-dot tl-dot-todo" id="tl-4-dot" style="font-size:16px;border:none;background:transparent;">✓</div>
+              </div>
+              <div class="tl-content">
+                <div class="tl-title">Gutachten-Arbeit beginnen</div>
+                <div class="tl-desc">Erst NACH Versand der Anzeige darf mit der Gutachten-Erstellung begonnen werden</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Versand-Dokumentation -->
+          <div style="margin-top:20px;padding-top:20px;border-top:1px solid var(--border);">
+            <div style="font-size:12px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px;">Versand dokumentieren</div>
+            <div class="form-grid">
+              <div class="form-group">
+                <label class="form-label">Versanddatum</label>
+                <input class="form-input" id="za-versand-datum" type="date">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Versandart</label>
+                <select class="form-input" id="za-versand-art">
+                  <option value="">— bitte wählen —</option>
+                  <option value="fax">Fax</option>
+                  <option value="post">Post (Einschreiben)</option>
+                  <option value="bea">beA (Elektronisches Anwaltspostfach)</option>
+                  <option value="email">E-Mail (nur wenn akzeptiert)</option>
+                  <option value="persoenlich">Persönlich übergeben</option>
+                </select>
+              </div>
+              <div class="form-group full">
+                <label class="form-label">Empfangsbestätigung / Referenz (optional)</label>
+                <input class="form-input" id="za-empfang" type="text" placeholder="z.B. Fax-Sendeprotokoll Nr. 12345">
+              </div>
+            </div>
+          </div>
+
+          <div class="btn-row" style="margin-top:16px;">
+            <button class="btn btn-primary" onclick="generiereVorschau();window.print()">
+              🖨️ Brief drucken / PDF
+            </button>
+            <button class="btn btn-ghost" onclick="kopiereText()">
+              📋 Text kopieren
+            </button>
+            <button class="btn btn-success" id="btn-als-erledigt" onclick="alsErledigtMarkieren()">
+              ✅ Als versendet markieren
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- BEREITS VERSENDET ANZEIGE -->
+      <div id="bereits-erledigt-box" class="info-box success" style="display:none;">
+        <div class="info-box-title">✅ §407a ZPO Anzeige dokumentiert</div>
+        <div class="info-box-text" id="erledigt-text"></div>
+      </div>
+
+    </div><!-- .page-content -->
+  </div><!-- .main-wrap -->
+</div><!-- .app-shell -->
+
+<script>
+(function() {
+  'use strict';
+
+  // URL-Parameter lesen
+  var params = new URLSearchParams(window.location.search);
+  var fallId  = params.get('fall') || params.get('az') || '';
+  var azParam = params.get('az') || '';
+
+  // Paket-Badge
+  var paket = localStorage.getItem('prova_paket') || 'Solo';
+  var pc = { Solo: '#4f8ef7', Team: '#a78bfa' }[paket] || '#4f8ef7';
+  var badgeEl = document.getElementById('topbar-paket-badge');
+  if (badgeEl) {
+    badgeEl.textContent = paket;
+    badgeEl.style.cssText = 'font-size:10px;font-weight:700;padding:3px 9px;border-radius:10px;background:' + pc + '18;color:' + pc + ';border:1px solid ' + pc + '33;';
+  }
+
+  // Breadcrumb
+  if (azParam) {
+    var crumb = document.getElementById('fall-az-crumb');
+    if (crumb) crumb.textContent = azParam;
+  }
+
+  // Heute als Standard-Datum
+  var heute = new Date().toISOString().split('T')[0];
+  var datumEl = document.getElementById('za-datum');
+  if (datumEl && !datumEl.value) datumEl.value = heute;
+
+  // SV-Daten aus localStorage vorausfüllen
+  var svEmail = localStorage.getItem('prova_sv_email') || '';
+  var svName  = localStorage.getItem('prova_sv_name')  || '';
+  var svIhk   = localStorage.getItem('prova_sv_ihk')   || '';
+  var svTenor = localStorage.getItem('prova_sv_tenor') || '';
+  var svAdresse = localStorage.getItem('prova_sv_adresse') || '';
+
+  if (svName)    document.getElementById('za-sv-name').value = svName;
+  if (svIhk)     document.getElementById('za-ihk').value = svIhk;
+  if (svTenor)   document.getElementById('za-tenor').value = svTenor;
+  if (svAdresse) document.getElementById('za-sv-adresse').value = svAdresse;
+
+  // Fall-Daten aus localStorage laden wenn fallId vorhanden
+  if (fallId) {
+    try {
+      var cache = JSON.parse(localStorage.getItem('prova_faelle_cache') || '[]');
+      var fall = cache.find(function(f) { return f.az === fallId || f.id === fallId; });
+      if (fall) {
+        if (fall.gericht_name) document.getElementById('za-gericht').value = fall.gericht_name;
+        if (fall.az_gericht)   document.getElementById('za-az-gericht').value = fall.az_gericht;
+        if (fall.parteien)     document.getElementById('za-parteien').value = fall.parteien;
+      }
+    } catch(e) {}
+  }
+
+  // Prüfe ob Anzeige bereits versendet
+  var storageKey = 'prova_zpo407_' + (fallId || azParam || 'standalone');
+  var bereitsErledigt = localStorage.getItem(storageKey);
+  if (bereitsErledigt) {
+    try {
+      var erledigt = JSON.parse(bereitsErledigt);
+      zeigeErledigtStatus(erledigt);
+    } catch(e) {}
+  }
+
+  // Alle Felder: Bei Änderung Vorschau neu generieren
+  var felder = ['za-gericht','za-az-gericht','za-parteien','za-beschluss-datum','za-sv-name','za-ihk','za-tenor','za-sv-adresse','za-datum'];
+  felder.forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.addEventListener('input', debounce(generiereVorschau, 400));
+  });
+  var checkboxen = ['ki-whisper','ki-normen','ki-struktur','ki-lektorat','ki-fotos','ki-kosten'];
+  checkboxen.forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.addEventListener('change', generiereVorschau);
+  });
+
+  // Initiale Vorschau
+  setTimeout(generiereVorschau, 100);
+
+  function debounce(fn, delay) {
+    var t;
+    return function() { clearTimeout(t); t = setTimeout(fn, delay); };
+  }
+
+  window.generiereVorschau = function() {
+    var gericht  = v('za-gericht')       || '[Gericht]';
+    var azG      = v('za-az-gericht')    || '[Aktenzeichen]';
+    var parteien = v('za-parteien')      || '[Kläger] ./. [Beklagter]';
+    var bDatum   = formatDatum(v('za-beschluss-datum'));
+    var svName   = v('za-sv-name')       || '[Name Sachverständiger]';
+    var ihk      = v('za-ihk')           || '[IHK / Körperschaft]';
+    var tenor    = v('za-tenor')         || '[Fachgebiet]';
+    var svAdr    = v('za-sv-adresse')    || '[Anschrift]';
+    var datum    = formatDatum(v('za-datum')) || formatDatum(heute);
+
+    // KI-Tätigkeiten
+    var kiListe = [];
+    if (c('ki-whisper'))   kiListe.push('   • Transkription der Ortstermin-Diktate mittels Spracherkennung (Whisper)');
+    if (c('ki-normen'))    kiListe.push('   • KI-gestützter Vorschlag einschlägiger technischer Normen (DIN, WTA, VOB, ZPO) zu den erhobenen Befunden');
+    if (c('ki-struktur'))  kiListe.push('   • Strukturierungshilfe und Vorentwurf der Kapitel 1–3 sowie Kapitel 5 (Sach- und Tatsachendarstellung) auf Basis der Ortstermin-Aufnahmen und Diktat-Transkriptionen');
+    if (c('ki-lektorat'))  kiListe.push('   • Rechtschreib-, Grammatik- und Konsistenzprüfung (Aktenzeichen, Daten, Namen)');
+    if (c('ki-fotos'))     kiListe.push('   • KI-Vorschläge für Bildunterschriften zu Lichtbildern (Bild-Erkennungsunterstützung)');
+    if (c('ki-kosten'))    kiListe.push('   • Vorschläge für Kostenschätzungen auf Basis des BKI-Einheitspreiskatalogs');
+
+    var kiText = kiListe.length > 0
+      ? kiListe.join('\n')
+      : '   • [Keine KI-Tätigkeiten ausgewählt]';
+
+    var brief = svAdr + '\n\n' +
+      gericht + '\n\n' +
+      datum + '\n\n' +
+      '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
+      'In der Sache: ' + parteien + '\n' +
+      'Gerichtliches Aktenzeichen: ' + azG + '\n' +
+      'Beweisbeschluss vom: ' + (bDatum || '[Datum Beweisbeschluss]') + '\n' +
+      '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
+      'Anzeige nach § 407a Abs. 3 ZPO\n' +
+      '— Einsatz von Hilfspersonen und technischen Hilfsmitteln —\n\n' +
+      'Sehr geehrte Damen und Herren,\n\n' +
+      'als vom Gericht bestellter Sachverständiger in der oben genannten Sache\n' +
+      'zeige ich unverzüglich und vor Beginn meiner gutachterlichen Tätigkeit\n' +
+      'gemäß § 407a Abs. 3 ZPO an, dass ich folgende technische Hilfsmittel\n' +
+      'und Systeme einsetzen werde:\n\n' +
+      '1. PROVA Systems\n' +
+      '   Verwaltungsplattform für öffentlich bestellte und vereidigte Sachverständige\n' +
+      '   (prova-systems.de). Einsatz für: Fallverwaltung, Dokumentation, PDF-Erstellung.\n\n' +
+      '2. Künstliche Intelligenz (KI-Assistenzsystem auf Basis großer Sprachmodelle)\n' +
+      '   Einsatzbereiche im vorliegenden Gutachten:\n' + kiText + '\n\n' +
+      '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
+      'Ausdrückliche Abgrenzung:\n\n' +
+      'Das Fachurteil — insbesondere die Ursachenanalyse, die Bewertung des\n' +
+      'Schadensbildes, die Beantwortung der Beweisfragen und alle kausalen\n' +
+      'Schlussfolgerungen — wird ausschließlich von mir persönlich und eigenverantwortlich\n' +
+      'erstellt. Die KI formuliert keine fachlichen Urteile und trifft keine\n' +
+      'Entscheidungen über die sachverständige Bewertung.\n\n' +
+      'Ich versichere, dass ich das Gutachten unter Beachtung der Voraussetzungen\n' +
+      'des § 407a ZPO persönlich erstatten werde.\n\n' +
+      'Offenlegung gemäß Art. 50 EU-KI-Verordnung (EU) 2024/1689:\n' +
+      'Der Einsatz von KI-Systemen wird im Gutachten unter § 8 "Verwendete Hilfsmittel"\n' +
+      'transparent ausgewiesen.\n' +
+      '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
+      'Mit freundlichen Grüßen\n\n\n' +
+      svName + '\n' +
+      'Öffentlich bestellter und vereidigter Sachverständiger\n' +
+      'für das Sachgebiet: ' + tenor + '\n' +
+      ihk;
+
+    var el = document.getElementById('brief-vorschau');
+    if (el) el.textContent = brief;
+  };
+
+  window.kopiereText = function() {
+    var el = document.getElementById('brief-vorschau');
+    if (!el) return;
+    navigator.clipboard.writeText(el.textContent).then(function() {
+      showToast('Text kopiert ✓');
+    }).catch(function() {
+      // Fallback
+      var sel = window.getSelection();
+      var range = document.createRange();
+      range.selectNodeContents(el);
+      sel.removeAllRanges();
+      sel.addRange(range);
+      document.execCommand('copy');
+      showToast('Text kopiert ✓');
+    });
+  };
+
+  window.alsErledigtMarkieren = function() {
+    var versandDatum = v('za-versand-datum') || heute;
+    var versandArt   = v('za-versand-art') || 'unbekannt';
+    var empfang      = v('za-empfang') || '';
+
+    if (!versandDatum || !versandArt || versandArt === '') {
+      showToast('Bitte Versanddatum und Versandart eintragen', 'warning');
+      return;
+    }
+
+    var daten = {
+      versendet: true,
+      datum: versandDatum,
+      art: versandArt,
+      empfang: empfang,
+      sv: v('za-sv-name'),
+      gericht: v('za-gericht'),
+      az: v('za-az-gericht'),
+      ts: new Date().toISOString()
+    };
+
+    localStorage.setItem(storageKey, JSON.stringify(daten));
+    zeigeErledigtStatus(daten);
+
+    // Falls Fall-ID bekannt: in Fall-Cache markieren
+    if (fallId) {
+      try {
+        var cache = JSON.parse(localStorage.getItem('prova_faelle_cache') || '[]');
+        cache = cache.map(function(f) {
+          if (f.az === fallId || f.id === fallId) {
+            f.zpo407_anzeige = daten;
+          }
+          return f;
+        });
+        localStorage.setItem('prova_faelle_cache', JSON.stringify(cache));
+      } catch(e) {}
+    }
+
+    showToast('✅ §407a ZPO Anzeige als versendet dokumentiert');
+  };
+
+  function zeigeErledigtStatus(daten) {
+    var statusDot  = document.getElementById('status-dot');
+    var statusText = document.getElementById('status-text');
+    var erledigtBox = document.getElementById('bereits-erledigt-box');
+    var erledigtText = document.getElementById('erledigt-text');
+
+    if (statusDot)  { statusDot.classList.remove('dot-missing'); statusDot.classList.add('dot-sent'); }
+    if (statusText) statusText.textContent = '✅ Anzeige versendet am ' + formatDatum(daten.datum) + ' per ' + daten.art;
+    if (erledigtBox) erledigtBox.style.display = 'block';
+    if (erledigtText) {
+      erledigtText.textContent = 'Die §407a Abs. 3 ZPO Anzeige wurde am ' + formatDatum(daten.datum) +
+        ' per ' + daten.art + ' an ' + (daten.gericht || 'das Gericht') + ' (Az. ' + (daten.az || '—') + ') versendet.' +
+        (daten.empfang ? ' Referenz: ' + daten.empfang : '');
+    }
+
+    // Timeline aktualisieren
+    ['tl-2-dot','tl-3-dot','tl-4-dot'].forEach(function(id) {
+      var el = document.getElementById(id);
+      if (el) { el.classList.remove('tl-dot-todo'); el.classList.add('tl-dot-done'); }
+    });
+  }
+
+  function v(id) {
+    var el = document.getElementById(id);
+    return el ? el.value.trim() : '';
+  }
+  function c(id) {
+    var el = document.getElementById(id);
+    return el ? el.checked : false;
+  }
+  function formatDatum(str) {
+    if (!str) return '';
+    try {
+      var d = new Date(str);
+      return d.toLocaleDateString('de-DE', { day:'2-digit', month:'2-digit', year:'numeric' });
+    } catch(e) { return str; }
+  }
+  function showToast(msg, type) {
+    var t = document.createElement('div');
+    t.textContent = msg;
+    t.style.cssText = 'position:fixed;bottom:24px;right:24px;z-index:9999;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:600;font-family:var(--font-ui,sans-serif);box-shadow:0 4px 20px rgba(0,0,0,.4);transition:all .3s;' +
+      (type === 'warning' ? 'background:#f59e0b;color:#1a0a00;' : 'background:#10b981;color:#fff;');
+    document.body.appendChild(t);
+    setTimeout(function() { t.style.opacity = '0'; setTimeout(function() { t.remove(); }, 300); }, 3000);
+  }
+
+  /* ════════════════════════════════════════════════════════════════════════
+     AIRTABLE AUDIT-TRAIL — Sprint K1 Marcel-Fix (20.04.2026)
+     Schreibt §407a-Anzeige-Events revisionssicher in SCHADENSFAELLE-Record.
+     Nur gerichtsverwertbarer Zeitstempel + Pflichtdaten, keine Spielereien.
+     Rechtsgrundlage: LG Darmstadt 19 O 527/16 — Nachweis der Vorab-Anzeige.
+     ════════════════════════════════════════════════════════════════════════ */
+  var AT_BASE   = 'appJ7bLlAHZoxENWE';
+  var AT_FAELLE = 'tblSxV8bsXwd1pwa0';
+
+  function resolveRecordId(rawFallId) {
+    if (!rawFallId) return null;
+    if (rawFallId.indexOf('rec') === 0) return rawFallId;
+    try {
+      var cache = JSON.parse(localStorage.getItem('prova_faelle_cache') || '[]');
+      var fall = cache.find(function(f) { return f.az === rawFallId || f.id === rawFallId; });
+      return fall ? fall.id : null;
+    } catch(e) { return null; }
+  }
+
+  async function persistToAirtable(mode, extraFields) {
+    try {
+      var p = new URLSearchParams(window.location.search);
+      var raw = p.get('fall') || p.get('az') || '';
+      if (!raw) return;  // Standalone-Modus ohne Fall = kein Audit-Trail
+
+      var recId = resolveRecordId(raw);
+      if (!recId) { console.warn('[PROVA §407a] Record-ID nicht auflösbar — Audit-Trail übersprungen'); return; }
+
+      var fields = Object.assign({}, extraFields || {});
+      var nowIso = new Date().toISOString();
+      if (mode === 'erstellt') fields.zpo_anzeige_erstellt = nowIso;
+      if (mode === 'gesendet') fields.zpo_anzeige_gesendet = nowIso;
+
+      var res = await fetch('/.netlify/functions/airtable', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          method: 'PATCH',
+          path: '/v0/' + AT_BASE + '/' + AT_FAELLE + '/' + recId,
+          payload: { fields: fields }
+        })
+      });
+      if (!res.ok) {
+        console.warn('[PROVA §407a] Audit-Trail fehlgeschlagen:', res.status, await res.text());
+      } else {
+        console.log('[PROVA §407a] Audit-Trail persistiert:', mode);
+      }
+    } catch(e) { console.warn('[PROVA §407a] Audit-Trail-Exception:', e); }
+  }
+
+  // Hook 1: Brief-Generieren → 'erstellt' persistieren
+  var _orig_generiere = window.generiereVorschau;
+  if (typeof _orig_generiere === 'function') {
+    window.generiereVorschau = function() {
+      var r = _orig_generiere.apply(this, arguments);
+      try {
+        var el_g = document.getElementById('za-gericht');
+        var el_a = document.getElementById('za-az-gericht');
+        var kiListe = [];
+        ['ki-whisper','ki-normen','ki-struktur','ki-lektorat','ki-fotos','ki-kosten'].forEach(function(id){
+          var c = document.getElementById(id);
+          if (c && c.checked) kiListe.push(id.replace('ki-', ''));
+        });
+        persistToAirtable('erstellt', {
+          zpo_anzeige_gericht:      el_g ? el_g.value.trim() : '',
+          zpo_anzeige_aktenzeichen: el_a ? el_a.value.trim() : '',
+          zpo_anzeige_ki_liste:     kiListe.join(', ')
+        });
+      } catch(e) {}
+      return r;
+    };
+  }
+
+  // Hook 2: „Als versendet markieren" → 'gesendet' persistieren
+  var _orig_erledigt = window.alsErledigtMarkieren;
+  if (typeof _orig_erledigt === 'function') {
+    window.alsErledigtMarkieren = function() {
+      var r = _orig_erledigt.apply(this, arguments);
+      try { persistToAirtable('gesendet', {}); } catch(e) {}
+      return r;
+    };
+  }
+})();
+</script>
+</body>
+</html>
