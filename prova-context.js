@@ -96,7 +96,7 @@
     SV:         'tbladqEQT3tmx4DIB',
     TERMINE:    'tblyMTTdtfGQjjmc2',
     RECHNUNGEN: 'tblF6MS7uiFAJDjiT',
-    NORMEN:     'tblnceVJIW7BjHsPF',
+    NORMEN:     'tblFVcMxntQhusY2i',
   };
 
   /* ── Zentraler Airtable-Proxy-Fetch ── */

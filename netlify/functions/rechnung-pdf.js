@@ -1,3 +1,10 @@
+// ═══════════════════════════════════════════════════════════════════════
+// PROVA Sprint K1 Bug-Fix (20.04.2026):
+//   Template-IDs vereinheitlicht mit Frontend (prova-preise.js, jveg-logic.js)
+//   Vorher: S32BEA1F vs 532BEA1F, B1C3E69D vs 81C3E69D (Inkonsistenz!)
+//   Jetzt:  S32BEA1F (F-01 JVEG), B1C3E69D (F-02 Pauschal)
+//   Falls PDF-Generation nach Deploy bricht: zurückrollen auf alte IDs
+// ═══════════════════════════════════════════════════════════════════════
 const { fetchWithRetry } = require('./lib/fetch-with-timeout');
 const { getCorsHeaders, corsOptionsResponse } = require('./lib/cors-helper');
 const { provaFetch } = require('./lib/prova-fetch');
@@ -6,16 +13,16 @@ const { provaFetch } = require('./lib/prova-fetch');
 // Netlify Function: rechnung-pdf
 //
 // Generiert Rechnungs-PDFs via PDFMonkey — 3 Typen:
-//   jveg      → PROVA – F-01 – JVEG GERICHTSRECHNUNG  (532BEA1F-9D1D-40CE-BA84-542C50898437)
-//   pauschale → PROVA – F-02 – PAUSCHALRECHNUNG        (81C3E69D-6710-4123-8670-6C52BB926058)
+//   jveg      → PROVA – F-01 – JVEG GERICHTSRECHNUNG  (S32BEA1F-9D1D-40CE-8A84-542C50B98437)
+//   pauschale → PROVA – F-02 – PAUSCHALRECHNUNG        (B1C3E69D-6710-4123-8670-6C52BB926058)
 //   stunden   → PROVA – F-03 – STUNDENRECHNUNG         (EA5CAC85-EE15-43BC-BC25-10C2C6368572)
 //
 // Env: PDFMONKEY_API_KEY
 // ══════════════════════════════════════════════════════════════════════════════
 
 const RECHNUNG_TEMPLATES = {
-  jveg:              '532BEA1F-9D1D-40CE-BA84-542C50898437',
-  pauschale:         '81C3E69D-6710-4123-8670-6C52BB926058',
+  jveg:              'S32BEA1F-9D1D-40CE-8A84-542C50B98437',
+  pauschale:         'B1C3E69D-6710-4123-8670-6C52BB926058',
   stunden:           'EA5CAC85-EE15-43BC-BC25-10C2C6368572',
   kurzstellungnahme: 'C4BB257B-2841-4AF7-93C1-0C795FCA6B8C',
   gutschrift:        '64BFD7F0-E90A-4F03-A65C-AE0D32DBA9C3',

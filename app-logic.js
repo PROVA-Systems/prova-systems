@@ -2159,6 +2159,26 @@ function baueBanner(kontext, aktuellerSchritt, istWerkzeug) {
       ? 'akte.html?az=' + encodeURIComponent(az)
       : 'archiv.html';
   
+  /* ═══ PROVA Sprint K1 — Fall-Erstellungs-Event feuern ═══ */
+  /* Trigger für widerrufs-flow.js (Verbraucher-Check) und */
+  /* gericht-auftrag-logic.js (§407a-Banner)               */
+  try {
+    if (recordId && typeof window.provaFallErstellt === 'function') {
+      window.provaFallErstellt({
+        fallId: recordId,
+        auftragstyp: localStorage.getItem('prova_gutachten_typ') || '',
+        auftraggeber: {
+          name:  (document.getElementById('az-ag-name')    || {}).value || '',
+          typ:   (document.getElementById('az-ag-typ')     || {}).value || 'privat',
+          firma: (document.getElementById('az-ag-firma')   || {}).value || ''
+        },
+        leistung: 'Sachverständigengutachten',
+        datum: new Date().toISOString().split('T')[0]
+      });
+    }
+  } catch(e) { console.warn('[PROVA K1] provaFallErstellt Fehler:', e); }
+  /* ═══ ENDE Sprint K1 Event-Integration ═══ */
+  
   // Nächster-Schritt Button
   var naechsterBtn = '';
   if (!istWerkzeug && aktuellerSchritt) {

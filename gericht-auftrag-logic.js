@@ -161,3 +161,74 @@
   } catch(e) {}
 })();
 
+
+/* ════════════════════════════════════════════════════════════════════════
+   PROVA Sprint K1 — §407a ZPO Anzeige-Banner
+   20.04.2026 · Claude Co-Founder
+   
+   Rechtsgrundlage:
+   - §407a Abs. 3 ZPO (Anzeige von Hilfsmitteln)
+   - LG Darmstadt 19 O 527/16 (10.11.2025) — KI-Anzeige zwingend vorab
+   - EU AI Act Art. 50 (ab 02.08.2026)
+   
+   Banner erscheint auf Arbeitsseiten (akte, app, dashboard, archiv)
+   solange Gerichtsauftrag + §407a-Anzeige noch nicht versendet.
+   ════════════════════════════════════════════════════════════════════════ */
+(function() {
+  'use strict';
+  
+  function zeigeBanner() {
+    var typ = (localStorage.getItem('prova_gutachten_typ') || '').toLowerCase();
+    if (typ !== 'gerichtsgutachten' && typ !== 'ergaenzungsgutachten') return;
+    
+    var fallId = localStorage.getItem('prova_aktueller_fall') 
+              || localStorage.getItem('prova_az') 
+              || '';
+    if (!fallId) return;
+    
+    var anzeigeKey = 'prova_zpo407_' + fallId;
+    var bereits = localStorage.getItem(anzeigeKey);
+    if (bereits === 'gesendet' || bereits === 'fertig') return;
+    
+    var dismissKey = 'prova_zpo407_banner_dismissed_' + fallId;
+    var dismissed = localStorage.getItem(dismissKey);
+    if (dismissed && (Date.now() - parseInt(dismissed)) < 3600000) return; // 1h ausblenden
+    
+    if (document.getElementById('prova-zpo407-banner')) return;
+    
+    var banner = document.createElement('div');
+    banner.id = 'prova-zpo407-banner';
+    banner.style.cssText = [
+      'position:fixed', 'top:62px', 'left:50%', 'transform:translateX(-50%)',
+      'z-index:900', 'background:linear-gradient(135deg,#ef4444,#dc2626)',
+      'color:#fff', 'padding:14px 18px', 'border-radius:12px',
+      'box-shadow:0 8px 32px rgba(239,68,68,.5), 0 2px 8px rgba(0,0,0,.2)',
+      'max-width:640px', 'width:calc(100% - 40px)',
+      'font-family:var(--font-ui,"DM Sans",sans-serif)', 'font-size:13.5px',
+      'display:flex', 'align-items:center', 'gap:14px',
+      'animation:provaZpoSlide 0.3s ease-out'
+    ].join(';');
+    
+    banner.innerHTML = 
+      '<style>@keyframes provaZpoSlide{from{opacity:0;transform:translate(-50%,-10px);}to{opacity:1;transform:translate(-50%,0);}}</style>' +
+      '<span style="font-size:22px;flex-shrink:0;">⚖️</span>' +
+      '<div style="flex:1;min-width:0;">' +
+        '<div style="font-weight:700;margin-bottom:3px;">§407a Abs. 3 ZPO — Anzeige-Pflicht vor Gutachten-Beginn</div>' +
+        '<div style="font-size:11.5px;opacity:.92;line-height:1.4;">KI-Nutzung muss dem Gericht vorab schriftlich angezeigt werden (LG Darmstadt 19 O 527/16).</div>' +
+      '</div>' +
+      '<a href="zpo-anzeige.html" style="background:#fff;color:#dc2626;padding:9px 16px;border-radius:8px;font-weight:700;text-decoration:none;font-size:12px;white-space:nowrap;flex-shrink:0;">Anzeige erstellen →</a>' +
+      '<button onclick="this.parentElement.remove();localStorage.setItem(\'' + dismissKey + '\',Date.now());" style="background:transparent;border:none;color:#fff;font-size:22px;cursor:pointer;opacity:.7;line-height:1;padding:0 4px;flex-shrink:0;" title="Schließen (1 Stunde ausblenden)">×</button>';
+    
+    document.body.appendChild(banner);
+  }
+  
+  var page = (window.location.pathname.split('/').pop() || '').toLowerCase();
+  var relevantPages = ['akte.html', 'app.html', 'dashboard.html', 'archiv.html'];
+  if (relevantPages.indexOf(page) === -1) return;
+  
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function() { setTimeout(zeigeBanner, 800); });
+  } else {
+    setTimeout(zeigeBanner, 800);
+  }
+})();

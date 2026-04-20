@@ -577,3 +577,47 @@
   }
 
 })();
+
+/* ════════════════════════════════════════════════════════════════════════
+   PROVA Sprint K1 — Fall-Erstellungs-Event
+   20.04.2026 · Claude Co-Founder
+   
+   Globale Helper-Funktion window.provaFallErstellt()
+   Wird aufgerufen in app-logic.js nach erfolgreicher Fall-Anlage.
+   
+   Feuert:  'prova:fall-erstellt'
+   Konsumenten:  widerrufs-flow.js (Verbraucher-Check)
+                gericht-auftrag-logic.js (§407a-Banner)
+   ════════════════════════════════════════════════════════════════════════ */
+(function() {
+  'use strict';
+  
+  window.provaFallErstellt = function(fallDaten) {
+    if (!fallDaten) {
+      console.warn('[PROVA K1] provaFallErstellt ohne Daten aufgerufen');
+      return;
+    }
+    
+    var typ = (fallDaten.auftragstyp || localStorage.getItem('prova_gutachten_typ') || '').toLowerCase();
+    var az  = fallDaten.fallId || fallDaten.id || localStorage.getItem('prova_aktueller_fall') || '';
+    
+    try {
+      document.dispatchEvent(new CustomEvent('prova:fall-erstellt', {
+        detail: {
+          fallId: az,
+          auftragstyp: typ,
+          auftraggeber: fallDaten.auftraggeber || {
+            name:  fallDaten.auftraggeberName  || '',
+            typ:   fallDaten.auftraggeberTyp   || 'privat',
+            firma: fallDaten.auftraggeberFirma || ''
+          },
+          leistung: fallDaten.leistung || 'Sachverständigengutachten',
+          datum:    fallDaten.datum    || new Date().toISOString().split('T')[0]
+        }
+      }));
+      console.log('[PROVA K1] Fall-Event dispatched:', az, typ);
+    } catch(e) {
+      console.error('[PROVA K1] Event-Dispatch fehlgeschlagen:', e);
+    }
+  };
+})();
