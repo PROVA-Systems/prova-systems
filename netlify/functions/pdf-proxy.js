@@ -38,12 +38,17 @@ const AIRTABLE_BASE   = process.env.AIRTABLE_BASE_ID   || 'appJ7bLlAHZoxENWE';
 const AT_API          = 'https://api.airtable.com';
 
 // Tabellen-Map: doc_type → Airtable-Tabellenname + PDF-URL-Felder
+// S-SICHER 5.1 (23.04.2026): Placeholder-IDs durch echte ersetzt; nicht
+// existierende Tabellen (mahnung, fotoanlage) entfernt bis Schema-Klärung.
 const DOC_TYPE_MAP = {
-  gutachten:  { table: 'tblSxV8bsXwd1pwa0', urlFields: ['PDF_URL', 'pdf_url'],         ownerField: 'sv_email' },
-  rechnung:   { table: 'tblRechnungen',      urlFields: ['PDF_URL', 'pdf_url'],         ownerField: 'sv_email' },
-  brief:      { table: 'tblBriefe',          urlFields: ['PDF_URL', 'pdf_url'],         ownerField: 'sv_email' },
-  mahnung:    { table: 'tblMahnungen',       urlFields: ['PDF_URL', 'pdf_url'],         ownerField: 'sv_email' },
-  fotoanlage: { table: 'tblFotoAnlagen',     urlFields: ['PDF_URL', 'pdf_url'],         ownerField: 'sv_email' },
+  gutachten:  { table: 'tblSxV8bsXwd1pwa0', urlFields: ['PDF_URL', 'pdf_url'],               ownerField: 'sv_email' },
+  rechnung:   { table: 'tblF6MS7uiFAJDjiT', urlFields: ['PDF_URL_Rechnung', 'pdf_url', 'PDF_URL'], ownerField: 'sv_email' },
+  brief:      { table: 'tblSzxvnkRE6B0thx', urlFields: ['brief_pdf_url', 'pdf_url', 'PDF_URL'],    ownerField: 'sv_email' },
+  // TODO K3: 'mahnung' wird mit dediziertem Template/Tabelle erstellt.
+  //   Aktuell sind Mahnungen Einträge in RECHNUNGEN mit Feld mahnstufe>0 —
+  //   der Frontend-Caller sollte 'rechnung' nutzen bis eigene Tabelle existiert.
+  // TODO K3: 'fotoanlage' wird mit dediziertem Template/Tabelle erstellt.
+  //   Aktuell keine Airtable-Tabelle vorhanden (FOTO_ANLAGEN fehlt).
 };
 
 // ── Hilfsfunktionen ────────────────────────────────────────────────────
