@@ -14,7 +14,7 @@ if(!localStorage.getItem('prova_user')) location.href='app-login.html';
 /* PROVA Sprint S1-Hotfix (21.04.2026): const → var wegen Konflikt
    mit prova-audit.js, das ebenfalls ein globales AT_BASE deklariert.
    Konstanten bleiben inhaltlich unverändert. */
-var AT_BASE = 'appJ7bLlAHZoxENWE', AT_TABLE = 'tblSxV8bsXwd1pwa0';
+var AT_BASE = (window.PROVA_CONFIG && window.PROVA_CONFIG.AIRTABLE_BASE) || 'appJ7bLlAHZoxENWE', AT_TABLE = 'tblSxV8bsXwd1pwa0';
 var WH_S3 = 'https://hook.eu1.make.com/44kqx7eo142aw7warqao4c4wqo1nw158';
 var WH_S1 = 'https://hook.eu1.make.com/imn2n5xs7j251xicrmdmk17of042pt2t';
 

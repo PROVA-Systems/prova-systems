@@ -279,9 +279,37 @@ Dann bittet Claude Code Marcel, den Branch zu reviewen und zu mergen.
 
 ---
 
+## 8. Zentrale Frontend-Konfiguration — teilweise umgestellt
+
+### Stand nach Sprint S-SICHER Paket 1 (24.04.2026)
+
+Neue Datei `prova-config.js` im Repo-Root definiert:
+```javascript
+window.PROVA_CONFIG = { AIRTABLE_BASE: "appJ7bLlAHZoxENWE" };
+```
+
+**Umgestellt auf `window.PROVA_CONFIG.AIRTABLE_BASE` (mit Hardcode-Fallback):**
+
+| File | Zeile | Status |
+|---|---|---|
+| `dashboard-core.js` | 26 (`DASH.AT_BASE`) | ✅ umgestellt |
+| `app-logic.js` | 81 (`const AIRTABLE_BASE`), 2365 (`var AT_BASE` in IIFE) | ✅ umgestellt |
+| `akte-logic.js` | 10 (`var AT_BASE`) | ✅ umgestellt |
+| `freigabe-logic.js` | 17 (`var AT_BASE`) | ✅ umgestellt |
+| `nav.js` | — | — (kein Hardcode vorhanden, nichts zu tun) |
+
+**Einbindung von `prova-config.js`:** in `app.html`, `dashboard.html`, `akte.html` direkt nach `auth-guard.js`, synchron (kein `defer`).
+
+**Noch NICHT umgestellt (Folge-Sprint):** Rund 35 weitere Files enthalten den Hardcode `appJ7bLlAHZoxENWE` — teils als Top-Level-Variablen, teils als inline-Strings in `/v0/appJ7bLlAHZoxENWE/tblXYZ...`-URLs. Diese bleiben in S-SICHER Paket 1 bewusst unangetastet.
+
+**Defense-in-Depth:** Jede umgestellte Variable hat die Form `(window.PROVA_CONFIG && window.PROVA_CONFIG.AIRTABLE_BASE) || 'appJ7bLlAHZoxENWE'` — fällt bei fehlender Config (z. B. Cache-Problem oder Script-Load-Reihenfolge) auf den Hardcode zurück. Kein Bruch möglich.
+
+---
+
 ## Historie dieser Datei
 
 | Datum | Änderung |
 |---|---|
 | 23.04.2026 | Initial mit Floskel-Abweichung |
 | 23.04.2026 | Erweitert um Live-Code-Audit: airtable.js-Whitelist, Stripe-Hardcoding, Test-Bestand, DIKTATE-Feldtyp |
+| 24.04.2026 | § 8 ergänzt: `prova-config.js` eingeführt, 5 Hot-Files umgestellt (S-SICHER Paket 1) |

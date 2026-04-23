@@ -78,7 +78,7 @@ function berechneFristWarnung(){
 ============================================================ */
 const WEBHOOK_G1 = 'https://hook.eu1.make.com/imn2n5xs7j251xicrmdmk17of042pt2t';
 const WEBHOOK_K1 = 'https://hook.eu1.make.com/bslfuqmlud1vo8qems5ccn5z5f2eq4dl';
-const AIRTABLE_BASE = 'appJ7bLlAHZoxENWE';
+const AIRTABLE_BASE = (window.PROVA_CONFIG && window.PROVA_CONFIG.AIRTABLE_BASE) || 'appJ7bLlAHZoxENWE';
 const AIRTABLE_TABLE = 'tblSxV8bsXwd1pwa0';
 const AIRTABLE_SV_TABLE = 'tbladqEQT3tmx4DIB';
 
@@ -2362,7 +2362,7 @@ window.PROVA_KONTEXT = {
 window.PROVA_AUDIT = (function() {
   'use strict';
   
-  var AT_BASE = 'appJ7bLlAHZoxENWE';
+  var AT_BASE = (window.PROVA_CONFIG && window.PROVA_CONFIG.AIRTABLE_BASE) || 'appJ7bLlAHZoxENWE';
   var AT_AUDIT = 'AUDIT_TRAIL'; // Tabellenname (wird per Name aufgelöst)
   
   // Einfacher Hash-Funktion (SHA-256 Simulation via djb2 für Client-Side)
