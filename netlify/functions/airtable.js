@@ -21,12 +21,42 @@ const ALLOWED_TABLES = {
   tblyMTTdtfGQjjmc2: { name: 'TERMINE',     userField: 'sv_email', readOnly: false },
   // Rechnungen: User-Filter
   tblF6MS7uiFAJDjiT: { name: 'RECHNUNGEN',  userField: 'sv_email', readOnly: false },
-  // Kontakte: User-Filter (DSGVO — Multi-Tenant-Trennung)
+  // Kontakte: Adressbuch Auftraggeber/Geschädigte — DSGVO-Multi-Tenant
   tblMKmPLjRelr6Hal: { name: 'KONTAKTE',    userField: 'sv_email', readOnly: false },
   // KI-Statistik: schreiben OK, lesen eingeschränkt
   tblv9F8LEnUC3mKru: { name: 'KI_STATISTIK', userField: null,      readOnly: false },
   // KI-Lernpool: nur schreiben
   tbl4LEsMvcDKFCYaF: { name: 'KI_LERNPOOL', userField: null,       readOnly: false },
+
+  // ── Sprint IMPORT-FIX: Whitelist um 12 Tabellen erweitert (23.04.2026) ──
+  // Briefe: Archiv aller versendeten Briefe (inkl. PDF-URL, Inhalt)
+  tblSzxvnkRE6B0thx: { name: 'BRIEFE',             userField: 'sv_email', readOnly: false },
+  // Textbausteine-Custom: SV-eigene Bausteine inkl. Floskeln (kategorie="Floskel")
+  tblDS8NQxzceGedJO: { name: 'TEXTBAUSTEINE_CUSTOM', userField: 'sv_email', readOnly: false },
+  // Textbausteine: Standard-Bausteine mit sv_email-Feld (für gefilterte Auswahl)
+  tbljPQrdMDsqUzieD: { name: 'TEXTBAUSTEINE',      userField: 'sv_email', readOnly: false },
+  // Diktate: Sprint S6 — Original-Diktat + Korrekturen pro Fall
+  tblTcapjDGDI2f58h: { name: 'DIKTATE',            userField: 'sv_email', readOnly: false },
+  // Normen: globaler DIN/WTA/VOB-Katalog, Read-only für alle Nutzer
+  tblnceVJIW7BjHsPF: { name: 'NORMEN',             userField: null,       readOnly: true  },
+  // Audit-Trail: KI-Nutzung, §6-Validierungen, Haftungs-Nachweise
+  tblqQmMwJKxltXXXl: { name: 'AUDIT_TRAIL',        userField: 'sv_email', readOnly: false },
+  // Statistiken: aggregierte KPIs ohne Personenbezug
+  tblb0j9qOhMExVEFH: { name: 'STATISTIKEN',        userField: null,       readOnly: false },
+  // Push-Subscriptions: Web-Push-Endpoints pro User (userField 'Email' wie SV-Tabelle)
+  tblAiF38HeS1R1Umj: { name: 'PUSH_SUBSCRIPTIONS', userField: 'Email',    readOnly: false },
+  // Einwilligungen: DSGVO-Audit-Log (AVV-Signatur, Onboarding-Checkboxen)
+  tblwgUQgtBWckPMHp: { name: 'EINWILLIGUNGEN',     userField: 'sv_email', readOnly: false },
+  // Rechtsdokumente: Versionen AGB/Datenschutz/AVV, Read-only
+  tbljJkS3HOvtmpAGT: { name: 'RECHTSDOKUMENTE',    userField: null,       readOnly: true  },
+  // Workflow-Errors: zentrales Error-Log für Netlify-Functions (Admin-Dashboard)
+  tblgECx0eyrpQTN8e: { name: 'WORKFLOW_ERRORS',    userField: null,       readOnly: false },
+
+  // HINWEIS: PASSWORD_RESET_TOKENS (tblaboaRkJjrX3Z4J) und LOGIN_ATTEMPTS
+  // (tbli4t2WDLeBfuBB2) gehören NICHT in diese Whitelist — sie sind
+  // Backend-exklusiv und werden nur von dedizierten Functions (login.js,
+  // password-reset-request.js) direkt mit process.env.AIRTABLE_PAT angesprochen.
+  // Siehe AKTUELLE-ABWEICHUNGEN.md § 2 "Security-Prinzip".
 };
 
 // ── Rate-Limiting (In-Memory, wird bei Function-Cold-Start zurückgesetzt) ──
@@ -164,7 +194,18 @@ exports.handler = async function(event) {
     KONTAKTE:           'tblMKmPLjRelr6Hal',
     KI_STATISTIK:       'tblv9F8LEnUC3mKru',
     KI_LERNPOOL:        'tbl4LEsMvcDKFCYaF',
-    PUSH_SUBSCRIPTIONS: 'tblPUSH_PLACEHOLDER', // nach Airtable-Anlage ersetzen
+    // ── Sprint IMPORT-FIX: neue Tabellen-Aliase (23.04.2026) ──
+    BRIEFE:              'tblSzxvnkRE6B0thx',
+    TEXTBAUSTEINE_CUSTOM:'tblDS8NQxzceGedJO',
+    TEXTBAUSTEINE:       'tbljPQrdMDsqUzieD',
+    DIKTATE:             'tblTcapjDGDI2f58h',
+    NORMEN:              'tblnceVJIW7BjHsPF',
+    AUDIT_TRAIL:         'tblqQmMwJKxltXXXl',
+    STATISTIKEN:         'tblb0j9qOhMExVEFH',
+    PUSH_SUBSCRIPTIONS:  'tblAiF38HeS1R1Umj',
+    EINWILLIGUNGEN:      'tblwgUQgtBWckPMHp',
+    RECHTSDOKUMENTE:     'tbljJkS3HOvtmpAGT',
+    WORKFLOW_ERRORS:     'tblgECx0eyrpQTN8e',
   };
   const BASE_ID = 'appJ7bLlAHZoxENWE';
 
