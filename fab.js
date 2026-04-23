@@ -320,13 +320,17 @@
         href: 'app.html',
         kbd: 'Ctrl+N →'
       },
-      {
-        icon: '💶',
-        iconBg: 'rgba(16,185,129,.15)',
-        label: 'Schnellrechnung',
-        desc: 'Ohne Fall — sofort erstellen',
-        href: 'schnelle-rechnung.html'
-      },
+      // Sprint S1 Hotfix (21.04.2026): Schnellrechnung-Link ausgeblendet.
+      // Die Seite ist nur ein Stub ("Erweiterung folgt"). Wird als
+      // "Pauschalrechnung" in Sprint K2 vollständig gebaut, dann wieder
+      // aktiviert. Link verstecken schützt Pilotkunden vor Leer-Seite.
+      // {
+      //   icon: '💶',
+      //   iconBg: 'rgba(16,185,129,.15)',
+      //   label: 'Schnellrechnung',
+      //   desc: 'Ohne Fall — sofort erstellen',
+      //   href: 'schnelle-rechnung.html'
+      // },
       {
         icon: '✉️',
         iconBg: 'rgba(245,158,11,.15)',

@@ -11,9 +11,12 @@ if (!window.showToast && window.zeigToast) window.showToast = window.zeigToast;
 'use strict';
 if(!localStorage.getItem('prova_user')) location.href='app-login.html';
 
-const AT_BASE='appJ7bLlAHZoxENWE', AT_TABLE='tblSxV8bsXwd1pwa0';
-const WH_S3='https://hook.eu1.make.com/44kqx7eo142aw7warqao4c4wqo1nw158';
-const WH_S1='https://hook.eu1.make.com/imn2n5xs7j251xicrmdmk17of042pt2t';
+/* PROVA Sprint S1-Hotfix (21.04.2026): const → var wegen Konflikt
+   mit prova-audit.js, das ebenfalls ein globales AT_BASE deklariert.
+   Konstanten bleiben inhaltlich unverändert. */
+var AT_BASE = 'appJ7bLlAHZoxENWE', AT_TABLE = 'tblSxV8bsXwd1pwa0';
+var WH_S3 = 'https://hook.eu1.make.com/44kqx7eo142aw7warqao4c4wqo1nw158';
+var WH_S1 = 'https://hook.eu1.make.com/imn2n5xs7j251xicrmdmk17of042pt2t';
 
 let recId=null, recFields=null, svProfil=null, editMode=false;
 
@@ -342,9 +345,6 @@ async function starteQualitaetspruefung() {
     btn.disabled = false; btn.textContent = '🔍 Erneut prüfen';
   }
 }
-// Session 22: Auf window exposen, damit der Auto-Qualitätscheck in freigabe.html greift
-// (DOMContentLoaded-Hook ruft window.starteQualitaetspruefung() bei aktivem auto_quality-Toggle)
-window.starteQualitaetspruefung = starteQualitaetspruefung;
 
 /* ── AUDIT-LOG TIMELINE ── */
 window.toggleAuditLog = function() {

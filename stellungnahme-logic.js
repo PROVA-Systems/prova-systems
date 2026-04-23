@@ -944,9 +944,6 @@ AUFGABE: Schreibe einen professionellen §6-Denkanstoß der AUSSCHLIESSLICH auf 
       body:JSON.stringify({
         model: 'gpt-4o-mini',
         max_tokens: 600,
-        // v3.5: Fachwissen-Kontext triggern (§6 → 8 Normen volle Tiefe)
-        schadensart: sa !== '—' ? sa : '',
-        paragraph_nr: 6,
         messages:[
           {role:'system', content: systemPrompt},
           {role:'user',   content: userPrompt}
@@ -988,9 +985,6 @@ async function ausformulieren() {
       body:JSON.stringify({
         model:'gpt-4o-mini',
         max_tokens:700,
-        // v3.5: Fachwissen-Kontext triggern (Weg B — Ausformulieren §6)
-        schadensart: sa !== '—' ? sa : '',
-        paragraph_nr: 6,
         messages:[
           {role:'system', content:`Du bist ein öffentlich bestellter und vereidigter Sachverständiger für Schäden an Gebäuden mit 30 Jahren Berufserfahrung. Du formulierst §6 Fachurteile für Gutachten.
 
@@ -1047,119 +1041,63 @@ const SA_TAGS = {
   'Sturmschaden':'SS','Elementarschaden':'ES','Baumängel allgemein':'BA',
   'Baumängel':'BA','Schimmel/Feuchte':'SC','Feuchte':'SC'
 };
-const NORMEN_DB=[{"n":"WTA 6-1-01/D","t":"Schimmel: Luftfeuchte <60%, Wandfeuchte >20% kritisch","sa":"SC"},{"n":"DIN 4108-2","t":"Mindestwärmeschutz: fRsi ≥ 0,70 — Taupunkt prüfen","sa":"SC,WS,BA"},{"n":"DIN 4108-3","t":"Feuchteschutz: Tauwassernachweis, Diffusion","sa":"SC,WS,BA"},{"n":"DIN EN ISO 13788","t":"Hygrothermik: Oberflächenfeuchte >80%rF schimmelkritisch","sa":"SC"},{"n":"DIN 68800-1","t":"Holzschutz: Holzfeuchte >18% = Schimmelrisiko","sa":"SC,WS"},{"n":"DIN 1946-6","t":"Lüftung Wohngebäude: mind. 0,3-facher Luftwechsel/h","sa":"SC"},{"n":"DIN EN ISO 16000-1","t":"Innenraumluft: Probenahme + Messstrategie Schimmelpilze","sa":"SC"},{"n":"UBA-Leitfaden","t":"Schimmel >0,5 m² = erheblicher Mangel, Sanierungspflicht","sa":"SC"},{"n":"DIN 18533","t":"Abdichtung erdberührt: Lastfall W1-E bis W4-E","sa":"WS,ES"},{"n":"DIN 18534","t":"Nassraum-Abdichtung: Beanspruchungsklasse A0–A3","sa":"WS"},{"n":"VdS 3151","t":"Trocknung: Holz ≤15%, Mauerwerk ≤3% KMG Zielfeuchte","sa":"WS,ES"},{"n":"DIN 18353","t":"Estrich: CM Zementestrich ≤2,0%, Anhydrit ≤0,5%","sa":"WS"},{"n":"DIN EN 13564","t":"Rückstauschutz: Rückstauebene = Straßenoberkante","sa":"WS,ES"},{"n":"DIN EN 805","t":"Druckprüfung Leitungen: Prüfdruck 1,5-fach Betrieb","sa":"WS"},{"n":"DIN 4102-4","t":"Feuerwiderstandsklassen: F30/F60/F90 nach Bauteilen","sa":"BS"},{"n":"DIN EN 13501-2","t":"Klassifizierung Feuerwiderstand europäisch","sa":"BS"},{"n":"TRGS 519","t":"Asbest: Arbeiten bei Abbruch, Sanierung, Instandhaltung","sa":"BS"},{"n":"GefStoffV §14","t":"Schadstoffmessung: Expositionsermittlung nach Brand","sa":"BS"},{"n":"DIN EN 1991-1-4","t":"Windlasten: Windzone 1–4, Böengeschwindigkeit","sa":"SS"},{"n":"DIN EN 1991-1-3","t":"Schneelasten: Schneelastzone 1–3, 0,65–1,10 kN/m²","sa":"SS,ES"},{"n":"DIN 18338","t":"Dachdeckung: Mindestdachneigung Tonziegel 22°","sa":"SS"},{"n":"DIN 18531","t":"Flachdach: Aufkantung ≥150 mm, Bitumen 2-lagig ≥6 mm","sa":"SS"},{"n":"VOB/B §13","t":"Gewährleistung Bauwerk 4 Jahre, Mängelansprüche","sa":"BA,SA"},{"n":"DIN 18202","t":"Toleranzen Hochbau: Ebenheit Boden max. 5 mm/4 m","sa":"BA,BS_V"},{"n":"DIN EN 206","t":"Beton: Expositionsklassen XC1–XF4","sa":"BA"},{"n":"DIN 55699","t":"WDVS: Haftfestigkeit Untergrund ≥0,25 N/mm²","sa":"BA,SA"},{"n":"§633 BGB","t":"Sachmangel Werkvertrag: vereinbarte Beschaffenheit","sa":"BA,KA"},{"n":"§634 BGB","t":"Rechte bei Mängeln: Nacherfüllung, Rücktritt, Schadensersatz","sa":"BA,KA"},{"n":"DIN 4095","t":"Drainage: Planung, Einbau, Instandhaltung","sa":"ES"},{"n":"DIN EN 1997-1","t":"Geotechnik: Erdrutsch, Setzungen, Baugrundversagen","sa":"ES"},{"n":"DIN 4020","t":"Baugrunduntersuchungen: Anforderungen Geotechnik","sa":"ES"},{"n":"§485 ZPO","t":"Selbständiges Beweisverfahren: Antrag auf Gutachten","sa":"BS_V,KA"},{"n":"§487 ZPO","t":"Inhalt des Antrags: Beweisfragen, Beweismittel","sa":"BS_V"},{"n":"§492 ZPO","t":"Durchführung: Beweisaufnahme und Protokollierung","sa":"BS_V"},{"n":"DIN EN ISO 17123","t":"Messverfahren: Kalibrierung und Messprotokoll","sa":"BS_V"},{"n":"§434 BGB","t":"Sachmangel: Beschaffenheitsvereinbarung, übliche Qualität","sa":"KA"},{"n":"§438 BGB","t":"Verjährung: 5 Jahre bei Bauwerken","sa":"KA,BA"},{"n":"§444 BGB","t":"Arglistige Täuschung: kein Haftungsausschluss möglich","sa":"KA"},{"n":"WTA 2-9-04/D","t":"Sanierputzsystem: w ≤ 0,5 kg/(m²·h⁰˙⁵)","sa":"SA"},{"n":"GEG","t":"Gebäudeenergiegesetz: Sanierungspflichten, U-Werte","sa":"SA"},{"n":"§407a ZPO","t":"Persönliche Erstattungspflicht des Sachverständigen","sa":"GERICHT"},{"n":"§411 ZPO","t":"Schriftliches Gutachten: Frist, Unterschrift, Stempel","sa":"GERICHT"},{"n":"§412 ZPO","t":"Neues Gutachten: bei Widerspruch oder Ergänzungsbedarf","sa":"GERICHT"},{"n":"§404 ZPO","t":"Sachverständigenauswahl: bevorzugt ö.b.u.v.","sa":"GERICHT"},{"n":"VdS 2021","t":"VdS-Leitlinien für Sachverständige: Qualitätsstandards","sa":"VERSICHERUNG"},{"n":"GDV AFB 2010","t":"Allgemeine Feuerversicherungs-Bedingungen","sa":"VERSICHERUNG"},{"n":"GDV AWB 2010","t":"Allgemeine Wohngebäude-Versicherungs-Bedingungen","sa":"VERSICHERUNG"},{"n":"DIN 276","t":"Kosten im Bauwesen: Kostengliederung nach KG100-700","sa":"BA,BS,WS,SC,SS,ES"},{"n":"§823 BGB","t":"Schadensersatzpflicht bei unerlaubter Handlung","sa":"BA,WS,SC,BS,SS,ES"},{"n":"VOB/B §4 Nr.3","t":"Bedenkenanmeldung: Hinweispflicht Auftragnehmer","sa":"BA"}];
+const S_NORMEN_DB=[{"n":"WTA 6-1-01/D","t":"Schimmel: Luftfeuchte <60%, Wandfeuchte >20% kritisch","sa":"SC"},{"n":"DIN 4108-2","t":"Mindestwärmeschutz: fRsi ≥ 0,70 — Taupunkt prüfen","sa":"SC,WS,BA"},{"n":"DIN 4108-3","t":"Feuchteschutz: Tauwassernachweis, Diffusion","sa":"SC,WS,BA"},{"n":"DIN EN ISO 13788","t":"Hygrothermik: Oberflächenfeuchte >80%rF schimmelkritisch","sa":"SC"},{"n":"DIN 68800-1","t":"Holzschutz: Holzfeuchte >18% = Schimmelrisiko","sa":"SC,WS"},{"n":"DIN 1946-6","t":"Lüftung Wohngebäude: mind. 0,3-facher Luftwechsel/h","sa":"SC"},{"n":"DIN EN ISO 16000-1","t":"Innenraumluft: Probenahme + Messstrategie Schimmelpilze","sa":"SC"},{"n":"UBA-Leitfaden","t":"Schimmel >0,5 m² = erheblicher Mangel, Sanierungspflicht","sa":"SC"},{"n":"DIN 18533","t":"Abdichtung erdberührt: Lastfall W1-E bis W4-E","sa":"WS,ES"},{"n":"DIN 18534","t":"Nassraum-Abdichtung: Beanspruchungsklasse A0–A3","sa":"WS"},{"n":"VdS 3151","t":"Trocknung: Holz ≤15%, Mauerwerk ≤3% KMG Zielfeuchte","sa":"WS,ES"},{"n":"DIN 18353","t":"Estrich: CM Zementestrich ≤2,0%, Anhydrit ≤0,5%","sa":"WS"},{"n":"DIN EN 13564","t":"Rückstauschutz: Rückstauebene = Straßenoberkante","sa":"WS,ES"},{"n":"DIN EN 805","t":"Druckprüfung Leitungen: Prüfdruck 1,5-fach Betrieb","sa":"WS"},{"n":"DIN 4102-4","t":"Feuerwiderstandsklassen: F30/F60/F90 nach Bauteilen","sa":"BS"},{"n":"DIN EN 13501-2","t":"Klassifizierung Feuerwiderstand europäisch","sa":"BS"},{"n":"TRGS 519","t":"Asbest: Arbeiten bei Abbruch, Sanierung, Instandhaltung","sa":"BS"},{"n":"GefStoffV §14","t":"Schadstoffmessung: Expositionsermittlung nach Brand","sa":"BS"},{"n":"DIN EN 1991-1-4","t":"Windlasten: Windzone 1–4, Böengeschwindigkeit","sa":"SS"},{"n":"DIN EN 1991-1-3","t":"Schneelasten: Schneelastzone 1–3, 0,65–1,10 kN/m²","sa":"SS,ES"},{"n":"DIN 18338","t":"Dachdeckung: Mindestdachneigung Tonziegel 22°","sa":"SS"},{"n":"DIN 18531","t":"Flachdach: Aufkantung ≥150 mm, Bitumen 2-lagig ≥6 mm","sa":"SS"},{"n":"VOB/B §13","t":"Gewährleistung Bauwerk 4 Jahre, Mängelansprüche","sa":"BA,SA"},{"n":"DIN 18202","t":"Toleranzen Hochbau: Ebenheit Boden max. 5 mm/4 m","sa":"BA,BS_V"},{"n":"DIN EN 206","t":"Beton: Expositionsklassen XC1–XF4","sa":"BA"},{"n":"DIN 55699","t":"WDVS: Haftfestigkeit Untergrund ≥0,25 N/mm²","sa":"BA,SA"},{"n":"§633 BGB","t":"Sachmangel Werkvertrag: vereinbarte Beschaffenheit","sa":"BA,KA"},{"n":"§634 BGB","t":"Rechte bei Mängeln: Nacherfüllung, Rücktritt, Schadensersatz","sa":"BA,KA"},{"n":"DIN 4095","t":"Drainage: Planung, Einbau, Instandhaltung","sa":"ES"},{"n":"DIN EN 1997-1","t":"Geotechnik: Erdrutsch, Setzungen, Baugrundversagen","sa":"ES"},{"n":"DIN 4020","t":"Baugrunduntersuchungen: Anforderungen Geotechnik","sa":"ES"},{"n":"§485 ZPO","t":"Selbständiges Beweisverfahren: Antrag auf Gutachten","sa":"BS_V,KA"},{"n":"§487 ZPO","t":"Inhalt des Antrags: Beweisfragen, Beweismittel","sa":"BS_V"},{"n":"§492 ZPO","t":"Durchführung: Beweisaufnahme und Protokollierung","sa":"BS_V"},{"n":"DIN EN ISO 17123","t":"Messverfahren: Kalibrierung und Messprotokoll","sa":"BS_V"},{"n":"§434 BGB","t":"Sachmangel: Beschaffenheitsvereinbarung, übliche Qualität","sa":"KA"},{"n":"§438 BGB","t":"Verjährung: 5 Jahre bei Bauwerken","sa":"KA,BA"},{"n":"§444 BGB","t":"Arglistige Täuschung: kein Haftungsausschluss möglich","sa":"KA"},{"n":"WTA 2-9-04/D","t":"Sanierputzsystem: w ≤ 0,5 kg/(m²·h⁰˙⁵)","sa":"SA"},{"n":"GEG","t":"Gebäudeenergiegesetz: Sanierungspflichten, U-Werte","sa":"SA"},{"n":"§407a ZPO","t":"Persönliche Erstattungspflicht des Sachverständigen","sa":"GERICHT"},{"n":"§411 ZPO","t":"Schriftliches Gutachten: Frist, Unterschrift, Stempel","sa":"GERICHT"},{"n":"§412 ZPO","t":"Neues Gutachten: bei Widerspruch oder Ergänzungsbedarf","sa":"GERICHT"},{"n":"§404 ZPO","t":"Sachverständigenauswahl: bevorzugt ö.b.u.v.","sa":"GERICHT"},{"n":"VdS 2021","t":"VdS-Leitlinien für Sachverständige: Qualitätsstandards","sa":"VERSICHERUNG"},{"n":"GDV AFB 2010","t":"Allgemeine Feuerversicherungs-Bedingungen","sa":"VERSICHERUNG"},{"n":"GDV AWB 2010","t":"Allgemeine Wohngebäude-Versicherungs-Bedingungen","sa":"VERSICHERUNG"},{"n":"DIN 276","t":"Kosten im Bauwesen: Kostengliederung nach KG100-700","sa":"BA,BS,WS,SC,SS,ES"},{"n":"§823 BGB","t":"Schadensersatzpflicht bei unerlaubter Handlung","sa":"BA,WS,SC,BS,SS,ES"},{"n":"VOB/B §4 Nr.3","t":"Bedenkenanmeldung: Hinweispflicht Auftragnehmer","sa":"BA"}];
 
 async function ladeNormen() {
   const el = document.getElementById('normenListe');
   if(!el) return;
 
-  // ═══════════════════════════════════════════════════════
-  // Sprint 3.6: Progressive Disclosure
-  //
-  // PHASE 1 (SOFORT, ~150ms): Provider liefert 5 typ-passende Normen aus 264
-  //   → rendert sofort, User sieht nie Spinner/Leere
-  // PHASE 2 (nach ~1.1s): KI wählt aus denselben 264 die kontext-relevanten
-  //   → tauscht Liste nur aus wenn User noch nichts ausgewählt hat
-  // FALLBACK: Bei Backend-Fehler lokale NORMEN_DB (50 Normen, Offline-Safe)
-  //
-  // Race-Safe: _pickerState trackt ob User schon eine Norm eingefügt hat
-  // ═══════════════════════════════════════════════════════
-
-  // Lokaler Fallback bei Backend-Ausfall
+  // Erste Stufe: statische Vorauswahl sofort zeigen
   const tag = SA_TAGS[sa];
-  const lokalStatisch = tag
-    ? NORMEN_DB.filter(n => n.sa.includes(tag)).slice(0,5)
-    : NORMEN_DB.slice(0,5);
+  const statisch = tag
+    ? S_NORMEN_DB.filter(n => n.sa.includes(tag)).slice(0,3)
+    : S_NORMEN_DB.slice(0,3);
 
-  // Race-Safe-State: global am window, damit normEinfuegen es lesen kann
-  window._normenPickerState = { userPicked: false, phase: 'init' };
+  el.innerHTML = '<div style="padding:8px 12px;font-size:11px;color:var(--text3);display:flex;align-items:center;gap:6px;"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;border:2px solid var(--accent);border-top-color:transparent;animation:spin .6s linear infinite;"></span>KI analysiert Diktat…</div>'
+    + statisch.map(n => renderNormItem(n)).join('');
 
-  const saForPicker = sa !== '—' ? sa : '';
+  // Zweite Stufe: KI liest Diktat und schlägt spezifische Normen vor
   const diktat  = (localStorage.getItem('prova_transkript') || '').trim();
   const entwurf = (localStorage.getItem('prova_entwurf_text') || '').substring(0,800).trim();
   const kontext = diktat || entwurf;
 
-  // ─── PHASE 1: fast-Call (~150ms, User schaut noch woanders hin) ───
-  // Während Phase 1 läuft: Spinner mit typ-passenden Lokalnormen als Backup
-  el.innerHTML = '<div style="padding:8px 12px;font-size:11px;color:var(--text3);display:flex;align-items:center;gap:6px;"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;border:2px solid var(--accent);border-top-color:transparent;animation:spin .6s linear infinite;"></span>Lade Normen…</div>'
-    + lokalStatisch.map(n => renderNormItem(n)).join('');
-
-  let phase1Normen = null;
-  try {
-    const r1 = await fetch('/.netlify/functions/normen-picker', {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ schadensart: saForPicker, mode: 'fast', max: 5 })
-    });
-    if (r1.ok) {
-      const d1 = await r1.json();
-      if (Array.isArray(d1.normen) && d1.normen.length) {
-        phase1Normen = d1.normen;
-      }
-    }
-  } catch(e) {
-    console.warn('[normen-picker] Phase 1 fehlgeschlagen, nutze lokalen Fallback:', e.message);
-  }
-
-  // Phase 1 gerendert — mit Backend-Ergebnis oder lokalem Fallback
-  const phase1Display = phase1Normen || lokalStatisch;
-  el.innerHTML = phase1Display.map(n => renderNormItem(n)).join('')
-    + '<div id="norm-picker-hint" style="padding:4px 10px;font-size:10px;color:var(--text3);display:flex;align-items:center;gap:6px;opacity:.7;"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;border:2px solid var(--accent);border-top-color:transparent;animation:spin .6s linear infinite;"></span>KI verfeinert Auswahl…</div>';
-  window._normenPickerState.phase = 'fast-done';
-
-  // Ohne Kontext kein KI-Refinement nötig
   if(!kontext) {
-    const hint = document.getElementById('norm-picker-hint');
-    if (hint) hint.remove();
-    window._normenPickerState.phase = 'done-no-ki';
+    // Nur statische Normen zeigen
+    el.innerHTML = statisch.map(n => renderNormItem(n)).join('');
     return;
   }
 
-  // ─── PHASE 2: smart-Call (KI-Verfeinerung, ~1.1s im Hintergrund) ───
   try {
-    const r2 = await fetch('/.netlify/functions/normen-picker', {
+    const normenListe = S_NORMEN_DB.map(n => n.n + ' — ' + n.t + (n.g?' ('+n.g+')':'')).join('\n');
+    const res = await fetch('/.netlify/functions/ki-proxy', {
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({
-        schadensart: saForPicker,
-        kontext: kontext,
-        mode: 'smart',
-        max: 5
+        model:'gpt-4o-mini',
+        max_tokens:200,
+        messages:[
+          {role:'system', content:'Du bist ein erfahrener Bausachverständiger. Antworte NUR mit einem JSON-Array der Norm-Bezeichnungen, z.B. ["DIN 4108-2","WTA 6-1-01/D"]. Keine Erklärungen, kein Markdown.'},
+          {role:'user', content:'Wähle aus der folgenden Liste die 3-5 relevantesten Normen für diesen Fall aus.\n\nFall: '+sa+'\nDiktat/Sichtbefunde:\n'+kontext.substring(0,600)+'\n\nVerfügbare Normen:\n'+normenListe+'\n\nGib NUR ein JSON-Array zurück.'}
+        ]
       })
     });
-    if (!r2.ok) throw new Error('HTTP '+r2.status);
-    const d2 = await r2.json();
-    const smartNormen = Array.isArray(d2.normen) ? d2.normen : [];
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const d = await res.json();
+    const txt = (d.content&&d.content[0]&&d.content[0].text)||
+                (d.choices&&(d.choices[0]&&d.choices[0].message&&d.choices[0].message.content))||'';
 
-    // Race-Safe: Nur austauschen wenn User noch nichts eingefügt hat
-    if (window._normenPickerState.userPicked) {
-      // User hat schon gewählt — respektieren, nur Hinweis entfernen
-      const hint = document.getElementById('norm-picker-hint');
-      if (hint) hint.remove();
-      window._normenPickerState.phase = 'done-user-picked';
-      return;
-    }
+    let vorschlag = [];
+    try {
+      const match = txt.match(/\[.*?\]/s);
+      if(match) vorschlag = JSON.parse(match[0]);
+    } catch(e) {}
 
-    if (smartNormen.length) {
-      // Verfeinerte KI-Auswahl einsetzen
-      el.innerHTML = smartNormen.map(n => renderNormItem(n)).join('')
-        + '<div style="padding:4px 10px;font-size:10px;color:var(--accent);opacity:.75;">✨ Auswahl KI-verfeinert</div>';
-      // Nach 3s Badge ausblenden, damit es nicht ewig steht
-      setTimeout(() => {
-        const ref = document.querySelector('#normenListe > div:last-child');
-        if (ref && ref.textContent.includes('KI-verfeinert')) ref.style.display = 'none';
-      }, 3000);
-      window._normenPickerState.phase = 'done-smart';
-    } else {
-      // Smart-Mode lieferte nichts Sinnvolles → Phase-1-Normen bleiben
-      const hint = document.getElementById('norm-picker-hint');
-      if (hint) hint.remove();
-      window._normenPickerState.phase = 'done-no-smart';
-    }
+    const kiNormen = vorschlag.length
+      ? vorschlag.map(nr => S_NORMEN_DB.find(n => n.n===nr)).filter(Boolean)
+      : statisch;
+
+    el.innerHTML = kiNormen.map(n => renderNormItem(n)).join('');
   } catch(e) {
-    // Smart fehlgeschlagen → Phase 1 bleibt bestehen, Hinweis entfernen
-    console.warn('[normen-picker] Phase 2 fehlgeschlagen:', e.message);
-    const hint = document.getElementById('norm-picker-hint');
-    if (hint) hint.remove();
-    window._normenPickerState.phase = 'done-smart-error';
+    el.innerHTML = statisch.map(n => renderNormItem(n)).join('');
   }
 }
 
@@ -1173,12 +1111,6 @@ function renderNormItem(n) {
 }
 
 function normEinfuegen(nr, titel) {
-  // Sprint 3.6: Race-Safe — Progressive Disclosure respektiert User-Choice
-  // Sobald der User eine Norm klickt, wird die Phase-2-Verfeinerung nicht mehr überschrieben.
-  if (window._normenPickerState) {
-    window._normenPickerState.userPicked = true;
-  }
-
   const insert = `\n(gem. ${nr} – ${titel})`;
   const ta = selectedWeg==='A' ? document.getElementById('svTextA') :
     (document.getElementById('ausform-wrap').style.display!=='none' ?
@@ -1988,10 +1920,10 @@ window.addEventListener('message', function(e) {
       }
     } catch(e) {}
 
-    // 2. NORMEN_DB (falls verfügbar)
-    if (window.NORMEN_DB && window.NORMEN_DB.length) {
+    // 2. S_NORMEN_DB (falls verfügbar)
+    if (window.S_NORMEN_DB && window.S_NORMEN_DB.length) {
       var added = all.map(function(i){return i.title;});
-      window.NORMEN_DB.slice(0, 20).forEach(function(n) {
+      window.S_NORMEN_DB.slice(0, 20).forEach(function(n) {
         var num = n.n || n.num || '';
         if (num && added.indexOf(num) === -1) {
           all.push({ title: num, sub: n.t || n.titel || '', text: num + ': ' + (n.t || n.titel || ''), typ: 'norm', icon: '📚' });
@@ -2340,20 +2272,6 @@ window.addEventListener('message', function(e) {
 
 /* ── KI-Assist für §6 ── */
 async function starteKIAssist(typ) {
-  // Session 22: inline_vorschlaege-Toggle aus Einstellungen respektieren.
-  // Default: aktiv. Nur bei explizitem false blockieren.
-  try {
-    var _es = JSON.parse(localStorage.getItem('prova_einstellungen') || '{}');
-    if (_es.inline_vorschlaege === false) {
-      if (typeof zeigeToast === 'function') {
-        zeigeToast('Inline KI-Vorschläge sind in Einstellungen deaktiviert');
-      } else {
-        alert('Inline KI-Vorschläge sind in Einstellungen → KI & Diktat deaktiviert.\n\nZum Aktivieren: Einstellungen öffnen und Toggle "Inline KI-Vorschläge" einschalten.');
-      }
-      return;
-    }
-  } catch(e) {}
-
   var btn = event.currentTarget;
   var origText = btn.innerHTML;
   btn.innerHTML = '⏳ KI denkt…';

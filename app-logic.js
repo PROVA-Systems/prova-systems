@@ -2028,14 +2028,14 @@ var WORKFLOW = [
   {
     schritt: 2,
     name: 'Diktat & Fotos',
-    seite: 'app.html#step2',
+    seite: 'app-starter.html#step2',
     icon: '🎙️',
     farbe: '#4f8ef7'
   },
   {
     schritt: 3,
     name: 'KI-Analyse',
-    seite: 'app.html#step3',
+    seite: 'app-starter.html#step3',
     icon: '🤖',
     farbe: '#6366f1'
   },
@@ -2158,26 +2158,6 @@ function baueBanner(kontext, aktuellerSchritt, istWerkzeug) {
     : az
       ? 'akte.html?az=' + encodeURIComponent(az)
       : 'archiv.html';
-  
-  /* ═══ PROVA Sprint K1 — Fall-Erstellungs-Event feuern ═══ */
-  /* Trigger für widerrufs-flow.js (Verbraucher-Check) und */
-  /* gericht-auftrag-logic.js (§407a-Banner)               */
-  try {
-    if (recordId && typeof window.provaFallErstellt === 'function') {
-      window.provaFallErstellt({
-        fallId: recordId,
-        auftragstyp: localStorage.getItem('prova_gutachten_typ') || '',
-        auftraggeber: {
-          name:  (document.getElementById('az-ag-name')    || {}).value || '',
-          typ:   (document.getElementById('az-ag-typ')     || {}).value || 'privat',
-          firma: (document.getElementById('az-ag-firma')   || {}).value || ''
-        },
-        leistung: 'Sachverständigengutachten',
-        datum: new Date().toISOString().split('T')[0]
-      });
-    }
-  } catch(e) { console.warn('[PROVA K1] provaFallErstellt Fehler:', e); }
-  /* ═══ ENDE Sprint K1 Event-Integration ═══ */
   
   // Nächster-Schritt Button
   var naechsterBtn = '';
@@ -2810,25 +2790,6 @@ async function bereinigeDiktatText() {
   if (badge) { badge.textContent = '⟳ Wird aufbereitet…'; badge.style.background = 'rgba(245,158,11,.2)'; }
 
   try {
-    // Session 7 DSGVO-Fix: Pseudonymisierung vor OpenAI-Transfer (USA/Drittland).
-    // IBAN, Telefon, E-Mail, Adressen, Namen werden durch Platzhalter ersetzt.
-    // Der Audit-Report wird für AUDIT_TRAIL gespeichert.
-    var textFuerKi = rawText;
-    if (typeof ProvaPseudo !== 'undefined' && typeof ProvaPseudo.apply === 'function') {
-      textFuerKi = ProvaPseudo.apply(rawText);
-      if (ProvaPseudo.lastReport && typeof window.provaAudit !== 'undefined') {
-        try {
-          window.provaAudit.log({
-            aktion: 'ki_proxy_pseudonymisierung',
-            details: ProvaPseudo.formatReport(ProvaPseudo.lastReport),
-            kontext: 'diktat_bereinigung'
-          });
-        } catch(_e) { /* Audit darf KI-Call nicht blockieren */ }
-      }
-    } else {
-      console.warn('[PROVA DSGVO] ProvaPseudo nicht verfügbar — Diktat wird UNGESCHÜTZT an KI gesendet.');
-    }
-
     var res = await fetch('/.netlify/functions/ki-proxy', {
       method: 'POST',
       headers: {'Content-Type':'application/json'},
@@ -2836,8 +2797,8 @@ async function bereinigeDiktatText() {
         model: 'gpt-4o-mini',
         max_tokens: 600,
         messages: [
-          {role:'system', content:'Du bist ein Textkorrektur-Assistent. Formatiere den folgenden Sprach-zu-Text-Diktat-Text: setze Kommas, Punkte und Großschreibung korrekt. Korrigiere offensichtliche Spracherkennungsfehler ("zirka" statt "zirkr", Zahlen ausschreiben wenn klar). Behalte ALLE inhaltlichen Angaben exakt bei — ändere keine Zahlen, Messwerte oder Fakten. Platzhalter wie [IBAN], [TELEFON], [EMAIL], [PERSON], [ADRESSE] bleiben UNVERÄNDERT im Text. Antworte NUR mit dem korrigierten Fließtext, keine Erklärungen.'},
-          {role:'user', content: textFuerKi}
+          {role:'system', content:'Du bist ein Textkorrektur-Assistent. Formatiere den folgenden Sprach-zu-Text-Diktat-Text: setze Kommas, Punkte und Großschreibung korrekt. Korrigiere offensichtliche Spracherkennungsfehler ("zirka" statt "zirkr", Zahlen ausschreiben wenn klar). Behalte ALLE inhaltlichen Angaben exakt bei — ändere keine Zahlen, Messwerte oder Fakten. Antworte NUR mit dem korrigierten Fließtext, keine Erklärungen.'},
+          {role:'user', content: rawText}
         ]
       })
     });
@@ -2970,7 +2931,7 @@ function sammleDaten() {
 
       document.getElementById('f-mw-extra')?.value ? String(document.getElementById('f-mw-extra').value) : '',
     ].filter(Boolean).join(' | ') || '',
-    transkript:         window.transcriptText || transcriptText || '',
+    transkript:         window.transcriptText || '',
     fotos_anzahl:       fotos.length,
     fotos:              fotos.map((f, i) => ({ index: i+1, dataUrl: f.dataUrl, caption: f.caption || 'Foto '+(i+1), groesse_kb: Math.round(f.compSize/1024) })),
     timestamp:          nowIso,
@@ -3203,14 +3164,6 @@ window.weiterZuAnalyse = async function() {
   goToStep(3);
   await sendeWebhook();
 };
-
-// Session 7: Doppelklick-Schutz um weiterZuAnalyse herum.
-// Verhindert dass ungeduldige User durch Rapid-Klick mehrfach ki-proxy/Webhook triggern
-// (→ doppelte Airtable-Fälle + doppelte OpenAI-Kosten).
-// Cooldown 3 Sek weil der eigentliche KI-Call mehrere Sekunden dauert.
-if (typeof ProvaClickGuard !== 'undefined' && typeof ProvaClickGuard.wrap === 'function') {
-  window.weiterZuAnalyse = ProvaClickGuard.wrap('weiterZuAnalyse', window.weiterZuAnalyse, 3000);
-}
 
 async function sendeWebhook() {
   const daten = sammleDaten();

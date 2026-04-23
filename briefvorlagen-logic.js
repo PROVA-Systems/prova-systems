@@ -49,12 +49,12 @@ var TMPLS=[
 
 /* ── STATE ── */
 var _cat='all', _q='', _tpl=null, _fall=null, _felder={}, _step=1, _ki=false;
-var _currentTab='edit';  /* Session 30: aktives Tab in Detail-Drawer */
 var _toastTimer;
 
 /* ── RENDER GRID ── */
 function render(){
   var c=document.getElementById('bv-container');
+  if(!c){ console.warn('[PROVA bv] bv-container nicht gefunden — retry nach DOMContentLoaded'); return; }
   c.innerHTML='';
   var vis=0;
   CATS.forEach(function(cat){
@@ -103,8 +103,16 @@ function render(){
   }
 }
 
-// Initial-Render — synchron nach TMPLS-Definition
-if (typeof render === 'function') render();
+// Initial-Render — Sprint S1 Hotfix (21.04.2026): sowohl sofort als auch
+// DOMContentLoaded-safe. Verhindert dass render() ins Leere läuft wenn
+// das Script aus irgendeinem Grund vor dem DOM-Parse ausgeführt wird.
+if (typeof render === 'function') {
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', render);
+  } else {
+    render();
+  }
+}
 
 window.bvFilter=function(q){_q=q.toLowerCase().trim();render();};
 window.bvSetCat=function(cat,btn){
@@ -115,12 +123,13 @@ window.bvSetCat=function(cat,btn){
 };
 
 
-/* ── BUTTON KLICK MIT FEEDBACK (Session 30: Tab-UI direkt öffnen) ── */
+/* ── BUTTON KLICK MIT FEEDBACK ── */
 window.bvVerwenden=function(id,evt){
   if(evt)evt.stopPropagation();
   _ki=false;
   var btn=document.getElementById('btnv-'+id);
   var card=document.getElementById('tc-'+id);
+  // Visuelles Klick-Feedback
   if(btn){btn.classList.add('pressing');setTimeout(function(){btn.classList.remove('pressing');},150);}
   if(card){card.classList.add('tc-highlight-v');}
   _tpl=TMPLS.find(function(t){return t.id===id;});
@@ -128,10 +137,8 @@ window.bvVerwenden=function(id,evt){
   setTimeout(function(){
     if(card)card.classList.remove('tc-highlight-v');
     bvOpenDrawer();
-    // Direkt Felder füllen (ohne Step-Wizard)
-    fuelleSV();
+    bvGoStep(1);
     ladeFaelle();
-    bvRenderVorschau();
   },180);
 };
 
@@ -147,57 +154,59 @@ window.bvKI=function(id,evt){
   setTimeout(function(){
     if(card)card.classList.remove('tc-highlight-ki');
     bvOpenDrawer();
-    fuelleSV();
+    bvGoStep(1);
     ladeFaelle();
-    bvRenderVorschau();
   },180);
 };
 
 function bvUpdateDrawerHeader(){
   if(!_tpl)return;
-  var ic = document.getElementById('dr-icon');
-  var ti = document.getElementById('dr-title');
-  var md = document.getElementById('dr-mode');
-  if (ic) ic.textContent = _tpl.icon;
-  if (ti) ti.textContent = _tpl.name;
-  if (md) md.textContent = _ki ? '✨ KI-unterstützte Erstellung' : 'Standard-Ausfüllung';
-  // KI-Box bleibt im Tab-UI immer sichtbar — enthält Hinweis + Generieren-Button
+  document.getElementById('dr-icon').textContent=_tpl.icon;
+  document.getElementById('dr-icon').className='bv-dr-icon '+(_ki?'mode-ki':'mode-v');
+  document.getElementById('dr-title').textContent=_tpl.name;
+  var modeEl=document.getElementById('dr-mode');
+  modeEl.textContent=_ki?'✨ KI-unterstützte Erstellung':'Standard-Ausfüllung';
+  modeEl.className='bv-dr-mode '+(_ki?'mode-ki':'mode-v');
+  document.getElementById('ki-area').style.display=_ki?'block':'none';
 }
 
-/* ── DRAWER (Session 30 Tab-UI) ── */
+/* ── DRAWER ── */
 function bvOpenDrawer(){
-  var empty = document.getElementById('bv-empty');
-  var detail = document.getElementById('bv-detail');
-  if (empty)  empty.style.display  = 'none';
-  if (detail) detail.style.display = 'block';
-  // sicher bei Tab "Bearbeiten" starten
-  _currentTab = 'edit';
-  window.switchTab && window.switchTab('edit');
-  // Send-Ergebnis zurücksetzen
-  var sr = document.getElementById('send-result');
-  if (sr) sr.style.display = 'none';
+  document.getElementById('bv-dr').classList.add('open');
+  document.getElementById('bv-ov').classList.add('show');
 }
 window.bvCloseDrawer=function(){
-  var empty = document.getElementById('bv-empty');
-  var detail = document.getElementById('bv-detail');
-  if (empty)  empty.style.display  = '';
-  if (detail) detail.style.display = 'none';
+  document.getElementById('bv-dr').classList.remove('open');
+  document.getElementById('bv-ov').classList.remove('show');
   _tpl=null;_fall=null;_ki=false;_step=1;_felder={};
-  var kiEdit = document.getElementById('ki-edit');
-  if (kiEdit) { kiEdit.value=''; kiEdit.style.display='none'; }
-  var kiArea = document.getElementById('ki-area');
-  if (kiArea) kiArea.textContent='Wählen Sie einen Empfänger und klicken Sie auf „KI generieren".';
 };
 
-/* ── STEPS (Session 30: Legacy, durch Tab-UI ersetzt) ── */
+/* ── STEPS ── */
 function bvGoStep(n){
-  /* no-op — Tab-UI ersetzt den 3-Step-Wizard.
-     Behalten als Platzhalter damit Alt-Refs nichts crashen. */
-  _step = n || 1;
+  _step=n;
+  document.querySelectorAll('.bv-panel').forEach(function(p){p.classList.remove('act');});
+  var pnl=document.getElementById('pnl-'+n);
+  if(pnl)pnl.classList.add('act');
+  for(var i=1;i<=3;i++){
+    var si=document.getElementById('si-'+i);
+    if(!si)continue;
+    si.classList.remove('act','done');
+    if(i<n)si.classList.add('done');
+    else if(i===n)si.classList.add('act');
+  }
+  var bb=document.getElementById('btn-back');
+  var bn=document.getElementById('btn-next');
+  if(bb)bb.style.display=n>1?'':'none';
+  if(bn){
+    bn.style.display=n===3?'none':'';
+    bn.textContent=n===2?'Weiter zum Versand →':'Weiter →';
+  }
+  if(n===2){fuelleSV();fuelleFall();bvRenderVorschau();if(_ki)bvGenKI();}
+  if(n===3)bvRenderSendSummary();
 }
-window.bvStepNext=function(){ /* no-op */ };
-window.bvStepBack=function(){ /* no-op */ };
-window.bvOhneFall=function(){_fall=null;};
+window.bvStepNext=function(){bvGoStep(Math.min(_step+1,3));};
+window.bvStepBack=function(){bvGoStep(Math.max(_step-1,1));};
+window.bvOhneFall=function(){_fall=null;bvGoStep(2);};
 
 /* ── FALL-PICKER ── */
 function ladeFaelle(){
@@ -282,7 +291,7 @@ window.bvSyncEditToPreview=function(){
   if(edit&&body) body.textContent=edit.value;
 };
 
-/* ── VORSCHAU (Session 30: reduziert auf prev-body — Tab-UI) ── */
+/* ── VORSCHAU ── */
 function bvRenderVorschau(){
   if(!_tpl)return;
   var az  = _felder.az      || '';
@@ -290,51 +299,42 @@ function bvRenderVorschau(){
   var agE = _felder.ag_email|| '';
   var adr = _felder.adresse || '';
   var dat = _felder.datum   || new Date().toLocaleDateString('de-DE');
-  var vn  = localStorage.getItem('prova_sv_vorname')  || '';
-  var nn  = localStorage.getItem('prova_sv_nachname') || '';
-  var nm  = (_felder.sv_name && _felder.sv_name.trim() !== 'null null' && _felder.sv_name.trim() !== '')
-              ? _felder.sv_name.trim()
-              : (vn+' '+nn).trim();
+  var nm  = _felder.sv_name || localStorage.getItem('prova_sv_vorname')+' '+localStorage.getItem('prova_sv_nachname');
   var kz  = _felder.kanzlei || localStorage.getItem('prova_kanzlei_name') || 'Sachverständigenbüro';
   var svE = _felder.sv_email|| localStorage.getItem('prova_sv_email') || '';
   var svT = _felder.sv_tel  || localStorage.getItem('prova_sv_telefon') || '';
 
-  // Body-Text (Standard oder bereits generierter KI-Text)
-  var edit = document.getElementById('ki-edit');
-  var body = document.getElementById('prev-body');
-  var txt;
-  if (edit && edit.value && edit.value.trim()) {
-    txt = edit.value;
-  } else {
-    txt = bvGetText(_tpl.id, {
-      az:  az  || '[Aktenzeichen]',
-      ag:  ag  || '[Auftraggeber]',
-      adr: adr || '[Objekt-Adresse]',
-      dat: dat,
-      nm:  nm || '[Sachverständiger]'
-    });
-  }
+  // Betreff-Logik
+  var subj = _tpl.name;
+  if(az) subj += ' — AZ: '+az;
 
-  // Signatur-Footer direkt anhängen
-  var sig = [kz, nm, svE, svT].filter(function(x){
-    return x && String(x).trim() && String(x).trim() !== 'null null';
-  }).join('  ·  ');
+  // Body-Text
+  var txt = bvGetText(_tpl.id,{az:az||'[Aktenzeichen]',ag:ag||'[Auftraggeber]',adr:adr||'[Objekt-Adresse]',dat:dat,nm:nm.trim()});
 
-  // Komplette Darstellung: Betreff, Body, Signatur
-  var subj = _tpl.name + (az ? ' — AZ: ' + az : '');
-  var headerBlock = ''
-    + 'Von:      ' + (nm || 'Sachverständiger') + (svE ? ' <' + svE + '>' : '') + '\n'
-    + 'An:       ' + (ag || '—') + (agE ? ' <' + agE + '>' : '') + '\n'
-    + 'Datum:    ' + dat + '\n'
-    + 'Betreff:  ' + subj + '\n'
-    + '─────────────────────────────────────────────\n\n';
+  // Avatar-Initiale
+  var initiale=(nm.trim()||'S').charAt(0).toUpperCase();
 
-  var sigBlock = sig ? '\n\n─────\n' + sig : '';
+  // Uhrzeit
+  var jetzt=new Date();
+  var zeit=jetzt.getHours().toString().padStart(2,'0')+':'+jetzt.getMinutes().toString().padStart(2,'0');
 
-  if (body) body.textContent = headerBlock + txt + sigBlock;
+  // Signatur-Footer
+  var sig=[kz,nm.trim(),svE,svT].filter(function(x){return x&&x.trim()&&x!=='null null';}).join('  ·  ');
 
-  // Edit-Textarea synchron halten (nur initial befüllen, nicht überschreiben)
-  if (edit && !edit.value) edit.value = txt;
+  // Felder setzen
+  function setEl(id,val){var el=document.getElementById(id);if(el)el.textContent=val;}
+  setEl('prev-avatar',    initiale);
+  setEl('prev-from-name', nm.trim()&&nm.trim()!=='null null' ? nm.trim() : 'Sachverständiger');
+  setEl('prev-from-email',svE||'—');
+  setEl('prev-date',      'Heute, '+zeit);
+  setEl('prev-to',        ag + (agE?' <'+agE+'>':'') || '—');
+  setEl('prev-subject',   subj);
+  setEl('prev-body',      txt);
+  setEl('prev-sig-footer',sig);
+
+  // Edit-Textarea synchron halten
+  var edit=document.getElementById('ki-edit');
+  if(edit&&!edit.value) edit.value=txt;
 }
 function bvGetText(id,d){
   var T={
@@ -511,14 +511,14 @@ function kiGetPrompt(tplId, felder) {
 }
 
 window.bvGenKI=async function(){
-  var kiArea=document.getElementById('ki-area');
+  var box=document.getElementById('ki-box');
+  var boxTxt=document.getElementById('ki-box-txt');
   var edit=document.getElementById('ki-edit');
   var btn=document.getElementById('ki-gen-btn');
-  var editBtn=document.getElementById('ki-edit-btn');
 
-  // Loading-Zustand direkt in der KI-Area zeigen
-  if (kiArea) kiArea.textContent = '⏳ KI schreibt Ihren Brief…';
-  if (btn) { btn.disabled = true; btn.textContent = '⏳ Wird erstellt…'; }
+  box.classList.add('show');
+  if(boxTxt) boxTxt.textContent='KI schreibt Ihren Brief…';
+  if(btn) btn.disabled=true;
 
   // Felder sicherstellen
   fuelleSV();
@@ -545,20 +545,25 @@ window.bvGenKI=async function(){
     var txt=(data.content&&data.content[0]&&data.content[0].text)||'';
     if(!txt) throw new Error('Keine Antwort von KI');
 
-    // KI-Text anzeigen + Edit-Textarea befüllen
-    if (kiArea) kiArea.textContent = txt;
-    if (edit)   edit.value = txt;
+    box.classList.remove('show');
 
-    // Sofort Vorschau aktualisieren
-    bvRenderVorschau();
+    // Edit-Textarea befüllen
+    if(edit) edit.value=txt;
 
-    if(btn)    { btn.disabled = false; btn.textContent = '↻ Neu generieren'; }
-    if(editBtn) editBtn.style.display = '';
+    // Sofort in Email-Vorschau übernehmen
+    var body=document.getElementById('prev-body');
+    if(body) body.textContent=txt;
+
+    if(btn){btn.disabled=false;btn.textContent='↻ Neu generieren';}
+
+    // KI-Hinweisbox einblenden
+    var kiArea=document.getElementById('ki-area');
+    if(kiArea) kiArea.style.display='block';
 
     bvToast('✅ Brief fertig — in Vorschau übernommen','success');
 
   }catch(e){
-    if (kiArea) kiArea.textContent = 'KI-Fehler: ' + e.message;
+    box.classList.remove('show');
     if(btn){btn.disabled=false;btn.textContent='↻ Neu generieren';}
     bvToast('KI-Fehler: '+e.message,'error');
   }
@@ -625,168 +630,6 @@ if (bvSrch) {
     var k = document.getElementById('bv-search-key');
     if (k) { k.style.display = 'flex'; }
   });
-}
-
-/* ── INITIAL RENDER: Template-Galerie aufbauen beim Seitenladen ── */
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', render);
-} else {
-  render();
-}
-
-/* ══════════════════════════════════════════════════════════════
-   SESSION 30 ADAPTER-LAYER — HTML/JS Tab-UI in Einklang bringen
-   Die briefvorlagen.html erwartet Funktionen die bisher fehlten.
-   ══════════════════════════════════════════════════════════════ */
-
-/* ── TAB-WECHSEL (HTML onclick="switchTab('edit'|'prev')") ── */
-window.switchTab = function(tab) {
-  _currentTab = tab;
-  var ep = document.getElementById('tab-edit-panel');
-  var pp = document.getElementById('tab-prev-panel');
-  var te = document.getElementById('tab-edit');
-  var tp = document.getElementById('tab-prev');
-
-  if (tab === 'prev') {
-    if (ep) ep.classList.remove('active');
-    if (pp) pp.classList.add('active');
-    if (te) te.classList.remove('active');
-    if (tp) tp.classList.add('active');
-    // Vor dem Zeigen: Vorschau aus aktuellem Edit-Stand aktualisieren
-    bvRenderVorschau();
-  } else {
-    if (ep) ep.classList.add('active');
-    if (pp) pp.classList.remove('active');
-    if (te) te.classList.add('active');
-    if (tp) tp.classList.remove('active');
-  }
-
-  // Button-Labels dem Tab anpassen
-  var bb = document.getElementById('btn-back');
-  var bn = document.getElementById('btn-next');
-  var bp = document.getElementById('btn-send-pdf');
-  if (tab === 'prev') {
-    if (bb) { bb.style.display = ''; bb.textContent = '← Bearbeiten'; }
-    if (bn) { bn.style.display = 'none'; }
-    if (bp) { bp.style.display = ''; }
-  } else {
-    if (bb) { bb.style.display = ''; bb.textContent = '✕ Schließen'; }
-    if (bn) { bn.style.display = ''; bn.textContent = 'Vorschau →'; }
-    if (bp) { bp.style.display = 'none'; }
-  }
-};
-
-/* ── NAVIGATION (HTML onclick="zurueck()" und "weiter()") ── */
-window.zurueck = function() {
-  if (_currentTab === 'prev') {
-    window.switchTab('edit');
-  } else {
-    window.bvCloseDrawer();
-  }
-};
-
-window.weiter = function() {
-  if (_currentTab === 'edit') {
-    window.switchTab('prev');
-  }
-  // Auf "prev" ist "Weiter" ausgeblendet — stattdessen PDF-Button sichtbar
-};
-
-/* ── PDF-VERSAND (HTML onclick="sendePDF()") ── */
-window.sendePDF = function() {
-  window.bvSend && window.bvSend('pdf');
-};
-
-/* ── KI-AKTIONEN (HTML onclick="starteKIGenerierung()" / "aktiviereKIEdit()") ── */
-window.starteKIGenerierung = function() {
-  if (!_tpl) {
-    bvToast('Bitte erst Vorlage wählen', 'error');
-    return;
-  }
-  if (!_fall && !_felder.ag_name) {
-    bvToast('Bitte erst Empfänger oder Fall wählen', 'error');
-    return;
-  }
-  // KI-Mode aktivieren damit bvRenderVorschau den richtigen Kontext nutzt
-  _ki = true;
-  bvUpdateDrawerHeader();
-  window.bvGenKI();
-};
-
-window.aktiviereKIEdit = function() {
-  var area = document.getElementById('ki-area');
-  var edit = document.getElementById('ki-edit');
-  var btn  = document.getElementById('ki-edit-btn');
-  if (!edit) return;
-  if (area && edit.style.display === 'none') {
-    // Edit-Modus aktivieren
-    edit.value = area.textContent || '';
-    edit.style.display = 'block';
-    area.style.display = 'none';
-    if (btn) btn.textContent = '✓ Fertig';
-    edit.focus();
-  } else {
-    // Edit-Modus schließen
-    if (area) {
-      area.textContent = edit.value;
-      area.style.display = '';
-    }
-    edit.style.display = 'none';
-    if (btn) btn.textContent = '✏️ Bearbeiten';
-    bvRenderVorschau();
-  }
-};
-
-/* ── SEARCH / FILTER (HTML oninput="filterVorlagen()" / "filterFaelle()") ── */
-window.filterVorlagen = function() {
-  var input = document.getElementById('bv-search');
-  _q = (input && input.value || '').toLowerCase().trim();
-  render();
-};
-
-window.filterFaelle = function() {
-  var input = document.getElementById('emp-name');
-  var q = (input && input.value || '').toLowerCase().trim();
-  var items = document.querySelectorAll('#fall-liste .bv-fall');
-  items.forEach(function(el) {
-    var txt = (el.textContent || '').toLowerCase();
-    el.style.display = (!q || txt.indexOf(q) !== -1) ? '' : 'none';
-  });
-};
-
-/* ── CAT-CHIPS (HTML-Container <div class="cat-chips" id="cat-chips">) ── */
-function renderCatChips() {
-  var host = document.getElementById('cat-chips');
-  if (!host) return;
-  var html = '<div class="cat-chip' + (_cat === 'all' ? ' active' : '')
-    + '" style="background:rgba(255,255,255,.06);color:var(--text2);'
-    + (_cat === 'all' ? 'border-color:var(--accent);color:var(--accent);' : '')
-    + '" onclick="bvSetCategory(\'all\')">Alle</div>';
-  CATS.forEach(function(cat) {
-    var active = _cat === cat.id;
-    html += '<div class="cat-chip' + (active ? ' active' : '') + '"'
-      + ' style="background:rgba(255,255,255,.06);color:var(--text2);'
-      + (active ? 'background:' + cat.col + '22;border-color:' + cat.col + ';color:' + cat.col + ';' : '')
-      + '" onclick="bvSetCategory(\'' + cat.id + '\')">' + cat.name + '</div>';
-  });
-  host.innerHTML = html;
-}
-
-window.bvSetCategory = function(cat) {
-  _cat = cat;
-  renderCatChips();
-  render();
-};
-
-/* ── ESC-Key ergänzend um Tab-Zurück vor Close ── */
-/* (Original Escape-Handler schließt Drawer komplett; hier nicht überschreiben,
-    damit Verhalten vorhersehbar bleibt — User kann ESC drücken zum Komplett-Abbruch) */
-
-/* Cat-Chips initial rendern sobald DOM bereit */
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', renderCatChips);
-} else {
-  renderCatChips();
 }
 
 })();

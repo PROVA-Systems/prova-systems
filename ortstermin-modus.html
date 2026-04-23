@@ -14,7 +14,6 @@
 <script src="trial-guard.js"></script>
 <script src="paket-guard.js"></script>
 <script src="theme.js"></script>
-<script src="diktat-parser.js" defer></script>
 <style>
 /* ══════════════════════════════════════════════════════════════════
    PROVA ORTSTERMIN-MODUS
@@ -673,17 +672,11 @@ body {
         <div class="diktat-result-text" id="diktat-text" contenteditable="true" spellcheck="true"></div>
         <div class="diktat-actions">
           <button class="diktat-action-btn" onclick="ditktatNeustart()">🔄 Neu aufnehmen</button>
-          <button class="diktat-action-btn" id="strukt-btn" onclick="diktatStrukturieren()" title="KI extrahiert Aktenzeichen, Raum, Befund, Messwerte, Ursachen-Hypothese (Konjunktiv II) aus dem Diktat">
-            <span id="strukt-btn-text">🧩 Felder extrahieren</span>
-          </button>
           <button class="diktat-action-btn primary" id="ki-btn" onclick="sendeAnKI()">
             <span id="ki-btn-text">✨ KI §4 erstellen</span>
           </button>
         </div>
       </div>
-
-      <!-- Session 30 / S33: Strukturiertes Review-Panel aus diktat-parser.js -->
-      <div id="strukt-review" style="margin-top:12px;"></div>
 
       <div id="ki-result-box" style="display:none;margin-top:12px;">
         <div class="diktat-result" style="border-color:rgba(139,92,246,.2)">
@@ -855,10 +848,16 @@ var _autoSaveTimer = null;
   // Gespeicherte Daten laden
   ladeDaten();
 
-  // Erste Messzeilen
-  addMesszeile('feuchte', '% u. H.');
-  addMesszeile('klima', '°C');
-  addMesszeile('risse', 'mm');
+  // Erste Messzeilen — Sprint S1 Hotfix (21.04.2026):
+  // addMesszeile ist erst später im File definiert (Zeile ~1168). Aufruf
+  // per DOMContentLoaded deferred, damit ReferenceError vermieden wird.
+  document.addEventListener('DOMContentLoaded', function() {
+    if (typeof window.addMesszeile === 'function') {
+      window.addMesszeile('feuchte', '% u. H.');
+      window.addMesszeile('klima', '°C');
+      window.addMesszeile('risse', 'mm');
+    }
+  });
 })();
 
 function updateOnlineStatus(){
@@ -985,34 +984,6 @@ window.ditktatNeustart = function(){
   document.getElementById('diktat-result').style.display = 'none';
   document.getElementById('ki-result-box').style.display  = 'none';
   document.getElementById('diktat-text').textContent = '';
-  var sr = document.getElementById('strukt-review'); if (sr) sr.innerHTML = '';
-};
-
-/* Session 30 / S33: Diktat strukturiert extrahieren (Felder, Messwerte, Hypothese) */
-window.diktatStrukturieren = async function(){
-  var text = document.getElementById('diktat-text').textContent.trim();
-  if (!text || text.length < 10) {
-    if (typeof toast === 'function') toast('Bitte zuerst Diktat aufnehmen', 'error');
-    return;
-  }
-  if (!window.PROVA || typeof PROVA.parseDiktatToStructured !== 'function') {
-    if (typeof toast === 'function') toast('Parser nicht geladen — Seite neu laden', 'error');
-    return;
-  }
-  var btn = document.getElementById('strukt-btn-text');
-  if (btn) btn.innerHTML = '<span class="ot-spin"></span> Analysiere…';
-  try {
-    var result = await PROVA.parseDiktatToStructured(text);
-    PROVA.renderDiktatReview(result, 'strukt-review');
-    // Zur späteren Weitergabe an Gutachten-Workflow merken
-    try { sessionStorage.setItem('prova_diktat_strukturiert', JSON.stringify(result)); } catch(e){}
-    if (typeof toast === 'function') toast('✨ Diktat strukturiert — bitte prüfen', 'success');
-  } catch(e) {
-    if (typeof toast === 'function') toast('Fehler: ' + e.message, 'error');
-    console.error('[PROVA Diktat-Parser]', e);
-  } finally {
-    if (btn) btn.textContent = '🧩 Felder extrahieren';
-  }
 };
 
 window.sendeAnKI = async function(){
@@ -1339,9 +1310,7 @@ function escHTML(s){
 <script src="prova-error-handler.js" defer></script>
 <script src="ki-lernpool.js" defer></script>
 <script src="sw-register.js" defer></script>
-<!-- Session 27: foto-captioning.js war faelschlich als Frontend-Script geladen,
-     ist aber eine Netlify Function (exports.handler). Frontend-Calls gehen
-     direkt an /.netlify/functions/foto-captioning — keine Script-Einbindung noetig. -->
+<script src="foto-captioning.js" defer></script>
 
 <script>
 window.provaKICaption = async function(btn) {
