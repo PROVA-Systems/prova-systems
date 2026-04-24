@@ -15,6 +15,31 @@
 <script src="paket-guard.js"></script>
 <script src="theme.js"></script>
 <script src="auth-guard.js"></script>
+<script>
+(function(){
+  // S-SICHER P2.6 (Finding 7.4) — Harter Auth-Guard vor Page-Render.
+  // Laeuft synchron BEVOR der Page-Logic-Script den Guard ggf. nicht aufruft
+  // oder zu spaet aufruft. Zusaetzlich zur Legacy-Migration-Absicherung:
+  // wenn auth-guard die Legacy-Migration gemacht hat aber prova_sv_email
+  // trotzdem fehlt → nicht eingeloggt → Redirect.
+  try {
+    if (typeof provaAuthGuard !== 'function') {
+      window.location.replace('app-login.html');
+      return;
+    }
+    var ok = provaAuthGuard({ silent: true });
+    var email = localStorage.getItem('prova_sv_email') || '';
+    // Haerte-Check: Auch wenn Guard "ok" sagt, muss eine echte sv_email
+    // vorhanden sein. Sonst war die Legacy-Migration ein Bypass.
+    if (!ok || !email || email.indexOf('@') === -1) {
+      window.location.replace('app-login.html');
+      return;
+    }
+  } catch (e) {
+    window.location.replace('app-login.html');
+  }
+})();
+</script>
 <script src="prova-sanitize.js"></script>
 <script src="prova-account-gate.js"></script>
 <script src="prova-config.js"></script>
