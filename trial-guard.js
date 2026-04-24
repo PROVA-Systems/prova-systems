@@ -12,6 +12,25 @@
 (function() {
   'use strict';
 
+  // ═══ MOBILE-RESCUE P0.2: Mehrschichtiger Guard gegen falsches Overlay ═══
+  // Wird VOR allen anderen Checks ausgeführt. Wenn Airtable-Daten (aus
+  // P0.1 beim Login gesichert) einen aktiven Abo-Status belegen, sofort
+  // aussteigen — kein Badge, kein Overlay.
+  var subStatus = (localStorage.getItem('prova_subscription_status') || '').toLowerCase();
+  if (subStatus === 'active') return;
+
+  // Trialing + trial_end in Zukunft → auch raus.
+  if (subStatus === 'trialing') {
+    var trialEndCheck = localStorage.getItem('prova_trial_end');
+    if (trialEndCheck) {
+      var tE = new Date(trialEndCheck + 'T23:59:59');
+      if (!isNaN(tE.getTime()) && tE.getTime() > Date.now()) return;
+    }
+  }
+
+  // Lokaler Override für Marcel / Founder-Testing via DevTools.
+  if (localStorage.getItem('prova_founder_bypass') === '1') return;
+
   var paket = localStorage.getItem('prova_paket') || 'Solo';
   var status = localStorage.getItem('prova_status') || 'Trial';
   var trialStart = localStorage.getItem('prova_trial_start');
@@ -201,8 +220,11 @@
     // S-SICHER UI-FIX1.1: Dev-Bypass für PROVA-Founder + Marcel
     // Vermeidet aufdringliches Overlay während Entwicklung/Testing.
     // Produktive Trial-Logik für echte Kunden bleibt unverändert.
+    // MOBILE-RESCUE P0.2: Email-Bypass verschärft — kein pauschales
+    // @gmx.de, sondern nur Marcel-spezifisch.
     var svEmail = (localStorage.getItem('prova_sv_email') || '').toLowerCase();
-    if (svEmail.endsWith('@prova-systems.de') || svEmail.endsWith('@gmx.de')) return;
+    if (svEmail.endsWith('@prova-systems.de')) return;
+    if (svEmail.indexOf('marcel') === 0 && svEmail.endsWith('@gmx.de')) return;
 
     // Erlaubte Seiten auch nach Trial-Ablauf
     var page = window.location.pathname.split('/').pop() || '';
