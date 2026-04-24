@@ -600,6 +600,21 @@
         window.provaSidebarToggle();
       });
     }
+
+    // UI-FIX2.4: Keyboard-Shortcut Ctrl+B (Mac: Cmd+B) togglet Sidebar.
+    // - nicht in Eingabefeldern (INPUT, TEXTAREA, contentEditable) triggern,
+    //   damit Browser-Bold in Rich-Text-Editoren erhalten bleibt
+    // - kleines 'b' verlangen → Shift+B löst NICHT aus (Marcel-Spec)
+    // - alt-Modifier ebenfalls ausschließen
+    document.addEventListener('keydown', function (e) {
+      if (!(e.ctrlKey || e.metaKey)) return;
+      if (e.shiftKey || e.altKey) return;
+      if (e.key !== 'b') return;
+      var t = e.target;
+      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
+      e.preventDefault();
+      if (typeof window.provaSidebarToggle === 'function') window.provaSidebarToggle();
+    });
   }
 
   /* ── Mobile Sidebar Funktionen (global) ── */
