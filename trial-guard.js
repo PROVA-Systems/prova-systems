@@ -226,12 +226,26 @@
     if (svEmail.endsWith('@prova-systems.de')) return;
     if (svEmail.indexOf('marcel') === 0 && svEmail.endsWith('@gmx.de')) return;
 
-    // Erlaubte Seiten auch nach Trial-Ablauf
+    // MOBILE-RESCUE P0.3: Read-Only-Seiten bleiben lesbar, nur Write-
+    // Seiten triggern das Overlay automatisch. Read-Seiten exponieren
+    // die Overlay-Funktion global, damit ein späterer Klick auf eine
+    // gesperrte Aktion sie triggern kann.
     var page = window.location.pathname.split('/').pop() || '';
-    var erlaubt = ['einstellungen.html', 'app-login.html', 'app-register.html', 'index.html', 'admin-login.html', 'admin-dashboard.html'];
-    if (erlaubt.indexOf(page) >= 0) return; // Einstellungen bleiben erreichbar (für Upgrade)
-
-    // Overlay nach kurzer Verzögerung zeigen
+    var erlaubt = [
+      // Original-Whitelist (Einstellungen + Auth + Admin)
+      'einstellungen.html', 'app-login.html', 'app-register.html',
+      'index.html', 'admin-login.html', 'admin-dashboard.html',
+      // Read-Only-Seiten (DSGVO-Art-15-Pflicht: bestehende Daten einsehen)
+      'dashboard.html', 'archiv.html', 'kontakte.html', 'termine.html'
+    ];
+    if (erlaubt.indexOf(page) >= 0) {
+      // Diese Seiten bleiben lesbar. Overlay erst wenn User auf gesperrter
+      // Action klickt — dafuer exponieren wir die Funktion global.
+      window.provaZeigeTrialOverlay = function() { zeigeTrialAbgelaufenOverlay(); };
+      return;
+    }
+    // Auf Write-Seiten (app.html, akte.html, freigabe.html,
+    // stellungnahme.html usw.) Overlay nach 800ms zeigen wie bisher.
     setTimeout(function() { zeigeTrialAbgelaufenOverlay(); }, 800);
   }
 
