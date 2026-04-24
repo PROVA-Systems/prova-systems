@@ -21,105 +21,318 @@
 </script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PROVA — Testphase beendet</title>
+  <title>PROVA — Konto read-only</title>
+  <link rel="stylesheet" href="prova-design.css">
+  <link rel="stylesheet" href="mobile.css">
+  <link rel="icon" type="image/svg+xml" href="/icons/icon-192.svg">
+  <script src="theme.js"></script>
   <style>
-    :root { --navy:#0D2544; --accent:#4A90D9; --text:#E2E8F0; --muted:#94A3B8; }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    /* Seiten-spezifisches Layout; nutzt Tokens aus prova-design.css */
     body {
-      font-family: 'Segoe UI', system-ui, sans-serif;
-      background: linear-gradient(135deg, #0D2544 0%, #1B3F6B 100%);
+      font-family: var(--font-ui, system-ui, sans-serif);
+      background: var(--bg, #0b0d11);
+      color: var(--text, #eaecf4);
       min-height: 100vh;
-      color: var(--text);
+      margin: 0;
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 1.5rem;
+      padding: 24px;
+      line-height: 1.5;
     }
-    .card {
-      max-width: 480px;
-      background: rgba(255,255,255,0.06);
-      border: 1px solid rgba(255,255,255,0.12);
+    .ro-card {
+      max-width: 560px;
+      width: 100%;
+      background: var(--surface, #1c2130);
+      border: 1px solid var(--border2, rgba(255,255,255,.11));
       border-radius: 16px;
-      padding: 2rem;
+      padding: 32px;
+      box-shadow: 0 8px 32px rgba(0,0,0,.4);
     }
-    h1 { font-size: 1.35rem; margin-bottom: 0.75rem; }
-    p { font-size: 0.9rem; line-height: 1.6; color: var(--muted); margin-bottom: 1rem; }
-    .actions { display: flex; flex-direction: column; gap: 10px; margin-top: 1.25rem; }
-    a.btn, button.btn {
+    .ro-icon {
+      font-size: 40px;
+      margin-bottom: 12px;
+    }
+    .ro-head {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -.01em;
+      color: var(--text);
+      margin: 0 0 10px;
+    }
+    .ro-sub {
+      font-size: 14px;
+      color: var(--text2, #8b93ab);
+      margin: 0 0 20px;
+    }
+    .ro-sub strong { color: var(--text); font-weight: 600; }
+    .ro-section-label {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .12em;
+      color: var(--text3, #4d5568);
+      margin: 24px 0 10px;
+    }
+    .ro-readable {
+      background: rgba(16,185,129,.06);
+      border: 1px solid rgba(16,185,129,.2);
+      border-radius: 10px;
+      padding: 14px 16px;
+      margin-bottom: 20px;
+    }
+    .ro-readable-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--success, #10b981);
+      margin-bottom: 8px;
+    }
+    .ro-readable-list {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4px 16px;
+      font-size: 12px;
+      color: var(--text2);
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+    .ro-readable-list li::before { content: "✓ "; color: var(--success); margin-right: 4px; }
+    .ro-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 4px;
+    }
+    .ro-btn {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      padding: 12px 16px;
+      gap: 10px;
+      padding: 13px 18px;
       border-radius: 10px;
+      font-family: inherit;
+      font-size: 14px;
       font-weight: 700;
-      font-size: 0.9rem;
-      text-decoration: none;
       cursor: pointer;
       border: none;
-      font-family: inherit;
+      text-decoration: none;
+      transition: opacity .15s, transform .08s;
     }
-    a.primary { background: var(--accent); color: #fff; }
-    a.secondary { background: rgba(255,255,255,0.1); color: var(--text); border: 1px solid rgba(255,255,255,0.15); }
-    button.ghost { background: transparent; color: var(--muted); border: 1px solid rgba(255,255,255,0.2); }
+    .ro-btn:hover { opacity: .9; }
+    .ro-btn:active { transform: translateY(1px); }
+    .ro-btn.primary {
+      background: linear-gradient(135deg, var(--accent, #4f8ef7), var(--accent2, #3a7be0));
+      color: #fff;
+      box-shadow: 0 2px 12px rgba(79,142,247,.35);
+    }
+    .ro-btn.secondary {
+      background: var(--surface2, #232a3a);
+      color: var(--text);
+      border: 1px solid var(--border2);
+    }
+    .ro-btn.danger {
+      background: transparent;
+      color: var(--danger, #ef4444);
+      border: 1px solid rgba(239,68,68,.35);
+    }
+    .ro-btn.danger:hover { background: rgba(239,68,68,.08); }
+    .ro-links {
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border, rgba(255,255,255,.06));
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px 16px;
+      font-size: 12px;
+    }
+    .ro-links a {
+      color: var(--text2);
+      text-decoration: none;
+      transition: color .15s;
+    }
+    .ro-links a:hover { color: var(--accent); }
+    .ro-status-msg {
+      font-size: 12px;
+      color: var(--text3);
+      margin-top: 10px;
+      min-height: 16px;
+    }
+    .ro-status-msg.warn { color: var(--warning, #f59e0b); }
+    .ro-status-msg.err { color: var(--danger); }
+    @media (max-width: 520px) {
+      .ro-card { padding: 24px 20px; }
+      .ro-head { font-size: 19px; }
+      .ro-readable-list { grid-template-columns: 1fr; }
+    }
   </style>
-
-<link rel="stylesheet" href="prova-design.css">
-<link rel="stylesheet" href="mobile.css">
-<script src="theme.js"></script>
 </head>
 <body>
-  <script src="prova-account-gate.js"></script>
-  <div class="card">
-    <h1>Testphase beendet</h1>
-    <p>Ihre 14 Tage Test sind vorbei. Sie können weiterhin Ihr <strong>Archiv</strong> und angelegte Daten einsehen — neue Gutachten, KI, Kalender und weitere Funktionen sind gesperrt, bis Sie ein Paket wählen (Solo oder Team).</p>
-    <div class="actions">
-      <button type="button" class="btn primary" id="btnCheckoutSolo">Jetzt upgraden — Solo · 149&nbsp;€ / Monat</button>
-      <button type="button" class="btn primary" id="btnCheckoutTeam" style="background:#2563eb;">Jetzt upgraden — Team · 279&nbsp;€ / Monat</button>
-      <a class="btn secondary" href="archiv.html">Zum Archiv</a>
-      <a class="btn secondary" href="index.html#preise">Pakete &amp; Preise</a>
-      <a class="btn secondary" href="einstellungen.html">Einstellungen</a>
-      <button type="button" class="btn ghost" id="btnLogout">Abmelden</button>
+  <!-- Gate selbst NICHT einbinden: account-gesperrt.html ist die Ziel-Seite,
+       ein re-check würde in die Whitelist greifen und wäre Endlos-Loop-Risiko. -->
+
+  <div class="ro-card" role="main">
+    <div class="ro-icon" aria-hidden="true">🔒</div>
+    <h1 class="ro-head">Ihr PROVA-Konto ist read-only</h1>
+    <p class="ro-sub">
+      Ihr Abonnement ist gekündigt oder Ihre Testphase ist beendet.
+      <strong>Sie können bestehende Daten weiter einsehen und herunterladen</strong> —
+      neue Fälle anlegen, KI-Funktionen, Ortstermine und Rechnungen erstellen sind gesperrt,
+      bis Sie Ihr Abo reaktivieren.
+    </p>
+
+    <div class="ro-readable">
+      <div class="ro-readable-title">📖 Das bleibt lesbar</div>
+      <ul class="ro-readable-list">
+        <li>Gutachten (Archiv)</li>
+        <li>Rechnungen</li>
+        <li>Briefe</li>
+        <li>Kontakte</li>
+        <li>Termine</li>
+        <li>Einstellungen</li>
+      </ul>
     </div>
-    <p id="checkoutMsg" style="font-size:0.8rem;color:var(--muted);margin-top:0.75rem;display:none;"></p>
+
+    <div class="ro-section-label">Was möchten Sie tun?</div>
+    <div class="ro-actions">
+      <button type="button" class="ro-btn primary" id="btn-reaktivieren">
+        ✨ Abo reaktivieren
+      </button>
+      <button type="button" class="ro-btn secondary" id="btn-daten-download">
+        📥 Meine Daten herunterladen
+      </button>
+      <button type="button" class="ro-btn danger" id="btn-konto-loeschen">
+        🗑️ Konto endgültig löschen
+      </button>
+    </div>
+    <p class="ro-status-msg" id="ro-status" aria-live="polite"></p>
+
+    <div class="ro-links">
+      <a href="archiv.html">📂 Zum Archiv</a>
+      <a href="einstellungen.html">⚙️ Einstellungen</a>
+      <a href="einstellungen.html#sec-dsgvo">📜 DSGVO-Export (vollständig)</a>
+      <a href="#" id="ro-logout">🚪 Abmelden</a>
+    </div>
   </div>
+
   <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
   <script>
-  if (typeof netlifyIdentity !== 'undefined') netlifyIdentity.init();
+    if (typeof netlifyIdentity !== 'undefined') netlifyIdentity.init();
   </script>
   <script src="prova-auth-api.js"></script>
   <script>
-  function startCheckout(plan) {
-    var msg = document.getElementById('checkoutMsg');
-    msg.style.display = 'block';
-    msg.textContent = 'Checkout wird vorbereitet…';
-    fetch('/.netlify/functions/create-checkout-session', {
-      method: 'POST',
-      headers: window.provaAuthHeaders(),
-      body: JSON.stringify({ plan: plan })
-    })
-      .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
-      .then(function (x) {
-        if (!x.ok || !x.j.url) {
-          msg.textContent = (x.j && x.j.error) ? x.j.error : 'Checkout nicht möglich. Bitte anmelden.';
+  (function () {
+    'use strict';
+
+    var statusEl = document.getElementById('ro-status');
+    function setStatus(msg, cls) {
+      statusEl.textContent = msg || '';
+      statusEl.className = 'ro-status-msg' + (cls ? ' ' + cls : '');
+    }
+
+    /* ─── 1. Abo reaktivieren → Stripe Customer Portal ─── */
+    document.getElementById('btn-reaktivieren').addEventListener('click', async function () {
+      var email = (localStorage.getItem('prova_sv_email') || '').toLowerCase();
+      if (!email) {
+        setStatus('Bitte zuerst anmelden, um das Kunden-Portal zu öffnen.', 'warn');
+        return;
+      }
+      setStatus('⏳ Öffne Stripe-Kunden-Portal …');
+      try {
+        var res = await fetch('/.netlify/functions/stripe-portal', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: email, return_url: window.location.href })
+        });
+        var data = await res.json().catch(function () { return {}; });
+        if (!res.ok || !data.url) {
+          var hint = data.hint ? ' — ' + data.hint : '';
+          setStatus('❌ Kunden-Portal nicht verfügbar: ' + (data.error || ('HTTP ' + res.status)) + hint, 'err');
           return;
         }
-        window.location.href = x.j.url;
-      })
-      .catch(function () {
-        msg.textContent = 'Netzwerkfehler.';
-      });
-  }
-  document.getElementById('btnCheckoutSolo').addEventListener('click', function () { startCheckout('solo'); });
-  document.getElementById('btnCheckoutTeam').addEventListener('click', function () { startCheckout('team'); });
-  document.getElementById('btnLogout').addEventListener('click', function () {
-    try {
-      Object.keys(localStorage).forEach(function (k) {
-        if (k.indexOf('prova_') === 0) localStorage.removeItem(k);
-      });
-    } catch (e) {}
-    if (typeof netlifyIdentity !== 'undefined') netlifyIdentity.logout();
-    window.location.href = 'app-login.html';
-  });
+        window.location.href = data.url;
+      } catch (e) {
+        setStatus('❌ Verbindungsfehler zum Kunden-Portal.', 'err');
+      }
+    });
+
+    /* ─── 2. Daten herunterladen → lokaler Export, Link zu vollständigem DSGVO-Export ─── */
+    document.getElementById('btn-daten-download').addEventListener('click', function () {
+      try {
+        var daten = {};
+        for (var i = 0; i < localStorage.length; i++) {
+          var k = localStorage.key(i);
+          if (k && k.indexOf('prova_') === 0) {
+            try { daten[k] = JSON.parse(localStorage.getItem(k)); }
+            catch (e) { daten[k] = localStorage.getItem(k); }
+          }
+        }
+        var blob = new Blob([JSON.stringify(daten, null, 2)], { type: 'application/json' });
+        var url  = URL.createObjectURL(blob);
+        var a    = document.createElement('a');
+        a.href     = url;
+        a.download = 'PROVA-Meine-Daten-' + new Date().toISOString().split('T')[0] + '.json';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        setStatus('✅ Lokaler Export heruntergeladen. Für vollständigen DSGVO-Art.-15-Export (inkl. Airtable-Daten) bitte Einstellungen → DSGVO öffnen.');
+      } catch (e) {
+        setStatus('❌ Export fehlgeschlagen: ' + e.message, 'err');
+      }
+    });
+
+    /* ─── 3. Konto löschen → Bestätigung mit E-Mail-Eingabe (DSGVO Art. 17) ─── */
+    document.getElementById('btn-konto-loeschen').addEventListener('click', function () {
+      var email = (localStorage.getItem('prova_sv_email') || '').trim();
+      if (!email) {
+        setStatus('Nicht eingeloggt — bitte anmelden, um Löschanfrage zu stellen.', 'warn');
+        return;
+      }
+      var bestaetigung = prompt(
+        '⚠️ Konto endgültig löschen (DSGVO Art. 17)\n\n' +
+        'Dies ist NICHT rückgängig zu machen. Alle Ihre Fälle, Rechnungen, ' +
+        'Briefe und Kontakte werden gemäß Aufbewahrungsfristen gelöscht.\n\n' +
+        'Zur Bestätigung: Bitte geben Sie Ihre E-Mail-Adresse ein:\n' + email
+      );
+      if (bestaetigung === null) return;
+      if (bestaetigung.trim().toLowerCase() !== email.toLowerCase()) {
+        setStatus('E-Mail stimmt nicht überein — Löschanfrage abgebrochen.', 'err');
+        return;
+      }
+      setStatus('⏳ Löschanfrage wird gestellt …');
+      fetch('/.netlify/functions/dsgvo-loeschen', {
+        method: 'POST',
+        headers: Object.assign({ 'Content-Type': 'application/json' },
+                               (typeof window.provaAuthHeaders === 'function' ? window.provaAuthHeaders() : {})),
+        body: JSON.stringify({ email: email, bestaetigt: true })
+      }).then(function (r) { return r.json().catch(function () { return {}; }); })
+        .then(function (j) {
+          if (j && j.ok) {
+            setStatus('✅ Löschanfrage gesendet. Bestätigung per E-Mail gemäß DSGVO Art. 17 innerhalb 30 Tagen.');
+          } else {
+            setStatus('⚠️ Löschanfrage konnte nicht bearbeitet werden. Bitte kontaktieren Sie kontakt@prova-systems.de.', 'warn');
+          }
+        }).catch(function () {
+          setStatus('⚠️ Netzwerkfehler. Bitte kontaktieren Sie kontakt@prova-systems.de.', 'warn');
+        });
+    });
+
+    /* ─── Abmelden ─── */
+    document.getElementById('ro-logout').addEventListener('click', function (e) {
+      e.preventDefault();
+      try {
+        Object.keys(localStorage).forEach(function (k) {
+          if (k.indexOf('prova_') === 0) localStorage.removeItem(k);
+        });
+      } catch (e2) {}
+      if (typeof netlifyIdentity !== 'undefined') { try { netlifyIdentity.logout(); } catch (e3) {} }
+      window.location.href = 'app-login.html';
+    });
+  })();
   </script>
 </body>
 </html>
