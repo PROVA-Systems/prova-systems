@@ -183,23 +183,42 @@
       + ':root{--sb-w:228px;--sb-w-col:56px;}'
 
       /* ─── SIDEBAR SHELL ─── */
+      /* UI-FIX2.2: Transition auf 250ms angehoben (Marcel-Spec) */
       + '.sidebar{'
       +   'position:fixed;left:0;top:0;bottom:0;width:var(--sb-w);min-width:var(--sb-w);'
       +   'background:var(--bg2,#111318);border-right:1px solid var(--border,rgba(255,255,255,.07));'
       +   'display:flex;flex-direction:column;z-index:200;'
-      +   'transition:width .22s cubic-bezier(.4,0,.2,1),min-width .22s cubic-bezier(.4,0,.2,1);'
+      +   'transition:width .25s cubic-bezier(.4,0,.2,1),min-width .25s cubic-bezier(.4,0,.2,1);'
       +   'overflow:hidden;font-family:var(--font-ui,"DM Sans",system-ui,sans-serif);'
       + '}'
       + '.sidebar.collapsed{width:var(--sb-w-col);min-width:var(--sb-w-col);}'
 
-      /* ─── LOGO ─── */
+      /* ─── LOGO + HEADER-TOGGLE (UI-FIX2.2) ─── */
       + '.sb-logo{'
-      +   'display:flex;align-items:center;gap:10px;padding:14px 16px;'
+      +   'display:flex;align-items:center;justify-content:space-between;gap:8px;padding:14px 14px;'
       +   'border-bottom:1px solid var(--border,rgba(255,255,255,.07));'
-      +   'min-height:52px;overflow:hidden;cursor:pointer;flex-shrink:0;'
-      +   'text-decoration:none;'
+      +   'min-height:52px;overflow:hidden;flex-shrink:0;'
       + '}'
-      + '.sb-logo:hover .sb-logo-text{opacity:.8;}'
+      + '.sb-logo-link{'
+      +   'display:flex;align-items:center;gap:10px;text-decoration:none;cursor:pointer;'
+      +   'min-width:0;overflow:hidden;flex:1 1 auto;'
+      + '}'
+      + '.sb-logo-link:hover .sb-logo-text{opacity:.8;}'
+      + '.sb-toggle-btn{'
+      +   'display:flex;align-items:center;justify-content:center;width:32px;height:32px;'
+      +   'border-radius:8px;border:none;background:transparent;color:var(--text3,#4d5568);'
+      +   'cursor:pointer;font-family:inherit;flex-shrink:0;'
+      +   'transition:background .15s,color .15s;'
+      + '}'
+      + '.sb-toggle-btn:hover{background:rgba(255,255,255,.06);color:var(--text2,#8b93ab);}'
+      + '.sb-toggle-btn:focus-visible{outline:2px solid var(--accent,#4f8ef7);outline-offset:1px;}'
+      + '.sb-toggle-icon-hdr{'
+      +   'font-size:16px;line-height:1;display:inline-flex;'
+      +   'transition:transform .25s cubic-bezier(.4,0,.2,1);'
+      + '}'
+      + '.sidebar.collapsed .sb-toggle-icon-hdr{transform:rotate(180deg);}'
+      + '.sidebar.collapsed .sb-logo-link{display:none;}'
+      + '.sidebar.collapsed .sb-logo{justify-content:center;padding:14px 8px;}'
       + '.sb-logo-mark{'
       +   'width:30px;height:30px;background:linear-gradient(135deg,var(--accent,#4f8ef7),var(--accent2,#3a7be0));'
       +   'border-radius:9px;flex-shrink:0;display:flex;align-items:center;justify-content:center;'
@@ -337,9 +356,9 @@
       + '.sidebar.collapsed .sb-collapse-label{opacity:0;width:0;}'
 
       /* ─── MAIN CONTENT OFFSET ─── */
-      + '.main-wrap{margin-left:var(--sb-w);transition:margin-left .22s cubic-bezier(.4,0,.2,1);background:var(--bg,#0b0d11);min-height:100vh;}'
+      + '.main-wrap{margin-left:var(--sb-w);transition:margin-left .25s cubic-bezier(.4,0,.2,1);background:var(--bg,#0b0d11);min-height:100vh;}'
       + '.sidebar.collapsed ~ .main-wrap{margin-left:var(--sb-w-col);}'
-      + '.main{margin-left:var(--sb-w);transition:margin-left .22s cubic-bezier(.4,0,.2,1);}'
+      + '.main{margin-left:var(--sb-w);transition:margin-left .25s cubic-bezier(.4,0,.2,1);}'
       + '.sidebar.collapsed ~ .main{margin-left:var(--sb-w-col);}'
 
       /* ─── MOBILE ─── */
@@ -396,9 +415,16 @@
   };
 
   var html = ''
-    + '<div class="sb-logo" onclick="window.location.href=\'dashboard.html\'" title="Zur Zentrale">'
-    +   '<div class="sb-logo-mark">P</div>'
-    +   '<div class="sb-logo-text">PR<span>O</span>VA</div>'
+    + '<div class="sb-logo">'
+    +   '<a class="sb-logo-link" href="dashboard.html" title="Zur Zentrale">'
+    +     '<div class="sb-logo-mark">P</div>'
+    +     '<div class="sb-logo-text">PR<span>O</span>VA</div>'
+    +   '</a>'
+    +   '<button type="button" class="sb-toggle-btn" id="sb-toggle-header" '
+    +     'aria-label="Sidebar einklappen" aria-expanded="true" '
+    +     'title="Sidebar einklappen">'
+    +     '<span class="sb-toggle-icon-hdr" aria-hidden="true">⇤</span>'
+    +   '</button>'
     + '</div>'
 
     + '<button class="sb-new-btn" id="sb-new-btn" onclick="provaResetFall();window.location.href=\'' + appUrl + '\'">'
@@ -449,10 +475,8 @@
     +     '<span style="font-size:11px;color:var(--text3);">Schnellsuche</span>'
     +     '<kbd style="font-size:10px;padding:2px 6px;border-radius:4px;background:var(--surface2);border:1px solid var(--border2);color:var(--text3);font-family:var(--font-mono);">⌘K</kbd>'
     +   '</div>'
-    +   '<button class="sb-collapse" id="sb-collapse-btn">'
-    +     '<span class="sb-toggle-icon">‹</span>'
-    +     '<span class="sb-collapse-label">Einklappen</span>'
-    +   '</button>'
+    // UI-FIX2.2: Alter Footer-Collapse-Button entfernt. Toggle ist jetzt
+    // im Sidebar-Header (id="sb-toggle-header"), zentral gehandlet.
     + '</div>'
   ;
 
@@ -492,10 +516,15 @@
 
     // Bei Viewport-Resize Auto-Collapse anpassen, aber NIE
     // explizite User-Wahl überschreiben.
+    // UI-FIX2.2: updateToggleUi nach Resize-Change nachziehen (aria/title).
     window.addEventListener('resize', function () {
       if (localStorage.getItem('prova_sb_collapsed') !== null) return;
       var shouldCollapse = window.innerWidth < 900 && window.innerWidth > 768;
+      var wasCol = existing.classList.contains('collapsed');
       existing.classList.toggle('collapsed', shouldCollapse);
+      if (shouldCollapse !== wasCol && typeof updateToggleUi === 'function') {
+        updateToggleUi(shouldCollapse);
+      }
     });
 
     // ── Scroll-Position der Sidebar wiederherstellen ──
@@ -530,13 +559,34 @@
       }, true);
     }
 
-    // Collapse-Button
-    var btn = document.getElementById('sb-collapse-btn');
-    if (btn) {
-      btn.addEventListener('click', function () {
-        existing.classList.toggle('collapsed');
-        var isCol = existing.classList.contains('collapsed');
-        localStorage.setItem('prova_sb_collapsed', isCol ? '1' : '0');
+    // UI-FIX2.2: Zentrale Toggle-Funktion + Header-Button-Handler.
+    // Globale Funktion, damit auch Keyboard-Shortcut (UI-FIX2.4) darauf zugreift.
+    function updateToggleUi(isCol) {
+      var b = document.getElementById('sb-toggle-header');
+      if (!b) return;
+      b.setAttribute('aria-expanded', isCol ? 'false' : 'true');
+      b.setAttribute('aria-label', isCol ? 'Sidebar ausklappen' : 'Sidebar einklappen');
+      b.setAttribute('title', (isCol ? 'Sidebar ausklappen' : 'Sidebar einklappen') + ' (Ctrl+B)');
+    }
+    window.provaSidebarToggle = function () {
+      existing.classList.toggle('collapsed');
+      var isCol = existing.classList.contains('collapsed');
+      try { localStorage.setItem('prova_sb_collapsed', isCol ? '1' : '0'); } catch (e) {}
+      updateToggleUi(isCol);
+      try {
+        document.dispatchEvent(new CustomEvent('prova-sidebar-toggle', {
+          detail: { collapsed: isCol }
+        }));
+      } catch (e) {}
+    };
+    // Initial-State-Sync (falls Auto-Collapse bereits .collapsed gesetzt hat)
+    updateToggleUi(existing.classList.contains('collapsed'));
+
+    var headerToggle = document.getElementById('sb-toggle-header');
+    if (headerToggle) {
+      headerToggle.addEventListener('click', function (e) {
+        e.stopPropagation();
+        window.provaSidebarToggle();
       });
     }
   }
