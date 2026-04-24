@@ -103,12 +103,14 @@ function renderKIAnalyse(data) {
     const box = document.getElementById('messwertAnalyse');
     const liste = document.getElementById('messwertListe');
     box.style.display = 'block';
+    // S-SICHER P2.3e: KI-Response-Felder escapen.
+    const escM = window.PROVA_SANITIZE.escapeHtml;
     liste.innerHTML = data.messwert_analyse.map(m =>
       `<div style="padding:6px 0;border-bottom:1px solid var(--border);">
-        <strong style="color:var(--text);">${m.messwert}</strong>
-        <span style="color:var(--text3);"> → Grenzwert: ${m.grenzwert}</span>
-        <span style="color:${m.bewertung && m.bewertung.includes('Überschreitung') ? 'var(--red)' : 'var(--green)'}; font-weight:600;"> ${m.bewertung}</span>
-        <span style="font-size:10px;color:var(--text3);"> (${m.normreferenz})</span>
+        <strong style="color:var(--text);">${escM(m.messwert)}</strong>
+        <span style="color:var(--text3);"> → Grenzwert: ${escM(m.grenzwert)}</span>
+        <span style="color:${m.bewertung && m.bewertung.includes('Überschreitung') ? 'var(--red)' : 'var(--green)'}; font-weight:600;"> ${escM(m.bewertung)}</span>
+        <span style="font-size:10px;color:var(--text3);"> (${escM(m.normreferenz)})</span>
       </div>`
     ).join('');
   }
@@ -118,15 +120,20 @@ function renderKIAnalyse(data) {
     const box = document.getElementById('ursachenBox');
     const liste = document.getElementById('ursachenListe');
     box.style.display = 'block';
+    // S-SICHER P2.3e: KI-Response-Felder escapen. u.kategorie wird
+    // sowohl als Attribut-Wert (data-kategorie) als auch als Text
+    // verwendet — deshalb escapeAttr bzw. escapeHtml passend.
+    const escU = window.PROVA_SANITIZE.escapeHtml;
+    const escUA = window.PROVA_SANITIZE.escapeAttr;
     liste.innerHTML = data.ursachenkategorien.map((u, i) => {
       const color = u.plausibilitaet === 'hoch' ? 'var(--green)' : u.plausibilitaet === 'mittel' ? 'var(--warn)' : 'var(--text3)';
       return `<label style="display:flex;gap:8px;align-items:flex-start;padding:8px 10px;background:var(--surface2);border-radius:8px;cursor:pointer;">
-        <input type="checkbox" class="ursache-check" data-kategorie="${u.kategorie}" onchange="trackUrsacheWahl(this)" style="margin-top:2px;">
+        <input type="checkbox" class="ursache-check" data-kategorie="${escUA(u.kategorie)}" onchange="trackUrsacheWahl(this)" style="margin-top:2px;">
         <div>
-          <div style="font-size:12px;font-weight:600;color:var(--text);">${u.kategorie}
-            <span style="font-size:9px;padding:2px 6px;border-radius:4px;background:${color}20;color:${color};font-weight:700;margin-left:4px;">${u.plausibilitaet}</span>
+          <div style="font-size:12px;font-weight:600;color:var(--text);">${escU(u.kategorie)}
+            <span style="font-size:9px;padding:2px 6px;border-radius:4px;background:${color}20;color:${color};font-weight:700;margin-left:4px;">${escU(u.plausibilitaet)}</span>
           </div>
-          <div style="font-size:11px;color:var(--text3);margin-top:2px;">${u.begruendung}</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:2px;">${escU(u.begruendung)}</div>
         </div>
       </label>`;
     }).join('');
@@ -144,9 +151,11 @@ function renderKIAnalyse(data) {
     if (hasFeststellungen || hasUrsachen || hasEmpf) {
       box.style.display = 'block';
       let html = '';
-      if (hasFeststellungen) html += `<div style="margin-bottom:8px;padding:8px 10px;background:var(--surface2);border-radius:6px;"><span style="color:var(--accent);font-weight:600;font-size:11px;">FESTSTELLUNGEN:</span><br>${de.feststellungen}</div>`;
-      if (hasUrsachen) html += `<div style="margin-bottom:8px;padding:8px 10px;background:var(--surface2);border-radius:6px;"><span style="color:var(--warn);font-weight:600;font-size:11px;">URSACHEN-HINWEISE (aus Ihrem Diktat):</span><br>${de.ursachen_hinweise}</div>`;
-      if (hasEmpf) html += `<div style="padding:8px 10px;background:var(--surface2);border-radius:6px;"><span style="color:var(--green);font-weight:600;font-size:11px;">EMPFEHLUNGEN (aus Ihrem Diktat):</span><br>${de.empfehlungen}</div>`;
+      // S-SICHER P2.3e: Diktat-Extrakte (SV-Rohtext via KI) escapen.
+      const escD = window.PROVA_SANITIZE.escapeHtml;
+      if (hasFeststellungen) html += `<div style="margin-bottom:8px;padding:8px 10px;background:var(--surface2);border-radius:6px;"><span style="color:var(--accent);font-weight:600;font-size:11px;">FESTSTELLUNGEN:</span><br>${escD(de.feststellungen)}</div>`;
+      if (hasUrsachen) html += `<div style="margin-bottom:8px;padding:8px 10px;background:var(--surface2);border-radius:6px;"><span style="color:var(--warn);font-weight:600;font-size:11px;">URSACHEN-HINWEISE (aus Ihrem Diktat):</span><br>${escD(de.ursachen_hinweise)}</div>`;
+      if (hasEmpf) html += `<div style="padding:8px 10px;background:var(--surface2);border-radius:6px;"><span style="color:var(--green);font-weight:600;font-size:11px;">EMPFEHLUNGEN (aus Ihrem Diktat):</span><br>${escD(de.empfehlungen)}</div>`;
       if (!hasUrsachen && !hasEmpf) html += '';
       text.innerHTML = html;
     }
@@ -155,12 +164,17 @@ function renderKIAnalyse(data) {
   // Normen-Vorschläge aktualisieren
   if (data.normen_vorschlaege && data.normen_vorschlaege.length > 0) {
     const nl = document.getElementById('normenListe');
-    nl.innerHTML = data.normen_vorschlaege.map(n =>
-      `<div class="norm-item" onclick="insertPhrase('${n.klick_text.replace(/'/g, "\\'")}')">
-        <strong>${n.norm}</strong>
-        <span style="font-size:10px;color:var(--text3);display:block;">${n.relevanz}</span>
-      </div>`
-    ).join('');
+    // S-SICHER P2.3e: Normen-Vorschlaege escapen. klick_text geht als
+    // JS-String-Argument in onclick — Backslash-Escape ergaenzen, damit
+    // '\' nicht die Funktion bricht. Anzeige-Text via escapeHtml.
+    const escN = window.PROVA_SANITIZE.escapeHtml;
+    nl.innerHTML = data.normen_vorschlaege.map(n => {
+      const kt = String(n.klick_text || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+      return `<div class="norm-item" onclick="insertPhrase('${kt}')">
+        <strong>${escN(n.norm)}</strong>
+        <span style="font-size:10px;color:var(--text3);display:block;">${escN(n.relevanz)}</span>
+      </div>`;
+    }).join('');
   }
 }
 
