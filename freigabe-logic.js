@@ -168,7 +168,8 @@ function renderDoc(){
   document.getElementById('sv-initials').textContent=ini;
   document.getElementById('sv-name').textContent=buero||svName;
   document.getElementById('sv-quali').textContent=svQ;
-  document.getElementById('sv-adresse').innerHTML=svAdr||'—';
+  // S-SICHER P2.3b: SV-Adresse kommt aus Einstellungen/Airtable → escapen.
+  document.getElementById('sv-adresse').innerHTML = svAdr ? window.PROVA_SANITIZE.escapeHtml(svAdr).replace(/\n/g,'<br>') : '—';
   document.getElementById('doc-haupttitel').textContent=sa+' — '+(adr||az);
   document.getElementById('doc-auftragzeile').textContent=`AZ: ${az} · ${f.Auftraggeber_Name||'—'} · ${f.Geschaedigter||'—'}`;
 
@@ -186,7 +187,8 @@ function renderDoc(){
       marked.setOptions({ breaks: true, gfm: true });
       el.innerHTML=marked.parse(cleanText);
     } else {
-      el.innerHTML='<pre style="white-space:pre-wrap;font-family:inherit;font-size:13px;line-height:1.8;color:rgba(255,255,255,.8);">'+entwurf.replace(/</g,'&lt;')+'</pre>';
+      // S-SICHER P2.3b: Vollstaendiges HTML-Escape statt nur '<'.
+      el.innerHTML='<pre style="white-space:pre-wrap;font-family:inherit;font-size:13px;line-height:1.8;color:rgba(255,255,255,.8);">'+window.PROVA_SANITIZE.escapeHtml(entwurf)+'</pre>';
     }
   } else {
     el.innerHTML='<p style="color:#94a3b8;font-style:italic;">Kein Gutachten-Entwurf gefunden.</p>';
@@ -201,7 +203,8 @@ function renderDoc(){
         s6El.innerHTML=marked.parse(s6);
         s6El.style.whiteSpace='normal';
       } else {
-        s6El.innerHTML=s6.replace(/\n/g,'<br>');
+        // S-SICHER P2.3b: Erst escapen, dann Newlines zu <br>.
+        s6El.innerHTML=window.PROVA_SANITIZE.escapeHtml(s6).replace(/\n/g,'<br>');
       }
     }
     var s6Block=document.getElementById('section6-block');
@@ -244,9 +247,9 @@ Aktenzeichen: \${azOff} · Erstellt am: \${datumOff} · §5-Prüfbestätigung: \
   if(offFinal){
     var s7El=document.getElementById('section7-text');
     if(s7El){
-      s7El.innerHTML=offFinal
-        .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
-        .replace(/\n/g,'<br>');
+      // S-SICHER P2.3b: Vollstaendiges HTML-Escape via PROVA_SANITIZE
+      // statt manuelles 3-fach-replace (Quote/Apostroph fehlten).
+      s7El.innerHTML=window.PROVA_SANITIZE.escapeHtml(offFinal).replace(/\n/g,'<br>');
     }
     var s7Block=document.getElementById('section7-block');
     if(s7Block)s7Block.style.display='block';
@@ -313,10 +316,13 @@ async function starteQualitaetspruefung() {
       data.pruefpunkte.forEach(function(p) {
         var icon = p.status === 'ok' ? '✅' : p.status === 'warnung' ? '⚠️' : '❌';
         var color = p.status === 'ok' ? '#10b981' : p.status === 'warnung' ? '#f59e0b' : '#ef4444';
+        // S-SICHER P2.3b: KI-Response kann HTML-Sonderzeichen enthalten → escapen.
+        var _kat = window.PROVA_SANITIZE.escapeHtml(p.kategorie || '');
+        var _hin = window.PROVA_SANITIZE.escapeHtml(p.hinweis || '');
         html += '<div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:6px;font-size:12px;">'
           + '<span>' + icon + '</span>'
-          + '<div><strong style="color:' + color + ';">' + (p.kategorie || '') + '</strong>'
-          + (p.hinweis ? '<div style="color:var(--text3);margin-top:2px;">' + p.hinweis + '</div>' : '')
+          + '<div><strong style="color:' + color + ';">' + _kat + '</strong>'
+          + (p.hinweis ? '<div style="color:var(--text3);margin-top:2px;">' + _hin + '</div>' : '')
           + '</div></div>';
       });
     }
@@ -341,7 +347,9 @@ async function starteQualitaetspruefung() {
 
   } catch(e) {
     loadingEl.style.display = 'none';
-    itemsEl.innerHTML = '<div style="font-size:12px;color:var(--danger);">Fehler: ' + e.message + '</div>';
+    // S-SICHER P2.3b: e.message nicht roh ins DOM — generische Meldung.
+    console.error('[freigabe:qi-check] Fehler:', e && e.message);
+    itemsEl.innerHTML = '<div style="font-size:12px;color:var(--danger);">Qualitaetspruefung fehlgeschlagen. Bitte erneut versuchen.</div>';
     btn.disabled = false; btn.textContent = '🔍 Erneut prüfen';
   }
 }
