@@ -155,6 +155,43 @@
         name:     localStorage.getItem('prova_sv_vorname') || ''
       };
       window.provaCreateSession(userData);
+
+      // MOBILE-RESCUE P0.6: Nach Legacy-Migration fehlen die Abo-Felder
+      // (paket/status/subscription_status/trial_end). Fire-and-forget
+      // Airtable-Sync, damit sie nachgeladen werden. Greift auch bei
+      // Netlify-Identity-Direct-Redirects die app-login-logic.js umgehen.
+      try {
+        fetch('/.netlify/functions/airtable', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({
+            method: 'GET',
+            path: '/v0/appJ7bLlAHZoxENWE/tbladqEQT3tmx4DIB?filterByFormula=' +
+                  encodeURIComponent('{Email}="' + legacy + '"') + '&maxRecords=1'
+          })
+        }).then(function(r) { return r.ok ? r.json() : null; })
+          .then(function(data) {
+            if (!data || !data.records || !data.records.length) return;
+            var f = data.records[0].fields || {};
+            try {
+              if (data.records[0] && data.records[0].id) localStorage.setItem('prova_at_sv_record_id', data.records[0].id);
+              var paket = (f.Paket && f.Paket.name) ? f.Paket.name : (f.Paket || f.paket || 'Solo');
+              var paketMap = {'Starter':'Solo','Pro':'Solo','Enterprise':'Team'};
+              paket = paketMap[paket] || paket;
+              if (!['Solo','Team'].includes(paket)) paket = 'Solo';
+              var status = (f.Status && f.Status.name) ? f.Status.name : (f.Status || 'Aktiv');
+              localStorage.setItem('prova_paket', paket);
+              localStorage.setItem('prova_status', status);
+              if (f.subscription_status)  localStorage.setItem('prova_subscription_status', f.subscription_status);
+              if (f.trial_end)            localStorage.setItem('prova_trial_end', f.trial_end);
+              if (f.current_period_end)   localStorage.setItem('prova_current_period_end', f.current_period_end);
+              if (f.testpilot)            localStorage.setItem('prova_testpilot', '1');
+              console.info('[Auth] Legacy-Session: Abo-Felder aus Airtable nachgeladen');
+            } catch(e) { console.warn('[Auth] Legacy-Sync-Parse-Fehler:', e); }
+          })
+          .catch(function(e) { console.warn('[Auth] Legacy-Airtable-Sync fehlgeschlagen:', e); });
+      } catch(e) {}
+
       return true;
     }
 
