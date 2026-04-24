@@ -171,6 +171,15 @@ async function ladePaketUndWeiterleiten(email, ziel) {
         paket = paketMap[paket] || paket;
         if (!['Solo','Team'].includes(paket)) paket = 'Solo';
         var status = (f.Status && f.Status.name) ? f.Status.name : (f.Status || 'Aktiv');
+        // MOBILE-RESCUE P0.1: Root-Cause-Fix. Vorher wurde 'status' nur lokal
+        // verwendet und nie nach localStorage geschrieben — trial-guard.js
+        // sah damit immer 'Trial' als Default und feuerte das Overlay.
+        // Zusätzlich subscription_status + trial_end sichern, damit der
+        // mehrschichtige Bypass in trial-guard.js alle nötigen Daten hat.
+        localStorage.setItem('prova_status', status);
+        if (f.subscription_status)  localStorage.setItem('prova_subscription_status', f.subscription_status);
+        if (f.trial_end)            localStorage.setItem('prova_trial_end', f.trial_end);
+        if (f.current_period_end)   localStorage.setItem('prova_current_period_end', f.current_period_end);
         if (status === 'Gesperrt' || status === 'Gekuendigt') {
           localStorage.clear();
           window.location.href = 'app-login.html?reason=account_locked';
