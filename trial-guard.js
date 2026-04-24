@@ -198,6 +198,12 @@
 
   /* ── Trial abgelaufen → Overlay ── */
   if (trialAbgelaufen) {
+    // S-SICHER UI-FIX1.1: Dev-Bypass für PROVA-Founder + Marcel
+    // Vermeidet aufdringliches Overlay während Entwicklung/Testing.
+    // Produktive Trial-Logik für echte Kunden bleibt unverändert.
+    var svEmail = (localStorage.getItem('prova_sv_email') || '').toLowerCase();
+    if (svEmail.endsWith('@prova-systems.de') || svEmail.endsWith('@gmx.de')) return;
+
     // Erlaubte Seiten auch nach Trial-Ablauf
     var page = window.location.pathname.split('/').pop() || '';
     var erlaubt = ['einstellungen.html', 'app-login.html', 'app-register.html', 'index.html', 'admin-login.html', 'admin-dashboard.html'];
