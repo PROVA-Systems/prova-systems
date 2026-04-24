@@ -586,8 +586,12 @@ window.handleAuftraggeberInput = function(val) {
   const filtered = VERSICHERUNGEN.filter(function(v) { return v.toLowerCase().includes(val.toLowerCase()); });
   if (!filtered.length) { drop.innerHTML = ''; drop.style.display = 'none'; return; }
   drop.innerHTML = filtered.map(function(v) {
+    // S-SICHER P2.3c: v ist Versicherungs-Name aus VERSICHERUNGEN —
+    // 'escaped' fuer JS-String-Kontext (onmousedown), 'safeText' fuer
+    // Text-Content des <div>.
     const escaped = String(v).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '\\"');
-    return '<div style="padding:9px 14px;cursor:pointer;font-size:.85rem;border-bottom:1px solid #F3F4F6" onmousedown="document.getElementById(\'f-auftraggeber-name\').value=\'' + escaped + '\';document.getElementById(\'ag-dropdown\').style.display=\'none\';document.getElementById(\'ag-dropdown\').innerHTML=\'\';" onmouseover="this.style.background=\'#EFF6FF\'" onmouseout="this.style.background=\'\'">' + v + '</div>';
+    const safeText = window.PROVA_SANITIZE.escapeHtml(v);
+    return '<div style="padding:9px 14px;cursor:pointer;font-size:.85rem;border-bottom:1px solid #F3F4F6" onmousedown="document.getElementById(\'f-auftraggeber-name\').value=\'' + escaped + '\';document.getElementById(\'ag-dropdown\').style.display=\'none\';document.getElementById(\'ag-dropdown\').innerHTML=\'\';" onmouseover="this.style.background=\'#EFF6FF\'" onmouseout="this.style.background=\'\'">' + safeText + '</div>';
   }).join('');
   drop.style.display = 'block';
 };
@@ -757,7 +761,11 @@ function renderFotoGrid() {
   if (exportBtn) exportBtn.style.display = fotos.length > 0 ? 'flex' : 'none';
 
   updateStep2Panel();
-  grid.innerHTML = fotos.map((f, i) => `
+  // S-SICHER P2.3c: f.caption kommt aus User-Eingabe (Foto-Beschriftung)
+  // und landet im value="" Attribut — muss escapeAttr-escaped werden.
+  grid.innerHTML = fotos.map((f, i) => {
+    const captionAttr = window.PROVA_SANITIZE.escapeAttr(f.caption || '');
+    return `
     <div style="position:relative;border-radius:.5rem;overflow:hidden;background:var(--gray-100);border:1px solid var(--gray-200)">
       <img src="${f.dataUrl}" style="width:100%;height:80px;object-fit:cover;display:block" alt="Foto ${i+1}">
       <div style="position:absolute;top:3px;left:3px;background:rgba(0,0,0,.7);color:#fff;font-size:9px;font-weight:800;padding:2px 6px;border-radius:4px;">Foto ${i+1}</div>
@@ -765,7 +773,7 @@ function renderFotoGrid() {
       <div style="padding:.25rem .375rem">
         <input type="text" id="foto-cap-${i}"
           placeholder="${f.captionLoading ? '⟳ KI analysiert…' : 'Beschriftung…'}"
-          value="${f.caption}"
+          value="${captionAttr}"
           style="width:100%;font-size:.65rem;border:none;background:${f.captionLoading ? 'rgba(74,144,217,0.08)' : 'transparent'};color:var(--gray-700);outline:none;font-family:inherit;border-radius:3px;padding:1px 2px;transition:background .3s"
           oninput="fotos[${i}].caption=this.value">
         <div id="foto-badge-${i}" style="margin-top:2px;min-height:14px;"></div>
@@ -773,7 +781,8 @@ function renderFotoGrid() {
         </div>
       </div>
     </div>
-  `).join('');
+  `;
+  }).join('');
 }
 
 window.entferneFoto = function(i) { fotos.splice(i,1); renderFotoGrid(); updateStep2Panel(); };
@@ -3331,6 +3340,9 @@ function renderTabelle(records) {
     return;
   }
   const klassen = { 'Entwurf':'badge-gray','In Freigabe':'badge-warning','Freigegeben':'badge-success','Exportiert':'badge-primary' };
+  // S-SICHER P2.3c: Airtable-Felder koennen HTML-Sonderzeichen enthalten.
+  // Alle Text-Outputs durch escapeHtml, Attribut-Werte durch escapeAttr.
+  const esc = window.PROVA_SANITIZE.escapeHtml;
   tbody.innerHTML = records.map(r => {
     const f = r.fields || {};
     const status = f.Status || 'Entwurf';
@@ -3339,11 +3351,11 @@ function renderTabelle(records) {
     const adresse = [f.Strasse, f.Ort].filter(Boolean).join(', ') || '—';
     const nr = f.Schadensnummer || r.id.slice(-6).toUpperCase();
     return `<tr>
-      <td style="font-weight:600;font-family:monospace">${nr}</td>
-      <td>${adresse}</td>
-      <td>${f.Schadenart||'—'}</td>
-      <td>${datum}</td>
-      <td><span class="badge ${badge}">${status}</span></td>
+      <td style="font-weight:600;font-family:monospace">${esc(nr)}</td>
+      <td>${esc(adresse)}</td>
+      <td>${esc(f.Schadenart||'—')}</td>
+      <td>${esc(datum)}</td>
+      <td><span class="badge ${badge}">${esc(status)}</span></td>
       <td><button class="btn btn-ghost btn-sm" onclick="window.location.href='freigabe.html?fall=${encodeURIComponent(nr)}'">Öffnen</button></td>
     </tr>`;
   }).join('');
@@ -3420,6 +3432,8 @@ function renderArchivTabelle(records) {
     'Freigegeben':'badge-success', 'Exportiert':'badge-primary'
   };
 
+  // S-SICHER P2.3c: Airtable-Felder escapen (Archiv-Tabelle).
+  const esc2 = window.PROVA_SANITIZE.escapeHtml;
   tbody.innerHTML = records.map(r => {
     const f = r.fields || {};
     const status = f.Status || 'Entwurf';
@@ -3432,13 +3446,13 @@ function renderArchivTabelle(records) {
     const dauerText = dauerSek ? Math.round(dauerSek/60) + ' Min.' : '—';
 
     return `<tr>
-      <td style="font-weight:600;font-family:monospace;font-size:.8125rem">${nr}</td>
-      <td style="font-size:.875rem">${adresse}</td>
-      <td style="font-size:.875rem">${f.Schadenart||'—'}</td>
-      <td style="font-size:.875rem;color:var(--gray-500)">${auftraggeber}</td>
-      <td style="font-size:.875rem">${datum}</td>
-      <td style="font-size:.875rem;color:var(--gray-500)">${dauerText}</td>
-      <td><span class="badge ${badge}" style="font-size:.68rem">${status}</span></td>
+      <td style="font-weight:600;font-family:monospace;font-size:.8125rem">${esc2(nr)}</td>
+      <td style="font-size:.875rem">${esc2(adresse)}</td>
+      <td style="font-size:.875rem">${esc2(f.Schadenart||'—')}</td>
+      <td style="font-size:.875rem;color:var(--gray-500)">${esc2(auftraggeber)}</td>
+      <td style="font-size:.875rem">${esc2(datum)}</td>
+      <td style="font-size:.875rem;color:var(--gray-500)">${esc2(dauerText)}</td>
+      <td><span class="badge ${badge}" style="font-size:.68rem">${esc2(status)}</span></td>
       <td style="white-space:nowrap">
         <button class="btn btn-ghost btn-sm" onclick="window.location.href='freigabe.html?fall=${encodeURIComponent(nr)}'" style="font-size:.75rem;padding:.3rem .625rem">Öffnen</button>
       </td>
