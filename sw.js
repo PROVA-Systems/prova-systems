@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v189';
+const CACHE_VERSION = 'prova-v190';
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [

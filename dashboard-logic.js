@@ -12,7 +12,7 @@
    Datenquellen: Airtable (primär) + localStorage (fallback)
 ════════════════════════════════════════════════════ */
 
-var AT_BASE = 'appJ7bLlAHZoxENWE';
+var AT_BASE = (window.PROVA_CONFIG && window.PROVA_CONFIG.AIRTABLE_BASE) || 'appJ7bLlAHZoxENWE';
 var AT_FAELLE = 'tblSxV8bsXwd1pwa0';
 var AT_TERMINE = 'tblyMTTdtfGQjjmc2';
 var AT_RECHNUNGEN = 'tblF6MS7uiFAJDjiT';
