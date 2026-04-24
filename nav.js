@@ -163,7 +163,10 @@
   function makeItem(item) {
     var isActive = (page === item.href) || (page === 'gutachten' && item.href === appUrl);
     var cls = 'sb-item' + (isActive ? ' active' : '');
-    return '<a href="' + item.href + '" class="' + cls + '" title="' + item.label + '">'
+    // UI-FIX2.3: data-tooltip für CSS-Tooltip im Collapsed-Mode + aria-label
+    // für Screen-Reader. Kein title mehr (vermeidet doppelten Browser-Tooltip).
+    var lbl = String(item.label).replace(/"/g, '&quot;');
+    return '<a href="' + item.href + '" class="' + cls + '" data-tooltip="' + lbl + '" aria-label="' + lbl + '">'
       + '<span class="sb-icon" aria-hidden="true">' + item.icon + '</span>'
       + '<span class="sb-label">' + item.label + '</span>'
       + '</a>';
@@ -309,14 +312,22 @@
       + '.sidebar.collapsed .sb-label{opacity:0;width:0;}'
       + '.sidebar.collapsed .sb-item{justify-content:center;padding:0;min-height:40px;}'
 
-      /* Tooltip on collapsed */
-      + '.sidebar.collapsed .sb-item[title]:hover::after{'
-      +   'content:attr(title);position:absolute;'
-      +   'left:calc(var(--sb-w-col) + 8px);top:50%;transform:translateY(-50%);'
+      /* Tooltip on collapsed
+         UI-FIX2.3: [data-tooltip] statt [title], damit kein doppelter
+         Browser-Tooltip + Fade-In-Animation. */
+      + '@keyframes prova-sb-tooltip-fade-in{'
+      +   'from{opacity:0;transform:translate(-4px,-50%);}'
+      +   'to{opacity:1;transform:translate(0,-50%);}'
+      + '}'
+      + '.sidebar.collapsed .sb-item[data-tooltip]:hover::after,'
+      + '.sidebar.collapsed .sb-settings[data-tooltip]:hover::after{'
+      +   'content:attr(data-tooltip);position:absolute;'
+      +   'left:calc(var(--sb-w-col) + 8px);top:50%;'
       +   'background:var(--bg2,#111318);border:1px solid var(--border2,rgba(255,255,255,.13));'
       +   'color:var(--text,#eaecf4);font-size:12px;font-weight:500;padding:5px 12px;'
       +   'border-radius:7px;white-space:nowrap;z-index:500;pointer-events:none;'
       +   'box-shadow:0 4px 12px rgba(0,0,0,.3);'
+      +   'opacity:0;animation:prova-sb-tooltip-fade-in 150ms ease-out forwards;'
       + '}'
 
       /* ─── FOOTER: EINSTELLUNGEN + PAKET + COLLAPSE ─── */
@@ -455,11 +466,11 @@
 
     + '<div class="sb-footer">'
     +   '<div class="sb-footer-divider"></div>'
-    +   '<a href="einstellungen.html" class="sb-settings' + settingsActive + '" title="Einstellungen">'
+    +   '<a href="einstellungen.html" class="sb-settings' + settingsActive + '" data-tooltip="Einstellungen" aria-label="Einstellungen">'
     +     '<span class="sb-icon" aria-hidden="true">⚙️</span>'
     +     '<span class="sb-label">Einstellungen</span>'
     +   '</a>'
-    +   '<a href="hilfe.html" class="sb-settings' + (page === 'hilfe.html' ? ' sb-active' : '') + '" title="Hilfe &amp; Support">'
+    +   '<a href="hilfe.html" class="sb-settings' + (page === 'hilfe.html' ? ' sb-active' : '') + '" data-tooltip="Hilfe &amp; Support" aria-label="Hilfe und Support">'
     +     '<span class="sb-icon" aria-hidden="true">❓</span>'
     +     '<span class="sb-label">Hilfe &amp; Support</span>'
     +   '</a>'
