@@ -473,9 +473,12 @@
     }
 
     // Collapse-State aus localStorage wiederherstellen
-    // Session 28 Fix #1: Auto-Collapse bei schmalen Fenstern (< 1100px)
-    // wenn der User noch keine eigene Entscheidung getroffen hat.
-    // So passt die Sidebar bei halbem Desktop-Fenster auf iPads/kleine Laptops.
+    // Session 28 Fix #1: Auto-Collapse bei schmalen Fenstern wenn der User
+    // noch keine eigene Entscheidung getroffen hat.
+    // S-SICHER UI-FIX1.5 (24.04.2026): Threshold von 1100 auf 900 gesenkt,
+    // damit User auf Standard-Notebooks (13-14") die volle Sidebar sehen.
+    // Zusätzlich Resize-Listener: Flip zwischen collapsed/full ohne Reload,
+    // solange der User NIE den Einklappen-Button geklickt hat.
     var savedCollapse = localStorage.getItem('prova_sb_collapsed');
     var collapsed;
     if (savedCollapse === '1' || savedCollapse === '0') {
@@ -483,9 +486,17 @@
       collapsed = savedCollapse === '1';
     } else {
       // Erste Sitzung: Auto-Collapse bei schmalen Fenstern
-      collapsed = window.innerWidth < 1100 && window.innerWidth > 768;
+      collapsed = window.innerWidth < 900 && window.innerWidth > 768;
     }
     if (collapsed) existing.classList.add('collapsed');
+
+    // Bei Viewport-Resize Auto-Collapse anpassen, aber NIE
+    // explizite User-Wahl überschreiben.
+    window.addEventListener('resize', function () {
+      if (localStorage.getItem('prova_sb_collapsed') !== null) return;
+      var shouldCollapse = window.innerWidth < 900 && window.innerWidth > 768;
+      existing.classList.toggle('collapsed', shouldCollapse);
+    });
 
     // ── Scroll-Position der Sidebar wiederherstellen ──
     var nav = existing.querySelector('.sb-nav');
