@@ -535,7 +535,18 @@ window.resetForm=function(){
 /* ─── HELPER ─── */
 function fmt(v){return (v||0).toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2})+' €';}
 function setText(id,v){var el=document.getElementById(id);if(el)el.textContent=v;}
-function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+// S-SICHER P2.3f: Lokale esc() umgeleitet auf window.PROVA_SANITIZE.escapeHtml,
+// damit auch " und ' korrekt escaped werden (vorher nur &, <, > — das war
+// unsicher fuer Attribut-Kontext wie value="'+esc(b)+'" in Zeile 183).
+function esc(s){
+  if (window.PROVA_SANITIZE && typeof window.PROVA_SANITIZE.escapeHtml === 'function') {
+    return window.PROVA_SANITIZE.escapeHtml(s);
+  }
+  // Fallback: erweiterte lokale Variante inkl. " und '.
+  return String(s == null ? '' : s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
 window.zeigToast=function(msg,typ){
   var t=document.getElementById('toast');
   t.textContent=msg;t.className='toast'+(typ==='err'?' err':'');
