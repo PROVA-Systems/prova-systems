@@ -129,7 +129,8 @@ exports.handler = async function(event, context) {
   const pmKey   = process.env.PDFMONKEY_API_KEY || '';
 
   if (!secret || secret.length < 32) {
-    console.error('[pdf-proxy] PDF_PROXY_SECRET fehlt oder zu kurz (<32 Zeichen)');
+    // S-SICHER P2.2: ENV-Namen nicht in Server-Logs (Defense-in-Depth).
+    console.error('[pdf-proxy] Server misconfigured: proxy secret missing or too short');
     return jsonResponse(event, 500, { error: 'SERVER_MISCONFIGURED', code: 'NO_PROXY_SECRET' });
   }
 
@@ -216,7 +217,8 @@ exports.handler = async function(event, context) {
       }
 
       if (!atKey) {
-        console.error('[pdf-proxy] AIRTABLE_API_KEY fehlt');
+        // S-SICHER P2.2: ENV-Namen nicht in Server-Logs.
+        console.error('[pdf-proxy] Server misconfigured: airtable key missing');
         return jsonResponse(event, 500, { error: 'Server nicht konfiguriert', code: 'NO_AT_KEY' });
       }
 
@@ -256,8 +258,9 @@ exports.handler = async function(event, context) {
         try {
           pdfUrl = await getPdfMonkeyUrl(pmDocId, pmKey);
         } catch(e) {
+          // S-SICHER P2.2 (Finding 8.1): e.message nur server-seitig.
           console.warn('[pdf-proxy] PDFMonkey-Fehler:', e.message);
-          return jsonResponse(event, 502, { error: 'PDF noch nicht bereit', code: e.message });
+          return jsonResponse(event, 502, { error: 'PDF noch nicht bereit', code: 'PDF_NOT_READY' });
         }
       }
 

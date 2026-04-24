@@ -324,11 +324,14 @@ exports.handler = async function(event) {
     };
 
   } catch (e) {
+    // S-SICHER P2.2 (Finding 8.1): e.message nicht mehr in Client-Response.
+    // Server-Logging bleibt fuer Netlify-Dashboard, Client bekommt nur
+    // generische Meldung.
     console.error('[Airtable] API nicht erreichbar:', e.message);
     return {
       statusCode: 502,
       headers,
-      body: JSON.stringify({ error: 'Airtable API nicht erreichbar', detail: e.message })
+      body: JSON.stringify({ error: 'Airtable API nicht erreichbar' })
     };
   }
 };

@@ -71,7 +71,9 @@ exports.handler = async function(event) {
     if (aufgabe === 'support_chat') return await handleSupportChat(body, apiKey);
     return await handleMessages(body, apiKey);
   } catch (e) {
-    return { statusCode: 502, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }, body: JSON.stringify({ error: 'Upstream error', detail: e.message }) };
+    // S-SICHER P2.2 (Finding 8.1): e.message nur server-seitig loggen.
+    console.error('[ki-proxy] Upstream-Fehler:', e && e.message);
+    return { statusCode: 502, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }, body: JSON.stringify({ error: 'Upstream error' }) };
   }
 };
 

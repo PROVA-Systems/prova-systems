@@ -109,13 +109,14 @@ exports.handler = async (event) => {
     });
 
     if (!response.ok) {
+      // S-SICHER P2.2 (Finding 8.1): OpenAI-Fehlermeldung nur server-seitig.
       const errData = await response.json().catch(() => ({}));
       const errMsg  = errData?.error?.message || `Whisper API Fehler ${response.status}`;
       console.error('[Whisper] API Fehler:', errMsg);
       return {
         statusCode: 502,
         headers: corsHeaders(),
-        body: JSON.stringify({ error: errMsg })
+        body: JSON.stringify({ error: 'Transkription fehlgeschlagen' })
       };
     }
 
@@ -152,11 +153,12 @@ exports.handler = async (event) => {
     };
 
   } catch (e) {
-    console.error('[Whisper] Exception:', e.message);
+    // S-SICHER P2.2 (Finding 8.1): e.message nur server-seitig loggen.
+    console.error('[Whisper] Exception:', e && e.message);
     return {
       statusCode: 502,
       headers:    corsHeaders(),
-      body: JSON.stringify({ error: 'Transkription fehlgeschlagen: ' + e.message }),
+      body: JSON.stringify({ error: 'Transkription fehlgeschlagen' }),
     };
   }
 };

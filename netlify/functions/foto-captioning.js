@@ -86,10 +86,12 @@ Gib das JSON-Objekt zurück.`;
 
     const data = await response.json();
     if (!response.ok) {
+      // S-SICHER P2.2 (Finding 8.1): OpenAI-Fehlermeldung nur server-seitig.
+      console.error('[foto-captioning] OpenAI-Fehler:', (data.error && data.error.message) || 'Unbekannt');
       return {
         statusCode: 502,
         headers: { 'Access-Control-Allow-Origin': '*', 'Content-Type': 'application/json' },
-        body: JSON.stringify({ error: 'OpenAI Fehler', detail: (data.error&&data.error.message) || 'Unbekannt' })
+        body: JSON.stringify({ error: 'Bild-Analyse fehlgeschlagen' })
       };
     }
 
@@ -120,10 +122,12 @@ Gib das JSON-Objekt zurück.`;
     };
 
   } catch (e) {
+    // S-SICHER P2.2 (Finding 8.1): e.message nur server-seitig loggen.
+    console.error('[foto-captioning] Upstream-Fehler:', e && e.message);
     return {
       statusCode: 502,
       headers: { 'Access-Control-Allow-Origin': '*', 'Content-Type': 'application/json' },
-      body: JSON.stringify({ error: 'Upstream error', detail: e.message })
+      body: JSON.stringify({ error: 'Upstream error' })
     };
   }
 };
