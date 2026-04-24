@@ -1158,38 +1158,25 @@ window.provaSbLogout = function() {
     nav.appendChild(items);
     document.body.appendChild(nav);
 
-    // Overlay für Sidebar
-    var overlay = document.createElement('div');
-    overlay.className = 'mobile-sidebar-overlay';
-    overlay.id = 'mobile-sidebar-overlay';
-    overlay.onclick = closeMobileSidebar;
-    document.body.appendChild(overlay);
+    // S-SICHER UI-FIX1.3: Kein eigenes mobile-sidebar-overlay mehr anlegen.
+    // Nutzt das bestehende #sb-overlay aus der ersten nav.js-IIFE (Zeile
+    // 466-473). Damit nur eine einzige Overlay-Mechanik im DOM.
   }
 
   /* ─── SIDEBAR TOGGLE AUF MOBILE ─── */
+  // S-SICHER UI-FIX1.3: toggle delegiert an die globalen Funktionen
+  // window.openMobileSidebar / window.closeMobileSidebar aus der ersten
+  // IIFE. Kein Duplikat-Overlay mehr.
   function toggleMobileSidebar() {
-    var sb = document.querySelector('.sidebar, .sb-wrap');
-    var ov = document.getElementById('mobile-sidebar-overlay');
+    var sb = document.getElementById('sidebar');
     if (!sb) return;
-    var isOpen = sb.classList.contains('mobile-open');
-    if (isOpen) {
-      closeMobileSidebar();
+    if (sb.classList.contains('mobile-open')) {
+      if (typeof window.closeMobileSidebar === 'function') window.closeMobileSidebar();
     } else {
-      sb.classList.add('mobile-open');
-      if (ov) ov.classList.add('show');
-      // Scroll-Lock
-      document.body.style.overflow = 'hidden';
+      if (typeof window.openMobileSidebar === 'function') window.openMobileSidebar();
     }
   }
   window.toggleMobileSidebar = toggleMobileSidebar;
-
-  function closeMobileSidebar() {
-    var sb = document.querySelector('.sidebar, .sb-wrap');
-    var ov = document.getElementById('mobile-sidebar-overlay');
-    if (sb) sb.classList.remove('mobile-open');
-    if (ov) ov.classList.remove('show');
-    document.body.style.overflow = '';
-  }
 
   /* ─── MOBILE OPTIMIERUNGEN ─── */
   function applyMobileOptimizations() {
