@@ -12,6 +12,26 @@
 (function() {
   'use strict';
 
+  // ═══ MOBILE-RESCUE P0R.3: Subscription-Status-Guard ═══
+  // Laeuft VOR allen anderen Checks. prova-status-hydrate.js hat die
+  // Felder zu diesem Zeitpunkt bereits geschrieben (Script-Reihenfolge
+  // in den HTMLs sichergestellt). Wenn ein aktiver Abo-Status belegt
+  // ist, sofort aussteigen — kein Badge, kein Overlay.
+  var subStatus = (localStorage.getItem('prova_subscription_status') || '').toLowerCase();
+  if (subStatus === 'active') return;
+
+  // Trialing + trial_end in Zukunft → ebenfalls raus.
+  if (subStatus === 'trialing') {
+    var trialEndCheck = localStorage.getItem('prova_trial_end');
+    if (trialEndCheck) {
+      var tE = new Date(trialEndCheck + 'T23:59:59');
+      if (!isNaN(tE.getTime()) && tE.getTime() > Date.now()) return;
+    }
+  }
+
+  // Lokaler DevTools-Override fuer Marcel / Founder-Testing.
+  if (localStorage.getItem('prova_founder_bypass') === '1') return;
+
   var paket = localStorage.getItem('prova_paket') || 'Solo';
   var status = localStorage.getItem('prova_status') || 'Trial';
   var trialStart = localStorage.getItem('prova_trial_start');
@@ -198,16 +218,23 @@
 
   /* ── Trial abgelaufen → Overlay ── */
   if (trialAbgelaufen) {
-    // S-SICHER UI-FIX1.1: Dev-Bypass für PROVA-Founder + Marcel
-    // Vermeidet aufdringliches Overlay während Entwicklung/Testing.
-    // Produktive Trial-Logik für echte Kunden bleibt unverändert.
+    // MOBILE-RESCUE P0R.3: Email-Bypass fuer PROVA-Founder + Marcel.
+    // @gmx.de nur noch wenn Local-Part mit "marcel" beginnt — vorher
+    // wurden pauschal alle gmx.de-User durchgewunken.
     var svEmail = (localStorage.getItem('prova_sv_email') || '').toLowerCase();
-    if (svEmail.endsWith('@prova-systems.de') || svEmail.endsWith('@gmx.de')) return;
+    if (svEmail.endsWith('@prova-systems.de')) return;
+    if (svEmail.indexOf('marcel') === 0 && svEmail.endsWith('@gmx.de')) return;
 
-    // Erlaubte Seiten auch nach Trial-Ablauf
+    // MOBILE-RESCUE P0R.3: Erlaubt-Liste erweitert um Read-Only-Seiten.
+    // Dashboard/Archiv/Kontakte/Termine bleiben auch bei Trial-Ablauf
+    // lesbar (DSGVO Art. 15 — bestehende Daten muessen einsehbar bleiben).
     var page = window.location.pathname.split('/').pop() || '';
-    var erlaubt = ['einstellungen.html', 'app-login.html', 'app-register.html', 'index.html', 'admin-login.html', 'admin-dashboard.html'];
-    if (erlaubt.indexOf(page) >= 0) return; // Einstellungen bleiben erreichbar (für Upgrade)
+    var erlaubt = [
+      'einstellungen.html', 'app-login.html', 'app-register.html',
+      'index.html', 'admin-login.html', 'admin-dashboard.html',
+      'dashboard.html', 'archiv.html', 'kontakte.html', 'termine.html'
+    ];
+    if (erlaubt.indexOf(page) >= 0) return; // Einstellungen + Read-Only bleiben erreichbar
 
     // Overlay nach kurzer Verzögerung zeigen
     setTimeout(function() { zeigeTrialAbgelaufenOverlay(); }, 800);
