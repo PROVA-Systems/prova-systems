@@ -59,6 +59,18 @@
       console.warn('[Auth] Session speichern fehlgeschlagen:', e);
       return false;
     }
+
+    // MOBILE-RESCUE P0.4: Defensive Absicherung — wenn der Caller die
+    // Abo-Status-Felder an createSession durchreicht, hier mitspeichern.
+    // Der Haupt-Login-Flow (app-login-logic.js, P0.1) schreibt die Werte
+    // bereits direkt; diese Route ist Backup fuer andere Session-Quellen.
+    try {
+      if (userData.subscription_status) localStorage.setItem('prova_subscription_status', userData.subscription_status);
+      if (userData.status)              localStorage.setItem('prova_status',              userData.status);
+      if (userData.trial_end)           localStorage.setItem('prova_trial_end',           userData.trial_end);
+      if (userData.paket)               localStorage.setItem('prova_paket',               userData.paket);
+    } catch (e) {}
+
     return true;
   };
 
