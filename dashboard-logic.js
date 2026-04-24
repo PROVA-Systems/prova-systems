@@ -743,11 +743,14 @@ async function ladeAlleDaten(){
 
   }catch(err){
     console.warn('Zentrale Ladefehler:',err);
+    // S-SICHER UI-FIX1.2: IMMER KPIs mit 0 als Baseline rendern —
+    // wenn unten echte LS-Daten kommen, überschreiben sie die 0.
+    // Vorher blieb bei Error der transparente .kpi-loading-Shimmer stehen.
+    renderKPIs([],[],[]);
     // Graceful degradation — zeige was in localStorage ist
     var ls=[];try{ls=JSON.parse(localStorage.getItem('prova_akten')||'[]');}catch(e){}
     if(ls.length===0){
       zeigOnboarding();
-      renderKPIs([],[],[]);  // KPIs auf 0 setzen
     }
     else{
       var faelleLS=ls.map(function(a){return{fields:{Aktenzeichen:a.aktenzeichen,Status:a.status||'In Bearbeitung',Schadensart:a.schadenart,Timestamp:a.datum}};});
