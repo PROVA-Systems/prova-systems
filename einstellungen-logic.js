@@ -639,14 +639,17 @@ window.ladeWebhookLog = function(){
   try{
     var logs=JSON.parse(localStorage.getItem('prova_outbound_log')||'[]');
     if(!logs.length){c.innerHTML='<div style="padding:12px;color:var(--text3);">Noch keine Webhook-Deliveries.</div>';return;}
+    // S-SICHER P2.3d: l.event kommt aus Webhook-Log (localStorage),
+    // potenziell durch externe Systeme beeinflussbar → escapen.
+    var esc = window.PROVA_SANITIZE.escapeHtml;
     c.innerHTML=logs.slice(0,20).map(function(l){
       var sc=l.status==='success'?'var(--success)':l.status==='pending'?'var(--warning)':'var(--danger)';
       var si=l.status==='success'?'✅':l.status==='pending'?'⏳':'❌';
       var ts=new Date(l.ts).toLocaleString('de-DE',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
       return '<div style="padding:7px 12px;border-bottom:1px solid rgba(255,255,255,.04);display:flex;align-items:center;gap:8px;">'
         +'<span style="color:'+sc+';">'+si+'</span>'
-        +'<span style="color:var(--text3);min-width:90px;font-size:11px;">'+ts+'</span>'
-        +'<span style="color:var(--text2);flex:1;overflow:hidden;text-overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+l.event+'</span>'
+        +'<span style="color:var(--text3);min-width:90px;font-size:11px;">'+esc(ts)+'</span>'
+        +'<span style="color:var(--text2);flex:1;overflow:hidden;text-overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+esc(l.event||'')+'</span>'
         +'</div>';
     }).join('');
   }catch(e){
