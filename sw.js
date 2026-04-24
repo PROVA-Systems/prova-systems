@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v191';
+const CACHE_VERSION = 'prova-v192';
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
@@ -79,8 +79,17 @@ self.addEventListener('activate', event => {
       Promise.all(
         keys.filter(k => k !== CACHE_VERSION).map(k => caches.delete(k))
       )
-    ).then(() => self.clients.claim())
-    // Kein auto-reload: Seite bleibt stabil, neuer SW wird beim nächsten Besuch aktiv
+    )
+    .then(() => self.clients.claim())
+    // S-SICHER UI-FIX1.6: Clients über neue SW-Version informieren, damit
+    // die Page-Seite (optional) ein sanftes Reload triggern kann. Der
+    // Client-Handler wird in einem Folge-Sprint in sw-register.js ergänzt.
+    // skipWaiting() ist bereits im install-Handler aktiv → neuer SW
+    // übernimmt sofort, clients.claim() greift auf alle offenen Tabs.
+    .then(() => self.clients.matchAll({ includeUncontrolled: true }))
+    .then(clients => {
+      clients.forEach(c => c.postMessage({ type: 'SW_UPDATED', version: CACHE_VERSION }));
+    })
   );
 });
 
