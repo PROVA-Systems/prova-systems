@@ -228,9 +228,16 @@ async function ladePaketUndWeiterleiten(email, ziel) {
 
 /* ────────────────────────────────────────────
    FLOW ③ — LOGIN
+   P4A.5 (25.04.2026): Login geht jetzt ueber unseren eigenen
+   Endpunkt /.netlify/functions/auth-token-issue, der intern
+   Netlify Identity ruft + Provisional-Fallback fuer unconfirmed
+   User implementiert (siehe auth-token-issue.js Top-Doc).
+   Der frueher hier hinterlegte Browser-Bypass (Identity-400 +
+   "Email not confirmed" → eigene Session ohne Server-Token,
+   Audit-Finding 7.1) ist ENTFERNT.
    ──────────────────────────────────────────── */
 window.login = async function() {
-  var email = document.getElementById('login-email').value.trim();
+  var email = document.getElementById('login-email').value.trim().toLowerCase();
   var pw    = document.getElementById('login-pw').value;
   var errEl = document.getElementById('login-err');
   var btn   = document.getElementById('login-btn');
@@ -239,74 +246,72 @@ window.login = async function() {
   if (!pw)    { showErr(errEl,'Bitte Passwort eingeben.'); return; }
   btn.disabled = true;
   btn.innerHTML = '<span class="spinner"></span>Anmelden…';
+
   try {
-    var res = await fetch('/.netlify/identity/token', {
+    var res = await fetch('/.netlify/functions/auth-token-issue', {
       method: 'POST',
-      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-      body: 'grant_type=password&username=' + encodeURIComponent(email) + '&password=' + encodeURIComponent(pw)
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: email, password: pw })
     });
-    if (res.status === 404) {
-      showErr(errEl, 'Konto-System noch nicht aktiviert. Bitte Support kontaktieren.');
-      btn.disabled = false; btn.textContent = 'Anmelden'; return;
-    }
-    if (res.status === 400) {
-      // Könnte "Email not confirmed" sein — Fallback: Session direkt setzen
-      var errBody = {};
-      try { errBody = await res.json(); } catch(e){}
-      if ((errBody.error_description||'').toLowerCase().includes('confirm')) {
-        // User existiert aber ist nicht bestätigt → direkt einloggen via Airtable
-        console.log('PROVA: E-Mail nicht bestätigt, Fallback-Login via Airtable');
-        localStorage.setItem('prova_user', JSON.stringify({email: email, name: email, token: 'fallback-login'}));
-        localStorage.setItem('prova_sv_email', email);
-        localStorage.setItem('prova_paket', 'Solo');
-        localStorage.setItem('prova_status', 'Trial');
-        // Trial-Start nur setzen wenn noch NICHT in Airtable und NICHT in localStorage
-        if (!localStorage.getItem('prova_trial_start')) {
-          var trialStart = new Date().toISOString();
-          localStorage.setItem('prova_trial_start', trialStart);
-          localStorage.setItem('prova_trial_days', '14');
-          // In Airtable speichern damit es geräteübergreifend funktioniert
-          fetch('/.netlify/functions/airtable', {
-            method: 'POST',
-            headers: {'Content-Type':'application/json'},
-            body: JSON.stringify({
-              method: 'PATCH',
-              path: '/v0/appJ7bLlAHZoxENWE/tbladqEQT3tmx4DIB',
-              payload: { fields: { trial_start: trialStart, trial_days: 14 } }
-            })
-          }).catch(function(){});
-        }
-        await ladePaketUndWeiterleiten(email);
-        return;
-      } else {
-        showErr(errEl, 'E-Mail oder Passwort falsch.');
-      }
-      btn.disabled = false; btn.textContent = 'Anmelden'; return;
-    }
-    if (res.status === 401 || res.status === 422) {
+
+    if (res.status === 401) {
       showErr(errEl, 'E-Mail oder Passwort falsch.');
+      btn.disabled = false; btn.textContent = 'Anmelden'; return;
+    }
+    if (res.status === 403) {
+      showErr(errEl, 'Konto gesperrt. Bitte kontakt@prova-systems.de kontaktieren.');
+      btn.disabled = false; btn.textContent = 'Anmelden'; return;
+    }
+    if (res.status === 502) {
+      showErr(errEl, 'Auth-Backend voruebergehend nicht erreichbar. Bitte erneut versuchen.');
       btn.disabled = false; btn.textContent = 'Anmelden'; return;
     }
     if (!res.ok) {
       showErr(errEl, 'Anmeldung fehlgeschlagen (' + res.status + ').');
       btn.disabled = false; btn.textContent = 'Anmelden'; return;
     }
+
     var data = await res.json();
-    if (!data.access_token) throw new Error('No token');
-    var userRes  = await fetch('/.netlify/identity/user', {headers: {'Authorization': 'Bearer ' + data.access_token}});
-    var userData = userRes.ok ? await userRes.json() : {};
-    var md   = userData.user_metadata || {};
-    var name = md.full_name || email;
-    localStorage.setItem('prova_user',     JSON.stringify({email: userData.email||email, name: name, token: data.access_token}));
-    localStorage.setItem('prova_sv_email', userData.email||email);
-    if (md.full_name) {
-      var parts = name.split(' ');
-      localStorage.setItem('prova_sv_vorname',  parts[0]||'');
-      localStorage.setItem('prova_sv_nachname', parts.slice(1).join(' ')||'');
+    if (!data || !data.token || !data.sv) {
+      showErr(errEl, 'Ungueltige Server-Antwort. Bitte erneut versuchen.');
+      btn.disabled = false; btn.textContent = 'Anmelden'; return;
     }
-    await ladePaketUndWeiterleiten(userData.email||email);
-  } catch(e) {
-    showErr(errEl, 'Verbindungsfehler. Bitte Internetverbindung prüfen.');
+    var sv = data.sv;
+    var resolvedEmail = sv.email || email;
+    var name = (sv.sv_vorname || '') + (sv.sv_nachname ? ' ' + sv.sv_nachname : '');
+    name = name.trim() || resolvedEmail;
+
+    // P4A.5: HMAC-Token ist primaerer Auth-Anker fuer auth-guard.js
+    localStorage.setItem('prova_auth_token', data.token);
+
+    // Legacy-kompatibles prova_user-Objekt + verified-Flag fuer
+    // spaeteres Frontend-Banner ("Bitte E-Mail bestaetigen") in
+    // AUTH-PERFEKT 2.0.
+    localStorage.setItem('prova_user', JSON.stringify({
+      email:       resolvedEmail,
+      name:        name,
+      token:       data.token,
+      verified:    !!sv.verified,
+      provisional: !!sv.provisional
+    }));
+    localStorage.setItem('prova_sv_email', resolvedEmail);
+
+    if (sv.paket)               localStorage.setItem('prova_paket', sv.paket);
+    if (sv.status)              localStorage.setItem('prova_status', sv.status);
+    if (sv.subscription_status) localStorage.setItem('prova_subscription_status', sv.subscription_status);
+    if (sv.trial_end)           localStorage.setItem('prova_trial_end', sv.trial_end);
+    if (sv.testpilot)           localStorage.setItem('prova_testpilot', '1');
+    if (sv.sv_vorname)          localStorage.setItem('prova_sv_vorname', sv.sv_vorname);
+    if (sv.sv_nachname)         localStorage.setItem('prova_sv_nachname', sv.sv_nachname);
+    if (sv.sv_record_id)        localStorage.setItem('prova_at_sv_record_id', sv.sv_record_id);
+
+    // ladePaketUndWeiterleiten synchronisiert weitere Profil-Felder
+    // aus Airtable (sv_qualifikation, sv_telefon, sv_adresse etc.)
+    // und macht den Redirect zur Startseite.
+    await ladePaketUndWeiterleiten(resolvedEmail);
+  } catch (e) {
+    console.warn('[login] Fehler:', e && e.message);
+    showErr(errEl, 'Verbindungsfehler. Bitte Internetverbindung pruefen.');
     btn.disabled = false; btn.textContent = 'Anmelden';
   }
 };
