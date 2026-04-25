@@ -15,6 +15,53 @@
 // SAFE BY DESIGN: wirft nie — bei Total-Fehlschlag leerer Kontext, ki-proxy läuft wie heute weiter
 const FW = require('./lib/prova-fachwissen');
 
+// S-SICHER P3.3: Server-seitige Pseudonymisierung (Defense-in-Depth gegen
+// Client-Wrapper-Bypass). Gleicher Code wie /prova-pseudo.js (CommonJS-Spiegel).
+const ProvaPseudo = require('./lib/prova-pseudo');
+
+// Felder die NICHT pseudonymisiert werden (steuernde / klassifizierende
+// Werte, kein Personenbezug). Identisch zu prova-pseudo-send.js SKIP_KEYS.
+const PSEUDO_SKIP_KEYS = {
+  imageBase64: 1, audioBase64: 1, mediaType: 1,
+  aufgabe: 1, paragraph_nr: 1, verwendungszweck: 1,
+  ki_analyse_modus: 1, model: 1, max_tokens: 1, temperature: 1,
+  sprache: 1, schadenart: 1, schadensart: 1, baujahr: 1,
+  role: 1, type: 1, _userEmail: 1
+};
+
+/**
+ * Walk durch ein beliebig tiefes Body-Objekt und pseudonymisiert jeden
+ * String-Leaf, der nicht in PSEUDO_SKIP_KEYS hängt. Strings >50 KB
+ * werden uebersprungen (Base64-Defense). Original-body bleibt unveraendert
+ * (immutable copy).
+ */
+function pseudonymizeBody(obj, depth) {
+  if (depth == null) depth = 0;
+  if (depth > 6) return obj;
+  if (obj == null) return obj;
+
+  if (typeof obj === 'string') {
+    if (obj.length > 50000) return obj;
+    return ProvaPseudo.apply(obj);
+  }
+  if (Array.isArray(obj)) {
+    return obj.map(function (item) { return pseudonymizeBody(item, depth + 1); });
+  }
+  if (typeof obj === 'object') {
+    const copy = {};
+    for (const k in obj) {
+      if (!Object.prototype.hasOwnProperty.call(obj, k)) continue;
+      if (PSEUDO_SKIP_KEYS[k]) {
+        copy[k] = obj[k];
+      } else {
+        copy[k] = pseudonymizeBody(obj[k], depth + 1);
+      }
+    }
+    return copy;
+  }
+  return obj;
+}
+
 /**
  * Wählt das Modell basierend auf der User-Präferenz (aus Body) und der Aufgabe.
  * 'praezise' → gpt-4o für schwere Analysen, sonst gpt-4o-mini.
@@ -62,14 +109,28 @@ exports.handler = async function(event) {
   try { body = JSON.parse(event.body); }
   catch (e) { return { statusCode: 400, body: JSON.stringify({ error: 'Invalid JSON' }) }; }
 
+  // S-SICHER P3.3: Pseudonymisierung BEVOR irgendetwas zu OpenAI geht.
+  // Greift auch wenn der Client-Wrapper umgangen wurde (curl, Postman,
+  // anderer Browser-Tab). safeBody fuer downstream — Original body
+  // unveraendert fuer eventuelle Logging-Zwecke.
+  const safeBody = pseudonymizeBody(body, 0);
+  // Reverse-Audit: Wenn nach apply() noch sensible Daten in safeBody sind
+  // → Warnung loggen (nicht blocken — Pseudo-Modul faengt 99% ab).
   try {
-    const aufgabe = body.aufgabe || 'messages';
-    if (aufgabe === 'fachurteil_entwurf') return await handleFachurteilEntwurf(body, apiKey);
-    if (aufgabe === 'qualitaetspruefung') return await handleQualitaetspruefung(body, apiKey);
-    if (aufgabe === 'freitext') return await handleFreitext(body, apiKey);
-    if (aufgabe === 'assist_inline') return await handleAssistInline(body, apiKey);
-    if (aufgabe === 'support_chat') return await handleSupportChat(body, apiKey);
-    return await handleMessages(body, apiKey);
+    const audit = ProvaPseudo.audit(JSON.stringify(safeBody));
+    if (audit && audit.length > 0) {
+      console.warn('[ki-proxy] Pseudonymisierungs-Reste nach apply():', audit);
+    }
+  } catch (e) {}
+
+  try {
+    const aufgabe = safeBody.aufgabe || 'messages';
+    if (aufgabe === 'fachurteil_entwurf') return await handleFachurteilEntwurf(safeBody, apiKey);
+    if (aufgabe === 'qualitaetspruefung') return await handleQualitaetspruefung(safeBody, apiKey);
+    if (aufgabe === 'freitext') return await handleFreitext(safeBody, apiKey);
+    if (aufgabe === 'assist_inline') return await handleAssistInline(safeBody, apiKey);
+    if (aufgabe === 'support_chat') return await handleSupportChat(safeBody, apiKey);
+    return await handleMessages(safeBody, apiKey);
   } catch (e) {
     // S-SICHER P2.2 (Finding 8.1): e.message nur server-seitig loggen.
     console.error('[ki-proxy] Upstream-Fehler:', e && e.message);
