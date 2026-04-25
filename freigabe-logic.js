@@ -289,7 +289,8 @@ async function starteQualitaetspruefung() {
   summaryEl.style.display = 'none';
 
   try {
-    var res = await fetch('/.netlify/functions/ki-proxy', {
+    // S-SICHER P3.2: Pseudo-Send-Wrapper.
+    var res = await (window.PROVA_PSEUDO_SEND ? window.PROVA_PSEUDO_SEND.fetch : fetch)('/.netlify/functions/ki-proxy', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

@@ -390,7 +390,8 @@ async function handleDokUpload(files) {
           r.readAsDataURL(file);
         });
 
-        var kiRes = await fetch('/.netlify/functions/ki-proxy', {
+        // S-SICHER P3.2: Pseudo-Send-Wrapper.
+        var kiRes = await (window.PROVA_PSEUDO_SEND ? window.PROVA_PSEUDO_SEND.fetch : fetch)('/.netlify/functions/ki-proxy', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ aufgabe: 'pdf_extraktion', pdf_base64: b64, dateiname: file.name })
@@ -425,7 +426,8 @@ async function handleDokUpload(files) {
           r.onerror = rej;
           r.readAsDataURL(file);
         });
-        var capRes = await fetch('/.netlify/functions/foto-captioning', {
+        // S-SICHER P3.2: Pseudo-Send-Wrapper.
+        var capRes = await (window.PROVA_PSEUDO_SEND ? window.PROVA_PSEUDO_SEND.fetch : fetch)('/.netlify/functions/foto-captioning', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

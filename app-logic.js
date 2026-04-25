@@ -692,7 +692,8 @@ async function autoCaption(idx) {
   var schadenart = (document.getElementById('f-schadenart') || {}).value || '';
 
   try {
-    var res = await fetch('/.netlify/functions/foto-captioning', {
+    // S-SICHER P3.2: Pseudo-Send-Wrapper, faellt zurueck auf nativen fetch.
+    var res = await (window.PROVA_PSEUDO_SEND ? window.PROVA_PSEUDO_SEND.fetch : fetch)('/.netlify/functions/foto-captioning', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -1855,7 +1856,8 @@ async function starteWhisperKorrektur(audioBlob) {
     else if(audioBlob.type.includes('wav')) filename = 'diktat.wav';
 
     // An S11 senden
-    var resp = await fetch(WHISPER_WEBHOOK, {
+    // S-SICHER P3.2: Pseudo-Send-Wrapper auch fuer Whisper-Webhook.
+    var resp = await (window.PROVA_PSEUDO_SEND ? window.PROVA_PSEUDO_SEND.fetch : fetch)(WHISPER_WEBHOOK, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ audio_base64: base64, filename: filename })
@@ -2799,7 +2801,8 @@ async function bereinigeDiktatText() {
   if (badge) { badge.textContent = '⟳ Wird aufbereitet…'; badge.style.background = 'rgba(245,158,11,.2)'; }
 
   try {
-    var res = await fetch('/.netlify/functions/ki-proxy', {
+    // S-SICHER P3.2: Pseudo-Send-Wrapper.
+    var res = await (window.PROVA_PSEUDO_SEND ? window.PROVA_PSEUDO_SEND.fetch : fetch)('/.netlify/functions/ki-proxy', {
       method: 'POST',
       headers: {'Content-Type':'application/json'},
       body: JSON.stringify({
@@ -3206,7 +3209,8 @@ async function sendeWebhook() {
   });
 
   try {
-    const res = await fetch(WEBHOOK_G1, {
+    // S-SICHER P3.2: Pseudo-Send-Wrapper auch fuer G1-Make-Webhook.
+    const res = await (window.PROVA_PSEUDO_SEND ? window.PROVA_PSEUDO_SEND.fetch : fetch)(WEBHOOK_G1, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(daten)

@@ -51,7 +51,7 @@ async function ladeKIAnalyse() {
     const messwerte = localStorage.getItem('prova_messwerte') || '';
     const entwurf = localStorage.getItem('prova_entwurf_text') || '';
 
-    const res = await fetch('/.netlify/functions/ki-proxy', {
+    const res = await (window.PROVA_PSEUDO_SEND ? window.PROVA_PSEUDO_SEND.fetch : fetch)('/.netlify/functions/ki-proxy', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -953,7 +953,7 @@ ${diktat ? 'DIKTAT DES SACHVERSTÄNDIGEN (Originalaufnahme):\n'+diktat : ''}${me
 AUFGABE: Schreibe einen professionellen §6-Denkanstoß der AUSSCHLIESSLICH auf den oben stehenden Fallinformationen basiert. Falls wesentliche Informationen fehlen, benenne diese explizit.`;
 
   try {
-    const res = await fetch('/.netlify/functions/ki-proxy', {
+    const res = await (window.PROVA_PSEUDO_SEND ? window.PROVA_PSEUDO_SEND.fetch : fetch)('/.netlify/functions/ki-proxy', {
       method:'POST', headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
         model: 'gpt-4o-mini',
@@ -994,7 +994,7 @@ async function ausformulieren() {
   const gesamtLen = b1.length+b2.length+b3.length;
   const maxLen = Math.round(gesamtLen*0.7);
   try {
-    const res = await fetch('/.netlify/functions/ki-proxy', {
+    const res = await (window.PROVA_PSEUDO_SEND ? window.PROVA_PSEUDO_SEND.fetch : fetch)('/.netlify/functions/ki-proxy', {
       method:'POST', headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
         model:'gpt-4o-mini',
@@ -1083,7 +1083,7 @@ async function ladeNormen() {
 
   try {
     const normenListe = S_NORMEN_DB.map(n => n.n + ' — ' + n.t + (n.g?' ('+n.g+')':'')).join('\n');
-    const res = await fetch('/.netlify/functions/ki-proxy', {
+    const res = await (window.PROVA_PSEUDO_SEND ? window.PROVA_PSEUDO_SEND.fetch : fetch)('/.netlify/functions/ki-proxy', {
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({
         model:'gpt-4o-mini',
@@ -2296,7 +2296,7 @@ async function starteKIAssist(typ) {
     var az = (new URLSearchParams(location.search)).get('az') || '';
     var schadenart = localStorage.getItem('prova_current_schadenart') || '';
     
-    var resp = await fetch('/.netlify/functions/ki-proxy', {
+    var resp = await (window.PROVA_PSEUDO_SEND ? window.PROVA_PSEUDO_SEND.fetch : fetch)('/.netlify/functions/ki-proxy', {
       method: 'POST',
       headers: {'Content-Type':'application/json'},
       body: JSON.stringify({
@@ -2507,7 +2507,7 @@ window.kiAssist = async function(typ) {
              + (currentText || '[noch leer — bitte kurze Stichpunkte eingeben]');
   
   try {
-    var res = await fetch('/.netlify/functions/ki-proxy', {
+    var res = await (window.PROVA_PSEUDO_SEND ? window.PROVA_PSEUDO_SEND.fetch : fetch)('/.netlify/functions/ki-proxy', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({
