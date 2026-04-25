@@ -85,13 +85,17 @@ function appendUserContext(systemPrompt, userKontext) {
   if (!userKontext || typeof userKontext !== 'string') return systemPrompt;
   const clean = userKontext.trim().slice(0, 1000);
   if (!clean) return systemPrompt;
+  // S-SICHER P3.5 (Finding 2.4): user_kontext kann SV-eigene PII enthalten
+  // (Bankverbindung, Adresse, Klienten-Namen) — pseudonymisieren bevor
+  // er als System-Prompt-Anhang zu OpenAI geht.
+  const cleanPseudo = ProvaPseudo.apply(clean);
   return systemPrompt + `
 
 ══════════════ PERSÖNLICHER KONTEXT DES SACHVERSTÄNDIGEN ══════════════
 (vom Nutzer in PROVA → Einstellungen → KI & Diktat hinterlegt)
 Berücksichtige diesen Kontext bei Norm-Auswahl, Schwerpunkten und Terminologie:
 
-${clean}
+${cleanPseudo}
 ════════════════════════════════════════════════════════════════════════`;
 }
 
