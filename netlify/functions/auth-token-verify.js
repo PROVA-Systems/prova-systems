@@ -32,10 +32,14 @@ function j(event, statusCode, obj) {
 }
 
 exports.handler = async (event) => {
-  if (event.httpMethod === 'OPTIONS') return corsOptionsResponse(event);
-  if (event.httpMethod !== 'POST' && event.httpMethod !== 'GET') {
+  // S-SICHER P4A.3-fix: case-insensitiver Method-Check + Diagnostic.
+  const method = String((event && event.httpMethod) || '').toUpperCase();
+  if (method === 'OPTIONS') return corsOptionsResponse(event);
+  if (method !== 'POST' && method !== 'GET') {
+    console.warn('[auth-token-verify] 405 — method=' + JSON.stringify(event && event.httpMethod));
     return j(event, 405, { error: 'Method Not Allowed' });
   }
+  // Body/Header-Lookups arbeiten weiter mit event.httpMethod, das ist OK.
 
   let token = '';
 
@@ -46,7 +50,7 @@ exports.handler = async (event) => {
   }
 
   // 2. POST-Body { token }
-  if (!token && event.httpMethod === 'POST' && event.body) {
+  if (!token && method === 'POST' && event.body) {
     try {
       const body = JSON.parse(event.body);
       if (body && typeof body.token === 'string') token = body.token;
@@ -54,7 +58,7 @@ exports.handler = async (event) => {
   }
 
   // 3. GET ?token=...
-  if (!token && event.httpMethod === 'GET' && event.queryStringParameters) {
+  if (!token && method === 'GET' && event.queryStringParameters) {
     const qt = event.queryStringParameters.token;
     if (typeof qt === 'string') token = qt;
   }

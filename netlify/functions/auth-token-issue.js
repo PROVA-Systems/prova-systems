@@ -40,8 +40,17 @@ function j(event, statusCode, obj) {
 }
 
 exports.handler = async (event) => {
-  if (event.httpMethod === 'OPTIONS') return corsOptionsResponse(event);
-  if (event.httpMethod !== 'POST') return j(event, 405, { error: 'Method Not Allowed' });
+  // S-SICHER P4A.3-fix: case-insensitiver Method-Check + Diagnostic.
+  // Marcel meldete 405 bei PowerShell Invoke-RestMethod -Method Post.
+  // Wahrscheinlich liefert ein Caller die Methode lowercase oder
+  // event.httpMethod ist gelegentlich undefined. Robuste Normalisierung.
+  const method = String((event && event.httpMethod) || '').toUpperCase();
+  if (method === 'OPTIONS') return corsOptionsResponse(event);
+  if (method !== 'POST') {
+    console.warn('[auth-token-issue] 405 — method=' + JSON.stringify(event && event.httpMethod) +
+                 ' UA=' + JSON.stringify((event.headers || {})['user-agent']));
+    return j(event, 405, { error: 'Method Not Allowed' });
+  }
 
   let body;
   try { body = JSON.parse(event.body || '{}'); }
