@@ -106,6 +106,22 @@ exports.handler = async (event) => {
   // "Email not confirmed" (Provisional-Fallback wie Browser-Login) oder
   // echtes Reject (401).
   const identityUrl = (process.env.URL || 'https://prova-systems.de') + '/.netlify/identity/token';
+
+  // P4A.3-fix-3: Diagnose-Logging fuer Identity-Routing-Problem.
+  // Marcel meldet: Direkt-Test gegen https://prova-systems.de/.netlify/
+  // identity/token mit gleichen Credentials = 200 OK. Selbe Credentials
+  // ueber unsere Function = 400 "no user found". Wir wissen jetzt nicht
+  // welche URL die Function tatsaechlich aufruft. Einmaliger Log:
+  console.log('[auth-token-issue] env-info', JSON.stringify({
+    URL: process.env.URL || null,
+    DEPLOY_URL: process.env.DEPLOY_URL || null,
+    DEPLOY_PRIME_URL: process.env.DEPLOY_PRIME_URL || null,
+    SITE_NAME: process.env.SITE_NAME || null,
+    host: (event.headers || {}).host || null,
+    xfh: (event.headers || {})['x-forwarded-host'] || null,
+    identityUrl: identityUrl
+  }));
+
   let identityVerified = false;
   let identityProvisional = false;
   try {
@@ -130,11 +146,23 @@ exports.handler = async (event) => {
         // Provisional-Pfad: weiter zur SV-Existenz-Pruefung in Airtable.
         identityProvisional = true;
       } else {
-        console.warn('[auth-token-issue] Identity 400:', desc.slice(0, 80));
+        // P4A.3-fix-3: Volldetail-Log fuer Diagnose
+        console.warn('[auth-token-issue] Identity 400 reject:', JSON.stringify({
+          error: errBody.error || null,
+          desc: desc.slice(0, 120),
+          identityUrl: identityUrl
+        }));
         return j(event, 401, { error: 'E-Mail oder Passwort ungueltig' });
       }
     } else {
-      console.warn('[auth-token-issue] Identity returned', r.status);
+      // P4A.3-fix-3: Volldetail-Log fuer non-200/non-400
+      let raw = '';
+      try { raw = (await r.text()).slice(0, 200); } catch (e) {}
+      console.warn('[auth-token-issue] Identity non-OK:', JSON.stringify({
+        status: r.status,
+        raw: raw,
+        identityUrl: identityUrl
+      }));
       return j(event, 401, { error: 'E-Mail oder Passwort ungueltig' });
     }
   } catch (e) {
