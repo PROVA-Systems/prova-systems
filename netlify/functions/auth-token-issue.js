@@ -23,6 +23,7 @@
 'use strict';
 
 const AuthToken = require('./lib/auth-token');
+const { isValidEmail, normalizeEmail, isStrongPassword } = require('./lib/auth-validate');
 const { getCorsHeaders, corsOptionsResponse } = require('./lib/cors-helper');
 
 const TTL_NORMAL = 7 * 24 * 60 * 60; // 7 Tage Standard-Session
@@ -46,14 +47,20 @@ exports.handler = async (event) => {
   try { body = JSON.parse(event.body || '{}'); }
   catch (e) { return j(event, 400, { error: 'Invalid JSON' }); }
 
-  const email    = String(body.email || '').trim().toLowerCase();
+  // S-SICHER P4A.7: Validation via lib/auth-validate.js Helpers.
+  const email    = normalizeEmail(body.email);
   const password = String(body.password || '');
 
   if (!email || !password) {
     return j(event, 400, { error: 'E-Mail und Passwort erforderlich' });
   }
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254) {
+  if (!isValidEmail(email)) {
     return j(event, 400, { error: 'E-Mail-Format ungueltig' });
+  }
+  if (!isStrongPassword(password)) {
+    // 8-256 Zeichen — Netlify Identity prueft echten Hash, hier nur
+    // Pre-Check gegen leere/Tausend-Zeichen-Bodies.
+    return j(event, 400, { error: 'Passwort ungueltig' });
   }
 
   // ── 1. Netlify Identity password-grant ────────────────────────────────
