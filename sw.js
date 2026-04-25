@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v203';
+const CACHE_VERSION = 'prova-v204';
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
@@ -48,6 +48,8 @@ const APP_SHELL = [
   '/trial-guard.js',
   '/prova-status-hydrate.js',
   '/prova-sanitize.js',
+  '/prova-pseudo.js',
+  '/prova-pseudo-send.js',
   '/prova-preise.js',
   '/paket-guard.js',
   '/ortstermin-modus.html',
