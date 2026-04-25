@@ -9,6 +9,14 @@
 // Max Upload: 25MB (Netlify Function Limit)
 // ══════════════════════════════════════════════════════════════════════════════
 
+// S-SICHER P3.4: Transkript wird vor Rueckgabe pseudonymisiert.
+// Audio-Inhalt selbst kann nicht pseudonymisiert werden (Whisper braucht
+// Original), aber der Text-Output enthaelt typischerweise Namen/Adressen
+// aus dem Diktat — die werden hier abgefangen, bevor sie zurueck zum
+// Client und (oft) wieder in ki-proxy fliessen.
+const crypto = require('crypto');
+const ProvaPseudo = require('./lib/prova-pseudo');
+
 exports.handler = async (event) => {
   if (event.httpMethod === 'OPTIONS') {
     return { statusCode: 200, headers: corsHeaders(), body: '' };
@@ -135,19 +143,34 @@ exports.handler = async (event) => {
 
     console.log(`[Whisper] Transkript: ${transkript.length} Zeichen, ${dauer.toFixed(1)}s, Qualität: ${qualitaet}`);
 
+    // S-SICHER P3.4: Transkript pseudonymisieren VOR Rueckgabe.
+    const transkriptSafe = ProvaPseudo.apply(transkript);
+    // DSGVO-Audit-Log: Counts (nicht Inhalt!), Timestamp, gehashte SV-Email.
+    try {
+      const svHash = crypto.createHash('sha256')
+        .update(String(body.sv_email || '')).digest('hex').slice(0, 8);
+      console.log('[AUDIT-DSGVO]', JSON.stringify({
+        function: 'whisper-diktat',
+        sv_email_hash: svHash,
+        pseudo_counts: ProvaPseudo.lastReport,
+        timestamp: new Date().toISOString()
+      }));
+    } catch (e) {}
+
     return {
       statusCode: 200,
       headers:    corsHeaders(),
       body: JSON.stringify({
-        transkript,
+        transkript: transkriptSafe,
         dauer:     Math.round(dauer),
         qualitaet,
-        worte:     transkript.split(/\s+/).filter(Boolean).length,
-        // Segmente mit Zeitstempeln (für spätere Bearbeitung)
+        worte:     transkriptSafe.split(/\s+/).filter(Boolean).length,
+        // Segmente mit Zeitstempeln (für spätere Bearbeitung).
+        // S-SICHER P3.4: Segment-Texte ebenfalls pseudonymisieren.
         segmente: segmente.map(s => ({
           start: s.start,
           ende:  s.end,
-          text:  s.text?.trim(),
+          text:  ProvaPseudo.apply((s.text || '').trim()),
         })),
       }),
     };
