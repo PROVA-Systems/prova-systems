@@ -11,6 +11,7 @@
 'use strict';
 
 const { getCorsHeaders, corsOptionsResponse } = require('./lib/cors-helper');
+const { requireAuth } = require('./lib/jwt-middleware');
 
 const AIRTABLE_BASE   = process.env.AIRTABLE_BASE_ID || 'appJ7bLlAHZoxENWE';
 const AT_FAELLE       = 'tblSxV8bsXwd1pwa0';
@@ -129,8 +130,8 @@ async function findRecordId(aktenzeichen, jwtEmail, atKey) {
   return data.records[0].id;
 }
 
-exports.handler = async function(event, context) {
-  if (event.httpMethod === 'OPTIONS') return corsOptionsResponse(event);
+// S-SICHER P4B.5: requireAuth wrap (kein Rate-Limit — Airtable selbst limitiert)
+exports.handler = requireAuth(async function(event, context) {
   if (event.httpMethod !== 'POST')    return json(event, 405, { error: 'Method Not Allowed' });
 
   // JWT-Pflicht
@@ -196,4 +197,4 @@ exports.handler = async function(event, context) {
     filename:  safeFile,
     record_id: actualRecordId,
   });
-};
+});
