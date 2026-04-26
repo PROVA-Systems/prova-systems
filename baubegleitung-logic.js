@@ -401,7 +401,7 @@ function speichereProjekt() {
     var _svE = localStorage.getItem('prova_sv_email')||'';
     var _aktP = _data.projekte.find(function(p){return p.id===(_editProjektId||_data.projekte[0].id);});
     if (_svE && _aktP) {
-      fetch('/.netlify/functions/airtable',{method:'POST',headers:{'Content-Type':'application/json'},
+      provaFetch('/.netlify/functions/airtable',{method:'POST',headers:{'Content-Type':'application/json'},
         body:JSON.stringify({method:'POST',path:'/v0/appJ7bLlAHZoxENWE/tblSxV8bsXwd1pwa0',
           payload:{records:[{fields:{
             Aktenzeichen: _aktP.az||'',
@@ -453,7 +453,7 @@ function speichereBegehung() {
     var _svE = localStorage.getItem('prova_sv_email')||'';
     if (_svE) {
       var begehungsSync = proj.begehungen[proj.begehungen.length-1];
-      fetch('/.netlify/functions/airtable',{method:'POST',headers:{'Content-Type':'application/json'},
+      provaFetch('/.netlify/functions/airtable',{method:'POST',headers:{'Content-Type':'application/json'},
         body:JSON.stringify({method:'POST',path:'/v0/appJ7bLlAHZoxENWE/tblSxV8bsXwd1pwa0',
           payload:{records:[{fields:{
             Aktenzeichen: proj.az||'',
@@ -630,7 +630,7 @@ async function generiereKIBericht() {
   var userPrompt = 'Formuliere diesen Baubegleitungsbericht professionell:\n\n' + rohenText;
 
   try {
-    var res = await fetch('/.netlify/functions/ki-proxy', {
+    var res = await provaFetch('/.netlify/functions/ki-proxy', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({

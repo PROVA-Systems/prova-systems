@@ -69,7 +69,7 @@ async function atFetch(table, formula, maxRecords, sortField){
       +'?filterByFormula='+encodeURIComponent(formula)
       +'&maxRecords='+(maxRecords||50)
       +sort;
-    var res=await fetch('/.netlify/functions/airtable',{
+    var res=await provaFetch('/.netlify/functions/airtable',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({method:'GET',path:path})
@@ -114,7 +114,7 @@ function zeigOnboarding(){
       localStorage.setItem('prova_onboarding_done','true');
       var atRecId = localStorage.getItem('prova_at_sv_record_id');
       if(atRecId) {
-        fetch('/.netlify/functions/airtable',{
+        provaFetch('/.netlify/functions/airtable',{
           method:'POST',
           headers:{'Content-Type':'application/json'},
           body:JSON.stringify({

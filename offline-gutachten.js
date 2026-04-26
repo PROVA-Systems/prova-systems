@@ -173,7 +173,7 @@ window.ProvaOffline = (function() {
     delete payload._synced;
     delete payload.id;
 
-    return fetch('/.netlify/functions/airtable', {
+    return provaFetch('/.netlify/functions/airtable', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

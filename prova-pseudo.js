@@ -28,7 +28,7 @@
    VERWENDUNG
    ──────────
    const sauber = ProvaPseudo.apply(diktatText);
-   await fetch('/.netlify/functions/ki-proxy', {
+   await provaFetch('/.netlify/functions/ki-proxy', {
      body: JSON.stringify({ messages: [{ role:'user', content: sauber }] })
    });
    

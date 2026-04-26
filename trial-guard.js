@@ -309,7 +309,7 @@
     var btn = document.getElementById(btnId);
     if (btn) { btn.disabled = true; btn.textContent = '⏳ Öffne Checkout…'; }
     try {
-      var res = await fetch('/.netlify/functions/stripe-checkout', {
+      var res = await provaFetch('/.netlify/functions/stripe-checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ paket: paketName, email: email })

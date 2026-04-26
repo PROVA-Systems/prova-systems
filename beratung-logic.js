@@ -125,7 +125,7 @@
   async function ladeFallFromAirtable() {
     if (!_recordId) return;
     try {
-      var res = await fetch('/.netlify/functions/airtable', {
+      var res = await provaFetch('/.netlify/functions/airtable', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -366,7 +366,7 @@
         method = 'POST';
         path = '/v0/' + AT_BASE + '/' + AT_FAELLE;
       }
-      var res = await fetch('/.netlify/functions/airtable', {
+      var res = await provaFetch('/.netlify/functions/airtable', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ method: method, path: path, payload: payload })
@@ -398,7 +398,7 @@
     if (out) out.innerHTML = '<div style="padding:10px;font-size:12px;color:var(--text3);">⏳ KI strukturiert…</div>';
 
     try {
-      var res = await fetch('/.netlify/functions/ki-proxy', {
+      var res = await provaFetch('/.netlify/functions/ki-proxy', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -463,7 +463,7 @@
     if (out) out.innerHTML = '<div style="padding:10px;font-size:12px;color:var(--text3);">⏳ KI schlägt Empfehlungen vor…</div>';
 
     try {
-      var res = await fetch('/.netlify/functions/ki-proxy', {
+      var res = await provaFetch('/.netlify/functions/ki-proxy', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

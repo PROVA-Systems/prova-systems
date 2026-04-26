@@ -23,7 +23,7 @@ window.provaAuditLog = async function(opts) {
   var az      = opts.aktenzeichen || localStorage.getItem('prova_aktiver_fall') || '';
 
   try {
-    await fetch('/.netlify/functions/airtable', {
+    await provaFetch('/.netlify/functions/airtable', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -64,7 +64,7 @@ window.provaStatLog = async function(opts) {
               String(jetzt.getMonth() + 1).padStart(2, '0');
 
   try {
-    await fetch('/.netlify/functions/airtable', {
+    await provaFetch('/.netlify/functions/airtable', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -99,7 +99,7 @@ window.provaKILog = async function(opts) {
      }
   */
   try {
-    await fetch('/.netlify/functions/airtable', {
+    await provaFetch('/.netlify/functions/airtable', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

@@ -53,7 +53,7 @@ async function loadData() {
       + '&sort[0][field]=' + AT_TS + '&sort[0][direction]=desc'
       + '&maxRecords=500';
 
-    var resp = await fetch('/.netlify/functions/airtable', {
+    var resp = await provaFetch('/.netlify/functions/airtable', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({method: 'GET', path: path, payload: null})
@@ -209,7 +209,7 @@ window.exportStatistikenCSV = async function() {
 
     if (svEmail) {
       try {
-        var res = await fetch('/.netlify/functions/airtable', {
+        var res = await provaFetch('/.netlify/functions/airtable', {
           method: 'POST', headers: {'Content-Type':'application/json'},
           body: JSON.stringify({
             method: 'GET',

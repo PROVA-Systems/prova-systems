@@ -420,7 +420,7 @@ function importAlles() {
     neuK++;
     // Airtable-Sync
     if (svEmail) {
-      fetch('/.netlify/functions/airtable', {
+      provaFetch('/.netlify/functions/airtable', {
         method: 'POST',
         headers: {'Content-Type':'application/json'},
         body: JSON.stringify({
@@ -494,14 +494,14 @@ function importAlles() {
       try {
         // Duplikat-Check: Aktenzeichen bereits vorhanden?
       var checkFilter = encodeURIComponent('AND({Aktenzeichen}="' + (f.aktenzeichen||'') + '",{sv_email}="' + svEmail + '")');
-      fetch('/.netlify/functions/airtable', {
+      provaFetch('/.netlify/functions/airtable', {
         method: 'POST',
         headers: {'Content-Type':'application/json'},
         body: JSON.stringify({method:'GET', path:'/v0/'+AT_BASE+'/'+AT_FAELLE+'?filterByFormula='+checkFilter+'&maxRecords=1'})
       }).then(function(r){return r.json();}).then(function(d){
         if (d.records && d.records.length > 0) { console.log('[Import] Duplikat übersprungen:', f.aktenzeichen); return; }
         // Kein Duplikat → schreiben
-        fetch('/.netlify/functions/airtable', {
+        provaFetch('/.netlify/functions/airtable', {
           method: 'POST',
           headers: {'Content-Type':'application/json'},
           body: JSON.stringify({

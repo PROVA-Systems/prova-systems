@@ -204,7 +204,7 @@ const PROVASearch = {
       const formula = encodeURIComponent(
         `AND(OR(FIND("${q}",LOWER({Aktenzeichen})),FIND("${q}",LOWER({Auftraggeber})),FIND("${q}",LOWER({Schaden_Strasse}))),{sv_email}="${svEmail}")`
       );
-      fetch('/.netlify/functions/airtable', {
+      provaFetch('/.netlify/functions/airtable', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

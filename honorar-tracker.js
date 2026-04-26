@@ -412,7 +412,7 @@ const HonorarTracker = (() => {
       const svEmail = localStorage.getItem('prova_sv_email') || '';
       if (!svEmail) return cached;
 
-      const resp = await fetch('/.netlify/functions/airtable', {
+      const resp = await provaFetch('/.netlify/functions/airtable', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'same-origin',
@@ -770,7 +770,7 @@ const HonorarTracker = (() => {
   async function _markiereBezahlt(rechnungId) {
     if (!confirm('Rechnung als bezahlt markieren?')) return;
     try {
-      await fetch('/.netlify/functions/airtable', {
+      await provaFetch('/.netlify/functions/airtable', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'same-origin',
@@ -796,7 +796,7 @@ const HonorarTracker = (() => {
 
     try {
       // Make.com Mahnung-Szenario triggern
-      await fetch('/.netlify/functions/airtable', {
+      await provaFetch('/.netlify/functions/airtable', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'same-origin',
@@ -820,7 +820,7 @@ const HonorarTracker = (() => {
   async function _stornieren(rechnungId) {
     if (!confirm('Rechnung wirklich stornieren? Diese Aktion kann nicht rückgängig gemacht werden.')) return;
     try {
-      await fetch('/.netlify/functions/airtable', {
+      await provaFetch('/.netlify/functions/airtable', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'same-origin',

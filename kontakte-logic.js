@@ -32,7 +32,7 @@ const AT_BASE_K = 'appJ7bLlAHZoxENWE';
 const AT_KONTAKTE = 'tblMKmPLjRelr6Hal';
 async function atKontakte(method, path, body) {
   try {
-    var res = await fetch('/.netlify/functions/airtable', {
+    var res = await provaFetch('/.netlify/functions/airtable', {
       method: 'POST',
       headers: {'Content-Type':'application/json'},
       body: JSON.stringify({method: method, path: path, payload: body || null})

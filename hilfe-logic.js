@@ -50,7 +50,7 @@ window.sendeHilfeTicket = async function() {
   if (btn) { btn.disabled = true; btn.textContent = '⏳ Wird gesendet…'; }
   
   try {
-    await fetch('/.netlify/functions/airtable', {
+    await provaFetch('/.netlify/functions/airtable', {
       method: 'POST', headers: {'Content-Type':'application/json'},
       body: JSON.stringify({ method: 'POST',
         path: '/v0/appJ7bLlAHZoxENWE/tblEb3A4dukGX8GFs',

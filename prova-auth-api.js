@@ -92,7 +92,7 @@
 
   /* ── Convenience-Wrapper ── */
   window.provaFetchAirtable = function (bodyObj) {
-    return fetch('/.netlify/functions/airtable', {
+    return provaFetch('/.netlify/functions/airtable', {
       method:  'POST',
       headers: window.provaAuthHeaders(),
       body:    JSON.stringify(bodyObj)
@@ -100,7 +100,7 @@
   };
 
   window.provaFetchKiProxy = function (bodyObj) {
-    return fetch('/.netlify/functions/ki-proxy', {
+    return provaFetch('/.netlify/functions/ki-proxy', {
       method:  'POST',
       headers: window.provaAuthHeaders(),
       body:    JSON.stringify(bodyObj)
@@ -121,7 +121,7 @@ window.provaCreateSession = function(user) {
 window.provaMailSenden = async function(opts) {
   // opts: { to, subject, text, html, az }
   var headers = window.provaAuthHeaders ? window.provaAuthHeaders() : {'Content-Type':'application/json'};
-  var r = await fetch('/.netlify/functions/smtp-senden', {
+  var r = await provaFetch('/.netlify/functions/smtp-senden', {
     method: 'POST',
     headers: headers,
     body: JSON.stringify(opts) // KEIN Passwort im Body!

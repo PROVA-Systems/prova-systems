@@ -211,7 +211,7 @@
     var userMsg = '§ 4 Befund:\n\n' + String(text_p4) + '\n\n─────\n\n§ 6 Fachurteil:\n\n' + String(text_p6);
 
     try {
-      var res = await fetch('/.netlify/functions/ki-proxy', {
+      var res = await provaFetch('/.netlify/functions/ki-proxy', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

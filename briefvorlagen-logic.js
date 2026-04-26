@@ -216,7 +216,7 @@ function ladeFaelle(){
   if(cache.length){bvRenderFaelle(cache,liste);return;}
   liste.innerHTML='<div style="text-align:center;padding:12px;font-size:12px;color:var(--text3);">Lädt…</div>';
   var sv=localStorage.getItem('prova_sv_email')||'';
-  fetch('/.netlify/functions/airtable',{method:'POST',headers:{'Content-Type':'application/json'},
+  provaFetch('/.netlify/functions/airtable',{method:'POST',headers:{'Content-Type':'application/json'},
     body:JSON.stringify({method:'GET',path:'/v0/'+AT_BASE+'/'+AT_FAELLE
       +'?pageSize=12&sort[0][field]=Timestamp&sort[0][direction]=desc'
       +(sv?'&filterByFormula='+encodeURIComponent('{sv_email}="'+sv+'"'):'')})
@@ -528,7 +528,7 @@ window.bvGenKI=async function(){
   var prompt = kiGetPrompt(_tpl?_tpl.id:'', _felder);
 
   try{
-    var res=await fetch('/.netlify/functions/ki-proxy',{
+    var res=await provaFetch('/.netlify/functions/ki-proxy',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
@@ -638,7 +638,7 @@ if (bvSrch) {
 window.provaBriefGesendet = async function(briefId) {
   if (!briefId) return;
   try {
-    await fetch('/.netlify/functions/airtable', {
+    await provaFetch('/.netlify/functions/airtable', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

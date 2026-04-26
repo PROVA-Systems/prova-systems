@@ -75,7 +75,7 @@
     var payloadText = pseudonymisieren(String(diktatText));
 
     try {
-      var res = await fetch('/.netlify/functions/ki-proxy', {
+      var res = await provaFetch('/.netlify/functions/ki-proxy', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

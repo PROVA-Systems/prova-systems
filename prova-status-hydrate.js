@@ -101,7 +101,7 @@
       var filter = encodeURIComponent('{Email}="' + email.replace(/"/g, '\\"') + '"');
       var path = '/v0/' + AIRTABLE_BASE + '/' + SV_TABLE + '?filterByFormula=' + filter + '&maxRecords=1';
 
-      fetch('/.netlify/functions/airtable', {
+      provaFetch('/.netlify/functions/airtable', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ method: 'GET', path: path })

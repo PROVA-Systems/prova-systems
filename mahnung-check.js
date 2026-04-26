@@ -63,7 +63,7 @@
         {'Content-Type': 'application/json'},
         window.provaAuthHeaders ? window.provaAuthHeaders() : {}
       );
-      var res  = await fetch('/.netlify/functions/airtable', {
+      var res  = await provaFetch('/.netlify/functions/airtable', {
         method: 'POST', headers: hdrs, signal: controller.signal,
         body: JSON.stringify({ method: 'GET', path: path })
       });

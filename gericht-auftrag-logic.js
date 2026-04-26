@@ -75,7 +75,7 @@
   };
 
   async function airtableCreate(fields){
-    var res = await fetch('/.netlify/functions/airtable', {
+    var res = await provaFetch('/.netlify/functions/airtable', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

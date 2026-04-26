@@ -487,7 +487,7 @@ const FristGuard = (function() {
       const svEmail = localStorage.getItem('prova_sv_email') || '';
       if (!svEmail) return cached;
 
-      const resp = await fetch('/.netlify/functions/airtable', {
+      const resp = await provaFetch('/.netlify/functions/airtable', {
         method: 'POST',
         headers: Object.assign({ 'Content-Type': 'application/json' }, window.provaAuthHeaders ? window.provaAuthHeaders() : {}),
         credentials: 'same-origin',
@@ -945,7 +945,7 @@ const FristGuard = (function() {
     if (btn) { btn.disabled = true; btn.textContent = 'Speichern…'; }
 
     try {
-      const resp = await fetch('/.netlify/functions/airtable', {
+      const resp = await provaFetch('/.netlify/functions/airtable', {
         method: 'POST',
         headers: Object.assign({ 'Content-Type': 'application/json' }, window.provaAuthHeaders ? window.provaAuthHeaders() : {}),
         credentials: 'same-origin',
@@ -986,7 +986,7 @@ const FristGuard = (function() {
   async function _abschliessen(fristId) {
     if (!confirm('Frist als erledigt markieren?')) return;
     try {
-      await fetch('/.netlify/functions/airtable', {
+      await provaFetch('/.netlify/functions/airtable', {
         method: 'POST',
         headers: Object.assign({ 'Content-Type': 'application/json' }, window.provaAuthHeaders ? window.provaAuthHeaders() : {}),
         credentials: 'same-origin',

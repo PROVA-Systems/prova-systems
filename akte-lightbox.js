@@ -110,7 +110,7 @@
     try {
       var path = '/v0/appJ7bLlAHZoxENWE/tblSxV8bsXwd1pwa0/' + recordId
         + '?fields[]=Fotos&fields[]=Foto_Captions';
-      var res  = await fetch('/.netlify/functions/airtable', {
+      var res  = await provaFetch('/.netlify/functions/airtable', {
         method:  'POST',
         headers: {'Content-Type': 'application/json'},
         body:    JSON.stringify({method: 'GET', path: path})

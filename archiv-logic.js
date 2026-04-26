@@ -70,7 +70,7 @@ async function ladeFaelle(){
     // Session 30: Flow, Auftragstyp, Phase ergänzt für 4-Flow-Architektur-Filter
     var _archivFields=['Aktenzeichen','Status','Timestamp','Schaden_Strasse','Ort','Auftraggeber_Name','Auftraggeber_Typ','sv_email','Schadensart','Flow','Auftragstyp','Phase'].map(function(f){return'fields%5B%5D='+encodeURIComponent(f);}).join('&');
     var path='/v0/'+AT_BASE+'/'+AT_FAELLE+'?filterByFormula='+encodeURIComponent(filter)+'&maxRecords=100&sort[0][field]=Timestamp&sort[0][direction]=desc&'+_archivFields;
-    var res=await fetch('/.netlify/functions/airtable',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({method:'GET',path:path})});
+    var res=await provaFetch('/.netlify/functions/airtable',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({method:'GET',path:path})});
     if(!res.ok)throw new Error('HTTP '+res.status);
     var data=await res.json();
     alleRecords=data.records||[];
@@ -382,7 +382,7 @@ window.sendSupport=async function(){
   var b=document.getElementById('sup-betreff').value.trim();
   var n=document.getElementById('sup-nachricht').value.trim();
   if(!b||!n)return;
-  try{await fetch('/.netlify/functions/make-proxy?key=sup',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({betreff:b,nachricht:n,sv_email:svEmail,paket:paket,seite:'archiv.html',ts:new Date().toISOString()})});}catch(e){}
+  try{await provaFetch('/.netlify/functions/make-proxy?key=sup',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({betreff:b,nachricht:n,sv_email:svEmail,paket:paket,seite:'archiv.html',ts:new Date().toISOString()})});}catch(e){}
   document.getElementById('sup-modal').classList.remove('open');
 };
 
@@ -430,7 +430,7 @@ async function supSendModal(){
   var btn=document.getElementById('sup-btn');
   btn.disabled=true;btn.textContent='⏳ Wird gesendet…';
   try{
-    await fetch('/.netlify/functions/make-proxy?key=sup',{
+    await provaFetch('/.netlify/functions/make-proxy?key=sup',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({

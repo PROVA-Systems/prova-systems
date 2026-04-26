@@ -763,7 +763,7 @@
     ].join('\n');
 
     try {
-      var res = await fetch('/.netlify/functions/ki-proxy', {
+      var res = await provaFetch('/.netlify/functions/ki-proxy', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -1174,7 +1174,7 @@
 
       // Airtable-Sync (non-blocking)
       try {
-        fetch('/.netlify/functions/airtable', {
+        provaFetch('/.netlify/functions/airtable', {
           method:'POST', headers:{'Content-Type':'application/json'},
           body: JSON.stringify({
             method:'POST',
@@ -1326,7 +1326,7 @@
       + '</div>';
 
     try {
-      var res = await fetch('/.netlify/functions/normen-picker', {
+      var res = await provaFetch('/.netlify/functions/normen-picker', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

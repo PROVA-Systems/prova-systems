@@ -10,7 +10,7 @@
     if (typeof window.provaFetchAirtable === 'function') {
       return window.provaFetchAirtable(bodyObj);
     }
-    return fetch('/.netlify/functions/airtable', {
+    return provaFetch('/.netlify/functions/airtable', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(bodyObj)
@@ -71,7 +71,7 @@
     if (!token) return;
     var name = (identityUser.user_metadata && identityUser.user_metadata.full_name) || '';
     try {
-      var res = await fetch('/.netlify/functions/provision-sv', {
+      var res = await provaFetch('/.netlify/functions/provision-sv', {
         method: 'POST',
         headers: {
           Authorization: 'Bearer ' + token,

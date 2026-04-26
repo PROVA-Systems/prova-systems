@@ -350,7 +350,7 @@ async function ladeListe(){
   try{
     var filter=svEmail?'AND(NOT({Status}=""),{sv_email}="'+svEmail+'")':'NOT({Status}="")';
     var path='/v0/'+AT_BASE+'/'+AT_RECHNUNGEN+'?filterByFormula='+encodeURIComponent(filter)+'&maxRecords=50&sort[0][field]=Timestamp&sort[0][direction]=desc';
-    var res=await fetch('/.netlify/functions/airtable',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({method:'GET',path:path})});
+    var res=await provaFetch('/.netlify/functions/airtable',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({method:'GET',path:path})});
     if(!res.ok)throw new Error('HTTP '+res.status);
     var data=await res.json();
     alleRechnungen=(data.records||[]).map(function(r){
@@ -588,7 +588,7 @@ async function supSendModal(){
   var btn=document.getElementById('sup-btn');
   btn.disabled=true;btn.textContent='⏳ Wird gesendet…';
   try{
-    await fetch('/.netlify/functions/make-proxy?key=sup',{
+    await provaFetch('/.netlify/functions/make-proxy?key=sup',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
@@ -631,7 +631,7 @@ window.rechnungPDFGenerieren = async function(rechnungId) {
   var svSteuernr = localStorage.getItem('prova_sv_steuernr') || '';
 
   // Rechnung aus Airtable laden
-  var res = await fetch('/.netlify/functions/airtable', {
+  var res = await provaFetch('/.netlify/functions/airtable', {
     method:'POST', headers:{'Content-Type':'application/json'},
     body: JSON.stringify({method:'GET',
       path:'/v0/appJ7bLlAHZoxENWE/tblF6MS7uiFAJDjiT/' + rechnungId
@@ -701,7 +701,7 @@ window.exportDatevCSV = async function() {
     if(typeof zeigToast==='function') zeigToast('DATEV-Export wird vorbereitet…');
 
     // Rechnungen direkt aus Airtable laden
-    var res = await fetch('/.netlify/functions/airtable', {
+    var res = await provaFetch('/.netlify/functions/airtable', {
       method: 'POST', headers: {'Content-Type':'application/json'},
       body: JSON.stringify({
         method: 'GET',

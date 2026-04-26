@@ -97,7 +97,7 @@
     }
 
     try {
-      var res = await fetch('/.netlify/functions/auth-token-issue', {
+      var res = await provaFetch('/.netlify/functions/auth-token-issue', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: email, password: pw })

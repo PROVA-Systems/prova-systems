@@ -119,7 +119,7 @@
     if (!rohtext || !rohtext.trim()) throw new Error('Text ist leer');
     var kontext = 'Bauphase: ' + (phase || 'unbekannt') + '\n\nRohtext:\n' + pseudonymisieren(rohtext);
     try {
-      var res = await fetch('/.netlify/functions/ki-proxy', {
+      var res = await provaFetch('/.netlify/functions/ki-proxy', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

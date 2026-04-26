@@ -115,7 +115,7 @@
       + fields;
 
     try {
-      var res = await fetch('/.netlify/functions/airtable', {
+      var res = await provaFetch('/.netlify/functions/airtable', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify({ method: 'GET', path: path })
@@ -133,7 +133,7 @@
   async function atGet(table, recordId) {
     try {
       var path = '/v0/' + AT.BASE + '/' + table + '/' + recordId;
-      var res = await fetch('/.netlify/functions/airtable', {
+      var res = await provaFetch('/.netlify/functions/airtable', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify({ method: 'GET', path: path })
@@ -150,7 +150,7 @@
   async function atCreate(table, fields) {
     try {
       var path = '/v0/' + AT.BASE + '/' + table;
-      var res = await fetch('/.netlify/functions/airtable', {
+      var res = await provaFetch('/.netlify/functions/airtable', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify({ method: 'POST', path: path, payload: { fields: fields } })
@@ -167,7 +167,7 @@
   async function atPatch(table, recordId, fields) {
     try {
       var path = '/v0/' + AT.BASE + '/' + table + '/' + recordId;
-      var res = await fetch('/.netlify/functions/airtable', {
+      var res = await provaFetch('/.netlify/functions/airtable', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify({ method: 'PATCH', path: path, payload: { fields: fields } })
@@ -404,7 +404,7 @@
 
       // Wenn Record-ID schon bekannt: direkter PATCH
       if (atId) {
-        await fetch('/.netlify/functions/airtable', {
+        await provaFetch('/.netlify/functions/airtable', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -417,7 +417,7 @@
       }
 
       // Sonst: erst Record-ID per Email-Lookup holen, dann patchen
-      var findRes = await fetch('/.netlify/functions/airtable', {
+      var findRes = await provaFetch('/.netlify/functions/airtable', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -435,7 +435,7 @@
       var recId = records[0].id;
       try { localStorage.setItem('prova_at_sv_record_id', recId); } catch(e) {}
 
-      await fetch('/.netlify/functions/airtable', {
+      await provaFetch('/.netlify/functions/airtable', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

@@ -66,7 +66,7 @@ async function ladeSVRecordId(){
   if(!email||_svRecordId)return _svRecordId;
   try{
     var path='/v0/'+AT_BASE+'/'+AT_SV_TABLE+'?filterByFormula='+encodeURIComponent('{Email}="'+email+'"')+'&maxRecords=1';
-    var res=await fetch('/.netlify/functions/airtable',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({method:'GET',path:path})});
+    var res=await provaFetch('/.netlify/functions/airtable',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({method:'GET',path:path})});
     if(!res.ok)return null;
     var data=await res.json();
     var rec=(data.records||[])[0];
@@ -80,7 +80,7 @@ async function updateAirtableFelder(felder){
   if(!recId){console.warn('Kein AT Record ID — Sync übersprungen');return false;}
   try{
     var path='/v0/'+AT_BASE+'/'+AT_SV_TABLE+'/'+recId;
-    var res=await fetch('/.netlify/functions/airtable',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({method:'PATCH',path:path,payload:{fields:felder}})});
+    var res=await provaFetch('/.netlify/functions/airtable',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({method:'PATCH',path:path,payload:{fields:felder}})});
     return res.ok;
   }catch(e){console.warn('AT PATCH Fehler:',e);return false;}
 }
@@ -961,7 +961,7 @@ async function syncZuAirtable(felder) {
   try {
     // Eigenen Record per Email suchen
     var filter = encodeURIComponent('{Email}="' + svEmail + '"');
-    var res = await fetch('/.netlify/functions/airtable', {
+    var res = await provaFetch('/.netlify/functions/airtable', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ method: 'GET',
@@ -973,7 +973,7 @@ async function syncZuAirtable(felder) {
     var recId = d.records[0].id;
 
     // Felder schreiben
-    await fetch('/.netlify/functions/airtable', {
+    await provaFetch('/.netlify/functions/airtable', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ method: 'PATCH',
@@ -1031,7 +1031,7 @@ window.speichereAbrechnung = function() {
 
   try {
     var filter = encodeURIComponent('{Email}="' + svEmail + '"');
-    var res = await fetch('/.netlify/functions/airtable', {
+    var res = await provaFetch('/.netlify/functions/airtable', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ method: 'GET',
@@ -1161,7 +1161,7 @@ window.provaSync = {
     if (!recId) return;
 
     try {
-      await fetch('/.netlify/functions/airtable', {
+      await provaFetch('/.netlify/functions/airtable', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -1181,7 +1181,7 @@ window.provaSync = {
     var email = localStorage.getItem('prova_sv_email') || '';
     if (!email) return null;
     try {
-      var res = await fetch('/.netlify/functions/airtable', {
+      var res = await provaFetch('/.netlify/functions/airtable', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ method: 'GET',
@@ -1200,7 +1200,7 @@ window.provaSync = {
     var email = localStorage.getItem('prova_sv_email') || '';
     if (!email) return;
     try {
-      var res = await fetch('/.netlify/functions/airtable', {
+      var res = await provaFetch('/.netlify/functions/airtable', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ method: 'GET',

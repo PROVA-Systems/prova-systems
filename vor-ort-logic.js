@@ -200,7 +200,7 @@ async function speichereUndWeiter() {
   try {
     var headers = Object.assign({'Content-Type':'application/json'},
       window.provaAuthHeaders ? window.provaAuthHeaders() : {});
-    var r = await fetch('/.netlify/functions/airtable', {
+    var r = await provaFetch('/.netlify/functions/airtable', {
       method: 'POST', headers: headers,
       body: JSON.stringify({
         method:  'POST',

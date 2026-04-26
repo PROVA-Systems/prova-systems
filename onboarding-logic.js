@@ -62,7 +62,7 @@
     var ts = new Date().toISOString();
     var svEmail = localStorage.getItem('prova_sv_email') || '';
     try {
-      await fetch('/.netlify/functions/airtable', {
+      await provaFetch('/.netlify/functions/airtable', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({
@@ -200,7 +200,7 @@
         avv_signed_ts: localStorage.getItem('prova_avv_ts') || new Date().toISOString()
       };
       // Erst prüfen ob schon vorhanden
-      var checkRes = await fetch('/.netlify/functions/airtable', {
+      var checkRes = await provaFetch('/.netlify/functions/airtable', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -215,7 +215,7 @@
           // Datensatz existiert → PATCH: onboarding_done + Paket + Datum setzen
           var existingId = checkData.records[0].id;
           localStorage.setItem('prova_sv_record_id', existingId);
-          await fetch('/.netlify/functions/airtable', {
+          await provaFetch('/.netlify/functions/airtable', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -236,7 +236,7 @@
       }
       // Neu anlegen (POST) — onboarding_done direkt mitgeben
       fields.onboarding_done = true;
-      await fetch('/.netlify/functions/airtable', {
+      await provaFetch('/.netlify/functions/airtable', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -270,7 +270,7 @@
         Erstkontakt_Datum: new Date().toISOString().slice(0, 10),
         MRR_EUR:   paket === 'Team' ? 699 : paket === 'Pro' ? 369 : 179
       };
-      await fetch('/.netlify/functions/airtable', {
+      await provaFetch('/.netlify/functions/airtable', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

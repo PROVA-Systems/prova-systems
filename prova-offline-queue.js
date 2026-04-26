@@ -182,7 +182,7 @@
           window.provaAuthHeaders ? window.provaAuthHeaders() : {}
         );
 
-        var res = await fetch('/.netlify/functions/ki-proxy', {
+        var res = await provaFetch('/.netlify/functions/ki-proxy', {
           method: 'POST',
           headers: headers,
           body: JSON.stringify({

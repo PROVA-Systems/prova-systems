@@ -312,7 +312,7 @@
       kontext: aktiverFall ? ('Aktiver Fall: ' + aktiverFall) : ''
     };
 
-    fetch('/.netlify/functions/ki-proxy', {
+    provaFetch('/.netlify/functions/ki-proxy', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(kiPayload)

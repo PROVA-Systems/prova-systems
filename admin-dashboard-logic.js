@@ -39,7 +39,7 @@ const T = {
 
 /* ── PROXY CALL ── */
 async function at(base, table, params='') {
-  const res = await fetch('/.netlify/functions/airtable', {
+  const res = await provaFetch('/.netlify/functions/airtable', {
     method: 'POST',
     headers: {'Content-Type':'application/json'},
     body: JSON.stringify({
@@ -439,7 +439,7 @@ function filterTickets() {
 
 async function updateTicketStatus(recordId, newStatus, idx) {
   try {
-    await fetch('/.netlify/functions/airtable', {
+    await provaFetch('/.netlify/functions/airtable', {
       method: 'POST',
       headers: {'Content-Type':'application/json'},
       body: JSON.stringify({

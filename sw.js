@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v208';
+const CACHE_VERSION = 'prova-v209';
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
@@ -32,6 +32,7 @@ const APP_SHELL = [
   '/positionen.html',
   '/baubegleitung.html',
   '/nav.js',
+  '/prova-fetch-auth.js',
   '/app-login-logic.js',
   '/auftragstyp.js',
   '/diktat-parser.js',

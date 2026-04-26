@@ -1213,7 +1213,7 @@ function weiterZuFreigabe() {
     if (andereUrsache) {
       syncPayload.lernpool = [{ schadenart: sa, ursache: andereUrsache, datum: kiStatistik.datum }];
     }
-    fetch('/.netlify/functions/ki-statistik', {
+    provaFetch('/.netlify/functions/ki-statistik', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(syncPayload)
@@ -1225,7 +1225,7 @@ function weiterZuFreigabe() {
     var recordId = sessionStorage.getItem('prova_record_id') || localStorage.getItem('prova_record_id') || '';
     var az_write = localStorage.getItem('prova_letztes_az') || '';
     if (recordId && az_write) {
-      fetch('/.netlify/functions/airtable', {
+      provaFetch('/.netlify/functions/airtable', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

@@ -176,7 +176,7 @@ window.SV_PROFIL = null;
 window.SV_RECORD_ID = null;
 
 async function airtableProxy(method, path, body = null) {
-  const res = await fetch('/.netlify/functions/airtable', {
+  const res = await provaFetch('/.netlify/functions/airtable', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ method, path, body })
@@ -855,7 +855,7 @@ window.exportFotoAnlage = async function() {
   // Versuch 1: PdfMonkey (professionelles PDF)
   try {
     showToast('PDF wird generiert…', 'info');
-    var res = await fetch('/.netlify/functions/foto-anlage-pdf', {
+    var res = await provaFetch('/.netlify/functions/foto-anlage-pdf', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -2420,7 +2420,7 @@ window.PROVA_AUDIT = (function() {
     if (paket === 'Solo') return; // Starter nur localStorage
     
     try {
-      var res = await fetch('/.netlify/functions/airtable', {
+      var res = await provaFetch('/.netlify/functions/airtable', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({
@@ -3316,7 +3316,7 @@ async function ladeGutachtenListe() {
   if (tbody) tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--gray-400);padding:2rem">Wird geladen…</td></tr>';
   try {
     const path = `/v0/${AIRTABLE_BASE}/${AIRTABLE_TABLE}?maxRecords=100&sort[0][field]=Timestamp&sort[0][direction]=desc`;
-    const res = await fetch('/.netlify/functions/airtable', {
+    const res = await provaFetch('/.netlify/functions/airtable', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ method: 'GET', path })
@@ -3387,7 +3387,7 @@ async function ladeArchivDaten() {
 
   try {
     const path = `/v0/${AIRTABLE_BASE}/${AIRTABLE_TABLE}?maxRecords=500&sort[0][field]=Timestamp&sort[0][direction]=desc`;
-    const res = await fetch('/.netlify/functions/airtable', {
+    const res = await provaFetch('/.netlify/functions/airtable', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ method: 'GET', path })
@@ -3583,7 +3583,7 @@ window.provaKontaktFaelleErhoehen = async function(auftrNameOrEmail) {
     var filter = encodeURIComponent(
       'OR({Name}="' + auftrNameOrEmail + '",{Email}="' + auftrNameOrEmail + '")'
     );
-    var res = await fetch('/.netlify/functions/airtable', {
+    var res = await provaFetch('/.netlify/functions/airtable', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ method: 'GET',
@@ -3596,7 +3596,7 @@ window.provaKontaktFaelleErhoehen = async function(auftrNameOrEmail) {
     var rec    = d.records[0];
     var aktuel = rec.fields.Faelle_Anzahl || 0;
 
-    await fetch('/.netlify/functions/airtable', {
+    await provaFetch('/.netlify/functions/airtable', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ method: 'PATCH',

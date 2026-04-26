@@ -31,7 +31,7 @@ async function ladeRecord(){
   if(!recordId && aktenzeichen){
     try{
       var searchPath='/v0/'+AT_BASE+'/'+AT_FAELLE+'?filterByFormula='+encodeURIComponent('{Aktenzeichen}="'+aktenzeichen+'"')+'&maxRecords=1';
-      var searchRes=await fetch('/.netlify/functions/airtable',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({method:'GET',path:searchPath})});
+      var searchRes=await provaFetch('/.netlify/functions/airtable',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({method:'GET',path:searchPath})});
       if(searchRes.ok){
         var searchData=await searchRes.json();
         if(searchData&&searchData.records&&searchData.records.length>0){
@@ -44,7 +44,7 @@ async function ladeRecord(){
   if(!recordId){zeigNotFound();return;}
   try{
     var path='/v0/'+AT_BASE+'/'+AT_FAELLE+'/'+recordId;
-    var res=await fetch('/.netlify/functions/airtable',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({method:'GET',path:path})});
+    var res=await provaFetch('/.netlify/functions/airtable',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({method:'GET',path:path})});
     if(!res.ok)throw new Error('HTTP '+res.status);
     var data=await res.json();
     if(!data||!data.id){zeigNotFound();return;}
@@ -283,7 +283,7 @@ window.phaseAbschliessen = async function(phaseN){
   }
   // Airtable-Update der Phase
   try {
-    var res = await fetch('/.netlify/functions/airtable', {
+    var res = await provaFetch('/.netlify/functions/airtable', {
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body: JSON.stringify({
@@ -528,7 +528,7 @@ async function ladeTermine(){
     var az=currentFields.Aktenzeichen;
     var filter='{aktenzeichen}="'+az.replace(/"/g,'\\"')+'"';
     var path='/v0/'+AT_BASE+'/'+AT_TERMINE+'?filterByFormula='+encodeURIComponent(filter)+'&maxRecords=10';
-    var res=await fetch('/.netlify/functions/airtable',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({method:'GET',path:path})});
+    var res=await provaFetch('/.netlify/functions/airtable',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({method:'GET',path:path})});
     var data=await res.json();
     var termine=(data.records||[]).map(function(r){return r.fields;});
     renderFristen(termine);
@@ -558,7 +558,7 @@ window.aktualisiereStatus=async function(){
   document.getElementById('status-hint').textContent=statusHint(newStatus);
   if(!recordId||!recordId.startsWith('rec'))return;
   try{
-    await fetch('/.netlify/functions/airtable',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({method:'PATCH',path:'/v0/'+AT_BASE+'/'+AT_FAELLE+'/'+recordId,payload:{fields:{Status:newStatus}}})});
+    await provaFetch('/.netlify/functions/airtable',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({method:'PATCH',path:'/v0/'+AT_BASE+'/'+AT_FAELLE+'/'+recordId,payload:{fields:{Status:newStatus}}})});
     zeigToast('Status aktualisiert: '+newStatus);
     // Cache invalidieren
     localStorage.removeItem('prova_archiv_cache_v2');
@@ -1008,14 +1008,14 @@ window.exportWordAkte = async function() {
   try {
     // Falldaten laden
     var [fallRes, briefeRes] = await Promise.all([
-      fetch('/.netlify/functions/airtable', {
+      provaFetch('/.netlify/functions/airtable', {
         method:'POST', headers:{'Content-Type':'application/json'},
         body: JSON.stringify({method:'GET',
           path:'/v0/appJ7bLlAHZoxENWE/tblSxV8bsXwd1pwa0?filterByFormula=' +
                encodeURIComponent('AND({Aktenzeichen}="'+az+'",{sv_email}="'+svEmail+'")') +
                '&maxRecords=1'})
       }),
-      fetch('/.netlify/functions/airtable', {
+      provaFetch('/.netlify/functions/airtable', {
         method:'POST', headers:{'Content-Type':'application/json'},
         body: JSON.stringify({method:'GET',
           path:'/v0/appJ7bLlAHZoxENWE/tblSzxvnkRE6B0thx?filterByFormula=' +
@@ -1027,7 +1027,7 @@ window.exportWordAkte = async function() {
     var fallData   = await fallRes.json();
     var briefeData = await briefeRes.json();
 
-    var res = await fetch('/.netlify/functions/akte-export', {
+    var res = await provaFetch('/.netlify/functions/akte-export', {
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({
         az, sv_email: svEmail, sv_name: svName,

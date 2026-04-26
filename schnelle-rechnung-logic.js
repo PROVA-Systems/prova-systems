@@ -55,7 +55,7 @@
   }
 
   async function makeProxy(key, payload){
-    return fetch('/.netlify/functions/make-proxy', {
+    return provaFetch('/.netlify/functions/make-proxy', {
       method: 'POST',
       headers: {'Content-Type':'application/json'},
       body: JSON.stringify({ key: key, payload: payload || {} })
@@ -63,7 +63,7 @@
   }
 
   async function airtableCreateRechnung(fields){
-    return fetch('/.netlify/functions/airtable', {
+    return provaFetch('/.netlify/functions/airtable', {
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body: JSON.stringify({

@@ -102,7 +102,7 @@
 
   function fetchAirtableNotifications(cb) {
     if (!AIRTABLE_NOTIF_PATH) return cb(null);
-    fetch('/.netlify/functions/airtable', {
+    provaFetch('/.netlify/functions/airtable', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ method: 'GET', path: AIRTABLE_NOTIF_PATH })

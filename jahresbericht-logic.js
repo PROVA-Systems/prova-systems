@@ -44,7 +44,7 @@ async function ladeDaten() {
     var filterF = svEmail ? '&filterByFormula=' + encodeURIComponent('{sv_email}="' + svEmail + '"') : '';
     var url = '/v0/' + AIRTABLE_BASE + '/' + AIRTABLE_TABLE
       + '?pageSize=200&sort[0][field]=Timestamp&sort[0][direction]=desc' + filterF;
-    var res = await fetch('/.netlify/functions/airtable', {
+    var res = await provaFetch('/.netlify/functions/airtable', {
       method: 'POST',
       headers: {'Content-Type':'application/json'},
       body: JSON.stringify({method:'GET', path: url})
@@ -56,7 +56,7 @@ async function ladeDaten() {
     // Seite 2 wenn vorhanden
     if (data.offset) {
       var url2 = url + '&offset=' + data.offset;
-      var res2 = await fetch('/.netlify/functions/airtable', {
+      var res2 = await provaFetch('/.netlify/functions/airtable', {
         method:'POST', headers:{'Content-Type':'application/json'},
         body: JSON.stringify({method:'GET', path: url2})
       });

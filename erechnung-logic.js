@@ -420,14 +420,14 @@ window.generateAndDownload = function() {
   var az = (document.getElementById('re-aktenzeichen') || {}).value || '';
   if (az) {
     var svEmail = localStorage.getItem('prova_sv_email') || '';
-    fetch('/.netlify/functions/airtable', {
+    provaFetch('/.netlify/functions/airtable', {
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({method:'GET',
         path:'/v0/appJ7bLlAHZoxENWE/tblF6MS7uiFAJDjiT?filterByFormula=' + 
           encodeURIComponent('{aktenzeichen}="' + az + '"') + '&maxRecords=1'})
     }).then(function(r){return r.json();}).then(function(d){
       if (d.records && d.records[0]) {
-        fetch('/.netlify/functions/airtable', {
+        provaFetch('/.netlify/functions/airtable', {
           method:'POST', headers:{'Content-Type':'application/json'},
           body: JSON.stringify({method:'PATCH',
             path:'/v0/appJ7bLlAHZoxENWE/tblF6MS7uiFAJDjiT/' + d.records[0].id,
