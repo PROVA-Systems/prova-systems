@@ -16,6 +16,10 @@ test.beforeEach(async ({ context }) => {
       email, name: email, token: 'test-session'
     }));
     localStorage.setItem('prova_sv_email', email);
+    // P5.C1: HMAC-Token-Mock fuer auth-guard P4A.4
+    var _exp = Math.floor(Date.now()/1000) + 3600;
+    var _h = btoa(JSON.stringify({sub: email, exp: _exp})).replace(/[+]/g,'-').replace(/[/]/g,'_').replace(/=+$/,'');
+    localStorage.setItem('prova_auth_token', _h + '.mocksig');
     localStorage.setItem('prova_paket', 'Solo');
     localStorage.setItem('prova_status', 'Aktiv');
     localStorage.setItem('prova_onboarding_done', 'true');

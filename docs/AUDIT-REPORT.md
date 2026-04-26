@@ -628,44 +628,51 @@ return { statusCode: 502, headers, body: JSON.stringify({ error: 'API nicht erre
 
 ---
 
+## Status-Update — 26.04.2026 (Sprint 04 P5)
+
+Nach Sprints S-SICHER P1/P2/P2.6/P3, P4A, P4B und Sprint 04 P5 sind die meisten Findings geschlossen. Status:
+- ✅ erledigt mit Sprint-Tag
+- 🟡 dokumentiert akzeptiert (Bridge bis Folge-Sprint)
+- 🔴 offen (Sprint-Verweis)
+
 ## Gesamtübersicht Findings
 
-| # | Schweregrad | Titel |
-|---|---|---|
-| 1.1 | 🔴 | airtable.js akzeptiert `_userEmail` aus Body (Auth-Bypass) |
-| 1.2 | 🔴 | Client-seitiger Session-Token ohne Server-Signatur |
-| 1.3 | 🔴 | `filterByFormula`-Injection durch unzureichendes Escaping |
-| 1.4 | 🔴 | Frontend vertraut localStorage.prova_sv_email für Auth |
-| 1.5 | 🟠 | Formula-Injection via `az` in stellungnahme-gegengutachten |
-| 1.6 | 🟠 | Zentrale Helper ohne sv_email-Injection (Defense-in-Depth) |
-| 1.7 | 🟡 | BASE_ID 40× hartcodiert |
-| 2.1 | 🔴 | ki-proxy.js ohne Server-Pseudonymisierung |
-| 2.2 | 🔴 | foto-captioning.js: Fotos unpseudonymisiert an OpenAI |
-| 2.3 | 🔴 | whisper-diktat.js: Klar-Transkript zurückgeben |
-| 2.4 | 🟠 | user_kontext unpseudonymisiert im Prompt |
-| 2.5 | 🟠 | Client-Pseudo inkonsistent angewandt |
-| 2.6 | 🟡 | Personen-Regex in prova-pseudo.js konservativ |
-| 3.1 | 🔴 | Session-State im Klartext-localStorage |
-| 3.2 | 🟠 | Import-Assistent legt Geschäftsdaten in localStorage |
-| 3.3 | 🟡 | prova_last_activity manipulierbar |
-| 4.1 | 🔴 | ki-proxy.js: keine Auth, CORS `*` |
-| 4.2 | 🔴 | foto-captioning.js: keine Auth, CORS `*` |
-| 4.3 | 🔴 | whisper-diktat.js: keine Auth, CORS `*` |
-| 4.4 | 🔴 | push-notify.js: CORS `*` |
-| 4.5 | 🟠 | Function-Duplikate im Repo-Root (toter Code) |
-| 4.6 | 🟠 | Permissions-Policy wird von Chrome verworfen |
-| 4.7 | 🟠 | airtable.js: keine strikte JWT-Pflicht |
-| 4.8 | 🟡 | health.js nicht reviewt |
-| 4.9 | 🟡 | _headers: CORS `*` für statische Assets |
-| 5.1 | 🟠 | pdf-proxy.js: DOC_TYPE_MAP hat Placeholder-IDs |
-| 5.2 | 🟡 | pdf-proxy.js: directUrl-Bypass |
-| 6.1 | 🟠 | 479 innerHTML ohne zentralen Sanitizer |
-| 6.2 | 🟡 | Brief-Templates rendern Airtable-Felder ungefiltert |
-| 7.1 | 🔴 | fallback-login erlaubt beliebige E-Mail ohne Passwort |
-| 7.2 | 🟠 | identity-signup.js: schwaches E-Mail-Escaping |
-| 7.3 | 🟠 | Kein Rate-Limit auf fallback-login |
-| 7.4 | 🔴 | dashboard.html ohne Session redirected NICHT zu Login (Test-Fund) |
-| 8.1 | 🟠 | Functions leaken e.message in Response |
+| # | Schweregrad | Status | Titel | Sprint |
+|---|---|---|---|---|
+| 1.1 | 🔴 | ✅ | airtable.js akzeptiert `_userEmail` aus Body (Auth-Bypass) | P4A.6 (Hybrid) → P4B.7 (STRICT) |
+| 1.2 | 🔴 | ✅ | Client-seitiger Session-Token ohne Server-Signatur | P4A.2-P4A.5 (HMAC) |
+| 1.3 | 🔴 | ✅ | `filterByFormula`-Injection durch unzureichendes Escaping | P1 (Escape-Härtung) |
+| 1.4 | 🔴 | ✅ | Frontend vertraut localStorage.prova_sv_email für Auth | P4B.7 (Token-sub gewinnt) |
+| 1.5 | 🟠 | 🟡 | Formula-Injection via `az` in stellungnahme-gegengutachten | dokumentiert; durch P4B-airtable.js indirekt entschärft |
+| 1.6 | 🟠 | ✅ | Zentrale Helper ohne sv_email-Injection (Defense-in-Depth) | P5.A2 (prova-sanitize-Hook in briefvorlagen) |
+| 1.7 | 🟡 | 🔴 | BASE_ID 40× hartcodiert | offen — Sprint 18+ |
+| 2.1 | 🔴 | ✅ | ki-proxy.js ohne Server-Pseudonymisierung | P3 |
+| 2.2 | 🔴 | 🟡 | foto-captioning.js: Fotos unpseudonymisiert an OpenAI | dokumentiert akzeptiert; EXIF-Strip + Face-Blur in K3+ |
+| 2.3 | 🔴 | ✅ | whisper-diktat.js: Klar-Transkript zurückgeben | P3.4 |
+| 2.4 | 🟠 | ✅ | user_kontext unpseudonymisiert im Prompt | P3.5 (appendUserContext) |
+| 2.5 | 🟠 | ✅ | Client-Pseudo inkonsistent angewandt | P3 (server-seitig konsolidiert) |
+| 2.6 | 🟡 | 🟡 | Personen-Regex in prova-pseudo.js konservativ | Iteration in K3+ |
+| 3.1 | 🔴 | ✅ | Session-State im Klartext-localStorage | P4B.7+P4B.9 (HMAC-only) |
+| 3.2 | 🟠 | 🔴 | Import-Assistent legt Geschäftsdaten in localStorage | offen — Sprint 5 (Datenmigration) |
+| 3.3 | 🟡 | ✅ | prova_last_activity manipulierbar | P4B.9 (auth-guard nutzt nur HMAC-Token-exp) |
+| 4.1 | 🔴 | ✅ | ki-proxy.js: keine Auth, CORS `*` | P4B.2 |
+| 4.2 | 🔴 | ✅ | foto-captioning.js: keine Auth, CORS `*` | P4B.4 |
+| 4.3 | 🔴 | ✅ | whisper-diktat.js: keine Auth, CORS `*` | P4B.3 |
+| 4.4 | 🔴 | ✅ | push-notify.js: CORS `*` | P4B.6 (Origin-Check + JWT) |
+| 4.5 | 🟠 | ✅ | Function-Duplikate im Repo-Root (toter Code) | P5.A4 (3 von 4); mahnung-pdf-Drift bleibt für Marcel |
+| 4.6 | 🟠 | 🟡 | Permissions-Policy wird von Chrome verworfen | dokumentiert; Sprint 18+ |
+| 4.7 | 🟠 | ✅ | airtable.js: keine strikte JWT-Pflicht | P4B.7 STRICT |
+| 4.8 | 🟡 | 🟡 | health.js nicht reviewt | public health-check, kein Auth nötig |
+| 4.9 | 🟡 | 🟡 | _headers: CORS `*` für statische Assets | dokumentiert akzeptiert (statische Assets sind public) |
+| 5.1 | 🟠 | ✅ | pdf-proxy.js: DOC_TYPE_MAP hat Placeholder-IDs | bereits S-SICHER 5.1 + P5.A1 (Auth-Migration) |
+| 5.2 | 🟡 | 🟡 | pdf-proxy.js: directUrl-Bypass | dokumentiert; verschoben auf AUTH-PERFEKT 2.0 |
+| 6.1 | 🟠 | ✅ | 479 innerHTML ohne zentralen Sanitizer | P2.3a (prova-sanitize.js) + P5.A2 (Hook in briefvorlagen) |
+| 6.2 | 🟡 | ✅ | Brief-Templates rendern Airtable-Felder ungefiltert | P5.A3 (briefvorlagen-logic _bvEsc) |
+| 7.1 | 🔴 | ✅ | fallback-login erlaubt beliebige E-Mail ohne Passwort | P4A.4+P4A.5+P4A.5-v2 |
+| 7.2 | 🟠 | ✅ | identity-signup.js: schwaches E-Mail-Escaping | P4A.7 (auth-validate.js) |
+| 7.3 | 🟠 | ✅ | Kein Rate-Limit auf fallback-login | P4B.1b (rate-limit-user.js, alle Auth-Endpoints durch lib gehärtet) |
+| 7.4 | 🔴 | ✅ | dashboard.html ohne Session redirected NICHT zu Login (Test-Fund) | P2.6 (Inline-Auth-Guard in 11 HTMLs) |
+| 8.1 | 🟠 | ✅ | Functions leaken e.message in Response | P2.2 (Findings-Audit) |
 
 ---
 
