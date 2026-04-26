@@ -73,38 +73,58 @@
      4. BUERO     - seltene Verwaltung (Kontakte, Import, Jahresbericht)
      Footer (immer sichtbar): Einstellungen + Hilfe + Abmelden
   */
-  var ARBEIT = [
-    { href: 'dashboard.html',        icon: '⊞',  label: 'Zentrale' },
-    { href: 'archiv.html',           icon: '📂', label: 'Meine Fälle' },
-    { href: 'termine.html',          icon: '📅', label: 'Kalender' },
-    { href: 'ortstermin-modus.html', icon: '📍', label: 'Ortstermin' },
-    { href: 'freigabe.html',         icon: '✅', label: 'Zur Freigabe' },
+  /* ════════════════════════════════════════════════════════════════════
+     P5b.A1 (Sprint 04b, 26.04.2026): Sidebar-Re-Architektur
+     ════════════════════════════════════════════════════════════════════
+     4 Sektionen statt vorher 4 (Arbeit/Werkzeuge/Dokumente/Buero).
+     Neue Reihenfolge richtet sich nach Marcels finaler Vision:
+       COCKPIT   - taegliche Landung (was steht an)
+       BUERO     - Dokumente + Geschaefts-Verwaltung
+       WERKZEUGE - Nachschlagewerke
+       SYSTEM    - Einstellungen + Hilfe (war frueher im Footer)
+
+     Items entfernt:
+       Ortstermin (Desktop) -> bleibt in Mobile-Bottom-Nav + akte.html-Tab
+       Zur Freigabe         -> ueber Notification-Glocke + Dashboard-Inbox
+       Schnellrechnung      -> ueber Split-Button "Neuer Auftrag"
+       Mahnwesen            -> Tab in Rechnungen (Sprint 04d)
+       E-Rechnung           -> Format-Tab in Rechnungen (Sprint 04d)
+       Daten importieren    -> Einstellungen -> Integrationen (Sprint 04d)
+
+     Items umbenannt:
+       Meine Faelle -> Meine Auftraege (durchgehend)
+
+     Items mit Live-Counts (siehe loadSidebarCounts unten):
+       Meine Auftraege -> phase_aktuell != 5 + sv_email match
+       Kalender        -> termin_datum heute + sv_email match
+       Rechnungen      -> status='offen' + faellig_am > 14 Tage + ueberfaellig
+       Kontakte        -> KONTAKTE-Records mit sv_email match
+  ═══════════════════════════════════════════════════════════════════ */
+  var COCKPIT = [
+    { href: 'dashboard.html',        icon: '🏠',  label: 'Zentrale' },
+    { href: 'archiv.html',           icon: '📋',  label: 'Meine Aufträge', countKey: 'auftraege' },
+    { href: 'termine.html',          icon: '📅',  label: 'Kalender',       countKey: 'kalender_heute' },
   ];
-  // WERKZEUGE: Nachschlagewerke, die WAEHREND der Arbeit genutzt werden
-  var WERKZEUGE = [
-    { href: 'normen.html',           icon: '📚',  label: 'Normen' },
-    { href: 'textbausteine.html',    icon: '📝',  label: 'Textbausteine' },
-    { href: 'positionen.html',       icon: '🗂️', label: 'Positionen & Preise' },
-    { href: 'jveg.html',             icon: '⚖️',  label: 'JVEG-Rechner' },
-    // P5.B3: bescheinigungen.html entfernt (defekt + ungenutzt). Redirect via netlify.toml.
-  ];
-  // DOKUMENTE (Session 30): was erstellt & versendet wird — Rechnungen + Briefe
-  var DOKUMENTE = [
-    { href: 'rechnungen.html',              icon: '💶', label: 'Rechnungen' },
-    { href: 'schnelle-rechnung.html',       icon: '⚡', label: 'Schnellrechnung (ohne Fall)' },
-    { href: 'erechnung.html',               icon: '📄', label: 'E-Rechnung (XRechnung)' },
-    { href: 'rechnungen.html?view=mahnung', icon: '📣', label: 'Mahnwesen' },
-    { href: 'briefvorlagen.html',           icon: '✉️', label: 'Briefe & Vorlagen' },
-  ];
-  // BUERO: Seltene Verwaltung
   var BUERO = [
-    { href: 'kontakte.html',         icon: '👥', label: 'Kontakte' },
-    { href: 'import-assistent.html', icon: '📥', label: 'Daten importieren' },
-    { href: 'jahresbericht.html',    icon: '📊', label: 'Jahresbericht' },
+    { href: 'rechnungen.html',     icon: '💸', label: 'Rechnungen',         countKey: 'rechnungen_ueberfaellig', warn: true },
+    { href: 'briefvorlagen.html',  icon: '✉️',  label: 'Briefe & Vorlagen' },
+    { href: 'kontakte.html',       icon: '👥', label: 'Kontakte',           countKey: 'kontakte' },
+    { href: 'jahresbericht.html',  icon: '📊', label: 'Jahresbericht' },
   ];
-  // GUTACHTEN-Gruppe entfernt (Session 30) - Zugriff über "+ Neuer Fall"
-  // ABRECHNUNG-Gruppe entfernt (Session 30) - Inhalte in DOKUMENTE konsolidiert
-  var VERWALTUNG = [];
+  var WERKZEUGE = [
+    { href: 'normen.html',         icon: '📚',  label: 'Normen' },
+    { href: 'textbausteine.html',  icon: '💬',  label: 'Textbausteine' },
+    { href: 'jveg.html',           icon: '🧮',  label: 'JVEG-Rechner' },
+    { href: 'positionen.html',     icon: '💰',  label: 'Positionen & Preise' },
+  ];
+  var SYSTEM = [
+    { href: 'einstellungen.html',  icon: '⚙️',  label: 'Einstellungen' },
+    { href: 'hilfe.html',          icon: '🎓',  label: 'Hilfe & Support' },
+  ];
+
+  // Backward-Compat — DOKUMENTE/ARBEIT/VERWALTUNG werden noch von keinem
+  // anderen Code referenziert; Stubs zur Sicherheit.
+  var ARBEIT = []; var DOKUMENTE = []; var VERWALTUNG = [];
 
 
   function aktiverFallBlock() {
@@ -162,13 +182,20 @@
 
   function makeItem(item) {
     var isActive = (page === item.href) || (page === 'gutachten' && item.href === appUrl);
+    // P5b.A4: archiv.html behaelt seinen Active-State auch wenn label
+    // "Meine Auftraege" lautet (URL bleibt gleich).
     var cls = 'sb-item' + (isActive ? ' active' : '');
-    // UI-FIX2.3: data-tooltip für CSS-Tooltip im Collapsed-Mode + aria-label
-    // für Screen-Reader. Kein title mehr (vermeidet doppelten Browser-Tooltip).
     var lbl = String(item.label).replace(/"/g, '&quot;');
+    var badge = '';
+    if (item.countKey) {
+      var bClass = 'sb-count' + (item.warn ? ' sb-count-warn' : '');
+      // data-count-key triggert dynamisches Update via loadSidebarCounts()
+      badge = '<span class="' + bClass + '" data-count-key="' + item.countKey + '" style="display:none;"></span>';
+    }
     return '<a href="' + item.href + '" class="' + cls + '" data-tooltip="' + lbl + '" aria-label="' + lbl + '">'
       + '<span class="sb-icon" aria-hidden="true">' + item.icon + '</span>'
       + '<span class="sb-label">' + item.label + '</span>'
+      + badge
       + '</a>';
   }
 
@@ -234,20 +261,55 @@
       + '.sb-logo-text span{color:var(--accent,#4f8ef7);}'
       + '.sidebar.collapsed .sb-logo-text{opacity:0;width:0;}'
 
-      /* ─── NEUER FALL BUTTON ─── */
-      + '.sb-new-btn{'
-      +   'display:flex;align-items:center;gap:8px;margin:12px 12px 6px;padding:10px 14px;'
+      /* P5b.B1-4: Split-Button "Neuer Auftrag" mit Dropdown */
+      + '.sb-new-wrap{position:relative;margin:12px 12px 6px;}'
+      + '.sb-new-btn-main,.sb-new-btn-arrow{'
       +   'background:linear-gradient(135deg,var(--accent,#4f8ef7),var(--accent2,#3a7be0));'
-      +   'border:none;border-radius:10px;color:#fff;font-size:13px;font-weight:700;'
+      +   'border:none;color:#fff;font-size:13px;font-weight:700;'
       +   'cursor:pointer;font-family:inherit;transition:all .18s;'
-      +   'box-shadow:0 2px 12px rgba(79,142,247,.3);white-space:nowrap;'
+      +   'box-shadow:0 2px 12px rgba(79,142,247,.3);'
       + '}'
-      + '.sb-new-btn:hover{opacity:.92;transform:translateY(-1px);box-shadow:0 4px 16px rgba(79,142,247,.4);}'
-      + '.sb-new-btn:active{transform:translateY(0);}'
-      + '.sb-new-btn .btn-icon{font-size:16px;flex-shrink:0;line-height:1;}'
-      + '.sb-new-btn .btn-label{transition:opacity .18s;overflow:hidden;}'
-      + '.sidebar.collapsed .sb-new-btn .btn-label{opacity:0;width:0;margin:0;padding:0;}'
-      + '.sidebar.collapsed .sb-new-btn{justify-content:center;padding:10px;margin:12px 8px 6px;}'
+      + '.sb-new-btn-main{'
+      +   'display:flex;align-items:center;gap:8px;padding:10px 14px;'
+      +   'border-radius:10px 0 0 10px;flex:1;min-width:0;text-align:left;'
+      +   'border-right:1px solid rgba(255,255,255,.18);'
+      + '}'
+      + '.sb-new-btn-arrow{'
+      +   'display:flex;align-items:center;justify-content:center;'
+      +   'width:32px;padding:10px 0;border-radius:0 10px 10px 0;'
+      + '}'
+      + '.sb-new-wrap{display:flex;}'
+      + '.sb-new-btn-main:hover,.sb-new-btn-arrow:hover{opacity:.92;}'
+      + '.sb-new-icon{font-size:14px;flex-shrink:0;line-height:1;}'
+      + '.sb-new-label{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}'
+      + '.sb-new-default{font-size:10px;font-weight:500;opacity:.75;white-space:nowrap;}'
+      + '.sb-new-arrow{font-size:11px;display:inline-block;transition:transform .18s;}'
+      + '.sidebar.collapsed .sb-new-label,.sidebar.collapsed .sb-new-default{opacity:0;width:0;margin:0;padding:0;}'
+      + '.sidebar.collapsed .sb-new-btn-main{justify-content:center;padding:10px;border-radius:10px;border-right:none;}'
+      + '.sidebar.collapsed .sb-new-btn-arrow{display:none;}'
+      // Dropdown
+      + '.sb-new-dropdown{'
+      +   'display:none;position:absolute;top:calc(100% + 6px);left:0;right:0;'
+      +   'background:var(--bg2,#13161d);border:1px solid var(--border2,rgba(255,255,255,.12));'
+      +   'border-radius:10px;box-shadow:0 12px 40px rgba(0,0,0,.55);'
+      +   'max-height:60vh;overflow-y:auto;z-index:600;padding:6px 0;'
+      + '}'
+      + '.sb-new-group{padding:4px 0;}'
+      + '.sb-new-group:not(:last-child){border-bottom:1px solid var(--border,rgba(255,255,255,.05));}'
+      + '.sb-new-group-label{'
+      +   'padding:6px 14px 4px;font-size:9px;font-weight:700;text-transform:uppercase;'
+      +   'letter-spacing:.1em;color:var(--text3,#6b7280);'
+      + '}'
+      + '.sb-new-item{'
+      +   'display:flex;align-items:center;gap:10px;width:100%;padding:8px 14px;'
+      +   'background:none;border:none;color:var(--text2,#aab4cb);font-size:12.5px;'
+      +   'cursor:pointer;font-family:inherit;text-align:left;transition:all .12s;'
+      + '}'
+      + '.sb-new-item:hover:not(.disabled){background:rgba(79,142,247,.08);color:var(--text,#e8eaf0);}'
+      + '.sb-new-item-icon{flex-shrink:0;font-size:14px;width:20px;display:inline-flex;justify-content:center;}'
+      + '.sb-new-item-label{flex:1;}'
+      + '.sb-new-item-tag{font-size:9px;color:var(--text3);background:rgba(255,255,255,.06);padding:1px 6px;border-radius:6px;}'
+      + '.sb-new-item.disabled{opacity:.4;cursor:not-allowed;}'
 
       /* ─── NAV SCROLL AREA ─── */
       + '.sb-nav{'
@@ -288,17 +350,41 @@
       + '}'
       + '.sb-item:hover{color:var(--text2,#8b93ab);background:rgba(255,255,255,.04);}'
       
-      /* Active state — NO font-weight change, NO border-left */
+      /* P5b.C1-3: Active-Dot statt Hintergrund.
+         Color-Highlight nur auf Text/Icon, kein Background, kein
+         border-left mehr. Active-Dot rechts: 6px Punkt mit
+         200ms scale-in. */
       + '.sb-item.active{'
       +   'color:var(--accent,#4f8ef7);'
-      +   'background:rgba(79,142,247,.08);'
       +   'font-weight:500;'  /* SAME as default — no shift */
       + '}'
-      /* Active indicator via box-shadow inset — no layout impact */
-      + '.sb-item.active::before{'
-      +   'content:"";position:absolute;left:0;top:6px;bottom:6px;width:3px;'
-      +   'background:var(--accent,#4f8ef7);border-radius:0 2px 2px 0;'
+      + '.sb-item.active::after{'
+      +   'content:"";position:absolute;right:12px;top:50%;'
+      +   'transform:translateY(-50%) scale(0);'
+      +   'width:6px;height:6px;border-radius:50%;'
+      +   'background:var(--accent,#4f8ef7);'
+      +   'animation:provaSbDotIn 200ms cubic-bezier(.34,1.56,.64,1) forwards;'
       + '}'
+      + '@keyframes provaSbDotIn{'
+      +   'to{transform:translateY(-50%) scale(1);}'
+      + '}'
+      /* Counts (Live-Numbers) rechts neben dem Label */
+      + '.sb-count{'
+      +   'margin-left:auto;font-size:11px;font-weight:600;'
+      +   'color:var(--text3,#6b7280);'
+      +   'background:rgba(255,255,255,.04);'
+      +   'border-radius:8px;padding:1px 6px;line-height:1.5;'
+      +   'transition:opacity .15s;'
+      + '}'
+      + '.sb-count-warn{'
+      +   'background:rgba(239,68,68,.12);color:#f87171;'
+      + '}'
+      + '.sb-item.active .sb-count{color:var(--accent,#4f8ef7);background:rgba(79,142,247,.12);}'
+      + '.sidebar.collapsed .sb-count{display:none !important;}'
+      /* Wenn aktive Seite Count hat, Active-Dot WEGLASSEN damit Badge sichtbar bleibt */
+      + '.sb-item.active:has(.sb-count[style*="display: none"])::after,'
+      + '.sb-item.active:not(:has(.sb-count))::after{display:block;}'
+      + '.sb-item.active:has(.sb-count:not([style*="display: none"]))::after{display:none;}'
       
       /* Icon — fixed width container prevents emoji width variations */
       + '.sb-icon{'
@@ -330,41 +416,54 @@
       +   'opacity:0;animation:prova-sb-tooltip-fade-in 150ms ease-out forwards;'
       + '}'
 
-      /* ─── FOOTER: EINSTELLUNGEN + PAKET + COLLAPSE ─── */
-      + '.sb-footer{margin-top:auto;flex-shrink:0;border-top:1px solid var(--border,rgba(255,255,255,.07));}'
-      
-      /* Einstellungen Link */
-      + '.sb-settings{'
-      +   'display:flex;align-items:center;gap:10px;padding:0 10px;min-height:36px;'
-      +   'color:var(--text3,#4d5568);font-size:13px;font-weight:500;'
-      +   'cursor:pointer;text-decoration:none;transition:color .12s,background .12s;'
-      +   'border-radius:8px;margin:6px 10px 0;position:relative;'
+      /* P5b.F1-3: Account-Footer mit Avatar + Tier + Usage + Dropdown */
+      + '.sb-account-footer{'
+      +   'margin-top:auto;flex-shrink:0;'
+      +   'border-top:1px solid var(--border,rgba(255,255,255,.07));'
+      +   'padding:10px;cursor:pointer;position:relative;transition:background .15s;'
       + '}'
-      + '.sb-settings:hover{color:var(--text2,#8b93ab);background:rgba(255,255,255,.04);}'
-      + '.sb-settings.active{color:var(--accent,#4f8ef7);background:rgba(79,142,247,.08);}'
-
-      /* Paket Badge */
-      + '.sb-paket{'
-      +   'display:flex;align-items:center;gap:8px;padding:10px 14px;'
+      + '.sb-account-footer:hover{background:rgba(255,255,255,.03);}'
+      + '.sb-account-row{display:flex;align-items:center;gap:10px;}'
+      + '.sb-account-avatar{'
+      +   'width:32px;height:32px;border-radius:50%;flex-shrink:0;'
+      +   'background:linear-gradient(135deg,var(--accent,#4f8ef7),var(--accent2,#3a7be0));'
+      +   'color:#fff;font-size:11px;font-weight:800;letter-spacing:.02em;'
+      +   'display:flex;align-items:center;justify-content:center;'
+      +   'box-shadow:0 1px 4px rgba(79,142,247,.3);'
       + '}'
-      + '.paket-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}'
-      + '.paket-name{'
-      +   'font-size:11px;font-weight:700;letter-spacing:.04em;white-space:nowrap;'
-      +   'overflow:hidden;transition:opacity .18s;'
+      + '.sb-account-info{flex:1;min-width:0;overflow:hidden;transition:opacity .18s;}'
+      + '.sb-account-name{'
+      +   'font-size:12.5px;font-weight:700;color:var(--text,#e8eaf0);'
+      +   'white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.3;'
       + '}'
-      + '.sidebar.collapsed .paket-name{opacity:0;width:0;}'
-
-      /* Collapse toggle */
-      + '.sb-collapse{'
-      +   'display:flex;align-items:center;gap:8px;padding:9px 14px;width:100%;'
-      +   'color:var(--text3,#4d5568);font-size:12px;cursor:pointer;'
-      +   'background:none;border:none;font-family:inherit;transition:color .12s;flex-shrink:0;'
+      + '.sb-account-meta{'
+      +   'font-size:10.5px;color:var(--text3,#6b7280);'
+      +   'white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.3;'
       + '}'
-      + '.sb-collapse:hover{color:var(--text2,#8b93ab);}'
-      + '.sb-toggle-icon{font-size:14px;transition:transform .22s;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;width:22px;}'
-      + '.sidebar.collapsed .sb-toggle-icon{transform:rotate(180deg);}'
-      + '.sb-collapse-label{white-space:nowrap;overflow:hidden;transition:opacity .18s;}'
-      + '.sidebar.collapsed .sb-collapse-label{opacity:0;width:0;}'
+      + '.sb-account-tier{font-weight:700;}'
+      + '.sb-account-arrow{'
+      +   'font-size:10px;color:var(--text3);flex-shrink:0;transition:transform .15s;'
+      + '}'
+      + '.sb-account-footer:hover .sb-account-arrow{transform:rotate(180deg);}'
+      + '.sidebar.collapsed .sb-account-info,.sidebar.collapsed .sb-account-arrow{opacity:0;width:0;height:0;}'
+      + '.sidebar.collapsed .sb-account-footer{padding:10px 6px;}'
+      + '.sidebar.collapsed .sb-account-row{justify-content:center;}'
+      // Account-Dropdown
+      + '.sb-account-menu{'
+      +   'display:none;position:absolute;bottom:calc(100% + 6px);left:8px;right:8px;'
+      +   'background:var(--bg2,#13161d);border:1px solid var(--border2,rgba(255,255,255,.12));'
+      +   'border-radius:10px;box-shadow:0 12px 40px rgba(0,0,0,.55);'
+      +   'padding:6px 0;z-index:600;'
+      + '}'
+      + '.sb-account-menu-item{'
+      +   'display:flex;align-items:center;gap:10px;width:100%;padding:8px 14px;'
+      +   'background:none;border:none;color:var(--text2,#aab4cb);font-size:12.5px;'
+      +   'cursor:pointer;font-family:inherit;text-align:left;text-decoration:none;'
+      +   'transition:background .12s;'
+      + '}'
+      + '.sb-account-menu-item:hover{background:rgba(79,142,247,.08);color:var(--text,#e8eaf0);}'
+      + '.sb-account-menu-item.sb-account-menu-logout:hover{background:rgba(239,68,68,.1);color:#f87171;}'
+      + '.sb-account-menu-sep{height:1px;background:var(--border,rgba(255,255,255,.05));margin:4px 8px;}'
 
       /* ─── MAIN CONTENT OFFSET ─── */
       + '.main-wrap{margin-left:var(--sb-w);transition:margin-left .25s cubic-bezier(.4,0,.2,1);background:var(--bg,#0b0d11);min-height:100vh;}'
@@ -425,6 +524,320 @@
     toRemove.forEach(function(k){ localStorage.removeItem(k); });
   };
 
+  /* ════════════════════════════════════════════════════════════════════
+     P5b.B1-4: Split-Button "Neuer Auftrag" mit 4-Flow-Dropdown
+  ═══════════════════════════════════════════════════════════════════ */
+  var AUFTRAGSTYPEN = [
+    { group: 'A · Schaden/Mangel', items: [
+      { id: 'schadensgutachten', icon: '📋', label: 'Schadensgutachten',          url: 'app.html?typ=schaden' },
+      { id: 'beweissicherung',   icon: '🔍', label: 'Beweissicherung',            url: 'app.html?typ=beweis' },
+      { id: 'ergaenzung',        icon: '📄', label: 'Ergänzungsgutachten (§411 ZPO)', url: 'ergaenzung.html' },
+      { id: 'gegengutachten',    icon: '🔄', label: 'Gegengutachten / Erwiderung', url: 'widerspruch-gutachten.html' },
+      { id: 'stellungnahme',     icon: '✍️',  label: 'Technische Stellungnahme',   url: 'stellungnahme.html' }
+    ]},
+    { group: 'B · Bewertung', items: [
+      { id: 'wertgutachten', icon: '🏠', label: 'Wertgutachten', url: 'wertgutachten.html' }
+    ]},
+    { group: 'C · Beratung', items: [
+      { id: 'telefonberatung', icon: '📞', label: 'Telefonberatung', url: 'beratung.html?typ=telefon' },
+      { id: 'beratung',        icon: '💼', label: 'Beratungsleistung', url: 'beratung.html' }
+    ]},
+    { group: 'D · Baubegleitung', items: [
+      { id: 'baubegleitung', icon: '🏗️', label: 'Baubegleitung', url: 'baubegleitung.html' }
+    ]},
+    { group: 'Bescheinigungen', items: [
+      { id: 'bescheinigung_placeholder', icon: '📜', label: 'Bescheinigung', url: '#', disabled: true, tooltip: 'Kommt in Kürze (Sprint 04d)' }
+    ]},
+    { group: 'Sonderfälle', items: [
+      { id: 'schiedsgutachten', icon: '⚖️', label: 'Schiedsgutachten', url: 'schiedsgutachten.html' }
+    ]},
+    { group: 'Standalone', items: [
+      { id: 'schnelle_rechnung', icon: '💸', label: 'Schnellrechnung (ohne Fall)', url: 'schnelle-rechnung.html' },
+      { id: 'brief_standalone',  icon: '✉️',  label: 'Brief (ohne Fall)',           url: 'briefvorlagen.html' }
+    ]}
+  ];
+
+  function findAuftragsTyp(id) {
+    for (var i = 0; i < AUFTRAGSTYPEN.length; i++) {
+      var items = AUFTRAGSTYPEN[i].items;
+      for (var j = 0; j < items.length; j++) {
+        if (items[j].id === id && !items[j].disabled) return items[j];
+      }
+    }
+    return null;
+  }
+
+  function getDefaultAuftrag() {
+    var last = localStorage.getItem('prova_letzter_auftragstyp');
+    return findAuftragsTyp(last) || findAuftragsTyp('schadensgutachten');
+  }
+
+  window.provaSelectAuftragstyp = function (id) {
+    var t = findAuftragsTyp(id);
+    if (!t) return;
+    try { localStorage.setItem('prova_letzter_auftragstyp', id); } catch(e) {}
+    provaResetFall();
+    window.location.href = t.url;
+  };
+
+  window.provaToggleAuftragDropdown = function () {
+    var dd = document.getElementById('sb-new-dropdown');
+    if (!dd) return;
+    var open = dd.style.display !== 'block';
+    dd.style.display = open ? 'block' : 'none';
+    var arrow = document.querySelector('.sb-new-arrow');
+    if (arrow) arrow.style.transform = open ? 'rotate(180deg)' : '';
+  };
+
+  // Dropdown schliessen bei Klick ausserhalb
+  document.addEventListener('click', function (e) {
+    var dd = document.getElementById('sb-new-dropdown');
+    if (!dd || dd.style.display !== 'block') return;
+    if (e.target.closest && e.target.closest('.sb-new-wrap')) return;
+    dd.style.display = 'none';
+    var arrow = document.querySelector('.sb-new-arrow');
+    if (arrow) arrow.style.transform = '';
+  });
+
+  function buildSplitButton() {
+    var def = getDefaultAuftrag();
+    var dropdownHtml = AUFTRAGSTYPEN.map(function (g) {
+      var items = g.items.map(function (it) {
+        var disabled = it.disabled ? ' disabled' : '';
+        var onclick = it.disabled
+          ? 'event.preventDefault();return false;'
+          : "provaSelectAuftragstyp('" + it.id + "');";
+        var tooltip = it.tooltip ? ' title="' + it.tooltip + '"' : '';
+        return '<button type="button" class="sb-new-item' + disabled + '" onclick="' + onclick + '"' + tooltip + '>'
+             + '<span class="sb-new-item-icon">' + it.icon + '</span>'
+             + '<span class="sb-new-item-label">' + it.label + '</span>'
+             + (it.disabled ? '<span class="sb-new-item-tag">Bald</span>' : '')
+             + '</button>';
+      }).join('');
+      return '<div class="sb-new-group">'
+           + '<div class="sb-new-group-label">' + g.group + '</div>'
+           + items
+           + '</div>';
+    }).join('');
+
+    return '<div class="sb-new-wrap">'
+         +   '<button type="button" class="sb-new-btn-main" id="sb-new-btn" onclick="provaSelectAuftragstyp(\'' + (def && def.id || 'schadensgutachten') + '\')" '
+         +     'title="Letzter Typ: ' + (def && def.label || 'Schadensgutachten') + '">'
+         +     '<span class="sb-new-icon">✨</span>'
+         +     '<span class="sb-new-label">Neuer Auftrag</span>'
+         +     '<span class="sb-new-default">(' + (def && def.label.split(' ')[0] || 'Schaden') + ')</span>'
+         +   '</button>'
+         +   '<button type="button" class="sb-new-btn-arrow" onclick="provaToggleAuftragDropdown()" aria-label="Auftragstyp auswählen">'
+         +     '<span class="sb-new-arrow">▾</span>'
+         +   '</button>'
+         +   '<div class="sb-new-dropdown" id="sb-new-dropdown">' + dropdownHtml + '</div>'
+         + '</div>';
+  }
+
+  /* ════════════════════════════════════════════════════════════════════
+     P5b.F1-3: Account-Footer mit Avatar + Tier-Badge + Usage + Dropdown
+  ═══════════════════════════════════════════════════════════════════ */
+  function getInitials(name) {
+    if (!name) return '??';
+    var parts = String(name).trim().split(/\s+/);
+    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  }
+
+  function getUserName() {
+    try {
+      var u = JSON.parse(localStorage.getItem('prova_user') || '{}');
+      return u.name || u.email || 'PROVA-Nutzer';
+    } catch (e) { return 'PROVA-Nutzer'; }
+  }
+
+  function getUsageText(paket) {
+    var n = parseInt(localStorage.getItem('prova_auftraege_count') || '0', 10) || 0;
+    if (paket === 'Solo')  return n + '/30 Aufträge';
+    if (paket === 'Team')  return n + ' Aufträge';
+    return n + ' Aufträge';
+  }
+
+  window.provaToggleAccountMenu = function () {
+    var m = document.getElementById('sb-account-menu');
+    if (!m) return;
+    m.style.display = m.style.display === 'block' ? 'none' : 'block';
+  };
+  document.addEventListener('click', function (e) {
+    var m = document.getElementById('sb-account-menu');
+    if (!m || m.style.display !== 'block') return;
+    if (e.target.closest && e.target.closest('.sb-account-footer')) return;
+    m.style.display = 'none';
+  });
+  window.provaToggleTheme = function () {
+    if (window.PROVA_THEME && typeof window.PROVA_THEME.toggle === 'function') {
+      window.PROVA_THEME.toggle();
+    } else {
+      var cur = localStorage.getItem('prova_theme') || 'dark';
+      var next = cur === 'dark' ? 'light' : 'dark';
+      localStorage.setItem('prova_theme', next);
+      document.documentElement.setAttribute('data-theme', next);
+    }
+  };
+
+  function buildAccountFooter() {
+    var name     = getUserName();
+    var initials = getInitials(name);
+    var usage    = getUsageText(paket);
+    return ''
+      + '<div class="sb-account-footer" onclick="provaToggleAccountMenu()" role="button" tabindex="0">'
+      +   '<div class="sb-account-row">'
+      +     '<div class="sb-account-avatar">' + initials + '</div>'
+      +     '<div class="sb-account-info">'
+      +       '<div class="sb-account-name">' + escAttr(name) + '</div>'
+      +       '<div class="sb-account-meta">'
+      +         '<span class="sb-account-tier" style="color:' + pc + ';">' + paket + '</span>'
+      +         '<span class="sb-account-meta-sep"> · </span>'
+      +         '<span class="sb-account-usage">' + usage + '</span>'
+      +       '</div>'
+      +     '</div>'
+      +     '<span class="sb-account-arrow">▾</span>'
+      +   '</div>'
+      +   '<div class="sb-account-menu" id="sb-account-menu">'
+      +     '<button type="button" onclick="event.stopPropagation();provaToggleTheme()" class="sb-account-menu-item">'
+      +       '<span>🌓</span><span>Theme wechseln</span>'
+      +     '</button>'
+      +     '<div class="sb-account-menu-sep"></div>'
+      +     '<a href="einstellungen.html" class="sb-account-menu-item">'
+      +       '<span>⚙️</span><span>Konto-Einstellungen</span>'
+      +     '</a>'
+      +     '<a href="einstellungen.html#paket" class="sb-account-menu-item">'
+      +       '<span>🔄</span><span>Plan upgraden</span>'
+      +     '</a>'
+      +     '<div class="sb-account-menu-sep"></div>'
+      +     '<button type="button" onclick="event.stopPropagation();provaSbLogout()" class="sb-account-menu-item sb-account-menu-logout">'
+      +       '<span>🚪</span><span>Abmelden</span>'
+      +     '</button>'
+      +   '</div>'
+      + '</div>';
+  }
+
+  function escAttr(s) {
+    return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  /* ════════════════════════════════════════════════════════════════════
+     P5b.D1-4: Live-Counts in Sidebar
+     Lazy-Loading: erste 3-5 Sekunden zeigen Sidebar ohne Counts, dann
+     async-Update via provaFetch. Cache 5 Min in localStorage.
+  ═══════════════════════════════════════════════════════════════════ */
+  var COUNT_CACHE_KEY = 'prova_sidebar_counts_v1';
+  var COUNT_TTL_MS = 5 * 60 * 1000; // 5 Minuten
+
+  function readCountCache() {
+    try {
+      var raw = localStorage.getItem(COUNT_CACHE_KEY);
+      if (!raw) return null;
+      var obj = JSON.parse(raw);
+      if (!obj || (Date.now() - (obj.ts || 0)) > COUNT_TTL_MS) return null;
+      return obj.counts || null;
+    } catch (e) { return null; }
+  }
+
+  function writeCountCache(counts) {
+    try {
+      localStorage.setItem(COUNT_CACHE_KEY, JSON.stringify({ ts: Date.now(), counts: counts }));
+    } catch (e) {}
+  }
+
+  function applyCountsToBadges(counts) {
+    if (!counts) return;
+    Object.keys(counts).forEach(function (key) {
+      var n = counts[key];
+      document.querySelectorAll('[data-count-key="' + key + '"]').forEach(function (el) {
+        if (n > 0) {
+          // Format: ueberfaellig zeigt "X ⚠", andere nur Zahl
+          var html = el.classList.contains('sb-count-warn') ? n + ' ⚠' : String(n);
+          el.textContent = html;
+          el.style.display = '';
+        } else {
+          el.style.display = 'none';
+        }
+      });
+    });
+    // Auch Account-Footer-Usage updaten falls Aufträge-Count da
+    if (typeof counts.auftraege === 'number') {
+      try { localStorage.setItem('prova_auftraege_count', String(counts.auftraege)); } catch(e){}
+      var u = document.querySelector('.sb-account-usage');
+      if (u) u.textContent = getUsageText(paket);
+    }
+  }
+
+  async function fetchAirtableCount(path) {
+    if (typeof window.provaFetch !== 'function') return 0;
+    try {
+      var res = await window.provaFetch('/.netlify/functions/airtable', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ method: 'GET', path: path })
+      });
+      if (!res.ok) return 0;
+      var data = await res.json();
+      return (data.records || []).length;
+    } catch (e) { return 0; }
+  }
+
+  async function loadSidebarCounts() {
+    if (typeof window.provaFetch !== 'function') return;
+    var svEmail = (localStorage.getItem('prova_sv_email') || '').toLowerCase();
+    if (!svEmail) return;
+
+    var BASE = 'appJ7bLlAHZoxENWE';
+    var TBL_FAELLE     = 'tblSxV8bsXwd1pwa0';
+    var TBL_TERMINE    = 'tblyMTTdtfGQjjmc2';
+    var TBL_RECHNUNGEN = 'tblF6MS7uiFAJDjiT';
+    var TBL_KONTAKTE   = 'tblMKmPLjRelr6Hal';
+
+    // ISO-Datum heute (YYYY-MM-DD), Datum vor 14 Tagen
+    var today = new Date();
+    var todayStr = today.toISOString().slice(0, 10);
+    var grenzVor14 = new Date(today.getTime() - 14 * 86400000).toISOString().slice(0, 10);
+
+    // 1. SCHADENSFAELLE wo phase_aktuell != 5 + sv_email match
+    //    Schema: phase_aktuell (number), sv_email (singleLineText)
+    var auftraegeFormel = "AND({sv_email}='" + svEmail + "', OR({phase_aktuell}=BLANK(), {phase_aktuell}!=5))";
+    var auftraegePath = '/v0/' + BASE + '/' + TBL_FAELLE + '?filterByFormula=' + encodeURIComponent(auftraegeFormel) + '&fields[]=Aktenzeichen';
+
+    // 2. TERMINE heute + sv_email match
+    //    Schema: termin_datum (dateTime), sv_email (email)
+    var kalenderFormel = "AND({sv_email}='" + svEmail + "', DATETIME_FORMAT({termin_datum},'YYYY-MM-DD')='" + todayStr + "')";
+    var kalenderPath = '/v0/' + BASE + '/' + TBL_TERMINE + '?filterByFormula=' + encodeURIComponent(kalenderFormel) + '&fields[]=termin_datum';
+
+    // 3. RECHNUNGEN ueberfaellig: status='offen' + faellig_am < heute - 14
+    //    Schema: status (singleSelect, lowercase), faellig_am (date), sv_email (singleLineText)
+    var rechnungenFormel = "AND({sv_email}='" + svEmail + "', LOWER({status})='offen', IS_BEFORE({faellig_am}, '" + grenzVor14 + "'))";
+    var rechnungenPath = '/v0/' + BASE + '/' + TBL_RECHNUNGEN + '?filterByFormula=' + encodeURIComponent(rechnungenFormel) + '&fields[]=status';
+
+    // 4. KONTAKTE Anzahl (sv_email match)
+    var kontakteFormel = "{sv_email}='" + svEmail + "'";
+    var kontaktePath = '/v0/' + BASE + '/' + TBL_KONTAKTE + '?filterByFormula=' + encodeURIComponent(kontakteFormel) + '&fields[]=Name';
+
+    // Parallele Loads
+    var results = await Promise.all([
+      fetchAirtableCount(auftraegePath),
+      fetchAirtableCount(kalenderPath),
+      fetchAirtableCount(rechnungenPath),
+      fetchAirtableCount(kontaktePath)
+    ]);
+
+    var counts = {
+      auftraege:                  results[0],
+      kalender_heute:             results[1],
+      rechnungen_ueberfaellig:    results[2],
+      kontakte:                   results[3]
+    };
+    writeCountCache(counts);
+    applyCountsToBadges(counts);
+  }
+
+  // Public API
+  window.provaSidebarRefresh = loadSidebarCounts;
+
   var html = ''
     + '<div class="sb-logo">'
     +   '<a class="sb-logo-link" href="dashboard.html" title="Zur Zentrale">'
@@ -438,10 +851,7 @@
     +   '</button>'
     + '</div>'
 
-    + '<button class="sb-new-btn" id="sb-new-btn" onclick="provaResetFall();window.location.href=\'' + appUrl + '\'">'
-    +   '<span class="btn-icon">+</span>'
-    +   '<span class="btn-label">Neuer Fall</span>'
-    + '</button>'
+    + buildSplitButton()
 
     + aktiverFallBlock()
 
@@ -458,37 +868,15 @@
     + '</button>'
 
     + '<div class="sb-nav">'
-    +   makeGroup('Arbeit', ARBEIT)
-    +   makeGroup('Werkzeuge', WERKZEUGE)
-    +   makeGroup('Dokumente', DOKUMENTE)
-    +   makeGroup('Büro', BUERO)
+    +   makeGroup('Cockpit',    COCKPIT)
+    +   makeGroup('Büro',       BUERO)
+    +   makeGroup('Werkzeuge',  WERKZEUGE)
+    +   makeGroup('System',     SYSTEM)
     + '</div>'
 
-    + '<div class="sb-footer">'
-    +   '<div class="sb-footer-divider"></div>'
-    +   '<a href="einstellungen.html" class="sb-settings' + settingsActive + '" data-tooltip="Einstellungen" aria-label="Einstellungen">'
-    +     '<span class="sb-icon" aria-hidden="true">⚙️</span>'
-    +     '<span class="sb-label">Einstellungen</span>'
-    +   '</a>'
-    +   '<a href="hilfe.html" class="sb-settings' + (page === 'hilfe.html' ? ' sb-active' : '') + '" data-tooltip="Hilfe &amp; Support" aria-label="Hilfe und Support">'
-    +     '<span class="sb-icon" aria-hidden="true">❓</span>'
-    +     '<span class="sb-label">Hilfe &amp; Support</span>'
-    +   '</a>'
-    +   '<div class="sb-paket">'
-    +     '<div class="paket-dot" style="background:' + pc + '"></div>'
-    +     '<span class="paket-name" style="color:' + pc + '">' + paket + '</span>'
-    +   '</div>'
-    +   '<button onclick="provaSbLogout()" class="sb-logout" title="Abmelden" style="display:flex;align-items:center;gap:8px;padding:8px 14px;border:none;background:none;color:var(--text3);font-size:12px;cursor:pointer;width:100%;border-radius:8px;font-family:inherit;transition:all .15s;" onmouseover="this.style.background=\'rgba(239,68,68,.08)\';this.style.color=\'#ef4444\'" onmouseout="this.style.background=\'none\';this.style.color=\'var(--text3)\'">'
-    +     '<span style="font-size:14px;">↩</span>'
-    +     '<span class="sb-label">Abmelden</span>'
-    +   '</button>'
-    +   '<div class="sb-kbd-hint" onclick="provaOpenCmdPalette()" title="Schnellsuche öffnen" style="display:flex;align-items:center;justify-content:space-between;padding:6px 14px;margin-bottom:2px;cursor:pointer;border-radius:8px;transition:background .15s;opacity:.5;" onmouseover="this.style.opacity=\'1\'" onmouseout="this.style.opacity=\'.5\'">'
-    +     '<span style="font-size:11px;color:var(--text3);">Schnellsuche</span>'
-    +     '<kbd style="font-size:10px;padding:2px 6px;border-radius:4px;background:var(--surface2);border:1px solid var(--border2);color:var(--text3);font-family:var(--font-mono);">⌘K</kbd>'
-    +   '</div>'
-    // UI-FIX2.2: Alter Footer-Collapse-Button entfernt. Toggle ist jetzt
-    // im Sidebar-Header (id="sb-toggle-header"), zentral gehandlet.
-    + '</div>'
+    /* P5b.F1-3: Account-Footer mit Avatar + Tier + Usage + Dropdown.
+       Ersetzt den alten Settings/Hilfe/Logout-Footer. */
+    + buildAccountFooter()
   ;
 
   /* ── In DOM einfügen ── */
@@ -637,10 +1025,27 @@
     if (e.key === 'Escape') closeMobileSidebar();
   });
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', injectNav);
-  } else {
+  function bootstrapSidebar() {
     injectNav();
+    // P5b.D: Sofort cache anwenden (falls vorhanden), dann fresh load.
+    var cached = readCountCache();
+    if (cached) applyCountsToBadges(cached);
+    // Lazy: 800ms warten, damit Login-Logic + auth-guard durch sind.
+    setTimeout(function () { loadSidebarCounts(); }, 800);
+    // Refresh on focus (max alle 30s, sonst nur cache)
+    var lastRefresh = 0;
+    window.addEventListener('focus', function () {
+      var now = Date.now();
+      if (now - lastRefresh < 30000) return;
+      lastRefresh = now;
+      loadSidebarCounts();
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', bootstrapSidebar);
+  } else {
+    bootstrapSidebar();
   }
 })();
 
