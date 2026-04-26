@@ -31,6 +31,7 @@
 
 const crypto  = require('crypto');
 const { getCorsHeaders, corsOptionsResponse } = require('./lib/cors-helper');
+const { resolveUser, logAuthFailure } = require('./lib/auth-resolve');
 
 // ── Konfiguration ──────────────────────────────────────────────────────
 const TOKEN_TTL_MS    = 15 * 60 * 1000;    // 15 Minuten
@@ -183,13 +184,20 @@ exports.handler = async function(event, context) {
   }
 
   // ── POST: Token erstellen (Eigentümer-Check) ───────────────────────
+  // P5.A1: HMAC-Token via lib/auth-resolve statt clientContext.user.
+  // GET-Pfad oben bleibt unverändert (signed-URL-Token im Query — separate
+  // Auth-Mechanik für PDF-Downloads, nicht durch HMAC ersetzt).
   if (event.httpMethod === 'POST') {
-    // JWT-Pflicht
-    const user = context.clientContext && context.clientContext.user;
-    if (!user || !user.email) {
+    const u = resolveUser(event);
+    if (u.mismatch) {
+      logAuthFailure('Auth-Mismatch', event, u.mismatch);
+      return jsonResponse(event, 403, { error: 'Auth-Mismatch: Token-Subject und Request-Identitaet stimmen nicht ueberein', code: 'AUTH_MISMATCH' });
+    }
+    if (!u.email) {
+      logAuthFailure('Auth-Required', event, { function: 'pdf-proxy' });
       return jsonResponse(event, 401, { error: 'Anmeldung erforderlich', code: 'UNAUTHORIZED' });
     }
-    const jwtEmail = user.email.toLowerCase().trim();
+    const jwtEmail = u.email;
 
     let body;
     try { body = JSON.parse(event.body || '{}'); }
