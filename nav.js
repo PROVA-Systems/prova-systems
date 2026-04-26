@@ -269,23 +269,25 @@
       +   'cursor:pointer;font-family:inherit;transition:all .18s;'
       +   'box-shadow:0 2px 12px rgba(79,142,247,.3);'
       + '}'
+      /* P5b.X1.3: Variante C — 2-Zeilen-Button */
       + '.sb-new-btn-main{'
-      +   'display:flex;align-items:center;gap:8px;padding:10px 14px;'
+      +   'display:flex;align-items:center;gap:10px;padding:9px 14px;'
       +   'border-radius:10px 0 0 10px;flex:1;min-width:0;text-align:left;'
       +   'border-right:1px solid rgba(255,255,255,.18);'
       + '}'
       + '.sb-new-btn-arrow{'
       +   'display:flex;align-items:center;justify-content:center;'
-      +   'width:32px;padding:10px 0;border-radius:0 10px 10px 0;'
+      +   'width:32px;padding:0;border-radius:0 10px 10px 0;flex-shrink:0;'
       + '}'
       + '.sb-new-wrap{display:flex;}'
       + '.sb-new-btn-main:hover,.sb-new-btn-arrow:hover{opacity:.92;}'
-      + '.sb-new-icon{font-size:14px;flex-shrink:0;line-height:1;}'
-      + '.sb-new-label{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}'
-      + '.sb-new-default{font-size:10px;font-weight:500;opacity:.75;white-space:nowrap;}'
+      + '.sb-new-icon{font-size:16px;flex-shrink:0;line-height:1;}'
+      + '.sb-new-text{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.2;}'
+      + '.sb-new-line1{font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}'
+      + '.sb-new-line2{font-size:11px;font-weight:500;opacity:.7;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px;}'
       + '.sb-new-arrow{font-size:11px;display:inline-block;transition:transform .18s;}'
-      + '.sidebar.collapsed .sb-new-label,.sidebar.collapsed .sb-new-default{opacity:0;width:0;margin:0;padding:0;}'
-      + '.sidebar.collapsed .sb-new-btn-main{justify-content:center;padding:10px;border-radius:10px;border-right:none;}'
+      + '.sidebar.collapsed .sb-new-text{opacity:0;width:0;}'
+      + '.sidebar.collapsed .sb-new-btn-main{justify-content:center;padding:10px;border-radius:10px;border-right:none;flex:0 0 auto;}'
       + '.sidebar.collapsed .sb-new-btn-arrow{display:none;}'
       // Dropdown
       + '.sb-new-dropdown{'
@@ -576,6 +578,9 @@
     var t = findAuftragsTyp(id);
     if (!t) return;
     try { localStorage.setItem('prova_letzter_auftragstyp', id); } catch(e) {}
+    // Live-Update der Smart-Default-Unterzeile (falls Navigation kurz klemmt)
+    var lbl = document.getElementById('sb-new-default-label');
+    if (lbl) lbl.textContent = t.label;
     provaResetFall();
     window.location.href = t.url;
   };
@@ -620,12 +625,20 @@
            + '</div>';
     }).join('');
 
+    /* P5b.X1.3: Variante C — 2-Zeilen-Button.
+       Hauptzeile gross + prominent ("Neuer Auftrag"), Unterzeile
+       klein + gedaempft (Smart-Default-Label).
+       Der Pfeil-Button bleibt rechts; im collapsed-Mode nur das ✨-Icon. */
+    var defLabel = (def && def.label) || 'Schadensgutachten';
+    var defId    = (def && def.id) || 'schadensgutachten';
     return '<div class="sb-new-wrap">'
-         +   '<button type="button" class="sb-new-btn-main" id="sb-new-btn" onclick="provaSelectAuftragstyp(\'' + (def && def.id || 'schadensgutachten') + '\')" '
-         +     'title="Letzter Typ: ' + (def && def.label || 'Schadensgutachten') + '">'
+         +   '<button type="button" class="sb-new-btn-main" id="sb-new-btn" onclick="provaSelectAuftragstyp(\'' + defId + '\')" '
+         +     'title="Direkt anlegen: ' + escAttr(defLabel) + '">'
          +     '<span class="sb-new-icon">✨</span>'
-         +     '<span class="sb-new-label">Neuer Auftrag</span>'
-         +     '<span class="sb-new-default">(' + (def && def.label.split(' ')[0] || 'Schaden') + ')</span>'
+         +     '<div class="sb-new-text">'
+         +       '<div class="sb-new-line1">Neuer Auftrag</div>'
+         +       '<div class="sb-new-line2" id="sb-new-default-label">' + escAttr(defLabel) + '</div>'
+         +     '</div>'
          +   '</button>'
          +   '<button type="button" class="sb-new-btn-arrow" onclick="provaToggleAuftragDropdown()" aria-label="Auftragstyp auswählen">'
          +     '<span class="sb-new-arrow">▾</span>'
@@ -908,22 +921,19 @@
       // User hat eigene Wahl getroffen - respektieren
       collapsed = savedCollapse === '1';
     } else {
-      // Erste Sitzung: Auto-Collapse bei schmalen Fenstern
-      collapsed = window.innerWidth < 900 && window.innerWidth > 768;
+      // P5b.X1.4: Auto-Collapse-Breakpoint deaktiviert fuer Range 768-1024.
+      // Marcel-Spec: Sidebar bleibt voll sichtbar bei halbiertem Desktop-Fenster.
+      // Unter 768px greift sowieso der Mobile-Mode (@media (max-width:768px)).
+      collapsed = false;
     }
     if (collapsed) existing.classList.add('collapsed');
 
-    // Bei Viewport-Resize Auto-Collapse anpassen, aber NIE
-    // explizite User-Wahl überschreiben.
-    // UI-FIX2.2: updateToggleUi nach Resize-Change nachziehen (aria/title).
+    // Resize-Listener: keine Auto-Collapse-Aenderungen mehr im 768-1024-Range.
+    // User-explizite Toggle-Wahl bleibt persistent. Mobile-Mode haengt rein
+    // an CSS-Media-Queries.
     window.addEventListener('resize', function () {
       if (localStorage.getItem('prova_sb_collapsed') !== null) return;
-      var shouldCollapse = window.innerWidth < 900 && window.innerWidth > 768;
-      var wasCol = existing.classList.contains('collapsed');
-      existing.classList.toggle('collapsed', shouldCollapse);
-      if (shouldCollapse !== wasCol && typeof updateToggleUi === 'function') {
-        updateToggleUi(shouldCollapse);
-      }
+      // Kein Auto-Collapse mehr — Sidebar bleibt voll sichtbar bis Mobile.
     });
 
     // ── Scroll-Position der Sidebar wiederherstellen ──

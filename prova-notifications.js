@@ -336,8 +336,12 @@
   function injectCss() {
     if (document.getElementById('prova-notif-css')) return;
     var css = ''
-      + '#prova-notif-wrap{position:fixed;top:14px;right:18px;z-index:550;}'
-      + '@media(max-width:768px){#prova-notif-wrap{top:10px;right:14px;}}'
+      /* P5b.X1.2: Default ist fixed top-right; wenn ein Topbar-Slot
+         (.prova-notif-slot oder .topbar-right) gefunden wird, switched
+         injectBell() auf inline-Mode (#prova-notif-wrap.in-topbar). */
+      + '#prova-notif-wrap{position:fixed;top:14px;right:32px;z-index:550;}'
+      + '#prova-notif-wrap.in-topbar{position:relative;top:auto;right:auto;display:inline-flex;}'
+      + '@media(max-width:768px){#prova-notif-wrap:not(.in-topbar){top:10px;right:14px;}}'
       + '#prova-notif-bell{'
       +   'position:relative;width:38px;height:38px;border-radius:10px;'
       +   'background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);'
@@ -416,14 +420,29 @@
   function injectBell() {
     if (document.getElementById('prova-notif-wrap')) return;
     injectCss();
+
+    // P5b.X1.2: Bevorzugter Mount-Point ist .prova-notif-slot, dann .topbar-right.
+    // Nur wenn keiner gefunden wird, faellt die Glocke auf fixed top-right zurück.
+    var slot = document.querySelector('.prova-notif-slot[data-prova-notif]')
+            || document.querySelector('.topbar-right');
     var wrap = document.createElement('div');
     wrap.id = 'prova-notif-wrap';
+    if (slot) wrap.classList.add('in-topbar');
     wrap.innerHTML = ''
       + '<button type="button" id="prova-notif-bell" aria-label="Benachrichtigungen">'
       +   '🔔<span id="prova-notif-badge"></span>'
       + '</button>'
       + '<div id="prova-notif-panel" role="dialog" aria-label="Benachrichtigungen"></div>';
-    document.body.appendChild(wrap);
+    if (slot) {
+      // Ins erste matchende Slot einfuegen (oder in topbar-right erste Position)
+      if (slot.classList.contains('prova-notif-slot')) {
+        slot.appendChild(wrap);
+      } else {
+        slot.insertBefore(wrap, slot.firstChild);
+      }
+    } else {
+      document.body.appendChild(wrap);
+    }
 
     var btn = document.getElementById('prova-notif-bell');
     var panel = document.getElementById('prova-notif-panel');
@@ -449,6 +468,10 @@
 
   function init() {
     if (!localStorage.getItem('prova_sv_email')) return; // nicht eingeloggt
+    // P5b.X1.6: Auf benachrichtigungen.html zeigt der Hauptbereich die volle
+    // Liste — die Glocke wird daneben redundant. Skip.
+    var path = (window.location && window.location.pathname || '').toLowerCase();
+    if (path.endsWith('/benachrichtigungen.html') || path.endsWith('benachrichtigungen.html')) return;
     injectBell();
     // Erste Last verzoegert (sidebar-counts haben Prio in den ersten 800ms)
     setTimeout(refresh, 1500);
