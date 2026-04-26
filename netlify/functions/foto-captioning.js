@@ -2,21 +2,23 @@
 // POST { imageBase64: "...", mediaType: "image/jpeg", aktenzeichen: "WS-2024-001", schadensart: "Wasserschaden" }
 // → GPT-4o Vision analysiert das Bild und gibt strukturierte Metadaten zurück
 
-exports.handler = async function(event) {
-  if (event.httpMethod === 'OPTIONS') {
-    return {
-      statusCode: 200,
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Headers': 'Content-Type',
-        'Access-Control-Allow-Methods': 'POST, OPTIONS'
-      },
-      body: ''
-    };
-  }
+const { requireAuth, jsonResponse } = require('./lib/jwt-middleware');
+const RateLimit = require('./lib/rate-limit-user');
+const { logAuthFailure } = require('./lib/auth-resolve');
 
+// S-SICHER P4B.4: requireAuth + Rate-Limit 30/60s pro Token-sub
+exports.handler = requireAuth(async function(event, context) {
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: JSON.stringify({ error: 'Method not allowed' }) };
+  }
+
+  const rl = RateLimit.check(context.userEmail, 30, 60);
+  if (!rl.allowed) {
+    logAuthFailure('Rate-Limit', event, { tokenEmail: context.userEmail, function: 'foto-captioning', max: 30, windowSec: 60 });
+    return jsonResponse(event, 429,
+      { error: 'Rate-Limit erreicht. Bitte ' + rl.retryAfter + 's warten.' },
+      { 'Retry-After': String(rl.retryAfter) }
+    );
   }
 
   const apiKey = process.env.OPENAI_API_KEY;
@@ -130,4 +132,4 @@ Gib das JSON-Objekt zurück.`;
       body: JSON.stringify({ error: 'Upstream error' })
     };
   }
-};
+});
