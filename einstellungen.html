@@ -670,7 +670,7 @@
           bn_zahlung:    s.bn_zahlung    !== false,
           bn_stillezeit: s.bn_stillezeit === true,
         };
-        await fetch('/.netlify/functions/push-notify', {
+        await provaFetch('/.netlify/functions/push-notify', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ aktion: 'save-prefs', email, prefs }),
@@ -688,7 +688,7 @@
         const local = JSON.parse(localStorage.getItem(ES_KEY) || '{}');
         // Nur laden wenn keine lokalen Werte existieren (sonst Benutzer-Änderung respektieren)
         if (local.bn_fristen === undefined || local.bn_zahlung === undefined || local.bn_stillezeit === undefined) {
-          const r = await fetch('/.netlify/functions/push-notify', {
+          const r = await provaFetch('/.netlify/functions/push-notify', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ aktion: 'get-prefs', email }),
@@ -795,7 +795,7 @@
       }
       try {
         if (typeof zeigeToast === 'function') zeigeToast('⏳ Portal wird geöffnet …');
-        const res = await fetch('/.netlify/functions/stripe-portal', {
+        const res = await provaFetch('/.netlify/functions/stripe-portal', {
           method:  'POST',
           headers: { 'Content-Type': 'application/json' },
           body:    JSON.stringify({ email, return_url: window.location.href })

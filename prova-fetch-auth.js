@@ -61,7 +61,7 @@
     } catch (e) {}
     // Nicht-aggressiv loggen — Login-Page hat eigenen Banner
     var page = (window.location && window.location.pathname || '').split('/').pop();
-    var publicPages = ['app-login.html', 'app-register.html', 'index.html', ''];
+    var publicPages = ['app-login.html', 'app-register.html', 'admin-login.html', 'index.html', ''];
     if (publicPages.indexOf(page) === -1) {
       try { localStorage.setItem('prova_logout_grund', 'token_expired'); } catch (e) {}
       window.location.replace('/app-login.html?reason=token_expired');

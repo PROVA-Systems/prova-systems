@@ -222,6 +222,7 @@
   <script>
     if (typeof netlifyIdentity !== 'undefined') netlifyIdentity.init();
   </script>
+  <script src="prova-fetch-auth.js"></script>
   <script src="prova-auth-api.js"></script>
   <script>
   (function () {
@@ -242,7 +243,7 @@
       }
       setStatus('⏳ Öffne Stripe-Kunden-Portal …');
       try {
-        var res = await fetch('/.netlify/functions/stripe-portal', {
+        var res = await provaFetch('/.netlify/functions/stripe-portal', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email: email, return_url: window.location.href })
@@ -304,7 +305,7 @@
         return;
       }
       setStatus('⏳ Löschanfrage wird gestellt …');
-      fetch('/.netlify/functions/dsgvo-loeschen', {
+      provaFetch('/.netlify/functions/dsgvo-loeschen', {
         method: 'POST',
         headers: Object.assign({ 'Content-Type': 'application/json' },
                                (typeof window.provaAuthHeaders === 'function' ? window.provaAuthHeaders() : {})),

@@ -986,7 +986,7 @@ async function transkribiere(blob){
       reader.onerror = rej;
       reader.readAsDataURL(blob);
     });
-    var res = await fetch('/.netlify/functions/whisper-diktat', {
+    var res = await provaFetch('/.netlify/functions/whisper-diktat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -1028,7 +1028,7 @@ window.sendeAnKI = async function(){
   btn.innerHTML = '<span class="ot-spin"></span> KI analysiert…';
 
   try {
-    var res = await fetch('/.netlify/functions/ki-proxy', {
+    var res = await provaFetch('/.netlify/functions/ki-proxy', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -1176,7 +1176,7 @@ window.analysiereAlleFotos = async function(){
       var base64 = foto.dataUrl.split(',')[1];
       var mediaType = foto.dataUrl.split(';')[0].split(':')[1] || 'image/jpeg';
 
-      var res = await fetch('/.netlify/functions/foto-captioning', {
+      var res = await provaFetch('/.netlify/functions/foto-captioning', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ imageBase64: base64, mediaType: mediaType, aktenzeichen: _az, schadensart: _schadenart })
@@ -1353,7 +1353,7 @@ window.provaKICaption = async function(btn) {
   btn.disabled = true; btn.textContent = '⏳ Analysiert…';
 
   try {
-    var res = await fetch('/.netlify/functions/foto-captioning', {
+    var res = await provaFetch('/.netlify/functions/foto-captioning', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

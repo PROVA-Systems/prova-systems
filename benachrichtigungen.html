@@ -812,7 +812,7 @@
 
         try {
           // VAPID Public Key vom Server holen
-          const vapidResp = await fetch('/.netlify/functions/push-notify', {
+          const vapidResp = await provaFetch('/.netlify/functions/push-notify', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ action: 'vapid-key' })
@@ -827,7 +827,7 @@
 
           // Subscription auf Server speichern
           const svEmail = localStorage.getItem('prova_sv_email') || '';
-          await fetch('/.netlify/functions/push-notify', {
+          await provaFetch('/.netlify/functions/push-notify', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -855,7 +855,7 @@
           const reg = await navigator.serviceWorker.ready;
           const sub = await reg.pushManager.getSubscription();
           if (sub) {
-            await fetch('/.netlify/functions/push-notify', {
+            await provaFetch('/.netlify/functions/push-notify', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
@@ -887,7 +887,7 @@
 
     async function sendePushTest() {
       try {
-        await fetch('/.netlify/functions/push-notify', {
+        await provaFetch('/.netlify/functions/push-notify', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -1024,7 +1024,7 @@ async function ladeBenachrichtigungen() {
   if (svEmail) {
     try {
       var filter = encodeURIComponent('AND({sv_email}="'+svEmail+'",OR({Status}="In Bearbeitung",{Status}="Offen"))');
-      var res = await fetch('/.netlify/functions/airtable', {
+      var res = await provaFetch('/.netlify/functions/airtable', {
         method:'POST', headers:{'Content-Type':'application/json'},
         body: JSON.stringify({method:'GET',
           path:'/v0/appJ7bLlAHZoxENWE/tblSxV8bsXwd1pwa0?filterByFormula='+filter+'&maxRecords=20&fields[]=Aktenzeichen&fields[]=Status&fields[]=Schadensart&fields[]=Timestamp'})

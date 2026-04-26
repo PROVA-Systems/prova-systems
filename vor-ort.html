@@ -580,7 +580,7 @@ async function speichereUndWeiter() {
   if (navigator.onLine) {
     try {
       var headers = Object.assign({'Content-Type':'application/json'}, window.provaAuthHeaders ? window.provaAuthHeaders() : {});
-      var r = await fetch('/.netlify/functions/airtable', {
+      var r = await provaFetch('/.netlify/functions/airtable', {
         method: 'POST', headers: headers,
         body: JSON.stringify(atPayload)
       });
@@ -767,7 +767,7 @@ async function fristAlsTermin(az, datum, schadensart, auftraggeber) {
     local.push(Object.assign({ id: 'frist_' + az.replace(/[^a-z0-9]/gi,'-'), src: 'auto' }, termin));
     localStorage.setItem('prova_termine', JSON.stringify(local));
     var hdrs = Object.assign({'Content-Type':'application/json'}, window.provaAuthHeaders ? window.provaAuthHeaders() : {});
-    fetch('/.netlify/functions/airtable', {
+    provaFetch('/.netlify/functions/airtable', {
       method: 'POST', headers: hdrs,
       body: JSON.stringify({ method: 'POST', path: '/v0/appJ7bLlAHZoxENWE/tblyMTTdtfGQjjmc2', payload: { records: [{ fields: termin }] } })
     }).catch(function() {});
