@@ -14,10 +14,34 @@
 //   npx web-push generate-vapid-keys
 // ══════════════════════════════════════════════════════════════════════════════
 
+const { resolveUser, logAuthFailure } = require('./lib/auth-resolve');
+
 const AT_BASE        = 'appJ7bLlAHZoxENWE';
 const AT_PUSH_TABLE  = 'PUSH_SUBSCRIPTIONS';   // Neue Tabelle anlegen
 const AT_FAELLE      = 'tblSxV8bsXwd1pwa0';
 const AT_TERMINE     = 'tblyMTTdtfGQjjmc2';
+
+// S-SICHER P4B.6: Origin-Check fuer User-Actions.
+// Allow-List der erlaubten Frontend-Origins. Make.com-Webhooks (send-fristen)
+// und der oeffentliche vapid-key-Endpoint sind ausgenommen — sie haben
+// entweder eigene Auth (geplant Sprint 04) oder sind public.
+const ALLOWED_ORIGINS = [
+  'https://prova-systems.de',
+  'https://www.prova-systems.de',
+  'https://app.prova-systems.de',
+  'https://admin.prova-systems.de',
+  'https://prova-systems.netlify.app',
+  'http://localhost:8888',
+  'http://localhost:3000'
+];
+
+function isAllowedOrigin(event) {
+  const origin = event.headers && (event.headers.origin || event.headers.Origin);
+  if (!origin) return false;
+  return ALLOWED_ORIGINS.some(function (o) {
+    return origin === o || origin === (o + '/');
+  });
+}
 
 exports.handler = async (event) => {
   if (event.httpMethod === 'OPTIONS') {
@@ -38,14 +62,48 @@ exports.handler = async (event) => {
 
   const { aktion, email, subscription, titel, nachricht, url, typ, prefs } = body;
 
+  // Public/Webhook-Actions ohne Origin-Check + Auth
+  if (aktion === 'vapid-key')    return handleVapidKey();
+  if (aktion === 'send-fristen') return await handleFristenCheck(pat);
+
+  // S-SICHER P4B.6: Origin-Check VOR JWT-Check.
+  // Bei fremder/fehlender Origin: 403 ohne Hint warum (Security).
+  if (!isAllowedOrigin(event)) {
+    logAuthFailure('Origin-Block', event, {
+      function: 'push-notify',
+      origin: (event.headers && (event.headers.origin || event.headers.Origin)) || 'missing'
+    });
+    return { statusCode: 403, headers: corsHeaders(), body: JSON.stringify({ error: 'Forbidden' }) };
+  }
+
+  // JWT-Check
+  const u = resolveUser(event);
+  if (u.mismatch) {
+    logAuthFailure('Auth-Mismatch', event, u.mismatch);
+    return { statusCode: 403, headers: corsHeaders(), body: JSON.stringify({ error: 'Auth-Mismatch: Token-Subject und Request-Identitaet stimmen nicht ueberein' }) };
+  }
+  if (!u.email) {
+    logAuthFailure('Auth-Required', event, { function: 'push-notify' });
+    return { statusCode: 401, headers: corsHeaders(), body: JSON.stringify({ error: 'Authentifizierung erforderlich' }) };
+  }
+
+  // body.email muss mit Token-sub uebereinstimmen — User darf nur fuer
+  // sich selbst Subscriptions/Sends triggern.
+  if (email && String(email).toLowerCase() !== u.email) {
+    logAuthFailure('Auth-Mismatch', event, {
+      tokenEmail: u.email, otherEmail: String(email).toLowerCase(), otherSource: 'body.email'
+    });
+    return { statusCode: 403, headers: corsHeaders(), body: JSON.stringify({ error: 'Auth-Mismatch: body.email weicht vom Token ab' }) };
+  }
+  // Wenn body.email fehlt: aus Token nehmen.
+  const userEmail = (email && String(email).toLowerCase()) || u.email;
+
   switch (aktion) {
-    case 'subscribe':    return await handleSubscribe(pat, email, subscription);
-    case 'unsubscribe':  return await handleUnsubscribe(pat, email);
-    case 'send':         return await handleSend(pat, email, { titel, nachricht, url, typ });
-    case 'send-fristen': return await handleFristenCheck(pat);
-    case 'save-prefs':   return await handleSavePrefs(pat, email, prefs || {});
-    case 'get-prefs':    return await handleGetPrefs(pat, email);
-    case 'vapid-key':    return handleVapidKey();
+    case 'subscribe':    return await handleSubscribe(pat, userEmail, subscription);
+    case 'unsubscribe':  return await handleUnsubscribe(pat, userEmail);
+    case 'send':         return await handleSend(pat, userEmail, { titel, nachricht, url, typ });
+    case 'save-prefs':   return await handleSavePrefs(pat, userEmail, prefs || {});
+    case 'get-prefs':    return await handleGetPrefs(pat, userEmail);
     default:
       return { statusCode: 400, headers: corsHeaders(), body: JSON.stringify({ error: `Unbekannte Aktion: ${aktion}` }) };
   }
