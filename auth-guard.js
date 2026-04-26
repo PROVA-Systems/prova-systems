@@ -65,39 +65,29 @@
     return true;
   };
 
-  /* Beim Login aufrufen: createSession(userData) */
+  /* P4B.9: provaCreateSession bleibt als no-op-Stub.
+     app-login-logic.js ruft das noch auf (defensiv hinter typeof-Guard),
+     hat aber keine Wirkung mehr — der HMAC-Token aus auth-token-issue
+     ist der einzige Auth-Anker. Wir loeschen die V2-Session-Reste falls
+     vorhanden, damit kein altes Session-Objekt herumliegt. */
   window.provaCreateSession = function (userData) {
     if (!userData || !userData.email) return false;
-
-    var now    = Date.now();
-    var token  = buildToken(userData.email, now);
-    var session = {
-      user:      userData,
-      created:   now,
-      expires:   now + SESSION_TTL,
-      token:     token,
-      v:         2
-    };
-
     try {
-      localStorage.setItem(SESSION_KEY, JSON.stringify(session));
-      localStorage.setItem(ACTIVITY_KEY, now.toString());
-      // Legacy-Key für Backward-Kompatibilität
-      localStorage.setItem(LEGACY_KEY, userData.email);
-    } catch (e) {
-      console.warn('[Auth] Session speichern fehlgeschlagen:', e);
-      return false;
-    }
+      localStorage.removeItem(SESSION_KEY);    // alte V2-Session weg
+      localStorage.setItem(ACTIVITY_KEY, Date.now().toString());
+      localStorage.setItem(LEGACY_KEY, userData.email);  // fuer Re-Login-Email-Vorbelegung
+    } catch (e) {}
     return true;
   };
 
-  /* Session auslesen */
+  /* Session auslesen — P4B.9: liefert Token-basierte Session aus prova_user.
+     V2-Session ist weg; provaGetSession bleibt als API fuer Code-Stellen
+     die Session-Info brauchen. */
   window.provaGetSession = function () {
     if (!isValidSession()) return null;
     try {
-      var raw = localStorage.getItem(SESSION_KEY);
-      if (!raw) return null;
-      return JSON.parse(raw);
+      var raw = localStorage.getItem('prova_user');
+      return raw ? JSON.parse(raw) : null;
     } catch (e) {
       return null;
     }
@@ -112,88 +102,29 @@
   /* ── Private Helfer ── */
 
   function isValidSession() {
-    var now = Date.now();
-
-    // P4A.4 (Finding 7.1): Primaerer Auth-Pfad — HMAC-Token aus
-    // auth-token-issue.js. Gesetzt in app-login-logic.js durch P4A.5.
+    // S-SICHER P4B.9: HMAC-Token ist EINZIGER Auth-Anker.
+    // V2-Session-Sekundaer-Pfad und Legacy-prova_user-Migration komplett
+    // entfernt (Audit-Findings 7.1 / 7.2 / 7.3 endgueltig geschlossen).
     var tok = localStorage.getItem(TOKEN_KEY);
     var tokPayload = tok ? verifyProvaToken(tok) : null;
     if (tokPayload) {
       // sv_email aus Token-sub spiegeln (Defense gegen lokale Manipulation
-      // anderer Keys: token.sub gewinnt).
+      // anderer localStorage-Keys: token.sub gewinnt).
       try { localStorage.setItem('prova_sv_email', tokPayload.sub); } catch (e) {}
       return true;
     }
 
-    // Falls Token vorhanden aber abgelaufen/ungueltig → bereinigen
+    // Token vorhanden aber abgelaufen/ungueltig -> bereinigen.
     if (tok && !tokPayload) {
       try { localStorage.removeItem(TOKEN_KEY); } catch (e) {}
       console.info('[Auth] HMAC-Token abgelaufen oder ungueltig — entfernt');
     }
 
-    // Sekundaerer Pfad: Legacy V2-Session (vor P4A.4 erzeugt durch
-    // provaCreateSession). Bleibt vorerst — Sprint 3 (P4B) macht den
-    // ganzen Auth-Flow auf HMAC-Token-only.
-    try {
-      var raw = localStorage.getItem(SESSION_KEY);
-      if (raw) {
-        var session = JSON.parse(raw);
-
-        // Format-Check
-        if (!session || session.v !== 2 || !session.user || !session.token) {
-          return false;
-        }
-
-        // Expiry-Check — verlängern wenn noch aktiv (letzte 24h)
-        if (now > session.expires) {
-          var lastAct = parseInt(localStorage.getItem(ACTIVITY_KEY) || '0');
-          if (lastAct && (now - lastAct) < 24 * 60 * 60 * 1000) {
-            session.expires = now + SESSION_TTL;
-            try { localStorage.setItem(SESSION_KEY, JSON.stringify(session)); } catch(e){}
-            console.info('[Auth] V2-Session automatisch verlängert');
-          } else {
-            console.info('[Auth] V2-Session abgelaufen');
-            return false;
-          }
-        }
-
-        var lastActivity = parseInt(localStorage.getItem(ACTIVITY_KEY) || '0');
-        if (lastActivity && (now - lastActivity) > SESSION_TTL) {
-          console.info('[Auth] Inaktivitäts-Timeout');
-          return false;
-        }
-
-        var expectedToken = buildToken(session.user.email, session.created);
-        if (session.token !== expectedToken) {
-          console.warn('[Auth] V2-Token-Manipulation erkannt');
-          return false;
-        }
-
-        return true;
-      }
-    } catch (e) {
-      return false;
-    }
-
-    // P4A.4 (Finding 7.1): Legacy-Migration aus prova_user-localStorage
-    // ENTFERNT. Vorher: jeder uebrig-gebliebene prova_user-Eintrag wurde
-    // stillschweigend zu V2 migriert — das war der Bypass der dashboard.html
-    // / einstellungen.html ohne echten Login passieren liess.
     return false;
   }
 
-  function buildToken(email, timestamp) {
-    // Einfaches, nicht-kryptografisches Token für Client-Side Tamper-Detection
-    // Echte Sicherheit liegt server-side in den Netlify Functions
-    var str = email + ':' + timestamp + ':' + navigator.userAgent.slice(0, 20);
-    var hash = 0;
-    for (var i = 0; i < str.length; i++) {
-      var chr = str.charCodeAt(i);
-      hash = ((hash << 5) - hash) + chr;
-      hash |= 0;
-    }
-    return 'prova_' + Math.abs(hash).toString(36);
-  }
+  // P4B.9: buildToken war fuer V2-Session-Tamper-Detection — ungenutzt nach
+  // Entfernung der V2-Session. Funktion entfernt.
 
   function refreshActivity() {
     try {
