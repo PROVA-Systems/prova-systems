@@ -7,6 +7,7 @@ const {
   TABLE_AUDIT
 } = require('./lib/prova-subscription.js');
 const { getCorsHeaders, corsOptionsResponse, jsonResponse } = require('./lib/cors-helper');
+const { requireAuth } = require('./lib/jwt-middleware');
 
 function json(statusCode, obj) {
   return {
@@ -36,12 +37,13 @@ async function listCount(pat, tableId, formula) {
   return Array.isArray(data.records) ? data.records.length : 0;
 }
 
-exports.handler = async function (event, context) {
-  if (event.httpMethod === 'OPTIONS') return json(204, {});
+exports.handler = requireAuth(async function (event, context) {
   if (event.httpMethod !== 'GET') return json(405, { error: 'Method Not Allowed' });
 
-  const user = context.clientContext && context.clientContext.user;
-  if (!user || !user.email) return json(401, { error: 'Anmeldung erforderlich' });
+  // P4B.7b: context.userEmail aus HMAC-Token statt Identity-clientContext.user.email
+  const userEmail = context.userEmail;
+  // Backward-Compat: alte Code-Stellen referenzieren user.email
+  const user = { email: userEmail };
 
   const pat = process.env.AIRTABLE_PAT;
   if (!pat) return json(500, { error: 'AIRTABLE_PAT nicht konfiguriert' });
@@ -84,4 +86,4 @@ exports.handler = async function (event, context) {
     ki_anfragen_anzahl: ki,
     generated_at: new Date().toISOString()
   });
-};
+});

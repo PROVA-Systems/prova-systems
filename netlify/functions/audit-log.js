@@ -4,6 +4,7 @@
  */
 const { AIRTABLE_API, BASE_ID, TABLE_AUDIT } = require('./lib/prova-subscription.js');
 const { getCorsHeaders, corsOptionsResponse, jsonResponse } = require('./lib/cors-helper');
+const { requireAuth } = require('./lib/jwt-middleware');
 
 function json(statusCode, obj) {
   return {
@@ -26,8 +27,7 @@ function ipHint(event) {
   return raw.split('.').slice(0, 3).join('.');
 }
 
-exports.handler = async function (event, context) {
-  if (event.httpMethod === 'OPTIONS') return json(204, {});
+exports.handler = requireAuth(async function (event, context) {
   if (event.httpMethod !== 'POST') return json(405, { error: 'Method Not Allowed' });
 
   const pat = process.env.AIRTABLE_PAT;
@@ -68,4 +68,4 @@ exports.handler = async function (event, context) {
     // never block app flow
   }
   return json(200, { ok: true });
-};
+});

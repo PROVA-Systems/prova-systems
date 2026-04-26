@@ -1,4 +1,5 @@
 const { getCorsHeaders, corsOptionsResponse } = require('./lib/cors-helper');
+const { requireAuth } = require('./lib/jwt-middleware');
 // ══════════════════════════════════════════════════
 // PROVA Systems — KI-Statistik Sync
 // Netlify Function: ki-statistik
@@ -28,14 +29,13 @@ const POOL_FIELDS = {
   datum:      'fld7z7wRgkHNUyjDf'
 };
 
-exports.handler = async (event) => {
+exports.handler = requireAuth(async (event, context) => {
   const headers = {
     'Access-Control-Allow-Origin': process.env.URL || 'https://prova-systems.de',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     'Content-Type': 'application/json'
   };
 
-  if (event.httpMethod === 'OPTIONS') return { statusCode: 200, headers, body: '' };
   if (event.httpMethod !== 'POST') return { statusCode: 405, headers, body: JSON.stringify({ error: 'Method Not Allowed' }) };
 
   const PAT = process.env.AIRTABLE_PAT;
@@ -87,7 +87,7 @@ exports.handler = async (event) => {
     console.error('ki-statistik error:', err);
     return { statusCode: 500, headers, body: JSON.stringify({ error: err.message }) };
   }
-};
+});
 
 async function airtableCreate(pat, tableId, fields) {
   try {

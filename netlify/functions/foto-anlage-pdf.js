@@ -1,12 +1,13 @@
 const { fetchWithRetry } = require('./lib/fetch-with-timeout');
 const { getCorsHeaders, corsOptionsResponse } = require('./lib/cors-helper');
+const { requireAuth } = require('./lib/jwt-middleware');
 // ══════════════════════════════════════════════════
 // PROVA Systems — Foto-Anlage PDF Generator
 // Netlify Function: foto-anlage-pdf
 // Env: PDFMONKEY_API_KEY, PDFMONKEY_FOTO_TEMPLATE_ID
 // ══════════════════════════════════════════════════
 
-exports.handler = async (event) => {
+exports.handler = requireAuth(async (event, context) => {
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: 'Method Not Allowed' };
   }
@@ -132,4 +133,4 @@ exports.handler = async (event) => {
       body: JSON.stringify({ fallback: true, reason: err.message })
     };
   }
-};
+});

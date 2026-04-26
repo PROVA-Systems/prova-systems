@@ -6,6 +6,8 @@
 
 // WICHTIG: Alle Webhooks als Netlify Env-Variablen setzen:
 // MAKE_WEBHOOK_WILLKOMMEN, MAKE_WEBHOOK_TRIAL, MAKE_WEBHOOK_KAUF, MAKE_WEBHOOK_SUPPORT
+const { requireAuth } = require('./lib/jwt-middleware');
+
 const WEBHOOKS = {
   willkommen:         process.env.MAKE_WEBHOOK_WILLKOMMEN || '',
   trial_erinnerung:   process.env.MAKE_WEBHOOK_TRIAL      || '',
@@ -13,7 +15,7 @@ const WEBHOOKS = {
   support:            process.env.MAKE_WEBHOOK_SUPPORT    || '',  // FIX: kein Hardcode-Fallback
 };
 
-exports.handler = async (event) => {
+exports.handler = requireAuth(async (event, context) => {
   const allowedOrigin = process.env.URL || 'https://prova-systems.de'; // FIX: kein Wildcard
   const headers = {
     'Access-Control-Allow-Origin':  allowedOrigin,
@@ -21,8 +23,6 @@ exports.handler = async (event) => {
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
     'Content-Type': 'application/json',
   };
-
-  if (event.httpMethod === 'OPTIONS') return { statusCode: 200, headers, body: '' };
   if (event.httpMethod !== 'POST')   return { statusCode: 405, headers, body: JSON.stringify({ error: 'Method Not Allowed' }) };
 
   // JWT-Auth prüfen (Netlify Identity)
@@ -65,4 +65,4 @@ exports.handler = async (event) => {
   } catch (err) {
     return { statusCode: 500, headers, body: JSON.stringify({ error: err.message }) };
   }
-};
+});

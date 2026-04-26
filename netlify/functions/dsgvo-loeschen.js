@@ -10,6 +10,7 @@
 const { getCorsHeaders, corsOptionsResponse } = require('./lib/cors-helper');
 const { fetchWithRetry } = require('./lib/fetch-with-timeout');
 const { provaFetch } = require('./lib/prova-fetch');
+const { requireAuth } = require('./lib/jwt-middleware');
 
 const AT_BASE = process.env.AIRTABLE_BASE_ID  || 'appJ7bLlAHZoxENWE';
 const AT_PAT  = process.env.AIRTABLE_PAT      || process.env.AIRTABLE_TOKEN || '';
@@ -65,16 +66,13 @@ async function getRecordIds(tableId, emailField, email) {
   return ids;
 }
 
-exports.handler = async function(event, context) {
-  if (event.httpMethod === 'OPTIONS') return corsOptionsResponse(event);
+exports.handler = requireAuth(async function(event, context) {
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, headers: getCorsHeaders(event), body: JSON.stringify({ error: 'Method Not Allowed' }) };
   }
 
-  const user = context.clientContext && context.clientContext.user;
-  if (!user || !user.email) {
-    return { statusCode: 401, headers: getCorsHeaders(event), body: JSON.stringify({ error: 'Anmeldung erforderlich' }) };
-  }
+  // P4B.7b: context.userEmail aus HMAC-Token, kein Identity-clientContext mehr.
+  const user = { email: context.userEmail };
 
   let body = {};
   try { body = JSON.parse(event.body || '{}'); } catch(e) {}
@@ -137,4 +135,4 @@ exports.handler = async function(event, context) {
       hinweis: 'Ihre Rechnungen werden gem. §257 HGB bis zum Ende der gesetzlichen Aufbewahrungsfrist (10 Jahre) aufbewahrt und danach automatisch gelöscht.'
     })
   };
-};
+});

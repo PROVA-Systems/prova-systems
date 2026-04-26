@@ -10,6 +10,7 @@ const { getCorsHeaders, corsOptionsResponse } = require('./lib/cors-helper');
 const log = require('./lib/prova-logger');
 const { fetchWithRetry } = require('./lib/fetch-with-timeout');
 const { provaFetch } = require('./lib/prova-fetch');
+const { requireAuth } = require('./lib/jwt-middleware');
 
 function json(event, status, obj) {
   return {
@@ -19,12 +20,11 @@ function json(event, status, obj) {
   };
 }
 
-exports.handler = async function(event, context) {
-  if (event.httpMethod === 'OPTIONS') return corsOptionsResponse(event);
+exports.handler = requireAuth(async function(event, context) {
   if (event.httpMethod !== 'POST') return json(event, 405, { error: 'Method Not Allowed' });
 
-  const user = context.clientContext && context.clientContext.user;
-  if (!user || !user.email) return json(event, 401, { error: 'Anmeldung erforderlich' });
+  // P4B.7b: HMAC-Token-Email aus context.userEmail
+  const user = { email: context.userEmail };
 
   let body = {};
   try { body = JSON.parse(event.body || '{}'); } catch(e) {}
@@ -96,4 +96,4 @@ exports.handler = async function(event, context) {
     else if (e.message.includes('ECONNREFUSED')) tipp = 'SMTP-Server nicht erreichbar.';
     log.error({fn:'smtp',event:'send_failed',err:e.message}); return json(event, 502, { ok: false, error: e.message, tipp });
   }
-};
+});

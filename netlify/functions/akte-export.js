@@ -2,6 +2,7 @@
 // Generiert Word-Dokument (.docx) der Akte via docx-npm Bibliothek
 
 const https = require('https');
+const { requireAuth } = require('./lib/jwt-middleware');
 
 const CORS = {
   'Content-Type': 'application/json',
@@ -10,8 +11,7 @@ const CORS = {
   'Access-Control-Allow-Headers': 'Content-Type'
 };
 
-exports.handler = async function(event) {
-  if (event.httpMethod === 'OPTIONS') return { statusCode: 204, headers: CORS, body: '' };
+exports.handler = requireAuth(async function(event, context) {
   if (event.httpMethod !== 'POST') return { statusCode: 405, headers: CORS, body: JSON.stringify({error:'Method not allowed'}) };
 
   try {
@@ -89,4 +89,4 @@ exports.handler = async function(event) {
   } catch(e) {
     return { statusCode: 500, headers: CORS, body: JSON.stringify({error: e.message}) };
   }
-};
+});

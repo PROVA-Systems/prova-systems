@@ -1,5 +1,6 @@
 const { AIRTABLE_API, BASE_ID, TABLE_AUDIT } = require('./lib/prova-subscription.js');
 const { getCorsHeaders, corsOptionsResponse, jsonResponse } = require('./lib/cors-helper');
+const { requireAuth } = require('./lib/jwt-middleware');
 
 function json(statusCode, obj) {
   return {
@@ -14,12 +15,11 @@ function json(statusCode, obj) {
   };
 }
 
-exports.handler = async function (event, context) {
-  if (event.httpMethod === 'OPTIONS') return json(204, {});
+exports.handler = requireAuth(async function (event, context) {
   if (event.httpMethod !== 'GET') return json(405, { error: 'Method Not Allowed' });
 
-  const user = context.clientContext && context.clientContext.user;
-  if (!user || !user.email) return json(401, { error: 'Anmeldung erforderlich' });
+  // P4B.7b: HMAC-Token-Email statt Identity-clientContext
+  const user = { email: context.userEmail };
 
   const pat = process.env.AIRTABLE_PAT;
   if (!pat) return json(500, { error: 'AIRTABLE_PAT nicht konfiguriert' });
@@ -45,4 +45,4 @@ exports.handler = async function (event, context) {
   } catch (e) {
     return json(200, { ok: true, records: [] });
   }
-};
+});

@@ -4,19 +4,19 @@
 
 const nodemailer = require('nodemailer');
 const { getCorsHeaders, corsOptionsResponse } = require('./lib/cors-helper');
+const { requireAuth } = require('./lib/jwt-middleware');
 
 const PDFMONKEY_KEY  = process.env.PDFMONKEY_API_KEY;
 const BRIEF_TPL_ID   = process.env.PDFMONKEY_BRIEF_TEMPLATE_ID;
 const K3_WEBHOOK     = process.env.MAKE_K3_WEBHOOK;
 
-exports.handler = async function(event) {
+exports.handler = requireAuth(async function(event, context) {
   const cors = {
     'Content-Type': 'application/json',
     'Access-Control-Allow-Origin': process.env.URL || 'https://prova-systems.de',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     'Access-Control-Allow-Methods': 'POST, OPTIONS'
   };
-  if (event.httpMethod === 'OPTIONS') return { statusCode: 200, headers: cors, body: '' };
   if (event.httpMethod !== 'POST') return { statusCode: 405, headers: cors, body: JSON.stringify({ error: 'Method not allowed' }) };
 
   const jwtEmail = event.clientContext && event.clientContext.user && event.clientContext.user.email
@@ -164,4 +164,4 @@ exports.handler = async function(event) {
   return { statusCode: 200, headers: cors, body: JSON.stringify({
     success: true, absender: smtp_user, empfaenger: to, pdf_url: pdfUrl
   })};
-};
+});

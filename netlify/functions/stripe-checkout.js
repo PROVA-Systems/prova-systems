@@ -15,6 +15,7 @@ const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY || '');
 const crypto = require('crypto');
 const { getCorsHeaders, corsOptionsResponse } = require('./lib/cors-helper');
 const { resolveSoloPriceId, resolveTeamPriceId } = require('./lib/prova-stripe-prices.js');
+const { requireAuth } = require('./lib/jwt-middleware');
 
 // ── CORS-FIX: event wird als Parameter übergeben (nicht aus Scope) ────
 function json(event, statusCode, obj) {
@@ -41,18 +42,14 @@ function generateIdempotencyKey(email, priceId) {
   return crypto.createHash('sha256').update(raw).digest('hex').slice(0, 40);
 }
 
-exports.handler = async function (event, context) {
-  if (event.httpMethod === 'OPTIONS') return corsOptionsResponse(event);
+exports.handler = requireAuth(async function (event, context) {
   if (event.httpMethod !== 'POST') return json(event, 405, { error: 'Method Not Allowed' });
 
   const key = process.env.STRIPE_SECRET_KEY;
   if (!key) return json(event, 500, { error: 'STRIPE_SECRET_KEY nicht konfiguriert', errorCode: 'API_KEY_MISSING' });
 
-  // JWT Auth
-  const user = context.clientContext && context.clientContext.user;
-  if (!user || !user.email) {
-    return json(event, 401, { error: 'Anmeldung erforderlich', errorCode: 'UNAUTHORIZED' });
-  }
+  // P4B.7b: HMAC-Token-Email aus context.userEmail
+  const user = { email: context.userEmail };
   const userEmail = user.email.toLowerCase();
 
   let body;
@@ -141,4 +138,4 @@ exports.handler = async function (event, context) {
       retryable:  [429, 502].includes(mapped.status),
     });
   }
-};
+});

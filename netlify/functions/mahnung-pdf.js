@@ -1,6 +1,7 @@
 const { fetchWithRetry } = require('./lib/fetch-with-timeout');
 const { getCorsHeaders, corsOptionsResponse } = require('./lib/cors-helper');
 const { provaFetch } = require('./lib/prova-fetch');
+const { requireAuth } = require('./lib/jwt-middleware');
 // ══════════════════════════════════════════════════════════════════════════════
 // PROVA Systems — Mahnung PDF Generator
 // Netlify Function: mahnung-pdf
@@ -48,10 +49,7 @@ const PDFMONKEY_API = 'https://api.pdfmonkey.io/api/v1/documents';
 const POLL_MAX     = 15;   // max. Versuche
 const POLL_DELAY   = 2000; // ms zwischen Polls
 
-exports.handler = async (event) => {
-  if (event.httpMethod === 'OPTIONS') {
-    return { statusCode: 200, headers: corsHeaders(), body: '' };
-  }
+exports.handler = requireAuth(async (event, context) => {
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, headers: corsHeaders(), body: 'Method Not Allowed' };
   }
@@ -265,7 +263,7 @@ exports.handler = async (event) => {
     console.error('[MahnungPDF] Exception:', e.message);
     return { statusCode: 500, headers: corsHeaders(), body: JSON.stringify({ error: e.message }) };
   }
-};
+});
 
 function corsHeaders() {
   return {

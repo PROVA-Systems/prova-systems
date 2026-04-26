@@ -8,6 +8,7 @@
 const { fetchWithRetry } = require('./lib/fetch-with-timeout');
 const { getCorsHeaders, corsOptionsResponse } = require('./lib/cors-helper');
 const { provaFetch } = require('./lib/prova-fetch');
+const { requireAuth } = require('./lib/jwt-middleware');
 // ══════════════════════════════════════════════════════════════════════════════
 // PROVA Systems — Rechnung PDF Generator
 // Netlify Function: rechnung-pdf
@@ -33,10 +34,7 @@ const PDFMONKEY_API = 'https://api.pdfmonkey.io/api/v1/documents';
 const POLL_MAX     = 15;
 const POLL_DELAY   = 2000;
 
-exports.handler = async (event) => {
-  if (event.httpMethod === 'OPTIONS') {
-    return { statusCode: 200, headers: corsHeaders(), body: '' };
-  }
+exports.handler = requireAuth(async (event, context) => {
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, headers: corsHeaders(), body: 'Method Not Allowed' };
   }
@@ -185,7 +183,7 @@ exports.handler = async (event) => {
     console.error('[RechnungPDF] Exception:', e.message);
     return { statusCode: 500, headers: corsHeaders(), body: JSON.stringify({ error: e.message }) };
   }
-};
+});
 
 // ══════════════════════════════════════════════════════════════════════════════
 // PAYLOAD BUILDER: F-01 JVEG Gerichtsrechnung

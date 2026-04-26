@@ -1,4 +1,5 @@
 const { getCorsHeaders, corsOptionsResponse } = require('./lib/cors-helper');
+const { requireAuth } = require('./lib/jwt-middleware');
 // ══════════════════════════════════════════════════════════════════════════════
 // PROVA Systems — Jahresbericht PDF Export
 // Netlify Function: jahresbericht-pdf
@@ -23,15 +24,11 @@ function corsHeaders() {
   };
 }
 
-exports.handler = async (event) => {
-  if (event.httpMethod === 'OPTIONS') return { statusCode: 200, headers: corsHeaders(), body: '' };
+exports.handler = requireAuth(async (event, context) => {
   if (event.httpMethod !== 'POST') return { statusCode: 405, headers: corsHeaders(), body: JSON.stringify({ error: 'Method Not Allowed' }) };
 
-  // JWT required
-  const jwtEmail = event.clientContext && event.clientContext.user && event.clientContext.user.email
-    ? String(event.clientContext.user.email).toLowerCase()
-    : '';
-  if (!jwtEmail) return { statusCode: 401, headers: corsHeaders(), body: JSON.stringify({ error: 'UNAUTHORIZED' }) };
+  // P4B.7b: jwtEmail aus context.userEmail (HMAC-Token), nicht clientContext.user
+  const jwtEmail = context.userEmail;
 
   const apiKey = process.env.PDFMONKEY_API_KEY;
   if (!apiKey) return { statusCode: 500, headers: corsHeaders(), body: JSON.stringify({ error: 'PDFMONKEY_API_KEY fehlt' }) };
@@ -156,5 +153,5 @@ exports.handler = async (event) => {
     console.error('[JahresberichtPDF] Exception:', e.message);
     return { statusCode: 500, headers: corsHeaders(), body: JSON.stringify({ error: e.message }) };
   }
-};
+});
 

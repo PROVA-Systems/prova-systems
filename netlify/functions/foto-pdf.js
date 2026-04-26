@@ -14,10 +14,11 @@ const CORS = {
   'Access-Control-Allow-Headers': 'Content-Type'
 };
 
+const { requireAuth } = require('./lib/jwt-middleware');
+
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
-exports.handler = async function(event) {
-  if (event.httpMethod === 'OPTIONS') return { statusCode: 204, headers: CORS, body: '' };
+exports.handler = requireAuth(async function(event, context) {
   if (event.httpMethod !== 'POST') return { statusCode: 405, headers: CORS, body: JSON.stringify({error: 'Method not allowed'}) };
 
   const apiKey = process.env.PDFMONKEY_API_KEY;
@@ -83,4 +84,4 @@ exports.handler = async function(event) {
 
   // Timeout — DocID zurückgeben
   return { statusCode: 202, headers: CORS, body: JSON.stringify({ success: true, pending: true, doc_id: docId }) };
-};
+});

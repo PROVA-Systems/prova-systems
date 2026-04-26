@@ -1,7 +1,9 @@
 // PROVA brief-senden.js v2 — leitet an smtp-senden.js weiter
 // Kompatibilitäts-Wrapper: alte Aufrufe (briefvorlagen-logic.js) funktionieren weiterhin
 
-exports.handler = async function(event) {
+const { requireAuth } = require('./lib/jwt-middleware');
+
+exports.handler = requireAuth(async function(event, context) {
   const cors = {
     'Content-Type': 'application/json',
     'Access-Control-Allow-Origin': process.env.URL || 'https://prova-systems.de',
@@ -45,4 +47,4 @@ const { getCorsHeaders, corsOptionsResponse } = require('./lib/cors-helper');
     httpMethod: 'POST',
     body: JSON.stringify(smtpPayload)
   });
-};
+});

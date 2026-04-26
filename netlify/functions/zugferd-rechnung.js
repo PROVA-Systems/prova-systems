@@ -1,4 +1,5 @@
 const { getCorsHeaders, corsOptionsResponse } = require('./lib/cors-helper');
+const { requireAuth } = require('./lib/jwt-middleware');
 // ══════════════════════════════════════════════════
 // PROVA Systems — ZUGFeRD/XRechnung Generator
 // Netlify Function: zugferd-rechnung
@@ -11,21 +12,18 @@ const { getCorsHeaders, corsOptionsResponse } = require('./lib/cors-helper');
 // Output: PDF-Download-URL oder XML-String
 // ══════════════════════════════════════════════════
 
-exports.handler = async (event) => {
+exports.handler = requireAuth(async (event, context) => {
   const headers = {
     'Access-Control-Allow-Origin': process.env.URL || 'https://prova-systems.de',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     'Content-Type': 'application/json',
   };
 
-  if (event.httpMethod === 'OPTIONS') return { statusCode: 200, headers, body: '' };
   if (event.httpMethod !== 'POST') return { statusCode: 405, headers, body: '{"error":"Method Not Allowed"}' };
 
   try {
-    const jwtEmail = event.clientContext && event.clientContext.user && event.clientContext.user.email
-      ? String(event.clientContext.user.email).toLowerCase()
-      : '';
-    if (!jwtEmail) return { statusCode: 401, headers, body: JSON.stringify({ error: 'UNAUTHORIZED' }) };
+    // P4B.7b: HMAC-Token-Email aus context.userEmail
+    const jwtEmail = context.userEmail;
 
     const input = JSON.parse(event.body || '{}');
     const format = input.format || 'zugferd'; // 'zugferd' oder 'xrechnung'
@@ -118,7 +116,7 @@ exports.handler = async (event) => {
   } catch (err) {
     return { statusCode: 500, headers, body: JSON.stringify({ error: err.message }) };
   }
-};
+});
 
 
 // ════════════════════════════════════════

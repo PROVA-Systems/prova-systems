@@ -12,13 +12,11 @@
 // Env: STRIPE_SECRET_KEY
 // ══════════════════════════════════════════════════════════════════════════════
 
+const { requireAuth } = require('./lib/jwt-middleware');
+
 const DEFAULT_RETURN = 'https://prova-systems.de/einstellungen.html#paket';
 
-exports.handler = async (event) => {
-  // CORS Preflight
-  if (event.httpMethod === 'OPTIONS') {
-    return { statusCode: 200, headers: corsHeaders(), body: '' };
-  }
+exports.handler = requireAuth(async (event, context) => {
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, headers: corsHeaders(), body: JSON.stringify({ error: 'Method Not Allowed' }) };
   }
@@ -83,7 +81,7 @@ exports.handler = async (event) => {
       body: JSON.stringify({ error: msg })
     };
   }
-};
+});
 
 function corsHeaders() {
   return {
