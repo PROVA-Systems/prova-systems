@@ -686,6 +686,89 @@ if(!localStorage.getItem('prova_user')){
 
 var svEmail=localStorage.getItem('prova_sv_email')||'';
 
+/* ════════════════════════════════════════════════════════════════════
+   P5b.G1-3: Dashboard-Inbox-Karte
+   Zeigt prominent oben auf dem Dashboard die Aufgaben die Marcels
+   Aufmerksamkeit brauchen: SCHADENSFAELLE mit phase_aktuell = 4
+   (Entwurf bereit zur Freigabe). Position: NACH Begruessung,
+   VOR den 4 KPI-Kacheln. Empty-State zeigt freundliche
+   "Alles erledigt!"-Meldung.
+
+   Datenquelle: gleiche Faelle-Records die ladeAlleDaten() schon laedt.
+   Wir filtern hier nur clientseitig auf phase_aktuell == 4.
+══════════════════════════════════════════════════════════════════ */
+function renderInboxKarte(faelle) {
+  var container = document.getElementById('dash-inbox-card');
+  // Falls Container noch nicht existiert: einmalig anlegen
+  if (!container) {
+    var kpiRow = document.getElementById('kpi-row');
+    if (!kpiRow) return;
+    container = document.createElement('section');
+    container.id = 'dash-inbox-card';
+    container.style.cssText = 'margin-bottom:20px;';
+    kpiRow.parentNode.insertBefore(container, kpiRow);
+  }
+
+  // Filter: phase_aktuell == 4 (Entwurf bereit zur Freigabe)
+  var wartend = (faelle || []).filter(function (r) {
+    var f = (r && r.fields) || r || {};
+    return Number(f.phase_aktuell) === 4;
+  }).slice(0, 5);
+
+  function svEsc(s) {
+    return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function fmtSeit(iso) {
+    if (!iso) return '';
+    var d = new Date(iso);
+    if (isNaN(d)) return '';
+    var days = Math.floor((Date.now() - d.getTime()) / 86400000);
+    if (days <= 0) return 'Seit heute wartend';
+    if (days === 1) return 'Seit 1 Tag wartend';
+    return 'Seit ' + days + ' Tagen wartend';
+  }
+
+  if (!wartend.length) {
+    container.innerHTML =
+      '<div style="background:linear-gradient(135deg,rgba(16,185,129,.08),rgba(16,185,129,.03));border:1px solid rgba(16,185,129,.2);border-radius:12px;padding:16px 20px;display:flex;align-items:center;gap:14px;">' +
+        '<div style="font-size:28px;line-height:1;">✓</div>' +
+        '<div>' +
+          '<div style="font-size:14px;font-weight:700;color:#10b981;">Alles erledigt!</div>' +
+          '<div style="font-size:12px;color:var(--text3);">Keine offenen Aufgaben.</div>' +
+        '</div>' +
+      '</div>';
+    return;
+  }
+
+  var rows = wartend.map(function (r) {
+    var f = (r && r.fields) || r || {};
+    var az    = f.Aktenzeichen || f.prova_aktenzeichen || '—';
+    var name  = f.Auftraggeber_Name || f.Geschaedigter || '';
+    var seit  = fmtSeit(f.phase_4_completed_at);
+    return '<div style="display:flex;align-items:center;gap:14px;padding:10px 0;border-bottom:1px solid var(--border,rgba(255,255,255,.06));">' +
+        '<div style="font-size:14px;line-height:1;">🟡</div>' +
+        '<div style="flex:1;min-width:0;">' +
+          '<div style="font-size:13px;font-weight:700;color:var(--text);font-family:var(--font-mono,monospace);">' + svEsc(az) + (name ? ' · ' + svEsc(name) : '') + '</div>' +
+          '<div style="font-size:11.5px;color:var(--text3);margin-top:2px;">Entwurf bereit zur Freigabe' + (seit ? ' · ' + svEsc(seit) : '') + '</div>' +
+        '</div>' +
+        '<a href="freigabe.html?az=' + encodeURIComponent(az) + '" style="font-size:11.5px;font-weight:700;color:var(--accent);text-decoration:none;padding:6px 12px;border-radius:7px;background:rgba(79,142,247,.1);white-space:nowrap;">Prüfen →</a>' +
+      '</div>';
+  }).join('');
+
+  container.innerHTML =
+    '<div style="background:var(--surface);border:1px solid rgba(245,158,11,.25);border-radius:12px;overflow:hidden;">' +
+      '<div style="padding:12px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:linear-gradient(135deg,rgba(245,158,11,.06),transparent);">' +
+        '<div style="font-size:13px;font-weight:800;color:var(--text);display:flex;align-items:center;gap:8px;">' +
+          '<span style="font-size:16px;line-height:1;">⚡</span>' +
+          'Wartet auf Sie (' + wartend.length + ')' +
+        '</div>' +
+        '<a href="freigabe.html" style="font-size:11px;color:var(--accent);text-decoration:none;font-weight:600;">Alle anzeigen →</a>' +
+      '</div>' +
+      '<div style="padding:4px 18px 12px;">' + rows + '</div>' +
+    '</div>';
+}
+
 async function ladeAlleDaten(){
   try{
     // Parallel laden
@@ -718,6 +801,7 @@ async function ladeAlleDaten(){
       if(ls.length===0){
         zeigOnboarding();
         renderKPIs([],[],[]);  // KPIs auf 0 setzen statt Loading-State
+        renderInboxKarte([]);  // P5b.G: Empty-State
         renderCal([]);
         return;
       }
@@ -726,6 +810,7 @@ async function ladeAlleDaten(){
     }
 
     var stats=renderKPIs(faelle,termine,rechnungen);
+    renderInboxKarte(faelle);  // P5b.G
     renderRecent(faelle);
     // Cache für renderAufgabenSofort aktualisieren
     try {
