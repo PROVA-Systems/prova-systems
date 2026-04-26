@@ -13,6 +13,9 @@
 
 // ── Fachwissen-Provider: liefert Airtable-Live-Normen mit Fallback-Kaskade
 // SAFE BY DESIGN: wirft nie — bei Total-Fehlschlag leerer Kontext, ki-proxy läuft wie heute weiter
+const { requireAuth, jsonResponse: jwtJsonResponse } = require('./lib/jwt-middleware');
+const RateLimit = require('./lib/rate-limit-user');
+const { logAuthFailure } = require('./lib/auth-resolve');
 const FW = require('./lib/prova-fachwissen');
 
 // S-SICHER P3.3: Server-seitige Pseudonymisierung (Defense-in-Depth gegen
@@ -99,13 +102,23 @@ ${cleanPseudo}
 ════════════════════════════════════════════════════════════════════════`;
 }
 
-exports.handler = async function(event) {
-  if (event.httpMethod === 'OPTIONS') {
-    return { statusCode: 200, headers: { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'Content-Type', 'Access-Control-Allow-Methods': 'POST, OPTIONS' }, body: '' };
-  }
+// S-SICHER P4B.2: requireAuth wrap + per-User Rate-Limit 20/60s.
+// Token-sub liegt nach requireAuth in context.userEmail.
+exports.handler = requireAuth(async function(event, context) {
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: JSON.stringify({ error: 'Method not allowed' }) };
   }
+
+  // Rate-Limit pro User (Token-sub)
+  const rl = RateLimit.check(context.userEmail, 20, 60);
+  if (!rl.allowed) {
+    logAuthFailure('Rate-Limit', event, { tokenEmail: context.userEmail, function: 'ki-proxy', max: 20, windowSec: 60 });
+    return jwtJsonResponse(event, 429,
+      { error: 'Rate-Limit erreicht. Bitte ' + rl.retryAfter + 's warten.' },
+      { 'Retry-After': String(rl.retryAfter) }
+    );
+  }
+
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) return { statusCode: 500, body: JSON.stringify({ error: 'OPENAI_API_KEY nicht konfiguriert' }) };
 
@@ -140,7 +153,7 @@ exports.handler = async function(event) {
     console.error('[ki-proxy] Upstream-Fehler:', e && e.message);
     return { statusCode: 502, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }, body: JSON.stringify({ error: 'Upstream error' }) };
   }
-};
+});
 
 async function handleFachurteilEntwurf(body, apiKey) {
   const { diktat = '', schadenart = '', messwerte = '', verwendungszweck = 'gericht', paragraphen = null, az = '', objekt = '', baujahr = '', auftraggeber = '' } = body;
