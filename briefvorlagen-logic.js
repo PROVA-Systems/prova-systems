@@ -223,16 +223,28 @@ function ladeFaelle(){
   }).then(function(r){return r.json();}).then(function(d){bvRenderFaelle(d.records||[],liste);})
     .catch(function(){liste.innerHTML='<div style="font-size:12px;color:var(--text3);text-align:center;padding:12px;">Keine Verbindung</div>';});
 }
+// P5.A3 (Finding 6.2): Airtable-Felder durch PROVA_SANITIZE.escapeHtml escapen.
+// f.Aktenzeichen/Schadenart/Adresse sind user-controlled (von SV im UI eingegeben
+// oder aus Brief-Importen) und gingen frueher unescaped in innerHTML — XSS
+// moeglich bei <script>-Payload im Aktenzeichen.
+function _bvEsc(s) {
+  if (window.PROVA_SANITIZE) return window.PROVA_SANITIZE.escapeHtml(s);
+  return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
 function bvRenderFaelle(records,container){
   if(!records.length){container.innerHTML='<div style="font-size:12px;color:var(--text3);text-align:center;padding:12px;">Keine Fälle vorhanden</div>';return;}
   container.innerHTML=records.map(function(r){
     var f=r.fields||{};
-    return '<div class="bv-fall" onclick="bvWaehle(\''+r.id+'\',this)">'
+    var az    = _bvEsc(f.Aktenzeichen||'—');
+    var schaden = _bvEsc(f.Schadenart||f.Schadensart||'');
+    var addr  = _bvEsc(f.Schaden_Strasse||f.Adresse||'');
+    var rid   = _bvEsc(r.id||'');
+    return '<div class="bv-fall" onclick="bvWaehle(\''+rid+'\',this)">'
       +'<div>'
-      +'<div class="bv-fall-az">'+(f.Aktenzeichen||'—')+'</div>'
-      +'<div class="bv-fall-info">'+(f.Schadenart||f.Schadensart||'')+((f.Schaden_Strasse||f.Adresse)?' · '+(f.Schaden_Strasse||f.Adresse):'')+'</div>'
+      +'<div class="bv-fall-az">'+az+'</div>'
+      +'<div class="bv-fall-info">'+schaden+(addr?' · '+addr:'')+'</div>'
       +'</div>'
-      +'<div class="bv-fall-ck" id="fck-'+r.id+'"></div>'
+      +'<div class="bv-fall-ck" id="fck-'+rid+'"></div>'
       +'</div>';
   }).join('');
 }
@@ -575,8 +587,9 @@ function bvRenderSendSummary(){
   var e=document.getElementById('emp-name');
   if(!_tpl)return;
   if(e)e.textContent=_felder.ag_name||_felder.ag_email||'—';
-  if(s)s.innerHTML='<div style="display:flex;justify-content:space-between;border-bottom:1px solid var(--border);padding-bottom:6px;margin-bottom:6px;"><span style="color:var(--text3)">Vorlage</span><span>'+_tpl.name+'</span></div>'
-    +'<div style="display:flex;justify-content:space-between;border-bottom:1px solid var(--border);padding-bottom:6px;margin-bottom:6px;"><span style="color:var(--text3)">Aktenzeichen</span><span>'+(_felder.az||'—')+'</span></div>'
+  // P5.A3: _felder.az ist user-controlled (Aktenzeichen-Input) -> escapen.
+  if(s)s.innerHTML='<div style="display:flex;justify-content:space-between;border-bottom:1px solid var(--border);padding-bottom:6px;margin-bottom:6px;"><span style="color:var(--text3)">Vorlage</span><span>'+_bvEsc(_tpl.name)+'</span></div>'
+    +'<div style="display:flex;justify-content:space-between;border-bottom:1px solid var(--border);padding-bottom:6px;margin-bottom:6px;"><span style="color:var(--text3)">Aktenzeichen</span><span>'+_bvEsc(_felder.az||'—')+'</span></div>'
     +'<div style="display:flex;justify-content:space-between;"><span style="color:var(--text3)">Modus</span><span>'+(_ki?'✨ KI-generiert':'Standard')+'</span></div>';
 }
 
@@ -596,7 +609,7 @@ window.bvSend=async function(typ){
     try{
       var pay={vorlage_id:_tpl?_tpl.id:'',vorlage_name:_tpl?_tpl.name:'',aktenzeichen:az,auftraggeber:ag,ag_email:email,sv_email:svEmail,adresse:_felder.adresse||'',datum:_felder.datum||'',sv_name:_felder.sv_name||'',brieftext:(document.getElementById('ki-edit')||{value:''}).value||''};
       var r=await fetch(WEBHOOK,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(pay)});
-      if(r.ok){if(result){result.style.display='block';result.innerHTML='<div style="padding:10px;background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.2);border-radius:8px;font-size:12px;color:#10b981;">✅ PDF wird generiert — per E-Mail an '+svEmail+'</div>';}bvToast('PDF wird erstellt ✅','success');}
+      if(r.ok){if(result){result.style.display='block';result.innerHTML='<div style="padding:10px;background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.2);border-radius:8px;font-size:12px;color:#10b981;">✅ PDF wird generiert — per E-Mail an '+_bvEsc(svEmail)+'</div>';}bvToast('PDF wird erstellt ✅','success');}
       else throw new Error('HTTP '+r.status);
     }catch(e){bvToast('Fehler: '+e.message,'error');}
     return;
