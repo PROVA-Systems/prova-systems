@@ -4,7 +4,6 @@
 
 const { requireAuth, jsonResponse } = require('./lib/jwt-middleware');
 const RateLimit = require('./lib/rate-limit-user');
-const { logAuthFailure } = require('./lib/auth-resolve');
 
 // S-SICHER P4B.4: requireAuth + Rate-Limit 30/60s pro Token-sub
 exports.handler = requireAuth(async function(event, context) {
@@ -12,9 +11,8 @@ exports.handler = requireAuth(async function(event, context) {
     return { statusCode: 405, body: JSON.stringify({ error: 'Method not allowed' }) };
   }
 
-  const rl = RateLimit.check(context.userEmail, 30, 60);
+  const rl = RateLimit.check(context.userEmail, 30, 60, { event: event, functionName: 'foto-captioning' });
   if (!rl.allowed) {
-    logAuthFailure('Rate-Limit', event, { tokenEmail: context.userEmail, function: 'foto-captioning', max: 30, windowSec: 60 });
     return jsonResponse(event, 429,
       { error: 'Rate-Limit erreicht. Bitte ' + rl.retryAfter + 's warten.' },
       { 'Retry-After': String(rl.retryAfter) }

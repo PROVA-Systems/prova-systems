@@ -100,14 +100,45 @@ function resolveUser(event) {
   };
 }
 
+// P4B.1d: Pseudonymisierung der Email vor jedem Logging.
+// Bei Auth-Failures kann die "Email" ein Angreifer-Payload sein — wir
+// wollen sie nicht in roher Form in console-Logs oder AUDIT_TRAIL haben.
+// ProvaPseudo.apply ersetzt erkannte E-Mail-Patterns durch [E-MAIL].
+function pseudoEmail(s) {
+  if (!s || typeof s !== 'string') return 'unknown';
+  try {
+    const ProvaPseudo = require('./prova-pseudo');
+    const out = ProvaPseudo.apply(s);
+    // ProvaPseudo.apply gibt z.B. '[E-MAIL]' zurueck; wenn der Input gar
+    // keine erkennbare Email war, lassen wir 'unknown'.
+    if (!out || out === s) return 'unknown';
+    return out;
+  } catch (e) {
+    return 'unknown';
+  }
+}
+
 function logAuthFailure(reason, event, extras) {
   const headers = (event && event.headers) || {};
   const ua = String(headers['user-agent'] || '').slice(0, 120);
   const ip = headers['x-nf-client-connection-ip'] || headers['client-ip'] || 'unknown';
   const path = (event && (event.path || event.rawPath)) || '';
 
+  // Pseudonymisierte Email-Felder fuer Konsole + AUDIT_TRAIL
+  const rawEmail = (extras && (extras.tokenEmail || extras.sv_email)) || '';
+  const pseudoMail = pseudoEmail(rawEmail);
+
+  // extras-Kopie mit pseudonymisierten Email-Feldern (otherEmail kann Mismatch-Body-Email sein)
+  const safeExtras = Object.assign({}, extras || {});
+  if (safeExtras.tokenEmail) safeExtras.tokenEmail = pseudoEmail(safeExtras.tokenEmail);
+  if (safeExtras.sv_email)   safeExtras.sv_email   = pseudoEmail(safeExtras.sv_email);
+  if (safeExtras.otherEmail) safeExtras.otherEmail = pseudoEmail(safeExtras.otherEmail);
+
   try {
-    console.warn('[auth-resolve] ' + reason, JSON.stringify(Object.assign({ ip: ip, ua: ua, path: path }, extras || {})));
+    console.warn('[auth-resolve] ' + reason, JSON.stringify(Object.assign(
+      { ip: ip, ua: ua, path: path, sv_email: pseudoMail },
+      safeExtras
+    )));
   } catch (e) {}
 
   // Best-effort AUDIT_TRAIL — nie await, nie blocken.
@@ -115,7 +146,6 @@ function logAuthFailure(reason, event, extras) {
   const base = process.env.AIRTABLE_BASE_ID || 'appJ7bLlAHZoxENWE';
   if (!pat) return;
 
-  const sv_email = (extras && (extras.tokenEmail || extras.sv_email)) || 'unbekannt';
   // tblqQmMwJKxltXXXl = AUDIT_TRAIL
   try {
     fetch('https://api.airtable.com/v0/' + base + '/tblqQmMwJKxltXXXl', {
@@ -128,13 +158,13 @@ function logAuthFailure(reason, event, extras) {
         records: [{
           fields: {
             typ: reason,
-            sv_email: sv_email,
+            sv_email: pseudoMail,
             details: JSON.stringify(Object.assign({
               ts: new Date().toISOString(),
               path: path,
               ip: ip,
               ua: ua
-            }, extras || {}))
+            }, safeExtras))
           }
         }]
       })

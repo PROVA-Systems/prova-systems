@@ -15,7 +15,6 @@
 // SAFE BY DESIGN: wirft nie — bei Total-Fehlschlag leerer Kontext, ki-proxy läuft wie heute weiter
 const { requireAuth, jsonResponse: jwtJsonResponse } = require('./lib/jwt-middleware');
 const RateLimit = require('./lib/rate-limit-user');
-const { logAuthFailure } = require('./lib/auth-resolve');
 const FW = require('./lib/prova-fachwissen');
 
 // S-SICHER P3.3: Server-seitige Pseudonymisierung (Defense-in-Depth gegen
@@ -109,10 +108,9 @@ exports.handler = requireAuth(async function(event, context) {
     return { statusCode: 405, body: JSON.stringify({ error: 'Method not allowed' }) };
   }
 
-  // Rate-Limit pro User (Token-sub)
-  const rl = RateLimit.check(context.userEmail, 20, 60);
+  // Rate-Limit pro User (Token-sub) — Lib loggt selbst bei Hit
+  const rl = RateLimit.check(context.userEmail, 20, 60, { event: event, functionName: 'ki-proxy' });
   if (!rl.allowed) {
-    logAuthFailure('Rate-Limit', event, { tokenEmail: context.userEmail, function: 'ki-proxy', max: 20, windowSec: 60 });
     return jwtJsonResponse(event, 429,
       { error: 'Rate-Limit erreicht. Bitte ' + rl.retryAfter + 's warten.' },
       { 'Retry-After': String(rl.retryAfter) }
