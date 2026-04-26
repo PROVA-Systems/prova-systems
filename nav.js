@@ -286,8 +286,15 @@
       + '.sb-new-line1{font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}'
       + '.sb-new-line2{font-size:11px;font-weight:500;opacity:.7;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px;}'
       + '.sb-new-arrow{font-size:11px;display:inline-block;transition:transform .18s;}'
-      + '.sidebar.collapsed .sb-new-text{opacity:0;width:0;}'
-      + '.sidebar.collapsed .sb-new-btn-main{justify-content:center;padding:10px;border-radius:10px;border-right:none;flex:0 0 auto;}'
+      /* P5b.X3-Hotfix: kompakter Quadrat-Button im collapsed-Mode statt
+         vollbreitem blauen Streifen mit nur ✨-Icon. */
+      + '.sidebar.collapsed .sb-new-wrap{display:flex;justify-content:center;margin:12px 8px 6px;}'
+      + '.sidebar.collapsed .sb-new-text{opacity:0;width:0;height:0;overflow:hidden;}'
+      + '.sidebar.collapsed .sb-new-btn-main{'
+      +   'width:40px;height:40px;padding:0;border-radius:10px;'
+      +   'flex:0 0 40px;justify-content:center;border-right:none;'
+      + '}'
+      + '.sidebar.collapsed .sb-new-icon{margin:0;font-size:18px;}'
       + '.sidebar.collapsed .sb-new-btn-arrow{display:none;}'
       // Dropdown
       + '.sb-new-dropdown{'
@@ -336,6 +343,21 @@
       // Session 28 Fix #2: Suchfeld darf Text nicht ueberlaufen (das "S" vom "Suchen")
       + '.sidebar.collapsed .sb-search-input,.sidebar.collapsed .sb-search{overflow:hidden !important;}'
       + '.sidebar.collapsed .sb-search-input{padding-left:0 !important;padding-right:0 !important;text-indent:-9999px !important;}'
+      /* P5b.X3-Hotfix: #sb-search-btn (das tatsaechliche aktuelle Element)
+         im collapsed-Mode auf 40x40 Quadrat mit nur 🔍 zentriert.
+         Inline-style="" ist staerker als Class-CSS — daher !important. */
+      + '.sidebar.collapsed #sb-search-btn{'
+      +   'width:40px !important;height:40px !important;'
+      +   'margin:0 8px 6px !important;padding:0 !important;'
+      +   'gap:0 !important;justify-content:center !important;'
+      +   'border-radius:10px !important;'
+      + '}'
+      + '.sidebar.collapsed #sb-search-btn > span:not(:first-child),'
+      + '.sidebar.collapsed #sb-search-btn > kbd{'
+      +   'display:none !important;visibility:hidden !important;'
+      +   'opacity:0 !important;width:0 !important;'
+      + '}'
+      + '.sidebar.collapsed #sb-search-btn > span:first-child{font-size:16px !important;}'
       + '.sidebar.collapsed .sb-section-label{opacity:0;height:0;padding:0;margin:0;overflow:hidden;}'
 
       /* ─── NAV ITEMS — NO LAYOUT SHIFT ─── */
