@@ -1,8 +1,14 @@
 # Function-Duplikate-Inventar
 
-**Stand:** 25.04.2026 (S-SICHER Paket 2 Commit P2.4)
+**Stand:** 26.04.2026 (Sprint 04 P5.A4 — drei Duplikate gelöscht)
 **Bezug:** AUDIT-REPORT Finding 4.5
-**Status:** Read-only — **keine Datei in diesem Commit gelöscht.** Marcel bestätigt vor Löschung pro Datei.
+**Status:** Update nach P5.A4 — drei Duplikate aus diesem Inventar gelöscht. Letzter offen: `mahnung-pdf.js` (siehe unten, drift seit Sprint 03).
+
+**Änderungen 26.04.2026:**
+- ✅ `ki-statistik.js` (Root) gelöscht
+- ✅ `team-interest.js` (Root) gelöscht
+- ✅ `netlify/functions/prova-sv-airtable.js` gelöscht (war die fehlplatzierte Function-Kopie des Frontend-Scripts)
+- 🔴 `mahnung-pdf.js` NICHT gelöscht — Root-Version (17.04) hat BRIEFE-Persistence-Code, Function-Version (26.04 P4B.7b) hat requireAuth-Wrapper. Drift seit Sprint 03. **Marcel-Aufgabe: manuelle Merge** (BRIEFE-Persistence aus Root in Function übernehmen, dann Root löschen). Bis dahin laufen beide Versionen — Netlify deployt nur die Function-Variante (siehe netlify.toml), Root ist toter Code.
 
 ---
 
