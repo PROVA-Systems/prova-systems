@@ -31,15 +31,27 @@ exports.handler = async function (event, context) {
   const key = ((event.queryStringParameters || {}).key || '').toLowerCase().trim();
   if (!ALLOWED_KEYS.includes(key)) return json(event, 400, { error: 'Ungültiger key: ' + key });
 
-  // k3: Interner Secret-Header (kein JWT)
+  // P5.A5: Auth-Strategie geklaert.
+  // - k3 (Webhook-Forwarder fuer Server-Trigger): Interner Secret-Header
+  //   PROVA_INTERNAL_WRITE_SECRET, KEIN JWT — Caller ist Server-Code, nicht
+  //   Browser. Bleibt unveraendert.
+  // - Alle anderen Keys: HMAC-Token-Pflicht (Browser-Trigger). Statt
+  //   clientContext.user (alter Identity-Pfad) jetzt lib/auth-resolve.
   if (key === 'k3') {
     const secret = (event.headers['x-prova-internal'] || '').trim();
     const envSecret = (process.env.PROVA_INTERNAL_WRITE_SECRET || '').trim();
     if (!envSecret || secret !== envSecret) return json(event, 403, { error: 'Verboten' });
   } else {
-    // Alle anderen: JWT Pflicht
-    const user = context.clientContext && context.clientContext.user;
-    if (!user || !user.email) return json(event, 401, { error: 'Anmeldung erforderlich' });
+    const { resolveUser, logAuthFailure } = require('./lib/auth-resolve');
+    const u = resolveUser(event);
+    if (u.mismatch) {
+      logAuthFailure('Auth-Mismatch', event, u.mismatch);
+      return json(event, 403, { error: 'Auth-Mismatch' });
+    }
+    if (!u.email) {
+      logAuthFailure('Auth-Required', event, { function: 'make-proxy', key: key });
+      return json(event, 401, { error: 'Anmeldung erforderlich' });
+    }
   }
 
   // Webhook-URLs aus ENV (Fallbacks nur für L4/L5/S6 die noch keine eigene ENV haben)
