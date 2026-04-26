@@ -1,0 +1,323 @@
+/* ════════════════════════════════════════════════════════════════════
+   PROVA — page-template.css
+   Sprint 04f Block A (27.04.2026)
+
+   Zentrale Layout-Klassen fuer alle 11 Auftragstyp-Pages.
+   Wird NACH prova-design.css und VOR Page-spezifischer Inline-CSS
+   eingebunden. Eingebunden in:
+     app.html, ergaenzung.html, widerspruch-gutachten.html,
+     stellungnahme.html, wertgutachten.html, beratung.html,
+     baubegleitung.html, schiedsgutachten.html, schnelle-rechnung.html,
+     briefvorlagen.html, akte.html
+
+   Keine Funktions-Aenderungen. Reine Layout-Vereinheitlichung.
+   Backend bleibt unberuehrt. nav.js + prova-notifications.js
+   bleiben unberuehrt.
+═══════════════════════════════════════════════════════════════════ */
+
+/* ─── 1. HEADER & TOPBAR (semantisch <header class="topbar">) ─── */
+header.topbar,
+header.page-header {
+  height: 52px;
+  min-height: 52px;
+  background: var(--bg2, #111318);
+  border-bottom: 1px solid var(--border, rgba(255,255,255,.07));
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  flex-shrink: 0;
+}
+header.topbar .topbar-left,
+.page-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  overflow: hidden;
+}
+header.topbar .topbar-right,
+.page-header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ─── 2. BREADCRUMB ─── */
+/* Format:    "PROVA › <strong>Page-Title</strong>"
+   Trenner:   "›" (nie "·" oder "/")
+   Style:     13px regular, var(--text2)              */
+.page-breadcrumb,
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text3, #6b7280);
+  font-family: var(--font-ui, 'DM Sans', system-ui, sans-serif);
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.page-breadcrumb strong,
+.breadcrumb strong {
+  color: var(--text2, #aab4cb);
+  font-weight: 600;
+}
+.page-breadcrumb-sep,
+.breadcrumb-sep {
+  color: var(--text3, #6b7280);
+  margin: 0 2px;
+}
+
+/* ─── 3. HERO (H1 + Subtitle) ─── */
+/* H1:        28px bold, var(--accent)
+   Subtitle:  14px regular, var(--text2)
+   Margin:    24px top, 32px bottom (subtitle)        */
+.page-hero {
+  margin: 24px 0 32px;
+}
+.page-title,
+.page-hero h1 {
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1.2;
+  color: var(--accent, #4f8ef7);
+  margin: 0 0 8px;
+  letter-spacing: -0.015em;
+  font-family: var(--font-ui, 'DM Sans', system-ui, sans-serif);
+}
+.page-subtitle,
+.page-hero p {
+  font-size: 14px;
+  color: var(--text2, #aab4cb);
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* ─── 4. STEPPER (.page-stepper) ─── */
+/* Konsolidiert: ersetzt .step / .wz-step / .flow-step
+   Aktive:    Gefuellter Akzent-Kreis + Akzent-Label
+   Erledigt:  ✓ in gruen + gruenes Label
+   Inaktiv:   leerer grauer Kreis + grau-Label
+   Position:  unter Hero, vor Main-Content              */
+.page-stepper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 28px;
+  overflow-x: auto;
+  padding: 4px 0;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+.page-stepper::-webkit-scrollbar { height: 3px; }
+.page-stepper::-webkit-scrollbar-thumb { background: rgba(255,255,255,.1); border-radius: 2px; }
+
+.page-step {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.page-step-circle {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  background: var(--surface2, #232a3a);
+  color: var(--text3, #6b7280);
+  border: 1.5px solid var(--border2, rgba(255,255,255,.12));
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+.page-step.active .page-step-circle {
+  background: var(--accent, #4f8ef7);
+  color: #fff;
+  border-color: var(--accent, #4f8ef7);
+  box-shadow: 0 0 0 4px rgba(79,142,247,.15);
+}
+.page-step.done .page-step-circle {
+  background: var(--success, #10b981);
+  color: #fff;
+  border-color: var(--success, #10b981);
+}
+.page-step.done .page-step-circle::before {
+  content: '✓';
+  font-size: 14px;
+  font-weight: 800;
+}
+.page-step.done .page-step-circle > span { display: none; }
+
+.page-step-label {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--text3, #6b7280);
+  white-space: nowrap;
+}
+.page-step.active .page-step-label {
+  color: var(--accent, #4f8ef7);
+  font-weight: 700;
+}
+.page-step.done .page-step-label {
+  color: var(--success, #10b981);
+  font-weight: 600;
+}
+.page-step-connector {
+  width: 28px;
+  height: 2px;
+  background: var(--surface2, #232a3a);
+  flex-shrink: 0;
+  border-radius: 1px;
+}
+.page-step.done + .page-step-connector { background: var(--success, #10b981); }
+
+/* ─── 5. CONTENT-CONTAINER ─── */
+.page-container,
+.page-content {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 24px 28px 96px;
+  width: 100%;
+  box-sizing: border-box;
+}
+@media (max-width: 768px) {
+  .page-container,
+  .page-content { padding: 16px 16px 120px; }
+  header.topbar,
+  header.page-header { padding: 0 16px; }
+  .page-title,
+  .page-hero h1 { font-size: 22px; }
+  .page-stepper { gap: 8px; }
+  .page-step-connector { width: 16px; }
+}
+
+/* ─── 6. CARDS (.page-card) ─── */
+/* Konsolidiert: ersetzt .doku-card, .form-card, .section-card    */
+.page-card {
+  background: var(--surface, #1c2130);
+  border: 1px solid var(--border2, rgba(255,255,255,.11));
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 16px;
+}
+.page-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  gap: 8px;
+}
+.page-card-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text, #eaecf4);
+  margin: 0;
+}
+.page-card-subtitle {
+  font-size: 12px;
+  color: var(--text3, #6b7280);
+  margin: 4px 0 0;
+}
+.page-card-body { /* default-Stuff */ }
+.page-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border, rgba(255,255,255,.06));
+}
+
+.page-pflicht-badge {
+  display: inline-block;
+  font-size: 9.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 2px 7px;
+  border-radius: 4px;
+  background: rgba(239,68,68,0.12);
+  color: #f87171;
+  margin-left: 8px;
+  vertical-align: middle;
+}
+
+/* ─── 7. ACTION-FOOTER (sticky) ─── */
+/* Position:  ganz unten, sticky
+   Linke:     "Entwurf speichern" (sekundaer)
+   Rechte:    "Weiter" / "Abschliessen" (primaer)      */
+.page-action-footer {
+  position: sticky;
+  bottom: 0;
+  z-index: 50;
+  background: var(--bg, #0b0d11);
+  padding: 14px 0;
+  margin-top: 24px;
+  border-top: 1px solid var(--border, rgba(255,255,255,.08));
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.page-action-footer-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.page-action-footer-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+.page-btn {
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s;
+  border: 1px solid transparent;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.page-btn-primary {
+  background: linear-gradient(135deg, var(--accent, #4f8ef7), var(--accent2, #3a7be0));
+  color: #fff;
+  box-shadow: 0 2px 12px rgba(79,142,247,.3);
+}
+.page-btn-primary:hover { opacity: 0.92; transform: translateY(-1px); }
+.page-btn-secondary {
+  background: var(--surface2, #232a3a);
+  color: var(--text2, #aab4cb);
+  border-color: var(--border2, rgba(255,255,255,.12));
+}
+.page-btn-secondary:hover { background: var(--surface, #1c2130); color: var(--text, #eaecf4); }
+
+/* ─── 8. RESPONSIVE — Mobile-Anpassungen ─── */
+@media (max-width: 768px) {
+  .page-action-footer {
+    padding: 12px 14px;
+    flex-direction: row;
+    margin-left: -14px;
+    margin-right: -14px;
+  }
+  .page-btn { padding: 10px 14px; font-size: 12px; }
+  .page-step-label { display: none; }
+  .page-step.active .page-step-label { display: inline; }
+  .page-card { padding: 16px; }
+}

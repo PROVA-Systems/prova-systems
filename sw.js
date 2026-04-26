@@ -34,6 +34,7 @@ const APP_SHELL = [
   '/nav.js',
   '/prova-fetch-auth.js',
   '/prova-notifications.js',
+  '/page-template.css',
   '/app-login-logic.js',
   '/auftragstyp.js',
   '/diktat-parser.js',
