@@ -81,129 +81,14 @@ function checkRateLimit(ip) {
   return true;
 }
 
-// ── User-Email-Resolution mit HMAC-Token-Hybrid (P4A.6) ──
-//
-// Auflösungsreihenfolge (PRIMARY → LEGACY):
-//   1. PROVA-HMAC-Token (Authorization: Bearer ... oder Cookie prova_auth=...)
-//      → server-seitig via lib/auth-token.verify() geprüft, sub = SV-E-Mail
-//   2. Netlify-Identity clientContext.user.email (Backward-Compat, deprecated)
-//   3. body._userEmail (Legacy-Bridge bis Sprint 03 — dann ENTFERNT)
-//
-// CROSS-CHECK: Wenn HMAC-Token vorhanden UND _userEmail/Identity-Email
-// auch vorhanden, MUESSEN sie übereinstimmen — sonst Mismatch (Caller
-// muss 403 zurückgeben + AUDIT_TRAIL eintrag).
-//
-// Sicherheits-Logik:
-//   - Token-sub gewinnt: ein Angreifer kann zwar body._userEmail setzen,
-//     aber nicht den HMAC-Token signieren (AUTH_HMAC_SECRET nur server-side).
-//   - Mismatch heisst: jemand schickt token=A + _userEmail=B. Das ist
-//     entweder ein Bug im Frontend oder ein Versuch sich als anderer
-//     User auszugeben → blockieren.
-//   - Kein Token + _userEmail allein: vorerst ok (Legacy-Bridge).
-//     Sprint 03 entfernt diesen Pfad und macht token PFLICHT.
-function getTokenPayload(event) {
-  let tok = null;
+// S-SICHER P4B.7: STRICT-Modus — User-Resolution ueber lib/auth-resolve.
+// Kein body._userEmail-Pfad mehr, kein Identity-clientContext-Pfad mehr.
+// HMAC-Token ist PFLICHT. Cross-Check + Logging in der Lib.
+const { resolveUser, logAuthFailure } = require('./lib/auth-resolve');
 
-  // 1. Authorization: Bearer <token>
-  const auth = event.headers && (event.headers.authorization || event.headers.Authorization);
-  if (auth && /^Bearer\s+/i.test(auth)) {
-    tok = auth.replace(/^Bearer\s+/i, '').trim();
-  }
-  // 2. Cookie: prova_auth=<token>
-  if (!tok) {
-    const cookie = event.headers && (event.headers.cookie || event.headers.Cookie);
-    if (cookie) {
-      const m = cookie.match(/(?:^|;\s*)prova_auth=([^;]+)/);
-      if (m) {
-        try { tok = decodeURIComponent(m[1]); } catch (e) {}
-      }
-    }
-  }
-  if (!tok) return null;
-
-  try {
-    const T = require('./lib/auth-token');
-    return T.verify(tok); // null bei Format/Sig/Exp-Fehler
-  } catch (e) {
-    return null;
-  }
-}
-
-function resolveUser(event) {
-  // 1. HMAC-Token
-  const tokenPayload = getTokenPayload(event);
-  const tokenEmail = (tokenPayload && tokenPayload.sub) ? String(tokenPayload.sub).toLowerCase() : null;
-
-  // 2. Netlify-Identity clientContext (deprecated)
-  let identityEmail = null;
-  try {
-    const context = event.clientContext || {};
-    const user    = context.user;
-    if (user && user.email) identityEmail = String(user.email).toLowerCase();
-  } catch (e) {}
-
-  // 3. body._userEmail (Legacy)
-  let bodyEmail = null;
-  try {
-    const body = JSON.parse(event.body || '{}');
-    if (body._userEmail && typeof body._userEmail === 'string') {
-      bodyEmail = body._userEmail.toLowerCase();
-    }
-  } catch (e) {}
-
-  // 4. Cross-Check
-  if (tokenEmail) {
-    if (identityEmail && identityEmail !== tokenEmail) {
-      return { email: null, source: null, mismatch: { tokenEmail, otherEmail: identityEmail, otherSource: 'identity' } };
-    }
-    if (bodyEmail && bodyEmail !== tokenEmail) {
-      return { email: null, source: null, mismatch: { tokenEmail, otherEmail: bodyEmail, otherSource: 'body' } };
-    }
-    return { email: tokenEmail, source: 'token', mismatch: null, tokenPayload: tokenPayload };
-  }
-
-  // 5. Kein Token: Legacy-Pfad (Sprint 03 entfernt das)
-  if (identityEmail) return { email: identityEmail, source: 'identity', mismatch: null };
-  if (bodyEmail)     return { email: bodyEmail,     source: 'legacy_body', mismatch: null };
-  return { email: null, source: null, mismatch: null };
-}
-
-// Legacy-Wrapper — bleibt für Code-Stellen die nur die E-Mail brauchen.
+// Legacy-Wrapper — bleibt fuer Code-Stellen die nur die E-Mail brauchen.
 function getUserEmailFromEvent(event) {
   return resolveUser(event).email;
-}
-
-// Best-effort AUDIT_TRAIL-Eintrag bei Auth-Mismatch.
-// Fire-and-forget — kein await nötig, fehlschlag blockiert nichts.
-function logAuthMismatch(mismatch, event) {
-  try {
-    console.warn('[airtable.js] AUTH-MISMATCH', JSON.stringify({
-      tokenEmail: mismatch.tokenEmail,
-      otherEmail: mismatch.otherEmail,
-      otherSource: mismatch.otherSource,
-      ip: (event.headers['x-nf-client-connection-ip'] || event.headers['client-ip'] || 'unknown'),
-      ua: (event.headers['user-agent'] || '').slice(0, 120)
-    }));
-  } catch (e) {}
-
-  const pat = process.env.AIRTABLE_PAT;
-  const base = process.env.AIRTABLE_BASE_ID || 'appJ7bLlAHZoxENWE';
-  if (!pat) return;
-  // tblqQmMwJKxltXXXl = AUDIT_TRAIL
-  fetch(`https://api.airtable.com/v0/${base}/tblqQmMwJKxltXXXl`, {
-    method: 'POST',
-    headers: { 'Authorization': `Bearer ${pat}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ records: [{ fields: {
-      typ:      'Auth-Mismatch',
-      sv_email: mismatch.tokenEmail,
-      details:  JSON.stringify({
-        other_email: mismatch.otherEmail,
-        other_source: mismatch.otherSource,
-        function: 'airtable',
-        ts: new Date().toISOString()
-      })
-    }}]})
-  }).catch(() => { /* best-effort */ });
 }
 
 // ── Tabellenname aus Pfad extrahieren ──
@@ -362,14 +247,25 @@ exports.handler = async function(event) {
     return { statusCode: 405, headers, body: JSON.stringify({ error: 'HTTP-Methode nicht erlaubt' }) };
   }
 
-  // ── User-Resolution mit HMAC-Token-Cross-Check (P4A.6) ──
+  // ── User-Resolution STRICT-Modus (P4B.7) ──
+  // HMAC-Token ist Pflicht. Mismatch -> 403, fehlend/invalid -> 401.
+  // Audit-Logging passiert in der Lib (logAuthFailure mit pseudonymisierten
+  // Email-Feldern, P4B.1d).
   const userInfo = resolveUser(event);
   if (userInfo.mismatch) {
-    logAuthMismatch(userInfo.mismatch, event);
+    logAuthFailure('Auth-Mismatch', event, userInfo.mismatch);
     return {
       statusCode: 403,
       headers,
       body: JSON.stringify({ error: 'Auth-Mismatch: Token-Subject und Request-Identität stimmen nicht überein' })
+    };
+  }
+  if (!userInfo.email) {
+    logAuthFailure('Auth-Required', event, { function: 'airtable' });
+    return {
+      statusCode: 401,
+      headers,
+      body: JSON.stringify({ error: 'Authentifizierung erforderlich' })
     };
   }
   const userEmail = userInfo.email;
