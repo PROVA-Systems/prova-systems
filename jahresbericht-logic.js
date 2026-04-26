@@ -48,23 +48,32 @@ var ART_FARBEN = ['#4f8ef7','#10B981','#f59e0b','#a78bfa','#ef4444','#06b6d4','#
 // ── Daten laden ──
 async function ladeDaten() {
   try {
-    // Alle Records (max 200 - für Startbetrieb ausreichend)
+    // P5.B4b: Airtable-Limit pageSize=100, vorher 200 -> 422 Unprocessable
+    // Entity. Mit pageSize=100 + maxRecords=200 + offset-Follow-up bleibt
+    // das Limit gleich (zwei Seiten a 100), nur der Request ist jetzt valid.
     var svEmail = localStorage.getItem('prova_sv_email') || '';
     var filterF = svEmail ? '&filterByFormula=' + encodeURIComponent('{sv_email}="' + svEmail + '"') : '';
     var url = '/v0/' + AIRTABLE_BASE + '/' + AIRTABLE_TABLE
-      + '?pageSize=200&sort[0][field]=Timestamp&sort[0][direction]=desc' + filterF;
+      + '?pageSize=100&maxRecords=200&sort[0][field]=Timestamp&sort[0][direction]=desc' + filterF;
     var res = await provaFetch('/.netlify/functions/airtable', {
       method: 'POST',
       headers: {'Content-Type':'application/json'},
       body: JSON.stringify({method:'GET', path: url})
     });
-    if (!res.ok) throw new Error('HTTP ' + res.status);
+    if (!res.ok) {
+      // Server-Body bei 4xx/5xx auslesen fuer besseres Logging — zeigt
+      // die echte Airtable-Fehlermeldung statt nur "HTTP 422".
+      var errBody = '';
+      try { errBody = await res.text(); } catch(_) {}
+      console.warn('[jahresbericht] airtable-error', res.status, errBody.slice(0, 300));
+      throw new Error('HTTP ' + res.status);
+    }
     var data = await res.json();
     _alleRecords = (data.records || []).map(function(r){ return r.fields || {}; });
 
-    // Seite 2 wenn vorhanden
+    // Seite 2 wenn vorhanden (max 200 Records gesamt)
     if (data.offset) {
-      var url2 = url + '&offset=' + data.offset;
+      var url2 = url + '&offset=' + encodeURIComponent(data.offset);
       var res2 = await provaFetch('/.netlify/functions/airtable', {
         method:'POST', headers:{'Content-Type':'application/json'},
         body: JSON.stringify({method:'GET', path: url2})
@@ -84,9 +93,15 @@ async function ladeDaten() {
     var rc = _jb$('report-content'); if (rc) rc.style.display = 'block';
 
   } catch(e) {
+    // P5.B4b: User-facing Message ohne technischen HTTP-Code. Details nur
+    // in console (siehe oben) fuer's Debug.
+    console.warn('[jahresbericht] load-error:', e && e.message);
     var ls = _jb$('loading-state');
-    if (ls) ls.innerHTML = '<div style="text-align:center;padding:40px;color:var(--red);">⚠ Fehler beim Laden: ' + e.message + '</div>';
-    else console.warn('[jahresbericht] load-error:', e && e.message);
+    if (ls) ls.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text2);">'
+      + '<div style="font-size:24px;margin-bottom:8px;">📊</div>'
+      + '<div style="font-size:13px;margin-bottom:14px;">Daten konnten nicht geladen werden.</div>'
+      + '<button onclick="location.reload()" style="padding:8px 18px;background:var(--accent,#4f8ef7);border:none;border-radius:8px;color:#fff;font-size:12px;cursor:pointer;font-family:inherit;">Erneut versuchen</button>'
+      + '</div>';
   }
 }
 
