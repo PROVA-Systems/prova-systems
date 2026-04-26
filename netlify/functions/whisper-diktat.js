@@ -16,13 +16,23 @@
 // Client und (oft) wieder in ki-proxy fliessen.
 const crypto = require('crypto');
 const ProvaPseudo = require('./lib/prova-pseudo');
+const { requireAuth, jsonResponse } = require('./lib/jwt-middleware');
+const RateLimit = require('./lib/rate-limit-user');
+const { logAuthFailure } = require('./lib/auth-resolve');
 
-exports.handler = async (event) => {
-  if (event.httpMethod === 'OPTIONS') {
-    return { statusCode: 200, headers: corsHeaders(), body: '' };
-  }
+// S-SICHER P4B.3: requireAuth + Rate-Limit 10/60s pro Token-sub
+exports.handler = requireAuth(async (event, context) => {
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, headers: corsHeaders(), body: 'Method Not Allowed' };
+  }
+
+  const rl = RateLimit.check(context.userEmail, 10, 60);
+  if (!rl.allowed) {
+    logAuthFailure('Rate-Limit', event, { tokenEmail: context.userEmail, function: 'whisper-diktat', max: 10, windowSec: 60 });
+    return jsonResponse(event, 429,
+      { error: 'Rate-Limit erreicht. Bitte ' + rl.retryAfter + 's warten.' },
+      { 'Retry-After': String(rl.retryAfter) }
+    );
   }
 
   const apiKey = process.env.OPENAI_API_KEY;
@@ -184,7 +194,7 @@ exports.handler = async (event) => {
       body: JSON.stringify({ error: 'Transkription fehlgeschlagen' }),
     };
   }
-};
+});
 
 function corsHeaders() {
   return {
