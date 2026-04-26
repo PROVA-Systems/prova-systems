@@ -222,11 +222,16 @@
   var _origShowStep = window.PROVA_TOUR && window.PROVA_TOUR.showStep;
   if (!_origShowStep && window.PROVA_TOUR) {
     // Monkey-patch: nach jedem Schritt Fortschritt anzeigen
+    // P5.B2: Defensive Null-Checks. Wenn PROVA_TOUR zwischendurch
+    // entfernt/ersetzt wurde (z.B. durch endTour oder Hot-Reload),
+    // werfen window.PROVA_TOUR.steps / .currentStep TypeError.
     var observer = new MutationObserver(function() {
       var tooltip = document.querySelector('.prova-tour-tooltip, .tour-tooltip, [class*="tour"][class*="tooltip"]');
       if (!tooltip || tooltip.querySelector('.tour-progress')) return;
-      var total  = window.PROVA_TOUR.steps ? window.PROVA_TOUR.steps.length : 0;
-      var current = window.PROVA_TOUR.currentStep || 0;
+      var T = window.PROVA_TOUR;
+      if (!T) return;
+      var total  = (T.steps && T.steps.length) || 0;
+      var current = T.currentStep || 0;
       if (!total) return;
       
       var prog = document.createElement('div');

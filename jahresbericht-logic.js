@@ -2,7 +2,16 @@
    PROVA jahresbericht-logic.js
    Jahresbericht — KI-Analyse, Statistiken
    Extrahiert aus jahresbericht.html
+
+   P5.B4 (Sprint 04): Defensive Null-Guards.
+   Vorher: getElementById('id').innerHTML = ... warf TypeError, wenn die
+   HTML-Datei den entsprechenden Container nicht enthielt (Status-Chart,
+   Zeit-Card, Faelle-Tabelle existieren in der aktuellen jahresbericht.html
+   nicht — geplant fuer Sprint 13). Jetzt: jede Render-Funktion checkt
+   Container-Existenz und ueberspringt sich bei null.
 ════════════════════════════════════════════════════════════ */
+
+function _jb$(id) { return document.getElementById(id); }
 
 function toggleDrawer(){var d=document.getElementById('drawer'),o=document.getElementById('drawerOverlay');d.classList.toggle('open');o.classList.toggle('open');document.body.style.overflow=d.classList.contains('open')?'hidden':'';}
 function closeDrawer(){document.getElementById('drawer').classList.remove('open');document.getElementById('drawerOverlay').classList.remove('open');document.body.style.overflow='';}
@@ -71,12 +80,13 @@ async function ladeDaten() {
     bautJahrButtons(jahre);
     renderBericht(_aktivesJahr);
 
-    document.getElementById('loading-state').style.display = 'none';
-    document.getElementById('report-content').style.display = 'block';
+    var ls = _jb$('loading-state'); if (ls) ls.style.display = 'none';
+    var rc = _jb$('report-content'); if (rc) rc.style.display = 'block';
 
   } catch(e) {
-    document.getElementById('loading-state').innerHTML =
-      '<div style="text-align:center;padding:40px;color:var(--red);">⚠ Fehler beim Laden: ' + e.message + '</div>';
+    var ls = _jb$('loading-state');
+    if (ls) ls.innerHTML = '<div style="text-align:center;padding:40px;color:var(--red);">⚠ Fehler beim Laden: ' + e.message + '</div>';
+    else console.warn('[jahresbericht] load-error:', e && e.message);
   }
 }
 
@@ -92,7 +102,7 @@ function ermittleJahre(records) {
 }
 
 function bautJahrButtons(jahre) {
-  var bar = document.getElementById('year-bar');
+  var bar = _jb$('year-bar'); if (!bar) return;
   // Aktuelles Jahr immer dabei
   var aktuellesJahr = new Date().getFullYear();
   if (!jahre.includes(aktuellesJahr)) jahre.unshift(aktuellesJahr);
@@ -116,8 +126,8 @@ function renderBericht(jahr) {
     return r.Timestamp && new Date(r.Timestamp).getFullYear() === jahr;
   });
 
-  document.getElementById('bericht-subtitle').textContent =
-    'Sachverständigenbüro · Statistik ' + jahr + ' · ' + _gefilterteRecords.length + ' Fälle';
+  var sub = _jb$('bericht-subtitle');
+  if (sub) sub.textContent = 'Sachverständigenbüro · Statistik ' + jahr + ' · ' + _gefilterteRecords.length + ' Fälle';
 
   renderKPIs(_gefilterteRecords, jahr);
   renderMonatChart(_gefilterteRecords);
@@ -166,7 +176,7 @@ function renderKPIs(records, jahr) {
      valFmt: String(Object.keys(arten).length)},
   ];
 
-  var grid = document.getElementById('kpi-grid');
+  var grid = _jb$('kpi-grid'); if (!grid) return;
   grid.innerHTML = '';
   kpis.forEach(function(k) {
     var div = document.createElement('div');
@@ -195,10 +205,11 @@ function renderMonatChart(records) {
   var max = Math.max.apply(null, monate) || 1;
   var monatNamen = ['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
 
-  var chart = document.getElementById('monat-chart');
-  var labels = document.getElementById('monat-labels');
+  var chart = _jb$('monat-chart');
+  var labels = _jb$('monat-labels');
+  if (!chart) return;
   chart.innerHTML = '';
-  labels.innerHTML = '';
+  if (labels) labels.innerHTML = '';
 
   monate.forEach(function(n, i) {
     var col = document.createElement('div');
@@ -219,7 +230,7 @@ function renderArtChart(records) {
   var sorted = Object.keys(arten).sort(function(a,b){return arten[b]-arten[a];}).slice(0,8);
   var max = sorted.length > 0 ? arten[sorted[0]] : 1;
 
-  var chart = document.getElementById('art-chart');
+  var chart = _jb$('art-chart'); if (!chart) return;
   chart.innerHTML = '';
   if (!sorted.length) { chart.innerHTML = '<div style="color:var(--text3);font-size:12px;">Keine Daten</div>'; return; }
 
@@ -244,7 +255,7 @@ function renderStatusChart(records) {
   var sorted = Object.keys(stati).sort(function(a,b){return stati[b]-stati[a];});
   var max = sorted.length > 0 ? stati[sorted[0]] : 1;
 
-  var chart = document.getElementById('status-chart');
+  var chart = _jb$('status-chart'); if (!chart) return;
   chart.innerHTML = '';
   sorted.forEach(function(s) {
     var n = stati[s];
@@ -263,7 +274,7 @@ function renderStatusChart(records) {
 
 // ── Bearbeitungszeit-Card ──
 function renderZeitCard(records) {
-  var body = document.getElementById('zeit-card-body');
+  var body = _jb$('zeit-card-body'); if (!body) return;
   var mitZeit = records.filter(function(r){return r.Bearbeitungszeit_Min > 0;});
   if (!mitZeit.length) {
     body.innerHTML = '<div style="color:var(--text3);font-size:12px;">Noch keine Bearbeitungszeiten erfasst.<br><span style="font-size:11px;">Werden automatisch aus App-Zeitstempeln berechnet.</span></div>';
@@ -303,12 +314,15 @@ function formatMin(min) {
 var _alleFaelleTabelle = [];
 function renderTabelle(records) {
   _alleFaelleTabelle = records;
-  document.getElementById('faelle-count').textContent = '· ' + records.length + ' Einträge';
+  var count = _jb$('faelle-count');
+  if (count) count.textContent = '· ' + records.length + ' Einträge';
   filterTabelle();
 }
 
 function filterTabelle() {
-  var suche = (document.getElementById('tabelle-suche').value||'').toLowerCase();
+  var sucheEl = _jb$('tabelle-suche');
+  if (!sucheEl) return; // Tabelle-Section nicht gerendert (HTML-Stub)
+  var suche = (sucheEl.value||'').toLowerCase();
   var gefiltert = suche
     ? _alleFaelleTabelle.filter(function(r){
         return (r.Aktenzeichen||'').toLowerCase().includes(suche) ||
@@ -317,7 +331,7 @@ function filterTabelle() {
       })
     : _alleFaelleTabelle;
 
-  var tbody = document.getElementById('faelle-tbody');
+  var tbody = _jb$('faelle-tbody'); if (!tbody) return;
   if (!gefiltert.length) {
     tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text3);padding:20px;">Keine Treffer</td></tr>';
     return;
@@ -370,8 +384,9 @@ window.zeigToast = window.zeigToast || window.showToast || function(m){ alert(m)
 document.addEventListener('DOMContentLoaded', function() {
   // Responsive charts-row
   function checkGrid(){
-    var r1=document.getElementById('charts-row');
-    var r2=document.getElementById('status-row');
+    var r1=_jb$('charts-row');
+    var r2=_jb$('status-row');
+    if (!r1 && !r2) return;
     var cols = window.innerWidth < 640 ? '1fr' : '1fr 1fr';
     if(r1)r1.style.gridTemplateColumns=cols;
     if(r2)r2.style.gridTemplateColumns=cols;

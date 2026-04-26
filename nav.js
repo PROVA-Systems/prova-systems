@@ -86,7 +86,7 @@
     { href: 'textbausteine.html',    icon: '📝',  label: 'Textbausteine' },
     { href: 'positionen.html',       icon: '🗂️', label: 'Positionen & Preise' },
     { href: 'jveg.html',             icon: '⚖️',  label: 'JVEG-Rechner' },
-    { href: 'bescheinigungen.html',  icon: '📐',  label: 'Bescheinigungen' },
+    // P5.B3: bescheinigungen.html entfernt (defekt + ungenutzt). Redirect via netlify.toml.
   ];
   // DOKUMENTE (Session 30): was erstellt & versendet wird — Rechnungen + Briefe
   var DOKUMENTE = [

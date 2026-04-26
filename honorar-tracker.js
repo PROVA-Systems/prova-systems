@@ -422,7 +422,7 @@ const HonorarTracker = (() => {
           filter: `{sv_email}="${svEmail}"`,
           sort: [{ field: 'rechnungsdatum', direction: 'desc' }],
           felder: ['Rechnungsnummer', 'empfaenger_name', 'brutto_betrag_eur', 'netto_betrag_eur',
-                   'rechnungsdatum', 'faellig_am', 'Status', 'aktenzeichen', 'empfaenger_name',
+                   'rechnungsdatum', 'faellig_am', 'status', 'aktenzeichen',
                    'mahnstufe', 'mahngebuehren_eur', 'Rechnungstyp', 'sv_email']
         })
       });
@@ -453,8 +453,11 @@ const HonorarTracker = (() => {
       ? Math.round((heute - faellig) / 86400000)
       : null;
 
-    // Status bestimmen
-    let statusKey = (f.Status || 'OFFEN').toUpperCase().replace(/ /g, '_');
+    // P5.B1: Airtable RECHNUNGEN-Schema hat das Feld lowercase ('status'),
+    // nicht 'Status'. Frueher: f.Status -> immer undefined -> alles 'OFFEN',
+    // plus 422 wenn 'Status' im felder-Array stand. Beide Schreibweisen
+    // unterstuetzen, falls altere Records oder Schema-Drift.
+    let statusKey = (f.status || f.Status || 'OFFEN').toUpperCase().replace(/ /g, '_');
     if (statusKey === 'OFFEN' && tageOffen !== null) {
       if      (tageOffen >= CONFIG.FAELLIG_TAGE_DRITTE) statusKey = 'MAHNUNG_3';
       else if (tageOffen >= CONFIG.FAELLIG_TAGE_ZWEITE) statusKey = 'MAHNUNG_2';
@@ -778,7 +781,7 @@ const HonorarTracker = (() => {
           action: 'update',
           tabelle: 'RECHNUNGEN',
           id: rechnungId,
-          felder: { Status: 'Bezahlt', Bezahlt_Am: new Date().toISOString().split('T')[0] }
+          felder: { status: 'Bezahlt', bezahlt_am: new Date().toISOString().split('T')[0] }
         })
       });
       // State updaten
@@ -804,10 +807,12 @@ const HonorarTracker = (() => {
           action: 'update',
           tabelle: 'RECHNUNGEN',
           id: rechnungId,
+          // P5.B1: Airtable-Schema RECHNUNGEN hat 'status' (lowercase) +
+          // 'mahnstufe' (Number). 'Mahnungen' und 'Letzte_Mahnung' existieren
+          // im Schema nicht und wuerden 422 ausloesen.
           felder: {
-            Status: `Mahnung ${stufe}`,
-            Mahnungen: stufe,
-            Letzte_Mahnung: new Date().toISOString().split('T')[0]
+            status: `Mahnung ${stufe}`,
+            mahnstufe: stufe
           }
         })
       });
@@ -828,7 +833,7 @@ const HonorarTracker = (() => {
           action: 'update',
           tabelle: 'RECHNUNGEN',
           id: rechnungId,
-          felder: { Status: 'Storniert' }
+          felder: { status: 'Storniert' }
         })
       });
       state.rechnungen = state.rechnungen.filter(r => r.id !== rechnungId);
