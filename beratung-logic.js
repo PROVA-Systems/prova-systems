@@ -93,7 +93,8 @@
     var el = document.getElementById('br-typ-badge');
     if (!el) return;
     var cfg = TYP_LABEL[_auftragstyp] || { label: 'Beratung', color: '#f97316' };
-    el.textContent = cfg.label + ' · Flow C';
+    // P5f.X1.2: 'Flow C'-Suffix entfernt — Entwickler-Begriff, nicht user-facing.
+    el.textContent = cfg.label;
     el.style.color = cfg.color;
     el.style.background = cfg.color + '18';
     el.style.borderColor = cfg.color + '33';

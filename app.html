@@ -860,9 +860,38 @@ document.addEventListener('DOMContentLoaded', function() {
     <div id="page-new">
       <div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start">
         <div>
-          <h1 class="page-title">Neues Gutachten erstellen</h1>
+          <h1 class="page-title" id="page-title-h1">Neues Gutachten erstellen</h1>
           <p class="page-subtitle">Diktieren Sie Ihre Beobachtungen – die PROVA erstellt den Entwurf.</p>
         </div>
+        <script>
+          /* P5f.X1.2: H1 dynamisch aus URL-Parameter typ= oder
+             localStorage 'prova_letzter_auftragstyp' (von nav.js
+             Split-Button gesetzt). */
+          (function () {
+            var typ = new URLSearchParams(window.location.search).get('typ')
+                   || localStorage.getItem('prova_letzter_auftragstyp')
+                   || 'schadensgutachten';
+            var titles = {
+              schaden:                  'Neues Schadensgutachten',
+              schadensgutachten:        'Neues Schadensgutachten',
+              beweis:                   'Neue Beweissicherung',
+              beweissicherung:          'Neue Beweissicherung',
+              gerichtlich:              'Neues Gerichtsgutachten',
+              ergaenzung:               'Neues Ergänzungsgutachten',
+              gegengutachten:           'Neues Gegengutachten / Erwiderung',
+              stellungnahme:            'Neue Technische Stellungnahme',
+              wertgutachten:            'Neues Wertgutachten',
+              telefonberatung:          'Neue Telefonberatung',
+              beratung:                 'Neue Beratungsleistung',
+              baubegleitung:            'Neue Baubegleitung',
+              schiedsgutachten:         'Neues Schiedsgutachten'
+            };
+            var title = titles[typ] || 'Neuer Auftrag';
+            var h1 = document.getElementById('page-title-h1');
+            if (h1) h1.textContent = title;
+            try { document.title = title + ' · PROVA'; } catch (e) {}
+          })();
+        </script>
         <div style="display:flex;gap:.75rem">
           <button class="btn btn-ghost btn-sm">Vorlage laden</button>
         </div>
