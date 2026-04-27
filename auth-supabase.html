@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex,nofollow">
+<title>PROVA — Auth (Supabase, K-1.0)</title>
+<!--
+  Sprint K-1.0 Block 6 — Supabase-Auth parallel zu Netlify Identity.
+  PARALLEL-Page zu /login.html. Wird in K-1.5 als finale Login-Page aktiviert.
+  Bewusst minimal/unbranded — UI-Polish kommt in K-1.4.
+-->
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 24px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    background: #f5f5f7; color: #111;
+    min-height: 100vh; display: flex; align-items: center; justify-content: center;
+  }
+  .card {
+    background: #fff; border-radius: 12px; padding: 32px;
+    width: 100%; max-width: 420px;
+    box-shadow: 0 2px 16px rgba(0,0,0,0.08);
+  }
+  h1 { font-size: 20px; margin: 0 0 4px; font-weight: 600; }
+  .subtitle { color: #666; font-size: 13px; margin: 0 0 24px; }
+  .badge {
+    display: inline-block; font-size: 11px; padding: 2px 8px;
+    background: #fef3c7; color: #92400e; border-radius: 4px;
+    margin-left: 6px;
+  }
+  .tabs { display: flex; gap: 4px; border-bottom: 1px solid #e5e5e7; margin-bottom: 20px; }
+  .tab {
+    flex: 1; padding: 8px 12px; background: none; border: 0;
+    border-bottom: 2px solid transparent;
+    cursor: pointer; font-size: 13px; color: #666;
+  }
+  .tab.active { color: #111; border-bottom-color: #111; font-weight: 500; }
+  form { display: none; flex-direction: column; gap: 12px; }
+  form.active { display: flex; }
+  label { font-size: 12px; color: #444; font-weight: 500; }
+  input[type=email], input[type=password], input[type=text] {
+    padding: 10px 12px; border: 1px solid #d1d1d6; border-radius: 6px;
+    font-size: 14px; font-family: inherit;
+  }
+  input:focus { outline: 2px solid #007aff; outline-offset: -1px; }
+  button[type=submit] {
+    margin-top: 8px; padding: 10px 16px; background: #111; color: #fff;
+    border: 0; border-radius: 6px; font-size: 14px; font-weight: 500;
+    cursor: pointer;
+  }
+  button[type=submit]:disabled { opacity: 0.5; cursor: not-allowed; }
+  button[type=submit]:hover:not(:disabled) { background: #333; }
+  .msg {
+    margin-top: 12px; padding: 10px 12px; border-radius: 6px;
+    font-size: 13px; display: none;
+  }
+  .msg.error   { display: block; background: #fee; color: #c00; border: 1px solid #fcc; }
+  .msg.success { display: block; background: #efe; color: #060; border: 1px solid #cfc; }
+  .msg.info    { display: block; background: #eef; color: #006; border: 1px solid #ccf; }
+  .footer-note { margin-top: 16px; font-size: 11px; color: #888; text-align: center; }
+  .footer-note a { color: #007aff; text-decoration: none; }
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>PROVA Login <span class="badge">K-1.0 Foundation</span></h1>
+  <p class="subtitle">Supabase Auth — parallel zur bestehenden /login.html</p>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="login" type="button">Anmelden</button>
+    <button class="tab" data-tab="signup" type="button">Registrieren</button>
+    <button class="tab" data-tab="reset" type="button">Passwort?</button>
+  </div>
+
+  <!-- LOGIN -->
+  <form id="login-form" class="active" autocomplete="on">
+    <label for="login-email">Email</label>
+    <input id="login-email" name="email" type="email" required autocomplete="username" placeholder="marcel.schreiber@prova-systems.de">
+    <label for="login-password">Passwort</label>
+    <input id="login-password" name="password" type="password" required autocomplete="current-password">
+    <button type="submit">Einloggen</button>
+  </form>
+
+  <!-- SIGN-UP -->
+  <form id="signup-form" autocomplete="on">
+    <label for="signup-name">Name</label>
+    <input id="signup-name" name="name" type="text" required autocomplete="name">
+    <label for="signup-email">Email</label>
+    <input id="signup-email" name="email" type="email" required autocomplete="email">
+    <label for="signup-password">Passwort (min. 8 Zeichen)</label>
+    <input id="signup-password" name="password" type="password" required autocomplete="new-password" minlength="8">
+    <button type="submit">Account anlegen</button>
+  </form>
+
+  <!-- RESET -->
+  <form id="reset-form" autocomplete="on">
+    <label for="reset-email">Email</label>
+    <input id="reset-email" name="email" type="email" required autocomplete="email">
+    <button type="submit">Reset-Link senden</button>
+  </form>
+
+  <div id="msg" class="msg" role="status" aria-live="polite"></div>
+
+  <div class="footer-note">
+    Bestehender Login (Netlify Identity): <a href="/login.html">/login.html</a><br>
+    K-1.0 Test-Page: <a href="/tools/test-supabase-login.html">/tools/test-supabase-login.html</a>
+  </div>
+</div>
+
+<!-- Reihenfolge wichtig: Config muss VOR den ESM-Modulen geladen sein -->
+<script src="/lib/prova-config.js"></script>
+<script type="module" src="/auth-supabase-logic.js"></script>
+</body>
+</html>
