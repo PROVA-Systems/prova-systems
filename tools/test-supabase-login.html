@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex,nofollow">
+<title>PROVA — Supabase Login + Roundtrip-Test (K-1.0.7)</title>
+<!--
+  Sprint K-1.0 Block 7 — Browser-Roundtrip-Test.
+
+  Marcel öffnet diese Page, pastet einmalig den Anon-Key in den
+  Setup-Banner (lokal in localStorage), loggt sich mit dem Founder-
+  Account ein und drückt "Master-Cockpit-Query". Console + Output-Box
+  zeigen das Resultat.
+
+  Erfolgs-Kriterium: kein Fehler, master-Cockpit-Daten erscheinen
+  (auch wenn alle Werte 0 — wichtig ist dass RLS+JWT funktionieren).
+-->
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 24px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    background: #f5f5f7; color: #111;
+  }
+  .wrap { max-width: 760px; margin: 0 auto; display: grid; gap: 16px; }
+  .card {
+    background: #fff; border-radius: 12px; padding: 20px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  }
+  h1 { font-size: 18px; margin: 0 0 4px; font-weight: 600; }
+  h2 { font-size: 14px; margin: 0 0 10px; font-weight: 600; color: #444; }
+  p { margin: 4px 0; font-size: 13px; color: #555; }
+  .badge {
+    display: inline-block; font-size: 11px; padding: 2px 8px;
+    background: #fef3c7; color: #92400e; border-radius: 4px;
+  }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  label { font-size: 12px; color: #444; font-weight: 500; }
+  input[type=email], input[type=password], input[type=text] {
+    width: 100%;
+    padding: 8px 10px; border: 1px solid #d1d1d6; border-radius: 6px;
+    font-size: 13px; font-family: inherit;
+  }
+  textarea {
+    width: 100%; min-height: 60px;
+    padding: 8px 10px; border: 1px solid #d1d1d6; border-radius: 6px;
+    font-size: 12px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    resize: vertical;
+  }
+  button {
+    padding: 8px 14px; background: #111; color: #fff;
+    border: 0; border-radius: 6px; font-size: 13px; font-weight: 500;
+    cursor: pointer;
+  }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+  button.secondary { background: #e5e5e7; color: #111; }
+  button.danger { background: #c00; }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 8px; }
+  .status {
+    display: inline-block; padding: 2px 8px; border-radius: 4px;
+    font-size: 11px; font-weight: 500;
+  }
+  .status.ok      { background: #efe; color: #060; }
+  .status.warn    { background: #fef3c7; color: #92400e; }
+  .status.err     { background: #fee; color: #c00; }
+  .status.neutral { background: #eee; color: #555; }
+  pre.console {
+    background: #0a0a0a; color: #d0d0d0;
+    padding: 12px; border-radius: 6px;
+    font-size: 11px; line-height: 1.4;
+    max-height: 320px; overflow: auto;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    white-space: pre-wrap; word-break: break-word;
+    margin: 0;
+  }
+  pre.console .ts { color: #888; }
+  pre.console .ok { color: #6f6; }
+  pre.console .err { color: #f88; }
+  pre.console .info { color: #8cf; }
+  details { margin-top: 8px; }
+  summary { cursor: pointer; font-size: 12px; color: #555; }
+  .setup {
+    background: #fff7d6; border: 1px solid #f5c842;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="card">
+    <h1>Supabase Login + Roundtrip-Test <span class="badge">K-1.0.7</span></h1>
+    <p>Pre-Pilot-Test der Supabase-Foundation. Erwartet wird: Login → Master-Cockpit-Query liefert Daten (auch wenn alle Werte 0).</p>
+    <p style="margin-top:8px;">
+      <span class="status neutral" id="conn-status">Verbindung: ?</span>
+      <span class="status neutral" id="auth-status">Auth: prüfe…</span>
+      <span class="status neutral" id="config-status">Config: prüfe…</span>
+    </p>
+  </div>
+
+  <!-- 1. SETUP-BANNER (nur sichtbar wenn Anon-Key fehlt) -->
+  <div class="card setup" id="setup-banner" hidden>
+    <h2>1) Setup — Anon-Key fehlt</h2>
+    <p>Der Supabase-Anon-Key ist nicht im Repo (saubere Trennung von Code und Secrets, auch wenn Anon-Keys public sind). Bitte einmalig hier einfügen — wird in Deinem Browser-localStorage gespeichert (Schlüssel <code>prova-supabase-anon-key</code>).</p>
+    <p style="margin-top:8px;"><strong>Wo holen:</strong> Supabase-Dashboard → Project <code>cngteblrbpwsyypexjrv</code> → Project Settings → API → <strong>anon public</strong> Key.</p>
+    <div class="row" style="margin-top:12px;">
+      <input type="text" id="setup-anon-input" placeholder="eyJhbG…" style="flex:1; min-width: 260px;" autocomplete="off">
+      <button id="setup-save-btn">Speichern + Reload</button>
+    </div>
+    <p style="margin-top:6px; font-size:11px; color:#888;">
+      Der Service-Role-Key gehört NICHT hierher — der bleibt server-side. Hier nur den Anon-Key.
+    </p>
+  </div>
+
+  <!-- 2. LOGIN-FORM (sichtbar wenn nicht eingeloggt) -->
+  <div class="card" id="login-card" hidden>
+    <h2>2) Login</h2>
+    <p>Pre-filled für den Founder-Account. Passwort kennt nur Marcel.</p>
+    <form id="login-form" autocomplete="on">
+      <div class="grid2" style="margin-top:8px;">
+        <div>
+          <label for="email">Email</label>
+          <input id="email" name="email" type="email" required value="marcel.schreiber@prova-systems.de" autocomplete="username">
+        </div>
+        <div>
+          <label for="password">Passwort</label>
+          <input id="password" name="password" type="password" required autocomplete="current-password" placeholder="(Marcel füllt manuell)">
+        </div>
+      </div>
+      <div class="row">
+        <button type="submit" id="login-btn">Einloggen</button>
+        <button type="button" class="secondary" id="signup-link" onclick="window.location.href='/auth-supabase.html'">Volle Auth-Page öffnen</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- 3. ROUNDTRIP-ACTIONS (sichtbar wenn eingeloggt) -->
+  <div class="card" id="actions-card" hidden>
+    <h2>3) Roundtrip-Tests</h2>
+    <p>User: <strong id="user-email">?</strong> · Workspace: <strong id="ws-id">?</strong></p>
+    <div class="row">
+      <button id="btn-master">Master-Cockpit-Query</button>
+      <button id="btn-tables">Tabellen-Probe (3 zählen)</button>
+      <button id="btn-pending-consents" class="secondary">Pending Einwilligungen</button>
+      <button id="btn-feature-event" class="secondary">trackFeatureEvent</button>
+      <button id="btn-logout" class="danger">Logout</button>
+    </div>
+    <div class="row" style="margin-top:8px;">
+      <button id="btn-reset-config" class="secondary" title="Anon-Key aus localStorage entfernen">Config zurücksetzen</button>
+    </div>
+  </div>
+
+  <!-- 4. CONSOLE-OUTPUT -->
+  <div class="card">
+    <h2>Console</h2>
+    <pre class="console" id="console-output">[bereit]
+</pre>
+    <details>
+      <summary>Was Marcel hier morgen früh erwartet</summary>
+      <p style="font-size:12px; margin-top:6px;">
+        1. Setup-Banner ausfüllen (Anon-Key paste) → Page reload<br>
+        2. Login mit <code>marcel.schreiber@prova-systems.de</code> + Passwort<br>
+        3. Auth-Status grün, User-Email + Workspace-ID sichtbar<br>
+        4. „Master-Cockpit-Query" klicken → JSON-Output mit Cockpit-Daten<br>
+        5. „Tabellen-Probe" klicken → 3 Counts (auftraege, kontakte, dokumente)<br>
+        6. „Logout" → zurück zu Login-Form<br><br>
+        Erfolgs-Kriterium: keine Errors, Master-Cockpit liefert ein Objekt.
+        Werte dürfen alle 0 sein — wichtig ist dass JWT + RLS funktionieren.
+      </p>
+    </details>
+  </div>
+
+</div>
+
+<!-- Pflicht-Reihenfolge: Config zuerst (klassisch), dann ESM-Module -->
+<script src="/lib/prova-config.js"></script>
+<script type="module">
+import {
+    supabase,
+    getCurrentUser,
+    getCurrentSession,
+    getActiveWorkspaceId,
+    signOut
+} from '/lib/supabase-client.js';
+import { dataStore } from '/lib/data-store.js';
+
+// ─── Console-Helpers ─────────────────────────────────────────
+const out = document.getElementById('console-output');
+function log(level, ...args) {
+    const ts = new Date().toLocaleTimeString('de-DE');
+    const line = args.map(a => {
+        if (a instanceof Error) return `${a.name}: ${a.message}`;
+        if (typeof a === 'object') return JSON.stringify(a, null, 2);
+        return String(a);
+    }).join(' ');
+    out.textContent += `[${ts}] ${level.toUpperCase()}: ${line}\n`;
+    out.scrollTop = out.scrollHeight;
+    // Mirror to browser console
+    (console[level] || console.log)('[PROVA]', ...args);
+}
+const logInfo = (...a) => log('info', ...a);
+const logOk   = (...a) => log('log',  ...a);
+const logErr  = (...a) => log('error',...a);
+
+// ─── UI-State ────────────────────────────────────────────────
+function setStatus(el, kind, text) {
+    el.className = 'status ' + kind;
+    el.textContent = text;
+}
+
+const $setup        = document.getElementById('setup-banner');
+const $loginCard    = document.getElementById('login-card');
+const $actionsCard  = document.getElementById('actions-card');
+const $userEmail    = document.getElementById('user-email');
+const $wsId         = document.getElementById('ws-id');
+const $connStatus   = document.getElementById('conn-status');
+const $authStatus   = document.getElementById('auth-status');
+const $configStatus = document.getElementById('config-status');
+
+// ─── Setup-Banner-Logic ──────────────────────────────────────
+const cfg = window.PROVA_CONFIG || {};
+const placeholder = cfg.PLACEHOLDER;
+const keyMissing = !cfg.SUPABASE_ANON_KEY || cfg.SUPABASE_ANON_KEY === placeholder;
+
+if (keyMissing) {
+    $setup.hidden = false;
+    setStatus($configStatus, 'err', 'Config: Anon-Key fehlt');
+    logErr('Anon-Key fehlt — bitte im Setup-Banner einfuegen.');
+} else {
+    setStatus($configStatus, 'ok', 'Config: OK');
+    logInfo('Config geladen. URL=' + cfg.SUPABASE_URL);
+}
+
+document.getElementById('setup-save-btn').addEventListener('click', () => {
+    const v = document.getElementById('setup-anon-input').value.trim();
+    if (!v.startsWith('eyJ')) {
+        alert('Das sieht nicht nach einem JWT-Anon-Key aus (sollte mit "eyJ" beginnen).');
+        return;
+    }
+    localStorage.setItem('prova-supabase-anon-key', v);
+    location.reload();
+});
+
+document.getElementById('btn-reset-config')?.addEventListener('click', () => {
+    if (confirm('Anon-Key aus localStorage entfernen und Page neu laden?')) {
+        localStorage.removeItem('prova-supabase-anon-key');
+        location.reload();
+    }
+});
+
+// ─── Verbindungs-Test (best-effort) ──────────────────────────
+async function pingConnection() {
+    if (keyMissing) return;
+    try {
+        // Health-Check: HEAD auf REST-Root antwortet auch ohne Auth
+        const r = await fetch(cfg.SUPABASE_URL + '/rest/v1/', {
+            headers: { 'apikey': cfg.SUPABASE_ANON_KEY }
+        });
+        if (r.ok || r.status === 200) {
+            setStatus($connStatus, 'ok', 'Verbindung: OK');
+        } else {
+            setStatus($connStatus, 'warn', 'Verbindung: HTTP ' + r.status);
+        }
+    } catch (e) {
+        setStatus($connStatus, 'err', 'Verbindung: Fehler');
+        logErr('Connection-Ping:', e);
+    }
+}
+
+// ─── Auth-State + UI-Toggle ──────────────────────────────────
+async function refreshAuthState() {
+    if (keyMissing) {
+        setStatus($authStatus, 'err', 'Auth: Config fehlt');
+        return;
+    }
+    const session = await getCurrentSession();
+    if (session) {
+        setStatus($authStatus, 'ok', 'Auth: eingeloggt');
+        $loginCard.hidden = true;
+        $actionsCard.hidden = false;
+        $userEmail.textContent = session.user.email || '?';
+        try {
+            const ws = await getActiveWorkspaceId();
+            $wsId.textContent = ws || '(kein Workspace)';
+            logInfo('Workspace-ID:', ws);
+        } catch (e) {
+            $wsId.textContent = '(Fehler)';
+            logErr('getActiveWorkspaceId:', e);
+        }
+        logOk('Eingeloggt als', session.user.email);
+    } else {
+        setStatus($authStatus, 'warn', 'Auth: nicht eingeloggt');
+        $loginCard.hidden = false;
+        $actionsCard.hidden = true;
+        logInfo('Nicht eingeloggt.');
+    }
+}
+
+// ─── Login-Form ──────────────────────────────────────────────
+document.getElementById('login-form')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = e.target.email.value.trim();
+    const password = e.target.password.value;
+    const btn = document.getElementById('login-btn');
+    btn.disabled = true;
+    btn.textContent = '…';
+    logInfo('Login-Versuch:', email);
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    btn.disabled = false;
+    btn.textContent = 'Einloggen';
+    if (error) {
+        logErr('Login fehlgeschlagen:', error.message);
+        return;
+    }
+    logOk('Login OK — User-ID:', data.user?.id);
+    e.target.password.value = '';
+    await refreshAuthState();
+});
+
+// ─── Roundtrip-Aktionen ──────────────────────────────────────
+
+document.getElementById('btn-master')?.addEventListener('click', async () => {
+    logInfo('Master-Cockpit-Query…');
+    try {
+        const { data, error } = await dataStore.cockpit.masterUebersicht();
+        if (error) { logErr('Master-Cockpit:', error); return; }
+        logOk('Master-Cockpit OK:', data);
+    } catch (e) {
+        logErr('Master-Cockpit-Exception:', e);
+    }
+});
+
+document.getElementById('btn-tables')?.addEventListener('click', async () => {
+    logInfo('Tabellen-Probe (count auftraege/kontakte/dokumente)…');
+    try {
+        const wsId = await getActiveWorkspaceId();
+        const tables = ['auftraege', 'kontakte', 'dokumente'];
+        for (const t of tables) {
+            const { count, error } = await supabase
+                .from(t)
+                .select('*', { count: 'exact', head: true })
+                .eq('workspace_id', wsId)
+                .is('deleted_at', null);
+            if (error) {
+                logErr(`${t}: ${error.message}`);
+            } else {
+                logOk(`${t}:`, count, 'rows');
+            }
+        }
+    } catch (e) {
+        logErr('Tabellen-Probe-Exception:', e);
+    }
+});
+
+document.getElementById('btn-pending-consents')?.addEventListener('click', async () => {
+    logInfo('get_pending_einwilligungen RPC…');
+    try {
+        const { data, error } = await dataStore.compliance.getPendingEinwilligungen();
+        if (error) { logErr('Pending-Consents:', error); return; }
+        logOk('Pending Einwilligungen:', data);
+    } catch (e) {
+        logErr('RPC-Exception:', e);
+    }
+});
+
+document.getElementById('btn-feature-event')?.addEventListener('click', async () => {
+    logInfo('trackFeatureEvent (page_view, k1_0_test)…');
+    try {
+        const { data, error } = await dataStore.trackFeatureEvent('page_view', 'k1_0_roundtrip_test');
+        if (error) { logErr('FeatureEvent:', error); return; }
+        logOk('FeatureEvent-ID:', data);
+    } catch (e) {
+        logErr('FeatureEvent-Exception:', e);
+    }
+});
+
+document.getElementById('btn-logout')?.addEventListener('click', async () => {
+    logInfo('Logout…');
+    await signOut('/tools/test-supabase-login.html?logged_out=1');
+});
+
+// ─── Init ────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', async () => {
+    if (new URLSearchParams(location.search).get('logged_in') === '1') {
+        logInfo('Redirect-Hinweis: gerade eingeloggt.');
+    }
+    if (new URLSearchParams(location.search).get('logged_out') === '1') {
+        logInfo('Redirect-Hinweis: gerade ausgeloggt.');
+    }
+    await pingConnection();
+    if (!keyMissing) await refreshAuthState();
+});
+
+// Auth-Listener fuer Reaktionen auf Token-Refresh / SignOut in anderen Tabs
+if (!keyMissing) {
+    supabase.auth.onAuthStateChange((event, session) => {
+        logInfo('AuthStateChange:', event);
+        refreshAuthState();
+    });
+}
+</script>
+</body>
+</html>
