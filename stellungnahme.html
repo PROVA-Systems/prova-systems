@@ -416,7 +416,24 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-ui);min-heigh
 /* nav.js Integration in stellungnahme */
 .app-shell .main-wrap { padding-top: 0; }
 .sidebar { z-index: 300; }
-@media(max-width:768px){ #main-wrap { margin-left: 0 !important; } }
+/* P5f.X2.2: flow-header und main-wrap muessen Sidebar-Margin
+   bekommen, damit Inhalt rechts der Sidebar landet (nicht darunter). */
+.app-shell .flow-header,
+.app-shell .main-wrap,
+.app-shell #main-wrap {
+  margin-left: var(--sb-w, 228px);
+  transition: margin-left .25s cubic-bezier(.4,0,.2,1);
+}
+.sidebar.collapsed ~ .flow-header,
+.sidebar.collapsed ~ .main-wrap,
+.sidebar.collapsed ~ #main-wrap {
+  margin-left: var(--sb-w-col, 56px);
+}
+@media(max-width:768px){
+  #main-wrap { margin-left: 0 !important; }
+  .app-shell .flow-header,
+  .app-shell .main-wrap { margin-left: 0 !important; }
+}
 
 @media(max-width:768px){#flow-burger{display:block!important}}
 

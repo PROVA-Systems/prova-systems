@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Neue Technische Stellungnahme · PROVA</title>
+<script src="prova-fetch-auth.js"></script>
+<script src="auth-guard.js"></script>
+<script src="prova-notifications.js" defer></script>
+<script src="prova-sanitize.js"></script>
+<script src="prova-auth-api.js"></script>
+<script src="prova-sv-airtable.js"></script>
+<script src="theme.js"></script>
+<script src="prova-layout.config.js"></script>
+<link rel="stylesheet" href="mobile.css">
+<link rel="stylesheet" href="prova-design.css">
+<link rel="stylesheet" href="page-template.css">
+<script src="nav.js" defer></script>
+<style>
+:root{
+  --bg:#0b0d11;--bg2:#111318;--bg3:#161a22;
+  --surface:#1c2130;--surface2:#232a3a;
+  --border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.11);
+  --text:#eaecf4;--text2:#8b93ab;--text3:#4d5568;
+  --accent:#4f8ef7;--accent2:#3a7be0;
+  --success:#10b981;--warning:#f59e0b;--danger:#ef4444;
+  --font-ui:'DM Sans',system-ui,sans-serif;
+  --r-sm:6px;--r-md:10px;--r-lg:14px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{font-size:14px;}
+body{font-family:var(--font-ui);background:var(--bg);color:var(--text);min-height:100vh;line-height:1.55;}
+input,select,textarea{font-size:max(16px,1em);}
+.app-shell{display:flex;min-height:100vh;}
+/* Page-spezifische Polish-Regeln, die nicht in page-template.css gehoeren */
+.ts-phase{display:none;}
+.ts-phase.active{display:block;animation:fadeIn .25s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+.ts-form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;}
+.ts-form-row.single{grid-template-columns:1fr;}
+@media(max-width:768px){.ts-form-row{grid-template-columns:1fr;}}
+.ts-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text3);margin-bottom:6px;display:block;}
+.ts-input,.ts-select,.ts-textarea{
+  width:100%;padding:10px 12px;background:var(--bg3);
+  border:1px solid var(--border2);border-radius:8px;
+  color:var(--text);font-size:13px;font-family:inherit;outline:none;
+  transition:border-color .15s;
+}
+.ts-input:focus,.ts-select:focus,.ts-textarea:focus{border-color:var(--accent);}
+.ts-textarea{resize:vertical;min-height:120px;line-height:1.6;}
+.ts-radio-group{display:flex;flex-direction:column;gap:8px;margin-bottom:14px;}
+.ts-radio-item{
+  display:flex;align-items:flex-start;gap:10px;padding:10px 14px;
+  background:var(--surface);border:1px solid var(--border);border-radius:8px;
+  cursor:pointer;transition:all .15s;
+}
+.ts-radio-item:hover{border-color:var(--border2);}
+.ts-radio-item input[type=radio]{margin-top:3px;flex-shrink:0;}
+.ts-radio-item.checked{border-color:var(--accent);background:rgba(79,142,247,.06);}
+.ts-radio-label{font-size:13px;font-weight:600;color:var(--text);}
+.ts-radio-sub{font-size:11.5px;color:var(--text3);margin-top:2px;}
+.ts-counter{font-size:10.5px;color:var(--text3);text-align:right;margin-top:4px;}
+.ts-todo-banner{
+  background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.25);
+  border-radius:10px;padding:14px 18px;margin-bottom:24px;
+  font-size:12.5px;color:#fcd34d;
+}
+.ts-todo-banner strong{color:var(--text);font-weight:700;}
+</style>
+</head>
+<body data-page="technische-stellungnahme">
+<div class="app-shell" id="app-shell">
+  <nav class="sidebar" id="sidebar"></nav>
+  <div class="sb-overlay" id="sb-overlay" onclick="closeMobileSidebar()"></div>
+  <div class="main-wrap" id="main-wrap">
+
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="burger" onclick="openMobileSidebar()"><span></span><span></span><span></span></button>
+        <div class="page-breadcrumb"><span>PROVA</span><span class="page-breadcrumb-sep">›</span><strong>Technische Stellungnahme</strong></div>
+      </div>
+      <div class="topbar-right">
+        <a href="einstellungen.html" class="settings-link" title="Einstellungen" style="color:var(--text2);text-decoration:none;font-size:18px;padding:6px 8px;">⚙️</a>
+      </div>
+    </header>
+
+    <main class="page-content">
+      <div class="page-hero">
+        <h1 class="page-title" id="ts-title">Neue Technische Stellungnahme</h1>
+        <p class="page-subtitle">Eigenständiger Auftragstyp · Fachliche Stellungnahme zu konkreter Frage in 3 Phasen</p>
+      </div>
+
+      <!-- TODO-Banner: Backend-Setup noch offen -->
+      <div class="ts-todo-banner" id="ts-todo">
+        <strong>⚠ Skeleton-Page</strong> — Backend-Anbindung steht noch aus.
+        Marcel muss vor Live-Schaltung anlegen:
+        <ol style="margin:6px 0 0 22px;font-size:12px;">
+          <li>Airtable-Tabelle <code>TECH_STELLUNGNAHMEN</code> mit Feld-Schema (siehe NACHT-PAUSE-2.md)</li>
+          <li>PDFMonkey-Template <code>TECHNISCHE_STELLUNGNAHME</code> (template_id in Logic-File einsetzen)</li>
+          <li>Tabellen-ID in <code>airtable.js</code> ALLOWED_TABLES whitelisten</li>
+        </ol>
+      </div>
+
+      <!-- 3-Step-Stepper -->
+      <div class="page-stepper" role="navigation" aria-label="Phasen">
+        <div class="page-step active" id="ts-step-1" onclick="tsGoTo(1)">
+          <div class="page-step-circle"><span>1</span></div>
+          <span class="page-step-label">Auftrag &amp; Frage</span>
+        </div>
+        <div class="page-step-connector"></div>
+        <div class="page-step" id="ts-step-2" onclick="tsGoTo(2)">
+          <div class="page-step-circle"><span>2</span></div>
+          <span class="page-step-label">Bewertung &amp; Antwort</span>
+        </div>
+        <div class="page-step-connector"></div>
+        <div class="page-step" id="ts-step-3" onclick="tsGoTo(3)">
+          <div class="page-step-circle"><span>3</span></div>
+          <span class="page-step-label">Versand &amp; Abrechnung</span>
+        </div>
+      </div>
+
+      <!-- ─── PHASE 1: Auftrag & Frage ─────────────────────── -->
+      <div class="ts-phase active" id="ts-phase-1">
+        <div class="page-card">
+          <div class="page-card-header">
+            <h2 class="page-card-title">Auftraggeber &amp; Aktenzeichen</h2>
+          </div>
+          <div class="ts-form-row">
+            <div>
+              <label class="ts-label" for="ts-az">Aktenzeichen <span class="page-pflicht-badge">Pflicht</span></label>
+              <input type="text" id="ts-az" class="ts-input" placeholder="TS-2026-NNN (auto-generiert beim Speichern)" readonly>
+            </div>
+            <div>
+              <label class="ts-label" for="ts-datum">Datum der Anfrage <span class="page-pflicht-badge">Pflicht</span></label>
+              <input type="date" id="ts-datum" class="ts-input">
+            </div>
+          </div>
+          <div class="ts-form-row">
+            <div>
+              <label class="ts-label" for="ts-auftraggeber-name">Auftraggeber Name</label>
+              <input type="text" id="ts-auftraggeber-name" class="ts-input" placeholder="Name / Firma">
+            </div>
+            <div>
+              <label class="ts-label" for="ts-auftraggeber-email">E-Mail</label>
+              <input type="email" id="ts-auftraggeber-email" class="ts-input" placeholder="kontakt@...">
+            </div>
+          </div>
+          <div class="ts-form-row single">
+            <div>
+              <label class="ts-label" for="ts-auftraggeber-adresse">Adresse</label>
+              <input type="text" id="ts-auftraggeber-adresse" class="ts-input" placeholder="Straße, PLZ Ort">
+            </div>
+          </div>
+        </div>
+
+        <div class="page-card">
+          <div class="page-card-header">
+            <h2 class="page-card-title">Art der Anfrage <span class="page-pflicht-badge">Pflicht</span></h2>
+          </div>
+          <div class="ts-radio-group" id="ts-art-group">
+            <label class="ts-radio-item">
+              <input type="radio" name="ts-art" value="fachlich-fremd"><div>
+                <div class="ts-radio-label">Fachliche Stellungnahme zu fremdem Gutachten</div>
+                <div class="ts-radio-sub">§412 ZPO · Erwiderung auf Privat-/Parteigutachten</div>
+              </div>
+            </label>
+            <label class="ts-radio-item">
+              <input type="radio" name="ts-art" value="handwerker-abrechnung"><div>
+                <div class="ts-radio-label">Bewertung einer Handwerker-Abrechnung</div>
+                <div class="ts-radio-sub">Plausibilitätsprüfung Stundensätze / Materialkosten</div>
+              </div>
+            </label>
+            <label class="ts-radio-item">
+              <input type="radio" name="ts-art" value="plausibilitaet"><div>
+                <div class="ts-radio-label">Plausibilitätsprüfung</div>
+                <div class="ts-radio-sub">Generelle fachliche Einschätzung</div>
+              </div>
+            </label>
+            <label class="ts-radio-item">
+              <input type="radio" name="ts-art" value="norm-konformitaet"><div>
+                <div class="ts-radio-label">Norm-Konformitätsprüfung</div>
+                <div class="ts-radio-sub">Einhaltung DIN / VOB / WTA / sonstige Normen</div>
+              </div>
+            </label>
+            <label class="ts-radio-item">
+              <input type="radio" name="ts-art" value="sonstige"><div>
+                <div class="ts-radio-label">Sonstige fachliche Frage</div>
+                <div class="ts-radio-sub">Freitext-Beschreibung in Phase 2</div>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <div class="page-card">
+          <div class="page-card-header">
+            <h2 class="page-card-title">Konkrete Frage <span class="page-pflicht-badge">Pflicht</span></h2>
+            <p class="page-card-subtitle">Maximal 1000 Zeichen — präzise Formulierung erleichtert die spätere Antwort</p>
+          </div>
+          <textarea id="ts-frage" class="ts-textarea" maxlength="1000" placeholder="Welche konkrete fachliche Frage soll beantwortet werden?"></textarea>
+          <div class="ts-counter"><span id="ts-frage-count">0</span> / 1000 Zeichen</div>
+        </div>
+
+        <div class="page-card">
+          <div class="page-card-header">
+            <h2 class="page-card-title">Bezugsdokumente</h2>
+            <p class="page-card-subtitle">Bis zu 5 Dateien (Gutachten, Angebote, Rechnungen, Briefe). Kommt in v2.</p>
+          </div>
+          <div style="font-size:12px;color:var(--text3);text-align:center;padding:24px;background:var(--bg3);border:1px dashed var(--border2);border-radius:8px;">
+            📎 Datei-Upload kommt in v2 — bis dahin Anhänge per E-Mail nachreichen
+          </div>
+        </div>
+      </div>
+
+      <!-- ─── PHASE 2: Bewertung & Antwort ─────────────────── -->
+      <div class="ts-phase" id="ts-phase-2">
+        <div class="page-card">
+          <div class="page-card-header">
+            <h2 class="page-card-title">Sachverhalt</h2>
+            <p class="page-card-subtitle">Was wurde gesehen, geprüft, festgestellt? (Diktat-Button kommt in v2)</p>
+          </div>
+          <textarea id="ts-sachverhalt" class="ts-textarea" placeholder="Sachverhalt aus eigenen Beobachtungen / vorgelegten Unterlagen..."></textarea>
+        </div>
+        <div class="page-card">
+          <div class="page-card-header">
+            <h2 class="page-card-title">Fachliche Bewertung</h2>
+            <p class="page-card-subtitle">KI-Hinweise (Konjunktiv-II / §407a-Check) kommen in v2</p>
+          </div>
+          <textarea id="ts-bewertung" class="ts-textarea" placeholder="Welche Normen / Regeln / Erfahrungswerte sind anzuwenden?"></textarea>
+        </div>
+        <div class="page-card">
+          <div class="page-card-header">
+            <h2 class="page-card-title">Antwort auf konkrete Frage <span class="page-pflicht-badge">Pflicht</span></h2>
+          </div>
+          <textarea id="ts-antwort" class="ts-textarea" style="min-height:200px;" placeholder="Kurz, klar, im Konjunktiv II wo Kausalaussage..."></textarea>
+        </div>
+        <div class="page-card">
+          <div class="page-card-header">
+            <h2 class="page-card-title">Verwendete Normen</h2>
+            <p class="page-card-subtitle">Multi-Select aus Normen-DB kommt in v2 — bis dahin Freitext</p>
+          </div>
+          <input type="text" id="ts-normen" class="ts-input" placeholder="DIN 4108, VOB/C ATV 18299, WTA 6-1, ...">
+        </div>
+      </div>
+
+      <!-- ─── PHASE 3: Versand & Abrechnung ────────────────── -->
+      <div class="ts-phase" id="ts-phase-3">
+        <div class="page-card">
+          <div class="page-card-header">
+            <h2 class="page-card-title">PDF-Vorschau</h2>
+            <p class="page-card-subtitle">PDFMonkey-Template <code>TECHNISCHE_STELLUNGNAHME</code> noch nicht angelegt</p>
+          </div>
+          <div style="font-size:12px;color:var(--text3);text-align:center;padding:48px;background:var(--bg3);border:1px dashed var(--border2);border-radius:8px;">
+            📄 PDF-Vorschau kommt nach PDFMonkey-Template-Setup
+          </div>
+        </div>
+        <div class="page-card">
+          <div class="page-card-header">
+            <h2 class="page-card-title">Honorar</h2>
+          </div>
+          <div class="ts-form-row">
+            <div>
+              <label class="ts-label" for="ts-honorar">Honorar (€)</label>
+              <input type="number" id="ts-honorar" class="ts-input" step="0.01" placeholder="z.B. 250.00">
+            </div>
+            <div>
+              <label class="ts-label" for="ts-honorar-typ">Abrechnungs-Typ</label>
+              <select id="ts-honorar-typ" class="ts-select">
+                <option value="pauschal">Pauschal</option>
+                <option value="jveg">JVEG-Stundensatz</option>
+                <option value="sonstige">Sonstige</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="page-card">
+          <div class="page-card-header">
+            <h2 class="page-card-title">Versand</h2>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button class="page-btn page-btn-secondary" disabled title="Kommt nach Backend-Setup">📧 Per E-Mail</button>
+            <button class="page-btn page-btn-secondary" disabled title="Kommt in v2">🖨 Drucken</button>
+            <button class="page-btn page-btn-secondary" disabled title="Kommt in v2">📬 beA-Versand</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action-Footer -->
+      <div class="page-action-footer">
+        <div class="page-action-footer-left">
+          <button type="button" class="page-btn page-btn-secondary" onclick="tsSpeichern()">💾 Entwurf speichern</button>
+        </div>
+        <div class="page-action-footer-right">
+          <button type="button" class="page-btn page-btn-secondary" id="ts-back-btn" onclick="tsBack()" style="display:none;">← Zurück</button>
+          <button type="button" class="page-btn page-btn-primary" id="ts-next-btn" onclick="tsNext()">Weiter →</button>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<script src="technische-stellungnahme-logic.js" defer></script>
+</body>
+</html>
