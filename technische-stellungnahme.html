@@ -4,12 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Neue Technische Stellungnahme · PROVA</title>
-<script src="prova-fetch-auth.js"></script>
-<script src="auth-guard.js"></script>
+
+<!-- K-1.3 Refactor: Backend auf Supabase. Reihenfolge:
+     1. prova-config.js (klassisch, setzt window.PROVA_CONFIG)
+     2. ESM-Modul Logic mit Auth-Guard + data-store + Edge Functions
+     3. Beibehalt: notifications, sanitize, theme, layout, nav (UI-Layer) -->
+<script src="/lib/prova-config.js"></script>
 <script src="prova-notifications.js" defer></script>
 <script src="prova-sanitize.js"></script>
-<script src="prova-auth-api.js"></script>
-<script src="prova-sv-airtable.js"></script>
 <script src="theme.js"></script>
 <script src="prova-layout.config.js"></script>
 <link rel="stylesheet" href="mobile.css">
@@ -90,16 +92,8 @@ input,select,textarea{font-size:max(16px,1em);}
         <p class="page-subtitle">Eigenständiger Auftragstyp · Fachliche Stellungnahme zu konkreter Frage in 3 Phasen</p>
       </div>
 
-      <!-- TODO-Banner: Backend-Setup noch offen -->
-      <div class="ts-todo-banner" id="ts-todo">
-        <strong>⚠ Skeleton-Page</strong> — Backend-Anbindung steht noch aus.
-        Marcel muss vor Live-Schaltung anlegen:
-        <ol style="margin:6px 0 0 22px;font-size:12px;">
-          <li>Airtable-Tabelle <code>TECH_STELLUNGNAHMEN</code> mit Feld-Schema (siehe NACHT-PAUSE-2.md)</li>
-          <li>PDFMonkey-Template <code>TECHNISCHE_STELLUNGNAHME</code> (template_id in Logic-File einsetzen)</li>
-          <li>Tabellen-ID in <code>airtable.js</code> ALLOWED_TABLES whitelisten</li>
-        </ol>
-      </div>
+      <!-- K-1.3 Refactor: TODO-Banner entfernt — Backend ist jetzt auf Supabase -->
+      <div id="ts-todo" style="display:none"></div>
 
       <!-- 3-Step-Stepper -->
       <div class="page-stepper" role="navigation" aria-label="Phasen">
@@ -299,6 +293,7 @@ input,select,textarea{font-size:max(16px,1em);}
   </div>
 </div>
 
-<script src="technische-stellungnahme-logic.js" defer></script>
+<!-- K-1.3 Refactor: ESM-Modul ersetzt klassisches IIFE-Logic-File -->
+<script type="module" src="/technische-stellungnahme-logic.js"></script>
 </body>
 </html>
