@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v235';   // Mega-Sprint #4 Audit+Cleanup (TS->GS Drift gefixt)
+const CACHE_VERSION = 'prova-v236';   // Mega-Sprint #4 Final (F1 PDF-Audit + F3 K-2 Vorb)
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
