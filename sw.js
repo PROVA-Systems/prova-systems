@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v232';   // K-1.5 Cutover-Vorb (Supabase-Lib im APP_SHELL)
+const CACHE_VERSION = 'prova-v233';   // K-1.5 Cutover-Vorb (Supabase-Lib im APP_SHELL)
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
@@ -44,8 +44,8 @@ const APP_SHELL = [
   '/prova-fetch-auth.js',
   '/prova-notifications.js',
   '/page-template.css',
-  '/technische-stellungnahme.html',
-  '/technische-stellungnahme-logic.js',
+  '/gutachterliche-stellungnahme.html',
+  '/gutachterliche-stellungnahme-logic.js',
   '/onboarding-supabase-logic.js',
   '/auth-supabase-logic.js',
   '/app-login-logic.js',

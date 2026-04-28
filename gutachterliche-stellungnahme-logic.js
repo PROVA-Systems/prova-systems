@@ -1,5 +1,5 @@
 /* ════════════════════════════════════════════════════════════════════
-   PROVA — technische-stellungnahme-logic.js (ESM)
+   PROVA — gutachterliche-stellungnahme-logic.js (ESM)
    Sprint K-1.3.A2 — Pilot komplett auf Supabase
 
    Refactor von Skeleton v1 (Sprint 04f P5f.X2):
@@ -107,7 +107,7 @@ function generateAz() {
     const lastNum = parseInt(localStorage.getItem('prova_ts_last_num') || '0', 10);
     const next = lastNum + 1;
     localStorage.setItem('prova_ts_last_num', String(next));
-    return 'TS-' + year + '-' + String(next).padStart(3, '0');
+    return 'GS-' + year + '-' + String(next).padStart(3, '0');
 }
 
 // ─── Draft-Gathering ──────────────────────────────────────────
@@ -139,7 +139,7 @@ function draftToAuftragRow(d) {
         zweck: 'privat',
         phase_aktuell: d.phase || 1,
         phase_max: 3,
-        titel: 'Technische Stellungnahme',
+        titel: 'Gutachterliche Stellungnahme',
         fragestellung: d.frage,
         auftragsdatum: d.datum || null,
         objekt: {
@@ -292,7 +292,7 @@ async function tsVersenden() {
                 },
                 auftrag_id: _auftragId,
                 typ: 'kurzstellungnahme_pdf',
-                betreff: 'Technische Stellungnahme · ' + draft.az
+                betreff: 'Gutachterliche Stellungnahme · ' + draft.az
             })
         });
         const json = await resp.json();

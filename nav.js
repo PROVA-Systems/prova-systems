@@ -557,7 +557,7 @@
       { id: 'beweissicherung',   icon: '🔍', label: 'Beweissicherung',            url: 'app.html?typ=beweis' },
       { id: 'ergaenzung',        icon: '📄', label: 'Ergänzungsgutachten (§411 ZPO)', url: 'ergaenzung.html' },
       { id: 'gegengutachten',    icon: '🔄', label: 'Gegengutachten / Erwiderung', url: 'widerspruch-gutachten.html' },
-      { id: 'stellungnahme',     icon: '✍️',  label: 'Technische Stellungnahme',   url: 'technische-stellungnahme.html' }
+      { id: 'stellungnahme',     icon: '✍️',  label: 'Gutachterliche Stellungnahme',   url: 'gutachterliche-stellungnahme.html' }
     ]},
     { group: 'B · Bewertung', items: [
       { id: 'wertgutachten', icon: '🏠', label: 'Wertgutachten', url: 'wertgutachten.html' }
