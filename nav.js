@@ -1446,29 +1446,45 @@ window.provaConfirm = function(msg, onYes) {
   }
 })();
 
-/* ── SIDEBAR LOGOUT ── */
+/* ── SIDEBAR LOGOUT (K-1.4 Refactor: Supabase-First, Netlify-Identity Fallback) ── */
 window.provaSbLogout = function() {
   if (!confirm('Wirklich abmelden?')) return;
-  // Netlify Identity
-  try {
-    if (window.netlifyIdentity && netlifyIdentity.currentUser()) {
-      netlifyIdentity.logout();
-      return;
-    }
-  } catch(e) {}
-  // Fallback: localStorage leeren + zu Login
-  var keysToKeep = ['prova_theme','prova_sb_collapsed'];
-  var keep = {};
-  keysToKeep.forEach(function(k) {
-    var v = localStorage.getItem(k);
-    if (v !== null) keep[k] = v;
+
+  var keysToKeep = ['prova_theme','prova_sb_collapsed','prova-supabase-anon-key'];
+
+  // 1. Supabase-Session beenden (falls verfügbar via globalem PROVA_DEBUG.supabase)
+  var supabaseLogout = function() {
+    try {
+      if (window.PROVA_DEBUG && window.PROVA_DEBUG.supabase) {
+        return window.PROVA_DEBUG.supabase.auth.signOut();
+      }
+    } catch(e) {}
+    return Promise.resolve();
+  };
+
+  supabaseLogout().finally(function() {
+    // 2. Netlify Identity Fallback (alter Auth-Layer, läuft parallel bis K-1.5)
+    try {
+      if (window.netlifyIdentity && netlifyIdentity.currentUser()) {
+        netlifyIdentity.logout();
+      }
+    } catch(e) {}
+
+    // 3. localStorage selektiv leeren — Token-Storage etc. raus, UI-State drin
+    var keep = {};
+    keysToKeep.forEach(function(k) {
+      var v = localStorage.getItem(k);
+      if (v !== null) keep[k] = v;
+    });
+    localStorage.clear();
+    sessionStorage.clear();
+    keysToKeep.forEach(function(k) {
+      if (keep[k] !== undefined) localStorage.setItem(k, keep[k]);
+    });
+
+    // 4. Redirect zu Login (app-login.html ist die echte Login-Page)
+    window.location.href = 'app-login.html';
   });
-  localStorage.clear();
-  sessionStorage.clear();
-  keysToKeep.forEach(function(k) {
-    if (keep[k] !== undefined) localStorage.setItem(k, keep[k]);
-  });
-  window.location.href = 'app-login.html';
 };
 
 /* ── END OFFLINE INDIKATOR ── */
