@@ -21,7 +21,7 @@ import { requireWorkspace, bindLogoutButtons, watchAuthState } from '/lib/auth-g
 
 const DRAFT_KEY = 'prova_ts_draft_v1';
 const AUTO_SAVE_MS = 30000;
-const AUFTRAG_TYP = 'kurzstellungnahme';      // ENUM-Wert; AZ-Pattern bleibt TS-
+const AUFTRAG_TYP = 'kurzstellungnahme';      // ENUM-Wert; AZ-Pattern: GS-YYYY-NNN
 
 let _phase = 1;
 let _autoSaveTimer = null;
