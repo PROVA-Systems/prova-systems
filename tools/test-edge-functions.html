@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex,nofollow">
+<title>PROVA — Edge Functions Health-Check (K-1.2.B10)</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 24px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    background: #f5f5f7; color: #111;
+  }
+  .wrap { max-width: 900px; margin: 0 auto; display: grid; gap: 16px; }
+  .card { background: #fff; border-radius: 12px; padding: 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+  h1 { font-size: 18px; margin: 0 0 4px; font-weight: 600; }
+  h2 { font-size: 14px; margin: 0 0 10px; font-weight: 600; color: #444; }
+  p { margin: 4px 0; font-size: 13px; color: #555; }
+  .badge { display: inline-block; font-size: 11px; padding: 2px 8px; background: #fef3c7; color: #92400e; border-radius: 4px; }
+  input[type=text], input[type=email], input[type=password] {
+    padding: 8px 10px; border: 1px solid #d1d1d6; border-radius: 6px;
+    font-size: 13px; font-family: inherit; min-width: 280px;
+  }
+  button { padding: 8px 14px; background: #111; color: #fff; border: 0; border-radius: 6px; font-size: 13px; cursor: pointer; }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+  button.secondary { background: #e5e5e7; color: #111; }
+  button.danger { background: #c00; }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 8px; }
+  .grid8 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .test-card { border: 1px solid #e5e5e7; border-radius: 8px; padding: 12px; }
+  .test-card h3 { margin: 0 0 6px; font-size: 13px; font-weight: 600; }
+  .test-card .desc { font-size: 11px; color: #777; margin: 0 0 8px; min-height: 26px; }
+  .status { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 500; margin-left: 6px; }
+  .status.ok { background: #efe; color: #060; }
+  .status.warn { background: #fef3c7; color: #92400e; }
+  .status.err { background: #fee; color: #c00; }
+  .status.neutral { background: #eee; color: #555; }
+  pre.console { background: #0a0a0a; color: #d0d0d0; padding: 12px; border-radius: 6px; font-size: 11px; line-height: 1.4; max-height: 320px; overflow: auto; font-family: ui-monospace, monospace; white-space: pre-wrap; word-break: break-word; margin: 0; }
+  .setup { background: #fff7d6; border: 1px solid #f5c842; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="card">
+    <h1>Edge Functions Health-Check <span class="badge">K-1.2.B10</span></h1>
+    <p>Smoke-Tests für alle 8 Edge Functions. Erfolgskriterium: keine 5xx, sinnvolle Responses.</p>
+  </div>
+
+  <div class="card setup" id="setup-banner" hidden>
+    <h2>Setup — Anon-Key fehlt</h2>
+    <p>Anon-Key aus Supabase-Dashboard → Project Settings → API → anon public.</p>
+    <div class="row">
+      <input type="text" id="setup-anon" placeholder="eyJhbG…" style="flex:1; min-width: 260px;">
+      <button id="setup-save">Speichern + Reload</button>
+    </div>
+  </div>
+
+  <div class="card" id="login-card" hidden>
+    <h2>Login (Founder-Account benötigt)</h2>
+    <div class="row">
+      <input type="email" id="email" value="marcel.schreiber@prova-systems.de">
+      <input type="password" id="password" placeholder="Passwort">
+      <button id="login-btn">Einloggen</button>
+    </div>
+  </div>
+
+  <div class="card" id="actions-card" hidden>
+    <h2>Tests <span id="user-info" style="font-weight:400; font-size:12px; color:#666"></span></h2>
+
+    <div class="grid8">
+      <div class="test-card">
+        <h3>1. ki-proxy <span class="status neutral" id="s-ki-proxy">?</span></h3>
+        <p class="desc">Mock-Prompt → strukturierte Antwort.</p>
+        <button data-test="ki-proxy">Test</button>
+      </div>
+      <div class="test-card">
+        <h3>2. whisper-diktat <span class="status neutral" id="s-whisper-diktat">?</span></h3>
+        <p class="desc">⚠️ Braucht Audio-File in Storage. Klick erst nach Upload.</p>
+        <button data-test="whisper-diktat" disabled title="Manueller Upload nötig">Test</button>
+      </div>
+      <div class="test-card">
+        <h3>3. pdf-generate <span class="status neutral" id="s-pdf-generate">?</span></h3>
+        <p class="desc">Test-Brief mit Mock-Daten.</p>
+        <button data-test="pdf-generate">Test</button>
+      </div>
+      <div class="test-card">
+        <h3>4. send-email <span class="status neutral" id="s-send-email">?</span></h3>
+        <p class="desc">Test-Mail an Founder-Email.</p>
+        <button data-test="send-email">Test</button>
+      </div>
+      <div class="test-card">
+        <h3>5. stripe-webhook <span class="status neutral" id="s-stripe-webhook">?</span></h3>
+        <p class="desc">Erwartet 401 bei fehlender Signature (= ok).</p>
+        <button data-test="stripe-webhook">Test</button>
+      </div>
+      <div class="test-card">
+        <h3>6. lifecycle-trigger <span class="status neutral" id="s-lifecycle-trigger">?</span></h3>
+        <p class="desc">Erwartet 401 ohne System-Token (= ok).</p>
+        <button data-test="lifecycle-trigger">Test</button>
+      </div>
+      <div class="test-card">
+        <h3>7. audit-write <span class="status neutral" id="s-audit-write">?</span></h3>
+        <p class="desc">Schreibt Test-Event in audit_trail.</p>
+        <button data-test="audit-write">Test</button>
+      </div>
+      <div class="test-card">
+        <h3>8. ical-feed <span class="status neutral" id="s-ical-feed">?</span></h3>
+        <p class="desc">Erwartet 403 ohne Token (= ok).</p>
+        <button data-test="ical-feed">Test</button>
+      </div>
+    </div>
+
+    <div class="row" style="margin-top:16px;">
+      <button id="test-all" class="secondary">Alle 8 testen</button>
+      <button id="logout-btn" class="danger">Logout</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Console</h2>
+    <pre class="console" id="out">[bereit]
+</pre>
+  </div>
+
+</div>
+
+<script src="/lib/prova-config.js"></script>
+<script type="module">
+import { supabase, getCurrentSession, signOut } from '/lib/supabase-client.js';
+
+const out = document.getElementById('out');
+function log(level, ...args) {
+    const ts = new Date().toLocaleTimeString('de-DE');
+    const msg = args.map(a => a instanceof Error ? `${a.name}: ${a.message}` : (typeof a === 'object' ? JSON.stringify(a, null, 2) : String(a))).join(' ');
+    out.textContent += `[${ts}] ${level.toUpperCase()}: ${msg}\n`;
+    out.scrollTop = out.scrollHeight;
+}
+const logInfo = (...a) => log('info', ...a);
+const logOk = (...a) => log('log', ...a);
+const logErr = (...a) => log('error', ...a);
+
+const cfg = window.PROVA_CONFIG || {};
+const SUPABASE_URL = cfg.SUPABASE_URL;
+const FN_BASE = `${SUPABASE_URL}/functions/v1`;
+const keyMissing = !cfg.SUPABASE_ANON_KEY || cfg.SUPABASE_ANON_KEY === cfg.PLACEHOLDER;
+
+const $banner = document.getElementById('setup-banner');
+const $loginCard = document.getElementById('login-card');
+const $actionsCard = document.getElementById('actions-card');
+const $userInfo = document.getElementById('user-info');
+
+if (keyMissing) {
+    $banner.hidden = false;
+    logErr('Anon-Key fehlt — bitte einfügen.');
+}
+
+document.getElementById('setup-save').addEventListener('click', () => {
+    const v = document.getElementById('setup-anon').value.trim();
+    if (!v.startsWith('eyJ')) { alert('Sieht nicht nach JWT aus'); return; }
+    localStorage.setItem('prova-supabase-anon-key', v);
+    location.reload();
+});
+
+document.getElementById('login-btn')?.addEventListener('click', async () => {
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+    logInfo('Login…');
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) { logErr('Login:', error.message); return; }
+    logOk('Login OK');
+    document.getElementById('password').value = '';
+    await refreshState();
+});
+
+document.getElementById('logout-btn')?.addEventListener('click', () => signOut('/tools/test-edge-functions.html'));
+
+async function refreshState() {
+    if (keyMissing) return;
+    const session = await getCurrentSession();
+    if (session) {
+        $loginCard.hidden = true;
+        $actionsCard.hidden = false;
+        $userInfo.textContent = `· ${session.user.email}`;
+    } else {
+        $loginCard.hidden = false;
+        $actionsCard.hidden = true;
+    }
+}
+
+function setStatus(name, kind, text) {
+    const el = document.getElementById(`s-${name}`);
+    if (el) { el.className = 'status ' + kind; el.textContent = text; }
+}
+
+async function callFn(name, body, { method = 'POST', expectFail = null, raw = false, query = '' } = {}) {
+    const url = `${FN_BASE}/${name}${query}`;
+    const session = await getCurrentSession();
+    const token = session?.access_token;
+
+    const headers = { 'Content-Type': 'application/json' };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    headers['apikey'] = cfg.SUPABASE_ANON_KEY;
+
+    const init = { method, headers };
+    if (method !== 'GET' && body !== null && body !== undefined) {
+        init.body = typeof body === 'string' ? body : JSON.stringify(body);
+    }
+
+    const t0 = Date.now();
+    let resp;
+    try {
+        resp = await fetch(url, init);
+    } catch (e) {
+        return { ok: false, status: 0, error: e.message };
+    }
+    const dur = Date.now() - t0;
+    const txt = await resp.text();
+    let data = txt;
+    try { data = JSON.parse(txt); } catch { /* keep as text */ }
+
+    return { ok: resp.ok || (expectFail && resp.status === expectFail), status: resp.status, dur, data };
+}
+
+const TESTS = {
+    'ki-proxy': async () => {
+        return await callFn('ki-proxy', {
+            prompt: 'Schreibe einen Satz: Die Wand zeigt Risse.',
+            purpose: 'sonstiges',
+            model: 'gpt_4o_mini',
+            max_tokens: 80
+        });
+    },
+    'whisper-diktat': async () => {
+        return await callFn('whisper-diktat', { audio_storage_path: 'test/dummy.opus' });
+    },
+    'pdf-generate': async () => {
+        return await callFn('pdf-generate', {
+            template_key: 'brief-din5008',
+            payload: { test: 'true', empfaenger: 'Test', betreff: 'Smoke' },
+            typ: 'brief',
+            betreff: 'Smoke-Test'
+        });
+    },
+    'send-email': async () => {
+        return await callFn('send-email', {
+            to: 'marcel.schreiber@prova-systems.de',
+            subject: 'PROVA Edge Function Smoke-Test',
+            html: '<p>Wenn du diese Mail siehst: Resend funktioniert.</p>',
+            zweck: 'edge_smoke_test'
+        });
+    },
+    'stripe-webhook': async () => {
+        // Erwartet 401 ohne stripe-signature
+        return await callFn('stripe-webhook', '{}', { expectFail: 401 });
+    },
+    'lifecycle-trigger': async () => {
+        // Erwartet 401 ohne System-Token
+        return await callFn('lifecycle-trigger', { trigger: 'cron_daily' }, { expectFail: 401 });
+    },
+    'audit-write': async () => {
+        return await callFn('audit-write', {
+            action: 'read',
+            entity_typ: 'edge_smoke_test',
+            payload: { ok: true }
+        });
+    },
+    'ical-feed': async () => {
+        // Erwartet 400 (no token) — ohne ?token-Param
+        return await callFn('ical-feed', null, { method: 'GET', expectFail: 400 });
+    }
+};
+
+document.querySelectorAll('button[data-test]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+        const name = btn.dataset.test;
+        setStatus(name, 'neutral', '…');
+        logInfo(`▶ ${name}`);
+        try {
+            const r = await TESTS[name]();
+            const symbol = r.ok ? 'ok' : (r.status === 0 ? 'err' : 'warn');
+            const txt = r.ok ? `${r.status} ${r.dur}ms` : `${r.status}`;
+            setStatus(name, symbol, txt);
+            logOk(`◀ ${name}:`, { status: r.status, dur: r.dur, data: r.data });
+        } catch (e) {
+            setStatus(name, 'err', 'fail');
+            logErr(`✗ ${name}:`, e);
+        }
+    });
+});
+
+document.getElementById('test-all').addEventListener('click', async () => {
+    for (const name of Object.keys(TESTS)) {
+        document.querySelector(`button[data-test="${name}"]`)?.click();
+        await new Promise(r => setTimeout(r, 1500));
+    }
+});
+
+if (!keyMissing) refreshState();
+supabase.auth.onAuthStateChange(() => refreshState());
+</script>
+</body>
+</html>
