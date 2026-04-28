@@ -9,7 +9,7 @@
 
 K-1.4 spezifiziert 25+ Pages-Refactor. Ohne Tests pro Page würde ein blinder Bulk-sed das Frontend brechen. Statt:
 
-- ✅ **Pilot komplett refactored** als Vorlage (`technische-stellungnahme.html` — Sprint K-1.3)
+- ✅ **Pilot komplett refactored** als Vorlage (`gutachterliche-stellungnahme.html` — Sprint K-1.3, umbenannt 28.04.2026)
 - ✅ **Zentrale Schaltstellen** auf Hybrid-Modus:
   - `nav.js` Logout: Supabase-First + Netlify-Fallback (B14)
   - `auth-supabase.html`: Production-ready, parallel zu `app-login.html` (B12)
@@ -126,7 +126,7 @@ kam, läuft Netlify-Identity-Flow weiter.
 
 | Tranche | Pages | Komplexität |
 |---|---|---|
-| **1.0** ✅ | technische-stellungnahme.html (Pilot) | DONE — Sprint K-1.3 |
+| **1.0** ✅ | gutachterliche-stellungnahme.html (Pilot, vormals technische-stellungnahme) | DONE — Sprint K-1.3 |
 | **1.1** Cockpit-Quick-Win | dashboard.html / index.html | mittel — KPI-Cards via cockpit-Views |
 | **1.2** Akte-Quick-Win | akte.html | mittel — getById + phasen-listing |
 | **1.3** Settings | einstellungen.html | mittel — workspace + briefkopf-Update |

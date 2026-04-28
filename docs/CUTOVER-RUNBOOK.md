@@ -36,7 +36,7 @@ Browser: https://prova-systems.de/tools/test-edge-functions.html
 
 ```
 - /auth-supabase.html       → Login, Register-Flow grün
-- /technische-stellungnahme.html → Phasen 1-3 + Versenden + PDF kommt an
+- /gutachterliche-stellungnahme.html → Phasen 1-3 + Versenden + PDF kommt an
 - /tools/test-pilot-kurzstellungnahme.html → 5 Tests grün
 - /app-login.html           → Bestehender Login funktioniert (Hybrid)
 - /index.html (oder /dashboard) → User landet drauf nach Login
