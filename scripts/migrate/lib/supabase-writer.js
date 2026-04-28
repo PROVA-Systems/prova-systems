@@ -190,20 +190,53 @@ export async function existsByExternalId(table, externalIdCol, externalId) {
 }
 
 /**
- * Liefert Workspace-ID für einen SV (per owner_email lookup).
- * Wird von Folge-Skripten genutzt (kontakte, schadensfaelle etc.).
+ * Liefert User-ID per Email (mapped Airtable-sv_email → public.users.id).
+ * Falls User nicht existiert: null. Marcel muss SV dann erst in Supabase
+ * Auth anlegen (oder Skript mit --auto-create-user-Modus).
  */
-export async function getWorkspaceIdByEmail(email) {
+export async function getUserIdByEmail(email) {
     const client = getServiceClient();
     const { data, error } = await client
-        .from('workspaces')
+        .from('users')
         .select('id')
-        .eq('owner_email', email)
-        .is('deleted_at', null)
+        .eq('email', email)
         .limit(1)
         .maybeSingle();
     if (error) throw error;
     return data?.id || null;
+}
+
+/**
+ * Liefert Owner-Workspace-ID für einen SV.
+ *
+ * Lookup:
+ *   users.email → users.id
+ *   workspace_memberships(user_id=users.id, rolle='owner', is_active=true)
+ *   → workspaces.id
+ */
+export async function getOwnerWorkspaceIdForEmail(email) {
+    const client = getServiceClient();
+    const userId = await getUserIdByEmail(email);
+    if (!userId) return null;
+
+    const { data, error } = await client
+        .from('workspace_memberships')
+        .select('workspace_id')
+        .eq('user_id', userId)
+        .eq('rolle', 'owner')
+        .eq('is_active', true)
+        .limit(1)
+        .maybeSingle();
+    if (error) throw error;
+    return data?.workspace_id || null;
+}
+
+/**
+ * BACKWARD-COMPAT: alte Skripte rufen evtl. getWorkspaceIdByEmail auf.
+ * Mapped intern auf getOwnerWorkspaceIdForEmail.
+ */
+export async function getWorkspaceIdByEmail(email) {
+    return await getOwnerWorkspaceIdForEmail(email);
 }
 
 /**
