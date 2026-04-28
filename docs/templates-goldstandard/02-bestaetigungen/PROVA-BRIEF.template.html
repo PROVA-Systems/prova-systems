@@ -1,0 +1,165 @@
+﻿<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>{{ dokument_typ_label | default: 'Geschäftsbrief' }} {{ dokument_nummer }}</title>
+<style>
+  /* PROVA BRIEF · DIN 5008 + Design-System v1.0
+     v1.2: Nur reiner Geschäftsbrief. Mahnungen nutzen separate MAHNUNG-MASTER.html */
+  @page { size: A4; margin: 0; }
+  html, body { margin: 0; padding: 0; font-family: 'Inter', -apple-system, sans-serif;
+    font-size: 10.5pt; line-height: 1.55; color: #1a1f2e; -webkit-font-smoothing: antialiased; }
+  .page { width: 210mm; min-height: 297mm; padding: 0; background: #fff; position: relative;
+    page-break-after: always; }
+  .page:last-child { page-break-after: auto; }
+
+  .briefkopf { padding: 20mm 20mm 0 20mm; border-bottom: 0.5pt solid #cbd5e1; padding-bottom: 4mm; }
+  .briefkopf-zeile { display: flex; justify-content: space-between; align-items: flex-start; }
+  .briefkopf-sv-name { font-size: 14pt; font-weight: 700; color: #1a3a6b; line-height: 1.2; letter-spacing: -0.01em; }
+  .briefkopf-sv-untertitel { font-size: 9pt; color: #64748b; margin-top: 1mm; line-height: 1.4; }
+  .briefkopf-kontakt { font-size: 8.5pt; color: #64748b; text-align: right; line-height: 1.5; }
+
+  .absender-mini { margin: 5mm 20mm 0 20mm; font-size: 7pt; color: #94a3b8;
+    border-bottom: 0.3pt solid #cbd5e1; padding-bottom: 1mm; }
+
+  .adressfeld { margin: 3mm 20mm 0 20mm; width: 85mm; min-height: 35mm; font-size: 11pt; line-height: 1.5; }
+  .adressfeld-name { font-weight: 600; }
+
+  .bezugszeile { position: absolute; top: 70mm; right: 20mm; width: 70mm; font-size: 9pt; }
+  .bezugszeile-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5mm 4mm; }
+  .bezugszeile-label { color: #64748b; font-size: 7.5pt; text-transform: uppercase; letter-spacing: 0.04em; }
+  .bezugszeile-wert { font-weight: 500; color: #1a1f2e; font-family: 'JetBrains Mono', monospace; font-size: 9pt; }
+
+  .betreff { margin: 25mm 20mm 0 20mm; font-size: 12pt; font-weight: 700; color: #1a3a6b; }
+  .betreff-untertitel { margin-top: 1mm; font-size: 10pt; font-weight: 400; color: #64748b; }
+
+  .anrede { margin: 8mm 20mm 0 20mm; font-size: 10.5pt; }
+  .brieftext { margin: 4mm 20mm 0 20mm; font-size: 10.5pt; text-align: justify; }
+  .brieftext p { margin: 0 0 3mm 0; }
+
+  .schluss { margin: 6mm 20mm 0 20mm; font-size: 10.5pt; text-align: justify;
+    page-break-inside: avoid; break-inside: avoid; }
+  .gruss { margin: 5mm 20mm 0 20mm; font-size: 10.5pt;
+    page-break-inside: avoid; break-inside: avoid; page-break-after: avoid; break-after: avoid; }
+  .unterschrift { margin: 12mm 20mm 0 20mm; font-size: 10.5pt;
+    page-break-inside: avoid; break-inside: avoid; page-break-before: avoid; break-before: avoid; }
+  .unterschrift-name { font-weight: 600; color: #1a3a6b; }
+  .unterschrift-funktion { font-size: 9pt; color: #64748b; }
+
+  .anlagen { margin: 8mm 20mm 0 20mm; font-size: 9.5pt;
+    page-break-inside: avoid; break-inside: avoid; }
+  .anlagen-titel { font-weight: 600; color: #1a3a6b; margin-bottom: 1mm; }
+
+  .dsgvo-hinweis { margin: 8mm 20mm 0 20mm; font-size: 7pt; color: #94a3b8;
+    line-height: 1.4; font-style: italic;
+    page-break-inside: avoid; break-inside: avoid; }
+
+  .pflichtangaben { margin: 12mm 20mm 0 20mm; padding-top: 4mm; border-top: 1pt solid #cbd5e1;
+    display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5mm; font-size: 7.5pt;
+    color: #64748b; line-height: 1.5;
+    page-break-inside: avoid; break-inside: avoid; }
+  .pflichtangaben-titel { font-weight: 700; color: #1a3a6b; font-size: 7.5pt;
+    text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 1mm; }
+  .pflichtangaben-zeile { margin-bottom: 0.5mm; }
+  .pflichtangaben-label { color: #94a3b8; }
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <!-- BRIEFKOPF -->
+  <div class="briefkopf">
+    <div class="briefkopf-zeile">
+      <div>
+        <div class="briefkopf-sv-name">{{ sv_titel | default: '' }} {{ sv_name }}</div>
+        <div class="briefkopf-sv-untertitel">{{ sv_qualifikation }}{% if sv_sachgebiet %} · {{ sv_sachgebiet }}{% endif %}</div>
+      </div>
+      <div class="briefkopf-kontakt">
+        {{ sv_strasse }}<br>{{ sv_plz }} {{ sv_ort }}<br>Tel. {{ sv_telefon }}<br>{{ sv_email }}
+      </div>
+    </div>
+  </div>
+
+  <div class="absender-mini">
+    {{ sv_titel | default: '' }} {{ sv_name }} · {{ sv_strasse }} · {{ sv_plz }} {{ sv_ort }}
+  </div>
+
+  <div class="adressfeld">
+    {% if empfaenger.firma %}<div class="adressfeld-name">{{ empfaenger.firma }}</div>{% endif %}
+    {% if empfaenger.ansprechpartner %}<div>{{ empfaenger.ansprechpartner }}</div>{% endif %}
+    {% if empfaenger.zusatz %}<div>{{ empfaenger.zusatz }}</div>{% endif %}
+    <div>{{ empfaenger.strasse }}</div>
+    <div>{{ empfaenger.plz }} {{ empfaenger.ort }}</div>
+    {% if empfaenger.land %}<div>{{ empfaenger.land }}</div>{% endif %}
+  </div>
+
+  <div class="bezugszeile">
+    <div class="bezugszeile-grid">
+      {% if bezug.ihr_zeichen %}
+      <div><div class="bezugszeile-label">Ihr Zeichen</div><div class="bezugszeile-wert">{{ bezug.ihr_zeichen }}</div></div>
+      {% endif %}
+      {% if bezug.unser_zeichen %}
+      <div><div class="bezugszeile-label">Unser Zeichen</div><div class="bezugszeile-wert">{{ bezug.unser_zeichen }}</div></div>
+      {% endif %}
+      {% if dokument_nummer %}
+      <div><div class="bezugszeile-label">{{ dokument_nummer_label | default: 'Dok-Nr.' }}</div><div class="bezugszeile-wert">{{ dokument_nummer }}</div></div>
+      {% endif %}
+      <div><div class="bezugszeile-label">Datum</div><div class="bezugszeile-wert">{{ datum }}</div></div>
+    </div>
+  </div>
+
+  <div class="betreff">
+    {{ betreff }}
+    {% if betreff_untertitel %}<div class="betreff-untertitel">{{ betreff_untertitel }}</div>{% endif %}
+  </div>
+
+  <div class="anrede">{{ anrede }}</div>
+
+  <div class="brieftext">{{ brieftext }}</div>
+
+  {% if schluss_text %}<div class="schluss">{{ schluss_text }}</div>{% endif %}
+
+  <div class="gruss">{{ gruss | default: 'Mit freundlichen Grüßen' }}</div>
+  <div class="unterschrift">
+    <div class="unterschrift-name">{{ sv_titel | default: '' }} {{ sv_name }}</div>
+    <div class="unterschrift-funktion">{{ sv_qualifikation }}</div>
+  </div>
+
+  {% if anlagen %}
+  <div class="anlagen">
+    <div class="anlagen-titel">Anlagen</div>
+    {{ anlagen }}
+  </div>
+  {% endif %}
+
+  <div class="dsgvo-hinweis">
+    Hinweis Datenverarbeitung: Ihre Daten werden auf Grundlage von Art. 6 Abs. 1 lit. b DSGVO zur Vertragserfüllung verarbeitet. Aufbewahrungsfristen gemäß § 14b UStG / § 257 HGB / § 35 IHK-SVO. Datenschutzerklärung unter {{ sv_email }}.
+  </div>
+
+  <div class="pflichtangaben">
+    <div>
+      <div class="pflichtangaben-titel">Sachverständiger</div>
+      <div class="pflichtangaben-zeile">{{ sv_titel | default: '' }} {{ sv_name }}</div>
+      <div class="pflichtangaben-zeile">{{ sv_strasse }}</div>
+      <div class="pflichtangaben-zeile">{{ sv_plz }} {{ sv_ort }}</div>
+      {% if sv_bestellungsstelle %}<div class="pflichtangaben-zeile">Bestellung: {{ sv_bestellungsstelle }}</div>{% endif %}
+    </div>
+    <div>
+      <div class="pflichtangaben-titel">Steuerangaben</div>
+      {% if sv_steuernummer %}<div class="pflichtangaben-zeile"><span class="pflichtangaben-label">Steuer-Nr.:</span> {{ sv_steuernummer }}</div>{% endif %}
+      {% if sv_ust_id %}<div class="pflichtangaben-zeile"><span class="pflichtangaben-label">USt-IdNr.:</span> {{ sv_ust_id }}</div>{% endif %}
+      {% if sv_finanzamt %}<div class="pflichtangaben-zeile"><span class="pflichtangaben-label">FA:</span> {{ sv_finanzamt }}</div>{% endif %}
+    </div>
+    <div>
+      <div class="pflichtangaben-titel">Bankverbindung</div>
+      <div class="pflichtangaben-zeile">{{ bank.name }}</div>
+      <div class="pflichtangaben-zeile" style="font-family:'JetBrains Mono',monospace;font-size:7.5pt;">IBAN {{ bank.iban }}</div>
+      <div class="pflichtangaben-zeile" style="font-family:'JetBrains Mono',monospace;font-size:7.5pt;">BIC {{ bank.bic }}</div>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

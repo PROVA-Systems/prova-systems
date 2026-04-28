@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>BES-09 Feuchtigkeits-Bestätigung — PROVA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root { --primary: #1a3a6b; --accent: #3b82f6; --muted: #64748b; --text: #0f172a; --light: #f1f5f9; --lighter: #f8fafc; --border: #e2e8f0; --success: #059669; --warning: #d97706; --danger: #b91c1c; }
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Inter', sans-serif; font-size: 10.5pt; line-height: 1.55; color: var(--text); background: white; }
+@page { size: A4; margin: 22mm 22mm 20mm 22mm; }
+.brief-header { padding-bottom: 8mm; }
+.absender-zeile { font-size: 8.5pt; color: var(--muted); border-bottom: 0.5pt solid var(--border); padding-bottom: 1mm; margin-bottom: 6mm; }
+.empfaenger-block { margin-top: 4mm; margin-bottom: 6mm; min-height: 30mm; }
+.empfaenger-block .anrede-zeile { font-size: 11pt; line-height: 1.5; }
+.bezugszeichen-block { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4mm; margin-bottom: 6mm; padding: 3mm 4mm; background: var(--lighter); border-radius: 2px; font-size: 9pt; }
+.bezugszeichen-block .label { color: var(--muted); font-size: 8pt; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 0.5mm; }
+.bezugszeichen-block .value { color: var(--text); font-family: 'JetBrains Mono', monospace; font-size: 9pt; font-weight: 500; }
+.betreff { font-size: 13pt; font-weight: 600; color: var(--primary); margin: 5mm 0 6mm 0; }
+.brief-body { font-size: 10.5pt; line-height: 1.65; }
+.brief-body p { margin-bottom: 3mm; }
+
+.ergebnis-card { margin: 5mm 0; padding: 6mm 8mm; border-radius: 4px; text-align: center; color: white; }
+.ergebnis-card.belegreif { background: linear-gradient(135deg, var(--success) 0%, #047857 100%); }
+.ergebnis-card.grenzwertig { background: linear-gradient(135deg, var(--warning) 0%, #b45309 100%); }
+.ergebnis-card.zuhoch { background: linear-gradient(135deg, var(--danger) 0%, #991b1b 100%); }
+.ergebnis-card .icon { font-size: 26pt; margin-bottom: 2mm; }
+.ergebnis-card .title { font-size: 16pt; font-weight: 700; margin-bottom: 2mm; }
+.ergebnis-card .subtitle { font-size: 10pt; opacity: 0.95; }
+
+.objekt-box { margin: 4mm 0; padding: 4mm 5mm; background: var(--lighter); border-left: 3px solid var(--primary); border-radius: 2px; }
+.objekt-box .label-titel { font-size: 9pt; letter-spacing: 0.1em; text-transform: uppercase; color: var(--primary); font-weight: 600; margin-bottom: 3mm; }
+.objekt-box .data-grid { display: grid; grid-template-columns: 50mm 1fr; gap: 1.5mm 4mm; }
+.objekt-box .data-row .key { color: var(--muted); font-size: 9.5pt; }
+.objekt-box .data-row .val { color: var(--text); font-size: 10.5pt; font-weight: 500; }
+
+.mess-table { width: 100%; border-collapse: collapse; margin: 4mm 0; font-size: 9.5pt; }
+.mess-table thead { background: var(--primary); color: white; }
+.mess-table thead th { padding: 2.5mm 3mm; text-align: left; font-size: 8.5pt; letter-spacing: 0.05em; font-weight: 600; }
+.mess-table thead th.num { text-align: right; }
+.mess-table tbody td { padding: 2mm 3mm; border-bottom: 0.5pt solid var(--border); vertical-align: top; }
+.mess-table tbody td.num { font-family: 'JetBrains Mono', monospace; text-align: right; font-weight: 500; }
+.mess-table tbody tr:nth-child(even) { background: var(--lighter); }
+.bewertung-badge { display: inline-block; padding: 0.5mm 2mm; border-radius: 2px; font-size: 8pt; font-weight: 600; text-transform: uppercase; }
+.bewertung-ok { background: #dcfce7; color: #166534; }
+.bewertung-grenz { background: #fef3c7; color: #92400e; }
+.bewertung-hoch { background: #fee2e2; color: #991b1b; }
+
+.methode-box { margin: 3mm 0; padding: 3mm 5mm; background: var(--lighter); border-radius: 3px; font-size: 9pt; }
+.methode-box .label { color: var(--muted); font-size: 8pt; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 1mm; }
+
+.einschraenkung-box { margin: 4mm 0; padding: 4mm 5mm; background: var(--lighter); border-left: 3px solid var(--warning); border-radius: 2px; font-size: 9.5pt; line-height: 1.55; }
+.einschraenkung-box strong { color: var(--warning); }
+
+.pflicht-box { margin: 4mm 0; padding: 3mm 5mm; background: var(--lighter); border-left: 3px solid var(--success); border-radius: 2px; font-size: 9.5pt; line-height: 1.5; }
+.pflicht-box .marker { display: inline-block; padding: 1mm 3mm; background: var(--success); color: white; font-size: 7.5pt; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 600; border-radius: 2px; margin-bottom: 2mm; }
+
+.unterschrift-block { margin-top: 8mm; }
+.unterschrift-zeile { display: flex; align-items: flex-end; gap: 8mm; }
+.unterschrift-feld { flex: 1; }
+.unterschrift-bild { max-width: 50mm; max-height: 18mm; margin-bottom: 1mm; }
+.stempel-bild { max-width: 32mm; max-height: 32mm; opacity: 0.85; }
+.unterschrift-line { border-top: 0.5pt solid var(--text); padding-top: 1.5mm; }
+.unterschrift-line .name { font-size: 11pt; font-weight: 600; color: var(--text); margin-bottom: 0.5mm; }
+.unterschrift-line .rolle { font-size: 9pt; color: var(--muted); }
+.footer-disclaimer { position: fixed; bottom: 6mm; left: 22mm; right: 22mm; font-size: 7.5pt; color: var(--muted); text-align: center; padding-top: 2mm; border-top: 0.5pt solid var(--border); }
+</style>
+</head>
+<body>
+
+<div class="brief-header">
+  <div class="absender-zeile">{{sv_titel}} {{sv_name}} · {{sv_strasse}} · {{sv_plz}} {{sv_ort}}</div>
+</div>
+
+<div class="empfaenger-block">
+  <div class="anrede-zeile">{{empfaenger_anrede}}<br>
+    {{#if empfaenger_firma}}{{empfaenger_firma}}<br>{{/if}}
+    {{empfaenger_name}}<br>
+    {{empfaenger_strasse}}<br>
+    {{empfaenger_plz}} {{empfaenger_ort}}
+  </div>
+</div>
+
+<div class="bezugszeichen-block">
+  <div><div class="label">Ihr Zeichen</div><div class="value">{{ihr_zeichen}}</div></div>
+  <div><div class="label">Unser Zeichen</div><div class="value">{{bes_nummer}}</div></div>
+  <div><div class="label">Bearbeiter</div><div class="value">{{sv_name}}</div></div>
+  <div><div class="label">Datum</div><div class="value">{{ausstellungsdatum}}</div></div>
+</div>
+
+<div class="betreff">Bestätigung der Bauteilfeuchtigkeit</div>
+
+<div class="brief-body">
+  <p>{{empfaenger_anrede}} {{empfaenger_name}},</p>
+
+  <p>am <strong>{{pruefdatum}}</strong> habe ich am Objekt <strong>{{objekt_adresse}}</strong> die Bauteilfeuchtigkeit messtechnisch erfasst. Anlass: <em>{{anlass}}</em>.</p>
+
+  <div class="ergebnis-card {{ergebnis_klasse}}">
+    <div class="icon">{{ergebnis_icon}}</div>
+    <div class="title">{{ergebnis_titel}}</div>
+    <div class="subtitle">{{ergebnis_subtitle}}</div>
+  </div>
+
+  <div class="objekt-box">
+    <div class="label-titel">Untersuchungs-Daten</div>
+    <div class="data-grid">
+      <div class="data-row"><div class="key">Objektart</div><div class="val">{{objektart}}</div></div>
+      <div class="data-row"><div class="key">Geprüfte Bauteile</div><div class="val">{{geprueft_bauteile_kurz}}</div></div>
+      <div class="data-row"><div class="key">Prüfdatum</div><div class="val">{{pruefdatum}}, {{pruefuhrzeit}}</div></div>
+      <div class="data-row"><div class="key">Außenklima</div><div class="val">{{aussenklima}}</div></div>
+      <div class="data-row"><div class="key">Raumklima</div><div class="val">{{raumklima}}</div></div>
+      <div class="data-row"><div class="key">Messmethode</div><div class="val">{{messmethode}}</div></div>
+    </div>
+  </div>
+
+  <h3 style="font-size: 11pt; color: var(--primary); margin: 5mm 0 2mm 0;">Messwerte Bauteilfeuchtigkeit</h3>
+
+  <table class="mess-table">
+    <thead>
+      <tr>
+        <th>Mess-Stelle</th>
+        <th>Material</th>
+        <th class="num">Wert</th>
+        <th class="num">Einheit</th>
+        <th class="num">Grenzwert</th>
+        <th>Bewertung</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{#each messwerte}}
+      <tr>
+        <td><strong>{{this.stelle}}</strong></td>
+        <td>{{this.material}}</td>
+        <td class="num">{{this.wert}}</td>
+        <td class="num">{{this.einheit}}</td>
+        <td class="num">≤ {{this.grenzwert}}</td>
+        <td><span class="bewertung-badge bewertung-{{this.bewertung_klasse}}">{{this.bewertung_label}}</span></td>
+      </tr>
+      {{/each}}
+    </tbody>
+  </table>
+
+  <div class="methode-box">
+    <div class="label">Verwendete Messgeräte (kalibriert)</div>
+    {{#each messgeraete}}<div>· {{this}}</div>{{/each}}
+  </div>
+
+  {{#if normbezug}}
+  <div class="methode-box">
+    <div class="label">Normbezug / Grenzwert-Referenz</div>
+    <div>{{normbezug}}</div>
+  </div>
+  {{/if}}
+
+  <p><strong>Zusammenfassende Bewertung:</strong> {{bewertung_zusammenfassend}}</p>
+
+  {{#if empfehlung}}
+  <p><strong>Empfehlung:</strong> {{empfehlung}}</p>
+  {{/if}}
+
+  <div class="einschraenkung-box">
+    <strong>⚠ Einschränkung:</strong> {{einschraenkung_text}}
+  </div>
+
+  {{#if fotos_anzahl}}
+  <p style="font-size: 9.5pt; color: var(--muted);">Es wurden {{fotos_anzahl}} Fotografien zur Dokumentation angefertigt.</p>
+  {{/if}}
+
+  <p>Mit freundlichen Grüßen</p>
+</div>
+
+<div class="pflicht-box">
+  <div class="marker">§ 407a Abs. 2 ZPO · § 9 IHK-SVO</div>
+  <p>Diese Bestätigung wurde nach bestem Wissen und Gewissen unparteiisch, gewissenhaft und persönlich erstattet. Die Messwerte beziehen sich auf den Stichtag und die im Bericht angegebenen Mess-Stellen. Materialfeuchte unterliegt zeitlichen Schwankungen.</p>
+</div>
+
+<div class="unterschrift-block">
+  <div class="unterschrift-zeile">
+    <div class="unterschrift-feld">
+      {{#if sv_unterschrift_url}}<img src="{{sv_unterschrift_url}}" alt="Unterschrift" class="unterschrift-bild">{{/if}}
+      <div class="unterschrift-line">
+        <div class="name">{{sv_titel}} {{sv_name}}</div>
+        <div class="rolle">ö.b.u.v. Sachverständiger · {{sv_bestellungsstelle}}</div>
+      </div>
+    </div>
+    <div>{{#if sv_stempel_url}}<img src="{{sv_stempel_url}}" alt="Rundstempel" class="stempel-bild">{{/if}}</div>
+  </div>
+</div>
+
+<div class="footer-disclaimer">
+  Erstellt mit PROVA Systems · prova-systems.de · Inhalt und sachverständige Bewertung allein in Verantwortung des unterzeichnenden Sachverständigen
+</div>
+
+</body>
+</html>

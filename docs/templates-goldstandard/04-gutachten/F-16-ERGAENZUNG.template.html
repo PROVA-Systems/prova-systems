@@ -1,0 +1,698 @@
+﻿<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>GG-2026-003-E1 — Lindenstraße 12, 50968 Köln (Objekt aus Erstgutachten — keine neue Begehung)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════════════════════════
+   PROVA Systems · KURZGUTACHTEN (Flow A) v1.0
+   Master-Schablone für Schadensgutachten (F-09, auch Basis F-07,
+   F-10, F-11, F-12, F-13, F-14, F-17, F-18)
+   Design-System v1.0 · 10.5pt Body · IHK-SVO § 9 Abs. 3
+   EU AI Act Art. 50 · § 407a Abs. 2+3 ZPO · DSGVO
+   ═══════════════════════════════════════════════════════════════ */
+
+:root {
+  --primary: #1a3a6b;
+  --accent:  #3b82f6;
+  --muted:   #64748b;
+  --text:    #0f172a;
+  --light:   #f1f5f9;
+  --lighter: #f8fafc;
+  --border:  #e2e8f0;
+  --success: #059669;
+  --warning: #d97706;
+  --danger:  #dc2626;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+  font-size: 10.5pt;
+  line-height: 1.55;
+  color: var(--text);
+  background: white;
+}
+
+@page { size: A4; margin: 20mm 20mm 22mm 20mm; }
+
+@page {
+  @top-left {
+    content: "Marcel Mustermann · ö.b.u.v. Sachverständiger";
+    font-family: 'Inter', sans-serif; font-size: 8pt; color: #64748b; padding-top: 10mm;
+  }
+  @top-right {
+    content: "Ergänzungsgutachten GG-2026-003-E1";
+    font-family: 'Inter', sans-serif; font-size: 8pt; color: #1a3a6b; font-weight: 600; padding-top: 10mm;
+  }
+  @bottom-left {
+    content: "Gutachten-Nr.: GG-2026-003-E1";
+    font-family: 'Inter', sans-serif; font-size: 8pt; color: #64748b; padding-bottom: 10mm;
+  }
+  @bottom-right {
+    content: "Seite " counter(page) " / " counter(pages);
+    font-family: 'Inter', sans-serif; font-size: 8pt; color: #64748b; padding-bottom: 10mm;
+  }
+}
+
+@page :first {
+  @top-left { content: ""; } @top-right { content: ""; }
+  @bottom-left { content: ""; } @bottom-right { content: ""; }
+}
+
+/* ═══ DECKBLATT ═══ */
+.deckblatt { page-break-after: always; min-height: 257mm; display: flex; flex-direction: column; }
+
+.deckblatt-header { padding-bottom: 18mm; border-bottom: 2px solid var(--primary); }
+.deckblatt-kategorie { font-size: 9.5pt; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); font-weight: 500; margin-bottom: 8mm; }
+.deckblatt-titel { font-size: 30pt; font-weight: 700; line-height: 1.15; color: var(--primary); margin-bottom: 4mm; letter-spacing: -0.02em; }
+.deckblatt-subtitel { font-size: 13pt; color: var(--muted); font-weight: 400; margin-bottom: 6mm; }
+.deckblatt-badge { display: inline-block; padding: 4px 12px; background: var(--light); color: var(--primary); border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 11pt; font-weight: 500; border: 1px solid var(--border); }
+
+.deckblatt-objekt { margin-top: 18mm; padding: 10mm; background: var(--lighter); border-left: 3px solid var(--accent); border-radius: 2px; }
+.deckblatt-objekt-label { font-size: 8pt; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 3mm; font-weight: 500; }
+.deckblatt-objekt-adresse { font-size: 15pt; font-weight: 600; color: var(--text); line-height: 1.35; margin-bottom: 2mm; }
+.deckblatt-objekt-typ { font-size: 11pt; color: var(--muted); }
+
+.deckblatt-sv { margin-top: 12mm; padding: 8mm 10mm; background: white; border: 1px solid var(--border); border-radius: 3px; }
+.deckblatt-sv-label { font-size: 8pt; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); font-weight: 500; margin-bottom: 3mm; }
+.deckblatt-sv-name { font-size: 13pt; font-weight: 600; color: var(--text); margin-bottom: 1.5mm; }
+.deckblatt-sv-qualifikation { font-size: 10.5pt; color: var(--primary); font-weight: 500; margin-bottom: 1.5mm; }
+.deckblatt-sv-bestellung { font-size: 9.5pt; color: var(--muted); line-height: 1.5; margin-bottom: 2mm; font-style: italic; }
+.deckblatt-sv-kontakt { font-size: 9.5pt; color: var(--text); line-height: 1.6; }
+.deckblatt-sv-kontakt .mono { font-family: 'JetBrains Mono', monospace; font-size: 9pt; }
+
+.deckblatt-metadaten { margin-top: auto; padding-top: 10mm; display: grid; grid-template-columns: repeat(2, 1fr); gap: 6mm 15mm; }
+.deckblatt-meta-item .label { font-size: 8pt; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); font-weight: 500; margin-bottom: 1mm; }
+.deckblatt-meta-item .value { font-size: 11pt; color: var(--text); font-weight: 500; }
+.deckblatt-meta-item .value.mono { font-family: 'JetBrains Mono', monospace; font-size: 10pt; }
+
+.deckblatt-footer { margin-top: 10mm; padding-top: 6mm; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: flex-end; font-size: 8.5pt; color: var(--muted); }
+.deckblatt-footer .umfang-info { font-size: 8.5pt; line-height: 1.5; }
+.deckblatt-footer .brand-right { text-align: right; font-size: 8pt; letter-spacing: 0.05em; }
+.deckblatt-footer .brand-right .bold { font-weight: 600; color: var(--primary); font-size: 9.5pt; letter-spacing: 0.08em; }
+
+/* ═══ INHALTSSEITEN ═══ */
+.teil { margin-bottom: 14mm; page-break-inside: avoid; }
+
+.teil-header { display: flex; align-items: baseline; gap: 10mm; margin-bottom: 8mm; padding-bottom: 4mm; border-bottom: 2px solid var(--primary); }
+.teil-nummer { font-family: 'JetBrains Mono', monospace; font-size: 11pt; font-weight: 500; color: var(--accent); letter-spacing: 0.1em; text-transform: uppercase; flex-shrink: 0; padding-top: 1mm; }
+.teil-titel { font-size: 18pt; font-weight: 600; color: var(--primary); letter-spacing: -0.015em; }
+
+.abschnitt { margin-bottom: 8mm; }
+.abschnitt-header { display: flex; align-items: baseline; gap: 6mm; margin-bottom: 4mm; padding-bottom: 2mm; border-bottom: 1px solid var(--border); }
+.abschnitt-nr { font-family: 'JetBrains Mono', monospace; font-size: 11.5pt; font-weight: 500; color: var(--muted); flex-shrink: 0; }
+.abschnitt-titel { font-size: 13pt; font-weight: 600; color: var(--text); letter-spacing: -0.01em; }
+.abschnitt-body { font-size: 10.5pt; line-height: 1.65; color: var(--text); }
+.abschnitt-body p { margin-bottom: 3mm; }
+
+.info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2mm 8mm; margin: 4mm 0; padding: 5mm 6mm; background: var(--lighter); border-radius: 3px; border: 1px solid var(--border); }
+.info-item { display: flex; flex-direction: column; gap: 0.5mm; padding: 1.5mm 0; }
+.info-item .label { font-size: 8pt; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 500; }
+.info-item .value { font-size: 10.5pt; color: var(--text); font-weight: 500; }
+.info-item .value.mono { font-family: 'JetBrains Mono', monospace; font-size: 10pt; }
+
+.beweisfrage { margin: 4mm 0; padding: 5mm 7mm; background: var(--lighter); border-left: 3px solid var(--primary); border-radius: 2px; font-size: 11pt; line-height: 1.6; }
+.beweisfrage .label { font-size: 8.5pt; letter-spacing: 0.1em; text-transform: uppercase; color: var(--primary); font-weight: 600; margin-bottom: 2mm; }
+
+/* Befund-Karte (Schaden-spezifisch) */
+.befund-karte { margin: 4mm 0; padding: 5mm 6mm; background: var(--lighter); border: 1px solid var(--border); border-left: 3px solid var(--accent); border-radius: 2px; }
+.befund-karte .nr { font-family: 'JetBrains Mono', monospace; font-size: 9pt; color: var(--accent); font-weight: 500; margin-bottom: 1mm; }
+.befund-karte .titel { font-size: 11pt; font-weight: 600; color: var(--primary); margin-bottom: 2mm; }
+.befund-karte .text { font-size: 10.5pt; line-height: 1.6; color: var(--text); }
+.befund-karte .norm { margin-top: 2mm; font-size: 9pt; color: var(--muted); font-style: italic; }
+
+/* Ursachenhypothesen (Flow A spezifisch) */
+.hypothese { margin: 3mm 0; padding: 4mm 5mm; background: white; border: 1px solid var(--border); border-radius: 3px; }
+.hypothese.primaer { border-left: 3px solid var(--primary); }
+.hypothese.alternativ { border-left: 3px solid var(--muted); }
+.hypothese-kopf { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 2mm; }
+.hypothese-titel { font-size: 11pt; font-weight: 600; color: var(--primary); }
+.hypothese-wahrscheinlichkeit { font-size: 9pt; color: var(--muted); font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; }
+
+/* Messwerte-Tabelle */
+.messwerte { width: 100%; border-collapse: collapse; margin: 4mm 0; font-size: 10pt; }
+.messwerte th, .messwerte td { padding: 2.5mm 4mm; text-align: left; border-bottom: 1px solid var(--border); }
+.messwerte th { background: var(--light); color: var(--muted); font-weight: 500; font-size: 9pt; letter-spacing: 0.08em; text-transform: uppercase; border-bottom: 2px solid var(--border); }
+.messwerte td.number { text-align: right; font-family: 'JetBrains Mono', monospace; font-size: 10pt; }
+.messwerte tr:nth-child(even) { background: var(--lighter); }
+
+/* Sanierung-Tabelle */
+.sanierung-tabelle { width: 100%; border-collapse: collapse; margin: 4mm 0; font-size: 10pt; }
+.sanierung-tabelle th, .sanierung-tabelle td { padding: 2.5mm 4mm; text-align: left; border-bottom: 1px solid var(--border); }
+.sanierung-tabelle th { background: var(--light); color: var(--muted); font-weight: 500; font-size: 9pt; letter-spacing: 0.08em; text-transform: uppercase; border-bottom: 2px solid var(--border); }
+.sanierung-tabelle td.number { text-align: right; font-family: 'JetBrains Mono', monospace; font-size: 10pt; }
+.sanierung-tabelle tr:nth-child(even) { background: var(--lighter); }
+.sanierung-tabelle tr.summary { background: var(--light) !important; font-weight: 600; border-top: 2px solid var(--primary); }
+.sanierung-tabelle tr.summary td { padding: 3mm 4mm; }
+
+/* Kostenrahmen-Card (Hauptergebnis Flow A) */
+.kosten-card {
+  margin: 6mm 0; padding: 8mm;
+  background: linear-gradient(135deg, var(--primary) 0%, #2a4a7b 100%);
+  color: white; border-radius: 4px; position: relative; overflow: hidden;
+}
+.kosten-card::before {
+  content: ''; position: absolute; top: 0; right: 0;
+  width: 40mm; height: 40mm;
+  background: radial-gradient(circle at top right, rgba(59, 130, 246, 0.3), transparent 70%);
+}
+.kosten-card-label { font-size: 9.5pt; letter-spacing: 0.12em; text-transform: uppercase; opacity: 0.85; margin-bottom: 2mm; font-weight: 500; }
+.kosten-card-value { font-size: 26pt; font-weight: 700; letter-spacing: -0.02em; line-height: 1.1; }
+.kosten-card-note { font-size: 9pt; opacity: 0.85; margin-top: 3mm; font-weight: 400; }
+
+/* SV-Fachurteil-Kasten (3.4 — KI-FREI) */
+.fachurteil-kasten { margin: 5mm 0; padding: 6mm 8mm; background: white; border: 2px solid var(--primary); border-radius: 4px; }
+.fachurteil-kasten .marker { display: inline-block; padding: 1.5mm 4mm; background: var(--primary); color: white; font-size: 8.5pt; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 600; border-radius: 2px; margin-bottom: 4mm; }
+.fachurteil-kasten .intro { font-size: 9.5pt; color: var(--muted); font-style: italic; margin-bottom: 4mm; line-height: 1.55; padding-bottom: 3mm; border-bottom: 1px solid var(--border); }
+.fachurteil-kasten .text { font-size: 11pt; line-height: 1.7; color: var(--text); }
+.fachurteil-kasten .text p { margin-bottom: 3mm; }
+
+/* Normen-Liste */
+.normen-liste { display: grid; gap: 2mm; margin: 4mm 0; }
+.norm-eintrag { padding: 3mm 4mm; background: var(--lighter); border-left: 2px solid var(--accent); border-radius: 2px; }
+.norm-eintrag .nr { font-family: 'JetBrains Mono', monospace; font-size: 10pt; font-weight: 500; color: var(--primary); margin-bottom: 0.5mm; }
+.norm-eintrag .titel { font-size: 10pt; color: var(--text); margin-bottom: 0.5mm; }
+.norm-eintrag .gw { font-size: 9pt; color: var(--muted); line-height: 1.4; }
+
+/* § 407a + DSGVO Erklärungs-Kasten */
+.erklaerung-kasten { margin: 4mm 0; padding: 5mm 7mm; background: var(--lighter); border-left: 3px solid var(--success); border-radius: 2px; font-size: 10.5pt; line-height: 1.65; }
+.erklaerung-kasten .marker { display: inline-block; padding: 1.2mm 3mm; background: var(--success); color: white; font-size: 8pt; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 600; border-radius: 2px; margin-bottom: 3mm; }
+
+.hinweis-box { margin: 4mm 0; padding: 4mm 5mm; background: var(--lighter); border: 1px solid var(--border); border-radius: 3px; font-size: 9.5pt; line-height: 1.6; color: var(--muted); }
+.hinweis-box strong { color: var(--primary); }
+
+/* Unterschriftsbereich */
+.unterschrift-block { margin-top: 12mm; padding-top: 6mm; border-top: 1px solid var(--border); }
+.unterschrift-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15mm; }
+.unterschrift-feld { border-top: 1px solid var(--text); padding-top: 2mm; font-size: 9.5pt; color: var(--muted); }
+.unterschrift-feld .name { font-size: 11pt; color: var(--text); font-weight: 600; margin-top: 1mm; }
+.unterschrift-feld .rolle { font-size: 9pt; color: var(--muted); margin-top: 0.5mm; }
+.unterschrift-feld .stempel { font-size: 8.5pt; color: var(--muted); margin-top: 4mm; font-style: italic; }
+
+/* §§-Referenzen inline */
+.law-ref { font-family: 'JetBrains Mono', monospace; font-size: 0.92em; color: var(--primary); font-weight: 500; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════
+     TEIL 1 · DECKBLATT + ALLGEMEINE ANGABEN + AUFGABENSTELLUNG
+     ═══════════════════════════════════════════════════════════ -->
+<section class="deckblatt">
+  <div class="deckblatt-header">
+    <div class="deckblatt-kategorie">Ergänzungsgutachten gemäß § 411 Abs. 3 ZPO · Ergänzung zum Erstgutachten GG-2026-003 vom 20.04.2026</div>
+    <h1 class="deckblatt-titel">Ergänzungsgutachten</h1>
+    <div class="deckblatt-subtitel">zum Ergänzung zum Erstgutachten GG-2026-003 vom 20.04.2026 gemäß DIN 4108 / WTA-Regelwerk</div>
+    <div class="deckblatt-badge">Gutachten-Nr.: GG-2026-003-E1</div>
+  </div>
+
+  <div class="deckblatt-objekt">
+    <div class="deckblatt-objekt-label">Begutachtungsobjekt</div>
+    <div class="deckblatt-objekt-adresse">Lindenstraße 12, 50968 Köln (Objekt aus Erstgutachten — keine neue Begehung)</div>
+    <div class="deckblatt-objekt-typ">Mehrfamilienhaus — identisch zu Erstgutachten · Baujahr 1962</div>
+  </div>
+
+  <div class="deckblatt-sv">
+    <div class="deckblatt-sv-label">Erstattender Sachverständiger</div>
+    <div class="deckblatt-sv-name">Marcel Mustermann, Dipl.-Ing.</div>
+    <div class="deckblatt-sv-qualifikation">ö.b.u.v. Sachverständiger für Schäden an Gebäuden</div>
+    
+    <div class="deckblatt-sv-bestellung">Öffentlich bestellt und vereidigt durch die IHK Köln · für Schäden an Gebäuden</div>
+    
+    <div class="deckblatt-sv-kontakt">
+      Hohenzollernring 12 · 50672 Köln<br>
+      Tel. <span class="mono">+49 221 1234567</span> · Fax <span class="mono">+49 221 1234568</span> · kontakt@prova-systems.de
+    </div>
+  </div>
+
+  <div class="deckblatt-metadaten">
+    <div class="deckblatt-meta-item">
+      <div class="label">Auftraggeber</div>
+      <div class="value">Landgericht Köln, 4. Zivilkammer</div>
+    </div>
+    <div class="deckblatt-meta-item">
+      <div class="label">Schadensstichtag</div>
+      <div class="value mono">01.09.2024</div>
+    </div>
+    <div class="deckblatt-meta-item">
+      <div class="label">Auftragserteilung</div>
+      <div class="value mono">05.06.2026</div>
+    </div>
+    <div class="deckblatt-meta-item">
+      <div class="label">Gutachtendatum</div>
+      <div class="value mono">20.04.2026</div>
+    </div>
+    
+    
+    <div class="deckblatt-meta-item">
+      <div class="label">Gericht</div>
+      <div class="value">Landgericht Köln</div>
+    </div>
+    <div class="deckblatt-meta-item">
+      <div class="label">Gerichtliches AZ</div>
+      <div class="value mono">4 O 281/25</div>
+    </div>
+    
+  </div>
+
+  <div class="deckblatt-footer">
+    <div class="umfang-info">
+      Umfang: 16 Seiten · 2 Anlagen · 12 Fotografien
+    </div>
+    <div class="brand-right">
+      erstellt mit<br>
+      <span class="bold">PROVA SYSTEMS</span>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════
+     TEIL 1 — Inhalt
+     ═══════════════════════════════════════════════════════════ -->
+<section class="teil">
+  <div class="teil-header">
+    <div class="teil-nummer">Teil 1</div>
+    <div class="teil-titel">Allgemeine Angaben und Aufgabenstellung</div>
+  </div>
+
+  <!-- 1.2 Auftragsumfang / Beweisbeschluss -->
+  <div class="abschnitt">
+    <div class="abschnitt-header">
+      <div class="abschnitt-nr">1.2</div>
+      <div class="abschnitt-titel">Auftragsumfang und Beweisbeschluss</div>
+    </div>
+    <div class="abschnitt-body">
+      
+      <p>Das <strong>Landgericht Köln</strong> hat mit Beweisbeschluss vom 05.06.2026 unter dem Aktenzeichen <span class="law-ref">4 O 281/25</span> ein Sachverständigengutachten in folgender Sache angeordnet:</p>
+      <div class="beweisfrage">
+        <div class="label">Beweisbeschluss im Wortlaut</div>
+        Gemäß § 411 Abs. 3 ZPO wird der Sachverständige gebeten, die auf das schriftliche Erstgutachten vom 20.04.2026 (Aktenblätter 124–157) hin entstandenen Nachfragen zu beantworten. Die Nachfragen beziehen sich auf drei Punkte: (1) Der Privatgutachter der Beklagten (Dipl.-Ing. Schwarz) widerspricht der Bewertung, dass die Verklebungsfläche mit 35 % unter die anerkannte Regel der Technik fällt. Er verweist auf Abschnitt 4.1.6 der DIN 55699 (2018), wonach in Sonderfällen Abweichungen von der 40 %-Regel zulässig seien. Bitte prüfen Sie diese Gegenauffassung und nehmen Stellung. (2) Die Klägerin bitten um nähere Begründung, warum die festgestellten 11 von 24 Fensterlaibungen mit Wärmebrücken auch bei teilweise verwendeten Laibungswinkeln als mangelhaft einzustufen wären. (3) Das Gericht bittet um Beantwortung der Frage, ob die von Ihnen in Teil 3.3 genannten Sanierungskosten von 42.720 € netto realistisch sind, angesichts der Tatsache, dass die Beklagte in einem unverbindlichen Gegenangebot vom 15.05.2026 zur Gesamtsanierung ein Volumen von nur 24.800 € netto genannt hat.
+      </div>
+      
+    </div>
+  </div>
+
+  <!-- 1.3 Mitarbeit + KI-Einsatz (Ex-ante) -->
+  <div class="abschnitt">
+    <div class="abschnitt-header">
+      <div class="abschnitt-nr">1.3</div>
+      <div class="abschnitt-titel">Mitarbeit von Hilfskräften und KI-Einsatz</div>
+    </div>
+    <div class="abschnitt-body">
+      <p>Der vorliegenden Gutachtenerstattung wurde mit Anzeige vom <strong>08.06.2026</strong> an das Landgericht Köln (Beschluss-Bestätigung) sowie die Prozessvertreter beider Parteien mit Schreiben vom 08.06.2026 gemäß <span class="law-ref">§ 407a Abs. 3 ZPO</span>, <span class="law-ref">§ 10 IHK-SVO</span> und <span class="law-ref">Art. 50 EU AI Act</span> der Einsatz folgender Hilfsmittel vorab angezeigt:</p>
+
+      
+      <p style="margin-top: 3mm;"><strong>Mitwirkung Dritter:</strong> Keine. Das Gutachten wurde vom unterzeichnenden Sachverständigen höchstpersönlich erstattet.</p>
+      
+
+      <p style="margin-top: 3mm;"><strong>Technische Arbeitsumgebung:</strong> PROVA Systems (prova-systems.de) als Workflow- und PDF-Generierungs-Plattform.</p>
+
+      <p style="margin-top: 3mm;"><strong>Eingesetzte KI-Systeme:</strong> OpenAI GPT-4o (Sprachmodell) und OpenAI Whisper (Spracherkennung). Eine detaillierte Aufgaben-Dokumentation folgt in <strong>Teil 4.3</strong>.</p>
+
+      <div class="hinweis-box" style="margin-top: 4mm;">
+        <strong>Wichtige Klarstellung:</strong> Die sachverständige Beurteilung sowie die <strong>Gesamtverantwortung</strong> für den Inhalt dieses Gutachtens verbleiben ausschließlich beim unterzeichnenden Sachverständigen. KI-Systeme werden ausschließlich als Arbeitshilfe zur Struktur- und Textaufbereitung eingesetzt; sie treffen keine fachlichen Entscheidungen. Das Fachurteil nach Teil 3.4 wurde KI-frei erstellt.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════
+     TEIL 2 · DOKUMENTATION DER DATEN
+     ═══════════════════════════════════════════════════════════ -->
+<section class="teil">
+  <div class="teil-header">
+    <div class="teil-nummer">Teil 2</div>
+    <div class="teil-titel">Dokumentation der Daten</div>
+  </div>
+
+  <!-- 2.1 Objektbeschreibung -->
+  <div class="abschnitt">
+    <div class="abschnitt-header">
+      <div class="abschnitt-nr">2.1</div>
+      <div class="abschnitt-titel">Objektbeschreibung</div>
+    </div>
+    <div class="abschnitt-body">
+      <div class="info-grid">
+        <div class="info-item">
+          <div class="label">Adresse</div>
+          <div class="value">Lindenstraße 12, 50968 Köln (Objekt aus Erstgutachten — keine neue Begehung)</div>
+        </div>
+        <div class="info-item">
+          <div class="label">Objektart</div>
+          <div class="value">Mehrfamilienhaus — identisch zu Erstgutachten</div>
+        </div>
+        
+        <div class="info-item">
+          <div class="label">Baujahr</div>
+          <div class="value mono">1962</div>
+        </div>
+        
+        
+        <div class="info-item">
+          <div class="label">Wohnfläche</div>
+          <div class="value mono">520 m²</div>
+        </div>
+        
+        
+        <div class="info-item">
+          <div class="label">Bauweise</div>
+          <div class="value">Siehe Erstgutachten Teil 2.1 — dieses Ergänzungsgutachten nimmt die Feststellungen aus dem Erstgutachten als gesichert an</div>
+        </div>
+        
+        
+        <div class="info-item">
+          <div class="label">Schadensort im Objekt</div>
+          <div class="value">Gesamtfassade — Bezug auf Erstgutachten</div>
+        </div>
+        
+      </div>
+
+      
+      <p style="margin-top: 4mm;">Dieses Ergänzungsgutachten ist auf die schriftliche Beantwortung der drei Nachfragen beschränkt. Eine neue Ortsbegehung war nach dem Beschluss des Gerichts nicht erforderlich, weil die Fragen ausschließlich fachlich-rechtlich zu beantwortende Themen betreffen. Für die sachlichen Feststellungen wird auf das Erstgutachten GG-2026-003 vom 20.04.2026 Bezug genommen.</p>
+      
+    </div>
+  </div>
+
+  <!-- 2.2 Anknüpfungstatsachen -->
+  <div class="abschnitt">
+    <div class="abschnitt-header">
+      <div class="abschnitt-nr">2.2</div>
+      <div class="abschnitt-titel">Anknüpfungstatsachen und verwendete Unterlagen</div>
+    </div>
+    <div class="abschnitt-body">
+      <p>Der Beurteilung liegen folgende Unterlagen und Auskünfte zugrunde:</p>
+
+      
+      <ul style="margin: 3mm 0 3mm 6mm;">
+        
+        <li style="margin-bottom: 1.5mm;"><strong>Erstgutachten GG-2026-003 vom 20.04.2026:</strong> Eigenes Erstgutachten, vom Gericht als Aktenbestandteil 124–157 geführt; sämtliche dortigen Befunde und Messwerte werden als gesicherte Grundlage übernommen</li>
+        
+        <li style="margin-bottom: 1.5mm;"><strong>Stellungnahme Privatgutachter Dipl.-Ing. Schwarz (Beklagte):</strong> Parteischriftsatz vom 18.05.2026 mit Privatgutachter-Stellungnahme (8 Seiten); Bezug auf DIN 55699 §4.1.6 Sonderfallregelung</li>
+        
+        <li style="margin-bottom: 1.5mm;"><strong>Schriftsatz Klägerin RA Dr. Holmann:</strong> Schriftsatz vom 22.05.2026 mit Nachfragen zu Laibungen und Wärmebrücken; Bitte um nähere Begründung</li>
+        
+        <li style="margin-bottom: 1.5mm;"><strong>Unverbindliches Gegenangebot der Beklagten:</strong> Angebot vom 15.05.2026 zur Sanierung über 24.800 € netto, vorgelegt als Anlage B17 im Prozess</li>
+        
+        <li style="margin-bottom: 1.5mm;"><strong>Gerichtlicher Hinweis und Erteilung Ergänzungsauftrag:</strong> Beschluss der 4. Zivilkammer vom 05.06.2026 mit den drei konkreten Ergänzungsfragen und Fristsetzung 15.07.2026</li>
+        
+      </ul>
+      
+    </div>
+  </div>
+
+  <!-- 2.3 Ortstermin -->
+  
+
+  <!-- 2.4 Fotografien -->
+  
+  <div class="abschnitt">
+    <div class="abschnitt-header">
+      <div class="abschnitt-nr">2.4</div>
+      <div class="abschnitt-titel">Fotografien</div>
+    </div>
+    <div class="abschnitt-body">
+      <p>Zur bildlichen Dokumentation wurden <strong>12 Fotografien</strong> angefertigt. Die Aufnahmen sind als gesonderte <strong>Anlage F-01</strong> beigefügt.</p>
+      <div class="hinweis-box" style="margin-top: 3mm;">
+        Die Fotografien ersetzen nicht die verbale Darstellung, sondern ergänzen sie (Nr. 9.3.7 IHK-SVO-Richtlinien).
+      </div>
+    </div>
+  </div>
+  
+
+  <!-- 2.5 Messungen -->
+  
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════
+     TEIL 3 · SACHVERSTÄNDIGE BEANTWORTUNG
+     ═══════════════════════════════════════════════════════════ -->
+<section class="teil">
+  <div class="teil-header">
+    <div class="teil-nummer">Teil 3</div>
+    <div class="teil-titel">Sachverständige Beantwortung</div>
+  </div>
+
+  <!-- 3.1 Befunde -->
+  <div class="abschnitt">
+    <div class="abschnitt-header">
+      <div class="abschnitt-nr">3.1</div>
+      <div class="abschnitt-titel">Befunde</div>
+    </div>
+    <div class="abschnitt-body">
+      
+      <p>Dieses Ergänzungsgutachten beantwortet die drei konkreten Fragen des Gerichts und der Parteien gemäß dem Beweisbeschluss vom 05.06.2026. Die Antworten werden in drei eigenständigen Abschnitten strukturiert:</p>
+      
+
+      
+      
+      <div class="befund-karte">
+        <div class="nr">Befund 1</div>
+        <div class="titel">Antwort auf Ergänzungsfrage 1 — Sonderfallregelung DIN 55699 §4.1.6</div>
+        <div class="text">Der Privatgutachter der Beklagten (Dipl.-Ing. Schwarz) zieht in seiner Stellungnahme vom 18.05.2026 die Sonderfallregelung in Abschnitt 4.1.6 der DIN 55699 (2018) heran und argumentiert, diese erlaube in bestimmten Fällen Abweichungen von der 40 %-Verklebungsfläche. Die tatsächliche Regelung in DIN 55699 §4.1.6 lautet jedoch: 'In begründeten Ausnahmefällen können bei nachweislich unebener Altputzoberfläche geringere Verklebungsflächen durch eine kompensatorische Erhöhung der mechanischen Befestigung zugelassen werden. Der Ausnahmefall ist schriftlich zu dokumentieren und vom Systemhersteller zu bestätigen.' Bei dem Objekt Lindenstraße 12 liegt weder eine unebene Altputzoberfläche vor (die Bestands-Putzfläche war laut Fotos und Voraufmaßen der Beklagten eben), noch eine schriftliche Ausnahmedokumentation durch den Systemhersteller X-Bau Baustoffe GmbH, noch eine kompensatorische Erhöhung der mechanischen Befestigung (im Gegenteil: die Dübelanzahl lag mit 5/m² unter dem Sollwert von 8/m²). Damit sind sämtliche drei Voraussetzungen der Sonderfallregelung nicht erfüllt. Die Auffassung des Privatgutachters Schwarz wäre damit zurückzuweisen; die Bewertung im Erstgutachten als Abweichung von der anerkannten Regel der Technik bliebe bestehen.</div>
+        
+      </div>
+      
+      <div class="befund-karte">
+        <div class="nr">Befund 2</div>
+        <div class="titel">Antwort auf Ergänzungsfrage 2 — Fensterlaibungen mit Wärmebrücken</div>
+        <div class="text">Die Nachfrage der Klägerin zur Beurteilung der 11 mangelhaften Laibungen ist nachvollziehbar und wird nachstehend näher begründet. Zum Hintergrund: Das Leistungsverzeichnis Pos. 27.3 schreibt die Ausführung aller 24 Fensterlaibungen mit Laibungsdämmung (20 mm) und Laibungswinkel vor. Bei der Bauteilöffnung an Laibung Ost 3. OG wurde festgestellt, dass dort nur 12 mm statt 20 mm Laibungsdämmung eingebaut wurde und der Laibungswinkel fehlte. Die Thermografie (Anlage F-03 des Erstgutachtens) zeigt an 11 der 24 Laibungen eine Wärmebrücke von ΔT > 2 K. Diese 11 Laibungen sind damit als mangelhaft zu werten, auch wenn an einigen von ihnen teilweise Laibungswinkel verwendet wurden. Der Grund: Bei einer Laibungsdämmung von nur 12 mm statt 20 mm wäre auch ein vorhandener Laibungswinkel nicht ausreichend, um die erforderliche Wärmebrückenreduktion zu erzielen. Der thermografische Nachweis der Wärmebrücke (ΔT > 2 K über dem umgebenden Dämmfeld) wäre das entscheidende Kriterium. Die 11 Laibungen sind damit alle mangelhaft — unabhängig davon, ob einzelne Bauteil-Komponenten formal vorhanden sind oder nicht.</div>
+        
+      </div>
+      
+      <div class="befund-karte">
+        <div class="nr">Befund 3</div>
+        <div class="titel">Antwort auf Ergänzungsfrage 3 — Plausibilität der Sanierungskosten 42.720 € vs. 24.800 €</div>
+        <div class="text">Das Gericht bittet um Einordnung der Diskrepanz zwischen meinem Sanierungskostenrahmen (42.720 € netto) und dem Gegenangebot der Beklagten (24.800 € netto). Die Gegenüberstellung ergibt: (a) Das Gegenangebot über 24.800 € umfasst nur vier Maßnahmen (Nachdübelung, Fensteranschlüsse, Oberputz-Teilsanierung, Schlussanstrich), während die erforderliche Sanierung sieben Mängelkomplexe abdecken muss (die zusätzlich: Sockelabschluss-Neuaufbau, Laibungsdämmung-Neuausführung, Oberputz-Neubeschichtung in Absandungsbereichen). (b) Die in meinem Erstgutachten enthaltene Position 'Sockelabschluss Rückbau + Neuerrichtung' mit 6.960 € ist eine unverzichtbare Maßnahme (fehlender Spritzwasserschutz nach DIN 18533), die im Gegenangebot komplett fehlt. (c) Die Position 'Laibungsdämmung Neuausführung' mit 6.840 € fehlt ebenfalls im Gegenangebot, obwohl 11 Laibungen fachlich zwingend zu sanieren wären. (d) Die Gerüstmiete (4.800 €) ist bei Dreimonats-Sanierung fachlich erforderlich und kann realistisch nicht eingespart werden. Insgesamt deckt das Gegenangebot der Beklagten damit nur etwa 58 % des tatsächlichen Sanierungsumfangs ab und stellt keine vollständige Mängelbeseitigung dar. Der in meinem Erstgutachten genannte Kostenrahmen von 42.720 € netto bleibt nach meiner sachverständigen Einschätzung realistisch; eine Überprüfung gegen drei unabhängige Angebote von Fachfirmen wurde auf Bitte des Gerichts bei drei regionalen Firmen veranlasst. Die Angebotseinholung ergab (Anlage F-02 dieses Ergänzungsgutachtens): Firma Alpha 44.200 €, Firma Beta 41.850 €, Firma Gamma 43.300 € — arithmetisches Mittel 43.117 €. Der Wert meiner Schätzung (42.720 €) liegt damit innerhalb von 1 % des Mittels der am Markt tatsächlich aufgerufenen Preise und ist als realistisch zu bestätigen.</div>
+        
+      </div>
+      
+      
+    </div>
+  </div>
+
+  <!-- 3.2 Ursachenanalyse (Hypothesen, Konjunktiv II) -->
+  <div class="abschnitt">
+    <div class="abschnitt-header">
+      <div class="abschnitt-nr">3.2</div>
+      <div class="abschnitt-titel">Ursachenanalyse</div>
+    </div>
+    <div class="abschnitt-body">
+      <p>Die Ursachenanalyse erfolgt auf Basis der dokumentierten Befunde und der Anknüpfungstatsachen nach Teil 2. Die im Folgenden dargelegten Hypothesen sind im Konjunktiv II formuliert und stehen unter dem Vorbehalt der abschließenden sachverständigen Würdigung in Teil 3.4.</p>
+
+      
+    </div>
+  </div>
+
+  <!-- 3.3 Sanierungsvorschlag + Kostenrahmen -->
+  
+
+  <!-- 3.4 Fachurteil (KI-FREI) -->
+  <div class="abschnitt">
+    <div class="abschnitt-header">
+      <div class="abschnitt-nr">3.4</div>
+      <div class="abschnitt-titel">Fachurteil</div>
+    </div>
+    <div class="abschnitt-body">
+      <div class="fachurteil-kasten">
+        <div class="marker">SV-Eigenleistung · KI-frei</div>
+        <div class="intro">
+          Dieses Fachurteil wurde gemäß <span class="law-ref">§ 407a Abs. 2 ZPO</span> und <span class="law-ref">§ 9 Abs. 2 IHK-SVO</span> vom unterzeichnenden Sachverständigen <strong>persönlich, eigenständig und ohne KI-Unterstützung</strong> verfasst.
+        </div>
+        <div class="text">
+          <p>Nach Prüfung der drei konkreten Ergänzungsfragen des Gerichts und der Parteien komme ich zu folgender zusammenfassender Stellungnahme:</p><p><strong>Zu Frage 1 (DIN 55699 Sonderfall):</strong> Die vom Privatgutachter der Beklagten vorgetragene Sonderfallregelung in DIN 55699 §4.1.6 greift nicht. Keine der drei kumulativ erforderlichen Voraussetzungen (unebene Altputzoberfläche, schriftliche Herstellerdokumentation, kompensatorische Dübelerhöhung) ist im konkreten Fall erfüllt. Im Gegenteil: Die Dübelanzahl wurde im untersuchten Bereich sogar unterschritten. Die Bewertung des Erstgutachtens bleibt damit unverändert.</p><p><strong>Zu Frage 2 (Laibungen mit Wärmebrücken):</strong> Die 11 thermografisch nachgewiesenen Laibungen mit ΔT > 2 K sind auch dann als mangelhaft zu werten, wenn teilweise Laibungswinkel vorhanden sind. Maßgeblich ist der thermografische Nachweis der Wärmebrücke, nicht allein die Vorhandensein einzelner Bauteile. Die geringere Laibungsdämmung (12 mm statt 20 mm) erklärt die Wärmebrücke unabhängig vom Laibungswinkel.</p><p><strong>Zu Frage 3 (Plausibilität 42.720 €):</strong> Das Gegenangebot der Beklagten (24.800 €) wäre fachlich unvollständig und decke nur etwa 58 % des tatsächlich erforderlichen Sanierungsumfangs ab. Insbesondere der Sockelabschluss (6.960 €) und die Laibungsdämmung (6.840 €) fehlen. Die unabhängige Überprüfung durch drei regionale Fachfirmen ergab Angebote in einer Spanne von 41.850 € bis 44.200 €, arithmetisches Mittel 43.117 €. Der von mir genannte Kostenrahmen von 42.720 € netto liegt innerhalb von 1 % des Marktpreismittels und ist damit realistisch. Das Gegenangebot der Beklagten wäre nicht geeignet, die vollständige Mängelbeseitigung zu gewährleisten.</p><p><strong>Schluss:</strong> Die Feststellungen des Erstgutachtens vom 20.04.2026 werden durch die Ergänzungsprüfung in vollem Umfang bestätigt. Neue Erkenntnisse, die eine Revision des Erstgutachtens rechtfertigen würden, wurden nicht gewonnen.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════
+     TEIL 4 · ZUSAMMENFASSUNG UND SCHLUSS
+     ═══════════════════════════════════════════════════════════ -->
+<section class="teil">
+  <div class="teil-header">
+    <div class="teil-nummer">Teil 4</div>
+    <div class="teil-titel">Zusammenfassung und Schluss</div>
+  </div>
+
+  <!-- 4.1 Kurzbeantwortung -->
+  <div class="abschnitt">
+    <div class="abschnitt-header">
+      <div class="abschnitt-nr">4.1</div>
+      <div class="abschnitt-titel">Kurzbeantwortung</div>
+    </div>
+    <div class="abschnitt-body">
+      
+      <p>Die drei Ergänzungsfragen werden wie folgt beantwortet: (1) Die Sonderfallregelung der DIN 55699 greift nicht — keine der drei Voraussetzungen ist erfüllt. (2) Die 11 Laibungen mit thermografisch nachgewiesenen Wärmebrücken sind auch bei teilweise vorhandenen Laibungswinkeln mangelhaft; maßgeblich ist der thermografische Nachweis. (3) Das Gegenangebot der Beklagten (24.800 €) ist unvollständig und deckt nur rund 58 % des erforderlichen Umfangs. Unabhängige Angebote von drei Fachfirmen ergeben ein Marktpreismittel von 43.117 € — der im Erstgutachten genannte Wert von 42.720 € ist damit realistisch.</p>
+      
+
+      
+      <div class="hinweis-box" style="margin-top: 3mm;">
+        <strong>Hinweis zu Grenzen der Sachkunde:</strong> Dieses Ergänzungsgutachten beantwortet die drei konkret vom Gericht gestellten Nachfragen. Eine erneute Gesamtbegutachtung oder eine neue Ortsbegehung waren nach gerichtlicher Erteilung nicht erforderlich. Für die sachlichen Feststellungen wird auf das Erstgutachten GG-2026-003 vom 20.04.2026 Bezug genommen. Die vom Privatgutachter Dipl.-Ing. Schwarz vorgetragenen weiteren Einwände außerhalb der Fragenliste sind nicht Gegenstand dieses Ergänzungsgutachtens und müssten gegebenenfalls durch das Gericht gesondert beauftragt werden.
+      </div>
+      
+    </div>
+  </div>
+
+  <!-- 4.2 § 407a Abs. 2 Unparteilichkeitserklärung -->
+  <div class="abschnitt">
+    <div class="abschnitt-header">
+      <div class="abschnitt-nr">4.2</div>
+      <div class="abschnitt-titel">Erklärung nach § 407a Abs. 2 ZPO (Unparteilichkeit)</div>
+    </div>
+    <div class="abschnitt-body">
+      <div class="erklaerung-kasten">
+        <div class="marker">§ 407a Abs. 2 ZPO · § 9 Abs. 2 IHK-SVO</div>
+        <p>Ich versichere, dass ich das vorliegende Gutachten nach bestem Wissen und Gewissen <strong>unparteiisch, gewissenhaft und persönlich</strong> erstattet habe. Ich bin mit den beteiligten Parteien weder verwandt noch verschwägert und habe kein wirtschaftliches oder persönliches Interesse am Ausgang des Verfahrens oder an der Verwendung dieses Gutachtens.</p>
+
+        
+        <p style="margin-top: 3mm;">Als öffentlich bestellter und vereidigter Sachverständiger bin ich an meinen bei der Bestellung geleisteten Eid gebunden und bestätige die Einhaltung der Unparteilichkeits- und Sorgfaltspflichten nach <span class="law-ref">§ 9 Abs. 2–3 IHK-SVO</span>.</p>
+        
+      </div>
+    </div>
+  </div>
+
+  <!-- 4.3 Hilfsmittel + KI (Ex-post) -->
+  <div class="abschnitt">
+    <div class="abschnitt-header">
+      <div class="abschnitt-nr">4.3</div>
+      <div class="abschnitt-titel">Verwendete Hilfsmittel und KI-Nutzung</div>
+    </div>
+    <div class="abschnitt-body">
+      <p>Die nachstehende Dokumentation ergänzt die Ex-ante-Anzeige aus Teil 1.3 um die konkreten Einsatztätigkeiten (Offenlegung nach <span class="law-ref">§ 407a Abs. 3 ZPO</span> und <span class="law-ref">Art. 50 EU AI Act</span>):</p>
+
+      
+      <p style="margin-top: 3mm;"><strong>OpenAI GPT-4o — Sprachmodell:</strong> Strukturierung der drei Ergänzungsfragen mit Bezug auf Erstgutachten und Stellungnahmen der Parteien; Vorentwurf der drei Antwortabschnitte in Teil 3.1; Rechtschreib- und Konsistenzprüfung.</p>
+      
+
+      
+
+      <div class="erklaerung-kasten" style="margin-top: 4mm;">
+        <div class="marker">Eigenleistung · Art. 50 EU AI Act</div>
+        <p><strong>Eigenleistung des Sachverständigen:</strong> Das vorliegende Gutachten wurde überwiegend vom unterzeichnenden Sachverständigen persönlich verfasst. KI-Systeme haben ergänzend bei der Strukturierung und Textaufbereitung der Teile 1 bis 3.3 unterstützt.</p>
+        <p style="margin-top: 2mm;"><strong>Teil 3.4 (Fachurteil):</strong> Vollständig und ausschließlich vom unterzeichnenden Sachverständigen persönlich verfasst, ohne KI-Unterstützung.</p>
+      </div>
+
+      <div class="hinweis-box">
+        <strong>DSGVO-Konformität:</strong> Vor jeder Übertragung an KI-Systeme wurden personenbezogene Daten durch technische Pseudonymisierung unkenntlich gemacht. Die Datenverarbeitung erfolgt auf Servern innerhalb der Europäischen Union.
+      </div>
+    </div>
+  </div>
+
+  <!-- 4.4 Unterschrift -->
+  <div class="abschnitt">
+    <div class="abschnitt-header">
+      <div class="abschnitt-nr">4.4</div>
+      <div class="abschnitt-titel">Ort, Datum, Unterschrift und Stempel</div>
+    </div>
+    <div class="abschnitt-body">
+      <div class="unterschrift-block">
+        <div class="unterschrift-grid">
+          <div class="unterschrift-feld">
+            Ort, Datum<br>
+            <div class="name">Köln, 20.04.2026</div>
+          </div>
+          <div class="unterschrift-feld">
+            Unterschrift Sachverständiger<br>
+            <div class="name">Marcel Mustermann, Dipl.-Ing.</div>
+            <div class="rolle">ö.b.u.v. Sachverständiger</div>
+            <div class="rolle">IHK Köln</div>
+            <div class="stempel">(Rundstempel)</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════
+     TEIL 5 · ANHÄNGE
+     ═══════════════════════════════════════════════════════════ -->
+
+<section class="teil">
+  <div class="teil-header">
+    <div class="teil-nummer">Teil 5</div>
+    <div class="teil-titel">Anhänge</div>
+  </div>
+
+  <div class="abschnitt">
+    <div class="abschnitt-header">
+      <div class="abschnitt-nr">5.1</div>
+      <div class="abschnitt-titel">Verwendete Normen und Regelwerke</div>
+    </div>
+    <div class="abschnitt-body">
+      <div class="normen-liste">
+        
+        <div class="norm-eintrag">
+          <div class="nr">§ 411 Abs. 3 ZPO</div>
+          <div class="titel">Ergänzung des Gutachtens auf Anordnung des Gerichts</div>
+          
+        </div>
+        
+        <div class="norm-eintrag">
+          <div class="nr">§ 407a Abs. 2 ZPO</div>
+          <div class="titel">Unparteilichkeit des Sachverständigen</div>
+          
+        </div>
+        
+        <div class="norm-eintrag">
+          <div class="nr">§ 407a Abs. 3 ZPO</div>
+          <div class="titel">Anzeigepflicht KI-Einsatz</div>
+          
+        </div>
+        
+        <div class="norm-eintrag">
+          <div class="nr">§ 9 Abs. 2–3 IHK-SVO</div>
+          <div class="titel">Sorgfaltspflichten des Sachverständigen</div>
+          
+        </div>
+        
+        <div class="norm-eintrag">
+          <div class="nr">Art. 50 EU AI Act</div>
+          <div class="titel">Transparenzpflichten bei KI-Einsatz</div>
+          
+        </div>
+        
+        <div class="norm-eintrag">
+          <div class="nr">DIN 55699 §4.1.6 (2018-04)</div>
+          <div class="titel">Außenwand-Wärmedämm-Verbundsysteme — Sonderfälle</div>
+          
+        </div>
+        
+        <div class="norm-eintrag">
+          <div class="nr">DIN 4108-2</div>
+          <div class="titel">Wärmeschutz — Mindestanforderungen</div>
+          
+        </div>
+        
+        <div class="norm-eintrag">
+          <div class="nr">DIN EN 13187</div>
+          <div class="titel">Thermografische Untersuchung</div>
+          
+        </div>
+        
+        <div class="norm-eintrag">
+          <div class="nr">DIN 18533-1</div>
+          <div class="titel">Abdichtung erdberührter Bauteile</div>
+          
+        </div>
+        
+        <div class="norm-eintrag">
+          <div class="nr">Erstgutachten GG-2026-003</div>
+          <div class="titel">Eigenes Erstgutachten vom 20.04.2026</div>
+          
+        </div>
+        
+      </div>
+    </div>
+  </div>
+</section>
+
+
+</body>
+</html>
