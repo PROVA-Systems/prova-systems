@@ -1,255 +1,391 @@
 /* ════════════════════════════════════════════════════════════════════
-   PROVA — technische-stellungnahme-logic.js
-   Sprint 04f Hotfix P5f.X2 — Block 6
-   Eigenstaendige Auftragstyp-Page "Technische Stellungnahme"
+   PROVA — technische-stellungnahme-logic.js (ESM)
+   Sprint K-1.3.A2 — Pilot komplett auf Supabase
 
-   STATUS: SKELETON v1 — Backend-Anbindung TODO
-   ─────────────────────────────────────────────────
-   Was funktioniert:
-   - Phase-Wechsel (1 -> 2 -> 3) mit Stepper-Update
-   - Radio-Item-Highlight bei Selection
-   - Frage-Zeichenzaehler
-   - Local-Auto-Save in localStorage 'prova_ts_draft' alle 30s
-   - Datum-Default heute
-   - Aktenzeichen-Generator (lokal: TS-YYYY-NNN)
+   Refactor von Skeleton v1 (Sprint 04f P5f.X2):
+   - Airtable-TODOs ersetzt durch dataStore.auftraege (Supabase)
+   - Edge Function pdf-generate fuer PDF
+   - Edge Function audit-write fuer Audit-Log
+   - lib/auth-guard.js fuer Session-Pflicht
 
-   Was TODO ist (vor Live-Schaltung):
-   - Airtable-Schema TECH_STELLUNGNAHMEN anlegen
-     (Schema-Spec siehe NACHT-PAUSE-2.md)
-   - Tabellen-ID in airtable.js ALLOWED_TABLES whitelisten
-   - airtable-Save-Funktion ueber provaFetch implementieren
-     (provisorisch markiert: TODO_AT_SAVE)
-   - PDFMonkey-Template-ID in PDFMONKEY_TEMPLATE_ID setzen
-   - Kontakte-Dropdown-Integration in Phase 1
-   - Diktat-Button in Phase 2 (whisper-diktat Function)
-   - Normen-Multi-Select in Phase 2 (Normen-DB)
-   - Datei-Upload in Phase 1 (foto-upload-Pattern adaptiert)
-   - Rechnung-Erstellung-Integration (rechnung-pdf Function)
-   - Email-Versand (smtp-senden Function)
+   Pattern:
+     1. Page laedt -> requireWorkspace() -> Workspace-ID
+     2. loadDraft() aus localStorage (UX, falls Browser-Crash vor Server-Save)
+     3. Auto-Save 30s: lokal + (sobald _auftragId existiert) auch Supabase
+     4. tsVersenden -> finalSave + pdf-generate
+   ════════════════════════════════════════════════════════════════════ */
 
-   Warum SKELETON: Block 6 dieser Hotfix-Sprint hat 2h-Aufwand-
-   Limit. Volle Backend-Anbindung waere 4-6h zusaetzlich.
-   Marcel kann sofort die UI testen, Auto-Save sammelt Eingaben
-   in localStorage. Backend-Migration in separatem Sprint.
-═══════════════════════════════════════════════════════════════════ */
+import { dataStore } from '/lib/data-store.js';
+import { supabase, getCurrentSession } from '/lib/supabase-client.js';
+import { requireWorkspace, bindLogoutButtons, watchAuthState } from '/lib/auth-guard.js';
 
-(function () {
-  'use strict';
+const DRAFT_KEY = 'prova_ts_draft_v1';
+const AUTO_SAVE_MS = 30000;
+const AUFTRAG_TYP = 'kurzstellungnahme';      // ENUM-Wert; AZ-Pattern bleibt TS-
 
-  // TODO_AT_SAVE: Sobald Airtable-Tabelle live, hier ID setzen
-  var TBL_TECH_STELLUNGNAHMEN = ''; // 'tblXXXXXXXXX' nach Marcel-Setup
-  var PDFMONKEY_TEMPLATE_ID = '';   // nach Marcel-Setup
+let _phase = 1;
+let _autoSaveTimer = null;
+let _workspaceId = null;
+let _userId = null;
+let _auftragId = null;       // gesetzt nach erstem Server-Save
+let _isDirty = false;
 
-  var DRAFT_KEY = 'prova_ts_draft_v1';
-  var AUTO_SAVE_MS = 30000;
+// ─── DOM-Helpers ──────────────────────────────────────────────
+function getVal(id) { const el = document.getElementById(id); return el ? el.value : ''; }
+function setVal(id, v) { const el = document.getElementById(id); if (el && v != null) el.value = v; }
 
-  var _phase = 1;
-  var _autoSaveTimer = null;
-
-  /* ── Phasen-Navigation ──────────────────────────────────── */
-  function updateStepper() {
-    [1, 2, 3].forEach(function (n) {
-      var el = document.getElementById('ts-step-' + n);
-      if (!el) return;
-      el.classList.remove('active', 'done');
-      if (n < _phase) el.classList.add('done');
-      else if (n === _phase) el.classList.add('active');
+// ─── Phasen-Navigation ────────────────────────────────────────
+function updateStepper() {
+    [1, 2, 3].forEach((n) => {
+        const el = document.getElementById('ts-step-' + n);
+        if (!el) return;
+        el.classList.remove('active', 'done');
+        if (n < _phase) el.classList.add('done');
+        else if (n === _phase) el.classList.add('active');
     });
-  }
+}
 
-  function showPhase(n) {
-    [1, 2, 3].forEach(function (i) {
-      var p = document.getElementById('ts-phase-' + i);
-      if (p) p.classList.toggle('active', i === n);
+function showPhase(n) {
+    [1, 2, 3].forEach((i) => {
+        const p = document.getElementById('ts-phase-' + i);
+        if (p) p.classList.toggle('active', i === n);
     });
-    var back = document.getElementById('ts-back-btn');
-    var next = document.getElementById('ts-next-btn');
+    const back = document.getElementById('ts-back-btn');
+    const next = document.getElementById('ts-next-btn');
     if (back) back.style.display = (n > 1) ? '' : 'none';
     if (next) next.textContent = (n < 3) ? 'Weiter →' : 'Versenden →';
     _phase = n;
     updateStepper();
-    try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch (e) {}
-  }
+    try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch { /* */ }
 
-  window.tsGoTo = function (n) {
+    // Phase-Wechsel auch in Supabase speichern (falls Auftrag schon existiert)
+    if (_auftragId) saveToSupabase({ phase_aktuell: n });
+}
+
+window.tsGoTo = function (n) {
     if (n < 1 || n > 3) return;
     if (!validateUpTo(n - 1)) return;
     showPhase(n);
-  };
-  window.tsNext = function () {
+};
+window.tsNext = function () {
     if (_phase >= 3) return tsVersenden();
     if (!validatePhase(_phase)) return;
     showPhase(_phase + 1);
-  };
-  window.tsBack = function () { if (_phase > 1) showPhase(_phase - 1); };
+};
+window.tsBack = function () { if (_phase > 1) showPhase(_phase - 1); };
 
-  function validatePhase(n) {
+function validatePhase(n) {
     if (n === 1) {
-      var datum = document.getElementById('ts-datum');
-      var frage = document.getElementById('ts-frage');
-      var artChecked = document.querySelector('input[name="ts-art"]:checked');
-      var missing = [];
-      if (datum && !datum.value) missing.push('Datum');
-      if (!artChecked) missing.push('Art der Anfrage');
-      if (frage && !frage.value.trim()) missing.push('Konkrete Frage');
-      if (missing.length) {
-        alert('Bitte ausfuellen: ' + missing.join(', '));
-        return false;
-      }
+        const datum = document.getElementById('ts-datum');
+        const frage = document.getElementById('ts-frage');
+        const artChecked = document.querySelector('input[name="ts-art"]:checked');
+        const missing = [];
+        if (datum && !datum.value) missing.push('Datum');
+        if (!artChecked) missing.push('Art der Anfrage');
+        if (frage && !frage.value.trim()) missing.push('Konkrete Frage');
+        if (missing.length) {
+            alert('Bitte ausfüllen: ' + missing.join(', '));
+            return false;
+        }
     } else if (n === 2) {
-      var antwort = document.getElementById('ts-antwort');
-      if (antwort && !antwort.value.trim()) {
-        alert('Antwort auf konkrete Frage ist Pflichtfeld.');
-        return false;
-      }
+        const antwort = document.getElementById('ts-antwort');
+        if (antwort && !antwort.value.trim()) {
+            alert('Antwort auf konkrete Frage ist Pflichtfeld.');
+            return false;
+        }
     }
     return true;
-  }
-  function validateUpTo(n) {
-    for (var i = 1; i <= n; i++) {
-      if (!validatePhase(i)) return false;
-    }
+}
+function validateUpTo(n) {
+    for (let i = 1; i <= n; i++) if (!validatePhase(i)) return false;
     return true;
-  }
+}
 
-  /* ── Aktenzeichen-Generator ─────────────────────────────── */
-  function generateAz() {
-    var year = new Date().getFullYear();
-    var lastNum = parseInt(localStorage.getItem('prova_ts_last_num') || '0', 10);
-    var next = lastNum + 1;
+// ─── AZ-Generator ─────────────────────────────────────────────
+function generateAz() {
+    const year = new Date().getFullYear();
+    const lastNum = parseInt(localStorage.getItem('prova_ts_last_num') || '0', 10);
+    const next = lastNum + 1;
     localStorage.setItem('prova_ts_last_num', String(next));
     return 'TS-' + year + '-' + String(next).padStart(3, '0');
-  }
+}
 
-  /* ── Auto-Save (localStorage only — TODO Backend) ───────── */
-  function gatherDraft() {
+// ─── Draft-Gathering ──────────────────────────────────────────
+function gatherDraft() {
     return {
-      ts: Date.now(),
-      phase: _phase,
-      az: getVal('ts-az'),
-      datum: getVal('ts-datum'),
-      auftraggeber_name: getVal('ts-auftraggeber-name'),
-      auftraggeber_email: getVal('ts-auftraggeber-email'),
-      auftraggeber_adresse: getVal('ts-auftraggeber-adresse'),
-      art: (document.querySelector('input[name="ts-art"]:checked') || {}).value || '',
-      frage: getVal('ts-frage'),
-      sachverhalt: getVal('ts-sachverhalt'),
-      bewertung: getVal('ts-bewertung'),
-      antwort: getVal('ts-antwort'),
-      normen: getVal('ts-normen'),
-      honorar: getVal('ts-honorar'),
-      honorar_typ: getVal('ts-honorar-typ')
+        ts: Date.now(),
+        phase: _phase,
+        az: getVal('ts-az'),
+        datum: getVal('ts-datum'),
+        auftraggeber_name: getVal('ts-auftraggeber-name'),
+        auftraggeber_email: getVal('ts-auftraggeber-email'),
+        auftraggeber_adresse: getVal('ts-auftraggeber-adresse'),
+        art: (document.querySelector('input[name="ts-art"]:checked') || {}).value || '',
+        frage: getVal('ts-frage'),
+        sachverhalt: getVal('ts-sachverhalt'),
+        bewertung: getVal('ts-bewertung'),
+        antwort: getVal('ts-antwort'),
+        normen: getVal('ts-normen'),
+        honorar: getVal('ts-honorar'),
+        honorar_typ: getVal('ts-honorar-typ')
     };
-  }
-  function getVal(id) { var el = document.getElementById(id); return el ? el.value : ''; }
-  function setVal(id, v) { var el = document.getElementById(id); if (el && v != null) el.value = v; }
+}
 
-  function autoSave() {
-    var draft = gatherDraft();
-    try { localStorage.setItem(DRAFT_KEY, JSON.stringify(draft)); } catch (e) {}
-  }
-  function loadDraft() {
+function draftToAuftragRow(d) {
+    return {
+        typ: AUFTRAG_TYP,
+        az: d.az || generateAz(),
+        status: 'entwurf',
+        zweck: 'privat',
+        phase_aktuell: d.phase || 1,
+        phase_max: 3,
+        titel: 'Technische Stellungnahme',
+        fragestellung: d.frage,
+        auftragsdatum: d.datum || null,
+        objekt: {
+            adresse: d.auftraggeber_adresse,
+            land: 'DE'
+        },
+        details: {
+            art: d.art,
+            sachverhalt: d.sachverhalt,
+            bewertung: d.bewertung,
+            antwort: d.antwort,
+            normen: d.normen,
+            honorar: d.honorar,
+            honorar_typ: d.honorar_typ,
+            auftraggeber: {
+                name: d.auftraggeber_name,
+                email: d.auftraggeber_email,
+                adresse: d.auftraggeber_adresse
+            }
+        }
+    };
+}
+
+// ─── Auto-Save (lokal + Supabase) ─────────────────────────────
+function autoSaveLocal() {
+    try { localStorage.setItem(DRAFT_KEY, JSON.stringify(gatherDraft())); } catch { /* */ }
+}
+
+async function saveToSupabase(partial) {
+    if (!_workspaceId) return;
     try {
-      var raw = localStorage.getItem(DRAFT_KEY);
-      if (!raw) return;
-      var d = JSON.parse(raw);
-      if (!d) return;
-      setVal('ts-az', d.az || '');
-      setVal('ts-datum', d.datum || '');
-      setVal('ts-auftraggeber-name', d.auftraggeber_name || '');
-      setVal('ts-auftraggeber-email', d.auftraggeber_email || '');
-      setVal('ts-auftraggeber-adresse', d.auftraggeber_adresse || '');
-      if (d.art) {
-        var radio = document.querySelector('input[name="ts-art"][value="' + d.art + '"]');
-        if (radio) { radio.checked = true; updateRadioHighlight(); }
-      }
-      setVal('ts-frage', d.frage || '');
-      setVal('ts-sachverhalt', d.sachverhalt || '');
-      setVal('ts-bewertung', d.bewertung || '');
-      setVal('ts-antwort', d.antwort || '');
-      setVal('ts-normen', d.normen || '');
-      setVal('ts-honorar', d.honorar || '');
-      setVal('ts-honorar-typ', d.honorar_typ || 'pauschal');
-      updateFrageCounter();
-    } catch (e) {}
-  }
-
-  window.tsSpeichern = function () {
-    autoSave();
-    // TODO_AT_SAVE: Spaeter Airtable-Persistierung hier ergaenzen.
-    var saved = document.getElementById('ts-saved-toast');
-    if (!saved) {
-      saved = document.createElement('div');
-      saved.id = 'ts-saved-toast';
-      saved.style.cssText = 'position:fixed;bottom:30px;right:30px;background:var(--success);color:#fff;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:600;z-index:9999;box-shadow:0 4px 16px rgba(16,185,129,.4);';
-      document.body.appendChild(saved);
+        if (!_auftragId) {
+            const draft = gatherDraft();
+            const row = draftToAuftragRow(draft);
+            const { data, error } = await dataStore.auftraege.create(row);
+            if (error) { console.warn('TS create:', error); return; }
+            _auftragId = data.id;
+            await dataStore.auditLog('create', 'auftrag', _auftragId, { typ: AUFTRAG_TYP, source: 'ts-pilot' });
+        } else {
+            const updates = partial || draftToAuftragRow(gatherDraft());
+            // Trigger updated_at, partial-update OK
+            await dataStore.auftraege.update(_auftragId, updates);
+        }
+        _isDirty = false;
+        flashSaveBadge('☁ Supabase-Save');
+    } catch (e) {
+        console.error('TS saveToSupabase:', e);
     }
-    saved.textContent = '💾 Entwurf gespeichert (lokal)';
+}
+
+async function autoSave() {
+    autoSaveLocal();
+    if (_isDirty && _workspaceId) {
+        await saveToSupabase();
+    }
+}
+
+function loadDraft() {
+    try {
+        const raw = localStorage.getItem(DRAFT_KEY);
+        if (!raw) return;
+        const d = JSON.parse(raw);
+        if (!d) return;
+        setVal('ts-az', d.az || '');
+        setVal('ts-datum', d.datum || '');
+        setVal('ts-auftraggeber-name', d.auftraggeber_name || '');
+        setVal('ts-auftraggeber-email', d.auftraggeber_email || '');
+        setVal('ts-auftraggeber-adresse', d.auftraggeber_adresse || '');
+        if (d.art) {
+            const radio = document.querySelector('input[name="ts-art"][value="' + d.art + '"]');
+            if (radio) { radio.checked = true; updateRadioHighlight(); }
+        }
+        setVal('ts-frage', d.frage || '');
+        setVal('ts-sachverhalt', d.sachverhalt || '');
+        setVal('ts-bewertung', d.bewertung || '');
+        setVal('ts-antwort', d.antwort || '');
+        setVal('ts-normen', d.normen || '');
+        setVal('ts-honorar', d.honorar || '');
+        setVal('ts-honorar-typ', d.honorar_typ || 'pauschal');
+        updateFrageCounter();
+    } catch { /* */ }
+}
+
+function flashSaveBadge(text) {
+    let saved = document.getElementById('ts-saved-toast');
+    if (!saved) {
+        saved = document.createElement('div');
+        saved.id = 'ts-saved-toast';
+        saved.style.cssText = 'position:fixed;bottom:30px;right:30px;background:var(--success);color:#fff;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:600;z-index:9999;box-shadow:0 4px 16px rgba(16,185,129,.4);';
+        document.body.appendChild(saved);
+    }
+    saved.textContent = text;
     saved.style.display = 'block';
-    setTimeout(function () { if (saved) saved.style.display = 'none'; }, 2400);
-  };
+    setTimeout(() => { if (saved) saved.style.display = 'none'; }, 2400);
+}
 
-  function tsVersenden() {
+window.tsSpeichern = async function () {
+    autoSaveLocal();
+    if (_workspaceId) {
+        await saveToSupabase();
+    } else {
+        flashSaveBadge('💾 Lokal gespeichert');
+    }
+};
+
+// ─── Versenden / Final-Save + PDF ─────────────────────────────
+async function tsVersenden() {
     if (!validatePhase(2)) return;
-    // TODO_AT_SAVE: Airtable-Save + PDFMonkey-Trigger + Versand
-    alert(
-      '⚠ Versand-Backend noch nicht angebunden.\n\n' +
-      'Marcel-TODO:\n' +
-      '1. TECH_STELLUNGNAHMEN-Tabelle in Airtable anlegen (Schema in NACHT-PAUSE-2.md)\n' +
-      '2. PDFMonkey-Template "TECHNISCHE_STELLUNGNAHME" anlegen\n' +
-      '3. airtable.js ALLOWED_TABLES um die neue Tabelle erweitern\n' +
-      '4. In technische-stellungnahme-logic.js die TODO_AT_SAVE-Markierungen befuellen\n\n' +
-      'Entwurf liegt in localStorage — geht nicht verloren.'
-    );
-  }
 
-  /* ── Radio-Item-Highlight ───────────────────────────────── */
-  function updateRadioHighlight() {
-    document.querySelectorAll('.ts-radio-item').forEach(function (el) {
-      var inp = el.querySelector('input[type=radio]');
-      el.classList.toggle('checked', !!(inp && inp.checked));
+    // Sicherstellen dass Auftrag in Supabase steht
+    await saveToSupabase({
+        ...draftToAuftragRow(gatherDraft()),
+        status: 'aktiv',
+        phase_aktuell: 3,
+        gutachtendatum: new Date().toISOString().slice(0, 10)
     });
-  }
 
-  /* ── Frage-Zeichenzaehler ───────────────────────────────── */
-  function updateFrageCounter() {
-    var inp = document.getElementById('ts-frage');
-    var cnt = document.getElementById('ts-frage-count');
+    if (!_auftragId) {
+        alert('Speichern fehlgeschlagen — bitte später erneut versuchen.');
+        return;
+    }
+
+    // PDF generieren via Edge Function
+    flashSaveBadge('📄 PDF wird generiert…');
+    try {
+        const session = await getCurrentSession();
+        const url = `${window.PROVA_CONFIG.SUPABASE_URL}/functions/v1/pdf-generate`;
+        const draft = gatherDraft();
+        const resp = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${session?.access_token ?? ''}`,
+                'apikey': window.PROVA_CONFIG.SUPABASE_ANON_KEY,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                template_key: 'kurzstellungnahme',
+                payload: {
+                    az: draft.az,
+                    datum: draft.datum,
+                    empfaenger_name: draft.auftraggeber_name,
+                    empfaenger_email: draft.auftraggeber_email,
+                    empfaenger_adresse: draft.auftraggeber_adresse,
+                    art: draft.art,
+                    frage: draft.frage,
+                    sachverhalt: draft.sachverhalt,
+                    bewertung: draft.bewertung,
+                    antwort: draft.antwort,
+                    normen: draft.normen
+                },
+                auftrag_id: _auftragId,
+                typ: 'kurzstellungnahme_pdf',
+                betreff: 'Technische Stellungnahme · ' + draft.az
+            })
+        });
+        const json = await resp.json();
+        if (!resp.ok) {
+            alert('PDF-Generation Fehler: ' + (json.error || resp.status));
+            return;
+        }
+
+        // Audit
+        await dataStore.auditLog('pdf_generate', 'dokument', json.dokument_id, {
+            template_key: 'kurzstellungnahme',
+            auftrag_id: _auftragId
+        });
+
+        flashSaveBadge('✓ PDF fertig');
+        // Redirect zur Akte
+        setTimeout(() => {
+            window.location.href = '/akte.html?id=' + _auftragId + '&pdf=' + encodeURIComponent(json.pdf_url || '');
+        }, 1200);
+    } catch (e) {
+        console.error('PDF-Generation:', e);
+        alert('PDF-Generation Fehler: ' + e.message);
+    }
+}
+
+// ─── Radio-Item-Highlight ─────────────────────────────────────
+function updateRadioHighlight() {
+    document.querySelectorAll('.ts-radio-item').forEach((el) => {
+        const inp = el.querySelector('input[type=radio]');
+        el.classList.toggle('checked', !!(inp && inp.checked));
+    });
+}
+
+// ─── Frage-Zeichenzaehler ─────────────────────────────────────
+function updateFrageCounter() {
+    const inp = document.getElementById('ts-frage');
+    const cnt = document.getElementById('ts-frage-count');
     if (inp && cnt) cnt.textContent = String(inp.value.length);
-  }
+}
 
-  /* ── Init ───────────────────────────────────────────────── */
-  function init() {
-    // Datum-Default heute
-    var datum = document.getElementById('ts-datum');
+// ─── Init ─────────────────────────────────────────────────────
+async function init() {
+    // 1. Auth + Workspace
+    try {
+        const ctx = await requireWorkspace();
+        _workspaceId = ctx.workspaceId;
+        _userId = ctx.user.id;
+    } catch (e) {
+        console.error('Auth:', e);
+        return;
+    }
+
+    // 2. UI-Defaults
+    const datum = document.getElementById('ts-datum');
     if (datum && !datum.value) datum.value = new Date().toISOString().slice(0, 10);
 
-    // Aktenzeichen erstmalig generieren wenn leer
-    var az = document.getElementById('ts-az');
+    const az = document.getElementById('ts-az');
     if (az && !az.value) az.value = generateAz();
 
-    // Draft restore
+    // 3. Draft restore
     loadDraft();
 
-    // Frage-Counter
-    var frage = document.getElementById('ts-frage');
-    if (frage) frage.addEventListener('input', updateFrageCounter);
+    // 4. TODO-Banner verstecken (Backend ist jetzt da)
+    const banner = document.getElementById('ts-todo');
+    if (banner) banner.style.display = 'none';
 
-    // Radio-Highlights
-    document.querySelectorAll('input[name="ts-art"]').forEach(function (r) {
-      r.addEventListener('change', updateRadioHighlight);
+    // 5. Frage-Counter
+    const frage = document.getElementById('ts-frage');
+    if (frage) frage.addEventListener('input', () => { updateFrageCounter(); _isDirty = true; });
+
+    // 6. Radio-Highlights
+    document.querySelectorAll('input[name="ts-art"]').forEach((r) => {
+        r.addEventListener('change', () => { updateRadioHighlight(); _isDirty = true; });
     });
     updateRadioHighlight();
 
-    // Auto-Save Timer
+    // 7. Generic dirty-tracking
+    document.querySelectorAll('.ts-input, .ts-textarea, .ts-select').forEach((el) => {
+        el.addEventListener('input', () => { _isDirty = true; });
+    });
+
+    // 8. Auto-Save Timer
     if (_autoSaveTimer) clearInterval(_autoSaveTimer);
     _autoSaveTimer = setInterval(autoSave, AUTO_SAVE_MS);
-    window.addEventListener('beforeunload', autoSave);
+    window.addEventListener('beforeunload', autoSaveLocal);
 
-    // Stepper init
+    // 9. Stepper init
     updateStepper();
-  }
 
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
-  else init();
-})();
+    // 10. Auth-Watcher (Multi-Tab-Logout)
+    watchAuthState();
+    bindLogoutButtons();
+}
+
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+else init();
