@@ -5,12 +5,14 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v226';
+const CACHE_VERSION = 'prova-v227';   // K-1.5 Cutover-Vorb (Supabase-Lib im APP_SHELL)
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
   '/',
   '/app-login.html',
+  '/auth-supabase.html',                // K-1.4 B12: Supabase-Login parallel
+  '/onboarding-supabase.html',          // K-1.3 A6: Workspace-Onboarding
   '/app-register.html',
   '/onboarding.html',
   '/onboarding-schnellstart.html',
@@ -32,11 +34,20 @@ const APP_SHELL = [
   '/positionen.html',
   '/baubegleitung.html',
   '/nav.js',
+  // K-1.0 + K-1.3 lib-Stack (Supabase-Foundation)
+  '/lib/prova-config.js',
+  '/lib/supabase-client.js',
+  '/lib/data-store.js',
+  '/lib/template-registry.js',
+  '/lib/auth-guard.js',
+  // Legacy auth (Hybrid-Modus, bleibt bis Cutover-Phase 5 cleanup)
   '/prova-fetch-auth.js',
   '/prova-notifications.js',
   '/page-template.css',
   '/technische-stellungnahme.html',
   '/technische-stellungnahme-logic.js',
+  '/onboarding-supabase-logic.js',
+  '/auth-supabase-logic.js',
   '/app-login-logic.js',
   '/auftragstyp.js',
   '/diktat-parser.js',
