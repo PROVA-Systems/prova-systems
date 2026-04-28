@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v234';   // K-1.5 Cutover-Vorb (Supabase-Lib im APP_SHELL)
+const CACHE_VERSION = 'prova-v235';   // Mega-Sprint #4 Audit+Cleanup (TS->GS Drift gefixt)
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
