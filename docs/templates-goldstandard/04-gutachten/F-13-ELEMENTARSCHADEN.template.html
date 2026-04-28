@@ -1,0 +1,1006 @@
+﻿<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>ES-2026-018 — Lindenstraße 27, 48149 Münster</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════════════════════════
+   PROVA Systems · KURZGUTACHTEN (Flow A) v1.0
+   Master-Schablone für Schadensgutachten (F-09, auch Basis F-07,
+   F-10, F-11, F-12, F-13, F-14, F-17, F-18)
+   Design-System v1.0 · 10.5pt Body · IHK-SVO § 9 Abs. 3
+   EU AI Act Art. 50 · § 407a Abs. 2+3 ZPO · DSGVO
+   ═══════════════════════════════════════════════════════════════ */
+
+:root {
+  --primary: #1a3a6b;
+  --accent:  #3b82f6;
+  --muted:   #64748b;
+  --text:    #0f172a;
+  --light:   #f1f5f9;
+  --lighter: #f8fafc;
+  --border:  #e2e8f0;
+  --success: #059669;
+  --warning: #d97706;
+  --danger:  #dc2626;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+  font-size: 10.5pt;
+  line-height: 1.55;
+  color: var(--text);
+  background: white;
+}
+
+@page { size: A4; margin: 20mm 20mm 22mm 20mm; }
+
+@page {
+  @top-left {
+    content: "Marcel Mustermann · ö.b.u.v. Sachverständiger";
+    font-family: 'Inter', sans-serif; font-size: 8pt; color: #64748b; padding-top: 10mm;
+  }
+  @top-right {
+    content: "Elementarschadengutachten ES-2026-018";
+    font-family: 'Inter', sans-serif; font-size: 8pt; color: #1a3a6b; font-weight: 600; padding-top: 10mm;
+  }
+  @bottom-left {
+    content: "Gutachten-Nr.: ES-2026-018";
+    font-family: 'Inter', sans-serif; font-size: 8pt; color: #64748b; padding-bottom: 10mm;
+  }
+  @bottom-right {
+    content: "Seite " counter(page) " / " counter(pages);
+    font-family: 'Inter', sans-serif; font-size: 8pt; color: #64748b; padding-bottom: 10mm;
+  }
+}
+
+@page :first {
+  @top-left { content: ""; } @top-right { content: ""; }
+  @bottom-left { content: ""; } @bottom-right { content: ""; }
+}
+
+/* ═══ DECKBLATT ═══ */
+.deckblatt { page-break-after: always; min-height: 257mm; display: flex; flex-direction: column; }
+
+.deckblatt-header { padding-bottom: 18mm; border-bottom: 2px solid var(--primary); }
+.deckblatt-kategorie { font-size: 9.5pt; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); font-weight: 500; margin-bottom: 8mm; }
+.deckblatt-titel { font-size: 30pt; font-weight: 700; line-height: 1.15; color: var(--primary); margin-bottom: 4mm; letter-spacing: -0.02em; }
+.deckblatt-subtitel { font-size: 13pt; color: var(--muted); font-weight: 400; margin-bottom: 6mm; }
+.deckblatt-badge { display: inline-block; padding: 4px 12px; background: var(--light); color: var(--primary); border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 11pt; font-weight: 500; border: 1px solid var(--border); }
+
+.deckblatt-objekt { margin-top: 18mm; padding: 10mm; background: var(--lighter); border-left: 3px solid var(--accent); border-radius: 2px; }
+.deckblatt-objekt-label { font-size: 8pt; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 3mm; font-weight: 500; }
+.deckblatt-objekt-adresse { font-size: 15pt; font-weight: 600; color: var(--text); line-height: 1.35; margin-bottom: 2mm; }
+.deckblatt-objekt-typ { font-size: 11pt; color: var(--muted); }
+
+.deckblatt-sv { margin-top: 12mm; padding: 8mm 10mm; background: white; border: 1px solid var(--border); border-radius: 3px; }
+.deckblatt-sv-label { font-size: 8pt; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); font-weight: 500; margin-bottom: 3mm; }
+.deckblatt-sv-name { font-size: 13pt; font-weight: 600; color: var(--text); margin-bottom: 1.5mm; }
+.deckblatt-sv-qualifikation { font-size: 10.5pt; color: var(--primary); font-weight: 500; margin-bottom: 1.5mm; }
+.deckblatt-sv-bestellung { font-size: 9.5pt; color: var(--muted); line-height: 1.5; margin-bottom: 2mm; font-style: italic; }
+.deckblatt-sv-kontakt { font-size: 9.5pt; color: var(--text); line-height: 1.6; }
+.deckblatt-sv-kontakt .mono { font-family: 'JetBrains Mono', monospace; font-size: 9pt; }
+
+.deckblatt-metadaten { margin-top: auto; padding-top: 10mm; display: grid; grid-template-columns: repeat(2, 1fr); gap: 6mm 15mm; }
+.deckblatt-meta-item .label { font-size: 8pt; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); font-weight: 500; margin-bottom: 1mm; }
+.deckblatt-meta-item .value { font-size: 11pt; color: var(--text); font-weight: 500; }
+.deckblatt-meta-item .value.mono { font-family: 'JetBrains Mono', monospace; font-size: 10pt; }
+
+.deckblatt-footer { margin-top: 10mm; padding-top: 6mm; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: flex-end; font-size: 8.5pt; color: var(--muted); }
+.deckblatt-footer .umfang-info { font-size: 8.5pt; line-height: 1.5; }
+.deckblatt-footer .brand-right { text-align: right; font-size: 8pt; letter-spacing: 0.05em; }
+.deckblatt-footer .brand-right .bold { font-weight: 600; color: var(--primary); font-size: 9.5pt; letter-spacing: 0.08em; }
+
+/* ═══ INHALTSSEITEN ═══ */
+.teil { margin-bottom: 14mm; page-break-inside: avoid; }
+
+.teil-header { display: flex; align-items: baseline; gap: 10mm; margin-bottom: 8mm; padding-bottom: 4mm; border-bottom: 2px solid var(--primary); }
+.teil-nummer { font-family: 'JetBrains Mono', monospace; font-size: 11pt; font-weight: 500; color: var(--accent); letter-spacing: 0.1em; text-transform: uppercase; flex-shrink: 0; padding-top: 1mm; }
+.teil-titel { font-size: 18pt; font-weight: 600; color: var(--primary); letter-spacing: -0.015em; }
+
+.abschnitt { margin-bottom: 8mm; }
+.abschnitt-header { display: flex; align-items: baseline; gap: 6mm; margin-bottom: 4mm; padding-bottom: 2mm; border-bottom: 1px solid var(--border); }
+.abschnitt-nr { font-family: 'JetBrains Mono', monospace; font-size: 11.5pt; font-weight: 500; color: var(--muted); flex-shrink: 0; }
+.abschnitt-titel { font-size: 13pt; font-weight: 600; color: var(--text); letter-spacing: -0.01em; }
+.abschnitt-body { font-size: 10.5pt; line-height: 1.65; color: var(--text); }
+.abschnitt-body p { margin-bottom: 3mm; }
+
+.info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2mm 8mm; margin: 4mm 0; padding: 5mm 6mm; background: var(--lighter); border-radius: 3px; border: 1px solid var(--border); }
+.info-item { display: flex; flex-direction: column; gap: 0.5mm; padding: 1.5mm 0; }
+.info-item .label { font-size: 8pt; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 500; }
+.info-item .value { font-size: 10.5pt; color: var(--text); font-weight: 500; }
+.info-item .value.mono { font-family: 'JetBrains Mono', monospace; font-size: 10pt; }
+
+.beweisfrage { margin: 4mm 0; padding: 5mm 7mm; background: var(--lighter); border-left: 3px solid var(--primary); border-radius: 2px; font-size: 11pt; line-height: 1.6; }
+.beweisfrage .label { font-size: 8.5pt; letter-spacing: 0.1em; text-transform: uppercase; color: var(--primary); font-weight: 600; margin-bottom: 2mm; }
+
+/* Befund-Karte (Schaden-spezifisch) */
+.befund-karte { margin: 4mm 0; padding: 5mm 6mm; background: var(--lighter); border: 1px solid var(--border); border-left: 3px solid var(--accent); border-radius: 2px; }
+.befund-karte .nr { font-family: 'JetBrains Mono', monospace; font-size: 9pt; color: var(--accent); font-weight: 500; margin-bottom: 1mm; }
+.befund-karte .titel { font-size: 11pt; font-weight: 600; color: var(--primary); margin-bottom: 2mm; }
+.befund-karte .text { font-size: 10.5pt; line-height: 1.6; color: var(--text); }
+.befund-karte .norm { margin-top: 2mm; font-size: 9pt; color: var(--muted); font-style: italic; }
+
+/* Ursachenhypothesen (Flow A spezifisch) */
+.hypothese { margin: 3mm 0; padding: 4mm 5mm; background: white; border: 1px solid var(--border); border-radius: 3px; }
+.hypothese.primaer { border-left: 3px solid var(--primary); }
+.hypothese.alternativ { border-left: 3px solid var(--muted); }
+.hypothese-kopf { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 2mm; }
+.hypothese-titel { font-size: 11pt; font-weight: 600; color: var(--primary); }
+.hypothese-wahrscheinlichkeit { font-size: 9pt; color: var(--muted); font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; }
+
+/* Messwerte-Tabelle */
+.messwerte { width: 100%; border-collapse: collapse; margin: 4mm 0; font-size: 10pt; }
+.messwerte th, .messwerte td { padding: 2.5mm 4mm; text-align: left; border-bottom: 1px solid var(--border); }
+.messwerte th { background: var(--light); color: var(--muted); font-weight: 500; font-size: 9pt; letter-spacing: 0.08em; text-transform: uppercase; border-bottom: 2px solid var(--border); }
+.messwerte td.number { text-align: right; font-family: 'JetBrains Mono', monospace; font-size: 10pt; }
+.messwerte tr:nth-child(even) { background: var(--lighter); }
+
+/* Sanierung-Tabelle */
+.sanierung-tabelle { width: 100%; border-collapse: collapse; margin: 4mm 0; font-size: 10pt; }
+.sanierung-tabelle th, .sanierung-tabelle td { padding: 2.5mm 4mm; text-align: left; border-bottom: 1px solid var(--border); }
+.sanierung-tabelle th { background: var(--light); color: var(--muted); font-weight: 500; font-size: 9pt; letter-spacing: 0.08em; text-transform: uppercase; border-bottom: 2px solid var(--border); }
+.sanierung-tabelle td.number { text-align: right; font-family: 'JetBrains Mono', monospace; font-size: 10pt; }
+.sanierung-tabelle tr:nth-child(even) { background: var(--lighter); }
+.sanierung-tabelle tr.summary { background: var(--light) !important; font-weight: 600; border-top: 2px solid var(--primary); }
+.sanierung-tabelle tr.summary td { padding: 3mm 4mm; }
+
+/* Kostenrahmen-Card (Hauptergebnis Flow A) */
+.kosten-card {
+  margin: 6mm 0; padding: 8mm;
+  background: linear-gradient(135deg, var(--primary) 0%, #2a4a7b 100%);
+  color: white; border-radius: 4px; position: relative; overflow: hidden;
+}
+.kosten-card::before {
+  content: ''; position: absolute; top: 0; right: 0;
+  width: 40mm; height: 40mm;
+  background: radial-gradient(circle at top right, rgba(59, 130, 246, 0.3), transparent 70%);
+}
+.kosten-card-label { font-size: 9.5pt; letter-spacing: 0.12em; text-transform: uppercase; opacity: 0.85; margin-bottom: 2mm; font-weight: 500; }
+.kosten-card-value { font-size: 26pt; font-weight: 700; letter-spacing: -0.02em; line-height: 1.1; }
+.kosten-card-note { font-size: 9pt; opacity: 0.85; margin-top: 3mm; font-weight: 400; }
+
+/* SV-Fachurteil-Kasten (3.4 — KI-FREI) */
+.fachurteil-kasten { margin: 5mm 0; padding: 6mm 8mm; background: white; border: 2px solid var(--primary); border-radius: 4px; }
+.fachurteil-kasten .marker { display: inline-block; padding: 1.5mm 4mm; background: var(--primary); color: white; font-size: 8.5pt; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 600; border-radius: 2px; margin-bottom: 4mm; }
+.fachurteil-kasten .intro { font-size: 9.5pt; color: var(--muted); font-style: italic; margin-bottom: 4mm; line-height: 1.55; padding-bottom: 3mm; border-bottom: 1px solid var(--border); }
+.fachurteil-kasten .text { font-size: 11pt; line-height: 1.7; color: var(--text); }
+.fachurteil-kasten .text p { margin-bottom: 3mm; }
+
+/* Normen-Liste */
+.normen-liste { display: grid; gap: 2mm; margin: 4mm 0; }
+.norm-eintrag { padding: 3mm 4mm; background: var(--lighter); border-left: 2px solid var(--accent); border-radius: 2px; }
+.norm-eintrag .nr { font-family: 'JetBrains Mono', monospace; font-size: 10pt; font-weight: 500; color: var(--primary); margin-bottom: 0.5mm; }
+.norm-eintrag .titel { font-size: 10pt; color: var(--text); margin-bottom: 0.5mm; }
+.norm-eintrag .gw { font-size: 9pt; color: var(--muted); line-height: 1.4; }
+
+/* § 407a + DSGVO Erklärungs-Kasten */
+.erklaerung-kasten { margin: 4mm 0; padding: 5mm 7mm; background: var(--lighter); border-left: 3px solid var(--success); border-radius: 2px; font-size: 10.5pt; line-height: 1.65; }
+.erklaerung-kasten .marker { display: inline-block; padding: 1.2mm 3mm; background: var(--success); color: white; font-size: 8pt; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 600; border-radius: 2px; margin-bottom: 3mm; }
+
+.hinweis-box { margin: 4mm 0; padding: 4mm 5mm; background: var(--lighter); border: 1px solid var(--border); border-radius: 3px; font-size: 9.5pt; line-height: 1.6; color: var(--muted); }
+.hinweis-box strong { color: var(--primary); }
+
+/* Unterschriftsbereich */
+.unterschrift-block { margin-top: 12mm; padding-top: 6mm; border-top: 1px solid var(--border); }
+.unterschrift-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15mm; }
+.unterschrift-feld { border-top: 1px solid var(--text); padding-top: 2mm; font-size: 9.5pt; color: var(--muted); }
+.unterschrift-feld .name { font-size: 11pt; color: var(--text); font-weight: 600; margin-top: 1mm; }
+.unterschrift-feld .rolle { font-size: 9pt; color: var(--muted); margin-top: 0.5mm; }
+.unterschrift-feld .stempel { font-size: 8.5pt; color: var(--muted); margin-top: 4mm; font-style: italic; }
+
+/* §§-Referenzen inline */
+.law-ref { font-family: 'JetBrains Mono', monospace; font-size: 0.92em; color: var(--primary); font-weight: 500; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════
+     TEIL 1 · DECKBLATT + ALLGEMEINE ANGABEN + AUFGABENSTELLUNG
+     ═══════════════════════════════════════════════════════════ -->
+<section class="deckblatt">
+  <div class="deckblatt-header">
+    <div class="deckblatt-kategorie">Versicherungsgutachten · Sturmschaden</div>
+    <h1 class="deckblatt-titel">Elementarschadengutachten</h1>
+    <div class="deckblatt-subtitel">zum Sturmschaden gemäß DIN 4108 / WTA-Regelwerk</div>
+    <div class="deckblatt-badge">Gutachten-Nr.: ES-2026-018</div>
+  </div>
+
+  <div class="deckblatt-objekt">
+    <div class="deckblatt-objekt-label">Begutachtungsobjekt</div>
+    <div class="deckblatt-objekt-adresse">Lindenstraße 27, 48149 Münster</div>
+    <div class="deckblatt-objekt-typ">Einfamilienhaus, freistehend, 2 Vollgeschosse + ausgebautes Dachgeschoss · Baujahr 1998</div>
+  </div>
+
+  <div class="deckblatt-sv">
+    <div class="deckblatt-sv-label">Erstattender Sachverständiger</div>
+    <div class="deckblatt-sv-name">Marcel Mustermann, Dipl.-Ing.</div>
+    <div class="deckblatt-sv-qualifikation">ö.b.u.v. Sachverständiger für Schäden an Gebäuden und Elementarschadensbewertung</div>
+    
+    <div class="deckblatt-sv-bestellung">Öffentlich bestellt und vereidigt durch die IHK Köln · für Schäden an Gebäuden</div>
+    
+    <div class="deckblatt-sv-kontakt">
+      Hohenzollernring 12 · 50672 Köln<br>
+      Tel. <span class="mono">+49 221 1234567</span> · Fax <span class="mono">+49 221 1234568</span> · kontakt@prova-systems.de
+    </div>
+  </div>
+
+  <div class="deckblatt-metadaten">
+    <div class="deckblatt-meta-item">
+      <div class="label">Auftraggeber</div>
+      <div class="value">R+V Allgemeine Versicherung AG, Wiesbaden</div>
+    </div>
+    <div class="deckblatt-meta-item">
+      <div class="label">Schadensstichtag</div>
+      <div class="value mono">28.03.2026</div>
+    </div>
+    <div class="deckblatt-meta-item">
+      <div class="label">Auftragserteilung</div>
+      <div class="value mono">30.03.2026</div>
+    </div>
+    <div class="deckblatt-meta-item">
+      <div class="label">Gutachtendatum</div>
+      <div class="value mono">20.04.2026</div>
+    </div>
+    
+    <div class="deckblatt-meta-item">
+      <div class="label">Versicherung</div>
+      <div class="value">R+V Allgemeine Versicherung AG</div>
+    </div>
+    <div class="deckblatt-meta-item">
+      <div class="label">Schadennummer</div>
+      <div class="value mono">GV-2026-3847-2214</div>
+    </div>
+    
+    
+  </div>
+
+  <div class="deckblatt-footer">
+    <div class="umfang-info">
+      Umfang: 16 Seiten · 2 Anlagen · 28 Fotografien
+    </div>
+    <div class="brand-right">
+      erstellt mit<br>
+      <span class="bold">PROVA SYSTEMS</span>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════
+     TEIL 1 — Inhalt
+     ═══════════════════════════════════════════════════════════ -->
+<section class="teil">
+  <div class="teil-header">
+    <div class="teil-nummer">Teil 1</div>
+    <div class="teil-titel">Allgemeine Angaben und Aufgabenstellung</div>
+  </div>
+
+  <!-- 1.2 Auftragsumfang / Beweisbeschluss -->
+  <div class="abschnitt">
+    <div class="abschnitt-header">
+      <div class="abschnitt-nr">1.2</div>
+      <div class="abschnitt-titel">Auftragsumfang</div>
+    </div>
+    <div class="abschnitt-body">
+      
+      <p>Der Unterzeichner wurde mit Auftrag vom <strong>30.03.2026</strong> beauftragt, ein <strong>Elementarschadengutachten</strong> zu einem Sturmschaden am oben bezeichneten Objekt zu erstatten.</p>
+
+      
+      <p style="margin-top: 3mm;"><strong>Fragestellung laut Auftragsschreiben:</strong></p>
+      <p>1. Liegt ein versicherter Sturmschaden im Sinne der GDV-Bedingungen (ab Windstärke 8 Beaufort) vor? 2. Welcher Schadensumfang besteht an Dach, Fassade und Nebengebäuden? 3. Sind Folgeschäden durch eindringendes Regenwasser zu erwarten? 4. Welche Reparatur- und Wiederherstellungsmaßnahmen sind erforderlich? 5. Mit welchem Kostenrahmen ist zu rechnen?</p>
+      
+      
+    </div>
+  </div>
+
+  <!-- 1.3 Mitarbeit + KI-Einsatz (Ex-ante) -->
+  <div class="abschnitt">
+    <div class="abschnitt-header">
+      <div class="abschnitt-nr">1.3</div>
+      <div class="abschnitt-titel">Mitarbeit von Hilfskräften und KI-Einsatz</div>
+    </div>
+    <div class="abschnitt-body">
+      <p>Der vorliegenden Gutachtenerstattung wurde mit Anzeige vom <strong>30.03.2026</strong> an die R+V Allgemeine Versicherung AG per E-Mail gemäß <span class="law-ref">§ 407a Abs. 3 ZPO</span>, <span class="law-ref">§ 10 IHK-SVO</span> und <span class="law-ref">Art. 50 EU AI Act</span> der Einsatz folgender Hilfsmittel vorab angezeigt:</p>
+
+      
+      <p style="margin-top: 3mm;"><strong>Mitwirkung Dritter:</strong> Keine. Das Gutachten wurde vom unterzeichnenden Sachverständigen höchstpersönlich erstattet.</p>
+      
+
+      <p style="margin-top: 3mm;"><strong>Technische Arbeitsumgebung:</strong> PROVA Systems (prova-systems.de) als Workflow- und PDF-Generierungs-Plattform.</p>
+
+      <p style="margin-top: 3mm;"><strong>Eingesetzte KI-Systeme:</strong> OpenAI GPT-4o (Sprachmodell) und OpenAI Whisper (Spracherkennung). Eine detaillierte Aufgaben-Dokumentation folgt in <strong>Teil 4.3</strong>.</p>
+
+      <div class="hinweis-box" style="margin-top: 4mm;">
+        <strong>Wichtige Klarstellung:</strong> Die sachverständige Beurteilung sowie die <strong>Gesamtverantwortung</strong> für den Inhalt dieses Gutachtens verbleiben ausschließlich beim unterzeichnenden Sachverständigen. KI-Systeme werden ausschließlich als Arbeitshilfe zur Struktur- und Textaufbereitung eingesetzt; sie treffen keine fachlichen Entscheidungen. Das Fachurteil nach Teil 3.4 wurde KI-frei erstellt.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════
+     TEIL 2 · DOKUMENTATION DER DATEN
+     ═══════════════════════════════════════════════════════════ -->
+<section class="teil">
+  <div class="teil-header">
+    <div class="teil-nummer">Teil 2</div>
+    <div class="teil-titel">Dokumentation der Daten</div>
+  </div>
+
+  <!-- 2.1 Objektbeschreibung -->
+  <div class="abschnitt">
+    <div class="abschnitt-header">
+      <div class="abschnitt-nr">2.1</div>
+      <div class="abschnitt-titel">Objektbeschreibung</div>
+    </div>
+    <div class="abschnitt-body">
+      <div class="info-grid">
+        <div class="info-item">
+          <div class="label">Adresse</div>
+          <div class="value">Lindenstraße 27, 48149 Münster</div>
+        </div>
+        <div class="info-item">
+          <div class="label">Objektart</div>
+          <div class="value">Einfamilienhaus, freistehend, 2 Vollgeschosse + ausgebautes Dachgeschoss</div>
+        </div>
+        
+        <div class="info-item">
+          <div class="label">Baujahr</div>
+          <div class="value mono">1998</div>
+        </div>
+        
+        
+        <div class="info-item">
+          <div class="label">Wohnfläche</div>
+          <div class="value mono">168 m²</div>
+        </div>
+        
+        
+        <div class="info-item">
+          <div class="label">Bauweise</div>
+          <div class="value">Massivbau, verklinkerte Außenwände, Stahlbetondecken, Satteldach 45° Dachneigung, Tondachpfannen (Frankfurter Pfanne), Dachrinne aus Titanzink, Solaranlage auf Südseite seit 2018</div>
+        </div>
+        
+        
+        <div class="info-item">
+          <div class="label">Schadensort im Objekt</div>
+          <div class="value">Dach Nordwestseite (Hauptschadenbereich), Schornsteinabdeckung, Terrassen-Überdachung (Alu-Glasdach), Gartenhäuschen, Umzäunung Westseite</div>
+        </div>
+        
+      </div>
+
+      
+      <p style="margin-top: 4mm;">Das Einfamilienhaus steht im Stadtteil Gievenbeck auf einem 580 m² großen Grundstück in Einzelhauslage. Das Grundstück ist nach Westen/Nordwesten hin exponiert, keine abschirmende Bebauung. Dach gut zugänglich mit Giebelleiter und Flachdach-Anschluss an Nachbargrundstück.</p>
+      
+    </div>
+  </div>
+
+  <!-- 2.2 Anknüpfungstatsachen -->
+  <div class="abschnitt">
+    <div class="abschnitt-header">
+      <div class="abschnitt-nr">2.2</div>
+      <div class="abschnitt-titel">Anknüpfungstatsachen und verwendete Unterlagen</div>
+    </div>
+    <div class="abschnitt-body">
+      <p>Der Beurteilung liegen folgende Unterlagen und Auskünfte zugrunde:</p>
+
+      
+      <ul style="margin: 3mm 0 3mm 6mm;">
+        
+        <li style="margin-bottom: 1.5mm;"><strong>Deutscher Wetterdienst DWD:</strong> Orkantief 'Kirsten' am 28.03.2026, Windspitzen Münster-Flughafen 112 km/h (Windstärke 11 Beaufort), offizieller Unwetterwarn-Lagebericht Nr. W2026-08</li>
+        
+        <li style="margin-bottom: 1.5mm;"><strong>Schadensmeldung Eigentümer:</strong> Meldung 29.03.2026 via R+V-App; Wahrnehmung des Sturmschadens am Morgen nach dem Unwetter; erste Sicherungsmaßnahmen durch Notdienst Dach Becker eingeleitet</li>
+        
+        <li style="margin-bottom: 1.5mm;"><strong>Notdienstprotokoll Dachdeckerei Becker:</strong> Provisorische Abdeckung mit Plane und Lattung am 29.03.2026, Kostenvoranschlag für endgültige Sanierung 14.500 € netto</li>
+        
+        <li style="margin-bottom: 1.5mm;"><strong>Auftrag Versicherung:</strong> Gutachtenauftrag R+V mit Bitte um Bestätigung des Sturmereignisses und Bewertung des Schadensumfangs</li>
+        
+        <li style="margin-bottom: 1.5mm;"><strong>Eigene Begehung:</strong> Ortstermin mit Dachbegehung und Drohnenaufnahme der schwer zugänglichen Bereiche</li>
+        
+      </ul>
+      
+    </div>
+  </div>
+
+  <!-- 2.3 Ortstermin -->
+  
+  <div class="abschnitt">
+    <div class="abschnitt-header">
+      <div class="abschnitt-nr">2.3</div>
+      <div class="abschnitt-titel">Ortstermin-Dokumentation</div>
+    </div>
+    <div class="abschnitt-body">
+      <div class="info-grid">
+        <div class="info-item">
+          <div class="label">Datum</div>
+          <div class="value mono">16.04.2026</div>
+        </div>
+        <div class="info-item">
+          <div class="label">Uhrzeit / Dauer</div>
+          <div class="value mono">11:00 Uhr · ca. 2 Stunden</div>
+        </div>
+        <div class="info-item" style="grid-column: 1 / -1;">
+          <div class="label">Anwesende</div>
+          <div class="value">Herr Klostermann (Eigentümer), Herr Becker (Dachdeckermeister), Sachverständiger Mustermann</div>
+        </div>
+        
+        <div class="info-item" style="grid-column: 1 / -1;">
+          <div class="label">Wetter / Raumklima</div>
+          <div class="value">trocken, sonnig, leichter Wind · 16 °C · Luftfeuchte 55 % rel.</div>
+        </div>
+        
+      </div>
+
+      
+      <p style="margin-top: 4mm;">Begehung Haus außen und innen (Dachboden). Dachbegehung bis Firstpfette. Drohnenaufnahmen der Südseite und des Schornsteinbereichs. Sichtprüfung Terrassen-Überdachung. Prüfung der provisorischen Notsicherung. Keine Regeneintrittsspuren im Dachboden dokumentiert, weil Notabdeckung zum Zeitpunkt des Ortstermins bereits 18 Tage wirksam.</p>
+      
+    </div>
+  </div>
+  
+
+  <!-- 2.4 Fotografien -->
+  
+  <div class="abschnitt">
+    <div class="abschnitt-header">
+      <div class="abschnitt-nr">2.4</div>
+      <div class="abschnitt-titel">Fotografien</div>
+    </div>
+    <div class="abschnitt-body">
+      <p>Zur bildlichen Dokumentation wurden <strong>28 Fotografien</strong> angefertigt. Die Aufnahmen sind als gesonderte <strong>Anlage F-01</strong> beigefügt.</p>
+      <div class="hinweis-box" style="margin-top: 3mm;">
+        Die Fotografien ersetzen nicht die verbale Darstellung, sondern ergänzen sie (Nr. 9.3.7 IHK-SVO-Richtlinien).
+      </div>
+    </div>
+  </div>
+  
+
+  <!-- 2.5 Messungen -->
+  
+  <div class="abschnitt">
+    <div class="abschnitt-header">
+      <div class="abschnitt-nr">2.5</div>
+      <div class="abschnitt-titel">Messwerte und verwendete Geräte</div>
+    </div>
+    <div class="abschnitt-body">
+      <p>Folgende Messungen wurden während des Ortstermins durchgeführt:</p>
+      <table class="messwerte">
+        <thead>
+          <tr><th>Messstelle</th><th>Parameter</th><th>Wert</th><th>Norm/Grenzwert</th></tr>
+        </thead>
+        <tbody>
+          
+          <tr>
+            <td>Windgeschwindigkeit Münster-Flughafen Messung DWD 28.03.2026 19:47 Uhr</td>
+            <td>Windspitze</td>
+            <td class="number">112 km/h (31,1 m/s)</td>
+            <td>Windstärke 11 Bft (GDV: Sturmschaden ab Bft 8 = 62 km/h)</td>
+          </tr>
+          
+          <tr>
+            <td>Dach Nordwest Anzahl abgehobener Dachziegel</td>
+            <td>Zählung</td>
+            <td class="number">48 Stück (davon 12 zerbrochen, 36 verschoben)</td>
+            <td>—</td>
+          </tr>
+          
+          <tr>
+            <td>Dachfläche betroffen (einschließlich Unterlattung)</td>
+            <td>Flächenmessung</td>
+            <td class="number">ca. 22 m²</td>
+            <td>—</td>
+          </tr>
+          
+          <tr>
+            <td>Schornsteinabdeckung Edelstahl</td>
+            <td>Visuelle Prüfung</td>
+            <td class="number">verformt und seitlich verschoben, eine Schraubbefestigung abgerissen</td>
+            <td>—</td>
+          </tr>
+          
+          <tr>
+            <td>Dachrinne Nordseite</td>
+            <td>Visuelle Prüfung</td>
+            <td class="number">eine Halterung aus Mauer gerissen, Rinne auf 2,5 m Länge durchhängend</td>
+            <td>—</td>
+          </tr>
+          
+          <tr>
+            <td>Terrassenüberdachung Alu-Glas</td>
+            <td>Visuelle Prüfung</td>
+            <td class="number">2 Glasscheiben zerbrochen, 1 Aluprofil verbogen</td>
+            <td>—</td>
+          </tr>
+          
+          <tr>
+            <td>Gartenhäuschen 4,5 m²</td>
+            <td>Visuelle Prüfung</td>
+            <td class="number">Dach komplett abgedeckt (Bitumenpappe + OSB), Konstruktion steht, Türblatt gebrochen</td>
+            <td>—</td>
+          </tr>
+          
+          <tr>
+            <td>Gartenzaun Westseite Holzlamelle</td>
+            <td>Flächenmessung</td>
+            <td class="number">16 m umgedrückt, 3 Pfosten schief</td>
+            <td>—</td>
+          </tr>
+          
+        </tbody>
+      </table>
+
+      
+      <p style="margin-top: 4mm;"><strong>Verwendete Messgeräte:</strong></p>
+      <ul style="margin: 2mm 0 3mm 6mm;">
+        
+        <li style="margin-bottom: 1mm;">DJI Mini 3 Pro Drohne für Dachaufnahmen</li>
+        
+        <li style="margin-bottom: 1mm;">Leica DISTO D2 Laserdistanzmesser</li>
+        
+        <li style="margin-bottom: 1mm;">Bosch GLM 50-27 C Laserentfernungsmesser (für Kleinere Distanzen)</li>
+        
+        <li style="margin-bottom: 1mm;">Abfrage Deutscher Wetterdienst DWD-Portal</li>
+        
+      </ul>
+      
+    </div>
+  </div>
+  
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════
+     TEIL 3 · SACHVERSTÄNDIGE BEANTWORTUNG
+     ═══════════════════════════════════════════════════════════ -->
+<section class="teil">
+  <div class="teil-header">
+    <div class="teil-nummer">Teil 3</div>
+    <div class="teil-titel">Sachverständige Beantwortung</div>
+  </div>
+
+  <!-- 3.1 Befunde -->
+  <div class="abschnitt">
+    <div class="abschnitt-header">
+      <div class="abschnitt-nr">3.1</div>
+      <div class="abschnitt-titel">Befunde</div>
+    </div>
+    <div class="abschnitt-body">
+      
+      <p>Das Gebäude und die Außenanlagen wurden am 16.04.2026 vollständig begangen. Das Dach wurde betreten; schwer zugängliche Bereiche wurden mit Drohne dokumentiert. Festgestellt wurden folgende Schadensbilder:</p>
+      
+
+      
+      
+      <div class="befund-karte">
+        <div class="nr">Befund 1</div>
+        <div class="titel">Dachziegelschaden Nordwest-Dachfläche</div>
+        <div class="text">Auf der nordwestlichen Dachfläche wurden durch die Sturmeinwirkung insgesamt 48 Dachziegel (Frankfurter Pfanne) aus dem Verband gerissen: 12 Ziegel sind zerbrochen und herabgestürzt (auf Nachbargrundstück und eigener Garten), 36 Ziegel sind verschoben. Die betroffene Dachfläche beträgt rund 22 m² an der exponiertesten Stelle (ca. 5,5 m Länge × 4,0 m Höhe). Die Dachlattung ist an drei Stellen gebrochen, die Unterspannbahn zeigt einen Riss von 1,2 m Länge.</div>
+        
+      </div>
+      
+      <div class="befund-karte">
+        <div class="nr">Befund 2</div>
+        <div class="titel">Schornsteinabdeckung verformt</div>
+        <div class="text">Die Edelstahl-Schornsteinabdeckung des nicht mehr genutzten Ziegel-Schornsteins ist durch die Sturmeinwirkung seitlich verschoben und verformt. Eine der vier Schraubbefestigungen ist abgerissen (Dübel aus dem Ziegel herausgezogen). Provisorisch ist die Abdeckung durch das Notdienst-Team durch Verspannung gesichert; eine Neuherstellung ist erforderlich.</div>
+        
+      </div>
+      
+      <div class="befund-karte">
+        <div class="nr">Befund 3</div>
+        <div class="titel">Dachrinne Nordseite beschädigt</div>
+        <div class="text">Die Titanzink-Dachrinne der Nordseite hat eine Halterung verloren (aus dem Mauerwerk gerissen). Auf einer Länge von ca. 2,5 m hängt die Rinne durch, was bei Regen zu Überschwappen in die verklinkerte Wand führen würde. Die Rinne selbst ist intakt.</div>
+        
+      </div>
+      
+      <div class="befund-karte">
+        <div class="nr">Befund 4</div>
+        <div class="titel">Terrassen-Überdachung beschädigt</div>
+        <div class="text">Die an der Südseite angebaute Terrassen-Überdachung (Aluminium-Konstruktion mit VSG-Glas) zeigt zwei zerbrochene Glasscheiben (VSG 8 mm) — vermutlich durch herabstürzende Dachziegel oder Äste. Ein Aluminium-Längsprofil ist verbogen. Die Tragkonstruktion ist statisch weiter tragfähig.</div>
+        
+      </div>
+      
+      <div class="befund-karte">
+        <div class="nr">Befund 5</div>
+        <div class="titel">Gartenhäuschen Dach komplett abgedeckt</div>
+        <div class="text">Das Gartenhäuschen (ca. 4,5 m² Grundfläche, Holzrahmenbau mit OSB-Bitumenpappen-Dach) hat das komplette Dach verloren: OSB-Platten und Bitumenabdichtung wurden vom Sturm abgerissen und auf eine Entfernung von ca. 15–20 m verteilt. Die Holzrahmenkonstruktion selbst steht unbeschädigt. Das Türblatt wurde durch eine herabfallende OSB-Platte gebrochen.</div>
+        
+      </div>
+      
+      <div class="befund-karte">
+        <div class="nr">Befund 6</div>
+        <div class="titel">Gartenzaun Westseite Holzlamelle umgedrückt</div>
+        <div class="text">Der Holzlamellen-Gartenzaun an der Westseite (Gesamtlänge 16 m) ist vollständig umgedrückt. Drei von acht Pfosten (Einbetonierung) sind schiefgestellt, was auf die Windlast zurückzuführen ist. Die Holzlamellen selbst sind teilweise gebrochen.</div>
+        
+      </div>
+      
+      
+    </div>
+  </div>
+
+  <!-- 3.2 Ursachenanalyse (Hypothesen, Konjunktiv II) -->
+  <div class="abschnitt">
+    <div class="abschnitt-header">
+      <div class="abschnitt-nr">3.2</div>
+      <div class="abschnitt-titel">Ursachenanalyse</div>
+    </div>
+    <div class="abschnitt-body">
+      <p>Die Ursachenanalyse erfolgt auf Basis der dokumentierten Befunde und der Anknüpfungstatsachen nach Teil 2. Die im Folgenden dargelegten Hypothesen sind im Konjunktiv II formuliert und stehen unter dem Vorbehalt der abschließenden sachverständigen Würdigung in Teil 3.4.</p>
+
+      
+      
+      <div class="hypothese alternativ">
+        <div class="hypothese-kopf">
+          <div class="hypothese-titel">Hypothese 1: Ursache — Sturmereignis ab Windstärke 8 Beaufort (GDV-konforme Deckung)</div>
+          <div class="hypothese-wahrscheinlichkeit">Hoch (amtlich dokumentiert)</div>
+        </div>
+        <div style="font-size: 10.5pt; line-height: 1.6;">Das Sturmereignis am 28.03.2026 wäre durch den Deutschen Wetterdienst offiziell als Orkantief 'Kirsten' gemeldet. Am Flughafen Münster (Entfernung ca. 6 km zum Objekt) wurden Windspitzen von 112 km/h gemessen, was Windstärke 11 auf der Beaufort-Skala entspricht. Die GDV-Mindestschwelle für einen Sturmschaden (Windstärke 8 = 62 km/h) wäre damit deutlich überschritten. Das dokumentierte Schadensbild — weiträumig abgehobene Dachziegel an der exponiertesten Dachseite (Nordwest), abgedecktes Gartenhaus, umgestürzter Zaun — entspräche typisch einem Sturmereignis dieser Intensität.</div>
+      </div>
+      
+      <div class="hypothese alternativ">
+        <div class="hypothese-kopf">
+          <div class="hypothese-titel">Hypothese 2: Alternativ-Hypothese — Konstruktionsmangel Dachlattung</div>
+          <div class="hypothese-wahrscheinlichkeit">Gering (ausgeschlossen)</div>
+        </div>
+        <div style="font-size: 10.5pt; line-height: 1.6;">Ein Mangel an der ursprünglichen Dachlattung (z.B. zu schwache Befestigung der Ziegel mit Sturmklammern) wäre theoretisch denkbar. Jedoch: Der Betroffenheitsgrad konzentriert sich eindeutig auf die windexponierteste Nordwest-Seite, während Süd- und Ostseite intakt sind. Bei Konstruktionsmangel wäre ein gleichmäßigerer Schadensanteil zu erwarten. Die Dachdeckerei Becker bestätigt zudem, dass bei Ziegelbefestigung im Baujahr 1998 Sturmklammer-Verwendung noch nicht flächendeckend Standard war. Ein mitursächlicher Konstruktionsmangel wäre damit zu verwerfen — die alleinige Sturmursache überwiegt eindeutig.</div>
+      </div>
+      
+      
+    </div>
+  </div>
+
+  <!-- 3.3 Sanierungsvorschlag + Kostenrahmen -->
+  
+  <div class="abschnitt">
+    <div class="abschnitt-header">
+      <div class="abschnitt-nr">3.3</div>
+      <div class="abschnitt-titel">Sanierungsvorschlag und Kostenrahmen</div>
+    </div>
+    <div class="abschnitt-body">
+      
+      <p>Die Schadensbehebung umfasst primär die Wiederherstellung der Dachhaut (Ziegel, Lattung, Unterspannbahn) und Reparatur bzw. Ersatz der weiteren beschädigten Bauteile. Die Kostenschätzung basiert auf marktüblichen Preisen (Stand 04/2026).</p>
+      
+
+      
+      <table class="sanierung-tabelle">
+        <thead>
+          <tr><th>Pos.</th><th>Leistung</th><th style="text-align:right;">Menge</th><th style="text-align:right;">EP netto</th><th style="text-align:right;">Summe netto</th></tr>
+        </thead>
+        <tbody>
+          
+          <tr>
+            <td>1</td>
+            <td>Rückbau beschädigte Dachziegel (Nordwest-Seite) + Entsorgung</td>
+            <td class="number">1 psch</td>
+            <td class="number">480,00 €</td>
+            <td class="number">480,00 €</td>
+          </tr>
+          
+          <tr>
+            <td>2</td>
+            <td>Reparatur Dachlattung (3 Fehlstellen)</td>
+            <td class="number">1 psch</td>
+            <td class="number">420,00 €</td>
+            <td class="number">420,00 €</td>
+          </tr>
+          
+          <tr>
+            <td>3</td>
+            <td>Neue Unterspannbahn (22 m² mit Überlappung)</td>
+            <td class="number">28 m²</td>
+            <td class="number">18,00 €</td>
+            <td class="number">504,00 €</td>
+          </tr>
+          
+          <tr>
+            <td>4</td>
+            <td>Neue Frankfurter Pfanne inkl. Sturmklammern (48 Ziegel + Reserve)</td>
+            <td class="number">60 Stk</td>
+            <td class="number">12,50 €</td>
+            <td class="number">750,00 €</td>
+          </tr>
+          
+          <tr>
+            <td>5</td>
+            <td>Neueindeckung Nordwest-Dachfläche</td>
+            <td class="number">22 m²</td>
+            <td class="number">95,00 €</td>
+            <td class="number">2.090,00 €</td>
+          </tr>
+          
+          <tr>
+            <td>6</td>
+            <td>Schornsteinabdeckung Edelstahl neu anfertigen + montieren</td>
+            <td class="number">1 psch</td>
+            <td class="number">680,00 €</td>
+            <td class="number">680,00 €</td>
+          </tr>
+          
+          <tr>
+            <td>7</td>
+            <td>Dachrinne Nordseite neu montieren + Halterung</td>
+            <td class="number">1 psch</td>
+            <td class="number">380,00 €</td>
+            <td class="number">380,00 €</td>
+          </tr>
+          
+          <tr>
+            <td>8</td>
+            <td>Terrassenüberdachung: 2 VSG-Scheiben + 1 Aluprofil ersetzen</td>
+            <td class="number">1 psch</td>
+            <td class="number">1.850,00 €</td>
+            <td class="number">1.850,00 €</td>
+          </tr>
+          
+          <tr>
+            <td>9</td>
+            <td>Gartenhäuschen: Dachneuherstellung (OSB + Bitumenbahn) + Türblatt</td>
+            <td class="number">1 psch</td>
+            <td class="number">1.240,00 €</td>
+            <td class="number">1.240,00 €</td>
+          </tr>
+          
+          <tr>
+            <td>10</td>
+            <td>Gartenzaun: 16 m Lamellenzaun neu + 3 Pfosten richten</td>
+            <td class="number">1 psch</td>
+            <td class="number">2.180,00 €</td>
+            <td class="number">2.180,00 €</td>
+          </tr>
+          
+          <tr>
+            <td>11</td>
+            <td>Notdienst-Rechnung Becker (Provisorische Abdeckung) — bereits angefallen</td>
+            <td class="number">1 psch</td>
+            <td class="number">820,00 €</td>
+            <td class="number">820,00 €</td>
+          </tr>
+          
+          <tr>
+            <td>12</td>
+            <td>Gerüststellung (Dacharbeiten)</td>
+            <td class="number">1 psch</td>
+            <td class="number">980,00 €</td>
+            <td class="number">980,00 €</td>
+          </tr>
+          
+          <tr>
+            <td>13</td>
+            <td>Entsorgung Sturmschutt (Container)</td>
+            <td class="number">1 psch</td>
+            <td class="number">340,00 €</td>
+            <td class="number">340,00 €</td>
+          </tr>
+          
+          
+          <tr class="summary"><td colspan="4">Summe netto</td><td class="number">12.714,00 €</td></tr>
+          
+        </tbody>
+      </table>
+      
+
+      
+      <div class="kosten-card">
+        <div class="kosten-card-label">Geschätzter Gesamtkostenrahmen (netto)</div>
+        <div class="kosten-card-value">12.714,00 €</div>
+        <div class="kosten-card-note">Orientierende Schätzung auf Basis marktüblicher Einheitspreise · Abweichungen ±15 % möglich</div>
+      </div>
+      
+    </div>
+  </div>
+  
+
+  <!-- 3.4 Fachurteil (KI-FREI) -->
+  <div class="abschnitt">
+    <div class="abschnitt-header">
+      <div class="abschnitt-nr">3.4</div>
+      <div class="abschnitt-titel">Fachurteil</div>
+    </div>
+    <div class="abschnitt-body">
+      <div class="fachurteil-kasten">
+        <div class="marker">SV-Eigenleistung · KI-frei</div>
+        <div class="intro">
+          Dieses Fachurteil wurde gemäß <span class="law-ref">§ 407a Abs. 2 ZPO</span> und <span class="law-ref">§ 9 Abs. 2 IHK-SVO</span> vom unterzeichnenden Sachverständigen <strong>persönlich, eigenständig und ohne KI-Unterstützung</strong> verfasst.
+        </div>
+        <div class="text">
+          <p>Nach Würdigung der dokumentierten Befunde, der amtlichen DWD-Wettermessung und der Begehung komme ich zu folgender sachverständiger Beurteilung:</p><p><strong>Zur Schadensursache und Versicherungsrelevanz:</strong> Das Sturmereignis vom 28.03.2026 wäre als Sturmschaden im Sinne der GDV-Bedingungen eindeutig einzuordnen. Die amtliche DWD-Messung am Flughafen Münster bestätigt Windspitzen von 112 km/h (Windstärke 11 Bft), weit oberhalb der Mindestschwelle für einen versicherten Sturmschaden (Windstärke 8 Bft = 62 km/h). Das dokumentierte Schadensbild — konzentriert auf die nordwestliche Dachseite sowie an exponierten Außenanlagen — entspricht einem typischen Sturmschadenmuster. Konstruktionsmängel wären auszuschließen.</p><p><strong>Zum Schadensumfang:</strong> Der Hauptschaden liegt auf der Nordwest-Dachfläche (rund 22 m² mit 48 beschädigten Dachziegeln, Lattungsschäden und Rissen in der Unterspannbahn), ergänzt durch Beschädigungen an Schornsteinabdeckung, Dachrinne, Terrassenüberdachung, Gartenhäuschen und Gartenzaun. Folgeschäden durch Regenwassereintritt konnten aufgrund der zeitnahen Notabdeckung durch die Dachdeckerei Becker vermieden werden.</p><p><strong>Zur Schadensbeseitigung und Kostenrahmen:</strong> Die Wiederherstellung erfolgt durch vollständige Dachneueindeckung der betroffenen Fläche mit neuer Unterspannbahn und Sturmklammern (nach heutigem Stand der Technik), Erneuerung bzw. Reparatur der weiteren beschädigten Bauteile und abschließende Entsorgung. Der orientierende Kostenrahmen beläuft sich auf <strong>12.714 € netto</strong>. Die bereits angefallene Notdienst-Rechnung der Dachdeckerei Becker (820 € netto) ist berücksichtigt.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════
+     TEIL 4 · ZUSAMMENFASSUNG UND SCHLUSS
+     ═══════════════════════════════════════════════════════════ -->
+<section class="teil">
+  <div class="teil-header">
+    <div class="teil-nummer">Teil 4</div>
+    <div class="teil-titel">Zusammenfassung und Schluss</div>
+  </div>
+
+  <!-- 4.1 Kurzbeantwortung -->
+  <div class="abschnitt">
+    <div class="abschnitt-header">
+      <div class="abschnitt-nr">4.1</div>
+      <div class="abschnitt-titel">Kurzbeantwortung</div>
+    </div>
+    <div class="abschnitt-body">
+      
+      <p>Es liegt ein versicherter Sturmschaden im Sinne der GDV-Bedingungen vor (Windstärke 11 Bft amtlich gemessen, weit über Mindestschwelle 8 Bft). Der Schaden umfasst Dach Nordwest (48 Ziegel, 22 m², Lattung, Unterspannbahn), Schornsteinabdeckung, Dachrinne, Terrassenüberdachung, Gartenhäuschen und Gartenzaun. Folgeschäden durch zeitnahe Notabdeckung vermieden. Kostenrahmen: 12.714 € netto.</p>
+      
+
+      
+      <div class="hinweis-box" style="margin-top: 3mm;">
+        <strong>Hinweis zu Grenzen der Sachkunde:</strong> Eine detaillierte statische Nachrechnung der Sturmsicherheit des gesamten Dachstuhls (über die optische Prüfung hinaus) wäre durch einen Tragwerksplaner zu beurteilen. Eine Neubewertung der Solaranlage auf der Südseite (auf Sturmsicherheit und mögliche Microbrüche) wäre durch einen Elektrotechniker bzw. den Anlagenbauer vorzunehmen.
+      </div>
+      
+    </div>
+  </div>
+
+  <!-- 4.2 § 407a Abs. 2 Unparteilichkeitserklärung -->
+  <div class="abschnitt">
+    <div class="abschnitt-header">
+      <div class="abschnitt-nr">4.2</div>
+      <div class="abschnitt-titel">Erklärung nach § 407a Abs. 2 ZPO (Unparteilichkeit)</div>
+    </div>
+    <div class="abschnitt-body">
+      <div class="erklaerung-kasten">
+        <div class="marker">§ 407a Abs. 2 ZPO · § 9 Abs. 2 IHK-SVO</div>
+        <p>Ich versichere, dass ich das vorliegende Gutachten nach bestem Wissen und Gewissen <strong>unparteiisch, gewissenhaft und persönlich</strong> erstattet habe. Ich bin mit den beteiligten Parteien weder verwandt noch verschwägert und habe kein wirtschaftliches oder persönliches Interesse am Ausgang des Verfahrens oder an der Verwendung dieses Gutachtens.</p>
+
+        
+        <p style="margin-top: 3mm;">Als öffentlich bestellter und vereidigter Sachverständiger bin ich an meinen bei der Bestellung geleisteten Eid gebunden und bestätige die Einhaltung der Unparteilichkeits- und Sorgfaltspflichten nach <span class="law-ref">§ 9 Abs. 2–3 IHK-SVO</span>.</p>
+        
+      </div>
+    </div>
+  </div>
+
+  <!-- 4.3 Hilfsmittel + KI (Ex-post) -->
+  <div class="abschnitt">
+    <div class="abschnitt-header">
+      <div class="abschnitt-nr">4.3</div>
+      <div class="abschnitt-titel">Verwendete Hilfsmittel und KI-Nutzung</div>
+    </div>
+    <div class="abschnitt-body">
+      <p>Die nachstehende Dokumentation ergänzt die Ex-ante-Anzeige aus Teil 1.3 um die konkreten Einsatztätigkeiten (Offenlegung nach <span class="law-ref">§ 407a Abs. 3 ZPO</span> und <span class="law-ref">Art. 50 EU AI Act</span>):</p>
+
+      
+      <p style="margin-top: 3mm;"><strong>OpenAI GPT-4o — Sprachmodell:</strong> Strukturierung der Anknüpfungstatsachen und Messwert-Tabelle; Vorentwurf der Abschnitte 2.1 (Objektbeschreibung) und 3.3 (Sanierungspositionen); Rechtschreib- und Konsistenzprüfung.</p>
+      
+
+      
+      <p style="margin-top: 2mm;"><strong>OpenAI Whisper — Spracherkennung:</strong> Transkription des Ortstermin-Diktats vom 16.04.2026 (ca. 50 Min Audiomaterial).</p>
+      
+
+      <div class="erklaerung-kasten" style="margin-top: 4mm;">
+        <div class="marker">Eigenleistung · Art. 50 EU AI Act</div>
+        <p><strong>Eigenleistung des Sachverständigen:</strong> Das vorliegende Gutachten wurde überwiegend vom unterzeichnenden Sachverständigen persönlich verfasst. KI-Systeme haben ergänzend bei der Strukturierung und Textaufbereitung der Teile 1 bis 3.3 unterstützt.</p>
+        <p style="margin-top: 2mm;"><strong>Teil 3.4 (Fachurteil):</strong> Vollständig und ausschließlich vom unterzeichnenden Sachverständigen persönlich verfasst, ohne KI-Unterstützung.</p>
+      </div>
+
+      <div class="hinweis-box">
+        <strong>DSGVO-Konformität:</strong> Vor jeder Übertragung an KI-Systeme wurden personenbezogene Daten durch technische Pseudonymisierung unkenntlich gemacht. Die Datenverarbeitung erfolgt auf Servern innerhalb der Europäischen Union.
+      </div>
+    </div>
+  </div>
+
+  <!-- 4.4 Unterschrift -->
+  <div class="abschnitt">
+    <div class="abschnitt-header">
+      <div class="abschnitt-nr">4.4</div>
+      <div class="abschnitt-titel">Ort, Datum, Unterschrift und Stempel</div>
+    </div>
+    <div class="abschnitt-body">
+      <div class="unterschrift-block">
+        <div class="unterschrift-grid">
+          <div class="unterschrift-feld">
+            Ort, Datum<br>
+            <div class="name">Köln, 20.04.2026</div>
+          </div>
+          <div class="unterschrift-feld">
+            Unterschrift Sachverständiger<br>
+            <div class="name">Marcel Mustermann, Dipl.-Ing.</div>
+            <div class="rolle">ö.b.u.v. Sachverständiger</div>
+            <div class="rolle">IHK Köln</div>
+            <div class="stempel">(Rundstempel)</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════
+     TEIL 5 · ANHÄNGE
+     ═══════════════════════════════════════════════════════════ -->
+
+<section class="teil">
+  <div class="teil-header">
+    <div class="teil-nummer">Teil 5</div>
+    <div class="teil-titel">Anhänge</div>
+  </div>
+
+  <div class="abschnitt">
+    <div class="abschnitt-header">
+      <div class="abschnitt-nr">5.1</div>
+      <div class="abschnitt-titel">Verwendete Normen und Regelwerke</div>
+    </div>
+    <div class="abschnitt-body">
+      <div class="normen-liste">
+        
+        <div class="norm-eintrag">
+          <div class="nr">§ 407a Abs. 2 ZPO</div>
+          <div class="titel">Unparteilichkeit des Sachverständigen</div>
+          
+        </div>
+        
+        <div class="norm-eintrag">
+          <div class="nr">§ 407a Abs. 3 ZPO</div>
+          <div class="titel">Anzeigepflicht KI-Einsatz</div>
+          
+        </div>
+        
+        <div class="norm-eintrag">
+          <div class="nr">§ 9 Abs. 2–3 IHK-SVO</div>
+          <div class="titel">Sorgfaltspflichten des Sachverständigen</div>
+          
+        </div>
+        
+        <div class="norm-eintrag">
+          <div class="nr">Art. 50 EU AI Act</div>
+          <div class="titel">Transparenzpflichten bei KI-Einsatz</div>
+          
+        </div>
+        
+        <div class="norm-eintrag">
+          <div class="nr">GDV Allgemeine Wohngebäude-Versicherungsbedingungen (VGB 2022)</div>
+          <div class="titel">Versicherte Elementarschäden — Definition Sturmschaden</div>
+          
+        </div>
+        
+        <div class="norm-eintrag">
+          <div class="nr">Beaufort-Skala (WMO)</div>
+          <div class="titel">Windstärke-Skala nach Sir Francis Beaufort</div>
+          
+        </div>
+        
+        <div class="norm-eintrag">
+          <div class="nr">DIN EN 1991-1-4 (2010-12)</div>
+          <div class="titel">Einwirkungen auf Tragwerke — Windlasten</div>
+          
+        </div>
+        
+        <div class="norm-eintrag">
+          <div class="nr">DIN 1055-4</div>
+          <div class="titel">Einwirkungen auf Tragwerke — Windlasten (historisch)</div>
+          
+        </div>
+        
+        <div class="norm-eintrag">
+          <div class="nr">DIN EN 1462</div>
+          <div class="titel">Rinnenhalter — Anforderungen und Prüfungen</div>
+          
+        </div>
+        
+        <div class="norm-eintrag">
+          <div class="nr">DIN 18008</div>
+          <div class="titel">Glas im Bauwesen — Bemessung</div>
+          
+        </div>
+        
+        <div class="norm-eintrag">
+          <div class="nr">Fachregeln Dachdeckerhandwerk (ZVDH) 2024</div>
+          <div class="titel">Verlegung von Dachziegeln bei Windeinwirkung</div>
+          
+        </div>
+        
+      </div>
+    </div>
+  </div>
+</section>
+
+
+</body>
+</html>

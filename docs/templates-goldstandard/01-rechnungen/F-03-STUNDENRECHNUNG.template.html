@@ -1,0 +1,698 @@
+﻿<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>Rechnung 2026-0142</title>
+<style>
+  /* ============================================
+     PROVA RECHNUNG · DIN 5008 + Design-System v1.0 (Template v1.1)
+     Inter + JetBrains Mono · primary #1a3a6b
+     ============================================ */
+  @page {
+    size: A4;
+    margin: 0;
+  }
+  @page :first {
+    margin: 0;
+  }
+  html, body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 10.5pt;
+    line-height: 1.5;
+    color: #1a1f2e;
+    -webkit-font-smoothing: antialiased;
+  }
+  .page {
+    width: 210mm;
+    min-height: 297mm;
+    padding: 0;
+    position: relative;
+    page-break-after: always;
+    background: #fff;
+  }
+  .page:last-child { page-break-after: auto; }
+
+  /* DIN 5008 BRIEFKOPF — Form B kompakt */
+  .briefkopf {
+    padding: 20mm 20mm 0 20mm;
+    border-bottom: 0.5pt solid #cbd5e1;
+    padding-bottom: 4mm;
+    margin-bottom: 0;
+  }
+  .briefkopf-zeile {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+  .briefkopf-sv-name {
+    font-size: 14pt;
+    font-weight: 700;
+    color: #1a3a6b;
+    letter-spacing: -0.01em;
+    line-height: 1.2;
+  }
+  .briefkopf-sv-untertitel {
+    font-size: 9pt;
+    color: #64748b;
+    margin-top: 1mm;
+    line-height: 1.4;
+  }
+  .briefkopf-kontakt {
+    font-size: 8.5pt;
+    color: #64748b;
+    text-align: right;
+    line-height: 1.5;
+  }
+
+  /* DIN 5008 ABSENDER-RÜCKSENDEZEILE (Mini-Adresszeile über Empfänger) */
+  .absender-mini {
+    margin: 5mm 20mm 0 20mm;
+    font-size: 7pt;
+    color: #94a3b8;
+    border-bottom: 0.3pt solid #cbd5e1;
+    padding-bottom: 1mm;
+  }
+
+  /* DIN 5008 ADRESSFENSTER — Empfänger
+     Position: ab 27mm vom oberen Rand bei Form A
+     Bei Form B: ab ca. 50mm (nach Briefkopf)
+     Breite max. 85mm, Höhe max. 40mm */
+  .adressfeld {
+    margin: 3mm 20mm 0 20mm;
+    width: 85mm;
+    min-height: 35mm;
+    font-size: 11pt;
+    line-height: 1.5;
+  }
+  .adressfeld-empfaenger-name {
+    font-weight: 600;
+  }
+
+  /* DIN 5008 BEZUGSZEICHEN-ZEILE rechts */
+  .bezugszeile {
+    position: absolute;
+    top: 70mm;
+    right: 20mm;
+    width: 70mm;
+    font-size: 9pt;
+  }
+  .bezugszeile-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5mm 4mm;
+  }
+  .bezugszeile-label {
+    color: #64748b;
+    font-size: 7.5pt;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .bezugszeile-wert {
+    font-weight: 500;
+    color: #1a1f2e;
+    font-family: 'JetBrains Mono', 'Courier New', monospace;
+    font-size: 9pt;
+  }
+
+  /* BETREFF */
+  .betreff {
+    margin: 25mm 20mm 0 20mm;
+    font-size: 12pt;
+    font-weight: 700;
+    color: #1a3a6b;
+  }
+  .betreff-leistungsbezug {
+    margin-top: 1mm;
+    font-size: 10pt;
+    font-weight: 400;
+    color: #64748b;
+  }
+
+  /* BRIEFTEXT */
+  .anrede {
+    margin: 8mm 20mm 0 20mm;
+    font-size: 10.5pt;
+  }
+  .einleitung {
+    margin: 4mm 20mm 0 20mm;
+    font-size: 10.5pt;
+    text-align: justify;
+  }
+
+  /* RECHNUNGSPOSITIONEN-TABELLE */
+  .positionen-wrapper {
+    margin: 6mm 20mm 0 20mm;
+  }
+  table.positionen {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 10pt;
+  }
+  table.positionen thead {
+    background: #f1f5f9;
+    border-bottom: 1.5pt solid #1a3a6b;
+  }
+  table.positionen thead th {
+    padding: 2.5mm 2mm;
+    text-align: left;
+    font-size: 8.5pt;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #1a3a6b;
+    font-weight: 600;
+  }
+  table.positionen thead th.num,
+  table.positionen thead th.menge,
+  table.positionen thead th.einzel,
+  table.positionen thead th.gesamt {
+    text-align: right;
+  }
+  table.positionen tbody tr {
+    border-bottom: 0.3pt solid #e2e8f0;
+  }
+  table.positionen tbody tr:last-child {
+    border-bottom: 0.5pt solid #94a3b8;
+  }
+  table.positionen td {
+    padding: 2.5mm 2mm;
+    vertical-align: top;
+  }
+  table.positionen td.num {
+    text-align: right;
+    color: #94a3b8;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9pt;
+    width: 12mm;
+  }
+  table.positionen td.bezeichnung {
+    line-height: 1.45;
+  }
+  table.positionen td.bezeichnung .untertitel {
+    color: #64748b;
+    font-size: 9pt;
+    font-style: italic;
+    margin-top: 0.5mm;
+  }
+  table.positionen td.menge {
+    text-align: right;
+    width: 18mm;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9.5pt;
+  }
+  table.positionen td.einzel {
+    text-align: right;
+    width: 22mm;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9.5pt;
+  }
+  table.positionen td.gesamt {
+    text-align: right;
+    width: 25mm;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9.5pt;
+    font-weight: 600;
+  }
+
+  /* SUMMENBLOCK */
+  .summen-wrapper {
+    margin: 5mm 20mm 0 20mm;
+    display: flex;
+    justify-content: flex-end;
+  }
+  .summen-tabelle {
+    width: 75mm;
+    font-size: 10pt;
+  }
+  .summen-tabelle table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .summen-tabelle td {
+    padding: 1.5mm 2mm;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9.5pt;
+  }
+  .summen-tabelle td.label {
+    text-align: left;
+    color: #64748b;
+    font-family: 'Inter', sans-serif;
+    font-size: 9.5pt;
+  }
+  .summen-tabelle td.wert {
+    text-align: right;
+  }
+  .summen-tabelle tr.zwischensumme td {
+    border-top: 0.5pt solid #cbd5e1;
+  }
+  .summen-tabelle tr.gesamt {
+    border-top: 1.5pt solid #1a3a6b;
+    border-bottom: 1.5pt solid #1a3a6b;
+    background: linear-gradient(90deg, #f1f5f9 0%, #fef3c7 100%);
+  }
+  .summen-tabelle tr.gesamt td {
+    padding: 3mm 2mm;
+    font-weight: 700;
+    color: #1a3a6b;
+    font-size: 11pt;
+  }
+  .summen-tabelle tr.gesamt td.label {
+    color: #1a3a6b;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-size: 9pt;
+  }
+
+  /* ZAHLUNGSBEDINGUNGEN */
+  .zahlungsbedingungen {
+    margin: 8mm 20mm 0 20mm;
+    padding: 4mm 5mm;
+    background: #f8fafc;
+    border-left: 3pt solid #1a3a6b;
+    font-size: 10pt;
+    line-height: 1.55;
+  }
+  .zahlungsbedingungen-titel {
+    font-weight: 700;
+    color: #1a3a6b;
+    margin-bottom: 1mm;
+    font-size: 9.5pt;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  /* SCHLUSSTEXT */
+  .schluss {
+    margin: 6mm 20mm 0 20mm;
+    font-size: 10.5pt;
+    text-align: justify;
+  }
+  .gruss {
+    margin: 5mm 20mm 0 20mm;
+    font-size: 10.5pt;
+  }
+  .unterschrift {
+    margin: 12mm 20mm 0 20mm;
+    font-size: 10.5pt;
+  }
+  .unterschrift-name {
+    font-weight: 600;
+    color: #1a3a6b;
+  }
+  .unterschrift-funktion {
+    font-size: 9pt;
+    color: #64748b;
+  }
+
+  /* LEISTUNGSZEITRAUM-BLOCK (§ 14 Abs. 4 Nr. 6 UStG Pflicht) */
+  .leistungszeitraum {
+    margin: 4mm 20mm 0 20mm;
+    padding: 2.5mm 4mm;
+    background: #f8fafc;
+    border-left: 2.5pt solid #94a3b8;
+    font-size: 9.5pt;
+    line-height: 1.5;
+    display: flex;
+    gap: 5mm;
+    align-items: baseline;
+  }
+  .leistungszeitraum-label {
+    color: #64748b;
+    font-size: 8.5pt;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+  .leistungszeitraum-wert {
+    font-family: 'JetBrains Mono', monospace;
+    color: #1a1f2e;
+    font-weight: 500;
+  }
+
+  /* VERZUGSHINWEIS § 286/288 BGB */
+  .verzugshinweis {
+    margin: 3mm 20mm 0 20mm;
+    font-size: 8.5pt;
+    color: #64748b;
+    line-height: 1.5;
+    font-style: italic;
+  }
+
+  /* DSGVO-FUSSZEILE */
+  .dsgvo-hinweis {
+    margin: 4mm 20mm 0 20mm;
+    font-size: 7pt;
+    color: #94a3b8;
+    line-height: 1.4;
+    font-style: italic;
+  }
+
+  /* PFLICHTANGABEN-FUSSBLOCK § 14 UStG */
+  .pflichtangaben {
+    margin: 12mm 20mm 0 20mm;
+    padding-top: 4mm;
+    border-top: 1pt solid #cbd5e1;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 5mm;
+    font-size: 7.5pt;
+    color: #64748b;
+    line-height: 1.5;
+  }
+  .pflichtangaben-spalte-titel {
+    font-weight: 700;
+    color: #1a3a6b;
+    font-size: 7.5pt;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 1mm;
+  }
+  .pflichtangaben-zeile {
+    margin-bottom: 0.5mm;
+  }
+  .pflichtangaben-label {
+    color: #94a3b8;
+  }
+
+  /* KOPF + FUSSZEILE FOLGESEITEN */
+  .kopfzeile-folge {
+    position: absolute;
+    top: 12mm;
+    left: 20mm;
+    right: 20mm;
+    display: flex;
+    justify-content: space-between;
+    font-size: 8pt;
+    color: #94a3b8;
+    border-bottom: 0.3pt solid #e2e8f0;
+    padding-bottom: 2mm;
+  }
+  .kopfzeile-titel {
+    font-weight: 600;
+    color: #1a3a6b;
+  }
+  .fusszeile-folge {
+    position: absolute;
+    bottom: 12mm;
+    left: 20mm;
+    right: 20mm;
+    display: flex;
+    justify-content: space-between;
+    font-size: 7.5pt;
+    color: #94a3b8;
+    border-top: 0.3pt solid #e2e8f0;
+    padding-top: 2mm;
+  }
+
+  /* PRINT-OPTIMIERUNG */
+  @media print {
+    .page { page-break-after: always; }
+    .page:last-child { page-break-after: auto; }
+  }
+</style>
+</head>
+<body>
+
+<!-- =========================== -->
+<!--   SEITE 1 — RECHNUNG        -->
+<!-- =========================== -->
+<div class="page">
+
+  <!-- BRIEFKOPF DIN 5008 Form B -->
+  <div class="briefkopf">
+    <div class="briefkopf-zeile">
+      <div>
+        <div class="briefkopf-sv-name">Dipl.-Ing. Marcel Mustermann</div>
+        <div class="briefkopf-sv-untertitel">
+          ö.b.u.v. Sachverständiger · Schäden an Gebäuden, Feuchte- und Schimmelpilzschäden
+        </div>
+      </div>
+      <div class="briefkopf-kontakt">
+        Hohenzollernring 12<br>
+        50672 Köln<br>
+        Tel. +49 221 1234567<br>
+        kontakt@prova-systems.de
+      </div>
+    </div>
+  </div>
+
+  <!-- DIN 5008 ABSENDER-MINI-ZEILE über Empfänger -->
+  <div class="absender-mini">
+    Dipl.-Ing. Marcel Mustermann · Hohenzollernring 12 · 50672 Köln
+  </div>
+
+  <!-- DIN 5008 ADRESSFELD Empfänger -->
+  <div class="adressfeld">
+    <div class="adressfeld-empfaenger-name">Familie Hennings</div>
+    <div>Herrn Dr. Thomas Hennings</div>
+    
+    <div>Isestraße 84</div>
+    <div>20149 Hamburg</div>
+    
+  </div>
+
+  <!-- DIN 5008 BEZUGSZEICHEN -->
+  <div class="bezugszeile">
+    <div class="bezugszeile-grid">
+      
+      <div>
+        <div class="bezugszeile-label">Ihr Zeichen</div>
+        <div class="bezugszeile-wert">—</div>
+      </div>
+      
+      
+      <div>
+        <div class="bezugszeile-label">Unser Zeichen</div>
+        <div class="bezugszeile-wert">SG-2026-047</div>
+      </div>
+      
+      <div>
+        <div class="bezugszeile-label">Rechnungs-Nr.</div>
+        <div class="bezugszeile-wert">2026-0142</div>
+      </div>
+      <div>
+        <div class="bezugszeile-label">Datum</div>
+        <div class="bezugszeile-wert">20.04.2026</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BETREFF -->
+  <div class="betreff">
+    Rechnung zum Schimmelgutachten SG-2026-047
+    <div class="betreff-leistungsbezug">Objekt Isestraße 84, 20149 Hamburg · Auftrag vom 10.03.2026</div>
+  </div>
+
+  <!-- LEISTUNGSZEITRAUM (§ 14 Abs. 4 Nr. 6 UStG Pflichtangabe) -->
+  <div class="leistungszeitraum">
+    <div class="leistungszeitraum-label">Leistungszeitraum</div>
+    <div class="leistungszeitraum-wert">10.03.2026 – 17.04.2026</div>
+  </div>
+
+  <!-- ANREDE -->
+  <div class="anrede">Sehr geehrter Herr Dr. Hennings,</div>
+
+  <!-- EINLEITUNG -->
+  <div class="einleitung">vereinbarungsgemäß stelle ich Ihnen die im oben genannten Leistungszeitraum erbrachten sachverständigen Leistungen für das Schimmelgutachten am Objekt Isestraße 84 in Hamburg in Rechnung. Die Abrechnung erfolgt nach den im Auftragsbestätigungsschreiben vereinbarten Stundensätzen.</div>
+
+  <!-- RECHNUNGSPOSITIONEN -->
+  <div class="positionen-wrapper">
+    <table class="positionen">
+      <thead>
+        <tr>
+          <th class="num">Pos.</th>
+          <th>Bezeichnung</th>
+          <th class="menge">Menge</th>
+          <th class="einzel">Einzel-€</th>
+          <th class="gesamt">Gesamt-€</th>
+        </tr>
+      </thead>
+      <tbody>
+        
+        <tr>
+          <td class="num">1</td>
+          <td class="bezeichnung">
+            Auftragsannahme, Aktenstudium, Vorbereitung Ortstermin
+            
+          </td>
+          <td class="menge">2,5 h</td>
+          <td class="einzel">180,00</td>
+          <td class="gesamt">450,00</td>
+        </tr>
+        
+        <tr>
+          <td class="num">2</td>
+          <td class="bezeichnung">
+            Ortstermin am 17.04.2026 inkl. An- und Abreise
+            
+          </td>
+          <td class="menge">4,0 h</td>
+          <td class="einzel">180,00</td>
+          <td class="gesamt">720,00</td>
+        </tr>
+        
+        <tr>
+          <td class="num">3</td>
+          <td class="bezeichnung">
+            Messungen vor Ort (CM-Feuchte, Salzanalyse, Klimamessung)
+            
+          </td>
+          <td class="menge">1,5 h</td>
+          <td class="einzel">180,00</td>
+          <td class="gesamt">270,00</td>
+        </tr>
+        
+        <tr>
+          <td class="num">4</td>
+          <td class="bezeichnung">
+            Auswertung Laboranalyse Hilfskraft Mykologie (Frau Dr. Raum)
+            
+          </td>
+          <td class="menge">1,0 psch</td>
+          <td class="einzel">385,00</td>
+          <td class="gesamt">385,00</td>
+        </tr>
+        
+        <tr>
+          <td class="num">5</td>
+          <td class="bezeichnung">
+            Gutachtenerstellung (18 Seiten + 2 Anlagen + 32 Fotos)
+            
+          </td>
+          <td class="menge">11,5 h</td>
+          <td class="einzel">180,00</td>
+          <td class="gesamt">2.070,00</td>
+        </tr>
+        
+        <tr>
+          <td class="num">6</td>
+          <td class="bezeichnung">
+            Sanierungs-Kostenschätzung
+            
+          </td>
+          <td class="menge">2,0 h</td>
+          <td class="einzel">180,00</td>
+          <td class="gesamt">360,00</td>
+        </tr>
+        
+        <tr>
+          <td class="num">7</td>
+          <td class="bezeichnung">
+            Schreibarbeit, Korrekturen, PDF-Erstellung, Versand
+            
+          </td>
+          <td class="menge">1,5 h</td>
+          <td class="einzel">90,00</td>
+          <td class="gesamt">135,00</td>
+        </tr>
+        
+        <tr>
+          <td class="num">8</td>
+          <td class="bezeichnung">
+            Materialkosten Probenmaterial + Verbrauchsmaterial
+            
+          </td>
+          <td class="menge">1,0 psch</td>
+          <td class="einzel">65,00</td>
+          <td class="gesamt">65,00</td>
+        </tr>
+        
+        <tr>
+          <td class="num">9</td>
+          <td class="bezeichnung">
+            Fahrtkosten Köln–Hamburg–Köln (PKW)
+            
+          </td>
+          <td class="menge">780 km</td>
+          <td class="einzel">0,42</td>
+          <td class="gesamt">327,60</td>
+        </tr>
+        
+      </tbody>
+    </table>
+  </div>
+
+  <!-- SUMMENBLOCK -->
+  <div class="summen-wrapper">
+    <div class="summen-tabelle">
+      <table>
+        <tr class="zwischensumme">
+          <td class="label">Zwischensumme netto</td>
+          <td class="wert">4.782,60 €</td>
+        </tr>
+        
+        <tr>
+          <td class="label">zzgl. Umsatzsteuer 19 %</td>
+          <td class="wert">908,69 €</td>
+        </tr>
+        <tr class="gesamt">
+          <td class="label">Gesamtbetrag brutto</td>
+          <td class="wert">5.691,29 €</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- ZAHLUNGSBEDINGUNGEN -->
+  <div class="zahlungsbedingungen">
+    <div class="zahlungsbedingungen-titel">Zahlungsbedingungen</div>
+    Bitte überweisen Sie den Gesamtbetrag innerhalb von 14 Tagen ohne Abzug auf das unten angegebene Konto. Bitte geben Sie bei Überweisung die Rechnungs-Nr. 2026-0142 als Verwendungszweck an.
+    <br>Bei Zahlung innerhalb von 7 Tagen gewähre ich 2 % Skonto auf den Bruttobetrag.
+  </div>
+
+  <!-- SCHLUSSTEXT -->
+  <div class="schluss">Für Rückfragen zu dieser Rechnung stehe ich Ihnen jederzeit gerne zur Verfügung. Ich bedanke mich für das entgegengebrachte Vertrauen und das angenehme Mandat.</div>
+
+  <!-- GRUSS + UNTERSCHRIFT -->
+  <div class="gruss">Mit freundlichen Grüßen</div>
+  <div class="unterschrift">
+    <div class="unterschrift-name">Dipl.-Ing. Marcel Mustermann</div>
+    <div class="unterschrift-funktion">ö.b.u.v. Sachverständiger</div>
+  </div>
+
+  <!-- §407a Abs. 3 ZPO + EU AI Act KI-Block: bewusst entfernt v1.1 - keine gesetzliche Pflicht für Rechnungen -->
+
+  <!-- VERZUGSHINWEIS § 286/288 BGB -->
+  
+  <div class="verzugshinweis">
+    Bei Zahlungsverzug behalte ich mir Verzugszinsen in Höhe von 5 Prozentpunkten über dem Basiszinssatz vor (§§ 286, 288 Abs. 1 BGB). Mahn- und Inkassokosten werden gegebenenfalls gesondert geltend gemacht.
+  </div>
+  
+
+  <!-- DSGVO + E-RECHNUNGS-HINWEIS -->
+  <div class="dsgvo-hinweis">
+    Hinweis Datenverarbeitung: Ihre Daten werden auf Grundlage von Art. 6 Abs. 1 lit. b DSGVO zur Vertragserfüllung verarbeitet und gemäß § 14b UStG i.V.m. § 257 HGB für 10 Jahre aufbewahrt. Datenschutzerklärung unter kontakt@prova-systems.de.
+    <br>Hinweis E-Rechnung: Diese Rechnung wird Ihnen elektronisch im PDF-Format übermittelt. Auf Wunsch erstelle ich Rechnungen auch im hybriden Format ZUGFeRD bzw. als XRechnung gemäß § 14 Abs. 1 UStG i.V.m. ViDA-Richtlinie. Bitte teilen Sie mir Ihren bevorzugten Format mit.
+  </div>
+
+  <!-- PFLICHTANGABEN § 14 UStG (Footer-Block) -->
+  <div class="pflichtangaben">
+    <div>
+      <div class="pflichtangaben-spalte-titel">Sachverständiger</div>
+      <div class="pflichtangaben-zeile">Dipl.-Ing. Marcel Mustermann</div>
+      <div class="pflichtangaben-zeile">Hohenzollernring 12</div>
+      <div class="pflichtangaben-zeile">50672 Köln</div>
+      <div class="pflichtangaben-zeile">Bestellung: IHK Köln</div>
+    </div>
+    <div>
+      <div class="pflichtangaben-spalte-titel">Steuerangaben</div>
+      <div class="pflichtangaben-zeile"><span class="pflichtangaben-label">Steuer-Nr.:</span> 215/5234/1234</div>
+      <div class="pflichtangaben-zeile"><span class="pflichtangaben-label">USt-IdNr.:</span> DE123456789</div>
+      <div class="pflichtangaben-zeile"><span class="pflichtangaben-label">FA:</span> Köln-Mitte</div>
+      <div class="pflichtangaben-zeile" style="margin-top:1.5mm;font-style:italic;">Aufbewahrungspflicht: 10 Jahre (§ 14b UStG)</div>
+    </div>
+    <div>
+      <div class="pflichtangaben-spalte-titel">Bankverbindung</div>
+      <div class="pflichtangaben-zeile">Sparkasse KölnBonn</div>
+      <div class="pflichtangaben-zeile" style="font-family:'JetBrains Mono',monospace;font-size:7.5pt;">IBAN DE89 3705 0198 1234 5678 90</div>
+      <div class="pflichtangaben-zeile" style="font-family:'JetBrains Mono',monospace;font-size:7.5pt;">BIC COLSDE33XXX</div>
+      <div class="pflichtangaben-zeile">Kontoinhaber: Marcel Mustermann</div>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

@@ -1,0 +1,191 @@
+﻿cd C:\PROVA-Systems\prova-systems\GitHub\prova-systems
+
+# ──────────────────────────────────────────────────
+# Goldstandard-Ordner-Struktur anlegen
+# ──────────────────────────────────────────────────
+
+$basePath = "docs/templates-goldstandard"
+
+# Hauptordner
+New-Item -ItemType Directory -Force -Path $basePath | Out-Null
+
+# Unterordner pro Template-Kategorie (Übersichtlichkeit)
+New-Item -ItemType Directory -Force -Path "$basePath/01-rechnungen" | Out-Null
+New-Item -ItemType Directory -Force -Path "$basePath/02-bestaetigungen" | Out-Null
+New-Item -ItemType Directory -Force -Path "$basePath/03-mahnungen" | Out-Null
+New-Item -ItemType Directory -Force -Path "$basePath/04-gutachten" | Out-Null
+New-Item -ItemType Directory -Force -Path "$basePath/05-sonstige" | Out-Null
+New-Item -ItemType Directory -Force -Path "$basePath/_DONE" | Out-Null
+
+# F-04 Goldstandard verschieben (hast Du schon)
+if (Test-Path "$basePath/F-04-KURZSTELLUNGNAHME.template.html") {
+    Move-Item "$basePath/F-04-KURZSTELLUNGNAHME.template.html" "$basePath/04-gutachten/" -Force
+    Move-Item "$basePath/F-04-KURZSTELLUNGNAHME.payload.json" "$basePath/04-gutachten/" -Force
+    Write-Host "✅ F-04 verschoben in 04-gutachten/" -ForegroundColor Green
+}
+
+# ──────────────────────────────────────────────────
+# Platzhalter-Files anlegen für ALLE 23 Templates
+# ──────────────────────────────────────────────────
+
+$templates = @(
+    # 01 Rechnungen
+    @{ Cat="01-rechnungen"; Name="F-01-JVEG-GERICHTSRECHNUNG"; UUID="S32BEA1F-9D1D-4OCE-BA84-542C50B9B437" },
+    @{ Cat="01-rechnungen"; Name="F-02-PAUSCHALRECHNUNG";      UUID="81C3E69D-6710-4123-8670-6C52BB926058" },
+    @{ Cat="01-rechnungen"; Name="F-03-STUNDENRECHNUNG";       UUID="EA5CAC85-EE15-43BC-8C25-10C2C6368572" },
+    @{ Cat="01-rechnungen"; Name="F-05-GUTSCHRIFT-STORNO";     UUID="64BFD7F0-E90A-4F03-A65C-AE0D32DBA9C3" },
+
+    # 02 Bestätigungen
+    @{ Cat="02-bestaetigungen"; Name="PROVA-BRIEF";             UUID="BAD1170B-C2BC-4EE7-ACBB-CCBD15B892C7" },
+    @{ Cat="02-bestaetigungen"; Name="FOTODOKU";                UUID="0383BD85-FEA6-4AED-B477-48A2AA5F1373" },
+
+    # 03 Mahnungen
+    @{ Cat="03-mahnungen"; Name="F-06-MAHNUNG-1";              UUID="8ECAC2E4-D079-4B62-B71C-BE0D12BBC020" },
+    @{ Cat="03-mahnungen"; Name="F-07-MAHNUNG-2";              UUID="A4E57F73-F6E6-4AEB-B48C-56A4869B026B" },
+    @{ Cat="03-mahnungen"; Name="F-08-MAHNUNG-3-LETZTE";       UUID="6ADE8D9A-BDF4-44B2-98D6-1BB027A4B239" },
+
+    # 04 Gutachten (F-04 hast Du schon)
+    @{ Cat="04-gutachten"; Name="F-09-KURZGUTACHTEN";          UUID="BA076019-40E8-41CB-B2AE-08D3A77289DA" },
+    @{ Cat="04-gutachten"; Name="F-10-BEWEISSICHERUNG";        UUID="6FF656D3-9807-4F59-9305-1338D5D1AD9A" },
+    @{ Cat="04-gutachten"; Name="F-11-BRANDSCHADEN";           UUID="6B85ECFF-EAB2-451B-8007-F5561AE20DB4" },
+    @{ Cat="04-gutachten"; Name="F-12-FEUCHTE-SCHIMMEL";       UUID="4233F240-A3D4-4611-A7B7-FDBE8BAACEF8" },
+    @{ Cat="04-gutachten"; Name="F-13-ELEMENTARSCHADEN";       UUID="8868A0E2-DB59-4CB5-8ED9-BCE327340949" },
+    @{ Cat="04-gutachten"; Name="F-14-BAUMAENGEL";             UUID="3174576E-999B-4A39-9A0C-9139AD220C9E" },
+    @{ Cat="04-gutachten"; Name="F-15-GERICHTSGUTACHTEN";      UUID="36E140DC-DD17-432F-B237-910C6462736E" },
+    @{ Cat="04-gutachten"; Name="F-16-ERGAENZUNG";             UUID="A8D05FAB-521E-43BC-A4B5-F2B5F6BFA1ED" },
+    @{ Cat="04-gutachten"; Name="F-17-SCHIEDSGUTACHTEN";       UUID="37CF6A57-F7C1-42F6-BF94-B91522615C13" },
+    @{ Cat="04-gutachten"; Name="F-18-BAUABNAHME";             UUID="4D81616B-1D99-4B6B-8EF4-B538DF71E9A5" },
+    @{ Cat="04-gutachten"; Name="F-19-WERTGUTACHTEN";          UUID="29064D98-FD12-4135-9D44-F49CCF9819C6" },
+
+    # 05 Sonstige
+    @{ Cat="05-sonstige"; Name="PROVA-GUTACHTEN-SOLO";         UUID="EC64C790-3E04-4C66-BFF8-4A3BB021585F" },
+    @{ Cat="05-sonstige"; Name="PROVA-GUTACHTEN-TEAM";         UUID="E865E0CD-535A-4A25-B5AB-917ACB6EB4F7" }
+)
+
+foreach ($t in $templates) {
+    $htmlPath = "$basePath/$($t.Cat)/$($t.Name).template.html"
+    $jsonPath = "$basePath/$($t.Cat)/$($t.Name).payload.json"
+    
+    # Nur Platzhalter wenn nicht schon existiert (F-04 nicht überschreiben!)
+    if (-not (Test-Path $htmlPath)) {
+        @"
+<!-- 
+  PROVA Template Goldstandard
+  Template: $($t.Name)
+  PDFMonkey UUID: $($t.UUID)
+  
+  ⚠️ PLATZHALTER — Marcel ersetzt diesen mit dem echten Template aus PDFMonkey
+  
+  Quelle: https://app.pdfmonkey.io/templates → $($t.Name) → Edit → HTML kopieren
+-->
+"@ | Set-Content -Path $htmlPath -Encoding UTF8
+    }
+    
+    if (-not (Test-Path $jsonPath)) {
+        @"
+{
+  "_template": "$($t.Name)",
+  "_pdfmonkey_uuid": "$($t.UUID)",
+  "_status": "PLATZHALTER — Marcel ersetzt mit echtem Sample-Payload"
+}
+"@ | Set-Content -Path $jsonPath -Encoding UTF8
+    }
+}
+
+# ──────────────────────────────────────────────────
+# README mit Anleitung
+# ──────────────────────────────────────────────────
+
+$readme = @"
+# PROVA Templates Goldstandard
+
+**Stand:** 28.04.2026  
+**Zweck:** Alle 23 PDFMonkey-Templates als HTML+JSON-Paar archivieren  
+**Verwendung:** Claude Code liest diese Files als Vorlage für Web-Page-Vollausbau
+
+---
+
+## Status (Marcel füllt aus)
+
+### 04-Gutachten (PRIORITÄT 1 — kritisch für Pilot)
+
+| Template | UUID | Status |
+|----------|------|--------|
+| F-04 KURZSTELLUNGNAHME | C4BB257B-2B41-4AF7-93C1-0C795FCA6BBC | ✅ DONE |
+| F-09 KURZGUTACHTEN | BA076019-40E8-41CB-B2AE-08D3A77289DA | ☐ TODO |
+| F-10 BEWEISSICHERUNG | 6FF656D3-9807-4F59-9305-1338D5D1AD9A | ☐ TODO |
+| F-11 BRANDSCHADEN | 6B85ECFF-EAB2-451B-8007-F5561AE20DB4 | ☐ TODO |
+| F-12 FEUCHTE-SCHIMMEL | 4233F240-A3D4-4611-A7B7-FDBE8BAACEF8 | ☐ TODO |
+| F-13 ELEMENTARSCHADEN | 8868A0E2-DB59-4CB5-8ED9-BCE327340949 | ☐ TODO |
+| F-14 BAUMAENGEL | 3174576E-999B-4A39-9A0C-9139AD220C9E | ☐ TODO |
+| F-15 GERICHTSGUTACHTEN | 36E140DC-DD17-432F-B237-910C6462736E | ☐ TODO |
+| F-16 ERGAENZUNG | A8D05FAB-521E-43BC-A4B5-F2B5F6BFA1ED | ☐ TODO |
+| F-17 SCHIEDSGUTACHTEN | 37CF6A57-F7C1-42F6-BF94-B91522615C13 | ☐ TODO |
+| F-18 BAUABNAHME | 4D81616B-1D99-4B6B-8EF4-B538DF71E9A5 | ☐ TODO |
+| F-19 WERTGUTACHTEN | 29064D98-FD12-4135-9D44-F49CCF9819C6 | ☐ TODO |
+
+### 01-Rechnungen
+| F-01 JVEG GERICHTSRECHNUNG | S32BEA1F-9D1D-4OCE-BA84-542C50B9B437 | ☐ TODO |
+| F-02 PAUSCHALRECHNUNG | 81C3E69D-6710-4123-8670-6C52BB926058 | ☐ TODO |
+| F-03 STUNDENRECHNUNG | EA5CAC85-EE15-43BC-8C25-10C2C6368572 | ☐ TODO |
+| F-05 GUTSCHRIFT-STORNO | 64BFD7F0-E90A-4F03-A65C-AE0D32DBA9C3 | ☐ TODO |
+
+### 02-Bestätigungen
+| PROVA-BRIEF | BAD1170B-C2BC-4EE7-ACBB-CCBD15B892C7 | ☐ TODO |
+| FOTODOKU | 0383BD85-FEA6-4AED-B477-48A2AA5F1373 | ☐ TODO |
+
+### 03-Mahnungen
+| F-06 MAHNUNG-1 | 8ECAC2E4-D079-4B62-B71C-BE0D12BBC020 | ☐ TODO |
+| F-07 MAHNUNG-2 | A4E57F73-F6E6-4AEB-B48C-56A4869B026B | ☐ TODO |
+| F-08 MAHNUNG-3-LETZTE | 6ADE8D9A-BDF4-44B2-98D6-1BB027A4B239 | ☐ TODO |
+
+### 05-Sonstige
+| PROVA-GUTACHTEN-SOLO | EC64C790-3E04-4C66-BFF8-4A3BB021585F | ☐ TODO |
+| PROVA-GUTACHTEN-TEAM | E865E0CD-535A-4A25-B5AB-917ACB6EB4F7 | ☐ TODO |
+
+---
+
+## Workflow für Marcel
+
+### Pro Template (~3 Min):
+
+1. **PDFMonkey öffnen:** https://app.pdfmonkey.io/templates
+2. **Template anklicken:** z.B. "F-09 KURZGUTACHTEN"
+3. **Edit-Modus** → HTML-Tab
+4. **HTML kopieren** (Strg+A → Strg+C)
+5. **In Notepad pasten** (oder VSCode)
+6. **Speichern** in entsprechendem Unterordner als ``F-09-KURZGUTACHTEN.template.html``
+7. **Sample-Data-Tab** in PDFMonkey → JSON kopieren
+8. **Speichern** als ``F-09-KURZGUTACHTEN.payload.json``
+9. ✅ In dieser README den Status auf DONE setzen
+
+### Reihenfolge nach Priorität (PROVA-Pilot-relevant):
+
+**Phase 1 — Pilot-kritisch (1-2 Std):**
+- F-04 KURZSTELLUNGNAHME ✅ (hast Du schon!)
+- F-09 KURZGUTACHTEN
+- F-10 BEWEISSICHERUNG
+- F-15 GERICHTSGUTACHTEN
+- PROVA-BRIEF
+- F-02 PAUSCHALRECHNUNG
+
+**Phase 2 — Erweitert (1 Std):**
+- F-11-F-14 (Spezial-Schäden)
+- F-19 WERTGUTACHTEN
+- F-17 SCHIEDSGUTACHTEN
+- F-16 ERGAENZUNG
+- F-18 BAUABNAHME
+
+**Phase 3 — Service (1 Std):**
+- F-01 JVEG, F-03 STUNDEN, F-05 GUTSCHRIFT
+- F-06-F-08 MAHNUNGEN
+- FOTODOKU
+- PROVA-GUTACHTEN-SOLO, -TEAM
+
+---
+
+## Validation
+
+Wenn alle 23 Templates eingepflegt sind:
+
+```powershell

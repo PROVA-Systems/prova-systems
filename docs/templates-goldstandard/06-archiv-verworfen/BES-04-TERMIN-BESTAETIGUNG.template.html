@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>BES-04 Termin-Bestätigung — PROVA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --primary: #1a3a6b; --accent: #3b82f6; --muted: #64748b;
+  --text: #0f172a; --light: #f1f5f9; --lighter: #f8fafc;
+  --border: #e2e8f0; --success: #059669; --warning: #d97706;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Inter', sans-serif; font-size: 10.5pt; line-height: 1.55; color: var(--text); background: white; }
+@page { size: A4; margin: 25mm 25mm 22mm 25mm; }
+
+.brief-header { padding-bottom: 10mm; }
+.absender-zeile { font-size: 8.5pt; color: var(--muted); border-bottom: 0.5pt solid var(--border); padding-bottom: 1mm; margin-bottom: 8mm; }
+
+.empfaenger-block { margin-top: 5mm; margin-bottom: 8mm; min-height: 35mm; }
+.empfaenger-block .anrede-zeile { font-size: 11pt; line-height: 1.5; }
+
+.bezugszeichen-block { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4mm; margin-bottom: 8mm; padding: 3mm 4mm; background: var(--lighter); border-radius: 2px; font-size: 9pt; }
+.bezugszeichen-block .label { color: var(--muted); font-size: 8pt; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 0.5mm; }
+.bezugszeichen-block .value { color: var(--text); font-family: 'JetBrains Mono', monospace; font-size: 9pt; font-weight: 500; }
+
+.betreff { font-size: 13pt; font-weight: 600; color: var(--primary); margin: 6mm 0 8mm 0; }
+
+.brief-body { font-size: 10.5pt; line-height: 1.7; }
+.brief-body p { margin-bottom: 4mm; }
+
+/* Termin-Highlight-Card */
+.termin-card {
+  margin: 6mm 0; padding: 8mm 10mm;
+  background: linear-gradient(135deg, var(--primary) 0%, #2a4a7b 100%);
+  color: white; border-radius: 4px; position: relative; overflow: hidden;
+  text-align: center;
+}
+.termin-card::before {
+  content: ''; position: absolute; top: 0; right: 0;
+  width: 40mm; height: 40mm;
+  background: radial-gradient(circle at top right, rgba(59, 130, 246, 0.3), transparent 70%);
+}
+.termin-card .label { font-size: 9pt; letter-spacing: 0.15em; text-transform: uppercase; opacity: 0.85; margin-bottom: 4mm; font-weight: 500; }
+.termin-card .datum { font-size: 26pt; font-weight: 700; letter-spacing: -0.02em; line-height: 1.1; margin-bottom: 2mm; }
+.termin-card .uhrzeit { font-size: 14pt; font-weight: 500; opacity: 0.95; margin-bottom: 4mm; }
+.termin-card .ort-treffpunkt { font-size: 11pt; opacity: 0.9; padding-top: 4mm; border-top: 0.5pt solid rgba(255,255,255,0.3); }
+
+/* Daten-Box */
+.termin-detail-box { margin: 5mm 0; padding: 5mm 6mm; background: var(--lighter); border-left: 3px solid var(--accent); border-radius: 2px; }
+.termin-detail-box .label-titel { font-size: 9pt; letter-spacing: 0.1em; text-transform: uppercase; color: var(--primary); font-weight: 600; margin-bottom: 4mm; }
+.termin-detail-box .data-grid { display: grid; grid-template-columns: 50mm 1fr; gap: 2mm 4mm; }
+.termin-detail-box .data-row .key { color: var(--muted); font-size: 9.5pt; padding: 1mm 0; }
+.termin-detail-box .data-row .val { color: var(--text); font-size: 10.5pt; font-weight: 500; padding: 1mm 0; }
+
+/* Vorbereitungs-Checkliste */
+.vorbereitungs-box { margin: 5mm 0; padding: 5mm 6mm; background: white; border: 1px solid var(--border); border-radius: 3px; }
+.vorbereitungs-box .label-titel { font-size: 10pt; letter-spacing: 0.05em; color: var(--primary); font-weight: 600; margin-bottom: 3mm; }
+.vorbereitungs-box ul { list-style: none; }
+.vorbereitungs-box li { padding: 1.5mm 0 1.5mm 7mm; font-size: 10pt; position: relative; }
+.vorbereitungs-box li::before { content: '☐'; position: absolute; left: 0; color: var(--accent); font-size: 12pt; line-height: 0.85; }
+
+/* Wichtiger Hinweis */
+.wichtig-box { margin: 5mm 0; padding: 4mm 6mm; background: var(--lighter); border: 1px solid var(--border); border-left: 3px solid var(--warning); border-radius: 3px; font-size: 10pt; line-height: 1.6; }
+.wichtig-box strong { color: var(--warning); }
+
+.pflicht-box { margin: 5mm 0; padding: 4mm 6mm; background: var(--lighter); border-left: 3px solid var(--success); border-radius: 2px; font-size: 9.5pt; line-height: 1.55; }
+.pflicht-box .marker { display: inline-block; padding: 1mm 3mm; background: var(--success); color: white; font-size: 7.5pt; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 600; border-radius: 2px; margin-bottom: 2.5mm; }
+
+.unterschrift-block { margin-top: 12mm; }
+.unterschrift-zeile { display: flex; align-items: flex-end; gap: 8mm; margin-top: 8mm; }
+.unterschrift-feld { flex: 1; }
+.unterschrift-bild { max-width: 50mm; max-height: 18mm; margin-bottom: 1mm; }
+.stempel-bild { max-width: 32mm; max-height: 32mm; opacity: 0.85; }
+.unterschrift-line { border-top: 0.5pt solid var(--text); padding-top: 1.5mm; }
+.unterschrift-line .name { font-size: 11pt; font-weight: 600; color: var(--text); margin-bottom: 0.5mm; }
+.unterschrift-line .rolle { font-size: 9pt; color: var(--muted); }
+
+.footer-disclaimer { position: fixed; bottom: 8mm; left: 25mm; right: 25mm; font-size: 7.5pt; color: var(--muted); text-align: center; padding-top: 2mm; border-top: 0.5pt solid var(--border); }
+
+.law-ref { font-family: 'JetBrains Mono', monospace; font-size: 0.92em; color: var(--primary); font-weight: 500; }
+</style>
+</head>
+<body>
+
+<div class="brief-header">
+  <div class="absender-zeile">{{sv_titel}} {{sv_name}} · {{sv_strasse}} · {{sv_plz}} {{sv_ort}}</div>
+</div>
+
+<div class="empfaenger-block">
+  <div class="anrede-zeile">{{empfaenger_anrede}}<br>
+    {{#if empfaenger_firma}}{{empfaenger_firma}}<br>{{/if}}
+    {{empfaenger_name}}<br>
+    {{empfaenger_strasse}}<br>
+    {{empfaenger_plz}} {{empfaenger_ort}}
+  </div>
+</div>
+
+<div class="bezugszeichen-block">
+  <div><div class="label">Ihr Zeichen</div><div class="value">{{ihr_zeichen}}</div></div>
+  <div><div class="label">Unser Zeichen</div><div class="value">{{bes_nummer}}</div></div>
+  <div><div class="label">Bearbeiter</div><div class="value">{{sv_name}}</div></div>
+  <div><div class="label">Datum</div><div class="value">{{ausstellungsdatum}}</div></div>
+</div>
+
+<div class="betreff">Bestätigung Ihres Ortstermins am {{termin_datum}}</div>
+
+<div class="brief-body">
+  <p>{{empfaenger_anrede}} {{empfaenger_name}},</p>
+
+  <p>hiermit bestätige ich Ihnen den vereinbarten Ortstermin zur Begutachtung des Objekts {{termin_objekt_adresse}}.</p>
+
+  <!-- Termin-Highlight-Card -->
+  <div class="termin-card">
+    <div class="label">Ihr Termin</div>
+    <div class="datum">{{termin_datum}}</div>
+    <div class="uhrzeit">{{termin_uhrzeit}} · {{termin_dauer_voraussichtlich_minuten}} Min</div>
+    <div class="ort-treffpunkt">📍 {{termin_objekt_adresse}}<br><strong>Treffpunkt:</strong> {{termin_treffpunkt}}</div>
+  </div>
+
+  <!-- Termin-Details -->
+  <div class="termin-detail-box">
+    <div class="label-titel">Termin-Details</div>
+    <div class="data-grid">
+      <div class="data-row"><div class="key">Zweck des Termins</div><div class="val">{{termin_zweck}}</div></div>
+      <div class="data-row"><div class="key">Voraussichtliche Anwesende</div><div class="val">
+        {{#each anwesende_voraussichtlich}}{{this}}{{#unless @last}}, {{/unless}}{{/each}}
+      </div></div>
+      <div class="data-row"><div class="key">Aktenzeichen</div><div class="val">{{auftrag_az_intern}}</div></div>
+    </div>
+  </div>
+
+  <!-- Vorbereitung -->
+  {{#if vorzubereiten_seitens_auftraggeber}}
+  <div class="vorbereitungs-box">
+    <div class="label-titel">Bitte halten Sie zum Termin bereit:</div>
+    <ul>
+      {{#each vorzubereiten_seitens_auftraggeber}}
+      <li>{{this}}</li>
+      {{/each}}
+    </ul>
+  </div>
+  {{/if}}
+
+  <!-- Anfahrt-Hinweis -->
+  {{#if anfahrtskosten_hinweis}}
+  <p style="font-size: 9.5pt; color: var(--muted); font-style: italic;">{{anfahrtskosten_hinweis}}</p>
+  {{/if}}
+
+  <!-- Wichtiger Hinweis bei Absage -->
+  <div class="wichtig-box">
+    <strong>⚠ Bei Verhinderung:</strong> Sollten Sie den Termin nicht wahrnehmen können, bitte ich um Absage spätestens <strong>{{absage_frist_h}} Stunden</strong> vorher unter <strong>{{absage_kontakt}}</strong>. Bei kurzfristigen Absagen unter dieser Frist können Ausfallkosten nach JVEG entstehen.
+  </div>
+
+  <p>Ich freue mich auf den Termin und bitte Sie, sich pünktlich am vereinbarten Treffpunkt einzufinden.</p>
+
+  <p>Mit freundlichen Grüßen</p>
+</div>
+
+<div class="pflicht-box">
+  <div class="marker">§ 407a Abs. 2 ZPO · § 9 IHK-SVO</div>
+  <p>Der Ortstermin wird unparteiisch und gewissenhaft durchgeführt. Etwaige Hilfsmittel (Messgeräte, Kamera) werden zur Dokumentation eingesetzt; alle erhobenen Daten werden DSGVO-konform behandelt.</p>
+</div>
+
+<div class="unterschrift-block">
+  <div class="unterschrift-zeile">
+    <div class="unterschrift-feld">
+      {{#if sv_unterschrift_url}}
+        <img src="{{sv_unterschrift_url}}" alt="Unterschrift" class="unterschrift-bild">
+      {{/if}}
+      <div class="unterschrift-line">
+        <div class="name">{{sv_titel}} {{sv_name}}</div>
+        <div class="rolle">ö.b.u.v. Sachverständiger · {{sv_bestellungsstelle}}</div>
+      </div>
+    </div>
+    <div>
+      {{#if sv_stempel_url}}
+        <img src="{{sv_stempel_url}}" alt="Rundstempel" class="stempel-bild">
+      {{/if}}
+    </div>
+  </div>
+</div>
+
+<div class="footer-disclaimer">
+  Erstellt mit PROVA Systems · prova-systems.de · Inhalt und sachverständige Bewertung allein in Verantwortung des unterzeichnenden Sachverständigen
+</div>
+
+</body>
+</html>

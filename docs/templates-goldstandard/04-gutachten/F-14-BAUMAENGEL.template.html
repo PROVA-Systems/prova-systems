@@ -1,0 +1,1031 @@
+﻿<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>BM-2026-022 — Kiesgrubenweg 17, 60437 Frankfurt am Main</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════════════════════════
+   PROVA Systems · KURZGUTACHTEN (Flow A) v1.0
+   Master-Schablone für Schadensgutachten (F-09, auch Basis F-07,
+   F-10, F-11, F-12, F-13, F-14, F-17, F-18)
+   Design-System v1.0 · 10.5pt Body · IHK-SVO § 9 Abs. 3
+   EU AI Act Art. 50 · § 407a Abs. 2+3 ZPO · DSGVO
+   ═══════════════════════════════════════════════════════════════ */
+
+:root {
+  --primary: #1a3a6b;
+  --accent:  #3b82f6;
+  --muted:   #64748b;
+  --text:    #0f172a;
+  --light:   #f1f5f9;
+  --lighter: #f8fafc;
+  --border:  #e2e8f0;
+  --success: #059669;
+  --warning: #d97706;
+  --danger:  #dc2626;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+  font-size: 10.5pt;
+  line-height: 1.55;
+  color: var(--text);
+  background: white;
+}
+
+@page { size: A4; margin: 20mm 20mm 22mm 20mm; }
+
+@page {
+  @top-left {
+    content: "Marcel Mustermann · ö.b.u.v. Sachverständiger";
+    font-family: 'Inter', sans-serif; font-size: 8pt; color: #64748b; padding-top: 10mm;
+  }
+  @top-right {
+    content: "Baumängelgutachten BM-2026-022";
+    font-family: 'Inter', sans-serif; font-size: 8pt; color: #1a3a6b; font-weight: 600; padding-top: 10mm;
+  }
+  @bottom-left {
+    content: "Gutachten-Nr.: BM-2026-022";
+    font-family: 'Inter', sans-serif; font-size: 8pt; color: #64748b; padding-bottom: 10mm;
+  }
+  @bottom-right {
+    content: "Seite " counter(page) " / " counter(pages);
+    font-family: 'Inter', sans-serif; font-size: 8pt; color: #64748b; padding-bottom: 10mm;
+  }
+}
+
+@page :first {
+  @top-left { content: ""; } @top-right { content: ""; }
+  @bottom-left { content: ""; } @bottom-right { content: ""; }
+}
+
+/* ═══ DECKBLATT ═══ */
+.deckblatt { page-break-after: always; min-height: 257mm; display: flex; flex-direction: column; }
+
+.deckblatt-header { padding-bottom: 18mm; border-bottom: 2px solid var(--primary); }
+.deckblatt-kategorie { font-size: 9.5pt; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); font-weight: 500; margin-bottom: 8mm; }
+.deckblatt-titel { font-size: 30pt; font-weight: 700; line-height: 1.15; color: var(--primary); margin-bottom: 4mm; letter-spacing: -0.02em; }
+.deckblatt-subtitel { font-size: 13pt; color: var(--muted); font-weight: 400; margin-bottom: 6mm; }
+.deckblatt-badge { display: inline-block; padding: 4px 12px; background: var(--light); color: var(--primary); border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 11pt; font-weight: 500; border: 1px solid var(--border); }
+
+.deckblatt-objekt { margin-top: 18mm; padding: 10mm; background: var(--lighter); border-left: 3px solid var(--accent); border-radius: 2px; }
+.deckblatt-objekt-label { font-size: 8pt; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 3mm; font-weight: 500; }
+.deckblatt-objekt-adresse { font-size: 15pt; font-weight: 600; color: var(--text); line-height: 1.35; margin-bottom: 2mm; }
+.deckblatt-objekt-typ { font-size: 11pt; color: var(--muted); }
+
+.deckblatt-sv { margin-top: 12mm; padding: 8mm 10mm; background: white; border: 1px solid var(--border); border-radius: 3px; }
+.deckblatt-sv-label { font-size: 8pt; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); font-weight: 500; margin-bottom: 3mm; }
+.deckblatt-sv-name { font-size: 13pt; font-weight: 600; color: var(--text); margin-bottom: 1.5mm; }
+.deckblatt-sv-qualifikation { font-size: 10.5pt; color: var(--primary); font-weight: 500; margin-bottom: 1.5mm; }
+.deckblatt-sv-bestellung { font-size: 9.5pt; color: var(--muted); line-height: 1.5; margin-bottom: 2mm; font-style: italic; }
+.deckblatt-sv-kontakt { font-size: 9.5pt; color: var(--text); line-height: 1.6; }
+.deckblatt-sv-kontakt .mono { font-family: 'JetBrains Mono', monospace; font-size: 9pt; }
+
+.deckblatt-metadaten { margin-top: auto; padding-top: 10mm; display: grid; grid-template-columns: repeat(2, 1fr); gap: 6mm 15mm; }
+.deckblatt-meta-item .label { font-size: 8pt; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); font-weight: 500; margin-bottom: 1mm; }
+.deckblatt-meta-item .value { font-size: 11pt; color: var(--text); font-weight: 500; }
+.deckblatt-meta-item .value.mono { font-family: 'JetBrains Mono', monospace; font-size: 10pt; }
+
+.deckblatt-footer { margin-top: 10mm; padding-top: 6mm; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: flex-end; font-size: 8.5pt; color: var(--muted); }
+.deckblatt-footer .umfang-info { font-size: 8.5pt; line-height: 1.5; }
+.deckblatt-footer .brand-right { text-align: right; font-size: 8pt; letter-spacing: 0.05em; }
+.deckblatt-footer .brand-right .bold { font-weight: 600; color: var(--primary); font-size: 9.5pt; letter-spacing: 0.08em; }
+
+/* ═══ INHALTSSEITEN ═══ */
+.teil { margin-bottom: 14mm; page-break-inside: avoid; }
+
+.teil-header { display: flex; align-items: baseline; gap: 10mm; margin-bottom: 8mm; padding-bottom: 4mm; border-bottom: 2px solid var(--primary); }
+.teil-nummer { font-family: 'JetBrains Mono', monospace; font-size: 11pt; font-weight: 500; color: var(--accent); letter-spacing: 0.1em; text-transform: uppercase; flex-shrink: 0; padding-top: 1mm; }
+.teil-titel { font-size: 18pt; font-weight: 600; color: var(--primary); letter-spacing: -0.015em; }
+
+.abschnitt { margin-bottom: 8mm; }
+.abschnitt-header { display: flex; align-items: baseline; gap: 6mm; margin-bottom: 4mm; padding-bottom: 2mm; border-bottom: 1px solid var(--border); }
+.abschnitt-nr { font-family: 'JetBrains Mono', monospace; font-size: 11.5pt; font-weight: 500; color: var(--muted); flex-shrink: 0; }
+.abschnitt-titel { font-size: 13pt; font-weight: 600; color: var(--text); letter-spacing: -0.01em; }
+.abschnitt-body { font-size: 10.5pt; line-height: 1.65; color: var(--text); }
+.abschnitt-body p { margin-bottom: 3mm; }
+
+.info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2mm 8mm; margin: 4mm 0; padding: 5mm 6mm; background: var(--lighter); border-radius: 3px; border: 1px solid var(--border); }
+.info-item { display: flex; flex-direction: column; gap: 0.5mm; padding: 1.5mm 0; }
+.info-item .label { font-size: 8pt; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 500; }
+.info-item .value { font-size: 10.5pt; color: var(--text); font-weight: 500; }
+.info-item .value.mono { font-family: 'JetBrains Mono', monospace; font-size: 10pt; }
+
+.beweisfrage { margin: 4mm 0; padding: 5mm 7mm; background: var(--lighter); border-left: 3px solid var(--primary); border-radius: 2px; font-size: 11pt; line-height: 1.6; }
+.beweisfrage .label { font-size: 8.5pt; letter-spacing: 0.1em; text-transform: uppercase; color: var(--primary); font-weight: 600; margin-bottom: 2mm; }
+
+/* Befund-Karte (Schaden-spezifisch) */
+.befund-karte { margin: 4mm 0; padding: 5mm 6mm; background: var(--lighter); border: 1px solid var(--border); border-left: 3px solid var(--accent); border-radius: 2px; }
+.befund-karte .nr { font-family: 'JetBrains Mono', monospace; font-size: 9pt; color: var(--accent); font-weight: 500; margin-bottom: 1mm; }
+.befund-karte .titel { font-size: 11pt; font-weight: 600; color: var(--primary); margin-bottom: 2mm; }
+.befund-karte .text { font-size: 10.5pt; line-height: 1.6; color: var(--text); }
+.befund-karte .norm { margin-top: 2mm; font-size: 9pt; color: var(--muted); font-style: italic; }
+
+/* Ursachenhypothesen (Flow A spezifisch) */
+.hypothese { margin: 3mm 0; padding: 4mm 5mm; background: white; border: 1px solid var(--border); border-radius: 3px; }
+.hypothese.primaer { border-left: 3px solid var(--primary); }
+.hypothese.alternativ { border-left: 3px solid var(--muted); }
+.hypothese-kopf { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 2mm; }
+.hypothese-titel { font-size: 11pt; font-weight: 600; color: var(--primary); }
+.hypothese-wahrscheinlichkeit { font-size: 9pt; color: var(--muted); font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; }
+
+/* Messwerte-Tabelle */
+.messwerte { width: 100%; border-collapse: collapse; margin: 4mm 0; font-size: 10pt; }
+.messwerte th, .messwerte td { padding: 2.5mm 4mm; text-align: left; border-bottom: 1px solid var(--border); }
+.messwerte th { background: var(--light); color: var(--muted); font-weight: 500; font-size: 9pt; letter-spacing: 0.08em; text-transform: uppercase; border-bottom: 2px solid var(--border); }
+.messwerte td.number { text-align: right; font-family: 'JetBrains Mono', monospace; font-size: 10pt; }
+.messwerte tr:nth-child(even) { background: var(--lighter); }
+
+/* Sanierung-Tabelle */
+.sanierung-tabelle { width: 100%; border-collapse: collapse; margin: 4mm 0; font-size: 10pt; }
+.sanierung-tabelle th, .sanierung-tabelle td { padding: 2.5mm 4mm; text-align: left; border-bottom: 1px solid var(--border); }
+.sanierung-tabelle th { background: var(--light); color: var(--muted); font-weight: 500; font-size: 9pt; letter-spacing: 0.08em; text-transform: uppercase; border-bottom: 2px solid var(--border); }
+.sanierung-tabelle td.number { text-align: right; font-family: 'JetBrains Mono', monospace; font-size: 10pt; }
+.sanierung-tabelle tr:nth-child(even) { background: var(--lighter); }
+.sanierung-tabelle tr.summary { background: var(--light) !important; font-weight: 600; border-top: 2px solid var(--primary); }
+.sanierung-tabelle tr.summary td { padding: 3mm 4mm; }
+
+/* Kostenrahmen-Card (Hauptergebnis Flow A) */
+.kosten-card {
+  margin: 6mm 0; padding: 8mm;
+  background: linear-gradient(135deg, var(--primary) 0%, #2a4a7b 100%);
+  color: white; border-radius: 4px; position: relative; overflow: hidden;
+}
+.kosten-card::before {
+  content: ''; position: absolute; top: 0; right: 0;
+  width: 40mm; height: 40mm;
+  background: radial-gradient(circle at top right, rgba(59, 130, 246, 0.3), transparent 70%);
+}
+.kosten-card-label { font-size: 9.5pt; letter-spacing: 0.12em; text-transform: uppercase; opacity: 0.85; margin-bottom: 2mm; font-weight: 500; }
+.kosten-card-value { font-size: 26pt; font-weight: 700; letter-spacing: -0.02em; line-height: 1.1; }
+.kosten-card-note { font-size: 9pt; opacity: 0.85; margin-top: 3mm; font-weight: 400; }
+
+/* SV-Fachurteil-Kasten (3.4 — KI-FREI) */
+.fachurteil-kasten { margin: 5mm 0; padding: 6mm 8mm; background: white; border: 2px solid var(--primary); border-radius: 4px; }
+.fachurteil-kasten .marker { display: inline-block; padding: 1.5mm 4mm; background: var(--primary); color: white; font-size: 8.5pt; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 600; border-radius: 2px; margin-bottom: 4mm; }
+.fachurteil-kasten .intro { font-size: 9.5pt; color: var(--muted); font-style: italic; margin-bottom: 4mm; line-height: 1.55; padding-bottom: 3mm; border-bottom: 1px solid var(--border); }
+.fachurteil-kasten .text { font-size: 11pt; line-height: 1.7; color: var(--text); }
+.fachurteil-kasten .text p { margin-bottom: 3mm; }
+
+/* Normen-Liste */
+.normen-liste { display: grid; gap: 2mm; margin: 4mm 0; }
+.norm-eintrag { padding: 3mm 4mm; background: var(--lighter); border-left: 2px solid var(--accent); border-radius: 2px; }
+.norm-eintrag .nr { font-family: 'JetBrains Mono', monospace; font-size: 10pt; font-weight: 500; color: var(--primary); margin-bottom: 0.5mm; }
+.norm-eintrag .titel { font-size: 10pt; color: var(--text); margin-bottom: 0.5mm; }
+.norm-eintrag .gw { font-size: 9pt; color: var(--muted); line-height: 1.4; }
+
+/* § 407a + DSGVO Erklärungs-Kasten */
+.erklaerung-kasten { margin: 4mm 0; padding: 5mm 7mm; background: var(--lighter); border-left: 3px solid var(--success); border-radius: 2px; font-size: 10.5pt; line-height: 1.65; }
+.erklaerung-kasten .marker { display: inline-block; padding: 1.2mm 3mm; background: var(--success); color: white; font-size: 8pt; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 600; border-radius: 2px; margin-bottom: 3mm; }
+
+.hinweis-box { margin: 4mm 0; padding: 4mm 5mm; background: var(--lighter); border: 1px solid var(--border); border-radius: 3px; font-size: 9.5pt; line-height: 1.6; color: var(--muted); }
+.hinweis-box strong { color: var(--primary); }
+
+/* Unterschriftsbereich */
+.unterschrift-block { margin-top: 12mm; padding-top: 6mm; border-top: 1px solid var(--border); }
+.unterschrift-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15mm; }
+.unterschrift-feld { border-top: 1px solid var(--text); padding-top: 2mm; font-size: 9.5pt; color: var(--muted); }
+.unterschrift-feld .name { font-size: 11pt; color: var(--text); font-weight: 600; margin-top: 1mm; }
+.unterschrift-feld .rolle { font-size: 9pt; color: var(--muted); margin-top: 0.5mm; }
+.unterschrift-feld .stempel { font-size: 8.5pt; color: var(--muted); margin-top: 4mm; font-style: italic; }
+
+/* §§-Referenzen inline */
+.law-ref { font-family: 'JetBrains Mono', monospace; font-size: 0.92em; color: var(--primary); font-weight: 500; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════
+     TEIL 1 · DECKBLATT + ALLGEMEINE ANGABEN + AUFGABENSTELLUNG
+     ═══════════════════════════════════════════════════════════ -->
+<section class="deckblatt">
+  <div class="deckblatt-header">
+    <div class="deckblatt-kategorie">Privatgutachten im Rahmen einer Bauabnahme · Baumangel bei Neubau</div>
+    <h1 class="deckblatt-titel">Baumängelgutachten</h1>
+    <div class="deckblatt-subtitel">zum Baumangel bei Neubau gemäß DIN 4108 / WTA-Regelwerk</div>
+    <div class="deckblatt-badge">Gutachten-Nr.: BM-2026-022</div>
+  </div>
+
+  <div class="deckblatt-objekt">
+    <div class="deckblatt-objekt-label">Begutachtungsobjekt</div>
+    <div class="deckblatt-objekt-adresse">Kiesgrubenweg 17, 60437 Frankfurt am Main</div>
+    <div class="deckblatt-objekt-typ">Reihenhaus (Mittelhaus), Neubau 2025, 2 Vollgeschosse + ausgebautes DG + Kellergeschoss · Baujahr 2025</div>
+  </div>
+
+  <div class="deckblatt-sv">
+    <div class="deckblatt-sv-label">Erstattender Sachverständiger</div>
+    <div class="deckblatt-sv-name">Marcel Mustermann, Dipl.-Ing.</div>
+    <div class="deckblatt-sv-qualifikation">ö.b.u.v. Sachverständiger für Schäden an Gebäuden und Baumängel</div>
+    
+    <div class="deckblatt-sv-bestellung">Öffentlich bestellt und vereidigt durch die IHK Köln · für Schäden an Gebäuden</div>
+    
+    <div class="deckblatt-sv-kontakt">
+      Hohenzollernring 12 · 50672 Köln<br>
+      Tel. <span class="mono">+49 221 1234567</span> · Fax <span class="mono">+49 221 1234568</span> · kontakt@prova-systems.de
+    </div>
+  </div>
+
+  <div class="deckblatt-metadaten">
+    <div class="deckblatt-meta-item">
+      <div class="label">Auftraggeber</div>
+      <div class="value">Familie Richter (Bauherrin)</div>
+    </div>
+    <div class="deckblatt-meta-item">
+      <div class="label">Schadensstichtag</div>
+      <div class="value mono">05.03.2026</div>
+    </div>
+    <div class="deckblatt-meta-item">
+      <div class="label">Auftragserteilung</div>
+      <div class="value mono">22.03.2026</div>
+    </div>
+    <div class="deckblatt-meta-item">
+      <div class="label">Gutachtendatum</div>
+      <div class="value mono">20.04.2026</div>
+    </div>
+    
+    
+  </div>
+
+  <div class="deckblatt-footer">
+    <div class="umfang-info">
+      Umfang: 20 Seiten · 3 Anlagen · 36 Fotografien
+    </div>
+    <div class="brand-right">
+      erstellt mit<br>
+      <span class="bold">PROVA SYSTEMS</span>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════
+     TEIL 1 — Inhalt
+     ═══════════════════════════════════════════════════════════ -->
+<section class="teil">
+  <div class="teil-header">
+    <div class="teil-nummer">Teil 1</div>
+    <div class="teil-titel">Allgemeine Angaben und Aufgabenstellung</div>
+  </div>
+
+  <!-- 1.2 Auftragsumfang / Beweisbeschluss -->
+  <div class="abschnitt">
+    <div class="abschnitt-header">
+      <div class="abschnitt-nr">1.2</div>
+      <div class="abschnitt-titel">Auftragsumfang</div>
+    </div>
+    <div class="abschnitt-body">
+      
+      <p>Der Unterzeichner wurde mit Auftrag vom <strong>22.03.2026</strong> beauftragt, ein <strong>Baumängelgutachten</strong> zu einem Baumangel bei Neubau am oben bezeichneten Objekt zu erstatten.</p>
+
+      
+      <p style="margin-top: 3mm;"><strong>Fragestellung laut Auftragsschreiben:</strong></p>
+      <p>1. Liegen bei der Abnahme des Neubaus (Reihenhaus Mitte) erhebliche Baumängel vor? 2. Welche Abweichungen gegenüber VOB/C, den anerkannten Regeln der Technik und den Leistungsbeschreibungen des Bauträgers bestehen? 3. Wie sind die Mängel nach BGB (wesentlich / unwesentlich) zu klassifizieren und welche Ansprüche des Bauherren bestehen? 4. Welche Mängelbeseitigungsmaßnahmen sind erforderlich? 5. Mit welchem Kostenrahmen ist bei fachgerechter Beseitigung zu rechnen?</p>
+      
+      
+    </div>
+  </div>
+
+  <!-- 1.3 Mitarbeit + KI-Einsatz (Ex-ante) -->
+  <div class="abschnitt">
+    <div class="abschnitt-header">
+      <div class="abschnitt-nr">1.3</div>
+      <div class="abschnitt-titel">Mitarbeit von Hilfskräften und KI-Einsatz</div>
+    </div>
+    <div class="abschnitt-body">
+      <p>Der vorliegenden Gutachtenerstattung wurde mit Anzeige vom <strong>22.03.2026</strong> an den Auftraggeber sowie nachrichtlich die ABC-Bauträger GmbH per E-Mail gemäß <span class="law-ref">§ 407a Abs. 3 ZPO</span>, <span class="law-ref">§ 10 IHK-SVO</span> und <span class="law-ref">Art. 50 EU AI Act</span> der Einsatz folgender Hilfsmittel vorab angezeigt:</p>
+
+      
+      <p style="margin-top: 3mm;"><strong>Mitwirkung Dritter:</strong> Keine. Das Gutachten wurde vom unterzeichnenden Sachverständigen höchstpersönlich erstattet.</p>
+      
+
+      <p style="margin-top: 3mm;"><strong>Technische Arbeitsumgebung:</strong> PROVA Systems (prova-systems.de) als Workflow- und PDF-Generierungs-Plattform.</p>
+
+      <p style="margin-top: 3mm;"><strong>Eingesetzte KI-Systeme:</strong> OpenAI GPT-4o (Sprachmodell) und OpenAI Whisper (Spracherkennung). Eine detaillierte Aufgaben-Dokumentation folgt in <strong>Teil 4.3</strong>.</p>
+
+      <div class="hinweis-box" style="margin-top: 4mm;">
+        <strong>Wichtige Klarstellung:</strong> Die sachverständige Beurteilung sowie die <strong>Gesamtverantwortung</strong> für den Inhalt dieses Gutachtens verbleiben ausschließlich beim unterzeichnenden Sachverständigen. KI-Systeme werden ausschließlich als Arbeitshilfe zur Struktur- und Textaufbereitung eingesetzt; sie treffen keine fachlichen Entscheidungen. Das Fachurteil nach Teil 3.4 wurde KI-frei erstellt.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════
+     TEIL 2 · DOKUMENTATION DER DATEN
+     ═══════════════════════════════════════════════════════════ -->
+<section class="teil">
+  <div class="teil-header">
+    <div class="teil-nummer">Teil 2</div>
+    <div class="teil-titel">Dokumentation der Daten</div>
+  </div>
+
+  <!-- 2.1 Objektbeschreibung -->
+  <div class="abschnitt">
+    <div class="abschnitt-header">
+      <div class="abschnitt-nr">2.1</div>
+      <div class="abschnitt-titel">Objektbeschreibung</div>
+    </div>
+    <div class="abschnitt-body">
+      <div class="info-grid">
+        <div class="info-item">
+          <div class="label">Adresse</div>
+          <div class="value">Kiesgrubenweg 17, 60437 Frankfurt am Main</div>
+        </div>
+        <div class="info-item">
+          <div class="label">Objektart</div>
+          <div class="value">Reihenhaus (Mittelhaus), Neubau 2025, 2 Vollgeschosse + ausgebautes DG + Kellergeschoss</div>
+        </div>
+        
+        <div class="info-item">
+          <div class="label">Baujahr</div>
+          <div class="value mono">2025</div>
+        </div>
+        
+        
+        <div class="info-item">
+          <div class="label">Wohnfläche</div>
+          <div class="value mono">142 m²</div>
+        </div>
+        
+        
+        <div class="info-item">
+          <div class="label">Bauweise</div>
+          <div class="value">Massivbau, KfW-55-Standard, Kalksandstein-Mauerwerk mit WDVS (Polystyrol 160 mm), Stahlbetondecken, Walmdach, Wärmepumpen-Heizung mit Fußbodenheizung, Lüftungsanlage mit Wärmerückgewinnung</div>
+        </div>
+        
+        
+        <div class="info-item">
+          <div class="label">Schadensort im Objekt</div>
+          <div class="value">Diverse Mängelpunkte über das gesamte Objekt verteilt: Kellerfeuchte, Setzrisse Erdgeschoss, Estrichabsenkung Obergeschoss, nicht fachgerechte Fliesenverlegung Bad, undichte Fensteranschlüsse im DG</div>
+        </div>
+        
+      </div>
+
+      
+      <p style="margin-top: 4mm;">Das Reihenhaus wurde im Rahmen eines Bauträgermodells durch die ABC-Bauträger GmbH errichtet. Notarielle Kaufvertragsunterzeichnung 05/2024, Baubeginn 08/2024, geplante Abnahme 02/2026. Die Baubegehung zur förmlichen Abnahme fand am 05.03.2026 statt; die Familie Richter hat die Abnahme aufgrund aufgeführter Mängel NICHT erklärt und den Abnahmevorbehalt förmlich protokollieren lassen.</p>
+      
+    </div>
+  </div>
+
+  <!-- 2.2 Anknüpfungstatsachen -->
+  <div class="abschnitt">
+    <div class="abschnitt-header">
+      <div class="abschnitt-nr">2.2</div>
+      <div class="abschnitt-titel">Anknüpfungstatsachen und verwendete Unterlagen</div>
+    </div>
+    <div class="abschnitt-body">
+      <p>Der Beurteilung liegen folgende Unterlagen und Auskünfte zugrunde:</p>
+
+      
+      <ul style="margin: 3mm 0 3mm 6mm;">
+        
+        <li style="margin-bottom: 1.5mm;"><strong>Bau- und Leistungsbeschreibung Kaufvertrag 05/2024:</strong> Notarielle Urkunde Nr. 1234/2024 Notariat Dr. Schmid, Frankfurt; Leistungsbeschreibung vom 20.04.2024 (28 Seiten)</li>
+        
+        <li style="margin-bottom: 1.5mm;"><strong>Abnahmeprotokoll vom 05.03.2026:</strong> Förmliche Abnahme durch Familie Richter verweigert; 23 Mängel protokolliert; ABC-Bauträger erklärt Abnahmeverweigerung als 'unberechtigt'</li>
+        
+        <li style="margin-bottom: 1.5mm;"><strong>E-Mail-Korrespondenz Bauträger:</strong> Schriftwechsel 06.03.–18.03.2026: ABC-Bauträger bietet Nachbesserung nur an 8 von 23 Punkten an, bestreitet die übrigen 15 Mängel</li>
+        
+        <li style="margin-bottom: 1.5mm;"><strong>Auftrag Familie Richter:</strong> Auftrag zur Begutachtung aller 23 protokollierten Mängelpunkte auf Erheblichkeit und Nachbesserungspflicht</li>
+        
+        <li style="margin-bottom: 1.5mm;"><strong>Eigene Begehung:</strong> Ortstermin in Anwesenheit der Familie Richter und der Bauleitung ABC-Bauträger (Einladung nach § 34 IHK-SVO)</li>
+        
+      </ul>
+      
+    </div>
+  </div>
+
+  <!-- 2.3 Ortstermin -->
+  
+  <div class="abschnitt">
+    <div class="abschnitt-header">
+      <div class="abschnitt-nr">2.3</div>
+      <div class="abschnitt-titel">Ortstermin-Dokumentation</div>
+    </div>
+    <div class="abschnitt-body">
+      <div class="info-grid">
+        <div class="info-item">
+          <div class="label">Datum</div>
+          <div class="value mono">15.04.2026</div>
+        </div>
+        <div class="info-item">
+          <div class="label">Uhrzeit / Dauer</div>
+          <div class="value mono">09:00 Uhr · ca. 4 Stunden</div>
+        </div>
+        <div class="info-item" style="grid-column: 1 / -1;">
+          <div class="label">Anwesende</div>
+          <div class="value">Herr und Frau Richter (Bauherren), Herr Kleinschmidt (Bauleiter ABC-Bauträger GmbH), Herr Pham (Polier Rohbau), Sachverständiger Mustermann</div>
+        </div>
+        
+        <div class="info-item" style="grid-column: 1 / -1;">
+          <div class="label">Wetter / Raumklima</div>
+          <div class="value">trocken, bewölkt · 15 °C (Außen), 19 °C (Innen) · Luftfeuchte 58 % rel. (Wohnräume), 68 % rel. (Keller)</div>
+        </div>
+        
+      </div>
+
+      
+      <p style="margin-top: 4mm;">Systematische Begehung nach dem vom Auftraggeber übergebenen Mängelkatalog (23 Punkte). Dokumentation jedes Mangels mit Fotos und Maß. Feuchtemessung Keller. Ebenheitsmessung Estrich Obergeschoss. Fensteranschluss-Prüfung im DG mit Rauchröhrchen. Prüfung der Dokumentation (Bauprotokolle, Aufmaße, Abnahmeprotokolle Gewerke) durch ABC-Bauträger; vollständige Unterlagen wurden vor Ort nicht vorgelegt, werden nachgereicht.</p>
+      
+    </div>
+  </div>
+  
+
+  <!-- 2.4 Fotografien -->
+  
+  <div class="abschnitt">
+    <div class="abschnitt-header">
+      <div class="abschnitt-nr">2.4</div>
+      <div class="abschnitt-titel">Fotografien</div>
+    </div>
+    <div class="abschnitt-body">
+      <p>Zur bildlichen Dokumentation wurden <strong>36 Fotografien</strong> angefertigt. Die Aufnahmen sind als gesonderte <strong>Anlage F-01</strong> beigefügt.</p>
+      <div class="hinweis-box" style="margin-top: 3mm;">
+        Die Fotografien ersetzen nicht die verbale Darstellung, sondern ergänzen sie (Nr. 9.3.7 IHK-SVO-Richtlinien).
+      </div>
+    </div>
+  </div>
+  
+
+  <!-- 2.5 Messungen -->
+  
+  <div class="abschnitt">
+    <div class="abschnitt-header">
+      <div class="abschnitt-nr">2.5</div>
+      <div class="abschnitt-titel">Messwerte und verwendete Geräte</div>
+    </div>
+    <div class="abschnitt-body">
+      <p>Folgende Messungen wurden während des Ortstermins durchgeführt:</p>
+      <table class="messwerte">
+        <thead>
+          <tr><th>Messstelle</th><th>Parameter</th><th>Wert</th><th>Norm/Grenzwert</th></tr>
+        </thead>
+        <tbody>
+          
+          <tr>
+            <td>Kelleraußenwand Südseite H=40cm</td>
+            <td>CM-Feuchte Mauerwerk</td>
+            <td class="number">6,8 M-%</td>
+            <td>WTA 4-5: trocken <4 M-%, feucht 4–8</td>
+          </tr>
+          
+          <tr>
+            <td>Kellerboden mittig</td>
+            <td>CM-Feuchte Estrich</td>
+            <td class="number">2,8 CM-%</td>
+            <td><2,0 CM-% belegreif DIN 18560</td>
+          </tr>
+          
+          <tr>
+            <td>Obergeschoss Flur Ebenheitsmessung Estrich</td>
+            <td>Höhendifferenz auf 4 m Messstrecke</td>
+            <td class="number">12 mm</td>
+            <td>DIN 18202 Tabelle 3 Zeile 2: max. 10 mm</td>
+          </tr>
+          
+          <tr>
+            <td>Obergeschoss Schlafzimmer Ebenheitsmessung</td>
+            <td>Höhendifferenz auf 4 m Messstrecke</td>
+            <td class="number">15 mm</td>
+            <td>DIN 18202: max. 10 mm — Überschreitung 50%</td>
+          </tr>
+          
+          <tr>
+            <td>Setzriss Wohnzimmer Nordwand</td>
+            <td>Rissbreite</td>
+            <td class="number">0,8 mm (ruhig)</td>
+            <td>DIN EN 1992-1-1: <0,3 mm zulässig, >0,5 mm mangelrelevant</td>
+          </tr>
+          
+          <tr>
+            <td>Setzriss Wohnzimmer Decke</td>
+            <td>Rissbreite</td>
+            <td class="number">0,4 mm</td>
+            <td>grenzwertig</td>
+          </tr>
+          
+          <tr>
+            <td>Fensteranschluss DG Giebel Luftdichtheit Rauchröhrchen</td>
+            <td>Qualitative Dichtheitsprüfung</td>
+            <td class="number">erheblicher Rauchdurchtritt an Anschlussfugen</td>
+            <td>DIN 4108-7 Luftdichtheit</td>
+          </tr>
+          
+          <tr>
+            <td>Fliesen Badezimmer EG Ebenheitsmessung</td>
+            <td>Höhendifferenz auf 1 m</td>
+            <td class="number">4 mm</td>
+            <td>DIN 18202: max. 2 mm Zeile 7</td>
+          </tr>
+          
+          <tr>
+            <td>Fliesen Badezimmer EG Verlegegenauigkeit Kreuzfuge</td>
+            <td>Versatz an Kreuzfugen</td>
+            <td class="number">bis 2,5 mm</td>
+            <td>Fliesen-Merkblatt: max. 1 mm</td>
+          </tr>
+          
+        </tbody>
+      </table>
+
+      
+      <p style="margin-top: 4mm;"><strong>Verwendete Messgeräte:</strong></p>
+      <ul style="margin: 2mm 0 3mm 6mm;">
+        
+        <li style="margin-bottom: 1mm;">Hedue Richtlatte 4 m mit Präzisions-Niveau</li>
+        
+        <li style="margin-bottom: 1mm;">Trotec BM 31 CM-Messgerät</li>
+        
+        <li style="margin-bottom: 1mm;">Gann Hydromette Compact B</li>
+        
+        <li style="margin-bottom: 1mm;">Rissmessschablone nach DIN EN 1992-1-1</li>
+        
+        <li style="margin-bottom: 1mm;">Rauchröhrchen Dräger für Luftdichtheitsprüfung</li>
+        
+        <li style="margin-bottom: 1mm;">Testo 625 Luftfeuchte/Temperatur</li>
+        
+        <li style="margin-bottom: 1mm;">Leica DISTO D2 Laserdistanzmesser</li>
+        
+      </ul>
+      
+    </div>
+  </div>
+  
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════
+     TEIL 3 · SACHVERSTÄNDIGE BEANTWORTUNG
+     ═══════════════════════════════════════════════════════════ -->
+<section class="teil">
+  <div class="teil-header">
+    <div class="teil-nummer">Teil 3</div>
+    <div class="teil-titel">Sachverständige Beantwortung</div>
+  </div>
+
+  <!-- 3.1 Befunde -->
+  <div class="abschnitt">
+    <div class="abschnitt-header">
+      <div class="abschnitt-nr">3.1</div>
+      <div class="abschnitt-titel">Befunde</div>
+    </div>
+    <div class="abschnitt-body">
+      
+      <p>Das Objekt wurde am 15.04.2026 systematisch begangen. Die Feststellungen werden nachfolgend den fachlich-technisch relevanten Einzelmängeln zugeordnet. Nicht alle 23 im Abnahmeprotokoll aufgeführten Punkte wurden als Baumangel bestätigt — die abschließende Einzelbewertung folgt in Teil 3.4. Die fünf schwerwiegendsten Mängel werden nachstehend dokumentiert:</p>
+      
+
+      
+      
+      <div class="befund-karte">
+        <div class="nr">Befund 1</div>
+        <div class="titel">Mangelpunkt M1 — Erhöhte Feuchte in der Kelleraußenwand</div>
+        <div class="text">An der südlichen Kelleraußenwand wurden CM-Feuchtewerte von 6,8 M-% gemessen. Dies liegt im Bereich 'feucht' (WTA 4-5: 4–8 M-%), ist jedoch für einen Neubau mit frischer Abdichtung nach DIN 18533 nicht akzeptabel. Die vertragsgegenständliche Kellerabdichtung 'Braune Wanne' hätte Werte von <4 M-% gewährleisten müssen. Eine Bauzeitfeuchte wäre nach 14 Monaten nicht mehr zu erwarten. Ursache dürfte eine fehlerhafte Abdichtung an der Arbeitsfuge Bodenplatte/Außenwand sein (zerstörungsfreie Verifikation bislang nicht möglich — freilegendes Aufgraben erforderlich).</div>
+        
+      </div>
+      
+      <div class="befund-karte">
+        <div class="nr">Befund 2</div>
+        <div class="titel">Mangelpunkt M2 — Estrichabsenkung im Obergeschoss (Ebenheitsmangel)</div>
+        <div class="text">Die Ebenheitsmessung im Obergeschoss (Flur und Schlafzimmer) ergibt Höhendifferenzen von 12 mm bzw. 15 mm auf einer Messstrecke von 4 m. Gemäß DIN 18202 Tabelle 3 Zeile 2 (nicht fertige Oberflächen für weiche Beläge) beträgt die zulässige Höchstdifferenz 10 mm. Die Überschreitung liegt bei 20–50 %, was einen erheblichen Ausführungsmangel darstellt. Für den geplanten Bodenbelag (Vinyl auf 15 mm Verlegeplatten nach Leistungsbeschreibung) ist diese Unebenheit nicht akzeptabel. Eine Nachspachtelung wäre erforderlich.</div>
+        
+      </div>
+      
+      <div class="befund-karte">
+        <div class="nr">Befund 3</div>
+        <div class="titel">Mangelpunkt M3 — Setzriss in Wohnzimmer-Nordwand (0,8 mm)</div>
+        <div class="text">In der Nordwand des Wohnzimmers verläuft ein durchgehender Riss von der Deckenanschluss-Kante bis zur Türlaibung auf ca. 2,80 m Länge. Die maximale Rissbreite beträgt 0,8 mm (messpunktuelle Einzelbestimmung). Der Riss wirkt ruhig (keine Rissbewegung während des Ortstermins erkennbar), dürfte aber die zulässige Rissbreite nach DIN EN 1992-1-1 (<0,3 mm) erheblich überschreiten. Ursache dürften typische Setzungsspannungen in der Aushärtephase sein. Eine Sanierung durch Rissüberbrückung mit Gewebe wäre erforderlich; eine bauwerksstatische Beurteilung ist nicht zwingend, aber als Vorsichtsmaßnahme angeraten.</div>
+        
+      </div>
+      
+      <div class="befund-karte">
+        <div class="nr">Befund 4</div>
+        <div class="titel">Mangelpunkt M4 — Undichte Fensteranschlüsse im Dachgeschoss</div>
+        <div class="text">Die Luftdichtheitsprüfung mit Rauchröhrchen an den zwei Giebelfenstern im DG zeigt erheblichen Rauchdurchtritt an den inneren Anschlussfugen. Dies deutet auf nicht fachgerechte Ausführung der inneren Luftdichtebene gemäß DIN 4108-7 hin. Bei einem KfW-55-Haus mit dichtheitsgeprüfter Gebäudehülle (Blower-Door) ist das ein erheblicher Mangel mit energetischen Konsequenzen. Die Fensteranschluss-Schaum-Ausführung ohne innenliegende Dampfbremse und Anschlussklebeband entspricht nicht den Herstellerrichtlinien.</div>
+        
+      </div>
+      
+      <div class="befund-karte">
+        <div class="nr">Befund 5</div>
+        <div class="titel">Mangelpunkt M5 — Fliesenmängel Badezimmer Erdgeschoss</div>
+        <div class="text">Die Wandfliesen im Badezimmer Erdgeschoss zeigen mehrere Mängel: (1) Ebenheitsmangel — Höhendifferenzen bis 4 mm auf 1 m Messstrecke (DIN 18202: max. 2 mm), (2) Fugenversatz bis 2,5 mm an Kreuzfugen (Fliesen-Merkblatt: max. 1 mm), (3) punktuelle Hohlstellen beim Abklopfen (geschätzte Fehlstellen auf 4 Fliesen im Duschbereich). Die Verlegung ist nicht fachgerecht. Eine Teilneuverfliesung des Duschbereichs wäre erforderlich.</div>
+        
+      </div>
+      
+      
+    </div>
+  </div>
+
+  <!-- 3.2 Ursachenanalyse (Hypothesen, Konjunktiv II) -->
+  <div class="abschnitt">
+    <div class="abschnitt-header">
+      <div class="abschnitt-nr">3.2</div>
+      <div class="abschnitt-titel">Ursachenanalyse</div>
+    </div>
+    <div class="abschnitt-body">
+      <p>Die Ursachenanalyse erfolgt auf Basis der dokumentierten Befunde und der Anknüpfungstatsachen nach Teil 2. Die im Folgenden dargelegten Hypothesen sind im Konjunktiv II formuliert und stehen unter dem Vorbehalt der abschließenden sachverständigen Würdigung in Teil 3.4.</p>
+
+      
+      
+      <div class="hypothese alternativ">
+        <div class="hypothese-kopf">
+          <div class="hypothese-titel">Hypothese 1: Ursache M1 Kellerfeuchte — Mangelhafte Arbeitsfugendichtung</div>
+          <div class="hypothese-wahrscheinlichkeit">Hoch (konstruktiv typisch)</div>
+        </div>
+        <div style="font-size: 10.5pt; line-height: 1.6;">Die Feuchteeinträge an der Südwand konzentrieren sich am Wandfuß. Dies wäre typisch für eine mangelhafte Dichtung der Arbeitsfuge zwischen Bodenplatte und aufgehender Wand. Bei der Braunen Wanne (WU-Beton + flexible Arbeitsfugenbänder) wäre dies eine bekannte Schwachstelle. Eine Verifikation durch Aufgrabung oder Bauteilöffnung wäre zur Beweisführung gegenüber dem Bauträger erforderlich.</div>
+      </div>
+      
+      <div class="hypothese alternativ">
+        <div class="hypothese-kopf">
+          <div class="hypothese-titel">Hypothese 2: Ursache M2 Estrichabsenkung — Unterdämmung nicht gleichmäßig verdichtet</div>
+          <div class="hypothese-wahrscheinlichkeit">Mittel (häufige Ursache)</div>
+        </div>
+        <div style="font-size: 10.5pt; line-height: 1.6;">Die Estrichabsenkung von bis zu 15 mm wäre am wahrscheinlichsten durch eine nicht gleichmäßige Verdichtung der Unterdämmung (EPS-Trittschalldämmung) bzw. durch Fehler beim Estrich-Einbau selbst zu erklären. Der Bauträger müsste die Ausführungsprotokolle und Dämmungsaufmaß nachreichen — dies wurde beim Ortstermin zugesagt.</div>
+      </div>
+      
+      <div class="hypothese alternativ">
+        <div class="hypothese-kopf">
+          <div class="hypothese-titel">Hypothese 3: Ursache M3 Setzriss — Regelkonforme Schwindspannung erst sekundär</div>
+          <div class="hypothese-wahrscheinlichkeit">Mittel (nicht alleinursächlich)</div>
+        </div>
+        <div style="font-size: 10.5pt; line-height: 1.6;">Setzrisse bis 0,3 mm wären bei Neubauten im Rahmen der Schwind- und Trocknungsphase normal. Der gemessene Riss (0,8 mm) überschreitet diesen Bereich deutlich. Als alternative Ursache wäre eine ungleiche Setzung des Fundaments denkbar, was jedoch eine geologische Bodenuntersuchung erfordern würde, die bislang nicht vorliegt. Alternativ wäre ein reiner Schwindriss zu werten, der nach Aushärtung stabilisiert ist — die Sanierung bleibt in beiden Fällen erforderlich.</div>
+      </div>
+      
+      
+    </div>
+  </div>
+
+  <!-- 3.3 Sanierungsvorschlag + Kostenrahmen -->
+  
+  <div class="abschnitt">
+    <div class="abschnitt-header">
+      <div class="abschnitt-nr">3.3</div>
+      <div class="abschnitt-titel">Sanierungsvorschlag und Kostenrahmen</div>
+    </div>
+    <div class="abschnitt-body">
+      
+      <p>Die Mängelbeseitigung umfasst die fünf dokumentierten Hauptmängel. Für weitere 18 Mängel aus dem Abnahmeprotokoll werden kleinere Nachbesserungsbeträge vom Bauträger bereits zugesagt und sind nicht mehr streitig; sie sind nicht Gegenstand dieser Kostenschätzung. Die Kostenschätzung basiert auf marktüblichen Preisen (Stand 04/2026).</p>
+      
+
+      
+      <table class="sanierung-tabelle">
+        <thead>
+          <tr><th>Pos.</th><th>Leistung</th><th style="text-align:right;">Menge</th><th style="text-align:right;">EP netto</th><th style="text-align:right;">Summe netto</th></tr>
+        </thead>
+        <tbody>
+          
+          <tr>
+            <td>1</td>
+            <td>M1 Kellerabdichtung: Freilegung Arbeitsfuge Südseite (2 lfm Aufgrabung)</td>
+            <td class="number">1 psch</td>
+            <td class="number">1.450,00 €</td>
+            <td class="number">1.450,00 €</td>
+          </tr>
+          
+          <tr>
+            <td>2</td>
+            <td>M1 Nachträgliche Abdichtung Arbeitsfuge (Injektion + Quellband)</td>
+            <td class="number">1 psch</td>
+            <td class="number">2.800,00 €</td>
+            <td class="number">2.800,00 €</td>
+          </tr>
+          
+          <tr>
+            <td>3</td>
+            <td>M1 Verfüllung Baugrube + Neuanlage Grünfläche</td>
+            <td class="number">1 psch</td>
+            <td class="number">680,00 €</td>
+            <td class="number">680,00 €</td>
+          </tr>
+          
+          <tr>
+            <td>4</td>
+            <td>M2 Estrichnivellierung Obergeschoss Spachtelmasse</td>
+            <td class="number">72 m²</td>
+            <td class="number">24,00 €</td>
+            <td class="number">1.728,00 €</td>
+          </tr>
+          
+          <tr>
+            <td>5</td>
+            <td>M3 Rissüberbrückung Wohnzimmer-Nordwand (Vliesstoff + Putzsanierung)</td>
+            <td class="number">1 psch</td>
+            <td class="number">480,00 €</td>
+            <td class="number">480,00 €</td>
+          </tr>
+          
+          <tr>
+            <td>6</td>
+            <td>M3 Statische Begutachtung Setzriss (Absicherung)</td>
+            <td class="number">1 psch</td>
+            <td class="number">380,00 €</td>
+            <td class="number">380,00 €</td>
+          </tr>
+          
+          <tr>
+            <td>7</td>
+            <td>M4 Fensteranschlüsse 2× Giebel DG: Rückbau + fachgerechte Luftdichtheit</td>
+            <td class="number">2 Fenster</td>
+            <td class="number">620,00 €</td>
+            <td class="number">1.240,00 €</td>
+          </tr>
+          
+          <tr>
+            <td>8</td>
+            <td>M4 Blower-Door-Messung nach Nachbesserung (Nachweis)</td>
+            <td class="number">1 psch</td>
+            <td class="number">580,00 €</td>
+            <td class="number">580,00 €</td>
+          </tr>
+          
+          <tr>
+            <td>9</td>
+            <td>M5 Duschbereich Rückbau + Neuverfliesung (ca. 8 m²)</td>
+            <td class="number">8 m²</td>
+            <td class="number">180,00 €</td>
+            <td class="number">1.440,00 €</td>
+          </tr>
+          
+          <tr>
+            <td>10</td>
+            <td>M5 Neue Fliesen + Abdichtung Duschbereich</td>
+            <td class="number">8 m²</td>
+            <td class="number">85,00 €</td>
+            <td class="number">680,00 €</td>
+          </tr>
+          
+          <tr>
+            <td>11</td>
+            <td>Nebenkosten (Baustelleneinrichtung, Schutzfolien, Reinigung)</td>
+            <td class="number">1 psch</td>
+            <td class="number">780,00 €</td>
+            <td class="number">780,00 €</td>
+          </tr>
+          
+          
+          <tr class="summary"><td colspan="4">Summe netto</td><td class="number">12.238,00 €</td></tr>
+          
+        </tbody>
+      </table>
+      
+
+      
+      <div class="kosten-card">
+        <div class="kosten-card-label">Geschätzter Gesamtkostenrahmen (netto)</div>
+        <div class="kosten-card-value">12.238,00 €</div>
+        <div class="kosten-card-note">Orientierende Schätzung auf Basis marktüblicher Einheitspreise · Abweichungen ±15 % möglich</div>
+      </div>
+      
+    </div>
+  </div>
+  
+
+  <!-- 3.4 Fachurteil (KI-FREI) -->
+  <div class="abschnitt">
+    <div class="abschnitt-header">
+      <div class="abschnitt-nr">3.4</div>
+      <div class="abschnitt-titel">Fachurteil</div>
+    </div>
+    <div class="abschnitt-body">
+      <div class="fachurteil-kasten">
+        <div class="marker">SV-Eigenleistung · KI-frei</div>
+        <div class="intro">
+          Dieses Fachurteil wurde gemäß <span class="law-ref">§ 407a Abs. 2 ZPO</span> und <span class="law-ref">§ 9 Abs. 2 IHK-SVO</span> vom unterzeichnenden Sachverständigen <strong>persönlich, eigenständig und ohne KI-Unterstützung</strong> verfasst.
+        </div>
+        <div class="text">
+          <p>Nach Würdigung der dokumentierten Befunde, der Messwerte und der Bau- und Leistungsbeschreibung vom 20.04.2024 komme ich zu folgender sachverständiger Beurteilung:</p><p><strong>Zur rechtlichen Einordnung der Mängel:</strong> Die fünf nachstehend bewerteten Mängel wären im Sinne des § 633 Abs. 2 BGB als Sachmängel zu werten, weil das Werk nicht die im Vertrag bzw. in der Leistungsbeschreibung vereinbarte Beschaffenheit (M1 Braune Wanne, M4 KfW-55 Luftdichtheit) aufweist bzw. von den anerkannten Regeln der Technik (M2 DIN 18202, M3 DIN EN 1992-1-1, M5 ZDB-Merkblatt) abweicht. Die Mängel sind sämtlich nicht als unwesentlich im Sinne des § 640 Abs. 1 Satz 2 BGB einzuordnen. Die Abnahmeverweigerung der Bauherrenfamilie am 05.03.2026 war daher fachlich berechtigt.</p><p><strong>Zur Nachbesserungspflicht des Bauträgers:</strong> Alle fünf dokumentierten Mängel (M1–M5) wären durch den Bauträger auf dessen Kosten nachzubessern. Die Nachbesserung wäre grundsätzlich vorrangig vor dem Selbstvornahmerecht (§ 637 BGB). Der Bauträger sollte eine angemessene Nachbesserungsfrist gesetzt werden (etwa 6–8 Wochen für den Gesamtmängelkomplex). Bei weiterer Verweigerung der Nachbesserung würde das Selbstvornahmerecht greifen, wofür die orientierende Kostenschätzung als Grundlage dienen könnte.</p><p><strong>Zur Einordnung der weiteren 18 Mängelpunkte:</strong> Die vom Bauträger bereits zugesagten 8 Nachbesserungen (kleinere Ausführungsmängel wie Lackanstriche, Silikonfugen, Türfugenspalten) sowie die streitigen 10 weiteren Punkte (die in meiner Beurteilung zu 7 als nicht erheblich / nicht mangelrelevant und zu 3 als mittelschwere Mängel zu werten wären) sind im Detail in Anlage F-02 dokumentiert. Diese Punkte erreichen in Summe nicht das Kostenvolumen der fünf Hauptmängel und stehen der Gesamtbewertung nicht entgegen.</p><p><strong>Zum Gesamtkostenrahmen:</strong> Für die fachgerechte Beseitigung der fünf dokumentierten Hauptmängel wäre ein Kostenrahmen von rund <strong>12.238 € netto</strong> zu veranschlagen. Zuzüglich der vom Bauträger zugesagten kleineren Nachbesserungen und der drei mittelschweren Mängel wäre das Gesamtvolumen bei etwa 15.000 € netto zu schätzen.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════
+     TEIL 4 · ZUSAMMENFASSUNG UND SCHLUSS
+     ═══════════════════════════════════════════════════════════ -->
+<section class="teil">
+  <div class="teil-header">
+    <div class="teil-nummer">Teil 4</div>
+    <div class="teil-titel">Zusammenfassung und Schluss</div>
+  </div>
+
+  <!-- 4.1 Kurzbeantwortung -->
+  <div class="abschnitt">
+    <div class="abschnitt-header">
+      <div class="abschnitt-nr">4.1</div>
+      <div class="abschnitt-titel">Kurzbeantwortung</div>
+    </div>
+    <div class="abschnitt-body">
+      
+      <p>Bei der Abnahme des Neubaus liegen fünf erhebliche Baumängel vor, die fachlich zur Abnahmeverweigerung berechtigten: (1) Kellerfeuchte durch mangelhafte Arbeitsfugendichtung, (2) Estrichabsenkung Obergeschoss mit Überschreitung DIN 18202 um 20–50 %, (3) Setzriss im Wohnzimmer mit 0,8 mm, (4) undichte Fensteranschlüsse im DG, (5) Fliesenmängel im Badezimmer EG. Alle fünf Mängel sind als Sachmängel nach § 633 Abs. 2 BGB durch den Bauträger nachzubessern. Kostenrahmen der Hauptmängel: 12.238 € netto; Gesamtvolumen mit Nebenmängeln: ca. 15.000 € netto.</p>
+      
+
+      
+      <div class="hinweis-box" style="margin-top: 3mm;">
+        <strong>Hinweis zu Grenzen der Sachkunde:</strong> Die abschließende rechtliche Bewertung (Rücktritt vom Vertrag, Minderung, Schadensersatz) wäre durch einen Fachanwalt für Bau- und Architektenrecht vorzunehmen und nicht Gegenstand dieses Sachverständigengutachtens. Eine vertiefte geologische Beurteilung des Baugrunds (bei Setzrissen) wäre durch einen Baugrundgutachter mit Baugrundaufschluss vorzunehmen. Die Bewertung der Dokumentationspflichten und Aufmaße des Bauträgers wäre nach nachgereichten Unterlagen abschließend in einem Ergänzungsgutachten möglich.
+      </div>
+      
+    </div>
+  </div>
+
+  <!-- 4.2 § 407a Abs. 2 Unparteilichkeitserklärung -->
+  <div class="abschnitt">
+    <div class="abschnitt-header">
+      <div class="abschnitt-nr">4.2</div>
+      <div class="abschnitt-titel">Erklärung nach § 407a Abs. 2 ZPO (Unparteilichkeit)</div>
+    </div>
+    <div class="abschnitt-body">
+      <div class="erklaerung-kasten">
+        <div class="marker">§ 407a Abs. 2 ZPO · § 9 Abs. 2 IHK-SVO</div>
+        <p>Ich versichere, dass ich das vorliegende Gutachten nach bestem Wissen und Gewissen <strong>unparteiisch, gewissenhaft und persönlich</strong> erstattet habe. Ich bin mit den beteiligten Parteien weder verwandt noch verschwägert und habe kein wirtschaftliches oder persönliches Interesse am Ausgang des Verfahrens oder an der Verwendung dieses Gutachtens.</p>
+
+        
+        <p style="margin-top: 3mm;">Als öffentlich bestellter und vereidigter Sachverständiger bin ich an meinen bei der Bestellung geleisteten Eid gebunden und bestätige die Einhaltung der Unparteilichkeits- und Sorgfaltspflichten nach <span class="law-ref">§ 9 Abs. 2–3 IHK-SVO</span>.</p>
+        
+      </div>
+    </div>
+  </div>
+
+  <!-- 4.3 Hilfsmittel + KI (Ex-post) -->
+  <div class="abschnitt">
+    <div class="abschnitt-header">
+      <div class="abschnitt-nr">4.3</div>
+      <div class="abschnitt-titel">Verwendete Hilfsmittel und KI-Nutzung</div>
+    </div>
+    <div class="abschnitt-body">
+      <p>Die nachstehende Dokumentation ergänzt die Ex-ante-Anzeige aus Teil 1.3 um die konkreten Einsatztätigkeiten (Offenlegung nach <span class="law-ref">§ 407a Abs. 3 ZPO</span> und <span class="law-ref">Art. 50 EU AI Act</span>):</p>
+
+      
+      <p style="margin-top: 3mm;"><strong>OpenAI GPT-4o — Sprachmodell:</strong> Strukturierung des Mängelkatalogs und der Messwert-Tabelle; Vorentwurf der Abschnitte 2.1 (Objektbeschreibung) und 3.1 (Mangelpunkt-Karten); Rechtschreib- und Konsistenzprüfung.</p>
+      
+
+      
+      <p style="margin-top: 2mm;"><strong>OpenAI Whisper — Spracherkennung:</strong> Transkription des Ortstermin-Diktats vom 15.04.2026 (ca. 120 Min Audiomaterial).</p>
+      
+
+      <div class="erklaerung-kasten" style="margin-top: 4mm;">
+        <div class="marker">Eigenleistung · Art. 50 EU AI Act</div>
+        <p><strong>Eigenleistung des Sachverständigen:</strong> Das vorliegende Gutachten wurde überwiegend vom unterzeichnenden Sachverständigen persönlich verfasst. KI-Systeme haben ergänzend bei der Strukturierung und Textaufbereitung der Teile 1 bis 3.3 unterstützt.</p>
+        <p style="margin-top: 2mm;"><strong>Teil 3.4 (Fachurteil):</strong> Vollständig und ausschließlich vom unterzeichnenden Sachverständigen persönlich verfasst, ohne KI-Unterstützung.</p>
+      </div>
+
+      <div class="hinweis-box">
+        <strong>DSGVO-Konformität:</strong> Vor jeder Übertragung an KI-Systeme wurden personenbezogene Daten durch technische Pseudonymisierung unkenntlich gemacht. Die Datenverarbeitung erfolgt auf Servern innerhalb der Europäischen Union.
+      </div>
+    </div>
+  </div>
+
+  <!-- 4.4 Unterschrift -->
+  <div class="abschnitt">
+    <div class="abschnitt-header">
+      <div class="abschnitt-nr">4.4</div>
+      <div class="abschnitt-titel">Ort, Datum, Unterschrift und Stempel</div>
+    </div>
+    <div class="abschnitt-body">
+      <div class="unterschrift-block">
+        <div class="unterschrift-grid">
+          <div class="unterschrift-feld">
+            Ort, Datum<br>
+            <div class="name">Köln, 20.04.2026</div>
+          </div>
+          <div class="unterschrift-feld">
+            Unterschrift Sachverständiger<br>
+            <div class="name">Marcel Mustermann, Dipl.-Ing.</div>
+            <div class="rolle">ö.b.u.v. Sachverständiger</div>
+            <div class="rolle">IHK Köln</div>
+            <div class="stempel">(Rundstempel)</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════
+     TEIL 5 · ANHÄNGE
+     ═══════════════════════════════════════════════════════════ -->
+
+<section class="teil">
+  <div class="teil-header">
+    <div class="teil-nummer">Teil 5</div>
+    <div class="teil-titel">Anhänge</div>
+  </div>
+
+  <div class="abschnitt">
+    <div class="abschnitt-header">
+      <div class="abschnitt-nr">5.1</div>
+      <div class="abschnitt-titel">Verwendete Normen und Regelwerke</div>
+    </div>
+    <div class="abschnitt-body">
+      <div class="normen-liste">
+        
+        <div class="norm-eintrag">
+          <div class="nr">§ 407a Abs. 2 ZPO</div>
+          <div class="titel">Unparteilichkeit des Sachverständigen</div>
+          
+        </div>
+        
+        <div class="norm-eintrag">
+          <div class="nr">§ 407a Abs. 3 ZPO</div>
+          <div class="titel">Anzeigepflicht KI-Einsatz</div>
+          
+        </div>
+        
+        <div class="norm-eintrag">
+          <div class="nr">§ 9 Abs. 2–3 IHK-SVO</div>
+          <div class="titel">Sorgfaltspflichten des Sachverständigen</div>
+          
+        </div>
+        
+        <div class="norm-eintrag">
+          <div class="nr">Art. 50 EU AI Act</div>
+          <div class="titel">Transparenzpflichten bei KI-Einsatz</div>
+          
+        </div>
+        
+        <div class="norm-eintrag">
+          <div class="nr">§ 633 Abs. 2 BGB</div>
+          <div class="titel">Sach- und Rechtsmangel bei Werkverträgen</div>
+          
+        </div>
+        
+        <div class="norm-eintrag">
+          <div class="nr">§ 634 BGB</div>
+          <div class="titel">Rechte des Bestellers bei Mängeln</div>
+          
+        </div>
+        
+        <div class="norm-eintrag">
+          <div class="nr">§ 637 BGB</div>
+          <div class="titel">Selbstvornahme</div>
+          
+        </div>
+        
+        <div class="norm-eintrag">
+          <div class="nr">§ 640 Abs. 1 Satz 2 BGB</div>
+          <div class="titel">Abnahmeverpflichtung bei unwesentlichen Mängeln</div>
+          
+        </div>
+        
+        <div class="norm-eintrag">
+          <div class="nr">VOB/C DIN 18299 ff.</div>
+          <div class="titel">Allgemeine Technische Vertragsbedingungen für Bauleistungen</div>
+          
+        </div>
+        
+        <div class="norm-eintrag">
+          <div class="nr">DIN 18202 (2019-07)</div>
+          <div class="titel">Toleranzen im Hochbau — Bauwerke</div>
+          
+        </div>
+        
+        <div class="norm-eintrag">
+          <div class="nr">DIN 18533-1 (2017-07)</div>
+          <div class="titel">Abdichtung von erdberührten Bauteilen</div>
+          
+        </div>
+        
+        <div class="norm-eintrag">
+          <div class="nr">DIN 4108-7 (2011-01)</div>
+          <div class="titel">Luftdichtheit von Gebäuden</div>
+          
+        </div>
+        
+        <div class="norm-eintrag">
+          <div class="nr">DIN EN 1992-1-1</div>
+          <div class="titel">Bemessung und Konstruktion von Stahlbetonbauten</div>
+          
+        </div>
+        
+        <div class="norm-eintrag">
+          <div class="nr">DIN 18195</div>
+          <div class="titel">Bauwerksabdichtungen (2017 zurückgezogen)</div>
+          
+        </div>
+        
+        <div class="norm-eintrag">
+          <div class="nr">DIN 18560-1 (2015-11)</div>
+          <div class="titel">Estriche im Bauwesen</div>
+          
+        </div>
+        
+        <div class="norm-eintrag">
+          <div class="nr">ZDB-Merkblatt Verlegung keramischer Beläge (2020)</div>
+          <div class="titel">Fachregel Fliesenverlegung</div>
+          
+        </div>
+        
+        <div class="norm-eintrag">
+          <div class="nr">DIN 18355</div>
+          <div class="titel">Tischler- und Glaserarbeiten (VOB/C)</div>
+          
+        </div>
+        
+      </div>
+    </div>
+  </div>
+</section>
+
+
+</body>
+</html>

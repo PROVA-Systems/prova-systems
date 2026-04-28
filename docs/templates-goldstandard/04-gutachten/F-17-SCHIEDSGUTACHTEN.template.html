@@ -1,0 +1,1008 @@
+﻿<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>SG-2026-006 — Carl-Benz-Straße 8, 51063 Köln (Gewerbegebiet Mülheim Nord)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════════════════════════
+   PROVA Systems · KURZGUTACHTEN (Flow A) v1.0
+   Master-Schablone für Schadensgutachten (F-09, auch Basis F-07,
+   F-10, F-11, F-12, F-13, F-14, F-17, F-18)
+   Design-System v1.0 · 10.5pt Body · IHK-SVO § 9 Abs. 3
+   EU AI Act Art. 50 · § 407a Abs. 2+3 ZPO · DSGVO
+   ═══════════════════════════════════════════════════════════════ */
+
+:root {
+  --primary: #1a3a6b;
+  --accent:  #3b82f6;
+  --muted:   #64748b;
+  --text:    #0f172a;
+  --light:   #f1f5f9;
+  --lighter: #f8fafc;
+  --border:  #e2e8f0;
+  --success: #059669;
+  --warning: #d97706;
+  --danger:  #dc2626;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+  font-size: 10.5pt;
+  line-height: 1.55;
+  color: var(--text);
+  background: white;
+}
+
+@page { size: A4; margin: 20mm 20mm 22mm 20mm; }
+
+@page {
+  @top-left {
+    content: "Marcel Mustermann · ö.b.u.v. Sachverständiger";
+    font-family: 'Inter', sans-serif; font-size: 8pt; color: #64748b; padding-top: 10mm;
+  }
+  @top-right {
+    content: "Schiedsgutachten SG-2026-006";
+    font-family: 'Inter', sans-serif; font-size: 8pt; color: #1a3a6b; font-weight: 600; padding-top: 10mm;
+  }
+  @bottom-left {
+    content: "Gutachten-Nr.: SG-2026-006";
+    font-family: 'Inter', sans-serif; font-size: 8pt; color: #64748b; padding-bottom: 10mm;
+  }
+  @bottom-right {
+    content: "Seite " counter(page) " / " counter(pages);
+    font-family: 'Inter', sans-serif; font-size: 8pt; color: #64748b; padding-bottom: 10mm;
+  }
+}
+
+@page :first {
+  @top-left { content: ""; } @top-right { content: ""; }
+  @bottom-left { content: ""; } @bottom-right { content: ""; }
+}
+
+/* ═══ DECKBLATT ═══ */
+.deckblatt { page-break-after: always; min-height: 257mm; display: flex; flex-direction: column; }
+
+.deckblatt-header { padding-bottom: 18mm; border-bottom: 2px solid var(--primary); }
+.deckblatt-kategorie { font-size: 9.5pt; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); font-weight: 500; margin-bottom: 8mm; }
+.deckblatt-titel { font-size: 30pt; font-weight: 700; line-height: 1.15; color: var(--primary); margin-bottom: 4mm; letter-spacing: -0.02em; }
+.deckblatt-subtitel { font-size: 13pt; color: var(--muted); font-weight: 400; margin-bottom: 6mm; }
+.deckblatt-badge { display: inline-block; padding: 4px 12px; background: var(--light); color: var(--primary); border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 11pt; font-weight: 500; border: 1px solid var(--border); }
+
+.deckblatt-objekt { margin-top: 18mm; padding: 10mm; background: var(--lighter); border-left: 3px solid var(--accent); border-radius: 2px; }
+.deckblatt-objekt-label { font-size: 8pt; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 3mm; font-weight: 500; }
+.deckblatt-objekt-adresse { font-size: 15pt; font-weight: 600; color: var(--text); line-height: 1.35; margin-bottom: 2mm; }
+.deckblatt-objekt-typ { font-size: 11pt; color: var(--muted); }
+
+.deckblatt-sv { margin-top: 12mm; padding: 8mm 10mm; background: white; border: 1px solid var(--border); border-radius: 3px; }
+.deckblatt-sv-label { font-size: 8pt; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); font-weight: 500; margin-bottom: 3mm; }
+.deckblatt-sv-name { font-size: 13pt; font-weight: 600; color: var(--text); margin-bottom: 1.5mm; }
+.deckblatt-sv-qualifikation { font-size: 10.5pt; color: var(--primary); font-weight: 500; margin-bottom: 1.5mm; }
+.deckblatt-sv-bestellung { font-size: 9.5pt; color: var(--muted); line-height: 1.5; margin-bottom: 2mm; font-style: italic; }
+.deckblatt-sv-kontakt { font-size: 9.5pt; color: var(--text); line-height: 1.6; }
+.deckblatt-sv-kontakt .mono { font-family: 'JetBrains Mono', monospace; font-size: 9pt; }
+
+.deckblatt-metadaten { margin-top: auto; padding-top: 10mm; display: grid; grid-template-columns: repeat(2, 1fr); gap: 6mm 15mm; }
+.deckblatt-meta-item .label { font-size: 8pt; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); font-weight: 500; margin-bottom: 1mm; }
+.deckblatt-meta-item .value { font-size: 11pt; color: var(--text); font-weight: 500; }
+.deckblatt-meta-item .value.mono { font-family: 'JetBrains Mono', monospace; font-size: 10pt; }
+
+.deckblatt-footer { margin-top: 10mm; padding-top: 6mm; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: flex-end; font-size: 8.5pt; color: var(--muted); }
+.deckblatt-footer .umfang-info { font-size: 8.5pt; line-height: 1.5; }
+.deckblatt-footer .brand-right { text-align: right; font-size: 8pt; letter-spacing: 0.05em; }
+.deckblatt-footer .brand-right .bold { font-weight: 600; color: var(--primary); font-size: 9.5pt; letter-spacing: 0.08em; }
+
+/* ═══ INHALTSSEITEN ═══ */
+.teil { margin-bottom: 14mm; page-break-inside: avoid; }
+
+.teil-header { display: flex; align-items: baseline; gap: 10mm; margin-bottom: 8mm; padding-bottom: 4mm; border-bottom: 2px solid var(--primary); }
+.teil-nummer { font-family: 'JetBrains Mono', monospace; font-size: 11pt; font-weight: 500; color: var(--accent); letter-spacing: 0.1em; text-transform: uppercase; flex-shrink: 0; padding-top: 1mm; }
+.teil-titel { font-size: 18pt; font-weight: 600; color: var(--primary); letter-spacing: -0.015em; }
+
+.abschnitt { margin-bottom: 8mm; }
+.abschnitt-header { display: flex; align-items: baseline; gap: 6mm; margin-bottom: 4mm; padding-bottom: 2mm; border-bottom: 1px solid var(--border); }
+.abschnitt-nr { font-family: 'JetBrains Mono', monospace; font-size: 11.5pt; font-weight: 500; color: var(--muted); flex-shrink: 0; }
+.abschnitt-titel { font-size: 13pt; font-weight: 600; color: var(--text); letter-spacing: -0.01em; }
+.abschnitt-body { font-size: 10.5pt; line-height: 1.65; color: var(--text); }
+.abschnitt-body p { margin-bottom: 3mm; }
+
+.info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2mm 8mm; margin: 4mm 0; padding: 5mm 6mm; background: var(--lighter); border-radius: 3px; border: 1px solid var(--border); }
+.info-item { display: flex; flex-direction: column; gap: 0.5mm; padding: 1.5mm 0; }
+.info-item .label { font-size: 8pt; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 500; }
+.info-item .value { font-size: 10.5pt; color: var(--text); font-weight: 500; }
+.info-item .value.mono { font-family: 'JetBrains Mono', monospace; font-size: 10pt; }
+
+.beweisfrage { margin: 4mm 0; padding: 5mm 7mm; background: var(--lighter); border-left: 3px solid var(--primary); border-radius: 2px; font-size: 11pt; line-height: 1.6; }
+.beweisfrage .label { font-size: 8.5pt; letter-spacing: 0.1em; text-transform: uppercase; color: var(--primary); font-weight: 600; margin-bottom: 2mm; }
+
+/* Befund-Karte (Schaden-spezifisch) */
+.befund-karte { margin: 4mm 0; padding: 5mm 6mm; background: var(--lighter); border: 1px solid var(--border); border-left: 3px solid var(--accent); border-radius: 2px; }
+.befund-karte .nr { font-family: 'JetBrains Mono', monospace; font-size: 9pt; color: var(--accent); font-weight: 500; margin-bottom: 1mm; }
+.befund-karte .titel { font-size: 11pt; font-weight: 600; color: var(--primary); margin-bottom: 2mm; }
+.befund-karte .text { font-size: 10.5pt; line-height: 1.6; color: var(--text); }
+.befund-karte .norm { margin-top: 2mm; font-size: 9pt; color: var(--muted); font-style: italic; }
+
+/* Ursachenhypothesen (Flow A spezifisch) */
+.hypothese { margin: 3mm 0; padding: 4mm 5mm; background: white; border: 1px solid var(--border); border-radius: 3px; }
+.hypothese.primaer { border-left: 3px solid var(--primary); }
+.hypothese.alternativ { border-left: 3px solid var(--muted); }
+.hypothese-kopf { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 2mm; }
+.hypothese-titel { font-size: 11pt; font-weight: 600; color: var(--primary); }
+.hypothese-wahrscheinlichkeit { font-size: 9pt; color: var(--muted); font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; }
+
+/* Messwerte-Tabelle */
+.messwerte { width: 100%; border-collapse: collapse; margin: 4mm 0; font-size: 10pt; }
+.messwerte th, .messwerte td { padding: 2.5mm 4mm; text-align: left; border-bottom: 1px solid var(--border); }
+.messwerte th { background: var(--light); color: var(--muted); font-weight: 500; font-size: 9pt; letter-spacing: 0.08em; text-transform: uppercase; border-bottom: 2px solid var(--border); }
+.messwerte td.number { text-align: right; font-family: 'JetBrains Mono', monospace; font-size: 10pt; }
+.messwerte tr:nth-child(even) { background: var(--lighter); }
+
+/* Sanierung-Tabelle */
+.sanierung-tabelle { width: 100%; border-collapse: collapse; margin: 4mm 0; font-size: 10pt; }
+.sanierung-tabelle th, .sanierung-tabelle td { padding: 2.5mm 4mm; text-align: left; border-bottom: 1px solid var(--border); }
+.sanierung-tabelle th { background: var(--light); color: var(--muted); font-weight: 500; font-size: 9pt; letter-spacing: 0.08em; text-transform: uppercase; border-bottom: 2px solid var(--border); }
+.sanierung-tabelle td.number { text-align: right; font-family: 'JetBrains Mono', monospace; font-size: 10pt; }
+.sanierung-tabelle tr:nth-child(even) { background: var(--lighter); }
+.sanierung-tabelle tr.summary { background: var(--light) !important; font-weight: 600; border-top: 2px solid var(--primary); }
+.sanierung-tabelle tr.summary td { padding: 3mm 4mm; }
+
+/* Kostenrahmen-Card (Hauptergebnis Flow A) */
+.kosten-card {
+  margin: 6mm 0; padding: 8mm;
+  background: linear-gradient(135deg, var(--primary) 0%, #2a4a7b 100%);
+  color: white; border-radius: 4px; position: relative; overflow: hidden;
+}
+.kosten-card::before {
+  content: ''; position: absolute; top: 0; right: 0;
+  width: 40mm; height: 40mm;
+  background: radial-gradient(circle at top right, rgba(59, 130, 246, 0.3), transparent 70%);
+}
+.kosten-card-label { font-size: 9.5pt; letter-spacing: 0.12em; text-transform: uppercase; opacity: 0.85; margin-bottom: 2mm; font-weight: 500; }
+.kosten-card-value { font-size: 26pt; font-weight: 700; letter-spacing: -0.02em; line-height: 1.1; }
+.kosten-card-note { font-size: 9pt; opacity: 0.85; margin-top: 3mm; font-weight: 400; }
+
+/* SV-Fachurteil-Kasten (3.4 — KI-FREI) */
+.fachurteil-kasten { margin: 5mm 0; padding: 6mm 8mm; background: white; border: 2px solid var(--primary); border-radius: 4px; }
+.fachurteil-kasten .marker { display: inline-block; padding: 1.5mm 4mm; background: var(--primary); color: white; font-size: 8.5pt; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 600; border-radius: 2px; margin-bottom: 4mm; }
+.fachurteil-kasten .intro { font-size: 9.5pt; color: var(--muted); font-style: italic; margin-bottom: 4mm; line-height: 1.55; padding-bottom: 3mm; border-bottom: 1px solid var(--border); }
+.fachurteil-kasten .text { font-size: 11pt; line-height: 1.7; color: var(--text); }
+.fachurteil-kasten .text p { margin-bottom: 3mm; }
+
+/* Normen-Liste */
+.normen-liste { display: grid; gap: 2mm; margin: 4mm 0; }
+.norm-eintrag { padding: 3mm 4mm; background: var(--lighter); border-left: 2px solid var(--accent); border-radius: 2px; }
+.norm-eintrag .nr { font-family: 'JetBrains Mono', monospace; font-size: 10pt; font-weight: 500; color: var(--primary); margin-bottom: 0.5mm; }
+.norm-eintrag .titel { font-size: 10pt; color: var(--text); margin-bottom: 0.5mm; }
+.norm-eintrag .gw { font-size: 9pt; color: var(--muted); line-height: 1.4; }
+
+/* § 407a + DSGVO Erklärungs-Kasten */
+.erklaerung-kasten { margin: 4mm 0; padding: 5mm 7mm; background: var(--lighter); border-left: 3px solid var(--success); border-radius: 2px; font-size: 10.5pt; line-height: 1.65; }
+.erklaerung-kasten .marker { display: inline-block; padding: 1.2mm 3mm; background: var(--success); color: white; font-size: 8pt; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 600; border-radius: 2px; margin-bottom: 3mm; }
+
+.hinweis-box { margin: 4mm 0; padding: 4mm 5mm; background: var(--lighter); border: 1px solid var(--border); border-radius: 3px; font-size: 9.5pt; line-height: 1.6; color: var(--muted); }
+.hinweis-box strong { color: var(--primary); }
+
+/* Unterschriftsbereich */
+.unterschrift-block { margin-top: 12mm; padding-top: 6mm; border-top: 1px solid var(--border); }
+.unterschrift-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15mm; }
+.unterschrift-feld { border-top: 1px solid var(--text); padding-top: 2mm; font-size: 9.5pt; color: var(--muted); }
+.unterschrift-feld .name { font-size: 11pt; color: var(--text); font-weight: 600; margin-top: 1mm; }
+.unterschrift-feld .rolle { font-size: 9pt; color: var(--muted); margin-top: 0.5mm; }
+.unterschrift-feld .stempel { font-size: 8.5pt; color: var(--muted); margin-top: 4mm; font-style: italic; }
+
+/* §§-Referenzen inline */
+.law-ref { font-family: 'JetBrains Mono', monospace; font-size: 0.92em; color: var(--primary); font-weight: 500; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════
+     TEIL 1 · DECKBLATT + ALLGEMEINE ANGABEN + AUFGABENSTELLUNG
+     ═══════════════════════════════════════════════════════════ -->
+<section class="deckblatt">
+  <div class="deckblatt-header">
+    <div class="deckblatt-kategorie">Schiedsgutachten nach Schiedsvereinbarung · Schiedsverfahren — Dachabdichtungs-Mängel Gewerbeobjekt</div>
+    <h1 class="deckblatt-titel">Schiedsgutachten</h1>
+    <div class="deckblatt-subtitel">zum Schiedsverfahren — Dachabdichtungs-Mängel Gewerbeobjekt gemäß DIN 4108 / WTA-Regelwerk</div>
+    <div class="deckblatt-badge">Gutachten-Nr.: SG-2026-006</div>
+  </div>
+
+  <div class="deckblatt-objekt">
+    <div class="deckblatt-objekt-label">Begutachtungsobjekt</div>
+    <div class="deckblatt-objekt-adresse">Carl-Benz-Straße 8, 51063 Köln (Gewerbegebiet Mülheim Nord)</div>
+    <div class="deckblatt-objekt-typ">Gewerbeobjekt — Logistikhalle mit Büroteil, 1.850 m² Flachdach · Baujahr 2024</div>
+  </div>
+
+  <div class="deckblatt-sv">
+    <div class="deckblatt-sv-label">Erstattender Sachverständiger</div>
+    <div class="deckblatt-sv-name">Marcel Mustermann, Dipl.-Ing.</div>
+    <div class="deckblatt-sv-qualifikation">ö.b.u.v. Sachverständiger für Schäden an Gebäuden</div>
+    
+    <div class="deckblatt-sv-bestellung">Öffentlich bestellt und vereidigt durch die IHK Köln · für Schäden an Gebäuden</div>
+    
+    <div class="deckblatt-sv-kontakt">
+      Hohenzollernring 12 · 50672 Köln<br>
+      Tel. <span class="mono">+49 221 1234567</span> · Fax <span class="mono">+49 221 1234568</span> · kontakt@prova-systems.de
+    </div>
+  </div>
+
+  <div class="deckblatt-metadaten">
+    <div class="deckblatt-meta-item">
+      <div class="label">Auftraggeber</div>
+      <div class="value">DIS Deutsche Institution für Schiedsgerichtsbarkeit e.V. (SGSG DIS-DVS-2026/003)</div>
+    </div>
+    <div class="deckblatt-meta-item">
+      <div class="label">Schadensstichtag</div>
+      <div class="value mono">15.10.2025</div>
+    </div>
+    <div class="deckblatt-meta-item">
+      <div class="label">Auftragserteilung</div>
+      <div class="value mono">28.02.2026</div>
+    </div>
+    <div class="deckblatt-meta-item">
+      <div class="label">Gutachtendatum</div>
+      <div class="value mono">20.04.2026</div>
+    </div>
+    
+    
+    <div class="deckblatt-meta-item">
+      <div class="label">Gericht</div>
+      <div class="value">Schiedsgericht bei der DIS Deutschen Institution für Schiedsgerichtsbarkeit e.V.</div>
+    </div>
+    <div class="deckblatt-meta-item">
+      <div class="label">Gerichtliches AZ</div>
+      <div class="value mono">DIS-DVS-2026/003</div>
+    </div>
+    
+  </div>
+
+  <div class="deckblatt-footer">
+    <div class="umfang-info">
+      Umfang: 28 Seiten · 4 Anlagen · 54 Fotografien
+    </div>
+    <div class="brand-right">
+      erstellt mit<br>
+      <span class="bold">PROVA SYSTEMS</span>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════
+     TEIL 1 — Inhalt
+     ═══════════════════════════════════════════════════════════ -->
+<section class="teil">
+  <div class="teil-header">
+    <div class="teil-nummer">Teil 1</div>
+    <div class="teil-titel">Allgemeine Angaben und Aufgabenstellung</div>
+  </div>
+
+  <!-- 1.2 Auftragsumfang / Beweisbeschluss -->
+  <div class="abschnitt">
+    <div class="abschnitt-header">
+      <div class="abschnitt-nr">1.2</div>
+      <div class="abschnitt-titel">Auftragsumfang und Beweisbeschluss</div>
+    </div>
+    <div class="abschnitt-body">
+      
+      <p>Das <strong>Schiedsgericht bei der DIS Deutschen Institution für Schiedsgerichtsbarkeit e.V.</strong> hat mit Beweisbeschluss vom 25.02.2026 unter dem Aktenzeichen <span class="law-ref">DIS-DVS-2026/003</span> ein Sachverständigengutachten in folgender Sache angeordnet:</p>
+      <div class="beweisfrage">
+        <div class="label">Beweisbeschluss im Wortlaut</div>
+        Das Schiedsgericht erteilt dem Sachverständigen den Auftrag zur Erstattung eines Gutachtens zur Streitigkeit zwischen der Schiedsklägerin ABC Gewerbebau GmbH (Generalunternehmerin) und dem Schiedsbeklagten XYZ Dachtechnik GmbH (Nachunternehmerin Gewerk Dach) betreffend den Werkvertrag vom 12.03.2024 über die Herstellung der Dachabdichtung am Objekt Carl-Benz-Straße 8, 51063 Köln. Folgende Beweisfragen sind zu beantworten: (1) Entspricht die durch die Schiedsbeklagte ausgeführte Dachabdichtung den anerkannten Regeln der Technik (insbesondere DIN 18531 Flachdächer) und der vertraglich geschuldeten Leistung? (2) Ist der am 15.10.2025 aufgetretene Wassereintritt im Lagerbereich A auf Mängel der Dachabdichtung zurückzuführen? (3) Welche Ursache hat der Wassereintritt, und falls Mängel der Abdichtung vorliegen: wer ist diese Mängel zuzuschreiben (Schiedsbeklagte als Ausführende, Schiedsklägerin als Bauherrin/Auftraggeberin mit Planungsverantwortung, oder Mitursachen Dritter)? (4) Welche Sanierungskosten sind zur nachhaltigen Beseitigung der Mängel aufzuwenden?
+      </div>
+      
+    </div>
+  </div>
+
+  <!-- 1.3 Mitarbeit + KI-Einsatz (Ex-ante) -->
+  <div class="abschnitt">
+    <div class="abschnitt-header">
+      <div class="abschnitt-nr">1.3</div>
+      <div class="abschnitt-titel">Mitarbeit von Hilfskräften und KI-Einsatz</div>
+    </div>
+    <div class="abschnitt-body">
+      <p>Der vorliegenden Gutachtenerstattung wurde mit Anzeige vom <strong>02.03.2026</strong> an das Schiedsgericht bei der DIS und beide Schiedsparteien mit Schreiben vom 02.03.2026 gemäß <span class="law-ref">§ 407a Abs. 3 ZPO</span>, <span class="law-ref">§ 10 IHK-SVO</span> und <span class="law-ref">Art. 50 EU AI Act</span> der Einsatz folgender Hilfsmittel vorab angezeigt:</p>
+
+      
+      <p style="margin-top: 3mm;"><strong>Mitwirkung Dritter:</strong> Keine. Das Gutachten wurde vom unterzeichnenden Sachverständigen höchstpersönlich erstattet.</p>
+      
+
+      <p style="margin-top: 3mm;"><strong>Technische Arbeitsumgebung:</strong> PROVA Systems (prova-systems.de) als Workflow- und PDF-Generierungs-Plattform.</p>
+
+      <p style="margin-top: 3mm;"><strong>Eingesetzte KI-Systeme:</strong> OpenAI GPT-4o (Sprachmodell) und OpenAI Whisper (Spracherkennung). Eine detaillierte Aufgaben-Dokumentation folgt in <strong>Teil 4.3</strong>.</p>
+
+      <div class="hinweis-box" style="margin-top: 4mm;">
+        <strong>Wichtige Klarstellung:</strong> Die sachverständige Beurteilung sowie die <strong>Gesamtverantwortung</strong> für den Inhalt dieses Gutachtens verbleiben ausschließlich beim unterzeichnenden Sachverständigen. KI-Systeme werden ausschließlich als Arbeitshilfe zur Struktur- und Textaufbereitung eingesetzt; sie treffen keine fachlichen Entscheidungen. Das Fachurteil nach Teil 3.4 wurde KI-frei erstellt.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════
+     TEIL 2 · DOKUMENTATION DER DATEN
+     ═══════════════════════════════════════════════════════════ -->
+<section class="teil">
+  <div class="teil-header">
+    <div class="teil-nummer">Teil 2</div>
+    <div class="teil-titel">Dokumentation der Daten</div>
+  </div>
+
+  <!-- 2.1 Objektbeschreibung -->
+  <div class="abschnitt">
+    <div class="abschnitt-header">
+      <div class="abschnitt-nr">2.1</div>
+      <div class="abschnitt-titel">Objektbeschreibung</div>
+    </div>
+    <div class="abschnitt-body">
+      <div class="info-grid">
+        <div class="info-item">
+          <div class="label">Adresse</div>
+          <div class="value">Carl-Benz-Straße 8, 51063 Köln (Gewerbegebiet Mülheim Nord)</div>
+        </div>
+        <div class="info-item">
+          <div class="label">Objektart</div>
+          <div class="value">Gewerbeobjekt — Logistikhalle mit Büroteil, 1.850 m² Flachdach</div>
+        </div>
+        
+        <div class="info-item">
+          <div class="label">Baujahr</div>
+          <div class="value mono">2024</div>
+        </div>
+        
+        
+        <div class="info-item">
+          <div class="label">Wohnfläche</div>
+          <div class="value mono">0 m²</div>
+        </div>
+        
+        
+        <div class="info-item">
+          <div class="label">Bauweise</div>
+          <div class="value">Stahlkonstruktion mit Trapezblech-Dach, zweilagige Bitumenabdichtung auf EPS-Gefälledämmung 120–180 mm, Attika-Ausführung 250 mm hoch, insgesamt 16 Einbauteile (Lichtkuppeln, RWA-Anlagen, Entlüftungen, Rohrdurchführungen)</div>
+        </div>
+        
+        
+        <div class="info-item">
+          <div class="label">Schadensort im Objekt</div>
+          <div class="value">Dachfläche Lagerbereich A (Nordhälfte der Halle, 820 m² Fläche)</div>
+        </div>
+        
+      </div>
+
+      
+      <p style="margin-top: 4mm;">Das Objekt ist eine 2024 errichtete Logistikhalle mit integriertem Büroteil. Die Schiedsklägerin ABC Gewerbebau GmbH als Generalunternehmerin hat den Rohbau und die Gebäudehülle errichtet; die Gewerke Dachabdichtung und Dacheinbauteile wurden per Werkvertrag vom 12.03.2024 an die Schiedsbeklagte XYZ Dachtechnik GmbH vergeben (Auftragssumme 148.500 € netto). Fertigstellung der Dachabdichtung: 15.08.2024. Erstmaliger Wassereintritt im Lager A am 15.10.2025 nach intensivem Regenereignis.</p>
+      
+    </div>
+  </div>
+
+  <!-- 2.2 Anknüpfungstatsachen -->
+  <div class="abschnitt">
+    <div class="abschnitt-header">
+      <div class="abschnitt-nr">2.2</div>
+      <div class="abschnitt-titel">Anknüpfungstatsachen und verwendete Unterlagen</div>
+    </div>
+    <div class="abschnitt-body">
+      <p>Der Beurteilung liegen folgende Unterlagen und Auskünfte zugrunde:</p>
+
+      
+      <ul style="margin: 3mm 0 3mm 6mm;">
+        
+        <li style="margin-bottom: 1.5mm;"><strong>Schiedsvereinbarung Werkvertrag Anhang IV:</strong> Schiedsvereinbarung vom 12.03.2024 mit Verweis auf DIS-Schiedsgerichtsordnung (Fassung 2018), Schiedsort Köln, Sprache Deutsch</li>
+        
+        <li style="margin-bottom: 1.5mm;"><strong>Werkvertrag ABC/XYZ:</strong> Vertragsdokument 42 Seiten, Leistungsbeschreibung Gewerk Dach 18 Positionen, Fertigstellungstermin 15.08.2024 (eingehalten)</li>
+        
+        <li style="margin-bottom: 1.5mm;"><strong>Schiedsklage ABC Gewerbebau:</strong> Eingereicht 12.11.2025, Forderung 78.400 € Sanierungskosten + Mietausfallschaden des Endnutzers 124.800 €</li>
+        
+        <li style="margin-bottom: 1.5mm;"><strong>Klageerwiderung XYZ Dachtechnik:</strong> Vom 10.01.2026, Bestreiten aller Ansprüche, Verweis auf planerische Mängel durch Generalunternehmer (Attikahöhe nicht ausreichend für gewählte Abdichtungsart)</li>
+        
+        <li style="margin-bottom: 1.5mm;"><strong>Bauabnahme Gewerk Dach 15.08.2024:</strong> Protokoll mit Anerkennung ohne Mängel, Unterzeichnung beider Parteien</li>
+        
+        <li style="margin-bottom: 1.5mm;"><strong>Schadensprotokoll Endnutzer vom 15.10.2025:</strong> Wassereintritt im Lagerbereich A nach Starkregen (56 mm in 2 Stunden laut DWD), Folgeschäden an Lagergut 84.600 € netto</li>
+        
+        <li style="margin-bottom: 1.5mm;"><strong>DWD-Niederschlagsdaten:</strong> Starkregen am 14.10./15.10.2025, Station Köln-Stammheim 56 mm/2h, Station Köln-Wahn 48 mm/2h</li>
+        
+        <li style="margin-bottom: 1.5mm;"><strong>Privatgutachten SV Dr. Lang (Klägerin):</strong> Privatgutachten vom 05.11.2025, 12 Mängel der Dachabdichtung, Schätzung Sanierung 78.400 €</li>
+        
+        <li style="margin-bottom: 1.5mm;"><strong>Privatgutachten SV Mayer (Beklagte):</strong> Gegengutachten vom 20.12.2025, Bestreiten der Mängel, Hinweis auf Planungsmängel Generalunternehmer</li>
+        
+        <li style="margin-bottom: 1.5mm;"><strong>Eigene Begehung:</strong> Ortstermin unter Ladung aller Schiedsparteien, mit Bauteilöffnungen und Druck-Probe</li>
+        
+      </ul>
+      
+    </div>
+  </div>
+
+  <!-- 2.3 Ortstermin -->
+  
+  <div class="abschnitt">
+    <div class="abschnitt-header">
+      <div class="abschnitt-nr">2.3</div>
+      <div class="abschnitt-titel">Ortstermin-Dokumentation</div>
+    </div>
+    <div class="abschnitt-body">
+      <div class="info-grid">
+        <div class="info-item">
+          <div class="label">Datum</div>
+          <div class="value mono">15.04.2026</div>
+        </div>
+        <div class="info-item">
+          <div class="label">Uhrzeit / Dauer</div>
+          <div class="value mono">08:00 Uhr · ca. 6 Stunden</div>
+        </div>
+        <div class="info-item" style="grid-column: 1 / -1;">
+          <div class="label">Anwesende</div>
+          <div class="value">RA Dr. Feldmann (Schiedsklägerin ABC), Herr Sommer (GF ABC Gewerbebau), RA Dr. Bachmann (Schiedsbeklagte XYZ), Herr Keskin (GF XYZ Dachtechnik), Herr Wagner (Polier XYZ, Zeuge), Frau Dr. Berg (DIS-Schiedssekretariat, Protokollführung), Herr Baumann (Vertreter Abdichtungssystem-Hersteller Bauder, Zeuge), Sachverständiger Mustermann</div>
+        </div>
+        
+        <div class="info-item" style="grid-column: 1 / -1;">
+          <div class="label">Wetter / Raumklima</div>
+          <div class="value">trocken, bewölkt · 14 °C · Luftfeuchte 62 % rel.</div>
+        </div>
+        
+      </div>
+
+      
+      <p style="margin-top: 4mm;">Vollständige Begehung des Flachdaches (1.850 m²) mit Schwerpunkt Lagerbereich A (820 m²). Systematische Dokumentation der vorhandenen Mängel. Bauteilöffnungen an drei ausgewählten Stellen: (1) Attika-Anschluss Nord, (2) Rohrdurchführung RWA 3, (3) Anschluss an Lichtkuppel LK-04 (Anlage F-03). Wasserdrucktest im Attikabereich Nord (Flutung mit 50 mm Wasserstand für 45 Minuten, keine Undichtigkeit festgestellt — aber Attikahöhe 250 mm ist bei Abdichtungsart G-G erforderlich: 150 mm). Thermografische Untersuchung (Anlage F-04). Parteianhörung und Stellungnahme der anwesenden Zeugen.</p>
+      
+    </div>
+  </div>
+  
+
+  <!-- 2.4 Fotografien -->
+  
+  <div class="abschnitt">
+    <div class="abschnitt-header">
+      <div class="abschnitt-nr">2.4</div>
+      <div class="abschnitt-titel">Fotografien</div>
+    </div>
+    <div class="abschnitt-body">
+      <p>Zur bildlichen Dokumentation wurden <strong>54 Fotografien</strong> angefertigt. Die Aufnahmen sind als gesonderte <strong>Anlage F-01</strong> beigefügt.</p>
+      <div class="hinweis-box" style="margin-top: 3mm;">
+        Die Fotografien ersetzen nicht die verbale Darstellung, sondern ergänzen sie (Nr. 9.3.7 IHK-SVO-Richtlinien).
+      </div>
+    </div>
+  </div>
+  
+
+  <!-- 2.5 Messungen -->
+  
+  <div class="abschnitt">
+    <div class="abschnitt-header">
+      <div class="abschnitt-nr">2.5</div>
+      <div class="abschnitt-titel">Messwerte und verwendete Geräte</div>
+    </div>
+    <div class="abschnitt-body">
+      <p>Folgende Messungen wurden während des Ortstermins durchgeführt:</p>
+      <table class="messwerte">
+        <thead>
+          <tr><th>Messstelle</th><th>Parameter</th><th>Wert</th><th>Norm/Grenzwert</th></tr>
+        </thead>
+        <tbody>
+          
+          <tr>
+            <td>Attikahöhe über OK Abdichtung gesamt 184 lfm</td>
+            <td>Durchschnittliche Höhe</td>
+            <td class="number">127 mm (Soll: 150 mm nach Flachdachrichtlinie)</td>
+            <td>Flachdachrichtlinie 2023 §4.6 — unterschritten</td>
+          </tr>
+          
+          <tr>
+            <td>Gefälle Flachdachfläche Nordhälfte</td>
+            <td>Mittleres Gefälle</td>
+            <td class="number">1,4 % (Soll: ≥2 % nach DIN 18531)</td>
+            <td>DIN 18531-1: Mindestgefälle 2 %</td>
+          </tr>
+          
+          <tr>
+            <td>Lichtkuppelanschluss LK-04 Abdichtungsüberlappung</td>
+            <td>Breite Überlappung</td>
+            <td class="number">85 mm (Soll: ≥120 mm)</td>
+            <td>Bauder-Systemrichtlinie + DIN 18531</td>
+          </tr>
+          
+          <tr>
+            <td>Rohrdurchführung RWA 3 Anschlussflansch</td>
+            <td>Abdichtungs-Ausbildung</td>
+            <td class="number">nicht entsprechend Herstellerdetail, ohne Festflansch ausgeführt</td>
+            <td>Bauder-Detail Z6.12</td>
+          </tr>
+          
+          <tr>
+            <td>Bitumenschweißnaht Lagerbereich A (Probe 1)</td>
+            <td>Überlappungsbreite</td>
+            <td class="number">72 mm (Soll: 100 mm)</td>
+            <td>DIN 18531-3 Verarbeitung</td>
+          </tr>
+          
+          <tr>
+            <td>Bitumenschweißnaht Lagerbereich A (Probe 2)</td>
+            <td>Überlappungsbreite</td>
+            <td class="number">98 mm</td>
+            <td>DIN 18531-3 — Toleranzbereich</td>
+          </tr>
+          
+          <tr>
+            <td>Bitumenschweißnaht Lagerbereich A (Probe 3)</td>
+            <td>Überlappungsbreite</td>
+            <td class="number">65 mm</td>
+            <td>erheblich unterschritten</td>
+          </tr>
+          
+          <tr>
+            <td>Gesamtfläche Nordhälfte Pfützenbildung 24h nach letztem Niederschlag</td>
+            <td>Flächenanteil Pfützen</td>
+            <td class="number">ca. 18 % (148 m²)</td>
+            <td>Flachdachrichtlinie max. 4 % zulässig</td>
+          </tr>
+          
+          <tr>
+            <td>Wasserdrucktest Attikabereich Nord 45 Min 50 mm Wasserstand</td>
+            <td>Dichtheit</td>
+            <td class="number">dicht — keine Undichtigkeit festgestellt</td>
+            <td>DIN 18531-4 Nachweis</td>
+          </tr>
+          
+          <tr>
+            <td>Thermografie Einbauteile Lagerbereich A</td>
+            <td>Temperatur-Anomalien 8 Stellen</td>
+            <td class="number">positive Auffälligkeiten ΔT >3 K</td>
+            <td>DIN EN 13187</td>
+          </tr>
+          
+        </tbody>
+      </table>
+
+      
+      <p style="margin-top: 4mm;"><strong>Verwendete Messgeräte:</strong></p>
+      <ul style="margin: 2mm 0 3mm 6mm;">
+        
+        <li style="margin-bottom: 1mm;">Hilti PM 40-MG Rotationslaser für Gefälleprüfung</li>
+        
+        <li style="margin-bottom: 1mm;">Testo 876 Wärmebildkamera</li>
+        
+        <li style="margin-bottom: 1mm;">Leica DISTO D2 Laserdistanzmesser</li>
+        
+        <li style="margin-bottom: 1mm;">Bosch Endoskop GIC 120</li>
+        
+        <li style="margin-bottom: 1mm;">Wasserdrucktest-Set (temporäre Bauflutung nach DIN 18531-4)</li>
+        
+        <li style="margin-bottom: 1mm;">Bauder-Systemdokumentation (Systemrichtlinie Bauder PYE PV 200 S5)</li>
+        
+      </ul>
+      
+    </div>
+  </div>
+  
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════
+     TEIL 3 · SACHVERSTÄNDIGE BEANTWORTUNG
+     ═══════════════════════════════════════════════════════════ -->
+<section class="teil">
+  <div class="teil-header">
+    <div class="teil-nummer">Teil 3</div>
+    <div class="teil-titel">Sachverständige Beantwortung</div>
+  </div>
+
+  <!-- 3.1 Befunde -->
+  <div class="abschnitt">
+    <div class="abschnitt-header">
+      <div class="abschnitt-nr">3.1</div>
+      <div class="abschnitt-titel">Befunde</div>
+    </div>
+    <div class="abschnitt-body">
+      
+      <p>Das Flachdach wurde am 15.04.2026 in Anwesenheit aller Schiedsparteien untersucht. Die Bauteilöffnungen erfolgten nach gemeinsamer Abstimmung der Parteien. Die nachstehenden Befunde beantworten die vier Beweisfragen des Schiedsgerichts:</p>
+      
+
+      
+      
+      <div class="befund-karte">
+        <div class="nr">Befund 1</div>
+        <div class="titel">Befund 1 — Gefälle der Dachfläche (Schnittstelle Planung/Ausführung)</div>
+        <div class="text">Das gemessene mittlere Gefälle in der Nordhälfte des Flachdaches beträgt 1,4 % (DIN 18531-1 fordert mindestens 2 %). Die Ursache liegt nach Aktenlage in der unzureichenden Gefälledämmung, die durch die Generalunternehmerin (Schiedsklägerin) geplant und als Bauleistung vor dem Gewerk der Schiedsbeklagten auszuführen war. Die Dämmplatten mit werkseitig 1,5 % Gefälle wurden durch ABC Gewerbebau GmbH gewählt und verlegt. Die Schiedsbeklagte hatte auf ihrer Leistungsbeschreibung die vorhandene Oberfläche zu bebauen. Es handelt sich damit um einen Planungs-/Ausführungsmangel der Schiedsklägerin, nicht der Schiedsbeklagten.</div>
+        
+      </div>
+      
+      <div class="befund-karte">
+        <div class="nr">Befund 2</div>
+        <div class="titel">Befund 2 — Attikahöhe nur 127 mm (Schnittstelle Planung/Ausführung)</div>
+        <div class="text">Die Attikahöhe beträgt im Mittel 127 mm, an einzelnen Stellen nur 115 mm. Die Flachdachrichtlinie 2023 §4.6 fordert bei der gewählten Abdichtungsart eine Attikahöhe von mindestens 150 mm, bei Flächen mit Pfützenbildung >4 % sogar 200 mm. Die Attika wurde durch die Schiedsklägerin als Rohbauleistung errichtet. Die Schiedsbeklagte hätte in der Angebotserstellung auf die unzureichende Attikahöhe hinweisen müssen (Hinweispflicht nach § 4 Abs. 3 VOB/B). Der fehlende Bedenkenhinweis liegt dokumentiert nicht vor. Damit wäre eine anteilige Mitverantwortung der Schiedsbeklagten gegeben (geschätzt 30 % Mitverschuldungsanteil).</div>
+        
+      </div>
+      
+      <div class="befund-karte">
+        <div class="nr">Befund 3</div>
+        <div class="titel">Befund 3 — Unzureichende Schweißnahtüberlappung (ausschließlich Ausführungsmangel)</div>
+        <div class="text">Die Überlappungen der Bitumenbahnen in der Nordhälfte wurden an 3 repräsentativen Stellen gemessen: 72 mm / 98 mm / 65 mm. DIN 18531-3 und die Bauder-Systemrichtlinie fordern 100 mm Mindestüberlappung. Zwei von drei Messstellen unterschreiten erheblich. Dieser Mangel ist ausschließlich der Ausführung der Schiedsbeklagten zuzuordnen. Bei Starkregen (56 mm/2h am 15.10.2025) entstünden Hydrostatische Drücke, die über unzureichende Schweißnähte zu Wassereintritt führen können.</div>
+        
+      </div>
+      
+      <div class="befund-karte">
+        <div class="nr">Befund 4</div>
+        <div class="titel">Befund 4 — Lichtkuppelanschluss LK-04 mangelhaft (Ausführungsmangel)</div>
+        <div class="text">Die Bauteilöffnung am Lichtkuppelanschluss LK-04 zeigt eine Anschlussüberlappung von nur 85 mm (Mindestanforderung 120 mm) und einen fehlerhaft ausgeführten Anschlussflansch. Im Unterschied zum Bauder-Systemdetail wurde kein Festflansch-Loselflansch-System ausgeführt, sondern eine einschichtige Klebung. Dies ist ein Ausführungsmangel der Schiedsbeklagten; der Mangel wäre eindeutig als wasserundichte Stelle unter Druckbelastung zu bewerten.</div>
+        
+      </div>
+      
+      <div class="befund-karte">
+        <div class="nr">Befund 5</div>
+        <div class="titel">Befund 5 — Rohrdurchführung RWA 3 mangelhaft (Ausführungsmangel)</div>
+        <div class="text">Die Bauteilöffnung an der Rohrdurchführung RWA 3 zeigt eine nicht systemkonforme Ausführung: Das Rohr wurde ohne vorgefertigte Anschlussmanschette direkt in die Abdichtung eingebunden. Bauder fordert in seinem Detail Z6.12 die Verwendung der mitgelieferten Anschlussmanschette. Die gewählte Ausführung bietet keine dauerhafte Dichtigkeit. Dieser Mangel ist ausschließlich der Ausführung der Schiedsbeklagten zuzuordnen.</div>
+        
+      </div>
+      
+      <div class="befund-karte">
+        <div class="nr">Befund 6</div>
+        <div class="titel">Befund 6 — Erhebliche Pfützenbildung (Kombinationsursache)</div>
+        <div class="text">Die Pfützenbildung auf der Nordhälfte (18 % der Fläche, 148 m²) übersteigt die Toleranzgrenze der Flachdachrichtlinie (max. 4 %) erheblich. Ursächlich wäre die Kombination aus unzureichendem Gefälle (Befund 1, Planungsmangel Schiedsklägerin) und der geringen Attikahöhe (Befund 2, Planungsmangel mit Mitverschuldungsanteil der Schiedsbeklagten). Pfützen erhöhen die hydrostatische Belastung der Dachabdichtung und beschleunigen Verschleißprozesse.</div>
+        
+      </div>
+      
+      <div class="befund-karte">
+        <div class="nr">Befund 7</div>
+        <div class="titel">Befund 7 — Kausalität Wassereintritt 15.10.2025</div>
+        <div class="text">Der Wassereintritt am 15.10.2025 wäre nach eigener Untersuchung am wahrscheinlichsten auf zwei Ursachen zurückzuführen: (a) den mangelhaften Lichtkuppelanschluss LK-04 (Befund 4); (b) die unzureichenden Schweißnahtüberlappungen (Befund 3) im Bereich mit starker Pfützenbildung, die unter hydrostatischem Druck des Starkregens aufgegeben haben. Beide Ursachen sind Ausführungsmängel der Schiedsbeklagten. Der Wasserdrucktest vom 15.04.2026 am Attikabereich Nord zeigte keine Undichtigkeit dort — die Attikaausbildung wäre damit als ursächlich für den 15.10.2025-Schaden zu verwerfen.</div>
+        
+      </div>
+      
+      
+    </div>
+  </div>
+
+  <!-- 3.2 Ursachenanalyse (Hypothesen, Konjunktiv II) -->
+  <div class="abschnitt">
+    <div class="abschnitt-header">
+      <div class="abschnitt-nr">3.2</div>
+      <div class="abschnitt-titel">Ursachenanalyse</div>
+    </div>
+    <div class="abschnitt-body">
+      <p>Die Ursachenanalyse erfolgt auf Basis der dokumentierten Befunde und der Anknüpfungstatsachen nach Teil 2. Die im Folgenden dargelegten Hypothesen sind im Konjunktiv II formuliert und stehen unter dem Vorbehalt der abschließenden sachverständigen Würdigung in Teil 3.4.</p>
+
+      
+      
+      <div class="hypothese alternativ">
+        <div class="hypothese-kopf">
+          <div class="hypothese-titel">Hypothese 1: Primäre Ursache Wassereintritt 15.10.2025 — Ausführungsmängel Schiedsbeklagte</div>
+          <div class="hypothese-wahrscheinlichkeit">Hoch (Bauteilöffnung und Drucktest)</div>
+        </div>
+        <div style="font-size: 10.5pt; line-height: 1.6;">Der Wassereintritt wäre mit überwiegender Wahrscheinlichkeit auf die Ausführungsmängel an Lichtkuppelanschluss LK-04 und auf die unzureichenden Schweißnahtüberlappungen im pfützenbelasteten Bereich der Nordhälfte zurückzuführen. Diese wären ausschließlich der Schiedsbeklagten zuzuordnen. Der Wasserdrucktest schließt die Attika als primäre Eintrittstelle aus.</div>
+      </div>
+      
+      <div class="hypothese alternativ">
+        <div class="hypothese-kopf">
+          <div class="hypothese-titel">Hypothese 2: Mitwirkende Ursachen — Planungsmängel Schiedsklägerin + fehlender Bedenkenhinweis</div>
+          <div class="hypothese-wahrscheinlichkeit">Mittel (anteilig)</div>
+        </div>
+        <div style="font-size: 10.5pt; line-height: 1.6;">Die Pfützenbildung (durch unzureichendes Gefälle + niedrige Attika) hätte die hydrostatische Belastung auf die Abdichtung erhöht. Die Pfützenbildung selbst wäre ein Planungsmangel der Schiedsklägerin. Die Schiedsbeklagte hätte jedoch auf die nicht fachgerechte Attikahöhe vor Beginn der Abdichtungsarbeiten schriftlich hinweisen müssen. Dieser fehlende Hinweis wäre eine anteilige Mitverantwortung.</div>
+      </div>
+      
+      
+    </div>
+  </div>
+
+  <!-- 3.3 Sanierungsvorschlag + Kostenrahmen -->
+  
+  <div class="abschnitt">
+    <div class="abschnitt-header">
+      <div class="abschnitt-nr">3.3</div>
+      <div class="abschnitt-titel">Sanierungsvorschlag und Kostenrahmen</div>
+    </div>
+    <div class="abschnitt-body">
+      
+      <p>Die nachhaltige Beseitigung der Mängel erfordert Maßnahmen auf zwei Ebenen: (a) Behebung der ausführungsbedingten Mängel durch die Schiedsbeklagte, (b) Verbesserung der planerischen Schwachstellen (Gefälle, Attika) auf Kosten der Schiedsklägerin. Die nachstehenden Kosten betreffen die Gesamtsanierung; die Verteilung zwischen den Parteien folgt in Teil 3.4.</p>
+      
+
+      
+      <table class="sanierung-tabelle">
+        <thead>
+          <tr><th>Pos.</th><th>Leistung</th><th style="text-align:right;">Menge</th><th style="text-align:right;">EP netto</th><th style="text-align:right;">Summe netto</th></tr>
+        </thead>
+        <tbody>
+          
+          <tr>
+            <td>1</td>
+            <td>A. Ausführungsmängel (Schiedsbeklagte): Rückbau + Neuerstellung Dachabdichtung Lagerbereich A</td>
+            <td class="number">820 m²</td>
+            <td class="number">62,00 €</td>
+            <td class="number">50.840,00 €</td>
+          </tr>
+          
+          <tr>
+            <td>2</td>
+            <td>A. Neuausführung aller 5 Lichtkuppelanschlüsse mit Systemdetail</td>
+            <td class="number">5 Stück</td>
+            <td class="number">1.240,00 €</td>
+            <td class="number">6.200,00 €</td>
+          </tr>
+          
+          <tr>
+            <td>3</td>
+            <td>A. Neuausführung aller 11 Rohrdurchführungen mit Systemmanschetten</td>
+            <td class="number">11 Stück</td>
+            <td class="number">480,00 €</td>
+            <td class="number">5.280,00 €</td>
+          </tr>
+          
+          <tr>
+            <td>4</td>
+            <td>B. Planungsmangel Attika (Schiedsklägerin): Attika-Aufbau auf 200 mm</td>
+            <td class="number">184 lfm</td>
+            <td class="number">185,00 €</td>
+            <td class="number">34.040,00 €</td>
+          </tr>
+          
+          <tr>
+            <td>5</td>
+            <td>B. Planungsmangel Gefälle (Schiedsklägerin): Gefälle-Ausgleichschicht</td>
+            <td class="number">820 m²</td>
+            <td class="number">42,00 €</td>
+            <td class="number">34.440,00 €</td>
+          </tr>
+          
+          <tr>
+            <td>6</td>
+            <td>Sicherung, Gerüst, Entsorgung, Endreinigung</td>
+            <td class="number">1 psch</td>
+            <td class="number">5.800,00 €</td>
+            <td class="number">5.800,00 €</td>
+          </tr>
+          
+          
+          <tr class="summary"><td colspan="4">Summe netto</td><td class="number">136.600,00 €</td></tr>
+          
+        </tbody>
+      </table>
+      
+
+      
+      <div class="kosten-card">
+        <div class="kosten-card-label">Geschätzter Gesamtkostenrahmen (netto)</div>
+        <div class="kosten-card-value">136.600,00 €</div>
+        <div class="kosten-card-note">Orientierende Schätzung auf Basis marktüblicher Einheitspreise · Abweichungen ±15 % möglich</div>
+      </div>
+      
+    </div>
+  </div>
+  
+
+  <!-- 3.4 Fachurteil (KI-FREI) -->
+  <div class="abschnitt">
+    <div class="abschnitt-header">
+      <div class="abschnitt-nr">3.4</div>
+      <div class="abschnitt-titel">Fachurteil</div>
+    </div>
+    <div class="abschnitt-body">
+      <div class="fachurteil-kasten">
+        <div class="marker">SV-Eigenleistung · KI-frei</div>
+        <div class="intro">
+          Dieses Fachurteil wurde gemäß <span class="law-ref">§ 407a Abs. 2 ZPO</span> und <span class="law-ref">§ 9 Abs. 2 IHK-SVO</span> vom unterzeichnenden Sachverständigen <strong>persönlich, eigenständig und ohne KI-Unterstützung</strong> verfasst.
+        </div>
+        <div class="text">
+          <p>Nach Würdigung des Beweisbeschlusses des Schiedsgerichts vom 25.02.2026, der dokumentierten Befunde, der Bauteilöffnungen, des Wasserdrucktests und der Aktenlage komme ich zu folgender sachverständiger Beurteilung:</p><p><strong>Zu Beweisfrage 1 (Fachgerechte Ausführung Dachabdichtung):</strong> Die Dachabdichtung wurde durch die Schiedsbeklagte in wesentlichen Teilen NICHT fachgerecht nach DIN 18531-3 und den Bauder-Systemrichtlinien ausgeführt. Fünf Einzelmängel sind nachgewiesen: unzureichende Schweißnahtüberlappungen (Befund 3), mangelhafter Lichtkuppelanschluss LK-04 (Befund 4), nicht systemkonforme Rohrdurchführung RWA 3 (Befund 5), ergänzt durch zwei Mängel der Gebäudehülle (unzureichendes Gefälle und geringe Attika), die jedoch der Schiedsklägerin als Generalunternehmerin zuzuordnen sind.</p><p><strong>Zu Beweisfrage 2 (Kausalität Wassereintritt 15.10.2025):</strong> Der Wassereintritt wäre mit hoher Wahrscheinlichkeit auf zwei Ausführungsmängel der Schiedsbeklagten zurückzuführen: auf den Lichtkuppelanschluss LK-04 und auf die unzureichenden Schweißnahtüberlappungen im Bereich der Nordhälfte. Der Wasserdrucktest vom 15.04.2026 schließt die Attika als primäre Eintrittsstelle aus. Die Schäden wären damit mit klaren Ursachen den Mängeln der Schiedsbeklagten zuzurechnen.</p><p><strong>Zu Beweisfrage 3 (Verantwortungsverteilung):</strong> Die festgestellten Mängel sind in ihrer Entstehung unterschiedlichen Parteien zuzurechnen: <strong>Ausführungsmängel</strong> (Schweißnähte, Lichtkuppelanschluss, Rohrdurchführung) entfallen auf die Schiedsbeklagte; <strong>Planungsmängel</strong> (Gefälle, Attikahöhe) auf die Schiedsklägerin. Die Schiedsbeklagte trägt zudem einen Mitverschuldungsanteil (geschätzt 30 %) für den fehlenden Bedenkenhinweis nach § 4 Abs. 3 VOB/B zur nicht fachgerechten Attikahöhe. Die primäre Kausalität für den Wassereintritt 15.10.2025 liegt jedoch eindeutig bei den Ausführungsmängeln der Schiedsbeklagten.</p><p><strong>Zu Beweisfrage 4 (Sanierungskosten):</strong> Die nachhaltige Gesamtsanierung beläuft sich auf rund <strong>136.600 € netto</strong>. Davon wären in fachlich-technischer Zuordnung: rund <strong>62.320 € der Schiedsbeklagten</strong> (Ausführungsmängel A.) und rund <strong>68.480 € der Schiedsklägerin</strong> (Planungsmängel B.) zuzuordnen. Die Nebenkosten (5.800 €) wären hälftig zu tragen. Die rechtliche Bewertung der Mitverschuldensquote hinsichtlich der Attika (ob die Schiedsbeklagte hier zusätzlich anteilig zahlen müsste) obliegt dem Schiedsgericht.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════
+     TEIL 4 · ZUSAMMENFASSUNG UND SCHLUSS
+     ═══════════════════════════════════════════════════════════ -->
+<section class="teil">
+  <div class="teil-header">
+    <div class="teil-nummer">Teil 4</div>
+    <div class="teil-titel">Zusammenfassung und Schluss</div>
+  </div>
+
+  <!-- 4.1 Kurzbeantwortung -->
+  <div class="abschnitt">
+    <div class="abschnitt-header">
+      <div class="abschnitt-nr">4.1</div>
+      <div class="abschnitt-titel">Kurzbeantwortung</div>
+    </div>
+    <div class="abschnitt-body">
+      
+      <p>Die Dachabdichtung wurde in wesentlichen Teilen nicht fachgerecht ausgeführt. Der Wassereintritt vom 15.10.2025 wäre auf zwei Ausführungsmängel der Schiedsbeklagten zurückzuführen (Lichtkuppelanschluss, Schweißnahtüberlappung). Daneben bestehen Planungsmängel der Schiedsklägerin (Gefälle, Attika), die die Pfützenbildung und damit die Belastung der Abdichtung erhöhen. Gesamtsanierung 136.600 € netto. Fachlich-technische Zuordnung: ca. 62.320 € Schiedsbeklagte, 68.480 € Schiedsklägerin. Mitverschuldensquote für fehlenden Bedenkenhinweis: ca. 30 %.</p>
+      
+
+      
+      <div class="hinweis-box" style="margin-top: 3mm;">
+        <strong>Hinweis zu Grenzen der Sachkunde:</strong> Die endgültige rechtliche Bewertung der Verantwortungsverteilung, der Mitverschuldensquote und der Zuordnung der Nebenkosten obliegt dem Schiedsgericht. Das vorliegende Gutachten bietet die fachlich-technische Grundlage dafür. Die Bewertung des Mietausfallschadens des Endnutzers (124.800 €) war nicht Gegenstand dieses Gutachtens und müsste durch einen Wertermittlungs-Sachverständigen oder das Schiedsgericht selbst beurteilt werden.
+      </div>
+      
+    </div>
+  </div>
+
+  <!-- 4.2 § 407a Abs. 2 Unparteilichkeitserklärung -->
+  <div class="abschnitt">
+    <div class="abschnitt-header">
+      <div class="abschnitt-nr">4.2</div>
+      <div class="abschnitt-titel">Erklärung nach § 407a Abs. 2 ZPO (Unparteilichkeit)</div>
+    </div>
+    <div class="abschnitt-body">
+      <div class="erklaerung-kasten">
+        <div class="marker">§ 407a Abs. 2 ZPO · § 9 Abs. 2 IHK-SVO</div>
+        <p>Ich versichere, dass ich das vorliegende Gutachten nach bestem Wissen und Gewissen <strong>unparteiisch, gewissenhaft und persönlich</strong> erstattet habe. Ich bin mit den beteiligten Parteien weder verwandt noch verschwägert und habe kein wirtschaftliches oder persönliches Interesse am Ausgang des Verfahrens oder an der Verwendung dieses Gutachtens.</p>
+
+        
+        <p style="margin-top: 3mm;">Als öffentlich bestellter und vereidigter Sachverständiger bin ich an meinen bei der Bestellung geleisteten Eid gebunden und bestätige die Einhaltung der Unparteilichkeits- und Sorgfaltspflichten nach <span class="law-ref">§ 9 Abs. 2–3 IHK-SVO</span>.</p>
+        
+      </div>
+    </div>
+  </div>
+
+  <!-- 4.3 Hilfsmittel + KI (Ex-post) -->
+  <div class="abschnitt">
+    <div class="abschnitt-header">
+      <div class="abschnitt-nr">4.3</div>
+      <div class="abschnitt-titel">Verwendete Hilfsmittel und KI-Nutzung</div>
+    </div>
+    <div class="abschnitt-body">
+      <p>Die nachstehende Dokumentation ergänzt die Ex-ante-Anzeige aus Teil 1.3 um die konkreten Einsatztätigkeiten (Offenlegung nach <span class="law-ref">§ 407a Abs. 3 ZPO</span> und <span class="law-ref">Art. 50 EU AI Act</span>):</p>
+
+      
+      <p style="margin-top: 3mm;"><strong>OpenAI GPT-4o — Sprachmodell:</strong> Strukturierung der umfangreichen Aktenlage (Schiedsklage, Klageerwiderung, Werkvertrag, 2 Privatgutachten); Vorentwurf der Abschnitte 2.1 (Objektbeschreibung) und 3.1 (Befundstruktur nach den vier Beweisfragen); Rechtschreib- und Konsistenzprüfung.</p>
+      
+
+      
+      <p style="margin-top: 2mm;"><strong>OpenAI Whisper — Spracherkennung:</strong> Transkription des Ortstermin-Diktats vom 15.04.2026 (ca. 240 Min Audiomaterial inkl. Parteianhörung und Zeugenaussagen).</p>
+      
+
+      <div class="erklaerung-kasten" style="margin-top: 4mm;">
+        <div class="marker">Eigenleistung · Art. 50 EU AI Act</div>
+        <p><strong>Eigenleistung des Sachverständigen:</strong> Das vorliegende Gutachten wurde überwiegend vom unterzeichnenden Sachverständigen persönlich verfasst. KI-Systeme haben ergänzend bei der Strukturierung und Textaufbereitung der Teile 1 bis 3.3 unterstützt.</p>
+        <p style="margin-top: 2mm;"><strong>Teil 3.4 (Fachurteil):</strong> Vollständig und ausschließlich vom unterzeichnenden Sachverständigen persönlich verfasst, ohne KI-Unterstützung.</p>
+      </div>
+
+      <div class="hinweis-box">
+        <strong>DSGVO-Konformität:</strong> Vor jeder Übertragung an KI-Systeme wurden personenbezogene Daten durch technische Pseudonymisierung unkenntlich gemacht. Die Datenverarbeitung erfolgt auf Servern innerhalb der Europäischen Union.
+      </div>
+    </div>
+  </div>
+
+  <!-- 4.4 Unterschrift -->
+  <div class="abschnitt">
+    <div class="abschnitt-header">
+      <div class="abschnitt-nr">4.4</div>
+      <div class="abschnitt-titel">Ort, Datum, Unterschrift und Stempel</div>
+    </div>
+    <div class="abschnitt-body">
+      <div class="unterschrift-block">
+        <div class="unterschrift-grid">
+          <div class="unterschrift-feld">
+            Ort, Datum<br>
+            <div class="name">Köln, 20.04.2026</div>
+          </div>
+          <div class="unterschrift-feld">
+            Unterschrift Sachverständiger<br>
+            <div class="name">Marcel Mustermann, Dipl.-Ing.</div>
+            <div class="rolle">ö.b.u.v. Sachverständiger</div>
+            <div class="rolle">IHK Köln</div>
+            <div class="stempel">(Rundstempel)</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════
+     TEIL 5 · ANHÄNGE
+     ═══════════════════════════════════════════════════════════ -->
+
+<section class="teil">
+  <div class="teil-header">
+    <div class="teil-nummer">Teil 5</div>
+    <div class="teil-titel">Anhänge</div>
+  </div>
+
+  <div class="abschnitt">
+    <div class="abschnitt-header">
+      <div class="abschnitt-nr">5.1</div>
+      <div class="abschnitt-titel">Verwendete Normen und Regelwerke</div>
+    </div>
+    <div class="abschnitt-body">
+      <div class="normen-liste">
+        
+        <div class="norm-eintrag">
+          <div class="nr">DIS-Schiedsgerichtsordnung 2018</div>
+          <div class="titel">Schiedsverfahren nach DIS-Ordnung</div>
+          
+        </div>
+        
+        <div class="norm-eintrag">
+          <div class="nr">§ 1029 ZPO</div>
+          <div class="titel">Schiedsvereinbarung</div>
+          
+        </div>
+        
+        <div class="norm-eintrag">
+          <div class="nr">§ 1049 ZPO</div>
+          <div class="titel">Anordnung von Sachverständigen-Beweisaufnahmen durch das Schiedsgericht</div>
+          
+        </div>
+        
+        <div class="norm-eintrag">
+          <div class="nr">§ 407a Abs. 2 ZPO</div>
+          <div class="titel">Unparteilichkeit des Sachverständigen</div>
+          
+        </div>
+        
+        <div class="norm-eintrag">
+          <div class="nr">§ 407a Abs. 3 ZPO</div>
+          <div class="titel">Anzeigepflicht KI-Einsatz</div>
+          
+        </div>
+        
+        <div class="norm-eintrag">
+          <div class="nr">§ 9 Abs. 2–3 IHK-SVO</div>
+          <div class="titel">Sorgfaltspflichten des Sachverständigen</div>
+          
+        </div>
+        
+        <div class="norm-eintrag">
+          <div class="nr">Art. 50 EU AI Act</div>
+          <div class="titel">Transparenzpflichten bei KI-Einsatz</div>
+          
+        </div>
+        
+        <div class="norm-eintrag">
+          <div class="nr">§ 4 Abs. 3 VOB/B</div>
+          <div class="titel">Bedenkenhinweispflicht des Auftragnehmers</div>
+          
+        </div>
+        
+        <div class="norm-eintrag">
+          <div class="nr">DIN 18531-1 (2017-07)</div>
+          <div class="titel">Abdichtung nicht genutzter Dächer</div>
+          
+        </div>
+        
+        <div class="norm-eintrag">
+          <div class="nr">DIN 18531-3 (2017-07)</div>
+          <div class="titel">Abdichtung nicht genutzter Dächer — Verarbeitung</div>
+          
+        </div>
+        
+        <div class="norm-eintrag">
+          <div class="nr">DIN 18531-4 (2017-07)</div>
+          <div class="titel">Abdichtung nicht genutzter Dächer — Instandhaltung</div>
+          
+        </div>
+        
+        <div class="norm-eintrag">
+          <div class="nr">DIN 18195</div>
+          <div class="titel">Bauwerksabdichtungen (2017 zurückgezogen)</div>
+          
+        </div>
+        
+        <div class="norm-eintrag">
+          <div class="nr">Flachdachrichtlinie ZVDH 2023</div>
+          <div class="titel">Regeln für Abdichtungen nicht genutzter Dächer</div>
+          
+        </div>
+        
+        <div class="norm-eintrag">
+          <div class="nr">Bauder-Systemrichtlinie PYE PV 200 S5</div>
+          <div class="titel">Verarbeitungsrichtlinie Bauder-Abdichtungssystem</div>
+          
+        </div>
+        
+        <div class="norm-eintrag">
+          <div class="nr">DIN EN 13187</div>
+          <div class="titel">Wärmetechnisches Verhalten von Gebäuden — Thermografie</div>
+          
+        </div>
+        
+      </div>
+    </div>
+  </div>
+</section>
+
+
+</body>
+</html>

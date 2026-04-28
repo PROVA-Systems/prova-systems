@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>BES-03 Auftragsannahme-Bestätigung — PROVA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --primary: #1a3a6b; --accent: #3b82f6; --muted: #64748b;
+  --text: #0f172a; --light: #f1f5f9; --lighter: #f8fafc;
+  --border: #e2e8f0; --success: #059669; --warning: #d97706;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Inter', sans-serif; font-size: 10.5pt; line-height: 1.55; color: var(--text); background: white; }
+@page { size: A4; margin: 25mm 25mm 22mm 25mm; }
+
+.brief-header { padding-bottom: 10mm; }
+.absender-zeile { font-size: 8.5pt; color: var(--muted); border-bottom: 0.5pt solid var(--border); padding-bottom: 1mm; margin-bottom: 8mm; }
+
+.empfaenger-block { margin-top: 5mm; margin-bottom: 8mm; min-height: 35mm; }
+.empfaenger-block .anrede-zeile { font-size: 11pt; line-height: 1.5; }
+
+.bezugszeichen-block { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4mm; margin-bottom: 8mm; padding: 3mm 4mm; background: var(--lighter); border-radius: 2px; font-size: 9pt; }
+.bezugszeichen-block .label { color: var(--muted); font-size: 8pt; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 0.5mm; }
+.bezugszeichen-block .value { color: var(--text); font-family: 'JetBrains Mono', monospace; font-size: 9pt; font-weight: 500; }
+
+.betreff { font-size: 13pt; font-weight: 600; color: var(--primary); margin: 6mm 0 8mm 0; }
+
+.brief-body { font-size: 10.5pt; line-height: 1.7; }
+.brief-body p { margin-bottom: 4mm; }
+
+.auftrag-box { margin: 5mm 0; padding: 6mm 8mm; background: var(--lighter); border-left: 3px solid var(--primary); border-radius: 2px; }
+.auftrag-box .label-titel { font-size: 9pt; letter-spacing: 0.1em; text-transform: uppercase; color: var(--primary); font-weight: 600; margin-bottom: 4mm; }
+.auftrag-box .data-grid { display: grid; grid-template-columns: 50mm 1fr; gap: 2mm 4mm; }
+.auftrag-box .data-row .key { color: var(--muted); font-size: 9.5pt; padding: 1mm 0; }
+.auftrag-box .data-row .val { color: var(--text); font-size: 10.5pt; font-weight: 500; padding: 1mm 0; }
+.auftrag-box .data-row .val.mono { font-family: 'JetBrains Mono', monospace; font-size: 10pt; }
+
+.honorar-card {
+  margin: 6mm 0; padding: 6mm 8mm;
+  background: linear-gradient(135deg, var(--primary) 0%, #2a4a7b 100%);
+  color: white; border-radius: 4px; position: relative; overflow: hidden;
+}
+.honorar-card::before {
+  content: ''; position: absolute; top: 0; right: 0;
+  width: 30mm; height: 30mm;
+  background: radial-gradient(circle at top right, rgba(59, 130, 246, 0.3), transparent 70%);
+}
+.honorar-card .label { font-size: 8.5pt; letter-spacing: 0.12em; text-transform: uppercase; opacity: 0.85; margin-bottom: 2mm; font-weight: 500; }
+.honorar-card .value-row { display: flex; align-items: baseline; gap: 6mm; flex-wrap: wrap; }
+.honorar-card .main-value { font-size: 22pt; font-weight: 700; letter-spacing: -0.02em; }
+.honorar-card .sub-value { font-size: 11pt; opacity: 0.9; }
+.honorar-card .note { font-size: 9pt; opacity: 0.85; margin-top: 3mm; }
+
+.ki-anzeige-box { margin: 5mm 0; padding: 5mm 6mm; background: white; border: 2px solid var(--accent); border-radius: 3px; }
+.ki-anzeige-box .marker { display: inline-block; padding: 1.5mm 4mm; background: var(--accent); color: white; font-size: 8pt; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 600; border-radius: 2px; margin-bottom: 4mm; }
+.ki-anzeige-box .intro { font-size: 9.5pt; color: var(--muted); margin-bottom: 3mm; line-height: 1.55; padding-bottom: 3mm; border-bottom: 1px solid var(--border); }
+.ki-anzeige-box ul { list-style: none; margin: 2mm 0 3mm 0; }
+.ki-anzeige-box ul li { padding: 1.5mm 0 1.5mm 6mm; font-size: 10pt; position: relative; }
+.ki-anzeige-box ul li::before { content: '→'; position: absolute; left: 0; color: var(--accent); font-weight: 700; }
+
+.pflicht-box { margin: 5mm 0; padding: 4mm 6mm; background: var(--lighter); border-left: 3px solid var(--success); border-radius: 2px; font-size: 9.5pt; line-height: 1.55; }
+.pflicht-box .marker { display: inline-block; padding: 1mm 3mm; background: var(--success); color: white; font-size: 7.5pt; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 600; border-radius: 2px; margin-bottom: 2.5mm; }
+
+.unterschrift-block { margin-top: 12mm; }
+.unterschrift-zeile { display: flex; align-items: flex-end; gap: 8mm; margin-top: 8mm; }
+.unterschrift-feld { flex: 1; }
+.unterschrift-bild { max-width: 50mm; max-height: 18mm; margin-bottom: 1mm; }
+.stempel-bild { max-width: 32mm; max-height: 32mm; opacity: 0.85; }
+.unterschrift-line { border-top: 0.5pt solid var(--text); padding-top: 1.5mm; }
+.unterschrift-line .name { font-size: 11pt; font-weight: 600; color: var(--text); margin-bottom: 0.5mm; }
+.unterschrift-line .rolle { font-size: 9pt; color: var(--muted); }
+
+.footer-disclaimer { position: fixed; bottom: 8mm; left: 25mm; right: 25mm; font-size: 7.5pt; color: var(--muted); text-align: center; padding-top: 2mm; border-top: 0.5pt solid var(--border); }
+
+.law-ref { font-family: 'JetBrains Mono', monospace; font-size: 0.92em; color: var(--primary); font-weight: 500; }
+</style>
+</head>
+<body>
+
+<div class="brief-header">
+  <div class="absender-zeile">{{sv_titel}} {{sv_name}} · {{sv_strasse}} · {{sv_plz}} {{sv_ort}}</div>
+</div>
+
+<div class="empfaenger-block">
+  <div class="anrede-zeile">{{empfaenger_anrede}}<br>
+    {{#if empfaenger_firma}}{{empfaenger_firma}}<br>{{/if}}
+    {{empfaenger_name}}<br>
+    {{empfaenger_strasse}}<br>
+    {{empfaenger_plz}} {{empfaenger_ort}}
+  </div>
+</div>
+
+<div class="bezugszeichen-block">
+  <div><div class="label">Ihr Zeichen</div><div class="value">{{ihr_zeichen}}</div></div>
+  <div><div class="label">Unser Zeichen</div><div class="value">{{bes_nummer}}</div></div>
+  <div><div class="label">Bearbeiter</div><div class="value">{{sv_name}}</div></div>
+  <div><div class="label">Datum</div><div class="value">{{ausstellungsdatum}}</div></div>
+</div>
+
+<div class="betreff">Auftragsannahme-Bestätigung</div>
+
+<div class="brief-body">
+  <p>{{empfaenger_anrede}} {{empfaenger_name}},</p>
+
+  <p>vielen Dank für Ihren Auftrag vom <strong>{{auftrag_eingang_datum}}</strong>. Hiermit bestätige ich Ihnen den Auftrag und meine Arbeit an folgendem Vorgang:</p>
+
+  <!-- Auftrags-Daten -->
+  <div class="auftrag-box">
+    <div class="label-titel">Auftragsdaten</div>
+    <div class="data-grid">
+      <div class="data-row"><div class="key">Auftragsgegenstand</div><div class="val">{{auftragsgegenstand}}</div></div>
+      <div class="data-row"><div class="key">Objekt</div><div class="val">{{objekt_adresse}}</div></div>
+      <div class="data-row"><div class="key">Aktenzeichen</div><div class="val mono">{{auftrag_az_intern}}</div></div>
+      <div class="data-row"><div class="key">Termin Vorschlag</div><div class="val mono">{{termin_vorgeschlagen}}</div></div>
+      <div class="data-row"><div class="key">Voraussichtliche Abgabe</div><div class="val mono">{{abgabetermin_voraussichtlich}}</div></div>
+    </div>
+  </div>
+
+  <!-- Honorar-Karte -->
+  <div class="honorar-card">
+    <div class="label">Honorarvereinbarung · {{honorarbasis}}</div>
+    <div class="value-row">
+      <div class="main-value">{{geschaetztes_honorar_eur_netto}} € netto</div>
+      <div class="sub-value">geschätzt · {{geschaetzter_aufwand_h}} h × {{honorarsatz_eur_h}} €/h</div>
+    </div>
+    <div class="note">Endgültige Abrechnung erfolgt nach tatsächlichem Aufwand. Auslagen (Anfahrt, Material, Druck) werden nach JVEG zusätzlich berechnet.</div>
+  </div>
+
+  <!-- KI-Anzeige (gesetzlich PFLICHT nach § 407a Abs. 3 ZPO!) -->
+  <div class="ki-anzeige-box">
+    <div class="marker">§ 407a Abs. 3 ZPO · Art. 50 EU AI Act</div>
+    <div class="intro">Hiermit zeige ich Ihnen gemäß <span class="law-ref">§ 407a Abs. 3 ZPO</span>, <span class="law-ref">§ 10 IHK-SVO</span> und <span class="law-ref">Art. 50 EU AI Act</span> den geplanten Einsatz folgender KI-Systeme an:</div>
+    <ul>
+      {{#each ki_systeme}}
+      <li>{{this}}</li>
+      {{/each}}
+    </ul>
+    <p style="font-size: 9.5pt; color: var(--muted); margin-top: 3mm;"><strong>Aufgaben der KI:</strong> Strukturierung, Vorentwurf, Textaufbereitung. Die fachliche Beurteilung sowie das Fachurteil verbleiben ausschließlich beim unterzeichnenden Sachverständigen. Die KI trifft keine fachlichen Entscheidungen.</p>
+  </div>
+
+  <p>Bei Rückfragen erreichen Sie mich unter <strong>{{sv_telefon}}</strong> oder per E-Mail unter <strong>{{sv_email}}</strong>.</p>
+
+  <p>Bitte bestätigen Sie diese Auftragsannahme bis zum <strong>{{rueckmeldungs_frist}}</strong>. Bei ausbleibender Rückmeldung gehe ich von Ihrer Zustimmung aus und beginne mit der Bearbeitung.</p>
+
+  <p>Es gelten meine Allgemeinen Geschäftsbedingungen ({{agb_url}}) sowie die Datenschutzerklärung ({{datenschutz_url}}).</p>
+
+  <p>Mit freundlichen Grüßen</p>
+</div>
+
+<div class="pflicht-box">
+  <div class="marker">§ 407a Abs. 2 ZPO · § 9 IHK-SVO</div>
+  <p>Ich versichere, dass ich diesen Auftrag nach bestem Wissen und Gewissen unparteiisch, gewissenhaft und persönlich bearbeiten werde. Ich bin mit den beteiligten Parteien weder verwandt noch verschwägert und habe kein wirtschaftliches oder persönliches Interesse am Ausgang des Verfahrens.</p>
+</div>
+
+<div class="unterschrift-block">
+  <div class="unterschrift-zeile">
+    <div class="unterschrift-feld">
+      {{#if sv_unterschrift_url}}
+        <img src="{{sv_unterschrift_url}}" alt="Unterschrift" class="unterschrift-bild">
+      {{/if}}
+      <div class="unterschrift-line">
+        <div class="name">{{sv_titel}} {{sv_name}}</div>
+        <div class="rolle">ö.b.u.v. Sachverständiger · {{sv_bestellungsstelle}}</div>
+      </div>
+    </div>
+    <div>
+      {{#if sv_stempel_url}}
+        <img src="{{sv_stempel_url}}" alt="Rundstempel" class="stempel-bild">
+      {{/if}}
+    </div>
+  </div>
+</div>
+
+<div class="footer-disclaimer">
+  Erstellt mit PROVA Systems · prova-systems.de · Inhalt und sachverständige Bewertung allein in Verantwortung des unterzeichnenden Sachverständigen
+</div>
+
+</body>
+</html>

@@ -1,0 +1,306 @@
+﻿<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title> MA-2026-0042-3</title>
+<style>
+  /* PROVA MAHNUNG · DIN 5008 + Design-System v1.0
+     Für F-06 (Stufe 1) · F-07 (Stufe 2) · F-08 (Stufe 3)
+     Mahnstufe steuert Farbgebung (blau/orange/rot) */
+  @page { size: A4; margin: 0; }
+  html, body { margin: 0; padding: 0; font-family: 'Inter', -apple-system, sans-serif;
+    font-size: 10.5pt; line-height: 1.55; color: #1a1f2e; -webkit-font-smoothing: antialiased; }
+  .page { width: 210mm; min-height: 297mm; padding: 0; background: #fff; position: relative;
+    page-break-after: always; }
+  .page:last-child { page-break-after: auto; }
+
+  /* BRIEFKOPF */
+  .briefkopf { padding: 20mm 20mm 0 20mm; border-bottom: 0.5pt solid #cbd5e1; padding-bottom: 4mm; }
+  .briefkopf-zeile { display: flex; justify-content: space-between; align-items: flex-start; }
+  .briefkopf-sv-name { font-size: 14pt; font-weight: 700; color: #1a3a6b; line-height: 1.2; letter-spacing: -0.01em; }
+  .briefkopf-sv-untertitel { font-size: 9pt; color: #64748b; margin-top: 1mm; line-height: 1.4; }
+  .briefkopf-kontakt { font-size: 8.5pt; color: #64748b; text-align: right; line-height: 1.5; }
+
+  .absender-mini { margin: 5mm 20mm 0 20mm; font-size: 7pt; color: #94a3b8;
+    border-bottom: 0.3pt solid #cbd5e1; padding-bottom: 1mm; }
+
+  /* DIN 5008 ADRESSFELD */
+  .adressfeld { margin: 3mm 20mm 0 20mm; width: 85mm; min-height: 35mm; font-size: 11pt; line-height: 1.5; }
+  .adressfeld-name { font-weight: 600; }
+
+  /* BEZUGSZEILE */
+  .bezugszeile { position: absolute; top: 70mm; right: 20mm; width: 70mm; font-size: 9pt; }
+  .bezugszeile-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5mm 4mm; }
+  .bezugszeile-label { color: #64748b; font-size: 7.5pt; text-transform: uppercase; letter-spacing: 0.04em; }
+  .bezugszeile-wert { font-weight: 500; color: #1a1f2e; font-family: 'JetBrains Mono', monospace; font-size: 9pt; }
+
+  /* MAHNUNG-HEADLINE (prominent statt dezentem Badge) */
+  .mahnung-headline-wrapper { margin: 25mm 20mm 0 20mm; padding: 6mm 8mm;
+    border-radius: 2mm; background: #dbeafe; border-left: 5pt solid #1e40af; }
+  .mahnung-headline-wrapper.stufe-2 { background: #fff7ed; border-left-color: #ea580c; }
+  .mahnung-headline-wrapper.stufe-3 { background: #fef2f2; border-left-color: #b91c1c; }
+  .mahnung-stufe-label { font-size: 9.5pt; font-weight: 700; color: #1e40af;
+    text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 1mm; }
+  .mahnung-headline-wrapper.stufe-2 .mahnung-stufe-label { color: #c2410c; }
+  .mahnung-headline-wrapper.stufe-3 .mahnung-stufe-label { color: #991b1b; }
+  .mahnung-headline { font-size: 24pt; font-weight: 700; color: #1a3a6b;
+    line-height: 1.1; letter-spacing: -0.02em; }
+  .mahnung-headline-wrapper.stufe-2 .mahnung-headline { color: #c2410c; }
+  .mahnung-headline-wrapper.stufe-3 .mahnung-headline { color: #991b1b; }
+  .mahnung-untertitel { font-size: 11pt; color: #64748b; margin-top: 2mm; line-height: 1.4; }
+
+  /* BRIEFTEXT */
+  .anrede { margin: 8mm 20mm 0 20mm; font-size: 10.5pt; }
+  .brieftext { margin: 4mm 20mm 0 20mm; font-size: 10.5pt; text-align: justify;
+    page-break-inside: avoid; break-inside: avoid; }
+  .brieftext p { margin: 0 0 3mm 0; }
+
+  /* RECHNUNGSTABELLE — prominent, mit fetten Summen */
+  .mahntabelle-wrapper { margin: 5mm 20mm 0 20mm; page-break-inside: avoid; break-inside: avoid; }
+  table.mahntabelle { width: 100%; border-collapse: collapse; font-size: 9.5pt; }
+  table.mahntabelle thead { background: #f1f5f9; border-bottom: 1.5pt solid #1a3a6b; }
+  table.mahntabelle thead th { padding: 2.5mm 2mm; text-align: left; font-size: 8.5pt;
+    text-transform: uppercase; letter-spacing: 0.04em; color: #1a3a6b; font-weight: 600; }
+  table.mahntabelle thead th.zahl { text-align: right; }
+  table.mahntabelle tbody tr { border-bottom: 0.3pt solid #e2e8f0; }
+  table.mahntabelle td { padding: 2.5mm 2mm; vertical-align: top; }
+  table.mahntabelle td.zahl { text-align: right; font-family: 'JetBrains Mono', monospace; font-size: 9.5pt; }
+  table.mahntabelle td.gesamt-betrag { font-weight: 600; }
+  table.mahntabelle tr.summe { border-top: 1.5pt solid #1a3a6b;
+    background: linear-gradient(90deg, #f1f5f9 0%, #fef3c7 100%); }
+  table.mahntabelle tr.summe td { padding: 3mm 2mm; font-weight: 700; color: #1a3a6b; font-size: 10.5pt; }
+
+  /* FRIST-BOX (prominent, eskalierend) */
+  .frist-box { margin: 6mm 20mm 0 20mm; padding: 5mm 6mm; border-left: 4pt solid #1a3a6b;
+    background: #f8fafc; font-size: 11pt; line-height: 1.55;
+    page-break-inside: avoid; break-inside: avoid; }
+  .frist-box.stufe-2 { border-left-color: #ea580c; background: #fff7ed; }
+  .frist-box.stufe-3 { border-left-color: #b91c1c; background: #fef2f2; }
+  .frist-box-titel { font-weight: 700; color: #1a3a6b; margin-bottom: 2mm; font-size: 10pt;
+    text-transform: uppercase; letter-spacing: 0.06em; }
+  .frist-box.stufe-2 .frist-box-titel { color: #c2410c; }
+  .frist-box.stufe-3 .frist-box-titel { color: #991b1b; }
+  .frist-datum { font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 12pt; }
+
+  /* ZAHLUNGSDATEN-BOX (prominent auf Mahnung!) */
+  .zahlungsdaten { margin: 6mm 20mm 0 20mm; padding: 4mm 5mm;
+    background: #f1f5f9; border-radius: 2mm; font-size: 10pt; line-height: 1.6;
+    page-break-inside: avoid; break-inside: avoid; }
+  .zahlungsdaten-titel { font-weight: 700; color: #1a3a6b; font-size: 9.5pt;
+    text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 2mm; }
+  .zahlungsdaten-zeile { display: flex; gap: 4mm; margin-bottom: 0.8mm; }
+  .zahlungsdaten-label { color: #64748b; min-width: 35mm; }
+  .zahlungsdaten-wert { font-family: 'JetBrains Mono', monospace; color: #1a1f2e; font-weight: 500; }
+
+  /* SCHLUSS + GRUSS + UNTERSCHRIFT */
+  .schluss { margin: 6mm 20mm 0 20mm; font-size: 10.5pt; text-align: justify;
+    page-break-inside: avoid; break-inside: avoid; }
+  .gruss { margin: 5mm 20mm 0 20mm; font-size: 10.5pt;
+    page-break-inside: avoid; break-inside: avoid; page-break-after: avoid; break-after: avoid; }
+  .unterschrift { margin: 12mm 20mm 0 20mm; font-size: 10.5pt;
+    page-break-inside: avoid; break-inside: avoid; page-break-before: avoid; break-before: avoid; }
+  .unterschrift-name { font-weight: 600; color: #1a3a6b; }
+  .unterschrift-funktion { font-size: 9pt; color: #64748b; }
+
+  .anlagen { margin: 8mm 20mm 0 20mm; font-size: 9.5pt;
+    page-break-inside: avoid; break-inside: avoid; }
+  .anlagen-titel { font-weight: 600; color: #1a3a6b; margin-bottom: 1mm; }
+
+  .dsgvo-hinweis { margin: 8mm 20mm 0 20mm; font-size: 7pt; color: #94a3b8;
+    line-height: 1.4; font-style: italic;
+    page-break-inside: avoid; break-inside: avoid; }
+
+  .pflichtangaben { margin: 12mm 20mm 0 20mm; padding-top: 4mm; border-top: 1pt solid #cbd5e1;
+    display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5mm; font-size: 7.5pt;
+    color: #64748b; line-height: 1.5;
+    page-break-inside: avoid; break-inside: avoid; }
+  .pflichtangaben-titel { font-weight: 700; color: #1a3a6b; font-size: 7.5pt;
+    text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 1mm; }
+  .pflichtangaben-zeile { margin-bottom: 0.5mm; }
+  .pflichtangaben-label { color: #94a3b8; }
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <!-- BRIEFKOPF -->
+  <div class="briefkopf">
+    <div class="briefkopf-zeile">
+      <div>
+        <div class="briefkopf-sv-name">Dipl.-Ing. Marcel Mustermann</div>
+        <div class="briefkopf-sv-untertitel">ö.b.u.v. Sachverständiger · Schäden an Gebäuden</div>
+      </div>
+      <div class="briefkopf-kontakt">
+        Hohenzollernring 12<br>50672 Köln<br>Tel. +49 221 1234567<br>kontakt@prova-systems.de
+      </div>
+    </div>
+  </div>
+
+  <div class="absender-mini">
+    Dipl.-Ing. Marcel Mustermann · Hohenzollernring 12 · 50672 Köln
+  </div>
+
+  <!-- ADRESSFELD -->
+  <div class="adressfeld">
+    <div class="adressfeld-name">Bauunternehmen Schulze GmbH</div>
+    <div>Herrn Geschäftsführer Schulze</div>
+    <div>z. Hd. Geschäftsleitung</div>
+    <div>Industriestraße 47</div>
+    <div>51149 Köln</div>
+  </div>
+
+  <!-- BEZUGSZEILE -->
+  <div class="bezugszeile">
+    <div class="bezugszeile-grid">
+      
+      <div><div class="bezugszeile-label">Ihr Zeichen</div><div class="bezugszeile-wert">Auftrag 2026-Q1-118</div></div>
+      
+      
+      <div><div class="bezugszeile-label">Unser Zeichen</div><div class="bezugszeile-wert">BM-2026-019</div></div>
+      
+      <div><div class="bezugszeile-label">Mahn-Nr.</div><div class="bezugszeile-wert">MA-2026-0042-3</div></div>
+      <div><div class="bezugszeile-label">Datum</div><div class="bezugszeile-wert">30.05.2026</div></div>
+    </div>
+  </div>
+
+  <!-- MAHNUNG-HEADLINE (prominent) -->
+  <div class="mahnung-headline-wrapper stufe-3">
+    <div class="mahnung-stufe-label">
+      
+      
+      Dritte und letzte Mahnung · Vor Inkasso
+    </div>
+    <div class="mahnung-headline">Dritte und letzte Mahnung vor Inkasso-Übergabe</div>
+    <div class="mahnung-untertitel">Trotz zweier Mahnungen weiterhin offen — Rechnung Nr. 2026-0089</div>
+  </div>
+
+  <!-- ANREDE -->
+  <div class="anrede">Sehr geehrter Herr Schulze,</div>
+
+  <!-- BRIEFTEXT -->
+  <div class="brieftext"><p>trotz meiner Zahlungserinnerung vom 20.04.2026 und der zweiten Mahnung vom 12.05.2026 ist die nachstehend aufgeführte Rechnung noch immer nicht beglichen. Eine Rückmeldung Ihrerseits ist ebenfalls ausgeblieben.</p><p>Hiermit setze ich Ihnen eine <strong>letzte Frist</strong> zur Begleichung des fälligen Gesamtbetrags. Sollte die Zahlung nicht innerhalb der unten genannten Frist auf meinem Konto eingegangen sein, werde ich die Forderung ohne weitere Ankündigung einem Inkassobüro übergeben und das gerichtliche Mahnverfahren einleiten. Sämtliche dadurch entstehenden weiteren Kosten (Inkasso-Gebühren, Gerichtskosten, Anwaltsgebühren) gehen zu Ihren Lasten.</p></div>
+
+  <!-- RECHNUNGSTABELLE -->
+  <div class="mahntabelle-wrapper">
+    <table class="mahntabelle">
+      <thead>
+        <tr>
+          <th>Rechnungs-Nr.</th>
+          <th>Rechnungsdatum</th>
+          <th>Fällig seit</th>
+          <th class="zahl">Offener Betrag</th>
+        </tr>
+      </thead>
+      <tbody>
+        
+        <tr>
+          <td>2026-0089</td>
+          <td>12.02.2026</td>
+          <td>26.02.2026 (93 Tage)</td>
+          <td class="zahl gesamt-betrag">3.487,40 €</td>
+        </tr>
+        
+        
+        <tr>
+          <td colspan="3">Mahngebühr (§ 286 Abs. 1 BGB)</td>
+          <td class="zahl">15,00 €</td>
+        </tr>
+        
+        
+        <tr>
+          <td colspan="3">Verzugszinsen (§ 288 BGB)</td>
+          <td class="zahl">96,86 €</td>
+        </tr>
+        
+        <tr class="summe">
+          <td colspan="3">Gesamt fälliger Betrag</td>
+          <td class="zahl">3.599,26 €</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- FRIST-BOX -->
+  
+  <div class="frist-box stufe-3">
+    <div class="frist-box-titel">ALLERLETZTE FRIST 7 TAGE</div>
+    Letzte Zahlungsfrist: <span class="frist-datum">06.06.2026 — 18:00 Uhr</span>. Bei nicht fristgerechter Zahlung erfolgt unmittelbar am Folgetag die Übergabe der Forderung an unser Inkassobüro sowie die Einleitung des gerichtlichen Mahnverfahrens. Es entstehen Ihnen dann erhebliche zusätzliche Kosten und ein Eintrag in einschlägige Wirtschaftsauskunfteien (Schufa, Creditreform) ist möglich.
+  </div>
+  
+
+  <!-- ZAHLUNGSDATEN -->
+  <div class="zahlungsdaten">
+    <div class="zahlungsdaten-titel">Zahlungsdaten</div>
+    <div class="zahlungsdaten-zeile">
+      <div class="zahlungsdaten-label">Empfänger:</div>
+      <div class="zahlungsdaten-wert">Dipl.-Ing. Marcel Mustermann</div>
+    </div>
+    <div class="zahlungsdaten-zeile">
+      <div class="zahlungsdaten-label">Bank:</div>
+      <div class="zahlungsdaten-wert">Sparkasse KölnBonn</div>
+    </div>
+    <div class="zahlungsdaten-zeile">
+      <div class="zahlungsdaten-label">IBAN:</div>
+      <div class="zahlungsdaten-wert">DE89 3705 0198 1234 5678 90</div>
+    </div>
+    <div class="zahlungsdaten-zeile">
+      <div class="zahlungsdaten-label">BIC:</div>
+      <div class="zahlungsdaten-wert">COLSDE33XXX</div>
+    </div>
+    <div class="zahlungsdaten-zeile">
+      <div class="zahlungsdaten-label">Verwendungszweck:</div>
+      <div class="zahlungsdaten-wert">2026-0089</div>
+    </div>
+  </div>
+
+  <!-- SCHLUSS -->
+  <div class="schluss">Sollten Sie sich in Zahlungsschwierigkeiten befinden, melden Sie sich bitte umgehend bei mir, um eine einvernehmliche Lösung zu finden. Eine Ratenvereinbarung kann nur vor Ablauf der oben genannten Frist getroffen werden.</div>
+
+  <!-- GRUSS + UNTERSCHRIFT -->
+  <div class="gruss">Mit freundlichen Grüßen</div>
+  <div class="unterschrift">
+    <div class="unterschrift-name">Dipl.-Ing. Marcel Mustermann</div>
+    <div class="unterschrift-funktion">ö.b.u.v. Sachverständiger</div>
+  </div>
+
+  <!-- ANLAGEN -->
+  
+  <div class="anlagen">
+    <div class="anlagen-titel">Anlagen</div>
+    Kopie der Originalrechnung Nr. 2026-0089 vom 12.02.2026<br>Kopie der 1. Mahnung MA-2026-0042 vom 20.04.2026<br>Kopie der 2. Mahnung MA-2026-0042-2 vom 12.05.2026<br>Aktuelle Verzugszinsen-Berechnung
+  </div>
+  
+
+  <!-- DSGVO -->
+  <div class="dsgvo-hinweis">
+    Hinweis Datenverarbeitung: Ihre Daten werden auf Grundlage von Art. 6 Abs. 1 lit. b DSGVO zur Vertragserfüllung verarbeitet. Aufbewahrungsfristen gemäß § 14b UStG / § 257 HGB / § 35 IHK-SVO. Datenschutzerklärung unter kontakt@prova-systems.de.
+  </div>
+
+  <!-- PFLICHTANGABEN -->
+  <div class="pflichtangaben">
+    <div>
+      <div class="pflichtangaben-titel">Sachverständiger</div>
+      <div class="pflichtangaben-zeile">Dipl.-Ing. Marcel Mustermann</div>
+      <div class="pflichtangaben-zeile">Hohenzollernring 12</div>
+      <div class="pflichtangaben-zeile">50672 Köln</div>
+      <div class="pflichtangaben-zeile">Bestellung: IHK Köln</div>
+    </div>
+    <div>
+      <div class="pflichtangaben-titel">Steuerangaben</div>
+      <div class="pflichtangaben-zeile"><span class="pflichtangaben-label">Steuer-Nr.:</span> 215/5234/1234</div>
+      <div class="pflichtangaben-zeile"><span class="pflichtangaben-label">USt-IdNr.:</span> DE123456789</div>
+      <div class="pflichtangaben-zeile"><span class="pflichtangaben-label">FA:</span> Köln-Mitte</div>
+    </div>
+    <div>
+      <div class="pflichtangaben-titel">Bankverbindung</div>
+      <div class="pflichtangaben-zeile">Sparkasse KölnBonn</div>
+      <div class="pflichtangaben-zeile" style="font-family:'JetBrains Mono',monospace;font-size:7.5pt;">IBAN DE89 3705 0198 1234 5678 90</div>
+      <div class="pflichtangaben-zeile" style="font-family:'JetBrains Mono',monospace;font-size:7.5pt;">BIC COLSDE33XXX</div>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

@@ -1,0 +1,1053 @@
+﻿<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>GG-2026-003 — Lindenstraße 12, 50968 Köln</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════════════════════════
+   PROVA Systems · KURZGUTACHTEN (Flow A) v1.0
+   Master-Schablone für Schadensgutachten (F-09, auch Basis F-07,
+   F-10, F-11, F-12, F-13, F-14, F-17, F-18)
+   Design-System v1.0 · 10.5pt Body · IHK-SVO § 9 Abs. 3
+   EU AI Act Art. 50 · § 407a Abs. 2+3 ZPO · DSGVO
+   ═══════════════════════════════════════════════════════════════ */
+
+:root {
+  --primary: #1a3a6b;
+  --accent:  #3b82f6;
+  --muted:   #64748b;
+  --text:    #0f172a;
+  --light:   #f1f5f9;
+  --lighter: #f8fafc;
+  --border:  #e2e8f0;
+  --success: #059669;
+  --warning: #d97706;
+  --danger:  #dc2626;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+  font-size: 10.5pt;
+  line-height: 1.55;
+  color: var(--text);
+  background: white;
+}
+
+@page { size: A4; margin: 20mm 20mm 22mm 20mm; }
+
+@page {
+  @top-left {
+    content: "Marcel Mustermann · ö.b.u.v. Sachverständiger";
+    font-family: 'Inter', sans-serif; font-size: 8pt; color: #64748b; padding-top: 10mm;
+  }
+  @top-right {
+    content: "Gerichtsgutachten GG-2026-003";
+    font-family: 'Inter', sans-serif; font-size: 8pt; color: #1a3a6b; font-weight: 600; padding-top: 10mm;
+  }
+  @bottom-left {
+    content: "Gutachten-Nr.: GG-2026-003";
+    font-family: 'Inter', sans-serif; font-size: 8pt; color: #64748b; padding-bottom: 10mm;
+  }
+  @bottom-right {
+    content: "Seite " counter(page) " / " counter(pages);
+    font-family: 'Inter', sans-serif; font-size: 8pt; color: #64748b; padding-bottom: 10mm;
+  }
+}
+
+@page :first {
+  @top-left { content: ""; } @top-right { content: ""; }
+  @bottom-left { content: ""; } @bottom-right { content: ""; }
+}
+
+/* ═══ DECKBLATT ═══ */
+.deckblatt { page-break-after: always; min-height: 257mm; display: flex; flex-direction: column; }
+
+.deckblatt-header { padding-bottom: 18mm; border-bottom: 2px solid var(--primary); }
+.deckblatt-kategorie { font-size: 9.5pt; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); font-weight: 500; margin-bottom: 8mm; }
+.deckblatt-titel { font-size: 30pt; font-weight: 700; line-height: 1.15; color: var(--primary); margin-bottom: 4mm; letter-spacing: -0.02em; }
+.deckblatt-subtitel { font-size: 13pt; color: var(--muted); font-weight: 400; margin-bottom: 6mm; }
+.deckblatt-badge { display: inline-block; padding: 4px 12px; background: var(--light); color: var(--primary); border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 11pt; font-weight: 500; border: 1px solid var(--border); }
+
+.deckblatt-objekt { margin-top: 18mm; padding: 10mm; background: var(--lighter); border-left: 3px solid var(--accent); border-radius: 2px; }
+.deckblatt-objekt-label { font-size: 8pt; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 3mm; font-weight: 500; }
+.deckblatt-objekt-adresse { font-size: 15pt; font-weight: 600; color: var(--text); line-height: 1.35; margin-bottom: 2mm; }
+.deckblatt-objekt-typ { font-size: 11pt; color: var(--muted); }
+
+.deckblatt-sv { margin-top: 12mm; padding: 8mm 10mm; background: white; border: 1px solid var(--border); border-radius: 3px; }
+.deckblatt-sv-label { font-size: 8pt; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); font-weight: 500; margin-bottom: 3mm; }
+.deckblatt-sv-name { font-size: 13pt; font-weight: 600; color: var(--text); margin-bottom: 1.5mm; }
+.deckblatt-sv-qualifikation { font-size: 10.5pt; color: var(--primary); font-weight: 500; margin-bottom: 1.5mm; }
+.deckblatt-sv-bestellung { font-size: 9.5pt; color: var(--muted); line-height: 1.5; margin-bottom: 2mm; font-style: italic; }
+.deckblatt-sv-kontakt { font-size: 9.5pt; color: var(--text); line-height: 1.6; }
+.deckblatt-sv-kontakt .mono { font-family: 'JetBrains Mono', monospace; font-size: 9pt; }
+
+.deckblatt-metadaten { margin-top: auto; padding-top: 10mm; display: grid; grid-template-columns: repeat(2, 1fr); gap: 6mm 15mm; }
+.deckblatt-meta-item .label { font-size: 8pt; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); font-weight: 500; margin-bottom: 1mm; }
+.deckblatt-meta-item .value { font-size: 11pt; color: var(--text); font-weight: 500; }
+.deckblatt-meta-item .value.mono { font-family: 'JetBrains Mono', monospace; font-size: 10pt; }
+
+.deckblatt-footer { margin-top: 10mm; padding-top: 6mm; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: flex-end; font-size: 8.5pt; color: var(--muted); }
+.deckblatt-footer .umfang-info { font-size: 8.5pt; line-height: 1.5; }
+.deckblatt-footer .brand-right { text-align: right; font-size: 8pt; letter-spacing: 0.05em; }
+.deckblatt-footer .brand-right .bold { font-weight: 600; color: var(--primary); font-size: 9.5pt; letter-spacing: 0.08em; }
+
+/* ═══ INHALTSSEITEN ═══ */
+.teil { margin-bottom: 14mm; page-break-inside: avoid; }
+
+.teil-header { display: flex; align-items: baseline; gap: 10mm; margin-bottom: 8mm; padding-bottom: 4mm; border-bottom: 2px solid var(--primary); }
+.teil-nummer { font-family: 'JetBrains Mono', monospace; font-size: 11pt; font-weight: 500; color: var(--accent); letter-spacing: 0.1em; text-transform: uppercase; flex-shrink: 0; padding-top: 1mm; }
+.teil-titel { font-size: 18pt; font-weight: 600; color: var(--primary); letter-spacing: -0.015em; }
+
+.abschnitt { margin-bottom: 8mm; }
+.abschnitt-header { display: flex; align-items: baseline; gap: 6mm; margin-bottom: 4mm; padding-bottom: 2mm; border-bottom: 1px solid var(--border); }
+.abschnitt-nr { font-family: 'JetBrains Mono', monospace; font-size: 11.5pt; font-weight: 500; color: var(--muted); flex-shrink: 0; }
+.abschnitt-titel { font-size: 13pt; font-weight: 600; color: var(--text); letter-spacing: -0.01em; }
+.abschnitt-body { font-size: 10.5pt; line-height: 1.65; color: var(--text); }
+.abschnitt-body p { margin-bottom: 3mm; }
+
+.info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2mm 8mm; margin: 4mm 0; padding: 5mm 6mm; background: var(--lighter); border-radius: 3px; border: 1px solid var(--border); }
+.info-item { display: flex; flex-direction: column; gap: 0.5mm; padding: 1.5mm 0; }
+.info-item .label { font-size: 8pt; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 500; }
+.info-item .value { font-size: 10.5pt; color: var(--text); font-weight: 500; }
+.info-item .value.mono { font-family: 'JetBrains Mono', monospace; font-size: 10pt; }
+
+.beweisfrage { margin: 4mm 0; padding: 5mm 7mm; background: var(--lighter); border-left: 3px solid var(--primary); border-radius: 2px; font-size: 11pt; line-height: 1.6; }
+.beweisfrage .label { font-size: 8.5pt; letter-spacing: 0.1em; text-transform: uppercase; color: var(--primary); font-weight: 600; margin-bottom: 2mm; }
+
+/* Befund-Karte (Schaden-spezifisch) */
+.befund-karte { margin: 4mm 0; padding: 5mm 6mm; background: var(--lighter); border: 1px solid var(--border); border-left: 3px solid var(--accent); border-radius: 2px; }
+.befund-karte .nr { font-family: 'JetBrains Mono', monospace; font-size: 9pt; color: var(--accent); font-weight: 500; margin-bottom: 1mm; }
+.befund-karte .titel { font-size: 11pt; font-weight: 600; color: var(--primary); margin-bottom: 2mm; }
+.befund-karte .text { font-size: 10.5pt; line-height: 1.6; color: var(--text); }
+.befund-karte .norm { margin-top: 2mm; font-size: 9pt; color: var(--muted); font-style: italic; }
+
+/* Ursachenhypothesen (Flow A spezifisch) */
+.hypothese { margin: 3mm 0; padding: 4mm 5mm; background: white; border: 1px solid var(--border); border-radius: 3px; }
+.hypothese.primaer { border-left: 3px solid var(--primary); }
+.hypothese.alternativ { border-left: 3px solid var(--muted); }
+.hypothese-kopf { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 2mm; }
+.hypothese-titel { font-size: 11pt; font-weight: 600; color: var(--primary); }
+.hypothese-wahrscheinlichkeit { font-size: 9pt; color: var(--muted); font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; }
+
+/* Messwerte-Tabelle */
+.messwerte { width: 100%; border-collapse: collapse; margin: 4mm 0; font-size: 10pt; }
+.messwerte th, .messwerte td { padding: 2.5mm 4mm; text-align: left; border-bottom: 1px solid var(--border); }
+.messwerte th { background: var(--light); color: var(--muted); font-weight: 500; font-size: 9pt; letter-spacing: 0.08em; text-transform: uppercase; border-bottom: 2px solid var(--border); }
+.messwerte td.number { text-align: right; font-family: 'JetBrains Mono', monospace; font-size: 10pt; }
+.messwerte tr:nth-child(even) { background: var(--lighter); }
+
+/* Sanierung-Tabelle */
+.sanierung-tabelle { width: 100%; border-collapse: collapse; margin: 4mm 0; font-size: 10pt; }
+.sanierung-tabelle th, .sanierung-tabelle td { padding: 2.5mm 4mm; text-align: left; border-bottom: 1px solid var(--border); }
+.sanierung-tabelle th { background: var(--light); color: var(--muted); font-weight: 500; font-size: 9pt; letter-spacing: 0.08em; text-transform: uppercase; border-bottom: 2px solid var(--border); }
+.sanierung-tabelle td.number { text-align: right; font-family: 'JetBrains Mono', monospace; font-size: 10pt; }
+.sanierung-tabelle tr:nth-child(even) { background: var(--lighter); }
+.sanierung-tabelle tr.summary { background: var(--light) !important; font-weight: 600; border-top: 2px solid var(--primary); }
+.sanierung-tabelle tr.summary td { padding: 3mm 4mm; }
+
+/* Kostenrahmen-Card (Hauptergebnis Flow A) */
+.kosten-card {
+  margin: 6mm 0; padding: 8mm;
+  background: linear-gradient(135deg, var(--primary) 0%, #2a4a7b 100%);
+  color: white; border-radius: 4px; position: relative; overflow: hidden;
+}
+.kosten-card::before {
+  content: ''; position: absolute; top: 0; right: 0;
+  width: 40mm; height: 40mm;
+  background: radial-gradient(circle at top right, rgba(59, 130, 246, 0.3), transparent 70%);
+}
+.kosten-card-label { font-size: 9.5pt; letter-spacing: 0.12em; text-transform: uppercase; opacity: 0.85; margin-bottom: 2mm; font-weight: 500; }
+.kosten-card-value { font-size: 26pt; font-weight: 700; letter-spacing: -0.02em; line-height: 1.1; }
+.kosten-card-note { font-size: 9pt; opacity: 0.85; margin-top: 3mm; font-weight: 400; }
+
+/* SV-Fachurteil-Kasten (3.4 — KI-FREI) */
+.fachurteil-kasten { margin: 5mm 0; padding: 6mm 8mm; background: white; border: 2px solid var(--primary); border-radius: 4px; }
+.fachurteil-kasten .marker { display: inline-block; padding: 1.5mm 4mm; background: var(--primary); color: white; font-size: 8.5pt; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 600; border-radius: 2px; margin-bottom: 4mm; }
+.fachurteil-kasten .intro { font-size: 9.5pt; color: var(--muted); font-style: italic; margin-bottom: 4mm; line-height: 1.55; padding-bottom: 3mm; border-bottom: 1px solid var(--border); }
+.fachurteil-kasten .text { font-size: 11pt; line-height: 1.7; color: var(--text); }
+.fachurteil-kasten .text p { margin-bottom: 3mm; }
+
+/* Normen-Liste */
+.normen-liste { display: grid; gap: 2mm; margin: 4mm 0; }
+.norm-eintrag { padding: 3mm 4mm; background: var(--lighter); border-left: 2px solid var(--accent); border-radius: 2px; }
+.norm-eintrag .nr { font-family: 'JetBrains Mono', monospace; font-size: 10pt; font-weight: 500; color: var(--primary); margin-bottom: 0.5mm; }
+.norm-eintrag .titel { font-size: 10pt; color: var(--text); margin-bottom: 0.5mm; }
+.norm-eintrag .gw { font-size: 9pt; color: var(--muted); line-height: 1.4; }
+
+/* § 407a + DSGVO Erklärungs-Kasten */
+.erklaerung-kasten { margin: 4mm 0; padding: 5mm 7mm; background: var(--lighter); border-left: 3px solid var(--success); border-radius: 2px; font-size: 10.5pt; line-height: 1.65; }
+.erklaerung-kasten .marker { display: inline-block; padding: 1.2mm 3mm; background: var(--success); color: white; font-size: 8pt; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 600; border-radius: 2px; margin-bottom: 3mm; }
+
+.hinweis-box { margin: 4mm 0; padding: 4mm 5mm; background: var(--lighter); border: 1px solid var(--border); border-radius: 3px; font-size: 9.5pt; line-height: 1.6; color: var(--muted); }
+.hinweis-box strong { color: var(--primary); }
+
+/* Unterschriftsbereich */
+.unterschrift-block { margin-top: 12mm; padding-top: 6mm; border-top: 1px solid var(--border); }
+.unterschrift-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15mm; }
+.unterschrift-feld { border-top: 1px solid var(--text); padding-top: 2mm; font-size: 9.5pt; color: var(--muted); }
+.unterschrift-feld .name { font-size: 11pt; color: var(--text); font-weight: 600; margin-top: 1mm; }
+.unterschrift-feld .rolle { font-size: 9pt; color: var(--muted); margin-top: 0.5mm; }
+.unterschrift-feld .stempel { font-size: 8.5pt; color: var(--muted); margin-top: 4mm; font-style: italic; }
+
+/* §§-Referenzen inline */
+.law-ref { font-family: 'JetBrains Mono', monospace; font-size: 0.92em; color: var(--primary); font-weight: 500; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════
+     TEIL 1 · DECKBLATT + ALLGEMEINE ANGABEN + AUFGABENSTELLUNG
+     ═══════════════════════════════════════════════════════════ -->
+<section class="deckblatt">
+  <div class="deckblatt-header">
+    <div class="deckblatt-kategorie">Gerichtsgutachten nach § 403 ZPO · Bauprozess — Qualität einer Fassadensanierung</div>
+    <h1 class="deckblatt-titel">Gerichtsgutachten</h1>
+    <div class="deckblatt-subtitel">zum Bauprozess — Qualität einer Fassadensanierung gemäß DIN 4108 / WTA-Regelwerk</div>
+    <div class="deckblatt-badge">Gutachten-Nr.: GG-2026-003</div>
+  </div>
+
+  <div class="deckblatt-objekt">
+    <div class="deckblatt-objekt-label">Begutachtungsobjekt</div>
+    <div class="deckblatt-objekt-adresse">Lindenstraße 12, 50968 Köln</div>
+    <div class="deckblatt-objekt-typ">Mehrfamilienhaus, 4 Vollgeschosse + ausgebautes DG, 7 Wohneinheiten · Baujahr 1962</div>
+  </div>
+
+  <div class="deckblatt-sv">
+    <div class="deckblatt-sv-label">Erstattender Sachverständiger</div>
+    <div class="deckblatt-sv-name">Marcel Mustermann, Dipl.-Ing.</div>
+    <div class="deckblatt-sv-qualifikation">ö.b.u.v. Sachverständiger für Schäden an Gebäuden</div>
+    
+    <div class="deckblatt-sv-bestellung">Öffentlich bestellt und vereidigt durch die IHK Köln · für Schäden an Gebäuden</div>
+    
+    <div class="deckblatt-sv-kontakt">
+      Hohenzollernring 12 · 50672 Köln<br>
+      Tel. <span class="mono">+49 221 1234567</span> · Fax <span class="mono">+49 221 1234568</span> · kontakt@prova-systems.de
+    </div>
+  </div>
+
+  <div class="deckblatt-metadaten">
+    <div class="deckblatt-meta-item">
+      <div class="label">Auftraggeber</div>
+      <div class="value">Landgericht Köln, 4. Zivilkammer</div>
+    </div>
+    <div class="deckblatt-meta-item">
+      <div class="label">Schadensstichtag</div>
+      <div class="value mono">01.09.2024</div>
+    </div>
+    <div class="deckblatt-meta-item">
+      <div class="label">Auftragserteilung</div>
+      <div class="value mono">08.01.2026</div>
+    </div>
+    <div class="deckblatt-meta-item">
+      <div class="label">Gutachtendatum</div>
+      <div class="value mono">20.04.2026</div>
+    </div>
+    
+    
+    <div class="deckblatt-meta-item">
+      <div class="label">Gericht</div>
+      <div class="value">Landgericht Köln</div>
+    </div>
+    <div class="deckblatt-meta-item">
+      <div class="label">Gerichtliches AZ</div>
+      <div class="value mono">4 O 281/25</div>
+    </div>
+    
+  </div>
+
+  <div class="deckblatt-footer">
+    <div class="umfang-info">
+      Umfang: 34 Seiten · 5 Anlagen · 68 Fotografien
+    </div>
+    <div class="brand-right">
+      erstellt mit<br>
+      <span class="bold">PROVA SYSTEMS</span>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════
+     TEIL 1 — Inhalt
+     ═══════════════════════════════════════════════════════════ -->
+<section class="teil">
+  <div class="teil-header">
+    <div class="teil-nummer">Teil 1</div>
+    <div class="teil-titel">Allgemeine Angaben und Aufgabenstellung</div>
+  </div>
+
+  <!-- 1.2 Auftragsumfang / Beweisbeschluss -->
+  <div class="abschnitt">
+    <div class="abschnitt-header">
+      <div class="abschnitt-nr">1.2</div>
+      <div class="abschnitt-titel">Auftragsumfang und Beweisbeschluss</div>
+    </div>
+    <div class="abschnitt-body">
+      
+      <p>Das <strong>Landgericht Köln</strong> hat mit Beweisbeschluss vom 08.01.2026 unter dem Aktenzeichen <span class="law-ref">4 O 281/25</span> ein Sachverständigengutachten in folgender Sache angeordnet:</p>
+      <div class="beweisfrage">
+        <div class="label">Beweisbeschluss im Wortlaut</div>
+        Es soll Beweis erhoben werden über die Behauptung der Klägerin, dass die durch die Beklagte in der Zeit vom 03.06.2024 bis 01.09.2024 ausgeführte Wärmedämm-Fassadensanierung (WDVS 140 mm EPS) am Objekt Lindenstraße 12, 50968 Köln nicht fachgerecht nach den anerkannten Regeln der Technik und nach DIN 55699 ausgeführt wurde, durch Einholung eines schriftlichen Sachverständigengutachtens. Die Fragen lauten im Einzelnen: (1) Ist die Wärmedämm-Verbundfassade (WDVS) nach DIN 55699 und den Herstellerrichtlinien des eingebauten Systems fachgerecht ausgeführt? (2) Welche Mängel bestehen, soweit die Ausführung nicht fachgerecht erfolgt ist? (3) Sind die vorgefundenen Mängel auf die Ausführung durch die Beklagte zurückzuführen, oder liegen andere Ursachen (z.B. unfachgerechte Nachbehandlung, Vorschäden, Fremdeinwirkung) vor? (4) Welche Maßnahmen sind zur vollständigen Mängelbeseitigung erforderlich und welche Kosten wären damit verbunden?
+      </div>
+      
+    </div>
+  </div>
+
+  <!-- 1.3 Mitarbeit + KI-Einsatz (Ex-ante) -->
+  <div class="abschnitt">
+    <div class="abschnitt-header">
+      <div class="abschnitt-nr">1.3</div>
+      <div class="abschnitt-titel">Mitarbeit von Hilfskräften und KI-Einsatz</div>
+    </div>
+    <div class="abschnitt-body">
+      <p>Der vorliegenden Gutachtenerstattung wurde mit Anzeige vom <strong>10.01.2026</strong> an das Landgericht Köln (Beweisbeschluss-Bestätigung) sowie die Prozessvertreter beider Parteien mit Schreiben vom 10.01.2026 gemäß <span class="law-ref">§ 407a Abs. 3 ZPO</span>, <span class="law-ref">§ 10 IHK-SVO</span> und <span class="law-ref">Art. 50 EU AI Act</span> der Einsatz folgender Hilfsmittel vorab angezeigt:</p>
+
+      
+      <p style="margin-top: 3mm;"><strong>Mitwirkung Dritter:</strong> Keine. Das Gutachten wurde vom unterzeichnenden Sachverständigen höchstpersönlich erstattet.</p>
+      
+
+      <p style="margin-top: 3mm;"><strong>Technische Arbeitsumgebung:</strong> PROVA Systems (prova-systems.de) als Workflow- und PDF-Generierungs-Plattform.</p>
+
+      <p style="margin-top: 3mm;"><strong>Eingesetzte KI-Systeme:</strong> OpenAI GPT-4o (Sprachmodell) und OpenAI Whisper (Spracherkennung). Eine detaillierte Aufgaben-Dokumentation folgt in <strong>Teil 4.3</strong>.</p>
+
+      <div class="hinweis-box" style="margin-top: 4mm;">
+        <strong>Wichtige Klarstellung:</strong> Die sachverständige Beurteilung sowie die <strong>Gesamtverantwortung</strong> für den Inhalt dieses Gutachtens verbleiben ausschließlich beim unterzeichnenden Sachverständigen. KI-Systeme werden ausschließlich als Arbeitshilfe zur Struktur- und Textaufbereitung eingesetzt; sie treffen keine fachlichen Entscheidungen. Das Fachurteil nach Teil 3.4 wurde KI-frei erstellt.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════
+     TEIL 2 · DOKUMENTATION DER DATEN
+     ═══════════════════════════════════════════════════════════ -->
+<section class="teil">
+  <div class="teil-header">
+    <div class="teil-nummer">Teil 2</div>
+    <div class="teil-titel">Dokumentation der Daten</div>
+  </div>
+
+  <!-- 2.1 Objektbeschreibung -->
+  <div class="abschnitt">
+    <div class="abschnitt-header">
+      <div class="abschnitt-nr">2.1</div>
+      <div class="abschnitt-titel">Objektbeschreibung</div>
+    </div>
+    <div class="abschnitt-body">
+      <div class="info-grid">
+        <div class="info-item">
+          <div class="label">Adresse</div>
+          <div class="value">Lindenstraße 12, 50968 Köln</div>
+        </div>
+        <div class="info-item">
+          <div class="label">Objektart</div>
+          <div class="value">Mehrfamilienhaus, 4 Vollgeschosse + ausgebautes DG, 7 Wohneinheiten</div>
+        </div>
+        
+        <div class="info-item">
+          <div class="label">Baujahr</div>
+          <div class="value mono">1962</div>
+        </div>
+        
+        
+        <div class="info-item">
+          <div class="label">Wohnfläche</div>
+          <div class="value mono">520 m²</div>
+        </div>
+        
+        
+        <div class="info-item">
+          <div class="label">Bauweise</div>
+          <div class="value">Massivbau, Kalksandstein-Mauerwerk 24 cm, Stahlbetondecken, Flachdach mit Attika, 2024 nachträglich gedämmt mit WDVS 140 mm EPS-Dämmung System 'ThermoMax' der Firma X-Bau Baustoffe GmbH</div>
+        </div>
+        
+        
+        <div class="info-item">
+          <div class="label">Schadensort im Objekt</div>
+          <div class="value">Gesamtfassade (ca. 480 m² inkl. Laibungen), besonders Nord- und Ostseite</div>
+        </div>
+        
+      </div>
+
+      
+      <p style="margin-top: 4mm;">Das Objekt ist ein 1962 errichtetes Mehrfamilienhaus im Kölner Süden. Im Sommer 2024 wurde durch die Beklagte (Y-Bau GmbH) eine Fassadensanierung mit WDVS ausgeführt (Vertragsvolumen 52.800 € netto). Die Eigentümergemeinschaft (WEG Lindenstraße 12) als Klägerin rügt Mängel, die sich seit Fertigstellung 09/2024 sukzessive zeigen.</p>
+      
+    </div>
+  </div>
+
+  <!-- 2.2 Anknüpfungstatsachen -->
+  <div class="abschnitt">
+    <div class="abschnitt-header">
+      <div class="abschnitt-nr">2.2</div>
+      <div class="abschnitt-titel">Anknüpfungstatsachen und verwendete Unterlagen</div>
+    </div>
+    <div class="abschnitt-body">
+      <p>Der Beurteilung liegen folgende Unterlagen und Auskünfte zugrunde:</p>
+
+      
+      <ul style="margin: 3mm 0 3mm 6mm;">
+        
+        <li style="margin-bottom: 1.5mm;"><strong>Beweisbeschluss LG Köln 4 O 281/25:</strong> Beschluss vom 08.01.2026; Bestellung des Sachverständigen mit Fristsetzung 30.04.2026 für die Gutachtenerstattung</li>
+        
+        <li style="margin-bottom: 1.5mm;"><strong>Klageschrift RA Dr. Holmann (Klägerin WEG):</strong> Klage vom 14.11.2025 auf 35.400 € Mängelbeseitigungskosten + Zinsen; 17 Einzelmängel protokolliert</li>
+        
+        <li style="margin-bottom: 1.5mm;"><strong>Klageerwiderung RA Berger (Beklagte Y-Bau GmbH):</strong> Antwort vom 10.12.2025; Anerkenntnis 4 kleiner Mängel, Bestreiten der übrigen 13; Hinweis auf eigene Nachbesserung 03/2025</li>
+        
+        <li style="margin-bottom: 1.5mm;"><strong>Werkvertrag WEG/Y-Bau:</strong> Leistungsbeschreibung vom 15.04.2024, 42 Positionen, Gesamtvolumen 52.800 € netto</li>
+        
+        <li style="margin-bottom: 1.5mm;"><strong>Bautagebücher der Beklagten:</strong> Tägliche Eintragungen 03.06.–01.09.2024, vom Gericht als Anlage B3 beigezogen</li>
+        
+        <li style="margin-bottom: 1.5mm;"><strong>Privatgutachten des SV Dipl.-Ing. Kessler (vorgerichtlich Klägerin):</strong> Gutachten vom 05.10.2025; dokumentiert 17 Mängel, Kostenschätzung 35.400 €; Akte als Anlage K12</li>
+        
+        <li style="margin-bottom: 1.5mm;"><strong>Eigene Begehung im Rahmen der gerichtlichen Beweisaufnahme:</strong> Termin unter Ladung aller Parteien (§ 404a ZPO); Beteiligung der Prozessvertreter</li>
+        
+      </ul>
+      
+    </div>
+  </div>
+
+  <!-- 2.3 Ortstermin -->
+  
+  <div class="abschnitt">
+    <div class="abschnitt-header">
+      <div class="abschnitt-nr">2.3</div>
+      <div class="abschnitt-titel">Ortstermin-Dokumentation</div>
+    </div>
+    <div class="abschnitt-body">
+      <div class="info-grid">
+        <div class="info-item">
+          <div class="label">Datum</div>
+          <div class="value mono">18.04.2026</div>
+        </div>
+        <div class="info-item">
+          <div class="label">Uhrzeit / Dauer</div>
+          <div class="value mono">09:30 Uhr · ca. 4 Stunden</div>
+        </div>
+        <div class="info-item" style="grid-column: 1 / -1;">
+          <div class="label">Anwesende</div>
+          <div class="value">RA Dr. Holmann (Klägerin WEG), Frau Dr. Schuster (WEG-Verwaltung), RA Berger (Beklagte Y-Bau GmbH), Herr Yildiz (Geschäftsführer Y-Bau GmbH), Herr Bauer (Polier der Beklagten, Zeuge), Herr Freytag (Vertreter Systemhersteller X-Bau Baustoffe GmbH, Zeuge), Sachverständiger Mustermann</div>
+        </div>
+        
+        <div class="info-item" style="grid-column: 1 / -1;">
+          <div class="label">Wetter / Raumklima</div>
+          <div class="value">trocken, sonnig · 18 °C · Luftfeuchte 48 % rel.</div>
+        </div>
+        
+      </div>
+
+      
+      <p style="margin-top: 4mm;">Begehung der gesamten Fassade (4 Seiten) mit Hubsteiger. Thermografische Aufnahmen der Nord- und Ostseite (Anlage F-03). Bauteilöffnung nach Abstimmung mit den Parteien (§ 404a Abs. 2 ZPO) an drei Stellen: (1) Sockelbereich, (2) Dübelbild Nordseite, (3) Anschluss Fenstersturz Ostseite (Anlage F-04). Messung der WDVS-Dämmdicke an 12 Stellen (Anlage F-05). Dokumentation aller Einzelmängel laut Klägerin-Mängelliste, Dokumentation von 3 zusätzlichen Befunden. Anschließende Parteianhörung.</p>
+      
+    </div>
+  </div>
+  
+
+  <!-- 2.4 Fotografien -->
+  
+  <div class="abschnitt">
+    <div class="abschnitt-header">
+      <div class="abschnitt-nr">2.4</div>
+      <div class="abschnitt-titel">Fotografien</div>
+    </div>
+    <div class="abschnitt-body">
+      <p>Zur bildlichen Dokumentation wurden <strong>68 Fotografien</strong> angefertigt. Die Aufnahmen sind als gesonderte <strong>Anlage F-01</strong> beigefügt.</p>
+      <div class="hinweis-box" style="margin-top: 3mm;">
+        Die Fotografien ersetzen nicht die verbale Darstellung, sondern ergänzen sie (Nr. 9.3.7 IHK-SVO-Richtlinien).
+      </div>
+    </div>
+  </div>
+  
+
+  <!-- 2.5 Messungen -->
+  
+  <div class="abschnitt">
+    <div class="abschnitt-header">
+      <div class="abschnitt-nr">2.5</div>
+      <div class="abschnitt-titel">Messwerte und verwendete Geräte</div>
+    </div>
+    <div class="abschnitt-body">
+      <p>Folgende Messungen wurden während des Ortstermins durchgeführt:</p>
+      <table class="messwerte">
+        <thead>
+          <tr><th>Messstelle</th><th>Parameter</th><th>Wert</th><th>Norm/Grenzwert</th></tr>
+        </thead>
+        <tbody>
+          
+          <tr>
+            <td>Dämmdicke WDVS Nord EG Bauteilöffnung</td>
+            <td>Messung mit Fühler</td>
+            <td class="number">132 mm (Soll: 140 mm)</td>
+            <td>Abweichung 5,7% — toleranzkritisch</td>
+          </tr>
+          
+          <tr>
+            <td>Dämmdicke WDVS Nord 2.OG</td>
+            <td>Messung mit Fühler</td>
+            <td class="number">138 mm</td>
+            <td>Toleranz ±5 mm eingehalten</td>
+          </tr>
+          
+          <tr>
+            <td>Dämmdicke WDVS Ost 3.OG</td>
+            <td>Messung mit Fühler</td>
+            <td class="number">128 mm</td>
+            <td>Abweichung 8,6% — erheblich</td>
+          </tr>
+          
+          <tr>
+            <td>Fassadenoberfläche Ost 2.OG Thermografie</td>
+            <td>Oberflächentemperatur bei 8°C Außenluft und 21°C Innenluft</td>
+            <td class="number">13,8 °C (flächenaktuell), punktuell 16,2°C</td>
+            <td>Wärmebrücken-Detektion DIN EN 13187</td>
+          </tr>
+          
+          <tr>
+            <td>Dübelbild Nord Bauteilöffnung</td>
+            <td>Anzahl Dübel pro m²</td>
+            <td class="number">5 Stück/m² (Soll: 8 Stück/m² nach Herstellerrichtlinie X-Bau bei Wind­zone II)</td>
+            <td>DIN 4108-10, ETAG 004</td>
+          </tr>
+          
+          <tr>
+            <td>Verklebungsfläche Bauteilöffnung Sockel</td>
+            <td>Flächenanteil Mörtelverklebung</td>
+            <td class="number">ca. 35% (Soll: ≥40% nach DIN 55699)</td>
+            <td>DIN 55699: Randwulst-Punkt-Methode ≥40%</td>
+          </tr>
+          
+          <tr>
+            <td>Fensteranschluss Ost Rauchröhrchen</td>
+            <td>Luftdichtheitsprüfung an Laibung</td>
+            <td class="number">Rauchdurchtritt (undicht)</td>
+            <td>DIN 4108-7</td>
+          </tr>
+          
+          <tr>
+            <td>Risse in Oberputz Nord</td>
+            <td>Anzahl Risse >0,3 mm/10 m² Fassade</td>
+            <td class="number">8 Stück (3 linear, 5 netzförmig)</td>
+            <td>DIN 18550 max. 2 Stück/10 m²</td>
+          </tr>
+          
+          <tr>
+            <td>Oberputz Haftung Kratzprobe</td>
+            <td>Schichthaftung</td>
+            <td class="number">partiell absandend (Ost 3.OG, 2 Prüfstellen)</td>
+            <td>DIN EN ISO 16276-2 Gitterschnitt Gt-2 bis Gt-3</td>
+          </tr>
+          
+          <tr>
+            <td>Sockelabschluss horizontal</td>
+            <td>Spritzwasserschutzabstand zu Geländeoberkante</td>
+            <td class="number">25 mm (Mindestsoll 150 mm)</td>
+            <td>DIN 18195-4 / DIN 18533 — erheblich zu niedrig</td>
+          </tr>
+          
+        </tbody>
+      </table>
+
+      
+      <p style="margin-top: 4mm;"><strong>Verwendete Messgeräte:</strong></p>
+      <ul style="margin: 2mm 0 3mm 6mm;">
+        
+        <li style="margin-bottom: 1mm;">Testo 876 Wärmebildkamera 640×480 Px</li>
+        
+        <li style="margin-bottom: 1mm;">Dämmdicken-Messgerät Gann DM 01 (Nadelmessung)</li>
+        
+        <li style="margin-bottom: 1mm;">Hubsteiger HAB HA 20 PX (für Fassadenbegehung)</li>
+        
+        <li style="margin-bottom: 1mm;">Rissmessschablone DIN EN 1992-1-1</li>
+        
+        <li style="margin-bottom: 1mm;">Bosch GLM 50-27 C Laserentfernungsmesser</li>
+        
+        <li style="margin-bottom: 1mm;">Rauchröhrchen Dräger</li>
+        
+        <li style="margin-bottom: 1mm;">Gitterschnitt-Prüfung nach DIN EN ISO 16276-2</li>
+        
+      </ul>
+      
+    </div>
+  </div>
+  
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════
+     TEIL 3 · SACHVERSTÄNDIGE BEANTWORTUNG
+     ═══════════════════════════════════════════════════════════ -->
+<section class="teil">
+  <div class="teil-header">
+    <div class="teil-nummer">Teil 3</div>
+    <div class="teil-titel">Sachverständige Beantwortung</div>
+  </div>
+
+  <!-- 3.1 Befunde -->
+  <div class="abschnitt">
+    <div class="abschnitt-header">
+      <div class="abschnitt-nr">3.1</div>
+      <div class="abschnitt-titel">Befunde</div>
+    </div>
+    <div class="abschnitt-body">
+      
+      <p>Die Fassade wurde am 18.04.2026 in Anwesenheit aller Prozessparteien gemäß § 404a ZPO vollständig untersucht. Bauteilöffnungen wurden nach ausdrücklicher Zustimmung beider Parteien und unter Dokumentation gemeinsam durchgeführt. Die nachstehenden Befunde beantworten die vier Beweisfragen aus Teil 1.2:</p>
+      
+
+      
+      
+      <div class="befund-karte">
+        <div class="nr">Befund 1</div>
+        <div class="titel">Befund zu Beweisfrage 1 — Mangelhafte Verklebung der Dämmplatten (DIN 55699)</div>
+        <div class="text">Die Bauteilöffnung im Sockelbereich Nordseite zeigt eine Verklebungsfläche von rund 35 %. Nach DIN 55699 (Außenwand-Wärmedämm-Verbundsysteme aus Polystyrol) wäre bei der im Werkvertrag vereinbarten Randwulst-Punkt-Methode eine Klebeflächen-Bedeckung von mindestens 40 % zu erzielen. Die Unterschreitung um rund 5 Prozentpunkte stellt eine Abweichung von der anerkannten Regel der Technik dar. Zusätzlich kritisch: Die Verklebung erfolgte nach Aussage des Poliers der Beklagten im Sockelbereich in Einzelnocken statt in Randwulst-Punkt-Ausführung — was nach Herstellerrichtlinie X-Bau ebenfalls abweicht.</div>
+        
+      </div>
+      
+      <div class="befund-karte">
+        <div class="nr">Befund 2</div>
+        <div class="titel">Befund zu Beweisfrage 1 — Unzureichende mechanische Befestigung (Dübelanzahl)</div>
+        <div class="text">Die Bauteilöffnung an der Nordseite ergibt eine Dübelanzahl von 5 Stück/m². Nach der Herstellerrichtlinie X-Bau für die Windzone II Köln (Binnenland) wären mindestens 8 Dübel/m² im Randbereich und 6 Dübel/m² im Feldbereich erforderlich. Die tatsächliche Ausführung unterschreitet die Mindestanforderung deutlich. Bei Windlasten im Sturmfall (bereits erlebt: Orkan 'Kirsten' 03/2026) wäre eine verminderte Sturmsicherheit des WDVS die Folge.</div>
+        
+      </div>
+      
+      <div class="befund-karte">
+        <div class="nr">Befund 3</div>
+        <div class="titel">Befund zu Beweisfrage 2 — Fehlerhafter Sockelabschluss (DIN 18195)</div>
+        <div class="text">Der horizontale Sockelabschluss des WDVS liegt nur 25 mm oberhalb der Geländeoberkante. Nach DIN 18533 (Nachfolger DIN 18195-4) und den anerkannten Regeln der Technik wäre ein Abstand von mindestens 150 mm Spritzwasserschutz erforderlich. Die Unterschreitung ist mit 125 mm erheblich. Der untere Abschluss zeigt bereits jetzt Durchnässungen des EPS-Dämmstoffs (beobachtet an drei Stellen der Südseite). Langfristige Folgen wären Schimmelbildung im Dämmbereich und Abfall der Dämmwirkung.</div>
+        
+      </div>
+      
+      <div class="befund-karte">
+        <div class="nr">Befund 4</div>
+        <div class="titel">Befund zu Beweisfrage 2 — Wärmebrücken im Laibungsbereich (Thermografie)</div>
+        <div class="text">Die Thermografie (Anlage F-03) zeigt an 11 der 24 Fensterlaibungen eine signifikant erhöhte Oberflächentemperatur (Differenz > 2 K), was auf nicht vollständig ausgeführte Laibungsdämmung oder fehlende Anschlussdämmstreifen zurückzuführen wäre. Messungen an der bauteilgeöffneten Laibung Ost 3. OG bestätigen: Die Laibungsdämmung wurde dort nur 12 mm statt 20 mm ausgeführt. Zusätzlich fehlen die Anschluss-Laibungswinkel, die im Leistungsverzeichnis als Position 27.3 vereinbart waren.</div>
+        
+      </div>
+      
+      <div class="befund-karte">
+        <div class="nr">Befund 5</div>
+        <div class="titel">Befund zu Beweisfrage 2 — Rissbildung im Oberputz</div>
+        <div class="text">Die Oberputz-Fläche zeigt an mehreren Stellen Risse: Linearrisse an 3 Stellen (Länge 0,8–2,1 m, Breite bis 0,5 mm), Netzrisse an 5 Stellen (Gesamtfläche ca. 8 m²). Dies überschreitet die zulässige Rissbildung nach DIN 18550 (max. 2 Stück/10 m²) deutlich. An zwei Stellen ist der Oberputz zudem absandend (Haftungsverlust Gt-2/Gt-3 laut Gitterschnitt). Ursächlich wäre nach meiner Einschätzung ein zu früher Folgeputzauftrag vor vollständiger Aushärtung des Armierungsputzes.</div>
+        
+      </div>
+      
+      <div class="befund-karte">
+        <div class="nr">Befund 6</div>
+        <div class="titel">Befund zu Beweisfrage 2 — Fensteranschluss undicht (Bauteilöffnung Ost)</div>
+        <div class="text">Die Luftdichtheitsprüfung mit Rauchröhrchen am Fensteranschluss Ost 3. OG zeigt erheblichen Rauchdurchtritt. Die geforderte innere Luftdichtebene nach DIN 4108-7 wäre nicht gegeben. Der im Leistungsverzeichnis Pos. 28 vereinbarte Anschluss mit Multifunktionsband und Kompriband fehlt nach Bauteilöffnung. Stattdessen ist die Fuge lediglich mit PU-Schaum und Silikon verfüllt.</div>
+        
+      </div>
+      
+      <div class="befund-karte">
+        <div class="nr">Befund 7</div>
+        <div class="titel">Befund zu Beweisfrage 3 — Abgrenzung Ausführungsmängel vs. andere Ursachen</div>
+        <div class="text">Die festgestellten Mängel sind ausnahmslos der Ausführung durch die Beklagte zuzuordnen. Ein Zusammenhang mit Fremdeinwirkung, mit der Nachbehandlung durch die Klägerin oder mit Vorschäden besteht nach Aktenlage und Begehung nicht. Die Beklagte hat mit Schreiben vom 10.12.2025 vier kleinere Punkte anerkannt; die hier dokumentierten Mängel gehen über diese Anerkenntnis deutlich hinaus.</div>
+        
+      </div>
+      
+      <div class="befund-karte">
+        <div class="nr">Befund 8</div>
+        <div class="titel">Befund zu Beweisfrage 4 — Sanierungsumfang</div>
+        <div class="text">Eine vollständige Mängelbeseitigung erfordert den teilweisen Rückbau des WDVS, die Sanierung von Sockelabschluss, Laibungen und Fensteranschlüssen, die Erneuerung des Oberputzes in den Rissbereichen, sowie die Nachbefestigung der Dämmplatten im nachweislich unterdübelten Bereich. Details folgen in Teil 3.3.</div>
+        
+      </div>
+      
+      
+    </div>
+  </div>
+
+  <!-- 3.2 Ursachenanalyse (Hypothesen, Konjunktiv II) -->
+  <div class="abschnitt">
+    <div class="abschnitt-header">
+      <div class="abschnitt-nr">3.2</div>
+      <div class="abschnitt-titel">Ursachenanalyse</div>
+    </div>
+    <div class="abschnitt-body">
+      <p>Die Ursachenanalyse erfolgt auf Basis der dokumentierten Befunde und der Anknüpfungstatsachen nach Teil 2. Die im Folgenden dargelegten Hypothesen sind im Konjunktiv II formuliert und stehen unter dem Vorbehalt der abschließenden sachverständigen Würdigung in Teil 3.4.</p>
+
+      
+      
+      <div class="hypothese alternativ">
+        <div class="hypothese-kopf">
+          <div class="hypothese-titel">Hypothese 1: Zur Kausalität — Ausführung durch Beklagte</div>
+          <div class="hypothese-wahrscheinlichkeit">Hoch (dokumentiert)</div>
+        </div>
+        <div style="font-size: 10.5pt; line-height: 1.6;">Die festgestellten Mängel wären ausnahmslos auf die Ausführung durch die Beklagte in der Zeit vom 03.06.2024 bis 01.09.2024 zurückzuführen. Die Bauteilöffnungen und die dokumentierte Materialsituation belegen dies eindeutig. Die Bautagebücher der Beklagten enthalten keine Hinweise auf abweichende Ausführungsbedingungen. Eine Mitursächlichkeit seitens der Klägerin wäre auszuschließen.</div>
+      </div>
+      
+      <div class="hypothese alternativ">
+        <div class="hypothese-kopf">
+          <div class="hypothese-titel">Hypothese 2: Zur Kausalität — Alternative Ursachen (Vorschaden, Witterung)</div>
+          <div class="hypothese-wahrscheinlichkeit">Gering (ausgeschlossen)</div>
+        </div>
+        <div style="font-size: 10.5pt; line-height: 1.6;">Alternative Ursachen wie Vorschäden (Mauerwerk, Altputz) oder außergewöhnliche Witterungseinflüsse während der Ausführungszeit wurden geprüft und kommen nicht in Betracht. Die Witterungsbedingungen im Sommer 2024 waren nach DWD-Daten unauffällig; die zur Zeit vorhandene Bausubstanz war laut Voraufmaß der Beklagten intakt.</div>
+      </div>
+      
+      
+    </div>
+  </div>
+
+  <!-- 3.3 Sanierungsvorschlag + Kostenrahmen -->
+  
+  <div class="abschnitt">
+    <div class="abschnitt-header">
+      <div class="abschnitt-nr">3.3</div>
+      <div class="abschnitt-titel">Sanierungsvorschlag und Kostenrahmen</div>
+    </div>
+    <div class="abschnitt-body">
+      
+      <p>Die Sanierung umfasst die Ursachen-gerechte Beseitigung aller dokumentierten Mängel. Soweit möglich erfolgt Nachbesserung im Bestand; wo Mängel konstruktiv nur durch Teilrückbau zu beheben sind, wird dieser Aufwand eingestellt. Die Kostenschätzung basiert auf marktüblichen Einheitspreisen (Stand 04/2026).</p>
+      
+
+      
+      <table class="sanierung-tabelle">
+        <thead>
+          <tr><th>Pos.</th><th>Leistung</th><th style="text-align:right;">Menge</th><th style="text-align:right;">EP netto</th><th style="text-align:right;">Summe netto</th></tr>
+        </thead>
+        <tbody>
+          
+          <tr>
+            <td>1</td>
+            <td>Sockelabschluss: Rückbau unterer WDVS-Streifen (150 mm Höhe) + Neuerrichtung mit fachgerechtem Abstand</td>
+            <td class="number">48 lfm</td>
+            <td class="number">145,00 €</td>
+            <td class="number">6.960,00 €</td>
+          </tr>
+          
+          <tr>
+            <td>2</td>
+            <td>Nachbefestigung der Dämmplatten mit zusätzlichen Dübeln Nordseite (3 Dübel/m² ergänzen)</td>
+            <td class="number">180 m²</td>
+            <td class="number">28,00 €</td>
+            <td class="number">5.040,00 €</td>
+          </tr>
+          
+          <tr>
+            <td>3</td>
+            <td>Laibungsdämmung: Rückbau + Neuausführung + Laibungswinkel Pos. 27.3</td>
+            <td class="number">24 Stück</td>
+            <td class="number">285,00 €</td>
+            <td class="number">6.840,00 €</td>
+          </tr>
+          
+          <tr>
+            <td>4</td>
+            <td>Fensteranschlüsse: Rückbau + Einbau Multifunktionsband + Kompriband Pos. 28</td>
+            <td class="number">24 Stück</td>
+            <td class="number">180,00 €</td>
+            <td class="number">4.320,00 €</td>
+          </tr>
+          
+          <tr>
+            <td>5</td>
+            <td>Oberputz-Sanierung in Rissbereichen (Gewebe-Armierung + Neuputz + Anstrich)</td>
+            <td class="number">45 m²</td>
+            <td class="number">78,00 €</td>
+            <td class="number">3.510,00 €</td>
+          </tr>
+          
+          <tr>
+            <td>6</td>
+            <td>Oberputz-Neubeschichtung in Absandungsbereichen Ost 3. OG</td>
+            <td class="number">8 m²</td>
+            <td class="number">95,00 €</td>
+            <td class="number">760,00 €</td>
+          </tr>
+          
+          <tr>
+            <td>7</td>
+            <td>Gesamtfassade Schlussanstrich zur Farbangleichung nach Teilsanierung</td>
+            <td class="number">480 m²</td>
+            <td class="number">18,00 €</td>
+            <td class="number">8.640,00 €</td>
+          </tr>
+          
+          <tr>
+            <td>8</td>
+            <td>Gerüstmiete 3 Monate (Gesamtfassade)</td>
+            <td class="number">1 psch</td>
+            <td class="number">4.800,00 €</td>
+            <td class="number">4.800,00 €</td>
+          </tr>
+          
+          <tr>
+            <td>9</td>
+            <td>Baustelleneinrichtung, Entsorgung, Sicherung</td>
+            <td class="number">1 psch</td>
+            <td class="number">1.850,00 €</td>
+            <td class="number">1.850,00 €</td>
+          </tr>
+          
+          
+          <tr class="summary"><td colspan="4">Summe netto</td><td class="number">42.720,00 €</td></tr>
+          
+        </tbody>
+      </table>
+      
+
+      
+      <div class="kosten-card">
+        <div class="kosten-card-label">Geschätzter Gesamtkostenrahmen (netto)</div>
+        <div class="kosten-card-value">42.720,00 €</div>
+        <div class="kosten-card-note">Orientierende Schätzung auf Basis marktüblicher Einheitspreise · Abweichungen ±15 % möglich</div>
+      </div>
+      
+    </div>
+  </div>
+  
+
+  <!-- 3.4 Fachurteil (KI-FREI) -->
+  <div class="abschnitt">
+    <div class="abschnitt-header">
+      <div class="abschnitt-nr">3.4</div>
+      <div class="abschnitt-titel">Fachurteil</div>
+    </div>
+    <div class="abschnitt-body">
+      <div class="fachurteil-kasten">
+        <div class="marker">SV-Eigenleistung · KI-frei</div>
+        <div class="intro">
+          Dieses Fachurteil wurde gemäß <span class="law-ref">§ 407a Abs. 2 ZPO</span> und <span class="law-ref">§ 9 Abs. 2 IHK-SVO</span> vom unterzeichnenden Sachverständigen <strong>persönlich, eigenständig und ohne KI-Unterstützung</strong> verfasst.
+        </div>
+        <div class="text">
+          <p>Nach Würdigung des Beweisbeschlusses, der dokumentierten Befunde aus der Begehung am 18.04.2026 mit Bauteilöffnung, der thermografischen Untersuchung, der Messwerte und der Aktenlage komme ich zu folgender sachverständiger Beurteilung:</p><p><strong>Zu Beweisfrage 1 (Fachgerechtigkeit der Ausführung):</strong> Die am Objekt Lindenstraße 12 in Köln durch die Beklagte ausgeführte Wärmedämm-Verbundfassade wäre in wesentlichen Teilen <strong>nicht fachgerecht</strong> nach DIN 55699, DIN 4108-10, DIN 18533 und den einschlägigen Herstellerrichtlinien ausgeführt. Die Bauteilöffnungen und die Thermografie belegen sieben Einzelmängel, die als 'wesentlich' im Sinne der anerkannten Regeln der Technik zu werten wären.</p><p><strong>Zu Beweisfrage 2 (Welche Mängel):</strong> Die wesentlichen Mängel sind: unzureichende Verklebungsfläche der Dämmplatten (35 % statt 40 %); unzureichende mechanische Befestigung (5 statt 8 Dübel/m²); fehlerhafter Sockelabschluss (25 mm statt 150 mm Spritzwasserschutz); mangelhafte Laibungsdämmung mit fehlenden Laibungswinkeln; Rissbildung im Oberputz weit über DIN 18550-Grenzen; absandender Oberputz an zwei Stellen; undichte Fensteranschlüsse durch fehlende Multifunktionsbänder. Die Mängel sind alle dokumentiert und mit Maßangaben belegt.</p><p><strong>Zu Beweisfrage 3 (Kausalität):</strong> Alle festgestellten Mängel wären ausnahmslos der Ausführung durch die Beklagte in der Zeit vom 03.06.2024 bis 01.09.2024 zuzuschreiben. Eine andere Ursache (Vorschaden, Fremdeinwirkung, unfachgerechte Nachbehandlung durch Klägerin) wäre auszuschließen. Die Bauteilöffnung an den repräsentativen Stellen zeigt ausschließlich ausführungsbedingte Fehlstellen.</p><p><strong>Zu Beweisfrage 4 (Sanierungsumfang und Kosten):</strong> Die vollständige Mängelbeseitigung erfordert den Teilrückbau des Sockelbereichs und der Laibungen, Nachbefestigungsarbeiten, Fensteranschlusssanierung, Oberputzsanierung in den Rissbereichen und abschließenden farbangleichenden Anstrich der Gesamtfassade. Der erforderliche Sanierungsaufwand beträgt nach meiner orientierenden Kostenschätzung <strong>42.720 € netto</strong>. Die im Privatgutachten Kessler genannten 35.400 € erfassen den erforderlichen Aufwand damit nicht vollständig, weil bestimmte Mangelkomplexe (etwa der fehlerhafte Sockelabschluss) dort nicht quantifiziert waren.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════
+     TEIL 4 · ZUSAMMENFASSUNG UND SCHLUSS
+     ═══════════════════════════════════════════════════════════ -->
+<section class="teil">
+  <div class="teil-header">
+    <div class="teil-nummer">Teil 4</div>
+    <div class="teil-titel">Zusammenfassung und Schluss</div>
+  </div>
+
+  <!-- 4.1 Kurzbeantwortung -->
+  <div class="abschnitt">
+    <div class="abschnitt-header">
+      <div class="abschnitt-nr">4.1</div>
+      <div class="abschnitt-titel">Kurzbeantwortung</div>
+    </div>
+    <div class="abschnitt-body">
+      
+      <p>Die Wärmedämm-Verbundfassade am Objekt Lindenstraße 12 in Köln wurde durch die Beklagte in wesentlichen Teilen nicht fachgerecht ausgeführt. Die Mängel umfassen unzureichende Verklebung (35 % statt 40 %), unzureichende Dübelzahl (5 statt 8/m²), fehlerhaften Sockelabschluss (25 mm statt 150 mm), mangelhafte Laibungsdämmung, erhebliche Rissbildung im Oberputz, undichte Fensteranschlüsse und absandenden Oberputz. Die Mängel wären ausschließlich der Ausführung durch die Beklagte zuzuordnen. Der erforderliche Sanierungsaufwand beträgt 42.720 € netto.</p>
+      
+
+      
+      <div class="hinweis-box" style="margin-top: 3mm;">
+        <strong>Hinweis zu Grenzen der Sachkunde:</strong> Eine rechtliche Bewertung der vertraglichen Pflichten der Parteien, der Verjährung, der Mitverschuldungsfragen oder der Verteilung der Sanierungskosten zwischen den Parteien ist nicht Gegenstand dieses Gutachtens und obliegt dem Gericht. Eine vertiefte statische Prüfung der Dämmstoffbefestigung nach Sturmeinwirkung wäre durch einen Tragwerksplaner vorzunehmen. Die im Gutachten genannten Einheitspreise stellen orientierende Schätzwerte dar; verbindliche Angebote wären durch Fachunternehmen einzuholen.
+      </div>
+      
+    </div>
+  </div>
+
+  <!-- 4.2 § 407a Abs. 2 Unparteilichkeitserklärung -->
+  <div class="abschnitt">
+    <div class="abschnitt-header">
+      <div class="abschnitt-nr">4.2</div>
+      <div class="abschnitt-titel">Erklärung nach § 407a Abs. 2 ZPO (Unparteilichkeit)</div>
+    </div>
+    <div class="abschnitt-body">
+      <div class="erklaerung-kasten">
+        <div class="marker">§ 407a Abs. 2 ZPO · § 9 Abs. 2 IHK-SVO</div>
+        <p>Ich versichere, dass ich das vorliegende Gutachten nach bestem Wissen und Gewissen <strong>unparteiisch, gewissenhaft und persönlich</strong> erstattet habe. Ich bin mit den beteiligten Parteien weder verwandt noch verschwägert und habe kein wirtschaftliches oder persönliches Interesse am Ausgang des Verfahrens oder an der Verwendung dieses Gutachtens.</p>
+
+        
+        <p style="margin-top: 3mm;">Als öffentlich bestellter und vereidigter Sachverständiger bin ich an meinen bei der Bestellung geleisteten Eid gebunden und bestätige die Einhaltung der Unparteilichkeits- und Sorgfaltspflichten nach <span class="law-ref">§ 9 Abs. 2–3 IHK-SVO</span>.</p>
+        
+      </div>
+    </div>
+  </div>
+
+  <!-- 4.3 Hilfsmittel + KI (Ex-post) -->
+  <div class="abschnitt">
+    <div class="abschnitt-header">
+      <div class="abschnitt-nr">4.3</div>
+      <div class="abschnitt-titel">Verwendete Hilfsmittel und KI-Nutzung</div>
+    </div>
+    <div class="abschnitt-body">
+      <p>Die nachstehende Dokumentation ergänzt die Ex-ante-Anzeige aus Teil 1.3 um die konkreten Einsatztätigkeiten (Offenlegung nach <span class="law-ref">§ 407a Abs. 3 ZPO</span> und <span class="law-ref">Art. 50 EU AI Act</span>):</p>
+
+      
+      <p style="margin-top: 3mm;"><strong>OpenAI GPT-4o — Sprachmodell:</strong> Strukturierung der umfangreichen Aktenlage (Klageschrift, Klageerwiderung, Werkvertrag, Bautagebücher, Privatgutachten Kessler); Vorentwurf der Abschnitte 2.1 (Objektbeschreibung) und 3.1 (Befundstruktur nach den vier Beweisfragen); Rechtschreib- und Konsistenzprüfung.</p>
+      
+
+      
+      <p style="margin-top: 2mm;"><strong>OpenAI Whisper — Spracherkennung:</strong> Transkription des Ortstermin-Diktats vom 18.04.2026 (ca. 180 Min Audiomaterial inkl. Parteianhörung).</p>
+      
+
+      <div class="erklaerung-kasten" style="margin-top: 4mm;">
+        <div class="marker">Eigenleistung · Art. 50 EU AI Act</div>
+        <p><strong>Eigenleistung des Sachverständigen:</strong> Das vorliegende Gutachten wurde überwiegend vom unterzeichnenden Sachverständigen persönlich verfasst. KI-Systeme haben ergänzend bei der Strukturierung und Textaufbereitung der Teile 1 bis 3.3 unterstützt.</p>
+        <p style="margin-top: 2mm;"><strong>Teil 3.4 (Fachurteil):</strong> Vollständig und ausschließlich vom unterzeichnenden Sachverständigen persönlich verfasst, ohne KI-Unterstützung.</p>
+      </div>
+
+      <div class="hinweis-box">
+        <strong>DSGVO-Konformität:</strong> Vor jeder Übertragung an KI-Systeme wurden personenbezogene Daten durch technische Pseudonymisierung unkenntlich gemacht. Die Datenverarbeitung erfolgt auf Servern innerhalb der Europäischen Union.
+      </div>
+    </div>
+  </div>
+
+  <!-- 4.4 Unterschrift -->
+  <div class="abschnitt">
+    <div class="abschnitt-header">
+      <div class="abschnitt-nr">4.4</div>
+      <div class="abschnitt-titel">Ort, Datum, Unterschrift und Stempel</div>
+    </div>
+    <div class="abschnitt-body">
+      <div class="unterschrift-block">
+        <div class="unterschrift-grid">
+          <div class="unterschrift-feld">
+            Ort, Datum<br>
+            <div class="name">Köln, 20.04.2026</div>
+          </div>
+          <div class="unterschrift-feld">
+            Unterschrift Sachverständiger<br>
+            <div class="name">Marcel Mustermann, Dipl.-Ing.</div>
+            <div class="rolle">ö.b.u.v. Sachverständiger</div>
+            <div class="rolle">IHK Köln</div>
+            <div class="stempel">(Rundstempel)</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════
+     TEIL 5 · ANHÄNGE
+     ═══════════════════════════════════════════════════════════ -->
+
+<section class="teil">
+  <div class="teil-header">
+    <div class="teil-nummer">Teil 5</div>
+    <div class="teil-titel">Anhänge</div>
+  </div>
+
+  <div class="abschnitt">
+    <div class="abschnitt-header">
+      <div class="abschnitt-nr">5.1</div>
+      <div class="abschnitt-titel">Verwendete Normen und Regelwerke</div>
+    </div>
+    <div class="abschnitt-body">
+      <div class="normen-liste">
+        
+        <div class="norm-eintrag">
+          <div class="nr">§ 403 ZPO</div>
+          <div class="titel">Einholung eines schriftlichen Gutachtens</div>
+          
+        </div>
+        
+        <div class="norm-eintrag">
+          <div class="nr">§ 404a ZPO</div>
+          <div class="titel">Leitung der Tätigkeit des Sachverständigen</div>
+          
+        </div>
+        
+        <div class="norm-eintrag">
+          <div class="nr">§ 407a Abs. 2 ZPO</div>
+          <div class="titel">Unparteilichkeit des Sachverständigen</div>
+          
+        </div>
+        
+        <div class="norm-eintrag">
+          <div class="nr">§ 407a Abs. 3 ZPO</div>
+          <div class="titel">Anzeigepflicht KI-Einsatz</div>
+          
+        </div>
+        
+        <div class="norm-eintrag">
+          <div class="nr">§ 9 Abs. 2–3 IHK-SVO</div>
+          <div class="titel">Sorgfaltspflichten des Sachverständigen</div>
+          
+        </div>
+        
+        <div class="norm-eintrag">
+          <div class="nr">Art. 50 EU AI Act</div>
+          <div class="titel">Transparenzpflichten bei KI-Einsatz</div>
+          
+        </div>
+        
+        <div class="norm-eintrag">
+          <div class="nr">DIN 55699 (2018-04)</div>
+          <div class="titel">Außenwand-Wärmedämm-Verbundsysteme aus Polystyrol (EPS)</div>
+          
+        </div>
+        
+        <div class="norm-eintrag">
+          <div class="nr">DIN 4108-10 (2021-11)</div>
+          <div class="titel">Wärmeschutz — Mindestanforderungen Dämmstoffe</div>
+          
+        </div>
+        
+        <div class="norm-eintrag">
+          <div class="nr">DIN 4108-2 (2013-02)</div>
+          <div class="titel">Wärmeschutz — Mindestanforderungen</div>
+          
+        </div>
+        
+        <div class="norm-eintrag">
+          <div class="nr">DIN 4108-7 (2011-01)</div>
+          <div class="titel">Luftdichtheit von Gebäuden</div>
+          
+        </div>
+        
+        <div class="norm-eintrag">
+          <div class="nr">DIN 18533-1 (2017-07)</div>
+          <div class="titel">Abdichtung von erdberührten Bauteilen</div>
+          
+        </div>
+        
+        <div class="norm-eintrag">
+          <div class="nr">DIN 18195</div>
+          <div class="titel">Bauwerksabdichtungen (2017 zurückgezogen)</div>
+          
+        </div>
+        
+        <div class="norm-eintrag">
+          <div class="nr">DIN 18550 (2015-04)</div>
+          <div class="titel">Planung, Zubereitung und Ausführung von Innen- und Außenputzen</div>
+          
+        </div>
+        
+        <div class="norm-eintrag">
+          <div class="nr">DIN EN 13187</div>
+          <div class="titel">Wärmetechnisches Verhalten von Gebäuden — Thermografie</div>
+          
+        </div>
+        
+        <div class="norm-eintrag">
+          <div class="nr">DIN EN ISO 16276-2</div>
+          <div class="titel">Korrosionsschutz von Stahlbauten — Gitterschnittprüfung</div>
+          
+        </div>
+        
+        <div class="norm-eintrag">
+          <div class="nr">DIN EN 1992-1-1</div>
+          <div class="titel">Bemessung von Stahlbetonbauten</div>
+          
+        </div>
+        
+        <div class="norm-eintrag">
+          <div class="nr">ETAG 004</div>
+          <div class="titel">Leitlinie für europäische technische Zulassungen für WDVS</div>
+          
+        </div>
+        
+        <div class="norm-eintrag">
+          <div class="nr">Herstellerrichtlinie X-Bau System ThermoMax</div>
+          <div class="titel">Verarbeitungsrichtlinie Hersteller</div>
+          
+        </div>
+        
+      </div>
+    </div>
+  </div>
+</section>
+
+
+</body>
+</html>
