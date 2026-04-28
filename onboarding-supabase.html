@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Onboarding · PROVA</title>
+<script src="/lib/prova-config.js"></script>
+<link rel="stylesheet" href="prova-design.css">
+<link rel="stylesheet" href="page-template.css">
+<link rel="stylesheet" href="mobile.css">
+<style>
+  body { background: #0b0d11; color: #eaecf4; font-family: 'DM Sans', system-ui, sans-serif; min-height: 100vh; margin: 0; padding: 24px; }
+  .ob-wrap { max-width: 560px; margin: 40px auto; }
+  .ob-card { background: #1c2130; border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 32px; }
+  .ob-title { font-size: 22px; font-weight: 700; margin: 0 0 8px; }
+  .ob-subtitle { font-size: 13px; color: #8b93ab; margin: 0 0 24px; }
+  .ob-step { display: none; }
+  .ob-step.active { display: block; animation: fadeIn .25s ease; }
+  @keyframes fadeIn { from {opacity:0;transform:translateY(8px);} to {opacity:1;transform:translateY(0);} }
+  label { display:block; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.07em; color:#4d5568; margin-bottom:6px; margin-top:16px; }
+  input, select { width:100%; padding:10px 12px; background:#161a22; border:1px solid rgba(255,255,255,0.11); border-radius:8px; color:#eaecf4; font-size:14px; outline:none; font-family:inherit; }
+  input:focus, select:focus { border-color: #4f8ef7; }
+  .tier-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 8px; }
+  .tier-card { padding: 16px; background: #232a3a; border: 2px solid transparent; border-radius: 10px; cursor: pointer; transition: border-color .15s; }
+  .tier-card:hover { border-color: rgba(255,255,255,0.16); }
+  .tier-card.selected { border-color: #4f8ef7; background: rgba(79,142,247,0.06); }
+  .tier-name { font-weight: 700; font-size: 15px; }
+  .tier-price { font-size: 22px; font-weight: 700; margin: 6px 0; }
+  .tier-desc { font-size: 11px; color: #8b93ab; }
+  .ob-buttons { display:flex; gap:10px; justify-content:flex-end; margin-top:24px; }
+  button { padding: 10px 20px; background: #4f8ef7; color: #fff; border: 0; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+  button.secondary { background: rgba(255,255,255,0.06); }
+  .msg { padding: 10px 12px; border-radius: 8px; font-size: 12px; margin-top: 16px; }
+  .msg.error { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); color: #fca5a5; }
+  .msg.info { background: rgba(79,142,247,0.08); border: 1px solid rgba(79,142,247,0.25); color: #93bbf9; }
+</style>
+</head>
+<body>
+
+<div class="ob-wrap">
+  <div class="ob-card">
+    <h1 class="ob-title">Willkommen bei PROVA</h1>
+    <p class="ob-subtitle">In 2 Minuten ist dein Workspace eingerichtet.</p>
+
+    <!-- STEP 1: SV-Daten -->
+    <div class="ob-step active" id="step-1">
+      <h2 style="font-size:14px;margin:0 0 12px;color:#8b93ab;">Schritt 1 von 2 — Deine Daten</h2>
+
+      <label for="name">Name <span style="color:#ef4444">*</span></label>
+      <input id="name" type="text" placeholder="Marcel Schreiber" autocomplete="name" required>
+
+      <label for="kanzlei">Kanzlei / Büro-Name</label>
+      <input id="kanzlei" type="text" placeholder="(optional, wird Workspace-Name)">
+
+      <label for="ihk">Bestellungsstelle (IHK)</label>
+      <input id="ihk" type="text" placeholder="z.B. IHK Köln" autocomplete="organization">
+
+      <label for="anschrift">Anschrift</label>
+      <input id="anschrift" type="text" placeholder="Straße + Hausnummer" autocomplete="street-address">
+
+      <label for="plz">PLZ + Ort</label>
+      <input id="plz" type="text" placeholder="50667 Köln" autocomplete="postal-code">
+
+      <label for="telefon">Telefon</label>
+      <input id="telefon" type="tel" placeholder="+49 …" autocomplete="tel">
+
+      <div class="ob-buttons">
+        <button id="btn-next-1" type="button">Weiter →</button>
+      </div>
+    </div>
+
+    <!-- STEP 2: Tier wählen -->
+    <div class="ob-step" id="step-2">
+      <h2 style="font-size:14px;margin:0 0 12px;color:#8b93ab;">Schritt 2 von 2 — Tier wählen</h2>
+      <p style="font-size:12px;color:#8b93ab;">14 Tage Trial — Tier kannst du später ändern.</p>
+
+      <div class="tier-grid">
+        <div class="tier-card selected" data-tier="solo">
+          <div class="tier-name">Solo</div>
+          <div class="tier-price">149 €<span style="font-size:12px;color:#8b93ab">/Mo</span></div>
+          <div class="tier-desc">Ein Sachverständiger. 5-30 Standardfälle/Monat.</div>
+        </div>
+        <div class="tier-card" data-tier="team">
+          <div class="tier-name">Team</div>
+          <div class="tier-price">279 €<span style="font-size:12px;color:#8b93ab">/Mo</span></div>
+          <div class="tier-desc">Team-Büro mit mehreren Usern + geteiltem Workspace.</div>
+        </div>
+      </div>
+
+      <div id="msg" class="msg" hidden></div>
+
+      <div class="ob-buttons">
+        <button id="btn-back-2" class="secondary" type="button">← Zurück</button>
+        <button id="btn-finish" type="button">Workspace anlegen</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="module" src="/onboarding-supabase-logic.js"></script>
+</body>
+</html>
