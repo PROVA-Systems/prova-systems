@@ -1,6 +1,11 @@
-# Pilot-Audit: technische-stellungnahme.html (K-1.3.A1)
+# Pilot-Audit: gutachterliche-stellungnahme.html (K-1.3.A1)
 
 **Datum:** 28.04.2026 · **Sprint:** K-1.3 (Frontend-Pilot)
+
+> **Hinweis 28.04.2026 (Mega-Sprint #4):** Pilot-Page wurde umbenannt von
+> `technische-stellungnahme.html` → `gutachterliche-stellungnahme.html`
+> (AZ-Prefix `TS-` → `GS-`). Inhalt unten ist historischer Pre-Refactor-Audit
+> und referenziert den alten Namen — Kontext-Erhalt.
 
 ## Page-Status (vor Refactor)
 
