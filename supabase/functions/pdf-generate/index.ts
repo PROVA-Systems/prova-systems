@@ -24,6 +24,7 @@ import { verifyJwt, getWorkspaceId, HttpError, withErrorHandling } from '../_sha
 import { createSupabaseClient } from '../_shared/supabase.ts';
 import { logAuditEvent, trackFeatureEvent } from '../_shared/audit.ts';
 import { getTemplateId } from '../_shared/templates.ts';
+import { resolveLetterhead, mergeLetterheadIntoVariables } from '../_shared/letterhead-resolver.ts';
 import type { PdfGenerateRequest, PdfGenerateResponse } from '../_shared/types.ts';
 
 const PDFMONKEY_API = 'https://api.pdfmonkey.io/api/v1';
@@ -97,8 +98,13 @@ const handler = async (req: Request): Promise<Response> => {
 
     const templateId = getTemplateId(body.template_key);
 
+    // K-FIX: Letterhead aus users.letterhead_config laden + in payload mergen
+    //        (Stempel/Unterschrift via Signed URL aus letterheads-Storage)
+    const letterhead = await resolveLetterhead(sb, ctx.user.id);
+    const mergedPayload = mergeLetterheadIntoVariables(body.payload, letterhead);
+
     // 1. Trigger PDFMonkey
-    const created = await pdfMonkeyCreate(templateId, body.payload);
+    const created = await pdfMonkeyCreate(templateId, mergedPayload);
 
     // 2. Poll
     const finished = await waitForPdf(created.id);
@@ -126,7 +132,7 @@ const handler = async (req: Request): Promise<Response> => {
         betreff: body.betreff ?? null,
         pdfmonkey_template_id: templateId,
         pdfmonkey_document_id: created.id,
-        pdf_payload: body.payload,
+        pdf_payload: mergedPayload,
         storage_bucket: STORAGE_BUCKET,
         storage_path: storagePath,
         bytes: pdfBuf.length,
