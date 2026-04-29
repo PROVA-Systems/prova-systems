@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Profil & Briefkopf · PROVA</title>
+
+<!-- K-UI/Item 1: Profil-Briefkopf-Page (Pattern A, ESM, Supabase) -->
+<script src="/lib/prova-config.js"></script>
+<script src="prova-notifications.js" defer></script>
+<script src="prova-sanitize.js"></script>
+<script src="theme.js"></script>
+<script src="prova-layout.config.js"></script>
+<link rel="stylesheet" href="mobile.css">
+<link rel="stylesheet" href="prova-design.css">
+<link rel="stylesheet" href="page-template.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="nav.js" defer></script>
+
+<style>
+:root {
+  --primary: #1a3a6b;
+  --accent: #3b82f6;
+  --muted: #64748b;
+  --bg: #0b0d11; --bg2: #111318; --bg3: #161a22;
+  --surface: #1c2130; --surface2: #232a3a;
+  --border: rgba(255,255,255,0.06); --border2: rgba(255,255,255,0.11);
+  --text: #eaecf4; --text2: #8b93ab; --text3: #4d5568;
+  --success: #10b981; --warning: #f59e0b; --danger: #ef4444;
+  --r-sm: 6px; --r-md: 10px; --r-lg: 14px;
+}
+*,*::before,*::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 14px; }
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background: var(--bg); color: var(--text); min-height: 100vh; line-height: 1.55;
+}
+input, select, textarea { font-size: max(16px, 1em); }
+.app-shell { display: flex; min-height: 100vh; }
+.profil-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+.profil-grid.single { grid-template-columns: 1fr; }
+@media (max-width: 768px) { .profil-grid { grid-template-columns: 1fr; } }
+.profil-label {
+  font-size: 11px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .07em; color: var(--text3); margin-bottom: 6px; display: block;
+}
+.profil-input, .profil-select, .profil-textarea {
+  width: 100%; padding: 10px 12px; background: var(--bg3);
+  border: 1px solid var(--border2); border-radius: 8px;
+  color: var(--text); font-family: inherit; outline: none; transition: border-color .15s;
+}
+.profil-input:focus, .profil-select:focus, .profil-textarea:focus { border-color: var(--accent); }
+.profil-textarea { resize: vertical; min-height: 80px; }
+.profil-hint { font-size: 11px; color: var(--text3); margin-top: 4px; }
+
+.upload-card {
+  display: grid; grid-template-columns: 120px 1fr; gap: 16px;
+  padding: 14px; background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; align-items: center;
+}
+.upload-preview {
+  width: 120px; height: 90px; background: var(--bg3);
+  border: 1px dashed var(--border2); border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; color: var(--text3); overflow: hidden; padding: 4px;
+}
+.upload-preview img { max-width: 100%; max-height: 100%; object-fit: contain; }
+.upload-actions { display: flex; flex-direction: column; gap: 6px; }
+.upload-actions .filename { font-size: 11px; color: var(--text3); font-family: 'JetBrains Mono', monospace; }
+.upload-btn {
+  display: inline-block; padding: 6px 12px; background: var(--accent);
+  color: #fff; border: 0; border-radius: 6px; font-size: 12px;
+  font-weight: 500; cursor: pointer; text-align: center; width: fit-content;
+}
+.upload-btn.secondary { background: rgba(255,255,255,0.06); color: var(--text); }
+.upload-btn.danger { background: var(--danger); }
+.upload-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+input[type=file] { display: none; }
+
+.toast {
+  position: fixed; bottom: 20px; right: 20px; padding: 12px 18px;
+  border-radius: 8px; font-size: 13px; font-weight: 500;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.3); z-index: 9999;
+  display: none;
+}
+.toast.success { background: var(--success); color: #fff; }
+.toast.error { background: var(--danger); color: #fff; }
+.toast.info { background: var(--accent); color: #fff; }
+
+.section-hint {
+  background: rgba(59,130,246,0.08);
+  border-left: 3pt solid var(--accent);
+  padding: 10px 14px; border-radius: 6px; font-size: 12px;
+  color: var(--text2); margin-bottom: 16px;
+}
+.save-bar {
+  position: sticky; bottom: 0; background: var(--bg2);
+  border-top: 1px solid var(--border2); padding: 12px 18px;
+  display: flex; justify-content: space-between; align-items: center; gap: 12px;
+  margin-top: 18px;
+}
+.save-bar .btn {
+  padding: 10px 20px; border-radius: 8px; font-size: 13px; font-weight: 600;
+  border: 0; cursor: pointer;
+}
+.save-bar .btn.primary { background: var(--accent); color: #fff; }
+.save-bar .btn.primary:disabled { opacity: 0.5; cursor: not-allowed; }
+.save-bar .btn.secondary { background: rgba(255,255,255,0.06); color: var(--text); }
+.dirty-indicator { font-size: 11px; color: var(--warning); display: none; }
+.dirty-indicator.visible { display: inline; }
+</style>
+</head>
+<body data-page="profil-supabase">
+<div class="app-shell" id="app-shell">
+  <nav class="sidebar" id="sidebar"></nav>
+  <div class="sb-overlay" id="sb-overlay" onclick="closeMobileSidebar()"></div>
+  <div class="main-wrap" id="main-wrap">
+
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="burger" onclick="openMobileSidebar()"><span></span><span></span><span></span></button>
+        <div class="page-breadcrumb"><span>PROVA</span><span class="page-breadcrumb-sep">›</span><strong>Profil &amp; Briefkopf</strong></div>
+      </div>
+    </header>
+
+    <main class="page-content">
+      <div class="page-hero">
+        <h1 class="page-title">Profil &amp; Briefkopf</h1>
+        <p class="page-subtitle">Stammdaten, Bankverbindung, Logo, Stempel und Unterschrift — erscheint automatisch auf allen Gutachten und Briefen.</p>
+      </div>
+
+      <!-- ── PERSÖNLICHE DATEN ── -->
+      <div class="page-card">
+        <div class="page-card-header">
+          <h2 class="page-card-title">Stammdaten</h2>
+        </div>
+        <div class="profil-grid">
+          <div>
+            <label class="profil-label" for="p-name">Name (vollständig)</label>
+            <input type="text" id="p-name" class="profil-input" placeholder="Marcel Schreiber">
+          </div>
+          <div>
+            <label class="profil-label" for="p-titel">Titel (akademisch)</label>
+            <input type="text" id="p-titel" class="profil-input" placeholder="Dipl.-Ing.">
+          </div>
+        </div>
+        <div class="profil-grid">
+          <div>
+            <label class="profil-label" for="p-qualifikation">Qualifikation</label>
+            <input type="text" id="p-qualifikation" class="profil-input" placeholder="ö.b.u.v. Sachverständiger">
+          </div>
+          <div>
+            <label class="profil-label" for="p-sachgebiet">Sachgebiet</label>
+            <input type="text" id="p-sachgebiet" class="profil-input" placeholder="Schäden an Gebäuden">
+          </div>
+        </div>
+        <div class="profil-grid single">
+          <div>
+            <label class="profil-label" for="p-bestellungsstelle">Bestellungsstelle</label>
+            <input type="text" id="p-bestellungsstelle" class="profil-input" placeholder="IHK Köln">
+          </div>
+        </div>
+
+        <div class="profil-grid">
+          <div>
+            <label class="profil-label" for="p-anschrift">Anschrift</label>
+            <input type="text" id="p-anschrift" class="profil-input" placeholder="Musterweg 12">
+          </div>
+          <div>
+            <label class="profil-label" for="p-plz-ort">PLZ + Ort</label>
+            <input type="text" id="p-plz-ort" class="profil-input" placeholder="50667 Köln">
+          </div>
+        </div>
+        <div class="profil-grid">
+          <div>
+            <label class="profil-label" for="p-telefon">Telefon</label>
+            <input type="tel" id="p-telefon" class="profil-input" placeholder="+49 221 1234567">
+          </div>
+          <div>
+            <label class="profil-label" for="p-mobil">Mobil</label>
+            <input type="tel" id="p-mobil" class="profil-input" placeholder="+49 170 1234567">
+          </div>
+        </div>
+      </div>
+
+      <!-- ── BRIEFKOPF (in users.letterhead_config) ── -->
+      <div class="page-card">
+        <div class="page-card-header">
+          <h2 class="page-card-title">Briefkopf-Zeilen</h2>
+        </div>
+        <div class="section-hint">
+          Drei optionale Zeilen oben rechts auf jedem Brief/Gutachten. Z.&nbsp;B. Firmenname, IHK-Verweis, Mitgliedschaft.
+        </div>
+        <div class="profil-grid single">
+          <div><label class="profil-label" for="p-bk-1">Briefkopf Zeile 1</label><input type="text" id="p-bk-1" class="profil-input" placeholder="z. B. SV-Büro Schreiber"></div>
+          <div><label class="profil-label" for="p-bk-2">Briefkopf Zeile 2</label><input type="text" id="p-bk-2" class="profil-input" placeholder="z. B. Mitglied BVS"></div>
+          <div><label class="profil-label" for="p-bk-3">Briefkopf Zeile 3</label><input type="text" id="p-bk-3" class="profil-input" placeholder="z. B. zertifiziert nach ISO/IEC 17024"></div>
+        </div>
+      </div>
+
+      <!-- ── BANKVERBINDUNG ── -->
+      <div class="page-card">
+        <div class="page-card-header">
+          <h2 class="page-card-title">Bankverbindung &amp; Steuer</h2>
+        </div>
+        <div class="profil-grid">
+          <div><label class="profil-label" for="p-bank-inhaber">Kontoinhaber</label><input type="text" id="p-bank-inhaber" class="profil-input" placeholder="Marcel Schreiber"></div>
+          <div><label class="profil-label" for="p-bank-name">Bankname</label><input type="text" id="p-bank-name" class="profil-input" placeholder="Commerzbank Köln"></div>
+        </div>
+        <div class="profil-grid">
+          <div><label class="profil-label" for="p-iban">IBAN</label><input type="text" id="p-iban" class="profil-input" placeholder="DE89 3704 0044 0532 0130 00" style="font-family:'JetBrains Mono',monospace;"></div>
+          <div><label class="profil-label" for="p-bic">BIC</label><input type="text" id="p-bic" class="profil-input" placeholder="COBADEFFXXX" style="font-family:'JetBrains Mono',monospace;"></div>
+        </div>
+        <div class="profil-grid">
+          <div><label class="profil-label" for="p-ust-id">USt-IdNr.</label><input type="text" id="p-ust-id" class="profil-input" placeholder="DE123456789"></div>
+          <div><label class="profil-label" for="p-steuernummer">Steuernummer</label><input type="text" id="p-steuernummer" class="profil-input" placeholder="215/5123/4567"></div>
+        </div>
+      </div>
+
+      <!-- ── LOGO + STEMPEL + UNTERSCHRIFT ── -->
+      <div class="page-card">
+        <div class="page-card-header">
+          <h2 class="page-card-title">Logo, Stempel &amp; Unterschrift</h2>
+        </div>
+        <div class="section-hint">
+          PNG mit transparentem Hintergrund empfohlen. Max. 200&nbsp;KB pro Datei. Erscheint automatisch auf allen generierten Briefen + Gutachten.
+        </div>
+
+        <div style="display:grid; gap:12px;">
+          <!-- LOGO -->
+          <div class="upload-card">
+            <div class="upload-preview" id="prev-logo"><span>Kein Logo</span></div>
+            <div class="upload-actions">
+              <strong style="font-size:13px;">Logo</strong>
+              <span class="filename" id="filename-logo">—</span>
+              <div style="display:flex; gap:6px;">
+                <label class="upload-btn" for="file-logo">Hochladen</label>
+                <button class="upload-btn danger" id="btn-del-logo" type="button" disabled>Entfernen</button>
+              </div>
+              <input type="file" id="file-logo" accept="image/png,image/jpeg">
+            </div>
+          </div>
+
+          <!-- STEMPEL -->
+          <div class="upload-card">
+            <div class="upload-preview" id="prev-stempel"><span>Kein Stempel</span></div>
+            <div class="upload-actions">
+              <strong style="font-size:13px;">Stempel</strong>
+              <span class="filename" id="filename-stempel">—</span>
+              <div style="display:flex; gap:6px;">
+                <label class="upload-btn" for="file-stempel">Hochladen</label>
+                <button class="upload-btn danger" id="btn-del-stempel" type="button" disabled>Entfernen</button>
+              </div>
+              <input type="file" id="file-stempel" accept="image/png,image/jpeg">
+            </div>
+          </div>
+
+          <!-- UNTERSCHRIFT -->
+          <div class="upload-card">
+            <div class="upload-preview" id="prev-unterschrift"><span>Keine Unterschrift</span></div>
+            <div class="upload-actions">
+              <strong style="font-size:13px;">Unterschrift</strong>
+              <span class="filename" id="filename-unterschrift">—</span>
+              <div style="display:flex; gap:6px;">
+                <label class="upload-btn" for="file-unterschrift">Hochladen</label>
+                <button class="upload-btn danger" id="btn-del-unterschrift" type="button" disabled>Entfernen</button>
+              </div>
+              <input type="file" id="file-unterschrift" accept="image/png,image/jpeg">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="save-bar">
+        <span class="dirty-indicator" id="dirty-ind">● Ungespeicherte Änderungen</span>
+        <div style="display:flex; gap:10px; margin-left:auto;">
+          <button class="btn secondary" id="btn-reload" type="button">Verwerfen</button>
+          <button class="btn primary" id="btn-save" type="button" disabled>Speichern</button>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module" src="/profil-supabase-logic.js"></script>
+</body>
+</html>
