@@ -1,0 +1,449 @@
+{
+  "$schema": "https://prova-systems.de/schemas/workflow-research-v1.json",
+  "auftrags_typ": "schadensgutachten",
+  "version": "1.1.0",
+  "stand": "2026-04-30",
+  "_korrektur": "v1.1: Phase 1 in 1A (Stammdaten/Picker) + 1B (Vorgangsdaten typ-spezifisch) gesplittet (Marcel-Direktive nach K-UI/X2-Korr). Stammdaten leben im kontakte-Adressbuch (1 Eintrag pro Firma), Vorgangsdaten am Auftrag (pro Auftrag andere Werte). Siehe README.md Architektur-Prinzipien.",
+  "phasen": [
+    {
+      "phase": "1A",
+      "name": "auftraggeber_stammdaten",
+      "label": "Auftraggeber wählen oder anlegen",
+      "_intent": "Picker auf existing kontakte ODER neuer Kontakt. KEINE vorgangsspezifischen Felder hier — die kommen in Phase 1B.",
+      "felder": [
+        {
+          "id": "auftraggeber_typ",
+          "label": "Auftraggeber-Typ",
+          "type": "select",
+          "required": true,
+          "options": [
+            { "value": "privatperson", "label": "Privatperson" },
+            { "value": "versicherung", "label": "Versicherung" },
+            { "value": "anwalt", "label": "Anwalt / Kanzlei" },
+            { "value": "gericht", "label": "Gericht" },
+            { "value": "behoerde", "label": "Behörde" },
+            { "value": "firma", "label": "Firma / Bauunternehmen" }
+          ]
+        },
+        {
+          "id": "anrede",
+          "label": "Anrede",
+          "type": "select",
+          "options": ["Herr", "Frau", "Divers", "—"],
+          "show_if": { "auftraggeber_typ": ["privatperson", "anwalt"] }
+        },
+        {
+          "id": "vorname",
+          "label": "Vorname",
+          "type": "text",
+          "required": true,
+          "show_if": { "auftraggeber_typ": ["privatperson"] }
+        },
+        {
+          "id": "nachname",
+          "label": "Nachname",
+          "type": "text",
+          "required": true,
+          "show_if": { "auftraggeber_typ": ["privatperson"] }
+        },
+        {
+          "id": "firma",
+          "label": "Firma",
+          "type": "text",
+          "required": true,
+          "show_if": { "auftraggeber_typ": ["versicherung", "firma"] }
+        },
+        {
+          "id": "kanzlei",
+          "label": "Kanzlei-Name",
+          "type": "text",
+          "required": true,
+          "show_if": { "auftraggeber_typ": ["anwalt"] }
+        },
+        {
+          "id": "behoerden_name",
+          "label": "Behörden-Name",
+          "type": "text",
+          "required": true,
+          "show_if": { "auftraggeber_typ": ["behoerde"] }
+        },
+        {
+          "id": "gericht_name",
+          "label": "Gericht",
+          "type": "text",
+          "required": true,
+          "placeholder": "z.B. Landgericht Köln",
+          "show_if": { "auftraggeber_typ": ["gericht"] }
+        },
+        {
+          "id": "spruchkoerper",
+          "label": "Spruchkörper",
+          "type": "text",
+          "required": true,
+          "placeholder": "z.B. 12. Zivilkammer",
+          "show_if": { "auftraggeber_typ": ["gericht"] }
+        },
+        {
+          "id": "ansprechpartner",
+          "label": "Ansprechpartner",
+          "type": "text",
+          "required": true,
+          "show_if": { "auftraggeber_typ": ["versicherung", "anwalt", "behoerde", "firma"] }
+        },
+        {
+          "id": "abteilung",
+          "label": "Abteilung",
+          "type": "text",
+          "required": false,
+          "show_if": { "auftraggeber_typ": ["versicherung", "behoerde", "firma"] }
+        },
+        {
+          "id": "anschrift_strasse",
+          "label": "Straße + Hausnummer",
+          "type": "text",
+          "required": true
+        },
+        {
+          "id": "anschrift_plz",
+          "label": "PLZ",
+          "type": "text",
+          "required": true,
+          "validation": "^\\d{5}$"
+        },
+        {
+          "id": "anschrift_ort",
+          "label": "Ort",
+          "type": "text",
+          "required": true
+        },
+        {
+          "id": "telefon",
+          "label": "Telefon",
+          "type": "tel",
+          "required_if": { "auftraggeber_typ": ["versicherung", "anwalt", "gericht", "behoerde", "firma"] },
+          "required": false
+        },
+        {
+          "id": "email",
+          "label": "E-Mail",
+          "type": "email",
+          "required_if": { "auftraggeber_typ": ["versicherung", "anwalt", "gericht", "behoerde", "firma"] },
+          "required": false
+        },
+        {
+          "_NOTIZ_KORREKTUR": "v1.1: Felder unten (schadennummer, versicherungsnummer, anwalt_az, gericht_az, beweisbeschluss_datum, beweisfragen, frist, behoerden_az) wurden in Phase 1B verschoben — sie sind Vorgangsdaten, nicht Stammdaten. Bleiben hier nur als Backwards-Compat-Hint, sind aber NICHT mehr Bestandteil von Phase 1A."
+        }
+      ]
+    },
+    {
+      "phase": "1B",
+      "name": "vorgangsdaten",
+      "label": "Vorgangsdaten — typ-spezifisch",
+      "_intent": "Pro Auftraggeber-Typ unterschiedliche Pflichtfelder. Werden in auftraege.details JSONB gespeichert (siehe SCHEMA-GAP-AUDIT.md). Kommen NACH dem Auftraggeber-Picker (Phase 1A) — bei existing Kontakt sind Stammdaten schon befuellt, hier kommt nur das vorgangsspezifische dazu.",
+      "felder": [
+        {
+          "id": "schadennummer",
+          "label": "Schadennummer (Versicherer)",
+          "type": "text",
+          "required": true,
+          "show_if": { "auftraggeber_typ": ["versicherung"] },
+          "help": "Wird vom Versicherer pro Schadensfall vergeben — JEDES Mal andere Nummer auch wenn gleiche Versicherung"
+        },
+        {
+          "id": "versicherungsnummer",
+          "label": "Versicherungsscheinnummer",
+          "type": "text",
+          "required": true,
+          "show_if": { "auftraggeber_typ": ["versicherung"] },
+          "help": "Aus dem Versicherungsschein des Versicherungsnehmers"
+        },
+        {
+          "id": "anwalt_az",
+          "label": "Aktenzeichen Anwalt",
+          "type": "text",
+          "required": true,
+          "show_if": { "auftraggeber_typ": ["anwalt"] }
+        },
+        {
+          "id": "gericht_az",
+          "label": "Geschäftszeichen Gericht",
+          "type": "text",
+          "required": true,
+          "show_if": { "auftraggeber_typ": ["gericht"] },
+          "placeholder": "z.B. 12 O 234/26"
+        },
+        {
+          "id": "beweisbeschluss_datum",
+          "label": "Beweisbeschluss-Datum",
+          "type": "date",
+          "required": true,
+          "show_if": { "auftraggeber_typ": ["gericht"] }
+        },
+        {
+          "id": "beweisfragen",
+          "label": "Beweisfragen (vollständig)",
+          "type": "textarea",
+          "required": true,
+          "show_if": { "auftraggeber_typ": ["gericht"] },
+          "help": "Wortlaut aus dem Beweisbeschluss — wird in Pflichthinweis-PDF zitiert (§407a ZPO)"
+        },
+        {
+          "id": "frist",
+          "label": "Frist zur Gutachten-Erstellung",
+          "type": "date",
+          "required": true,
+          "show_if": { "auftraggeber_typ": ["gericht"] },
+          "help": "§ 407a Abs 1 ZPO Pflicht"
+        },
+        {
+          "id": "behoerden_az",
+          "label": "Behörden-Aktenzeichen",
+          "type": "text",
+          "required": true,
+          "show_if": { "auftraggeber_typ": ["behoerde"] }
+        }
+      ]
+    },
+    {
+      "phase": 2,
+      "name": "schadens_objekt",
+      "label": "Schadens-Objekt & Beteiligte",
+      "felder": [
+        {
+          "id": "objekt_adresse_strasse",
+          "label": "Objekt — Straße + Hausnummer",
+          "type": "text",
+          "required": true
+        },
+        {
+          "id": "objekt_adresse_plz",
+          "label": "Objekt — PLZ",
+          "type": "text",
+          "required": true,
+          "validation": "^\\d{5}$"
+        },
+        {
+          "id": "objekt_adresse_ort",
+          "label": "Objekt — Ort",
+          "type": "text",
+          "required": true
+        },
+        {
+          "id": "objekt_typ",
+          "label": "Objekt-Typ",
+          "type": "select",
+          "required": true,
+          "options": [
+            "Einfamilienhaus", "Mehrfamilienhaus", "Eigentumswohnung", 
+            "Reihenhaus", "Doppelhaushälfte", "Gewerbeobjekt", 
+            "Bauwerk im Bau", "Sonstiges"
+          ]
+        },
+        {
+          "id": "baujahr",
+          "label": "Baujahr (sofern bekannt)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "eigentuemer",
+          "label": "Eigentümer",
+          "type": "kontakt_picker",
+          "required": false,
+          "help": "Falls abweichend vom Auftraggeber"
+        },
+        {
+          "id": "versicherungsnehmer",
+          "label": "Versicherungsnehmer (Geschädigter)",
+          "type": "kontakt_picker",
+          "required": true,
+          "show_if": { "auftraggeber_typ": ["versicherung"] },
+          "help": "Pflicht: i.d.R. abweichend vom Versicherer"
+        },
+        {
+          "id": "mandant",
+          "label": "Mandant des Anwalts",
+          "type": "kontakt_picker",
+          "required": true,
+          "show_if": { "auftraggeber_typ": ["anwalt"] }
+        },
+        {
+          "id": "klaeger",
+          "label": "Kläger",
+          "type": "kontakt_picker",
+          "required": true,
+          "show_if": { "auftraggeber_typ": ["gericht"] }
+        },
+        {
+          "id": "klaeger_anwalt",
+          "label": "Anwalt Kläger",
+          "type": "kontakt_picker",
+          "required": false,
+          "show_if": { "auftraggeber_typ": ["gericht"] }
+        },
+        {
+          "id": "beklagter",
+          "label": "Beklagter",
+          "type": "kontakt_picker",
+          "required": true,
+          "show_if": { "auftraggeber_typ": ["gericht"] }
+        },
+        {
+          "id": "beklagter_anwalt",
+          "label": "Anwalt Beklagter",
+          "type": "kontakt_picker",
+          "required": false,
+          "show_if": { "auftraggeber_typ": ["gericht"] }
+        },
+        {
+          "id": "schadensart",
+          "label": "Schadensart",
+          "type": "select",
+          "required": true,
+          "options": [
+            { "value": "wasser", "label": "Wasserschaden" },
+            { "value": "brand", "label": "Brandschaden" },
+            { "value": "baumangel", "label": "Baumängel" },
+            { "value": "schimmel", "label": "Schimmelschaden" },
+            { "value": "elementar", "label": "Elementar-/Sturmschaden" },
+            { "value": "setzung", "label": "Setzungs-/Risssschaden" },
+            { "value": "kombiniert", "label": "Kombiniert (mehrere)" }
+          ]
+        },
+        {
+          "id": "schadens_datum",
+          "label": "Schadens-Datum",
+          "type": "date",
+          "required": true,
+          "help": "Pflicht insbesondere bei Versicherungs-Schäden"
+        },
+        {
+          "id": "vertragsart",
+          "label": "Vertragsart (Bauvertrag)",
+          "type": "select",
+          "required": true,
+          "show_if": { "schadensart": ["baumangel"] },
+          "options": ["BGB-Werkvertrag", "VOB/B"]
+        },
+        {
+          "id": "abnahme_datum",
+          "label": "Abnahme-Datum",
+          "type": "date",
+          "required": true,
+          "show_if": { "schadensart": ["baumangel"] },
+          "help": "Pflicht: Verjährungs-Berechnung"
+        },
+        {
+          "id": "bauunternehmen",
+          "label": "Bauunternehmen (Verursacher)",
+          "type": "kontakt_picker",
+          "required": true,
+          "show_if": { "schadensart": ["baumangel"] }
+        }
+      ]
+    },
+    {
+      "phase": 3,
+      "name": "ortstermin",
+      "label": "Ortstermin & Befund",
+      "felder": [
+        {
+          "id": "ortstermin_datum",
+          "label": "Termin-Datum",
+          "type": "date",
+          "required": true
+        },
+        {
+          "id": "ortstermin_uhrzeit",
+          "label": "Termin-Uhrzeit",
+          "type": "time",
+          "required": true
+        },
+        {
+          "id": "anwesende",
+          "label": "Anwesende Personen",
+          "type": "textarea",
+          "required": true,
+          "help": "Pflicht-Angabe nach IfS-Leitsätzen"
+        },
+        {
+          "id": "wetterbedingungen",
+          "label": "Wetter-Bedingungen",
+          "type": "text",
+          "required_if": { "schadensart": ["wasser", "elementar"] },
+          "required": false,
+          "help": "Bei Außenschäden Pflicht (Bleutge: Ortsbesichtigung)"
+        },
+        {
+          "id": "hilfsmittel",
+          "label": "Verwendete Hilfsmittel",
+          "type": "checkbox_multi",
+          "required": true,
+          "options": [
+            "Feuchtemessgerät", "Endoskop", "Wärmebildkamera", 
+            "Risslupe", "Lasermessgerät", "Photogerät",
+            "Nivelliergerät", "Probennahme-Set", "Sonstiges"
+          ]
+        },
+        {
+          "id": "feuchte_messwerte",
+          "label": "Feuchte-Messwerte",
+          "type": "messwerte_table",
+          "required": true,
+          "show_if": { "schadensart": ["wasser", "schimmel"] },
+          "help": "Messpunkte mit Datum + Hilfsmittel + Werten"
+        },
+        {
+          "id": "riss_messungen",
+          "label": "Riss-Messungen",
+          "type": "messwerte_table",
+          "required": true,
+          "show_if": { "schadensart": ["setzung"] },
+          "help": "Lokalisation, Breite, Verlauf"
+        },
+        {
+          "id": "schadensbeschreibung",
+          "label": "Schadens-Beschreibung",
+          "type": "textarea",
+          "required": true,
+          "min_chars": 200
+        },
+        {
+          "id": "fotos",
+          "label": "Schadens-Fotos",
+          "type": "file_upload_multi",
+          "required": true,
+          "min_count": 3,
+          "help": "Mind. 3 Fotos, IfS-Leitsatz Pflicht"
+        }
+      ]
+    }
+  ],
+  "pflichthinweise_pdf": [
+    {
+      "typ": "paragraph_407a",
+      "label": "§ 407a ZPO Hinweis-Box",
+      "show_if": { "auftraggeber_typ": ["gericht"] },
+      "quelle": "§ 407a Abs 6 ZPO"
+    },
+    {
+      "typ": "ki_offenlegung",
+      "label": "EU AI Act Art. 50 Offenlegung",
+      "show_if": { "ki_genutzt": true },
+      "quelle": "EU AI Act Art. 50"
+    },
+    {
+      "typ": "hilfskraft_erwaehnung",
+      "label": "Hilfskräfte-Hinweis",
+      "show_if": { "hilfskraft_genutzt": true },
+      "quelle": "§ 407a Abs 3 ZPO"
+    }
+  ],
+  "ausgeschlossen_pro_typ": {
+    "privatperson": ["schadennummer", "versicherungsnummer", "anwalt_az", "gericht_az", "behoerden_az", "firma", "abteilung", "kanzlei"],
+    "versicherung": ["anwalt_az", "gericht_az", "behoerden_az", "vorname", "nachname"],
+    "anwalt": ["schadennummer", "gericht_az", "behoerden_az"],
+    "gericht": ["schadennummer", "anwalt_az", "behoerden_az"],
+    "behoerde": ["schadennummer", "anwalt_az", "gericht_az"]
+  }
+}
