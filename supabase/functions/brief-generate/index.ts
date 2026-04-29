@@ -29,6 +29,7 @@ import { verifyJwt, getWorkspaceId, HttpError, withErrorHandling } from '../_sha
 import { createSupabaseClient } from '../_shared/supabase.ts';
 import { logAuditEvent, trackFeatureEvent } from '../_shared/audit.ts';
 import { getKorrespondenzTemplateId } from '../_shared/templates.ts';
+import { resolveLetterhead, mergeLetterheadIntoVariables } from '../_shared/letterhead-resolver.ts';
 
 const PDFMONKEY_API = 'https://api.pdfmonkey.io/api/v1';
 const PDFMONKEY_KEY = Deno.env.get('PDFMONKEY_API_KEY') ?? '';
@@ -125,9 +126,11 @@ const handler = async (req: Request): Promise<Response> => {
         );
     }
 
-    // 2. TODO K-2.1A: Letterhead aus users.letterhead_config laden + mergen
-    //    Aktuell: Pass-Through der variables. K-2.1A retrofittet via _shared/letterhead-resolver.
-    const mergedVariables = body.variables;
+    // 2. Letterhead aus users.letterhead_config + Storage-Signed-URLs mergen
+    //    (Frontend-Variables haben Vorrang ausser bei Bild-URLs — siehe
+    //    mergeLetterheadIntoVariables in _shared/letterhead-resolver.ts)
+    const letterhead = await resolveLetterhead(sb, ctx.user.id);
+    const mergedVariables = mergeLetterheadIntoVariables(body.variables, letterhead);
 
     // 3. PDFMonkey-Generation
     const created = await pdfMonkeyCreate(lookup.templateId, mergedVariables);
