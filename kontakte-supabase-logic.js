@@ -1,13 +1,15 @@
 /* ════════════════════════════════════════════════════════════════════
    PROVA — kontakte-supabase-logic.js (ESM)
    Sprint K-UI Item 2 — Kontakte-Page (CRUD)
+   K-UI/X2 Refactor: Schema-Match — adresse_strasse + nr + zusatz statt
+   anschrift; Conditional-Felder pro typ (kanzlei/versicherungs_nr/...).
 
    Liest/schreibt:
-     - kontakte-Tabelle (workspace-scoped via RLS)
+     - kontakte-Tabelle (workspace-scoped via RLS, Schema 02_*.sql)
      - Soft-Delete via deleted_at-Timestamp
 
    Pattern: ESM, lib/auth-guard, lib/data-store.kontakte
-   Modal: Create + Edit, Liste mit Suche + Typ-Filter
+   Modal: Create + Edit, Liste mit Suche + Typ-Filter, Conditional Sections
 ═══════════════════════════════════════════════════════════════════════ */
 
 import { kontakte as kontakteStore } from '/lib/data-store.js';
@@ -15,8 +17,16 @@ import { requireWorkspace, watchAuthState, bindLogoutButtons } from '/lib/auth-g
 
 const $ = (id) => document.getElementById(id);
 
+// ─── Typ-Klassifikation (mirror DB-ENUM kontakt_typ) ────────
+// Welche Sections fuer welchen typ:
+//   'firma' visible: alle ausser privat (firma-Pflicht)
+//   'anwalt' visible: typ='anwalt' (kanzlei-Pflicht)
+//   'versicherung' visible: typ='versicherung' (vers/schaden-Pflicht)
+//   'gericht-behoerde' visible: typ in {gericht,behoerde} (behoerden_az-Pflicht)
+const TYPS_MIT_FIRMA = new Set(['firma','anwalt','versicherung','gericht','behoerde','handwerker','sv_kollege']);
+
 let _currentList = [];
-let _editingId = null;            // null = create, sonst UUID
+let _editingId = null;
 let _searchTimer = null;
 
 // ─── UI-Helpers ──────────────────────────────────────────────
@@ -37,10 +47,27 @@ function getVal(id) { return ($(id)?.value ?? '').trim(); }
 function setVal(id, v) { const el = $(id); if (el) el.value = v ?? ''; }
 
 function buildDisplayName(k) {
-    if (k.firma && k.typ !== 'person') return k.firma;
+    if (k.firma && k.typ !== 'privat') return k.firma;
     const parts = [k.titel, k.vorname, k.nachname].filter(Boolean);
     if (parts.length) return parts.join(' ');
     return k.firma || k.name || '(unbenannt)';
+}
+
+function buildAdresseLine(k) {
+    // DIN-5008-konforme Anschrift in einer Zeile fuer Liste
+    const street = [k.adresse_strasse, k.adresse_nr].filter(Boolean).join(' ');
+    const ortPart = [k.plz, k.ort].filter(Boolean).join(' ');
+    const both = [street, ortPart].filter(Boolean).join(', ');
+    if (k.adresse_zusatz) return both ? `${both} (${k.adresse_zusatz})` : k.adresse_zusatz;
+    return both;
+}
+
+function buildSubInfo(k) {
+    // Typ-spezifische Zweitzeile
+    if (k.typ === 'versicherung' && k.versicherungs_nr) return `Vers-Nr: ${k.versicherungs_nr}`;
+    if (k.typ === 'anwalt' && k.kanzlei) return k.kanzlei;
+    if ((k.typ === 'gericht' || k.typ === 'behoerde') && k.behoerden_az) return `Az: ${k.behoerden_az}`;
+    return '';
 }
 
 function formatTags(tags) {
@@ -53,6 +80,33 @@ function parseTags(s) {
     if (!s) return null;
     const arr = s.split(',').map(t => t.trim()).filter(Boolean);
     return arr.length ? arr : null;
+}
+
+// ─── Conditional Sections ────────────────────────────────────
+function updateConditionalSections() {
+    const typ = getVal('k-typ') || 'privat';
+
+    document.querySelectorAll('[data-section]').forEach(el => {
+        const section = el.dataset.section;
+        let show = false;
+        switch (section) {
+            case 'person':            show = true; break;  // immer (Ansprechpartner-Felder)
+            case 'firma':             show = TYPS_MIT_FIRMA.has(typ); break;
+            case 'anwalt':            show = typ === 'anwalt'; break;
+            case 'versicherung':      show = typ === 'versicherung'; break;
+            case 'gericht-behoerde':  show = typ === 'gericht' || typ === 'behoerde'; break;
+            default:                  show = true;
+        }
+        el.style.display = show ? '' : 'none';
+    });
+}
+
+function toggleMehrFelder() {
+    const box = $('mehr-felder');
+    const icon = $('toggle-mehr-felder-icon');
+    const visible = box.style.display !== 'none';
+    box.style.display = visible ? 'none' : '';
+    if (icon) icon.textContent = visible ? '▾' : '▴';
 }
 
 // ─── Liste rendern ──────────────────────────────────────────
@@ -71,8 +125,9 @@ function renderList(list) {
 
     root.innerHTML = list.map(k => {
         const name = escapeHtml(buildDisplayName(k));
-        const typ = escapeHtml(k.typ || 'person');
-        const meta = [k.plz, k.ort].filter(Boolean).join(' ');
+        const typ = escapeHtml(k.typ || 'privat');
+        const adresse = escapeHtml(buildAdresseLine(k) || '—');
+        const subInfo = escapeHtml(buildSubInfo(k));
         const email = k.email ? `<a href="mailto:${escapeHtml(k.email)}" onclick="event.stopPropagation()">${escapeHtml(k.email)}</a>` : '';
         const tel = k.telefon || k.mobil || '';
         return `
@@ -80,7 +135,7 @@ function renderList(list) {
             <div><span class="typ-badge ${typ}">${typ}</span></div>
             <div>
               <div class="kontakt-name">${name}</div>
-              <div class="kontakt-meta">${escapeHtml(meta || '—')}</div>
+              <div class="kontakt-meta">${adresse}${subInfo ? ' · ' + subInfo : ''}</div>
             </div>
             <div class="kontakt-info">
               ${email}${email && tel ? '<br>' : ''}${escapeHtml(tel)}
@@ -91,7 +146,6 @@ function renderList(list) {
           </div>`;
     }).join('');
 
-    // Event-Delegation
     root.querySelectorAll('.kontakt-row').forEach(row => {
         row.addEventListener('click', (e) => {
             const editBtn = e.target.closest('[data-edit]');
@@ -121,16 +175,28 @@ async function loadList() {
     renderList(_currentList);
 }
 
-// ─── Modal (Create/Edit) ────────────────────────────────────
+// ─── Modal: Reset / Open / Close ────────────────────────────
+const RESET_FIELDS = [
+    'k-titel','k-vorname','k-nachname','k-firma','k-abteilung',
+    'k-kanzlei','k-versicherungs-nr','k-schaden-nr','k-behoerden-az',
+    'k-strasse','k-hausnr','k-zusatz','k-plz','k-ort',
+    'k-email','k-telefon','k-mobil','k-tags',
+    'k-email-2','k-fax','k-website',
+    'k-ust-id','k-steuernummer','k-iban','k-bic','k-notizen'
+];
+
 function openCreate() {
     _editingId = null;
     $('modal-title').textContent = 'Neuer Kontakt';
     $('btn-delete').style.visibility = 'hidden';
-    // Reset
-    ['k-titel','k-vorname','k-nachname','k-firma','k-email','k-telefon','k-mobil','k-anschrift','k-plz','k-ort','k-tags']
-        .forEach(id => setVal(id, ''));
-    setVal('k-typ', 'person');
+    RESET_FIELDS.forEach(id => setVal(id, ''));
+    setVal('k-typ', 'privat');
     setVal('k-anrede', '');
+    setVal('k-land', 'DE');
+    // Mehr-Felder zugeklappt starten
+    if ($('mehr-felder')) $('mehr-felder').style.display = 'none';
+    if ($('toggle-mehr-felder-icon')) $('toggle-mehr-felder-icon').textContent = '▾';
+    updateConditionalSections();
     $('modal-edit').classList.add('visible');
     setTimeout(() => $('k-vorname').focus(), 50);
 }
@@ -143,20 +209,50 @@ function openEdit(id) {
     $('modal-title').textContent = 'Kontakt bearbeiten';
     $('btn-delete').style.visibility = 'visible';
 
-    setVal('k-typ', k.typ || 'person');
-    setVal('k-anrede', k.anrede || '');
-    setVal('k-titel', k.titel || '');
-    setVal('k-vorname', k.vorname || '');
-    setVal('k-nachname', k.nachname || '');
-    setVal('k-firma', k.firma || '');
-    setVal('k-email', k.email || '');
-    setVal('k-telefon', k.telefon || '');
-    setVal('k-mobil', k.mobil || '');
-    setVal('k-anschrift', k.anschrift || '');
-    setVal('k-plz', k.plz || '');
-    setVal('k-ort', k.ort || '');
-    setVal('k-tags', formatTags(k.tags));
+    setVal('k-typ',           k.typ || 'privat');
+    setVal('k-anrede',        k.anrede || '');
+    setVal('k-titel',         k.titel || '');
+    setVal('k-vorname',       k.vorname || '');
+    setVal('k-nachname',      k.nachname || '');
+    setVal('k-firma',         k.firma || '');
+    setVal('k-abteilung',     k.abteilung || '');
 
+    // Conditional
+    setVal('k-kanzlei',          k.kanzlei || '');
+    setVal('k-versicherungs-nr', k.versicherungs_nr || '');
+    setVal('k-schaden-nr',       k.schaden_nr || '');
+    setVal('k-behoerden-az',     k.behoerden_az || '');
+
+    // Adresse (3 Felder)
+    setVal('k-strasse', k.adresse_strasse || '');
+    setVal('k-hausnr',  k.adresse_nr || '');
+    setVal('k-zusatz',  k.adresse_zusatz || '');
+    setVal('k-plz',     k.plz || '');
+    setVal('k-ort',     k.ort || '');
+    setVal('k-land',    k.land || 'DE');
+
+    // Kommunikation
+    setVal('k-email',   k.email || '');
+    setVal('k-telefon', k.telefon || '');
+    setVal('k-mobil',   k.mobil || '');
+    setVal('k-tags',    formatTags(k.tags));
+
+    // Mehr-Felder
+    setVal('k-email-2',     k.email_2 || '');
+    setVal('k-fax',         k.fax || '');
+    setVal('k-website',     k.website || '');
+    setVal('k-ust-id',      k.ust_id || '');
+    setVal('k-steuernummer', k.steuernummer || '');
+    setVal('k-iban',        k.iban || '');
+    setVal('k-bic',         k.bic || '');
+    setVal('k-notizen',     k.notizen || '');
+
+    // Auto-Open Mehr-Felder wenn etwas befuellt ist
+    const mehrBefuellt = k.email_2 || k.fax || k.website || k.ust_id || k.steuernummer || k.iban || k.bic || k.notizen;
+    if ($('mehr-felder')) $('mehr-felder').style.display = mehrBefuellt ? '' : 'none';
+    if ($('toggle-mehr-felder-icon')) $('toggle-mehr-felder-icon').textContent = mehrBefuellt ? '▴' : '▾';
+
+    updateConditionalSections();
     $('modal-edit').classList.add('visible');
 }
 
@@ -165,40 +261,94 @@ function closeModal() {
     _editingId = null;
 }
 
+// ─── Read Form -> Insert/Update Payload ─────────────────────
 function readModal() {
-    const vorname = getVal('k-vorname');
+    const typ      = getVal('k-typ') || 'privat';
+    const vorname  = getVal('k-vorname');
     const nachname = getVal('k-nachname');
-    const firma = getVal('k-firma');
-    // Anzeigename — fuer search_vector + Listen-Anzeige
-    const nameParts = [vorname, nachname].filter(Boolean).join(' ');
-    const computedName = nameParts || firma || null;
+    const firma    = getVal('k-firma');
 
-    return {
-        typ: getVal('k-typ') || 'person',
-        anrede: getVal('k-anrede') || null,
-        titel: getVal('k-titel') || null,
-        vorname: vorname || null,
-        nachname: nachname || null,
-        firma: firma || null,
-        name: computedName,
-        email: getVal('k-email') || null,
+    // Computed name (DB-Trigger compute_kontakt_name pflegt es eigentlich,
+    // aber NOT NULL — wir liefern Fallback um Insert-Fehler zu vermeiden)
+    let computedName = null;
+    if (TYPS_MIT_FIRMA.has(typ) && firma) {
+        computedName = firma;
+    } else {
+        const parts = [getVal('k-anrede'), getVal('k-titel'), vorname, nachname].filter(Boolean);
+        computedName = parts.join(' ').trim() || firma || null;
+    }
+
+    const payload = {
+        typ,
+        anrede:    getVal('k-anrede') || null,
+        titel:     getVal('k-titel') || null,
+        vorname:   vorname || null,
+        nachname:  nachname || null,
+        firma:     firma || null,
+        abteilung: getVal('k-abteilung') || null,
+        name:      computedName,
+
+        // Adresse
+        adresse_strasse: getVal('k-strasse') || null,
+        adresse_nr:      getVal('k-hausnr')  || null,
+        adresse_zusatz:  getVal('k-zusatz')  || null,
+        plz:             getVal('k-plz')     || null,
+        ort:             getVal('k-ort')     || null,
+        land:            (getVal('k-land') || 'DE').toUpperCase(),
+
+        // Kommunikation
+        email:   getVal('k-email')   || null,
+        email_2: getVal('k-email-2') || null,
         telefon: getVal('k-telefon') || null,
-        mobil: getVal('k-mobil') || null,
-        anschrift: getVal('k-anschrift') || null,
-        plz: getVal('k-plz') || null,
-        ort: getVal('k-ort') || null,
-        tags: parseTags(getVal('k-tags'))
+        mobil:   getVal('k-mobil')   || null,
+        fax:     getVal('k-fax')     || null,
+        website: getVal('k-website') || null,
+
+        // Geschaeftsdaten
+        ust_id:       getVal('k-ust-id')       || null,
+        steuernummer: getVal('k-steuernummer') || null,
+        iban:         getVal('k-iban')         || null,
+        bic:          getVal('k-bic')          || null,
+
+        // Conditional (typ-spezifisch — werden trotzdem mitgesendet,
+        // null wenn nicht relevant; Spalten sind nullable)
+        kanzlei:          (typ === 'anwalt')         ? (getVal('k-kanzlei') || null)        : null,
+        versicherungs_nr: (typ === 'versicherung')   ? (getVal('k-versicherungs-nr') || null) : null,
+        schaden_nr:       (typ === 'versicherung')   ? (getVal('k-schaden-nr') || null)     : null,
+        behoerden_az:     (typ === 'gericht' || typ === 'behoerde')
+                              ? (getVal('k-behoerden-az') || null) : null,
+
+        // Notizen + Tags
+        notizen: getVal('k-notizen') || null,
+        tags:    parseTags(getVal('k-tags'))
     };
+
+    return payload;
+}
+
+function validatePayload(p) {
+    // Pflichtfeld pro typ
+    if (p.typ === 'privat') {
+        if (!p.vorname && !p.nachname) {
+            return 'Bei Privatperson: Vorname oder Nachname Pflicht.';
+        }
+    } else {
+        // alle anderen Typen: firma Pflicht
+        if (!p.firma) return `Bei Typ "${p.typ}": Firma/Institution ist Pflicht.`;
+    }
+    if (p.typ === 'anwalt'        && !p.kanzlei)          return 'Bei Anwalt: Kanzlei ist Pflicht.';
+    if (p.typ === 'versicherung'  && !p.versicherungs_nr) return 'Bei Versicherung: Versicherungs-Nr. ist Pflicht.';
+    if (p.typ === 'versicherung'  && !p.schaden_nr)       return 'Bei Versicherung: Schaden-Nr. ist Pflicht.';
+    if ((p.typ === 'gericht' || p.typ === 'behoerde') && !p.behoerden_az) {
+        return 'Bei Gericht/Behörde: Behörden-/Geschäftszeichen ist Pflicht.';
+    }
+    return null;
 }
 
 async function saveModal() {
     const data = readModal();
-
-    // Mindestvalidierung
-    if (!data.name && !data.firma) {
-        toast('error', 'Mindestens Vorname/Nachname oder Firma angeben');
-        return;
-    }
+    const validationError = validatePayload(data);
+    if (validationError) { toast('error', validationError, 4000); return; }
 
     const btn = $('btn-save');
     btn.disabled = true; btn.textContent = 'Speichere…';
@@ -212,7 +362,8 @@ async function saveModal() {
 
     btn.disabled = false; btn.textContent = 'Speichern';
     if (res.error) {
-        toast('error', 'Fehler: ' + res.error.message, 4000);
+        toast('error', 'Fehler: ' + res.error.message, 5000);
+        console.error('[kontakte] save:', res.error);
         return;
     }
     toast('success', _editingId ? 'Kontakt aktualisiert' : 'Kontakt angelegt');
@@ -259,6 +410,14 @@ async function init() {
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape' && $('modal-edit').classList.contains('visible')) closeModal();
     });
+
+    // Conditional Sections: typ-Wechsel triggert re-render
+    $('k-typ').addEventListener('change', updateConditionalSections);
+
+    // Mehr-Felder-Toggle
+    if ($('toggle-mehr-felder')) {
+        $('toggle-mehr-felder').addEventListener('click', toggleMehrFelder);
+    }
 
     await loadList();
     watchAuthState();
