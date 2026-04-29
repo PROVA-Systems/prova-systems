@@ -752,14 +752,15 @@ body {
         <div class="unterschrift-grid">
           <div class="unterschrift-feld">
             Ort, Datum<br>
-            <div class="name">Köln, 20.04.2026</div>
+            <div class="name">{{ sv_ort | default: 'Köln' }}, {{ gutachten_datum | default: '20.04.2026' }}</div>
           </div>
           <div class="unterschrift-feld">
             Unterschrift Sachverständiger<br>
-            <div class="name">Marcel Mustermann, Dipl.-Ing.</div>
-            <div class="rolle">ö.b.u.v. Sachverständiger</div>
-            <div class="rolle">IHK Köln</div>
-            <div class="stempel">(Rundstempel)</div>
+            {% if sv_unterschrift_url %}<img src="{{ sv_unterschrift_url }}" alt="Unterschrift" style="display:block; max-height:14mm; margin:1mm 0 2mm 0;" />{% endif %}
+            <div class="name">{{ sv_titel | default: '' }} {{ sv_name | default: 'Marcel Mustermann, Dipl.-Ing.' }}</div>
+            <div class="rolle">{{ sv_qualifikation | default: 'ö.b.u.v. Sachverständiger' }}</div>
+            {% if sv_bestellungsstelle %}<div class="rolle">{{ sv_bestellungsstelle }}</div>{% else %}<div class="rolle">IHK Köln</div>{% endif %}
+            {% if sv_stempel_url %}<img src="{{ sv_stempel_url }}" alt="Stempel" style="display:block; max-height:24mm; margin-top:4mm; opacity:0.92;" />{% else %}<div class="stempel">(Rundstempel)</div>{% endif %}
           </div>
         </div>
       </div>
