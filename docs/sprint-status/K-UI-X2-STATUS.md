@@ -4,6 +4,29 @@
 **Datum:** 2026-04-29
 **Bearbeiter:** Claude Code + Marcel
 
+> **🔄 KORREKTUR durch Marcel (29.04.2026 abends):** Stammdaten ≠ Vorgangsdaten.
+> Schadennummer / Versicherungs-Nr / Behörden-Az sind **Auftrags-Felder**,
+> nicht Kontakt-Felder. Ein Kontakt ("Allianz Versicherung AG") kommt für
+> viele Aufträge mit unterschiedlichen Schaden-Nr vor.
+>
+> **Konsequenz:** Aus den 3 Conditional-Sections (Anwalt/Versicherung/Gericht)
+> wurde nur eine smarte Label-Switch-Logik:
+> - `data-section="versicherung"` und `="gericht-behoerde"` **entfernt**
+> - `data-section="anwalt"` **entfernt** — `firma`-Label switcht dynamisch zu
+>   "Kanzlei" bei `typ=anwalt` (Daten gehen in dieselbe DB-Spalte `firma`)
+> - Neuer Hinweis-Banner bei typ ∈ {versicherung, gericht, behoerde}:
+>   _"Schadennummer ist Auftragsdaten — gibst du beim Anlegen des Auftrags ein"_
+>
+> **DB-Spalten** `kontakte.kanzlei`, `versicherungs_nr`, `schaden_nr`,
+> `behoerden_az` bleiben in der Tabelle — kein DROP. Können in einem späteren
+> Sprint umgenutzt oder gedroppt werden.
+>
+> **Conditional Forms für vorgangsspezifische Felder kommen in Sprint 06b
+> im Auftrags-Wizard.** Die Kontakte-Tabelle dient ausschließlich als
+> Stammdaten-Adressbuch.
+>
+> Korrektur-Commits: `5bb186c` (B1+B2), `22df8d7` (B3 select), `790857a` (sw v241).
+
 ---
 
 ## Zielsetzung
@@ -124,25 +147,24 @@ CACHE_VERSION-Bump nach Frontend-Aenderungen.
 7. Speichern → grüner Toast "Kontakt angelegt"
 8. Liste muss zeigen: "Anna Test" + "Hauptstr. 12, 50667 Köln"
 
-### Test 2: Versicherung anlegen (Conditional)
+### Test 2: Versicherung anlegen (Stammdaten)
 1. "+ Neuer Kontakt" → Typ: Versicherung
-2. Conditional-Section "Versicherungs-Nr / Schaden-Nr" muss erscheinen
+2. **Korrektur:** Hinweis-Banner muss erscheinen ("Schadennummer ist Auftragsdaten")
 3. Firma leer lassen → "Speichern" → Fehler "Firma/Institution Pflicht"
-4. Firma: HUK-Coburg → Vers-Nr leer → "Speichern" → Fehler "vers_nr Pflicht"
-5. Vers-Nr: HUK-2026/12345 · Schaden-Nr: SCH-42 → Speichern → OK
-6. Liste-Sub-Info muss "Vers-Nr: HUK-2026/12345" zeigen
+4. Firma: Allianz Versicherung AG → Speichern → OK
+5. Liste muss "Allianz Versicherung AG" zeigen, **keine** Vers-Nr/Schaden-Nr
 
-### Test 3: Anwalt
-1. "+ Neuer" → Anwalt → Conditional "Kanzlei" erscheint
-2. Firma: leer + Kanzlei: leer → "Speichern" → Fehler "Firma Pflicht"
-3. Firma: RA Müller GmbH · Kanzlei: leer → "Speichern" → Fehler "Kanzlei Pflicht"
-4. Kanzlei: Müller & Partner → Speichern → OK
-5. Liste-Sub-Info muss "Müller & Partner" zeigen
+### Test 3: Anwalt (Label-Switch)
+1. "+ Neuer" → Anwalt
+2. **Korrektur:** firma-Label muss zu "Kanzlei *" wechseln (vorher: "Firma / Institution *")
+3. Placeholder muss "Müller & Partner Rechtsanwälte" zeigen
+4. Firma leer → "Speichern" → Fehler "Bei Typ 'anwalt': Kanzlei ist Pflicht"
+5. Kanzlei: Müller & Partner → Speichern → OK
 
-### Test 4: Gericht (behoerden_az)
-1. Typ: Gericht → Conditional "Behörden-Az" erscheint
-2. Firma: AG Köln · behoerden_az: 12 OH 34/26 → Speichern → OK
-3. Liste-Sub-Info: "Az: 12 OH 34/26"
+### Test 4: Gericht
+1. Typ: Gericht → Hinweis-Banner ("Aktenzeichen ist Auftragsdaten") erscheint
+2. Firma: AG Köln → Speichern → OK
+3. Liste zeigt "AG Köln", **kein** Behörden-Az
 
 ### Test 5: Edit-Roundtrip
 1. Privatperson aus Test 1 anklicken → Modal mit allen Werten
