@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v241';   // K-UI/X2-Korr: Vorgangsdaten raus aus Kontakt-Stammdaten
+const CACHE_VERSION = 'prova-v242';   // Sprint 06b Skeleton: auftrag-neu.html + lib/auftrags-schema.js
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
@@ -86,6 +86,11 @@ const APP_SHELL = [
   '/kontakte-supabase-logic.js',
   '/briefe.html',
   '/briefe-logic.js',
+
+  // ── Sprint 06b (30.04.2026): Auftrags-Wizard Skeleton ──
+  '/auftrag-neu.html',
+  '/auftrag-neu-logic.js',
+  '/lib/auftrags-schema.js',
 ];
 
 self.addEventListener('install', event => {

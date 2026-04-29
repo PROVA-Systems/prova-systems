@@ -103,6 +103,7 @@
   var COCKPIT = [
     { href: 'dashboard.html',        icon: '🏠',  label: 'Zentrale' },
     { href: 'archiv.html',           icon: '📋',  label: 'Meine Aufträge', countKey: 'auftraege' },
+    { href: 'auftrag-neu.html',      icon: '➕',  label: 'Neuer Auftrag' },
     { href: 'termine.html',          icon: '📅',  label: 'Kalender',       countKey: 'kalender_heute' },
   ];
   var BUERO = [
