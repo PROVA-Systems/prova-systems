@@ -16,8 +16,13 @@ import { supabase, getCurrentUser } from '/lib/supabase-client.js';
 import { requireWorkspace, watchAuthState, bindLogoutButtons } from '/lib/auth-guard.js';
 
 const BUCKET = 'letterheads';
-const MAX_BYTES = 200 * 1024;          // 200 KB
-const ALLOWED_MIME = ['image/png', 'image/jpeg'];
+const MAX_BYTES = 5 * 1024 * 1024;     // 5 MB (K-UI/X1: relaxed von 200 KB)
+const ALLOWED_MIME = ['image/png', 'image/jpeg', 'image/svg+xml'];
+const MIME_TO_EXT = {
+    'image/png':     'png',
+    'image/jpeg':    'jpg',
+    'image/svg+xml': 'svg'
+};
 const SIGNED_TTL = 3600;
 
 const $ = (id) => document.getElementById(id);
@@ -144,13 +149,17 @@ async function refreshImagePreview(type, storagePath) {
 
 async function handleUpload(type, file) {
     if (!file) return;
-    if (file.size > MAX_BYTES) { toast('error', 'Datei zu groß (max. 200 KB)'); return; }
-    if (!ALLOWED_MIME.includes(file.type)) { toast('error', 'Nur PNG oder JPEG'); return; }
+    if (file.size > MAX_BYTES) {
+        toast('error', `Datei zu groß: ${(file.size/1024/1024).toFixed(2)} MB (max. 5 MB)`, 4000); return;
+    }
+    if (!ALLOWED_MIME.includes(file.type)) {
+        toast('error', `Format "${file.type || 'unbekannt'}" nicht unterstützt — nur PNG, JPG oder SVG`, 4000); return;
+    }
 
     _uploadingType = type;
     toast('info', 'Lade ' + type + ' hoch…', 8000);
 
-    const ext = file.type === 'image/jpeg' ? 'jpg' : 'png';
+    const ext = MIME_TO_EXT[file.type] || 'png';
     const path = `${_user.id}/${type}.${ext}`;
 
     // Old-File entfernen (idempotent — RLS erlaubt Delete eigener Files)
@@ -185,6 +194,46 @@ async function handleUpload(type, file) {
     await refreshImagePreview(type, path);
     toast('success', type.charAt(0).toUpperCase() + type.slice(1) + ' gespeichert');
     _uploadingType = null;
+}
+
+// ─── Drag & Drop ───────────────────────────────────────────────
+// K-UI/X1: jede Upload-Card wird zur Drop-Zone — Datei reinziehen ODER
+// File-Picker. Visual Feedback: Border-Highlight beim dragover.
+function bindDropZone(type) {
+    // Wir nehmen die ganze .upload-card als Drop-Zone (Preview + Actions)
+    const previewEl = $('prev-' + type);
+    if (!previewEl) return;
+    const card = previewEl.closest('.upload-card');
+    if (!card) return;
+
+    const onDragEnter = (e) => {
+        e.preventDefault(); e.stopPropagation();
+        if (_uploadingType) return;
+        card.classList.add('drag-over');
+    };
+    const onDragLeave = (e) => {
+        e.preventDefault(); e.stopPropagation();
+        // Nur wenn wirklich aus dem Element raus (relatedTarget noch innerhalb? -> ignore)
+        if (e.relatedTarget && card.contains(e.relatedTarget)) return;
+        card.classList.remove('drag-over');
+    };
+    const onDragOver = (e) => {
+        e.preventDefault(); e.stopPropagation();
+        e.dataTransfer.dropEffect = 'copy';
+    };
+    const onDrop = (e) => {
+        e.preventDefault(); e.stopPropagation();
+        card.classList.remove('drag-over');
+        if (_uploadingType) { toast('info', 'Bitte aktuellen Upload abwarten'); return; }
+        const file = e.dataTransfer?.files?.[0];
+        if (!file) return;
+        handleUpload(type, file);
+    };
+
+    card.addEventListener('dragenter', onDragEnter);
+    card.addEventListener('dragleave', onDragLeave);
+    card.addEventListener('dragover',  onDragOver);
+    card.addEventListener('drop',      onDrop);
 }
 
 async function handleDelete(type) {
@@ -283,6 +332,11 @@ async function init() {
     $('file-logo').addEventListener('change',         (e) => handleUpload('logo', e.target.files[0]));
     $('file-stempel').addEventListener('change',      (e) => handleUpload('stempel', e.target.files[0]));
     $('file-unterschrift').addEventListener('change', (e) => handleUpload('unterschrift', e.target.files[0]));
+
+    // Drag&Drop fuer alle 3 Bild-Felder (K-UI/X1)
+    bindDropZone('logo');
+    bindDropZone('stempel');
+    bindDropZone('unterschrift');
 
     $('btn-del-logo').addEventListener('click',         () => handleDelete('logo'));
     $('btn-del-stempel').addEventListener('click',      () => handleDelete('stempel'));
