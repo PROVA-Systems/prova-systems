@@ -430,6 +430,33 @@ a{text-decoration:none;color:inherit;}button,input,select,textarea{font-family:i
             </div>
           </div>
 
+          <!-- ── K-UI/Item 4: BRIEF-SCHNELL-BUTTONS ── -->
+          <!-- Pure HTML, keine Supabase-Abh. (akte.html laeuft im Hybrid-Auth) -->
+          <!-- Redirect zu briefe.html?template=KEY&auftrag=AZ → Pre-Select dort -->
+          <div class="info-card">
+            <div class="info-card-title">Brief erstellen</div>
+            <div id="brief-quick-buttons" style="display:flex;flex-direction:column;gap:6px;">
+              <a href="#" data-tpl="auftragsbestaetigung" class="brief-quick-btn" style="padding:7px 10px;background:rgba(59,130,246,0.10);border:1px solid rgba(59,130,246,0.25);border-radius:6px;color:var(--text);font-size:12px;font-weight:500;display:flex;align-items:center;gap:8px;cursor:pointer;">✅ <span>Auftragsbestätigung</span></a>
+              <a href="#" data-tpl="termin-ag" class="brief-quick-btn" style="padding:7px 10px;background:rgba(59,130,246,0.10);border:1px solid rgba(59,130,246,0.25);border-radius:6px;color:var(--text);font-size:12px;font-weight:500;display:flex;align-items:center;gap:8px;cursor:pointer;">📅 <span>Terminbestätigung</span></a>
+              <a href="#" data-tpl="anforderung-unterlagen" class="brief-quick-btn" style="padding:7px 10px;background:rgba(59,130,246,0.10);border:1px solid rgba(59,130,246,0.25);border-radius:6px;color:var(--text);font-size:12px;font-weight:500;display:flex;align-items:center;gap:8px;cursor:pointer;">📄 <span>Unterlagen anfordern</span></a>
+              <a href="#" data-tpl="uebergabe-gutachten" class="brief-quick-btn" style="padding:7px 10px;background:rgba(59,130,246,0.10);border:1px solid rgba(59,130,246,0.25);border-radius:6px;color:var(--text);font-size:12px;font-weight:500;display:flex;align-items:center;gap:8px;cursor:pointer;">📦 <span>Gutachten übergeben</span></a>
+              <a href="#" data-tpl="mahnung-1" class="brief-quick-btn" style="padding:7px 10px;background:rgba(245,158,11,0.10);border:1px solid rgba(245,158,11,0.25);border-radius:6px;color:var(--text);font-size:12px;font-weight:500;display:flex;align-items:center;gap:8px;cursor:pointer;">💸 <span>Mahnung (1. Stufe)</span></a>
+              <a href="briefe.html" style="padding:6px 10px;color:var(--text3);font-size:11px;text-align:center;text-decoration:underline;margin-top:4px;">Alle 11 Vorlagen ansehen →</a>
+            </div>
+          </div>
+          <script>
+          (function(){
+            // Inject AZ aus URL in alle Quick-Buttons -> briefe.html?template=KEY&auftrag=AZ
+            var az = new URLSearchParams(window.location.search).get('az') || '';
+            document.querySelectorAll('#brief-quick-buttons .brief-quick-btn').forEach(function(a){
+              var tpl = a.dataset.tpl;
+              var url = 'briefe.html?template=' + encodeURIComponent(tpl);
+              if (az) url += '&auftrag=' + encodeURIComponent(az);
+              a.href = url;
+            });
+          })();
+          </script>
+
           <!-- FRISTEN & TERMINE -->
           <div class="info-card">
             <div class="info-card-title">Fristen & Termine</div>
