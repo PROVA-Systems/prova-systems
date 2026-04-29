@@ -214,11 +214,15 @@ input, select, textarea { font-size: max(16px, 1em); }
         <div>
           <label class="form-label" for="k-typ">Typ</label>
           <select class="form-select" id="k-typ">
-            <option value="person">Person</option>
-            <option value="firma">Firma</option>
+            <option value="privat">Privatperson</option>
+            <option value="firma">Firma / Bauunternehmen</option>
+            <option value="anwalt">Anwalt</option>
+            <option value="versicherung">Versicherung</option>
             <option value="gericht">Gericht</option>
             <option value="behoerde">Behörde</option>
-            <option value="versicherung">Versicherung</option>
+            <option value="handwerker">Handwerker</option>
+            <option value="sv_kollege">SV-Kollege</option>
+            <option value="sonstiges">Sonstiges</option>
           </select>
         </div>
         <div>
@@ -232,29 +236,89 @@ input, select, textarea { font-size: max(16px, 1em); }
         </div>
       </div>
 
-      <div class="form-grid" id="grp-person">
+      <!-- Person-Felder (bei Privat/Anwalt-Ansprechpartner immer; bei Firma/Behörde optional als Ansprechpartner) -->
+      <div class="form-grid" data-section="person">
         <div><label class="form-label" for="k-titel">Titel</label><input type="text" id="k-titel" class="form-input" placeholder="Dr."></div>
         <div><label class="form-label" for="k-vorname">Vorname</label><input type="text" id="k-vorname" class="form-input"></div>
       </div>
-      <div class="form-grid" id="grp-person-2">
-        <div class="form-grid single" style="margin:0;"><div><label class="form-label" for="k-nachname">Nachname</label><input type="text" id="k-nachname" class="form-input"></div></div>
-        <div class="form-grid single" style="margin:0;"><div><label class="form-label" for="k-firma">Firma / Behörde</label><input type="text" id="k-firma" class="form-input" placeholder="optional"></div></div>
+      <div class="form-grid" data-section="person">
+        <div><label class="form-label" for="k-nachname">Nachname</label><input type="text" id="k-nachname" class="form-input"></div>
+        <div></div>
       </div>
 
+      <!-- Firma-Felder (bei firma/anwalt/versicherung/gericht/behoerde/handwerker/sv_kollege Pflicht) -->
+      <div class="form-grid" data-section="firma" style="display:none;">
+        <div><label class="form-label" for="k-firma">Firma / Institution <span style="color:var(--danger);">*</span></label><input type="text" id="k-firma" class="form-input" placeholder="z. B. Müller GmbH"></div>
+        <div><label class="form-label" for="k-abteilung">Abteilung</label><input type="text" id="k-abteilung" class="form-input" placeholder="z. B. Schadenregulierung"></div>
+      </div>
+
+      <!-- Conditional: Anwalt -->
+      <div class="form-grid single" data-section="anwalt" style="display:none;">
+        <div><label class="form-label" for="k-kanzlei">Kanzlei <span style="color:var(--danger);">*</span></label><input type="text" id="k-kanzlei" class="form-input" placeholder="z. B. Müller &amp; Partner Rechtsanwälte"></div>
+      </div>
+
+      <!-- Conditional: Versicherung -->
+      <div class="form-grid" data-section="versicherung" style="display:none;">
+        <div><label class="form-label" for="k-versicherungs-nr">Versicherungs-Nr. <span style="color:var(--danger);">*</span></label><input type="text" id="k-versicherungs-nr" class="form-input" placeholder="z. B. HUK-2026/12345"></div>
+        <div><label class="form-label" for="k-schaden-nr">Schaden-Nr. <span style="color:var(--danger);">*</span></label><input type="text" id="k-schaden-nr" class="form-input" placeholder="z. B. SCH-2026-0042"></div>
+      </div>
+
+      <!-- Conditional: Gericht / Behörde -->
+      <div class="form-grid single" data-section="gericht-behoerde" style="display:none;">
+        <div><label class="form-label" for="k-behoerden-az">Behörden-/Geschäftszeichen <span style="color:var(--danger);">*</span></label><input type="text" id="k-behoerden-az" class="form-input" placeholder="z. B. 12 OH 34/26"></div>
+      </div>
+
+      <!-- Adresse (DIN 5008) -->
+      <div class="form-grid" style="grid-template-columns: 7fr 2fr 1fr;">
+        <div><label class="form-label" for="k-strasse">Straße</label><input type="text" id="k-strasse" class="form-input" placeholder="Musterstraße"></div>
+        <div><label class="form-label" for="k-hausnr">Nr.</label><input type="text" id="k-hausnr" class="form-input" placeholder="12a"></div>
+        <div><label class="form-label" for="k-zusatz">Zusatz</label><input type="text" id="k-zusatz" class="form-input" placeholder="2. OG"></div>
+      </div>
+      <div class="form-grid">
+        <div class="form-grid" style="margin:0; grid-template-columns: 90px 1fr;">
+          <div><label class="form-label" for="k-plz">PLZ</label><input type="text" id="k-plz" class="form-input" maxlength="10"></div>
+          <div><label class="form-label" for="k-ort">Ort</label><input type="text" id="k-ort" class="form-input"></div>
+        </div>
+        <div><label class="form-label" for="k-land">Land</label><input type="text" id="k-land" class="form-input" value="DE" maxlength="2" style="text-transform:uppercase;"></div>
+      </div>
+
+      <!-- Kommunikation -->
       <div class="form-grid">
         <div><label class="form-label" for="k-email">E-Mail</label><input type="email" id="k-email" class="form-input"></div>
         <div><label class="form-label" for="k-telefon">Telefon</label><input type="tel" id="k-telefon" class="form-input"></div>
       </div>
       <div class="form-grid">
         <div><label class="form-label" for="k-mobil">Mobil</label><input type="tel" id="k-mobil" class="form-input"></div>
-        <div><label class="form-label" for="k-anschrift">Anschrift</label><input type="text" id="k-anschrift" class="form-input" placeholder="Straße, Nr."></div>
-      </div>
-      <div class="form-grid">
-        <div><label class="form-label" for="k-plz">PLZ</label><input type="text" id="k-plz" class="form-input" maxlength="10"></div>
-        <div><label class="form-label" for="k-ort">Ort</label><input type="text" id="k-ort" class="form-input"></div>
-      </div>
-      <div class="form-grid single">
         <div><label class="form-label" for="k-tags">Tags (kommagetrennt)</label><input type="text" id="k-tags" class="form-input" placeholder="z. B. Auftraggeber, VIP"></div>
+      </div>
+
+      <!-- Mehr-Felder-Toggle -->
+      <button type="button" id="toggle-mehr-felder" class="btn-secondary" style="width:100%; margin-top:6px;">
+        <span id="toggle-mehr-felder-icon">▾</span> Weitere Felder (Email-2, Fax, Website, Steuer, Bank, Notizen)
+      </button>
+
+      <div id="mehr-felder" style="display:none; margin-top:12px;">
+        <div class="form-grid">
+          <div><label class="form-label" for="k-email-2">E-Mail (zweite)</label><input type="email" id="k-email-2" class="form-input"></div>
+          <div><label class="form-label" for="k-fax">Fax</label><input type="tel" id="k-fax" class="form-input"></div>
+        </div>
+        <div class="form-grid single">
+          <div><label class="form-label" for="k-website">Website</label><input type="url" id="k-website" class="form-input" placeholder="https://"></div>
+        </div>
+
+        <!-- Steuer + Bank: nur bei Firma/Bauunternehmen relevant, aber nicht enforced -->
+        <div class="form-grid">
+          <div><label class="form-label" for="k-ust-id">USt-IdNr.</label><input type="text" id="k-ust-id" class="form-input" placeholder="DE123456789"></div>
+          <div><label class="form-label" for="k-steuernummer">Steuernummer</label><input type="text" id="k-steuernummer" class="form-input"></div>
+        </div>
+        <div class="form-grid">
+          <div><label class="form-label" for="k-iban">IBAN</label><input type="text" id="k-iban" class="form-input" style="font-family:'JetBrains Mono', monospace;"></div>
+          <div><label class="form-label" for="k-bic">BIC</label><input type="text" id="k-bic" class="form-input" style="font-family:'JetBrains Mono', monospace;"></div>
+        </div>
+
+        <div class="form-grid single">
+          <div><label class="form-label" for="k-notizen">Notizen</label><textarea id="k-notizen" class="form-input" rows="3" style="resize:vertical;"></textarea></div>
+        </div>
       </div>
     </div>
     <div class="modal-footer">
