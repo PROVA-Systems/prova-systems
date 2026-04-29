@@ -1646,13 +1646,47 @@ window.provaSbLogout = function() {
   'use strict';
 
   /* ─── DEVICE DETECTION ─── */
-  var isMobile  = window.matchMedia('(max-width: 768px)').matches;
-  var isTablet  = window.matchMedia('(min-width: 769px) and (max-width: 1024px)').matches;
+  var mqMobile  = window.matchMedia('(max-width: 768px)');
+  var mqTablet  = window.matchMedia('(min-width: 769px) and (max-width: 1099px)');
+  var isMobile  = mqMobile.matches;
+  var isTablet  = mqTablet.matches;
   var isIOS     = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
   var isAndroid = /Android/.test(navigator.userAgent);
 
   // Globale Flags
   window.PROVA_DEVICE = { isMobile: isMobile, isTablet: isTablet, isIOS: isIOS, isAndroid: isAndroid };
+
+  /* K-FIX: Sidebar-Layout-Bug 768-1100px (Memory #19)
+     Bisher: Layout-Switch nur bei Page-Load (matchMedia.matches einmalig).
+     Jetzt: Listener auf change-Events, PROVA_DEVICE-Flags + body-Class
+     update bei Resize. Verhindert dass User mit Resize zwischen
+     Tablet/Desktop landet ohne Layout-Re-Render. */
+  function onBreakpointChange() {
+    var prevMobile = window.PROVA_DEVICE.isMobile;
+    var prevTablet = window.PROVA_DEVICE.isTablet;
+    window.PROVA_DEVICE.isMobile = mqMobile.matches;
+    window.PROVA_DEVICE.isTablet = mqTablet.matches;
+    isMobile = mqMobile.matches;
+    isTablet = mqTablet.matches;
+    if (prevMobile !== isMobile || prevTablet !== isTablet) {
+      document.body.classList.toggle('prova-mobile', isMobile);
+      document.body.classList.toggle('prova-tablet', isTablet);
+      document.body.classList.toggle('prova-desktop', !isMobile && !isTablet);
+      // Custom Event fuer Pages die auf Layout-Change reagieren wollen
+      try { window.dispatchEvent(new CustomEvent('prova:breakpoint-change', { detail: window.PROVA_DEVICE })); } catch (e) {}
+    }
+  }
+  // matchMedia change-Listener (modern + legacy fallback)
+  if (mqMobile.addEventListener) mqMobile.addEventListener('change', onBreakpointChange);
+  else if (mqMobile.addListener) mqMobile.addListener(onBreakpointChange);
+  if (mqTablet.addEventListener) mqTablet.addEventListener('change', onBreakpointChange);
+  else if (mqTablet.addListener) mqTablet.addListener(onBreakpointChange);
+  // Initial-Sync der body-Classes
+  try {
+    document.body.classList.toggle('prova-mobile', isMobile);
+    document.body.classList.toggle('prova-tablet', isTablet);
+    document.body.classList.toggle('prova-desktop', !isMobile && !isTablet);
+  } catch (e) {}
 
   /* ─── iOS SAFE AREA ─── */
   if (isIOS) {

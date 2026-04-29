@@ -111,13 +111,16 @@
     if (!el && targets.length) el = targets[0];
     if (!el) { showStep(idx + 1); return; } // Element nicht gefunden → nächster Schritt
 
-    // Highlight positionieren
+    // Highlight positionieren (K-FIX: defensive Null-Checks)
+    if (!el || typeof el.getBoundingClientRect !== 'function') { showStep(idx + 1); return; }
     var rect = el.getBoundingClientRect();
     var pad = 6;
-    highlightEl.style.top = (rect.top - pad) + 'px';
-    highlightEl.style.left = (rect.left - pad) + 'px';
-    highlightEl.style.width = (rect.width + pad * 2) + 'px';
-    highlightEl.style.height = (rect.height + pad * 2) + 'px';
+    if (highlightEl && highlightEl.style) {
+      highlightEl.style.top = (rect.top - pad) + 'px';
+      highlightEl.style.left = (rect.left - pad) + 'px';
+      highlightEl.style.width = (rect.width + pad * 2) + 'px';
+      highlightEl.style.height = (rect.height + pad * 2) + 'px';
+    }
 
     // Tooltip Inhalt
     var dots = '';
