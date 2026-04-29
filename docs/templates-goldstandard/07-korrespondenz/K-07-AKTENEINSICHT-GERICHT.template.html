@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>Antrag Akteneinsicht {{ az_sv }}</title>
+<style>
+@page { size: A4; margin: 0; }
+html, body { margin: 0; padding: 0; font-family: 'Inter', -apple-system, sans-serif; font-size: 10.5pt; line-height: 1.55; color: #1a1f2e; }
+.page { width: 210mm; min-height: 297mm; padding: 0; background: #fff; position: relative; }
+.briefkopf { padding: 20mm 20mm 4mm 20mm; border-bottom: 0.5pt solid #cbd5e1; }
+.briefkopf-zeile { display: flex; justify-content: space-between; }
+.briefkopf-sv-name { font-size: 14pt; font-weight: 700; color: #1a3a6b; }
+.briefkopf-sv-untertitel { font-size: 9pt; color: #64748b; margin-top: 1mm; }
+.briefkopf-kontakt { font-size: 8.5pt; color: #64748b; text-align: right; line-height: 1.5; }
+.absender-mini { margin: 5mm 20mm 0 20mm; font-size: 7pt; color: #94a3b8; border-bottom: 0.3pt solid #cbd5e1; padding-bottom: 1mm; }
+.adressfeld { margin: 3mm 20mm 0 20mm; width: 85mm; min-height: 35mm; font-size: 11pt; }
+.adressfeld-name { font-weight: 600; }
+.bezugszeile { position: absolute; top: 70mm; right: 20mm; width: 70mm; font-size: 9pt; }
+.bezugszeile-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5mm 4mm; }
+.bezugszeile-label { color: #64748b; font-size: 7.5pt; text-transform: uppercase; letter-spacing: 0.04em; }
+.bezugszeile-wert { font-weight: 500; font-family: 'JetBrains Mono', monospace; font-size: 9pt; }
+.betreff { margin: 25mm 20mm 0 20mm; font-size: 12pt; font-weight: 700; color: #1a3a6b; }
+.anrede { margin: 8mm 20mm 0 20mm; }
+.brieftext { margin: 4mm 20mm 0 20mm; text-align: justify; }
+.brieftext p { margin: 0 0 3mm 0; }
+.brieftext h3 { font-size: 10.5pt; font-weight: 600; color: #1a3a6b; margin: 4mm 0 2mm 0; }
+.gruss { margin: 6mm 20mm 0 20mm; }
+.signatur-block { margin: 12mm 20mm 0 20mm; }
+.unterschrift-img, .stempel-img { display: block; }
+.sv-name { font-weight: 600; font-size: 11pt; color: #1a3a6b; }
+.sv-titel { font-size: 9pt; color: #64748b; margin-top: 2px; }
+.pflichtangaben { margin: 12mm 20mm 8mm 20mm; padding-top: 4mm; border-top: 1pt solid #cbd5e1; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5mm; font-size: 7.5pt; color: #64748b; }
+.pflichtangaben-titel { font-weight: 700; color: #1a3a6b; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 1mm; }
+</style>
+</head>
+<body>
+
+<div class="page">
+  <div class="briefkopf">
+    <div class="briefkopf-zeile">
+      <div>
+        <div class="briefkopf-sv-name">{{ sv_titel | default: '' }} {{ sv_name }}</div>
+        <div class="briefkopf-sv-untertitel">{{ sv_qualifikation }}{% if sv_sachgebiet %} · {{ sv_sachgebiet }}{% endif %}</div>
+      </div>
+      <div class="briefkopf-kontakt">{{ sv_strasse }}<br>{{ sv_plz }} {{ sv_ort }}<br>Tel. {{ sv_telefon }}<br>{{ sv_email }}</div>
+    </div>
+  </div>
+
+  <div class="absender-mini">{{ sv_name }} · {{ sv_strasse }} · {{ sv_plz }} {{ sv_ort }}</div>
+
+  <div class="adressfeld">
+    <div class="adressfeld-name">An das {{ gericht_name }}</div>
+    <div>— Geschäftsstelle —</div>
+    <div>{{ gericht_adresse }}</div>
+  </div>
+
+  <div class="bezugszeile">
+    <div class="bezugszeile-grid">
+      <div><div class="bezugszeile-label">Geschäftszeichen Gericht</div><div class="bezugszeile-wert">{{ az_gericht }}</div></div>
+      <div><div class="bezugszeile-label">SV-Aktenzeichen</div><div class="bezugszeile-wert">{{ az_sv }}</div></div>
+      <div><div class="bezugszeile-label">Datum</div><div class="bezugszeile-wert">{{ datum }}</div></div>
+    </div>
+  </div>
+
+  <div class="betreff">Antrag auf Akteneinsicht (§ 299 ZPO) — Verfahren {{ az_gericht }}</div>
+
+  <div class="anrede">Sehr geehrte Damen und Herren,</div>
+
+  <div class="brieftext">
+    <p>im o. g. Verfahren wurde ich mit Beweisbeschluss vom {{ beweisbeschluss_datum }} zum gerichtlichen Sachverständigen bestellt. Zur ordnungsgemäßen Erstellung des Gutachtens beantrage ich hiermit Akteneinsicht in den vollständigen Verfahrensakte.</p>
+
+    <h3>Zweck der Einsicht</h3>
+    <p>{{ einsichtsgrund }}</p>
+
+    <h3>Dauer und Modalität</h3>
+    <p>Ich bitte um Übersendung der Akte oder Bereitstellung in elektronischer Form (beA-Postfach: {{ bea_postfach | default: 'auf Anfrage' }}). Voraussichtlicher Rückgabe-Zeitraum: <strong>{{ rueckgabe_zeitraum }}</strong>. Eine Vollmacht-Erweiterung ist bei meiner Bestellung enthalten.</p>
+
+    <p>Sollten Teile der Akte nach §§ 299a, 299b ZPO oder anderweitig schutzwürdig nicht zugänglich sein, bitte ich um entsprechenden Vermerk im Begleitschreiben.</p>
+
+    <p>Vielen Dank für Ihre zeitnahe Bearbeitung.</p>
+  </div>
+
+  <div class="gruss">Mit freundlichen Grüßen</div>
+
+  <div class="signatur-block">
+    {% if sv_unterschrift_url %}<img src="{{ sv_unterschrift_url }}" alt="Unterschrift" class="unterschrift-img" style="max-height: 50px; margin-bottom: 4px;" />{% endif %}
+    <div class="sv-name">{{ sv_name }}</div>
+    <div class="sv-titel">{{ sv_qualifikation | default: 'Gerichtlich bestellter Sachverständiger' }}</div>
+    {% if sv_stempel_url %}<img src="{{ sv_stempel_url }}" alt="Stempel" class="stempel-img" style="max-height: 90px; margin-top: 16px; opacity: 0.92;" />{% endif %}
+  </div>
+
+  <div class="pflichtangaben">
+    <div><div class="pflichtangaben-titel">Sachverständiger</div><div>{{ sv_name }}</div><div>{{ sv_qualifikation }}</div></div>
+    <div><div class="pflichtangaben-titel">Bestellung</div>{% if sv_bestellungsstelle %}<div>{{ sv_bestellungsstelle }}</div>{% endif %}</div>
+    <div><div class="pflichtangaben-titel">Steuer</div>{% if sv_ust_id %}<div>USt-IdNr: {{ sv_ust_id }}</div>{% endif %}</div>
+  </div>
+</div>
+</body>
+</html>
