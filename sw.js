@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v234';   // K-1.5 Cutover-Vorb (Supabase-Lib im APP_SHELL)
+const CACHE_VERSION = 'prova-v237';   // K-FIX: 9 Korrespondenz-Templates + brief-generate + letterhead
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
