@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v238';   // K-UI: Profil-Briefkopf + Kontakte + Briefe-Page (Items 1-3)
+const CACHE_VERSION = 'prova-v239';   // K-UI/X1: briefe-logic CSP-Fix + briefe-Helper in data-store
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
