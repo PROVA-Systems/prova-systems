@@ -1,15 +1,22 @@
 /* ════════════════════════════════════════════════════════════════════
    PROVA — kontakte-supabase-logic.js (ESM)
    Sprint K-UI Item 2 — Kontakte-Page (CRUD)
-   K-UI/X2 Refactor: Schema-Match — adresse_strasse + nr + zusatz statt
-   anschrift; Conditional-Felder pro typ (kanzlei/versicherungs_nr/...).
 
-   Liest/schreibt:
-     - kontakte-Tabelle (workspace-scoped via RLS, Schema 02_*.sql)
-     - Soft-Delete via deleted_at-Timestamp
+   K-UI/X2-Korr (Marcel-Direktive): Kontakte-Tabelle ist STAMMDATEN-
+   Adressbuch. Vorgangsdaten (Schadennummer, Versicherungs-Nr,
+   Behoerden-Az) gehoeren in den Auftrag (Sprint 06b Conditional
+   Forms im Auftrags-Wizard), NICHT in den Kontakt.
+
+   Beispiel: "Allianz Versicherung AG" ist EIN Kontakt — kommt fuer
+   viele Auftraege als Auftraggeber vor, jeder hat andere Schaden-Nr.
+
+   Schema-Map: Frontend ↔ DB
+     - 1 UI-Feld "Strasse / Nr / Zusatz" -> 3 DB-Spalten
+       (adresse_strasse, adresse_nr, adresse_zusatz)
+     - "Firma / Institution"-Label switcht zu "Kanzlei" bei typ=anwalt
+       — Daten gehen aber in dieselbe firma-DB-Spalte (kanzlei ≡ firma)
 
    Pattern: ESM, lib/auth-guard, lib/data-store.kontakte
-   Modal: Create + Edit, Liste mit Suche + Typ-Filter, Conditional Sections
 ═══════════════════════════════════════════════════════════════════════ */
 
 import { kontakte as kontakteStore } from '/lib/data-store.js';
@@ -19,10 +26,11 @@ const $ = (id) => document.getElementById(id);
 
 // ─── Typ-Klassifikation (mirror DB-ENUM kontakt_typ) ────────
 // Welche Sections fuer welchen typ:
-//   'firma' visible: alle ausser privat (firma-Pflicht)
-//   'anwalt' visible: typ='anwalt' (kanzlei-Pflicht)
-//   'versicherung' visible: typ='versicherung' (vers/schaden-Pflicht)
-//   'gericht-behoerde' visible: typ in {gericht,behoerde} (behoerden_az-Pflicht)
+//   'firma' visible: alle ausser privat — firma-Pflicht (Label switcht
+//                    zu "Kanzlei" bei typ=anwalt)
+//   'vorgangshinweis' visible: typ in {versicherung,gericht,behoerde}
+//                    — informativer Hinweis dass Schaden-Nr/Az im
+//                      Auftrag, nicht hier
 const TYPS_MIT_FIRMA = new Set(['firma','anwalt','versicherung','gericht','behoerde','handwerker','sv_kollege']);
 
 let _currentList = [];
@@ -63,10 +71,10 @@ function buildAdresseLine(k) {
 }
 
 function buildSubInfo(k) {
-    // Typ-spezifische Zweitzeile
-    if (k.typ === 'versicherung' && k.versicherungs_nr) return `Vers-Nr: ${k.versicherungs_nr}`;
-    if (k.typ === 'anwalt' && k.kanzlei) return k.kanzlei;
-    if ((k.typ === 'gericht' || k.typ === 'behoerde') && k.behoerden_az) return `Az: ${k.behoerden_az}`;
+    // K-UI/X2-Korrektur (Marcel): Stammdaten zeigen keine Vorgangsdaten an.
+    // Schadennummer / Vers-Nr / Behoerden-Az sind Auftragsdaten, nicht Kontakt.
+    // Sub-Info nur fuer abteilung (informativ, nicht typ-spezifisch).
+    if (k.abteilung) return k.abteilung;
     return '';
 }
 
@@ -90,15 +98,28 @@ function updateConditionalSections() {
         const section = el.dataset.section;
         let show = false;
         switch (section) {
-            case 'person':            show = true; break;  // immer (Ansprechpartner-Felder)
-            case 'firma':             show = TYPS_MIT_FIRMA.has(typ); break;
-            case 'anwalt':            show = typ === 'anwalt'; break;
-            case 'versicherung':      show = typ === 'versicherung'; break;
-            case 'gericht-behoerde':  show = typ === 'gericht' || typ === 'behoerde'; break;
-            default:                  show = true;
+            case 'person':           show = true; break;  // immer (Ansprechpartner-Felder)
+            case 'firma':            show = TYPS_MIT_FIRMA.has(typ); break;
+            case 'vorgangshinweis':  show = (typ === 'versicherung' || typ === 'gericht' || typ === 'behoerde');
+                                     break;
+            default:                 show = true;
         }
         el.style.display = show ? '' : 'none';
     });
+
+    // K-UI/X2-Korr (Marcel): firma-Label dynamisch — bei Anwalt heisst's "Kanzlei",
+    // sonst "Firma / Institution". Daten gehen in dieselbe DB-Spalte (firma).
+    const firmaLabel = $('k-firma-label');
+    if (firmaLabel) {
+        const text = (typ === 'anwalt') ? 'Kanzlei' : 'Firma / Institution';
+        firmaLabel.innerHTML = `${text} <span style="color:var(--danger);">*</span>`;
+    }
+    const firmaInput = $('k-firma');
+    if (firmaInput) {
+        firmaInput.placeholder = (typ === 'anwalt')
+            ? 'z. B. Müller & Partner Rechtsanwälte'
+            : 'z. B. Müller GmbH';
+    }
 }
 
 function toggleMehrFelder() {
@@ -178,7 +199,6 @@ async function loadList() {
 // ─── Modal: Reset / Open / Close ────────────────────────────
 const RESET_FIELDS = [
     'k-titel','k-vorname','k-nachname','k-firma','k-abteilung',
-    'k-kanzlei','k-versicherungs-nr','k-schaden-nr','k-behoerden-az',
     'k-strasse','k-hausnr','k-zusatz','k-plz','k-ort',
     'k-email','k-telefon','k-mobil','k-tags',
     'k-email-2','k-fax','k-website',
@@ -217,11 +237,9 @@ function openEdit(id) {
     setVal('k-firma',         k.firma || '');
     setVal('k-abteilung',     k.abteilung || '');
 
-    // Conditional
-    setVal('k-kanzlei',          k.kanzlei || '');
-    setVal('k-versicherungs-nr', k.versicherungs_nr || '');
-    setVal('k-schaden-nr',       k.schaden_nr || '');
-    setVal('k-behoerden-az',     k.behoerden_az || '');
+    // K-UI/X2-Korr: kanzlei/versicherungs_nr/schaden_nr/behoerden_az
+    // sind Vorgangsdaten — werden hier nicht angezeigt. Pre-X2-Daten in
+    // diesen Spalten bleiben in der DB unangetastet.
 
     // Adresse (3 Felder)
     setVal('k-strasse', k.adresse_strasse || '');
@@ -310,13 +328,10 @@ function readModal() {
         iban:         getVal('k-iban')         || null,
         bic:          getVal('k-bic')          || null,
 
-        // Conditional (typ-spezifisch — werden trotzdem mitgesendet,
-        // null wenn nicht relevant; Spalten sind nullable)
-        kanzlei:          (typ === 'anwalt')         ? (getVal('k-kanzlei') || null)        : null,
-        versicherungs_nr: (typ === 'versicherung')   ? (getVal('k-versicherungs-nr') || null) : null,
-        schaden_nr:       (typ === 'versicherung')   ? (getVal('k-schaden-nr') || null)     : null,
-        behoerden_az:     (typ === 'gericht' || typ === 'behoerde')
-                              ? (getVal('k-behoerden-az') || null) : null,
+        // K-UI/X2-Korr: Vorgangsdaten (kanzlei/versicherungs_nr/schaden_nr/
+        // behoerden_az) werden NICHT mitgesendet. DB-Spalten bleiben
+        // unangetastet — bestehende Werte ueberleben Update durch
+        // Supabase Partial-Update-Semantik (nur explizit gesetzte Felder).
 
         // Notizen + Tags
         notizen: getVal('k-notizen') || null,
@@ -327,20 +342,20 @@ function readModal() {
 }
 
 function validatePayload(p) {
-    // Pflichtfeld pro typ
+    // K-UI/X2-Korr: nur Stammdaten-Pflichtfelder. Vorgangsdaten
+    // (kanzlei/vers_nr/schaden_nr/behoerden_az) sind in Sprint 06b
+    // im Auftrags-Wizard zu validieren.
     if (p.typ === 'privat') {
         if (!p.vorname && !p.nachname) {
             return 'Bei Privatperson: Vorname oder Nachname Pflicht.';
         }
     } else {
-        // alle anderen Typen: firma Pflicht
-        if (!p.firma) return `Bei Typ "${p.typ}": Firma/Institution ist Pflicht.`;
-    }
-    if (p.typ === 'anwalt'        && !p.kanzlei)          return 'Bei Anwalt: Kanzlei ist Pflicht.';
-    if (p.typ === 'versicherung'  && !p.versicherungs_nr) return 'Bei Versicherung: Versicherungs-Nr. ist Pflicht.';
-    if (p.typ === 'versicherung'  && !p.schaden_nr)       return 'Bei Versicherung: Schaden-Nr. ist Pflicht.';
-    if ((p.typ === 'gericht' || p.typ === 'behoerde') && !p.behoerden_az) {
-        return 'Bei Gericht/Behörde: Behörden-/Geschäftszeichen ist Pflicht.';
+        // alle anderen Typen: firma Pflicht (bei Anwalt heisst's "Kanzlei",
+        // gleiche DB-Spalte — Marcel-Korrektur "kanzlei ≡ firma fuer Anwaelte")
+        if (!p.firma) {
+            const label = (p.typ === 'anwalt') ? 'Kanzlei' : 'Firma/Institution';
+            return `Bei Typ "${p.typ}": ${label} ist Pflicht.`;
+        }
     }
     return null;
 }
