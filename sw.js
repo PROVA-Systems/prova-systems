@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v240';   // K-UI/X2: kontakte-Schema-Match (adresse_strasse/_nr/_zusatz + Conditional)
+const CACHE_VERSION = 'prova-v241';   // K-UI/X2-Korr: Vorgangsdaten raus aus Kontakt-Stammdaten
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
