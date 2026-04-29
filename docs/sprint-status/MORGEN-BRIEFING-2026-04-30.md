@@ -165,6 +165,129 @@ Erwarteter Aufwand A-D: ~4h. E (Rest) je Page ~15-30 min, ~8-12h.
   nutzen → falls ja, gleicher Service-Role-Patch wie X3/X4.
 - **alte Parallel-Pages deprecaten** nach Cutover: profil.html,
   kontakte.html, briefvorlagen.html, app-login.html.
-- **Workflow-Research-Sprint** (`docs/workflow-research/01-SCHADENSGUTACHTEN/`)
-  — von Marcel angefragt, ich hatte Pilot-erst-Pfad empfohlen, Antwort
-  noch offen.
+
+---
+
+# 🔍 Nacht-Audit + Sprint-06b-Foundation (v3 Nacht-Sprint, 30.04.)
+
+Marcel hat in der Nacht 5-6h autonomes Arbeiten freigegeben. Ergebnisse:
+
+## Audit-Branches (in main gemerged)
+
+### audit/cutover-page-inventory — `docs/sprint-status/CUTOVER-PAGE-INVENTORY.md`
+
+Klassifikation aller **129 Root-HTML + 47 Subfolder-HTML**:
+- **GREEN (Pure-Supabase):** 6 Pages
+- **RED (Netlify Identity):** 6 Pages
+- **YELLOW (Hybrid):** ~52 Pages
+- **GRAY (vermutlich tot):** ~95 Pages, in 7 Cluster gruppiert
+
+**Goldwert für Cutover Block 3:** Tier-A→E-Reihenfolge mit konkreten
+Page-Listen. Geschätzter Aufwand 9-12h für Tier A+B+C. Plus 50-90 Pages
+können nach Marcel-Review der GRAY-Cluster gelöscht werden.
+
+**Top-3 Befunde:**
+1. **akte.html ist top-Prio** — Brief-Workflow bricht aktuell darauf
+2. **kontakte.html + briefvorlagen.html** sind in nav.js neben den
+   neuen Supabase-Pages — **deprecaten** statt migrieren
+3. **Cluster 1 (Brief-Doppel-Pages):** 28 Root + 28 briefe/-Subfolder
+   sind durch K-UI/briefe.html ersetzbar — Cleanup-Sprint danach
+
+### audit/schema-gap-06b — `SCHEMA-GAP-AUDIT.md` + `PLANNED_06b_auftraege_extend.sql`
+
+Befund: **auftraege-Schema ist 90% bereit für Sprint 06b.** Migration
+minimal — nur 2 Spalten + 1 ENUM:
+- `auftraggeber_typ` ENUM (privatperson|versicherung|anwalt|gericht|behoerde|firma)
+- `auftraege.auftraggeber_kontakt_id` UUID FK auf kontakte
+- 2 Indexe + COMMENT-Doku für `details` und `objekt` JSONB
+
+**Marcel-TODO:** PLANNED-Migration reviewen, in versioniertes File
+umbenennen, im Dashboard SQL-Editor anwenden. Erst dann Sprint 06c
+Live-Save aktivieren.
+
+### feature/workflow-research-vorgangsdaten-korrektur
+
+PHASEN-FELDER.json v1.0 → v1.1: Phase 1 in **1A (Stammdaten)** + **1B
+(Vorgangsdaten)** gesplittet. Plus PFLICHTFELDER.md mit 6-Klassen-System
+(STAMM/VORGANG/BETEILIGTE/OBJEKT/BEFUND/GUTACHTEN). README.md mit
+Architektur-Prinzipien + Allianz-Beispiel.
+
+---
+
+## 🔧 Vorbereitete Code-Branches (Marcel-Review erforderlich, NICHT gemerged)
+
+### feature/data-store-auftraege-crud
+- `lib/data-store.auftraege.createDraft(data)` — Convenience-Wrapper
+  der status='entwurf' + phase_aktuell=1 setzt
+- `lib/data-store.auftraege.listDrafts()` — Wizard-Recovery (eigene Entwürfe)
+- additive only — keine Änderung bestehender Funktionen
+
+### feature/auftrags-schema-conditional
+- Neuer File `lib/auftrags-schema.js` (469 Zeilen)
+- Pure JS, JSDoc-annotiert, keine UI-Abhängigkeiten
+- Exports: AUFTRAGGEBER_TYPEN, SCHADENSARTEN, FELDER (60+ Field-Metadata)
+- Helpers: getRequiredFields, getOptionalFields, validateAuftragsPayload
+
+### feature/sprint-06b-auftrag-neu-skeleton
+**Hängt ab von den 2 vorigen Branches** (sind via merge enthalten — Marcel
+kann den Branch direkt browsen oder die 3 separat reviewen).
+
+- `auftrag-neu.html`: Pattern A, 4-Phasen-Stepper, sticky Action-Footer
+- `auftrag-neu-logic.js`: Field-Renderer, Phase-Renderer (1A/1B/2/3),
+  Auto-Save (1500ms LocalStorage), Phase-Validation, Stepper-Navigation
+- `nav.js`: COCKPIT-Eintrag "+ Neuer Auftrag" mit ➕-Icon
+- `sw.js`: APP_SHELL erweitert + v241 → v242
+
+**Skeleton — LocalStorage-Draft-only.** Live-Save in DB kommt in Sprint
+06c sobald PLANNED-Migration appliziert ist.
+
+---
+
+## 📋 Marcel-Morgen-Reihenfolge
+
+1. **MORGEN-BRIEFING lesen** (5 Min) — diese Datei
+2. **X4 deployen + testen** (10 Min) — `supabase functions deploy
+   pdf-generate --project-ref cngteblrbpwsyypexjrv` + Schadensgutachten-
+   Workflow durchspielen
+3. **Workflow-Research-Korrektur reviewen** (5 Min) —
+   `docs/workflow-research/` ist schon in main, nur Allianz-Beispiel-
+   Argumentation verifizieren
+4. **Cutover-Sprint K-1.5 starten** (3-4h) — mit
+   `CUTOVER-PAGE-INVENTORY.md` als Plan, **akte.html priorisiert**
+5. **Mittag: Sprint-06b Code-Branches reviewen** (30 Min)
+   - feature/data-store-auftraege-crud (klein, additive)
+   - feature/auftrags-schema-conditional (469-Z pure JS)
+   - feature/sprint-06b-auftrag-neu-skeleton (Skeleton mit den 2
+     vorigen via merge)
+   - Bei OK: alle 3 in main mergen
+6. **Nachmittag: Schema-Migration applizieren** (15 Min) —
+   PLANNED_06b → 20260501_06b umbenennen + Dashboard SQL-Editor
+7. **Abend: Sprint 06b Live-Save aktivieren** (30 Min) —
+   auftrag-neu-logic.js TODO durch `auftraege.createDraft()`-Calls
+   ersetzen, plus `kontakteStore.create()` für neue Kontakte in Phase 1A
+
+**Total: ~6-8h** für vollen Cutover + Sprint 06b live.
+
+---
+
+## Erwartetes Ergebnis am Tagesende (Marcel-Plan)
+
+- ✅ Cutover K-1.5 abgeschlossen (akte/app/dashboard + Tier B+C)
+- ✅ Old Pages deprecated (kontakte.html, briefvorlagen.html, app-login.html)
+- ✅ pdf-generate live mit X4-Patch
+- ✅ Sprint 06b Wizard live mit DB-Save
+- 🟡 Sprint 06c (Live-Save UX-Polish + Beteiligte-M:N) als Folge-Sprint übermorgen
+
+---
+
+## Branch-Übersicht (Stand Nacht-Ende)
+
+| Branch | Stand | Marcel-Aktion |
+|---|---|---|
+| `main` | X3 + X2 + X1 + K-UI + N1/N4/N5 gemerged | Foundation-Stand |
+| `nacht-n7-morgen-briefing` | dieses File (Update) | mergen erlaubt |
+| `hotfix-k-ui-x4-pdf-generate-rls` | 2 Commits | Deploy + Test → mergen |
+| `feature/data-store-auftraege-crud` | createDraft+listDrafts | reviewen → mergen |
+| `feature/auftrags-schema-conditional` | 469 Z pure JS | reviewen → mergen |
+| `feature/sprint-06b-auftrag-neu-skeleton` | Wizard-Skeleton, 2 Branches via merge enthalten | reviewen → mergen |
+| `sprint-k-1-5-cutover` | Block 1 (auth-guard) | rebase auf main, dann Block 2-7 |
