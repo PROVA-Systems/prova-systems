@@ -336,7 +336,9 @@
         iconBg: 'rgba(245,158,11,.15)',
         label: 'Schnellbrief',
         desc: 'Brief ohne Fallzuordnung',
-        href: 'briefvorlagen.html?modus=freistehend'
+        // K-UI/X1: alte briefvorlagen.html?modus=freistehend -> neue
+        // briefe.html?mode=schnellbrief (11 Korrespondenz-Templates)
+        href: 'briefe.html?mode=schnellbrief'
       },
       {
         icon: '📅',

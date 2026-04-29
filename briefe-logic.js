@@ -142,6 +142,10 @@ const TEMPLATES = [
 let _activeTemplate = null;
 let _generating = false;
 
+// K-UI/X1: Schnellbrief-Modus aus URL ?mode=schnellbrief
+// -> Auftrag-Picker im BEZUG-Block ausblenden + Hinweis-Banner
+const _isSchnellbrief = new URLSearchParams(location.search).get('mode') === 'schnellbrief';
+
 // ─── UI-Helpers ──────────────────────────────────────────────
 function toast(kind, text, ms = 3500) {
     const el = $('toast');
@@ -240,14 +244,23 @@ function renderForm(template) {
 
       <div id="result-zone"></div>
 
+      ${_isSchnellbrief ? `
+      <div style="padding:10px 14px; background:rgba(245,158,11,0.10); border-left:3px solid var(--warning); border-radius:6px; font-size:12px; color:var(--text2); margin-bottom:14px;">
+        <strong style="color:var(--warning);">Schnellbrief-Modus</strong> &middot; Brief ohne Fall-Zuordnung — wird nicht in eine Akte abgelegt.
+      </div>` : ''}
+
       <!-- ── BEZUG ── -->
       <div class="form-section">
         <div class="form-section-title">Bezug</div>
         <div class="form-grid">
+          ${_isSchnellbrief ? `
+          <div style="display:none;">
+            <select id="f-auftrag-id"><option value="">— kein Auftrag —</option></select>
+          </div>` : `
           <div>
             <label class="form-label" for="f-auftrag-id">Auftrag verknüpfen (optional)</label>
             <select id="f-auftrag-id" class="form-select"><option value="">— kein Auftrag —</option></select>
-          </div>
+          </div>`}
           <div>
             <label class="form-label" for="f-datum">Brief-Datum</label>
             <input id="f-datum" type="date" class="form-input" value="${todayIso()}">
