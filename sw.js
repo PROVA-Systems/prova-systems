@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v239';   // K-UI/X1: CSP-Fix esm.sh + Drag&Drop Profil + Schnellbrief-FAB
+const CACHE_VERSION = 'prova-v240';   // K-UI/X2: kontakte-Schema-Match (adresse_strasse/_nr/_zusatz + Conditional)
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
