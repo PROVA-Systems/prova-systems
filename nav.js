@@ -106,10 +106,10 @@
     { href: 'termine.html',          icon: '📅',  label: 'Kalender',       countKey: 'kalender_heute' },
   ];
   var BUERO = [
-    { href: 'rechnungen.html',     icon: '💸', label: 'Rechnungen',         countKey: 'rechnungen_ueberfaellig', warn: true },
-    { href: 'briefvorlagen.html',  icon: '✉️',  label: 'Briefe & Vorlagen' },
-    { href: 'kontakte.html',       icon: '👥', label: 'Kontakte',           countKey: 'kontakte' },
-    { href: 'jahresbericht.html',  icon: '📊', label: 'Jahresbericht' },
+    { href: 'rechnungen.html',         icon: '💸', label: 'Rechnungen',         countKey: 'rechnungen_ueberfaellig', warn: true },
+    { href: 'briefe.html',             icon: '✉️',  label: 'Briefe' },
+    { href: 'kontakte-supabase.html',  icon: '👥', label: 'Kontakte',           countKey: 'kontakte' },
+    { href: 'jahresbericht.html',      icon: '📊', label: 'Jahresbericht' },
   ];
   var WERKZEUGE = [
     { href: 'normen.html',         icon: '📚',  label: 'Normen' },
@@ -118,8 +118,9 @@
     { href: 'positionen.html',     icon: '💰',  label: 'Positionen & Preise' },
   ];
   var SYSTEM = [
-    { href: 'einstellungen.html',  icon: '⚙️',  label: 'Einstellungen' },
-    { href: 'hilfe.html',          icon: '🎓',  label: 'Hilfe & Support' },
+    { href: 'profil-supabase.html', icon: '👤', label: 'Profil & Briefkopf' },
+    { href: 'einstellungen.html',   icon: '⚙️',  label: 'Einstellungen' },
+    { href: 'hilfe.html',           icon: '🎓',  label: 'Hilfe & Support' },
   ];
 
   // Backward-Compat — DOKUMENTE/ARBEIT/VERWALTUNG werden noch von keinem

@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v237';   // K-FIX: 9 Korrespondenz-Templates + brief-generate + letterhead
+const CACHE_VERSION = 'prova-v238';   // K-UI: Profil-Briefkopf + Kontakte + Briefe-Page (Items 1-3)
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
@@ -78,6 +78,14 @@ const APP_SHELL = [
   '/widerrufs-flow.js',
   '/fab.js',
   '/gericht-auftrag-logic.js',
+
+  // ── Sprint K-UI (27.04.2026): Profil-Briefkopf + Kontakte + Briefe ──
+  '/profil-supabase.html',
+  '/profil-supabase-logic.js',
+  '/kontakte-supabase.html',
+  '/kontakte-supabase-logic.js',
+  '/briefe.html',
+  '/briefe-logic.js',
 ];
 
 self.addEventListener('install', event => {
