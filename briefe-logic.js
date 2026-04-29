@@ -5,7 +5,7 @@
    Flow:
      1. Card waehlen → Form-Panel rendert template-spezifisches Form
      2. Auftrag/Empfaenger optional aus Datenbank picken
-     3. "Generieren" → supabase.functions.invoke('brief-generate', {...})
+     3. "Generieren" → briefe.generate(...) (Wrapper um brief-generate Edge Fn)
      4. Response: PDF-URL → in Result-Card anzeigen + Akte-Link
      5. URL-Params: ?template=KEY&auftrag=AZ → Pre-Select + Pre-Fill
 
@@ -14,8 +14,7 @@
    manuelle Eingabe der SV-Daten hier noetig.
 ═══════════════════════════════════════════════════════════════════════ */
 
-import { supabase } from '/lib/supabase-client.js';
-import { auftraege, kontakte } from '/lib/data-store.js';
+import { auftraege, kontakte, briefe } from '/lib/data-store.js';
 import { requireWorkspace, watchAuthState, bindLogoutButtons } from '/lib/auth-guard.js';
 
 const $ = (id) => document.getElementById(id);
@@ -428,14 +427,12 @@ async function generate() {
     btn.disabled = true; btn.textContent = 'Generiere PDF …';
 
     try {
-        const { data, error } = await supabase.functions.invoke('brief-generate', {
-            body: {
-                template_key: _activeTemplate.key,
-                variables,
-                contact_id: contactId,
-                auftrag_id: auftragId,
-                az
-            }
+        const { data, error } = await briefe.generate({
+            template_key: _activeTemplate.key,
+            variables,
+            contact_id: contactId,
+            auftrag_id: auftragId,
+            az
         });
 
         if (error) throw error;
