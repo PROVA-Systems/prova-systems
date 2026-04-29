@@ -80,17 +80,17 @@ export function getTemplateId(key: string): string {
    ============================================================ */
 
 export const KORRESPONDENZ_TEMPLATES: Record<string, string> = {
-    'auftragsbestaetigung':   '<TODO_PDFMONKEY_UUID_K01>',  // K-01
-    'termin-ag':              '<TODO_PDFMONKEY_UUID_K02>',  // K-02
-    'termin-mehrparteien':    '<TODO_PDFMONKEY_UUID_K03>',  // K-03
-    'anforderung-unterlagen': '<TODO_PDFMONKEY_UUID_K04>',  // K-04 (Goldstandard pending K-2.x)
-    'uebergabe-gutachten':    '<TODO_PDFMONKEY_UUID_K05>',  // K-05 (pending)
-    'mahnung-1':              '<TODO_PDFMONKEY_UUID_K06A>', // K-06A (pending)
-    'mahnung-2':              '<TODO_PDFMONKEY_UUID_K06B>', // K-06B (pending)
-    'mahnung-3':              '<TODO_PDFMONKEY_UUID_K06C>', // K-06C (pending)
-    'akteneinsicht':          '<TODO_PDFMONKEY_UUID_K07>',  // K-07 (pending)
-    'befangenheit':           '<TODO_PDFMONKEY_UUID_K08>',  // K-08 (pending)
-    'auftragsablehnung':      '<TODO_PDFMONKEY_UUID_K09>',  // K-09 (pending)
+    'auftragsbestaetigung':   '5255119d-583f-4a3f-938e-dee4fcdce895',  // K-01
+    'termin-ag':              '7b2ebb1d-55c0-4f02-833d-2abc087d9851',  // K-02
+    'termin-mehrparteien':    '972685a4-70ed-46de-927d-810e3bb1c26e',  // K-03
+    'anforderung-unterlagen': 'c6fe446e-4694-47e0-aadd-b3a276ec9469',  // K-04 (Goldstandard pending K-2.x)
+    'uebergabe-gutachten':    '5c4ee8dc-3f27-4fbc-b016-c606cc8b7d9c',  // K-05 (pending)
+    'mahnung-1':              'db80bdb9-f3f2-46cd-b258-7e4742cd9de6', // K-06A (pending)
+    'mahnung-2':              '13ec8528-666e-4f0a-aeba-bc9d2fc3d960', // K-06B (pending)
+    'mahnung-3':              '34c89070-c1ac-41c7-b670-1f4c33111e47', // K-06C (pending)
+    'akteneinsicht':          '06d23ad9-35ef-478b-9501-8c16c23bca08',  // K-07 (pending)
+    'befangenheit':           '4faf6204-d3bf-481a-9f5b-43920eab430e',  // K-08 (pending)
+    'auftragsablehnung':      '1a58e6fd-47f5-4206-aa0b-7dfd13766f63',  // K-09 (pending)
 };
 
 const TODO_UUID_RE = /^<TODO_PDFMONKEY_UUID_/;
