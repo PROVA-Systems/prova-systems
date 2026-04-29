@@ -371,9 +371,14 @@ function applyKontaktAutofill() {
     try { k = JSON.parse(opt.dataset.k); } catch { return; }
 
     const name = k.firma || [k.titel, k.vorname, k.nachname].filter(Boolean).join(' ') || k.name || '';
+    // K-UI/X2: Adresse aus 3 DB-Spalten zu DIN-5008-Brief-Strasse zusammensetzen
+    // (Templates erwarten "empfaenger_strasse" als eine Zeile inkl. Hausnr.)
+    const briefStrasse = [k.adresse_strasse, k.adresse_nr].filter(Boolean).join(' ')
+                         + (k.adresse_zusatz ? `, ${k.adresse_zusatz}` : '');
+
     if ($('f-empfaenger-name'))    $('f-empfaenger-name').value    = name;
     if ($('f-empfaenger-firma'))   $('f-empfaenger-firma').value   = (k.firma && name !== k.firma) ? k.firma : '';
-    if ($('f-empfaenger-strasse')) $('f-empfaenger-strasse').value = k.anschrift || '';
+    if ($('f-empfaenger-strasse')) $('f-empfaenger-strasse').value = briefStrasse.trim();
     if ($('f-empfaenger-plz'))     $('f-empfaenger-plz').value     = k.plz || '';
     if ($('f-empfaenger-ort'))     $('f-empfaenger-ort').value     = k.ort || '';
     if ($('f-empfaenger-anrede') && k.anrede) {
