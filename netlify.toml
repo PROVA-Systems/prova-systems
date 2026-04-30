@@ -372,15 +372,17 @@
   status = 301
   force  = true
 
-# ─── Block C: APP-Subdomain Root → /login ─────────────────────────
-# Wer direkt app.prova-systems.de aufruft soll auf /login landen.
-# JS-seitig prueft auth-guard ob Session existiert und redirected
-# bei eingeloggtem User auf /dashboard.
+# ─── Block C: APP-Subdomain Root → /dashboard (JS-Auth) ───────────
+# Marcel-Direktive: Server-Side leitet immer auf /dashboard. Der
+# Auth-Check passiert client-seitig in lib/auth-guard.js — eingeloggte
+# User landen direkt auf der App-Startseite, nicht-eingeloggte werden
+# vom auth-guard auf /login weitergeleitet.
+# Vorteil: authed User sehen nicht kurz die Login-URL beim Direktaufruf.
 
 [[redirects]]
   from   = "https://app.prova-systems.de/"
-  to     = "/login"
-  status = 302
+  to     = "/dashboard"
+  status = 301
   force  = true
 
 # ─── Block D: Bestand ─────────────────────────────────────────────
