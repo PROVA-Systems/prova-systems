@@ -5,11 +5,12 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v241';   // K-UI/X2-Korr: Vorgangsdaten raus aus Kontakt-Stammdaten
+const CACHE_VERSION = 'prova-v243';   // APP-LANDING-SPLIT 3d: /login als kanonische Login-URL + login.html
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
   '/',
+  '/login.html',                        // APP-LANDING-SPLIT: kanonische Login-Page
   '/app-login.html',
   '/auth-supabase.html',                // K-1.4 B12: Supabase-Login parallel
   '/onboarding-supabase.html',          // K-1.3 A6: Workspace-Onboarding
