@@ -12,6 +12,7 @@ import {
     supabase,
     signOut as _signOut
 } from './lib/supabase-client.js';
+import { writeLegacyBridge } from './lib/auth-guard.js';
 
 // ─── DOM-HELPERS ──────────────────────────────────────────────
 
@@ -105,6 +106,12 @@ async function handleLogin(form) {
 
     showSuccess('Eingeloggt — prüfe Pflicht-Einwilligungen…');
 
+    // Cutover-Block-3 Bridge: Legacy-Keys SOFORT setzen damit der Inline-IIFE-Guard
+    // auf der Ziel-Page (z.B. dashboard.html) synchron durchgeht VOR dem Page-Render.
+    if (data && data.user) {
+        writeLegacyBridge(data.user);
+    }
+
     // Forced Re-Consent: vor jedem Login pflicht_einwilligungen prüfen
     try {
         const { data: pending, error: pendingErr } = await supabase.rpc('get_pending_einwilligungen');
@@ -119,9 +126,21 @@ async function handleLogin(form) {
     }
 
     // Post-Login-Redirect: ursprünglich angeforderter Pfad aus next= ODER /dashboard.
-    // (Hotfix login-redirect-default 01.05.2026 — Default war zuvor die K-1.0-Test-Page.)
+    // next=-Sanitizer: niemals zu /login zurueckleiten (Anti-Self-Loop).
     const params = new URLSearchParams(window.location.search);
-    const next = params.get('next') || '/dashboard';
+    let next = params.get('next') || '/dashboard';
+    const lower = (next || '').toLowerCase();
+    if (lower === '/login' || lower.startsWith('/login?') ||
+        lower === '/auth-supabase.html' || lower.startsWith('/auth-supabase.html?') ||
+        lower === '/app-login.html' || lower.startsWith('/app-login.html?')) {
+        console.warn('[auth] next= points to login page (' + next + ') — using /dashboard');
+        next = '/dashboard';
+    }
+    // Loop-Counter zuruecksetzen: erfolgreicher Login bedeutet keine Loop mehr.
+    try {
+        sessionStorage.removeItem('prova-redirect-counter');
+        sessionStorage.removeItem('prova-redirect-stamp');
+    } catch (_) {}
     window.location.href = next;
 }
 
@@ -152,6 +171,13 @@ async function handleSignUp(form) {
     }
 
     showSuccess('Account angelegt. Bitte bestätige Deine Email — wir haben Dir einen Link geschickt.');
+
+    // Cutover-Block-3 Bridge: Legacy-Keys auch beim Sign-Up setzen, falls Auto-Login
+    // (Supabase erstellt Session sofort wenn email-confirmation deaktiviert ist).
+    if (data && data.user) {
+        writeLegacyBridge(data.user);
+    }
+
     form.reset();
 }
 
