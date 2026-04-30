@@ -216,18 +216,22 @@ document.addEventListener('DOMContentLoaded', () => {
         showInfo('Du bist abgemeldet.');
     }
 
-    // Bereits eingeloggt? Auto-Redirect respektiert next= (auth-guard schickt
-    // Original-Pfad mit). Default ist /dashboard.
-    // (Hotfix login-redirect-default 01.05.2026 — Default war zuvor die K-1.0-Test-Page,
-    // ohne next=-Param-Berücksichtigung.)
+    // Hotfix-2 (01.05.2026, disable-auto-redirect-loop):
+    // Auto-Redirect bei bereits eingeloggter Session DEAKTIVIERT.
+    //
+    // Vorgaenger-Hotfix login-redirect-default leitete bei vorhandener
+    // Session automatisch nach /dashboard weiter. Resultat war eine
+    // Race-Condition-Loop: auth-guard.js auf /dashboard prueft synchron
+    // (vor Session-Hydration), sieht keine Session, schickt zurueck nach
+    // /login. /login sieht hydrierte Session, schickt nach /dashboard.
+    // → Endlos-Loop, Browser haengt.
+    //
+    // Notfall-Loesung: kein Auto-Sprung. User loggt sich aktiv ein
+    // (oder navigiert manuell zu /dashboard). Kein UX-Verlust — Login-
+    // Page ist die normale Erwartung wenn jemand /login aufruft.
     supabase.auth.getSession().then(({ data: { session } }) => {
         if (session && !action) {
-            const params2 = new URLSearchParams(window.location.search);
-            const target = params2.get('next') || '/dashboard';
-            showInfo('Bereits eingeloggt als ' + (session.user.email || '?') + ' — leite weiter…');
-            setTimeout(() => {
-                window.location.href = target;
-            }, 1200);
+            console.log('[auth] Session detected on /login, no auto-redirect (anti-loop hotfix-2)');
         }
     }).catch(() => { /* nicht blocken */ });
 });
