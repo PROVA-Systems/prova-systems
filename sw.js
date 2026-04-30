@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v243';   // APP-LANDING-SPLIT 3d: /login als kanonische Login-URL + login.html
+const CACHE_VERSION = 'prova-v244';   // split-3d: nav.js Logout/Logo-Redirects auf /login
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
