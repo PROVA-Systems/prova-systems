@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PROVA — Login</title>
+<meta name="description" content="PROVA — KI-natives B2B-SaaS für ö.b.u.v. Bauschaden-Sachverständige. Anmelden zur App.">
+<link rel="canonical" href="https://app.prova-systems.de/login">
+<style>
+  :root {
+    --navy:        #1B3F6B;
+    --navy-dark:   #0D2544;
+    --accent:      #4A90D9;
+    --accent-light:#EFF6FF;
+    --success:     #10B981;
+    --error:       #EF4444;
+    --gray-100:    #F3F4F6;
+    --gray-200:    #E5E7EB;
+    --gray-400:    #9CA3AF;
+    --gray-500:    #6B7280;
+    --gray-700:    #374151;
+    --gray-900:    #111827;
+    --white:       #FFFFFF;
+    --radius:      12px;
+    --shadow:      0 20px 60px rgba(0,0,0,.12);
+    color-scheme: light;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: var(--navy-dark); color: var(--gray-900);
+    min-height: 100vh; padding: 1.5rem;
+    display: flex; align-items: center; justify-content: center;
+    position: relative; overflow: hidden;
+  }
+  body::before {
+    content: ''; position: fixed; inset: 0; pointer-events: none;
+    background:
+      radial-gradient(ellipse 80% 50% at 20% 20%, rgba(74,144,217,.15) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 40% at 80% 80%, rgba(27,63,107,.4) 0%, transparent 60%);
+  }
+  .card {
+    background: var(--white); border-radius: var(--radius);
+    padding: 2.5rem; width: 100%; max-width: 440px;
+    box-shadow: var(--shadow); position: relative; z-index: 1;
+  }
+  .brand { display: flex; align-items: center; gap: 12px; margin-bottom: 2rem; }
+  .brand-logo {
+    width: 40px; height: 40px; background: var(--navy); border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--accent); font-weight: 700; font-size: 14px;
+  }
+  .brand-name { font-weight: 700; font-size: 18px; color: var(--navy); letter-spacing: -.01em; }
+  .brand-tag { font-size: 11px; color: var(--gray-500); margin-top: 2px; }
+  h1 { font-size: 22px; font-weight: 700; color: var(--navy); margin: 0 0 4px; }
+  .subtitle { color: var(--gray-500); font-size: 13px; margin: 0 0 1.5rem; }
+  .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--gray-200); margin-bottom: 20px; }
+  .tab {
+    flex: 1; padding: 10px 12px; background: none; border: 0;
+    border-bottom: 2px solid transparent;
+    cursor: pointer; font-size: 14px; color: var(--gray-500);
+    font-family: inherit; font-weight: 500;
+    transition: color .15s, border-color .15s;
+  }
+  .tab.active { color: var(--navy); border-bottom-color: var(--navy); }
+  .tab:hover:not(.active) { color: var(--gray-700); }
+  form { display: none; flex-direction: column; gap: 12px; }
+  form.active { display: flex; }
+  label { font-size: 12px; color: var(--gray-700); font-weight: 500; }
+  input[type=email], input[type=password], input[type=text] {
+    padding: 10px 12px; border: 1px solid var(--gray-200); border-radius: 6px;
+    font-size: 14px; font-family: inherit;
+    transition: border-color .15s, outline-color .15s;
+  }
+  input:focus { outline: 2px solid var(--accent); outline-offset: -1px; border-color: var(--accent); }
+  button[type=submit] {
+    margin-top: 8px; padding: 12px 16px; background: var(--navy); color: var(--white);
+    border: 0; border-radius: 6px; font-size: 14px; font-weight: 600;
+    cursor: pointer; font-family: inherit;
+    transition: background .15s;
+  }
+  button[type=submit]:disabled { opacity: 0.5; cursor: not-allowed; }
+  button[type=submit]:hover:not(:disabled) { background: var(--navy-dark); }
+  .form-helper {
+    font-size: 12px; color: var(--gray-500); text-align: right;
+    margin-top: -2px;
+  }
+  .form-helper a {
+    color: var(--accent); text-decoration: none; font-weight: 500;
+    cursor: pointer;
+  }
+  .form-helper a:hover { text-decoration: underline; }
+  .reset-prompt {
+    background: var(--accent-light); border: 1px solid var(--accent);
+    border-radius: 6px; padding: 10px 12px; margin-top: 4px;
+    font-size: 12px; color: var(--navy);
+    display: none;
+  }
+  .reset-prompt.active { display: block; }
+  .reset-prompt input { width: 100%; margin-top: 6px; }
+  .reset-prompt button {
+    margin-top: 6px; padding: 8px 12px;
+    background: var(--accent); color: var(--white);
+    border: 0; border-radius: 4px; font-size: 12px; font-weight: 500;
+    cursor: pointer;
+  }
+  .msg {
+    margin-top: 12px; padding: 10px 12px; border-radius: 6px;
+    font-size: 13px; display: none;
+  }
+  .msg.error   { display: block; background: #fee; color: #c00; border: 1px solid #fcc; }
+  .msg.success { display: block; background: #efe; color: #060; border: 1px solid #cfc; }
+  .msg.info    { display: block; background: var(--accent-light); color: var(--navy); border: 1px solid var(--accent); }
+  .footer-note {
+    margin-top: 20px; font-size: 11px; color: var(--gray-400); text-align: center;
+    padding-top: 16px; border-top: 1px solid var(--gray-200);
+  }
+  .footer-note a { color: var(--gray-500); text-decoration: none; }
+  .footer-note a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="brand">
+    <div class="brand-logo">PV</div>
+    <div>
+      <div class="brand-name">PROVA Systems</div>
+      <div class="brand-tag">Bauschaden-Sachverständige · KI-nativ · DSGVO-konform</div>
+    </div>
+  </div>
+  <h1>Willkommen zurück</h1>
+  <p class="subtitle">Melde dich mit deinem Account an oder lege einen neuen an.</p>
+
+  <div class="tabs" role="tablist">
+    <button class="tab active" data-tab="login" type="button" role="tab" aria-selected="true">Anmelden</button>
+    <button class="tab" data-tab="signup" type="button" role="tab" aria-selected="false">Registrieren</button>
+  </div>
+
+  <!-- LOGIN -->
+  <form id="login-form" class="active" autocomplete="on">
+    <label for="login-email">E-Mail-Adresse</label>
+    <input id="login-email" name="email" type="email" required autocomplete="username" placeholder="name@ihre-kanzlei.de">
+    <label for="login-password">Passwort</label>
+    <input id="login-password" name="password" type="password" required autocomplete="current-password">
+    <div class="form-helper">
+      <a id="show-reset" type="button">Passwort vergessen?</a>
+    </div>
+
+    <!-- Inline-Reset-Form, erscheint bei Klick auf "Passwort vergessen?" -->
+    <div id="reset-prompt" class="reset-prompt">
+      <strong>Passwort zurücksetzen</strong> — wir senden dir einen Link an deine E-Mail-Adresse.
+      <input id="reset-email" type="email" placeholder="E-Mail-Adresse" autocomplete="email">
+      <button type="button" id="send-reset">Reset-Link senden</button>
+    </div>
+
+    <button type="submit">Einloggen</button>
+  </form>
+
+  <!-- SIGN-UP -->
+  <form id="signup-form" autocomplete="on">
+    <label for="signup-name">Voller Name</label>
+    <input id="signup-name" name="name" type="text" required autocomplete="name" placeholder="Marcel Schreiber">
+    <label for="signup-email">E-Mail-Adresse</label>
+    <input id="signup-email" name="email" type="email" required autocomplete="email" placeholder="name@ihre-kanzlei.de">
+    <label for="signup-password">Passwort (mindestens 8 Zeichen)</label>
+    <input id="signup-password" name="password" type="password" required autocomplete="new-password" minlength="8">
+    <button type="submit">Account anlegen</button>
+  </form>
+
+  <!-- Hidden Reset-Form fuer Logic-Kompatibilitaet (auth-supabase-logic.js erwartet #reset-form) -->
+  <form id="reset-form" autocomplete="on" style="display:none;">
+    <label for="reset-form-email">E-Mail</label>
+    <input id="reset-form-email" name="email" type="email" autocomplete="email">
+    <button type="submit">Reset-Link senden</button>
+  </form>
+
+  <div id="msg" class="msg" role="status" aria-live="polite"></div>
+
+  <div class="footer-note">
+    © PROVA Systems ·
+    <a href="https://prova-systems.de/datenschutz.html">Datenschutz</a> ·
+    <a href="https://prova-systems.de/impressum.html">Impressum</a> ·
+    <a href="https://prova-systems.de/agb.html">AGB</a>
+  </div>
+</div>
+
+<!-- Reihenfolge wichtig: Config muss VOR den ESM-Modulen geladen sein -->
+<script src="/lib/prova-config.js"></script>
+<script type="module" src="/auth-supabase-logic.js"></script>
+<script>
+  // Inline-Reset-Toggle: zeigt das Reset-Formular im Login-Tab.
+  // Bridge zum bestehenden #reset-form (das auth-supabase-logic.js erwartet).
+  document.addEventListener('DOMContentLoaded', function () {
+    var resetLink = document.getElementById('show-reset');
+    var resetPrompt = document.getElementById('reset-prompt');
+    var resetEmailInline = document.getElementById('reset-email');
+    var resetEmailHidden = document.getElementById('reset-form-email');
+    var sendResetBtn = document.getElementById('send-reset');
+    var resetFormHidden = document.getElementById('reset-form');
+
+    if (resetLink && resetPrompt) {
+      resetLink.addEventListener('click', function (e) {
+        e.preventDefault();
+        resetPrompt.classList.toggle('active');
+        if (resetPrompt.classList.contains('active') && resetEmailInline) {
+          resetEmailInline.focus();
+        }
+      });
+    }
+
+    if (sendResetBtn && resetEmailInline && resetEmailHidden && resetFormHidden) {
+      sendResetBtn.addEventListener('click', function () {
+        var val = (resetEmailInline.value || '').trim();
+        if (!val) {
+          resetEmailInline.focus();
+          return;
+        }
+        resetEmailHidden.value = val;
+        // Trigger Submit-Event auf dem hidden form — auth-supabase-logic.js
+        // lauscht auf #reset-form submit.
+        if (typeof resetFormHidden.requestSubmit === 'function') {
+          resetFormHidden.requestSubmit();
+        } else {
+          var evt = new Event('submit', { bubbles: true, cancelable: true });
+          resetFormHidden.dispatchEvent(evt);
+        }
+      });
+    }
+  });
+</script>
+</body>
+</html>

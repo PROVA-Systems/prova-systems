@@ -876,7 +876,7 @@
 
   var html = ''
     + '<div class="sb-logo">'
-    +   '<a class="sb-logo-link" href="dashboard.html" title="Zur Zentrale">'
+    +   '<a class="sb-logo-link" href="/" title="Zur Zentrale">'
     +     '<div class="sb-logo-mark">P</div>'
     +     '<div class="sb-logo-text">PR<span>O</span>VA</div>'
     +   '</a>'
@@ -1483,8 +1483,12 @@ window.provaSbLogout = function() {
       if (keep[k] !== undefined) localStorage.setItem(k, keep[k]);
     });
 
-    // 4. Redirect zu Login (app-login.html ist die echte Login-Page)
-    window.location.href = 'app-login.html';
+    // 4. Redirect zu Login. APP-LANDING-SPLIT (30.04.2026):
+    //    /login ist die kanonische Login-URL. netlify.toml +
+    //    _redirects servieren von dort die login.html. Auf
+    //    prova-systems.de wird /login zusaetzlich host-conditioned
+    //    auf https://app.prova-systems.de/login umgeleitet.
+    window.location.href = '/login';
   });
 };
 

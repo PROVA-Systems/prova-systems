@@ -1,1 +1,102 @@
-/favicon.ico /icons/icon-192.svg 200
+# ==================================================================
+# PROVA Systems — _redirects (APP-LANDING-SPLIT Phase 3)
+# ==================================================================
+# Path-only Aliase die fuer ALLE Hosts gelten.
+# Host-conditioned Cross-Domain-Redirects liegen in netlify.toml.
+#
+# Reihenfolge (Netlify): _redirects-Regeln werden VOR
+# netlify.toml-[[redirects]]-Regeln verarbeitet — aber innerhalb
+# beider Files top-down. Spezifische Regeln zuerst.
+#
+# Format: <from> <to> <status>[!]
+#   200  = rewrite (URL bleibt sichtbar)
+#   301  = permanent redirect
+#   302  = temporary redirect
+#   !    = force (auch wenn Datei existiert)
+# ==================================================================
+
+# ─── Assets ────────────────────────────────────────────────────────
+/favicon.ico                    /icons/icon-192.svg                 200
+
+# ─── Auth/Login ────────────────────────────────────────────────────
+# /login serviert die neue login.html (siehe Block 3c).
+# Auf prova-systems.de wird /login zusaetzlich von netlify.toml
+# host-conditioned auf app.prova-systems.de/login umgelenkt — das
+# greift VOR dieser Regel weil host-conditioned Regeln Prioritaet haben.
+/login                          /login.html                         200
+/anmelden                       /login.html                         200
+/auth                           /login.html                         200
+
+# Logout (Path-Alias) — die eigentliche Logout-Logik macht JS via
+# supabase.auth.signOut(). Wenn ein User /logout direkt aufruft,
+# host-conditioned Regel in netlify.toml leitet ihn auf prova-systems.de
+# um.
+
+# ─── Clean URLs fuer App-Pages ─────────────────────────────────────
+# Diese Aliase werden von App-Subdomain genutzt (z.B. /dashboard
+# → /dashboard.html). Auf LANDING-Subdomain wird /dashboard von
+# netlify.toml schon vorher cross-domain umgeleitet.
+
+/dashboard                      /dashboard.html                     200
+/akte                           /akte.html                          200
+/app                            /app.html                           200
+/archiv                         /archiv.html                        200
+/briefe                         /briefe.html                        200
+/kontakte                       /kontakte-supabase.html             200
+/profil                         /profil-supabase.html               200
+/termine                        /termine.html                       200
+/rechnungen                     /rechnungen.html                    200
+/einstellungen                  /einstellungen.html                 200
+/freigabe                       /freigabe.html                      200
+/freigabe-queue                 /freigabe-queue.html                200
+/stellungnahme                  /stellungnahme.html                 200
+/gutachterliche-stellungnahme   /gutachterliche-stellungnahme.html  200
+/baubegleitung                  /baubegleitung.html                 200
+/beratung                       /beratung.html                      200
+/wertgutachten                  /wertgutachten.html                 200
+/ortstermin                     /ortstermin-modus.html              301
+/ortstermin-modus               /ortstermin-modus.html              200
+
+# ─── Werkzeuge ─────────────────────────────────────────────────────
+/jveg                           /jveg.html                          200
+/normen                         /normen.html                        200
+/textbausteine                  /textbausteine.html                 200
+/positionen                     /positionen.html                    200
+/zpo-anzeige                    /zpo-anzeige.html                   200
+/jahresbericht                  /jahresbericht.html                 200
+/kostenermittlung               /kostenermittlung.html              200
+/hilfe                          /hilfe.html                         200
+/statistiken                    /statistiken.html                   200
+
+# ─── Onboarding ────────────────────────────────────────────────────
+/onboarding                     /onboarding-supabase.html           200
+/onboarding-welcome             /onboarding-welcome.html            200
+/onboarding-schnellstart        /onboarding-schnellstart.html       200
+/register                       /onboarding-supabase.html           301
+
+# ─── Sonstige App ──────────────────────────────────────────────────
+/portal                         /portal.html                        200
+/benachrichtigungen             /benachrichtigungen.html            200
+/import-assistent               /import-assistent.html              200
+/smtp-einrichtung               /smtp-einrichtung.html              200
+/auftrag-neu                    /auftrag-neu.html                   200
+
+# ─── Admin ─────────────────────────────────────────────────────────
+/admin                          /admin-dashboard.html               200
+/admin-dashboard                /admin-dashboard.html               200
+/admin-login                    /admin-login.html                   200
+
+# ─── Marketing (LANDING — pricing + kontakt) ──────────────────────
+/pricing                        /pricing.html                       200
+/preise                         /pricing.html                       200
+/kontakt                        /kontakt.html                       200
+/contact                        /kontakt.html                       200
+
+# ─── Legal (LANDING — bleiben Path-only weil beide Hosts brauchen) ─
+/agb                            /agb.html                           200
+/datenschutz                    /datenschutz.html                   200
+/impressum                      /impressum.html                     200
+/avv                            /avv.html                           200
+
+# ─── Edge Function Aliase ──────────────────────────────────────────
+/webhook/stripe                 /.netlify/functions/stripe-webhook  200
