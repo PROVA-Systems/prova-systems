@@ -18,7 +18,9 @@ var pc={'Solo':'#4f8ef7','Team':'#a78bfa'}[paket]||'#4f8ef7';
   var el=document.getElementById('topbar-paket-badge');
   if(el){el.style.display='none';} // Paket steht in Sidebar unten
 })();
-provaAuthGuard();
+// Cutover-Block-3 (01.05.2026): provaAuthGuard ist nach Migration nicht mehr global verfuegbar.
+// lib/auth-guard.js runAuthGuard wird ueber den Module-Tag in akte.html aufgerufen.
+if (typeof provaAuthGuard === 'function') { provaAuthGuard(); }
 
 /* ─── RECORD LADEN ─── */
 var recordId=sessionStorage.getItem('prova_record_id')||new URLSearchParams(window.location.search).get('id')||'';
