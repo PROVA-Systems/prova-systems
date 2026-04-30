@@ -118,9 +118,10 @@ async function handleLogin(form) {
         console.warn('PROVA: get_pending_einwilligungen-Check fehlgeschlagen:', e);
     }
 
-    // Default-Redirect: Test-Page zeigt Master-Cockpit-Daten
+    // Post-Login-Redirect: ursprünglich angeforderter Pfad aus next= ODER /dashboard.
+    // (Hotfix login-redirect-default 01.05.2026 — Default war zuvor die K-1.0-Test-Page.)
     const params = new URLSearchParams(window.location.search);
-    const next = params.get('next') || '/tools/test-supabase-login.html?logged_in=1';
+    const next = params.get('next') || '/dashboard';
     window.location.href = next;
 }
 
@@ -215,12 +216,17 @@ document.addEventListener('DOMContentLoaded', () => {
         showInfo('Du bist abgemeldet.');
     }
 
-    // Bereits eingeloggt? Auto-Redirect (für Convenience im Test)
+    // Bereits eingeloggt? Auto-Redirect respektiert next= (auth-guard schickt
+    // Original-Pfad mit). Default ist /dashboard.
+    // (Hotfix login-redirect-default 01.05.2026 — Default war zuvor die K-1.0-Test-Page,
+    // ohne next=-Param-Berücksichtigung.)
     supabase.auth.getSession().then(({ data: { session } }) => {
         if (session && !action) {
+            const params2 = new URLSearchParams(window.location.search);
+            const target = params2.get('next') || '/dashboard';
             showInfo('Bereits eingeloggt als ' + (session.user.email || '?') + ' — leite weiter…');
             setTimeout(() => {
-                window.location.href = '/tools/test-supabase-login.html?logged_in=1';
+                window.location.href = target;
             }, 1200);
         }
     }).catch(() => { /* nicht blocken */ });

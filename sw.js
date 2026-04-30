@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v245';   // hotfix redirect-precedence: App-Pfade in netlify.toml host-spezifisch
+const CACHE_VERSION = 'prova-v246';   // hotfix login-redirect-default: /dashboard statt /tools/test-supabase-login.html
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
