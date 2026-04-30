@@ -11,32 +11,30 @@
 <link rel="manifest" href="/manifest.json">
 <script src="prova-preise.js"></script>
 <script src="prova-fetch-auth.js"></script>
-<script src="auth-guard.js"></script>
+<script src="/lib/prova-config.js"></script>
 <script src="prova-notifications.js" defer></script>
 <script>
 (function(){
-  // S-SICHER P2.6 (Finding 7.4) — Harter Auth-Guard vor Page-Render.
-  // Laeuft synchron BEVOR der Page-Logic-Script den Guard ggf. nicht aufruft
-  // oder zu spaet aufruft. Zusaetzlich zur Legacy-Migration-Absicherung:
-  // wenn auth-guard die Legacy-Migration gemacht hat aber prova_sv_email
-  // trotzdem fehlt → nicht eingeloggt → Redirect.
+  // Cutover-Block-3 Hybrid-Auth-Guard (01.05.2026):
+  // Synchroner Pre-Check der Bridge-Keys, die lib/auth-guard.js writeLegacyBridge()
+  // nach Supabase-Login schreibt. Bei fehlenden Keys: Redirect zu /login mit next=.
+  // Async lib/auth-guard.js runAuthGuard (unten) validiert echte Supabase-Session
+  // und erneuert Bridge-Token bei TOKEN_REFRESHED.
   try {
-    if (typeof provaAuthGuard !== 'function') {
-      window.location.replace('app-login.html');
-      return;
-    }
-    var ok = provaAuthGuard({ silent: true });
+    var token = localStorage.getItem('prova_auth_token');
     var email = localStorage.getItem('prova_sv_email') || '';
-    // Haerte-Check: Auch wenn Guard "ok" sagt, muss eine echte sv_email
-    // vorhanden sein. Sonst war die Legacy-Migration ein Bypass.
-    if (!ok || !email || email.indexOf('@') === -1) {
-      window.location.replace('app-login.html');
+    if (!token || !email || email.indexOf('@') === -1) {
+      window.location.replace('/login?next=' + encodeURIComponent(location.pathname + location.search));
       return;
     }
   } catch (e) {
-    window.location.replace('app-login.html');
+    window.location.replace('/login');
   }
 })();
+</script>
+<script type="module">
+  import { runAuthGuard } from '/lib/auth-guard.js';
+  runAuthGuard().catch(e => console.error('[auth] guard failed', e));
 </script>
 <script src="prova-sanitize.js"></script>
 <script src="prova-pseudo.js"></script>
