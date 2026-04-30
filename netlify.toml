@@ -1,5 +1,17 @@
 # ==================================================================
-# PROVA Systems - netlify.toml v5.4
+# PROVA Systems - netlify.toml v6.0 (APP-LANDING-SPLIT Phase 3)
+# ==================================================================
+# Architektur:
+#   prova-systems.de       → LANDING (Marketing + Legal)
+#   app.prova-systems.de   → APP     (SaaS, Login-protected)
+#   admin.prova-systems.de → ADMIN   (Founder-Cockpit, separat)
+#
+# Routing-Strategie:
+#   - Cross-Domain-Redirects (LANDING → APP) sind in [[redirects]]
+#     mit absolute-URL-`from` definiert (host-conditioned).
+#   - Path-only Aliases (z.B. /dashboard → /dashboard.html) liegen
+#     in _redirects und gelten fuer alle Hosts.
+#   - Reihenfolge: Netlify wertet top-down, host-spezifisch zuerst.
 # ==================================================================
 
 [build]
@@ -16,38 +28,379 @@
   directory    = "netlify/functions"
   node_bundler = "esbuild"
 
-# ==============================================================
+# ==================================================================
 # REDIRECTS
-# ==============================================================
+# ==================================================================
+
+# ─── Block A: Auth/Login-Konsolidierung (alle Hosts) ─────────────
+# Alte Login-URLs werden auf /login (App-Subdomain) zusammengefasst.
+# Diese Regeln gelten host-unabhaengig — egal woher der Request kommt,
+# Endziel ist immer app.prova-systems.de/login.
 
 [[redirects]]
-  from = "/"
-  to   = "/index.html"
-  status = 200
-
-[[redirects]]
-  from   = "/app"
-  to     = "/app-login.html"
-  status = 200
-
-[[redirects]]
-  from   = "/login"
-  to     = "/app-login.html"
+  from   = "/app-login.html"
+  to     = "https://app.prova-systems.de/login"
   status = 301
+  force  = true
 
 [[redirects]]
-  from   = "/register"
-  to     = "/onboarding.html"
+  from   = "/auth-supabase.html"
+  to     = "https://app.prova-systems.de/login"
   status = 301
+  force  = true
 
+# Logout-Redirect → Landing-Startseite (User soll wieder Marketing sehen)
 [[redirects]]
   from   = "/logout"
-  to     = "/app-login.html"
+  to     = "https://prova-systems.de/"
   status = 302
+  force  = true
 
-# P5.B3 (Sprint 04): bescheinigungen.html entfernt — Sidebar-Link in nav.js
-# weg, Datei aus Repo geloescht. Bookmarks/Direkt-Links zeigen auf
-# Dashboard.
+# ─── Block B: Cross-Domain LANDING → APP ─────────────────────────
+# Wenn ein User direkt eine alte App-URL auf prova-systems.de
+# aufruft (Bookmark, Mail-Link, Google-Index), wird er per 301
+# auf app.prova-systems.de umgeleitet. Querystring + Splat bleiben
+# erhalten.
+#
+# Pattern: `from = "https://<host>/<path>*"` matcht <path>, <path>.html
+# und <path>/sub. `:splat` reicht den Rest weiter.
+#
+# Doppelt fuer prova-systems.de + www.prova-systems.de — Netlify
+# unterscheidet beide Hosts streng.
+
+# /login: prova-systems.de → app.prova-systems.de
+[[redirects]]
+  from   = "https://prova-systems.de/login"
+  to     = "https://app.prova-systems.de/login"
+  status = 301
+  force  = true
+[[redirects]]
+  from   = "https://www.prova-systems.de/login"
+  to     = "https://app.prova-systems.de/login"
+  status = 301
+  force  = true
+
+# /register: prova-systems.de → app.prova-systems.de/register
+[[redirects]]
+  from   = "https://prova-systems.de/register"
+  to     = "https://app.prova-systems.de/register"
+  status = 301
+  force  = true
+[[redirects]]
+  from   = "https://www.prova-systems.de/register"
+  to     = "https://app.prova-systems.de/register"
+  status = 301
+  force  = true
+
+# ─── Sidebar / Core App-Pages (host-conditioned) ──────────────────
+# Eine Macro-Liste aller Pfade die zur APP gehoeren.
+# Jeder Eintrag matcht /<path>, /<path>.html und /<path>/<sub>.
+
+# /dashboard
+[[redirects]]
+  from   = "https://prova-systems.de/dashboard*"
+  to     = "https://app.prova-systems.de/dashboard:splat"
+  status = 301
+  force  = true
+[[redirects]]
+  from   = "https://www.prova-systems.de/dashboard*"
+  to     = "https://app.prova-systems.de/dashboard:splat"
+  status = 301
+  force  = true
+
+# /akte
+[[redirects]]
+  from   = "https://prova-systems.de/akte*"
+  to     = "https://app.prova-systems.de/akte:splat"
+  status = 301
+  force  = true
+[[redirects]]
+  from   = "https://www.prova-systems.de/akte*"
+  to     = "https://app.prova-systems.de/akte:splat"
+  status = 301
+  force  = true
+
+# /app (Schadensgutachten-Wizard)
+[[redirects]]
+  from   = "https://prova-systems.de/app*"
+  to     = "https://app.prova-systems.de/app:splat"
+  status = 301
+  force  = true
+[[redirects]]
+  from   = "https://www.prova-systems.de/app*"
+  to     = "https://app.prova-systems.de/app:splat"
+  status = 301
+  force  = true
+
+# /archiv
+[[redirects]]
+  from   = "https://prova-systems.de/archiv*"
+  to     = "https://app.prova-systems.de/archiv:splat"
+  status = 301
+  force  = true
+[[redirects]]
+  from   = "https://www.prova-systems.de/archiv*"
+  to     = "https://app.prova-systems.de/archiv:splat"
+  status = 301
+  force  = true
+
+# /briefe
+[[redirects]]
+  from   = "https://prova-systems.de/briefe*"
+  to     = "https://app.prova-systems.de/briefe:splat"
+  status = 301
+  force  = true
+[[redirects]]
+  from   = "https://www.prova-systems.de/briefe*"
+  to     = "https://app.prova-systems.de/briefe:splat"
+  status = 301
+  force  = true
+
+# /kontakte (+ kontakte-supabase)
+[[redirects]]
+  from   = "https://prova-systems.de/kontakte*"
+  to     = "https://app.prova-systems.de/kontakte:splat"
+  status = 301
+  force  = true
+[[redirects]]
+  from   = "https://www.prova-systems.de/kontakte*"
+  to     = "https://app.prova-systems.de/kontakte:splat"
+  status = 301
+  force  = true
+
+# /profil (+ profil-supabase)
+[[redirects]]
+  from   = "https://prova-systems.de/profil*"
+  to     = "https://app.prova-systems.de/profil:splat"
+  status = 301
+  force  = true
+[[redirects]]
+  from   = "https://www.prova-systems.de/profil*"
+  to     = "https://app.prova-systems.de/profil:splat"
+  status = 301
+  force  = true
+
+# /termine
+[[redirects]]
+  from   = "https://prova-systems.de/termine*"
+  to     = "https://app.prova-systems.de/termine:splat"
+  status = 301
+  force  = true
+[[redirects]]
+  from   = "https://www.prova-systems.de/termine*"
+  to     = "https://app.prova-systems.de/termine:splat"
+  status = 301
+  force  = true
+
+# /rechnungen
+[[redirects]]
+  from   = "https://prova-systems.de/rechnungen*"
+  to     = "https://app.prova-systems.de/rechnungen:splat"
+  status = 301
+  force  = true
+[[redirects]]
+  from   = "https://www.prova-systems.de/rechnungen*"
+  to     = "https://app.prova-systems.de/rechnungen:splat"
+  status = 301
+  force  = true
+
+# /einstellungen
+[[redirects]]
+  from   = "https://prova-systems.de/einstellungen*"
+  to     = "https://app.prova-systems.de/einstellungen:splat"
+  status = 301
+  force  = true
+[[redirects]]
+  from   = "https://www.prova-systems.de/einstellungen*"
+  to     = "https://app.prova-systems.de/einstellungen:splat"
+  status = 301
+  force  = true
+
+# /freigabe (+ freigabe-queue)
+[[redirects]]
+  from   = "https://prova-systems.de/freigabe*"
+  to     = "https://app.prova-systems.de/freigabe:splat"
+  status = 301
+  force  = true
+[[redirects]]
+  from   = "https://www.prova-systems.de/freigabe*"
+  to     = "https://app.prova-systems.de/freigabe:splat"
+  status = 301
+  force  = true
+
+# /stellungnahme (+ stellungnahme-* Versionen)
+[[redirects]]
+  from   = "https://prova-systems.de/stellungnahme*"
+  to     = "https://app.prova-systems.de/stellungnahme:splat"
+  status = 301
+  force  = true
+[[redirects]]
+  from   = "https://www.prova-systems.de/stellungnahme*"
+  to     = "https://app.prova-systems.de/stellungnahme:splat"
+  status = 301
+  force  = true
+
+# /gutachterliche-stellungnahme (Pilot-Page)
+[[redirects]]
+  from   = "https://prova-systems.de/gutachterliche-stellungnahme*"
+  to     = "https://app.prova-systems.de/gutachterliche-stellungnahme:splat"
+  status = 301
+  force  = true
+[[redirects]]
+  from   = "https://www.prova-systems.de/gutachterliche-stellungnahme*"
+  to     = "https://app.prova-systems.de/gutachterliche-stellungnahme:splat"
+  status = 301
+  force  = true
+
+# Flow B/C/D
+[[redirects]]
+  from   = "https://prova-systems.de/baubegleitung*"
+  to     = "https://app.prova-systems.de/baubegleitung:splat"
+  status = 301
+  force  = true
+[[redirects]]
+  from   = "https://prova-systems.de/beratung*"
+  to     = "https://app.prova-systems.de/beratung:splat"
+  status = 301
+  force  = true
+[[redirects]]
+  from   = "https://prova-systems.de/wertgutachten*"
+  to     = "https://app.prova-systems.de/wertgutachten:splat"
+  status = 301
+  force  = true
+[[redirects]]
+  from   = "https://prova-systems.de/ortstermin*"
+  to     = "https://app.prova-systems.de/ortstermin:splat"
+  status = 301
+  force  = true
+
+# Werkzeuge
+[[redirects]]
+  from   = "https://prova-systems.de/jveg*"
+  to     = "https://app.prova-systems.de/jveg:splat"
+  status = 301
+  force  = true
+[[redirects]]
+  from   = "https://prova-systems.de/normen*"
+  to     = "https://app.prova-systems.de/normen:splat"
+  status = 301
+  force  = true
+[[redirects]]
+  from   = "https://prova-systems.de/textbausteine*"
+  to     = "https://app.prova-systems.de/textbausteine:splat"
+  status = 301
+  force  = true
+[[redirects]]
+  from   = "https://prova-systems.de/positionen*"
+  to     = "https://app.prova-systems.de/positionen:splat"
+  status = 301
+  force  = true
+[[redirects]]
+  from   = "https://prova-systems.de/zpo-anzeige*"
+  to     = "https://app.prova-systems.de/zpo-anzeige:splat"
+  status = 301
+  force  = true
+[[redirects]]
+  from   = "https://prova-systems.de/jahresbericht*"
+  to     = "https://app.prova-systems.de/jahresbericht:splat"
+  status = 301
+  force  = true
+[[redirects]]
+  from   = "https://prova-systems.de/kostenermittlung*"
+  to     = "https://app.prova-systems.de/kostenermittlung:splat"
+  status = 301
+  force  = true
+[[redirects]]
+  from   = "https://prova-systems.de/hilfe*"
+  to     = "https://app.prova-systems.de/hilfe:splat"
+  status = 301
+  force  = true
+[[redirects]]
+  from   = "https://prova-systems.de/statistiken*"
+  to     = "https://app.prova-systems.de/statistiken:splat"
+  status = 301
+  force  = true
+
+# Onboarding
+[[redirects]]
+  from   = "https://prova-systems.de/onboarding*"
+  to     = "https://app.prova-systems.de/onboarding:splat"
+  status = 301
+  force  = true
+[[redirects]]
+  from   = "https://www.prova-systems.de/onboarding*"
+  to     = "https://app.prova-systems.de/onboarding:splat"
+  status = 301
+  force  = true
+
+# Sonstige App-Pages
+[[redirects]]
+  from   = "https://prova-systems.de/portal*"
+  to     = "https://app.prova-systems.de/portal:splat"
+  status = 301
+  force  = true
+[[redirects]]
+  from   = "https://prova-systems.de/benachrichtigungen*"
+  to     = "https://app.prova-systems.de/benachrichtigungen:splat"
+  status = 301
+  force  = true
+[[redirects]]
+  from   = "https://prova-systems.de/import-assistent*"
+  to     = "https://app.prova-systems.de/import-assistent:splat"
+  status = 301
+  force  = true
+[[redirects]]
+  from   = "https://prova-systems.de/smtp-einrichtung*"
+  to     = "https://app.prova-systems.de/smtp-einrichtung:splat"
+  status = 301
+  force  = true
+[[redirects]]
+  from   = "https://prova-systems.de/auftrag-neu*"
+  to     = "https://app.prova-systems.de/auftrag-neu:splat"
+  status = 301
+  force  = true
+
+# /admin-* → admin.prova-systems.de
+[[redirects]]
+  from   = "https://prova-systems.de/admin-dashboard*"
+  to     = "https://admin.prova-systems.de/dashboard:splat"
+  status = 301
+  force  = true
+[[redirects]]
+  from   = "https://prova-systems.de/admin-login*"
+  to     = "https://admin.prova-systems.de/login:splat"
+  status = 301
+  force  = true
+
+# ─── Block C: APP-Subdomain Root → /login ─────────────────────────
+# Wer direkt app.prova-systems.de aufruft soll auf /login landen.
+# JS-seitig prueft auth-guard ob Session existiert und redirected
+# bei eingeloggtem User auf /dashboard.
+
+[[redirects]]
+  from   = "https://app.prova-systems.de/"
+  to     = "/login"
+  status = 302
+  force  = true
+
+# ─── Block D: Bestand ─────────────────────────────────────────────
+# Bestehende Redirects vor APP-LANDING-SPLIT — bleiben unveraendert
+# weil sie path-only sind und auf beide Hosts angewendet werden.
+
+# /app als rewrite (legacy — soll auf /dashboard zeigen jetzt)
+[[redirects]]
+  from   = "/app"
+  to     = "/dashboard"
+  status = 301
+  force  = true
+
+# /register → /onboarding (clean URL)
+[[redirects]]
+  from   = "/register"
+  to     = "/onboarding-supabase.html"
+  status = 301
+
+# bescheinigungen.html (Sprint 04 entfernt)
 [[redirects]]
   from   = "/bescheinigungen.html"
   to     = "/dashboard.html"
@@ -57,55 +410,22 @@
   to     = "/dashboard.html"
   status = 301
 
+# Tier-Legacy-Umleitungen (Sprint K1, 20.04.2026)
 [[redirects]]
-  from   = "/dashboard"
-  to     = "/dashboard.html"
+  from   = "/app-starter.html"
+  to     = "/app.html"
   status = 301
-
+  force  = true
 [[redirects]]
-  from   = "/onboarding"
-  to     = "/onboarding.html"
-  status = 200
-
-[[redirects]]
-  from   = "/freigabe"
-  to     = "/freigabe.html"
-  status = 200
-
-[[redirects]]
-  from   = "/einstellungen"
-  to     = "/einstellungen.html"
-  status = 200
-
-[[redirects]]
-  from   = "/benachrichtigungen"
-  to     = "/benachrichtigungen.html"
-  status = 200
-
-[[redirects]]
-  from   = "/ortstermin"
-  to     = "/ortstermin-modus.html"
+  from   = "/app-pro.html"
+  to     = "/app.html"
   status = 301
-
+  force  = true
 [[redirects]]
-  from   = "/agb"
-  to     = "/agb.html"
-  status = 200
-
-[[redirects]]
-  from   = "/datenschutz"
-  to     = "/datenschutz.html"
-  status = 200
-
-[[redirects]]
-  from   = "/impressum"
-  to     = "/impressum.html"
-  status = 200
-
-[[redirects]]
-  from   = "/avv"
-  to     = "/avv.html"
-  status = 200
+  from   = "/app-enterprise.html"
+  to     = "/app.html"
+  status = 301
+  force  = true
 
 # Stripe Webhook Alias
 [[redirects]]
@@ -113,38 +433,15 @@
   to     = "/.netlify/functions/stripe-webhook"
   status = 200
 
-# ─── Tier-Legacy-Umleitungen (Sprint K1 Fix, 20.04.2026) ──────────────
-# Dateien app-starter.html / app-pro.html / app-enterprise.html wurden
-# gelöscht. 301 leitet alte Bookmarks, externe Links, Google-Index und
-# Alt-Service-Worker-Caches permanent auf app.html um.
-# MUSS VOR dem /* → /404.html Catch-all stehen (Netlify wertet top-down).
-[[redirects]]
-  from   = "/app-starter.html"
-  to     = "/app.html"
-  status = 301
-  force  = true
-
-[[redirects]]
-  from   = "/app-pro.html"
-  to     = "/app.html"
-  status = 301
-  force  = true
-
-[[redirects]]
-  from   = "/app-enterprise.html"
-  to     = "/app.html"
-  status = 301
-  force  = true
-
 # 404 Fallback - KEIN SPA-Catchall (wuerde fehlende Dateien auf index.html leiten)
 [[redirects]]
   from   = "/*"
   to     = "/404.html"
   status = 404
 
-# ==============================================================
+# ==================================================================
 # SECURITY HEADERS
-# ==============================================================
+# ==================================================================
 
 [[headers]]
   for = "/*"
@@ -193,4 +490,4 @@
   for = "/.netlify/functions/*"
   [headers.values]
     Cache-Control    = "no-cache, no-store, must-revalidate"
-    X-PROVA-Version  = "5.4"
+    X-PROVA-Version  = "6.0"
