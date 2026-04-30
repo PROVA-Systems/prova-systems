@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v247';   // hotfix-2 disable auto-redirect (anti-loop)
+const CACHE_VERSION = 'prova-v248';   // Cutover Block 3: Bridge + Belt-and-Suspenders
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
