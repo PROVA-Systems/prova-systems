@@ -21,7 +21,7 @@
 
 import { handleCors, jsonResponse, errorResponse } from '../_shared/cors.ts';
 import { verifyJwt, getWorkspaceId, HttpError, withErrorHandling } from '../_shared/auth.ts';
-import { createSupabaseClient } from '../_shared/supabase.ts';
+import { createSupabaseClient, createServiceClient } from '../_shared/supabase.ts';
 import { logAuditEvent, trackFeatureEvent } from '../_shared/audit.ts';
 import { getTemplateId } from '../_shared/templates.ts';
 import { resolveLetterhead, mergeLetterheadIntoVariables } from '../_shared/letterhead-resolver.ts';
@@ -90,7 +90,16 @@ const handler = async (req: Request): Promise<Response> => {
 
     const ctx = await verifyJwt(req);
     const workspaceId = await getWorkspaceId(req, ctx);
-    const sb = createSupabaseClient(req);
+
+    // K-UI/X4 (Pattern aus X3 brief-generate, live verifiziert 30.04.):
+    //   sbUser  — User-JWT, nur fuer Reads mit Sicherheits-Bezug
+    //             (resolveLetterhead liest eigene users-Row via RLS)
+    //   sbAdmin — Service-Role, RLS bypass, fuer Storage + dokumente-
+    //             Insert + audit_trail. workspace_id wurde via verifyJwt
+    //             + getWorkspaceId User-side verifiziert, eine zweite
+    //             RLS-Schicht waere redundant.
+    const sbUser  = createSupabaseClient(req);
+    const sbAdmin = createServiceClient();
 
     const body = await req.json() as PdfGenerateRequest;
     if (!body.template_key) throw new HttpError('template_key required', 400);
@@ -100,7 +109,8 @@ const handler = async (req: Request): Promise<Response> => {
 
     // K-FIX: Letterhead aus users.letterhead_config laden + in payload mergen
     //        (Stempel/Unterschrift via Signed URL aus letterheads-Storage)
-    const letterhead = await resolveLetterhead(sb, ctx.user.id);
+    //        Bewusst sbUser: liest nur eigene users-Row, RLS schuetzt korrekt.
+    const letterhead = await resolveLetterhead(sbUser, ctx.user.id);
     const mergedPayload = mergeLetterheadIntoVariables(body.payload, letterhead);
 
     // 1. Trigger PDFMonkey
@@ -115,16 +125,21 @@ const handler = async (req: Request): Promise<Response> => {
     if (!pdfResp.ok) throw new HttpError(`PDF download ${pdfResp.status}`, 502);
     const pdfBuf = new Uint8Array(await pdfResp.arrayBuffer());
 
-    // 4. Upload zu Storage (workspace-scoped Pfad)
+    // 4. Upload zu Storage (Service-Client → RLS bypass).
+    //    Pfad-Konvention: sv-{workspace_id}/... — matcht
+    //    storage_path_to_workspace_id-Helper aus 03_schema_artefakte_storage.sql,
+    //    damit SELECT-RLS spaeter funktioniert (User soll Files seines
+    //    Workspaces lesen koennen — Service-Role nur fuer den INSERT).
     const datePath = new Date().toISOString().slice(0, 10);
-    const storagePath = `${workspaceId}/dokumente/${datePath}/${body.template_key}-${created.id}.pdf`;
-    const { error: upErr } = await sb.storage
+    const storagePath = `sv-${workspaceId}/dokumente/${datePath}/${body.template_key}-${created.id}.pdf`;
+    const { error: upErr } = await sbAdmin.storage
         .from(STORAGE_BUCKET)
         .upload(storagePath, pdfBuf, { contentType: 'application/pdf', upsert: true });
     if (upErr) throw new HttpError(`Storage upload: ${upErr.message}`, 500);
 
-    // 5. dokumente-Insert
-    const { data: docRow, error: insErr } = await sb.from('dokumente').insert({
+    // 5. dokumente-Insert — Service-Client. workspace_id explizit aus
+    //    User-verifizierter Quelle, Multi-Tenancy-Boundary bleibt korrekt.
+    const { data: docRow, error: insErr } = await sbAdmin.from('dokumente').insert({
         workspace_id: workspaceId,
         typ: body.typ,
         auftrag_id: body.auftrag_id ?? null,
@@ -141,13 +156,14 @@ const handler = async (req: Request): Promise<Response> => {
     }).select('id').single();
     if (insErr) throw new HttpError(`dokumente insert: ${insErr.message}`, 500);
 
-    // 6. Signed URL für Frontend (1h gültig)
-    const { data: signed } = await sb.storage
+    // 6. Signed URL für Frontend (1h gültig) — Service-Client darf signen.
+    const { data: signed } = await sbAdmin.storage
         .from(STORAGE_BUCKET)
         .createSignedUrl(storagePath, 3600);
 
-    // 7. Audit + Feature-Event
-    await logAuditEvent(sb, {
+    // 7. Audit + Feature-Event — Service-Client (audit_trail INSERT
+    //    soll auch dann klappen wenn audit_trail-RLS strict ist).
+    await logAuditEvent(sbAdmin, {
         action: 'pdf_generate',
         entityTyp: 'dokument',
         entityId: docRow.id,
@@ -155,7 +171,7 @@ const handler = async (req: Request): Promise<Response> => {
         workspaceId,
         userId: ctx.user.id
     }, req);
-    await trackFeatureEvent(sb, workspaceId, 'document_generated', `pdf.${body.template_key}`);
+    await trackFeatureEvent(sbAdmin, workspaceId, 'document_generated', `pdf.${body.template_key}`);
 
     const response: PdfGenerateResponse = {
         dokument_id: docRow.id,
