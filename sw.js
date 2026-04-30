@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v246';   // hotfix login-redirect-default: /dashboard statt /tools/test-supabase-login.html
+const CACHE_VERSION = 'prova-v247';   // hotfix-2 disable auto-redirect (anti-loop)
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
