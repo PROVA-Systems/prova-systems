@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v244';   // split-3d: nav.js Logout/Logo-Redirects auf /login
+const CACHE_VERSION = 'prova-v245';   // hotfix redirect-precedence: App-Pfade in netlify.toml host-spezifisch
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
