@@ -3,6 +3,7 @@
 // → GPT-4o Vision analysiert das Bild und gibt strukturierte Metadaten zurück
 
 const { requireAuth, jsonResponse } = require('./lib/jwt-middleware');
+const { getCorsHeaders } = require('./lib/cors-helper');
 const RateLimit = require('./lib/rate-limit-user');
 
 // S-SICHER P4B.4: requireAuth + Rate-Limit 30/60s pro Token-sub
@@ -90,7 +91,7 @@ Gib das JSON-Objekt zurück.`;
       console.error('[foto-captioning] OpenAI-Fehler:', (data.error && data.error.message) || 'Unbekannt');
       return {
         statusCode: 502,
-        headers: { 'Access-Control-Allow-Origin': '*', 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...getCorsHeaders(event) },
         body: JSON.stringify({ error: 'Bild-Analyse fehlgeschlagen' })
       };
     }
@@ -112,7 +113,7 @@ Gib das JSON-Objekt zurück.`;
       statusCode: 200,
       headers: {
         'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
+        ...getCorsHeaders(event)
       },
       body: JSON.stringify({
         success: true,
@@ -126,7 +127,7 @@ Gib das JSON-Objekt zurück.`;
     console.error('[foto-captioning] Upstream-Fehler:', e && e.message);
     return {
       statusCode: 502,
-      headers: { 'Access-Control-Allow-Origin': '*', 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...getCorsHeaders(event) },
       body: JSON.stringify({ error: 'Upstream error' })
     };
   }

@@ -15,6 +15,10 @@
 // ══════════════════════════════════════════════════════════════════════════════
 
 const { resolveUser, logAuthFailure } = require('./lib/auth-resolve');
+const { getCorsHeaders } = require('./lib/cors-helper');
+
+// S6 Phase 1.9: per-request event-Capture (siehe ki-proxy.js Begruendung)
+let _currentEvent = null;
 
 const AT_BASE        = 'appJ7bLlAHZoxENWE';
 const AT_PUSH_TABLE  = 'PUSH_SUBSCRIPTIONS';   // Neue Tabelle anlegen
@@ -44,6 +48,7 @@ function isAllowedOrigin(event) {
 }
 
 exports.handler = async (event) => {
+  _currentEvent = event;
   if (event.httpMethod === 'OPTIONS') {
     return { statusCode: 200, headers: corsHeaders(), body: '' };
   }
@@ -464,8 +469,6 @@ async function atDelete(pat, path) {
 function corsHeaders() {
   return {
     'Content-Type': 'application/json',
-    'Access-Control-Allow-Origin':  '*',
-    'Access-Control-Allow-Headers': 'Content-Type',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    ...getCorsHeaders(_currentEvent)
   };
 }

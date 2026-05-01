@@ -17,10 +17,15 @@
 const crypto = require('crypto');
 const ProvaPseudo = require('./lib/prova-pseudo');
 const { requireAuth, jsonResponse } = require('./lib/jwt-middleware');
+const { getCorsHeaders } = require('./lib/cors-helper');
 const RateLimit = require('./lib/rate-limit-user');
+
+// S6 Phase 1.9: per-request event-Capture (siehe ki-proxy.js Begruendung)
+let _currentEvent = null;
 
 // S-SICHER P4B.3: requireAuth + Rate-Limit 10/60s pro Token-sub
 exports.handler = requireAuth(async (event, context) => {
+  _currentEvent = event;
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, headers: corsHeaders(), body: 'Method Not Allowed' };
   }
@@ -197,8 +202,6 @@ exports.handler = requireAuth(async (event, context) => {
 function corsHeaders() {
   return {
     'Content-Type': 'application/json',
-    'Access-Control-Allow-Origin':  '*',
-    'Access-Control-Allow-Headers': 'Content-Type',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    ...getCorsHeaders(_currentEvent)
   };
 }

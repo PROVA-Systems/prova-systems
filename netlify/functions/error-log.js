@@ -10,12 +10,13 @@ const rateBuckets = new Map();
 const WINDOW_MS = 60 * 1000;
 const MAX_PER_WINDOW = 10;
 
+// S6 Phase 1.9: per-request event-Capture (siehe ki-proxy.js Begruendung)
+let _currentEvent = null;
+
 function corsHeaders() {
   return {
     'Content-Type': 'application/json; charset=utf-8',
-    'Access-Control-Allow-Origin': (event && event.headers && event.headers.origin && (event.headers.origin.includes('prova-systems') || event.headers.origin.includes('localhost')) ? event.headers.origin : (process.env.URL || 'https://prova-systems.de')),
-    'Access-Control-Allow-Headers': 'Content-Type',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS'
+    ...getCorsHeaders(_currentEvent, ['POST', 'OPTIONS'])
   };
 }
 
@@ -38,6 +39,7 @@ function allowRate(ip) {
 }
 
 exports.handler = async function (event) {
+  _currentEvent = event;
   if (event.httpMethod === 'OPTIONS') {
     return { statusCode: 204, headers: corsHeaders(), body: '' };
   }

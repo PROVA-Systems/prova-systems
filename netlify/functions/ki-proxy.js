@@ -14,6 +14,7 @@
 // ── Fachwissen-Provider: liefert Airtable-Live-Normen mit Fallback-Kaskade
 // SAFE BY DESIGN: wirft nie — bei Total-Fehlschlag leerer Kontext, ki-proxy läuft wie heute weiter
 const { requireAuth, jsonResponse: jwtJsonResponse } = require('./lib/jwt-middleware');
+const { getCorsHeaders } = require('./lib/cors-helper');
 const RateLimit = require('./lib/rate-limit-user');
 const FW = require('./lib/prova-fachwissen');
 
@@ -101,9 +102,15 @@ ${cleanPseudo}
 ════════════════════════════════════════════════════════════════════════`;
 }
 
+// S6 Phase 1.9: per-request event-Capture fuer interne jsonResponse-Aufrufe.
+// Netlify-Lambda-Container haelt nur EINEN Request gleichzeitig (single-threaded
+// V8 Event-Loop) — module-scoped Variable ist hier safe.
+let _currentEvent = null;
+
 // S-SICHER P4B.2: requireAuth wrap + per-User Rate-Limit 20/60s.
 // Token-sub liegt nach requireAuth in context.userEmail.
 exports.handler = requireAuth(async function(event, context) {
+  _currentEvent = event;
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: JSON.stringify({ error: 'Method not allowed' }) };
   }
@@ -149,7 +156,7 @@ exports.handler = requireAuth(async function(event, context) {
   } catch (e) {
     // S-SICHER P2.2 (Finding 8.1): e.message nur server-seitig loggen.
     console.error('[ki-proxy] Upstream-Fehler:', e && e.message);
-    return { statusCode: 502, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }, body: JSON.stringify({ error: 'Upstream error' }) };
+    return { statusCode: 502, headers: { 'Content-Type': 'application/json', ...getCorsHeaders(_currentEvent) }, body: JSON.stringify({ error: 'Upstream error' }) };
   }
 });
 
@@ -353,7 +360,7 @@ async function callOpenAI(params, apiKey) {
 }
 
 function jsonResponse(data, status = 200) {
-  return { statusCode: status, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }, body: JSON.stringify(data) };
+  return { statusCode: status, headers: { 'Content-Type': 'application/json', ...getCorsHeaders(_currentEvent) }, body: JSON.stringify(data) };
 }
 
 /* ── KI-Assist Inline (§6 Fachurteil) ── */

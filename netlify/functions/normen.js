@@ -22,13 +22,17 @@ const FIELD_MAP = {
 
 const FIELDS = Object.keys(FIELD_MAP).map(id => `fields[]=${encodeURIComponent(id)}`).join('&');
 
-const CORS = {
-  'Content-Type': 'application/json; charset=utf-8',
-  'Access-Control-Allow-Origin': 'https://prova-systems.de',
-  'Access-Control-Allow-Methods': 'GET,OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type',
-  'Cache-Control': 'public, max-age=300'
-};
+const { getCorsHeaders } = require('./lib/cors-helper');
+
+// S6 Phase 1.9: dynamische CORS-Headers per Request (vorher hardcoded
+// auf prova-systems.de — App-Subdomain wurde geblockt). Audit-8 M-03.
+function corsBase(event) {
+  return {
+    'Content-Type': 'application/json; charset=utf-8',
+    'Cache-Control': 'public, max-age=300',
+    ...getCorsHeaders(event, ['GET', 'OPTIONS'])
+  };
+}
 
 async function fetchPage(pat, offset) {
   // Aktiv ist ein Checkbox-Feld → TRUE() für aktive Datensätze
@@ -61,6 +65,7 @@ function mapRecord(rec) {
 }
 
 exports.handler = async function(event) {
+  const CORS = corsBase(event);
   if (event.httpMethod === 'OPTIONS') {
     return { statusCode: 204, headers: CORS, body: '' };
   }

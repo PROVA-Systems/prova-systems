@@ -3,15 +3,16 @@
 
 const https = require('https');
 const { requireAuth } = require('./lib/jwt-middleware');
+const { getCorsHeaders } = require('./lib/cors-helper');
 
-const CORS = {
-  'Content-Type': 'application/json',
-  'Access-Control-Allow-Origin': 'https://prova-systems.de',
-  'Access-Control-Allow-Methods': 'POST,OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type'
-};
+// S6 Phase 1.9: dynamische CORS-Headers per Request (vorher hardcoded
+// auf prova-systems.de — App-Subdomain wurde geblockt). Audit-8 M-03.
+function corsHeaders(event) {
+  return { 'Content-Type': 'application/json', ...getCorsHeaders(event) };
+}
 
 exports.handler = requireAuth(async function(event, context) {
+  const CORS = corsHeaders(event);
   if (event.httpMethod !== 'POST') return { statusCode: 405, headers: CORS, body: JSON.stringify({error:'Method not allowed'}) };
 
   try {

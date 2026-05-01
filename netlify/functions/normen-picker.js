@@ -16,15 +16,17 @@
 // Frontend hat zusätzlich eigenen lokalen Fallback (NORMEN_DB bleibt als Notfall).
 
 const FW = require('./lib/prova-fachwissen.js');
+const { getCorsHeaders } = require('./lib/cors-helper');
 
-const CORS = {
-  'Content-Type': 'application/json; charset=utf-8',
-  'Access-Control-Allow-Origin': 'https://prova-systems.de',
-  'Access-Control-Allow-Methods': 'POST,GET,OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type',
-  // Für fast-Mode kurzes Edge-Cache — schlägt bei gleicher schadensart ein
-  'Cache-Control': 'public, max-age=60'
-};
+// S6 Phase 1.9: dynamische CORS-Headers per Request (vorher hardcoded
+// auf prova-systems.de — App-Subdomain wurde geblockt). Audit-8 M-03.
+function corsBase(event) {
+  return {
+    'Content-Type': 'application/json; charset=utf-8',
+    'Cache-Control': 'public, max-age=60',
+    ...getCorsHeaders(event, ['POST', 'GET', 'OPTIONS'])
+  };
+}
 
 /**
  * Frontend-Kompatibilitäts-Mapping:
@@ -224,6 +226,7 @@ async function handleFlowB(zweck, objektart, max) {
 }
 
 exports.handler = async function(event) {
+  const CORS = corsBase(event);
   if (event.httpMethod === 'OPTIONS') {
     return { statusCode: 204, headers: CORS, body: '' };
   }

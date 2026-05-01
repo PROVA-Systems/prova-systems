@@ -12,10 +12,11 @@ const bcrypt = require('bcryptjs');
 const { getCorsHeaders, corsOptionsResponse } = require('./lib/cors-helper');
 
 exports.handler = async (event) => {
+  // S6 Phase 1.9: zentralen cors-helper nutzen statt lokal hardcoded.
+  // ALLOWED_ORIGINS in cors-helper enthaelt admin.prova-systems.de.
   const headers = {
-    'Access-Control-Allow-Origin': process.env.URL || 'https://prova-systems.de',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     'Content-Type': 'application/json',
+    ...getCorsHeaders(event)
   };
 
   if (event.httpMethod === 'OPTIONS') return { statusCode: 200, headers, body: '' };

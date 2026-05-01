@@ -9,14 +9,15 @@ const {
 const { getCorsHeaders, corsOptionsResponse, jsonResponse } = require('./lib/cors-helper');
 const { requireAuth } = require('./lib/jwt-middleware');
 
+// S6 Phase 1.9: per-request event-Capture (siehe ki-proxy.js Begruendung)
+let _currentEvent = null;
+
 function json(statusCode, obj) {
   return {
     statusCode: statusCode,
     headers: {
       'Content-Type': 'application/json; charset=utf-8',
-      'Access-Control-Allow-Origin': (event && event.headers && event.headers.origin && (event.headers.origin.includes('prova-systems') || event.headers.origin.includes('localhost')) ? event.headers.origin : (process.env.URL || 'https://prova-systems.de')),
-      'Access-Control-Allow-Headers': 'Authorization, Content-Type',
-      'Access-Control-Allow-Methods': 'GET, OPTIONS'
+      ...getCorsHeaders(_currentEvent, ['GET', 'OPTIONS'])
     },
     body: JSON.stringify(obj)
   };
@@ -38,6 +39,7 @@ async function listCount(pat, tableId, formula) {
 }
 
 exports.handler = requireAuth(async function (event, context) {
+  _currentEvent = event;
   if (event.httpMethod !== 'GET') return json(405, { error: 'Method Not Allowed' });
 
   // P4B.7b: context.userEmail aus HMAC-Token statt Identity-clientContext.user.email

@@ -13,10 +13,15 @@
 // ══════════════════════════════════════════════════════════════════════════════
 
 const { requireAuth } = require('./lib/jwt-middleware');
+const { getCorsHeaders } = require('./lib/cors-helper');
+
+// S6 Phase 1.9: per-request event-Capture (siehe ki-proxy.js Begruendung)
+let _currentEvent = null;
 
 const DEFAULT_RETURN = 'https://prova-systems.de/einstellungen.html#paket';
 
 exports.handler = requireAuth(async (event, context) => {
+  _currentEvent = event;
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, headers: corsHeaders(), body: JSON.stringify({ error: 'Method Not Allowed' }) };
   }
@@ -85,9 +90,7 @@ exports.handler = requireAuth(async (event, context) => {
 
 function corsHeaders() {
   return {
-    'Content-Type':                 'application/json',
-    'Access-Control-Allow-Origin':  '*',
-    'Access-Control-Allow-Headers': 'Content-Type',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS'
+    'Content-Type': 'application/json',
+    ...getCorsHeaders(_currentEvent)
   };
 }

@@ -630,12 +630,21 @@
 [[headers]]
   for = "/*"
   [headers.values]
-    Strict-Transport-Security = "max-age=31536000; includeSubDomains"
-    X-Frame-Options           = "SAMEORIGIN"
-    X-Content-Type-Options    = "nosniff"
-    Referrer-Policy           = "strict-origin-when-cross-origin"
-    Permissions-Policy        = "microphone=(self), camera=(self), geolocation=(), payment=(self)"
-    Content-Security-Policy   = "default-src 'self'; script-src 'self' 'unsafe-inline' https://identity.netlify.com https://js.stripe.com https://esm.sh https://cdn.jsdelivr.net https://*.supabase.co; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; media-src 'self' blob:; worker-src 'self' blob:; frame-src 'self' https://*.stripe.com https://js.stripe.com https://hooks.stripe.com; connect-src 'self' https://esm.sh https://cdn.jsdelivr.net https://*.netlify.app https://prova-systems.netlify.app https://identity.netlify.com https://api.netlify.com https://api.stripe.com https://api.openai.com https://hook.eu1.make.com https://hook.eu2.make.com https://*.supabase.co wss://*.supabase.co wss:; frame-ancestors 'self'; object-src 'none'; base-uri 'self';"
+    # S6 Phase 1.9 (02.05.2026): Header-Hardening nach Audit 7.
+    # - HSTS: preload-Direktive ergaenzt (LOW-2)
+    # - COOP/COEP/CORP: Cross-Origin-Isolation (HIGH-4)
+    # - Permissions-Policy: vollstaendige Liste statt 4 Features (INFO-2)
+    # - CSP: identity.netlify.com raus (M-06), *.netlify.app raus (M-07),
+    #        wss: Wildcard raus (M-08)
+    Strict-Transport-Security    = "max-age=31536000; includeSubDomains; preload"
+    X-Frame-Options              = "SAMEORIGIN"
+    X-Content-Type-Options       = "nosniff"
+    Referrer-Policy              = "strict-origin-when-cross-origin"
+    Cross-Origin-Opener-Policy   = "same-origin-allow-popups"
+    Cross-Origin-Embedder-Policy = "credentialless"
+    Cross-Origin-Resource-Policy = "same-origin"
+    Permissions-Policy           = "accelerometer=(), autoplay=(), camera=(self), cross-origin-isolated=(), display-capture=(), encrypted-media=(), fullscreen=(self), geolocation=(), gyroscope=(), keyboard-map=(), magnetometer=(), microphone=(self), midi=(), payment=(self), picture-in-picture=(), publickey-credentials-get=(self), screen-wake-lock=(), sync-xhr=(self), usb=(), web-share=(self), xr-spatial-tracking=()"
+    Content-Security-Policy      = "default-src 'self'; script-src 'self' 'unsafe-inline' https://js.stripe.com https://esm.sh https://cdn.jsdelivr.net https://*.supabase.co; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; media-src 'self' blob:; worker-src 'self' blob:; frame-src 'self' https://*.stripe.com https://js.stripe.com https://hooks.stripe.com; connect-src 'self' https://esm.sh https://cdn.jsdelivr.net https://prova-systems.netlify.app https://api.netlify.com https://api.stripe.com https://api.openai.com https://hook.eu1.make.com https://hook.eu2.make.com https://*.supabase.co wss://*.supabase.co; frame-ancestors 'self'; object-src 'none'; base-uri 'self';"
 
 # HTML: kein Cache
 [[headers]]
