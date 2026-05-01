@@ -1,6 +1,6 @@
 # PROVA Regeln Permanent
 
-**Stand:** 01.05.2026 abend (Tag 7)
+**Stand:** 02.05.2026 nachmittags (Tag 8)
 **Single Source of Truth** — siehe `docs/master/README.md`
 **Quellen:** `CLAUDE.md` v3.0 (Repo-Root, lebend) + Tag-7-Lessons-Learned
 
@@ -233,11 +233,41 @@ PROVA_AUDIT_TRAIL_TABLE
 
 NICHT-Prefix erlaubt für:
 - Standard-Library-ENVs (NODE_ENV, URL, NETLIFY_*, DEPLOY_URL)
-- Service-spezifische Standards (STRIPE_SECRET_KEY, OPENAI_API_KEY, AIRTABLE_PAT)
+- Service-spezifische Standards (STRIPE_SECRET_KEY, OPENAI_API_KEY)
 ```
 
 #### Rationale
 Multi-Project-Netlify-Accounts haben oft generische Namen vorbelegt. Wenn ein anderes Repo `SUPABASE_URL` benutzt, kann das aktuelle Projekt eine falsche URL erben. PROVA-Prefix isoliert eindeutig zu PROVA-internen Functions.
+
+---
+
+## Daten-Pfad (35a — neu 02.05.2026)
+
+### Regel 35a — Airtable ist im Live-Pfad verboten
+**Kein neuer Code darf Daten aus `/.netlify/functions/airtable*` oder `api.airtable.com` lesen oder schreiben. PROVA ist seit Sprint K-1.5 vollständig auf Supabase migriert.**
+
+#### Erlaubt (Übergangs-Realität)
+- Tot-Code-Strings in Logic-Files dürfen vorerst stehenbleiben (werden vom `prova-fetch-auth.js`-Wrapper hart abgeblockt mit 410-Fake-Response)
+- Verbleibende `process.env.AIRTABLE_*`-Lesungen in alten Functions (Refactor-Backlog) — schlagen nach Marcel-ENV-Löschung mit 401 fehl, kein User-Impact weil die Functions nicht mehr aufgerufen werden
+- Referenzen in `docs/`, `masterplan-v2/`, `scripts/migrate/`, `tests/` (Historie + Migrations-Pipeline + Test-Fixtures)
+
+#### Verboten
+- Neuer `fetch('/.netlify/functions/airtable...')`-Call
+- Neuer `fetch('https://api.airtable.com/...')`-Call
+- Neue Function die Airtable-API aufruft
+- Wiederbeleben einer der gelöschten 16 Legacy-Functions (siehe `docs/master/PROVA-ARCHITEKTUR-MASTER.md` Block 3)
+- CSP `connect-src` darf nicht wieder Airtable enthalten
+
+#### Bei „Daten aus Airtable nötig"
+Sprint 11+ baut den jeweiligen Lookup auf Supabase-Direktzugriff via `lib/data-store.js` (oder direkter `supabase.from()` in Skeleton). Falls Marcel temporär Airtable-Daten braucht: Migrations-Pipeline `scripts/migrate/` ergänzen, NICHT Live-Code.
+
+#### Why
+Doktrin „PROVA ist seit K-1.0 bis K-1.5 vollständig auf Supabase migriert" muss in der Codebase konsistent reflektiert sein. Doppelter Daten-Pfad führt zu schwer reproduzierbaren Race-Conditions (siehe `docs/diagnose/OPTION-C-RACE-ANALYSE.md`).
+
+#### How to apply
+- Vor jedem neuen `fetch(...)`-Call: prüfe URL — wenn airtable, **anders bauen**
+- Bei Code-Review: jede neue Airtable-Referenz **blockt Merge**
+- Verifikation: `grep -ri 'airtable' --exclude-dir=docs --exclude-dir=masterplan-v2 --exclude-dir=scripts/migrate --exclude-dir=tests` darf keine **neuen** Treffer produzieren
 
 ---
 

@@ -1,6 +1,6 @@
 # PROVA Architektur Master
 
-**Stand:** 01.05.2026 abend (Tag 7, post-Option-C)
+**Stand:** 02.05.2026 nachmittags (Tag 8, post-Voll-Cleanup-Sprint)
 **Single Source of Truth** — siehe `docs/master/README.md`
 
 ---
@@ -95,14 +95,22 @@ Supabase Auth
   JWKS-URL: https://cngteblrbpwsyypexjrv.supabase.co/auth/v1/.well-known/jwks.json
   1 aktiver Public Key (kid: a3d72a1f-...)
 
-Netlify Functions (~48 Stück)
+Netlify Functions (~31 Stück, post-Voll-Cleanup)
   Server-Side JWT-Verify via lib/auth-resolve.js (async)
     → 3-Teiler-Token: lib/supabase-jwt.js (jose+JWKS, ES256)
     → 2-Teiler-Token: lib/auth-token.js (HMAC-SHA256 Legacy-Fallback)
-  Auth-protected: 25 Functions (alle via requireAuth oder resolveUser)
-  Public: 13 Functions (health, error-log, normen, auth-token-issue, etc.)
-  Admin-only: 6 Functions (admin-auth, admin-cache-clear, etc.)
-  Server-triggered: 4 Functions (stripe-webhook, termin-reminder, etc.)
+  Auth-protected: ~18 Functions (alle via requireAuth oder resolveUser)
+  Public: ~7 Functions (health, error-log, normen, auth-token-issue, etc.)
+  Admin-only: ~3 Functions (admin-auth, admin-cache-clear, etc.)
+  Server-triggered: ~3 Functions (stripe-webhook, termin-reminder, etc.)
+  
+  GELÖSCHT 02.05. (Voll-Cleanup-Sprint Block 3, 16 Functions + 1 Helper):
+  airtable.js, airtable-rate-limiter.js, lib/airtable-query.js (Pure-Proxies)
+  setup-tabellen.js, identity-signup.js (One-Time/Legacy)
+  auth-token-verify.js, brief-pdf-senden.js, brief-senden.js,
+  foto-pdf.js, mahnung-pdf.js, rechnung-pdf.js, jahresbericht-pdf.js,
+  zugferd-rechnung.js, smtp-test.js, create-checkout-session.js,
+  prova-subscription.js, pdf-analyse.js, normen-monitor.js, lib/prova-cache.js
 ```
 
 ### Externe Services
@@ -117,7 +125,7 @@ Netlify Functions (~48 Stück)
 | **Netlify** | Frontend-Hosting + Functions | core |
 | **Make.com** | Cron-Jobs (T3 Trial-Reminders, F1 Founding) | reduziert (raus ab Sprint K-1.5) |
 | **IONOS SMTP** | Custom-SMTP-Forward | optional |
-| **Airtable** | Legacy-Read-Path über `airtable.js` Function | wird ausphased |
+| ~~**Airtable**~~ | ~~Legacy-Read-Path~~ — **AUS DEM LIVE-PFAD ENTFERNT 02.05.2026** (`airtable.js` Function gelöscht, CSP `connect-src` clean, `prova-fetch-auth.js` blockt verbleibende Tot-Code-Calls hart). ~25 Functions referenzieren noch `process.env.AIRTABLE_*` (Refactor-Backlog). | **OUT (Live-Pfad)** |
 
 ---
 
@@ -342,9 +350,9 @@ Path-only Aliase für **LANDING-Hosts** (das App-Path-Rewrites stehen in netlify
 
 ---
 
-## Netlify Functions (Stand 01.05.2026, ~48 Stück)
+## Netlify Functions (Stand 02.05.2026, ~31 Stück, post-Voll-Cleanup)
 
-### `lib/` (Helper, ~15 Files)
+### `lib/` (Helper)
 
 | Datei | Zweck |
 |---|---|
@@ -355,23 +363,25 @@ Path-only Aliase für **LANDING-Hosts** (das App-Path-Rewrites stehen in netlify
 | `jwt-middleware.js` | `requireAuth(handler)` Wrapper |
 | `cors-helper.js` | CORS-Headers per ENV |
 | `rate-limit-user.js` | In-Memory Rate-Limit-Bucket per Token-sub |
-| `airtable-query.js`, `prova-cache.js`, `prova-pseudo.js`, `prova-logger.js`, `prova-stripe-prices.js`, `prova-subscription.js`, `prova-fachwissen.js`, `prova-fetch.js` | weitere Helpers |
+| `prova-pseudo.js`, `prova-logger.js`, `prova-stripe-prices.js`, `prova-fachwissen.js`, `prova-fetch.js` | weitere Helpers |
 
-### Auth-protected (25 Stück, alle via `requireAuth` oder direkter `resolveUser`)
+### Auth-protected (~18, alle via `requireAuth` oder direkter `resolveUser`)
 
-`airtable.js`, `make-proxy.js`, `akte-export.js`, `audit-log.js`, `brief-pdf-senden.js`, `brief-senden.js`, `dsgvo-auskunft.js`, `dsgvo-loeschen.js`, `emails.js`, `foto-anlage-pdf.js`, `foto-captioning.js`, `foto-pdf.js`, `foto-upload.js`, `jahresbericht-pdf.js`, `ki-proxy.js`, `ki-statistik.js`, `mahnung-pdf.js`, `mein-aktivitaetsprotokoll.js`, `pdf-proxy.js`, `rechnung-pdf.js`, `smtp-senden.js`, `stripe-checkout.js`, `stripe-portal.js`, `whisper-diktat.js`, `zugferd-rechnung.js`
+`make-proxy.js`, `akte-export.js`, `audit-log.js`, `dsgvo-auskunft.js`, `dsgvo-loeschen.js`, `emails.js`, `foto-anlage-pdf.js`, `foto-captioning.js`, `foto-upload.js`, `ki-proxy.js`, `ki-statistik.js`, `mein-aktivitaetsprotokoll.js`, `pdf-proxy.js`, `smtp-senden.js`, `stripe-checkout.js`, `stripe-portal.js`, `whisper-diktat.js`
 
-### Public / Server-Triggered (~13)
+> ⚠️ **Refactor-Backlog:** Diese Functions referenzieren noch `process.env.AIRTABLE_*`. Nach Marcel-ENV-Löschung schlagen Airtable-Calls mit `401` fehl — Funktionen müssen in Folge-Sprints auf Supabase migriert werden.
 
-`health.js`, `error-log.js`, `push-notify.js`, `identity-signup.js`, `normen.js`, `normen-monitor.js`, `normen-picker.js`, `pdf-analyse.js`, `team-interest.js`, `stripe-webhook.js`, `termin-reminder.js`, `auth-token-issue.js`, `auth-token-verify.js`
+### Public / Server-Triggered (~7)
 
-### Admin-Only (6, separater Auth-Pfad — Sprint 18)
+`health.js`, `error-log.js`, `push-notify.js`, `normen.js`, `normen-picker.js`, `team-interest.js`, `stripe-webhook.js`, `termin-reminder.js`, `auth-token-issue.js`
 
-`admin-auth.js`, `admin-cache-clear.js`, `smtp-credentials.js`, `smtp-test.js`, `setup-tabellen.js`, `invite-user.js`
+### Admin-Only (~3, separater Auth-Pfad — Sprint 18)
 
-### Internal/Helper (~4)
+`admin-auth.js`, `admin-cache-clear.js`, `smtp-credentials.js`, `invite-user.js`
 
-`airtable-rate-limiter.js`, `provision-sv.js`, `create-checkout-session.js`, `prova-subscription.js`
+### Internal/Helper
+
+`provision-sv.js`
 
 ---
 
@@ -385,9 +395,10 @@ PROVA_SUPABASE_PROJECT_URL       ← optional
 # Auth (Legacy, weiterhin für HMAC-Fallback)
 AUTH_HMAC_SECRET
 
-# Airtable (Legacy-Read-Path)
-AIRTABLE_PAT, AIRTABLE_BASE_ID, AIRTABLE_TABLE_SV, AIRTABLE_BRIEFE_TABLE,
-AIRTABLE_AUDIT_TRAIL_TABLE, AIRTABLE_API_KEY (Legacy), AIRTABLE_TOKEN (Legacy)
+# Airtable — DEPRECATED (Marcel-Action: manuell in Netlify-UI löschen)
+# Liste in docs/sprint-status/AIRTABLE-ENV-CLEANUP-LIST.md (12 Vars)
+# Nach Löschung: ~18 Auth-Functions schlagen Airtable-Calls mit 401 fehl
+# (Refactor-Backlog für Folge-Sprints)
 
 # OpenAI
 OPENAI_API_KEY

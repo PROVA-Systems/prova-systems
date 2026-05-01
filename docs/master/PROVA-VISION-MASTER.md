@@ -1,6 +1,6 @@
 # PROVA Vision Master
 
-**Stand:** 01.05.2026 abend (Tag 7)
+**Stand:** 02.05.2026 nachmittags (Tag 8)
 **Vorläufer:** `masterplan-v2/00_MASTERPLAN.md` (25.04., archiviert) · CLAUDE.md v3.0 (27.04.)
 **Single Source of Truth** — siehe `docs/master/README.md`
 

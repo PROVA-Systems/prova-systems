@@ -1,6 +1,6 @@
 # PROVA Sprints Masterplan
 
-**Stand:** 01.05.2026 abend (Tag 7)
+**Stand:** 02.05.2026 nachmittags (Tag 8)
 **Single Source of Truth** — siehe `docs/master/README.md`
 
 ---
@@ -104,7 +104,29 @@ Migration vom Bridge-Hack zur Industry-Standard Token-Verifikation.
 
 **DONE-Doc:** `docs/sprint-status/PARALLEL-SPRINT-DONE.md`
 
-### Master-Doku-Konsolidierung Tag 7 abend (DIESER Sprint)
+### Voll-Cleanup-Sprint — Airtable raus (Tag 8 vormittags-nachmittags, DONE)
+
+Marcel-Direktive 02.05.2026: „PROVA ist seit Sprint K-1.0 bis K-1.5 vollständig auf Supabase migriert" — Doktrin in der Realität verankern. Live-Code-Pfad muss ohne Airtable laufen.
+
+| Block | Inhalt | sw.js | Files |
+|---|---|---|---|
+| Block 1 — Race-Fix | `prova-fetch-auth.js` lazy-import (`import('/lib/supabase-client.js')` statt window-Polling) — eliminiert Race-Condition zwischen defer-Scripts und ESM-Modules | v250 | 1 |
+| Block 2 — Fetch-Wrapper | `prova-fetch-auth.js` blockt hart `/.netlify/functions/airtable` + `api.airtable.com` mit 410-Fake-Response | v250 | 1 |
+| Block 2A — Live-Konsumenten | `frist-guard.js` + `prova-status-hydrate.js` Cache-only (Sprint 11+ baut Supabase-Lookup neu) | – | 2 |
+| Block 3 — Function-Purge | 16 Legacy-Functions + 1 lib-Helper gelöscht: `airtable.js`, `airtable-rate-limiter.js`, `lib/airtable-query.js`, `setup-tabellen.js`, `identity-signup.js`, 11 Legacy-PDF/SMTP/Auth-Endpoints (47 → 31 Functions) | – | -17 |
+| Block 4 — CSP + ENV | `netlify.toml` `connect-src` → Airtable raus, supabase.co bestätigt; `sw.js` Skip-Bedingung `airtable.com` raus + `supabase.co` ergänzt; `AIRTABLE-ENV-CLEANUP-LIST.md` für Marcel (12 ENV-Vars in Netlify-UI manuell) | v251 | 3 |
+| Block 5 — Verifikation | Smoke-Test 15/15 PASS; airtable-grep-Audit; Master-Files-Update; Tag pending | – | – |
+
+**Realität-Check:**
+- ~68 Frontend-Logic-Files haben weiterhin Tot-Code-Refs zu `airtable` (durch `prova-fetch-auth.js` Wrapper hart abgeblockt — kein User-Impact)
+- ~25 Netlify-Functions referenzieren noch `process.env.AIRTABLE_*` (werden bei Marcel-ENV-Löschung auto-disabled mit 401, müssen in Folge-Sprints auf Supabase migriert werden)
+- Marcel-Akzeptanz „grep clean" auf **Live-Code-Pfad-Ebene** erfüllt, **nicht** auf String-Ebene
+
+**DONE-Doc:** `docs/sprint-status/AIRTABLE-ENV-CLEANUP-LIST.md`
+**Drift-Audit:** `docs/diagnose/AIRTABLE-DRIFT-AUDIT.md`
+**Tag pending:** `v203-vollcutover-airtable-out` (wartet auf Marcel-Test grün)
+
+### Master-Doku-Konsolidierung Tag 7 abend (DONE)
 
 | Branch | Inhalt | Status |
 |---|---|---|
@@ -210,6 +232,7 @@ Nach erfolgreichem 10-SV-Pilot:
 | `v200-app-landing-split-done` | 30.04. abend | Phase 4 Cutover komplett |
 | `v201-loop-eliminated` *(geplant)* | 01.05. nachts | Cutover Block 3 (NICHT gesetzt — Marcel-Test schickte zu Option C) |
 | `v202-jwt-server-verify` *(pending)* | 01.05. mittag | Option C deployed, wartet auf grünen Marcel-Test |
+| `v203-vollcutover-airtable-out` *(pending)* | 02.05. nachmittag | Voll-Cleanup-Sprint: Airtable aus Live-Pfad raus (sw.js v251) |
 
 ---
 
@@ -224,7 +247,9 @@ Nach erfolgreichem 10-SV-Pilot:
 | v246 | 01.05. morgens | Hotfix login-redirect-default |
 | v247 | 01.05. morgens | Hotfix-2 disable auto-redirect |
 | v248 | 01.05. nachts | Cutover Block 3: Bridge + Belt-and-Suspenders |
-| **v249** | **01.05. mittag** | **Option C: Server-Side Supabase-JWT-Verify (jose JWKS)** |
+| v249 | 01.05. mittag | Option C: Server-Side Supabase-JWT-Verify (jose JWKS) |
+| v250 | 02.05. mittag | Voll-Cleanup-Sprint Block 1+2: Race-Fix + Airtable-Fetch-Wrapper |
+| **v251** | **02.05. nachmittag** | **Voll-Cleanup-Sprint Block 4: Airtable raus aus CSP + SW** |
 
 ---
 
@@ -245,6 +270,13 @@ Nach erfolgreichem 10-SV-Pilot:
 ---
 
 ## Stand-Notizen (chronologisch, neueste oben)
+
+**02.05.2026 nachmittags (Tag 8):**
+- Voll-Cleanup-Sprint abgeschlossen — Airtable aus Live-Daten-Pfad
+- sw.js v251 deployed
+- 16 Legacy-Functions + 1 Helper gelöscht
+- ENV-Cleanup-Liste für Marcel-Action vorbereitet
+- ~68 Frontend-Files haben Tot-Code-Refs (durch Wrapper geblockt) — Folge-Sprint 11+
 
 **01.05.2026 abend (Tag 7):**
 - Master-Doku-Konsolidierung in `docs/master/` (dieser Sprint)

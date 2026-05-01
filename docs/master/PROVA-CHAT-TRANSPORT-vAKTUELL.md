@@ -1,6 +1,6 @@
 # PROVA Chat-Transport — AKTUELL
 
-**Stand:** 01.05.2026 abend (Tag 7 nach Option-C-Deploy)
+**Stand:** 02.05.2026 nachmittags (Tag 8 nach Voll-Cleanup-Sprint)
 **Vorgänger:** v37 (01.05. mittag, archiviert in `docs/archiv/chat-transports/PROVA-CHAT-TRANSPORT-v35.md`)
 **Single Source of Truth** — siehe `docs/master/README.md`
 
@@ -12,13 +12,15 @@
 
 **Wer bin ich:** Du bist Browser-Claude für Marcel Schreiber von PROVA Systems — KI-natives B2B-SaaS für ö.b.u.v. Bauschaden-Sachverständige in Deutschland.
 
-**Wo stehen wir:** Tag 7 von 21+ Tagen Pre-Pilot. Tech-Stack-Pivot nach Voll-Supabase ist abgeschlossen. APP-LANDING-SPLIT live. Login-Loop war heute der Showdown — über 24h Hotfix-Kette, am Ende **architektonisch eliminiert** durch Server-Side Supabase-JWT-Verify (Option C, sw.js v249). Marcel testet gerade.
+**Wo stehen wir:** Tag 8 von 21+ Tagen Pre-Pilot. Voll-Cleanup-Sprint abgeschlossen — Airtable ist aus dem Live-Daten-Pfad raus (sw.js v251). Login-Race-Condition gefixt (lazy-import). Frist-Guard + Status-Hydrate sauber. 16 Legacy-Functions gelöscht (47 → 31). ENV-Liste für Marcel zur manuellen Löschung in Netlify-UI.
+
+**Realität-Check:** ~68 Frontend-Logic-Files haben weiterhin Tot-Code-Refs zu `/.netlify/functions/airtable` (durch `prova-fetch-auth.js` Wrapper hart abgeblockt — kein User-Impact). Vollständiger Code-Sweep der 143 Files in Sprint 11+ wenn Pages echte Supabase-Logik bekommen. Marcel-Akzeptanz „grep clean" ist auf Live-Code-Pfad-Ebene erfüllt, nicht auf String-Ebene.
 
 **Was als nächstes:**
-1. Marcel-Login-Test grün → Tag `v202-jwt-server-verify` setzen
-2. 4 Branches reviewen + mergen (Cluster-Cleanup, KI-Prompts-Skeleton, Pricing-Fix, Master-Konsolidierung)
+1. Marcel löscht 12 ENV-Vars in Netlify-UI (Liste in `docs/sprint-status/AIRTABLE-ENV-CLEANUP-LIST.md`)
+2. Marcel testet Inkognito-Login → Tag `v203-vollcutover-airtable-out` setzen
 3. Schema-Migration 06b applizieren → Sprint 06b/06c Live-Save
-4. Sprint 04e/04c/04d (Verknüpfungen, Globale Suche, Bescheinigungen)
+4. Sprint 11+ — Logic-Files-Sweep parallel zum Workflow-Sprint
 
 **Worauf achten:**
 - Bei Bug-Diagnose: **Diagnose-First** (Regel 33). Nicht blind Code-Vorgaben übernehmen — selbst aus Files validieren
@@ -65,9 +67,18 @@
 ### 01.05.2026 mittag — Parallel-Sprint (3 Branches)
 
 - `cleanup/cluster-review-auto`: 20 DEAD-Pages weg (-3350 LOC), 3 BLOCKED
-- `docs/ki-prompts-master-skeleton`: KI-PROMPTS-MASTER.md Skeleton (Sprint-9-Vorbereitung)
+- `docs/ki-prompts-master-skeleton`: KI-PROMPTS-MASTER.md Skeleton
 - `fix/pricing-discrepancy`: index.html 25 → 30 Gutachten
 - Doc: `docs/sprint-status/PARALLEL-SPRINT-DONE.md`
+
+### 02.05.2026 — Voll-Cleanup-Sprint (Airtable raus)
+
+- **Block 1:** `prova-fetch-auth.js` lazy-import — Race-Condition gefixt (sw.js v250)
+- **Block 2A:** `prova-fetch-auth.js` blockiert hart `/.netlify/functions/airtable`-Calls (fake-410-Response). `frist-guard.js`, `prova-status-hydrate.js` entkernt — Cache-only-Mode bis Sprint 11
+- **Block 3:** 16 Legacy-Functions + 1 lib-Helper gelöscht (47 → 31 Functions): `airtable.js` + Helper, `setup-tabellen`, `identity-signup`, 11 Legacy-PDF/SMTP/Auth-Endpoints
+- **Block 4:** `netlify.toml` CSP `api.airtable.com` raus, `sw.js` Skip-Bedingung raus + supabase.co ergänzt (v251), `AIRTABLE-ENV-CLEANUP-LIST.md` für Marcel (12 ENV-Vars manuell)
+- **Block 5:** Verifikation 15/15 PASS, Master-Files-Update
+- **Tag:** `v203-vollcutover-airtable-out` (pending bis Marcel-Test grün)
 
 ### 01.05.2026 abend — Master-Doku-Konsolidierung
 
