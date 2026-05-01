@@ -10,17 +10,20 @@
    prova_paket / prova_status / prova_subscription_status / prova_trial_end
    im localStorage, trial-guard.js feuerte das Overlay fälschlich.
 
-   Dieses Skript ist der zentrale, pfad-unabhängige Sync-Mechanismus:
-   läuft auf jeder Seite einmal, zieht Abo-Felder aus Airtable nach und
-   dispatcht ein 'prova-status-loaded'-Event, sobald die Daten da sind.
+   Dieses Skript war der zentrale, pfad-unabhängige Sync-Mechanismus:
+   zog Abo-Felder aus Legacy-Quelle nach und dispatchte ein
+   'prova-status-loaded'-Event.
 
-   VERHALTEN
-   - Keine Email erkennbar → still aussteigen (User nicht eingeloggt).
-   - prova_subscription_status bereits gesetzt → nur Event dispatchen
-     und aussteigen (idempotent, kein unnötiger Netzwerk-Call).
-   - Sonst: POST /.netlify/functions/airtable, Felder speichern, Event
-     dispatchen.
-   - Fire-and-forget — alle Fehler landen nur in console.warn.
+   STATUS NACH VOLL-CLEANUP-SPRINT 02.05.2026:
+   Legacy-Datenquelle deaktiviert (siehe docs/diagnose/AIRTABLE-DRIFT-AUDIT.md).
+   Sprint 11+ baut Status-Hydration auf Supabase-Direktzugriff via
+   data-store.js (users + workspace_memberships + subscriptions).
+   Bis dahin: nur Cache-Read + Event-Dispatch.
+
+   VERHALTEN aktuell
+   - Cached Werte aus localStorage emittieren
+   - Keine Server-Calls
+   - Event 'prova-status-loaded' bleibt für Konsumenten kompatibel
 
    EINBINDEN
    Nach prova-config.js (falls vorhanden) und prova-auth-api.js (falls
@@ -33,9 +36,7 @@
 (function () {
   'use strict';
 
-  var AIRTABLE_BASE = (window.PROVA_CONFIG && window.PROVA_CONFIG.AIRTABLE_BASE)
-                     || 'appJ7bLlAHZoxENWE';
-  var SV_TABLE = 'tbladqEQT3tmx4DIB';
+  // Legacy-Konstanten entfernt im Voll-Cleanup-Sprint 02.05.2026.
 
   /* ── Email aus allen bekannten Quellen ermitteln ── */
   function resolveEmail() {
@@ -96,61 +97,17 @@
       return;
     }
 
-    // Airtable-Fetch (fire-and-forget, alle Fehler → warn)
-    try {
-      var filter = encodeURIComponent('{Email}="' + email.replace(/"/g, '\\"') + '"');
-      var path = '/v0/' + AIRTABLE_BASE + '/' + SV_TABLE + '?filterByFormula=' + filter + '&maxRecords=1';
-
-      provaFetch('/.netlify/functions/airtable', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ method: 'GET', path: path })
-      }).then(function (r) {
-        return r && r.ok ? r.json() : null;
-      }).then(function (data) {
-        if (!data || !data.records || !data.records.length) {
-          console.warn('[StatusHydrate] Kein SV-Record fuer', email);
-          return;
-        }
-        var rec = data.records[0];
-        var f   = rec.fields || {};
-
-        try {
-          if (rec.id) localStorage.setItem('prova_at_sv_record_id', rec.id);
-
-          var paket  = normalizePaket(f.Paket || f.paket);
-          var status = normalizeStatus(f.Status);
-
-          localStorage.setItem('prova_paket',  paket);
-          localStorage.setItem('prova_status', status);
-
-          if (f.subscription_status)  localStorage.setItem('prova_subscription_status', String(f.subscription_status).toLowerCase());
-          if (f.trial_end)            localStorage.setItem('prova_trial_end', String(f.trial_end).slice(0, 10));
-          if (f.current_period_end)   localStorage.setItem('prova_current_period_end', String(f.current_period_end).slice(0, 10));
-          if (f.testpilot)            localStorage.setItem('prova_testpilot', '1');
-
-          // Profil-Felder nur füllen wenn leer (nicht überschreiben)
-          if (f.sv_vorname  && !localStorage.getItem('prova_sv_vorname'))  localStorage.setItem('prova_sv_vorname',  f.sv_vorname);
-          if (f.sv_nachname && !localStorage.getItem('prova_sv_nachname')) localStorage.setItem('prova_sv_nachname', f.sv_nachname);
-
-          console.log('[StatusHydrate] geladen:', paket, status, (f.subscription_status || '(kein sub-status)'));
-
-          emit({
-            cached: false,
-            paket: paket,
-            status: status,
-            subscription_status: f.subscription_status || '',
-            trial_end: f.trial_end || ''
-          });
-        } catch (e) {
-          console.warn('[StatusHydrate] Parse-Fehler:', e && e.message);
-        }
-      }).catch(function (e) {
-        console.warn('[StatusHydrate] Fetch fehlgeschlagen:', e && e.message);
-      });
-    } catch (e) {
-      console.warn('[StatusHydrate] Sync-Fehler:', e && e.message);
-    }
+    // Voll-Cleanup-Sprint 02.05.2026 (Block 2A):
+    // SV-Status-Hydration aus Legacy-Quelle deaktiviert. Sprint 11+ baut
+    // den Status-Lookup auf Supabase-Direktzugriff
+    // (users + workspace_memberships + subscriptions). Bis dahin: Cache-only.
+    // Doc: docs/diagnose/AIRTABLE-DRIFT-AUDIT.md
+    emit({
+      cached: !!localStorage.getItem('prova_subscription_status'),
+      paket: localStorage.getItem('prova_paket') || '',
+      status: localStorage.getItem('prova_status') || '',
+      subscription_status: localStorage.getItem('prova_subscription_status') || ''
+    });
   }
 
   /* ── Trigger: direkt wenn DOM bereits bereit, sonst nach DOMContentLoaded ── */

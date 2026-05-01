@@ -6,7 +6,7 @@
  * - Fristen-Badge im Seitenmenü (roter Punkt mit Zahl)
  * - Overlay-Warnung beim Seitenaufruf wenn kritische Fristen nahen
  * - Farbcodierte Fristenampel: Rot (<= 3 Tage), Gelb (4–7 Tage), Grün (8–14 Tage)
- * - Integration mit Airtable TERMINE-Tabelle
+ * - Integration deaktiviert (Voll-Cleanup-Sprint 02.05.2026, Re-Implementation in Sprint 11)
  * - Gericht-/Versicherungs-/Auftraggeber-Fristen unterschieden
  * - §407 StPO / §§ 407a, 411 ZPO Fristen-Typen
  * - Tages-Check beim App-Start + Web Push (via push-notify.js)
@@ -473,44 +473,21 @@ const FristGuard = (function() {
 
   // ── Fristen laden ───────────────────────────────────────────────
   async function ladeFristen(forceFresh = false) {
-    // Cache nutzen wenn frisch
+    // Voll-Cleanup-Sprint 02.05.2026 (Block 2A):
+    // Frist-Quelle wurde im Voll-Supabase-Cleanup deaktiviert. Sprint 11
+    // (Workflows + Fristen-System) baut die Fristen auf Supabase-Basis
+    // (auftraege.frist_*-Spalten oder eigene Fristen-Tabelle) neu auf.
+    // Bis dahin: leere Fristen-Liste + Cache-Fallback.
+    // Doc: docs/diagnose/AIRTABLE-DRIFT-AUDIT.md
     if (!forceFresh && state.geladen && state.letzterCheck) {
       const alter = Date.now() - state.letzterCheck;
       if (alter < CONFIG.CHECK_INTERVAL_H * 3600000) return state.fristen;
     }
-
-    // Aus localStorage laden (Offline-Fallback)
     const cached = ladeFristenAusCache();
-
-    try {
-      // Airtable via Netlify Function
-      const svEmail = localStorage.getItem('prova_sv_email') || '';
-      if (!svEmail) return cached;
-
-      const resp = await provaFetch('/.netlify/functions/airtable', {
-        method: 'POST',
-        headers: Object.assign({ 'Content-Type': 'application/json' }, window.provaAuthHeaders ? window.provaAuthHeaders() : {}),
-        credentials: 'same-origin',
-        body: JSON.stringify({
-          method: 'GET',
-          path: '/v0/appJ7bLlAHZoxENWE/tblyMTTdtfGQjjmc2?filterByFormula=' + encodeURIComponent('AND({Status}!="Abgeschlossen",{sv_email}="' + svEmail + '")') + '&sort[0][field]=termin_datum&sort[0][direction]=asc&fields[]=aktenzeichen&fields[]=termin_datum&fields[]=termin_typ&fields[]=objekt_adresse&fields[]=notizen&fields[]=erinnerung_24h&fields[]=sv_email&fields[]=Status'
-        })
-      });
-
-      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-      const data = await resp.json();
-      const fristen = (data.records || []).map(normalisiereFrist);
-      
-      state.fristen    = fristen;
-      state.geladen    = true;
-      state.letzterCheck = Date.now();
-      speicherFristenInCache(fristen);
-      return fristen;
-
-    } catch (err) {
-      console.warn('[FristGuard] Airtable Fehler, nutze Cache:', err.message);
-      return cached;
-    }
+    state.fristen     = cached;
+    state.geladen     = true;
+    state.letzterCheck = Date.now();
+    return cached;
   }
 
   function normalisiereFrist(record) {
@@ -944,70 +921,21 @@ const FristGuard = (function() {
     const btn = document.querySelector('.fg-form-submit');
     if (btn) { btn.disabled = true; btn.textContent = 'Speichern…'; }
 
-    try {
-      const resp = await provaFetch('/.netlify/functions/airtable', {
-        method: 'POST',
-        headers: Object.assign({ 'Content-Type': 'application/json' }, window.provaAuthHeaders ? window.provaAuthHeaders() : {}),
-        credentials: 'same-origin',
-        body: JSON.stringify({
-          action: 'create',
-          tabelle: 'TERMINE',
-          felder: {
-            Titel:           titel,
-            Datum:           datum,
-            Typ:             typ,
-            Erinnerung_Tage: parseInt(erinnerung),
-            Notiz:           notiz,
-            SV_Email:        svEmail,
-            Abgeschlossen:   false
-          }
-        })
-      });
-
-      if (!resp.ok) throw new Error('Speichern fehlgeschlagen');
-
-      // Cache leeren + neu laden
-      state.geladen = false;
-      state.letzterCheck = null;
-      await init();
-
-      // Modal neu rendern
-      const body = document.getElementById('fg-modal-body');
-      if (body) body.innerHTML = renderModalInhalt(state.fristen, null);
-
-    } catch (err) {
-      alert('Frist konnte nicht gespeichert werden: ' + err.message);
-    } finally {
-      if (btn) { btn.disabled = false; btn.textContent = 'Frist speichern'; }
-    }
+    // Voll-Cleanup-Sprint 02.05.2026 (Block 2A):
+    // Frist-Speicherung deaktiviert. Sprint 11 baut Fristen-Workflow neu.
+    alert('Fristen-Speicherung wird in Sprint 11 (Workflows + Fristen-System) neu auf Supabase implementiert.');
+    if (btn) { btn.disabled = false; btn.textContent = 'Frist speichern'; }
   }
 
   // ── Frist als erledigt markieren ────────────────────────────────
   async function _abschliessen(fristId) {
-    if (!confirm('Frist als erledigt markieren?')) return;
-    try {
-      await provaFetch('/.netlify/functions/airtable', {
-        method: 'POST',
-        headers: Object.assign({ 'Content-Type': 'application/json' }, window.provaAuthHeaders ? window.provaAuthHeaders() : {}),
-        credentials: 'same-origin',
-        body: JSON.stringify({
-          action: 'update',
-          tabelle: 'TERMINE',
-          id: fristId,
-          felder: { Abgeschlossen: true }
-        })
-      });
-      // Aus State entfernen
-      state.fristen = state.fristen.filter(f => f.id !== fristId);
-      speicherFristenInCache(state.fristen);
-      aktualisiereBadge(state.fristen);
-      // Karte aus Modal entfernen
-      document.getElementById('fg-k-'+(fristId) && 'fg-k-'+(fristId).closest)('.fg-modal-section')
-        ? document.querySelector('#fg-k-'+fristId) : null; if(_rm) _rm.remove();
-      document.getElementById('fg-k-'+(fristId)) && (function(el){if(el)el.remove();})(el);
-    } catch (err) {
-      alert('Fehler: ' + err.message);
-    }
+    // Voll-Cleanup-Sprint 02.05.2026 (Block 2A): deaktiviert bis Sprint 11.
+    if (!confirm('Frist als erledigt markieren? (Sprint 11 implementiert das auf Supabase neu)')) return;
+    state.fristen = state.fristen.filter(f => f.id !== fristId);
+    speicherFristenInCache(state.fristen);
+    aktualisiereBadge(state.fristen);
+    var el = document.getElementById('fg-k-' + fristId);
+    if (el) el.remove();
   }
 
   // ── ICS Kalender Export ─────────────────────────────────────────
