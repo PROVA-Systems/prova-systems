@@ -129,6 +129,39 @@ Netlify Functions (~31 Stück, post-Voll-Cleanup)
 
 ---
 
+## Subprozessoren (DSGVO Art. 28, Stand 02.05.2026)
+
+Pflicht-Liste für AVV (`docs/public/AVV-VORLAGE.md`) und Datenschutzerklärung (`docs/public/DATENSCHUTZERKLAERUNG-ENTWURF.md`). Siehe auch `docs/audit/2026-05-02-supabprozessoren.md`.
+
+| Anbieter | Sitz | Datenkategorien | Rechtsgrundlage | AVV-Status | Transfer-Mechanismus |
+|---|---|---|---|---|---|
+| **Supabase Inc.** | US (Hosting in Frankfurt EU, AWS eu-central-1) | Stammdaten, Auftragsdaten, Foto-Files, Audit-Logs, Auth-Tokens | Art. 6 Abs. 1 lit. b (Vertragserfüllung) + Art. 6 Abs. 1 lit. f (berechtigtes Interesse) | **Standard-AVV unterzeichnet** (Marcel-Action: Status verifizieren) | EU-Hosting, US-Mutter via SCC + DPA |
+| **OpenAI Ireland Ltd.** | IE (API-Endpoints US) | Pseudonymisierte Diktat-Texte, KI-Prompt-Inputs | Art. 6 Abs. 1 lit. b + Marcel-Einwilligung Pilot-SV | **AVV erforderlich** — Marcel-Action: OpenAI-Business-Account + DPA | EU-Mutter, US-Verarbeitung via SCC + Pseudonymisierung |
+| **Stripe Payments Europe Ltd.** | IE (Dublin) | Email, Zahlungsdaten (NICHT Kreditkarten — bei Stripe direkt) | Art. 6 Abs. 1 lit. b | **Standard-AVV** (Stripe-Side, durch Akzeptanz Stripe-Terms) | EU-Verarbeitung |
+| **PDFMonkey SAS** | FR | Auftragsdaten (zur PDF-Generierung), Briefkopf-Daten | Art. 6 Abs. 1 lit. b | **AVV erforderlich** — Marcel-Action: DPA bei PDFMonkey anfordern | EU-Verarbeitung |
+| **Make.com (Celonis SE / IFTTT EMEA)** | CZ (Prag) | Webhook-Payloads (Trial-Reminder, Founding-Coupon) | Art. 6 Abs. 1 lit. f | **AVV erforderlich** — Marcel-Action: DPA bei Make.com prüfen | EU-Verarbeitung |
+| **Netlify Inc.** | US (Hosting San Francisco + Edge weltweit) | Frontend-Files (statisch), Function-Logs (anonymisiert) | Art. 6 Abs. 1 lit. b + lit. f | **AVV erforderlich** — Marcel-Action: Netlify Pro Plan + DPA | US-Verarbeitung via SCC + DPA |
+| **Resend (Resend Inc.)** | US | E-Mail-Adressen + Mail-Body-Inhalte | Art. 6 Abs. 1 lit. b | **AVV erforderlich** — Marcel-Action: DPA bei Resend anfordern | US-Verarbeitung via SCC + DPA |
+| **IONOS SE** | DE | DNS, Domain-Registry | Art. 6 Abs. 1 lit. b | Standard-Vertrag DE | EU-Verarbeitung |
+| **GitHub Inc.** (Microsoft) | US | Source-Code (kein Production-User-Daten) | Art. 6 Abs. 1 lit. b (interne Entwicklung) | nicht subprozessor-relevant (keine Endkunden-Daten) | – |
+
+### Pseudonymisierung (Pflicht vor OpenAI)
+
+**Vor jedem KI-Call** durchläuft der Diktat-Text die Funktion `prova-pseudo.js` server-side:
+- Namen → `[NAME-1]`, `[NAME-2]`, ...
+- Adressen → `[ADRESSE-1]`, ...
+- E-Mails → `[EMAIL-1]`, ...
+- IBANs → `[IBAN-1]`, ...
+- Telefonnummern → `[TEL-1]`, ...
+
+**Reverse-Mapping** bleibt server-side, OpenAI sieht nur Platzhalter. Doku in `lib/prova-pseudo.js`.
+
+### Datenflussdiagramm
+
+→ siehe `docs/audit/DSGVO-DATAFLOW.md` (Phase 4 Audit 16, mit Mermaid-Diagram)
+
+---
+
 ## Auth-Architektur (post-Option-C, KOMPLETT)
 
 ### Frontend Login-Flow

@@ -191,17 +191,91 @@ Aus `masterplan-v2/01_UI-PRINZIPIEN.md` (übernommen mit Tag-7-Annotationen):
 
 ---
 
-## Marketing-Parallel-Plan
+## Marketing & Akquise
 
-**Aus `masterplan-v2/04_MARKETING-PARALLEL.md` (im Repo unter `masterplan-v2/`, archiviert).**
+**Detail-Plan:** `docs/strategie/PROVA-MARKETING-ROADMAP.md` (Single Source of Truth für Akquise)
 
-Kurz-Stand laut Plan v2.1 (25.04.):
+### Ideen-Sammlung Mini-Tools (Lead-Magnete, Bauen erst nach S6)
+
+Statische Mini-Sites unter `prova-systems.de/tools/*` — SEO + Lead-Magnete, einbinden in Newsletter/LinkedIn:
+
+- **JVEG-Rechner** — Interaktive Berechnung Stundensatz-Honorar nach JVEG aktueller Stand
+- **Ortstermin-Checkliste** — PDF-Generator Pflicht-Punkte vor Ortstermin (Akteneinsicht, Adresse, Beteiligte, Werkzeuge)
+- **Widerrufsfrist-Rechner** — Prüfung 14-Tage-Frist bei Privat-Auftrag, mit Datum-Eingabe
+- **§407a-KI-Hinweis-Generator** — Mini-Tool das einen rechtssicheren KI-Hinweis-Text für Gutachten generiert
+
+**Status:** Spezifikation in `docs/strategie/MARKETING-MINI-TOOLS-SPEC.md` (S6 Deliverable). Implementation NACH S6.
+
+### Webinar-Themen (Verbands-/Fortbildungs-Ansprache)
+
+- „§6 Fachurteil rechtssicher formulieren — was die Gerichte 2025-2026 fordern"
+- „KI-Werkzeuge für SVs nach §407a — was darf, was muss?"
+- „Konjunktiv II bei Kausalaussagen — der eine Satz der ein Gutachten kippt"
+- „Halluzinations-Check & Norm-Validierung — KI ohne Reputations-Schaden"
+- „Aus Diktat zum strukturierten Gutachten in 30 Minuten" (Live-Demo)
+
+### Fachverbände-Liste (Akquise-Kanäle)
+
+| Verband | Schwerpunkt | Zugang |
+|---|---|---|
+| **BVS** Bundesverband öffentlich bestellter und vereidigter Sachverständiger | öbuv-SVs alle Sparten | Mitgliederbereich, Fortbildungs-Kalender |
+| **BBauSV** Bundesverband Bau-Sachverständige | Bauschäden Schwerpunkt | Webinar-Sponsoring |
+| **VBD** Verband Beratender Bauingenieure und Sachverständiger | Bauingenieur-Sparte | LinkedIn-Aktivität |
+| **BDSF** Bundesverband Deutscher Sachverständiger und Fachgutachter | Multi-Disziplin | Newsletter-Anzeige |
+| **Architektenkammer** (Bundes- + Länderkammern) | Architekten-Fortbildungen | Kontakt zu Fortbildungs-Referat |
+| **TÜV-Akademie** Bauschäden | Fortbildungs-Anbieter | Sponsor-Slot bei Tagungen |
+| **IHK Sachverständigen-Listen** | regionale öbuv-SVs | öffentliche Liste, Direkt-Outreach |
+
+### Pilot-Strategie
+
+**Trichter:** 50 Ziel-SVs sammeln → 30 Discovery-Gespräche → 5-10 Pilotkunden → 3 Referenzen → Skalierung auf 30+ zahlende.
+
+**Phasen:**
+1. **Liste 50 SVs** (Marcel pflegt selbst, Template in `docs/strategie/PROVA-MARKETING-ROADMAP.md`)
+2. **Discovery-Gespräche** mit 12-Fragen-Leitfaden (Pain-Points, aktuelle Software, Bereitschaft Beta-Test)
+3. **Pilot-Vereinbarung** (`docs/public/PILOT-VEREINBARUNG-ENTWURF.md`)
+4. **Founding-99€-lifetime** für erste 10 (Stripe-Coupon `FOUNDING-99`)
+5. **Referenzkunden-Tracking** in Marketing-Roadmap (mit Einwilligung zur Nennung)
+
+### Bestehender Plan (masterplan-v2/04_MARKETING-PARALLEL.md, weiterhin gültig)
+
 - Woche 1-2: Landing, Warteliste, LinkedIn-Posts, 5 Interessenten
 - Woche 3-4: 2 Blog-Posts, IHK-Netzwerk, Video-Demo-Script
 - Woche 5-6: 2 weitere Blog-Posts, Pilot-Kandidaten konkretisieren
 - **Ziel Ende:** 15-25 Warteliste + 5-8 konkrete Pilot-Interessenten
 
-**TBD Marcel:** Ist diese Marketing-Roadmap noch aktuell? Welche Phase aktiv? Aktuelle Warteliste-Größe?
+**TBD Marcel:** Aktuelle Warteliste-Größe? Welche Phase aktiv?
+
+---
+
+## Erweiterungs-Sparten (Roadmap nach 50 zahlenden Kunden)
+
+**Heute Scope:** Bauschaden-Gutachten (4-Flow A/B/C/D, ö.b.u.v.-Bauschaden-SVs).
+
+**Spätere Sparten** (frühestens nach Skalierung auf 50 zahlende SV-Büros, NICHT in Vor-Pilot-Scope):
+
+### Immobilienbewertung (B-Flow Erweiterung)
+
+- **ImmoWertV-Konformität** — Sachwertverfahren, Vergleichswertverfahren, Ertragswertverfahren
+- **Marktbericht-Integration** (Gutachterausschüsse, BORIS-Daten)
+- **Verkehrswert-Gutachten-Templates**
+- **Zielgruppe:** zusätzlicher öbuv-Bewerter-Markt (10× größer als Bauschaden allein)
+
+### Energieberatung (Adjazenz-Markt)
+
+- **GEG/GEG-Novelle 2024-Anforderungen**
+- **Energie-Ausweis-Erstellung** (Bedarfs- + Verbrauchs-Ausweis)
+- **ESG-nahe Gebäudedokumentation** (CSRD-relevant für gewerbliche Auftraggeber)
+- **Synergie:** viele Bauschaden-SVs haben auch Energie-Berater-Zertifikat
+
+### Baubegleitung/Mängelmanagement für private Bauherren
+
+- **Bauherren-App** (kein SV, aber Bauherr-Zielgruppe)
+- **Mängel-Tracking** über Bauphasen
+- **SV-Vermittlung** bei Streit (Lead-Generation für PROVA-SVs)
+- **Geschäftsmodell:** Freemium für Bauherren, Lead-Gebühr für SVs
+
+> ⚠️ **Status:** alle drei sind **Roadmap-Items**, nicht in S6-Sprint-Scope. Eintrag dient der Investor-/Pilot-Pitch-Vorbereitung („wo geht's hin").
 
 ---
 
@@ -230,6 +304,11 @@ Kurz-Stand laut Plan v2.1 (25.04.):
 ---
 
 ## Stand-Notizen (chronologisch, neueste oben)
+
+**02.05.2026 nachmittag (Tag 8):**
+- Voll-Cleanup-Sprint Airtable abgeschlossen (Tag `v203-vollcutover-airtable-out`)
+- Sprint S6 startet: Master-Files-Update + 22 Audits + Security-Hardening
+- Marketing-Sektion + Erweiterungs-Sparten ergänzt (Ninja-AI-Erkenntnisse selektiv)
 
 **01.05.2026 abend (Tag 7):**
 - Option C deployed (sw.js v249), Marcel testet Login-Flow

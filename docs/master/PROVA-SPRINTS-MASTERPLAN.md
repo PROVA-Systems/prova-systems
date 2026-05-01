@@ -161,6 +161,66 @@ Nach abgeschlossener Auth-Foundation: Feature-Polish bis Pilot-Ready.
 
 ---
 
+## Phase B+ — Pilot-Readiness & Marketing (NEU 02.05.2026)
+
+Eingefügt zwischen Phase B (Produkt-Core) und Pilot-Launch. Hauptzweck: Lead-Magnete + Verbands-Reichweite + Discovery-Outreach-Material.
+
+| Sprint | Aufwand | Inhalt | Voraussetzung |
+|---|---:|---|---|
+| **Mini-Tools** | 6-8h | 4 statische Mini-Sites unter `prova-systems.de/tools/*` (JVEG-Rechner, Ortstermin-Checkliste, Widerrufsfrist-Rechner, §407a-KI-Hinweis-Generator) — Vanilla HTML/CSS/JS, keine Auth, SEO-optimiert, Lead-Capture via Newsletter-Form | nach Sprint 12 (Polish) · Spec in `docs/strategie/MARKETING-MINI-TOOLS-SPEC.md` |
+| **Webinar-Vorbereitung** | 4-5h | Slides + Skript für 3 Top-Themen (§6 Fachurteil, §407a-KI-Hinweise, Konjunktiv II); Demo-Cut für „30-Min Diktat-zu-Gutachten" | Mini-Tools live (Demo-Material nutzt Tools) |
+| **Discovery-Outreach-Doku** | 3-4h | Marcel-Hilfsmittel: 50-SV-Listen-Template (Excel/CSV), 4 E-Mail-Vorlagen (Erstkontakt / Follow-up / Pilot-Einladung / Referenz-Anfrage), 12-Fragen-Gesprächs-Leitfaden | – |
+| **S6 — Security-Hardening** | 30-50h | 22 Audits + Findings-Fix + 10 Public-Deliverables + Test-Suiten (siehe S6-Block unten) | Voll-Cleanup-Sprint grün ✅ |
+
+**Detail-Plan:** `docs/strategie/PROVA-MARKETING-ROADMAP.md`
+
+---
+
+## Sprint S6 — Security-Hardening + Master-Files-Update + Voll-Audit (LAUFEND ab 02.05.)
+
+Marcel-Direktive: 22 CC-machbare Audits durchführen, Findings sortiert nach Severity fixen, Vertrauens-Bausteine für Pilot-SVs erstellen.
+
+### Phasen-Plan (von Claude Code gewählt)
+
+| Phase | Inhalt | Aufwand | Status |
+|---|---|---|---|
+| **Phase 1** | Master-Files + 5 Quick-Audits (Secret-Scan, Deps, CSP, CORS, localStorage) + CRITICAL/HIGH-Fixes | 3-5h | **LAUFEND** |
+| Phase 2 | Tiefe Audits — OWASP ASVS L1, OWASP LLM Top 10, RLS-Coverage, Rate-Limit, Input-Validation + HIGH-Fixes | 4-6h | pending |
+| Phase 3 | Multi-Tenant-Test-Suite (Audit 4) + Backup/Restore-Drill (Audit 17) + CI-Integration | 3-5h | pending |
+| Phase 4 | Spezial-Audits 12-22 (Upload, PDF, Email, Logging, DSGVO-Dataflow, Error-Handling, Lighthouse, Sentry, DR-Plan) | 6-8h | pending |
+| Phase 5 | 10 Public-Deliverables ausarbeiten + AUDIT-SUMMARY-Final + Tag `v204-security-hardening-done` | 3-5h | pending |
+
+**Tag-Konflikt-Auflösung:** Sprint-Prompt sagt `v203-security-hardening-done`, aber `v203` ist bereits durch Voll-Cleanup-Sprint belegt → final tag = **`v204-security-hardening-done`**.
+
+### Deliverables (S6 erzeugt)
+
+| Datei | Zweck | Anwalt-Review nötig |
+|---|---|---|
+| `docs/strategie/PROVA-AUDIT-COMPLIANCE.md` | Audit-Tracking-System, was CC vs Mensch | nein |
+| `docs/strategie/PROVA-MARKETING-ROADMAP.md` | Pilot-Akquise-Plan, Mini-Tools, Verbände | nein |
+| `docs/strategie/MARKETING-MINI-TOOLS-SPEC.md` | Spezifikation der 4 Mini-Tools | nein |
+| `docs/strategie/PENTEST-BRIEFING.md` | Briefing-Doku für externen Pentester | nein |
+| `docs/audit/BACKLOG.md` | Findings-Sammelpunkt, sortiert nach Severity | nein |
+| `docs/audit/AUDIT-SUMMARY-2026-05.md` | Master-Bericht aller 22 Audits | nein |
+| `docs/audit/MARCEL-PFLICHT-AKTIONEN.md` | Liste was Marcel selbst tun muss | nein |
+| `docs/audit/2026-05-02-<audit-name>.md` × 22 | Findings-Reports pro Audit | nein |
+| `docs/public/SECURITY.md` | Public Security-Übersicht | nein (CC) |
+| `docs/public/DATA-PROCESSING.md` | Datenverarbeitungs-Übersicht | nein (CC) |
+| `docs/public/INCIDENT-RESPONSE.md` | Incident-Plan | nein (CC) |
+| `docs/public/AVV-VORLAGE.md` | Auftragsverarbeitungs-Vertrag-Entwurf | **JA** |
+| `docs/public/DATENSCHUTZERKLAERUNG-ENTWURF.md` | DSGVO-Datenschutzerklärung-Entwurf | **JA** |
+| `docs/public/PILOT-VEREINBARUNG-ENTWURF.md` | Pilot-Programm-Bedingungen-Entwurf | **JA** |
+| `docs/public/PILOT-ONBOARDING-CHECKLISTE.md` | Onboarding-Schritte für Pilot-SV | nein |
+
+### Test-Suiten
+
+- `tests/multitenant-isolation/` — Vitest+Supabase, 3 Test-Workspaces, alle Cross-Tenant-Versuche müssen 403/404 liefern
+- `tests/security-headers/` — curl-basiert, prüft CSP/HSTS/X-Frame-Options gegen Live-Domain
+- `tests/rls-coverage/` — SQL-basiert, prüft jede Tabelle auf RLS+Policies
+- **CI-Integration:** GitHub Actions oder Netlify Plugin (Phase 3)
+
+---
+
 ## Phase C — Pilot-Onboarding-Vorbereitung
 
 | Item | Aufwand | Status |
