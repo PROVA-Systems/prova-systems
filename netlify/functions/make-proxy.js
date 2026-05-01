@@ -43,7 +43,7 @@ exports.handler = async function (event, context) {
     if (!envSecret || secret !== envSecret) return json(event, 403, { error: 'Verboten' });
   } else {
     const { resolveUser, logAuthFailure } = require('./lib/auth-resolve');
-    const u = resolveUser(event);
+    const u = await resolveUser(event);
     if (u.mismatch) {
       logAuthFailure('Auth-Mismatch', event, u.mismatch);
       return json(event, 403, { error: 'Auth-Mismatch' });

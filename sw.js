@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v248';   // Cutover Block 3: Bridge + Belt-and-Suspenders
+const CACHE_VERSION = 'prova-v249';   // Option C: Server-Side Supabase-JWT-Verify (jose JWKS)
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [

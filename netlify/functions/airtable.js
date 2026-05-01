@@ -87,8 +87,10 @@ function checkRateLimit(ip) {
 const { resolveUser, logAuthFailure } = require('./lib/auth-resolve');
 
 // Legacy-Wrapper — bleibt fuer Code-Stellen die nur die E-Mail brauchen.
-function getUserEmailFromEvent(event) {
-  return resolveUser(event).email;
+// Phase 2 Cutover Block 3: resolveUser ist jetzt async (Supabase-JWT-Verify).
+async function getUserEmailFromEvent(event) {
+  const u = await resolveUser(event);
+  return u.email;
 }
 
 // ── Tabellenname aus Pfad extrahieren ──
@@ -248,10 +250,11 @@ exports.handler = async function(event) {
   }
 
   // ── User-Resolution STRICT-Modus (P4B.7) ──
-  // HMAC-Token ist Pflicht. Mismatch -> 403, fehlend/invalid -> 401.
+  // HMAC-Token ODER Supabase-JWT akzeptiert (Cutover Block 3 Phase 2,
+  // 01.05.2026). Mismatch -> 403, fehlend/invalid -> 401.
   // Audit-Logging passiert in der Lib (logAuthFailure mit pseudonymisierten
   // Email-Feldern, P4B.1d).
-  const userInfo = resolveUser(event);
+  const userInfo = await resolveUser(event);
   if (userInfo.mismatch) {
     logAuthFailure('Auth-Mismatch', event, userInfo.mismatch);
     return {

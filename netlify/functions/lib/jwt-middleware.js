@@ -48,7 +48,7 @@ function requireAuth(handler) {
       return { statusCode: 204, headers: getCorsHeaders(event), body: '' };
     }
 
-    const u = resolveUser(event);
+    const u = await resolveUser(event);
 
     if (u.mismatch) {
       logAuthFailure('Auth-Mismatch', event, u.mismatch);

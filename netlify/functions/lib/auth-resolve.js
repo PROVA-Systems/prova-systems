@@ -31,8 +31,17 @@
 'use strict';
 
 const T = require('./auth-token');
+const SupabaseJWT = require('./supabase-jwt');
 
-function getTokenPayload(event) {
+/**
+ * Async Token-Resolution. Cutover Block 3 Phase 2 (Option C, 01.05.2026):
+ *  1. Versuche zuerst Supabase-JWT (3-Teiler) — Migration-Vorrang
+ *  2. Fallback: Legacy PROVA-HMAC-Token (2-Teiler)
+ * Das Mapping unten normalisiert beide Token-Quellen auf das gleiche
+ * Payload-Schema (sub=email lowercase, sv_id, plan, verified, iat, exp,
+ * _source) damit Caller transparent weiterarbeiten.
+ */
+async function getTokenPayload(event) {
   let tok = null;
 
   // 1. Authorization: Bearer <token>
@@ -55,15 +64,42 @@ function getTokenPayload(event) {
 
   if (!tok) return null;
 
-  try {
-    return T.verify(tok);
-  } catch (e) {
-    return null;
+  const parts = tok.split('.');
+
+  // 1) Supabase-JWT (3-Teiler header.payload.signature) — Migration-Vorrang
+  if (parts.length === 3) {
+    const sp = await SupabaseJWT.verify(tok);
+    if (sp) {
+      console.info('[auth] Verified via supabase-jwt');
+      return {
+        sub:      String(sp.email).toLowerCase(),  // PROVA: sub = Email lowercase
+        sv_id:    sp.sub,                          // Supabase-User-UUID
+        plan:     'unknown',                       // optional, aus DB falls noetig
+        verified: true,
+        iat:      sp.iat,
+        exp:      sp.exp,
+        _source:  'supabase'
+      };
+    }
+    return null;   // 3-Teiler aber Supabase-Verify failed → ungueltig
   }
+
+  // 2) Legacy PROVA-HMAC-Token (2-Teiler head.sig) — Fallback
+  if (parts.length === 2) {
+    try {
+      const payload = T.verify(tok);
+      if (payload) {
+        console.info('[auth] Verified via legacy-hmac');
+        return Object.assign({}, payload, { _source: 'hmac' });
+      }
+    } catch (e) {}
+  }
+
+  return null;
 }
 
-function resolveUser(event) {
-  const tokenPayload = getTokenPayload(event);
+async function resolveUser(event) {
+  const tokenPayload = await getTokenPayload(event);
   const tokenEmail = (tokenPayload && tokenPayload.sub)
     ? String(tokenPayload.sub).toLowerCase()
     : null;
