@@ -68,6 +68,57 @@
     }
   }
 
+  // Helper: Token im Auth-Header setzen (oder ueberschreiben)
+  function applyAuthHeader(options, token) {
+    options.headers = options.headers || {};
+    if (typeof Headers !== 'undefined' && options.headers instanceof Headers) {
+      options.headers.set('Authorization', 'Bearer ' + token);
+    } else {
+      options.headers['Authorization'] = 'Bearer ' + token;
+    }
+  }
+
+  // Defense-in-Depth (Cutover Block 3 Phase 2 — Option C, 01.05.2026):
+  // Bei 401 mit Supabase-JWT (3-Teiler) erst Refresh versuchen, vor Logout.
+  // Verhindert dass User unnoetig ausgesperrt wird wenn nur das Token abgelaufen
+  // ist (z.B. nach 1h Inaktivitaet — supabase-js refresht automatisch, aber
+  // bei abgelaufenem Token vor naechstem onAuthStateChange-Trigger kann ein
+  // Function-Call mit altem Token ankommen).
+  async function tryRefreshAndRetry(url, options) {
+    var supa = window.PROVA_DEBUG && window.PROVA_DEBUG.supabase;
+    if (!supa || !supa.auth || typeof supa.auth.refreshSession !== 'function') {
+      console.info('[fetch-auth] supabase nicht verfuegbar — kein Refresh moeglich');
+      return null;
+    }
+    try {
+      var refreshRes = await supa.auth.refreshSession();
+      var newToken = refreshRes && refreshRes.data && refreshRes.data.session
+        && refreshRes.data.session.access_token;
+      if (refreshRes.error || !newToken) {
+        console.warn('[fetch-auth] refresh failed', refreshRes.error);
+        return null;
+      }
+      console.info('[fetch-auth] refresh OK, retrying fetch with new token');
+      try { localStorage.setItem('prova_auth_token', newToken); } catch (e) {}
+      // 1× Retry mit neuem Token (frische Options-Kopie)
+      var retryOpts = Object.assign({}, options);
+      retryOpts.headers = options.headers
+        ? (options.headers instanceof Headers ? new Headers(options.headers) : Object.assign({}, options.headers))
+        : {};
+      applyAuthHeader(retryOpts, newToken);
+      return await nativeFetch(url, retryOpts);
+    } catch (e) {
+      console.warn('[fetch-auth] refresh-retry error', e);
+      return null;
+    }
+  }
+
+  function isSupabaseJwt(tok) {
+    return tok && typeof tok === 'string'
+      && tok.indexOf('eyJ') === 0
+      && tok.split('.').length === 3;
+  }
+
   window.provaFetch = async function provaFetch(url, options) {
     options = options || {};
     options.headers = options.headers || {};
@@ -96,8 +147,19 @@
       throw err;
     }
 
-    // 401 von Function -> Token ist tot, ausloggen.
+    // 401 von Function -> versuche Refresh-vor-Logout (Cutover Block 3 Phase 2)
     if (res && res.status === 401 && isFunctionUrl(url)) {
+      var currentTok = getToken();
+      if (isSupabaseJwt(currentTok)) {
+        console.info('[fetch-auth] 401 with supabase-jwt, trying refresh...');
+        var retryRes = await tryRefreshAndRetry(url, options);
+        if (retryRes && retryRes.status !== 401) {
+          // Refresh + Retry erfolgreich → Caller bekommt frische Response
+          return retryRes;
+        }
+        console.warn('[fetch-auth] refresh-retry failed → logout');
+      }
+      // Alter HMAC-Token ODER Refresh failed → Auto-Logout
       clearAuthAndRedirect();
     }
 

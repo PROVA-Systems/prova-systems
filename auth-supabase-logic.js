@@ -106,10 +106,12 @@ async function handleLogin(form) {
 
     showSuccess('Eingeloggt — prüfe Pflicht-Einwilligungen…');
 
-    // Cutover-Block-3 Bridge: Legacy-Keys SOFORT setzen damit der Inline-IIFE-Guard
-    // auf der Ziel-Page (z.B. dashboard.html) synchron durchgeht VOR dem Page-Render.
-    if (data && data.user) {
-        writeLegacyBridge(data.user);
+    // Cutover-Block-3 Phase 2 (Option C, 01.05.2026):
+    // Schreibt den ECHTEN Supabase access_token (3-Teiler ES256 JWT) in
+    // prova_auth_token. Server-Side verifiziert via JWKS — kein Bridge-Hack
+    // mehr. data.session enthaelt access_token + refresh_token.
+    if (data && data.user && data.session) {
+        writeLegacyBridge(data.user, data.session);
     }
 
     // Forced Re-Consent: vor jedem Login pflicht_einwilligungen prüfen
@@ -172,10 +174,10 @@ async function handleSignUp(form) {
 
     showSuccess('Account angelegt. Bitte bestätige Deine Email — wir haben Dir einen Link geschickt.');
 
-    // Cutover-Block-3 Bridge: Legacy-Keys auch beim Sign-Up setzen, falls Auto-Login
-    // (Supabase erstellt Session sofort wenn email-confirmation deaktiviert ist).
-    if (data && data.user) {
-        writeLegacyBridge(data.user);
+    // Cutover-Block-3 Phase 2 (Option C): wenn Supabase Auto-Login macht
+    // (email-confirmation deaktiviert), schreiben wir den access_token rein.
+    if (data && data.user && data.session) {
+        writeLegacyBridge(data.user, data.session);
     }
 
     form.reset();
