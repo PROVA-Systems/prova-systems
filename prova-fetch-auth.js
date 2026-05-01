@@ -143,9 +143,47 @@
       && tok.split('.').length === 3;
   }
 
+  // Voll-Cleanup-Sprint Block 2 (02.05.2026): Airtable-Endpoint hart deaktiviert.
+  // PROVA ist seit K-1.5 auf Supabase. Calls zu /.netlify/functions/airtable
+  // werden mit fake-410 abgewiesen damit Logic-Files in catch-Pfad fallen
+  // statt User auszusperren. Code-Stellen werden parallel pro File entfernt
+  // (file-by-file Cleanup) bis grep -ri "airtable" nur noch in archivierten
+  // Pfaden Treffer hat.
+  function isDisabledAirtableUrl(url) {
+    return typeof url === 'string'
+      && (url.indexOf('/.netlify/functions/airtable') !== -1
+          || url.indexOf('api.airtable.com') !== -1);
+  }
+
+  function makeAirtableDisabledResponse(url) {
+    var body = JSON.stringify({
+      error: 'airtable-disabled',
+      reason: 'Voll-Supabase-Cleanup-Sprint 02.05.2026 — Airtable ist nicht mehr Live-Datenpfad. Logic-Files werden parallel migriert; siehe docs/diagnose/AIRTABLE-DRIFT-AUDIT.md.',
+      records: [],
+      data: [],
+      items: []
+    });
+    return {
+      ok: false,
+      status: 410,
+      statusText: 'Gone',
+      url: String(url || ''),
+      headers: typeof Headers !== 'undefined' ? new Headers({'Content-Type': 'application/json'}) : null,
+      json: function () { return Promise.resolve(JSON.parse(body)); },
+      text: function () { return Promise.resolve(body); },
+      clone: function () { return makeAirtableDisabledResponse(url); }
+    };
+  }
+
   window.provaFetch = async function provaFetch(url, options) {
     options = options || {};
     options.headers = options.headers || {};
+
+    // Voll-Cleanup: Airtable-URLs hart abweisen
+    if (isDisabledAirtableUrl(url)) {
+      console.info('[airtable-cleanup] blocked legacy call:', url);
+      return makeAirtableDisabledResponse(url);
+    }
 
     if (isFunctionUrl(url)) {
       var tok = getToken();
