@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v249';   // Option C: Server-Side Supabase-JWT-Verify (jose JWKS)
+const CACHE_VERSION = 'prova-v250';   // Block 1: prova-fetch-auth lazy-import (Race-Fix)
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [

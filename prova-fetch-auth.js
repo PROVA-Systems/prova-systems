@@ -84,9 +84,33 @@
   // ist (z.B. nach 1h Inaktivitaet — supabase-js refresht automatisch, aber
   // bei abgelaufenem Token vor naechstem onAuthStateChange-Trigger kann ein
   // Function-Call mit altem Token ankommen).
-  async function tryRefreshAndRetry(url, options) {
+  // Cache fuer den lazy-imported Supabase-Client (Race-Fix Block 1, 02.05.2026)
+  var _supaPromise = null;
+  async function getSupabaseClient() {
+    // 1. Synchron — ist supabase schon im window registriert?
     var supa = window.PROVA_DEBUG && window.PROVA_DEBUG.supabase;
-    if (!supa || !supa.auth || typeof supa.auth.refreshSession !== 'function') {
+    if (supa && supa.auth && typeof supa.auth.refreshSession === 'function') return supa;
+    // 2. Lazy ESM-Import — Race-Window zwischen defer-Scripts und ESM-Module
+    //    eliminiert. Browser cached die import-Promise, zweiter Aufruf ist instant.
+    if (!_supaPromise) {
+      _supaPromise = import('/lib/supabase-client.js')
+        .then(function (mod) { return (mod && mod.supabase) || null; })
+        .catch(function (e) {
+          console.warn('[fetch-auth] supabase-client lazy-import failed', e);
+          _supaPromise = null;
+          return null;
+        });
+    }
+    var imported = await _supaPromise;
+    if (imported && imported.auth && typeof imported.auth.refreshSession === 'function') {
+      return imported;
+    }
+    return null;
+  }
+
+  async function tryRefreshAndRetry(url, options) {
+    var supa = await getSupabaseClient();
+    if (!supa) {
       console.info('[fetch-auth] supabase nicht verfuegbar — kein Refresh moeglich');
       return null;
     }
