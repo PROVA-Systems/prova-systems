@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v250';   // Block 1: prova-fetch-auth lazy-import (Race-Fix)
+const CACHE_VERSION = 'prova-v251';   // Voll-Cleanup-Sprint Block 4: Airtable raus aus CSP+SW
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
@@ -128,10 +128,10 @@ self.addEventListener('fetch', event => {
     url.pathname.startsWith('/.netlify/') ||
     url.pathname.startsWith('/cdn-cgi/') ||
     url.hostname.includes('make.com') ||
-    url.hostname.includes('airtable.com') ||
     url.hostname.includes('openai.com') ||
     url.hostname.includes('pdfmonkey.io') ||
     url.hostname.includes('stripe.com') ||
+    url.hostname.includes('supabase.co') ||
     event.request.method !== 'GET'
   ) {
     return;
