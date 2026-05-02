@@ -1,6 +1,6 @@
 # PROVA Chat-Transport — AKTUELL
 
-**Stand:** 02.05.2026 nachmittags (Tag 8 nach Voll-Cleanup-Sprint)
+**Stand:** 03.05.2026 frueh (Tag 9 nach Mega-Nacht-Sprint S6 Phase 2-3 + KI + Threat-Model)
 **Vorgänger:** v37 (01.05. mittag, archiviert in `docs/archiv/chat-transports/PROVA-CHAT-TRANSPORT-v35.md`)
 **Single Source of Truth** — siehe `docs/master/README.md`
 
@@ -12,15 +12,16 @@
 
 **Wer bin ich:** Du bist Browser-Claude für Marcel Schreiber von PROVA Systems — KI-natives B2B-SaaS für ö.b.u.v. Bauschaden-Sachverständige in Deutschland.
 
-**Wo stehen wir:** Tag 8 von 21+ Tagen Pre-Pilot. Voll-Cleanup-Sprint abgeschlossen — Airtable ist aus dem Live-Daten-Pfad raus (sw.js v251). Login-Race-Condition gefixt (lazy-import). Frist-Guard + Status-Hydrate sauber. 16 Legacy-Functions gelöscht (47 → 31). ENV-Liste für Marcel zur manuellen Löschung in Netlify-UI.
+**Wo stehen wir:** Tag 9 von 21+ Tagen Pre-Pilot. Mega-Nacht-Sprint abgeschlossen (02.05.→03.05.). Sprint S6 Phase 1 + 2 + 3 + KI-Prompts-Master + Threat-Model. **5 Audit-Reports** + **Multi-Tenant-Test-Suite (33 Tests)** + **CI-Workflow** + **Backup-Drill-Doku** + **8 KI-Prompts extrahiert** + **30-Threat STRIDE-Model**.
 
-**Realität-Check:** ~68 Frontend-Logic-Files haben weiterhin Tot-Code-Refs zu `/.netlify/functions/airtable` (durch `prova-fetch-auth.js` Wrapper hart abgeblockt — kein User-Impact). Vollständiger Code-Sweep der 143 Files in Sprint 11+ wenn Pages echte Supabase-Logik bekommen. Marcel-Akzeptanz „grep clean" ist auf Live-Code-Pfad-Ebene erfüllt, nicht auf String-Ebene.
+**Findings-Stand:** 1 CRITICAL (auth-token-issue Login-Brute-Force, NACHT-PAUSE für Marcel), 24 HIGH in BACKLOG, 1 PLANNED-Migration (RLS-Audit-Findings, Marcel-Test in Dev pending).
 
-**Was als nächstes:**
-1. Marcel löscht 12 ENV-Vars in Netlify-UI (Liste in `docs/sprint-status/AIRTABLE-ENV-CLEANUP-LIST.md`)
-2. Marcel testet Inkognito-Login → Tag `v203-vollcutover-airtable-out` setzen
-3. Schema-Migration 06b applizieren → Sprint 06b/06c Live-Save
-4. Sprint 11+ — Logic-Files-Sweep parallel zum Workflow-Sprint
+**Was als nächstes (priorisiert):**
+1. **NACHT-PAUSE-Entscheidung:** auth-token-issue Function löschen oder Rate-Limit (`docs/diagnose/NACHT-PAUSE-S6-NACHT-rate-limit-auth-token-issue.md`)
+2. Marcel löscht 12 ENV-Vars in Netlify-UI (Voll-Cleanup-Liste)
+3. Marcel hinterlegt 3 GitHub-Secrets für Multi-Tenant-CI-Tests
+4. PLANNED-Migration in Dev applizieren + testen
+5. Sprint S6 Phase 4-5 (Spezial-Audits + Public-Deliverables-Final + Tag v204-security-hardening-done)
 
 **Worauf achten:**
 - Bei Bug-Diagnose: **Diagnose-First** (Regel 33). Nicht blind Code-Vorgaben übernehmen — selbst aus Files validieren

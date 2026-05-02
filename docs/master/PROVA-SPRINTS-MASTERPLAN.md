@@ -1,6 +1,6 @@
 # PROVA Sprints Masterplan
 
-**Stand:** 02.05.2026 nachmittags (Tag 8)
+**Stand:** 03.05.2026 frueh (Tag 9 — Mega-Nacht-Sprint abgeschlossen)
 **Single Source of Truth** — siehe `docs/master/README.md`
 
 ---
@@ -184,9 +184,11 @@ Marcel-Direktive: 22 CC-machbare Audits durchführen, Findings sortiert nach Sev
 
 | Phase | Inhalt | Aufwand | Status |
 |---|---|---|---|
-| **Phase 1** | Master-Files + 5 Quick-Audits (Secret-Scan, Deps, CSP, CORS, localStorage) + CRITICAL/HIGH-Fixes | 3-5h | **LAUFEND** |
-| Phase 2 | Tiefe Audits — OWASP ASVS L1, OWASP LLM Top 10, RLS-Coverage, Rate-Limit, Input-Validation + HIGH-Fixes | 4-6h | pending |
-| Phase 3 | Multi-Tenant-Test-Suite (Audit 4) + Backup/Restore-Drill (Audit 17) + CI-Integration | 3-5h | pending |
+| **Phase 1** | Master-Files + 5 Quick-Audits (Secret-Scan, Deps, CSP, CORS, localStorage) + CRITICAL/HIGH-Fixes | 3-5h | **DONE** (02.05. nachmittag) |
+| **Phase 2** | Tiefe Audits — OWASP ASVS L1, OWASP LLM Top 10, RLS-Coverage, Rate-Limit, Input-Validation + HIGH-Fixes | 4-6h | **DONE** (02.05. nacht) |
+| **Phase 3** | Multi-Tenant-Test-Suite (Audit 4) + Backup/Restore-Drill (Audit 17) + CI-Integration | 3-5h | **DONE** (02.05. nacht) |
+| **Sprint C** | KI-PROMPTS-MASTER aus Code extrahiert (8 Prompts) | 30-45min | **DONE** (02.05. nacht) |
+| **Sprint D** | STRIDE Threat-Model 5 Cluster, 30 Threats, 4 Mermaid-Diagramme | 45-60min | **DONE** (02.05. nacht) |
 | Phase 4 | Spezial-Audits 12-22 (Upload, PDF, Email, Logging, DSGVO-Dataflow, Error-Handling, Lighthouse, Sentry, DR-Plan) | 6-8h | pending |
 | Phase 5 | 10 Public-Deliverables ausarbeiten + AUDIT-SUMMARY-Final + Tag `v204-security-hardening-done` | 3-5h | pending |
 
