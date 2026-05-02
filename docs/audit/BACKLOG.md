@@ -8,7 +8,9 @@
 
 ## CRITICAL (sofort fixen)
 
-*(keine Findings)*
+| ID | Audit | Titel | Status |
+|---|---|---|---|
+| RL-01 | A4 | `auth-token-issue` Login-Endpoint ohne Rate-Limit (Brute-Force) | NEEDS-MARCEL — siehe `docs/diagnose/NACHT-PAUSE-S6-NACHT-rate-limit-auth-token-issue.md` |
 
 ---
 
@@ -85,6 +87,23 @@
 | H-05 | HIGH | A7 | unsafe-inline script-src | Backlog | Architektur-Sprint |
 | H-06 | HIGH | A11 | Akten-Inhalte in localStorage | dokumentiert | Logout-Wipe verifizieren (Marcel-Test) |
 | H-07 | HIGH | A11 | Auftraggeber-PII in localStorage | dokumentiert | Logout-Wipe verifizieren (Marcel-Test) |
+| **H-08** | HIGH | A1 | Schema-Validation-Library fehlt (V2.1.2 FAIL) | NEEDS-MARCEL | Architektur-Entscheidung zod/joi |
+| **H-09** | HIGH | A1 | Cross-Tenant-Isolation-Tests fehlen (V8.2.2) | offen | Sprint B Phase 3 |
+| **H-10** | HIGH | A1 | Real-Time-Alerts (Sentry) fehlen (V15.3.1) | offen | Audit 21 Phase 4 |
+| **H-11** | HIGH | A1 | Trace-IDs für Support fehlen (V16.1.3) | offen | Sentry-Setup |
+| **H-12** | HIGH | A3 | RLS audit_trail INSERT ohne workspace_id-Konsistenz | PLANNED-Migration | `supabase/migrations/PLANNED_2026-05-02_rls_audit_findings.sql` |
+| **H-13** | HIGH | A4 | admin-auth Brute-Force ohne Rate-Limit | offen | 5/15Min/IP |
+| **H-14** | HIGH | A4 | dsgvo-auskunft + dsgvo-loeschen ohne Rate-Limit | offen | Pro-Tag-Limits |
+| **H-15** | HIGH | A4 | smtp-senden ohne Rate-Limit (Spam-Vektor) | offen | 50/h/User |
+| **H-16** | HIGH | A4 | foto-anlage-pdf + pdf-proxy ohne Rate-Limit (Cost) | offen | 20-100/h/User |
+| **H-17** | HIGH | A4 | foto-upload ohne Rate-Limit (Storage-Flooding) | offen | 30/h/User |
+| **H-18** | HIGH | A4 | invite-user ohne Rate-Limit (Spam-Invite) | offen | 10/h/User |
+| **H-19** | HIGH | A5 | emails Webhook-Forwarder ohne Empfänger-Validation | offen | typ-Whitelist + Email-Format |
+| **H-20** | HIGH | A5 | smtp-senden Empfänger ungeprüft (CRLF-Injection-Risk) | offen | isValidEmail + CRLF-Schutz |
+| **H-21** | HIGH | A5 | invite-user Email + paket ungeprüft (Tot-Code) | offen | Whitelist (oder Function löschen) |
+| **H-22** | HIGH | A5 | akte-export RTF-Injection-Risiko | offen | rtfEscape() |
+| **H-23** | HIGH | A5 | foto-upload kein MIME-Whitelist (Polyglot-Files) | offen | Magic-Bytes + ALLOWED_MIME |
+| **H-24** | HIGH | A5 | foto-anlage-pdf kein Foto-Anzahl-Limit | offen | max 50 Fotos |
 | M-01 | MED | A8 | Wildcard CORS 5 Functions | ✅ FIXED | foto-captioning, ki-proxy, whisper-diktat, push-notify, stripe-portal |
 | M-02 | MED | A8 | app.* fehlt in ALLOWED_ORIGINS | ✅ FIXED | cors-helper.js explizite Liste |
 | M-03 | MED | A8 | hardcoded prova-systems.de | ✅ FIXED | normen, normen-picker, akte-export |
