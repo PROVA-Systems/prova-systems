@@ -1,0 +1,62 @@
+name: Multitenant Isolation Tests
+
+# Sprint S6 Phase 3 — verifiziert dass RLS Cross-Tenant-Daten-Zugriff verhindert.
+#
+# Trigger:
+#   - manueller Workflow-Dispatch (Marcel kann jederzeit triggern)
+#   - bei jedem PR auf main (Block bei rotem Test)
+#
+# Voraussetzung — GitHub-Secrets im Repo (Settings → Secrets → Actions):
+#   SUPABASE_URL
+#   SUPABASE_ANON_KEY
+#   SUPABASE_SERVICE_ROLE_KEY  (KRITISCH — niemals committen)
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'supabase/migrations/**'
+      - 'tests/multitenant-isolation/**'
+      - 'lib/data-store.js'
+      - 'lib/supabase-client.js'
+      - '.github/workflows/multitenant-isolation-tests.yml'
+
+jobs:
+  isolation-tests:
+    name: Multi-Tenant RLS Isolation
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Setup Test-Workspaces
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: node tests/multitenant-isolation/setup.js
+
+      - name: Run Isolation Tests
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: node --test tests/multitenant-isolation/isolation.test.js
+
+      - name: Teardown (always — auch bei Fail)
+        if: always()
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: node tests/multitenant-isolation/teardown.js
