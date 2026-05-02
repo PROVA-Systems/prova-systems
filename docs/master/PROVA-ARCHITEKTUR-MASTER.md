@@ -129,6 +129,69 @@ Netlify Functions (~31 Stück, post-Voll-Cleanup)
 
 ---
 
+## Stripe-Architektur (Stand 03.05.2026, neuer Account)
+
+### Account-Migration
+- 03.05.2026 — neuer Stripe-Account (alter war Sandbox, 0 Kunden, 0 Risiko)
+- Tag `v205-stripe-account-migration` (pending nach Marcel-Test)
+
+### Komponenten
+
+| Komponente | Location | Zweck |
+|---|---|---|
+| **stripe-checkout.js** | Netlify Function | Erzeugt Checkout-Session (Subscription Solo/Team + Add-ons) |
+| **stripe-webhook.js** | Netlify Function | Empfängt Stripe-Events (signed), schreibt in Supabase |
+| **stripe-portal.js** | Netlify Function | Erzeugt Customer-Portal-Link für Abo-Verwaltung |
+| **lib/prova-stripe-prices.js** | Helper | Price-ID-Resolution (ENV-First) |
+
+### Architektur-Entscheidung: Netlify Function statt Supabase Edge
+
+**Webhook bleibt Netlify Function**, weil:
+1. **stripe**-npm-Package ist CommonJS — Deno-Edge bräuchte ESM-Anpassungen + alternative Imports
+2. **Signature-Verify** (`stripe.webhooks.constructEvent`) ist im Node-Stack getestet + funktioniert
+3. **Konsistenz:** stripe-checkout, stripe-portal sind auch Netlify
+4. **Latenz nicht kritisch:** Stripe wartet bis 30s, Webhook braucht nur Idempotenz
+5. **Wartbarkeit:** Marcel kennt Netlify-Functions-Stack
+6. **Kein Vorteil Edge:** Cold-Start-Optimierung ist hier nicht gefragt
+
+**DB-Backend:** Migrierung von Airtable auf **Supabase** (03.05.2026). Webhook schreibt jetzt in:
+- `stripe_events` — Idempotenz via UNIQUE `stripe_event_id`, Audit-Spur
+- `workspaces.abo_*` — Subscription-State (tier, status, customer_id, subscription_id, price_id, MRR-Snapshot)
+- `audit_trail` — DSGVO-Pflicht-Logging pro Event
+
+### Datenfluss
+
+```
+Stripe-Webhook → POST /.netlify/functions/stripe-webhook
+  ↓ stripe.webhooks.constructEvent(body, sig, whSecret)
+  ↓ Idempotenz-Check: stripe_events WHERE stripe_event_id = X
+  ↓   → existiert? status='duplikat', return 200
+  ↓ INSERT INTO stripe_events (status='empfangen')
+  ↓ Switch event.type:
+  ↓   checkout.session.completed → workspace.abo_status='aktiv'
+  ↓   invoice.payment_succeeded   → workspace.letzte_zahlung_*
+  ↓   customer.subscription.deleted → workspace.abo_status='gekuendigt'
+  ↓ UPDATE stripe_events SET status='verarbeitet', verarbeitet_at=NOW()
+  ↓ INSERT INTO audit_trail (DSGVO-Logging)
+  ↓ return 200
+```
+
+### Plan-Tier-Mapping (neuer Account)
+
+| PROVA-Plan | Stripe-Modus | ENV-Var-Name | Default Price-ID (neuer Account 03.05.) |
+|---|---|---|---|
+| Solo (149€/Mo) | subscription | STRIPE_PRICE_SOLO | `price_1TSjMZRXumrtL2n5fgToRwyr` |
+| Team (279€/Mo) | subscription | STRIPE_PRICE_TEAM | `price_1TSjNXRXumrtL2n56c6emN2k` |
+| Add-on 5 Gutachten (25€) | payment (one-time) | STRIPE_PRICE_ADDON_5 | `price_1TSl2JRXumrtL2n52XSz85oC` |
+| Add-on 10 Gutachten (45€) | payment (one-time) | STRIPE_PRICE_ADDON_10 | `price_1TSl3fRXumrtL2n5Gur4BmWL` |
+| Add-on 20 Gutachten (80€) | payment (one-time) | STRIPE_PRICE_ADDON_20 | `price_1TSl4eRXumrtL2n5tIWx0ET8` |
+| Founding-Coupon (50€ off, lifetime, 10 Plätze) | coupon | STRIPE_FOUNDING_COUPON_ID | TBD nach Marcel-Anlage |
+
+### Setup-Doku
+→ siehe `docs/strategie/STRIPE-SETUP.md`
+
+---
+
 ## Subprozessoren (DSGVO Art. 28, Stand 02.05.2026)
 
 Pflicht-Liste für AVV (`docs/public/AVV-VORLAGE.md`) und Datenschutzerklärung (`docs/public/DATENSCHUTZERKLAERUNG-ENTWURF.md`). Siehe auch `docs/audit/2026-05-02-supabprozessoren.md`.

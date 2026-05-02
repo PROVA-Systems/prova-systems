@@ -29,7 +29,7 @@
       preis_jahr_total:  1428,         // 119 × 12
       ersparnis_jahr:    360,          // (149-119) × 12
       onboarding:        149,          // Einmalige Onboarding-Gebühr
-      stripe_price_abo:  'price_1TEHG68d1CNm0HvYFNx99Tq6',
+      stripe_price_abo:  'price_1TSjMZRXumrtL2n5fgToRwyr',  // 03.05.2026 neuer Account
       stripe_price_jahr: '',           // → Stripe Jahres-Price-ID eintragen
       trial_tage:        14,
       farbe:             '#4f8ef7',
@@ -67,7 +67,7 @@
       preis_jahr_total:  2628,         // 219 × 12
       ersparnis_jahr:    720,          // (279-219) × 12
       onboarding:        349,          // Einmalige Onboarding-Gebühr
-      stripe_price_abo:  'price_1TEHH68d1CNm0HvYLeG1Or7T',
+      stripe_price_abo:  'price_1TSjNXRXumrtL2n56c6emN2k',  // 03.05.2026 neuer Account
       stripe_price_jahr: '',           // → Stripe Jahres-Price-ID eintragen
       trial_tage:        14,
       farbe:             '#a78bfa',
@@ -237,10 +237,11 @@
   }
 
 })(window);
-/* ── Add-on Pakete ─────────────────────────────────────── */
+/* ── Add-on Pakete (03.05.2026 neuer Stripe-Account) ───── */
 window.PROVA_ADDON_PREISE = {
-  FAELLE_5:  'price_1TJLnv8d1CNm0HvYy7ZrLRot',   // +5 Fälle Add-on
-  FAELLE_10: 'price_1TJLpG8d1CNm0HvY69Ph6oqY',   // +10 Fälle Add-on
+  FAELLE_5:  'price_1TSl2JRXumrtL2n52XSz85oC',   // +5  Gutachten (25€)
+  FAELLE_10: 'price_1TSl3fRXumrtL2n5Gur4BmWL',   // +10 Gutachten (45€)
+  FAELLE_20: 'price_1TSl4eRXumrtL2n5tIWx0ET8',   // +20 Gutachten (80€)
 };
 
 

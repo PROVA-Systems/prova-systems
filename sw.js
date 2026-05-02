@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v251';   // Voll-Cleanup-Sprint Block 4: Airtable raus aus CSP+SW
+const CACHE_VERSION = 'prova-v252';   // Stripe-Migration 03.05.2026: neue Price-IDs in prova-preise.js
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [

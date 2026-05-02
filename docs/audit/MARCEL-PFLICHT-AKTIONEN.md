@@ -14,6 +14,21 @@ Sammelpunkt für alles, was **Claude Code NICHT machen kann** und Marcel manuell
 
 ## 🔴 SOFORT (innerhalb 7 Tagen)
 
+### Aus Stripe-Migration-Sprint (03.05.)
+
+→ Detail-Doku in `docs/strategie/STRIPE-SETUP.md`
+
+- [ ] **Neue Stripe-ENV-Vars in Netlify hinterlegen:**
+  - `STRIPE_SECRET_KEY` (Live-Mode)
+  - `STRIPE_PUBLISHABLE_KEY`
+  - `PROVA_SUPABASE_PROJECT_URL` + `SUPABASE_SERVICE_ROLE_KEY` (für Webhook-Supabase-Writes)
+- [ ] **Webhook-Endpoint im Stripe-Dashboard anlegen:** `https://prova-systems.de/.netlify/functions/stripe-webhook` mit 5 Event-Types
+- [ ] **STRIPE_WEBHOOK_SECRET** kopieren + in Netlify setzen
+- [ ] **Founding-Coupon `FOUNDING-99` im Stripe-Dashboard anlegen** (50€ off Solo, lifetime, 10 Plätze) → `STRIPE_FOUNDING_COUPON_ID` in Netlify
+- [ ] **Customer-Portal im Stripe-Dashboard aktivieren**
+- [ ] **Trigger Deploy** + Test-Checkout mit 4242-Karte
+- [ ] **Alte Stripe-ENV-Vars vom Sandbox-Account löschen** (alte STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET)
+
 ### Aus Voll-Cleanup-Sprint (02.05.)
 
 - [ ] **12 AIRTABLE_*-ENV-Vars in Netlify-UI löschen** — Liste in `docs/sprint-status/AIRTABLE-ENV-CLEANUP-LIST.md`. Nach Löschung manuell „Trigger Deploy" in Netlify (kein Auto-Redeploy bei ENV-Change).
