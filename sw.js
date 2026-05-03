@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v258';   // MEGA-MEGA-MEGA O7: Final Tech-Debt-Marathon (sentry+admin+wertgutachten 6 pages)
+const CACHE_VERSION = 'prova-v259';   // MEGA⁴ Q2+Q3: Mobile-Polish Layer + Q1 Templates F-09/F-15
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
@@ -43,6 +43,8 @@ const APP_SHELL = [
   '/lib/template-registry.js',
   '/lib/auth-guard.js',
   '/lib/sentry-init.js',                // M3: Sentry Browser-SDK-Init
+  '/lib/mobile-polish.css',             // MEGA⁴ Q2: Mobile-Polish CSS
+  '/lib/mobile-polish.js',              // MEGA⁴ Q3: Mobile-Polish JS (Lazy/Offline/Camera/Geo)
   // Legacy auth (Hybrid-Modus, bleibt bis Cutover-Phase 5 cleanup)
   '/prova-fetch-auth.js',
   '/prova-notifications.js',
