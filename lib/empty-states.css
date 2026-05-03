@@ -1,0 +1,152 @@
+/* ═══════════════════════════════════════════════════════════════════
+   PROVA Systems · Empty-State + Skeleton-Library v1.0 (MEGA⁷ U3)
+   Pflicht-Lektuere CLAUDE.md Empty-States-Regel:
+   1. Icon (groß, freundlich)
+   2. Titel (was fehlt, neutral)
+   3. 1-2 Saetze was passiert nach der Aktion
+   4. Primaer-Button
+   5. Optional zweiter Weg (Demo-Fall, Hilfe)
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── Empty-State Container ── */
+.prova-empty-state {
+  text-align: center;
+  padding: 48px 32px;
+  max-width: 480px;
+  margin: 32px auto;
+  background: var(--surface, #1c2537);
+  border: 1px solid var(--border, rgba(255,255,255,0.07));
+  border-radius: 14px;
+  position: relative;
+}
+
+.prova-empty-state__icon {
+  font-size: 56px;
+  margin-bottom: 16px;
+  display: block;
+  opacity: 0.85;
+  line-height: 1;
+}
+
+.prova-empty-state__title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text, #e8eaf0);
+  margin-bottom: 8px;
+  letter-spacing: -0.01em;
+}
+
+.prova-empty-state__text {
+  font-size: 14px;
+  color: var(--text2, #aab4cb);
+  line-height: 1.6;
+  margin-bottom: 24px;
+}
+
+.prova-empty-state__actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.prova-empty-state__btn {
+  display: inline-block;
+  padding: 11px 20px;
+  background: linear-gradient(135deg, var(--accent, #4f8ef7), var(--accent2, #3a7be0));
+  color: white;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.prova-empty-state__btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(79,142,247,0.4);
+}
+
+.prova-empty-state__btn--secondary {
+  background: transparent;
+  color: var(--accent, #4f8ef7);
+  border: 1px solid var(--accent, #4f8ef7);
+}
+.prova-empty-state__btn--secondary:hover {
+  background: rgba(79,142,247,0.08);
+  box-shadow: none;
+  transform: none;
+}
+
+/* ── Skeleton-Loaders ── */
+@keyframes prova-skeleton-pulse {
+  0%, 100% { opacity: 0.4; }
+  50%      { opacity: 0.8; }
+}
+
+.prova-skeleton {
+  display: inline-block;
+  background: linear-gradient(90deg,
+    var(--surface, #1c2537) 0%,
+    var(--surface2, #222d42) 50%,
+    var(--surface, #1c2537) 100%);
+  background-size: 200% 100%;
+  animation: prova-skeleton-pulse 1.4s ease-in-out infinite;
+  border-radius: 6px;
+  height: 16px;
+  width: 100%;
+  vertical-align: middle;
+}
+
+.prova-skeleton--text-short  { width: 60%; }
+.prova-skeleton--text-medium { width: 80%; }
+.prova-skeleton--title       { height: 22px; width: 50%; }
+.prova-skeleton--block       { height: 80px; width: 100%; border-radius: 10px; }
+.prova-skeleton--avatar      { width: 40px; height: 40px; border-radius: 50%; }
+.prova-skeleton--button      { width: 100px; height: 36px; border-radius: 8px; }
+.prova-skeleton--card        { height: 140px; width: 100%; border-radius: 14px; margin-bottom: 12px; }
+
+/* ── Skeleton Liste-Layout ── */
+.prova-skeleton-list { display: flex; flex-direction: column; gap: 8px; }
+.prova-skeleton-list .row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px;
+  background: var(--surface, #1c2537);
+  border: 1px solid var(--border, rgba(255,255,255,0.07));
+  border-radius: 10px;
+}
+.prova-skeleton-list .row .col-grow { flex: 1; display: flex; flex-direction: column; gap: 6px; }
+
+/* ── Toast-Notifications (Success-Feedback) ── */
+.prova-toast {
+  position: fixed; bottom: 24px; left: 50%;
+  transform: translateX(-50%) translateY(100px);
+  background: var(--surface, #1c2537);
+  border: 1px solid var(--border2, rgba(255,255,255,0.12));
+  padding: 12px 20px;
+  border-radius: 12px;
+  font-size: 14px; color: var(--text, #e8eaf0);
+  box-shadow: 0 12px 36px rgba(0,0,0,0.4);
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  z-index: 9999;
+  max-width: calc(100vw - 32px);
+}
+.prova-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); pointer-events: auto; }
+
+.prova-toast--success { border-color: rgba(16,185,129,0.4); }
+.prova-toast--success::before { content: '✓ '; color: var(--green, #10b981); font-weight: 700; }
+.prova-toast--error   { border-color: rgba(239,68,68,0.4); }
+.prova-toast--error::before { content: '✕ '; color: var(--red, #ef4444); font-weight: 700; }
+.prova-toast--info    { border-color: rgba(79,142,247,0.4); }
+
+/* ── Mobile-Anpassungen ── */
+@media (max-width: 640px) {
+  .prova-empty-state { padding: 32px 20px; margin: 16px; }
+  .prova-empty-state__icon { font-size: 48px; }
+  .prova-empty-state__title { font-size: 16px; }
+  .prova-toast { bottom: 16px; left: 16px; right: 16px; transform: translateY(100px); }
+  .prova-toast.show { transform: translateY(0); }
+}
