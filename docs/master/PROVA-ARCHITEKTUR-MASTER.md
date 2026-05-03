@@ -190,6 +190,14 @@ Stripe-Webhook → POST /.netlify/functions/stripe-webhook
 ### Setup-Doku
 → siehe `docs/strategie/STRIPE-SETUP.md`
 
+### Verification-Suite (03.05.2026)
+3 Skripte für Marcel-Verifikation in <5 Min:
+- `npm run verify-stripe` — ENV + API + Webhook + Coupon + Supabase + Portal
+- `npm run test-webhook` — Mock-Event signiert senden, End-to-End-Test
+- `npm run test-checkouts` — 6 Test-Checkout-URLs erzeugen (Solo/Team/Founding/3 Add-ons)
+
+→ Runbook + Troubleshooting in `docs/strategie/STRIPE-VERIFICATION-RUNBOOK.md`
+
 ---
 
 ## Subprozessoren (DSGVO Art. 28, Stand 02.05.2026)
