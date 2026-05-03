@@ -1,10 +1,12 @@
 /**
- * PROVA — Frontend-Fehler → Airtable AUDIT_TRAIL (ohne JWT)
+ * PROVA — Frontend-Fehler → AUDIT_TRAIL (ohne JWT)
+ * MEGA⁴-EXT Q4: Storage-Router (dual-write Airtable + Supabase audit_trail).
  * Rate-Limit: 10 POSTs / Minute / Client-IP
  * Antwort immer 200 (UI nicht blockieren)
  */
 const { AIRTABLE_API, BASE_ID, TABLE_AUDIT } = require('./lib/prova-subscription.js');
 const { getCorsHeaders, corsOptionsResponse, jsonResponse } = require('./lib/cors-helper');
+const { writeDual, getSupabase } = require('./lib/storage-router');
 
 const rateBuckets = new Map();
 const WINDOW_MS = 60 * 1000;
@@ -85,14 +87,26 @@ exports.handler = async function (event) {
   };
 
   try {
-    const url = AIRTABLE_API + '/v0/' + BASE_ID + '/' + TABLE_AUDIT;
-    await fetch(url, {
-      method: 'POST',
-      headers: {
-        Authorization: 'Bearer ' + pat,
-        'Content-Type': 'application/json'
+    await writeDual({
+      functionName: 'error-log',
+      airtable: async () => {
+        const url = AIRTABLE_API + '/v0/' + BASE_ID + '/' + TABLE_AUDIT;
+        return fetch(url, {
+          method: 'POST',
+          headers: { Authorization: 'Bearer ' + pat, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ fields: fields })
+        });
       },
-      body: JSON.stringify({ fields: fields })
+      supabase: async () => {
+        const sb = getSupabase();
+        if (!sb) return null;
+        return sb.from('audit_trail').insert({
+          typ: 'frontend.error',
+          sv_email: user,
+          details: JSON.stringify({ msg: msg, src: src, line: line, page: page }),
+          created_at: ts
+        });
+      }
     });
   } catch (e) {
     /* still 200 */
