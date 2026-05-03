@@ -78,6 +78,10 @@ async function getTokenPayload(event) {
         verified: true,
         iat:      sp.iat,
         exp:      sp.exp,
+        // O4: AAL (Authenticator Assurance Level) durchreichen fuer 2FA-Pflicht
+        // im admin-auth-guard. 'aal1' = Email+Passwort, 'aal2' = + 2FA-Faktor.
+        aal:      sp.aal || 'aal1',
+        amr:      Array.isArray(sp.amr) ? sp.amr : [],
         _source:  'supabase'
       };
     }

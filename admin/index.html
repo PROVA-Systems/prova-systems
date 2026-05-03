@@ -429,6 +429,24 @@ async function bootstrap() {
     return;
   }
 
+  // O4: 2FA-Pflicht-Hinweis bei AAL1-Login
+  window.checkAAL = async function() {
+    if (!sb) return;
+    try {
+      const { data: { aal } } = await sb.auth.mfa.getAuthenticatorAssuranceLevel();
+      if (aal && aal.currentLevel !== 'aal2') {
+        const banner = document.createElement('div');
+        banner.style.cssText = 'background:rgba(234,179,8,.15);border-bottom:1px solid #eab308;color:#eab308;padding:10px 24px;font-size:0.85rem;text-align:center';
+        banner.innerHTML = '⚠ 2FA nicht aktiviert. Admin-Endpoints erfordern AAL2. <a href="https://supabase.com/dashboard/project/cngteblrbpwsyypexjrv/auth/mfa" target="_blank" style="color:#eab308;text-decoration:underline">2FA jetzt einrichten</a>';
+        const app = document.getElementById('app-area');
+        if (app && !document.getElementById('aal-banner')) {
+          banner.id = 'aal-banner';
+          app.insertBefore(banner, app.firstChild);
+        }
+      }
+    } catch (e) { console.warn('AAL-Check fail', e); }
+  };
+
   sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
     auth: { persistSession: true, autoRefreshToken: true, storageKey: 'prova-admin-session' }
   });
@@ -477,6 +495,7 @@ function showApp(session) {
   document.getElementById('login-area').style.display = 'none';
   document.getElementById('app-area').style.display = 'block';
   document.getElementById('who-am-i').textContent = session.user.email;
+  if (typeof window.checkAAL === 'function') window.checkAAL();
   loadAllTabs();
 }
 
