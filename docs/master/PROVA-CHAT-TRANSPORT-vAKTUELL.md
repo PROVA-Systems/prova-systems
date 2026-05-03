@@ -322,4 +322,26 @@ Volles Update-Protokoll in `docs/master/README.md`.
 
 ---
 
-*Chat-Transport vAKTUELL · 01.05.2026 abend · Wird nach jedem Sprint überschrieben · Versions-Historie im git-Log*
+## MEGA-SKALIERUNG 03.05.2026 nachmittag (Tag `v206-skalierung-mega-done`)
+
+**7 Sub-Sprints (M1–M7), 5 Commits, 3h Wall-Clock, 43 Tests grün.**
+
+| ID | Lieferung | Commit |
+|---|---|---|
+| M1c | 3 Tot-Code-Files weg + auth-token-issue 5/15min Rate-Limit + 1h Lockout | `227eaaf` |
+| M2 | zod-Schema-Validation (5 Functions, 6 Schemas, 37 Tests) | `576d1f3` |
+| M3 | Sentry Error-Tracking (4 Functions, 3 HTML-Pages, EU-Region, AVV) | `3887af8` |
+| M4 | pilot.html Hero+Trust+Features+FAQ+Live-Counter via /pilot-seats | `5a58aa2` |
+| M5 | /loop-Workflows ready (Marcel-Activation pending) | doc-only |
+| M6 | /learn-codebase Runbook (Marcel-Aktion fresh Session) | doc-only |
+| M7 | Final-Report + Master-Files-Sync + Tag | this commit |
+
+**BACKLOG-Delta:** RL-01 + 5×HIGH RESOLVED, 1×HIGH NEU (H-25 Legacy app-login.html Migration).
+
+**Marcel-Pflicht-Aktionen vor Pilot:** Sentry-ENVs in Netlify, /loop-Activation, AVV-Re-Consent, /learn-codebase einmal. Details in `docs/sprint-status/MEGA-SKALIERUNG-2026-05-03-NACHMITTAG.md`.
+
+**Tech-Stack-Update:** zod@4.4 + @sentry/node@10.51 + @sentry/browser@10.51 zu Production-Deps.
+
+---
+
+*Chat-Transport vAKTUELL · 03.05.2026 nachmittag · Wird nach jedem Sprint überschrieben · Versions-Historie im git-Log*

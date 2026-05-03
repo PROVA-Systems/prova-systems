@@ -612,4 +612,33 @@ NETLIFY_ACCESS_TOKEN, NETLIFY_SITE_ID
 
 ---
 
-*Architektur-Master 01.05.2026 abend · Single Source of Truth · Aktualisiert von Claude Code nach jedem Sprint*
+## Tech-Stack-Update — MEGA-SKALIERUNG 03.05.2026 nachmittag
+
+**Production-Dependencies neu ergänzt:**
+- `zod@^4.4.2` — Schema-Validation (`lib/schemas/_common.js` + 5 Function-Schemas). OWASP ASVS V2.1.2.
+- `@sentry/node@^10.51.0` — Backend Error-Tracking + Performance-Monitoring (`netlify/functions/lib/sentry-wrap.js`)
+- `@sentry/browser@^10.51.0` — Frontend Error-Tracking (Browser-CDN-Bundle in `lib/sentry-init.js`, npm-Package fuer Local-Dev)
+
+**Architektur-Pattern post-M2/M3:**
+- Function-Validation: `parseXxx(body)` → `{ ok, data, error }` (zod safeParse-Wrapper) ersetzt manuelle if-Ketten
+- Function-Wrapping: `withSentry(handler, { functionName })` als äusserste Schicht (vor `requireAuth`)
+- DSGVO-Filter: `beforeSend`-Hook scrubbed Auth-Header / Cookies / Body / user.email/IP / breadcrumb-URLs
+
+**Subprozessor-Liste:** Sentry (Functional Software, Inc.) als 7. Subprozessor in `avv.html` + `legal/avv.html` Anlage 2 ergänzt. EU-Region (`ingest.de.sentry.io`, Frankfurt), AVV unterschrieben. **Marcel-Pflicht:** AVV-Re-Consent für Bestands-User triggern (Regel 20 CLAUDE.md).
+
+**Endpoints neu:**
+- `GET /pilot-seats` — Public, Cache 5min, liefert `{ available, remaining, total }` für pilot.html Live-Counter
+- `GET /sentry-test?secret=PROVA_SENTRY_TEST_SECRET` — Test-Trigger fuer Sentry-Verifikation
+
+**Endpoints entfernt (Tot-Code post-K-1.5):**
+- `POST /foto-upload` (foto-archiv.js Caller mitgelöscht)
+- `POST /invite-user`
+
+**Endpoints unverändert aber abgesichert:**
+- `POST /auth-token-issue` — 5/15min IP-Limit + 1h Lockout (legacy, Migration in Sprint AUTH-PERFEKT 2.0)
+
+**Neue Permissions-Konfig:** `.claude/settings.json` — `Bash(git push)` jetzt auto-allowed; kritische Files (CLAUDE.md, package.json, netlify.toml, sw.js, supabase/migrations) bleiben unter ask-Schutz; rm -rf-Varianten + sudo + curl|sh unter deny.
+
+---
+
+*Architektur-Master 03.05.2026 nachmittag · Single Source of Truth · Aktualisiert von Claude Code nach jedem Sprint*

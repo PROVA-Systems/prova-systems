@@ -370,4 +370,27 @@ Nach erfolgreichem 10-SV-Pilot:
 
 ---
 
-*Sprints-Masterplan 01.05.2026 abend · Single Source of Truth · Aktualisiert von Claude Code nach jedem Sprint*
+## MEGA-SKALIERUNGS-SPRINT — 03.05.2026 nachmittag
+
+**Tag:** `v206-skalierung-mega-done`
+**Sub-Sprints:** M1c, M2, M3, M4, M5, M6, M7
+**Wall-Clock:** ~3h
+**Commits:** 5 (227eaaf, 576d1f3, 3887af8, 5a58aa2 + M7 final)
+
+| Sprint | Lieferung |
+|---|---|
+| M1c | Tot-Code-Cleanup (3 Files) + Brute-Force-Schutz auth-token-issue (RL-01 RESOLVED) |
+| M2  | zod-Schema-Validation (5 Functions, 6 Schemas, 37 Tests) — OWASP ASVS V2.1.2 |
+| M3  | Sentry Error-Tracking (4 Functions + 3 HTML, EU-Region, AVV) — H-10/H-11 RESOLVED |
+| M4  | pilot.html Hero/Trust/Features/FAQ + /pilot-seats Live-Counter |
+| M5  | /loop-Workflows ready (Marcel-Activation pending) |
+| M6  | /learn-codebase Runbook (Marcel-Aktion fresh Session) |
+| M7  | Final-Report + Master-Files-Sync + Tag v206 |
+
+**Auto-Permissions-Update:** `.claude/settings.json` post-Sprint M7 erweitert — `Bash(git push)` jetzt auto-allowed, kritische Files (CLAUDE.md, package.json, netlify.toml, sw.js, supabase/migrations) unter ask-Schutz.
+
+Vollständiger Final-Report: `docs/sprint-status/MEGA-SKALIERUNG-2026-05-03-NACHMITTAG.md`.
+
+---
+
+*Sprints-Masterplan 03.05.2026 nachmittag · Single Source of Truth · Aktualisiert von Claude Code nach jedem Sprint*

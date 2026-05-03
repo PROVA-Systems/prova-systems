@@ -1,8 +1,36 @@
 # PROVA /loop Workflows (Claude Code Max-Plan)
 
-**Stand:** 03.05.2026 (Power-Setup MAX)
+**Stand:** 03.05.2026 (MEGA-SKALIERUNG M5)
+**Status:** Loop 1 + Loop 2 = **READY** (Activation-Pflicht durch Marcel in eigener CC-Session, siehe unten)
 **Zielgruppe:** Marcel (Loop-Aktivierung) + zukünftiges Team
 **Voraussetzung:** Claude Max 20€/Monat (`/loop` ist Max-Plan-Feature)
+
+---
+
+## ⚡ Marcel-Activation (M5 — sofort 2 Min)
+
+`/loop`-Tasks laufen in der CC-Session in der sie aktiviert wurden. Damit sie dauerhaft fire (auch wenn CC-Window geschlossen wird), nutze entweder:
+
+- **`/loop`** in einer dauerhaft offenen CC-Session (Marcel-Workstation), oder
+- **`/schedule`** für true-Cron auf Anthropic-Backend (empfohlen wenn Marcel CC oft schliesst)
+
+**Sofort aktivieren (Copy-Paste in deine CC-CLI):**
+
+```
+/loop 24h "Run scripts/smoke-test-cutover.sh from PROVA-repo. If not 15/15 green, create GitHub issue with title 'Daily Smoke-Test failed [date]' and full output. Otherwise log success briefly."
+```
+
+```
+/loop 6h "Run 'npm audit --audit-level=high' in PROVA-repo. If new HIGH or CRITICAL vulnerabilities found, create GitHub issue with details and recommended fix command. Otherwise log only."
+```
+
+Verifikation:
+```
+/loops
+```
+→ sollte beide als `active` listen.
+
+---
 
 ---
 
@@ -14,7 +42,7 @@ Recurring-Tasks die Claude Code in regelmäßigen Abständen ausführt. Pre-Pilo
 
 ## Empfohlene Loops für PROVA-Pre-Pilot
 
-### Loop 1: Daily Smoke-Test (✅ EMPFOHLEN sofort aktivieren)
+### Loop 1: Daily Smoke-Test (✅ READY zum aktivieren — siehe Marcel-Activation oben)
 
 **Cadence:** alle 24h
 **Wert:** Marcel weiß JEDEN Morgen ob das System läuft
@@ -30,7 +58,7 @@ Recurring-Tasks die Claude Code in regelmäßigen Abständen ausführt. Pre-Pilo
 
 ---
 
-### Loop 2: npm audit (✅ EMPFOHLEN sofort aktivieren)
+### Loop 2: npm audit (✅ READY zum aktivieren — siehe Marcel-Activation oben)
 
 **Cadence:** alle 6h
 **Wert:** Security-Updates ohne dass Marcel dran denken muss
