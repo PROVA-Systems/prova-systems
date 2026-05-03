@@ -1,11 +1,14 @@
 const { fetchWithRetry } = require('./lib/fetch-with-timeout');
 const { getCorsHeaders, corsOptionsResponse } = require('./lib/cors-helper');
 const { requireAuth } = require('./lib/jwt-middleware');
+const RateLimit = require('./lib/rate-limit-user');
 // ══════════════════════════════════════════════════
 // PROVA Systems — Foto-Anlage PDF Generator
 // Netlify Function: foto-anlage-pdf
 // Env: PDFMONKEY_API_KEY, PDFMONKEY_FOTO_TEMPLATE_ID
 // ══════════════════════════════════════════════════
+
+const MAX_FOTOS_PRO_PDF = 50;  // S6 X4 H-24: PDFMonkey-Cost-Schutz
 
 exports.handler = requireAuth(async (event, context) => {
   if (event.httpMethod !== 'POST') {
@@ -13,14 +16,23 @@ exports.handler = requireAuth(async (event, context) => {
   }
 
   const headers = {
-    'Access-Control-Allow-Origin': process.env.URL || 'https://prova-systems.de',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     'Content-Type': 'application/json',
+    ...getCorsHeaders(event)
   };
 
   // CORS preflight
   if (event.httpMethod === 'OPTIONS') {
     return { statusCode: 200, headers, body: '' };
+  }
+
+  // S6 X4 H-16: Rate-Limit — 20 PDFs / Stunde / User (PDFMonkey-Cost-Schutz)
+  const rl = RateLimit.check(context.userEmail, 20, 60 * 60, { event, functionName: 'foto-anlage-pdf' });
+  if (!rl.allowed) {
+    return {
+      statusCode: 429,
+      headers: { ...headers, 'Retry-After': String(rl.retryAfter) },
+      body: JSON.stringify({ error: 'PDF-Limit erreicht (max 20/h). Bitte ' + Math.ceil(rl.retryAfter / 60) + ' Min warten.' })
+    };
   }
 
   const jwtEmail = event.clientContext && event.clientContext.user && event.clientContext.user.email
@@ -45,6 +57,15 @@ exports.handler = requireAuth(async (event, context) => {
 
     if (!fotos || !fotos.length) {
       return { statusCode: 400, headers, body: JSON.stringify({ error: 'Keine Fotos' }) };
+    }
+
+    // S6 X4 H-24: Foto-Anzahl-Limit (PDFMonkey-Cost-Schutz)
+    if (fotos.length > MAX_FOTOS_PRO_PDF) {
+      return {
+        statusCode: 400,
+        headers,
+        body: JSON.stringify({ error: 'Max ' + MAX_FOTOS_PRO_PDF + ' Fotos pro PDF (uebermittelt: ' + fotos.length + ')' })
+      };
     }
 
     // PdfMonkey Document erstellen

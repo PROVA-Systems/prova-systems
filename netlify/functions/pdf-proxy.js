@@ -32,6 +32,7 @@
 const crypto  = require('crypto');
 const { getCorsHeaders, corsOptionsResponse } = require('./lib/cors-helper');
 const { resolveUser, logAuthFailure } = require('./lib/auth-resolve');
+const RateLimit = require('./lib/rate-limit-user');
 
 // ── Konfiguration ──────────────────────────────────────────────────────
 const TOKEN_TTL_MS    = 15 * 60 * 1000;    // 15 Minuten
@@ -188,7 +189,7 @@ exports.handler = async function(event, context) {
   // GET-Pfad oben bleibt unverändert (signed-URL-Token im Query — separate
   // Auth-Mechanik für PDF-Downloads, nicht durch HMAC ersetzt).
   if (event.httpMethod === 'POST') {
-    const u = resolveUser(event);
+    const u = await resolveUser(event);
     if (u.mismatch) {
       logAuthFailure('Auth-Mismatch', event, u.mismatch);
       return jsonResponse(event, 403, { error: 'Auth-Mismatch: Token-Subject und Request-Identitaet stimmen nicht ueberein', code: 'AUTH_MISMATCH' });
@@ -198,6 +199,12 @@ exports.handler = async function(event, context) {
       return jsonResponse(event, 401, { error: 'Anmeldung erforderlich', code: 'UNAUTHORIZED' });
     }
     const jwtEmail = u.email;
+
+    // S6 X4 H-16: Rate-Limit — 100 Token-Sign-Calls / Stunde / User
+    const rl = RateLimit.check(jwtEmail, 100, 60 * 60, { event, functionName: 'pdf-proxy' });
+    if (!rl.allowed) {
+      return jsonResponse(event, 429, { error: 'Rate-Limit erreicht', code: 'RATE_LIMIT', retryAfter: rl.retryAfter });
+    }
 
     let body;
     try { body = JSON.parse(event.body || '{}'); }

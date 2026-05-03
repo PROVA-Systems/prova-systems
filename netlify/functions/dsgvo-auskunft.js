@@ -8,6 +8,7 @@ const {
 } = require('./lib/prova-subscription.js');
 const { getCorsHeaders, corsOptionsResponse, jsonResponse } = require('./lib/cors-helper');
 const { requireAuth } = require('./lib/jwt-middleware');
+const RateLimit = require('./lib/rate-limit-user');
 
 // S6 Phase 1.9: per-request event-Capture (siehe ki-proxy.js Begruendung)
 let _currentEvent = null;
@@ -41,6 +42,16 @@ async function listCount(pat, tableId, formula) {
 exports.handler = requireAuth(async function (event, context) {
   _currentEvent = event;
   if (event.httpMethod !== 'GET') return json(405, { error: 'Method Not Allowed' });
+
+  // S6 X4 H-14: DSGVO-Auskunft Abuse-Schutz — 1 Anfrage / Tag / User
+  // (DB-teure Query, sollte nicht massenhaft getriggert werden)
+  const rl = RateLimit.check(context.userEmail, 1, 24 * 60 * 60, { event, functionName: 'dsgvo-auskunft' });
+  if (!rl.allowed) {
+    return json(429, {
+      error: 'DSGVO-Auskunft kann nur 1× pro Tag angefordert werden. Bitte ' + Math.ceil(rl.retryAfter / 3600) + ' Stunden warten.',
+      retryAfter: rl.retryAfter
+    });
+  }
 
   // P4B.7b: context.userEmail aus HMAC-Token statt Identity-clientContext.user.email
   const userEmail = context.userEmail;

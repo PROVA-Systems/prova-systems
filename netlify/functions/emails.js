@@ -37,8 +37,25 @@ exports.handler = requireAuth(async (event, context) => {
     const body = JSON.parse(event.body || '{}');
     const { typ } = body;
 
-    if (!typ) {
-      return { statusCode: 400, headers, body: JSON.stringify({ error: 'Feld "typ" fehlt' }) };
+    // S6 X4 H-19: Whitelist + Format-Checks
+    const ALLOWED_TYPES = ['willkommen', 'trial_erinnerung', 'kauf_bestaetigung', 'support'];
+    if (!typ || !ALLOWED_TYPES.includes(typ)) {
+      return { statusCode: 400, headers, body: JSON.stringify({ error: 'Feld "typ" fehlt oder ungueltig (erlaubt: ' + ALLOWED_TYPES.join(', ') + ')' }) };
+    }
+
+    // Email-Format-Check (verhindert Header-Injection wenn Email weitergeleitet)
+    const EMAIL_RE = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
+    if (body.email && (typeof body.email !== 'string' || !EMAIL_RE.test(body.email) || body.email.length > 254)) {
+      return { statusCode: 400, headers, body: JSON.stringify({ error: 'Email-Format ungueltig' }) };
+    }
+    // CRLF-Injection-Schutz fuer Subject + Body
+    if (body.subject && (String(body.subject).includes('\r') || String(body.subject).includes('\n') || String(body.subject).length > 200)) {
+      return { statusCode: 400, headers, body: JSON.stringify({ error: 'Subject ungueltig (CRLF oder zu lang)' }) };
+    }
+    // Body-Size-Limit
+    const bodyText = body.body || body.text || body.html || '';
+    if (String(bodyText).length > 10000) {
+      return { statusCode: 413, headers, body: JSON.stringify({ error: 'Body zu gross (max 10k)' }) };
     }
 
     // Support-Emails: jeder angemeldete User darf; andere Typen nur Admin oder interner Aufruf

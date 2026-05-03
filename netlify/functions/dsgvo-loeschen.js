@@ -11,6 +11,7 @@ const { getCorsHeaders, corsOptionsResponse } = require('./lib/cors-helper');
 const { fetchWithRetry } = require('./lib/fetch-with-timeout');
 const { provaFetch } = require('./lib/prova-fetch');
 const { requireAuth } = require('./lib/jwt-middleware');
+const RateLimit = require('./lib/rate-limit-user');
 
 const AT_BASE = process.env.AIRTABLE_BASE_ID  || 'appJ7bLlAHZoxENWE';
 const AT_PAT  = process.env.AIRTABLE_PAT      || process.env.AIRTABLE_TOKEN || '';
@@ -69,6 +70,20 @@ async function getRecordIds(tableId, emailField, email) {
 exports.handler = requireAuth(async function(event, context) {
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, headers: getCorsHeaders(event), body: JSON.stringify({ error: 'Method Not Allowed' }) };
+  }
+
+  // S6 X4 H-14: DSGVO-Löschung Abuse-Schutz — 1 Anfrage / Tag / User
+  // (destruktiver Workflow, Race-Condition-Schutz, kein Doppel-Trigger)
+  const rl = RateLimit.check(context.userEmail, 1, 24 * 60 * 60, { event, functionName: 'dsgvo-loeschen' });
+  if (!rl.allowed) {
+    return {
+      statusCode: 429,
+      headers: { ...getCorsHeaders(event), 'Retry-After': String(rl.retryAfter) },
+      body: JSON.stringify({
+        error: 'DSGVO-Löschung kann nur 1× pro Tag angefordert werden. Bitte ' + Math.ceil(rl.retryAfter / 3600) + ' Stunden warten.',
+        retryAfter: rl.retryAfter
+      })
+    };
   }
 
   // P4B.7b: context.userEmail aus HMAC-Token, kein Identity-clientContext mehr.

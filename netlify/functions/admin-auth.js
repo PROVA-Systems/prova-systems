@@ -10,10 +10,10 @@
 
 const bcrypt = require('bcryptjs');
 const { getCorsHeaders, corsOptionsResponse } = require('./lib/cors-helper');
+const RateLimitIp = require('./lib/rate-limit-ip');
 
 exports.handler = async (event) => {
   // S6 Phase 1.9: zentralen cors-helper nutzen statt lokal hardcoded.
-  // ALLOWED_ORIGINS in cors-helper enthaelt admin.prova-systems.de.
   const headers = {
     'Content-Type': 'application/json',
     ...getCorsHeaders(event)
@@ -21,6 +21,19 @@ exports.handler = async (event) => {
 
   if (event.httpMethod === 'OPTIONS') return { statusCode: 200, headers, body: '' };
   if (event.httpMethod !== 'POST') return { statusCode: 405, headers, body: '{"error":"Method Not Allowed"}' };
+
+  // S6 X4 H-13: Brute-Force-Schutz — 5 Versuche / 15 Min / IP
+  const rl = RateLimitIp.check(event, 5, 15 * 60, { functionName: 'admin-auth' });
+  if (!rl.allowed) {
+    return {
+      statusCode: 429,
+      headers: { ...headers, 'Retry-After': String(rl.retryAfter) },
+      body: JSON.stringify({
+        ok: false,
+        error: 'Zu viele Anmelde-Versuche. Bitte ' + Math.ceil(rl.retryAfter / 60) + ' Minuten warten.'
+      })
+    };
+  }
 
   try {
     // Nur mit verifiziertem Netlify-Identity User (JWT)

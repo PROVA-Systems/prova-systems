@@ -11,6 +11,8 @@ const log = require('./lib/prova-logger');
 const { fetchWithRetry } = require('./lib/fetch-with-timeout');
 const { provaFetch } = require('./lib/prova-fetch');
 const { requireAuth } = require('./lib/jwt-middleware');
+const RateLimit = require('./lib/rate-limit-user');
+const { isValidEmail } = require('./lib/auth-validate');
 
 function json(event, status, obj) {
   return {
@@ -23,6 +25,15 @@ function json(event, status, obj) {
 exports.handler = requireAuth(async function(event, context) {
   if (event.httpMethod !== 'POST') return json(event, 405, { error: 'Method Not Allowed' });
 
+  // S6 X4 H-15: Rate-Limit — 50 Mails / Stunde / User (Spam-Schutz)
+  const rl = RateLimit.check(context.userEmail, 50, 60 * 60, { event, functionName: 'smtp-senden' });
+  if (!rl.allowed) {
+    return json(event, 429, {
+      error: 'Mail-Limit erreicht (max 50/h). Bitte ' + Math.ceil(rl.retryAfter / 60) + ' Min warten.',
+      retryAfter: rl.retryAfter
+    });
+  }
+
   // P4B.7b: HMAC-Token-Email aus context.userEmail
   const user = { email: context.userEmail };
 
@@ -32,6 +43,27 @@ exports.handler = requireAuth(async function(event, context) {
   const { to, subject, text, html, az } = body;
   if (!to || !subject || (!text && !html)) {
     return json(event, 400, { error: 'Pflichtfelder fehlen: to, subject, text/html' });
+  }
+
+  // S6 X4 H-20: Empfänger-Validation + CRLF-Injection-Schutz
+  // Verhindert SMTP-Header-Injection (Bcc-Smuggling, Spoof-From, etc.)
+  const toStr = String(to);
+  if (toStr.includes('\r') || toStr.includes('\n') ||
+      toStr.includes(',') || toStr.includes(';')) {
+    return json(event, 400, { error: 'Ungültiger Empfänger (Multi-Recipients oder CRLF nicht erlaubt)' });
+  }
+  if (!isValidEmail(toStr)) {
+    return json(event, 400, { error: 'Empfänger-Email-Format ungültig' });
+  }
+  const subjStr = String(subject);
+  if (subjStr.length > 200) {
+    return json(event, 400, { error: 'Subject zu lang (max 200 Zeichen)' });
+  }
+  if (subjStr.includes('\r') || subjStr.includes('\n')) {
+    return json(event, 400, { error: 'CRLF im Subject verboten (Header-Injection-Schutz)' });
+  }
+  if ((text || html || '').length > 100000) {
+    return json(event, 413, { error: 'Mail-Body zu groß (max 100k Zeichen)' });
   }
 
   // ── Credentials intern aus smtp-credentials.js laden ─────────────────────
