@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v262';   // MEGA⁶: Cockpit 12/12 + DSGVO-Audit + Anwalt-Vorbereitung + 209 Tests
+const CACHE_VERSION = 'prova-v263';   // MEGA⁷: Perfektion-Sprint (7 Tiers, 262 Tests, Status-Page, Empty-State-Lib)
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [

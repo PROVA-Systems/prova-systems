@@ -4,6 +4,32 @@ Format: pro Sprint ein Block. Ältere Sprints zuoberst nicht — neueste oben.
 
 ---
 
+## MEGA⁷ — PERFEKTION SELF-SCOPING (U0-U8)
+
+**Tag:** `v212-perfektion-tier-3-4-8-9-11-12-done` · **Stand:** 04.05.2026 nacht · **Commits:** `031ddb2`, `ea77f70`, `20aaf7f`, `4d7ebc4`, `b8267a6`, `aa319f0`, `716aa39` + U8
+
+Marcel-Direktive "MARKTFÜHRUNG NICHT 90%". Self-Scoping-Variante D: 7 Tiers in höchster Quality, 5 Tiers MEGA⁸-Backlog (Browser-Pflicht oder Marcel-Decision).
+
+### Sub-Sprints
+- U0: Self-Assessment (docs/diagnose/MEGA7-SELF-ASSESSMENT-PLAN.md)
+- U1 (Tier 4): 3 weitere Function-Migrationen (ki-statistik + team-interest + health)
+- U2 (Tier 8): Security-Headers-Audit-Doku + Rate-Limits normen/audit-log + security-audit.sh
+- U3 (Tier 12): 500.html + maintenance.html + Empty-State-Library (lib/empty-states.*)
+- U4 (Tier 3): Backend cancellation-survey.js + lib/cookie-consent.js + lib/cancellation-survey.js
+- U5 (Tier 11): Tests 209 -> 262 (+53)
+- U6 (Tier 2): Cockpit-Polish (CSV-Export + Keyboard-Shortcuts Ctrl+K/Ctrl+E/1-9/0 + Quick-Switcher)
+- U7 (Tier 9): status.html Public-Status-Page + uptime-monitor.js + NACHT-PAUSE Analytics-Tool
+
+### MEGA⁸-Backlog (transparent)
+5 Tiers nicht heute: Mobile-Lighthouse-Verify (Browser), Cockpit-WebSocket (Live-Test), KI-Confidence-UI (Frontend-Refactor), 15 weitere PDF-Templates, Upload-EXIF-Strip (Browser), Synthetic-Tests (Playwright), Analytics-Tool (Marcel-Decision), E2E-Tests (Playwright), WCAG 2.1 AA (Audit-Tools).
+
+### Total
+- 9 Commits, ~3.500 LOC neu, 53 neue Tests
+- 1 NACHT-PAUSE-File (Plausible vs. Matomo Marcel-Decision)
+- 0 Production-Breaking-Changes
+
+---
+
 ## MEGA⁶ — COMPLIANCE + PILOT-READY + COCKPIT-FINAL (S0+S1+S2+S3+S4+S5+S6)
 
 **Tag:** `v211-compliance-pilot-ready-done` · **Stand:** 04.05.2026 nacht · **Commits:** `f50b16d`, `503b74a`, `9b1bee0`, `308e794`, `43e37e7` + S6
