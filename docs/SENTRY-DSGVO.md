@@ -40,6 +40,9 @@ Implementiert in `lib/sentry-init.js` (Frontend) + `netlify/functions/lib/sentry
 | `user.email` | ersetzt durch `[redacted]` | DSGVO Art. 4 Personenbezug |
 | `user.ip_address` | auf `null` gesetzt | IP-Adresse = personenbezogenes Datum |
 | `breadcrumbs[].data.url` | Query-String entfernt | URLs enthalten oft Aktenzeichen / Suche / Email |
+| `user_pseudo` (Tag, ab O6) | erste 3 Zeichen + `***` + Domain (z.B. `mar***@prova-systems.de`) | Pseudonymisiert, nicht zurueckverfolgbar zu Person |
+| `workspace_id` (Tag, ab O6) | UUID — KEIN PII (Art. 4 DSGVO) | Tenant-Identifikator, fuer Bug-Triage erforderlich |
+| Slow-Call-Warnings (ab O6) | nur duration_ms + Function-Name | Performance-Monitoring ohne PII-Risiko |
 
 **Was wird gesendet:**
 

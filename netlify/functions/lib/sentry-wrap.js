@@ -88,28 +88,58 @@ function withSentry(handler, opts) {
   const fnName = (opts && opts.functionName) || 'unknown';
   return async function (event, context) {
     const S = initSentry();
+    const startMs = Date.now();
+    let result, threw = null;
     try {
-      return await handler(event, context);
+      result = await handler(event, context);
+      return result;
     } catch (err) {
+      threw = err;
       if (S) {
         try {
           S.withScope(function (scope) {
             scope.setTag('function', fnName);
             scope.setTag('http.method', (event && event.httpMethod) || 'unknown');
+            // O6: Workspace-Context aus context.workspaceId oder header
+            // (UUID, kein PII; sicher als Tag).
+            const wsId = (context && context.workspaceId)
+              || (event && event.headers && (event.headers['x-prova-workspace'] || event.headers['X-Prova-Workspace']))
+              || null;
+            if (wsId) scope.setTag('workspace_id', String(wsId).slice(0, 36));
+            // Pseudonymisierte sv_email (nur erste Buchstaben + Domain)
+            const adminEmail = (context && context.adminEmail) || (context && context.userEmail) || null;
+            if (adminEmail) {
+              const m = String(adminEmail).match(/^([^@]{0,3})[^@]*(@.+)$/);
+              if (m) scope.setTag('user_pseudo', m[1] + '***' + m[2]);
+            }
             scope.setContext('netlify', {
               path: (event && event.path) || null,
               method: (event && event.httpMethod) || null,
-              referer: (event && event.headers && event.headers.referer) || null
+              referer: (event && event.headers && event.headers.referer) || null,
+              duration_ms: Date.now() - startMs
             });
             S.captureException(err);
           });
-          // Best-effort flush vor Re-throw (Lambda wird gefroren)
           await S.flush(2000).catch(function () {});
         } catch (e) {
           console.warn('[sentry-wrap] captureException failed:', e && e.message);
         }
       }
       throw err;
+    } finally {
+      // O6: Performance-Sample (nur slow-Calls > 3s, sample-rate 100%).
+      // Schuetzt vor Spam waehrend kostenlose Sentry-Quota begrenzt ist.
+      if (S && !threw) {
+        const dur = Date.now() - startMs;
+        if (dur > 3000) {
+          try {
+            S.captureMessage('slow-call: ' + fnName + ' (' + dur + 'ms)', {
+              level: 'warning',
+              tags: { function: fnName, slow: true, duration_ms: dur }
+            });
+          } catch (e) { /* ignore */ }
+        }
+      }
     }
   };
 }
