@@ -177,22 +177,22 @@
 
   <div id="tab-time-track" class="tab-content">
     <div class="panel">
-      <h2>Gutachten-Time-Tracking <span class="meta">pro User · letzte 7 Tage</span></h2>
-      <div class="coming-soon-box">⏱ Aktuell BACKLOG Sprint K-2.<br>Aggregation aus <code>audit_trail</code> auftrag.created → auftrag.freigegeben.<br>Erfordert Schema-Erweiterung um <code>auftrag_lifecycle_minutes</code>.</div>
+      <h2>Gutachten-Time-Tracking <span class="meta" id="tt-meta">pro User · letzte 30 Tage</span></h2>
+      <div id="tt-content" class="loading">Lade…</div>
     </div>
   </div>
 
   <div id="tab-features" class="tab-content">
     <div class="panel">
-      <h2>Feature-Heatmap <span class="meta">welche Features genutzt</span></h2>
-      <div class="coming-soon-box">🔥 Aktuell BACKLOG Sprint K-2.<br>Erfordert <code>feature_events</code>-Tabelle (in CLAUDE.md Regel 16 vorgesehen).</div>
+      <h2>Feature-Heatmap <span class="meta" id="fh-meta">letzte 7 Tage</span></h2>
+      <div id="fh-content" class="loading">Lade…</div>
     </div>
   </div>
 
   <div id="tab-dropoff" class="tab-content">
     <div class="panel">
-      <h2>Drop-off-Funnel <span class="meta">wo brechen Pilots ab</span></h2>
-      <div class="coming-soon-box">📉 Aktuell BACKLOG Sprint K-2.<br>Funnel: Sign-Up → Onboarding-Done → 1. Akte → 1. PDF → Stripe-Aktivierung.<br>Pilot-Daten unter 5 → Statistik nicht aussagekräftig.</div>
+      <h2>Drop-off-Funnel <span class="meta" id="fn-meta">letzte 60 Tage</span></h2>
+      <div id="fn-content" class="loading">Lade…</div>
     </div>
   </div>
 
@@ -212,8 +212,8 @@
 
   <div id="tab-churn" class="tab-content">
     <div class="panel">
-      <h2>Churn-Reasons <span class="meta">Cancellation-Survey</span></h2>
-      <div class="coming-soon-box">🔚 Aktuell BACKLOG Sprint K-2.<br>Erfordert Cancellation-Survey-Modal in einstellungen.html + <code>cancellation_reasons</code>-Tabelle.</div>
+      <h2>Churn-Reasons <span class="meta" id="ch-meta">letzte 90 Tage</span></h2>
+      <div id="ch-content" class="loading">Lade…</div>
     </div>
   </div>
 
@@ -226,8 +226,8 @@
 
   <div id="tab-pdf-queue" class="tab-content">
     <div class="panel">
-      <h2>PDF-Queue <span class="meta">pending PDFMonkey-Generierungen</span></h2>
-      <div class="coming-soon-box">📄 Aktuell BACKLOG Sprint K-2.<br>Erfordert PDFMonkey-Webhook-Integration. Aktuell: PDFs werden synchron erzeugt, keine Queue.</div>
+      <h2>PDF-Queue <span class="meta" id="pq-meta">PDFMonkey + Audit-Trail letzte 24h</span></h2>
+      <div id="pq-content" class="loading">Lade…</div>
     </div>
   </div>
 
@@ -240,8 +240,8 @@
 
   <div id="tab-alerts" class="tab-content">
     <div class="panel">
-      <h2>Push-Alerts <span class="meta">kritische Events</span></h2>
-      <div class="coming-soon-box">🔔 Aktuell BACKLOG Sprint K-2.<br>Aggregation der letzten 24h <code>admin.*</code> + <code>stripe.payment_failed</code> + <code>auth.forbidden</code>-Events. Push via Web-Push-API zu Marcel-Geraet.</div>
+      <h2>Push-Alerts <span class="meta" id="pa-meta">kritische Events letzte 24h</span></h2>
+      <div id="pa-content" class="loading">Lade…</div>
     </div>
   </div>
 
@@ -475,13 +475,189 @@ async function loadHealth() {
   t.innerHTML = html; t.className = '';
 }
 
+// ── 6 neue Loaders (MEGA⁶ S1) ──
+
+async function loadTimeTracking() {
+  const t = document.getElementById('tt-content');
+  t.className = 'loading'; t.textContent = 'Lade…';
+  const r = await apiGet('/.netlify/functions/admin-time-tracking?since=30d');
+  if (r.error) { t.innerHTML = '<div class="error-box">' + escapeHtml(r.error) + '</div>'; return; }
+  if (!r.configured) { t.innerHTML = '<div class="info-box">' + escapeHtml(r.hint || 'Keine Daten') + '</div>'; t.className = ''; return; }
+  let html = '<div class="grid">';
+  html += kpiCard('Auftraege completed', r.completed_total || 0, 'letzte 30 Tage', 'green');
+  html += '</div>';
+  if (r.per_typ && r.per_typ.length) {
+    html += '<h3 style="margin:14px 0 8px;font-size:0.95rem">Avg-Dauer pro Auftragstyp</h3>';
+    html += '<table><thead><tr><th>Typ</th><th>Anzahl</th><th>Avg Min</th><th>Total Std</th></tr></thead><tbody>';
+    for (const x of r.per_typ) {
+      html += '<tr><td><code>' + escapeHtml(x.typ) + '</code></td><td>' + x.count + '</td><td>' + x.avg_min + '</td><td>' + Math.round(x.total_min / 60) + '</td></tr>';
+    }
+    html += '</tbody></table>';
+  }
+  if (r.per_user && r.per_user.length) {
+    html += '<h3 style="margin:14px 0 8px;font-size:0.95rem">Top 20 User</h3>';
+    html += '<table><thead><tr><th>Email</th><th>Anzahl</th><th>Avg Min</th></tr></thead><tbody>';
+    for (const u of r.per_user) {
+      html += '<tr><td>' + escapeHtml(u.sv_email) + '</td><td>' + u.count + '</td><td>' + u.avg_min + '</td></tr>';
+    }
+    html += '</tbody></table>';
+  }
+  if (!r.completed_total) html += '<div class="info-box" style="margin-top:14px">Noch keine completed Auftraege im Zeitraum — Daten erscheinen sobald Pilots erste PDFs generieren.</div>';
+  t.innerHTML = html; t.className = '';
+}
+
+async function loadFeatureHeatmap() {
+  const t = document.getElementById('fh-content');
+  t.className = 'loading'; t.textContent = 'Lade…';
+  const r = await apiGet('/.netlify/functions/admin-feature-heatmap');
+  if (r.error) { t.innerHTML = '<div class="error-box">' + escapeHtml(r.error) + '</div>'; return; }
+  let html = '<div class="grid">';
+  html += kpiCard('Total Events', r.total_events || 0, 'letzte 7 Tage');
+  html += kpiCard('Top-Features', (r.top_features || []).length, '');
+  html += kpiCard('Aktive Users', (r.top_users || []).length, '');
+  html += '</div>';
+  if (r.matrix && r.matrix.length && r.top_users.length) {
+    html += '<h3 style="margin:14px 0 8px;font-size:0.95rem">Heatmap Feature × User (Top 15 × Top 10)</h3>';
+    html += '<table><thead><tr><th>Feature</th><th>Total</th>';
+    for (const u of r.top_users) html += '<th><small>' + escapeHtml((u.user || '').slice(0, 10)) + '…</small></th>';
+    html += '</tr></thead><tbody>';
+    for (const row of r.matrix) {
+      html += '<tr><td><code style="font-size:0.75rem">' + escapeHtml(row.feature) + '</code></td><td><strong>' + row.total + '</strong></td>';
+      for (const u of r.top_users) {
+        const v = row.cells[u.user] || 0;
+        const intensity = Math.min(255, Math.round(v / Math.max(1, row.total) * 200));
+        html += '<td style="background:rgba(96,165,250,' + (intensity / 255).toFixed(2) + ')">' + (v || '·') + '</td>';
+      }
+      html += '</tr>';
+    }
+    html += '</tbody></table>';
+  } else {
+    html += '<div class="info-box">Noch keine Daten — Cockpit zeigt erste Werte sobald Pilots Features nutzen.</div>';
+  }
+  t.innerHTML = html; t.className = '';
+}
+
+async function loadFunnel() {
+  const t = document.getElementById('fn-content');
+  t.className = 'loading'; t.textContent = 'Lade…';
+  const r = await apiGet('/.netlify/functions/admin-funnel');
+  if (r.error) { t.innerHTML = '<div class="error-box">' + escapeHtml(r.error) + '</div>'; return; }
+  let html = '<div class="grid">';
+  html += kpiCard('Total User-Cohort', r.total_users_in_cohort || 0, 'letzte 60 Tage');
+  html += '</div>';
+  if (r.funnel && r.funnel.length) {
+    html += '<h3 style="margin:14px 0 8px;font-size:0.95rem">Conversion-Funnel</h3>';
+    html += '<table><thead><tr><th>Stage</th><th>Count</th><th>Drop-off %</th><th>Cumulative %</th></tr></thead><tbody>';
+    for (const s of r.funnel) {
+      const dropColor = s.dropoff_pct > 30 ? 'var(--red)' : (s.dropoff_pct > 10 ? 'var(--yellow)' : 'var(--text-dim)');
+      html += '<tr><td><strong>' + escapeHtml(s.label) + '</strong></td><td>' + s.count + '</td><td style="color:' + dropColor + '">' + s.dropoff_pct + '%</td><td>' + s.cumulative_pct + '%</td></tr>';
+    }
+    html += '</tbody></table>';
+  }
+  if (!r.total_users_in_cohort) html += '<div class="info-box">Noch keine Pilots im Cohort — Funnel laedt sobald Sign-Up-Events anfallen.</div>';
+  t.innerHTML = html; t.className = '';
+}
+
+async function loadChurn() {
+  const t = document.getElementById('ch-content');
+  t.className = 'loading'; t.textContent = 'Lade…';
+  const r = await apiGet('/.netlify/functions/admin-churn');
+  if (r.error) { t.innerHTML = '<div class="error-box">' + escapeHtml(r.error) + '</div>'; return; }
+  let html = '<div class="grid">';
+  html += kpiCard('Cancellations', r.total_cancellations || 0, 'letzte 90 Tage', r.total_cancellations ? 'yellow' : 'green');
+  html += '</div>';
+  if (r.hint) html += '<div class="info-box">' + escapeHtml(r.hint) + '</div>';
+  if (r.by_category && r.by_category.length) {
+    html += '<h3 style="margin:14px 0 8px;font-size:0.95rem">Reasons</h3>';
+    html += '<table><thead><tr><th>Kategorie</th><th>Anzahl</th><th>%</th></tr></thead><tbody>';
+    for (const c of r.by_category) {
+      html += '<tr><td><strong>' + escapeHtml(c.label) + '</strong></td><td>' + c.count + '</td><td>' + c.pct + '%</td></tr>';
+      if (c.examples && c.examples.length) {
+        for (const ex of c.examples) {
+          html += '<tr><td colspan="3" style="padding-left:30px;font-size:0.8rem;color:var(--text-dim)">"' + escapeHtml(ex.text) + '" — ' + escapeHtml(ex.email || '?') + '</td></tr>';
+        }
+      }
+    }
+    html += '</tbody></table>';
+  }
+  t.innerHTML = html; t.className = '';
+}
+
+async function loadPdfQueue() {
+  const t = document.getElementById('pq-content');
+  t.className = 'loading'; t.textContent = 'Lade…';
+  const r = await apiGet('/.netlify/functions/admin-pdf-queue');
+  if (r.error) { t.innerHTML = '<div class="error-box">' + escapeHtml(r.error) + '</div>'; return; }
+  let html = '<div class="grid">';
+  if (r.sources && r.sources.audit_trail) {
+    html += kpiCard('PDF-Events 24h', r.sources.audit_trail.last_24h || 0, '');
+    if (r.sources.audit_trail.by_typ) {
+      for (const [typ, count] of Object.entries(r.sources.audit_trail.by_typ)) {
+        html += kpiCard(typ.replace('pdf.', ''), count, '', typ === 'pdf.failed' ? 'red' : 'green');
+      }
+    }
+  }
+  html += '</div>';
+  if (r.sources && r.sources.pdfmonkey) {
+    if (r.sources.pdfmonkey.ok) {
+      html += '<h3 style="margin:14px 0 8px;font-size:0.95rem">PDFMonkey-API recent</h3>';
+      html += '<div class="grid">';
+      for (const [s, c] of Object.entries(r.sources.pdfmonkey.by_status || {})) {
+        html += kpiCard(s, c, 'PDFMonkey-Status');
+      }
+      html += '</div>';
+    } else {
+      html += '<div class="info-box">PDFMonkey-API: ' + escapeHtml(r.sources.pdfmonkey.hint || r.sources.pdfmonkey.error || '?') + '</div>';
+    }
+  }
+  if (r.sources && r.sources.audit_trail && r.sources.audit_trail.recent && r.sources.audit_trail.recent.length) {
+    html += '<h3 style="margin:14px 0 8px;font-size:0.95rem">Audit-Trail-Events</h3>';
+    html += '<table><thead><tr><th>Zeit</th><th>Typ</th><th>Email</th></tr></thead><tbody>';
+    for (const e of r.sources.audit_trail.recent) {
+      html += '<tr><td><small>' + new Date(e.created_at).toLocaleString('de-DE') + '</small></td><td><code>' + escapeHtml(e.typ) + '</code></td><td>' + escapeHtml(e.sv_email || '—') + '</td></tr>';
+    }
+    html += '</tbody></table>';
+  }
+  t.innerHTML = html; t.className = '';
+}
+
+async function loadPushAlerts() {
+  const t = document.getElementById('pa-content');
+  t.className = 'loading'; t.textContent = 'Lade…';
+  const r = await apiGet('/.netlify/functions/admin-push-alerts');
+  if (r.error) { t.innerHTML = '<div class="error-box">' + escapeHtml(r.error) + '</div>'; return; }
+  if (!r.configured) { t.innerHTML = '<div class="info-box">' + escapeHtml(r.hint || '?') + '</div>'; t.className = ''; return; }
+  let html = '<div class="grid">';
+  html += kpiCard('High', (r.counts && r.counts.high) || 0, '', (r.counts && r.counts.high) ? 'red' : 'green');
+  html += kpiCard('Medium', (r.counts && r.counts.medium) || 0, '', (r.counts && r.counts.medium) ? 'yellow' : 'green');
+  html += kpiCard('Low', (r.counts && r.counts.low) || 0, '');
+  html += '</div>';
+  if (!r.alerts || !r.alerts.length) {
+    html += '<div class="info-box">Keine Alerts in letzten 24h. 🎉</div>';
+  } else {
+    html += '<table><thead><tr><th>Sev</th><th>Zeit</th><th>Typ</th><th>Email</th><th>Details</th></tr></thead><tbody>';
+    for (const a of r.alerts) {
+      const sevColor = a.severity === 'high' ? 'err' : (a.severity === 'medium' ? 'warn' : 'ok');
+      html += '<tr><td><span class="pill ' + sevColor + '">' + a.severity + '</span></td><td><small>' + new Date(a.created_at).toLocaleString('de-DE') + '</small></td><td><code style="font-size:0.75rem">' + escapeHtml(a.typ) + '</code></td><td>' + escapeHtml(a.sv_email || '—') + '</td><td><small style="color:var(--text-dim);word-break:break-all">' + escapeHtml((a.details_short || '').slice(0, 100)) + '</small></td></tr>';
+    }
+    html += '</tbody></table>';
+  }
+  t.innerHTML = html; t.className = '';
+}
+
 const tabLoaders = {
-  'sessions': loadSessions,
-  'conversion': loadConversion,
-  'mrr': loadMrr,
-  'ki-costs': loadKiCosts,
-  'errors': loadErrors,
-  'health': loadHealth
+  'sessions':    loadSessions,
+  'time-track':  loadTimeTracking,
+  'features':    loadFeatureHeatmap,
+  'dropoff':     loadFunnel,
+  'conversion':  loadConversion,
+  'mrr':         loadMrr,
+  'churn':       loadChurn,
+  'ki-costs':    loadKiCosts,
+  'pdf-queue':   loadPdfQueue,
+  'errors':      loadErrors,
+  'alerts':      loadPushAlerts,
+  'health':      loadHealth
 };
 
 let currentTab = 'sessions';
