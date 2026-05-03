@@ -4,6 +4,53 @@ Format: pro Sprint ein Block. Ältere Sprints zuoberst nicht — neueste oben.
 
 ---
 
+## POST-MEGA-MEGA — PILOT-LAUNCH-FINAL (N1+N2+N3+N4)
+
+**Tag:** `v207-pilot-launch-ready` · **Stand:** 03.05.2026 (Nacht) · **Commits:** `acf4045`, `22c4df5`, `23b23f7`, +N4
+
+**Modus:** Voller Autonomie-Modus, Marcel offline 6-9h, 4 sequenzielle Sprints.
+
+### Sprint N1 — Stripe-Test-Suite automatisiert
+
+- `scripts/stripe-test-suite.js` (~200 LOC) mit 8 Szenarien (Solo/Team/Founding/AddOn5/Failed/3DS/SEPA)
+- `scripts/email-render-check.js` validiert alle Email-Templates (viewport, max-width, Unfilled-Platzhalter)
+- `tests/stripe/founding-pilot.test.js` Fix nach M2-zod-Schema-Validation (errorCode `VALIDATION_FAILED`)
+- 27/27 stripe tests gruen
+- Live-Mode-Gate via `CONFIRM_LIVE_CHECKOUT=ja` ENV
+- `docs/audit/STRIPE-TESTS-2026-05-03.md` mit GO/NO-GO + 3 Live-Test-Strategien
+
+### Sprint N2 — Onboarding-Drip-Campaign
+
+- 7 Templates: trial-day-2/3/7/14/30/60/88 unter `email-templates/onboarding/`
+- `make-scenario-backup.json` mit 9 Modulen (Make.com)
+- `docs/strategie/ONBOARDING-AUTOMATION.md` mit Decision-Tree + 3 Implementation-Optionen (Make.com / pg_cron / Manuell)
+- Pflicht-View-Sketch `v_pilot_drip_candidates`
+- Re-Engagement-Logik dokumentiert
+
+### Sprint N3 — Admin-Cockpit MVP
+
+- `netlify/functions/lib/admin-auth-guard.js` — `requireAdmin` Helper mit Email-Whitelist (hardcoded), Rate-Limit, Audit-Trail bei JEDER Aktion
+- 4 Backend-Functions: `admin-pilot-list`, `admin-stripe-kpis`, `admin-sentry-errors`, `admin-impersonate`
+- `admin/index.html` Single-Page-Cockpit mit 4 Tabs (Pilot-Liste / Stripe-KPIs / Sentry-Errors / Quick-Actions)
+- Defense-in-Depth: Frontend-Whitelist + Auto-Logout + Backend-Whitelist + Rate-Limit + Audit
+- Impersonation read-only, 30 Min TTL, workspace-locked, Reason-Pflicht
+
+### Sprint N4 — Pre-Launch-Checklist + Briefing
+
+- `docs/strategie/PILOT-LAUNCH-CHECKLIST.md` — 11 Sektionen, 100+ Checkpoints, GO/NO-GO-Kriterien
+- `docs/strategie/PILOT-LAUNCH-BRIEFING.md` — Marcel-Founder-Briefing inkl. Pilot-Einladungs-Template + Daily-Routine
+- `docs/sprint-status/POST-MEGA-MEGA-PILOT-READY-2026-05-03-FINAL.md` — Executive Summary + Marcel-Pflichtaktionen
+- sw.js v255 → v256
+
+### Lessons + Open Items
+
+- Stripe-CLI-Tests nicht in CI moeglich (Mock-Tests decken Webhook-Verhalten)
+- 2FA fuer Admin-Cockpit noch nicht erzwungen (Backlog Sprint K-2)
+- Impersonation-Frontend-Read-only-Modus erfordert Anpassung der Auftrags-/Akte-Pages (Backlog)
+- Email-Drip-Campaign-Live-Schaltung benoetigt Make.com-Aktivierung ODER pg_cron-DB-Setup (Marcel-Entscheidung)
+
+---
+
 ## Sprint 04 — P5 Reste + Seiten-Bugs
 
 **Tag:** *(ausstehend bis Marcel-Verifikation)* · **Stand:** 26.04.2026 · **Letzte Commits:** `27ff5ae`-`179985f`

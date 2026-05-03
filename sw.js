@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v255';   // MEGA-SKALIERUNG M4: pilot.html Hero+Trust+Features+FAQ-Upgrade
+const CACHE_VERSION = 'prova-v256';   // POST-MEGA-MEGA N3: Admin-Cockpit MVP (Marcel-only)
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
