@@ -1,6 +1,8 @@
 const { getCorsHeaders, corsOptionsResponse } = require('./lib/cors-helper');
 // MEGA-SKALIERUNG M2: zod-Schema-Validation
 const { parseTeamInterest } = require('../../lib/schemas/team-interest');
+// MEGA⁷ U1: Storage-Router (dual-write Airtable + Supabase team_interesse-Lead)
+const { writeDual, getSupabase } = require('./lib/storage-router');
 // ══════════════════════════════════════════════════════════════
 // PROVA Systems — Team Interesse Function
 // /.netlify/functions/team-interest
@@ -73,44 +75,54 @@ exports.handler = async (event) => {
 
   const pat = process.env.AIRTABLE_PAT;
 
-  // ── 1. Airtable: Lead speichern ──
+  // ── 1. Storage-Router: Lead speichern (dual-write moeglich) ──
   let airtableId = null;
-  if (pat) {
-    try {
-      const atRes = await fetch(`https://api.airtable.com/v0/${AT_BASE}/${encodeURIComponent(AT_TABLE)}`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${pat}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          records: [{
-            fields: {
-              'Name':         name || 'Nicht angegeben',
-              'Email':        email,
-              'Kanzlei_Info': kanzlei_info || 'Keine Angabe',
-              'SVs_Anzahl':   svs_anzahl   || 'Nicht angegeben',
-              'Datum':        new Date().toISOString(),
-              'Status':       'Interesse',
-            }
-          }],
-          typecast: true,
-        }),
-      });
-
-      if (atRes.ok) {
-        const atData = await atRes.json();
-        airtableId = atData.records?.[0]?.id;
-        console.log('[PROVA] Team Interesse in Airtable gespeichert:', airtableId);
-      } else {
-        const err = await atRes.text();
-        console.error('[PROVA] Airtable Fehler:', atRes.status, err);
+  try {
+    const wr = await writeDual({
+      functionName: 'team-interest',
+      airtable: async () => {
+        if (!pat) return null;
+        const atRes = await fetch(`https://api.airtable.com/v0/${AT_BASE}/${encodeURIComponent(AT_TABLE)}`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${pat}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            records: [{
+              fields: {
+                'Name':         name || 'Nicht angegeben',
+                'Email':        email,
+                'Kanzlei_Info': kanzlei_info || 'Keine Angabe',
+                'SVs_Anzahl':   svs_anzahl   || 'Nicht angegeben',
+                'Datum':        new Date().toISOString(),
+                'Status':       'Interesse',
+              }
+            }],
+            typecast: true,
+          }),
+        });
+        if (atRes.ok) {
+          const atData = await atRes.json();
+          airtableId = atData.records?.[0]?.id;
+          return atData;
+        }
+        return null;
+      },
+      supabase: async () => {
+        const sb = getSupabase();
+        if (!sb) return null;
+        return sb.from('team_interesse_leads').insert({
+          name: name || 'Nicht angegeben',
+          email: email,
+          kanzlei_info: kanzlei_info || null,
+          svs_anzahl: svs_anzahl || null,
+          status: 'interesse'
+        });
       }
-    } catch (e) {
-      console.error('[PROVA] Airtable Exception:', e.message);
+    });
+    if (!wr.airtable && !wr.supabase) {
+      console.warn('[PROVA] team-interest: kein Backend erreichbar');
     }
-  } else {
-    console.warn('[PROVA] AIRTABLE_PAT nicht konfiguriert — Lead nicht gespeichert');
+  } catch (e) {
+    console.error('[PROVA] team-interest Exception:', e.message);
   }
 
   // ── 2. Make.com L4: E-Mail-Auto-Antwort triggern ──

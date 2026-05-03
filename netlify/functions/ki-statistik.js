@@ -1,10 +1,11 @@
 const { getCorsHeaders, corsOptionsResponse } = require('./lib/cors-helper');
 const { requireAuth } = require('./lib/jwt-middleware');
+const { writeDual, getSupabase } = require('./lib/storage-router');
 // ══════════════════════════════════════════════════
 // PROVA Systems — KI-Statistik Sync
-// Netlify Function: ki-statistik
-// Syncs KI_STATISTIK + KI_LERNPOOL to Airtable
-// Env: AIRTABLE_PAT
+// MEGA⁷ U1: Storage-Router (dual-write Airtable + Supabase ki_protokoll).
+// Default PROVA_MIGRATION_PATH=airtable -> 0 Production-Risiko.
+// Env: AIRTABLE_PAT (Airtable-Path), SUPABASE_SERVICE_ROLE_KEY (Supabase-Path)
 // ══════════════════════════════════════════════════
 
 const AT_BASE = 'appJ7bLlAHZoxENWE';
@@ -65,8 +66,31 @@ exports.handler = requireAuth(async (event, context) => {
       fields[STAT_FIELDS.diktat] = !!s.diktat_verwendet;
       fields[STAT_FIELDS.datum] = s.datum || new Date().toISOString().split('T')[0];
 
-      const statRes = await airtableCreate(PAT, AT_KI_STATISTIK, fields);
-      results.statistik = statRes ? 'ok' : 'error';
+      const wr = await writeDual({
+        functionName: 'ki-statistik',
+        airtable: async () => airtableCreate(PAT, AT_KI_STATISTIK, fields),
+        supabase: async () => {
+          const sb = getSupabase();
+          if (!sb) return null;
+          return sb.from('ki_protokoll').insert({
+            workspace_id: null,
+            sv_email: jwtEmail,
+            funktion: 'ki-statistik-sync',
+            modell: 'meta',
+            tokens_in: 0,
+            tokens_out: parseInt(s.eigentext_zeichen) || 0,
+            kosten_eur: 0,
+            metadata: {
+              schadenart: s.schadenart,
+              ursache_quelle: s.ursache_quelle,
+              ursache_kategorien: s.ursache_kategorien,
+              weg: s.weg,
+              diktat_verwendet: !!s.diktat_verwendet
+            }
+          });
+        }
+      });
+      results.statistik = (wr.airtable || wr.supabase) ? 'ok' : 'error';
     }
 
     // 2. KI_LERNPOOL speichern (wenn "Andere Ursache" vorhanden)

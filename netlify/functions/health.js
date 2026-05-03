@@ -1,15 +1,16 @@
 /**
  * PROVA Health Check — /.netlify/functions/health
  * ════════════════════════════════════════════════
- * Standard bei allen professionellen SaaS-Systemen.
- * UptimeRobot / BetterUptime rufen diesen Endpoint alle 5 Minuten ab.
- * Schlägt er fehl → sofortige Benachrichtigung bevor ein SV es merkt.
+ * MEGA⁷ U1: Supabase-Check ergaenzt + Storage-Router-Path im Output.
  *
- * Prüft: Airtable, ENV-Variablen, System-Status
+ * UptimeRobot / BetterUptime rufen diesen Endpoint alle 5 Minuten ab.
+ *
+ * Prüft: Airtable, Supabase, OpenAI, ENV-Variablen, System-Status
  */
 'use strict';
 
 const { getCorsHeaders } = require('./lib/cors-helper');
+const { getSupabase, getMigrationPath } = require('./lib/storage-router');
 
 exports.handler = async function(event, context) {
   if (event.httpMethod === 'OPTIONS') return corsOptionsResponse(event);
@@ -53,6 +54,28 @@ exports.handler = async function(event, context) {
     allOk = false;
   }
 
+  // ── 2b. Supabase erreichbar? (MEGA⁷ U1) ───────────────────────
+  try {
+    const sb = getSupabase();
+    if (sb) {
+      const sbStart = Date.now();
+      const { error } = await sb.from('audit_trail').select('id', { count: 'exact', head: true }).limit(1);
+      checks.supabase = {
+        ok: !error,
+        ms: Date.now() - sbStart,
+        error: error ? error.message : null
+      };
+      if (!checks.supabase.ok) allOk = false;
+    } else {
+      checks.supabase = { ok: false, hint: 'SUPABASE_SERVICE_ROLE_KEY fehlt' };
+      // Supabase-Konfig fehlt: nur Warnung wenn migration-path != 'airtable'
+      if (getMigrationPath() !== 'airtable') allOk = false;
+    }
+  } catch (e) {
+    checks.supabase = { ok: false, error: e.message };
+    if (getMigrationPath() !== 'airtable') allOk = false;
+  }
+
   // ── 3. OpenAI erreichbar? (nur Ping, kein Token-Verbrauch) ───
   try {
     const controller = new AbortController();
@@ -82,9 +105,14 @@ exports.handler = async function(event, context) {
     body: JSON.stringify({
       status:  allOk ? 'ok' : 'degraded',
       version: 'prova-v101',
+      migration_path: getMigrationPath(),
       ms,
       checks,
       ts: new Date().toISOString(),
     }, null, 2),
   };
 };
+
+function corsOptionsResponse(event) {
+  return { statusCode: 204, headers: getCorsHeaders(event), body: '' };
+}
