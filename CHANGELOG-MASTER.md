@@ -4,6 +4,66 @@ Format: pro Sprint ein Block. Ältere Sprints zuoberst nicht — neueste oben.
 
 ---
 
+## MEGA⁶ — COMPLIANCE + PILOT-READY + COCKPIT-FINAL (S0+S1+S2+S3+S4+S5+S6)
+
+**Tag:** `v211-compliance-pilot-ready-done` · **Stand:** 04.05.2026 nacht · **Commits:** `f50b16d`, `503b74a`, `9b1bee0`, `308e794`, `43e37e7` + S6
+
+### S0 — Realitaets-Check
+- docs/diagnose/MEGA6-REALITATS-CHECK.md
+- 7 Sprints sind tatsaechlich neu, kein Skip noetig
+
+### S1 — AUTH-COCKPIT 12/12 (`f50b16d`)
+- 6 neue Backend-Endpoints: time-tracking, feature-heatmap, funnel, churn, pdf-queue, push-alerts
+- admin/voll.html: Coming-Soon-Boxes durch echte Tab-Bodies ersetzt + 6 JS-Loader
+- 12/12 Cockpit-Sektionen mit Live-Daten
+
+### S2 — DSGVO-Audit-Vorbereitung (`503b74a`)
+- docs/compliance/ Folder: CHECKLIST + VERARBEITUNGSVERZEICHNIS + DSFA + AVV-LISTE
+- 30+ DSGVO-Punkte (Art. 5/6/7/13/17/20/25/30/32/33/35) mit Status-Matrix
+- 10 Verarbeitungstaetigkeiten dokumentiert
+- 5 Risiko-Verarbeitungen mit DSFA-Bewertung
+- 10 Subprozessoren mit Drittland-Schutz (SCC + DPF)
+- 18 DSGVO-Pseudonymisierungs-Tests
+
+### S3 — Anwalt-Reviews-Doku (`9b1bee0`)
+- 6 Drafts in legal-current/: agb + datenschutz + impressum + avv-template + ai-disclosure + sv-407a-statement
+- ANWALT-REVIEW-BRIEFING.md (1-Pager)
+- ANWALT-REVIEW-TRACKING.md (Status + Phasen-Plan + Budget 1.500-3.000€)
+- ANWALT-RECHERCHE.md (3 Kategorien + Marcel-Workflow + Plan B)
+
+### S4 — Pilot-Ready-Final-Check (`308e794`)
+- scripts/pilot-readiness-check.js (18 Smoke-Checks, JSON-Report, Exit-Code)
+- PILOT-ONBOARDING-FINAL.md (90-Tage-Reise mit 8 Touchpoints + Eskalations-Pfade)
+- PILOT-FAQ.md (Top 20 Fragen)
+- PILOT-READINESS-FINAL.md mit 🟢 GO + 4 kritischen Marcel-Pflichten + Risk-Matrix
+- package.json: test:pilot-ready + test:dsgvo Scripts
+
+### S5 — Test-Coverage 110 -> 209 (`43e37e7`)
+- tests/storage-router/ (8): getMigrationPath + readDual
+- tests/admin/cockpit-endpoints.test.js (49): 16 Endpoints × 3 Aspekte
+- tests/dsgvo/loesch-export.test.js (10): Art. 17 + Art. 20 + Art. 15
+- Total 209/209 gruen
+
+### S6 — Final + Tag (this commit)
+- MEGA-HEXA-2026-05-04-NACHT-FINAL.md
+- GITHUB-RELEASE-v211.md
+- Master-Files-Sync (CHAT-TRANSPORT, SPRINTS-MASTERPLAN)
+- sw.js v261 -> v262
+- Tag v211-compliance-pilot-ready-done
+
+### Senior-Engineering-Behavior
+- 0 Production-Breaking-Changes
+- 0 NACHT-PAUSE-Files
+- Realitaets-Check vor Action
+- Pattern-Reuse durchgehend (DSGVO-Tests aus pseudo-Lib, Cockpit-Endpoints aus Q6-Pattern)
+
+### Total-Statistik (MEGA⁶)
+- 6 Commits, ~3.500 LOC neu
+- 20+ Files created (Endpoints + Compliance + Tests + Pilot-Docs)
+- 99 neue Tests (110 -> 209)
+
+---
+
 ## MEGA⁴-EXT — AIRTABLE-MIGRATION (Q2+Q3+Q4+Q11)
 
 **Tag:** `v210-airtable-migration-done` · **Stand:** 04.05.2026 nacht · **Commits:** `358e606`, `eb98005`, `e633e40` + Q11

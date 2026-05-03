@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v261';   // MEGA⁴-EXT: Airtable-Migration Storage-Router + 4 Pilot-Migrationen + Liquid-Bug-Fixes
+const CACHE_VERSION = 'prova-v262';   // MEGA⁶: Cockpit 12/12 + DSGVO-Audit + Anwalt-Vorbereitung + 209 Tests
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [

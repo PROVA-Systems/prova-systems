@@ -1,6 +1,6 @@
 # PROVA Chat-Transport — AKTUELL
 
-**Stand:** 04.05.2026 nacht (Tag 10 — MEGA⁴-EXT Airtable-Migration Foundation done + Tag `v210-airtable-migration-done`)
+**Stand:** 04.05.2026 nacht (Tag 10 — MEGA⁶ Compliance+Pilot-Ready+Cockpit-Final done + Tag `v211-compliance-pilot-ready-done`)
 **Vorgänger:** Tag 9 mittag (Founding-Pilot LIVE, Power-Setup MAX done) → siehe git-Log
 **Single Source of Truth** — siehe `docs/master/README.md`
 
