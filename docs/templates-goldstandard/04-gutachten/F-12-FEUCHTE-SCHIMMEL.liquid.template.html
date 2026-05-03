@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>{{ gutachten_nummer }} — {{ objekt.adresse }}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════════════════════════
+   PROVA Systems · F-12 Feuchte-Schimmelschadengutachten (Flow A) v1.0
+   Liquid-templated · Production-Ready für PDFMonkey · 8-15 Seiten
+   Design-System v1.0 · 10.5pt Body · IHK-SVO § 9 Abs. 3
+   EU AI Act Art. 50 · § 407a Abs. 2+3 ZPO · DSGVO
+   ═══════════════════════════════════════════════════════════════ */
+:root { --primary: #1a3a6b; --accent: #3b82f6; --muted: #64748b; --text: #0f172a; --light: #f1f5f9; --lighter: #f8fafc; --border: #e2e8f0; --success: #059669; --warning: #d97706; --danger: #dc2626; }
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif; font-size: 10.5pt; line-height: 1.55; color: var(--text); background: white; }
+@page { size: A4; margin: 20mm 20mm 22mm 20mm; }
+@page {
+  @top-left { content: "{{ sv_name }} · {{ sv_qualifikation | default: 'ö.b.u.v. Sachverständiger' }}"; font-family: 'Inter', sans-serif; font-size: 8pt; color: #64748b; padding-top: 10mm; }
+  @top-right { content: "Feuchte-Schimmelschadengutachten {{ gutachten_nummer }}"; font-family: 'Inter', sans-serif; font-size: 8pt; color: #1a3a6b; font-weight: 600; padding-top: 10mm; }
+  @bottom-left { content: "Gutachten-Nr.: {{ gutachten_nummer }}"; font-family: 'Inter', sans-serif; font-size: 8pt; color: #64748b; padding-bottom: 10mm; }
+  @bottom-right { content: "Seite " counter(page) " / " counter(pages); font-family: 'Inter', sans-serif; font-size: 8pt; color: #64748b; padding-bottom: 10mm; }
+}
+@page :first { @top-left { content: ""; } @top-right { content: ""; } @bottom-left { content: ""; } @bottom-right { content: ""; } }
+.deckblatt { page-break-after: always; min-height: 257mm; display: flex; flex-direction: column; }
+.deckblatt-header { padding-bottom: 18mm; border-bottom: 2px solid var(--primary); }
+.deckblatt-kategorie { font-size: 9.5pt; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); font-weight: 500; margin-bottom: 8mm; }
+.deckblatt-titel { font-size: 30pt; font-weight: 700; line-height: 1.15; color: var(--primary); margin-bottom: 4mm; letter-spacing: -0.02em; }
+.deckblatt-subtitel { font-size: 13pt; color: var(--muted); font-weight: 400; margin-bottom: 6mm; }
+.deckblatt-badge { display: inline-block; padding: 4px 12px; background: var(--light); color: var(--primary); border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 11pt; font-weight: 500; border: 1px solid var(--border); }
+.deckblatt-objekt { margin-top: 18mm; padding: 10mm; background: var(--lighter); border-left: 3px solid var(--accent); border-radius: 2px; }
+.deckblatt-objekt-label { font-size: 8pt; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 3mm; font-weight: 500; }
+.deckblatt-objekt-adresse { font-size: 15pt; font-weight: 600; color: var(--text); line-height: 1.35; margin-bottom: 2mm; }
+.deckblatt-objekt-typ { font-size: 11pt; color: var(--muted); }
+.deckblatt-sv { margin-top: 12mm; padding: 8mm 10mm; background: white; border: 1px solid var(--border); border-radius: 3px; }
+.deckblatt-sv-label { font-size: 8pt; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); font-weight: 500; margin-bottom: 3mm; }
+.deckblatt-sv-name { font-size: 13pt; font-weight: 600; color: var(--text); margin-bottom: 1.5mm; }
+.deckblatt-sv-qualifikation { font-size: 10.5pt; color: var(--primary); font-weight: 500; margin-bottom: 1.5mm; }
+.deckblatt-sv-bestellung { font-size: 9.5pt; color: var(--muted); line-height: 1.5; margin-bottom: 2mm; font-style: italic; }
+.deckblatt-sv-kontakt { font-size: 9.5pt; color: var(--text); line-height: 1.6; }
+.deckblatt-sv-kontakt .mono { font-family: 'JetBrains Mono', monospace; font-size: 9pt; }
+.deckblatt-metadaten { margin-top: auto; padding-top: 10mm; display: grid; grid-template-columns: repeat(2, 1fr); gap: 6mm 15mm; }
+.deckblatt-meta-item .label { font-size: 8pt; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); font-weight: 500; margin-bottom: 1mm; }
+.deckblatt-meta-item .value { font-size: 11pt; color: var(--text); font-weight: 500; }
+.deckblatt-meta-item .value.mono { font-family: 'JetBrains Mono', monospace; font-size: 10pt; }
+.deckblatt-footer { margin-top: 10mm; padding-top: 6mm; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: flex-end; font-size: 8.5pt; color: var(--muted); }
+.deckblatt-footer .brand-right { text-align: right; font-size: 8pt; letter-spacing: 0.05em; }
+.deckblatt-footer .brand-right .bold { font-weight: 600; color: var(--primary); font-size: 9.5pt; letter-spacing: 0.08em; }
+.teil { margin-bottom: 14mm; page-break-inside: avoid; }
+.teil-header { display: flex; align-items: baseline; gap: 10mm; margin-bottom: 8mm; padding-bottom: 4mm; border-bottom: 2px solid var(--primary); }
+.teil-nummer { font-family: 'JetBrains Mono', monospace; font-size: 11pt; font-weight: 500; color: var(--accent); letter-spacing: 0.1em; text-transform: uppercase; flex-shrink: 0; padding-top: 1mm; }
+.teil-titel { font-size: 18pt; font-weight: 600; color: var(--primary); letter-spacing: -0.015em; }
+.abschnitt { margin-bottom: 8mm; }
+.abschnitt-header { display: flex; align-items: baseline; gap: 6mm; margin-bottom: 4mm; padding-bottom: 2mm; border-bottom: 1px solid var(--border); }
+.abschnitt-nr { font-family: 'JetBrains Mono', monospace; font-size: 11.5pt; font-weight: 500; color: var(--muted); flex-shrink: 0; }
+.abschnitt-titel { font-size: 13pt; font-weight: 600; color: var(--text); letter-spacing: -0.01em; }
+.abschnitt-body { font-size: 10.5pt; line-height: 1.65; color: var(--text); }
+.abschnitt-body p { margin-bottom: 3mm; }
+.info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2mm 8mm; margin: 4mm 0; padding: 5mm 6mm; background: var(--lighter); border-radius: 3px; border: 1px solid var(--border); }
+.info-item { display: flex; flex-direction: column; gap: 0.5mm; padding: 1.5mm 0; }
+.info-item .label { font-size: 8pt; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 500; }
+.info-item .value { font-size: 10.5pt; color: var(--text); font-weight: 500; }
+.info-item .value.mono { font-family: 'JetBrains Mono', monospace; font-size: 10pt; }
+.beweisfrage { margin: 4mm 0; padding: 5mm 7mm; background: var(--lighter); border-left: 3px solid var(--primary); border-radius: 2px; font-size: 11pt; line-height: 1.6; }
+.beweisfrage .label { font-size: 8.5pt; letter-spacing: 0.1em; text-transform: uppercase; color: var(--primary); font-weight: 600; margin-bottom: 2mm; }
+.befund-karte { margin: 4mm 0; padding: 5mm 6mm; background: var(--lighter); border: 1px solid var(--border); border-left: 3px solid var(--accent); border-radius: 2px; }
+.befund-karte .nr { font-family: 'JetBrains Mono', monospace; font-size: 9pt; color: var(--accent); font-weight: 500; margin-bottom: 1mm; }
+.befund-karte .titel { font-size: 11pt; font-weight: 600; color: var(--primary); margin-bottom: 2mm; }
+.befund-karte .text { font-size: 10.5pt; line-height: 1.6; color: var(--text); }
+.befund-karte .norm { margin-top: 2mm; font-size: 9pt; color: var(--muted); font-style: italic; }
+.messwerte { width: 100%; border-collapse: collapse; margin: 4mm 0; font-size: 10pt; }
+.messwerte th, .messwerte td { padding: 2.5mm 4mm; text-align: left; border-bottom: 1px solid var(--border); }
+.messwerte th { background: var(--light); color: var(--muted); font-weight: 500; font-size: 9pt; letter-spacing: 0.08em; text-transform: uppercase; border-bottom: 2px solid var(--border); }
+.messwerte td.number { text-align: right; font-family: 'JetBrains Mono', monospace; font-size: 10pt; }
+.messwerte tr:nth-child(even) { background: var(--lighter); }
+.hypothese { margin: 3mm 0; padding: 4mm 5mm; background: white; border: 1px solid var(--border); border-radius: 3px; }
+.hypothese.primaer { border-left: 3px solid var(--primary); }
+.hypothese.alternativ { border-left: 3px solid var(--muted); }
+.hypothese-kopf { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 2mm; }
+.hypothese-titel { font-size: 11pt; font-weight: 600; color: var(--primary); }
+.hypothese-wahrscheinlichkeit { font-size: 9pt; color: var(--muted); font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; }
+.fachurteil-kasten { margin: 5mm 0; padding: 6mm 8mm; background: white; border: 2px solid var(--primary); border-radius: 4px; }
+.fachurteil-kasten .marker { display: inline-block; padding: 1.5mm 4mm; background: var(--primary); color: white; font-size: 8.5pt; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 600; border-radius: 2px; margin-bottom: 4mm; }
+.fachurteil-kasten .intro { font-size: 9.5pt; color: var(--muted); font-style: italic; margin-bottom: 4mm; line-height: 1.55; padding-bottom: 3mm; border-bottom: 1px solid var(--border); }
+.fachurteil-kasten .text { font-size: 11pt; line-height: 1.7; color: var(--text); }
+.fachurteil-kasten .text p { margin-bottom: 3mm; }
+.kosten-card { margin: 6mm 0; padding: 8mm; background: linear-gradient(135deg, var(--primary) 0%, #2a4a7b 100%); color: white; border-radius: 4px; }
+.kosten-card-label { font-size: 9.5pt; letter-spacing: 0.12em; text-transform: uppercase; opacity: 0.85; margin-bottom: 2mm; font-weight: 500; }
+.kosten-card-value { font-size: 26pt; font-weight: 700; letter-spacing: -0.02em; line-height: 1.1; }
+.kosten-card-note { font-size: 9pt; opacity: 0.85; margin-top: 3mm; font-weight: 400; }
+.sanierung-tabelle { width: 100%; border-collapse: collapse; margin: 4mm 0; font-size: 10pt; }
+.sanierung-tabelle th, .sanierung-tabelle td { padding: 2.5mm 4mm; text-align: left; border-bottom: 1px solid var(--border); }
+.sanierung-tabelle th { background: var(--light); color: var(--muted); font-weight: 500; font-size: 9pt; letter-spacing: 0.08em; text-transform: uppercase; border-bottom: 2px solid var(--border); }
+.sanierung-tabelle td.number { text-align: right; font-family: 'JetBrains Mono', monospace; }
+.sanierung-tabelle tr:nth-child(even) { background: var(--lighter); }
+.sanierung-tabelle tr.summary { background: var(--light) !important; font-weight: 600; border-top: 2px solid var(--primary); }
+.normen-liste { display: grid; gap: 2mm; margin: 4mm 0; }
+.norm-eintrag { padding: 3mm 4mm; background: var(--lighter); border-left: 2px solid var(--accent); border-radius: 2px; }
+.norm-eintrag .nr { font-family: 'JetBrains Mono', monospace; font-size: 10pt; font-weight: 500; color: var(--primary); margin-bottom: 0.5mm; }
+.norm-eintrag .titel { font-size: 10pt; color: var(--text); margin-bottom: 0.5mm; }
+.erklaerung-kasten { margin: 4mm 0; padding: 5mm 7mm; background: var(--lighter); border-left: 3px solid var(--success); border-radius: 2px; font-size: 10.5pt; line-height: 1.65; }
+.erklaerung-kasten .marker { display: inline-block; padding: 1.2mm 3mm; background: var(--success); color: white; font-size: 8pt; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 600; border-radius: 2px; margin-bottom: 3mm; }
+.hinweis-box { margin: 4mm 0; padding: 4mm 5mm; background: var(--lighter); border: 1px solid var(--border); border-radius: 3px; font-size: 9.5pt; line-height: 1.6; color: var(--muted); }
+.hinweis-box strong { color: var(--primary); }
+.unterschrift-block { margin-top: 12mm; padding-top: 6mm; border-top: 1px solid var(--border); }
+.unterschrift-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15mm; }
+.unterschrift-feld { border-top: 1px solid var(--text); padding-top: 2mm; font-size: 9.5pt; color: var(--muted); }
+.unterschrift-feld .name { font-size: 11pt; color: var(--text); font-weight: 600; margin-top: 1mm; }
+.unterschrift-feld .rolle { font-size: 9pt; color: var(--muted); margin-top: 0.5mm; }
+.law-ref { font-family: 'JetBrains Mono', monospace; font-size: 0.92em; color: var(--primary); font-weight: 500; }
+.foto-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4mm; margin: 4mm 0; }
+.foto-eintrag { padding: 3mm 4mm; background: var(--lighter); border-radius: 2px; font-size: 9.5pt; }
+.foto-eintrag .nr { font-family: 'JetBrains Mono', monospace; font-size: 9pt; color: var(--accent); margin-bottom: 1mm; }
+</style>
+</head>
+<body>
+
+<!-- TEIL 1.1 DECKBLATT -->
+<section class="deckblatt">
+  <div class="deckblatt-header">
+    <div class="deckblatt-kategorie">{{ zweck_label | default: "Kurzgutachten für den Auftraggeber" }}{% if schadensart_label %} · {{ schadensart_label }}{% endif %}</div>
+    <h1 class="deckblatt-titel">Feuchte-Schimmelschadengutachten</h1>
+    {% if subtitel %}<div class="deckblatt-subtitel">{{ subtitel }}</div>{% endif %}
+    <div class="deckblatt-badge">Gutachten-Nr.: {{ gutachten_nummer }}</div>
+  </div>
+  <div class="deckblatt-objekt">
+    <div class="deckblatt-objekt-label">Begutachtungsobjekt</div>
+    <div class="deckblatt-objekt-adresse">{{ objekt.adresse }}</div>
+    <div class="deckblatt-objekt-typ">{{ objekt.objektart_label | default: objekt.objektart }}{% if objekt.baujahr %} · Baujahr {{ objekt.baujahr }}{% endif %}</div>
+  </div>
+  <div class="deckblatt-sv">
+    <div class="deckblatt-sv-label">Erstattender Sachverständiger</div>
+    <div class="deckblatt-sv-name">{{ sv_name }}{% if sv_titel %}, {{ sv_titel }}{% endif %}</div>
+    <div class="deckblatt-sv-qualifikation">{{ sv_qualifikation | default: "ö.b.u.v. Sachverständiger" }}{% if sv_sachgebiet %} für {{ sv_sachgebiet }}{% endif %}</div>
+    {% if sv_bestellungsstelle %}<div class="deckblatt-sv-bestellung">Öffentlich bestellt und vereidigt durch die {{ sv_bestellungsstelle }}{% if sv_bestellungstenor %} · {{ sv_bestellungstenor }}{% endif %}</div>{% endif %}
+    <div class="deckblatt-sv-kontakt">
+      {{ sv_strasse }} · {{ sv_plz }} {{ sv_ort }}<br>
+      Tel. <span class="mono">{{ sv_telefon }}</span>{% if sv_fax %} · Fax <span class="mono">{{ sv_fax }}</span>{% endif %} · {{ sv_email }}
+    </div>
+  </div>
+  <div class="deckblatt-metadaten">
+    <div class="deckblatt-meta-item"><div class="label">Auftraggeber</div><div class="value">{{ auftraggeber_name }}</div></div>
+    {% if schadensstichtag %}<div class="deckblatt-meta-item"><div class="label">Schadensstichtag</div><div class="value mono">{{ schadensstichtag }}</div></div>{% endif %}
+    <div class="deckblatt-meta-item"><div class="label">Auftragserteilung</div><div class="value mono">{{ auftragsdatum | default: datum }}</div></div>
+    <div class="deckblatt-meta-item"><div class="label">Gutachtendatum</div><div class="value mono">{{ datum }}</div></div>
+  </div>
+  <div class="deckblatt-footer">
+    <div class="umfang-info">Umfang: {{ umfang_seiten | default: "—" }} Seiten{% if umfang_anlagen %} · {{ umfang_anlagen }} Anlagen{% endif %}{% if umfang_fotos %} · {{ umfang_fotos }} Fotografien{% endif %}</div>
+    <div class="brand-right">erstellt mit<br><span class="bold">PROVA SYSTEMS</span></div>
+  </div>
+</section>
+
+<!-- TEIL 1 ALLGEMEINE ANGABEN -->
+<section class="teil">
+  <div class="teil-header"><div class="teil-nummer">Teil 1</div><div class="teil-titel">Allgemeine Angaben und Aufgabenstellung</div></div>
+  <div class="abschnitt">
+    <div class="abschnitt-header"><div class="abschnitt-nr">1.2</div><div class="abschnitt-titel">Auftragsumfang</div></div>
+    <div class="abschnitt-body">
+      <p>Der Unterzeichner wurde mit Auftrag vom <strong>{{ auftragsdatum | default: datum }}</strong> beauftragt, ein <strong>Feuchte-Schimmelschadengutachten</strong>{% if schadensart_label %} zu {{ schadensart_label }}{% endif %} am oben bezeichneten Objekt zu erstatten.</p>
+      {% if fragestellung %}
+      <p style="margin-top: 3mm;"><strong>Fragestellung laut Auftragsschreiben:</strong></p>
+      <div class="beweisfrage">{{ fragestellung }}</div>
+      {% endif %}
+    </div>
+  </div>
+  <div class="abschnitt">
+    <div class="abschnitt-header"><div class="abschnitt-nr">1.3</div><div class="abschnitt-titel">Mitarbeit von Hilfskräften und KI-Einsatz</div></div>
+    <div class="abschnitt-body">
+      <p>Dem vorliegenden Feuchte-Schimmelschadengutachten wurde{% if ki_anzeige_datum %} mit Anzeige vom <strong>{{ ki_anzeige_datum }}</strong>{% if ki_anzeige_empfaenger %} an {{ ki_anzeige_empfaenger }}{% endif %}{% endif %} gemäß <span class="law-ref">§ 407a Abs. 3 ZPO</span>, <span class="law-ref">§ 10 IHK-SVO</span> und <span class="law-ref">Art. 50 EU AI Act</span> der Einsatz folgender Hilfsmittel vorab angezeigt:</p>
+      <p style="margin-top: 3mm;"><strong>Mitwirkung Dritter:</strong> {{ mitwirkung_dritter | default: "Keine. Das Gutachten wurde vom unterzeichnenden Sachverständigen höchstpersönlich erstattet." }}</p>
+      <p style="margin-top: 3mm;"><strong>Technische Arbeitsumgebung:</strong> PROVA Systems (prova-systems.de).</p>
+      <p style="margin-top: 3mm;"><strong>Eingesetzte KI-Systeme:</strong> OpenAI GPT-4o + OpenAI Whisper. Detail-Dokumentation in <strong>Teil 4.3</strong>.</p>
+      <div class="hinweis-box" style="margin-top: 4mm;"><strong>Wichtige Klarstellung:</strong> Die sachverständige Beurteilung sowie die <strong>Gesamtverantwortung</strong> für den Inhalt verbleiben ausschließlich beim unterzeichnenden Sachverständigen. Das Fachurteil nach Teil 3.4 wurde KI-frei erstellt.</div>
+    </div>
+  </div>
+</section>
+
+<!-- TEIL 2 DOKUMENTATION DER DATEN -->
+<section class="teil">
+  <div class="teil-header"><div class="teil-nummer">Teil 2</div><div class="teil-titel">Dokumentation der Daten</div></div>
+  <div class="abschnitt">
+    <div class="abschnitt-header"><div class="abschnitt-nr">2.1</div><div class="abschnitt-titel">Objektbeschreibung</div></div>
+    <div class="abschnitt-body">
+      <div class="info-grid">
+        <div class="info-item"><div class="label">Adresse</div><div class="value">{{ objekt.adresse }}</div></div>
+        <div class="info-item"><div class="label">Objektart</div><div class="value">{{ objekt.objektart_label | default: objekt.objektart }}</div></div>
+        {% if objekt.baujahr %}<div class="info-item"><div class="label">Baujahr</div><div class="value mono">{{ objekt.baujahr }}</div></div>{% endif %}
+        {% if objekt.wohnflaeche %}<div class="info-item"><div class="label">Wohnflaeche</div><div class="value mono">{{ objekt.wohnflaeche }} m²</div></div>{% endif %}
+        {% if objekt.schadensort %}<div class="info-item"><div class="label">Schadensort</div><div class="value">{{ objekt.schadensort }}</div></div>{% endif %}
+      </div>
+      {% if objekt.beschreibung %}<p style="margin-top: 4mm;">{{ objekt.beschreibung }}</p>{% endif %}
+    </div>
+  </div>
+  <div class="abschnitt">
+    <div class="abschnitt-header"><div class="abschnitt-nr">2.2</div><div class="abschnitt-titel">Anknüpfungstatsachen und verwendete Unterlagen</div></div>
+    <div class="abschnitt-body">
+      {% if anknuepfungstatsachen != blank %}
+      <p>Der Beurteilung liegen folgende Unterlagen und Auskünfte zugrunde:</p>
+      <ul style="margin: 3mm 0 3mm 6mm;">
+        {% for t in anknuepfungstatsachen %}<li style="margin-bottom: 1.5mm;">{% if t.titel %}<strong>{{ t.titel }}:</strong> {% endif %}{{ t.text }}</li>{% endfor %}
+      </ul>
+      {% endif %}
+    </div>
+  </div>
+  <div class="abschnitt">
+    <div class="abschnitt-header"><div class="abschnitt-nr">2.3</div><div class="abschnitt-titel">Ortsbesichtigung</div></div>
+    <div class="abschnitt-body">
+      <p>Eine Ortsbesichtigung fand am <strong>{{ ortstermin_datum | default: datum }}</strong> statt{% if ortstermin_anwesende %}, anwesend: {{ ortstermin_anwesende }}{% endif %}.</p>
+      {% if ortstermin_dauer %}<p>Dauer der Begehung: ca. {{ ortstermin_dauer }} Minuten.</p>{% endif %}
+    </div>
+  </div>
+</section>
+
+<!-- TEIL 3 BEANTWORTUNG DER FRAGESTELLUNG -->
+<section class="teil">
+  <div class="teil-header"><div class="teil-nummer">Teil 3</div><div class="teil-titel">Beantwortung der Fragestellung</div></div>
+
+  <div class="abschnitt">
+    <div class="abschnitt-header"><div class="abschnitt-nr">3.1</div><div class="abschnitt-titel">Befundaufnahme</div></div>
+    <div class="abschnitt-body">
+      {% if befunde != blank %}
+      {% for b in befunde %}
+      <div class="befund-karte">
+        {% if b.nr %}<div class="nr">{{ b.nr }}</div>{% endif %}
+        {% if b.titel %}<div class="titel">{{ b.titel }}</div>{% endif %}
+        <div class="text">{{ b.text }}</div>
+        {% if b.norm %}<div class="norm">Bezug: {{ b.norm }}</div>{% endif %}
+      </div>
+      {% endfor %}
+      {% else %}
+      <p>{{ befunde_text | default: "—" }}</p>
+      {% endif %}
+    </div>
+  </div>
+
+  {% if messwerte != blank %}
+  <div class="abschnitt">
+    <div class="abschnitt-header"><div class="abschnitt-nr">3.2</div><div class="abschnitt-titel">Beweissicherung — Messprotokoll</div></div>
+    <div class="abschnitt-body">
+      <table class="messwerte">
+        <thead><tr><th>Pos.</th><th>Bezeichnung</th><th>Sollwert</th><th>Istwert</th><th>Bewertung</th></tr></thead>
+        <tbody>
+          {% for m in messwerte %}
+          <tr>
+            <td class="number">{{ forloop.index }}</td>
+            <td>{{ m.bezeichnung }}</td>
+            <td class="number">{{ m.soll }}</td>
+            <td class="number">{{ m.ist }}</td>
+            <td>{{ m.bewertung | default: "—" }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+
+  {% if fotos != blank %}
+  <div class="abschnitt">
+    <div class="abschnitt-header"><div class="abschnitt-nr">3.2.1</div><div class="abschnitt-titel">Foto-Dokumentation (Bezug zu Anhang)</div></div>
+    <div class="abschnitt-body">
+      <div class="foto-grid">
+        {% for f in fotos %}
+        <div class="foto-eintrag">
+          <div class="nr">Foto {{ f.nr | default: forloop.index }}</div>
+          <strong>{{ f.titel }}</strong>
+          {% if f.beschreibung %}<p style="margin-top:1mm;font-size:9pt;color:var(--muted)">{{ f.beschreibung }}</p>{% endif %}
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="abschnitt">
+    <div class="abschnitt-header"><div class="abschnitt-nr">3.3</div><div class="abschnitt-titel">Ursachenanalyse</div></div>
+    <div class="abschnitt-body">
+      <p>Die Ursachenanalyse stützt sich auf die in Teil 3.1 dokumentierten Befunde und die Anknüpfungstatsachen aus Teil 2.2. Die folgenden Hypothesen sind im Konjunktiv II formuliert und stehen unter dem Vorbehalt der abschließenden sachverständigen Würdigung in Teil 3.4.</p>
+      {% if hypothesen != blank %}
+      {% for h in hypothesen %}
+      <div class="hypothese {{ h.kategorie | default: 'primaer' }}">
+        <div class="hypothese-kopf">
+          <div class="hypothese-titel">{{ h.titel }}</div>
+          {% if h.wahrscheinlichkeit %}<div class="hypothese-wahrscheinlichkeit">{{ h.wahrscheinlichkeit }}</div>{% endif %}
+        </div>
+        <p>{{ h.text }}</p>
+      </div>
+      {% endfor %}
+      {% endif %}
+      {% if normen != blank %}
+      <p style="margin-top: 4mm;"><strong>Herangezogene Normen und Regelwerke:</strong></p>
+      <div class="normen-liste">
+        {% for n in normen %}
+        <div class="norm-eintrag">
+          <div class="nr">{{ n.nr }}</div>
+          <div class="titel">{{ n.titel }}</div>
+          {% if n.gw %}<div class="gw">{{ n.gw }}</div>{% endif %}
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="abschnitt">
+    <div class="abschnitt-header"><div class="abschnitt-nr">3.4</div><div class="abschnitt-titel">Sachverständige Beurteilung (Fachurteil)</div></div>
+    <div class="abschnitt-body">
+      <div class="fachurteil-kasten">
+        <div class="marker">SV-Fachurteil · KI-frei (Art. 50 EU AI Act)</div>
+        <div class="intro">Die nachstehende Beurteilung wurde vollständig und ausschließlich vom unterzeichnenden Sachverständigen persönlich erstellt, ohne KI-Unterstützung. Die abschließende fachliche Entscheidung obliegt allein dem Sachverständigen (§ 10 IHK-SVO, § 407a Abs. 2 ZPO).</div>
+        <div class="text">{{ fachurteil_text }}</div>
+      </div>
+    </div>
+  </div>
+
+  {% if sanierung_positionen != blank %}
+  <div class="abschnitt">
+    <div class="abschnitt-header"><div class="abschnitt-nr">3.5</div><div class="abschnitt-titel">Sanierungsempfehlung und Schadenshöhe</div></div>
+    <div class="abschnitt-body">
+      <table class="sanierung-tabelle">
+        <thead><tr><th>Pos.</th><th>Maßnahme</th><th>Einheit</th><th>Menge</th><th>EP €</th><th>GP €</th></tr></thead>
+        <tbody>
+          {% for s in sanierung_positionen %}
+          <tr>
+            <td class="number">{{ forloop.index }}</td>
+            <td>{{ s.massnahme }}</td>
+            <td>{{ s.einheit | default: "Stk" }}</td>
+            <td class="number">{{ s.menge }}</td>
+            <td class="number">{{ s.ep }}</td>
+            <td class="number">{{ s.gp }}</td>
+          </tr>
+          {% endfor %}
+          {% if sanierung_summe %}
+          <tr class="summary"><td colspan="5">Gesamtbetrag (netto)</td><td class="number">{{ sanierung_summe }} €</td></tr>
+          {% endif %}
+        </tbody>
+      </table>
+      {% if schadenssumme %}
+      <div class="kosten-card">
+        <div class="kosten-card-label">Geschätzte Schadenshöhe (brutto)</div>
+        <div class="kosten-card-value">{{ schadenssumme }}</div>
+        <div class="kosten-card-note">netto zzgl. 19 % USt., ca.-Schätzung Stand {{ datum }}</div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+</section>
+
+<!-- TEIL 4 ZUSAMMENFASSUNG + 407a + KI + UNTERSCHRIFT -->
+<section class="teil">
+  <div class="teil-header"><div class="teil-nummer">Teil 4</div><div class="teil-titel">Zusammenfassung und Schlusserklärungen</div></div>
+  {% if zusammenfassung %}
+  <div class="abschnitt">
+    <div class="abschnitt-header"><div class="abschnitt-nr">4.1</div><div class="abschnitt-titel">Zusammenfassendes Ergebnis</div></div>
+    <div class="abschnitt-body"><p>{{ zusammenfassung }}</p></div>
+  </div>
+  {% endif %}
+  <div class="abschnitt">
+    <div class="abschnitt-header"><div class="abschnitt-nr">4.2</div><div class="abschnitt-titel">Erklärung zur Unparteilichkeit (§ 407a Abs. 2 ZPO)</div></div>
+    <div class="abschnitt-body">
+      <div class="erklaerung-kasten">
+        <div class="marker">§ 407a Abs. 2 ZPO</div>
+        <p>Der Unterzeichner versichert, dass das vorliegende Kurzgutachten nach bestem Wissen und Gewissen, unparteiisch und ohne Rücksicht auf die Person der Beteiligten erstattet wurde. Es bestehen keine Befangenheitsgründe. Die zugrunde liegenden Tatsachen wurden eigenverantwortlich überprüft.</p>
+      </div>
+    </div>
+  </div>
+  <div class="abschnitt">
+    <div class="abschnitt-header"><div class="abschnitt-nr">4.3</div><div class="abschnitt-titel">Dokumentation des KI-Einsatzes (Art. 50 EU AI Act)</div></div>
+    <div class="abschnitt-body">
+      <p>Die nachstehende Dokumentation ergänzt die Ex-ante-Anzeige aus Teil 1.3:</p>
+      <ul style="margin: 3mm 0 3mm 6mm;">
+        <li style="margin-bottom: 1.5mm;"><strong>OpenAI Whisper:</strong> Transkription des SV-Diktats. Output vom SV vor Übernahme geprüft und korrigiert.</li>
+        <li style="margin-bottom: 1.5mm;"><strong>OpenAI GPT-4o:</strong> Strukturierung der Befunde, Konjunktiv-II-Prüfung, Halluzinations-Check, §407a-Compliance-Check, Rechtschreib- und Grammatik-Hinweise. Keine fachlichen Entscheidungen.</li>
+        <li style="margin-bottom: 1.5mm;"><strong>Eigenleistungs-Anteil:</strong> Teil 3.4 (Fachurteil) wurde vollständig und ausschließlich vom unterzeichnenden Sachverständigen persönlich verfasst, ohne KI-Unterstützung.</li>
+      </ul>
+      <div class="hinweis-box" style="margin-top: 4mm;"><strong>Verantwortungsklausel:</strong> Die Gesamtverantwortung für den Inhalt dieses Gutachtens verbleibt ausschließlich beim unterzeichnenden Sachverständigen.</div>
+    </div>
+  </div>
+  <div class="abschnitt">
+    <div class="abschnitt-header"><div class="abschnitt-nr">4.4</div><div class="abschnitt-titel">Unterschrift</div></div>
+    <div class="abschnitt-body">
+      <p>{{ ort | default: sv_ort }}, den {{ datum }}</p>
+      <div class="unterschrift-block">
+        <div class="unterschrift-grid">
+          <div class="unterschrift-feld">
+            Unterschrift Sachverständiger
+            <div class="name">{{ sv_name }}{% if sv_titel %}, {{ sv_titel }}{% endif %}</div>
+            <div class="rolle">{{ sv_qualifikation | default: "ö.b.u.v. Sachverständiger" }}</div>
+          </div>
+          {% if sv_eidstatus %}
+          <div class="unterschrift-feld">
+            Vereidigt
+            <div class="name">{{ sv_bestellungsstelle | default: "IHK Köln" }}</div>
+            <div class="rolle">{{ sv_bestellungstenor | default: "für Schäden an Gebäuden" }}</div>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% if anlagen != blank %}
+<section class="teil">
+  <div class="teil-header"><div class="teil-nummer">Teil 5</div><div class="teil-titel">Anlagen</div></div>
+  <div class="abschnitt">
+    <div class="abschnitt-body">
+      <ul style="margin: 3mm 0 3mm 6mm;">
+        {% for a in anlagen %}<li style="margin-bottom: 1.5mm;"><strong>{{ a.nr | default: forloop.index }}:</strong> {{ a.titel }}{% if a.beschreibung %} — {{ a.beschreibung }}{% endif %}</li>{% endfor %}
+      </ul>
+    </div>
+  </div>
+</section>
+{% endif %}
+
+</body>
+</html>
