@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>{{ abnahme_nummer }} — Bauabnahme {{ projekt_name }}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* PROVA Systems · F-22 BAUABNAHME (Flow D) v1.0
+   Final-/Teil-/Nachabnahme-Protokoll · Liquid · § 640 BGB · § 12 VOB/B */
+:root { --primary: #1a3a6b; --accent: #3b82f6; --muted: #64748b; --text: #0f172a; --light: #f1f5f9; --lighter: #f8fafc; --border: #e2e8f0; --success: #059669; --warning: #d97706; --danger: #dc2626; }
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Inter', sans-serif; font-size: 10.5pt; line-height: 1.55; color: var(--text); background: white; }
+@page { size: A4; margin: 18mm 18mm 22mm 18mm; }
+@page {
+  @top-left { content: "{{ sv_name }} · ö.b.u.v. SV"; font-family: 'Inter', sans-serif; font-size: 8pt; color: #64748b; padding-top: 8mm; }
+  @top-right { content: "Bauabnahme {{ abnahme_nummer }}"; font-family: 'Inter', sans-serif; font-size: 8pt; color: #1a3a6b; font-weight: 600; padding-top: 8mm; }
+  @bottom-right { content: "Seite " counter(page) " / " counter(pages); font-family: 'Inter', sans-serif; font-size: 8pt; color: #64748b; padding-bottom: 8mm; }
+}
+@page :first { @top-left { content: ""; } @top-right { content: ""; } }
+.deckblatt { padding: 10mm 0 8mm; border-bottom: 2px solid var(--primary); margin-bottom: 8mm; }
+.deckblatt-kategorie { font-size: 9.5pt; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); font-weight: 500; margin-bottom: 4mm; }
+.deckblatt-titel { font-size: 28pt; font-weight: 700; line-height: 1.1; color: var(--primary); margin-bottom: 3mm; }
+.deckblatt-meta { font-size: 11pt; color: var(--muted); margin-bottom: 3mm; }
+.deckblatt-badge { display: inline-block; padding: 3px 10px; background: var(--light); color: var(--primary); border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 10pt; font-weight: 500; border: 1px solid var(--border); }
+.status-card { margin: 4mm 0; padding: 6mm 8mm; border-radius: 4px; }
+.status-card.voll { background: linear-gradient(135deg, var(--success) 0%, #047857 100%); color: white; }
+.status-card.vorbehalt { background: linear-gradient(135deg, var(--warning) 0%, #c2410c 100%); color: white; }
+.status-card.verweigert { background: linear-gradient(135deg, var(--danger) 0%, #991b1b 100%); color: white; }
+.status-label { font-size: 9pt; letter-spacing: 0.12em; text-transform: uppercase; opacity: 0.85; margin-bottom: 2mm; font-weight: 500; }
+.status-value { font-size: 22pt; font-weight: 700; letter-spacing: -0.02em; line-height: 1.1; }
+.info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5mm 8mm; margin: 4mm 0; padding: 5mm 6mm; background: var(--lighter); border-radius: 3px; border: 1px solid var(--border); }
+.info-item { display: flex; flex-direction: column; padding: 1.5mm 0; }
+.info-item .label { font-size: 8pt; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 500; }
+.info-item .value { font-size: 10.5pt; color: var(--text); font-weight: 500; }
+.info-item .value.mono { font-family: 'JetBrains Mono', monospace; font-size: 10pt; }
+.section { margin-bottom: 7mm; page-break-inside: avoid; }
+.section-titel { font-size: 14pt; font-weight: 600; color: var(--primary); margin-bottom: 4mm; padding-bottom: 2mm; border-bottom: 1px solid var(--border); }
+.section-body p { margin-bottom: 3mm; line-height: 1.6; }
+.restmangel-eintrag { margin: 3mm 0; padding: 4mm 5mm; background: white; border: 1px solid var(--border); border-left: 4px solid var(--warning); border-radius: 3px; }
+.restmangel-eintrag.kritisch { border-left-color: var(--danger); }
+.eintrag-kopf { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 2mm; }
+.eintrag-titel { font-size: 11pt; font-weight: 600; color: var(--primary); }
+.eintrag-nr { font-family: 'JetBrains Mono', monospace; font-size: 9pt; color: var(--muted); margin-right: 3mm; }
+.eintrag-text { font-size: 10pt; line-height: 1.55; color: var(--text); }
+.eintrag-meta { margin-top: 2mm; padding-top: 2mm; border-top: 1px dashed var(--border); display: flex; gap: 6mm; flex-wrap: wrap; font-size: 9pt; color: var(--muted); }
+.schwere-badge { display: inline-block; padding: 1mm 3mm; border-radius: 2px; font-size: 8pt; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+.schwere-badge.optisch { background: rgba(100, 116, 139, 0.12); color: var(--muted); }
+.schwere-badge.technisch { background: rgba(59, 130, 246, 0.12); color: var(--accent); }
+.schwere-badge.wesentlich { background: rgba(245, 158, 11, 0.12); color: var(--warning); }
+.schwere-badge.kritisch { background: rgba(220, 38, 38, 0.12); color: var(--danger); }
+.einbehalt-card { margin: 5mm 0; padding: 6mm 8mm; background: var(--lighter); border: 2px solid var(--warning); border-radius: 4px; display: flex; justify-content: space-between; align-items: baseline; }
+.einbehalt-label { font-size: 9pt; letter-spacing: 0.1em; text-transform: uppercase; color: var(--warning); font-weight: 600; }
+.einbehalt-value { font-size: 22pt; font-weight: 700; color: var(--warning); }
+.erklaerung-kasten { margin: 4mm 0; padding: 5mm 7mm; background: var(--lighter); border-left: 3px solid var(--accent); border-radius: 2px; font-size: 10.5pt; line-height: 1.65; }
+.erklaerung-kasten .marker { display: inline-block; padding: 1.2mm 3mm; background: var(--accent); color: white; font-size: 8pt; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 600; border-radius: 2px; margin-bottom: 3mm; }
+.unterschrift-block { margin-top: 12mm; padding-top: 6mm; border-top: 1px solid var(--border); }
+.unterschrift-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8mm; }
+.unterschrift-feld { border-top: 1px solid var(--text); padding-top: 2mm; font-size: 9pt; color: var(--muted); }
+.unterschrift-feld .name { font-size: 10.5pt; color: var(--text); font-weight: 600; margin-top: 0.5mm; }
+.law-ref { font-family: 'JetBrains Mono', monospace; font-size: 0.92em; color: var(--primary); }
+</style>
+</head>
+<body>
+
+<div class="deckblatt">
+  <div class="deckblatt-kategorie">{{ abnahme_typ_label | default: "Abnahmeprotokoll" }} · § 640 BGB / § 12 VOB/B</div>
+  <h1 class="deckblatt-titel">Bauabnahme</h1>
+  <div class="deckblatt-meta">{{ projekt_name }} · {{ baustelle_adresse }}</div>
+  <div class="deckblatt-badge">Abnahme-Nr.: {{ abnahme_nummer }}</div>
+</div>
+
+<div class="status-card {% if abnahme_status == 'voll_angenommen' %}voll{% elsif abnahme_status == 'angenommen_unter_vorbehalt' %}vorbehalt{% else %}verweigert{% endif %}">
+  <div class="status-label">Abnahme-Status</div>
+  <div class="status-value">{% if abnahme_status == 'voll_angenommen' %}✓ Vollständig angenommen{% elsif abnahme_status == 'angenommen_unter_vorbehalt' %}⚠ Angenommen unter Vorbehalt{% else %}✗ Abnahme verweigert{% endif %}</div>
+</div>
+
+<div class="info-grid">
+  <div class="info-item"><div class="label">Bauherr</div><div class="value">{{ bauherr_name }}</div></div>
+  <div class="info-item"><div class="label">Bauunternehmen</div><div class="value">{{ bauunternehmen | default: "—" }}</div></div>
+  <div class="info-item"><div class="label">Abnahmedatum</div><div class="value mono">{{ abnahme_datum }}</div></div>
+  <div class="info-item"><div class="label">Abnahme-Typ</div><div class="value">{{ abnahme_typ_label | default: abnahme_typ }}</div></div>
+  <div class="info-item"><div class="label">Baubeginn</div><div class="value mono">{{ baubeginn_datum | default: "—" }}</div></div>
+  <div class="info-item"><div class="label">Bausumme</div><div class="value mono">{% if bausumme_eur %}{{ bausumme_eur }} €{% else %}—{% endif %}</div></div>
+</div>
+
+{% if abnahme_anwesende and abnahme_anwesende.size > 0 %}
+<section class="section">
+  <h2 class="section-titel">Anwesende</h2>
+  <div class="section-body">
+    <p>{{ abnahme_anwesende | join: " · " }}</p>
+  </div>
+</section>
+{% endif %}
+
+<section class="section">
+  <h2 class="section-titel">Sachverständige Bewertung</h2>
+  <div class="section-body">
+    <p>{{ sv_bewertung }}</p>
+  </div>
+</section>
+
+{% if restmaengel and restmaengel.size > 0 %}
+<section class="section">
+  <h2 class="section-titel">Restmängel zur Abnahme</h2>
+  <div class="section-body">
+    <p style="margin-bottom:4mm">Folgende Mängel werden im Sinne von § 640 Abs. 2 BGB / § 12 Nr. 3 VOB/B vorbehalten:</p>
+    {% for m in restmaengel %}
+    <div class="restmangel-eintrag {% if m.schwere == 'kritisch' %}kritisch{% endif %}">
+      <div class="eintrag-kopf">
+        <div>
+          {% if m.nr %}<span class="eintrag-nr">RM-{{ m.nr }}</span>{% endif %}
+          <span class="eintrag-titel">{{ m.titel }}</span>
+        </div>
+        <div><span class="schwere-badge {{ m.schwere }}">{{ m.schwere }}</span></div>
+      </div>
+      <div class="eintrag-text">{{ m.beschreibung }}</div>
+      <div class="eintrag-meta">
+        {% if m.frist_behebung %}<span><strong>Frist zur Beseitigung:</strong> {{ m.frist_behebung }}</span>{% endif %}
+        {% if m.sicherheitseinbehalt_eur %}<span><strong>Sicherheitseinbehalt:</strong> {{ m.sicherheitseinbehalt_eur }} €</span>{% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+{% if sicherheitseinbehalt_summe_eur %}
+<div class="einbehalt-card">
+  <div>
+    <div class="einbehalt-label">Sicherheitseinbehalt gemäß § 17 VOB/B</div>
+    <div style="font-size:9.5pt;color:var(--muted);margin-top:1mm">Bis zur Mangelbeseitigung der Restmängel</div>
+  </div>
+  <div class="einbehalt-value">{{ sicherheitseinbehalt_summe_eur }} €</div>
+</div>
+{% endif %}
+
+{% if bauherr_erklaert or unternehmen_erklaert %}
+<section class="section">
+  <h2 class="section-titel">Erklärungen der Parteien</h2>
+  {% if bauherr_erklaert %}
+  <div class="erklaerung-kasten">
+    <div class="marker">Erklärung Bauherr</div>
+    <p>{{ bauherr_erklaert }}</p>
+  </div>
+  {% endif %}
+  {% if unternehmen_erklaert %}
+  <div class="erklaerung-kasten">
+    <div class="marker">Erklärung Bauunternehmen</div>
+    <p>{{ unternehmen_erklaert }}</p>
+  </div>
+  {% endif %}
+</section>
+{% endif %}
+
+<section class="section">
+  <h2 class="section-titel">Rechtshinweise</h2>
+  <div class="section-body">
+    <p>Die in diesem Protokoll dokumentierten Restmängel sind im Sinne von <span class="law-ref">§ 640 Abs. 2 BGB</span> sowie <span class="law-ref">§ 12 Nr. 3 VOB/B</span> ausdrücklich vorbehalten und stehen einer Annahmeerklärung nicht entgegen. Die Verjährung der Mängelrechte beginnt mit der Abnahme (<span class="law-ref">§ 634a BGB</span>).</p>
+    <p style="margin-top:3mm">Mit der Unterzeichnung durch den Bauherrn erklärt dieser die rechtsverbindliche Werkabnahme im Sinne von <span class="law-ref">§ 640 BGB</span> unter Vorbehalt der dokumentierten Restmängel.</p>
+  </div>
+</section>
+
+<div class="unterschrift-block">
+  <p>{{ ort | default: "Köln" }}, den {{ abnahme_datum }}</p>
+  <div class="unterschrift-grid">
+    <div class="unterschrift-feld">
+      Unterschrift Bauherr
+      <div class="name">{{ bauherr_name }}</div>
+    </div>
+    <div class="unterschrift-feld">
+      Unterschrift Bauunternehmen
+      <div class="name">{{ bauunternehmen | default: "—" }}</div>
+    </div>
+    <div class="unterschrift-feld">
+      Unterschrift Sachverständiger
+      <div class="name">{{ sv_name }}{% if sv_titel %}, {{ sv_titel }}{% endif %}</div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
