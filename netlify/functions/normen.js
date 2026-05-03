@@ -25,6 +25,8 @@ const FIELDS = Object.keys(FIELD_MAP).map(id => `fields[]=${encodeURIComponent(i
 
 const { getCorsHeaders } = require('./lib/cors-helper');
 const { readDual, getSupabase } = require('./lib/storage-router');
+// MEGA⁷ U2: Rate-Limit fuer public-Endpoints
+const RateLimitIp = require('./lib/rate-limit-ip');
 
 // S6 Phase 1.9: dynamische CORS-Headers per Request (vorher hardcoded
 // auf prova-systems.de — App-Subdomain wurde geblockt). Audit-8 M-03.
@@ -70,6 +72,16 @@ exports.handler = async function(event) {
   const CORS = corsBase(event);
   if (event.httpMethod === 'OPTIONS') {
     return { statusCode: 204, headers: CORS, body: '' };
+  }
+
+  // MEGA⁷ U2: Rate-Limit 60/min/IP (Normen-Liste public-cached, nicht missbrauchbar)
+  const rl = RateLimitIp.check(event, 60, 60, { functionName: 'normen' });
+  if (!rl.allowed) {
+    return {
+      statusCode: 429,
+      headers: { ...CORS, 'Retry-After': String(rl.retryAfter) },
+      body: JSON.stringify({ error: 'Rate-Limit erreicht', retryAfter: rl.retryAfter })
+    };
   }
 
   const pat = process.env.AIRTABLE_PAT || process.env.AIRTABLE_TOKEN;

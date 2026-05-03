@@ -11,6 +11,8 @@ const { AIRTABLE_API, BASE_ID, TABLE_AUDIT } = require('./lib/prova-subscription
 const { getCorsHeaders, corsOptionsResponse, jsonResponse } = require('./lib/cors-helper');
 const { requireAuth } = require('./lib/jwt-middleware');
 const { writeDual, getSupabase } = require('./lib/storage-router');
+// MEGA⁷ U2: Rate-Limit pro User (verhindert Audit-Log-Spam)
+const RateLimitUser = require('./lib/rate-limit-user');
 
 // S6 Phase 1.9: per-request event-Capture (siehe ki-proxy.js Begruendung)
 let _currentEvent = null;
@@ -37,6 +39,12 @@ function ipHint(event) {
 exports.handler = requireAuth(async function (event, context) {
   _currentEvent = event;
   if (event.httpMethod !== 'POST') return json(405, { error: 'Method Not Allowed' });
+
+  // MEGA⁷ U2: Rate-Limit 30/min/User
+  const rl = RateLimitUser.check(context.userEmail || 'anon', 30, 60, { event, functionName: 'audit-log' });
+  if (!rl.allowed) {
+    return json(200, { ok: true, skipped: 'rate_limit', retryAfter: rl.retryAfter });
+  }
 
   const pat = process.env.AIRTABLE_PAT;
   if (!pat) return json(200, { ok: true, skipped: 'no_pat' });
