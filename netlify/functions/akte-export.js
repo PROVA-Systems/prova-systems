@@ -4,6 +4,8 @@
 const https = require('https');
 const { requireAuth } = require('./lib/jwt-middleware');
 const { getCorsHeaders } = require('./lib/cors-helper');
+// MEGA-SKALIERUNG M2: zod-Schema-Validation
+const { parseAkteExport } = require('../../lib/schemas/akte-export');
 
 // S6 Phase 1.9: dynamische CORS-Headers per Request (vorher hardcoded
 // auf prova-systems.de — App-Subdomain wurde geblockt). Audit-8 M-03.
@@ -16,12 +18,17 @@ exports.handler = requireAuth(async function(event, context) {
   if (event.httpMethod !== 'POST') return { statusCode: 405, headers: CORS, body: JSON.stringify({error:'Method not allowed'}) };
 
   try {
-    const body = JSON.parse(event.body || '{}');
-    const { az, sv_email, fall, gutachten, briefe } = body;
+    let rawBody;
+    try { rawBody = JSON.parse(event.body || '{}'); }
+    catch (e) { return { statusCode: 400, headers: CORS, body: JSON.stringify({error: 'Invalid JSON'}) }; }
 
-    if (!az || !sv_email) {
-      return { statusCode: 400, headers: CORS, body: JSON.stringify({error: 'az und sv_email erforderlich'}) };
+    // MEGA-SKALIERUNG M2: zod-Schema-Validation (az + sv_email Pflicht, fall/gutachten/briefe optional mit Length-Limits)
+    const parsed = parseAkteExport(rawBody);
+    if (!parsed.ok) {
+      return { statusCode: 400, headers: CORS, body: JSON.stringify({ error: parsed.error.message, fields: parsed.error.fields }) };
     }
+    const body = parsed.data;
+    const { az, sv_email, fall, gutachten, briefe } = body;
 
     // S6 X4 H-22: RTF-Injection-Schutz (escape \, {, } + Length-Limit)
     function rtfEscape(s) {

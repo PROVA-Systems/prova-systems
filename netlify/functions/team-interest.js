@@ -1,4 +1,6 @@
 const { getCorsHeaders, corsOptionsResponse } = require('./lib/cors-helper');
+// MEGA-SKALIERUNG M2: zod-Schema-Validation
+const { parseTeamInterest } = require('../../lib/schemas/team-interest');
 // ══════════════════════════════════════════════════════════════
 // PROVA Systems — Team Interesse Function
 // /.netlify/functions/team-interest
@@ -58,15 +60,16 @@ exports.handler = async (event) => {
     return { statusCode: 400, headers: HEADERS, body: JSON.stringify({ error: 'Invalid JSON' }) };
   }
 
-  const { name = '', email = '', kanzlei_info = '', svs_anzahl = '' } = data;
-
-  // ── Validierung ──
-  if (!email || !email.includes('@')) {
+  // MEGA-SKALIERUNG M2: zod-Schema-Validation
+  // (Email-Format strikt + CRLF-Schutz + Length-Limits, ersetzt naives email.includes('@'))
+  const parsed = parseTeamInterest(data);
+  if (!parsed.ok) {
     return {
       statusCode: 400, headers: HEADERS,
-      body: JSON.stringify({ error: 'Gültige E-Mail-Adresse erforderlich' })
+      body: JSON.stringify({ error: parsed.error.message, fields: parsed.error.fields })
     };
   }
+  const { name = '', email, kanzlei_info = '', svs_anzahl = '' } = parsed.data;
 
   const pat = process.env.AIRTABLE_PAT;
 

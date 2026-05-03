@@ -12,6 +12,8 @@ const { fetchWithRetry } = require('./lib/fetch-with-timeout');
 const { provaFetch } = require('./lib/prova-fetch');
 const { requireAuth } = require('./lib/jwt-middleware');
 const RateLimit = require('./lib/rate-limit-user');
+// MEGA-SKALIERUNG M2: zod-Schema-Validation
+const { parseDsgvoLoeschen } = require('../../lib/schemas/dsgvo-loeschen');
 
 const AT_BASE = process.env.AIRTABLE_BASE_ID  || 'appJ7bLlAHZoxENWE';
 const AT_PAT  = process.env.AIRTABLE_PAT      || process.env.AIRTABLE_TOKEN || '';
@@ -89,12 +91,19 @@ exports.handler = requireAuth(async function(event, context) {
   // P4B.7b: context.userEmail aus HMAC-Token, kein Identity-clientContext mehr.
   const user = { email: context.userEmail };
 
-  let body = {};
-  try { body = JSON.parse(event.body || '{}'); } catch(e) {}
+  let rawBody = {};
+  try { rawBody = JSON.parse(event.body || '{}'); } catch(e) {}
 
-  if (!body.confirm) {
-    return { statusCode: 400, headers: getCorsHeaders(event), body: JSON.stringify({ error: 'Bitte confirm: true setzen um die Löschung zu bestätigen' }) };
+  // MEGA-SKALIERUNG M2: zod-Schema (confirm muss exakt true sein, reason optional max 500)
+  const parsed = parseDsgvoLoeschen(rawBody);
+  if (!parsed.ok) {
+    return {
+      statusCode: 400,
+      headers: getCorsHeaders(event),
+      body: JSON.stringify({ error: parsed.error.message, fields: parsed.error.fields })
+    };
   }
+  const body = parsed.data;
 
   const email = user.email.toLowerCase().trim();
   const protokoll = [];

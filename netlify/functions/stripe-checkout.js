@@ -40,6 +40,8 @@ const {
   resolveFoundingCouponId
 } = require('./lib/prova-stripe-prices');
 const { requireAuth } = require('./lib/jwt-middleware');
+// MEGA-SKALIERUNG M2: zod-Schema-Validation
+const { parseStripeCheckout } = require('../../lib/schemas/stripe-checkout');
 
 const STRIPE_API_VERSION = '2024-12-18.acacia';
 const PILOT_TRIAL_DAYS = 90;
@@ -108,12 +110,25 @@ exports.handler = requireAuth(async function (event, context) {
 
   const userEmail = context.userEmail.toLowerCase();
 
-  let body;
-  try { body = JSON.parse(event.body || '{}'); }
+  let rawBody;
+  try { rawBody = JSON.parse(event.body || '{}'); }
   catch { return json(event, 400, { error: 'Ungültiger JSON-Body', errorCode: 'INVALID_JSON' }); }
 
-  const planConfig = resolvePlanConfig(body.plan || 'solo');
+  // MEGA-SKALIERUNG M2: zod-Schema-Validation (ersetzt manuelle if-Checks).
+  // Plan-Whitelist + URL-Validation + Pilot-Solo-Constraint im Schema.
+  const parsed = parseStripeCheckout(rawBody);
+  if (!parsed.ok) {
+    return json(event, 400, {
+      error: parsed.error.message,
+      errorCode: 'VALIDATION_FAILED',
+      fields: parsed.error.fields
+    });
+  }
+  const body = parsed.data;
+
+  const planConfig = resolvePlanConfig(body.plan);
   if (!planConfig) {
+    // sollte durch Schema bereits gefiltert sein — defensive
     return json(event, 400, { error: 'Unbekannter plan: ' + body.plan, errorCode: 'INVALID_PLAN' });
   }
   if (!planConfig.priceId) {
@@ -122,20 +137,12 @@ exports.handler = requireAuth(async function (event, context) {
 
   const isPilot = body.pilot_program === true;
 
-  // Pilot-Programm-Validation: nur Solo-Subscription
-  if (isPilot) {
-    if (body.plan && String(body.plan).toLowerCase() !== 'solo') {
-      return json(event, 400, {
-        error: 'Founding-Pilot ist nur fuer Solo-Plan verfuegbar',
-        errorCode: 'PILOT_REQUIRES_SOLO'
-      });
-    }
-    if (planConfig.mode !== 'subscription') {
-      return json(event, 400, {
-        error: 'Founding-Pilot benoetigt Subscription-Modus',
-        errorCode: 'PILOT_REQUIRES_SUBSCRIPTION'
-      });
-    }
+  // Pilot-Programm-Mode-Check (Plan-Constraint laeuft schon im Schema).
+  if (isPilot && planConfig.mode !== 'subscription') {
+    return json(event, 400, {
+      error: 'Founding-Pilot benoetigt Subscription-Modus',
+      errorCode: 'PILOT_REQUIRES_SUBSCRIPTION'
+    });
   }
 
   // Founding-Coupon-Resolution

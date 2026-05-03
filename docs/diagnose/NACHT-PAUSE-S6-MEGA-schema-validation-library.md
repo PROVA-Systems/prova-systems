@@ -2,7 +2,23 @@
 
 **Datum:** 03.05.2026 nacht (Mega-Mega-Sprint Sprint X4)
 **Sprint:** S6 H-08 (OWASP ASVS V2.1.2)
-**Marcel-Decision pflicht:** vor Sprint X5/Phase 5
+**Marcel-Decision:** ✅ ENTSCHIEDEN am 03.05.2026 nachmittag — **Option A (zod)**
+**Status:** ✅ RESOLVED durch MEGA-SKALIERUNG M2 (zod 4.4.2 installiert, 5 Schemas + 5 Functions refactored, 37/37 Tests gruen)
+
+---
+
+## Resolution-Snapshot (M2)
+
+- `npm install zod@^4.4.2`
+- `lib/schemas/_common.js` (gemeinsame Refinements: emailStrict, noCrlfString, aktenzeichen, httpUrl, safeParse)
+- 5 Schema-Files: `lib/schemas/{stripe-checkout,dsgvo-loeschen,akte-export,smtp-senden,team-interest}.js`
+- 5 Functions refactored: stripe-checkout, dsgvo-loeschen, akte-export, smtp-senden, team-interest
+- `tests/schemas/schemas.test.js` — 37 Tests (valid + invalid + edge je Schema)
+- Defense-in-Depth: bestehende Custom-Validatoren (z.B. isValidEmail in smtp-senden) bleiben als zweite Schicht
+
+Original-Decision-Doc unten zur Historie:
+
+---
 
 ---
 
