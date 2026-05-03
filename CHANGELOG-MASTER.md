@@ -4,6 +4,34 @@ Format: pro Sprint ein Block. Ältere Sprints zuoberst nicht — neueste oben.
 
 ---
 
+## MEGA⁸ — PERFEKTION CONTINUE (V0-V5)
+
+**Tag:** `v213-perfektion-continue-done` · **Stand:** 04.05.2026 nacht · **Commits:** `57db87b`, `de9302f`, `e4d9b2a`, `e8c8ab7` + V5
+
+Marcel-Direktive "WIR ARBEITEN BIS ALLE PUNKTE ABGEHAKT". 4 Tiers voll + 1 Tier partial.
+
+### Sub-Sprints
+- V0: Self-Assessment (docs/diagnose/MEGA8-SELF-ASSESSMENT-PLAN.md)
+- V1 (Tier 2 voll): Dark/Light + Notifications-Bell + Realtime-WebSocket + Mobile Bottom-Nav
+- V2 (Tier 12): Empty-State-Library in 6 Pages + Toast-Migration + lib/form-validate.js + WCAG-Audit
+- V3 (Tier 5 voll): lib/ki-prompts/ + ki-confidence.js + ki-history-Endpoint
+- V4 (Tier 6 partial): 5 Liquid-Goldstandards (F-10/F-11/F-12/F-13/F-14)
+
+### MEGA⁹-Backlog
+- Tier 2 Restpunkte (Drilldown, Bulk-Ops, Saved-Views, Diff-View, Charts)
+- Tier 5 Restpunkte (KI-History-Frontend, Edit-Suggestions, Anthropic-Fallback)
+- Tier 6 Restpunkte (10 weitere Templates)
+- Tier 7 voll (Upload-System)
+- Tier 12 voll (WCAG Browser-Audit)
+- Marcel-Decisions (Analytics-Tool, Anthropic-API-Key)
+
+### Total
+- 6 Commits, ~3.700 LOC neu (davon ~2.200 in 5 PDF-Templates)
+- 1 neuer NACHT-PAUSE-File (Anthropic-Fallback)
+- 0 Production-Breaking-Changes
+
+---
+
 ## MEGA⁷ — PERFEKTION SELF-SCOPING (U0-U8)
 
 **Tag:** `v212-perfektion-tier-3-4-8-9-11-12-done` · **Stand:** 04.05.2026 nacht · **Commits:** `031ddb2`, `ea77f70`, `20aaf7f`, `4d7ebc4`, `b8267a6`, `aa319f0`, `716aa39` + U8

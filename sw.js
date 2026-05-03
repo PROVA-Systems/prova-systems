@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v263';   // MEGA⁷: Perfektion-Sprint (7 Tiers, 262 Tests, Status-Page, Empty-State-Lib)
+const CACHE_VERSION = 'prova-v264';   // MEGA⁸: Cockpit-WebSocket + Empty-State-Migration + KI-Polish + 5 Liquid-Templates
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
