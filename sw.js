@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v256';   // POST-MEGA-MEGA N3: Admin-Cockpit MVP (Marcel-only)
+const CACHE_VERSION = 'prova-v257';   // MEGA-MEGA-MEGA O1: Bug-Fixes (RECHNUNGEN-422, onboarding-tour, sidebar-resize)
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [

@@ -103,15 +103,17 @@
   async function atFetch(table, formula, opts) {
     opts = opts || {};
     var maxRecords = opts.maxRecords || 100;
-    var sort       = opts.sort || 'Timestamp';
+    // O1-FIX: KEIN Default-Sort mehr — Tabellen wie RECHNUNGEN haben kein
+    // 'Timestamp'-Feld, was bei Default-Sort 422 ausloeste. Caller muss
+    // sort explizit setzen wenn gewuenscht.
+    var sort       = opts.sort;
     var sortDir    = opts.sortDir || 'desc';
     var fields     = opts.fields ? opts.fields.map(function(f){ return '&fields[]=' + encodeURIComponent(f); }).join('') : '';
 
     var path = '/v0/' + AT.BASE + '/' + table
       + '?filterByFormula=' + encodeURIComponent(formula || 'TRUE()')
       + '&maxRecords=' + maxRecords
-      + '&sort[0][field]=' + encodeURIComponent(sort)
-      + '&sort[0][direction]=' + sortDir
+      + (sort ? ('&sort[0][field]=' + encodeURIComponent(sort) + '&sort[0][direction]=' + sortDir) : '')
       + fields;
 
     try {

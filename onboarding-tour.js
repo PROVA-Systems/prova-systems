@@ -97,8 +97,15 @@
 
   function showStep(idx) {
     currentStep = idx;
+    // O1-FIX: Defensive Pre-Checks — STEPS koennte zwischen Init und naechstem
+    // Aufruf veraendert worden sein (Hot-Reload / doppeltes Init / Memory-Pressure).
+    if (!STEPS || !Array.isArray(STEPS) || idx < 0 || idx >= STEPS.length) {
+      endTour();
+      return;
+    }
     var step = STEPS[idx];
-    if (!step) { endTour(); return; }
+    if (!step || typeof step !== 'object') { endTour(); return; }
+    if (!step.target) { showStep(idx + 1); return; }
 
     // Finde Ziel-Element
     var targets = document.querySelectorAll(step.target);

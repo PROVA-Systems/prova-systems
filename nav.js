@@ -1686,6 +1686,16 @@ window.provaSbLogout = function() {
   else if (mqMobile.addListener) mqMobile.addListener(onBreakpointChange);
   if (mqTablet.addEventListener) mqTablet.addEventListener('change', onBreakpointChange);
   else if (mqTablet.addListener) mqTablet.addListener(onBreakpointChange);
+
+  // O1-FIX: Belt-and-Suspenders. matchMedia 'change'-Events sind in einigen
+  // Browsern/Edge-Cases nicht zuverlaessig (Browser-Zoom, DevTools-Toggle).
+  // Debounced Resize-Listener als Fallback.
+  var _resizeDebounce = null;
+  window.addEventListener('resize', function() {
+    if (_resizeDebounce) clearTimeout(_resizeDebounce);
+    _resizeDebounce = setTimeout(onBreakpointChange, 150);
+  }, { passive: true });
+
   // Initial-Sync der body-Classes
   try {
     document.body.classList.toggle('prova-mobile', isMobile);
