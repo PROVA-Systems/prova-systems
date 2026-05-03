@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex,nofollow">
+<title>PROVA Admin-Cockpit Voll-Version</title>
+<link rel="icon" href="/img/icon-192.png">
+<style>
+  :root {
+    --bg: #0f172a; --panel: #1e293b; --panel-hover: #273449;
+    --border: #334155; --text: #f1f5f9; --text-dim: #94a3b8;
+    --accent: #60a5fa; --green: #22c55e; --yellow: #eab308; --red: #ef4444; --purple: #a855f7;
+    --shadow: 0 4px 12px rgba(0,0,0,0.3);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg); color: var(--text); min-height: 100vh; line-height: 1.5;
+  }
+  header {
+    background: var(--panel); padding: 12px 24px; border-bottom: 1px solid var(--border);
+    display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;
+  }
+  header h1 { margin: 0; font-size: 1.1rem; font-weight: 600; }
+  header h1 .badge {
+    background: var(--purple); color: white; font-size: 0.65rem;
+    padding: 2px 6px; border-radius: 4px; margin-left: 8px; vertical-align: middle;
+  }
+  header button.logout {
+    background: transparent; border: 1px solid var(--border); color: var(--text-dim);
+    padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 0.8rem;
+  }
+  header button.logout:hover { background: var(--panel-hover); color: var(--text); }
+  nav.tabs {
+    background: var(--panel); border-bottom: 1px solid var(--border);
+    padding: 0 12px; display: flex; gap: 0; overflow-x: auto; flex-wrap: nowrap;
+  }
+  nav.tabs button {
+    background: transparent; border: none; color: var(--text-dim);
+    padding: 12px 14px; cursor: pointer; font-size: 0.82rem;
+    border-bottom: 2px solid transparent; transition: all 0.15s; white-space: nowrap;
+  }
+  nav.tabs button:hover { color: var(--text); }
+  nav.tabs button.active { color: var(--accent); border-bottom-color: var(--accent); }
+  main { padding: 18px; max-width: 1500px; margin: 0 auto; }
+  .panel {
+    background: var(--panel); border-radius: 8px; padding: 18px;
+    margin-bottom: 18px; box-shadow: var(--shadow);
+  }
+  .panel h2 {
+    margin: 0 0 14px; font-size: 1rem; font-weight: 600;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .panel h2 .meta { font-size: 0.75rem; color: var(--text-dim); font-weight: normal; }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px; margin-bottom: 16px;
+  }
+  .kpi {
+    background: var(--bg); padding: 14px; border-radius: 6px; border: 1px solid var(--border);
+  }
+  .kpi .label { font-size: 0.72rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.05em; }
+  .kpi .val { font-size: 1.5rem; font-weight: 700; margin: 4px 0; }
+  .kpi .sub { font-size: 0.72rem; color: var(--text-dim); }
+  .kpi.green .val { color: var(--green); }
+  .kpi.yellow .val { color: var(--yellow); }
+  .kpi.red .val { color: var(--red); }
+  .kpi.purple .val { color: var(--purple); }
+  table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); }
+  th { color: var(--text-dim); font-weight: 600; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; }
+  td { vertical-align: top; }
+  tr:hover td { background: var(--panel-hover); }
+  .pill {
+    display: inline-block; padding: 2px 8px; border-radius: 12px;
+    font-size: 0.7rem; font-weight: 600;
+  }
+  .pill.ok { background: rgba(34, 197, 94, 0.2); color: var(--green); }
+  .pill.warn { background: rgba(234, 179, 8, 0.2); color: var(--yellow); }
+  .pill.err { background: rgba(239, 68, 68, 0.2); color: var(--red); }
+  .loading { color: var(--text-dim); font-style: italic; padding: 16px; text-align: center; }
+  .error-box {
+    background: rgba(239, 68, 68, 0.1); border: 1px solid var(--red);
+    color: var(--red); padding: 12px; border-radius: 6px; margin-bottom: 12px; font-size: 0.85rem;
+  }
+  .info-box {
+    background: rgba(96, 165, 250, 0.1); border: 1px solid var(--accent);
+    color: var(--accent); padding: 12px; border-radius: 6px; margin-bottom: 12px; font-size: 0.85rem;
+  }
+  .coming-soon-box {
+    background: rgba(168, 85, 247, 0.08); border: 1px dashed var(--purple);
+    color: var(--purple); padding: 18px; border-radius: 6px; text-align: center; font-size: 0.9rem;
+  }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+  .login-screen {
+    max-width: 420px; margin: 80px auto; background: var(--panel);
+    padding: 32px; border-radius: 8px; box-shadow: var(--shadow);
+  }
+  .login-screen h2 { margin: 0 0 16px; font-size: 1.2rem; }
+  .login-screen p { color: var(--text-dim); margin: 0 0 16px; font-size: 0.9rem; }
+  .login-screen input {
+    width: 100%; padding: 10px; background: var(--bg); border: 1px solid var(--border);
+    color: var(--text); border-radius: 4px; font-size: 0.95rem; margin-bottom: 12px;
+  }
+  .login-screen button {
+    width: 100%; padding: 12px; background: var(--accent); color: var(--bg);
+    border: none; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 0.95rem;
+  }
+  .chart-wrap { background: var(--bg); border-radius: 6px; padding: 16px; margin: 12px 0; }
+  .chart-wrap canvas { max-height: 300px; }
+  .service-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 0; border-bottom: 1px solid var(--border);
+  }
+  .service-row:last-child { border-bottom: none; }
+  .service-row .name { font-weight: 600; }
+  .service-row .meta { font-size: 0.8rem; color: var(--text-dim); }
+  @media (max-width: 768px) {
+    main { padding: 10px; }
+    nav.tabs { padding: 0 6px; }
+    nav.tabs button { padding: 10px 8px; font-size: 0.75rem; }
+    .grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+    .kpi .val { font-size: 1.2rem; }
+    table { font-size: 0.75rem; }
+    th, td { padding: 5px 6px; }
+  }
+</style>
+</head>
+<body>
+
+<div id="login-area" style="display:none">
+  <div class="login-screen">
+    <h2>PROVA Admin-Cockpit Voll-Version</h2>
+    <p>Marcel-only · 2FA-Pflicht aktiv. Login mit Founder-Account.</p>
+    <div id="login-error" class="error-box" style="display:none"></div>
+    <input id="email" type="email" placeholder="marcel.schreiber891@gmail.com" autocomplete="username">
+    <input id="password" type="password" placeholder="Passwort" autocomplete="current-password">
+    <button id="login-btn">Anmelden</button>
+  </div>
+</div>
+
+<div id="app-area" style="display:none">
+<header>
+  <h1>PROVA Admin-Cockpit <span class="badge">VOLL · 12 SEKTIONEN</span></h1>
+  <div style="display:flex;gap:14px;align-items:center">
+    <span style="font-size:0.85rem;color:var(--text-dim)" id="who-am-i"></span>
+    <button class="logout" id="logout-btn">Logout</button>
+  </div>
+</header>
+
+<nav class="tabs">
+  <button data-tab="sessions" class="active">🟢 Live-Sessions</button>
+  <button data-tab="time-track">⏱ Time-Tracking</button>
+  <button data-tab="features">🔥 Feature-Heatmap</button>
+  <button data-tab="dropoff">📉 Drop-off</button>
+  <button data-tab="conversion">🔄 Conversion</button>
+  <button data-tab="mrr">💰 MRR Live</button>
+  <button data-tab="churn">🔚 Churn</button>
+  <button data-tab="ki-costs">🧠 KI-Costs</button>
+  <button data-tab="pdf-queue">📄 PDF-Queue</button>
+  <button data-tab="errors">🚨 Error-Stream</button>
+  <button data-tab="alerts">🔔 Alerts</button>
+  <button data-tab="health">❤ System-Health</button>
+</nav>
+
+<main>
+  <div id="tab-sessions" class="tab-content active">
+    <div class="panel">
+      <h2>Live-Sessions <span class="meta" id="sessions-meta">letzte 30 Min</span></h2>
+      <div id="sessions-content" class="loading">Lade…</div>
+    </div>
+  </div>
+
+  <div id="tab-time-track" class="tab-content">
+    <div class="panel">
+      <h2>Gutachten-Time-Tracking <span class="meta">pro User · letzte 7 Tage</span></h2>
+      <div class="coming-soon-box">⏱ Aktuell BACKLOG Sprint K-2.<br>Aggregation aus <code>audit_trail</code> auftrag.created → auftrag.freigegeben.<br>Erfordert Schema-Erweiterung um <code>auftrag_lifecycle_minutes</code>.</div>
+    </div>
+  </div>
+
+  <div id="tab-features" class="tab-content">
+    <div class="panel">
+      <h2>Feature-Heatmap <span class="meta">welche Features genutzt</span></h2>
+      <div class="coming-soon-box">🔥 Aktuell BACKLOG Sprint K-2.<br>Erfordert <code>feature_events</code>-Tabelle (in CLAUDE.md Regel 16 vorgesehen).</div>
+    </div>
+  </div>
+
+  <div id="tab-dropoff" class="tab-content">
+    <div class="panel">
+      <h2>Drop-off-Funnel <span class="meta">wo brechen Pilots ab</span></h2>
+      <div class="coming-soon-box">📉 Aktuell BACKLOG Sprint K-2.<br>Funnel: Sign-Up → Onboarding-Done → 1. Akte → 1. PDF → Stripe-Aktivierung.<br>Pilot-Daten unter 5 → Statistik nicht aussagekräftig.</div>
+    </div>
+  </div>
+
+  <div id="tab-conversion" class="tab-content">
+    <div class="panel">
+      <h2>Trial → Paid Conversion-Pipeline <span class="meta" id="conv-meta"></span></h2>
+      <div id="conv-content" class="loading">Lade aus Stripe-KPIs…</div>
+    </div>
+  </div>
+
+  <div id="tab-mrr" class="tab-content">
+    <div class="panel">
+      <h2>MRR Live <span class="meta" id="mrr-meta"></span></h2>
+      <div id="mrr-content" class="loading">Lade…</div>
+    </div>
+  </div>
+
+  <div id="tab-churn" class="tab-content">
+    <div class="panel">
+      <h2>Churn-Reasons <span class="meta">Cancellation-Survey</span></h2>
+      <div class="coming-soon-box">🔚 Aktuell BACKLOG Sprint K-2.<br>Erfordert Cancellation-Survey-Modal in einstellungen.html + <code>cancellation_reasons</code>-Tabelle.</div>
+    </div>
+  </div>
+
+  <div id="tab-ki-costs" class="tab-content">
+    <div class="panel">
+      <h2>KI-Token-Cost <span class="meta" id="ki-meta">letzte 7 Tage</span></h2>
+      <div id="ki-content" class="loading">Lade…</div>
+    </div>
+  </div>
+
+  <div id="tab-pdf-queue" class="tab-content">
+    <div class="panel">
+      <h2>PDF-Queue <span class="meta">pending PDFMonkey-Generierungen</span></h2>
+      <div class="coming-soon-box">📄 Aktuell BACKLOG Sprint K-2.<br>Erfordert PDFMonkey-Webhook-Integration. Aktuell: PDFs werden synchron erzeugt, keine Queue.</div>
+    </div>
+  </div>
+
+  <div id="tab-errors" class="tab-content">
+    <div class="panel">
+      <h2>Error-Stream <span class="meta" id="errors-meta"></span></h2>
+      <div id="errors-content" class="loading">Lade aus Sentry…</div>
+    </div>
+  </div>
+
+  <div id="tab-alerts" class="tab-content">
+    <div class="panel">
+      <h2>Push-Alerts <span class="meta">kritische Events</span></h2>
+      <div class="coming-soon-box">🔔 Aktuell BACKLOG Sprint K-2.<br>Aggregation der letzten 24h <code>admin.*</code> + <code>stripe.payment_failed</code> + <code>auth.forbidden</code>-Events. Push via Web-Push-API zu Marcel-Geraet.</div>
+    </div>
+  </div>
+
+  <div id="tab-health" class="tab-content">
+    <div class="panel">
+      <h2>System-Health <span class="meta" id="health-meta"></span></h2>
+      <div id="health-content" class="loading">Lade…</div>
+    </div>
+  </div>
+</main>
+</div>
+
+<script src="/lib/prova-config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js" defer></script>
+<script>
+'use strict';
+const cfg = window.PROVA_CONFIG || {};
+const SUPABASE_URL = cfg.SUPABASE_URL || 'https://cngteblrbpwsyypexjrv.supabase.co';
+const SUPABASE_ANON_KEY = cfg.SUPABASE_ANON_KEY || '';
+const ADMIN_EMAILS = ['marcel.schreiber891@gmail.com', 'marcel.schreiber@prova-systems.de', 'marcel@prova-systems.de', 'kontakt@prova-systems.de', 'admin@prova-systems.de'];
+let sb = null, currentSession = null;
+
+async function bootstrap() {
+  if (!SUPABASE_ANON_KEY) {
+    showLoginError('Supabase-Konfiguration fehlt.');
+    document.getElementById('login-area').style.display = 'block';
+    return;
+  }
+  sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    auth: { persistSession: true, autoRefreshToken: true, storageKey: 'prova-admin-voll-session' }
+  });
+  const { data: { session } } = await sb.auth.getSession();
+  if (session && ADMIN_EMAILS.includes((session.user.email || '').toLowerCase())) {
+    currentSession = session;
+    showApp(session);
+  } else if (session) {
+    await sb.auth.signOut();
+    showLoginError('Diese Email hat keinen Admin-Zugang.');
+    document.getElementById('login-area').style.display = 'block';
+  } else {
+    document.getElementById('login-area').style.display = 'block';
+  }
+}
+
+function showLoginError(msg) {
+  const el = document.getElementById('login-error');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+async function doLogin() {
+  const email = document.getElementById('email').value.trim().toLowerCase();
+  const password = document.getElementById('password').value;
+  if (!email || !password || !ADMIN_EMAILS.includes(email)) {
+    showLoginError('Email + Passwort eingeben (Admin-Whitelist).');
+    return;
+  }
+  const { data, error } = await sb.auth.signInWithPassword({ email, password });
+  if (error) { showLoginError(error.message); return; }
+  currentSession = data.session;
+  showApp(data.session);
+}
+
+function showApp(session) {
+  document.getElementById('login-area').style.display = 'none';
+  document.getElementById('app-area').style.display = 'block';
+  document.getElementById('who-am-i').textContent = session.user.email;
+  loadCurrentTab();
+}
+
+async function apiGet(path) {
+  const r = await fetch(path, { headers: { 'Authorization': 'Bearer ' + currentSession.access_token, 'X-Provider': 'supabase' } });
+  if (r.status === 401 || r.status === 403) {
+    const j = await r.json();
+    return { error: j.error || 'Unauthorized', code: j.code };
+  }
+  return r.json();
+}
+
+function escapeHtml(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[m]));
+}
+
+function kpiCard(label, val, sub, color) {
+  return '<div class="kpi ' + (color || '') + '"><div class="label">' + escapeHtml(label) + '</div><div class="val">' + escapeHtml(String(val)) + '</div><div class="sub">' + escapeHtml(sub || '') + '</div></div>';
+}
+
+async function loadSessions() {
+  const t = document.getElementById('sessions-content');
+  t.className = 'loading'; t.textContent = 'Lade…';
+  const r = await apiGet('/.netlify/functions/admin-live-sessions');
+  if (r.error) { t.innerHTML = '<div class="error-box">' + escapeHtml(r.error) + (r.code === 'AAL2_REQUIRED' ? ' — 2FA nicht aktiviert' : '') + '</div>'; return; }
+  if (!r.sessions || !r.sessions.length) { t.innerHTML = '<div class="info-box">Keine aktiven Sessions in den letzten 30 Min.</div>'; t.className = ''; return; }
+  let html = '<div class="grid"><div class="kpi green"><div class="label">Aktive Sessions</div><div class="val">' + r.active_count + '</div><div class="sub">letzte 30 Min</div></div></div>';
+  html += '<table><thead><tr><th>Email</th><th>Workspace</th><th>Letzter Login</th><th>Typ</th></tr></thead><tbody>';
+  for (const s of r.sessions) {
+    html += '<tr>';
+    html += '<td>' + escapeHtml(s.email || '—') + '</td>';
+    html += '<td><small>' + (s.workspace_id ? escapeHtml(s.workspace_id.slice(0, 8)) + '…' : '—') + '</small></td>';
+    html += '<td><small>' + new Date(s.last_login).toLocaleString('de-DE') + '</small></td>';
+    html += '<td><code style="font-size:0.7rem">' + escapeHtml(s.typ) + '</code></td>';
+    html += '</tr>';
+  }
+  html += '</tbody></table>';
+  t.innerHTML = html; t.className = '';
+}
+
+async function loadConversion() {
+  const t = document.getElementById('conv-content');
+  t.className = 'loading'; t.textContent = 'Lade…';
+  const r = await apiGet('/.netlify/functions/admin-stripe-kpis');
+  if (r.error) { t.innerHTML = '<div class="error-box">' + escapeHtml(r.error) + '</div>'; return; }
+  const last = r.last_30_days || {};
+  let html = '<div class="grid">';
+  html += kpiCard('Trials gestartet (30T)', last.trial_started || 0, '');
+  html += kpiCard('Conversions (30T)', last.conversions || 0, last.conversion_rate + '% Quote', 'green');
+  html += kpiCard('Aktive Pilots', (r.workspaces && r.workspaces.aktiv) || 0, 'zahlend');
+  html += kpiCard('Trials offen', (r.workspaces && r.workspaces.trial) || 0, 'in Trial-Phase', 'purple');
+  html += '</div>';
+  html += '<div class="info-box">Quelle: admin-stripe-kpis. Detail-Funnel pending Sprint K-2.</div>';
+  t.innerHTML = html; t.className = '';
+}
+
+async function loadMrr() {
+  const t = document.getElementById('mrr-content');
+  t.className = 'loading'; t.textContent = 'Lade…';
+  const r = await apiGet('/.netlify/functions/admin-stripe-kpis');
+  if (r.error) { t.innerHTML = '<div class="error-box">' + escapeHtml(r.error) + '</div>'; return; }
+  const last = r.last_30_days || {};
+  let html = '<div class="grid">';
+  html += kpiCard('MRR (Brutto)', (r.mrr_eur || 0) + ' €', 'monatlich wiederkehrend', 'green');
+  html += kpiCard('Lifetime Total', Math.round(r.gesamtzahlungen_lifetime_eur || 0) + ' €', 'gesamt eingenommen');
+  html += kpiCard('ARR Hochrechnung', ((r.mrr_eur || 0) * 12) + ' €', 'MRR × 12', 'purple');
+  html += kpiCard('Founding-Members', (r.founding_coupon && r.founding_coupon.times_redeemed) || 0, 'eingelöst von ' + ((r.founding_coupon && r.founding_coupon.max_redemptions) || '∞'));
+  html += '</div>';
+  html += '<div class="chart-wrap"><canvas id="mrr-chart" width="400" height="160"></canvas></div>';
+  t.innerHTML = html; t.className = '';
+  if (window.Chart) {
+    const ctx = document.getElementById('mrr-chart');
+    if (ctx) {
+      try { new window.Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: ['Trials (30T)', 'Conversions (30T)', 'Churn (30T)', 'MRR €'],
+          datasets: [{ label: 'Stripe-KPIs', data: [last.trial_started || 0, last.conversions || 0, last.churn || 0, r.mrr_eur || 0], backgroundColor: ['#a855f7','#22c55e','#ef4444','#60a5fa'] }]
+        },
+        options: { responsive: true, scales: { y: { beginAtZero: true, ticks: { color: '#94a3b8' } }, x: { ticks: { color: '#94a3b8' } } }, plugins: { legend: { labels: { color: '#f1f5f9' } } } }
+      }); } catch (e) { console.warn('Chart fail', e); }
+    }
+  }
+}
+
+async function loadKiCosts() {
+  const t = document.getElementById('ki-content');
+  t.className = 'loading'; t.textContent = 'Lade…';
+  const r = await apiGet('/.netlify/functions/admin-ki-costs?since=7d');
+  if (r.error) { t.innerHTML = '<div class="error-box">' + escapeHtml(r.error) + '</div>'; return; }
+  if (!r.configured) { t.innerHTML = '<div class="info-box">' + escapeHtml(r.hint || 'ki_protokoll Tabelle pending') + '</div>'; t.className = ''; return; }
+  const s = r.summary;
+  let html = '<div class="grid">';
+  html += kpiCard('Calls Total', s.calls_total, 'letzte 7 Tage');
+  html += kpiCard('Cost Total', s.cost_total_eur + ' €', '', 'green');
+  html += kpiCard('Tokens In', (s.tokens_in_total / 1000).toFixed(1) + 'k', '');
+  html += kpiCard('Tokens Out', (s.tokens_out_total / 1000).toFixed(1) + 'k', '');
+  html += '</div>';
+  if (r.modelle && r.modelle.length) {
+    html += '<h3 style="margin:16px 0 8px;font-size:0.95rem">Pro Modell</h3>';
+    html += '<table><thead><tr><th>Modell</th><th>Calls</th><th>Cost €</th><th>Tokens In/Out</th></tr></thead><tbody>';
+    for (const m of r.modelle) {
+      html += '<tr><td><code>' + escapeHtml(m.modell) + '</code></td><td>' + m.calls + '</td><td>' + m.cost_eur + ' €</td><td><small>' + (m.tokens_in / 1000).toFixed(1) + 'k / ' + (m.tokens_out / 1000).toFixed(1) + 'k</small></td></tr>';
+    }
+    html += '</tbody></table>';
+  }
+  if (r.top_workspaces && r.top_workspaces.length) {
+    html += '<h3 style="margin:16px 0 8px;font-size:0.95rem">Top Workspaces nach Cost</h3>';
+    html += '<table><thead><tr><th>Workspace</th><th>Calls</th><th>Cost €</th></tr></thead><tbody>';
+    for (const w of r.top_workspaces.slice(0, 10)) {
+      html += '<tr><td><small>' + escapeHtml(w.workspace_id.slice(0, 8)) + '…</small></td><td>' + w.calls + '</td><td>' + w.cost_eur + ' €</td></tr>';
+    }
+    html += '</tbody></table>';
+  }
+  t.innerHTML = html; t.className = '';
+}
+
+async function loadErrors() {
+  const t = document.getElementById('errors-content');
+  t.className = 'loading'; t.textContent = 'Lade…';
+  const r = await apiGet('/.netlify/functions/admin-sentry-errors');
+  if (r.error) { t.innerHTML = '<div class="error-box">' + escapeHtml(r.error) + '</div>'; return; }
+  if (!r.configured) { t.innerHTML = '<div class="info-box">Sentry nicht konfiguriert.<br>' + escapeHtml(r.hint || '') + '</div>'; t.className = ''; return; }
+  let html = '';
+  for (const proj of (r.projects || [])) {
+    html += '<h3 style="margin:0 0 8px;font-size:0.95rem">' + escapeHtml(proj.name) + '</h3>';
+    if (proj.error) { html += '<div class="error-box">' + escapeHtml(proj.error) + '</div>'; continue; }
+    if (!proj.issues || !proj.issues.length) { html += '<div class="info-box">Keine offenen Errors letzte 24h. 🎉</div>'; continue; }
+    html += '<table><thead><tr><th>ID</th><th>Titel</th><th>Level</th><th>Count</th></tr></thead><tbody>';
+    for (const i of proj.issues.slice(0, 10)) {
+      html += '<tr><td><a href="' + escapeHtml(i.permalink) + '" target="_blank" style="color:var(--accent)">' + escapeHtml(i.shortId) + '</a></td><td>' + escapeHtml((i.title || '').slice(0, 70)) + '</td><td><span class="pill ' + (i.level === 'error' ? 'err' : 'warn') + '">' + escapeHtml(i.level) + '</span></td><td>' + (i.count || 0) + '</td></tr>';
+    }
+    html += '</tbody></table>';
+  }
+  t.innerHTML = html; t.className = '';
+}
+
+async function loadHealth() {
+  const t = document.getElementById('health-content');
+  t.className = 'loading'; t.textContent = 'Lade…';
+  const r = await apiGet('/.netlify/functions/admin-system-health');
+  if (r.error) { t.innerHTML = '<div class="error-box">' + escapeHtml(r.error) + '</div>'; return; }
+  let html = '<div class="grid">';
+  html += kpiCard('ENV-Vars Komplett', r.env_complete ? '✅' : '❌', '9 Pflicht-Variablen', r.env_complete ? 'green' : 'red');
+  html += kpiCard('DB-Connection', r.database.ok ? '✅ ' + r.database.ms + 'ms' : '❌', r.database.error || 'OK', r.database.ok ? 'green' : 'red');
+  html += kpiCard('Function-Runtime', r.netlify.region, r.netlify.memory_mb + ' MB');
+  html += kpiCard('Response', r.response_ms + 'ms', 'dieser Health-Check');
+  html += '</div>';
+
+  html += '<h3 style="margin:14px 0 8px;font-size:0.95rem">External Services</h3>';
+  for (const [name, svc] of Object.entries(r.services || {})) {
+    html += '<div class="service-row"><div><strong class="name">' + escapeHtml(name.toUpperCase()) + '</strong> <span class="meta">' + (svc.ms || 0) + 'ms</span></div>';
+    html += '<span class="pill ' + (svc.ok ? 'ok' : 'err') + '">' + (svc.ok ? '✅ OK' : '❌ ' + (svc.error || svc.status)) + '</span></div>';
+  }
+
+  html += '<h3 style="margin:14px 0 8px;font-size:0.95rem">ENV-Variablen</h3>';
+  html += '<div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(220px,1fr))">';
+  for (const [name, set] of Object.entries(r.env)) {
+    html += '<div class="kpi" style="padding:8px"><div class="label">' + escapeHtml(name) + '</div><div class="val" style="font-size:1rem;color:' + (set ? 'var(--green)' : 'var(--red)') + '">' + (set ? '✅ gesetzt' : '❌ fehlt') + '</div></div>';
+  }
+  html += '</div>';
+
+  t.innerHTML = html; t.className = '';
+}
+
+const tabLoaders = {
+  'sessions': loadSessions,
+  'conversion': loadConversion,
+  'mrr': loadMrr,
+  'ki-costs': loadKiCosts,
+  'errors': loadErrors,
+  'health': loadHealth
+};
+
+let currentTab = 'sessions';
+function loadCurrentTab() {
+  const fn = tabLoaders[currentTab];
+  if (fn) fn();
+}
+
+document.querySelectorAll('nav.tabs button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('nav.tabs button').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    btn.classList.add('active');
+    currentTab = btn.dataset.tab;
+    document.getElementById('tab-' + currentTab).classList.add('active');
+    loadCurrentTab();
+  });
+});
+
+document.getElementById('login-btn').addEventListener('click', doLogin);
+document.getElementById('logout-btn').addEventListener('click', async () => {
+  await sb.auth.signOut();
+  location.reload();
+});
+document.getElementById('password').addEventListener('keypress', (e) => {
+  if (e.key === 'Enter') doLogin();
+});
+
+bootstrap();
+</script>
+</body>
+</html>
