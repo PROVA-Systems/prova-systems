@@ -428,6 +428,11 @@
             <div class="es-zeile-info"><div class="es-zeile-label">KI-Lernpool verwalten</div><div class="es-zeile-sub">Gelernte Vokabeln, Korrekturen und Spracherkennung-Prompt</div></div>
             <button class="es-btn" onclick="oeffneLernpoolModal()">🧠 Lernpool öffnen</button>
           </div>
+          <!-- MEGA¹¹ W9: KI-Nutzung & Kosten -->
+          <div class="es-zeile">
+            <div class="es-zeile-info"><div class="es-zeile-label">KI-Nutzung & Kosten</div><div class="es-zeile-sub">Letzte 30 Tage: Anrufe, Tokens, Kosten pro Funktion</div></div>
+            <button class="es-btn" onclick="oeffneKICostModal()" aria-label="KI-Kosten-Uebersicht oeffnen">💰 Anzeigen</button>
+          </div>
         </section>
 
         <!-- BENACHRICHTIGUNGEN -->
@@ -855,6 +860,8 @@
 <script src="prova-error-handler.js" defer></script>
 <script src="support-chat.js" defer></script>
 <script src="sw-register.js" defer></script>
+<!-- MEGA¹¹ W9: KI-Cost-Display -->
+<script src="/lib/ki-cost-display.js" defer></script>
 <!-- ═══════════════════════════════════════════════════════════════
      KI-LERNPOOL Modal — im gleichen Einstellungen-Look & Feel
      Zeigt gelernte Vokabeln + Korrekturen + Statistik aus localStorage
@@ -892,6 +899,31 @@
         <button class="es-btn" onclick="leereLernpool()" style="font-size:12px;color:#ef4444;border-color:rgba(239,68,68,.3);">🗑 Leeren</button>
         <button class="es-btn" onclick="schliesseLernpoolModal()" style="font-size:12px;">Schließen</button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- MEGA¹¹ W9: KI-Cost-Display Modal -->
+<div id="ki-cost-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);backdrop-filter:blur(4px);z-index:9500;align-items:center;justify-content:center;padding:20px;" role="dialog" aria-label="KI-Kosten-Uebersicht">
+  <div style="background:var(--surface);border:1px solid var(--border2);border-radius:16px;width:100%;max-width:680px;max-height:88vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.5);">
+    <div style="padding:20px 22px;border-bottom:1px solid var(--border);flex-shrink:0;display:flex;justify-content:space-between;align-items:center;">
+      <div>
+        <div style="font-size:18px;font-weight:700;color:var(--text);">💰 KI-Nutzung & Kosten</div>
+        <div style="font-size:12px;color:var(--text3);margin-top:4px;">Anrufe + Tokens + Kosten — Quelle: ki_protokoll-Tabelle</div>
+      </div>
+      <button onclick="schliesseKICostModal()" aria-label="Modal schliessen" style="background:none;border:none;color:var(--text3);font-size:22px;cursor:pointer;padding:4px 10px;border-radius:6px;">✕</button>
+    </div>
+    <div style="padding:14px 22px;border-bottom:1px solid var(--border);flex-shrink:0;display:flex;gap:8px;align-items:center;">
+      <label style="font-size:12px;color:var(--text3);">Zeitraum:</label>
+      <select id="ki-cost-since" onchange="ladeKICost()" style="background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:5px 10px;color:var(--text);font-size:12px;">
+        <option value="24h">24 Stunden</option>
+        <option value="7d" selected>7 Tage</option>
+        <option value="30d">30 Tage</option>
+      </select>
+      <button class="es-btn" onclick="ladeKICost()" style="font-size:11px;margin-left:auto;">🔄 Aktualisieren</button>
+    </div>
+    <div id="ki-cost-content" style="overflow-y:auto;padding:22px;flex:1;">
+      <div style="text-align:center;color:var(--text3);font-size:13px;padding:40px 0;">Lade…</div>
     </div>
   </div>
 </div>

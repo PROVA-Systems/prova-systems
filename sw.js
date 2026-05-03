@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v266';   // MEGA¹⁰ W4+W5: Refactor Foto-Upload (Orientation-Bug + Memory-Leak + HEIC-Brands) + Toast-Sweep + Form-Validate-Login
+const CACHE_VERSION = 'prova-v267';   // MEGA¹¹: Tier 9 (UptimeRobot) + Tier 10 (Plausible) + Tier 12 (DRY+WCAG+ScipLink) + Tier 5 (KI-Cost) + Tier 1 (PWA-Install)
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
@@ -48,6 +48,12 @@ const APP_SHELL = [
   '/lib/foto-upload-v2.js',             // MEGA⁹ W1: Magic-Bytes + EXIF-Strip + Image-Optimize
   '/lib/foto-upload-v2.css',            // MEGA⁹ W1: Drop-Zone + Item-Card Styles
   '/lib/foto-upload-v2-ui.js',          // MEGA⁹ W1: ProvaUploadUI DOM-Helper
+  '/lib/public-status-widget.js',       // MEGA¹¹ W6: Footer-Status-Widget
+  '/lib/analytics-plausible.js',        // MEGA¹¹ W7: Plausible-Wrapper
+  '/lib/prova-alert.js',                // MEGA¹¹ W8: provaAlert-DRY-Helper
+  '/lib/ki-cost-display.js',            // MEGA¹¹ W9: KI-Cost-Modal
+  '/lib/pwa-install-prompt.js',         // MEGA¹¹ W10: PWA-Install-Banner
+  '/offline.html',                      // MEGA¹¹ W10: PWA-Offline-Fallback
   // Legacy auth (Hybrid-Modus, bleibt bis Cutover-Phase 5 cleanup)
   '/prova-fetch-auth.js',
   '/prova-notifications.js',
