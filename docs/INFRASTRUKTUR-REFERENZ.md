@@ -113,7 +113,7 @@
 | F-06 | `8ECAC2E4` | Mahnung 1 |
 | F-07 | `A4E57F73` | Mahnung 2 |
 | F-08 | `6ADE8D9A` | Mahnung 3 |
-| F-09 | `BA076019` | (Reserve) |
+| F-09 | `BA076019` | Kurzgutachten (Liquid-Migration pending — siehe IHK-SVO-TEMPLATES-MIGRATION.md) |
 | F-10 | `6FF656D3` | Beweissicherung |
 | F-11 | `6B85ECFF` | (Reserve) |
 | F-12 | `4233F240` | Feuchte/Schimmel |
