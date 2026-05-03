@@ -1,6 +1,6 @@
 # PROVA Chat-Transport — AKTUELL
 
-**Stand:** 03.05.2026 frueh (Tag 9 nach Mega-Nacht-Sprint S6 Phase 2-3 + KI + Threat-Model)
+**Stand:** 03.05.2026 morgen (Tag 9 — nach Mega-Mega-Sprint Phase 4 + 5 + Tag v204)
 **Vorgänger:** v37 (01.05. mittag, archiviert in `docs/archiv/chat-transports/PROVA-CHAT-TRANSPORT-v35.md`)
 **Single Source of Truth** — siehe `docs/master/README.md`
 
@@ -12,16 +12,18 @@
 
 **Wer bin ich:** Du bist Browser-Claude für Marcel Schreiber von PROVA Systems — KI-natives B2B-SaaS für ö.b.u.v. Bauschaden-Sachverständige in Deutschland.
 
-**Wo stehen wir:** Tag 9 von 21+ Tagen Pre-Pilot. Mega-Nacht-Sprint abgeschlossen (02.05.→03.05.). Sprint S6 Phase 1 + 2 + 3 + KI-Prompts-Master + Threat-Model. **5 Audit-Reports** + **Multi-Tenant-Test-Suite (33 Tests)** + **CI-Workflow** + **Backup-Drill-Doku** + **8 KI-Prompts extrahiert** + **30-Threat STRIDE-Model**.
+**Wo stehen wir:** Tag 9. Mega-Mega-Sprint S6 Phase 1-5 komplett abgeschlossen. Stripe-Migration LIVE + Verify-Suite (3 Skripte). DSGVO-Compliance 6 Public-Files final. 22 Audits durchgelaufen. 12 HIGH-Findings gefixt. **Tag `v204-security-hardening-done` gesetzt.**
 
-**Findings-Stand:** 1 CRITICAL (auth-token-issue Login-Brute-Force, NACHT-PAUSE für Marcel), 24 HIGH in BACKLOG, 1 PLANNED-Migration (RLS-Audit-Findings, Marcel-Test in Dev pending).
+**Findings-Stand:**
+- 1 CRITICAL (auth-token-issue, NACHT-PAUSE für Marcel)
+- ~30 HIGH in BACKLOG (12 ✅ FIXED, 4 Tot-Code-Marcel-Decision, ~14 in Folge-Sprints)
+- 1 PLANNED-Migration (RLS-Findings, Marcel-Dev-Test pending)
 
-**Was als nächstes (priorisiert):**
-1. **NACHT-PAUSE-Entscheidung:** auth-token-issue Function löschen oder Rate-Limit (`docs/diagnose/NACHT-PAUSE-S6-NACHT-rate-limit-auth-token-issue.md`)
-2. Marcel löscht 12 ENV-Vars in Netlify-UI (Voll-Cleanup-Liste)
-3. Marcel hinterlegt 3 GitHub-Secrets für Multi-Tenant-CI-Tests
-4. PLANNED-Migration in Dev applizieren + testen
-5. Sprint S6 Phase 4-5 (Spezial-Audits + Public-Deliverables-Final + Tag v204-security-hardening-done)
+**Was als nächstes:**
+1. **Marcel verifiziert Stripe-Setup:** `npm run verify-stripe` + `npm run test-webhook` + Test-Checkout
+2. NACHT-PAUSE-Decisions: auth-token-issue (löschen empfohlen) + Schema-Library (zod empfohlen)
+3. PLANNED-Migration in Dev applizieren
+4. Folge-Sprints: Pilot-Akquise + S6-Restbacklog (Sentry, Lighthouse, Tot-Code-Cleanup)
 
 **Worauf achten:**
 - Bei Bug-Diagnose: **Diagnose-First** (Regel 33). Nicht blind Code-Vorgaben übernehmen — selbst aus Files validieren
