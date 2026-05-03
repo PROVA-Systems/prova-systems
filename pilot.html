@@ -6,6 +6,7 @@
 <title>PROVA Founding-Member werden — 90 Tage gratis testen</title>
 <meta name="description" content="Werde einer der ersten 10 Founding-Member von PROVA. 90 Tage gratis testen, dann 99€/Monat lebenslang statt 149€.">
 <meta name="robots" content="noindex"><!-- Pilot-Programm: nicht in Google indexieren -->
+<link rel="icon" type="image/svg+xml" href="/icons/icon-192.svg">
 <style>
   :root {
     --navy:        #1B3F6B;
@@ -13,38 +14,55 @@
     --accent:      #4A90D9;
     --accent-light:#EFF6FF;
     --gold:        #D4A938;
+    --gold-dark:   #B8901F;
     --success:     #10B981;
     --error:       #EF4444;
     --warning:     #F59E0B;
     --gray-100:    #F3F4F6;
     --gray-200:    #E5E7EB;
+    --gray-300:    #D1D5DB;
     --gray-400:    #9CA3AF;
     --gray-500:    #6B7280;
+    --gray-600:    #4B5563;
     --gray-700:    #374151;
     --gray-900:    #111827;
     --white:       #FFFFFF;
     --radius:      12px;
+    --radius-lg:   16px;
     --shadow:      0 20px 60px rgba(0,0,0,.12);
+    --shadow-sm:   0 4px 14px rgba(0,0,0,.06);
     color-scheme: light;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
   body {
     font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
     background: var(--navy-dark); color: var(--gray-900);
     min-height: 100vh; padding: 1.5rem;
-    display: flex; align-items: center; justify-content: center;
     position: relative; overflow-x: hidden;
+    line-height: 1.5;
   }
   body::before {
-    content: ''; position: fixed; inset: 0; pointer-events: none;
+    content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0;
     background:
-      radial-gradient(ellipse 80% 50% at 20% 20%, rgba(212,169,56,.15) 0%, transparent 60%),
-      radial-gradient(ellipse 60% 40% at 80% 80%, rgba(27,63,107,.4) 0%, transparent 60%);
+      radial-gradient(ellipse 80% 50% at 20% 20%, rgba(212,169,56,.18) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 40% at 80% 80%, rgba(27,63,107,.45) 0%, transparent 60%);
   }
+
+  /* Layout-Wrapper — Card oben + Content darunter */
+  .page {
+    position: relative; z-index: 1;
+    max-width: 920px; margin: 0 auto;
+    display: flex; flex-direction: column; gap: 2rem;
+  }
+
+  /* CTA-Card (oben) */
   .card {
     background: var(--white); border-radius: var(--radius);
     padding: 2.5rem 2rem; width: 100%; max-width: 540px;
-    box-shadow: var(--shadow); position: relative; z-index: 1;
+    box-shadow: var(--shadow);
+    margin: 2rem auto 0;
+    animation: fadeInUp 0.6s ease-out;
   }
   .brand { display: flex; align-items: center; gap: 12px; margin-bottom: 1.5rem; }
   .brand-logo {
@@ -55,7 +73,7 @@
   .brand-name { font-size: 1.05rem; font-weight: 700; color: var(--navy); }
   .badge-founding {
     display: inline-block;
-    background: linear-gradient(135deg, var(--gold), #B8901F);
+    background: linear-gradient(135deg, var(--gold), var(--gold-dark));
     color: var(--white); font-size: 0.75rem; font-weight: 700;
     padding: 4px 10px; border-radius: 12px; letter-spacing: 0.5px;
     margin-bottom: 1rem; text-transform: uppercase;
@@ -86,9 +104,17 @@
     font-size: 0.95rem;
   }
   .seats-label { color: var(--gray-700); }
-  .seats-value { font-weight: 700; color: var(--navy); }
+  .seats-value { font-weight: 700; color: var(--navy); transition: color 0.3s; }
   .seats-value.warning { color: var(--warning); }
   .seats-value.error { color: var(--error); }
+  .seats-bar {
+    width: 100%; height: 6px; background: var(--gray-200);
+    border-radius: 3px; margin-top: 0.75rem; overflow: hidden;
+  }
+  .seats-bar-fill {
+    height: 100%; background: linear-gradient(90deg, var(--success), var(--accent));
+    border-radius: 3px; transition: width 0.6s ease-out;
+  }
   .features {
     list-style: none; margin-bottom: 1.75rem;
     border-top: 1px solid var(--gray-200);
@@ -108,26 +134,27 @@
     background: linear-gradient(135deg, var(--navy), var(--accent));
     color: var(--white); border: none; cursor: pointer;
     font-size: 1.05rem; font-weight: 600;
-    transition: opacity 0.2s, transform 0.1s;
+    transition: opacity 0.2s, transform 0.1s, box-shadow 0.2s;
   }
-  .btn:hover:not(:disabled) { opacity: 0.92; }
+  .btn:hover:not(:disabled) {
+    opacity: 0.95;
+    box-shadow: 0 8px 24px rgba(74,144,217,.35);
+  }
   .btn:active { transform: translateY(1px); }
-  .btn:disabled { opacity: 0.5; cursor: not-allowed; background: var(--gray-400); }
-  .btn-secondary {
-    margin-top: 0.75rem; background: transparent; color: var(--gray-700);
-    border: 1px solid var(--gray-200);
-  }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; background: var(--gray-400); box-shadow: none; }
   .fineprint {
     font-size: 0.8rem; color: var(--gray-500);
     line-height: 1.5; margin-top: 1.25rem; text-align: center;
   }
   .fineprint a { color: var(--accent); text-decoration: none; }
+  .fineprint a:hover { text-decoration: underline; }
   .alert {
     background: #FEF3C7; border-left: 4px solid var(--warning);
     padding: 12px 16px; border-radius: 8px;
     color: #78350F; font-size: 0.92rem; margin-bottom: 1rem;
   }
   .alert.error { background: #FEE2E2; border-color: var(--error); color: #7F1D1D; }
+  .alert a { color: inherit; font-weight: 600; }
   .login-link {
     text-align: center; margin-top: 1rem;
     font-size: 0.92rem; color: var(--gray-500);
@@ -140,6 +167,101 @@
     margin-right: 8px; vertical-align: middle;
   }
   @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Trust-Signals (unter Card) */
+  .trust-strip {
+    background: rgba(255,255,255,.06);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: var(--radius);
+    padding: 1.25rem 1.5rem;
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem;
+    color: var(--white);
+    animation: fadeInUp 0.7s ease-out 0.1s both;
+  }
+  .trust-item { text-align: center; }
+  .trust-icon {
+    width: 32px; height: 32px; margin: 0 auto 0.4rem;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--gold);
+  }
+  .trust-icon svg { width: 28px; height: 28px; }
+  .trust-label { font-size: 0.78rem; font-weight: 600; opacity: 0.95; line-height: 1.3; }
+  .trust-sub { font-size: 0.7rem; opacity: 0.7; margin-top: 0.15rem; }
+
+  /* Section-Container (Feature-Grid + FAQ) */
+  .section {
+    background: var(--white); border-radius: var(--radius-lg);
+    padding: 2rem 1.75rem;
+    box-shadow: var(--shadow);
+    animation: fadeInUp 0.7s ease-out 0.2s both;
+  }
+  .section h2 {
+    font-size: 1.25rem; color: var(--navy); margin-bottom: 1.25rem;
+    border-bottom: 2px solid var(--accent-light); padding-bottom: 0.5rem;
+  }
+
+  /* Feature-Grid */
+  .feature-grid {
+    display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;
+  }
+  .feature-item {
+    display: flex; gap: 0.85rem;
+    padding: 0.9rem; border-radius: 10px;
+    background: var(--gray-100);
+    transition: transform 0.2s, background 0.2s;
+  }
+  .feature-item:hover { transform: translateY(-2px); background: var(--accent-light); }
+  .feature-emoji { font-size: 1.4rem; flex-shrink: 0; }
+  .feature-title { font-weight: 600; color: var(--navy); font-size: 0.95rem; margin-bottom: 0.2rem; }
+  .feature-desc { font-size: 0.85rem; color: var(--gray-600); line-height: 1.45; }
+
+  /* FAQ */
+  .faq-item {
+    border-bottom: 1px solid var(--gray-200);
+    padding: 1rem 0;
+  }
+  .faq-item:last-child { border-bottom: none; }
+  .faq-question {
+    font-weight: 600; color: var(--navy); font-size: 1rem;
+    cursor: pointer; display: flex; justify-content: space-between; align-items: center;
+    padding-right: 0.5rem;
+    list-style: none;
+  }
+  .faq-question::-webkit-details-marker { display: none; }
+  .faq-question::after {
+    content: '+'; font-size: 1.4rem; color: var(--accent);
+    transition: transform 0.2s; flex-shrink: 0;
+  }
+  .faq-item[open] .faq-question::after { content: '−'; }
+  .faq-answer {
+    margin-top: 0.6rem; color: var(--gray-700); font-size: 0.92rem;
+    line-height: 1.55;
+  }
+
+  /* Footer-Strip */
+  .footer-strip {
+    text-align: center; color: rgba(255,255,255,.6);
+    font-size: 0.82rem; padding: 1rem 0;
+    animation: fadeInUp 0.8s ease-out 0.3s both;
+  }
+  .footer-strip a { color: rgba(255,255,255,.85); text-decoration: none; }
+  .footer-strip a:hover { color: var(--gold); }
+
+  /* Mobile-First Responsive */
+  @media (max-width: 720px) {
+    body { padding: 1rem; }
+    .card { padding: 2rem 1.5rem; margin-top: 1rem; }
+    h1 { font-size: 1.4rem; }
+    .trust-strip { grid-template-columns: repeat(2, 1fr); padding: 1rem; }
+    .section { padding: 1.5rem 1.25rem; }
+    .feature-grid { grid-template-columns: 1fr; }
+    .pricing-box { padding: 1rem 1.25rem; }
+  }
 </style>
 <!-- MEGA-SKALIERUNG M3: Sentry Error-Tracking (DSGVO, EU-Region, AVV) -->
 <script src="https://browser.sentry-cdn.com/10.51.0/bundle.tracing.min.js" crossorigin="anonymous"></script>
@@ -147,62 +269,204 @@
 </head>
 <body>
 
-<div class="card">
-  <div class="brand">
-    <div class="brand-logo">P</div>
-    <div class="brand-name">PROVA Systems</div>
-  </div>
+<div class="page">
 
-  <span class="badge-founding">★ Founding-Programm</span>
-  <h1>90 Tage gratis testen — danach 99€/Monat lebenslang</h1>
-  <p class="subtitle">
-    Sei einer der ersten 10 öffentlich bestellten und vereidigten Sachverständigen,
-    die PROVA mitgestalten. Du bekommst lebenslang den Founding-Member-Preis.
-  </p>
-
-  <div id="alert-container"></div>
-
-  <div class="pricing-box">
-    <div class="pricing-row">
-      <span class="price-label">Heute zahlen:</span>
-      <span class="price-value price-now">0,00 €</span>
+  <!-- ────────────── CTA-CARD ────────────── -->
+  <div class="card">
+    <div class="brand">
+      <div class="brand-logo">P</div>
+      <div class="brand-name">PROVA Systems</div>
     </div>
-    <div class="pricing-row">
-      <span class="price-label">Ab <strong id="trial-end-date">[+90 Tage]</strong> monatlich:</span>
-      <span class="price-value">
-        <span class="price-strikethrough">149€</span>99 €
-      </span>
+
+    <span class="badge-founding">★ Founding-Programm</span>
+    <h1>90 Tage gratis testen — danach 99 €/Monat lebenslang</h1>
+    <p class="subtitle">
+      Sei einer der ersten 10 öffentlich bestellten und vereidigten Sachverständigen,
+      die PROVA mitgestalten. Du bekommst lebenslang den Founding-Member-Preis.
+    </p>
+
+    <div id="alert-container"></div>
+
+    <div class="pricing-box">
+      <div class="pricing-row">
+        <span class="price-label">Heute zahlen:</span>
+        <span class="price-value price-now">0,00 €</span>
+      </div>
+      <div class="pricing-row">
+        <span class="price-label">Ab <strong id="trial-end-date">[+90 Tage]</strong> monatlich:</span>
+        <span class="price-value">
+          <span class="price-strikethrough">149 €</span>99 €
+        </span>
+      </div>
+    </div>
+
+    <div class="seats">
+      <span class="seats-label">Founding-Plätze:</span>
+      <span class="seats-value" id="seats-display">wird geladen…</span>
+    </div>
+    <div class="seats-bar"><div class="seats-bar-fill" id="seats-bar-fill" style="width: 0%"></div></div>
+
+    <ul class="features">
+      <li>Alle Solo-Features (KI-Diktat, §407a-Integration, JVEG-Rechner)</li>
+      <li>90 Tage komplett kostenlos — keine Kündigung nötig wenn du nicht weiter willst</li>
+      <li>Karte hinterlegen, Belastung erst nach Trial-Ende</li>
+      <li>Persönlicher Kontakt zu Marcel als Founding-Member</li>
+      <li>Stimme bei Feature-Roadmap-Decisions</li>
+      <li>Lifetime-Garantie auf 99 €/Monat-Preis</li>
+    </ul>
+
+    <button class="btn" id="btn-pilot" disabled>
+      <span id="btn-label">Plätze werden geprüft…</span>
+    </button>
+
+    <p class="fineprint">
+      Mit Klick auf den Button startet der Stripe-Checkout (zertifiziertes Bezahl-System).
+      14-tägiges Widerrufsrecht. <a href="/pilot-vereinbarung.html" target="_blank">Pilot-Vereinbarung</a> ·
+      <a href="/datenschutz.html" target="_blank">Datenschutz</a> ·
+      <a href="/avv.html" target="_blank">AVV</a>
+    </p>
+
+    <p class="login-link">
+      Noch kein PROVA-Account? <a href="/register">Hier registrieren</a> — danach kommst du wieder zu dieser Seite zurück.
+    </p>
+  </div>
+
+  <!-- ────────────── TRUST-STRIP ────────────── -->
+  <div class="trust-strip">
+    <div class="trust-item">
+      <div class="trust-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke-linejoin="round"/></svg>
+      </div>
+      <div class="trust-label">DSGVO &amp; AVV</div>
+      <div class="trust-sub">Verträge unterschrieben</div>
+    </div>
+    <div class="trust-item">
+      <div class="trust-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h4l3-9 4 18 3-9h4" stroke-linejoin="round" stroke-linecap="round"/></svg>
+      </div>
+      <div class="trust-label">EU-Hosting</div>
+      <div class="trust-sub">Frankfurt am Main</div>
+    </div>
+    <div class="trust-item">
+      <div class="trust-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+      </div>
+      <div class="trust-label">AES-256 verschlüsselt</div>
+      <div class="trust-sub">Akten + Diktate</div>
+    </div>
+    <div class="trust-item">
+      <div class="trust-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2 4 6v6c0 5 3.5 9 8 10 4.5-1 8-5 8-10V6l-8-4z" stroke-linejoin="round"/><path d="m9 12 2 2 4-4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <div class="trust-label">§203 StGB</div>
+      <div class="trust-sub">Schweigepflicht-konform</div>
     </div>
   </div>
 
-  <div class="seats">
-    <span class="seats-label">Founding-Plätze:</span>
-    <span class="seats-value" id="seats-display">wird geladen…</span>
+  <!-- ────────────── FEATURE-GRID ────────────── -->
+  <div class="section">
+    <h2>Was Founding-Member bekommen</h2>
+    <div class="feature-grid">
+      <div class="feature-item">
+        <div class="feature-emoji" aria-hidden="true">🎤</div>
+        <div>
+          <div class="feature-title">KI-Diktat &amp; Strukturhilfe</div>
+          <div class="feature-desc">Whisper-Transkription + automatische Vorstrukturierung in §1–§7. Du bleibst Autor — KI ist nur Hilfe.</div>
+        </div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-emoji" aria-hidden="true">⚖️</div>
+        <div>
+          <div class="feature-title">§6 Fachurteil-Editor</div>
+          <div class="feature-desc">SV-First-Design: leeres Textfeld dominiert, KI-Hilfen opt-in. Konjunktiv-II-Check + Halluzinations-Check vor Freigabe.</div>
+        </div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-emoji" aria-hidden="true">🧮</div>
+        <div>
+          <div class="feature-title">JVEG-Rechner integriert</div>
+          <div class="feature-desc">Honorar-Berechnung nach JVEG mit Belastungsstufen und automatischer Rechnungs-PDF.</div>
+        </div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-emoji" aria-hidden="true">📑</div>
+        <div>
+          <div class="feature-title">§407a-Compliance</div>
+          <div class="feature-desc">Pflichthinweise + Audit-Trail aller KI-Calls. Du kannst jederzeit nachweisen, was die KI berührt hat.</div>
+        </div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-emoji" aria-hidden="true">📤</div>
+        <div>
+          <div class="feature-title">Direkt-Versand SMTP</div>
+          <div class="feature-desc">Mit deiner eigenen Mail-Adresse. Kein PROVA im Header. SMTP-Credentials AES-256-GCM verschlüsselt.</div>
+        </div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-emoji" aria-hidden="true">🛡️</div>
+        <div>
+          <div class="feature-title">Persönlicher Kontakt</div>
+          <div class="feature-desc">Direkter Marcel-Kontakt für Bugs, Wünsche, Roadmap-Decisions. Founding-Member entscheiden mit.</div>
+        </div>
+      </div>
+    </div>
   </div>
 
-  <ul class="features">
-    <li>Alle Solo-Features (KI-Diktat, §407a-Integration, JVEG-Rechner)</li>
-    <li>90 Tage komplett kostenlos — keine Kündigung nötig wenn du nicht weiter willst</li>
-    <li>Karte hinterlegen, Belastung erst nach Trial-Ende</li>
-    <li>Persönlicher Kontakt zu Marcel als Founding-Member</li>
-    <li>Stimme bei Feature-Roadmap-Decisions</li>
-    <li>Lifetime-Garantie auf 99€/Monat-Preis</li>
-  </ul>
+  <!-- ────────────── FAQ ────────────── -->
+  <div class="section">
+    <h2>Häufige Fragen</h2>
 
-  <button class="btn" id="btn-pilot" disabled>
-    <span id="btn-label">Plätze werden geprüft…</span>
-  </button>
+    <details class="faq-item">
+      <summary class="faq-question">Warum 90 Tage Trial — und nicht 30?</summary>
+      <p class="faq-answer">
+        Ein Standardgutachten dauert typischerweise 4–8 Wochen vom Auftrag bis Versand. 90 Tage geben dir Zeit, mindestens 2 reale Fälle komplett mit PROVA durchzuziehen — Ortstermin, Diktat, KI-Strukturhilfe, §6 Fachurteil, PDF, E-Mail, Rechnung. Erst dann kannst du seriös beurteilen, ob PROVA in deinen Workflow passt.
+      </p>
+    </details>
 
-  <p class="fineprint">
-    Mit Klick auf den Button startet der Stripe-Checkout (zertifiziertes Bezahl-System).
-    14-tägiges Widerrufsrecht. <a href="/pilot-vereinbarung.html" target="_blank">Pilot-Vereinbarung</a> ·
-    <a href="/datenschutz.html" target="_blank">Datenschutz</a> ·
-    <a href="/avv.html" target="_blank">AVV</a>
+    <details class="faq-item">
+      <summary class="faq-question">Wann wird meine Karte belastet?</summary>
+      <p class="faq-answer">
+        Erst nach Tag 90. Während der Trial-Phase wird 0 € abgebucht. Karte hinterlegen ist Stripe-Pflicht für Subscription-Trials (Kartenverifikation, schließt Spam-Accounts aus), aber es gibt keine Vorab-Belastung.
+      </p>
+    </details>
+
+    <details class="faq-item">
+      <summary class="faq-question">Was ist, wenn ich nach 90 Tagen nicht weiter machen will?</summary>
+      <p class="faq-answer">
+        Nichts tun — die Subscription läuft nur bei Bestätigung weiter. Du kannst auch jederzeit vorher kündigen mit einem Klick im Stripe-Customer-Portal. Daten werden 30 Tage nach Kündigung DSGVO-konform gelöscht (Rechnungen bleiben gem. §257 HGB 10 Jahre archiviert).
+      </p>
+    </details>
+
+    <details class="faq-item">
+      <summary class="faq-question">Was bedeutet „Lifetime 99 €/Monat"?</summary>
+      <p class="faq-answer">
+        Solange deine Founding-Subscription aktiv läuft, bleibt der Preis bei 99 €/Monat — auch wenn der Solo-Listenpreis irgendwann auf 199 € oder 249 € steigt. Voraussetzung ist nur eine durchgehende Subscription. Bei Pausierung erlischt der Founding-Preis.
+      </p>
+    </details>
+
+    <details class="faq-item">
+      <summary class="faq-question">Was passiert mit meinen Akten-Daten?</summary>
+      <p class="faq-answer">
+        Verschlüsselt at-rest in der EU (Frankfurt am Main) gespeichert. PROVA-Mitarbeiter können einzelne Daten nur mit deiner expliziten Zustimmung einsehen (z.B. für Bug-Diagnose). KI-Verarbeitung läuft mit Pseudonymisierung — Namen, Adressen und IBANs werden serverseitig durch Platzhalter ersetzt, bevor irgendetwas an OpenAI geht. Vollständige Subprozessor-Liste in der <a href="/avv.html" target="_blank" style="color: var(--accent); font-weight: 600;">AVV</a>.
+      </p>
+    </details>
+
+    <details class="faq-item">
+      <summary class="faq-question">Kann ich meine Daten exportieren oder löschen?</summary>
+      <p class="faq-answer">
+        Ja, jederzeit per Klick. DSGVO Art. 15 Auskunft → JSON-Export aller deiner Daten. DSGVO Art. 17 Löschung → vollständige Entfernung (außer Rechnungen, gesetzlich aufzubewahren §257 HGB / §147 AO 10 Jahre). Auch deine SV-Stammdaten werden bei Löschung anonymisiert.
+      </p>
+    </details>
+  </div>
+
+  <!-- ────────────── FOOTER-STRIP ────────────── -->
+  <p class="footer-strip">
+    Fragen? <a href="mailto:kontakt@prova-systems.de">kontakt@prova-systems.de</a> ·
+    <a href="/impressum.html">Impressum</a> ·
+    <a href="/datenschutz.html">Datenschutz</a> ·
+    <a href="/agb.html">AGB</a>
   </p>
 
-  <p class="login-link">
-    Noch kein PROVA-Account? <a href="/register">Hier registrieren</a> — danach kommst du wieder zu dieser Seite zurück.
-  </p>
 </div>
 
 <script type="module">
@@ -211,43 +475,75 @@
   // ── Trial-End-Datum berechnen (heute + 90 Tage) ────────────────────────
   const trialEnd = new Date();
   trialEnd.setDate(trialEnd.getDate() + 90);
-  const formatDate = trialEnd.toLocaleDateString('de-DE', {
+  document.getElementById('trial-end-date').textContent = trialEnd.toLocaleDateString('de-DE', {
     day: '2-digit', month: 'long', year: 'numeric'
   });
-  document.getElementById('trial-end-date').textContent = formatDate;
 
-  // ── State ──────────────────────────────────────────────────────────────
+  // ── State + Helpers ───────────────────────────────────────────────────
   const btn = document.getElementById('btn-pilot');
   const btnLabel = document.getElementById('btn-label');
   const seatsDisplay = document.getElementById('seats-display');
+  const seatsBarFill = document.getElementById('seats-bar-fill');
   const alertContainer = document.getElementById('alert-container');
 
   function showAlert(msg, type) {
     type = type || 'info';
-    alertContainer.innerHTML = `<div class="alert ${type === 'error' ? 'error' : ''}">${msg}</div>`;
+    alertContainer.innerHTML = '<div class="alert ' + (type === 'error' ? 'error' : '') + '">' + msg + '</div>';
   }
   function hideAlert() { alertContainer.innerHTML = ''; }
 
+  // ── M4: Live-Counter via /pilot-seats Endpoint ─────────────────────────
+  async function loadSeats() {
+    try {
+      const res = await fetch('/.netlify/functions/pilot-seats', { method: 'GET' });
+      if (!res.ok) throw new Error('seats unavailable');
+      const data = await res.json();
+      if (typeof data.remaining === 'number' && typeof data.total === 'number') {
+        const taken = data.total - data.remaining;
+        const pct = Math.min(100, Math.max(0, (taken / data.total) * 100));
+        seatsDisplay.textContent = data.remaining + ' / ' + data.total + ' frei';
+        seatsBarFill.style.width = pct + '%';
+        if (data.remaining === 0) {
+          seatsDisplay.classList.add('error');
+        } else if (data.remaining <= 3) {
+          seatsDisplay.classList.add('warning');
+        }
+        return data;
+      }
+      seatsDisplay.textContent = 'verfügbar';
+      return data;
+    } catch (e) {
+      // Counter ist nice-to-have, blockiert nicht den Checkout
+      seatsDisplay.textContent = 'verfügbar';
+      return null;
+    }
+  }
+
   // ── Login-Status pruefen ───────────────────────────────────────────────
   const { data: { session }, error: sessionErr } = await supabase.auth.getSession();
+  const seatsData = await loadSeats();
+
   if (sessionErr || !session) {
-    showAlert('Du musst eingeloggt sein um Founding-Member zu werden. <a href="/register?next=' + encodeURIComponent(location.pathname) + '">Hier registrieren</a> oder <a href="/login?next=' + encodeURIComponent(location.pathname) + '">einloggen</a>.', 'error');
+    showAlert(
+      'Du musst eingeloggt sein um Founding-Member zu werden. ' +
+      '<a href="/register?next=' + encodeURIComponent(location.pathname) + '">Hier registrieren</a> oder ' +
+      '<a href="/login?next=' + encodeURIComponent(location.pathname) + '">einloggen</a>.',
+      'error'
+    );
     btnLabel.textContent = 'Bitte zuerst einloggen';
     return;
   }
 
-  // ── Pilot-Seats live abfragen via stripe-checkout (preflight: 0 Body) ──
-  // Pragmatisch: wir machen einen "dry-run"-Call der aber Pilot-Limit-Check macht
-  // Alternativ: separate Function fuer Coupon-Status. Aktuell nutzen wir den
-  // stripe-checkout-Pre-Flight (Coupon-Lookup ist Teil der pilot_program-Logic)
-  // → wir nutzen stattdessen fetch /pilot-seats-check (kommt in C4 → Skript)
-  // → fuer C1: einfacher Status-Hinweis basierend auf statischer Annahme
+  if (seatsData && seatsData.remaining === 0) {
+    showAlert(
+      'Die Founding-Plätze sind leider ausgebucht. Schreib uns trotzdem an ' +
+      '<a href="mailto:kontakt@prova-systems.de">kontakt@prova-systems.de</a> — wir melden uns bei Verfügbarkeit.',
+      'error'
+    );
+    btnLabel.textContent = 'Plätze ausgebucht';
+    return;
+  }
 
-  // Fuer C1-Pilot-Page: wir versuchen den Checkout zu starten, der Pre-Flight
-  // dort gibt PILOT_SOLD_OUT zurueck wenn Coupon-Limit erreicht.
-  // Initial-Anzeige: optimistisch "Plätze prüfen…" → klick startet Pre-Flight
-
-  seatsDisplay.textContent = 'klick auf Button';
   btn.disabled = false;
   btnLabel.textContent = 'Founding-Member werden';
 
@@ -276,7 +572,12 @@
       if (res.status === 410 || data.errorCode === 'PILOT_SOLD_OUT') {
         seatsDisplay.textContent = 'AUSGEBUCHT';
         seatsDisplay.classList.add('error');
-        showAlert('Die Founding-Plätze sind leider ausgebucht. Schreib uns trotzdem an <a href="mailto:kontakt@prova-systems.de">kontakt@prova-systems.de</a> — wir melden uns bei Verfügbarkeit.', 'error');
+        seatsBarFill.style.width = '100%';
+        showAlert(
+          'Die Founding-Plätze sind in den letzten Sekunden ausgebucht worden. Schreib uns an ' +
+          '<a href="mailto:kontakt@prova-systems.de">kontakt@prova-systems.de</a>.',
+          'error'
+        );
         btnLabel.textContent = 'Plätze ausgebucht';
         return;
       }
@@ -285,19 +586,20 @@
         throw new Error(data.error || 'Checkout konnte nicht erstellt werden');
       }
 
-      // Seats-Anzeige aktualisieren falls verfügbar
+      // Live-Counter aktualisieren falls Stripe-Response Seats mitgeschickt hat
       if (typeof data.pilot_seats_remaining === 'number') {
+        const taken = 10 - data.pilot_seats_remaining;
         seatsDisplay.textContent = data.pilot_seats_remaining + ' / 10 frei';
+        seatsBarFill.style.width = (taken / 10 * 100) + '%';
         if (data.pilot_seats_remaining <= 3) seatsDisplay.classList.add('warning');
       }
 
-      // Redirect zu Stripe-Checkout
       btnLabel.innerHTML = '<span class="loading-spinner"></span>Weiterleitung zu Stripe…';
       window.location.href = data.sessionUrl;
 
     } catch (e) {
       console.error('[pilot] Fehler:', e);
-      showAlert('Fehler beim Starten des Checkouts: ' + e.message, 'error');
+      showAlert('Fehler beim Starten des Checkouts: ' + (e.message || e), 'error');
       btn.disabled = false;
       btnLabel.textContent = 'Erneut versuchen';
     }

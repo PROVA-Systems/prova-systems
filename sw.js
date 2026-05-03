@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v254';   // MEGA-SKALIERUNG M3: Sentry-Init in pilot/app/index + lib/sentry-init.js
+const CACHE_VERSION = 'prova-v255';   // MEGA-SKALIERUNG M4: pilot.html Hero+Trust+Features+FAQ-Upgrade
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
