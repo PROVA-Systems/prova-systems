@@ -422,4 +422,27 @@ Admin-Cockpit-Doku: `docs/strategie/ADMIN-COCKPIT-MVP.md`.
 
 ---
 
+## POST-POST-MEGA-MEGA — TECH-DEBT-MARATHON — 03.05.2026 abend/nacht
+
+**Tag:** `v208-tech-debt-marathon-done`
+**Sub-Sprints:** O1, O2, O3, O4, O5, O6, O7
+**Wall-Clock:** ~6h (geplant 8-10h, abgeschlossen unter Plan)
+**Commits:** 7 (`d67924c`, `af4bafa`, `0fed657`, `ef3f124`, `e95026d`, `a408a9f` + O7)
+
+| Sprint | Lieferung |
+|---|---|
+| O1  | Tech-Debt-Bug-Fixes (RECHNUNGEN-422 atFetch-Default-Sort + onboarding-tour Pre-Checks + sidebar-resize Belt-and-Suspenders) |
+| O2  | IHK-SVO 4-Teile F-04 KURZSTELLUNGNAHME Liquid-Goldstandard (CRITICAL pre-customer) — PDFMonkey-Migrations-Plan + NACHT-PAUSE-File F09-F15 |
+| O3  | AIRTABLE-DRIFT Strategie + Priorisierungs-Matrix HIGH/MEDIUM/LOW + 4 Sprint-K-2-Bundles + NACHT-PAUSE Migration |
+| O4  | AUTH-PERFEKT 2.0 — 2FA-Pflicht Admin (AAL2 server-side enforced) + UI-Banner + Notfall-ENV-Schalter |
+| O5  | Flow B Wertgutachten — Realitaets-Check (bereits gepusht), Sentry-Init in wertgutachten.html ergaenzt |
+| O6  | Sentry-Polish — Workspace-ID + user_pseudo Tags + Slow-Call-Sampling > 3s + Sentry-Init in 6 weiteren Pages |
+| O7  | Final-Report + Master-Files-Sync + sw.js v258 + Tag v208 |
+
+**Senior-Engineering-Behavior:** 0 Production-Breaking-Changes ohne Live-Test. 2 NACHT-PAUSE-Files mit klaren Decision-Optionen (F09-F15-Liquid + Airtable-Migration). Marcel-Vorab-Decision "Defensive Fixes" respektiert.
+
+Vollständiger Final-Report: `docs/sprint-status/MEGA-MEGA-MEGA-2026-05-03-NACHT-FINAL.md`.
+
+---
+
 *Sprints-Masterplan 03.05.2026 nacht · Single Source of Truth · Aktualisiert von Claude Code nach jedem Sprint*

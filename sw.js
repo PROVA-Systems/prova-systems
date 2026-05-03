@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v257';   // MEGA-MEGA-MEGA O1: Bug-Fixes (RECHNUNGEN-422, onboarding-tour, sidebar-resize)
+const CACHE_VERSION = 'prova-v258';   // MEGA-MEGA-MEGA O7: Final Tech-Debt-Marathon (sentry+admin+wertgutachten 6 pages)
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [

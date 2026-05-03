@@ -4,6 +4,85 @@ Format: pro Sprint ein Block. Ältere Sprints zuoberst nicht — neueste oben.
 
 ---
 
+## POST-MEGA-MEGA-MEGA — TECH-DEBT-MARATHON (O1+O2+O3+O4+O5+O6+O7)
+
+**Tag:** `v208-tech-debt-marathon-done` · **Stand:** 03.05.2026 nacht · **Commits:** `d67924c`, `af4bafa`, `0fed657`, `ef3f124`, `e95026d`, `a408a9f` + O7
+
+**Modus:** Voller Autonomie, Marcel offline 8-10h, Bypass-Mode aktiv.
+
+### Sprint O1 — Tech-Debt-Bug-Fixes (`d67924c`)
+
+- prova-context.js: atFetch Default-Sort 'Timestamp' entfernt (RECHNUNGEN-422 Root-Cause: hat keine Timestamp-Spalte)
+- onboarding-tour.js showStep(): defensive Pre-Checks fuer STEPS-Array + step.target
+- nav.js: Belt-and-Suspenders Resize-Listener (debounced 150ms) als matchMedia-Fallback fuer Sidebar 768-1100px
+- whisper-diktat.js Syntax+Auth+Pseudonymisierung verifiziert (kein Bug, manueller Audio-Test bleibt Marcel-Pflicht)
+- sw.js v256 → v257
+- npm audit: 0 vulnerabilities
+
+### Sprint O2 — IHK-SVO 4-Teile-Templates CRITICAL (`af4bafa`)
+
+- F-04 KURZSTELLUNGNAHME Liquid-Goldstandard erstellt (~285 LOC)
+- 4-Teile-Struktur IHK-SVO § 9 Abs. 3 + EU AI Act Art. 50 + § 407a Abs. 2+3 ZPO
+- Anti-Substitution: Header+Footer ab Seite 2 (IHK-Koeln-Anforderung)
+- Design-System v1.0 (Inter + JetBrains Mono, primary #1a3a6b)
+- Migrations-Doku mit 5-Schritt-PDFMonkey-Plan
+- INFRASTRUKTUR-REFERENZ.md F-09 als Kurzgutachten korrigiert
+- NACHT-PAUSE-File F09-F15-LIQUID (Marcel-Decision)
+
+### Sprint O3 — AIRTABLE-DRIFT-Cleanup (`0fed657`)
+
+- Honest Assessment: 0 Files migriert (Marcel-Vorab-Decision "Defensive Fixes" hatte Vorrang)
+- Priorisierungs-Matrix HIGH/MEDIUM/LOW/DEAD mit Aufwands-Schaetzungen
+- ENV-Cleanup-Liste: 12 distinct AIRTABLE_* ENVs, 3 Konsolidierungen vorgeschlagen
+- Pattern-Vorlage Migration (Airtable atFetch -> dataStore.list)
+- 4 Sprint-K-2-Bundles vorgeschlagen (~17-22h Total-Effort)
+- NACHT-PAUSE-File AIRTABLE-MIGRATION (Marcel-Decision)
+
+### Sprint O4 — AUTH-PERFEKT 2.0 (`ef3f124`)
+
+- auth-resolve.js: aal + amr Claims aus Supabase-JWT durchgereicht
+- admin-auth-guard.js: 2FA-Pflicht (AAL2) als Stufe 3 Pre-Check
+  - Default require2FA=true, Opt-Out via opts.require2FA=false
+  - Globaler Notfall-Schalter PROVA_ADMIN_REQUIRE_2FA=false ENV
+  - Audit-Trail-Eintrag admin.<fn>.no_2fa
+- admin/index.html: Banner-Warnung bei AAL1-Login + Direkt-Link Supabase MFA-Settings
+- AUTH-PERFEKT-2.0-PLAN.md mit 4-Phasen + Backlog H-25..H-30
+
+### Sprint O5 — Flow B Wertgutachten (`e95026d`)
+
+- Realitaets-Check: Bereits gepusht (commit f444713 P5f.C)
+- 1384 LOC wertgutachten-logic.js + 536 LOC wertgutachten.html
+- sw.js APP_SHELL OK, nav.js OK, auftragstyp.js Routing OK
+- Sentry-Init Script in wertgutachten.html ergaenzt (war fehlend)
+- F-19 Goldstandard bereits Liquid + IHK-SVO 4-Teile + ImmoWertV-2021
+
+### Sprint O6 — Sentry-Polish (`a408a9f`)
+
+- sentry-wrap.js: Workspace-ID + user_pseudo Tags (DSGVO-konform)
+- Slow-Call-Sampling: Calls > 3s als 'warning' captureMessage
+- duration_ms im netlify-Context bei Errors
+- Sentry-Init in 6 weiteren Pages (dashboard/akte/freigabe/archiv/einstellungen/stellungnahme)
+- SENTRY-DSGVO.md erweitert um neue Tags + Slow-Call-Warnings
+
+### Sprint O7 — Final + Tag (this commit)
+
+- MEGA-MEGA-MEGA-2026-05-03-NACHT-FINAL.md Executive Summary
+- GITHUB-RELEASE-v208.md Release-Notes
+- CHANGELOG-MASTER.md Block (dieser)
+- Master-Files-Sync (CHAT-TRANSPORT, SPRINTS-MASTERPLAN)
+- sw.js v257 → v258
+- Tag v208-tech-debt-marathon-done
+
+### Total-Statistik POST-POST-MEGA-MEGA
+
+- 7 Sub-Sprints, 7 Commits
+- 25+ Files modified
+- 8 Doku-Files created (Migrations, NACHT-PAUSE, Status, Plan)
+- 2 NACHT-PAUSE-Files mit klaren Decision-Optionen
+- 0 Production-Breaking-Changes ohne Live-Test (Senior-Engineering-Behavior)
+
+---
+
 ## POST-MEGA-MEGA — PILOT-LAUNCH-FINAL (N1+N2+N3+N4)
 
 **Tag:** `v207-pilot-launch-ready` · **Stand:** 03.05.2026 (Nacht) · **Commits:** `acf4045`, `22c4df5`, `23b23f7`, +N4

@@ -1,6 +1,6 @@
 # PROVA Chat-Transport — AKTUELL
 
-**Stand:** 03.05.2026 nacht (Tag 9 — POST-MEGA-MEGA-PILOT-LAUNCH-FINAL done + Tag `v207-pilot-launch-ready`)
+**Stand:** 03.05.2026 nacht (Tag 9 — POST-MEGA-MEGA-MEGA Tech-Debt-Marathon done + Tag `v208-tech-debt-marathon-done`)
 **Vorgänger:** Tag 9 mittag (Founding-Pilot LIVE, Power-Setup MAX done) → siehe git-Log
 **Single Source of Truth** — siehe `docs/master/README.md`
 
@@ -12,13 +12,23 @@
 
 **Wer bin ich:** Du bist Browser-Claude für Marcel Schreiber von PROVA Systems — KI-natives B2B-SaaS für ö.b.u.v. Bauschaden-Sachverständige in Deutschland.
 
-**Wo stehen wir:** Tag 9 nacht. **POST-MEGA-MEGA-PILOT-LAUNCH-FINAL abgeschlossen.** PROVA ist Pilot-Launch-bereit mit Tag `v207-pilot-launch-ready`. 5 Sprints durchgezogen waehrend Marcel offline war:
+**Wo stehen wir:** Tag 9 nacht. **POST-POST-MEGA-MEGA Tech-Debt-Marathon abgeschlossen.** PROVA ist Pilot-Launch-bereit mit Tag `v208-tech-debt-marathon-done`. 12 Sprints durchgezogen heute (POST-MEGA-MEGA + POST-POST-MEGA-MEGA):
 
-- **N1** (`acf4045`): Stripe-Test-Suite mit 8 Szenarien automatisiert + email-render-check + 27/27 Tests grün
-- **N2** (`22c4df5`): Onboarding-Drip 7 Templates + Make.com-JSON + pg_cron-Alternative
-- **N3** (`23b23f7`): Admin-Cockpit MVP — 4 Tabs + 4 Backend-Functions
-- **N4** (`01e6c66`): Pre-Launch-Checklist + Marcel-Briefing + sw.js v256
-- **N3-EXT** (`ea48974`): Audit-Tab + Send-Email + Force-Logout + CSV-Export + Auto-Refresh
+POST-MEGA-MEGA-PILOT-LAUNCH (heute mittag → abend, v207):
+- **N1** (`acf4045`): Stripe-Test-Suite + email-render-check + 27/27 Tests
+- **N2** (`22c4df5`): Onboarding-Drip 7 Templates + Make.com-JSON
+- **N3** (`23b23f7`): Admin-Cockpit MVP (4 Tabs + 4 Backend-Functions)
+- **N4** (`01e6c66`): Pre-Launch-Checklist + Marcel-Briefing
+- **N3-EXT** (`ea48974`): Audit-Tab + Send-Email + Force-Logout + CSV + Auto-Refresh
+- **N4-EXT** (`83959de`): Master-Files-Sync + GitHub-Release-v207
+
+POST-POST-MEGA-MEGA-TECH-DEBT (heute abend → nacht, v208):
+- **O1** (`d67924c`): Bug-Fixes (RECHNUNGEN-422 + onboarding-tour + sidebar-resize)
+- **O2** (`af4bafa`): IHK-SVO 4-Teile F-04 Liquid-Goldstandard CRITICAL
+- **O3** (`0fed657`): AIRTABLE-DRIFT Strategie + 2 NACHT-PAUSE-Files
+- **O4** (`ef3f124`): AUTH-PERFEKT 2.0 (2FA-Pflicht Admin)
+- **O5** (`e95026d`): Flow B Wertgutachten Status-Doku + Sentry-Init
+- **O6** (`a408a9f`): Sentry-Polish (Slow-Call + Workspace-Tag + 6 Pages)
 
 **Was Marcel als naechstes:**
 1. `docs/sprint-status/POST-MEGA-MEGA-PILOT-READY-2026-05-03-FINAL.md` lesen
