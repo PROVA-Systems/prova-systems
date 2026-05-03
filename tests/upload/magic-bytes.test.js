@@ -12,21 +12,23 @@ const { test, describe } = require('node:test');
 const assert = require('node:assert/strict');
 
 // Reproduktion der MAGIC_BYTES Tabelle aus lib/foto-upload-v2.js
+// MEGA¹⁰ W4: HEIC-Eintraege jetzt mit sig_offset=4 (Box-Size davor)
 const MAGIC_BYTES = [
   { ext: 'jpg',  mime: 'image/jpeg', sig: [0xFF, 0xD8, 0xFF] },
   { ext: 'png',  mime: 'image/png',  sig: [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A] },
   { ext: 'webp', mime: 'image/webp', sig: [0x52, 0x49, 0x46, 0x46], offset_check: 8, additional: [0x57, 0x45, 0x42, 0x50] },
   { ext: 'gif',  mime: 'image/gif',  sig: [0x47, 0x49, 0x46, 0x38] },
-  { ext: 'heic', mime: 'image/heic', sig: [0x66, 0x74, 0x79, 0x70], offset_check: 4, additional: [0x68, 0x65, 0x69, 0x63] },
-  { ext: 'heif', mime: 'image/heif', sig: [0x66, 0x74, 0x79, 0x70], offset_check: 4, additional: [0x68, 0x65, 0x69, 0x66] },
+  { ext: 'heic', mime: 'image/heic', sig: [0x66, 0x74, 0x79, 0x70], sig_offset: 4, offset_check: 8, additional: [0x68, 0x65, 0x69, 0x63] },
+  { ext: 'heif', mime: 'image/heif', sig: [0x66, 0x74, 0x79, 0x70], sig_offset: 4, offset_check: 8, additional: [0x68, 0x65, 0x69, 0x66] },
   { ext: 'pdf',  mime: 'application/pdf', sig: [0x25, 0x50, 0x44, 0x46] }
 ];
 
 function detectMime(bytes) {
   for (const sig of MAGIC_BYTES) {
+    const primaryOffset = sig.sig_offset || 0;
     let matches = true;
     for (let i = 0; i < sig.sig.length; i++) {
-      if (bytes[i] !== sig.sig[i]) { matches = false; break; }
+      if (bytes[primaryOffset + i] !== sig.sig[i]) { matches = false; break; }
     }
     if (!matches) continue;
     if (sig.offset_check && sig.additional) {
@@ -61,18 +63,16 @@ describe('Magic-Bytes File-Type-Detection', () => {
     assert.equal(detectMime(bytes), null);
   });
 
-  test('HEIC erkannt (ftyp heic)', () => {
+  test('HEIC erkannt (ftyp heic an Offset 4)', () => {
+    // MEGA¹⁰ W4: Realistische HEIC-Header (Box-Size + ftyp + Brand)
+    // Vorher (MEGA⁹): Test war kuenstlich, hatte sig ab Offset 0 — Production-Bug!
     const bytes = new Uint8Array([0x00, 0x00, 0x00, 0x18, 0x66, 0x74, 0x79, 0x70, 0x68, 0x65, 0x69, 0x63, 0x00, 0x00, 0x00, 0x00]);
-    // sig[0]: ftyp at offset 4 — wait actually sig is matched from start
-    // Let me check — sig is [0x66, 0x74, 0x79, 0x70] = "ftyp"
-    // Bytes match ab Index 4. Aber MAGIC_BYTES checks ab 0.
-    // → Test mit sig ab Position 0:
-    const bytes2 = new Uint8Array([0x66, 0x74, 0x79, 0x70, 0x68, 0x65, 0x69, 0x63]);
-    assert.equal(detectMime(bytes2), 'image/heic');
+    assert.equal(detectMime(bytes), 'image/heic');
   });
 
-  test('HEIF erkannt', () => {
-    const bytes = new Uint8Array([0x66, 0x74, 0x79, 0x70, 0x68, 0x65, 0x69, 0x66]);
+  test('HEIF erkannt (ftyp heif an Offset 4)', () => {
+    // MEGA¹⁰ W4: Realistische HEIF-Header
+    const bytes = new Uint8Array([0x00, 0x00, 0x00, 0x18, 0x66, 0x74, 0x79, 0x70, 0x68, 0x65, 0x69, 0x66, 0x00, 0x00, 0x00, 0x00]);
     assert.equal(detectMime(bytes), 'image/heif');
   });
 

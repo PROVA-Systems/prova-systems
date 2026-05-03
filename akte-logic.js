@@ -395,28 +395,63 @@ async function handleDokUpload(files) {
       try {
         var validation = await helpers.validateFileType(file, allowedMimes);
         if (!validation.ok) {
-          statusEl.textContent = '⚠️ Datei abgelehnt: ' + (validation.reason || 'Typ ungueltig') + ' (' + file.name + ')';
+          // MEGA¹⁰ W4: User-sichtbare Toast statt nur Status-Text
+          var rejectMsg = '⚠️ Datei abgelehnt: ' + (validation.reason || 'Typ ungueltig') + ' (' + file.name + ')';
+          statusEl.textContent = rejectMsg;
+          if (window.ProvaUI && window.ProvaUI.toast) {
+            window.ProvaUI.toast(rejectMsg, 'error');
+          }
           continue;
+        }
+        // MIME-Spoofing-Detection: extension/MIME stimmt nicht ueberein mit Magic-Bytes
+        if (validation.mimeMatches === false) {
+          console.warn('[upload] MIME-Spoofing detected:', file.name, file.type, '->', validation.detected);
+          if (window.ProvaUI && window.ProvaUI.toast) {
+            window.ProvaUI.toast('Datei-Typ ('  + (file.type||'leer') + ') stimmt nicht mit Inhalt (' + validation.detected + ') ueberein', 'info');
+          }
         }
       } catch (e) { console.warn('[upload] magic-bytes-check failed', e); }
     }
 
     // EXIF-Strip + Image-Optimize fuer Bilder (vor KI-Send)
+    // MEGA¹⁰ W4: Orientation VOR stripExif lesen (sonst Hochformat-Bug)
     var processedFile = file;
     if (helpers && file.type && file.type.indexOf('image/') === 0) {
       try {
         var blob = file;
+        var orientation = 1;
+        if (file.type === 'image/jpeg' && helpers.readExifOrientation) {
+          try { orientation = await helpers.readExifOrientation(blob); } catch (_) {}
+        }
+        var sizeBefore = blob.size;
         if (file.type === 'image/jpeg' && helpers.stripExif) {
           blob = await helpers.stripExif(blob);  // GPS/Camera/IPTC raus
         }
         if (helpers.optimizeImage) {
-          blob = await helpers.optimizeImage(blob, { maxWidth: 2048, maxHeight: 2048, quality: 0.85, prefer: 'webp' });
+          blob = await helpers.optimizeImage(blob, {
+            maxWidth: 2048, maxHeight: 2048, quality: 0.85, prefer: 'webp',
+            orientation: orientation
+          });
         }
-        // Restore filename for KI-Endpoint
+        // User-sichtbares Audit (Console — Frontend hat kein audit_trail)
+        var saved = sizeBefore - blob.size;
+        if (saved > 1024) {
+          console.log('[upload] ' + file.name + ': EXIF-stripped + optimized, saved ' +
+            Math.round(saved/1024) + 'KB (orientation=' + orientation + ')');
+        }
         processedFile = new File([blob], file.name, { type: blob.type || file.type });
       } catch (e) {
         console.warn('[upload] image-preprocessing failed, fallback to original', e);
+        if (window.ProvaUI && window.ProvaUI.toast) {
+          window.ProvaUI.toast('Bild-Vorverarbeitung fehlgeschlagen — Original wird verwendet', 'info');
+        }
         processedFile = file;
+      }
+    }
+    // HEIC-Hint: Browser kann HEIC nicht decoden, KI-Captioning kann scheitern
+    if (file.type === 'image/heic' || file.type === 'image/heif') {
+      if (window.ProvaUI && window.ProvaUI.toast) {
+        window.ProvaUI.toast('HEIC-Bild — Vorschau evtl. eingeschraenkt, KI-Beschriftung versucht', 'info');
       }
     }
     file = processedFile;
