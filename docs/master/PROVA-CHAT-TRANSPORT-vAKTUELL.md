@@ -1,10 +1,10 @@
 # PROVA Chat-Transport — AKTUELL
 
-**Stand:** 03.05.2026 mittag (Tag 9 — Power-Setup MAX done + Founding-Pilot LIVE)
-**Vorgänger:** v37 (01.05. mittag, archiviert in `docs/archiv/chat-transports/PROVA-CHAT-TRANSPORT-v35.md`)
+**Stand:** 03.05.2026 nacht (Tag 9 — POST-MEGA-MEGA-PILOT-LAUNCH-FINAL done + Tag `v207-pilot-launch-ready`)
+**Vorgänger:** Tag 9 mittag (Founding-Pilot LIVE, Power-Setup MAX done) → siehe git-Log
 **Single Source of Truth** — siehe `docs/master/README.md`
 
-> ⚠️ **Versions-Hinweis:** Diese Datei heißt absichtlich `vAKTUELL` (statt fortlaufender Nummer wie v37/v38). Sie wird nach jedem Sprint **direkt überschrieben** — Versions-Historie liegt im git-Log. Einzige laufend gepflegte Briefing-Quelle für Chat-Wechsel.
+> ⚠️ **Versions-Hinweis:** Diese Datei heißt absichtlich `vAKTUELL` (statt fortlaufender Nummer wie v37/v38). Sie wird nach jedem Sprint **direkt überschrieben** — Versions-Historie liegt im git-Log.
 
 ---
 
@@ -12,14 +12,33 @@
 
 **Wer bin ich:** Du bist Browser-Claude für Marcel Schreiber von PROVA Systems — KI-natives B2B-SaaS für ö.b.u.v. Bauschaden-Sachverständige in Deutschland.
 
-**Wo stehen wir:** Tag 9 mittag. Catch-Up-Sprint abgeschlossen — **Founding-Pilot-Programm ist deployed**. Pilot-Page `/pilot` live, 90T Trial + Auto-FOUNDING-99-Coupon, Stripe-Webhook erweitert (trial_will_end + Trial-zu-Paid-Transition + Pilot-Audit-Logs). 4 Email-Templates. Webhook-Monitoring-Skripte (`stripe-status` + `stripe-replay`). 3 Marcel-Vorbereitungs-Doku-Files. 2 Tot-Code-Decision-Files. Tag v204-security-hardening-done aus Mega-Mega-Sprint bleibt.
+**Wo stehen wir:** Tag 9 nacht. **POST-MEGA-MEGA-PILOT-LAUNCH-FINAL abgeschlossen.** PROVA ist Pilot-Launch-bereit mit Tag `v207-pilot-launch-ready`. 5 Sprints durchgezogen waehrend Marcel offline war:
+
+- **N1** (`acf4045`): Stripe-Test-Suite mit 8 Szenarien automatisiert + email-render-check + 27/27 Tests grün
+- **N2** (`22c4df5`): Onboarding-Drip 7 Templates + Make.com-JSON + pg_cron-Alternative
+- **N3** (`23b23f7`): Admin-Cockpit MVP — 4 Tabs + 4 Backend-Functions
+- **N4** (`01e6c66`): Pre-Launch-Checklist + Marcel-Briefing + sw.js v256
+- **N3-EXT** (`ea48974`): Audit-Tab + Send-Email + Force-Logout + CSV-Export + Auto-Refresh
+
+**Was Marcel als naechstes:**
+1. `docs/sprint-status/POST-MEGA-MEGA-PILOT-READY-2026-05-03-FINAL.md` lesen
+2. `docs/strategie/PILOT-LAUNCH-CHECKLIST.md` 60-90 Min abarbeiten (11 Sektionen)
+3. PROVA_SENTRY_TEST_SECRET in Netlify ENV setzen (war pending)
+4. Eigenen Founder-Account testen + Admin-Cockpit unter `/admin/` einloggen
+5. Erste 5 Pilot-Einladungen senden (Vorlage in PILOT-LAUNCH-BRIEFING.md)
+
+**Admin-Cockpit (NEU live):**
+- URL: `https://app.prova-systems.de/admin/` — Marcel-Email-Whitelist-Login
+- 5 Tabs: Pilot-Liste · Stripe-KPIs · Sentry-Errors · Audit-Trail · Quick-Actions
+- 7 Backend-Functions (alle mit `withSentry+requireAdmin`-Pattern)
+- Doku: `docs/strategie/ADMIN-COCKPIT-MVP.md`
 
 **Stripe-Test-Status:**
-12 ENV-Vars in Netlify gesetzt + Webhook-Endpoint angelegt + Founding-Coupon angelegt + Customer-Portal aktiviert + Trigger Deploy ausgeführt. Test-Käufe stehen aus (Marcel macht heute mit Verify-Skript-Suite).
+12 ENV-Vars in Netlify gesetzt + Webhook-Endpoint angelegt + Founding-Coupon angelegt + Customer-Portal aktiviert. **Automatisierte Test-Suite** in `scripts/stripe-test-suite.js` (Live-Mode-Gate via `CONFIRM_LIVE_CHECKOUT=ja`). Live-Test mit Refund-Strategie steht aus → siehe `docs/audit/STRIPE-TESTS-2026-05-03.md`.
 
 **Findings-Stand:**
-- 1 CRITICAL (auth-token-issue, NACHT-PAUSE für Marcel)
-- ~30 HIGH in BACKLOG (12 ✅ FIXED, 4 Tot-Code-Decision-Files vorhanden, ~14 in Folge-Sprints)
+- 0 CRITICAL (auth-token-issue gefixt in M1c, durch zod-Schema-Validation M2 abgesichert)
+- ~30 HIGH in BACKLOG (12 ✅ FIXED, ~14 in Folge-Sprint K-2)
 - 1 PLANNED-Migration (RLS-Findings, Marcel-Dev-Test pending)
 
 **Power-Tools aktiv (Max-Plan):**
