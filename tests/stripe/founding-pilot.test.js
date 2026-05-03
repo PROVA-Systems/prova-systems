@@ -286,12 +286,15 @@ describe('founding-pilot checkout', () => {
     assert.match(body.error, /ausgebucht/i);
   });
 
-  test('Pilot mit plan=team → 400 PILOT_REQUIRES_SOLO', async () => {
+  test('Pilot mit plan=team → 400 (zod-Schema-Validation)', async () => {
+    // M2: zod-Schema fängt das jetzt vor Function-Logik mit errorCode='VALIDATION_FAILED'.
+    // Message bleibt klar: "Founding-Pilot ist nur fuer Solo-Plan verfuegbar".
     const { checkout } = installMocks();
     const res = await checkout.handler(postCheckoutEvent({ pilot_program: true, plan: 'team' }), {});
     assert.equal(res.statusCode, 400);
     const body = JSON.parse(res.body);
-    assert.equal(body.errorCode, 'PILOT_REQUIRES_SOLO');
+    assert.equal(body.errorCode, 'VALIDATION_FAILED');
+    assert.match(body.error, /Founding-Pilot ist nur fuer Solo-Plan/i);
   });
 
   test('Pilot-Seats remaining wird korrekt berechnet', async () => {
