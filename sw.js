@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v259';   // MEGA⁴ Q2+Q3: Mobile-Polish Layer + Q1 Templates F-09/F-15
+const CACHE_VERSION = 'prova-v260';   // MEGA⁴ Q8: User-Facing-Maximum Final (Mobile + Flow C/D + Cockpit-Voll + 110 Tests)
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [

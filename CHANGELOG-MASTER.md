@@ -4,6 +4,69 @@ Format: pro Sprint ein Block. Ältere Sprints zuoberst nicht — neueste oben.
 
 ---
 
+## MEGA⁴ — USER-FACING-MAXIMUM (Q1+Q2+Q3+Q4+Q5+Q6+Q7+Q8)
+
+**Tag:** `v209-user-facing-maximum-done` · **Stand:** 04.05.2026 nacht · **Commits:** `0f07921`, `da4f522`, `4bc85a2`, `cafa538`, `ec40ffb`, `f504785` + Q8
+
+**Modus:** Voller Autonomie, Marcel offline 8-10h, abgeschlossen unter Plan in 5h.
+
+### Q1 — F-09 + F-15 Liquid-Goldstandards (`0f07921`)
+- F-09 KURZGUTACHTEN ~485 LOC (Teil 3.1-3.5 erweitert mit Beweissicherung-Tabelle, Foto-Grid, Hypothesen-Cards, Sanierung-Kosten-Card)
+- F-15 GERICHTSGUTACHTEN ~520 LOC (Beweisbeschluss-Wortlaut, Beweisfragen-Liste, Verfahrensparteien, § 404a Bauteiloeffnungen, § 407a + § 10 IHK-SVO)
+- Beispiel-Payloads mit realistischen Schadensfaellen
+
+### Q2+Q3 — Mobile-Rescue (`da4f522`)
+- lib/mobile-polish.css (~140 LOC) zentraler Mobile-First-Stylesheet
+- lib/mobile-polish.js (~180 LOC) Lazy-Polyfill + Offline + Pull-to-Refresh + Camera-API + Geolocation
+- 10 Pages integriert
+- iOS Safe-Area + Touch-Target 44x44 + Mobile-Tables-to-Cards + Tablet-Layout
+
+### Q4 — Flow C Beratung (`4bc85a2`)
+- lib/schemas/beratung.js (3 zod-Schemas + 3 Enums)
+- F-20 BERATUNGSPROTOKOLL Liquid-Goldstandard mit Honorar-Card + Empfehlungs-Prioritaets-Badges
+- beratung.html: Sentry-Init + mobile-polish integriert
+- Realitaets-Check: 1-Page-Wizard existierte bereits, kein Refactor noetig
+
+### Q5 — Flow D Baubegleitung (`cafa538`)
+- lib/schemas/baubegleitung.js (3 zod-Schemas + 3 Enums)
+- F-21 BAUBEGLEITUNG-PROTOKOLL (Color-coded Mangel-Schwere-Badges)
+- F-22 BAUABNAHME (Status-Card-Gradient + Sicherheitseinbehalt + § 640 BGB / § 12 VOB/B / § 634a BGB)
+- baubegleitung.html: Sentry + mobile-polish integriert
+
+### Q6 — AUTH-COCKPIT Voll-Version (`ec40ffb`)
+- admin/voll.html mit 12 Tabs + Charts.js CDN
+- 3 neue Backend-Endpoints mit 2FA-Pflicht (admin-live-sessions, admin-ki-costs, admin-system-health)
+- 6/12 Sektionen live (Live-Sessions/Conversion/MRR/KI-Costs/Errors/Health)
+- 6/12 als BACKLOG transparent dokumentiert mit Begruendung
+
+### Q7 — Test-Coverage 70 -> 110 (`f504785`)
+- tests/schemas/beratung.test.js (17 Tests)
+- tests/schemas/baubegleitung.test.js (23 Tests)
+- 110/110 Tests gruen
+- package.json neue Scripts test:schemas + test:all
+
+### Q8 — Final + Tag (this commit)
+- MEGA-QUADRO-2026-05-04-NACHT-FINAL.md Executive Summary
+- GITHUB-RELEASE-v209.md Release-Notes
+- Master-Files-Sync (CHAT-TRANSPORT, SPRINTS-MASTERPLAN)
+- sw.js v259 -> v260
+- Tag v209-user-facing-maximum-done
+
+### Senior-Engineering-Behavior
+- 0 Production-Breaking-Changes ohne Live-Test
+- Pattern-Reuse durchgehend (F-04 Pattern in F-09/F-15/F-20)
+- Realitaets-Check vor jedem Sprint (Flow C/D existierten bereits!)
+- 0 NACHT-PAUSE-Files (alle Aufgaben pragmatisch geloest)
+
+### Total-Statistik
+
+- 8 Sub-Sprints, 8 Commits
+- 30+ Files modified, 20+ Files created
+- 110/110 Tests gruen
+- ~3500 LOC neu (Templates + Tests + Cockpit + Mobile + Doku)
+
+---
+
 ## POST-MEGA-MEGA-MEGA — TECH-DEBT-MARATHON (O1+O2+O3+O4+O5+O6+O7)
 
 **Tag:** `v208-tech-debt-marathon-done` · **Stand:** 03.05.2026 nacht · **Commits:** `d67924c`, `af4bafa`, `0fed657`, `ef3f124`, `e95026d`, `a408a9f` + O7

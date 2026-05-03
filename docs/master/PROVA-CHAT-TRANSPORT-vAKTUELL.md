@@ -1,6 +1,6 @@
 # PROVA Chat-Transport — AKTUELL
 
-**Stand:** 03.05.2026 nacht (Tag 9 — POST-MEGA-MEGA-MEGA Tech-Debt-Marathon done + Tag `v208-tech-debt-marathon-done`)
+**Stand:** 04.05.2026 nacht (Tag 10 — MEGA⁴ User-Facing-Maximum done + Tag `v209-user-facing-maximum-done`)
 **Vorgänger:** Tag 9 mittag (Founding-Pilot LIVE, Power-Setup MAX done) → siehe git-Log
 **Single Source of Truth** — siehe `docs/master/README.md`
 
