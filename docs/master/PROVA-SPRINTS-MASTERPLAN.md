@@ -1,6 +1,6 @@
 # PROVA Sprints Masterplan
 
-**Stand:** 03.05.2026 morgen (Tag 9 — Mega-Mega-Sprint abgeschlossen, Tag v204 gesetzt)
+**Stand:** 03.05.2026 mittag (Tag 9 — Catch-Up-Sprint: Founding-Pilot LIVE)
 **Single Source of Truth** — siehe `docs/master/README.md`
 
 ---

@@ -191,12 +191,28 @@ Stripe-Webhook → POST /.netlify/functions/stripe-webhook
 → siehe `docs/strategie/STRIPE-SETUP.md`
 
 ### Verification-Suite (03.05.2026)
-3 Skripte für Marcel-Verifikation in <5 Min:
+5 Skripte für Marcel:
 - `npm run verify-stripe` — ENV + API + Webhook + Coupon + Supabase + Portal
 - `npm run test-webhook` — Mock-Event signiert senden, End-to-End-Test
-- `npm run test-checkouts` — 6 Test-Checkout-URLs erzeugen (Solo/Team/Founding/3 Add-ons)
+- `npm run test-checkouts` — 7 Test-Checkout-URLs (Solo/Team/Founding/3 Add-ons + Founding-Pilot)
+- `npm run stripe-status` — Live-Webhook-Health (Catch-Up C4)
+- `npm run stripe-replay` — Failed-Webhook Re-Delivery (Catch-Up C4)
 
 → Runbook + Troubleshooting in `docs/strategie/STRIPE-VERIFICATION-RUNBOOK.md`
+
+### Founding-Pilot-Programm (Catch-Up C1, 03.05.2026)
+- **Pilot-Signup-Page:** `/pilot` (`pilot.html`)
+- **Backend:** `stripe-checkout.js` mit `pilot_program=true` body-Param
+- **Mechanik:** 90 Tage Trial + Auto-Apply FOUNDING-99 Coupon → 99€/Mo lifetime
+- **Pre-Check:** Coupon-Plätze via `stripe.coupons.retrieve()` (max 10 redemptions)
+- **Webhook-Erweiterung:** `customer.subscription.trial_will_end` + Trial-zu-Paid-Transition
+- **Audit-Trail-Types:**
+  - `stripe.pilot.trial_started` (Signup)
+  - `stripe.pilot.trial_ending_soon` (Tag 87, 3T vor Ende)
+  - `stripe.pilot.founding_paid` (Tag 90, erste echte Zahlung)
+- **Email-Templates:** `email-templates/founding/` (4 Templates: einladung, trial-welcome, trial-ending, founding-welcome)
+- **Test-Coverage:** `tests/stripe/founding-pilot.test.js` (9/9 grün)
+- **Marcel-Workflow:** `docs/strategie/PILOT-EINLADUNG-WORKFLOW.md`
 
 ---
 

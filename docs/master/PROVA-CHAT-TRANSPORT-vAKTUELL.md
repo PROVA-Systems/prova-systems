@@ -1,6 +1,6 @@
 # PROVA Chat-Transport — AKTUELL
 
-**Stand:** 03.05.2026 morgen (Tag 9 — nach Mega-Mega-Sprint Phase 4 + 5 + Tag v204)
+**Stand:** 03.05.2026 mittag (Tag 9 — Catch-Up-Sprint: Founding-Pilot-Programm LIVE)
 **Vorgänger:** v37 (01.05. mittag, archiviert in `docs/archiv/chat-transports/PROVA-CHAT-TRANSPORT-v35.md`)
 **Single Source of Truth** — siehe `docs/master/README.md`
 
@@ -12,18 +12,22 @@
 
 **Wer bin ich:** Du bist Browser-Claude für Marcel Schreiber von PROVA Systems — KI-natives B2B-SaaS für ö.b.u.v. Bauschaden-Sachverständige in Deutschland.
 
-**Wo stehen wir:** Tag 9. Mega-Mega-Sprint S6 Phase 1-5 komplett abgeschlossen. Stripe-Migration LIVE + Verify-Suite (3 Skripte). DSGVO-Compliance 6 Public-Files final. 22 Audits durchgelaufen. 12 HIGH-Findings gefixt. **Tag `v204-security-hardening-done` gesetzt.**
+**Wo stehen wir:** Tag 9 mittag. Catch-Up-Sprint abgeschlossen — **Founding-Pilot-Programm ist deployed**. Pilot-Page `/pilot` live, 90T Trial + Auto-FOUNDING-99-Coupon, Stripe-Webhook erweitert (trial_will_end + Trial-zu-Paid-Transition + Pilot-Audit-Logs). 4 Email-Templates. Webhook-Monitoring-Skripte (`stripe-status` + `stripe-replay`). 3 Marcel-Vorbereitungs-Doku-Files. 2 Tot-Code-Decision-Files. Tag v204-security-hardening-done aus Mega-Mega-Sprint bleibt.
+
+**Stripe-Test-Status:**
+12 ENV-Vars in Netlify gesetzt + Webhook-Endpoint angelegt + Founding-Coupon angelegt + Customer-Portal aktiviert + Trigger Deploy ausgeführt. Test-Käufe stehen aus (Marcel macht heute mit Verify-Skript-Suite).
 
 **Findings-Stand:**
 - 1 CRITICAL (auth-token-issue, NACHT-PAUSE für Marcel)
-- ~30 HIGH in BACKLOG (12 ✅ FIXED, 4 Tot-Code-Marcel-Decision, ~14 in Folge-Sprints)
+- ~30 HIGH in BACKLOG (12 ✅ FIXED, 4 Tot-Code-Decision-Files vorhanden, ~14 in Folge-Sprints)
 - 1 PLANNED-Migration (RLS-Findings, Marcel-Dev-Test pending)
 
-**Was als nächstes:**
-1. **Marcel verifiziert Stripe-Setup:** `npm run verify-stripe` + `npm run test-webhook` + Test-Checkout
-2. NACHT-PAUSE-Decisions: auth-token-issue (löschen empfohlen) + Schema-Library (zod empfohlen)
-3. PLANNED-Migration in Dev applizieren
-4. Folge-Sprints: Pilot-Akquise + S6-Restbacklog (Sentry, Lighthouse, Tot-Code-Cleanup)
+**Was als nächstes (priorisiert):**
+1. **Marcel verifiziert Stripe-Setup:** `npm run verify-stripe` + `npm run test-webhook` + `npm run test-checkouts` (jetzt mit Pilot-Szenario)
+2. **Tot-Code-Decisions:** foto-upload + invite-user löschen (Decision-Files in `docs/diagnose/TOT-CODE-DECISION-*.md`)
+3. **Erste Pilot-SVs einladen** (Workflow-Doku in `docs/strategie/PILOT-EINLADUNG-WORKFLOW.md`)
+4. NACHT-PAUSE-Decisions: auth-token-issue + Schema-Library (zod empfohlen)
+5. PLANNED-Migration in Dev applizieren
 
 **Worauf achten:**
 - Bei Bug-Diagnose: **Diagnose-First** (Regel 33). Nicht blind Code-Vorgaben übernehmen — selbst aus Files validieren
