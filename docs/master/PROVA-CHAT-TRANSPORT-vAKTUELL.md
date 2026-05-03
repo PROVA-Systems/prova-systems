@@ -1,6 +1,6 @@
 # PROVA Chat-Transport — AKTUELL
 
-**Stand:** 03.05.2026 mittag (Tag 9 — Catch-Up-Sprint: Founding-Pilot-Programm LIVE)
+**Stand:** 03.05.2026 mittag (Tag 9 — Power-Setup MAX done + Founding-Pilot LIVE)
 **Vorgänger:** v37 (01.05. mittag, archiviert in `docs/archiv/chat-transports/PROVA-CHAT-TRANSPORT-v35.md`)
 **Single Source of Truth** — siehe `docs/master/README.md`
 
@@ -22,12 +22,21 @@
 - ~30 HIGH in BACKLOG (12 ✅ FIXED, 4 Tot-Code-Decision-Files vorhanden, ~14 in Folge-Sprints)
 - 1 PLANNED-Migration (RLS-Findings, Marcel-Dev-Test pending)
 
+**Power-Tools aktiv (Max-Plan):**
+- `.claude/settings.json` — Pre-Allowed Permissions + PostToolUse-Hooks + Stop-Beep
+- 4 Custom Slash-Commands: `/prova-deploy`, `/prova-status`, `/prova-test`, `/prova-verify-stripe`
+- 1 Custom Subagent: `prova-rls-auditor`
+- CLAUDE.md v3.1 mit Compounding-Engineering-Sektion
+- 4 /loop-Workflows dokumentiert (`docs/strategie/CC-LOOPS-WORKFLOW.md`)
+- Plugins (Marcel installiert via CLI): claude-mem, claude-hud, context-mode, last30days, SDD-Kit, security-sweep
+
 **Was als nächstes (priorisiert):**
-1. **Marcel verifiziert Stripe-Setup:** `npm run verify-stripe` + `npm run test-webhook` + `npm run test-checkouts` (jetzt mit Pilot-Szenario)
-2. **Tot-Code-Decisions:** foto-upload + invite-user löschen (Decision-Files in `docs/diagnose/TOT-CODE-DECISION-*.md`)
-3. **Erste Pilot-SVs einladen** (Workflow-Doku in `docs/strategie/PILOT-EINLADUNG-WORKFLOW.md`)
-4. NACHT-PAUSE-Decisions: auth-token-issue + Schema-Library (zod empfohlen)
-5. PLANNED-Migration in Dev applizieren
+1. **Marcel installiert die 6 Plugins** via CLI (~15 Min, siehe `docs/sprint-status/POWER-SETUP-MAX-DONE.md`)
+2. **Marcel verifiziert Stripe-Setup:** `/prova-verify-stripe` (custom command) oder `npm run verify-stripe`
+3. **Loop 1 + Loop 2 aktivieren** (Daily Smoke-Test + npm audit)
+4. **Tot-Code-Decisions:** foto-upload + invite-user löschen
+5. **Erste Pilot-SVs einladen** (`docs/strategie/PILOT-EINLADUNG-WORKFLOW.md`)
+6. NACHT-PAUSE-Decisions + PLANNED-Migration
 
 **Worauf achten:**
 - Bei Bug-Diagnose: **Diagnose-First** (Regel 33). Nicht blind Code-Vorgaben übernehmen — selbst aus Files validieren

@@ -1,0 +1,90 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "_comment": "PROVA Power-Setup MAX 03.05.2026 — Pre-Allowed Permissions + PostToolUse-Hooks + Stop-Beep. Marcel-spezifisch via .claude/settings.local.json überschreibbar.",
+  "permissions": {
+    "allow": [
+      "Bash(npm run *)",
+      "Bash(npm test:*)",
+      "Bash(npm audit)",
+      "Bash(npm install *)",
+      "Bash(npm update *)",
+      "Bash(npm ls *)",
+      "Bash(git status:*)",
+      "Bash(git log:*)",
+      "Bash(git diff:*)",
+      "Bash(git branch:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git tag:*)",
+      "Bash(git fetch:*)",
+      "Bash(git pull:*)",
+      "Bash(git show:*)",
+      "Bash(node --check *)",
+      "Bash(node scripts/*)",
+      "Bash(node --test tests/*)",
+      "Bash(supabase functions deploy *)",
+      "Bash(supabase functions list)",
+      "Bash(supabase migration list)",
+      "Bash(supabase db diff)",
+      "Bash(netlify status)",
+      "Bash(netlify env:list)",
+      "Bash(netlify functions:list)",
+      "Edit(/docs/**)",
+      "Edit(/scripts/**)",
+      "Edit(/tests/**)",
+      "Edit(/netlify/functions/**)",
+      "Edit(/supabase/functions/**)",
+      "Edit(/src/**)",
+      "Edit(/.claude/**)",
+      "Edit(/email-templates/**)",
+      "Read(*)"
+    ],
+    "ask": [
+      "Bash(rm:*)",
+      "Bash(git push:*)",
+      "Bash(git reset:*)",
+      "Bash(supabase db push)",
+      "Bash(supabase functions invoke *)",
+      "Edit(/supabase/migrations/**)",
+      "Edit(/CLAUDE.md)",
+      "Edit(/package.json)",
+      "Edit(/netlify.toml)",
+      "Edit(/sw.js)"
+    ],
+    "deny": [
+      "Bash(rm -rf:*)",
+      "Bash(supabase db reset)",
+      "Bash(git push --force:*)",
+      "Bash(git reset --hard:*)",
+      "Bash(npm publish)"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "for f in $CLAUDE_FILE_PATHS; do case \"$f\" in *.js) node --check \"$f\" 2>&1 || echo \"[hook] SYNTAX-ERROR in $f\";; esac; done"
+          },
+          {
+            "type": "command",
+            "command": "for f in $CLAUDE_FILE_PATHS; do case \"$f\" in *netlify/functions/ki-*) grep -q 'prova-pseudo' \"$f\" || echo \"[hook] WARNING: KI-Function ohne prova-pseudo-Import: $f\";; esac; done"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -NoProfile -Command \"[console]::beep(800, 300)\""
+          }
+        ]
+      }
+    ]
+  }
+}

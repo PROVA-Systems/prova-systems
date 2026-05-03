@@ -350,4 +350,76 @@ K-1.5  Cutover + Make-Deaktivierung + Tag                        3-4h
 
 ---
 
-*Ende CLAUDE.md v3.0*
+## 🔧 Power-Tools (Max-Plan-Edition, ab 03.05.2026)
+
+Marcel hat Claude Max 20€/Monat — alle Features verfügbar. Pre-Pilot-Phase nutzt MAXIMAL.
+
+### Aktive CC-Plugins
+| Plugin | Zweck | Marketplace |
+|---|---|---|
+| **claude-mem** | persistent memory zwischen Sessions | thedotmack/claude-mem |
+| **claude-hud** | status-bar mit context% + cost-tracking | jarrodwatts/claude-hud |
+| **context-mode** | 90% Token-Sparsamkeit | scottconverse/context-mode |
+| **last30days** | Trend-Recherche (OPENAI_API_KEY pflicht) | mvanhorn/last30days-skill |
+| **SDD-Kit** | Spec-Driven-Development | NeoLabHQ/context-engineering-kit |
+| **security-sweep** | OWASP Auto-Scanner | composiohq-awesome-claude-plugins |
+
+### Aktive Custom-Konfig (im Repo, `.claude/`)
+- **`.claude/settings.json`** — Pre-Allowed Permissions + PostToolUse-Hooks (auto-`node --check` + pseudo-Import-Check) + Stop-Beep
+- **`.claude/commands/`** — 4 Custom Slash-Commands:
+  - `/prova-deploy` — Deploy-Workflow (Tests + sw.js Bump + Push)
+  - `/prova-status` — Sprint-Status-Übersicht
+  - `/prova-test` — komplette Test-Suite
+  - `/prova-verify-stripe` — Stripe-Setup-Verifikation
+- **`.claude/agents/prova-rls-auditor.md`** — Specialized Subagent für RLS-Policy-Audits
+
+### /loop Workflows (Marcel-Decision)
+→ siehe `docs/strategie/CC-LOOPS-WORKFLOW.md`
+
+Empfehlungen:
+- ✅ Loop 1: Daily Smoke-Test (24h)
+- ✅ Loop 2: npm audit Check (6h)
+- ⏸ Loop 3: Stripe-Webhook-Health (NACH Pilot-Start)
+- ⏸ Loop 4: Cost-Monitoring (NACH Pilot-Start)
+
+### Compounding Engineering
+
+Wenn ich (CC) einen Fehler mache und Marcel weist mich darauf hin:
+→ Update diese CLAUDE.md so dass der Fehler nie wieder passiert.
+→ Pattern: `## Bei X — beachte Y`-Sektion ergänzen
+→ Marcel committet die Regel als permanent.
+
+### Wann Context-Mode deaktivieren
+
+`/context-mode` komprimiert um ~90%. Bei Security-Audits + Compliance-Reviews + Threat-Modeling + RLS-Migrations brauche ich aber DETAILS. Daher temporär aus:
+```bash
+/context-mode:ctx-purge
+```
+
+### Wann /effort max nutzen
+
+Default: `/effort high` für PROVA-Sprints.
+
+`/effort max` für: RLS-Migrations, Threat-Modeling, Architecture-Decisions, Security-Critical-Refactors, 22-Audit-Sprints.
+
+### Bewusst übersprungen
+- **Zilliz / claude-context** — Marcel-Decision: Repo-Größe rechtfertigt Vector-DB nicht
+- **Compound Engineering (OpenAI Codex)** — Extra-Cost, Overkill für Pre-Pilot
+- **Worktrees** — Marcel arbeitet sequenziell
+- **Voice-Input** — Marcel tippt gerne
+
+---
+
+## 🔁 Compounding-Engineering-Lessons (lernende Sektion)
+
+Wird mit Marcel-Feedback ergänzt. Pattern: bei wiederkehrenden Fehlern hier eintragen, damit ich (CC) sie nicht wiederhole.
+
+- **Bei `resolveUser()` Aufruf** — IMMER `await` setzen (Function ist async post-Option-C). Lurking-Bug-Pattern, in Sprint X4 in `pdf-proxy.js` gefunden.
+- **Bei Stripe-Trial-Logic** — `payment_method_collection: 'always'` setzen sonst keine Kartenverifikation während Trial. Gelernt in Catch-Up C1.
+- **Bei Function-Tests mit Module-Mocks** — Module-Cache via `Module._cache[require.resolve(...)] = { ..., exports: ... }` invalidieren VOR `require(target)`. Mock-Pattern in `tests/stripe/stripe-webhook.test.js` als Vorlage.
+- **Bei `git push` ohne Marcel-OK** — settings.json `ask`-Liste schützt davor. Niemals umgehen.
+- **Bei Doku-Files** — Marcel will klare „Empfehlung A/B/C"-Decision-Files, nicht „du entscheidest". Pros/Cons je Option.
+
+---
+
+*Ende CLAUDE.md v3.1 (Power-Setup MAX 03.05.2026)*
