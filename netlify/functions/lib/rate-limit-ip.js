@@ -64,7 +64,7 @@ function check(event, max, windowSec, opts) {
 
 // Best-effort GC
 if (typeof setInterval === 'function') {
-  setInterval(function () {
+  const gcHandle = setInterval(function () {
     const now = Date.now();
     buckets.forEach(function (bucket, key) {
       if (now - bucket.windowStart > 30 * 60 * 1000) {
@@ -72,6 +72,8 @@ if (typeof setInterval === 'function') {
       }
     });
   }, 5 * 60 * 1000);
+  // M1c: GC-Timer darf Test-Prozesse nicht am Leben halten.
+  if (gcHandle && typeof gcHandle.unref === 'function') gcHandle.unref();
 }
 
 module.exports = {

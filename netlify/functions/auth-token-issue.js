@@ -54,8 +54,29 @@ const AuthToken = require('./lib/auth-token');
 const ProvaPseudo = require('./lib/prova-pseudo');
 const { isValidEmail, normalizeEmail, isStrongPassword } = require('./lib/auth-validate');
 const { getCorsHeaders, corsOptionsResponse } = require('./lib/cors-helper');
+const RateLimitIp = require('./lib/rate-limit-ip');
 
 const TTL_NORMAL = 7 * 24 * 60 * 60; // 7 Tage Standard-Session
+
+// MEGA-SKALIERUNG M1c (RL-01 Fix): Brute-Force-Schutz fuer Login-Endpoint.
+// Stufe 1: Soft-Window 5 Versuche / 15 Min / IP via rate-limit-ip.
+// Stufe 2: Nach 6. Versuch in Window → 1h-Lockout (separate Map, ueberlebt
+// Window-Reset).
+const LOCKOUT_MS = 60 * 60 * 1000; // 1 Stunde
+const lockoutMap = global._authTokenIssueLockout || (global._authTokenIssueLockout = new Map());
+
+// Best-effort GC fuer abgelaufene Lockouts (analog rate-limit-ip.js)
+if (!global._authTokenIssueLockoutGc && typeof setInterval === 'function') {
+  global._authTokenIssueLockoutGc = setInterval(function () {
+    const now = Date.now();
+    lockoutMap.forEach(function (until, key) {
+      if (now >= until) lockoutMap.delete(key);
+    });
+  }, 5 * 60 * 1000);
+  if (global._authTokenIssueLockoutGc && typeof global._authTokenIssueLockoutGc.unref === 'function') {
+    global._authTokenIssueLockoutGc.unref();
+  }
+}
 
 const AT_BASE = 'appJ7bLlAHZoxENWE';
 const AT_SV   = 'tbladqEQT3tmx4DIB';
@@ -79,6 +100,48 @@ exports.handler = async (event) => {
     console.warn('[auth-token-issue] 405 — method=' + JSON.stringify(event && event.httpMethod) +
                  ' UA=' + JSON.stringify((event.headers || {})['user-agent']));
     return j(event, 405, { error: 'Method Not Allowed' });
+  }
+
+  // MEGA-SKALIERUNG M1c (RL-01 Fix): Brute-Force-Schutz.
+  // 1) Aktive Lockout-Pruefung (1h nach Window-Ueberschreitung)
+  // 2) Soft-Window 5 Versuche / 15 Min / IP, danach Lockout setzen
+  const ip = RateLimitIp.getClientIp(event);
+  if (ip !== 'unknown') {
+    const lockedUntil = lockoutMap.get(ip);
+    if (lockedUntil && Date.now() < lockedUntil) {
+      const retryAfter = Math.max(1, Math.ceil((lockedUntil - Date.now()) / 1000));
+      console.warn('[auth-token-issue] LOCKOUT-HIT', JSON.stringify({ ip, retryAfter }));
+      return {
+        statusCode: 429,
+        headers: Object.assign(
+          { 'Content-Type': 'application/json; charset=utf-8', 'Retry-After': String(retryAfter) },
+          getCorsHeaders(event)
+        ),
+        body: JSON.stringify({
+          error: 'Zu viele Login-Versuche. Konto fuer ' + Math.ceil(retryAfter / 60) + ' Minuten gesperrt.',
+          retryAfter: retryAfter
+        })
+      };
+    }
+    if (lockedUntil) lockoutMap.delete(ip);
+
+    const rl = RateLimitIp.check(event, 5, 15 * 60, { functionName: 'auth-token-issue' });
+    if (!rl.allowed) {
+      lockoutMap.set(ip, Date.now() + LOCKOUT_MS);
+      console.warn('[auth-token-issue] RATE-LIMIT exceeded → 1h Lockout',
+                   JSON.stringify({ ip, lockoutMs: LOCKOUT_MS }));
+      return {
+        statusCode: 429,
+        headers: Object.assign(
+          { 'Content-Type': 'application/json; charset=utf-8', 'Retry-After': String(LOCKOUT_MS / 1000) },
+          getCorsHeaders(event)
+        ),
+        body: JSON.stringify({
+          error: 'Zu viele Login-Versuche. Konto fuer 1 Stunde gesperrt.',
+          retryAfter: LOCKOUT_MS / 1000
+        })
+      };
+    }
   }
 
   let body;

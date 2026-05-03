@@ -10,7 +10,7 @@
 
 | ID | Audit | Titel | Status |
 |---|---|---|---|
-| RL-01 | A4 | `auth-token-issue` Login-Endpoint ohne Rate-Limit (Brute-Force) | NEEDS-MARCEL — siehe `docs/diagnose/NACHT-PAUSE-S6-NACHT-rate-limit-auth-token-issue.md` |
+| RL-01 | A4 | `auth-token-issue` Login-Endpoint ohne Rate-Limit (Brute-Force) | ✅ RESOLVED MEGA-SKALIERUNG M1c — 5/15min IP-Limit + 1h Lockout |
 
 ---
 
@@ -168,13 +168,14 @@
 | **H-14** | HIGH | A4 | dsgvo-auskunft + dsgvo-loeschen ohne Rate-Limit | ✅ FIXED Sprint X4 | 1/Tag/User |
 | **H-15** | HIGH | A4 | smtp-senden ohne Rate-Limit (Spam-Vektor) | ✅ FIXED Sprint X4 | 50/h/User |
 | **H-16** | HIGH | A4 | foto-anlage-pdf + pdf-proxy ohne Rate-Limit (Cost) | ✅ FIXED Sprint X4 | 20/h + 100/h/User |
-| **H-17** | HIGH | A4 | foto-upload ohne Rate-Limit (Storage-Flooding) | offen — Tot-Code | nach Supabase-Storage-Migration |
-| **H-18** | HIGH | A4 | invite-user ohne Rate-Limit (Spam-Invite) | offen — Tot-Code | Marcel-Decision: Function löschen |
+| **H-17** | HIGH | A4 | foto-upload ohne Rate-Limit (Storage-Flooding) | ✅ RESOLVED MEGA-SKALIERUNG M1c | Tot-Code geloescht (Function + foto-archiv.js Caller) |
+| **H-18** | HIGH | A4 | invite-user ohne Rate-Limit (Spam-Invite) | ✅ RESOLVED MEGA-SKALIERUNG M1c | Tot-Code geloescht (0 Caller) |
 | **H-19** | HIGH | A5 | emails Webhook-Forwarder ohne Empfänger-Validation | ✅ FIXED Sprint X4 | typ-Whitelist + Email-Format + CRLF |
 | **H-20** | HIGH | A5 | smtp-senden Empfänger ungeprüft (CRLF-Injection-Risk) | ✅ FIXED Sprint X4 | isValidEmail + CRLF + Length-Limits |
-| **H-21** | HIGH | A5 | invite-user Email + paket ungeprüft (Tot-Code) | offen — Tot-Code | Marcel-Decision: Function löschen |
+| **H-21** | HIGH | A5 | invite-user Email + paket ungeprüft (Tot-Code) | ✅ RESOLVED MEGA-SKALIERUNG M1c | Tot-Code geloescht |
 | **H-22** | HIGH | A5 | akte-export RTF-Injection-Risiko | ✅ FIXED Sprint X4 | rtfEscape() in 8 Stellen |
-| **H-23** | HIGH | A5 | foto-upload kein MIME-Whitelist (Polyglot-Files) | offen — Tot-Code | nach Supabase-Storage-Migration |
+| **H-23** | HIGH | A5 | foto-upload kein MIME-Whitelist (Polyglot-Files) | ✅ RESOLVED MEGA-SKALIERUNG M1c | Tot-Code geloescht — neuer Foto-Workflow (Supabase Storage) erhaelt MIME-Whitelist by Design |
+| **H-25** | HIGH | M1c | `app-login.html` + `app-login-logic.js` Legacy-Auth (Netlify Identity + auth-token-issue) | offen — Tech-Debt | Migration auf Supabase Auth (analog `login.html` / `auth-supabase-logic.js`) — eigener Sprint AUTH-PERFEKT 2.0 post-Pilot. Workaround: Rate-Limit + 1h Lockout aktiv (RL-01 RESOLVED) |
 | **H-24** | HIGH | A5 | foto-anlage-pdf kein Foto-Anzahl-Limit | ✅ FIXED Sprint X4 | max 50 Fotos |
 | M-01 | MED | A8 | Wildcard CORS 5 Functions | ✅ FIXED | foto-captioning, ki-proxy, whisper-diktat, push-notify, stripe-portal |
 | M-02 | MED | A8 | app.* fehlt in ALLOWED_ORIGINS | ✅ FIXED | cors-helper.js explizite Liste |
