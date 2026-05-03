@@ -281,13 +281,21 @@
   <button data-tab="pilots" class="active">📋 Pilot-Liste</button>
   <button data-tab="kpis">💰 Stripe-KPIs</button>
   <button data-tab="errors">🚨 Sentry-Errors</button>
+  <button data-tab="audit">📜 Audit-Trail</button>
   <button data-tab="actions">⚡ Quick-Actions</button>
 </nav>
 
 <main>
   <div id="tab-pilots" class="tab-content active">
     <div class="panel">
-      <h2>Pilot-Workspaces <span class="meta" id="pilots-meta"></span></h2>
+      <h2>
+        Pilot-Workspaces
+        <span class="meta">
+          <label style="margin-right:10px"><input type="checkbox" id="pilots-autorefresh" checked> Auto-Refresh 30s</label>
+          <button class="action secondary" style="font-size:0.7rem;padding:3px 8px" onclick="exportPilotsCsv()">⬇ CSV-Export</button>
+          <span id="pilots-meta"></span>
+        </span>
+      </h2>
       <div class="filters" id="status-filters">
         <button data-status="all" class="active">Alle</button>
         <button data-status="trial">Trial</button>
@@ -310,6 +318,26 @@
     <div class="panel">
       <h2>Sentry — Letzte 24h <span class="meta" id="errors-meta"></span></h2>
       <div id="errors-content" class="loading">Lade…</div>
+    </div>
+  </div>
+
+  <div id="tab-audit" class="tab-content">
+    <div class="panel">
+      <h2>Audit-Trail <span class="meta" id="audit-meta"></span></h2>
+      <div class="filters">
+        <button class="active" data-audit-prefix="" onclick="setAuditFilter(this, '')">Alle</button>
+        <button data-audit-prefix="admin" onclick="setAuditFilter(this, 'admin')">admin.*</button>
+        <button data-audit-prefix="stripe" onclick="setAuditFilter(this, 'stripe')">stripe.*</button>
+        <button data-audit-prefix="auth" onclick="setAuditFilter(this, 'auth')">auth.*</button>
+        <button data-audit-prefix="ki" onclick="setAuditFilter(this, 'ki')">ki.*</button>
+        <select id="audit-since" onchange="loadAudit()" style="background:var(--bg);color:var(--text);border:1px solid var(--border);padding:6px;border-radius:4px">
+          <option value="1h">letzte 1h</option>
+          <option value="24h" selected>letzte 24h</option>
+          <option value="7d">letzte 7 Tage</option>
+          <option value="30d">letzte 30 Tage</option>
+        </select>
+      </div>
+      <div id="audit-content" class="loading">Lade…</div>
     </div>
   </div>
 
@@ -337,9 +365,37 @@
         </div>
 
         <div style="background:var(--bg);padding:14px;border-radius:6px;border:1px solid var(--border)">
-          <h3 style="margin:0 0 8px;font-size:0.95rem">📤 Audit-Trail Export</h3>
-          <p style="font-size:0.8rem;color:var(--text-dim);margin:0 0 10px">Alle Admin-Aktionen letzte 30 Tage.</p>
-          <button class="action secondary" onclick="alert('Direkt in Supabase Dashboard:\n\nselect * from audit_trail\nwhere typ like \\'admin.%\\'\n  and created_at &gt; now() - interval \\'30 days\\'\norder by created_at desc;')">SQL anzeigen</button>
+          <h3 style="margin:0 0 8px;font-size:0.95rem">📧 Email an Pilot-SV</h3>
+          <p style="font-size:0.8rem;color:var(--text-dim);margin:0 0 10px">Vordefinierte Templates aus Drip-Campaign.</p>
+          <input id="send-email-to" type="email" placeholder="empfaenger@example.com" style="width:100%;padding:6px;background:var(--panel);border:1px solid var(--border);color:var(--text);border-radius:4px;margin-bottom:6px">
+          <input id="send-email-vorname" type="text" placeholder="Vorname (Personalisierung)" style="width:100%;padding:6px;background:var(--panel);border:1px solid var(--border);color:var(--text);border-radius:4px;margin-bottom:6px">
+          <select id="send-email-template" style="width:100%;padding:6px;background:var(--panel);border:1px solid var(--border);color:var(--text);border-radius:4px;margin-bottom:8px">
+            <option value="trial-day-2-no-login">Day-2 — Kein Login</option>
+            <option value="trial-day-3-no-akte">Day-3 — Keine Akte</option>
+            <option value="trial-day-7-checkin">Day-7 — Check-in (3 Fragen)</option>
+            <option value="trial-day-14-twoweek">Day-14 — NPS</option>
+            <option value="trial-day-30-onemonth">Day-30 — Reflexion</option>
+            <option value="trial-day-60-midtrial">Day-60 — Halbzeit</option>
+            <option value="trial-day-88-final">Day-88 — Final-Reminder</option>
+            <option value="founding-welcome">Founding-Welcome</option>
+            <option value="pilot-einladung">Pilot-Einladung</option>
+            <option value="trial-welcome">Trial-Welcome</option>
+            <option value="trial-ending-email">Trial-Ending</option>
+          </select>
+          <div style="display:flex;gap:6px">
+            <button class="action secondary" onclick="sendEmail(true)" style="flex:1">Vorschau</button>
+            <button class="action" onclick="sendEmail(false)" style="flex:1">Absenden</button>
+          </div>
+          <pre id="send-email-result" style="display:none;margin-top:8px;max-height:200px"></pre>
+        </div>
+
+        <div style="background:var(--bg);padding:14px;border-radius:6px;border:1px solid var(--border)">
+          <h3 style="margin:0 0 8px;font-size:0.95rem;color:var(--red)">⚠ Force-Logout</h3>
+          <p style="font-size:0.8rem;color:var(--text-dim);margin:0 0 10px">Beendet alle Sessions eines Users (Notfall).</p>
+          <input id="logout-email" type="email" placeholder="user@example.com" style="width:100%;padding:6px;background:var(--panel);border:1px solid var(--border);color:var(--text);border-radius:4px;margin-bottom:6px">
+          <input id="logout-reason" type="text" placeholder="Grund (Pflicht, min 5 Zeichen)" style="width:100%;padding:6px;background:var(--panel);border:1px solid var(--border);color:var(--text);border-radius:4px;margin-bottom:8px">
+          <button class="action danger" onclick="forceLogout()">Force-Logout</button>
+          <pre id="force-logout-result" style="display:none;margin-top:8px"></pre>
         </div>
       </div>
     </div>
@@ -452,6 +508,7 @@ async function apiPost(path, body) {
 
 // ── Tab: Pilot-Liste ──
 let currentStatusFilter = 'all';
+let lastPilotsList = [];
 
 async function loadPilots() {
   const target = document.getElementById('pilots-list');
@@ -464,6 +521,7 @@ async function loadPilots() {
     return;
   }
   const list = r.pilots || r.workspaces || [];
+  lastPilotsList = list;
   if (!list.length) {
     target.innerHTML = '<div class="info-box">Keine Workspaces für Filter "' + currentStatusFilter + '".</div>';
     return;
@@ -627,6 +685,155 @@ function escapeHtml(s) {
   return String(s == null ? '' : s).replace(/[&<>"']/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[m]));
 }
 function escapeAttr(s) { return escapeHtml(s); }
+
+// ── CSV-Export ──
+function exportPilotsCsv() {
+  if (!lastPilotsList || !lastPilotsList.length) {
+    alert('Keine Daten zum Exportieren — erst Pilot-Liste laden.');
+    return;
+  }
+  const headers = ['id', 'name', 'email', 'abo_tier', 'abo_status', 'anzahl_akten', 'trial_day', 'gesamtzahlungen_lifetime_eur', 'stripe_customer_id', 'created_at'];
+  const csvRows = [headers.join(',')];
+  for (const w of lastPilotsList) {
+    const row = headers.map(h => {
+      let v = w[h];
+      if (h === 'email') v = w.email || w.billing_email || '';
+      if (h === 'anzahl_akten') v = w.anzahl_akten != null ? w.anzahl_akten : (w.akten_count != null ? w.akten_count : '');
+      if (v == null) v = '';
+      v = String(v);
+      if (v.includes(',') || v.includes('"') || v.includes('\n')) {
+        v = '"' + v.replace(/"/g, '""') + '"';
+      }
+      return v;
+    });
+    csvRows.push(row.join(','));
+  }
+  const csv = csvRows.join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'prova-pilots-' + new Date().toISOString().slice(0, 10) + '.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+// ── Auto-Refresh ──
+let autoRefreshTimer = null;
+function startAutoRefresh() {
+  stopAutoRefresh();
+  autoRefreshTimer = setInterval(() => {
+    const cb = document.getElementById('pilots-autorefresh');
+    if (cb && cb.checked && document.getElementById('tab-pilots').classList.contains('active')) {
+      loadPilots();
+    }
+  }, 30000);
+}
+function stopAutoRefresh() {
+  if (autoRefreshTimer) { clearInterval(autoRefreshTimer); autoRefreshTimer = null; }
+}
+
+// ── Send-Email ──
+async function sendEmail(dryRun) {
+  const to = document.getElementById('send-email-to').value.trim();
+  const vorname = document.getElementById('send-email-vorname').value.trim() || 'Pilot-SV';
+  const template = document.getElementById('send-email-template').value;
+  if (!to) { alert('Empfaenger-Email Pflicht.'); return; }
+  const out = document.getElementById('send-email-result');
+  out.style.display = 'block';
+  out.textContent = 'Sende…';
+  const r = await apiPost('/.netlify/functions/admin-send-email', {
+    to: to,
+    template: template,
+    vars: { vorname: vorname, SV_VORNAME: vorname },
+    dry_run: !!dryRun
+  });
+  if (r.html_preview) {
+    out.textContent = '── Vorschau (' + r.subject + ') ──\n\n' + r.html_preview;
+  } else {
+    out.textContent = JSON.stringify(r, null, 2);
+  }
+}
+
+// ── Force-Logout ──
+async function forceLogout() {
+  const email = document.getElementById('logout-email').value.trim();
+  const reason = document.getElementById('logout-reason').value.trim();
+  if (!email || !reason) { alert('Email + Grund Pflicht.'); return; }
+  if (!confirm('Wirklich alle Sessions von ' + email + ' beenden?\n\nGrund: ' + reason)) return;
+  const out = document.getElementById('force-logout-result');
+  out.style.display = 'block';
+  out.textContent = 'Sende…';
+  const r = await apiPost('/.netlify/functions/admin-force-logout', {
+    user_email: email, reason: reason
+  });
+  out.textContent = JSON.stringify(r, null, 2);
+}
+
+// ── Tab: Audit-Trail ──
+let auditPrefix = '';
+function setAuditFilter(btn, prefix) {
+  document.querySelectorAll('[data-audit-prefix]').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  auditPrefix = prefix;
+  loadAudit();
+}
+async function loadAudit() {
+  const target = document.getElementById('audit-content');
+  target.className = 'loading';
+  target.textContent = 'Lade…';
+  const since = document.getElementById('audit-since').value;
+  const url = '/.netlify/functions/admin-audit-trail?since=' + encodeURIComponent(since)
+    + (auditPrefix ? '&typ_prefix=' + encodeURIComponent(auditPrefix) : '')
+    + '&limit=200';
+  const r = await apiGet(url);
+  if (r.error) {
+    target.innerHTML = '<div class="error-box">' + escapeHtml(r.error) + '</div>';
+    return;
+  }
+  if (!r.events || !r.events.length) {
+    target.innerHTML = '<div class="info-box">Keine Events fuer Filter.</div>';
+    target.className = '';
+    return;
+  }
+  let html = '<details style="margin-bottom:14px"><summary><strong>Top-Events (' + r.top_events.length + ')</strong></summary><div class="grid" style="margin-top:8px">';
+  for (const t of r.top_events) {
+    html += kpiCard(t.typ, t.count, '');
+  }
+  html += '</div></details>';
+  html += '<table><thead><tr><th>Zeit</th><th>Typ</th><th>Email</th><th>Workspace</th><th>Details</th></tr></thead><tbody>';
+  for (const e of r.events) {
+    let detailsShort = '';
+    try {
+      const d = (typeof e.details === 'string') ? JSON.parse(e.details) : e.details;
+      detailsShort = d ? JSON.stringify(d).slice(0, 120) : '';
+    } catch { detailsShort = String(e.details || '').slice(0, 120); }
+    html += '<tr>';
+    html += '<td><small>' + new Date(e.created_at).toLocaleString('de-DE') + '</small></td>';
+    html += '<td><code style="font-size:0.75rem">' + escapeHtml(e.typ || '') + '</code></td>';
+    html += '<td>' + escapeHtml(e.sv_email || '—') + '</td>';
+    html += '<td><small style="color:var(--text-dim)">' + (e.workspace_id ? escapeHtml(e.workspace_id.slice(0, 8)) + '…' : '—') + '</small></td>';
+    html += '<td><small style="color:var(--text-dim);word-break:break-all">' + escapeHtml(detailsShort) + '</small></td>';
+    html += '</tr>';
+  }
+  html += '</tbody></table>';
+  target.innerHTML = html;
+  target.className = '';
+  document.getElementById('audit-meta').textContent = r.total + ' Events · ' + r.filter.since.replace(/T.*/, '');
+}
+
+// Erweitere Tab-Switching um Audit-Tab + Auto-Refresh-Trigger
+const _origLoadAllTabs = loadAllTabs;
+loadAllTabs = async function() {
+  await Promise.all([loadPilots(), loadKpis(), loadErrors(), loadAudit()]);
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+  // Auto-Refresh nach 5s starten (gibt Zeit fuer initial-load)
+  setTimeout(startAutoRefresh, 5000);
+});
 
 bootstrap();
 </script>
