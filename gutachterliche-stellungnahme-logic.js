@@ -84,13 +84,19 @@ function validatePhase(n) {
         if (!artChecked) missing.push('Art der Anfrage');
         if (frage && !frage.value.trim()) missing.push('Konkrete Frage');
         if (missing.length) {
-            alert('Bitte ausfüllen: ' + missing.join(', '));
+            // MEGA¹⁰ W5: Toast statt blocking-alert
+            const msg = 'Bitte ausfüllen: ' + missing.join(', ');
+            if (window.ProvaUI && window.ProvaUI.toast) window.ProvaUI.toast(msg, 'error');
+            else alert(msg);
             return false;
         }
     } else if (n === 2) {
         const antwort = document.getElementById('ts-antwort');
         if (antwort && !antwort.value.trim()) {
-            alert('Antwort auf konkrete Frage ist Pflichtfeld.');
+            // MEGA¹⁰ W5: Toast statt blocking-alert
+            const msg2 = 'Antwort auf konkrete Frage ist Pflichtfeld.';
+            if (window.ProvaUI && window.ProvaUI.toast) window.ProvaUI.toast(msg2, 'error');
+            else alert(msg2);
             return false;
         }
     }
@@ -258,7 +264,10 @@ async function tsVersenden() {
     });
 
     if (!_auftragId) {
-        alert('Speichern fehlgeschlagen — bitte später erneut versuchen.');
+        // MEGA¹⁰ W5: Toast statt blocking-alert
+        const errMsg = 'Speichern fehlgeschlagen — bitte später erneut versuchen.';
+        if (window.ProvaUI && window.ProvaUI.toast) window.ProvaUI.toast(errMsg, 'error');
+        else alert(errMsg);
         return;
     }
 
@@ -297,7 +306,10 @@ async function tsVersenden() {
         });
         const json = await resp.json();
         if (!resp.ok) {
-            alert('PDF-Generation Fehler: ' + (json.error || resp.status));
+            // MEGA¹⁰ W5: Toast statt blocking-alert
+            const errMsg = 'PDF-Generation Fehler: ' + (json.error || resp.status);
+            if (window.ProvaUI && window.ProvaUI.toast) window.ProvaUI.toast(errMsg, 'error');
+            else alert(errMsg);
             return;
         }
 
@@ -314,7 +326,10 @@ async function tsVersenden() {
         }, 1200);
     } catch (e) {
         console.error('PDF-Generation:', e);
-        alert('PDF-Generation Fehler: ' + e.message);
+        // MEGA¹⁰ W5: Toast statt blocking-alert
+        const errMsg2 = 'PDF-Generation Fehler: ' + e.message;
+        if (window.ProvaUI && window.ProvaUI.toast) window.ProvaUI.toast(errMsg2, 'error');
+        else alert(errMsg2);
     }
 }
 

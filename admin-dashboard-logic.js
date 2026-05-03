@@ -452,7 +452,12 @@ async function updateTicketStatus(recordId, newStatus, idx) {
     if (_tickets[idx]) _tickets[idx].fields.Status = newStatus;
     renderTickets(_tickets);
   } catch(e) {
-    alert('Fehler beim Aktualisieren: ' + e.message);
+    // MEGA¹⁰ W5: Toast statt blocking-alert
+    if (window.ProvaUI && window.ProvaUI.toast) {
+      window.ProvaUI.toast('Fehler beim Aktualisieren: ' + e.message, 'error');
+    } else {
+      alert('Fehler beim Aktualisieren: ' + e.message);
+    }
   }
 }
 

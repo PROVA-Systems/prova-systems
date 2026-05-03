@@ -342,7 +342,13 @@ window.generateAndDownload = function() {
 window.copyXML = function() {
   var errors = validateXRechnung();
   if (errors.length > 0) {
-    alert('Bitte zuerst alle Pflichtfelder ausfüllen:\n' + errors.slice(0,3).join('\n') + (errors.length > 3 ? '\n...' : ''));
+    // MEGA¹⁰ W5: Toast statt blocking-alert (mehrzeiliger Fehler kompakter im Toast)
+    var msg = 'Pflichtfelder fehlen: ' + errors.slice(0,3).join(', ') + (errors.length > 3 ? '...' : '');
+    if (window.ProvaUI && window.ProvaUI.toast) {
+      window.ProvaUI.toast(msg, 'error');
+    } else {
+      alert('Bitte zuerst alle Pflichtfelder ausfüllen:\n' + errors.slice(0,3).join('\n') + (errors.length > 3 ? '\n...' : ''));
+    }
     return;
   }
   var xml = generateXRechnungXML();

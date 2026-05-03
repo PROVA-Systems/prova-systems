@@ -207,7 +207,10 @@ function toggleKIBox() {
 // Ergänzungs-Diktat
 function starteErgaenzungsDiktat() {
   if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
-    alert('Spracherkennung wird von Ihrem Browser nicht unterstützt. Bitte verwenden Sie Chrome.');
+    // MEGA¹⁰ W5: Toast statt blocking-alert
+    const browserMsg = 'Spracherkennung wird von Ihrem Browser nicht unterstützt. Bitte verwenden Sie Chrome.';
+    if (window.ProvaUI && window.ProvaUI.toast) window.ProvaUI.toast(browserMsg, 'error');
+    else alert(browserMsg);
     return;
   }
 

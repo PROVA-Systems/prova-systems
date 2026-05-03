@@ -74,12 +74,43 @@
      502 → Identity-Backend nicht erreichbar
      500 → Server-Misconfig (AUTH_HMAC_SECRET fehlt)
      ──────────────────────────────────────────── */
+  // MEGA¹⁰ W5: Form-Validate-Migration via ProvaForm.validateField
+  // Pseudo-Form: app-login.html nutzt kein <form>-Tag, sondern <div>-Wrapper mit Click-Handlers.
+  // ProvaForm.validateField (Lower-Level-API) funktioniert dennoch — braucht nur ein Input-Element.
+  function _validateLoginInputs(emailEl, pwEl) {
+    if (!window.ProvaForm || !window.ProvaForm.validateField) return true;  // Library nicht geladen → skip
+    var emailRule = {
+      name: 'login-email', required: true,
+      pattern: /^[^@\s]+@[^@\s]+\.[^@\s]+$/,
+      errorMsg: { required: 'E-Mail-Adresse erforderlich', pattern: 'Bitte gueltige E-Mail-Adresse eingeben' }
+    };
+    var pwRule = {
+      name: 'login-pw', required: true,
+      minLength: 1,  // Login akzeptiert beliebige PW-Laengen (auch alte kurze)
+      errorMsg: { required: 'Passwort erforderlich' }
+    };
+    var emailValid = window.ProvaForm.validateField(emailEl, emailRule);
+    var pwValid = window.ProvaForm.validateField(pwEl, pwRule);
+    return emailValid && pwValid;
+  }
+
   window.login = async function () {
-    var email = (document.getElementById('login-email').value || '').trim();
-    var pw    =  document.getElementById('login-pw').value || '';
+    var emailEl = document.getElementById('login-email');
+    var pwEl = document.getElementById('login-pw');
+    var email = (emailEl.value || '').trim();
+    var pw    =  pwEl.value || '';
     var errEl = document.getElementById('login-error');
     var btn   = document.getElementById('login-btn');
     if (errEl) errEl.style.display = 'none';
+
+    // MEGA¹⁰ W5: Live-Field-Validation mit ProvaForm
+    if (!_validateLoginInputs(emailEl, pwEl)) {
+      // Field-Errors sind bereits visuell im DOM von validateField
+      if (window.ProvaUI && window.ProvaUI.toast) {
+        window.ProvaUI.toast('Bitte Eingaben pruefen', 'error');
+      }
+      return;
+    }
 
     if (!email || !pw) {
       if (errEl) {

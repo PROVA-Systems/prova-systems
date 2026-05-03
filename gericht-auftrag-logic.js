@@ -147,7 +147,13 @@
 
       window.location.href = 'app.html?az=' + encodeURIComponent(az.trim());
     } catch(e) {
-      alert('Speichern fehlgeschlagen: ' + (e && e.message ? e.message : 'unbekannt'));
+      // MEGA¹⁰ W5: Toast statt blocking-alert
+      var errMsg = 'Speichern fehlgeschlagen: ' + (e && e.message ? e.message : 'unbekannt');
+      if (window.ProvaUI && window.ProvaUI.toast) {
+        window.ProvaUI.toast(errMsg, 'error');
+      } else {
+        alert(errMsg);
+      }
     } finally {
       busy(false);
     }

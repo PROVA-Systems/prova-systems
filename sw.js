@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v265';   // MEGA⁹ W1: Foto-Upload-v2 (Magic-Bytes + EXIF-Strip + Optimize) integriert in akte.html
+const CACHE_VERSION = 'prova-v266';   // MEGA¹⁰ W4+W5: Refactor Foto-Upload (Orientation-Bug + Memory-Leak + HEIC-Brands) + Toast-Sweep + Form-Validate-Login
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
