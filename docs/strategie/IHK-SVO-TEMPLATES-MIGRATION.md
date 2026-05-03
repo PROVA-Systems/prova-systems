@@ -98,6 +98,68 @@ Im PDFMonkey-Dashboard → Template → "Sample Data" / "Beispieldaten":
 
 ---
 
+## Liquid-Best-Practices für PDFMonkey
+
+> Aus Bug-Findings beim Upload v209 (F-09) — diese Patterns NIE wieder im Repo.
+
+### ❌ NIEMALS: `{% if x and x.size > 0 %}`
+PDFMonkey-Liquid-Parser stolpert über die explizite Size-Check-Kombination. `x and x.size > 0` wertet bei undefinierten Variablen falsch und produziert Parse-Fehler.
+
+### ✅ STATTDESSEN: `{% if x != blank %}`
+`!= blank` deckt sicher alle Fälle ab: undefined, null, empty array, empty string. Standard-Liquid-Idiom.
+
+```liquid
+✅ {% if befunde != blank %}
+   {% for b in befunde %}...{% endfor %}
+{% else %}
+   <p>Fallback</p>
+{% endif %}
+```
+
+### ❌ NIEMALS: `{% if X %}` direkt vor `{% for ... in X %}`
+Truthy-Check ohne `!= blank` ist unzuverlaessig. Beispiel:
+```liquid
+❌ {% if befunde %}
+   {% for b in befunde %}...{% endfor %}
+{% else %}
+   ...
+{% endif %}
+```
+
+Das `{% endfor %}` gefolgt von `{% else %}` koennte vom Parser als for-loop-else (existiert in Liquid fuer leere Listen) interpretiert werden — wenn das `{% if %}` truthy schlaegt, wird der else-Block falsch zugeordnet.
+
+### ✅ STATTDESSEN: Multi-line mit `!= blank`
+```liquid
+{% if befunde != blank %}
+  {% for b in befunde %}
+    <p>{{ b.text }}</p>
+  {% endfor %}
+{% else %}
+  <p>Keine Befunde dokumentiert.</p>
+{% endif %}
+```
+
+### Quick-Checks vor jedem Template-Commit
+
+```bash
+# Pattern 1 muss leer sein:
+grep -n "and .*\.size *> *0" template.html
+
+# Pattern 2 (else direkt nach endfor): manuell pruefen oder
+grep -B1 -A2 "{% endfor %}" template.html | grep "{% else %}"
+```
+
+Falls Treffer: alle `{% if X %}` zu `{% if X != blank %}` aendern.
+
+### Property-Access-Check
+Auch fuer Object-Properties:
+```liquid
+❌ {% if b.foto_refs and b.foto_refs.size > 0 %}
+✅ {% if b.foto_refs != blank %}
+```
+
+---
+
 ## Variablen-Referenz (gemeinsam für F-04/F-09/F-15/F-19)
 
 ### Pflicht

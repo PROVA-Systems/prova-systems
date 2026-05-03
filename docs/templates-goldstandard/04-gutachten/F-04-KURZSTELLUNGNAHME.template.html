@@ -163,7 +163,7 @@ body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Helvetica Neue'
   <div class="abschnitt">
     <div class="abschnitt-header"><div class="abschnitt-nr">2.2</div><div class="abschnitt-titel">Anknüpfungstatsachen und verwendete Unterlagen</div></div>
     <div class="abschnitt-body">
-      {% if anknuepfungstatsachen %}
+      {% if anknuepfungstatsachen != blank %}
       <p>Der Beurteilung liegen folgende Unterlagen und Auskünfte zugrunde:</p>
       <ul style="margin: 3mm 0 3mm 6mm;">
         {% for t in anknuepfungstatsachen %}<li style="margin-bottom: 1.5mm;">{% if t.titel %}<strong>{{ t.titel }}:</strong> {% endif %}{{ t.text }}</li>{% endfor %}
@@ -181,7 +181,13 @@ body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Helvetica Neue'
   <div class="abschnitt">
     <div class="abschnitt-header"><div class="abschnitt-nr">3.1</div><div class="abschnitt-titel">Befunde aus dem Ortstermin</div></div>
     <div class="abschnitt-body">
-      {% if befunde %}{% for b in befunde %}<p>{% if b.nr %}<strong>{{ b.nr }}:</strong> {% endif %}{{ b.text }}</p>{% endfor %}{% else %}<p>{{ befunde_text | default: "—" }}</p>{% endif %}
+      {% if befunde != blank %}
+        {% for b in befunde %}
+          <p>{% if b.nr %}<strong>{{ b.nr }}:</strong> {% endif %}{{ b.text }}</p>
+        {% endfor %}
+      {% else %}
+        <p>{{ befunde_text | default: "—" }}</p>
+      {% endif %}
     </div>
   </div>
   {% if hypothesen %}
@@ -258,7 +264,7 @@ body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Helvetica Neue'
   </div>
 </section>
 
-{% if anlagen %}
+{% if anlagen != blank %}
 <section class="teil">
   <div class="teil-header"><div class="teil-nummer">Teil 5</div><div class="teil-titel">Anlagen</div></div>
   <div class="abschnitt">
