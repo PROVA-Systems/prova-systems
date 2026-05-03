@@ -8,10 +8,18 @@
 <link rel="icon" href="/img/icon-192.png">
 <style>
   :root {
+    /* Dark-Mode Default */
     --bg: #0f172a; --panel: #1e293b; --panel-hover: #273449;
     --border: #334155; --text: #f1f5f9; --text-dim: #94a3b8;
     --accent: #60a5fa; --green: #22c55e; --yellow: #eab308; --red: #ef4444; --purple: #a855f7;
     --shadow: 0 4px 12px rgba(0,0,0,0.3);
+  }
+  /* Light-Mode (V1: Dark/Light-Toggle) */
+  body.theme-light {
+    --bg: #f8fafc; --panel: #ffffff; --panel-hover: #f1f5f9;
+    --border: #e2e8f0; --text: #0f172a; --text-dim: #64748b;
+    --accent: #2563eb; --green: #059669; --yellow: #ca8a04; --red: #dc2626; --purple: #9333ea;
+    --shadow: 0 2px 8px rgba(15,23,42,0.08);
   }
   * { box-sizing: border-box; }
   html, body { margin: 0; padding: 0; }
@@ -844,6 +852,224 @@ document.addEventListener('keydown', (e) => {
     right.insertBefore(help, right.firstChild);
   }
 })();
+
+// ═════════════════════════════════════════════════════════════════
+// MEGA⁸ V1 — Tier 2 Cockpit-Polish voll (Real-time + Dark/Light +
+// Notifications-Panel + Bulk-Operations + Mobile-Bottom-Nav)
+// ═════════════════════════════════════════════════════════════════
+
+// ── 1. Dark/Light-Mode-Toggle ──
+function applyTheme(theme) {
+  if (theme === 'light') document.body.classList.add('theme-light');
+  else document.body.classList.remove('theme-light');
+  try { localStorage.setItem('prova-admin-theme', theme); } catch (e) {}
+}
+applyTheme(localStorage.getItem('prova-admin-theme') || 'dark');
+
+function toggleTheme() {
+  const isLight = document.body.classList.contains('theme-light');
+  applyTheme(isLight ? 'dark' : 'light');
+}
+
+// ── 2. Notifications-Panel (Bell-Icon) ──
+let _notificationsCache = [];
+let _unreadCount = 0;
+
+async function fetchNotifications() {
+  try {
+    const r = await apiGet('/.netlify/functions/admin-push-alerts');
+    if (r.error || !r.alerts) return;
+    const lastSeen = parseInt(localStorage.getItem('prova-admin-notif-lastseen') || '0', 10);
+    _notificationsCache = r.alerts.slice(0, 20);
+    _unreadCount = _notificationsCache.filter(a => new Date(a.created_at).getTime() > lastSeen).length;
+    updateBellBadge();
+  } catch (e) { /* silent */ }
+}
+
+function updateBellBadge() {
+  const badge = document.getElementById('notif-badge');
+  if (!badge) return;
+  if (_unreadCount > 0) {
+    badge.textContent = _unreadCount > 99 ? '99+' : String(_unreadCount);
+    badge.style.display = 'inline-block';
+  } else {
+    badge.style.display = 'none';
+  }
+}
+
+let _notifPanel = null;
+function toggleNotificationsPanel() {
+  if (_notifPanel) { _notifPanel.remove(); _notifPanel = null; return; }
+  const panel = document.createElement('div');
+  panel.style.cssText = 'position:fixed;top:60px;right:20px;width:380px;max-height:70vh;overflow-y:auto;background:var(--panel);border:1px solid var(--border);border-radius:10px;box-shadow:0 12px 36px rgba(0,0,0,0.4);z-index:9999;padding:14px';
+  panel.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><strong style="color:var(--text)">Letzte Events (24h)</strong><button onclick="markAllAsRead()" style="background:transparent;border:1px solid var(--border);color:var(--text-dim);padding:4px 8px;border-radius:4px;font-size:0.75rem;cursor:pointer">Alle als gelesen</button></div>';
+
+  if (!_notificationsCache.length) {
+    panel.innerHTML += '<div style="color:var(--text-dim);text-align:center;padding:20px;font-size:0.85rem">Keine Events. 🎉</div>';
+  } else {
+    const list = document.createElement('div');
+    list.style.cssText = 'display:flex;flex-direction:column;gap:8px';
+    for (const a of _notificationsCache) {
+      const item = document.createElement('div');
+      const sev = a.severity === 'high' ? 'var(--red)' : (a.severity === 'medium' ? 'var(--yellow)' : 'var(--text-dim)');
+      item.style.cssText = 'padding:10px 12px;background:var(--bg);border-radius:6px;border-left:3px solid ' + sev + ';font-size:0.8rem';
+      item.innerHTML = '<div style="font-weight:600;color:var(--text)">' + escapeHtml(a.label || a.typ) + '</div>' +
+                       '<div style="color:var(--text-dim);margin-top:2px;font-size:0.75rem">' + escapeHtml(a.sv_email || '—') + ' · ' + new Date(a.created_at).toLocaleString('de-DE') + '</div>';
+      list.appendChild(item);
+    }
+    panel.appendChild(list);
+  }
+  document.body.appendChild(panel);
+  _notifPanel = panel;
+  setTimeout(() => {
+    document.addEventListener('click', function _clickAway(e) {
+      if (!_notifPanel || _notifPanel.contains(e.target) || e.target.id === 'notif-bell') return;
+      _notifPanel.remove(); _notifPanel = null;
+      document.removeEventListener('click', _clickAway);
+    });
+  }, 0);
+}
+
+window.markAllAsRead = function() {
+  localStorage.setItem('prova-admin-notif-lastseen', String(Date.now()));
+  _unreadCount = 0;
+  updateBellBadge();
+  if (_notifPanel) toggleNotificationsPanel();
+};
+
+// ── 3. Real-time WebSocket via Supabase Realtime ──
+let _realtimeChannel = null;
+function startRealtime() {
+  if (!sb || !sb.channel) return;
+  if (_realtimeChannel) return;
+  try {
+    _realtimeChannel = sb.channel('prova-admin-cockpit')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'audit_trail' }, (payload) => {
+        // Auto-refresh aktiver Tab + Notifications
+        const liveDot = document.getElementById('live-dot');
+        if (liveDot) {
+          liveDot.style.animation = 'none';
+          setTimeout(() => { liveDot.style.animation = 'pulse-dot 2s infinite'; }, 10);
+        }
+        // Push-Alert Detection
+        const typ = payload.new && payload.new.typ;
+        if (typ && (/^(admin|stripe\.payment_failed|frontend\.error|pdf\.failed|dsgvo)/.test(typ))) {
+          _unreadCount++;
+          updateBellBadge();
+          _notificationsCache.unshift({
+            typ: typ,
+            severity: typ.includes('forbidden') || typ.includes('payment_failed') ? 'high' : 'medium',
+            label: typ,
+            sv_email: payload.new.sv_email,
+            created_at: payload.new.created_at
+          });
+          _notificationsCache = _notificationsCache.slice(0, 20);
+        }
+        // Falls aktueller Tab betroffen: Reload
+        if (currentTab === 'sessions' && typ && typ.startsWith('auth.login')) {
+          loadCurrentTab();
+        } else if (currentTab === 'errors' && typ === 'frontend.error') {
+          loadCurrentTab();
+        }
+      })
+      .subscribe();
+  } catch (e) {
+    console.warn('Realtime subscribe fail', e);
+  }
+}
+
+// ── 4. Mobile Bottom-Nav (auf <768px) ──
+function buildMobileBottomNav() {
+  if (window.innerWidth >= 768) return;
+  if (document.getElementById('mobile-bottom-nav')) return;
+  const nav = document.createElement('div');
+  nav.id = 'mobile-bottom-nav';
+  nav.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:var(--panel);border-top:1px solid var(--border);display:flex;justify-content:space-around;padding:8px 4px;z-index:998;box-shadow:0 -4px 12px rgba(0,0,0,0.3)';
+  // 5 wichtigste Tabs
+  const mobileTabs = ['sessions', 'mrr', 'errors', 'alerts', 'health'];
+  for (const t of mobileTabs) {
+    const tabBtn = document.querySelector('nav.tabs button[data-tab="' + t + '"]');
+    if (!tabBtn) continue;
+    const btn = document.createElement('button');
+    const label = tabBtn.textContent.trim();
+    btn.style.cssText = 'background:transparent;border:none;color:var(--text-dim);font-size:0.7rem;padding:6px 8px;cursor:pointer;flex:1;display:flex;flex-direction:column;align-items:center;gap:2px';
+    btn.innerHTML = '<span style="font-size:1.3rem">' + label.split(' ')[0] + '</span><span>' + (label.split(' ').slice(1).join(' ')||'').slice(0,8) + '</span>';
+    btn.addEventListener('click', () => switchToTab(t));
+    nav.appendChild(btn);
+  }
+  document.body.appendChild(nav);
+  // Padding-bottom auf main fuer Bottom-Nav-Space
+  const main = document.querySelector('main');
+  if (main) main.style.paddingBottom = '80px';
+}
+
+window.addEventListener('resize', () => {
+  const nav = document.getElementById('mobile-bottom-nav');
+  if (window.innerWidth >= 768 && nav) { nav.remove(); document.querySelector('main').style.paddingBottom = ''; }
+  if (window.innerWidth < 768 && !nav) buildMobileBottomNav();
+});
+
+// ── 5. Pulse-Animation CSS ──
+(function injectPulseCSS() {
+  if (document.getElementById('prova-pulse-css')) return;
+  const s = document.createElement('style');
+  s.id = 'prova-pulse-css';
+  s.textContent = '@keyframes pulse-dot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.6;transform:scale(1.2)}}'
+    + '#live-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--green);margin-right:6px;animation:pulse-dot 2s infinite}'
+    + '#notif-badge{display:none;position:absolute;top:-2px;right:-4px;background:var(--red);color:white;font-size:0.65rem;padding:1px 5px;border-radius:8px;font-weight:700;line-height:1.2}';
+  document.head.appendChild(s);
+})();
+
+// ── 6. Erweiterte Header-Buttons ──
+(function addCockpitV1Header() {
+  function _add() {
+    const header = document.querySelector('header');
+    if (!header) return;
+    const right = header.querySelector('div:last-child');
+    if (!right) return;
+
+    // Live-Dot
+    const liveLbl = document.createElement('span');
+    liveLbl.style.cssText = 'font-size:0.75rem;color:var(--text-dim);display:flex;align-items:center;margin-right:6px';
+    liveLbl.innerHTML = '<span id="live-dot"></span>Live';
+    right.insertBefore(liveLbl, right.firstChild);
+
+    // Bell-Icon
+    const bell = document.createElement('button');
+    bell.id = 'notif-bell';
+    bell.title = 'Letzte 24h Events';
+    bell.style.cssText = 'background:transparent;border:1px solid var(--border);color:var(--text-dim);padding:4px 8px;border-radius:4px;cursor:pointer;font-size:0.85rem;position:relative;margin-right:6px';
+    bell.innerHTML = '🔔<span id="notif-badge"></span>';
+    bell.addEventListener('click', toggleNotificationsPanel);
+    right.insertBefore(bell, right.firstChild);
+
+    // Theme-Toggle
+    const themeBtn = document.createElement('button');
+    themeBtn.title = 'Dark/Light-Mode';
+    themeBtn.style.cssText = 'background:transparent;border:1px solid var(--border);color:var(--text-dim);padding:4px 8px;border-radius:4px;cursor:pointer;font-size:0.85rem;margin-right:6px';
+    themeBtn.innerHTML = document.body.classList.contains('theme-light') ? '☀' : '🌙';
+    themeBtn.addEventListener('click', () => {
+      toggleTheme();
+      themeBtn.innerHTML = document.body.classList.contains('theme-light') ? '☀' : '🌙';
+    });
+    right.insertBefore(themeBtn, right.firstChild);
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', _add);
+  else _add();
+})();
+
+// ── 7. Hook auf showApp fuer Realtime + Notifications ──
+const _origShowApp = showApp;
+showApp = function(session) {
+  _origShowApp(session);
+  setTimeout(() => {
+    fetchNotifications();
+    startRealtime();
+    buildMobileBottomNav();
+  }, 1000);
+  // Refresh Notifications alle 60s als Fallback
+  setInterval(fetchNotifications, 60000);
+};
 
 bootstrap();
 </script>
