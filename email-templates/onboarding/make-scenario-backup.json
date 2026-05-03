@@ -1,0 +1,143 @@
+{
+  "_meta": {
+    "name": "PROVA Onboarding Drip-Campaign",
+    "version": "1.0",
+    "created_at": "2026-05-03",
+    "author": "PROVA Systems / Claude Code",
+    "purpose": "Drip-Email-Campaign fuer Pilot-SVs basierend auf Trial-Tag + Aktivitaet",
+    "description": "Cron-getriggert taeglich um 09:00 UTC. Liest aus Supabase-View 'v_pilot_drip_candidates' welche SVs heute welche Email kriegen. Sendet via Resend (oder PROVA-SMTP). Dedupliziert via audit_trail-Eintrag pro Email-Type+User."
+  },
+  "_required_supabase_view": {
+    "name": "v_pilot_drip_candidates",
+    "purpose": "Aggregiert Pilot-SV-Status fuer Drip-Decision",
+    "ddl_sketch": "CREATE OR REPLACE VIEW v_pilot_drip_candidates AS\nSELECT\n  w.id AS workspace_id,\n  w.billing_email AS email,\n  u.name AS vorname,\n  EXTRACT(DAY FROM (NOW() - w.abo_aktiv_seit))::int AS trial_day,\n  w.abo_status,\n  w.abo_trial_endet_am,\n  (SELECT COUNT(*) FROM auftraege a WHERE a.workspace_id = w.id) AS anzahl_akten,\n  (SELECT MAX(last_login_at) FROM users u2 JOIN workspace_memberships m ON m.user_id = u2.id WHERE m.workspace_id = w.id) AS last_login_at,\n  (SELECT EXISTS(SELECT 1 FROM audit_trail a WHERE a.workspace_id = w.id AND a.typ = 'onboarding.email_sent' AND a.details::jsonb->>'template' = $1)) AS email_already_sent\nFROM workspaces w\nLEFT JOIN workspace_memberships m ON m.workspace_id = w.id AND m.is_active = true\nLEFT JOIN users u ON u.id = m.user_id\nWHERE w.abo_status = 'trial' OR w.abo_status = 'aktiv';"
+  },
+  "scenario": {
+    "name": "PROVA-Onboarding-Drip",
+    "scheduling": {
+      "type": "interval",
+      "interval": 86400,
+      "start_at": "09:00:00 UTC"
+    },
+    "modules": [
+      {
+        "id": 1,
+        "name": "Trigger: Daily-Cron-Tick",
+        "type": "Schedule"
+      },
+      {
+        "id": 2,
+        "name": "Lookup-Pilot-Candidates",
+        "type": "Supabase: Make a Database Request",
+        "input": {
+          "endpoint": "POST /rest/v1/rpc/pilot_drip_candidates",
+          "auth": "service_role_key",
+          "body": "{}"
+        },
+        "output": "iterable<{workspace_id, email, vorname, trial_day, abo_status, anzahl_akten, last_login_at}>"
+      },
+      {
+        "id": 3,
+        "name": "Iterator",
+        "type": "Iterator",
+        "input": "module2.output"
+      },
+      {
+        "id": 4,
+        "name": "Decision-Tree-Router",
+        "type": "Router",
+        "routes": [
+          {
+            "filter": "trial_day == 2 AND last_login_at IS NULL",
+            "template": "trial-day-2-no-login"
+          },
+          {
+            "filter": "(trial_day == 3 OR trial_day == 5) AND last_login_at IS NOT NULL AND anzahl_akten == 0",
+            "template": "trial-day-3-no-akte"
+          },
+          {
+            "filter": "trial_day == 7",
+            "template": "trial-day-7-checkin"
+          },
+          {
+            "filter": "trial_day == 14",
+            "template": "trial-day-14-twoweek"
+          },
+          {
+            "filter": "trial_day == 30",
+            "template": "trial-day-30-onemonth"
+          },
+          {
+            "filter": "trial_day == 60",
+            "template": "trial-day-60-midtrial"
+          },
+          {
+            "filter": "trial_day == 88",
+            "template": "trial-day-88-final"
+          }
+        ]
+      },
+      {
+        "id": 5,
+        "name": "Dedup-Check",
+        "type": "Supabase: Lookup audit_trail",
+        "filter": "workspace_id = {{module3.workspace_id}} AND typ = 'onboarding.email_sent' AND details->>'template' = '{{router.template}}'",
+        "skip_if_exists": true
+      },
+      {
+        "id": 6,
+        "name": "Render-Email-Template",
+        "type": "HTTP: GET email-template HTML",
+        "input": "https://raw.githubusercontent.com/PROVA-Systems/prova-systems/main/email-templates/onboarding/{{router.template}}.html",
+        "transform": "replace {{vorname}}, {{anzahl_akten}}, {{stripe_link}}, {{login_link}}"
+      },
+      {
+        "id": 7,
+        "name": "Send-Email-via-Resend",
+        "type": "HTTP: POST resend.com/emails",
+        "input": {
+          "to": "{{module3.email}}",
+          "from": "Marcel @ PROVA <marcel@prova-systems.de>",
+          "subject": "{{template-spezifisch, siehe email-templates/onboarding/SUBJECTS.md}}",
+          "html": "{{module6.output}}",
+          "reply_to": "kontakt@prova-systems.de"
+        }
+      },
+      {
+        "id": 8,
+        "name": "Audit-Trail-Eintrag",
+        "type": "Supabase: Insert audit_trail",
+        "input": {
+          "workspace_id": "{{module3.workspace_id}}",
+          "user_id": null,
+          "typ": "onboarding.email_sent",
+          "details": "{\"template\": \"{{router.template}}\", \"email\": \"[redacted-pseudo]\", \"trial_day\": {{module3.trial_day}}, \"sent_at\": \"{{now}}\"}"
+        }
+      },
+      {
+        "id": 9,
+        "name": "Error-Handler",
+        "type": "Sentry: Capture-Exception (oder GitHub-Issue)",
+        "trigger": "any module fail"
+      }
+    ]
+  },
+  "_subjects": {
+    "trial-day-2-no-login": "Brauchen Sie Hilfe beim ersten Login?",
+    "trial-day-3-no-akte": "Lassen Sie mich Ihnen die erste Akte zeigen",
+    "trial-day-7-checkin": "Erste Woche bei PROVA — wie war's?",
+    "trial-day-14-twoweek": "PROVA nach 2 Wochen — Ihre Erfahrung?",
+    "trial-day-30-onemonth": "1 Monat PROVA — lass uns reflektieren",
+    "trial-day-60-midtrial": "Halbzeit Ihrer 90-Tage-Trial",
+    "trial-day-88-final": "PROVA-Trial endet in 2 Tagen — noch alles klar?"
+  },
+  "_re_engagement_logic": {
+    "5_day_no_login_fallback": "Wenn trial-day-2-no-login geskippt wurde (kein Trigger an Tag 2 ueblich? Marcel-Doc-Hinweis): Re-Trigger an Tag 5",
+    "akte_created_after_no_akte_email": "Wenn anzahl_akten > 0 nach trial-day-3-no-akte: spaeter no-akte-Reminders skip",
+    "cancel_click_skip_all": "Wenn workspace.abo_status = 'gekuendigt': nur trial-day-88-final senden, alles andere skip",
+    "subject_personalization_optional": "Vorname-Variants im Subject: 'Marcel, brauchen Sie Hilfe?' — Sprint-Erweiterung wenn Make-Sponsor-Plan"
+  },
+  "_alternative_implementation": {
+    "if_make_unavailable": "Direkt-Implementation als Supabase Edge Function via pg_cron-Trigger:\n\nCREATE EXTENSION IF NOT EXISTS pg_cron;\nSELECT cron.schedule('pilot-drip-daily', '0 9 * * *', $$\n  SELECT net.http_post(\n    url:='https://prova-systems.de/.netlify/functions/cron-pilot-drip',\n    headers:='{\"Authorization\": \"Bearer <PROVA_INTERNAL_SECRET>\"}'::jsonb\n  );\n$$);\n\nDann eigene Function 'cron-pilot-drip' implementieren die: View queryt, Template lädt, via Resend versendet, audit_trail schreibt."
+  }
+}
