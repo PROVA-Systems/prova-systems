@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v253';   // Catch-Up C1: pilot.html + Founding-Programm
+const CACHE_VERSION = 'prova-v254';   // MEGA-SKALIERUNG M3: Sentry-Init in pilot/app/index + lib/sentry-init.js
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
@@ -42,6 +42,7 @@ const APP_SHELL = [
   '/lib/data-store.js',
   '/lib/template-registry.js',
   '/lib/auth-guard.js',
+  '/lib/sentry-init.js',                // M3: Sentry Browser-SDK-Init
   // Legacy auth (Hybrid-Modus, bleibt bis Cutover-Phase 5 cleanup)
   '/prova-fetch-auth.js',
   '/prova-notifications.js',

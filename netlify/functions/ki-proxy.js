@@ -17,6 +17,8 @@ const { requireAuth, jsonResponse: jwtJsonResponse } = require('./lib/jwt-middle
 const { getCorsHeaders } = require('./lib/cors-helper');
 const RateLimit = require('./lib/rate-limit-user');
 const FW = require('./lib/prova-fachwissen');
+// MEGA-SKALIERUNG M3: Sentry Error-Capture
+const { withSentry } = require('./lib/sentry-wrap');
 
 // S-SICHER P3.3: Server-seitige Pseudonymisierung (Defense-in-Depth gegen
 // Client-Wrapper-Bypass). Gleicher Code wie /prova-pseudo.js (CommonJS-Spiegel).
@@ -109,7 +111,7 @@ let _currentEvent = null;
 
 // S-SICHER P4B.2: requireAuth wrap + per-User Rate-Limit 20/60s.
 // Token-sub liegt nach requireAuth in context.userEmail.
-exports.handler = requireAuth(async function(event, context) {
+exports.handler = withSentry(requireAuth(async function(event, context) {
   _currentEvent = event;
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: JSON.stringify({ error: 'Method not allowed' }) };
@@ -158,7 +160,7 @@ exports.handler = requireAuth(async function(event, context) {
     console.error('[ki-proxy] Upstream-Fehler:', e && e.message);
     return { statusCode: 502, headers: { 'Content-Type': 'application/json', ...getCorsHeaders(_currentEvent) }, body: JSON.stringify({ error: 'Upstream error' }) };
   }
-});
+}), { functionName: 'ki-proxy' });
 
 async function handleFachurteilEntwurf(body, apiKey) {
   const { diktat = '', schadenart = '', messwerte = '', verwendungszweck = 'gericht', paragraphen = null, az = '', objekt = '', baujahr = '', auftraggeber = '' } = body;

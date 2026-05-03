@@ -42,6 +42,8 @@ const {
 const { requireAuth } = require('./lib/jwt-middleware');
 // MEGA-SKALIERUNG M2: zod-Schema-Validation
 const { parseStripeCheckout } = require('../../lib/schemas/stripe-checkout');
+// MEGA-SKALIERUNG M3: Sentry Error-Capture
+const { withSentry } = require('./lib/sentry-wrap');
 
 const STRIPE_API_VERSION = '2024-12-18.acacia';
 const PILOT_TRIAL_DAYS = 90;
@@ -102,7 +104,7 @@ async function checkPilotCouponAvailability(stripe, couponId) {
   }
 }
 
-exports.handler = requireAuth(async function (event, context) {
+exports.handler = withSentry(requireAuth(async function (event, context) {
   if (event.httpMethod !== 'POST') return json(event, 405, { error: 'Method Not Allowed' });
 
   const key = process.env.STRIPE_SECRET_KEY;
@@ -259,7 +261,7 @@ exports.handler = requireAuth(async function (event, context) {
       retryable: [429, 502].includes(mapped.status)
     });
   }
-});
+}), { functionName: 'stripe-checkout' });
 
 // Exports für Tests
 module.exports.checkPilotCouponAvailability = checkPilotCouponAvailability;

@@ -32,6 +32,8 @@ const Stripe = require('stripe');
 const { createClient } = require('@supabase/supabase-js');
 const log = require('./lib/prova-logger');
 const { tierFromPriceId } = require('./lib/prova-stripe-prices');
+// MEGA-SKALIERUNG M3: Sentry Error-Capture
+const { withSentry } = require('./lib/sentry-wrap');
 
 const STRIPE_API_VERSION = '2024-12-18.acacia';
 
@@ -472,7 +474,7 @@ async function markEventIgnored(eventRowId, reason) {
 }
 
 // ── Main Handler ───────────────────────────────────────────────────────────
-exports.handler = async function (event) {
+exports.handler = withSentry(async function (event) {
   const t0 = Date.now();
   log.info({ fn: 'stripe-webhook', event: 'received', method: event.httpMethod });
 
@@ -568,4 +570,4 @@ exports.handler = async function (event) {
     // 500 → Stripe retried automatisch (max 3 Tage, exponential Backoff)
     return { statusCode: 500, body: 'Handler error' };
   }
-};
+}, { functionName: 'stripe-webhook' });

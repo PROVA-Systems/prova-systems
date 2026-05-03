@@ -161,8 +161,8 @@
 | H-07 | HIGH | A11 | Auftraggeber-PII in localStorage | dokumentiert | Logout-Wipe verifizieren (Marcel-Test) |
 | **H-08** | HIGH | A1 | Schema-Validation-Library fehlt (V2.1.2 FAIL) | NEEDS-MARCEL | Architektur-Entscheidung zod/joi |
 | **H-09** | HIGH | A1 | Cross-Tenant-Isolation-Tests fehlen (V8.2.2) | offen | Sprint B Phase 3 |
-| **H-10** | HIGH | A1 | Real-Time-Alerts (Sentry) fehlen (V15.3.1) | offen | Audit 21 Phase 4 |
-| **H-11** | HIGH | A1 | Trace-IDs für Support fehlen (V16.1.3) | offen | Sentry-Setup |
+| **H-10** | HIGH | A1 | Real-Time-Alerts (Sentry) fehlen (V15.3.1) | ✅ RESOLVED MEGA-SKALIERUNG M3 | Sentry @sentry/node 10.51 wraps 4 kritische Functions (auth-token-issue, stripe-checkout, stripe-webhook, ki-proxy) + Frontend (pilot, app, index). EU-Region (ingest.de.sentry.io), AVV unterschrieben |
+| **H-11** | HIGH | A1 | Trace-IDs für Support fehlen (V16.1.3) | ✅ RESOLVED MEGA-SKALIERUNG M3 | Sentry generiert event_id pro Error → Marcel kann via Sentry-Dashboard zu User-Reports zuordnen. tracesSampleRate 0.1 fuer Performance-Spans |
 | **H-12** | HIGH | A3 | RLS audit_trail INSERT ohne workspace_id-Konsistenz | PLANNED-Migration | `supabase/migrations/PLANNED_2026-05-02_rls_audit_findings.sql` |
 | **H-13** | HIGH | A4 | admin-auth Brute-Force ohne Rate-Limit | ✅ FIXED Sprint X4 | 5/15Min/IP via lib/rate-limit-ip.js |
 | **H-14** | HIGH | A4 | dsgvo-auskunft + dsgvo-loeschen ohne Rate-Limit | ✅ FIXED Sprint X4 | 1/Tag/User |

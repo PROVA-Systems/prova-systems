@@ -55,6 +55,8 @@ const ProvaPseudo = require('./lib/prova-pseudo');
 const { isValidEmail, normalizeEmail, isStrongPassword } = require('./lib/auth-validate');
 const { getCorsHeaders, corsOptionsResponse } = require('./lib/cors-helper');
 const RateLimitIp = require('./lib/rate-limit-ip');
+// MEGA-SKALIERUNG M3: Sentry Error-Capture
+const { withSentry } = require('./lib/sentry-wrap');
 
 const TTL_NORMAL = 7 * 24 * 60 * 60; // 7 Tage Standard-Session
 
@@ -89,7 +91,7 @@ function j(event, statusCode, obj) {
   };
 }
 
-exports.handler = async (event) => {
+exports.handler = withSentry(async (event) => {
   // S-SICHER P4A.3-fix: case-insensitiver Method-Check + Diagnostic.
   // Marcel meldete 405 bei PowerShell Invoke-RestMethod -Method Post.
   // Wahrscheinlich liefert ein Caller die Methode lowercase oder
@@ -313,4 +315,4 @@ exports.handler = async (event) => {
       provisional:         !identityVerified
     }
   });
-};
+}, { functionName: 'auth-token-issue' });
