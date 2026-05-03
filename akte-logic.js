@@ -378,10 +378,48 @@ async function handleDokUpload(files) {
   var az = (function(){var _e=document.getElementById('akte-az');return _e?_e.textContent:undefined;})()  || localStorage.getItem('prova_letztes_az') || '';
   var uploads = JSON.parse(localStorage.getItem('prova_akte_docs_' + az) || '[]');
 
+  // MEGA⁹ W1: ProvaUploadHelpers Pre-Processing-Pipeline
+  // - Magic-Bytes-Validation (anti-MIME-Spoofing)
+  // - EXIF-Strip fuer JPEGs (DSGVO-Pflicht: GPS/Geraete-Info raus vor KI-Send)
+  // - Image-Optimize (Resize 2048max + WebP wo moeglich)
+  var helpers = window.ProvaUploadHelpers || null;
+  var allowedMimes = ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif', 'application/pdf'];
+
   for (var i = 0; i < files.length; i++) {
     var file = files[i];
     statusEl.style.display = 'block';
     statusEl.textContent = '⏳ KI analysiert: ' + file.name + '…';
+
+    // Magic-Bytes-Check (Security-Layer vor KI-Send)
+    if (helpers && helpers.validateFileType) {
+      try {
+        var validation = await helpers.validateFileType(file, allowedMimes);
+        if (!validation.ok) {
+          statusEl.textContent = '⚠️ Datei abgelehnt: ' + (validation.reason || 'Typ ungueltig') + ' (' + file.name + ')';
+          continue;
+        }
+      } catch (e) { console.warn('[upload] magic-bytes-check failed', e); }
+    }
+
+    // EXIF-Strip + Image-Optimize fuer Bilder (vor KI-Send)
+    var processedFile = file;
+    if (helpers && file.type && file.type.indexOf('image/') === 0) {
+      try {
+        var blob = file;
+        if (file.type === 'image/jpeg' && helpers.stripExif) {
+          blob = await helpers.stripExif(blob);  // GPS/Camera/IPTC raus
+        }
+        if (helpers.optimizeImage) {
+          blob = await helpers.optimizeImage(blob, { maxWidth: 2048, maxHeight: 2048, quality: 0.85, prefer: 'webp' });
+        }
+        // Restore filename for KI-Endpoint
+        processedFile = new File([blob], file.name, { type: blob.type || file.type });
+      } catch (e) {
+        console.warn('[upload] image-preprocessing failed, fallback to original', e);
+        processedFile = file;
+      }
+    }
+    file = processedFile;
 
     var typLabel = 'Dokument';
     var icon = '📎';

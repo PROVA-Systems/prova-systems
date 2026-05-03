@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v264';   // MEGA⁸: Cockpit-WebSocket + Empty-State-Migration + KI-Polish + 5 Liquid-Templates
+const CACHE_VERSION = 'prova-v265';   // MEGA⁹ W1: Foto-Upload-v2 (Magic-Bytes + EXIF-Strip + Optimize) integriert in akte.html
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
@@ -45,6 +45,9 @@ const APP_SHELL = [
   '/lib/sentry-init.js',                // M3: Sentry Browser-SDK-Init
   '/lib/mobile-polish.css',             // MEGA⁴ Q2: Mobile-Polish CSS
   '/lib/mobile-polish.js',              // MEGA⁴ Q3: Mobile-Polish JS (Lazy/Offline/Camera/Geo)
+  '/lib/foto-upload-v2.js',             // MEGA⁹ W1: Magic-Bytes + EXIF-Strip + Image-Optimize
+  '/lib/foto-upload-v2.css',            // MEGA⁹ W1: Drop-Zone + Item-Card Styles
+  '/lib/foto-upload-v2-ui.js',          // MEGA⁹ W1: ProvaUploadUI DOM-Helper
   // Legacy auth (Hybrid-Modus, bleibt bis Cutover-Phase 5 cleanup)
   '/prova-fetch-auth.js',
   '/prova-notifications.js',
