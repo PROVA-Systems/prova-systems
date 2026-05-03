@@ -206,15 +206,46 @@
      (Endpoint funktioniert; neue User werden in Identity angelegt;
       Email-Confirmation laeuft nativ.)
      ──────────────────────────────────────────── */
+  // MEGA¹¹ W8: Form-Validate-Migration fuer Register (analog zu Login in W5)
+  function _validateRegisterInputs(nameEl, emailEl, pwEl) {
+    if (!window.ProvaForm || !window.ProvaForm.validateField) return true;
+    var nameRule = {
+      name: 'reg-name', required: true, minLength: 2,
+      errorMsg: { required: 'Vollstaendiger Name erforderlich', minLength: 'Name zu kurz' }
+    };
+    var emailRule = {
+      name: 'reg-email', required: true,
+      pattern: /^[^@\s]+@[^@\s]+\.[^@\s]+$/,
+      errorMsg: { required: 'E-Mail-Adresse erforderlich', pattern: 'Bitte gueltige E-Mail-Adresse eingeben' }
+    };
+    var pwRule = {
+      name: 'reg-pw', required: true, minLength: 8,
+      errorMsg: { required: 'Passwort erforderlich', minLength: 'Passwort muss mind. 8 Zeichen haben' }
+    };
+    var v1 = window.ProvaForm.validateField(nameEl, nameRule);
+    var v2 = window.ProvaForm.validateField(emailEl, emailRule);
+    var v3 = window.ProvaForm.validateField(pwEl, pwRule);
+    return v1 && v2 && v3;
+  }
+
   window.register = async function () {
-    var name  = (document.getElementById('reg-name').value  || '').trim();
-    var email = (document.getElementById('reg-email').value || '').trim();
-    var pw    =  document.getElementById('reg-pw').value || '';
+    var nameEl = document.getElementById('reg-name');
+    var emailEl = document.getElementById('reg-email');
+    var pwEl = document.getElementById('reg-pw');
+    var name  = (nameEl.value  || '').trim();
+    var email = (emailEl.value || '').trim();
+    var pw    =  pwEl.value || '';
     var errEl = document.getElementById('reg-error');
     var sucEl = document.getElementById('reg-success');
     var btn   = document.getElementById('reg-btn');
     if (errEl) errEl.style.display = 'none';
     if (sucEl) sucEl.style.display = 'none';
+
+    // MEGA¹¹ W8: Live-Field-Validation
+    if (!_validateRegisterInputs(nameEl, emailEl, pwEl)) {
+      if (window.provaAlert) window.provaAlert('Bitte Eingaben pruefen', 'error');
+      return;
+    }
 
     if (!name || !email || pw.length < 8) {
       if (errEl) {
@@ -266,7 +297,20 @@
      PASSWORT-RESET — bleibt via netlifyIdentity.open('recovery')
      ──────────────────────────────────────────── */
   window.resetPasswort = function () {
-    var email = (document.getElementById('reset-email').value || '').trim();
+    var emailEl = document.getElementById('reset-email');
+    var email = (emailEl.value || '').trim();
+    // MEGA¹¹ W8: Field-Validation fuer Reset-Form
+    if (window.ProvaForm && window.ProvaForm.validateField) {
+      var resetRule = {
+        name: 'reset-email', required: true,
+        pattern: /^[^@\s]+@[^@\s]+\.[^@\s]+$/,
+        errorMsg: { required: 'E-Mail-Adresse erforderlich', pattern: 'Bitte gueltige E-Mail-Adresse eingeben' }
+      };
+      if (!window.ProvaForm.validateField(emailEl, resetRule)) {
+        if (window.provaAlert) window.provaAlert('Bitte gueltige E-Mail-Adresse eingeben', 'error');
+        return;
+      }
+    }
     if (!email) return;
     if (typeof netlifyIdentity !== 'undefined' && netlifyIdentity.open) {
       netlifyIdentity.open('recovery');
