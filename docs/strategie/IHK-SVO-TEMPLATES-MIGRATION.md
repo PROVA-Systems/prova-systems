@@ -34,15 +34,24 @@ Die IHK-SVO § 9 Abs. 3 schreibt eine **4-Teile-Struktur** für Bauschadensgutac
 **Marcel-Pflicht:** HTML komplett kopieren in PDFMonkey Dashboard → Template `C4BB257B` → Editor → Quellcode ersetzen → "Speichern". Test-Render mit Mock-Payload (siehe `F-04-KURZSTELLUNGNAHME.payload.json`).
 
 ### F-09 KURZGUTACHTEN · `BA076019`
-**Repo-File:** `docs/templates-goldstandard/04-gutachten/F-09-KURZGUTACHTEN.template.html`
-**Status:** ⚠ **DEMO-VARIANTE** mit hardcoded Werten (Frau Kowalski, Parkett Meier). Struktur ist 4-Teile-konform.
-**Aktion:** **Marcel-Decision benötigt** (siehe NACHT-PAUSE-File `docs/diagnose/NACHT-PAUSE-MEGA-MEGA-MEGA-F09-LIQUID.md`).
-**Empfehlung:** Pre-Pilot Status-Quo OK (Demo-Werte sehen für Pilot-Kunden trotzdem professionell aus). Liquid-Migration in Sprint K-2.
+**Repo-Files:**
+- `docs/templates-goldstandard/04-gutachten/F-09-KURZGUTACHTEN.liquid.template.html` (NEU MEGA⁴ Q1, Liquid Production)
+- `docs/templates-goldstandard/04-gutachten/F-09-KURZGUTACHTEN.liquid.payload.json` (Variablen-Schema)
+- `docs/templates-goldstandard/04-gutachten/F-09-KURZGUTACHTEN.template.html` (Demo-Variante, Backup)
+
+**Status:** ✅ **PRODUCTION-READY** (Liquid, IHK-SVO 4-Teile, EU AI Act + § 407a, ~485 LOC)
+**Erweitert um:** Teil 3.1 Befundaufnahme + 3.2 Beweissicherung (Mess-Tabelle + Foto-Grid) + 3.3 Ursachenanalyse mit Hypothesen + 3.4 Fachurteil + 3.5 Sanierungsempfehlung mit Kosten-Card
+**Marcel-Pflicht:** HTML komplett kopieren in PDFMonkey Dashboard → Template `BA076019`.
 
 ### F-15 GERICHTSGUTACHTEN · `36E140DC`
-**Repo-File:** `docs/templates-goldstandard/04-gutachten/F-15-GERICHTSGUTACHTEN.template.html`
-**Status:** ⚠ **DEMO-VARIANTE** mit hardcoded Werten (Landgericht Köln, WDVS-Fall). Struktur ist 4-Teile-konform inkl. § 404a ZPO.
-**Aktion:** Wie F-09 — Marcel-Decision (gleicher NACHT-PAUSE-File).
+**Repo-Files:**
+- `docs/templates-goldstandard/04-gutachten/F-15-GERICHTSGUTACHTEN.liquid.template.html` (NEU MEGA⁴ Q1, Liquid Production)
+- `docs/templates-goldstandard/04-gutachten/F-15-GERICHTSGUTACHTEN.liquid.payload.json` (Variablen-Schema mit Beweisbeschluss + Beweisfragen + Parteien)
+- `docs/templates-goldstandard/04-gutachten/F-15-GERICHTSGUTACHTEN.template.html` (Demo-Variante, Backup)
+
+**Status:** ✅ **PRODUCTION-READY** (Liquid, IHK-SVO 4-Teile, § 407a + § 404a ZPO + § 10 IHK-SVO Höchstpersönlichkeit, ~520 LOC)
+**Erweitert um:** Gericht-Block auf Deckblatt · Beweisbeschluss-Wortlaut · Beweisfragen-Liste (Liquid-Iteration) · Parteien-Block · Bauteilöffnungen mit Zustimmung · Beweisfrage-Beantwortung in Teil 3.4 · erweiterte Unparteilichkeitserklärung
+**Marcel-Pflicht:** HTML komplett kopieren in PDFMonkey Dashboard → Template `36E140DC`.
 
 ### F-19 WERTGUTACHTEN · ggf. `29064D98-FD12-4135-9D44-F49CCF9819C6`
 **Repo-File:** `docs/templates-goldstandard/04-gutachten/F-19-WERTGUTACHTEN.template.html`

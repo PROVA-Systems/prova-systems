@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>{{ gutachten_nummer }} — {{ gericht_aktenzeichen | default: objekt.adresse }}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════════════════════════
+   PROVA Systems · F-15 GERICHTSGUTACHTEN (Flow A) v1.0
+   Liquid-templated · Production-Ready für PDFMonkey · 15-50+ Seiten
+   Design-System v1.0 · 10.5pt Body · IHK-SVO § 9 Abs. 3
+   EU AI Act Art. 50 · § 407a Abs. 2+3 ZPO · § 404a ZPO · DSGVO
+   ═══════════════════════════════════════════════════════════════ */
+:root { --primary: #1a3a6b; --accent: #3b82f6; --muted: #64748b; --text: #0f172a; --light: #f1f5f9; --lighter: #f8fafc; --border: #e2e8f0; --success: #059669; --warning: #d97706; --danger: #dc2626; }
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Inter', sans-serif; font-size: 10.5pt; line-height: 1.55; color: var(--text); background: white; }
+@page { size: A4; margin: 20mm 20mm 22mm 20mm; }
+@page {
+  @top-left { content: "{{ sv_name }} · {{ sv_qualifikation | default: 'ö.b.u.v. Sachverständiger' }}"; font-family: 'Inter', sans-serif; font-size: 8pt; color: #64748b; padding-top: 10mm; }
+  @top-right { content: "Gerichtsgutachten {{ gutachten_nummer }}"; font-family: 'Inter', sans-serif; font-size: 8pt; color: #1a3a6b; font-weight: 600; padding-top: 10mm; }
+  @bottom-left { content: "Az.: {{ gericht_aktenzeichen | default: gutachten_nummer }}"; font-family: 'Inter', sans-serif; font-size: 8pt; color: #64748b; padding-bottom: 10mm; }
+  @bottom-right { content: "Seite " counter(page) " / " counter(pages); font-family: 'Inter', sans-serif; font-size: 8pt; color: #64748b; padding-bottom: 10mm; }
+}
+@page :first { @top-left { content: ""; } @top-right { content: ""; } @bottom-left { content: ""; } @bottom-right { content: ""; } }
+.deckblatt { page-break-after: always; min-height: 257mm; display: flex; flex-direction: column; }
+.deckblatt-header { padding-bottom: 18mm; border-bottom: 2px solid var(--primary); }
+.deckblatt-kategorie { font-size: 9.5pt; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); font-weight: 500; margin-bottom: 8mm; }
+.deckblatt-titel { font-size: 30pt; font-weight: 700; line-height: 1.15; color: var(--primary); margin-bottom: 4mm; letter-spacing: -0.02em; }
+.deckblatt-subtitel { font-size: 13pt; color: var(--muted); font-weight: 400; margin-bottom: 6mm; }
+.deckblatt-badge { display: inline-block; padding: 4px 12px; background: var(--light); color: var(--primary); border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 11pt; font-weight: 500; border: 1px solid var(--border); }
+.deckblatt-objekt { margin-top: 18mm; padding: 10mm; background: var(--lighter); border-left: 3px solid var(--accent); border-radius: 2px; }
+.deckblatt-objekt-label { font-size: 8pt; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 3mm; font-weight: 500; }
+.deckblatt-objekt-adresse { font-size: 15pt; font-weight: 600; color: var(--text); line-height: 1.35; margin-bottom: 2mm; }
+.deckblatt-objekt-typ { font-size: 11pt; color: var(--muted); }
+.gericht-block { margin-top: 12mm; padding: 8mm 10mm; background: white; border: 2px solid var(--primary); border-radius: 3px; }
+.gericht-block .label { font-size: 8pt; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 3mm; font-weight: 600; }
+.gericht-block .name { font-size: 14pt; font-weight: 700; color: var(--primary); margin-bottom: 2mm; }
+.gericht-block .az { font-family: 'JetBrains Mono', monospace; font-size: 11pt; color: var(--text); margin-bottom: 1mm; }
+.gericht-block .verfahren { font-size: 10pt; color: var(--muted); }
+.deckblatt-sv { margin-top: 10mm; padding: 8mm 10mm; background: white; border: 1px solid var(--border); border-radius: 3px; }
+.deckblatt-sv-label { font-size: 8pt; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); font-weight: 500; margin-bottom: 3mm; }
+.deckblatt-sv-name { font-size: 13pt; font-weight: 600; color: var(--text); margin-bottom: 1.5mm; }
+.deckblatt-sv-qualifikation { font-size: 10.5pt; color: var(--primary); font-weight: 500; margin-bottom: 1.5mm; }
+.deckblatt-sv-bestellung { font-size: 9.5pt; color: var(--muted); line-height: 1.5; margin-bottom: 2mm; font-style: italic; }
+.deckblatt-sv-kontakt { font-size: 9.5pt; color: var(--text); line-height: 1.6; }
+.deckblatt-sv-kontakt .mono { font-family: 'JetBrains Mono', monospace; font-size: 9pt; }
+.deckblatt-metadaten { margin-top: auto; padding-top: 10mm; display: grid; grid-template-columns: repeat(2, 1fr); gap: 6mm 15mm; }
+.deckblatt-meta-item .label { font-size: 8pt; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); font-weight: 500; margin-bottom: 1mm; }
+.deckblatt-meta-item .value { font-size: 11pt; color: var(--text); font-weight: 500; }
+.deckblatt-meta-item .value.mono { font-family: 'JetBrains Mono', monospace; font-size: 10pt; }
+.deckblatt-footer { margin-top: 10mm; padding-top: 6mm; border-top: 1px solid var(--border); display: flex; justify-content: space-between; font-size: 8.5pt; color: var(--muted); }
+.deckblatt-footer .brand-right { text-align: right; }
+.deckblatt-footer .brand-right .bold { font-weight: 600; color: var(--primary); font-size: 9.5pt; letter-spacing: 0.08em; }
+.teil { margin-bottom: 14mm; page-break-inside: avoid; }
+.teil-header { display: flex; align-items: baseline; gap: 10mm; margin-bottom: 8mm; padding-bottom: 4mm; border-bottom: 2px solid var(--primary); }
+.teil-nummer { font-family: 'JetBrains Mono', monospace; font-size: 11pt; font-weight: 500; color: var(--accent); letter-spacing: 0.1em; text-transform: uppercase; flex-shrink: 0; padding-top: 1mm; }
+.teil-titel { font-size: 18pt; font-weight: 600; color: var(--primary); letter-spacing: -0.015em; }
+.abschnitt { margin-bottom: 8mm; }
+.abschnitt-header { display: flex; align-items: baseline; gap: 6mm; margin-bottom: 4mm; padding-bottom: 2mm; border-bottom: 1px solid var(--border); }
+.abschnitt-nr { font-family: 'JetBrains Mono', monospace; font-size: 11.5pt; font-weight: 500; color: var(--muted); flex-shrink: 0; }
+.abschnitt-titel { font-size: 13pt; font-weight: 600; color: var(--text); letter-spacing: -0.01em; }
+.abschnitt-body { font-size: 10.5pt; line-height: 1.65; color: var(--text); }
+.abschnitt-body p { margin-bottom: 3mm; }
+.beweisbeschluss-kasten { margin: 4mm 0; padding: 6mm 8mm; background: var(--lighter); border: 2px solid var(--primary); border-left: 6px solid var(--primary); border-radius: 3px; }
+.beweisbeschluss-kasten .marker { display: inline-block; padding: 1.5mm 4mm; background: var(--primary); color: white; font-size: 8.5pt; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 600; border-radius: 2px; margin-bottom: 4mm; }
+.beweisbeschluss-kasten p { font-size: 11pt; line-height: 1.65; }
+.beweisfrage-list { counter-reset: bf-counter; margin: 4mm 0; }
+.beweisfrage-eintrag { counter-increment: bf-counter; margin-bottom: 5mm; padding: 5mm 7mm 5mm 14mm; background: var(--lighter); border-left: 3px solid var(--primary); border-radius: 2px; position: relative; font-size: 11pt; line-height: 1.6; }
+.beweisfrage-eintrag::before { content: counter(bf-counter) "."; position: absolute; left: 6mm; top: 5mm; font-family: 'JetBrains Mono', monospace; font-weight: 700; color: var(--primary); }
+.beantwortung-kasten { margin: 4mm 0; padding: 6mm 8mm; background: white; border: 2px solid var(--success); border-radius: 4px; }
+.beantwortung-kasten .marker { display: inline-block; padding: 1.5mm 4mm; background: var(--success); color: white; font-size: 8.5pt; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 600; border-radius: 2px; margin-bottom: 4mm; }
+.beantwortung-kasten .frage-ref { font-size: 9.5pt; color: var(--muted); margin-bottom: 2mm; font-style: italic; }
+.beantwortung-kasten .text { font-size: 11pt; line-height: 1.7; color: var(--text); }
+.info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2mm 8mm; margin: 4mm 0; padding: 5mm 6mm; background: var(--lighter); border-radius: 3px; border: 1px solid var(--border); }
+.info-item { display: flex; flex-direction: column; gap: 0.5mm; padding: 1.5mm 0; }
+.info-item .label { font-size: 8pt; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 500; }
+.info-item .value { font-size: 10.5pt; color: var(--text); font-weight: 500; }
+.info-item .value.mono { font-family: 'JetBrains Mono', monospace; font-size: 10pt; }
+.parteien-liste { display: grid; gap: 3mm; margin: 4mm 0; }
+.partei-eintrag { padding: 4mm 5mm; background: var(--lighter); border-left: 3px solid var(--accent); border-radius: 2px; }
+.partei-eintrag .rolle { font-size: 8.5pt; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); font-weight: 600; margin-bottom: 1.5mm; }
+.partei-eintrag .name { font-size: 11pt; font-weight: 600; color: var(--text); }
+.partei-eintrag .anschrift { font-size: 9.5pt; color: var(--muted); margin-top: 1mm; }
+.partei-eintrag .vertreter { font-size: 9pt; color: var(--muted); margin-top: 1mm; font-style: italic; }
+.fachurteil-kasten { margin: 5mm 0; padding: 6mm 8mm; background: white; border: 2px solid var(--primary); border-radius: 4px; }
+.fachurteil-kasten .marker { display: inline-block; padding: 1.5mm 4mm; background: var(--primary); color: white; font-size: 8.5pt; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 600; border-radius: 2px; margin-bottom: 4mm; }
+.fachurteil-kasten .intro { font-size: 9.5pt; color: var(--muted); font-style: italic; margin-bottom: 4mm; line-height: 1.55; padding-bottom: 3mm; border-bottom: 1px solid var(--border); }
+.fachurteil-kasten .text { font-size: 11pt; line-height: 1.7; color: var(--text); }
+.fachurteil-kasten .text p { margin-bottom: 3mm; }
+.erklaerung-kasten { margin: 4mm 0; padding: 5mm 7mm; background: var(--lighter); border-left: 3px solid var(--success); border-radius: 2px; font-size: 10.5pt; line-height: 1.65; }
+.erklaerung-kasten .marker { display: inline-block; padding: 1.2mm 3mm; background: var(--success); color: white; font-size: 8pt; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 600; border-radius: 2px; margin-bottom: 3mm; }
+.unparteilichkeit-kasten { margin: 5mm 0; padding: 7mm 9mm; background: var(--lighter); border: 2px solid var(--success); border-left: 6px solid var(--success); border-radius: 3px; }
+.unparteilichkeit-kasten .marker { display: inline-block; padding: 1.5mm 4mm; background: var(--success); color: white; font-size: 8.5pt; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 600; border-radius: 2px; margin-bottom: 4mm; }
+.hinweis-box { margin: 4mm 0; padding: 4mm 5mm; background: var(--lighter); border: 1px solid var(--border); border-radius: 3px; font-size: 9.5pt; line-height: 1.6; color: var(--muted); }
+.hinweis-box strong { color: var(--primary); }
+.unterschrift-block { margin-top: 12mm; padding-top: 6mm; border-top: 1px solid var(--border); }
+.unterschrift-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15mm; }
+.unterschrift-feld { border-top: 1px solid var(--text); padding-top: 2mm; font-size: 9.5pt; color: var(--muted); }
+.unterschrift-feld .name { font-size: 11pt; color: var(--text); font-weight: 600; margin-top: 1mm; }
+.unterschrift-feld .rolle { font-size: 9pt; color: var(--muted); margin-top: 0.5mm; }
+.law-ref { font-family: 'JetBrains Mono', monospace; font-size: 0.92em; color: var(--primary); font-weight: 500; }
+.akten-verzeichnis { width: 100%; border-collapse: collapse; margin: 4mm 0; font-size: 10pt; }
+.akten-verzeichnis th, .akten-verzeichnis td { padding: 2.5mm 4mm; text-align: left; border-bottom: 1px solid var(--border); }
+.akten-verzeichnis th { background: var(--light); color: var(--muted); font-weight: 500; font-size: 9pt; letter-spacing: 0.08em; text-transform: uppercase; border-bottom: 2px solid var(--border); }
+.akten-verzeichnis td.number { text-align: right; font-family: 'JetBrains Mono', monospace; }
+</style>
+</head>
+<body>
+
+<!-- TEIL 1.1 DECKBLATT -->
+<section class="deckblatt">
+  <div class="deckblatt-header">
+    <div class="deckblatt-kategorie">Sachverständigengutachten gemäß Beweisbeschluss</div>
+    <h1 class="deckblatt-titel">Gerichtsgutachten</h1>
+    {% if subtitel %}<div class="deckblatt-subtitel">{{ subtitel }}</div>{% endif %}
+    <div class="deckblatt-badge">Gutachten-Nr.: {{ gutachten_nummer }}</div>
+  </div>
+  <div class="deckblatt-objekt">
+    <div class="deckblatt-objekt-label">Beweisthemenobjekt</div>
+    <div class="deckblatt-objekt-adresse">{{ objekt.adresse }}</div>
+    <div class="deckblatt-objekt-typ">{{ objekt.objektart_label | default: objekt.objektart }}{% if objekt.baujahr %} · Baujahr {{ objekt.baujahr }}{% endif %}</div>
+  </div>
+  <div class="gericht-block">
+    <div class="label">Anordnendes Gericht</div>
+    <div class="name">{{ gericht_name }}</div>
+    <div class="az">Az.: {{ gericht_aktenzeichen }}</div>
+    {% if verfahren_art %}<div class="verfahren">Verfahrensart: {{ verfahren_art }}</div>{% endif %}
+    {% if beweisbeschluss_datum %}<div class="verfahren">Beweisbeschluss vom {{ beweisbeschluss_datum }}</div>{% endif %}
+  </div>
+  <div class="deckblatt-sv">
+    <div class="deckblatt-sv-label">Bestellter Sachverständiger</div>
+    <div class="deckblatt-sv-name">{{ sv_name }}{% if sv_titel %}, {{ sv_titel }}{% endif %}</div>
+    <div class="deckblatt-sv-qualifikation">{{ sv_qualifikation | default: "ö.b.u.v. Sachverständiger" }}{% if sv_sachgebiet %} für {{ sv_sachgebiet }}{% endif %}</div>
+    {% if sv_bestellungsstelle %}<div class="deckblatt-sv-bestellung">Öffentlich bestellt und vereidigt durch die {{ sv_bestellungsstelle }}{% if sv_bestellungstenor %} · {{ sv_bestellungstenor }}{% endif %}</div>{% endif %}
+    <div class="deckblatt-sv-kontakt">
+      {{ sv_strasse }} · {{ sv_plz }} {{ sv_ort }}<br>
+      Tel. <span class="mono">{{ sv_telefon }}</span> · {{ sv_email }}
+    </div>
+  </div>
+  <div class="deckblatt-metadaten">
+    <div class="deckblatt-meta-item"><div class="label">Beweisbeschluss</div><div class="value mono">{{ beweisbeschluss_datum | default: "—" }}</div></div>
+    <div class="deckblatt-meta-item"><div class="label">Bestellungsbeschluss</div><div class="value mono">{{ bestellungsbeschluss_datum | default: "—" }}</div></div>
+    <div class="deckblatt-meta-item"><div class="label">Ortstermin</div><div class="value mono">{{ ortstermin_datum | default: "—" }}</div></div>
+    <div class="deckblatt-meta-item"><div class="label">Gutachtendatum</div><div class="value mono">{{ datum }}</div></div>
+  </div>
+  <div class="deckblatt-footer">
+    <div class="umfang-info">Umfang: {{ umfang_seiten | default: "—" }} Seiten{% if umfang_anlagen %} · {{ umfang_anlagen }} Anlagen{% endif %}</div>
+    <div class="brand-right">erstellt mit<br><span class="bold">PROVA SYSTEMS</span></div>
+  </div>
+</section>
+
+<!-- TEIL 1 ALLGEMEINE ANGABEN -->
+<section class="teil">
+  <div class="teil-header"><div class="teil-nummer">Teil 1</div><div class="teil-titel">Allgemeine Angaben und Aufgabenstellung</div></div>
+
+  <div class="abschnitt">
+    <div class="abschnitt-header"><div class="abschnitt-nr">1.2</div><div class="abschnitt-titel">Beweisbeschluss</div></div>
+    <div class="abschnitt-body">
+      <p>Das <strong>{{ gericht_name }}</strong> hat mit Beweisbeschluss vom <strong>{{ beweisbeschluss_datum }}</strong> unter dem Aktenzeichen <span class="law-ref">{{ gericht_aktenzeichen }}</span> ein Sachverständigengutachten in folgender Sache angeordnet:</p>
+      {% if beweisbeschluss_text %}
+      <div class="beweisbeschluss-kasten">
+        <div class="marker">Beweisbeschluss im Wortlaut</div>
+        <p>{{ beweisbeschluss_text }}</p>
+      </div>
+      {% endif %}
+      {% if beweisfragen and beweisfragen.size > 0 %}
+      <p style="margin-top: 4mm;"><strong>Beweisfragen:</strong></p>
+      <div class="beweisfrage-list">
+        {% for f in beweisfragen %}
+        <div class="beweisfrage-eintrag">{{ f }}</div>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  {% if parteien and parteien.size > 0 %}
+  <div class="abschnitt">
+    <div class="abschnitt-header"><div class="abschnitt-nr">1.2.1</div><div class="abschnitt-titel">Verfahrensparteien</div></div>
+    <div class="abschnitt-body">
+      <div class="parteien-liste">
+        {% for p in parteien %}
+        <div class="partei-eintrag">
+          <div class="rolle">{{ p.rolle }}</div>
+          <div class="name">{{ p.name }}</div>
+          {% if p.anschrift %}<div class="anschrift">{{ p.anschrift }}</div>{% endif %}
+          {% if p.vertreter %}<div class="vertreter">vertreten durch {{ p.vertreter }}</div>{% endif %}
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="abschnitt">
+    <div class="abschnitt-header"><div class="abschnitt-nr">1.3</div><div class="abschnitt-titel">Mitarbeit von Hilfskräften und KI-Einsatz</div></div>
+    <div class="abschnitt-body">
+      <p>Dem vorliegenden Gerichtsgutachten wurde mit Anzeige vom <strong>{{ ki_anzeige_datum | default: bestellungsbeschluss_datum }}</strong> an das {{ gericht_name }} (Beweisbeschluss-Bestätigung) sowie die Prozessvertreter beider Parteien gemäß <span class="law-ref">§ 407a Abs. 3 ZPO</span>, <span class="law-ref">§ 10 IHK-SVO</span> und <span class="law-ref">Art. 50 EU AI Act</span> der Einsatz folgender Hilfsmittel vorab angezeigt:</p>
+      <p style="margin-top: 3mm;"><strong>Mitwirkung Dritter:</strong> {{ mitwirkung_dritter | default: "Keine. Das Gutachten wurde vom unterzeichnenden Sachverständigen höchstpersönlich erstattet (§ 407a Abs. 1 ZPO Höchstpersönlichkeit)." }}</p>
+      <p style="margin-top: 3mm;"><strong>Eingesetzte KI-Systeme:</strong> OpenAI GPT-4o + OpenAI Whisper. Detail-Dokumentation in <strong>Teil 4.3</strong>.</p>
+      <div class="hinweis-box" style="margin-top: 4mm;"><strong>§ 10 IHK-SVO Höchstpersönlichkeit:</strong> Die sachverständige Beurteilung sowie die Gesamtverantwortung verbleiben ausschließlich beim unterzeichnenden Sachverständigen. KI-Systeme werden ausschließlich als Arbeitshilfe eingesetzt und treffen keine fachlichen Entscheidungen. Das Fachurteil nach Teil 3.4 wurde KI-frei erstellt.</div>
+    </div>
+  </div>
+</section>
+
+<!-- TEIL 2 DOKUMENTATION DER DATEN -->
+<section class="teil">
+  <div class="teil-header"><div class="teil-nummer">Teil 2</div><div class="teil-titel">Dokumentation der Daten</div></div>
+  <div class="abschnitt">
+    <div class="abschnitt-header"><div class="abschnitt-nr">2.1</div><div class="abschnitt-titel">Objektbeschreibung</div></div>
+    <div class="abschnitt-body">
+      <div class="info-grid">
+        <div class="info-item"><div class="label">Adresse</div><div class="value">{{ objekt.adresse }}</div></div>
+        <div class="info-item"><div class="label">Objektart</div><div class="value">{{ objekt.objektart_label | default: objekt.objektart }}</div></div>
+        {% if objekt.baujahr %}<div class="info-item"><div class="label">Baujahr</div><div class="value mono">{{ objekt.baujahr }}</div></div>{% endif %}
+        {% if objekt.wohnflaeche %}<div class="info-item"><div class="label">Wohnflaeche</div><div class="value mono">{{ objekt.wohnflaeche }} m²</div></div>{% endif %}
+      </div>
+      {% if objekt.beschreibung %}<p style="margin-top: 4mm;">{{ objekt.beschreibung }}</p>{% endif %}
+    </div>
+  </div>
+
+  <div class="abschnitt">
+    <div class="abschnitt-header"><div class="abschnitt-nr">2.2</div><div class="abschnitt-titel">Akten und verwendete Unterlagen</div></div>
+    <div class="abschnitt-body">
+      {% if anknuepfungstatsachen %}
+      <table class="akten-verzeichnis">
+        <thead><tr><th>Pos.</th><th>Aktenstueck / Unterlage</th><th>Datum</th></tr></thead>
+        <tbody>
+          {% for t in anknuepfungstatsachen %}
+          <tr>
+            <td class="number">{{ forloop.index }}</td>
+            <td>{% if t.titel %}<strong>{{ t.titel }}:</strong> {% endif %}{{ t.text }}</td>
+            <td>{{ t.datum | default: "—" }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="abschnitt">
+    <div class="abschnitt-header"><div class="abschnitt-nr">2.3</div><div class="abschnitt-titel">Ortstermin und Beweisaufnahme</div></div>
+    <div class="abschnitt-body">
+      <p>Der Ortstermin fand am <strong>{{ ortstermin_datum }}</strong> in Anwesenheit aller Prozessparteien (siehe Teil 1.2.1) gemäß <span class="law-ref">§ 404a ZPO</span> statt.</p>
+      {% if bauteiloeffnungen and bauteiloeffnungen.size > 0 %}
+      <p style="margin-top: 3mm;"><strong>Bauteilöffnungen mit Zustimmung der Parteien:</strong></p>
+      <ul style="margin: 2mm 0 3mm 6mm;">
+        {% for b in bauteiloeffnungen %}
+        <li style="margin-bottom: 1.5mm;">{{ b }}</li>
+        {% endfor %}
+      </ul>
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+<!-- TEIL 3 BEANTWORTUNG DER BEWEISFRAGEN -->
+<section class="teil">
+  <div class="teil-header"><div class="teil-nummer">Teil 3</div><div class="teil-titel">Beantwortung der Beweisfragen</div></div>
+
+  <div class="abschnitt">
+    <div class="abschnitt-header"><div class="abschnitt-nr">3.1</div><div class="abschnitt-titel">Befundaufnahme</div></div>
+    <div class="abschnitt-body">
+      {% if befunde %}
+      {% for b in befunde %}
+      <p>{% if b.nr %}<strong>{{ b.nr }}:</strong> {% endif %}{{ b.text }}</p>
+      {% endfor %}
+      {% else %}
+      <p>{{ befunde_text | default: "—" }}</p>
+      {% endif %}
+    </div>
+  </div>
+
+  {% if hypothesen %}
+  <div class="abschnitt">
+    <div class="abschnitt-header"><div class="abschnitt-nr">3.2</div><div class="abschnitt-titel">Sachverständige Würdigung der Befunde (Konjunktiv II)</div></div>
+    <div class="abschnitt-body">
+      {% for h in hypothesen %}
+      <p style="margin-top: 3mm;"><strong>{{ h.titel }}:</strong> {{ h.text }}</p>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="abschnitt">
+    <div class="abschnitt-header"><div class="abschnitt-nr">3.4</div><div class="abschnitt-titel">Beantwortung der Beweisfragen (Fachurteil)</div></div>
+    <div class="abschnitt-body">
+      <div class="fachurteil-kasten">
+        <div class="marker">SV-Fachurteil · KI-frei (Art. 50 EU AI Act, § 10 IHK-SVO)</div>
+        <div class="intro">Die nachstehende Beantwortung der Beweisfragen wurde vollständig und ausschließlich vom unterzeichnenden Sachverständigen persönlich erstellt, ohne KI-Unterstützung. Die abschließende fachliche Entscheidung obliegt allein dem Sachverständigen (§ 407a Abs. 2 ZPO).</div>
+        <div class="text">{{ fachurteil_text }}</div>
+      </div>
+
+      {% if beweisfrage_antworten and beweisfrage_antworten.size > 0 %}
+      {% for a in beweisfrage_antworten %}
+      <div class="beantwortung-kasten">
+        <div class="marker">Antwort zu Beweisfrage {{ a.nr | default: forloop.index }}</div>
+        {% if a.frage %}<div class="frage-ref">Frage: {{ a.frage }}</div>{% endif %}
+        <div class="text">{{ a.antwort }}</div>
+      </div>
+      {% endfor %}
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+<!-- TEIL 4 SCHLUSSERKLAERUNGEN -->
+<section class="teil">
+  <div class="teil-header"><div class="teil-nummer">Teil 4</div><div class="teil-titel">Schlusserklärungen</div></div>
+  {% if zusammenfassung %}
+  <div class="abschnitt">
+    <div class="abschnitt-header"><div class="abschnitt-nr">4.1</div><div class="abschnitt-titel">Zusammenfassendes Ergebnis</div></div>
+    <div class="abschnitt-body"><p>{{ zusammenfassung }}</p></div>
+  </div>
+  {% endif %}
+
+  <div class="abschnitt">
+    <div class="abschnitt-header"><div class="abschnitt-nr">4.2</div><div class="abschnitt-titel">Erklärung zur Unparteilichkeit (§ 407a Abs. 2 ZPO) und zur Höchstpersönlichkeit (§ 407a Abs. 1 ZPO)</div></div>
+    <div class="abschnitt-body">
+      <div class="unparteilichkeit-kasten">
+        <div class="marker">§ 407a Abs. 1+2 ZPO · § 10 IHK-SVO</div>
+        <p>Der Unterzeichner versichert hiermit:</p>
+        <ul style="margin: 3mm 0 3mm 6mm;">
+          <li style="margin-bottom: 1.5mm;">dass das vorliegende Sachverständigengutachten nach bestem Wissen und Gewissen, unparteiisch und ohne Rücksicht auf die Person der Beteiligten erstattet wurde;</li>
+          <li style="margin-bottom: 1.5mm;">dass keine Befangenheitsgründe vorliegen und auch nicht vor noch nach der Bestellung bekannt wurden;</li>
+          <li style="margin-bottom: 1.5mm;">dass das Gutachten höchstpersönlich erstattet wurde (§ 407a Abs. 1 ZPO, § 10 IHK-SVO) und nicht delegiert wurde;</li>
+          <li style="margin-bottom: 1.5mm;">dass die zugrunde liegenden Anknüpfungstatsachen eigenverantwortlich geprüft wurden;</li>
+          <li style="margin-bottom: 1.5mm;">dass die unter Art. 50 EU AI Act offengelegten KI-Systeme ausschließlich als Arbeitshilfe eingesetzt wurden und keine sachverständigen Beurteilungen ersetzt haben.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="abschnitt">
+    <div class="abschnitt-header"><div class="abschnitt-nr">4.3</div><div class="abschnitt-titel">Dokumentation des KI-Einsatzes (Art. 50 EU AI Act, § 407a Abs. 3 ZPO)</div></div>
+    <div class="abschnitt-body">
+      <p>Die nachstehende Dokumentation ergänzt die Ex-ante-Anzeige aus Teil 1.3:</p>
+      <ul style="margin: 3mm 0 3mm 6mm;">
+        <li style="margin-bottom: 1.5mm;"><strong>OpenAI Whisper:</strong> Transkription des SV-Diktats in Text. Output wurde vom SV vor Übernahme geprüft und korrigiert.</li>
+        <li style="margin-bottom: 1.5mm;"><strong>OpenAI GPT-4o:</strong> Strukturierung der Befunde, Konjunktiv-II-Prüfung, Halluzinations-Check, §407a-Compliance-Check, Rechtschreib- und Grammatik-Hinweise. Keine sachverständigen Beurteilungen.</li>
+        <li style="margin-bottom: 1.5mm;"><strong>Eigenleistungs-Anteil:</strong> Teil 3.4 (Beweisfrage-Beantwortung) wurde vollständig und ausschließlich vom unterzeichnenden Sachverständigen persönlich verfasst, ohne KI-Unterstützung.</li>
+      </ul>
+      <div class="hinweis-box" style="margin-top: 4mm;"><strong>Verantwortungsklausel:</strong> Die Gesamtverantwortung für den Inhalt dieses Gerichtsgutachtens verbleibt ausschließlich beim unterzeichnenden Sachverständigen.</div>
+    </div>
+  </div>
+
+  <div class="abschnitt">
+    <div class="abschnitt-header"><div class="abschnitt-nr">4.4</div><div class="abschnitt-titel">Unterschrift</div></div>
+    <div class="abschnitt-body">
+      <p>{{ ort | default: sv_ort }}, den {{ datum }}</p>
+      <div class="unterschrift-block">
+        <div class="unterschrift-grid">
+          <div class="unterschrift-feld">
+            Unterschrift Sachverständiger
+            <div class="name">{{ sv_name }}{% if sv_titel %}, {{ sv_titel }}{% endif %}</div>
+            <div class="rolle">{{ sv_qualifikation | default: "ö.b.u.v. Sachverständiger" }}</div>
+          </div>
+          {% if sv_eidstatus %}
+          <div class="unterschrift-feld">
+            Vereidigt
+            <div class="name">{{ sv_bestellungsstelle | default: "IHK Köln" }}</div>
+            <div class="rolle">{{ sv_bestellungstenor | default: "für Schäden an Gebäuden" }}</div>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% if anlagen %}
+<section class="teil">
+  <div class="teil-header"><div class="teil-nummer">Teil 5</div><div class="teil-titel">Anlagen — Akten- und Unterlagenverzeichnis</div></div>
+  <div class="abschnitt">
+    <div class="abschnitt-body">
+      <table class="akten-verzeichnis">
+        <thead><tr><th>Anlage Nr.</th><th>Bezeichnung</th><th>Beschreibung</th></tr></thead>
+        <tbody>
+          {% for a in anlagen %}
+          <tr>
+            <td class="number">{{ a.nr | default: forloop.index }}</td>
+            <td><strong>{{ a.titel }}</strong></td>
+            <td>{{ a.beschreibung | default: "—" }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+{% endif %}
+
+</body>
+</html>
