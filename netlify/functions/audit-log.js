@@ -1,10 +1,16 @@
 /**
  * PROVA — AUDIT_TRAIL logging endpoint
+ * MEGA⁴-EXT Q3: Storage-Router (dual-write Airtable + Supabase audit_trail).
+ *
  * Writes lightweight metadata only.
+ * Default: PROVA_MIGRATION_PATH='airtable' → nur Airtable
+ *          'dual' → beide (sichere Migration)
+ *          'supabase' → nur Supabase (Ziel-Zustand)
  */
 const { AIRTABLE_API, BASE_ID, TABLE_AUDIT } = require('./lib/prova-subscription.js');
 const { getCorsHeaders, corsOptionsResponse, jsonResponse } = require('./lib/cors-helper');
 const { requireAuth } = require('./lib/jwt-middleware');
+const { writeDual, getSupabase } = require('./lib/storage-router');
 
 // S6 Phase 1.9: per-request event-Capture (siehe ki-proxy.js Begruendung)
 let _currentEvent = null;
@@ -52,19 +58,30 @@ exports.handler = requireAuth(async function (event, context) {
   const hint = ipHint(event);
 
   try {
-    await fetch(AIRTABLE_API + '/v0/' + BASE_ID + '/' + TABLE_AUDIT, {
-      method: 'POST',
-      headers: { Authorization: 'Bearer ' + pat, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        fields: {
-          Typ: typ,
-          Email: email,
-          AZ: az,
-          Details: details,
-          Zeitstempel: ts,
-          IP_Hint: hint
-        }
-      })
+    await writeDual({
+      functionName: 'audit-log',
+      airtable: async () => {
+        return fetch(AIRTABLE_API + '/v0/' + BASE_ID + '/' + TABLE_AUDIT, {
+          method: 'POST',
+          headers: { Authorization: 'Bearer ' + pat, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            fields: {
+              Typ: typ, Email: email, AZ: az,
+              Details: details, Zeitstempel: ts, IP_Hint: hint
+            }
+          })
+        });
+      },
+      supabase: async () => {
+        const sb = getSupabase();
+        if (!sb) return null;
+        return sb.from('audit_trail').insert({
+          typ: typ,
+          sv_email: email,
+          details: JSON.stringify(Object.assign({ az: az, ip_hint: hint }, detailsObj)),
+          created_at: ts
+        });
+      }
     });
   } catch (e2) {
     // never block app flow

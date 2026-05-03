@@ -1,6 +1,7 @@
 // PROVA — normen.js Netlify Function
-// Lädt alle aktiven Normen aus Airtable NORMEN-Tabelle (tblnceVJIW7BjHsPF)
-// Korrekte Feld-IDs aus Airtable-Schema — Stand 17.04.2026
+// MEGA⁴-EXT Q3: Storage-Router Pilot-Migration (Bundle A)
+// Liest aus Airtable ODER Supabase je nach PROVA_MIGRATION_PATH ENV.
+// Default: 'airtable' (Status-Quo). 'dual'/supabase' fuer graduellen Rollout.
 
 const AIRTABLE_BASE  = 'appJ7bLlAHZoxENWE';
 const AIRTABLE_TABLE = 'tblnceVJIW7BjHsPF';
@@ -23,6 +24,7 @@ const FIELD_MAP = {
 const FIELDS = Object.keys(FIELD_MAP).map(id => `fields[]=${encodeURIComponent(id)}`).join('&');
 
 const { getCorsHeaders } = require('./lib/cors-helper');
+const { readDual, getSupabase } = require('./lib/storage-router');
 
 // S6 Phase 1.9: dynamische CORS-Headers per Request (vorher hardcoded
 // auf prova-systems.de — App-Subdomain wurde geblockt). Audit-8 M-03.
@@ -76,15 +78,44 @@ exports.handler = async function(event) {
   }
 
   try {
-    let all = [];
-    let offset = null;
-
-    do {
-      const data = await fetchPage(pat, offset);
-      const records = (data.records || []).map(mapRecord);
-      all = all.concat(records);
-      offset = data.offset || null;
-    } while (offset);
+    // Storage-Router: PROVA_MIGRATION_PATH='airtable' (default) | 'dual' | 'supabase'
+    const all = await readDual({
+      functionName: 'normen',
+      airtable: async () => {
+        let acc = [];
+        let offset = null;
+        do {
+          const data = await fetchPage(pat, offset);
+          const records = (data.records || []).map(mapRecord);
+          acc = acc.concat(records);
+          offset = data.offset || null;
+        } while (offset);
+        return acc;
+      },
+      supabase: async () => {
+        const sb = getSupabase();
+        if (!sb) return [];
+        const { data, error } = await sb.from('textbausteine')
+          .select('titel, kurzbeschreibung, inhalt, kategorie_subtyp, metadata, is_active')
+          .eq('kategorie', 'norm')
+          .eq('is_active', true)
+          .limit(1000);
+        if (error) throw new Error('Supabase: ' + error.message);
+        return (data || []).map(t => ({
+          num:    t.titel,
+          titel:  t.kurzbeschreibung || '',
+          bereich: t.kategorie_subtyp || '',
+          sa:     (t.metadata && t.metadata.schadensarten) || '',
+          anw:    (t.metadata && t.metadata.anwendung) || '',
+          gw:     (t.metadata && t.metadata.grenzwerte) || '',
+          mess:   (t.metadata && t.metadata.messtechnik) || '',
+          hint:   (t.metadata && t.metadata.gutachter_hinweis) || '',
+          hf:     (t.metadata && t.metadata.haeufigkeit) || 'mittel',
+          status: 'aktiv',
+          aktiv:  true
+        }));
+      }
+    });
 
     // Sortierung: hoch → mittel → niedrig
     const HF_ORDER = { 'hoch': 0, 'mittel': 1, 'niedrig': 2 };
