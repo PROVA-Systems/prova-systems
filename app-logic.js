@@ -1053,8 +1053,9 @@ PROVA.canUse = function(feature) {
 };
 PROVA.requirePaket = function(feature, minPaket) {
   if (!PROVA.canUse(feature)) {
-    const msg = '🔒 Nur im Team-Paket verfügbar';
-    alert(msg + '\n\nPaket upgraden unter Einstellungen → Paket & Features');
+    const msg = '🔒 Nur im Team-Paket verfuegbar — Paket upgraden unter Einstellungen → Paket & Features';
+    if (window.ProvaUI && ProvaUI.toast) ProvaUI.toast(msg, 'info');
+    else alert(msg);
     return false;
   }
   return true;

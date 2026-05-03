@@ -277,10 +277,15 @@ function escAttr(s){return String(s||'').replace(/'/g,"\\'").replace(/"/g,'&quot
 /* ── Phase-Aktionen (global für onclick) ── */
 window.phaseAbschliessen = async function(phaseN){
   var recordId = window._currentAkteId;
-  if(!recordId){ alert('Kein aktiver Fall gefunden.'); return; }
+  if(!recordId){
+    if (window.ProvaUI && ProvaUI.toast) ProvaUI.toast('Kein aktiver Fall gefunden.', 'error');
+    else alert('Kein aktiver Fall gefunden.');
+    return;
+  }
   var naechstePhase = phaseN + 1;
   if(naechstePhase > 9){
-    alert('Alle Phasen abgeschlossen. Fall kann archiviert werden.');
+    if (window.ProvaUI && ProvaUI.toast) ProvaUI.toast('Alle Phasen abgeschlossen. Fall kann archiviert werden.', 'info');
+    else alert('Alle Phasen abgeschlossen. Fall kann archiviert werden.');
     return;
   }
   // Airtable-Update der Phase
@@ -302,7 +307,8 @@ window.phaseAbschliessen = async function(phaseN){
     if(window._currentAkteFields) renderTimeline(null, window._currentAkteFields);
     if(typeof provaToast==='function') provaToast('✅ Phase '+phaseN+' abgeschlossen','success');
   } catch(e) {
-    alert('Phase konnte nicht gespeichert werden: '+e.message);
+    if (window.ProvaUI && ProvaUI.toast) ProvaUI.toast('Phase konnte nicht gespeichert werden: '+e.message, 'error');
+    else alert('Phase konnte nicht gespeichert werden: '+e.message);
   }
 };
 
@@ -495,6 +501,7 @@ function uebernimmFrist() {
   }
   document.getElementById('dok-frist-banner').style.display = 'none';
   if (typeof showToast === 'function') showToast('Frist ' + _erkFrist + ' im Kalender eingetragen ✓', 'success');
+  else if (window.ProvaUI && ProvaUI.toast) ProvaUI.toast('Frist ' + _erkFrist + ' eingetragen.', 'success');
   else alert('Frist ' + _erkFrist + ' eingetragen.');
 }
 
