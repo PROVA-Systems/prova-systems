@@ -208,6 +208,26 @@ function renderKontakte() {
   }
 
   if (!liste.length) {
+    // MEGA⁹ W2: Differenzierter Empty-State (Filter vs. Onboarding)
+    if (window.ProvaUI && window.ProvaUI.emptyState) {
+      var hasFilter = !!(suche || filterTyp);
+      window.ProvaUI.emptyState(grid, hasFilter ? {
+        icon: '🔍',
+        title: 'Keine Treffer',
+        text: 'Setze die Filter zurueck oder waehle eine andere Kategorie.',
+        primaryBtn: { label: 'Filter zuruecksetzen', onClick: 'resetFilter && resetFilter()' }
+      } : {
+        icon: '👥',
+        title: 'Noch keine Kontakte',
+        text: 'Lege Auftraggeber, Anwaelte oder Versicherungen an — sie erscheinen automatisch in deinen Aufträgen.',
+        primaryBtn: { label: '+ Neuer Kontakt', onClick: 'oeffneNeu && oeffneNeu()' },
+        secondaryBtn: { label: '⬆ Importieren', onClick: 'oeffneImport && oeffneImport()' }
+      });
+      // Grid-Layout-Fix (Empty-State soll volle Breite nehmen)
+      var emptyEl = grid.querySelector('.prova-empty-state');
+      if (emptyEl) emptyEl.style.gridColumn = '1/-1';
+      return;
+    }
     grid.innerHTML = '<div class="empty" style="grid-column:1/-1;"><div class="empty-icon">👥</div><div style="font-size:14px;font-weight:600;margin-bottom:6px;">'+(suche||filterTyp?'Keine Treffer':'Noch keine Kontakte')+'</div><div style="font-size:12px;">'+(suche||filterTyp?'Filter anpassen':'+ Neuer Kontakt oder ⬆ Importieren')+'</div></div>';
     return;
   }

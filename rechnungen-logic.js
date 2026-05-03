@@ -388,6 +388,17 @@ async function ladeListe(){
   setText('liste-count',alleRechnungen.length+' Rechnungen');
 
   if(alleRechnungen.length===0){
+    // MEGA⁹ W2: Empty-State via ProvaUI mit zwei Wegen (JVEG + Standard)
+    if (window.ProvaUI && window.ProvaUI.emptyState) {
+      window.ProvaUI.emptyState(liste, {
+        icon: '🧾',
+        title: 'Noch keine Rechnungen',
+        text: 'Erstelle deine erste Rechnung — JVEG-Rechner fuer Gerichte oder freie Standard-Rechnung.',
+        primaryBtn: { label: 'JVEG-Rechner', href: 'jveg.html' },
+        secondaryBtn: { label: 'Standard-Rechnung', href: 'rechnungen.html?neu=1' }
+      });
+      return;
+    }
     liste.innerHTML='<div class="liste-empty">Noch keine Rechnungen.<br><br><a href="jveg.html" style="color:var(--accent);font-size:12px;">JVEG-Rechner öffnen →</a></div>';
     return;
   }
@@ -604,7 +615,12 @@ async function supSendModal(){
   }catch(e){
     btn.disabled=false;
     btn.textContent='Nachricht senden';
-    alert('Fehler. Bitte E-Mail an support@prova-systems.de');
+    // MEGA⁹ W2: Toast statt alert (User kann weiterarbeiten)
+    if (window.ProvaUI && window.ProvaUI.toast) {
+      window.ProvaUI.toast('Senden fehlgeschlagen. Bitte E-Mail an support@prova-systems.de', 'error');
+    } else {
+      alert('Fehler. Bitte E-Mail an support@prova-systems.de');
+    }
   }
 }
 /* ══════════════════════════════════════════════════════════════

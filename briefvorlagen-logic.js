@@ -95,6 +95,16 @@ function render(){
     c.appendChild(sec);
   });
   if(!vis){
+    // MEGA⁹ W2: Empty-State via ProvaUI (Filter/Search-Empty-Case)
+    if (window.ProvaUI && window.ProvaUI.emptyState) {
+      window.ProvaUI.emptyState(c, {
+        icon: '🔍',
+        title: 'Keine Vorlagen gefunden',
+        text: 'Versuche einen anderen Suchbegriff oder setze die Filter zurueck.',
+        primaryBtn: { label: 'Filter zuruecksetzen', onClick: 'bvFilter && bvFilter("")' }
+      });
+      return;
+    }
     c.innerHTML='<div class="bv-empty">'
       +'<div class="bv-empty-icon">🔍</div>'
       +'<div class="bv-empty-title">Keine Vorlagen gefunden</div>'

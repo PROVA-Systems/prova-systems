@@ -327,6 +327,23 @@ function renderListe(){
   var body=document.getElementById('liste-body');
   if(!body)return;
   if(gefiltert.length===0){
+    // MEGA⁹ W2: Differenzierter Empty-State via ProvaUI.emptyState
+    if (window.ProvaUI && window.ProvaUI.emptyState) {
+      var isOnboarding = (alleRecords.length === 0);
+      window.ProvaUI.emptyState(body, isOnboarding ? {
+        icon: '📋',
+        title: 'Noch keine Fälle im Archiv',
+        text: 'Lege deinen ersten Auftrag an — er erscheint hier sofort nach dem Speichern.',
+        primaryBtn: { label: '+ Neuer Auftrag', href: appUrl },
+        secondaryBtn: { label: 'Demo-Fall ansehen', href: 'akte.html?az=SCH-DEMO-001' }
+      } : {
+        icon: '🔍',
+        title: 'Keine Treffer fuer aktuelle Filter',
+        text: 'Setze die Filter zurueck oder probiere ein anderes Suchwort.',
+        primaryBtn: { label: 'Filter zuruecksetzen', onClick: 'resetFilter && resetFilter()' }
+      });
+      return;
+    }
     body.innerHTML='<div class="list-empty"><div class="list-empty-icon">🔍</div><p style="font-size:13px;color:var(--text3);margin-bottom:8px;">Keine Fälle gefunden.</p><a href="'+appUrl+'" style="color:var(--accent);font-size:13px;">Neuen Fall anlegen →</a></div>';
     return;
   }

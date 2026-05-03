@@ -548,6 +548,17 @@ function renderRecent(faelle){
   if(!list)return;
   var recent=faelle.slice(0,5);
   if(recent.length===0){
+    // MEGA⁹ W2: Onboarding-Empty-State via ProvaUI mit Demo-Fall (CLAUDE.md Empty-States-Regel: Demo-Fall-Link bei neuen Usern)
+    if (window.ProvaUI && window.ProvaUI.emptyState) {
+      window.ProvaUI.emptyState(list, {
+        icon: '📋',
+        title: 'Noch keine Fälle angelegt',
+        text: 'Lege deinen ersten Fall an — Schaden, Wertgutachten, Beratung oder Baubegleitung. Oder schau dir einen Demo-Fall an.',
+        primaryBtn: { label: '+ Ersten Fall erstellen', href: 'app.html' },
+        secondaryBtn: { label: 'Demo-Fall ansehen', href: 'akte.html?az=SCH-DEMO-001' }
+      });
+      return;
+    }
     list.innerHTML='<div style="padding:20px;text-align:center;font-size:12px;color:var(--text3);">Noch keine Fälle angelegt.<br><a href="app.html" style="color:var(--accent);margin-top:6px;display:inline-block;">Ersten Fall erstellen →</a></div>';
     return;
   }
