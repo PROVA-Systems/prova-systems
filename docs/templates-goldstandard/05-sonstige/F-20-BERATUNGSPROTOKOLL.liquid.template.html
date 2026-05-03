@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>{{ protokoll_nummer }} — {{ auftraggeber_name }}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* PROVA Systems · F-20 BERATUNGSPROTOKOLL (Flow C) v1.0
+   Liquid-templated · 2-4 Seiten · Design-System v1.0 */
+:root { --primary: #1a3a6b; --accent: #3b82f6; --muted: #64748b; --text: #0f172a; --light: #f1f5f9; --lighter: #f8fafc; --border: #e2e8f0; --success: #059669; }
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Inter', sans-serif; font-size: 10.5pt; line-height: 1.55; color: var(--text); background: white; }
+@page { size: A4; margin: 20mm 20mm 22mm 20mm; }
+@page {
+  @top-left { content: "{{ sv_name }} · {{ sv_qualifikation | default: 'ö.b.u.v. Sachverständiger' }}"; font-family: 'Inter', sans-serif; font-size: 8pt; color: #64748b; padding-top: 10mm; }
+  @top-right { content: "Beratungsprotokoll {{ protokoll_nummer }}"; font-family: 'Inter', sans-serif; font-size: 8pt; color: #1a3a6b; font-weight: 600; padding-top: 10mm; }
+  @bottom-right { content: "Seite " counter(page) " / " counter(pages); font-family: 'Inter', sans-serif; font-size: 8pt; color: #64748b; padding-bottom: 10mm; }
+}
+@page :first { @top-left { content: ""; } @top-right { content: ""; } @bottom-right { content: ""; } }
+.kopf { padding: 10mm 0 8mm; border-bottom: 2px solid var(--primary); margin-bottom: 8mm; }
+.kopf-kategorie { font-size: 9.5pt; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); font-weight: 500; margin-bottom: 4mm; }
+.kopf-titel { font-size: 26pt; font-weight: 700; line-height: 1.15; color: var(--primary); margin-bottom: 3mm; letter-spacing: -0.02em; }
+.kopf-badge { display: inline-block; padding: 3px 10px; background: var(--light); color: var(--primary); border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 10pt; font-weight: 500; border: 1px solid var(--border); }
+.info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2mm 8mm; margin: 4mm 0 6mm; padding: 5mm 6mm; background: var(--lighter); border-radius: 3px; border: 1px solid var(--border); }
+.info-item { display: flex; flex-direction: column; gap: 0.5mm; padding: 1.5mm 0; }
+.info-item .label { font-size: 8pt; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 500; }
+.info-item .value { font-size: 10.5pt; color: var(--text); font-weight: 500; }
+.info-item .value.mono { font-family: 'JetBrains Mono', monospace; font-size: 10pt; }
+.section { margin-bottom: 8mm; }
+.section-titel { font-size: 14pt; font-weight: 600; color: var(--primary); margin-bottom: 4mm; padding-bottom: 2mm; border-bottom: 1px solid var(--border); }
+.section-body { font-size: 10.5pt; line-height: 1.65; color: var(--text); }
+.section-body p { margin-bottom: 3mm; }
+.punkt-liste { counter-reset: pkt-counter; }
+.punkt-eintrag { counter-increment: pkt-counter; margin: 4mm 0; padding: 4mm 5mm 4mm 14mm; background: var(--lighter); border-left: 3px solid var(--accent); border-radius: 2px; position: relative; }
+.punkt-eintrag::before { content: counter(pkt-counter) "."; position: absolute; left: 6mm; top: 4mm; font-family: 'JetBrains Mono', monospace; font-weight: 700; color: var(--accent); font-size: 11pt; }
+.punkt-titel { font-size: 11pt; font-weight: 600; color: var(--primary); margin-bottom: 1.5mm; }
+.punkt-text { font-size: 10.5pt; line-height: 1.55; color: var(--text); }
+.empfehlung-eintrag { margin: 3mm 0; padding: 4mm 5mm; background: white; border: 1px solid var(--border); border-left: 3px solid var(--success); border-radius: 2px; }
+.empfehlung-titel { font-size: 11pt; font-weight: 600; color: var(--success); margin-bottom: 1.5mm; display: flex; justify-content: space-between; align-items: baseline; }
+.empfehlung-prio { font-size: 8.5pt; padding: 1mm 4mm; border-radius: 3px; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; }
+.empfehlung-prio.hoch { background: rgba(220, 38, 38, 0.12); color: #dc2626; }
+.empfehlung-prio.mittel { background: rgba(245, 158, 11, 0.12); color: #d97706; }
+.empfehlung-prio.niedrig { background: rgba(100, 116, 139, 0.12); color: var(--muted); }
+.aktion-tabelle { width: 100%; border-collapse: collapse; margin: 3mm 0; font-size: 10pt; }
+.aktion-tabelle th, .aktion-tabelle td { padding: 2.5mm 3mm; text-align: left; border-bottom: 1px solid var(--border); }
+.aktion-tabelle th { background: var(--light); color: var(--muted); font-weight: 500; font-size: 9pt; text-transform: uppercase; letter-spacing: 0.05em; }
+.ki-box { margin: 6mm 0; padding: 5mm 6mm; background: var(--lighter); border: 1px solid var(--border); border-left: 3px solid var(--accent); border-radius: 3px; font-size: 9.5pt; line-height: 1.5; }
+.ki-box .marker { display: inline-block; padding: 1mm 3mm; background: var(--accent); color: white; font-size: 7.5pt; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; border-radius: 2px; margin-bottom: 2mm; }
+.unterschrift-block { margin-top: 12mm; padding-top: 6mm; border-top: 1px solid var(--border); display: grid; grid-template-columns: 1fr; gap: 8mm; }
+.unterschrift-feld { border-top: 1px solid var(--text); padding-top: 2mm; max-width: 300px; font-size: 9.5pt; color: var(--muted); }
+.unterschrift-feld .name { font-size: 11pt; color: var(--text); font-weight: 600; margin-top: 1mm; }
+.law-ref { font-family: 'JetBrains Mono', monospace; font-size: 0.92em; color: var(--primary); font-weight: 500; }
+.honorar-card { margin: 6mm 0; padding: 6mm 8mm; background: linear-gradient(135deg, var(--primary) 0%, #2a4a7b 100%); color: white; border-radius: 4px; display: flex; justify-content: space-between; align-items: baseline; }
+.honorar-label { font-size: 9pt; letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.85; }
+.honorar-value { font-size: 22pt; font-weight: 700; letter-spacing: -0.02em; }
+</style>
+</head>
+<body>
+
+<div class="kopf">
+  <div class="kopf-kategorie">{{ typ_label | default: "Beratungsleistung" }}{% if thema_label %} · {{ thema_label }}{% endif %}</div>
+  <h1 class="kopf-titel">Beratungsprotokoll</h1>
+  <div class="kopf-badge">Protokoll-Nr.: {{ protokoll_nummer }}</div>
+</div>
+
+<div class="info-grid">
+  <div class="info-item"><div class="label">Auftraggeber</div><div class="value">{{ auftraggeber_name }}</div></div>
+  <div class="info-item"><div class="label">Beratungsdatum</div><div class="value mono">{{ termin_datum | default: datum }}{% if termin_uhrzeit %}, {{ termin_uhrzeit }} Uhr{% endif %}</div></div>
+  {% if termin_dauer_min %}<div class="info-item"><div class="label">Dauer</div><div class="value mono">{{ termin_dauer_min }} Min.</div></div>{% endif %}
+  <div class="info-item"><div class="label">Beratungsart</div><div class="value">{{ typ_label | default: typ }}</div></div>
+  {% if beratungs_objekt_adresse %}<div class="info-item" style="grid-column:1 / -1"><div class="label">Beratungs-Objekt</div><div class="value">{{ beratungs_objekt_adresse }}</div></div>{% endif %}
+</div>
+
+<section class="section">
+  <h2 class="section-titel">1 · Anlass und Themenstellung</h2>
+  <div class="section-body">
+    <p><strong>Beratungs-Thema:</strong> {{ thema_label | default: thema }}</p>
+    {% if thema_freitext %}<p>{{ thema_freitext }}</p>{% endif %}
+  </div>
+</section>
+
+{% if besprochene_punkte and besprochene_punkte.size > 0 %}
+<section class="section">
+  <h2 class="section-titel">2 · Besprochene Punkte</h2>
+  <div class="section-body">
+    <div class="punkt-liste">
+      {% for p in besprochene_punkte %}
+      <div class="punkt-eintrag">
+        {% if p.titel %}<div class="punkt-titel">{{ p.titel }}</div>{% endif %}
+        <div class="punkt-text">{{ p.text }}</div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+{% if empfehlungen and empfehlungen.size > 0 %}
+<section class="section">
+  <h2 class="section-titel">3 · Sachverständige Empfehlungen</h2>
+  <div class="section-body">
+    {% for e in empfehlungen %}
+    <div class="empfehlung-eintrag">
+      <div class="empfehlung-titel">
+        <span>✓ {{ e.titel }}</span>
+        {% if e.prioritaet %}<span class="empfehlung-prio {{ e.prioritaet }}">{{ e.prioritaet }}</span>{% endif %}
+      </div>
+      <p>{{ e.text }}</p>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+{% if folge_aktionen and folge_aktionen.size > 0 %}
+<section class="section">
+  <h2 class="section-titel">4 · Folge-Aktionen</h2>
+  <div class="section-body">
+    <table class="aktion-tabelle">
+      <thead><tr><th>Pos.</th><th>Aktion</th><th>Verantwortlich</th><th>Bis</th></tr></thead>
+      <tbody>
+        {% for a in folge_aktionen %}
+        <tr>
+          <td>{{ forloop.index }}</td>
+          <td>{{ a.text }}</td>
+          <td>{{ a.verantwortlich | default: "—" }}</td>
+          <td>{{ a.bis_datum | default: "—" }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endif %}
+
+{% if honorar_brutto %}
+<div class="honorar-card">
+  <div>
+    <div class="honorar-label">Honorar gemäß Beratungsumfang</div>
+    {% if stundensatz_eur and termin_dauer_min %}<div style="font-size:9.5pt;opacity:.8;margin-top:1mm">{{ termin_dauer_min }} Min × {{ stundensatz_eur }} €/h</div>{% endif %}
+  </div>
+  <div class="honorar-value">{{ honorar_brutto }}</div>
+</div>
+{% endif %}
+
+{% if ki_eingesetzt %}
+<div class="ki-box">
+  <div class="marker">KI-Einsatz · Art. 50 EU AI Act</div>
+  <p><strong>Im Rahmen dieser Beratung wurden KI-Systeme zur Arbeitsunterstützung eingesetzt:</strong></p>
+  {% if ki_aufgaben and ki_aufgaben.size > 0 %}
+  <ul style="margin-left:6mm;margin-top:2mm">
+    {% for a in ki_aufgaben %}<li>{{ a }}</li>{% endfor %}
+  </ul>
+  {% endif %}
+  <p style="margin-top:2mm"><strong>Verantwortungsklausel:</strong> Die sachverständige Beurteilung sowie die Gesamtverantwortung für den Inhalt dieses Beratungsprotokolls verbleiben ausschließlich beim unterzeichnenden Sachverständigen. Eingesetzte Systeme: OpenAI GPT-4o + Whisper.</p>
+</div>
+{% endif %}
+
+<div class="unterschrift-block">
+  <div>
+    <p>{{ ort | default: sv_ort }}, den {{ datum }}</p>
+  </div>
+  <div class="unterschrift-feld">
+    Unterschrift Sachverständiger
+    <div class="name">{{ sv_name }}{% if sv_titel %}, {{ sv_titel }}{% endif %}</div>
+    <div style="font-size:9pt;color:var(--muted);margin-top:0.5mm">{{ sv_qualifikation | default: "ö.b.u.v. Sachverständiger" }}{% if sv_sachgebiet %} für {{ sv_sachgebiet }}{% endif %}</div>
+  </div>
+</div>
+
+</body>
+</html>
