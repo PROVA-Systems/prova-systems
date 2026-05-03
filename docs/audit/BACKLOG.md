@@ -61,6 +61,78 @@
 
 ---
 
+## Phase-4-Audit-Findings (Sprint X3, 03.05.2026)
+
+### Foto-Upload (Audit 12)
+| ID | Sev | Titel |
+|---|---|---|
+| FU-01 | HIGH | MIME-Whitelist + Magic-Bytes (Folge-Sprint) |
+| FU-02 | HIGH | EXIF-Strip vor Storage (sharp-Library) |
+| FU-03 | MED | Größen-Limit explicit |
+| FU-04 | MED | Filename-Sanitization |
+| FU-05 | LOW | Storage-Bucket-Policies verifizieren (NEEDS-MARCEL) |
+
+### PDF-Generation (Audit 13)
+| ID | Sev | Titel |
+|---|---|---|
+| PDF-01 | HIGH | foto-anlage-pdf max 50 Fotos (= H-24, in Sprint X4) |
+| PDF-02 | MED | pdf-proxy URL-Whitelist (SSRF-Schutz) |
+| PDF-03 | MED | PDFMonkey-Template-Injection-Test (NEEDS-MARCEL) |
+| PDF-04 | MED | PDFMonkey-Cost-Cap pro User/Tag |
+
+### Email (Audit 14)
+| ID | Sev | Titel |
+|---|---|---|
+| EM-01..02 | HIGH | CRLF-Injection + Empfänger-Format (= H-20, in Sprint X4) |
+| EM-03 | MED | SPF/DKIM/DMARC Verifikation (NEEDS-MARCEL) |
+| EM-04 | MED | mail-tester.com Score (NEEDS-MARCEL) |
+| EM-05 | LOW | Bounce-Handler |
+
+### Audit-Logging (Audit 15)
+| ID | Sev | Titel |
+|---|---|---|
+| AL-01 | HIGH | audit_trail INSERT-Policy (= H-12, PLANNED-Migration) |
+| AL-02..05 | MED | Logout, Password-Reset, DSGVO-Aktionen, Cross-Tenant-Versuche logging |
+| AL-06 | LOW | Append-Only-Policy explizit (in PLANNED ergänzen) |
+| AL-07 | LOW | pg_cron 5J-Auto-Cleanup |
+
+### DSGVO-Dataflow (Audit 16)
+| ID | Sev | Titel |
+|---|---|---|
+| DA-01..02 | LOW | Whisper-Audio + Foto-Upload UI-Disclaimer (Folge-Sprint UI) |
+
+### Error-Handling (Audit 18)
+| ID | Sev | Titel |
+|---|---|---|
+| EH-01..03 | MED | Generic-Errors + Trace-IDs + 404-vs-403 |
+
+### Code-Quality (Audit 19)
+| ID | Sev | Titel |
+|---|---|---|
+| CQ-01 | MED | .eslintrc + security-plugin |
+| CQ-02 | MED | Tot-Code-Cleanup (Sprint 11+) |
+| CQ-05 | INFO | SBOM erzeugen (NEEDS-MARCEL) |
+
+### Lighthouse (Audit 20)
+| ID | Sev | Titel |
+|---|---|---|
+| LH-01 | NM | Lighthouse Top-10-Pages-Lauf (NEEDS-MARCEL) |
+
+### Sentry (Audit 21)
+| ID | Sev | Titel |
+|---|---|---|
+| SE-01..02 | HIGH | Real-Time-Alerts + Trace-IDs (Sentry-Setup) |
+| SE-03 | MED | Sentry-Account + DPA (NEEDS-MARCEL) |
+
+### Disaster-Recovery (Audit 22)
+| ID | Sev | Titel |
+|---|---|---|
+| DR-01 | MED | Bus-Faktor 1 (NEEDS-MARCEL: Vertretungs-Person) |
+| DR-02 | MED | Status-Page einrichten |
+| DR-03 | LOW | Backup-2-of-3 (Backblaze, ~5€/Mo) |
+
+---
+
 ## INFO (Dokumentations-Hinweise)
 
 | ID | Audit | Titel |
