@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v252';   // Stripe-Migration 03.05.2026: neue Price-IDs in prova-preise.js
+const CACHE_VERSION = 'prova-v253';   // Catch-Up C1: pilot.html + Founding-Programm
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
@@ -18,6 +18,7 @@ const APP_SHELL = [
   '/onboarding.html',
   '/onboarding-schnellstart.html',
   '/dashboard.html',
+  '/pilot.html',                        // Catch-Up C1: Founding-Pilot-Programm
   '/archiv.html',
   '/akte.html',
   '/app.html',

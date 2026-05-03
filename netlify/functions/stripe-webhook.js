@@ -196,10 +196,14 @@ async function handleCheckoutCompleted(event) {
     const tier    = tierFromPriceId(priceId) || (sess.metadata?.prova_plan === 'team' ? 'team' : 'solo');
     const intervalPeriodEnd = sub.current_period_end ? new Date(sub.current_period_end * 1000).toISOString() : null;
 
-    const { error } = await sb.from('workspaces').update({
+    // C1: Trial-Status erkennen (Founding-Pilot oder generelle Stripe-Trial)
+    const isTrialing = sub.status === 'trialing';
+    const isPilot = sess.metadata?.prova_pilot === 'true' || sub.metadata?.prova_pilot === 'true';
+    const trialEnd = sub.trial_end ? new Date(sub.trial_end * 1000).toISOString() : null;
+
+    const updateFields = {
       abo_tier:                tier,
-      abo_status:              'aktiv',
-      abo_aktiv_seit:          new Date().toISOString(),
+      abo_status:              isTrialing ? 'trial' : 'aktiv',
       stripe_customer_id:      customerId,
       stripe_subscription_id:  sub.id,
       stripe_price_id:         priceId,
@@ -207,17 +211,41 @@ async function handleCheckoutCompleted(event) {
       naechste_zahlung_am:     intervalPeriodEnd ? intervalPeriodEnd.slice(0, 10) : null,
       billing_email:           customerEmail || ws.billing_email,
       updated_at:              new Date().toISOString()
-    }).eq('id', ws.id);
+    };
+
+    if (isTrialing) {
+      updateFields.abo_trial_endet_am = trialEnd;
+    } else {
+      updateFields.abo_aktiv_seit = new Date().toISOString();
+    }
+
+    const { error } = await sb.from('workspaces').update(updateFields).eq('id', ws.id);
     if (error) throw error;
 
-    await auditLog(ws.id, null, 'stripe.subscription.activated', {
+    const auditType = isPilot
+      ? 'stripe.pilot.trial_started'
+      : (isTrialing ? 'stripe.subscription.trial_started' : 'stripe.subscription.activated');
+
+    await auditLog(ws.id, null, auditType, {
       stripe_event_id: event.id,
       stripe_subscription_id: sub.id,
       tier,
-      price_id: priceId
+      price_id: priceId,
+      trialing: isTrialing,
+      pilot: isPilot,
+      trial_end: trialEnd,
+      trial_days: sub.trial_end && sub.trial_start
+        ? Math.round((sub.trial_end - sub.trial_start) / 86400)
+        : null
     });
 
-    return { ok: true, action: 'subscription_activated', workspace_id: ws.id, tier };
+    return {
+      ok: true,
+      action: isPilot ? 'pilot_trial_started' : (isTrialing ? 'trial_started' : 'subscription_activated'),
+      workspace_id: ws.id,
+      tier,
+      trial_end: trialEnd
+    };
   }
 
   if (isAddonPayment) {
@@ -257,23 +285,104 @@ async function handleInvoicePaymentSucceeded(event) {
   const betragEur = (inv.amount_paid || 0) / 100;
   const lifetimeAlt = Number(ws.gesamtzahlungen_lifetime_eur) || 0;
 
-  const { error } = await sb.from('workspaces').update({
+  // C1: Trial-zu-Paid-Transition erkennen.
+  // billing_reason='subscription_cycle' nach Trial → erste echte Zahlung
+  // (initial bei Trial-Start ist billing_reason='subscription_create' mit amount=0)
+  const isTrialToPaidTransition = ws.abo_status === 'trial' && betragEur > 0;
+
+  const updateFields = {
     letzte_zahlung_am:            new Date().toISOString().slice(0, 10),
     letzte_zahlung_betrag_eur:    betragEur,
     gesamtzahlungen_lifetime_eur: lifetimeAlt + betragEur,
     abo_status:                   'aktiv',
     updated_at:                   new Date().toISOString()
-  }).eq('id', ws.id);
+  };
+
+  if (isTrialToPaidTransition) {
+    updateFields.abo_aktiv_seit = new Date().toISOString();
+    updateFields.abo_trial_endet_am = null;
+  }
+
+  const { error } = await sb.from('workspaces').update(updateFields).eq('id', ws.id);
   if (error) throw error;
 
-  await auditLog(ws.id, null, 'stripe.invoice.paid', {
+  // Pilot-spezifische Welcome-Notification: Trial → Founding-Paid Transition
+  let auditType = 'stripe.invoice.paid';
+  if (isTrialToPaidTransition) {
+    // Pilot? prüfe via Stripe-Subscription-Metadata
+    try {
+      if (inv.subscription) {
+        const stripe = getStripeClient();
+        const sub = await stripe.subscriptions.retrieve(inv.subscription);
+        if (sub.metadata && sub.metadata.prova_pilot === 'true') {
+          auditType = 'stripe.pilot.founding_paid';
+        }
+      }
+    } catch {}
+  }
+
+  await auditLog(ws.id, null, auditType, {
     stripe_event_id: event.id,
     stripe_invoice_id: inv.id,
     betrag_eur: betragEur,
-    currency: inv.currency
+    currency: inv.currency,
+    trial_to_paid: isTrialToPaidTransition,
+    billing_reason: inv.billing_reason
   });
 
-  return { ok: true, action: 'invoice_paid', workspace_id: ws.id, betrag_eur: betragEur };
+  return {
+    ok: true,
+    action: isTrialToPaidTransition ? (auditType === 'stripe.pilot.founding_paid' ? 'pilot_founding_paid' : 'trial_to_paid') : 'invoice_paid',
+    workspace_id: ws.id,
+    betrag_eur: betragEur
+  };
+}
+
+// ── Event-Handler: customer.subscription.trial_will_end (3 Tage vor Trial-Ende) ──
+async function handleTrialWillEnd(event) {
+  const sub = event.data.object;
+  const customerId = sub.customer;
+  let customerEmail = (sub.metadata && sub.metadata.prova_email) || '';
+
+  if (!customerEmail && customerId) {
+    try {
+      const stripe = getStripeClient();
+      const cust = await stripe.customers.retrieve(customerId);
+      customerEmail = (cust.email || '').toLowerCase();
+    } catch {}
+  }
+
+  const ws = await findWorkspaceByCustomer(customerId, customerEmail);
+  if (!ws) return { ok: false, reason: 'no_workspace' };
+
+  const isPilot = sub.metadata && sub.metadata.prova_pilot === 'true';
+  const trialEnd = sub.trial_end ? new Date(sub.trial_end * 1000).toISOString() : null;
+
+  // workspaces.abo_status bleibt 'trial', aber Audit-Trail-Eintrag fuer Email-Trigger
+  await auditLog(ws.id, null, isPilot ? 'stripe.pilot.trial_ending_soon' : 'stripe.subscription.trial_ending_soon', {
+    stripe_event_id: event.id,
+    stripe_subscription_id: sub.id,
+    trial_end: trialEnd,
+    pilot: isPilot,
+    days_remaining: sub.trial_end ? Math.ceil((sub.trial_end * 1000 - Date.now()) / 86400000) : null
+  });
+
+  // Best-effort Email-Trigger via Resend/SMTP (Folge-Sprint via cron + email-templates)
+  // Aktuell: nur loggen, Marcel sieht in audit_trail
+  log.info({
+    fn: 'stripe-webhook',
+    event: 'trial_will_end',
+    workspace_id: ws.id,
+    pilot: isPilot,
+    trial_end: trialEnd
+  });
+
+  return {
+    ok: true,
+    action: isPilot ? 'pilot_trial_ending_soon' : 'trial_ending_soon',
+    workspace_id: ws.id,
+    trial_end: trialEnd
+  };
 }
 
 // ── Event-Handler: customer.subscription.deleted ───────────────────────────
@@ -440,6 +549,10 @@ exports.handler = async function (event) {
           ...stripeEvent,
           data: { object: { ...stripeEvent.data.object, mode: 'subscription', subscription: stripeEvent.data.object.id } }
         });
+        break;
+      case 'customer.subscription.trial_will_end':
+        // C1: 3 Tage vor Trial-Ende → Marcel + SV per Email informieren
+        result = await handleTrialWillEnd(stripeEvent);
         break;
       default:
         await markEventIgnored(eventRow.id, 'event_type_not_handled: ' + stripeEvent.type);

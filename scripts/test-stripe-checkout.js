@@ -87,6 +87,15 @@ async function main() {
       metadata: { prova_plan: 'solo', test_run: '1' }
     },
     {
+      label:    'Founding-Pilot (90T Trial + 99€/Mo lifetime)',
+      priceId:  resolveSoloPriceId(),
+      mode:     'subscription',
+      metadata: { prova_plan: 'solo', prova_pilot: 'true', test_run: '1' },
+      couponId: resolveFoundingCouponId(),
+      trialDays: 90,
+      paymentMethodCollection: 'always'
+    },
+    {
       label:    'Team (279€/Mo Subscription)',
       priceId:  resolveTeamPriceId(),
       mode:     'subscription',
@@ -137,6 +146,12 @@ async function main() {
 
     if (scenario.mode === 'subscription') {
       params.subscription_data = { metadata: scenario.metadata };
+      if (scenario.trialDays) {
+        params.subscription_data.trial_period_days = scenario.trialDays;
+      }
+      if (scenario.paymentMethodCollection) {
+        params.payment_method_collection = scenario.paymentMethodCollection;
+      }
       if (scenario.couponId) {
         params.discounts = [{ coupon: scenario.couponId }];
       } else {
