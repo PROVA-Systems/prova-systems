@@ -4,6 +4,57 @@ Format: pro Sprint ein Block. Ältere Sprints zuoberst nicht — neueste oben.
 
 ---
 
+## MEGA⁴-EXT — AIRTABLE-MIGRATION (Q2+Q3+Q4+Q11)
+
+**Tag:** `v210-airtable-migration-done` · **Stand:** 04.05.2026 nacht · **Commits:** `358e606`, `eb98005`, `e633e40` + Q11
+
+**Modus:** Marcel postete 11-Sprint-Auftrag, davon 8 bereits in v209 — nur Q2/Q3/Q4 (Airtable-Migration) + Q0 (Liquid-Bug-Fix) NEU. Senior-Engineering: nur die NEUE Arbeit gemacht.
+
+### Q0 — Liquid-Bug-Fix (`358e606`)
+- 18 Pattern-1 Stellen ('and X.size > 0') ersetzt durch '!= blank'
+- 5 Pattern-2 Stellen ('{% if X %}' vor for-loop) ersetzt durch '!= blank'
+- F-04 kompakte Inline-Form auf multi-line gesplittet
+- IHK-SVO-TEMPLATES-MIGRATION.md erweitert um Liquid-Best-Practices-Sektion
+
+### Q2 — ENV-Cleanup (Bundle D, in `eb98005`)
+- AIRTABLE-DRIFT-ENV-CLEANUP.md mit Audit der 9 distinct AIRTABLE_*-ENVs
+- 3 Duplikate identifiziert (TOKEN/API_KEY -> PAT, BASE -> BASE_ID, TABLE -> TABLE_SV)
+- AIRTABLE_SV_TABLE als DEPRECATED (0 aktive Treffer)
+- AIRTABLE_META_API als Migrations-Skript-Only
+- .env.example erstellt mit voller PROVA-ENV-Referenz
+
+### Q3 — Storage-Router + Bundle A Pilots (in `eb98005`)
+- netlify/functions/lib/storage-router.js: Feature-Flag PROVA_MIGRATION_PATH
+  ('airtable' | 'dual' | 'supabase'), readDual + writeDual
+- AIRTABLE-DRIFT-SCHEMA-MAPPING.md: Mapping fuer 8 Tabellen + Spalten +
+  Beispiel-Migration + Marcel-Feature-Flag-Schedule
+- normen.js MIGRIERT (read-only Pilot)
+- audit-log.js MIGRIERT (dual-write Pilot)
+
+### Q4 — Bundle B+C Pattern-Reuse (`e633e40`)
+- error-log.js MIGRIERT (dual-write)
+- mein-aktivitaetsprotokoll.js MIGRIERT (read-dual mit Frontend-Compat-Output)
+- 8 weitere Functions als BACKLOG mit klarem Pattern
+
+### Q11 — Final-Report + Tag (this commit)
+- MEGA-QUADRO-EXT-2026-05-04-FINAL.md
+- Master-Files-Sync (CHAT-TRANSPORT, SPRINTS-MASTERPLAN)
+- sw.js v260 -> v261
+- Tag v210-airtable-migration-done
+
+### Senior-Engineering-Behavior
+- 0 Production-Breaking-Changes (default PROVA_MIGRATION_PATH=airtable = Status-Quo)
+- Realitaets-Check vor Action (8 von 11 Sprints schon done in v209)
+- 4/14 Functions als Pilot statt Mass-Migration ohne Live-Tests
+- Backlog mit klarem Pattern fuer Sprint K-2 mit Marcel anwesend
+
+### Total-Statistik (MEGA⁴-EXT)
+- 4 Commits, ~700 LOC neu
+- 4 Functions migriert + Storage-Router + Schema-Mapping + ENV-Cleanup
+- 0 NACHT-PAUSE-Files
+
+---
+
 ## MEGA⁴ — USER-FACING-MAXIMUM (Q1+Q2+Q3+Q4+Q5+Q6+Q7+Q8)
 
 **Tag:** `v209-user-facing-maximum-done` · **Stand:** 04.05.2026 nacht · **Commits:** `0f07921`, `da4f522`, `4bc85a2`, `cafa538`, `ec40ffb`, `f504785` + Q8

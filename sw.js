@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v260';   // MEGA⁴ Q8: User-Facing-Maximum Final (Mobile + Flow C/D + Cockpit-Voll + 110 Tests)
+const CACHE_VERSION = 'prova-v261';   // MEGA⁴-EXT: Airtable-Migration Storage-Router + 4 Pilot-Migrationen + Liquid-Bug-Fixes
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
