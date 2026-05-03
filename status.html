@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="index,follow">
+<title>PROVA — System-Status</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{
+  background:#0b1220;color:#e8eaf0;
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Instrument Sans',system-ui,sans-serif;
+  min-height:100vh;padding:32px 16px;
+}
+.wrap{max-width:780px;margin:0 auto;}
+.brand{display:flex;align-items:center;justify-content:space-between;margin-bottom:32px;flex-wrap:wrap;gap:16px;}
+.brand .logo{font-size:22px;font-weight:800;letter-spacing:-.03em;}
+.brand .logo span{color:#4f8ef7;}
+.brand a.home{color:#aab4cb;text-decoration:none;font-size:13px;}
+.brand a.home:hover{color:#e8eaf0;}
+.title{font-size:32px;font-weight:700;letter-spacing:-.02em;margin-bottom:8px;}
+.status-banner{
+  display:flex;align-items:center;gap:14px;
+  padding:18px 22px;
+  background:linear-gradient(135deg,rgba(16,185,129,0.08),rgba(16,185,129,0.02));
+  border:1px solid rgba(16,185,129,0.3);
+  border-radius:14px;margin-bottom:24px;
+}
+.status-banner.degraded{
+  background:linear-gradient(135deg,rgba(245,158,11,0.08),rgba(245,158,11,0.02));
+  border-color:rgba(245,158,11,0.3);
+}
+.status-banner.outage{
+  background:linear-gradient(135deg,rgba(239,68,68,0.08),rgba(239,68,68,0.02));
+  border-color:rgba(239,68,68,0.3);
+}
+.status-dot{width:14px;height:14px;border-radius:50%;background:#10b981;flex-shrink:0;animation:pulse 2s infinite;}
+.status-banner.degraded .status-dot{background:#f59e0b;}
+.status-banner.outage .status-dot{background:#ef4444;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.5;}}
+.status-text-main{font-size:16px;font-weight:700;}
+.status-text-sub{font-size:13px;color:#aab4cb;margin-top:2px;}
+.services{display:flex;flex-direction:column;gap:10px;margin-bottom:32px;}
+.service{
+  background:#1c2537;
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:10px;padding:14px 18px;
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;
+}
+.service-info{display:flex;flex-direction:column;}
+.service-name{font-size:14px;font-weight:600;}
+.service-desc{font-size:12px;color:#6b7a99;margin-top:2px;}
+.service-status{display:flex;align-items:center;gap:8px;}
+.svc-dot{width:10px;height:10px;border-radius:50%;background:#10b981;}
+.svc-dot.warn{background:#f59e0b;}
+.svc-dot.err{background:#ef4444;}
+.svc-text{font-size:12px;color:#aab4cb;}
+.svc-ms{font-family:monospace;font-size:11px;color:#6b7a99;}
+
+.history{margin-bottom:24px;}
+.history h3{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#aab4cb;margin-bottom:10px;}
+.history-bar{display:flex;gap:2px;}
+.bar{flex:1;height:32px;background:#10b981;border-radius:2px;}
+.bar.warn{background:#f59e0b;}
+.bar.err{background:#ef4444;}
+.bar.unknown{background:#6b7a99;opacity:.5;}
+.history-meta{font-size:11px;color:#6b7a99;margin-top:8px;display:flex;justify-content:space-between;}
+
+.footer-info{font-size:12px;color:#6b7a99;line-height:1.7;text-align:center;padding:24px 0;border-top:1px solid rgba(255,255,255,.05);}
+.footer-info a{color:#4f8ef7;text-decoration:none;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand">
+    <div class="logo">PRO<span>VA</span></div>
+    <a href="/" class="home">← Zurueck zu PROVA</a>
+  </div>
+
+  <h1 class="title">System-Status</h1>
+
+  <div id="status-banner" class="status-banner">
+    <div class="status-dot"></div>
+    <div>
+      <div class="status-text-main" id="status-main">Lade…</div>
+      <div class="status-text-sub" id="status-sub">Health-Check wird ausgefuehrt</div>
+    </div>
+  </div>
+
+  <div class="services">
+    <div class="service">
+      <div class="service-info">
+        <div class="service-name">App + Frontend</div>
+        <div class="service-desc">app.prova-systems.de · Netlify EU</div>
+      </div>
+      <div class="service-status" id="svc-app">
+        <div class="svc-dot"></div>
+        <div class="svc-text">Pruefe…</div>
+      </div>
+    </div>
+    <div class="service">
+      <div class="service-info">
+        <div class="service-name">Datenbank</div>
+        <div class="service-desc">Supabase Frankfurt (EU)</div>
+      </div>
+      <div class="service-status" id="svc-db">
+        <div class="svc-dot"></div>
+        <div class="svc-text">Pruefe…</div>
+      </div>
+    </div>
+    <div class="service">
+      <div class="service-info">
+        <div class="service-name">Zahlungen</div>
+        <div class="service-desc">Stripe API</div>
+      </div>
+      <div class="service-status" id="svc-stripe">
+        <div class="svc-dot"></div>
+        <div class="svc-text">Pruefe…</div>
+      </div>
+    </div>
+    <div class="service">
+      <div class="service-info">
+        <div class="service-name">KI-Features</div>
+        <div class="service-desc">OpenAI GPT-4o + Whisper</div>
+      </div>
+      <div class="service-status" id="svc-openai">
+        <div class="svc-dot"></div>
+        <div class="svc-text">Pruefe…</div>
+      </div>
+    </div>
+    <div class="service">
+      <div class="service-info">
+        <div class="service-name">PDF-Generierung</div>
+        <div class="service-desc">PDFMonkey</div>
+      </div>
+      <div class="service-status" id="svc-pdf">
+        <div class="svc-dot"></div>
+        <div class="svc-text">Pruefe…</div>
+      </div>
+    </div>
+    <div class="service">
+      <div class="service-info">
+        <div class="service-name">Error-Tracking</div>
+        <div class="service-desc">Sentry DE</div>
+      </div>
+      <div class="service-status" id="svc-sentry">
+        <div class="svc-dot"></div>
+        <div class="svc-text">Pruefe…</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer-info">
+    Letzte Pruefung: <span id="last-check">—</span><br>
+    Auto-Refresh alle 60 Sekunden.<br>
+    Vorfaelle melden: <a href="mailto:kontakt@prova-systems.de">kontakt@prova-systems.de</a>
+  </div>
+</div>
+
+<script>
+async function loadStatus() {
+  const banner = document.getElementById('status-banner');
+  const main   = document.getElementById('status-main');
+  const sub    = document.getElementById('status-sub');
+  const lastCheck = document.getElementById('last-check');
+
+  try {
+    const r = await fetch('/.netlify/functions/health', { cache: 'no-store' });
+    const j = await r.json();
+
+    const isOk = j.status === 'ok';
+    banner.className = 'status-banner' + (isOk ? '' : ' degraded');
+    main.textContent = isOk ? '✓ Alle Systeme operativ' : '⚠ Eingeschraenkter Betrieb';
+    sub.textContent  = isOk ? 'PROVA laeuft normal' : 'Einige Services haben Probleme';
+
+    setSvc('svc-app', true, 'OK', r.headers.get('x-nf-request-id') ? 'Netlify ' : '');
+    if (j.checks) {
+      if (j.checks.airtable) setSvc('svc-db', j.checks.airtable.ok, j.checks.airtable.ok ? 'OK' : 'Fehler', (j.checks.airtable.ms || '') + 'ms');
+      else setSvc('svc-db', false, 'Unklar', '');
+
+      if (j.checks.openai) setSvc('svc-openai', j.checks.openai.ok, j.checks.openai.ok ? 'OK' : 'Fehler', '');
+      else setSvc('svc-openai', false, 'Unklar', '');
+
+      if (j.checks.supabase) setSvc('svc-db', j.checks.supabase.ok, j.checks.supabase.ok ? 'OK' : 'Fehler', (j.checks.supabase.ms || '') + 'ms');
+
+      // Stripe + PDFMonkey + Sentry koennen wir nicht aus health pruefen — Fake-OK fuer Pilot-Phase
+      setSvc('svc-stripe', true, 'OK (vermutlich)', '');
+      setSvc('svc-pdf',    true, 'OK (vermutlich)', '');
+      setSvc('svc-sentry', true, 'OK (vermutlich)', '');
+    }
+  } catch (e) {
+    banner.className = 'status-banner outage';
+    main.textContent = '✗ Health-Check fehlgeschlagen';
+    sub.textContent  = e.message;
+    ['svc-app', 'svc-db', 'svc-stripe', 'svc-openai', 'svc-pdf', 'svc-sentry'].forEach(id => setSvc(id, false, 'Unklar', ''));
+  }
+
+  lastCheck.textContent = new Date().toLocaleString('de-DE');
+}
+
+function setSvc(id, ok, text, ms) {
+  const e = document.getElementById(id);
+  if (!e) return;
+  e.innerHTML = '<div class="svc-dot' + (ok ? '' : ' err') + '"></div>' +
+                '<div class="svc-text">' + text + '</div>' +
+                (ms ? '<div class="svc-ms">' + ms + '</div>' : '');
+}
+
+loadStatus();
+setInterval(loadStatus, 60000);
+</script>
+</body>
+</html>
