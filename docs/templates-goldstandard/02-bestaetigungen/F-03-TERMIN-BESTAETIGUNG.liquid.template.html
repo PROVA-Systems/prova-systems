@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>Termin-Bestaetigung — {{ termin_datum }}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════════════════════════
+   PROVA Systems · F-03 TERMIN-BESTAETIGUNG
+   Liquid-templated · 1 Seite · KOMPAKT
+   Use-Case: SV bestaetigt Ortstermin mit Datum/Uhrzeit/Adresse.
+   Ton: praezise, kurz, terminorientiert (kein Brief-Smalltalk)
+   Layout-Spezifika gegenueber F-02 (Auftrag):
+     - PROMINENTER Termin-Block (gross, sofort sichtbar)
+     - ANFAHRTSDETAILS-Box mit Parkmoeglichkeit + Schluessel-Info
+     - KONTAKT-vor-Ort-Box (Ansprechpartner mit Telefon)
+     - Vorbereitungs-Checkliste (was sollte vor Ort sein?)
+   ═══════════════════════════════════════════════════════════════ */
+:root { --primary: #1a3a6b; --accent: #3b82f6; --muted: #64748b; --text: #0f172a; --light: #f1f5f9; --lighter: #f8fafc; --border: #e2e8f0; --termin: #0891b2; --termin-light: #ecfeff; }
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Inter', -apple-system, sans-serif; font-size: 11pt; line-height: 1.55; color: var(--text); }
+@page { size: A4; margin: 22mm 22mm 22mm 22mm; }
+
+.kopf-kompakt {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10mm;
+  margin-bottom: 12mm;
+  padding-bottom: 6mm;
+  border-bottom: 1px solid var(--border);
+  font-size: 9.5pt;
+}
+.kopf-absender strong { color: var(--text); display: block; margin-bottom: 1mm; font-size: 10.5pt; }
+.kopf-absender { color: var(--muted); line-height: 1.55; }
+.kopf-meta { text-align: right; color: var(--muted); }
+.kopf-meta .ort-datum { color: var(--text); }
+.kopf-meta .az { font-family: 'JetBrains Mono', monospace; font-size: 9pt; margin-top: 2mm; }
+
+.empfaenger-kompakt { margin-bottom: 8mm; font-size: 10.5pt; line-height: 1.6; }
+.empfaenger-kompakt strong { font-weight: 600; }
+
+.betreff-2 {
+  font-size: 14pt; font-weight: 600; color: var(--primary);
+  margin-bottom: 6mm;
+}
+
+/* PROMINENTER Termin-Block — sofort sichtbar */
+.termin-prominent {
+  margin: 8mm 0;
+  padding: 8mm 10mm;
+  background: var(--termin-light);
+  border: 2px solid var(--termin);
+  border-radius: 6px;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 5mm 8mm;
+  align-items: center;
+}
+.termin-icon {
+  font-size: 36pt;
+  line-height: 1;
+  color: var(--termin);
+}
+.termin-info-titel {
+  font-size: 9pt;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--termin);
+  font-weight: 600;
+  margin-bottom: 1mm;
+}
+.termin-info .datum { font-size: 22pt; font-weight: 700; color: var(--text); line-height: 1.1; letter-spacing: -0.01em; }
+.termin-info .uhrzeit { font-size: 13pt; color: var(--text); margin-top: 1mm; font-family: 'JetBrains Mono', monospace; }
+.termin-info .dauer { font-size: 10.5pt; color: var(--muted); margin-top: 1mm; }
+
+/* Adresse-Block */
+.adresse-block {
+  margin: 6mm 0;
+  padding: 5mm 7mm;
+  background: var(--lighter);
+  border-left: 3px solid var(--accent);
+  border-radius: 2px;
+}
+.adresse-titel { font-size: 9pt; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); font-weight: 600; margin-bottom: 2mm; }
+.adresse-text { font-size: 12pt; line-height: 1.5; color: var(--text); }
+
+/* Anfahrts-Details (KOMPAKT — nicht generic Auftragsbox!) */
+.anfahrt-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4mm;
+  margin: 6mm 0;
+}
+.anfahrt-item {
+  padding: 4mm 5mm;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+}
+.anfahrt-item .titel {
+  font-size: 8.5pt;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 600;
+  margin-bottom: 2mm;
+}
+.anfahrt-item .text { font-size: 10.5pt; line-height: 1.5; color: var(--text); }
+
+/* Vorbereitungs-Checkliste */
+.checkliste {
+  margin: 6mm 0;
+  padding: 5mm 7mm;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+}
+.checkliste-titel { font-size: 10.5pt; font-weight: 600; color: var(--text); margin-bottom: 3mm; }
+.checkliste ul { margin: 0; padding-left: 5mm; font-size: 10pt; line-height: 1.7; }
+.checkliste ul li { margin-bottom: 1.5mm; }
+
+/* Kontakt-vor-Ort */
+.kontakt-vor-ort {
+  margin: 6mm 0;
+  padding: 4mm 6mm;
+  background: var(--lighter);
+  border-radius: 3px;
+  font-size: 10pt;
+}
+.kontakt-vor-ort strong { color: var(--text); }
+
+.text { font-size: 10.5pt; line-height: 1.6; margin-bottom: 4mm; }
+.gruss-kompakt { margin-top: 8mm; font-size: 10.5pt; }
+.gruss-kompakt strong { display: block; margin-top: 12mm; }
+</style>
+</head>
+<body>
+
+<div class="kopf-kompakt">
+  <div class="kopf-absender">
+    <strong>{{ sv_name }}</strong>
+    {% if sv_qualifikation %}<div>{{ sv_qualifikation }}</div>{% endif %}
+    <div>{{ sv_strasse }} · {{ sv_plz }} {{ sv_ort }}</div>
+    {% if sv_mobil %}<div>Mobil: {{ sv_mobil }}</div>{% endif %}
+  </div>
+  <div class="kopf-meta">
+    <div class="ort-datum">{{ ort_datum }}</div>
+    <div class="az">AZ: {{ az }}</div>
+  </div>
+</div>
+
+<div class="empfaenger-kompakt">
+  <strong>{{ empfaenger_name }}</strong>{% if empfaenger_zusatz != blank %}<br>{{ empfaenger_zusatz }}{% endif %}<br>
+  {{ empfaenger_strasse }}, {{ empfaenger_plz }} {{ empfaenger_ort }}
+</div>
+
+<div class="betreff-2">Termin-Bestaetigung</div>
+
+<!-- TERMIN PROMINENT -->
+<div class="termin-prominent">
+  <div class="termin-icon" aria-hidden="true">📅</div>
+  <div class="termin-info">
+    <div class="termin-info-titel">Ortstermin</div>
+    <div class="datum">{{ termin_datum }}</div>
+    <div class="uhrzeit">⏱ {{ termin_uhrzeit }}{% if termin_dauer != blank %} · {{ termin_dauer }}{% endif %}</div>
+    {% if termin_typ != blank %}<div class="dauer">{{ termin_typ }}</div>{% endif %}
+  </div>
+</div>
+
+<!-- ADRESSE -->
+<div class="adresse-block">
+  <div class="adresse-titel">Adresse</div>
+  <div class="adresse-text">{{ termin_adresse }}{% if termin_etage != blank %}, {{ termin_etage }}{% endif %}</div>
+</div>
+
+<!-- ANFAHRTSDETAILS GRID -->
+{% if anfahrt_parken != blank or anfahrt_oeffis != blank or anfahrt_schluessel != blank or anfahrt_zugang != blank %}
+<div class="anfahrt-grid">
+  {% if anfahrt_parken != blank %}
+  <div class="anfahrt-item">
+    <div class="titel">🅿️ Parken</div>
+    <div class="text">{{ anfahrt_parken }}</div>
+  </div>
+  {% endif %}
+  {% if anfahrt_oeffis != blank %}
+  <div class="anfahrt-item">
+    <div class="titel">🚇 OePNV</div>
+    <div class="text">{{ anfahrt_oeffis }}</div>
+  </div>
+  {% endif %}
+  {% if anfahrt_schluessel != blank %}
+  <div class="anfahrt-item">
+    <div class="titel">🔑 Schluessel</div>
+    <div class="text">{{ anfahrt_schluessel }}</div>
+  </div>
+  {% endif %}
+  {% if anfahrt_zugang != blank %}
+  <div class="anfahrt-item">
+    <div class="titel">🚪 Zugang</div>
+    <div class="text">{{ anfahrt_zugang }}</div>
+  </div>
+  {% endif %}
+</div>
+{% endif %}
+
+<!-- KONTAKT VOR ORT -->
+{% if kontakt_vor_ort_name != blank %}
+<div class="kontakt-vor-ort">
+  <strong>Ansprechpartner vor Ort:</strong> {{ kontakt_vor_ort_name }}
+  {% if kontakt_vor_ort_telefon != blank %} · 📞 {{ kontakt_vor_ort_telefon }}{% endif %}
+  {% if kontakt_vor_ort_funktion != blank %} · {{ kontakt_vor_ort_funktion }}{% endif %}
+</div>
+{% endif %}
+
+<!-- VORBEREITUNGS-CHECKLISTE -->
+{% if vorbereitung != blank and vorbereitung.size > 0 %}
+<div class="checkliste">
+  <div class="checkliste-titel">Bitte vor dem Termin bereitstellen</div>
+  <ul>
+    {% for item in vorbereitung %}
+    <li>{{ item }}</li>
+    {% endfor %}
+  </ul>
+</div>
+{% endif %}
+
+<div class="text">
+  <p>Sollte der Termin nicht passen oder Sie aenderen muessen, melden Sie sich bitte
+     spaetestens 24 Stunden vorher unter den oben genannten Kontaktdaten.</p>
+</div>
+
+<div class="gruss-kompakt">
+  Mit freundlichen Gruessen
+  <strong>{{ sv_name }}</strong>
+</div>
+
+</body>
+</html>
