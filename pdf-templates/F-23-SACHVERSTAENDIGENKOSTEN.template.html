@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>Sachverstaendigenkostenrechnung {{ rechnung_nr }}</title>
+<!--
+  PROVA Systems · F-23 SACHVERSTAENDIGENKOSTENRECHNUNG · Liquid-Template
+  MEGA¹⁸ W71 (Tier 6 PRIMARY) · 2026-05-08
+
+  Zweck: Detaillierte Kostenrechnung fuer GERICHTSverfahren mit
+         Anlagen-Verzeichnis + Taetigkeits-Aufstellung + Fahrtkosten
+         + Auslagen separat. Komplexer als F-01 (mehr Detail-Tiefe).
+
+  Liquid-Variablen (siehe payload.example.json):
+    rechnung_nr, rechnung_datum, leistungs_zeitraum
+    az, gericht_name, gericht_az
+    sv_*, auftraggeber_*
+    taetigkeiten[]: { datum, beschreibung, dauer_h, satz, betrag, kategorie }
+    fahrten[]: { datum, route, km, satz, dauer_h, betrag }
+    auslagen[]: { datum, posten, betrag, beleg_nr }
+    anlagen[]: { nr, bezeichnung, seiten }
+    summe_taetigkeit, summe_fahrt, summe_auslagen, summe_netto
+    ust_satz, ust_betrag, summe_brutto
+    bemerkungen (frei-Text, optional)
+
+  KEINE EU AI Act Box (Rechnung).
+  Erweitert ggue. F-01: Anlagen-Verzeichnis + Kategorisierung der Taetigkeiten.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root { --primary: #1a3a6b; --accent: #3b82f6; --muted: #64748b; --text: #0f172a; --light: #f1f5f9; --lighter: #f8fafc; --border: #e2e8f0; --success: #059669; }
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Inter', sans-serif; font-size: 10.5pt; line-height: 1.55; color: var(--text); background: white; }
+@page { size: A4; margin: 20mm 20mm 22mm 20mm; }
+@page {
+  @top-left { content: "{{ sv_name }}"; font-family: 'Inter', sans-serif; font-size: 8pt; color: #64748b; padding-top: 10mm; }
+  @top-right { content: "Kostenrechnung {{ rechnung_nr }}"; font-family: 'Inter', sans-serif; font-size: 8pt; color: #1a3a6b; font-weight: 600; padding-top: 10mm; }
+  @bottom-right { content: "Seite " counter(page) " / " counter(pages); font-family: 'Inter', sans-serif; font-size: 8pt; color: #64748b; padding-bottom: 10mm; }
+}
+@page :first { @top-left { content: ""; } @top-right { content: ""; } }
+
+.kopf { padding: 0 0 8mm; border-bottom: 2px solid var(--primary); margin-bottom: 8mm; }
+.kopf-kategorie { font-size: 9.5pt; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); font-weight: 500; margin-bottom: 4mm; }
+.kopf-titel { font-size: 24pt; font-weight: 700; line-height: 1.15; color: var(--primary); margin-bottom: 3mm; letter-spacing: -0.02em; }
+.kopf-meta { display: flex; gap: 6mm; font-family: 'JetBrains Mono', monospace; font-size: 9.5pt; color: var(--muted); flex-wrap: wrap; }
+.kopf-meta strong { color: var(--text); font-weight: 500; }
+
+.adress-block { display: grid; grid-template-columns: 1fr 1fr; gap: 8mm; margin: 6mm 0; }
+.adress-card { padding: 4mm 5mm; background: var(--lighter); border-radius: 3px; border: 1px solid var(--border); font-size: 10pt; }
+.adress-card .label { font-size: 8pt; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 500; margin-bottom: 2mm; }
+.adress-card strong { font-weight: 600; }
+
+.section { margin-bottom: 7mm; }
+.section-titel { font-size: 13pt; font-weight: 600; color: var(--primary); margin-bottom: 3mm; padding-bottom: 1.5mm; border-bottom: 1px solid var(--border); }
+.section-sub { font-size: 9pt; color: var(--muted); margin-top: -1mm; margin-bottom: 3mm; }
+
+.posten-tabelle { width: 100%; border-collapse: collapse; margin: 2mm 0; font-size: 10pt; }
+.posten-tabelle th, .posten-tabelle td { padding: 2.5mm 3mm; text-align: left; border-bottom: 1px solid var(--border); vertical-align: top; }
+.posten-tabelle th { background: var(--light); color: var(--muted); font-weight: 500; font-size: 8.5pt; text-transform: uppercase; letter-spacing: 0.04em; }
+.posten-tabelle td.num { font-family: 'JetBrains Mono', monospace; text-align: right; white-space: nowrap; }
+.posten-tabelle td.kat { font-size: 8.5pt; color: var(--muted); }
+.posten-tabelle tr.subtotal { background: var(--lighter); font-weight: 500; }
+.posten-tabelle tr.subtotal td { padding: 3mm; border-top: 1.5px solid var(--border); }
+
+.summen-block { margin: 6mm 0 4mm; padding: 5mm 6mm; background: linear-gradient(135deg, var(--primary) 0%, #2a4a7b 100%); color: white; border-radius: 4px; }
+.summen-zeile { display: flex; justify-content: space-between; padding: 1.5mm 0; font-size: 11pt; }
+.summen-zeile.brutto { font-size: 16pt; font-weight: 700; padding-top: 3mm; margin-top: 2mm; border-top: 1px solid rgba(255,255,255,0.3); }
+.summen-zeile .value { font-family: 'JetBrains Mono', monospace; }
+
+.anlagen-liste { padding: 4mm 5mm; background: var(--lighter); border-radius: 3px; border: 1px solid var(--border); font-size: 10pt; }
+.anlagen-eintrag { display: grid; grid-template-columns: 22mm 1fr 28mm; gap: 4mm; padding: 1.5mm 0; border-bottom: 1px dashed var(--border); }
+.anlagen-eintrag:last-child { border-bottom: none; }
+.anlagen-nr { font-family: 'JetBrains Mono', monospace; font-weight: 600; color: var(--primary); }
+.anlagen-seiten { font-size: 9pt; color: var(--muted); text-align: right; }
+
+.bemerkungen-box { margin: 4mm 0; padding: 4mm 5mm; background: white; border: 1px solid var(--border); border-left: 3px solid var(--accent); border-radius: 2px; font-size: 9.5pt; line-height: 1.5; }
+.bemerkungen-box strong { color: var(--accent); }
+
+.law-ref { font-family: 'JetBrains Mono', monospace; font-size: 0.92em; color: var(--primary); font-weight: 500; }
+</style>
+</head>
+<body>
+
+<div class="kopf">
+  <div class="kopf-kategorie">Sachverstaendigenkosten · Gerichtsverfahren</div>
+  <h1 class="kopf-titel">Kostenrechnung</h1>
+  <div class="kopf-meta">
+    <div>Rechnung-Nr.: <strong>{{ rechnung_nr }}</strong></div>
+    <div>Datum: <strong>{{ rechnung_datum }}</strong></div>
+    {% if leistungs_zeitraum %}<div>Zeitraum: <strong>{{ leistungs_zeitraum }}</strong></div>{% endif %}
+    {% if gericht_az %}<div>Gericht: <strong>{{ gericht_az }}</strong></div>{% endif %}
+  </div>
+</div>
+
+<div class="adress-block">
+  <div class="adress-card">
+    <div class="label">Sachverstaendiger</div>
+    <strong>{{ sv_name }}</strong><br>
+    {% if sv_titel %}{{ sv_titel }}<br>{% endif %}
+    {% if sv_kanzlei %}{{ sv_kanzlei }}<br>{% endif %}
+    {{ sv_adresse }}
+  </div>
+  <div class="adress-card">
+    <div class="label">Rechnungsempfaenger</div>
+    <strong>{{ auftraggeber_name | default: gericht_name }}</strong><br>
+    {{ auftraggeber_adresse | default: gericht_adresse }}
+  </div>
+</div>
+
+<section class="section">
+  <h2 class="section-titel">1 · Taetigkeiten</h2>
+  <div class="section-sub">Detaillierte Aufstellung aller im o.g. Zeitraum erbrachten gutachterlichen Taetigkeiten.</div>
+  <table class="posten-tabelle">
+    <thead>
+      <tr><th>Datum</th><th>Taetigkeit / Beschreibung</th><th class="num">Dauer (h)</th><th class="num">Satz/h</th><th class="num">Betrag</th></tr>
+    </thead>
+    <tbody>
+      {% for t in taetigkeiten %}
+      <tr>
+        <td><span class="law-ref">{{ t.datum }}</span></td>
+        <td>{{ t.beschreibung }}{% if t.kategorie %}<div class="kat">{{ t.kategorie }}</div>{% endif %}</td>
+        <td class="num">{{ t.dauer_h }}</td>
+        <td class="num">{{ t.satz }} €</td>
+        <td class="num">{{ t.betrag }} €</td>
+      </tr>
+      {% endfor %}
+      <tr class="subtotal"><td colspan="4">Summe Taetigkeiten</td><td class="num">{{ summe_taetigkeit }} €</td></tr>
+    </tbody>
+  </table>
+</section>
+
+{% if fahrten and fahrten.size > 0 %}
+<section class="section">
+  <h2 class="section-titel">2 · Fahrt- und Aufenthaltskosten</h2>
+  <table class="posten-tabelle">
+    <thead>
+      <tr><th>Datum</th><th>Strecke</th><th class="num">km</th><th class="num">€/km</th><th class="num">Dauer</th><th class="num">Betrag</th></tr>
+    </thead>
+    <tbody>
+      {% for f in fahrten %}
+      <tr>
+        <td><span class="law-ref">{{ f.datum }}</span></td>
+        <td>{{ f.route }}</td>
+        <td class="num">{{ f.km }}</td>
+        <td class="num">{{ f.satz | default: "0,42" }}</td>
+        <td class="num">{{ f.dauer_h }}</td>
+        <td class="num">{{ f.betrag }} €</td>
+      </tr>
+      {% endfor %}
+      <tr class="subtotal"><td colspan="5">Summe Fahrtkosten</td><td class="num">{{ summe_fahrt }} €</td></tr>
+    </tbody>
+  </table>
+</section>
+{% endif %}
+
+{% if auslagen and auslagen.size > 0 %}
+<section class="section">
+  <h2 class="section-titel">3 · Auslagen</h2>
+  <table class="posten-tabelle">
+    <thead><tr><th>Datum</th><th>Posten</th><th>Beleg</th><th class="num">Betrag</th></tr></thead>
+    <tbody>
+      {% for a in auslagen %}
+      <tr>
+        <td><span class="law-ref">{{ a.datum }}</span></td>
+        <td>{{ a.posten }}</td>
+        <td class="kat">{{ a.beleg_nr | default: "—" }}</td>
+        <td class="num">{{ a.betrag }} €</td>
+      </tr>
+      {% endfor %}
+      <tr class="subtotal"><td colspan="3">Summe Auslagen</td><td class="num">{{ summe_auslagen }} €</td></tr>
+    </tbody>
+  </table>
+</section>
+{% endif %}
+
+<div class="summen-block">
+  <div class="summen-zeile"><div class="label">Gesamt Netto</div><div class="value">{{ summe_netto }} €</div></div>
+  <div class="summen-zeile"><div class="label">zzgl. {{ ust_satz | default: "19" }} % Umsatzsteuer</div><div class="value">{{ ust_betrag }} €</div></div>
+  <div class="summen-zeile brutto"><div class="label">Rechnungsbetrag</div><div class="value">{{ summe_brutto }} €</div></div>
+</div>
+
+{% if anlagen and anlagen.size > 0 %}
+<section class="section">
+  <h2 class="section-titel">Anlagen-Verzeichnis</h2>
+  <div class="anlagen-liste">
+    {% for an in anlagen %}
+    <div class="anlagen-eintrag">
+      <div class="anlagen-nr">Anlage {{ an.nr }}</div>
+      <div>{{ an.bezeichnung }}</div>
+      <div class="anlagen-seiten">{{ an.seiten | default: "1" }} S.</div>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+{% if bemerkungen %}
+<div class="bemerkungen-box">
+  <strong>Anmerkungen:</strong><br>
+  {{ bemerkungen }}
+</div>
+{% endif %}
+
+</body>
+</html>

@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>Honorartabelle {{ sv_name }}</title>
+<!--
+  PROVA Systems · F-25 HONORARTABELLE · Liquid-Template
+  MEGA¹⁸ W71 (Tier 6 PRIMARY) · 2026-05-08
+
+  Zweck: Uebersicht der Stundensaetze + Pauschalen je Auftragsart.
+         Wird als Beilage verwendet (z.B. zu AG-Schreiben, Webseite).
+         JVEG-konform aber auch fuer privatrechtl. Auftraege.
+
+  Liquid-Variablen:
+    sv_name, sv_titel, sv_kanzlei
+    gueltig_ab (Datum), gueltig_bis (optional)
+    auftragsarten[]: { kategorie, beschreibung, satz_h?, pauschal?, einheit, hinweis? }
+    fahrtkosten_satz_per_km (default "0,42")
+    nebenkosten[]: { posten, satz, einheit }
+    rechtsbasis (default "JVEG / freie Vereinbarung")
+    fussnoten[]: text  (optional, mehrzeilig)
+
+  KEINE EU AI Act Box (Honorartabelle, keine Bewertung).
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root { --primary: #1a3a6b; --accent: #3b82f6; --muted: #64748b; --text: #0f172a; --light: #f1f5f9; --lighter: #f8fafc; --border: #e2e8f0; --success: #059669; }
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Inter', sans-serif; font-size: 10.5pt; line-height: 1.55; color: var(--text); background: white; }
+@page { size: A4; margin: 18mm 18mm 20mm 18mm; }
+@page {
+  @top-left { content: "{{ sv_name }} · {{ sv_titel | default: 'ö.b.u.v. Sachverständiger' }}"; font-family: 'Inter', sans-serif; font-size: 8pt; color: #64748b; padding-top: 8mm; }
+  @top-right { content: "Honorartabelle"; font-family: 'Inter', sans-serif; font-size: 8pt; color: #1a3a6b; font-weight: 600; padding-top: 8mm; }
+  @bottom-right { content: "Seite " counter(page) " / " counter(pages); font-family: 'Inter', sans-serif; font-size: 8pt; color: #64748b; padding-bottom: 8mm; }
+}
+@page :first { @top-left { content: ""; } @top-right { content: ""; } }
+
+.kopf { padding: 0 0 8mm; border-bottom: 2px solid var(--primary); margin-bottom: 8mm; text-align: center; }
+.kopf-kategorie { font-size: 9.5pt; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); font-weight: 500; margin-bottom: 3mm; }
+.kopf-titel { font-size: 28pt; font-weight: 700; line-height: 1.1; color: var(--primary); letter-spacing: -0.02em; }
+.kopf-meta { font-family: 'JetBrains Mono', monospace; font-size: 9pt; color: var(--muted); margin-top: 3mm; }
+.kopf-meta strong { color: var(--text); font-weight: 500; }
+
+.einleitung { padding: 4mm 5mm; background: var(--lighter); border-radius: 3px; border-left: 3px solid var(--accent); font-size: 10pt; line-height: 1.55; margin-bottom: 7mm; }
+.einleitung strong { color: var(--primary); }
+
+.section { margin-bottom: 7mm; }
+.section-titel { font-size: 13pt; font-weight: 600; color: var(--primary); margin-bottom: 3mm; padding-bottom: 1.5mm; border-bottom: 1px solid var(--border); }
+
+.honorar-tabelle { width: 100%; border-collapse: collapse; font-size: 10pt; }
+.honorar-tabelle th { background: var(--primary); color: white; padding: 3mm 4mm; text-align: left; font-size: 9.5pt; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; }
+.honorar-tabelle td { padding: 3mm 4mm; border-bottom: 1px solid var(--border); vertical-align: top; }
+.honorar-tabelle tr:nth-child(even) td { background: var(--lighter); }
+.honorar-tabelle .kat { font-weight: 600; color: var(--primary); }
+.honorar-tabelle .besch { font-size: 9.5pt; color: var(--muted); margin-top: 1mm; }
+.honorar-tabelle .satz { font-family: 'JetBrains Mono', monospace; font-weight: 500; text-align: right; white-space: nowrap; }
+.honorar-tabelle .einheit { font-size: 9pt; color: var(--muted); }
+.honorar-tabelle th.num { text-align: right; }
+
+.nebenkosten-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4mm; }
+.nebenkosten-card { padding: 3.5mm 4mm; background: var(--lighter); border-radius: 3px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: baseline; }
+.nebenkosten-card .posten { font-size: 10pt; }
+.nebenkosten-card .satz { font-family: 'JetBrains Mono', monospace; font-weight: 600; color: var(--primary); }
+.nebenkosten-card .einheit { font-size: 8.5pt; color: var(--muted); margin-left: 1mm; }
+
+.basis-box { margin: 5mm 0; padding: 4mm 5mm; background: white; border: 1px solid var(--border); border-left: 3px solid var(--success); border-radius: 2px; font-size: 9.5pt; line-height: 1.55; }
+.basis-box strong { color: var(--success); }
+
+.fussnoten { margin-top: 6mm; padding-top: 3mm; border-top: 1px solid var(--border); font-size: 8.5pt; color: var(--muted); line-height: 1.55; }
+.fussnoten ol { margin-left: 5mm; }
+.fussnoten li { margin-bottom: 1mm; }
+
+.law-ref { font-family: 'JetBrains Mono', monospace; font-size: 0.92em; color: var(--primary); font-weight: 500; }
+</style>
+</head>
+<body>
+
+<div class="kopf">
+  <div class="kopf-kategorie">Honorar &middot; Stundensaetze &middot; Pauschalen</div>
+  <h1 class="kopf-titel">Honorartabelle</h1>
+  <div class="kopf-meta">
+    Gueltig ab: <strong>{{ gueltig_ab }}</strong>
+    {% if gueltig_bis %} &middot; Gueltig bis: <strong>{{ gueltig_bis }}</strong>{% endif %}
+  </div>
+</div>
+
+<div class="einleitung">
+  Sehr geehrte Damen und Herren,<br><br>
+  nachfolgend finden Sie eine Uebersicht meiner aktuellen Honorarsaetze fuer
+  gutachterliche und beratende Taetigkeiten. Die Saetze richten sich nach
+  <strong>{{ rechtsbasis | default: "JVEG (gerichtlich) bzw. freier Vereinbarung (privatrechtlich)" }}</strong>.
+  Eine konkrete Honorarvereinbarung erfolgt im Auftragsschreiben.
+</div>
+
+<section class="section">
+  <h2 class="section-titel">1 · Auftragsarten</h2>
+  <table class="honorar-tabelle">
+    <thead>
+      <tr>
+        <th>Kategorie</th>
+        <th>Beschreibung / Hinweis</th>
+        <th class="num">Stundensatz</th>
+        <th class="num">Pauschale</th>
+        <th class="num">Einheit</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for a in auftragsarten %}
+      <tr>
+        <td><span class="kat">{{ a.kategorie }}</span></td>
+        <td>{{ a.beschreibung }}{% if a.hinweis %}<div class="besch">{{ a.hinweis }}</div>{% endif %}</td>
+        <td class="satz">{% if a.satz_h %}{{ a.satz_h }} €{% else %}—{% endif %}</td>
+        <td class="satz">{% if a.pauschal %}{{ a.pauschal }} €{% else %}—{% endif %}</td>
+        <td class="einheit">{{ a.einheit | default: "netto" }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+
+<section class="section">
+  <h2 class="section-titel">2 · Nebenkosten</h2>
+  <div class="nebenkosten-grid">
+    <div class="nebenkosten-card">
+      <div class="posten">Fahrtkosten (eigener PKW)</div>
+      <div><span class="satz">{{ fahrtkosten_satz_per_km | default: "0,42" }} €</span><span class="einheit">/km</span></div>
+    </div>
+    {% for n in nebenkosten %}
+    <div class="nebenkosten-card">
+      <div class="posten">{{ n.posten }}</div>
+      <div><span class="satz">{{ n.satz }}</span><span class="einheit">{% if n.einheit %} {{ n.einheit }}{% endif %}</span></div>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+
+<div class="basis-box">
+  <strong>Rechtsbasis &middot; Hinweise:</strong>
+  <ul style="margin-top:1.5mm; margin-left:5mm;">
+    <li>Bei gerichtlich beauftragten Gutachten gelten die Saetze nach <span class="law-ref">JVEG</span>.</li>
+    <li>Privatrechtliche Auftraege werden zuvor schriftlich vereinbart.</li>
+    <li>Alle Saetze verstehen sich netto, zzgl. der jeweils geltenden gesetzlichen Umsatzsteuer.</li>
+    <li>Reisezeit wird mit dem normalen Stundensatz abgerechnet (analog JVEG).</li>
+  </ul>
+</div>
+
+{% if fussnoten and fussnoten.size > 0 %}
+<div class="fussnoten">
+  <ol>
+    {% for fn in fussnoten %}<li>{{ fn }}</li>{% endfor %}
+  </ol>
+</div>
+{% endif %}
+
+</body>
+</html>
