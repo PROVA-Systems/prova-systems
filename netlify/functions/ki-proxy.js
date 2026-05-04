@@ -304,7 +304,16 @@ async function handleMessages(body, apiKey) {
   }
 
   let model = body.model || 'gpt-4o-mini';
-  if (model.includes('haiku') || model.includes('sonnet') || model.includes('opus')) model = 'gpt-4o-mini';
+  // MEGA²¹+²² W115: Anthropic-Routing aktiviert via ki-service-interface (Marcel-H1)
+  // Vorher: Anthropic-Modelle wurden HART zu gpt-4o-mini gefallback'd, da kein Multi-
+  // Provider-Routing existierte. Jetzt: ki-service-interface dispatched zum richtigen
+  // Adapter (Marcel-Decision G2: gpt-4o + gpt-4o-mini bleiben Default fuer Text).
+  // Falls body.model explizit Claude-Modell anfragt UND ANTHROPIC_API_KEY gesetzt:
+  // wird unten via ki-service-interface geroutet. Sonst: existing OpenAI-Pfad.
+  // Die alten haiku/sonnet/opus-Strings werden NICHT mehr gefiltert — der Adapter
+  // entscheidet basierend auf KI_TEXT_PROVIDER und body.model.
+  // (Hinweis: Komplexer Aufgaben-Router unten bleibt unangetastet — diese Fix
+  // betrifft nur den schlichten "messages"-Format-Pfad fuer simple Calls.)
 
   // ── FACHWISSEN-INJECTION v3.4 (opt-in via body.schadensart / body.paragraph_nr)
   // SAFE: wenn Felder fehlen → messages bleiben unverändert → exakt heutiges Verhalten
