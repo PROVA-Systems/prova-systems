@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v270';   // MEGA¹⁴: 3 PDF-Templates (F-05/F-08/FOTODOK) + Swipe + Native-Share + PTR-Sweep + 4 Bug-Fixes (W18-W21)
+const CACHE_VERSION = 'prova-v271';   // MEGA¹⁴-Ext: Triple-Mode-Foundation + 2 weitere PDFs (F-02/F-03) + Architektur-Doku
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
@@ -66,6 +66,7 @@ const APP_SHELL = [
   '/lib/admin-bulk.js',                 // MEGA¹³ W21: Bulk-Operations
   '/lib/swipe-gestures.js',             // MEGA¹⁴ W24: Touch-Swipe-Detection
   '/lib/native-share.js',               // MEGA¹⁴ W24: Web-Share-API + Clipboard-Fallback
+  '/lib/workflow-mode-router.js',       // MEGA¹⁴-Ext W28: Triple-Mode-Router (Foundation)
   // Legacy auth (Hybrid-Modus, bleibt bis Cutover-Phase 5 cleanup)
   '/prova-fetch-auth.js',
   '/prova-notifications.js',
