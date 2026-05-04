@@ -153,6 +153,18 @@ async function handleSignUp(form) {
     const password = form.password.value;
     const name = form.name.value.trim();
 
+    // MEGA²⁰ W86: Legal-Checkboxes-State erfassen (Marcel-Decision A1)
+    const cbAgb = document.getElementById('cb-agb');
+    const cbAvv = document.getElementById('cb-avv');
+    const cbDse = document.getElementById('cb-dse');
+    const cbNewsletter = document.getElementById('cb-newsletter');
+
+    // Pflicht-Validation als Defense-in-Depth (Form-Submit-Disable schon clientside)
+    if (cbAgb && cbAvv && cbDse && (!cbAgb.checked || !cbAvv.checked || !cbDse.checked)) {
+        showError('Bitte alle Pflicht-Einwilligungen (AGB, AVV, Datenschutzerklaerung) bestaetigen.');
+        return;
+    }
+
     setLoading(form, true);
     hideMsg();
 
@@ -178,9 +190,42 @@ async function handleSignUp(form) {
     // (email-confirmation deaktiviert), schreiben wir den access_token rein.
     if (data && data.user && data.session) {
         writeLegacyBridge(data.user, data.session);
+
+        // MEGA²⁰ W86: Einwilligungen via existing record_einwilligung-RPC loggen.
+        // Best-Effort (Marcel-Decision F2): bei Failure → Force-Later via
+        // existing get_pending_einwilligungen beim naechsten Login.
+        // Nur ausfuehren wenn Auto-Login erfolgreich (data.session vorhanden).
+        const types = ['agb', 'datenschutzerklaerung', 'avv_auftragsverarbeitung'];
+        if (cbNewsletter && cbNewsletter.checked) types.push('newsletter');
+
+        try {
+            const fetcher = window.provaFetch || window.fetch;
+            const res = await fetcher('/.netlify/functions/log-legal-acceptance', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ types: types, onboarding_schritt: 'signup' })
+            });
+            if (!res.ok) {
+                console.warn('[auth] log-legal-acceptance failed:', res.status,
+                    '— forced re-consent will catch this on next login');
+            } else {
+                const result = await res.json().catch(() => ({}));
+                if (result && result.partial) {
+                    console.warn('[auth] log-legal-acceptance partial:',
+                        result.results || result, '— force-later may apply');
+                }
+            }
+        } catch (e) {
+            // Kein Block — User hat Account, get_pending_einwilligungen
+            // greift beim naechsten Login.
+            console.warn('[auth] log-legal-acceptance network error:', e.message);
+        }
     }
 
     form.reset();
+    // Re-Disable Submit-Button nach Reset (checkboxes werden geleert)
+    const signupSubmit = document.getElementById('signup-submit');
+    if (signupSubmit) signupSubmit.disabled = true;
 }
 
 // ─── PASSWORT-RESET ───────────────────────────────────────────
