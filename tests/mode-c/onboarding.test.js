@@ -37,6 +37,51 @@ describe('lib/onboarding-trigger.js — Trigger-Logic', () => {
   });
 });
 
+describe('lib/onboarding-trigger.js — MEGA¹⁹ W78 A11y + DB-Trigger', () => {
+  test('Backdrop-Blur fuer Premium-Feel', () => {
+    assert.match(ONBOARD, /backdrop-filter:blur/);
+  });
+
+  test('Scale-In Animation injected', () => {
+    assert.match(ONBOARD, /provaOnbScaleIn/);
+    assert.match(ONBOARD, /provaOnbFadeIn/);
+  });
+
+  test('Mobile-Responsive @media max-width:540px', () => {
+    assert.match(ONBOARD, /@media \(max-width:540px\)/);
+  });
+
+  test('Esc-Key schliesst Modal', () => {
+    assert.match(ONBOARD, /ev\.key === ['"]Escape['"]/);
+    assert.match(ONBOARD, /addEventListener\(['"]keydown['"]/);
+  });
+
+  test('Click-outside auf Backdrop schliesst Modal', () => {
+    assert.match(ONBOARD, /ev\.target === overlay/);
+  });
+
+  test('Focus-Trap mit Shift+Tab', () => {
+    assert.match(ONBOARD, /ev\.shiftKey/);
+    assert.match(ONBOARD, /document\.activeElement === first/);
+  });
+
+  test('Initial-Fokus auf erste Mode-Card', () => {
+    assert.match(ONBOARD, /firstCard\.focus\(\)/);
+  });
+
+  test('_closeOverlay mit Cleanup + Fade-Out', () => {
+    assert.match(ONBOARD, /function _closeOverlay/);
+    assert.match(ONBOARD, /removeEventListener\(['"]keydown['"]/);
+    assert.match(ONBOARD, /opacity 0\.2s ease-out/);
+  });
+
+  test('DB-Trigger via fetchSettings + _fallback-Defense', () => {
+    assert.match(ONBOARD, /settings\._fallback/);
+    assert.match(ONBOARD, /settings\.default_mode/);
+    assert.match(ONBOARD, /defensive skip statt Modal-Spam/);
+  });
+});
+
 describe('lib/onboarding-trigger.js — Modal-UI', () => {
   test('Modal hat role=dialog + aria-modal', () => {
     assert.match(ONBOARD, /role['"],\s*['"]dialog/);
