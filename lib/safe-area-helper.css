@@ -1,0 +1,112 @@
+/**
+ * PROVA Safe-Area-Helper-CSS
+ * MEGA¹² W14 (Tier 1, 2026-05-05)
+ *
+ * Utility-Classes fuer iOS-Safari Safe-Area-Insets (Notch, Home-Bar).
+ * Nutzt env(safe-area-inset-*) wo unterstuetzt, mit max() als Fallback.
+ *
+ * Browser-Support:
+ *   - iOS Safari 11+: voll
+ *   - Chrome Android: voll
+ *   - Desktop: kein Insets (env returns 0px) — sicheres Fallback via max()
+ *
+ * USAGE in HTML:
+ *   <body class="psa-pt-safe psa-pb-safe">
+ *   <header class="psa-pt-safe psa-px-safe">
+ *   <footer class="psa-pb-safe">
+ *
+ * Pflicht-Setup: <meta name="viewport" content="..., viewport-fit=cover">
+ * (sonst werden insets NICHT applied von iOS)
+ */
+
+/* ─── PADDING-Variants (additiv zum existing padding) ─────────────────── */
+
+.psa-pt-safe {
+  padding-top: max(var(--psa-pt-base, 16px), env(safe-area-inset-top));
+}
+
+.psa-pb-safe {
+  padding-bottom: max(var(--psa-pb-base, 16px), env(safe-area-inset-bottom));
+}
+
+.psa-pl-safe {
+  padding-left: max(var(--psa-pl-base, 16px), env(safe-area-inset-left));
+}
+
+.psa-pr-safe {
+  padding-right: max(var(--psa-pr-base, 16px), env(safe-area-inset-right));
+}
+
+.psa-px-safe {
+  padding-left: max(var(--psa-px-base, 16px), env(safe-area-inset-left));
+  padding-right: max(var(--psa-px-base, 16px), env(safe-area-inset-right));
+}
+
+.psa-py-safe {
+  padding-top: max(var(--psa-py-base, 16px), env(safe-area-inset-top));
+  padding-bottom: max(var(--psa-py-base, 16px), env(safe-area-inset-bottom));
+}
+
+/* ─── MARGIN-Variants (rare, but useful fuer Floating-FABs) ───────────── */
+
+.psa-mb-safe {
+  margin-bottom: max(0px, env(safe-area-inset-bottom));
+}
+
+.psa-mr-safe {
+  margin-right: max(0px, env(safe-area-inset-right));
+}
+
+/* ─── POSITION-Helpers (fuer fixed/sticky-Elements) ──────────────────── */
+
+.psa-bottom-safe {
+  bottom: max(var(--psa-bottom-base, 16px), env(safe-area-inset-bottom));
+}
+
+.psa-top-safe {
+  top: max(var(--psa-top-base, 16px), env(safe-area-inset-top));
+}
+
+/* ─── 100vh-Bug-Fix Helper-Class fuer iOS ─────────────────────────────── */
+
+.psa-min-h-screen {
+  /* iOS-Safari hat 100vh-Bug (URL-Bar dynamic) */
+  /* Modern dvh-Unit ist Fix; vh als Fallback */
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+.psa-h-screen {
+  height: 100vh;
+  height: 100dvh;
+}
+
+/* ─── Touch-Target-Helper (WCAG 2.5.5 min. 48x48px) ──────────────────── */
+
+.psa-touch-target {
+  min-width: 48px;
+  min-height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ─── Tap-Highlight-Disabled (nur fuer Custom-Touch-Animation) ────────── */
+
+.psa-no-tap-highlight {
+  -webkit-tap-highlight-color: transparent;
+  tap-highlight-color: transparent;
+}
+
+/* ─── Input-Zoom-Disabled (iOS-Safari: font-size < 16 triggert Zoom) ──── */
+
+.psa-no-input-zoom {
+  font-size: 16px;
+}
+
+/* ─── Smooth-Scroll Bug-Fix (iOS unter 16) ────────────────────────────── */
+
+.psa-momentum-scroll {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
