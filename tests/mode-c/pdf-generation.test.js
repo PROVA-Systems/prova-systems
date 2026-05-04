@@ -91,8 +91,11 @@ describe('generate-pdf-mode-c.js — Backend', () => {
     assert.match(PDF_BACKEND, /missing:\s*result\.missing/);
   });
 
-  test('TODO-Marker fuer alternative Service-Wahl', () => {
-    assert.match(PDF_BACKEND, /pdf_service_options/);
+  test('MEGA¹⁸ W68: PDF-Service-Interface integriert (statt TODO-Marker)', () => {
+    // MEGA¹⁷ hatte hier pdf_service_options Stub. MEGA¹⁸ ersetzt durch
+    // echten PDF-Service-Call via lib/pdf-service-interface.
+    assert.match(PDF_BACKEND, /lib\/pdf-service-interface/);
+    assert.match(PDF_BACKEND, /pdfService\.generatePdf/);
   });
 });
 
