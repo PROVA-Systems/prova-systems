@@ -101,11 +101,22 @@ exports.handler = withSentry(requireAuth(async function (event, context) {
     return { statusCode: 401, headers: baseHeaders, body: JSON.stringify({ error: 'no user_id' }) };
   }
 
-  if (event.httpMethod !== 'GET') {
-    return { statusCode: 405, headers: baseHeaders, body: JSON.stringify({ error: 'Method Not Allowed', allowed: ['GET'] }) };
+  // MEGA¹⁸ W68: GET=Vorschau (HTML), POST=PDF-Generation via Service-Abstraction
+  if (event.httpMethod !== 'GET' && event.httpMethod !== 'POST') {
+    return { statusCode: 405, headers: baseHeaders, body: JSON.stringify({ error: 'Method Not Allowed', allowed: ['GET', 'POST'] }) };
   }
 
-  const auftragId = event.queryStringParameters && event.queryStringParameters.auftrag_id;
+  let auftragId;
+  if (event.httpMethod === 'GET') {
+    auftragId = event.queryStringParameters && event.queryStringParameters.auftrag_id;
+  } else {
+    try {
+      const body = JSON.parse(event.body || '{}');
+      auftragId = body.auftrag_id;
+    } catch (e) {
+      return { statusCode: 400, headers: baseHeaders, body: JSON.stringify({ error: 'invalid JSON body' }) };
+    }
+  }
   if (!auftragId || !/^[0-9a-f-]{36}$/i.test(auftragId)) {
     return { statusCode: 400, headers: baseHeaders, body: JSON.stringify({ error: 'invalid auftrag_id' }) };
   }
@@ -182,21 +193,91 @@ exports.handler = withSentry(requireAuth(async function (event, context) {
       dataContext
     );
 
+    // MEGA¹⁸ W68: Bei GET = Vorschau (HTML), bei POST = PDF-Generation via Service
+    if (event.httpMethod === 'GET') {
+      return {
+        statusCode: 200,
+        headers: baseHeaders,
+        body: JSON.stringify({
+          ok: true,
+          mode: 'preview',
+          auftrag_id: auftrag.id,
+          az: auftrag.az,
+          vorlage_id: vorlage.id,
+          vorlage_name: vorlage.name,
+          interpolated_html: result.html,
+          applied: result.applied,
+          missing: result.missing
+        })
+      };
+    }
+
+    // POST: PDF-Generation via Service-Abstraction
+    let pdfService;
+    try {
+      pdfService = require('../../lib/pdf-service-interface.js').getService();
+    } catch (e) {
+      return { statusCode: 500, headers: baseHeaders, body: JSON.stringify({
+        error: 'PDF-Service-Layer Init failed',
+        detail: e.message
+      }) };
+    }
+
+    if (!pdfService.isAvailable()) {
+      return { statusCode: 503, headers: baseHeaders, body: JSON.stringify({
+        error: 'PDF-Service nicht konfiguriert',
+        service: pdfService.serviceName,
+        hint: 'Marcel-Pflicht: PDFMONKEY_API_KEY + PDFMONKEY_MODE_C_TEMPLATE_ID setzen'
+      }) };
+    }
+
+    const pdfOptions = {
+      title: (auftrag.titel || vorlage.name || ('Mode C ' + auftrag.az)).slice(0, 200),
+      footer_text: `Aktenzeichen ${auftrag.az || ''}`.trim()
+    };
+
+    const pdfRes = await pdfService.generatePdf(result.html, pdfOptions);
+
+    if (!pdfRes.ok) {
+      return { statusCode: 502, headers: baseHeaders, body: JSON.stringify({
+        error: pdfRes.error || 'PDF-Generation fehlgeschlagen',
+        code: pdfRes.code || 'UNKNOWN',
+        service: pdfService.serviceName
+      }) };
+    }
+
+    // Audit-Log fire-and-forget
+    try {
+      sb.from('audit_trail').insert({
+        function_name: 'generate-pdf-mode-c',
+        action: 'pdf.generated',
+        payload: {
+          user_id: userId,
+          auftrag_id: auftrag.id,
+          vorlage_id: vorlage.id,
+          service: pdfService.serviceName,
+          applied: result.applied,
+          missing_count: (result.missing || []).length
+        },
+        result: 'ok'
+      }).then(() => {}).catch(() => {});
+    } catch (_) { /* fire-and-forget */ }
+
     return {
       statusCode: 200,
       headers: baseHeaders,
       body: JSON.stringify({
         ok: true,
+        mode: 'pdf',
         auftrag_id: auftrag.id,
         az: auftrag.az,
         vorlage_id: vorlage.id,
         vorlage_name: vorlage.name,
-        interpolated_html: result.html,
+        download_url: pdfRes.download_url,
+        document_id: pdfRes.document_id || null,
+        service: pdfService.serviceName,
         applied: result.applied,
-        missing: result.missing,
-        // PDF-Generation TODO: Marcel-Decision pflicht (DocRaptor / Gotenberg / Cloud-Puppeteer)
-        todo: 'pdf-service',
-        pdf_service_options: ['docraptor', 'gotenberg', 'puppeteer-cloud']
+        missing: result.missing
       })
     };
   } catch (e) {

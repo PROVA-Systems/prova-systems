@@ -431,7 +431,8 @@ a{text-decoration:none;color:inherit;}button,input,select,textarea{font-family:i
             </select>
             <div id="mode-c-mapping-status" style="font-size:11px;color:var(--text3);margin-top:6px;line-height:1.4;"></div>
             <button id="mode-c-preview-btn" style="display:none;margin-top:8px;width:100%;padding:7px;background:rgba(79,142,247,0.1);border:1px solid rgba(79,142,247,0.3);color:var(--accent);border-radius:4px;font-size:12px;cursor:pointer;" onclick="modeCPreview()">👁 Vorschau (interpoliert)</button>
-            <button id="mode-c-pdf-btn" style="display:none;margin-top:6px;width:100%;padding:7px;background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.3);color:var(--success,#059669);border-radius:4px;font-size:12px;cursor:pointer;font-weight:600;" onclick="modeCDownloadPdf()">📄 PDF generieren</button>
+            <button id="mode-c-pdf-btn" style="display:none;margin-top:6px;width:100%;padding:7px;background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.3);color:var(--success,#059669);border-radius:4px;font-size:12px;cursor:pointer;font-weight:600;" onclick="modeCGeneratePdf()">📥 PDF generieren (PDFMonkey)</button>
+            <button id="mode-c-pdf-fallback-btn" style="display:none;margin-top:4px;width:100%;padding:6px;background:transparent;border:1px solid var(--border2);color:var(--text3);border-radius:4px;font-size:10px;cursor:pointer;" onclick="modeCDownloadPdf()" title="Browser-side PDF (Offline-Fallback)">↻ Lokale PDF (Offline)</button>
             <div id="mode-c-save-status" role="status" aria-live="polite" style="font-size:10px;color:var(--text3);margin-top:4px;"></div>
           </div>
 
@@ -687,6 +688,8 @@ a{text-decoration:none;color:inherit;}button,input,select,textarea{font-family:i
       }
       if (previewBtn) previewBtn.style.display = 'block';
       if (pdfBtn) pdfBtn.style.display = 'block';
+      const fallbackBtn = document.getElementById('mode-c-pdf-fallback-btn');
+      if (fallbackBtn) fallbackBtn.style.display = 'block';
     }
 
     async function onModeCVorlageChange(e) {
@@ -716,7 +719,68 @@ a{text-decoration:none;color:inherit;}button,input,select,textarea{font-family:i
       }
     }
 
-    // MEGA¹⁷-PERFECTION W60: PDF-Download (Browser-Side via jsPDF + html2canvas)
+    // ─── MEGA¹⁸ W70: PDF-Generation via PDFMonkey (Server-Side) ─────
+    window.modeCGeneratePdf = async function () {
+      if (!_modeCCurrentVorlageId || !_modeCAuftragId) {
+        if (window.provaAlert) window.provaAlert('Bitte erst Vorlage waehlen', 'warning');
+        return;
+      }
+      const status = document.getElementById('mode-c-save-status');
+      const btn = document.getElementById('mode-c-pdf-btn');
+      if (btn) { btn.disabled = true; btn.textContent = '⏳ Generiere via PDFMonkey…'; }
+      if (status) status.textContent = '⏳ Server-side Rendering laeuft (kann 5-15s dauern)…';
+
+      try {
+        const fetcher = window.provaFetch || window.fetch;
+        const res = await fetcher('/.netlify/functions/generate-pdf-mode-c', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ auftrag_id: _modeCAuftragId })
+        });
+
+        if (!res.ok) {
+          const err = await res.json().catch(function () { return {}; });
+          if (res.status === 503) {
+            // Service nicht konfiguriert → Hint zu Browser-Fallback
+            throw new Error((err.error || 'Service nicht konfiguriert') + '. Tipp: "↻ Lokale PDF" verwenden.');
+          }
+          if (err.code === 'TIMEOUT') {
+            throw new Error('PDFMonkey-Timeout. Bitte erneut versuchen oder Browser-PDF nutzen.');
+          }
+          throw new Error(err.error || ('HTTP ' + res.status));
+        }
+
+        const data = await res.json();
+        if (!data.download_url) {
+          throw new Error('Backend liefert keinen download_url');
+        }
+
+        // Warning bei missing variables
+        if ((data.missing || []).length > 0) {
+          if (window.provaAlert) {
+            window.provaAlert('PDF generiert, aber ' + data.missing.length + ' Variable(n) nicht aufgeloest: ' + data.missing.slice(0,3).join(', '), 'warning');
+          }
+        }
+
+        // Direkter Download via Window-Open (PDFMonkey-URL ist signed + temp)
+        const a = document.createElement('a');
+        a.href = data.download_url;
+        a.target = '_blank';
+        a.rel = 'noopener';
+        a.click();
+
+        if (status) status.textContent = '✓ PDF erzeugt (' + data.service + ')';
+        setTimeout(function () { if (status) status.textContent = ''; }, 5000);
+      } catch (e) {
+        if (status) status.textContent = '✗ ' + e.message;
+        if (window.provaAlert) window.provaAlert('PDFMonkey: ' + e.message, 'error');
+      } finally {
+        if (btn) { btn.disabled = false; btn.textContent = '📥 PDF generieren (PDFMonkey)'; }
+      }
+    };
+
+    // ─── MEGA¹⁷ W60: PDF-Download Browser-Side (Fallback) ─────────────
+    // MEGA¹⁸: Bleibt als Offline-Fallback. Nutzt jsPDF + html2canvas via CDN.
     window.modeCDownloadPdf = async function () {
       if (!_modeCCurrentVorlageId || !_modeCAuftragId) {
         if (window.provaAlert) window.provaAlert('Bitte erst Vorlage waehlen', 'warning');
