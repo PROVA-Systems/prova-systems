@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v278';   // MEGA¹⁸: PDF-Service-Abstraction (PDFMonkey + DocRaptor-Stub) + MODE_C_GENERIC Liquid-Template + Tier-6 PDFs (F-01-JVEG, F-23-SVKOSTEN, F-25-HONORAR)
+const CACHE_VERSION = 'prova-v279';   // MEGA¹⁹ FINAL-PUSH: 3 Tier-6 PDFs (F-07/F-08/F-24) + Onboarding-A11y + Airtable-Quick-Cleanup (silent 410-Fallback)
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
