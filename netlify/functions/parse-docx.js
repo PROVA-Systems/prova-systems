@@ -231,6 +231,54 @@ exports.handler = withSentry(requireAuth(async function (event, context) {
     }
   }
 
+  // ─── PUT: Variable-Mapping aktualisieren ─────────────────────────
+  // MEGA¹⁷ W50: User mapped Vorlage-Variablen auf PROVA-Felder.
+  // Body: { id: <uuid>, variable_mapping: { "$Aktenzeichen": "akte.az", ... } }
+  if (event.httpMethod === 'PUT') {
+    let body;
+    try {
+      body = JSON.parse(event.body || '{}');
+    } catch (e) {
+      return { statusCode: 400, headers: baseHeaders, body: JSON.stringify({ error: 'invalid JSON' }) };
+    }
+
+    const id = String(body.id || '').trim();
+    if (!/^[0-9a-f-]{36}$/i.test(id)) {
+      return { statusCode: 400, headers: baseHeaders, body: JSON.stringify({ error: 'invalid id' }) };
+    }
+
+    const mapping = body.variable_mapping;
+    if (!mapping || typeof mapping !== 'object' || Array.isArray(mapping)) {
+      return { statusCode: 400, headers: baseHeaders, body: JSON.stringify({ error: 'variable_mapping must be object' }) };
+    }
+
+    // Validation: Werte muessen Strings (PROVA-Field-Keys) sein
+    for (const k of Object.keys(mapping)) {
+      const v = mapping[k];
+      if (v !== null && typeof v !== 'string') {
+        return { statusCode: 400, headers: baseHeaders, body: JSON.stringify({ error: 'mapping values must be string|null' }) };
+      }
+      // Sanity: kein Pfad mit '..' oder Sonder-Chars
+      if (typeof v === 'string' && (v.length > 100 || /[^a-zA-Z0-9_\.]/.test(v))) {
+        return { statusCode: 400, headers: baseHeaders, body: JSON.stringify({ error: 'invalid field-key', value: v }) };
+      }
+    }
+
+    try {
+      const { error } = await sb.from('user_vorlagen')
+        .update({ variable_mapping: mapping, updated_at: new Date().toISOString() })
+        .eq('user_id', userId)
+        .eq('id', id);
+
+      if (error) {
+        return { statusCode: 500, headers: baseHeaders, body: JSON.stringify({ error: 'update failed', detail: error.message }) };
+      }
+      return { statusCode: 200, headers: baseHeaders, body: JSON.stringify({ ok: true, id, mapping_size: Object.keys(mapping).length }) };
+    } catch (e) {
+      return { statusCode: 500, headers: baseHeaders, body: JSON.stringify({ error: 'unexpected', detail: e.message }) };
+    }
+  }
+
   // ─── DELETE: Soft-Delete ─────────────────────────────────────────
   if (event.httpMethod === 'DELETE') {
     const id = event.queryStringParameters && event.queryStringParameters.id;
@@ -251,7 +299,7 @@ exports.handler = withSentry(requireAuth(async function (event, context) {
     }
   }
 
-  return { statusCode: 405, headers: baseHeaders, body: JSON.stringify({ error: 'Method Not Allowed', allowed: ['GET','POST','DELETE'] }) };
+  return { statusCode: 405, headers: baseHeaders, body: JSON.stringify({ error: 'Method Not Allowed', allowed: ['GET','POST','PUT','DELETE'] }) };
 }), { functionName: 'parse-docx' });
 
 // Test-Exports
