@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v268';   // MEGA¹²: Anthropic-Fallback + Confidence-Badges + Mobile-UX + Drilldown + Toast-Sweep + 2 Bug-Fixes
+const CACHE_VERSION = 'prova-v269';   // MEGA¹³: KI-Historie + Autosuggest + Hamburger + Bottom-Sheet + 4 Bug-Fixes + Bulk-Ops + 2 KPI-Drilldowns
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
@@ -59,6 +59,11 @@ const APP_SHELL = [
   '/lib/safe-area-helper.css',          // MEGA¹² W14: iOS-Safe-Area-Helper-CSS
   '/lib/pull-to-refresh.js',            // MEGA¹² W14: Pull-to-Refresh
   '/lib/admin-drilldown.js',            // MEGA¹² W15: Drilldown-Modal
+  '/lib/ki-history-frontend.js',        // MEGA¹³ W18: KI-Historie-Modal
+  '/lib/ki-autosuggest.js',             // MEGA¹³ W18: KI-Autosuggest Ghost-Text
+  '/lib/hamburger-menu.js',             // MEGA¹³ W19: Hamburger-Menu
+  '/lib/bottom-sheet.js',               // MEGA¹³ W19: Bottom-Sheet Modal
+  '/lib/admin-bulk.js',                 // MEGA¹³ W21: Bulk-Operations
   // Legacy auth (Hybrid-Modus, bleibt bis Cutover-Phase 5 cleanup)
   '/prova-fetch-auth.js',
   '/prova-notifications.js',
