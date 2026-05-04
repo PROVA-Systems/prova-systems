@@ -5,6 +5,7 @@
 <script src="paket-guard.js"></script>
 <script src="prova-fetch-auth.js"></script>
 <script src="/lib/prova-config.js"></script>
+<script src="/lib/prova-fields.js"></script>
 <script src="/lib/prova-mode-c.js"></script>
 <script src="/lib/sentry-init.js"></script>
 <script src="prova-notifications.js" defer></script>
@@ -1065,6 +1066,9 @@
             : (mapCount === varCount
               ? '<span style="color:var(--success,#059669);">✓ '+mapCount+'/'+varCount+' gemappt</span>'
               : '<span style="color:var(--warning,#d97706);">⚠ '+mapCount+'/'+varCount+' gemappt</span>');
+          var editBtn = varCount > 0
+            ? '<button onclick="event.stopPropagation();openMappingModal(\''+escVorlage(v.id)+'\')" style="background:transparent;border:1px solid var(--border2);color:var(--text);border-radius:4px;padding:4px 10px;font-size:11px;cursor:pointer;margin-right:6px;" aria-label="Mapping bearbeiten">✏ Mapping</button>'
+            : '';
           return '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:var(--bg);border:1px solid var(--border);border-radius:6px;margin-bottom:6px;cursor:pointer;" onclick="openMappingModal(\''+escVorlage(v.id)+'\')" role="button" tabindex="0" onkeydown="if(event.key===\'Enter\')openMappingModal(\''+escVorlage(v.id)+'\')">' +
             '<div style="flex:1;min-width:0;">' +
               '<div style="font-weight:600;color:var(--text);">'+escVorlage(v.name)+'</div>' +
@@ -1072,7 +1076,10 @@
                 varCount+' Variable'+(varCount===1?'':'n')+' · '+mapStatus+
               '</div>' +
             '</div>' +
-            '<button onclick="event.stopPropagation();loescheVorlage(\''+escVorlage(v.id)+'\')" style="background:transparent;border:1px solid rgba(239,68,68,0.3);color:#ef4444;border-radius:4px;padding:4px 10px;font-size:11px;cursor:pointer;" aria-label="Vorlage loeschen">🗑</button>' +
+            '<div style="display:flex;align-items:center;">' +
+              editBtn +
+              '<button onclick="event.stopPropagation();loescheVorlage(\''+escVorlage(v.id)+'\')" style="background:transparent;border:1px solid rgba(239,68,68,0.3);color:#ef4444;border-radius:4px;padding:4px 10px;font-size:11px;cursor:pointer;" aria-label="Vorlage loeschen">🗑</button>' +
+            '</div>' +
           '</div>';
         }).join('');
       } catch (e) {
@@ -1114,7 +1121,12 @@
 
       listEl.innerHTML = (v.variables || []).map(function (varName) {
         var current = existingMapping[varName] || '';
-        var guess = window.ProvaModeC.smartGuessField(varName);
+        // MEGA¹⁷-PERFECTION W56: Confidence-Score
+        var guessResult = window.ProvaModeC.smartGuessFieldWithConfidence
+          ? window.ProvaModeC.smartGuessFieldWithConfidence(varName)
+          : { field: window.ProvaModeC.smartGuessField(varName), confidence: 'low' };
+        var guess = guessResult.field;
+        var conf = guessResult.confidence;
         var selected = current || guess || '';
         var optsHtml = '<option value="">— nicht mappen —</option>';
         Object.keys(groups).forEach(function (g) {
@@ -1125,13 +1137,17 @@
           });
           optsHtml += '</optgroup>';
         });
-        var hint = (!current && guess)
-          ? '<div style="font-size:10px;color:var(--accent,#4f8ef7);margin-top:3px;">💡 Vorgeschlagen: '+escVorlage(guess)+'</div>'
-          : '';
+        var confBadge = '';
+        if (!current && guess) {
+          var icon = conf === 'high' ? '🟢' : (conf === 'medium' ? '🟡' : '🔴');
+          var label = conf === 'high' ? 'sicher' : (conf === 'medium' ? 'vermutlich' : 'unsicher');
+          confBadge = '<div style="font-size:10px;color:var(--accent,#4f8ef7);margin-top:3px;">' +
+            icon + ' ' + label + ': ' + escVorlage(guess) + '</div>';
+        }
         return '<div style="display:grid;grid-template-columns:1fr 1.3fr;gap:10px;align-items:center;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;">' +
           '<div>' +
             '<div style="font-family:ui-monospace,monospace;font-size:13px;color:var(--text);font-weight:600;">'+escVorlage(varName)+'</div>' +
-            hint +
+            confBadge +
           '</div>' +
           '<select class="es-select vmm-select" data-var="'+escVorlage(varName)+'" style="width:100%;">'+optsHtml+'</select>' +
         '</div>';
@@ -1240,7 +1256,14 @@
               vorlagenStatus('✓ Hochgeladen — ' + (data.variables || []).length + ' Variablen erkannt', 'var(--success,#059669)');
               if (nameInput) nameInput.value = '';
               fileInput.value = '';
-              ladeVorlagen();
+              await ladeVorlagen();
+              // MEGA¹⁷-PERFECTION W56: Auto-Open Mapping-Modal nach Upload
+              // (sofern Variablen erkannt wurden — sonst direkt nutzbar)
+              if ((data.variables || []).length > 0 && data.id) {
+                setTimeout(function () {
+                  if (window.openMappingModal) window.openMappingModal(data.id);
+                }, 250);  // kurzer Delay damit Vorlagen-Liste sichtbar gerendert
+              }
             } else if (res.status === 503) {
               vorlagenStatus('⚠️ Migration 08 nicht angewendet — Marcel kontaktieren', 'var(--warning,#d97706)');
             } else {
