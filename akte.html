@@ -420,6 +420,20 @@ a{text-decoration:none;color:inherit;}button,input,select,textarea{font-family:i
             <div style="font-size:11px;color:var(--text3);line-height:1.6;" id="status-hint">—</div>
           </div>
 
+          <!-- MEGA¹⁷ W51: Mode-C Vorlage-Picker (nur sichtbar bei default_mode='C') -->
+          <div class="info-card" id="mode-c-card" style="display:none;">
+            <div class="info-card-title">📁 Mode C Vorlage</div>
+            <div id="mode-c-empty" style="display:none;font-size:12px;color:var(--text3);line-height:1.5;padding:6px 0;">
+              Noch keine Vorlagen hochgeladen. <a href="einstellungen.html#es-sec-vorlagen" style="color:var(--accent);">In Einstellungen hochladen →</a>
+            </div>
+            <select id="mode-c-vorlage-select" class="es-select" style="display:none;width:100%;font-size:12px;padding:6px 8px;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:4px;">
+              <option value="">— keine Vorlage —</option>
+            </select>
+            <div id="mode-c-mapping-status" style="font-size:11px;color:var(--text3);margin-top:6px;line-height:1.4;"></div>
+            <button id="mode-c-preview-btn" style="display:none;margin-top:8px;width:100%;padding:7px;background:rgba(79,142,247,0.1);border:1px solid rgba(79,142,247,0.3);color:var(--accent);border-radius:4px;font-size:12px;cursor:pointer;" onclick="modeCPreview()">👁 Vorschau (interpoliert)</button>
+            <div id="mode-c-save-status" role="status" aria-live="polite" style="font-size:10px;color:var(--text3);margin-top:4px;"></div>
+          </div>
+
           <!-- AUFTRAGGEBER -->
           <div class="info-card">
             <div class="info-card-title">Auftraggeber</div>
@@ -569,6 +583,165 @@ a{text-decoration:none;color:inherit;}button,input,select,textarea{font-family:i
       if (_notizEditor && _notizEditor.destroy) {
         try { _notizEditor.destroy(); } catch (_) {}
       }
+    });
+
+    // ─── MEGA¹⁷ W51: Mode-C-Picker ─────────────────────────────
+    let _modeCActive = false;
+    let _modeCAuftragId = null;
+    let _modeCVorlagen = [];
+    let _modeCCurrentVorlageId = null;
+
+    async function initModeCPicker() {
+      if (!window.ProvaWorkflowMode) return;
+      try {
+        const settings = await window.ProvaWorkflowMode.fetchSettings();
+        _modeCActive = (settings.default_mode === 'C');
+        const card = document.getElementById('mode-c-card');
+        if (!card) return;
+
+        if (!_modeCActive) {
+          card.style.display = 'none';
+          return;
+        }
+        card.style.display = 'block';
+
+        const fetcher = window.provaFetch || window.fetch;
+        const res = await fetcher('/.netlify/functions/parse-docx');
+        if (!res.ok) {
+          document.getElementById('mode-c-empty').style.display = 'block';
+          document.getElementById('mode-c-empty').textContent = 'Vorlagen-Backend nicht erreichbar.';
+          return;
+        }
+        const data = await res.json();
+        _modeCVorlagen = (data.vorlagen || []).filter(function (v) { return v.is_active !== false; });
+
+        if (data._migration_pending || _modeCVorlagen.length === 0) {
+          document.getElementById('mode-c-empty').style.display = 'block';
+          return;
+        }
+
+        const sel = document.getElementById('mode-c-vorlage-select');
+        if (!sel) return;
+        sel.innerHTML = '<option value="">— keine Vorlage —</option>' +
+          _modeCVorlagen.map(function (v) {
+            return '<option value="' + v.id + '">' + (v.name || '(unbenannt)').replace(/[<>]/g,'') + '</option>';
+          }).join('');
+        sel.style.display = 'block';
+        document.getElementById('mode-c-empty').style.display = 'none';
+
+        // Aktuell gespeicherte Vorlage laden (aus globalem Auftrag-State)
+        try {
+          if (window._currentAuftrag && window._currentAuftrag.id) {
+            _modeCAuftragId = window._currentAuftrag.id;
+            const stored = window._currentAuftrag.vorlage_id;
+            if (stored) {
+              sel.value = stored;
+              _modeCCurrentVorlageId = stored;
+              renderMappingStatus();
+            }
+          }
+        } catch (_) { /* falls _currentAuftrag noch nicht da, init laeuft bei Auftrag-Load */ }
+
+        sel.addEventListener('change', onModeCVorlageChange);
+      } catch (e) {
+        console.warn('[akte Mode-C-Init]', e.message);
+      }
+    }
+
+    function renderMappingStatus() {
+      const statusEl = document.getElementById('mode-c-mapping-status');
+      const previewBtn = document.getElementById('mode-c-preview-btn');
+      if (!statusEl) return;
+      if (!_modeCCurrentVorlageId) {
+        statusEl.textContent = '';
+        if (previewBtn) previewBtn.style.display = 'none';
+        return;
+      }
+      const v = _modeCVorlagen.find(function (x) { return x.id === _modeCCurrentVorlageId; });
+      if (!v) { statusEl.textContent = ''; return; }
+      const total = (v.variables || []).length;
+      const mapping = v.variable_mapping || {};
+      const mapped = Object.keys(mapping).filter(function (k) { return mapping[k]; }).length;
+      if (total === 0) {
+        statusEl.innerHTML = '<span style="color:var(--text3);">Keine Variablen — direkt nutzbar.</span>';
+      } else if (mapped === total) {
+        statusEl.innerHTML = '<span style="color:var(--success,#059669);">✓ ' + mapped + '/' + total + ' Variablen gemappt</span>';
+      } else {
+        statusEl.innerHTML = '<span style="color:var(--warning,#d97706);">⚠ ' + mapped + '/' + total + ' gemappt</span> · <a href="einstellungen.html#es-sec-vorlagen" style="color:var(--accent);">Mapping vervollstaendigen →</a>';
+      }
+      if (previewBtn) previewBtn.style.display = 'block';
+    }
+
+    async function onModeCVorlageChange(e) {
+      const newId = e.target.value || null;
+      _modeCCurrentVorlageId = newId;
+      renderMappingStatus();
+      const status = document.getElementById('mode-c-save-status');
+      if (status) status.textContent = '⏳ Speichere…';
+
+      if (!_modeCAuftragId) {
+        if (status) status.textContent = '⚠ Kein Auftrag geladen';
+        return;
+      }
+
+      try {
+        const ds = await import('/lib/data-store.js');
+        const { error } = await ds.auftraege.update(_modeCAuftragId, { vorlage_id: newId });
+        if (error) {
+          if (status) status.textContent = '✗ ' + (error.message || 'Speichern fehlgeschlagen');
+        } else {
+          if (status) status.textContent = '✓ Vorlage gespeichert';
+          if (window._currentAuftrag) window._currentAuftrag.vorlage_id = newId;
+          setTimeout(function () { if (status) status.textContent = ''; }, 3000);
+        }
+      } catch (err) {
+        if (status) status.textContent = '✗ ' + err.message;
+      }
+    }
+
+    window.modeCPreview = async function () {
+      if (!_modeCCurrentVorlageId || !_modeCAuftragId) return;
+      try {
+        const fetcher = window.provaFetch || window.fetch;
+        const res = await fetcher('/.netlify/functions/generate-pdf-mode-c?auftrag_id=' + encodeURIComponent(_modeCAuftragId));
+        if (!res.ok) {
+          if (window.provaAlert) window.provaAlert('Vorschau fehlgeschlagen (' + res.status + ')', 'error');
+          return;
+        }
+        const data = await res.json();
+        const w = window.open('', '_blank');
+        if (w) {
+          w.document.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>Vorschau · ' + (data.vorlage_name || 'Mode C') + '</title><style>body{font-family:system-ui,sans-serif;max-width:800px;margin:30px auto;padding:20px;color:#222;line-height:1.5;}h1{font-size:14px;color:#666;border-bottom:1px solid #ddd;padding-bottom:6px;margin-bottom:20px;}.warn{background:#fff3cd;border:1px solid #ffeeba;padding:8px 12px;border-radius:4px;font-size:13px;color:#856404;margin-bottom:20px;}</style></head><body>');
+          w.document.write('<h1>Vorschau · ' + (data.vorlage_name || '') + ' · ' + (data.applied || 0) + ' von ' + ((data.applied||0)+(data.missing||[]).length) + ' Variablen aufgeloest</h1>');
+          if ((data.missing || []).length > 0) {
+            w.document.write('<div class="warn">⚠ Nicht aufgeloeste Variablen: ' + data.missing.join(', ') + '</div>');
+          }
+          w.document.write(data.interpolated_html || '');
+          w.document.write('</body></html>');
+          w.document.close();
+        }
+      } catch (e) {
+        if (window.provaAlert) window.provaAlert('Vorschau-Fehler: ' + e.message, 'error');
+      }
+    };
+
+    // Mode-C-Picker init: nach Mode-B-Init UND nach Auftrag-Daten-Load.
+    // _currentAuftrag wird von der bestehenden Akte-Load-Logik gesetzt.
+    document.addEventListener('DOMContentLoaded', function () {
+      // Verzoegere Mode-C-Init bis _currentAuftrag verfuegbar (max 6s polling)
+      let attempts = 0;
+      const maxAttempts = 60;  // 6s @ 100ms
+      const t = setInterval(function () {
+        attempts++;
+        if (window._currentAuftrag && window._currentAuftrag.id) {
+          clearInterval(t);
+          initModeCPicker();
+        } else if (attempts >= maxAttempts) {
+          clearInterval(t);
+          // Fallback: trotzdem init versuchen, evtl. kein Auftrag
+          initModeCPicker();
+        }
+      }, 100);
     });
   })();
 </script>
