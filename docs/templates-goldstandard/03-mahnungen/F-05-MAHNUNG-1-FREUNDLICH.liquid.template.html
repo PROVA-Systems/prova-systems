@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>Zahlungserinnerung — Rechnung {{ rechnung_nummer }}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════════════════════════
+   PROVA Systems · F-05 ZAHLUNGSERINNERUNG (Mahnung Stufe 1)
+   Liquid-templated · 1 Seite · Ton: verstaendnisvoll
+   "Vielleicht uebersehen — wir geben gerne nochmal Bescheid."
+   KEIN Mahn-Zuschlag · KEIN Verzug-Zinsen · KEINE Anwalt-Drohung
+   Frist: 7 Tage neu
+   ═══════════════════════════════════════════════════════════════ */
+:root { --primary: #1a3a6b; --accent: #3b82f6; --muted: #64748b; --text: #0f172a; --light: #f1f5f9; --lighter: #f8fafc; --border: #e2e8f0; --success: #059669; }
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Inter', -apple-system, sans-serif; font-size: 11pt; line-height: 1.6; color: var(--text); background: white; }
+@page { size: A4; margin: 25mm 25mm 25mm 25mm; }
+@page {
+  @bottom-left { content: "Rechnung {{ rechnung_nummer }} · Zahlungserinnerung"; font-family: 'Inter', sans-serif; font-size: 8pt; color: #64748b; padding-bottom: 12mm; }
+  @bottom-right { content: "{{ sv_name }}"; font-family: 'Inter', sans-serif; font-size: 8pt; color: #64748b; padding-bottom: 12mm; }
+}
+.brief-kopf { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16mm; }
+.absender { font-size: 9pt; line-height: 1.5; color: var(--muted); }
+.absender-name { font-weight: 600; color: var(--text); margin-bottom: 1mm; }
+.empfaenger { margin-top: 14mm; margin-bottom: 16mm; font-size: 11pt; line-height: 1.6; }
+.empfaenger-name { font-weight: 600; }
+.brief-meta { text-align: right; font-size: 9.5pt; color: var(--muted); margin-bottom: 8mm; line-height: 1.55; }
+.brief-meta .ort-datum { color: var(--text); }
+.betreff { font-size: 12.5pt; font-weight: 600; color: var(--primary); margin: 8mm 0 6mm; letter-spacing: -0.01em; }
+.anrede { margin-bottom: 5mm; font-size: 11pt; }
+.text-block { margin-bottom: 5mm; font-size: 11pt; line-height: 1.65; }
+.text-block p { margin-bottom: 3mm; }
+.rechnung-box {
+  margin: 8mm 0;
+  padding: 6mm 8mm;
+  background: var(--lighter);
+  border-left: 3px solid var(--accent);
+  border-radius: 2px;
+}
+.rechnung-box .label {
+  font-size: 8pt;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 500;
+  margin-bottom: 2mm;
+}
+.rechnung-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 3mm 8mm; }
+.rechnung-grid .item .l { font-size: 8.5pt; color: var(--muted); margin-bottom: 0.8mm; text-transform: uppercase; letter-spacing: 0.06em; }
+.rechnung-grid .item .v { font-size: 11.5pt; color: var(--text); font-weight: 500; }
+.rechnung-grid .item .v.mono { font-family: 'JetBrains Mono', monospace; }
+.rechnung-grid .betrag .v { font-size: 14pt; font-weight: 700; color: var(--primary); }
+
+.zahlungs-box {
+  margin: 6mm 0;
+  padding: 5mm 6mm;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  background: white;
+  font-size: 10pt;
+}
+.zahlungs-box-titel { font-weight: 600; color: var(--primary); font-size: 10.5pt; margin-bottom: 3mm; }
+.zahlungs-box .iban-row { display: flex; gap: 6mm; flex-wrap: wrap; font-family: 'JetBrains Mono', monospace; font-size: 9.5pt; color: var(--text); }
+.zahlungs-box .iban-row .label { font-family: 'Inter', sans-serif; color: var(--muted); font-size: 8.5pt; text-transform: uppercase; letter-spacing: 0.06em; margin-right: 2mm; }
+
+.frist-hinweis {
+  margin: 6mm 0;
+  padding: 4mm 5mm;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  font-size: 10.5pt;
+  color: var(--text);
+}
+.frist-hinweis strong { color: var(--success); }
+
+.gruss { margin-top: 8mm; font-size: 11pt; }
+.gruss-name { font-weight: 600; margin-top: 14mm; }
+.gruss-titel { color: var(--muted); font-size: 10pt; }
+
+.ps {
+  margin-top: 8mm;
+  padding: 4mm 5mm;
+  background: var(--lighter);
+  border-radius: 3px;
+  font-size: 10pt;
+  color: var(--muted);
+  line-height: 1.6;
+}
+.ps strong { color: var(--text); }
+</style>
+</head>
+<body>
+
+<div class="brief-kopf">
+  <div class="absender">
+    <div class="absender-name">{{ sv_name }}</div>
+    {% if sv_qualifikation %}<div>{{ sv_qualifikation }}</div>{% endif %}
+    <div>{{ sv_strasse }}</div>
+    <div>{{ sv_plz }} {{ sv_ort }}</div>
+    {% if sv_telefon %}<div>Tel.: {{ sv_telefon }}</div>{% endif %}
+    {% if sv_email %}<div>{{ sv_email }}</div>{% endif %}
+  </div>
+  <div class="brief-meta">
+    <div class="ort-datum">{{ ort_datum }}</div>
+    <div>Rechnung-Nr.: <span style="color:var(--text);font-family:'JetBrains Mono',monospace;">{{ rechnung_nummer }}</span></div>
+    {% if rechnung_datum %}<div>Rechnungs-Datum: {{ rechnung_datum }}</div>{% endif %}
+  </div>
+</div>
+
+<div class="empfaenger">
+  <div class="empfaenger-name">{{ empfaenger_name }}</div>
+  {% if empfaenger_zusatz != blank %}<div>{{ empfaenger_zusatz }}</div>{% endif %}
+  <div>{{ empfaenger_strasse }}</div>
+  <div>{{ empfaenger_plz }} {{ empfaenger_ort }}</div>
+</div>
+
+<div class="betreff">Zahlungserinnerung — Rechnung {{ rechnung_nummer }}</div>
+
+<div class="anrede">{{ anrede }}{% if anrede_name != blank %} {{ anrede_name }}{% endif %},</div>
+
+<div class="text-block">
+  <p>vielleicht ist Ihnen meine Rechnung vom {{ rechnung_datum }} entgangen — das passiert
+     im Alltag schnell. Mit dieser freundlichen Erinnerung moechte ich Sie auf den
+     ausstehenden Betrag aufmerksam machen.</p>
+</div>
+
+<div class="rechnung-box">
+  <div class="label">Offener Betrag</div>
+  <div class="rechnung-grid">
+    <div class="item">
+      <div class="l">Rechnung-Nr.</div>
+      <div class="v mono">{{ rechnung_nummer }}</div>
+    </div>
+    <div class="item">
+      <div class="l">Rechnungs-Datum</div>
+      <div class="v">{{ rechnung_datum }}</div>
+    </div>
+    <div class="item">
+      <div class="l">Faellig seit</div>
+      <div class="v">{{ faelligkeit_datum }}</div>
+    </div>
+    <div class="item betrag">
+      <div class="l">Brutto-Betrag</div>
+      <div class="v mono">{{ betrag_brutto }} EUR</div>
+    </div>
+  </div>
+</div>
+
+<div class="text-block">
+  <p>Bitte ueberweisen Sie den ausstehenden Betrag bis zum
+     <strong>{{ neue_frist }}</strong> auf das unten angegebene Konto. Falls Sie bereits
+     bezahlt haben — vielen Dank, dann betrachten Sie diese Erinnerung als gegenstandslos.</p>
+</div>
+
+<div class="zahlungs-box">
+  <div class="zahlungs-box-titel">Zahlungs-Verbindung</div>
+  <div class="iban-row">
+    <span><span class="label">IBAN:</span> {{ sv_iban }}</span>
+    {% if sv_bic %}<span><span class="label">BIC:</span> {{ sv_bic }}</span>{% endif %}
+  </div>
+  {% if sv_bank %}<div style="margin-top:2mm;font-family:'JetBrains Mono',monospace;font-size:9.5pt;"><span style="font-family:'Inter',sans-serif;color:var(--muted);font-size:8.5pt;text-transform:uppercase;letter-spacing:0.06em;margin-right:2mm;">Bank:</span>{{ sv_bank }}</div>{% endif %}
+  <div style="margin-top:2mm;font-family:'JetBrains Mono',monospace;font-size:9.5pt;"><span style="font-family:'Inter',sans-serif;color:var(--muted);font-size:8.5pt;text-transform:uppercase;letter-spacing:0.06em;margin-right:2mm;">Verwendungszweck:</span>{{ rechnung_nummer }}</div>
+</div>
+
+<div class="frist-hinweis">
+  ✉️ <strong>Frist: {{ neue_frist }}</strong> — bei Fragen oder Verzoegerungen melden Sie sich gerne kurz, wir finden eine Loesung.
+</div>
+
+<div class="gruss">Mit freundlichen Gruessen</div>
+<div class="gruss-name">{{ sv_name }}</div>
+<div class="gruss-titel">{{ sv_qualifikation | default: "Sachverstaendiger" }}</div>
+
+{% if hat_kontaktwunsch %}
+<div class="ps">
+  <strong>P.S.</strong> Falls die Rechnung verloren gegangen ist, schicke ich Ihnen
+  gerne eine Kopie. Eine kurze Antwort per E-Mail oder Telefon reicht.
+</div>
+{% endif %}
+
+</body>
+</html>

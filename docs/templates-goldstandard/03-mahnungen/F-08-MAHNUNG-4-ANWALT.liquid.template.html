@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>Letzte Mahnung — vor Anwalts-Übergabe — Rechnung {{ rechnung_nummer }}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════════════════════════
+   PROVA Systems · F-08 LETZTE MAHNUNG (Stufe 4) · Anwalts-Andeutung
+   Liquid-templated · 1-2 Seiten · Ton: rechtlich-hart
+   "Letzte Frist · ansonsten Anwalt"
+   MIT Mahn-Zuschlag (5,00 EUR) · MIT Verzug-Zinsen (BGB §288)
+   Frist: 5 Werktage
+   Layout deutlich anders als F-05:
+     - Roter Header-Stripe
+     - Mahn-Historie als Tabelle
+     - §-Verweise prominent
+   ═══════════════════════════════════════════════════════════════ */
+:root {
+  --primary: #1a3a6b;
+  --danger: #dc2626;
+  --danger-light: #fef2f2;
+  --danger-border: #fecaca;
+  --muted: #64748b;
+  --text: #0f172a;
+  --light: #f1f5f9;
+  --lighter: #f8fafc;
+  --border: #e2e8f0;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Inter', -apple-system, sans-serif; font-size: 10.5pt; line-height: 1.55; color: var(--text); }
+@page { size: A4; margin: 25mm 22mm 25mm 22mm; }
+@page {
+  @bottom-left { content: "Letzte Mahnung · Rechnung {{ rechnung_nummer }}"; font-family: 'Inter', sans-serif; font-size: 8pt; color: var(--danger); padding-bottom: 12mm; font-weight: 600; }
+  @bottom-right { content: "Seite " counter(page) " / " counter(pages) " · {{ sv_name }}"; font-family: 'Inter', sans-serif; font-size: 8pt; color: var(--muted); padding-bottom: 12mm; }
+}
+
+/* Roter Header-Stripe — visueller Ernst */
+.header-stripe {
+  background: var(--danger);
+  color: white;
+  padding: 6mm 10mm;
+  margin: -25mm -22mm 12mm -22mm;
+  letter-spacing: 0.05em;
+}
+.header-stripe-titel {
+  font-size: 18pt;
+  font-weight: 700;
+  text-transform: uppercase;
+  margin-bottom: 1mm;
+}
+.header-stripe-untertitel {
+  font-size: 10pt;
+  opacity: 0.95;
+  font-weight: 500;
+}
+
+.brief-kopf-2 {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8mm;
+  margin-bottom: 12mm;
+  font-size: 9.5pt;
+  line-height: 1.55;
+}
+.absender-kompakt { color: var(--muted); }
+.absender-kompakt strong { color: var(--text); display: block; margin-bottom: 1mm; }
+.brief-meta-rechts { text-align: right; color: var(--muted); }
+.brief-meta-rechts .ort-datum { color: var(--text); font-weight: 500; }
+.brief-meta-rechts .mahn-nr {
+  margin-top: 3mm;
+  display: inline-block;
+  padding: 2mm 4mm;
+  background: var(--danger-light);
+  color: var(--danger);
+  border: 1px solid var(--danger-border);
+  border-radius: 3px;
+  font-size: 9pt;
+  font-weight: 600;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.empfaenger-2 {
+  margin-bottom: 12mm;
+  font-size: 11pt;
+  line-height: 1.6;
+}
+.empfaenger-2 strong { font-weight: 600; }
+
+.betreff-2 {
+  font-size: 13pt;
+  font-weight: 700;
+  color: var(--danger);
+  margin: 4mm 0 6mm;
+  padding: 4mm 5mm;
+  background: var(--danger-light);
+  border-left: 4px solid var(--danger);
+  border-radius: 2px;
+}
+
+.text-block-hart { font-size: 10.5pt; line-height: 1.65; margin-bottom: 5mm; }
+.text-block-hart p { margin-bottom: 3mm; }
+.text-block-hart strong { color: var(--danger); }
+
+/* Mahn-Historie als Tabelle (deutlich anders als F-05 Box-Pattern) */
+.mahn-historie {
+  margin: 6mm 0;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.mahn-historie-titel {
+  background: var(--light);
+  padding: 3mm 5mm;
+  font-size: 9.5pt;
+  font-weight: 600;
+  color: var(--text);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--border);
+}
+.mahn-historie table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 9.5pt;
+}
+.mahn-historie th, .mahn-historie td {
+  padding: 2.5mm 5mm;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+.mahn-historie th {
+  background: var(--lighter);
+  font-weight: 600;
+  font-size: 8.5pt;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+.mahn-historie td.mono { font-family: 'JetBrains Mono', monospace; }
+.mahn-historie td.right { text-align: right; }
+.mahn-historie tr:last-child td { border-bottom: none; }
+
+/* Forderung-Aufstellung */
+.forderung-block {
+  margin: 6mm 0;
+  padding: 5mm 7mm;
+  background: var(--danger-light);
+  border: 1px solid var(--danger-border);
+  border-radius: 3px;
+}
+.forderung-titel {
+  font-size: 9.5pt;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--danger);
+  font-weight: 600;
+  margin-bottom: 3mm;
+}
+.forderung-tabelle {
+  width: 100%;
+  font-size: 10pt;
+}
+.forderung-tabelle td {
+  padding: 1.5mm 0;
+  vertical-align: baseline;
+}
+.forderung-tabelle td.label { color: var(--text); }
+.forderung-tabelle td.value {
+  text-align: right;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 500;
+}
+.forderung-tabelle tr.summe {
+  border-top: 2px solid var(--danger);
+}
+.forderung-tabelle tr.summe td {
+  padding-top: 3mm;
+  font-weight: 700;
+  font-size: 12pt;
+  color: var(--danger);
+}
+
+/* Rechtliche Hinweise — explizit fett markiert */
+.rechtshinweis-box {
+  margin: 6mm 0;
+  padding: 5mm 6mm;
+  background: white;
+  border: 2px solid var(--danger);
+  border-radius: 3px;
+}
+.rechtshinweis-box .titel {
+  font-size: 11pt;
+  font-weight: 700;
+  color: var(--danger);
+  margin-bottom: 3mm;
+  display: flex;
+  align-items: center;
+  gap: 3mm;
+}
+.rechtshinweis-box ul {
+  margin: 2mm 0 0 4mm;
+  padding-left: 4mm;
+  font-size: 10pt;
+  line-height: 1.7;
+}
+.rechtshinweis-box ul li { margin-bottom: 2mm; }
+.rechtshinweis-box .paragraph {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9pt;
+  color: var(--muted);
+  margin-left: 2mm;
+}
+
+.zahlung-2 {
+  margin: 6mm 0;
+  padding: 4mm 6mm;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  font-size: 9.5pt;
+}
+.zahlung-2 .titel { font-weight: 600; color: var(--text); margin-bottom: 2mm; font-size: 10pt; }
+.zahlung-2 .iban { font-family: 'JetBrains Mono', monospace; }
+.zahlung-2 .label { color: var(--muted); font-size: 8.5pt; text-transform: uppercase; letter-spacing: 0.06em; margin-right: 2mm; }
+
+.frist-final {
+  margin: 8mm 0;
+  padding: 6mm 8mm;
+  background: var(--danger);
+  color: white;
+  border-radius: 3px;
+  text-align: center;
+}
+.frist-final .l1 { font-size: 9pt; letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.9; margin-bottom: 1mm; }
+.frist-final .l2 { font-size: 16pt; font-weight: 700; letter-spacing: -0.01em; }
+
+.gruss-2 { margin-top: 8mm; font-size: 11pt; }
+.gruss-2-name { font-weight: 600; margin-top: 14mm; }
+.gruss-2-titel { color: var(--muted); font-size: 10pt; }
+</style>
+</head>
+<body>
+
+<div class="header-stripe">
+  <div class="header-stripe-titel">Letzte Mahnung</div>
+  <div class="header-stripe-untertitel">Vor Anwalts-Übergabe · 5 Werktage Frist</div>
+</div>
+
+<div class="brief-kopf-2">
+  <div class="absender-kompakt">
+    <strong>{{ sv_name }}</strong>
+    {% if sv_qualifikation %}<div>{{ sv_qualifikation }}</div>{% endif %}
+    <div>{{ sv_strasse }}, {{ sv_plz }} {{ sv_ort }}</div>
+    <div>Tel.: {{ sv_telefon }} · {{ sv_email }}</div>
+  </div>
+  <div class="brief-meta-rechts">
+    <div class="ort-datum">{{ ort_datum }}</div>
+    <div style="margin-top:1mm;">Rechnung-Nr.: <span style="font-family:'JetBrains Mono',monospace;color:var(--text);">{{ rechnung_nummer }}</span></div>
+    <div class="mahn-nr">4. Mahnung</div>
+  </div>
+</div>
+
+<div class="empfaenger-2">
+  <strong>{{ empfaenger_name }}</strong>{% if empfaenger_zusatz != blank %}<br>{{ empfaenger_zusatz }}{% endif %}<br>
+  {{ empfaenger_strasse }}<br>
+  {{ empfaenger_plz }} {{ empfaenger_ort }}
+</div>
+
+<div class="betreff-2">
+  Letzte Mahnung — vor Anwaltsuebergabe — Rechnung {{ rechnung_nummer }} vom {{ rechnung_datum }}
+</div>
+
+<div class="text-block-hart">
+  <p>{{ anrede }}{% if anrede_name != blank %} {{ anrede_name }}{% endif %},</p>
+  <p>trotz dreimaliger Mahnung — letztmalig am {{ letzte_mahnung_datum }} — ist der
+     ausstehende Betrag aus Rechnung {{ rechnung_nummer }} bis heute nicht eingegangen.</p>
+  <p>Mit dieser <strong>letzten Mahnung</strong> setze ich Ihnen eine endgueltige Frist
+     bis zum <strong>{{ frist_letzte }}</strong>. <strong>Sollte bis dahin keine Zahlung
+     erfolgen, werde ich die Forderung anwaltlich beitreiben lassen.</strong></p>
+</div>
+
+<!-- Mahn-Historie als Tabelle -->
+<div class="mahn-historie">
+  <div class="mahn-historie-titel">Bisheriger Mahnungs-Verlauf</div>
+  <table>
+    <thead>
+      <tr><th>Stufe</th><th>Datum</th><th>Ton</th><th class="right">Mahn-Kosten</th></tr>
+    </thead>
+    <tbody>
+      {% for m in mahn_historie %}
+      <tr>
+        <td>{{ m.stufe }}</td>
+        <td class="mono">{{ m.datum }}</td>
+        <td>{{ m.ton }}</td>
+        <td class="right mono">{{ m.kosten }} EUR</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- Forderung-Aufstellung -->
+<div class="forderung-block">
+  <div class="forderung-titel">Gesamtforderung zum {{ ort_datum }}</div>
+  <table class="forderung-tabelle">
+    <tr>
+      <td class="label">Hauptforderung (Rechnung {{ rechnung_nummer }})</td>
+      <td class="value">{{ hauptforderung_brutto }} EUR</td>
+    </tr>
+    <tr>
+      <td class="label">Mahn-Zuschlaege (4 Mahnungen)</td>
+      <td class="value">{{ mahnkosten_summe }} EUR</td>
+    </tr>
+    <tr>
+      <td class="label">Verzugszinsen ({{ verzug_tage }} Tage, BGB § 288)</td>
+      <td class="value">{{ verzugszinsen }} EUR</td>
+    </tr>
+    <tr class="summe">
+      <td class="label">Gesamt-Forderung</td>
+      <td class="value">{{ gesamt_forderung }} EUR</td>
+    </tr>
+  </table>
+</div>
+
+<!-- Rechtliche Hinweise — §§ explizit -->
+<div class="rechtshinweis-box">
+  <div class="titel">⚖️ Rechtliche Konsequenzen bei weiterem Verzug</div>
+  <ul>
+    <li>Anwaltliche Beitreibung mit Kosten gemaess RVG <span class="paragraph">(§ 13 RVG, ggf. zzgl. 1,3 Geschaeftsgebuehr)</span></li>
+    <li>Mahnbescheid beim Amtsgericht <span class="paragraph">(§ 688 ZPO)</span></li>
+    <li>Schufa-Eintrag bei Verbrauchern <span class="paragraph">(BDSG § 31)</span></li>
+    <li>Weitere Verzugszinsen ab Eingang der gerichtlichen Mahnung</li>
+  </ul>
+</div>
+
+<!-- Zahlungsverbindung kompakt -->
+<div class="zahlung-2">
+  <div class="titel">Zahlung an</div>
+  <div><span class="label">IBAN:</span><span class="iban">{{ sv_iban }}</span></div>
+  {% if sv_bic %}<div style="margin-top:1mm;"><span class="label">BIC:</span><span class="iban">{{ sv_bic }}</span></div>{% endif %}
+  <div style="margin-top:1mm;"><span class="label">Verwendungszweck:</span><span class="iban">{{ rechnung_nummer }}</span></div>
+</div>
+
+<!-- Frist final, sehr prominent -->
+<div class="frist-final">
+  <div class="l1">Endgueltige Zahlungsfrist</div>
+  <div class="l2">{{ frist_letzte }}</div>
+</div>
+
+<div class="text-block-hart">
+  <p>Ich hoffe, eine anwaltliche Beitreibung vermeiden zu koennen.</p>
+</div>
+
+<div class="gruss-2">Mit freundlichen Gruessen</div>
+<div class="gruss-2-name">{{ sv_name }}</div>
+<div class="gruss-2-titel">{{ sv_qualifikation | default: "Sachverstaendiger" }}</div>
+
+</body>
+</html>
