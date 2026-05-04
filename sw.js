@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v279';   // MEGA¹⁹ FINAL-PUSH: 3 Tier-6 PDFs (F-07/F-08/F-24) + Onboarding-A11y + Airtable-Quick-Cleanup (silent 410-Fallback)
+const CACHE_VERSION = 'prova-v280';   // MEGA²⁰ ONBOARDING: AGB-Checkboxes + Welcome-Wizard 4-Step (Persona+Mode+Tour+Demo-Akte) + Migration 10 (users.persona_*) + log-legal-acceptance Lambda (einwilligungen-Reuse) + Solo-only Pricing
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
