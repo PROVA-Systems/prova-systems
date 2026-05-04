@@ -482,6 +482,38 @@
           </div>
         </section>
 
+        <!-- MEGA¹⁶ W46: Mode-C Word-Vorlagen Sektion -->
+        <section class="es-section" id="es-sec-vorlagen">
+          <div class="es-section-header">
+            <span class="es-section-icon">📁</span>
+            <div class="es-section-info">
+              <div class="es-section-title">Eigene Vorlagen (Word-Import)</div>
+              <div class="es-section-sub">Lade .docx-Vorlagen hoch — werden in PDF-Generation als Mode C verwendet</div>
+            </div>
+          </div>
+          <div class="es-zeile vertikal">
+            <div class="es-zeile-info">
+              <div class="es-zeile-label">Vorlage hochladen</div>
+              <div class="es-zeile-sub">Max. 10 MB · nur .docx · Platzhalter im Format $Name oder {{Name}} werden automatisch erkannt.</div>
+            </div>
+            <div style="display:flex;gap:8px;margin-top:8px;width:100%;">
+              <input type="file" id="vorlage-file-input" accept=".docx" style="display:none;" />
+              <input type="text" id="vorlage-name-input" class="es-input" placeholder="Vorlagen-Name (z.B. 'Mein Standardgutachten')" style="flex:1;" />
+              <button class="es-btn" id="vorlage-upload-btn" onclick="document.getElementById('vorlage-file-input').click()">📁 Datei waehlen</button>
+            </div>
+            <div id="vorlage-upload-status" role="status" aria-live="polite" style="font-size:12px;color:var(--text3);margin-top:8px;"></div>
+          </div>
+          <div class="es-zeile vertikal">
+            <div class="es-zeile-info">
+              <div class="es-zeile-label">Meine Vorlagen</div>
+              <div class="es-zeile-sub">Aktive Vorlagen — kann bei Mode C in Akten verwendet werden.</div>
+            </div>
+            <div id="vorlagen-list" style="margin-top:10px;width:100%;font-size:13px;">
+              <div style="color:var(--text3);padding:8px 0;">Lade…</div>
+            </div>
+          </div>
+        </section>
+
         <!-- BENACHRICHTIGUNGEN -->
         <section class="es-section" id="es-sec-benachrichtigungen">
           <div class="es-section-header">
@@ -954,6 +986,128 @@
         r.addEventListener('change', updateCardBorders);
       });
       updateCardBorders();
+    });
+
+    // MEGA¹⁶ W46: Word-Import-UI (Mode C)
+    function vorlagenStatus(msg, color) {
+      var el = document.getElementById('vorlage-upload-status');
+      if (!el) return;
+      el.textContent = msg || '';
+      el.style.color = color || 'var(--text3)';
+    }
+
+    function escVorlage(s) {
+      return String(s == null ? '' : s)
+        .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    async function ladeVorlagen() {
+      var listEl = document.getElementById('vorlagen-list');
+      if (!listEl) return;
+      try {
+        var fetcher = window.provaFetch || window.fetch;
+        var res = await fetcher('/.netlify/functions/parse-docx');
+        if (!res.ok) {
+          listEl.innerHTML = '<div style="color:var(--red,#ef4444);padding:8px 0;">Fehler beim Laden ('+res.status+')</div>';
+          return;
+        }
+        var data = await res.json();
+        if (data._migration_pending) {
+          listEl.innerHTML = '<div style="color:var(--warning,#d97706);padding:8px 0;">⚠️ Migration 08 noch nicht angewendet — Vorlagen-Speicherung blockiert.</div>';
+          return;
+        }
+        if (!data.vorlagen || data.vorlagen.length === 0) {
+          listEl.innerHTML = '<div style="color:var(--text3);padding:8px 0;font-style:italic;">Noch keine Vorlagen hochgeladen.</div>';
+          return;
+        }
+        listEl.innerHTML = data.vorlagen.map(function (v) {
+          var vars = (v.variables || []).slice(0, 5).map(escVorlage).join(', ');
+          var more = (v.variables || []).length > 5 ? ' +' + ((v.variables.length) - 5) : '';
+          return '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:var(--bg);border:1px solid var(--border);border-radius:6px;margin-bottom:6px;">' +
+            '<div style="flex:1;min-width:0;">' +
+              '<div style="font-weight:600;color:var(--text);">'+escVorlage(v.name)+'</div>' +
+              '<div style="font-size:11px;color:var(--text3);margin-top:2px;">' +
+                'Variablen: '+(vars||'<i>keine</i>')+more+
+              '</div>' +
+            '</div>' +
+            '<button onclick="loescheVorlage(\''+escVorlage(v.id)+'\')" style="background:transparent;border:1px solid rgba(239,68,68,0.3);color:#ef4444;border-radius:4px;padding:4px 10px;font-size:11px;cursor:pointer;" aria-label="Vorlage loeschen">🗑 Loeschen</button>' +
+          '</div>';
+        }).join('');
+      } catch (e) {
+        listEl.innerHTML = '<div style="color:var(--red,#ef4444);padding:8px 0;">'+escVorlage(e.message||'Fehler')+'</div>';
+      }
+    }
+
+    window.loescheVorlage = async function (id) {
+      if (!window.provaConfirm && !window.confirm) return;
+      var confirmFn = window.provaConfirm || window.confirm;
+      if (!confirmFn('Vorlage wirklich loeschen?')) return;
+      try {
+        var fetcher = window.provaFetch || window.fetch;
+        var res = await fetcher('/.netlify/functions/parse-docx?id=' + encodeURIComponent(id), { method: 'DELETE' });
+        if (res.ok) {
+          if (window.provaAlert) window.provaAlert('Vorlage geloescht', 'success');
+          ladeVorlagen();
+        } else {
+          if (window.provaAlert) window.provaAlert('Loeschen fehlgeschlagen', 'error');
+        }
+      } catch (e) {
+        if (window.provaAlert) window.provaAlert('Fehler: ' + e.message, 'error');
+      }
+    };
+
+    document.addEventListener('DOMContentLoaded', function () {
+      ladeVorlagen();
+      var fileInput = document.getElementById('vorlage-file-input');
+      if (fileInput) {
+        fileInput.addEventListener('change', async function (e) {
+          var file = e.target.files && e.target.files[0];
+          if (!file) return;
+          var nameInput = document.getElementById('vorlage-name-input');
+          var name = (nameInput && nameInput.value || '').trim() || file.name.replace(/\.docx?$/i, '');
+          // Validation
+          if (!file.name.match(/\.docx$/i)) {
+            vorlagenStatus('⚠️ Nur .docx-Dateien erlaubt', 'var(--red,#ef4444)');
+            return;
+          }
+          if (file.size > 10 * 1024 * 1024) {
+            vorlagenStatus('⚠️ Datei zu gross (max 10MB)', 'var(--red,#ef4444)');
+            return;
+          }
+
+          vorlagenStatus('⏳ Konvertiere ' + file.name + '…', 'var(--text3)');
+          // base64 encoding
+          var base64 = await new Promise(function (res, rej) {
+            var r = new FileReader();
+            r.onload = function () { res(r.result.split(',')[1]); };
+            r.onerror = rej;
+            r.readAsDataURL(file);
+          });
+
+          try {
+            var fetcher = window.provaFetch || window.fetch;
+            var res = await fetcher('/.netlify/functions/parse-docx', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ name: name, source_filename: file.name, docx_base64: base64 })
+            });
+            if (res.ok) {
+              var data = await res.json();
+              vorlagenStatus('✓ Hochgeladen — ' + (data.variables || []).length + ' Variablen erkannt', 'var(--success,#059669)');
+              if (nameInput) nameInput.value = '';
+              fileInput.value = '';
+              ladeVorlagen();
+            } else if (res.status === 503) {
+              vorlagenStatus('⚠️ Migration 08 nicht angewendet — Marcel kontaktieren', 'var(--warning,#d97706)');
+            } else {
+              var err = await res.json().catch(function(){return{};});
+              vorlagenStatus('✗ ' + (err.error || 'Upload fehlgeschlagen'), 'var(--red,#ef4444)');
+            }
+          } catch (e) {
+            vorlagenStatus('✗ ' + (e.message || 'Netzwerk-Fehler'), 'var(--red,#ef4444)');
+          }
+        });
+      }
     });
 
     window.speichereWorkflowMode = async function () {
