@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v273';   // MEGA¹⁵.5: ENV-Fix (MAKE_WEBHOOKS-Helper Konsolidierung 21→1) — AWS-Lambda-4KB-Limit Hotfix
+const CACHE_VERSION = 'prova-v274';   // MEGA¹⁶: Mode B in akte+stellungnahme + Mode C Word-Import (parse-docx + Vorlagen-UI) + Migration 08
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
