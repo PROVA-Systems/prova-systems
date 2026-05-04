@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v276';   // MEGA¹⁷: Mode-C Akten-Integration (Migration 09 + Mapping-UI + akte.html Picker + generate-pdf-mode-c Stub + ProvaModeC-Library)
+const CACHE_VERSION = 'prova-v277';   // MEGA¹⁷-PERFECTION: Auto-Open Mapping + Confidence-Score + Browser-PDF (jsPDF) + PDF-Button + Mobile-Fallback + Onboarding-Wizard
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
