@@ -184,8 +184,14 @@ async function callAnthropic(params, apiKey) {
  */
 function isOutageError(err) {
   const msg = String((err && err.message) || err || '');
-  // OpenAI 5xx
+  // OpenAI 5xx (= Server-Side-Outage)
   if (/OpenAI 5\d\d/i.test(msg)) return true;
+  // OpenAI 408 (Request Timeout) — semantisch ein Timeout, sollte fallback ausloesen
+  // MEGA¹³ W20 Bug-Fix: 408 fehlte vorher
+  if (/OpenAI 408/i.test(msg)) return true;
+  // Generischer 5xx von beliebigem Provider (z.B. Cloudflare) — Edge-Cache-Outage
+  // MEGA¹³ W20 Bug-Fix: 'Cloudflare 5xx' oder 'CDN 5xx' matched vorher nicht
+  if (/(Cloudflare|CDN|Gateway|Proxy)\s+5\d\d/i.test(msg)) return true;
   // Network errors
   if (/network/i.test(msg)) return true;
   if (/timeout/i.test(msg)) return true;
