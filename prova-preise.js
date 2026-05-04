@@ -21,15 +21,58 @@
   ══════════════════════════════════════════════════════════ */
   var PREISE = {
 
+    // MEGA²¹ Pilot-Phase: Coming-Soon Tier (NICHT aktiv, Frontend-Display only)
+    Starter: {
+      name:              'Starter',
+      tagline:           'Einstieg fuer kleinere Volumen',
+      preis_monatlich:   89,           // €/Monat (Marcel-Direktive Coming Soon Juni)
+      preis_jaehrlich:   69,
+      preis_jahr_total:  828,
+      ersparnis_jahr:    240,
+      onboarding:        99,
+      stripe_price_abo:  '',           // Marcel-A1: legt manuell post-Pilot an
+      stripe_price_jahr: '',
+      trial_tage:        14,
+      farbe:             '#9ca3af',
+      farbe_rgb:         '156,163,175',
+      kontingent_gutachten: 5,
+      max_svs:           1,
+      coming_soon:       true,         // Frontend-Display als "Coming Soon" (Juni 2026)
+      coming_soon_label: 'Juni 2026',
+      features: [
+        '1 Sachverstaendiger',
+        '5 Gutachten/Monat',
+        'Mode A (PROVA-Standard)',
+        'KI-Diktat',
+        'KI-Hilfe Basic (3 von 8)',
+        '12 Briefvorlagen',
+        'Email-Support (48h)'
+      ],
+      nicht_enthalten: [
+        'Mode B (Editor)',
+        'Mode C (Eigene Vorlagen)',
+        'Mahnwesen',
+        'ZUGFeRD',
+        'DATEV-Export',
+        'Foto-KI Vision'
+      ]
+    },
+
     Solo: {
       name:              'Solo',
-      tagline:           'Für den selbstständigen Sachverständigen',
-      preis_monatlich:   149,          // €/Monat bei Monatszahlung
-      preis_jaehrlich:   119,           // €/Monat bei Jahreszahlung
-      preis_jahr_total:  1428,         // 119 × 12
-      ersparnis_jahr:    360,          // (149-119) × 12
-      onboarding:        149,          // Einmalige Onboarding-Gebühr
-      stripe_price_abo:  'price_1TSjMZRXumrtL2n5fgToRwyr',  // 03.05.2026 neuer Account
+      tagline:           'Für den selbstständigen Sachverstaendigen',
+      // MEGA²¹ Pricing-Update (Marcel-Direktive 2026-05-08): 149€ → 179€
+      preis_monatlich:   179,          // €/Monat (war 149€)
+      preis_jaehrlich:   149,           // €/Monat bei Jahreszahlung
+      preis_jahr_total:  1788,         // 149 × 12
+      ersparnis_jahr:    360,          // (179-149) × 12
+      onboarding:        179,          // Einmalige Onboarding-Gebuehr
+      // MEGA²¹ NEU: Founding-Member-Discount
+      preis_founding:    125,          // €/Monat fuer erste 10 Pilot-SVs
+      founding_member_label: '🎁 Founding Members 125€/Mo',
+      founding_member_max: 10,
+      stripe_price_abo:  'price_1TSjMZRXumrtL2n5fgToRwyr',  // OLD 149€ — Marcel-A1: ersetzt 179€-Price-ID manuell
+      stripe_price_founding: '',       // Marcel-A1: legt manuell an (125€-Price oder Coupon)
       stripe_price_jahr: '',           // → Stripe Jahres-Price-ID eintragen
       trial_tage:        14,
       farbe:             '#4f8ef7',
@@ -62,14 +105,17 @@
     Team: {
       name:              'Team',
       tagline:           'Für Büros mit mehreren Sachverständigen',
-      preis_monatlich:   279,          // €/Monat bei Monatszahlung
-      preis_jaehrlich:   219,           // €/Monat bei Jahreszahlung
-      preis_jahr_total:  2628,         // 219 × 12
-      ersparnis_jahr:    720,          // (279-219) × 12
-      onboarding:        349,          // Einmalige Onboarding-Gebühr
-      stripe_price_abo:  'price_1TSjNXRXumrtL2n56c6emN2k',  // 03.05.2026 neuer Account
+      // MEGA²¹ Pricing-Update (Marcel-Direktive 2026-05-08): 279€ → 379€ Coming Soon Juli
+      preis_monatlich:   379,          // €/Monat (war 279€)
+      preis_jaehrlich:   299,           // €/Monat bei Jahreszahlung
+      preis_jahr_total:  3588,         // 299 × 12
+      ersparnis_jahr:    960,          // (379-299) × 12
+      onboarding:        449,          // Einmalige Onboarding-Gebuehr
+      stripe_price_abo:  'price_1TSjNXRXumrtL2n56c6emN2k',  // OLD 279€ — Marcel-A1: ersetzt 379€-Price-ID manuell
       stripe_price_jahr: '',           // → Stripe Jahres-Price-ID eintragen
       trial_tage:        14,
+      coming_soon:       true,         // MEGA²¹: Frontend-Display als "Coming Soon" (Juli 2026)
+      coming_soon_label: 'Juli 2026',
       farbe:             '#a78bfa',
       farbe_rgb:         '167,139,250',
       kontingent_gutachten: null,      // unbegrenzt

@@ -12,20 +12,24 @@ const ROOT = path.join(__dirname, '..', '..');
 const HTML = fs.readFileSync(path.join(ROOT, 'login.html'), 'utf8');
 
 describe('login.html — Pricing-Strip Solo-only', () => {
-  test('Solo 149 €/Monat sichtbar', () => {
-    assert.match(HTML, /Solo 149\s*€\/Monat/);
+  test('Solo 179 €/Monat sichtbar (MEGA²¹ Pricing-Update)', () => {
+    assert.match(HTML, /Solo 179\s*€\/Monat/);
   });
 
   test('14 Tage kostenlos testen', () => {
     assert.match(HTML, /14 Tage kostenlos testen/);
   });
 
-  test('Starter Coming Soon Badge', () => {
-    assert.match(HTML, /<span class="tier-coming-soon" data-tier="starter">Starter Coming Soon<\/span>/);
+  test('Starter Coming Soon Badge (MEGA²¹: mit 89€ + Juni)', () => {
+    assert.match(HTML, /<span class="tier-coming-soon" data-tier="starter">Starter 89€ · Coming Soon Juni<\/span>/);
   });
 
-  test('Team Coming Soon Badge', () => {
-    assert.match(HTML, /<span class="tier-coming-soon" data-tier="team">Team Coming Soon<\/span>/);
+  test('Team Coming Soon Badge (MEGA²¹: mit 379€ + Juli)', () => {
+    assert.match(HTML, /<span class="tier-coming-soon" data-tier="team">Team 379€ · Coming Soon Juli<\/span>/);
+  });
+
+  test('Founding Members 125€ Hint (MEGA²¹ NEU)', () => {
+    assert.match(HTML, /🎁 Founding Members.*125\s*€/);
   });
 
   test('CSS-Klasse .tier-coming-soon definiert', () => {
