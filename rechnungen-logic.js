@@ -349,7 +349,12 @@ async function ladeListe(){
   var liste=document.getElementById('rechnung-liste');
   try{
     var filter=svEmail?'AND(NOT({Status}=""),{sv_email}="'+svEmail+'")':'NOT({Status}="")';
-    var path='/v0/'+AT_BASE+'/'+AT_RECHNUNGEN+'?filterByFormula='+encodeURIComponent(filter)+'&maxRecords=50&sort[0][field]=Timestamp&sort[0][direction]=desc';
+    // MEGA²¹+²² W117 BUG-FIX RECHNUNGEN 422:
+    // RECHNUNGEN-Tabelle hat kein 'Timestamp'-Feld — Sort darauf wirft 422.
+    // Marcel-Direktive: RECHNUNGEN 422 fixen. Gleicher Fix wie in
+    // prova-context.js atFetch (Sort entfernt). 'Rechnungsdatum' als
+    // Alternative ist Schema-konform, sortiert ueber tatsaechliches Datum.
+    var path='/v0/'+AT_BASE+'/'+AT_RECHNUNGEN+'?filterByFormula='+encodeURIComponent(filter)+'&maxRecords=50&sort[0][field]=Rechnungsdatum&sort[0][direction]=desc';
     var res=await provaFetch('/.netlify/functions/airtable',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({method:'GET',path:path})});
     if(!res.ok)throw new Error('HTTP '+res.status);
     var data=await res.json();

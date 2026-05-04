@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v280';   // MEGA²⁰ ONBOARDING: AGB-Checkboxes + Welcome-Wizard 4-Step (Persona+Mode+Tour+Demo-Akte) + Migration 10 (users.persona_*) + log-legal-acceptance Lambda (einwilligungen-Reuse) + Solo-only Pricing
+const CACHE_VERSION = 'prova-v282';   // MEGA²¹+²² COMBINED: Pricing 179€ + Pipeline-Tab + Login-as-User + KI-Service-Abstraction (Claude Sonnet 4.6 Vision + GPT-4o Text) + Migration 11 Beweisbeschluss + parse-beweisbeschluss + Disclaimer-Lib + KI-Stats + ki-proxy-Bug-Fix + RECHNUNGEN-422-Fix + tour-null-check
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
