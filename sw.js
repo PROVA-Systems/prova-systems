@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v277';   // MEGA¹⁷-PERFECTION: Auto-Open Mapping + Confidence-Score + Browser-PDF (jsPDF) + PDF-Button + Mobile-Fallback + Onboarding-Wizard
+const CACHE_VERSION = 'prova-v278';   // MEGA¹⁸: PDF-Service-Abstraction (PDFMonkey + DocRaptor-Stub) + MODE_C_GENERIC Liquid-Template + Tier-6 PDFs (F-01-JVEG, F-23-SVKOSTEN, F-25-HONORAR)
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
