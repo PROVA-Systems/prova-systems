@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v271';   // MEGA¹⁴-Ext: Triple-Mode-Foundation + 2 weitere PDFs (F-02/F-03) + Architektur-Doku
+const CACHE_VERSION = 'prova-v272';   // MEGA¹⁵: TipTap-Editor LIVE — ProvaEditor + workflow-settings Backend + Settings-UI + briefvorlagen Mode-B-Demo
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
@@ -67,6 +67,8 @@ const APP_SHELL = [
   '/lib/swipe-gestures.js',             // MEGA¹⁴ W24: Touch-Swipe-Detection
   '/lib/native-share.js',               // MEGA¹⁴ W24: Web-Share-API + Clipboard-Fallback
   '/lib/workflow-mode-router.js',       // MEGA¹⁴-Ext W28: Triple-Mode-Router (Foundation)
+  '/lib/prova-editor.js',               // MEGA¹⁵ W32: TipTap-Wrapper (Mode B Editor)
+  '/lib/prova-editor.css',              // MEGA¹⁵ W32: Editor-Styles
   // Legacy auth (Hybrid-Modus, bleibt bis Cutover-Phase 5 cleanup)
   '/prova-fetch-auth.js',
   '/prova-notifications.js',
