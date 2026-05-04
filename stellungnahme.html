@@ -1215,10 +1215,13 @@ body.focus-mode .focus-toggle-btn { background:rgba(79,142,247,.12); color:var(-
             <div id="ausform-wrap" style="display:none;margin-top:12px;">
               <div style="font-size:11px;color:var(--text3);margin-bottom:6px;">
                 KI-Formulierung — bitte überarbeiten und als Ihren Text anpassen:
+                <span id="stellungnahme-mode-badge" style="display:none;font-size:10px;font-weight:500;background:rgba(79,142,247,.1);color:var(--accent);padding:2px 8px;border-radius:999px;margin-left:6px;">✏️ Editor-Modus</span>
               </div>
               <textarea class="sv-textarea" id="svTextEdit"
                 placeholder="Überarbeiten Sie den Text…"
                 oninput="onInputEdit()" rows="6" style="min-height:140px;"></textarea>
+              <!-- MEGA¹⁶ W44: Mode B Editor-Container -->
+              <div id="stellungnahme-editor-mode-b" style="display:none;margin-top:8px;"></div>
               <div class="char-count" id="charEdit">0 Zeichen</div>
               <div class="kj-check idle" id="kjCheckEdit">
                 <span>⏳</span><span>Konjunktiv II wird geprüft…</span>
@@ -1378,6 +1381,84 @@ body.focus-mode .focus-toggle-btn { background:rgba(79,142,247,.12); color:var(-
         });
       }
     });
+  </script>
+
+  <!-- MEGA¹⁶ W44: Mode B fuer KI-Bearbeitungs-Field (svTextEdit) -->
+  <script src="/lib/workflow-mode-router.js" defer></script>
+  <script defer>
+    (function () {
+      let _stelEditor = null;
+      let _modeBActive = false;
+
+      async function checkModeB() {
+        if (!window.ProvaWorkflowMode) return;
+        try {
+          const settings = await window.ProvaWorkflowMode.fetchSettings();
+          _modeBActive = (settings.default_mode === 'B');
+          const badge = document.getElementById('stellungnahme-mode-badge');
+          if (badge) badge.style.display = _modeBActive ? 'inline-block' : 'none';
+        } catch (_) {}
+      }
+
+      // Hook fuer ausformulieren(): wenn Mode B aktiv, ersetze textarea durch Editor
+      const _origOnInputEdit = window.onInputEdit;
+      let _editorWiredUp = false;
+
+      async function wireEditorIfModeB() {
+        if (_editorWiredUp || !_modeBActive || !window.ProvaEditor) return;
+
+        const ta = document.getElementById('svTextEdit');
+        const container = document.getElementById('stellungnahme-editor-mode-b');
+        if (!ta || !container) return;
+        if (ta.style.display === 'none') return;  // schon umgewandelt
+
+        const initialContent = ta.value || '';
+        try {
+          _stelEditor = await window.ProvaEditor.create({
+            el: container,
+            content: initialContent,
+            placeholder: 'Stellungnahme-Text bearbeiten (Mode B)…',
+            autoSaveKey: 'prova_stellungnahme_edit_b',
+            onUpdate: (html) => {
+              if (ta) {
+                ta.value = html;
+                if (typeof _origOnInputEdit === 'function') {
+                  try { _origOnInputEdit(); } catch (_) {}
+                }
+              }
+            }
+          });
+          ta.style.display = 'none';
+          container.style.display = 'block';
+          _editorWiredUp = true;
+        } catch (e) {
+          console.warn('[stellungnahme Mode-B] editor init failed', e.message);
+        }
+      }
+
+      // Beobachtung: wenn ausform-wrap visible wird, wire-up
+      document.addEventListener('DOMContentLoaded', async function () {
+        await checkModeB();
+        if (!_modeBActive) return;
+
+        // Polling-light (alle 1s) ob ausform-wrap sichtbar
+        let pollCount = 0;
+        const poller = setInterval(function () {
+          pollCount++;
+          const wrap = document.getElementById('ausform-wrap');
+          if (wrap && wrap.style.display !== 'none' && !_editorWiredUp) {
+            wireEditorIfModeB();
+          }
+          if (_editorWiredUp || pollCount > 600) clearInterval(poller);  // max 10min
+        }, 1000);
+      });
+
+      window.addEventListener('beforeunload', function () {
+        if (_stelEditor && _stelEditor.destroy) {
+          try { _stelEditor.destroy(); } catch (_) {}
+        }
+      });
+    })();
   </script>
 </body>
 </html>

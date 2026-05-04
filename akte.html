@@ -397,11 +397,13 @@ a{text-decoration:none;color:inherit;}button,input,select,textarea{font-family:i
           <!-- NOTIZEN -->
           <div class="section-card" id="sec-notizen">
             <div class="section-header" onclick="toggleSection('sec-notizen')">
-              <div class="section-title"><span class="section-title-icon">💬</span>Interne Notizen</div>
+              <div class="section-title"><span class="section-title-icon">💬</span>Interne Notizen <span id="notiz-mode-badge" style="display:none;font-size:10px;font-weight:500;background:rgba(79,142,247,.1);color:var(--accent);padding:2px 8px;border-radius:999px;margin-left:6px;">✏️ Editor-Modus</span></div>
               <span class="section-toggle">▾</span>
             </div>
             <div class="section-body">
               <textarea class="notiz-area" id="notiz-input" placeholder="Interne Notizen zu diesem Fall (werden nicht im Gutachten angezeigt)…"></textarea>
+              <!-- MEGA¹⁶ W43: Mode B Editor-Container -->
+              <div id="notiz-editor-mode-b" style="display:none;margin-bottom:8px;"></div>
               <button class="notiz-save" onclick="speichereNotiz()">Notiz speichern</button>
             </div>
           </div>
@@ -512,5 +514,63 @@ a{text-decoration:none;color:inherit;}button,input,select,textarea{font-family:i
 <script src="prova-context.js" defer></script>
 <script src="prova-error-handler.js" defer></script>
 <script src="akte-lightbox.js" defer></script>
+
+<!-- MEGA¹⁶ W43: Mode B Editor-Integration fuer Interne Notizen -->
+<script src="/lib/workflow-mode-router.js" defer></script>
+<script src="/lib/prova-editor.js" defer></script>
+<script defer>
+  (function () {
+    let _notizEditor = null;
+    let _modeBActive = false;
+
+    async function initModeBNotiz() {
+      if (!window.ProvaWorkflowMode) return;
+      try {
+        const settings = await window.ProvaWorkflowMode.fetchSettings();
+        _modeBActive = (settings.default_mode === 'B');
+
+        const badge = document.getElementById('notiz-mode-badge');
+        if (badge) badge.style.display = _modeBActive ? 'inline-block' : 'none';
+
+        if (!_modeBActive || !window.ProvaEditor) return;
+
+        // Mode B aktiv: Editor anstelle textarea
+        const ta = document.getElementById('notiz-input');
+        const container = document.getElementById('notiz-editor-mode-b');
+        if (!ta || !container) return;
+
+        // Existing-Wert aus localStorage oder textarea uebernehmen
+        const az = (function(){var _e=document.getElementById('akte-az');return _e?_e.textContent:undefined;})()
+          || localStorage.getItem('prova_letztes_az') || '';
+        const initialContent = ta.value || localStorage.getItem('prova_akte_notiz_' + az) || '';
+
+        _notizEditor = await window.ProvaEditor.create({
+          el: container,
+          content: initialContent,
+          placeholder: 'Interne Notizen zu diesem Fall (Mode B Editor)…',
+          autoSaveKey: 'prova_akte_notiz_b_' + az,
+          onUpdate: (html) => {
+            // Sync zurueck zu textarea (existing speichereNotiz erwartet ta.value)
+            if (ta) ta.value = html;
+          }
+        });
+
+        ta.style.display = 'none';
+        container.style.display = 'block';
+      } catch (e) {
+        console.warn('[akte Mode-B-Init]', e.message);
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', initModeBNotiz);
+
+    // Cleanup bei Page-Unload
+    window.addEventListener('beforeunload', function () {
+      if (_notizEditor && _notizEditor.destroy) {
+        try { _notizEditor.destroy(); } catch (_) {}
+      }
+    });
+  })();
+</script>
 </body>
 </html>
