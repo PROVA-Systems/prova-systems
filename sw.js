@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v269';   // MEGA¹³: KI-Historie + Autosuggest + Hamburger + Bottom-Sheet + 4 Bug-Fixes + Bulk-Ops + 2 KPI-Drilldowns
+const CACHE_VERSION = 'prova-v270';   // MEGA¹⁴: 3 PDF-Templates (F-05/F-08/FOTODOK) + Swipe + Native-Share + PTR-Sweep + 4 Bug-Fixes (W18-W21)
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
@@ -64,6 +64,8 @@ const APP_SHELL = [
   '/lib/hamburger-menu.js',             // MEGA¹³ W19: Hamburger-Menu
   '/lib/bottom-sheet.js',               // MEGA¹³ W19: Bottom-Sheet Modal
   '/lib/admin-bulk.js',                 // MEGA¹³ W21: Bulk-Operations
+  '/lib/swipe-gestures.js',             // MEGA¹⁴ W24: Touch-Swipe-Detection
+  '/lib/native-share.js',               // MEGA¹⁴ W24: Web-Share-API + Clipboard-Fallback
   // Legacy auth (Hybrid-Modus, bleibt bis Cutover-Phase 5 cleanup)
   '/prova-fetch-auth.js',
   '/prova-notifications.js',
