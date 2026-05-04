@@ -20,9 +20,10 @@ const HEADERS = {
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 
-// Make.com L4/L5 Webhooks (nur via ENV; keine Fallback-URLs im Repo)
-const MAKE_L4_WEBHOOK = process.env.MAKE_WEBHOOK_L4 || '';
-const MAKE_L5_WEBHOOK = process.env.MAKE_WEBHOOK_L5 || '';
+// MEGA¹⁵.5 W39: Konsolidierter Helper (Backwards-Compat zu MAKE_WEBHOOK_L4/L5)
+const { getMakeWebhook } = require('./lib/make-webhooks');
+const MAKE_L4_WEBHOOK = getMakeWebhook('l4') || '';
+const MAKE_L5_WEBHOOK = getMakeWebhook('l5') || '';
 
 // Airtable
 const AT_BASE  = 'appJ7bLlAHZoxENWE';

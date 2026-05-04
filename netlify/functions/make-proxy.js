@@ -54,30 +54,14 @@ exports.handler = async function (event, context) {
     }
   }
 
-  // Webhook-URLs aus ENV (Fallbacks nur für L4/L5/S6 die noch keine eigene ENV haben)
-  const WEBHOOKS = {
-    k3:  process.env.MAKE_WEBHOOK_K3,
-    a5:  process.env.MAKE_WEBHOOK_A5,
-    f1:  process.env.MAKE_WEBHOOK_F1,
-    g1:  process.env.MAKE_WEBHOOK_G1,
-    g3:  process.env.MAKE_WEBHOOK_G3,
-    k1:  process.env.MAKE_WEBHOOK_K1,
-    k2:  process.env.MAKE_WEBHOOK_K2      || process.env.MAKE_WEBHOOK_KAUF,
-    l3:  process.env.MAKE_WEBHOOK_L3      || process.env.MAKE_S3_WEBHOOK,
-    l4:  process.env.MAKE_WEBHOOK_L4,   // ENV: MAKE_WEBHOOK_L4 setzen
-    l5:  process.env.MAKE_WEBHOOK_L5,   // ENV: MAKE_WEBHOOK_L5 setzen
-    l8:  process.env.MAKE_WEBHOOK_L8,
-    l9:  process.env.MAKE_WEBHOOK_L9,
-    l10: process.env.MAKE_WEBHOOK_L10     || process.env.MAKE_S4_WEBHOOK,
-    s1:  process.env.MAKE_WEBHOOK_S1,
-    s3:  process.env.MAKE_WEBHOOK_S3,
-    s6:  process.env.MAKE_WEBHOOK_S6,      // ENV: MAKE_WEBHOOK_S6 setzen
-    s9:  process.env.MAKE_WEBHOOK_S9,      // ENV: MAKE_WEBHOOK_S9 setzen (Foto-/Gutachten-Workflow)
-    sup: process.env.MAKE_WEBHOOK_SUPPORT, // ENV: MAKE_WEBHOOK_SUPPORT setzen
-    wh:  process.env.MAKE_WEBHOOK_WHISPER,
-  };
+  // MEGA¹⁵.5 W38: Konsolidierter Helper (MAKE_WEBHOOKS-JSON statt 21 separate ENVs)
+  // Backwards-Compat: liest MAKE_WEBHOOK_<KEY>-Legacy-ENVs als Fallback
+  const { getMakeWebhook } = require('./lib/make-webhooks');
 
-  const webhook = WEBHOOKS[key] || '';
+  // Spezial-Mapping fuer kauf -> k2 (legacy alias)
+  const aliasedKey = (key === 'kauf') ? 'k2' : key;
+
+  const webhook = getMakeWebhook(aliasedKey) || '';
   if (!webhook) {
     console.warn('[make-proxy] Kein Webhook fuer key:', key);
     return json(event, 200, { ok: true, skipped: true, reason: 'Webhook nicht konfiguriert' });
