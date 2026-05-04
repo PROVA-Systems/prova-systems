@@ -265,6 +265,20 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
   <script src="auto-save.js" defer></script>
   <script src="global-search.js" defer></script>
   <script src="auftragstyp.js"></script>
+  <!-- MEGA¹⁴ W24: Pull-to-Refresh in briefvorlagen -->
+  <script src="/lib/pull-to-refresh.js" defer></script>
+  <script defer>
+    document.addEventListener('DOMContentLoaded', function () {
+      if (!('ontouchstart' in window) || !window.ProvaPullToRefresh) return;
+      var grid = document.querySelector('#bv-content, .bv-grid, [data-list="briefvorlagen"]');
+      if (grid) {
+        window.ProvaPullToRefresh.bind(grid, async function () {
+          if (typeof render === 'function') render();
+          else window.location.reload();
+        });
+      }
+    });
+  </script>
   <script src="briefvorlagen-logic.js" defer></script>
 <script src="prova-context.js" defer></script>
 <script src="prova-error-handler.js" defer></script>
