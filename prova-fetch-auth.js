@@ -181,7 +181,9 @@
 
     // Voll-Cleanup: Airtable-URLs hart abweisen
     if (isDisabledAirtableUrl(url)) {
-      console.info('[airtable-cleanup] blocked legacy call:', url);
+      // MEGA¹⁹ W79: console.info → console.debug. DevTools-Default-Filter
+      // zeigt INFO an, DEBUG nicht. User sieht clean Console.
+      console.debug('[airtable-cleanup] blocked legacy call:', url);
       return makeAirtableDisabledResponse(url);
     }
 
