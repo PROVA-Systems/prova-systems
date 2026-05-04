@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v275';   // Hotfix MEGA¹⁶.5: prova-config Merge-Defense (lib + root order-independent → kein SUPABASE_URL-Verlust mehr)
+const CACHE_VERSION = 'prova-v276';   // MEGA¹⁷: Mode-C Akten-Integration (Migration 09 + Mapping-UI + akte.html Picker + generate-pdf-mode-c Stub + ProvaModeC-Library)
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
