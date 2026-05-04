@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>Zahlungserinnerung {{ rechnung_nr }}</title>
+<!--
+  PROVA Systems · F-07 MAHNUNG STUFE 1 (Zahlungserinnerung) · Liquid-Template
+  MEGA¹⁹ W75 · 2026-05-08
+
+  Charakter: Höflich, freundlich-erinnernd. Ohne Verzugszinsen.
+             14 Tage Frist. Erstkontakt bei Zahlungsverzug.
+
+  Liquid-Variablen:
+    mahnung_nr, mahnung_datum
+    rechnung_nr, rechnung_datum, rechnung_betrag, rechnung_faellig_am
+    az (optional)
+    sv_*, auftraggeber_*
+    summe_offen
+    frist_tage (default 14), frist_datum
+    sv_iban, sv_bic, sv_bank
+    persoenlicher_zusatz (optional, freundliche Bemerkung)
+
+  KEINE EU AI Act Box (administrative Mahnung).
+  KEINE Verzugszinsen-Drohung in Stufe 1.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root { --primary: #1a3a6b; --accent: #3b82f6; --muted: #64748b; --text: #0f172a; --light: #f1f5f9; --lighter: #f8fafc; --border: #e2e8f0; --success: #059669; --warning: #d97706; }
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Inter', sans-serif; font-size: 10.5pt; line-height: 1.6; color: var(--text); background: white; }
+@page { size: A4; margin: 22mm 22mm 22mm 22mm; }
+@page {
+  @top-left { content: "{{ sv_name }}{% if sv_titel %} · {{ sv_titel }}{% endif %}"; font-family: 'Inter', sans-serif; font-size: 8pt; color: #64748b; padding-top: 10mm; }
+  @top-right { content: "Zahlungserinnerung {{ mahnung_nr }}"; font-family: 'Inter', sans-serif; font-size: 8pt; color: #1a3a6b; font-weight: 600; padding-top: 10mm; }
+  @bottom-right { content: "Seite " counter(page) " / " counter(pages); font-family: 'Inter', sans-serif; font-size: 8pt; color: #64748b; padding-bottom: 10mm; }
+}
+@page :first { @top-left { content: ""; } @top-right { content: ""; } }
+
+.kopf { padding: 0 0 6mm; border-bottom: 2px solid var(--accent); margin-bottom: 8mm; }
+.kopf-kategorie { font-size: 9pt; letter-spacing: 0.18em; text-transform: uppercase; color: var(--accent); font-weight: 500; margin-bottom: 3mm; }
+.kopf-titel { font-size: 22pt; font-weight: 600; line-height: 1.15; color: var(--primary); letter-spacing: -0.02em; }
+.kopf-meta { font-family: 'JetBrains Mono', monospace; font-size: 9pt; color: var(--muted); margin-top: 3mm; display: flex; gap: 6mm; flex-wrap: wrap; }
+.kopf-meta strong { color: var(--text); font-weight: 500; }
+
+.adress-block { display: grid; grid-template-columns: 1fr 1fr; gap: 6mm; margin: 5mm 0 7mm; }
+.adress-card { padding: 4mm 5mm; background: var(--lighter); border-radius: 3px; border: 1px solid var(--border); font-size: 10pt; }
+.adress-card .label { font-size: 8pt; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); font-weight: 500; margin-bottom: 2mm; }
+
+.anrede { font-size: 11pt; margin: 4mm 0 5mm; }
+.absatz { margin-bottom: 4mm; line-height: 1.7; }
+.hervor { background: var(--lighter); padding: 1mm 2mm; border-radius: 2px; font-weight: 500; }
+
+.rechnung-card { margin: 5mm 0; padding: 4mm 5mm; background: var(--lighter); border: 1px solid var(--border); border-left: 3px solid var(--accent); border-radius: 3px; }
+.rechnung-card .label { font-size: 9pt; color: var(--muted); margin-bottom: 1mm; }
+.rechnung-card .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5mm 6mm; font-size: 10pt; }
+.rechnung-card .grid .item .k { font-size: 8.5pt; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+.rechnung-card .grid .item .v { font-family: 'JetBrains Mono', monospace; font-weight: 500; margin-top: 0.5mm; }
+
+.summe-card { margin: 5mm 0; padding: 5mm 6mm; background: linear-gradient(135deg, var(--primary) 0%, #2a4a7b 100%); color: white; border-radius: 4px; display: flex; justify-content: space-between; align-items: baseline; }
+.summe-card .label { font-size: 10pt; letter-spacing: 0.05em; opacity: 0.9; }
+.summe-card .value { font-size: 22pt; font-weight: 600; font-family: 'JetBrains Mono', monospace; letter-spacing: -0.01em; }
+
+.frist-info { margin: 5mm 0; padding: 4mm 5mm; background: rgba(59, 130, 246, 0.06); border: 1px solid rgba(59, 130, 246, 0.25); border-radius: 3px; font-size: 10pt; }
+.frist-info strong { color: var(--accent); }
+
+.zahlung-block { margin: 5mm 0 7mm; padding: 4mm 5mm; background: white; border: 1px solid var(--border); border-left: 3px solid var(--success); border-radius: 2px; font-size: 9.5pt; line-height: 1.5; }
+.zahlung-block .label { font-size: 9pt; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 2mm; font-weight: 500; }
+.zahlung-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1mm 5mm; font-family: 'JetBrains Mono', monospace; }
+
+.gruss { margin-top: 8mm; }
+.unterschrift { margin-top: 12mm; }
+.unterschrift .name { font-weight: 600; }
+.unterschrift .titel { font-size: 9.5pt; color: var(--muted); }
+
+.fuss-text { margin-top: 8mm; padding-top: 3mm; border-top: 1px solid var(--border); font-size: 8.5pt; color: var(--muted); line-height: 1.55; }
+.fuss-text .ueberschrift { font-weight: 600; color: var(--text); margin-bottom: 1.5mm; }
+</style>
+</head>
+<body>
+
+<div class="kopf">
+  <div class="kopf-kategorie">Zahlungserinnerung &middot; Stufe 1</div>
+  <h1 class="kopf-titel">Freundliche Zahlungserinnerung</h1>
+  <div class="kopf-meta">
+    <div>Mahnung-Nr.: <strong>{{ mahnung_nr }}</strong></div>
+    <div>Datum: <strong>{{ mahnung_datum }}</strong></div>
+    {% if az %}<div>Aktenzeichen: <strong>{{ az }}</strong></div>{% endif %}
+  </div>
+</div>
+
+<div class="adress-block">
+  <div class="adress-card">
+    <div class="label">Absender</div>
+    <strong>{{ sv_name }}</strong>{% if sv_titel %}, {{ sv_titel }}{% endif %}<br>
+    {% if sv_kanzlei %}{{ sv_kanzlei }}<br>{% endif %}
+    {{ sv_adresse }}
+  </div>
+  <div class="adress-card">
+    <div class="label">An</div>
+    <strong>{{ auftraggeber_name }}</strong><br>
+    {{ auftraggeber_adresse }}
+  </div>
+</div>
+
+<div class="anrede">Sehr geehrte{% if auftraggeber_anrede == "Herr" %}r Herr{% elsif auftraggeber_anrede == "Frau" %} Frau{% else %} Damen und Herren{% endif %}{% if auftraggeber_nachname %} {{ auftraggeber_nachname }}{% endif %},</div>
+
+<div class="absatz">
+  vermutlich ist es Ihrer Aufmerksamkeit entgangen — unsere nachstehende Rechnung
+  ist bislang noch nicht beglichen worden. Da uns Ihre Zufriedenheit mit unserer
+  Leistung wichtig ist, moechten wir Sie freundlich daran erinnern.
+</div>
+
+<div class="rechnung-card">
+  <div class="label">Offene Rechnung</div>
+  <div class="grid">
+    <div class="item"><div class="k">Rechnungs-Nr.</div><div class="v">{{ rechnung_nr }}</div></div>
+    <div class="item"><div class="k">Rechnungsdatum</div><div class="v">{{ rechnung_datum }}</div></div>
+    {% if rechnung_faellig_am %}<div class="item"><div class="k">Urspruengliche Faelligkeit</div><div class="v">{{ rechnung_faellig_am }}</div></div>{% endif %}
+    <div class="item"><div class="k">Rechnungsbetrag</div><div class="v">{{ rechnung_betrag }} €</div></div>
+  </div>
+</div>
+
+<div class="summe-card">
+  <div class="label">Offen zur Zahlung</div>
+  <div class="value">{{ summe_offen }} €</div>
+</div>
+
+<div class="frist-info">
+  Bitte ueberweisen Sie den Betrag innerhalb von <strong>{{ frist_tage | default: "14" }} Tagen</strong>{% if frist_datum %} (bis spaetestens <strong>{{ frist_datum }}</strong>){% endif %} auf das unten genannte Konto.
+  Sollten Sie die Zahlung bereits veranlasst haben, betrachten Sie diese Erinnerung bitte als gegenstandslos.
+</div>
+
+{% if persoenlicher_zusatz %}
+<div class="absatz">{{ persoenlicher_zusatz }}</div>
+{% endif %}
+
+<div class="zahlung-block">
+  <div class="label">Zahlungsangaben</div>
+  <div class="zahlung-grid">
+    <div>IBAN: <strong>{{ sv_iban }}</strong></div>
+    <div>BIC: <strong>{{ sv_bic }}</strong></div>
+    <div>Bank: {{ sv_bank }}</div>
+    <div>Verwendungszweck: <strong>{{ rechnung_nr }}</strong></div>
+  </div>
+</div>
+
+<div class="gruss">Mit freundlichen Gruessen</div>
+
+<div class="unterschrift">
+  <div class="name">{{ sv_name }}</div>
+  <div class="titel">{{ sv_titel | default: "ö.b.u.v. Sachverstaendiger" }}</div>
+</div>
+
+<div class="fuss-text">
+  <div class="ueberschrift">DSGVO-Hinweis</div>
+  Diese Zahlungserinnerung enthaelt personenbezogene Daten i.S.d. DSGVO und ist
+  vertraulich zu behandeln. Bei Fragen stehen wir gerne zur Verfuegung.
+</div>
+
+</body>
+</html>

@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>Aktenauszug {{ az }}</title>
+<!--
+  PROVA Systems · F-24 AKTENAUSZUG · Liquid-Template
+  MEGA¹⁹ W77 · 2026-05-08
+
+  Zweck: Chronologischer Auszug aller Vorgänge zu einem Aktenzeichen.
+         Wird typischerweise an Gericht uebermittelt (Beweisstuecke,
+         Termin-Historie, Phasen-Verlauf, Foto-Liste).
+
+  Liquid-Variablen:
+    az, titel, schadensart_label
+    sv_*, auftraggeber_*
+    auszug_datum, auszug_zeitraum_von, auszug_zeitraum_bis
+    objekt: { adresse, plz, ort, objektart, baujahr }
+    phasen[]: { nr, name, status, datum_eintrag, datum_abschluss }
+    eintraege[]: { datum, typ, titel, beschreibung, status, autor }
+    fotos[]: { nr, datum, beschreibung, kategorie } (optional)
+    dokumente[]: { datum, typ, bezeichnung, anlage_nr } (optional)
+
+  MIT EU AI Act Box (Sachverstaendigen-Auszug, § 407a Abs. 3 ZPO).
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root { --primary: #1a3a6b; --accent: #3b82f6; --muted: #64748b; --text: #0f172a; --light: #f1f5f9; --lighter: #f8fafc; --border: #e2e8f0; --success: #059669; --warning: #d97706; --danger: #b91c1c; }
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Inter', sans-serif; font-size: 10.5pt; line-height: 1.55; color: var(--text); background: white; }
+@page { size: A4; margin: 20mm 20mm 22mm 20mm; }
+@page {
+  @top-left { content: "{{ sv_name }}{% if sv_titel %} · {{ sv_titel }}{% endif %}"; font-family: 'Inter', sans-serif; font-size: 8pt; color: #64748b; padding-top: 10mm; }
+  @top-right { content: "Aktenauszug {{ az }}"; font-family: 'Inter', sans-serif; font-size: 8pt; color: #1a3a6b; font-weight: 600; padding-top: 10mm; }
+  @bottom-left { content: "Auszug vom {{ auszug_datum }}"; font-family: 'Inter', sans-serif; font-size: 8pt; color: #64748b; padding-bottom: 10mm; }
+  @bottom-right { content: "Seite " counter(page) " / " counter(pages); font-family: 'Inter', sans-serif; font-size: 8pt; color: #64748b; padding-bottom: 10mm; }
+}
+@page :first { @top-left { content: ""; } @top-right { content: ""; } }
+
+.kopf { padding: 0 0 8mm; border-bottom: 2px solid var(--primary); margin-bottom: 8mm; }
+.kopf-kategorie { font-size: 9.5pt; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); font-weight: 500; margin-bottom: 4mm; }
+.kopf-titel { font-size: 26pt; font-weight: 700; line-height: 1.15; color: var(--primary); margin-bottom: 3mm; letter-spacing: -0.02em; }
+.kopf-meta { font-family: 'JetBrains Mono', monospace; font-size: 9.5pt; color: var(--muted); display: flex; gap: 6mm; flex-wrap: wrap; }
+.kopf-meta strong { color: var(--text); font-weight: 500; }
+
+.cover-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4mm; margin: 6mm 0 8mm; }
+.cover-card { padding: 5mm 6mm; background: var(--lighter); border-radius: 3px; border: 1px solid var(--border); }
+.cover-card .label { font-size: 8pt; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 500; margin-bottom: 2mm; }
+.cover-card .value { font-size: 10.5pt; line-height: 1.5; }
+.cover-card .value.mono { font-family: 'JetBrains Mono', monospace; }
+
+.section { margin-bottom: 8mm; }
+.section-titel { font-size: 14pt; font-weight: 600; color: var(--primary); margin-bottom: 4mm; padding-bottom: 2mm; border-bottom: 1px solid var(--border); }
+.section-sub { font-size: 9pt; color: var(--muted); margin-top: -2mm; margin-bottom: 4mm; }
+
+/* Phasen-Tracker */
+.phasen-tracker { display: flex; flex-direction: column; gap: 0; margin: 4mm 0; }
+.phase { display: grid; grid-template-columns: 26mm 1fr 28mm; gap: 5mm; padding: 3mm 4mm; border-bottom: 1px dashed var(--border); align-items: center; }
+.phase:last-child { border-bottom: none; }
+.phase .nr { font-family: 'JetBrains Mono', monospace; font-size: 11pt; font-weight: 700; color: var(--primary); }
+.phase .name { font-weight: 500; font-size: 10.5pt; }
+.phase .status { font-size: 9pt; padding: 1mm 4mm; border-radius: 3px; font-weight: 500; text-align: center; text-transform: uppercase; letter-spacing: 0.04em; }
+.phase .status.abgeschlossen { background: rgba(5, 150, 105, 0.12); color: var(--success); }
+.phase .status.aktiv { background: rgba(217, 119, 6, 0.12); color: var(--warning); }
+.phase .status.offen { background: var(--lighter); color: var(--muted); }
+
+/* Chronologie */
+.chronologie { margin: 4mm 0; }
+.eintrag { display: grid; grid-template-columns: 28mm 1fr; gap: 5mm; padding: 3.5mm 0; border-bottom: 1px solid var(--border); }
+.eintrag:last-child { border-bottom: none; }
+.eintrag .datum { font-family: 'JetBrains Mono', monospace; font-size: 9.5pt; color: var(--muted); padding-top: 0.8mm; }
+.eintrag .body .typ { display: inline-block; padding: 0.5mm 2.5mm; background: var(--lighter); color: var(--primary); font-size: 8.5pt; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; border-radius: 2px; margin-bottom: 1mm; border: 1px solid var(--border); }
+.eintrag .body .titel { font-weight: 600; font-size: 10.5pt; margin-bottom: 1mm; }
+.eintrag .body .besch { font-size: 9.5pt; color: var(--muted); line-height: 1.55; }
+.eintrag .body .meta { font-size: 8.5pt; color: var(--muted); margin-top: 1mm; font-family: 'JetBrains Mono', monospace; }
+
+/* Foto-Liste */
+.foto-tabelle { width: 100%; border-collapse: collapse; margin: 3mm 0; font-size: 10pt; }
+.foto-tabelle th { background: var(--light); color: var(--muted); font-size: 9pt; text-transform: uppercase; letter-spacing: 0.04em; padding: 2.5mm 3mm; text-align: left; font-weight: 500; }
+.foto-tabelle td { padding: 2mm 3mm; border-bottom: 1px solid var(--border); vertical-align: top; }
+.foto-tabelle .nr { font-family: 'JetBrains Mono', monospace; font-weight: 600; color: var(--primary); white-space: nowrap; }
+.foto-tabelle .datum { font-family: 'JetBrains Mono', monospace; font-size: 9pt; color: var(--muted); white-space: nowrap; }
+.foto-tabelle .kat { font-size: 8.5pt; color: var(--muted); }
+
+/* Dokumente */
+.dokumente-grid { display: grid; grid-template-columns: 28mm 30mm 1fr 22mm; gap: 4mm; }
+.dokumente-grid .header { font-size: 8.5pt; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 500; padding-bottom: 1.5mm; border-bottom: 1px solid var(--border); }
+.dokumente-grid .row { font-size: 10pt; padding: 1.5mm 0; border-bottom: 1px dashed var(--border); }
+.dokumente-grid .row:last-of-type { border-bottom: none; }
+
+/* EU AI Act Box (Pflicht bei Sachverstaendigen-Auszug) */
+.ai-box { margin: 8mm 0; padding: 5mm 6mm; background: var(--lighter); border: 1px solid var(--border); border-left: 3px solid var(--accent); border-radius: 3px; font-size: 9.5pt; line-height: 1.55; }
+.ai-box .marker { display: inline-block; padding: 1mm 3mm; background: var(--accent); color: white; font-size: 7.5pt; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; border-radius: 2px; margin-bottom: 2mm; }
+.ai-box .law-ref { font-family: 'JetBrains Mono', monospace; font-size: 0.92em; color: var(--primary); font-weight: 500; }
+
+/* Unterschrifts-Block */
+.unterschrift-block { margin-top: 12mm; padding-top: 6mm; border-top: 1px solid var(--border); }
+.unterschrift-feld { border-top: 1px solid var(--text); padding-top: 2mm; max-width: 80mm; font-size: 9.5pt; color: var(--muted); }
+.unterschrift-feld .name { font-size: 11pt; color: var(--text); font-weight: 600; margin-top: 1mm; }
+.unterschrift-feld .titel { font-size: 9.5pt; color: var(--muted); }
+
+.fuss-text { margin-top: 8mm; padding-top: 3mm; border-top: 1px solid var(--border); font-size: 8.5pt; color: var(--muted); line-height: 1.55; }
+</style>
+</head>
+<body>
+
+<div class="kopf">
+  <div class="kopf-kategorie">Sachverstaendigen-Aktenauszug</div>
+  <h1 class="kopf-titel">Aktenauszug</h1>
+  <div class="kopf-meta">
+    <div>Aktenzeichen: <strong>{{ az }}</strong></div>
+    <div>Auszug vom: <strong>{{ auszug_datum }}</strong></div>
+    {% if auszug_zeitraum_von and auszug_zeitraum_bis %}<div>Zeitraum: <strong>{{ auszug_zeitraum_von }} – {{ auszug_zeitraum_bis }}</strong></div>{% endif %}
+  </div>
+</div>
+
+<div class="cover-grid">
+  <div class="cover-card">
+    <div class="label">Sachverstaendiger</div>
+    <div class="value">
+      <strong>{{ sv_name }}</strong><br>
+      {% if sv_titel %}{{ sv_titel }}<br>{% endif %}
+      {% if sv_kanzlei %}{{ sv_kanzlei }}<br>{% endif %}
+      {{ sv_adresse }}
+    </div>
+  </div>
+  <div class="cover-card">
+    <div class="label">Auftraggeber</div>
+    <div class="value">
+      <strong>{{ auftraggeber_name }}</strong><br>
+      {{ auftraggeber_adresse }}
+    </div>
+  </div>
+  {% if titel %}<div class="cover-card" style="grid-column: 1 / -1">
+    <div class="label">Vorgangs-Titel</div>
+    <div class="value">{{ titel }}{% if schadensart_label %} <span class="value mono">({{ schadensart_label }})</span>{% endif %}</div>
+  </div>{% endif %}
+  {% if objekt and objekt.adresse %}<div class="cover-card" style="grid-column: 1 / -1">
+    <div class="label">Objekt</div>
+    <div class="value">{{ objekt.adresse }}, {{ objekt.plz }} {{ objekt.ort }}{% if objekt.objektart %} &middot; {{ objekt.objektart }}{% endif %}{% if objekt.baujahr %} &middot; Baujahr {{ objekt.baujahr }}{% endif %}</div>
+  </div>{% endif %}
+</div>
+
+{% if phasen and phasen.size > 0 %}
+<section class="section">
+  <h2 class="section-titel">1 &middot; Phasen-Verlauf</h2>
+  <div class="section-sub">Bearbeitungs-Phasen des gutachterlichen Vorgangs.</div>
+  <div class="phasen-tracker">
+    {% for p in phasen %}
+    <div class="phase">
+      <div class="nr">Phase {{ p.nr }}</div>
+      <div>
+        <div class="name">{{ p.name }}</div>
+        {% if p.datum_eintrag or p.datum_abschluss %}<div style="font-size:8.5pt; color: var(--muted); margin-top: 0.5mm; font-family: 'JetBrains Mono', monospace;">{% if p.datum_eintrag %}eingetreten {{ p.datum_eintrag }}{% endif %}{% if p.datum_abschluss %} &middot; abgeschlossen {{ p.datum_abschluss }}{% endif %}</div>{% endif %}
+      </div>
+      <div class="status {{ p.status | default: 'offen' }}">{{ p.status | default: "offen" }}</div>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+<section class="section">
+  <h2 class="section-titel">2 &middot; Chronologie der Vorgänge</h2>
+  <div class="section-sub">Alle Eintraege der Akte in chronologischer Reihenfolge (älteste zuerst).</div>
+  <div class="chronologie">
+    {% for e in eintraege %}
+    <div class="eintrag">
+      <div class="datum">{{ e.datum }}</div>
+      <div class="body">
+        {% if e.typ %}<span class="typ">{{ e.typ }}</span>{% endif %}
+        {% if e.titel %}<div class="titel">{{ e.titel }}</div>{% endif %}
+        {% if e.beschreibung %}<div class="besch">{{ e.beschreibung }}</div>{% endif %}
+        {% if e.status or e.autor %}<div class="meta">{% if e.status %}Status: {{ e.status }}{% endif %}{% if e.status and e.autor %} &middot; {% endif %}{% if e.autor %}{{ e.autor }}{% endif %}</div>{% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+
+{% if fotos and fotos.size > 0 %}
+<section class="section">
+  <h2 class="section-titel">3 &middot; Foto-Verzeichnis</h2>
+  <div class="section-sub">Im Vorgang dokumentierte Fotos (Datum + Beschreibung).</div>
+  <table class="foto-tabelle">
+    <thead><tr><th>Foto-Nr.</th><th>Datum</th><th>Beschreibung</th><th>Kategorie</th></tr></thead>
+    <tbody>
+      {% for f in fotos %}
+      <tr>
+        <td class="nr">F-{{ f.nr }}</td>
+        <td class="datum">{{ f.datum }}</td>
+        <td>{{ f.beschreibung }}</td>
+        <td class="kat">{{ f.kategorie | default: "—" }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endif %}
+
+{% if dokumente and dokumente.size > 0 %}
+<section class="section">
+  <h2 class="section-titel">4 &middot; Dokumente / Anlagen</h2>
+  <div class="dokumente-grid">
+    <div class="header">Datum</div>
+    <div class="header">Typ</div>
+    <div class="header">Bezeichnung</div>
+    <div class="header">Anlage</div>
+    {% for d in dokumente %}
+    <div class="row" style="font-family: 'JetBrains Mono', monospace; font-size: 9pt; color: var(--muted);">{{ d.datum }}</div>
+    <div class="row">{{ d.typ }}</div>
+    <div class="row">{{ d.bezeichnung }}</div>
+    <div class="row" style="font-family: 'JetBrains Mono', monospace;">{% if d.anlage_nr %}A-{{ d.anlage_nr }}{% else %}—{% endif %}</div>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+<div class="ai-box">
+  <span class="marker">EU AI Act &middot; § 407a ZPO</span>
+  <div>
+    Dieser Aktenauszug wurde unter Verwendung KI-gestuetzter Strukturhilfen
+    durch den Sachverstaendigen erstellt. Alle fachlichen Bewertungen,
+    Auswahl der Eintraege und die Verantwortung fuer den Inhalt liegen
+    ausschliesslich beim unterzeichnenden Sachverstaendigen
+    (<span class="law-ref">§ 407a Abs. 3 ZPO</span>,
+    <span class="law-ref">EU AI Act Art. 50</span>).
+    KI dient als Hilfsmittel zur Strukturierung — keine eigenstaendigen Bewertungen.
+  </div>
+</div>
+
+<div class="unterschrift-block">
+  <div class="unterschrift-feld">
+    <div class="name">{{ sv_name }}</div>
+    <div class="titel">{{ sv_titel | default: "ö.b.u.v. Sachverstaendiger" }}</div>
+    <div style="margin-top: 2mm; font-size: 9pt;">{{ auszug_datum }}</div>
+  </div>
+</div>
+
+<div class="fuss-text">
+  Dieser Aktenauszug enthaelt personenbezogene Daten i.S.d. DSGVO und ist
+  vertraulich zu behandeln. Eine Weitergabe an Dritte bedarf der ausdruecklichen
+  Zustimmung des Auftraggebers oder muss durch ein gerichtliches Erfordernis
+  legitimiert sein.
+</div>
+
+</body>
+</html>
