@@ -207,10 +207,8 @@ function toggleKIBox() {
 // Ergänzungs-Diktat
 function starteErgaenzungsDiktat() {
   if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
-    // MEGA¹⁰ W5: Toast statt blocking-alert
-    const browserMsg = 'Spracherkennung wird von Ihrem Browser nicht unterstützt. Bitte verwenden Sie Chrome.';
-    if (window.ProvaUI && window.ProvaUI.toast) window.ProvaUI.toast(browserMsg, 'error');
-    else alert(browserMsg);
+    // MEGA¹² W16: provaAlert-Helper (DRY)
+    (window.provaAlert || alert)('Spracherkennung wird von Ihrem Browser nicht unterstützt. Bitte verwenden Sie Chrome.', 'error');
     return;
   }
 
@@ -973,10 +971,18 @@ AUFGABE: Schreibe einen professionellen §6-Denkanstoß der AUSSCHLIESSLICH auf 
       ? d.content[0].text
       : (d.choices&&d.choices[0] ? d.choices[0].message.content : '');
     if(!txt) throw new Error('Kein Text');
-    document.getElementById('kiInspText').textContent = txt;
-    document.getElementById('kiInspText').style.display = 'block';
+    const outEl = document.getElementById('kiInspText');
+    outEl.textContent = txt;
+    outEl.style.display = 'block';
     document.getElementById('kiInspRefresh').style.display = 'inline-flex';
     localStorage.setItem('prova_ki_stellungnahme_vorschlag', txt);
+    // MEGA¹² W13: Confidence-Badge + Fallback-Badge an Output-Container
+    if (window.ProvaConfidence) {
+      window.ProvaConfidence.applyToResponse(d, outEl, { requireKonjunktivII: true, expectedMinTokens: 100 });
+    }
+    if (window.ProvaKIFallbackBadge) {
+      window.ProvaKIFallbackBadge.applyToResponse(d, outEl);
+    }
   } catch(e) {
     document.getElementById('kiInspText').innerHTML =
       '<span style="color:var(--red);">KI nicht erreichbar ('+e.message+'). Bitte erneut versuchen.</span>';

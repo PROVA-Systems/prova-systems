@@ -78,10 +78,12 @@ function computeConfidence(openaiResult, opts) {
   }
 
   // 4. Halluzinations-Red-Flags (apodiktische Aussagen)
+  // MEGA¹² W13 Bug-Fix: rf muss auch lowercased werden — sonst matched
+  // 'Mit Sicherheit' (groß-S) NIE im lowercased text
   const lowerText = text.toLowerCase();
   let redFlagCount = 0;
   for (const rf of HALLUZINATION_RED_FLAGS) {
-    if (lowerText.includes(rf)) redFlagCount++;
+    if (lowerText.includes(rf.toLowerCase())) redFlagCount++;
   }
   if (redFlagCount > 0) {
     score -= redFlagCount * 15;
