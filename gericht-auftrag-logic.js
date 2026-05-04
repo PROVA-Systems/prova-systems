@@ -147,13 +147,8 @@
 
       window.location.href = 'app.html?az=' + encodeURIComponent(az.trim());
     } catch(e) {
-      // MEGA¹⁰ W5: Toast statt blocking-alert
-      var errMsg = 'Speichern fehlgeschlagen: ' + (e && e.message ? e.message : 'unbekannt');
-      if (window.ProvaUI && window.ProvaUI.toast) {
-        window.ProvaUI.toast(errMsg, 'error');
-      } else {
-        alert(errMsg);
-      }
+      // MEGA¹² W16: provaAlert-Helper (DRY)
+      (window.provaAlert || alert)('Speichern fehlgeschlagen: ' + (e && e.message ? e.message : 'unbekannt'), 'error');
     } finally {
       busy(false);
     }

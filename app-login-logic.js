@@ -106,9 +106,8 @@
     // MEGA¹⁰ W5: Live-Field-Validation mit ProvaForm
     if (!_validateLoginInputs(emailEl, pwEl)) {
       // Field-Errors sind bereits visuell im DOM von validateField
-      if (window.ProvaUI && window.ProvaUI.toast) {
-        window.ProvaUI.toast('Bitte Eingaben pruefen', 'error');
-      }
+      // MEGA¹² W16: provaAlert-Helper (DRY)
+      if (window.provaAlert) window.provaAlert('Bitte Eingaben pruefen', 'error');
       return;
     }
 

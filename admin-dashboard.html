@@ -210,8 +210,8 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14
   <div id="tab-overview" class="tab-panel">
     <!-- KPI-Grid -->
     <div class="kpi-grid">
-      <div class="kpi blue">
-        <div class="kpi-label">MRR</div>
+      <div class="kpi blue" role="button" tabindex="0" onclick="oeffneKICostDrilldown && oeffneKICostDrilldown()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();oeffneKICostDrilldown && oeffneKICostDrilldown();}" style="cursor:pointer" aria-label="MRR-KPI Detail oeffnen">
+        <div class="kpi-label">MRR <span style="opacity:.5;font-size:9px;">▶</span></div>
         <div class="kpi-value" id="kpiMrr">—</div>
         <div class="kpi-sub" id="kpiMrrSub">ARR —</div>
       </div>
@@ -436,6 +436,35 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
+  <!-- MEGA¹² W15+W16: Drilldown-Modal + provaAlert-Helper -->
+  <script src="/lib/empty-states.js" defer></script>
+  <script src="/lib/prova-alert.js" defer></script>
+  <script src="/lib/admin-drilldown.js" defer></script>
   <script src="admin-dashboard-logic.js" defer></script>
+  <script defer>
+    // KPI-Drilldown: MRR → KI-Cost-Aufschluesselung (Demo)
+    window.oeffneKICostDrilldown = function () {
+      if (!window.ProvaDrilldown) return;
+      window.ProvaDrilldown.open({
+        title: 'KI-Kosten-Detail',
+        subtitle: 'Aufschluesselung pro KI-Funktion',
+        timeRanges: ['24h', '7d', '30d'],
+        loader: async function (range) {
+          var fetcher = window.provaFetch || window.fetch;
+          var res = await fetcher('/.netlify/functions/ki-history?since=' + (range || '7d') + '&limit=200');
+          if (!res.ok) throw new Error('HTTP ' + res.status);
+          var j = await res.json();
+          if (!j.ok || !Array.isArray(j.per_funktion)) return [];
+          return j.per_funktion.map(function (f) {
+            return {
+              name: f.funktion,
+              value: f.calls + ' Anrufe',
+              hint: (f.cost_eur || 0).toFixed(2) + ' EUR'
+            };
+          });
+        }
+      });
+    };
+  </script>
 </body>
 </html>
