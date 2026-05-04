@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v267';   // MEGA¹¹: Tier 9 (UptimeRobot) + Tier 10 (Plausible) + Tier 12 (DRY+WCAG+ScipLink) + Tier 5 (KI-Cost) + Tier 1 (PWA-Install)
+const CACHE_VERSION = 'prova-v268';   // MEGA¹²: Anthropic-Fallback + Confidence-Badges + Mobile-UX + Drilldown + Toast-Sweep + 2 Bug-Fixes
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
@@ -54,6 +54,11 @@ const APP_SHELL = [
   '/lib/ki-cost-display.js',            // MEGA¹¹ W9: KI-Cost-Modal
   '/lib/pwa-install-prompt.js',         // MEGA¹¹ W10: PWA-Install-Banner
   '/offline.html',                      // MEGA¹¹ W10: PWA-Offline-Fallback
+  '/lib/ki-fallback-badge.js',          // MEGA¹² W12: Anthropic-Fallback-Badge
+  '/lib/ki-confidence-badge.js',        // MEGA¹² W13: KI-Confidence-Badge
+  '/lib/safe-area-helper.css',          // MEGA¹² W14: iOS-Safe-Area-Helper-CSS
+  '/lib/pull-to-refresh.js',            // MEGA¹² W14: Pull-to-Refresh
+  '/lib/admin-drilldown.js',            // MEGA¹² W15: Drilldown-Modal
   // Legacy auth (Hybrid-Modus, bleibt bis Cutover-Phase 5 cleanup)
   '/prova-fetch-auth.js',
   '/prova-notifications.js',
