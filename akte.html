@@ -431,6 +431,7 @@ a{text-decoration:none;color:inherit;}button,input,select,textarea{font-family:i
             </select>
             <div id="mode-c-mapping-status" style="font-size:11px;color:var(--text3);margin-top:6px;line-height:1.4;"></div>
             <button id="mode-c-preview-btn" style="display:none;margin-top:8px;width:100%;padding:7px;background:rgba(79,142,247,0.1);border:1px solid rgba(79,142,247,0.3);color:var(--accent);border-radius:4px;font-size:12px;cursor:pointer;" onclick="modeCPreview()">👁 Vorschau (interpoliert)</button>
+            <button id="mode-c-pdf-btn" style="display:none;margin-top:6px;width:100%;padding:7px;background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.3);color:var(--success,#059669);border-radius:4px;font-size:12px;cursor:pointer;font-weight:600;" onclick="modeCDownloadPdf()">📄 PDF generieren</button>
             <div id="mode-c-save-status" role="status" aria-live="polite" style="font-size:10px;color:var(--text3);margin-top:4px;"></div>
           </div>
 
@@ -531,6 +532,7 @@ a{text-decoration:none;color:inherit;}button,input,select,textarea{font-family:i
 
 <!-- MEGA¹⁶ W43: Mode B Editor-Integration fuer Interne Notizen -->
 <script src="/lib/workflow-mode-router.js" defer></script>
+<script src="/lib/prova-pdf-mode-c.js" defer></script>
 <script src="/lib/prova-editor.js" defer></script>
 <script defer>
   (function () {
@@ -595,12 +597,24 @@ a{text-decoration:none;color:inherit;}button,input,select,textarea{font-family:i
       if (!window.ProvaWorkflowMode) return;
       try {
         const settings = await window.ProvaWorkflowMode.fetchSettings();
-        _modeCActive = (settings.default_mode === 'C');
+        // MEGA¹⁷-PERFECTION W58: Mobile-Fallback Mode-C → Mode A
+        const eff = window.ProvaWorkflowMode.effectiveMode
+          ? window.ProvaWorkflowMode.effectiveMode({ userDefault: settings.default_mode })
+          : { mode: settings.default_mode, source: 'default' };
+
+        _modeCActive = (eff.mode === 'C');
         const card = document.getElementById('mode-c-card');
         if (!card) return;
 
         if (!_modeCActive) {
           card.style.display = 'none';
+          // Toast wenn Mobile-Fallback griff
+          if (eff.source === 'mobile-fallback' && eff.original === 'C' && !sessionStorage.getItem('prova_mobile_fallback_shown')) {
+            sessionStorage.setItem('prova_mobile_fallback_shown', '1');
+            setTimeout(function () {
+              if (window.provaAlert) window.provaAlert('📱 Mobile: Standard-Modus aktiv. Mode C am Desktop verwalten.', 'info');
+            }, 800);
+          }
           return;
         }
         card.style.display = 'block';
@@ -651,10 +665,12 @@ a{text-decoration:none;color:inherit;}button,input,select,textarea{font-family:i
     function renderMappingStatus() {
       const statusEl = document.getElementById('mode-c-mapping-status');
       const previewBtn = document.getElementById('mode-c-preview-btn');
+      const pdfBtn = document.getElementById('mode-c-pdf-btn');
       if (!statusEl) return;
       if (!_modeCCurrentVorlageId) {
         statusEl.textContent = '';
         if (previewBtn) previewBtn.style.display = 'none';
+        if (pdfBtn) pdfBtn.style.display = 'none';
         return;
       }
       const v = _modeCVorlagen.find(function (x) { return x.id === _modeCCurrentVorlageId; });
@@ -670,6 +686,7 @@ a{text-decoration:none;color:inherit;}button,input,select,textarea{font-family:i
         statusEl.innerHTML = '<span style="color:var(--warning,#d97706);">⚠ ' + mapped + '/' + total + ' gemappt</span> · <a href="einstellungen.html#es-sec-vorlagen" style="color:var(--accent);">Mapping vervollstaendigen →</a>';
       }
       if (previewBtn) previewBtn.style.display = 'block';
+      if (pdfBtn) pdfBtn.style.display = 'block';
     }
 
     async function onModeCVorlageChange(e) {
@@ -698,6 +715,63 @@ a{text-decoration:none;color:inherit;}button,input,select,textarea{font-family:i
         if (status) status.textContent = '✗ ' + err.message;
       }
     }
+
+    // MEGA¹⁷-PERFECTION W60: PDF-Download (Browser-Side via jsPDF + html2canvas)
+    window.modeCDownloadPdf = async function () {
+      if (!_modeCCurrentVorlageId || !_modeCAuftragId) {
+        if (window.provaAlert) window.provaAlert('Bitte erst Vorlage waehlen', 'warning');
+        return;
+      }
+      const status = document.getElementById('mode-c-save-status');
+      if (status) status.textContent = '⏳ Generiere PDF…';
+      const pdfBtn = document.getElementById('mode-c-pdf-btn');
+      if (pdfBtn) pdfBtn.disabled = true;
+
+      try {
+        // 1) interpolated_html holen
+        const fetcher = window.provaFetch || window.fetch;
+        const res = await fetcher('/.netlify/functions/generate-pdf-mode-c?auftrag_id=' + encodeURIComponent(_modeCAuftragId));
+        if (!res.ok) {
+          const err = await res.json().catch(function () { return {}; });
+          throw new Error(err.error || ('HTTP ' + res.status));
+        }
+        const data = await res.json();
+        if (!data.interpolated_html) {
+          throw new Error('Backend liefert kein HTML');
+        }
+
+        // 2) Warning bei missing variables
+        if ((data.missing || []).length > 0) {
+          const cont = window.confirm
+            ? confirm('Achtung: ' + data.missing.length + ' Variable(n) nicht aufgeloest (' + data.missing.slice(0,3).join(', ') + (data.missing.length>3?', …':'') + ').\n\nTrotzdem PDF generieren?')
+            : true;
+          if (!cont) {
+            if (status) status.textContent = '';
+            if (pdfBtn) pdfBtn.disabled = false;
+            return;
+          }
+        }
+
+        // 3) PDF-Library lazy-load + generieren
+        if (!window.ProvaPdfModeC) {
+          throw new Error('PDF-Library nicht verfuegbar');
+        }
+        const az = (window._currentAuftrag && window._currentAuftrag.az) || data.az || 'gutachten';
+        const filename = az.replace(/[^a-zA-Z0-9_-]/g, '_') + '_' + (data.vorlage_name||'mode-c').replace(/[^a-zA-Z0-9_-]/g, '_') + '.pdf';
+        await window.ProvaPdfModeC.generateAndDownload({
+          html: data.interpolated_html,
+          filename: filename,
+          title: az + ' — ' + (data.vorlage_name || '')
+        });
+        if (status) status.textContent = '✓ PDF heruntergeladen';
+        setTimeout(function () { if (status) status.textContent = ''; }, 4000);
+      } catch (e) {
+        if (status) status.textContent = '✗ ' + e.message;
+        if (window.provaAlert) window.provaAlert('PDF-Fehler: ' + e.message, 'error');
+      } finally {
+        if (pdfBtn) pdfBtn.disabled = false;
+      }
+    };
 
     window.modeCPreview = async function () {
       if (!_modeCCurrentVorlageId || !_modeCAuftragId) return;
