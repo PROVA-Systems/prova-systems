@@ -348,7 +348,76 @@ async function handleMessages(body, apiKey) {
   return jsonResponse({ content: [{ type: 'text', text }], model: result.model, usage: result.usage });
 }
 
-async function callOpenAI(params, apiKey) {
+// MEGA¹² W12: Anthropic-Fallback bei OpenAI-Outage
+const { callAnthropic, isOutageError } = require('./lib/ki-anthropic');
+const { getSupabase } = require('./lib/storage-router');
+
+/**
+ * Wrappped callOpenAI mit Fallback auf Anthropic bei Outage-Errors.
+ *
+ * Logik:
+ *   1. Try OpenAI
+ *   2. Bei isOutageError(): try Anthropic mit gleichem params (Adapter erledigt Conversion)
+ *   3. Bei Anthropic-Erfolg: Audit-Log + Set _fallback-Flag
+ *   4. Bei Anthropic-Fehler: original OpenAI-Error werfen (transparent fuer Caller)
+ *
+ * Bei nicht-Outage-Errors (4xx, 401, 429): NICHT Fallback — geht durch.
+ */
+async function callKIWithFallback(params, openaiKey) {
+  try {
+    const result = await _callOpenAIRaw(params, openaiKey);
+    return result;  // OpenAI hat geantwortet — kein Fallback noetig
+  } catch (openaiErr) {
+    if (!isOutageError(openaiErr)) {
+      // 4xx, Auth-Fehler, Rate-Limit → kein Fallback, Fehler durchreichen
+      throw openaiErr;
+    }
+
+    const anthropicKey = process.env.ANTHROPIC_API_KEY;
+    if (!anthropicKey) {
+      // Anthropic nicht konfiguriert → Original-Fehler werfen
+      throw openaiErr;
+    }
+
+    // Audit-Log fire-and-forget — Fallback wird AKTIVIERT
+    _auditFallbackEvent({
+      original_error: String(openaiErr.message || openaiErr).slice(0, 500),
+      requested_model: params.model,
+      timestamp: new Date().toISOString()
+    });
+
+    try {
+      const result = await callAnthropic(params, anthropicKey);
+      result._fallback = true;  // Frontend-Marker fuer Backup-KI-Badge
+      result._fallback_provider = 'anthropic';
+      return result;
+    } catch (anthropicErr) {
+      // Beide gescheitert → Original-OpenAI-Fehler werfen (relevanter fuer User)
+      console.error('[ki-proxy] Anthropic-Fallback auch gescheitert:', anthropicErr.message);
+      throw new Error('OpenAI nicht erreichbar UND Anthropic-Fallback fehlgeschlagen: ' + openaiErr.message);
+    }
+  }
+}
+
+function _auditFallbackEvent(meta) {
+  // Fire-and-forget: nicht await'en, kein User-Wait
+  setImmediate(async () => {
+    try {
+      const sb = getSupabase();
+      if (!sb) return;
+      await sb.from('audit_trail').insert({
+        function_name: 'ki-proxy',
+        action: 'ki.fallback.activated',
+        payload: meta,
+        result: 'fallback_to_anthropic'
+      });
+    } catch (e) {
+      console.warn('[ki-proxy] audit fallback log failed:', e.message);
+    }
+  });
+}
+
+async function _callOpenAIRaw(params, apiKey) {
   const response = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + apiKey },
@@ -359,6 +428,11 @@ async function callOpenAI(params, apiKey) {
     throw new Error('OpenAI ' + response.status + ': ' + (err?.error?.message || 'Fehler'));
   }
   return response.json();
+}
+
+// Backwards-Compat: existing call-sites nutzen callOpenAI (jetzt mit Fallback)
+async function callOpenAI(params, apiKey) {
+  return callKIWithFallback(params, apiKey);
 }
 
 function jsonResponse(data, status = 200) {
@@ -419,24 +493,24 @@ Gib NUR den korrigierten deutschen Text zurück. Perfekte Grammatik und Zeichens
   }
   console.log(`[ki-proxy:assistInline] Fachwissen-Quelle: ${fwSource} | SA: ${schadenart || '—'}`);
 
-  const res = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: { 'Authorization': 'Bearer ' + apiKey, 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      model: chooseModel(body, 'assist_inline', 'gpt-4o'),
-      temperature: 0.10,
-      max_tokens: 2000,
-      messages: [
-        { role: 'system', content: appendUserContext(systemMsgFinal, body.user_kontext) },
-        { role: 'user', content: userMsg }
-      ]
-    })
-  });
+  // MEGA¹² W12: callOpenAI nutzt jetzt callKIWithFallback (Anthropic-Backup)
+  const data = await callOpenAI({
+    model: chooseModel(body, 'assist_inline', 'gpt-4o'),
+    temperature: 0.10,
+    max_tokens: 2000,
+    messages: [
+      { role: 'system', content: appendUserContext(systemMsgFinal, body.user_kontext) },
+      { role: 'user', content: userMsg }
+    ]
+  }, apiKey);
 
-  if (!res.ok) throw new Error('OpenAI ' + res.status);
-  const data = await res.json();
   const vorschlag = data.choices?.[0]?.message?.content?.trim() || '';
-  return jsonResponse({ vorschlag });
+  // Fallback-Marker an Frontend weitergeben (fuer Backup-KI-Badge)
+  return jsonResponse({
+    vorschlag,
+    _fallback: data._fallback === true,
+    _provider: data._fallback ? 'anthropic' : 'openai'
+  });
 }
 
 async function handleSupportChat(body, apiKey) {

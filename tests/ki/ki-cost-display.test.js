@@ -15,7 +15,8 @@ function fmt(n, decimals) {
 }
 
 function fmtTokens(n) {
-  if (n == null) return '—';
+  // MEGA¹² W12 Bug-Fix: NaN-Handling
+  if (n == null || isNaN(n)) return '—';
   if (n >= 1000000) return (n / 1000000).toFixed(2) + 'M';
   if (n >= 1000) return Math.round(n / 1000) + 'k';
   return String(n);
@@ -71,6 +72,14 @@ describe('KI-Cost-Display Format-Helpers', () => {
   test('fmtTokens null', () => {
     assert.equal(fmtTokens(null), '—');
     assert.equal(fmtTokens(undefined), '—');
+  });
+
+  test('fmtTokens NaN (MEGA¹² W12 Bug-Fix)', () => {
+    // Pre-MEGA¹²: returnte 'NaN' string, was im UI sichtbar war
+    // Post-Fix: returnt '—' (Empty-Indicator)
+    assert.equal(fmtTokens(NaN), '—');
+    assert.equal(fmtTokens(0/0), '—');
+    assert.equal(fmtTokens(parseInt('abc')), '—');  // parseInt fail = NaN
   });
 
   test('fmtEur formatiert mit Komma + €', () => {
