@@ -1,14 +1,17 @@
 /* ============================================================
-   PROVA Systems — Zentrale Frontend-Konfiguration
-   S-SICHER 1.7 (Sprint S-SICHER Paket 1)
+   PROVA Systems — Zentrale Frontend-Konfiguration (Legacy: AIRTABLE_BASE)
+   S-SICHER 1.7 + Hotfix MEGA¹⁶.5 (2026-05-08)
 
-   Zweck: BASE_ID zentralisieren statt in 40+ Files hartcodieren.
-   Schritt 1 von N — nur 5 Hot-Files umgestellt (nav, dashboard-core,
-   app-logic, akte-logic, freigabe-logic).
+   Zweck: BASE_ID zentralisieren. Wird in K-1.5 entfernt (Cutover).
 
-   Einbindung: VOR allen *-logic.js Scripts, NACH auth-guard.js.
-   Aktuell eingebunden in: app.html, dashboard.html, akte.html.
+   WICHTIG (Hotfix MEGA¹⁶.5): MERGE statt OVERWRITE.
+   /lib/prova-config.js setzt SUPABASE_URL/SUPABASE_ANON_KEY auf
+   window.PROVA_CONFIG. Wenn diese Datei (root) DANACH lädt (siehe
+   dashboard.html Z.22 + Z.52), wuerde ein direktes Re-Assign die
+   Supabase-Werte loeschen → "PROVA_CONFIG.SUPABASE_URL fehlt"-Error
+   beim ESM-Import von supabase-client.js.
 
-   WICHTIG: Keine Airtable-Calls direkt aus dieser Datei. Nur Constants.
+   Loesung: bestehende Properties bewahren, nur AIRTABLE_BASE setzen.
 ============================================================ */
-window.PROVA_CONFIG = { AIRTABLE_BASE: "appJ7bLlAHZoxENWE" };
+window.PROVA_CONFIG = window.PROVA_CONFIG || {};
+window.PROVA_CONFIG.AIRTABLE_BASE = "appJ7bLlAHZoxENWE";

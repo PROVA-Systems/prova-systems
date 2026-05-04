@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v274';   // MEGA¹⁶: Mode B in akte+stellungnahme + Mode C Word-Import (parse-docx + Vorlagen-UI) + Migration 08
+const CACHE_VERSION = 'prova-v275';   // Hotfix MEGA¹⁶.5: prova-config Merge-Defense (lib + root order-independent → kein SUPABASE_URL-Verlust mehr)
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
