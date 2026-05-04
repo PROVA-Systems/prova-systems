@@ -215,13 +215,13 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14
         <div class="kpi-value" id="kpiMrr">—</div>
         <div class="kpi-sub" id="kpiMrrSub">ARR —</div>
       </div>
-      <div class="kpi green">
-        <div class="kpi-label">Aktive Kunden</div>
+      <div class="kpi green" role="button" tabindex="0" onclick="oeffneKundenDrilldown && oeffneKundenDrilldown()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();oeffneKundenDrilldown && oeffneKundenDrilldown();}" style="cursor:pointer" aria-label="Aktive Kunden Detail oeffnen">
+        <div class="kpi-label">Aktive Kunden <span style="opacity:.5;font-size:9px;">▶</span></div>
         <div class="kpi-value" id="kpiKunden">—</div>
         <div class="kpi-sub" id="kpiKundenSub">— gesamt</div>
       </div>
-      <div class="kpi warn">
-        <div class="kpi-label">Offene Tickets</div>
+      <div class="kpi warn" role="button" tabindex="0" onclick="oeffneTicketsDrilldown && oeffneTicketsDrilldown()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();oeffneTicketsDrilldown && oeffneTicketsDrilldown();}" style="cursor:pointer" aria-label="Offene Tickets Detail oeffnen">
+        <div class="kpi-label">Offene Tickets <span style="opacity:.5;font-size:9px;">▶</span></div>
         <div class="kpi-value" id="kpiTickets">—</div>
         <div class="kpi-sub" id="kpiTicketsSub">Support</div>
       </div>
@@ -462,6 +462,46 @@ document.addEventListener('DOMContentLoaded', function() {
               hint: (f.cost_eur || 0).toFixed(2) + ' EUR'
             };
           });
+        }
+      });
+    };
+
+    // MEGA¹³ W21: 2 weitere KPI-Drilldowns
+    window.oeffneKundenDrilldown = function () {
+      if (!window.ProvaDrilldown) return;
+      window.ProvaDrilldown.open({
+        title: 'Aktive Kunden',
+        subtitle: 'Pakete-Verteilung',
+        loader: async function () {
+          // Aggregiert aus _allSvs (existing in admin-dashboard-logic.js)
+          if (!window._allSvs || !Array.isArray(window._allSvs)) return [];
+          var byPaket = {};
+          window._allSvs.forEach(function (sv) {
+            var p = (sv.fields && sv.fields.Paket) || 'Unbekannt';
+            byPaket[p] = (byPaket[p] || 0) + 1;
+          });
+          return Object.entries(byPaket)
+            .map(function ([k, v]) { return { name: k, value: v + ' Kunden' }; })
+            .sort(function (a, b) { return parseInt(b.value) - parseInt(a.value); });
+        }
+      });
+    };
+
+    window.oeffneTicketsDrilldown = function () {
+      if (!window.ProvaDrilldown) return;
+      window.ProvaDrilldown.open({
+        title: 'Offene Tickets',
+        subtitle: 'Aufschluesselung nach Status',
+        loader: async function () {
+          if (!window._tickets || !Array.isArray(window._tickets)) return [];
+          var byStatus = {};
+          window._tickets.forEach(function (t) {
+            var s = (t.fields && t.fields.Status) || 'Unbekannt';
+            byStatus[s] = (byStatus[s] || 0) + 1;
+          });
+          return Object.entries(byStatus)
+            .map(function ([k, v]) { return { name: k, value: v + ' Tickets' }; })
+            .sort(function (a, b) { return parseInt(b.value) - parseInt(a.value); });
         }
       });
     };
