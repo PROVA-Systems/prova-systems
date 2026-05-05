@@ -330,3 +330,41 @@ Statische Mini-Sites unter `prova-systems.de/tools/*` — SEO + Lead-Magnete, ei
 ---
 
 *Vision-Master 01.05.2026 abend · Single Source of Truth · Aktualisiert von Claude Code nach jedem Sprint*
+
+---
+
+## MEGA²⁰-²⁴ Pilot-Hardening Updates (09.05.2026)
+
+### Pricing-Tiers (FINAL nach MEGA²¹)
+| Tier | Preis | Stripe Price-ID | Coming-Soon |
+|---|---|---|---|
+| STARTER | 89€/mo | price_1TTUQlRXumrtL2n5jPmG1IEY | Juni 2026 |
+| **SOLO** | **179€/mo** | **price_1TSjMZRXumrtL2n5fgToRwyr** | ✅ Pilot |
+| TEAM | 379€/mo | price_1TSjNXRXumrtL2n56c6emN2k | Juli 2026 |
+| **Founding-Member** | **125€/mo lifetime** | Coupon "FOUNDING-30" | ✅ Pilot |
+
+### KI-Stack (FINAL nach MEGA²²)
+- **Vision:** Claude Sonnet 4.6 (Anthropic) — Foto-Analyse, Schaden-Erkennung
+- **Text:** GPT-4o (OpenAI) — Konjunktiv-II, Halluzinations-Check, Strukturierung
+- **Audio:** Whisper-1 (OpenAI) — Diktat-Transkription
+- **Fallback:** GPT-4o-mini (S1 Mechanical)
+- **ENV-Switch:** `KI_VISION_PROVIDER=anthropic`, `KI_TEXT_PROVIDER=openai`
+
+### Triple-Mode-Architektur
+- **Mode A:** PROVA-Standard (Templates, F-04/F-09/F-15/F-19) — Default
+- **Mode B:** PROVA+Editor (TipTap) — auf Klick
+- **Mode C:** Eigene Vorlagen (Word .docx) — auf Klick, Mobile-Fallback auf A
+- **Routing:** lib/workflow-mode-router.js (auftragOverride > userDefault > A-Fallback)
+
+### Beweisbeschluss-Foundation (NEU MEGA²²+²³)
+- Migration 11: auftraege.beweisbeschluss_pdf_extrakt JSONB
+- Lambda: parse-beweisbeschluss.js (Pattern-Matching only, kein LLM, Marcel-C1)
+- Frontend: lib/beweisbeschluss-upload.js (Block 1 MEGA²³)
+- Page: gericht-auftrag.html (integriert)
+
+### Roadmap nach Pilot
+- **Juni 2026:** STARTER 89€ Tier offiziell launchen (für kleine SVs ≤ 5 Fälle/Monat)
+- **Juli 2026:** TEAM 379€ Tier launchen (für Büros ≥ 3 Mitarbeiter)
+- **August 2026:** Beweisfragen-Extraktor mit LLM (Tranche 2 nach Marcel-Validation Pattern-Matching)
+- **September 2026:** F-19 Wertgutachten Foundation (Schäden + Bauteile + Kostenermittlung)
+

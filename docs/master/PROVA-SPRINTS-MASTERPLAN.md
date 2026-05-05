@@ -469,3 +469,53 @@ Vollständiger Final-Report: `docs/sprint-status/MEGA-QUADRO-2026-05-04-NACHT-FI
 ---
 
 *Sprints-Masterplan 04.05.2026 nacht · Single Source of Truth · Aktualisiert von Claude Code nach jedem Sprint*
+
+---
+
+## MEGA²⁰-²⁴ Pilot-Hardening-Phase — 03-09.05.2026
+
+### MEGA²⁰ — ONBOARDING-FOUNDATION (06.05.2026)
+**Tag:** `v280-onboarding-foundation`
+**Tests:** 567 grün
+**Lieferung:** Welcome-Wizard 4-Step (Persona/Mode/Tour/Demo-Akte), AGB-Checkboxes Login,
+Migration 10 (users.persona_*), Pricing-Strip (Solo 149€), Service-Worker v280.
+
+### MEGA²¹+²² COMBINED MARATHON (08.05.2026)
+**Tag:** —
+**Tests:** 731 grün (+164 neue), sw.js v282
+**Commits:** 4 (`fe215d3`, `fad546b`, `a9b5aa0`, `3d1bafe`)
+**Lieferung:**
+- Pricing-Refactor: Solo 149€ → 179€, Founding 99€ → 125€, neue Tiers STARTER (89€), TEAM (379€)
+- Admin-Cockpit: 7 Tabs (Pipeline-Tab + Login-as-User Quick-Action)
+- KI-Service-Abstraction: Claude Sonnet 4.6 Vision + GPT-4o Text (Marcel-Decision MEGA²²)
+- Migration 11 (auftraege.beweisbeschluss_*) + parse-beweisbeschluss-Lambda (Pattern-Matching, Marcel-C1)
+- lib/prova-disclaimer.js + lib/ki-stats.js Foundations
+- ki-proxy-Bug-Fix Z.307 + RECHNUNGEN-422-Fix + onboarding-tour null-check
+
+### MEGA²³ NACHT-MARATHON (08-09.05.2026 nacht)
+**Tag:** —
+**Tests:** 1670 grün (+105 neue + 9 fixed), sw.js v284
+**Commits:** 6 (`2d440dd`, `20329c0`, `b834dc4`, `6f25580`, `03195cd`, `fc73c19`)
+**Lieferung (8/13 Blöcke autonom in Nacht-Marathon):**
+- Block 1: Beweisbeschluss-Upload-UI (lib/beweisbeschluss-upload.js + 41 Tests)
+- Block 2: Disclaimer-Wiring 7 Pages + 21 Tests
+- Block 3: Admin-Cockpit Settings-Tab (8. Tab) + 10 Tests
+- Block 4: KI-Stats Frontend-Charts (lib/admin-ki-stats-frontend.js) + 19 Tests
+- Block 5: 7 Pre-existing Toast-Fails fixed (W5+W16-dual-Pattern)
+- Block 11: Email-Notify Login-as-User (DSGVO-Transparenz) + 14 Tests
+- Block 12: PILOT-LAUNCH-CHECKLIST 32→60 Items
+- Block 13: NACHT-MARATHON-REPORT-V2.md + KNOWN-ISSUES.md
+
+### MEGA²⁴ TAG-MARATHON (09.05.2026 morgen)
+**Tag:** v285-pilot-final (geplant)
+**Tests:** 1763 grün (+93 User-Journey)
+**Commits:** 9+ erwartet
+**Lieferung:**
+- Block 6: 8 User-Journey-Tests (60+ Tests Plan, 93 geliefert)
+- Block 7: Security-Audit (`docs/diagnose/SECURITY-AUDIT-2026-05-09.md`) — 0 Critical, 2 Medium
+- Block 8: Performance-Audit (`docs/diagnose/PERFORMANCE-AUDIT-2026-05-09.md`) — GO
+- Block 9: Documentation-Sync (Master-Files + README.md)
+- Block 10: Backlog-Cleanup (orphan-pages, env-cleanup, template-consolidation)
+
+**Pilot-Launch-Empfehlung:** GO-MIT-VORBEHALT (2-3 Tage zum Pilot, Marcel-Pflicht-Items in PILOT-LAUNCH-CHECKLIST.md A+C+D)
+

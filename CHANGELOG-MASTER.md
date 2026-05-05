@@ -521,3 +521,76 @@ curl -X POST /.netlify/functions/ki-proxy -d '{}'
 - **Drei Diagnose-Hypothesen** (SW-Cache / `ladePaketUndWeiterleiten` / CORS) waren alle ohne reale Daten — das Problem war ein Vierter, den keine der Hypothesen abdeckte: Editor-Target war tote Datei. Lehre: vor Code-Änderungen `grep -rln "<filename>" --include="*.html"` als Sanity-Check, mindestens.
 
 ---
+
+---
+
+# MEGA²⁰-²⁴ Pilot-Hardening-Phase (08-09.05.2026)
+
+## MEGA²³ Nacht-Marathon (08-09.05.2026 nacht)
+**Tests:** 1565 → 1670 (+105 neu, 9 fixed) | **sw.js:** v282 → v284 | **Commits:** 6
+
+### Block 1 — Beweisbeschluss-Upload-UI ✅
+- `lib/beweisbeschluss-upload.js` (UMD-Pattern, ~370 LOC)
+- `gericht-auftrag.html` Integration mit Section "📄 Beweisbeschluss-PDF — Pattern-Extraktion"
+- 41 Tests (validate, fileToBase64, renderPreview mit XSS-Escape, collectEdits via DOM-Shim, attach-flow mit fetchImpl-Mock)
+
+### Block 2 — Disclaimer-Wiring ✅
+- 7 Pages `<script src="/lib/prova-disclaimer.js" defer>`: stellungnahme, ortstermin-modus, akte, app, freigabe, gutachterliche-stellungnahme, wertgutachten
+- 3 Inline-§407a-Disclaimer (class="prova-ki-disclaimer") + Tooltip-title-Attribute auf KI-Buttons
+- 21 Tests
+
+### Block 3 — Admin-Cockpit Settings-Tab ✅
+- 8. Tab in admin-dashboard.html: System-Info + Feature-Flags + ENV-Status + Sprint-Historie
+- SW-Version-Probe via /sw.js?probe= Fetch
+- 10 Tests
+
+### Block 4 — KI-Stats Frontend-Charts ✅
+- `lib/admin-ki-stats-frontend.js` (UMD): aggregateModelDistribution, aggregateCostsPerUser (Top5), aggregateFotoUsage (10/Monat-Limit), aggregateDiktatStats
+- 4 neue Karten in Admin-Cockpit "KI & Workflow"-Tab + Range-Selector
+- 19 Tests
+
+### Block 5 — Toast-Migration W5+W16 dual-Pattern Fix ✅
+- 7 Pre-existing Test-Fails repariert via `if (window.ProvaUI && window.ProvaUI.toast) ProvaUI.toast(); else (window.provaAlert || alert)();`
+- 6 Files: admin-dashboard, erechnung, gericht-auftrag, gutachterliche-stellungnahme, stellungnahme, rechnungen-logic.js
+
+### Block 11 — Email-Notify Login-as-User (DSGVO) ✅
+- `netlify/functions/admin-impersonate.js` erweitert mit user_agent + admin_ip in audit_trail
+- notifyImpersonation() Helper mit SMTP via nodemailer
+- ENV-Gate IMPERSONATION_NOTIFY=on, fire-and-forget
+- DSGVO-Hinweis (§32 BDSG / Art. 5 DSGVO) im Email-Body
+- 14 Tests
+
+### Block 12 — PILOT-LAUNCH-CHECKLIST ✅
+- Erweitert von 32 auf 60 Items in 8 Sektionen
+- Neue ENV-Vars (KI_VISION_PROVIDER, IMPERSONATION_NOTIFY, SMTP-Config)
+- Stripe Coupon FOUNDING-30, Migration 11, npm install pdf-parse
+
+### Block 13 — Wakeup-Briefing ✅
+- `NACHT-MARATHON-REPORT-V2.md` mit GO/NO-GO + Action-Items
+- `docs/diagnose/KNOWN-ISSUES.md` mit 5 deferred Issues
+
+## MEGA²⁴ Tag-Marathon (09.05.2026 morgen)
+**Tests:** 1670 → 1763 (+93 User-Journey) | **sw.js:** v284 → v285 (geplant) | **Commits:** 9+
+
+### Block 6 — User-Journey-Tests ✅
+- 8 End-to-End-Stories in `tests/user-journey/`
+- 93 Tests gesamt (Plan war 60+)
+- 01-signup-onboarding, 02-mode-a, 03-mode-b, 04-mode-c, 05-foto-vision-claude, 06-beweisbeschluss-upload (Lib-integriert), 07-rechnung-pdf, 08-admin-impersonate
+
+### Block 7 — Security-Audit ✅
+- `docs/diagnose/SECURITY-AUDIT-2026-05-09.md`
+- 0 Critical/High, 2 Medium (innerHTML-Audit empfohlen, Auth-Coverage-Liste)
+- Empfehlung: GO-MIT-FIXES
+
+### Block 8 — Performance-Audit ✅
+- `docs/diagnose/PERFORMANCE-AUDIT-2026-05-09.md`
+- 56 Lambdas alle < 32 KB, 213 DB-Indices
+- Quick-Wins: Sentry lazy-load, App-Icons prunen, sw.js APP_SHELL prunen
+- Empfehlung: GO
+
+### Block 9 — Documentation-Sync ✅
+- PROVA-SPRINTS-MASTERPLAN.md erweitert (MEGA²⁰-²⁴)
+- PROVA-VISION-MASTER.md erweitert (Pricing FINAL, KI-Stack FINAL, Roadmap)
+- PROVA-ARCHITEKTUR-MASTER.md erweitert (F-Slot-Mapping, Triple-Mode, KI-Service-Abstraction, Admin-Cockpit 8 Tabs, Beweisbeschluss-Foundation, Disclaimer-System)
+- CHANGELOG-MASTER.md (dieser Eintrag)
+

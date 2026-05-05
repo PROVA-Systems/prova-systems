@@ -642,3 +642,102 @@ NETLIFY_ACCESS_TOKEN, NETLIFY_SITE_ID
 ---
 
 *Architektur-Master 03.05.2026 nachmittag · Single Source of Truth · Aktualisiert von Claude Code nach jedem Sprint*
+
+---
+
+## MEGA²⁰-²⁴ Architektur-Erweiterungen (09.05.2026)
+
+### F-Slot-Mapping (UPDATED)
+| F-Slot | Name | Status | Page |
+|---|---|---|---|
+| F-01 | JVEG-Gerichtsrechnung | ✅ | rechnungen.html |
+| F-04 | Kurzstellungnahme | ✅ Mode-A | stellungnahme.html / gutachterliche-stellungnahme.html |
+| F-09 | Kurzgutachten | ✅ Mode-A | (Vorlage) |
+| F-15 | Gerichtsgutachten | ✅ Mode-A | gericht-auftrag.html |
+| F-19 | Wertgutachten | 🚧 NEU (geplant Sep 2026) | wertgutachten.html |
+| F-20 | Beratungsprotokoll | ✅ | beratung.html |
+| F-21 | Baubegleitung-Protokoll | ✅ | baubegleitung.html |
+
+### Triple-Mode-Architektur (MEGA¹⁴-¹⁷)
+```
+lib/workflow-mode-router.js
+  ├─ resolve({auftragOverride, userDefault}) → 'A'|'B'|'C'
+  ├─ effectiveMode({...,isMobile}) → mobile-fallback C → A
+  └─ openForAuftrag(id) → lazy-load Mode-UI
+
+Mode A = Templates (default)
+Mode B = TipTap-Editor
+Mode C = Word-Vorlagen (Mobile-disabled)
+```
+
+### KI-Service-Abstraction (MEGA²²)
+```
+lib/ki-service-interface.js  — abstract base
+  ├─ ki-service-anthropic.js (Claude Sonnet 4.6 Vision)
+  └─ ki-service-openai.js    (GPT-4o Text + Whisper)
+
+ENV-Routing:
+  KI_VISION_PROVIDER = anthropic|openai
+  KI_TEXT_PROVIDER   = openai
+  KI_FALLBACK_MODEL  = gpt-4o-mini
+
+Pflicht-Logging: lib/ki-stats.js → ki_protokoll-Tabelle
+```
+
+### Admin-Cockpit (MEGA²¹+²³ — 8 Tabs)
+| # | Tab | Zweck |
+|---|---|---|
+| 1 | Übersicht | KPI-Grid (User, Revenue, Errors) |
+| 2 | Kunden | User-Tabelle + Login-as-User Quick-Action (MEGA²¹) |
+| 3 | Finanzen | Stripe-KPIs (MRR, Churn, etc.) |
+| 4 | KI & Workflow | KI-Stats + Charts (MEGA²³ Block 4) |
+| 5 | Support | Ticket-Liste |
+| 6 | Health | UptimeRobot + Sentry-Status |
+| 7 | Pipeline | Pilot-SV-Funnel + Conversion (MEGA²¹) |
+| 8 | Settings | System-Info + Feature-Flags + Sprint-Historie (MEGA²³ Block 3) |
+
+### Beweisbeschluss-Foundation (MEGA²²+²³)
+```
+Migration 11 (auftraege.beweisbeschluss_*):
+  - beweisbeschluss_pdf_extrakt   JSONB
+  - beweisbeschluss_pdf_extrakt_version  INT
+  - beweisbeschluss_pdf_uploaded_at      TIMESTAMP
+  - beweisbeschluss_pdf_storage_path     TEXT
+
+Lambda: netlify/functions/parse-beweisbeschluss.js
+  - PDF max 10MB, MIME-Check, Magic-Bytes
+  - pdf-parse → Pattern-Matching (Marcel-C1: kein LLM)
+  - Pattern: Aktenzeichen, Frist, Hauptfragen, Parteien
+  - Storage: sv-files Bucket, fire-and-forget
+
+Frontend: lib/beweisbeschluss-upload.js (UMD)
+  - drag-drop + click-to-pick
+  - validatePdf, fileToBase64, isValidAuftragId
+  - renderPreview (escaped, editable)
+  - collectEdits (DOM read-back)
+  - attach(rootEl, opts) inkl. fetchImpl-Override fuer Tests
+
+Page-Integration: gericht-auftrag.html
+  - Section "📄 Beweisbeschluss-PDF — Pattern-Extraktion"
+  - Auto-Form-Uebernahme nach SV-Edit-and-Save
+  - Fallback: alte text-basierte KI-Section bleibt
+```
+
+### Disclaimer-System (MEGA²¹+²²+²³)
+```
+lib/prova-disclaimer.js (UMD):
+  ProvaDisclaimer.html({variant})  → standard|foto|beweisbeschluss
+  ProvaDisclaimer.tooltipText()    → Plain-Text fuer title=""
+  ProvaDisclaimer.aiBoxHtml({context}) → EU AI Act Box
+
+Wiring (8 Pages mit script-tag):
+  gericht-auftrag, stellungnahme, ortstermin-modus, akte, app, freigabe,
+  gutachterliche-stellungnahme, wertgutachten
+
+Inline-Disclaimer (3 Pages mit class="prova-ki-disclaimer"):
+  gericht-auftrag.html, ortstermin-modus.html, stellungnahme.html
+
+Tooltips (title=""...§407a):
+  Foto-KI-Btn, Diktat-KI-Btn, KI-Assist-Btn
+```
+
