@@ -58,6 +58,105 @@ async function verifySubscriptionActive(stripe, customerEmail) {
 }
 
 /**
+ * MEGA²⁷.7 Block 2: Berechne Werber-Stats fuer Reward-Email.
+ */
+async function calculateReferrerStats(sb, referrerUserId) {
+  const stats = { total_sent: 0, total_rewarded: 0, total_active_count: 0 };
+  if (!sb || !referrerUserId) return stats;
+  try {
+    const { data } = await sb.from('referrals')
+      .select('status')
+      .eq('referrer_user_id', referrerUserId);
+    if (!data) return stats;
+    data.forEach(row => {
+      if (row.status !== 'expired' && row.status !== 'cancelled') stats.total_sent++;
+      if (row.status === 'rewarded') stats.total_rewarded++;
+      if (['pending', 'active', 'hold', 'rewarded'].indexOf(row.status) !== -1) stats.total_active_count++;
+    });
+  } catch (_) { /* graceful */ }
+  return stats;
+}
+
+/**
+ * MEGA²⁷.7 Block 2: Send HTML-Reward-Email an Werber via referral-reward.html Template.
+ * Fire-and-forget — Failure blockt Cron-Flow nicht.
+ */
+async function sendRewardEmail(sb, referral, stats) {
+  if (!referral || !referral.referrer_email) return { ok: false, skipped: 'no_referrer_email' };
+  if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
+    return { ok: false, skipped: 'no_smtp_env' };
+  }
+  let nodemailer;
+  try { nodemailer = require('nodemailer'); }
+  catch (e) { return { ok: false, skipped: 'nodemailer_missing' }; }
+
+  // Werber-Name lookup (best-effort)
+  let werberName = referral.referrer_email;
+  try {
+    const { data: u } = await sb.from('users')
+      .select('full_name')
+      .eq('id', referral.referrer_user_id)
+      .maybeSingle();
+    if (u && u.full_name) werberName = u.full_name;
+  } catch (_) { /* graceful */ }
+
+  // Next-Billing-Date: erste des nächsten Monats (heuristic)
+  const now = new Date();
+  const nextBilling = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+  const nextBillingStr = String(nextBilling.getDate()).padStart(2, '0') + '.'
+    + String(nextBilling.getMonth() + 1).padStart(2, '0') + '.' + nextBilling.getFullYear();
+
+  const totalSent = (stats && stats.total_sent) || 0;
+  const totalRewarded = (stats && stats.total_rewarded) || 0;
+  const totalActive = (stats && stats.total_active_count) || 0;
+
+  let html, text;
+  try {
+    const Renderer = require('../../lib/email-renderer');
+    const vars = {
+      WERBER_NAME: werberName,
+      GEWORBENER_EMAIL: referral.referred_email || '',
+      NEXT_BILLING_DATE: nextBillingStr,
+      TOTAL_SENT: String(totalSent),
+      TOTAL_REWARDED: String(totalRewarded),
+      TOTAL_MONTHS_FREE: String(totalRewarded),
+      TOTAL_VALUE_EUR: String(totalRewarded * 99),
+      REMAINING_OF_12: String(Math.max(0, 12 - totalActive)),
+      DASHBOARD_URL: (process.env.REFERRAL_BASE_URL || 'https://prova-systems.de') + '/dashboard.html'
+    };
+    const rendered = Renderer.renderTemplate('referral-reward', vars);
+    html = rendered.html;
+    text = rendered.text;
+  } catch (e) {
+    text = 'Hallo ' + werberName + ',\n\n'
+      + 'Deine Empfehlung an ' + (referral.referred_email || 'einen Kollegen') + ' war erfolgreich!\n'
+      + 'Du hast 1 Monat PROVA gewonnen (Wert 99 EUR).\n\n'
+      + 'Statistik: ' + totalRewarded + ' erfolgreiche Empfehlungen von ' + totalSent + ' versendet.\n\n'
+      + 'PROVA-Systems';
+  }
+
+  try {
+    const transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST,
+      port: Number(process.env.SMTP_PORT || 587),
+      secure: process.env.SMTP_PORT === '465',
+      auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS }
+    });
+    const mailOptions = {
+      from: process.env.SMTP_FROM_REFERRAL || 'PROVA Empfehlung <empfehlung@prova-systems.de>',
+      to: referral.referrer_email,
+      subject: '🎉 Du hast 1 Monat PROVA gewonnen!',
+      text: text
+    };
+    if (html) mailOptions.html = html;
+    await transporter.sendMail(mailOptions);
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: e.message };
+  }
+}
+
+/**
  * Apply Reward-Coupon auf Werber-Sub.
  */
 async function applyRewardToReferrer(stripe, referrerEmail) {
@@ -154,6 +253,14 @@ exports.handler = withSentry(async function (event) {
             reward_stripe_coupon_id: REWARD_COUPON_ID
           }).eq('id', r.id);
           result.rewarded++;
+
+          // MEGA²⁷.7 Block 2: HTML-Reward-Email senden (fire-and-forget)
+          try {
+            const stats = await calculateReferrerStats(sb, r.referrer_user_id);
+            await sendRewardEmail(sb, r, stats);
+          } catch (emailErr) {
+            errors.push({ id: r.id, error: emailErr.message, phase: 'reward_email' });
+          }
         } catch (e) {
           errors.push({ id: r.id, error: e.message, phase: 'reward' });
         }
@@ -166,4 +273,8 @@ exports.handler = withSentry(async function (event) {
   return json(event, 200, { ok: true, processed: result, errors });
 }, { functionName: 'check-referral-rewards' });
 
-exports._test = { verifySubscriptionActive, applyRewardToReferrer, REWARD_COUPON_ID };
+exports._test = {
+  verifySubscriptionActive, applyRewardToReferrer,
+  calculateReferrerStats, sendRewardEmail,
+  REWARD_COUPON_ID
+};

@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v289';   // MEGA²⁷.6: HTML-Email-Aktivierung create-referral.js + IS_REFERRED-Block send-welcome-email.js + Migration 12 applied (+26 tests, 2010 gruen)
+const CACHE_VERSION = 'prova-v290';   // MEGA²⁷.7 Final Polish: netlify.toml Cron-Schedules (02:00+14:00 UTC) + Reward-Email in check-referral-rewards.js + send-referral-reminders.js NEU + 2 Reminder-Templates (+29 tests, 2039 gruen)
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
