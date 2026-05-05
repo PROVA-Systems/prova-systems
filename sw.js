@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v282';   // MEGA²¹+²² COMBINED: Pricing 179€ + Pipeline-Tab + Login-as-User + KI-Service-Abstraction (Claude Sonnet 4.6 Vision + GPT-4o Text) + Migration 11 Beweisbeschluss + parse-beweisbeschluss + Disclaimer-Lib + KI-Stats + ki-proxy-Bug-Fix + RECHNUNGEN-422-Fix + tour-null-check
+const CACHE_VERSION = 'prova-v284';   // MEGA²³ Nacht-Marathon: Block 1 Beweisbeschluss-Upload + Block 2 Disclaimer-Wiring + Block 3 Settings-Tab + Block 4 KI-Stats-Frontend + Block 5 Toast-Migration-Fix + Block 11 Email-Notify-Impersonate (105 neue Tests, 1670 grün)
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
@@ -38,6 +38,9 @@ const APP_SHELL = [
   '/nav.js',
   // K-1.0 + K-1.3 lib-Stack (Supabase-Foundation)
   '/lib/prova-config.js',
+  '/lib/beweisbeschluss-upload.js',     // MEGA²³ Block 1: Beweisbeschluss-PDF-Upload-Library
+  '/lib/admin-ki-stats-frontend.js',    // MEGA²³ Block 4: KI-Stats Frontend-Charts
+  '/lib/prova-disclaimer.js',           // MEGA²¹+²² W110: §407a-Disclaimer-Lib
   '/lib/supabase-client.js',
   '/lib/data-store.js',
   '/lib/template-registry.js',
