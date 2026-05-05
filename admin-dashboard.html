@@ -11,6 +11,7 @@
 <script src="nav.js" defer></script>
 <script src="auftragstyp.js"></script>
   <script src="global-search.js" defer></script>
+  <script src="/lib/admin-ki-stats-frontend.js" defer></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>PROVA Admin Dashboard</title>
@@ -206,6 +207,8 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14
     <button class="tab-btn" data-tab="health" onclick="showTab('health', this)" style="background:none;border:none;padding:10px 16px;font-size:13px;font-weight:600;color:var(--text3);border-bottom:2px solid transparent;cursor:pointer;font-family:inherit;">Health</button>
     <!-- MEGA²¹ W95: 7. Tab Pipeline (Marcel-Decision F1) -->
     <button class="tab-btn" data-tab="pipeline" onclick="showTab('pipeline', this)" style="background:none;border:none;padding:10px 16px;font-size:13px;font-weight:600;color:var(--text3);border-bottom:2px solid transparent;cursor:pointer;font-family:inherit;">Pipeline</button>
+    <!-- MEGA²³ Block 3: 8. Tab Settings (System-Info + Feature-Flags) -->
+    <button class="tab-btn" data-tab="settings" onclick="showTab('settings', this)" style="background:none;border:none;padding:10px 16px;font-size:13px;font-weight:600;color:var(--text3);border-bottom:2px solid transparent;cursor:pointer;font-family:inherit;">⚙️ Settings</button>
   </div>
 
   <!-- TAB: ÜBERSICHT -->
@@ -310,6 +313,48 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14
       <div class="card" style="padding:18px;">
         <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:14px;">KI-Nutzung nach Typ</div>
         <div id="kiByType" class="paket-bars"><div class="loading"><div class="spin"></div>Lade…</div></div>
+      </div>
+    </div>
+
+    <!-- MEGA²³ Block 4: KI-Stats Frontend-Charts (Token-Cost + Model-Distribution + Foto-Usage + Diktat-Min) -->
+    <div style="margin-top:16px;display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+      <!-- Model-Distribution-Pie (CSS-only) -->
+      <div class="card" style="padding:18px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+          <div style="font-size:13px;font-weight:700;color:var(--text);">🥧 Model-Distribution</div>
+          <select id="kiStatsRange" onchange="loadKIStatsExt()" style="padding:4px 8px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:11px;font-family:inherit;">
+            <option value="today">Heute</option>
+            <option value="week">Woche</option>
+            <option value="month" selected>Monat</option>
+          </select>
+        </div>
+        <div id="kiModelDistribution" style="font-size:12px;color:var(--text2);">
+          <div class="loading"><div class="spin"></div>Lade…</div>
+        </div>
+      </div>
+
+      <!-- Token-Cost pro User (Top 5) -->
+      <div class="card" style="padding:18px;">
+        <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:12px;">💰 Token-Cost pro User (Top 5)</div>
+        <div id="kiCostsPerUser" style="font-size:12px;color:var(--text2);">
+          <div class="loading"><div class="spin"></div>Lade…</div>
+        </div>
+      </div>
+
+      <!-- Foto-KI-Usage pro User -->
+      <div class="card" style="padding:18px;">
+        <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:12px;">📷 Foto-KI-Usage (Limit 10/Monat)</div>
+        <div id="kiFotoUsage" style="font-size:12px;color:var(--text2);">
+          <div class="loading"><div class="spin"></div>Lade…</div>
+        </div>
+      </div>
+
+      <!-- Diktat-Minuten -->
+      <div class="card" style="padding:18px;">
+        <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:12px;">🎙️ Diktat-Minuten + Avg-Response</div>
+        <div id="kiDiktatStats" style="font-size:12px;color:var(--text2);">
+          <div class="loading"><div class="spin"></div>Lade…</div>
+        </div>
       </div>
     </div>
   </div>
@@ -460,6 +505,57 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14
     </div>
   </div>
 
+  <!-- MEGA²³ Block 3: 8. Tab SETTINGS (System-Info + Feature-Flags + ENV-Status) -->
+  <div id="tab-settings" class="tab-panel" style="display:none;">
+    <div class="grid2" style="gap:16px;">
+      <!-- System-Info -->
+      <div class="card" style="padding:18px;">
+        <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:12px;">📊 System-Info</div>
+        <table style="width:100%;font-size:12px;color:var(--text2);">
+          <tr><td style="padding:4px 0;width:40%;color:var(--text3);">SW-Version</td><td id="settingsSwVersion" style="font-family:ui-monospace,monospace;color:var(--text);">—</td></tr>
+          <tr><td style="padding:4px 0;color:var(--text3);">Git-Commit</td><td id="settingsGitCommit" style="font-family:ui-monospace,monospace;color:var(--text);">—</td></tr>
+          <tr><td style="padding:4px 0;color:var(--text3);">Total Tests</td><td id="settingsTotalTests" style="font-family:ui-monospace,monospace;color:var(--text);">—</td></tr>
+          <tr><td style="padding:4px 0;color:var(--text3);">Last Deploy</td><td id="settingsLastDeploy" style="font-family:ui-monospace,monospace;color:var(--text);">—</td></tr>
+          <tr><td style="padding:4px 0;color:var(--text3);">Browser</td><td id="settingsBrowser" style="font-family:ui-monospace,monospace;color:var(--text);font-size:11px;">—</td></tr>
+        </table>
+      </div>
+
+      <!-- Feature-Flags -->
+      <div class="card" style="padding:18px;">
+        <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:12px;">🚩 Feature-Flags (Read-Only)</div>
+        <table style="width:100%;font-size:12px;color:var(--text2);">
+          <tr><td style="padding:4px 0;width:50%;color:var(--text3);">KI_VISION_PROVIDER</td><td id="flagKiVision" style="font-family:ui-monospace,monospace;color:var(--text);">— (server-side)</td></tr>
+          <tr><td style="padding:4px 0;color:var(--text3);">KI_TEXT_PROVIDER</td><td id="flagKiText" style="font-family:ui-monospace,monospace;color:var(--text);">— (server-side)</td></tr>
+          <tr><td style="padding:4px 0;color:var(--text3);">KI_FALLBACK_MODEL</td><td id="flagKiFallback" style="font-family:ui-monospace,monospace;color:var(--text);">— (server-side)</td></tr>
+          <tr><td style="padding:4px 0;color:var(--text3);">IMPERSONATION_NOTIFY</td><td id="flagImpersonate" style="font-family:ui-monospace,monospace;color:var(--text);">— (server-side)</td></tr>
+        </table>
+        <div style="margin-top:10px;font-size:11px;color:var(--text3);font-style:italic;">
+          Werte werden NICHT angezeigt (Sicherheit). Nur Konfigurations-Status.
+        </div>
+      </div>
+
+      <!-- ENV-Status -->
+      <div class="card" style="padding:18px;grid-column:1/-1;">
+        <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:12px;">🔐 ENV-Status (Konfiguration vorhanden / fehlt)</div>
+        <div id="settingsEnvList" style="font-size:12px;color:var(--text2);font-family:ui-monospace,monospace;">
+          <div style="color:var(--text3);">Lade via /.netlify/functions/admin-env-status…</div>
+        </div>
+      </div>
+
+      <!-- Sprint-Historie -->
+      <div class="card" style="padding:18px;grid-column:1/-1;">
+        <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:12px;">📚 Sprint-Historie (Letzte 5)</div>
+        <div style="font-size:12px;color:var(--text2);">
+          <div style="padding:6px 0;border-bottom:1px solid var(--border);">MEGA²³ Nacht-Marathon — Beweisbeschluss-UI + Disclaimer-Wiring + Settings-Tab + Email-Notify</div>
+          <div style="padding:6px 0;border-bottom:1px solid var(--border);">MEGA²² — KI-Service-Abstraction (Claude Sonnet 4.6 Vision + GPT-4o Text) + Beweisbeschluss-Lambda</div>
+          <div style="padding:6px 0;border-bottom:1px solid var(--border);">MEGA²¹ — 3-Tier-Pricing (89/179/379€) + Founding 125€ + Pipeline-Tab</div>
+          <div style="padding:6px 0;border-bottom:1px solid var(--border);">MEGA²⁰ — Onboarding-Foundation (Welcome-Wizard + Migration 10 + Pricing-Strip)</div>
+          <div style="padding:6px 0;">MEGA¹⁹ — Pilot-Page Founding-Banner + Sentry-Integration</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <script>
@@ -479,9 +575,107 @@ function showTab(name, btn) {
   // Tab-spezifisches Lazy-Loading
   if (name === 'kunden' && typeof loadKunden === 'function') loadKunden();
   if (name === 'finanzen' && typeof loadFinanzen === 'function') loadFinanzen();
-  if (name === 'ki-stats' && typeof loadKIStats === 'function') loadKIStats();
+  if (name === 'ki-stats' && typeof loadKIStats === 'function') { loadKIStats(); loadKIStatsExt(); }
   if (name === 'tickets' && typeof loadTickets === 'function') loadTickets();
   if (name === 'pipeline' && typeof loadPipeline === 'function') loadPipeline();
+  if (name === 'settings' && typeof loadSettings === 'function') loadSettings();
+}
+
+// MEGA²³ Block 4: KI-Stats Frontend-Charts (lib/admin-ki-stats-frontend.js)
+async function loadKIStatsExt() {
+  if (!window.ProvaAdminKiStats) {
+    console.warn('[ki-stats-ext] ProvaAdminKiStats lib nicht geladen');
+    return;
+  }
+  var range = document.getElementById('kiStatsRange') ? document.getElementById('kiStatsRange').value : 'month';
+  var fetcher = window.provaFetch || window.fetch;
+  try {
+    var resp = await fetcher('/.netlify/functions/admin-ki-aggregations?range=' + encodeURIComponent(range), {
+      method: 'GET',
+      headers: window.provaAuthHeaders ? window.provaAuthHeaders() : {}
+    });
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    var data = await resp.json();
+    var rows = (data && data.rows) || [];
+    var dist = window.ProvaAdminKiStats.aggregateModelDistribution(rows);
+    var costs = window.ProvaAdminKiStats.aggregateCostsPerUser(rows, 5);
+    var foto = window.ProvaAdminKiStats.aggregateFotoUsage(rows);
+    var diktat = window.ProvaAdminKiStats.aggregateDiktatStats(rows);
+    document.getElementById('kiModelDistribution').innerHTML = window.ProvaAdminKiStats.renderModelPie(dist);
+    document.getElementById('kiCostsPerUser').innerHTML = window.ProvaAdminKiStats.renderCostsTable(costs);
+    document.getElementById('kiFotoUsage').innerHTML = window.ProvaAdminKiStats.renderFotoUsage(foto);
+    document.getElementById('kiDiktatStats').innerHTML = window.ProvaAdminKiStats.renderDiktatStats(diktat);
+  } catch (e) {
+    var msg = '<div style="color:var(--text3);font-style:italic;padding:8px 0;">Lambda /admin-ki-aggregations nicht erreichbar (' + (e.message || 'unknown') + ')</div>';
+    ['kiModelDistribution','kiCostsPerUser','kiFotoUsage','kiDiktatStats'].forEach(function(id){
+      var el = document.getElementById(id);
+      if (el) el.innerHTML = msg;
+    });
+  }
+}
+
+// MEGA²³ Block 3: Settings-Tab Loader
+async function loadSettings() {
+  // SW-Version aus Service-Worker fetchen
+  try {
+    if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+      var resp = await fetch('/sw.js?probe=' + Date.now(), { cache: 'no-cache' });
+      if (resp.ok) {
+        var t = await resp.text();
+        var m = t.match(/CACHE_VERSION\s*=\s*['"]([^'"]+)['"]/);
+        if (m) document.getElementById('settingsSwVersion').textContent = m[1];
+      }
+    }
+  } catch (e) { console.warn('[settings] sw probe failed', e.message); }
+
+  // Browser-Info
+  document.getElementById('settingsBrowser').textContent = (navigator.userAgent || '').slice(0, 70);
+
+  // Last Deploy aus document.lastModified
+  document.getElementById('settingsLastDeploy').textContent =
+    document.lastModified ? new Date(document.lastModified).toLocaleString('de-DE') : 'unbekannt';
+
+  // ENV-Status via Lambda (best-effort, optional)
+  try {
+    var fetcher = window.provaFetch || window.fetch;
+    var resp = await fetcher('/.netlify/functions/admin-env-status', {
+      method: 'GET',
+      headers: window.provaAuthHeaders ? window.provaAuthHeaders() : {}
+    });
+    if (resp.ok) {
+      var data = await resp.json();
+      var html = '';
+      var keys = (data.keys || []);
+      keys.forEach(function(k) {
+        var ok = !!k.set;
+        html += '<div style="padding:4px 0;display:flex;justify-content:space-between;">'
+          + '<span style="color:var(--text2);">' + escapeHtml(k.name) + '</span>'
+          + '<span style="color:' + (ok ? 'var(--success)' : 'var(--danger)') + ';font-weight:600;">'
+          + (ok ? '✅ gesetzt' : '❌ fehlt') + '</span></div>';
+      });
+      var elList = document.getElementById('settingsEnvList');
+      if (elList) elList.innerHTML = html || '<div style="color:var(--text3);">Lambda nicht implementiert oder leer.</div>';
+
+      if (data.flags) {
+        if (data.flags.KI_VISION_PROVIDER) document.getElementById('flagKiVision').textContent = '✅ ' + data.flags.KI_VISION_PROVIDER;
+        if (data.flags.KI_TEXT_PROVIDER) document.getElementById('flagKiText').textContent = '✅ ' + data.flags.KI_TEXT_PROVIDER;
+        if (data.flags.KI_FALLBACK_MODEL) document.getElementById('flagKiFallback').textContent = '✅ ' + data.flags.KI_FALLBACK_MODEL;
+        if (typeof data.flags.IMPERSONATION_NOTIFY !== 'undefined')
+          document.getElementById('flagImpersonate').textContent = data.flags.IMPERSONATION_NOTIFY === 'on' ? '✅ aktiviert' : '⚠️ aus';
+      }
+    } else {
+      document.getElementById('settingsEnvList').innerHTML =
+        '<div style="color:var(--text3);font-style:italic;">Lambda /admin-env-status liefert ' + resp.status + ' — bitte implementieren oder Marcel-OK abwarten.</div>';
+    }
+  } catch (e) {
+    document.getElementById('settingsEnvList').innerHTML =
+      '<div style="color:var(--text3);font-style:italic;">Settings-Lambda nicht erreichbar (' + escapeHtml(e.message) + ').</div>';
+  }
+}
+
+function escapeHtml(s) {
+  if (s === null || s === undefined) return '';
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
 // MEGA²¹ W95: Pipeline-Tab Loader (existing admin-funnel + admin-pilot-list)
