@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v285';   // MEGA²⁴ Tag-Marathon: Block 6 User-Journey-Tests (93) + Block 7 Security-Audit + Block 8 Performance-Audit + Block 9 Master-Files-Sync + Block 10 Backlog-Cleanup-Docs (1763 grün, alle 13 Bloecke MEGA²³+²⁴ done)
+const CACHE_VERSION = 'prova-v286';   // MEGA²⁵+²⁶ Pre-Pilot-Polish: Marcel-Pre-Launch-Items + Auth-Coverage-Refinement + 27 Security-Audit-Tests + send-welcome-email Lambda (15 Tests) + Plausible-Snippet pricing.html+pilot.html (1820 gruen)
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
