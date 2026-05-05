@@ -207,8 +207,9 @@ function toggleKIBox() {
 // Ergänzungs-Diktat
 function starteErgaenzungsDiktat() {
   if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
-    // MEGA¹² W16: provaAlert-Helper (DRY)
-    (window.provaAlert || alert)('Spracherkennung wird von Ihrem Browser nicht unterstützt. Bitte verwenden Sie Chrome.', 'error');
+    // MEGA²³ Block 5: Toast-Migration W5 (ProvaUI primary, provaAlert fallback W16-compat)
+    if (window.ProvaUI && window.ProvaUI.toast) window.ProvaUI.toast('Spracherkennung wird von Ihrem Browser nicht unterstützt. Bitte verwenden Sie Chrome.', 'error');
+    else (window.provaAlert || alert)('Spracherkennung wird von Ihrem Browser nicht unterstützt. Bitte verwenden Sie Chrome.', 'error');
     return;
   }
 

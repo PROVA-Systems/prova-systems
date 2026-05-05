@@ -314,7 +314,9 @@ window.generateAndDownload = function() {
   if (errors.length > 0) {
     var msg = 'Folgende Pflichtfelder fehlen:\n\n' + errors.map(function(e) { return '• ' + e; }).join('\n');
     msg += '\n\nBitte ergänzen und erneut versuchen.';
-    alert(msg);
+    // MEGA²³ Block 5: Toast-Migration W5
+    if (window.ProvaUI && window.ProvaUI.toast) window.ProvaUI.toast('Pflichtfelder fehlen: ' + errors[0], 'error');
+    else alert(msg);
     return;
   }
 

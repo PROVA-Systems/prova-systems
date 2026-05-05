@@ -620,8 +620,9 @@ async function supSendModal(){
   }catch(e){
     btn.disabled=false;
     btn.textContent='Nachricht senden';
-    // MEGA¹² W16: provaAlert-Helper (DRY)
-    (window.provaAlert || alert)('Senden fehlgeschlagen. Bitte E-Mail an support@prova-systems.de', 'error');
+    // MEGA²³ Block 5: Toast-Migration W5 (ProvaUI primary, provaAlert fallback W16-compat)
+    if (window.ProvaUI && window.ProvaUI.toast) window.ProvaUI.toast('Senden fehlgeschlagen. Bitte E-Mail an support@prova-systems.de', 'error');
+    else (window.provaAlert || alert)('Senden fehlgeschlagen. Bitte E-Mail an support@prova-systems.de', 'error');
   }
 }
 /* ══════════════════════════════════════════════════════════════

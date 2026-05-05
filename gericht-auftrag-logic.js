@@ -147,8 +147,9 @@
 
       window.location.href = 'app.html?az=' + encodeURIComponent(az.trim());
     } catch(e) {
-      // MEGA¹² W16: provaAlert-Helper (DRY)
-      (window.provaAlert || alert)('Speichern fehlgeschlagen: ' + (e && e.message ? e.message : 'unbekannt'), 'error');
+      // MEGA²³ Block 5: Toast-Migration W5 (ProvaUI primary, provaAlert fallback W16-compat)
+      if (window.ProvaUI && window.ProvaUI.toast) window.ProvaUI.toast('Speichern fehlgeschlagen: ' + (e && e.message ? e.message : 'unbekannt'), 'error');
+      else (window.provaAlert || alert)('Speichern fehlgeschlagen: ' + (e && e.message ? e.message : 'unbekannt'), 'error');
     } finally {
       busy(false);
     }
