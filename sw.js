@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v288';   // MEGA²⁷.5 Patch: Stripe-Auto-Apply + 2 HTML-Email-Templates + Email-Renderer + Dashboard-Integration + Webhook-Robust-Lookup (referral-card mounted, referred_user_id auto-linking, +53 tests, 1984 gruen)
+const CACHE_VERSION = 'prova-v289';   // MEGA²⁷.6: HTML-Email-Aktivierung create-referral.js + IS_REFERRED-Block send-welcome-email.js + Migration 12 applied (+26 tests, 2010 gruen)
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [

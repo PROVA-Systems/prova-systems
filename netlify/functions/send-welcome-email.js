@@ -29,13 +29,15 @@ function json(event, statusCode, body) {
 
 /**
  * Build Welcome-Email-Body (DE).
- * @param {object} opts { firstname, persona, founding_member }
+ * @param {object} opts { firstname, persona, founding_member, referrer_name }
  * @returns {{subject:string, text:string, html:string}}
  */
 function buildWelcomeEmail(opts) {
   opts = opts || {};
   const fn = String(opts.firstname || '').trim() || 'Sachverständiger';
   const isFounding = !!opts.founding_member;
+  const referrerName = String(opts.referrer_name || '').trim();
+  const isReferred = referrerName.length > 0;
   const subject = isFounding
     ? '🎯 Willkommen als Founding-Member bei PROVA — Deine ersten 30 Min'
     : 'Willkommen bei PROVA — Deine ersten 30 Min';
@@ -89,19 +91,64 @@ function buildWelcomeEmail(opts) {
     'ö.b.u.v. Sachverständiger nach §36 GewO'
   ].join('\n');
 
-  const text = greeting + '\n\n' + intro + '\n' + steps;
+  // MEGA²⁷.6 Block 2: IS_REFERRED-Block (wenn User durch Empfehlung kam)
+  const referredTextBlock = isReferred
+    ? '\n🎉 EMPFOHLEN VON ' + referrerName.toUpperCase() + '\n'
+      + 'Du sparst 50 € in deinem 1. Monat dank ' + referrerName + '.\n'
+      + 'Dein Kollege bekommt 1 Monat gratis, sobald deine Sub 30 Tage aktiv ist.\n'
+    : '';
+
+  const referredHtmlBlock = isReferred
+    ? '<div style="background:linear-gradient(135deg,#1e3a8a 0%,#3b82f6 100%);color:#ffffff;padding:18px 22px;border-radius:10px;margin:12px 0 18px;">'
+      + '<div style="font-size:16px;font-weight:700;margin-bottom:6px;">🎉 Empfohlen von ' + escapeHtml(referrerName) + '!</div>'
+      + '<div style="font-size:13px;color:rgba(255,255,255,0.92);line-height:1.55;">Du sparst <strong>50 € in deinem 1. Monat</strong>. '
+      + escapeHtml(referrerName) + ' bekommt 1 Monat gratis, sobald deine Sub 30 Tage aktiv ist.</div>'
+      + '</div>'
+    : '';
+
+  const text = greeting + '\n\n' + referredTextBlock + intro + '\n' + steps;
 
   // Minimal-HTML-Variante (text-Hauptverwendung)
   const html = '<!DOCTYPE html><html lang="de"><body style="font-family:-apple-system,Segoe UI,Roboto,sans-serif;max-width:600px;margin:auto;padding:20px;color:#0f172a;line-height:1.6;">'
     + '<h2 style="color:#3b82f6;">' + escapeHtml(subject) + '</h2>'
     + '<p>' + escapeHtml(greeting) + '</p>'
+    + referredHtmlBlock
     + '<p>' + escapeHtml(intro) + '</p>'
     + '<pre style="background:#f8fafc;padding:14px;border-radius:8px;font-family:ui-monospace,monospace;font-size:13px;white-space:pre-wrap;">'
     + escapeHtml(steps) + '</pre>'
     + '<p style="font-size:11px;color:#64748b;margin-top:20px;">— PROVA Systems · §36 GewO</p>'
     + '</body></html>';
 
-  return { subject, text, html };
+  return { subject, text, html, is_referred: isReferred };
+}
+
+/**
+ * MEGA²⁷.6 Block 2: Lookup ob User durch Empfehlung kam.
+ * Returns referrer-name oder null.
+ */
+async function lookupReferrerForUser(sb, userId) {
+  if (!sb || !userId) return null;
+  try {
+    const { data: ref } = await sb.from('referrals')
+      .select('referrer_user_id, referrer_email')
+      .eq('referred_user_id', userId)
+      .in('status', ['active', 'hold', 'rewarded'])
+      .limit(1)
+      .maybeSingle();
+    if (!ref) return null;
+    // Lookup name via users-table (best-effort)
+    try {
+      const { data: u } = await sb.from('users')
+        .select('full_name')
+        .eq('id', ref.referrer_user_id)
+        .maybeSingle();
+      if (u && u.full_name) return u.full_name;
+    } catch (_) { /* graceful */ }
+    // Fallback: email als Name
+    return ref.referrer_email || null;
+  } catch (_) {
+    return null;
+  }
 }
 
 function escapeHtml(s) {
@@ -161,10 +208,21 @@ exports.handler = withSentry(async function (event) {
     return json(event, 400, { error: 'valid email required' });
   }
 
+  // MEGA²⁷.6 Block 2: Referrer-Lookup wenn user_id vorhanden
+  let referrerName = null;
+  if (body.user_id) {
+    try {
+      const sbMod = require('./lib/storage-router');
+      const sb = sbMod && sbMod.getSupabase ? sbMod.getSupabase() : null;
+      if (sb) referrerName = await lookupReferrerForUser(sb, body.user_id);
+    } catch (_) { /* graceful: kein Referrer-Block, normale Welcome */ }
+  }
+
   const email = buildWelcomeEmail({
     firstname: body.firstname,
     persona: body.persona,
-    founding_member: body.founding_member
+    founding_member: body.founding_member,
+    referrer_name: referrerName
   });
 
   try {
@@ -178,7 +236,7 @@ exports.handler = withSentry(async function (event) {
         subject: email.subject
       });
     }
-    return json(event, 200, { ok: true, subject: email.subject });
+    return json(event, 200, { ok: true, subject: email.subject, is_referred: !!email.is_referred });
   } catch (e) {
     return json(event, 500, { error: 'send failed', detail: e.message });
   }
@@ -187,6 +245,7 @@ exports.handler = withSentry(async function (event) {
 // Test-Exports
 exports._test = {
   buildWelcomeEmail,
+  lookupReferrerForUser,
   sendEmail,
   escapeHtml
 };

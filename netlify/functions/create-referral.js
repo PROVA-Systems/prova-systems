@@ -66,6 +66,27 @@ async function createStripePromo(code, expiresAtIso) {
   }
 }
 
+/**
+ * Format DE-Date "16.05.2026, 23:59 Uhr" für Email-Display.
+ */
+function _formatExpiresAt(isoString) {
+  if (!isoString) return '';
+  try {
+    const d = new Date(isoString);
+    if (isNaN(d.getTime())) return '';
+    const dd = String(d.getDate()).padStart(2, '0');
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const yyyy = d.getFullYear();
+    const hh = String(d.getHours()).padStart(2, '0');
+    const min = String(d.getMinutes()).padStart(2, '0');
+    return dd + '.' + mm + '.' + yyyy + ', ' + hh + ':' + min + ' Uhr';
+  } catch (_) { return ''; }
+}
+
+/**
+ * MEGA²⁷.6 Block 1: HTML + Plain-Text via email-renderer.
+ * Multipart/alternative — Lisa sieht PROVA-Branded HTML, alte Clients Plain-Text-Fallback.
+ */
 async function sendInviteEmail(opts) {
   if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
     return { ok: false, skipped: 'no_smtp_env' };
@@ -75,33 +96,46 @@ async function sendInviteEmail(opts) {
   catch (e) { return { ok: false, skipped: 'nodemailer_missing' }; }
 
   const subject = (opts.referrerName || 'Ein Kollege') + ' empfiehlt PROVA-Systems';
-  const lines = [
-    'Hallo,',
-    '',
-    (opts.referrerName || 'Ein Kollege') + ' (' + (opts.referrerEmail || '') + ') hat dir PROVA-Systems empfohlen –',
-    'das KI-System fuer oeffentlich bestellte Sachverstaendige.',
-    '',
-    'DEIN VORTEIL: 50€ Rabatt im 1. Monat (statt 179€ nur 129€)'
-  ];
-  if (opts.personalMessage) {
-    lines.push('', 'Persoenliche Nachricht:', '"' + opts.personalMessage + '"');
+
+  // Renderer-basiertes HTML + Plain-Text. Fallback: Plain-Text inline wenn Renderer fehlt.
+  let htmlBody = null;
+  let textBody = null;
+  try {
+    const Renderer = require('../../lib/email-renderer');
+    const baseUrl = process.env.REFERRAL_BASE_URL || 'https://prova-systems.de';
+    const vars = {
+      WERBER_NAME: opts.referrerName || 'Ein Kollege',
+      WERBER_EMAIL: opts.referrerEmail || '',
+      GEWORBENER_EMAIL: opts.referredEmail || '',
+      CODE: opts.code || '',
+      REDEMPTION_URL: baseUrl + '/r/' + (opts.code || ''),
+      EXPIRES_AT_FORMATTED: _formatExpiresAt(opts.expiresAt),
+      PERSONAL_MESSAGE: opts.personalMessage || '',
+      HAS_PERSONAL_MESSAGE: !!(opts.personalMessage && String(opts.personalMessage).trim())
+    };
+    const rendered = Renderer.renderTemplate('referral-invite', vars);
+    htmlBody = rendered.html;
+    textBody = rendered.text;
+  } catch (e) {
+    // Fallback: Plain-Text-only (bei Renderer/Template-Fehler)
+    console.warn('[create-referral] renderer fallback:', e.message);
+    const lines = [
+      'Hallo,',
+      '',
+      (opts.referrerName || 'Ein Kollege') + ' (' + (opts.referrerEmail || '') + ') hat dir PROVA-Systems empfohlen.',
+      '',
+      'DEIN VORTEIL: 50 EUR Rabatt im 1. Monat (statt 179 EUR nur 129 EUR)',
+      '',
+      'EINLOESEN:',
+      'Code: ' + opts.code,
+      'Link: ' + (process.env.REFERRAL_BASE_URL || 'https://prova-systems.de') + '/r/' + opts.code,
+      '',
+      'Code gueltig 7 Tage.',
+      '',
+      'PROVA-Systems'
+    ];
+    textBody = lines.join('\n');
   }
-  lines.push(
-    '',
-    'EINLOESEN:',
-    'Code: ' + opts.code,
-    'Link: ' + (process.env.REFERRAL_BASE_URL || 'https://prova-systems.de') + '/r/' + opts.code,
-    '',
-    'Code gueltig 7 Tage.',
-    '',
-    'Mit besten Gruessen,',
-    'PROVA-Systems',
-    '',
-    '---',
-    'Du bekommst diese Email, weil ' + (opts.referrerName || 'ein Kollege') + ' dich empfohlen hat.',
-    'Antworten gehen direkt an ' + (opts.referrerEmail || ''),
-    'Datenschutz: prova-systems.de/datenschutz'
-  );
 
   const transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST,
@@ -109,14 +143,16 @@ async function sendInviteEmail(opts) {
     secure: process.env.SMTP_PORT === '465',
     auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS }
   });
-  await transporter.sendMail({
+  const mailOptions = {
     from: process.env.SMTP_FROM_REFERRAL || 'PROVA Empfehlung <empfehlung@prova-systems.de>',
     to: opts.referredEmail,
     subject: subject,
-    text: lines.join('\n'),
+    text: textBody,
     replyTo: opts.referrerEmail || undefined
-  });
-  return { ok: true };
+  };
+  if (htmlBody) mailOptions.html = htmlBody;
+  await transporter.sendMail(mailOptions);
+  return { ok: true, html_sent: !!htmlBody };
 }
 
 exports.handler = withSentry(requireAuth(async function (event, context) {
@@ -265,7 +301,8 @@ exports.handler = withSentry(requireAuth(async function (event, context) {
     referrerName: referrerName,
     referrerEmail: userEmail,
     personalMessage: personalMessage,
-    code: code
+    code: code,
+    expiresAt: expiresAt
   }).then(r => {
     if (r.ok) {
       sb.from('referrals').update({ email_sent_at: new Date().toISOString(), email_delivery_status: 'sent' })
@@ -285,4 +322,4 @@ exports.handler = withSentry(requireAuth(async function (event, context) {
   });
 }), { functionName: 'create-referral' });
 
-exports._test = { createStripePromo, sendInviteEmail, FRIEND_COUPON_ID, RATE_LIMIT_PER_DAY };
+exports._test = { createStripePromo, sendInviteEmail, _formatExpiresAt, FRIEND_COUPON_ID, RATE_LIMIT_PER_DAY };
