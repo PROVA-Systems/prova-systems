@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width,initial-scale=1, viewport-fit=cover">
+<title>Schadensfälle · PROVA</title>
+<script src="prova-preise.js"></script>
+<script src="paket-guard.js"></script>
+<script src="prova-fetch-auth.js"></script>
+<script src="/lib/prova-config.js"></script>
+<script src="prova-notifications.js" defer></script>
+<script>
+(function(){
+  try {
+    var token = localStorage.getItem('prova_auth_token');
+    var email = localStorage.getItem('prova_sv_email') || '';
+    if (!token || !email || email.indexOf('@') === -1) {
+      window.location.replace('/login?next=' + encodeURIComponent(location.pathname + location.search));
+      return;
+    }
+  } catch (e) { window.location.replace('/login'); }
+})();
+</script>
+<script type="module">
+  import { runAuthGuard } from '/lib/auth-guard.js';
+  runAuthGuard().catch(e => console.error('[auth] guard failed', e));
+</script>
+<script src="theme.js"></script>
+<script src="prova-layout.config.js"></script>
+<script src="nav.js" defer></script>
+<link rel="stylesheet" href="mobile.css">
+<link rel="stylesheet" href="prova-design.css">
+<link rel="stylesheet" href="/lib/empty-states.css">
+<script src="/lib/empty-states.js" defer></script>
+<style>
+:root {
+  --bg:#0b0d11; --bg2:#111318; --bg3:#161a22;
+  --surface:#1c2130; --surface2:#232a3a;
+  --border:rgba(255,255,255,0.06); --border2:rgba(255,255,255,0.11);
+  --text:#eaecf4; --text2:#8b93ab; --text3:#4d5568;
+  --accent:#4f8ef7; --accent2:#3a7be0;
+  --success:#10b981; --warning:#f59e0b; --danger:#ef4444; --purple:#8b5cf6;
+  --r-sm:6px; --r-md:10px; --r-lg:14px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;line-height:1.55;}
+
+.sf-wrap { max-width: 1280px; margin: 0 auto; padding: 16px 20px 100px; }
+.sf-toolbar { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px; margin-bottom: 18px; }
+.sf-title { font-size: 22px; font-weight: 700; }
+.sf-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.btn { padding: 10px 16px; border-radius: var(--r-md); font-size: 13px; font-weight: 600; cursor: pointer; border: none; font-family: inherit; min-height: 40px; }
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-primary:hover { background: var(--accent2); }
+.btn-ghost { background: transparent; color: var(--text2); border: 1px solid var(--border); }
+.btn-ghost:hover { background: var(--surface); color: var(--text); }
+
+.sf-filters { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 10px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); padding: 14px; margin-bottom: 16px; }
+.sf-filter-group { display: flex; flex-direction: column; gap: 4px; }
+.sf-filter-label { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
+.sf-input, .sf-select {
+  background: var(--bg2); border: 1px solid var(--border);
+  color: var(--text); border-radius: var(--r-sm); padding: 9px 12px; font-size: 13px;
+  font-family: inherit; min-height: 40px;
+}
+.sf-input:focus, .sf-select:focus { outline: none; border-color: var(--accent); }
+
+.sf-table { width: 100%; border-collapse: separate; border-spacing: 0; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); overflow: hidden; }
+.sf-table thead th {
+  text-align: left; padding: 12px 14px; font-size: 11px; color: var(--text3);
+  text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700; background: var(--bg3);
+  border-bottom: 1px solid var(--border); cursor: pointer; user-select: none;
+}
+.sf-table thead th:hover { background: var(--surface2); color: var(--text); }
+.sf-table thead th.sorted::after { content: " ↓"; color: var(--accent); }
+.sf-table thead th.sorted-asc::after { content: " ↑"; color: var(--accent); }
+.sf-table tbody tr { border-bottom: 1px solid var(--border); cursor: pointer; transition: background .12s; }
+.sf-table tbody tr:hover { background: var(--bg3); }
+.sf-table td { padding: 12px 14px; font-size: 13px; color: var(--text2); }
+.sf-table td.az { font-family: ui-monospace, monospace; color: var(--text); font-weight: 600; }
+.sf-table td.title { color: var(--text); }
+
+.badge { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 99px; font-size: 11px; font-weight: 600; }
+.badge-phase { background: rgba(79,142,247,.12); color: #93c5fd; }
+.badge-status { background: rgba(255,255,255,.06); color: var(--text2); }
+.badge-status.aktiv { background: rgba(16,185,129,.12); color: #34d399; }
+.badge-status.abgeschlossen { background: rgba(139,92,246,.12); color: #a78bfa; }
+.badge-frist-warn { background: rgba(245,158,11,.12); color: #fbbf24; }
+.badge-frist-overdue { background: rgba(239,68,68,.12); color: #f87171; }
+
+.empty-state { padding: 56px 24px; text-align: center; color: var(--text3); }
+.empty-state .icon { font-size: 42px; margin-bottom: 12px; }
+.empty-state .title { font-size: 16px; color: var(--text); font-weight: 700; margin-bottom: 6px; }
+.empty-state .desc { font-size: 13px; max-width: 380px; margin: 0 auto 18px; }
+.empty-state .demo-hint { margin-top: 12px; font-size: 12px; }
+
+.loading { padding: 40px; text-align: center; color: var(--text3); font-size: 13px; }
+.error-box { padding: 16px; background: rgba(239,68,68,.08); border: 1px solid rgba(239,68,68,.2); color: #f87171; border-radius: var(--r-md); margin-bottom: 16px; }
+
+.sf-meta { font-size: 12px; color: var(--text3); margin-top: 10px; }
+
+@media (max-width: 768px) {
+  .sf-filters { grid-template-columns: 1fr; }
+  .sf-table thead { display: none; }
+  .sf-table tbody tr { display: block; padding: 12px; border-bottom: 1px solid var(--border); }
+  .sf-table tbody td { display: block; padding: 4px 0; border: none; }
+  .sf-table tbody td.az { font-size: 14px; }
+}
+</style>
+</head>
+<body data-page="schadensfaelle">
+<div class="app-shell" id="app-shell">
+  <nav class="sidebar" id="sidebar"></nav>
+  <div class="sb-overlay" id="sb-overlay" onclick="closeMobileSidebar()"></div>
+  <div class="main-wrap" id="main-wrap">
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="burger" onclick="openMobileSidebar()"><span></span><span></span><span></span></button>
+        <div class="breadcrumb"><span>PROVA</span><span style="color:var(--text3)">›</span><strong>Schadensfälle</strong></div>
+      </div>
+      <div class="topbar-right">
+        <button class="btn btn-primary" onclick="window.location.href='neuer-fall.html'">+ Neuer Fall</button>
+      </div>
+    </header>
+    <div class="page-content">
+      <div class="sf-wrap">
+        <div class="sf-toolbar">
+          <div class="sf-title">📋 Schadensfälle <span style="color:var(--text3);font-weight:400;font-size:14px;margin-left:8px;" id="sf-count"></span></div>
+          <div class="sf-actions">
+            <button class="btn btn-ghost" onclick="window.location.href='archiv.html'">📦 Archiv</button>
+          </div>
+        </div>
+
+        <div class="sf-filters">
+          <div class="sf-filter-group">
+            <label class="sf-filter-label">Suche</label>
+            <input type="text" id="sf-search" class="sf-input" placeholder="Aktenzeichen, Kurzbezeichnung…" oninput="window.SF.applyFilters()" />
+          </div>
+          <div class="sf-filter-group">
+            <label class="sf-filter-label">Auftragstyp</label>
+            <select id="sf-typ" class="sf-select" onchange="window.SF.applyFilters()">
+              <option value="">Alle</option>
+              <option value="schadensgutachten">Schadensgutachten</option>
+              <option value="beweissicherung">Beweissicherung</option>
+              <option value="ergaenzungsgutachten">Ergänzungsgutachten</option>
+              <option value="gegengutachten">Gegengutachten</option>
+              <option value="gerichtsgutachten">Gerichtsgutachten</option>
+              <option value="stellungnahme">Stellungnahme</option>
+              <option value="gutachterliche-stellungnahme">Gutachterliche Stellungnahme</option>
+            </select>
+          </div>
+          <div class="sf-filter-group">
+            <label class="sf-filter-label">Phase</label>
+            <select id="sf-phase" class="sf-select" onchange="window.SF.applyFilters()">
+              <option value="">Alle</option>
+              <option value="auftragsannahme">Auftragsannahme</option>
+              <option value="ortstermin">Ortstermin</option>
+              <option value="bearbeitung">Bearbeitung</option>
+              <option value="freigabe">Freigabe</option>
+              <option value="abgeschlossen">Abgeschlossen</option>
+            </select>
+          </div>
+          <div class="sf-filter-group">
+            <label class="sf-filter-label">Status</label>
+            <select id="sf-status" class="sf-select" onchange="window.SF.applyFilters()">
+              <option value="">Alle</option>
+              <option value="aktiv">Aktiv</option>
+              <option value="in_arbeit">In Arbeit</option>
+              <option value="wartend">Wartend</option>
+              <option value="abgeschlossen">Abgeschlossen</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="sf-content">
+          <div class="loading">Lade Schadensfälle…</div>
+        </div>
+        <div class="sf-meta" id="sf-meta"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="schadensfaelle-logic.js"></script>
+<script src="sw-register.js" defer></script>
+</body>
+</html>

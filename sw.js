@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v290';   // MEGA²⁷.7 Final Polish: netlify.toml Cron-Schedules (02:00+14:00 UTC) + Reward-Email in check-referral-rewards.js + send-referral-reminders.js NEU + 2 Reminder-Templates (+29 tests, 2039 gruen)
+const CACHE_VERSION = 'prova-v291';   // MEGA²⁸ P1-I1: schadensfaelle.html Übersicht-Liste Flow A + 22 Tests (2061 grün)
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
@@ -41,6 +41,8 @@ const APP_SHELL = [
   '/lib/beweisbeschluss-upload.js',     // MEGA²³ Block 1: Beweisbeschluss-PDF-Upload-Library
   '/lib/admin-ki-stats-frontend.js',    // MEGA²³ Block 4: KI-Stats Frontend-Charts
   '/lib/prova-disclaimer.js',           // MEGA²¹+²² W110: §407a-Disclaimer-Lib
+  '/schadensfaelle.html',               // MEGA²⁸ P1-I1: Übersicht-Liste Flow A
+  '/schadensfaelle-logic.js',
   '/lib/referral-system.js',            // MEGA²⁷: Referral-Foundation
   '/lib/referral-ui.js',                // MEGA²⁷: Dashboard-Karte + Modals
   '/lib/referral-redemption.js',        // MEGA²⁷: Pricing-Page Code-Detection

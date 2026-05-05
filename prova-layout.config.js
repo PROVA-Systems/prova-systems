@@ -30,6 +30,7 @@
       'vor-ort.html',
       'akte.html',
       'archiv.html',
+      'schadensfaelle.html',
       'termine.html',
       'rechnungen.html',
       'jveg.html',
