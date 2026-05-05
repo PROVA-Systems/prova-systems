@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v284';   // MEGA²³ Nacht-Marathon: Block 1 Beweisbeschluss-Upload + Block 2 Disclaimer-Wiring + Block 3 Settings-Tab + Block 4 KI-Stats-Frontend + Block 5 Toast-Migration-Fix + Block 11 Email-Notify-Impersonate (105 neue Tests, 1670 grün)
+const CACHE_VERSION = 'prova-v285';   // MEGA²⁴ Tag-Marathon: Block 6 User-Journey-Tests (93) + Block 7 Security-Audit + Block 8 Performance-Audit + Block 9 Master-Files-Sync + Block 10 Backlog-Cleanup-Docs (1763 grün, alle 13 Bloecke MEGA²³+²⁴ done)
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
