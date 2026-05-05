@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v287';   // MEGA²⁷ Referral-System: Migration 12 + lib/referral-system.js + lib/referral-ui.js + lib/referral-redemption.js + 4 Lambdas (create/redeem/cron-rewards/stripe-webhook) + 111 Referral-Tests (1931 gruen)
+const CACHE_VERSION = 'prova-v288';   // MEGA²⁷.5 Patch: Stripe-Auto-Apply + 2 HTML-Email-Templates + Email-Renderer + Dashboard-Integration + Webhook-Robust-Lookup (referral-card mounted, referred_user_id auto-linking, +53 tests, 1984 gruen)
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [

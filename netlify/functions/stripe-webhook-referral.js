@@ -62,25 +62,85 @@ async function findReferralByEmail(sb, email) {
   }
 }
 
-async function handleSubscriptionCreated(sb, sub, customer) {
-  if (!_hasFriendCoupon(sub)) return { skipped: 'no_friend_coupon' };
-  const email = (customer && customer.email) || (sub && sub.metadata && sub.metadata.email);
-  if (!email) return { skipped: 'no_email' };
+/**
+ * MEGA²⁷.5 Block 4: Find referrals-Eintrag via Code (aus Stripe-Metadata).
+ * Robusterer Lookup als email-only.
+ */
+async function findReferralByCode(sb, code) {
+  if (!code) return null;
+  try {
+    const { data } = await sb.from('referrals')
+      .select('id, status, referred_email, referrer_email, code')
+      .eq('code', String(code).toUpperCase())
+      .maybeSingle();
+    return data || null;
+  } catch (_) {
+    return null;
+  }
+}
 
-  const ref = await findReferralByEmail(sb, email);
-  if (!ref || ref.status !== 'pending') return { skipped: 'no_pending_referral' };
+/**
+ * MEGA²⁷.5 Block 4: Multi-Strategy-Lookup.
+ * Reihenfolge: metadata.code (zuverlaessig) → email-match (Fallback).
+ */
+async function findReferral(sb, sub, customer) {
+  // Primary: metadata.prova_referral_code (von stripe-checkout.js gesetzt)
+  const metaCode =
+    (sub && sub.metadata && sub.metadata.prova_referral_code) ||
+    (sub && sub.metadata && sub.metadata.referral_code) ||
+    null;
+  if (metaCode) {
+    const byCode = await findReferralByCode(sb, metaCode);
+    if (byCode) return byCode;
+  }
+  // Fallback: email-match
+  const email = (customer && customer.email) || (sub && sub.metadata && sub.metadata.email);
+  if (email) {
+    const byEmail = await findReferralByEmail(sb, email);
+    if (byEmail) return byEmail;
+  }
+  return null;
+}
+
+/**
+ * MEGA²⁷.5 Block 4: Lookup referred_user_id via Supabase (best-effort).
+ */
+async function findUserIdByEmail(sb, email) {
+  if (!email) return null;
+  try {
+    const { data } = await sb.from('users').select('id').eq('email', String(email).toLowerCase()).maybeSingle();
+    return data ? data.id : null;
+  } catch (_) {
+    return null;
+  }
+}
+
+async function handleSubscriptionCreated(sb, sub, customer) {
+  // Wenn Metadata-Code da ist, ueberschreibt das den Coupon-Check
+  // (ueberschreibt nicht, aber: Code-Linkung ist zuverlaessiger)
+  const metaCode = sub && sub.metadata && sub.metadata.prova_referral_code;
+  if (!metaCode && !_hasFriendCoupon(sub)) return { skipped: 'no_friend_coupon' };
+
+  const ref = await findReferral(sb, sub, customer);
+  if (!ref) return { skipped: 'no_referral_found' };
+  if (ref.status !== 'pending') return { skipped: 'referral_not_pending', current_status: ref.status };
+
+  const email = (customer && customer.email) || ref.referred_email;
+  const referredUserId = await findUserIdByEmail(sb, email);
 
   const now = new Date();
   const rewardEligibleAt = new Date(now.getTime() + HOLD_DAYS * 24 * 60 * 60 * 1000);
 
   try {
-    await sb.from('referrals').update({
+    const updatePayload = {
       status: 'active',
       signed_up_at: now.toISOString(),
       subscribed_at: now.toISOString(),
       reward_eligible_at: rewardEligibleAt.toISOString()
-    }).eq('id', ref.id);
-    return { ok: true, referral_id: ref.id, status: 'active' };
+    };
+    if (referredUserId) updatePayload.referred_user_id = referredUserId;
+    await sb.from('referrals').update(updatePayload).eq('id', ref.id);
+    return { ok: true, referral_id: ref.id, status: 'active', user_linked: !!referredUserId };
   } catch (e) {
     return { error: e.message };
   }
@@ -168,6 +228,7 @@ exports.handler = withSentry(async function (event) {
 }, { functionName: 'stripe-webhook-referral' });
 
 exports._test = {
-  _hasFriendCoupon, findReferralByEmail, handleSubscriptionCreated, handleSubscriptionDeleted,
+  _hasFriendCoupon, findReferralByEmail, findReferralByCode, findReferral, findUserIdByEmail,
+  handleSubscriptionCreated, handleSubscriptionDeleted,
   FRIEND_COUPON_ID, HOLD_DAYS
 };

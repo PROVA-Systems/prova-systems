@@ -21,6 +21,9 @@
 <script src="prova-fetch-auth.js"></script>
 <script src="/lib/prova-config.js"></script>
 <script src="/lib/sentry-init.js"></script>
+<!-- MEGA²⁷.5 Block 3: Referral-System UI-Libraries -->
+<script src="/lib/referral-system.js" defer></script>
+<script src="/lib/referral-ui.js" defer></script>
 <script src="prova-notifications.js" defer></script>
 <script>
 (function(){
@@ -891,6 +894,10 @@ window.addEventListener('error', function(ev) {
           </a>
         </div>
       </div>
+
+      <!-- MEGA²⁷.5 Block 3: Referral-Card-Mount -->
+      <div id="referral-card-mount" style="margin-top:12px;"></div>
+
     </div>
   </div>
 
@@ -1002,6 +1009,116 @@ window.addEventListener('error', function(ev) {
         FristGuard.init({ bannerId: 'fg-banner-container', svEmail: localStorage.getItem('prova_sv_email') || '' }).catch(function(){});
       }
     });
+  </script>
+  <!-- MEGA²⁷.5 Block 3: Referral-Card Auto-Mount + Modal-Wiring -->
+  <script>
+  (function initReferralCard() {
+    function mount() {
+      if (!window.ProvaReferralUI || !window.ProvaReferral) { setTimeout(mount, 200); return; }
+      var el = document.getElementById('referral-card-mount');
+      if (!el) return;
+      var paket = (localStorage.getItem('prova_paket') || '').toLowerCase();
+      var isFounding = paket.indexOf('founding') >= 0 || localStorage.getItem('prova_founding_member') === 'true';
+      var defaultStats = { total_pending: 0, total_active: 0, total_hold: 0, total_rewarded: 0 };
+
+      function rerender(stats) {
+        window.ProvaReferralUI.attach(el, {
+          stats: stats || defaultStats,
+          isFoundingMember: isFounding,
+          onOpenCreate: openCreateModal,
+          onOpenHistory: openHistoryModal
+        });
+      }
+
+      function openCreateModal() {
+        if (!isFounding) return;
+        window.ProvaReferral.getStats().then(function(s){
+          var modalHtml = window.ProvaReferralUI.buildCreateModalHtml({ stats: s || defaultStats });
+          var wrap = document.createElement('div');
+          wrap.innerHTML = modalHtml;
+          document.body.appendChild(wrap);
+          wireCreateModal(wrap, s || defaultStats);
+        }).catch(function(){
+          var modalHtml = window.ProvaReferralUI.buildCreateModalHtml({ stats: defaultStats });
+          var wrap = document.createElement('div');
+          wrap.innerHTML = modalHtml;
+          document.body.appendChild(wrap);
+          wireCreateModal(wrap, defaultStats);
+        });
+      }
+
+      function wireCreateModal(wrap, stats) {
+        var cancel = wrap.querySelector('.prova-referral-cancel');
+        var submit = wrap.querySelector('.prova-referral-submit');
+        var msg = wrap.querySelector('.prova-referral-message');
+        var charCount = wrap.querySelector('.prova-referral-charcount');
+        var status = wrap.querySelector('.prova-referral-status');
+        if (msg && charCount) {
+          msg.addEventListener('input', function(){ charCount.textContent = msg.value.length + ' / 500'; });
+        }
+        if (cancel) cancel.addEventListener('click', function(){ wrap.remove(); });
+        if (submit) submit.addEventListener('click', function(){
+          var emailEl = wrap.querySelector('.prova-referral-email');
+          var email = (emailEl ? emailEl.value : '').trim().toLowerCase();
+          var message = msg ? msg.value : '';
+          var emailCheck = window.ProvaReferral.validateEmail(email);
+          if (!emailCheck.ok) {
+            status.style.display = 'block';
+            status.style.color = '#ef4444';
+            status.textContent = '❌ ' + emailCheck.error;
+            return;
+          }
+          status.style.display = 'block';
+          status.style.color = '#3b82f6';
+          status.textContent = '⏳ Einladung wird versendet…';
+          submit.disabled = true;
+          window.ProvaReferral.create({ email: email, message: message }).then(function(r){
+            if (r && r.ok) {
+              status.style.color = '#10b981';
+              status.textContent = '✅ Einladung an ' + email + ' gesendet';
+              setTimeout(function(){ wrap.remove(); rerender(); }, 1800);
+            } else {
+              status.style.color = '#ef4444';
+              status.textContent = '❌ ' + (r && r.error ? r.error : 'Fehler beim Senden');
+              submit.disabled = false;
+            }
+          }).catch(function(e){
+            status.style.color = '#ef4444';
+            status.textContent = '❌ Netzwerk-Fehler: ' + e.message;
+            submit.disabled = false;
+          });
+        });
+      }
+
+      function openHistoryModal() {
+        Promise.all([
+          window.ProvaReferral.getHistory().catch(function(){ return { items: [] }; }),
+          window.ProvaReferral.getStats().catch(function(){ return defaultStats; })
+        ]).then(function(res) {
+          var historyData = res[0] || { items: [] };
+          var stats = res[1] || defaultStats;
+          var modalHtml = window.ProvaReferralUI.buildHistoryModalHtml({
+            items: historyData.items || [],
+            stats: stats
+          });
+          var wrap = document.createElement('div');
+          wrap.innerHTML = modalHtml;
+          document.body.appendChild(wrap);
+          var close = wrap.querySelector('.prova-referral-close');
+          if (close) close.addEventListener('click', function(){ wrap.remove(); });
+        });
+      }
+
+      // Initial render with defaults, then load real stats
+      rerender(defaultStats);
+      window.ProvaReferral.getStats().then(rerender).catch(function(){});
+    }
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', mount);
+    } else {
+      mount();
+    }
+  })();
   </script>
 </body>
 </html>
