@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v286';   // MEGA²⁵+²⁶ Pre-Pilot-Polish: Marcel-Pre-Launch-Items + Auth-Coverage-Refinement + 27 Security-Audit-Tests + send-welcome-email Lambda (15 Tests) + Plausible-Snippet pricing.html+pilot.html (1820 gruen)
+const CACHE_VERSION = 'prova-v287';   // MEGA²⁷ Referral-System: Migration 12 + lib/referral-system.js + lib/referral-ui.js + lib/referral-redemption.js + 4 Lambdas (create/redeem/cron-rewards/stripe-webhook) + 111 Referral-Tests (1931 gruen)
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
@@ -41,6 +41,9 @@ const APP_SHELL = [
   '/lib/beweisbeschluss-upload.js',     // MEGA²³ Block 1: Beweisbeschluss-PDF-Upload-Library
   '/lib/admin-ki-stats-frontend.js',    // MEGA²³ Block 4: KI-Stats Frontend-Charts
   '/lib/prova-disclaimer.js',           // MEGA²¹+²² W110: §407a-Disclaimer-Lib
+  '/lib/referral-system.js',            // MEGA²⁷: Referral-Foundation
+  '/lib/referral-ui.js',                // MEGA²⁷: Dashboard-Karte + Modals
+  '/lib/referral-redemption.js',        // MEGA²⁷: Pricing-Page Code-Detection
   '/lib/supabase-client.js',
   '/lib/data-store.js',
   '/lib/template-registry.js',
