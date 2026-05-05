@@ -35,21 +35,30 @@
 
 ## Action-Items für Marcel (Folge-Sprint)
 
-### CRITICAL (PIE-1)
-1. **`admin-cache-clear.js`** — `requireAdmin`-Wrapper ergänzen (1 Zeile Change)
-2. **`pdf-proxy.js`** — Auth verifizieren (verbraucht externe Credits)
-3. **`make-proxy.js`** — Webhook-Secret-Verify dokumentieren oder hinzufügen
+### Re-Audit-Update (MEGA²⁵ Phase 2)
 
-### MEDIUM (PIE-2)
-4. **`push-notify.js`** — JWT-Subscriber-Verify
-5. **`provision-sv.js`** — Self-handled-HMAC verifizieren
-6. **`termin-reminder.js`** — Netlify-Cron-Header oder eigene HMAC
+Nach genauer Code-Inspection: **Alle vermeintlich unwired Lambdas haben ihre eigene Auth-Pattern**:
 
-### LOW (PIE-3)
-7. **`normen.js` + `normen-picker.js`** — Public-OK akzeptieren oder Optional-JWT
+| File | Auth-Pattern | Status |
+|---|---|---|
+| `admin-cache-clear.js` | `PROVA_INTERNAL_WRITE_SECRET` Header | ✅ Self-Handled |
+| `pdf-proxy.js` | JWT-Pflicht + Eigentümer-Check + HMAC-Token (15min TTL) | ✅ Stark gesichert |
+| `make-proxy.js` | `ALLOWED_KEYS` Whitelist + Server-only Webhook-URLs | ✅ Sicher |
+| `push-notify.js` | `resolveUser` + Origin-Allowlist | ✅ Mit Auth |
+| `provision-sv.js` | Manuell prüfen | ⚠️ Audit pending |
+| `termin-reminder.js` | Cron-Trigger (Make.com S8) | ⚠️ Cron-Header oder HMAC? |
+| `normen.js`, `normen-picker.js` | Public Read-Only | ✅ Acceptable |
+| `health.js`, `pilot-seats.js`, `error-log.js`, `team-interest.js` | Public-by-Design | ✅ Acceptable |
+| `admin-auth.js` | Auth IS die Funktion | ✅ Self-Handled |
+| `smtp-credentials.js` | Internal-only (Lambda-zu-Lambda) | ✅ Acceptable |
 
-### CLEAN (KEINE Action nötig)
-- `health.js`, `pilot-seats.js`, `error-log.js`, `team-interest.js`, `admin-auth.js`, `smtp-credentials.js`
+### Aktualisierte Severity (post-Audit)
+
+**SEC-1 Severity:** LOW (war: MEDIUM)
+
+Nur 2 Files brauchen Verifikation (nicht Fix!):
+- `provision-sv.js` — Source-Code-Audit ob HMAC-Verify aktiv
+- `termin-reminder.js` — Cron-Trigger-Auth dokumentieren
 
 ---
 
