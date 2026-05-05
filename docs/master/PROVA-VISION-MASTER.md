@@ -32,8 +32,8 @@ Workflow: Auftrag → Ortstermin → Diktat → KI-Strukturhilfe → §6 Fachurt
 
 | Tier | Preis | Aufträge | Notiz |
 |---|---|---|---|
-| **Solo** | 149 €/Monat | 30 pro Monat | Standard für Einzel-SVs |
-| **Team** | 279 €/Monat | unbegrenzt | Mehrere User, gemeinsame Akten |
+| **Solo** | 179 €/Monat | 30 pro Monat | Standard für Einzel-SVs (seit 09.05.2026) |
+| **Team** | 379 €/Monat | unbegrenzt | Mehrere User, gemeinsame Akten (seit 09.05.2026) |
 | **Add-on 5F** | (im Account) | +5 zusätzlich | `price_1TJLnv8` (Stripe) |
 | **Add-on 10F** | (im Account) | +10 zusätzlich | `price_1TJLpG8` (Stripe) |
 | **Founding Member** | 99 €/Monat lifetime | wie Solo | Erste 10 Pilotkunden, Coupon `FOUNDING-99` |

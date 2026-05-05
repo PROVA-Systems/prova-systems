@@ -11,7 +11,7 @@
 ┌─────────────────────────────────────────────────────────────────┐
 │  prova-systems.de        →  LANDING (Marketing/Legal)           │
 │    /                        index.html · Marketing-Hero          │
-│    /pricing /preise         pricing.html (Solo 149€/Team 279€)   │
+│    /pricing /preise         pricing.html (Solo 179€/Team 379€)   │
 │    /kontakt /contact        kontakt.html (Mailto-Form)           │
 │    /datenschutz /impressum  Legal (cross-domain canonical)       │
 │    /agb /avv                Legal                                │
@@ -180,8 +180,9 @@ Stripe-Webhook → POST /.netlify/functions/stripe-webhook
 
 | PROVA-Plan | Stripe-Modus | ENV-Var-Name | Default Price-ID (neuer Account 03.05.) |
 |---|---|---|---|
-| Solo (149€/Mo) | subscription | STRIPE_PRICE_SOLO | `price_1TSjMZRXumrtL2n5fgToRwyr` |
-| Team (279€/Mo) | subscription | STRIPE_PRICE_TEAM | `price_1TSjNXRXumrtL2n56c6emN2k` |
+| Solo (179€/Mo) | subscription | STRIPE_PRICE_SOLO | `price_1TSjMZRXumrtL2n5fgToRwyr` |
+| Team (379€/Mo) | subscription | STRIPE_PRICE_TEAM | `price_1TSjNXRXumrtL2n56c6emN2k` |
+| Founding (99€/Mo lifetime, 10 Plätze) | coupon | FOUNDING-99 | siehe STRIPE_FOUNDING_COUPON_ID |
 | Add-on 5 Gutachten (25€) | payment (one-time) | STRIPE_PRICE_ADDON_5 | `price_1TSl2JRXumrtL2n52XSz85oC` |
 | Add-on 10 Gutachten (45€) | payment (one-time) | STRIPE_PRICE_ADDON_10 | `price_1TSl3fRXumrtL2n5Gur4BmWL` |
 | Add-on 20 Gutachten (80€) | payment (one-time) | STRIPE_PRICE_ADDON_20 | `price_1TSl4eRXumrtL2n5tIWx0ET8` |
