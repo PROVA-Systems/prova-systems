@@ -1,6 +1,6 @@
 # PROVA Pilot — FAQ (Top 20)
 
-**Stand:** 04.05.2026 (MEGA⁶ S4)
+**Stand:** 09.05.2026 (MEGA²⁵)
 **Zielgruppe:** Pilot-SVs in Founding-Phase
 
 ---
@@ -9,11 +9,11 @@
 
 ### 1. Wie lange dauert die Trial?
 
-Die **Founding-Pilot-Trial dauert 90 Tage** (Tag 1-90). Danach startet automatisch das Founding-99-Abo (99 €/Monat **lifetime**, nicht 149 €). Du kannst jederzeit kuendigen ueber den Customer-Portal-Link in deinen Account-Settings.
+Die **Founding-Pilot-Trial dauert 90 Tage** (Tag 1-90). Danach startet automatisch das Founding-Member-Abo (**125 €/Monat lifetime**, regulärer Solo-Preis 179 €). Du kannst jederzeit kündigen über den Customer-Portal-Link in deinen Account-Settings.
 
-### 2. Was passiert wenn ich vor Tag 90 kuendige?
+### 2. Was passiert wenn ich vor Tag 90 kündige?
 
-Du verlierst den Founding-Member-Status. Bei spaeterem Wiedereinstieg gilt der regulaere Solo-Preis (149 €/Monat).
+Du verlierst den Founding-Member-Status. Bei späterem Wiedereinstieg gilt der reguläre Solo-Preis (179 €/Monat).
 
 ### 3. Wo aendere ich mein Passwort?
 
@@ -41,11 +41,15 @@ Ja, ab MEGA-MEGA-MEGA O4. Im Account-Settings → Security → Multi-Factor → 
 
 ### 7. Wie funktioniert die KI-Strukturhilfe?
 
-KI hilft beim:
-- **Whisper:** Diktat → Text-Transkription
-- **GPT-4o:** Strukturieren, Konjunktiv-II-Pruefung, Halluzinations-Check, §407a-Compliance, Rechtschreibung
+KI hilft beim (Hybrid-Stack seit MEGA²²):
+- **Whisper-1** (OpenAI): Diktat → Text-Transkription
+- **Claude Sonnet 4.6** (Anthropic): Foto-Vision (Schaden-Erkennung)
+- **GPT-4o** (OpenAI): Konjunktiv-II-Prüfung, Halluzinations-Check, §407a-Compliance, Strukturierung
+- **GPT-4o-mini**: Rechtschreibung + Grammatik (S1-Stufe, mechanisch)
 
-KI macht **NIE eigenstaendige fachliche Bewertungen**. Das **§6 Fachurteil** verfasst du höchstpersönlich (§ 10 IHK-SVO + § 407a Abs. 1 ZPO).
+KI macht **NIE eigenständige fachliche Bewertungen**. Das **§6 Fachurteil** verfasst du höchstpersönlich (§ 10 IHK-SVO + § 407a Abs. 1 ZPO).
+
+**Disclaimer-Mandate:** Bei jeder KI-Funktion erscheint ein §407a-Hinweis (gemäß EU AI Act Art. 50).
 
 ### 8. Wie funktioniert die Eigenleistungs-Schwelle?
 
@@ -80,8 +84,9 @@ AVV-Template in `docs/compliance/legal-current/avv-template.md`. Bei Pilot-Onboa
 - **Email-Versand:** IONOS (DE) oder Resend (EU)
 - **Zahlungen:** Stripe (EU + USA mit SCC)
 - **PDF-Generierung:** PDFMonkey (USA mit SCC)
-- **KI:** OpenAI (USA mit SCC + Pseudonymisierung)
-- **Error-Tracking:** Sentry (DE)
+- **KI Vision:** Anthropic (USA mit SCC + Pseudonymisierung)
+- **KI Text + Audio:** OpenAI (USA mit SCC + Pseudonymisierung)
+- **Error-Tracking:** Sentry (EU/DE)
 
 Vollstaendige Liste: `docs/compliance/AVV-LISTE.md`.
 
@@ -145,4 +150,36 @@ Antworte auf eine der Onboarding-Mails (Tag 7, 14, 30) oder Email an `kontakt@pr
 
 ---
 
-*FAQ-Stand 04.05.2026 — quartalsweise update.*
+## Pricing-Tier-Übersicht (FINAL nach MEGA²¹)
+
+| Tier | Preis | Ziel | Status |
+|---|---|---|---|
+| **STARTER** | 89 €/mo | ≤ 5 Fälle/Monat (kleine SVs) | Coming Soon (Juni 2026) |
+| **SOLO** ⭐ | **179 €/mo** | 5–30 Fälle/Monat (Standard) | ✅ Pilot |
+| **TEAM** | 379 €/mo | Büros ≥ 3 Mitarbeiter | Coming Soon (Juli 2026) |
+| **Founding-Member** | **125 €/mo lifetime** | Erste 10 Pilot-SVs | ✅ Pilot (Coupon FOUNDING-30) |
+
+## KI-Funktions-Garantie (Marcel-Direktive)
+
+Jede KI-Funktion in PROVA besteht **5 Tests vor Produktiv-Live-Schaltung**:
+1. **Funktionalität** — 10 Happy-Path-Beispiele liefern sinnvolle Ergebnisse
+2. **Edge-Cases** — 5 Extreme (kurz, lang, ohne Satzzeichen, Fachbegriffe, Tippfehler)
+3. **Präzision** — bei 20 korrekten Texten max 10% Falsch-Positiv-Rate
+4. **Konsistenz** — gleicher Input 3× = im Kern gleiches Ergebnis
+5. **Zeitverhalten** — < 10s Antwort, sonst Progress-Indikator
+
+**Wenn ein Test rot ist, wird die Funktion im UI ausgeblendet bis grün.**
+
+## Beweisbeschluss-Pattern-Extraktion (NEU MEGA²²+²³)
+
+Auf der Gerichtsauftrag-Page kannst du einen Beweisbeschluss als PDF hochladen. Pattern-Matching (kein LLM in Tranche 1) extrahiert:
+- Aktenzeichen
+- Frist-Datum
+- Hauptfragen (nummeriert)
+- Parteien-Namen (Kläger / Beklagter)
+
+Du editierst die Erkennungs-Ergebnisse vor dem Speichern. **Disclaimer:** Pattern-Matching ist eine erste Strukturierungs-Hilfe. Du als bestellter SV bleibst nach §407a ZPO letztverantwortlich.
+
+---
+
+*FAQ-Stand 09.05.2026 (MEGA²⁵) — quartalsweise update.*
