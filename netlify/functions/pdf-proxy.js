@@ -33,6 +33,7 @@ const crypto  = require('crypto');
 const { getCorsHeaders, corsOptionsResponse } = require('./lib/cors-helper');
 const { resolveUser, logAuthFailure } = require('./lib/auth-resolve');
 const RateLimit = require('./lib/rate-limit-user');
+const ProvaPseudo = require('./lib/prova-pseudo'); // MEGA²⁸ W3-I7: PII-Pseudonymisierung in Logs
 
 // ── Konfiguration ──────────────────────────────────────────────────────
 const TOKEN_TTL_MS    = 15 * 60 * 1000;    // 15 Minuten
@@ -167,7 +168,7 @@ exports.handler = async function(event, context) {
     const pdfBuffer = Buffer.from(await pdfRes.arrayBuffer());
     const filename  = (payload.filename || 'dokument.pdf').replace(/[^a-zA-Z0-9._-]/g, '_');
 
-    console.log(`[pdf-proxy] PDF gestreamt: ${filename} (${pdfBuffer.length} bytes) für ${payload.email}`);
+    console.log(`[pdf-proxy] PDF gestreamt: ${filename} (${pdfBuffer.length} bytes) für ${ProvaPseudo.apply(payload.email)}`);
 
     return {
       statusCode: 200,
@@ -323,7 +324,7 @@ exports.handler = async function(event, context) {
 
     const token = createToken(tokenPayload, secret);
 
-    console.log(`[pdf-proxy] Token ausgestellt: ${safeFilename} für ${jwtEmail}, läuft ab ${new Date(expiresAt).toISOString()}`);
+    console.log(`[pdf-proxy] Token ausgestellt: ${safeFilename} für ${ProvaPseudo.apply(jwtEmail)}, läuft ab ${new Date(expiresAt).toISOString()}`);
 
     return jsonResponse(event, 200, {
       token,

@@ -16,6 +16,7 @@
 
 const { resolveUser, logAuthFailure } = require('./lib/auth-resolve');
 const { getCorsHeaders } = require('./lib/cors-helper');
+const ProvaPseudo = require('./lib/prova-pseudo'); // MEGA²⁸ W3-I7: PII-Pseudonymisierung in Logs
 
 // S6 Phase 1.9: per-request event-Capture (siehe ki-proxy.js Begruendung)
 let _currentEvent = null;
@@ -244,7 +245,7 @@ async function handleSubscribe(pat, email, subscription) {
       await atPost(pat, `/v0/${AT_BASE}/${AT_PUSH_TABLE}`, { records: [{ fields }] });
     }
 
-    console.log(`[Push] Subscription gespeichert: ${email}`);
+    console.log(`[Push] Subscription gespeichert: ${ProvaPseudo.apply(email)}`);
     return { statusCode: 200, headers: corsHeaders(), body: JSON.stringify({ success: true }) };
 
   } catch (e) {

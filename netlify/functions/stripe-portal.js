@@ -20,6 +20,7 @@ const Stripe = require('stripe');
 const { createClient } = require('@supabase/supabase-js');
 const { requireAuth } = require('./lib/jwt-middleware');
 const { getCorsHeaders } = require('./lib/cors-helper');
+const ProvaPseudo = require('./lib/prova-pseudo'); // MEGA²⁸ W3-I7: PII-Pseudonymisierung in Logs
 
 const STRIPE_API_VERSION = '2024-12-18.acacia';
 
@@ -114,7 +115,7 @@ exports.handler = requireAuth(async (event, context) => {
       return_url
     });
 
-    console.log('[stripe-portal] session erstellt fuer ' + email);
+    console.log('[stripe-portal] session erstellt fuer ' + ProvaPseudo.apply(email));
 
     return {
       statusCode: 200,
