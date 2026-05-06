@@ -1,7 +1,7 @@
 /**
- * PROVA — skizzen-save.js (MEGA³⁰ W10b-I5)
- * POST { id?, schadensfall_id, titel, svg_data, foto_ref?, massstab?, notiz? }
- * Upsert: id present → update, sonst insert.
+ * PROVA — skizzen-save.js (MEGA³² W12b-I2 Schema-Reconciled)
+ * POST { id?, auftrag_id, titel, svg_content, foto_referenz_id?, massstab?, notiz? }
+ * Schema (W12-I0 Audit): public.skizzen mit auftrag_id + svg_content + foto_referenz_id
  */
 'use strict';
 
@@ -11,14 +11,14 @@ const { getCorsHeaders } = require('./lib/cors-helper');
 const { getSupabase } = require('./lib/storage-router');
 const RateLimit = require('./lib/rate-limit-user');
 
-const SVG_MAX_BYTES = 200 * 1024; // 200 KB
+const SVG_MAX_BYTES = 200 * 1024;
 
 function validateSvg(s) {
-  if (typeof s !== 'string' || !s.trim()) return 'svg_data leer';
-  if (Buffer.byteLength(s, 'utf8') > SVG_MAX_BYTES) return 'svg_data > 200KB';
-  if (!/<svg[\s>]/i.test(s)) return 'svg_data kein <svg>-Tag';
-  if (/<script\b/i.test(s)) return 'svg_data: <script> nicht erlaubt';
-  if (/\son\w+\s*=/i.test(s)) return 'svg_data: on*-Handler nicht erlaubt';
+  if (typeof s !== 'string' || !s.trim()) return 'svg_content leer';
+  if (Buffer.byteLength(s, 'utf8') > SVG_MAX_BYTES) return 'svg_content > 200KB';
+  if (!/<svg[\s>]/i.test(s)) return 'svg_content kein <svg>-Tag';
+  if (/<script\b/i.test(s)) return 'svg_content: <script> nicht erlaubt';
+  if (/\son\w+\s*=/i.test(s)) return 'svg_content: on*-Handler nicht erlaubt';
   return null;
 }
 
@@ -33,10 +33,14 @@ exports.handler = withSentry(requireAuth(async function (event, context) {
   try { body = JSON.parse(event.body || '{}'); }
   catch (e) { return jsonResponse(event, 400, { error: 'Invalid JSON' }); }
 
-  if (!body.schadensfall_id) return jsonResponse(event, 400, { error: 'schadensfall_id pflicht' });
-  if (!body.titel || body.titel.length < 2) return jsonResponse(event, 400, { error: 'titel pflicht (min 2 chars)' });
+  // Backwards-Compat: alte Frontends senden schadensfall_id + svg_data
+  const auftrag_id = body.auftrag_id || body.schadensfall_id;
+  const svg_content = body.svg_content || body.svg_data;
 
-  const svgErr = validateSvg(body.svg_data);
+  if (!auftrag_id) return jsonResponse(event, 400, { error: 'auftrag_id pflicht' });
+  if (!body.titel || body.titel.length < 2) return jsonResponse(event, 400, { error: 'titel pflicht (min 2 Zeichen)' });
+
+  const svgErr = validateSvg(svg_content);
   if (svgErr) return jsonResponse(event, 400, { error: svgErr });
 
   const sb = getSupabase();
@@ -46,11 +50,11 @@ exports.handler = withSentry(requireAuth(async function (event, context) {
     if (body.id) {
       const patch = {
         titel: body.titel,
-        svg_data: body.svg_data,
-        foto_ref: body.foto_ref || null,
+        svg_content: svg_content,
+        foto_referenz_id: body.foto_referenz_id || null,
         massstab: body.massstab || null,
         notiz: body.notiz || null,
-        geaendert_am: new Date().toISOString()
+        updated_at: new Date().toISOString()
       };
       const { data, error } = await sb.from('skizzen').update(patch)
         .eq('id', body.id).is('deleted_at', null).select().maybeSingle();
@@ -59,21 +63,22 @@ exports.handler = withSentry(requireAuth(async function (event, context) {
       return jsonResponse(event, 200, { skizze: data, updated: true });
     }
 
-    // Workspace-Resolve aus auftraege
+    // Workspace-Resolve via auftraege
     const { data: fall, error: fErr } = await sb.from('auftraege')
-      .select('workspace_id').eq('id', body.schadensfall_id).maybeSingle();
+      .select('workspace_id').eq('id', auftrag_id).maybeSingle();
     if (fErr) return jsonResponse(event, 500, { error: fErr.message });
-    if (!fall) return jsonResponse(event, 404, { error: 'Schadensfall nicht gefunden' });
+    if (!fall) return jsonResponse(event, 404, { error: 'Auftrag nicht gefunden' });
 
     const insert = {
-      schadensfall_id: body.schadensfall_id,
+      auftrag_id: auftrag_id,
       workspace_id: fall.workspace_id,
       titel: body.titel,
-      svg_data: body.svg_data,
-      foto_ref: body.foto_ref || null,
+      svg_content: svg_content,
+      foto_referenz_id: body.foto_referenz_id || null,
       massstab: body.massstab || null,
       notiz: body.notiz || null,
-      erstellt_von: context.userId
+      pseudonymisiert: body.pseudonymisiert === true, // explizit setzbar
+      created_by_user_id: context.userId
     };
     const { data, error } = await sb.from('skizzen').insert(insert).select().single();
     if (error) return jsonResponse(event, 500, { error: error.message });

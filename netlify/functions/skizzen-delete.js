@@ -1,6 +1,7 @@
 /**
- * PROVA — skizzen-delete.js (MEGA³⁰ W10b-I5)
- * DELETE ?id=  — Soft-Delete
+ * PROVA — skizzen-delete.js (MEGA³² W12b-I2 Schema-verified)
+ * DELETE ?id= — Soft-Delete via deleted_at
+ * Schema (W12-I0): public.skizzen RLS via workspace_memberships → kein eigener Workspace-Check.
  */
 'use strict';
 

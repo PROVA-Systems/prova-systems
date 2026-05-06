@@ -63,7 +63,7 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
 
   <div class="sk-toolbar">
     <input type="text" class="sk-input" id="sk-titel" placeholder="Skizze-Titel (z.B. Erdgeschoss)" style="min-width:240px;">
-    <input type="text" class="sk-input" id="sk-schadensfall_id" placeholder="Schadensfall-UUID" style="min-width:280px;">
+    <input type="text" class="sk-input" id="sk-auftrag_id" placeholder="Auftrag-UUID" style="min-width:280px;">
     <select class="sk-input" id="sk-massstab">
       <option value="">Maßstab (optional)</option>
       <option>1:1</option><option>1:5</option><option>1:10</option><option>1:20</option>
@@ -186,12 +186,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
 async function saveSkizze() {
   const titel = document.getElementById('sk-titel').value.trim();
-  const schadensfall_id = document.getElementById('sk-schadensfall_id').value.trim();
+  const auftrag_id = document.getElementById('sk-auftrag_id').value.trim();
   const massstab = document.getElementById('sk-massstab').value;
-  if (!titel || !schadensfall_id) { alert('Titel + Schadensfall-ID pflicht.'); return; }
+  if (!titel || !auftrag_id) { alert('Titel + Auftrag-ID pflicht.'); return; }
   const svg = document.getElementById('sk-svg').outerHTML;
   if (svg.length < 100) { alert('Canvas leer — bitte zeichnen oder eine vorhandene Skizze laden.'); return; }
-  const body = { schadensfall_id, titel, svg_data: svg, massstab: massstab || null };
+  const body = { auftrag_id, titel, svg_content: svg, massstab: massstab || null };
   if (LOADED_ID) body.id = LOADED_ID;
   try {
     const res = await provaFetch('/.netlify/functions/skizzen-save', {
@@ -222,7 +222,7 @@ async function loadSkizzen() {
       </div>`).join('');
     data.skizzen.forEach(s => {
       const wrap = document.querySelector(`[data-svg-id="${s.id}"]`);
-      if (wrap && s.svg_data) wrap.innerHTML = s.svg_data;
+      if (wrap && s.svg_content) wrap.innerHTML = s.svg_content;
     });
     window.__SKIZZEN_CACHE = data.skizzen;
   } catch (e) {
@@ -234,10 +234,10 @@ function loadSkizze(id) {
   const s = (window.__SKIZZEN_CACHE || []).find(x => x.id === id);
   if (!s) return;
   document.getElementById('sk-titel').value = s.titel || '';
-  document.getElementById('sk-schadensfall_id').value = s.schadensfall_id || '';
+  document.getElementById('sk-auftrag_id').value = s.auftrag_id || '';
   document.getElementById('sk-massstab').value = s.massstab || '';
-  if (s.svg_data) {
-    const m = s.svg_data.match(/<svg[^>]*>([\s\S]*?)<\/svg>/i);
+  if (s.svg_content) {
+    const m = s.svg_content.match(/<svg[^>]*>([\s\S]*?)<\/svg>/i);
     document.getElementById('sk-svg').innerHTML = m ? m[1] : '';
   }
   LOADED_ID = id;

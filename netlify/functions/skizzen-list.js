@@ -1,6 +1,7 @@
 /**
- * PROVA — skizzen-list.js (MEGA³⁰ W10b-I5)
- * GET ?schadensfall_id=&with_svg=0|1
+ * PROVA — skizzen-list.js (MEGA³² W12b-I2 Schema-Reconciled)
+ * GET ?auftrag_id=&with_svg=0|1
+ * Schema (W12-I0 Audit): public.skizzen mit auftrag_id + svg_content + workspace_memberships RLS
  */
 'use strict';
 
@@ -21,13 +22,16 @@ exports.handler = withSentry(requireAuth(async function (event, context) {
   if (!sb) return jsonResponse(event, 503, { error: 'Supabase nicht konfiguriert' });
 
   const q = event.queryStringParameters || {};
+  // Backwards-Compat: alte Frontends senden noch schadensfall_id
+  const auftrag_id = q.auftrag_id || q.schadensfall_id || null;
+
   const cols = q.with_svg === '1'
-    ? '*'
-    : 'id,schadensfall_id,workspace_id,titel,foto_ref,massstab,notiz,erstellt_am,geaendert_am';
+    ? 'id, workspace_id, auftrag_id, titel, svg_content, foto_referenz_id, massstab, notiz, pseudonymisiert, created_at, updated_at'
+    : 'id, workspace_id, auftrag_id, titel, foto_referenz_id, massstab, notiz, pseudonymisiert, created_at, updated_at';
 
   try {
-    let query = sb.from('skizzen').select(cols).is('deleted_at', null).order('erstellt_am', { ascending: false });
-    if (q.schadensfall_id) query = query.eq('schadensfall_id', q.schadensfall_id);
+    let query = sb.from('skizzen').select(cols).is('deleted_at', null).order('created_at', { ascending: false });
+    if (auftrag_id) query = query.eq('auftrag_id', auftrag_id);
     const { data, error } = await query.limit(200);
     if (error) return jsonResponse(event, 500, { error: error.message });
     return jsonResponse(event, 200, { skizzen: data || [], total: (data || []).length });
