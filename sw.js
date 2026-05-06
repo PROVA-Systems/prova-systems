@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v294';   // MEGA²⁸ V3.2-W2 (in progress): archiv-filter Library + Status-Filter + Demo-Toggle + Reset-Button (KORR-10) + 22 Tests grün
+const CACHE_VERSION = 'prova-v294';   // MEGA²⁸ V3.2-W2 (in progress): archiv-filter (KORR-10) + global-search-engine (KORR-7) + 43 neue Tests grün
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
@@ -40,6 +40,7 @@ const APP_SHELL = [
   '/lib/prova-config.js',
   '/lib/beweisbeschluss-upload.js',     // MEGA²³ Block 1: Beweisbeschluss-PDF-Upload-Library
   '/lib/archiv-filter.js',              // MEGA²⁸ V3.2-W2 KORR-10: Archiv-Filter-Library
+  '/lib/global-search-engine.js',       // MEGA²⁸ V3.2-W2 KORR-7: Cmd+K Search-Engine (pure-fn)
   '/lib/admin-ki-stats-frontend.js',    // MEGA²³ Block 4: KI-Stats Frontend-Charts
   '/lib/prova-disclaimer.js',           // MEGA²¹+²² W110: §407a-Disclaimer-Lib
   '/schadensfaelle.html',               // MEGA²⁸ P1-I1: Übersicht-Liste Flow A
