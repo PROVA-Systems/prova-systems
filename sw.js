@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v294';   // MEGA²⁸ V3.2-W2 (in progress): archiv-filter (KORR-10) + global-search-engine (KORR-7) + 43 neue Tests grün
+const CACHE_VERSION = 'prova-v294';   // MEGA²⁸ V3.2-W2 (in progress): archiv-filter (KORR-10) + global-search-engine (KORR-7) + neuer-fall.html Wizard-Landing (KORR-8) + 57 neue Tests grün
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
@@ -45,6 +45,7 @@ const APP_SHELL = [
   '/lib/prova-disclaimer.js',           // MEGA²¹+²² W110: §407a-Disclaimer-Lib
   '/schadensfaelle.html',               // MEGA²⁸ P1-I1: Übersicht-Liste Flow A
   '/schadensfaelle-logic.js',
+  '/neuer-fall.html',                   // MEGA²⁸ V3.2-W2 KORR-8: Wizard-Landing-Page
   '/lib/referral-system.js',            // MEGA²⁷: Referral-Foundation
   '/lib/referral-ui.js',                // MEGA²⁷: Dashboard-Karte + Modals
   '/lib/referral-redemption.js',        // MEGA²⁷: Pricing-Page Code-Detection

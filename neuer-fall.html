@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1, viewport-fit=cover">
+<title>Neuer Fall · PROVA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800&display=swap" rel="stylesheet">
+<script src="prova-preise.js"></script>
+<script src="paket-guard.js"></script>
+<script src="prova-fetch-auth.js"></script>
+<script src="/lib/prova-config.js"></script>
+<script src="/lib/sentry-init.js"></script>
+<script>
+(function(){
+  try {
+    var token = localStorage.getItem('prova_auth_token');
+    var email = localStorage.getItem('prova_sv_email') || '';
+    if (!token || !email || email.indexOf('@') === -1) {
+      window.location.replace('/login?next=' + encodeURIComponent(location.pathname + location.search));
+      return;
+    }
+  } catch (e) { window.location.replace('/login'); }
+})();
+</script>
+<script type="module">
+  import { runAuthGuard } from '/lib/auth-guard.js';
+  runAuthGuard().catch(e => console.error('[auth] guard failed', e));
+</script>
+<script src="theme.js"></script>
+<script src="prova-layout.config.js"></script>
+<script src="nav.js" defer></script>
+<link rel="stylesheet" href="mobile.css">
+<link rel="stylesheet" href="prova-design.css">
+<style>
+:root {
+  --bg:#0b0d11; --bg2:#111318; --bg3:#161a22;
+  --surface:#1c2130; --surface2:#232a3a;
+  --border:rgba(255,255,255,0.06); --border2:rgba(255,255,255,0.11);
+  --text:#eaecf4; --text2:#8b93ab; --text3:#4d5568;
+  --accent:#4f8ef7; --accent2:#3a7be0;
+  --r-sm:6px; --r-md:10px; --r-lg:14px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;line-height:1.55;}
+.nf-wrap{max-width:760px;margin:0 auto;padding:48px 20px 100px;}
+.nf-stepper{display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:32px;flex-wrap:wrap;}
+.nf-step{display:flex;align-items:center;gap:8px;padding:6px 14px;border-radius:20px;background:var(--surface);border:1px solid var(--border2);font-size:12px;color:var(--text3);font-weight:600;}
+.nf-step.active{background:rgba(79,142,247,.12);border-color:var(--accent);color:var(--accent);}
+.nf-step .nf-num{width:20px;height:20px;border-radius:50%;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;}
+.nf-step.active .nf-num{background:var(--accent);color:#fff;}
+.nf-arrow{color:var(--text3);font-size:14px;}
+.nf-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:32px 28px;margin-bottom:18px;}
+.nf-h1{font-size:22px;font-weight:800;letter-spacing:-.025em;margin-bottom:6px;}
+.nf-sub{font-size:14px;color:var(--text2);margin-bottom:24px;}
+.nf-btn{display:inline-flex;align-items:center;gap:8px;padding:12px 22px;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:var(--r-md);color:#fff;font-weight:700;font-size:14px;cursor:pointer;font-family:inherit;text-decoration:none;}
+.nf-btn:hover{opacity:.9;transform:translateY(-1px);}
+.nf-btn-ghost{background:transparent;border:1px solid var(--border2);color:var(--text2);}
+.nf-btn-ghost:hover{background:rgba(255,255,255,.04);}
+.nf-actions{display:flex;gap:10px;flex-wrap:wrap;}
+.nf-info{font-size:12px;color:var(--text3);margin-top:18px;padding:12px 14px;background:var(--bg3);border-radius:var(--r-md);border-left:3px solid var(--accent);}
+.nf-loading{text-align:center;padding:24px;color:var(--text3);font-size:13px;}
+.nf-loading::before{content:'';display:inline-block;width:16px;height:16px;border:2px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;margin-right:10px;vertical-align:-3px;}
+@keyframes spin{to{transform:rotate(360deg);}}
+@media(max-width:600px){
+  .nf-wrap{padding:24px 14px 80px;}
+  .nf-card{padding:22px 18px;}
+  .nf-stepper{gap:4px;}
+  .nf-step{padding:4px 9px;font-size:11px;}
+}
+</style>
+</head>
+<body>
+<main class="nf-wrap" id="main-content">
+
+  <div class="nf-stepper" aria-label="Wizard-Stepper">
+    <div class="nf-step active" aria-current="step">
+      <span class="nf-num">1</span><span>Auftragstyp</span>
+    </div>
+    <span class="nf-arrow">›</span>
+    <div class="nf-step">
+      <span class="nf-num">2</span><span>Wo &amp; Was</span>
+    </div>
+    <span class="nf-arrow">›</span>
+    <div class="nf-step">
+      <span class="nf-num">3</span><span>Auftraggeber</span>
+    </div>
+    <span class="nf-arrow">›</span>
+    <div class="nf-step">
+      <span class="nf-num">4</span><span>Rahmen</span>
+    </div>
+  </div>
+
+  <div class="nf-card">
+    <h1 class="nf-h1">Neuen Fall anlegen</h1>
+    <p class="nf-sub">Wir führen dich in 4 Schritten durch die wichtigsten Daten. Du kannst jederzeit Pause machen — der Fall wird automatisch gespeichert.</p>
+
+    <div id="nf-status" class="nf-loading" role="status" aria-live="polite">Wizard wird geladen…</div>
+
+    <div id="nf-actions" class="nf-actions" style="display:none;">
+      <button class="nf-btn" type="button" id="nf-start-btn" onclick="startWizard()">+ Auftragstyp wählen</button>
+      <a class="nf-btn nf-btn-ghost" href="app.html">Klassisches Formular</a>
+      <a class="nf-btn nf-btn-ghost" href="archiv.html">Zurück zu Fällen</a>
+    </div>
+
+    <div class="nf-info">
+      <strong>Tipp:</strong> Der Wizard schreibt direkt in die Stamm-Daten. Pflichtfelder sind die Schadenadresse (Schritt 2) und der Auftraggeber-Name (Schritt 3) — alles andere ist optional und kann später ergänzt werden.
+    </div>
+  </div>
+
+</main>
+
+<script src="auftragstyp.js"></script>
+<script src="trial-guard.js"></script>
+<script src="prova-wizard.js"></script>
+<script src="global-search.js" defer></script>
+<script>
+(function(){
+  function showActions(){
+    var s = document.getElementById('nf-status');
+    var a = document.getElementById('nf-actions');
+    if (s) s.style.display = 'none';
+    if (a) a.style.display = 'flex';
+  }
+
+  window.startWizard = function(){
+    if (window.PROVA && typeof window.PROVA.openAuftragstyp === 'function') {
+      window.PROVA.openAuftragstyp();
+      return;
+    }
+    if (typeof window.PROVA_START_WIZARD === 'function') {
+      window.PROVA_START_WIZARD('privatgutachten');
+      return;
+    }
+    window.location.href = 'app.html';
+  };
+
+  // Auto-trigger Dialog wenn alles geladen ist (sanfter Fallback nach 1.5s)
+  function tryAutoTrigger(){
+    if (window.PROVA && typeof window.PROVA.openAuftragstyp === 'function') {
+      showActions();
+      // Direkt-Trigger nur wenn vom Sidebar-Click gekommen (kein Loop bei direkter URL)
+      if (sessionStorage.getItem('prova_neuer_fall_auto') === '1') {
+        sessionStorage.removeItem('prova_neuer_fall_auto');
+        setTimeout(window.startWizard, 200);
+      }
+      return true;
+    }
+    return false;
+  }
+
+  if (tryAutoTrigger()) return;
+  var attempts = 0;
+  var iv = setInterval(function(){
+    attempts++;
+    if (tryAutoTrigger() || attempts > 20) {
+      clearInterval(iv);
+      if (attempts > 20) showActions(); // Fallback: zeige Buttons trotzdem
+    }
+  }, 100);
+})();
+</script>
+<script src="sw-register.js" defer></script>
+</body>
+</html>
