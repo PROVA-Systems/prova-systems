@@ -47,6 +47,7 @@ const APP_SHELL = [
   '/schadensfaelle-logic.js',
   '/neuer-fall.html',                   // MEGA²⁸ V3.2-W2 KORR-8: Wizard-Landing-Page
   '/bescheinigungen.html',              // MEGA²⁸ V3.2-W3-I3 KORR-9: 11 Korrespondenz-Briefe Übersicht
+  '/admin-cockpit.html',                // MEGA²⁸ V3.2-W5-I9 KORR-23: 12-Sektionen-Übersicht (6 live, 6 skeleton)
   '/lib/referral-system.js',            // MEGA²⁷: Referral-Foundation
   '/lib/referral-ui.js',                // MEGA²⁷: Dashboard-Karte + Modals
   '/lib/referral-redemption.js',        // MEGA²⁷: Pricing-Page Code-Detection

@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1, viewport-fit=cover">
+<title>Admin-Cockpit · PROVA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="prova-fetch-auth.js"></script>
+<script src="/lib/prova-config.js"></script>
+<script src="/lib/sentry-init.js"></script>
+<script>
+(function(){
+  // Auth-Guard für admin-Subdomain. Routing-Verifikation: netlify.toml redirects
+  // admin.prova-systems.de auf /admin-cockpit.html (manueller Marcel-Step in Welle 6).
+  try {
+    var token = localStorage.getItem('prova_auth_token');
+    var email = localStorage.getItem('prova_sv_email') || '';
+    var isAdmin = localStorage.getItem('prova_is_admin') === 'true' ||
+                  email.toLowerCase() === 'admin@prova-systems.de' ||
+                  email.toLowerCase() === 'marcel.schreiber891@gmail.com';
+    if (!token || !email || !isAdmin) {
+      window.location.replace('/login?next=' + encodeURIComponent(location.pathname));
+      return;
+    }
+  } catch (e) { window.location.replace('/login'); }
+})();
+</script>
+<script type="module">
+  import { runAuthGuard } from '/lib/auth-guard.js';
+  runAuthGuard().catch(e => console.error('[auth] guard failed', e));
+</script>
+<script src="theme.js"></script>
+<style>
+:root {
+  --bg:#0b0d11; --bg2:#111318; --bg3:#161a22;
+  --surface:#1c2130; --surface2:#232a3a;
+  --border:rgba(255,255,255,0.06); --border2:rgba(255,255,255,0.11);
+  --text:#eaecf4; --text2:#8b93ab; --text3:#4d5568;
+  --accent:#4f8ef7; --accent2:#3a7be0;
+  --success:#10b981; --warning:#f59e0b; --danger:#ef4444;
+  --r-md:10px; --r-lg:14px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;line-height:1.55;}
+.cp-header{background:var(--bg2);border-bottom:1px solid var(--border);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;}
+.cp-title{font-size:18px;font-weight:800;letter-spacing:-.02em;}
+.cp-badge-admin{font-size:10px;font-weight:700;padding:3px 9px;border-radius:10px;letter-spacing:.04em;background:rgba(239,68,68,.12);color:var(--danger);border:1px solid rgba(239,68,68,.3);}
+.cp-wrap{max-width:1400px;margin:0 auto;padding:24px 20px 80px;}
+.cp-h1{font-size:22px;font-weight:800;letter-spacing:-.025em;margin-bottom:6px;}
+.cp-sub{font-size:14px;color:var(--text2);margin-bottom:24px;}
+.cp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px;}
+.cp-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:18px 20px;transition:all .15s;}
+.cp-card.skeleton{opacity:0.65;border-style:dashed;}
+.cp-card-head{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.cp-card-num{width:28px;height:28px;border-radius:8px;background:rgba(79,142,247,.12);color:var(--accent);font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center;}
+.cp-card-title{font-size:14px;font-weight:700;color:var(--text);}
+.cp-status{font-size:10px;font-weight:700;padding:2px 8px;border-radius:8px;margin-left:auto;}
+.cp-status.live{background:rgba(16,185,129,.12);color:var(--success);}
+.cp-status.skeleton{background:rgba(245,158,11,.12);color:var(--warning);}
+.cp-card-desc{font-size:12px;color:var(--text3);margin-bottom:12px;}
+.cp-data{font-size:11px;color:var(--text3);font-family:ui-monospace,Consolas,monospace;background:var(--bg3);padding:8px 10px;border-radius:6px;margin-bottom:10px;min-height:36px;display:flex;align-items:center;}
+.cp-actions{display:flex;gap:6px;flex-wrap:wrap;}
+.cp-btn{padding:6px 12px;border:1px solid var(--border2);background:transparent;color:var(--text2);border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;text-decoration:none;display:inline-block;}
+.cp-btn:hover{border-color:var(--accent);color:var(--accent);}
+.cp-btn.primary{background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;color:#fff;}
+.cp-info{margin-top:24px;padding:14px 16px;background:var(--bg3);border-left:3px solid var(--accent);border-radius:var(--r-md);font-size:13px;color:var(--text2);}
+@media(max-width:600px){.cp-wrap{padding:16px 14px 80px;}.cp-grid{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+
+<header class="cp-header">
+  <div class="cp-title">⚙️ PROVA Admin-Cockpit</div>
+  <span class="cp-badge-admin">SUPER-ADMIN</span>
+</header>
+
+<main class="cp-wrap" id="main-content">
+  <h1 class="cp-h1">12-Sektionen-Übersicht</h1>
+  <p class="cp-sub">Live-Stand der PROVA-Operationen. Klick → Edge Function-Detail-Page (Welle 6 Detail-UIs). 6/12 Sektionen voll funktional, 6/12 als Skeleton mit Daten-Source-Refs.</p>
+
+  <div class="cp-grid">
+
+    <!-- Section 1 — KPIs Live -->
+    <div class="cp-card">
+      <div class="cp-card-head">
+        <span class="cp-card-num">1</span>
+        <span class="cp-card-title">KPIs Live</span>
+        <span class="cp-status live">LIVE</span>
+      </div>
+      <p class="cp-card-desc">MRR, ARR, Active Users, Trial-Users, Founding-Coupons.</p>
+      <div class="cp-data" id="data-1">→ admin-stripe-kpis</div>
+      <div class="cp-actions">
+        <a class="cp-btn primary" href="/.netlify/functions/admin-stripe-kpis">Live abrufen</a>
+      </div>
+    </div>
+
+    <!-- Section 2 — User-Management -->
+    <div class="cp-card">
+      <div class="cp-card-head">
+        <span class="cp-card-num">2</span>
+        <span class="cp-card-title">User-Management</span>
+        <span class="cp-status live">LIVE</span>
+      </div>
+      <p class="cp-card-desc">Pilot-Liste, Status-Filter, Login-as-User-Impersonation.</p>
+      <div class="cp-data">→ admin-pilot-list + admin-impersonate</div>
+      <div class="cp-actions">
+        <a class="cp-btn primary" href="/.netlify/functions/admin-pilot-list">Pilot-Liste</a>
+        <a class="cp-btn" href="admin-dashboard.html">Klassische Ansicht</a>
+      </div>
+    </div>
+
+    <!-- Section 3 — Usage-Analytics -->
+    <div class="cp-card">
+      <div class="cp-card-head">
+        <span class="cp-card-num">3</span>
+        <span class="cp-card-title">Usage-Analytics</span>
+        <span class="cp-status live">LIVE</span>
+      </div>
+      <p class="cp-card-desc">Feature-Heatmap, Drop-off-Funnel, Aktivitätsmuster.</p>
+      <div class="cp-data">→ admin-feature-heatmap + admin-funnel</div>
+      <div class="cp-actions">
+        <a class="cp-btn primary" href="/.netlify/functions/admin-feature-heatmap">Heatmap</a>
+        <a class="cp-btn" href="/.netlify/functions/admin-funnel">Funnel</a>
+      </div>
+    </div>
+
+    <!-- Section 4 — System-Health -->
+    <div class="cp-card">
+      <div class="cp-card-head">
+        <span class="cp-card-num">4</span>
+        <span class="cp-card-title">System-Health</span>
+        <span class="cp-status live">LIVE</span>
+      </div>
+      <p class="cp-card-desc">Live-Sessions, Error-Stream, PDF-Queue, Sentry-Errors.</p>
+      <div class="cp-data">→ admin-system-health + admin-sentry-errors</div>
+      <div class="cp-actions">
+        <a class="cp-btn primary" href="/.netlify/functions/admin-system-health">System</a>
+        <a class="cp-btn" href="/.netlify/functions/admin-sentry-errors">Errors</a>
+        <a class="cp-btn" href="/.netlify/functions/admin-live-sessions">Sessions</a>
+        <a class="cp-btn" href="/.netlify/functions/admin-pdf-queue">PDF-Queue</a>
+      </div>
+    </div>
+
+    <!-- Section 5 — Audit-Trail -->
+    <div class="cp-card">
+      <div class="cp-card-head">
+        <span class="cp-card-num">5</span>
+        <span class="cp-card-title">Audit-Trail</span>
+        <span class="cp-status live">LIVE</span>
+      </div>
+      <p class="cp-card-desc">Compliance-Events, Admin-Aktionen, Login-Trail.</p>
+      <div class="cp-data">→ admin-audit-trail</div>
+      <div class="cp-actions">
+        <a class="cp-btn primary" href="/.netlify/functions/admin-audit-trail">Trail anzeigen</a>
+      </div>
+    </div>
+
+    <!-- Section 6 — KI-Token-Cost pro User -->
+    <div class="cp-card">
+      <div class="cp-card-head">
+        <span class="cp-card-num">6</span>
+        <span class="cp-card-title">KI-Token-Cost</span>
+        <span class="cp-status live">LIVE</span>
+      </div>
+      <p class="cp-card-desc">Cost pro User aus ki_protokoll. GPT-5.5/5.4/5.4-mini + Claude.</p>
+      <div class="cp-data">→ admin-ki-costs (W3-I0-aware)</div>
+      <div class="cp-actions">
+        <a class="cp-btn primary" href="/.netlify/functions/admin-ki-costs">Cost-Aggregation</a>
+      </div>
+    </div>
+
+    <!-- Section 7 — Support-Inbox (Skeleton) -->
+    <div class="cp-card skeleton">
+      <div class="cp-card-head">
+        <span class="cp-card-num">7</span>
+        <span class="cp-card-title">Support-Inbox</span>
+        <span class="cp-status skeleton">SKELETON</span>
+      </div>
+      <p class="cp-card-desc">IONOS-Email-Tickets aggregiert.</p>
+      <div class="cp-data">→ TBD (Welle 6 — Lambda admin-support-inbox)</div>
+      <div class="cp-actions"><span class="cp-btn">Welle 6</span></div>
+    </div>
+
+    <!-- Section 8 — Push-Alerts-Stream (Skeleton) -->
+    <div class="cp-card skeleton">
+      <div class="cp-card-head">
+        <span class="cp-card-num">8</span>
+        <span class="cp-card-title">Push-Alerts-Stream</span>
+        <span class="cp-status skeleton">SKELETON</span>
+      </div>
+      <p class="cp-card-desc">Real-time Stream aus admin-push-alerts.</p>
+      <div class="cp-data">→ admin-push-alerts (Lambda existiert, UI Skeleton)</div>
+      <div class="cp-actions">
+        <a class="cp-btn" href="/.netlify/functions/admin-push-alerts">Lambda-Output</a>
+      </div>
+    </div>
+
+    <!-- Section 9 — Gutachten-Timing (Skeleton) -->
+    <div class="cp-card skeleton">
+      <div class="cp-card-head">
+        <span class="cp-card-num">9</span>
+        <span class="cp-card-title">Gutachten-Timing</span>
+        <span class="cp-status skeleton">SKELETON</span>
+      </div>
+      <p class="cp-card-desc">Median, P95 pro User. Gutachten-Erstellungs-Geschwindigkeit.</p>
+      <div class="cp-data">→ admin-time-tracking (Lambda existiert)</div>
+      <div class="cp-actions">
+        <a class="cp-btn" href="/.netlify/functions/admin-time-tracking">Lambda-Output</a>
+      </div>
+    </div>
+
+    <!-- Section 10 — Trial→Paid Conversion (Skeleton) -->
+    <div class="cp-card skeleton">
+      <div class="cp-card-head">
+        <span class="cp-card-num">10</span>
+        <span class="cp-card-title">Trial→Paid Conversion</span>
+        <span class="cp-status skeleton">SKELETON</span>
+      </div>
+      <p class="cp-card-desc">Funnel + Cohort. Conversion-Rate seit Pilot-Launch.</p>
+      <div class="cp-data">→ admin-funnel + admin-stripe-kpis (UI fehlt)</div>
+      <div class="cp-actions"><span class="cp-btn">Welle 6 UI</span></div>
+    </div>
+
+    <!-- Section 11 — Churn-Reasons (Skeleton) -->
+    <div class="cp-card skeleton">
+      <div class="cp-card-head">
+        <span class="cp-card-num">11</span>
+        <span class="cp-card-title">Churn-Reasons</span>
+        <span class="cp-status skeleton">SKELETON</span>
+      </div>
+      <p class="cp-card-desc">Exit-Survey-Aggregation. Wer kündigt, warum?</p>
+      <div class="cp-data">→ admin-churn (Lambda existiert)</div>
+      <div class="cp-actions">
+        <a class="cp-btn" href="/.netlify/functions/admin-churn">Lambda-Output</a>
+      </div>
+    </div>
+
+    <!-- Section 12 — Billing-Sync (Skeleton) -->
+    <div class="cp-card skeleton">
+      <div class="cp-card-head">
+        <span class="cp-card-num">12</span>
+        <span class="cp-card-title">Billing-Sync</span>
+        <span class="cp-status skeleton">SKELETON</span>
+      </div>
+      <p class="cp-card-desc">Stripe-Status, Invoice-History, Disputes.</p>
+      <div class="cp-data">→ Stripe API direkt (UI fehlt)</div>
+      <div class="cp-actions"><span class="cp-btn">Welle 6 Stripe-Sync</span></div>
+    </div>
+
+  </div>
+
+  <div class="cp-info">
+    <strong>Skeleton-Sektionen (7-12):</strong> Lambdas existieren bereits. Detail-UIs in Welle 6 (oder existing admin-dashboard.html-Tabs nutzen). Routing über admin.prova-systems.de erfordert netlify.toml-Eintrag (Marcel-Action).
+    <br><br>
+    <strong>2FA-Foundation:</strong> wird in Welle 6 nach admin-auth-guard-Refactor wieder live geschaltet. Aktuell nur Email-Whitelist + JWT.
+  </div>
+
+</main>
+
+<script src="sw-register.js" defer></script>
+</body>
+</html>
