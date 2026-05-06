@@ -1,9 +1,52 @@
-# MEGA²⁹ V3.2 Welle 9 — FINAL REPORT (Markt-Reife-Foundation)
+# MEGA²⁹ V3.2 Welle 9 — FINAL REPORT (Markt-Reife-Foundation + Continuous-Run-Nachreichungen)
 
-**Datum:** 2026-05-10 nachmittags
+**Datum:** 2026-05-10 spätnachmittags
 **Branch:** `welle-9-market-ready`
-**Welle 9 Items:** 5/8 in dieser Session abgeliefert + 3 Self-Scoping-deferred zu W10
-**Status:** Markt-Reife-Foundation done — Welle 10 hat klaren Plan
+**Welle 9 Items:** 9/9 = **100%** (5 Original + 4 Continuous-Run-Nachreichungen)
+**Status:** Markt-Reife-Foundation komplett — Welle 10 hat klaren Plan
+
+## 🏁 WELLE 9 (NACHGEREICHT) — FINAL
+
+### Done (✅ alle 9)
+- W9-I0: Komplett-Audit (88% Markt-Reife, 3 BLOCKER) — commit 3ee9059
+- W9-I1: AUTH-PERFEKT 2.0 Foundation (29 Tests) — commit 4c2e8d6
+- W9-I2: Pricing-Drift-Fix (179€/379€/99€) — commit 3538e37
+- W9-I6: Stripe-Webhook-Renewal-Doku — commit ba0b32e
+- W9-I7: Final + sw.js v400 — commit 65cc3ba
+- W9N-I0b: KI-Funktions-Garantie-Audit + Stripe-MCP-TBD — commit 67f02dd
+- W9N-I4: Cmd-K Globale Suche (Lambda + Frontend Hybrid, 14 Tests) — commit a60d57f
+- W9N-I5: Cookie-Banner DSGVO + iCal-Export (13 Quellen, 20 Tests) — commit 89b0995
+- W9N-I3: Sprint 06b Schema + Live-Save Status — commit 8bb6959
+
+### Welle-9-Gesamt-Coverage
+- Original-Items: 5/5 ✅
+- Continuous-Run-Nachreichungen: 4/4 ✅
+- **Total: 9/9 = 100%**
+
+### Bug-Findings (🐛)
+- KI-Garantie-Test war auf gpt-4o-Pattern (W4-I0-veraltet) — Quick-Fix in W9N-I0b
+- 3 iCal-Tests hatten falsche Regex-Pattern — Quick-Fix während W9N-I5
+
+### Marcel-Manual-Steps (🟡)
+- AUTH-Schema-Migration apply: `supabase/migrations/2026_05_10_w9_2fa_foundation.sql`
+- Sprint 06b Schema-Migration apply: `supabase/migrations/2026_05_10_w9_06b_auftraege_extend.sql`
+- `PROVA_TOTP_ENCRYPTION_KEY` in Netlify ENV (32 Bytes hex)
+- Stripe-Production-Setup-Verify (6-Punkt-Checkliste in Audit-Doku)
+- Browser-Test Cmd-K-Modal + iCal-Subscribe-Link
+
+### Welle-10-Empfehlung (Welle-9-Audit-driven)
+
+**🔴 Markt-Blocker (~30-35h):**
+1. Einträge-System (Sprint 06 B1, 6-7h)
+2. Skizzen-Funktion (Sprint 07 B2, 5-6h)
+3. Fristen-System (Sprint 11 B6, 9-11h)
+4. Sprint K Tranche-1: F-04, F-16, F-17, F-18 Liquid (~7h)
+5. Backup + Status-Page (Operations, 2-3h)
+
+**🟡 Aus W9N-Audit:**
+- Cookie-Banner Welle-10-Polish (13-Monate-Re-Show + Footer-Link)
+- iCal Subscribe-Token-Pattern (HMAC-signiert für External-Calendar-Apps)
+- Stripe-Production-Setup-Verify mit MCP
 
 ---
 

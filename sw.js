@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v400';   // MEGA²⁹ V3.2-W9 Markt-Reife-Foundation: Komplett-Audit (88% Markt-Reife, 3 BLOCKER für W10) + AUTH-PERFEKT 2.0 Foundation (TOTP-Helper + 3 Stub-Endpoints + Schema-Migration + 29 Tests) + Pricing-Drift-Fix (149€→179€) + Stripe-Webhook-Renewal-Doku
+const CACHE_VERSION = 'prova-v401';   // MEGA²⁹ V3.2-W9N Continuous-Run: Cmd-K Globale Suche (Lambda+Frontend Hybrid, 14 Tests) + Cookie-DSGVO-Audit (13 Quellen) + iCal RFC 5545 Lambda (20 Tests) + Sprint 06b Schema-File + KI-Funktions-Garantie 19/19 grün + Stripe-MCP-TBD
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
