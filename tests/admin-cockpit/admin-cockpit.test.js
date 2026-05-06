@@ -76,3 +76,37 @@ test('admin-cockpit.html: title + lang Attribut', () => {
   assert.match(html, /<title>[^<]*Admin-Cockpit/);
   assert.match(html, /<html\s+lang="de"/);
 });
+
+test('W6-I4: loadKPIs() Live-Fetch-Function für Sektion 1', () => {
+  assert.match(html, /async function loadKPIs/);
+  assert.match(html, /admin-stripe-kpis/);
+  assert.match(html, /MRR/);
+  assert.match(html, /Trial/);
+  assert.match(html, /Founding/);
+});
+
+test('W6-I4: loadKICosts() Live-Fetch-Function für Sektion 6', () => {
+  assert.match(html, /async function loadKICosts/);
+  assert.match(html, /admin-ki-costs/);
+  assert.match(html, /total_eur/);
+  assert.match(html, /total_calls/);
+});
+
+test('W6-I4: Auto-Load bei DOMContentLoaded', () => {
+  assert.match(html, /DOMContentLoaded/);
+  assert.match(html, /loadKPIs\(\)/);
+  assert.match(html, /loadKICosts\(\)/);
+});
+
+test('W6-I4: escHtml + fmtEUR + fmtCount Helpers', () => {
+  assert.match(html, /function escHtml/);
+  assert.match(html, /function fmtEUR/);
+  assert.match(html, /function fmtCount/);
+  assert.match(html, /Intl\.NumberFormat\(['"]de-DE['"]/);
+});
+
+test('W6-I4: Aktualisieren-Button + Raw JSON-Link pro Live-Sektion', () => {
+  assert.match(html, /onclick="loadKPIs\(\)"/);
+  assert.match(html, /onclick="loadKICosts\(\)"/);
+  assert.match(html, /Raw JSON/);
+});
