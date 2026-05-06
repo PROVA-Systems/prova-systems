@@ -253,3 +253,94 @@
 
 ---
 
+## Bereich 11 — AUTH-COCKPIT (admin.prova-systems.de)
+
+**Status:** 🟡 TEILWEISE
+**Komplettheit:** **~75%**
+
+**Belege:**
+- ✅ Subdomain dokumentiert: `netlify.toml:7` `admin.prova-systems.de → ADMIN (Founder-Cockpit, separat)`
+- ✅ Pages: `admin-cockpit.html`, `admin-dashboard.html`, `admin-login.html`
+- ✅ **22 Admin-Lambdas** in `netlify/functions/`:
+  - `admin-audit-trail.js`, `admin-auth.js`, `admin-billing-sync.js`, `admin-cache-clear.js`, `admin-churn.js`
+  - `admin-conversion-funnel.js` (W11-I6), `admin-feature-heatmap.js`, `admin-force-logout.js`, `admin-funnel.js`
+  - `admin-impersonate.js`, `admin-ki-costs.js`, `admin-live-sessions.js`, `admin-mrr-live.js` (W11-I6)
+  - `admin-pdf-queue.js`, `admin-pilot-list.js`, `admin-push-alerts.js`, `admin-send-email.js`
+  - `admin-sentry-errors.js`, `admin-stripe-kpis.js`, `admin-support-inbox.js`, weitere
+- ✅ Auth-Guard: `lib/admin-auth-guard.js` mit hardcoded-Whitelist + ENV-Override (M33-I3)
+- ✅ Login-as-User: `admin-impersonate.js` + `impersonation_log` Tabelle aktiv
+
+**Soll-vs-Ist Mapping (17 Soll-Widgets):**
+| # | Widget | Status |
+|---|---|---|
+| 1 | KPIs Dashboard | ✅ admin-stripe-kpis |
+| 2 | User-Mgmt + Login-as-User | ✅ admin-impersonate |
+| 3 | Usage-Analytics | 🟡 admin-feature-heatmap |
+| 4 | System-Health | ✅ system_health Tabelle + status-check Lambda |
+| 5 | Support-Inbox | ✅ admin-support-inbox |
+| 6 | Billing-Sync | ✅ admin-billing-sync |
+| 7 | Audit-Trail-Viewer | ✅ admin-audit-trail |
+| 8 | Push-Alerts | ✅ admin-push-alerts |
+| 9 | Live-Sessions | ✅ admin-live-sessions |
+| 10 | Gutachten-Timing per User | 🟡 AUDIT-UNKLAR (admin-time-tracking gegrept aber Status pending) |
+| 11 | Feature-Heatmap | ✅ admin-feature-heatmap |
+| 12 | Drop-off-Funnel | ✅ admin-conversion-funnel + admin-funnel |
+| 13 | Trial-Paid-Conversion | ✅ admin-conversion-funnel |
+| 14 | MRR live | ✅ admin-mrr-live |
+| 15 | Churn-Reasons | ✅ admin-churn + churn_reasons Tabelle |
+| 16 | KI-Token-Cost per User | ✅ admin-ki-costs |
+| 17 | PDF-Queue | ✅ admin-pdf-queue |
+
+**Lücken:**
+- 🟡 2FA-Pflicht für Super-Admin: Foundation existiert (W12b-I4), aber **Force-Admin-2FA-Logic** in admin-login.html AUDIT-UNKLAR
+- 🟡 Marcel-Super-Admin-Check in admin-auth.js: `requireAdmin` mit hardcoded Whitelist da ✅
+- 🟡 Subdomain admin.prova-systems.de DNS-Live-Status: AUDIT-UNKLAR (Marcel-Manual-Verify)
+
+**Acceptance:** **17 Widgets fast vollständig erfüllt** (15 ✅ + 2 🟡), Production-Ready bei DNS-Verify.
+
+---
+
+## Bereich 12 — APP-LANDING-SPLIT
+
+**Status:** 🟡 TEILWEISE — Marcel-Direktive 07.05. "NICHT FERTIG" bestätigt
+**Komplettheit:** **~60%**
+
+**Belege FÜR:**
+- ✅ `netlify.toml v6.0` (Zeile 1+) explizit "APP-LANDING-SPLIT Phase 3" — Architektur dokumentiert
+- ✅ Drei-Subdomain-Modell: prova-systems.de / app.prova-systems.de / admin.prova-systems.de
+- ✅ Cross-Domain-Redirect-Block A für Login-URLs → app.prova-systems.de/login
+- ✅ Redirect /dashboard → app.prova-systems.de
+- ✅ Tag `v200-app-landing-split-done` (30.04. abend laut Vision-Master Zeile 154)
+- ✅ Cutover Block 3 (51 Hybrid-Pages migriert auf `lib/auth-guard.js`)
+- ✅ Drift-Notiz in Vision-Master Zeile 116: LANDING-Pages nutzen DM Sans + Navy (post-Split-Decision), App-Stack nutzt Inter
+
+**Lücken (Marcel-Direktive):**
+- 🟡 **Code-Repo-Trennung (separate Build-Targets):** AUDIT-UNKLAR — `netlify.toml` hat 1 publish-dir `.` für alle 3 Subdomains. Keine separaten Build-Configs.
+- 🟡 **Cookies + SW-Scope getrennt:** AUDIT-UNKLAR — `sw.js` ist zentral mit APP_SHELL für ALLE Domains
+- 🟡 **Landing als komplette Marketing-Site (Hero/Features/Pricing/FAQ/Footer/Blog):** `index.html` (Landing) + `pricing.html` existieren, aber Blog/FAQ-Status pending
+- 🟡 **App-Boundary-Hardening:** AUDIT-UNKLAR — App-Code könnte auf Landing rendern wenn DNS-Routing fail
+- 🟡 **Lighthouse-Score auf Landing:** AUDIT-UNKLAR — kein Pre-Push-Audit dokumentiert
+- 🟡 **SEO-Metadata vorhanden:** index.html hat vermutlich Basic-Meta, vollständige Marketing-Site-SEO pending
+
+**Acceptance:** **Foundation ist da (Phase 3 dokumentiert), aber Marcel's "NICHT FERTIG" Direktive bestätigt: Repo-Trennung + SW-Scope-Split + Marketing-Site-Vervollständigung sind die offenen Posten.**
+
+---
+
+## Bereich 13 — Sandbox/Demo für Landing (NEU aus Chat)
+
+**Status:** 🔴 NICHT GEBAUT
+**Komplettheit:** **0%**
+
+**Belege:**
+- ❌ Keine `demo*.html` oder `sandbox*.html` in Repo-Root (`ls demo*.html` → No such file)
+- ❌ Kein Mock-Layer-Code für ki-proxy/whisper/PDFMonkey-Stubs
+- ✅ Aber: `onboarding-create-demo.js` Lambda + Demo-Fall SCH-DEMO-001 (W11-I4) — **aber nur intern nach Login**, NICHT als public sandbox
+- ❌ Conversion-Funnel-Tracking via feature_events für /demo: nicht aktiv (kein /demo)
+
+**Lücken:**
+- Komplett neu zu bauen: prova-systems.de/demo Page ohne Login + Mock-Workflow + Tour-Steps + Tracking
+
+**Acceptance:** **Vision-Erweiterung NEU aus Chat 07.05. — bisher nicht in Sprint-Plan**. Nice-to-have für Marketing-Conversion, kein Pilot-Blocker.
+
+---
+
