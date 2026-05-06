@@ -344,3 +344,150 @@
 
 ---
 
+## Bereich 14 — Finanz-Workflows
+
+**Status:** 🔴 NICHT GEBAUT (signifikante Lücken)
+**Komplettheit:** **~25%**
+
+**Belege FÜR:**
+- ✅ Stripe-Webhook: `netlify/functions/stripe-webhook.js` + `stripe-webhook-referral.js`
+- ✅ Honorar-Tracker (Repo-Root): `honorar-tracker.js`
+- ✅ JVEG-Page: `jveg.html` + JVEG-Stundenzettel-Lambda `eintraege-jveg-export.js` (W12b-I1)
+- ✅ Rechnungen-Templates: F-01 JVEG, F-02 Pauschal, F-03 Stunden, F-05 Gutschrift-Storno (4 Templates)
+- ✅ ENUMs für Mahn-Stufen: `dokument_typ` ENUM hat `mahnung_1`/`mahnung_2`/`mahnung_3`
+- ✅ `email_log` + `stripe_events`-Tabellen aktiv
+
+**Lücken:**
+- 🔴 **KEIN Mahn-Cron-Lambda** — `ls netlify/functions/*mahn*` → No matches. Mahnwesen 14/21/35-Tage-Logic nicht automatisiert.
+- 🔴 **KEIN ZUGFeRD-Rechnungs-Generator** — `*zugferd*` → 0 Matches. ZUGFeRD 2.1 BASIC nicht implementiert.
+- 🔴 **Stripe Live-Webhook-Secret-Renewal** vor Pilot: Marcel-Manual pending (Vision-Master Zeile 171)
+- 🟡 Honorar-Rechner (JVEG + BVS + Streitwert) UI-Status: AUDIT-UNKLAR
+
+**Acceptance:** **Foundation Stripe + JVEG-Stundenzettel da, aber Mahnwesen-Automation + ZUGFeRD = signifikante Lücken** für Rechnungs-Workflows.
+
+---
+
+## Bereich 15 — PDF-Templates
+
+**Status:** ✅ VOLLSTÄNDIG mit Polish-Lücken
+**Komplettheit:** **~85%**
+
+**Belege:**
+- ✅ **57 Templates total** in `docs/templates-goldstandard/` über 8 Subfolder
+- ✅ **12 Gutachten-Templates** in `04-gutachten/` (`*.liquid.template.html`):
+  - F-04 Kurzstellungnahme, F-09 Kurzgutachten, F-10 Beweissicherung, F-11 Brandschaden, F-12 Feuchte-Schimmel, F-16 Ergänzung, F-17 Schiedsgutachten, F-18 Bauabnahme, F-19 Wertgutachten, weitere
+- ✅ **4 Rechnungen** (01-rechnungen): F-01 JVEG, F-02 Pauschal, F-03 Stunden, F-05 Gutschrift
+- ✅ **2+ Bestätigungen** (02-bestaetigungen): F-02 Auftragsbestätigung, F-03 Termin-Bestätigung, FOTODOKU, PROVA-BRIEF
+- ✅ **Mahn-Templates** (03-mahnungen) — Folder existiert
+- ✅ **3 Email-Templates** (05-emails): WELCOME, TRIAL-ENDING, PILOT-FEEDBACK (W11-I5)
+- ✅ **5+ Beratungs-Templates** (05-beratung)
+- ✅ **Korrespondenz** (07-korrespondenz)
+- ✅ EU AI Act Box auf Gutachten-Templates: F-04, F-09, F-10, F-11, F-12 verifiziert (5 grep-confirmed)
+- ✅ KEINE EU-AI-Act-Box auf Rechnungen: `F-02-PAUSCHALRECHNUNG:578` Comment "v1.1 bewusst entfernt" ✅
+
+**Lücken:**
+- 🟡 Memory-Notiz "7 Tranche-1 Templates mit falscher §1-§6-Struktur" — AUDIT-UNKLAR welche 7 betroffen
+- 🟡 Bescheinigungen 7 Arten: Folder `02-bestaetigungen/` hat ~4-5 Files, **AUDIT-UNKLAR ob alle 7 Bescheinigungs-Arten** (sv-bestätigung, ortsbesichtigung, auftragsannahme, termin, mängelfreiheit, zustand, beweissicherung — siehe `dokument_typ` ENUM 33 Werte)
+- 🟡 Design-System v1.0 auf allen 57 Templates: AUDIT-UNKLAR
+
+**Acceptance:** **Template-Foundation sehr robust** (57 Templates, IHK-konform für Gutachten + EU AI Act korrekt platziert). Polish-Items (Tranche-1-Fix + 7-Bescheinigungs-Vollständigkeit) post-Pilot OK.
+
+---
+
+## Bereich 16 — Mobile-Rescue P1-P4
+
+**Status:** 🟡 TEILWEISE
+**Komplettheit:** **~50%**
+
+**Belege:**
+- ✅ Mobile-Polish-CSS: `lib/mobile-polish.css` (in sw.js APP_SHELL)
+- ✅ Mobile-Polish-JS: `lib/mobile-polish.js` (Lazy/Offline/Camera/Geo)
+- ✅ Touch-Gesten: `lib/swipe-gestures.js`
+- ✅ Bottom-Sheet-Modal: `lib/bottom-sheet.js`
+- ✅ Hamburger-Menu: `lib/hamburger-menu.js`
+- ✅ Pull-to-Refresh: `lib/pull-to-refresh.js`
+- ✅ Safe-Area-Helper-CSS für iOS: `lib/safe-area-helper.css`
+- ✅ PWA: `manifest.json` + offline.html + PWA-Install-Prompt
+
+**Lücken:**
+- 🟡 P1 Mobile-Layout-Audit: keine dedizierte Audit-Doku gefunden
+- 🟡 P3 Mobile-Diktat-First-UX: AUDIT-UNKLAR (separater Walk durch app.html mobile)
+- 🟡 P4 Mobile-Foto-Upload: `lib/foto-upload-v2.js` existiert, mobile-spezifische Optimierung AUDIT-UNKLAR
+- 🟡 Touch-Target-Sizes 44px+ Coverage über alle Pages: AUDIT-UNKLAR
+
+**Acceptance:** **Mobile-Foundation robust** (8+ Mobile-Lib-Files), aber **P1-P4 explizite Audit-Dokumente fehlen**. Pilot-Pflicht: Marcel-Mobile-Smoke-Test pre-Live.
+
+---
+
+## Bereich 17 — Diktat + Whisper-Pipeline
+
+**Status:** 🟡 TEILWEISE
+**Komplettheit:** **~75%**
+
+**Belege:**
+- ✅ Whisper-Lambda: `netlify/functions/whisper-diktat.js`
+- ✅ Pseudonymisierung-Lib: `lib/prova-pseudo.js` + Server-Spiegel in netlify/functions/lib/
+- ✅ Audio-Storage: `audio_dateien` Tabelle aktiv (Schema W12-I0 verifiziert)
+- ✅ Storage-Bucket `sv-files` (Vision-Master Zeile 95, dokumentiert)
+- ✅ KI-Strukturierung-Foundation: `compliance-check.js` + `paragraph-generator.js`
+- ✅ Diktat-Parser: `diktat-parser.js`
+- ✅ Whisper-Sentry-Tests: `tests/whisper-sentry/whisper-sentry.test.js`
+
+**Lücken:**
+- 🟡 **Whisper-Chunker** (für lange Diktate >25MB): AUDIT-UNKLAR — kein `*chunker*` Lambda gegrept
+- 🟡 Pseudonymisierung VOR Whisper-Call: `whisper-diktat.js` muss explizit verifiziert werden (separater grep)
+- 🟡 KI-Strukturierungs-Lambda nach Diktat (Diktat → §1-§5 Auto-Strukturierung): AUDIT-UNKLAR — könnte in ki-proxy.js Action sein
+
+**Acceptance:** **Pipeline-Foundation steht**, Polish (Chunker + Strukturierungs-Lambda explizit) post-Pilot.
+
+---
+
+## Bereich 18 — Onboarding-Pipeline
+
+**Status:** ✅ KOMPLETT (mit Cron-Setup-Lücke)
+**Komplettheit:** **~85%**
+
+**Belege:**
+- ✅ Demo-Fall: `onboarding-create-demo.js` + `onboarding-delete-demo.js` (W11-I4)
+- ✅ 3 Email-Templates: WELCOME / TRIAL-ENDING / PILOT-FEEDBACK (W11-I5) in `docs/templates-goldstandard/05-emails/`
+- ✅ 3 Send-Lambdas: `email-welcome.js`, `email-trial-ending-cron.js`, `email-pilot-feedback-cron.js` (W11-I5)
+- ✅ Resend-Helper: `netlify/functions/lib/email-resend-helper.js` (Liquid-Substitution + ENV-Fallback)
+- ✅ Cal.com EU-Booking-URL gesetzt (M33-I1-PATCH): `https://cal.eu/marcel.schreiber/prova-pilot-feedback`
+
+**Lücken:**
+- 🔴 **`netlify.toml` hat KEINE `[[scheduled.functions]]`-Einträge** (`grep "scheduled.functions"` → 0). Cron-Schedule für trial-ending + pilot-feedback + fristen-reminder + status-check **NICHT konfiguriert**.
+- 🟡 Resend-Domain-Verify Status (SPF/DKIM/DMARC): Marcel-Manual pending
+- 🟡 PROVA_EMAIL_CRON_SECRET ENV: muss noch in Netlify gesetzt werden
+
+**Acceptance:** **Code 100% fertig, aber Cron-Schedules + ENV-Setup als Marcel-Manual-Pflicht pre-Pilot**.
+
+---
+
+## Bereich 19 — ENVs + Infrastruktur
+
+**Status:** 🟡 TEILWEISE — MEGA³³ Branch noch nicht in main
+**Komplettheit:** **~75%**
+
+**Belege:**
+- ✅ MEGA³³-Branch `mega33-env-konsolidierung` aktiv (10 Commits seit main)
+- ✅ ENV-Audit-Doku: `docs/setup/ENV-KONSOLIDIERUNG-MEGA33.md`
+- ✅ Make-Webhooks JSON-Bündelung verifiziert (M33-I4, 10 Tests grün)
+- ✅ Calendly-URL Default-Pattern (M33-I1)
+- ✅ Founding-Counter aus DB (M33-I2)
+- ✅ Admin-Emails hardcoded mit Override (M33-I3)
+- ✅ ANTHROPIC_API_KEY ENV gesetzt (Pflicht laut KI-PROMPTS-MASTER + tests/ki/anthropic-wrapper)
+
+**Branch-Status:**
+- 🟡 `mega33-env-konsolidierung` ist NICHT in main gemerged (origin/main HEAD = `bd5f0cd Merge welle-11-final`, danach kein MEGA³³)
+- 🟡 PR-Ready, aber Marcel-Review pending
+
+**Lücken (Marcel-Manual pre-Pilot):**
+- 🔴 `PROVA_EMAIL_CRON_SECRET` ENV nicht gesetzt
+- 🔴 `RESEND_API_KEY` Status: AUDIT-UNKLAR
+- 🟡 `MAKE_WEBHOOKS` JSON-Object Status: AUDIT-UNKLAR ob in Production-Netlify-ENV gesetzt
+- 🟡 KI-Modell-Migration ENVs: ANTHROPIC_API_KEY ✅ angeblich da, aber Marcel-Verify nötig
+
+**Acceptance:** **Konsolidierung -23 ENVs erreicht** (M33-FINAL.md), aber **Branch-Merge + Marcel-Manual-ENV-Setup blockierend für Email-Cron-Live-Schedule**.
+
+---
+
