@@ -4,6 +4,7 @@
 const https = require('https');
 const { requireAuth } = require('./lib/jwt-middleware');
 const { withSentry } = require('./lib/sentry-wrap'); // MEGA²⁸ W5-I6: Sentry-Error-Tracking
+const RateLimit = require('./lib/rate-limit-user'); // MEGA²⁸ W6-I1: Heavy-Op Rate-Limit
 const { getCorsHeaders } = require('./lib/cors-helper');
 // MEGA-SKALIERUNG M2: zod-Schema-Validation
 const { parseAkteExport } = require('../../lib/schemas/akte-export');
@@ -17,6 +18,13 @@ function corsHeaders(event) {
 exports.handler = withSentry(requireAuth(async function(event, context) {
   const CORS = corsHeaders(event);
   if (event.httpMethod !== 'POST') return { statusCode: 405, headers: CORS, body: JSON.stringify({error:'Method not allowed'}) };
+
+  // MEGA²⁸ W6-I1: Heavy-Op Rate-Limit (30/60s pro User — Word-Doc-Generation)
+  const rl = RateLimit.check(context.userEmail, 30, 60, { event: event, functionName: 'akte-export' });
+  if (!rl.allowed) {
+    return { statusCode: 429, headers: { ...CORS, 'Retry-After': String(rl.retryAfter) },
+      body: JSON.stringify({ error: 'Rate-Limit erreicht. Bitte ' + rl.retryAfter + 's warten.' }) };
+  }
 
   try {
     let rawBody;

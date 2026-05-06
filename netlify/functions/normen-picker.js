@@ -18,6 +18,7 @@
 const FW = require('./lib/prova-fachwissen.js');
 const { getCorsHeaders } = require('./lib/cors-helper');
 const { withSentry } = require('./lib/sentry-wrap'); // MEGA²⁸ W5-I6: Sentry-Error-Tracking
+const RateLimitIp = require('./lib/rate-limit-ip'); // MEGA²⁸ W6-I1: KI-Cost-Schutz (public-ähnlich)
 
 // S6 Phase 1.9: dynamische CORS-Headers per Request (vorher hardcoded
 // auf prova-systems.de — App-Subdomain wurde geblockt). Audit-8 M-03.
@@ -230,6 +231,13 @@ exports.handler = withSentry(async function(event) {
   const CORS = corsBase(event);
   if (event.httpMethod === 'OPTIONS') {
     return { statusCode: 204, headers: CORS, body: '' };
+  }
+
+  // MEGA²⁸ W6-I1: KI-Cost-Schutz per IP (60/60s — public-ähnlich, KI-Klassifikation)
+  const rl = RateLimitIp.check(event, 60, 60, { functionName: 'normen-picker' });
+  if (!rl.allowed) {
+    return { statusCode: 429, headers: { ...CORS, 'Retry-After': String(rl.retryAfter) },
+      body: JSON.stringify({ error: 'Rate-Limit erreicht. Bitte ' + rl.retryAfter + 's warten.' }) };
   }
 
   try {
