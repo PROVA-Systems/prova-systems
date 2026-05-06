@@ -184,7 +184,8 @@ const PROVASearch = {
         href: 'akte.html?az=' + encodeURIComponent(c.az || ''),
         sub: [c.auftraggeber, c.adresse].filter(Boolean).join(' · ')
       }));
-      // 2. Airtable-Suche im Hintergrund (mit Debounce)
+      // 2. Hybrid-Backend (MEGA²⁹ W9N-I4): erst Lambda (Supabase), dann Airtable als Fallback
+      this._searchSupabase(q);
       this._searchAirtable(q);
       return local;
     } catch(e) { return []; }
@@ -192,6 +193,57 @@ const PROVASearch = {
 
   _atSearchTimer: null,
   _atSearchQ: '',
+  _sbSearchTimer: null,
+  _sbSearchQ: '',
+
+  // MEGA²⁹ W9N-I4: Live-Search via global-search Lambda (Supabase, multi-source)
+  _searchSupabase(q) {
+    clearTimeout(this._sbSearchTimer);
+    this._sbSearchQ = q;
+    this._sbSearchTimer = setTimeout(() => {
+      if (q.length < 2 || q !== this._sbSearchQ) return;
+      provaFetch('/.netlify/functions/global-search?q=' + encodeURIComponent(q) + '&limit=10', {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' }
+      }).then(r => r.json()).then(data => {
+        if (q !== this._q) return;
+        const results = (data && Array.isArray(data.results)) ? data.results : [];
+        if (!results.length) return;
+        const container = document.getElementById('prova-search-results');
+        if (!container) return;
+        // Recently-Searched in localStorage speichern
+        try {
+          const hist = JSON.parse(localStorage.getItem('prova_search_history') || '[]');
+          hist.unshift(q);
+          const dedup = [...new Set(hist)].slice(0, 5);
+          localStorage.setItem('prova_search_history', JSON.stringify(dedup));
+        } catch(_) {}
+        // Doppelte zur existierenden Liste vermeiden
+        const existing = container.querySelectorAll('.ps-item[data-href]');
+        const existingHrefs = [...existing].map(e => e.dataset.href);
+        const neu = results.filter(r => !existingHrefs.includes(r.href));
+        if (!neu.length) return;
+        // Group-Header
+        const div = document.createElement('div');
+        div.className = 'ps-group';
+        div.textContent = 'Live-Suche (Supabase)';
+        container.appendChild(div);
+        neu.forEach(r => {
+          const icon = r.type === 'akte' ? '📋' : r.type === 'kontakt' ? '👤' : r.type === 'dokument' ? '📄' : '🔍';
+          const item = document.createElement('div');
+          item.className = 'ps-item';
+          item.dataset.href = r.href;
+          item.tabIndex = -1;
+          item.innerHTML = '<div class="ps-icon">' + icon + '</div>' +
+            '<div style="flex:1;min-width:0"><div class="ps-label">' + (r.title || '—') + '</div>' +
+            (r.subtitle ? '<div class="ps-sub">' + r.subtitle + '</div>' : '') + '</div>' +
+            '<span class="ps-type">' + (r.type || '?') + '</span>';
+          item.addEventListener('click', () => { window.location.href = r.href; });
+          container.appendChild(item);
+        });
+      }).catch(() => { /* graceful: Lambda evtl. nicht deployed */ });
+    }, 300); // 300ms-Debounce statt 400ms (Live-Feel)
+  },
 
   _searchAirtable(q) {
     // Debounce: 400ms warten, dann suchen
