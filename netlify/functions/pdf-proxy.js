@@ -34,6 +34,7 @@ const { getCorsHeaders, corsOptionsResponse } = require('./lib/cors-helper');
 const { resolveUser, logAuthFailure } = require('./lib/auth-resolve');
 const RateLimit = require('./lib/rate-limit-user');
 const ProvaPseudo = require('./lib/prova-pseudo'); // MEGA²⁸ W3-I7: PII-Pseudonymisierung in Logs
+const { withSentry } = require('./lib/sentry-wrap'); // MEGA²⁸ W3-I6: Sentry-Error-Tracking
 
 // ── Konfiguration ──────────────────────────────────────────────────────
 const TOKEN_TTL_MS    = 15 * 60 * 1000;    // 15 Minuten
@@ -124,7 +125,7 @@ function jsonResponse(event, status, obj) {
 }
 
 // ── Handler ────────────────────────────────────────────────────────────
-exports.handler = async function(event, context) {
+exports.handler = withSentry(async function(event, context) {
   if (event.httpMethod === 'OPTIONS') return corsOptionsResponse(event);
 
   const secret  = process.env.PDF_PROXY_SECRET || '';
@@ -336,4 +337,4 @@ exports.handler = async function(event, context) {
   }
 
   return jsonResponse(event, 405, { error: 'Method Not Allowed' });
-};
+}, { name: 'pdf-proxy' });
