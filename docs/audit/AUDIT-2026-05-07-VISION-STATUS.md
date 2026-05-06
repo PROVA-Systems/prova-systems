@@ -174,3 +174,82 @@
 
 ---
 
+## Bereich 7 — Flow A Schadensgutachten
+
+**Status:** 🟡 TEILWEISE
+**Komplettheit:** **~70%**
+
+**Belege FÜR vorhandene Phasen:**
+- ✅ **Phase 1+2 Stammdaten/Auftragsdetails:** `neuer-fall.html` Wizard-Landing + `auftragstyp.js` + `app.html`
+- ✅ **Phase 3 Diktat & Fotos:** `app.html` (Hauptort, dictation page) + `ortstermin-modus.html`
+- ✅ **Phase 4-5 §6 Fachurteil:** `stellungnahme.html` + `stellungnahme-logic.js` (Bereich 5 detailliert)
+- ✅ **Phase 6 Zusammenfassung:** `gutachten-zusammenfassung.html`
+- ✅ **Phase 8 Freigabe:** `freigabe.html`
+- ✅ **Phase 9 Export:** PDFMonkey-Integration via `pdf-generate` Edge Function (existing)
+- ✅ Akten-Detail: `akte.html` mit 5-Tab-Widget (W11-I1)
+- ✅ Spezial-Flows: `schiedsgutachten.html`, `stellungnahme-gegengutachten.html`, `vorlage-09-ergaenzungsgutachten.html`
+
+**Lücken:**
+- 🟡 **Phase 7 Anhänge:** AUDIT-UNKLAR — kein dediziertes `anhaenge.html`
+- 🟡 **Skip-Logic für Beweissicherung/Gegengutachten/Ergänzung:** AUDIT-UNKLAR (Wizard-Logic nicht durchgegrept)
+- 🟡 **Auto-Save Live (Sprint 06b/06c):** Spalten `auftraggeber_typ` + `auftraggeber_kontakt_id` existieren NICHT (Bereich 1) — Live-Save nicht voll Production-aktiviert. LocalStorage-Drafts vorhanden.
+- 🟡 **Wizard end-to-end-Durchlauf:** AUDIT-UNKLAR — separater Marcel-Click-Through-Test nötig
+
+**Acceptance:** Foundation für Flow A robust, **Wizard-Live-Save + Skip-Logic Audit pending**.
+
+---
+
+## Bereich 8 — Flow B Wertgutachten
+
+**Status:** 🟡 TEILWEISE
+**Komplettheit:** **~50%**
+
+**Belege:**
+- ✅ Page: `wertgutachten.html` + `wertgutachten-logic.js`
+- ✅ Template: `docs/templates-goldstandard/04-gutachten/F-19-WERTGUTACHTEN.liquid.template.html` + `.template.html` + `.payload.json`
+- ✅ Test: `tests/templates-liquid/f-19-wertgutachten.test.js`
+
+**Lücken:**
+- 🟡 **AUDIT-UNKLAR:** Sachwert/Vergleich/Ertragswert als 3 separate Verfahren — nur 1 Template `F-19` gefunden, keine `F-19a/b/c` Varianten
+- 🟡 ImmoWertV-Konformität: AUDIT-UNKLAR — nicht durch grep/Test belegt
+- 🟡 BORIS-Daten-Integration: AUDIT-UNKLAR (Roadmap-Item)
+
+**Acceptance:** Basis-Template + Page existieren, **Multi-Verfahren-Polish post-Pilot**.
+
+---
+
+## Bereich 9 — Flow C Beratung
+
+**Status:** 🟡 TEILWEISE
+**Komplettheit:** **~40%**
+
+**Belege:**
+- ✅ Page: `beratung.html` + `beratung-logic.js`
+- ✅ Template-Folder: `docs/templates-goldstandard/05-beratung/` existiert
+
+**Lücken:**
+- 🟡 3-Phasen-Workflow (Annahme/Termin/Abschluss): AUDIT-UNKLAR — kein Phasen-Step-Pattern direkt belegt
+- 🟡 Templates-Inhalt: AUDIT-UNKLAR (separater ls + grep nötig)
+
+**Acceptance:** **Sprint 09-10 Flow C Härtung pending laut Vision-Master Zeile 169**.
+
+---
+
+## Bereich 10 — Flow D Baubegleitung
+
+**Status:** 🟡 TEILWEISE
+**Komplettheit:** **~45%**
+
+**Belege:**
+- ✅ Page: `baubegleitung.html` + `baubegleitung-polish.js`
+- ✅ Eintraege-System (W12b-I1) mit `auftrag_id`-FK — Multi-Termin-Foundation
+- ✅ Tab-Widget in akte.html zeigt Einträge pro Auftrag (W11-I1)
+
+**Lücken:**
+- 🟡 Multi-Begehungs-Termin-Pattern: Foundation via `eintraege` da, aber explizite Bau-Phasen-UI AUDIT-UNKLAR
+- 🟡 Templates für Baubegleitungs-Bericht: AUDIT-UNKLAR
+
+**Acceptance:** **Sprint 09-10 Flow D Härtung pending laut Vision-Master**.
+
+---
+
