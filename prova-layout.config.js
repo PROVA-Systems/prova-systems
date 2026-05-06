@@ -154,7 +154,6 @@
       'nachforderung-unterlagen.html',
       'ortsbesichtigung-protokoll-gericht.html',
       'ortstermin-protokoll.html',
-      'ortstermin-arbeitsblatt.html',
       'schlussrechnung-aufstellung.html',
       'sicherheitsbedenken.html',
       'terminsbestaetigung.html',
