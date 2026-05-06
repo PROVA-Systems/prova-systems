@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v297';   // MEGA²⁸ V3.2-W5: Regel 41+42 + Auth-Hardening (rate-limit + sentry-test gate) + Subprocessor-Audit + AVV komplett-update (Anthropic NEU) + KI-Disclosure-Sync-Doku + Sentry-Wrap-Bulk (6) + Rate-Limit-Bulk (3 KI-Lambdas) + Proaktiv-Audit Round 2
+const CACHE_VERSION = 'prova-v298';   // MEGA²⁸ V3.2-W6: Rate-Limit-Bulk-Completion (15 Lambdas) + whisper-diktat Sentry-Wrap + W5-I8 Quick-Fix-Audit + admin-cockpit Live-Fetch (KPIs+KI-Cost) + Sprint-K-Tranche-1-Inventory + Pre-Pilot-Readiness-Report
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
