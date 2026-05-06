@@ -143,7 +143,7 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
       </div>
     </div>
 
-    <!-- Section 5 — Audit-Trail -->
+    <!-- Section 5 — Audit-Trail (LIVE-Fetch) -->
     <div class="cp-card">
       <div class="cp-card-head">
         <span class="cp-card-num">5</span>
@@ -151,9 +151,10 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
         <span class="cp-status live">LIVE</span>
       </div>
       <p class="cp-card-desc">Compliance-Events, Admin-Aktionen, Login-Trail.</p>
-      <div class="cp-data">→ admin-audit-trail</div>
+      <div class="cp-data" id="data-5">⏳ Lade live data…</div>
       <div class="cp-actions">
-        <a class="cp-btn primary" href="/.netlify/functions/admin-audit-trail">Trail anzeigen</a>
+        <button class="cp-btn primary" type="button" onclick="loadAuditTrail()">Aktualisieren</button>
+        <a class="cp-btn" href="/.netlify/functions/admin-audit-trail" target="_blank">Raw JSON</a>
       </div>
     </div>
 
@@ -184,17 +185,18 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
       <div class="cp-actions"><span class="cp-btn">Welle 6</span></div>
     </div>
 
-    <!-- Section 8 — Push-Alerts-Stream (Skeleton) -->
-    <div class="cp-card skeleton">
+    <!-- Section 8 — Push-Alerts-Stream (LIVE-Fetch) -->
+    <div class="cp-card">
       <div class="cp-card-head">
         <span class="cp-card-num">8</span>
         <span class="cp-card-title">Push-Alerts-Stream</span>
-        <span class="cp-status skeleton">SKELETON</span>
+        <span class="cp-status live">LIVE</span>
       </div>
       <p class="cp-card-desc">Real-time Stream aus admin-push-alerts.</p>
-      <div class="cp-data">→ admin-push-alerts (Lambda existiert, UI Skeleton)</div>
+      <div class="cp-data" id="data-8">⏳ Lade live data…</div>
       <div class="cp-actions">
-        <a class="cp-btn" href="/.netlify/functions/admin-push-alerts">Lambda-Output</a>
+        <button class="cp-btn primary" type="button" onclick="loadPushAlerts()">Aktualisieren</button>
+        <a class="cp-btn" href="/.netlify/functions/admin-push-alerts" target="_blank">Raw JSON</a>
       </div>
     </div>
 
@@ -224,17 +226,18 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
       <div class="cp-actions"><span class="cp-btn">Welle 6 UI</span></div>
     </div>
 
-    <!-- Section 11 — Churn-Reasons (Skeleton) -->
-    <div class="cp-card skeleton">
+    <!-- Section 11 — Churn-Reasons (LIVE-Fetch) -->
+    <div class="cp-card">
       <div class="cp-card-head">
         <span class="cp-card-num">11</span>
         <span class="cp-card-title">Churn-Reasons</span>
-        <span class="cp-status skeleton">SKELETON</span>
+        <span class="cp-status live">LIVE</span>
       </div>
       <p class="cp-card-desc">Exit-Survey-Aggregation. Wer kündigt, warum?</p>
-      <div class="cp-data">→ admin-churn (Lambda existiert)</div>
+      <div class="cp-data" id="data-11">⏳ Lade live data…</div>
       <div class="cp-actions">
-        <a class="cp-btn" href="/.netlify/functions/admin-churn">Lambda-Output</a>
+        <button class="cp-btn primary" type="button" onclick="loadChurn()">Aktualisieren</button>
+        <a class="cp-btn" href="/.netlify/functions/admin-churn" target="_blank">Raw JSON</a>
       </div>
     </div>
 
@@ -312,11 +315,70 @@ async function loadKICosts() {
   }
 }
 
+async function loadAuditTrail() {
+  const el = document.getElementById('data-5');
+  if (!el) return;
+  el.innerHTML = '⏳ Lade…';
+  try {
+    const res = await provaFetch('/.netlify/functions/admin-audit-trail?limit=5');
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    const events = Array.isArray(data.events) ? data.events : (Array.isArray(data) ? data : []);
+    const last = events.slice(0, 3).map(e =>
+      escHtml((e.event || e.action || 'event') + ' · ' + (e.ts || e.created_at || ''))
+    ).join(' · ');
+    el.innerHTML = '<strong>Last 3:</strong> ' + (last || '<em>keine Events</em>');
+  } catch (e) {
+    el.innerHTML = '<span style="color:var(--danger);">Fehler: ' + escHtml(e.message) + '</span>';
+  }
+}
+
+async function loadPushAlerts() {
+  const el = document.getElementById('data-8');
+  if (!el) return;
+  el.innerHTML = '⏳ Lade…';
+  try {
+    const res = await provaFetch('/.netlify/functions/admin-push-alerts?limit=5');
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    const subs = data.subscriptions_count != null ? fmtCount(data.subscriptions_count) : '—';
+    const sent = data.sent_today != null ? fmtCount(data.sent_today) : '—';
+    el.innerHTML =
+      '<strong>Subs:</strong> ' + escHtml(String(subs)) +
+      ' &nbsp;·&nbsp; <strong>Heute gesendet:</strong> ' + escHtml(String(sent));
+  } catch (e) {
+    el.innerHTML = '<span style="color:var(--danger);">Fehler: ' + escHtml(e.message) + '</span>';
+  }
+}
+
+async function loadChurn() {
+  const el = document.getElementById('data-11');
+  if (!el) return;
+  el.innerHTML = '⏳ Lade…';
+  try {
+    const res = await provaFetch('/.netlify/functions/admin-churn?range=30d');
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    const churn = data.churn_count != null ? fmtCount(data.churn_count) : '—';
+    const rate = data.churn_rate_pct != null ? data.churn_rate_pct.toFixed(1) + '%' : '—';
+    const top = data.top_reason || '—';
+    el.innerHTML =
+      '<strong>30d Churn:</strong> ' + escHtml(String(churn)) +
+      ' &nbsp;·&nbsp; <strong>Rate:</strong> ' + escHtml(String(rate)) +
+      ' &nbsp;·&nbsp; <strong>Top:</strong> ' + escHtml(String(top));
+  } catch (e) {
+    el.innerHTML = '<span style="color:var(--danger);">Fehler: ' + escHtml(e.message) + '</span>';
+  }
+}
+
 // Auto-load on page-ready
 document.addEventListener('DOMContentLoaded', function () {
   if (typeof provaFetch === 'function') {
     loadKPIs();
     loadKICosts();
+    loadAuditTrail();
+    loadPushAlerts();
+    loadChurn();
   }
 });
 </script>
