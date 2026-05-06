@@ -16,30 +16,32 @@
 
 ## 🔴 CRITICAL
 
-### F1 — admin_password_bcrypt + admin_password_hash duplizieren ENV
-**Severity:** 🟡 MEDIUM (Verwirrung, kein direkter Bug)
-**Befund:** Zwei ENV-Vars für dasselbe Konzept:
-- `process.env.ADMIN_PASSWORD_BCRYPT`
-- `process.env.ADMIN_PASSWORD_HASH`
+### F1 — admin_password_bcrypt + admin_password_hash ✅ KORREKTUR W6-I3
+**Severity:** 🟢 INFO (intentional Migration-Fallback)
+**Befund Round-2-Korrektur:** Beide ENVs sind absichtlich koexistent:
+- `ADMIN_PASSWORD_BCRYPT` = aktuelles bcrypt-Pattern (Primary)
+- `ADMIN_PASSWORD_HASH` = Legacy-SHA-256-Migration-Fallback (Pre-Bcrypt-Phase)
 
-**Empfehlung Welle 6:** Konsolidieren auf eine ENV (`PROVA_ADMIN_PASSWORD_BCRYPT`), legacy als deprecated markieren.
+Code-Pattern in `admin-auth.js`: prüft erst BCRYPT, fallback auf HASH wenn BCRYPT fehlt. Das ist eine bewusste Migration-Period — kein Bug.
+
+**W6-I3 Quick-Fix:** Kommentar in `admin-auth.js:55-60` präzisiert ("Migration-Fallback, NICHT Doppelung").
+
+**Welle-7-Item (optional):** PROVA-Prefix-Konsolidierung als Teil ENV-Rename-Sprint, gleichzeitig HASH-Fallback nach 1 Jahr deaktivieren.
 
 ---
 
 ## 🟡 MEDIUM
 
-### F2 — setInterval ohne clearInterval (7 Files)
-**Befund:**
-- `auth-guard.js`, `frist-guard.js`, `sw-register.js` — Frontend (Long-Running, Browser-Tab-Lifetime)
-- `netlify/functions/auth-token-issue.js`, `lib/rate-limit-ip.js`, `lib/rate-limit-user.js` — Backend Lambdas
-- `scripts/uptime-monitor.js` — CLI-Skript
+### F2 — setInterval ohne clearInterval ✅ KORREKTUR W6-I3
+**Severity:** 🟢 INFO (intentional Best-Effort-GC)
+**Befund Round-2-Korrektur:** Alle 3 Backend-Lambda-setInterval-Patterns sind dokumentierte **Best-Effort-GC für In-Memory-Buckets**:
+- `lib/rate-limit-user.js` — Comment: "alle 5 Min Buckets aufraeumen die laenger als 5 Min alt sind. Verhindert unbounded Memory-Growth"
+- `lib/rate-limit-ip.js` — gleiches GC-Pattern für IP-Buckets
+- `auth-token-issue.js` — `global._authTokenIssueLockoutGc` Marker verhindert Multi-Init bei Container-Reuse
 
-**Bewertung:**
-- Frontend (3 Files): kein Memory-Leak — setInterval läuft bis Page-Unload, das ist Browser-Standard
-- Backend (3 Files): Lambdas sind kurzlebig (max ~15min Function-Timeout). setInterval kann aber bei `runtime: nodejs20` Container-Reuse Memory-Akkumulation verursachen → Welle 6
-- CLI: nicht kritisch (uptime-monitor läuft als bewusster Long-Runner)
+Frontend-setInterval (auth-guard, frist-guard, sw-register) sind Standard-Browser-Lifetime-Pattern.
 
-**Quick-Fix:** keine — Frontend-setInterval ist Standard-Pattern. Backend-Audit für Welle 6.
+**Quick-Fix W6-I3:** keine notwendig — alle setInterval-Patterns sind intentional und korrekt-dokumentiert.
 
 ### F3 — ENV-Var-Naming-Inconsistencies (Regel 35 Verstoß)
 **Befund:** 17 ENVs ohne `PROVA_`-Prefix in Multi-Tenant-Setup.

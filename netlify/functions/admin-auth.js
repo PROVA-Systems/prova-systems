@@ -51,11 +51,14 @@ exports.handler = async (event) => {
       return { statusCode: 400, headers, body: JSON.stringify({ ok: false, error: 'Passwort fehlt' }) };
     }
 
-    // bcrypt Hash aus Env-Var laden
+    // bcrypt Hash aus Env-Var laden (Primary)
     const storedHash = process.env.ADMIN_PASSWORD_BCRYPT;
 
     if (!storedHash) {
-      // Fallback auf alten SHA-256 Hash (Übergangsphase)
+      // MEGA²⁸ W6-I3: Legacy-Migration-Fallback (NICHT Doppelung!).
+      // ADMIN_PASSWORD_HASH = alter SHA-256-Hash aus Pre-Bcrypt-Phase.
+      // Migrations-Workflow: bei erstem Login mit altem Hash → ENV manuell auf BCRYPT umstellen.
+      // Sobald BCRYPT gesetzt, wird HASH ignoriert. Beide ENVs sind also bewusst koexistent.
       const oldHash = process.env.ADMIN_PASSWORD_HASH;
       if (oldHash) {
         const crypto = require('crypto');
