@@ -14,9 +14,9 @@ const { getCorsHeaders } = require('./lib/cors-helper');
 const { getSupabase } = require('./lib/storage-router');
 const Email = require('./lib/email-resend-helper');
 
-// MEGA³³ M33-I1: Default-Calendly-URL hardcoded mit ENV-Override (vermeidet Marcel-Manual-ENV).
-// Marcel kann via PROVA_CALENDLY_URL überschreiben, aber Default funktioniert sofort.
-const DEFAULT_CALENDLY_URL = 'https://calendly.com/marcel-schreiber-prova/pilot-feedback';
+// MEGA³³ M33-I1-PATCH: Cal.com EU + Whereby (DSGVO-perfekt). Default hardcoded mit ENV-Override.
+// Marcel nutzt cal.eu (EU-Domain) + Whereby (Norwegen). Backwards-Compat für PROVA_CALENDLY_URL bleibt.
+const DEFAULT_BOOKING_URL = 'https://cal.eu/marcel.schreiber/prova-pilot-feedback';
 
 exports.handler = withSentry(async function (event) {
   if (event.httpMethod === 'OPTIONS') return { statusCode: 204, headers: getCorsHeaders(event), body: '' };
@@ -50,7 +50,10 @@ exports.handler = withSentry(async function (event) {
   });
 
   let sent = 0, skipped = 0;
-  const calendlyUrl = process.env.PROVA_CALENDLY_URL || DEFAULT_CALENDLY_URL;
+  // Defensive ENV-Fallback-Chain: neue PROVA_BOOKING_URL > legacy PROVA_CALENDLY_URL > Default
+  const bookingUrl = process.env.PROVA_BOOKING_URL
+    || process.env.PROVA_CALENDLY_URL
+    || DEFAULT_BOOKING_URL;
 
   for (const userId of Object.keys(byUser)) {
     const a = byUser[userId];
@@ -60,7 +63,8 @@ exports.handler = withSentry(async function (event) {
       user_email: user.email,
       user_first_name: user.vorname || '',
       first_auftrag_az: a.az,
-      calendly_url: calendlyUrl
+      booking_url: bookingUrl,    // NEU: korrekte Variable (Cal.com + Whereby)
+      calendly_url: bookingUrl    // BACKWARDS-COMPAT: alte Template-Variable
     });
     const r = await Email.sendEmail({
       to: user.email,

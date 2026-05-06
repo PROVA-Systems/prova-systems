@@ -60,9 +60,10 @@ test('TRIAL-ENDING: Pricing-Cards + Founding', () => {
   assert.match(tpl, /\{%\s*if\s+founding_remaining\s*%\}/);
 });
 
-test('PILOT-FEEDBACK: Calendly-Link + 3 Fragen', () => {
+test('PILOT-FEEDBACK: Booking-Link (Cal.com EU) + 3 Fragen', () => {
   const tpl = Helper.loadTemplate('PILOT-FEEDBACK');
-  assert.match(tpl, /\{\{ calendly_url \}\}/);
+  // booking_url mit calendly_url Backwards-Compat-Default
+  assert.match(tpl, /\{\{\s*booking_url(\s*\|\s*default:\s*calendly_url)?\s*\}\}/);
   // 3 Fragen-Cards
   const matches = tpl.match(/class="question"/g) || [];
   assert.strictEqual(matches.length, 3);
@@ -79,10 +80,14 @@ test('Lambda email-trial-ending-cron.js: workspaces.trial_end Filter', () => {
   assert.match(src, /from\(['"]workspaces['"]\)/);
 });
 
-test('Lambda email-pilot-feedback-cron.js: is_demo=false Filter', () => {
+test('Lambda email-pilot-feedback-cron.js: is_demo=false Filter + Cal.com EU URL', () => {
   const src = fs.readFileSync(path.join(__dirname, '..', '..', 'netlify', 'functions', 'email-pilot-feedback-cron.js'), 'utf8');
   assert.match(src, /eq\(['"]is_demo['"]\s*,\s*false\)/);
-  assert.match(src, /calendly/);
+  // Cal.com EU oder Calendly-Backwards-Compat akzeptiert
+  assert.match(src, /cal\.eu|calendly/);
+  // ENV-Fallback-Chain neu
+  assert.match(src, /PROVA_BOOKING_URL/);
+  assert.match(src, /PROVA_CALENDLY_URL/);
 });
 
 test('Helper: HTML-Render keine doppelten Variablen', () => {
