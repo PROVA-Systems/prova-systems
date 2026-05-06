@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v299';   // MEGA²⁸ V3.2-W6P2: DocRaptor+Cloudflare Klärung + ENV-Naming-Migration (3 Auth-Critical) + Sentry-Wrap-Phase-2 (9 Lambdas, 55/64) + Rate-Limit-Phase-2 (DSGVO + Demo-Akte) + admin-cockpit Live-Fetch (5/12 LIVE: KPIs/KI-Cost/Audit/Push/Churn)
+const CACHE_VERSION = 'prova-v300';   // MEGA²⁸ V3.2-W7: ENV-Phase-2 (4 Production-Lambdas migriert) + Sentry-Wrap-Phase-3 manual (3 NO-CLOSING-MATCH gefixt, 58/64 = 91% Coverage) + admin-cockpit 10/12 LIVE (Gutachten-Timing + Conversion-Funnel) + F-18/F-22 + PROVA-GUTACHTEN Templates-Klärung — Pre-Pilot v300 ready
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
