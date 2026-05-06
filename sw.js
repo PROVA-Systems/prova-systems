@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v302';   // MEGA²⁸ V3.2-W8 Reference: F-19 WERTGUTACHTEN Liquid-Variante (ImmoWertV 2021 + §194 BauGB + BGH ±30% + 13 Quellen) — Sprint K Tranche-1 reference-implementation, Welle 8b für F-04/F-16/F-17/F-18
+const CACHE_VERSION = 'prova-v303';   // MEGA²⁸ V3.2-W8-I7: admin-cockpit 12/12 LIVE (Section 7 Support-Inbox + Section 12 Billing-Sync mit neuen Lambdas admin-support-inbox + admin-billing-sync) + 20 neue Tests grün
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
