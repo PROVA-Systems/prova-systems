@@ -200,30 +200,34 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
       </div>
     </div>
 
-    <!-- Section 9 — Gutachten-Timing (Skeleton) -->
-    <div class="cp-card skeleton">
+    <!-- Section 9 — Gutachten-Timing (LIVE-Fetch) -->
+    <div class="cp-card">
       <div class="cp-card-head">
         <span class="cp-card-num">9</span>
         <span class="cp-card-title">Gutachten-Timing</span>
-        <span class="cp-status skeleton">SKELETON</span>
+        <span class="cp-status live">LIVE</span>
       </div>
       <p class="cp-card-desc">Median, P95 pro User. Gutachten-Erstellungs-Geschwindigkeit.</p>
-      <div class="cp-data">→ admin-time-tracking (Lambda existiert)</div>
+      <div class="cp-data" id="data-9">⏳ Lade live data…</div>
       <div class="cp-actions">
-        <a class="cp-btn" href="/.netlify/functions/admin-time-tracking">Lambda-Output</a>
+        <button class="cp-btn primary" type="button" onclick="loadGutachtenTiming()">Aktualisieren</button>
+        <a class="cp-btn" href="/.netlify/functions/admin-time-tracking" target="_blank">Raw JSON</a>
       </div>
     </div>
 
-    <!-- Section 10 — Trial→Paid Conversion (Skeleton) -->
-    <div class="cp-card skeleton">
+    <!-- Section 10 — Trial→Paid Conversion (LIVE-Fetch) -->
+    <div class="cp-card">
       <div class="cp-card-head">
         <span class="cp-card-num">10</span>
         <span class="cp-card-title">Trial→Paid Conversion</span>
-        <span class="cp-status skeleton">SKELETON</span>
+        <span class="cp-status live">LIVE</span>
       </div>
       <p class="cp-card-desc">Funnel + Cohort. Conversion-Rate seit Pilot-Launch.</p>
-      <div class="cp-data">→ admin-funnel + admin-stripe-kpis (UI fehlt)</div>
-      <div class="cp-actions"><span class="cp-btn">Welle 6 UI</span></div>
+      <div class="cp-data" id="data-10">⏳ Lade live data…</div>
+      <div class="cp-actions">
+        <button class="cp-btn primary" type="button" onclick="loadConversion()">Aktualisieren</button>
+        <a class="cp-btn" href="/.netlify/functions/admin-funnel" target="_blank">Raw JSON</a>
+      </div>
     </div>
 
     <!-- Section 11 — Churn-Reasons (LIVE-Fetch) -->
@@ -371,6 +375,46 @@ async function loadChurn() {
   }
 }
 
+async function loadGutachtenTiming() {
+  const el = document.getElementById('data-9');
+  if (!el) return;
+  el.innerHTML = '⏳ Lade…';
+  try {
+    const res = await provaFetch('/.netlify/functions/admin-time-tracking?range=30d');
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    const median = data.median_hours != null ? data.median_hours.toFixed(1) + 'h' : '—';
+    const p95 = data.p95_hours != null ? data.p95_hours.toFixed(1) + 'h' : '—';
+    const count = data.gutachten_count != null ? fmtCount(data.gutachten_count) : '—';
+    el.innerHTML =
+      '<strong>Median:</strong> ' + escHtml(String(median)) +
+      ' &nbsp;·&nbsp; <strong>P95:</strong> ' + escHtml(String(p95)) +
+      ' &nbsp;·&nbsp; <strong>Anzahl:</strong> ' + escHtml(String(count));
+  } catch (e) {
+    el.innerHTML = '<span style="color:var(--danger);">Fehler: ' + escHtml(e.message) + '</span>';
+  }
+}
+
+async function loadConversion() {
+  const el = document.getElementById('data-10');
+  if (!el) return;
+  el.innerHTML = '⏳ Lade…';
+  try {
+    const res = await provaFetch('/.netlify/functions/admin-funnel?range=30d');
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    const rate = data.conversion_rate_pct != null ? data.conversion_rate_pct.toFixed(1) + '%' : '—';
+    const trial = data.trial_count != null ? fmtCount(data.trial_count) : '—';
+    const paid = data.paid_count != null ? fmtCount(data.paid_count) : '—';
+    el.innerHTML =
+      '<strong>Trial→Paid:</strong> ' + escHtml(String(rate)) +
+      ' &nbsp;·&nbsp; <strong>Trial:</strong> ' + escHtml(String(trial)) +
+      ' &nbsp;·&nbsp; <strong>Paid:</strong> ' + escHtml(String(paid));
+  } catch (e) {
+    el.innerHTML = '<span style="color:var(--danger);">Fehler: ' + escHtml(e.message) + '</span>';
+  }
+}
+
 // Auto-load on page-ready
 document.addEventListener('DOMContentLoaded', function () {
   if (typeof provaFetch === 'function') {
@@ -379,6 +423,8 @@ document.addEventListener('DOMContentLoaded', function () {
     loadAuditTrail();
     loadPushAlerts();
     loadChurn();
+    loadGutachtenTiming();
+    loadConversion();
   }
 });
 </script>

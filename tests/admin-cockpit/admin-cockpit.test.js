@@ -30,11 +30,18 @@ test('admin-cockpit.html: hat alle 12 Sektionen', () => {
   }
 });
 
-test('admin-cockpit.html: 8 LIVE + 4 SKELETON Status (W6P2-I4 erweitert)', () => {
+test('admin-cockpit.html: 10 LIVE + 2 SKELETON Status (W7-I4 erweitert)', () => {
   const live = (html.match(/class="cp-status live"/g) || []).length;
   const skeleton = (html.match(/class="cp-status skeleton"/g) || []).length;
-  assert.strictEqual(live, 8, '8 LIVE-Sektionen erwartet (vorher 6, +2 mit cp-card live: 5+8 sind direkt-card live, 11 separate; minus Section 1+6 cp-data; total 8)');
-  assert.strictEqual(skeleton, 4, '4 SKELETON-Sektionen erwartet (7 Support, 9 Timing, 10 Conversion, 12 Billing)');
+  assert.strictEqual(live, 10, '10 LIVE-Sektionen erwartet (W7-I4 fügt 9+10 hinzu)');
+  assert.strictEqual(skeleton, 2, '2 SKELETON verbleiben (7 Support-Inbox, 12 Billing-Sync)');
+});
+
+test('W7-I4: loadGutachtenTiming + loadConversion Live-Fetch', () => {
+  assert.match(html, /async function loadGutachtenTiming/);
+  assert.match(html, /async function loadConversion/);
+  assert.match(html, /admin-time-tracking\?range=30d/);
+  assert.match(html, /admin-funnel\?range=30d/);
 });
 
 test('W6P2-I4: loadAuditTrail / loadPushAlerts / loadChurn Live-Fetch', () => {
