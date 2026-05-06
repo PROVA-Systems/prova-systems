@@ -16,7 +16,8 @@
  *   encryptSecret(plain, key) → string (AES-256-GCM, iv|tag|ciphertext base64)
  *   decryptSecret(encrypted, key) → string
  *
- * ENV: PROVA_TOTP_ENCRYPTION_KEY (32-Byte hex) defensive: || TOTP_ENCRYPTION_KEY
+ * ENV: PROVA_TOTP_ENCRYPTION_KEY (32-Byte hex) defensive Fallback-Chain:
+ *      || TOTP_ENCRYPTION_KEY || TWO_FACTOR_ENCRYPTION_KEY (Marcel-existing)
  */
 'use strict';
 
@@ -126,10 +127,13 @@ function generateRecoveryCodes(n) {
 
 // ── Encryption für DB-Storage (AES-256-GCM) ────────────────────────────────
 function getEncryptionKey() {
-  // MEGA²⁹ W9-I1: defensive PROVA-Prefix-Migration
-  const keyHex = process.env.PROVA_TOTP_ENCRYPTION_KEY || process.env.TOTP_ENCRYPTION_KEY;
+  // MEGA²⁹ W9-I1 + W12b-I4: defensive ENV-Fallback-Chain
+  // Marcel hat TWO_FACTOR_ENCRYPTION_KEY bereits in Netlify gesetzt (existing).
+  const keyHex = process.env.PROVA_TOTP_ENCRYPTION_KEY
+    || process.env.TOTP_ENCRYPTION_KEY
+    || process.env.TWO_FACTOR_ENCRYPTION_KEY;
   if (!keyHex || keyHex.length < 64) {
-    throw new Error('PROVA_TOTP_ENCRYPTION_KEY (Legacy: TOTP_ENCRYPTION_KEY) muss 32 Bytes (64 hex chars) sein');
+    throw new Error('TOTP-Key (PROVA_TOTP_ENCRYPTION_KEY | TOTP_ENCRYPTION_KEY | TWO_FACTOR_ENCRYPTION_KEY) muss 32 Bytes (64 hex chars) sein');
   }
   return Buffer.from(keyHex, 'hex');
 }
