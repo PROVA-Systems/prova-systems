@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v294';   // MEGA²⁸ V3.2-W2 (in progress): archiv-filter (KORR-10) + global-search-engine (KORR-7) + neuer-fall.html Wizard-Landing (KORR-8) + 57 neue Tests grün
+const CACHE_VERSION = 'prova-v295';   // MEGA²⁸ V3.2-W3 (in progress): cluster-cleanup (KORR-4) + cloudflare-mailto-fix (KORR-25) + sentry-audit + pdf-proxy-wrap (KORR-20) + bescheinigungen.html (KORR-9) + 4 PII-pseudo-fixes (W3-I7 audit)
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
@@ -46,6 +46,7 @@ const APP_SHELL = [
   '/schadensfaelle.html',               // MEGA²⁸ P1-I1: Übersicht-Liste Flow A
   '/schadensfaelle-logic.js',
   '/neuer-fall.html',                   // MEGA²⁸ V3.2-W2 KORR-8: Wizard-Landing-Page
+  '/bescheinigungen.html',              // MEGA²⁸ V3.2-W3-I3 KORR-9: 11 Korrespondenz-Briefe Übersicht
   '/lib/referral-system.js',            // MEGA²⁷: Referral-Foundation
   '/lib/referral-ui.js',                // MEGA²⁷: Dashboard-Karte + Modals
   '/lib/referral-redemption.js',        // MEGA²⁷: Pricing-Page Code-Detection
