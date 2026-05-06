@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v292';   // MEGA²⁸ V3.1 KORR-Runde: KI-PROMPTS-MASTER + Make T3+F1 Doc + AVV/TOM/Verfahrensverzeichnis + DSGVO-Portability + Rate-Limit-Helper + Migration 15 is_demo + Bescheinigungen-Inventory + Sandbox-Inventory + Decision-Log #10 + Dep-Updates (10 commits, 2080+ tests grün)
+const CACHE_VERSION = 'prova-v293';   // MEGA²⁸ V3.2-W1: Regel-14-Compliance-Fix (gpt-4o-mini→gpt-4o für pruefe_fachurteil + fachurteil_entwurf) + §407a Pre-Send-Validator + KI-Konsistenz-Check §4↔§6 + KI-Cost-Calc + Master-Doku-Sync + Kontrast-Audit + Decisions #10-#13 (8 commits W1, 371+ tests grün)
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [

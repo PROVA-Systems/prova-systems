@@ -227,3 +227,27 @@
 
 **Empfehlung Marcel:** Browser-Test pflicht — falls Bug an konkreter Page sichtbar ist, Page-Name liefern für gezielten Fix.
 
+
+---
+
+## DECISION #13 (W1-I9) — Live-Transkript-Bug Diagnose
+
+**Code-Audit (`app-logic.js:2722-2747`):**
+- Web-Speech-API mit `recognition.continuous = true; interimResults = false`
+- `onresult`-Handler appendet `<p>`-Elements an `#transcriptArea`
+- KEINE Pause-on-Manual-Input-Logic
+
+**Vermutete Bug-Mechanik (Marcel-Beobachtung):**
+Wenn User manuell in `#transcriptArea` tippt während Recognition läuft, überschreibt der nächste `onresult`-Trigger oder appendet auf einer falschen Position → Live-Transkript "bricht" gefühlt.
+
+**Fix-Optionen:**
+- (a) `contenteditable`-Toggle auf `#transcriptArea` (User-Edit pausiert Recognition via blur-Listener)
+- (b) Trennung: separate "Live-Stream"-Container vs "User-Edited"-Container
+- (c) Recognition komplett pausieren bei Focus-Event auf editable area
+
+**Meine Meinung als CTO:** (c) ist am pragmatischsten — User-Erwartung ist klar.
+
+**Default umgesetzt:** Code-Audit + Decision-Log. Fix erfordert Live-Browser-Verification (Web-Speech-API ist Browser-API), daher per Regel C deferred. Bug-Pattern dokumentiert für gezielten Sprint.
+
+**Empfehlung Marcel:** Browser-Reproduce + Variant (c) implementieren in einem 30-min-Sprint mit Live-Test.
+
