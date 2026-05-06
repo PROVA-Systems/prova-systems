@@ -136,7 +136,7 @@ PROVA ist ein KI-natives B2B-SaaS für **öffentlich bestellte und vereidigte Ba
 20. **Forced Re-Consent** — bei neuer Version eines Rechtsdokuments (`rechtsdokumente.aktuell = TRUE`) müssen alle aktiven User vor nächstem Login neu zustimmen. View `v_user_pending_einwilligungen` und Function `record_einwilligung()` nutzen.
 
 ### Pricing
-21. **Solo (149€/mo) und Team (279€/mo)** — KEINE anderen Tier-Namen, NIEMALS andere Preise.
+21. **Solo (179€/mo) und Team (379€/mo)** — KEINE anderen Tier-Namen, NIEMALS andere Preise. (Update Marcel-Direktive 2026-05-08, vorher 149€/279€)
 22. **Add-ons:** 5F=`price_1TJLnv8`, 10F=`price_1TJLpG8`.
 23. **Founding-Members:** 99€ lifetime für erste 10 Pilotkunden (Stripe-Coupon `FOUNDING-99`).
 
@@ -303,7 +303,7 @@ prova-systems/
 
 ## Was du NIE tun darfst
 
-- ❌ Pricing ändern (Solo 149€ / Team 279€ sind fix)
+- ❌ Pricing ändern (Solo 179€ / Team 379€ sind fix; Stand 2026-05-08 nach Marcel-Direktive)
 - ❌ Neue Frameworks einführen (Vanilla-JS bleibt)
 - ❌ RLS-Policies umgehen mit Service-Role-Key im Frontend
 - ❌ KI-Bewertungen schreiben lassen (nur strukturierte Hilfen)

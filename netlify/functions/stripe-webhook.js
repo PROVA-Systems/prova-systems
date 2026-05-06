@@ -482,9 +482,11 @@ exports.handler = withSentry(async function (event) {
     return { statusCode: 405, body: 'Method Not Allowed' };
   }
 
-  // ENV-Check
-  if (!process.env.STRIPE_SECRET_KEY || !process.env.STRIPE_WEBHOOK_SECRET) {
-    console.error('[stripe-webhook] STRIPE_SECRET_KEY oder STRIPE_WEBHOOK_SECRET fehlt');
+  // ENV-Check (MEGA²⁹ W9-I6: defensive PROVA-Prefix-Migration)
+  const stripeSecret = process.env.PROVA_STRIPE_SECRET_KEY || process.env.STRIPE_SECRET_KEY;
+  const webhookSecret = process.env.PROVA_STRIPE_WEBHOOK_SECRET || process.env.STRIPE_WEBHOOK_SECRET;
+  if (!stripeSecret || !webhookSecret) {
+    console.error('[stripe-webhook] PROVA_STRIPE_SECRET_KEY (Legacy: STRIPE_SECRET_KEY) oder PROVA_STRIPE_WEBHOOK_SECRET (Legacy: STRIPE_WEBHOOK_SECRET) fehlt');
     return { statusCode: 500, body: 'Webhook nicht konfiguriert' };
   }
   if (!process.env.SUPABASE_SERVICE_ROLE_KEY || !(process.env.PROVA_SUPABASE_PROJECT_URL || process.env.SUPABASE_URL)) {
@@ -503,7 +505,7 @@ exports.handler = withSentry(async function (event) {
   let stripeEvent;
   try {
     const stripe = getStripeClient();
-    stripeEvent = stripe.webhooks.constructEvent(body, sig, process.env.STRIPE_WEBHOOK_SECRET);
+    stripeEvent = stripe.webhooks.constructEvent(body, sig, webhookSecret); // W9-I6: defensive PROVA-Prefix
   } catch (err) {
     console.warn('[stripe-webhook] signature verify failed:', err.message);
     return { statusCode: 400, body: 'Webhook signature failed' };

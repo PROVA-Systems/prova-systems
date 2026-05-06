@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1, viewport-fit=cover">
+<title>Fristen · PROVA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="prova-fetch-auth.js"></script>
+<script src="/lib/prova-config.js"></script>
+<script>
+(function(){
+  try {
+    var token = localStorage.getItem('prova_auth_token');
+    var email = localStorage.getItem('prova_sv_email') || '';
+    if (!token || !email) { window.location.replace('/login?next=' + encodeURIComponent(location.pathname)); return; }
+  } catch (e) { window.location.replace('/login'); }
+})();
+</script>
+<script type="module">
+  import { runAuthGuard } from '/lib/auth-guard.js';
+  runAuthGuard().catch(e => console.error('[auth] guard failed', e));
+</script>
+<script src="theme.js"></script>
+<script src="prova-layout.config.js"></script>
+<script src="nav.js" defer></script>
+<script src="/lib/fristen-pipelines.js"></script>
+<link rel="stylesheet" href="prova-design.css">
+<style>
+:root {
+  --bg:#0b0d11; --surface:#1c2130; --surface2:#232a3a;
+  --border:rgba(255,255,255,0.06); --border2:rgba(255,255,255,0.11);
+  --text:#eaecf4; --text2:#8b93ab; --text3:#4d5568;
+  --accent:#4f8ef7; --accent2:#3a7be0; --success:#10b981; --warning:#f59e0b; --danger:#ef4444;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;line-height:1.55;}
+.fr-wrap{max-width:1180px;margin:0 auto;padding:24px 20px 80px;}
+.fr-h1{font-size:24px;font-weight:800;letter-spacing:-.025em;margin-bottom:6px;}
+.fr-sub{font-size:14px;color:var(--text2);margin-bottom:20px;}
+.fr-toolbar{display:flex;gap:10px;margin:14px 0;flex-wrap:wrap;}
+.fr-btn{padding:8px 14px;border:none;border-radius:8px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;}
+.fr-btn-ghost{padding:8px 14px;background:var(--surface);border:1px solid var(--border2);color:var(--text2);border-radius:8px;cursor:pointer;font-family:inherit;font-size:13px;}
+.fr-input{padding:8px 11px;background:var(--surface);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;}
+.fr-list{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
+.fr-row{display:grid;grid-template-columns:120px 130px 1fr 100px 100px 90px 60px;gap:10px;padding:13px 18px;border-bottom:1px solid var(--border);align-items:center;font-size:13px;}
+.fr-row:last-child{border-bottom:none;}
+.fr-row-header{background:var(--surface2);font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);font-weight:700;}
+.fr-typ{font-size:10px;padding:3px 8px;border-radius:8px;background:rgba(79,142,247,.12);color:var(--accent);font-weight:700;width:fit-content;}
+.fr-pipe{font-size:10px;padding:3px 8px;border-radius:8px;background:rgba(245,158,11,.12);color:var(--warning);font-weight:700;width:fit-content;}
+.fr-status{font-size:10px;font-weight:700;padding:3px 8px;border-radius:8px;width:fit-content;}
+.fr-status.offen{background:rgba(79,142,247,.12);color:var(--accent);}
+.fr-status.erfuellt{background:rgba(16,185,129,.12);color:var(--success);}
+.fr-status.verfallen{background:rgba(239,68,68,.12);color:var(--danger);}
+.fr-status.verlaengert{background:rgba(245,158,11,.12);color:var(--warning);}
+.fr-due-today{font-weight:700;color:var(--warning);}
+.fr-overdue{font-weight:700;color:var(--danger);}
+.fr-empty{padding:32px;text-align:center;color:var(--text3);font-size:13px;}
+.fr-modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:500;align-items:center;justify-content:center;padding:20px;}
+.fr-modal-overlay.open{display:flex;}
+.fr-modal{background:var(--surface);border:1px solid var(--border2);border-radius:12px;max-width:560px;width:100%;padding:24px;}
+.fr-modal h2{font-size:16px;font-weight:700;margin-bottom:14px;}
+.fr-form-group{margin-bottom:12px;}
+.fr-form-label{display:block;font-size:11px;font-weight:600;color:var(--text3);margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em;}
+.fr-form-input,.fr-form-select{width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;}
+.fr-modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:16px;}
+.fr-modal-cancel{padding:8px 16px;background:transparent;border:1px solid var(--border2);color:var(--text2);border-radius:8px;cursor:pointer;font-family:inherit;}
+@media(max-width:700px){.fr-row{grid-template-columns:1fr;}.fr-row-header{display:none;}}
+</style>
+</head>
+<body>
+<main class="fr-wrap" id="main-content">
+
+  <h1 class="fr-h1">Fristen</h1>
+  <p class="fr-sub">Reminder-System für 5 Pipelines (Schaden/Wert/Bauabnahme/Schiedsgutachten/Beweissicherung) — automatische E-Mail bei T-14/7/3/1 Tagen.</p>
+
+  <div class="fr-toolbar">
+    <select class="fr-input" id="f-status" onchange="loadFristen()">
+      <option value="">Alle Status</option>
+      <option value="offen">Offen</option>
+      <option value="erfuellt">Erfüllt</option>
+      <option value="verfallen">Verfallen</option>
+      <option value="verlaengert">Verlängert</option>
+    </select>
+    <select class="fr-input" id="f-due" onchange="loadFristen()">
+      <option value="">Alle Termine</option>
+      <option value="7">Nächste 7 Tage</option>
+      <option value="14">Nächste 14 Tage</option>
+      <option value="30">Nächste 30 Tage</option>
+    </select>
+    <button class="fr-btn" type="button" onclick="openCreate()">+ Einzel-Frist</button>
+    <button class="fr-btn-ghost" type="button" onclick="openPipeline()">+ Pipeline anwenden</button>
+    <span style="margin-left:auto;font-size:12px;color:var(--text3);" id="fr-count">—</span>
+  </div>
+
+  <div class="fr-list">
+    <div class="fr-row fr-row-header">
+      <div>Datum</div><div>Typ</div><div>Notiz</div><div>Pipeline</div><div>Status</div><div>T-Tage</div><div></div>
+    </div>
+    <div id="fr-rows"></div>
+  </div>
+
+</main>
+
+<!-- Single-Modal -->
+<div class="fr-modal-overlay" id="fr-modal-overlay" onclick="if(event.target===this)closeModal()">
+  <div class="fr-modal">
+    <h2>Neue Frist</h2>
+    <div class="fr-form-group"><label class="fr-form-label">Auftrag-UUID</label><input type="text" class="fr-form-input" id="m-auftrag_id"></div>
+    <div class="fr-form-group">
+      <label class="fr-form-label">Typ</label>
+      <select class="fr-form-select" id="m-frist_typ">
+        <option>gericht</option><option>gutachten-erstattung</option><option>honorar</option>
+        <option>widerspruch</option><option>akteneinsicht</option><option>zeugen</option>
+        <option>parteien</option><option>ortstermin</option>
+      </select>
+    </div>
+    <div class="fr-form-group"><label class="fr-form-label">Datum-Soll</label><input type="date" class="fr-form-input" id="m-datum_soll"></div>
+    <div class="fr-form-group"><label class="fr-form-label">Notiz</label><input type="text" class="fr-form-input" id="m-notiz"></div>
+    <div class="fr-form-group"><label class="fr-form-label">Rechtsgrundlage (optional, z.B. § 411 ZPO)</label><input type="text" class="fr-form-input" id="m-rechtsgrundlage"></div>
+    <div class="fr-modal-actions">
+      <button class="fr-modal-cancel" type="button" onclick="closeModal()">Abbrechen</button>
+      <button class="fr-btn" type="button" onclick="saveFrist()">Speichern</button>
+    </div>
+  </div>
+</div>
+
+<!-- Pipeline-Modal -->
+<div class="fr-modal-overlay" id="fr-pipe-overlay" onclick="if(event.target===this)closePipeline()">
+  <div class="fr-modal">
+    <h2>Pipeline anwenden</h2>
+    <p style="font-size:12px;color:var(--text2);margin-bottom:10px;">Erzeugt alle Fristen einer Pipeline mit relativen Offsets gegen den Stichtag.</p>
+    <div class="fr-form-group"><label class="fr-form-label">Auftrag-UUID</label><input type="text" class="fr-form-input" id="p-auftrag_id"></div>
+    <div class="fr-form-group">
+      <label class="fr-form-label">Pipeline</label>
+      <select class="fr-form-select" id="p-pipeline_key"></select>
+    </div>
+    <div class="fr-form-group"><label class="fr-form-label">Stichtag (Auftragseingang/Beweisbeschluss/Ortstermin)</label><input type="date" class="fr-form-input" id="p-stichtag"></div>
+    <div id="p-preview" style="margin-top:8px;padding:10px;background:var(--bg);border-radius:8px;font-size:11px;font-family:ui-monospace,monospace;color:var(--text2);max-height:200px;overflow-y:auto;"></div>
+    <div class="fr-modal-actions">
+      <button class="fr-modal-cancel" type="button" onclick="closePipeline()">Abbrechen</button>
+      <button class="fr-btn" type="button" onclick="applyPipeline()">Pipeline erstellen</button>
+    </div>
+  </div>
+</div>
+
+<script>
+function escHtml(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function fmtDate(d){if(!d)return '—';try{return new Date(d).toLocaleDateString('de-DE');}catch(e){return d;}}
+function diffDays(d){const t=new Date(d+'T00:00:00');const today=new Date();today.setHours(0,0,0,0);return Math.round((t-today)/86400000);}
+
+async function loadFristen() {
+  const status = document.getElementById('f-status').value;
+  const due = document.getElementById('f-due').value;
+  let url = '/.netlify/functions/fristen-list?';
+  if (status) url += 'status=' + status + '&';
+  if (due) url += 'due_within_days=' + due + '&';
+  try {
+    const res = await provaFetch(url);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    document.getElementById('fr-count').textContent = data.total + ' Fristen';
+    const rows = document.getElementById('fr-rows');
+    if (!data.fristen || !data.fristen.length) {
+      rows.innerHTML = '<div class="fr-empty">Keine Fristen gefunden. <a href="#" onclick="event.preventDefault();openPipeline()" style="color:var(--accent);">+ Pipeline anwenden</a></div>';
+      return;
+    }
+    rows.innerHTML = data.fristen.map(f => {
+      const td = diffDays(f.datum_soll);
+      const tdCls = td < 0 ? 'fr-overdue' : (td <= 1 ? 'fr-due-today' : '');
+      const tdTxt = td < 0 ? 'überfällig' : (td === 0 ? 'heute' : 'T-' + td);
+      return `<div class="fr-row">
+        <div>${fmtDate(f.datum_soll)}</div>
+        <div><span class="fr-typ">${escHtml(f.frist_typ)}</span></div>
+        <div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(f.notiz || '—')}</div>
+        <div>${f.pipeline ? '<span class="fr-pipe">' + escHtml(f.pipeline) + '</span>' : '—'}</div>
+        <div><span class="fr-status ${f.status}">${f.status}</span></div>
+        <div class="${tdCls}">${tdTxt}</div>
+        <div>${f.status === 'offen' ? '<button class="fr-btn-ghost" type="button" style="padding:4px 8px;font-size:11px;" onclick="markErfuellt(\\''+f.id+'\\')">✓</button>' : ''}</div>
+      </div>`;
+    }).join('');
+  } catch (e) {
+    document.getElementById('fr-rows').innerHTML = '<div class="fr-empty" style="color:var(--warning);">Fehler: ' + escHtml(e.message) + '</div>';
+  }
+}
+
+function openCreate() {
+  document.getElementById('m-datum_soll').value = new Date(Date.now() + 14*86400000).toISOString().slice(0,10);
+  document.getElementById('fr-modal-overlay').classList.add('open');
+}
+function closeModal() { document.getElementById('fr-modal-overlay').classList.remove('open'); }
+
+async function saveFrist() {
+  const body = {
+    auftrag_id: document.getElementById('m-auftrag_id').value.trim(),
+    frist_typ: document.getElementById('m-frist_typ').value,
+    datum_soll: document.getElementById('m-datum_soll').value,
+    notiz: document.getElementById('m-notiz').value.trim() || null,
+    rechtsgrundlage: document.getElementById('m-rechtsgrundlage').value.trim() || null
+  };
+  if (!body.auftrag_id || !body.datum_soll) { alert('Auftrag-UUID + Datum pflicht.'); return; }
+  try {
+    const res = await provaFetch('/.netlify/functions/fristen-create', {
+      method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body)
+    });
+    if (!res.ok) { const err = await res.json(); alert('Fehler: ' + (err.error || res.status)); return; }
+    closeModal(); loadFristen();
+  } catch (e) { alert('Fehler: ' + e.message); }
+}
+
+function openPipeline() {
+  const sel = document.getElementById('p-pipeline_key');
+  sel.innerHTML = '';
+  const pipes = (window.FristenPipelines || { listPipelines: () => [] }).listPipelines();
+  pipes.forEach(p => {
+    const opt = document.createElement('option');
+    opt.value = p.key; opt.textContent = p.label + ' (' + p.count + ' Fristen, ab ' + p.stichtag_quelle + ')';
+    sel.appendChild(opt);
+  });
+  document.getElementById('p-stichtag').value = new Date().toISOString().slice(0,10);
+  updatePreview();
+  document.getElementById('p-pipe-overlay').classList.add('open');
+  document.getElementById('fr-pipe-overlay').classList.add('open');
+}
+function closePipeline() { document.getElementById('fr-pipe-overlay').classList.remove('open'); }
+
+document.addEventListener('DOMContentLoaded', () => {
+  ['p-pipeline_key','p-stichtag'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('change', updatePreview);
+  });
+  loadFristen();
+});
+
+function updatePreview() {
+  const key = document.getElementById('p-pipeline_key').value;
+  const stichtag = document.getElementById('p-stichtag').value;
+  if (!key || !stichtag || !window.FristenPipelines) return;
+  const fr = window.FristenPipelines.applyPipeline(key, { stichtag });
+  document.getElementById('p-preview').innerHTML = (fr || []).map(f =>
+    f.datum_soll + ' → ' + escHtml(f.frist_typ) + ' (' + escHtml(f.rechtsgrundlage) + ')'
+  ).join('<br>');
+}
+
+async function applyPipeline() {
+  const body = {
+    auftrag_id: document.getElementById('p-auftrag_id').value.trim(),
+    pipeline_key: document.getElementById('p-pipeline_key').value,
+    stichtag: document.getElementById('p-stichtag').value
+  };
+  if (!body.auftrag_id) { alert('Auftrag-UUID pflicht.'); return; }
+  try {
+    const res = await provaFetch('/.netlify/functions/fristen-create', {
+      method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body)
+    });
+    if (!res.ok) { const err = await res.json(); alert('Fehler: ' + (err.error || res.status)); return; }
+    const data = await res.json();
+    alert(data.created + ' Fristen erstellt (Pipeline: ' + data.pipeline + ')');
+    closePipeline(); loadFristen();
+  } catch (e) { alert('Fehler: ' + e.message); }
+}
+
+async function markErfuellt(id) {
+  try {
+    const res = await provaFetch('/.netlify/functions/fristen-mark-erfuellt', {
+      method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ id })
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    loadFristen();
+  } catch (e) { alert('Fehler: ' + e.message); }
+}
+</script>
+<script src="sw-register.js" defer></script>
+</body>
+</html>

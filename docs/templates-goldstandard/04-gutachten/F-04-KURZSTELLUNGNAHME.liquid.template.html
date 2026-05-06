@@ -1,0 +1,129 @@
+<!--
+  PROVA F-04 KURZSTELLUNGNAHME — Liquid-Variante (MEGA³⁰ W10-I1)
+  Recherche-Quellen: docs/sprint-status/MEGA-30-W10-I0-RECHERCHE.md
+  Stand: 2026-05-10
+  Compliance: § 407a ZPO + § 411 Abs. 4 ZPO + § 10 IHK-SVO + Art. 50 EU AI Act
+  Kompakt-Format: 5-10 Seiten (Stellungnahme-Charakter, KEIN Voll-Gutachten)
+-->
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>{{ az }} — Kurzstellungnahme {{ thema | default: "Sachverhalt" }}</title>
+<style>
+  @page { size: A4; margin: 22mm 18mm 18mm 22mm; }
+  body { font-family: 'Inter', system-ui, sans-serif; color: #1f2937; font-size: 10pt; line-height: 1.55; }
+  h1 { color: #1e3a8a; font-size: 18pt; }
+  .deckblatt { margin-top: 20mm; }
+  .deckblatt-titel { font-size: 20pt; font-weight: 800; margin-bottom: 4mm; }
+  .deckblatt-az { font-family: 'JetBrains Mono', monospace; font-size: 11pt; color: #4f8ef7; }
+  .teil-header { background: #1e3a8a; color: #fff; padding: 3mm 5mm; margin: 8mm 0 4mm; font-weight: 700; font-size: 11pt; }
+  .abschnitt-header { display: flex; gap: 4mm; margin: 6mm 0 2mm; padding-bottom: 1mm; border-bottom: 1px solid #d1d5db; }
+  .abschnitt-nr { font-family: 'JetBrains Mono', monospace; font-weight: 700; color: #4f8ef7; }
+  .abschnitt-titel { font-weight: 700; color: #1e3a8a; }
+  .pflicht-klausel { margin: 3mm 0; padding: 3mm 4mm; background: #fff7ed; border-left: 3px solid #f59e0b; border-radius: 4px; font-size: 9pt; }
+  .law-ref { font-family: 'JetBrains Mono', monospace; font-size: 9pt; color: #4f8ef7; }
+  .fachurteil-box { margin: 4mm 0; padding: 4mm 5mm; background: #f0fdf4; border-left: 3px solid #10b981; border-radius: 4px; }
+  .fachurteil-intro { font-size: 9pt; color: #065f46; margin-bottom: 2mm; font-style: italic; }
+  .ki-disclosure-box { margin: 6mm 0 4mm; padding: 4mm 5mm; border-left: 3px solid #4f8ef7; background: #f7f9fc; font-size: 9pt; page-break-inside: avoid; }
+  .unterschrift-line { border-bottom: 1px solid #1f2937; height: 12mm; margin: 4mm 0 2mm; }
+</style>
+</head>
+<body>
+
+<div class="deckblatt">
+  <div class="deckblatt-az">{{ az }}</div>
+  <h1 class="deckblatt-titel">Kurzstellungnahme</h1>
+  <p style="font-size:11pt;font-weight:600;">{{ thema }}</p>
+  <p style="font-size:9pt;color:#6b7280;margin-top:8mm;">
+    <strong>Auftraggeber:</strong> {{ auftraggeber_name }}<br>
+    {{ auftraggeber_anschrift }}<br>
+    <strong>Stellungnahme-Stichtag:</strong> {{ stellungnahme_stichtag }}<br>
+    <strong>Datum:</strong> {{ datum }}
+  </p>
+  <p style="font-size:9pt;color:#6b7280;margin-top:6mm;">
+    <strong>Erstattender Sachverständiger:</strong> {{ sv_name }}<br>
+    {{ sv_qualifikation | default: "ö.b.u.v. Sachverständiger" }}{% if sv_sachgebiet %} für {{ sv_sachgebiet }}{% endif %}<br>
+    {{ sv_anschrift }}
+  </p>
+</div>
+
+<!-- TEIL 1: AUFTRAG + BEWEISFRAGEN -->
+<div class="teil-header">Teil 1 — Auftrag und Beweisfragen</div>
+
+<div class="abschnitt-header"><div class="abschnitt-nr">1.1</div><div class="abschnitt-titel">Auftragsbeschreibung</div></div>
+<p>{{ auftragsbeschreibung }}</p>
+
+<div class="abschnitt-header"><div class="abschnitt-nr">1.2</div><div class="abschnitt-titel">Beweisfragen</div></div>
+<ol>
+{% for frage in beweisfragen %}
+  <li>{{ frage }}</li>
+{% endfor %}
+</ol>
+
+<div class="pflicht-klausel">
+  <strong>Stellungnahme-Stichtag (<span class="law-ref">§ 411 Abs. 4 ZPO</span>):</strong> Diese Kurzstellungnahme bezieht sich auf den Stichtag <strong>{{ stellungnahme_stichtag }}</strong>. Spätere Sachlagen sind nicht berücksichtigt.
+</div>
+
+<!-- TEIL 2: STAMMDATEN -->
+<div class="teil-header">Teil 2 — Stammdaten</div>
+
+<div class="abschnitt-header"><div class="abschnitt-nr">2.1</div><div class="abschnitt-titel">Sachverhalt</div></div>
+<p>{{ sachverhalt }}</p>
+
+<div class="abschnitt-header"><div class="abschnitt-nr">2.2</div><div class="abschnitt-titel">Vorgelegte Unterlagen</div></div>
+<ul>
+{% for unterlage in vorgelegte_unterlagen %}
+  <li>{{ unterlage }}</li>
+{% endfor %}
+</ul>
+
+<!-- TEIL 3: BEANTWORTUNG -->
+<div class="teil-header">Teil 3 — Beantwortung der Beweisfragen</div>
+
+<div class="abschnitt-header"><div class="abschnitt-nr">3.1</div><div class="abschnitt-titel">Methodik</div></div>
+
+<div class="pflicht-klausel">
+  <strong>Methodik-Begründung:</strong> Die Bewertung erfolgte ausschließlich aufgrund der vorliegenden Unterlagen ohne Ortsbesichtigung. Eine vertiefte Begutachtung ist gegebenenfalls in einem Voll-Gutachten erforderlich.
+</div>
+
+<p>{{ methodik_text }}</p>
+
+<div class="abschnitt-header"><div class="abschnitt-nr">3.2</div><div class="abschnitt-titel">Befunde</div></div>
+<p>{{ befunde_text }}</p>
+
+<!-- 3.4 Fachurteil -->
+<div class="abschnitt-header"><div class="abschnitt-nr">3.4</div><div class="abschnitt-titel">Sachverständige Beurteilung (Fachurteil)</div></div>
+
+<div class="fachurteil-box">
+  <div class="fachurteil-intro">Die nachstehende Beurteilung wurde vollständig und ausschließlich vom unterzeichnenden Sachverständigen persönlich erstellt, ohne KI-Unterstützung (<span class="law-ref">§ 10 IHK-SVO</span>, <span class="law-ref">§ 407a Abs. 2 ZPO</span>).</div>
+  <div style="white-space:pre-wrap;">{{ fachurteil_text }}</div>
+</div>
+
+<!-- TEIL 4: ZUSAMMENFASSUNG + COMPLIANCE -->
+<div class="teil-header">Teil 4 — Zusammenfassung und Unterschrift</div>
+
+<div class="abschnitt-header"><div class="abschnitt-nr">4.1</div><div class="abschnitt-titel">Zusammenfassende Feststellung</div></div>
+<p>{{ zusammenfassung }}</p>
+
+<div class="ki-disclosure-box">
+  <div style="font-weight:700;color:#2c3e50;margin-bottom:2mm;font-size:9pt;text-transform:uppercase;letter-spacing:.04em;">
+    KI-Hilfsmittel-Erklärung (<span class="law-ref">§ 407a Abs. 3 ZPO</span> · <span class="law-ref">Art. 50 EU AI Act</span>)
+  </div>
+  Bei der Erstellung dieser Kurzstellungnahme wurden KI-gestützte Werkzeuge ausschließlich zur Strukturierung, Grammatik-Prüfung und Konsistenz-Analyse eingesetzt. <strong>Alle fachlichen Bewertungen wurden vom unterzeichnenden Sachverständigen persönlich geprüft und freigegeben.</strong>
+</div>
+
+<p style="margin-top:5mm;font-size:9pt;">
+  <strong>Eigenleistungs-Anteil:</strong> Teil 3.4 (Fachurteil) wurde vollständig und ausschließlich vom unterzeichnenden Sachverständigen persönlich verfasst, ohne KI-Unterstützung.
+</p>
+
+<div class="abschnitt-header"><div class="abschnitt-nr">4.2</div><div class="abschnitt-titel">Ort, Datum, Unterschrift</div></div>
+
+<div style="margin-top:6mm;">
+  <p style="font-size:10pt;margin-bottom:4mm;">{{ unterschrift_ort }}, den {{ unterschrift_datum }}</p>
+  <div class="unterschrift-line"></div>
+  <p style="font-size:9pt;color:#6b7280;">{{ sv_name }} · {{ sv_qualifikation }}</p>
+</div>
+
+</body>
+</html>

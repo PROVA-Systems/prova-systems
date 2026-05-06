@@ -257,10 +257,14 @@ describe('KI-Garantie Source-Audit', () => {
     assert.ok(/claude-sonnet-4-6|claude-sonnet/i.test(src));
   });
 
-  test('ki-service-openai.js Konjunktiv-II nutzt gpt-4o (NICHT mini)', () => {
+  test('ki-service-openai.js Modell-Strategie aktuell (W4-I0: gpt-5.x oder backwards-compat gpt-4o)', () => {
+    // MEGA²⁹ W9-I0b: Test aktualisiert nach W4-I0 (gpt-4o deprecated → gpt-5.x).
+    // Backwards-Compat-Pattern erlaubt gpt-4o als Fallback-String, aber
+    // mindestens ein gpt-5.x-String MUSS verfügbar sein.
     const src = fs.readFileSync(path.join(ROOT, 'lib/ki-service-openai.js'), 'utf8');
-    // Suche nach Konjunktiv-Stelle: nutzt Standard-GPT-4o
-    assert.ok(/gpt-4o(?!-mini)/.test(src),
-      'gpt-4o Standard-Modell muss verfügbar sein');
+    const hasGpt5 = /gpt-5\.(?:5|4)/i.test(src);
+    const hasGpt4o = /gpt-4o(?!-mini)/.test(src); // backwards-compat
+    assert.ok(hasGpt5 || hasGpt4o,
+      'gpt-5.x oder gpt-4o Modell-String muss verfügbar sein (W4-I0-Migration)');
   });
 });
