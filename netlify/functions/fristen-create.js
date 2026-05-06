@@ -1,7 +1,9 @@
 /**
- * PROVA — fristen-create.js (MEGA³⁰ W10b-I6)
- * POST { schadensfall_id, frist_typ, datum_soll, ... } (Single)
- *   ODER { schadensfall_id, pipeline_key, stichtag } (Bulk via fristen-pipelines)
+ * PROVA — fristen-create.js (MEGA³² W12b-I3 Schema-Reconciled)
+ * POST { auftrag_id, frist_typ, datum_soll, ... } (Single)
+ *   ODER { auftrag_id, pipeline_key, stichtag } (Bulk via fristen-pipelines)
+ *
+ * Schema (W12-I0 Audit): public.fristen mit auftrag_id + created_by_user_id + workspace_memberships RLS
  */
 'use strict';
 
@@ -25,16 +27,19 @@ exports.handler = withSentry(requireAuth(async function (event, context) {
   try { body = JSON.parse(event.body || '{}'); }
   catch (e) { return jsonResponse(event, 400, { error: 'Invalid JSON' }); }
 
-  if (!body.schadensfall_id) return jsonResponse(event, 400, { error: 'schadensfall_id pflicht' });
+  // Backwards-Compat: alte Frontends senden noch schadensfall_id
+  const auftrag_id = body.auftrag_id || body.schadensfall_id;
+
+  if (!auftrag_id) return jsonResponse(event, 400, { error: 'auftrag_id pflicht' });
 
   const sb = getSupabase();
   if (!sb) return jsonResponse(event, 503, { error: 'Supabase nicht konfiguriert' });
 
-  // Workspace-Resolve
+  // Workspace-Resolve via auftraege
   const { data: fall, error: fErr } = await sb.from('auftraege')
-    .select('workspace_id').eq('id', body.schadensfall_id).maybeSingle();
+    .select('workspace_id').eq('id', auftrag_id).maybeSingle();
   if (fErr) return jsonResponse(event, 500, { error: fErr.message });
-  if (!fall) return jsonResponse(event, 404, { error: 'Schadensfall nicht gefunden' });
+  if (!fall) return jsonResponse(event, 404, { error: 'Auftrag nicht gefunden' });
 
   try {
     if (body.pipeline_key) {
@@ -43,9 +48,9 @@ exports.handler = withSentry(requireAuth(async function (event, context) {
       if (!fristen) return jsonResponse(event, 400, { error: 'Pipeline-Key unbekannt' });
       const inserts = fristen.map(function (f) {
         return Object.assign({}, f, {
-          schadensfall_id: body.schadensfall_id,
+          auftrag_id: auftrag_id,
           workspace_id: fall.workspace_id,
-          erstellt_von: context.userId
+          created_by_user_id: context.userId
         });
       });
       const { data, error } = await sb.from('fristen').insert(inserts).select();
@@ -59,7 +64,7 @@ exports.handler = withSentry(requireAuth(async function (event, context) {
     if (!body.datum_soll) return jsonResponse(event, 400, { error: 'datum_soll pflicht (YYYY-MM-DD)' });
 
     const insert = {
-      schadensfall_id: body.schadensfall_id,
+      auftrag_id: auftrag_id,
       workspace_id: fall.workspace_id,
       frist_typ: body.frist_typ,
       pipeline: body.pipeline || null,
@@ -68,7 +73,7 @@ exports.handler = withSentry(requireAuth(async function (event, context) {
       notiz: body.notiz || null,
       rechtsgrundlage: body.rechtsgrundlage || null,
       status: 'offen',
-      erstellt_von: context.userId
+      created_by_user_id: context.userId
     };
     const { data, error } = await sb.from('fristen').insert(insert).select().single();
     if (error) return jsonResponse(event, 500, { error: error.message });

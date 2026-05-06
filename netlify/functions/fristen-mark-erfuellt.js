@@ -31,7 +31,7 @@ exports.handler = withSentry(requireAuth(async function (event, context) {
     const { data, error } = await sb.from('fristen').update({
       status: 'erfuellt',
       datum_ist: datum_ist,
-      geaendert_am: new Date().toISOString()
+      updated_at: new Date().toISOString()
     }).eq('id', body.id).is('deleted_at', null).select().maybeSingle();
     if (error) return jsonResponse(event, 500, { error: error.message });
     if (!data) return jsonResponse(event, 404, { error: 'Frist nicht gefunden' });

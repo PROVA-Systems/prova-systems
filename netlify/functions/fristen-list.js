@@ -1,6 +1,7 @@
 /**
- * PROVA — fristen-list.js (MEGA³⁰ W10b-I6)
- * GET ?schadensfall_id=&status=&due_within_days=
+ * PROVA — fristen-list.js (MEGA³² W12b-I3 Schema-Reconciled)
+ * GET ?auftrag_id=&status=&due_within_days=
+ * Schema (W12-I0 Audit): public.fristen mit auftrag_id + workspace_memberships RLS
  */
 'use strict';
 
@@ -21,9 +22,12 @@ exports.handler = withSentry(requireAuth(async function (event, context) {
   if (!sb) return jsonResponse(event, 503, { error: 'Supabase nicht konfiguriert' });
 
   const q = event.queryStringParameters || {};
+  // Backwards-Compat
+  const auftrag_id = q.auftrag_id || q.schadensfall_id || null;
+
   try {
     let query = sb.from('fristen').select('*').is('deleted_at', null).order('datum_soll', { ascending: true });
-    if (q.schadensfall_id) query = query.eq('schadensfall_id', q.schadensfall_id);
+    if (auftrag_id) query = query.eq('auftrag_id', auftrag_id);
     if (q.status) query = query.eq('status', q.status);
     if (q.due_within_days) {
       const max = new Date();

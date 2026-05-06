@@ -27,7 +27,7 @@ exports.handler = withSentry(requireAuth(async function (event, context) {
   if (!body.id) return jsonResponse(event, 400, { error: 'id pflicht' });
   if (body.status && STATUS.indexOf(body.status) < 0) return jsonResponse(event, 400, { error: 'status ungültig' });
 
-  const patch = { geaendert_am: new Date().toISOString() };
+  const patch = { updated_at: new Date().toISOString() };
   ALLOWED.forEach(function (f) { if (Object.prototype.hasOwnProperty.call(body, f)) patch[f] = body[f]; });
   if (Object.keys(patch).length === 1) return jsonResponse(event, 400, { error: 'Keine Update-Felder' });
 

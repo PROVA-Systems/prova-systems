@@ -106,7 +106,7 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
 <div class="fr-modal-overlay" id="fr-modal-overlay" onclick="if(event.target===this)closeModal()">
   <div class="fr-modal">
     <h2>Neue Frist</h2>
-    <div class="fr-form-group"><label class="fr-form-label">Schadensfall-UUID</label><input type="text" class="fr-form-input" id="m-schadensfall_id"></div>
+    <div class="fr-form-group"><label class="fr-form-label">Auftrag-UUID</label><input type="text" class="fr-form-input" id="m-auftrag_id"></div>
     <div class="fr-form-group">
       <label class="fr-form-label">Typ</label>
       <select class="fr-form-select" id="m-frist_typ">
@@ -130,7 +130,7 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
   <div class="fr-modal">
     <h2>Pipeline anwenden</h2>
     <p style="font-size:12px;color:var(--text2);margin-bottom:10px;">Erzeugt alle Fristen einer Pipeline mit relativen Offsets gegen den Stichtag.</p>
-    <div class="fr-form-group"><label class="fr-form-label">Schadensfall-UUID</label><input type="text" class="fr-form-input" id="p-schadensfall_id"></div>
+    <div class="fr-form-group"><label class="fr-form-label">Auftrag-UUID</label><input type="text" class="fr-form-input" id="p-auftrag_id"></div>
     <div class="fr-form-group">
       <label class="fr-form-label">Pipeline</label>
       <select class="fr-form-select" id="p-pipeline_key"></select>
@@ -192,13 +192,13 @@ function closeModal() { document.getElementById('fr-modal-overlay').classList.re
 
 async function saveFrist() {
   const body = {
-    schadensfall_id: document.getElementById('m-schadensfall_id').value.trim(),
+    auftrag_id: document.getElementById('m-auftrag_id').value.trim(),
     frist_typ: document.getElementById('m-frist_typ').value,
     datum_soll: document.getElementById('m-datum_soll').value,
     notiz: document.getElementById('m-notiz').value.trim() || null,
     rechtsgrundlage: document.getElementById('m-rechtsgrundlage').value.trim() || null
   };
-  if (!body.schadensfall_id || !body.datum_soll) { alert('Schadensfall + Datum pflicht.'); return; }
+  if (!body.auftrag_id || !body.datum_soll) { alert('Auftrag-UUID + Datum pflicht.'); return; }
   try {
     const res = await provaFetch('/.netlify/functions/fristen-create', {
       method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body)
@@ -244,11 +244,11 @@ function updatePreview() {
 
 async function applyPipeline() {
   const body = {
-    schadensfall_id: document.getElementById('p-schadensfall_id').value.trim(),
+    auftrag_id: document.getElementById('p-auftrag_id').value.trim(),
     pipeline_key: document.getElementById('p-pipeline_key').value,
     stichtag: document.getElementById('p-stichtag').value
   };
-  if (!body.schadensfall_id) { alert('Schadensfall-UUID pflicht.'); return; }
+  if (!body.auftrag_id) { alert('Auftrag-UUID pflicht.'); return; }
   try {
     const res = await provaFetch('/.netlify/functions/fristen-create', {
       method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body)

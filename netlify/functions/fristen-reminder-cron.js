@@ -70,7 +70,7 @@ exports.handler = withSentry(async function (event) {
   // Hole alle offenen Fristen mit datum_soll in den nächsten 30 Tagen
   const max = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
   const { data: fristen, error } = await sb.from('fristen')
-    .select('id,schadensfall_id,frist_typ,datum_soll,erinnerung_tage_vor,erinnerung_letzte_versendet_am,notiz,rechtsgrundlage,erstellt_von')
+    .select('id,auftrag_id,frist_typ,datum_soll,erinnerung_tage_vor,erinnerung_letzte_versendet_am,notiz,rechtsgrundlage,created_by_user_id')
     .eq('status', 'offen').is('deleted_at', null)
     .gte('datum_soll', todayISO).lte('datum_soll', max);
   if (error) return jsonResponse(event, 500, { error: error.message });
@@ -83,10 +83,8 @@ exports.handler = withSentry(async function (event) {
     if (pattern.indexOf(days) < 0) { skipped++; continue; }
     if (f.erinnerung_letzte_versendet_am === todayISO) { skipped++; continue; } // schon heute gesendet
 
-    // User-Email holen
-    const { data: user } = await sb.from('user_workspaces').select('user_id').eq('user_id', f.erstellt_von).maybeSingle();
-    if (!user) { skipped++; continue; }
-    const { data: profile } = await sb.from('user_profiles').select('email').eq('user_id', f.erstellt_von).maybeSingle();
+    // User-Email holen aus public.users (Schema W12-I0)
+    const { data: profile } = await sb.from('users').select('email').eq('id', f.created_by_user_id).maybeSingle();
     if (!profile || !profile.email) { skipped++; continue; }
 
     const r = await sendReminderEmail({
