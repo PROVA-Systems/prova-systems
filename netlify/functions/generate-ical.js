@@ -17,11 +17,29 @@
  */
 'use strict';
 
+const crypto = require('crypto');
 const { withSentry } = require('./lib/sentry-wrap');
 const { requireAuth } = require('./lib/jwt-middleware');
 const { getCorsHeaders } = require('./lib/cors-helper');
 const { getSupabase } = require('./lib/storage-router');
 const RateLimit = require('./lib/rate-limit-user');
+
+// HMAC-Token-Mode für webcal://-Subscribe (Calendar-Apps senden kein JWT)
+// Token = HMAC-SHA256(secret, sv_email).slice(0, 32)
+function generateIcalToken(svEmail) {
+  const secret = process.env.ICAL_TOKEN_SECRET || '';
+  if (!secret) return null;
+  return crypto.createHmac('sha256', secret).update(String(svEmail || '').toLowerCase()).digest('hex').slice(0, 32);
+}
+
+function verifyIcalToken(svEmail, token) {
+  const expected = generateIcalToken(svEmail);
+  if (!expected || !token) return false;
+  if (expected.length !== token.length) return false;
+  try {
+    return crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(token));
+  } catch (e) { return false; }
+}
 
 // RFC 5545 Section 3.7: Line-Folding bei > 75 Zeichen
 function foldLine(line) {
@@ -95,7 +113,8 @@ function buildIcalBody(termine, sv_email) {
   return lines.join('\r\n'); // RFC 5545: CRLF-Line-Endings PFLICHT
 }
 
-exports.handler = withSentry(requireAuth(async function (event, context) {
+// Inner handler – wird sowohl von JWT-Variante als auch von HMAC-Token-Variante aufgerufen
+async function innerHandler(event, context) {
   if (event.httpMethod === 'OPTIONS') return { statusCode: 204, headers: getCorsHeaders(event), body: '' };
   if (event.httpMethod !== 'GET') return { statusCode: 405, headers: getCorsHeaders(event), body: 'Method Not Allowed' };
 
@@ -140,7 +159,19 @@ exports.handler = withSentry(requireAuth(async function (event, context) {
     },
     body: ical
   };
-}), { functionName: 'generate-ical' });
+}
+
+// Outer handler: HMAC-Token-Mode (?token=&email=) ODER JWT-Auth
+exports.handler = withSentry(async function (event) {
+  const q = event.queryStringParameters || {};
+  if (q.token && q.email) {
+    if (!verifyIcalToken(q.email, q.token)) {
+      return { statusCode: 401, headers: getCorsHeaders(event), body: 'Invalid token' };
+    }
+    return innerHandler(event, { userEmail: q.email, userId: null });
+  }
+  return requireAuth(innerHandler)(event);
+}, { functionName: 'generate-ical' });
 
 // Internals exportiert für Tests
-exports._test = { foldLine, escapeText, toIcalDateTime, buildIcalBody };
+exports._test = { foldLine, escapeText, toIcalDateTime, buildIcalBody, generateIcalToken, verifyIcalToken };
