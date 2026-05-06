@@ -24,6 +24,18 @@ exports.handler = withSentry(async function (event) {
     return { statusCode: 200, headers, body: '' };
   }
 
+  // MEGA²⁸ W5-I2: Defense-in-Depth — zusätzlich Dev-Mode-Gate.
+  // Production-Sentry-Test soll explicit gestartet werden via ENV-Flag.
+  const isDev = process.env.NETLIFY_DEV === 'true' || process.env.CONTEXT === 'dev';
+  const sentryTestEnabled = process.env.PROVA_SENTRY_TEST_ENABLED === 'true';
+  if (!isDev && !sentryTestEnabled) {
+    return {
+      statusCode: 403,
+      headers,
+      body: JSON.stringify({ error: 'sentry-test disabled in production. Set PROVA_SENTRY_TEST_ENABLED=true.' })
+    };
+  }
+
   const provided = (event.queryStringParameters && event.queryStringParameters.secret) || '';
   const expected = process.env.PROVA_SENTRY_TEST_SECRET || '';
 

@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>Auftragsbestaetigung — {{ az }}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════════════════════════
+   PROVA Systems · F-02 AUFTRAGSBESTAETIGUNG
+   Liquid-templated · 1 Seite · Ton: professionell, vorab informierend
+   "Wir haben Ihren Auftrag entgegengenommen"
+   Use-Case: Direkt nach Auftragsannahme an Auftraggeber.
+   Layout: Brief mit Auftrags-Detail-Box + AGB/Datenschutz-Hinweis-Block
+   Spezifika: Honorar-Hinweis, voraussichtliche Dauer, Liefertermin
+   ═══════════════════════════════════════════════════════════════ */
+:root { --primary: #1a3a6b; --accent: #3b82f6; --muted: #64748b; --text: #0f172a; --light: #f1f5f9; --lighter: #f8fafc; --border: #e2e8f0; --success: #059669; }
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Inter', -apple-system, sans-serif; font-size: 11pt; line-height: 1.6; color: var(--text); }
+@page { size: A4; margin: 25mm 25mm 25mm 25mm; }
+@page {
+  @bottom-left { content: "Auftragsbestaetigung · {{ az }}"; font-family: 'Inter', sans-serif; font-size: 8pt; color: var(--muted); padding-bottom: 12mm; }
+  @bottom-right { content: "{{ sv_name }}"; font-family: 'Inter', sans-serif; font-size: 8pt; color: var(--muted); padding-bottom: 12mm; }
+}
+
+.kopf { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14mm; }
+.kopf-absender { font-size: 9pt; line-height: 1.55; color: var(--muted); }
+.kopf-absender strong { color: var(--text); display: block; margin-bottom: 1mm; }
+.kopf-meta { text-align: right; font-size: 9.5pt; color: var(--muted); }
+.kopf-meta .ort-datum { color: var(--text); font-weight: 500; }
+.kopf-meta .az-pill {
+  display: inline-block;
+  margin-top: 4mm;
+  padding: 2mm 5mm;
+  background: var(--lighter);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9.5pt;
+  color: var(--text);
+}
+
+.empfaenger { margin-bottom: 14mm; font-size: 11pt; line-height: 1.6; }
+.empfaenger strong { font-weight: 600; }
+
+.betreff {
+  font-size: 13pt; font-weight: 600; color: var(--primary);
+  margin: 8mm 0 6mm;
+}
+
+.text { font-size: 11pt; line-height: 1.65; margin-bottom: 5mm; }
+.text p { margin-bottom: 3mm; }
+
+/* Auftrags-Detail-Box */
+.auftrag-box {
+  margin: 6mm 0;
+  padding: 6mm 8mm;
+  background: var(--lighter);
+  border-left: 3px solid var(--success);
+  border-radius: 2px;
+}
+.auftrag-titel {
+  font-size: 9pt;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--success);
+  font-weight: 600;
+  margin-bottom: 3mm;
+}
+.auftrag-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3mm 8mm;
+}
+.auftrag-grid .item .l { font-size: 8.5pt; color: var(--muted); margin-bottom: 0.8mm; text-transform: uppercase; letter-spacing: 0.06em; }
+.auftrag-grid .item .v { font-size: 11.5pt; color: var(--text); font-weight: 500; }
+.auftrag-grid .item .v.mono { font-family: 'JetBrains Mono', monospace; font-size: 10.5pt; }
+.auftrag-grid .item.full { grid-column: 1/-1; }
+
+/* Honorar-Box */
+.honorar-box {
+  margin: 5mm 0;
+  padding: 5mm 7mm;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+}
+.honorar-titel { font-size: 10.5pt; font-weight: 600; color: var(--primary); margin-bottom: 3mm; }
+.honorar-zeile { display: flex; justify-content: space-between; padding: 1.5mm 0; font-size: 10pt; }
+.honorar-zeile.summe { border-top: 1px solid var(--border); margin-top: 2mm; padding-top: 3mm; font-weight: 700; color: var(--primary); font-size: 11pt; }
+.honorar-zeile .v.mono { font-family: 'JetBrains Mono', monospace; }
+
+/* AGB/Datenschutz-Hinweis */
+.hinweise {
+  margin: 6mm 0;
+  padding: 4mm 5mm;
+  background: var(--lighter);
+  border-radius: 3px;
+  font-size: 9.5pt;
+  color: var(--muted);
+  line-height: 1.55;
+}
+.hinweise strong { color: var(--text); }
+
+.gruss { margin-top: 8mm; font-size: 11pt; }
+.gruss-name { font-weight: 600; margin-top: 14mm; }
+.gruss-titel { color: var(--muted); font-size: 10pt; }
+</style>
+</head>
+<body>
+
+<div class="kopf">
+  <div class="kopf-absender">
+    <strong>{{ sv_name }}</strong>
+    {% if sv_qualifikation %}<div>{{ sv_qualifikation }}</div>{% endif %}
+    <div>{{ sv_strasse }}</div>
+    <div>{{ sv_plz }} {{ sv_ort }}</div>
+    {% if sv_telefon %}<div>Tel.: {{ sv_telefon }}</div>{% endif %}
+    {% if sv_email %}<div>{{ sv_email }}</div>{% endif %}
+  </div>
+  <div class="kopf-meta">
+    <div class="ort-datum">{{ ort_datum }}</div>
+    <div class="az-pill">Aktenzeichen: {{ az }}</div>
+  </div>
+</div>
+
+<div class="empfaenger">
+  <strong>{{ empfaenger_name }}</strong>{% if empfaenger_zusatz != blank %}<br>{{ empfaenger_zusatz }}{% endif %}<br>
+  {{ empfaenger_strasse }}<br>
+  {{ empfaenger_plz }} {{ empfaenger_ort }}
+</div>
+
+<div class="betreff">Auftragsbestaetigung — {{ auftragsart }}</div>
+
+<div class="text">
+  <p>{{ anrede }}{% if anrede_name != blank %} {{ anrede_name }}{% endif %},</p>
+  <p>vielen Dank fuer Ihren Auftrag vom {{ auftragsdatum }}. Hiermit bestaetige ich die
+     Annahme und gebe Ihnen einen Ueberblick ueber Auftragsumfang, voraussichtliche
+     Dauer und Honorar.</p>
+</div>
+
+<!-- Auftrags-Detail-Box -->
+<div class="auftrag-box">
+  <div class="auftrag-titel">Auftrags-Eckdaten</div>
+  <div class="auftrag-grid">
+    <div class="item">
+      <div class="l">Auftragsart</div>
+      <div class="v">{{ auftragsart }}</div>
+    </div>
+    <div class="item">
+      <div class="l">Auftrags-Datum</div>
+      <div class="v">{{ auftragsdatum }}</div>
+    </div>
+    {% if objekt_adresse != blank %}
+    <div class="item full">
+      <div class="l">Objekt</div>
+      <div class="v">{{ objekt_adresse }}</div>
+    </div>
+    {% endif %}
+    {% if schadensart != blank %}
+    <div class="item">
+      <div class="l">Schadensart</div>
+      <div class="v">{{ schadensart }}</div>
+    </div>
+    {% endif %}
+    {% if voraussichtliche_dauer != blank %}
+    <div class="item">
+      <div class="l">Voraussichtliche Dauer</div>
+      <div class="v">{{ voraussichtliche_dauer }}</div>
+    </div>
+    {% endif %}
+    {% if liefertermin != blank %}
+    <div class="item">
+      <div class="l">Voraussichtlicher Liefertermin</div>
+      <div class="v">{{ liefertermin }}</div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Honorar (optional, je nach Auftragsart) -->
+{% if honorar_hinweis != blank %}
+<div class="honorar-box">
+  <div class="honorar-titel">Honorar-Hinweis</div>
+  {% if honorar_pauschal != blank %}
+  <div class="honorar-zeile">
+    <span>Pauschale</span>
+    <span class="v mono">{{ honorar_pauschal }} EUR</span>
+  </div>
+  {% else %}
+    {% if stundensatz != blank %}
+    <div class="honorar-zeile">
+      <span>Stundensatz (netto)</span>
+      <span class="v mono">{{ stundensatz }} EUR / h</span>
+    </div>
+    {% endif %}
+    {% if voraussichtlicher_aufwand != blank %}
+    <div class="honorar-zeile">
+      <span>Voraussichtlicher Aufwand</span>
+      <span class="v">{{ voraussichtlicher_aufwand }} h</span>
+    </div>
+    {% endif %}
+  {% endif %}
+  {% if reisekosten_hinweis != blank %}
+  <div class="honorar-zeile" style="font-size:9.5pt;color:var(--muted);">
+    <span>{{ reisekosten_hinweis }}</span>
+  </div>
+  {% endif %}
+</div>
+{% endif %}
+
+<div class="text">
+  <p>Bei Fragen zum Auftrag, zur voraussichtlichen Dauer oder zum Honorar erreichen
+     Sie mich unter den oben genannten Kontaktdaten.</p>
+</div>
+
+<!-- AGB/Datenschutz-Hinweise -->
+<div class="hinweise">
+  <strong>Hinweis:</strong> Es gelten meine Allgemeinen Geschaefts­bedingungen. Personenbezogene
+  Daten werden gemaess DSGVO ausschliesslich zur Auftragsbearbeitung verarbeitet
+  (Art. 6 Abs. 1 lit. b DSGVO). Eine vollstaendige Datenschutzerklaerung erhalten
+  Sie auf Anfrage.
+</div>
+
+<div class="gruss">Mit freundlichen Gruessen</div>
+<div class="gruss-name">{{ sv_name }}</div>
+<div class="gruss-titel">{{ sv_qualifikation | default: "Sachverstaendiger" }}</div>
+
+</body>
+</html>

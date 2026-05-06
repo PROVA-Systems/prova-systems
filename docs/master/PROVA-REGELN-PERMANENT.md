@@ -363,6 +363,40 @@ Bei neuen Usern: Demo-Fall-Link auf `SCH-DEMO-001` zeigen.
 - ❌ Quick-Fix-Pflaster ohne Diagnose (Regel 33)
 - ❌ Hardcoded-Test-Defaults ungeprüft in Production schicken (Regel 34)
 - ❌ ENV-Vars ohne PROVA-Prefix in Multi-Tenant-Setup (Regel 35)
+- ❌ Veraltete KI-Modell-Strings (Regel 41 — gpt-4o, gpt-4o-mini, claude-3-* sind seit Feb 2026 deprecated)
+- ❌ Kritische KI-Pfade ohne Anthropic-Backup-Provider (Regel 42)
+
+---
+
+## Regel 41 — KI-Modell-Aktualität (Pflicht, seit 10.05.2026)
+
+Vor jedem Sprint, der KI-Modelle berührt, muss CC die aktuellen OpenAI/Anthropic-Modell-Strings via Web-Search verifizieren. Veraltete Strings (`gpt-4o`, `gpt-4o-mini`, `claude-3-*`, `gpt-3.5-*`) sind verboten.
+
+**Stand 10.05.2026:**
+- Primary `gpt-5.5` für kritische Pfade (§6 Konjunktiv-II, Compliance-Checks)
+- `gpt-5.4` für Mid-Tier (assist_inline)
+- `gpt-5.4-mini` für S1-mechanische Helfer (freitext, support_chat, normen-picker, foto-captioning)
+
+Memory-Werte sind nicht authoritative — Web-Search ist Pflicht.
+
+**Verstoß-Folge:** Code-Review-Block, Rollback erforderlich.
+
+---
+
+## Regel 42 — KI-Backup-Provider-Pflicht (seit 10.05.2026)
+
+Alle kritischen KI-Pfade (Mapping in `KI-PROMPTS-MASTER.md`) müssen einen Anthropic Claude-Fallback haben.
+
+**Fallback-Pattern (implementiert in W4-I0, ki-proxy.js `callOpenAIWithFallback`):**
+- Bei OpenAI 429/5xx automatischer Fallback auf Claude-Equivalent
+  - `gpt-5.5` → `claude-opus-4-7`
+  - `gpt-5.4` → `claude-sonnet-4-6`
+  - `gpt-5.4-mini` → `claude-haiku-4-5-20251001`
+- Defensiv-gecodet: wenn `ANTHROPIC_API_KEY` fehlt, OpenAI-Error wird durchgereicht ohne Try
+- Sentry-Event bei Fallback (für Monitoring)
+- Nur bei 429/500/502/503/504 fallback (NICHT bei 400 = User-Error)
+
+**Verstoß-Folge:** KI-Funktions-Garantie-Test schlägt fehl, Pre-Pilot-Block.
 
 ---
 

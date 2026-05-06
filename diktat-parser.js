@@ -79,7 +79,7 @@
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          model: 'gpt-4o-mini',
+          model: 'gpt-5.4-mini',
           max_tokens: 1200,
           temperature: 0.1, // niedrig für Determinismus / weniger Halluzinationen
           messages: [

@@ -162,15 +162,31 @@
   }
 
   window._tourNext = function() {
+    // MEGA²¹+²² W117 BUG-FIX: Defensive Null-Checks vor Step-Navigation.
+    // Marcel-Direktive: onboarding-tour.js:168 null-check.
+    // STEPS kann durch Hot-Reload oder Memory-Pressure mutated sein,
+    // currentStep koennte ausserhalb des Arrays liegen.
+    if (typeof STEPS === 'undefined' || !Array.isArray(STEPS) || STEPS.length === 0) {
+      endTour();
+      return;
+    }
+    if (typeof currentStep !== 'number' || isNaN(currentStep)) {
+      currentStep = 0;
+    }
     if (currentStep >= STEPS.length - 1) {
       endTour();
     } else {
-      showStep(currentStep + 1);
+      try {
+        showStep(currentStep + 1);
+      } catch (e) {
+        console.warn('[tour] _tourNext failed, ending tour:', e.message);
+        endTour();
+      }
     }
   };
 
   window._tourEnd = function() {
-    endTour();
+    try { endTour(); } catch (_) { /* defensive */ }
   };
 
   function endTour() {

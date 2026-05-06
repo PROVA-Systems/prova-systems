@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>Foto-Dokumentation — {{ az }}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════════════════════════
+   PROVA Systems · F-FOTODOK · FOTO-Dokumentation
+   Liquid-templated · 2-N Seiten · Layout: Bilder-Grid
+   Use-Case: SV dokumentiert Ortstermin mit 4-30 Fotos.
+   Ton: kuehl-objektiv, faktisch (kein Brief, keine Bewertung).
+   Layout vollstaendig anders als Mahnungen oder Gutachten:
+     - 2-Spalten-Grid Bilder pro Seite
+     - Bildunterschriften kompakt
+     - Pro Bild: Bauteil, Datum/Uhrzeit, Kameraposition, Schweregrad-Farbe
+     - DSGVO-Hinweis: Fotos koennen Personen/Eigentum zeigen
+   ═══════════════════════════════════════════════════════════════ */
+:root {
+  --primary: #1a3a6b;
+  --accent: #3b82f6;
+  --muted: #64748b;
+  --text: #0f172a;
+  --light: #f1f5f9;
+  --lighter: #f8fafc;
+  --border: #e2e8f0;
+  --schwer-gering: #059669;
+  --schwer-mittel: #d97706;
+  --schwer-schwer: #dc2626;
+  --schwer-kritisch: #991b1b;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Inter', -apple-system, sans-serif; font-size: 10pt; line-height: 1.5; color: var(--text); }
+@page { size: A4; margin: 18mm 15mm 18mm 15mm; }
+@page {
+  @top-left { content: "Foto-Dokumentation · {{ az }}"; font-family: 'Inter', sans-serif; font-size: 8pt; color: var(--muted); padding-top: 8mm; }
+  @top-right { content: "{{ sv_name }}"; font-family: 'Inter', sans-serif; font-size: 8pt; color: var(--muted); padding-top: 8mm; }
+  @bottom-left { content: "Aufnahme-Datum: {{ termin_datum }}"; font-family: 'Inter', sans-serif; font-size: 8pt; color: var(--muted); padding-bottom: 8mm; }
+  @bottom-right { content: "Seite " counter(page) " / " counter(pages); font-family: 'Inter', sans-serif; font-size: 8pt; color: var(--muted); padding-bottom: 8mm; }
+}
+
+/* DECKBLATT — kompakt, kein 30pt-Titel wie bei Gutachten */
+.deckblatt-fotodok {
+  page-break-after: always;
+  display: flex;
+  flex-direction: column;
+  height: calc(297mm - 36mm);
+  padding-top: 10mm;
+}
+.dd-titel-zeile {
+  display: flex;
+  align-items: baseline;
+  gap: 8mm;
+  margin-bottom: 8mm;
+  padding-bottom: 4mm;
+  border-bottom: 2px solid var(--primary);
+}
+.dd-titel { font-size: 22pt; font-weight: 700; color: var(--primary); letter-spacing: -0.02em; }
+.dd-untertitel { font-size: 11pt; color: var(--muted); font-weight: 400; }
+.dd-meta-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4mm 12mm;
+  margin: 6mm 0;
+  padding: 5mm 6mm;
+  background: var(--lighter);
+  border-radius: 3px;
+}
+.dd-meta-item .label { font-size: 8pt; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 500; }
+.dd-meta-item .value { font-size: 11pt; color: var(--text); margin-top: 1mm; }
+.dd-meta-item .value.mono { font-family: 'JetBrains Mono', monospace; font-size: 10pt; }
+.dd-anlass {
+  margin: 6mm 0;
+  padding: 5mm 7mm;
+  background: white;
+  border-left: 3px solid var(--accent);
+  border-radius: 2px;
+}
+.dd-anlass-titel { font-size: 9pt; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); font-weight: 600; margin-bottom: 2mm; }
+.dd-anlass-text { font-size: 10.5pt; line-height: 1.65; color: var(--text); }
+
+/* DSGVO-Hinweis */
+.dd-dsgvo {
+  margin-top: auto;
+  padding: 4mm 6mm;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  font-size: 9pt;
+  color: var(--muted);
+  line-height: 1.55;
+}
+.dd-dsgvo strong { color: var(--text); }
+
+/* SEITEN-CONTENT — Bilder-Grid */
+.bilder-page {
+  page-break-after: always;
+}
+.bilder-page:last-child { page-break-after: avoid; }
+.bilder-section-titel {
+  font-size: 12pt;
+  font-weight: 600;
+  color: var(--primary);
+  margin: 4mm 0 6mm;
+  padding-bottom: 2mm;
+  border-bottom: 1px solid var(--border);
+}
+
+/* 2-Spalten-Grid pro Seite, max 4 Bilder pro Seite */
+.bilder-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6mm;
+  page-break-inside: auto;
+}
+
+.bild-karte {
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  overflow: hidden;
+  background: white;
+  page-break-inside: avoid;
+}
+.bild-karte-img {
+  width: 100%;
+  height: 75mm;
+  object-fit: cover;
+  background: var(--lighter);
+  display: block;
+}
+.bild-karte-info {
+  padding: 3mm 4mm;
+  font-size: 8.5pt;
+  line-height: 1.45;
+}
+.bild-karte-titel {
+  font-size: 9.5pt;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 1.5mm;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+.bild-karte-nr {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8.5pt;
+  color: var(--accent);
+  font-weight: 500;
+}
+.bild-karte-meta {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 1mm 2mm;
+  font-size: 8pt;
+  color: var(--muted);
+  margin-bottom: 1.5mm;
+}
+.bild-karte-meta .l { font-weight: 500; }
+.bild-karte-meta .v { color: var(--text); font-family: 'JetBrains Mono', monospace; }
+.bild-karte-bauteil {
+  margin-top: 1.5mm;
+  padding-top: 1.5mm;
+  border-top: 1px solid var(--border);
+  font-size: 8.5pt;
+  color: var(--text);
+  line-height: 1.5;
+}
+
+/* Schweregrad-Indikator */
+.schwere-pill {
+  display: inline-block;
+  padding: 0.5mm 2mm;
+  border-radius: 999px;
+  font-size: 7.5pt;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  vertical-align: middle;
+  margin-left: 2mm;
+}
+.schwere-pill.gering { background: rgba(5,150,105,0.1); color: var(--schwer-gering); }
+.schwere-pill.mittel { background: rgba(217,119,6,0.1); color: var(--schwer-mittel); }
+.schwere-pill.schwer { background: rgba(220,38,38,0.1); color: var(--schwer-schwer); }
+.schwere-pill.kritisch { background: rgba(153,27,27,0.15); color: var(--schwer-kritisch); }
+</style>
+</head>
+<body>
+
+<!-- DECKBLATT -->
+<div class="deckblatt-fotodok">
+  <div class="dd-titel-zeile">
+    <div class="dd-titel">Foto-Dokumentation</div>
+    <div class="dd-untertitel">{{ ortstermin_typ | default: "Ortstermin" }}</div>
+  </div>
+
+  <div class="dd-meta-grid">
+    <div class="dd-meta-item">
+      <div class="label">Aktenzeichen</div>
+      <div class="value mono">{{ az }}</div>
+    </div>
+    <div class="dd-meta-item">
+      <div class="label">Aufnahme-Datum</div>
+      <div class="value">{{ termin_datum }}</div>
+    </div>
+    <div class="dd-meta-item">
+      <div class="label">Sachverstaendiger</div>
+      <div class="value">{{ sv_name }}</div>
+    </div>
+    <div class="dd-meta-item">
+      <div class="label">Anzahl Bilder</div>
+      <div class="value mono">{{ bilder.size }}</div>
+    </div>
+    <div class="dd-meta-item" style="grid-column: 1/-1;">
+      <div class="label">Objekt</div>
+      <div class="value">{{ objekt_adresse }}</div>
+    </div>
+  </div>
+
+  {% if anlass != blank %}
+  <div class="dd-anlass">
+    <div class="dd-anlass-titel">Anlass der Foto-Dokumentation</div>
+    <div class="dd-anlass-text">{{ anlass }}</div>
+  </div>
+  {% endif %}
+
+  {% if witterung != blank %}
+  <div class="dd-anlass">
+    <div class="dd-anlass-titel">Witterungs-Bedingungen am Termin</div>
+    <div class="dd-anlass-text">{{ witterung }}</div>
+  </div>
+  {% endif %}
+
+  <!-- DSGVO am Ende des Deckblatts -->
+  <div class="dd-dsgvo">
+    <strong>Datenschutzhinweis:</strong> Die folgenden Aufnahmen koennen ggf. Personen, Hausrat
+    oder andere personenbezogene Bezuege zeigen. Sie wurden im Rahmen der gutachterlichen
+    Sachverhalts-Aufnahme erstellt und unterliegen Art. 6 Abs. 1 lit. f DSGVO (berechtigtes
+    Interesse). Eine Weitergabe an Dritte erfolgt nur im Auftrag des Auftraggebers oder
+    auf gerichtliche Anordnung.
+  </div>
+</div>
+
+<!-- BILDER-SEITEN: 4 Bilder pro Seite (2x2 Grid) -->
+{% for bild in bilder %}
+{% if forloop.first or forloop.index0 | modulo: 4 == 0 %}
+{% if forloop.first == false %}</div></div>{% endif %}
+<div class="bilder-page">
+  {% if forloop.first %}<div class="bilder-section-titel">Foto-Sequenz · {{ bilder.size }} Aufnahmen</div>{% endif %}
+  <div class="bilder-grid">
+{% endif %}
+
+  <div class="bild-karte">
+    <img class="bild-karte-img" src="{{ bild.url }}" alt="{{ bild.titel | default: 'Aufnahme' }}">
+    <div class="bild-karte-info">
+      <div class="bild-karte-titel">
+        <span>{{ bild.titel | default: bild.bauteil | default: "Aufnahme" }}{% if bild.schweregrad %}<span class="schwere-pill {{ bild.schweregrad }}">{{ bild.schweregrad }}</span>{% endif %}</span>
+        <span class="bild-karte-nr">#{{ forloop.index }}</span>
+      </div>
+      <div class="bild-karte-meta">
+        {% if bild.bauteil %}<div class="l">Bauteil:</div><div class="v">{{ bild.bauteil }}</div>{% endif %}
+        {% if bild.uhrzeit %}<div class="l">Uhrzeit:</div><div class="v">{{ bild.uhrzeit }}</div>{% endif %}
+        {% if bild.position %}<div class="l">Position:</div><div class="v">{{ bild.position }}</div>{% endif %}
+      </div>
+      {% if bild.beschreibung %}<div class="bild-karte-bauteil">{{ bild.beschreibung }}</div>{% endif %}
+    </div>
+  </div>
+
+{% if forloop.last %}
+  </div>
+</div>
+{% endif %}
+{% endfor %}
+
+</body>
+</html>

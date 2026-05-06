@@ -5,6 +5,8 @@
 <script src="paket-guard.js"></script>
 <script src="prova-fetch-auth.js"></script>
 <script src="/lib/prova-config.js"></script>
+<script src="/lib/prova-fields.js"></script>
+<script src="/lib/prova-mode-c.js"></script>
 <script src="/lib/sentry-init.js"></script>
 <script src="prova-notifications.js" defer></script>
 <script>
@@ -428,7 +430,125 @@
             <div class="es-zeile-info"><div class="es-zeile-label">KI-Lernpool verwalten</div><div class="es-zeile-sub">Gelernte Vokabeln, Korrekturen und Spracherkennung-Prompt</div></div>
             <button class="es-btn" onclick="oeffneLernpoolModal()">🧠 Lernpool öffnen</button>
           </div>
+          <!-- MEGA¹¹ W9: KI-Nutzung & Kosten -->
+          <div class="es-zeile">
+            <div class="es-zeile-info"><div class="es-zeile-label">KI-Nutzung & Kosten</div><div class="es-zeile-sub">Letzte 30 Tage: Anrufe, Tokens, Kosten pro Funktion</div></div>
+            <button class="es-btn" onclick="oeffneKICostModal()" aria-label="KI-Kosten-Uebersicht oeffnen">💰 Anzeigen</button>
+          </div>
         </section>
+
+        <!-- MEGA¹⁵ W34: WORKFLOW-MODUS Sektion -->
+        <section class="es-section" id="es-sec-workflow">
+          <div class="es-section-header">
+            <span class="es-section-icon">🔀</span>
+            <div class="es-section-info">
+              <div class="es-section-title">Workflow-Modus</div>
+              <div class="es-section-sub">Wie moechtest du Gutachten am liebsten erstellen? (Pro Akte uebersteuerbar)</div>
+            </div>
+          </div>
+          <div class="es-zeile vertikal">
+            <div class="es-zeile-info">
+              <div class="es-zeile-label">Mein Standard-Modus</div>
+              <div class="es-zeile-sub">Wird bei neuen Akten standardmaessig verwendet. Du kannst pro Akte wechseln.</div>
+            </div>
+            <div id="workflow-mode-cards" style="display:flex;flex-direction:column;gap:10px;width:100%;margin-top:8px;">
+              <!-- Mode A -->
+              <label class="workflow-mode-card" style="display:flex;gap:12px;align-items:flex-start;padding:14px 16px;background:var(--bg);border:2px solid var(--border);border-radius:10px;cursor:pointer;transition:border-color .15s;">
+                <input type="radio" name="workflow_default_mode" value="A" id="wfm-A" style="margin-top:3px;width:18px;height:18px;cursor:pointer;">
+                <div style="flex:1;">
+                  <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:2px;">🚀 PROVA-Standard</div>
+                  <div style="font-size:12px;color:var(--text3);line-height:1.5;">Strukturierte Templates ausfuellen. Schnell, IHK-SVO-konform. Ideal fuer 80% der Standardfaelle.</div>
+                </div>
+              </label>
+              <!-- Mode B -->
+              <label class="workflow-mode-card" style="display:flex;gap:12px;align-items:flex-start;padding:14px 16px;background:var(--bg);border:2px solid var(--border);border-radius:10px;cursor:pointer;transition:border-color .15s;">
+                <input type="radio" name="workflow_default_mode" value="B" id="wfm-B" style="margin-top:3px;width:18px;height:18px;cursor:pointer;">
+                <div style="flex:1;">
+                  <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:2px;">✏️ PROVA+Editor</div>
+                  <div style="font-size:12px;color:var(--text3);line-height:1.5;">Frei tippen wie in Word, mit Konjunktiv-II-Pruefung. Ideal wenn du gerne erzaehlend formulierst.</div>
+                </div>
+              </label>
+              <!-- Mode C -->
+              <label class="workflow-mode-card" style="display:flex;gap:12px;align-items:flex-start;padding:14px 16px;background:var(--bg);border:2px solid var(--border);border-radius:10px;cursor:pointer;transition:border-color .15s;opacity:0.6;">
+                <input type="radio" name="workflow_default_mode" value="C" id="wfm-C" disabled style="margin-top:3px;width:18px;height:18px;cursor:not-allowed;">
+                <div style="flex:1;">
+                  <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:2px;">📁 Eigene Vorlagen <span style="font-size:10px;font-weight:500;color:var(--text3);background:var(--lighter);padding:2px 6px;border-radius:4px;margin-left:4px;">Bald</span></div>
+                  <div style="font-size:12px;color:var(--text3);line-height:1.5;">Word-Dokumente hochladen. Verfuegbar in PROVA-Update Mai 2026.</div>
+                </div>
+              </label>
+            </div>
+            <div style="display:flex;gap:8px;margin-top:14px;width:100%;">
+              <button class="es-btn" id="workflow-save-btn" onclick="speichereWorkflowMode()" style="flex:0 0 auto;">Standard speichern</button>
+              <span id="workflow-save-status" role="status" aria-live="polite" style="font-size:12px;color:var(--text3);align-self:center;"></span>
+            </div>
+          </div>
+        </section>
+
+        <!-- MEGA¹⁶ W46 + MEGA¹⁷ W50/W53: Mode-C Word-Vorlagen Sektion -->
+        <section class="es-section" id="es-sec-vorlagen">
+          <div class="es-section-header">
+            <span class="es-section-icon">📁</span>
+            <div class="es-section-info">
+              <div class="es-section-title">Eigene Vorlagen (Word-Import)</div>
+              <div class="es-section-sub">Lade .docx-Vorlagen hoch — werden in PDF-Generation als Mode C verwendet</div>
+            </div>
+          </div>
+          <!-- MEGA¹⁷ W53: Mobile-Restriction Hint (gerendert via .mode-c-mobile-hint CSS) -->
+          <div class="mode-c-mobile-hint" style="display:none;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);color:#d97706;padding:12px 14px;border-radius:6px;margin-bottom:12px;font-size:13px;">
+            📱 Word-Vorlagen am Desktop verwalten — auf Mobile ist der .docx-Upload eingeschraenkt.
+          </div>
+          <div class="es-zeile vertikal">
+            <div class="es-zeile-info">
+              <div class="es-zeile-label">Vorlage hochladen</div>
+              <div class="es-zeile-sub">Max. 10 MB · nur .docx · Platzhalter im Format $Name oder {{Name}} werden automatisch erkannt.</div>
+            </div>
+            <div style="display:flex;gap:8px;margin-top:8px;width:100%;">
+              <input type="file" id="vorlage-file-input" accept=".docx" style="display:none;" />
+              <input type="text" id="vorlage-name-input" class="es-input" placeholder="Vorlagen-Name (z.B. 'Mein Standardgutachten')" style="flex:1;" />
+              <button class="es-btn" id="vorlage-upload-btn" onclick="document.getElementById('vorlage-file-input').click()">📁 Datei waehlen</button>
+            </div>
+            <div id="vorlage-upload-status" role="status" aria-live="polite" style="font-size:12px;color:var(--text3);margin-top:8px;"></div>
+          </div>
+          <div class="es-zeile vertikal">
+            <div class="es-zeile-info">
+              <div class="es-zeile-label">Meine Vorlagen</div>
+              <div class="es-zeile-sub">Aktive Vorlagen — kann bei Mode C in Akten verwendet werden. Klicke auf eine Vorlage, um Variablen zu mappen.</div>
+            </div>
+            <div id="vorlagen-list" style="margin-top:10px;width:100%;font-size:13px;">
+              <div style="color:var(--text3);padding:8px 0;">Lade…</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- MEGA¹⁷ W50: Variable-Mapping-Modal -->
+        <div id="vorlage-mapping-modal" role="dialog" aria-modal="true" aria-labelledby="vmm-title" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9999;align-items:center;justify-content:center;padding:20px;">
+          <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;max-width:680px;width:100%;max-height:85vh;display:flex;flex-direction:column;">
+            <div style="padding:18px 22px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
+              <div>
+                <div id="vmm-title" style="font-size:16px;font-weight:600;color:var(--text);">Variable-Mapping</div>
+                <div id="vmm-subtitle" style="font-size:12px;color:var(--text3);margin-top:2px;"></div>
+              </div>
+              <button onclick="closeMappingModal()" aria-label="Schliessen" style="background:transparent;border:none;color:var(--text3);font-size:22px;cursor:pointer;line-height:1;">×</button>
+            </div>
+            <div style="padding:18px 22px;overflow-y:auto;flex:1;">
+              <div style="font-size:12px;color:var(--text3);margin-bottom:14px;">
+                Verknuepfe jede Variable in Deiner Vorlage mit einem PROVA-Feld. Beim PDF-Generieren werden die Werte automatisch eingesetzt.
+              </div>
+              <div id="vmm-list" style="display:flex;flex-direction:column;gap:10px;"></div>
+            </div>
+            <div style="padding:14px 22px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;">
+              <button class="es-btn" onclick="closeMappingModal()">Abbrechen</button>
+              <button class="es-btn primary" id="vmm-save-btn" onclick="saveMappingModal()">💾 Mapping speichern</button>
+            </div>
+          </div>
+        </div>
+
+        <style>
+          @media (max-width: 768px) {
+            #es-sec-vorlagen .mode-c-mobile-hint { display: block !important; }
+            #es-sec-vorlagen .es-zeile.vertikal:has(#vorlage-file-input) { opacity: 0.5; pointer-events: none; }
+          }
+        </style>
 
         <!-- BENACHRICHTIGUNGEN -->
         <section class="es-section" id="es-sec-benachrichtigungen">
@@ -855,6 +975,344 @@
 <script src="prova-error-handler.js" defer></script>
 <script src="support-chat.js" defer></script>
 <script src="sw-register.js" defer></script>
+<!-- MEGA¹¹ W9: KI-Cost-Display -->
+<script src="/lib/ki-cost-display.js" defer></script>
+<!-- MEGA¹⁵ W34: Workflow-Mode-Settings -->
+<script src="/lib/workflow-mode-router.js" defer></script>
+<script defer>
+  (function () {
+    var saveStatus = function (msg, color) {
+      var el = document.getElementById('workflow-save-status');
+      if (!el) return;
+      el.textContent = msg || '';
+      el.style.color = color || '';
+    };
+
+    var updateCardBorders = function () {
+      document.querySelectorAll('.workflow-mode-card').forEach(function (card) {
+        var input = card.querySelector('input[type="radio"]');
+        var isActive = input && input.checked;
+        card.style.borderColor = isActive ? 'var(--accent, #4f8ef7)' : 'var(--border)';
+      });
+    };
+
+    document.addEventListener('DOMContentLoaded', async function () {
+      // Initial-Load: aktuelle Settings vom Backend
+      try {
+        var fetcher = window.provaFetch || window.fetch;
+        var res = await fetcher('/.netlify/functions/workflow-settings');
+        if (res.ok) {
+          var data = await res.json();
+          var current = data.default_mode || 'A';
+          var radio = document.querySelector('input[name="workflow_default_mode"][value="' + current + '"]');
+          if (radio) {
+            radio.checked = true;
+            updateCardBorders();
+          }
+          if (data._fallback) {
+            saveStatus('(Default — noch nicht gespeichert)', 'var(--text3)');
+          }
+        }
+      } catch (e) {
+        console.warn('[workflow-settings] load failed:', e.message);
+      }
+
+      // Card-Border-Update bei Radio-Change
+      document.querySelectorAll('input[name="workflow_default_mode"]').forEach(function (r) {
+        r.addEventListener('change', updateCardBorders);
+      });
+      updateCardBorders();
+    });
+
+    // MEGA¹⁶ W46: Word-Import-UI (Mode C)
+    function vorlagenStatus(msg, color) {
+      var el = document.getElementById('vorlage-upload-status');
+      if (!el) return;
+      el.textContent = msg || '';
+      el.style.color = color || 'var(--text3)';
+    }
+
+    function escVorlage(s) {
+      return String(s == null ? '' : s)
+        .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    async function ladeVorlagen() {
+      var listEl = document.getElementById('vorlagen-list');
+      if (!listEl) return;
+      try {
+        var fetcher = window.provaFetch || window.fetch;
+        var res = await fetcher('/.netlify/functions/parse-docx');
+        if (!res.ok) {
+          listEl.innerHTML = '<div style="color:var(--red,#ef4444);padding:8px 0;">Fehler beim Laden ('+res.status+')</div>';
+          return;
+        }
+        var data = await res.json();
+        if (data._migration_pending) {
+          listEl.innerHTML = '<div style="color:var(--warning,#d97706);padding:8px 0;">⚠️ Migration 08 noch nicht angewendet — Vorlagen-Speicherung blockiert.</div>';
+          return;
+        }
+        if (!data.vorlagen || data.vorlagen.length === 0) {
+          listEl.innerHTML = '<div style="color:var(--text3);padding:8px 0;font-style:italic;">Noch keine Vorlagen hochgeladen.</div>';
+          return;
+        }
+        // MEGA¹⁷ W50: Cache vorlagen fuer Mapping-Modal
+        window._vorlagenCache = data.vorlagen;
+        listEl.innerHTML = data.vorlagen.map(function (v) {
+          var varCount = (v.variables || []).length;
+          var mapCount = v.variable_mapping ? Object.keys(v.variable_mapping).filter(function(k){return v.variable_mapping[k];}).length : 0;
+          var mapStatus = varCount === 0
+            ? '<span style="color:var(--text3);">keine Variablen</span>'
+            : (mapCount === varCount
+              ? '<span style="color:var(--success,#059669);">✓ '+mapCount+'/'+varCount+' gemappt</span>'
+              : '<span style="color:var(--warning,#d97706);">⚠ '+mapCount+'/'+varCount+' gemappt</span>');
+          var editBtn = varCount > 0
+            ? '<button onclick="event.stopPropagation();openMappingModal(\''+escVorlage(v.id)+'\')" style="background:transparent;border:1px solid var(--border2);color:var(--text);border-radius:4px;padding:4px 10px;font-size:11px;cursor:pointer;margin-right:6px;" aria-label="Mapping bearbeiten">✏ Mapping</button>'
+            : '';
+          return '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:var(--bg);border:1px solid var(--border);border-radius:6px;margin-bottom:6px;cursor:pointer;" onclick="openMappingModal(\''+escVorlage(v.id)+'\')" role="button" tabindex="0" onkeydown="if(event.key===\'Enter\')openMappingModal(\''+escVorlage(v.id)+'\')">' +
+            '<div style="flex:1;min-width:0;">' +
+              '<div style="font-weight:600;color:var(--text);">'+escVorlage(v.name)+'</div>' +
+              '<div style="font-size:11px;color:var(--text3);margin-top:2px;">' +
+                varCount+' Variable'+(varCount===1?'':'n')+' · '+mapStatus+
+              '</div>' +
+            '</div>' +
+            '<div style="display:flex;align-items:center;">' +
+              editBtn +
+              '<button onclick="event.stopPropagation();loescheVorlage(\''+escVorlage(v.id)+'\')" style="background:transparent;border:1px solid rgba(239,68,68,0.3);color:#ef4444;border-radius:4px;padding:4px 10px;font-size:11px;cursor:pointer;" aria-label="Vorlage loeschen">🗑</button>' +
+            '</div>' +
+          '</div>';
+        }).join('');
+      } catch (e) {
+        listEl.innerHTML = '<div style="color:var(--red,#ef4444);padding:8px 0;">'+escVorlage(e.message||'Fehler')+'</div>';
+      }
+    }
+
+    // MEGA¹⁷ W50: Variable-Mapping-Modal
+    window._currentMappingVorlage = null;
+
+    window.openMappingModal = function (vorlageId) {
+      var v = (window._vorlagenCache || []).find(function (x) { return x.id === vorlageId; });
+      if (!v) return;
+      if (!window.ProvaModeC) {
+        if (window.provaAlert) window.provaAlert('Mode-C-Library nicht geladen', 'error');
+        return;
+      }
+      window._currentMappingVorlage = v;
+      var modal = document.getElementById('vorlage-mapping-modal');
+      var titleEl = document.getElementById('vmm-subtitle');
+      var listEl = document.getElementById('vmm-list');
+      if (!modal || !listEl) return;
+
+      titleEl.textContent = v.name + ' · ' + (v.variables || []).length + ' Variable(n)';
+      var fields = window.ProvaModeC.PROVA_FIELDS;
+      var existingMapping = v.variable_mapping || {};
+
+      if (!v.variables || v.variables.length === 0) {
+        listEl.innerHTML = '<div style="color:var(--text3);font-style:italic;padding:12px 0;">Keine Variablen in dieser Vorlage erkannt. Falls Du Platzhalter im Word-Dokument hast, muessen sie das Format $Name oder {{Name}} haben.</div>';
+        return;
+      }
+
+      // Group fields fuer Optgroups
+      var groups = {};
+      fields.forEach(function (f) {
+        if (!groups[f.group]) groups[f.group] = [];
+        groups[f.group].push(f);
+      });
+
+      listEl.innerHTML = (v.variables || []).map(function (varName) {
+        var current = existingMapping[varName] || '';
+        // MEGA¹⁷-PERFECTION W56: Confidence-Score
+        var guessResult = window.ProvaModeC.smartGuessFieldWithConfidence
+          ? window.ProvaModeC.smartGuessFieldWithConfidence(varName)
+          : { field: window.ProvaModeC.smartGuessField(varName), confidence: 'low' };
+        var guess = guessResult.field;
+        var conf = guessResult.confidence;
+        var selected = current || guess || '';
+        var optsHtml = '<option value="">— nicht mappen —</option>';
+        Object.keys(groups).forEach(function (g) {
+          optsHtml += '<optgroup label="'+escVorlage(g)+'">';
+          groups[g].forEach(function (f) {
+            var sel = (f.key === selected) ? ' selected' : '';
+            optsHtml += '<option value="'+escVorlage(f.key)+'"'+sel+'>'+escVorlage(f.label)+' ('+escVorlage(f.key)+')</option>';
+          });
+          optsHtml += '</optgroup>';
+        });
+        var confBadge = '';
+        if (!current && guess) {
+          var icon = conf === 'high' ? '🟢' : (conf === 'medium' ? '🟡' : '🔴');
+          var label = conf === 'high' ? 'sicher' : (conf === 'medium' ? 'vermutlich' : 'unsicher');
+          confBadge = '<div style="font-size:10px;color:var(--accent,#4f8ef7);margin-top:3px;">' +
+            icon + ' ' + label + ': ' + escVorlage(guess) + '</div>';
+        }
+        return '<div style="display:grid;grid-template-columns:1fr 1.3fr;gap:10px;align-items:center;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;">' +
+          '<div>' +
+            '<div style="font-family:ui-monospace,monospace;font-size:13px;color:var(--text);font-weight:600;">'+escVorlage(varName)+'</div>' +
+            confBadge +
+          '</div>' +
+          '<select class="es-select vmm-select" data-var="'+escVorlage(varName)+'" style="width:100%;">'+optsHtml+'</select>' +
+        '</div>';
+      }).join('');
+
+      modal.style.display = 'flex';
+    };
+
+    window.closeMappingModal = function () {
+      var modal = document.getElementById('vorlage-mapping-modal');
+      if (modal) modal.style.display = 'none';
+      window._currentMappingVorlage = null;
+    };
+
+    window.saveMappingModal = async function () {
+      var v = window._currentMappingVorlage;
+      if (!v) return;
+      var btn = document.getElementById('vmm-save-btn');
+      if (btn) { btn.disabled = true; btn.textContent = '💾 Speichere…'; }
+
+      var mapping = {};
+      var selects = document.querySelectorAll('#vmm-list .vmm-select');
+      selects.forEach(function (sel) {
+        var k = sel.getAttribute('data-var');
+        var val = sel.value || null;
+        if (k) mapping[k] = val;
+      });
+
+      try {
+        var fetcher = window.provaFetch || window.fetch;
+        var res = await fetcher('/.netlify/functions/parse-docx', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: v.id, variable_mapping: mapping })
+        });
+        if (res.ok) {
+          if (window.provaAlert) window.provaAlert('Mapping gespeichert', 'success');
+          closeMappingModal();
+          ladeVorlagen();
+        } else {
+          var err = await res.json().catch(function(){return{};});
+          if (window.provaAlert) window.provaAlert('Fehler: ' + (err.error || res.status), 'error');
+        }
+      } catch (e) {
+        if (window.provaAlert) window.provaAlert('Netzwerk-Fehler: ' + e.message, 'error');
+      } finally {
+        if (btn) { btn.disabled = false; btn.textContent = '💾 Mapping speichern'; }
+      }
+    };
+
+    window.loescheVorlage = async function (id) {
+      if (!window.provaConfirm && !window.confirm) return;
+      var confirmFn = window.provaConfirm || window.confirm;
+      if (!confirmFn('Vorlage wirklich loeschen?')) return;
+      try {
+        var fetcher = window.provaFetch || window.fetch;
+        var res = await fetcher('/.netlify/functions/parse-docx?id=' + encodeURIComponent(id), { method: 'DELETE' });
+        if (res.ok) {
+          if (window.provaAlert) window.provaAlert('Vorlage geloescht', 'success');
+          ladeVorlagen();
+        } else {
+          if (window.provaAlert) window.provaAlert('Loeschen fehlgeschlagen', 'error');
+        }
+      } catch (e) {
+        if (window.provaAlert) window.provaAlert('Fehler: ' + e.message, 'error');
+      }
+    };
+
+    document.addEventListener('DOMContentLoaded', function () {
+      ladeVorlagen();
+      var fileInput = document.getElementById('vorlage-file-input');
+      if (fileInput) {
+        fileInput.addEventListener('change', async function (e) {
+          var file = e.target.files && e.target.files[0];
+          if (!file) return;
+          var nameInput = document.getElementById('vorlage-name-input');
+          var name = (nameInput && nameInput.value || '').trim() || file.name.replace(/\.docx?$/i, '');
+          // Validation
+          if (!file.name.match(/\.docx$/i)) {
+            vorlagenStatus('⚠️ Nur .docx-Dateien erlaubt', 'var(--red,#ef4444)');
+            return;
+          }
+          if (file.size > 10 * 1024 * 1024) {
+            vorlagenStatus('⚠️ Datei zu gross (max 10MB)', 'var(--red,#ef4444)');
+            return;
+          }
+
+          vorlagenStatus('⏳ Konvertiere ' + file.name + '…', 'var(--text3)');
+          // base64 encoding
+          var base64 = await new Promise(function (res, rej) {
+            var r = new FileReader();
+            r.onload = function () { res(r.result.split(',')[1]); };
+            r.onerror = rej;
+            r.readAsDataURL(file);
+          });
+
+          try {
+            var fetcher = window.provaFetch || window.fetch;
+            var res = await fetcher('/.netlify/functions/parse-docx', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ name: name, source_filename: file.name, docx_base64: base64 })
+            });
+            if (res.ok) {
+              var data = await res.json();
+              vorlagenStatus('✓ Hochgeladen — ' + (data.variables || []).length + ' Variablen erkannt', 'var(--success,#059669)');
+              if (nameInput) nameInput.value = '';
+              fileInput.value = '';
+              await ladeVorlagen();
+              // MEGA¹⁷-PERFECTION W56: Auto-Open Mapping-Modal nach Upload
+              // (sofern Variablen erkannt wurden — sonst direkt nutzbar)
+              if ((data.variables || []).length > 0 && data.id) {
+                setTimeout(function () {
+                  if (window.openMappingModal) window.openMappingModal(data.id);
+                }, 250);  // kurzer Delay damit Vorlagen-Liste sichtbar gerendert
+              }
+            } else if (res.status === 503) {
+              vorlagenStatus('⚠️ Migration 08 nicht angewendet — Marcel kontaktieren', 'var(--warning,#d97706)');
+            } else {
+              var err = await res.json().catch(function(){return{};});
+              vorlagenStatus('✗ ' + (err.error || 'Upload fehlgeschlagen'), 'var(--red,#ef4444)');
+            }
+          } catch (e) {
+            vorlagenStatus('✗ ' + (e.message || 'Netzwerk-Fehler'), 'var(--red,#ef4444)');
+          }
+        });
+      }
+    });
+
+    window.speichereWorkflowMode = async function () {
+      var btn = document.getElementById('workflow-save-btn');
+      var radio = document.querySelector('input[name="workflow_default_mode"]:checked');
+      if (!radio) {
+        saveStatus('Bitte einen Modus waehlen', 'var(--red,#ef4444)');
+        return;
+      }
+      var mode = radio.value;
+      btn.disabled = true;
+      saveStatus('⏳ Speichere…', 'var(--text3)');
+
+      try {
+        var fetcher = window.provaFetch || window.fetch;
+        var res = await fetcher('/.netlify/functions/workflow-settings', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ default_mode: mode, onboarding_completed: true })
+        });
+        if (res.ok) {
+          saveStatus('✓ Gespeichert', 'var(--success,#059669)');
+          if (window.provaAlert) window.provaAlert('Standard-Modus gespeichert: ' + mode, 'success');
+        } else if (res.status === 503) {
+          var json = await res.json();
+          saveStatus('⚠️ Migration nicht angewendet — siehe Marcel', 'var(--warning,#d97706)');
+          console.warn('[workflow-settings] migration not applied:', json);
+        } else {
+          saveStatus('✗ Fehler beim Speichern', 'var(--red,#ef4444)');
+        }
+      } catch (e) {
+        saveStatus('✗ ' + (e.message || 'Netzwerkfehler'), 'var(--red,#ef4444)');
+      } finally {
+        btn.disabled = false;
+      }
+    };
+  })();
+</script>
 <!-- ═══════════════════════════════════════════════════════════════
      KI-LERNPOOL Modal — im gleichen Einstellungen-Look & Feel
      Zeigt gelernte Vokabeln + Korrekturen + Statistik aus localStorage
@@ -892,6 +1350,31 @@
         <button class="es-btn" onclick="leereLernpool()" style="font-size:12px;color:#ef4444;border-color:rgba(239,68,68,.3);">🗑 Leeren</button>
         <button class="es-btn" onclick="schliesseLernpoolModal()" style="font-size:12px;">Schließen</button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- MEGA¹¹ W9: KI-Cost-Display Modal -->
+<div id="ki-cost-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);backdrop-filter:blur(4px);z-index:9500;align-items:center;justify-content:center;padding:20px;" role="dialog" aria-label="KI-Kosten-Uebersicht">
+  <div style="background:var(--surface);border:1px solid var(--border2);border-radius:16px;width:100%;max-width:680px;max-height:88vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.5);">
+    <div style="padding:20px 22px;border-bottom:1px solid var(--border);flex-shrink:0;display:flex;justify-content:space-between;align-items:center;">
+      <div>
+        <div style="font-size:18px;font-weight:700;color:var(--text);">💰 KI-Nutzung & Kosten</div>
+        <div style="font-size:12px;color:var(--text3);margin-top:4px;">Anrufe + Tokens + Kosten — Quelle: ki_protokoll-Tabelle</div>
+      </div>
+      <button onclick="schliesseKICostModal()" aria-label="Modal schliessen" style="background:none;border:none;color:var(--text3);font-size:22px;cursor:pointer;padding:4px 10px;border-radius:6px;">✕</button>
+    </div>
+    <div style="padding:14px 22px;border-bottom:1px solid var(--border);flex-shrink:0;display:flex;gap:8px;align-items:center;">
+      <label style="font-size:12px;color:var(--text3);">Zeitraum:</label>
+      <select id="ki-cost-since" onchange="ladeKICost()" style="background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:5px 10px;color:var(--text);font-size:12px;">
+        <option value="24h">24 Stunden</option>
+        <option value="7d" selected>7 Tage</option>
+        <option value="30d">30 Tage</option>
+      </select>
+      <button class="es-btn" onclick="ladeKICost()" style="font-size:11px;margin-left:auto;">🔄 Aktualisieren</button>
+    </div>
+    <div id="ki-cost-content" style="overflow-y:auto;padding:22px;flex:1;">
+      <div style="text-align:center;color:var(--text3);font-size:13px;padding:40px 0;">Lade…</div>
     </div>
   </div>
 </div>

@@ -78,10 +78,13 @@ function computeConfidence(openaiResult, opts) {
   }
 
   // 4. Halluzinations-Red-Flags (apodiktische Aussagen)
-  const lowerText = text.toLowerCase();
+  // MEGA¹² W13 Bug-Fix: rf muss auch lowercased werden
+  // MEGA¹³ W20 Bug-Fix: Whitespace-Variants (Multi-Space, Tab, Non-Breaking-Space)
+  //   normalisieren — sonst matchen kopierte Texte mit Word-Whitespace nicht
+  const lowerText = text.toLowerCase().replace(/[\s ]+/g, ' ');
   let redFlagCount = 0;
   for (const rf of HALLUZINATION_RED_FLAGS) {
-    if (lowerText.includes(rf)) redFlagCount++;
+    if (lowerText.includes(rf.toLowerCase().replace(/\s+/g, ' '))) redFlagCount++;
   }
   if (redFlagCount > 0) {
     score -= redFlagCount * 15;

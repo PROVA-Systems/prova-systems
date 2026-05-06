@@ -7,15 +7,23 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="PROVA">
-  <meta name="theme-color" content="#111827">
+  <!-- MEGA¹¹ W10: Theme-Color light + dark variants -->
+  <meta name="theme-color" content="#f5f7fb" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#111827" media="(prefers-color-scheme: dark)">
   <link rel="apple-touch-icon" href="/icons/icon-192.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-192.png">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>PROVA — Zentrale</title>
+<!-- MEGA¹¹ W10: PWA Install-Prompt -->
+<script src="/lib/pwa-install-prompt.js" defer></script>
 <script src="prova-preise.js"></script>
 <script src="paket-guard.js"></script>
 <script src="prova-fetch-auth.js"></script>
 <script src="/lib/prova-config.js"></script>
 <script src="/lib/sentry-init.js"></script>
+<!-- MEGA²⁷.5 Block 3: Referral-System UI-Libraries -->
+<script src="/lib/referral-system.js" defer></script>
+<script src="/lib/referral-ui.js" defer></script>
 <script src="prova-notifications.js" defer></script>
 <script>
 (function(){
@@ -45,6 +53,9 @@
 <script src="prova-pseudo-send.js"></script>
 <script src="prova-account-gate.js"></script>
 <script src="prova-config.js"></script>
+<script src="/lib/workflow-mode-router.js" defer></script>
+<script src="/lib/onboarding-trigger.js" defer></script>
+<script src="/lib/welcome-wizard.js" defer></script>
 <script src="prova-status-hydrate.js"></script>
 <script src="theme.js"></script>
 <script src="nav.js" defer></script>
@@ -747,6 +758,9 @@ window.addEventListener('error', function(ev) {
 });
 </script></head>
 <body>
+<!-- MEGA¹¹ W8: Skip-to-Content-Link (WCAG 2.4.1, Best-Practice fuer Screen-Reader) -->
+<a href="#main-content" class="prova-skip-link" style="position:absolute;left:-9999px;top:0;padding:8px 16px;background:#1c2537;color:#fff;z-index:99999;text-decoration:none;">Zum Inhalt springen</a>
+<style>.prova-skip-link:focus{left:8px;top:8px;}</style>
 
 <div class="app-shell">
 
@@ -785,13 +799,13 @@ window.addEventListener('error', function(ev) {
           <span style="font-size:13px;font-weight:500;">Alle Fälle</span>
         </a>
         <!-- Einstellungen (als reiner Button mit direktem Navigations-Handler, kein verschachteltes <a>) -->
-        <button class="topbar-btn" title="Einstellungen" onclick="window.location.href='einstellungen.html'">⚙</button>
+        <button class="topbar-btn" title="Einstellungen" aria-label="Einstellungen oeffnen" onclick="window.location.href='einstellungen.html'">⚙</button>
       </div>
     </header>
 
     <!-- Page Content -->
     <div id="fg-banner-container"></div>
-<main class="page-content">
+<main class="page-content" id="main-content">
 
   <!-- ── HEADER ── -->
   <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:24px;flex-wrap:wrap;">
@@ -880,6 +894,10 @@ window.addEventListener('error', function(ev) {
           </a>
         </div>
       </div>
+
+      <!-- MEGA²⁷.5 Block 3: Referral-Card-Mount -->
+      <div id="referral-card-mount" style="margin-top:12px;"></div>
+
     </div>
   </div>
 
@@ -913,14 +931,14 @@ window.addEventListener('error', function(ev) {
 </nav>
 
 <!-- Support FAB -->
-<button class="support-fab" onclick="openSupportModal()" title="Support">💬</button>
+<button class="support-fab" onclick="openSupportModal()" title="Support" aria-label="Support-Chat oeffnen">💬</button>
 
 <!-- Support Modal -->
 <div class="modal-overlay" id="support-modal" onclick="if(event.target===this)this.classList.remove('open')">
   <div class="modal-box">
     <div class="modal-header">
       <div class="modal-title">💬 Support</div>
-      <button class="modal-close" onclick="document.getElementById('support-modal').classList.remove('open')">✕</button>
+      <button class="modal-close" onclick="document.getElementById('support-modal').classList.remove('open')" aria-label="Modal schliessen">✕</button>
     </div>
     <div id="support-faq-box" style="display:none;margin-bottom:14px;padding:13px;background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.25);border-radius:var(--r-md);">
       <div style="font-size:11px;font-weight:700;color:var(--success);margin-bottom:5px;letter-spacing:.04em;">KI-ANTWORT</div>
@@ -954,6 +972,20 @@ window.addEventListener('error', function(ev) {
 
 
   <script src="sw-register.js" defer></script>
+  <!-- MEGA¹⁴ W24: Pull-to-Refresh in dashboard -->
+  <script src="/lib/pull-to-refresh.js" defer></script>
+  <script defer>
+    document.addEventListener('DOMContentLoaded', function () {
+      if (!('ontouchstart' in window) || !window.ProvaPullToRefresh) return;
+      var listEl = document.getElementById('recent-list');
+      if (listEl && typeof ladeDashboard === 'function') {
+        window.ProvaPullToRefresh.bind(listEl, async function () { await ladeDashboard(); });
+      } else if (listEl && typeof window.location !== 'undefined') {
+        // Fallback: Page-Reload wenn keine ladeDashboard-Funktion
+        window.ProvaPullToRefresh.bind(listEl, async function () { window.location.reload(); });
+      }
+    });
+  </script>
   <script src="global-search.js" defer></script>
   <script src="auftragstyp.js"></script>
   <script src="prova-context.js" defer></script>
@@ -977,6 +1009,116 @@ window.addEventListener('error', function(ev) {
         FristGuard.init({ bannerId: 'fg-banner-container', svEmail: localStorage.getItem('prova_sv_email') || '' }).catch(function(){});
       }
     });
+  </script>
+  <!-- MEGA²⁷.5 Block 3: Referral-Card Auto-Mount + Modal-Wiring -->
+  <script>
+  (function initReferralCard() {
+    function mount() {
+      if (!window.ProvaReferralUI || !window.ProvaReferral) { setTimeout(mount, 200); return; }
+      var el = document.getElementById('referral-card-mount');
+      if (!el) return;
+      var paket = (localStorage.getItem('prova_paket') || '').toLowerCase();
+      var isFounding = paket.indexOf('founding') >= 0 || localStorage.getItem('prova_founding_member') === 'true';
+      var defaultStats = { total_pending: 0, total_active: 0, total_hold: 0, total_rewarded: 0 };
+
+      function rerender(stats) {
+        window.ProvaReferralUI.attach(el, {
+          stats: stats || defaultStats,
+          isFoundingMember: isFounding,
+          onOpenCreate: openCreateModal,
+          onOpenHistory: openHistoryModal
+        });
+      }
+
+      function openCreateModal() {
+        if (!isFounding) return;
+        window.ProvaReferral.getStats().then(function(s){
+          var modalHtml = window.ProvaReferralUI.buildCreateModalHtml({ stats: s || defaultStats });
+          var wrap = document.createElement('div');
+          wrap.innerHTML = modalHtml;
+          document.body.appendChild(wrap);
+          wireCreateModal(wrap, s || defaultStats);
+        }).catch(function(){
+          var modalHtml = window.ProvaReferralUI.buildCreateModalHtml({ stats: defaultStats });
+          var wrap = document.createElement('div');
+          wrap.innerHTML = modalHtml;
+          document.body.appendChild(wrap);
+          wireCreateModal(wrap, defaultStats);
+        });
+      }
+
+      function wireCreateModal(wrap, stats) {
+        var cancel = wrap.querySelector('.prova-referral-cancel');
+        var submit = wrap.querySelector('.prova-referral-submit');
+        var msg = wrap.querySelector('.prova-referral-message');
+        var charCount = wrap.querySelector('.prova-referral-charcount');
+        var status = wrap.querySelector('.prova-referral-status');
+        if (msg && charCount) {
+          msg.addEventListener('input', function(){ charCount.textContent = msg.value.length + ' / 500'; });
+        }
+        if (cancel) cancel.addEventListener('click', function(){ wrap.remove(); });
+        if (submit) submit.addEventListener('click', function(){
+          var emailEl = wrap.querySelector('.prova-referral-email');
+          var email = (emailEl ? emailEl.value : '').trim().toLowerCase();
+          var message = msg ? msg.value : '';
+          var emailCheck = window.ProvaReferral.validateEmail(email);
+          if (!emailCheck.ok) {
+            status.style.display = 'block';
+            status.style.color = '#ef4444';
+            status.textContent = '❌ ' + emailCheck.error;
+            return;
+          }
+          status.style.display = 'block';
+          status.style.color = '#3b82f6';
+          status.textContent = '⏳ Einladung wird versendet…';
+          submit.disabled = true;
+          window.ProvaReferral.create({ email: email, message: message }).then(function(r){
+            if (r && r.ok) {
+              status.style.color = '#10b981';
+              status.textContent = '✅ Einladung an ' + email + ' gesendet';
+              setTimeout(function(){ wrap.remove(); rerender(); }, 1800);
+            } else {
+              status.style.color = '#ef4444';
+              status.textContent = '❌ ' + (r && r.error ? r.error : 'Fehler beim Senden');
+              submit.disabled = false;
+            }
+          }).catch(function(e){
+            status.style.color = '#ef4444';
+            status.textContent = '❌ Netzwerk-Fehler: ' + e.message;
+            submit.disabled = false;
+          });
+        });
+      }
+
+      function openHistoryModal() {
+        Promise.all([
+          window.ProvaReferral.getHistory().catch(function(){ return { items: [] }; }),
+          window.ProvaReferral.getStats().catch(function(){ return defaultStats; })
+        ]).then(function(res) {
+          var historyData = res[0] || { items: [] };
+          var stats = res[1] || defaultStats;
+          var modalHtml = window.ProvaReferralUI.buildHistoryModalHtml({
+            items: historyData.items || [],
+            stats: stats
+          });
+          var wrap = document.createElement('div');
+          wrap.innerHTML = modalHtml;
+          document.body.appendChild(wrap);
+          var close = wrap.querySelector('.prova-referral-close');
+          if (close) close.addEventListener('click', function(){ wrap.remove(); });
+        });
+      }
+
+      // Initial render with defaults, then load real stats
+      rerender(defaultStats);
+      window.ProvaReferral.getStats().then(rerender).catch(function(){});
+    }
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', mount);
+    } else {
+      mount();
+    }
+  })();
   </script>
 </body>
 </html>

@@ -15,8 +15,10 @@ exports.handler = async function(event) {
   if (event.httpMethod === 'OPTIONS') return { statusCode: 200, headers: cors, body: '' };
 
   // Einfacher Shared-Secret Schutz
+  // MEGA²⁸ W7-I1: defensive PROVA-Prefix-Migration
   const secret = event.headers['x-prova-secret'] || '';
-  if (process.env.TERMIN_REMINDER_SECRET && secret !== process.env.TERMIN_REMINDER_SECRET) {
+  const expectedSecret = process.env.PROVA_TERMIN_REMINDER_SECRET || process.env.TERMIN_REMINDER_SECRET;
+  if (expectedSecret && secret !== expectedSecret) {
     return { statusCode: 401, headers: cors, body: JSON.stringify({ error: 'Unauthorized' }) };
   }
 

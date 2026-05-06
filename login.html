@@ -117,6 +117,73 @@
   }
   .footer-note a { color: var(--gray-500); text-decoration: none; }
   .footer-note a:hover { text-decoration: underline; }
+  /* MEGA²⁰ W85: Pricing-Display + AGB-Checkboxes */
+  .pricing-strip {
+    margin-bottom: 16px;
+    padding: 12px 14px;
+    background: var(--accent-light);
+    border: 1px solid var(--accent);
+    border-radius: 8px;
+    font-size: 12px;
+    color: var(--navy);
+  }
+  .pricing-strip strong { font-weight: 700; }
+  .pricing-strip .tier-coming-soon {
+    display: inline-block;
+    margin-left: 6px;
+    padding: 1px 6px;
+    background: var(--gray-200);
+    color: var(--gray-500);
+    border-radius: 8px;
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-weight: 600;
+  }
+  .legal-checkboxes {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 6px;
+    padding: 10px 12px;
+    background: var(--gray-100);
+    border-radius: 6px;
+    font-size: 12px;
+    line-height: 1.5;
+  }
+  .legal-cb {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    cursor: pointer;
+  }
+  .legal-cb input[type=checkbox] {
+    margin-top: 2px;
+    cursor: pointer;
+    flex-shrink: 0;
+    accent-color: var(--accent);
+  }
+  .legal-cb a {
+    color: var(--accent);
+    text-decoration: underline;
+    font-weight: 500;
+  }
+  .legal-cb.required::after {
+    content: '*';
+    color: var(--error);
+    margin-left: 2px;
+  }
+  .legal-error {
+    margin-top: 4px;
+    font-size: 11px;
+    color: var(--error);
+    display: none;
+  }
+  .legal-error.active { display: block; }
+  @media (max-width: 480px) {
+    .pricing-strip { font-size: 11px; }
+    .legal-checkboxes { font-size: 11px; }
+  }
 </style>
 </head>
 <body>
@@ -156,15 +223,51 @@
     <button type="submit">Einloggen</button>
   </form>
 
-  <!-- SIGN-UP -->
+  <!-- SIGN-UP — MEGA²⁰ W85: Pricing-Strip + AGB-Checkboxes + Solo-only -->
   <form id="signup-form" autocomplete="on">
+    <!-- Pricing-Strip: MEGA²¹ Pricing-Update — Solo 179€ + Founding 125€ -->
+    <div class="pricing-strip" aria-label="Pricing-Information">
+      <strong>Solo 179 €/Monat</strong> · 14 Tage kostenlos testen
+      <div style="margin-top:4px;font-size:11px;color:var(--success,#10b981);font-weight:600;">
+        🎁 Founding Members: <strong>125 €/Monat</strong> (erste 10 Pilot-SVs)
+      </div>
+      <div style="margin-top:4px;font-size:11px;">
+        <span class="tier-coming-soon" data-tier="starter">Starter 89€ · Coming Soon Juni</span>
+        <span class="tier-coming-soon" data-tier="team">Team 379€ · Coming Soon Juli</span>
+      </div>
+    </div>
+
     <label for="signup-name">Voller Name</label>
     <input id="signup-name" name="name" type="text" required autocomplete="name" placeholder="Marcel Schreiber">
     <label for="signup-email">E-Mail-Adresse</label>
     <input id="signup-email" name="email" type="email" required autocomplete="email" placeholder="name@ihre-kanzlei.de">
     <label for="signup-password">Passwort (mindestens 8 Zeichen)</label>
     <input id="signup-password" name="password" type="password" required autocomplete="new-password" minlength="8">
-    <button type="submit">Account anlegen</button>
+
+    <!-- Legal-Checkboxes: 3 Pflicht + 1 Newsletter optional -->
+    <div class="legal-checkboxes" role="group" aria-label="Rechtliche Einwilligungen">
+      <label class="legal-cb required" for="cb-agb">
+        <input id="cb-agb" type="checkbox" name="cb_agb" data-required="1">
+        <span>Ich akzeptiere die <a href="/agb.html" target="_blank" rel="noopener">Allgemeinen Geschäftsbedingungen</a>.</span>
+      </label>
+      <label class="legal-cb required" for="cb-avv">
+        <input id="cb-avv" type="checkbox" name="cb_avv" data-required="1">
+        <span>Ich akzeptiere die <a href="/avv.html" target="_blank" rel="noopener">Auftragsverarbeitungs&shy;vereinbarung (Art. 28 DSGVO)</a>.</span>
+      </label>
+      <label class="legal-cb required" for="cb-dse">
+        <input id="cb-dse" type="checkbox" name="cb_dse" data-required="1">
+        <span>Ich habe die <a href="/datenschutz.html" target="_blank" rel="noopener">Datenschutz&shy;erklärung</a> zur Kenntnis genommen.</span>
+      </label>
+      <label class="legal-cb" for="cb-newsletter">
+        <input id="cb-newsletter" type="checkbox" name="cb_newsletter">
+        <span>Newsletter mit Produkt-Updates und Tipps (optional, jederzeit kündbar)</span>
+      </label>
+      <div id="legal-error" class="legal-error" role="alert" aria-live="polite">
+        Bitte alle Pflicht-Einwilligungen (mit *) bestaetigen.
+      </div>
+    </div>
+
+    <button type="submit" id="signup-submit" disabled>Account anlegen</button>
   </form>
 
   <!-- Hidden Reset-Form fuer Logic-Kompatibilitaet (auth-supabase-logic.js erwartet #reset-form) -->
@@ -207,6 +310,26 @@
         }
       });
     }
+
+    // MEGA²⁰ W85: Legal-Checkboxes Live-Validation
+    var requiredCbs = document.querySelectorAll('#signup-form .legal-cb input[data-required="1"]');
+    var signupSubmit = document.getElementById('signup-submit');
+    var legalError = document.getElementById('legal-error');
+
+    function validateLegalCheckboxes() {
+      var allChecked = Array.prototype.every.call(requiredCbs, function (cb) { return cb.checked; });
+      if (signupSubmit) signupSubmit.disabled = !allChecked;
+      if (legalError) {
+        // Zeige Fehler nur wenn User schon mindestens eine Checkbox angeklickt hat aber nicht alle
+        var anyChecked = Array.prototype.some.call(requiredCbs, function (cb) { return cb.checked; });
+        legalError.classList.toggle('active', !allChecked && anyChecked);
+      }
+    }
+    requiredCbs.forEach(function (cb) {
+      cb.addEventListener('change', validateLegalCheckboxes);
+    });
+    // Initial-Check (falls Browser checkboxes restoriert)
+    validateLegalCheckboxes();
 
     if (sendResetBtn && resetEmailInline && resetEmailHidden && resetFormHidden) {
       sendResetBtn.addEventListener('click', function () {

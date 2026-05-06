@@ -2305,5 +2305,40 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
 })();
 </script>
 
+<!-- MEGA¹¹ W7: Plausible-Analytics (cookieless, DSGVO-konform via Consent-Lib) -->
+<script src="/lib/cookie-consent.js" defer></script>
+<script src="/lib/analytics-plausible.js" defer></script>
+<script>
+  // Plausible-Init nach Cookie-Consent-Lib geladen
+  document.addEventListener('DOMContentLoaded', function () {
+    if (window.ProvaCookieConsent && typeof window.ProvaCookieConsent.init === 'function') {
+      window.ProvaCookieConsent.init();
+    }
+    if (window.Plausible) {
+      window.Plausible.init('prova-systems.de');
+    }
+  });
+
+  // Goal-Tracking auf wichtige Landing-CTAs
+  document.addEventListener('click', function (e) {
+    if (!window.Plausible) return;
+    const target = e.target.closest('a, button');
+    if (!target) return;
+
+    // Pricing-Section-Click
+    if (target.closest('[data-section="pricing"], .pricing-card, [href*="#pricing"]')) {
+      window.Plausible.trackGoal('Pricing-Click');
+    }
+    // Trial-Signup-CTAs
+    if (target.matches('a[href*="testversion"], a[href*="register"], button[data-cta="trial"]')) {
+      window.Plausible.trackGoal('Trial-CTA-Click');
+    }
+    // Demo-Buttons
+    if (target.matches('a[href*="#demo"], button[data-cta="demo"]')) {
+      window.Plausible.trackGoal('Demo-Started');
+    }
+  });
+</script>
+
 </body>
 </html>

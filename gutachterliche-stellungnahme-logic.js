@@ -84,13 +84,16 @@ function validatePhase(n) {
         if (!artChecked) missing.push('Art der Anfrage');
         if (frage && !frage.value.trim()) missing.push('Konkrete Frage');
         if (missing.length) {
-            alert('Bitte ausfüllen: ' + missing.join(', '));
+            // MEGA²³ Block 5: Toast-Migration W5 (ProvaUI primary, provaAlert fallback W16-compat)
+            if (window.ProvaUI && window.ProvaUI.toast) window.ProvaUI.toast('Bitte ausfüllen: ' + missing.join(', '), 'error');
+            else (window.provaAlert || alert)('Bitte ausfüllen: ' + missing.join(', '), 'error');
             return false;
         }
     } else if (n === 2) {
         const antwort = document.getElementById('ts-antwort');
         if (antwort && !antwort.value.trim()) {
-            alert('Antwort auf konkrete Frage ist Pflichtfeld.');
+            if (window.ProvaUI && window.ProvaUI.toast) window.ProvaUI.toast('Antwort auf konkrete Frage ist Pflichtfeld.', 'error');
+            else (window.provaAlert || alert)('Antwort auf konkrete Frage ist Pflichtfeld.', 'error');
             return false;
         }
     }
@@ -258,7 +261,9 @@ async function tsVersenden() {
     });
 
     if (!_auftragId) {
-        alert('Speichern fehlgeschlagen — bitte später erneut versuchen.');
+        // MEGA²³ Block 5: Toast-Migration W5 (ProvaUI primary, provaAlert fallback W16-compat)
+        if (window.ProvaUI && window.ProvaUI.toast) window.ProvaUI.toast('Speichern fehlgeschlagen — bitte später erneut versuchen.', 'error');
+        else (window.provaAlert || alert)('Speichern fehlgeschlagen — bitte später erneut versuchen.', 'error');
         return;
     }
 
@@ -297,7 +302,9 @@ async function tsVersenden() {
         });
         const json = await resp.json();
         if (!resp.ok) {
-            alert('PDF-Generation Fehler: ' + (json.error || resp.status));
+            // MEGA²³ Block 5: Toast-Migration W5 (ProvaUI primary, provaAlert fallback W16-compat)
+            if (window.ProvaUI && window.ProvaUI.toast) window.ProvaUI.toast('PDF-Generation Fehler: ' + (json.error || resp.status), 'error');
+            else (window.provaAlert || alert)('PDF-Generation Fehler: ' + (json.error || resp.status), 'error');
             return;
         }
 
@@ -314,7 +321,9 @@ async function tsVersenden() {
         }, 1200);
     } catch (e) {
         console.error('PDF-Generation:', e);
-        alert('PDF-Generation Fehler: ' + e.message);
+        // MEGA²³ Block 5: Toast-Migration W5 (ProvaUI primary, provaAlert fallback W16-compat)
+        if (window.ProvaUI && window.ProvaUI.toast) window.ProvaUI.toast('PDF-Generation Fehler: ' + e.message, 'error');
+        else (window.provaAlert || alert)('PDF-Generation Fehler: ' + e.message, 'error');
     }
 }
 

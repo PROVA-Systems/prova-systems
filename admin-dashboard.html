@@ -11,6 +11,7 @@
 <script src="nav.js" defer></script>
 <script src="auftragstyp.js"></script>
   <script src="global-search.js" defer></script>
+  <script src="/lib/admin-ki-stats-frontend.js" defer></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>PROVA Admin Dashboard</title>
@@ -204,24 +205,28 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14
     <button class="tab-btn" data-tab="ki-stats" onclick="showTab('ki-stats', this)" style="background:none;border:none;padding:10px 16px;font-size:13px;font-weight:600;color:var(--text3);border-bottom:2px solid transparent;cursor:pointer;font-family:inherit;">KI & Workflow</button>
     <button class="tab-btn" data-tab="tickets" onclick="showTab('tickets', this)" style="background:none;border:none;padding:10px 16px;font-size:13px;font-weight:600;color:var(--text3);border-bottom:2px solid transparent;cursor:pointer;font-family:inherit;">Support</button>
     <button class="tab-btn" data-tab="health" onclick="showTab('health', this)" style="background:none;border:none;padding:10px 16px;font-size:13px;font-weight:600;color:var(--text3);border-bottom:2px solid transparent;cursor:pointer;font-family:inherit;">Health</button>
+    <!-- MEGA²¹ W95: 7. Tab Pipeline (Marcel-Decision F1) -->
+    <button class="tab-btn" data-tab="pipeline" onclick="showTab('pipeline', this)" style="background:none;border:none;padding:10px 16px;font-size:13px;font-weight:600;color:var(--text3);border-bottom:2px solid transparent;cursor:pointer;font-family:inherit;">Pipeline</button>
+    <!-- MEGA²³ Block 3: 8. Tab Settings (System-Info + Feature-Flags) -->
+    <button class="tab-btn" data-tab="settings" onclick="showTab('settings', this)" style="background:none;border:none;padding:10px 16px;font-size:13px;font-weight:600;color:var(--text3);border-bottom:2px solid transparent;cursor:pointer;font-family:inherit;">⚙️ Settings</button>
   </div>
 
   <!-- TAB: ÜBERSICHT -->
   <div id="tab-overview" class="tab-panel">
     <!-- KPI-Grid -->
     <div class="kpi-grid">
-      <div class="kpi blue">
-        <div class="kpi-label">MRR</div>
+      <div class="kpi blue" role="button" tabindex="0" onclick="oeffneKICostDrilldown && oeffneKICostDrilldown()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();oeffneKICostDrilldown && oeffneKICostDrilldown();}" style="cursor:pointer" aria-label="MRR-KPI Detail oeffnen">
+        <div class="kpi-label">MRR <span style="opacity:.5;font-size:9px;">▶</span></div>
         <div class="kpi-value" id="kpiMrr">—</div>
         <div class="kpi-sub" id="kpiMrrSub">ARR —</div>
       </div>
-      <div class="kpi green">
-        <div class="kpi-label">Aktive Kunden</div>
+      <div class="kpi green" role="button" tabindex="0" onclick="oeffneKundenDrilldown && oeffneKundenDrilldown()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();oeffneKundenDrilldown && oeffneKundenDrilldown();}" style="cursor:pointer" aria-label="Aktive Kunden Detail oeffnen">
+        <div class="kpi-label">Aktive Kunden <span style="opacity:.5;font-size:9px;">▶</span></div>
         <div class="kpi-value" id="kpiKunden">—</div>
         <div class="kpi-sub" id="kpiKundenSub">— gesamt</div>
       </div>
-      <div class="kpi warn">
-        <div class="kpi-label">Offene Tickets</div>
+      <div class="kpi warn" role="button" tabindex="0" onclick="oeffneTicketsDrilldown && oeffneTicketsDrilldown()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();oeffneTicketsDrilldown && oeffneTicketsDrilldown();}" style="cursor:pointer" aria-label="Offene Tickets Detail oeffnen">
+        <div class="kpi-label">Offene Tickets <span style="opacity:.5;font-size:9px;">▶</span></div>
         <div class="kpi-value" id="kpiTickets">—</div>
         <div class="kpi-sub" id="kpiTicketsSub">Support</div>
       </div>
@@ -308,6 +313,48 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14
       <div class="card" style="padding:18px;">
         <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:14px;">KI-Nutzung nach Typ</div>
         <div id="kiByType" class="paket-bars"><div class="loading"><div class="spin"></div>Lade…</div></div>
+      </div>
+    </div>
+
+    <!-- MEGA²³ Block 4: KI-Stats Frontend-Charts (Token-Cost + Model-Distribution + Foto-Usage + Diktat-Min) -->
+    <div style="margin-top:16px;display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+      <!-- Model-Distribution-Pie (CSS-only) -->
+      <div class="card" style="padding:18px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+          <div style="font-size:13px;font-weight:700;color:var(--text);">🥧 Model-Distribution</div>
+          <select id="kiStatsRange" onchange="loadKIStatsExt()" style="padding:4px 8px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:11px;font-family:inherit;">
+            <option value="today">Heute</option>
+            <option value="week">Woche</option>
+            <option value="month" selected>Monat</option>
+          </select>
+        </div>
+        <div id="kiModelDistribution" style="font-size:12px;color:var(--text2);">
+          <div class="loading"><div class="spin"></div>Lade…</div>
+        </div>
+      </div>
+
+      <!-- Token-Cost pro User (Top 5) -->
+      <div class="card" style="padding:18px;">
+        <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:12px;">💰 Token-Cost pro User (Top 5)</div>
+        <div id="kiCostsPerUser" style="font-size:12px;color:var(--text2);">
+          <div class="loading"><div class="spin"></div>Lade…</div>
+        </div>
+      </div>
+
+      <!-- Foto-KI-Usage pro User -->
+      <div class="card" style="padding:18px;">
+        <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:12px;">📷 Foto-KI-Usage (Limit 10/Monat)</div>
+        <div id="kiFotoUsage" style="font-size:12px;color:var(--text2);">
+          <div class="loading"><div class="spin"></div>Lade…</div>
+        </div>
+      </div>
+
+      <!-- Diktat-Minuten -->
+      <div class="card" style="padding:18px;">
+        <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:12px;">🎙️ Diktat-Minuten + Avg-Response</div>
+        <div id="kiDiktatStats" style="font-size:12px;color:var(--text2);">
+          <div class="loading"><div class="spin"></div>Lade…</div>
+        </div>
       </div>
     </div>
   </div>
@@ -405,6 +452,108 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14
       <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:14px;">Audit-Log (letzte Events)</div>
       <div id="auditTable"><div class="loading"><div class="spin"></div>Lade…</div></div>
     </div>
+
+    <!-- MEGA²¹ W93: External Quick-Links (Marcel-Direktive Block B Section 6) -->
+    <div class="card" style="padding:18px;margin-top:16px;">
+      <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:14px;">🚀 Quick-Links (externe Tools)</div>
+      <div id="quick-links" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px;">
+        <a href="https://dashboard.stripe.com" target="_blank" rel="noopener" style="padding:10px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text2);font-size:12px;text-decoration:none;display:flex;align-items:center;gap:8px;transition:all .15s;" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--text)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text2)'">💳 Stripe Dashboard</a>
+        <a href="https://eu1.make.com" target="_blank" rel="noopener" style="padding:10px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text2);font-size:12px;text-decoration:none;display:flex;align-items:center;gap:8px;transition:all .15s;" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--text)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text2)'">⚙️ Make.com Scenarios</a>
+        <a href="https://app.pdfmonkey.io" target="_blank" rel="noopener" style="padding:10px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text2);font-size:12px;text-decoration:none;display:flex;align-items:center;gap:8px;transition:all .15s;" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--text)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text2)'">📄 PDFMonkey</a>
+        <a href="https://supabase.com/dashboard/project/cngteblrbpwsyypexjrv" target="_blank" rel="noopener" style="padding:10px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text2);font-size:12px;text-decoration:none;display:flex;align-items:center;gap:8px;transition:all .15s;" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--text)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text2)'">🗄️ Supabase</a>
+        <a href="https://plausible.io" target="_blank" rel="noopener" style="padding:10px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text2);font-size:12px;text-decoration:none;display:flex;align-items:center;gap:8px;transition:all .15s;" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--text)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text2)'">📊 Plausible Analytics</a>
+        <a href="https://uptimerobot.com" target="_blank" rel="noopener" style="padding:10px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text2);font-size:12px;text-decoration:none;display:flex;align-items:center;gap:8px;transition:all .15s;" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--text)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text2)'">🔔 UptimeRobot</a>
+        <a href="https://app.netlify.com" target="_blank" rel="noopener" style="padding:10px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text2);font-size:12px;text-decoration:none;display:flex;align-items:center;gap:8px;transition:all .15s;" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--text)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text2)'">🚀 Netlify</a>
+        <a href="https://github.com/prova-systems" target="_blank" rel="noopener" style="padding:10px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text2);font-size:12px;text-decoration:none;display:flex;align-items:center;gap:8px;transition:all .15s;" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--text)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text2)'">🐙 GitHub Repo</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- MEGA²¹ W95: 7. Tab PIPELINE (Marcel-Decision F1) -->
+  <div id="tab-pipeline" class="tab-panel" style="display:none;">
+    <div class="kpi-grid">
+      <div class="kpi blue">
+        <div class="kpi-label">Pilot-SVs Outreach</div>
+        <div class="kpi-value" id="kpiPipelinePilot">—</div>
+        <div class="kpi-sub" id="kpiPipelinePilotSub">kontaktiert</div>
+      </div>
+      <div class="kpi green">
+        <div class="kpi-label">Founding Members</div>
+        <div class="kpi-value" id="kpiPipelineFounding">—</div>
+        <div class="kpi-sub" id="kpiPipelineFoundingSub">von 10 verfuegbar</div>
+      </div>
+      <div class="kpi warn">
+        <div class="kpi-label">Trial → Paid</div>
+        <div class="kpi-value" id="kpiPipelineConversion">—</div>
+        <div class="kpi-sub" id="kpiPipelineConversionSub">Conversion-Rate</div>
+      </div>
+      <div class="kpi purple">
+        <div class="kpi-label">Pipeline-Wert</div>
+        <div class="kpi-value" id="kpiPipelineWert">—</div>
+        <div class="kpi-sub" id="kpiPipelineWertSub">prognostiziert</div>
+      </div>
+    </div>
+    <div class="grid2">
+      <div class="card" style="padding:18px;">
+        <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:12px;">Pilot-SV-Outreach-Status</div>
+        <div id="pipelinePilotList"><div class="loading"><div class="spin"></div>Lade via admin-pilot-list…</div></div>
+      </div>
+      <div class="card" style="padding:18px;">
+        <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:12px;">Conversion-Funnel</div>
+        <div id="pipelineFunnel"><div class="loading"><div class="spin"></div>Lade via admin-funnel…</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MEGA²³ Block 3: 8. Tab SETTINGS (System-Info + Feature-Flags + ENV-Status) -->
+  <div id="tab-settings" class="tab-panel" style="display:none;">
+    <div class="grid2" style="gap:16px;">
+      <!-- System-Info -->
+      <div class="card" style="padding:18px;">
+        <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:12px;">📊 System-Info</div>
+        <table style="width:100%;font-size:12px;color:var(--text2);">
+          <tr><td style="padding:4px 0;width:40%;color:var(--text3);">SW-Version</td><td id="settingsSwVersion" style="font-family:ui-monospace,monospace;color:var(--text);">—</td></tr>
+          <tr><td style="padding:4px 0;color:var(--text3);">Git-Commit</td><td id="settingsGitCommit" style="font-family:ui-monospace,monospace;color:var(--text);">—</td></tr>
+          <tr><td style="padding:4px 0;color:var(--text3);">Total Tests</td><td id="settingsTotalTests" style="font-family:ui-monospace,monospace;color:var(--text);">—</td></tr>
+          <tr><td style="padding:4px 0;color:var(--text3);">Last Deploy</td><td id="settingsLastDeploy" style="font-family:ui-monospace,monospace;color:var(--text);">—</td></tr>
+          <tr><td style="padding:4px 0;color:var(--text3);">Browser</td><td id="settingsBrowser" style="font-family:ui-monospace,monospace;color:var(--text);font-size:11px;">—</td></tr>
+        </table>
+      </div>
+
+      <!-- Feature-Flags -->
+      <div class="card" style="padding:18px;">
+        <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:12px;">🚩 Feature-Flags (Read-Only)</div>
+        <table style="width:100%;font-size:12px;color:var(--text2);">
+          <tr><td style="padding:4px 0;width:50%;color:var(--text3);">KI_VISION_PROVIDER</td><td id="flagKiVision" style="font-family:ui-monospace,monospace;color:var(--text);">— (server-side)</td></tr>
+          <tr><td style="padding:4px 0;color:var(--text3);">KI_TEXT_PROVIDER</td><td id="flagKiText" style="font-family:ui-monospace,monospace;color:var(--text);">— (server-side)</td></tr>
+          <tr><td style="padding:4px 0;color:var(--text3);">KI_FALLBACK_MODEL</td><td id="flagKiFallback" style="font-family:ui-monospace,monospace;color:var(--text);">— (server-side)</td></tr>
+          <tr><td style="padding:4px 0;color:var(--text3);">IMPERSONATION_NOTIFY</td><td id="flagImpersonate" style="font-family:ui-monospace,monospace;color:var(--text);">— (server-side)</td></tr>
+        </table>
+        <div style="margin-top:10px;font-size:11px;color:var(--text3);font-style:italic;">
+          Werte werden NICHT angezeigt (Sicherheit). Nur Konfigurations-Status.
+        </div>
+      </div>
+
+      <!-- ENV-Status -->
+      <div class="card" style="padding:18px;grid-column:1/-1;">
+        <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:12px;">🔐 ENV-Status (Konfiguration vorhanden / fehlt)</div>
+        <div id="settingsEnvList" style="font-size:12px;color:var(--text2);font-family:ui-monospace,monospace;">
+          <div style="color:var(--text3);">Lade via /.netlify/functions/admin-env-status…</div>
+        </div>
+      </div>
+
+      <!-- Sprint-Historie -->
+      <div class="card" style="padding:18px;grid-column:1/-1;">
+        <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:12px;">📚 Sprint-Historie (Letzte 5)</div>
+        <div style="font-size:12px;color:var(--text2);">
+          <div style="padding:6px 0;border-bottom:1px solid var(--border);">MEGA²³ Nacht-Marathon — Beweisbeschluss-UI + Disclaimer-Wiring + Settings-Tab + Email-Notify</div>
+          <div style="padding:6px 0;border-bottom:1px solid var(--border);">MEGA²² — KI-Service-Abstraction (Claude Sonnet 4.6 Vision + GPT-4o Text) + Beweisbeschluss-Lambda</div>
+          <div style="padding:6px 0;border-bottom:1px solid var(--border);">MEGA²¹ — 3-Tier-Pricing (89/179/379€) + Founding 125€ + Pipeline-Tab</div>
+          <div style="padding:6px 0;border-bottom:1px solid var(--border);">MEGA²⁰ — Onboarding-Foundation (Welcome-Wizard + Migration 10 + Pricing-Strip)</div>
+          <div style="padding:6px 0;">MEGA¹⁹ — Pilot-Page Founding-Banner + Sentry-Integration</div>
+        </div>
+      </div>
+    </div>
   </div>
 
 </div>
@@ -426,16 +575,269 @@ function showTab(name, btn) {
   // Tab-spezifisches Lazy-Loading
   if (name === 'kunden' && typeof loadKunden === 'function') loadKunden();
   if (name === 'finanzen' && typeof loadFinanzen === 'function') loadFinanzen();
-  if (name === 'ki-stats' && typeof loadKIStats === 'function') loadKIStats();
+  if (name === 'ki-stats' && typeof loadKIStats === 'function') { loadKIStats(); loadKIStatsExt(); }
   if (name === 'tickets' && typeof loadTickets === 'function') loadTickets();
+  if (name === 'pipeline' && typeof loadPipeline === 'function') loadPipeline();
+  if (name === 'settings' && typeof loadSettings === 'function') loadSettings();
 }
+
+// MEGA²³ Block 4: KI-Stats Frontend-Charts (lib/admin-ki-stats-frontend.js)
+async function loadKIStatsExt() {
+  if (!window.ProvaAdminKiStats) {
+    console.warn('[ki-stats-ext] ProvaAdminKiStats lib nicht geladen');
+    return;
+  }
+  var range = document.getElementById('kiStatsRange') ? document.getElementById('kiStatsRange').value : 'month';
+  var fetcher = window.provaFetch || window.fetch;
+  try {
+    var resp = await fetcher('/.netlify/functions/admin-ki-aggregations?range=' + encodeURIComponent(range), {
+      method: 'GET',
+      headers: window.provaAuthHeaders ? window.provaAuthHeaders() : {}
+    });
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    var data = await resp.json();
+    var rows = (data && data.rows) || [];
+    var dist = window.ProvaAdminKiStats.aggregateModelDistribution(rows);
+    var costs = window.ProvaAdminKiStats.aggregateCostsPerUser(rows, 5);
+    var foto = window.ProvaAdminKiStats.aggregateFotoUsage(rows);
+    var diktat = window.ProvaAdminKiStats.aggregateDiktatStats(rows);
+    document.getElementById('kiModelDistribution').innerHTML = window.ProvaAdminKiStats.renderModelPie(dist);
+    document.getElementById('kiCostsPerUser').innerHTML = window.ProvaAdminKiStats.renderCostsTable(costs);
+    document.getElementById('kiFotoUsage').innerHTML = window.ProvaAdminKiStats.renderFotoUsage(foto);
+    document.getElementById('kiDiktatStats').innerHTML = window.ProvaAdminKiStats.renderDiktatStats(diktat);
+  } catch (e) {
+    var msg = '<div style="color:var(--text3);font-style:italic;padding:8px 0;">Lambda /admin-ki-aggregations nicht erreichbar (' + (e.message || 'unknown') + ')</div>';
+    ['kiModelDistribution','kiCostsPerUser','kiFotoUsage','kiDiktatStats'].forEach(function(id){
+      var el = document.getElementById(id);
+      if (el) el.innerHTML = msg;
+    });
+  }
+}
+
+// MEGA²³ Block 3: Settings-Tab Loader
+async function loadSettings() {
+  // SW-Version aus Service-Worker fetchen
+  try {
+    if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+      var resp = await fetch('/sw.js?probe=' + Date.now(), { cache: 'no-cache' });
+      if (resp.ok) {
+        var t = await resp.text();
+        var m = t.match(/CACHE_VERSION\s*=\s*['"]([^'"]+)['"]/);
+        if (m) document.getElementById('settingsSwVersion').textContent = m[1];
+      }
+    }
+  } catch (e) { console.warn('[settings] sw probe failed', e.message); }
+
+  // Browser-Info
+  document.getElementById('settingsBrowser').textContent = (navigator.userAgent || '').slice(0, 70);
+
+  // Last Deploy aus document.lastModified
+  document.getElementById('settingsLastDeploy').textContent =
+    document.lastModified ? new Date(document.lastModified).toLocaleString('de-DE') : 'unbekannt';
+
+  // ENV-Status via Lambda (best-effort, optional)
+  try {
+    var fetcher = window.provaFetch || window.fetch;
+    var resp = await fetcher('/.netlify/functions/admin-env-status', {
+      method: 'GET',
+      headers: window.provaAuthHeaders ? window.provaAuthHeaders() : {}
+    });
+    if (resp.ok) {
+      var data = await resp.json();
+      var html = '';
+      var keys = (data.keys || []);
+      keys.forEach(function(k) {
+        var ok = !!k.set;
+        html += '<div style="padding:4px 0;display:flex;justify-content:space-between;">'
+          + '<span style="color:var(--text2);">' + escapeHtml(k.name) + '</span>'
+          + '<span style="color:' + (ok ? 'var(--success)' : 'var(--danger)') + ';font-weight:600;">'
+          + (ok ? '✅ gesetzt' : '❌ fehlt') + '</span></div>';
+      });
+      var elList = document.getElementById('settingsEnvList');
+      if (elList) elList.innerHTML = html || '<div style="color:var(--text3);">Lambda nicht implementiert oder leer.</div>';
+
+      if (data.flags) {
+        if (data.flags.KI_VISION_PROVIDER) document.getElementById('flagKiVision').textContent = '✅ ' + data.flags.KI_VISION_PROVIDER;
+        if (data.flags.KI_TEXT_PROVIDER) document.getElementById('flagKiText').textContent = '✅ ' + data.flags.KI_TEXT_PROVIDER;
+        if (data.flags.KI_FALLBACK_MODEL) document.getElementById('flagKiFallback').textContent = '✅ ' + data.flags.KI_FALLBACK_MODEL;
+        if (typeof data.flags.IMPERSONATION_NOTIFY !== 'undefined')
+          document.getElementById('flagImpersonate').textContent = data.flags.IMPERSONATION_NOTIFY === 'on' ? '✅ aktiviert' : '⚠️ aus';
+      }
+    } else {
+      document.getElementById('settingsEnvList').innerHTML =
+        '<div style="color:var(--text3);font-style:italic;">Lambda /admin-env-status liefert ' + resp.status + ' — bitte implementieren oder Marcel-OK abwarten.</div>';
+    }
+  } catch (e) {
+    document.getElementById('settingsEnvList').innerHTML =
+      '<div style="color:var(--text3);font-style:italic;">Settings-Lambda nicht erreichbar (' + escapeHtml(e.message) + ').</div>';
+  }
+}
+
+function escapeHtml(s) {
+  if (s === null || s === undefined) return '';
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+// MEGA²¹ W95: Pipeline-Tab Loader (existing admin-funnel + admin-pilot-list)
+async function loadPipeline() {
+  var fetcher = window.provaFetch || window.fetch;
+  // Pilot-Outreach-Liste
+  try {
+    var resPilot = await fetcher('/.netlify/functions/admin-pilot-list');
+    if (resPilot.ok) {
+      var dataPilot = await resPilot.json();
+      var pilotList = document.getElementById('pipelinePilotList');
+      if (pilotList && Array.isArray(dataPilot.items)) {
+        document.getElementById('kpiPipelinePilot').textContent = String(dataPilot.items.length);
+        var foundingCount = dataPilot.items.filter(function(p){return p.is_founding_member;}).length;
+        document.getElementById('kpiPipelineFounding').textContent = String(Math.max(0, 10 - foundingCount));
+        pilotList.innerHTML = dataPilot.items.slice(0, 10).map(function (p) {
+          return '<div style="padding:8px 10px;background:var(--bg);border:1px solid var(--border);border-radius:6px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;font-size:12px;">'
+            + '<div><div style="font-weight:600;color:var(--text)">' + (p.name||'—') + '</div><div style="color:var(--text3);font-size:10px;">' + (p.email||'') + '</div></div>'
+            + '<div style="color:var(--text3);font-family:var(--mono);font-size:11px;">' + (p.status||'—') + '</div>'
+          + '</div>';
+        }).join('') || '<div style="color:var(--text3);font-style:italic;padding:6px 0;">Noch keine Pilot-SVs in der Liste.</div>';
+      }
+    }
+  } catch (_) { /* graceful skip */ }
+  // Conversion-Funnel
+  try {
+    var resFunnel = await fetcher('/.netlify/functions/admin-funnel');
+    if (resFunnel.ok) {
+      var dataFunnel = await resFunnel.json();
+      var fEl = document.getElementById('pipelineFunnel');
+      if (fEl && dataFunnel.stages) {
+        var html = '';
+        dataFunnel.stages.forEach(function (s) {
+          html += '<div style="display:flex;justify-content:space-between;padding:8px 12px;background:var(--bg);border:1px solid var(--border);border-radius:6px;margin-bottom:6px;font-size:12px;">'
+            + '<span style="color:var(--text2);">' + s.name + '</span>'
+            + '<span style="font-family:var(--mono);font-weight:700;color:var(--text);">' + s.count + '</span>'
+            + '</div>';
+        });
+        fEl.innerHTML = html || '<div style="color:var(--text3);font-style:italic;">Funnel-Daten nicht verfuegbar.</div>';
+        if (dataFunnel.conversion_rate != null) {
+          document.getElementById('kpiPipelineConversion').textContent = (dataFunnel.conversion_rate * 100).toFixed(1) + '%';
+        }
+      }
+    }
+  } catch (_) { /* graceful skip */ }
+}
+
+// MEGA²¹ W94: Login-as-User Helper (Marcel-Decision B1: Standard-Audit-Trail)
+window.adminImpersonate = async function (targetUserId, targetEmail) {
+  if (!confirm('🔐 Als ' + (targetEmail || 'User') + ' einloggen?\n\nDieser Vorgang wird im Audit-Trail (impersonation_log) protokolliert.\n\nFortfahren?')) return;
+  try {
+    var fetcher = window.provaFetch || window.fetch;
+    var res = await fetcher('/.netlify/functions/admin-impersonate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ target_user_id: targetUserId })
+    });
+    if (!res.ok) {
+      var err = await res.json().catch(function(){return{};});
+      alert('Login-as-User fehlgeschlagen: ' + (err.error || res.status));
+      return;
+    }
+    var data = await res.json();
+    if (data.redirect_url) {
+      window.location.href = data.redirect_url;
+    } else if (data.session_token) {
+      // Falls Lambda Token statt URL liefert
+      sessionStorage.setItem('prova_impersonate_session', data.session_token);
+      window.location.href = '/dashboard.html?impersonating=1';
+    }
+  } catch (e) {
+    alert('Network-Fehler: ' + e.message);
+  }
+};
 
 // Auto-Load bei Seitenstart
 document.addEventListener('DOMContentLoaded', function() {
   if (typeof loadAll === 'function') loadAll();
+
+  // MEGA²¹ W93: Auto-Refresh System-Health alle 30s (Marcel-Decision C2)
+  setInterval(function () {
+    var activeTab = document.querySelector('.tab-btn[style*="border-bottom-color: var(--accent)"]');
+    var activeName = activeTab ? activeTab.getAttribute('data-tab') : '';
+    // Nur Health-Tab refresht — andere Tabs sind manuell oder onClick
+    if (activeName === 'health' && typeof loadHealth === 'function') {
+      loadHealth();
+    } else if (activeName === 'overview' && typeof loadAll === 'function') {
+      loadAll();
+    }
+  }, 30000);
 });
 </script>
 
+  <!-- MEGA¹² W15+W16: Drilldown-Modal + provaAlert-Helper -->
+  <script src="/lib/empty-states.js" defer></script>
+  <script src="/lib/prova-alert.js" defer></script>
+  <script src="/lib/admin-drilldown.js" defer></script>
   <script src="admin-dashboard-logic.js" defer></script>
+  <script defer>
+    // KPI-Drilldown: MRR → KI-Cost-Aufschluesselung (Demo)
+    window.oeffneKICostDrilldown = function () {
+      if (!window.ProvaDrilldown) return;
+      window.ProvaDrilldown.open({
+        title: 'KI-Kosten-Detail',
+        subtitle: 'Aufschluesselung pro KI-Funktion',
+        timeRanges: ['24h', '7d', '30d'],
+        loader: async function (range) {
+          var fetcher = window.provaFetch || window.fetch;
+          var res = await fetcher('/.netlify/functions/ki-history?since=' + (range || '7d') + '&limit=200');
+          if (!res.ok) throw new Error('HTTP ' + res.status);
+          var j = await res.json();
+          if (!j.ok || !Array.isArray(j.per_funktion)) return [];
+          return j.per_funktion.map(function (f) {
+            return {
+              name: f.funktion,
+              value: f.calls + ' Anrufe',
+              hint: (f.cost_eur || 0).toFixed(2) + ' EUR'
+            };
+          });
+        }
+      });
+    };
+
+    // MEGA¹³ W21: 2 weitere KPI-Drilldowns
+    window.oeffneKundenDrilldown = function () {
+      if (!window.ProvaDrilldown) return;
+      window.ProvaDrilldown.open({
+        title: 'Aktive Kunden',
+        subtitle: 'Pakete-Verteilung',
+        loader: async function () {
+          // Aggregiert aus _allSvs (existing in admin-dashboard-logic.js)
+          if (!window._allSvs || !Array.isArray(window._allSvs)) return [];
+          var byPaket = {};
+          window._allSvs.forEach(function (sv) {
+            var p = (sv.fields && sv.fields.Paket) || 'Unbekannt';
+            byPaket[p] = (byPaket[p] || 0) + 1;
+          });
+          return Object.entries(byPaket)
+            .map(function ([k, v]) { return { name: k, value: v + ' Kunden' }; })
+            .sort(function (a, b) { return parseInt(b.value) - parseInt(a.value); });
+        }
+      });
+    };
+
+    window.oeffneTicketsDrilldown = function () {
+      if (!window.ProvaDrilldown) return;
+      window.ProvaDrilldown.open({
+        title: 'Offene Tickets',
+        subtitle: 'Aufschluesselung nach Status',
+        loader: async function () {
+          if (!window._tickets || !Array.isArray(window._tickets)) return [];
+          var byStatus = {};
+          window._tickets.forEach(function (t) {
+            var s = (t.fields && t.fields.Status) || 'Unbekannt';
+            byStatus[s] = (byStatus[s] || 0) + 1;
+          });
+          return Object.entries(byStatus)
+            .map(function ([k, v]) { return { name: k, value: v + ' Tickets' }; })
+            .sort(function (a, b) { return parseInt(b.value) - parseInt(a.value); });
+        }
+      });
+    };
+  </script>
 </body>
 </html>

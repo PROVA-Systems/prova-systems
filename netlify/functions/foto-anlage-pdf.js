@@ -1,4 +1,5 @@
 const { fetchWithRetry } = require('./lib/fetch-with-timeout');
+const { withSentry } = require('./lib/sentry-wrap'); // MEGA²⁸ W5-I6: Sentry-Error-Tracking
 const { getCorsHeaders, corsOptionsResponse } = require('./lib/cors-helper');
 const { requireAuth } = require('./lib/jwt-middleware');
 const RateLimit = require('./lib/rate-limit-user');
@@ -10,7 +11,7 @@ const RateLimit = require('./lib/rate-limit-user');
 
 const MAX_FOTOS_PRO_PDF = 50;  // S6 X4 H-24: PDFMonkey-Cost-Schutz
 
-exports.handler = requireAuth(async (event, context) => {
+exports.handler = withSentry(requireAuth(async (event, context) => {
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: 'Method Not Allowed' };
   }
@@ -154,4 +155,4 @@ exports.handler = requireAuth(async (event, context) => {
       body: JSON.stringify({ fallback: true, reason: err.message })
     };
   }
-});
+}), { functionName: 'foto-anlage-pdf' });

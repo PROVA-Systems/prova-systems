@@ -16,6 +16,7 @@ const { withSentry } = require('./lib/sentry-wrap');
 const { requireAuth, jsonResponse } = require('./lib/jwt-middleware');
 const { getCorsHeaders } = require('./lib/cors-helper');
 const { getSupabase } = require('./lib/storage-router');
+const RateLimit = require('./lib/rate-limit-user'); // MEGA²⁸ W5-I5: Read-heavy 60/60s
 
 function parseSince(s) {
   const m = String(s || '7d').match(/^(\d+)([hd])$/);
@@ -29,6 +30,13 @@ exports.handler = withSentry(requireAuth(async function (event, context) {
   const baseHeaders = { 'Content-Type': 'application/json; charset=utf-8', ...getCorsHeaders(event) };
   if (event.httpMethod === 'OPTIONS') return { statusCode: 204, headers: getCorsHeaders(event), body: '' };
   if (event.httpMethod !== 'GET') return { statusCode: 405, headers: baseHeaders, body: JSON.stringify({ error: 'Method Not Allowed' }) };
+
+  // MEGA²⁸ W5-I5: Read-heavy Rate-Limit (60/60s pro User)
+  const rl = RateLimit.check(context.userEmail, 60, 60, { event: event, functionName: 'ki-history' });
+  if (!rl.allowed) {
+    return { statusCode: 429, headers: { ...baseHeaders, 'Retry-After': String(rl.retryAfter) },
+      body: JSON.stringify({ error: 'Rate-Limit erreicht. Bitte ' + rl.retryAfter + 's warten.' }) };
+  }
 
   const sb = getSupabase();
   if (!sb) {

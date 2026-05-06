@@ -7,6 +7,7 @@
  */
 const nodemailer = require('nodemailer');
 const { getCorsHeaders, corsOptionsResponse } = require('./lib/cors-helper');
+const { withSentry } = require('./lib/sentry-wrap'); // MEGA²⁸ W6P2-I2: Sentry-Wrap
 const log = require('./lib/prova-logger');
 const { fetchWithRetry } = require('./lib/fetch-with-timeout');
 const { provaFetch } = require('./lib/prova-fetch');
@@ -24,7 +25,7 @@ function json(event, status, obj) {
   };
 }
 
-exports.handler = requireAuth(async function(event, context) {
+exports.handler = withSentry(requireAuth(async function(event, context) {
   if (event.httpMethod !== 'POST') return json(event, 405, { error: 'Method Not Allowed' });
 
   // S6 X4 H-15: Rate-Limit — 50 Mails / Stunde / User (Spam-Schutz)
@@ -120,4 +121,4 @@ exports.handler = requireAuth(async function(event, context) {
     else if (e.message.includes('ECONNREFUSED')) tipp = 'SMTP-Server nicht erreichbar.';
     log.error({fn:'smtp',event:'send_failed',err:e.message}); return json(event, 502, { ok: false, error: e.message, tipp });
   }
-});
+}), { functionName: 'smtp-senden' });

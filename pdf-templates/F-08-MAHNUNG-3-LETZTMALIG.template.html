@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>Letztmalige Mahnung {{ mahnung_nr }}</title>
+<!--
+  PROVA Systems · F-08 MAHNUNG STUFE 3 LETZTMALIG · Liquid-Template
+  MEGA¹⁹ W76 · 2026-05-08
+
+  Charakter: Formell, letzte Frist. § 288 BGB Verzugszinsen 9% ueber
+             Basiszinssatz. Inkasso-Drohung + Anwaltskosten-Hinweis.
+             7 Tage Frist.
+
+  Liquid-Variablen:
+    mahnung_nr, mahnung_datum
+    rechnung_nr, rechnung_datum, rechnung_betrag, rechnung_faellig_am
+    az
+    sv_*, auftraggeber_*
+    summe_hauptforderung, summe_verzugszinsen, summe_mahngebuehren, summe_gesamt
+    verzugszins_satz (default "9 % über dem jeweiligen Basiszinssatz")
+    verzug_seit_datum
+    frist_tage (default 7), frist_datum
+    sv_iban, sv_bic, sv_bank
+    vorgaengige_mahnungen[]: { datum, nr } (optional, Historie)
+
+  KEINE EU AI Act Box (administrative Mahnung).
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root { --primary: #1a3a6b; --accent: #3b82f6; --muted: #64748b; --text: #0f172a; --light: #f1f5f9; --lighter: #f8fafc; --border: #e2e8f0; --danger: #b91c1c; --warning: #d97706; }
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Inter', sans-serif; font-size: 10.5pt; line-height: 1.6; color: var(--text); background: white; }
+@page { size: A4; margin: 22mm 22mm 22mm 22mm; }
+@page {
+  @top-left { content: "{{ sv_name }}{% if sv_titel %} · {{ sv_titel }}{% endif %}"; font-family: 'Inter', sans-serif; font-size: 8pt; color: #64748b; padding-top: 10mm; }
+  @top-right { content: "Letztmalige Mahnung {{ mahnung_nr }}"; font-family: 'Inter', sans-serif; font-size: 8pt; color: #b91c1c; font-weight: 600; padding-top: 10mm; }
+  @bottom-right { content: "Seite " counter(page) " / " counter(pages); font-family: 'Inter', sans-serif; font-size: 8pt; color: #64748b; padding-bottom: 10mm; }
+}
+@page :first { @top-left { content: ""; } @top-right { content: ""; } }
+
+.kopf { padding: 0 0 6mm; border-bottom: 3px solid var(--danger); margin-bottom: 8mm; }
+.kopf-kategorie { font-size: 9pt; letter-spacing: 0.18em; text-transform: uppercase; color: var(--danger); font-weight: 600; margin-bottom: 3mm; }
+.kopf-titel { font-size: 22pt; font-weight: 700; line-height: 1.15; color: var(--primary); letter-spacing: -0.02em; }
+.kopf-meta { font-family: 'JetBrains Mono', monospace; font-size: 9pt; color: var(--muted); margin-top: 3mm; display: flex; gap: 6mm; flex-wrap: wrap; }
+.kopf-meta strong { color: var(--text); font-weight: 500; }
+
+.adress-block { display: grid; grid-template-columns: 1fr 1fr; gap: 6mm; margin: 5mm 0 7mm; }
+.adress-card { padding: 4mm 5mm; background: var(--lighter); border-radius: 3px; border: 1px solid var(--border); font-size: 10pt; }
+.adress-card .label { font-size: 8pt; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); font-weight: 500; margin-bottom: 2mm; }
+
+.warn-banner { margin: 4mm 0; padding: 4mm 5mm; background: rgba(185, 28, 28, 0.08); border: 1px solid rgba(185, 28, 28, 0.3); border-left: 3px solid var(--danger); border-radius: 3px; font-size: 11pt; font-weight: 500; color: var(--danger); }
+
+.anrede { font-size: 11pt; margin: 4mm 0 5mm; }
+.absatz { margin-bottom: 4mm; line-height: 1.7; }
+
+.historie-card { margin: 5mm 0; padding: 4mm 5mm; background: var(--lighter); border: 1px solid var(--border); border-radius: 3px; }
+.historie-card .label { font-size: 8.5pt; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); margin-bottom: 2mm; }
+.historie-card .item { display: grid; grid-template-columns: 24mm 1fr; gap: 3mm; padding: 1mm 0; font-family: 'JetBrains Mono', monospace; font-size: 9.5pt; border-bottom: 1px dashed var(--border); }
+.historie-card .item:last-child { border-bottom: none; }
+
+.kosten-tabelle { width: 100%; border-collapse: collapse; margin: 4mm 0; font-size: 10.5pt; }
+.kosten-tabelle td { padding: 2.5mm 4mm; border-bottom: 1px solid var(--border); }
+.kosten-tabelle td.label { color: var(--text); font-weight: 500; }
+.kosten-tabelle td.num { font-family: 'JetBrains Mono', monospace; text-align: right; white-space: nowrap; }
+.kosten-tabelle tr.gesamt td { background: var(--primary); color: white; font-size: 12pt; font-weight: 700; padding: 4mm; border: none; }
+.kosten-tabelle tr.gesamt td.num { font-size: 16pt; }
+
+.frist-warnung { margin: 5mm 0; padding: 5mm 6mm; background: rgba(185, 28, 28, 0.06); border: 2px solid var(--danger); border-radius: 4px; font-size: 11pt; font-weight: 500; }
+.frist-warnung strong { color: var(--danger); font-weight: 700; }
+.frist-warnung .frist-datum { font-family: 'JetBrains Mono', monospace; font-size: 14pt; color: var(--danger); display: block; margin-top: 2mm; }
+
+.law-ref { font-family: 'JetBrains Mono', monospace; font-size: 0.92em; color: var(--primary); font-weight: 500; }
+
+.zahlung-block { margin: 5mm 0; padding: 4mm 5mm; background: white; border: 1px solid var(--border); border-left: 3px solid var(--accent); border-radius: 2px; font-size: 9.5pt; line-height: 1.5; }
+.zahlung-block .label { font-size: 9pt; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 2mm; font-weight: 500; }
+.zahlung-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1mm 5mm; font-family: 'JetBrains Mono', monospace; }
+
+.gruss { margin-top: 7mm; }
+.unterschrift { margin-top: 12mm; }
+.unterschrift .name { font-weight: 600; }
+.unterschrift .titel { font-size: 9.5pt; color: var(--muted); }
+
+.fuss-text { margin-top: 7mm; padding-top: 3mm; border-top: 1px solid var(--border); font-size: 8.5pt; color: var(--muted); line-height: 1.55; }
+.fuss-text .ueberschrift { font-weight: 600; color: var(--text); margin-bottom: 1.5mm; }
+</style>
+</head>
+<body>
+
+<div class="kopf">
+  <div class="kopf-kategorie">Mahnung &middot; Letztmalig &middot; Stufe 3</div>
+  <h1 class="kopf-titel">Letztmalige Mahnung</h1>
+  <div class="kopf-meta">
+    <div>Mahnung-Nr.: <strong>{{ mahnung_nr }}</strong></div>
+    <div>Datum: <strong>{{ mahnung_datum }}</strong></div>
+    {% if az %}<div>Aktenzeichen: <strong>{{ az }}</strong></div>{% endif %}
+  </div>
+</div>
+
+<div class="adress-block">
+  <div class="adress-card">
+    <div class="label">Absender</div>
+    <strong>{{ sv_name }}</strong>{% if sv_titel %}, {{ sv_titel }}{% endif %}<br>
+    {% if sv_kanzlei %}{{ sv_kanzlei }}<br>{% endif %}
+    {{ sv_adresse }}
+  </div>
+  <div class="adress-card">
+    <div class="label">An</div>
+    <strong>{{ auftraggeber_name }}</strong><br>
+    {{ auftraggeber_adresse }}
+  </div>
+</div>
+
+<div class="warn-banner">
+  Trotz vorangegangener Mahnungen ist unser Rechnungsbetrag noch immer offen.
+  Dies ist die <strong>letzte Aufforderung</strong> zur Zahlung vor Einleitung
+  weiterer Massnahmen.
+</div>
+
+<div class="anrede">Sehr geehrte{% if auftraggeber_anrede == "Herr" %}r Herr{% elsif auftraggeber_anrede == "Frau" %} Frau{% else %} Damen und Herren{% endif %}{% if auftraggeber_nachname %} {{ auftraggeber_nachname }}{% endif %},</div>
+
+<div class="absatz">
+  unsere unten aufgefuehrte Rechnung ist trotz vorangegangener Mahnungen bislang
+  nicht beglichen worden. Hiermit fordern wir Sie <strong>letztmalig</strong>
+  auf, den offenen Betrag innerhalb der unten genannten Frist auszugleichen.
+</div>
+
+{% if vorgaengige_mahnungen and vorgaengige_mahnungen.size > 0 %}
+<div class="historie-card">
+  <div class="label">Bisheriger Mahn-Vorgang</div>
+  <div class="item"><div>Rechnung {{ rechnung_nr }}</div><div>vom {{ rechnung_datum }}</div></div>
+  {% for m in vorgaengige_mahnungen %}
+  <div class="item"><div>Mahnung {{ m.nr }}</div><div>vom {{ m.datum }}</div></div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<div class="absatz">
+  Da Sie sich seit dem <strong>{{ verzug_seit_datum }}</strong> in Verzug
+  befinden, sind wir berechtigt, Verzugszinsen in Hoehe von
+  <strong>{{ verzugszins_satz | default: "9 % ueber dem jeweiligen Basiszinssatz" }}</strong>
+  gemaess <span class="law-ref">§ 288 Abs. 2 BGB</span> sowie die durch den
+  Verzug entstandenen Mahn- und Beitreibungskosten geltend zu machen.
+</div>
+
+<table class="kosten-tabelle">
+  <tr><td class="label">Hauptforderung (Rechnung {{ rechnung_nr }})</td><td class="num">{{ summe_hauptforderung }} €</td></tr>
+  {% if summe_verzugszinsen %}<tr><td class="label">Verzugszinsen seit {{ verzug_seit_datum }}</td><td class="num">{{ summe_verzugszinsen }} €</td></tr>{% endif %}
+  {% if summe_mahngebuehren %}<tr><td class="label">Mahngebuehren</td><td class="num">{{ summe_mahngebuehren }} €</td></tr>{% endif %}
+  <tr class="gesamt"><td class="label">Gesamtforderung</td><td class="num">{{ summe_gesamt }} €</td></tr>
+</table>
+
+<div class="frist-warnung">
+  Bitte ueberweisen Sie den Gesamtbetrag <strong>spaetestens innerhalb von {{ frist_tage | default: "7" }} Tagen</strong>:
+  {% if frist_datum %}<span class="frist-datum">bis {{ frist_datum }}</span>{% endif %}
+  Sollte bis zum o.g. Termin kein Zahlungseingang erfolgen, sehen wir uns leider
+  gezwungen, ein <strong>gerichtliches Mahnverfahren einzuleiten</strong> bzw.
+  die Forderung an ein Inkassobuero zu uebergeben. Die hierdurch entstehenden
+  zusaetzlichen Anwalts- und Inkassokosten gehen vollumfaenglich zu Ihren Lasten.
+</div>
+
+<div class="zahlung-block">
+  <div class="label">Zahlungsangaben</div>
+  <div class="zahlung-grid">
+    <div>IBAN: <strong>{{ sv_iban }}</strong></div>
+    <div>BIC: <strong>{{ sv_bic }}</strong></div>
+    <div>Bank: {{ sv_bank }}</div>
+    <div>Verwendungszweck: <strong>{{ rechnung_nr }}</strong></div>
+  </div>
+</div>
+
+<div class="gruss">Mit freundlichen Gruessen</div>
+
+<div class="unterschrift">
+  <div class="name">{{ sv_name }}</div>
+  <div class="titel">{{ sv_titel | default: "ö.b.u.v. Sachverstaendiger" }}</div>
+</div>
+
+<div class="fuss-text">
+  <div class="ueberschrift">DSGVO-Hinweis</div>
+  Diese Mahnung enthaelt personenbezogene Daten i.S.d. DSGVO und ist vertraulich
+  zu behandeln. Bei berechtigten Fragen oder Rueckfragen kontaktieren Sie uns
+  bitte umgehend.
+</div>
+
+</body>
+</html>

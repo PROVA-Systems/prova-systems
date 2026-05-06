@@ -221,9 +221,11 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
 
               <!-- KI-Generierung -->
               <div class="ki-box" id="ki-box">
-                <div class="ki-box-label">✨ KI-Entwurf</div>
+                <div class="ki-box-label">✨ KI-Entwurf <span id="ki-mode-badge" style="display:none;font-size:10px;font-weight:500;background:rgba(79,142,247,.1);color:var(--accent);padding:2px 8px;border-radius:999px;margin-left:6px;">✏️ Editor-Modus</span></div>
                 <div class="ki-area" id="ki-area">Wählen Sie einen Empfänger und klicken Sie auf „KI generieren".</div>
                 <textarea class="ki-edit" id="ki-edit" placeholder="KI-Text hier bearbeiten…" style="display:none;"></textarea>
+                <!-- MEGA¹⁵ W35: Mode-B Editor-Container (TipTap rendert hier) -->
+                <div id="ki-editor-mode-b" style="display:none;margin-top:8px;"></div>
                 <div style="margin-top:8px;display:flex;gap:8px;">
                   <button class="btn btn-ki" id="ki-gen-btn" onclick="starteKIGenerierung()">✨ KI generieren</button>
                   <button class="btn btn-secondary" onclick="aktiviereKIEdit()" style="display:none;" id="ki-edit-btn">✏️ Bearbeiten</button>
@@ -265,9 +267,106 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
   <script src="auto-save.js" defer></script>
   <script src="global-search.js" defer></script>
   <script src="auftragstyp.js"></script>
+  <!-- MEGA¹⁴ W24: Pull-to-Refresh in briefvorlagen -->
+  <script src="/lib/pull-to-refresh.js" defer></script>
+  <script defer>
+    document.addEventListener('DOMContentLoaded', function () {
+      if (!('ontouchstart' in window) || !window.ProvaPullToRefresh) return;
+      var grid = document.querySelector('#bv-content, .bv-grid, [data-list="briefvorlagen"]');
+      if (grid) {
+        window.ProvaPullToRefresh.bind(grid, async function () {
+          if (typeof render === 'function') render();
+          else window.location.reload();
+        });
+      }
+    });
+  </script>
   <script src="briefvorlagen-logic.js" defer></script>
 <script src="prova-context.js" defer></script>
 <script src="prova-error-handler.js" defer></script>
 <script src="support-chat.js" defer></script>
+
+<!-- MEGA¹⁵ W35: Mode-B-Demo-Integration (Workflow-Mode-Router + ProvaEditor) -->
+<script src="/lib/workflow-mode-router.js" defer></script>
+<script src="/lib/prova-editor.js" defer></script>
+<script defer>
+  (function () {
+    let _activeEditor = null;
+    let _modeBActive = false;
+
+    async function checkModeAndAdapt() {
+      if (!window.ProvaWorkflowMode) return;
+      try {
+        const settings = await window.ProvaWorkflowMode.fetchSettings();
+        const mode = settings.default_mode || 'A';
+        _modeBActive = (mode === 'B');
+
+        const badge = document.getElementById('ki-mode-badge');
+        if (badge) badge.style.display = _modeBActive ? 'inline-block' : 'none';
+      } catch (e) {
+        console.warn('[briefvorlagen mode-check]', e.message);
+      }
+    }
+
+    // Override aktiviereKIEdit() falls Mode B aktiv: Editor statt textarea
+    const _origAktivierKIEdit = window.aktiviereKIEdit;
+    window.aktiviereKIEdit = async function () {
+      if (!_modeBActive || !window.ProvaEditor) {
+        // Mode A: existing behaviour
+        if (typeof _origAktivierKIEdit === 'function') return _origAktivierKIEdit.apply(this, arguments);
+        const ta = document.getElementById('ki-edit');
+        const ar = document.getElementById('ki-area');
+        if (ta && ar) {
+          ta.value = ar.textContent;
+          ar.style.display = 'none';
+          ta.style.display = 'block';
+          ta.focus();
+        }
+        return;
+      }
+
+      // Mode B: ProvaEditor laden
+      const editorContainer = document.getElementById('ki-editor-mode-b');
+      const kiArea = document.getElementById('ki-area');
+      const kiTextarea = document.getElementById('ki-edit');
+      if (!editorContainer || !kiArea) return;
+
+      const initialContent = kiArea.innerHTML || kiArea.textContent || '';
+
+      // Editor erzeugen
+      try {
+        // Existing destroy
+        if (_activeEditor && _activeEditor.destroy) _activeEditor.destroy();
+
+        _activeEditor = await window.ProvaEditor.create({
+          el: editorContainer,
+          content: initialContent,
+          placeholder: 'KI-Brief bearbeiten…',
+          autoSaveKey: 'briefvorlagen_draft',
+          onUpdate: (html) => {
+            // Sync zurueck zum textarea (existing logic erwartet das)
+            if (kiTextarea) kiTextarea.value = html;
+          }
+        });
+
+        kiArea.style.display = 'none';
+        if (kiTextarea) kiTextarea.style.display = 'none';
+        editorContainer.style.display = 'block';
+        _activeEditor.focus();
+
+        if (window.provaAlert) {
+          window.provaAlert(_activeEditor._isFallback
+            ? 'Editor nicht verfuegbar — Text-Modus aktiv'
+            : '✏️ Editor-Modus aktiv', 'info');
+        }
+      } catch (e) {
+        console.warn('[Mode-B] Editor-Init failed, fallback to textarea:', e.message);
+        if (typeof _origAktivierKIEdit === 'function') _origAktivierKIEdit.apply(this, arguments);
+      }
+    };
+
+    document.addEventListener('DOMContentLoaded', checkModeAndAdapt);
+  })();
+</script>
 </body>
 </html>

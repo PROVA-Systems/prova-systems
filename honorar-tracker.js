@@ -427,6 +427,12 @@ const HonorarTracker = (() => {
         })
       });
 
+      // MEGA¹⁹ W79: Status 410 = Airtable-Endpoint absichtlich disabled
+      // (Voll-Cleanup-Sprint 02.05.2026). Silent-Fallback zu Cache, kein
+      // Console-Spam — User sieht clean Dashboard.
+      if (resp.status === 410) {
+        return cached;
+      }
       if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
       const data   = await resp.json();
       const liste  = (data.records || []).map(normalisiereRechnung);
@@ -438,7 +444,11 @@ const HonorarTracker = (() => {
       return liste;
 
     } catch (err) {
-      console.warn('[HonorarTracker] Airtable Fehler:', err.message);
+      // MEGA¹⁹ W79: 410 ist erwarteter Disable-Zustand → kein Warning.
+      // Andere Errors weiterhin loggen (Network-Probleme etc.).
+      if (!/HTTP 410|airtable-disabled/.test(err.message || '')) {
+        console.warn('[HonorarTracker] Airtable Fehler:', err.message);
+      }
       return cached;
     }
   }

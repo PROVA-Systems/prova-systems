@@ -349,7 +349,12 @@ async function ladeListe(){
   var liste=document.getElementById('rechnung-liste');
   try{
     var filter=svEmail?'AND(NOT({Status}=""),{sv_email}="'+svEmail+'")':'NOT({Status}="")';
-    var path='/v0/'+AT_BASE+'/'+AT_RECHNUNGEN+'?filterByFormula='+encodeURIComponent(filter)+'&maxRecords=50&sort[0][field]=Timestamp&sort[0][direction]=desc';
+    // MEGA²¹+²² W117 BUG-FIX RECHNUNGEN 422:
+    // RECHNUNGEN-Tabelle hat kein 'Timestamp'-Feld — Sort darauf wirft 422.
+    // Marcel-Direktive: RECHNUNGEN 422 fixen. Gleicher Fix wie in
+    // prova-context.js atFetch (Sort entfernt). 'Rechnungsdatum' als
+    // Alternative ist Schema-konform, sortiert ueber tatsaechliches Datum.
+    var path='/v0/'+AT_BASE+'/'+AT_RECHNUNGEN+'?filterByFormula='+encodeURIComponent(filter)+'&maxRecords=50&sort[0][field]=Rechnungsdatum&sort[0][direction]=desc';
     var res=await provaFetch('/.netlify/functions/airtable',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({method:'GET',path:path})});
     if(!res.ok)throw new Error('HTTP '+res.status);
     var data=await res.json();
@@ -388,6 +393,17 @@ async function ladeListe(){
   setText('liste-count',alleRechnungen.length+' Rechnungen');
 
   if(alleRechnungen.length===0){
+    // MEGA⁹ W2: Empty-State via ProvaUI mit zwei Wegen (JVEG + Standard)
+    if (window.ProvaUI && window.ProvaUI.emptyState) {
+      window.ProvaUI.emptyState(liste, {
+        icon: '🧾',
+        title: 'Noch keine Rechnungen',
+        text: 'Erstelle deine erste Rechnung — JVEG-Rechner fuer Gerichte oder freie Standard-Rechnung.',
+        primaryBtn: { label: 'JVEG-Rechner', href: 'jveg.html' },
+        secondaryBtn: { label: 'Standard-Rechnung', href: 'rechnungen.html?neu=1' }
+      });
+      return;
+    }
     liste.innerHTML='<div class="liste-empty">Noch keine Rechnungen.<br><br><a href="jveg.html" style="color:var(--accent);font-size:12px;">JVEG-Rechner öffnen →</a></div>';
     return;
   }
@@ -604,7 +620,9 @@ async function supSendModal(){
   }catch(e){
     btn.disabled=false;
     btn.textContent='Nachricht senden';
-    alert('Fehler. Bitte E-Mail an support@prova-systems.de');
+    // MEGA²³ Block 5: Toast-Migration W5 (ProvaUI primary, provaAlert fallback W16-compat)
+    if (window.ProvaUI && window.ProvaUI.toast) window.ProvaUI.toast('Senden fehlgeschlagen. Bitte E-Mail an support@prova-systems.de', 'error');
+    else (window.provaAlert || alert)('Senden fehlgeschlagen. Bitte E-Mail an support@prova-systems.de', 'error');
   }
 }
 /* ══════════════════════════════════════════════════════════════

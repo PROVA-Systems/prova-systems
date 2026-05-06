@@ -378,10 +378,83 @@ async function handleDokUpload(files) {
   var az = (function(){var _e=document.getElementById('akte-az');return _e?_e.textContent:undefined;})()  || localStorage.getItem('prova_letztes_az') || '';
   var uploads = JSON.parse(localStorage.getItem('prova_akte_docs_' + az) || '[]');
 
+  // MEGA⁹ W1: ProvaUploadHelpers Pre-Processing-Pipeline
+  // - Magic-Bytes-Validation (anti-MIME-Spoofing)
+  // - EXIF-Strip fuer JPEGs (DSGVO-Pflicht: GPS/Geraete-Info raus vor KI-Send)
+  // - Image-Optimize (Resize 2048max + WebP wo moeglich)
+  var helpers = window.ProvaUploadHelpers || null;
+  var allowedMimes = ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif', 'application/pdf'];
+
   for (var i = 0; i < files.length; i++) {
     var file = files[i];
     statusEl.style.display = 'block';
     statusEl.textContent = '⏳ KI analysiert: ' + file.name + '…';
+
+    // Magic-Bytes-Check (Security-Layer vor KI-Send)
+    if (helpers && helpers.validateFileType) {
+      try {
+        var validation = await helpers.validateFileType(file, allowedMimes);
+        if (!validation.ok) {
+          // MEGA¹⁰ W4: User-sichtbare Toast statt nur Status-Text
+          var rejectMsg = '⚠️ Datei abgelehnt: ' + (validation.reason || 'Typ ungueltig') + ' (' + file.name + ')';
+          statusEl.textContent = rejectMsg;
+          if (window.ProvaUI && window.ProvaUI.toast) {
+            window.ProvaUI.toast(rejectMsg, 'error');
+          }
+          continue;
+        }
+        // MIME-Spoofing-Detection: extension/MIME stimmt nicht ueberein mit Magic-Bytes
+        if (validation.mimeMatches === false) {
+          console.warn('[upload] MIME-Spoofing detected:', file.name, file.type, '->', validation.detected);
+          if (window.ProvaUI && window.ProvaUI.toast) {
+            window.ProvaUI.toast('Datei-Typ ('  + (file.type||'leer') + ') stimmt nicht mit Inhalt (' + validation.detected + ') ueberein', 'info');
+          }
+        }
+      } catch (e) { console.warn('[upload] magic-bytes-check failed', e); }
+    }
+
+    // EXIF-Strip + Image-Optimize fuer Bilder (vor KI-Send)
+    // MEGA¹⁰ W4: Orientation VOR stripExif lesen (sonst Hochformat-Bug)
+    var processedFile = file;
+    if (helpers && file.type && file.type.indexOf('image/') === 0) {
+      try {
+        var blob = file;
+        var orientation = 1;
+        if (file.type === 'image/jpeg' && helpers.readExifOrientation) {
+          try { orientation = await helpers.readExifOrientation(blob); } catch (_) {}
+        }
+        var sizeBefore = blob.size;
+        if (file.type === 'image/jpeg' && helpers.stripExif) {
+          blob = await helpers.stripExif(blob);  // GPS/Camera/IPTC raus
+        }
+        if (helpers.optimizeImage) {
+          blob = await helpers.optimizeImage(blob, {
+            maxWidth: 2048, maxHeight: 2048, quality: 0.85, prefer: 'webp',
+            orientation: orientation
+          });
+        }
+        // User-sichtbares Audit (Console — Frontend hat kein audit_trail)
+        var saved = sizeBefore - blob.size;
+        if (saved > 1024) {
+          console.log('[upload] ' + file.name + ': EXIF-stripped + optimized, saved ' +
+            Math.round(saved/1024) + 'KB (orientation=' + orientation + ')');
+        }
+        processedFile = new File([blob], file.name, { type: blob.type || file.type });
+      } catch (e) {
+        console.warn('[upload] image-preprocessing failed, fallback to original', e);
+        if (window.ProvaUI && window.ProvaUI.toast) {
+          window.ProvaUI.toast('Bild-Vorverarbeitung fehlgeschlagen — Original wird verwendet', 'info');
+        }
+        processedFile = file;
+      }
+    }
+    // HEIC-Hint: Browser kann HEIC nicht decoden, KI-Captioning kann scheitern
+    if (file.type === 'image/heic' || file.type === 'image/heif') {
+      if (window.ProvaUI && window.ProvaUI.toast) {
+        window.ProvaUI.toast('HEIC-Bild — Vorschau evtl. eingeschraenkt, KI-Beschriftung versucht', 'info');
+      }
+    }
+    file = processedFile;
 
     var typLabel = 'Dokument';
     var icon = '📎';

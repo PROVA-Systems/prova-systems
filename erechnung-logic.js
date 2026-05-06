@@ -314,7 +314,9 @@ window.generateAndDownload = function() {
   if (errors.length > 0) {
     var msg = 'Folgende Pflichtfelder fehlen:\n\n' + errors.map(function(e) { return '• ' + e; }).join('\n');
     msg += '\n\nBitte ergänzen und erneut versuchen.';
-    alert(msg);
+    // MEGA²³ Block 5: Toast-Migration W5
+    if (window.ProvaUI && window.ProvaUI.toast) window.ProvaUI.toast('Pflichtfelder fehlen: ' + errors[0], 'error');
+    else alert(msg);
     return;
   }
 
@@ -342,7 +344,9 @@ window.generateAndDownload = function() {
 window.copyXML = function() {
   var errors = validateXRechnung();
   if (errors.length > 0) {
-    alert('Bitte zuerst alle Pflichtfelder ausfüllen:\n' + errors.slice(0,3).join('\n') + (errors.length > 3 ? '\n...' : ''));
+    // MEGA¹² W16: provaAlert-Helper (DRY)
+    var msg = 'Pflichtfelder fehlen: ' + errors.slice(0,3).join(', ') + (errors.length > 3 ? '...' : '');
+    (window.provaAlert || alert)(msg, 'error');
     return;
   }
   var xml = generateXRechnungXML();

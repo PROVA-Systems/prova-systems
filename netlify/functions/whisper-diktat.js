@@ -19,12 +19,14 @@ const ProvaPseudo = require('./lib/prova-pseudo');
 const { requireAuth, jsonResponse } = require('./lib/jwt-middleware');
 const { getCorsHeaders } = require('./lib/cors-helper');
 const RateLimit = require('./lib/rate-limit-user');
+const { withSentry } = require('./lib/sentry-wrap'); // MEGA²⁸ W6-I2: Sentry-Error-Tracking
 
 // S6 Phase 1.9: per-request event-Capture (siehe ki-proxy.js Begruendung)
 let _currentEvent = null;
 
 // S-SICHER P4B.3: requireAuth + Rate-Limit 10/60s pro Token-sub
-exports.handler = requireAuth(async (event, context) => {
+// MEGA²⁸ W6-I2: + withSentry für Error-Tracking (Pseudonymisierung in beforeSend-Hook)
+exports.handler = withSentry(requireAuth(async (event, context) => {
   _currentEvent = event;
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, headers: corsHeaders(), body: 'Method Not Allowed' };
@@ -197,7 +199,7 @@ exports.handler = requireAuth(async (event, context) => {
       body: JSON.stringify({ error: 'Transkription fehlgeschlagen' }),
     };
   }
-});
+}), { functionName: 'whisper-diktat' });
 
 function corsHeaders() {
   return {

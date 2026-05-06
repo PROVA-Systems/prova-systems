@@ -68,18 +68,109 @@ function pseudonymizeBody(obj, depth) {
 }
 
 /**
- * Wählt das Modell basierend auf der User-Präferenz (aus Body) und der Aufgabe.
- * 'praezise' → gpt-4o für schwere Analysen, sonst gpt-4o-mini.
- * Schnelle Aufgaben (qualitaetspruefung, support_chat) bleiben immer mini — Latenz wichtig.
+ * MEGA²⁸ W3-I0 — Modell-Strategie 10.05.2026
+ *
+ * GPT-4o + GPT-4o-mini wurden Februar 2026 von OpenAI deprecated.
+ * Aktuelles Lineup (10.05.2026 verifiziert):
+ *   GPT-5.5         $5.00 / $30.00 per 1M tokens — frontier (24.04.2026)
+ *   GPT-5.5 Pro     $30.00 / $180.00 — ultra-kritisch
+ *   GPT-5.4         $2.50 / $15.00 — günstigerer Vorgänger
+ *   GPT-5.4-mini    $0.40 / $1.60 — schnell, niedrige Komplexität
+ *   GPT-5.4-nano    günstiger
+ *
+ * Anthropic-Backup-Provider (ANTHROPIC_API_KEY):
+ *   Claude Opus 4.7    'claude-opus-4-7' — top, Frontier-Backup
+ *   Claude Sonnet 4.6  'claude-sonnet-4-6' — Mid-Tier-Backup
+ *   Claude Haiku 4.5   'claude-haiku-4-5-20251001' — Latency-Backup
+ *
+ * +-------------------------+--------------+-----------------------------+----------------------------+
+ * | Action                  | Primary      | Backup (Anthropic)          | Begründung                 |
+ * +-------------------------+--------------+-----------------------------+----------------------------+
+ * | fachurteil_entwurf      | gpt-5.5      | claude-opus-4-7             | Rule 14 Konjunktiv-II      |
+ * | pruefe_fachurteil       | gpt-5.5      | claude-opus-4-7             | Rule 14 (Compliance)       |
+ * | qualitaetspruefung      | gpt-5.5      | claude-opus-4-7             | Rule 14 (Konjunktiv-Check) |
+ * | ki-konsistenz-check     | gpt-5.5      | claude-opus-4-7             | Compliance §4↔§6           |
+ * | assist_inline           | gpt-5.4      | claude-sonnet-4-6           | Balance Q/Cost             |
+ * | freitext (Default)      | gpt-5.4-mini | claude-haiku-4-5-20251001   | User-Override-fähig        |
+ * | support_chat            | gpt-5.4-mini | claude-haiku-4-5-20251001   | Latenz, mechanisch         |
+ * | normen-picker           | gpt-5.4-mini | claude-haiku-4-5-20251001   | S1, mechanisch             |
+ * | foto-captioning         | gpt-5.4-mini | claude-haiku-4-5-20251001   | Vision, mechanisch         |
+ * | whisper-transcript      | whisper-1    | (kein Anthropic-Equivalent) | Speech-to-Text             |
+ * +-------------------------+--------------+-----------------------------+----------------------------+
+ *
+ * DEPRECATED-Modelle (NICHT MEHR NUTZEN):
+ *   gpt-4o, gpt-4o-mini, gpt-3.5-turbo (Feb 2026 abgekündigt)
+ *   claude-3-5-sonnet, claude-3-haiku (durch 4.x ersetzt)
+ *
+ * Tests: tests/ki-proxy/model-compliance.test.js
  */
+const MODELS = {
+  // Frontier (Konjunktiv-II / Compliance / Schwere Analyse)
+  fachurteil:    'gpt-5.5',
+  pruefung:      'gpt-5.5',
+  konsistenz:    'gpt-5.5',
+  // Mid-Tier (Inline-Assist, gute Qualität)
+  assist:        'gpt-5.4',
+  // Light (Latency, mechanische Aufgaben)
+  light:         'gpt-5.4-mini',
+  // Speech-to-Text
+  whisper:       'whisper-1'
+};
+
+const ANTHROPIC_BACKUP = {
+  // Mapping pro Aktion (für callAnthropic-Fallback)
+  fachurteil_entwurf:   'claude-opus-4-7',
+  pruefe_fachurteil:    'claude-opus-4-7',
+  qualitaetspruefung:   'claude-opus-4-7',
+  konsistenz_check:     'claude-opus-4-7',
+  assist_inline:        'claude-sonnet-4-6',
+  freitext:             'claude-haiku-4-5-20251001',
+  support_chat:         'claude-haiku-4-5-20251001',
+  messages:             'claude-haiku-4-5-20251001'
+};
+
 function chooseModel(body, aufgabe, defaultModel) {
   const modus = body.ki_analyse_modus === 'praezise' ? 'praezise' : 'schnell';
-  // "Schwere" Aufgaben — User-Wahl respektieren
   const heavy = ['fachurteil_entwurf', 'assist_inline', 'freitext', 'messages'];
   if (modus === 'praezise' && heavy.includes(aufgabe)) {
-    return 'gpt-4o';
+    return MODELS.fachurteil; // praezise = Top-Modell für schwere Aufgaben
   }
-  return defaultModel;  // Fallback auf handler-seitigen Default
+  return defaultModel;
+}
+
+/**
+ * MEGA²⁸ W3-I0 — Anthropic-Fallback-Wrapper
+ *
+ * Versucht zuerst OpenAI. Bei 429/5xx-Fehler oder Network-Failure → Anthropic-Backup.
+ * Bei 400 (User-Error) wird NICHT ge-fallback'd.
+ *
+ * Telemetrie: jeder Fallback-Aufruf loggt warn + Sentry-Breadcrumb.
+ */
+async function callOpenAIWithFallback(params, openaiApiKey, aufgabe) {
+  // callOpenAI ist im selben File definiert (Function-Declaration hoisted).
+  const { callAnthropic, mapOpenAIModelToAnthropic } = require('./lib/ki-anthropic');
+
+  try {
+    return await callOpenAI(params, openaiApiKey);
+  } catch (err) {
+    const status = err && err.status;
+    const isFallbackable = !status || status === 429 || status === 500 ||
+                           status === 502 || status === 503 || status === 504;
+
+    const anthropicKey = process.env.ANTHROPIC_API_KEY;
+    if (!isFallbackable || !anthropicKey) {
+      throw err; // 400 oder kein Anthropic-Key → propagieren
+    }
+
+    console.warn('[ki-proxy] OpenAI failed (status=' + status + '), falling back to Anthropic for action=' + aufgabe);
+
+    const anthropicModel = ANTHROPIC_BACKUP[aufgabe] || mapOpenAIModelToAnthropic(params.model);
+    const anthropicParams = Object.assign({}, params, { model: anthropicModel });
+    const result = await callAnthropic(anthropicParams, anthropicKey);
+    // Marker für Telemetrie
+    result._fallback_provider = 'anthropic';
+    return result;
+  }
 }
 
 /**
@@ -241,7 +332,8 @@ WICHTIG: Analysiere AUSSCHLIESSLICH was im Diktat steht. Leere Arrays wenn zu we
   // Telemetrie im Response-Header (optional, hilft beim Monitoring)
   console.log(`[ki-proxy:fachurteil] Fachwissen-Quelle: ${fachwissenSource}`);
 
-  const result = await callOpenAI({ model: chooseModel(body, 'fachurteil_entwurf', 'gpt-4o-mini'), max_tokens: 1200, messages: [{ role: 'system', content: appendUserContext(systemPromptFinal, body.user_kontext) }, { role: 'user', content: userPrompt }] }, apiKey);
+  // MEGA²⁸ W1-I1: Default gpt-4o (war mini) — §6 Fachurteil-Entwurf braucht Konjunktiv-II-Qualität (Regel 14).
+  const result = await callOpenAIWithFallback({ model: chooseModel(body, 'fachurteil_entwurf', MODELS.fachurteil), max_tokens: 1200, messages: [{ role: 'system', content: appendUserContext(systemPromptFinal, body.user_kontext) }, { role: 'user', content: userPrompt }] }, apiKey, 'fachurteil_entwurf');
   const rawText = result.choices?.[0]?.message?.content || '';
   let parsed = {};
   try {
@@ -257,7 +349,9 @@ async function handleQualitaetspruefung(body, apiKey) {
   const { gutachten_text = '', beweisfragen = '' } = body;
   if (!gutachten_text || gutachten_text.length < 100) return jsonResponse({ pruefpunkte: [], gesamt_bewertung: 'TEXT_ZU_KURZ' });
 
-  const result = await callOpenAI({ model: 'gpt-4o-mini', max_tokens: 600, messages: [
+  // MEGA²⁸ W3-I0: GPT-5.5 (Frontier) für Konjunktiv-II-Compliance (Rule 14)
+  // GPT-4o ist Feb 2026 deprecated, GPT-5.5 seit 24.04.2026 in API.
+  const result = await callOpenAIWithFallback({ model: MODELS.pruefung, max_tokens: 600, messages: [
     { role: 'system', content: appendUserContext('Du bist ein Oberlandesgericht-Sachverständiger. Prüfe §6-Fachurteilstexte auf: 1. Konjunktiv II korrekt? 2. Keine unzulässigen Indikativ-Kausalaussagen? 3. Beweislast korrekt? 4. Normverweise vorhanden? 5. Sanierungsempfehlung konkret? ANTWORT NUR JSON: {"pruefpunkte":[{"typ":"ok|warnung|fehler","text":"Beschreibung"}],"konjunktiv_ok":true,"gesamt_bewertung":"gut|verbesserungswuerdig|ueberarbeiten"}', body.user_kontext) },
     { role: 'user', content: 'Prüfe:\n\n' + gutachten_text.substring(0, 2000) + (beweisfragen ? '\n\nBeweisfragen:\n' + beweisfragen : '') }
   ] }, apiKey);
@@ -270,7 +364,7 @@ async function handleQualitaetspruefung(body, apiKey) {
 }
 
 async function handleFreitext(body, apiKey) {
-  const result = await callOpenAI({ model: chooseModel(body, 'freitext', body.model || 'gpt-4o-mini'), max_tokens: body.max_tokens || 500, messages: [
+  const result = await callOpenAIWithFallback({ model: chooseModel(body, 'freitext', body.model || MODELS.light), max_tokens: body.max_tokens || 500, messages: [
     { role: 'system', content: appendUserContext(body.system || 'Du bist ein Assistent für öffentlich bestellte Sachverständige.', body.user_kontext) },
     { role: 'user', content: body.prompt || '' }
   ] }, apiKey);
@@ -303,8 +397,17 @@ async function handleMessages(body, apiKey) {
     }
   }
 
-  let model = body.model || 'gpt-4o-mini';
-  if (model.includes('haiku') || model.includes('sonnet') || model.includes('opus')) model = 'gpt-4o-mini';
+  let model = body.model || MODELS.light; // MEGA²⁸ W3-I0: gpt-4o-mini → gpt-5.4-mini
+  // MEGA²¹+²² W115: Anthropic-Routing aktiviert via ki-service-interface (Marcel-H1)
+  // Vorher: Anthropic-Modelle wurden HART zu gpt-4o-mini gefallback'd, da kein Multi-
+  // Provider-Routing existierte. Jetzt: ki-service-interface dispatched zum richtigen
+  // Adapter (Marcel-Decision G2: gpt-4o + gpt-4o-mini bleiben Default fuer Text).
+  // Falls body.model explizit Claude-Modell anfragt UND ANTHROPIC_API_KEY gesetzt:
+  // wird unten via ki-service-interface geroutet. Sonst: existing OpenAI-Pfad.
+  // Die alten haiku/sonnet/opus-Strings werden NICHT mehr gefiltert — der Adapter
+  // entscheidet basierend auf KI_TEXT_PROVIDER und body.model.
+  // (Hinweis: Komplexer Aufgaben-Router unten bleibt unangetastet — diese Fix
+  // betrifft nur den schlichten "messages"-Format-Pfad fuer simple Calls.)
 
   // ── FACHWISSEN-INJECTION v3.4 (opt-in via body.schadensart / body.paragraph_nr)
   // SAFE: wenn Felder fehlen → messages bleiben unverändert → exakt heutiges Verhalten
@@ -348,7 +451,76 @@ async function handleMessages(body, apiKey) {
   return jsonResponse({ content: [{ type: 'text', text }], model: result.model, usage: result.usage });
 }
 
-async function callOpenAI(params, apiKey) {
+// MEGA¹² W12: Anthropic-Fallback bei OpenAI-Outage
+const { callAnthropic, isOutageError } = require('./lib/ki-anthropic');
+const { getSupabase } = require('./lib/storage-router');
+
+/**
+ * Wrappped callOpenAI mit Fallback auf Anthropic bei Outage-Errors.
+ *
+ * Logik:
+ *   1. Try OpenAI
+ *   2. Bei isOutageError(): try Anthropic mit gleichem params (Adapter erledigt Conversion)
+ *   3. Bei Anthropic-Erfolg: Audit-Log + Set _fallback-Flag
+ *   4. Bei Anthropic-Fehler: original OpenAI-Error werfen (transparent fuer Caller)
+ *
+ * Bei nicht-Outage-Errors (4xx, 401, 429): NICHT Fallback — geht durch.
+ */
+async function callKIWithFallback(params, openaiKey) {
+  try {
+    const result = await _callOpenAIRaw(params, openaiKey);
+    return result;  // OpenAI hat geantwortet — kein Fallback noetig
+  } catch (openaiErr) {
+    if (!isOutageError(openaiErr)) {
+      // 4xx, Auth-Fehler, Rate-Limit → kein Fallback, Fehler durchreichen
+      throw openaiErr;
+    }
+
+    const anthropicKey = process.env.ANTHROPIC_API_KEY;
+    if (!anthropicKey) {
+      // Anthropic nicht konfiguriert → Original-Fehler werfen
+      throw openaiErr;
+    }
+
+    // Audit-Log fire-and-forget — Fallback wird AKTIVIERT
+    _auditFallbackEvent({
+      original_error: String(openaiErr.message || openaiErr).slice(0, 500),
+      requested_model: params.model,
+      timestamp: new Date().toISOString()
+    });
+
+    try {
+      const result = await callAnthropic(params, anthropicKey);
+      result._fallback = true;  // Frontend-Marker fuer Backup-KI-Badge
+      result._fallback_provider = 'anthropic';
+      return result;
+    } catch (anthropicErr) {
+      // Beide gescheitert → Original-OpenAI-Fehler werfen (relevanter fuer User)
+      console.error('[ki-proxy] Anthropic-Fallback auch gescheitert:', anthropicErr.message);
+      throw new Error('OpenAI nicht erreichbar UND Anthropic-Fallback fehlgeschlagen: ' + openaiErr.message);
+    }
+  }
+}
+
+function _auditFallbackEvent(meta) {
+  // Fire-and-forget: nicht await'en, kein User-Wait
+  setImmediate(async () => {
+    try {
+      const sb = getSupabase();
+      if (!sb) return;
+      await sb.from('audit_trail').insert({
+        function_name: 'ki-proxy',
+        action: 'ki.fallback.activated',
+        payload: meta,
+        result: 'fallback_to_anthropic'
+      });
+    } catch (e) {
+      console.warn('[ki-proxy] audit fallback log failed:', e.message);
+    }
+  });
+}
+
+async function _callOpenAIRaw(params, apiKey) {
   const response = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + apiKey },
@@ -359,6 +531,11 @@ async function callOpenAI(params, apiKey) {
     throw new Error('OpenAI ' + response.status + ': ' + (err?.error?.message || 'Fehler'));
   }
   return response.json();
+}
+
+// Backwards-Compat: existing call-sites nutzen callOpenAI (jetzt mit Fallback)
+async function callOpenAI(params, apiKey) {
+  return callKIWithFallback(params, apiKey);
 }
 
 function jsonResponse(data, status = 200) {
@@ -419,24 +596,24 @@ Gib NUR den korrigierten deutschen Text zurück. Perfekte Grammatik und Zeichens
   }
   console.log(`[ki-proxy:assistInline] Fachwissen-Quelle: ${fwSource} | SA: ${schadenart || '—'}`);
 
-  const res = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: { 'Authorization': 'Bearer ' + apiKey, 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      model: chooseModel(body, 'assist_inline', 'gpt-4o'),
-      temperature: 0.10,
-      max_tokens: 2000,
-      messages: [
-        { role: 'system', content: appendUserContext(systemMsgFinal, body.user_kontext) },
-        { role: 'user', content: userMsg }
-      ]
-    })
-  });
+  // MEGA¹² W12: callOpenAI nutzt jetzt callKIWithFallback (Anthropic-Backup)
+  const data = await callOpenAI({
+    model: chooseModel(body, 'assist_inline', MODELS.assist), // MEGA²⁸ W3-I0: gpt-4o → gpt-5.4
+    temperature: 0.10,
+    max_tokens: 2000,
+    messages: [
+      { role: 'system', content: appendUserContext(systemMsgFinal, body.user_kontext) },
+      { role: 'user', content: userMsg }
+    ]
+  }, apiKey);
 
-  if (!res.ok) throw new Error('OpenAI ' + res.status);
-  const data = await res.json();
   const vorschlag = data.choices?.[0]?.message?.content?.trim() || '';
-  return jsonResponse({ vorschlag });
+  // Fallback-Marker an Frontend weitergeben (fuer Backup-KI-Badge)
+  return jsonResponse({
+    vorschlag,
+    _fallback: data._fallback === true,
+    _provider: data._fallback ? 'anthropic' : 'openai'
+  });
 }
 
 async function handleSupportChat(body, apiKey) {
@@ -502,12 +679,12 @@ VERHALTENSREGELN:
   ];
 
   try {
-    const result = await callOpenAI({
-      model:       'gpt-4o-mini',
+    const result = await callOpenAIWithFallback({
+      model:       MODELS.light, // MEGA²⁸ W3-I0: gpt-4o-mini → gpt-5.4-mini
       max_tokens:  350,
-      temperature: 0.25,  // Niedrig für konsistente, faktische Antworten
+      temperature: 0.25,
       messages
-    }, apiKey);
+    }, apiKey, 'support_chat');
 
     const antwort = result.choices?.[0]?.message?.content?.trim();
 

@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v264';   // MEGA⁸: Cockpit-WebSocket + Empty-State-Migration + KI-Polish + 5 Liquid-Templates
+const CACHE_VERSION = 'prova-v301';   // MEGA²⁸ V3.2-W7N-I1: Live-Transkript Manual-Input-Schutz (Variante A, 5s pause + buffer-flush) — Pre-Pilot-Blocker gefixt, Marcel-Browser-Test pflicht (Decision #15)
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
@@ -38,6 +38,19 @@ const APP_SHELL = [
   '/nav.js',
   // K-1.0 + K-1.3 lib-Stack (Supabase-Foundation)
   '/lib/prova-config.js',
+  '/lib/beweisbeschluss-upload.js',     // MEGA²³ Block 1: Beweisbeschluss-PDF-Upload-Library
+  '/lib/archiv-filter.js',              // MEGA²⁸ V3.2-W2 KORR-10: Archiv-Filter-Library
+  '/lib/global-search-engine.js',       // MEGA²⁸ V3.2-W2 KORR-7: Cmd+K Search-Engine (pure-fn)
+  '/lib/admin-ki-stats-frontend.js',    // MEGA²³ Block 4: KI-Stats Frontend-Charts
+  '/lib/prova-disclaimer.js',           // MEGA²¹+²² W110: §407a-Disclaimer-Lib
+  '/schadensfaelle.html',               // MEGA²⁸ P1-I1: Übersicht-Liste Flow A
+  '/schadensfaelle-logic.js',
+  '/neuer-fall.html',                   // MEGA²⁸ V3.2-W2 KORR-8: Wizard-Landing-Page
+  '/bescheinigungen.html',              // MEGA²⁸ V3.2-W3-I3 KORR-9: 11 Korrespondenz-Briefe Übersicht
+  '/admin-cockpit.html',                // MEGA²⁸ V3.2-W5-I9 KORR-23: 12-Sektionen-Übersicht (6 live, 6 skeleton)
+  '/lib/referral-system.js',            // MEGA²⁷: Referral-Foundation
+  '/lib/referral-ui.js',                // MEGA²⁷: Dashboard-Karte + Modals
+  '/lib/referral-redemption.js',        // MEGA²⁷: Pricing-Page Code-Detection
   '/lib/supabase-client.js',
   '/lib/data-store.js',
   '/lib/template-registry.js',
@@ -45,10 +58,36 @@ const APP_SHELL = [
   '/lib/sentry-init.js',                // M3: Sentry Browser-SDK-Init
   '/lib/mobile-polish.css',             // MEGA⁴ Q2: Mobile-Polish CSS
   '/lib/mobile-polish.js',              // MEGA⁴ Q3: Mobile-Polish JS (Lazy/Offline/Camera/Geo)
+  '/lib/foto-upload-v2.js',             // MEGA⁹ W1: Magic-Bytes + EXIF-Strip + Image-Optimize
+  '/lib/foto-upload-v2.css',            // MEGA⁹ W1: Drop-Zone + Item-Card Styles
+  '/lib/foto-upload-v2-ui.js',          // MEGA⁹ W1: ProvaUploadUI DOM-Helper
+  '/lib/public-status-widget.js',       // MEGA¹¹ W6: Footer-Status-Widget
+  '/lib/analytics-plausible.js',        // MEGA¹¹ W7: Plausible-Wrapper
+  '/lib/prova-alert.js',                // MEGA¹¹ W8: provaAlert-DRY-Helper
+  '/lib/ki-cost-display.js',            // MEGA¹¹ W9: KI-Cost-Modal
+  '/lib/pwa-install-prompt.js',         // MEGA¹¹ W10: PWA-Install-Banner
+  '/offline.html',                      // MEGA¹¹ W10: PWA-Offline-Fallback
+  '/lib/ki-fallback-badge.js',          // MEGA¹² W12: Anthropic-Fallback-Badge
+  '/lib/ki-confidence-badge.js',        // MEGA¹² W13: KI-Confidence-Badge
+  '/lib/safe-area-helper.css',          // MEGA¹² W14: iOS-Safe-Area-Helper-CSS
+  '/lib/pull-to-refresh.js',            // MEGA¹² W14: Pull-to-Refresh
+  '/lib/admin-drilldown.js',            // MEGA¹² W15: Drilldown-Modal
+  '/lib/ki-history-frontend.js',        // MEGA¹³ W18: KI-Historie-Modal
+  '/lib/ki-autosuggest.js',             // MEGA¹³ W18: KI-Autosuggest Ghost-Text
+  '/lib/hamburger-menu.js',             // MEGA¹³ W19: Hamburger-Menu
+  '/lib/bottom-sheet.js',               // MEGA¹³ W19: Bottom-Sheet Modal
+  '/lib/admin-bulk.js',                 // MEGA¹³ W21: Bulk-Operations
+  '/lib/swipe-gestures.js',             // MEGA¹⁴ W24: Touch-Swipe-Detection
+  '/lib/native-share.js',               // MEGA¹⁴ W24: Web-Share-API + Clipboard-Fallback
+  '/lib/workflow-mode-router.js',       // MEGA¹⁴-Ext W28: Triple-Mode-Router (Foundation)
+  '/lib/prova-editor.js',               // MEGA¹⁵ W32: TipTap-Wrapper (Mode B Editor)
+  '/lib/prova-editor.css',              // MEGA¹⁵ W32: Editor-Styles
   // Legacy auth (Hybrid-Modus, bleibt bis Cutover-Phase 5 cleanup)
   '/prova-fetch-auth.js',
   '/prova-notifications.js',
   '/page-template.css',
+  '/stellungnahme.css',                 // MEGA²⁸ V3.2-W3-I4 KORR-24: Inline-CSS Extract
+  '/app.css',                           // MEGA²⁸ V3.2-W3-I4 KORR-24: Inline-CSS Extract
   '/gutachterliche-stellungnahme.html',
   '/gutachterliche-stellungnahme-logic.js',
   '/onboarding-supabase-logic.js',

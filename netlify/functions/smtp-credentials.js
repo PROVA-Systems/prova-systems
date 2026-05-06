@@ -14,6 +14,7 @@
  */
 const crypto = require('crypto');
 const { getCorsHeaders, corsOptionsResponse } = require('./lib/cors-helper');
+const { withSentry } = require('./lib/sentry-wrap'); // MEGA²⁸ W6P2-I2: Sentry-Wrap
 const { fetchWithRetry } = require('./lib/fetch-with-timeout');
 const { provaFetch } = require('./lib/prova-fetch');
 
@@ -63,7 +64,7 @@ async function findSvRecord(email) {
   return d.records && d.records[0] ? d.records[0] : null;
 }
 
-exports.handler = async function(event, context) {
+exports.handler = withSentry(async function(event, context) {
   if (event.httpMethod === 'OPTIONS') return corsOptionsResponse(event);
 
   const user = context.clientContext && context.clientContext.user;
@@ -142,4 +143,4 @@ exports.handler = async function(event, context) {
   }
 
   return { statusCode: 405, headers: getCorsHeaders(event), body: JSON.stringify({ error: 'Method Not Allowed' }) };
-};
+}, { functionName: 'smtp-credentials' });

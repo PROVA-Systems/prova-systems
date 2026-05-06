@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1, viewport-fit=cover">
+<title>Bescheinigungen · PROVA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="prova-preise.js"></script>
+<script src="paket-guard.js"></script>
+<script src="prova-fetch-auth.js"></script>
+<script src="/lib/prova-config.js"></script>
+<script>
+(function(){
+  try {
+    var token = localStorage.getItem('prova_auth_token');
+    var email = localStorage.getItem('prova_sv_email') || '';
+    if (!token || !email || email.indexOf('@') === -1) {
+      window.location.replace('/login?next=' + encodeURIComponent(location.pathname + location.search));
+      return;
+    }
+  } catch (e) { window.location.replace('/login'); }
+})();
+</script>
+<script type="module">
+  import { runAuthGuard } from '/lib/auth-guard.js';
+  runAuthGuard().catch(e => console.error('[auth] guard failed', e));
+</script>
+<script src="theme.js"></script>
+<script src="prova-layout.config.js"></script>
+<script src="nav.js" defer></script>
+<link rel="stylesheet" href="mobile.css">
+<link rel="stylesheet" href="prova-design.css">
+<style>
+:root {
+  --bg:#0b0d11; --bg2:#111318; --bg3:#161a22;
+  --surface:#1c2130; --surface2:#232a3a;
+  --border:rgba(255,255,255,0.06); --border2:rgba(255,255,255,0.11);
+  --text:#eaecf4; --text2:#8b93ab; --text3:#4d5568;
+  --accent:#4f8ef7; --accent2:#3a7be0;
+  --r-sm:6px; --r-md:10px; --r-lg:14px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;line-height:1.55;}
+.bs-wrap{max-width:1180px;margin:0 auto;padding:24px 20px 80px;}
+.bs-header{margin-bottom:22px;}
+.bs-h1{font-size:24px;font-weight:800;letter-spacing:-.025em;margin-bottom:6px;}
+.bs-sub{font-size:14px;color:var(--text2);max-width:780px;}
+.bs-info{margin-top:14px;padding:14px 16px;background:var(--bg3);border-radius:var(--r-md);border-left:3px solid var(--accent);font-size:13px;color:var(--text2);}
+.bs-info strong{color:var(--text);}
+.bs-toolbar{display:flex;gap:10px;margin:18px 0;align-items:center;flex-wrap:wrap;}
+.bs-search{padding:9px 12px;background:var(--surface);border:1px solid var(--border2);border-radius:var(--r-md);color:var(--text);font-size:13px;outline:none;width:280px;font-family:inherit;}
+.bs-search:focus{border-color:var(--accent);}
+.bs-search::placeholder{color:var(--text3);}
+.bs-count{font-size:12px;color:var(--text3);font-weight:600;}
+.bs-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;}
+.bs-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:18px 18px 16px;transition:all .15s;display:flex;flex-direction:column;}
+.bs-card:hover{border-color:var(--border2);transform:translateY(-1px);}
+.bs-card-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;}
+.bs-code{font-family:ui-monospace,Consolas,monospace;font-size:11px;font-weight:700;letter-spacing:.04em;padding:3px 8px;border-radius:4px;background:rgba(79,142,247,.12);color:var(--accent);}
+.bs-rechtsbasis{font-size:10px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.04em;}
+.bs-name{font-size:15px;font-weight:700;margin-bottom:6px;color:var(--text);}
+.bs-zweck{font-size:12px;color:var(--text2);margin-bottom:12px;flex-grow:1;}
+.bs-actions{display:flex;gap:8px;}
+.bs-btn{flex:1;padding:8px 12px;border:none;border-radius:var(--r-sm);background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;font-weight:700;font-size:12px;cursor:pointer;font-family:inherit;text-decoration:none;text-align:center;display:inline-block;}
+.bs-btn:hover{opacity:.9;}
+.bs-btn-ghost{background:transparent;border:1px solid var(--border2);color:var(--text2);}
+.bs-btn-ghost:hover{background:rgba(255,255,255,.04);}
+.bs-empty{padding:48px 20px;text-align:center;color:var(--text3);}
+.bs-empty-icon{font-size:36px;margin-bottom:12px;opacity:.4;}
+@media(max-width:600px){
+  .bs-wrap{padding:16px 14px 80px;}
+  .bs-grid{grid-template-columns:1fr;}
+  .bs-search{width:100%;}
+}
+</style>
+</head>
+<body>
+<main class="bs-wrap" id="main-content">
+
+  <header class="bs-header">
+    <h1 class="bs-h1">Bescheinigungen &amp; Korrespondenz</h1>
+    <p class="bs-sub">Vorlagen für SV-Korrespondenz nach DIN 5008 — Auftragsannahme, Termin-Mitteilung, Mahnung, Akteneinsicht u.&nbsp;a.</p>
+
+    <div class="bs-info">
+      <strong>Hinweis (K-2.0-Recherche):</strong> Klassische "Bescheinigungen" wie Mängelfreiheit, Schimmelfreiheit oder Standsicherheit fallen <em>nicht</em> in den ö.b.u.v. SV-Tätigkeitsbereich (BGH NJW 2014, 1452 / UBA-Leitfaden 2017 / SV-VO NRW §8a). Stattdessen werden hier die 11 ausgewählten <strong>Korrespondenz-Briefe</strong> bereitgestellt, die im SV-Workflow tatsächlich rechtskonform genutzt werden können.
+    </div>
+  </header>
+
+  <div class="bs-toolbar">
+    <input class="bs-search" id="bs-q" type="search" placeholder="Suchen… z.B. Mahnung, Termin, Akteneinsicht" oninput="filterCards()">
+    <span class="bs-count" id="bs-count">11 Vorlagen</span>
+  </div>
+
+  <div class="bs-grid" id="bs-grid">
+    <!-- gerendert via JS -->
+  </div>
+
+  <div class="bs-empty" id="bs-empty" style="display:none;">
+    <div class="bs-empty-icon">🔍</div>
+    <p style="font-size:14px;margin-bottom:8px;">Keine Vorlage zur Suche gefunden.</p>
+    <button class="bs-btn-ghost bs-btn" onclick="document.getElementById('bs-q').value='';filterCards();" style="max-width:200px;">Suche zurücksetzen</button>
+  </div>
+
+</main>
+
+<script src="auftragstyp.js"></script>
+<script src="trial-guard.js"></script>
+<script src="global-search.js" defer></script>
+<script>
+// ════════════════════════════════════════════════════════════
+// MEGA²⁸ W3-I3 KORR-9 — bescheinigungen.html Page
+// 11 Korrespondenz-Briefe aus K-2.0-Recherche
+// ════════════════════════════════════════════════════════════
+const BESCHEINIGUNGEN = [
+  { code: 'K-01', name: 'Auftragsbestätigung',         rechtsbasis: 'DIN 5008',  zweck: 'Brief an Auftraggeber bei Annahme des Gutachten-Auftrags.', vorlage: 'auftragsbestaetigung' },
+  { code: 'K-02', name: 'Termin-Mitteilung',           rechtsbasis: 'DIN 5008',  zweck: 'Vorab-Information an Auftraggeber zum geplanten Ortstermin.', vorlage: 'einladung-ortstermin' },
+  { code: 'K-03', name: 'Mehrparteien-Termin',         rechtsbasis: 'DIN 5008',  zweck: 'Termin-Mitteilung bei Beweissicherung mit mehreren Parteien.', vorlage: 'einladung-ortstermin-multi' },
+  { code: 'K-04', name: 'Anforderung Unterlagen',      rechtsbasis: 'DIN 5008',  zweck: 'Standardisierte Anforderung von Dokumenten beim Auftraggeber.',  vorlage: 'nachforderung-unterlagen' },
+  { code: 'K-05', name: 'Übergabe Gutachten',          rechtsbasis: 'DIN 5008',  zweck: 'Anschreiben mit PDF-Anhang bei Gutachten-Versand.',           vorlage: 'uebergabe-gutachten' },
+  { code: 'K-06A',name: 'Mahnung 1 (Erinnerung)',      rechtsbasis: '§286 BGB',  zweck: 'Erste Zahlungserinnerung — freundlich, ohne Mahngebühr.',     vorlage: 'mahnung-1' },
+  { code: 'K-06B',name: 'Mahnung 2',                   rechtsbasis: '§286 BGB',  zweck: 'Zweite Mahnung — mit Mahngebühr und Verzugszinsen.',          vorlage: 'mahnung-2' },
+  { code: 'K-06C',name: 'Mahnung 3 (letzte Frist)',    rechtsbasis: '§286 BGB',  zweck: 'Dritte Mahnung mit Vorrechtsklausel und Inkasso-Androhung.',  vorlage: 'mahnung-3' },
+  { code: 'K-07', name: 'Akteneinsicht-Antrag',        rechtsbasis: '§299 ZPO',  zweck: 'Antrag auf Akteneinsicht beim Gericht zur Gutachten-Vorbereitung.', vorlage: 'akteneinsicht' },
+  { code: 'K-08', name: 'Befangenheits-Anzeige',       rechtsbasis: '§406 ZPO',  zweck: 'Eigenständige Anzeige von Befangenheits-Gründen an das Gericht.', vorlage: 'befangenheit' },
+  { code: 'K-09', name: 'Auftragsablehnung',           rechtsbasis: 'BGB',       zweck: 'Höfliche Ablehnung eines Auftrags mit Begründung.',           vorlage: 'auftragsablehnung' }
+];
+
+function escHtml(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+function renderCards(items) {
+  const grid = document.getElementById('bs-grid');
+  const empty = document.getElementById('bs-empty');
+  if (!items.length) {
+    grid.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+  grid.innerHTML = items.map(b => `
+    <div class="bs-card">
+      <div class="bs-card-head">
+        <span class="bs-code">${escHtml(b.code)}</span>
+        <span class="bs-rechtsbasis">${escHtml(b.rechtsbasis)}</span>
+      </div>
+      <div class="bs-name">${escHtml(b.name)}</div>
+      <div class="bs-zweck">${escHtml(b.zweck)}</div>
+      <div class="bs-actions">
+        <a class="bs-btn" href="briefvorlagen.html?vorlage=${encodeURIComponent(b.vorlage)}">Brief erstellen</a>
+      </div>
+    </div>
+  `).join('');
+}
+
+function filterCards() {
+  const q = (document.getElementById('bs-q').value || '').toLowerCase().trim();
+  const filtered = !q ? BESCHEINIGUNGEN : BESCHEINIGUNGEN.filter(b =>
+    b.code.toLowerCase().includes(q) ||
+    b.name.toLowerCase().includes(q) ||
+    b.zweck.toLowerCase().includes(q) ||
+    b.rechtsbasis.toLowerCase().includes(q)
+  );
+  document.getElementById('bs-count').textContent = filtered.length + ' von ' + BESCHEINIGUNGEN.length + ' Vorlagen';
+  renderCards(filtered);
+}
+
+// Init
+renderCards(BESCHEINIGUNGEN);
+window.filterCards = filterCards;
+</script>
+<script src="sw-register.js" defer></script>
+</body>
+</html>

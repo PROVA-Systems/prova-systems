@@ -452,7 +452,9 @@ async function updateTicketStatus(recordId, newStatus, idx) {
     if (_tickets[idx]) _tickets[idx].fields.Status = newStatus;
     renderTickets(_tickets);
   } catch(e) {
-    alert('Fehler beim Aktualisieren: ' + e.message);
+    // MEGA²³ Block 5: Toast-Migration W5 (ProvaUI.toast primary, provaAlert fallback W16-compat)
+    if (window.ProvaUI && window.ProvaUI.toast) window.ProvaUI.toast('Fehler beim Aktualisieren: ' + e.message, 'error');
+    else (window.provaAlert || alert)('Fehler beim Aktualisieren: ' + e.message, 'error');
   }
 }
 

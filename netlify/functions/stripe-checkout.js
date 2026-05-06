@@ -151,7 +151,31 @@ exports.handler = withSentry(requireAuth(async function (event, context) {
   let discounts;
   let couponId;
   let pilotSeatsRemaining = null;
+  let referralCodeApplied = null;
   const stripe = new Stripe(key, { apiVersion: STRIPE_API_VERSION });
+
+  // MEGA²⁷.5 Block 1: Referral-Code-Auto-Apply (PROVA-FRIEND-XX-Y6)
+  // Liest body.referral_code, validiert via referrals-Tabelle, injectet promotion_code.
+  // Pilot-Coupons schlagen Referral-Codes (Founding > Friend).
+  const refCodeRaw = String(body.referral_code || '').trim().toUpperCase();
+  if (refCodeRaw && /^PROVA-FRIEND-[A-Z]{1,4}-[A-Z2-9]{6}$/.test(refCodeRaw) && !isPilot && !discounts) {
+    try {
+      const sbMod = require('./lib/storage-router');
+      const sb = sbMod && sbMod.getSupabase ? sbMod.getSupabase() : null;
+      if (sb) {
+        const { data: ref } = await sb.from('referrals')
+          .select('code, status, expires_at, stripe_promo_code_id')
+          .eq('code', refCodeRaw)
+          .maybeSingle();
+        const valid = ref && ref.status === 'pending' && ref.stripe_promo_code_id
+          && new Date(ref.expires_at) > new Date();
+        if (valid) {
+          discounts = [{ promotion_code: ref.stripe_promo_code_id }];
+          referralCodeApplied = refCodeRaw;
+        }
+      }
+    } catch (_) { /* graceful — kein Discount, kein Block */ }
+  }
 
   if (isPilot || (body.coupon === 'founding' && body.plan === 'solo')) {
     couponId = resolveFoundingCouponId();
@@ -194,7 +218,8 @@ exports.handler = withSentry(requireAuth(async function (event, context) {
         prova_plan:   body.plan || 'solo',
         prova_email:  userEmail,
         prova_addon:  planConfig.isAddon ? '1' : '0',
-        prova_pilot:  isPilot ? 'true' : 'false'
+        prova_pilot:  isPilot ? 'true' : 'false',
+        prova_referral_code: referralCodeApplied || ''
       },
       automatic_tax: { enabled: !!process.env.STRIPE_AUTO_TAX }
     };
@@ -205,7 +230,8 @@ exports.handler = withSentry(requireAuth(async function (event, context) {
         metadata: {
           prova_plan:  body.plan || 'solo',
           prova_email: userEmail,
-          prova_pilot: isPilot ? 'true' : 'false'
+          prova_pilot: isPilot ? 'true' : 'false',
+          prova_referral_code: referralCodeApplied || ''
         }
       };
 

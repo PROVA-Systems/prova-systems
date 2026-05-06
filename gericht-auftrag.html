@@ -7,6 +7,8 @@
   <script src="prova-preise.js"></script>
   <script src="paket-guard.js"></script>
   <script src="prova-fetch-auth.js"></script>
+  <script src="/lib/beweisbeschluss-upload.js" defer></script>
+  <script src="/lib/prova-disclaimer.js" defer></script>
 <script src="/lib/prova-config.js"></script>
 <script type="module">
   import { runAuthGuard } from '/lib/auth-guard.js';
@@ -156,6 +158,23 @@ body{font-family:var(--font-ui);background:var(--bg);color:var(--text);min-heigh
               ⏳ KI analysiert Beweisbeschluss…
             </div>
             <div id="beweisfragen-result"></div>
+            <div class="prova-ki-disclaimer" role="note" style="margin-top:12px;padding:8px 12px;background:rgba(245,158,11,.08);border-left:3px solid rgba(245,158,11,.4);border-radius:4px;font-size:11px;color:#92400e;line-height:1.5;">
+              <strong>📌 KI-Hinweis:</strong> Die Extraktion ist eine ERSTE STRUKTURIERUNGS-HILFE. Bitte pruefen Sie die Vollstaendigkeit gegen das Original. Sie als bestellter SV bleiben nach §407a ZPO letztverantwortlich.
+            </div>
+          </div>
+        </div>
+
+        <!-- Beweisbeschluss-PDF Pattern-Extraktion (MEGA²³ Block 1) -->
+        <div class="ga-card">
+          <div class="ga-card-header">
+            <div class="ga-card-title">📄 Beweisbeschluss-PDF — Pattern-Extraktion</div>
+            <div class="ga-card-sub">Neu: PDF-Upload mit automatischer Aktenzeichen-, Frist- und Fragen-Erkennung. Ergebnis manuell bearbeitbar.</div>
+          </div>
+          <div class="ga-body">
+            <div id="bb-upload-zone"></div>
+            <div id="bb-info" style="margin-top:8px;font-size:11px;color:var(--text3);line-height:1.5;">
+              Dieses Modul nutzt Pattern-Matching (kein LLM). Die erkannten Felder werden in den Edit-Bereich oben uebernommen, sobald Sie auf <strong>Uebernehmen</strong> klicken.
+            </div>
           </div>
         </div>
 
@@ -291,6 +310,58 @@ function showMsg(txt, type) {
 
 // Heute als Standard-Datum
 document.getElementById('ga-datum').value = new Date().toISOString().split('T')[0];
+
+// MEGA²³ Block 1: Beweisbeschluss-Upload-Integration
+(function initBeweisbeschlussUpload() {
+  function tryWire() {
+    if (!window.ProvaBeweisbeschlussUpload) { setTimeout(tryWire, 100); return; }
+    var zone = document.getElementById('bb-upload-zone');
+    if (!zone) return;
+    // Auftrag-ID aus URL ?supabase_id= oder localStorage (post-cutover)
+    var params = new URLSearchParams(window.location.search);
+    var auftragId = params.get('supabase_id') || params.get('auftrag_id') || (localStorage.getItem('prova_active_auftrag_id') || '');
+    var headers = window.provaAuthHeaders ? window.provaAuthHeaders() : {};
+    window.ProvaBeweisbeschlussUpload.attach(zone, {
+      auftrag_id: auftragId,
+      headers: headers,
+      onParsed: function(extr) {
+        try { console.log('[bb] parsed', extr); } catch(_){}
+      },
+      onSaved: function(edited) {
+        // Edited-Werte ins Stammdaten-Form uebernehmen
+        if (edited.aktenzeichen && !document.getElementById('ga-az').value) {
+          document.getElementById('ga-az').value = edited.aktenzeichen;
+        }
+        if (edited.frist_datum) {
+          var iso = window.ProvaBeweisbeschlussUpload.deDateToIso(edited.frist_datum);
+          if (iso) document.getElementById('ga-frist').value = iso;
+        }
+        if (edited.hauptfragen && edited.hauptfragen.length) {
+          edited.hauptfragen.forEach(function(f){ _fragen.push(f.text); });
+          renderFragen();
+        }
+        if (edited.parteien && edited.parteien.length) {
+          edited.parteien.forEach(function(p){
+            if (p.rolle && /kl[aä]ger/i.test(p.rolle) && !document.getElementById('ga-klaeger').value) {
+              document.getElementById('ga-klaeger').value = p.name;
+            } else if (p.rolle && /beklagt/i.test(p.rolle) && !document.getElementById('ga-beklagter').value) {
+              document.getElementById('ga-beklagter').value = p.name;
+            }
+          });
+        }
+        showMsg('✅ Beweisbeschluss-Daten ins Formular uebernommen', 'ok');
+      },
+      onError: function(err) {
+        try { console.error('[bb] error', err); } catch(_){}
+      }
+    });
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', tryWire);
+  } else {
+    tryWire();
+  }
+})();
 </script>
 
 <script src="support-chat.js" defer></script>

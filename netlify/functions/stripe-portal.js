@@ -20,6 +20,8 @@ const Stripe = require('stripe');
 const { createClient } = require('@supabase/supabase-js');
 const { requireAuth } = require('./lib/jwt-middleware');
 const { getCorsHeaders } = require('./lib/cors-helper');
+const ProvaPseudo = require('./lib/prova-pseudo'); // MEGA²⁸ W3-I7: PII-Pseudonymisierung in Logs
+const { withSentry } = require('./lib/sentry-wrap'); // MEGA²⁸ W7-I2: Sentry-Wrap manual
 
 const STRIPE_API_VERSION = '2024-12-18.acacia';
 
@@ -71,7 +73,7 @@ async function findStripeCustomerIdForEmail(email, stripe) {
   return null;
 }
 
-exports.handler = requireAuth(async (event, context) => {
+exports.handler = withSentry(requireAuth(async (event, context) => {
   _currentEvent = event;
 
   if (event.httpMethod !== 'POST') {
@@ -114,7 +116,7 @@ exports.handler = requireAuth(async (event, context) => {
       return_url
     });
 
-    console.log('[stripe-portal] session erstellt fuer ' + email);
+    console.log('[stripe-portal] session erstellt fuer ' + ProvaPseudo.apply(email));
 
     return {
       statusCode: 200,
@@ -133,7 +135,7 @@ exports.handler = requireAuth(async (event, context) => {
       body: JSON.stringify({ error: msg })
     };
   }
-});
+}), { functionName: 'stripe-portal' });
 
 function corsHeaders() {
   return {

@@ -11,7 +11,7 @@
 ┌─────────────────────────────────────────────────────────────────┐
 │  prova-systems.de        →  LANDING (Marketing/Legal)           │
 │    /                        index.html · Marketing-Hero          │
-│    /pricing /preise         pricing.html (Solo 149€/Team 279€)   │
+│    /pricing /preise         pricing.html (Solo 179€/Team 379€)   │
 │    /kontakt /contact        kontakt.html (Mailto-Form)           │
 │    /datenschutz /impressum  Legal (cross-domain canonical)       │
 │    /agb /avv                Legal                                │
@@ -180,8 +180,9 @@ Stripe-Webhook → POST /.netlify/functions/stripe-webhook
 
 | PROVA-Plan | Stripe-Modus | ENV-Var-Name | Default Price-ID (neuer Account 03.05.) |
 |---|---|---|---|
-| Solo (149€/Mo) | subscription | STRIPE_PRICE_SOLO | `price_1TSjMZRXumrtL2n5fgToRwyr` |
-| Team (279€/Mo) | subscription | STRIPE_PRICE_TEAM | `price_1TSjNXRXumrtL2n56c6emN2k` |
+| Solo (179€/Mo) | subscription | STRIPE_PRICE_SOLO | `price_1TSjMZRXumrtL2n5fgToRwyr` |
+| Team (379€/Mo) | subscription | STRIPE_PRICE_TEAM | `price_1TSjNXRXumrtL2n56c6emN2k` |
+| Founding (99€/Mo lifetime, 10 Plätze) | coupon | FOUNDING-99 | siehe STRIPE_FOUNDING_COUPON_ID |
 | Add-on 5 Gutachten (25€) | payment (one-time) | STRIPE_PRICE_ADDON_5 | `price_1TSl2JRXumrtL2n52XSz85oC` |
 | Add-on 10 Gutachten (45€) | payment (one-time) | STRIPE_PRICE_ADDON_10 | `price_1TSl3fRXumrtL2n5Gur4BmWL` |
 | Add-on 20 Gutachten (80€) | payment (one-time) | STRIPE_PRICE_ADDON_20 | `price_1TSl4eRXumrtL2n5tIWx0ET8` |
@@ -642,3 +643,148 @@ NETLIFY_ACCESS_TOKEN, NETLIFY_SITE_ID
 ---
 
 *Architektur-Master 03.05.2026 nachmittag · Single Source of Truth · Aktualisiert von Claude Code nach jedem Sprint*
+
+---
+
+## MEGA²⁰-²⁴ Architektur-Erweiterungen (09.05.2026)
+
+### F-Slot-Mapping (UPDATED)
+| F-Slot | Name | Status | Page |
+|---|---|---|---|
+| F-01 | JVEG-Gerichtsrechnung | ✅ | rechnungen.html |
+| F-04 | Kurzstellungnahme | ✅ Mode-A | stellungnahme.html / gutachterliche-stellungnahme.html |
+| F-09 | Kurzgutachten | ✅ Mode-A | (Vorlage) |
+| F-15 | Gerichtsgutachten | ✅ Mode-A | gericht-auftrag.html |
+| F-19 | Wertgutachten | 🚧 NEU (geplant Sep 2026) | wertgutachten.html |
+| F-20 | Beratungsprotokoll | ✅ | beratung.html |
+| F-21 | Baubegleitung-Protokoll | ✅ | baubegleitung.html |
+
+### Triple-Mode-Architektur (MEGA¹⁴-¹⁷)
+```
+lib/workflow-mode-router.js
+  ├─ resolve({auftragOverride, userDefault}) → 'A'|'B'|'C'
+  ├─ effectiveMode({...,isMobile}) → mobile-fallback C → A
+  └─ openForAuftrag(id) → lazy-load Mode-UI
+
+Mode A = Templates (default)
+Mode B = TipTap-Editor
+Mode C = Word-Vorlagen (Mobile-disabled)
+```
+
+### KI-Service-Abstraction (MEGA²²)
+```
+lib/ki-service-interface.js  — abstract base
+  ├─ ki-service-anthropic.js (Claude Sonnet 4.6 Vision)
+  └─ ki-service-openai.js    (GPT-4o Text + Whisper)
+
+ENV-Routing:
+  KI_VISION_PROVIDER = anthropic|openai
+  KI_TEXT_PROVIDER   = openai
+  KI_FALLBACK_MODEL  = gpt-4o-mini
+
+Pflicht-Logging: lib/ki-stats.js → ki_protokoll-Tabelle
+```
+
+### Admin-Cockpit (MEGA²¹+²³ — 8 Tabs)
+| # | Tab | Zweck |
+|---|---|---|
+| 1 | Übersicht | KPI-Grid (User, Revenue, Errors) |
+| 2 | Kunden | User-Tabelle + Login-as-User Quick-Action (MEGA²¹) |
+| 3 | Finanzen | Stripe-KPIs (MRR, Churn, etc.) |
+| 4 | KI & Workflow | KI-Stats + Charts (MEGA²³ Block 4) |
+| 5 | Support | Ticket-Liste |
+| 6 | Health | UptimeRobot + Sentry-Status |
+| 7 | Pipeline | Pilot-SV-Funnel + Conversion (MEGA²¹) |
+| 8 | Settings | System-Info + Feature-Flags + Sprint-Historie (MEGA²³ Block 3) |
+
+### Beweisbeschluss-Foundation (MEGA²²+²³)
+```
+Migration 11 (auftraege.beweisbeschluss_*):
+  - beweisbeschluss_pdf_extrakt   JSONB
+  - beweisbeschluss_pdf_extrakt_version  INT
+  - beweisbeschluss_pdf_uploaded_at      TIMESTAMP
+  - beweisbeschluss_pdf_storage_path     TEXT
+
+Lambda: netlify/functions/parse-beweisbeschluss.js
+  - PDF max 10MB, MIME-Check, Magic-Bytes
+  - pdf-parse → Pattern-Matching (Marcel-C1: kein LLM)
+  - Pattern: Aktenzeichen, Frist, Hauptfragen, Parteien
+  - Storage: sv-files Bucket, fire-and-forget
+
+Frontend: lib/beweisbeschluss-upload.js (UMD)
+  - drag-drop + click-to-pick
+  - validatePdf, fileToBase64, isValidAuftragId
+  - renderPreview (escaped, editable)
+  - collectEdits (DOM read-back)
+  - attach(rootEl, opts) inkl. fetchImpl-Override fuer Tests
+
+Page-Integration: gericht-auftrag.html
+  - Section "📄 Beweisbeschluss-PDF — Pattern-Extraktion"
+  - Auto-Form-Uebernahme nach SV-Edit-and-Save
+  - Fallback: alte text-basierte KI-Section bleibt
+```
+
+### Disclaimer-System (MEGA²¹+²²+²³)
+```
+lib/prova-disclaimer.js (UMD):
+  ProvaDisclaimer.html({variant})  → standard|foto|beweisbeschluss
+  ProvaDisclaimer.tooltipText()    → Plain-Text fuer title=""
+  ProvaDisclaimer.aiBoxHtml({context}) → EU AI Act Box
+
+Wiring (8 Pages mit script-tag):
+  gericht-auftrag, stellungnahme, ortstermin-modus, akte, app, freigabe,
+  gutachterliche-stellungnahme, wertgutachten
+
+Inline-Disclaimer (3 Pages mit class="prova-ki-disclaimer"):
+  gericht-auftrag.html, ortstermin-modus.html, stellungnahme.html
+
+Tooltips (title=""...§407a):
+  Foto-KI-Btn, Diktat-KI-Btn, KI-Assist-Btn
+```
+
+
+---
+
+## MEGA²⁸ Architektur-Update (10.05.2026)
+
+### Edge Functions (Stand 10.05., gesamt ~50)
+
+**MEGA²⁷ Referral-System (5 NEU):**
+- `create-referral.js` — Werber initiiert Empfehlung (HTML-Email aktiviert MEGA²⁷.6)
+- `redeem-referral-code.js` — Code-Lookup für Pricing-Page
+- `check-referral-rewards.js` — Cron 02:00 UTC (30d Hold + Reward + HTML-Email)
+- `stripe-webhook-referral.js` — Multi-Strategy User-Linking
+- `send-referral-reminders.js` — Cron 14:00 UTC Auto-Reminder Tag 5-6
+
+**MEGA²⁸ V3-V3.2 (3 NEU):**
+- `dsgvo-portability.js` — DSGVO Art. 20 JSON-Export (V3.1 KORR-19)
+- `ki-konsistenz-check.js` — §4↔§6 Widerspruchs-Detection (V3.2-W1-I2, GPT-4o Pflicht)
+- `send-welcome-email.js` (Erweitert MEGA²⁷.6 mit IS_REFERRED-Block)
+
+**MEGA²⁸ Lib-Helpers (3 NEU):**
+- `lib/rate-limit-helper.js` — Per-User-Per-Function Rate-Limiting (V3.1 KORR-21)
+- `lib/ki-cost-calc.js` — Cost-Calculation für ki_protokoll-Inserts (V3.2-W1-I4)
+- `lib/sv-eigenleistung-validator.js` — §407a Pre-Send-Validator (V3.2-W1-I3)
+
+### Migrations Status (12 → 15 live)
+
+| # | Name | Status | Sprint |
+|---|---|---|---|
+| 11 | auftraege_beweisbeschluss | ✅ live | MEGA²² |
+| 12 | referrals_system | ✅ live | MEGA²⁷ |
+| 13 | (skipped, stillgelegt) | — | — |
+| 14 | (workspace_member_roles deferred) | — | (AUTH-PERFEKT 2.0) |
+| 15 | auftraege.is_demo | ✅ live | MEGA²⁸ V3.1 |
+
+### KI-Modell-Compliance (post-V3.2-W1-I1)
+
+| Action | Modell | Compliance |
+|---|---|---|
+| `pruefe_fachurteil` | gpt-4o ✅ | Regel 14 erfüllt (vorher mini, gefixt) |
+| `fachurteil_entwurf` | gpt-4o (default) ✅ | Regel 14 erfüllt (vorher mini, gefixt) |
+| `assist_inline` | gpt-4o ✅ | Regel 14 erfüllt |
+| `freitext` | mini default | User-Override-fähig, OK für S1 |
+| `support_chat` | mini | OK (S1 mechanisch, Latenz wichtig) |
+| Foto-Vision | claude-sonnet-4-6 | KI_VISION_PROVIDER=anthropic |
+| Whisper | whisper-1 | OK |
+

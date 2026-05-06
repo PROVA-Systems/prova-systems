@@ -1,6 +1,8 @@
 const { getCorsHeaders, corsOptionsResponse } = require('./lib/cors-helper');
 const { requireAuth } = require('./lib/jwt-middleware');
 const { writeDual, getSupabase } = require('./lib/storage-router');
+const RateLimit = require('./lib/rate-limit-user'); // MEGA²⁸ W6-I1: User-Rate-Limit
+const { withSentry } = require('./lib/sentry-wrap'); // MEGA²⁸ W7-I2: Sentry-Wrap manual
 // ══════════════════════════════════════════════════
 // PROVA Systems — KI-Statistik Sync
 // MEGA⁷ U1: Storage-Router (dual-write Airtable + Supabase ki_protokoll).
@@ -30,7 +32,7 @@ const POOL_FIELDS = {
   datum:      'fld7z7wRgkHNUyjDf'
 };
 
-exports.handler = requireAuth(async (event, context) => {
+exports.handler = withSentry(requireAuth(async (event, context) => {
   const headers = {
     'Access-Control-Allow-Origin': process.env.URL || 'https://prova-systems.de',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization',
@@ -38,6 +40,13 @@ exports.handler = requireAuth(async (event, context) => {
   };
 
   if (event.httpMethod !== 'POST') return { statusCode: 405, headers, body: JSON.stringify({ error: 'Method Not Allowed' }) };
+
+  // MEGA²⁸ W6-I1: User-Rate-Limit (60/60s — KI-Statistik-Aggregation)
+  const rl = RateLimit.check(context.userEmail, 60, 60, { event: event, functionName: 'ki-statistik' });
+  if (!rl.allowed) {
+    return { statusCode: 429, headers: { ...headers, 'Retry-After': String(rl.retryAfter) },
+      body: JSON.stringify({ error: 'Rate-Limit erreicht. Bitte ' + rl.retryAfter + 's warten.' }) };
+  }
 
   const PAT = process.env.AIRTABLE_PAT;
   if (!PAT) return { statusCode: 500, headers, body: JSON.stringify({ error: 'AIRTABLE_PAT nicht konfiguriert' }) };
@@ -111,7 +120,7 @@ exports.handler = requireAuth(async (event, context) => {
     console.error('ki-statistik error:', err);
     return { statusCode: 500, headers, body: JSON.stringify({ error: err.message }) };
   }
-});
+}), { functionName: 'ki-statistik' });
 
 async function airtableCreate(pat, tableId, fields) {
   try {

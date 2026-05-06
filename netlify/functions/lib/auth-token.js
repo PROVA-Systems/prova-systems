@@ -34,10 +34,12 @@ const crypto = require('crypto');
 const ALG = 'sha256';
 
 function getSecret() {
-  const s = process.env.AUTH_HMAC_SECRET;
+  // MEGA²⁸ W6P2-I5: Defensiv-Migration zu PROVA-Prefix (Regel 35).
+  // Backwards-Compat: alte ENV gewinnt wenn neue nicht gesetzt ist.
+  const s = process.env.PROVA_AUTH_HMAC_SECRET || process.env.AUTH_HMAC_SECRET;
   if (!s || s.length < 32) {
     // Server-misconfig — Caller sollte das als 500 abbilden.
-    const err = new Error('AUTH_HMAC_SECRET fehlt oder zu kurz');
+    const err = new Error('PROVA_AUTH_HMAC_SECRET (oder Legacy AUTH_HMAC_SECRET) fehlt oder zu kurz');
     err.code = 'NO_AUTH_SECRET';
     throw err;
   }

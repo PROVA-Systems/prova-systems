@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>{{ title | default: "Mode C Dokument" }}</title>
+<!--
+  PROVA Systems · MODE_C_GENERIC · Liquid-Template fuer PDFMonkey
+  Version 1.0 — MEGA¹⁸ W69 (2026-05-08)
+
+  Goldstandard-Backup. Identisches Liquid-Template ist in PDFMonkey-UI
+  unter Identifier "MODE_C_GENERIC" angelegt (Marcel-Pflicht).
+
+  Liquid-Variablen (alle optional ausser html_content):
+    title           — Document-Title (default: "Mode C Dokument")
+    html_content    — User-HTML (interpoliert mit User-Mapping-Werten)
+    footer_text     — Footer-Zusatztext (z.B. "Aktenzeichen XYZ")
+    custom_css      — optional User-CSS (wird nach Default-CSS injected)
+    header_logo     — optional URL/data-URL fuer Logo (default: PROVA-Wortmarke)
+    show_ai_box     — bool, EU AI Act Box anzeigen (default false)
+    ai_box_text     — Text fuer EU AI Act Box (falls show_ai_box=true)
+
+  Design-System v1.0 strikt:
+    - Inter (UI) + JetBrains Mono (Mono)
+    - #1a3a6b primary, #3b82f6 accent
+    - A4, 20mm Margins
+    - Header ab Seite 2, Footer ab Seite 1
+    - DSGVO-Hinweis im Footer
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --primary: #1a3a6b;
+  --accent: #3b82f6;
+  --muted: #64748b;
+  --text: #0f172a;
+  --light: #f1f5f9;
+  --lighter: #f8fafc;
+  --border: #e2e8f0;
+  --success: #059669;
+  --warning: #d97706;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { color-scheme: light; }
+body {
+  font-family: 'Inter', sans-serif;
+  font-size: 10.5pt;
+  line-height: 1.55;
+  color: var(--text);
+  background: white;
+}
+
+@page { size: A4; margin: 20mm 20mm 22mm 20mm; }
+@page {
+  @top-left {
+    content: "{{ title | default: 'Mode C Dokument' }}";
+    font-family: 'Inter', sans-serif;
+    font-size: 8pt;
+    color: #64748b;
+    padding-top: 10mm;
+  }
+  @top-right {
+    content: "PROVA Systems · ö.b.u.v. SV";
+    font-family: 'Inter', sans-serif;
+    font-size: 8pt;
+    color: #1a3a6b;
+    font-weight: 600;
+    padding-top: 10mm;
+  }
+  @bottom-left {
+    content: "{{ footer_text | default: '' }}";
+    font-family: 'Inter', sans-serif;
+    font-size: 8pt;
+    color: #64748b;
+    padding-bottom: 10mm;
+  }
+  @bottom-right {
+    content: "Seite " counter(page) " / " counter(pages);
+    font-family: 'Inter', sans-serif;
+    font-size: 8pt;
+    color: #64748b;
+    padding-bottom: 10mm;
+  }
+}
+@page :first {
+  @top-left { content: ""; }
+  @top-right { content: ""; }
+}
+
+/* ─── Cover-Header (nur Seite 1) ─── */
+.cover-header {
+  padding: 0 0 8mm;
+  border-bottom: 2px solid var(--primary);
+  margin-bottom: 8mm;
+}
+.cover-kategorie {
+  font-size: 9.5pt;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 500;
+  margin-bottom: 4mm;
+}
+.cover-title {
+  font-size: 26pt;
+  font-weight: 700;
+  line-height: 1.15;
+  color: var(--primary);
+  margin-bottom: 3mm;
+  letter-spacing: -0.02em;
+}
+.cover-meta {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2mm 8mm;
+  margin: 4mm 0 6mm;
+  padding: 5mm 6mm;
+  background: var(--lighter);
+  border-radius: 3px;
+  border: 1px solid var(--border);
+}
+.cover-meta-item { display: flex; flex-direction: column; gap: 0.5mm; padding: 1.5mm 0; }
+.cover-meta-item .label {
+  font-size: 8pt;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 500;
+}
+.cover-meta-item .value { font-size: 10.5pt; color: var(--text); font-weight: 500; }
+.cover-meta-item .value.mono { font-family: 'JetBrains Mono', monospace; font-size: 10pt; }
+
+/* ─── User-Content-Wrapper ─── */
+.user-content {
+  font-size: 10.5pt;
+  line-height: 1.65;
+  color: var(--text);
+}
+.user-content h1, .user-content h2, .user-content h3 {
+  color: var(--primary);
+  font-weight: 600;
+  margin: 5mm 0 3mm;
+  letter-spacing: -0.01em;
+}
+.user-content h1 { font-size: 18pt; }
+.user-content h2 { font-size: 14pt; padding-bottom: 2mm; border-bottom: 1px solid var(--border); }
+.user-content h3 { font-size: 12pt; }
+.user-content p { margin: 2mm 0 3mm; }
+.user-content table { border-collapse: collapse; width: 100%; margin: 3mm 0; font-size: 10pt; }
+.user-content th, .user-content td {
+  padding: 2mm 3mm;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+.user-content th {
+  background: var(--light);
+  color: var(--muted);
+  font-weight: 500;
+  text-transform: uppercase;
+  font-size: 9pt;
+  letter-spacing: 0.05em;
+}
+.user-content ul, .user-content ol { margin: 2mm 0 3mm 6mm; }
+.user-content li { margin-bottom: 1mm; }
+.user-content blockquote {
+  margin: 3mm 0;
+  padding: 3mm 5mm;
+  border-left: 3px solid var(--accent);
+  background: var(--lighter);
+  font-style: italic;
+}
+.user-content code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9.5pt;
+  background: var(--light);
+  padding: 0.5mm 1.5mm;
+  border-radius: 2px;
+}
+.user-content pre {
+  font-family: 'JetBrains Mono', monospace;
+  background: var(--light);
+  padding: 3mm 4mm;
+  border-radius: 3px;
+  font-size: 9.5pt;
+  overflow-x: auto;
+}
+.user-content a { color: var(--accent); text-decoration: underline; }
+
+/* ─── EU AI Act Box (optional) ─── */
+.ai-box {
+  margin: 6mm 0;
+  padding: 5mm 6mm;
+  background: var(--lighter);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: 3px;
+  font-size: 9.5pt;
+  line-height: 1.5;
+}
+.ai-box .marker {
+  display: inline-block;
+  padding: 1mm 3mm;
+  background: var(--accent);
+  color: white;
+  font-size: 7.5pt;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  border-radius: 2px;
+  margin-bottom: 2mm;
+}
+
+/* ─── DSGVO-Footer (nur Seite letzte) ─── */
+.dsgvo-footer {
+  margin-top: 10mm;
+  padding-top: 4mm;
+  border-top: 1px solid var(--border);
+  font-size: 8pt;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+{{ custom_css }}
+</style>
+</head>
+<body>
+
+<div class="cover-header">
+  <div class="cover-kategorie">PROVA Systems · Mode C Dokument</div>
+  <h1 class="cover-title">{{ title | default: "Dokument" }}</h1>
+</div>
+
+{% if cover_meta_az or cover_meta_datum or cover_meta_auftraggeber %}
+<div class="cover-meta">
+  {% if cover_meta_az %}<div class="cover-meta-item"><div class="label">Aktenzeichen</div><div class="value mono">{{ cover_meta_az }}</div></div>{% endif %}
+  {% if cover_meta_datum %}<div class="cover-meta-item"><div class="label">Datum</div><div class="value mono">{{ cover_meta_datum }}</div></div>{% endif %}
+  {% if cover_meta_auftraggeber %}<div class="cover-meta-item" style="grid-column:1 / -1"><div class="label">Auftraggeber</div><div class="value">{{ cover_meta_auftraggeber }}</div></div>{% endif %}
+</div>
+{% endif %}
+
+<div class="user-content">
+  {{ html_content }}
+</div>
+
+{% if show_ai_box %}
+<div class="ai-box">
+  <div class="marker">EU AI Act Hinweis</div>
+  {{ ai_box_text | default: "Dieses Dokument wurde mit Unterstuetzung KI-gestuetzter Strukturhilfen vom Sachverstaendigen erstellt. Der Sachverstaendige ist alleinverantwortlich fuer alle fachlichen Bewertungen (§ 407a Abs. 3 ZPO, EU AI Act Art. 50)." }}
+</div>
+{% endif %}
+
+<div class="dsgvo-footer">
+  Dieses Dokument enthaelt personenbezogene Daten i.S.d. DSGVO. Vertrauliche Behandlung pflicht.
+  Erstellt mit PROVA Systems &mdash; KI-natives B2B-SaaS fuer ö.b.u.v. Bausachverstaendige.
+</div>
+
+</body>
+</html>

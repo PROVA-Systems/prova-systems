@@ -4,18 +4,20 @@
 // FIX #006: support-Webhook als env-Variable (kein Hardcode-Fallback)
 // ══════════════════════════════════════════════════════════════════════════════
 
-// WICHTIG: Alle Webhooks als Netlify Env-Variablen setzen:
-// MAKE_WEBHOOK_WILLKOMMEN, MAKE_WEBHOOK_TRIAL, MAKE_WEBHOOK_KAUF, MAKE_WEBHOOK_SUPPORT
+// MEGA¹⁵.5 W39: Konsolidierter Helper (MAKE_WEBHOOKS-JSON statt einzelne ENVs)
+// Backwards-Compat: liest MAKE_WEBHOOK_<KEY>-Legacy-ENVs als Fallback
 const { requireAuth } = require('./lib/jwt-middleware');
+const { withSentry } = require('./lib/sentry-wrap'); // MEGA²⁸ W6P2-I2: Sentry-Wrap
+const { getMakeWebhook } = require('./lib/make-webhooks');
 
 const WEBHOOKS = {
-  willkommen:         process.env.MAKE_WEBHOOK_WILLKOMMEN || '',
-  trial_erinnerung:   process.env.MAKE_WEBHOOK_TRIAL      || '',
-  kauf_bestaetigung:  process.env.MAKE_WEBHOOK_KAUF       || '',
-  support:            process.env.MAKE_WEBHOOK_SUPPORT    || '',  // FIX: kein Hardcode-Fallback
+  willkommen:         getMakeWebhook('willkommen') || '',
+  trial_erinnerung:   getMakeWebhook('trial')      || '',
+  kauf_bestaetigung:  getMakeWebhook('kauf')       || '',
+  support:            getMakeWebhook('support')    || '',
 };
 
-exports.handler = requireAuth(async (event, context) => {
+exports.handler = withSentry(requireAuth(async (event, context) => {
   const allowedOrigin = process.env.URL || 'https://prova-systems.de'; // FIX: kein Wildcard
   const headers = {
     'Access-Control-Allow-Origin':  allowedOrigin,
@@ -82,4 +84,4 @@ exports.handler = requireAuth(async (event, context) => {
   } catch (err) {
     return { statusCode: 500, headers, body: JSON.stringify({ error: err.message }) };
   }
-});
+}), { functionName: 'emails' });

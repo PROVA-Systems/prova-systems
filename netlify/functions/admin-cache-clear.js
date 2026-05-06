@@ -5,9 +5,10 @@
  */
 'use strict';
 const { getCorsHeaders, corsOptionsResponse } = require('./lib/cors-helper');
+const { withSentry } = require('./lib/sentry-wrap'); // MEGA²⁸ W6P2-I2: Sentry-Wrap
 const { clearAccessCache } = require('./lib/prova-subscription');
 
-exports.handler = async function(event, context) {
+exports.handler = withSentry(async function(event, context) {
   if (event.httpMethod === 'OPTIONS') return corsOptionsResponse(event);
   if (event.httpMethod !== 'POST') return { statusCode: 405, body: 'Method Not Allowed' };
 
@@ -28,4 +29,4 @@ exports.handler = async function(event, context) {
     headers: getCorsHeaders(event),
     body: JSON.stringify({ ok: true, cleared: email })
   };
-};
+}, { functionName: 'admin-cache-clear' });

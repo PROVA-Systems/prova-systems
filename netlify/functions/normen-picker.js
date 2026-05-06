@@ -17,6 +17,8 @@
 
 const FW = require('./lib/prova-fachwissen.js');
 const { getCorsHeaders } = require('./lib/cors-helper');
+const { withSentry } = require('./lib/sentry-wrap'); // MEGA²⁸ W5-I6: Sentry-Error-Tracking
+const RateLimitIp = require('./lib/rate-limit-ip'); // MEGA²⁸ W6-I1: KI-Cost-Schutz (public-ähnlich)
 
 // S6 Phase 1.9: dynamische CORS-Headers per Request (vorher hardcoded
 // auf prova-systems.de — App-Subdomain wurde geblockt). Audit-8 M-03.
@@ -106,7 +108,7 @@ async function handleSmart(schadensart, kontext, max, apiKey) {
       method: 'POST',
       headers: { 'Authorization': 'Bearer ' + apiKey, 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'gpt-5.4-mini', // MEGA²⁸ W3-I0: gpt-4o-mini deprecated → gpt-5.4-mini (S1 Norm-Klassifikation)
         temperature: 0.1,
         max_tokens: 200,
         messages: [
@@ -225,10 +227,17 @@ async function handleFlowB(zweck, objektart, max) {
   };
 }
 
-exports.handler = async function(event) {
+exports.handler = withSentry(async function(event) {
   const CORS = corsBase(event);
   if (event.httpMethod === 'OPTIONS') {
     return { statusCode: 204, headers: CORS, body: '' };
+  }
+
+  // MEGA²⁸ W6-I1: KI-Cost-Schutz per IP (60/60s — public-ähnlich, KI-Klassifikation)
+  const rl = RateLimitIp.check(event, 60, 60, { functionName: 'normen-picker' });
+  if (!rl.allowed) {
+    return { statusCode: 429, headers: { ...CORS, 'Retry-After': String(rl.retryAfter) },
+      body: JSON.stringify({ error: 'Rate-Limit erreicht. Bitte ' + rl.retryAfter + 's warten.' }) };
   }
 
   try {
@@ -285,4 +294,4 @@ exports.handler = async function(event) {
       body: JSON.stringify({ mode: 'error', normen: [], total: 0, error: err.message })
     };
   }
-};
+}, { functionName: 'normen-picker' });

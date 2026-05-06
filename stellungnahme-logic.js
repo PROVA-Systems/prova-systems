@@ -207,7 +207,9 @@ function toggleKIBox() {
 // Ergänzungs-Diktat
 function starteErgaenzungsDiktat() {
   if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
-    alert('Spracherkennung wird von Ihrem Browser nicht unterstützt. Bitte verwenden Sie Chrome.');
+    // MEGA²³ Block 5: Toast-Migration W5 (ProvaUI primary, provaAlert fallback W16-compat)
+    if (window.ProvaUI && window.ProvaUI.toast) window.ProvaUI.toast('Spracherkennung wird von Ihrem Browser nicht unterstützt. Bitte verwenden Sie Chrome.', 'error');
+    else (window.provaAlert || alert)('Spracherkennung wird von Ihrem Browser nicht unterstützt. Bitte verwenden Sie Chrome.', 'error');
     return;
   }
 
@@ -956,7 +958,7 @@ AUFGABE: Schreibe einen professionellen §6-Denkanstoß der AUSSCHLIESSLICH auf 
     const res = await (window.PROVA_PSEUDO_SEND ? window.PROVA_PSEUDO_SEND.fetch : fetch)('/.netlify/functions/ki-proxy', {
       method:'POST', headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'gpt-5.4-mini',
         max_tokens: 600,
         messages:[
           {role:'system', content: systemPrompt},
@@ -970,10 +972,18 @@ AUFGABE: Schreibe einen professionellen §6-Denkanstoß der AUSSCHLIESSLICH auf 
       ? d.content[0].text
       : (d.choices&&d.choices[0] ? d.choices[0].message.content : '');
     if(!txt) throw new Error('Kein Text');
-    document.getElementById('kiInspText').textContent = txt;
-    document.getElementById('kiInspText').style.display = 'block';
+    const outEl = document.getElementById('kiInspText');
+    outEl.textContent = txt;
+    outEl.style.display = 'block';
     document.getElementById('kiInspRefresh').style.display = 'inline-flex';
     localStorage.setItem('prova_ki_stellungnahme_vorschlag', txt);
+    // MEGA¹² W13: Confidence-Badge + Fallback-Badge an Output-Container
+    if (window.ProvaConfidence) {
+      window.ProvaConfidence.applyToResponse(d, outEl, { requireKonjunktivII: true, expectedMinTokens: 100 });
+    }
+    if (window.ProvaKIFallbackBadge) {
+      window.ProvaKIFallbackBadge.applyToResponse(d, outEl);
+    }
   } catch(e) {
     document.getElementById('kiInspText').innerHTML =
       '<span style="color:var(--red);">KI nicht erreichbar ('+e.message+'). Bitte erneut versuchen.</span>';
@@ -997,7 +1007,7 @@ async function ausformulieren() {
     const res = await (window.PROVA_PSEUDO_SEND ? window.PROVA_PSEUDO_SEND.fetch : fetch)('/.netlify/functions/ki-proxy', {
       method:'POST', headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
-        model:'gpt-4o-mini',
+        model:'gpt-5.4-mini',
         max_tokens:700,
         messages:[
           {role:'system', content:`Du bist ein öffentlich bestellter und vereidigter Sachverständiger für Schäden an Gebäuden mit 30 Jahren Berufserfahrung. Du formulierst §6 Fachurteile für Gutachten.
@@ -1086,7 +1096,7 @@ async function ladeNormen() {
     const res = await (window.PROVA_PSEUDO_SEND ? window.PROVA_PSEUDO_SEND.fetch : fetch)('/.netlify/functions/ki-proxy', {
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({
-        model:'gpt-4o-mini',
+        model:'gpt-5.4-mini',
         max_tokens:200,
         messages:[
           {role:'system', content:'Du bist ein erfahrener Bausachverständiger. Antworte NUR mit einem JSON-Array der Norm-Bezeichnungen, z.B. ["DIN 4108-2","WTA 6-1-01/D"]. Keine Erklärungen, kein Markdown.'},

@@ -1,4 +1,5 @@
 const { getCorsHeaders, corsOptionsResponse } = require('./lib/cors-helper');
+const { withSentry } = require('./lib/sentry-wrap'); // MEGA²⁸ W6P2-I2: Sentry-Wrap
 // MEGA-SKALIERUNG M2: zod-Schema-Validation
 const { parseTeamInterest } = require('../../lib/schemas/team-interest');
 // MEGA⁷ U1: Storage-Router (dual-write Airtable + Supabase team_interesse-Lead)
@@ -20,15 +21,16 @@ const HEADERS = {
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 
-// Make.com L4/L5 Webhooks (nur via ENV; keine Fallback-URLs im Repo)
-const MAKE_L4_WEBHOOK = process.env.MAKE_WEBHOOK_L4 || '';
-const MAKE_L5_WEBHOOK = process.env.MAKE_WEBHOOK_L5 || '';
+// MEGA¹⁵.5 W39: Konsolidierter Helper (Backwards-Compat zu MAKE_WEBHOOK_L4/L5)
+const { getMakeWebhook } = require('./lib/make-webhooks');
+const MAKE_L4_WEBHOOK = getMakeWebhook('l4') || '';
+const MAKE_L5_WEBHOOK = getMakeWebhook('l5') || '';
 
 // Airtable
 const AT_BASE  = 'appJ7bLlAHZoxENWE';
 const AT_TABLE = 'TEAM_INTERESSE';
 
-exports.handler = async (event) => {
+exports.handler = withSentry(async (event) => {
   // ── Rate limit (public endpoint) ──
   const clientIP = (event.headers && (event.headers['x-forwarded-for'] || event.headers['x-nf-client-connection-ip']))
     ? String((event.headers['x-forwarded-for'] || event.headers['x-nf-client-connection-ip'])).split(',')[0].trim()
@@ -132,7 +134,8 @@ exports.handler = async (event) => {
       headers: {
         'Content-Type': 'application/json',
         // einfacher Abuse-Schutz (Make muss dieses Secret prüfen)
-        ...(process.env.TEAM_INTEREST_SECRET ? { 'X-PROVA-Secret': process.env.TEAM_INTEREST_SECRET } : {})
+        // MEGA²⁸ W7-I1: defensive PROVA-Prefix-Migration
+        ...((process.env.PROVA_TEAM_INTEREST_SECRET || process.env.TEAM_INTEREST_SECRET) ? { 'X-PROVA-Secret': (process.env.PROVA_TEAM_INTEREST_SECRET || process.env.TEAM_INTEREST_SECRET) } : {})
       },
       body: JSON.stringify({
         name:         name || 'Interessent',
@@ -177,4 +180,4 @@ exports.handler = async (event) => {
       airtable_id: airtableId,
     }),
   };
-};
+}, { functionName: 'team-interest' });

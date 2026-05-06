@@ -32,8 +32,8 @@ Workflow: Auftrag → Ortstermin → Diktat → KI-Strukturhilfe → §6 Fachurt
 
 | Tier | Preis | Aufträge | Notiz |
 |---|---|---|---|
-| **Solo** | 149 €/Monat | 30 pro Monat | Standard für Einzel-SVs |
-| **Team** | 279 €/Monat | unbegrenzt | Mehrere User, gemeinsame Akten |
+| **Solo** | 179 €/Monat | 30 pro Monat | Standard für Einzel-SVs (seit 09.05.2026) |
+| **Team** | 379 €/Monat | unbegrenzt | Mehrere User, gemeinsame Akten (seit 09.05.2026) |
 | **Add-on 5F** | (im Account) | +5 zusätzlich | `price_1TJLnv8` (Stripe) |
 | **Add-on 10F** | (im Account) | +10 zusätzlich | `price_1TJLpG8` (Stripe) |
 | **Founding Member** | 99 €/Monat lifetime | wie Solo | Erste 10 Pilotkunden, Coupon `FOUNDING-99` |
@@ -330,3 +330,62 @@ Statische Mini-Sites unter `prova-systems.de/tools/*` — SEO + Lead-Magnete, ei
 ---
 
 *Vision-Master 01.05.2026 abend · Single Source of Truth · Aktualisiert von Claude Code nach jedem Sprint*
+
+---
+
+## MEGA²⁰-²⁴ Pilot-Hardening Updates (09.05.2026)
+
+### Pricing-Tiers (FINAL nach MEGA²¹)
+| Tier | Preis | Stripe Price-ID | Coming-Soon |
+|---|---|---|---|
+| STARTER | 89€/mo | price_1TTUQlRXumrtL2n5jPmG1IEY | Juni 2026 |
+| **SOLO** | **179€/mo** | **price_1TSjMZRXumrtL2n5fgToRwyr** | ✅ Pilot |
+| TEAM | 379€/mo | price_1TSjNXRXumrtL2n56c6emN2k | Juli 2026 |
+| **Founding-Member** | **125€/mo lifetime** | Coupon "FOUNDING-30" | ✅ Pilot |
+
+### KI-Stack (FINAL nach MEGA²²)
+- **Vision:** Claude Sonnet 4.6 (Anthropic) — Foto-Analyse, Schaden-Erkennung
+- **Text:** GPT-4o (OpenAI) — Konjunktiv-II, Halluzinations-Check, Strukturierung
+- **Audio:** Whisper-1 (OpenAI) — Diktat-Transkription
+- **Fallback:** GPT-4o-mini (S1 Mechanical)
+- **ENV-Switch:** `KI_VISION_PROVIDER=anthropic`, `KI_TEXT_PROVIDER=openai`
+
+### Triple-Mode-Architektur
+- **Mode A:** PROVA-Standard (Templates, F-04/F-09/F-15/F-19) — Default
+- **Mode B:** PROVA+Editor (TipTap) — auf Klick
+- **Mode C:** Eigene Vorlagen (Word .docx) — auf Klick, Mobile-Fallback auf A
+- **Routing:** lib/workflow-mode-router.js (auftragOverride > userDefault > A-Fallback)
+
+### Beweisbeschluss-Foundation (NEU MEGA²²+²³)
+- Migration 11: auftraege.beweisbeschluss_pdf_extrakt JSONB
+- Lambda: parse-beweisbeschluss.js (Pattern-Matching only, kein LLM, Marcel-C1)
+- Frontend: lib/beweisbeschluss-upload.js (Block 1 MEGA²³)
+- Page: gericht-auftrag.html (integriert)
+
+### Roadmap nach Pilot
+- **Juni 2026:** STARTER 89€ Tier offiziell launchen (für kleine SVs ≤ 5 Fälle/Monat)
+- **Juli 2026:** TEAM 379€ Tier launchen (für Büros ≥ 3 Mitarbeiter)
+- **August 2026:** Beweisfragen-Extraktor mit LLM (Tranche 2 nach Marcel-Validation Pattern-Matching)
+- **September 2026:** F-19 Wertgutachten Foundation (Schäden + Bauteile + Kostenermittlung)
+
+
+---
+
+## Update 10.05.2026 — MEGA²⁷ Referral-System + MEGA²⁸ Frontend-Complete
+
+### Referral-System (MEGA²⁷ live)
+- Founding-Member empfehlen Kollegen → 50€ Rabatt für Geworbenen + 1 Monat gratis für Werber nach 30 Tagen
+- 5 Edge Functions, 3 HTML-Email-Templates, 2 Cron-Schedules (02:00 + 14:00 UTC)
+- Migration 12 live, Stripe-Coupons FRIEND-50 + WERBER-MONAT-FREI
+
+### MEGA²⁸-Updates
+- Pricing: Solo 179€ / Team 379€ / Founding 99€ (Coupon FOUNDING-99)
+- §407a Pre-Send-Validator (V3.2-W1-I3)
+- KI-Konsistenz-Check §4↔§6 mit GPT-4o (V3.2-W1-I2)
+- DSGVO Art. 20 Portability via JSON-Export
+- KI-Cost-Tracking-Lib für `ki_protokoll`-Inserts
+
+### Modell-Compliance (Regel 14 strikt enforced ab MEGA²⁸ V3.2-W1-I1)
+- Konjunktiv-II-Pfade: ALLE auf gpt-4o (vorher gpt-4o-mini-Verstöße korrigiert)
+- gpt-4o-mini bleibt für S1-mechanisch (support_chat, normen-picker)
+

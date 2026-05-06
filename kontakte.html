@@ -526,6 +526,20 @@
   <script src="sw-register.js" defer></script>
   <script src="auto-save.js" defer></script>
   <script src="global-search.js" defer></script>
+  <!-- MEGA¹⁴ W24: Pull-to-Refresh in kontakte -->
+  <script src="/lib/pull-to-refresh.js" defer></script>
+  <script defer>
+    document.addEventListener('DOMContentLoaded', function () {
+      if (!('ontouchstart' in window) || !window.ProvaPullToRefresh) return;
+      var grid = document.querySelector('.kontakte-grid, #kontakte-list, [data-list="kontakte"]');
+      if (grid) {
+        window.ProvaPullToRefresh.bind(grid, async function () {
+          if (typeof ladeKontakte === 'function') await ladeKontakte();
+          else window.location.reload();
+        });
+      }
+    });
+  </script>
   <script src="auftragstyp.js"></script>
   <script src="kontakte-logic.js" defer></script>
 <script src="prova-context.js" defer></script>
