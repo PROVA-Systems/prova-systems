@@ -68,9 +68,26 @@ function pseudonymizeBody(obj, depth) {
 }
 
 /**
+ * MEGA²⁸ W1-I1 — Modell-Compliance-Audit (CLAUDE.md Regel 14)
+ *
+ * Pro Action dokumentierte Modell-Wahl:
+ *
+ * +--------------------------+----------+------------------------------------------+
+ * | Action                   | Model    | Begründung                                |
+ * +--------------------------+----------+------------------------------------------+
+ * | fachurteil_entwurf       | gpt-4o   | §6 SV-Hilfe → Konjunktiv-II-Pflicht (R14) |
+ * | qualitaetspruefung       | gpt-4o   | Konjunktiv-II-Check Pflicht (R14)         |
+ * | assist_inline            | gpt-4o   | S3 Inhaltlich, Konjunktiv-II              |
+ * | freitext                 | mini def | User-Override-fähig, S1-mechanisch OK     |
+ * | support_chat (line 589)  | mini     | S1 mechanisch, Latenz wichtig             |
+ * | normen-picker (extern)   | mini     | S1 Norm-Vorschlag, Latenz wichtig         |
+ * +--------------------------+----------+------------------------------------------+
+ *
  * Wählt das Modell basierend auf der User-Präferenz (aus Body) und der Aufgabe.
- * 'praezise' → gpt-4o für schwere Analysen, sonst gpt-4o-mini.
- * Schnelle Aufgaben (qualitaetspruefung, support_chat) bleiben immer mini — Latenz wichtig.
+ * 'praezise' → gpt-4o für schwere Analysen, sonst Default.
+ * Schnelle Aufgaben (support_chat) bleiben immer mini — Latenz wichtig.
+ *
+ * Tests: tests/ki-proxy/model-compliance.test.js
  */
 function chooseModel(body, aufgabe, defaultModel) {
   const modus = body.ki_analyse_modus === 'praezise' ? 'praezise' : 'schnell';
@@ -241,7 +258,8 @@ WICHTIG: Analysiere AUSSCHLIESSLICH was im Diktat steht. Leere Arrays wenn zu we
   // Telemetrie im Response-Header (optional, hilft beim Monitoring)
   console.log(`[ki-proxy:fachurteil] Fachwissen-Quelle: ${fachwissenSource}`);
 
-  const result = await callOpenAI({ model: chooseModel(body, 'fachurteil_entwurf', 'gpt-4o-mini'), max_tokens: 1200, messages: [{ role: 'system', content: appendUserContext(systemPromptFinal, body.user_kontext) }, { role: 'user', content: userPrompt }] }, apiKey);
+  // MEGA²⁸ W1-I1: Default gpt-4o (war mini) — §6 Fachurteil-Entwurf braucht Konjunktiv-II-Qualität (Regel 14).
+  const result = await callOpenAI({ model: chooseModel(body, 'fachurteil_entwurf', 'gpt-4o'), max_tokens: 1200, messages: [{ role: 'system', content: appendUserContext(systemPromptFinal, body.user_kontext) }, { role: 'user', content: userPrompt }] }, apiKey);
   const rawText = result.choices?.[0]?.message?.content || '';
   let parsed = {};
   try {
@@ -257,7 +275,9 @@ async function handleQualitaetspruefung(body, apiKey) {
   const { gutachten_text = '', beweisfragen = '' } = body;
   if (!gutachten_text || gutachten_text.length < 100) return jsonResponse({ pruefpunkte: [], gesamt_bewertung: 'TEXT_ZU_KURZ' });
 
-  const result = await callOpenAI({ model: 'gpt-4o-mini', max_tokens: 600, messages: [
+  // MEGA²⁸ W1-I1: gpt-4o-mini → gpt-4o (CLAUDE.md Regel 14 — Konjunktiv-II-Check Pflicht-Modell)
+  // Begründung: -mini scheitert reproduzierbar an deutscher Konjunktiv-II-Grammatik.
+  const result = await callOpenAI({ model: 'gpt-4o', max_tokens: 600, messages: [
     { role: 'system', content: appendUserContext('Du bist ein Oberlandesgericht-Sachverständiger. Prüfe §6-Fachurteilstexte auf: 1. Konjunktiv II korrekt? 2. Keine unzulässigen Indikativ-Kausalaussagen? 3. Beweislast korrekt? 4. Normverweise vorhanden? 5. Sanierungsempfehlung konkret? ANTWORT NUR JSON: {"pruefpunkte":[{"typ":"ok|warnung|fehler","text":"Beschreibung"}],"konjunktiv_ok":true,"gesamt_bewertung":"gut|verbesserungswuerdig|ueberarbeiten"}', body.user_kontext) },
     { role: 'user', content: 'Prüfe:\n\n' + gutachten_text.substring(0, 2000) + (beweisfragen ? '\n\nBeweisfragen:\n' + beweisfragen : '') }
   ] }, apiKey);
