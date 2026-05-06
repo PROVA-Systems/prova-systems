@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v295';   // MEGA²⁸ V3.2-W3 (in progress): cluster-cleanup (KORR-4) + cloudflare-mailto-fix (KORR-25) + sentry-audit + pdf-proxy-wrap (KORR-20) + bescheinigungen.html (KORR-9) + 4 PII-pseudo-fixes (W3-I7 audit)
+const CACHE_VERSION = 'prova-v295';   // MEGA²⁸ V3.2-W3: cluster-cleanup + cloudflare-mailto-fix + sentry-audit + bescheinigungen + 4 PII-pseudo-fixes + ki-disclosure-partial + inline-css-extract (stellungnahme/app, -50%/-28%)
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
@@ -85,6 +85,8 @@ const APP_SHELL = [
   '/prova-fetch-auth.js',
   '/prova-notifications.js',
   '/page-template.css',
+  '/stellungnahme.css',                 // MEGA²⁸ V3.2-W3-I4 KORR-24: Inline-CSS Extract
+  '/app.css',                           // MEGA²⁸ V3.2-W3-I4 KORR-24: Inline-CSS Extract
   '/gutachterliche-stellungnahme.html',
   '/gutachterliche-stellungnahme-logic.js',
   '/onboarding-supabase-logic.js',
