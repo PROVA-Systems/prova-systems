@@ -13,6 +13,7 @@
 const { withSentry } = require('./lib/sentry-wrap');
 const { getCorsHeaders } = require('./lib/cors-helper');
 const { getSupabase } = require('./lib/storage-router');
+const RateLimitIp = require('./lib/rate-limit-ip'); // MEGA²⁸ W5-I2: DDoS-Schutz für Public-Code-Lookup
 
 function json(event, statusCode, body) {
   return {
@@ -30,6 +31,19 @@ exports.handler = withSentry(async function (event) {
   }
   if (event.httpMethod !== 'GET') {
     return json(event, 405, { error: 'Method Not Allowed' });
+  }
+
+  // MEGA²⁸ W5-I2: Rate-Limit pro IP — Code-Fishing-Schutz (10/min ist großzügig
+  // für legitime "Code abgelaufen → neu generieren"-Flows, hart genug gegen
+  // brute-force CODE_REGEX Enumeration).
+  const rl = RateLimitIp.check(event, 10, 60, { functionName: 'redeem-referral-code' });
+  if (!rl.allowed) {
+    return {
+      statusCode: 429,
+      headers: { 'Content-Type': 'application/json; charset=utf-8',
+                 'Retry-After': String(rl.retryAfter), ...getCorsHeaders(event) },
+      body: JSON.stringify({ valid: false, error: 'Rate-Limit erreicht. Bitte ' + rl.retryAfter + 's warten.' })
+    };
   }
 
   const params = event.queryStringParameters || {};
