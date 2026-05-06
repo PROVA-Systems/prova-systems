@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v600';   // MEGA³⁰ V3.2-W10b Anti-Defer-Vollausbau: F-16/17/18 Liquid-Templates + Einträge-System Vollausbau (5 Lambdas + Frontend + JVEG) + Skizzen-System (Schema + 3 Lambdas + Native SVG-Editor) + Fristen-System Vollausbau (5 Lambdas + 5 Pipelines + Frontend) + Status-Page (6 Services) + Cookie-13M-Re-Show + iCal HMAC-Token
+const CACHE_VERSION = 'prova-v650-schema-reconciled';   // MEGA³² W12b Schema-Reconciliation: 9/9 Items, 4 Migrations apply'd via MCP, 13 Lambdas reconciled gegen echtes Production-Schema (auftrag_id NICHT schadensfall_id, workspace_memberships NICHT _members, system_health NICHT service_health, eintrag_typ ENUM 4 Werte NICHT 8). Drift-Closure 100%.
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
