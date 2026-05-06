@@ -58,3 +58,45 @@
 
 ---
 
+## Bereich 2 — KI-Härtung (Sprint 09a/b + Regeln 9-15)
+
+**Status:** 🟡 TEILWEISE
+**Komplettheit:** **~70%**
+
+**Belege:**
+- ✅ `KI-PROMPTS-MASTER.md` (402 LOC) — **inhaltlich gefüllt**, NICHT mehr Skeleton. W3-I0-Update auf GPT-5.x + Claude 4.x, Modell-Mapping pro Action dokumentiert.
+- ✅ `netlify/functions/ki-proxy.js` mit MODELS-Konstante (Zeile 107+) — Multi-Provider OpenAI primary + Anthropic fallback
+- ✅ Pseudonymisierung-Foundation: `netlify/functions/lib/prova-pseudo.js` + Server-Side-Wrap in ki-proxy.js (Zeile 23-25, 227-237). DSGVO-konform via PROVA_PSEUDO regex-basiert.
+- ✅ Test-Suiten: `tests/ki-proxy/model-compliance.test.js`, `tests/ki/anthropic-wrapper.test.js`, `tests/ki/ki-proxy-fallback.test.js`, `tests/ki-cost/cost-calc.test.js`, `tests/ki-konsistenz/konsistenz-check.test.js`, `tests/sv-eigenleistung/validator.test.js`
+- ✅ Konjunktiv-II-Check via gpt-5.5 (statt mini, Regel 14 erfüllt) — siehe MODELS.fachurteil/pruefung/konsistenz alle 'gpt-5.5'
+
+**Lücken:**
+- 🔴 KEIN dedizierter Tests-Folder `tests/halluzination/` oder `tests/konjunktiv/` — Tests sind in `tests/ki-proxy/`, `tests/ki-konsistenz/` und `tests/sv-eigenleistung/` verteilt. **AUDIT-UNKLAR:** ob die 5-Test-Suite (Funktionalität / Edge-Cases / Präzision / Konsistenz / Zeit) pro KI-Funktion vollständig erfüllt ist (Regel 15).
+- 🟡 `tests/ki-stats/ki-stats.test.js` deckt Cost-Tracking — aber **AUDIT-UNKLAR** ob `ki_protokoll`-Inserts in JEDEM ki-proxy-Call (Pflicht-Logging Regel 16): grep `from('ki_protokoll')` in ki-proxy nötig.
+- 🟡 §407a-Pre-Send-Check: `lib/prova-disclaimer.js` existiert, aber Modal-Pflicht vor Freigabe AUDIT-UNKLAR (Bereich 5/6).
+
+**Acceptance:** KI-Foundation ist da, Modell-Migration W3-I0 dokumentiert + im Code aktiv. **Test-Coverage gegen Regel-15-5-Test-Suite muss separat verifiziert werden** vor Pilot-Live.
+
+---
+
+## Bereich 3 — KI-Modell-Migration W3-I0 (NEU aus Chat)
+
+**Status:** 🟡 TEILWEISE — Foundation da, Smart-Router separates Modul fehlt
+**Komplettheit:** **~75%**
+
+**Belege:**
+- ✅ Modell-Mapping in `KI-PROMPTS-MASTER.md` Zeile 28-39 dokumentiert
+- ✅ Modell-Strings im Code: `netlify/functions/ki-proxy.js` Zeile 107-126 (MODELS + MODELS_FALLBACK Konstanten)
+- ✅ Anthropic-Adapter: `tests/ki/anthropic-wrapper.test.js` belegt Wrapper-Existenz
+- ✅ Fallback-Tests: `tests/ki/ki-proxy-fallback.test.js`
+- ✅ ANTHROPIC_API_KEY ENV: gelistet als existing in `docs/setup/ENV-KONSOLIDIERUNG-MEGA33.md` (Pflicht-ENV)
+
+**Lücken:**
+- 🔴 KEIN separates `lib/ai-router.js` als isolierter Smart-Router-Modul. Der `chooseModel()`-Equivalent ist inline in ki-proxy.js via `MODELS[action]`-Lookup verteilt. Funktional gleichwertig, aber kein dediziertes Router-Lib-File für Reuse durch andere Lambdas.
+- 🟡 User-Setting "ki_modus" (schnell/präzise) — AUDIT-UNKLAR — keine Settings-Spalte `users.ki_modus` direkt sichtbar (kein `user_workflow_settings.ki_modus`).
+- 🟡 Health-Check pro Provider — `system_health` Tabelle existiert (W12b-I6), aber AUDIT-UNKLAR ob OpenAI- + Anthropic-Probes separat geloggt werden vs. nur "openai" + "claude" als kategorie-Werte.
+
+**Acceptance:** Migration-Code aktiv, Tests grün, **dediziertes ai-router.js Lib-File wäre Refactoring-Polish** (nicht blocking für Pilot).
+
+---
+
