@@ -1,7 +1,8 @@
 /**
- * PROVA — eintraege-list.js (MEGA³⁰ W10b-I4)
- * Liste der Einträge zu einem Schadensfall (oder Workspace-weit).
- * Pattern aus admin-support-inbox.js (W8-I7).
+ * PROVA — eintraege-list.js (MEGA³² W12-I1 Schema-Reconciled)
+ *
+ * GET ?auftrag_id=&typ=&from=&to=&limit=
+ * Schema-konform: existing public.eintraege (auftrag_id + typ ENUM diktat|text|foto|mix + titel + content)
  */
 'use strict';
 
@@ -10,6 +11,8 @@ const { requireAuth, jsonResponse } = require('./lib/jwt-middleware');
 const { getCorsHeaders } = require('./lib/cors-helper');
 const { getSupabase } = require('./lib/storage-router');
 const RateLimit = require('./lib/rate-limit-user');
+
+const EINTRAG_TYP = ['diktat', 'text', 'foto', 'mix'];
 
 exports.handler = withSentry(requireAuth(async function (event, context) {
   if (event.httpMethod === 'OPTIONS') return { statusCode: 204, headers: getCorsHeaders(event), body: '' };
@@ -21,33 +24,26 @@ exports.handler = withSentry(requireAuth(async function (event, context) {
   const sb = getSupabase();
   if (!sb) return jsonResponse(event, 503, { error: 'Supabase nicht konfiguriert' });
 
-  const params = event.queryStringParameters || {};
-  const schadensfallId = params.schadensfall_id || null;
-  const eintragTyp = params.eintrag_typ || null;
-  const dateFrom = params.from || null;
-  const dateTo = params.to || null;
-  const limit = Math.min(200, parseInt(params.limit || '50', 10));
+  const q = event.queryStringParameters || {};
+  // Backwards-Compat: alte Frontends senden noch schadensfall_id
+  const auftrag_id = q.auftrag_id || q.schadensfall_id || null;
 
   try {
-    let q = sb.from('eintraege')
-      .select('id, schadensfall_id, eintrag_typ, datum, uhrzeit_von, dauer_min, beschreibung_text, anhang_files, abrechenbar, abgerechnet, erstellt_am')
+    let query = sb.from('eintraege')
+      .select('id, workspace_id, auftrag_id, ortstermin_id, typ, nr, datum, titel, content, audio_dateien_ids, foto_ids, pseudonymisiert, konjunktiv_check_passed, dauer_min, abrechenbar, created_by_user_id, created_at, updated_at')
       .is('deleted_at', null)
-      .order('datum', { ascending: false })
-      .limit(limit);
-    if (schadensfallId) q = q.eq('schadensfall_id', schadensfallId);
-    if (eintragTyp) q = q.eq('eintrag_typ', eintragTyp);
-    if (dateFrom) q = q.gte('datum', dateFrom);
-    if (dateTo) q = q.lte('datum', dateTo);
-
-    const { data, error } = await q;
+      .order('datum', { ascending: false });
+    if (auftrag_id) query = query.eq('auftrag_id', auftrag_id);
+    if (q.typ && EINTRAG_TYP.indexOf(q.typ) >= 0) query = query.eq('typ', q.typ);
+    if (q.from) query = query.gte('datum', q.from);
+    if (q.to) query = query.lte('datum', q.to);
+    const limit = Math.min(parseInt(q.limit || 100, 10), 200);
+    const { data, error } = await query.limit(limit);
     if (error) return jsonResponse(event, 500, { error: error.message });
-
-    return jsonResponse(event, 200, {
-      total: (data || []).length,
-      limit,
-      eintraege: data || []
-    });
+    return jsonResponse(event, 200, { eintraege: data || [], total: (data || []).length });
   } catch (e) {
     return jsonResponse(event, 500, { error: 'unexpected', detail: e.message });
   }
 }), { functionName: 'eintraege-list' });
+
+module.exports.__EINTRAG_TYP = EINTRAG_TYP;
