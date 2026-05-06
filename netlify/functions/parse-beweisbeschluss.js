@@ -26,6 +26,7 @@
 
 const { withSentry } = require('./lib/sentry-wrap');
 const { requireAuth } = require('./lib/jwt-middleware');
+const RateLimit = require('./lib/rate-limit-user'); // MEGA²⁸ W5-I5: KI-Cost-Schutz
 const { getCorsHeaders } = require('./lib/cors-helper');
 const { getSupabase } = require('./lib/storage-router');
 
@@ -144,6 +145,13 @@ exports.handler = withSentry(requireAuth(async function (event, context) {
   }
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, headers: baseHeaders, body: JSON.stringify({ error: 'Method Not Allowed', allowed: ['POST'] }) };
+  }
+
+  // MEGA²⁸ W5-I5: KI-Cost-Rate-Limit (30/60s pro User)
+  const rl = RateLimit.check(context.userEmail || userId, 30, 60, { event: event, functionName: 'parse-beweisbeschluss' });
+  if (!rl.allowed) {
+    return { statusCode: 429, headers: { ...baseHeaders, 'Retry-After': String(rl.retryAfter) },
+      body: JSON.stringify({ error: 'Rate-Limit erreicht. Bitte ' + rl.retryAfter + 's warten.' }) };
   }
 
   let body;
