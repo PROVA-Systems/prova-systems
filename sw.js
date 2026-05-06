@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v293';   // MEGA²⁸ V3.2-W1: Regel-14-Compliance-Fix (gpt-4o-mini→gpt-4o für pruefe_fachurteil + fachurteil_entwurf) + §407a Pre-Send-Validator + KI-Konsistenz-Check §4↔§6 + KI-Cost-Calc + Master-Doku-Sync + Kontrast-Audit + Decisions #10-#13 (8 commits W1, 371+ tests grün)
+const CACHE_VERSION = 'prova-v294';   // MEGA²⁸ V3.2-W2 (in progress): archiv-filter Library + Status-Filter + Demo-Toggle + Reset-Button (KORR-10) + 22 Tests grün
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
@@ -39,6 +39,7 @@ const APP_SHELL = [
   // K-1.0 + K-1.3 lib-Stack (Supabase-Foundation)
   '/lib/prova-config.js',
   '/lib/beweisbeschluss-upload.js',     // MEGA²³ Block 1: Beweisbeschluss-PDF-Upload-Library
+  '/lib/archiv-filter.js',              // MEGA²⁸ V3.2-W2 KORR-10: Archiv-Filter-Library
   '/lib/admin-ki-stats-frontend.js',    // MEGA²³ Block 4: KI-Stats Frontend-Charts
   '/lib/prova-disclaimer.js',           // MEGA²¹+²² W110: §407a-Disclaimer-Lib
   '/schadensfaelle.html',               // MEGA²⁸ P1-I1: Übersicht-Liste Flow A

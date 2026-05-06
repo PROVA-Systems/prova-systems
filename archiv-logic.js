@@ -90,61 +90,48 @@ async function ladeFaelle(){
   filterUndRender();
 }
 
-/* ── FILTER ── */
+/* ── FILTER (MEGA²⁸ V3.2-W2 KORR-10: lib/archiv-filter.js wraps applyFilters) ── */
 var gefiltert=[];
 window.filterUndRender=function(){
-  var such=(document.getElementById('suche').value||'').toLowerCase().trim();
-  var flow=(document.getElementById('f-flow')||{}).value||'';
-  var art=((document.getElementById('f-art')||{}).value||'').toLowerCase();
-  var phase=(document.getElementById('f-phase')||{}).value||'';
-  var sa=document.getElementById('f-schadenart').value;
-  var zr=document.getElementById('f-zeitraum').value;
-  var now=Date.now();
+  var criteria={
+    such:(document.getElementById('suche').value||'').toLowerCase().trim(),
+    flow:(document.getElementById('f-flow')||{}).value||'',
+    art:((document.getElementById('f-art')||{}).value||'').toLowerCase(),
+    phase:(document.getElementById('f-phase')||{}).value||'',
+    schadenart:document.getElementById('f-schadenart').value||'',
+    zeitraum:document.getElementById('f-zeitraum').value||'',
+    status:((document.getElementById('f-status')||{}).value||''),
+    demo:((document.getElementById('f-demo')||{}).value||'all')
+  };
 
-  gefiltert=alleRecords.filter(function(r){
-    var f=r.fields||{};
-    // Session 30: Neue Filter Flow/Art/Phase
-    if(flow){
-      var recFlow=getFlowFromRecord(r);
-      if(recFlow!==flow)return false;
-    }
-    if(art){
-      var recArt=getArtFromRecord(r);
-      if(recArt!==art)return false;
-    }
-    if(phase){
-      var recPhase=getPhaseFromRecord(r);
-      if(String(recPhase)!==phase)return false;
-    }
-    // Bestehende Filter
-    if(sa){
-      var saField=(f.Schadensart||f.schadenart||'').toLowerCase();
-      if(!saField.includes(sa.toLowerCase()))return false;
-    }
-    if(zr&&f.Timestamp){
-      var ts=new Date(f.Timestamp).getTime();
-      var tage=zr==='30'?30:zr==='90'?90:365;
-      if(zr==='jahr'){
-        if(new Date(f.Timestamp).getFullYear()!==new Date().getFullYear())return false;
-      }else{
-        if(now-ts>tage*24*60*60*1000)return false;
-      }
-    }
-    if(such){
+  if(window.ArchivFilter&&typeof window.ArchivFilter.applyFilters==='function'){
+    gefiltert=window.ArchivFilter.applyFilters(alleRecords,criteria);
+  }else{
+    // Fallback: nur Suche, falls Library nicht geladen ist (Backwards-Compat)
+    gefiltert=alleRecords.filter(function(r){
+      if(!criteria.such)return true;
+      var f=r.fields||{};
       var az=(f.Aktenzeichen||'').toLowerCase();
-      var addr=[(f.Schaden_Strasse||''),(f.Ort||'')].join(' ').toLowerCase();
-      var ag=(f.Auftraggeber_Name||'').toLowerCase();
-      var art2=(f.Schadensart||f.schadenart||'').toLowerCase();
-      var at=(f.Auftragstyp||'').toLowerCase();
-      if(!az.includes(such)&&!addr.includes(such)&&!ag.includes(such)&&!art2.includes(such)&&!at.includes(such))return false;
-    }
-    return true;
-  });
+      return az.indexOf(criteria.such)!==-1;
+    });
+  }
 
   document.getElementById('count-badge').textContent=gefiltert.length+' Fälle';
 
   if(currentView==='kanban')renderKanban();
   else renderListe();
+};
+
+/* Filter-Reset (MEGA²⁸ V3.2-W2 KORR-10) — von Empty-State und Reset-Button gerufen */
+window.resetFilter=function(){
+  var ids=['suche','f-flow','f-art','f-phase','f-schadenart','f-zeitraum','f-status'];
+  ids.forEach(function(id){
+    var el=document.getElementById(id);
+    if(el)el.value='';
+  });
+  var demoEl=document.getElementById('f-demo');
+  if(demoEl)demoEl.value='all';
+  if(typeof window.filterUndRender==='function')window.filterUndRender();
 };
 
 /* ── HELPER ── */
@@ -420,6 +407,11 @@ setTimeout(function() {
 // Filter-Events
 document.getElementById('f-schadenart').addEventListener('change',filterUndRender);
 document.getElementById('f-zeitraum').addEventListener('change',filterUndRender);
+// MEGA²⁸ V3.2-W2 KORR-10: Status + Demo-Filter
+var fStatus=document.getElementById('f-status');
+if(fStatus)fStatus.addEventListener('change',filterUndRender);
+var fDemo=document.getElementById('f-demo');
+if(fDemo)fDemo.addEventListener('change',filterUndRender);
 
 })();
 
