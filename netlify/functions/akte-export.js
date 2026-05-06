@@ -3,6 +3,7 @@
 
 const https = require('https');
 const { requireAuth } = require('./lib/jwt-middleware');
+const { withSentry } = require('./lib/sentry-wrap'); // MEGA²⁸ W5-I6: Sentry-Error-Tracking
 const { getCorsHeaders } = require('./lib/cors-helper');
 // MEGA-SKALIERUNG M2: zod-Schema-Validation
 const { parseAkteExport } = require('../../lib/schemas/akte-export');
@@ -13,7 +14,7 @@ function corsHeaders(event) {
   return { 'Content-Type': 'application/json', ...getCorsHeaders(event) };
 }
 
-exports.handler = requireAuth(async function(event, context) {
+exports.handler = withSentry(requireAuth(async function(event, context) {
   const CORS = corsHeaders(event);
   if (event.httpMethod !== 'POST') return { statusCode: 405, headers: CORS, body: JSON.stringify({error:'Method not allowed'}) };
 
@@ -106,4 +107,4 @@ exports.handler = requireAuth(async function(event, context) {
   } catch(e) {
     return { statusCode: 500, headers: CORS, body: JSON.stringify({error: e.message}) };
   }
-});
+}), { functionName: 'akte-export' });

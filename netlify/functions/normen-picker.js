@@ -17,6 +17,7 @@
 
 const FW = require('./lib/prova-fachwissen.js');
 const { getCorsHeaders } = require('./lib/cors-helper');
+const { withSentry } = require('./lib/sentry-wrap'); // MEGA²⁸ W5-I6: Sentry-Error-Tracking
 
 // S6 Phase 1.9: dynamische CORS-Headers per Request (vorher hardcoded
 // auf prova-systems.de — App-Subdomain wurde geblockt). Audit-8 M-03.
@@ -225,7 +226,7 @@ async function handleFlowB(zweck, objektart, max) {
   };
 }
 
-exports.handler = async function(event) {
+exports.handler = withSentry(async function(event) {
   const CORS = corsBase(event);
   if (event.httpMethod === 'OPTIONS') {
     return { statusCode: 204, headers: CORS, body: '' };
@@ -285,4 +286,4 @@ exports.handler = async function(event) {
       body: JSON.stringify({ mode: 'error', normen: [], total: 0, error: err.message })
     };
   }
-};
+}, { functionName: 'normen-picker' });

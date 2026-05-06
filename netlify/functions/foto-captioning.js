@@ -3,11 +3,12 @@
 // → GPT-4o Vision analysiert das Bild und gibt strukturierte Metadaten zurück
 
 const { requireAuth, jsonResponse } = require('./lib/jwt-middleware');
+const { withSentry } = require('./lib/sentry-wrap'); // MEGA²⁸ W5-I6: Sentry-Error-Tracking
 const { getCorsHeaders } = require('./lib/cors-helper');
 const RateLimit = require('./lib/rate-limit-user');
 
 // S-SICHER P4B.4: requireAuth + Rate-Limit 30/60s pro Token-sub
-exports.handler = requireAuth(async function(event, context) {
+exports.handler = withSentry(requireAuth(async function(event, context) {
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: JSON.stringify({ error: 'Method not allowed' }) };
   }
@@ -131,4 +132,4 @@ Gib das JSON-Objekt zurück.`;
       body: JSON.stringify({ error: 'Upstream error' })
     };
   }
-});
+}), { functionName: 'foto-captioning' });

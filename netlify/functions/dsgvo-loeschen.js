@@ -8,6 +8,7 @@
  * POST { confirm: true, reason: "..." }
  */
 const { getCorsHeaders, corsOptionsResponse } = require('./lib/cors-helper');
+const { withSentry } = require('./lib/sentry-wrap'); // MEGA²⁸ W5-I6: Sentry-Error-Tracking
 const { fetchWithRetry } = require('./lib/fetch-with-timeout');
 const { provaFetch } = require('./lib/prova-fetch');
 const { requireAuth } = require('./lib/jwt-middleware');
@@ -69,7 +70,7 @@ async function getRecordIds(tableId, emailField, email) {
   return ids;
 }
 
-exports.handler = requireAuth(async function(event, context) {
+exports.handler = withSentry(requireAuth(async function(event, context) {
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, headers: getCorsHeaders(event), body: JSON.stringify({ error: 'Method Not Allowed' }) };
   }
@@ -159,4 +160,4 @@ exports.handler = requireAuth(async function(event, context) {
       hinweis: 'Ihre Rechnungen werden gem. §257 HGB bis zum Ende der gesetzlichen Aufbewahrungsfrist (10 Jahre) aufbewahrt und danach automatisch gelöscht.'
     })
   };
-});
+}), { functionName: 'dsgvo-loeschen' });

@@ -6,6 +6,7 @@ const {
   TABLE_RECHNUNGEN,
   TABLE_AUDIT
 } = require('./lib/prova-subscription.js');
+const { withSentry } = require('./lib/sentry-wrap'); // MEGA²⁸ W5-I6: Sentry-Error-Tracking
 const { getCorsHeaders, corsOptionsResponse, jsonResponse } = require('./lib/cors-helper');
 const { requireAuth } = require('./lib/jwt-middleware');
 const RateLimit = require('./lib/rate-limit-user');
@@ -39,7 +40,7 @@ async function listCount(pat, tableId, formula) {
   return Array.isArray(data.records) ? data.records.length : 0;
 }
 
-exports.handler = requireAuth(async function (event, context) {
+exports.handler = withSentry(requireAuth(async function (event, context) {
   _currentEvent = event;
   if (event.httpMethod !== 'GET') return json(405, { error: 'Method Not Allowed' });
 
@@ -99,4 +100,4 @@ exports.handler = requireAuth(async function (event, context) {
     ki_anfragen_anzahl: ki,
     generated_at: new Date().toISOString()
   });
-});
+}), { functionName: 'dsgvo-auskunft' });
