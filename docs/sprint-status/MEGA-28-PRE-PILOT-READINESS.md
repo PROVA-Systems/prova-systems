@@ -1,9 +1,9 @@
 # MEGA²⁸ Pre-Pilot-Readiness-Report
 
-**Datum:** 2026-05-10 mittags (nach Welle 6)
-**Branch:** `mega-28-frontend-complete` (49 atomic commits seit V3-Start)
-**Status:** Pre-Pilot-Ready für 99% des Scope. Marcel-Manual-Steps + Anwalt-Review pending für 100%.
-**Tag-Empfehlung:** `v300-pre-pilot-ready` (NICHT setzen — Marcel pusht selbst)
+**Datum:** 2026-05-10 nachmittags (nach Welle 7 NEU — Live-Transkript-Fix)
+**Branch:** `mega-28-frontend-complete` (63 atomic commits seit V3-Start)
+**Status:** Pre-Pilot-Ready für 100% des Code-Scope. Marcel-Browser-Test Live-Transkript pflicht. Anwalt-AVV-Review pending.
+**Tag-Empfehlung:** `v301-pre-pilot-ready` (NICHT setzen — Marcel pusht selbst nach Browser-Test)
 
 ---
 
@@ -59,9 +59,10 @@
 ### 🟡 Marcel-Manual-Steps (offen, vor Pilot-Launch)
 
 **🔴 PRIORITÄT 1 — vor Pilot-Launch zwingend:**
-1. **AVV-Anwalt-Review** — `docs/legal/AVV.md` + `SUBPROCESSOR-LISTE.md`
-2. **Anthropic DPA verifizieren** — falls noch nicht unterzeichnet
-3. **Cloudflare-Status klären** — Dashboard-Check (DNS / WAF / Workers aktiv?)
+1. **🆕 Live-Transkript-Browser-Test (W7N-I1)** — Mikro-Aufnahme starten + Manual-Input während Stream tippen → 5s pause + Buffer-Flush mit hellblauem Hintergrund erwartet (Klick-Anleitung Decision #15)
+2. **AVV-Anwalt-Review** — `docs/legal/AVV.md` + `SUBPROCESSOR-LISTE.md`
+3. **Anthropic DPA verifizieren** — falls noch nicht unterzeichnet
+4. **Cloudflare-Status klären** — Dashboard-Check (DNS / WAF / Workers aktiv?)
 4. **Cloudflare-Page-Rule "Email Obfuscation Off"** für `*prova-systems.de/*` aktivieren
 5. **Sentry-Region** prüfen (US-Default oder EU?)
 6. **DocRaptor-Status** klären (aktiv oder ENV bereinigen?)
