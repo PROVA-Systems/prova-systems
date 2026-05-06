@@ -742,3 +742,49 @@ Tooltips (title=""...§407a):
   Foto-KI-Btn, Diktat-KI-Btn, KI-Assist-Btn
 ```
 
+
+---
+
+## MEGA²⁸ Architektur-Update (10.05.2026)
+
+### Edge Functions (Stand 10.05., gesamt ~50)
+
+**MEGA²⁷ Referral-System (5 NEU):**
+- `create-referral.js` — Werber initiiert Empfehlung (HTML-Email aktiviert MEGA²⁷.6)
+- `redeem-referral-code.js` — Code-Lookup für Pricing-Page
+- `check-referral-rewards.js` — Cron 02:00 UTC (30d Hold + Reward + HTML-Email)
+- `stripe-webhook-referral.js` — Multi-Strategy User-Linking
+- `send-referral-reminders.js` — Cron 14:00 UTC Auto-Reminder Tag 5-6
+
+**MEGA²⁸ V3-V3.2 (3 NEU):**
+- `dsgvo-portability.js` — DSGVO Art. 20 JSON-Export (V3.1 KORR-19)
+- `ki-konsistenz-check.js` — §4↔§6 Widerspruchs-Detection (V3.2-W1-I2, GPT-4o Pflicht)
+- `send-welcome-email.js` (Erweitert MEGA²⁷.6 mit IS_REFERRED-Block)
+
+**MEGA²⁸ Lib-Helpers (3 NEU):**
+- `lib/rate-limit-helper.js` — Per-User-Per-Function Rate-Limiting (V3.1 KORR-21)
+- `lib/ki-cost-calc.js` — Cost-Calculation für ki_protokoll-Inserts (V3.2-W1-I4)
+- `lib/sv-eigenleistung-validator.js` — §407a Pre-Send-Validator (V3.2-W1-I3)
+
+### Migrations Status (12 → 15 live)
+
+| # | Name | Status | Sprint |
+|---|---|---|---|
+| 11 | auftraege_beweisbeschluss | ✅ live | MEGA²² |
+| 12 | referrals_system | ✅ live | MEGA²⁷ |
+| 13 | (skipped, stillgelegt) | — | — |
+| 14 | (workspace_member_roles deferred) | — | (AUTH-PERFEKT 2.0) |
+| 15 | auftraege.is_demo | ✅ live | MEGA²⁸ V3.1 |
+
+### KI-Modell-Compliance (post-V3.2-W1-I1)
+
+| Action | Modell | Compliance |
+|---|---|---|
+| `pruefe_fachurteil` | gpt-4o ✅ | Regel 14 erfüllt (vorher mini, gefixt) |
+| `fachurteil_entwurf` | gpt-4o (default) ✅ | Regel 14 erfüllt (vorher mini, gefixt) |
+| `assist_inline` | gpt-4o ✅ | Regel 14 erfüllt |
+| `freitext` | mini default | User-Override-fähig, OK für S1 |
+| `support_chat` | mini | OK (S1 mechanisch, Latenz wichtig) |
+| Foto-Vision | claude-sonnet-4-6 | KI_VISION_PROVIDER=anthropic |
+| Whisper | whisper-1 | OK |
+

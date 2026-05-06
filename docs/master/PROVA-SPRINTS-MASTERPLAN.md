@@ -519,3 +519,55 @@ Migration 10 (users.persona_*), Pricing-Strip (Solo 149€), Service-Worker v280
 
 **Pilot-Launch-Empfehlung:** GO-MIT-VORBEHALT (2-3 Tage zum Pilot, Marcel-Pflicht-Items in PILOT-LAUNCH-CHECKLIST.md A+C+D)
 
+
+---
+
+## MEGA²⁸ Frontend-Complete (V3 + V3.1 + V3.2-W1) — 09-10.05.2026
+
+**Branch:** `mega-28-frontend-complete` (NICHT main)
+**Pattern:** Welle-basierte Sessions wegen CC-Output-Cap (~15-20 Min)
+**Tests:** 2039 → 2160+ grün (+121 in MEGA²⁸ gesamt)
+
+### V3 (4 Commits, 09.05. nacht)
+- P0-I1 Pricing-Drift Master-Docs (149/279 → 179/379, Founding 99€)
+- P1-I1 schadensfaelle.html Übersicht-Liste Flow A
+- P6-I1 KI-Funktions-Garantie 5-Tests
+- P12 Sprint-Final + Decisions-Log #1-#9
+
+### V3.1 (9 Commits, 10.05. morgens, KORR-Runde)
+- KORR-3 KI-PROMPTS-MASTER live-status
+- KORR-5 Make T3+F1 Activation-Doku
+- KORR-22 AVV + TOM + Verfahrensverzeichnis
+- KORR-21 rate-limit-helper.js
+- KORR-19 dsgvo-portability.js Art. 20
+- KORR-2 Sandbox-Inventory + Migration 15 is_demo (live applied)
+- KORR-1 Bescheinigungen-Inventory (respects K-2.0)
+- KORR-26 Dependency-Updates safe minors
+- Decision #10 sidebar-resize Marcel-Spec-Konflikt
+
+### V3.2-W1 (8 Commits, 10.05. mittags)
+- W1-I1 ki-proxy.js Modell-Compliance (gpt-4o-mini → gpt-4o für pruefe_fachurteil + fachurteil_entwurf default)
+- W1-I3 §407a Pre-Send-Validator
+- W1-I6+I7 Decisions #10 (resolved no-op) + #11 (Auftrag-Doppelung already-fixed)
+- W1-I4 ki-cost-calc.js
+- W1-I2 ki-konsistenz-check.js §4↔§6 + 12 Tests
+- weitere folgen
+
+### Migrations live appliziert (12 → 15)
+- Migration 12: referrals (MEGA²⁷)
+- Migration 13: (skipped, stillgelegt)
+- Migration 14: (workspace_member_roles, deferred)
+- Migration 15: auftraege.is_demo (MEGA²⁸ KORR-2)
+
+### Neue Edge Functions (MEGA²⁸)
+- `dsgvo-portability.js` — Art. 20 JSON-Export
+- `ki-konsistenz-check.js` — §4↔§6 Widerspruchs-Detection
+- `lib/rate-limit-helper.js` — Per-User-Per-Function Rate-Limiting
+- `lib/ki-cost-calc.js` — Cost-Calculation
+- `lib/sv-eigenleistung-validator.js` — §407a Pre-Send-Validator
+
+### Neue Master-Docs
+- `KI-PROMPTS-MASTER.md` (Live-Status-Update)
+- `docs/legal/AVV.md`, `TOM.md`, `VERFAHRENSVERZEICHNIS.md` (Anwalt-Review-Vorlagen)
+- `docs/setup/MAKE-WEBHOOKS-T3-F1-ACTIVATION.md`
+

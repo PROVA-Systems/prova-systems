@@ -368,3 +368,24 @@ Statische Mini-Sites unter `prova-systems.de/tools/*` — SEO + Lead-Magnete, ei
 - **August 2026:** Beweisfragen-Extraktor mit LLM (Tranche 2 nach Marcel-Validation Pattern-Matching)
 - **September 2026:** F-19 Wertgutachten Foundation (Schäden + Bauteile + Kostenermittlung)
 
+
+---
+
+## Update 10.05.2026 — MEGA²⁷ Referral-System + MEGA²⁸ Frontend-Complete
+
+### Referral-System (MEGA²⁷ live)
+- Founding-Member empfehlen Kollegen → 50€ Rabatt für Geworbenen + 1 Monat gratis für Werber nach 30 Tagen
+- 5 Edge Functions, 3 HTML-Email-Templates, 2 Cron-Schedules (02:00 + 14:00 UTC)
+- Migration 12 live, Stripe-Coupons FRIEND-50 + WERBER-MONAT-FREI
+
+### MEGA²⁸-Updates
+- Pricing: Solo 179€ / Team 379€ / Founding 99€ (Coupon FOUNDING-99)
+- §407a Pre-Send-Validator (V3.2-W1-I3)
+- KI-Konsistenz-Check §4↔§6 mit GPT-4o (V3.2-W1-I2)
+- DSGVO Art. 20 Portability via JSON-Export
+- KI-Cost-Tracking-Lib für `ki_protokoll`-Inserts
+
+### Modell-Compliance (Regel 14 strikt enforced ab MEGA²⁸ V3.2-W1-I1)
+- Konjunktiv-II-Pfade: ALLE auf gpt-4o (vorher gpt-4o-mini-Verstöße korrigiert)
+- gpt-4o-mini bleibt für S1-mechanisch (support_chat, normen-picker)
+
