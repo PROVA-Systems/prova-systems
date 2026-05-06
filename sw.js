@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v650-schema-reconciled';   // MEGA³² W12b Schema-Reconciliation: 9/9 Items, 4 Migrations apply'd via MCP, 13 Lambdas reconciled gegen echtes Production-Schema (auftrag_id NICHT schadensfall_id, workspace_memberships NICHT _members, system_health NICHT service_health, eintrag_typ ENUM 4 Werte NICHT 8). Drift-Closure 100%.
+const CACHE_VERSION = 'prova-v660-w11-tabs';   // MEGA³² W11-I1 Schadensfall-Tab-Integration: 5 Tabs (Einträge/Skizzen/Fristen/Fotos/Dokumente) + 2 neue Lambdas (fotos-list/dokumente-list) + URL-Persistenz + Lazy-Load
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
