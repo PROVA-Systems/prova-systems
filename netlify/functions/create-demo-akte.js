@@ -25,6 +25,7 @@ const { withSentry } = require('./lib/sentry-wrap');
 const { requireAuth } = require('./lib/jwt-middleware');
 const { getCorsHeaders } = require('./lib/cors-helper');
 const { getSupabase } = require('./lib/storage-router');
+const RateLimit = require('./lib/rate-limit-user'); // MEGA²⁸ W6P2-I3: Onboarding 60/60s
 
 const DEMO_AKTE_DEFAULTS = {
   typ: 'schadensgutachten',
@@ -72,6 +73,12 @@ exports.handler = withSentry(requireAuth(async function (event, context) {
   }
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, headers: baseHeaders, body: JSON.stringify({ error: 'Method Not Allowed', allowed: ['POST'] }) };
+  }
+  // MEGA²⁸ W6P2-I3: Onboarding-Rate-Limit 60/60s
+  const rl = RateLimit.check(context.userEmail || userId, 60, 60, { event: event, functionName: 'create-demo-akte' });
+  if (!rl.allowed) {
+    return { statusCode: 429, headers: { ...baseHeaders, 'Retry-After': String(rl.retryAfter) },
+      body: JSON.stringify({ error: 'Rate-Limit erreicht. Bitte ' + rl.retryAfter + 's warten.' }) };
   }
 
   const sb = getSupabase();

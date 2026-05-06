@@ -17,6 +17,7 @@ const { withSentry } = require('./lib/sentry-wrap');
 const { requireAuth } = require('./lib/jwt-middleware');
 const { getCorsHeaders } = require('./lib/cors-helper');
 const { getSupabase } = require('./lib/storage-router');
+const RateLimit = require('./lib/rate-limit-user'); // MEGA²⁸ W6P2-I3: DSGVO-Heavy 5/60s
 
 const EXPORT_VERSION = '1.0';
 
@@ -93,6 +94,11 @@ exports.handler = withSentry(requireAuth(async function (event, context) {
   }
   if (event.httpMethod !== 'GET') {
     return json(event, 405, { error: 'Method Not Allowed' });
+  }
+  // MEGA²⁸ W6P2-I3: DSGVO-Heavy Rate-Limit 5/60s (Export ist large-payload + DB-intensiv)
+  const rl = RateLimit.check(context.userEmail || context.userId, 5, 60, { event: event, functionName: 'dsgvo-portability' });
+  if (!rl.allowed) {
+    return json(event, 429, { error: 'Rate-Limit erreicht. Bitte ' + rl.retryAfter + 's warten.' });
   }
   const userId = context.userId || context.user_id;
   if (!userId) return json(event, 401, { error: 'Authentication required' });
