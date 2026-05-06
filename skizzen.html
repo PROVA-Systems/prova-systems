@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1, viewport-fit=cover">
+<title>Skizzen · PROVA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="prova-fetch-auth.js"></script>
+<script src="/lib/prova-config.js"></script>
+<script>
+(function(){
+  try {
+    var token = localStorage.getItem('prova_auth_token');
+    var email = localStorage.getItem('prova_sv_email') || '';
+    if (!token || !email) { window.location.replace('/login?next=' + encodeURIComponent(location.pathname)); return; }
+  } catch (e) { window.location.replace('/login'); }
+})();
+</script>
+<script type="module">
+  import { runAuthGuard } from '/lib/auth-guard.js';
+  runAuthGuard().catch(e => console.error('[auth] guard failed', e));
+</script>
+<script src="theme.js"></script>
+<script src="prova-layout.config.js"></script>
+<script src="nav.js" defer></script>
+<link rel="stylesheet" href="prova-design.css">
+<style>
+:root {
+  --bg:#0b0d11; --surface:#1c2130; --surface2:#232a3a;
+  --border:rgba(255,255,255,0.06); --border2:rgba(255,255,255,0.11);
+  --text:#eaecf4; --text2:#8b93ab; --text3:#4d5568;
+  --accent:#4f8ef7; --accent2:#3a7be0; --success:#10b981; --warning:#f59e0b;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;line-height:1.55;}
+.sk-wrap{max-width:1180px;margin:0 auto;padding:24px 20px 80px;}
+.sk-h1{font-size:24px;font-weight:800;letter-spacing:-.025em;margin-bottom:6px;}
+.sk-sub{font-size:14px;color:var(--text2);margin-bottom:20px;}
+.sk-toolbar{display:flex;gap:10px;margin:16px 0;align-items:center;flex-wrap:wrap;}
+.sk-btn{padding:8px 14px;border:none;border-radius:8px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;}
+.sk-btn-ghost{padding:8px 14px;background:var(--surface);border:1px solid var(--border2);color:var(--text2);border-radius:8px;cursor:pointer;font-family:inherit;font-size:13px;}
+.sk-btn-ghost:hover{border-color:var(--accent);color:var(--text);}
+.sk-btn-ghost.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+.sk-input{padding:8px 11px;background:var(--surface);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;}
+.sk-canvas-wrap{background:#fff;border:1px solid var(--border);border-radius:12px;overflow:hidden;margin:14px 0;}
+#sk-svg{width:100%;height:520px;cursor:crosshair;display:block;background:#fff;}
+.sk-grid-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;margin-top:18px;}
+.sk-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;cursor:pointer;transition:border-color .12s;}
+.sk-card:hover{border-color:var(--accent);}
+.sk-card-titel{font-size:13px;font-weight:700;margin-bottom:4px;}
+.sk-card-meta{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.04em;}
+.sk-card-svg{margin-top:8px;background:#fff;border-radius:6px;height:120px;overflow:hidden;display:flex;align-items:center;justify-content:center;}
+.sk-card-svg svg{max-width:100%;max-height:100%;}
+.sk-empty{padding:32px;text-align:center;color:var(--text3);font-size:13px;background:var(--surface);border:1px solid var(--border);border-radius:10px;}
+</style>
+</head>
+<body>
+<main class="sk-wrap" id="main-content">
+
+  <h1 class="sk-h1">Skizzen</h1>
+  <p class="sk-sub">Hand-Skizzen für Schadensfälle (DIN ISO 5455 Maßstab) — direkt zeichnen, speichern, in PDF-Templates verwenden.</p>
+
+  <div class="sk-toolbar">
+    <input type="text" class="sk-input" id="sk-titel" placeholder="Skizze-Titel (z.B. Erdgeschoss)" style="min-width:240px;">
+    <input type="text" class="sk-input" id="sk-schadensfall_id" placeholder="Schadensfall-UUID" style="min-width:280px;">
+    <select class="sk-input" id="sk-massstab">
+      <option value="">Maßstab (optional)</option>
+      <option>1:1</option><option>1:5</option><option>1:10</option><option>1:20</option>
+      <option>1:50</option><option>1:100</option><option>1:200</option><option>1:500</option>
+    </select>
+    <span style="border-left:1px solid var(--border2);height:24px;"></span>
+    <button class="sk-btn-ghost active" type="button" id="t-pen" onclick="setTool('pen')">✏ Stift</button>
+    <button class="sk-btn-ghost" type="button" id="t-line" onclick="setTool('line')">─ Linie</button>
+    <button class="sk-btn-ghost" type="button" id="t-rect" onclick="setTool('rect')">▭ Rechteck</button>
+    <input type="color" class="sk-input" id="sk-color" value="#1f2937" style="width:50px;padding:2px;">
+    <button class="sk-btn-ghost" type="button" onclick="clearCanvas()">⟲ Leeren</button>
+    <button class="sk-btn" type="button" onclick="saveSkizze()">Speichern</button>
+  </div>
+
+  <div class="sk-canvas-wrap">
+    <svg id="sk-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 520"></svg>
+  </div>
+
+  <h2 style="font-size:15px;font-weight:700;margin:18px 0 4px;">Gespeicherte Skizzen</h2>
+  <div id="sk-list" class="sk-grid-list"></div>
+
+</main>
+
+<script>
+let TOOL = 'pen';
+let DRAWING = false;
+let CURRENT_PATH = null;
+let CURRENT_RECT = null;
+let START_POINT = null;
+let LOADED_ID = null;
+
+function escHtml(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+function setTool(t) {
+  TOOL = t;
+  ['pen','line','rect'].forEach(x => {
+    document.getElementById('t-'+x).classList.toggle('active', x === t);
+  });
+}
+
+function svgPoint(evt) {
+  const svg = document.getElementById('sk-svg');
+  const pt = svg.createSVGPoint();
+  pt.x = evt.clientX; pt.y = evt.clientY;
+  return pt.matrixTransform(svg.getScreenCTM().inverse());
+}
+
+function clearCanvas() {
+  if (!confirm('Canvas wirklich leeren?')) return;
+  document.getElementById('sk-svg').innerHTML = '';
+  LOADED_ID = null;
+}
+
+function startDraw(e) {
+  e.preventDefault();
+  DRAWING = true;
+  const p = svgPoint(e);
+  START_POINT = p;
+  const color = document.getElementById('sk-color').value;
+  const svg = document.getElementById('sk-svg');
+  if (TOOL === 'pen') {
+    CURRENT_PATH = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    CURRENT_PATH.setAttribute('d', 'M ' + p.x + ' ' + p.y);
+    CURRENT_PATH.setAttribute('stroke', color);
+    CURRENT_PATH.setAttribute('stroke-width', '2');
+    CURRENT_PATH.setAttribute('fill', 'none');
+    CURRENT_PATH.setAttribute('stroke-linecap', 'round');
+    svg.appendChild(CURRENT_PATH);
+  } else if (TOOL === 'line') {
+    CURRENT_PATH = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    CURRENT_PATH.setAttribute('x1', p.x); CURRENT_PATH.setAttribute('y1', p.y);
+    CURRENT_PATH.setAttribute('x2', p.x); CURRENT_PATH.setAttribute('y2', p.y);
+    CURRENT_PATH.setAttribute('stroke', color);
+    CURRENT_PATH.setAttribute('stroke-width', '2');
+    svg.appendChild(CURRENT_PATH);
+  } else if (TOOL === 'rect') {
+    CURRENT_RECT = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    CURRENT_RECT.setAttribute('x', p.x); CURRENT_RECT.setAttribute('y', p.y);
+    CURRENT_RECT.setAttribute('width', 0); CURRENT_RECT.setAttribute('height', 0);
+    CURRENT_RECT.setAttribute('stroke', color);
+    CURRENT_RECT.setAttribute('stroke-width', '2');
+    CURRENT_RECT.setAttribute('fill', 'none');
+    svg.appendChild(CURRENT_RECT);
+  }
+}
+
+function moveDraw(e) {
+  if (!DRAWING) return;
+  e.preventDefault();
+  const p = svgPoint(e);
+  if (TOOL === 'pen') {
+    const d = CURRENT_PATH.getAttribute('d');
+    CURRENT_PATH.setAttribute('d', d + ' L ' + p.x + ' ' + p.y);
+  } else if (TOOL === 'line') {
+    CURRENT_PATH.setAttribute('x2', p.x); CURRENT_PATH.setAttribute('y2', p.y);
+  } else if (TOOL === 'rect') {
+    const x = Math.min(START_POINT.x, p.x);
+    const y = Math.min(START_POINT.y, p.y);
+    CURRENT_RECT.setAttribute('x', x); CURRENT_RECT.setAttribute('y', y);
+    CURRENT_RECT.setAttribute('width', Math.abs(p.x - START_POINT.x));
+    CURRENT_RECT.setAttribute('height', Math.abs(p.y - START_POINT.y));
+  }
+}
+
+function endDraw(e) {
+  DRAWING = false; CURRENT_PATH = null; CURRENT_RECT = null;
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const svg = document.getElementById('sk-svg');
+  svg.addEventListener('mousedown', startDraw);
+  svg.addEventListener('mousemove', moveDraw);
+  svg.addEventListener('mouseup', endDraw);
+  svg.addEventListener('mouseleave', endDraw);
+  svg.addEventListener('touchstart', e => startDraw(e.touches[0]));
+  svg.addEventListener('touchmove', e => moveDraw(e.touches[0]));
+  svg.addEventListener('touchend', endDraw);
+  loadSkizzen();
+});
+
+async function saveSkizze() {
+  const titel = document.getElementById('sk-titel').value.trim();
+  const schadensfall_id = document.getElementById('sk-schadensfall_id').value.trim();
+  const massstab = document.getElementById('sk-massstab').value;
+  if (!titel || !schadensfall_id) { alert('Titel + Schadensfall-ID pflicht.'); return; }
+  const svg = document.getElementById('sk-svg').outerHTML;
+  if (svg.length < 100) { alert('Canvas leer — bitte zeichnen oder eine vorhandene Skizze laden.'); return; }
+  const body = { schadensfall_id, titel, svg_data: svg, massstab: massstab || null };
+  if (LOADED_ID) body.id = LOADED_ID;
+  try {
+    const res = await provaFetch('/.netlify/functions/skizzen-save', {
+      method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body)
+    });
+    if (!res.ok) { const err = await res.json(); alert('Fehler: ' + (err.error || res.status)); return; }
+    LOADED_ID = null;
+    loadSkizzen();
+    alert('Gespeichert.');
+  } catch (e) { alert('Fehler: ' + e.message); }
+}
+
+async function loadSkizzen() {
+  try {
+    const res = await provaFetch('/.netlify/functions/skizzen-list?with_svg=1');
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    const list = document.getElementById('sk-list');
+    if (!data.skizzen || !data.skizzen.length) {
+      list.innerHTML = '<div class="sk-empty">Keine Skizzen gespeichert. Zeichne oben + "Speichern".</div>';
+      return;
+    }
+    list.innerHTML = data.skizzen.map(s => `
+      <div class="sk-card" onclick="loadSkizze('${s.id}')">
+        <div class="sk-card-titel">${escHtml(s.titel)}</div>
+        <div class="sk-card-meta">${s.massstab || '—'} · ${new Date(s.erstellt_am).toLocaleDateString('de-DE')}</div>
+        <div class="sk-card-svg" data-svg-id="${s.id}"></div>
+      </div>`).join('');
+    data.skizzen.forEach(s => {
+      const wrap = document.querySelector(`[data-svg-id="${s.id}"]`);
+      if (wrap && s.svg_data) wrap.innerHTML = s.svg_data;
+    });
+    window.__SKIZZEN_CACHE = data.skizzen;
+  } catch (e) {
+    document.getElementById('sk-list').innerHTML = '<div class="sk-empty" style="color:var(--warning);">Fehler: ' + escHtml(e.message) + '</div>';
+  }
+}
+
+function loadSkizze(id) {
+  const s = (window.__SKIZZEN_CACHE || []).find(x => x.id === id);
+  if (!s) return;
+  document.getElementById('sk-titel').value = s.titel || '';
+  document.getElementById('sk-schadensfall_id').value = s.schadensfall_id || '';
+  document.getElementById('sk-massstab').value = s.massstab || '';
+  if (s.svg_data) {
+    const m = s.svg_data.match(/<svg[^>]*>([\s\S]*?)<\/svg>/i);
+    document.getElementById('sk-svg').innerHTML = m ? m[1] : '';
+  }
+  LOADED_ID = id;
+  window.scrollTo({top: 0, behavior: 'smooth'});
+}
+</script>
+<script src="sw-register.js" defer></script>
+</body>
+</html>
