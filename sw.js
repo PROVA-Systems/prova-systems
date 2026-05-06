@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v500';   // MEGA³⁰ V3.2-W10 Markt-Reife-Vollendung-Foundation: Recherche-Block (7 Bereiche × ≥10 Quellen) + F-04 Liquid + Einträge-System Schema (Audit-Blocker A) + Fristen-System Schema (Audit-Blocker C) + Backup-Strategie-Doku — F-16/17/18, Skizzen, Lambdas/Frontends → W10b
+const CACHE_VERSION = 'prova-v600';   // MEGA³⁰ V3.2-W10b Anti-Defer-Vollausbau: F-16/17/18 Liquid-Templates + Einträge-System Vollausbau (5 Lambdas + Frontend + JVEG) + Skizzen-System (Schema + 3 Lambdas + Native SVG-Editor) + Fristen-System Vollausbau (5 Lambdas + 5 Pipelines + Frontend) + Status-Page (6 Services) + Cookie-13M-Re-Show + iCal HMAC-Token
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
