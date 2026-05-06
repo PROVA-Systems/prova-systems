@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v301';   // MEGA²⁸ V3.2-W7N-I1: Live-Transkript Manual-Input-Schutz (Variante A, 5s pause + buffer-flush) — Pre-Pilot-Blocker gefixt, Marcel-Browser-Test pflicht (Decision #15)
+const CACHE_VERSION = 'prova-v302';   // MEGA²⁸ V3.2-W8 Reference: F-19 WERTGUTACHTEN Liquid-Variante (ImmoWertV 2021 + §194 BauGB + BGH ±30% + 13 Quellen) — Sprint K Tranche-1 reference-implementation, Welle 8b für F-04/F-16/F-17/F-18
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
