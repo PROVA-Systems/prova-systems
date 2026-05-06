@@ -162,6 +162,45 @@
 
 ---
 
+## W9-I0 Schritt 2.5 — Stripe Production-Setup-Verify
+
+**Status:** TBD (Marcel-Manual-Verifikation pflicht)
+
+**Stripe-MCP-Verify nicht in dieser Session durchgeführt** (Tool-Approval pflicht).
+
+**Marcel-Manual-Action für Welle 10:**
+1. Stripe-Dashboard öffnen → Live-Mode
+2. Verifikation:
+   - [ ] Solo-Product existiert + Price 17900 Cent (179€/Mo recurring)
+   - [ ] Team-Product existiert + Price 37900 Cent (379€/Mo recurring)
+   - [ ] Founding-Member: Price 9900 Cent (99€/Mo) ODER Coupon `FOUNDING-99`
+   - [ ] Add-on-Prices: `price_1TJLnv8` (5F) + `price_1TJLpG8` (10F)
+   - [ ] Webhook-Endpoint für `checkout.session.completed` registriert
+   - [ ] Webhook-Signing-Secret in Netlify-ENV `PROVA_STRIPE_WEBHOOK_SECRET`
+
+**Pre-Production-Audit Welle 10:** Stripe-MCP-Tool-Calls mit Marcel-Approval.
+
+---
+
+## W9-I0 Schritt 2.6 — KI-Funktions-Garantie-Verify ✅
+
+**Status:** PASS — 19/19 Tests grün
+
+**Audit-Befund:** `tests/ki-funktions-garantie.test.js` (MEGA²⁸ P6-I1) existiert mit 5 Test-Suites:
+1. ✅ Konjunktiv-II-Validator (regex-based, Indikativ-Detection)
+2. ✅ Halluzinations-Check
+3. ✅ §407a-Eigenleistung-Check
+4. ✅ KI-Konsistenz-Check
+5. ✅ KI-Garantie Source-Audit (Modell-Verfügbarkeit)
+
+**Tests laufen mit Mock-Responses (KEINE echten API-Calls)** — production-ready Quality-Gate.
+
+**W9-I0b Quick-Fix:** Test "ki-service-openai.js Konjunktiv-II nutzt gpt-4o" auf W4-I0-Stand aktualisiert (akzeptiert `gpt-5.x` ODER `gpt-4o` Backwards-Compat).
+
+**KI-Garantie-Heartbeat-UI:** noch nicht implementiert. Welle-10-Item: rotes Badge in admin-cockpit Section 4 (System-Health) wenn KI-Service unreachable.
+
+---
+
 ## Drift-Liste
 
 ### Pricing-Drift 🔴
