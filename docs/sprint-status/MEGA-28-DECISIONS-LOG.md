@@ -214,3 +214,16 @@
 
 **Keine Action nötig.**
 
+
+---
+
+## DECISION #12 (W1-I5) — Stepper rückwärts klickbar — Audit-Ergebnis
+
+**Recherche-Ergebnis:** `gutachterliche-stellungnahme-logic.js:65-69` `tsGoTo(n)` Funktion erlaubt bereits backward-Click (validateUpTo(n-1) returnt true für n≤current_phase).
+
+**Andere Stepper:** `lib/stepper*.js` existiert nicht. `jveg.html` hat `stepper`-CSS-Klasse (Number-Input-Stepper, nicht Phase-Stepper). Onboarding und stellungnahme.html haben Phase-Logic ohne dedizierte stepper-lib.
+
+**Status:** KORR-11/W1-I5 ist effectively no-op — der erwähnte Bug ist im untersuchten Code nicht reproduzierbar. Bestehende Phase-Stepper sind backward-clickable.
+
+**Empfehlung Marcel:** Browser-Test pflicht — falls Bug an konkreter Page sichtbar ist, Page-Name liefern für gezielten Fix.
+
