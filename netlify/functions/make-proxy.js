@@ -4,6 +4,7 @@
  * v97: alle 18 Webhook-Keys + cors-helper
  */
 const { getCorsHeaders, corsOptionsResponse } = require('./lib/cors-helper');
+const { withSentry } = require('./lib/sentry-wrap'); // MEGA²⁸ W6P2-I2: Sentry-Wrap
 const { fetchWithRetry } = require('./lib/fetch-with-timeout');
 const { provaFetch } = require('./lib/prova-fetch');
 
@@ -24,7 +25,7 @@ const ALLOWED_KEYS = [
   'sup','wh'
 ];
 
-exports.handler = async function (event, context) {
+exports.handler = withSentry(async function (event, context) {
   if (event.httpMethod === 'OPTIONS') return corsOptionsResponse(event);
   if (event.httpMethod !== 'POST') return json(event, 405, { error: 'Method Not Allowed' });
 
@@ -81,4 +82,4 @@ exports.handler = async function (event, context) {
     console.error('[make-proxy] Fehler:', err.message);
     return json(event, 502, { ok: false, error: 'Make.com nicht erreichbar: ' + err.message });
   }
-};
+}, { functionName: 'make-proxy' });

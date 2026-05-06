@@ -1,4 +1,5 @@
 const { getCorsHeaders, corsOptionsResponse } = require('./lib/cors-helper');
+const { withSentry } = require('./lib/sentry-wrap'); // MEGA²⁸ W6P2-I2: Sentry-Wrap
 // MEGA-SKALIERUNG M2: zod-Schema-Validation
 const { parseTeamInterest } = require('../../lib/schemas/team-interest');
 // MEGA⁷ U1: Storage-Router (dual-write Airtable + Supabase team_interesse-Lead)
@@ -29,7 +30,7 @@ const MAKE_L5_WEBHOOK = getMakeWebhook('l5') || '';
 const AT_BASE  = 'appJ7bLlAHZoxENWE';
 const AT_TABLE = 'TEAM_INTERESSE';
 
-exports.handler = async (event) => {
+exports.handler = withSentry(async (event) => {
   // ── Rate limit (public endpoint) ──
   const clientIP = (event.headers && (event.headers['x-forwarded-for'] || event.headers['x-nf-client-connection-ip']))
     ? String((event.headers['x-forwarded-for'] || event.headers['x-nf-client-connection-ip'])).split(',')[0].trim()
@@ -178,4 +179,4 @@ exports.handler = async (event) => {
       airtable_id: airtableId,
     }),
   };
-};
+}, { functionName: 'team-interest' });

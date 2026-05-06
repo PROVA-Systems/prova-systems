@@ -24,6 +24,7 @@ const FIELD_MAP = {
 const FIELDS = Object.keys(FIELD_MAP).map(id => `fields[]=${encodeURIComponent(id)}`).join('&');
 
 const { getCorsHeaders } = require('./lib/cors-helper');
+const { withSentry } = require('./lib/sentry-wrap'); // MEGA²⁸ W6P2-I2: Sentry-Wrap
 const { readDual, getSupabase } = require('./lib/storage-router');
 // MEGA⁷ U2: Rate-Limit fuer public-Endpoints
 const RateLimitIp = require('./lib/rate-limit-ip');
@@ -68,7 +69,7 @@ function mapRecord(rec) {
   return mapped;
 }
 
-exports.handler = async function(event) {
+exports.handler = withSentry(async function(event) {
   const CORS = corsBase(event);
   if (event.httpMethod === 'OPTIONS') {
     return { statusCode: 204, headers: CORS, body: '' };
@@ -145,4 +146,4 @@ exports.handler = async function(event) {
       body: JSON.stringify({ error: err.message })
     };
   }
-};
+}, { functionName: 'normen' });

@@ -1,5 +1,6 @@
 // MEGA⁴-EXT Q4: Storage-Router (read-dual fuer eigene Aktivitaets-History).
 const { AIRTABLE_API, BASE_ID, TABLE_AUDIT } = require('./lib/prova-subscription.js');
+const { withSentry } = require('./lib/sentry-wrap'); // MEGA²⁸ W6P2-I2: Sentry-Wrap
 const { getCorsHeaders, corsOptionsResponse, jsonResponse } = require('./lib/cors-helper');
 const { requireAuth } = require('./lib/jwt-middleware');
 const { readDual, getSupabase } = require('./lib/storage-router');
@@ -18,7 +19,7 @@ function json(statusCode, obj) {
   };
 }
 
-exports.handler = requireAuth(async function (event, context) {
+exports.handler = withSentry(requireAuth(async function (event, context) {
   _currentEvent = event;
   if (event.httpMethod !== 'GET') return json(405, { error: 'Method Not Allowed' });
 
@@ -66,4 +67,4 @@ exports.handler = requireAuth(async function (event, context) {
   } catch (e) {
     return json(200, { ok: true, records: [] });
   }
-});
+}), { functionName: 'mein-aktivitaetsprotokoll' });

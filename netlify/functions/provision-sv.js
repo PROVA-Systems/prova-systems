@@ -8,6 +8,7 @@
  * Optional (in Airtable anlegen): Trial_End (Datum), Onboarding_Datum (Datum)
  */
 const { AIRTABLE_API, BASE_ID, TABLE_SV } = require('./lib/prova-subscription.js');
+const { withSentry } = require('./lib/sentry-wrap'); // MEGA²⁸ W6P2-I2: Sentry-Wrap
 const { getCorsHeaders, corsOptionsResponse, jsonResponse } = require('./lib/cors-helper');
 
 function json(statusCode, obj) {
@@ -18,7 +19,7 @@ function json(statusCode, obj) {
   };
 }
 
-exports.handler = async function (event, context) {
+exports.handler = withSentry(async function (event, context) {
   if (event.httpMethod === 'OPTIONS') {
     return corsOptionsResponse(event);
   }
@@ -115,5 +116,4 @@ exports.handler = async function (event, context) {
   } catch (e) {
     return json(502, { error: String(e && e.message ? e.message : e) });
   }
-};
-
+}, { functionName: 'provision-sv' });

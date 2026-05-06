@@ -7,6 +7,7 @@
 // MEGA¹⁵.5 W39: Konsolidierter Helper (MAKE_WEBHOOKS-JSON statt einzelne ENVs)
 // Backwards-Compat: liest MAKE_WEBHOOK_<KEY>-Legacy-ENVs als Fallback
 const { requireAuth } = require('./lib/jwt-middleware');
+const { withSentry } = require('./lib/sentry-wrap'); // MEGA²⁸ W6P2-I2: Sentry-Wrap
 const { getMakeWebhook } = require('./lib/make-webhooks');
 
 const WEBHOOKS = {
@@ -16,7 +17,7 @@ const WEBHOOKS = {
   support:            getMakeWebhook('support')    || '',
 };
 
-exports.handler = requireAuth(async (event, context) => {
+exports.handler = withSentry(requireAuth(async (event, context) => {
   const allowedOrigin = process.env.URL || 'https://prova-systems.de'; // FIX: kein Wildcard
   const headers = {
     'Access-Control-Allow-Origin':  allowedOrigin,
@@ -83,4 +84,4 @@ exports.handler = requireAuth(async (event, context) => {
   } catch (err) {
     return { statusCode: 500, headers, body: JSON.stringify({ error: err.message }) };
   }
-});
+}), { functionName: 'emails' });
