@@ -1,0 +1,257 @@
+<!--
+  ════════════════════════════════════════════════════════════════════════
+  PROVA F-19 WERTGUTACHTEN — Liquid-Variante (MEGA²⁸ W8-I2)
+  Recherche-Quellen: docs/sprint-status/MEGA-28-W8-T5-RECHERCHE-F19.md
+  Stand: 2026-05-10
+  Compliance: ImmoWertV 2021 + § 194 BauGB + § 407a Abs. 3 ZPO + Art. 50 EU AI Act
+  Pflicht-Klauseln: 5 (Bewertungsstichtag, Verfahrens-Begründung, BGH-Marge, §407a, Art. 50)
+  ════════════════════════════════════════════════════════════════════════
+-->
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>{{ az }} — Verkehrswertgutachten {{ objekt_adresse | default: "Objekt" }}</title>
+<style>
+  @page { size: A4; margin: 22mm 18mm 18mm 22mm; @top-left { content: "{{ sv_name }} · {{ sv_qualifikation | default: 'ö.b.u.v. Sachverständiger' }}"; font-family: 'Inter', sans-serif; font-size: 8pt; color: #64748b; padding-top: 10mm; } }
+  body { font-family: 'Inter', system-ui, sans-serif; color: #1f2937; font-size: 10pt; line-height: 1.55; }
+  h1, h2, h3 { color: #1e3a8a; }
+  .deckblatt { page-break-after: always; margin-top: 30mm; }
+  .deckblatt-titel { font-size: 22pt; font-weight: 800; letter-spacing: -.02em; margin-bottom: 8mm; }
+  .deckblatt-az { font-family: 'JetBrains Mono', monospace; font-size: 11pt; color: #4f8ef7; margin-bottom: 4mm; }
+  .deckblatt-objekt { font-size: 13pt; font-weight: 600; margin-bottom: 18mm; }
+  .deckblatt-sv-block { margin-top: 24mm; padding-top: 8mm; border-top: 1px solid #d1d5db; }
+  .deckblatt-sv-label { font-size: 9pt; color: #6b7280; text-transform: uppercase; letter-spacing: .04em; margin-bottom: 2mm; }
+  .deckblatt-sv-name { font-size: 12pt; font-weight: 700; }
+  .deckblatt-sv-qualifikation { font-size: 10pt; color: #4b5563; margin-bottom: 4mm; }
+  .teil-header { background: #1e3a8a; color: #fff; padding: 4mm 6mm; margin: 12mm 0 6mm; font-weight: 700; font-size: 12pt; letter-spacing: .02em; }
+  .abschnitt-header { display: flex; align-items: baseline; gap: 4mm; margin: 8mm 0 3mm; padding-bottom: 1mm; border-bottom: 1px solid #d1d5db; }
+  .abschnitt-nr { font-family: 'JetBrains Mono', monospace; font-size: 11pt; font-weight: 700; color: #4f8ef7; }
+  .abschnitt-titel { font-size: 12pt; font-weight: 700; color: #1e3a8a; }
+  .pflicht-klausel { margin: 4mm 0; padding: 4mm 5mm; background: #fff7ed; border-left: 3px solid #f59e0b; border-radius: 4px; font-size: 9.5pt; line-height: 1.5; }
+  .pflicht-klausel strong { color: #92400e; }
+  .law-ref { font-family: 'JetBrains Mono', monospace; font-size: 9pt; color: #4f8ef7; background: rgba(79,142,247,.08); padding: 1px 4px; border-radius: 3px; }
+  .verfahren-tabelle { width: 100%; border-collapse: collapse; margin: 4mm 0; font-size: 9.5pt; }
+  .verfahren-tabelle th { background: #f3f4f6; text-align: left; padding: 3mm 4mm; font-weight: 700; }
+  .verfahren-tabelle td { padding: 3mm 4mm; border-top: 1px solid #e5e7eb; }
+  .verkehrswert-box { margin: 8mm 0; padding: 6mm; background: linear-gradient(135deg, #1e3a8a, #3a7be0); color: #fff; border-radius: 8px; }
+  .verkehrswert-label { font-size: 11pt; opacity: .85; margin-bottom: 2mm; }
+  .verkehrswert-eur { font-size: 24pt; font-weight: 800; margin-bottom: 2mm; }
+  .verkehrswert-worten { font-size: 11pt; font-style: italic; opacity: .9; }
+  .fachurteil-box { margin: 6mm 0; padding: 5mm 6mm; background: #f0fdf4; border-left: 3px solid #10b981; border-radius: 4px; }
+  .fachurteil-intro { font-size: 9.5pt; color: #065f46; margin-bottom: 3mm; font-style: italic; }
+  .fachurteil-text { font-size: 10pt; line-height: 1.7; white-space: pre-wrap; }
+  .ki-disclosure-box { margin: 8mm 0 6mm; padding: 5mm 6mm; border: 1px solid #d6dde8; border-left: 3px solid #4f8ef7; border-radius: 4px; background: #f7f9fc; font-size: 9.5pt; line-height: 1.55; page-break-inside: avoid; }
+  .ki-disclosure-box-title { font-weight: 700; color: #2c3e50; margin-bottom: 2.5mm; font-size: 9pt; text-transform: uppercase; letter-spacing: 0.04em; }
+  .unterschrift-block { margin-top: 12mm; padding-top: 6mm; border-top: 1px solid #d1d5db; }
+  .unterschrift-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12mm; margin-top: 8mm; }
+  .unterschrift-line { border-bottom: 1px solid #1f2937; height: 14mm; margin-bottom: 2mm; }
+  .unterschrift-label { font-size: 9pt; color: #6b7280; }
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════════════════════════
+     DECKBLATT
+     ════════════════════════════════════════════════════════════ -->
+<div class="deckblatt">
+  <div class="deckblatt-az">{{ az }}</div>
+  <h1 class="deckblatt-titel">Verkehrswertgutachten</h1>
+  <p class="deckblatt-objekt">{{ objekt_adresse }}</p>
+  <p style="font-size:10pt;color:#4b5563;">Bewertungsstichtag: {{ bewertungsstichtag }}</p>
+
+  <div class="deckblatt-sv-block">
+    <div class="deckblatt-sv-label">Erstattender Sachverständiger</div>
+    <div class="deckblatt-sv-name">{{ sv_name }}</div>
+    <div class="deckblatt-sv-qualifikation">{{ sv_qualifikation | default: "ö.b.u.v. Sachverständiger" }}{% if sv_sachgebiet %} für {{ sv_sachgebiet }}{% endif %}</div>
+    <div style="font-size:9pt;color:#6b7280;">{{ sv_anschrift }}</div>
+  </div>
+
+  <div style="margin-top:18mm;font-size:9pt;color:#6b7280;">
+    <strong>Auftraggeber:</strong> {{ auftraggeber_name }}<br>
+    {{ auftraggeber_anschrift }}<br>
+    <strong>Datum Auftragseingang:</strong> {{ auftrag_datum }}<br>
+    <strong>Datum Gutachten-Erstattung:</strong> {{ datum }}
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════
+     TEIL 1 — DECKBLATT + AUFTRAG + BEWEISFRAGEN
+     ════════════════════════════════════════════════════════════ -->
+<div class="teil-header">Teil 1 — Auftrag und Beweisfragen</div>
+
+<div class="abschnitt-header">
+  <div class="abschnitt-nr">1.1</div>
+  <div class="abschnitt-titel">Auftragsbeschreibung</div>
+</div>
+<p>Der unterzeichnende Sachverständige wurde mit Auftrag vom {{ auftrag_datum }} durch {{ auftraggeber_name }} mit der Erstattung eines Verkehrswertgutachtens für das Objekt {{ objekt_adresse }} beauftragt.</p>
+
+<div class="abschnitt-header">
+  <div class="abschnitt-nr">1.2</div>
+  <div class="abschnitt-titel">Beweisfragen</div>
+</div>
+<ol>
+{% for frage in beweisfragen %}
+  <li>{{ frage }}</li>
+{% endfor %}
+</ol>
+
+<div class="pflicht-klausel">
+  <strong>Bewertungsstichtag (§ 7 ImmoWertV):</strong> Die Wertermittlung bezieht sich ausschließlich auf den Bewertungsstichtag <strong>{{ bewertungsstichtag }}</strong>. Spätere Markt- oder Objekt-Veränderungen sind nicht berücksichtigt.
+</div>
+
+<!-- ════════════════════════════════════════════════════════════
+     TEIL 2 — STAMMDATEN
+     ════════════════════════════════════════════════════════════ -->
+<div class="teil-header">Teil 2 — Stammdaten</div>
+
+<div class="abschnitt-header">
+  <div class="abschnitt-nr">2.1</div>
+  <div class="abschnitt-titel">Objektdaten</div>
+</div>
+<table class="verfahren-tabelle">
+  <tr><th>Adresse</th><td>{{ objekt_adresse }}</td></tr>
+  <tr><th>Objekt-Typ</th><td>{{ objekt_typ }}</td></tr>
+  <tr><th>Baujahr</th><td>{{ baujahr }}</td></tr>
+  <tr><th>Wohnfläche</th><td>{{ wohnflaeche_qm }} m²</td></tr>
+  <tr><th>Grundstücksfläche</th><td>{{ grundstuecksflaeche_qm }} m²</td></tr>
+  <tr><th>Bewertungsstichtag</th><td><strong>{{ bewertungsstichtag }}</strong></td></tr>
+</table>
+
+<div class="abschnitt-header">
+  <div class="abschnitt-nr">2.2</div>
+  <div class="abschnitt-titel">Vorgelegte Unterlagen</div>
+</div>
+<ul>
+{% for unterlage in vorgelegte_unterlagen %}
+  <li>{{ unterlage }}</li>
+{% endfor %}
+</ul>
+
+<div class="abschnitt-header">
+  <div class="abschnitt-nr">2.3</div>
+  <div class="abschnitt-titel">Ortsbesichtigung</div>
+</div>
+<p>Eine Ortsbesichtigung erfolgte am {{ ortsbesichtigung_datum }}{% if ortsbesichtigung_anwesende %}, anwesend: {{ ortsbesichtigung_anwesende }}{% endif %}.</p>
+
+<!-- ════════════════════════════════════════════════════════════
+     TEIL 3 — BEANTWORTUNG DER BEWEISFRAGEN
+     ════════════════════════════════════════════════════════════ -->
+<div class="teil-header">Teil 3 — Beantwortung der Beweisfragen</div>
+
+<div class="abschnitt-header">
+  <div class="abschnitt-nr">3.1</div>
+  <div class="abschnitt-titel">Wahl des Bewertungsverfahrens</div>
+</div>
+
+<div class="pflicht-klausel">
+  <strong>Verfahrens-Begründung (§ 6 ImmoWertV):</strong> Die Wahl des Verfahrens <strong>{{ verfahren_gewaehlt }}</strong> erfolgte nach § 6 ImmoWertV unter Berücksichtigung des ortsüblichen Geschäftsverkehrs und der Eigenart des Bewertungsobjekts.
+</div>
+
+<p>{{ verfahren_begruendung }}</p>
+
+{% if vergleichswert_eur %}
+<div class="abschnitt-header">
+  <div class="abschnitt-nr">3.2</div>
+  <div class="abschnitt-titel">Vergleichswertverfahren <span class="law-ref">§§ 14-23 ImmoWertV</span></div>
+</div>
+<table class="verfahren-tabelle">
+  <tr><th>Vergleichswert</th><td><strong>{{ vergleichswert_eur }} €</strong></td></tr>
+  <tr><th>Vergleichsobjekt-Quellen</th><td>{{ vergleichswert_quellen }}</td></tr>
+</table>
+{% endif %}
+
+{% if sachwert_eur %}
+<div class="abschnitt-header">
+  <div class="abschnitt-nr">3.3</div>
+  <div class="abschnitt-titel">Sachwertverfahren <span class="law-ref">§§ 35-43 ImmoWertV</span></div>
+</div>
+<table class="verfahren-tabelle">
+  <tr><th>Bodenwert</th><td>{{ sachwert_bodenwert_eur }} €</td></tr>
+  <tr><th>Sachwert bauliche Anlagen</th><td>{{ sachwert_baulich_eur }} €</td></tr>
+  <tr><th>Sachwert gesamt</th><td><strong>{{ sachwert_eur }} €</strong></td></tr>
+</table>
+{% endif %}
+
+{% if ertragswert_eur %}
+<div class="abschnitt-header">
+  <div class="abschnitt-nr">3.{% if vergleichswert_eur %}{% if sachwert_eur %}4{% else %}3{% endif %}{% else %}{% if sachwert_eur %}3{% else %}2{% endif %}{% endif %}</div>
+  <div class="abschnitt-titel">Ertragswertverfahren <span class="law-ref">§§ 27-34 ImmoWertV</span></div>
+</div>
+<table class="verfahren-tabelle">
+  <tr><th>Reinertrag</th><td>{{ ertragswert_reinertrag_eur }} €</td></tr>
+  <tr><th>Kapitalisierungszinssatz</th><td>{{ ertragswert_kapitalisierungszinssatz }}%</td></tr>
+  <tr><th>Ertragswert gesamt</th><td><strong>{{ ertragswert_eur }} €</strong></td></tr>
+</table>
+{% endif %}
+
+<!-- 3.X Sachverständige Beurteilung (Fachurteil) — SV-EIGENHÄNDIG! -->
+<div class="abschnitt-header">
+  <div class="abschnitt-nr">3.X</div>
+  <div class="abschnitt-titel">Sachverständige Beurteilung (Fachurteil)</div>
+</div>
+
+<div class="fachurteil-box">
+  <div class="fachurteil-intro">Die nachstehende Beurteilung wurde vollständig und ausschließlich vom unterzeichnenden Sachverständigen persönlich erstellt, ohne KI-Unterstützung. Die abschließende fachliche Entscheidung obliegt allein dem Sachverständigen (<span class="law-ref">§ 10 IHK-SVO</span>, <span class="law-ref">§ 407a Abs. 2 ZPO</span>).</div>
+  <div class="fachurteil-text">{{ fachurteil_text }}</div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════
+     TEIL 4 — ZUSAMMENFASSUNG + COMPLIANCE + UNTERSCHRIFT
+     ════════════════════════════════════════════════════════════ -->
+<div class="teil-header">Teil 4 — Zusammenfassung und Verkehrswert</div>
+
+<div class="abschnitt-header">
+  <div class="abschnitt-nr">4.1</div>
+  <div class="abschnitt-titel">Verkehrswert (Marktwert)</div>
+</div>
+
+<div class="verkehrswert-box">
+  <div class="verkehrswert-label">Verkehrswert {{ objekt_adresse }} zum Bewertungsstichtag {{ bewertungsstichtag }}</div>
+  <div class="verkehrswert-eur">{{ verkehrswert_eur }} €</div>
+  <div class="verkehrswert-worten">{{ verkehrswert_eur_in_worten }}</div>
+</div>
+
+<div class="pflicht-klausel">
+  <strong>Verkehrswert-Definition (<span class="law-ref">§ 194 BauGB</span>):</strong> Der Verkehrswert (Marktwert) wird durch den Preis bestimmt, der in dem Zeitpunkt, auf den sich die Ermittlung bezieht, im gewöhnlichen Geschäftsverkehr nach den rechtlichen Gegebenheiten und tatsächlichen Eigenschaften, der sonstigen Beschaffenheit und der Lage des Bewertungsobjekts ohne Rücksicht auf ungewöhnliche oder persönliche Verhältnisse zu erzielen wäre.
+</div>
+
+<div class="pflicht-klausel">
+  <strong>BGH-Genauigkeitsmarge:</strong> Nach BGH-Rechtsprechung (V ZR 420/99 vom 12.01.2001) ist eine Genauigkeitsmarge bis ±30% des ermittelten Verkehrswerts anzuerkennen. Eine Punktlandung im genauen Marktpreis ist sachverständig nicht möglich.
+</div>
+
+<div class="abschnitt-header">
+  <div class="abschnitt-nr">4.2</div>
+  <div class="abschnitt-titel">Eigenleistung und KI-Hilfsmittel-Erklärung</div>
+</div>
+
+<div class="ki-disclosure-box">
+  <div class="ki-disclosure-box-title">KI-Hilfsmittel-Erklärung (§ 407a Abs. 3 ZPO · Art. 50 EU AI Act)</div>
+  <p style="margin:0;">Bei der Erstellung dieses Gutachtens wurden KI-gestützte Werkzeuge ausschließlich zur Strukturierung, Grammatik-Prüfung, Rechtschreibung und Konsistenz-Analyse eingesetzt. <strong>Alle fachlichen Bewertungen und Schlussfolgerungen wurden vom unterzeichnenden Sachverständigen persönlich geprüft und freigegeben.</strong> Die Gesamtverantwortung für den Inhalt verbleibt ausschließlich beim Sachverständigen (<span class="law-ref">§ 407a ZPO</span>, <span class="law-ref">Art. 50 EU AI Act</span>).</p>
+</div>
+
+<p style="margin-top:6mm;font-size:9.5pt;">
+  <strong>Eigenleistungs-Anteil:</strong> Das Fachurteil (Teil 3.X) wurde vollständig und ausschließlich vom unterzeichnenden Sachverständigen persönlich verfasst, ohne KI-Unterstützung.
+</p>
+
+<div class="abschnitt-header">
+  <div class="abschnitt-nr">4.3</div>
+  <div class="abschnitt-titel">Ort, Datum, Unterschrift und Stempel</div>
+</div>
+
+<div class="unterschrift-block">
+  <div style="font-size:10pt;margin-bottom:6mm;">{{ unterschrift_ort }}, den {{ unterschrift_datum }}</div>
+  <div class="unterschrift-grid">
+    <div>
+      <div class="unterschrift-line"></div>
+      <div class="unterschrift-label">Unterschrift Sachverständiger<br>{{ sv_name }}</div>
+    </div>
+    <div>
+      <div class="unterschrift-line"></div>
+      <div class="unterschrift-label">Stempel</div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

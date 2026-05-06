@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v301';   // MEGA²⁸ V3.2-W7N-I1: Live-Transkript Manual-Input-Schutz (Variante A, 5s pause + buffer-flush) — Pre-Pilot-Blocker gefixt, Marcel-Browser-Test pflicht (Decision #15)
+const CACHE_VERSION = 'prova-v303';   // MEGA²⁸ V3.2-W8-I7: admin-cockpit 12/12 LIVE (Section 7 Support-Inbox + Section 12 Billing-Sync mit neuen Lambdas admin-support-inbox + admin-billing-sync) + 20 neue Tests grün
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [

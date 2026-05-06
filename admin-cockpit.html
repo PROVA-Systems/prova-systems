@@ -173,16 +173,19 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
       </div>
     </div>
 
-    <!-- Section 7 — Support-Inbox (Skeleton) -->
-    <div class="cp-card skeleton">
+    <!-- Section 7 — Support-Inbox (W8-I7 LIVE) -->
+    <div class="cp-card">
       <div class="cp-card-head">
         <span class="cp-card-num">7</span>
         <span class="cp-card-title">Support-Inbox</span>
-        <span class="cp-status skeleton">SKELETON</span>
+        <span class="cp-status live">LIVE</span>
       </div>
-      <p class="cp-card-desc">IONOS-Email-Tickets aggregiert.</p>
-      <div class="cp-data">→ TBD (Welle 6 — Lambda admin-support-inbox)</div>
-      <div class="cp-actions"><span class="cp-btn">Welle 6</span></div>
+      <p class="cp-card-desc">Support-Tickets aggregiert (support_tickets-Table mit audit_trail-Fallback).</p>
+      <div class="cp-data" id="data-7">⏳ Lade live data…</div>
+      <div class="cp-actions">
+        <button class="cp-btn primary" type="button" onclick="loadSupportInbox()">Aktualisieren</button>
+        <a class="cp-btn" href="/.netlify/functions/admin-support-inbox?range=7d" target="_blank">Raw JSON</a>
+      </div>
     </div>
 
     <!-- Section 8 — Push-Alerts-Stream (LIVE-Fetch) -->
@@ -245,16 +248,19 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
       </div>
     </div>
 
-    <!-- Section 12 — Billing-Sync (Skeleton) -->
-    <div class="cp-card skeleton">
+    <!-- Section 12 — Billing-Sync (W8-I7 LIVE) -->
+    <div class="cp-card">
       <div class="cp-card-head">
         <span class="cp-card-num">12</span>
         <span class="cp-card-title">Billing-Sync</span>
-        <span class="cp-status skeleton">SKELETON</span>
+        <span class="cp-status live">LIVE</span>
       </div>
-      <p class="cp-card-desc">Stripe-Status, Invoice-History, Disputes.</p>
-      <div class="cp-data">→ Stripe API direkt (UI fehlt)</div>
-      <div class="cp-actions"><span class="cp-btn">Welle 6 Stripe-Sync</span></div>
+      <p class="cp-card-desc">Stripe-Subscriptions-Status + Invoice-History + MRR-Aggregation.</p>
+      <div class="cp-data" id="data-12">⏳ Lade live data…</div>
+      <div class="cp-actions">
+        <button class="cp-btn primary" type="button" onclick="loadBillingSync()">Aktualisieren</button>
+        <a class="cp-btn" href="/.netlify/functions/admin-billing-sync" target="_blank">Raw JSON</a>
+      </div>
     </div>
 
   </div>
@@ -415,6 +421,49 @@ async function loadConversion() {
   }
 }
 
+async function loadSupportInbox() {
+  const el = document.getElementById('data-7');
+  if (!el) return;
+  el.innerHTML = '⏳ Lade…';
+  try {
+    const res = await provaFetch('/.netlify/functions/admin-support-inbox?range=7d');
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    const open = data.open_count != null ? fmtCount(data.open_count) : '—';
+    const closed = data.closed_count != null ? fmtCount(data.closed_count) : '—';
+    const total = data.total != null ? fmtCount(data.total) : '—';
+    const sourceTag = data.source && data.source !== 'support_tickets' ? ' <em>(' + escHtml(data.source) + ')</em>' : '';
+    el.innerHTML =
+      '<strong>Open:</strong> ' + escHtml(String(open)) +
+      ' &nbsp;·&nbsp; <strong>Closed:</strong> ' + escHtml(String(closed)) +
+      ' &nbsp;·&nbsp; <strong>Total 7d:</strong> ' + escHtml(String(total)) + sourceTag;
+  } catch (e) {
+    el.innerHTML = '<span style="color:var(--danger);">Fehler: ' + escHtml(e.message) + '</span>';
+  }
+}
+
+async function loadBillingSync() {
+  const el = document.getElementById('data-12');
+  if (!el) return;
+  el.innerHTML = '⏳ Lade…';
+  try {
+    const res = await provaFetch('/.netlify/functions/admin-billing-sync');
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    const active = data.active_count != null ? fmtCount(data.active_count) : '—';
+    const trialing = data.trialing_count != null ? fmtCount(data.trialing_count) : '—';
+    const past_due = data.past_due_count != null ? fmtCount(data.past_due_count) : '—';
+    const mrr = data.mrr_eur != null ? fmtEUR(data.mrr_eur * 100) : '—';
+    el.innerHTML =
+      '<strong>Active:</strong> ' + escHtml(String(active)) +
+      ' &nbsp;·&nbsp; <strong>Trial:</strong> ' + escHtml(String(trialing)) +
+      ' &nbsp;·&nbsp; <strong>Past-Due:</strong> ' + escHtml(String(past_due)) +
+      ' &nbsp;·&nbsp; <strong>MRR:</strong> ' + escHtml(mrr);
+  } catch (e) {
+    el.innerHTML = '<span style="color:var(--danger);">Fehler: ' + escHtml(e.message) + '</span>';
+  }
+}
+
 // Auto-load on page-ready
 document.addEventListener('DOMContentLoaded', function () {
   if (typeof provaFetch === 'function') {
@@ -425,6 +474,8 @@ document.addEventListener('DOMContentLoaded', function () {
     loadChurn();
     loadGutachtenTiming();
     loadConversion();
+    loadSupportInbox();
+    loadBillingSync();
   }
 });
 </script>
