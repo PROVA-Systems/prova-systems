@@ -17,6 +17,7 @@
 const { resolveUser, logAuthFailure } = require('./lib/auth-resolve');
 const { getCorsHeaders } = require('./lib/cors-helper');
 const ProvaPseudo = require('./lib/prova-pseudo'); // MEGA²⁸ W3-I7: PII-Pseudonymisierung in Logs
+const { withSentry } = require('./lib/sentry-wrap'); // MEGA²⁸ W7-I2: Sentry-Wrap manual
 
 // S6 Phase 1.9: per-request event-Capture (siehe ki-proxy.js Begruendung)
 let _currentEvent = null;
@@ -48,7 +49,7 @@ function isAllowedOrigin(event) {
   });
 }
 
-exports.handler = async (event) => {
+exports.handler = withSentry(async (event) => {
   _currentEvent = event;
   if (event.httpMethod === 'OPTIONS') {
     return { statusCode: 200, headers: corsHeaders(), body: '' };
@@ -113,7 +114,7 @@ exports.handler = async (event) => {
     default:
       return { statusCode: 400, headers: corsHeaders(), body: JSON.stringify({ error: `Unbekannte Aktion: ${aktion}` }) };
   }
-};
+}, { functionName: 'push-notify' });
 
 // ── VAPID Public Key liefern (für Client-seitiges Subscribe) ────────────────
 function handleVapidKey() {
