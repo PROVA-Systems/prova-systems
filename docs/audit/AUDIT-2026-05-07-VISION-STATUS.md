@@ -145,3 +145,32 @@
 
 ---
 
+## Bereich 6 — Compliance-Härtung
+
+**Status:** 🟡 TEILWEISE
+**Komplettheit:** **~80%**
+
+**Belege FÜR:**
+- ✅ DSGVO-DB-Functions Live (Supabase MCP):
+  - `dsgvo_user_export()` ✅
+  - `dsgvo_user_loeschen()` ✅
+  - 🔴 `dsgvo_user_portabilitaet()` FEHLT (Regel 19 verlangt 3 Functions)
+- ✅ EU AI Act Art. 50 Disclosure auf Gutachten-Templates: `F-04`, `F-09`, `F-10`, `F-11`, `F-12` (5+ Liquid-Templates verifiziert via grep)
+- ✅ KEINE EU-AI-Act-Box auf Rechnungen: `F-02-PAUSCHALRECHNUNG.template.html:578` Comment "bewusst entfernt v1.1 - keine gesetzliche Pflicht für Rechnungen" — **Vision-konform** ✅
+- ✅ Forced Re-Consent Foundation: `rechtsdokumente`-Tabelle existiert (Regel 20 Foundation)
+- ✅ AVV-Tabelle: `versicherungs_partner` existiert (Regel 18 Foundation)
+- ✅ Disclaimer-Lib: `lib/prova-disclaimer.js` existiert (Regel 12)
+- ✅ Compliance-Check-Lib: `compliance-check.js` (Repo-Root)
+- ✅ Audit-Trail INSERT-only Constraint: `audit_trail`-Tabelle aktiv (4 rows in Production)
+
+**Lücken:**
+- 🔴 `dsgvo_user_portabilitaet()` DB-Function FEHLT — Regel 19 nicht vollständig erfüllt
+- 🟡 §407a-Pre-Send-Modal mit 3 Häkchen vor Freigabe: AUDIT-UNKLAR (kein Modal-Pattern in `freigabe.html` direkt belegt)
+- 🟡 AVV-Tabelle Live-Pflege-Status: AUDIT-UNKLAR (0 rows in `versicherungs_partner` — leer? oder absichtlich noch nicht befüllt)
+- 🟡 Forced Re-Consent View `v_user_pending_einwilligungen` + Function `record_einwilligung()`: AUDIT-UNKLAR (separater MCP-Check nötig)
+- 🟡 EU AI Act PDF-Box auf ALLEN 12 Gutachten-Templates: nur 5 verifiziert via grep, Rest pending
+
+**Acceptance:** Compliance-Foundation steht, aber **3 konkrete Lücken** (Portabilitäts-Function, Pre-Send-Modal, AVV-Daten-Pflege).
+
+---
+
