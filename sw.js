@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v300';   // MEGA²⁸ V3.2-W7: ENV-Phase-2 (4 Production-Lambdas migriert) + Sentry-Wrap-Phase-3 manual (3 NO-CLOSING-MATCH gefixt, 58/64 = 91% Coverage) + admin-cockpit 10/12 LIVE (Gutachten-Timing + Conversion-Funnel) + F-18/F-22 + PROVA-GUTACHTEN Templates-Klärung — Pre-Pilot v300 ready
+const CACHE_VERSION = 'prova-v301';   // MEGA²⁸ V3.2-W7N-I1: Live-Transkript Manual-Input-Schutz (Variante A, 5s pause + buffer-flush) — Pre-Pilot-Blocker gefixt, Marcel-Browser-Test pflicht (Decision #15)
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [

@@ -301,3 +301,54 @@ Anthropic Backup (callOpenAIWithFallback bei 429/5xx):
 4. Frontend lib/ki-confidence-badge.js Confidence-Score live prüfen — erkennt GPT-5.5 als Frontier?
 
 **Welle-4-Item:** Anthropic-Pricing live verifizieren + ggf. PRICING-Schätzungen korrigieren.
+
+---
+
+## DECISION #15 (W7N-I1) — Live-Transkript Manual-Input-Schutz IMPLEMENTIERT
+
+**Datum:** 2026-05-10 (Welle 7 NEU)
+**Status:** ✅ Code-Fix umgesetzt — Marcel-Browser-Test pflicht
+**Vorgänger:** Decision #13 (W2-Welle, Bug-Pattern dokumentiert, Browser-Verify-deferred)
+
+### Variante-A-Lösung (CTO-Vote, implementiert in app-logic.js:2722-2790)
+
+**Pattern:** Manual-Input pausiert Live-Append für 5 Sekunden mit Buffer-Flush.
+
+**State-Variablen:**
+- `window._lastManualInputTs` (number, Timestamp letzter manueller Eingabe)
+- `window._pendingTranscriptBuffer` (string, gepufferter Live-Text während Pause)
+
+**Event-Listener auf #transcriptArea:**
+- `input` (contenteditable Änderung)
+- `keydown` (Tastatureingabe)
+- `paste` (Paste-Event)
+
+**Idempotenz:** `data-w7i1Bound` Attribut verhindert Doppel-Bind bei Re-Init.
+
+**onresult-Logic:**
+1. Wenn `Date.now() - lastManualInputTs < 5000ms` → Final-Text in Buffer parken, KEIN Append
+2. Sonst: Buffer-Flush (gepufferte Texte mit `data-buffered-during-edit` Marker als Hellblau-Hintergrund) + neue Final-Texte appenden
+
+### Marcel — Browser-Test-Anleitung
+
+```
+1. Mikrofon-Aufnahme starten (vor-ort.html oder app.html)
+2. In transcriptArea klicken, Cursor positionieren
+3. Manuell tippen oder Text korrigieren während Live-Stream läuft
+4. Erwartung:
+   - 5 Sekunden lang: KEIN neuer Live-Append (Cursor bleibt stabil)
+   - Nach 5s ohne Eingabe: gepufferte Texte erscheinen mit hellblauem Hintergrund
+   - Cursor-Position bleibt erhalten
+5. Failure-Case: wenn Cursor springt oder Live-Text fehlt → ROLLBACK + Variante B (Cursor-Position-Tracking)
+```
+
+### Tests
+
+- `tests/live-transkript/w7n-i1.test.js` — 12/12 grün
+- Strukturelle Verifikation: PAUSE_AFTER_MANUAL_MS, Event-Listener, Buffer-Pattern, Audit-Marker
+- Volle Browser-Verifikation pflicht (Web-Speech-API kann nicht in Node-Tests gemockt werden)
+
+### Welle-8-Item bei Failure
+- Variante B: Cursor-Position-Tracking + Insert-At-Position statt append
+- Variante C: explizit "Pause Live"-Toggle-Button
+

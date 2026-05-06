@@ -2722,11 +2722,54 @@ async function starteAufnahme() {
   recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
   recognition.continuous = true; recognition.interimResults = false; recognition.lang = 'de-DE';
 
+  // ════════════════════════════════════════════════════════════════════════
+  // MEGA²⁸ W7N-I1 — Live-Transkript Manual-Input-Schutz (Variante A)
+  // Bug: User-Editing während Live-Stream → Append kollidiert mit Cursor.
+  // Fix: Wenn User in transcriptArea tippt, pausiere Live-Append für 5s.
+  // Browser-Verify-Marker: Marcel-Smoke-Test pflicht (Decision-Log).
+  // ════════════════════════════════════════════════════════════════════════
+  window._lastManualInputTs = 0;
+  const PAUSE_AFTER_MANUAL_MS = 5000;
+  const _areaForListener = $('#transcriptArea');
+  if (_areaForListener && !_areaForListener.dataset.w7i1Bound) {
+    const _markManual = () => { window._lastManualInputTs = Date.now(); };
+    _areaForListener.addEventListener('input', _markManual);   // contenteditable input
+    _areaForListener.addEventListener('keydown', _markManual);
+    _areaForListener.addEventListener('paste', _markManual);
+    _areaForListener.dataset.w7i1Bound = '1';
+  }
+
   recognition.onresult = e => {
+    // W7N-I1 Variante A: skip Append wenn User vor < 5s manuell editiert hat.
+    if (Date.now() - (window._lastManualInputTs || 0) < PAUSE_AFTER_MANUAL_MS) {
+      // Buffer den Final-Text statt droppen — wird bei nächstem Append (post-Pause) geflushed.
+      window._pendingTranscriptBuffer = window._pendingTranscriptBuffer || '';
+      for (let j = e.resultIndex; j < e.results.length; j++) {
+        if (e.results[j].isFinal) {
+          window._pendingTranscriptBuffer += (window._pendingTranscriptBuffer ? ' ' : '') + e.results[j][0].transcript.trim();
+        }
+      }
+      return;
+    }
+
     const area = $('#transcriptArea');
     const empty = area.querySelector('.transcript-empty');
     if (empty) empty.style.display = 'none';
     let interim = '';
+
+    // W7N-I1 Buffer-Flush: pending Live-Text aus Pause-Periode anhängen
+    if (window._pendingTranscriptBuffer) {
+      const pendingText = window._pendingTranscriptBuffer;
+      window._pendingTranscriptBuffer = '';
+      window.transcriptText += (window.transcriptText ? ' ' : '') + pendingText;
+      const pBuffered = document.createElement('p');
+      pBuffered.style.cssText = 'font-family:var(--font-body);font-size:.9375rem;line-height:1.7;color:var(--gray-700);margin-bottom:.5rem;background:rgba(79,142,247,.04);';
+      pBuffered.textContent = pendingText;
+      pBuffered.dataset.bufferedDuringEdit = '1';
+      area.appendChild(pBuffered);
+      area.scrollTop = area.scrollHeight;
+    }
+
     for (let i = e.resultIndex; i < e.results.length; i++) {
       if (e.results[i].isFinal) {
         const text = e.results[i][0].transcript.trim();
