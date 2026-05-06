@@ -48,21 +48,21 @@ exports.handler = withSentry(requireAuth(async function (event, context) {
   const allResults = [];
 
   try {
-    // 1. Auftraege durchsuchen
+    // 1. Auftraege durchsuchen — Schema W12-I0: az (NICHT aktenzeichen), schadensart_label, kurzbeantwortung
     if (typeFilter === 'all' || typeFilter === 'akten') {
       try {
         const { data: auftraege } = await sb.from('auftraege')
-          .select('id, aktenzeichen, schadensart, schaden_strasse, ort, status, created_at')
-          .or('aktenzeichen.ilike.%' + queryLower + '%,schaden_strasse.ilike.%' + queryLower + '%,ort.ilike.%' + queryLower + '%')
+          .select('id, az, schadensart_label, schadensart_kategorie, kurzbeantwortung, status, created_at')
+          .or('az.ilike.%' + queryLower + '%,schadensart_label.ilike.%' + queryLower + '%,kurzbeantwortung.ilike.%' + queryLower + '%')
           .limit(limit);
         (auftraege || []).forEach(a => allResults.push({
           type: 'akte',
           id: a.id,
-          title: a.aktenzeichen || '(kein AZ)',
-          subtitle: [a.schadensart, a.ort].filter(Boolean).join(' · '),
+          title: a.az || '(kein AZ)',
+          subtitle: [a.schadensart_label || a.schadensart_kategorie, a.status].filter(Boolean).join(' · '),
           status: a.status,
-          href: 'akte.html?az=' + encodeURIComponent(a.aktenzeichen || ''),
-          score: a.aktenzeichen && a.aktenzeichen.toLowerCase().includes(queryLower) ? 100 : 50
+          href: 'akte.html?az=' + encodeURIComponent(a.az || ''),
+          score: a.az && a.az.toLowerCase().includes(queryLower) ? 100 : 50
         }));
       } catch (_) { /* table maybe not present */ }
     }

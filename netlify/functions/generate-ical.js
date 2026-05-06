@@ -91,19 +91,33 @@ function buildIcalBody(termine, sv_email) {
   ];
 
   termine.forEach(t => {
-    const uid = (t.id || (t.az + '-' + t.start)) + '@prova-systems.de';
-    const dtstart = toIcalDateTime(t.start);
-    const dtend = t.end ? toIcalDateTime(t.end) : toIcalDateTime(new Date(new Date(t.start).getTime() + 60 * 60 * 1000)); // default 1h
+    // Schema W12-I0: datum DATE + uhrzeit_von/uhrzeit_bis TIME + dauer_minuten + ical_uid
+    if (!t.datum) return;
+    const startISO = t.uhrzeit_von ? (t.datum + 'T' + t.uhrzeit_von) : (t.datum + 'T09:00:00');
+    const dtstart = toIcalDateTime(startISO);
     if (!dtstart) return;
+    let dtend;
+    if (t.uhrzeit_bis) {
+      dtend = toIcalDateTime(t.datum + 'T' + t.uhrzeit_bis);
+    } else if (t.dauer_minuten) {
+      dtend = toIcalDateTime(new Date(new Date(startISO).getTime() + t.dauer_minuten * 60000));
+    } else {
+      dtend = toIcalDateTime(new Date(new Date(startISO).getTime() + 60 * 60 * 1000));
+    }
+    const uid = t.ical_uid || (t.id + '@prova-systems.de');
+    const auftragAz = t.auftraege && t.auftraege.az ? t.auftraege.az : null;
+    const ortParts = [t.ort_name, t.ort_adresse, t.ort_plz, t.ort_ort].filter(Boolean).join(', ');
+
     lines.push('BEGIN:VEVENT');
     lines.push(foldLine('UID:' + uid));
     lines.push('DTSTAMP:' + now);
     lines.push('DTSTART:' + dtstart);
     if (dtend) lines.push('DTEND:' + dtend);
-    lines.push(foldLine('SUMMARY:' + escapeText(t.titel || t.az || 'Termin')));
+    if (typeof t.ical_sequence === 'number') lines.push('SEQUENCE:' + t.ical_sequence);
+    lines.push(foldLine('SUMMARY:' + escapeText(t.titel || auftragAz || 'Termin')));
     if (t.beschreibung) lines.push(foldLine('DESCRIPTION:' + escapeText(t.beschreibung)));
-    if (t.ort) lines.push(foldLine('LOCATION:' + escapeText(t.ort)));
-    if (t.az) lines.push(foldLine('CATEGORIES:' + escapeText('Akte ' + t.az)));
+    if (ortParts) lines.push(foldLine('LOCATION:' + escapeText(ortParts)));
+    if (auftragAz) lines.push(foldLine('CATEGORIES:' + escapeText('Akte ' + auftragAz)));
     lines.push('STATUS:CONFIRMED');
     lines.push('TRANSP:OPAQUE');
     lines.push('END:VEVENT');
@@ -127,23 +141,24 @@ async function innerHandler(event, context) {
   const sb = getSupabase();
   if (!sb) return { statusCode: 503, headers: getCorsHeaders(event), body: 'Supabase nicht konfiguriert' };
 
-  // Range default: nächste 90 Tage
+  // Range default: nächste 90 Tage. Schema W12-I0: datum DATE.
   const range = (event.queryStringParameters && event.queryStringParameters.range) || '90d';
   const days = parseInt((range.match(/^(\d+)d$/) || [])[1] || '90', 10);
-  const fromIso = new Date().toISOString();
-  const toIso = new Date(Date.now() + days * 86400000).toISOString();
+  const fromDate = new Date().toISOString().slice(0, 10);
+  const toDate = new Date(Date.now() + days * 86400000).toISOString().slice(0, 10);
 
   let termine = [];
   try {
     const { data } = await sb.from('termine')
-      .select('id, az, titel, beschreibung, ort, start, end, sv_email')
-      .gte('start', fromIso)
-      .lte('start', toIso)
-      .order('start', { ascending: true })
+      .select('id, auftrag_id, titel, beschreibung, ort_name, ort_adresse, ort_plz, ort_ort, datum, uhrzeit_von, uhrzeit_bis, dauer_minuten, ical_uid, ical_sequence, status, auftraege(az)')
+      .gte('datum', fromDate)
+      .lte('datum', toDate)
+      .is('deleted_at', null)
+      .neq('status', 'abgesagt')
+      .order('datum', { ascending: true })
       .limit(500);
     termine = data || [];
   } catch (_) {
-    // Tabelle vielleicht nicht da → leerer Kalender
     termine = [];
   }
 
