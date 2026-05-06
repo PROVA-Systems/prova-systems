@@ -179,3 +179,38 @@
 **Default umgesetzt:** KORR-12 als no-op markiert. Marcel reviewt: V3.1-Spec überschreibt P5b.X1.4 oder nicht?
 
 ---
+
+---
+
+## DECISION #10 RESOLUTION (W1-I6) — Sidebar-Resize-Konflikt-Analyse
+
+**Recherche-Ergebnis:** P5b.X1.4 ist KEIN formales Sprint-Doc, sondern nur ein Code-Kommentar in nav.js (Zeilen 947-950). Das ist eine implizite Marcel-Decision während P5b ohne separate Sprint-Doku.
+
+**Inhalt P5b.X1.4 (zitiert aus nav.js:947-950):**
+> "P5b.X1.4: Auto-Collapse-Breakpoint deaktiviert fuer Range 768-1024.
+> Marcel-Spec: Sidebar bleibt voll sichtbar bei halbiertem Desktop-Fenster.
+> Unter 768px greift sowieso der Mobile-Mode."
+
+**V3.1-Prompt-Anforderung (zitiert):**
+> "nav.js:479-488 — Auto-Collapse bei 769-1099px greift nur bei Page-Load, nicht bei Resize"
+
+**Konflikt-Analyse:**
+- V3.1 spricht von 769-1099px Range mit erwartetem Auto-Collapse
+- P5b.X1.4 sagt: 768-1024 explizit DEAKTIVIERT
+- Range-Differenz (1024 vs 1099) wirkt wie Marcel-Memory-Drift
+- **Echte Konflikt-Substanz:** sollte 768-1099 (oder 1024) Auto-Collapse haben?
+
+**CTO-Empfehlung (final):** P5b.X1.4-Spec respektieren. Marcel hat explizit dokumentiert, dass Sidebar bei halbiertem Desktop-Fenster voll sichtbar bleibt — User-Hand-Wahl persistent. V3.1-Anforderung wirkt wie alte Memory-Drift. Item bleibt no-op bis Marcel explizite gegenteilige Decision trifft.
+
+**Status:** RESOLVED als "no-op". Falls Marcel ändern will: Decision-Log-Eintrag + nav.js:947-950 Kommentar aktualisieren.
+
+---
+
+## DECISION #11 (W1-I7) — Auftrag&Identifikation Doppelung — Bereits behoben
+
+**Recherche-Ergebnis:** `grep -rn "Auftrag.{0,3}Identifikation"` findet 0 Code-Treffer (nur Treffer in MEGA-28-FRONTEND-COMPLETE-FINAL.md selbst, das die TODO erwähnt).
+
+**Status:** Doppelung wurde in früherem Sprint bereits beseitigt. KORR-13 ist effectively no-op.
+
+**Keine Action nötig.**
+
