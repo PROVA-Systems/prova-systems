@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v291';   // MEGA²⁸ P1-I1: schadensfaelle.html Übersicht-Liste Flow A + 22 Tests (2061 grün)
+const CACHE_VERSION = 'prova-v292';   // MEGA²⁸ V3.1 KORR-Runde: KI-PROMPTS-MASTER + Make T3+F1 Doc + AVV/TOM/Verfahrensverzeichnis + DSGVO-Portability + Rate-Limit-Helper + Migration 15 is_demo + Bescheinigungen-Inventory + Sandbox-Inventory + Decision-Log #10 + Dep-Updates (10 commits, 2080+ tests grün)
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
