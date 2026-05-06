@@ -100,3 +100,48 @@
 
 ---
 
+## Bereich 4 — Prompt-Caching (W4 Bonus)
+
+**Status:** 🔴 NICHT GEBAUT
+**Komplettheit:** **0%**
+
+**Belege:**
+- ❌ `grep "cache_control\|prompt_cache\|cached_tokens"` in `netlify/functions/ki-proxy.js` → 0 Matches
+- ❌ Schema-Reference enthält keine `ki_protokoll.cached_tokens_in` Spalte (grep auf Schema-Ref → 0 Matches)
+- ❌ Keine OpenAI cache_control Headers gesetzt
+- ❌ Keine Cache-Key-Strategie
+
+**Lücken:**
+- W4-Bonus-Sprint nicht durchgeführt. System-Prompts > 1024 Tokens vermutlich existent, aber Caching nicht aktiviert.
+- Schema-Erweiterung um `cached_tokens_in` Spalte in `ki_protokoll` fehlt.
+
+**Acceptance:** **Optional** (nicht Vision-Kern). Cost-Optimierung post-Pilot wenn KI-Volumen steigt.
+
+---
+
+## Bereich 5 — §6 Fachurteil-Editor (Vision-Kern!)
+
+**Status:** 🟡 TEILWEISE
+**Komplettheit:** **~50%**
+**Pages:** `stellungnahme.html` (Hauptort, Zeile 167+), `app.html`, `compliance-check.js`, `dashboard-logic.js`, `akte-logic.js`
+
+**Belege FÜR Pattern-Erfüllung:**
+- ✅ KI-Output non-copyable (Regel 11): `stellungnahme.html:167` `<div class="card-body" id="kiAnalyseContent" style="user-select:none;-webkit-user-select:none;...">`
+- ✅ EIGENLEISTUNG-Fortschrittsbalken: `stellungnahme.html:208` Comment-Marker — Foundation vorhanden
+- ✅ KI-Prompt-Pattern für Fachurteil mit "WAS DER SV BISHER IN §6 GESCHRIEBEN HAT" Context: `stellungnahme-logic.js:953`
+- ✅ Pflicht-Test-Suite: `tests/sv-eigenleistung/validator.test.js`
+- ✅ Compliance-Check-Lib: `compliance-check.js` (Repo-Root)
+
+**Lücken / AUDIT-UNKLAR:**
+- 🟡 **AUDIT-UNKLAR:** 60% Viewport-Layout für leeres Textfeld — nicht durch CSS-grep verifiziert.
+- 🟡 **AUDIT-UNKLAR:** 500-Zeichen-Eigenleistung-Gate als hartes Gate vor Freigabe-Button — nur Fortschrittsbalken-Comment gefunden, kein expliziter Lock.
+- 🟡 **AUDIT-UNKLAR:** 2/3-Qualitäts-Marker (Norm/Konjunktiv/§-Verweis) — kein Pattern wie `q_marker_count >= 2` gegrept.
+- 🟡 **AUDIT-UNKLAR:** Override-Modal mit audit_trail-Eintrag — Modal-Komponente nicht direkt belegt.
+- 🟡 **AUDIT-UNKLAR:** S1/S2/S3-Buttons opt-in — KI-UI in `stellungnahme.html` existiert, aber Stufen-Trennung-Verifikation pending.
+- 🔴 **Skizzen-Inline-Embed (Marker `[SKIZZE-N]`)** — kein Pattern im Editor gegrept.
+- 🟡 **Befunde-Panel rechts** zieht aus §1-§5: Layout-Pattern existiert, aber rein-faktisch-Filter AUDIT-UNKLAR.
+
+**Acceptance:** **Mittlerer Vision-Kern teilweise erfüllt**, aber 6 von 11 Soll-Anforderungen sind AUDIT-UNKLAR. **Kritischer separater Audit-Walk durch `stellungnahme.html` + `stellungnahme-logic.js` nötig** vor Pilot-Live.
+
+---
+
