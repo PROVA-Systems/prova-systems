@@ -88,9 +88,10 @@ exports.handler = withSentry(requireAdmin(async function (event, context) {
     return jsonResponse(event, 405, { error: 'Method Not Allowed' });
   }
 
-  const secret = process.env.AUTH_HMAC_SECRET;
+  // MEGA²⁸ W6P2-I5: Defensiv-Migration PROVA-Prefix (alte ENV bleibt funktional)
+  const secret = process.env.PROVA_AUTH_HMAC_SECRET || process.env.AUTH_HMAC_SECRET;
   if (!secret || secret.length < 32) {
-    return jsonResponse(event, 500, { error: 'AUTH_HMAC_SECRET fehlt/zu kurz' });
+    return jsonResponse(event, 500, { error: 'PROVA_AUTH_HMAC_SECRET (Legacy: AUTH_HMAC_SECRET) fehlt/zu kurz' });
   }
 
   let body;

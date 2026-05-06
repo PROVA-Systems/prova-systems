@@ -52,14 +52,15 @@ exports.handler = async (event) => {
     }
 
     // bcrypt Hash aus Env-Var laden (Primary)
-    const storedHash = process.env.ADMIN_PASSWORD_BCRYPT;
+    // MEGA²⁸ W6P2-I5: Defensiv-Migration PROVA-Prefix (Regel 35) + Backwards-Compat
+    const storedHash = process.env.PROVA_ADMIN_PASSWORD_BCRYPT || process.env.ADMIN_PASSWORD_BCRYPT;
 
     if (!storedHash) {
       // MEGA²⁸ W6-I3: Legacy-Migration-Fallback (NICHT Doppelung!).
       // ADMIN_PASSWORD_HASH = alter SHA-256-Hash aus Pre-Bcrypt-Phase.
       // Migrations-Workflow: bei erstem Login mit altem Hash → ENV manuell auf BCRYPT umstellen.
       // Sobald BCRYPT gesetzt, wird HASH ignoriert. Beide ENVs sind also bewusst koexistent.
-      const oldHash = process.env.ADMIN_PASSWORD_HASH;
+      const oldHash = process.env.PROVA_ADMIN_PASSWORD_HASH || process.env.ADMIN_PASSWORD_HASH;
       if (oldHash) {
         const crypto = require('crypto');
         const sha256 = crypto.createHash('sha256').update(password).digest('hex');

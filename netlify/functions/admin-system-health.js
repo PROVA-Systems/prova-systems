@@ -38,7 +38,7 @@ exports.handler = withSentry(requireAdmin(async function (event, context) {
     OPENAI_API_KEY: !!process.env.OPENAI_API_KEY,
     PDFMONKEY_API_KEY: !!process.env.PDFMONKEY_API_KEY,
     SENTRY_DSN_FUNCTIONS: !!process.env.SENTRY_DSN_FUNCTIONS,
-    AUTH_HMAC_SECRET: !!process.env.AUTH_HMAC_SECRET,
+    AUTH_HMAC_SECRET: !!(process.env.PROVA_AUTH_HMAC_SECRET || process.env.AUTH_HMAC_SECRET), // W6P2-I5: defensiv
     PROVA_SMTP_HOST: !!process.env.PROVA_SMTP_HOST
   };
 
