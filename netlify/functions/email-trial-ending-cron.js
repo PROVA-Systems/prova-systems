@@ -34,6 +34,12 @@ exports.handler = withSentry(async function (event) {
   const tpl = Email.loadTemplate('TRIAL-ENDING');
   if (!tpl) return jsonResponse(event, 500, { error: 'Template fehlt' });
 
+  // MEGA³³ M33-I2: Founding-Remaining aus DB statt ENV.
+  // Pattern: 10 Founding-Plätze, vergeben in chronologischer Reihenfolge der Signups.
+  const FOUNDING_TOTAL = 10;
+  const { count: totalWorkspaces } = await sb.from('workspaces').select('id', { count: 'exact', head: true });
+  const foundingRemaining = Math.max(0, FOUNDING_TOTAL - (totalWorkspaces || 0));
+
   let sent = 0, skipped = 0;
   for (const w of (workspaces || [])) {
     const { data: owner } = await sb.from('users').select('email, vorname').eq('id', w.owner_user_id).maybeSingle();
@@ -43,7 +49,7 @@ exports.handler = withSentry(async function (event) {
       user_first_name: owner.vorname || '',
       trial_end_date: new Date(w.trial_end).toLocaleDateString('de-DE'),
       checkout_url: 'https://app.prova-systems.de/pricing.html',
-      founding_remaining: process.env.PROVA_FOUNDING_REMAINING || ''
+      founding_remaining: foundingRemaining > 0 ? String(foundingRemaining) : ''
     });
     const r = await Email.sendEmail({
       to: owner.email,
