@@ -62,7 +62,7 @@ async function detectAiConflicts(p4_text, p6_text, openaiCall) {
   if (!openaiCall || typeof openaiCall !== 'function') return [];
   try {
     const result = await openaiCall({
-      model: 'gpt-4o', // PFLICHT — Regel 14 + Konjunktiv-II-Sensitivität
+      model: 'gpt-5.5', // MEGA²⁸ W3-I0: Frontier-Modell PFLICHT (Regel 14 + Konjunktiv-II)
       max_tokens: 500,
       temperature: 0.2,
       messages: [

@@ -1,16 +1,87 @@
 # PROVA KI-PROMPTS MASTER
 
-**Stand:** 01.05.2026
-**Zweck:** Zentrale Sammlung aller KI-Prompts für `netlify/functions/ki-proxy.js` (OpenAI-Proxy mit Multi-Tenant-Auth + DSGVO-Pseudonymisierung)
-**Status:** SKELETON — leere Slots werden in Sprint 9 (KI-Prompt-Härtung) gefüllt
+**Stand:** 10.05.2026 (MEGA²⁸ W3-I0 — Modell-Strategie aktualisiert, Anthropic-Backup aktiviert)
+**Zweck:** Zentrale Sammlung aller KI-Prompts für `netlify/functions/ki-proxy.js` (Multi-Provider: OpenAI primary + Anthropic fallback)
+**Status:** Production — alle Modell-Strings W3-I0 auf GPT-5.x + Claude 4.x migriert
+
+---
+
+## 🔥 W3-I0 Modell-Update (10.05.2026)
+
+GPT-4o + GPT-4o-mini wurden Februar 2026 von OpenAI deprecated.
+Neue OpenAI-Lineup + Anthropic-Backup-Provider implementiert.
+
+### Aktuelle OpenAI-Modelle (verifiziert 10.05.2026)
+
+| Modell        | Prompt $/1M | Completion $/1M | Tier       | Use-Case                    |
+|---------------|-------------|-----------------|------------|-----------------------------|
+| gpt-5.5       | $5.00       | $30.00          | Frontier   | Konjunktiv-II, Compliance   |
+| gpt-5.5-pro   | $30.00      | $180.00         | Ultra      | Ultra-kritisch (selten)     |
+| gpt-5.4       | $2.50       | $15.00          | Mid        | Inline-Assist               |
+| gpt-5.4-mini  | $0.40       | $1.60           | Light      | Latency, mechanisch         |
+| gpt-5.4-nano  | $0.10       | $0.40           | Lightest   | Höchste Latenz-Demands      |
+
+### Anthropic-Backup-Provider (ANTHROPIC_API_KEY)
+
+| Modell                       | Prompt $/1M | Completion $/1M | Tier     |
+|------------------------------|-------------|-----------------|----------|
+| claude-opus-4-7              | ~$15        | ~$75            | Frontier |
+| claude-sonnet-4-6            | $3.00       | $15.00          | Mid      |
+| claude-haiku-4-5-20251001    | ~$0.80      | ~$4.00          | Light    |
+
+### Modell-Mapping pro Action (Single Source of Truth: ki-proxy.js MODELS-Konstante)
+
+| Action                | Primary OpenAI | Backup Anthropic            | Begründung                  |
+|-----------------------|----------------|-----------------------------|-----------------------------|
+| fachurteil_entwurf    | gpt-5.5        | claude-opus-4-7             | Rule 14 Konjunktiv-II       |
+| pruefe_fachurteil     | gpt-5.5        | claude-opus-4-7             | Rule 14 Compliance          |
+| qualitaetspruefung    | gpt-5.5        | claude-opus-4-7             | Konjunktiv-II-Check         |
+| ki-konsistenz-check   | gpt-5.5        | claude-opus-4-7             | §4↔§6 Compliance-kritisch   |
+| assist_inline         | gpt-5.4        | claude-sonnet-4-6           | Balance Q/Cost              |
+| freitext (Default)    | gpt-5.4-mini   | claude-haiku-4-5-20251001   | User-Override-fähig         |
+| support_chat          | gpt-5.4-mini   | claude-haiku-4-5-20251001   | Latenz, mechanisch          |
+| normen-picker         | gpt-5.4-mini   | claude-haiku-4-5-20251001   | S1-Klassifikation           |
+| foto-captioning       | gpt-5.4-mini   | claude-haiku-4-5-20251001   | Vision, mechanisch          |
+| whisper-transcript    | whisper-1      | (kein Anthropic-Equivalent) | Speech-to-Text              |
+
+### Fallback-Logic
+
+```js
+// netlify/functions/ki-proxy.js
+async function callOpenAIWithFallback(params, openaiApiKey, aufgabe) {
+  try {
+    return await callOpenAI(params, openaiApiKey);
+  } catch (err) {
+    const status = err && err.status;
+    const isFallbackable = !status || [429, 500, 502, 503, 504].includes(status);
+    const anthropicKey = process.env.ANTHROPIC_API_KEY;
+    if (!isFallbackable || !anthropicKey) throw err;
+
+    console.warn('[ki-proxy] OpenAI failed, falling back to Anthropic');
+    const anthropicModel = ANTHROPIC_BACKUP[aufgabe];
+    const result = await callAnthropic({ ...params, model: anthropicModel }, anthropicKey);
+    result._fallback_provider = 'anthropic';
+    return result;
+  }
+}
+```
+
+**Trigger:** 429 (Rate-Limit), 500/502/503/504 (Server-Outage), Network-Failure
+**Nicht-Fallback:** 400 (User-Error), 401 (Auth-Problem), 403 (Permission)
+
+### DEPRECATED-Modelle (NICHT MEHR NUTZEN in Production-Calls)
+
+- `gpt-4o`, `gpt-4o-mini`, `gpt-3.5-turbo` — Februar 2026 von OpenAI abgekündigt
+- `claude-3-5-sonnet`, `claude-3-haiku` — durch Claude 4.x ersetzt
+- Backwards-Compat-Mapping bleibt in `lib/ki-anthropic.js` MODEL_MAP + `lib/ki-cost-calc.js` PRICING für Übergang
 
 ---
 
 ## Architektur-Hinweise
 
 - Alle KI-Calls laufen über `/.netlify/functions/ki-proxy` mit `provaFetch` (Authorization-Header). Cross-Origin nicht erlaubt.
-- DSGVO: Pseudonymisierung VOR Übergabe an OpenAI (Names → `[NAME]`, Emails → `[EMAIL]`, IBAN → `[IBAN]`, etc. via `lib/prova-pseudo.js`).
-- Modell-Wahl pro Slot dokumentiert (siehe CLAUDE.md Regel 14: Konjunktiv-II-Check **nur GPT-4o**, niemals 4o-mini).
+- DSGVO: Pseudonymisierung VOR Übergabe an OpenAI/Anthropic (Names → `[NAME]`, Emails → `[EMAIL]`, IBAN → `[IBAN]`, etc. via `lib/prova-pseudo.js`).
+- Modell-Wahl pro Slot dokumentiert (siehe CLAUDE.md Regel 14: Konjunktiv-II-Check **nur Frontier-Modell** = gpt-5.5 oder claude-opus-4-7 als Backup).
 - KI macht NIE eigenständige fachliche Bewertungen (CLAUDE.md Regel 8). Nur strukturierte Hilfen + Konsistenz-Checks.
 - Halluzinations-Verbot (Regel 10): KI darf nichts erfinden, nur das wiedergeben was im Diktat oder Stamm-Daten stand.
 - **Konjunktiv II Pflicht** bei jeder Kausalaussage (Regel 9): „es liegt nahe, dass..." statt „es ist...".

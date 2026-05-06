@@ -2807,7 +2807,7 @@ async function bereinigeDiktatText() {
       method: 'POST',
       headers: {'Content-Type':'application/json'},
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'gpt-5.4-mini',
         max_tokens: 600,
         messages: [
           {role:'system', content:'Du bist ein Textkorrektur-Assistent. Formatiere den folgenden Sprach-zu-Text-Diktat-Text: setze Kommas, Punkte und Großschreibung korrekt. Korrigiere offensichtliche Spracherkennungsfehler ("zirka" statt "zirkr", Zahlen ausschreiben wenn klar). Behalte ALLE inhaltlichen Angaben exakt bei — ändere keine Zahlen, Messwerte oder Fakten. Antworte NUR mit dem korrigierten Fließtext, keine Erklärungen.'},

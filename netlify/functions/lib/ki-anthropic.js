@@ -37,22 +37,31 @@
 const ANTHROPIC_API_URL = 'https://api.anthropic.com/v1/messages';
 const ANTHROPIC_VERSION = '2023-06-01';
 
-// Model-Mapping OpenAI → Anthropic
-// Pflichtenheft: gpt-4o = "schwere" Aufgaben (Konjunktiv-II, Halluzinations-Check)
-//                gpt-4o-mini = "leichte" Aufgaben (Rechtschreibung, Kurz-Texte)
-// Anthropic-Aequivalente per CLAUDE.md (latest):
-//                Claude Sonnet 4.6 fuer schwer
-//                Claude Haiku 4.5 fuer leicht
+// Model-Mapping OpenAI → Anthropic (MEGA²⁸ W3-I0, 10.05.2026)
+// GPT-4o + GPT-4o-mini wurden Februar 2026 deprecated.
+// Aktuelles Lineup:
+//   gpt-5.5      = Frontier (Konjunktiv-II, Compliance) → claude-opus-4-7
+//   gpt-5.4      = Mid-Tier (Inline-Assist)             → claude-sonnet-4-6
+//   gpt-5.4-mini = Latency-Class (mechanisch)           → claude-haiku-4-5-20251001
 const MODEL_MAP = {
-  'gpt-4o': 'claude-sonnet-4-6',
-  'gpt-4o-mini': 'claude-haiku-4-5-20251001',
-  'gpt-4': 'claude-sonnet-4-6',
-  'gpt-4-turbo': 'claude-sonnet-4-6',
+  // Aktuelle Modelle (10.05.2026)
+  'gpt-5.5':       'claude-opus-4-7',
+  'gpt-5.5-pro':   'claude-opus-4-7',
+  'gpt-5.4':       'claude-sonnet-4-6',
+  'gpt-5.4-mini':  'claude-haiku-4-5-20251001',
+  'gpt-5.4-nano':  'claude-haiku-4-5-20251001',
+  // Backwards-Compat (deprecated, sicherer Fallback)
+  'gpt-4o':        'claude-sonnet-4-6',
+  'gpt-4o-mini':   'claude-haiku-4-5-20251001',
+  'gpt-4':         'claude-sonnet-4-6',
+  'gpt-4-turbo':   'claude-sonnet-4-6',
   'gpt-3.5-turbo': 'claude-haiku-4-5-20251001'
 };
 
 function mapOpenAIModelToAnthropic(openaiModel) {
   const m = String(openaiModel || '').toLowerCase();
+  // MEGA²⁸ W3-I0: Pass-Through für explicit Claude-Modelle (kein Re-Mapping)
+  if (m.startsWith('claude-')) return m;
   return MODEL_MAP[m] || 'claude-sonnet-4-6';  // sicherer Default
 }
 

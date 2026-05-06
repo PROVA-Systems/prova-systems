@@ -958,7 +958,7 @@ AUFGABE: Schreibe einen professionellen §6-Denkanstoß der AUSSCHLIESSLICH auf 
     const res = await (window.PROVA_PSEUDO_SEND ? window.PROVA_PSEUDO_SEND.fetch : fetch)('/.netlify/functions/ki-proxy', {
       method:'POST', headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'gpt-5.4-mini',
         max_tokens: 600,
         messages:[
           {role:'system', content: systemPrompt},
@@ -1007,7 +1007,7 @@ async function ausformulieren() {
     const res = await (window.PROVA_PSEUDO_SEND ? window.PROVA_PSEUDO_SEND.fetch : fetch)('/.netlify/functions/ki-proxy', {
       method:'POST', headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
-        model:'gpt-4o-mini',
+        model:'gpt-5.4-mini',
         max_tokens:700,
         messages:[
           {role:'system', content:`Du bist ein öffentlich bestellter und vereidigter Sachverständiger für Schäden an Gebäuden mit 30 Jahren Berufserfahrung. Du formulierst §6 Fachurteile für Gutachten.
@@ -1096,7 +1096,7 @@ async function ladeNormen() {
     const res = await (window.PROVA_PSEUDO_SEND ? window.PROVA_PSEUDO_SEND.fetch : fetch)('/.netlify/functions/ki-proxy', {
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({
-        model:'gpt-4o-mini',
+        model:'gpt-5.4-mini',
         max_tokens:200,
         messages:[
           {role:'system', content:'Du bist ein erfahrener Bausachverständiger. Antworte NUR mit einem JSON-Array der Norm-Bezeichnungen, z.B. ["DIN 4108-2","WTA 6-1-01/D"]. Keine Erklärungen, kein Markdown.'},

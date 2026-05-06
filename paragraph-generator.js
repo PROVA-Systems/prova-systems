@@ -270,7 +270,7 @@
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          model: 'gpt-4o-mini',
+          model: 'gpt-5.4-mini',
           max_tokens: 1200,
           temperature: 0.2,
           // v3.4: Fachwissen-Kontext triggern (Server injiziert typ-abhängige Normen)
@@ -309,7 +309,7 @@
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          model: 'gpt-4o-mini',
+          model: 'gpt-5.4-mini',
           max_tokens: 1500,
           temperature: 0.15,
           // v3.4: Fachwissen-Kontext triggern (§ 6 Fachurteil → max. 8 Normen)

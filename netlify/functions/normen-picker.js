@@ -106,7 +106,7 @@ async function handleSmart(schadensart, kontext, max, apiKey) {
       method: 'POST',
       headers: { 'Authorization': 'Bearer ' + apiKey, 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'gpt-5.4-mini', // MEGA²⁸ W3-I0: gpt-4o-mini deprecated → gpt-5.4-mini (S1 Norm-Klassifikation)
         temperature: 0.1,
         max_tokens: 200,
         messages: [

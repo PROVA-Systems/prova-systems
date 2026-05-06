@@ -251,3 +251,53 @@ Wenn User manuell in `#transcriptArea` tippt während Recognition läuft, übers
 
 **Empfehlung Marcel:** Browser-Reproduce + Variant (c) implementieren in einem 30-min-Sprint mit Live-Test.
 
+
+---
+
+## DECISION #14 (W3-I0) — KRITISCH: Modell-Strategie-Update + Anthropic-Backup
+
+**Datum:** 2026-05-10
+**Trigger:** Marcel-Erkenntnis 10.05.2026 — "GPT-4o wurde Februar 2026 von OpenAI deprecated"
+**V3.1-Fehler:** KORR-3 hat "gpt-4o-mini → gpt-4o" als Rule-14-Fix gemacht — beides deprecated.
+
+**Neue Modell-Strategie (10.05.2026):**
+
+OpenAI Primary:
+- gpt-5.5 ($5/$30) — Frontier (Konjunktiv-II / Compliance)
+- gpt-5.4 ($2.50/$15) — Mid-Tier
+- gpt-5.4-mini ($0.40/$1.60) — Light/Latency
+
+Anthropic Backup (callOpenAIWithFallback bei 429/5xx):
+- claude-opus-4-7 — Frontier-Backup
+- claude-sonnet-4-6 — Mid-Backup
+- claude-haiku-4-5-20251001 — Light-Backup
+
+**Code-Änderungen W3-I0:**
+- ki-proxy.js: MODELS-Konstanten + ANTHROPIC_BACKUP-Map + callOpenAIWithFallback-Function
+- lib/ki-anthropic.js: MODEL_MAP erweitert für gpt-5.x → claude-4.x + Pass-Through für claude-* Strings
+- lib/ki-cost-calc.js: PRICING erweitert mit GPT-5.x + Anthropic, deprecated-Modelle für Backwards-Compat behalten
+- ki-konsistenz-check.js: gpt-4o → gpt-5.5 (Compliance-kritisch)
+- foto-captioning.js + normen-picker.js: gpt-4o-mini → gpt-5.4-mini
+- 9 Frontend-Logic-Files: Bulk-Replace gpt-4o-mini → gpt-5.4-mini
+- compliance-check.js: gpt-4o-mini → gpt-5.5 (Konsistenz-Check)
+- lib/ki-prompts/index.js: alle 9 Modell-Strings updated
+- lib/ki-confidence-badge.js: Confidence-Logik erkennt jetzt GPT-5.x + Claude 4.x
+- lib/ki-service-openai.js: DEFAULT_VISION + DEFAULT_TEXT auf gpt-5.4-mini
+- lib/ki-service-interface.js: PRICES_USD_PER_1M aktualisiert
+
+**Tests:**
+- tests/ki-proxy/model-compliance.test.js: 18/18 grün (komplett neu)
+- tests/ki-cost/cost-calc.test.js: 23/23 grün (+11 neue für GPT-5.x + Claude)
+- tests/anthropic-helper/anthropic-helper.test.js: 13/13 grün (NEW)
+
+**ENV-Status:**
+- `ANTHROPIC_API_KEY` ist bereits live (Marcel hat es in Netlify gesetzt mit $50 Credit, siehe `lib/ki-service-anthropic.js` line 7)
+- Falls Key in einer Umgebung fehlt: Fallback-Logic ist defensive — wirft den Original-OpenAI-Error durch, kein Backup
+
+**Marcel-Action-Items:**
+1. Verifizieren: `ANTHROPIC_API_KEY` in Netlify-Production-ENV gesetzt? (`netlify env:get ANTHROPIC_API_KEY`)
+2. Pricing der Anthropic-Modelle live verifizieren (claude-opus-4-7, claude-haiku-4-5 — Werte in PRICING sind Schätzungen)
+3. Smoke-Test im Pilot: einen Konjunktiv-II-Check fahren → Response-Header `_fallback_provider` = 'anthropic'? Nein → OpenAI primary funktioniert.
+4. Frontend lib/ki-confidence-badge.js Confidence-Score live prüfen — erkennt GPT-5.5 als Frontier?
+
+**Welle-4-Item:** Anthropic-Pricing live verifizieren + ggf. PRICING-Schätzungen korrigieren.

@@ -215,7 +215,7 @@
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          model: 'gpt-4o-mini',
+          model: 'gpt-5.5', // MEGA²⁸ W3-I0: Konsistenz-Check ist Compliance-kritisch (Regel 14)
           max_tokens: 1500,
           temperature: 0.1,
           // v3.4: Fachwissen-Kontext — schadensart durchreichen (Server normalisiert)

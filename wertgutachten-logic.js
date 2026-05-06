@@ -767,7 +767,7 @@
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          model: 'gpt-4o-mini',
+          model: 'gpt-5.4-mini',
           max_tokens: 1400,
           temperature: 0.2,
           messages: [

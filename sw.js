@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v295';   // MEGA²⁸ V3.2-W3: cluster-cleanup + cloudflare-mailto-fix + sentry-audit + bescheinigungen + 4 PII-pseudo-fixes + ki-disclosure-partial + inline-css-extract (stellungnahme/app, -50%/-28%)
+const CACHE_VERSION = 'prova-v296';   // MEGA²⁸ V3.2-W3-I0 KRITISCH: Modell-Update GPT-5.5/5.4/5.4-mini + Anthropic-Backup-Provider (claude-opus-4-7/sonnet-4-6/haiku-4-5) + callOpenAIWithFallback (429/5xx) — 18+13 neue Tests grün
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [

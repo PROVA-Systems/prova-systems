@@ -64,7 +64,7 @@ Gib das JSON-Objekt zurück.`;
         'Authorization': 'Bearer ' + apiKey
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'gpt-5.4-mini', // MEGA²⁸ W3-I0: gpt-4o-mini deprecated → gpt-5.4-mini (Vision, mechanisch)
         max_tokens: 400,
         messages: [
           { role: 'system', content: systemPrompt },

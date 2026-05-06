@@ -1,24 +1,45 @@
 /**
- * PROVA — ki-cost-calc.js (MEGA²⁸ W1-I4)
+ * PROVA — ki-cost-calc.js (MEGA²⁸ W3-I0, 10.05.2026)
  *
  * Cost-Calculation für OpenAI/Anthropic-Calls. Pure-Function, testbar.
  *
- * Stand der Preise (10.05.2026):
- *   gpt-4o: $2.50 prompt / $10.00 completion per 1M tokens
- *   gpt-4o-mini: $0.15 prompt / $0.60 completion per 1M tokens
- *   claude-sonnet-4-6: $3.00 prompt / $15.00 completion per 1M tokens (Schätzung)
- *   whisper-1: $0.006 per Audio-Minute
+ * Stand der Preise (10.05.2026, USD per 1M tokens):
+ *   GPT-5.5         $5.00 prompt / $30.00 completion (Frontier, 24.04.2026)
+ *   GPT-5.5 Pro     $30.00 / $180.00 (ultra-kritisch)
+ *   GPT-5.4         $2.50 / $15.00 (Mid-Tier, gute Qualität)
+ *   GPT-5.4-mini    $0.40 / $1.60 (Latency-Class)
+ *   GPT-5.4-nano    $0.10 / $0.40 (Schätzung — günstigste Stufe)
+ *   Claude Opus 4.7    $15.00 / $75.00 (Frontier-Backup, Schätzung)
+ *   Claude Sonnet 4.6  $3.00 / $15.00 (Mid-Tier-Backup)
+ *   Claude Haiku 4.5   $0.80 / $4.00 (Latency-Backup, Schätzung)
+ *   Whisper-1          $0.006 per Audio-Minute
  *
+ * DEPRECATED (Feb 2026, Backwards-Compat behalten für Übergang):
+ *   gpt-4o, gpt-4o-mini, gpt-3.5-turbo, claude-3-5-sonnet, claude-3-haiku
+ *
+ * EUR-Conversion: USD * 0.92 (Approximation)
  * Tabelle: ki_protokoll (existiert live mit kosten_eur Spalte).
- * EUR-Conversion: USD * 0.92 (Approximation, sollte später via Live-Rate ersetzt werden)
  */
 'use strict';
 
 const PRICING = {
-  'gpt-4o': { prompt: 2.50, completion: 10.00 },
-  'gpt-4o-mini': { prompt: 0.15, completion: 0.60 },
-  'claude-sonnet-4-6': { prompt: 3.00, completion: 15.00 },
-  'claude-sonnet': { prompt: 3.00, completion: 15.00 }
+  // OpenAI — Aktuell (10.05.2026)
+  'gpt-5.5':       { prompt: 5.00,  completion: 30.00 },
+  'gpt-5.5-pro':   { prompt: 30.00, completion: 180.00 },
+  'gpt-5.4':       { prompt: 2.50,  completion: 15.00 },
+  'gpt-5.4-mini':  { prompt: 0.40,  completion: 1.60 },
+  'gpt-5.4-nano':  { prompt: 0.10,  completion: 0.40 },
+
+  // Anthropic — Aktuell (10.05.2026, Schätzungen — vor Live-Verifikation)
+  'claude-opus-4-7':           { prompt: 15.00, completion: 75.00 },
+  'claude-sonnet-4-6':         { prompt: 3.00,  completion: 15.00 },
+  'claude-haiku-4-5-20251001': { prompt: 0.80,  completion: 4.00 },
+  'claude-sonnet':             { prompt: 3.00,  completion: 15.00 },
+
+  // DEPRECATED — Backwards-Compat (Feb 2026 abgekündigt)
+  'gpt-4o':        { prompt: 2.50,  completion: 10.00 },
+  'gpt-4o-mini':   { prompt: 0.15,  completion: 0.60 },
+  'gpt-3.5-turbo': { prompt: 0.50,  completion: 1.50 }
 };
 
 const USD_TO_EUR = 0.92;

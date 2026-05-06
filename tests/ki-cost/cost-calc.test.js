@@ -80,14 +80,73 @@ describe('ki-cost-calc — buildProtokollPayload', () => {
 });
 
 describe('ki-cost-calc — PRICING-Konstante', () => {
-  test('alle 4 Modelle definiert', () => {
+  test('Backwards-Compat: deprecated gpt-4o/mini bleiben in Tabelle', () => {
     ['gpt-4o', 'gpt-4o-mini', 'claude-sonnet-4-6'].forEach(m => {
-      assert.ok(Lib.PRICING[m], m + ' fehlt in PRICING');
+      assert.ok(Lib.PRICING[m], m + ' fehlt in PRICING (Backwards-Compat)');
     });
   });
 
   test('GPT-4o Output 4x teurer als Input', () => {
     const r = Lib.PRICING['gpt-4o'];
     assert.equal(r.completion / r.prompt, 4);
+  });
+});
+
+describe('ki-cost-calc — W3-I0 GPT-5.x + Claude 4.x Pricing (10.05.2026)', () => {
+  test('GPT-5.5 Pricing: $5 prompt / $30 completion', () => {
+    assert.equal(Lib.PRICING['gpt-5.5'].prompt, 5.00);
+    assert.equal(Lib.PRICING['gpt-5.5'].completion, 30.00);
+  });
+
+  test('GPT-5.5 Pro Pricing: $30 / $180 (ultra-kritisch)', () => {
+    assert.equal(Lib.PRICING['gpt-5.5-pro'].prompt, 30.00);
+    assert.equal(Lib.PRICING['gpt-5.5-pro'].completion, 180.00);
+  });
+
+  test('GPT-5.4 Pricing: $2.50 / $15', () => {
+    assert.equal(Lib.PRICING['gpt-5.4'].prompt, 2.50);
+    assert.equal(Lib.PRICING['gpt-5.4'].completion, 15.00);
+  });
+
+  test('GPT-5.4-mini Pricing: $0.40 / $1.60', () => {
+    assert.equal(Lib.PRICING['gpt-5.4-mini'].prompt, 0.40);
+    assert.equal(Lib.PRICING['gpt-5.4-mini'].completion, 1.60);
+  });
+
+  test('Claude Opus 4.7 Pricing definiert', () => {
+    const r = Lib.PRICING['claude-opus-4-7'];
+    assert.ok(r, 'claude-opus-4-7 fehlt');
+    assert.ok(r.prompt > 0 && r.completion > 0);
+  });
+
+  test('Claude Sonnet 4.6 Pricing: $3 / $15', () => {
+    assert.equal(Lib.PRICING['claude-sonnet-4-6'].prompt, 3.00);
+    assert.equal(Lib.PRICING['claude-sonnet-4-6'].completion, 15.00);
+  });
+
+  test('Claude Haiku 4.5 Pricing definiert', () => {
+    const r = Lib.PRICING['claude-haiku-4-5-20251001'];
+    assert.ok(r, 'claude-haiku-4-5-20251001 fehlt');
+    assert.ok(r.prompt > 0 && r.completion > 0);
+  });
+
+  test('GPT-5.5 ist teurer als GPT-5.4 (Frontier-Premium)', () => {
+    assert.ok(Lib.PRICING['gpt-5.5'].prompt > Lib.PRICING['gpt-5.4'].prompt);
+  });
+
+  test('GPT-5.4-mini ist günstiger als GPT-5.4 (Light-Tier)', () => {
+    assert.ok(Lib.PRICING['gpt-5.4-mini'].prompt < Lib.PRICING['gpt-5.4'].prompt);
+  });
+
+  test('calculateUsdCost mit gpt-5.5: 1k prompt + 500 completion = $0.020', () => {
+    const c = Lib.calculateUsdCost('gpt-5.5', 1000, 500);
+    // 1000 * 5/1M + 500 * 30/1M = 0.005 + 0.015 = 0.020
+    assert.equal(c, 0.020);
+  });
+
+  test('calculateUsdCost mit claude-opus-4-7 substantially > Sonnet', () => {
+    const opus = Lib.calculateUsdCost('claude-opus-4-7', 1000, 500);
+    const sonnet = Lib.calculateUsdCost('claude-sonnet-4-6', 1000, 500);
+    assert.ok(opus > sonnet * 4); // Opus ~5x teurer als Sonnet
   });
 });
