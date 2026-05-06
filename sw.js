@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v401';   // MEGA²⁹ V3.2-W9N Continuous-Run: Cmd-K Globale Suche (Lambda+Frontend Hybrid, 14 Tests) + Cookie-DSGVO-Audit (13 Quellen) + iCal RFC 5545 Lambda (20 Tests) + Sprint 06b Schema-File + KI-Funktions-Garantie 19/19 grün + Stripe-MCP-TBD
+const CACHE_VERSION = 'prova-v500';   // MEGA³⁰ V3.2-W10 Markt-Reife-Vollendung-Foundation: Recherche-Block (7 Bereiche × ≥10 Quellen) + F-04 Liquid + Einträge-System Schema (Audit-Blocker A) + Fristen-System Schema (Audit-Blocker C) + Backup-Strategie-Doku — F-16/17/18, Skizzen, Lambdas/Frontends → W10b
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
