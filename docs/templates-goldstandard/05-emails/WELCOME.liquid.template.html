@@ -1,0 +1,46 @@
+<!--
+  PROVA W11-I5 Welcome-Mail (sofort nach Signup)
+  Variables: {{ user_email }}, {{ user_first_name }}, {{ trial_end_date }}, {{ login_url }}, {{ demo_fall_id? }}
+  PDFMonkey-kompatibel ODER direkt via Resend-API.
+-->
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>Willkommen bei PROVA</title>
+<style>
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#1f2937;line-height:1.6;margin:0;padding:0;background:#f3f4f6;}
+  .wrap{max-width:560px;margin:24px auto;background:#fff;padding:32px 28px;border-radius:12px;}
+  h1{font-size:22px;color:#1e3a8a;margin-bottom:8px;}
+  .muted{color:#6b7280;font-size:13px;}
+  .step{display:flex;gap:14px;margin:14px 0;align-items:flex-start;}
+  .step-num{flex-shrink:0;width:28px;height:28px;background:#4f8ef7;color:#fff;border-radius:14px;display:flex;align-items:center;justify-content:center;font-weight:700;}
+  .btn{display:inline-block;padding:12px 24px;background:linear-gradient(135deg,#4f8ef7,#3a7be0);color:#fff;text-decoration:none;border-radius:8px;font-weight:700;margin:14px 0;}
+  .footer{font-size:11px;color:#9ca3af;margin-top:28px;border-top:1px solid #e5e7eb;padding-top:14px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Willkommen bei PROVA{% if user_first_name %}, {{ user_first_name }}{% endif %}!</h1>
+  <p>schön, dass du dabei bist. PROVA ist die KI-native Plattform für ö.b.u.v. Bausachverständige — schneller von Diktat zum gerichtsfesten Gutachten.</p>
+
+  <h2 style="font-size:15px;color:#1e3a8a;margin-top:22px;">Deine ersten 5 Schritte</h2>
+
+  <div class="step"><div class="step-num">1</div><div><strong>Profil vervollständigen</strong><br><span class="muted">Adresse, Briefkopf-Logo, IHK-Sachgebiet — für PDF-Generierung.</span></div></div>
+  <div class="step"><div class="step-num">2</div><div><strong>2FA aktivieren</strong> (empfohlen)<br><span class="muted">Authenticator-App + 10 Recovery-Codes — Mandantengeheimnis-Schutz.</span></div></div>
+  <div class="step"><div class="step-num">3</div><div><strong>Demo-Fall erkunden</strong>{% if demo_fall_id %} (<a href="{{ login_url }}/akte.html?id={{ demo_fall_id }}">SCH-DEMO-001</a>){% endif %}<br><span class="muted">Wasserschaden-Beispiel mit Einträgen, Skizze, Fristen — kein Daten-Risiko.</span></div></div>
+  <div class="step"><div class="step-num">4</div><div><strong>Erste echte Akte anlegen</strong><br><span class="muted">Wizard führt durch Auftraggeber-Typ → Schadenadresse → Beweisfragen.</span></div></div>
+  <div class="step"><div class="step-num">5</div><div><strong>Stripe-Zahlmittel hinterlegen</strong><br><span class="muted">Trial endet am {{ trial_end_date }}. Solo 179€ / Team 379€. Founding-Lifetime 99€ für die ersten 10 Pilot-Kunden.</span></div></div>
+
+  <a class="btn" href="{{ login_url }}">Jetzt einloggen →</a>
+
+  <p class="muted">Brauchst du Hilfe? Antworte direkt auf diese Mail oder schreibe an <a href="mailto:kontakt@prova-systems.de">kontakt@prova-systems.de</a>.</p>
+
+  <div class="footer">
+    PROVA Systems · M. Schreiber · prova-systems.de<br>
+    DSGVO-Compliance: Diese Mail erhältst du weil du einen PROVA-Account erstellt hast.<br>
+    Abmelden für Onboarding-Mails: <a href="{{ login_url }}/einstellungen.html#email-prefs">Einstellungen</a>
+  </div>
+</div>
+</body>
+</html>
