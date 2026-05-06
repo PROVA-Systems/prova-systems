@@ -14,6 +14,10 @@ const { getCorsHeaders } = require('./lib/cors-helper');
 const { getSupabase } = require('./lib/storage-router');
 const Email = require('./lib/email-resend-helper');
 
+// MEGA³³ M33-I1: Default-Calendly-URL hardcoded mit ENV-Override (vermeidet Marcel-Manual-ENV).
+// Marcel kann via PROVA_CALENDLY_URL überschreiben, aber Default funktioniert sofort.
+const DEFAULT_CALENDLY_URL = 'https://calendly.com/marcel-schreiber-prova/pilot-feedback';
+
 exports.handler = withSentry(async function (event) {
   if (event.httpMethod === 'OPTIONS') return { statusCode: 204, headers: getCorsHeaders(event), body: '' };
 
@@ -46,7 +50,7 @@ exports.handler = withSentry(async function (event) {
   });
 
   let sent = 0, skipped = 0;
-  const calendlyUrl = process.env.PROVA_CALENDLY_URL || 'https://calendly.com/prova-systems/15min';
+  const calendlyUrl = process.env.PROVA_CALENDLY_URL || DEFAULT_CALENDLY_URL;
 
   for (const userId of Object.keys(byUser)) {
     const a = byUser[userId];
