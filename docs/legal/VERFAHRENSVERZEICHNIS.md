@@ -1,8 +1,9 @@
 # Verfahrensverzeichnis (Art. 30 DSGVO)
 
-**Stand:** 2026-05-10 (MEGA²⁸ KORR-22)
+**Stand:** 2026-05-10 (MEGA²⁸ W5-I4 — synchronisiert mit AVV + SUBPROCESSOR-LISTE)
 **Verantwortlicher:** PROVA-Systems / Marcel Schreiber
 **Status:** Vorlage, Anwalt-Review pflicht
+**Synchronisiert mit:** `docs/legal/AVV.md` §5, `docs/legal/SUBPROCESSOR-LISTE.md`, `docs/legal/SUBPROCESSOR-AUDIT.md`
 
 ---
 

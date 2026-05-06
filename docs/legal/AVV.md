@@ -1,8 +1,9 @@
 # AVV — Auftragsverarbeitungs-Vertrag (Vorlage)
 
-**Stand:** 2026-05-10 (MEGA²⁸ KORR-22)
+**Stand:** 2026-05-10 (MEGA²⁸ W5-I4 — Subprocessor-Liste komplett aktualisiert)
 **Status:** Anwalt-Review pflicht vor Pilot-Launch
 **Rechtsgrundlage:** Art. 28 DSGVO
+**Vorgänger:** KORR-22 (W3.1) — heute mit aktuellem Subprocessor-Audit überarbeitet
 
 ---
 
@@ -75,23 +76,31 @@ Siehe separate Anlage: `docs/legal/TOM.md`.
 
 ---
 
-## §5 Unterbeauftragung
+## §5 Unterbeauftragung (Subprozessoren)
+
+**Vollständige Subprozessor-Liste:** Siehe Anlage `docs/legal/SUBPROCESSOR-LISTE.md` (mit DPA-Verlinkung, Speicherdauer, Sub-Subprocessor pro Anbieter).
 
 **Aktuell genehmigte Unterbeauftragte (Sub-Auftragsverarbeiter):**
 
 | Anbieter | Zweck | Region | DPA-Status |
 |---|---|---|---|
-| Supabase Inc. | Datenbank + Storage | EU (Frankfurt) | Standard-DPA |
-| Stripe Inc. | Zahlungsabwicklung | USA + EU (SCC) | DPA + SCC |
-| OpenAI L.L.C. | KI-Text + Whisper-Audio | USA (SCC + Pseudo) | DPA + SCC |
-| Anthropic PBC | KI-Vision Claude Sonnet 4.6 | USA (SCC + Pseudo) | DPA + SCC |
-| PDFMonkey | PDF-Generation | USA (SCC) | DPA + SCC |
-| Sentry GmbH | Error-Tracking | EU (Frankfurt) | Standard-DPA |
-| Netlify Inc. | Hosting + Edge Functions | USA (SCC) | DPA + SCC |
-| IONOS SE | Email-SMTP | DE | Standard-DPA |
-| Resend Inc. (optional) | Email-Versand | USA + EU | DPA + SCC |
+| Supabase Inc. | Datenbank, Auth, Storage, Edge Functions | EU (Frankfurt, eu-central-1) | EU-DPA verfügbar |
+| Stripe Payments Europe Ltd. | Zahlungsabwicklung Subscriptions + Webhooks | Irland (EU) + USA (SCC) | EU-DPA |
+| OpenAI L.L.C. | KI-Text-Strukturhilfe (gpt-5.5/5.4/5.4-mini), Speech-to-Text (whisper-1) | USA (SCC + Pseudo) | DPA standard |
+| **Anthropic, PBC** ⭐ NEU | **KI-Backup-Provider** (claude-opus-4-7/sonnet-4-6/haiku-4-5-20251001) — automatischer Fallback bei OpenAI 429/5xx | USA (SCC + Pseudo) | DPA standard |
+| PDFMonkey (par tlrk SAS) | PDF-Generation aus Liquid-Templates | Frankreich (EU) | EU-DPA |
+| Functional Software Inc. (Sentry) | Error-Tracking + Performance-Monitoring (PII-pseudonymisiert) | USA (Marcel-Check für EU-Region) | DPA + SCC |
+| Netlify, Inc. | Frontend-Hosting + Edge Functions + Build-Pipeline | USA + EU-Edge | DPA + SCC (Business-Tier) |
+| 1&1 IONOS SE | SMTP-Email-Versand (SV-Korrespondenz, Welcome, Mahnungen) | Deutschland | AV-Vertrag |
+| **Formagrid Inc. (Airtable)** | Legacy-SV-Stammdaten, Auth-Trail, Briefe (in 19 aktiven Lambdas — Migration-Plan zu Supabase) | USA (SCC) | DPA standard |
+| **Make.com (Celonis-Tochter)** | Webhook-Bridge (Stripe-Events, Email-Trigger) — Migration-Plan zu Edge Functions | Tschechien (EU) | EU-DPA |
+| Cloudflare, Inc. (TBD) | DNS / CDN / WAF — Marcel-Action: Dashboard-Status-Check pflicht (W5-I3 audit) | USA + EU | DPA + SCC (falls aktiv) |
 
-Änderungen werden dem Auftraggeber mit 14-Tage-Vorlauf via Email mitgeteilt.
+**Stand der Subprozessor-Liste:** 2026-05-10 (W5-I4 nach Audit W5-I3).
+
+**TBD-Items (Marcel-Check):** Cloudflare-Status (DNS / Workers aktiv?), DocRaptor (PDF-Fallback aktiv?). Status nach Marcel-Klärung in `SUBPROCESSOR-LISTE.md` final.
+
+Änderungen der Subprozessor-Liste werden dem Auftraggeber mit 14-Tage-Vorlauf via Email mitgeteilt (gemäß Art. 28 Abs. 2 DSGVO).
 
 ---
 
@@ -151,10 +160,13 @@ SV kann jederzeit anfordern:
 **Anhänge:**
 - Anlage 1: TOM (`docs/legal/TOM.md`)
 - Anlage 2: Verfahrensverzeichnis (`docs/legal/VERFAHRENSVERZEICHNIS.md`)
-- Anlage 3: Subprozessor-Liste (siehe §5)
+- Anlage 3: Subprozessor-Liste (`docs/legal/SUBPROCESSOR-LISTE.md`)
+- Anlage 4: Subprocessor-Audit-Befund (`docs/legal/SUBPROCESSOR-AUDIT.md`)
 
 ---
 
 ⚠️ **Anwalt-Review pflicht vor Pilot-Launch.**
 
-*MEGA²⁸ KORR-22 — Vorlage von Claude Opus 4.7 (1M context)*
+*MEGA²⁸ W5-I4 — Subprocessor-Liste komplett aktualisiert basierend auf Audit W5-I3 (10.05.2026). Anthropic als KI-Backup-Provider ergänzt. Airtable + Make + Cloudflare ehrlich aufgeführt mit Migration-Status.*
+
+*Vorgänger: KORR-22 (W3.1).*
