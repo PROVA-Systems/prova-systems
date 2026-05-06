@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v660-w11-tabs';   // MEGA³² W11-I1 Schadensfall-Tab-Integration: 5 Tabs (Einträge/Skizzen/Fristen/Fotos/Dokumente) + 2 neue Lambdas (fotos-list/dokumente-list) + URL-Persistenz + Lazy-Load
+const CACHE_VERSION = 'prova-v700-market-ready';   // MEGA³² Welle 11 FINAL — Markt-Launch-Ready. 9/9 Items: Schadensfall-Tabs + Dashboard-Widget + AUTH-PERFEKT-2FA-UI + Demo-Fall + Onboarding-Emails + Admin-Cockpit-Widgets + Markt-Launch-Checklist + Schema-Final + Marcel-Onboarding-Doku.
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
