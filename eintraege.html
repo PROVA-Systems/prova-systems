@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1, viewport-fit=cover">
+<title>Einträge · PROVA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="prova-fetch-auth.js"></script>
+<script src="/lib/prova-config.js"></script>
+<script>
+(function(){
+  try {
+    var token = localStorage.getItem('prova_auth_token');
+    var email = localStorage.getItem('prova_sv_email') || '';
+    if (!token || !email) {
+      window.location.replace('/login?next=' + encodeURIComponent(location.pathname));
+      return;
+    }
+  } catch (e) { window.location.replace('/login'); }
+})();
+</script>
+<script type="module">
+  import { runAuthGuard } from '/lib/auth-guard.js';
+  runAuthGuard().catch(e => console.error('[auth] guard failed', e));
+</script>
+<script src="theme.js"></script>
+<script src="prova-layout.config.js"></script>
+<script src="nav.js" defer></script>
+<link rel="stylesheet" href="prova-design.css">
+<style>
+:root {
+  --bg:#0b0d11; --surface:#1c2130; --surface2:#232a3a;
+  --border:rgba(255,255,255,0.06); --border2:rgba(255,255,255,0.11);
+  --text:#eaecf4; --text2:#8b93ab; --text3:#4d5568;
+  --accent:#4f8ef7; --accent2:#3a7be0;
+  --success:#10b981; --warning:#f59e0b;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;line-height:1.55;}
+.et-wrap{max-width:1180px;margin:0 auto;padding:24px 20px 80px;}
+.et-h1{font-size:24px;font-weight:800;letter-spacing:-.025em;margin-bottom:6px;}
+.et-sub{font-size:14px;color:var(--text2);margin-bottom:20px;}
+.et-toolbar{display:flex;gap:10px;margin:18px 0;align-items:center;flex-wrap:wrap;}
+.et-filter{padding:8px 11px;background:var(--surface);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;}
+.et-btn{padding:8px 14px;border:none;border-radius:8px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;}
+.et-btn:hover{opacity:.9;}
+.et-list{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
+.et-row{display:grid;grid-template-columns:120px 140px 1fr 80px 90px 60px;gap:10px;padding:14px 18px;border-bottom:1px solid var(--border);align-items:center;font-size:13px;}
+.et-row:hover{background:rgba(255,255,255,.02);}
+.et-row:last-child{border-bottom:none;}
+.et-row-header{background:var(--surface2);font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);font-weight:700;}
+.et-typ{font-size:10px;padding:3px 8px;border-radius:8px;background:rgba(79,142,247,.12);color:var(--accent);font-weight:700;width:fit-content;}
+.et-dauer{font-family:ui-monospace,Consolas,monospace;color:var(--text2);}
+.et-abrech{font-size:10px;font-weight:700;}
+.et-abrech.ja{color:var(--success);}
+.et-abrech.nein{color:var(--text3);}
+.et-empty{padding:32px;text-align:center;color:var(--text3);font-size:13px;}
+.et-modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:500;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px);}
+.et-modal-overlay.open{display:flex;}
+.et-modal{background:var(--surface);border:1px solid var(--border2);border-radius:12px;max-width:560px;width:100%;padding:24px;}
+.et-modal h2{font-size:16px;font-weight:700;margin-bottom:16px;}
+.et-form-group{margin-bottom:12px;}
+.et-form-label{display:block;font-size:11px;font-weight:600;color:var(--text3);margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em;}
+.et-form-input,.et-form-select,.et-form-textarea{width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;}
+.et-form-textarea{min-height:80px;resize:vertical;}
+.et-modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:18px;}
+.et-modal-cancel{padding:8px 16px;background:transparent;border:1px solid var(--border2);color:var(--text2);border-radius:8px;cursor:pointer;font-family:inherit;}
+@media(max-width:600px){.et-row{grid-template-columns:1fr;gap:4px;padding:12px;}.et-row-header{display:none;}}
+</style>
+</head>
+<body>
+<main class="et-wrap" id="main-content">
+
+  <h1 class="et-h1">Einträge</h1>
+  <p class="et-sub">Gerichtsfeste Chronologie deiner Arbeit pro Schadensfall — Diktate, Termine, Korrespondenz, Recherchen. JVEG-Stundenzettel-Foundation.</p>
+
+  <div class="et-toolbar">
+    <select class="et-filter" id="f-typ" onchange="loadEintraege()">
+      <option value="">Alle Typen</option>
+      <option value="ortstermin">Ortstermin</option>
+      <option value="telefonat">Telefonat</option>
+      <option value="email">E-Mail</option>
+      <option value="recherche">Recherche</option>
+      <option value="gutachten-arbeit">Gutachten-Arbeit</option>
+      <option value="akteneinsicht">Akteneinsicht</option>
+      <option value="korrespondenz">Korrespondenz</option>
+      <option value="sonstiges">Sonstiges</option>
+    </select>
+    <input type="date" class="et-filter" id="f-from" onchange="loadEintraege()" placeholder="Von">
+    <input type="date" class="et-filter" id="f-to" onchange="loadEintraege()" placeholder="Bis">
+    <button class="et-btn" type="button" onclick="openCreate()">+ Neuer Eintrag</button>
+    <span style="margin-left:auto;font-size:12px;color:var(--text3);" id="et-count">—</span>
+  </div>
+
+  <div class="et-list" id="et-list">
+    <div class="et-row et-row-header">
+      <div>Datum</div><div>Typ</div><div>Beschreibung</div><div>Dauer</div><div>Abrechenbar</div><div></div>
+    </div>
+    <div id="et-rows"></div>
+  </div>
+
+</main>
+
+<div class="et-modal-overlay" id="et-modal-overlay" onclick="if(event.target===this)closeModal()">
+  <div class="et-modal">
+    <h2 id="et-modal-title">Neuer Eintrag</h2>
+    <div class="et-form-group">
+      <label class="et-form-label">Schadensfall-ID</label>
+      <input type="text" class="et-form-input" id="m-schadensfall_id" placeholder="UUID des Schadensfalls">
+    </div>
+    <div class="et-form-group">
+      <label class="et-form-label">Eintrag-Typ</label>
+      <select class="et-form-select" id="m-eintrag_typ">
+        <option value="ortstermin">Ortstermin</option>
+        <option value="telefonat">Telefonat</option>
+        <option value="email">E-Mail</option>
+        <option value="recherche">Recherche</option>
+        <option value="gutachten-arbeit">Gutachten-Arbeit</option>
+        <option value="akteneinsicht">Akteneinsicht</option>
+        <option value="korrespondenz">Korrespondenz</option>
+        <option value="sonstiges">Sonstiges</option>
+      </select>
+    </div>
+    <div class="et-form-group">
+      <label class="et-form-label">Datum</label>
+      <input type="date" class="et-form-input" id="m-datum">
+    </div>
+    <div class="et-form-group">
+      <label class="et-form-label">Dauer (Minuten, für JVEG)</label>
+      <input type="number" class="et-form-input" id="m-dauer_min" min="0" value="0">
+    </div>
+    <div class="et-form-group">
+      <label class="et-form-label">Beschreibung (mind. 5 Zeichen)</label>
+      <textarea class="et-form-textarea" id="m-beschreibung_text" placeholder="Was wurde gemacht?"></textarea>
+    </div>
+    <div class="et-form-group">
+      <label style="display:flex;gap:8px;align-items:center;font-size:13px;">
+        <input type="checkbox" id="m-abrechenbar" checked>
+        Abrechenbar (fließt in JVEG-Stundenrechnung ein)
+      </label>
+    </div>
+    <div class="et-modal-actions">
+      <button class="et-modal-cancel" type="button" onclick="closeModal()">Abbrechen</button>
+      <button class="et-btn" type="button" onclick="saveEintrag()">Speichern</button>
+    </div>
+  </div>
+</div>
+
+<script>
+function escHtml(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+function fmtDate(d){if(!d)return '—';try{return new Date(d).toLocaleDateString('de-DE');}catch(e){return d;}}
+function fmtDauer(min){if(!min)return '—';const h=Math.floor(min/60);const m=min%60;return h>0?(h+'h'+(m?(' '+m+'m'):'')):min+'m';}
+
+async function loadEintraege() {
+  const typ = document.getElementById('f-typ').value;
+  const from = document.getElementById('f-from').value;
+  const to = document.getElementById('f-to').value;
+  let url = '/.netlify/functions/eintraege-list?limit=100';
+  if (typ) url += '&eintrag_typ=' + encodeURIComponent(typ);
+  if (from) url += '&from=' + from;
+  if (to) url += '&to=' + to;
+  try {
+    const res = await provaFetch(url);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    const rows = document.getElementById('et-rows');
+    document.getElementById('et-count').textContent = data.total + ' Einträge';
+    if (!data.eintraege || !data.eintraege.length) {
+      rows.innerHTML = '<div class="et-empty">Keine Einträge gefunden. <a href="#" onclick="event.preventDefault();openCreate()" style="color:var(--accent);">+ Ersten Eintrag anlegen</a></div>';
+      return;
+    }
+    rows.innerHTML = data.eintraege.map(e => `
+      <div class="et-row">
+        <div>${fmtDate(e.datum)}</div>
+        <div><span class="et-typ">${escHtml(e.eintrag_typ)}</span></div>
+        <div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(e.beschreibung_text || '').substring(0,80)}</div>
+        <div class="et-dauer">${fmtDauer(e.dauer_min)}</div>
+        <div class="et-abrech ${e.abrechenbar ? 'ja' : 'nein'}">${e.abrechenbar ? '✓' : '–'}</div>
+        <div><button class="et-modal-cancel" type="button" style="padding:4px 10px;" onclick="deleteEintrag('${e.id}')">×</button></div>
+      </div>`).join('');
+  } catch (err) {
+    document.getElementById('et-rows').innerHTML = '<div class="et-empty" style="color:var(--warning);">Fehler: ' + escHtml(err.message) + '</div>';
+  }
+}
+
+function openCreate() {
+  document.getElementById('m-datum').value = new Date().toISOString().slice(0,10);
+  document.getElementById('et-modal-overlay').classList.add('open');
+}
+function closeModal() { document.getElementById('et-modal-overlay').classList.remove('open'); }
+
+async function saveEintrag() {
+  const body = {
+    schadensfall_id: document.getElementById('m-schadensfall_id').value.trim(),
+    eintrag_typ: document.getElementById('m-eintrag_typ').value,
+    datum: document.getElementById('m-datum').value,
+    dauer_min: parseInt(document.getElementById('m-dauer_min').value || 0, 10),
+    beschreibung_text: document.getElementById('m-beschreibung_text').value.trim(),
+    abrechenbar: document.getElementById('m-abrechenbar').checked
+  };
+  if (!body.schadensfall_id || !body.beschreibung_text) {
+    alert('Schadensfall-ID und Beschreibung sind Pflicht.');
+    return;
+  }
+  try {
+    const res = await provaFetch('/.netlify/functions/eintraege-create', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      alert('Fehler: ' + (err.error || res.status));
+      return;
+    }
+    closeModal();
+    loadEintraege();
+  } catch (err) {
+    alert('Fehler: ' + err.message);
+  }
+}
+
+async function deleteEintrag(id) {
+  if (!confirm('Eintrag wirklich löschen? (Soft-Delete, kann wiederhergestellt werden)')) return;
+  try {
+    const res = await provaFetch('/.netlify/functions/eintraege-delete?id=' + encodeURIComponent(id), {
+      method: 'DELETE'
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    loadEintraege();
+  } catch (err) {
+    alert('Fehler: ' + err.message);
+  }
+}
+
+document.addEventListener('DOMContentLoaded', loadEintraege);
+</script>
+<script src="sw-register.js" defer></script>
+</body>
+</html>
