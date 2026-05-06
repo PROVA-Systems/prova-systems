@@ -140,8 +140,8 @@ body{
     </div>
     <div class="service">
       <div class="service-info">
-        <div class="service-name">Error-Tracking</div>
-        <div class="service-desc">Sentry DE</div>
+        <div class="service-name">E-Mail-Versand</div>
+        <div class="service-desc">Resend EU</div>
       </div>
       <div class="service-status" id="svc-sentry">
         <div class="svc-dot"></div>
@@ -165,32 +165,28 @@ async function loadStatus() {
   const lastCheck = document.getElementById('last-check');
 
   try {
-    const r = await fetch('/.netlify/functions/health', { cache: 'no-store' });
+    const r = await fetch('/.netlify/functions/status-check', { cache: 'no-store' });
     const j = await r.json();
 
-    const isOk = j.status === 'ok';
-    banner.className = 'status-banner' + (isOk ? '' : ' degraded');
-    main.textContent = isOk ? '✓ Alle Systeme operativ' : '⚠ Eingeschraenkter Betrieb';
-    sub.textContent  = isOk ? 'PROVA laeuft normal' : 'Einige Services haben Probleme';
+    const overall = j.overall || 'unknown';
+    const statusCls = overall === 'operational' ? '' : (overall === 'major-outage' ? ' outage' : ' degraded');
+    banner.className = 'status-banner' + statusCls;
+    main.textContent = overall === 'operational' ? '✓ Alle Systeme operativ'
+      : overall === 'major-outage' ? '✗ Größere Störung'
+      : '⚠ Teilweise eingeschränkt';
+    sub.textContent = j.checked_at ? 'Letzter Check: ' + new Date(j.checked_at).toLocaleString('de-DE') : 'Keine Daten';
 
-    setSvc('svc-app', true, 'OK', r.headers.get('x-nf-request-id') ? 'Netlify ' : '');
-    if (j.checks) {
-      if (j.checks.airtable) setSvc('svc-db', j.checks.airtable.ok, j.checks.airtable.ok ? 'OK' : 'Fehler', (j.checks.airtable.ms || '') + 'ms');
-      else setSvc('svc-db', false, 'Unklar', '');
-
-      if (j.checks.openai) setSvc('svc-openai', j.checks.openai.ok, j.checks.openai.ok ? 'OK' : 'Fehler', '');
-      else setSvc('svc-openai', false, 'Unklar', '');
-
-      if (j.checks.supabase) setSvc('svc-db', j.checks.supabase.ok, j.checks.supabase.ok ? 'OK' : 'Fehler', (j.checks.supabase.ms || '') + 'ms');
-
-      // Stripe + PDFMonkey + Sentry koennen wir nicht aus health pruefen — Fake-OK fuer Pilot-Phase
-      setSvc('svc-stripe', true, 'OK (vermutlich)', '');
-      setSvc('svc-pdf',    true, 'OK (vermutlich)', '');
-      setSvc('svc-sentry', true, 'OK (vermutlich)', '');
-    }
+    const map = { frontend: 'svc-app', supabase: 'svc-db', stripe: 'svc-stripe', openai: 'svc-openai', pdfmonkey: 'svc-pdf', resend: 'svc-sentry' };
+    (j.services || []).forEach(s => {
+      const id = map[s.service];
+      if (!id) return;
+      const ok = s.status === 'up';
+      const txt = s.status === 'up' ? 'OK' : (s.status === 'down' ? 'Störung' : (s.status === 'degraded' ? 'Eingeschränkt' : 'Unklar'));
+      setSvc(id, ok, txt, s.latency_ms != null ? s.latency_ms + 'ms' : '');
+    });
   } catch (e) {
     banner.className = 'status-banner outage';
-    main.textContent = '✗ Health-Check fehlgeschlagen';
+    main.textContent = '✗ Status-Check fehlgeschlagen';
     sub.textContent  = e.message;
     ['svc-app', 'svc-db', 'svc-stripe', 'svc-openai', 'svc-pdf', 'svc-sentry'].forEach(id => setSvc(id, false, 'Unklar', ''));
   }
