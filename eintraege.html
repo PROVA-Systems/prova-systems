@@ -73,19 +73,15 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
 <main class="et-wrap" id="main-content">
 
   <h1 class="et-h1">Einträge</h1>
-  <p class="et-sub">Gerichtsfeste Chronologie deiner Arbeit pro Schadensfall — Diktate, Termine, Korrespondenz, Recherchen. JVEG-Stundenzettel-Foundation.</p>
+  <p class="et-sub">Gerichtsfeste Chronologie deiner Arbeit pro Auftrag — Diktate, Texte, Fotos. JVEG-Stundenzettel via § 8/12. Schema (W12-I0): typ ENUM ∈ {diktat, text, foto, mix}.</p>
 
   <div class="et-toolbar">
     <select class="et-filter" id="f-typ" onchange="loadEintraege()">
       <option value="">Alle Typen</option>
-      <option value="ortstermin">Ortstermin</option>
-      <option value="telefonat">Telefonat</option>
-      <option value="email">E-Mail</option>
-      <option value="recherche">Recherche</option>
-      <option value="gutachten-arbeit">Gutachten-Arbeit</option>
-      <option value="akteneinsicht">Akteneinsicht</option>
-      <option value="korrespondenz">Korrespondenz</option>
-      <option value="sonstiges">Sonstiges</option>
+      <option value="diktat">Diktat</option>
+      <option value="text">Text</option>
+      <option value="foto">Foto</option>
+      <option value="mix">Mix (Diktat + Text + Foto)</option>
     </select>
     <input type="date" class="et-filter" id="f-from" onchange="loadEintraege()" placeholder="Von">
     <input type="date" class="et-filter" id="f-to" onchange="loadEintraege()" placeholder="Bis">
@@ -106,20 +102,16 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
   <div class="et-modal">
     <h2 id="et-modal-title">Neuer Eintrag</h2>
     <div class="et-form-group">
-      <label class="et-form-label">Schadensfall-ID</label>
-      <input type="text" class="et-form-input" id="m-schadensfall_id" placeholder="UUID des Schadensfalls">
+      <label class="et-form-label">Auftrag-ID</label>
+      <input type="text" class="et-form-input" id="m-auftrag_id" placeholder="UUID des Auftrags">
     </div>
     <div class="et-form-group">
       <label class="et-form-label">Eintrag-Typ</label>
-      <select class="et-form-select" id="m-eintrag_typ">
-        <option value="ortstermin">Ortstermin</option>
-        <option value="telefonat">Telefonat</option>
-        <option value="email">E-Mail</option>
-        <option value="recherche">Recherche</option>
-        <option value="gutachten-arbeit">Gutachten-Arbeit</option>
-        <option value="akteneinsicht">Akteneinsicht</option>
-        <option value="korrespondenz">Korrespondenz</option>
-        <option value="sonstiges">Sonstiges</option>
+      <select class="et-form-select" id="m-typ">
+        <option value="diktat">Diktat</option>
+        <option value="text">Text</option>
+        <option value="foto">Foto</option>
+        <option value="mix">Mix</option>
       </select>
     </div>
     <div class="et-form-group">
@@ -127,12 +119,16 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
       <input type="date" class="et-form-input" id="m-datum">
     </div>
     <div class="et-form-group">
-      <label class="et-form-label">Dauer (Minuten, für JVEG)</label>
+      <label class="et-form-label">Dauer (Minuten, für JVEG § 8/12)</label>
       <input type="number" class="et-form-input" id="m-dauer_min" min="0" value="0">
     </div>
     <div class="et-form-group">
-      <label class="et-form-label">Beschreibung (mind. 5 Zeichen)</label>
-      <textarea class="et-form-textarea" id="m-beschreibung_text" placeholder="Was wurde gemacht?"></textarea>
+      <label class="et-form-label">Titel (Kurz, z.B. "Ortstermin Müllerstraße")</label>
+      <input type="text" class="et-form-input" id="m-titel" placeholder="Kurz und prägnant">
+    </div>
+    <div class="et-form-group">
+      <label class="et-form-label">Inhalt (mind. 5 Zeichen — Volltext)</label>
+      <textarea class="et-form-textarea" id="m-content" placeholder="Was wurde dokumentiert?"></textarea>
     </div>
     <div class="et-form-group">
       <label style="display:flex;gap:8px;align-items:center;font-size:13px;">
@@ -158,7 +154,7 @@ async function loadEintraege() {
   const from = document.getElementById('f-from').value;
   const to = document.getElementById('f-to').value;
   let url = '/.netlify/functions/eintraege-list?limit=100';
-  if (typ) url += '&eintrag_typ=' + encodeURIComponent(typ);
+  if (typ) url += '&typ=' + encodeURIComponent(typ);
   if (from) url += '&from=' + from;
   if (to) url += '&to=' + to;
   try {
@@ -171,15 +167,21 @@ async function loadEintraege() {
       rows.innerHTML = '<div class="et-empty">Keine Einträge gefunden. <a href="#" onclick="event.preventDefault();openCreate()" style="color:var(--accent);">+ Ersten Eintrag anlegen</a></div>';
       return;
     }
-    rows.innerHTML = data.eintraege.map(e => `
+    rows.innerHTML = data.eintraege.map(e => {
+      const beschreibung = (e.titel || '') + (e.content && e.content !== e.titel ? ' — ' + e.content : '');
+      const badges = [];
+      if (e.pseudonymisiert) badges.push('<span title="Keine PII detektiert" style="font-size:9px;color:#10b981;margin-left:4px;">🔒</span>');
+      if (e.konjunktiv_check_passed) badges.push('<span title="Konjunktiv-II OK" style="font-size:9px;color:#4f8ef7;margin-left:4px;">✓K</span>');
+      return `
       <div class="et-row">
         <div>${fmtDate(e.datum)}</div>
-        <div><span class="et-typ">${escHtml(e.eintrag_typ)}</span></div>
-        <div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(e.beschreibung_text || '').substring(0,80)}</div>
+        <div><span class="et-typ">${escHtml(e.typ)}</span></div>
+        <div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(beschreibung).substring(0,80)}${badges.join('')}</div>
         <div class="et-dauer">${fmtDauer(e.dauer_min)}</div>
         <div class="et-abrech ${e.abrechenbar ? 'ja' : 'nein'}">${e.abrechenbar ? '✓' : '–'}</div>
         <div><button class="et-modal-cancel" type="button" style="padding:4px 10px;" onclick="deleteEintrag('${e.id}')">×</button></div>
-      </div>`).join('');
+      </div>`;
+    }).join('');
   } catch (err) {
     document.getElementById('et-rows').innerHTML = '<div class="et-empty" style="color:var(--warning);">Fehler: ' + escHtml(err.message) + '</div>';
   }
@@ -192,16 +194,23 @@ function openCreate() {
 function closeModal() { document.getElementById('et-modal-overlay').classList.remove('open'); }
 
 async function saveEintrag() {
+  const titel = document.getElementById('m-titel').value.trim();
+  const content = document.getElementById('m-content').value.trim();
   const body = {
-    schadensfall_id: document.getElementById('m-schadensfall_id').value.trim(),
-    eintrag_typ: document.getElementById('m-eintrag_typ').value,
+    auftrag_id: document.getElementById('m-auftrag_id').value.trim(),
+    typ: document.getElementById('m-typ').value,
     datum: document.getElementById('m-datum').value,
     dauer_min: parseInt(document.getElementById('m-dauer_min').value || 0, 10),
-    beschreibung_text: document.getElementById('m-beschreibung_text').value.trim(),
+    titel: titel || (content ? content.slice(0, 80) : ''),
+    content: content,
     abrechenbar: document.getElementById('m-abrechenbar').checked
   };
-  if (!body.schadensfall_id || !body.beschreibung_text) {
-    alert('Schadensfall-ID und Beschreibung sind Pflicht.');
+  if (!body.auftrag_id || !body.content) {
+    alert('Auftrag-ID und Inhalt sind Pflicht.');
+    return;
+  }
+  if (body.content.length < 5) {
+    alert('Inhalt muss mind. 5 Zeichen haben.');
     return;
   }
   try {
@@ -214,6 +223,10 @@ async function saveEintrag() {
       const err = await res.json();
       alert('Fehler: ' + (err.error || res.status));
       return;
+    }
+    const data = await res.json();
+    if (data.warnings && data.warnings.length) {
+      alert('Eintrag gespeichert mit Hinweisen:\n\n' + data.warnings.join('\n'));
     }
     closeModal();
     loadEintraege();

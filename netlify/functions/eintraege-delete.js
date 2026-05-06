@@ -1,6 +1,9 @@
 /**
- * PROVA — eintraege-delete.js (MEGA³⁰ W10b-I4)
- * DELETE { id } — Soft-Delete via deleted_at
+ * PROVA — eintraege-delete.js (MEGA³² W12b-I1 Schema-verified)
+ * DELETE { id } — Soft-Delete via deleted_at (Spalte aus W12-I1 Migration ergänzt)
+ *
+ * Schema-konform: existing public.eintraege (W12-I0 Audit).
+ * RLS-Pattern: workspace_memberships filtert automatisch (kein eigener Workspace-Check nötig).
  */
 'use strict';
 

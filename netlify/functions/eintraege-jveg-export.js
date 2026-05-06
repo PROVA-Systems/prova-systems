@@ -1,7 +1,11 @@
 /**
- * PROVA — eintraege-jveg-export.js (MEGA³⁰ W10b-I4)
- * GET ?schadensfall_id=&from=&to=
+ * PROVA — eintraege-jveg-export.js (MEGA³² W12b-I1 Schema-Reconciled)
+ * GET ?auftrag_id=&from=&to=&stundensatz=
  * Output: HTML-Stundenzettel (PDF-tauglich) JVEG § 8/12 — abrechenbare Einträge × Dauer × Stundensatz.
+ *
+ * Schema (W12-I0 Audit): public.eintraege mit auftrag_id (NICHT schadensfall_id),
+ * titel + content (NICHT beschreibung_text), typ ENUM (diktat|text|foto|mix).
+ * Auftraege.az (NICHT aktenzeichen).
  */
 'use strict';
 
@@ -32,10 +36,12 @@ function buildHtml(opts) {
     const dauerMin = parseInt(e.dauer_min || 0, 10);
     const stunden = dauerMin / 60;
     const betrag = stunden * stundensatz;
+    // Schema (W12-I0): titel + content statt beschreibung_text, typ ENUM statt eintrag_typ
+    const beschreibung = (e.titel || '') + (e.content && e.content !== e.titel ? ' — ' + e.content : '');
     return {
       datum: e.datum || '',
-      typ: e.eintrag_typ || '',
-      beschreibung: e.beschreibung_text || '',
+      typ: e.typ || e.eintrag_typ || '',
+      beschreibung: beschreibung,
       dauer_min: dauerMin,
       stunden: stunden,
       betrag: betrag
@@ -80,14 +86,17 @@ exports.handler = withSentry(requireAuth(async function (event, context) {
   if (!rl.allowed) return jsonResponse(event, 429, { error: 'Rate-Limit erreicht' });
 
   const q = event.queryStringParameters || {};
-  if (!q.schadensfall_id) return jsonResponse(event, 400, { error: 'schadensfall_id pflicht' });
+  // Backwards-Compat: alte Frontends senden noch schadensfall_id
+  const auftragId = q.auftrag_id || q.schadensfall_id;
+  if (!auftragId) return jsonResponse(event, 400, { error: 'auftrag_id pflicht' });
 
   const sb = getSupabase();
   if (!sb) return jsonResponse(event, 503, { error: 'Supabase nicht konfiguriert' });
 
   try {
-    let query = sb.from('eintraege').select('*')
-      .eq('schadensfall_id', q.schadensfall_id)
+    let query = sb.from('eintraege')
+      .select('id, datum, typ, titel, content, dauer_min, abrechenbar')
+      .eq('auftrag_id', auftragId)
       .eq('abrechenbar', true)
       .is('deleted_at', null)
       .order('datum', { ascending: true });
@@ -96,13 +105,13 @@ exports.handler = withSentry(requireAuth(async function (event, context) {
     const { data: eintraege, error } = await query;
     if (error) return jsonResponse(event, 500, { error: error.message });
 
-    const { data: fall } = await sb.from('auftraege').select('aktenzeichen').eq('id', q.schadensfall_id).maybeSingle();
+    const { data: fall } = await sb.from('auftraege').select('az').eq('id', auftragId).maybeSingle();
 
     const stundensatz = parseFloat(q.stundensatz || 100);
     const html = buildHtml({
       eintraege: eintraege || [],
       stundensatz: stundensatz,
-      az: (fall && fall.aktenzeichen) || q.schadensfall_id,
+      az: (fall && fall.az) || auftragId,
       sv_name: context.userEmail || '—',
       from: q.from || (eintraege && eintraege[0] ? eintraege[0].datum : '—'),
       to: q.to || (eintraege && eintraege.length ? eintraege[eintraege.length - 1].datum : '—')
@@ -112,7 +121,7 @@ exports.handler = withSentry(requireAuth(async function (event, context) {
       statusCode: 200,
       headers: Object.assign({}, getCorsHeaders(event), {
         'Content-Type': 'text/html; charset=utf-8',
-        'Content-Disposition': 'inline; filename="stundenzettel-' + q.schadensfall_id + '.html"'
+        'Content-Disposition': 'inline; filename="stundenzettel-' + auftragId + '.html"'
       }),
       body: html
     };
