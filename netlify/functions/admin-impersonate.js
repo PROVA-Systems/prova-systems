@@ -181,7 +181,8 @@ exports.handler = withSentry(requireAdmin(async function (event, context) {
 
   // MEGA²³ Block 11: Email-Notification an User (fire-and-forget, best-effort)
   // ENV: IMPERSONATION_NOTIFY=on aktiviert Email. Sonst nur Audit-Log.
-  if (process.env.IMPERSONATION_NOTIFY === 'on' && ws.billing_email) {
+  // MEGA²⁸ W7-I1: defensive PROVA-Prefix-Migration
+  if ((process.env.PROVA_IMPERSONATION_NOTIFY || process.env.IMPERSONATION_NOTIFY) === 'on' && ws.billing_email) {
     notifyImpersonation({
       to: ws.billing_email,
       adminEmail: context.adminEmail,

@@ -134,7 +134,8 @@ exports.handler = withSentry(async (event) => {
       headers: {
         'Content-Type': 'application/json',
         // einfacher Abuse-Schutz (Make muss dieses Secret prüfen)
-        ...(process.env.TEAM_INTEREST_SECRET ? { 'X-PROVA-Secret': process.env.TEAM_INTEREST_SECRET } : {})
+        // MEGA²⁸ W7-I1: defensive PROVA-Prefix-Migration
+        ...((process.env.PROVA_TEAM_INTEREST_SECRET || process.env.TEAM_INTEREST_SECRET) ? { 'X-PROVA-Secret': (process.env.PROVA_TEAM_INTEREST_SECRET || process.env.TEAM_INTEREST_SECRET) } : {})
       },
       body: JSON.stringify({
         name:         name || 'Interessent',

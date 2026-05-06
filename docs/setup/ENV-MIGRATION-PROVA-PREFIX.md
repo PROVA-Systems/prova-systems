@@ -51,16 +51,17 @@ Beide ENVs funktionieren parallel. Marcel kann graduell von alten zu neuen Names
 | `AUTH_HMAC_SECRET` | `PROVA_AUTH_HMAC_SECRET` | ✅ defensiv migriert (lib/auth-token.js + admin-impersonate.js + admin-system-health.js) |
 | `ADMIN_PASSWORD_BCRYPT` | `PROVA_ADMIN_PASSWORD_BCRYPT` | ✅ defensiv migriert (admin-auth.js) |
 | `ADMIN_PASSWORD_HASH` | `PROVA_ADMIN_PASSWORD_HASH` | ✅ defensiv migriert (admin-auth.js) |
-| `CONFIRM_LIVE_CHECKOUT` | `PROVA_CONFIRM_LIVE_CHECKOUT` | 🟡 Welle 7 (2 Files) |
-| `FORCE_FALLBACK` | `PROVA_FORCE_FALLBACK` | 🟡 Welle 7 (1 File) |
-| `FW_PATH` | `PROVA_FW_PATH` | 🟡 Welle 7 (1 File) |
-| `IMPERSONATION_NOTIFY` | `PROVA_IMPERSONATION_NOTIFY` | 🟡 Welle 7 (1 File) |
-| `UPTIME_WEBHOOK_SECRET` | `PROVA_UPTIME_WEBHOOK_SECRET` | 🟡 Welle 7 |
-| `TERMIN_REMINDER_SECRET` | `PROVA_TERMIN_REMINDER_SECRET` | 🟡 Welle 7 |
-| `TEAM_INTEREST_SECRET` | `PROVA_TEAM_INTEREST_SECRET` | 🟡 Welle 7 |
-| `TEST_CHECKOUT_EMAIL` | `PROVA_TEST_CHECKOUT_EMAIL` | 🟡 Welle 7 (2 Files) |
-| `WEBHOOK_TEST_EMAIL` | `PROVA_WEBHOOK_TEST_EMAIL` | 🟡 Welle 7 |
-| `WEBHOOK_TEST_URL` | `PROVA_WEBHOOK_TEST_URL` | 🟡 Welle 7 |
+| `CONFIRM_LIVE_CHECKOUT` | `PROVA_CONFIRM_LIVE_CHECKOUT` | 🟢 nur in scripts/ (Build-Tools, kein Production-Risk) |
+| `FORCE_FALLBACK` | `PROVA_FORCE_FALLBACK` | 🟢 nur in scripts/ (Build-Tools) |
+| `FW_PATH` | `PROVA_FW_PATH` | 🟢 nur in scripts/ (Build-Tools) |
+| `IMPERSONATION_NOTIFY` | `PROVA_IMPERSONATION_NOTIFY` | ✅ W7-I1 defensiv migriert (admin-impersonate.js) |
+| `UPTIME_WEBHOOK_SECRET` | `PROVA_UPTIME_WEBHOOK_SECRET` | ✅ W7-I1 defensiv migriert (uptime-webhook.js) |
+| `TERMIN_REMINDER_SECRET` | `PROVA_TERMIN_REMINDER_SECRET` | ✅ W7-I1 defensiv migriert (termin-reminder.js) |
+| `TEAM_INTEREST_SECRET` | `PROVA_TEAM_INTEREST_SECRET` | ✅ W7-I1 defensiv migriert (team-interest.js) |
+| `TEST_CHECKOUT_EMAIL` | `PROVA_TEST_CHECKOUT_EMAIL` | 🟢 nur in scripts/ (Test-Tools) |
+| `WEBHOOK_TEST_EMAIL` | `PROVA_WEBHOOK_TEST_EMAIL` | 🟢 nur in scripts/ (Test-Tools) |
+| `WEBHOOK_TEST_URL` | `PROVA_WEBHOOK_TEST_URL` | 🟢 nur in scripts/ (Test-Tools) |
+| `SITE_NAME` | (KEINE Migration) | 🟢 Netlify-System-ENV |
 
 **Total Welle-7-Backlog:** 11 ENVs × 1-2 Files = ~15 Edits, ~30 Min.
 

@@ -112,7 +112,8 @@ exports.handler = withSentry(async function (event) {
   }
 
   // Secret-Validation (constant-time)
-  const expectedSecret = process.env.UPTIME_WEBHOOK_SECRET || '';
+  // MEGA²⁸ W7-I1: defensive PROVA-Prefix-Migration
+  const expectedSecret = process.env.PROVA_UPTIME_WEBHOOK_SECRET || process.env.UPTIME_WEBHOOK_SECRET || '';
   const providedSecret = (event.queryStringParameters && event.queryStringParameters.secret) || '';
 
   if (!expectedSecret) {
