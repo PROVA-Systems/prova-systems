@@ -10,7 +10,33 @@
 
 ## Gesamt-Status
 
-*[wird nach allen 19 Bereichen finalisiert]*
+| Bereich | Status | % |
+|---|---|---|
+| 1. Schema (DB) | ✅ | 98% |
+| 2. KI-Härtung | 🟡 | 70% |
+| 3. KI-Modell-Migration W3-I0 | 🟡 | 75% |
+| 4. Prompt-Caching W4-Bonus | 🔴 | 0% |
+| 5. §6 Fachurteil-Editor | 🟡 | 50% |
+| 6. Compliance-Härtung | 🟡 | 80% |
+| 7. Flow A Schadensgutachten | 🟡 | 70% |
+| 8. Flow B Wertgutachten | 🟡 | 50% |
+| 9. Flow C Beratung | 🟡 | 40% |
+| 10. Flow D Baubegleitung | 🟡 | 45% |
+| 11. AUTH-COCKPIT | 🟡 | 75% |
+| 12. APP-LANDING-SPLIT | 🟡 | 60% |
+| 13. Sandbox/Demo | 🔴 | 0% |
+| 14. Finanz-Workflows | 🔴 | 25% |
+| 15. PDF-Templates | ✅ | 85% |
+| 16. Mobile-Rescue P1-P4 | 🟡 | 50% |
+| 17. Diktat + Whisper | 🟡 | 75% |
+| 18. Onboarding-Pipeline | ✅ | 85% |
+| 19. ENVs + Infrastruktur | 🟡 | 75% |
+
+**Vision-Komplettheit:** **~58%** (gewichtet einfacher Mittelwert)
+**Audit-Unklar-Anteil:** ~15% (pro-Bereich-Marker)
+**Echte konkrete Lücken:** ~27% (Code/Migration fehlt)
+
+---
 
 ---
 
@@ -490,4 +516,88 @@
 **Acceptance:** **Konsolidierung -23 ENVs erreicht** (M33-FINAL.md), aber **Branch-Merge + Marcel-Manual-ENV-Setup blockierend für Email-Cron-Live-Schedule**.
 
 ---
+
+## Zusammenfassung Lücken (priorisiert)
+
+### 🔴 KRITISCH (Compliance + Vision-Kern + Pilot-Blocker)
+
+1. **§6 Fachurteil-Editor — 6 Soll-Anforderungen AUDIT-UNKLAR** (Bereich 5):
+   - 60% Viewport-Layout, 500-Zeichen-Gate, 2/3-Q-Marker, Override-Modal+audit_trail, S1/S2/S3-Stufen-Trennung, Skizzen-Inline-Embed
+   - **Vision-Kern! Marcel-Click-Through-Audit pre-Pilot zwingend.**
+2. **§407a-Pre-Send-Modal vor Freigabe** (Bereich 6) — Modal mit 3 Häkchen AUDIT-UNKLAR
+3. **`dsgvo_user_portabilitaet()` DB-Function FEHLT** (Bereich 6) — Regel 19 nicht erfüllt
+4. **Mahn-Cron-Lambda + ZUGFeRD-Generator FEHLEN** (Bereich 14) — Rechnungs-Workflow unvollständig
+5. **`netlify.toml` `[[scheduled.functions]]` LEER** (Bereich 18) — Onboarding-Emails + Fristen-Reminder nicht gescheduled
+6. **MEGA³³-Branch nicht in main gemerged** (Bereich 19) — ENV-Konsolidierung nicht Production-aktiv
+
+### 🟡 WICHTIG (Funktional / Polish vor Pilot)
+
+7. **5-Test-Suite pro KI-Funktion** (Regel 15) — explicit Test-Coverage-Audit nötig (Bereich 2)
+8. **`ki_protokoll`-Inserts in JEDEM ki-proxy-Call** (Regel 16) — grep-Verifikation pending
+9. **Auftraege-Wizard Live-Save** (Bereich 7) — `auftraggeber_typ`/`auftraggeber_kontakt_id` Migration pending
+10. **APP-LANDING-SPLIT Hardening** (Bereich 12, Marcel-Direktive "NICHT FERTIG"):
+    - Repo-Trennung / SW-Scope-Split / Marketing-Site-Vervollständigung / Lighthouse-Audit
+11. **Force-Admin-2FA-Logic** in admin-login.html (Bereich 11)
+12. **AVV-Tabelle leer** (`versicherungs_partner` 0 rows) — Marcel-Pflege-Aufgabe
+13. **Whisper-Chunker für lange Diktate >25MB** (Bereich 17)
+14. **Bescheinigungen 7 Arten** vollständig (Bereich 15) — aktuell ~4-5 Files
+15. **Mobile-Rescue P1-P4 Audit-Dokumente** fehlen (Bereich 16)
+
+### 🟢 NICE-TO-HAVE (Post-Pilot Polish)
+
+16. **Sandbox/Demo für Landing** (Bereich 13) — Marketing-Conversion-Optimierung
+17. **Prompt-Caching W4-Bonus** (Bereich 4) — Cost-Optimierung wenn Volumen
+18. **lib/ai-router.js als Standalone** (Bereich 3) — Refactoring-Polish
+19. **Multi-Verfahren in Flow B** (Sachwert/Vergleich/Ertragswert separat) (Bereich 8)
+20. **BORIS-Daten-Integration** (Bereich 8) — Roadmap
+
+---
+
+## Empfehlung Marathon-Plan
+
+**Vor erstem Pilot-Login:**
+
+1. **Pilot-Blocker-Sprint** (1-2 Tage):
+   - Marcel: MEGA³³-PR mergen
+   - Marcel: Cron-Schedules in `netlify.toml` setzen + ENVs in Netlify
+   - Marcel: AVV-Tabelle pflegen + DSGVO-Anwalt-Review
+   - CC: §6-Editor-Audit-Walk + Lücken-Closure (kritischste 6)
+   - CC: §407a-Pre-Send-Modal in `freigabe.html`
+   - CC: `dsgvo_user_portabilitaet()` DB-Function via MCP
+
+2. **Compliance-Härtung** (1 Tag):
+   - 5-Test-Suite-Audit pro KI-Funktion (Regel 15)
+   - `ki_protokoll`-Insert-Coverage
+   - Force-Admin-2FA-Logic
+
+3. **APP-LANDING-SPLIT Final** (2-3 Tage, Marcel-Direktive):
+   - Repo-Trennung
+   - SW-Scope-Split
+   - Marketing-Site Hero/Features/Pricing/FAQ/Footer komplett
+   - Lighthouse-Audit + SEO-Metadata
+
+4. **Pilot-Onboarding** (1 Tag):
+   - Cron-Schedules Live-Test
+   - Resend-Domain-Verify
+   - Pilot-Smoke-Test mit Marcel
+
+5. **Post-Pilot-Wachstum** (n Tage, basierend auf Feedback):
+   - Mahnwesen-Automation + ZUGFeRD
+   - Sandbox/Demo
+   - Multi-Verfahren-Wertgutachten
+   - Prompt-Caching
+
+---
+
+## Audit-Schluss
+
+**Wahrheit über Annahme:** Repo zeigt **~58% Vision-Komplettheit** mit robuster Foundation (Schema 98%, PDF-Templates 85%, Onboarding 85%) und klar identifizierten Lücken (Vision-Kern §6-Editor 50%, Sandbox 0%, Caching 0%, Mahnwesen 25%).
+
+**Memory ist nicht zuverlässig:** mehrfach gefunden, dass W11/W12/W13-Marketing-Aussagen ("100% Markt-Launch-Ready") **nicht der Repo-Wahrheit entsprechen**. Drift-Closure-Sprints (W12b) waren erfolgreich für Code-DB-Sync, aber Vision-Komplettheit ≠ Drift-Closure.
+
+**Nächster Schritt:** Marcel-Review dieser Doku → Marathon-Plan-Priorisierung → CC führt Lücken-Closure-Sprints durch.
+
+—
+**Co-Authored-By: Claude Code (Repo-First, kein Memory-Layer)**
+
 
