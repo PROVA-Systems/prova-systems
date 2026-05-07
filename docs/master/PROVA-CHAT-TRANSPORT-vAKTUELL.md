@@ -1,5 +1,26 @@
 # PROVA Chat-Transport — AKTUELL
 
+**Stand:** 07.05.2026 (Tag 19 — MEGA³⁴ Final 100% Komplett + Tag v950)
+**Status-Block:** **MEGA³⁴ live, Vision 100% Komplett** ✅✅
+
+## Tag-Liste (chronologisch)
+
+- `v213-perfektion-continue-done` — MEGA⁸ Stand 04.05.2026
+- `v820` — MEGA³² FINAL Stand 07.05.2026 (Flows + Bescheinigungen + Mobile)
+- `v900` — MEGA³³ FINAL Stand 07.05.2026 (UI-Integration 100% Vision)
+- `v950` — MEGA³⁴ FINAL Stand 07.05.2026 (Final-Polish: Cookie-Banner + Status-Page + 5 Onboarding-Mails + iCal + 360°)
+
+## Wichtige IDs (unverändert)
+
+- Supabase Project: `cngteblrbpwsyypexjrv` (Frankfurt eu-central-1)
+- Stripe Products: Solo `prod_*solo*`, Team `prod_*team*`
+- Founding-Coupon: `FOUNDING-99`
+- Add-ons: 5F=`price_1TJLnv8`, 10F=`price_1TJLpG8`
+
+---
+
+# (Legacy)
+
 **Stand:** 04.05.2026 nacht (Tag 10 — MEGA⁸ Perfektion-Continue done + Tag `v213-perfektion-continue-done`)
 **Vorgänger:** Tag 9 mittag (Founding-Pilot LIVE, Power-Setup MAX done) → siehe git-Log
 **Single Source of Truth** — siehe `docs/master/README.md`
