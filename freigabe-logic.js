@@ -525,35 +525,61 @@ window.exportStempelSVG = function() {
   a.click(); URL.revokeObjectURL(url);
 };
 
-/* §407a + §5 BESTÄTIGUNG — beide Checkboxen müssen aktiv sein */
+/* §407a + §5 + Stamm-Daten BESTÄTIGUNG — MEGA³⁰ B1: alle 3 Checkboxen müssen aktiv sein */
 function toggle407a(){
   var cb407  = document.getElementById('cb407a');
   var cb5    = document.getElementById('cb5pruef');
+  var cbStamm= document.getElementById('cbstamm');
   var btn    = document.getElementById('btnFreigeben');
   var hinweis= document.getElementById('cb-hinweis');
 
-  var beideGecheckt = cb407 && cb5 && cb407.checked && cb5.checked;
+  var alleGecheckt = cb407 && cb5 && cbStamm
+    && cb407.checked && cb5.checked && cbStamm.checked;
 
   if(btn){
-    btn.disabled = !beideGecheckt;
-    btn.style.opacity = beideGecheckt ? '1' : '.5';
-    btn.style.cursor  = beideGecheckt ? 'pointer' : 'not-allowed';
+    btn.disabled = !alleGecheckt;
+    btn.style.opacity = alleGecheckt ? '1' : '.5';
+    btn.style.cursor  = alleGecheckt ? 'pointer' : 'not-allowed';
   }
 
-  // Hinweis ausblenden wenn beide gecheckt
-  if(hinweis) hinweis.style.display = beideGecheckt ? 'none' : 'flex';
+  // Hinweis ausblenden wenn alle 3 gecheckt
+  if(hinweis) hinweis.style.display = alleGecheckt ? 'none' : 'flex';
 
   // Audit-Timestamps
   var now = new Date().toISOString();
-  if(cb407 && cb407.checked) {
-    localStorage.setItem('prova_407a_ts', now);
-  } else {
-    localStorage.removeItem('prova_407a_ts');
-  }
-  if(cb5 && cb5.checked) {
-    localStorage.setItem('prova_5pruef_ts', now);
-  } else {
-    localStorage.removeItem('prova_5pruef_ts');
+  if(cb407 && cb407.checked) localStorage.setItem('prova_407a_ts', now);
+  else localStorage.removeItem('prova_407a_ts');
+  if(cb5 && cb5.checked) localStorage.setItem('prova_5pruef_ts', now);
+  else localStorage.removeItem('prova_5pruef_ts');
+  if(cbStamm && cbStamm.checked) localStorage.setItem('prova_stamm_ts', now);
+  else localStorage.removeItem('prova_stamm_ts');
+}
+
+/* MEGA³⁰ B1: audit_trail-Insert beim Freigabe-Klick (3-Häkchen-Bestätigung).
+   Schema-konform: action='create', entity_typ='compliance_407a', payload JSONB. */
+async function logComplianceBestaetigung(auftragId) {
+  try {
+    var fetcher = window.provaFetch || window.fetch.bind(window);
+    await fetcher('/.netlify/functions/audit-trail-write', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'create',
+        entity_typ: 'compliance_407a',
+        entity_id: auftragId || null,
+        payload: {
+          kategorie: 'compliance_407a_bestaetigt',
+          ts_407a:   localStorage.getItem('prova_407a_ts'),
+          ts_5pruef: localStorage.getItem('prova_5pruef_ts'),
+          ts_stamm:  localStorage.getItem('prova_stamm_ts'),
+          page: 'freigabe.html',
+          source: 'MEGA30-B1'
+        }
+      })
+    });
+  } catch (e) {
+    console.warn('[freigabe] audit_trail Insert fehlgeschlagen', e);
+    // defensive: Freigabe nicht blockieren bei DB-Outage
   }
 }
 
@@ -562,6 +588,8 @@ async function approveGutachten(){
   if(!recId||!recFields){zeigToast('Kein Datensatz geladen.','err');return;}
   const btn=document.getElementById('btnFreigeben');
   btn.disabled=true; btn.textContent='Einen Moment…';
+  // MEGA³⁰ B1: audit_trail-Insert vor Freigabe (3-Häkchen-Bestätigung)
+  await logComplianceBestaetigung(recFields && (recFields.auftrag_id || recFields.id) || recId);
   const f=recFields;
   const payload={
     airtable_id:recId,
@@ -1150,8 +1178,8 @@ function zeigeErfolgState(emailText, az) {
 
 /* ══ SaaS UX — Linear/Stripe/Raycast ══ */
 
-// STRIPE: Checklist-Toggle
-var _checks = { '407a': false, '5pruef': false };
+// STRIPE: Checklist-Toggle (MEGA³⁰ B1: 3 Häkchen statt 2)
+var _checks = { '407a': false, '5pruef': false, 'stamm': false };
 function toggleCheck(id) {
   _checks[id] = !_checks[id];
   var item = document.getElementById('check-' + id);
@@ -1160,14 +1188,14 @@ function toggleCheck(id) {
   if (item) item.classList.toggle('checked', _checks[id]);
   if (box)  box.textContent = _checks[id] ? '✓' : '';
   if (cb)   cb.checked = _checks[id];
-  // Original toggle407a aufrufen
+  // Original toggle407a aufrufen (3-Häkchen-Logic)
   if (typeof toggle407a === 'function') toggle407a();
-  // Trust Signal + Keyboard Hint zeigen wenn beide gecheckt
-  var bothDone = _checks['407a'] && _checks['5pruef'];
+  // Trust Signal + Keyboard Hint zeigen wenn alle 3 gecheckt
+  var allDone = _checks['407a'] && _checks['5pruef'] && _checks['stamm'];
   var ts = document.getElementById('trust-signal');
   var kh = document.getElementById('keyboard-hint');
-  if (ts) ts.style.display = bothDone ? 'flex' : 'none';
-  if (kh) kh.style.display = bothDone ? 'block' : 'none';
+  if (ts) ts.style.display = allDone ? 'flex' : 'none';
+  if (kh) kh.style.display = allDone ? 'block' : 'none';
 }
 
 // RAYCAST + LINEAR: Keyboard Shortcuts
