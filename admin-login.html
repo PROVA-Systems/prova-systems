@@ -104,6 +104,11 @@ async function login(){
       var data = await res.json();
       if (data.ok) {
         sessionStorage.setItem('prova_admin', btoa(Date.now().toString()));
+        // MEGA³¹ B2: Force-Admin-2FA
+        if (data.totp_enabled === false) {
+          window.location.href = 'setup-2fa.html?force=admin';
+          return;
+        }
         window.location.href = 'admin-dashboard.html';
         return;
       }

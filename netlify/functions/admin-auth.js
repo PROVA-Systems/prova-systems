@@ -74,10 +74,28 @@ exports.handler = async (event) => {
     // bcrypt Vergleich (absichtlich langsam — ~100ms pro Versuch)
     const match = await bcrypt.compare(password, storedHash);
 
+    // MEGA³¹ B2: Force-Admin-2FA-Logic
+    // Wenn Login erfolgreich → prüfe ob TOTP aktiv ist; wenn nicht → totp_enabled:false zurückgeben
+    let totp_enabled = true; // default = OK (kein Force)
+    if (match) {
+      try {
+        const { createClient } = require('@supabase/supabase-js');
+        const url = process.env.PROVA_SUPABASE_PROJECT_URL || process.env.SUPABASE_URL;
+        const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+        if (url && key) {
+          const sb = createClient(url, key, { auth: { autoRefreshToken: false, persistSession: false } });
+          // Marcel-Hauptemail prüfen (hardcoded Whitelist im Frontend, hier nur Existenz-Check)
+          const adminEmail = process.env.PROVA_ADMIN_PRIMARY_EMAIL || 'marcel.schreiber891@gmail.com';
+          const { data: u } = await sb.from('users').select('totp_enabled').eq('email', adminEmail).maybeSingle();
+          if (u && u.totp_enabled === false) totp_enabled = false;
+        }
+      } catch (_) { /* defensive — kein Block bei DB-Outage */ }
+    }
+
     return {
       statusCode: 200,
       headers,
-      body: JSON.stringify({ ok: match })
+      body: JSON.stringify({ ok: match, totp_enabled: totp_enabled })
     };
 
   } catch (err) {
