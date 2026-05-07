@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1, viewport-fit=cover">
+<title>Diktat · PROVA Mobile</title>
+<link rel="manifest" href="/manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0b0d11">
+<script src="prova-fetch-auth.js"></script>
+<script src="/lib/prova-config.js"></script>
+<script>
+(function(){
+  try {
+    var token = localStorage.getItem('prova_auth_token');
+    if (!token) { window.location.replace('/login?next=' + encodeURIComponent(location.pathname)); return; }
+  } catch (e) { window.location.replace('/login'); }
+})();
+</script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:system-ui,-apple-system,sans-serif;background:#0b0d11;color:#eaecf4;min-height:100vh;line-height:1.5;-webkit-tap-highlight-color:transparent;}
+.dm-wrap{min-height:100vh;display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom);}
+.dm-header{padding:16px 20px;border-bottom:1px solid rgba(255,255,255,.06);}
+.dm-h1{font-size:18px;font-weight:800;}
+.dm-status{font-size:12px;color:#8b93ab;margin-top:4px;}
+.dm-content{flex:1;padding:20px;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+.dm-record-btn{width:140px;height:140px;border-radius:50%;background:linear-gradient(135deg,#ef4444,#dc2626);border:none;color:#fff;font-size:48px;cursor:pointer;box-shadow:0 8px 24px rgba(239,68,68,.4);transition:transform .15s;}
+.dm-record-btn:active{transform:scale(.95);}
+.dm-record-btn.recording{background:linear-gradient(135deg,#10b981,#059669);animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{box-shadow:0 8px 24px rgba(16,185,129,.4);}50%{box-shadow:0 8px 32px rgba(16,185,129,.7);}}
+.dm-time{font-family:ui-monospace,monospace;font-size:32px;font-weight:700;margin:20px 0;color:#10b981;}
+.dm-controls{display:flex;gap:14px;margin-top:24px;}
+.dm-controls button{padding:14px 20px;background:#1c2130;border:1px solid rgba(255,255,255,.11);color:#eaecf4;border-radius:10px;font-size:14px;cursor:pointer;font-family:inherit;min-width:44px;min-height:44px;}
+.dm-list{padding:16px 20px;max-height:40vh;overflow-y:auto;}
+.dm-item{padding:10px 14px;background:#1c2130;border:1px solid rgba(255,255,255,.06);border-radius:8px;margin-bottom:8px;font-size:13px;}
+</style>
+</head>
+<body>
+<main class="dm-wrap">
+
+  <header class="dm-header">
+    <h1 class="dm-h1">🎙️ Mobile-Diktat</h1>
+    <div class="dm-status" id="dm-status">Bereit zum Aufnehmen</div>
+  </header>
+
+  <section class="dm-content">
+    <button class="dm-record-btn" id="dm-record-btn" type="button" onclick="toggleRecord()" aria-label="Aufnahme starten/stoppen">
+      <span id="dm-icon">●</span>
+    </button>
+    <div class="dm-time" id="dm-time">0:00</div>
+    <div class="dm-controls">
+      <button type="button" id="dm-pause-btn" disabled onclick="pauseRecord()">⏸️ Pause</button>
+      <button type="button" id="dm-save-btn" disabled onclick="saveRecord()">💾 Speichern</button>
+    </div>
+  </section>
+
+  <section class="dm-list" id="dm-list">
+    <div style="font-size:11px;color:#4d5568;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">Aktuelle Diktate</div>
+    <div id="dm-list-content" style="font-size:13px;color:#8b93ab;">Lade…</div>
+  </section>
+
+</main>
+
+<script>
+let _mediaRecorder = null;
+let _chunks = [];
+let _startTime = null;
+let _timerInterval = null;
+let _isRecording = false;
+let _isPaused = false;
+
+async function toggleRecord() {
+  if (!_isRecording) await startRecord();
+  else stopRecord();
+}
+
+async function startRecord() {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    _mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm;codecs=opus' });
+    _chunks = [];
+    _mediaRecorder.ondataavailable = (e) => { if (e.data.size > 0) _chunks.push(e.data); };
+    _mediaRecorder.start(1000); // Chunks alle 1s
+    _isRecording = true;
+    _startTime = Date.now();
+    document.getElementById('dm-record-btn').classList.add('recording');
+    document.getElementById('dm-icon').textContent = '⏹';
+    document.getElementById('dm-pause-btn').disabled = false;
+    document.getElementById('dm-status').textContent = '🔴 Aufnahme läuft…';
+    _timerInterval = setInterval(updateTime, 1000);
+  } catch (e) {
+    document.getElementById('dm-status').textContent = 'Fehler: ' + e.message;
+  }
+}
+
+function stopRecord() {
+  if (!_mediaRecorder) return;
+  _mediaRecorder.stop();
+  _mediaRecorder.stream.getTracks().forEach(t => t.stop());
+  _isRecording = false;
+  clearInterval(_timerInterval);
+  document.getElementById('dm-record-btn').classList.remove('recording');
+  document.getElementById('dm-icon').textContent = '●';
+  document.getElementById('dm-status').textContent = 'Aufnahme beendet — Speichern oder neu starten';
+  document.getElementById('dm-save-btn').disabled = false;
+}
+
+function pauseRecord() {
+  if (!_mediaRecorder) return;
+  if (!_isPaused) { _mediaRecorder.pause(); _isPaused = true; document.getElementById('dm-status').textContent = '⏸️ Pausiert'; }
+  else { _mediaRecorder.resume(); _isPaused = false; document.getElementById('dm-status').textContent = '🔴 Aufnahme läuft…'; }
+}
+
+function updateTime() {
+  if (!_startTime) return;
+  const elapsed = Math.floor((Date.now() - _startTime) / 1000);
+  const min = Math.floor(elapsed / 60);
+  const sec = elapsed % 60;
+  document.getElementById('dm-time').textContent = min + ':' + String(sec).padStart(2, '0');
+}
+
+async function saveRecord() {
+  if (!_chunks.length) return;
+  const blob = new Blob(_chunks, { type: 'audio/webm' });
+  document.getElementById('dm-status').textContent = '💾 Lade hoch…';
+  try {
+    const fd = new FormData();
+    fd.append('audio', blob, 'diktat-' + Date.now() + '.webm');
+    const res = await provaFetch('/.netlify/functions/whisper-diktat', { method: 'POST', body: fd });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    document.getElementById('dm-status').textContent = '✅ Hochgeladen';
+    if (data.transkript) localStorage.setItem('prova_diktat_transkript', data.transkript);
+  } catch (e) {
+    document.getElementById('dm-status').textContent = 'Fehler: ' + e.message;
+  }
+}
+</script>
+</body>
+</html>
