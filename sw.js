@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v959-mega36-w3-4-12tabs';   // MEGA³⁶ W3.4 Admin-Dashboard 12-Tabs-Daten-Cockpit: Duplikat-tab-ki-stats-Bug gefixt (unique IDs), 4 neue Tabs (Audit/Push/Sessions/Timing) mit Live-Daten via admin-audit-trail/admin-push-alerts/admin-live-sessions/admin-time-tracking. Ehrliche Empty-States (kein Coming-Soon-Placeholder). 16 Tests grün. Vorgänger v958 (W3.3 Cmd-K).
+const CACHE_VERSION = 'prova-v960-mega36-w3-5-schadensfaelle-fab';   // MEGA³⁶ W3.5 schadensfaelle.html Verify + Mobile-FAB (Konsistenz mit dashboard W3.2). Bestehende 22 Tests bleiben grün, 3 neue Tests für FAB. Vorgänger v959 (W3.4 12-Tabs).
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [

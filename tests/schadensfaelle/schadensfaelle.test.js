@@ -139,6 +139,20 @@ describe('schadensfaelle — Source-Audit (HTML)', () => {
   test('Touch-Targets ≥40px (min-height)', () => {
     assert.match(HTML, /min-height:\s*40px/);
   });
+
+  // MEGA³⁶ W3.5: Mobile-FAB für Konsistenz mit dashboard.html
+  test('W3.5: Mobile-FAB existiert mit korrekter Klasse + ID', () => {
+    assert.match(HTML, /class="new-case-fab"\s+id="sf-new-case-fab"/);
+  });
+
+  test('W3.5: Mobile-FAB verlinkt zu neuer-fall.html', () => {
+    assert.match(HTML, /id="sf-new-case-fab"[^>]*onclick="window\.location\.href='neuer-fall\.html'"/);
+  });
+
+  test('W3.5: Mobile-FAB nur ≤768px sichtbar (display:none default)', () => {
+    assert.match(HTML, /\.new-case-fab\s*\{[^}]*display:\s*none/);
+    assert.match(HTML, /@media\s*\(max-width:\s*768px\)\s*\{\s*\.new-case-fab\s*\{\s*display:\s*flex/);
+  });
 });
 
 describe('schadensfaelle — Sidebar-Eintrag in prova-layout.config.js', () => {
