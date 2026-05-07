@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v956-mega36-w3-1-draft-restore';   // MEGA³⁶ W3.1 Draft-Restore: wizard-live-save.js + neuer-fall.html erweitert um findActiveDraft/restoreDraft/discardDraft/showRestoreBanner — 6 Unit-Tests + 2 HTML-Verify-Tests grün. Vorgänger v955 (M³⁵ Pre-Pilot-Hardening) bleibt funktional intakt.
+const CACHE_VERSION = 'prova-v957-mega36-w3-2-cockpit-fab';   // MEGA³⁶ W3.2 Cockpit-Quick-Action + Mobile-FAB: dashboard.html-Header-Button und nav.js-Cmd-K-Palette zeigen jetzt auf neuer-fall.html (statt app.html); zusätzlicher .new-case-fab (56×56, ≤768px) für Mobile. 10 neue Tests grün. Vorgänger v956 (W3.1 Draft-Restore).
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
