@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v961-mega36-w6-env-konsolidierung';   // MEGA³⁶ W6.1-W6.5 ENV-Konsolidierung: lib/dokument-templates-cache.js (Browser-DB-Lookup statt PROVA_TEMPLATE_*-ENVs), netlify/functions/list-dokument-templates.js (GET-Lambda), make-webhooks-config.js (MAKE_WEBHOOKS_JSON Helper + Legacy-Fallback). Plus Doku: ENV-AUDIT-REPORT M³⁶-Append + MEGA36-MARCEL-ENV-CLEANUP.md. 20 Tests grün.
+const CACHE_VERSION = 'prova-v962-mega36-w7-mobile-polish';   // MEGA³⁶ W7 Mobile-Polish: prova-wizard.js Stepper rückwärts-klickbar (_wzZurueckZuSchritt + a11y role/tabindex/Enter+Space) — done-Bubbles springen direkt zurück, Daten werden vor Sprung gesichert. W7.2/3 als verified, W7.5 Lighthouse Out-of-Scope-Doku. 14 Tests grün.
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
