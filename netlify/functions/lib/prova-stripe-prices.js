@@ -9,8 +9,8 @@
  *   2. Default (= neuer-Account-Live-Price-ID, hardcoded für Stabilität)
  *
  * **Subscriptions** (mode='subscription'):
- *   STRIPE_PRICE_SOLO  → 149€/Monat, 25 Gutachten
- *   STRIPE_PRICE_TEAM  → 279€/Monat, 60 Gutachten
+ *   STRIPE_PRICE_SOLO  → 179€/Monat, 25 Gutachten   (M37 Sync; Marcel-Direktive 2026-05-08)
+ *   STRIPE_PRICE_TEAM  → 379€/Monat, 60 Gutachten   (M37 Sync)
  *
  * **Add-on-Pakete** (mode='payment', one-time, 12 Monate gültig):
  *   STRIPE_PRICE_ADDON_5   → 25€, +5 Gutachten

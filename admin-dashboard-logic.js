@@ -244,8 +244,8 @@ async function loadKPIs() {
     const kunden = await at(ADMIN_BASE, T.KUNDEN, 'fields[]=Paket&fields[]=Status&fields[]=Email&fields[]=Vorname&fields[]=Nachname&fields[]=Name');
     const aktiv = kunden.records.filter(r => r.fields.Status !== 'Gekündigt');
     const mrr = aktiv.reduce((s, r) => {
-      const p = {Solo:149,Team:279};
-      return s + (Number(r.fields.MRR_EUR) || p[r.fields.Paket] || 149);
+      const p = {Solo:179,Team:379};
+      return s + (Number(r.fields.MRR_EUR) || p[r.fields.Paket] || 179);
     }, 0);
     document.getElementById('kpiMrr').textContent = fmtEur(mrr);
     document.getElementById('kpiMrrSub').textContent = `ARR ${fmtEur(mrr*12)}`;
@@ -316,7 +316,7 @@ async function loadNeuesteKunden() {
       const f = r.fields;
       const name = [f.Vorname, f.Nachname].filter(x => x && x.trim()).join(' ') || f.Email || '–';
       if (!name || name === '–') return; // undefined undefined überspringen
-      const mrr = f.MRR_EUR || {Solo:149,Team:279}[f.Paket] || 149;
+      const mrr = f.MRR_EUR || {Solo:179,Team:379}[f.Paket] || 179;
       html += `<tr><td><strong>${name}</strong></td>
         <td>${paketBadge(f.Paket)}</td>
         <td>${statusBadge(f.Status||'Aktiv')}</td>
@@ -373,7 +373,7 @@ function renderKunden(records) {
   records.forEach(r => {
     const f = r.fields;
     const name = f.Name || [f.Vorname, f.Nachname].filter(Boolean).join(' ') || '–';
-    const mrr = f.MRR_EUR || {Solo:149,Team:279}[f.Paket] || 149;
+    const mrr = f.MRR_EUR || {Solo:179,Team:379}[f.Paket] || 179;
     html += `<tr><td><strong>${name}</strong></td>
       <td>${paketBadge(f.Paket)}</td>
       <td>${statusBadge(f.Status)}</td>

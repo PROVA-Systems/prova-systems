@@ -681,7 +681,7 @@ PROVA Systems ist ein KI-gestütztes Gutachten-System für öffentlich bestellte
 • E-Rechnung: XRechnung 3.0 + ZUGFeRD 2.4 (nur Team-Paket)
 • Baubegleitung: Mängel-Tracking über Projektphasen (nur Team-Paket)
 • Offline-Modus: PWA, funktioniert auch ohne Internet am Ortstermin
-• Pakete: Solo (149€/Mo, 1 SV) | Team (279€/Mo, bis 5 SVs)
+• Pakete: Solo (179€/Mo, 1 SV) | Team (379€/Mo, bis 5 SVs)
 
 VERHALTENSREGELN:
 • Antworten maximal 3–4 Sätze (Gutachter sind beschäftigt)
