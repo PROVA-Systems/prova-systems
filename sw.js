@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v960-mega36-w3-5-schadensfaelle-fab';   // MEGA³⁶ W3.5 schadensfaelle.html Verify + Mobile-FAB (Konsistenz mit dashboard W3.2). Bestehende 22 Tests bleiben grün, 3 neue Tests für FAB. Vorgänger v959 (W3.4 12-Tabs).
+const CACHE_VERSION = 'prova-v961-mega36-w6-env-konsolidierung';   // MEGA³⁶ W6.1-W6.5 ENV-Konsolidierung: lib/dokument-templates-cache.js (Browser-DB-Lookup statt PROVA_TEMPLATE_*-ENVs), netlify/functions/list-dokument-templates.js (GET-Lambda), make-webhooks-config.js (MAKE_WEBHOOKS_JSON Helper + Legacy-Fallback). Plus Doku: ENV-AUDIT-REPORT M³⁶-Append + MEGA36-MARCEL-ENV-CLEANUP.md. 20 Tests grün.
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
