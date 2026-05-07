@@ -134,19 +134,23 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
           </div>
         </div>
 
-        <div class="sf-filters">
+        <!-- MEGA³⁴ A2: Universal-Filter-Bar mit Datum-Range + Bulk-Actions -->
+        <div class="sf-filters filter-bar" id="sf-filter-bar">
           <div class="sf-filter-group">
             <label class="sf-filter-label">Suche</label>
-            <input type="text" id="sf-search" class="sf-input" placeholder="Aktenzeichen, Kurzbezeichnung…" oninput="window.SF.applyFilters()" />
+            <input type="text" id="sf-search" class="sf-input" placeholder="Aktenzeichen, Auftraggeber, Kurzbezeichnung…" oninput="window.SF.applyFilters()" />
           </div>
           <div class="sf-filter-group">
             <label class="sf-filter-label">Auftragstyp</label>
             <select id="sf-typ" class="sf-select" onchange="window.SF.applyFilters()">
               <option value="">Alle</option>
               <option value="schadensgutachten">Schadensgutachten</option>
+              <option value="wertgutachten">Wertgutachten</option>
+              <option value="beratung">Beratung</option>
+              <option value="baubegleitung">Baubegleitung</option>
               <option value="beweissicherung">Beweissicherung</option>
-              <option value="ergaenzungsgutachten">Ergänzungsgutachten</option>
               <option value="gegengutachten">Gegengutachten</option>
+              <option value="ergaenzungsgutachten">Ergänzungsgutachten</option>
               <option value="gerichtsgutachten">Gerichtsgutachten</option>
               <option value="stellungnahme">Stellungnahme</option>
               <option value="gutachterliche-stellungnahme">Gutachterliche Stellungnahme</option>
@@ -171,13 +175,40 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
               <option value="in_arbeit">In Arbeit</option>
               <option value="wartend">Wartend</option>
               <option value="abgeschlossen">Abgeschlossen</option>
+              <option value="storniert">Storniert</option>
             </select>
           </div>
+          <div class="sf-filter-group">
+            <label class="sf-filter-label">Datum von</label>
+            <input type="date" id="sf-date-from" class="sf-input" onchange="window.SF.applyFilters()">
+          </div>
+          <div class="sf-filter-group">
+            <label class="sf-filter-label">Datum bis</label>
+            <input type="date" id="sf-date-to" class="sf-input" onchange="window.SF.applyFilters()">
+          </div>
+        </div>
+
+        <!-- MEGA³⁴ A2: Bulk-Actions-Bar -->
+        <div class="sf-bulk-bar" id="sf-bulk-bar" style="display:none;margin-bottom:14px;padding:10px 14px;background:rgba(79,142,247,.1);border:1px solid rgba(79,142,247,.3);border-radius:8px;">
+          <span id="sf-bulk-count" style="font-size:13px;font-weight:600;"></span>
+          <span style="margin-left:auto;display:inline-flex;gap:8px;">
+            <button class="btn btn-ghost" onclick="window.SF.bulkComplete()">✓ Als abgeschlossen markieren</button>
+            <button class="btn btn-ghost" onclick="window.SF.exportCSV()">⬇ CSV-Export</button>
+            <button class="btn btn-ghost" onclick="window.SF.bulkClear()">✕ Auswahl aufheben</button>
+          </span>
         </div>
 
         <div id="sf-content">
           <div class="loading">Lade Schadensfälle…</div>
         </div>
+
+        <!-- MEGA³⁴ A2: Pagination -->
+        <div class="sf-pagination paginate" id="sf-pagination" style="display:flex;justify-content:center;gap:8px;margin-top:16px;flex-wrap:wrap;">
+          <button class="btn btn-ghost" id="sf-page-prev" onclick="window.SF.page(-1)">← Zurück</button>
+          <span id="sf-page-info" style="padding:10px 14px;font-size:13px;">Seite 1 von 1</span>
+          <button class="btn btn-ghost" id="sf-page-next" onclick="window.SF.page(1)">Weiter →</button>
+        </div>
+
         <div class="sf-meta" id="sf-meta"></div>
       </div>
     </div>
