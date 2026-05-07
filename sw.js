@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v950-final-100-percent';   // MEGA³⁴ FINAL — Vision ECHTES 100%. A1 Cookie-Banner DSGVO + A2 schadensfaelle Universal-Liste + A3 Cmd-K Aktionen + A4 iCal-Subscribe RFC 5545 + B1 360° Verknüpfungen + B2 5 Onboarding-Mails + B3 Public Status-Page /status + B4 Master-Doku v3.0 + C1 KI-Live-Verify + C2 Playwright E2E. 5 MEGA-Wellen, ~660 neue Tests, 19 Marathon-Tage.
+const CACHE_VERSION = 'prova-v955-mega35-pilot-live-ready';   // MEGA³⁵ Pre-Pilot-Hardening. P0 Schema-Apply (4 Migrations 18-21 in Live-DB) + C1 foto-upload Lambda + EXIF-Strip + C2 RLS-Migration 22 + 9 Policies live + C3 user-workflow-settings rename + C4 list-auftraege Lambda + C5 dsgvo-loeschen-antrag Supabase + 4 Bedingungen + C6 termine-ical-token. 5 Pilot-Blocker geschlossen, ~50 neue Tests, ECHTES 100% post-Audit-Korrektur.
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
