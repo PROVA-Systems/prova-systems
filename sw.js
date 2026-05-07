@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v962-mega36-w7-mobile-polish';   // MEGA³⁶ W7 Mobile-Polish: prova-wizard.js Stepper rückwärts-klickbar (_wzZurueckZuSchritt + a11y role/tabindex/Enter+Space) — done-Bubbles springen direkt zurück, Daten werden vor Sprung gesichert. W7.2/3 als verified, W7.5 Lighthouse Out-of-Scope-Doku. 14 Tests grün.
+const CACHE_VERSION = 'prova-v999-mega36-pre-final';   // MEGA³⁶ Pre-FINAL: 16/17 Items done, W9 Pre-Checks 4/6 grün (Lambda-Cross-Ref OK, RLS OK auf 5 Tabellen, APP_SHELL completed mit dokument-templates-cache.js, Migration 24 PENDING Marcel-Apply, Live-Curl + PDFMonkey blockiert bis Branch-Merge). Tag v1000 erst nach Marcel-Apply gemäß 9/9-Acceptance.
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
@@ -63,6 +63,7 @@ const APP_SHELL = [
   '/lib/whisper-chunker.js',            // MEGA³² D1: Whisper-Chunker für >25MB Audio
   '/lib/honorar-rechner.js',            // MEGA³² D2: JVEG/BVS/Streitwert Multi-Modus
   '/lib/wizard-live-save.js',           // MEGA³² A1: Wizard-Save + Skip-Logic
+  '/lib/dokument-templates-cache.js',   // MEGA³⁶ W6.1: DB-Lookup-Cache für Templates
   '/lib/wertgutachten-verfahren.js',    // MEGA³² A2: Sachwert/Vergleich/Ertrag (ImmoWertV)
   '/diktat-mobile.html',                // MEGA³² C2 P3: Mobile-Diktat-First-UX
   '/honorar-rechner.html',              // MEGA³² D2: Honorar-Rechner UI
