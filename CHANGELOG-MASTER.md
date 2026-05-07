@@ -4,6 +4,34 @@ Format: pro Sprint ein Block. Ältere Sprints zuoberst nicht — neueste oben.
 
 ---
 
+## MEGA³⁷ — Audit + Vault-Migration + Templates + 16-Domänen (08.05.2026)
+
+**Tag:** `v999.x-pre-final` · **Branch:** `mega34-final-100-percent` · **Acceptance:** 6/9 grün, 3/9 Marcel-Manual
+
+### Phase A — Kritische Fixes
+- **A1 (c329a5f):** Admin-Dashboard Airtable→Supabase. `at()`-Dispatcher mappt 9 Bridge-Keys auf admin-*-Lambdas. Neues `admin-support-update` Lambda. `checkSupabaseHealth` statt `checkAirtableHealth`. 12 Tests grün.
+- **A2 (8f88721):** `_oeffneSchritt` Stepper-Verify — kein Bug, Daten-Erhalt durch `_sammleDaten()` in allen Callern garantiert. 7 Tests.
+- **A3 (5b84797):** Pricing-Drift komplett gefixt (Solo 179€ / Team 379€) in 3 Files (admin-dashboard-logic, ki-proxy-Prompts, prova-stripe-prices Comments). 5 Tests.
+
+### Phase B — Templates komplett
+- **B-Bundle (585ed00):** Migration 24 + 27 APPLIED via MCP. 17 Templates live (8× K-XX + 6× F-XX + 3 NEU aus W4.1: K-10/K-11/K-12). dokument-templates-cache E2E mit 9 Tests.
+
+### Phase C — Vault-Migration
+- **C-Bundle (70bd496):** Migrations 25 (`service_endpoints`) + 26 (`vault_helpers`) APPLIED. `lib/service-endpoints-cache.js` (Browser) + `lib/get-make-webhook-url.js` (Server-Helper, DB-First+Legacy-Fallback). Marcel-Action-Doku `MEGA37-MARCEL-VAULT-MIGRATION.md`. 18 Tests. **M³⁶ W6.2 (`MAKE_WEBHOOKS_JSON`-ENV) verworfen.**
+
+### Phase D — 16-Domänen-Audit
+- **D-Bundle (90d1060):** 16 Domänen-Dokus + Executive-Summary in `docs/audit/MEGA37-D*.md`. **0 CRITICAL**, 6 HIGH (DSGVO Art. 30/32/33, DR-Plan, KI-Disclosure-Box). Recherche-Quellen für D06+D13 dokumentiert. Asset-Valuation: Replacement-Cost 13–18 Mio € (180 KSLOC, COCOMO II Semi-Detached).
+
+**Marcel-Pflicht für Tag v1000:**
+1. Vault-Secrets setzen (`vault.create_secret(...)` × 4-5 API-Keys)
+2. service_endpoints-URLs UPDATE (echte Make-Hooks aus Netlify-ENVs)
+3. Edge Function Secrets via `supabase secrets set ...`
+4. Branch-Merge mega34→main + Live-Deploy
+5. Netlify-ENV-Cleanup (50→7-10)
+6. DSGVO Art. 30+32+33-Doku (Anwalt)
+
+---
+
 ## MEGA³⁴ — Final 100% (Cookie-Banner + Status-Page + Onboarding-Mails + iCal + 360°)
 
 **Tag:** `v950` · **Stand:** 07.05.2026 · **Branch:** `mega34-final-100-percent`

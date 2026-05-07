@@ -1,15 +1,20 @@
 # PROVA Systems
 
-**Status:** ✅ Vision 100% Komplett · **Tag:** v950 · **Stand:** 07.05.2026
+**Status:** ✅ Vision 100% Komplett + Vault-Migration + 16-Domänen-Audit · **Tag:** v999.x (v1000 nach Marcel-Manual-Apply) · **Stand:** 08.05.2026 (M³⁷)
 
 KI-natives B2B-SaaS für **öffentlich bestellte und vereidigte Bausachverständige** in Deutschland.
 
 ## Quick-Stats
 
-- **5 MEGA-Wellen:** ³⁰ → ³⁴
-- **~57 Items, ~660 neue Tests** (in M30-M34)
+- **8 MEGA-Wellen:** ³⁰ → ³⁷
+- **~150 Items, ~1.000 neue Tests** (in M30–M37)
 - **4-Flow-Architektur:** Schadensgutachten / Wertgutachten / Beratung / Baubegleitung
 - **Compliance:** IHK-SVO 4-Teile + § 407a ZPO + EU AI Act + DSGVO
+- **Architektur-Highlights M³⁷:**
+  - Admin-Dashboard 100% Supabase (kein Airtable mehr)
+  - Vault-Migration: API-Keys in Supabase Vault, Make-Webhooks in `service_endpoints`
+  - 16-Domänen-Audit dokumentiert (`docs/audit/MEGA37-D*.md`)
+  - 17 Korrespondenz/Gutachten-Templates in `dokument_templates`-Tabelle
 
 ## Tech-Stack
 
@@ -19,8 +24,10 @@ KI-natives B2B-SaaS für **öffentlich bestellte und vereidigte Bausachverständ
 | Datenbank | Supabase Postgres (Frankfurt eu-central-1) |
 | Auth | Supabase Auth + JWT + 2FA für Admin |
 | Storage | Supabase Storage |
-| Backend | Netlify Functions (Lambdas) |
-| Workflow | pg_cron + Lambdas |
+| Backend | Netlify Functions (Lambdas) + 9 Edge Functions (Deno, in Supabase) |
+| Secrets | Supabase Vault + Edge Function Secrets (M³⁷) |
+| Service-Endpoints | Supabase `service_endpoints`-Tabelle (M³⁷ — kein MAKE_WEBHOOKS_JSON in Netlify) |
+| Workflow | pg_cron + Lambdas + Make.com (Webhooks via DB) |
 | PDFs | PDFMonkey |
 | Email | Resend (EU) |
 | Zahlung | Stripe |
