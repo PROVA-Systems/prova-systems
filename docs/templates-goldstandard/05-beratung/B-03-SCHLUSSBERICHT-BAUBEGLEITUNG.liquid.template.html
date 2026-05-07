@@ -1,0 +1,55 @@
+<!--
+  PROVA Schluss-Bericht Baubegleitung v1.0 (MEGA³² A4)
+  Aggregiert alle Begehungs-Protokolle (eintraege) zu einem Final-Bericht.
+-->
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>Schluss-Bericht Baubegleitung — {{ aktenzeichen }}</title>
+<style>body{font-family:'Inter',system-ui,sans-serif;color:#1f2937;max-width:720px;margin:24px auto;padding:24px;line-height:1.6;}h1{color:#1e3a8a;}h2{color:#1e3a8a;font-size:16px;margin-top:24px;}.law{font-family:'JetBrains Mono',monospace;color:#4f8ef7;font-size:12px;}.meta{background:#f3f4f6;padding:12px 16px;border-radius:8px;font-size:12px;}.phase{padding:10px 14px;background:#fff7ed;border-left:3px solid #f59e0b;border-radius:4px;margin:10px 0;}</style>
+</head>
+<body>
+
+<h1>Baubegleitung — Schluss-Bericht</h1>
+<p class="law">VOB/B § 12 Abnahme + HOAI § 51 Bauüberwachung</p>
+
+<div class="meta">
+  <strong>Bauvorhaben:</strong> {{ projekt_name }}<br>
+  <strong>Auftraggeber:</strong> {{ kunde_name }}<br>
+  <strong>Aktenzeichen:</strong> {{ aktenzeichen }}<br>
+  <strong>Begleitungs-Zeitraum:</strong> {{ start_datum }} bis {{ ende_datum }}<br>
+  <strong>Anzahl Begehungen:</strong> {{ anzahl_begehungen }}<br>
+  <strong>SV:</strong> {{ sv_name }}
+</div>
+
+<h2>1. Bau-Phasen-Verlauf</h2>
+{% for phase in bau_phasen %}
+<div class="phase">
+  <strong>{{ phase.name }}</strong> ({{ phase.zeitraum }})<br>
+  <em>Begehungen:</em> {{ phase.anzahl_begehungen }}<br>
+  <em>Status:</em> {{ phase.status }}
+</div>
+{% endfor %}
+
+<h2>2. Wesentliche Mängel im Verlauf</h2>
+{% if maengel_chronologie.size > 0 %}
+<ol>
+{% for m in maengel_chronologie %}
+<li>{{ m.datum }}: {{ m.beschreibung }} — {% if m.behoben %}✓ behoben{% else %}⚠️ offen{% endif %}</li>
+{% endfor %}
+</ol>
+{% else %}
+<p>Keine wesentlichen Mängel im Verlauf festgestellt.</p>
+{% endif %}
+
+<h2>3. Abnahme-Empfehlung</h2>
+<p>{{ abnahme_empfehlung }}</p>
+
+<p style="font-size:11px;color:#6b7280;margin-top:30px;">
+Dieser Schluss-Bericht aggregiert {{ anzahl_begehungen }} Einzel-Begehungs-Protokolle (B-02).
+DIN 18202 Toleranzen + VOB/B § 13 Mängelansprüche-Verjährung 5 Jahre Bauwerk wurden berücksichtigt.
+</p>
+
+</body>
+</html>

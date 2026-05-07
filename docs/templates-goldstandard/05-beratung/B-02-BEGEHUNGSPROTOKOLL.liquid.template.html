@@ -1,0 +1,54 @@
+<!--
+  PROVA Begehungs-Protokoll v1.0 (MEGA³² A4)
+  Pro Begehungs-Termin in Baubegleitung — basiert auf eintraege.
+-->
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>Begehungs-Protokoll {{ begehung_nr }} — {{ aktenzeichen }}</title>
+<style>body{font-family:'Inter',system-ui,sans-serif;color:#1f2937;max-width:720px;margin:24px auto;padding:24px;line-height:1.6;}h1{color:#1e3a8a;font-size:22px;}.law{font-family:'JetBrains Mono',monospace;color:#4f8ef7;font-size:12px;}.meta{background:#f3f4f6;padding:12px 16px;border-radius:8px;font-size:12px;}</style>
+</head>
+<body>
+
+<h1>Bau-Begehungs-Protokoll #{{ begehung_nr }}</h1>
+<p class="law">DIN 18205 Bedarfsplanung + VOB/B § 4 Pflichten Auftraggeber</p>
+
+<div class="meta">
+  <strong>Bauvorhaben:</strong> {{ projekt_name }}<br>
+  <strong>Auftraggeber:</strong> {{ kunde_name }}<br>
+  <strong>Aktenzeichen:</strong> {{ aktenzeichen }}<br>
+  <strong>Begehung Nr.:</strong> {{ begehung_nr }} ({{ bau_phase }})<br>
+  <strong>Datum:</strong> {{ begehungs_datum }}<br>
+  <strong>Wetter:</strong> {{ wetter }}<br>
+  <strong>SV:</strong> {{ sv_name }}
+</div>
+
+<h2>Anwesende</h2>
+<p>{{ anwesende }}</p>
+
+<h2>Bau-Stand</h2>
+<p>{{ bau_stand }}</p>
+
+<h2>Beobachtungen + Mängel</h2>
+{% if maengel.size > 0 %}
+<table style="width:100%;border-collapse:collapse;font-size:9pt;">
+<thead><tr><th style="text-align:left;padding:4px;">#</th><th style="text-align:left;padding:4px;">Mangel</th><th style="text-align:left;padding:4px;">Foto</th><th style="text-align:left;padding:4px;">Frist</th></tr></thead>
+<tbody>
+{% for m in maengel %}
+<tr><td>{{ forloop.index }}</td><td>{{ m.beschreibung }}</td><td>{{ m.foto_ref }}</td><td>{{ m.nachbesserungs_frist }}</td></tr>
+{% endfor %}
+</tbody></table>
+{% else %}
+<p style="color:#10b981;">Keine Mängel festgestellt.</p>
+{% endif %}
+
+<h2>Empfehlungen</h2>
+<p>{{ empfehlungen }}</p>
+
+<p style="margin-top:30px;font-size:11px;color:#6b7280;">
+DIN 18202 Toleranzen + DIN 18299 VOB/C wurden berücksichtigt.
+</p>
+
+</body>
+</html>
