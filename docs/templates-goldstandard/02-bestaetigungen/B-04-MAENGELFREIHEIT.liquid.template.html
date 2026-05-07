@@ -1,0 +1,54 @@
+<!--
+  PROVA Mängelfreiheits-Bescheinigung v1.0 (MEGA³² B1)
+  VOB/B § 12 Abnahme-Bescheinigung — keine sichtbaren Mängel.
+-->
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>Mängelfreiheits-Bescheinigung — {{ aktenzeichen }}</title>
+<style>body{font-family:'Inter',system-ui,sans-serif;color:#1f2937;max-width:720px;margin:24px auto;padding:24px;line-height:1.6;}h1{color:#1e3a8a;}.law{font-family:'JetBrains Mono',monospace;color:#4f8ef7;font-size:12px;}.signature-line{border-bottom:1px solid #1f2937;height:12mm;margin:6mm 0;}</style>
+</head>
+<body>
+
+<h1>Mängelfreiheits-Bescheinigung</h1>
+<p class="law">VOB/B § 12 Abs. 1 Abnahme + DIN 18202 Toleranzen</p>
+
+<p>Hiermit bescheinigt der Unterzeichnende als öffentlich bestellter und vereidigter
+Sachverständiger im Sachgebiet {{ sv_sachgebiet }}:</p>
+
+<h2>Bauvorhaben / Objekt</h2>
+<p>{{ projekt_name }}<br>{{ projekt_adresse }}</p>
+
+<h2>Begehungs-Datum</h2>
+<p>{{ begehungs_datum }}</p>
+
+<h2>Bescheinigung</h2>
+<p>Nach gründlicher Inaugenscheinnahme des Objekts wurden zum Begehungs-Datum
+{% if maengel_kategorie == 'keine' %}
+<strong>keine sichtbaren Mängel</strong> festgestellt.
+{% elsif maengel_kategorie == 'unwesentlich' %}
+<strong>nur unwesentliche Mängel</strong> festgestellt, die einer Abnahme nach VOB/B § 12 Abs. 3 Nr. 2 nicht entgegenstehen.
+{% else %}
+{{ maengel_beschreibung }}
+{% endif %}
+</p>
+
+<h2>Geltungsbereich</h2>
+<p>Diese Bescheinigung bezieht sich AUSSCHLIESSLICH auf den Zustand zum Begehungs-Datum
+und beinhaltet keine Aussage zu nicht inspizierbaren Bauteilen oder zukünftigen Entwicklungen.
+DIN 18202 Toleranzen wurden berücksichtigt.</p>
+
+<p style="font-size:11px;color:#6b7280;">
+Diese Bescheinigung ist KEIN Gutachten nach § 407a ZPO. Mängelansprüche-Verjährung
+gemäß BGB § 638 (5 Jahre für Bauwerke) bleibt unberührt.
+</p>
+
+<div style="margin-top:30px;">
+  <p>{{ unterschrift_ort }}, den {{ unterschrift_datum }}</p>
+  <div class="signature-line"></div>
+  <p style="font-size:11px;color:#6b7280;">{{ sv_name }}, ö.b.u.v. SV {{ sv_sachgebiet }}</p>
+</div>
+
+</body>
+</html>
