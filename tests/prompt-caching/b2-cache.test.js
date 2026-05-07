@@ -7,7 +7,7 @@ const path = require('path');
 
 const Calc = require('../../netlify/functions/lib/ki-cost-calc');
 const proxySrc = fs.readFileSync(path.join(__dirname, '..', '..', 'netlify', 'functions', 'ki-proxy.js'), 'utf8');
-const sqlSrc = fs.readFileSync(path.join(__dirname, '..', '..', 'supabase-migrations', '08_add_ki_protokoll_cached_tokens.sql'), 'utf8');
+const sqlSrc = fs.readFileSync(path.join(__dirname, '..', '..', 'supabase-migrations', '17_add_ki_protokoll_cached_tokens.sql'), 'utf8');
 
 test('B2: ki-cost-calc exposiert calculateUsdCostCached + calculateEurCostCached', () => {
   assert.strictEqual(typeof Calc.calculateUsdCostCached, 'function');
@@ -44,7 +44,7 @@ test('B2: ki-proxy.js parsed prompt_tokens_details.cached_tokens', () => {
   assert.match(proxySrc, /cached_token_input/);
 });
 
-test('B2: SQL Schema-Migration 08 hat cached_token_input + cached_token_output', () => {
+test('B2: SQL Schema-Migration 17 hat cached_token_input + cached_token_output', () => {
   assert.match(sqlSrc, /ADD COLUMN cached_token_input INTEGER NOT NULL DEFAULT 0/);
   assert.match(sqlSrc, /ADD COLUMN cached_token_output INTEGER NOT NULL DEFAULT 0/);
 });

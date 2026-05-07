@@ -7,7 +7,7 @@ const path = require('path');
 
 const html = fs.readFileSync(path.join(__dirname, '..', '..', 'baubegleitung.html'), 'utf8');
 const polishSrc = fs.readFileSync(path.join(__dirname, '..', '..', 'baubegleitung-polish.js'), 'utf8');
-const sqlSrc = fs.readFileSync(path.join(__dirname, '..', '..', 'supabase-migrations', '07_add_eintraege_bauphase.sql'), 'utf8');
+const sqlSrc = fs.readFileSync(path.join(__dirname, '..', '..', 'supabase-migrations', '16_add_eintraege_bauphase.sql'), 'utf8');
 const tplExists = fs.existsSync(path.join(__dirname, '..', '..', 'docs', 'templates-goldstandard', '05-beratung', 'B-03-SCHLUSSBERICHT-BAUBEGLEITUNG.liquid.template.html'));
 
 test('A4: bau-phase|timeline-step Selector >= 4 Treffer in HTML', () => {
@@ -27,7 +27,7 @@ test('A4: data-timeline-step 1-4 Phase-Marker', () => {
   }
 });
 
-test('A4: Schema-Migration 07_add_eintraege_bauphase.sql existiert', () => {
+test('A4: Schema-Migration 16_add_eintraege_bauphase.sql existiert', () => {
   assert.match(sqlSrc, /eintraege.*bauphase/i);
   assert.match(sqlSrc, /ADD COLUMN bauphase TEXT/);
 });
