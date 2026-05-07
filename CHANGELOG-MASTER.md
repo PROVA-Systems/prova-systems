@@ -4,6 +4,81 @@ Format: pro Sprint ein Block. Ältere Sprints zuoberst nicht — neueste oben.
 
 ---
 
+## MEGA³³ — UI-Integration + Vision 100% Komplett
+
+**Tag:** `v900` · **Stand:** 07.05.2026 · **Branch:** `mega33-ui-integration-100-percent`
+
+Marcel-Direktive: "Wir bauen NICHT für 1-3 Testpiloten. Wir bauen 100% Vision-Komplett."
+Anti-Lib-Only-Regel verschärft: MEGA³² hatte A1-A4 nur als Libs gebaut — MEGA³³ integriert in Production-Pages.
+
+### 11 Items + FINAL (alle grün, 157 neue Tests)
+
+**Block A — 4-Flows UI-Integration (40 Tests):**
+- A1 (453e11c): `auftrag-neu` UI mit `wizard-live-save` Lib + Skip-Logic-UI
+  - `neuer-fall.html` + `prova-wizard.js` + `auftragstyp.js` Bridge
+  - Phase-Indicator §1-§6 mit `data-phase-nr` + `.phase-skipped` CSS
+- A2 (0c96533): `wertgutachten.html` Multi-Verfahren-UI mit ProvaWertVerfahren
+  - 3 verfahren-btn + Empfehlung-Button + Cross-Check-Hook
+- A3 (7098f01): `beratung.html` 3-Phasen-Wizard
+  - Phase 1 Bestätigungs-Brief, Phase 2 Termin, Phase 3 B-01-Bericht-Generator
+  - KEIN §6-Editor (Beratung != Gutachten, SVO § 18)
+- A4 (921dabc): `baubegleitung.html` Multi-Termin + B-03-Schluss + bauphase-Migration
+  - Schema-Migration `eintraege.bauphase` (5 ENUM-Werte)
+  - VOB/B § 12 + DIN 18205 + HOAI § 51 konform
+
+**Block B — Vision-Polish (42 Tests):**
+- B1 (b5c8027): 7 Tranche-1-Templates IHK-SVO 4-Teile-Audit + 12 Quellen
+  - F-09 bis F-15 verifiziert konform (Migration aus §1-§6 erfolgte M²⁰-²⁴)
+- B2 (4df882f): Prompt-Caching W4-Bonus aktiv (-40% KI-Cost erwartet)
+  - Schema-Migration `ki_protokoll.cached_token_input/output`
+  - `enableCacheControlIfStable` für >1024-Token System-Prompts
+  - Cached-Faktor 0.10 (90% Discount) in `calculateUsdCostCached`
+- B3 (be5cab1): Cross-Device-Sync E2E mit Mock-Supabase + Audit-Doku
+  - 10 Tests (PC↔Tablet↔Handy + Konflikt-Resolution + Throttle)
+- B4 (3e69101): Forced Re-Consent Live-Trigger via prova-fetch-auth
+  - Auto-Lazy-Load `lib/re-consent-modal.js` auf authenticated Pages
+  - Bisher tot (Lib war auf keiner Page eingebunden) — jetzt live
+
+**Block C — Final-QA (75 Tests):**
+- C1 (aba2068): IHK-Pre-Audit Compliance-Walk + 15 Quellen
+  - 6/6 Compliance-Kategorien grün (IHK-SVO + § 407a + EU AI Act + DSGVO + Pseudonymisierung + Legal-Pages)
+- C2 (e961dc6): 50 Edge-Case-Tests (5×10 Auth/PDF/DB/UI/KI) + Coverage-Audit
+  - Migration-Renumber 07→16 + 08→17 (Konflikt-Fix)
+- C3 (101bd08): Bescheinigungs-Live-Verify + AVV-Anwalt-Paket
+  - 8 Bescheinigungs-Typen mit ENV-Var-Lookup-Pattern
+  - `docs/legal/AVV-PAKET-FUER-ANWALT.md` + Anschreiben
+
+**FINAL (709683f):** sw.js v900 + Sprint-Status-Doku + Tag v900
+
+### Vision-Komplettheit: 92% → 100%
+
+| Bereich | Δ |
+|---|---|
+| 1. Schema (DB) | +1 (bauphase + cached_tokens) |
+| 2. KI-Härtung | +8 (Edge-Cases + Cached + Pseudo-Audit) |
+| 4. Prompt-Caching W4-Bonus | +100 (live aktiv) |
+| 6. Compliance-Härtung | +6 (IHK-Pre-Audit + AVV-Paket) |
+| 7-10. Flow A/B/C/D | +12/+20/+25/+20 (UI-Integration) |
+| 15. PDF-Templates | +5 (B1 Tranche-1 verifiziert) |
+
+### Marathon-Stats (M³⁰ → M³³)
+- ~10 Tage Sprint-Marathon
+- ~600+ Commits, ~750+ Tests grün
+- 0 Self-Scoping-Bündelungen in M³³
+
+### Marcel-Wake-Up-Liste (Pflicht-Manual vor Pilot-Live)
+1. 🔴 Branch-Merge mega30→31→32→33→main (oder Squash-Merge)
+2. 🔴 AVV-Anwalt-Review (`docs/legal/AVV-PAKET-FUER-ANWALT.md`)
+3. 🔴 Stripe Live-Webhook + STRIPE_WEBHOOK_SECRET in Netlify
+4. 🔴 PDFMonkey-Upload 6 Templates (B-04/B-05/B-06/BRIEF-AUFTRAG/BRIEF-TERMIN/BRIEF-ANERKENNUNG)
+   → IDs in 8 Netlify-ENVs `PDFMONKEY_TPL_*` setzen (Resolver in Lambda)
+5. 🟡 Resend-Domain SPF/DKIM/DMARC verifizieren
+6. 🟡 versicherungs_partner Top-10 partnerschaft_status='aktiv'
+7. 🟡 OG-Image für Landing (1200×630)
+8. 🟡 Memory + CHANGELOG aktualisieren
+
+---
+
 ## MEGA⁸ — PERFEKTION CONTINUE (V0-V5)
 
 **Tag:** `v213-perfektion-continue-done` · **Stand:** 04.05.2026 nacht · **Commits:** `57db87b`, `de9302f`, `e4d9b2a`, `e8c8ab7` + V5

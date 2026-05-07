@@ -14,17 +14,31 @@ const { getCorsHeaders } = require('./lib/cors-helper');
 const { getSupabase } = require('./lib/storage-router');
 const RateLimit = require('./lib/rate-limit-user');
 
-// Mapping typ → PDFMonkey-Template-ID (in ENV oder hardcoded)
+// Mapping typ → PDFMonkey-Template-ID
+// Marcel-Pflege: nach PDFMonkey-Upload die UUIDs in den ENV-Vars setzen
+// (in Netlify Dashboard → Site Settings → Environment Variables).
+// Falls ENV-Var leer → Lambda nutzt 'name' als Platzhalter (für Test-Runs).
 const TEMPLATE_MAP = {
-  'sv_bestaetigung':           { name: 'F-02-AUFTRAGSBESTAETIGUNG', kategorie: 'pdf' },
-  'auftragsannahme_brief':     { name: 'BRIEF-AUFTRAG-ANNAHME', kategorie: 'brief' },
-  'termin_bestaetigung':       { name: 'F-03-TERMIN-BESTAETIGUNG', kategorie: 'pdf' },
-  'termin_bestaetigung_brief': { name: 'BRIEF-TERMIN-BESTAETIGUNG', kategorie: 'brief' },
-  'maengelfreiheit':           { name: 'B-04-MAENGELFREIHEIT', kategorie: 'pdf' },
-  'zustand':                   { name: 'B-05-ZUSTANDSBESCHEINIGUNG', kategorie: 'pdf' },
-  'beweissicherung':           { name: 'B-06-BEWEISSICHERUNGSBESTAETIGUNG', kategorie: 'pdf' },
-  'sv_anerkennung':            { name: 'BRIEF-SACHVERSTANDIGE-ANERKENNUNG', kategorie: 'brief' }
+  'sv_bestaetigung':           { name: 'F-02-AUFTRAGSBESTAETIGUNG',          kategorie: 'pdf',   env: 'PDFMONKEY_TPL_F02' },
+  'auftragsannahme_brief':     { name: 'BRIEF-AUFTRAG-ANNAHME',              kategorie: 'brief', env: 'PDFMONKEY_TPL_BRIEF_AUFTRAG' },
+  'termin_bestaetigung':       { name: 'F-03-TERMIN-BESTAETIGUNG',           kategorie: 'pdf',   env: 'PDFMONKEY_TPL_F03' },
+  'termin_bestaetigung_brief': { name: 'BRIEF-TERMIN-BESTAETIGUNG',          kategorie: 'brief', env: 'PDFMONKEY_TPL_BRIEF_TERMIN' },
+  'maengelfreiheit':           { name: 'B-04-MAENGELFREIHEIT',               kategorie: 'pdf',   env: 'PDFMONKEY_TPL_B04' },
+  'zustand':                   { name: 'B-05-ZUSTANDSBESCHEINIGUNG',         kategorie: 'pdf',   env: 'PDFMONKEY_TPL_B05' },
+  'beweissicherung':           { name: 'B-06-BEWEISSICHERUNGSBESTAETIGUNG',  kategorie: 'pdf',   env: 'PDFMONKEY_TPL_B06' },
+  'sv_anerkennung':            { name: 'BRIEF-SACHVERSTANDIGE-ANERKENNUNG',  kategorie: 'brief', env: 'PDFMONKEY_TPL_BRIEF_ANERKENNUNG' }
 };
+
+/**
+ * Resolved-Template-ID: ENV-Var lookup, Fallback auf .name
+ * (für Production-Live: PDFMonkey-UUID via ENV; für Tests: Name als Platzhalter).
+ */
+function resolveTemplateId(typ) {
+  const tpl = TEMPLATE_MAP[typ];
+  if (!tpl) return null;
+  const envValue = process.env[tpl.env];
+  return (envValue && envValue.trim()) || tpl.name;
+}
 
 const VALID_TYPEN = Object.keys(TEMPLATE_MAP);
 
@@ -59,13 +73,14 @@ exports.handler = withSentry(requireAuth(async function (event, context) {
   const dokumentTyp = tpl.kategorie === 'brief' ? 'brief' : 'bescheinigung_' + body.typ.replace('_brief', '').slice(0, 30);
 
   // dokumente-Insert mit Status entwurf
+  const resolvedId = resolveTemplateId(body.typ);
   const insert = {
     workspace_id: a.workspace_id,
     auftrag_id: body.auftrag_id,
     typ: 'sonstiges_pdf', // dokument_typ ENUM wert (sicherer Default)
     status: 'in_generation',
     betreff: 'Bescheinigung: ' + body.typ,
-    pdfmonkey_template_id: tpl.name,
+    pdfmonkey_template_id: resolvedId,
     pdf_payload: body.payload || {}
   };
   const { data: dok, error: dErr } = await sb.from('dokumente').insert(insert).select().maybeSingle();
@@ -95,3 +110,4 @@ exports.handler = withSentry(requireAuth(async function (event, context) {
 
 module.exports.__TEMPLATE_MAP = TEMPLATE_MAP;
 module.exports.__VALID_TYPEN = VALID_TYPEN;
+module.exports.__resolveTemplateId = resolveTemplateId;

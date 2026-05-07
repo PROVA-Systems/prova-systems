@@ -71,3 +71,30 @@ test('C3: Anwalt-Anschreiben mit konkreten Review-Aufträgen', () => {
   assert.match(anschreiben, /TOMs Art\. 32/);
   assert.match(anschreiben, /§\s*407a ZPO/);
 });
+
+// MEGA³³ Post-Wake-Up: ENV-Var-Resolution für PDFMonkey-Template-IDs
+test('C3-ENV: __resolveTemplateId fällt auf .name zurück wenn ENV leer', () => {
+  // Sicherstellen dass ENVs nicht gesetzt sind
+  delete process.env.PDFMONKEY_TPL_F02;
+  delete process.env.PDFMONKEY_TPL_BRIEF_AUFTRAG;
+  // Cache-Reload
+  delete require.cache[require.resolve('../../netlify/functions/bescheinigung-generate')];
+  const Lambda2 = require('../../netlify/functions/bescheinigung-generate');
+  assert.strictEqual(Lambda2.__resolveTemplateId('sv_bestaetigung'), 'F-02-AUFTRAGSBESTAETIGUNG');
+});
+
+test('C3-ENV: __resolveTemplateId nutzt ENV-Wert wenn gesetzt', () => {
+  process.env.PDFMONKEY_TPL_B04 = '12345678-aaaa-bbbb-cccc-deadbeefcafe';
+  delete require.cache[require.resolve('../../netlify/functions/bescheinigung-generate')];
+  const Lambda2 = require('../../netlify/functions/bescheinigung-generate');
+  assert.strictEqual(Lambda2.__resolveTemplateId('maengelfreiheit'), '12345678-aaaa-bbbb-cccc-deadbeefcafe');
+  delete process.env.PDFMONKEY_TPL_B04;
+});
+
+test('C3-ENV: alle 8 Typen haben env-Lookup-Schlüssel im TEMPLATE_MAP', () => {
+  delete require.cache[require.resolve('../../netlify/functions/bescheinigung-generate')];
+  const Lambda2 = require('../../netlify/functions/bescheinigung-generate');
+  Object.entries(Lambda2.__TEMPLATE_MAP).forEach(([typ, def]) => {
+    assert.match(def.env || '', /^PDFMONKEY_TPL_/, typ + ' fehlt env-Key');
+  });
+});
