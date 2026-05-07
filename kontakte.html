@@ -275,6 +275,64 @@
     </div>
   </div>
 
+  <!-- MEGA³⁴ B1: 360°-Aktivitäts-Tab + Verknüpfte-Aufträge-Tab -->
+  <div class="kontakt-tabs" id="kontakt-tabs" style="display:none;border-bottom:1px solid var(--border);margin:16px 0;">
+    <button class="k-tab active" data-tab="liste" onclick="setKontaktTab('liste')" style="padding:10px 16px;background:none;border:none;border-bottom:2px solid var(--accent);color:var(--accent);cursor:pointer;font-family:inherit;font-weight:700;">📋 Kontakt-Liste</button>
+    <button class="k-tab" data-tab="verknuepft" onclick="setKontaktTab('verknuepft')" style="padding:10px 16px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text3);cursor:pointer;font-family:inherit;">🔗 Verknüpfte Aufträge</button>
+    <button class="k-tab" data-tab="360" onclick="setKontaktTab('360')" style="padding:10px 16px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text3);cursor:pointer;font-family:inherit;">🎯 360°-Aktivitäten</button>
+  </div>
+  <div id="kontakt-360-pane" style="display:none;padding:16px;background:var(--surface);border-radius:8px;margin-bottom:16px;">
+    <h3 style="margin-bottom:8px;">🎯 360°-Aktivitäts-Timeline</h3>
+    <p style="font-size:12px;color:var(--text3);margin-bottom:12px;">Aufträge · Rechnungen · Termine · Dokumente verknüpft mit diesem Kontakt</p>
+    <div id="kontakt-360-events" style="font-size:13px;"></div>
+  </div>
+
+  <!-- MEGA³⁴ B1: Tab-Switch-Logic -->
+  <script>
+    window.setKontaktTab = async function(tab) {
+      document.querySelectorAll('.k-tab').forEach(b => {
+        const active = b.getAttribute('data-tab') === tab;
+        b.style.borderBottomColor = active ? 'var(--accent)' : 'transparent';
+        b.style.color = active ? 'var(--accent)' : 'var(--text3)';
+      });
+      document.getElementById('kontakt-360-pane').style.display = (tab === '360') ? 'block' : 'none';
+      if (tab === '360') {
+        const params = new URLSearchParams(location.search);
+        const kontakt_id = params.get('kontakt_id') || params.get('id');
+        if (!kontakt_id) {
+          document.getElementById('kontakt-360-events').innerHTML = '<em style="color:var(--text3);">Kein Kontakt ausgewählt — wähle einen aus der Liste.</em>';
+          return;
+        }
+        try {
+          const fetcher = window.provaFetch || window.fetch.bind(window);
+          const res = await fetcher('/.netlify/functions/kontakt-aktivitaeten?kontakt_id=' + encodeURIComponent(kontakt_id));
+          const data = await res.json();
+          const events = (data && data.events) || [];
+          if (!events.length) {
+            document.getElementById('kontakt-360-events').innerHTML = '<em style="color:var(--text3);">Keine Aktivitäten verknüpft.</em>';
+          } else {
+            document.getElementById('kontakt-360-events').innerHTML = events.map(e =>
+              '<div style="padding:8px 12px;border-left:3px solid var(--accent);background:var(--surface2);margin-bottom:6px;border-radius:0 4px 4px 0;">'
+              + '<span style="font-size:11px;color:var(--text3);">' + (e.date ? new Date(e.date).toLocaleDateString('de-DE') : '—') + '</span> '
+              + '<span style="font-size:11px;color:var(--accent);font-weight:700;">[' + e.type.toUpperCase() + ']</span> '
+              + '<a href="' + (e.link || '#') + '" style="color:var(--text);text-decoration:none;">' + (e.title || '—') + '</a>'
+              + '</div>'
+            ).join('');
+          }
+        } catch (err) {
+          document.getElementById('kontakt-360-events').innerHTML = '<em style="color:#ef4444;">Fehler beim Laden: ' + err.message + '</em>';
+        }
+      }
+    };
+    // Show tabs only when ?id= is in URL
+    document.addEventListener('DOMContentLoaded', () => {
+      const params = new URLSearchParams(location.search);
+      if (params.get('id') || params.get('kontakt_id')) {
+        document.getElementById('kontakt-tabs').style.display = 'flex';
+      }
+    });
+  </script>
+
   <!-- STATS -->
   <div class="stats-bar" id="statsBar"></div>
 
