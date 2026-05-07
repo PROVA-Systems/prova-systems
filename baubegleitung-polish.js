@@ -318,6 +318,56 @@
           btnRow.appendChild(btn);
         }
 
+        // MEGA³³ A4: Schluss-Bericht-Button (B-03-SCHLUSSBERICHT-BAUBEGLEITUNG)
+        if (btnRow && !btnRow.querySelector('[data-bb-schluss]')) {
+          var btnSchluss = document.createElement('button');
+          btnSchluss.className = 'btn btn-ghost';
+          btnSchluss.style.fontSize = '12px';
+          btnSchluss.setAttribute('data-bb-schluss', '1');
+          btnSchluss.textContent = '🏁 Schluss-Bericht (B-03)';
+          btnSchluss.onclick = async function() {
+            // B-03-SCHLUSSBERICHT-BAUBEGLEITUNG via PDFMonkey
+            // Aggregation: alle eintraege mit bauphase + maengel-Liste + Summary
+            var eintraege = (proj.begehungen || []).map(function(b){
+              return {
+                datum: b.datum,
+                bauphase: b.bauphase || phaseZuId(b.phase) || 'sonstige',
+                text: b.text || '',
+                maengel: b.maengel || []
+              };
+            });
+            var fetcher = window.provaFetch || window.fetch.bind(window);
+            try {
+              btnSchluss.textContent = '⏳ Generiere…';
+              btnSchluss.disabled = true;
+              var res = await fetcher('/.netlify/functions/bescheinigung-generate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  typ: 'schluss_bericht_baubegleitung',
+                  template: 'B-03-SCHLUSSBERICHT-BAUBEGLEITUNG',
+                  projekt_name: proj.name,
+                  bau_phasen: eintraege,
+                  maengel_chronologie: eintraege.flatMap(function(e){
+                    return (e.maengel || []).map(function(m){
+                      return Object.assign({}, m, { bauphase: e.bauphase, datum: e.datum });
+                    });
+                  })
+                })
+              });
+              var data = await res.json();
+              if (data && data.pdf_url) window.open(data.pdf_url, '_blank');
+              else alert('Schluss-Bericht (B-03) wird generiert. PDF erscheint im Archiv.');
+            } catch (e) {
+              alert('Schluss-Bericht-Generation fehlgeschlagen: ' + e.message);
+            } finally {
+              btnSchluss.textContent = '🏁 Schluss-Bericht (B-03)';
+              btnSchluss.disabled = false;
+            }
+          };
+          btnRow.appendChild(btnSchluss);
+        }
+
         // PDF-Export-Button
         if (btnRow && !btnRow.querySelector('[data-bb-pdf]')) {
           var btnPdf = document.createElement('button');
