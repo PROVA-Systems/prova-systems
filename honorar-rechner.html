@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1, viewport-fit=cover">
+<title>Honorar-Rechner · PROVA</title>
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/lib/mobile-polish.css">
+<script src="/lib/honorar-rechner.js"></script>
+<script>
+(function(){
+  try {
+    var token = localStorage.getItem('prova_auth_token');
+    if (!token) { window.location.replace('/login?next=' + encodeURIComponent(location.pathname)); return; }
+  } catch (e) { window.location.replace('/login'); }
+})();
+</script>
+<style>
+.hr-wrap{max-width:960px;margin:0 auto;padding:24px;}
+.hr-modi{display:flex;gap:12px;margin-bottom:24px;flex-wrap:wrap;}
+.hr-modi button{flex:1;min-width:120px;min-height:44px;padding:12px;background:#1c2130;color:#eaecf4;border:1px solid rgba(255,255,255,.11);border-radius:8px;cursor:pointer;font-family:inherit;font-size:14px;}
+.hr-modi button.active{background:#3b82f6;border-color:#3b82f6;}
+.hr-form{display:grid;gap:14px;background:#1c2130;border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:20px;margin-bottom:20px;}
+.hr-row{display:grid;grid-template-columns:200px 1fr;gap:12px;align-items:center;}
+.hr-row label{font-size:13px;color:#8b93ab;}
+.hr-row input,.hr-row select{padding:10px;background:#0b0d11;color:#eaecf4;border:1px solid rgba(255,255,255,.11);border-radius:6px;font-family:inherit;font-size:14px;}
+.hr-result{background:linear-gradient(135deg,#0e7490,#0891b2);border-radius:10px;padding:24px;color:#fff;}
+.hr-result-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.15);}
+.hr-result-row.total{font-size:20px;font-weight:800;border:none;padding-top:12px;}
+.hr-disclaimer{font-size:11px;color:#8b93ab;margin-top:12px;line-height:1.5;}
+@media (max-width:600px){.hr-row{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+<main class="hr-wrap">
+  <h1 style="margin-bottom:6px;">💶 Honorar-Rechner</h1>
+  <p style="color:#8b93ab;margin-bottom:20px;">JVEG · BVS-Empfehlung · Streitwert-Pauschal</p>
+
+  <div class="hr-modi">
+    <button id="modus-jveg" class="active" onclick="setModus('jveg')">⚖️ JVEG (Gericht)</button>
+    <button id="modus-bvs" onclick="setModus('bvs')">📋 BVS (Privat)</button>
+    <button id="modus-streitwert" onclick="setModus('streitwert')">📊 Streitwert-Pauschal</button>
+  </div>
+
+  <!-- JVEG -->
+  <section id="form-jveg" class="hr-form">
+    <div class="hr-row">
+      <label>Stunden Aufwand</label>
+      <input type="number" id="jveg-stunden" value="8" step="0.5" min="0">
+    </div>
+    <div class="hr-row">
+      <label>Honorargruppe</label>
+      <select id="jveg-gruppe">
+        <option value="M1">M1 — einfach (75€/h)</option>
+        <option value="M2" selected>M2 — Bauwesen Standard (100€/h)</option>
+        <option value="M3">M3 — komplex (125€/h)</option>
+      </select>
+    </div>
+    <div class="hr-row">
+      <label>Anfahrt km (hin+zurück)</label>
+      <input type="number" id="jveg-km" value="0" min="0">
+    </div>
+    <div class="hr-row">
+      <label>Gutachten-Seiten</label>
+      <input type="number" id="jveg-seiten" value="0" min="0">
+    </div>
+    <div class="hr-row">
+      <label>Porto (€)</label>
+      <input type="number" id="jveg-porto" value="0" step="0.01" min="0">
+    </div>
+  </section>
+
+  <!-- BVS -->
+  <section id="form-bvs" class="hr-form" style="display:none;">
+    <div class="hr-row">
+      <label>Stunden Aufwand</label>
+      <input type="number" id="bvs-stunden" value="6" step="0.5" min="0">
+    </div>
+    <div class="hr-row">
+      <label>Tarif</label>
+      <select id="bvs-tarif">
+        <option value="standard" selected>Standard (150€/h)</option>
+        <option value="erschwert">Erschwert/Statik (180€/h)</option>
+      </select>
+    </div>
+    <div class="hr-row">
+      <label>Anfahrt km</label>
+      <input type="number" id="bvs-km" value="0" min="0">
+    </div>
+    <div class="hr-row">
+      <label>Anschläge im Bericht</label>
+      <input type="number" id="bvs-anschlaege" value="0" min="0">
+    </div>
+  </section>
+
+  <!-- Streitwert -->
+  <section id="form-streitwert" class="hr-form" style="display:none;">
+    <div class="hr-row">
+      <label>Streitwert (€)</label>
+      <input type="number" id="sw-streitwert" value="25000" min="0">
+    </div>
+  </section>
+
+  <button onclick="berechne()" style="width:100%;padding:14px;background:#10b981;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:16px;font-weight:700;min-height:44px;margin-bottom:20px;">📊 Honorar berechnen</button>
+
+  <div id="hr-output"></div>
+
+  <p class="hr-disclaimer">
+    Hinweis: Die Berechnung dient als Orientierung. Verbindliche Honorare richten sich
+    nach JVEG (für Gerichts-Aufträge) bzw. den individuellen Vereinbarungen mit
+    Privat-Auftraggebern. BVS-Tarife sind Empfehlungen, nicht bindend.
+    Stand: 2024 (BVS) / 2021 (JVEG-Reform).
+  </p>
+</main>
+
+<script>
+let _modus = 'jveg';
+
+function setModus(m) {
+  _modus = m;
+  ['jveg','bvs','streitwert'].forEach(x => {
+    document.getElementById('modus-'+x).classList.toggle('active', x === m);
+    document.getElementById('form-'+x).style.display = x === m ? '' : 'none';
+  });
+  document.getElementById('hr-output').innerHTML = '';
+}
+
+function berechne() {
+  let result;
+  if (_modus === 'jveg') {
+    result = HonorarRechner.berechneJVEG({
+      stunden: +document.getElementById('jveg-stunden').value,
+      gruppe: document.getElementById('jveg-gruppe').value,
+      km: +document.getElementById('jveg-km').value,
+      seiten: +document.getElementById('jveg-seiten').value,
+      porto: +document.getElementById('jveg-porto').value,
+    });
+  } else if (_modus === 'bvs') {
+    result = HonorarRechner.berechneBVS({
+      stunden: +document.getElementById('bvs-stunden').value,
+      tarif: document.getElementById('bvs-tarif').value,
+      km: +document.getElementById('bvs-km').value,
+      anschlaege: +document.getElementById('bvs-anschlaege').value,
+    });
+  } else {
+    result = HonorarRechner.berechneStreitwert({
+      streitwert_eur: +document.getElementById('sw-streitwert').value,
+    });
+  }
+  renderResult(result);
+}
+
+function renderResult(r) {
+  const breakdown = r.breakdown ? Object.entries(r.breakdown).map(([k,v]) =>
+    '<div class="hr-result-row"><span>'+k.replace(/_eur$/,'').replace(/_/g,' ')+'</span><span>'+v.toFixed(2)+' €</span></div>'
+  ).join('') : '';
+  document.getElementById('hr-output').innerHTML = `
+    <div class="hr-result">
+      <h3 style="margin-bottom:14px;">Berechnung — Modus: ${r.modus}</h3>
+      ${breakdown}
+      <div class="hr-result-row"><span>Netto</span><span>${r.netto_eur.toFixed(2)} €</span></div>
+      <div class="hr-result-row"><span>+ 19% MwSt.</span><span>${r.mwst_eur.toFixed(2)} €</span></div>
+      <div class="hr-result-row total"><span>Brutto</span><span>${r.brutto_eur.toFixed(2)} €</span></div>
+    </div>
+  `;
+}
+</script>
+</body>
+</html>
