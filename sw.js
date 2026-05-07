@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v958-mega36-w3-3-cmdk-recent';   // MEGA³⁶ W3.3 Cmd-K Recent-Searches + Route-Fix: global-search.js zeigt prova_search_history-Einträge im Empty-State (Re-Query statt Navigate), "Neuer Fall (Wizard)"-Page → neuer-fall.html, alte "Neues Gutachten"-Action entfernt, escapeAttr-Helper für XSS-Schutz. 10 neue + 12 bestehende A3-Tests grün. Vorgänger v957 (W3.2 Cockpit-FAB).
+const CACHE_VERSION = 'prova-v959-mega36-w3-4-12tabs';   // MEGA³⁶ W3.4 Admin-Dashboard 12-Tabs-Daten-Cockpit: Duplikat-tab-ki-stats-Bug gefixt (unique IDs), 4 neue Tabs (Audit/Push/Sessions/Timing) mit Live-Daten via admin-audit-trail/admin-push-alerts/admin-live-sessions/admin-time-tracking. Ehrliche Empty-States (kein Coming-Soon-Placeholder). 16 Tests grün. Vorgänger v958 (W3.3 Cmd-K).
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
