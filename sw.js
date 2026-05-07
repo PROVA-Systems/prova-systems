@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v810-mega31-vollendung-vision-kern';   // MEGA³¹ Vollendung — A1-A5/B1-B3/C1-C3/D1 (12 Items). §6 Editor 60vw + 500-Zeichen-Gate + S1/S2/S3 + Skizzen-Embed + ZUGFeRD + 50 KI-Tests + Force-Admin-2FA + AVV-Master + APP-LANDING-SPLIT + Marketing-Site + SEO + Diktat-Strukturierung.
+const CACHE_VERSION = 'prova-v820-mega32-flows-bescheinigungen-mobile';   // MEGA³² 4-Flows + Bescheinigungen + Mobile + Diktat-Polish + Honorar + Sandbox/Demo. A1 Wizard-Save + A2 Wertgutachten 3-Verfahren + A3-A4 Beratung/Baubegleitung-Templates + B1-B3 7 Bescheinigungen + Briefe + Lambda + B3-UI + C1-C2 Mobile P1-P4 + D1 Whisper-Chunker + D2 Honorar-Rechner + E1 Sandbox-Demo /demo.
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
@@ -59,6 +59,15 @@ const APP_SHELL = [
   '/lib/mobile-polish.css',             // MEGA⁴ Q2: Mobile-Polish CSS
   '/lib/mobile-polish.js',              // MEGA⁴ Q3: Mobile-Polish JS (Lazy/Offline/Camera/Geo)
   '/lib/foto-upload-v2.js',             // MEGA⁹ W1: Magic-Bytes + EXIF-Strip + Image-Optimize
+  '/lib/foto-upload-mobile.js',         // MEGA³² C2 P4: Mobile-Foto-Upload mit EXIF-Strip + Geo-Tag
+  '/lib/whisper-chunker.js',            // MEGA³² D1: Whisper-Chunker für >25MB Audio
+  '/lib/honorar-rechner.js',            // MEGA³² D2: JVEG/BVS/Streitwert Multi-Modus
+  '/lib/wizard-live-save.js',           // MEGA³² A1: Wizard-Save + Skip-Logic
+  '/lib/wertgutachten-verfahren.js',    // MEGA³² A2: Sachwert/Vergleich/Ertrag (ImmoWertV)
+  '/diktat-mobile.html',                // MEGA³² C2 P3: Mobile-Diktat-First-UX
+  '/honorar-rechner.html',              // MEGA³² D2: Honorar-Rechner UI
+  '/bescheinigung-erstellen.html',      // MEGA³² B3: 8-Card-Selector
+  '/demo.html',                         // MEGA³² E1: Sandbox-Demo /demo
   '/lib/foto-upload-v2.css',            // MEGA⁹ W1: Drop-Zone + Item-Card Styles
   '/lib/foto-upload-v2-ui.js',          // MEGA⁹ W1: ProvaUploadUI DOM-Helper
   '/lib/public-status-widget.js',       // MEGA¹¹ W6: Footer-Status-Widget
