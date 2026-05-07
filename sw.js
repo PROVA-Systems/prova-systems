@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v957-mega36-w3-2-cockpit-fab';   // MEGA³⁶ W3.2 Cockpit-Quick-Action + Mobile-FAB: dashboard.html-Header-Button und nav.js-Cmd-K-Palette zeigen jetzt auf neuer-fall.html (statt app.html); zusätzlicher .new-case-fab (56×56, ≤768px) für Mobile. 10 neue Tests grün. Vorgänger v956 (W3.1 Draft-Restore).
+const CACHE_VERSION = 'prova-v958-mega36-w3-3-cmdk-recent';   // MEGA³⁶ W3.3 Cmd-K Recent-Searches + Route-Fix: global-search.js zeigt prova_search_history-Einträge im Empty-State (Re-Query statt Navigate), "Neuer Fall (Wizard)"-Page → neuer-fall.html, alte "Neues Gutachten"-Action entfernt, escapeAttr-Helper für XSS-Schutz. 10 neue + 12 bestehende A3-Tests grün. Vorgänger v957 (W3.2 Cockpit-FAB).
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [

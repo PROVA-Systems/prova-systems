@@ -4,6 +4,12 @@
    Sucht: Fälle (localStorage), Normen (PROVA_NORMEN_DB), Seiten
 ════════════════════════════════════════════════════════════ */
 
+function escapeAttr(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
 const PROVASearch = {
   isOpen: false,
   _q: '',
@@ -11,7 +17,8 @@ const PROVASearch = {
   // Statische Seiten-Einträge
   PAGES: [
     { type: 'page', label: 'Zentrale / Dashboard', icon: '⊞', href: 'dashboard.html' },
-    { type: 'page', label: 'Neues Gutachten', icon: '✚', href: 'app.html' },
+    { type: 'page', label: 'Neuer Fall (Wizard)', icon: '✚', href: 'neuer-fall.html' },
+    { type: 'page', label: 'Klassisches Gutachten-Formular', icon: '📋', href: 'app.html' },
     { type: 'page', label: 'Fälle / Archiv', icon: '📂', href: 'archiv.html' },
     { type: 'page', label: 'Normen-Datenbank', icon: '📚', href: 'normen.html' },
     { type: 'page', label: 'Textbausteine', icon: '📝', href: 'textbausteine.html' },
@@ -116,9 +123,19 @@ const PROVASearch = {
     if (!this._q) {
       // Leer: Schnellaktionen zeigen
       results.push({ group: 'Schnellaktionen' });
-      results.push({ type: 'action', label: 'Neues Gutachten starten', icon: '✚', href: 'app.html', sub: 'Schritt 1: Stammdaten' });
-      results.push({ type: 'action', label: 'Neuer Fall / Auftraggeber', icon: '📂', href: 'archiv.html', sub: 'Fallliste öffnen' });
+      results.push({ type: 'action', label: 'Neuen Fall anlegen', icon: '✚', href: 'neuer-fall.html', sub: 'Wizard mit 4 Setup-Schritten' });
+      results.push({ type: 'action', label: 'Fälle / Archiv öffnen', icon: '📂', href: 'archiv.html', sub: 'Alle Fälle anzeigen' });
       results.push({ type: 'action', label: 'Normen nachschlagen', icon: '📚', href: 'normen.html', sub: '163 DIN/WTA/ZPO Normen' });
+
+      // MEGA³⁶ W3.3: Recent-Searches (aus prova_search_history) als Schnellzugriff
+      const recentSearches = this._getRecentSearches();
+      if (recentSearches.length) {
+        results.push({ group: 'Letzte Suchen' });
+        recentSearches.forEach(q => results.push({
+          type: 'recent-query', label: q, icon: '🔄',
+          sub: 'Suche wiederholen', _isRecentQuery: true
+        }));
+      }
 
       // Letzte Fälle
       const recent = this._getRecentCases();
@@ -168,6 +185,15 @@ const PROVASearch = {
         href: 'akte.html?az=' + encodeURIComponent(c.az || ''),
         sub: [c.sa, c.adr].filter(Boolean).join(' · ')
       }));
+    } catch(e) { return []; }
+  },
+
+  // MEGA³⁶ W3.3: Recent-Searches aus prova_search_history (≤5 dedup)
+  _getRecentSearches() {
+    try {
+      const hist = JSON.parse(localStorage.getItem('prova_search_history') || '[]');
+      if (!Array.isArray(hist)) return [];
+      return hist.filter(q => typeof q === 'string' && q.trim()).slice(0, 5);
     } catch(e) { return []; }
   },
 
@@ -303,18 +329,38 @@ const PROVASearch = {
     this._activeIdx = -1;
     this._results.innerHTML = items.map((item, i) => {
       if (item.group) return '<div class="ps-group">' + item.group + '</div>';
-      return '<div class="ps-item" data-href="' + (item.href||'') + '" tabindex="-1">'
+      const isRecentQuery = item._isRecentQuery === true;
+      const typeLabel = isRecentQuery ? 'Suche'
+        : item.type === 'case' ? 'Fall'
+        : item.type === 'norm' ? 'Norm'
+        : item.type === 'action' ? 'Aktion'
+        : 'Seite';
+      return '<div class="ps-item" data-href="' + (item.href||'') + '"'
+        + (isRecentQuery ? ' data-recent-query="' + escapeAttr(item.label) + '"' : '')
+        + ' tabindex="-1">'
         + '<div class="ps-icon">' + item.icon + '</div>'
         + '<div style="flex:1;min-width:0">'
         + '<div class="ps-label">' + this._hl(item.label) + '</div>'
         + (item.sub ? '<div class="ps-sub">' + item.sub + '</div>' : '')
         + '</div>'
-        + '<span class="ps-type">' + (item.type === 'case' ? 'Fall' : item.type === 'norm' ? 'Norm' : 'Seite') + '</span>'
+        + '<span class="ps-type">' + typeLabel + '</span>'
         + '</div>';
     }).join('');
 
     this._results.querySelectorAll('.ps-item').forEach(el => {
-      el.onclick = () => { window.location.href = el.dataset.href; this.close(); };
+      el.onclick = () => {
+        // MEGA³⁶ W3.3: Recent-Query → re-query, kein navigate
+        const recent = el.dataset.recentQuery;
+        if (recent) {
+          this._input.value = recent;
+          this._search(recent);
+          return;
+        }
+        if (el.dataset.href) {
+          window.location.href = el.dataset.href;
+          this.close();
+        }
+      };
     });
   },
 
