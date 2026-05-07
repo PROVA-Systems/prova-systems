@@ -9,6 +9,8 @@
 <script src="prova-fetch-auth.js"></script>
 <script src="/lib/prova-config.js"></script>
 <script src="/lib/prova-disclaimer.js" defer></script>
+<!-- MEGA³³ A2: ProvaWertVerfahren-Lib (ImmoWertV §§22-39) -->
+<script src="/lib/wertgutachten-verfahren.js"></script>
 <script src="/lib/sentry-init.js"></script>
 <script type="module">
   import { runAuthGuard } from '/lib/auth-guard.js';
@@ -258,20 +260,28 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent);
         <div class="panel-title">2. Wertermittlungsverfahren wählen</div>
         <div class="panel-legal">Nach § 8 ImmoWertV. Mehrere Verfahren können parallel berechnet werden — ein Verfahrensmix ist bei geeigneter Datenlage empfohlen (§ 6 Abs. 1 ImmoWertV). Der SV entscheidet final.</div>
 
+        <!-- MEGA³³ A2: Empfehlung-Button (nutzt ProvaWertVerfahren.empfehleVerfahren) -->
+        <div style="margin-bottom:14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+          <button type="button" class="verfahren-tab"
+                  style="padding:10px 16px;background:rgba(139,92,246,.12);border:1px solid rgba(139,92,246,.35);color:#c4b5fd;border-radius:8px;cursor:pointer;font-family:inherit;font-size:13px;font-weight:700;min-height:44px;"
+                  onclick="wgEmpfehleVerfahren()">💡 Verfahren-Empfehlung anzeigen</button>
+          <span id="wg-empfehlung-text" style="font-size:13px;color:var(--text2);"></span>
+        </div>
+
         <div class="verf-choice">
-          <div class="verf-card" data-verf="sachwert" onclick="wgToggleVerfahren('sachwert')">
+          <div class="verf-card verfahren-btn" data-verf="sachwert" data-verfahren-btn="sachwert" onclick="wgToggleVerfahren('sachwert')">
             <div class="verf-icon">🏗️</div>
             <div class="verf-title">Sachwertverfahren</div>
             <div class="verf-sub">§§ 35–39 ImmoWertV</div>
             <div class="verf-sub" style="margin-top:4px;">Bodenwert + Gebäudesachwert</div>
           </div>
-          <div class="verf-card" data-verf="vergleich" onclick="wgToggleVerfahren('vergleich')">
+          <div class="verf-card verfahren-btn" data-verf="vergleich" data-verfahren-btn="vergleich" onclick="wgToggleVerfahren('vergleich')">
             <div class="verf-icon">🔁</div>
             <div class="verf-title">Vergleichswertverfahren</div>
             <div class="verf-sub">§§ 24–26 ImmoWertV</div>
             <div class="verf-sub" style="margin-top:4px;">Vergleichsobjekte-Durchschnitt</div>
           </div>
-          <div class="verf-card" data-verf="ertrag" onclick="wgToggleVerfahren('ertrag')">
+          <div class="verf-card verfahren-btn" data-verf="ertrag" data-verfahren-btn="ertrag" onclick="wgToggleVerfahren('ertrag')">
             <div class="verf-icon">💼</div>
             <div class="verf-title">Ertragswertverfahren</div>
             <div class="verf-sub">§§ 27–34 ImmoWertV</div>

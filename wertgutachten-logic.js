@@ -171,6 +171,45 @@
   window.wgSelectVerfahren = window.wgToggleVerfahren;
 
   /* ═══════════════════════════════════════════════════════════
+     MEGA³³ A2: Verfahren-Empfehlung via ProvaWertVerfahren-Lib
+     ImmoWertV §6: SV entscheidet final, Lib gibt nur Empfehlung
+  ═══════════════════════════════════════════════════════════ */
+  window.wgEmpfehleVerfahren = function() {
+    var typ = (_state.objekt && _state.objekt.gebaeudeart) || '';
+    var empfehlung = 'sachwert';
+    if (typeof window.ProvaWertVerfahren !== 'undefined' &&
+        typeof window.ProvaWertVerfahren.empfehleVerfahren === 'function') {
+      empfehlung = window.ProvaWertVerfahren.empfehleVerfahren(typ);
+    }
+    var labels = {
+      sachwert: '🏗️ Sachwertverfahren empfohlen (typisch für EFH/RH/DHH)',
+      vergleich: '🔁 Vergleichswertverfahren empfohlen (typisch für ETW/Wohnungen)',
+      ertrag: '💼 Ertragswertverfahren empfohlen (typisch für MFH/Renditeobjekte)',
+      kombiniert: '🔀 Kombiniertes Verfahren empfohlen (Sonderbau/Hotel/Klinik)'
+    };
+    var el = $('wg-empfehlung-text');
+    if (el) el.textContent = labels[empfehlung] || labels.sachwert;
+    return empfehlung;
+  };
+
+  /* MEGA³³ A2: Cross-Check via ProvaWertVerfahren (Sanity-Plausibilität) */
+  function _libCrossCheckSachwert() {
+    if (typeof window.ProvaWertVerfahren === 'undefined') return null;
+    if (!_state.objekt || !_state.sachwert) return null;
+    try {
+      return window.ProvaWertVerfahren.berechneSachwert({
+        bodenrichtwert_eur_qm: _state.objekt.bodenrichtwert,
+        grundstuecksflaeche_qm: _state.objekt.grundstuecksflaeche,
+        nhk_eur_qm: _state.sachwert.nhk,
+        bgf_qm: _state.objekt.bgf || _state.objekt.wohnflaeche,
+        alterswertminderung_pct: _state.sachwert.awm,
+        marktanpassung_gesamt: _state.sachwert.smf
+      });
+    } catch (e) { return null; }
+  }
+  window.wgLibCrossCheck = _libCrossCheckSachwert;
+
+  /* ═══════════════════════════════════════════════════════════
      DATEN SAMMELN
   ═══════════════════════════════════════════════════════════ */
   function objektDatenSammeln() {
