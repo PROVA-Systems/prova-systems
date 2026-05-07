@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v999.1-mega37-a1-airtable-out';   // MEGA³⁷ A1 + A3: Admin-Dashboard Airtable→Supabase (at()-Dispatcher mappt 9 Bridge-Keys auf admin-*-Lambdas), neues admin-support-update Lambda, checkSupabaseHealth statt checkAirtableHealth, Pricing-Drift gefixt (179€/379€ statt 149€/279€). 12 Tests grün.
+const CACHE_VERSION = 'prova-v999.2-mega37-vault-migration';   // MEGA³⁷ A+B+C: Admin-Airtable-Out + Templates-SEED-applied (17) + Vault-Migration (Migrations 25+26 live, service_endpoints + vault_helpers, lib/service-endpoints-cache.js + Server-Helper get-make-webhook-url.js mit DB-First/Legacy-Fallback). Marcel-Manual-Doku für Vault-Secrets + ENV-Cleanup. 60+ Tests grün.
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
@@ -64,6 +64,7 @@ const APP_SHELL = [
   '/lib/honorar-rechner.js',            // MEGA³² D2: JVEG/BVS/Streitwert Multi-Modus
   '/lib/wizard-live-save.js',           // MEGA³² A1: Wizard-Save + Skip-Logic
   '/lib/dokument-templates-cache.js',   // MEGA³⁶ W6.1: DB-Lookup-Cache für Templates
+  '/lib/service-endpoints-cache.js',    // MEGA³⁷ C4: DB-Lookup-Cache für Make-Webhooks
   '/lib/wertgutachten-verfahren.js',    // MEGA³² A2: Sachwert/Vergleich/Ertrag (ImmoWertV)
   '/diktat-mobile.html',                // MEGA³² C2 P3: Mobile-Diktat-First-UX
   '/honorar-rechner.html',              // MEGA³² D2: Honorar-Rechner UI
