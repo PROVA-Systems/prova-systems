@@ -1432,6 +1432,8 @@ function pruefeNormenVorschlag(text) {
 document.addEventListener('DOMContentLoaded', function() {
   var ta = document.getElementById('svTextA');
   if (ta) {
+    // MEGA³¹ A1: Auto-Fokus auf §6-Editor (Vision-Master Regel 11)
+    setTimeout(function() { try { ta.focus(); } catch (e) {} }, 250);
     ta.addEventListener('input', function() {
       pruefeNormenVorschlag(this.value);
     });
