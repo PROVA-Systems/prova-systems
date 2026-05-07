@@ -62,6 +62,40 @@ function calculateUsdCost(model, promptTokens, completionTokens) {
 }
 
 /**
+ * MEGA³³ B2 — Berechne Kosten in USD MIT Prompt-Caching-Discount.
+ * Cached Input-Tokens kosten 10% (OpenAI: $0.50/1M statt $5.00/1M für gpt-5.5).
+ * @param {string} model
+ * @param {object} tokens — { prompt, completion, cachedPrompt, cachedCompletion }
+ * @returns {number} USD
+ */
+function calculateUsdCostCached(model, tokens) {
+  const cleanModel = String(model || '').toLowerCase().replace(/[\s_]/g, '-');
+  const rate = PRICING[cleanModel];
+  if (!rate) return 0;
+  const t = tokens || {};
+  const pt = Number(t.prompt) || 0;             // gesamt (incl. cached)
+  const ct = Number(t.completion) || 0;
+  const cpt = Number(t.cachedPrompt) || 0;       // davon cached
+  const cct = Number(t.cachedCompletion) || 0;
+  const uncachedPrompt = Math.max(0, pt - cpt);
+  const uncachedCompletion = Math.max(0, ct - cct);
+  // Cached: 10% des Standard-Preises (OpenAI Pricing-Page Stand 2026)
+  const CACHED_FACTOR = 0.10;
+  const cost = (
+    uncachedPrompt * rate.prompt
+    + cpt * rate.prompt * CACHED_FACTOR
+    + uncachedCompletion * rate.completion
+    + cct * rate.completion * CACHED_FACTOR
+  ) / 1_000_000;
+  return Math.round(cost * 1_000_000) / 1_000_000;
+}
+
+function calculateEurCostCached(model, tokens) {
+  const usd = calculateUsdCostCached(model, tokens);
+  return Math.round(usd * USD_TO_EUR * 1_000_000) / 1_000_000;
+}
+
+/**
  * Berechne Kosten in EUR.
  */
 function calculateEurCost(model, promptTokens, completionTokens) {
@@ -108,6 +142,8 @@ function buildProtokollPayload(opts) {
 module.exports = {
   calculateUsdCost,
   calculateEurCost,
+  calculateUsdCostCached,
+  calculateEurCostCached,
   calculateWhisperUsdCost,
   buildProtokollPayload,
   PRICING,
