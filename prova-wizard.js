@@ -247,6 +247,13 @@ function _oeffneSchritt(n) {
 function _weiter() {
   if (!_validiere()) return;
   _sammleDaten();
+  // MEGA³³ A1: Live-Save jeden Step → ProvaWizardSave (Defensive: localStorage-Fallback bei DB-Outage)
+  try {
+    if (typeof window !== 'undefined' && window.ProvaWizardSave) {
+      var aid = sessionStorage.getItem('prova_current_auftrag_id') || ('draft-' + Date.now());
+      window.ProvaWizardSave.saveStep(aid, { phase: WZ.schritt, data: WZ.felder, auftrag_typ: WZ.typ });
+    }
+  } catch(e) {}
   var maxStep = _brauchSchritt4() ? 4 : 3;
   if (WZ.schritt < maxStep) {
     _oeffneSchritt(WZ.schritt + 1);
