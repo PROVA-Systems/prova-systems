@@ -239,4 +239,26 @@
     try { data = await res.json(); } catch (e) {}
     return { ok: res.ok, status: res.status, data: data, response: res };
   };
+
+  // MEGA³³ B4: Auto-Lazy-Load ProvaReConsent-Modal-Lib auf authenticated Pages.
+  // Lib hat selbst DOMContentLoaded-Auto-Init mit checkAndShow nach 1.5s.
+  // Hier nur sicherstellen, dass die Lib auch tatsächlich GELADEN wird —
+  // bisher war sie nur in tests, aber nicht in HTML-Pages eingebunden.
+  try {
+    if (typeof document !== 'undefined' && typeof window.ProvaReConsent === 'undefined') {
+      var rcToken = null;
+      try { rcToken = localStorage.getItem('prova_auth_token'); } catch (e) {}
+      if (rcToken) {
+        var rcPath = (window.location && window.location.pathname) || '';
+        var rcSkip = ['/login.html', '/login', '/index.html', '/', '/pricing.html', '/datenschutz.html', '/impressum.html', '/agb.html', '/avv.html', '/demo.html'];
+        if (rcSkip.indexOf(rcPath) === -1) {
+          var rcScript = document.createElement('script');
+          rcScript.src = '/lib/re-consent-modal.js';
+          rcScript.defer = true;
+          rcScript.setAttribute('data-mega33-b4', '1');
+          document.head.appendChild(rcScript);
+        }
+      }
+    }
+  } catch (e) { /* nicht-kritisch, fail-silent */ }
 })();
