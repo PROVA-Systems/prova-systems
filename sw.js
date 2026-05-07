@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v700-market-ready';   // MEGA³² Welle 11 FINAL — Markt-Launch-Ready. 9/9 Items: Schadensfall-Tabs + Dashboard-Widget + AUTH-PERFEKT-2FA-UI + Demo-Fall + Onboarding-Emails + Admin-Cockpit-Widgets + Markt-Launch-Checklist + Schema-Final + Marcel-Onboarding-Doku.
+const CACHE_VERSION = 'prova-v810-mega31-vollendung-vision-kern';   // MEGA³¹ Vollendung — A1-A5/B1-B3/C1-C3/D1 (12 Items). §6 Editor 60vw + 500-Zeichen-Gate + S1/S2/S3 + Skizzen-Embed + ZUGFeRD + 50 KI-Tests + Force-Admin-2FA + AVV-Master + APP-LANDING-SPLIT + Marketing-Site + SEO + Diktat-Strukturierung.
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
