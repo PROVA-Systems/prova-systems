@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v955-mega35-pilot-live-ready';   // MEGA³⁵ Pre-Pilot-Hardening. P0 Schema-Apply (4 Migrations 18-21 in Live-DB) + C1 foto-upload Lambda + EXIF-Strip + C2 RLS-Migration 22 + 9 Policies live + C3 user-workflow-settings rename + C4 list-auftraege Lambda + C5 dsgvo-loeschen-antrag Supabase + 4 Bedingungen + C6 termine-ical-token. 5 Pilot-Blocker geschlossen, ~50 neue Tests, ECHTES 100% post-Audit-Korrektur.
+const CACHE_VERSION = 'prova-v956-mega36-w3-1-draft-restore';   // MEGA³⁶ W3.1 Draft-Restore: wizard-live-save.js + neuer-fall.html erweitert um findActiveDraft/restoreDraft/discardDraft/showRestoreBanner — 6 Unit-Tests + 2 HTML-Verify-Tests grün. Vorgänger v955 (M³⁵ Pre-Pilot-Hardening) bleibt funktional intakt.
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [

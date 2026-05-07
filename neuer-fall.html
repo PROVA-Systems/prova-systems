@@ -168,6 +168,24 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
     return await window.ProvaWizardSave.saveStep(auftrag_id, step_data);
   };
 
+  // MEGA³⁶ W3.1: Draft-Restore-Banner falls localStorage-Draft existiert
+  function tryRestoreBanner(){
+    if (!window.ProvaWizardSave || typeof window.ProvaWizardSave.findActiveDraft !== 'function') return;
+    var draft = window.ProvaWizardSave.findActiveDraft();
+    if (!draft) return;
+    window.ProvaWizardSave.showRestoreBanner({
+      draft: draft,
+      onRestore: function(d){
+        try { sessionStorage.setItem('prova_wizard_restore_id', d.auftrag_id); } catch(e){}
+        try { sessionStorage.setItem('prova_wizard_restore_data', JSON.stringify(d.data)); } catch(e){}
+        if (window.PROVA && typeof window.PROVA.openAuftragstyp === 'function') {
+          window.PROVA.openAuftragstyp({ restoreDraft: d });
+        }
+      },
+      onDiscard: function(){ /* localStorage bereits cleared im Banner-Handler */ }
+    });
+  }
+
   // Auto-trigger Dialog wenn alles geladen ist (sanfter Fallback nach 1.5s)
   function tryAutoTrigger(){
     if (window.PROVA && typeof window.PROVA.openAuftragstyp === 'function') {
@@ -181,6 +199,9 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
     }
     return false;
   }
+
+  // MEGA³⁶ W3.1: Draft-Restore zuerst prüfen (zeigt Banner non-blocking)
+  setTimeout(tryRestoreBanner, 300);
 
   if (tryAutoTrigger()) return;
   var attempts = 0;
