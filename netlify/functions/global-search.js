@@ -121,9 +121,34 @@ exports.handler = withSentry(requireAuth(async function (event, context) {
     return jsonResponse(event, 200, {
       q: cleanQ,
       total: allResults.length,
-      results: sliced
+      results: sliced,
+      // MEGA³⁴ A3: Aktionen-Kategorie (Quick-Actions)
+      aktionen: matchActions(cleanQ)
     });
   } catch (e) {
     return jsonResponse(event, 500, { error: 'unexpected', detail: e.message, results: [] });
   }
 }), { functionName: 'global-search' });
+
+// ─── MEGA³⁴ A3: Quick-Actions-Kategorie ─────────────────────────────────────
+const QUICK_ACTIONS = [
+  { id: 'new-auftrag', label: 'Neuer Auftrag', icon: '➕', href: '/neuer-fall.html', keywords: ['auftrag','neu','fall','schaden','wert'] },
+  { id: 'new-rechnung', label: 'Neue Rechnung', icon: '🧾', href: '/rechnungen.html?new=1', keywords: ['rechnung','invoice','honorar'] },
+  { id: 'termine', label: 'Termine-Kalender', icon: '📅', href: '/termine.html', keywords: ['termin','kalender','date'] },
+  { id: 'archiv', label: 'Archiv', icon: '📦', href: '/archiv.html', keywords: ['archiv','abgeschlossen'] },
+  { id: 'einstellungen', label: 'Einstellungen', icon: '⚙️', href: '/einstellungen.html', keywords: ['einstellungen','settings','profil'] },
+  { id: 'demo', label: 'Live-Demo', icon: '🚀', href: '/demo.html', keywords: ['demo','tour'] },
+  { id: 'honorar-rechner', label: 'Honorar-Rechner', icon: '💶', href: '/honorar-rechner.html', keywords: ['honorar','jveg','bvs','streitwert'] },
+  { id: 'cookie-settings', label: 'Cookie-Einstellungen', icon: '🍪', href: '/cookie-einstellungen.html', keywords: ['cookie','consent','dsgvo'] }
+];
+
+function matchActions(q) {
+  if (!q || q.length < 2) return [];
+  const Q = q.toLowerCase();
+  return QUICK_ACTIONS.filter(a =>
+    a.label.toLowerCase().includes(Q) || a.keywords.some(k => k.includes(Q))
+  ).slice(0, 5);
+}
+
+module.exports.__matchActions = matchActions;
+module.exports.__QUICK_ACTIONS = QUICK_ACTIONS;
