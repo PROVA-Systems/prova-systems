@@ -29,6 +29,10 @@ const MODEL_MAP = {
   support_chat:       'gpt-5.4-mini',
   normen_picker:      'gpt-5.4-mini',
   foto_captioning:    'gpt-5.4-mini',
+  diktat_strukturierung: 'gpt-5.4-mini', // MEGA³¹ D1: Diktat → §1-§5
+  rechtschreibung_s1: 'gpt-5.4-mini',    // MEGA³¹ A3: S1 Sprache
+  absatz_s2:          'gpt-5.4',         // MEGA³¹ A3: S2 Struktur
+  fachsprache_s3:     'gpt-5.4',         // MEGA³¹ A3: S3 Fachsprache
   // Whisper
   whisper:            'whisper-1'
 };
@@ -73,7 +77,7 @@ const PRICING = {
 function chooseModel(funktion, userMode) {
   const mode = userMode === 'praezise' ? 'praezise' : 'schnell';
   // praezise-Modus eskaliert leichte Funktionen auf Frontier
-  const lightFunktionen = ['freitext', 'support_chat', 'normen_picker', 'foto_captioning'];
+  const lightFunktionen = ['freitext', 'support_chat', 'normen_picker', 'foto_captioning', 'diktat_strukturierung', 'rechtschreibung_s1'];
   if (mode === 'praezise' && lightFunktionen.includes(funktion)) {
     return MODEL_MAP.fachurteil_entwurf; // gpt-5.5
   }
