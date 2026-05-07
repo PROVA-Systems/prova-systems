@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v999-mega36-pre-final';   // MEGA³⁶ Pre-FINAL: 16/17 Items done, W9 Pre-Checks 4/6 grün (Lambda-Cross-Ref OK, RLS OK auf 5 Tabellen, APP_SHELL completed mit dokument-templates-cache.js, Migration 24 PENDING Marcel-Apply, Live-Curl + PDFMonkey blockiert bis Branch-Merge). Tag v1000 erst nach Marcel-Apply gemäß 9/9-Acceptance.
+const CACHE_VERSION = 'prova-v999.1-mega37-a1-airtable-out';   // MEGA³⁷ A1 + A3: Admin-Dashboard Airtable→Supabase (at()-Dispatcher mappt 9 Bridge-Keys auf admin-*-Lambdas), neues admin-support-update Lambda, checkSupabaseHealth statt checkAirtableHealth, Pricing-Drift gefixt (179€/379€ statt 149€/279€). 12 Tests grün.
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [

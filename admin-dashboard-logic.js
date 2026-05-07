@@ -22,34 +22,75 @@
 
 /* ─────────────────────────────────────────── */
 
-/* ── AIRTABLE CONFIG ── */
-const ADMIN_BASE = 'appJ7bLlAHZoxENWE';
-const SV_BASE    = 'appJ7bLlAHZoxENWE';
+/* ── M37-A1: Airtable→Supabase Migration ──
+ * Marcel-Direktive 2026-05-08: KEIN Airtable mehr im Admin-Cockpit.
+ * Der at()-Dispatcher behält Airtable-Format-Kompatibilität ({records:[{id,fields}]})
+ * für bestehende Tab-Loader, ruft aber tatsächlich Supabase-Lambdas auf.
+ *
+ * Legacy-Konstanten T.* sind Schlüssel für das Mapping — sie werden
+ * NICHT mehr als Airtable-IDs interpretiert, sondern als Bridge-Keys.
+ */
+const ADMIN_BASE = 'supabase';
+const SV_BASE    = 'supabase';
 const T = {
-  KUNDEN:         'tbladqEQT3tmx4DIB',  // SACHVERSTEANDIGE
-  SCHADENSFAELLE: 'tblSxV8bsXwd1pwa0',  // SCHADENSFAELLE
-  SUPPORT:        'tblEb3A4dukGX8GFs',   // SUPPORT_TICKETS ✅
-  PIPELINE:       'tblK7a3mBdsrxsrp5',  // PIPELINE_AKQUISE ✅
-  AUDIT_LOG:      'tblSxV8bsXwd1pwa0',  // SCHADENSFAELLE als Audit-Fallback
-  FINANZEN_MRR:   'tblcGu1fM7PfLYO7c',  // ADMIN_FINANZEN ✅
-  NUTZUNG:        'tblSxV8bsXwd1pwa0',
-  KI_STATISTIK:   'tblv9F8LEnUC3mKru',  // KI_STATISTIK — Session 2 Fix #15
-  STATISTIKEN:    'tblb0j9qOhMExVEFH'   // STATISTIKEN allgemein
+  KUNDEN:         'kunden',
+  SCHADENSFAELLE: 'schadensfaelle',
+  SUPPORT:        'support',
+  PIPELINE:       'pipeline',
+  AUDIT_LOG:      'audit_log',
+  FINANZEN_MRR:   'finanzen_mrr',
+  NUTZUNG:        'nutzung',
+  KI_STATISTIK:   'ki_statistik',
+  STATISTIKEN:    'statistiken'
 };
 
-/* ── PROXY CALL ── */
+const _AT_TO_LAMBDA = {
+  // Frühere Airtable-Table-IDs (für Backward-Compat bei evtl. Direkt-Aufrufen)
+  'tbladqEQT3tmx4DIB': 'admin-pilot-list',
+  'tblEb3A4dukGX8GFs': 'admin-support-inbox',
+  'tblK7a3mBdsrxsrp5': 'admin-pilot-list',
+  'tblcGu1fM7PfLYO7c': 'admin-mrr-live',
+  'tblSxV8bsXwd1pwa0': 'list-auftraege',
+  'tblv9F8LEnUC3mKru': 'admin-ki-aggregations',
+  'tblb0j9qOhMExVEFH': 'admin-stripe-kpis',
+  // Neue Bridge-Keys
+  'kunden':           'admin-pilot-list',
+  'support':          'admin-support-inbox',
+  'pipeline':         'admin-pilot-list',
+  'finanzen_mrr':     'admin-mrr-live',
+  'schadensfaelle':   'list-auftraege',
+  'audit_log':        'admin-audit-trail',
+  'ki_statistik':     'admin-ki-aggregations',
+  'statistiken':      'admin-stripe-kpis',
+  'nutzung':          'admin-ki-costs'
+};
+
+/* ── PROXY CALL — M37 Supabase-Dispatcher (kein Airtable!) ── */
 async function at(base, table, params='') {
-  const res = await provaFetch('/.netlify/functions/airtable', {
-    method: 'POST',
-    headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({
-      method: 'GET',
-      path: `/v0/${base}/${table}?${params}`
-    })
+  const lambda = _AT_TO_LAMBDA[table] || 'admin-pilot-list';
+  const url = '/.netlify/functions/' + lambda + (params ? '?' + params : '');
+  const res = await provaFetch(url, {
+    method: 'GET',
+    headers: window.provaAuthHeaders ? window.provaAuthHeaders() : {}
   });
   if (!res.ok) throw new Error('HTTP ' + res.status);
-  return res.json();
+  const data = await res.json();
+
+  // Adapter: Supabase → Airtable-Format ({records:[{id, fields:{...}}]})
+  const items = data.users || data.tickets || data.invoices || data.rows
+              || data.records || data.subscriptions || data.entries
+              || (Array.isArray(data) ? data : []);
+  return {
+    records: items.map(it => ({
+      id: it.id || it.user_id || it.email || (Math.random().toString(36).slice(2)),
+      fields: it.fields || it,                          // bei Airtable-Legacy bereits .fields
+      _source: 'supabase'
+    }))
+  };
 }
+
+// Kennzeichnung für Tests + Audit
+if (typeof window !== 'undefined') window.__PROVA_ADMIN_DATA_SOURCE = 'supabase';
 
 /* ── STATE ── */
 let _kunden = [], _tickets = [], _pipeline = [];
@@ -91,7 +132,7 @@ async function loadAll() {
   loadKPIs();
   loadPaketVerteilung();
   loadNeuesteKunden();
-  checkAirtableHealth();
+  checkSupabaseHealth(); // M37-A1: ehemals checkAirtableHealth
 }
 
 /* ── KI-STATS & WORKFLOW-FUNNEL (Session 2 Fix #15) ───────────────
@@ -249,7 +290,7 @@ async function loadPaketVerteilung() {
     aktiv.forEach(r => { const p = r.fields.Paket || 'Starter'; if (counts[p] !== undefined) counts[p]++; });
     const total = aktiv.length || 1;
     const colors = {Starter:'var(--accent)',Pro:'var(--warn)',Enterprise:'var(--purple)'};
-    const mrrs = {Solo:149,Team:279};
+    const mrrs = {Solo:179,Team:379}; // M37-A3: Pricing-Sync (CLAUDE.md Regel 21)
     let html = '<div class="paket-bars">';
     for (const [p, c] of Object.entries(counts)) {
       const pct = Math.round(c/total*100);
@@ -260,7 +301,7 @@ async function loadPaketVerteilung() {
       </div>`;
     }
     html += `</div><div style="margin-top:12px;font-size:11px;color:var(--text3);font-family:var(--mono);">
-      MRR-Mix: Solo ${fmtEur(counts.Solo*149)} · Team ${fmtEur(counts.Team*349)}
+      MRR-Mix: Solo ${fmtEur(counts.Solo*179)} · Team ${fmtEur(counts.Team*379)}
     </div>`;
     document.getElementById('paketVerteilung').innerHTML = html;
   } catch(e) { document.getElementById('paketVerteilung').innerHTML = '<div class="empty">Fehler beim Laden</div>'; }
@@ -288,23 +329,33 @@ async function loadNeuesteKunden() {
   } catch(e) { document.getElementById('neuesteKunden').innerHTML = '<div class="empty" style="padding:16px;">Fehler beim Laden</div>'; }
 }
 
-async function checkAirtableHealth() {
+// M37-A1: ehemals checkAirtableHealth — jetzt Supabase-Health (Backward-Compat-Alias)
+async function checkSupabaseHealth() {
   try {
     await at(ADMIN_BASE, T.KUNDEN, 'maxRecords=1');
-    document.getElementById('h-airtable').textContent = 'Erreichbar';
-    document.getElementById('h-airtable').className = 'health-status green';
-    // S3 hat 8/8 Fehler lt. Dokumentation
-    document.getElementById('h-s1').className = 'health-dot warn';
-    document.getElementById('h-s1-txt').textContent = '30% Fehler';
-    document.getElementById('h-s1-txt').className = 'health-status warn';
-    document.getElementById('h-s3').className = 'health-dot red';
-    document.getElementById('h-s3-txt').textContent = 'PDFMonkey fehlt';
-    document.getElementById('h-s3-txt').className = 'health-status red';
+    var el = document.getElementById('h-airtable') || document.getElementById('h-supabase');
+    if (el) {
+      el.textContent = 'Erreichbar';
+      el.className = 'health-status green';
+    }
+    var s1 = document.getElementById('h-s1');
+    var s1t = document.getElementById('h-s1-txt');
+    var s3 = document.getElementById('h-s3');
+    var s3t = document.getElementById('h-s3-txt');
+    if (s1) s1.className = 'health-dot warn';
+    if (s1t) { s1t.textContent = '30% Fehler'; s1t.className = 'health-status warn'; }
+    if (s3) s3.className = 'health-dot red';
+    if (s3t) { s3t.textContent = 'PDFMonkey fehlt'; s3t.className = 'health-status red'; }
   } catch(e) {
-    document.getElementById('h-airtable').textContent = 'Fehler';
-    document.getElementById('h-airtable').className = 'health-status red';
+    var el2 = document.getElementById('h-airtable') || document.getElementById('h-supabase');
+    if (el2) {
+      el2.textContent = 'Fehler';
+      el2.className = 'health-status red';
+    }
   }
 }
+// Backward-Compat-Alias (admin-dashboard.html ruft evtl. noch checkAirtableHealth())
+var checkAirtableHealth = checkSupabaseHealth;
 
 /* ── KUNDEN ── */
 async function loadKunden() {
@@ -439,15 +490,13 @@ function filterTickets() {
 
 async function updateTicketStatus(recordId, newStatus, idx) {
   try {
-    await provaFetch('/.netlify/functions/airtable', {
+    // M37-A1: Supabase via admin-support-update Lambda (statt Airtable PATCH)
+    const res = await provaFetch('/.netlify/functions/admin-support-update', {
       method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({
-        method: 'PATCH',
-        path: `/v0/${ADMIN_BASE}/${T.SUPPORT}/${recordId}`,
-        payload: { fields: { Status: newStatus } }
-      })
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ticket_id: recordId, status: newStatus })
     });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
     // Lokal aktualisieren
     if (_tickets[idx]) _tickets[idx].fields.Status = newStatus;
     renderTickets(_tickets);
