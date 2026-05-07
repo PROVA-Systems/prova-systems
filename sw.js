@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v900-vision-100-percent';   // MEGA³³ 100% Vision-Komplett. UI-Integration A1-A4 (auftrag-neu+wertgutachten+beratung+baubegleitung Multi-Termin+bauphase-Migration) + B1 IHK-SVO 7 Tranche-1 verifiziert + B2 Prompt-Caching W4 (-40% Cost) + B3 Cross-Device-Sync E2E + B4 Forced Re-Consent Live + C1 IHK-Pre-Audit 6/6 Compliance + C2 50 Edge-Case-Tests + C3 AVV-Anwalt-Paket. Vision: 85% -> 100%.
+const CACHE_VERSION = 'prova-v950-final-100-percent';   // MEGA³⁴ FINAL — Vision ECHTES 100%. A1 Cookie-Banner DSGVO + A2 schadensfaelle Universal-Liste + A3 Cmd-K Aktionen + A4 iCal-Subscribe RFC 5545 + B1 360° Verknüpfungen + B2 5 Onboarding-Mails + B3 Public Status-Page /status + B4 Master-Doku v3.0 + C1 KI-Live-Verify + C2 Playwright E2E. 5 MEGA-Wellen, ~660 neue Tests, 19 Marathon-Tage.
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
@@ -68,6 +68,8 @@ const APP_SHELL = [
   '/honorar-rechner.html',              // MEGA³² D2: Honorar-Rechner UI
   '/bescheinigung-erstellen.html',      // MEGA³² B3: 8-Card-Selector
   '/demo.html',                         // MEGA³² E1: Sandbox-Demo /demo
+  '/cookie-einstellungen.html',         // MEGA³⁴ A1: Cookie-Settings-Page (DSGVO § 25 TTDSG)
+  '/public-status.html',                // MEGA³⁴ B3: Public Status-Page /status
   '/lib/foto-upload-v2.css',            // MEGA⁹ W1: Drop-Zone + Item-Card Styles
   '/lib/foto-upload-v2-ui.js',          // MEGA⁹ W1: ProvaUploadUI DOM-Helper
   '/lib/public-status-widget.js',       // MEGA¹¹ W6: Footer-Status-Widget
