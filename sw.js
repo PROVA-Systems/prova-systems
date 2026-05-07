@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v820-mega32-flows-bescheinigungen-mobile';   // MEGA³² 4-Flows + Bescheinigungen + Mobile + Diktat-Polish + Honorar + Sandbox/Demo. A1 Wizard-Save + A2 Wertgutachten 3-Verfahren + A3-A4 Beratung/Baubegleitung-Templates + B1-B3 7 Bescheinigungen + Briefe + Lambda + B3-UI + C1-C2 Mobile P1-P4 + D1 Whisper-Chunker + D2 Honorar-Rechner + E1 Sandbox-Demo /demo.
+const CACHE_VERSION = 'prova-v900-vision-100-percent';   // MEGA³³ 100% Vision-Komplett. UI-Integration A1-A4 (auftrag-neu+wertgutachten+beratung+baubegleitung Multi-Termin+bauphase-Migration) + B1 IHK-SVO 7 Tranche-1 verifiziert + B2 Prompt-Caching W4 (-40% Cost) + B3 Cross-Device-Sync E2E + B4 Forced Re-Consent Live + C1 IHK-Pre-Audit 6/6 Compliance + C2 50 Edge-Case-Tests + C3 AVV-Anwalt-Paket. Vision: 85% -> 100%.
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
