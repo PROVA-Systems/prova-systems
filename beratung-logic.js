@@ -619,4 +619,87 @@
   }
   bindAutoSave();
 
+  /* ═══════════════════════════════════════════════════════════════════
+     MEGA³³ A3: 3-Phasen-Wizard-Logic (UI-Integration)
+     Phase 1 Auftragsannahme → Bestätigungs-Brief
+     Phase 2 Beratungstermin → Diktat + Protokoll
+     Phase 3 Abschluss       → Beratungs-Bericht (B-01-BERATUNGSBERICHT) + Rechnung
+  ═══════════════════════════════════════════════════════════════════ */
+  var _aktivePhase = parseInt(sessionStorage.getItem('prova_beratung_phase') || '1', 10);
+
+  window.setBeratungPhase = function(nr) {
+    if ([1, 2, 3].indexOf(nr) === -1) return;
+    _aktivePhase = nr;
+    try { sessionStorage.setItem('prova_beratung_phase', String(nr)); } catch(e) {}
+
+    // Phase-Cards-State: aktiv vs done
+    document.querySelectorAll('.beratung-phase').forEach(function(el) {
+      var step = parseInt(el.getAttribute('data-phase-step') || '0', 10);
+      el.classList.toggle('phase-active', step === nr);
+      el.classList.toggle('active', step === nr);
+      el.classList.toggle('done', step < nr);
+      el.classList.toggle('pending', step > nr);
+    });
+
+    // Phase-Action-Buttons (1=Bestätigung, 3=Bericht)
+    var btnB = document.getElementById('btn-bestaetigung-brief');
+    var btnR = document.getElementById('btn-beratungs-bericht');
+    var info = document.getElementById('phase-action-info');
+    if (btnB) btnB.style.display = (nr === 1) ? '' : 'none';
+    if (btnR) btnR.style.display = (nr === 3) ? '' : 'none';
+    if (info) {
+      info.textContent = nr === 1 ? 'Stammdaten erfassen + Bestätigungs-Brief versenden'
+        : nr === 2 ? 'Termin durchführen + Zeit erfassen + Diktat aufnehmen'
+        : 'Bericht generieren (B-01) + Rechnung erstellen';
+    }
+
+    // Live-Save via wizard-live-save (falls verfügbar)
+    if (typeof window.persistStep === 'function') {
+      var aid = sessionStorage.getItem('prova_current_auftrag_id') || ('beratung-' + Date.now());
+      window.persistStep(aid, { auftrag_typ: 'beratung', phase_step: nr });
+    }
+  };
+
+  window.generateBestaetigungsBrief = function() {
+    // Phase 1: Bestätigungs-Brief erzeugen via /briefe/auftragsbestaetigung
+    var az = (document.getElementById('br-az') || {}).value || '';
+    var ag = (document.getElementById('br-ag') || {}).value || '';
+    var thema = (document.getElementById('br-thema') || {}).value || '';
+    if (!az || !ag) {
+      alert('Bitte Aktenzeichen + Auftraggeber-Name eintragen.');
+      return;
+    }
+    var url = '/briefe/auftragsbestaetigung.html?az=' + encodeURIComponent(az)
+            + '&ag=' + encodeURIComponent(ag)
+            + '&thema=' + encodeURIComponent(thema)
+            + '&typ=beratung';
+    window.open(url, '_blank');
+  };
+
+  window.generateBeratungsBericht = function() {
+    // Phase 3: B-01-BERATUNGSBERICHT via PDFMonkey-Lambda generieren
+    var az = (document.getElementById('br-az') || {}).value || '';
+    if (!az) { alert('Aktenzeichen fehlt.'); return; }
+    var fetcher = window.provaFetch || window.fetch.bind(window);
+    fetcher('/.netlify/functions/bescheinigung-generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        typ: 'beratungs_bericht',
+        template: 'B-01-BERATUNGSBERICHT',
+        az: az,
+        eintraege: _eintraege || [],
+        thema: (document.getElementById('br-thema') || {}).value || ''
+      })
+    }).then(function(r){ return r.json(); })
+      .then(function(d){
+        if (d && d.pdf_url) window.open(d.pdf_url, '_blank');
+        else alert('Bericht wird im Hintergrund generiert. PDF erscheint im Archiv.');
+      })
+      .catch(function(e){ alert('Bericht-Generation fehlgeschlagen: ' + e.message); });
+  };
+
+  // Initialer Phase-State
+  setBeratungPhase(_aktivePhase);
+
 })();
