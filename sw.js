@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v1409-mega42-p9-dsgvo-roundtrip';   // MEGA⁴² P1: scripts/run-all-tests.js stable cross-platform runner mit --test-force-exit. 4231/4231 M⁴⁰+M⁴¹ Tests grün in 19s. 32 Pre-M⁴⁰-Legacy-Fails dokumentiert (out-of-scope).
+const CACHE_VERSION = 'prova-v1410-mega42-p10-pilot-onboarding';   // MEGA⁴² P1: scripts/run-all-tests.js stable cross-platform runner mit --test-force-exit. 4231/4231 M⁴⁰+M⁴¹ Tests grün in 19s. 32 Pre-M⁴⁰-Legacy-Fails dokumentiert (out-of-scope).
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
@@ -124,6 +124,7 @@ const APP_SHELL = [
   '/lib/workflow-stepper-bridge.css',   // MEGA⁴² P2: Bridge-Stepper-Header-Styles
   '/push-setup.html',                   // MEGA⁴² P5: Push-Alerts Setup-Wizard 3 Steps
   '/health-test-down.html',             // MEGA⁴² P5: Manueller Health-Check-Trigger (Test-Tool)
+  '/pilot-tutorial.html',               // MEGA⁴² P10: 12-Step Pilot-Tutorial mit Resume
   '/lib/sync-conflict-resolver.js',     // MEGA⁴¹ P10: Sync-Konflikt-Resolver
   '/lib/offline-sync-status.js',        // MEGA⁴¹ P10: Offline-Sync-Status-Icon
   '/wiederherstellbare-entwuerfe.html', // MEGA⁴¹ P10: Recovery-Page für Drafts

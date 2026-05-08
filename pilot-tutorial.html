@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1, viewport-fit=cover">
+<title>Pilot-Tutorial · PROVA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="prova-fetch-auth.js"></script>
+<script src="/lib/prova-config.js"></script>
+<script>
+(function(){
+  try {
+    var token = localStorage.getItem('prova_auth_token');
+    if (!token) { window.location.replace('/login?next=/pilot-tutorial.html'); return; }
+  } catch (e) { window.location.replace('/login'); }
+})();
+</script>
+<script type="module">
+  import { runAuthGuard } from '/lib/auth-guard.js';
+  runAuthGuard().catch(e => console.error('[auth] guard failed', e));
+</script>
+<script src="theme.js"></script>
+<script src="prova-layout.config.js"></script>
+<script src="nav.js" defer></script>
+<link rel="stylesheet" href="prova-design.css">
+<style>
+:root {
+  --bg:#0b0d11; --surface:#1c2130; --surface2:#232a3a;
+  --border:rgba(255,255,255,0.06); --text:#eaecf4; --text2:#8b93ab;
+  --accent:#4f8ef7; --success:#10b981;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;line-height:1.55;}
+.pt-wrap{max-width:880px;margin:0 auto;padding:48px 20px 100px;}
+.pt-progress{display:flex;gap:6px;margin-bottom:24px;}
+.pt-progress-step{flex:1;height:3px;background:var(--surface2);border-radius:2px;}
+.pt-progress-step.is-done{background:var(--success);}
+.pt-progress-step.is-active{background:var(--accent);}
+.pt-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:32px;margin-bottom:18px;}
+.pt-h1{font-size:24px;font-weight:800;margin-bottom:8px;}
+.pt-step-label{font-size:12px;color:var(--accent);text-transform:uppercase;letter-spacing:0.05em;font-weight:700;margin-bottom:8px;}
+.pt-content{color:var(--text2);font-size:15px;}
+.pt-content strong{color:var(--text);}
+.pt-content code{background:var(--surface2);padding:2px 6px;border-radius:4px;font-family:'SF Mono',monospace;font-size:13px;color:var(--accent);}
+.pt-actions{display:flex;justify-content:space-between;align-items:center;margin-top:24px;}
+.pt-btn{padding:12px 22px;border:none;border-radius:8px;font-weight:700;cursor:pointer;font-family:inherit;font-size:14px;}
+.pt-btn-primary{background:linear-gradient(135deg,var(--accent),#3a7be0);color:#fff;}
+.pt-btn-ghost{background:var(--surface2);color:var(--text2);border:1px solid var(--border);}
+.pt-btn:disabled{opacity:.4;cursor:not-allowed;}
+.pt-tip{background:rgba(79,142,247,.08);border-left:3px solid var(--accent);padding:12px 14px;border-radius:6px;font-size:13px;margin-top:14px;}
+</style>
+</head>
+<body>
+<main class="pt-wrap">
+  <div class="pt-progress" id="pt-progress"></div>
+  <div class="pt-card" id="pt-card">
+    <div class="pt-step-label" id="pt-step-label"></div>
+    <h1 class="pt-h1" id="pt-h1"></h1>
+    <div class="pt-content" id="pt-content"></div>
+    <div class="pt-actions">
+      <button class="pt-btn pt-btn-ghost" id="pt-prev">← Zurück</button>
+      <span style="color:var(--text2);font-size:13px;" id="pt-counter"></span>
+      <button class="pt-btn pt-btn-primary" id="pt-next">Weiter →</button>
+    </div>
+  </div>
+</main>
+
+<script>
+const STEPS = [
+  {
+    label: 'Schritt 1 von 12',
+    title: 'Willkommen im PROVA-Pilot 🥇',
+    content: 'Diese Tour dauert 12 Minuten. Sie können jederzeit pausieren — der Fortschritt wird gespeichert.<br><br>Was Sie lernen:<br><br><strong>1.</strong> 4-Flow-Architektur (Schaden / Wert / Beratung / Baubegleitung)<br><strong>2.</strong> Akte anlegen + Diktat<br><strong>3.</strong> §6 Fachurteil mit KI-Hilfe<br><strong>4.</strong> Freigabe + PDF-Export<br><strong>5.</strong> Mobile-App + Push-Alerts<br><br><em>Profi-Tipp:</em> Falls Sie im Vorfeld schon Fragen haben — antworten Sie auf die Welcome-Mail.'
+  },
+  {
+    label: 'Schritt 2 von 12',
+    title: '4 Workflows — welcher passt für mich?',
+    content: 'PROVA unterstützt 4 Gutachten-Typen mit eigenen UIs:<br><br><strong>A — Schaden &amp; Mangel</strong> (§1-§6 Voll-Struktur)<br>Gerichtsgutachten, Versicherungs-, Privat-, Schiedsgutachten, Beweissicherung, Ergänzungs-, Gegengutachten<br><br><strong>B — Wertgutachten</strong> (ImmoWertV)<br>Sachwert, Vergleichswert, Ertragswert<br><br><strong>C — Beratung</strong> (Stunden-Abrechnung)<br>Kauf-, Sanierungs-, Baurechtberatung<br><br><strong>D — Baubegleitung</strong> (Periodische Berichte)<br>Baudokumentation über Wochen/Monate<br><br>80% aller Cases sind Flow A.'
+  },
+  {
+    label: 'Schritt 3 von 12',
+    title: 'Erste Akte anlegen',
+    content: 'Klick auf <code>Neuer Fall</code> oben links → wähle Auftragstyp → Wizard-Stepper führt Sie durch:<br><br><strong>1.</strong> Auftragstyp<br><strong>2.</strong> Wo &amp; Was (Adresse + Schadenart)<br><strong>3.</strong> Auftraggeber<br><strong>4.</strong> Rahmen (Beweisbeschluss / Frist)<br><br>Jeder Schritt wird auto-gespeichert. Bei Pause: einfach Browser zu, später weiter.<div class="pt-tip"><strong>💡 Pro-Tip:</strong> Pflicht ist nur Adresse (Schritt 2) + Auftraggeber-Name (Schritt 3). Alles andere optional.</div>'
+  },
+  {
+    label: 'Schritt 4 von 12',
+    title: 'Diktat aufnehmen',
+    content: 'In jeder Akte: Tab "<strong>Diktat</strong>". Klick auf Mikro → spreche frei. Whisper transkribiert automatisch (auch Fachbegriffe).<br><br><strong>Mobile:</strong> /diktat-mobile.html für unterwegs. EXIF-GPS-Strip ist standardmäßig an für Fotos.<br><br><strong>Datenschutz:</strong> Vor OpenAI-Übertragung wird automatisch pseudonymisiert (Namen, Adressen, IBAN).'
+  },
+  {
+    label: 'Schritt 5 von 12',
+    title: 'Fotos hinzufügen',
+    content: 'Tab "<strong>Fotos</strong>" → Drag &amp; Drop oder Camera. PROVA macht automatisch:<br><br><strong>1.</strong> EXIF-GPS-Strip (DSGVO)<br><strong>2.</strong> Bildoptimierung (Kompression, Auflösung)<br><strong>3.</strong> Ordnung in PDF (chronologisch + nummeriert)<br><br>Multi-Modal-Aggregation: Fotos können in §1-§6 Phasen + Anlagen-Sektionen verteilt werden.'
+  },
+  {
+    label: 'Schritt 6 von 12',
+    title: '§6 Fachurteil — der Kern',
+    content: 'Tab "<strong>§6 Fachurteil</strong>" → Editor öffnet. Wichtige Regeln:<br><br><strong>1.</strong> Mindestens 500 Zeichen Eigenleistung<br><strong>2.</strong> 2/3 Qualitäts-Marker (Norm-Verweis / Konjunktiv II / §-Verweis)<br><strong>3.</strong> Override-Modal wenn Gate nicht erfüllt<br><br><strong>KI-Hilfe (3 Stufen):</strong><br><strong>S1</strong> Mechanisch (Live: Rechtschreibung)<br><strong>S2</strong> Strukturell (Auf Klick: Absätze)<br><strong>S3</strong> Inhaltlich (Auf Klick: Konjunktiv-II / Halluzinations-Check)<div class="pt-tip"><strong>💡 Wichtig:</strong> KI macht KEINE Bewertungen. SV schreibt das Fachurteil selbst. KI prüft.</div>'
+  },
+  {
+    label: 'Schritt 7 von 12',
+    title: 'Freigabe + PDF-Export',
+    content: 'Wenn alles fertig: Klick "<strong>Freigeben</strong>" → Halluzinations-Check + §407a-Check laufen automatisch.<br><br>Bei "✅ alles ok": PDF wird generiert (PDFMonkey) und kann downloadet werden.<br>Bei "⚠ Verdacht": Warnung mit Begründung — Sie können Override mit Audit-Eintrag.'
+  },
+  {
+    label: 'Schritt 8 von 12',
+    title: 'Cmd+K — globale Suche',
+    content: 'Drücken Sie <code>Cmd+K</code> (Mac) oder <code>Ctrl+K</code> (Win). Globale Suche öffnet sich:<br><br><strong>•</strong> Akten (Titel + Kunde + Adresse)<br><strong>•</strong> Kontakte<br><strong>•</strong> Rechnungen<br><strong>•</strong> DIN-Normen<br><strong>•</strong> FAQ (34 Topics)<br><br><strong>Tastatur:</strong> ↑↓ navigieren, Enter öffnen, Esc schließen.'
+  },
+  {
+    label: 'Schritt 9 von 12',
+    title: 'Mobile + PWA-Install',
+    content: 'PROVA ist eine PWA (Progressive Web App):<br><br><strong>iOS Safari:</strong> Teilen → "Zum Home-Bildschirm hinzufügen"<br><strong>Android Chrome:</strong> Banner erscheint nach 2-3 Visits<br><br>Im Standalone-Mode: kein Adressleiste, fühlt sich nativ an. Offline-Modus aktiv (Akten editieren, später syncen).'
+  },
+  {
+    label: 'Schritt 10 von 12',
+    title: 'Push-Alerts einrichten',
+    content: 'Geht 2 Min: <a href="/push-setup.html" style="color:var(--accent);">/push-setup.html</a><br><br>PROVA pingt Sie wenn:<br><strong>•</strong> Service down (Supabase / OpenAI / PDFMonkey)<br><strong>•</strong> Wichtige Kontakt-Antwort kommt<br><strong>•</strong> Frist-Reminder<br><br>Sie können einzeln entscheiden was Sie wollen (Settings → Notifications).'
+  },
+  {
+    label: 'Schritt 11 von 12',
+    title: 'Hilfe + Support',
+    content: 'Wenn was nicht klappt:<br><br><strong>1.</strong> <a href="/support.html" style="color:var(--accent);">/support.html</a> — 34 FAQ-Topics + Kontakt-Form<br><strong>2.</strong> <code>Cmd+K</code> "FAQ" tippen → direkt Antworten<br><strong>3.</strong> <a href="/audit-trail.html" style="color:var(--accent);">/audit-trail.html</a> — was hat KI vs. SV gemacht (TR-ESOR-konform)<br><strong>4.</strong> Pilot-Slack — direkter Marcel-Zugang<br><strong>5.</strong> Antwort auf Welcome-Mail — landet bei Marcel'
+  },
+  {
+    label: 'Schritt 12 von 12',
+    title: 'Fertig! Was jetzt?',
+    content: 'Sie haben die wichtigsten Konzepte. Jetzt:<br><br><strong>1.</strong> Erstes Akte anlegen (echter Case bevorzugt)<br><strong>2.</strong> Push-Alerts einrichten<br><strong>3.</strong> Mobile-App installieren<br><strong>4.</strong> Bei Fragen: Welcome-Mail-Antwort oder Pilot-Slack<br><br><strong>In 30 Tagen:</strong> Marcel meldet sich für Feedback-Call. 30 Min, optional, schenkt PROVA-Zukunft Form.<br><br><em>Viel Spaß beim Pilot!</em>'
+  }
+];
+let cur = parseInt(localStorage.getItem('pilot_tutorial_step') || '0', 10);
+
+function render() {
+  const s = STEPS[cur];
+  document.getElementById('pt-step-label').textContent = s.label;
+  document.getElementById('pt-h1').textContent = s.title;
+  document.getElementById('pt-content').innerHTML = s.content;
+  document.getElementById('pt-counter').textContent = (cur + 1) + ' / ' + STEPS.length;
+  document.getElementById('pt-prev').disabled = cur === 0;
+  document.getElementById('pt-next').textContent = cur === STEPS.length - 1 ? '🎉 Fertig!' : 'Weiter →';
+  // Progress
+  const prog = document.getElementById('pt-progress');
+  prog.innerHTML = '';
+  for (let i = 0; i < STEPS.length; i++) {
+    const div = document.createElement('div');
+    div.className = 'pt-progress-step' + (i < cur ? ' is-done' : i === cur ? ' is-active' : '');
+    prog.appendChild(div);
+  }
+  localStorage.setItem('pilot_tutorial_step', String(cur));
+}
+
+document.getElementById('pt-prev').addEventListener('click', () => { if (cur > 0) { cur--; render(); } });
+document.getElementById('pt-next').addEventListener('click', () => {
+  if (cur < STEPS.length - 1) { cur++; render(); }
+  else { localStorage.setItem('pilot_tutorial_done', '1'); window.location.href = '/dashboard.html'; }
+});
+render();
+</script>
+<script src="sw-register.js" defer></script>
+</body>
+</html>
