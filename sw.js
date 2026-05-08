@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v1309-mega41-p9-pdfs-inventar';   // MEGA⁴¹ P9 PDFs Vollständigkeits-Audit: admin-pdfmonkey-inventory Lambda (Live-Fetch PDFMonkey-API parallel zu Supabase-dokument_templates, computeDrift={matched, missing_in_supabase, missing_in_pdfmonkey}, computeCompliance={407a_blocks, ai_act_disclosure, gpt4o_violations}); admin-pseudonymisierung-audit Lambda mit 7 SYNTHETIC_PII_TESTS (5 must_not_contain Name/Email/IBAN/Telefon/Adresse + 2 must_contain Aktenzeichen+DIN für Legit-Erhalt); Doku MEGA41-PHASE-9-PDFS-INVENTAR.md mit Marcel-Audit-Procedure + 3 Drift-Resolution-Patterns. 20 P9-Tests grün. M⁴¹-Tests gesamt: P1=42 + P2=32 + P3=20 + P4=19 + P5=20 + P6=19 + P7=21 + P8=23 + P9=20 = 216.
+const CACHE_VERSION = 'prova-v1310-mega41-p10-mobile-sync';   // MEGA⁴¹ P10 Mobile Sync-Konflikt: lib/sync-conflict-resolver.js (detectConflict 5 Strategien, resolveLastWriteWins, resolveMerge mit String-Diff/Array-Union/Object-Shallow-Merge, 7 MERGEABLE_FIELDS); lib/offline-sync-status.js (5 STATES idle/syncing/offline_empty/offline_pending/error, IndexedDB-Count, online/offline/storage Auto-Update, prefers-reduced-motion); wiederherstellbare-entwuerfe.html (3 Sections Editor+Wizard+Queue, Banner bei ≥5 Drafts, Restore+Delete-Actions, fmtAge s/min/h/d). 26 P10-Tests grün. M⁴¹-Tests gesamt: 242.
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
@@ -119,6 +119,9 @@ const APP_SHELL = [
   '/kontakt-detail.html',               // MEGA⁴¹ P7: Kontakt-360-View 9 Tabs
   '/lib/wizard-stepper.js',             // MEGA⁴¹ P8: Workflow-Stepper-Pattern-Lib
   '/lib/wizard-stepper.css',            // MEGA⁴¹ P8: Stepper-CSS
+  '/lib/sync-conflict-resolver.js',     // MEGA⁴¹ P10: Sync-Konflikt-Resolver
+  '/lib/offline-sync-status.js',        // MEGA⁴¹ P10: Offline-Sync-Status-Icon
+  '/wiederherstellbare-entwuerfe.html', // MEGA⁴¹ P10: Recovery-Page für Drafts
   '/editor-demo.html',                  // MEGA⁴⁰ P1.2: Editor-Demo-Page (Pattern A volle Page-Width)
   '/dokument-neu.html',                 // MEGA⁴⁰ P3: Neues-Dokument Entry-Page (Modal-First)
   '/dokument-import.html',              // MEGA⁴⁰ P4: DOCX-Import-Page (Drag&Drop)
