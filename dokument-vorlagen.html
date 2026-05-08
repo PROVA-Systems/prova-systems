@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1, viewport-fit=cover">
+<title>Vorlagen · PROVA (MEGA⁴⁰ P7)</title>
+
+<link rel="stylesheet" href="/style.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --primary: #1a3a6b; --accent: #4f8ef7; --muted: #94a3b8;
+  --bg: #0b0d11; --bg2: #111318; --bg3: #161a22;
+  --surface: #1c2130; --surface2: #232a3a;
+  --border: rgba(255,255,255,0.06); --border2: rgba(255,255,255,0.11);
+  --text: #eaecf4; --text2: #8b93ab; --text3: #4d5568;
+  --success: #10b981; --warning: #f59e0b; --danger: #ef4444;
+}
+*,*::before,*::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 14px; }
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--bg); color: var(--text);
+  min-height: 100vh; line-height: 1.6;
+}
+.tpl-page { max-width: 1400px; margin: 0 auto; padding: 24px 24px 80px; }
+.tpl-header { margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
+.tpl-header h1 { font-size: 22px; font-weight: 700; margin: 0 0 4px; }
+.tpl-header p { font-size: 13px; color: var(--text2); margin: 0; }
+
+.tpl-toolbar {
+  display: flex; align-items: center; gap: 12px;
+  margin-bottom: 18px; padding: 12px 14px;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+  flex-wrap: wrap;
+}
+.tpl-filters {
+  display: flex; gap: 4px; flex-wrap: wrap;
+}
+.tpl-filter-btn {
+  padding: 6px 12px; font-size: 12.5px; font-weight: 600;
+  background: transparent; border: 1px solid var(--border2);
+  border-radius: 6px; color: var(--text); cursor: pointer; font-family: inherit;
+}
+.tpl-filter-btn:hover { background: var(--surface2); border-color: var(--accent); }
+.tpl-filter-btn.tpl-filter-btn--active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+.tpl-search {
+  flex: 1; min-width: 200px;
+  padding: 8px 12px; font-size: 13px;
+  background: transparent; border: 1px solid var(--border2);
+  border-radius: 6px; color: var(--text); font-family: inherit;
+}
+.tpl-search:focus { outline: none; border-color: var(--accent); }
+
+.tpl-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 14px;
+}
+
+.tpl-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; padding: 16px; cursor: pointer;
+  transition: border-color .15s ease, transform .15s ease;
+  display: flex; flex-direction: column; gap: 10px;
+}
+.tpl-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+.tpl-card-head { display: flex; justify-content: space-between; gap: 8px; align-items: flex-start; }
+.tpl-card-title { font-size: 14px; font-weight: 700; }
+.tpl-card-kat {
+  font-size: 10px; font-weight: 700; padding: 3px 8px;
+  background: var(--bg3); color: var(--text2);
+  border-radius: 99px; white-space: nowrap;
+  font-family: 'JetBrains Mono', monospace;
+}
+.tpl-card-desc { font-size: 12.5px; color: var(--text2); flex: 1; }
+.tpl-card-meta {
+  display: flex; gap: 10px; font-size: 11px; color: var(--text3);
+  border-top: 1px dashed var(--border); padding-top: 8px;
+}
+.tpl-card-source {
+  font-size: 9.5px; font-weight: 700; padding: 2px 6px;
+  border-radius: 3px; text-transform: uppercase; letter-spacing: .04em;
+}
+.tpl-card-source--prova_default { background: rgba(16,185,129,0.16); color: var(--success); }
+.tpl-card-source--user { background: rgba(79,142,247,0.16); color: var(--accent); }
+.tpl-card-source--docx_import { background: rgba(245,158,11,0.16); color: var(--warning); }
+
+.tpl-empty {
+  text-align: center; padding: 60px 20px;
+  color: var(--text3); font-style: italic;
+  grid-column: 1 / -1;
+}
+</style>
+</head>
+<body>
+
+<main class="tpl-page">
+
+  <header class="tpl-header">
+    <h1>📚 Vorlagen</h1>
+    <p>PROVA-Default-Vorlagen + deine eigenen + DOCX-Importe — Klick = neuer Editor.</p>
+  </header>
+
+  <div class="tpl-toolbar">
+    <div class="tpl-filters" role="tablist" aria-label="Vorlagen-Filter">
+      <button type="button" class="tpl-filter-btn tpl-filter-btn--active" data-filter="alle">Alle</button>
+      <button type="button" class="tpl-filter-btn" data-filter="eigene">Eigene</button>
+      <button type="button" class="tpl-filter-btn" data-filter="prova_default">PROVA-Default</button>
+      <button type="button" class="tpl-filter-btn" data-filter="docx_import">DOCX-Import</button>
+    </div>
+    <input type="search" class="tpl-search" id="tpl-search" placeholder="Vorlage suchen…" aria-label="Vorlage suchen">
+  </div>
+
+  <div id="tpl-grid" class="tpl-grid">
+    <div class="tpl-empty">Lade Vorlagen…</div>
+  </div>
+
+</main>
+
+<script defer>
+window.addEventListener('DOMContentLoaded', function () {
+  const grid = document.getElementById('tpl-grid');
+  const searchEl = document.getElementById('tpl-search');
+  const filterBtns = document.querySelectorAll('.tpl-filter-btn');
+  let currentFilter = 'alle';
+  let currentSearch = '';
+  let debounceTimer = null;
+
+  async function loadTemplates() {
+    grid.innerHTML = '<div class="tpl-empty">Lade Vorlagen…</div>';
+    const params = new URLSearchParams({ filter: currentFilter });
+    if (currentSearch) params.set('q', currentSearch);
+    try {
+      const res = await fetch('/.netlify/functions/document-templates-list?' + params.toString());
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+      renderGrid(data.templates || []);
+    } catch (e) {
+      grid.innerHTML = '<div class="tpl-empty" style="color:var(--danger);">Fehler: ' + e.message + '</div>';
+    }
+  }
+
+  function renderGrid(templates) {
+    if (templates.length === 0) {
+      grid.innerHTML = '<div class="tpl-empty">Keine Vorlagen — erstelle eine im Editor mit „Als Vorlage speichern".</div>';
+      return;
+    }
+    grid.innerHTML = templates.map(t => {
+      const kat = t.kategorie ? '<span class="tpl-card-kat">' + esc(t.kategorie) + '</span>' : '';
+      const desc = t.beschreibung ? '<div class="tpl-card-desc">' + esc(t.beschreibung) + '</div>' : '';
+      const sourceClass = 'tpl-card-source--' + (t.source || 'user');
+      const sourceLabel = t.is_global ? 'PROVA' : (t.source === 'docx_import' ? 'DOCX' : 'Eigene');
+      return '<article class="tpl-card" role="button" tabindex="0" data-id="' + t.id + '" data-weg="' + (t.weg || 'weg_a') + '">' +
+        '<div class="tpl-card-head">' +
+          '<div class="tpl-card-title">' + esc(t.titel) + '</div>' + kat +
+        '</div>' + desc +
+        '<div class="tpl-card-meta">' +
+          '<span class="tpl-card-source ' + sourceClass + '">' + sourceLabel + '</span>' +
+          '<span>· ' + (t.weg || 'weg_a').replace('weg_', '') + '</span>' +
+          '<span>· ' + (t.use_count || 0) + '× genutzt</span>' +
+        '</div>' +
+      '</article>';
+    }).join('');
+
+    // Click-Handler
+    grid.querySelectorAll('.tpl-card').forEach(card => {
+      card.addEventListener('click', () => useTemplate(card.dataset.id));
+      card.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); useTemplate(card.dataset.id); }
+      });
+    });
+  }
+
+  async function useTemplate(id) {
+    try {
+      const res = await fetch('/.netlify/functions/document-template-use', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ template_id: id })
+      });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+      const tpl = data.template;
+      // Save als neues Document → redirect zu dokument-neu mit doc-id
+      const saveRes = await fetch('/.netlify/functions/document-save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          weg: tpl.weg || 'weg_a',
+          titel: tpl.titel + ' (Kopie ' + new Date().toLocaleDateString('de-DE') + ')',
+          content_json: tpl.content_json
+        })
+      });
+      const saveJson = await saveRes.json();
+      if (!saveRes.ok) throw new Error(saveJson.error || 'Save fehlgeschlagen');
+      window.location.href = '/dokument-neu.html?weg=' + encodeURIComponent(tpl.weg) + '&doc=' + encodeURIComponent(saveJson.document_id);
+    } catch (e) {
+      alert('Fehler: ' + e.message);
+    }
+  }
+
+  function esc(s) {
+    if (s == null) return '';
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  // Filter-Click
+  filterBtns.forEach(btn => btn.addEventListener('click', () => {
+    filterBtns.forEach(b => b.classList.remove('tpl-filter-btn--active'));
+    btn.classList.add('tpl-filter-btn--active');
+    currentFilter = btn.dataset.filter;
+    loadTemplates();
+  }));
+
+  // Search-Debounce
+  searchEl.addEventListener('input', () => {
+    if (debounceTimer) clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => {
+      currentSearch = searchEl.value.trim();
+      loadTemplates();
+    }, 300);
+  });
+
+  loadTemplates();
+});
+</script>
+
+</body>
+</html>
