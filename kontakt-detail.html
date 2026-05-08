@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1, viewport-fit=cover">
+<title>Kontakt-360° · PROVA</title>
+
+<link rel="stylesheet" href="/style.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --primary: #1a3a6b; --accent: #4f8ef7; --muted: #94a3b8;
+  --bg: #0b0d11; --bg2: #111318; --bg3: #161a22;
+  --surface: #1c2130; --surface2: #232a3a;
+  --border: rgba(255,255,255,0.06); --border2: rgba(255,255,255,0.11);
+  --text: #eaecf4; --text2: #8b93ab; --text3: #4d5568;
+  --success: #10b981; --warning: #f59e0b; --danger: #ef4444; --purple: #a78bfa;
+}
+*,*::before,*::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 14px; }
+body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; line-height: 1.6; }
+
+.k360-page { max-width: 1400px; margin: 0 auto; padding: 24px 24px 80px; }
+
+/* Header */
+.k360-head { display: grid; grid-template-columns: 1fr auto; gap: 16px; align-items: start; margin-bottom: 22px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
+.k360-head h1 { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+.k360-head .k360-typ { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; background: var(--bg3); color: var(--text2); text-transform: uppercase; letter-spacing: .07em; vertical-align: middle; margin-left: 6px; }
+.k360-head .k360-meta { font-size: 13px; color: var(--text2); display: flex; gap: 16px; flex-wrap: wrap; }
+
+/* Quick-Actions */
+.k360-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+.k360-action-btn { padding: 8px 14px; font-size: 12.5px; font-weight: 600; background: var(--surface); border: 1px solid var(--border2); border-radius: 6px; color: var(--text); cursor: pointer; font-family: inherit; }
+.k360-action-btn:hover { background: var(--surface2); border-color: var(--accent); }
+.k360-action-btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+.k360-action-btn.primary:hover { background: #3b7be0; }
+
+/* Stats-Cards */
+.k360-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 18px; }
+.k360-stat { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; }
+.k360-stat-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--text3); margin-bottom: 4px; }
+.k360-stat-val { font-size: 18px; font-weight: 800; }
+.k360-stat-val--success { color: var(--success); }
+.k360-stat-val--warning { color: var(--warning); }
+.k360-stat-val--accent { color: var(--accent); }
+.k360-stat-val--purple { color: var(--purple); }
+
+/* Tabs */
+.k360-tabs { display: flex; gap: 2px; border-bottom: 1px solid var(--border); overflow-x: auto; margin-bottom: 14px; }
+.k360-tab { padding: 10px 14px; font-size: 12.5px; font-weight: 600; background: transparent; border: none; color: var(--text3); cursor: pointer; font-family: inherit; border-bottom: 2px solid transparent; white-space: nowrap; }
+.k360-tab:hover { color: var(--text2); }
+.k360-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+.k360-tab .badge { display: inline-block; margin-left: 5px; padding: 1px 6px; border-radius: 99px; background: var(--bg3); color: var(--text3); font-size: 10px; font-weight: 700; }
+.k360-tab.active .badge { background: rgba(79,142,247,0.16); color: var(--accent); }
+
+/* Tab-Content */
+.k360-pane { display: none; }
+.k360-pane.active { display: block; }
+
+.k360-list { display: flex; flex-direction: column; gap: 6px; }
+.k360-item { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; cursor: pointer; transition: border-color .15s ease; }
+.k360-item:hover { border-color: var(--accent); }
+.k360-item-title { font-size: 13.5px; font-weight: 600; }
+.k360-item-meta { display: flex; gap: 12px; margin-top: 3px; font-size: 11px; color: var(--text3); flex-wrap: wrap; }
+.k360-item-meta .status { padding: 1px 6px; border-radius: 99px; background: var(--bg3); }
+.k360-item-meta .status.bezahlt { background: rgba(16,185,129,0.16); color: var(--success); }
+.k360-item-meta .status.offen { background: rgba(245,158,11,0.16); color: var(--warning); }
+.k360-item-meta .status.mahn { background: rgba(239,68,68,0.16); color: var(--danger); }
+
+.k360-search { width: 100%; padding: 8px 12px; font-size: 13px; background: var(--surface); border: 1px solid var(--border2); border-radius: 6px; color: var(--text); font-family: inherit; margin-bottom: 12px; }
+.k360-search:focus { outline: none; border-color: var(--accent); }
+
+.k360-empty { text-align: center; padding: 40px 20px; color: var(--text3); font-style: italic; }
+
+@media (max-width: 700px) {
+  .k360-head { grid-template-columns: 1fr; }
+  .k360-actions { width: 100%; }
+}
+</style>
+</head>
+<body>
+
+<main class="k360-page">
+
+  <header class="k360-head">
+    <div>
+      <h1 id="k360-name">Lade…<span class="k360-typ" id="k360-typ"></span></h1>
+      <div class="k360-meta" id="k360-meta"></div>
+    </div>
+    <div class="k360-actions">
+      <button type="button" class="k360-action-btn primary" id="k360-act-auftrag">+ Auftrag</button>
+      <button type="button" class="k360-action-btn" id="k360-act-brief">📨 Brief</button>
+      <button type="button" class="k360-action-btn" id="k360-act-termin">📅 Termin</button>
+      <button type="button" class="k360-action-btn" id="k360-act-bescheinigung">📋 Bescheinigung</button>
+      <button type="button" class="k360-action-btn" id="k360-act-pdf">⊟ PDF-Bericht</button>
+    </div>
+  </header>
+
+  <!-- Statistiken -->
+  <div class="k360-stats" id="k360-stats">
+    <div class="k360-empty">Lade…</div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="k360-tabs" role="tablist">
+    <button type="button" class="k360-tab active" data-tab="auftraege">Aufträge<span class="badge" id="k360-c-auftraege">–</span></button>
+    <button type="button" class="k360-tab" data-tab="rechnungen">Rechnungen<span class="badge" id="k360-c-rechnungen">–</span></button>
+    <button type="button" class="k360-tab" data-tab="bescheinigungen">Bescheinigungen<span class="badge" id="k360-c-bescheinigungen">–</span></button>
+    <button type="button" class="k360-tab" data-tab="dokumente">Dokumente<span class="badge" id="k360-c-dokumente">–</span></button>
+    <button type="button" class="k360-tab" data-tab="fotos">Fotos<span class="badge" id="k360-c-fotos">–</span></button>
+    <button type="button" class="k360-tab" data-tab="skizzen">Skizzen<span class="badge" id="k360-c-skizzen">–</span></button>
+    <button type="button" class="k360-tab" data-tab="eintraege">Einträge<span class="badge" id="k360-c-eintraege">–</span></button>
+    <button type="button" class="k360-tab" data-tab="termine">Termine<span class="badge" id="k360-c-termine">–</span></button>
+    <button type="button" class="k360-tab" data-tab="korrespondenz">Korrespondenz<span class="badge" id="k360-c-korrespondenz">–</span></button>
+  </div>
+
+  <!-- Tab-Search (filter innerhalb tab) -->
+  <input type="search" class="k360-search" id="k360-search" placeholder="Filter in dieser Liste…">
+
+  <!-- Tab-Content -->
+  <div id="k360-content"></div>
+
+</main>
+
+<script defer>
+window.addEventListener('DOMContentLoaded', function () {
+  const params = new URLSearchParams(window.location.search);
+  const kontaktId = params.get('id') || params.get('kontakt_id');
+  if (!kontaktId) {
+    document.getElementById('k360-name').textContent = 'Kein Kontakt-ID angegeben';
+    return;
+  }
+
+  const TAB_KEYS = ['auftraege','rechnungen','bescheinigungen','dokumente','fotos','skizzen','eintraege','termine','korrespondenz'];
+  let _data = null;
+  let _activeTab = 'auftraege';
+  let _searchQuery = '';
+
+  function esc(s) {
+    if (s == null) return '';
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  function fmt(d) {
+    if (!d) return '–';
+    try { return new Date(d).toLocaleDateString('de-DE'); } catch (_) { return d; }
+  }
+  function fmtEur(n) {
+    if (n == null) return '–';
+    return new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(n);
+  }
+
+  async function load() {
+    try {
+      const res = await fetch('/.netlify/functions/kontakt-360?kontakt_id=' + encodeURIComponent(kontaktId));
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      _data = await res.json();
+      renderHeader();
+      renderStats();
+      renderBadges();
+      renderTab(_activeTab);
+    } catch (e) {
+      document.getElementById('k360-name').textContent = 'Fehler: ' + e.message;
+    }
+  }
+
+  function renderHeader() {
+    const k = _data.kontakt;
+    const fullName = (k.vorname || '') + ' ' + (k.name || '');
+    document.getElementById('k360-name').firstChild.textContent = fullName.trim() || 'Unbekannt';
+    document.getElementById('k360-typ').textContent = k.typ || '';
+    const meta = [];
+    if (k.firma) meta.push('🏢 ' + esc(k.firma));
+    if (k.email) meta.push('✉️ ' + esc(k.email));
+    if (k.telefon) meta.push('📞 ' + esc(k.telefon));
+    if (k.ort) meta.push('📍 ' + esc((k.plz ? k.plz + ' ' : '') + k.ort));
+    document.getElementById('k360-meta').innerHTML = meta.join(' · ');
+  }
+
+  function renderStats() {
+    const s = _data.statistik;
+    const score = s.zahlungsverhalten_score;
+    let scoreClass = 'k360-stat-val--accent';
+    if (score != null && score >= 90) scoreClass = 'k360-stat-val--success';
+    else if (score != null && score < 50) scoreClass = 'k360-stat-val--warning';
+
+    document.getElementById('k360-stats').innerHTML =
+      stat('Aufträge', s.auftrag_count, 'k360-stat-val--accent') +
+      stat('Gesamtumsatz', fmtEur(s.gesamtumsatz_eur), 'k360-stat-val--success') +
+      stat('Offen', fmtEur(s.rechnungen_offen_eur), s.rechnungen_offen_eur > 0 ? 'k360-stat-val--warning' : '') +
+      stat('Ø Bearbeitung', s.durchschnitt_bearbeitungstage != null ? s.durchschnitt_bearbeitungstage + ' T' : '–') +
+      stat('Letzte Aktion', fmt(s.letzte_interaktion)) +
+      stat('Zahlungsverhalten', score != null ? score + '/100' : '–', scoreClass);
+  }
+
+  function stat(label, val, valClass) {
+    return '<div class="k360-stat"><div class="k360-stat-label">' + esc(label) + '</div>' +
+      '<div class="k360-stat-val ' + (valClass || '') + '">' + esc(val) + '</div></div>';
+  }
+
+  function renderBadges() {
+    const stat = _data.statistik;
+    document.getElementById('k360-c-auftraege').textContent = _data.tabs.auftraege.length;
+    document.getElementById('k360-c-rechnungen').textContent = _data.tabs.rechnungen.length;
+    document.getElementById('k360-c-bescheinigungen').textContent = stat.bescheinigungen_count;
+    document.getElementById('k360-c-dokumente').textContent = stat.dokumente_count;
+    document.getElementById('k360-c-fotos').textContent = stat.fotos_count;
+    document.getElementById('k360-c-skizzen').textContent = stat.skizzen_count;
+    document.getElementById('k360-c-eintraege').textContent = stat.eintraege_count;
+    document.getElementById('k360-c-termine').textContent = stat.termine_count;
+    document.getElementById('k360-c-korrespondenz').textContent = stat.korrespondenz_count;
+  }
+
+  function filterByQuery(items) {
+    if (!_searchQuery) return items;
+    const q = _searchQuery.toLowerCase();
+    return items.filter(it => JSON.stringify(it).toLowerCase().includes(q));
+  }
+
+  function renderTab(tab) {
+    _activeTab = tab;
+    document.querySelectorAll('.k360-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+
+    const items = filterByQuery(_data.tabs[tab] || []);
+    const container = document.getElementById('k360-content');
+    if (items.length === 0) {
+      container.innerHTML = '<div class="k360-empty">Keine ' + tab + ' für diesen Kontakt.</div>';
+      return;
+    }
+    container.innerHTML = '<div class="k360-list">' + items.map(it => renderItem(tab, it)).join('') + '</div>';
+  }
+
+  function renderItem(tab, it) {
+    let title, meta = [];
+    switch (tab) {
+      case 'auftraege':
+        title = (it.az || it.aktenzeichen || it.titel || it.id);
+        meta.push('Status: ' + (it.status || '–'));
+        meta.push('Erstellt: ' + fmt(it.created_at));
+        break;
+      case 'rechnungen':
+        title = it.rechnungsnr || it.id;
+        const statusKlasse = /mahn/.test(it.status || '') ? 'mahn' : (it.status === 'bezahlt' ? 'bezahlt' : 'offen');
+        meta.push('<span class="status ' + statusKlasse + '">' + esc(it.status || '–') + '</span>');
+        meta.push(fmtEur(it.betrag_brutto));
+        meta.push('Erstellt: ' + fmt(it.created_at));
+        break;
+      case 'termine':
+        title = it.titel || 'Termin';
+        meta.push(fmt(it.start_at));
+        meta.push(it.status || '–');
+        break;
+      case 'eintraege':
+        title = (it.titel || 'Eintrag') + ' · ' + (it.typ || '–');
+        meta.push(fmt(it.datum || it.created_at));
+        if (it.content) meta.push((it.content || '').slice(0, 80));
+        break;
+      case 'fotos':
+        title = it.beschreibung || 'Foto';
+        meta.push(fmt(it.created_at));
+        break;
+      case 'skizzen':
+        title = it.titel || 'Skizze';
+        meta.push(fmt(it.datum || it.created_at));
+        break;
+      case 'dokumente':
+      case 'bescheinigungen':
+      case 'korrespondenz':
+        title = it.betreff || it.typ || it.id;
+        meta.push(it.status || '–');
+        meta.push(fmt(it.created_at));
+        break;
+      default:
+        title = it.id;
+    }
+    return '<div class="k360-item">' +
+      '<div class="k360-item-title">' + esc(title) + '</div>' +
+      '<div class="k360-item-meta">' + meta.map(m => typeof m === 'string' ? esc(m) : '').join(' · ') + meta.filter(m => /class="status/.test(m)).join('') + '</div>' +
+      '</div>';
+  }
+
+  // Wire Tabs
+  document.querySelectorAll('.k360-tab').forEach(btn => {
+    btn.addEventListener('click', () => renderTab(btn.dataset.tab));
+  });
+
+  // Search
+  let dt = null;
+  document.getElementById('k360-search').addEventListener('input', (e) => {
+    if (dt) clearTimeout(dt);
+    dt = setTimeout(() => {
+      _searchQuery = e.target.value.trim();
+      renderTab(_activeTab);
+    }, 200);
+  });
+
+  // Quick-Actions
+  document.getElementById('k360-act-auftrag').addEventListener('click', () => {
+    window.location.href = '/neuer-fall.html?kontakt_id=' + encodeURIComponent(kontaktId);
+  });
+  document.getElementById('k360-act-brief').addEventListener('click', () => {
+    window.location.href = '/briefvorlagen.html?kontakt_id=' + encodeURIComponent(kontaktId);
+  });
+  document.getElementById('k360-act-termin').addEventListener('click', () => {
+    window.location.href = '/termine.html?neuer=1&kontakt_id=' + encodeURIComponent(kontaktId);
+  });
+  document.getElementById('k360-act-bescheinigung').addEventListener('click', () => {
+    window.location.href = '/bescheinigungen.html?kontakt_id=' + encodeURIComponent(kontaktId);
+  });
+  document.getElementById('k360-act-pdf').addEventListener('click', () => {
+    if (!_data) return;
+    const w = window.open('', '_blank');
+    if (!w) return alert('Pop-up-Blocker deaktivieren.');
+    const k = _data.kontakt;
+    const s = _data.statistik;
+    let html = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Kontakt-Bericht ' + esc(k.name) + '</title>' +
+      '<style>@page{size:A4;margin:20mm;}body{font-family:Inter,sans-serif;font-size:10pt;color:#000;}h1{font-size:16pt;}h2{font-size:12pt;border-bottom:1pt solid #888;padding-bottom:3pt;margin-top:14pt;}table{border-collapse:collapse;width:100%;margin-top:6pt;}td,th{border:0.5pt solid #888;padding:4pt 6pt;text-align:left;}th{background:#f0f0f0;}small{color:#666;}</style>' +
+      '</head><body><h1>Kontakt-Bericht: ' + esc((k.vorname || '') + ' ' + k.name) + '</h1>' +
+      '<small>Erstellt am ' + new Date().toLocaleString('de-DE') + ' · PROVA Kontakt-360°</small>' +
+      '<h2>Stammdaten</h2><table><tr><td>Firma</td><td>' + esc(k.firma || '–') + '</td></tr>' +
+      '<tr><td>E-Mail</td><td>' + esc(k.email || '–') + '</td></tr>' +
+      '<tr><td>Telefon</td><td>' + esc(k.telefon || '–') + '</td></tr>' +
+      '<tr><td>Adresse</td><td>' + esc((k.strasse || '') + ', ' + (k.plz || '') + ' ' + (k.ort || '')) + '</td></tr></table>' +
+      '<h2>Statistiken</h2><table>' +
+      '<tr><td>Aufträge gesamt</td><td>' + s.auftrag_count + '</td></tr>' +
+      '<tr><td>Gesamtumsatz</td><td>' + fmtEur(s.gesamtumsatz_eur) + '</td></tr>' +
+      '<tr><td>Offene Rechnungen</td><td>' + s.rechnungen_offen_count + ' · ' + fmtEur(s.rechnungen_offen_eur) + '</td></tr>' +
+      '<tr><td>Durchschn. Bearbeitungszeit</td><td>' + (s.durchschnitt_bearbeitungstage != null ? s.durchschnitt_bearbeitungstage + ' Tage' : '–') + '</td></tr>' +
+      '<tr><td>Zahlungsverhalten-Score</td><td>' + (s.zahlungsverhalten_score != null ? s.zahlungsverhalten_score + '/100' : '–') + '</td></tr>' +
+      '</table>';
+    TAB_KEYS.forEach(key => {
+      const items = _data.tabs[key] || [];
+      if (items.length === 0) return;
+      html += '<h2>' + key.charAt(0).toUpperCase() + key.slice(1) + ' (' + items.length + ')</h2><table>';
+      items.slice(0, 50).forEach(it => {
+        const t = it.az || it.aktenzeichen || it.rechnungsnr || it.titel || it.beschreibung || it.betreff || it.id;
+        const dt = it.created_at || it.datum || it.start_at;
+        html += '<tr><td>' + esc(dt ? new Date(dt).toLocaleDateString('de-DE') : '–') + '</td><td>' + esc(t) + '</td></tr>';
+      });
+      html += '</table>';
+    });
+    html += '</body></html>';
+    w.document.write(html);
+    w.document.close();
+    setTimeout(() => { w.focus(); w.print(); }, 600);
+  });
+
+  load();
+});
+</script>
+
+</body>
+</html>

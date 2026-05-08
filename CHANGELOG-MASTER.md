@@ -4,6 +4,76 @@ Format: pro Sprint ein Block. Ältere Sprints zuoberst nicht — neueste oben.
 
 ---
 
+## MEGA⁴¹ — Pre-Pilot-Vollendung (08.05.2026)
+
+**Tag:** `v1400` · **Branch:** `mega41-pre-pilot-completion` · **Acceptance:** 13/13 Audit-Punkte ✅, 314 Tests grün
+
+### Vision
+Audit 2026-05-12 zeigte 3 ✅ / 10 🟡 / 0 ❌. M⁴¹ schließt alle 10 PARTIAL-Lücken auf 100% Pre-Pilot-Bereitschaft.
+
+### Phase 0 + 1 — Audit-Recheck + Daten-Import (TOP-PRIO)
+- **`b836cc5`:** Phase-0-Doku mit Audit-Synthese + Code-Stand-Snapshot + Reihenfolge
+- **`d903e40` → `c4bfd8b` → `88c5d02` → `9c72ea2` → `0a125df` → `2249d70` → `361726f`:** Recherche 5 Quellen + Migration 36 import_logs APPLIED + Format-Detector + AZ-Normalizer + 3 Lambdas (validate/execute/rollback) + Atomic-Transaction + 24h-Rollback + 42 Tests grün
+
+### Phase 2 — Audit-Trail KI-vs-SV
+- **`e748817` → `d144417` → `df03822` → `4ad9d01` → `e0617af`:** Recherche 4 Quellen (EU AI Act + §407a + BGH + TR-ESOR + OECD) + Migration 37 audit_trail-Erweiterung mit ENUM audit_source + SHA256 Hash-Chain + audit-source-tracker.js Frontend + 2 Lambdas + audit-trail.html Viewer + 32 Tests
+
+### Phase 3 — Push-Alerts + Health-Coverage
+- **`14132fd` → `076d608` → `1cf741d`:** Migration 38 system_health_history + push_alert_log + 2 Views + health-check-cron Lambda mit 8 Services + Push-Throttling 1/h + 3 Alert-Types + admin-system-uptime + 20 Tests
+
+### Phase 4 — PDF-Aggregations-Lambda
+- **`05f7e3c` → `d1f0e2d`:** eintraege-pdf-aggregator Lambda (Multi-modal Foto/Skizze/Diktat/Notiz chronologisch) + Editor-Toolbar "📥 Einträge"-Button + 19 Tests
+
+### Phase 5 — Support-System
+- **`633e872` → `874e440` → `33a9292`:** Recherche 30+ FAQ-Themen + Migration 39 mit tsvector-Volltextsuche + 34 FAQ-Seeds APPLIED + 2 Lambdas (faq-search public + ticket-create) + support.html mit 12 Pills + Highlight + 20 Tests
+
+### Phase 6 — Globale Suche Cmd-K Drilldown
+- **`67ab8bf` → `8844bd2`:** lib/cmd-k-modal.js (Cmd+K/Ctrl+K Keybinding global, 80ms Debounce, Match-Highlighting, Group-by-Type 9 Kategorien, Recent-Searches max 10) + Drilldown-Test DIN→DIN9→DIN98 + 19 Tests
+
+### Phase 7 — Kontakt-360-View
+- **`8431ed1` → `2eb0d67` → `3a36177`:** kontakt-360 Lambda mit 9 Tabs + computeStatistik (Umsatz/Bearbeitungstage/Score) + Parallel-Queries + kontakt-detail.html mit 9 Tabs + 6 Stats-Cards + 5 Quick-Actions + PDF-Bericht-Export + 21 Tests
+
+### Phase 8 — Workflow-Stepper-Polish
+- **`fa563fe` → `261c518`:** UX-Recherche 5 Quellen (Linear/Notion/Stripe/Asana/Vercel) + lib/wizard-stepper.js + .css zentrale Pattern-Lib mit Mount/Validate/Draft + 23 Tests
+
+### Phase 9 — PDFs Vollständigkeits-Audit
+- **`dec0767` → `43112e0`:** admin-pdfmonkey-inventory Lambda mit Live-API + Drift-Detection + Compliance-Check (gpt4o_violations) + admin-pseudonymisierung-audit Lambda mit 7 PII-Tests + Doku mit Marcel-Audit-Procedure + 20 Tests
+
+### Phase 10 — Mobile Sync-Konflikt
+- **`b28a266` → `f65a696`:** lib/sync-conflict-resolver.js (5 Strategien + Last-Write-Wins + Merge mit String-Diff/Array-Union/Object-Shallow-Merge) + lib/offline-sync-status.js (5 STATES Auto-Update) + wiederherstellbare-entwuerfe.html mit 3 Sections + 26 Tests
+
+### Phase 11 — Verify-Pass P4/P8/P12
+- **`9d32105`:** 21 Source-Inspection-Tests bestätigen Audit-Behauptungen für Skizzen + Admin + Einstellungen + Bug-Fix-Report-Doku-Template
+
+### Phase 12 — E2E Compound-Szenarien
+- **`85a2048`:** 51 Tests in 5 Szenarien (Migration vom GM / Mobile Außentermin / Hybrid Word-Vorlage / System-Admin / Search+Kontakt-360) — alle Komponenten existieren + verlinkt
+
+### Phase 13 — FINAL + Tag v1400
+- 17 Pre-FINAL-Checks alle ✅
+- Master-Doku-Updates (Vision-Master + Architektur-Master + Audit-POST-M41)
+- sw.js v1400
+- Tag v1400
+
+### Bilanz
+| Bereich | Count |
+|---------|-------|
+| Phasen Code-Done | 13/13 ✅ |
+| Commits gesamt | 38 |
+| Tests grün | 314 |
+| Migrations APPLIED | 4 (36+37+38+39) |
+| Lambdas neu | 14 |
+| Frontend-Libs neu | 8 |
+| HTML-Pages neu | 4 |
+
+### Score-Verlauf
+- Pre-M⁴¹ Audit: 3/10/0
+- → Post-Phase-1: 4/9/0 (P11)
+- → Post-Phase-3: 6/7/0 (P6 + P9)
+- → Post-Phase-5: 8/5/0 (P5 + P7)
+- → Post-Phase-10: **13/0/0** = 100%
+
+---
+
 ## MEGA⁴⁰ — Editor & Vorlagen-System (08.05.2026)
 
 **Tag:** `v1300` · **Branch:** `mega40-editor-vorlagen` · **Acceptance:** 10/10 Phasen Code-Done, 247 Tests grün

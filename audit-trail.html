@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1, viewport-fit=cover">
+<title>Audit-Trail · PROVA (MEGA⁴¹ P2)</title>
+<meta name="description" content="Gerichtsfester Audit-Trail mit KI-vs-SV-Trennung. EU AI Act + §407a ZPO Compliance.">
+
+<link rel="stylesheet" href="/style.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --primary: #1a3a6b; --accent: #4f8ef7; --muted: #94a3b8;
+  --bg: #0b0d11; --bg2: #111318; --bg3: #161a22;
+  --surface: #1c2130; --surface2: #232a3a;
+  --border: rgba(255,255,255,0.06); --border2: rgba(255,255,255,0.11);
+  --text: #eaecf4; --text2: #8b93ab; --text3: #4d5568;
+  --success: #10b981; --warning: #f59e0b; --danger: #ef4444; --purple: #a78bfa;
+}
+*,*::before,*::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 14px; }
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--bg); color: var(--text);
+  min-height: 100vh; line-height: 1.6;
+}
+.at-page { max-width: 1400px; margin: 0 auto; padding: 24px 24px 80px; }
+
+.at-header { margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
+.at-header h1 { font-size: 22px; font-weight: 700; margin: 0 0 4px; }
+.at-header p { font-size: 13px; color: var(--text2); margin: 0; }
+
+/* Toolbar */
+.at-toolbar {
+  display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 18px;
+  padding: 12px 14px; background: var(--surface);
+  border: 1px solid var(--border); border-radius: 8px;
+}
+.at-filter-group { display: flex; gap: 4px; flex-wrap: wrap; }
+.at-filter-btn {
+  padding: 6px 12px; font-size: 12px; font-weight: 600;
+  background: transparent; border: 1px solid var(--border2);
+  border-radius: 6px; color: var(--text); cursor: pointer; font-family: inherit;
+}
+.at-filter-btn:hover { background: var(--surface2); border-color: var(--accent); }
+.at-filter-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+.at-filter-btn[data-source="ki"].active { background: var(--purple); border-color: var(--purple); }
+.at-filter-btn[data-source="sv_eigen"].active { background: var(--success); border-color: var(--success); }
+
+.at-search { flex: 1; min-width: 200px; padding: 6px 10px; font-size: 13px;
+  background: transparent; border: 1px solid var(--border2);
+  border-radius: 6px; color: var(--text); font-family: inherit; }
+
+/* Stats-Cards */
+.at-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px; margin-bottom: 16px; }
+.at-stat { background: var(--surface); border: 1px solid var(--border);
+  border-radius: 8px; padding: 12px 14px; }
+.at-stat-label { font-size: 10px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .07em; color: var(--text3); margin-bottom: 4px; }
+.at-stat-val { font-size: 22px; font-weight: 800; }
+.at-stat-val--ki { color: var(--purple); }
+.at-stat-val--sv { color: var(--success); }
+.at-stat-val--quote { color: var(--accent); }
+
+/* Timeline */
+.at-timeline {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+  max-height: 70vh; overflow-y: auto;
+}
+.at-row {
+  display: grid; grid-template-columns: 60px 100px 1fr 110px 80px;
+  gap: 10px; align-items: start;
+  padding: 10px 14px; border-bottom: 1px solid var(--border);
+  font-size: 12.5px; transition: background .12s;
+}
+.at-row:hover { background: var(--surface2); }
+.at-row:last-child { border-bottom: none; }
+
+.at-row-source {
+  font-size: 10px; font-weight: 700; padding: 2px 6px;
+  border-radius: 99px; text-transform: uppercase; letter-spacing: .05em;
+  text-align: center; white-space: nowrap;
+}
+.at-row-source--ki { background: rgba(167,139,250,0.16); color: var(--purple); }
+.at-row-source--sv_eigen { background: rgba(16,185,129,0.16); color: var(--success); }
+.at-row-source--sv_uebernommen { background: rgba(79,142,247,0.16); color: var(--accent); }
+.at-row-source--system { background: rgba(148,163,184,0.16); color: var(--muted); }
+.at-row-source--admin_impersonate { background: rgba(245,158,11,0.16); color: var(--warning); }
+
+.at-row-time { color: var(--text3); font-family: 'JetBrains Mono', monospace; font-size: 11px; }
+.at-row-action { font-weight: 600; color: var(--text); }
+.at-row-meta { font-size: 11px; color: var(--text2); margin-top: 3px; }
+.at-row-entity { color: var(--text3); font-size: 11px; font-family: 'JetBrains Mono', monospace; }
+.at-row-hash { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--text3); }
+
+.at-empty { text-align: center; padding: 60px 20px; color: var(--text3); font-style: italic; }
+.at-pdf-btn { padding: 8px 16px; font-size: 13px; font-weight: 700;
+  background: var(--accent); color: #fff; border: none; border-radius: 6px;
+  cursor: pointer; font-family: inherit; }
+.at-pdf-btn:hover { background: #3b7be0; }
+</style>
+</head>
+<body>
+
+<main class="at-page">
+
+  <header class="at-header">
+    <h1>📜 Audit-Trail (KI vs SV-Eigenleistung)</h1>
+    <p>Gerichtsfester Beweis-Trail · EU AI Act Art. 50 Disclosure · §407a ZPO Compliance · TR-ESOR Hash-Chain</p>
+  </header>
+
+  <div class="at-toolbar">
+    <div class="at-filter-group" role="tablist" aria-label="Quelle-Filter">
+      <button type="button" class="at-filter-btn active" data-source="">Alle</button>
+      <button type="button" class="at-filter-btn" data-source="ki">🤖 KI</button>
+      <button type="button" class="at-filter-btn" data-source="sv_eigen">✓ SV eigen</button>
+      <button type="button" class="at-filter-btn" data-source="sv_uebernommen">✓ SV übernommen</button>
+      <button type="button" class="at-filter-btn" data-source="system">System</button>
+      <button type="button" class="at-filter-btn" data-source="admin_impersonate">Admin</button>
+    </div>
+    <input type="search" class="at-search" id="at-search" placeholder="Action / Entity-ID suchen…" aria-label="Audit suchen">
+    <button type="button" class="at-pdf-btn" id="at-pdf-btn">⊟ Als PDF exportieren</button>
+  </div>
+
+  <div id="at-stats" class="at-stats">
+    <div class="at-stat"><div class="at-stat-label">Gesamt</div><div class="at-stat-val" id="at-stat-total">–</div></div>
+    <div class="at-stat"><div class="at-stat-label">KI</div><div class="at-stat-val at-stat-val--ki" id="at-stat-ki">–</div></div>
+    <div class="at-stat"><div class="at-stat-label">SV eigen</div><div class="at-stat-val at-stat-val--sv" id="at-stat-sv">–</div></div>
+    <div class="at-stat"><div class="at-stat-label">SV übern.</div><div class="at-stat-val at-stat-val--sv" id="at-stat-svu">–</div></div>
+    <div class="at-stat"><div class="at-stat-label">SV-Quote</div><div class="at-stat-val at-stat-val--quote" id="at-stat-quote">–</div></div>
+  </div>
+
+  <div id="at-timeline" class="at-timeline">
+    <div class="at-empty">Lade Audit-Einträge…</div>
+  </div>
+
+</main>
+
+<script defer>
+window.addEventListener('DOMContentLoaded', function () {
+  const tl = document.getElementById('at-timeline');
+  const search = document.getElementById('at-search');
+  const filterBtns = document.querySelectorAll('.at-filter-btn');
+  const pdfBtn = document.getElementById('at-pdf-btn');
+  let currentSource = '';
+  let currentSearch = '';
+  let allRows = [];
+
+  async function loadAudit() {
+    tl.innerHTML = '<div class="at-empty">Lade Audit-Einträge…</div>';
+    const params = new URLSearchParams();
+    if (currentSource) params.set('source', currentSource);
+    try {
+      const res = await fetch('/.netlify/functions/admin-audit-trail?' + params.toString());
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+      allRows = data.entries || data.rows || [];
+      renderRows(allRows);
+      updateStats(allRows);
+    } catch (e) {
+      tl.innerHTML = '<div class="at-empty" style="color:var(--danger);">Fehler: ' + e.message + '</div>';
+    }
+  }
+
+  function renderRows(rows) {
+    const filtered = currentSearch
+      ? rows.filter(r => JSON.stringify(r).toLowerCase().includes(currentSearch.toLowerCase()))
+      : rows;
+    if (filtered.length === 0) {
+      tl.innerHTML = '<div class="at-empty">Keine Einträge gefunden.</div>';
+      return;
+    }
+    tl.innerHTML = filtered.map(r => {
+      const src = r.source || 'system';
+      const ts = r.created_at ? new Date(r.created_at).toLocaleString('de-DE') : '–';
+      const action = esc(r.action || '–');
+      const entity = r.entity_typ ? (r.entity_typ + ' / ' + (r.entity_id || '–').slice(0, 8)) : '–';
+      const hash = r.integrity_hash ? r.integrity_hash.slice(0, 12) + '…' : '–';
+      const kiBadge = r.ki_model ? ' · ' + esc(r.ki_model) : '';
+      const conf = r.ki_confidence != null ? ' (' + (r.ki_confidence * 100).toFixed(0) + '%)' : '';
+      const euBadge = r.eu_ai_act_disclosed ? ' · EU AI Act ✓' : '';
+      return '<div class="at-row">' +
+        '<span class="at-row-source at-row-source--' + esc(src) + '">' + esc(src) + '</span>' +
+        '<span class="at-row-time">' + esc(ts) + '</span>' +
+        '<div><div class="at-row-action">' + action + kiBadge + conf + euBadge + '</div>' +
+        '<div class="at-row-meta">' + esc(entity) + '</div></div>' +
+        '<span class="at-row-entity">' + esc(r.user_id ? r.user_id.slice(0,8) : '–') + '</span>' +
+        '<span class="at-row-hash" title="' + esc(r.integrity_hash || '') + '">' + esc(hash) + '</span>' +
+      '</div>';
+    }).join('');
+  }
+
+  function updateStats(rows) {
+    const total = rows.length;
+    const ki = rows.filter(r => r.source === 'ki').length;
+    const sv = rows.filter(r => r.source === 'sv_eigen').length;
+    const svu = rows.filter(r => r.source === 'sv_uebernommen').length;
+    const inhalt = ki + sv + svu;
+    const quote = inhalt > 0 ? Math.round(((sv + svu) / inhalt) * 100) : 0;
+    document.getElementById('at-stat-total').textContent = total;
+    document.getElementById('at-stat-ki').textContent = ki;
+    document.getElementById('at-stat-sv').textContent = sv;
+    document.getElementById('at-stat-svu').textContent = svu;
+    document.getElementById('at-stat-quote').textContent = quote + '%';
+  }
+
+  function esc(s) {
+    if (s == null) return '';
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  filterBtns.forEach(btn => btn.addEventListener('click', () => {
+    filterBtns.forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentSource = btn.dataset.source || '';
+    loadAudit();
+  }));
+
+  let debounce = null;
+  search.addEventListener('input', () => {
+    if (debounce) clearTimeout(debounce);
+    debounce = setTimeout(() => {
+      currentSearch = search.value.trim();
+      renderRows(allRows);
+    }, 200);
+  });
+
+  pdfBtn.addEventListener('click', () => {
+    // Pragmatic: window.print() mit A4-Stylesheet
+    const w = window.open('', '_blank');
+    if (!w) return alert('Pop-up-Blocker deaktivieren.');
+    const html = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Audit-Trail Export</title>' +
+      '<style>@page{size:A4;margin:20mm;}body{font-family:Inter,sans-serif;font-size:10pt;}' +
+      'table{border-collapse:collapse;width:100%;}td,th{border:0.5pt solid #888;padding:4px 6px;text-align:left;}' +
+      'th{background:#f4f4f4;font-weight:bold;}h1{font-size:14pt;}small{color:#888;}</style>' +
+      '</head><body><h1>Audit-Trail Export · PROVA</h1>' +
+      '<small>Erstellt: ' + new Date().toLocaleString('de-DE') + ' · TR-ESOR Hash-Chain · EU AI Act Art. 50 Compliance</small>' +
+      '<table><thead><tr><th>Zeit</th><th>Quelle</th><th>Action</th><th>Entity</th><th>KI-Modell</th><th>Hash (12)</th></tr></thead><tbody>' +
+      allRows.map(r => '<tr>' +
+        '<td>' + (r.created_at ? new Date(r.created_at).toLocaleString('de-DE') : '–') + '</td>' +
+        '<td>' + esc(r.source || 'system') + '</td>' +
+        '<td>' + esc(r.action || '–') + '</td>' +
+        '<td>' + esc((r.entity_typ || '–') + '/' + (r.entity_id ? r.entity_id.slice(0,8) : '–')) + '</td>' +
+        '<td>' + esc(r.ki_model || '–') + '</td>' +
+        '<td style="font-family:monospace;font-size:8pt;">' + esc(r.integrity_hash ? r.integrity_hash.slice(0, 12) : '–') + '</td>' +
+        '</tr>').join('') +
+      '</tbody></table></body></html>';
+    w.document.write(html);
+    w.document.close();
+    setTimeout(() => { w.focus(); w.print(); }, 600);
+  });
+
+  loadAudit();
+});
+</script>
+
+</body>
+</html>

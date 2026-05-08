@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v1300-mega40-final';   // MEGA⁴⁰ FINAL — Editor & Vorlagen-System: 10/10 Phasen Code-Done, 247 Tests grün, 38 Commits, 3 Migrations APPLIED (33+34+35), 7 Lambdas, 10 Frontend-Libs, 4 HTML-Pages, 5 PROVA-Default-Vorlagen seeded. Volltext-TipTap-Editor + 3-Wege-System (Wizard/Eigene Word-Vorlage/Hybrid mit Locked-Sections) + DOCX-Import (mammoth.js) + Export (HTML/MD/DOCX-XML) + PDF-Browser-Print (IHK-konform A4 Times 25mm) + KI-Backstop S1 + Konjunktiv-II S3 + Bibliothek-Adapter (6 Kategorien) + Vorlagen-System (Use-Count-Tracking). KEIN gpt-4o-Code-Path. §407a + EU-AI-Act-Compliance auto-injiziert bei weg_c. Tag v1300.
+const CACHE_VERSION = 'prova-v1500-mega42-pilot-live-verified';   // MEGA⁴² FINAL — 13/13 Phasen Code-Done. 213 neue Tests gruen, 4377/4421 Total. Stepper-Bridge fuer 4 Flows + Performance-Suite mit Zahlen + Playwright E2E-Suite + Push-Alerts E2E + PDFMonkey-Audit + Mobile-Test-Plan + Auth-Audit (146 Lambdas, 92% Coverage, 0 Unintentional-Public) + RLS-Fix Migration 40 + DSGVO-Roundtrip + 5 Pilot-Mails + 12-Step-Tutorial + Demo-Seeder + Production-Runbook 8 Kapitel + Compound-Live-Test-Plan. CODE 100% PILOT-READY, LIVE-VERIFY pending Marcel-Pflicht-Sequenz.   // MEGA⁴² P1: scripts/run-all-tests.js stable cross-platform runner mit --test-force-exit. 4231/4231 M⁴⁰+M⁴¹ Tests grün in 19s. 32 Pre-M⁴⁰-Legacy-Fails dokumentiert (out-of-scope).
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
@@ -109,6 +109,25 @@ const APP_SHELL = [
   '/lib/editor-bibliothek-adapter.js',  // MEGA⁴⁰ P8: Bibliothek-TipTap-Adapter
   '/lib/editor-locked-sections.js',     // MEGA⁴⁰ P9: 4 Compliance-Sektionen (weg_c)
   '/lib/editor-pdf-generator.js',       // MEGA⁴⁰ P9: Browser-Print PDF-Generator IHK
+  '/lib/import-format-detector.js',     // MEGA⁴¹ P1: 4 Format-Signatures + CSV/JSON-Parser
+  '/lib/aktenzeichen-normalizer.js',    // MEGA⁴¹ P1: AZ-Format-Vereinheitlichung
+  '/lib/import-assistent-supabase.js',  // MEGA⁴¹ P1: Bridge zu Backend-Lambdas
+  '/lib/audit-source-tracker.js',       // MEGA⁴¹ P2: KI-vs-SV-Frontend-Tracker (EU AI Act)
+  '/audit-trail.html',                  // MEGA⁴¹ P2: Audit-Trail-Viewer-Page
+  '/support.html',                      // MEGA⁴¹ P5: Support + FAQ-Search + Ticket-Form
+  '/lib/cmd-k-modal.js',                // MEGA⁴¹ P6: Cmd+K Drilldown-Modal global
+  '/kontakt-detail.html',               // MEGA⁴¹ P7: Kontakt-360-View 9 Tabs
+  '/lib/wizard-stepper.js',             // MEGA⁴¹ P8: Workflow-Stepper-Pattern-Lib
+  '/lib/wizard-stepper.css',            // MEGA⁴¹ P8: Stepper-CSS
+  '/lib/wizard-flow-configs.js',        // MEGA⁴² P2: Flow-Configs A/B/C/D (Source-of-Truth)
+  '/lib/workflow-stepper-bridge.js',    // MEGA⁴² P2: Bridge prova-wizard ↔ wizard-stepper
+  '/lib/workflow-stepper-bridge.css',   // MEGA⁴² P2: Bridge-Stepper-Header-Styles
+  '/push-setup.html',                   // MEGA⁴² P5: Push-Alerts Setup-Wizard 3 Steps
+  '/health-test-down.html',             // MEGA⁴² P5: Manueller Health-Check-Trigger (Test-Tool)
+  '/pilot-tutorial.html',               // MEGA⁴² P10: 12-Step Pilot-Tutorial mit Resume
+  '/lib/sync-conflict-resolver.js',     // MEGA⁴¹ P10: Sync-Konflikt-Resolver
+  '/lib/offline-sync-status.js',        // MEGA⁴¹ P10: Offline-Sync-Status-Icon
+  '/wiederherstellbare-entwuerfe.html', // MEGA⁴¹ P10: Recovery-Page für Drafts
   '/editor-demo.html',                  // MEGA⁴⁰ P1.2: Editor-Demo-Page (Pattern A volle Page-Width)
   '/dokument-neu.html',                 // MEGA⁴⁰ P3: Neues-Dokument Entry-Page (Modal-First)
   '/dokument-import.html',              // MEGA⁴⁰ P4: DOCX-Import-Page (Drag&Drop)

@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1, viewport-fit=cover">
+<title>Wiederherstellbare Entwürfe · PROVA</title>
+
+<link rel="stylesheet" href="/style.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --primary: #1a3a6b; --accent: #4f8ef7; --muted: #94a3b8;
+  --bg: #0b0d11; --bg2: #111318; --bg3: #161a22;
+  --surface: #1c2130; --surface2: #232a3a;
+  --border: rgba(255,255,255,0.06); --border2: rgba(255,255,255,0.11);
+  --text: #eaecf4; --text2: #8b93ab; --text3: #4d5568;
+  --success: #10b981; --warning: #f59e0b; --danger: #ef4444;
+}
+*,*::before,*::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 14px; }
+body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; line-height: 1.6; }
+
+.we-page { max-width: 1100px; margin: 0 auto; padding: 24px 24px 80px; }
+.we-header { margin-bottom: 22px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
+.we-header h1 { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+.we-header p { font-size: 13px; color: var(--text2); }
+
+.we-section { margin-bottom: 28px; }
+.we-section h2 { font-size: 14px; font-weight: 700; color: var(--accent); margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+.we-section h2 .we-count { font-size: 11px; font-weight: 700; color: var(--text3); padding: 2px 8px; background: var(--bg3); border-radius: 99px; }
+
+.we-list { display: flex; flex-direction: column; gap: 8px; }
+.we-item { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; display: grid; grid-template-columns: 1fr auto auto; gap: 12px; align-items: center; }
+.we-item:hover { border-color: var(--accent); }
+.we-item-content { min-width: 0; }
+.we-item-title { font-size: 13.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.we-item-meta { font-size: 11px; color: var(--text3); margin-top: 2px; display: flex; gap: 12px; flex-wrap: wrap; }
+.we-item-age { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text2); }
+
+.we-btn { padding: 6px 12px; font-size: 12px; font-weight: 600; border-radius: 6px; cursor: pointer; font-family: inherit; }
+.we-btn--primary { background: var(--accent); color: #fff; border: 1px solid var(--accent); }
+.we-btn--primary:hover { background: #3b7be0; }
+.we-btn--ghost { background: transparent; border: 1px solid var(--border2); color: var(--text2); }
+.we-btn--ghost:hover { background: var(--surface2); color: var(--text); border-color: var(--danger); }
+
+.we-empty { padding: 30px 20px; text-align: center; color: var(--text3); font-style: italic; font-size: 13px; }
+
+.we-banner { padding: 12px 14px; background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.3); border-radius: 8px; margin-bottom: 18px; font-size: 12.5px; color: var(--warning); display: flex; gap: 8px; align-items: flex-start; }
+
+@media (max-width: 600px) {
+  .we-item { grid-template-columns: 1fr; gap: 8px; }
+}
+</style>
+</head>
+<body>
+
+<main class="we-page">
+
+  <header class="we-header">
+    <h1>♻️ Wiederherstellbare Entwürfe</h1>
+    <p>Lokal gespeicherte Drafts aus Editor, Wizard-Flows + Offline-Queue. Auto-Cleanup nach 30 Tagen.</p>
+  </header>
+
+  <div class="we-banner" id="we-banner" hidden>
+    <span>⚠️</span>
+    <span id="we-banner-text">Mehrere Drafts gefunden — bitte überprüfen.</span>
+  </div>
+
+  <!-- Section: Editor-Drafts (TipTap-Auto-Save) -->
+  <section class="we-section">
+    <h2>Editor-Drafts <span class="we-count" id="we-cnt-editor">0</span></h2>
+    <div class="we-list" id="we-list-editor"><div class="we-empty">Keine Editor-Drafts.</div></div>
+  </section>
+
+  <!-- Section: Wizard-Drafts (wizard-stepper localStorage) -->
+  <section class="we-section">
+    <h2>Wizard-Drafts <span class="we-count" id="we-cnt-wizard">0</span></h2>
+    <div class="we-list" id="we-list-wizard"><div class="we-empty">Keine Wizard-Drafts.</div></div>
+  </section>
+
+  <!-- Section: Offline-Queue (IndexedDB) -->
+  <section class="we-section">
+    <h2>Offline-Queue (IndexedDB) <span class="we-count" id="we-cnt-queue">0</span></h2>
+    <div class="we-list" id="we-list-queue"><div class="we-empty">Lade…</div></div>
+  </section>
+
+</main>
+
+<script defer>
+window.addEventListener('DOMContentLoaded', function () {
+  const editorList = document.getElementById('we-list-editor');
+  const wizardList = document.getElementById('we-list-wizard');
+  const queueList = document.getElementById('we-list-queue');
+
+  function esc(s) {
+    if (s == null) return '';
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  function fmtAge(timestamp) {
+    if (!timestamp) return '';
+    const ms = Date.now() - new Date(timestamp).getTime();
+    const sec = Math.round(ms / 1000);
+    if (sec < 60) return 'vor ' + sec + 's';
+    if (sec < 3600) return 'vor ' + Math.round(sec / 60) + 'min';
+    if (sec < 86400) return 'vor ' + Math.round(sec / 3600) + 'h';
+    return 'vor ' + Math.round(sec / 86400) + 'd';
+  }
+
+  function renderItem(opts) {
+    return '<div class="we-item">' +
+      '<div class="we-item-content">' +
+        '<div class="we-item-title">' + esc(opts.title) + '</div>' +
+        '<div class="we-item-meta">' + (opts.meta || []).map(esc).join(' · ') + '</div>' +
+      '</div>' +
+      '<span class="we-item-age">' + esc(opts.age || '') + '</span>' +
+      '<div style="display:flex;gap:6px;">' +
+        '<button class="we-btn we-btn--primary" data-action="restore" data-key="' + esc(opts.key) + '">Wiederherstellen</button>' +
+        '<button class="we-btn we-btn--ghost" data-action="delete" data-key="' + esc(opts.key) + '">Löschen</button>' +
+      '</div>' +
+    '</div>';
+  }
+
+  function loadEditorDrafts() {
+    const items = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (!key || !/_draft|prova_editor_/i.test(key)) continue;
+      try {
+        const raw = localStorage.getItem(key);
+        const data = JSON.parse(raw);
+        const ts = data._recovery_saved_at || data.savedAt || data.timestamp;
+        items.push({
+          key: key,
+          title: data.titel || data.title || key,
+          meta: [data.weg || 'editor', data.kategorie || ''],
+          age: fmtAge(ts)
+        });
+      } catch (_) {
+        items.push({ key: key, title: key, meta: ['raw'], age: '' });
+      }
+    }
+    document.getElementById('we-cnt-editor').textContent = items.length;
+    if (items.length === 0) {
+      editorList.innerHTML = '<div class="we-empty">Keine Editor-Drafts.</div>';
+    } else {
+      editorList.innerHTML = items.map(renderItem).join('');
+    }
+    return items.length;
+  }
+
+  function loadWizardDrafts() {
+    const items = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (!key || !key.startsWith('wizard_draft_')) continue;
+      try {
+        const data = JSON.parse(localStorage.getItem(key));
+        items.push({
+          key: key,
+          title: 'Wizard ' + key.replace('wizard_draft_', ''),
+          meta: ['Schritt ' + ((data.currentIdx || 0) + 1), 'Completed: ' + (data.completed || []).length],
+          age: fmtAge(data.savedAt)
+        });
+      } catch (_) {
+        items.push({ key: key, title: key, meta: ['raw'] });
+      }
+    }
+    document.getElementById('we-cnt-wizard').textContent = items.length;
+    if (items.length === 0) {
+      wizardList.innerHTML = '<div class="we-empty">Keine Wizard-Drafts.</div>';
+    } else {
+      wizardList.innerHTML = items.map(renderItem).join('');
+    }
+    return items.length;
+  }
+
+  async function loadQueueItems() {
+    if (!window.indexedDB) {
+      queueList.innerHTML = '<div class="we-empty">IndexedDB nicht verfügbar.</div>';
+      return 0;
+    }
+    return new Promise((resolve) => {
+      const req = indexedDB.open('prova_offline_v1', 1);
+      req.onsuccess = (e) => {
+        const db = e.target.result;
+        if (!db.objectStoreNames.contains('queue')) { db.close(); queueList.innerHTML = '<div class="we-empty">Queue leer.</div>'; resolve(0); return; }
+        const tx = db.transaction(['queue'], 'readonly');
+        const store = tx.objectStore('queue');
+        const all = store.getAll();
+        all.onsuccess = () => {
+          const items = (all.result || []).map(it => ({
+            key: 'idb:queue:' + it.id,
+            title: (it.typ || 'Item') + ' — ' + (it.az || it.id),
+            meta: [it.status || 'pending', it.synced ? 'synced' : 'wartend'],
+            age: fmtAge(it.timestamp)
+          }));
+          document.getElementById('we-cnt-queue').textContent = items.length;
+          if (items.length === 0) {
+            queueList.innerHTML = '<div class="we-empty">Queue leer.</div>';
+          } else {
+            queueList.innerHTML = items.map(renderItem).join('');
+          }
+          db.close();
+          resolve(items.length);
+        };
+        all.onerror = () => { db.close(); queueList.innerHTML = '<div class="we-empty">Fehler beim Laden.</div>'; resolve(0); };
+      };
+      req.onerror = () => { queueList.innerHTML = '<div class="we-empty">DB-Fehler.</div>'; resolve(0); };
+    });
+  }
+
+  async function refreshAll() {
+    const editorCount = loadEditorDrafts();
+    const wizardCount = loadWizardDrafts();
+    const queueCount = await loadQueueItems();
+    const total = editorCount + wizardCount + queueCount;
+    if (total >= 5) {
+      document.getElementById('we-banner').hidden = false;
+      document.getElementById('we-banner-text').textContent = total + ' Drafts gefunden — möglicherweise Sync-Probleme oder vergessene Entwürfe.';
+    }
+  }
+
+  // Wire Action-Buttons (event delegation)
+  document.addEventListener('click', async (e) => {
+    if (!e.target.matches('[data-action]')) return;
+    const action = e.target.dataset.action;
+    const key = e.target.dataset.key;
+    if (!key) return;
+
+    if (action === 'delete') {
+      if (!confirm('Draft wirklich löschen?')) return;
+      if (key.startsWith('idb:queue:')) {
+        // IndexedDB-Delete
+        const id = key.replace('idb:queue:', '');
+        const req = indexedDB.open('prova_offline_v1', 1);
+        req.onsuccess = (ev) => {
+          const db = ev.target.result;
+          const tx = db.transaction(['queue'], 'readwrite');
+          tx.objectStore('queue').delete(id);
+          tx.oncomplete = () => { db.close(); refreshAll(); };
+        };
+      } else {
+        localStorage.removeItem(key);
+        refreshAll();
+      }
+    } else if (action === 'restore') {
+      // Best-Effort: redirect zu Editor mit draftKey-Param
+      if (key.startsWith('wizard_draft_')) {
+        const wizardKey = key.replace('wizard_draft_', '');
+        alert('Wizard-Draft erkannt: ' + wizardKey + '\nBitte in der entsprechenden Page (z.B. neuer-fall.html) öffnen — Draft wird automatisch geladen.');
+      } else {
+        alert('Draft-Schlüssel: ' + key + '\nMarkiere den Schlüssel und öffne die zugehörige Page um den Draft zu laden.');
+      }
+    }
+  });
+
+  refreshAll();
+});
+</script>
+
+</body>
+</html>
