@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v1306-mega41-p6-cmd-k';   // MEGA⁴¹ P6 Cmd-K Drilldown: lib/cmd-k-modal.js (Cmd+K/Ctrl+K Keybinding global, 80ms Debounce Live-Drilldown, Match-Highlighting via cmdk-mark, Group-by-Type 9 Kategorien, Recent-Searches max 10 dedup-by-text, Keyboard-Navigation ↑↓↵Esc, prefers-reduced-motion); Auto-init nach DOMContentLoaded; nutzt existing /global-search Lambda. 19 P6-Tests grün (incl. Drilldown DIN→DIN9→DIN98 Progressive-Match-Test). M⁴¹-Tests gesamt: P1=42 + P2=32 + P3=20 + P4=19 + P5=20 + P6=19 = 152.
+const CACHE_VERSION = 'prova-v1307-mega41-p7-kontakt-360';   // MEGA⁴¹ P7 Kontakt-360-View: kontakt-360 Lambda (9 Tabs auftraege/rechnungen/bescheinigungen/dokumente/fotos/skizzen/eintraege/termine/korrespondenz, computeStatistik mit Gesamtumsatz+Bearbeitungstage+Score, Parallel-Queries via Promise.all, Bulk-Foto-Lookup via .in(), M:N-Auflösung via auftrag_kontakte ODER kontakt_id-FK); kontakt-detail.html mit 9-Tab-Layout + 6 Stats-Cards + 5 Quick-Actions + Filter-Search + PDF-Bericht-Export. 21 P7-Tests grün. M⁴¹-Tests gesamt: P1+P2+P3+P4+P5+P6+P7 = 173.
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
@@ -116,6 +116,7 @@ const APP_SHELL = [
   '/audit-trail.html',                  // MEGA⁴¹ P2: Audit-Trail-Viewer-Page
   '/support.html',                      // MEGA⁴¹ P5: Support + FAQ-Search + Ticket-Form
   '/lib/cmd-k-modal.js',                // MEGA⁴¹ P6: Cmd+K Drilldown-Modal global
+  '/kontakt-detail.html',               // MEGA⁴¹ P7: Kontakt-360-View 9 Tabs
   '/editor-demo.html',                  // MEGA⁴⁰ P1.2: Editor-Demo-Page (Pattern A volle Page-Width)
   '/dokument-neu.html',                 // MEGA⁴⁰ P3: Neues-Dokument Entry-Page (Modal-First)
   '/dokument-import.html',              // MEGA⁴⁰ P4: DOCX-Import-Page (Drag&Drop)
