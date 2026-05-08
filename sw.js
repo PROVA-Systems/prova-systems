@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v1207-mega40-p6-spell-konjunktiv';   // MEGA⁴⁰ P6 Rechtschreibung+Konjunktiv-II: lib/editor-spell-layer.js (3 Layer: Browser-Native lang=de-DE, KI-Backstop S1 'schnell', Konjunktiv-II S3 'praezise'); Begründungs-Box NICHT-kopierbar (user-select:none + contextmenu/copy/cut block); Auto-Browser-Spellcheck in mount(); Toolbar Spell+Konjunktiv-Buttons; KI-Funktions-Garantie 5-Tests-Suite (Funktionalität/Edge/Präzision/Konsistenz/Zeit). KEIN gpt-4o im Code (deprecated Feb 2026). 23 P6-Tests grün, 180 M⁴⁰-Tests grün total.
+const CACHE_VERSION = 'prova-v1208-mega40-p7-vorlagen';   // MEGA⁴⁰ P7 Vorlagen-System: Migration 35 document_templates (workspace+global Dual-Mode RLS, APPLIED via MCP) + 5 PROVA-Defaults (F-04 Beweisbeschluss, F-09 Stellungnahme, F-10 Schadens-Kurzgutachten, F-15 Wertgutachten, F-19 Beratung) seeded; 3 Lambdas: document-templates-list (4 Filter), document-template-create (is_global IMMER false), document-template-use (use_count + last_used increment); dokument-vorlagen.html Karten-Grid mit Filter-Tabs + Search + Source-Badges; 'Als Vorlage'-Button im Editor. 25 P7-Tests grün, 205 M⁴⁰-Tests grün total.
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
@@ -109,6 +109,7 @@ const APP_SHELL = [
   '/editor-demo.html',                  // MEGA⁴⁰ P1.2: Editor-Demo-Page (Pattern A volle Page-Width)
   '/dokument-neu.html',                 // MEGA⁴⁰ P3: Neues-Dokument Entry-Page (Modal-First)
   '/dokument-import.html',              // MEGA⁴⁰ P4: DOCX-Import-Page (Drag&Drop)
+  '/dokument-vorlagen.html',            // MEGA⁴⁰ P7: Vorlagen-Page Karten-Grid
   // Legacy auth (Hybrid-Modus, bleibt bis Cutover-Phase 5 cleanup)
   '/prova-fetch-auth.js',
   '/prova-notifications.js',
