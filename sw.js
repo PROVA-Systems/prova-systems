@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v1210-mega40-p9-pdf-e2e';   // MEGA⁴⁰ P9 PDF-Generation + E2E (alle 3 Wege): lib/editor-locked-sections.js (4 Compliance-Sektionen Deckblatt/§407a/EU-AI-Act/Unterschrift mit {{Variable}}-Interpolation); lib/editor-pdf-generator.js (Browser-Print Pop-up, IHK-konform DIN A4 25mm Times-New-Roman 11pt, @top-right Aktenzeichen + @bottom-right Seitenzahl, page-break+widows+orphans); '⊟ PDF' Toolbar-Button; weg_c auto-Locked-Sections-Inject vor Print; E2E-Tests alle 3 Wege; Performance <100ms für 30-Section-Doc. 23 P9-Tests grün, 247 M⁴⁰-Tests grün total.
+const CACHE_VERSION = 'prova-v1300-mega40-final';   // MEGA⁴⁰ FINAL — Editor & Vorlagen-System: 10/10 Phasen Code-Done, 247 Tests grün, 38 Commits, 3 Migrations APPLIED (33+34+35), 7 Lambdas, 10 Frontend-Libs, 4 HTML-Pages, 5 PROVA-Default-Vorlagen seeded. Volltext-TipTap-Editor + 3-Wege-System (Wizard/Eigene Word-Vorlage/Hybrid mit Locked-Sections) + DOCX-Import (mammoth.js) + Export (HTML/MD/DOCX-XML) + PDF-Browser-Print (IHK-konform A4 Times 25mm) + KI-Backstop S1 + Konjunktiv-II S3 + Bibliothek-Adapter (6 Kategorien) + Vorlagen-System (Use-Count-Tracking). KEIN gpt-4o-Code-Path. §407a + EU-AI-Act-Compliance auto-injiziert bei weg_c. Tag v1300.
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [

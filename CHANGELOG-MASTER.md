@@ -4,6 +4,84 @@ Format: pro Sprint ein Block. Ältere Sprints zuoberst nicht — neueste oben.
 
 ---
 
+## MEGA⁴⁰ — Editor & Vorlagen-System (08.05.2026)
+
+**Tag:** `v1300` · **Branch:** `mega40-editor-vorlagen` · **Acceptance:** 10/10 Phasen Code-Done, 247 Tests grün
+
+### Vision
+PROVA hatte nur ein nacktes `<textarea>`. M⁴⁰ liefert vollwertigen TipTap-Cloud-Editor + 3-Wege-System (Wizard/Eigene Word-Vorlage/Hybrid) + Vorlagen-System + DOCX-Import/Export + PDF-Generation + KI-Hilfen. "Gutachten Manager VERWALTET. PROVA ERSTELLT." ✅
+
+### Phase 0 + 1.1 — Schema + Lambdas (Session 1)
+- **`5a11973`:** Master-Prompt + Phase-0-Read + Tech-Stack-Decision (TipTap)
+- **`907a548`:** Migration 33 (documents + documents_versions APPLIED) + document-save/-load Lambdas mit RLS workspace-isoliert + Versions-pro-Save. 18 Tests grün.
+
+### Phase 1.2 — TipTap-UI-Integration
+- **`1bab92e`:** ProvaEditor + Underline + TextAlign Extensions
+- **`6601a46`:** editor-tiptap.js High-Level-Wrapper (Auto-Save 5s + Versions-UI letzte 10 + Save-Status idle/dirty/saving/saved/error)
+- **`f2c7716`:** editor-demo.html Pattern A volle Page-Width (1400px)
+- **`44d529e`:** 33 Tests grün
+
+### Phase 2 — Erweiterte Editor-Features
+- **`1816541`:** ProvaEditor + Image/TextStyle/Color/Highlight/FontFamily Extensions
+- **`05cda29`:** editor-extensions.js Custom Footnote/PageBreak/CrossRef + Helpers (collectHeadings/generateToC/autoNumberFootnotes/resolveCrossRefs)
+- **`4c4f108`:** editor-image-upload Lambda + Migration 34 document_images (RLS, APPLIED via MCP)
+- **`6fd10f6`:** Extended-Toolbar mit 9 Button-Gruppen + CSS Footnote/PageBreak/Image
+- **`29622b9`:** 33 Tests grün
+
+### Phase 3 — 3-Wege-Auswahl-Modal
+- **`ebb3342`:** lib/document-mode-modal.js (3 Karten + confirmModeSwitch + LOCKED_SECTION_KEYS)
+- **`cd0d911`:** Mode-Switcher Weg-Badge in Status-Bar mit Click→Modal+Save
+- **`5c29884`:** 3-Page-Integration: editor-demo (Badge), dokument-neu (Modal-First-Entry), briefvorlagen (Banner+Redirect)
+- **`4139215`:** 25 Tests grün
+
+### Phase 4 — DOCX-Import (Recherche-Pflicht: 5 Quellen)
+- **`f24b8f1`:** Recherche-Doku 5 Library-Kandidaten → mammoth.js (BSD-2, 280 KB) gewählt
+- **`959894c`:** lib/docx-import.js mit mammoth@1 CDN-Lazy-Load + DOMParser-Walker + Regex-Fallback + extractPlaceholders + detectWordWarnings
+- **`f2958a4`:** dokument-import.html Drag&Drop-Page mit Preview + Placeholder-Liste + 'Direkt bearbeiten'/'Als Vorlage'
+- **`c19ddf5`:** 27 Tests grün
+
+### Phase 5 — DOCX/HTML/Markdown-Export
+- **`61fca3d`:** lib/docx-export.js mit exportHtml (PROVA-Wrap + XSS-safe) + exportMarkdown (ATX + GFM-Tables + Footnotes) + exportDocxBlob
+- **`590995f`:** netlify/functions/editor-docx-export Lambda mit pure-Node WordprocessingML-2003-XML Generation (kein npm-Dep)
+- **`af5f22a`:** Export-Buttons in Toolbar + Roundtrip-Tests + 21 Tests grün
+
+### Phase 6 — Rechtschreibung + Konjunktiv-II
+- **`2b70198`:** lib/editor-spell-layer.js (3 Layer: Browser-Native lang=de-DE, KI-Backstop S1 'schnell', Konjunktiv-II S3 'praezise', Begründungs-Box NICHT-kopierbar)
+- **`84fa9d8`:** KI-Funktions-Garantie 5-Tests-Suite (Funktionalität/Edge/Präzision/Konsistenz/Zeit) + 23 Tests grün. KEIN gpt-4o-Code-Path.
+
+### Phase 7 — Vorlagen-System
+- **`ac95fd4`:** Migration 35 document_templates (workspace+global Dual-Mode RLS, APPLIED) + 5 PROVA-Defaults (F-04/F-09/F-10/F-15/F-19) + 3 Lambdas (list/create/use)
+- **`936b1ec`:** dokument-vorlagen.html Karten-Grid mit 4 Filter-Tabs + Search + Source-Badges + 'Als Vorlage'-Button
+- **`0556db5`:** 25 Tests grün
+
+### Phase 8 — Bibliothek-Toolbar-Adapter
+- **`b5bac4e`:** lib/editor-bibliothek-adapter.js — TipTap-Bridge zu M³⁹-Lib, 6 Kategorien, 6-Tab-Modal + Search-Debounce 250ms, FOOTNOTE_PATTERN auto-detect (DIN/WTA/VOB/JVEG/ZPO/§), Recent-Items via localStorage
+- **`88d0fc0`:** 19 Tests grün
+
+### Phase 9 — PDF-Generation + E2E
+- **`e6db779`:** lib/editor-locked-sections.js (4 Compliance-Sektionen: Deckblatt + §407a + EU-AI-Act-Disclosure + Unterschrift) + lib/editor-pdf-generator.js (Browser-Print Pop-up, IHK-konform DIN A4 25mm Times-New-Roman 11pt) + Toolbar-Button
+- **`f48f035`:** E2E-Tests alle 3 Wege (weg_a/b/c) + Performance <100ms für 30-Section-Doc + 23 Tests grün
+
+### Phase 10 — FINAL
+- 14 Pre-FINAL-Checks alle grün
+- FINAL-Doku `docs/sprint-status/MEGA-40-FINAL.md`
+- sw.js v1300
+- Tag-Empfehlung v1300
+
+### Bilanz
+| Bereich | Count |
+|---------|-------|
+| Phasen Code-Done | 10/10 |
+| Commits gesamt | 38 |
+| Tests grün | 247 |
+| Migrations APPLIED | 3 (33+34+35) |
+| Lambdas erstellt | 7 |
+| Frontend-Libs | 10 |
+| HTML-Pages | 4 |
+| Recherche-Quellen P4 | 5 |
+
+---
+
 ## MEGA³⁹ — Master-Consolidation-Implementation (08.05.2026)
 
 **Tag:** `v1199-pre-final` · **Branch:** `mega39-master-consolidation` · **Acceptance:** 14/18 grün, 4/18 Marcel-Manual
