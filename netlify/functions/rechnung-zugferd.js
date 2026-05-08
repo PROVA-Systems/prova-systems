@@ -146,10 +146,11 @@ function buildZugferdXml(opts) {
 
 // ── PDF/A-3-Embed via pdf-lib ─────────────────────────────────────────────
 async function embedXmlInPdf(pdfBytes, xmlString, filename) {
-  let PDFLib;
-  try { PDFLib = require('pdf-lib'); }
-  catch (e) {
-    // Fallback: kein pdf-lib verfügbar — return original PDF mit Hinweis
+  // Dynamic require: esbuild kann eval('require')(...) nicht zur Build-Zeit
+  // resolven, das Modul bleibt als Runtime-Lookup. pdf-lib ist NICHT in
+  // package.json — dieser Pfad ist optional, mit graceful Fallback.
+  const PDFLib = (() => { try { return eval('require')('pdf-lib'); } catch { return null; } })();
+  if (!PDFLib) {
     return { pdfBytes, embedded: false, reason: 'pdf-lib not available' };
   }
   const pdfDoc = await PDFLib.PDFDocument.load(pdfBytes);
