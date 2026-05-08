@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v1201-mega40-p1.1-editor-foundation-schema';   // MEGA⁴⁰ P1.1 Editor-Foundation Schema-Layer: Migration 33 (documents + documents_versions APPLIED via MCP, RLS workspace-isoliert), netlify/functions/document-save.js + document-load.js (3-Wege-System weg_a/b/c, JSONB-Storage, Versions-History pro Save, Workspace-Validation 403). 18 Tests grün. TipTap-UI-Integration in Folge-Session (P1.2).
+const CACHE_VERSION = 'prova-v1202-mega40-p1.2-tiptap-ui-integration';   // MEGA⁴⁰ P1.2 TipTap-UI-Integration: lib/prova-editor.js erweitert um Underline + TextAlign Extensions; lib/editor-tiptap.js High-Level-Wrapper mit Backend-Sync (Auto-Save 5s debounced, Versions-UI letzte 10 Saves, Save-Status idle/dirty/saving/saved/error); editor-demo.html Pattern A volle Page-Width Demo. 33 P1.2-Tests grün, 51 M⁴⁰-Tests grün total. Phase 2-10 in Folge-Phasen.
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
@@ -96,8 +96,11 @@ const APP_SHELL = [
   '/lib/swipe-gestures.js',             // MEGA¹⁴ W24: Touch-Swipe-Detection
   '/lib/native-share.js',               // MEGA¹⁴ W24: Web-Share-API + Clipboard-Fallback
   '/lib/workflow-mode-router.js',       // MEGA¹⁴-Ext W28: Triple-Mode-Router (Foundation)
-  '/lib/prova-editor.js',               // MEGA¹⁵ W32: TipTap-Wrapper (Mode B Editor)
+  '/lib/prova-editor.js',               // MEGA¹⁵ W32: TipTap-Wrapper (Mode B Editor) + MEGA⁴⁰ P1.2: Underline+Align Extensions
   '/lib/prova-editor.css',              // MEGA¹⁵ W32: Editor-Styles
+  '/lib/editor-tiptap.js',              // MEGA⁴⁰ P1.2: High-Level-Wrapper mit Backend-Sync
+  '/lib/editor-tiptap.css',             // MEGA⁴⁰ P1.2: Status-Bar + Versions-Panel CSS
+  '/editor-demo.html',                  // MEGA⁴⁰ P1.2: Editor-Demo-Page (Pattern A volle Page-Width)
   // Legacy auth (Hybrid-Modus, bleibt bis Cutover-Phase 5 cleanup)
   '/prova-fetch-auth.js',
   '/prova-notifications.js',
