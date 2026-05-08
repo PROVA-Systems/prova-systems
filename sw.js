@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v1205-mega40-p4-docx-import';   // MEGA⁴⁰ P4 DOCX-Import: lib/docx-import.js mit mammoth.js@1 CDN-Lazy-Load, PROVA_STYLE_MAP (Heading 1→h2), DOMParser-Walker + Regex-Fallback, extractPlaceholders {{Token}} mit Sortierung+Count, detectWordWarnings (Page-Breaks, Tracked-Changes, mammoth-Messages); dokument-import.html Drag&Drop-Page mit Preview/Placeholder-Liste/Warnings + 'Direkt bearbeiten'/'Als Vorlage' Actions → /document-save weg_b → redirect dokument-neu. 27 P4-Tests grün + Recherche-Doku 5 Quellen. 136 M⁴⁰-Tests grün total.
+const CACHE_VERSION = 'prova-v1206-mega40-p5-docx-export';   // MEGA⁴⁰ P5 DOCX/HTML/Markdown-Export: lib/docx-export.js mit exportHtml (PROVA-Wrap + XSS-safe), exportMarkdown (ATX + GFM-Tables + Footnotes), exportDocxBlob (POST→Lambda); netlify/functions/editor-docx-export Lambda mit pure-Node WordprocessingML-2003-XML Generation (kein npm-Dep), Headings/Listen/Tabellen/Marks/PageBreak; Extended-Toolbar HTML/MD/DOCX Download-Buttons. Roundtrip-Tests strukturell identisch. 21 P5-Tests grün, 157 M⁴⁰-Tests grün total.
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
@@ -104,6 +104,7 @@ const APP_SHELL = [
   '/lib/document-mode-modal.js',        // MEGA⁴⁰ P3: 3-Wege-Auswahl-Modal
   '/lib/document-mode-modal.css',       // MEGA⁴⁰ P3: Modal-CSS (Karten-Grid, Animations)
   '/lib/docx-import.js',                // MEGA⁴⁰ P4: DOCX-Import via mammoth.js
+  '/lib/docx-export.js',                // MEGA⁴⁰ P5: HTML/MD/DOCX-Export
   '/editor-demo.html',                  // MEGA⁴⁰ P1.2: Editor-Demo-Page (Pattern A volle Page-Width)
   '/dokument-neu.html',                 // MEGA⁴⁰ P3: Neues-Dokument Entry-Page (Modal-First)
   '/dokument-import.html',              // MEGA⁴⁰ P4: DOCX-Import-Page (Drag&Drop)
