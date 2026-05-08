@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1, viewport-fit=cover">
+<title>Support · PROVA</title>
+
+<link rel="stylesheet" href="/style.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --primary: #1a3a6b; --accent: #4f8ef7; --muted: #94a3b8;
+  --bg: #0b0d11; --bg2: #111318; --bg3: #161a22;
+  --surface: #1c2130; --surface2: #232a3a;
+  --border: rgba(255,255,255,0.06); --border2: rgba(255,255,255,0.11);
+  --text: #eaecf4; --text2: #8b93ab; --text3: #4d5568;
+  --success: #10b981; --warning: #f59e0b; --danger: #ef4444;
+}
+*,*::before,*::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 14px; }
+body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; line-height: 1.6; }
+.sup-page { max-width: 900px; margin: 0 auto; padding: 24px 24px 80px; }
+.sup-header { margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
+.sup-header h1 { font-size: 22px; font-weight: 700; margin: 0 0 4px; }
+.sup-header p { font-size: 13px; color: var(--text2); margin: 0; }
+
+.sup-search-wrap { margin-bottom: 18px; }
+.sup-search { width: 100%; padding: 14px 18px; font-size: 15px; background: var(--surface); border: 1px solid var(--border2); border-radius: 10px; color: var(--text); font-family: inherit; }
+.sup-search:focus { outline: none; border-color: var(--accent); }
+.sup-search::placeholder { color: var(--text3); }
+
+.sup-cat-filter { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 16px; }
+.sup-cat-btn { padding: 5px 11px; font-size: 11.5px; font-weight: 600; background: transparent; border: 1px solid var(--border2); border-radius: 99px; color: var(--text2); cursor: pointer; font-family: inherit; }
+.sup-cat-btn:hover { border-color: var(--accent); color: var(--text); }
+.sup-cat-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+.sup-results { display: flex; flex-direction: column; gap: 8px; margin-bottom: 24px; }
+.sup-faq-card {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+  padding: 14px 16px; cursor: pointer; transition: border-color .15s ease;
+}
+.sup-faq-card:hover { border-color: var(--accent); }
+.sup-faq-card.active { border-color: var(--accent); background: rgba(79,142,247,0.08); }
+.sup-faq-frage { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+.sup-faq-kat { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--text3); }
+.sup-faq-antwort { font-size: 13px; color: var(--text2); margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--border); display: none; }
+.sup-faq-card.active .sup-faq-antwort { display: block; }
+.sup-faq-actions { display: flex; gap: 8px; margin-top: 8px; }
+.sup-faq-action { padding: 4px 10px; font-size: 11px; font-weight: 600; background: transparent; border: 1px solid var(--border2); border-radius: 4px; color: var(--text2); cursor: pointer; font-family: inherit; }
+.sup-faq-action:hover { color: var(--text); border-color: var(--accent); }
+
+.sup-empty { text-align: center; padding: 40px 20px; color: var(--text3); font-style: italic; }
+
+.sup-ticket-form {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+  padding: 20px 22px; margin-top: 20px;
+}
+.sup-ticket-form h2 { font-size: 15px; font-weight: 700; margin: 0 0 6px; }
+.sup-ticket-form p { font-size: 12.5px; color: var(--text2); margin: 0 0 16px; }
+.sup-form-row { margin-bottom: 12px; }
+.sup-form-label { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--text3); margin-bottom: 4px; }
+.sup-form-input, .sup-form-select, .sup-form-textarea {
+  width: 100%; padding: 10px 12px; font-size: 13px; background: var(--bg3);
+  border: 1px solid var(--border2); border-radius: 6px; color: var(--text); font-family: inherit;
+}
+.sup-form-textarea { resize: vertical; min-height: 100px; }
+.sup-form-input:focus, .sup-form-select:focus, .sup-form-textarea:focus { outline: none; border-color: var(--accent); }
+.sup-submit { padding: 10px 22px; font-size: 13.5px; font-weight: 700; background: var(--accent); color: #fff; border: none; border-radius: 6px; cursor: pointer; font-family: inherit; }
+.sup-submit:hover { background: #3b7be0; }
+.sup-submit:disabled { opacity: .5; cursor: not-allowed; }
+.sup-status { font-size: 12px; color: var(--text2); padding: 8px; text-align: center; }
+.sup-status.success { color: var(--success); }
+.sup-status.error { color: var(--danger); }
+
+mark { background: rgba(255, 235, 59, 0.3); color: var(--text); padding: 0 2px; }
+</style>
+</head>
+<body>
+
+<main class="sup-page">
+
+  <header class="sup-header">
+    <h1>🆘 Support &amp; FAQ</h1>
+    <p>Suche zuerst in der FAQ. Falls keine Antwort passt — Frage stellen.</p>
+  </header>
+
+  <div class="sup-search-wrap">
+    <input type="search" class="sup-search" id="sup-search" placeholder="Was möchtest du wissen? (z.B. „DOCX importieren", „Mahnung", „Apple Pencil")" autofocus>
+  </div>
+
+  <div class="sup-cat-filter" role="tablist" aria-label="Kategorie-Filter">
+    <button type="button" class="sup-cat-btn active" data-kat="">Alle</button>
+    <button type="button" class="sup-cat-btn" data-kat="gutachten">Gutachten</button>
+    <button type="button" class="sup-cat-btn" data-kat="rechnungen">Rechnungen</button>
+    <button type="button" class="sup-cat-btn" data-kat="diktat">Diktat</button>
+    <button type="button" class="sup-cat-btn" data-kat="skizzen">Skizzen</button>
+    <button type="button" class="sup-cat-btn" data-kat="bescheinigungen">Bescheinigungen</button>
+    <button type="button" class="sup-cat-btn" data-kat="termine">Termine</button>
+    <button type="button" class="sup-cat-btn" data-kat="ki">KI-Hilfen</button>
+    <button type="button" class="sup-cat-btn" data-kat="vorlagen">Vorlagen</button>
+    <button type="button" class="sup-cat-btn" data-kat="import">Import</button>
+    <button type="button" class="sup-cat-btn" data-kat="account">Account</button>
+    <button type="button" class="sup-cat-btn" data-kat="datenschutz">Datenschutz</button>
+  </div>
+
+  <div id="sup-results" class="sup-results">
+    <div class="sup-empty">Lade FAQ…</div>
+  </div>
+
+  <div class="sup-ticket-form" id="sup-ticket-form">
+    <h2>📨 Frage stellen</h2>
+    <p>Keine FAQ passt? Stelle deine Frage — Marcel antwortet meist innerhalb 24h.</p>
+
+    <div class="sup-form-row">
+      <label class="sup-form-label" for="sup-ticket-titel">Betreff</label>
+      <input type="text" class="sup-form-input" id="sup-ticket-titel" placeholder="Kurze Zusammenfassung" maxlength="500">
+    </div>
+
+    <div class="sup-form-row">
+      <label class="sup-form-label" for="sup-ticket-kat">Kategorie</label>
+      <select class="sup-form-select" id="sup-ticket-kat">
+        <option value="sonstiges">Sonstiges</option>
+        <option value="gutachten">Gutachten</option>
+        <option value="rechnungen">Rechnungen</option>
+        <option value="diktat">Diktat</option>
+        <option value="skizzen">Skizzen</option>
+        <option value="bescheinigungen">Bescheinigungen</option>
+        <option value="termine">Termine</option>
+        <option value="ki">KI-Hilfen</option>
+        <option value="vorlagen">Vorlagen</option>
+        <option value="import">Import</option>
+        <option value="account">Account</option>
+        <option value="datenschutz">Datenschutz</option>
+      </select>
+    </div>
+
+    <div class="sup-form-row">
+      <label class="sup-form-label" for="sup-ticket-body">Frage</label>
+      <textarea class="sup-form-textarea" id="sup-ticket-body" placeholder="Beschreibe deine Frage so genau wie möglich…" maxlength="10000"></textarea>
+    </div>
+
+    <button type="button" class="sup-submit" id="sup-submit-btn">Frage absenden</button>
+    <div class="sup-status" id="sup-status"></div>
+  </div>
+
+</main>
+
+<script defer>
+window.addEventListener('DOMContentLoaded', function () {
+  const searchEl = document.getElementById('sup-search');
+  const resultsEl = document.getElementById('sup-results');
+  const catBtns = document.querySelectorAll('.sup-cat-btn');
+  const submitBtn = document.getElementById('sup-submit-btn');
+  const statusEl = document.getElementById('sup-status');
+  const ticketTitel = document.getElementById('sup-ticket-titel');
+  const ticketKat = document.getElementById('sup-ticket-kat');
+  const ticketBody = document.getElementById('sup-ticket-body');
+
+  let currentKat = '';
+  let currentQuery = '';
+  let lastResults = [];
+  let debounce = null;
+
+  async function searchFaq() {
+    resultsEl.innerHTML = '<div class="sup-empty">Suche läuft…</div>';
+    const params = new URLSearchParams();
+    if (currentQuery) params.set('q', currentQuery);
+    if (currentKat) params.set('kategorie', currentKat);
+    params.set('limit', '20');
+    try {
+      const res = await fetch('/.netlify/functions/faq-search?' + params.toString());
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+      lastResults = data.results || [];
+      renderResults();
+    } catch (e) {
+      resultsEl.innerHTML = '<div class="sup-empty" style="color:var(--danger);">Fehler: ' + e.message + '</div>';
+    }
+  }
+
+  function renderResults() {
+    if (lastResults.length === 0) {
+      resultsEl.innerHTML = '<div class="sup-empty">Keine FAQ-Treffer. Stelle deine Frage unten — wir antworten meist innerhalb 24h.</div>';
+      return;
+    }
+    resultsEl.innerHTML = lastResults.map(f => {
+      const fragenHtml = highlight(esc(f.frage), currentQuery);
+      const antwortHtml = highlight(esc(f.antwort), currentQuery);
+      return '<div class="sup-faq-card" data-id="' + f.id + '">' +
+        '<div class="sup-faq-kat">' + esc(f.kategorie) + ' · ' + (f.view_count || 0) + ' Aufrufe</div>' +
+        '<div class="sup-faq-frage">' + fragenHtml + '</div>' +
+        '<div class="sup-faq-antwort">' + antwortHtml +
+        '<div class="sup-faq-actions">' +
+        '<button class="sup-faq-action" data-action="helpful" data-id="' + f.id + '">👍 Hat geholfen</button>' +
+        '<button class="sup-faq-action" data-action="not-helpful" data-id="' + f.id + '">👎 Hat NICHT geholfen</button>' +
+        '</div></div></div>';
+    }).join('');
+
+    resultsEl.querySelectorAll('.sup-faq-card').forEach(card => {
+      card.addEventListener('click', (e) => {
+        if (e.target.classList.contains('sup-faq-action')) return;
+        card.classList.toggle('active');
+      });
+    });
+    resultsEl.querySelectorAll('.sup-faq-action[data-action="not-helpful"]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const id = btn.dataset.id;
+        const faq = lastResults.find(f => f.id === id);
+        if (faq) {
+          ticketTitel.value = 'FAQ nicht hilfreich: ' + faq.frage.slice(0, 100);
+          ticketKat.value = faq.kategorie || 'sonstiges';
+          ticketBody.value = 'Folgende FAQ hat NICHT meine Frage beantwortet:\n\n"' + faq.frage + '"\n\nAntwort war:\n"' + faq.antwort + '"\n\nMein konkretes Problem:\n';
+          ticketBody.focus();
+          document.getElementById('sup-ticket-form').scrollIntoView({ behavior: 'smooth' });
+        }
+      });
+    });
+  }
+
+  function highlight(text, query) {
+    if (!query || query.length < 2) return text;
+    try {
+      const re = new RegExp('(' + query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi');
+      return text.replace(re, '<mark>$1</mark>');
+    } catch (_) { return text; }
+  }
+
+  function esc(s) {
+    if (s == null) return '';
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  searchEl.addEventListener('input', () => {
+    if (debounce) clearTimeout(debounce);
+    debounce = setTimeout(() => {
+      currentQuery = searchEl.value.trim();
+      searchFaq();
+    }, 200);
+  });
+
+  catBtns.forEach(btn => btn.addEventListener('click', () => {
+    catBtns.forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentKat = btn.dataset.kat || '';
+    searchFaq();
+  }));
+
+  submitBtn.addEventListener('click', async () => {
+    const titel = ticketTitel.value.trim();
+    const body = ticketBody.value.trim();
+    if (titel.length < 3) { statusEl.textContent = 'Betreff muss mind. 3 Zeichen haben.'; statusEl.className = 'sup-status error'; return; }
+    if (body.length < 10) { statusEl.textContent = 'Frage muss mind. 10 Zeichen haben.'; statusEl.className = 'sup-status error'; return; }
+    submitBtn.disabled = true;
+    statusEl.textContent = 'Sende…';
+    statusEl.className = 'sup-status';
+    try {
+      const res = await fetch('/.netlify/functions/support-ticket-create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          titel: titel,
+          beschreibung: body,
+          kategorie: ticketKat.value,
+          page_url: window.location.href
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'HTTP ' + res.status);
+      statusEl.textContent = 'Ticket erstellt: ' + data.ticket_id + ' — Antwort folgt per E-Mail';
+      statusEl.className = 'sup-status success';
+      ticketTitel.value = '';
+      ticketBody.value = '';
+    } catch (e) {
+      statusEl.textContent = 'Fehler: ' + e.message;
+      statusEl.className = 'sup-status error';
+    } finally {
+      submitBtn.disabled = false;
+    }
+  });
+
+  // Initial-Load
+  searchFaq();
+});
+</script>
+
+</body>
+</html>
