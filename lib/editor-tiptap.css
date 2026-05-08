@@ -89,10 +89,122 @@
   border-color: #3b7be0;
 }
 
+/* ─── Extended-Toolbar (P2: Image / Color / Footnote / PageBreak / ToC) ──── */
+
+.pet-toolbar-ext {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 12px;
+  background: var(--surface2, #232a3a);
+  border: 1px solid var(--border, rgba(255,255,255,0.06));
+  border-radius: 8px;
+}
+
+.pet-toolbar-ext-sep {
+  width: 1px;
+  height: 22px;
+  background: var(--border2, rgba(255,255,255,0.11));
+  margin: 0 4px;
+}
+
+.pet-toolbar-ext-btn {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text, #eaecf4);
+  border-radius: 4px;
+  padding: 6px 10px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  min-width: 32px;
+  min-height: 32px;
+  font-family: inherit;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.pet-toolbar-ext-btn:hover {
+  background: var(--surface, #1c2130);
+  border-color: var(--accent, #4f8ef7);
+}
+.pet-toolbar-ext-btn:focus-visible {
+  outline: 2px solid var(--accent, #4f8ef7);
+  outline-offset: 1px;
+}
+
 /* ─── Editor-Host (umschließt prova-editor) ─────────────── */
 
 .pet-editor-host {
   width: 100%;
+}
+
+/* ─── Custom-Extensions Styles (Footnote / PageBreak / CrossRef / Image) ── */
+
+.prova-editor-content .prova-editor-footnote {
+  font-size: 0.78em;
+  color: var(--accent, #4f8ef7);
+  cursor: help;
+  margin-left: 1px;
+  vertical-align: super;
+  line-height: 0;
+}
+.prova-editor-content .prova-editor-footnote::before {
+  content: '[';
+}
+.prova-editor-content .prova-editor-footnote::after {
+  content: ']';
+}
+
+.prova-editor-content .prova-editor-pagebreak {
+  display: block;
+  height: 4px;
+  margin: 22px -12px;
+  background: repeating-linear-gradient(
+    to right,
+    var(--accent, #4f8ef7) 0 8px,
+    transparent 8px 14px
+  );
+  border-radius: 2px;
+  position: relative;
+}
+.prova-editor-content .prova-editor-pagebreak::after {
+  content: '— Seitenumbruch —';
+  position: absolute;
+  top: -16px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--accent, #4f8ef7);
+  background: var(--surface, #1c2130);
+  padding: 0 8px;
+  text-transform: uppercase;
+}
+@media print {
+  .prova-editor-content .prova-editor-pagebreak {
+    page-break-before: always;
+    break-before: page;
+    height: 0;
+    background: transparent;
+  }
+  .prova-editor-content .prova-editor-pagebreak::after {
+    display: none;
+  }
+}
+
+.prova-editor-content .prova-editor-xref {
+  color: var(--accent, #4f8ef7);
+  text-decoration: underline dotted;
+  cursor: pointer;
+}
+
+.prova-editor-content .prova-editor-image {
+  max-width: 100%;
+  height: auto;
+  border-radius: 6px;
+  margin: 10px 0;
+  border: 1px solid var(--border, rgba(255,255,255,0.06));
 }
 
 /* ─── Versions-Panel ─────────────────────────────────────── */
