@@ -44,7 +44,7 @@ exports.handler = withSentry(requireAuth(async (event, context) => {
   }
 
   const API_KEY = process.env.PDFMONKEY_API_KEY;
-  const TEMPLATE_ID = process.env.PDFMONKEY_FOTO_TEMPLATE_ID;
+  const TEMPLATE_ID = require('./lib/env-config').parsePdfmonkeyTemplates().foto;
 
   if (!API_KEY || !TEMPLATE_ID) {
     return {

@@ -23,6 +23,8 @@
 
 'use strict';
 
+const { parseStripePrices } = require('./env-config');
+
 // Defaults aus neuem Stripe-Account (03.05.2026)
 const DEFAULT_SOLO     = 'price_1TSjMZRXumrtL2n5fgToRwyr';
 const DEFAULT_TEAM     = 'price_1TSjNXRXumrtL2n56c6emN2k';
@@ -31,19 +33,20 @@ const DEFAULT_ADDON_10 = 'price_1TSl3fRXumrtL2n5Gur4BmWL';
 const DEFAULT_ADDON_20 = 'price_1TSl4eRXumrtL2n5tIWx0ET8';
 
 function resolveSoloPriceId() {
-  return process.env.STRIPE_PRICE_SOLO || DEFAULT_SOLO;
+  return parseStripePrices().solo || DEFAULT_SOLO;
 }
 
 function resolveTeamPriceId() {
-  return process.env.STRIPE_PRICE_TEAM || DEFAULT_TEAM;
+  return parseStripePrices().team || DEFAULT_TEAM;
 }
 
 function resolveAddonPriceId(paketGroesse) {
   // paketGroesse = 5 | 10 | 20
+  const p = parseStripePrices();
   switch (Number(paketGroesse)) {
-    case 5:  return process.env.STRIPE_PRICE_ADDON_5  || DEFAULT_ADDON_5;
-    case 10: return process.env.STRIPE_PRICE_ADDON_10 || DEFAULT_ADDON_10;
-    case 20: return process.env.STRIPE_PRICE_ADDON_20 || DEFAULT_ADDON_20;
+    case 5:  return p.addon5  || DEFAULT_ADDON_5;
+    case 10: return p.addon10 || DEFAULT_ADDON_10;
+    case 20: return p.addon20 || DEFAULT_ADDON_20;
     default: return null;
   }
 }

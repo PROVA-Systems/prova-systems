@@ -143,7 +143,7 @@ async function sendRewardEmail(sb, referral, stats) {
       auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS }
     });
     const mailOptions = {
-      from: process.env.SMTP_FROM_REFERRAL || 'PROVA Empfehlung <empfehlung@prova-systems.de>',
+      from: require('./lib/env-config').parseSmtpReferral().from || 'PROVA Empfehlung <empfehlung@prova-systems.de>',
       to: referral.referrer_email,
       subject: '🎉 Du hast 1 Monat PROVA gewonnen!',
       text: text

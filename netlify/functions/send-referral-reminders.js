@@ -106,7 +106,7 @@ async function sendReminderEmail(sb, referral) {
       auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS }
     });
     const mailOptions = {
-      from: process.env.SMTP_FROM_REFERRAL || 'PROVA Empfehlung <empfehlung@prova-systems.de>',
+      from: require('./lib/env-config').parseSmtpReferral().from || 'PROVA Empfehlung <empfehlung@prova-systems.de>',
       to: referral.referred_email,
       subject: '⏰ Erinnerung: Dein 50€ Rabatt läuft in ' + daysLeft + ' Tagen ab',
       text: text,

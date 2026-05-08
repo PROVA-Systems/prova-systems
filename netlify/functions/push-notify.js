@@ -18,6 +18,7 @@ const { resolveUser, logAuthFailure } = require('./lib/auth-resolve');
 const { getCorsHeaders } = require('./lib/cors-helper');
 const ProvaPseudo = require('./lib/prova-pseudo'); // MEGA²⁸ W3-I7: PII-Pseudonymisierung in Logs
 const { withSentry } = require('./lib/sentry-wrap'); // MEGA²⁸ W7-I2: Sentry-Wrap manual
+const { parseVapidKeys } = require('./lib/env-config'); // M⁴³: ENV-Konsolidierung
 
 // S6 Phase 1.9: per-request event-Capture (siehe ki-proxy.js Begruendung)
 let _currentEvent = null;
@@ -118,7 +119,7 @@ exports.handler = withSentry(async (event) => {
 
 // ── VAPID Public Key liefern (für Client-seitiges Subscribe) ────────────────
 function handleVapidKey() {
-  const key = process.env.VAPID_PUBLIC_KEY;
+  const key = parseVapidKeys().public;
   if (!key) {
     return { statusCode: 500, headers: corsHeaders(), body: JSON.stringify({ error: 'VAPID_PUBLIC_KEY nicht konfiguriert' }) };
   }
@@ -421,9 +422,10 @@ async function sendPush(webpush, subscription, { titel, nachricht, url, badge, t
 function requireWebPush() {
   try {
     const webpush = require('web-push');
-    const pub  = process.env.VAPID_PUBLIC_KEY;
-    const priv = process.env.VAPID_PRIVATE_KEY;
-    const subj = process.env.VAPID_SUBJECT || 'mailto:hallo@prova-systems.de';
+    const v = parseVapidKeys();
+    const pub  = v.public;
+    const priv = v.private;
+    const subj = v.subject;
 
     if (!pub || !priv) {
       console.error('[Push] VAPID_PUBLIC_KEY oder VAPID_PRIVATE_KEY fehlt');
