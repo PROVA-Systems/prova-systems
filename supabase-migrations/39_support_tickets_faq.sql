@@ -80,6 +80,17 @@ CREATE INDEX IF NOT EXISTS idx_tickets_user ON public.support_tickets(user_id, c
 CREATE INDEX IF NOT EXISTS idx_tickets_status ON public.support_tickets(status, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_tickets_priority ON public.support_tickets(priority, created_at DESC);
 
+-- Bestehende support_tickets-Tabelle (M²⁸-Legacy mit deutschem Schema) erweitern
+-- (Im Live-Repo via separate ADD COLUMN-Migration applied — hier dokumentiert)
+ALTER TABLE public.support_tickets
+  ADD COLUMN IF NOT EXISTS ai_response_attempted BOOLEAN DEFAULT FALSE,
+  ADD COLUMN IF NOT EXISTS ai_response_text TEXT,
+  ADD COLUMN IF NOT EXISTS faq_match_id UUID REFERENCES public.faq_entries(id) ON DELETE SET NULL,
+  ADD COLUMN IF NOT EXISTS faq_match_score NUMERIC(3,2),
+  ADD COLUMN IF NOT EXISTS kategorie TEXT;
+
+CREATE INDEX IF NOT EXISTS idx_tickets_faq_match ON public.support_tickets(faq_match_id) WHERE faq_match_id IS NOT NULL;
+
 ALTER TABLE public.support_tickets ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS tickets_workspace_select ON public.support_tickets;

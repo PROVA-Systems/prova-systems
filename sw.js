@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v1303-mega41-p3-push-alerts';   // MEGA⁴¹ P3 Push-Alerts + Health-Coverage: Migration 38 system_health_history + push_alert_log + 2 Views v_service_uptime (24h/7d/30d) + v_service_status_latest, APPLIED via MCP; health-check-cron.js (8 Services parallel via Promise.all, 5s Timeout, Throttling 1/Service/h via push_alert_log Lookup, 3 Alert-Types down/recovery/latency); admin-system-uptime.js (Admin-Section mit current+uptime+alerts_recent, requireAdmin+2FA); 20 P3-Tests grün.
+const CACHE_VERSION = 'prova-v1305-mega41-p4-p5-pdf-support';   // MEGA⁴¹ P4 PDF-Aggregation: eintraege-pdf-aggregator Lambda (Multi-modal Foto+Skizze+Diktat+Notiz chronologisch sortiert in TipTap-JSON, Marker-Liste mit Befund-Refs, KI-bereinigt mit highlight-Mark, §407a + EU AI Act Footer); Editor-Toolbar "📥 Einträge"-Button. P5 Support-System: Migration 39 (faq_entries mit tsvector-german-Volltextsuche + Trigger + 34 FAQ-Seeds APPLIED, support_tickets ALTER ADD 5 Spalten); 2 Lambdas (faq-search public via textSearch + support-ticket-create RateLimit 10/h); support.html mit Search-Debounce 200ms + 12 Kategorie-Pills + Highlight + 'Hat NICHT geholfen' → Ticket-Form-Vorbefüllung. P4=19 + P5=20 = 39 Tests grün, M⁴¹-Tests gesamt 153.
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
@@ -114,6 +114,7 @@ const APP_SHELL = [
   '/lib/import-assistent-supabase.js',  // MEGA⁴¹ P1: Bridge zu Backend-Lambdas
   '/lib/audit-source-tracker.js',       // MEGA⁴¹ P2: KI-vs-SV-Frontend-Tracker (EU AI Act)
   '/audit-trail.html',                  // MEGA⁴¹ P2: Audit-Trail-Viewer-Page
+  '/support.html',                      // MEGA⁴¹ P5: Support + FAQ-Search + Ticket-Form
   '/editor-demo.html',                  // MEGA⁴⁰ P1.2: Editor-Demo-Page (Pattern A volle Page-Width)
   '/dokument-neu.html',                 // MEGA⁴⁰ P3: Neues-Dokument Entry-Page (Modal-First)
   '/dokument-import.html',              // MEGA⁴⁰ P4: DOCX-Import-Page (Drag&Drop)
