@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1, viewport-fit=cover">
+<title>Health-Check Test (Manueller Trigger) · PROVA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="prova-fetch-auth.js"></script>
+<script src="/lib/prova-config.js"></script>
+<script>
+(function(){
+  try {
+    var token = localStorage.getItem('prova_auth_token');
+    if (!token) { window.location.replace('/login?next=/health-test-down.html'); return; }
+  } catch (e) { window.location.replace('/login'); }
+})();
+</script>
+<script type="module">
+  import { runAuthGuard } from '/lib/auth-guard.js';
+  runAuthGuard().catch(e => console.error('[auth] guard failed', e));
+</script>
+<script src="theme.js"></script>
+<script src="prova-layout.config.js"></script>
+<script src="nav.js" defer></script>
+<link rel="stylesheet" href="prova-design.css">
+<style>
+:root {
+  --bg:#0b0d11; --surface:#1c2130; --surface2:#232a3a;
+  --border:rgba(255,255,255,0.06); --text:#eaecf4; --text2:#8b93ab;
+  --accent:#4f8ef7; --success:#10b981; --warning:#f59e0b; --danger:#ef4444;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;line-height:1.55;}
+.htd-wrap{max-width:880px;margin:0 auto;padding:48px 20px 100px;}
+.htd-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:32px;margin-bottom:18px;}
+.htd-h1{font-size:22px;font-weight:800;margin-bottom:6px;}
+.htd-sub{color:var(--text2);font-size:14px;margin-bottom:24px;}
+.htd-warn{padding:14px;background:rgba(245,158,11,.10);border-left:3px solid var(--warning);border-radius:6px;margin-bottom:18px;font-size:13px;}
+.htd-services{display:grid;gap:8px;margin-bottom:18px;}
+.htd-service{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--surface2);border-radius:8px;font-size:13px;}
+.htd-service-name{font-weight:600;}
+.htd-service-status{padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700;text-transform:uppercase;}
+.htd-status-up{background:rgba(16,185,129,.18);color:var(--success);}
+.htd-status-down{background:rgba(239,68,68,.18);color:var(--danger);}
+.htd-status-unknown{background:rgba(139,147,171,.12);color:var(--text2);}
+.htd-btn{display:inline-flex;align-items:center;gap:8px;padding:10px 18px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-weight:600;font-size:13px;cursor:pointer;font-family:inherit;}
+.htd-btn-primary{background:linear-gradient(135deg,var(--accent),#3a7be0);border:none;color:#fff;font-weight:700;}
+.htd-btn:hover{opacity:.85;}
+.htd-actions{display:flex;flex-wrap:wrap;gap:10px;}
+.htd-result{margin-top:18px;padding:14px;background:var(--surface2);border-radius:8px;font-family:'SF Mono',Consolas,monospace;font-size:12px;white-space:pre-wrap;max-height:400px;overflow:auto;display:none;}
+.htd-result.has-content{display:block;}
+</style>
+</head>
+<body>
+<main class="htd-wrap" id="main-content">
+  <div class="htd-card">
+    <h1 class="htd-h1">Health-Check Test-Trigger</h1>
+    <p class="htd-sub">Manueller Trigger für health-check-cron Lambda. Nutze für Tests dass Push-Alerts ankommen, bevor pg_cron alle 10min läuft.</p>
+
+    <div class="htd-warn">
+      <strong>⚠ Pflicht-Setup:</strong> Vor dem Trigger muss <a href="/push-setup.html">/push-setup.html</a> erfolgreich durchlaufen sein, sonst gibt es keine Push-Empfänger.
+    </div>
+
+    <h2 style="font-size:15px;font-weight:700;margin-bottom:10px;">Service-Status (live)</h2>
+    <div class="htd-services" id="htd-service-list">
+      <div class="htd-service"><span class="htd-service-name">Lade …</span></div>
+    </div>
+
+    <div class="htd-actions">
+      <button class="htd-btn htd-btn-primary" type="button" id="htd-trigger-btn">Health-Check sofort triggern</button>
+      <button class="htd-btn" type="button" id="htd-simulate-down-btn">Simuliere Service-Down</button>
+      <button class="htd-btn" type="button" id="htd-history-btn">Letzte 10 Health-Checks anzeigen</button>
+    </div>
+
+    <div class="htd-result" id="htd-result"></div>
+  </div>
+</main>
+
+<script>
+(function(){
+  'use strict';
+  function token() { return localStorage.getItem('prova_auth_token'); }
+  function showResult(label, data) {
+    const el = document.getElementById('htd-result');
+    const text = '=== ' + label + ' (' + new Date().toISOString() + ') ===\n' +
+                 (typeof data === 'string' ? data : JSON.stringify(data, null, 2));
+    el.textContent = text;
+    el.classList.add('has-content');
+  }
+
+  async function loadServiceStatus() {
+    try {
+      const r = await fetch('/.netlify/functions/system-health-current', {
+        headers: { 'Authorization': 'Bearer ' + token() }
+      });
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      const data = await r.json();
+      const list = document.getElementById('htd-service-list');
+      list.innerHTML = '';
+      const services = (data.services || data.health || []).slice(0, 12);
+      if (!services.length) {
+        list.innerHTML = '<div class="htd-service"><span class="htd-service-name">Keine Daten — Cron noch nicht gelaufen</span></div>';
+        return;
+      }
+      for (const s of services) {
+        const status = (s.status || 'unknown').toLowerCase();
+        const cls = status === 'up' ? 'htd-status-up' : status === 'down' ? 'htd-status-down' : 'htd-status-unknown';
+        const div = document.createElement('div');
+        div.className = 'htd-service';
+        div.innerHTML = '<span class="htd-service-name">' + (s.service || s.name || '?') + '</span>' +
+                        '<span class="htd-service-status ' + cls + '">' + status + '</span>';
+        list.appendChild(div);
+      }
+    } catch (e) {
+      document.getElementById('htd-service-list').innerHTML =
+        '<div class="htd-service"><span class="htd-service-name">⚠ ' + e.message + '</span></div>';
+    }
+  }
+
+  document.getElementById('htd-trigger-btn').addEventListener('click', async function() {
+    showResult('Trigger health-check-cron', 'Wird ausgeführt …');
+    try {
+      const r = await fetch('/.netlify/functions/health-check-cron?manual=true', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + token() }
+      });
+      const data = await r.json().catch(() => ({ status: r.status }));
+      showResult('Trigger health-check-cron', data);
+      setTimeout(loadServiceStatus, 1500);
+    } catch (e) {
+      showResult('Trigger fehlgeschlagen', e.message);
+    }
+  });
+
+  document.getElementById('htd-simulate-down-btn').addEventListener('click', async function() {
+    showResult('Simuliere Service-Down', 'Sendet test-down-event an Push-Notify …');
+    try {
+      const r = await fetch('/.netlify/functions/push-notify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token() },
+        body: JSON.stringify({
+          test: true,
+          alert_type: 'service-down',
+          service: 'test-service',
+          message: 'TEST: Service "test-service" ist down'
+        })
+      });
+      const data = await r.json().catch(() => ({ status: r.status }));
+      showResult('Simuliere Service-Down', data);
+    } catch (e) {
+      showResult('Simulation fehlgeschlagen', e.message);
+    }
+  });
+
+  document.getElementById('htd-history-btn').addEventListener('click', async function() {
+    try {
+      const r = await fetch('/.netlify/functions/system-health-history?limit=10', {
+        headers: { 'Authorization': 'Bearer ' + token() }
+      });
+      const data = await r.json();
+      showResult('Letzte 10 Health-Checks', data);
+    } catch (e) {
+      showResult('History-Abruf fehlgeschlagen', e.message);
+    }
+  });
+
+  loadServiceStatus();
+})();
+</script>
+<script src="sw-register.js" defer></script>
+</body>
+</html>

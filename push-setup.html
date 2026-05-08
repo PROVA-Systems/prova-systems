@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1, viewport-fit=cover">
+<title>Push-Alerts einrichten · PROVA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="prova-fetch-auth.js"></script>
+<script src="/lib/prova-config.js"></script>
+<script>
+(function(){
+  try {
+    var token = localStorage.getItem('prova_auth_token');
+    if (!token) { window.location.replace('/login?next=/push-setup.html'); return; }
+  } catch (e) { window.location.replace('/login'); }
+})();
+</script>
+<script type="module">
+  import { runAuthGuard } from '/lib/auth-guard.js';
+  runAuthGuard().catch(e => console.error('[auth] guard failed', e));
+</script>
+<script src="theme.js"></script>
+<script src="prova-layout.config.js"></script>
+<script src="nav.js" defer></script>
+<link rel="stylesheet" href="prova-design.css">
+<style>
+:root {
+  --bg:#0b0d11; --surface:#1c2130; --surface2:#232a3a;
+  --border:rgba(255,255,255,0.06); --text:#eaecf4; --text2:#8b93ab;
+  --accent:#4f8ef7; --success:#10b981; --warning:#f59e0b; --danger:#ef4444;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;line-height:1.55;}
+.ps-wrap{max-width:760px;margin:0 auto;padding:48px 20px 100px;}
+.ps-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:32px;margin-bottom:18px;}
+.ps-h1{font-size:24px;font-weight:800;margin-bottom:6px;}
+.ps-sub{color:var(--text2);font-size:14px;margin-bottom:24px;}
+.ps-step{display:flex;gap:12px;align-items:flex-start;margin-bottom:18px;padding:12px;background:var(--surface2);border-radius:8px;}
+.ps-step-num{flex-shrink:0;width:28px;height:28px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;}
+.ps-step-content{flex:1;}
+.ps-step-title{font-weight:600;margin-bottom:4px;}
+.ps-step-desc{font-size:13px;color:var(--text2);}
+.ps-btn{display:inline-flex;align-items:center;gap:8px;padding:12px 22px;background:linear-gradient(135deg,var(--accent),#3a7be0);border:none;border-radius:10px;color:#fff;font-weight:700;font-size:14px;cursor:pointer;font-family:inherit;}
+.ps-btn:disabled{opacity:.5;cursor:not-allowed;}
+.ps-status{padding:10px 14px;border-radius:8px;font-size:13px;margin:12px 0;display:none;}
+.ps-status.ok{background:rgba(16,185,129,.12);color:var(--success);display:block;}
+.ps-status.err{background:rgba(239,68,68,.12);color:var(--danger);display:block;}
+.ps-status.info{background:rgba(245,158,11,.10);color:var(--warning);display:block;}
+.ps-services{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;margin-top:16px;}
+.ps-service-pill{padding:8px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;font-size:12px;}
+</style>
+</head>
+<body>
+<main class="ps-wrap" id="main-content">
+  <div class="ps-card">
+    <h1 class="ps-h1">Push-Alerts einrichten</h1>
+    <p class="ps-sub">PROVA überwacht 8 kritische Services alle 10 Minuten. Bei einem Ausfall bekommst du eine Push-Benachrichtigung auf dieses Gerät.</p>
+
+    <div class="ps-step">
+      <div class="ps-step-num">1</div>
+      <div class="ps-step-content">
+        <div class="ps-step-title">Browser-Berechtigung erteilen</div>
+        <div class="ps-step-desc">Klick auf den Button — Browser fragt einmalig nach.</div>
+        <button class="ps-btn" id="ps-perm-btn" type="button">Berechtigung anfragen</button>
+        <div class="ps-status" id="ps-perm-status"></div>
+      </div>
+    </div>
+
+    <div class="ps-step">
+      <div class="ps-step-num">2</div>
+      <div class="ps-step-content">
+        <div class="ps-step-title">Subscription registrieren</div>
+        <div class="ps-step-desc">Sendet die Subscription-Endpoint-URL an PROVA für Push-Versand.</div>
+        <button class="ps-btn" id="ps-sub-btn" type="button" disabled>Subscription speichern</button>
+        <div class="ps-status" id="ps-sub-status"></div>
+      </div>
+    </div>
+
+    <div class="ps-step">
+      <div class="ps-step-num">3</div>
+      <div class="ps-step-content">
+        <div class="ps-step-title">Test-Push empfangen</div>
+        <div class="ps-step-desc">Triggert sofort eine Test-Notification auf diesem Gerät. <a href="/health-test-down.html">Erweiterte Tests</a></div>
+        <button class="ps-btn" id="ps-test-btn" type="button" disabled>Test-Push senden</button>
+        <div class="ps-status" id="ps-test-status"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="ps-card">
+    <h2 style="font-size:18px;font-weight:700;margin-bottom:8px;">Überwachte Services</h2>
+    <div class="ps-services">
+      <div class="ps-service-pill">🔵 Supabase Auth</div>
+      <div class="ps-service-pill">🔵 Supabase REST</div>
+      <div class="ps-service-pill">🔵 Supabase Storage</div>
+      <div class="ps-service-pill">🟣 OpenAI API</div>
+      <div class="ps-service-pill">🟢 Stripe API</div>
+      <div class="ps-service-pill">🟡 PDFMonkey</div>
+      <div class="ps-service-pill">🔴 Resend Email</div>
+      <div class="ps-service-pill">⚪ Netlify Functions</div>
+    </div>
+  </div>
+</main>
+
+<script>
+(function(){
+  'use strict';
+  function setStatus(el, kind, msg) {
+    el.className = 'ps-status ' + kind;
+    el.textContent = msg;
+  }
+  async function urlBase64ToUint8Array(b64) {
+    const padding = '='.repeat((4 - b64.length % 4) % 4);
+    const base64 = (b64 + padding).replace(/-/g, '+').replace(/_/g, '/');
+    const raw = atob(base64);
+    const out = new Uint8Array(raw.length);
+    for (let i = 0; i < raw.length; i++) out[i] = raw.charCodeAt(i);
+    return out;
+  }
+  async function getVapidKey() {
+    try {
+      const r = await fetch('/.netlify/functions/push-vapid-key');
+      if (r.ok) return (await r.json()).publicKey;
+    } catch (e) {}
+    // Fallback: hardcoded if available in window
+    return window.PROVA_VAPID_PUBLIC_KEY || null;
+  }
+
+  const permBtn = document.getElementById('ps-perm-btn');
+  const subBtn = document.getElementById('ps-sub-btn');
+  const testBtn = document.getElementById('ps-test-btn');
+  const permStatus = document.getElementById('ps-perm-status');
+  const subStatus = document.getElementById('ps-sub-status');
+  const testStatus = document.getElementById('ps-test-status');
+
+  // Init: check current permission
+  if (!('Notification' in window) || !('serviceWorker' in navigator) || !('PushManager' in window)) {
+    setStatus(permStatus, 'err', '❌ Push wird in diesem Browser nicht unterstützt.');
+    permBtn.disabled = true;
+    return;
+  }
+  if (Notification.permission === 'granted') {
+    setStatus(permStatus, 'ok', '✓ Berechtigung bereits erteilt.');
+    subBtn.disabled = false;
+  } else if (Notification.permission === 'denied') {
+    setStatus(permStatus, 'err', '❌ Berechtigung verweigert. Bitte in den Browser-Einstellungen ändern.');
+    permBtn.disabled = true;
+  }
+
+  permBtn.addEventListener('click', async function() {
+    setStatus(permStatus, 'info', 'Browser fragt …');
+    try {
+      const r = await Notification.requestPermission();
+      if (r === 'granted') {
+        setStatus(permStatus, 'ok', '✓ Berechtigung erteilt.');
+        subBtn.disabled = false;
+      } else {
+        setStatus(permStatus, 'err', '❌ Berechtigung nicht erteilt: ' + r);
+      }
+    } catch (e) {
+      setStatus(permStatus, 'err', '❌ Fehler: ' + e.message);
+    }
+  });
+
+  subBtn.addEventListener('click', async function() {
+    setStatus(subStatus, 'info', 'Service-Worker wird registriert …');
+    try {
+      const reg = await navigator.serviceWorker.ready;
+      const vapidKey = await getVapidKey();
+      if (!vapidKey) {
+        setStatus(subStatus, 'err', '❌ VAPID-Public-Key nicht verfügbar (Server-Konfig fehlt).');
+        return;
+      }
+      const sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: await urlBase64ToUint8Array(vapidKey)
+      });
+      const token = localStorage.getItem('prova_auth_token');
+      const r = await fetch('/.netlify/functions/push-subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify(sub.toJSON())
+      });
+      if (r.ok) {
+        setStatus(subStatus, 'ok', '✓ Subscription gespeichert.');
+        testBtn.disabled = false;
+      } else {
+        const text = await r.text();
+        setStatus(subStatus, 'err', '❌ Server-Fehler ' + r.status + ': ' + text);
+      }
+    } catch (e) {
+      setStatus(subStatus, 'err', '❌ ' + e.message);
+    }
+  });
+
+  testBtn.addEventListener('click', async function() {
+    setStatus(testStatus, 'info', 'Test-Push wird versendet …');
+    try {
+      const token = localStorage.getItem('prova_auth_token');
+      const r = await fetch('/.netlify/functions/push-test', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify({ message: 'PROVA Test-Push 🚀' })
+      });
+      if (r.ok) {
+        setStatus(testStatus, 'ok', '✓ Test-Push versendet — sollte in wenigen Sekunden ankommen.');
+      } else {
+        setStatus(testStatus, 'err', '❌ Server-Fehler ' + r.status);
+      }
+    } catch (e) {
+      setStatus(testStatus, 'err', '❌ ' + e.message);
+    }
+  });
+})();
+</script>
+<script src="sw-register.js" defer></script>
+</body>
+</html>
