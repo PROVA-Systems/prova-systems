@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v999.9-mega39-p6-ki-werkzeug-stufen';   // MEGA³⁹ P6 KI-Werkzeug-Stufen S1/S2/S3: lib/ki-werkzeug-stufen.js (bindEditor §407a-500-Char-Enforcement, S2 Diff-Modal Word-Level mit Übernehmen/Ablehnen, S3 nicht-kopierbare Begründungs-Box mit 3-Event-Block + user-select:none, 5 KI-Aufgaben über ki-proxy mit gpt-5.5/praezise via FORCED_HIGH_MODEL_PURPOSES). 15 Tests grün.
+const CACHE_VERSION = 'prova-v999.10-mega39-p9-bescheinigungen-top12';   // MEGA³⁹ P9 Bescheinigungen Top 12 (Sprint 04d): bescheinigungs-logic.js mit 12 Typen + 3 Compliance-Hinweisen (Mängelfreiheit/Schimmelfreiheit/Standsicherheit), AZ-Generator BES-YYYY-NNN via M³⁶ W4.6-Lambda, PDF/DB via M³⁰ bescheinigung-generate. 11/12 Phasen done. 16 Tests grün.
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
