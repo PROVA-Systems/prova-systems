@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v999.2-mega37-vault-migration';   // MEGA³⁷ A+B+C: Admin-Airtable-Out + Templates-SEED-applied (17) + Vault-Migration (Migrations 25+26 live, service_endpoints + vault_helpers, lib/service-endpoints-cache.js + Server-Helper get-make-webhook-url.js mit DB-First/Legacy-Fallback). Marcel-Manual-Doku für Vault-Secrets + ENV-Cleanup. 60+ Tests grün.
+const CACHE_VERSION = 'prova-v999.3-mega39-p1-ki-5.5';   // MEGA³⁹ P1 KI-Modell-Update: gpt-4o-Stack → gpt-5.5/5.5-instant. Edge Function ki-proxy MODEL_API_NAME (praezise/schnell + Legacy-Aliase), PRICE_PER_M_TOKENS für neue Modelle, FORCED_HIGH_MODEL_PURPOSES (Konjunktiv+Halluzin+407a). lib/ki-cost-calc + ki-confidence + ki-anthropic erweitert. 9 Tests grün.
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [

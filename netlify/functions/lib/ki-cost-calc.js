@@ -23,12 +23,13 @@
 'use strict';
 
 const PRICING = {
-  // OpenAI — Aktuell (10.05.2026)
-  'gpt-5.5':       { prompt: 5.00,  completion: 30.00 },
-  'gpt-5.5-pro':   { prompt: 30.00, completion: 180.00 },
-  'gpt-5.4':       { prompt: 2.50,  completion: 15.00 },
-  'gpt-5.4-mini':  { prompt: 0.40,  completion: 1.60 },
-  'gpt-5.4-nano':  { prompt: 0.10,  completion: 0.40 },
+  // OpenAI — Aktuell (M³⁹ P1, Stand 2026-05-08)
+  'gpt-5.5':         { prompt: 5.00,  completion: 30.00 },
+  'gpt-5.5-pro':     { prompt: 30.00, completion: 180.00 },
+  'gpt-5.5-instant': { prompt: 0.80,  completion: 3.20 },  // M³⁹ NEU (released 2026-05-05)
+  'gpt-5.4':         { prompt: 2.50,  completion: 15.00 },
+  'gpt-5.4-mini':    { prompt: 0.40,  completion: 1.60 },
+  'gpt-5.4-nano':    { prompt: 0.10,  completion: 0.40 },
 
   // Anthropic — Aktuell (10.05.2026, Schätzungen — vor Live-Verifikation)
   'claude-opus-4-7':           { prompt: 15.00, completion: 75.00 },

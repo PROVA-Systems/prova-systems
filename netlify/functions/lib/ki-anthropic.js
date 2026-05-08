@@ -45,11 +45,12 @@ const ANTHROPIC_VERSION = '2023-06-01';
 //   gpt-5.4-mini = Latency-Class (mechanisch)           → claude-haiku-4-5-20251001
 const MODEL_MAP = {
   // Aktuelle Modelle (10.05.2026)
-  'gpt-5.5':       'claude-opus-4-7',
-  'gpt-5.5-pro':   'claude-opus-4-7',
-  'gpt-5.4':       'claude-sonnet-4-6',
-  'gpt-5.4-mini':  'claude-haiku-4-5-20251001',
-  'gpt-5.4-nano':  'claude-haiku-4-5-20251001',
+  'gpt-5.5':         'claude-opus-4-7',
+  'gpt-5.5-pro':     'claude-opus-4-7',
+  'gpt-5.5-instant': 'claude-haiku-4-5-20251001',  // M³⁹ NEU
+  'gpt-5.4':         'claude-sonnet-4-6',
+  'gpt-5.4-mini':    'claude-haiku-4-5-20251001',
+  'gpt-5.4-nano':    'claude-haiku-4-5-20251001',
   // Backwards-Compat (deprecated, sicherer Fallback)
   'gpt-4o':        'claude-sonnet-4-6',
   'gpt-4o-mini':   'claude-haiku-4-5-20251001',
