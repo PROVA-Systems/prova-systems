@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v1199-mega39-pre-final';   // MEGA³⁹ Pre-FINAL: 11 von 12 Phasen Code-seitig done (P0+P1+P2+P3+P4+P5+P6+P7+P8+P9+P10), 135 neue Tests grün, 14/18 Acceptance-Punkte grün, 4/18 Marcel-Manual-Pending (Edge-Function-Deploy + Page-Wirings + 9 PDFMonkey-Templates + Tag v1200). KEIN Tag v1200 bis Acceptance N/N.
+const CACHE_VERSION = 'prova-v1201-mega40-p1.1-editor-foundation-schema';   // MEGA⁴⁰ P1.1 Editor-Foundation Schema-Layer: Migration 33 (documents + documents_versions APPLIED via MCP, RLS workspace-isoliert), netlify/functions/document-save.js + document-load.js (3-Wege-System weg_a/b/c, JSONB-Storage, Versions-History pro Save, Workspace-Validation 403). 18 Tests grün. TipTap-UI-Integration in Folge-Session (P1.2).
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
