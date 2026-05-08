@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v1300-mega40-final';   // MEGA⁴⁰ FINAL — Editor & Vorlagen-System: 10/10 Phasen Code-Done, 247 Tests grün, 38 Commits, 3 Migrations APPLIED (33+34+35), 7 Lambdas, 10 Frontend-Libs, 4 HTML-Pages, 5 PROVA-Default-Vorlagen seeded. Volltext-TipTap-Editor + 3-Wege-System (Wizard/Eigene Word-Vorlage/Hybrid mit Locked-Sections) + DOCX-Import (mammoth.js) + Export (HTML/MD/DOCX-XML) + PDF-Browser-Print (IHK-konform A4 Times 25mm) + KI-Backstop S1 + Konjunktiv-II S3 + Bibliothek-Adapter (6 Kategorien) + Vorlagen-System (Use-Count-Tracking). KEIN gpt-4o-Code-Path. §407a + EU-AI-Act-Compliance auto-injiziert bei weg_c. Tag v1300.
+const CACHE_VERSION = 'prova-v1301-mega41-p1-daten-import';   // MEGA⁴¹ P1 Daten-Import: Migration 36 import_logs (workspace+RLS+rollback_token+inserted_ids+24h-TTL, APPLIED via MCP); 3 Lambdas (validate/execute/rollback) mit Atomic-Pattern + Multi-Pass-Insert + AZ-Normalisierung; lib/import-format-detector.js (4 FORMAT_SIGNATURES + Pure-JS CSV/JSON-Parser); lib/aktenzeichen-normalizer.js; lib/import-assistent-supabase.js Bridge zu import-assistent.html (Legacy-UI bleibt parallel). 42 P1-Tests grün, 5 Recherche-Quellen.
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
@@ -109,6 +109,9 @@ const APP_SHELL = [
   '/lib/editor-bibliothek-adapter.js',  // MEGA⁴⁰ P8: Bibliothek-TipTap-Adapter
   '/lib/editor-locked-sections.js',     // MEGA⁴⁰ P9: 4 Compliance-Sektionen (weg_c)
   '/lib/editor-pdf-generator.js',       // MEGA⁴⁰ P9: Browser-Print PDF-Generator IHK
+  '/lib/import-format-detector.js',     // MEGA⁴¹ P1: 4 Format-Signatures + CSV/JSON-Parser
+  '/lib/aktenzeichen-normalizer.js',    // MEGA⁴¹ P1: AZ-Format-Vereinheitlichung
+  '/lib/import-assistent-supabase.js',  // MEGA⁴¹ P1: Bridge zu Backend-Lambdas
   '/editor-demo.html',                  // MEGA⁴⁰ P1.2: Editor-Demo-Page (Pattern A volle Page-Width)
   '/dokument-neu.html',                 // MEGA⁴⁰ P3: Neues-Dokument Entry-Page (Modal-First)
   '/dokument-import.html',              // MEGA⁴⁰ P4: DOCX-Import-Page (Drag&Drop)
