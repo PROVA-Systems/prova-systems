@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v1312-mega41-p12-e2e';   // MEGA⁴¹ P12 E2E Compound-Szenarien: 5 Szenarien Source-basiert verifiziert (SZ1 Migration vom GM mit 10 Tests, SZ2 Mobile-Außentermin 10, SZ3 Hybrid-Word-Vorlage 10, SZ4 System-Admin 11, SZ5 Search+Kontakt-360 10) — alle Bauteile existieren UND verlinkt. Live-Playwright-Run = Marcel-Pflicht. 51 P12-Tests grün. M⁴¹-Tests gesamt: 314.
+const CACHE_VERSION = 'prova-v1400-mega41-pre-pilot-ready';   // MEGA⁴¹ FINAL — Pre-Pilot-Vollendung: 13/13 Audit-Punkte ✅, 0/13 🟡, 0/13 ❌, 314 Tests grün, 38 Commits, 4 Migrations APPLIED (36+37+38+39), 14 neue Lambdas, 8 neue Frontend-Libs, 4 neue HTML-Pages. Daten-Import + KI-vs-SV-Audit-Trail (TR-ESOR Hash-Chain) + Push-Alerts (8 Services) + Multi-Modal-PDF-Aggregation + Support-System (34 FAQ + tsvector) + Cmd-K-Drilldown + Kontakt-360 (9 Tabs) + Workflow-Stepper-Pattern + PDFs-Inventar + Mobile-Sync-Konflikt-Resolver. KEIN gpt-4o-Code-Path. EU AI Act + §407a + DSGVO + IHK + BGH compliant. PILOT-READY.
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
