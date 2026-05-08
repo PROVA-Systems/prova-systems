@@ -1,0 +1,186 @@
+/**
+ * PROVA Document-Mode-Modal (MEGA⁴⁰ P3) — CSS
+ *
+ * Modal mit 3 Karten (Wizard / Eigene / Hybrid), responsive Grid.
+ */
+
+.pdmm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 20px;
+  animation: pdmm-fade-in .15s ease-out;
+}
+
+@keyframes pdmm-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.pdmm-wrap {
+  background: var(--surface, #1c2130);
+  border: 1px solid var(--border2, rgba(255,255,255,0.11));
+  border-radius: 14px;
+  max-width: 1100px;
+  width: 100%;
+  max-height: 92vh;
+  overflow-y: auto;
+  padding: 28px 32px 20px;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  color: var(--text, #eaecf4);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+}
+
+.pdmm-head {
+  text-align: center;
+  margin-bottom: 24px;
+}
+.pdmm-head h2 {
+  font-size: 22px;
+  font-weight: 700;
+  margin: 0 0 6px;
+  letter-spacing: -0.01em;
+}
+.pdmm-sub {
+  font-size: 13.5px;
+  color: var(--text2, #8b93ab);
+  margin: 0;
+}
+
+.pdmm-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 18px;
+}
+@media (max-width: 900px) {
+  .pdmm-grid { grid-template-columns: 1fr; }
+}
+
+.pdmm-card {
+  text-align: left;
+  background: var(--bg3, #161a22);
+  border: 2px solid var(--border, rgba(255,255,255,0.06));
+  border-radius: 10px;
+  padding: 18px;
+  cursor: pointer;
+  font-family: inherit;
+  color: inherit;
+  transition: border-color .15s ease, transform .15s ease, box-shadow .15s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 280px;
+}
+.pdmm-card:hover {
+  border-color: var(--accent, #4f8ef7);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(79,142,247,0.18);
+}
+.pdmm-card:focus-visible {
+  outline: 2px solid var(--accent, #4f8ef7);
+  outline-offset: 2px;
+}
+.pdmm-card--current {
+  border-color: var(--success, #10b981);
+  background: rgba(16,185,129,0.08);
+}
+
+.pdmm-card-icon {
+  font-size: 36px;
+  line-height: 1;
+}
+.pdmm-card-title {
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.pdmm-card-pitch {
+  font-size: 13.5px;
+  color: var(--text2, #8b93ab);
+  font-style: italic;
+}
+.pdmm-card-details {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  flex: 1;
+}
+.pdmm-card-details li {
+  font-size: 12.5px;
+  color: var(--text, #eaecf4);
+  padding: 3px 0 3px 14px;
+  position: relative;
+}
+.pdmm-card-details li::before {
+  content: '✓';
+  position: absolute;
+  left: 0;
+  color: var(--accent, #4f8ef7);
+  font-weight: 700;
+}
+.pdmm-card-best {
+  font-size: 12px;
+  color: var(--text3, #4d5568);
+  border-top: 1px dashed var(--border, rgba(255,255,255,0.06));
+  padding-top: 10px;
+}
+.pdmm-card-best strong {
+  color: var(--text, #eaecf4);
+  font-weight: 600;
+}
+.pdmm-card-action {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--accent, #4f8ef7);
+  text-align: right;
+}
+.pdmm-card-current-badge {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--success, #10b981);
+  text-align: right;
+}
+
+.pdmm-foot {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 12px;
+  border-top: 1px solid var(--border, rgba(255,255,255,0.06));
+}
+.pdmm-cancel {
+  padding: 10px 20px;
+  font-size: 13.5px;
+  font-weight: 600;
+  background: transparent;
+  border: 1px solid var(--border2, rgba(255,255,255,0.11));
+  border-radius: 6px;
+  color: var(--text, #eaecf4);
+  cursor: pointer;
+  font-family: inherit;
+  min-height: 40px;
+}
+.pdmm-cancel:hover {
+  background: var(--surface2, #232a3a);
+  border-color: var(--accent, #4f8ef7);
+}
+
+@media (max-width: 640px) {
+  .pdmm-wrap { padding: 18px 16px; border-radius: 10px; }
+  .pdmm-head h2 { font-size: 18px; }
+  .pdmm-card { min-height: auto; padding: 14px; }
+  .pdmm-card-icon { font-size: 28px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pdmm-overlay, .pdmm-card { animation: none; transition: none; }
+  .pdmm-card:hover { transform: none; }
+}
