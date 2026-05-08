@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v1209-mega40-p8-bibliothek';   // MEGA⁴⁰ P8 Bibliothek-Toolbar: lib/editor-bibliothek-adapter.js — TipTap-Bridge zu M³⁹-Lib, 6 Kategorien (Normen/Bausteine/Floskeln/§-Verweise/Kontakte/Positionen), 6-Tab-Modal + Search-Debounce 250ms, FOOTNOTE_PATTERN auto-detect (DIN/WTA/VOB/JVEG/ZPO/§), insertAtCursor mit cursor-erhalt, Recent-Items via localStorage (max 5, dedup-by-text); '📚 Bib' Toolbar-Button. 19 P8-Tests grün, 224 M⁴⁰-Tests grün total.
+const CACHE_VERSION = 'prova-v1210-mega40-p9-pdf-e2e';   // MEGA⁴⁰ P9 PDF-Generation + E2E (alle 3 Wege): lib/editor-locked-sections.js (4 Compliance-Sektionen Deckblatt/§407a/EU-AI-Act/Unterschrift mit {{Variable}}-Interpolation); lib/editor-pdf-generator.js (Browser-Print Pop-up, IHK-konform DIN A4 25mm Times-New-Roman 11pt, @top-right Aktenzeichen + @bottom-right Seitenzahl, page-break+widows+orphans); '⊟ PDF' Toolbar-Button; weg_c auto-Locked-Sections-Inject vor Print; E2E-Tests alle 3 Wege; Performance <100ms für 30-Section-Doc. 23 P9-Tests grün, 247 M⁴⁰-Tests grün total.
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
@@ -107,6 +107,8 @@ const APP_SHELL = [
   '/lib/docx-export.js',                // MEGA⁴⁰ P5: HTML/MD/DOCX-Export
   '/lib/editor-spell-layer.js',         // MEGA⁴⁰ P6: Spell+Konjunktiv-II Layer
   '/lib/editor-bibliothek-adapter.js',  // MEGA⁴⁰ P8: Bibliothek-TipTap-Adapter
+  '/lib/editor-locked-sections.js',     // MEGA⁴⁰ P9: 4 Compliance-Sektionen (weg_c)
+  '/lib/editor-pdf-generator.js',       // MEGA⁴⁰ P9: Browser-Print PDF-Generator IHK
   '/editor-demo.html',                  // MEGA⁴⁰ P1.2: Editor-Demo-Page (Pattern A volle Page-Width)
   '/dokument-neu.html',                 // MEGA⁴⁰ P3: Neues-Dokument Entry-Page (Modal-First)
   '/dokument-import.html',              // MEGA⁴⁰ P4: DOCX-Import-Page (Drag&Drop)
