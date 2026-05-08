@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v999.3-mega39-p1-ki-5.5';   // MEGA³⁹ P1 KI-Modell-Update: gpt-4o-Stack → gpt-5.5/5.5-instant. Edge Function ki-proxy MODEL_API_NAME (praezise/schnell + Legacy-Aliase), PRICE_PER_M_TOKENS für neue Modelle, FORCED_HIGH_MODEL_PURPOSES (Konjunktiv+Halluzin+407a). lib/ki-cost-calc + ki-confidence + ki-anthropic erweitert. 9 Tests grün.
+const CACHE_VERSION = 'prova-v999.4-mega39-p10-cross-domain-fix';   // MEGA³⁹ P10 Pilot-Blocker: F1 Cross-Domain-Login GEFIXT (Cookie-Adapter .prova-systems.de in lib/supabase-client.js, 30 Tage, SameSite=Lax+Secure, localStorage-Fallback), F2 Index/App-Split VERIFIED (netlify.toml host-conditioned), F3 Diktat-Mode dokumentiert (nicht reproduzierbar im aktuellen Code). 10 Tests grün.
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
