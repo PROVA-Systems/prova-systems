@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v1401-mega42-p1-test-runner-stable';   // MEGA⁴² P1: scripts/run-all-tests.js stable cross-platform runner mit --test-force-exit. 4231/4231 M⁴⁰+M⁴¹ Tests grün in 19s. 32 Pre-M⁴⁰-Legacy-Fails dokumentiert (out-of-scope).
+const CACHE_VERSION = 'prova-v1402-mega42-p2-stepper-bridge';   // MEGA⁴² P1: scripts/run-all-tests.js stable cross-platform runner mit --test-force-exit. 4231/4231 M⁴⁰+M⁴¹ Tests grün in 19s. 32 Pre-M⁴⁰-Legacy-Fails dokumentiert (out-of-scope).
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
@@ -119,6 +119,9 @@ const APP_SHELL = [
   '/kontakt-detail.html',               // MEGA⁴¹ P7: Kontakt-360-View 9 Tabs
   '/lib/wizard-stepper.js',             // MEGA⁴¹ P8: Workflow-Stepper-Pattern-Lib
   '/lib/wizard-stepper.css',            // MEGA⁴¹ P8: Stepper-CSS
+  '/lib/wizard-flow-configs.js',        // MEGA⁴² P2: Flow-Configs A/B/C/D (Source-of-Truth)
+  '/lib/workflow-stepper-bridge.js',    // MEGA⁴² P2: Bridge prova-wizard ↔ wizard-stepper
+  '/lib/workflow-stepper-bridge.css',   // MEGA⁴² P2: Bridge-Stepper-Header-Styles
   '/lib/sync-conflict-resolver.js',     // MEGA⁴¹ P10: Sync-Konflikt-Resolver
   '/lib/offline-sync-status.js',        // MEGA⁴¹ P10: Offline-Sync-Status-Icon
   '/wiederherstellbare-entwuerfe.html', // MEGA⁴¹ P10: Recovery-Page für Drafts
