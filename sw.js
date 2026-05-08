@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v1301-mega41-p1-daten-import';   // MEGA⁴¹ P1 Daten-Import: Migration 36 import_logs (workspace+RLS+rollback_token+inserted_ids+24h-TTL, APPLIED via MCP); 3 Lambdas (validate/execute/rollback) mit Atomic-Pattern + Multi-Pass-Insert + AZ-Normalisierung; lib/import-format-detector.js (4 FORMAT_SIGNATURES + Pure-JS CSV/JSON-Parser); lib/aktenzeichen-normalizer.js; lib/import-assistent-supabase.js Bridge zu import-assistent.html (Legacy-UI bleibt parallel). 42 P1-Tests grün, 5 Recherche-Quellen.
+const CACHE_VERSION = 'prova-v1302-mega41-p2-audit-trail';   // MEGA⁴¹ P2 KI-vs-SV-Audit-Trail: Migration 37 audit_trail-Erweiterung (ENUM audit_source 5 Werte, ki_model + ki_confidence + eu_ai_act_disclosed + original_ki_ref + prev_hash, 4 Indizes, View v_auftrag_eigenleistung_quote, APPLIED via MCP); netlify/functions/lib/audit-source-helper.js (Server SHA256 Hash-Chain TR-ESOR + 3 log-Funktionen); lib/audit-source-tracker.js (Frontend wrapKiContent + EU AI Act Markup data-ai-generated); 2 Lambdas (audit-source-log + auftrag-eigenleistung-quote 50%-Threshold); audit-trail.html Viewer mit 6 Filter + 5 Stats + PDF-Export. 32 P2-Tests grün, 4 Recherche-Quellen (EU AI Act + §407a BGH + TR-ESOR + OECD).
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
@@ -112,6 +112,8 @@ const APP_SHELL = [
   '/lib/import-format-detector.js',     // MEGA⁴¹ P1: 4 Format-Signatures + CSV/JSON-Parser
   '/lib/aktenzeichen-normalizer.js',    // MEGA⁴¹ P1: AZ-Format-Vereinheitlichung
   '/lib/import-assistent-supabase.js',  // MEGA⁴¹ P1: Bridge zu Backend-Lambdas
+  '/lib/audit-source-tracker.js',       // MEGA⁴¹ P2: KI-vs-SV-Frontend-Tracker (EU AI Act)
+  '/audit-trail.html',                  // MEGA⁴¹ P2: Audit-Trail-Viewer-Page
   '/editor-demo.html',                  // MEGA⁴⁰ P1.2: Editor-Demo-Page (Pattern A volle Page-Width)
   '/dokument-neu.html',                 // MEGA⁴⁰ P3: Neues-Dokument Entry-Page (Modal-First)
   '/dokument-import.html',              // MEGA⁴⁰ P4: DOCX-Import-Page (Drag&Drop)
