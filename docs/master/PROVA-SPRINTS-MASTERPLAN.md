@@ -1,4 +1,40 @@
-# PROVA Sprints Masterplan
+# PROVA Sprints Masterplan v3.0 — 100% Komplett
+
+**Stand:** 07.05.2026 (Tag 19) · **Marathon-Closure** ✅
+**Phasen B + C + D + E:** alle DONE
+
+---
+
+## MEGA-Wellen-Sektion (5 Wellen, MEGA³⁰ → MEGA³⁴)
+
+| Welle | Branch | Tag | Items | Tests | Vision-Sprung | Datum |
+|---|---|---|---|---|---|---|
+| MEGA³⁰ | mega30-pilot-blocker-vision-kern | (intern) | 12 | 105 | → 67% | 06.05.2026 |
+| MEGA³¹ | mega31-vollendung-vision-kern | (intern) | 12 | 169 | 67% → 78% | 06.05.2026 |
+| MEGA³² | mega32-flows-bescheinigungen-mobile | v820 | 12 | 115 | 78% → 92% | 07.05.2026 |
+| MEGA³³ | mega33-ui-integration-100-percent | **v900** | 11 | 157 | 92% → 100% | 07.05.2026 |
+| MEGA³⁴ | mega34-final-100-percent | **v950** | 10 | ~120 | 100% Final-Polish | 07.05.2026 |
+
+**Marathon-Statistik:**
+- 5 MEGA-Wellen, ~57 Items, ~660 neue Tests
+- ~600+ Commits über alle Wellen
+- 0 Self-Scoping-Bündelungen ab MEGA³¹
+- Anti-Lib-Only-Regel ab MEGA³³ konsequent
+- 19 Marathon-Tage (Tag 1 = 19.04.2026, Tag 19 = 07.05.2026)
+
+---
+
+## Roadmap-Phasen-Status (alle ✅ DONE)
+
+- **Phase A** Foundation: ✅ DONE (Sprint K-1.0 bis K-1.5)
+- **Phase B** Kerngeschäft: ✅ DONE (Aufträge + Editor + PDFs + Rechnungen)
+- **Phase C** Compliance-Härtung: ✅ DONE (IHK-SVO + EU AI Act + DSGVO)
+- **Phase D** UI-Vollendung: ✅ DONE (4 Flows + 8 Bescheinigungen + Mobile)
+- **Phase E** Pre-Pilot: ✅ DONE (Status-Page + Onboarding-Mails + AVV-Paket + iCal)
+
+---
+
+# (Legacy-Stand vor 03.05.2026)
 
 **Stand:** 03.05.2026 mittag (Tag 9 — Power-Setup MAX done + Founding-Pilot LIVE)
 **Single Source of Truth** — siehe `docs/master/README.md`

@@ -267,6 +267,12 @@ function updateEigenleistung(len) {
   count.style.color = color;
   fill.style.width = pct + '%';
   fill.style.background = color;
+
+  // MEGA³¹ A2: 500-Zeichen-Gate (Vision-Spec) zusätzlich zum 700-Marcel-Soll
+  if (typeof window.ProvaEditorGate !== 'undefined') {
+    var ta2 = document.getElementById('svTextA');
+    if (ta2) window.ProvaEditorGate.updateCounter(ta2.value);
+  }
 }
 
 // §7 Offenlegungstexte
@@ -1432,6 +1438,8 @@ function pruefeNormenVorschlag(text) {
 document.addEventListener('DOMContentLoaded', function() {
   var ta = document.getElementById('svTextA');
   if (ta) {
+    // MEGA³¹ A1: Auto-Fokus auf §6-Editor (Vision-Master Regel 11)
+    setTimeout(function() { try { ta.focus(); } catch (e) {} }, 250);
     ta.addEventListener('input', function() {
       pruefeNormenVorschlag(this.value);
     });
@@ -2615,6 +2623,13 @@ window.speichereUndWeiter = async function() {
   // Dann weiter zur Freigabe
   var recId = localStorage.getItem('prova_current_record_id') || '';
   var az    = localStorage.getItem('prova_letztes_az') || localStorage.getItem('prova_current_az') || '';
+  // MEGA³¹ A2: Editor-Gate-Check + Override-Modal vor Freigabe-Redirect
+  var taText = (document.getElementById('svTextA') || {}).value || '';
+  if (typeof window.ProvaEditorGate !== 'undefined') {
+    var auftragId = localStorage.getItem('prova_current_auftrag_id') || recId;
+    var darfWeiter = await window.ProvaEditorGate.checkOrOverride({ text: taText, auftrag_id: auftragId });
+    if (!darfWeiter) return; // User wählte "Zurück zum Editor"
+  }
   if (recId) window.location.href = 'freigabe.html?id=' + recId;
   else if (az) window.location.href = 'freigabe.html?az=' + encodeURIComponent(az);
   else window.location.href = 'freigabe.html';

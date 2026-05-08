@@ -325,6 +325,26 @@
     selectedType = typeId;
     extractedData = null;
 
+    // MEGA³³ A1: Skip-Logic-UI nach Typ-Auswahl
+    var skipMap = {
+      'beweissicherung':       'beweis',
+      'gegengutachten':        'gegen',
+      'ergaenzungsgutachten':  'ergaenzung',
+      'sanierungsberatung':    'beratung',
+      'kaufberatung':          'beratung',
+      'baubegleitung':         'baubegleitung',
+      'bauabnahme':            'baubegleitung',
+      'wertgutachten':         'wertgutachten',
+      'schiedsgutachten':      'schied',
+      'gerichtsgutachten':     'schaden',
+      'versicherungsgutachten':'schaden',
+      'privatgutachten':       'schaden'
+    };
+    var libTyp = skipMap[typeId] || 'schaden';
+    if (typeof window.applyAuftragstypUI === 'function') {
+      try { window.applyAuftragstypUI(libTyp); } catch(e){}
+    }
+
     // Cards highlighten
     var cards = document.querySelectorAll('.at-card');
     cards.forEach(function(c) {

@@ -81,3 +81,15 @@ test('neuer-fall.html: hat title + lang Attribut', () => {
   assert.match(html, /<title>[^<]*Neuer Fall/);
   assert.match(html, /<html\s+lang="de"/);
 });
+
+// ── MEGA³⁶ W3.1: Draft-Restore Wiring ──
+test('neuer-fall.html: Draft-Restore-Banner-Wiring vorhanden', () => {
+  assert.match(html, /tryRestoreBanner/);
+  assert.match(html, /findActiveDraft/);
+  assert.match(html, /showRestoreBanner/);
+});
+
+test('neuer-fall.html: Draft-Restore setzt sessionStorage-Bridge für Wizard', () => {
+  assert.match(html, /prova_wizard_restore_id/);
+  assert.match(html, /prova_wizard_restore_data/);
+});

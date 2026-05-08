@@ -30,21 +30,31 @@ const OPENAI_API = 'https://api.openai.com/v1/chat/completions';
 const OPENAI_KEY = Deno.env.get('OPENAI_API_KEY') ?? '';
 
 // Modell-Mapping → OpenAI-API-Namen (intern, NIE im Frontend leaken)
+// MEGA³⁹ P1: Migration von gpt-4o-Stack auf gpt-5.5-Stack (gpt-4o deprecated Feb 2026)
 const MODEL_API_NAME: Record<string, string> = {
-    'gpt_4o': 'gpt-4o',
-    'gpt_4o_mini': 'gpt-4o-mini',
-    'gpt_4_turbo': 'gpt-4-turbo'
+    // Aktuelle Namen
+    'praezise':       'gpt-5.5',
+    'schnell':        'gpt-5.5-instant',
+    'gpt_5_5':        'gpt-5.5',
+    'gpt_5_5_instant':'gpt-5.5-instant',
+    // Legacy-Aliase (Auto-Migration)
+    'gpt_4o':         'gpt-5.5',           // ehem. gpt-4o
+    'gpt_4o_mini':    'gpt-5.5-instant',   // ehem. gpt-4o-mini
+    'gpt_4_turbo':    'gpt-5.5'            // ehem. gpt-4-turbo
 };
 
-// Token-Preise pro 1M Tokens (Stand 2026-04, EUR ungefähr)
+// Token-Preise pro 1M Tokens (Stand 2026-05, EUR ungefähr)
 const PRICE_PER_M_TOKENS: Record<string, { in: number; out: number }> = {
-    'gpt_4o':       { in: 2.50,  out: 10.00 },
-    'gpt_4o_mini':  { in: 0.15,  out: 0.60  },
-    'gpt_4_turbo':  { in: 10.00, out: 30.00 }
+    'gpt-5.5':         { in: 2.50,  out: 10.00 },
+    'gpt-5.5-instant': { in: 0.15,  out: 0.60  },
+    // Legacy (für historische ki_protokoll-Einträge)
+    'gpt-4o':          { in: 2.50,  out: 10.00 },
+    'gpt-4o-mini':     { in: 0.15,  out: 0.60  },
+    'gpt-4-turbo':     { in: 10.00, out: 30.00 }
 };
 
-// Konjunktiv-Korrektur PFLICHT GPT-4o (CLAUDE.md Regel)
-const FORCED_GPT_4O_PURPOSES = new Set(['konjunktiv_korrektur']);
+// Konjunktiv-Korrektur: ehem. gpt-4o-Pflicht → jetzt höchstes Modell gpt-5.5
+const FORCED_HIGH_MODEL_PURPOSES = new Set(['konjunktiv_korrektur', 'halluzinations_check', '407a_konsistenz']);
 
 interface PseudoMap {
     [token: string]: string;          // [AZ-1] -> 'SCH-2026-001'
@@ -159,8 +169,10 @@ async function callOpenAI(model: string, prompt: string, system: string, maxToke
     };
 }
 
-function calcCostEur(model: string, tokensIn: number, tokensOut: number): number {
-    const p = PRICE_PER_M_TOKENS[model] ?? PRICE_PER_M_TOKENS['gpt_4o_mini'];
+function calcCostEur(modelOrApiName: string, tokensIn: number, tokensOut: number): number {
+    // M³⁹ P1: lookup by both internal name (gpt_4o_mini) AND API-name (gpt-5.5-instant)
+    const apiName = MODEL_API_NAME[modelOrApiName] ?? modelOrApiName;
+    const p = PRICE_PER_M_TOKENS[apiName] ?? PRICE_PER_M_TOKENS['gpt-5.5-instant'];
     return (tokensIn * p.in + tokensOut * p.out) / 1_000_000;
 }
 
@@ -180,8 +192,9 @@ const handler = async (req: Request): Promise<Response> => {
     if (!body.prompt) throw new HttpError('prompt required', 400);
 
     const purpose = body.purpose ?? 'sonstiges';
-    let model = body.model ?? 'gpt_4o_mini';
-    if (FORCED_GPT_4O_PURPOSES.has(purpose)) model = 'gpt_4o';
+    // MEGA³⁹ P1: Default = 'schnell' (gpt-5.5-instant); High-Trust-Tasks → 'praezise'
+    let model = body.model ?? 'schnell';
+    if (FORCED_HIGH_MODEL_PURPOSES.has(purpose)) model = 'praezise';
     const apiName = MODEL_API_NAME[model];
     if (!apiName) throw new HttpError(`Unknown model: ${model}`, 400);
 

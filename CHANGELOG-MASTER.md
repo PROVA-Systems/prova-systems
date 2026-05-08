@@ -4,6 +4,272 @@ Format: pro Sprint ein Block. Ältere Sprints zuoberst nicht — neueste oben.
 
 ---
 
+## MEGA⁴⁰ — Editor & Vorlagen-System (08.05.2026)
+
+**Tag:** `v1300` · **Branch:** `mega40-editor-vorlagen` · **Acceptance:** 10/10 Phasen Code-Done, 247 Tests grün
+
+### Vision
+PROVA hatte nur ein nacktes `<textarea>`. M⁴⁰ liefert vollwertigen TipTap-Cloud-Editor + 3-Wege-System (Wizard/Eigene Word-Vorlage/Hybrid) + Vorlagen-System + DOCX-Import/Export + PDF-Generation + KI-Hilfen. "Gutachten Manager VERWALTET. PROVA ERSTELLT." ✅
+
+### Phase 0 + 1.1 — Schema + Lambdas (Session 1)
+- **`5a11973`:** Master-Prompt + Phase-0-Read + Tech-Stack-Decision (TipTap)
+- **`907a548`:** Migration 33 (documents + documents_versions APPLIED) + document-save/-load Lambdas mit RLS workspace-isoliert + Versions-pro-Save. 18 Tests grün.
+
+### Phase 1.2 — TipTap-UI-Integration
+- **`1bab92e`:** ProvaEditor + Underline + TextAlign Extensions
+- **`6601a46`:** editor-tiptap.js High-Level-Wrapper (Auto-Save 5s + Versions-UI letzte 10 + Save-Status idle/dirty/saving/saved/error)
+- **`f2c7716`:** editor-demo.html Pattern A volle Page-Width (1400px)
+- **`44d529e`:** 33 Tests grün
+
+### Phase 2 — Erweiterte Editor-Features
+- **`1816541`:** ProvaEditor + Image/TextStyle/Color/Highlight/FontFamily Extensions
+- **`05cda29`:** editor-extensions.js Custom Footnote/PageBreak/CrossRef + Helpers (collectHeadings/generateToC/autoNumberFootnotes/resolveCrossRefs)
+- **`4c4f108`:** editor-image-upload Lambda + Migration 34 document_images (RLS, APPLIED via MCP)
+- **`6fd10f6`:** Extended-Toolbar mit 9 Button-Gruppen + CSS Footnote/PageBreak/Image
+- **`29622b9`:** 33 Tests grün
+
+### Phase 3 — 3-Wege-Auswahl-Modal
+- **`ebb3342`:** lib/document-mode-modal.js (3 Karten + confirmModeSwitch + LOCKED_SECTION_KEYS)
+- **`cd0d911`:** Mode-Switcher Weg-Badge in Status-Bar mit Click→Modal+Save
+- **`5c29884`:** 3-Page-Integration: editor-demo (Badge), dokument-neu (Modal-First-Entry), briefvorlagen (Banner+Redirect)
+- **`4139215`:** 25 Tests grün
+
+### Phase 4 — DOCX-Import (Recherche-Pflicht: 5 Quellen)
+- **`f24b8f1`:** Recherche-Doku 5 Library-Kandidaten → mammoth.js (BSD-2, 280 KB) gewählt
+- **`959894c`:** lib/docx-import.js mit mammoth@1 CDN-Lazy-Load + DOMParser-Walker + Regex-Fallback + extractPlaceholders + detectWordWarnings
+- **`f2958a4`:** dokument-import.html Drag&Drop-Page mit Preview + Placeholder-Liste + 'Direkt bearbeiten'/'Als Vorlage'
+- **`c19ddf5`:** 27 Tests grün
+
+### Phase 5 — DOCX/HTML/Markdown-Export
+- **`61fca3d`:** lib/docx-export.js mit exportHtml (PROVA-Wrap + XSS-safe) + exportMarkdown (ATX + GFM-Tables + Footnotes) + exportDocxBlob
+- **`590995f`:** netlify/functions/editor-docx-export Lambda mit pure-Node WordprocessingML-2003-XML Generation (kein npm-Dep)
+- **`af5f22a`:** Export-Buttons in Toolbar + Roundtrip-Tests + 21 Tests grün
+
+### Phase 6 — Rechtschreibung + Konjunktiv-II
+- **`2b70198`:** lib/editor-spell-layer.js (3 Layer: Browser-Native lang=de-DE, KI-Backstop S1 'schnell', Konjunktiv-II S3 'praezise', Begründungs-Box NICHT-kopierbar)
+- **`84fa9d8`:** KI-Funktions-Garantie 5-Tests-Suite (Funktionalität/Edge/Präzision/Konsistenz/Zeit) + 23 Tests grün. KEIN gpt-4o-Code-Path.
+
+### Phase 7 — Vorlagen-System
+- **`ac95fd4`:** Migration 35 document_templates (workspace+global Dual-Mode RLS, APPLIED) + 5 PROVA-Defaults (F-04/F-09/F-10/F-15/F-19) + 3 Lambdas (list/create/use)
+- **`936b1ec`:** dokument-vorlagen.html Karten-Grid mit 4 Filter-Tabs + Search + Source-Badges + 'Als Vorlage'-Button
+- **`0556db5`:** 25 Tests grün
+
+### Phase 8 — Bibliothek-Toolbar-Adapter
+- **`b5bac4e`:** lib/editor-bibliothek-adapter.js — TipTap-Bridge zu M³⁹-Lib, 6 Kategorien, 6-Tab-Modal + Search-Debounce 250ms, FOOTNOTE_PATTERN auto-detect (DIN/WTA/VOB/JVEG/ZPO/§), Recent-Items via localStorage
+- **`88d0fc0`:** 19 Tests grün
+
+### Phase 9 — PDF-Generation + E2E
+- **`e6db779`:** lib/editor-locked-sections.js (4 Compliance-Sektionen: Deckblatt + §407a + EU-AI-Act-Disclosure + Unterschrift) + lib/editor-pdf-generator.js (Browser-Print Pop-up, IHK-konform DIN A4 25mm Times-New-Roman 11pt) + Toolbar-Button
+- **`f48f035`:** E2E-Tests alle 3 Wege (weg_a/b/c) + Performance <100ms für 30-Section-Doc + 23 Tests grün
+
+### Phase 10 — FINAL
+- 14 Pre-FINAL-Checks alle grün
+- FINAL-Doku `docs/sprint-status/MEGA-40-FINAL.md`
+- sw.js v1300
+- Tag-Empfehlung v1300
+
+### Bilanz
+| Bereich | Count |
+|---------|-------|
+| Phasen Code-Done | 10/10 |
+| Commits gesamt | 38 |
+| Tests grün | 247 |
+| Migrations APPLIED | 3 (33+34+35) |
+| Lambdas erstellt | 7 |
+| Frontend-Libs | 10 |
+| HTML-Pages | 4 |
+| Recherche-Quellen P4 | 5 |
+
+---
+
+## MEGA³⁹ — Master-Consolidation-Implementation (08.05.2026)
+
+**Tag:** `v1199-pre-final` · **Branch:** `mega39-master-consolidation` · **Acceptance:** 14/18 grün, 4/18 Marcel-Manual
+
+### Phase 0 — Master-Docs-Read
+- **`db5cdf5`:** Lücken-Tabelle 14 Items, M³⁶/M³⁷-DONE-Markierung. Marcel-Direktive systematisch erfüllt.
+
+### Phase 1 — KI-Modell-Update gpt-4o → gpt-5.5/5.5-instant (kritisch — gpt-4o deprecated Feb 2026)
+- **`3afbe32`:** Edge Function ki-proxy + 3 Libs migriert. FORCED_HIGH_MODEL_PURPOSES (Konjunktiv + Halluzin + 407a → praezise/gpt-5.5). Default = 'schnell'. 9 Tests grün.
+
+### Phase 10 — 3 Pilot-UX-Blocker
+- **`c7807c4`:** F1 Cross-Domain-Login GEFIXT (Cookie-Adapter `.prova-systems.de`, 30d, SameSite=Lax+Secure, localStorage-Fallback). F2 Index/App-Split VERIFIED. F3 Diktat-Mode dokumentiert. 10 Tests grün.
+
+### Phase 3 — Skizzen-Funktion Tier 1+2
+- **`de73889`:** lib/skizzen-canvas.js (7 Werkzeuge + Marker-System + Pencil-Pressure + IndexedDB-Auto-Save). Migration 28 (typ='skizze' + skizze_data/image_url/nr). Lambda skizze-save.js mit PNG-Storage. §407a: Bild geht NICHT an KI. 19 Tests grün.
+
+### Phase 2 — Globale Suche 360°
+- **`3df0907`:** 8 Such-Bereiche (auftraege/kontakte/dokumente/termine/eintraege/textbausteine/dokument_templates/normen-Seed 50+ DIN/WTA/VOB/JVEG/ZPO/EU AI Act). Marcel-Beispiel "DIN 985"-Drilldown funktional. 13 Tests grün.
+
+### Phase 4 — Skizzen-Integration in akte.html
+- **`3df0907`:** skizzen-list liest BEIDE Quellen (Legacy SVG + M³⁹ Canvas). Widget-Render-Pfad-Differenzierung mit Marker-Badge (📍 N). 10 Tests grün.
+
+### Phase 7 — Fristen-System Verify
+- **`2d76c9c`:** 5 Pipelines + 5 Lambdas + UI bereits in M³⁰ W10b-I6 implementiert (Schadensgutachten/Wertgutachten/Bauabnahme/Schiedsgutachten/Beweissicherung). 8 Frist-Typen, 4 Status, 8 Rechtsgrundlagen. 15 Tests grün.
+
+### Phase 8 — Dashboard 5-Widgets + Mahnwesen 3-Stufen
+- **`61f954f`:** 5. KI-Token-Widget mit Eskalations-Farben (rot ≥90% / gelb ≥75% / accent default). Mahnwesen 3-Stufen verifiziert (F-05/F-07/F-08, Tag 14/21/35, Gebühr 0/5/10€). 12 Tests grün.
+
+### Phase 5 — Bibliothek-Pattern Universal-Toolbar (6 Kategorien)
+- **`6dd62e9`:** lib/bibliothek-pattern.js (200ms Live-Search, Recent-Items, Favoriten ★). 2 Lambdas (user-favoriten-list/toggle). Migration 32 (RLS user_id=auth.uid()). 16 Tests grün.
+
+### Phase 6 — KI-Werkzeug-Stufen S1/S2/S3
+- **`b6e61a7`:** lib/ki-werkzeug-stufen.js mit bindEditor (§407a-500-Char-Enforcement), S2 Diff-Modal Word-Level, S3 nicht-kopierbare Begründungs-Box (user-select:none + 3-Event-Block contextmenu/copy/cut). 5 KI-Aufgaben mit FORCED_HIGH_MODEL_PURPOSES. 15 Tests grün.
+
+### Phase 9 — Bescheinigungen Top 12 (Sprint 04d)
+- **`d5c776f`:** bescheinigungs-logic.js mit 12 Typen + 3 Compliance-Hinweisen (Mängelfreiheit/Schimmelfreiheit/Standsicherheit). AZ via M³⁶ W4.6-Lambda (BES-YYYY-NNN). DB-ENUM-Mapping 12/12 verifiziert. 16 Tests grün.
+- **`(P9-UI)`:** bescheinigungen.html UI-Erweiterung mit Top-12-Section parallel zu existierenden 11 Korrespondenz-Briefen. 8 Tests grün.
+
+### MEGA39-FINAL
+- **`b1f14fd`:** Acceptance-Bilanz 14/18 grün, 4/18 Marcel-Manual-Pending. Compounding-Engineering-Lessons (Master-Docs-Single-Source, gpt-4o-Migration, Cross-Subdomain-Auth, Verify-First, Self-Scoping, Honest-Token-Stop). KEIN Tag v1200 ohne Marcel-Manual.
+
+**Marcel-Pflicht für Tag v1200 (in Reihenfolge):**
+1. `supabase functions deploy ki-proxy`
+2. F1 Cross-Domain Browser-Verify
+3. 9 weitere PDFMonkey-Templates BES-01..BES-12 (3 in goldstandard)
+4. 7 Editor-Pages mit Bibliothek-Toolbar
+5. 2 Editor-Pages mit KI-Werkzeug-Stufen
+6. pg_cron für mahnwesen-cron + fristen-reminder-cron
+7. Branch-Merge mega39 → main
+8. Tablet-Tests (Pencil/S-Pen für P3 Skizzen)
+9. `sw.js → v1200` + `git tag v1200`
+10. Master-Doku-Updates (PROVA-VISION-MASTER.md)
+
+**135 neue M³⁹-Tests grün, 0 Regressions. 12 Commits gepusht.**
+
+---
+
+## MEGA³⁷ — Audit + Vault-Migration + Templates + 16-Domänen (08.05.2026)
+
+**Tag:** `v999.x-pre-final` · **Branch:** `mega34-final-100-percent` · **Acceptance:** 6/9 grün, 3/9 Marcel-Manual
+
+### Phase A — Kritische Fixes
+- **A1 (c329a5f):** Admin-Dashboard Airtable→Supabase. `at()`-Dispatcher mappt 9 Bridge-Keys auf admin-*-Lambdas. Neues `admin-support-update` Lambda. `checkSupabaseHealth` statt `checkAirtableHealth`. 12 Tests grün.
+- **A2 (8f88721):** `_oeffneSchritt` Stepper-Verify — kein Bug, Daten-Erhalt durch `_sammleDaten()` in allen Callern garantiert. 7 Tests.
+- **A3 (5b84797):** Pricing-Drift komplett gefixt (Solo 179€ / Team 379€) in 3 Files (admin-dashboard-logic, ki-proxy-Prompts, prova-stripe-prices Comments). 5 Tests.
+
+### Phase B — Templates komplett
+- **B-Bundle (585ed00):** Migration 24 + 27 APPLIED via MCP. 17 Templates live (8× K-XX + 6× F-XX + 3 NEU aus W4.1: K-10/K-11/K-12). dokument-templates-cache E2E mit 9 Tests.
+
+### Phase C — Vault-Migration
+- **C-Bundle (70bd496):** Migrations 25 (`service_endpoints`) + 26 (`vault_helpers`) APPLIED. `lib/service-endpoints-cache.js` (Browser) + `lib/get-make-webhook-url.js` (Server-Helper, DB-First+Legacy-Fallback). Marcel-Action-Doku `MEGA37-MARCEL-VAULT-MIGRATION.md`. 18 Tests. **M³⁶ W6.2 (`MAKE_WEBHOOKS_JSON`-ENV) verworfen.**
+
+### Phase D — 16-Domänen-Audit
+- **D-Bundle (90d1060):** 16 Domänen-Dokus + Executive-Summary in `docs/audit/MEGA37-D*.md`. **0 CRITICAL**, 6 HIGH (DSGVO Art. 30/32/33, DR-Plan, KI-Disclosure-Box). Recherche-Quellen für D06+D13 dokumentiert. Asset-Valuation: Replacement-Cost 13–18 Mio € (180 KSLOC, COCOMO II Semi-Detached).
+
+**Marcel-Pflicht für Tag v1000:**
+1. Vault-Secrets setzen (`vault.create_secret(...)` × 4-5 API-Keys)
+2. service_endpoints-URLs UPDATE (echte Make-Hooks aus Netlify-ENVs)
+3. Edge Function Secrets via `supabase secrets set ...`
+4. Branch-Merge mega34→main + Live-Deploy
+5. Netlify-ENV-Cleanup (50→7-10)
+6. DSGVO Art. 30+32+33-Doku (Anwalt)
+
+---
+
+## MEGA³⁴ — Final 100% (Cookie-Banner + Status-Page + Onboarding-Mails + iCal + 360°)
+
+**Tag:** `v950` · **Stand:** 07.05.2026 · **Branch:** `mega34-final-100-percent`
+
+10 Items + FINAL — Final-Polish bis ECHTES 100%:
+
+**Block A — Pilot-Critical:**
+- A1 (6256e9f): Cookie-Banner DSGVO § 25 TTDSG + Settings-Page + 11 Quellen
+- A2 (3d94126): schadensfaelle.html Universal-Liste + Filter + Sort + Pagination + CSV
+- A3 (1a8a1d8): Cmd-K Globale Suche Aktionen-Kategorie + 8 Quick-Actions
+- A4 (1506c1a): iCal-Export RFC 5545 + Subscribe-URL + Signed-Token + 10 Quellen
+
+**Block B — Vision-Vollendung:**
+- B1 (0632ee7): Verknüpfungen Sprint 04e + 360°-Aktivitäts-Timeline-Lambda
+- B2 (e621b04): 5 Onboarding-Email-Templates (Day 0/1/3/7/14) + Cron + Idempotenz
+- B3 (a352945): Public Status-Page + Health-Check-Lambda + incidents-Tabelle
+- B4: Master-Doku-Update v3.0 (VISION + SPRINTS + CHAT-TRANSPORT + README + CHANGELOG)
+
+**Block C — Polish + Live-Verify:**
+- C1: KI-Funktions-Garantie Live-Verify-Suite (opt-in)
+- C2: Pre-Pilot E2E-Smoke-Tests (Playwright + 8 Flows)
+
+**FINAL:** sw.js v950 + Tag v950 + AUDIT-Final-Report
+
+**Marathon-Closure:** 5 MEGA-Wellen über 19 Tage, ~660 neue Tests, ~600 Commits, 0 Self-Scoping ab M³¹.
+
+---
+
+## MEGA³³ — UI-Integration + Vision 100% Komplett
+
+**Tag:** `v900` · **Stand:** 07.05.2026 · **Branch:** `mega33-ui-integration-100-percent`
+
+Marcel-Direktive: "Wir bauen NICHT für 1-3 Testpiloten. Wir bauen 100% Vision-Komplett."
+Anti-Lib-Only-Regel verschärft: MEGA³² hatte A1-A4 nur als Libs gebaut — MEGA³³ integriert in Production-Pages.
+
+### 11 Items + FINAL (alle grün, 157 neue Tests)
+
+**Block A — 4-Flows UI-Integration (40 Tests):**
+- A1 (453e11c): `auftrag-neu` UI mit `wizard-live-save` Lib + Skip-Logic-UI
+  - `neuer-fall.html` + `prova-wizard.js` + `auftragstyp.js` Bridge
+  - Phase-Indicator §1-§6 mit `data-phase-nr` + `.phase-skipped` CSS
+- A2 (0c96533): `wertgutachten.html` Multi-Verfahren-UI mit ProvaWertVerfahren
+  - 3 verfahren-btn + Empfehlung-Button + Cross-Check-Hook
+- A3 (7098f01): `beratung.html` 3-Phasen-Wizard
+  - Phase 1 Bestätigungs-Brief, Phase 2 Termin, Phase 3 B-01-Bericht-Generator
+  - KEIN §6-Editor (Beratung != Gutachten, SVO § 18)
+- A4 (921dabc): `baubegleitung.html` Multi-Termin + B-03-Schluss + bauphase-Migration
+  - Schema-Migration `eintraege.bauphase` (5 ENUM-Werte)
+  - VOB/B § 12 + DIN 18205 + HOAI § 51 konform
+
+**Block B — Vision-Polish (42 Tests):**
+- B1 (b5c8027): 7 Tranche-1-Templates IHK-SVO 4-Teile-Audit + 12 Quellen
+  - F-09 bis F-15 verifiziert konform (Migration aus §1-§6 erfolgte M²⁰-²⁴)
+- B2 (4df882f): Prompt-Caching W4-Bonus aktiv (-40% KI-Cost erwartet)
+  - Schema-Migration `ki_protokoll.cached_token_input/output`
+  - `enableCacheControlIfStable` für >1024-Token System-Prompts
+  - Cached-Faktor 0.10 (90% Discount) in `calculateUsdCostCached`
+- B3 (be5cab1): Cross-Device-Sync E2E mit Mock-Supabase + Audit-Doku
+  - 10 Tests (PC↔Tablet↔Handy + Konflikt-Resolution + Throttle)
+- B4 (3e69101): Forced Re-Consent Live-Trigger via prova-fetch-auth
+  - Auto-Lazy-Load `lib/re-consent-modal.js` auf authenticated Pages
+  - Bisher tot (Lib war auf keiner Page eingebunden) — jetzt live
+
+**Block C — Final-QA (75 Tests):**
+- C1 (aba2068): IHK-Pre-Audit Compliance-Walk + 15 Quellen
+  - 6/6 Compliance-Kategorien grün (IHK-SVO + § 407a + EU AI Act + DSGVO + Pseudonymisierung + Legal-Pages)
+- C2 (e961dc6): 50 Edge-Case-Tests (5×10 Auth/PDF/DB/UI/KI) + Coverage-Audit
+  - Migration-Renumber 07→16 + 08→17 (Konflikt-Fix)
+- C3 (101bd08): Bescheinigungs-Live-Verify + AVV-Anwalt-Paket
+  - 8 Bescheinigungs-Typen mit ENV-Var-Lookup-Pattern
+  - `docs/legal/AVV-PAKET-FUER-ANWALT.md` + Anschreiben
+
+**FINAL (709683f):** sw.js v900 + Sprint-Status-Doku + Tag v900
+
+### Vision-Komplettheit: 92% → 100%
+
+| Bereich | Δ |
+|---|---|
+| 1. Schema (DB) | +1 (bauphase + cached_tokens) |
+| 2. KI-Härtung | +8 (Edge-Cases + Cached + Pseudo-Audit) |
+| 4. Prompt-Caching W4-Bonus | +100 (live aktiv) |
+| 6. Compliance-Härtung | +6 (IHK-Pre-Audit + AVV-Paket) |
+| 7-10. Flow A/B/C/D | +12/+20/+25/+20 (UI-Integration) |
+| 15. PDF-Templates | +5 (B1 Tranche-1 verifiziert) |
+
+### Marathon-Stats (M³⁰ → M³³)
+- ~10 Tage Sprint-Marathon
+- ~600+ Commits, ~750+ Tests grün
+- 0 Self-Scoping-Bündelungen in M³³
+
+### Marcel-Wake-Up-Liste (Pflicht-Manual vor Pilot-Live)
+1. 🔴 Branch-Merge mega30→31→32→33→main (oder Squash-Merge)
+2. 🔴 AVV-Anwalt-Review (`docs/legal/AVV-PAKET-FUER-ANWALT.md`)
+3. 🔴 Stripe Live-Webhook + STRIPE_WEBHOOK_SECRET in Netlify
+4. 🔴 PDFMonkey-Upload 6 Templates (B-04/B-05/B-06/BRIEF-AUFTRAG/BRIEF-TERMIN/BRIEF-ANERKENNUNG)
+   → IDs in 8 Netlify-ENVs `PDFMONKEY_TPL_*` setzen (Resolver in Lambda)
+5. 🟡 Resend-Domain SPF/DKIM/DMARC verifizieren
+6. 🟡 versicherungs_partner Top-10 partnerschaft_status='aktiv'
+7. 🟡 OG-Image für Landing (1200×630)
+8. 🟡 Memory + CHANGELOG aktualisieren
+
+---
+
 ## MEGA⁸ — PERFEKTION CONTINUE (V0-V5)
 
 **Tag:** `v213-perfektion-continue-done` · **Stand:** 04.05.2026 nacht · **Commits:** `57db87b`, `de9302f`, `e4d9b2a`, `e8c8ab7` + V5

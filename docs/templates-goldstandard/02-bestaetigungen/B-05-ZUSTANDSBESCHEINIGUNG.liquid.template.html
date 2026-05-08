@@ -1,0 +1,59 @@
+<!--
+  PROVA Zustands-Bescheinigung v1.0 (MEGA³² B1)
+  Dokumentiert Ist-Zustand zum Stichtag (oft vor Übergabe / Eigentumswechsel).
+-->
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>Zustands-Bescheinigung — {{ aktenzeichen }}</title>
+<style>body{font-family:'Inter',system-ui,sans-serif;color:#1f2937;max-width:720px;margin:24px auto;padding:24px;line-height:1.6;}h1{color:#1e3a8a;}.law{font-family:'JetBrains Mono',monospace;color:#4f8ef7;font-size:12px;}.signature-line{border-bottom:1px solid #1f2937;height:12mm;margin:6mm 0;}</style>
+</head>
+<body>
+
+<h1>Zustands-Bescheinigung</h1>
+<p class="law">Bauwerks-Dokumentation zum Stichtag</p>
+
+<p>Hiermit bescheinigt der Unterzeichnende als öffentlich bestellter und vereidigter
+Sachverständiger den Zustand des nachstehend beschriebenen Objekts.</p>
+
+<h2>Objekt</h2>
+<p>{{ projekt_name }}<br>{{ projekt_adresse }}</p>
+
+<h2>Begehungs-Stichtag</h2>
+<p>{{ begehungs_datum }}</p>
+
+<h2>Allgemeiner Zustand</h2>
+<p>{{ allgemeiner_zustand }}</p>
+
+<h2>Strukturbefund</h2>
+<p>{{ strukturbefund }}</p>
+
+<h2>Bauteilspezifischer Zustand</h2>
+{% if bauteile.size > 0 %}
+<table style="width:100%;border-collapse:collapse;font-size:9pt;">
+<thead><tr><th style="text-align:left;padding:4px;">Bauteil</th><th style="text-align:left;padding:4px;">Zustand</th><th style="text-align:left;padding:4px;">Foto</th></tr></thead>
+<tbody>
+{% for b in bauteile %}
+<tr><td>{{ b.name }}</td><td>{{ b.zustand }}</td><td>{{ b.foto_ref }}</td></tr>
+{% endfor %}
+</tbody></table>
+{% endif %}
+
+<h2>Hinweise + Empfehlungen</h2>
+<p>{{ hinweise }}</p>
+
+<p style="font-size:11px;color:#6b7280;">
+Diese Zustands-Bescheinigung ist eine Momentaufnahme zum o.g. Stichtag.
+KEIN Gutachten nach § 407a ZPO. Verborgene Mängel können trotz sorgfältiger
+Inspektion nicht ausgeschlossen werden.
+</p>
+
+<div style="margin-top:30px;">
+  <p>{{ unterschrift_ort }}, den {{ unterschrift_datum }}</p>
+  <div class="signature-line"></div>
+  <p style="font-size:11px;color:#6b7280;">{{ sv_name }}, ö.b.u.v. SV {{ sv_sachgebiet }}</p>
+</div>
+
+</body>
+</html>

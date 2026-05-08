@@ -14,7 +14,9 @@ try {
 }
 
 module.exports = defineConfig({
-  testDir: './tests',
+  // MEGA³⁴ C2: E2E-Smoke-Tests in tests/e2e/*.e2e.js
+  testDir: './tests/e2e',
+  testMatch: /.*\.e2e\.js$/,
   timeout: 60 * 1000,
   expect: { timeout: 10 * 1000 },
 
@@ -29,7 +31,7 @@ module.exports = defineConfig({
   ],
 
   use: {
-    baseURL: 'https://prova-systems.de',
+    baseURL: process.env.E2E_BASE_URL || 'https://prova-systems.de',
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
@@ -45,5 +47,9 @@ module.exports = defineConfig({
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
     },
+    {
+      name: 'mobile-safari',
+      use: { ...devices['iPhone 14 Pro'] }
+    }
   ],
 });

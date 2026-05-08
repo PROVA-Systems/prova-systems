@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PROVA Systems Status</title>
+<meta name="description" content="Live-Status aller PROVA-Systems-Services. 30-Tage-Uptime-Übersicht.">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',system-ui,sans-serif;background:#0b0d11;color:#eaecf4;min-height:100vh;line-height:1.55;}
+.ps-wrap{max-width:980px;margin:0 auto;padding:48px 20px;}
+.ps-hero{text-align:center;padding:32px 20px;background:linear-gradient(135deg,#10b981,#059669);border-radius:14px;margin-bottom:32px;}
+.ps-hero.degraded{background:linear-gradient(135deg,#f59e0b,#d97706);}
+.ps-hero.outage{background:linear-gradient(135deg,#ef4444,#dc2626);}
+.ps-hero h1{font-size:24px;font-weight:800;color:#fff;margin-bottom:6px;}
+.ps-hero p{color:rgba(255,255,255,.9);font-size:14px;}
+.ps-grid{display:grid;grid-template-columns:1fr;gap:12px;margin-bottom:32px;}
+.ps-card{background:#1c2130;border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:16px;display:flex;align-items:center;justify-content:space-between;}
+.ps-svc{font-weight:600;font-size:14px;}
+.ps-status{display:inline-flex;align-items:center;gap:8px;font-size:12px;font-weight:700;}
+.ps-dot{width:10px;height:10px;border-radius:50%;}
+.ps-dot.green{background:#10b981;}
+.ps-dot.yellow{background:#f59e0b;}
+.ps-dot.red{background:#ef4444;}
+.ps-uptime{display:flex;gap:2px;flex-wrap:wrap;margin-top:8px;}
+.ps-day{width:8px;height:18px;border-radius:2px;background:rgba(255,255,255,.1);}
+.ps-day.up{background:#10b981;}
+.ps-day.degraded{background:#f59e0b;}
+.ps-day.down{background:#ef4444;}
+.ps-section-title{font-size:14px;font-weight:700;color:#8b93ab;margin:32px 0 12px;text-transform:uppercase;letter-spacing:.06em;}
+.ps-incidents{background:#1c2130;border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:18px;}
+.ps-incident{padding:10px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:13px;}
+.ps-incident:last-child{border:none;}
+.ps-meta{font-size:11px;color:#4d5568;text-align:center;margin-top:24px;}
+</style>
+</head>
+<body>
+<main class="ps-wrap">
+  <div class="ps-hero" id="ps-hero">
+    <h1>🟢 All Systems Operational</h1>
+    <p>Alle PROVA-Services laufen normal · Aktualisiert alle 5 Min</p>
+  </div>
+
+  <div class="ps-section-title">Services</div>
+  <div class="ps-grid" id="ps-services">
+    <!-- Cards werden via JS gefüllt -->
+  </div>
+
+  <div class="ps-section-title">Recent Incidents (letzte 90 Tage)</div>
+  <div class="ps-incidents" id="ps-incidents">
+    <em style="color:#4d5568;font-size:13px;">Lade…</em>
+  </div>
+
+  <p class="ps-meta">
+    PROVA Systems · <a href="/" style="color:#3b82f6;">Zur Web-App</a> ·
+    <a href="/datenschutz.html" style="color:#3b82f6;">Datenschutz</a>
+  </p>
+</main>
+
+<script>
+const SERVICES = [
+  { id: 'web', name: 'Web App', endpoint: 'https://app.prova-systems.de' },
+  { id: 'landing', name: 'Landing', endpoint: 'https://prova-systems.de' },
+  { id: 'api', name: 'Netlify Functions', endpoint: '/.netlify/functions/public-status' },
+  { id: 'db', name: 'Database (Supabase)', endpoint: null },
+  { id: 'pdf', name: 'PDF-Generation (PDFMonkey)', endpoint: null },
+  { id: 'ki', name: 'KI-Service (OpenAI)', endpoint: null },
+  { id: 'email', name: 'Email-Service (Resend)', endpoint: null }
+];
+
+function renderUptime(days) {
+  return Array.from({length: 30}, (_, i) => {
+    const d = (days && days[i]) || 'up';
+    return '<span class="ps-day ' + d + '" title="Tag ' + (i+1) + ': ' + d + '"></span>';
+  }).join('');
+}
+
+function renderServices(data) {
+  const grid = document.getElementById('ps-services');
+  grid.innerHTML = SERVICES.map(svc => {
+    const status = (data && data.services && data.services[svc.id]) || { status: 'green', uptime_30d: null };
+    const dotClass = status.status === 'green' ? 'green' : status.status === 'yellow' ? 'yellow' : 'red';
+    const label = status.status === 'green' ? 'Operational' : status.status === 'yellow' ? 'Degraded' : 'Outage';
+    return ''
+      + '<div class="ps-card">'
+      + '  <div>'
+      + '    <div class="ps-svc">' + svc.name + '</div>'
+      + '    <div class="ps-uptime">' + renderUptime(status.uptime_30d) + '</div>'
+      + '  </div>'
+      + '  <span class="ps-status"><span class="ps-dot ' + dotClass + '"></span>' + label + '</span>'
+      + '</div>';
+  }).join('');
+}
+
+function renderIncidents(incidents) {
+  const box = document.getElementById('ps-incidents');
+  if (!incidents || !incidents.length) {
+    box.innerHTML = '<em style="color:#4d5568;font-size:13px;">Keine Incidents in den letzten 90 Tagen.</em>';
+    return;
+  }
+  box.innerHTML = incidents.map(i =>
+    '<div class="ps-incident">'
+    + '<strong>[' + (i.severity || 'minor').toUpperCase() + '] ' + (i.service || '?') + '</strong> · '
+    + '<span style="color:#4d5568;">' + (i.started_at ? new Date(i.started_at).toLocaleDateString('de-DE') : '—') + '</span><br>'
+    + '<span style="color:#8b93ab;">' + (i.description || '') + '</span>'
+    + '</div>'
+  ).join('');
+}
+
+async function loadStatus() {
+  try {
+    const res = await fetch('/.netlify/functions/public-status');
+    const data = await res.json();
+    renderServices(data);
+    renderIncidents(data && data.incidents);
+    if (data && data.overall === 'red') {
+      const h = document.getElementById('ps-hero');
+      h.classList.add('outage');
+      h.querySelector('h1').textContent = '🔴 Major Outage';
+    } else if (data && data.overall === 'yellow') {
+      const h = document.getElementById('ps-hero');
+      h.classList.add('degraded');
+      h.querySelector('h1').textContent = '🟡 Degraded Performance';
+    }
+  } catch (e) {
+    renderServices(null);
+    renderIncidents(null);
+  }
+}
+
+loadStatus();
+setInterval(loadStatus, 5 * 60 * 1000);
+</script>
+</body>
+</html>

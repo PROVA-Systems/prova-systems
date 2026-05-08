@@ -247,6 +247,13 @@ function _oeffneSchritt(n) {
 function _weiter() {
   if (!_validiere()) return;
   _sammleDaten();
+  // MEGA³³ A1: Live-Save jeden Step → ProvaWizardSave (Defensive: localStorage-Fallback bei DB-Outage)
+  try {
+    if (typeof window !== 'undefined' && window.ProvaWizardSave) {
+      var aid = sessionStorage.getItem('prova_current_auftrag_id') || ('draft-' + Date.now());
+      window.ProvaWizardSave.saveStep(aid, { phase: WZ.schritt, data: WZ.felder, auftrag_typ: WZ.typ });
+    }
+  } catch(e) {}
   var maxStep = _brauchSchritt4() ? 4 : 3;
   if (WZ.schritt < maxStep) {
     _oeffneSchritt(WZ.schritt + 1);
@@ -547,13 +554,18 @@ function _header(titel, schritt, sub) {
   for (var i = 2; i <= maxStep; i++) {
     var done   = schritt > i;
     var active = schritt === i;
+    // MEGA³⁶ W7.4: bei done Step → klickbar (rückwärts-Sprung)
+    var stepCursor = done ? 'pointer' : 'default';
+    var stepRole = done ? ' role="button" tabindex="0"' : '';
+    var stepClick = done ? ' onclick="_wzZurueckZuSchritt(' + i + ')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();_wzZurueckZuSchritt(' + i + ');}" aria-label="Zurück zu Schritt ' + (i-1) + ': ' + (steps[i]||'').replace(/"/g,'&quot;') + '"' : '';
     progress += '<div style="display:flex;align-items:center;gap:6px;'+(i>2?'margin-left:4px;':'')+'">';
     if (i > 2) progress += '<div style="width:24px;height:1px;background:'+(done?'#10b981':active?'var(--accent)':'var(--border)')+';"></div>';
-    progress += '<div style="width:22px;height:22px;border-radius:50%;background:'
+    progress += '<div' + stepRole + stepClick
+      + ' style="width:22px;height:22px;border-radius:50%;background:'
       + (done ? '#10b981' : active ? 'var(--accent,#4f8ef7)' : 'var(--surface2)')
       + ';border:1.5px solid '+(done?'#10b981':active?'var(--accent,#4f8ef7)':'var(--border)')
       + ';display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:'+(done||active?'#fff':'var(--text3)')
-      + ';transition:all .3s;">'+(done?'✓':i-1)+'</div>';
+      + ';transition:all .3s;cursor:'+stepCursor+';">'+(done?'✓':i-1)+'</div>';
     if (active) {
       progress += '<span style="font-size:11px;font-weight:700;color:var(--text2);">' + (steps[i]||'') + '</span>';
     }
@@ -642,6 +654,18 @@ function _erstelleWizard(schritt) {
 /* ── GLOBALE HANDLER (von onclick erreichbar) ── */
 window._wzWeiter  = function() { _weiter(); };
 window._wzZurueck = function() { _zurueck(); };
+
+// MEGA³⁶ W7.4: rückwärts-klickbarer Stepper — direkt zu Schritt n springen
+// (n muss kleiner als aktueller Schritt sein, sonst no-op).
+// Daten des aktuellen Schritts werden vorher gesichert (_sammleDaten).
+window._wzZurueckZuSchritt = function(n) {
+  var target = parseInt(n, 10);
+  if (isNaN(target) || target < 2) return;
+  if (!WZ || typeof WZ.schritt !== 'number') return;
+  if (target >= WZ.schritt) return; // nur rückwärts
+  if (typeof _sammleDaten === 'function') _sammleDaten();
+  if (typeof _oeffneSchritt === 'function') _oeffneSchritt(target);
+};
 
 window.PROVA_WZ_chipSA = function(btn) {
   var parent = btn.closest('.wz-box') || btn.parentElement.parentElement;

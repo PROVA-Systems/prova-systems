@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1, viewport-fit=cover">
+<title>Bescheinigung erstellen · PROVA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="prova-fetch-auth.js"></script>
+<script src="/lib/prova-config.js"></script>
+<script>
+(function(){
+  try {
+    var token = localStorage.getItem('prova_auth_token');
+    var email = localStorage.getItem('prova_sv_email') || '';
+    if (!token || !email) { window.location.replace('/login?next=' + encodeURIComponent(location.pathname)); return; }
+  } catch (e) { window.location.replace('/login'); }
+})();
+</script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',system-ui,sans-serif;background:#0b0d11;color:#eaecf4;min-height:100vh;line-height:1.6;}
+.b-wrap{max-width:880px;margin:0 auto;padding:32px 20px 80px;}
+.b-h1{font-size:24px;font-weight:800;margin-bottom:6px;}
+.b-sub{font-size:14px;color:#8b93ab;margin-bottom:24px;}
+.b-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin-bottom:24px;}
+.b-card{background:#1c2130;border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:20px;cursor:pointer;transition:border-color .2s;}
+.b-card:hover{border-color:#4f8ef7;}
+.b-card.active{border-color:#4f8ef7;background:rgba(79,142,247,.08);}
+.b-card-name{font-size:15px;font-weight:700;margin-bottom:6px;}
+.b-card-desc{font-size:12px;color:#8b93ab;}
+.b-form{background:#1c2130;border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:22px;margin-bottom:16px;}
+.b-form input{width:100%;padding:10px 12px;background:#0b0d11;border:1px solid rgba(255,255,255,.11);border-radius:8px;color:#eaecf4;font-family:inherit;font-size:14px;margin:8px 0;}
+.b-btn{padding:11px 22px;background:linear-gradient(135deg,#4f8ef7,#3a7be0);color:#fff;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer;font-family:inherit;}
+.b-btn:disabled{opacity:.5;cursor:not-allowed;}
+</style>
+</head>
+<body>
+<main class="b-wrap">
+
+  <h1 class="b-h1">📜 Bescheinigung erstellen</h1>
+  <p class="b-sub">Wähle eine Bescheinigungs-Art und erstelle das Dokument für einen Auftrag.</p>
+
+  <h2 style="font-size:13px;text-transform:uppercase;color:#4d5568;letter-spacing:.06em;margin-bottom:12px;">1. Art wählen</h2>
+  <div class="b-grid" id="bescheinigungs-grid"></div>
+
+  <h2 style="font-size:13px;text-transform:uppercase;color:#4d5568;letter-spacing:.06em;margin-bottom:12px;">2. Auftrag-Daten</h2>
+  <div class="b-form">
+    <label style="font-size:11px;color:#8b93ab;">Auftrag-UUID</label>
+    <input type="text" id="auftrag-id" placeholder="UUID aus Auftrag-Listing">
+    <button class="b-btn" type="button" id="btn-generate" disabled onclick="generate()">Bescheinigung generieren</button>
+    <div id="result" style="margin-top:14px;font-size:13px;"></div>
+  </div>
+
+</main>
+
+<script>
+const TYPEN = [
+  { typ: 'sv_bestaetigung',           name: 'SV-Bestätigung', desc: 'Auftragsannahme + Bestätigung als ö.b.u.v. SV' },
+  { typ: 'auftragsannahme_brief',     name: 'Auftragsannahme (Brief)', desc: 'DIN-5008 Brief mit Honorar-Konditionen' },
+  { typ: 'termin_bestaetigung',       name: 'Termin-Bestätigung', desc: 'Ortstermin formell bestätigen' },
+  { typ: 'termin_bestaetigung_brief', name: 'Termin-Brief', desc: 'DIN-5008 Termin-Bestätigung als Brief' },
+  { typ: 'maengelfreiheit',           name: 'Mängelfreiheits-Bescheinigung', desc: 'VOB/B § 12 Abnahme — keine sichtbaren Mängel' },
+  { typ: 'zustand',                   name: 'Zustands-Bescheinigung', desc: 'Bauwerks-Zustand zum Stichtag dokumentieren' },
+  { typ: 'beweissicherung',           name: 'Beweissicherungs-Bestätigung', desc: '§ 411a ZPO Beweismittel-Erhebung bestätigen' },
+  { typ: 'sv_anerkennung',            name: 'SV-Anerkennung', desc: 'IHK-Bestellung + Vereidigung nachweisen' }
+];
+
+let _selected = null;
+
+function renderGrid() {
+  const grid = document.getElementById('bescheinigungs-grid');
+  grid.innerHTML = TYPEN.map(t =>
+    '<div class="b-card" data-typ="' + t.typ + '" onclick="selectTyp(\'' + t.typ + '\')">' +
+    '<div class="b-card-name">' + t.name + '</div>' +
+    '<div class="b-card-desc">' + t.desc + '</div></div>'
+  ).join('');
+}
+
+function selectTyp(typ) {
+  _selected = typ;
+  document.querySelectorAll('.b-card').forEach(c => c.classList.toggle('active', c.dataset.typ === typ));
+  document.getElementById('btn-generate').disabled = !document.getElementById('auftrag-id').value;
+}
+
+document.addEventListener('input', e => {
+  if (e.target.id === 'auftrag-id') {
+    document.getElementById('btn-generate').disabled = !(_selected && e.target.value.trim());
+  }
+});
+
+async function generate() {
+  const auftrag_id = document.getElementById('auftrag-id').value.trim();
+  const result = document.getElementById('result');
+  result.textContent = 'Generiere…';
+  try {
+    const res = await provaFetch('/.netlify/functions/bescheinigung-generate', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ typ: _selected, auftrag_id, payload: {} })
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      result.textContent = 'Fehler: ' + (err.error || res.status);
+      result.style.color = '#ef4444';
+      return;
+    }
+    const data = await res.json();
+    result.innerHTML = '✅ Bescheinigung-ID: <code>' + data.dokument_id + '</code> (Status: ' + data.status + ')';
+    result.style.color = '#10b981';
+  } catch (e) {
+    result.textContent = 'Fehler: ' + e.message;
+    result.style.color = '#ef4444';
+  }
+}
+
+renderGrid();
+</script>
+</body>
+</html>

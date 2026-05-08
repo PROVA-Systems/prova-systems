@@ -521,16 +521,47 @@ function _auditFallbackEvent(meta) {
 }
 
 async function _callOpenAIRaw(params, apiKey) {
+  // MEGA³³ B2: Prompt-Caching aktivieren bei stabilen System-Prompts > 1024 Tokens
+  // OpenAI cached automatisch bei Prefix-Match >= 1024 Tokens — wir setzen
+  // explizit cache_control auf System-Prompt damit Anthropic-Compat parallel läuft.
+  const enrichedParams = enableCacheControlIfStable(params);
   const response = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + apiKey },
-    body: JSON.stringify(params)
+    body: JSON.stringify(enrichedParams)
   });
   if (!response.ok) {
     const err = await response.json().catch(() => ({}));
     throw new Error('OpenAI ' + response.status + ': ' + (err?.error?.message || 'Fehler'));
   }
-  return response.json();
+  const data = await response.json();
+  // Cached-Tokens aus usage.prompt_tokens_details.cached_tokens parsen
+  if (data && data.usage) {
+    const ptd = data.usage.prompt_tokens_details || {};
+    data.usage.cached_token_input = ptd.cached_tokens || 0;
+    data.usage.cached_token_output = (data.usage.completion_tokens_details || {}).cached_tokens || 0;
+  }
+  return data;
+}
+
+/**
+ * MEGA³³ B2 — markiert System-Prompt mit cache_control (ephemeral),
+ * sofern er > 1024 Zeichen ist (~ Heuristik für 1024 Tokens).
+ * OpenAI honoriert das implizit; Anthropic-Compat braucht explizites Marker.
+ */
+function enableCacheControlIfStable(params) {
+  if (!params || !Array.isArray(params.messages)) return params;
+  const sys = params.messages.find(m => m && m.role === 'system');
+  if (!sys || typeof sys.content !== 'string') return params;
+  if (sys.content.length < 1024) return params; // zu kurz, Caching lohnt nicht
+  // OpenAI: cache_control wird in messages-content-Array akzeptiert
+  // (kompatibles Schema mit Anthropic für Multi-Provider-Setup).
+  const newSys = {
+    role: 'system',
+    content: [{ type: 'text', text: sys.content, cache_control: { type: 'ephemeral' } }]
+  };
+  const newMessages = params.messages.map(m => m === sys ? newSys : m);
+  return Object.assign({}, params, { messages: newMessages });
 }
 
 // Backwards-Compat: existing call-sites nutzen callOpenAI (jetzt mit Fallback)
@@ -650,7 +681,7 @@ PROVA Systems ist ein KI-gestütztes Gutachten-System für öffentlich bestellte
 • E-Rechnung: XRechnung 3.0 + ZUGFeRD 2.4 (nur Team-Paket)
 • Baubegleitung: Mängel-Tracking über Projektphasen (nur Team-Paket)
 • Offline-Modus: PWA, funktioniert auch ohne Internet am Ortstermin
-• Pakete: Solo (149€/Mo, 1 SV) | Team (279€/Mo, bis 5 SVs)
+• Pakete: Solo (179€/Mo, 1 SV) | Team (379€/Mo, bis 5 SVs)
 
 VERHALTENSREGELN:
 • Antworten maximal 3–4 Sätze (Gutachter sind beschäftigt)

@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1, viewport-fit=cover">
+<title>DOCX-Import · PROVA (MEGA⁴⁰ P4)</title>
+
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/lib/prova-editor.css">
+<link rel="stylesheet" href="/lib/editor-tiptap.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --primary: #1a3a6b; --accent: #4f8ef7; --muted: #94a3b8;
+  --bg: #0b0d11; --bg2: #111318; --bg3: #161a22;
+  --surface: #1c2130; --surface2: #232a3a;
+  --border: rgba(255,255,255,0.06); --border2: rgba(255,255,255,0.11);
+  --text: #eaecf4; --text2: #8b93ab; --text3: #4d5568;
+  --success: #10b981; --warning: #f59e0b; --danger: #ef4444; --lighter: #232a3a;
+}
+*,*::before,*::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 14px; }
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--bg); color: var(--text);
+  min-height: 100vh; line-height: 1.6;
+}
+.di-page {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 24px 24px 80px;
+}
+.di-header {
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+.di-header h1 { font-size: 22px; font-weight: 700; margin: 0 0 4px; }
+.di-header p { font-size: 13px; color: var(--text2); margin: 0; }
+
+.di-dropzone {
+  border: 2px dashed var(--border2);
+  border-radius: 12px;
+  padding: 60px 30px;
+  text-align: center;
+  background: var(--surface);
+  transition: border-color .15s ease, background .15s ease;
+  cursor: pointer;
+}
+.di-dropzone.di-dropzone--active {
+  border-color: var(--accent);
+  background: rgba(79,142,247,0.08);
+}
+.di-dropzone-icon { font-size: 48px; margin-bottom: 14px; }
+.di-dropzone-title { font-size: 16px; font-weight: 600; margin-bottom: 6px; }
+.di-dropzone-sub { font-size: 13px; color: var(--text2); margin-bottom: 14px; }
+.di-dropzone button {
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 700;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: inherit;
+}
+.di-dropzone input[type="file"] { display: none; }
+
+.di-result {
+  margin-top: 24px;
+  display: none;
+  grid-template-columns: 1fr 320px;
+  gap: 18px;
+}
+.di-result.di-result--show { display: grid; }
+@media (max-width: 900px) { .di-result.di-result--show { grid-template-columns: 1fr; } }
+
+.di-preview {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 20px 24px;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+.di-preview h2 {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--accent);
+  margin-bottom: 12px;
+}
+.di-preview-content {
+  background: var(--bg);
+  padding: 16px;
+  border-radius: 6px;
+  font-size: 13.5px;
+  line-height: 1.65;
+}
+.di-preview-content h1, .di-preview-content h2, .di-preview-content h3, .di-preview-content h4 {
+  margin: 10px 0 6px; color: var(--text);
+}
+.di-preview-content p { margin: 0 0 8px; }
+.di-preview-content ul, .di-preview-content ol { margin: 0 0 8px; padding-left: 20px; }
+.di-preview-content table { border-collapse: collapse; margin: 8px 0; font-size: 12px; }
+.di-preview-content table th, .di-preview-content table td { border: 1px solid var(--border2); padding: 4px 8px; }
+
+.di-side {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.di-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px 16px;
+}
+.di-card h3 {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  color: var(--text3);
+  margin-bottom: 10px;
+}
+.di-placeholder-list { list-style: none; padding: 0; }
+.di-placeholder-list li {
+  font-size: 12.5px;
+  padding: 6px 0;
+  border-bottom: 1px dashed var(--border);
+  display: flex;
+  justify-content: space-between;
+  gap: 6px;
+}
+.di-placeholder-list code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11.5px;
+  background: var(--bg3);
+  padding: 1px 6px;
+  border-radius: 3px;
+  color: var(--accent);
+}
+.di-placeholder-count {
+  font-size: 10.5px;
+  color: var(--text3);
+  align-self: center;
+}
+
+.di-warnings { font-size: 12.5px; color: var(--warning); }
+.di-warnings li { padding: 4px 0 4px 14px; position: relative; }
+.di-warnings li::before { content: '⚠'; position: absolute; left: 0; }
+
+.di-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.di-actions button {
+  flex: 1;
+  min-width: 130px;
+  padding: 10px 14px;
+  font-size: 13px;
+  font-weight: 700;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: inherit;
+}
+.di-btn-primary { background: var(--accent); color: #fff; }
+.di-btn-primary:hover { background: #3b7be0; }
+.di-btn-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border2); }
+.di-btn-secondary:hover { background: var(--bg3); border-color: var(--accent); }
+
+.di-status {
+  font-size: 12px;
+  color: var(--text2);
+  font-style: italic;
+  text-align: center;
+  padding: 8px;
+}
+</style>
+</head>
+<body>
+
+<main class="di-page">
+
+  <header class="di-header">
+    <h1>📥 DOCX-Import</h1>
+    <p>Lade deine Word-Vorlage hoch — PROVA konvertiert sie zu einem editierbaren Dokument.</p>
+  </header>
+
+  <div id="di-dropzone" class="di-dropzone" tabindex="0" role="button" aria-label="DOCX-Datei hier ablegen oder klicken">
+    <div class="di-dropzone-icon">📄</div>
+    <div class="di-dropzone-title">DOCX-Datei hier ablegen</div>
+    <div class="di-dropzone-sub">oder klicken zum Auswählen</div>
+    <button type="button" id="di-file-btn">Datei auswählen</button>
+    <input type="file" id="di-file-input" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" />
+  </div>
+
+  <div id="di-status" class="di-status"></div>
+
+  <div id="di-result" class="di-result">
+    <div class="di-preview">
+      <h2>Vorschau (Konvertiert)</h2>
+      <div id="di-preview-content" class="di-preview-content"></div>
+    </div>
+
+    <div class="di-side">
+      <div class="di-card">
+        <h3>Platzhalter ({{...}})</h3>
+        <ul id="di-placeholder-list" class="di-placeholder-list"></ul>
+      </div>
+      <div class="di-card">
+        <h3>Hinweise / Warnungen</h3>
+        <ul id="di-warnings-list" class="di-warnings"></ul>
+      </div>
+      <div class="di-actions">
+        <button type="button" id="di-action-edit" class="di-btn-primary">Direkt bearbeiten →</button>
+        <button type="button" id="di-action-template" class="di-btn-secondary">Als Vorlage</button>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<script src="/lib/docx-import.js" defer></script>
+<script defer>
+window.addEventListener('DOMContentLoaded', function () {
+  const dz = document.getElementById('di-dropzone');
+  const fileInput = document.getElementById('di-file-input');
+  const fileBtn = document.getElementById('di-file-btn');
+  const statusEl = document.getElementById('di-status');
+  const resultEl = document.getElementById('di-result');
+  const previewEl = document.getElementById('di-preview-content');
+  const phList = document.getElementById('di-placeholder-list');
+  const warnList = document.getElementById('di-warnings-list');
+  const editBtn = document.getElementById('di-action-edit');
+  const tplBtn = document.getElementById('di-action-template');
+
+  let lastImport = null;
+
+  function setStatus(msg, kind) {
+    statusEl.textContent = msg;
+    statusEl.style.color = kind === 'error' ? 'var(--danger)' :
+                           kind === 'success' ? 'var(--success)' : 'var(--text2)';
+  }
+
+  async function processFile(file) {
+    if (!file) return;
+    if (!/\.docx$/i.test(file.name) && file.type !== 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
+      setStatus('Nur .docx-Dateien werden unterstützt.', 'error');
+      return;
+    }
+    setStatus('Konvertiere ' + file.name + '…', 'info');
+
+    try {
+      const ab = await file.arrayBuffer();
+      const result = await window.ProvaDocxImport.importDocx(ab);
+      lastImport = { ...result, filename: file.name };
+
+      previewEl.innerHTML = result.html;
+      phList.innerHTML = result.placeholders.length === 0
+        ? '<li style="color:var(--text3);font-style:italic;">Keine Platzhalter gefunden.</li>'
+        : result.placeholders.map(p =>
+            '<li><code>{{' + p.token + '}}</code><span class="di-placeholder-count">' + p.count + '×</span></li>'
+          ).join('');
+      warnList.innerHTML = result.warnings.length === 0
+        ? '<li style="color:var(--success);font-style:italic;list-style:none;padding-left:0;">Keine Warnungen.</li>'
+        : result.warnings.map(w => '<li>' + w + '</li>').join('');
+
+      resultEl.classList.add('di-result--show');
+      setStatus('Konvertierung erfolgreich.', 'success');
+    } catch (e) {
+      setStatus('Fehler: ' + e.message, 'error');
+    }
+  }
+
+  // Click → File-Picker
+  fileBtn.addEventListener('click', () => fileInput.click());
+  dz.addEventListener('click', (e) => {
+    if (e.target === fileBtn) return;
+    fileInput.click();
+  });
+  dz.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fileInput.click(); }
+  });
+
+  // Drag&Drop
+  ['dragenter', 'dragover'].forEach(ev => dz.addEventListener(ev, (e) => {
+    e.preventDefault(); e.stopPropagation();
+    dz.classList.add('di-dropzone--active');
+  }));
+  ['dragleave', 'drop'].forEach(ev => dz.addEventListener(ev, (e) => {
+    e.preventDefault(); e.stopPropagation();
+    dz.classList.remove('di-dropzone--active');
+  }));
+  dz.addEventListener('drop', (e) => {
+    const f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+    if (f) processFile(f);
+  });
+
+  fileInput.addEventListener('change', (e) => {
+    const f = e.target.files && e.target.files[0];
+    if (f) processFile(f);
+  });
+
+  // Action: Direkt bearbeiten → save als documents.weg_b → redirect zu dokument-neu mit doc-id
+  async function saveAndRedirect(asTemplate) {
+    if (!lastImport) return;
+    const titel = lastImport.filename.replace(/\.docx$/i, '');
+    const body = {
+      weg: 'weg_b',
+      titel: titel + (asTemplate ? ' (Vorlage)' : ''),
+      content_json: lastImport.tipTapJson,
+      notiz: 'DOCX-Import: ' + lastImport.placeholders.length + ' Platzhalter, ' + lastImport.warnings.length + ' Warnungen'
+    };
+    setStatus('Speichere…', 'info');
+    try {
+      const res = await fetch('/.netlify/functions/document-save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || ('HTTP ' + res.status));
+      setStatus('Gespeichert: ' + json.document_id, 'success');
+      setTimeout(() => {
+        window.location.href = '/dokument-neu.html?weg=weg_b&doc=' + encodeURIComponent(json.document_id);
+      }, 800);
+    } catch (e) {
+      setStatus('Speichern fehlgeschlagen: ' + e.message, 'error');
+    }
+  }
+
+  editBtn.addEventListener('click', () => saveAndRedirect(false));
+  tplBtn.addEventListener('click', () => saveAndRedirect(true));
+});
+</script>
+
+</body>
+</html>

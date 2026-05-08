@@ -30,6 +30,8 @@
 <script src="theme.js"></script>
 <script src="prova-layout.config.js"></script>
 <script src="nav.js" defer></script>
+<!-- MEGA³³ A1: Wizard-Live-Save + Skip-Logic UI-Integration -->
+<script src="/lib/wizard-live-save.js" defer></script>
 <link rel="stylesheet" href="mobile.css">
 <link rel="stylesheet" href="prova-design.css">
 <style>
@@ -68,6 +70,12 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
   .nf-stepper{gap:4px;}
   .nf-step{padding:4px 9px;font-size:11px;}
 }
+/* MEGA³³ A1: Phase-Skip-Indicator-UI */
+.nf-phases{display:flex;gap:8px;margin:18px 0;flex-wrap:wrap;}
+.nf-phase{display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:14px;background:var(--surface2);border:1px solid var(--border);font-size:11px;color:var(--text2);font-weight:600;}
+.nf-phase.phase-skipped{opacity:.4;text-decoration:line-through;background:var(--bg3);position:relative;}
+.nf-phase.phase-skipped::after{content:'übersprungen';font-size:9px;color:#f59e0b;margin-left:4px;text-decoration:none;font-weight:700;text-transform:uppercase;}
+.nf-phase-num{display:inline-block;width:18px;height:18px;border-radius:50%;background:var(--bg);font-size:10px;line-height:18px;text-align:center;font-weight:800;}
 </style>
 </head>
 <body>
@@ -103,8 +111,19 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
       <a class="nf-btn nf-btn-ghost" href="archiv.html">Zurück zu Fällen</a>
     </div>
 
+    <!-- MEGA³³ A1: §1-§6 Phase-Indicator (zeigt Skip-Status je nach auftrag_typ) -->
+    <div class="nf-phases" id="nf-phase-indicator" aria-label="Gutachten-Paragraphen">
+      <div class="nf-phase" data-phase-nr="1"><span class="nf-phase-num">1</span>Anlass</div>
+      <div class="nf-phase" data-phase-nr="2"><span class="nf-phase-num">2</span>Sachverhalt</div>
+      <div class="nf-phase" data-phase-nr="3"><span class="nf-phase-num">3</span>Anknüpfung</div>
+      <div class="nf-phase" data-phase-nr="4"><span class="nf-phase-num">4</span>Befunde</div>
+      <div class="nf-phase" data-phase-nr="5"><span class="nf-phase-num">5</span>Beweisfragen</div>
+      <div class="nf-phase" data-phase-nr="6"><span class="nf-phase-num">6</span>Fachurteil</div>
+    </div>
+
     <div class="nf-info">
-      <strong>Tipp:</strong> Der Wizard schreibt direkt in die Stamm-Daten. Pflichtfelder sind die Schadenadresse (Schritt 2) und der Auftraggeber-Name (Schritt 3) — alles andere ist optional und kann später ergänzt werden.
+      <strong>Tipp:</strong> Der Wizard schreibt direkt in die Stamm-Daten. Pflichtfelder sind die Schadenadresse (Schritt 2) und der Auftraggeber-Name (Schritt 3) — alles andere ist optional und kann später ergänzt werden.<br>
+      <strong style="color:#f59e0b;">Skip-Logic:</strong> Bei Beweissicherung entfällt §5+§6, bei Gegen-/Ergänzungsgutachten entfallen §1 bzw. §1-§3.
     </div>
   </div>
 
@@ -135,6 +154,38 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
     window.location.href = 'app.html';
   };
 
+  // MEGA³³ A1: Phase-Indicator + Live-Save-Hook
+  window.applyAuftragstypUI = function(auftrag_typ) {
+    if (window.ProvaWizardSave && typeof window.ProvaWizardSave.applyPhaseIndicator === 'function') {
+      window.ProvaWizardSave.applyPhaseIndicator(auftrag_typ);
+    }
+    try { sessionStorage.setItem('prova_current_auftrag_typ', auftrag_typ); } catch(e){}
+  };
+
+  // Bridge: jeder Step-Save in prova-wizard.js → ProvaWizardSave.saveStep
+  window.persistStep = async function(auftrag_id, step_data) {
+    if (!window.ProvaWizardSave) return { saved: false, reason: 'lib-not-loaded' };
+    return await window.ProvaWizardSave.saveStep(auftrag_id, step_data);
+  };
+
+  // MEGA³⁶ W3.1: Draft-Restore-Banner falls localStorage-Draft existiert
+  function tryRestoreBanner(){
+    if (!window.ProvaWizardSave || typeof window.ProvaWizardSave.findActiveDraft !== 'function') return;
+    var draft = window.ProvaWizardSave.findActiveDraft();
+    if (!draft) return;
+    window.ProvaWizardSave.showRestoreBanner({
+      draft: draft,
+      onRestore: function(d){
+        try { sessionStorage.setItem('prova_wizard_restore_id', d.auftrag_id); } catch(e){}
+        try { sessionStorage.setItem('prova_wizard_restore_data', JSON.stringify(d.data)); } catch(e){}
+        if (window.PROVA && typeof window.PROVA.openAuftragstyp === 'function') {
+          window.PROVA.openAuftragstyp({ restoreDraft: d });
+        }
+      },
+      onDiscard: function(){ /* localStorage bereits cleared im Banner-Handler */ }
+    });
+  }
+
   // Auto-trigger Dialog wenn alles geladen ist (sanfter Fallback nach 1.5s)
   function tryAutoTrigger(){
     if (window.PROVA && typeof window.PROVA.openAuftragstyp === 'function') {
@@ -148,6 +199,9 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
     }
     return false;
   }
+
+  // MEGA³⁶ W3.1: Draft-Restore zuerst prüfen (zeigt Banner non-blocking)
+  setTimeout(tryRestoreBanner, 300);
 
   if (tryAutoTrigger()) return;
   var attempts = 0;

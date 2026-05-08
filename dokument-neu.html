@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1, viewport-fit=cover">
+<title>Neues Dokument · PROVA (MEGA⁴⁰ P3)</title>
+
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/lib/prova-editor.css">
+<link rel="stylesheet" href="/lib/editor-tiptap.css">
+<link rel="stylesheet" href="/lib/document-mode-modal.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --primary: #1a3a6b; --accent: #4f8ef7; --muted: #94a3b8;
+  --bg: #0b0d11; --bg2: #111318; --bg3: #161a22;
+  --surface: #1c2130; --surface2: #232a3a;
+  --border: rgba(255,255,255,0.06); --border2: rgba(255,255,255,0.11);
+  --text: #eaecf4; --text2: #8b93ab; --text3: #4d5568;
+  --success: #10b981; --warning: #f59e0b; --danger: #ef4444; --lighter: #232a3a;
+}
+*,*::before,*::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 14px; }
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--bg); color: var(--text);
+  min-height: 100vh; line-height: 1.6;
+}
+.dn-page {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 24px 24px 80px;
+}
+.dn-header {
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+.dn-header h1 {
+  font-size: 22px;
+  font-weight: 700;
+  margin: 0 0 4px;
+}
+.dn-header p {
+  font-size: 13px;
+  color: var(--text2);
+  margin: 0;
+}
+.dn-empty {
+  text-align: center;
+  padding: 80px 20px;
+  color: var(--text3);
+}
+.dn-empty h2 {
+  color: var(--text);
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+.dn-empty button {
+  margin-top: 16px;
+  padding: 12px 28px;
+  font-size: 14px;
+  font-weight: 700;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: inherit;
+}
+.dn-empty button:hover { background: #3b7be0; }
+#editor-mount-dn { width: 100%; }
+</style>
+</head>
+<body>
+
+<main class="dn-page">
+
+  <header class="dn-header">
+    <h1>📄 Neues Dokument</h1>
+    <p>Wähle den Erstellungs-Weg — du kannst jederzeit wechseln (Klick auf das Weg-Badge im Editor).</p>
+  </header>
+
+  <div id="editor-mount-dn">
+    <div class="dn-empty">
+      <h2>Bereit zum Schreiben?</h2>
+      <p>Wähle 1 von 3 Wegen — Wizard, Eigene Word-Vorlage oder Hybrid.</p>
+      <button type="button" id="dn-start-btn">Weg auswählen →</button>
+    </div>
+  </div>
+
+</main>
+
+<script src="/lib/prova-editor.js" defer></script>
+<script src="/lib/editor-extensions.js" defer></script>
+<script src="/lib/document-mode-modal.js" defer></script>
+<script src="/lib/docx-export.js" defer></script>
+<script src="/lib/editor-locked-sections.js" defer></script>
+<script src="/lib/editor-pdf-generator.js" defer></script>
+<script src="/lib/ki-werkzeug-stufen.js" defer></script>
+<script src="/lib/editor-spell-layer.js" defer></script>
+<script src="/lib/editor-bibliothek-adapter.js" defer></script>
+<script src="/lib/editor-tiptap.js" defer></script>
+<script defer>
+window.addEventListener('DOMContentLoaded', function () {
+  const startBtn = document.getElementById('dn-start-btn');
+  const mount = document.getElementById('editor-mount-dn');
+
+  // ?weg=weg_a Quick-Start-Param (von briefvorlagen.html)
+  const params = new URLSearchParams(window.location.search);
+  const initialWeg = params.get('weg');
+
+  async function startFlow(presetWeg) {
+    const weg = presetWeg || await window.ProvaDocumentModeModal.open({});
+    if (!weg) return;  // User abgebrochen
+
+    mount.innerHTML = '';
+    try {
+      const ed = await window.ProvaEditorTipTap.mount({
+        el: mount,
+        weg: weg,
+        autoSaveMs: 5000,
+        titel: 'Neues Dokument vom ' + new Date().toLocaleDateString('de-DE'),
+        onSaved: (resp) => console.log('[dokument-neu] saved v' + resp.version_nr),
+        onError: (err) => console.warn('[dokument-neu] error', err)
+      });
+      window._activeEditor = ed;
+    } catch (e) {
+      mount.innerHTML = '<div class="dn-empty"><h2>Editor konnte nicht starten</h2><p>' + e.message + '</p></div>';
+    }
+  }
+
+  startBtn.addEventListener('click', () => startFlow(null));
+
+  // Auto-Start wenn weg aus URL
+  if (initialWeg && ['weg_a', 'weg_b', 'weg_c'].indexOf(initialWeg) >= 0) {
+    setTimeout(() => startFlow(initialWeg), 200);
+  }
+});
+</script>
+
+</body>
+</html>

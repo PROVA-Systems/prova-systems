@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v700-market-ready';   // MEGA³² Welle 11 FINAL — Markt-Launch-Ready. 9/9 Items: Schadensfall-Tabs + Dashboard-Widget + AUTH-PERFEKT-2FA-UI + Demo-Fall + Onboarding-Emails + Admin-Cockpit-Widgets + Markt-Launch-Checklist + Schema-Final + Marcel-Onboarding-Doku.
+const CACHE_VERSION = 'prova-v1300-mega40-final';   // MEGA⁴⁰ FINAL — Editor & Vorlagen-System: 10/10 Phasen Code-Done, 247 Tests grün, 38 Commits, 3 Migrations APPLIED (33+34+35), 7 Lambdas, 10 Frontend-Libs, 4 HTML-Pages, 5 PROVA-Default-Vorlagen seeded. Volltext-TipTap-Editor + 3-Wege-System (Wizard/Eigene Word-Vorlage/Hybrid mit Locked-Sections) + DOCX-Import (mammoth.js) + Export (HTML/MD/DOCX-XML) + PDF-Browser-Print (IHK-konform A4 Times 25mm) + KI-Backstop S1 + Konjunktiv-II S3 + Bibliothek-Adapter (6 Kategorien) + Vorlagen-System (Use-Count-Tracking). KEIN gpt-4o-Code-Path. §407a + EU-AI-Act-Compliance auto-injiziert bei weg_c. Tag v1300.
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
@@ -59,6 +59,22 @@ const APP_SHELL = [
   '/lib/mobile-polish.css',             // MEGA⁴ Q2: Mobile-Polish CSS
   '/lib/mobile-polish.js',              // MEGA⁴ Q3: Mobile-Polish JS (Lazy/Offline/Camera/Geo)
   '/lib/foto-upload-v2.js',             // MEGA⁹ W1: Magic-Bytes + EXIF-Strip + Image-Optimize
+  '/lib/foto-upload-mobile.js',         // MEGA³² C2 P4: Mobile-Foto-Upload mit EXIF-Strip + Geo-Tag
+  '/lib/whisper-chunker.js',            // MEGA³² D1: Whisper-Chunker für >25MB Audio
+  '/lib/honorar-rechner.js',            // MEGA³² D2: JVEG/BVS/Streitwert Multi-Modus
+  '/lib/wizard-live-save.js',           // MEGA³² A1: Wizard-Save + Skip-Logic
+  '/lib/dokument-templates-cache.js',   // MEGA³⁶ W6.1: DB-Lookup-Cache für Templates
+  '/lib/service-endpoints-cache.js',    // MEGA³⁷ C4: DB-Lookup-Cache für Make-Webhooks
+  '/lib/skizzen-canvas.js',             // MEGA³⁹ P3: Skizzen-Canvas Tier 1+2
+  '/lib/bibliothek-pattern.js',         // MEGA³⁹ P5: Universal-Toolbar 6 Kategorien
+  '/lib/ki-werkzeug-stufen.js',         // MEGA³⁹ P6: KI-Werkzeug-Stufen S1/S2/S3
+  '/lib/wertgutachten-verfahren.js',    // MEGA³² A2: Sachwert/Vergleich/Ertrag (ImmoWertV)
+  '/diktat-mobile.html',                // MEGA³² C2 P3: Mobile-Diktat-First-UX
+  '/honorar-rechner.html',              // MEGA³² D2: Honorar-Rechner UI
+  '/bescheinigung-erstellen.html',      // MEGA³² B3: 8-Card-Selector
+  '/demo.html',                         // MEGA³² E1: Sandbox-Demo /demo
+  '/cookie-einstellungen.html',         // MEGA³⁴ A1: Cookie-Settings-Page (DSGVO § 25 TTDSG)
+  '/public-status.html',                // MEGA³⁴ B3: Public Status-Page /status
   '/lib/foto-upload-v2.css',            // MEGA⁹ W1: Drop-Zone + Item-Card Styles
   '/lib/foto-upload-v2-ui.js',          // MEGA⁹ W1: ProvaUploadUI DOM-Helper
   '/lib/public-status-widget.js',       // MEGA¹¹ W6: Footer-Status-Widget
@@ -80,8 +96,23 @@ const APP_SHELL = [
   '/lib/swipe-gestures.js',             // MEGA¹⁴ W24: Touch-Swipe-Detection
   '/lib/native-share.js',               // MEGA¹⁴ W24: Web-Share-API + Clipboard-Fallback
   '/lib/workflow-mode-router.js',       // MEGA¹⁴-Ext W28: Triple-Mode-Router (Foundation)
-  '/lib/prova-editor.js',               // MEGA¹⁵ W32: TipTap-Wrapper (Mode B Editor)
+  '/lib/prova-editor.js',               // MEGA¹⁵ W32: TipTap-Wrapper (Mode B Editor) + MEGA⁴⁰ P1.2: Underline+Align Extensions
   '/lib/prova-editor.css',              // MEGA¹⁵ W32: Editor-Styles
+  '/lib/editor-tiptap.js',              // MEGA⁴⁰ P1.2 + P2: High-Level-Wrapper mit Backend-Sync + Extended-Toolbar
+  '/lib/editor-tiptap.css',             // MEGA⁴⁰ P1.2 + P2: Status-Bar + Versions-Panel + Extended-Toolbar + Footnote/PageBreak CSS
+  '/lib/editor-extensions.js',          // MEGA⁴⁰ P2: Custom Footnote/PageBreak/CrossRef + Helpers
+  '/lib/document-mode-modal.js',        // MEGA⁴⁰ P3: 3-Wege-Auswahl-Modal
+  '/lib/document-mode-modal.css',       // MEGA⁴⁰ P3: Modal-CSS (Karten-Grid, Animations)
+  '/lib/docx-import.js',                // MEGA⁴⁰ P4: DOCX-Import via mammoth.js
+  '/lib/docx-export.js',                // MEGA⁴⁰ P5: HTML/MD/DOCX-Export
+  '/lib/editor-spell-layer.js',         // MEGA⁴⁰ P6: Spell+Konjunktiv-II Layer
+  '/lib/editor-bibliothek-adapter.js',  // MEGA⁴⁰ P8: Bibliothek-TipTap-Adapter
+  '/lib/editor-locked-sections.js',     // MEGA⁴⁰ P9: 4 Compliance-Sektionen (weg_c)
+  '/lib/editor-pdf-generator.js',       // MEGA⁴⁰ P9: Browser-Print PDF-Generator IHK
+  '/editor-demo.html',                  // MEGA⁴⁰ P1.2: Editor-Demo-Page (Pattern A volle Page-Width)
+  '/dokument-neu.html',                 // MEGA⁴⁰ P3: Neues-Dokument Entry-Page (Modal-First)
+  '/dokument-import.html',              // MEGA⁴⁰ P4: DOCX-Import-Page (Drag&Drop)
+  '/dokument-vorlagen.html',            // MEGA⁴⁰ P7: Vorlagen-Page Karten-Grid
   // Legacy auth (Hybrid-Modus, bleibt bis Cutover-Phase 5 cleanup)
   '/prova-fetch-auth.js',
   '/prova-notifications.js',

@@ -30,11 +30,45 @@ exports.handler = withSentry(requireAuth(async function (event, context) {
     : 'id, workspace_id, auftrag_id, titel, foto_referenz_id, massstab, notiz, pseudonymisiert, created_at, updated_at';
 
   try {
+    // 1. Alte SVG-basierte Skizzen aus skizzen-Tabelle
     let query = sb.from('skizzen').select(cols).is('deleted_at', null).order('created_at', { ascending: false });
     if (auftrag_id) query = query.eq('auftrag_id', auftrag_id);
-    const { data, error } = await query.limit(200);
+    const { data: svgSkizzen, error } = await query.limit(200);
     if (error) return jsonResponse(event, 500, { error: error.message });
-    return jsonResponse(event, 200, { skizzen: data || [], total: (data || []).length });
+
+    // 2. M³⁹ P3 — Canvas-basierte Skizzen aus eintraege (typ='skizze')
+    let canvasList = [];
+    try {
+      let q2 = sb.from('eintraege')
+        .select('id, workspace_id, auftrag_id, titel, skizze_nr, skizze_data, skizze_image_url, created_at, updated_at')
+        .eq('typ', 'skizze')
+        .order('skizze_nr', { ascending: true });
+      if (auftrag_id) q2 = q2.eq('auftrag_id', auftrag_id);
+      const { data: cs } = await q2.limit(200);
+      canvasList = (cs || []).map(c => ({
+        id: c.id,
+        workspace_id: c.workspace_id,
+        auftrag_id: c.auftrag_id,
+        titel: c.titel || ('Skizze ' + (c.skizze_nr || '')),
+        skizze_nr: c.skizze_nr,
+        marker_count: (c.skizze_data && c.skizze_data.markers) ? c.skizze_data.markers.length : 0,
+        image_url: c.skizze_image_url,
+        canvas_data: c.skizze_data,    // nur full-data wenn caller will
+        source: 'canvas',  // Unterscheidung zur alten skizzen-Tabelle
+        created_at: c.created_at,
+        updated_at: c.updated_at
+      }));
+    } catch (_) { /* eintraege-Tabelle erweitert noch nicht? graceful */ }
+
+    // Mark legacy items
+    const svgItems = (svgSkizzen || []).map(s => Object.assign({}, s, { source: 'svg-legacy' }));
+
+    return jsonResponse(event, 200, {
+      skizzen: svgItems.concat(canvasList),
+      total: svgItems.length + canvasList.length,
+      svg_count: svgItems.length,
+      canvas_count: canvasList.length
+    });
   } catch (e) {
     return jsonResponse(event, 500, { error: 'unexpected', detail: e.message });
   }

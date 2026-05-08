@@ -91,16 +91,29 @@ function computeConfidence(openaiResult, opts) {
     reasons.push('Apodiktische Aussagen gefunden (' + redFlagCount + 'x)');
   }
 
-  // 5. Model-Mapping
+  // 5. Model-Mapping (M³⁹ P1: gpt-5.5-Stack als Frontier; Mini/Instant/Nano = Light)
   const model = openaiResult.model || '';
-  if (model.includes('gpt-4o') && !model.includes('mini')) {
-    // GPT-4o = staerker, +5 Bonus wenn nichts negatives
+  const isFrontier = (
+    model.includes('gpt-5.5-pro') ||
+    (model.includes('gpt-5.5') && !model.includes('instant')) ||
+    (model.includes('gpt-5.4') && !model.includes('mini') && !model.includes('nano')) ||
+    (model.includes('gpt-4o') && !model.includes('mini'))   // Legacy-Backwards-Compat
+  );
+  const isLightModel = (
+    model.includes('gpt-5.5-instant') ||
+    model.includes('gpt-5.4-mini') ||
+    model.includes('gpt-5.4-nano') ||
+    model.includes('gpt-4o-mini')   // Legacy
+  );
+
+  if (isFrontier) {
+    // Frontier = stärker, +5 Bonus wenn nichts Negatives
     if (reasons.length === 0) score = Math.min(100, score + 5);
-  } else if (model.includes('gpt-4o-mini')) {
-    // gpt-4o-mini fuer Konjunktiv II = Penalty (CLAUDE.md Regel 14)
+  } else if (isLightModel) {
+    // Light-Modelle für Konjunktiv II = Penalty (CLAUDE.md Regel 14)
     if (opts.requireKonjunktivII) {
       score -= 20;
-      reasons.push('gpt-4o-mini ist nicht zuverlaessig fuer Konjunktiv II');
+      reasons.push('Light-Modell ist nicht zuverlaessig fuer Konjunktiv II — Frontier nutzen');
     }
   }
 

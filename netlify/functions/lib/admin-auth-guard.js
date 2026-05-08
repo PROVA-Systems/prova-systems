@@ -23,13 +23,17 @@ const { createClient } = require('@supabase/supabase-js');
 const RateLimit = require('./rate-limit-user');
 
 // HARDCODED Whitelist — erweiterbar fuer zukuenftige Admins.
-// Bewusst nicht aus ENV (verhindert versehentliche Prod-Aenderung).
-const ADMIN_EMAILS = [
+// MEGA³³ M33-I3: Optional ENV-Override (PROVA_ADMIN_EMAILS comma-separated)
+// für Notfall-Erweiterung ohne Re-Deploy. Hardcoded bleibt Default.
+const HARDCODED_ADMIN_EMAILS = [
   'marcel.schreiber891@gmail.com',
   'marcel@prova-systems.de',
   'kontakt@prova-systems.de',
   'admin@prova-systems.de'
 ];
+const ENV_ADMIN_EMAILS = (process.env.PROVA_ADMIN_EMAILS || '')
+  .split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
+const ADMIN_EMAILS = Array.from(new Set([...HARDCODED_ADMIN_EMAILS, ...ENV_ADMIN_EMAILS]));
 
 let _supabaseAdmin = null;
 function getSupabaseAdmin() {

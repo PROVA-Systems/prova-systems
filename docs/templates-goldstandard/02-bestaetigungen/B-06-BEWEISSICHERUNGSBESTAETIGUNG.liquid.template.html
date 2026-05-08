@@ -1,0 +1,59 @@
+<!--
+  PROVA Beweissicherungs-Bestätigung v1.0 (MEGA³² B1)
+  § 411a ZPO Beweissicherungs-Verfahren — bestätigt Erhebung von Beweismitteln.
+-->
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>Beweissicherungs-Bestätigung — {{ aktenzeichen }}</title>
+<style>body{font-family:'Inter',system-ui,sans-serif;color:#1f2937;max-width:720px;margin:24px auto;padding:24px;line-height:1.6;}h1{color:#1e3a8a;}.law{font-family:'JetBrains Mono',monospace;color:#4f8ef7;font-size:12px;}.signature-line{border-bottom:1px solid #1f2937;height:12mm;margin:6mm 0;}</style>
+</head>
+<body>
+
+<h1>Beweissicherungs-Bestätigung</h1>
+<p class="law">§ 411a ZPO Selbständiges Beweisverfahren + § 485 ZPO Beweissicherung</p>
+
+<p>Hiermit bestätigt der Unterzeichnende als öffentlich bestellter und vereidigter
+Sachverständiger die nachstehend dokumentierte Beweissicherung:</p>
+
+<h2>Akte / Verfahren</h2>
+<p><strong>Aktenzeichen:</strong> {{ aktenzeichen }}<br>
+<strong>Gericht:</strong> {{ gericht_name }}<br>
+<strong>Gericht-AZ:</strong> {{ gericht_az }}</p>
+
+<h2>Beweissicherungs-Termin</h2>
+<p><strong>Datum:</strong> {{ beweissicherungs_datum }}<br>
+<strong>Ort:</strong> {{ ort }}<br>
+<strong>Anwesende:</strong> {{ anwesende }}</p>
+
+<h2>Erhobene Beweismittel</h2>
+{% if beweismittel.size > 0 %}
+<ol>
+{% for b in beweismittel %}
+<li><strong>{{ b.typ }}:</strong> {{ b.beschreibung }}{% if b.foto_ref %} (Foto: {{ b.foto_ref }}){% endif %}</li>
+{% endfor %}
+</ol>
+{% else %}
+<p>{{ beweismittel_freitext }}</p>
+{% endif %}
+
+<h2>Bestätigung</h2>
+<p>Die o.g. Beweismittel wurden im Rahmen des selbständigen Beweisverfahrens
+nach § 411a ZPO am {{ beweissicherungs_datum }} unter Beachtung der Pflichten nach § 407a ZPO erhoben und dokumentiert.</p>
+
+<p>Eine Aufbewahrung erfolgt nach § 147 AO 10 Jahre + JVEG-Aufbewahrungsfristen.</p>
+
+<p style="font-size:11px;color:#6b7280;">
+Diese Bestätigung dokumentiert die Beweissicherung. Eine Bewertung der Beweismittel
+erfolgt im separat erstellten Beweissicherungs-Gutachten (F-10) gemäß § 407a ZPO.
+</p>
+
+<div style="margin-top:30px;">
+  <p>{{ unterschrift_ort }}, den {{ unterschrift_datum }}</p>
+  <div class="signature-line"></div>
+  <p style="font-size:11px;color:#6b7280;">{{ sv_name }}, ö.b.u.v. SV {{ sv_sachgebiet }}</p>
+</div>
+
+</body>
+</html>

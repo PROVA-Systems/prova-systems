@@ -1,0 +1,109 @@
+<!--
+  PROVA AVV-Master v1.0 (MEGA³¹ B3)
+  Auftragsverarbeitungs-Vereinbarung nach Art. 28 DSGVO
+
+  Liquid-Variablen:
+    - {{ kunde_name }}, {{ kunde_anschrift }}
+    - {{ datum }}, {{ geltungsbereich }}, {{ dauer }}
+    - {{ technisch_organisatorische_massnahmen }}
+    - {{ unterauftragsverarbeiter }}, {{ datenkategorien }}
+-->
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>AVV — {{ kunde_name }} — PROVA Systems</title>
+<style>
+  body { font-family: 'Inter', system-ui, sans-serif; color: #1f2937; max-width: 720px; margin: 24px auto; padding: 24px; line-height: 1.6; }
+  h1 { color: #1e3a8a; font-size: 22px; }
+  h2 { color: #1e3a8a; font-size: 16px; margin-top: 24px; }
+  h3 { font-size: 14px; margin-top: 16px; }
+  .law { font-family: 'JetBrains Mono', monospace; color: #4f8ef7; font-size: 12px; }
+  .meta { background: #f3f4f6; padding: 12px 16px; border-radius: 8px; font-size: 12px; }
+  .signature { margin-top: 40px; display: flex; gap: 40px; }
+  .signature-block { flex: 1; }
+  .signature-line { border-bottom: 1px solid #1f2937; height: 12mm; margin: 6mm 0; }
+</style>
+</head>
+<body>
+
+<h1>Auftragsverarbeitungs-Vereinbarung (AVV)</h1>
+<p class="law">nach Artikel 28 DSGVO</p>
+
+<div class="meta">
+  <strong>Auftraggeber (Verantwortlicher):</strong> {{ kunde_name }}<br>
+  {{ kunde_anschrift }}<br><br>
+  <strong>Auftragnehmer (Auftragsverarbeiter):</strong> PROVA Systems<br>
+  M. Schreiber · Sachverständigen-Software · prova-systems.de<br><br>
+  <strong>Datum:</strong> {{ datum }}<br>
+  <strong>Vertragsbeginn:</strong> {{ datum }}<br>
+  <strong>Dauer:</strong> {{ dauer | default: "unbefristet, bis Vertragsende der Hauptdienstleistung" }}
+</div>
+
+<h2>§1 Gegenstand und Dauer der Auftragsverarbeitung <span class="law">Art. 28 Abs. 3 lit. a</span></h2>
+<p><strong>Gegenstand:</strong> {{ geltungsbereich | default: "Verarbeitung personenbezogener Daten im Rahmen der PROVA-Sachverständigen-Software (Auftragsverwaltung, Diktat-Pipeline, KI-Strukturhilfe, PDF-Generation, Mahnwesen)" }}</p>
+<p><strong>Dauer:</strong> {{ dauer | default: "unbefristet, mit Kündigungsfrist 3 Monate. Bei Vertragsende: vollständige Löschung gemäß §11." }}</p>
+
+<h2>§2 Art und Zweck der Verarbeitung <span class="law">Art. 28 Abs. 3 lit. b</span></h2>
+<p><strong>Art:</strong> Erheben, Speichern, Strukturieren, Pseudonymisieren, Verändern, Auslesen, Übermitteln, Vergleichen, Verknüpfen, Einschränken, Löschen, Vernichten.</p>
+<p><strong>Zweck:</strong> Erbringung der Sachverständigen-Software-Dienstleistung gemäß SaaS-Vertrag, einschließlich KI-gestützter Texthilfen unter Wahrung der §407a ZPO Compliance.</p>
+
+<h2>§3 Art der Daten und Kategorien Betroffener <span class="law">Art. 28 Abs. 3 lit. b</span></h2>
+<p><strong>Datenkategorien:</strong> {{ datenkategorien | default: "Stammdaten (Namen, Adressen), Kontaktdaten, Auftrags- und Schadensdaten, Diktat-Audiodaten (pseudonymisiert), Foto-Daten (EXIF-stripped), Rechnungsdaten, Korrespondenz" }}</p>
+<p><strong>Betroffene:</strong> Auftraggeber, Geschädigte, Eigentümer, Mieter, Anwälte, Versicherer, Zeugen, Sachverständigen-Kollegen.</p>
+
+<h2>§4 Pflichten des Auftragnehmers <span class="law">Art. 28 Abs. 3 lit. c-h</span></h2>
+<ul>
+  <li><strong>Vertraulichkeit:</strong> Verpflichtung aller Personen mit Datenzugang nach Art. 29 DSGVO + § 53a BDSG.</li>
+  <li><strong>Sicherheit (Art. 32):</strong> Implementierung der unter §5 beschriebenen TOMs.</li>
+  <li><strong>Unterauftragsverarbeiter:</strong> nur mit dokumentierter Genehmigung. Liste in §6.</li>
+  <li><strong>Betroffenen-Rechte (Art. 15-22):</strong> technische Unterstützung des Verantwortlichen via Self-Service (DSGVO-Mein-Konto-Page) + dsgvo_user_export/loeschen/portabilitaet Functions.</li>
+  <li><strong>Datenschutzverletzungs-Meldung:</strong> binnen 24h an Verantwortlichen + Sentry-Alert-Setup.</li>
+  <li><strong>DPIA-Unterstützung (Art. 35):</strong> auf Anfrage.</li>
+  <li><strong>Rückgabe/Löschung:</strong> nach Vertragsende gemäß §11.</li>
+  <li><strong>Nachweis + Audits:</strong> auf Anfrage des Verantwortlichen.</li>
+</ul>
+
+<h2>§5 Technisch-organisatorische Maßnahmen (TOM) <span class="law">Art. 32 DSGVO</span></h2>
+<p>{{ technisch_organisatorische_massnahmen | default: "Siehe Anhang TOM-Katalog (separates Dokument). Standardumfang umfasst: Pseudonymisierung vor KI-Calls, Verschlüsselung at-rest (AES-256) + in-transit (TLS 1.3), Zugriffskontrolle (RLS + 2FA für Admin), Audit-Logging (audit_trail), regelmäßige Backups (Supabase EU), DSGVO-Pflicht-Functions, EXIF-Strip auf Fotos." }}</p>
+
+<h2>§6 Unterauftragsverarbeiter <span class="law">Art. 28 Abs. 2-4</span></h2>
+<p>{{ unterauftragsverarbeiter | default: "Supabase Inc. (Frankfurt EU-Region) — Hosting + DB; OpenAI Ireland (KI-Inferenz, mit Pseudonymisierung); Anthropic Ireland (KI-Backup, mit Pseudonymisierung); Resend (E-Mail-Versand EU); PDFMonkey (PDF-Generation EU); Stripe Payments Europe (Zahlungs-Verarbeitung). Alle haben eigene Standardvertragsklauseln (SCC) oder Adäquanzbeschluss. Auftragnehmer behält sich Wechsel mit 4-Wochen-Vorankündigung vor." }}</p>
+
+<h2>§7 Pflichten des Verantwortlichen</h2>
+<ul>
+  <li>Rechtmäßigkeits-Prüfung der Datenverarbeitung (Art. 6 DSGVO).</li>
+  <li>Information der Betroffenen (Art. 13/14).</li>
+  <li>Bei Bedarf: Einholung von Einwilligungen (Art. 7).</li>
+</ul>
+
+<h2>§8 Weisungsrecht</h2>
+<p>Verarbeitung erfolgt ausschließlich auf dokumentierte Weisung des Verantwortlichen. Mündliche Weisungen werden vom Auftragnehmer schriftlich bestätigt. Bei Verstoß gegen DSGVO informiert der Auftragnehmer den Verantwortlichen unverzüglich.</p>
+
+<h2>§9 Drittland-Übermittlung</h2>
+<p>Übermittlungen in Drittländer nur bei Vorliegen eines Adäquanzbeschlusses (Art. 45) oder Standardvertragsklauseln (Art. 46). Aktueller Stand: alle Verarbeitungen in EU-Region (Supabase Frankfurt, OpenAI Ireland mit DPA, Resend EU, Anthropic Ireland mit DPA).</p>
+
+<h2>§10 Haftung</h2>
+<p>Haftung beider Parteien gemäß Art. 82 DSGVO. Bei mehreren Verantwortlichen oder Auftragsverarbeitern haftet jeder für den durch ihn verursachten Schaden gesamtschuldnerisch.</p>
+
+<h2>§11 Beendigung — Rückgabe und Löschung</h2>
+<p>Nach Vertragsende werden alle personenbezogenen Daten innerhalb von 30 Tagen entweder zurückgegeben (Export via Art. 20 Datenportabilität JSON-Export) oder gelöscht (dsgvo_user_loeschen Function). Aufbewahrungs-pflichtige Daten (z.B. Buchhaltung §147 AO 10 Jahre) bleiben in Read-Only-Archiv.</p>
+
+<h2>§12 Schlussbestimmungen</h2>
+<p>Sollten einzelne Bestimmungen unwirksam sein, bleibt die Wirksamkeit der übrigen unberührt. Änderungen + Ergänzungen bedürfen der Schriftform. Gerichtsstand: Berlin (Sitz des Auftragnehmers).</p>
+
+<div class="signature">
+  <div class="signature-block">
+    <p><strong>Verantwortlicher</strong></p>
+    <div class="signature-line"></div>
+    <p>{{ kunde_name }}, {{ datum }}</p>
+  </div>
+  <div class="signature-block">
+    <p><strong>Auftragsverarbeiter</strong></p>
+    <div class="signature-line"></div>
+    <p>M. Schreiber, PROVA Systems, {{ datum }}</p>
+  </div>
+</div>
+
+</body>
+</html>

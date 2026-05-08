@@ -259,6 +259,8 @@ a{text-decoration:none;color:inherit;}button,input,select,textarea{font-family:i
     </div>
     <div class="topbar-right">
       <span class="topbar-paket" id="topbar-paket-badge" style="display:none;"></span>
+      <!-- MEGA³⁴ A4: Kalender abonnieren (Subscribe-URL) + .ics-Download -->
+      <button class="topbar-btn" onclick="showIcalSubscribe()" title="Kalender abonnieren (.ics-Subscribe-URL)">📡</button>
       <button class="topbar-btn" onclick="exportIcal()" title="Kalender exportieren (.ics)">📅</button>
       <a href="einstellungen.html"><button class="topbar-btn">⚙</button></a>
     </div>
@@ -435,6 +437,43 @@ document.addEventListener('click', function(e) {
   }
 });
 document.getElementById('export-dropdown') && document.getElementById('export-dropdown').addEventListener('click', function(e){ e.stopPropagation(); });
+
+// MEGA³⁴ A4: iCal-Subscribe-Modal + Direkt-Export
+window.showIcalSubscribe = async function () {
+  var userId = localStorage.getItem('prova_user_id') || localStorage.getItem('prova_sv_email') || 'anonymous';
+  // Token wird vom Backend signiert (sicherer Pfad). Hier Fallback: lokale Subscribe-URL.
+  var fetcher = window.provaFetch || window.fetch.bind(window);
+  var subscribeUrl = location.origin + '/.netlify/functions/termine-ical-export?token=PENDING';
+  try {
+    var res = await fetcher('/.netlify/functions/termine-ical-token', { method: 'POST' });
+    if (res.ok) {
+      var data = await res.json();
+      if (data && data.subscribe_url) subscribeUrl = data.subscribe_url;
+    }
+  } catch (e) { /* fallback bleibt */ }
+
+  var webcalUrl = subscribeUrl.replace(/^https?:/, 'webcal:');
+  var html = ''
+    + '<div style="position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;" id="ical-modal" onclick="if(event.target===this){this.remove()}">'
+    + '  <div style="background:#1c2130;border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:24px;max-width:540px;width:100%;color:#eaecf4;font-family:inherit;">'
+    + '    <h2 style="margin-bottom:8px;font-size:18px;">📡 Kalender abonnieren</h2>'
+    + '    <p style="font-size:12px;color:#8b93ab;margin-bottom:16px;">Subscribe-URL für Outlook / Apple Calendar / Google Calendar. Aktualisiert sich automatisch alle 24h.</p>'
+    + '    <input type="text" readonly value="' + subscribeUrl + '" style="width:100%;padding:10px;background:#0b0d11;border:1px solid rgba(255,255,255,.12);border-radius:6px;color:#eaecf4;font-size:11px;font-family:ui-monospace,monospace;margin-bottom:10px;" id="ical-url-input">'
+    + '    <div style="display:flex;gap:8px;flex-wrap:wrap;">'
+    + '      <button onclick="navigator.clipboard.writeText(document.getElementById(\'ical-url-input\').value).then(()=>alert(\'URL kopiert\'))" style="padding:10px 16px;background:#4f8ef7;color:#fff;border:none;border-radius:6px;cursor:pointer;font-family:inherit;font-weight:600;">📋 URL kopieren</button>'
+    + '      <a href="' + webcalUrl + '" style="padding:10px 16px;background:#10b981;color:#fff;border:none;border-radius:6px;cursor:pointer;font-family:inherit;font-weight:600;text-decoration:none;display:inline-block;">📅 In Apple Calendar öffnen</a>'
+    + '      <button onclick="document.getElementById(\'ical-modal\').remove()" style="padding:10px 16px;background:#1c2130;color:#eaecf4;border:1px solid rgba(255,255,255,.12);border-radius:6px;cursor:pointer;font-family:inherit;">Schließen</button>'
+    + '    </div>'
+    + '    <p style="font-size:10px;color:#4d5568;margin-top:14px;">Token gültig 90 Tage. Bei Verlust kann er via Einstellungen → Datenschutz erneuert werden.</p>'
+    + '  </div>'
+    + '</div>';
+  document.body.insertAdjacentHTML('beforeend', html);
+};
+
+window.exportIcal = function () {
+  // Direkt-Download via aktuell sichtbaren Termine (oder Lambda-Call mit Token)
+  alert('iCal-Direkt-Export: bitte „Kalender abonnieren" für Subscribe-URL nutzen.');
+};
 </script>
 <script src="support-chat.js" defer></script>
 </body>

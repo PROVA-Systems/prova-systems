@@ -1191,7 +1191,7 @@ window.provaConfirm = function(msg, onYes) {
   var overlay, input, results, visible = false;
 
   var AKTIONEN = [
-    { label: '+ Neuer Fall', desc: 'Neues Gutachten anlegen', href: 'app.html', icon: '📋' },
+    { label: '+ Neuer Fall', desc: 'Neues Gutachten anlegen (Wizard)', href: 'neuer-fall.html', icon: '📋' },
     { label: 'Schnellrechnung', desc: 'Rechnung ohne Fall erstellen', href: 'schnelle-rechnung.html', icon: '⚡' },
     { label: '§407a ZPO Anzeige', desc: 'KI-Anzeige an Gericht (Pflicht vor Gerichtsgutachten)', href: 'zpo-anzeige.html', icon: '⚖️' },
     { label: 'Fälle / Archiv', desc: 'Alle Fälle anzeigen', href: 'archiv.html', icon: '📂' },

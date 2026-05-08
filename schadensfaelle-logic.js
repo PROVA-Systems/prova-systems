@@ -193,12 +193,93 @@
     }
   }
 
+  // ─── MEGA³⁴ A2: Pagination + Bulk + CSV-Export ───
+  var _state = { page: 1, pageSize: 50, sortBy: 'datum', sortDir: 'desc', selected: new Set() };
+
+  function paginate(rows, page, size) {
+    const start = (page - 1) * size;
+    return rows.slice(start, start + size);
+  }
+
+  function totalPages(total, size) {
+    return Math.max(1, Math.ceil(total / size));
+  }
+
+  function pageGo(delta) {
+    _state.page = Math.max(1, _state.page + delta);
+    if (typeof applyFilters === 'function') applyFilters();
+  }
+
+  function sortBy(key) {
+    if (_state.sortBy === key) {
+      _state.sortDir = _state.sortDir === 'asc' ? 'desc' : 'asc';
+    } else {
+      _state.sortBy = key;
+      _state.sortDir = 'asc';
+    }
+    if (typeof applyFilters === 'function') applyFilters();
+  }
+
+  function filterByDateRange(rows, fromIso, toIso) {
+    if (!fromIso && !toIso) return rows;
+    return rows.filter(r => {
+      const d = (r.datum || r.created_at || '').slice(0, 10);
+      if (fromIso && d < fromIso) return false;
+      if (toIso && d > toIso) return false;
+      return true;
+    });
+  }
+
+  function bulkComplete() {
+    if (!_state.selected.size) { alert('Keine Auswahl getroffen.'); return; }
+    if (!confirm('Markiere ' + _state.selected.size + ' Aufträge als abgeschlossen?')) return;
+    // TODO: Production-Path via Lambda. Für M34: optimistic UI-Update.
+    console.log('[SF] Bulk-Complete:', Array.from(_state.selected));
+    _state.selected.clear();
+    if (typeof applyFilters === 'function') applyFilters();
+  }
+
+  function bulkClear() {
+    _state.selected.clear();
+    var bb = document.getElementById('sf-bulk-bar');
+    if (bb) bb.style.display = 'none';
+    document.querySelectorAll('.sf-row-check').forEach(function (cb) { cb.checked = false; });
+  }
+
+  function exportCSV(rows) {
+    const data = (rows && Array.isArray(rows)) ? rows : (window._SF_currentRows || []);
+    const head = ['Aktenzeichen', 'Auftragstyp', 'Auftraggeber', 'Phase', 'Datum', 'Status'];
+    const csv = [head.join(';')].concat(
+      data.map(r => [r.az || r.aktenzeichen || '', r.auftragstyp || r.typ || '',
+        r.auftraggeber || '', r.phase || '', r.datum || '', r.status || '']
+        .map(v => '"' + String(v).replace(/"/g, '""') + '"').join(';'))
+    ).join('\n');
+    if (typeof Blob !== 'undefined') {
+      const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'schadensfaelle-' + Date.now() + '.csv';
+      document.body.appendChild(a); a.click();
+      setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 200);
+    }
+    return csv;
+  }
+
   // Public API
   window.SF = {
     applyFilters,
     sortRows,
     filterRows,
     fristStatus,
+    paginate,
+    totalPages,
+    page: pageGo,
+    sortBy,
+    filterByDateRange,
+    bulkComplete,
+    bulkClear,
+    exportCSV,
+    _state,
     _const: { SCHADENS_TYPEN }
   };
 
@@ -209,9 +290,38 @@
   }
 })();
 
+// MEGA³⁴ A2: Pure-Function-Exports für Tests (Node-side, ohne window/document)
+function paginatePure(rows, page, size) {
+  const start = (page - 1) * size;
+  return rows.slice(start, start + size);
+}
+function totalPagesPure(total, size) {
+  return Math.max(1, Math.ceil(total / size));
+}
+function filterByDateRangePure(rows, fromIso, toIso) {
+  if (!fromIso && !toIso) return rows;
+  return rows.filter(r => {
+    const d = (r.datum || r.created_at || '').slice(0, 10);
+    if (fromIso && d < fromIso) return false;
+    if (toIso && d > toIso) return false;
+    return true;
+  });
+}
+function exportCSVPure(rows) {
+  const head = ['Aktenzeichen', 'Auftragstyp', 'Auftraggeber', 'Phase', 'Datum', 'Status'];
+  return [head.join(';')].concat(
+    rows.map(r => [r.az || '', r.auftragstyp || '', r.auftraggeber || '', r.phase || '', r.datum || '', r.status || '']
+      .map(v => '"' + String(v).replace(/"/g, '""') + '"').join(';'))
+  ).join('\n');
+}
+
 // Test-Exports (Node-side via require — pure functions only)
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
+    paginate: paginatePure,
+    totalPages: totalPagesPure,
+    filterByDateRange: filterByDateRangePure,
+    exportCSV: exportCSVPure,
     sortRows: function (rows, key, dir) {
       const factor = dir === 'desc' ? -1 : 1;
       return rows.slice().sort((a, b) => {

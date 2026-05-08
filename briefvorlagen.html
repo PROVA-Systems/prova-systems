@@ -167,6 +167,16 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
         <h1 class="page-title">Briefe &amp; Vorlagen</h1>
         <p class="page-subtitle">Vorlagen-Bibliothek für Schreiben an Auftraggeber, Gericht, Versicherung</p>
       </div>
+
+      <!-- MEGA⁴⁰ P3: 3-Wege-Editor-Hinweis (Banner) -->
+      <div id="m40-editor-banner" style="margin:0 0 16px;padding:14px 18px;background:linear-gradient(135deg,rgba(79,142,247,0.16),rgba(99,102,241,0.18));border:1px solid rgba(79,142,247,0.4);border-radius:10px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+        <div style="font-size:24px;">📄</div>
+        <div style="flex:1;min-width:200px;">
+          <div style="font-size:13.5px;font-weight:700;margin-bottom:2px;">Neuer Document-Editor verfügbar</div>
+          <div style="font-size:12px;color:var(--text2);">Volltext-Editor mit 3-Wege-System (Wizard / eigene Vorlage / Hybrid). MEGA⁴⁰ Pre-Pilot.</div>
+        </div>
+        <button type="button" id="m40-open-modal-btn" style="padding:8px 16px;font-size:13px;font-weight:700;background:var(--accent);color:#fff;border:none;border-radius:6px;cursor:pointer;font-family:inherit;">Modus wählen →</button>
+      </div>
       <!-- 2-spaltiges Layout -->
       <div class="bv-layout" id="bv-wrapper">
 
@@ -289,6 +299,23 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
 <!-- MEGA¹⁵ W35: Mode-B-Demo-Integration (Workflow-Mode-Router + ProvaEditor) -->
 <script src="/lib/workflow-mode-router.js" defer></script>
 <script src="/lib/prova-editor.js" defer></script>
+<!-- MEGA⁴⁰ P3: 3-Wege-Modal -->
+<link rel="stylesheet" href="/lib/document-mode-modal.css">
+<script src="/lib/document-mode-modal.js" defer></script>
+<script defer>
+window.addEventListener('DOMContentLoaded', function () {
+  const btn = document.getElementById('m40-open-modal-btn');
+  if (!btn) return;
+  btn.addEventListener('click', async function () {
+    if (!window.ProvaDocumentModeModal) {
+      window.location.href = '/dokument-neu.html';
+      return;
+    }
+    const weg = await window.ProvaDocumentModeModal.open({});
+    if (weg) window.location.href = '/dokument-neu.html?weg=' + encodeURIComponent(weg);
+  });
+});
+</script>
 <script defer>
   (function () {
     let _activeEditor = null;

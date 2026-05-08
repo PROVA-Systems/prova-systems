@@ -205,14 +205,41 @@
     <span style="font-size:11px;color:var(--text3);">Auch nachträglich von zu Hause oder unterwegs</span>
   </div>
 
+  <!-- MEGA³¹ A3: S1/S2/S3-Buttons opt-in (Vision-Master Regel 13) -->
+  <div id="ki-stufen-toolbar" style="display:flex;gap:8px;margin-bottom:12px;padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;align-items:center;flex-wrap:wrap;">
+    <span style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;">KI-Hilfen (opt-in):</span>
+    <button class="tool-button" id="ki-s1-btn" type="button" onclick="window.ProvaSStufen && window.ProvaSStufen.toggle('s1')" data-stufe="s1" style="padding:6px 12px;font-size:12px;background:var(--bg2);border:1px solid var(--border2);color:var(--text2);border-radius:6px;cursor:pointer;font-family:inherit;">S1 Sprache</button>
+    <button class="tool-button" id="ki-s2-btn" type="button" onclick="window.ProvaSStufen && window.ProvaSStufen.toggle('s2')" data-stufe="s2" style="padding:6px 12px;font-size:12px;background:var(--bg2);border:1px solid var(--border2);color:var(--text2);border-radius:6px;cursor:pointer;font-family:inherit;">S2 Struktur</button>
+    <button class="tool-button" id="ki-s3-btn" type="button" onclick="window.ProvaSStufen && window.ProvaSStufen.toggle('s3')" data-stufe="s3" style="padding:6px 12px;font-size:12px;background:var(--bg2);border:1px solid var(--border2);color:var(--text2);border-radius:6px;cursor:pointer;font-family:inherit;">S3 Fachsprache</button>
+    <span id="ki-stufen-status" style="font-size:11px;color:var(--text3);margin-left:8px;"></span>
+  </div>
+  <!-- KI-Output non-copyable -->
+  <!-- MEGA³¹ D1: Diktat strukturieren -->
+  <div style="margin-bottom:12px;">
+    <button type="button" id="btn-diktat-strukturieren" onclick="window.ProvaDiktatStruktur && window.ProvaDiktatStruktur.run()" style="padding:8px 14px;font-size:12px;background:var(--bg2);border:1px solid var(--border2);color:var(--text2);border-radius:6px;cursor:pointer;font-family:inherit;">
+      🎙️ Diktat strukturieren → §1-§5
+    </button>
+    <span id="diktat-strukt-status" style="font-size:11px;color:var(--text3);margin-left:8px;"></span>
+  </div>
+
+  <div id="ki-output-box" style="display:none;margin-bottom:12px;padding:14px;background:rgba(79,142,247,.05);border:1px solid rgba(79,142,247,.2);border-radius:10px;font-size:13px;line-height:1.6;color:var(--text2);user-select:none;-webkit-user-select:none;">
+    <div style="font-size:11px;font-weight:700;color:var(--accent);margin-bottom:6px;">KI-Vorschlag (NICHT kopierbar — Eigenleistung-Schutz §407a)</div>
+    <div id="ki-output-content"></div>
+  </div>
+
   <!-- EIGENLEISTUNG-FORTSCHRITTSBALKEN -->
   <div id="eigenleistungBar" style="margin-bottom:16px;padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
       <span style="font-size:11px;font-weight:600;color:var(--text2);">✏️ Ihre Eigenleistung</span>
       <span id="eigenleistungCount" style="font-size:11px;font-weight:700;color:var(--red);">0 / 700 Zeichen</span>
+      <!-- MEGA³¹ A2: 500-Zeichen-Gate (Vision-Spec) zusätzlich zum 700-Soll -->
+      <span id="zeichenCounter" style="font-size:11px;font-weight:700;color:var(--red);margin-left:10px;">0 / 500 Zeichen</span>
     </div>
     <div style="height:5px;border-radius:5px;background:rgba(255,255,255,.06);overflow:hidden;">
       <div id="eigenleistungFill" style="height:100%;border-radius:5px;background:var(--red);transition:width .3s,background .3s;width:0%;"></div>
+    </div>
+    <div id="zeichenWarnBanner" style="display:none;margin-top:8px;padding:6px 10px;font-size:11px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);border-radius:6px;color:#ef4444;">
+      ⚠️ Mindestens 500 Zeichen Eigenleistung erforderlich (§ 407a ZPO). Override-Modal triggert bei Freigabe.
     </div>
   </div>
 
@@ -455,6 +482,36 @@
     <!-- RECHTE SPALTE: KONTEXT + NORMEN -->
     <div class="right-col">
 
+      <!-- MEGA³¹ A1: Befunde-Panel (rein faktisch aus §1-§5, KEINE Formulierungen) -->
+      <div class="befunde-panel" id="befundePanel">
+        <div class="befunde-panel-header">📋 Befunde aus §1-§5 (rein faktisch)</div>
+        <div class="befunde-panel-section">
+          <h4>§1 Auftrag</h4>
+          <p id="befunde-auftrag">—</p>
+        </div>
+        <div class="befunde-panel-section">
+          <h4>§2 Sachverhalt</h4>
+          <p id="befunde-sachverhalt">—</p>
+        </div>
+        <div class="befunde-panel-section">
+          <h4>§3 Anknüpfungstatsachen</h4>
+          <p id="befunde-anknuepfung">—</p>
+        </div>
+        <div class="befunde-panel-section">
+          <h4>§4 Befunde + Messwerte</h4>
+          <p id="befunde-befunde">—</p>
+        </div>
+        <div class="befunde-panel-section">
+          <h4>§5 Beweisfragen</h4>
+          <p id="befunde-fragen">—</p>
+        </div>
+      </div>
+
+      <!-- MEGA³¹ A4: Skizzen-Inline-Embed Sidebar -->
+      <div id="skizzen-sidebar" class="ctx-card" style="margin-bottom:14px;">
+        <div style="font-size:11px;color:var(--text3);font-style:italic;">Skizzen werden geladen…</div>
+      </div>
+
       <!-- Fall-Kontext -->
       <div class="ctx-card">
         <div class="ctx-title">📋 Fall-Kontext</div>
@@ -540,6 +597,12 @@
   <!-- MEGA¹² W16: provaAlert-Helper -->
   <script src="/lib/empty-states.js" defer></script>
   <script src="/lib/prova-alert.js" defer></script>
+  <!-- MEGA³¹ A2/A3: Quality-Markers + Editor-Gate Libs -->
+  <script src="/lib/quality-markers.js" defer></script>
+  <script src="/lib/editor-gate.js" defer></script>
+  <script src="/lib/ki-s-stufen.js" defer></script>
+  <script src="/lib/skizzen-embed.js" defer></script>
+  <script src="/lib/diktat-struktur.js" defer></script>
   <script src="stellungnahme-logic.js" defer></script>
   <script src="global-search.js" defer></script>
 <script src="prova-context.js" defer></script>
