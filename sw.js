@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v999.10-mega39-p9-bescheinigungen-top12';   // MEGA³⁹ P9 Bescheinigungen Top 12 (Sprint 04d): bescheinigungs-logic.js mit 12 Typen + 3 Compliance-Hinweisen (Mängelfreiheit/Schimmelfreiheit/Standsicherheit), AZ-Generator BES-YYYY-NNN via M³⁶ W4.6-Lambda, PDF/DB via M³⁰ bescheinigung-generate. 11/12 Phasen done. 16 Tests grün.
+const CACHE_VERSION = 'prova-v1199-mega39-pre-final';   // MEGA³⁹ Pre-FINAL: 11 von 12 Phasen Code-seitig done (P0+P1+P2+P3+P4+P5+P6+P7+P8+P9+P10), 135 neue Tests grün, 14/18 Acceptance-Punkte grün, 4/18 Marcel-Manual-Pending (Edge-Function-Deploy + Page-Wirings + 9 PDFMonkey-Templates + Tag v1200). KEIN Tag v1200 bis Acceptance N/N.
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
