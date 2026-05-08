@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v999.5-mega39-p3-skizzen';   // MEGA³⁹ P3 Skizzen-Funktion: lib/skizzen-canvas.js (Tier 1+2 Werkzeuge + Marker-System + Pencil-Pressure + IndexedDB-Auto-Save), Migration 28 applied (ENUM 'skizze' + skizze_data/image_url/nr), netlify/functions/skizze-save.js Lambda mit PNG-Storage. 19 Tests grün.
+const CACHE_VERSION = 'prova-v999.6-mega39-p2p4-suche-skizze-integration';   // MEGA³⁹ P2 + P4: Globale Suche 360° auf 8 Bereiche erweitert (auftraege/kontakte/dokumente/termine/eintraege/textbausteine/dokument_templates/normen-Seed 50+ DIN/WTA/VOB/JVEG/ZPO) — Marcel "DIN 985"-Drilldown funktional. P4 Skizzen-Integration: skizzen-list liest BEIDE Quellen (legacy SVG + M³⁹ Canvas), Widget unterscheidet Render-Pfad mit Marker-Badge. 23 neue Tests grün.
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
