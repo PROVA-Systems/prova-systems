@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v1403-mega42-p3-playwright-suite';   // MEGA⁴² P1: scripts/run-all-tests.js stable cross-platform runner mit --test-force-exit. 4231/4231 M⁴⁰+M⁴¹ Tests grün in 19s. 32 Pre-M⁴⁰-Legacy-Fails dokumentiert (out-of-scope).
+const CACHE_VERSION = 'prova-v1404-mega42-p4-perf-suite';   // MEGA⁴² P1: scripts/run-all-tests.js stable cross-platform runner mit --test-force-exit. 4231/4231 M⁴⁰+M⁴¹ Tests grün in 19s. 32 Pre-M⁴⁰-Legacy-Fails dokumentiert (out-of-scope).
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
