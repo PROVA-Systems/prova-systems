@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v1310-mega41-p10-mobile-sync';   // MEGA⁴¹ P10 Mobile Sync-Konflikt: lib/sync-conflict-resolver.js (detectConflict 5 Strategien, resolveLastWriteWins, resolveMerge mit String-Diff/Array-Union/Object-Shallow-Merge, 7 MERGEABLE_FIELDS); lib/offline-sync-status.js (5 STATES idle/syncing/offline_empty/offline_pending/error, IndexedDB-Count, online/offline/storage Auto-Update, prefers-reduced-motion); wiederherstellbare-entwuerfe.html (3 Sections Editor+Wizard+Queue, Banner bei ≥5 Drafts, Restore+Delete-Actions, fmtAge s/min/h/d). 26 P10-Tests grün. M⁴¹-Tests gesamt: 242.
+const CACHE_VERSION = 'prova-v1311-mega41-p11-verify-pass';   // MEGA⁴¹ P11 Verify-Pass für P4/P8/P12: 21 Source-Inspection-Tests bestätigen Audit-Behauptungen (P4 Skizzen TIER_1_TOOLS+Pressure+Marker, P8 Admin 12 Sections+28 Lambdas+2FA, P12 Einstellungen 8 Sections+Theme+Workflow); Bug-Fix-Report-Doku-Template für Marcel-Live-Tests (Apple Pencil/S Pen/Hell-Dunkel-Persist/DSGVO-Export). 21 P11-Tests grün. M⁴¹-Tests gesamt: 263.
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
