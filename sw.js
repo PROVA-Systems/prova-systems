@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v1308-mega41-p8-stepper';   // MEGA⁴¹ P8 Workflow-Stepper-Polish: lib/wizard-stepper.js + .css zentrale Pattern-Lib (mount/nextStep/prevStep/goToStep mit completed-Check, validateStep mit Error-Array, saveDraft/loadDraft via localStorage 'wizard_draft_<key>', Auto-Save 1500ms Debounce, Keyboard Enter/Esc, role=progressbar aria-valuenow); CSS mit done/active/locked States + Progress-Bar bei ≥3 Steps + Mobile-Compact 700px + prefers-reduced-motion. UX-Recherche 5 Quellen (Linear/Notion/Stripe/Asana/Vercel) → 10 Decision-Final-Patterns. 23 P8-Tests grün. M⁴¹-Tests gesamt: P1=42, P2=32, P3=20, P4=19, P5=20, P6=19, P7=21, P8=23 = 196.
+const CACHE_VERSION = 'prova-v1309-mega41-p9-pdfs-inventar';   // MEGA⁴¹ P9 PDFs Vollständigkeits-Audit: admin-pdfmonkey-inventory Lambda (Live-Fetch PDFMonkey-API parallel zu Supabase-dokument_templates, computeDrift={matched, missing_in_supabase, missing_in_pdfmonkey}, computeCompliance={407a_blocks, ai_act_disclosure, gpt4o_violations}); admin-pseudonymisierung-audit Lambda mit 7 SYNTHETIC_PII_TESTS (5 must_not_contain Name/Email/IBAN/Telefon/Adresse + 2 must_contain Aktenzeichen+DIN für Legit-Erhalt); Doku MEGA41-PHASE-9-PDFS-INVENTAR.md mit Marcel-Audit-Procedure + 3 Drift-Resolution-Patterns. 20 P9-Tests grün. M⁴¹-Tests gesamt: P1=42 + P2=32 + P3=20 + P4=19 + P5=20 + P6=19 + P7=21 + P8=23 + P9=20 = 216.
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
