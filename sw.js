@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v1302-mega41-p2-audit-trail';   // MEGA⁴¹ P2 KI-vs-SV-Audit-Trail: Migration 37 audit_trail-Erweiterung (ENUM audit_source 5 Werte, ki_model + ki_confidence + eu_ai_act_disclosed + original_ki_ref + prev_hash, 4 Indizes, View v_auftrag_eigenleistung_quote, APPLIED via MCP); netlify/functions/lib/audit-source-helper.js (Server SHA256 Hash-Chain TR-ESOR + 3 log-Funktionen); lib/audit-source-tracker.js (Frontend wrapKiContent + EU AI Act Markup data-ai-generated); 2 Lambdas (audit-source-log + auftrag-eigenleistung-quote 50%-Threshold); audit-trail.html Viewer mit 6 Filter + 5 Stats + PDF-Export. 32 P2-Tests grün, 4 Recherche-Quellen (EU AI Act + §407a BGH + TR-ESOR + OECD).
+const CACHE_VERSION = 'prova-v1303-mega41-p3-push-alerts';   // MEGA⁴¹ P3 Push-Alerts + Health-Coverage: Migration 38 system_health_history + push_alert_log + 2 Views v_service_uptime (24h/7d/30d) + v_service_status_latest, APPLIED via MCP; health-check-cron.js (8 Services parallel via Promise.all, 5s Timeout, Throttling 1/Service/h via push_alert_log Lookup, 3 Alert-Types down/recovery/latency); admin-system-uptime.js (Admin-Section mit current+uptime+alerts_recent, requireAdmin+2FA); 20 P3-Tests grün.
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
