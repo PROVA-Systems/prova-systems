@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v999.8-mega39-p5-bibliothek';   // MEGA³⁹ P5 Bibliothek-Pattern: lib/bibliothek-pattern.js (Universal-Toolbar 6 Kategorien normen/textbausteine/floskeln/paragraphen/kontakte/positionen, 200ms Live-Search, Recent-Items, Favoriten ★) + 2 Lambdas (user-favoriten-list/toggle) + Migration 32 (RLS user_id). 16 Tests grün.
+const CACHE_VERSION = 'prova-v999.9-mega39-p6-ki-werkzeug-stufen';   // MEGA³⁹ P6 KI-Werkzeug-Stufen S1/S2/S3: lib/ki-werkzeug-stufen.js (bindEditor §407a-500-Char-Enforcement, S2 Diff-Modal Word-Level mit Übernehmen/Ablehnen, S3 nicht-kopierbare Begründungs-Box mit 3-Event-Block + user-select:none, 5 KI-Aufgaben über ki-proxy mit gpt-5.5/praezise via FORCED_HIGH_MODEL_PURPOSES). 15 Tests grün.
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
@@ -67,6 +67,7 @@ const APP_SHELL = [
   '/lib/service-endpoints-cache.js',    // MEGA³⁷ C4: DB-Lookup-Cache für Make-Webhooks
   '/lib/skizzen-canvas.js',             // MEGA³⁹ P3: Skizzen-Canvas Tier 1+2
   '/lib/bibliothek-pattern.js',         // MEGA³⁹ P5: Universal-Toolbar 6 Kategorien
+  '/lib/ki-werkzeug-stufen.js',         // MEGA³⁹ P6: KI-Werkzeug-Stufen S1/S2/S3
   '/lib/wertgutachten-verfahren.js',    // MEGA³² A2: Sachwert/Vergleich/Ertrag (ImmoWertV)
   '/diktat-mobile.html',                // MEGA³² C2 P3: Mobile-Diktat-First-UX
   '/honorar-rechner.html',              // MEGA³² D2: Honorar-Rechner UI
