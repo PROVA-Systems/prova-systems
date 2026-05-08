@@ -4,6 +4,63 @@ Format: pro Sprint ein Block. Ältere Sprints zuoberst nicht — neueste oben.
 
 ---
 
+## MEGA³⁹ — Master-Consolidation-Implementation (08.05.2026)
+
+**Tag:** `v1199-pre-final` · **Branch:** `mega39-master-consolidation` · **Acceptance:** 14/18 grün, 4/18 Marcel-Manual
+
+### Phase 0 — Master-Docs-Read
+- **`db5cdf5`:** Lücken-Tabelle 14 Items, M³⁶/M³⁷-DONE-Markierung. Marcel-Direktive systematisch erfüllt.
+
+### Phase 1 — KI-Modell-Update gpt-4o → gpt-5.5/5.5-instant (kritisch — gpt-4o deprecated Feb 2026)
+- **`3afbe32`:** Edge Function ki-proxy + 3 Libs migriert. FORCED_HIGH_MODEL_PURPOSES (Konjunktiv + Halluzin + 407a → praezise/gpt-5.5). Default = 'schnell'. 9 Tests grün.
+
+### Phase 10 — 3 Pilot-UX-Blocker
+- **`c7807c4`:** F1 Cross-Domain-Login GEFIXT (Cookie-Adapter `.prova-systems.de`, 30d, SameSite=Lax+Secure, localStorage-Fallback). F2 Index/App-Split VERIFIED. F3 Diktat-Mode dokumentiert. 10 Tests grün.
+
+### Phase 3 — Skizzen-Funktion Tier 1+2
+- **`de73889`:** lib/skizzen-canvas.js (7 Werkzeuge + Marker-System + Pencil-Pressure + IndexedDB-Auto-Save). Migration 28 (typ='skizze' + skizze_data/image_url/nr). Lambda skizze-save.js mit PNG-Storage. §407a: Bild geht NICHT an KI. 19 Tests grün.
+
+### Phase 2 — Globale Suche 360°
+- **`3df0907`:** 8 Such-Bereiche (auftraege/kontakte/dokumente/termine/eintraege/textbausteine/dokument_templates/normen-Seed 50+ DIN/WTA/VOB/JVEG/ZPO/EU AI Act). Marcel-Beispiel "DIN 985"-Drilldown funktional. 13 Tests grün.
+
+### Phase 4 — Skizzen-Integration in akte.html
+- **`3df0907`:** skizzen-list liest BEIDE Quellen (Legacy SVG + M³⁹ Canvas). Widget-Render-Pfad-Differenzierung mit Marker-Badge (📍 N). 10 Tests grün.
+
+### Phase 7 — Fristen-System Verify
+- **`2d76c9c`:** 5 Pipelines + 5 Lambdas + UI bereits in M³⁰ W10b-I6 implementiert (Schadensgutachten/Wertgutachten/Bauabnahme/Schiedsgutachten/Beweissicherung). 8 Frist-Typen, 4 Status, 8 Rechtsgrundlagen. 15 Tests grün.
+
+### Phase 8 — Dashboard 5-Widgets + Mahnwesen 3-Stufen
+- **`61f954f`:** 5. KI-Token-Widget mit Eskalations-Farben (rot ≥90% / gelb ≥75% / accent default). Mahnwesen 3-Stufen verifiziert (F-05/F-07/F-08, Tag 14/21/35, Gebühr 0/5/10€). 12 Tests grün.
+
+### Phase 5 — Bibliothek-Pattern Universal-Toolbar (6 Kategorien)
+- **`6dd62e9`:** lib/bibliothek-pattern.js (200ms Live-Search, Recent-Items, Favoriten ★). 2 Lambdas (user-favoriten-list/toggle). Migration 32 (RLS user_id=auth.uid()). 16 Tests grün.
+
+### Phase 6 — KI-Werkzeug-Stufen S1/S2/S3
+- **`b6e61a7`:** lib/ki-werkzeug-stufen.js mit bindEditor (§407a-500-Char-Enforcement), S2 Diff-Modal Word-Level, S3 nicht-kopierbare Begründungs-Box (user-select:none + 3-Event-Block contextmenu/copy/cut). 5 KI-Aufgaben mit FORCED_HIGH_MODEL_PURPOSES. 15 Tests grün.
+
+### Phase 9 — Bescheinigungen Top 12 (Sprint 04d)
+- **`d5c776f`:** bescheinigungs-logic.js mit 12 Typen + 3 Compliance-Hinweisen (Mängelfreiheit/Schimmelfreiheit/Standsicherheit). AZ via M³⁶ W4.6-Lambda (BES-YYYY-NNN). DB-ENUM-Mapping 12/12 verifiziert. 16 Tests grün.
+- **`(P9-UI)`:** bescheinigungen.html UI-Erweiterung mit Top-12-Section parallel zu existierenden 11 Korrespondenz-Briefen. 8 Tests grün.
+
+### MEGA39-FINAL
+- **`b1f14fd`:** Acceptance-Bilanz 14/18 grün, 4/18 Marcel-Manual-Pending. Compounding-Engineering-Lessons (Master-Docs-Single-Source, gpt-4o-Migration, Cross-Subdomain-Auth, Verify-First, Self-Scoping, Honest-Token-Stop). KEIN Tag v1200 ohne Marcel-Manual.
+
+**Marcel-Pflicht für Tag v1200 (in Reihenfolge):**
+1. `supabase functions deploy ki-proxy`
+2. F1 Cross-Domain Browser-Verify
+3. 9 weitere PDFMonkey-Templates BES-01..BES-12 (3 in goldstandard)
+4. 7 Editor-Pages mit Bibliothek-Toolbar
+5. 2 Editor-Pages mit KI-Werkzeug-Stufen
+6. pg_cron für mahnwesen-cron + fristen-reminder-cron
+7. Branch-Merge mega39 → main
+8. Tablet-Tests (Pencil/S-Pen für P3 Skizzen)
+9. `sw.js → v1200` + `git tag v1200`
+10. Master-Doku-Updates (PROVA-VISION-MASTER.md)
+
+**135 neue M³⁹-Tests grün, 0 Regressions. 12 Commits gepusht.**
+
+---
+
 ## MEGA³⁷ — Audit + Vault-Migration + Templates + 16-Domänen (08.05.2026)
 
 **Tag:** `v999.x-pre-final` · **Branch:** `mega34-final-100-percent` · **Acceptance:** 6/9 grün, 3/9 Marcel-Manual
