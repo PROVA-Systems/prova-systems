@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v1203-mega40-p2-editor-advanced';   // MEGA⁴⁰ P2 Editor-Advanced: ProvaEditor + Image/TextStyle/Color/Highlight/FontFamily Extensions; lib/editor-extensions.js Custom Footnote/PageBreak/CrossRef + Helpers (collectHeadings/generateToC/autoNumberFootnotes/resolveCrossRefs); netlify/functions/editor-image-upload Lambda + Migration 34 document_images (RLS workspace-isoliert, APPLIED via MCP); Extended-Toolbar in editor-tiptap.js mit 9 Button-Gruppen; CSS Footnote/PageBreak/CrossRef/Image. 33 P2-Tests grün + 33 P1.2-Tests grün + 18 P1.1-Tests grün = 84 M⁴⁰-Tests grün.
+const CACHE_VERSION = 'prova-v1204-mega40-p3-mode-modal';   // MEGA⁴⁰ P3 3-Wege-Auswahl-Modal: lib/document-mode-modal.js mit 3 Karten (Wizard/Eigene/Hybrid), confirmModeSwitch Datenverlust-Warning, LOCKED_SECTION_KEYS (4 Compliance-Sektionen für weg_c); Mode-Switcher Weg-Badge in Status-Bar mit Click→Modal+Save; 3-Page-Integration: editor-demo.html (Badge), dokument-neu.html (NEU, Modal-First-Entry mit ?weg-Param), briefvorlagen.html (Banner+Redirect). 25 P3-Tests grün, 109 M⁴⁰-Tests grün total.
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
@@ -101,7 +101,10 @@ const APP_SHELL = [
   '/lib/editor-tiptap.js',              // MEGA⁴⁰ P1.2 + P2: High-Level-Wrapper mit Backend-Sync + Extended-Toolbar
   '/lib/editor-tiptap.css',             // MEGA⁴⁰ P1.2 + P2: Status-Bar + Versions-Panel + Extended-Toolbar + Footnote/PageBreak CSS
   '/lib/editor-extensions.js',          // MEGA⁴⁰ P2: Custom Footnote/PageBreak/CrossRef + Helpers
+  '/lib/document-mode-modal.js',        // MEGA⁴⁰ P3: 3-Wege-Auswahl-Modal
+  '/lib/document-mode-modal.css',       // MEGA⁴⁰ P3: Modal-CSS (Karten-Grid, Animations)
   '/editor-demo.html',                  // MEGA⁴⁰ P1.2: Editor-Demo-Page (Pattern A volle Page-Width)
+  '/dokument-neu.html',                 // MEGA⁴⁰ P3: Neues-Dokument Entry-Page (Modal-First)
   // Legacy auth (Hybrid-Modus, bleibt bis Cutover-Phase 5 cleanup)
   '/prova-fetch-auth.js',
   '/prova-notifications.js',
