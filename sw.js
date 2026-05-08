@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v1204-mega40-p3-mode-modal';   // MEGA⁴⁰ P3 3-Wege-Auswahl-Modal: lib/document-mode-modal.js mit 3 Karten (Wizard/Eigene/Hybrid), confirmModeSwitch Datenverlust-Warning, LOCKED_SECTION_KEYS (4 Compliance-Sektionen für weg_c); Mode-Switcher Weg-Badge in Status-Bar mit Click→Modal+Save; 3-Page-Integration: editor-demo.html (Badge), dokument-neu.html (NEU, Modal-First-Entry mit ?weg-Param), briefvorlagen.html (Banner+Redirect). 25 P3-Tests grün, 109 M⁴⁰-Tests grün total.
+const CACHE_VERSION = 'prova-v1205-mega40-p4-docx-import';   // MEGA⁴⁰ P4 DOCX-Import: lib/docx-import.js mit mammoth.js@1 CDN-Lazy-Load, PROVA_STYLE_MAP (Heading 1→h2), DOMParser-Walker + Regex-Fallback, extractPlaceholders {{Token}} mit Sortierung+Count, detectWordWarnings (Page-Breaks, Tracked-Changes, mammoth-Messages); dokument-import.html Drag&Drop-Page mit Preview/Placeholder-Liste/Warnings + 'Direkt bearbeiten'/'Als Vorlage' Actions → /document-save weg_b → redirect dokument-neu. 27 P4-Tests grün + Recherche-Doku 5 Quellen. 136 M⁴⁰-Tests grün total.
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
@@ -103,8 +103,10 @@ const APP_SHELL = [
   '/lib/editor-extensions.js',          // MEGA⁴⁰ P2: Custom Footnote/PageBreak/CrossRef + Helpers
   '/lib/document-mode-modal.js',        // MEGA⁴⁰ P3: 3-Wege-Auswahl-Modal
   '/lib/document-mode-modal.css',       // MEGA⁴⁰ P3: Modal-CSS (Karten-Grid, Animations)
+  '/lib/docx-import.js',                // MEGA⁴⁰ P4: DOCX-Import via mammoth.js
   '/editor-demo.html',                  // MEGA⁴⁰ P1.2: Editor-Demo-Page (Pattern A volle Page-Width)
   '/dokument-neu.html',                 // MEGA⁴⁰ P3: Neues-Dokument Entry-Page (Modal-First)
+  '/dokument-import.html',              // MEGA⁴⁰ P4: DOCX-Import-Page (Drag&Drop)
   // Legacy auth (Hybrid-Modus, bleibt bis Cutover-Phase 5 cleanup)
   '/prova-fetch-auth.js',
   '/prova-notifications.js',
