@@ -85,9 +85,42 @@ async function atFetch(table, formula, maxRecords, sortField){
    SKELETON LOADING — zeigt während Daten laden
 ══════════════════════════════════════════════════ */
 function zeigSkeleton(){
-  ['kpi-aktiv','kpi-heute','kpi-rechnungen','kpi-kontingent'].forEach(function(id){
+  ['kpi-aktiv','kpi-heute','kpi-rechnungen','kpi-kontingent','kpi-ki-token'].forEach(function(id){
     var el=document.getElementById(id);
     if(el){el.innerHTML='<span class="skeleton" style="display:inline-block;width:40px;height:24px;border-radius:6px;"></span>';}
+  });
+}
+
+/* M³⁹ P8 — KI-Token-Verbrauch-Widget (5. KPI) */
+async function loadKiTokenKpi(){
+  var el=document.getElementById('kpi-ki-token');
+  var sub=document.getElementById('kpi-ki-token-sub');
+  if(!el)return;
+  try{
+    var fetcher = window.provaFetch || window.fetch.bind(window);
+    var resp = await fetcher('/.netlify/functions/admin-ki-aggregations?range=month',{
+      method:'GET',
+      headers: window.provaAuthHeaders ? window.provaAuthHeaders() : {}
+    });
+    if(!resp.ok)throw new Error('HTTP '+resp.status);
+    var data = await resp.json();
+    var tokensTotal = (data && data.tokens_total) || 0;
+    var tokenLimit = parseInt(localStorage.getItem('prova_ki_token_limit')||'1000000',10);
+    var pct = tokenLimit>0 ? Math.min(100, Math.round(tokensTotal/tokenLimit*100)) : 0;
+    el.textContent = pct+' %';
+    if(sub)sub.textContent = (tokensTotal/1000).toFixed(1)+'k / '+(tokenLimit/1000).toFixed(0)+'k Token';
+    if(pct>=90){el.style.color='var(--danger,#ef4444)';}
+    else if(pct>=75){el.style.color='var(--warning,#f59e0b)';}
+    else{el.style.color='var(--accent)';}
+  }catch(e){
+    el.textContent='—';
+    if(sub)sub.textContent='Daten nicht verfügbar';
+  }
+}
+// Auto-Trigger bei DOMContentLoaded zusammen mit anderen Loadern
+if(typeof document!=='undefined'){
+  document.addEventListener('DOMContentLoaded',function(){
+    setTimeout(loadKiTokenKpi,500);  // 500ms Delay damit Auth-Header bereit
   });
 }
 

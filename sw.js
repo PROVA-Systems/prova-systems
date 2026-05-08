@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v999.6-mega39-p2p4-suche-skizze-integration';   // MEGA³⁹ P2 + P4: Globale Suche 360° auf 8 Bereiche erweitert (auftraege/kontakte/dokumente/termine/eintraege/textbausteine/dokument_templates/normen-Seed 50+ DIN/WTA/VOB/JVEG/ZPO) — Marcel "DIN 985"-Drilldown funktional. P4 Skizzen-Integration: skizzen-list liest BEIDE Quellen (legacy SVG + M³⁹ Canvas), Widget unterscheidet Render-Pfad mit Marker-Badge. 23 neue Tests grün.
+const CACHE_VERSION = 'prova-v999.7-mega39-p7p8-fristen-dashboard';   // MEGA³⁹ P7 Fristen-Verify (5 Pipelines + 5 Lambdas pre-existing M³⁰, 15 Tests) + P8 Dashboard 5. KPI-Widget KI-Token-Verbrauch (Eskalations-Farben rot/gelb/accent, ruft admin-ki-aggregations) + Mahnwesen 3-Stufen verifiziert (F-05/F-07/F-08, Tag 14/21/35, Gebühr 0/5/10€). 27 neue Tests grün.
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
