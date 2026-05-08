@@ -39,7 +39,7 @@ async function sendReminderEmail(opts) {
     '</ul>' +
     '<p>—<br>PROVA Fristen-Reminder</p>';
   try {
-    const fetch = global.fetch || require('node-fetch');
+    const fetch = global.fetch;
     const res = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: { 'Authorization': 'Bearer ' + apiKey, 'Content-Type': 'application/json' },

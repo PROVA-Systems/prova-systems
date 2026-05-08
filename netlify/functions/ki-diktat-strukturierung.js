@@ -93,7 +93,7 @@ exports.handler = withSentry(requireAuth(async function (event, context) {
   });
 
   try {
-    const fetch = global.fetch || require('node-fetch');
+    const fetch = global.fetch;
     const apiKey = process.env.OPENAI_API_KEY || process.env.PROVA_OPENAI_API_KEY;
     if (!apiKey) {
       // Defensive: kein API-Key → Schema-Stub für Entwicklungs-Tests

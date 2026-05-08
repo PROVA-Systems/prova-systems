@@ -16,7 +16,7 @@ function getStripeKey() {
 async function stripeFetch(path) {
   const key = getStripeKey();
   if (!key) throw new Error('STRIPE_SECRET_KEY nicht gesetzt');
-  const fetch = global.fetch || require('node-fetch');
+  const fetch = global.fetch;
   const res = await fetch('https://api.stripe.com/v1' + path, {
     headers: { 'Authorization': 'Bearer ' + key }
   });

@@ -32,7 +32,7 @@ function jsonRes(event, code, body) {
 }
 
 async function probe(svc) {
-  const fetch = global.fetch || require('node-fetch');
+  const fetch = global.fetch;
   const t0 = Date.now();
   try {
     let url, opts = {};

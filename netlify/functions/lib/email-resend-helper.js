@@ -48,7 +48,7 @@ function loadTemplate(templateName) {
 async function sendEmail(opts) {
   const apiKey = getResendKey();
   if (!apiKey) return { sent: false, reason: 'no-resend-key' };
-  const fetch = global.fetch || require('node-fetch');
+  const fetch = global.fetch;
   try {
     const res = await fetch('https://api.resend.com/emails', {
       method: 'POST',

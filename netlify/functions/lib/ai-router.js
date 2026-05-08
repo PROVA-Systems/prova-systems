@@ -122,7 +122,7 @@ async function checkProviderHealth(provider) {
     return Object.assign({ cached: true }, cached.result);
   }
 
-  const fetch = global.fetch || require('node-fetch');
+  const fetch = global.fetch;
   const t0 = Date.now();
   let url, opts = {};
 
