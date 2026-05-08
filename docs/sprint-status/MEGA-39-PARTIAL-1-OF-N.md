@@ -15,34 +15,34 @@ M³⁹-Prompt schätzt **12-16h CC-Zeit über mehrere Sessions**. Nach M³⁵-³
 
 ---
 
-## Done in dieser Session (6 von 12 Phasen)
+## Done in dieser Session (8 von 12 Phasen)
 
 | Phase | Commit | Inhalt | Tests |
 |-------|--------|--------|-------|
 | **0 Master-Docs-Read** | `db5cdf5` | Lücken-Tabelle 14 Items, M³⁶/M³⁷-DONE-Markierung, Reihenfolge-Plan | – |
-| **1 KI-Modell-Update** | `3afbe32` | gpt-4o-Stack → gpt-5.5/5.5-instant in 4 Files (Edge Function ki-proxy + 3 Libs); FORCED_HIGH_MODEL_PURPOSES; Default = 'schnell' | 9/9 ✅ |
-| **10 Pilot-Blocker (3)** | `c7807c4` | F1 Cross-Domain-Login GEFIXT (Cookie-Adapter .prova-systems.de); F2 VERIFIED (netlify.toml host-conditioned OK); F3 dokumentiert (nicht-reproduzierbar) | 10/10 ✅ |
-| **3 Skizzen-Funktion** | `de73889` | Tier 1+2 Canvas-Lib (7 Werkzeuge + Marker-System + Pencil-Pressure + IndexedDB), Migration 28, skizze-save.js Lambda | 19/19 ✅ |
-| **2 Globale Suche 360°** | `3df0907` | global-search Lambda auf 8 Bereiche erweitert (auftraege/kontakte/dokumente/termine/eintraege/textbausteine/dokument_templates/normen-Seed 50+); "DIN 985"-Drilldown funktional | 13/13 ✅ |
-| **4 Skizzen-Integration** | `3df0907` | skizzen-list liest BEIDE Quellen (Legacy SVG + Canvas), Widget render-Pfad-Differenzierung mit Marker-Badge | 10/10 ✅ |
+| **1 KI-Modell-Update** | `3afbe32` | gpt-4o-Stack → gpt-5.5/5.5-instant in 4 Files (Edge Function ki-proxy + 3 Libs) | 9/9 ✅ |
+| **10 Pilot-Blocker** | `c7807c4` | F1 Cross-Domain-Login GEFIXT (Cookie-Adapter .prova-systems.de); F2 VERIFIED; F3 dokumentiert | 10/10 ✅ |
+| **3 Skizzen-Funktion** | `de73889` | Tier 1+2 Canvas-Lib + Migration 28 + skizze-save Lambda | 19/19 ✅ |
+| **2 Globale Suche 360°** | `3df0907` | 8 Such-Bereiche + Normen-Seed 50+; "DIN 985"-Drilldown funktional | 13/13 ✅ |
+| **4 Skizzen-Integration** | `3df0907` | skizzen-list liest BEIDE Quellen, Widget mit Marker-Badge | 10/10 ✅ |
+| **7 Fristen-System** | `2d76c9c` | VERIFY pre-existing M³⁰ (5 Pipelines + 5 Lambdas + UI) | 15/15 ✅ |
+| **8 Dashboard + Mahnwesen** | `61f954f` | 5. KI-Token-Widget mit Eskalations-Farben + Mahnwesen 3-Stufen verifiziert | 12/12 ✅ |
 
-**Total:** 5 Commits, 61 neue Tests grün.
+**Total:** 7 Commits + 1 Heart-Beat, **88 neue Tests grün**.
 
 ---
 
-## Open für nächste Sessions (6 von 12)
+## Open für nächste Sessions (4 von 12)
 
 | Phase | Inhalt | Geschätzt | Priorität |
 |-------|--------|-----------|-----------|
 | 5 | Bibliothek-Pattern auf 7 Seiten | 3-4h | 🟠 |
 | 6 | KI-Werkzeug-Stufen S1/S2/S3 UI | 3-4h | 🟠 |
-| 7 | Fristen-System 5-Pipelines | 3h | 🟠 |
-| 8 | Dashboard 5-Widgets + Mahnwesen 3-Stufen | 3h | 🟠 |
 | 9 | Bescheinigungen Top 12 (Sprint 04d) | 4-5h | 🟠 |
 | 11 | schadensfaelle.html + neuer-fall.html | (skip — schon DONE in M³⁶) | – |
 | 12 | FINAL + Tag v1200 | 1-2h | nach allen |
 
-**Realistisch:** 1-2 weitere Sessions à 8-12h für Komplettierung.
+**Realistisch:** 1 weitere Session à 8-12h für Komplettierung.
 
 ---
 
