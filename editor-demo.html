@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1, viewport-fit=cover">
+<title>Editor-Demo · PROVA (MEGA⁴⁰ P1.2)</title>
+<meta name="description" content="TipTap-Editor mit Auto-Save 5s + Versions-Historie — PROVA-Document-Editor für 3-Wege-System.">
+
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/lib/prova-editor.css">
+<link rel="stylesheet" href="/lib/editor-tiptap.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --primary: #1a3a6b; --accent: #4f8ef7; --muted: #94a3b8;
+  --bg: #0b0d11; --bg2: #111318; --bg3: #161a22;
+  --surface: #1c2130; --surface2: #232a3a;
+  --border: rgba(255,255,255,0.06); --border2: rgba(255,255,255,0.11);
+  --text: #eaecf4; --text2: #8b93ab; --text3: #4d5568;
+  --success: #10b981; --warning: #f59e0b; --danger: #ef4444; --lighter: #232a3a;
+}
+*,*::before,*::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 14px; }
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--bg); color: var(--text);
+  min-height: 100vh; line-height: 1.6;
+}
+
+/* Pattern A: volle Page-Width (max 1400px), kein Sidebar — Editor dominiert */
+.editor-page {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 24px 24px 80px;
+}
+
+.editor-page-header {
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+.editor-page-header h1 {
+  font-size: 22px;
+  font-weight: 700;
+  margin: 0 0 4px;
+  letter-spacing: -0.01em;
+}
+.editor-page-header p {
+  font-size: 13px;
+  color: var(--text2);
+  margin: 0;
+}
+
+.editor-meta-bar {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+  padding: 12px 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 13px;
+  align-items: center;
+}
+.editor-meta-bar label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  color: var(--text3);
+}
+.editor-meta-bar select, .editor-meta-bar input {
+  padding: 6px 10px;
+  font-size: 13px;
+  background: transparent;
+  border: 1px solid var(--border2);
+  border-radius: 5px;
+  color: var(--text);
+  font-family: inherit;
+}
+.editor-meta-bar .ed-spacer { flex: 1; }
+
+#editor-mount {
+  width: 100%;
+}
+
+.editor-debug {
+  margin-top: 24px;
+  padding: 12px 14px;
+  background: var(--bg3);
+  border: 1px dashed var(--border2);
+  border-radius: 6px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11.5px;
+  color: var(--text2);
+  white-space: pre-wrap;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.editor-empty-hint {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--text3);
+  font-style: italic;
+}
+
+@media (max-width: 640px) {
+  .editor-page { padding: 14px 14px 60px; }
+  .editor-page-header h1 { font-size: 18px; }
+  .editor-meta-bar { padding: 10px; }
+}
+</style>
+</head>
+<body>
+
+<main class="editor-page">
+
+  <header class="editor-page-header">
+    <h1>📝 Document-Editor (MEGA⁴⁰ P1.2)</h1>
+    <p>TipTap v2 · Auto-Save 5 s · Versions-Historie · 3-Wege-System (weg_a / weg_b / weg_c)</p>
+  </header>
+
+  <div class="editor-meta-bar">
+    <label for="ed-weg">Weg</label>
+    <select id="ed-weg" aria-label="Weg auswählen">
+      <option value="weg_a">A — Wizard</option>
+      <option value="weg_b">B — Eigene Vorlage</option>
+      <option value="weg_c">C — Hybrid</option>
+    </select>
+
+    <label for="ed-doc-id">Document-ID</label>
+    <input type="text" id="ed-doc-id" placeholder="(neu)" aria-label="Document-ID (leer = neu erstellen)" style="width:280px;">
+
+    <span class="ed-spacer"></span>
+
+    <button type="button" id="ed-init" class="pet-save-now-btn">Editor starten</button>
+  </div>
+
+  <div id="editor-mount">
+    <div class="editor-empty-hint">
+      Wähle Weg + optional Document-ID, dann „Editor starten".
+    </div>
+  </div>
+
+  <div class="editor-debug" id="ed-debug" hidden></div>
+
+</main>
+
+<script src="/lib/prova-editor.js" defer></script>
+<script src="/lib/editor-tiptap.js" defer></script>
+<script defer>
+window.addEventListener('DOMContentLoaded', function () {
+  const initBtn = document.getElementById('ed-init');
+  const wegSel = document.getElementById('ed-weg');
+  const docIdIn = document.getElementById('ed-doc-id');
+  const mount = document.getElementById('editor-mount');
+  const dbg = document.getElementById('ed-debug');
+
+  let activeInstance = null;
+
+  function log(msg, obj) {
+    dbg.hidden = false;
+    const ts = new Date().toLocaleTimeString('de-DE');
+    dbg.textContent += '[' + ts + '] ' + msg + (obj ? ' → ' + JSON.stringify(obj) : '') + '\n';
+    dbg.scrollTop = dbg.scrollHeight;
+  }
+
+  initBtn.addEventListener('click', async function () {
+    if (activeInstance) {
+      try { activeInstance.destroy(); } catch (_) {}
+      activeInstance = null;
+    }
+    mount.innerHTML = '';
+
+    const opts = {
+      el: mount,
+      weg: wegSel.value,
+      documentId: docIdIn.value.trim() || null,
+      autoSaveMs: 5000,
+      titel: 'Demo-Dokument vom ' + new Date().toLocaleDateString('de-DE'),
+      onSaved: (resp) => log('SAVED', { id: resp.document_id, v: resp.version_nr, kb: Math.round(resp.byte_size / 102.4) / 10 }),
+      onError: (err) => log('ERROR', { msg: err.message, status: err.status })
+    };
+
+    try {
+      log('Mount editor', { weg: opts.weg, documentId: opts.documentId });
+      activeInstance = await window.ProvaEditorTipTap.mount(opts);
+      log('Mount OK', { docId: activeInstance.getDocumentId(), v: activeInstance.getCurrentVersion() });
+      window._activeEditor = activeInstance;  // Debug-Hook
+    } catch (e) {
+      log('MOUNT-ERROR', { msg: e.message });
+      mount.innerHTML = '<div class="editor-empty-hint" style="color:var(--danger);">Editor konnte nicht starten: ' + e.message + '</div>';
+    }
+  });
+});
+</script>
+
+</body>
+</html>
