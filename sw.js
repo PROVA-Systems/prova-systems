@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v1208-mega40-p7-vorlagen';   // MEGA⁴⁰ P7 Vorlagen-System: Migration 35 document_templates (workspace+global Dual-Mode RLS, APPLIED via MCP) + 5 PROVA-Defaults (F-04 Beweisbeschluss, F-09 Stellungnahme, F-10 Schadens-Kurzgutachten, F-15 Wertgutachten, F-19 Beratung) seeded; 3 Lambdas: document-templates-list (4 Filter), document-template-create (is_global IMMER false), document-template-use (use_count + last_used increment); dokument-vorlagen.html Karten-Grid mit Filter-Tabs + Search + Source-Badges; 'Als Vorlage'-Button im Editor. 25 P7-Tests grün, 205 M⁴⁰-Tests grün total.
+const CACHE_VERSION = 'prova-v1209-mega40-p8-bibliothek';   // MEGA⁴⁰ P8 Bibliothek-Toolbar: lib/editor-bibliothek-adapter.js — TipTap-Bridge zu M³⁹-Lib, 6 Kategorien (Normen/Bausteine/Floskeln/§-Verweise/Kontakte/Positionen), 6-Tab-Modal + Search-Debounce 250ms, FOOTNOTE_PATTERN auto-detect (DIN/WTA/VOB/JVEG/ZPO/§), insertAtCursor mit cursor-erhalt, Recent-Items via localStorage (max 5, dedup-by-text); '📚 Bib' Toolbar-Button. 19 P8-Tests grün, 224 M⁴⁰-Tests grün total.
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
@@ -106,6 +106,7 @@ const APP_SHELL = [
   '/lib/docx-import.js',                // MEGA⁴⁰ P4: DOCX-Import via mammoth.js
   '/lib/docx-export.js',                // MEGA⁴⁰ P5: HTML/MD/DOCX-Export
   '/lib/editor-spell-layer.js',         // MEGA⁴⁰ P6: Spell+Konjunktiv-II Layer
+  '/lib/editor-bibliothek-adapter.js',  // MEGA⁴⁰ P8: Bibliothek-TipTap-Adapter
   '/editor-demo.html',                  // MEGA⁴⁰ P1.2: Editor-Demo-Page (Pattern A volle Page-Width)
   '/dokument-neu.html',                 // MEGA⁴⁰ P3: Neues-Dokument Entry-Page (Modal-First)
   '/dokument-import.html',              // MEGA⁴⁰ P4: DOCX-Import-Page (Drag&Drop)
