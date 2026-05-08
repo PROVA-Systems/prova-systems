@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v999.4-mega39-p10-cross-domain-fix';   // MEGA³⁹ P10 Pilot-Blocker: F1 Cross-Domain-Login GEFIXT (Cookie-Adapter .prova-systems.de in lib/supabase-client.js, 30 Tage, SameSite=Lax+Secure, localStorage-Fallback), F2 Index/App-Split VERIFIED (netlify.toml host-conditioned), F3 Diktat-Mode dokumentiert (nicht reproduzierbar im aktuellen Code). 10 Tests grün.
+const CACHE_VERSION = 'prova-v999.5-mega39-p3-skizzen';   // MEGA³⁹ P3 Skizzen-Funktion: lib/skizzen-canvas.js (Tier 1+2 Werkzeuge + Marker-System + Pencil-Pressure + IndexedDB-Auto-Save), Migration 28 applied (ENUM 'skizze' + skizze_data/image_url/nr), netlify/functions/skizze-save.js Lambda mit PNG-Storage. 19 Tests grün.
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
@@ -65,6 +65,7 @@ const APP_SHELL = [
   '/lib/wizard-live-save.js',           // MEGA³² A1: Wizard-Save + Skip-Logic
   '/lib/dokument-templates-cache.js',   // MEGA³⁶ W6.1: DB-Lookup-Cache für Templates
   '/lib/service-endpoints-cache.js',    // MEGA³⁷ C4: DB-Lookup-Cache für Make-Webhooks
+  '/lib/skizzen-canvas.js',             // MEGA³⁹ P3: Skizzen-Canvas Tier 1+2
   '/lib/wertgutachten-verfahren.js',    // MEGA³² A2: Sachwert/Vergleich/Ertrag (ImmoWertV)
   '/diktat-mobile.html',                // MEGA³² C2 P3: Mobile-Diktat-First-UX
   '/honorar-rechner.html',              // MEGA³² D2: Honorar-Rechner UI
