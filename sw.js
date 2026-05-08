@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v1311-mega41-p11-verify-pass';   // MEGA⁴¹ P11 Verify-Pass für P4/P8/P12: 21 Source-Inspection-Tests bestätigen Audit-Behauptungen (P4 Skizzen TIER_1_TOOLS+Pressure+Marker, P8 Admin 12 Sections+28 Lambdas+2FA, P12 Einstellungen 8 Sections+Theme+Workflow); Bug-Fix-Report-Doku-Template für Marcel-Live-Tests (Apple Pencil/S Pen/Hell-Dunkel-Persist/DSGVO-Export). 21 P11-Tests grün. M⁴¹-Tests gesamt: 263.
+const CACHE_VERSION = 'prova-v1312-mega41-p12-e2e';   // MEGA⁴¹ P12 E2E Compound-Szenarien: 5 Szenarien Source-basiert verifiziert (SZ1 Migration vom GM mit 10 Tests, SZ2 Mobile-Außentermin 10, SZ3 Hybrid-Word-Vorlage 10, SZ4 System-Admin 11, SZ5 Search+Kontakt-360 10) — alle Bauteile existieren UND verlinkt. Live-Playwright-Run = Marcel-Pflicht. 51 P12-Tests grün. M⁴¹-Tests gesamt: 314.
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
