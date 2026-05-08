@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v1206-mega40-p5-docx-export';   // MEGA⁴⁰ P5 DOCX/HTML/Markdown-Export: lib/docx-export.js mit exportHtml (PROVA-Wrap + XSS-safe), exportMarkdown (ATX + GFM-Tables + Footnotes), exportDocxBlob (POST→Lambda); netlify/functions/editor-docx-export Lambda mit pure-Node WordprocessingML-2003-XML Generation (kein npm-Dep), Headings/Listen/Tabellen/Marks/PageBreak; Extended-Toolbar HTML/MD/DOCX Download-Buttons. Roundtrip-Tests strukturell identisch. 21 P5-Tests grün, 157 M⁴⁰-Tests grün total.
+const CACHE_VERSION = 'prova-v1207-mega40-p6-spell-konjunktiv';   // MEGA⁴⁰ P6 Rechtschreibung+Konjunktiv-II: lib/editor-spell-layer.js (3 Layer: Browser-Native lang=de-DE, KI-Backstop S1 'schnell', Konjunktiv-II S3 'praezise'); Begründungs-Box NICHT-kopierbar (user-select:none + contextmenu/copy/cut block); Auto-Browser-Spellcheck in mount(); Toolbar Spell+Konjunktiv-Buttons; KI-Funktions-Garantie 5-Tests-Suite (Funktionalität/Edge/Präzision/Konsistenz/Zeit). KEIN gpt-4o im Code (deprecated Feb 2026). 23 P6-Tests grün, 180 M⁴⁰-Tests grün total.
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
@@ -105,6 +105,7 @@ const APP_SHELL = [
   '/lib/document-mode-modal.css',       // MEGA⁴⁰ P3: Modal-CSS (Karten-Grid, Animations)
   '/lib/docx-import.js',                // MEGA⁴⁰ P4: DOCX-Import via mammoth.js
   '/lib/docx-export.js',                // MEGA⁴⁰ P5: HTML/MD/DOCX-Export
+  '/lib/editor-spell-layer.js',         // MEGA⁴⁰ P6: Spell+Konjunktiv-II Layer
   '/editor-demo.html',                  // MEGA⁴⁰ P1.2: Editor-Demo-Page (Pattern A volle Page-Width)
   '/dokument-neu.html',                 // MEGA⁴⁰ P3: Neues-Dokument Entry-Page (Modal-First)
   '/dokument-import.html',              // MEGA⁴⁰ P4: DOCX-Import-Page (Drag&Drop)
