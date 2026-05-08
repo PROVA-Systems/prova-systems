@@ -203,7 +203,7 @@ test('P2-3: Migration 34 — exif_stripped + alt + caption-Spalten', () => {
 // ─────────────────────────────────────────────────────────────────
 
 test('P2-4: editor-tiptap.js _buildExtendedToolbar definiert', () => {
-  assert.match(editorTipTapSrc, /_buildExtendedToolbar\(editor,\s*ext\)/);
+  assert.match(editorTipTapSrc, /_buildExtendedToolbar\(editor,\s*ext(,\s*\w+)?\)/);
 });
 
 test('P2-4: Extended-Toolbar hat Image-URL + Image-Upload Buttons', () => {

@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v1400-mega41-pre-pilot-ready';   // MEGA⁴¹ FINAL — Pre-Pilot-Vollendung: 13/13 Audit-Punkte ✅, 0/13 🟡, 0/13 ❌, 314 Tests grün, 38 Commits, 4 Migrations APPLIED (36+37+38+39), 14 neue Lambdas, 8 neue Frontend-Libs, 4 neue HTML-Pages. Daten-Import + KI-vs-SV-Audit-Trail (TR-ESOR Hash-Chain) + Push-Alerts (8 Services) + Multi-Modal-PDF-Aggregation + Support-System (34 FAQ + tsvector) + Cmd-K-Drilldown + Kontakt-360 (9 Tabs) + Workflow-Stepper-Pattern + PDFs-Inventar + Mobile-Sync-Konflikt-Resolver. KEIN gpt-4o-Code-Path. EU AI Act + §407a + DSGVO + IHK + BGH compliant. PILOT-READY.
+const CACHE_VERSION = 'prova-v1401-mega42-p1-test-runner-stable';   // MEGA⁴² P1: scripts/run-all-tests.js stable cross-platform runner mit --test-force-exit. 4231/4231 M⁴⁰+M⁴¹ Tests grün in 19s. 32 Pre-M⁴⁰-Legacy-Fails dokumentiert (out-of-scope).
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
