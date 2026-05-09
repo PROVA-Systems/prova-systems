@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v2020-mega47-blocker-vision';   // MEGA⁴³+⁴⁴ FINAL — 144 Edge Functions ACTIVE, lib/edge-shim.js für transparentes /.netlify/functions/* → /functions/v1/* Rerouting. Welle 1-7 komplett: 23 Workspace+Auth+Cockpit + 17 KI-Pipeline + 13 Stripe+Email + 13 Auftrag+Fristen + 18 Document+PDF+Editor + 10 DSGVO+2FA+Compliance + 30 Admin+Workflow+Cron+Onboarding+Import. 2 deferred (parse-beweisbeschluss, parse-docx — Node-spezifisch). Marcel: ENV-Cleanup im Netlify Dashboard pflicht (siehe docs/MARCEL-FINAL-NETLIFY-ENV-CLEANUP.md) bevor v2000 live geht.
+const CACHE_VERSION = 'prova-v2030-mega48-prova-config-fix';   // MEGA⁴³+⁴⁴ FINAL — 144 Edge Functions ACTIVE, lib/edge-shim.js für transparentes /.netlify/functions/* → /functions/v1/* Rerouting. Welle 1-7 komplett: 23 Workspace+Auth+Cockpit + 17 KI-Pipeline + 13 Stripe+Email + 13 Auftrag+Fristen + 18 Document+PDF+Editor + 10 DSGVO+2FA+Compliance + 30 Admin+Workflow+Cron+Onboarding+Import. 2 deferred (parse-beweisbeschluss, parse-docx — Node-spezifisch). Marcel: ENV-Cleanup im Netlify Dashboard pflicht (siehe docs/MARCEL-FINAL-NETLIFY-ENV-CLEANUP.md) bevor v2000 live geht.
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
