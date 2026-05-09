@@ -359,6 +359,38 @@ body::after {
         Anmelden
       </button>
 
+      <!-- MEGA⁵² 2FA-Step-2 (versteckt bis aal2 required) -->
+      <div id="mfa-step" style="display:none;margin-top:1.25rem;padding:1rem;background:rgba(79,142,247,.08);border:1px solid rgba(79,142,247,.3);border-radius:10px;">
+        <div style="font-weight:700;margin-bottom:.5rem;color:#4f8ef7;">🔐 2FA — Schritt 2</div>
+        <div style="font-size:.85rem;color:var(--text2,#8b93ab);margin-bottom:.75rem;">
+          Bitte 6-stelligen Code aus deiner Authenticator-App eingeben.
+        </div>
+        <div class="form-group">
+          <input type="text" class="form-input" id="mfa-code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" placeholder="123456" autocomplete="one-time-code">
+        </div>
+        <div class="error-msg" id="mfa-error" style="display:none;"></div>
+        <button class="btn btn-primary" id="mfa-verify-btn" onclick="verifyMfa()">Bestätigen</button>
+        <div style="text-align:center;margin-top:.75rem;font-size:.8rem;">
+          <a href="#" onclick="zeigeRecoveryCode();return false;" style="color:#8b93ab;">Authenticator verloren? Recovery-Code verwenden →</a>
+        </div>
+      </div>
+
+      <!-- MEGA⁵² Recovery-Code-Form -->
+      <div id="recovery-step" style="display:none;margin-top:1.25rem;padding:1rem;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.3);border-radius:10px;">
+        <div style="font-weight:700;margin-bottom:.5rem;color:#f59e0b;">🔑 Recovery-Code Login</div>
+        <div style="font-size:.85rem;color:var(--text2,#8b93ab);margin-bottom:.75rem;">
+          Verwende einen deiner gespeicherten Recovery-Codes. <strong>Wird verbraucht!</strong>
+        </div>
+        <div class="form-group">
+          <input type="text" class="form-input" id="recovery-code" placeholder="ABCDE-FGHJK" autocomplete="off" style="text-transform:uppercase;">
+        </div>
+        <div class="error-msg" id="recovery-error" style="display:none;"></div>
+        <button class="btn btn-primary" id="recovery-verify-btn" onclick="verifyRecoveryCode()">Bestätigen</button>
+        <div style="text-align:center;margin-top:.75rem;font-size:.8rem;">
+          <a href="#" onclick="zurueckZuMfa();return false;" style="color:#8b93ab;">← Zurück zu Authenticator-Code</a>
+        </div>
+      </div>
+
       <div class="divider">oder</div>
 
       <!-- 14-Tage Trial -->

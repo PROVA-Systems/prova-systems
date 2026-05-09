@@ -10,160 +10,290 @@
 <script src="/lib/prova-config.js"></script>
 <script src="/lib/edge-shim.js"></script>
 <script>
-(function(){
+(function () {
   try {
     var token = localStorage.getItem('prova_auth_token');
-    var email = localStorage.getItem('prova_sv_email') || '';
-    if (!token || !email) { window.location.replace('/login?next=' + encodeURIComponent(location.pathname + location.search)); return; }
+    if (!token) { window.location.replace('/login?next=' + encodeURIComponent(location.pathname)); return; }
   } catch (e) { window.location.replace('/login'); }
 })();
 </script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:'DM Sans',system-ui,sans-serif;background:#0b0d11;color:#eaecf4;min-height:100vh;line-height:1.6;}
-.s2-wrap{max-width:600px;margin:0 auto;padding:48px 20px 80px;}
-.s2-h1{font-size:24px;font-weight:800;margin-bottom:6px;}
-.s2-sub{font-size:14px;color:#8b93ab;margin-bottom:30px;}
-.force-banner{padding:14px 18px;background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.24);border-radius:10px;color:#f59e0b;margin-bottom:24px;font-size:13px;}
-.card{background:#1c2130;border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:22px;margin-bottom:16px;}
-.card h2{font-size:15px;font-weight:700;margin-bottom:10px;}
-.qr-box{background:#fff;padding:14px;border-radius:8px;width:200px;height:200px;margin:14px auto;display:flex;align-items:center;justify-content:center;}
-.qr-box img{max-width:100%;}
-.code-box{font-family:ui-monospace,Consolas,monospace;background:#0b0d11;padding:10px 14px;border-radius:8px;font-size:13px;letter-spacing:0.1em;color:#4f8ef7;text-align:center;}
-.input{width:100%;padding:12px 14px;background:#0b0d11;border:1px solid rgba(255,255,255,.11);border-radius:8px;color:#eaecf4;font-family:ui-monospace,monospace;font-size:18px;text-align:center;letter-spacing:0.4em;margin:10px 0;}
-.btn{padding:12px 24px;background:linear-gradient(135deg,#4f8ef7,#3a7be0);color:#fff;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer;font-family:inherit;width:100%;}
-.btn:disabled{opacity:.5;cursor:not-allowed;}
-.backup-list{background:#0b0d11;padding:14px 18px;border-radius:8px;margin:14px 0;font-family:ui-monospace,monospace;font-size:13px;letter-spacing:0.1em;line-height:1.9;color:#10b981;}
-.cb-confirm{display:flex;gap:10px;align-items:flex-start;font-size:13px;cursor:pointer;margin:14px 0;}
-.msg{font-size:12px;margin-top:10px;}
-.msg.error{color:#ef4444;}
-.msg.success{color:#10b981;}
+body{font-family:'DM Sans',system-ui,sans-serif;background:#0b0d11;color:#eaecf4;min-height:100vh;line-height:1.5;padding:20px;}
+.wrap{max-width:540px;margin:0 auto;padding:32px 0;}
+h1{font-size:24px;font-weight:800;margin-bottom:6px;}
+.subtitle{color:#8b93ab;font-size:14px;margin-bottom:24px;}
+.card{background:#1c2130;border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:24px;margin-bottom:16px;}
+.card h2{font-size:16px;font-weight:700;margin-bottom:8px;color:#eaecf4;}
+.card .desc{color:#8b93ab;font-size:13px;margin-bottom:14px;}
+.status-active{color:#10b981;font-weight:700;}
+.status-inactive{color:#f59e0b;font-weight:700;}
+.btn{padding:12px 20px;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer;font-family:inherit;min-height:44px;display:inline-flex;align-items:center;gap:8px;}
+.btn-primary{background:linear-gradient(135deg,#4f8ef7,#3a7be0);color:#fff;}
+.btn-primary:hover:not(:disabled){opacity:.9;}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed;}
+.btn-secondary{background:#232a3a;color:#eaecf4;border:1px solid rgba(255,255,255,.1);}
+.btn-danger{background:transparent;color:#ef4444;border:1px solid rgba(239,68,68,.4);}
+.qr-box{background:#fff;padding:18px;border-radius:10px;display:inline-block;margin:0 auto;}
+.qr-box img{display:block;}
+.qr-wrap{text-align:center;margin:14px 0;}
+.secret-box{background:#0b0d11;border:1px dashed rgba(255,255,255,.13);border-radius:8px;padding:10px 14px;font-family:ui-monospace,monospace;font-size:13px;letter-spacing:.04em;word-break:break-all;color:#10b981;margin:8px 0 14px;}
+input[type="text"],input[type="password"]{background:#0b0d11;border:1px solid rgba(255,255,255,.13);color:#eaecf4;padding:12px 14px;border-radius:8px;font-size:14px;font-family:inherit;width:100%;}
+input[type="text"]:focus{outline:2px solid #4f8ef7;outline-offset:-1px;}
+.input-group{margin-bottom:12px;}
+.input-group label{font-size:12px;color:#8b93ab;display:block;margin-bottom:4px;}
+.msg{font-size:13px;padding:8px 12px;border-radius:6px;margin-top:8px;}
+.msg-error{background:rgba(239,68,68,.1);color:#ef4444;border:1px solid rgba(239,68,68,.3);}
+.msg-success{background:rgba(16,185,129,.1);color:#10b981;border:1px solid rgba(16,185,129,.3);}
+.msg-info{background:rgba(79,142,247,.08);color:#4f8ef7;border:1px solid rgba(79,142,247,.25);}
+.recovery-list{display:grid;grid-template-columns:1fr 1fr;gap:8px;background:#0b0d11;border:1px solid rgba(255,255,255,.13);border-radius:8px;padding:14px;margin:12px 0;font-family:ui-monospace,monospace;font-size:14px;letter-spacing:.05em;color:#10b981;}
+.recovery-list code{padding:6px;}
+.warning{background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.3);color:#f59e0b;border-radius:8px;padding:12px;font-size:13px;margin:10px 0;}
+.app-list{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0;}
+.app-pill{background:#232a3a;padding:6px 12px;border-radius:14px;font-size:12px;color:#8b93ab;}
+@media print{body{background:#fff;color:#000;}.wrap{max-width:none;}.card{background:none;border:1px solid #000;}.no-print{display:none!important;}.recovery-list{color:#000;border-color:#000;}}
 </style>
 </head>
 <body>
-<main class="s2-wrap">
+<div class="wrap">
 
-  <h1 class="s2-h1">🔐 Zwei-Faktor-Authentifizierung einrichten</h1>
-  <p class="s2-sub">Sicherheits-Härtung gemäß IHK-SVO §3 + DSGVO Art. 32 (TOM).</p>
+<h1>🔐 Zwei-Faktor-Authentifizierung</h1>
+<p class="subtitle">Schützt deinen Account und Mandanten-Daten gegen Passwort-Kompromittierung.</p>
 
-  <div id="force-banner" class="force-banner" style="display:none;">
-    ⚠️ <strong>Admin-Pflicht:</strong> Du hast Admin-Rechte und musst 2FA aktivieren bevor du das Cockpit nutzen kannst.
+<!-- Status-Card -->
+<div class="card" id="status-card">
+  <h2>Status</h2>
+  <p id="status-text" class="desc">⏳ wird geprüft…</p>
+  <div id="status-actions"></div>
+</div>
+
+<!-- Setup-Card (initial) -->
+<div class="card no-print" id="setup-card" style="display:none;">
+  <h2>Schritt 1: Authenticator-App vorbereiten</h2>
+  <p class="desc">Installiere eine TOTP-App auf deinem Smartphone:</p>
+  <div class="app-list">
+    <span class="app-pill">📱 Authy</span>
+    <span class="app-pill">📱 Google Authenticator</span>
+    <span class="app-pill">📱 Microsoft Authenticator</span>
+    <span class="app-pill">📱 1Password</span>
+    <span class="app-pill">📱 Bitwarden</span>
   </div>
+  <button type="button" class="btn btn-primary" id="btn-enroll">2FA einrichten</button>
+</div>
 
-  <div class="card" id="setup-card">
-    <h2>1. QR-Code mit Authenticator-App scannen</h2>
-    <p style="font-size:13px;color:#8b93ab;">Empfohlen: Google Authenticator, Authy, 1Password, Bitwarden.</p>
-    <div class="qr-box" id="qr-box"><span style="color:#1f2937;">Lade QR-Code…</span></div>
-    <p style="font-size:12px;color:#8b93ab;text-align:center;">Manuell-Code (falls QR nicht scannbar):</p>
-    <div class="code-box" id="manual-code">—</div>
+<!-- QR-Code-Card -->
+<div class="card no-print" id="qr-card" style="display:none;">
+  <h2>Schritt 2: QR-Code scannen</h2>
+  <p class="desc">Öffne deine Authenticator-App, "Konto hinzufügen" → QR-Code scannen.</p>
+  <div class="qr-wrap">
+    <div class="qr-box"><img id="qr-img" alt="QR-Code für 2FA-Setup" width="220" height="220"></div>
   </div>
+  <p class="desc" style="margin-top:14px;font-size:12px;">Manueller Code (falls keine Kamera):</p>
+  <div class="secret-box" id="manual-secret">…</div>
 
-  <div class="card" id="backup-card" style="display:none;">
-    <h2>2. Backup-Codes — JETZT speichern!</h2>
-    <p style="font-size:13px;color:#f59e0b;">⚠️ Diese 8 Codes werden NUR EINMAL angezeigt. Bewahre sie sicher auf.</p>
-    <div class="backup-list" id="backup-list"></div>
-    <button class="btn" type="button" onclick="copyBackup()" style="background:rgba(255,255,255,.06);">📋 In Zwischenablage kopieren</button>
-    <label class="cb-confirm">
-      <input type="checkbox" id="cb-backup-saved">
-      Ich habe die Backup-Codes sicher gespeichert (z.B. Passwort-Manager).
-    </label>
+  <h2 style="margin-top:18px;">Schritt 3: Bestätigen</h2>
+  <p class="desc">Gib den 6-stelligen Code aus deiner App ein:</p>
+  <div class="input-group">
+    <input type="text" id="totp-code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="one-time-code" placeholder="123456">
   </div>
+  <button type="button" class="btn btn-primary" id="btn-verify" disabled>Aktivieren</button>
+  <div id="msg-verify" style="display:none;"></div>
+</div>
 
-  <div class="card" id="verify-card" style="display:none;">
-    <h2>3. 6-stelligen TOTP-Code eingeben</h2>
-    <p style="font-size:13px;color:#8b93ab;">Aus deiner Authenticator-App.</p>
-    <input type="text" class="input" id="totp-code" maxlength="6" placeholder="000000" inputmode="numeric" autocomplete="one-time-code">
-    <button class="btn" type="button" id="btn-verify" disabled onclick="verify()">2FA aktivieren</button>
-    <div class="msg" id="msg-verify"></div>
+<!-- Recovery-Codes-Card -->
+<div class="card" id="recovery-card" style="display:none;">
+  <h2>🔑 Recovery-Codes</h2>
+  <p class="desc">Bewahre diese Codes sicher auf — sie sind dein Backup wenn du dein Smartphone verlierst.</p>
+  <div class="warning"><strong>⚠ Werden NICHT erneut angezeigt!</strong> Drucken oder in Passwort-Manager speichern.</div>
+  <div class="recovery-list" id="recovery-list"></div>
+  <div class="no-print" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;">
+    <button type="button" class="btn btn-secondary" id="btn-print">🖨 Drucken</button>
+    <button type="button" class="btn btn-secondary" id="btn-download">💾 Als TXT herunterladen</button>
   </div>
+  <div class="input-group no-print" style="margin-top:14px;">
+    <label><input type="checkbox" id="cb-saved"> Ich habe die Codes sicher gespeichert</label>
+  </div>
+  <button type="button" class="btn btn-primary no-print" id="btn-finish" disabled>Fertig</button>
+</div>
 
-</main>
+<!-- Disable-Card -->
+<div class="card no-print" id="disable-card" style="display:none;">
+  <h2>2FA deaktivieren</h2>
+  <p class="desc">Wenn du 2FA deaktivierst, ist dein Account weniger sicher. Bist du sicher?</p>
+  <div class="input-group">
+    <label>Passwort zur Bestätigung:</label>
+    <input type="password" id="disable-pw" placeholder="••••••••">
+  </div>
+  <button type="button" class="btn btn-danger" id="btn-disable">2FA deaktivieren</button>
+  <div id="msg-disable" style="display:none;"></div>
+</div>
 
-<script>
-let _backupCodes = [];
+</div>
 
-function generateBackupCodes() {
-  // 8 Codes je 16 Hex-Zeichen via crypto.getRandomValues
-  const codes = [];
-  for (let i = 0; i < 8; i++) {
-    const arr = new Uint8Array(8);
-    crypto.getRandomValues(arr);
-    const hex = Array.from(arr).map(b => b.toString(16).padStart(2, '0')).join('').toUpperCase();
-    codes.push(hex.slice(0, 4) + '-' + hex.slice(4, 8) + '-' + hex.slice(8, 12) + '-' + hex.slice(12, 16));
-  }
-  return codes;
+<script type="module">
+import { supabase } from '/lib/supabase-client.js';
+
+const $ = (id) => document.getElementById(id);
+let _factorId = null;
+let _challengeId = null;
+let _recoveryCodes = [];
+
+function showMsg(elId, text, type) {
+  const el = $(elId);
+  el.style.display = 'block';
+  el.className = 'msg msg-' + (type || 'info');
+  el.textContent = text;
 }
 
-async function init() {
-  const params = new URLSearchParams(location.search);
-  if (params.get('force') === 'admin') {
-    document.getElementById('force-banner').style.display = 'block';
+async function checkStatus() {
+  const { data: factors } = await supabase.auth.mfa.listFactors();
+  const verifiedTotp = (factors?.totp ?? []).find(f => f.status === 'verified');
+  if (verifiedTotp) {
+    $('status-text').innerHTML = '<span class="status-active">✅ 2FA aktiv</span> seit ' +
+      new Date(verifiedTotp.created_at).toLocaleDateString('de-DE');
+    $('status-actions').innerHTML = '<button type="button" class="btn btn-secondary" id="btn-show-disable" style="margin-top:8px;">Deaktivieren</button>' +
+      ' <button type="button" class="btn btn-secondary" id="btn-regen" style="margin-top:8px;">Recovery-Codes neu generieren</button>';
+    $('btn-show-disable').onclick = () => { $('disable-card').style.display = 'block'; $('disable-card').scrollIntoView({behavior:'smooth'}); };
+    $('btn-regen').onclick = regenerateRecoveryCodes;
+    _factorId = verifiedTotp.id;
+  } else {
+    $('status-text').innerHTML = '<span class="status-inactive">❌ Nicht aktiv</span> — empfohlen für Mandanten-Daten.';
+    $('setup-card').style.display = 'block';
   }
-  // Setup via auth-2fa-setup Lambda
+}
+
+async function startEnroll() {
+  $('btn-enroll').disabled = true;
+  $('btn-enroll').textContent = '⏳ Erstelle QR-Code…';
+  // Vorher: alle 'unverified' Factors löschen (verhindert Duplicate-Faktor-Errors)
   try {
-    const res = await provaFetch('/.netlify/functions/auth-2fa-setup', { method: 'POST' });
-    if (!res.ok) throw new Error('Setup-Fehler HTTP ' + res.status);
-    const data = await res.json();
-    const otpauth = data.qr_url || data.otpauth_url;
-    const secret = (otpauth.match(/secret=([^&]+)/) || [])[1] || '—';
-    document.getElementById('manual-code').textContent = secret;
-    // QR via api.qrserver.com
-    const qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encodeURIComponent(otpauth);
-    document.getElementById('qr-box').innerHTML = '<img src="' + qrUrl + '" alt="QR-Code">';
-
-    // Backup-Codes generieren + anzeigen
-    _backupCodes = generateBackupCodes();
-    document.getElementById('backup-list').innerHTML = _backupCodes.join('<br>');
-    document.getElementById('backup-card').style.display = 'block';
-  } catch (e) {
-    document.getElementById('qr-box').innerHTML = '<span style="color:#ef4444;">' + e.message + '</span>';
-  }
-}
-
-function copyBackup() {
-  if (!navigator.clipboard) return alert('Bitte manuell kopieren');
-  navigator.clipboard.writeText(_backupCodes.join('\n')).then(() => {
-    alert('Backup-Codes kopiert. JETZT in Passwort-Manager speichern!');
+    const { data: factors } = await supabase.auth.mfa.listFactors();
+    for (const f of (factors?.totp ?? [])) {
+      if (f.status === 'unverified') await supabase.auth.mfa.unenroll({ factorId: f.id });
+    }
+  } catch (_) {}
+  const { data, error } = await supabase.auth.mfa.enroll({
+    factorType: 'totp', friendlyName: 'PROVA-Authenticator-' + new Date().toISOString().slice(0,10)
   });
+  if (error) {
+    $('btn-enroll').disabled = false;
+    $('btn-enroll').textContent = '2FA einrichten';
+    showMsg('msg-verify', 'Fehler: ' + error.message, 'error');
+    return;
+  }
+  _factorId = data.id;
+  $('qr-img').src = data.totp.qr_code;
+  $('manual-secret').textContent = data.totp.secret;
+  $('setup-card').style.display = 'none';
+  $('qr-card').style.display = 'block';
+  $('qr-card').scrollIntoView({behavior:'smooth'});
 }
 
-document.addEventListener('change', (e) => {
-  if (e.target.id === 'cb-backup-saved') {
-    document.getElementById('verify-card').style.display = e.target.checked ? 'block' : 'none';
+async function verifyTotp() {
+  const code = $('totp-code').value.trim();
+  if (!/^\d{6}$/.test(code)) { showMsg('msg-verify', 'Bitte 6-stelligen Code eingeben.', 'error'); return; }
+  $('btn-verify').disabled = true;
+  $('btn-verify').textContent = '⏳ Verifiziere…';
+  try {
+    const ch = await supabase.auth.mfa.challenge({ factorId: _factorId });
+    if (ch.error) throw new Error(ch.error.message);
+    _challengeId = ch.data.id;
+    const v = await supabase.auth.mfa.verify({ factorId: _factorId, challengeId: _challengeId, code });
+    if (v.error) throw new Error(v.error.message);
+    showMsg('msg-verify', '✅ 2FA aktiviert! Generiere Recovery-Codes…', 'success');
+    await generateRecoveryCodes(true);
+  } catch (e) {
+    $('btn-verify').disabled = false;
+    $('btn-verify').textContent = 'Aktivieren';
+    showMsg('msg-verify', 'Fehler: ' + e.message, 'error');
   }
-});
+}
+
+async function generateRecoveryCodes(showCard) {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) { showMsg('msg-verify', 'Session-Fehler.', 'error'); return; }
+  const res = await fetch(window.PROVA_CONFIG.SUPABASE_URL + '/functions/v1/generate-mfa-recovery-codes', {
+    method: 'POST',
+    headers: { 'Authorization': 'Bearer ' + session.access_token, 'Content-Type': 'application/json',
+               'apikey': window.PROVA_CONFIG.SUPABASE_ANON_KEY }
+  });
+  const data = await res.json();
+  if (!res.ok || !data.codes) {
+    showMsg('msg-verify', 'Fehler beim Erstellen der Recovery-Codes: ' + (data.error || res.status), 'error');
+    return;
+  }
+  _recoveryCodes = data.codes;
+  if (showCard) {
+    $('qr-card').style.display = 'none';
+    $('setup-card').style.display = 'none';
+  } else {
+    $('disable-card').style.display = 'none';
+  }
+  $('recovery-list').innerHTML = _recoveryCodes.map(c => '<code>' + c + '</code>').join('');
+  $('recovery-card').style.display = 'block';
+  $('recovery-card').scrollIntoView({behavior:'smooth'});
+}
+
+async function regenerateRecoveryCodes() {
+  if (!confirm('Alle alten Recovery-Codes werden ungültig. Fortfahren?')) return;
+  await generateRecoveryCodes(false);
+}
+
+function downloadRecoveryCodes() {
+  const text = 'PROVA Systems — 2FA Recovery-Codes\n'
+    + 'Generiert: ' + new Date().toLocaleString('de-DE') + '\n'
+    + 'User: ' + (localStorage.getItem('prova_sv_email') || '?') + '\n\n'
+    + _recoveryCodes.join('\n')
+    + '\n\nWichtig: jeder Code ist nur EINMAL nutzbar. Nach Verbrauch:\n'
+    + 'Settings → Sicherheit → "Recovery-Codes neu generieren"\n';
+  const blob = new Blob([text], { type: 'text/plain' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'prova-recovery-codes-' + new Date().toISOString().slice(0,10) + '.txt';
+  a.click();
+}
+
+async function disable2FA() {
+  const pw = $('disable-pw').value;
+  if (!pw) { showMsg('msg-disable', 'Passwort erforderlich.', 'error'); return; }
+  $('btn-disable').disabled = true;
+  $('btn-disable').textContent = '⏳ Verifiziere…';
+  try {
+    // Re-Auth durch signInWithPassword (validates Password)
+    const email = localStorage.getItem('prova_sv_email') || '';
+    const reauth = await supabase.auth.signInWithPassword({ email, password: pw });
+    if (reauth.error) throw new Error('Passwort falsch');
+    // Unenroll all TOTP factors
+    const { data: factors } = await supabase.auth.mfa.listFactors();
+    for (const f of (factors?.totp ?? [])) {
+      await supabase.auth.mfa.unenroll({ factorId: f.id });
+    }
+    showMsg('msg-disable', '✅ 2FA deaktiviert. Reload…', 'success');
+    setTimeout(() => location.reload(), 1500);
+  } catch (e) {
+    $('btn-disable').disabled = false;
+    $('btn-disable').textContent = '2FA deaktivieren';
+    showMsg('msg-disable', 'Fehler: ' + e.message, 'error');
+  }
+}
 
 document.addEventListener('input', (e) => {
   if (e.target.id === 'totp-code') {
-    document.getElementById('btn-verify').disabled = !/^\d{6}$/.test(e.target.value);
+    $('btn-verify').disabled = !/^\d{6}$/.test(e.target.value);
   }
 });
+document.addEventListener('change', (e) => {
+  if (e.target.id === 'cb-saved') $('btn-finish').disabled = !e.target.checked;
+});
 
-async function verify() {
-  const code = document.getElementById('totp-code').value;
-  const msg = document.getElementById('msg-verify');
-  msg.className = 'msg'; msg.textContent = 'Verifiziere…';
-  try {
-    const res = await provaFetch('/.netlify/functions/auth-2fa-verify', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ code: code, backup_codes: _backupCodes })
-    });
-    if (!res.ok) {
-      const err = await res.json();
-      msg.className = 'msg error'; msg.textContent = 'Fehler: ' + (err.error || res.status);
-      return;
-    }
-    msg.className = 'msg success'; msg.textContent = '✅ 2FA aktiviert. Weiterleitung…';
-    setTimeout(() => {
-      const params = new URLSearchParams(location.search);
-      window.location.href = params.get('force') === 'admin' ? '/admin-dashboard.html' : '/einstellungen.html';
-    }, 1200);
-  } catch (e) {
-    msg.className = 'msg error'; msg.textContent = 'Fehler: ' + e.message;
-  }
-}
+$('btn-enroll').onclick = startEnroll;
+$('btn-verify').onclick = verifyTotp;
+$('btn-print').onclick = () => window.print();
+$('btn-download').onclick = downloadRecoveryCodes;
+$('btn-finish').onclick = () => { window.location.href = 'einstellungen.html'; };
+$('btn-disable').onclick = disable2FA;
 
-init();
+checkStatus();
 </script>
 </body>
 </html>

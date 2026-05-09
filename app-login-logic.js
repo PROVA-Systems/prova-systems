@@ -193,6 +193,138 @@
 
       var resolvedEmail = String(user.email || email).toLowerCase();
 
+      // MEGA⁵²: 2FA-Step-2 Check via Supabase Native MFA
+      try {
+        var aal = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+        var currentLevel = aal && aal.data && aal.data.currentLevel;
+        var nextLevel    = aal && aal.data && aal.data.nextLevel;
+        if (currentLevel === 'aal1' && nextLevel === 'aal2') {
+          // 2FA erforderlich → Step-2-Form zeigen
+          var fac = await supabase.auth.mfa.listFactors();
+          var verifiedFactor = (fac.data && fac.data.totp || []).find(function (f) { return f.status === 'verified'; });
+          if (!verifiedFactor) {
+            // Edge-Case: aal2 required aber kein verified Factor → fall through to normal login (Account-Recovery-Pfad)
+            console.warn('[login] aal2 required but no verified TOTP-factor — proceeding to dashboard, user soll 2FA neu einrichten');
+          } else {
+            window.__provaMfaContext = {
+              factorId: verifiedFactor.id,
+              user: user, supabase: supabase, resolvedEmail: resolvedEmail,
+              originalEmail: email
+            };
+            // Login-Form ausblenden, MFA-Step zeigen
+            document.getElementById('login-error').style.display = 'none';
+            if (btn) { btn.disabled = false; btn.textContent = 'Anmelden'; }
+            var mfaStep = document.getElementById('mfa-step');
+            if (mfaStep) mfaStep.style.display = 'block';
+            var loginForm = document.getElementById('form-login');
+            // Verstecke Email/Passwort + Trial-Box, lasse nur MFA sichtbar
+            ['login-email','login-pw'].forEach(function (id) { var el = document.getElementById(id); if (el && el.parentElement) el.parentElement.style.display = 'none'; });
+            ['login-btn'].forEach(function (id) { var el = document.getElementById(id); if (el) el.style.display = 'none'; });
+            var trialBox = document.querySelector('.trial-box');
+            if (trialBox) trialBox.style.display = 'none';
+            var dividers = document.querySelectorAll('.divider');
+            dividers.forEach(function (d) { d.style.display = 'none'; });
+            setTimeout(function () { var mc = document.getElementById('mfa-code'); if (mc) mc.focus(); }, 100);
+            return;  // Pause Login bis MFA verified
+          }
+        }
+      } catch (eAal) {
+        console.warn('[login] aal-Check failed (non-blocking):', eAal && eAal.message);
+      }
+
+      await _completeLogin(supabase, user, resolvedEmail);
+      return;
+    } catch (e) {
+      console.warn('[login] Verbindungsfehler', e && e.message);
+      fail('Verbindungsfehler. Bitte Internetverbindung prüfen.');
+    }
+  };
+
+  /* ── MEGA⁵² MFA Step-2 Verify (TOTP Code) ── */
+  window.verifyMfa = async function () {
+    var ctx = window.__provaMfaContext;
+    if (!ctx) { console.warn('[mfa] no context'); return; }
+    var code = (document.getElementById('mfa-code').value || '').trim();
+    var errEl = document.getElementById('mfa-error');
+    var btn = document.getElementById('mfa-verify-btn');
+    if (!/^\d{6}$/.test(code)) {
+      errEl.textContent = 'Bitte 6-stelligen Code eingeben.';
+      errEl.style.display = 'block';
+      return;
+    }
+    errEl.style.display = 'none';
+    btn.disabled = true; btn.textContent = '⏳ Verifiziere…';
+    try {
+      var ch = await ctx.supabase.auth.mfa.challenge({ factorId: ctx.factorId });
+      if (ch.error) throw new Error(ch.error.message);
+      var v = await ctx.supabase.auth.mfa.verify({ factorId: ctx.factorId, challengeId: ch.data.id, code: code });
+      if (v.error) throw new Error(v.error.message);
+      // aal2 erfolgreich → fortfahren
+      await _completeLogin(ctx.supabase, ctx.user, ctx.resolvedEmail);
+    } catch (e) {
+      btn.disabled = false; btn.textContent = 'Bestätigen';
+      errEl.textContent = 'Code ungültig. Bitte erneut versuchen.';
+      errEl.style.display = 'block';
+    }
+  };
+
+  /* ── MEGA⁵² Recovery-Code-Login ── */
+  window.zeigeRecoveryCode = function () {
+    document.getElementById('mfa-step').style.display = 'none';
+    document.getElementById('recovery-step').style.display = 'block';
+    setTimeout(function () { var rc = document.getElementById('recovery-code'); if (rc) rc.focus(); }, 100);
+  };
+  window.zurueckZuMfa = function () {
+    document.getElementById('recovery-step').style.display = 'none';
+    document.getElementById('mfa-step').style.display = 'block';
+  };
+  window.verifyRecoveryCode = async function () {
+    var ctx = window.__provaMfaContext;
+    if (!ctx) { console.warn('[mfa] no context for recovery'); return; }
+    var code = (document.getElementById('recovery-code').value || '').trim().toUpperCase();
+    var errEl = document.getElementById('recovery-error');
+    var btn = document.getElementById('recovery-verify-btn');
+    var pwEl = document.getElementById('login-pw');
+    var pw = pwEl ? pwEl.value : '';
+    if (!code || code.length < 8) {
+      errEl.textContent = 'Bitte vollständigen Recovery-Code eingeben.';
+      errEl.style.display = 'block';
+      return;
+    }
+    errEl.style.display = 'none';
+    btn.disabled = true; btn.textContent = '⏳ Verifiziere…';
+    try {
+      var SB_URL = (window.PROVA_CONFIG && window.PROVA_CONFIG.SUPABASE_URL) || 'https://cngteblrbpwsyypexjrv.supabase.co';
+      var SB_ANON = (window.PROVA_CONFIG && window.PROVA_CONFIG.SUPABASE_ANON_KEY) || '';
+      var res = await fetch(SB_URL + '/functions/v1/verify-mfa-recovery-code', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': SB_ANON, 'Authorization': 'Bearer ' + SB_ANON },
+        body: JSON.stringify({ email: ctx.resolvedEmail, password: pw, recovery_code: code })
+      });
+      var data = await res.json();
+      if (!res.ok) throw new Error(data.error || ('HTTP ' + res.status));
+      // Session in localStorage + auf den supabase-Client setzen
+      if (data.session && data.session.access_token) {
+        await ctx.supabase.auth.setSession({
+          access_token: data.session.access_token,
+          refresh_token: data.session.refresh_token
+        });
+      }
+      if (data.warning) alert(data.warning);
+      await _completeLogin(ctx.supabase, ctx.user || data.user, ctx.resolvedEmail);
+    } catch (e) {
+      btn.disabled = false; btn.textContent = 'Bestätigen';
+      errEl.textContent = 'Recovery-Code ungültig: ' + e.message;
+      errEl.style.display = 'block';
+    }
+  };
+
+  /* ── MEGA⁵² _completeLogin: Profile-Sync + localStorage + Redirect ── */
+  async function _completeLogin(supabase, user, resolvedEmail) {
+    var ses = await supabase.auth.getSession();
+    var session = ses && ses.data && ses.data.session;
+    if (!session) { console.warn('[mfa] no session post-verify'); window.location.href = 'dashboard.html'; return; }
+
       // Profil-Daten aus public.users + workspace_memberships nachziehen
       var displayName = resolvedEmail.split('@')[0];
       var paket = 'Solo'; var aboStatus = null; var trialEnd = null;
@@ -256,11 +388,8 @@
       } catch (e3) {}
 
       window.location.href = 'dashboard.html';
-    } catch (e) {
-      console.warn('[login] Verbindungsfehler', e && e.message);
-      fail('Verbindungsfehler. Bitte Internetverbindung prüfen.');
-    }
-  };
+  }
+  /* ── End of _completeLogin ── */
 
   /* ────────────────────────────────────────────
      REGISTER — bleibt via netlifyIdentity.signup
