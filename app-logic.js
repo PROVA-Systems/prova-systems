@@ -2723,52 +2723,50 @@ async function starteAufnahme() {
   recognition.continuous = true; recognition.interimResults = false; recognition.lang = 'de-DE';
 
   // ════════════════════════════════════════════════════════════════════════
-  // MEGA²⁸ W7N-I1 — Live-Transkript Manual-Input-Schutz (Variante A)
-  // Bug: User-Editing während Live-Stream → Append kollidiert mit Cursor.
-  // Fix: Wenn User in transcriptArea tippt, pausiere Live-Append für 5s.
-  // Browser-Verify-Marker: Marcel-Smoke-Test pflicht (Decision-Log).
+  // MEGA⁴⁷ Diktat-Mode-Bug Final-Fix — strict Mode-Toggle (kein Buffer-Flush mehr)
+  //
+  // Bug-Historie: W7N-I1 hatte 5s-Pause-Buffer mit Auto-Flush — Marcel meldete
+  // dass Live-Transkript nach kurzem Tippen trotzdem appended wurde. Jetzt:
+  //   - User tippt manuell in transcriptArea → recognition.stop() + Toast
+  //   - Buffer wird verworfen (kein Flush)
+  //   - User muss Mikrofon-Button explizit erneut klicken zum Resume
+  //
+  // Acceptance (Marcel 09.05.2026 Eskalation):
+  //   ✓ Manuelle Eingabe → kein Whisper-Call in Network-Tab
+  //   ✓ Mikrofon-Button → Whisper-Stream startet
+  //   ✓ Toggle hin/her → kein Memory-Leak (recognition wird gecleant)
   // ════════════════════════════════════════════════════════════════════════
-  window._lastManualInputTs = 0;
-  const PAUSE_AFTER_MANUAL_MS = 5000;
   const _areaForListener = $('#transcriptArea');
-  if (_areaForListener && !_areaForListener.dataset.w7i1Bound) {
-    const _markManual = () => { window._lastManualInputTs = Date.now(); };
-    _areaForListener.addEventListener('input', _markManual);   // contenteditable input
-    _areaForListener.addEventListener('keydown', _markManual);
-    _areaForListener.addEventListener('paste', _markManual);
-    _areaForListener.dataset.w7i1Bound = '1';
+  if (_areaForListener && !_areaForListener.dataset.mega47Bound) {
+    const _onManualInput = function (ev) {
+      // Nur "echte" User-Eingabe: keydown mit printable key ODER paste ODER input-event mit inputType
+      // (kein synthetic input vom recognition-Append-Code, der setzt textContent direkt)
+      if (!isRecording) return;
+      // Bei keydown: Shift/Ctrl/Alt/Meta + Modifier-only keys ignorieren
+      if (ev && ev.type === 'keydown') {
+        if (ev.ctrlKey || ev.metaKey || ev.altKey) return;
+        const k = ev.key || '';
+        if (k.length !== 1 && k !== 'Backspace' && k !== 'Delete' && k !== 'Enter') return;
+      }
+      // Stoppe Recording sofort
+      try { stoppeAufnahme(); } catch (_) {}
+      if (typeof showToast === 'function') {
+        showToast('Diktat pausiert wegen manueller Eingabe — Mikrofon-Button für Resume.', 'info');
+      }
+    };
+    _areaForListener.addEventListener('keydown', _onManualInput);
+    _areaForListener.addEventListener('paste', _onManualInput);
+    _areaForListener.dataset.mega47Bound = '1';
   }
 
   recognition.onresult = e => {
-    // W7N-I1 Variante A: skip Append wenn User vor < 5s manuell editiert hat.
-    if (Date.now() - (window._lastManualInputTs || 0) < PAUSE_AFTER_MANUAL_MS) {
-      // Buffer den Final-Text statt droppen — wird bei nächstem Append (post-Pause) geflushed.
-      window._pendingTranscriptBuffer = window._pendingTranscriptBuffer || '';
-      for (let j = e.resultIndex; j < e.results.length; j++) {
-        if (e.results[j].isFinal) {
-          window._pendingTranscriptBuffer += (window._pendingTranscriptBuffer ? ' ' : '') + e.results[j][0].transcript.trim();
-        }
-      }
-      return;
-    }
+    // Sicherheits-Check: falls Recording stoppte aber recognition.onresult noch feuert
+    if (!isRecording) return;
 
     const area = $('#transcriptArea');
     const empty = area.querySelector('.transcript-empty');
     if (empty) empty.style.display = 'none';
     let interim = '';
-
-    // W7N-I1 Buffer-Flush: pending Live-Text aus Pause-Periode anhängen
-    if (window._pendingTranscriptBuffer) {
-      const pendingText = window._pendingTranscriptBuffer;
-      window._pendingTranscriptBuffer = '';
-      window.transcriptText += (window.transcriptText ? ' ' : '') + pendingText;
-      const pBuffered = document.createElement('p');
-      pBuffered.style.cssText = 'font-family:var(--font-body);font-size:.9375rem;line-height:1.7;color:var(--gray-700);margin-bottom:.5rem;background:rgba(79,142,247,.04);';
-      pBuffered.textContent = pendingText;
-      pBuffered.dataset.bufferedDuringEdit = '1';
-      area.appendChild(pBuffered);
-      area.scrollTop = area.scrollHeight;
-    }
 
     for (let i = e.resultIndex; i < e.results.length; i++) {
       if (e.results[i].isFinal) {
@@ -2799,7 +2797,14 @@ async function starteAufnahme() {
   recognition.onerror = e => {
     if (e.error === 'not-allowed') { showToast('Mikrofon verweigert.', 'error'); stoppeAufnahme(); }
   };
-  recognition.onend = () => { if (isRecording) { try { recognition.start(); } catch(err) {} } };
+  // MEGA⁴⁷: nur restart wenn IMMER NOCH isRecording UND recognition === currentInstance
+  //   (kein revive nach stoppeAufnahme, kein Restart nach manuellem Stop)
+  recognition.onend = () => {
+    if (!isRecording) return;
+    if (recognition !== window._currentRecognition) return;  // wurde durch neue Aufnahme oder stop ersetzt
+    try { recognition.start(); } catch(err) { /* ignore — stoppeAufnahme räumt auf */ }
+  };
+  window._currentRecognition = recognition;
   try { recognition.start(); } catch(err) { showToast('Fehler beim Starten.', 'error'); }
 }
 
@@ -2819,6 +2824,8 @@ function stoppeAufnahme() {
   var iconPlay = document.getElementById('recIconPlay'); var iconStop = document.getElementById('recIconStop');
   if (iconPlay) iconPlay.style.display = ''; if (iconStop) iconStop.style.display = 'none';
   if (recognition) { try { recognition.stop(); } catch(err) {} recognition = null; }
+  window._currentRecognition = null;        // MEGA⁴⁷: invalidate Restart-Token
+  window._pendingTranscriptBuffer = '';     // MEGA⁴⁷: alte Buffer verwerfen falls noch da
   // MediaRecorder stoppen → Whisper-Korrektur startet
   if (mediaRecorder && mediaRecorder.state !== 'inactive') {
     try { mediaRecorder.stop(); } catch(e) {}
