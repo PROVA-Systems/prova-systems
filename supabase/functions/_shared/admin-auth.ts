@@ -23,6 +23,7 @@ import { handleCors, errorResponse, jsonResponse } from './cors.ts';
 // ── Config ─────────────────────────────────────────────────
 const HARDCODED_ADMIN_EMAILS = [
     'marcel.schreiber891@gmail.com',
+    'marcel.schreiber@prova-systems.de',   // MEGA⁵¹ — Marcel's Pilot-Email (FQDN korrigiert)
     'marcel@prova-systems.de',
     'kontakt@prova-systems.de',
     'admin@prova-systems.de'

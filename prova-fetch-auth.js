@@ -227,6 +227,15 @@
       clearAuthAndRedirect();
     }
 
+    // MEGA⁵¹: 403 ist NIEMALS ein Logout-Trigger.
+    // 403 = Permission-Denied (nicht in Admin-Whitelist, keine 2FA, RLS, etc.)
+    // Token bleibt VALID → User soll eingeloggt bleiben.
+    // Caller (z.B. dashboard-logic.js loadKiTokenKpi) catched !ok und zeigt "—".
+    if (res && res.status === 403 && isFunctionUrl(url)) {
+      var fnName = url.split(FUNCTION_PREFIX)[1]?.split('?')[0] ?? '?';
+      console.info('[fetch-auth] 403 forbidden on ' + fnName + ' — kein Logout (Permission-Denied, Token bleibt valid)');
+    }
+
     return res;
   };
 
