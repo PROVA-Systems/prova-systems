@@ -1,26 +1,24 @@
 /* ============================================================
    PROVA app-login-logic.js — Login/Register/Reset Logic
 
-   S-SICHER P4A.5-v2 (26.04.2026)
-   Externalisiert aus app-login.html Inline-Scripts (vorher
-   Zeilen 418-590 inline). Genau eine funktionale Aenderung
-   gegenueber der Inline-Version: window.login ruft jetzt den
-   eigenen HMAC-Endpoint /.netlify/functions/auth-token-issue
-   statt direkt /.netlify/identity/token. Alles andere ist 1:1
-   uebernommen — Register/Reset bleiben via netlifyIdentity-Widget,
-   da diese Endpoints funktionieren und die Email-Confirmation /
-   Password-Recovery-Flows daran haengen.
+   MEGA⁴⁵ (09.05.2026) — Komplett-Migration auf Supabase Auth.
 
-   Folge der Externalisierung:
-   - netlifyIdentity.on('login', ...)-Handler entfernt: das war
-     ein Parallel-Pfad, der durch das Identity-Widget getriggert
-     werden konnte. Mit P4A.5-v2 ist auth-token-issue der einzige
-     Login-Pfad.
-   - netlifyIdentity.on('init', ...) bleibt wegen Invite-/Recovery-
-     URL-Hash-Routing — beide Flows brauchen das Widget.
+   Frühere Bridges entfernt:
+   - /.netlify/functions/auth-token-issue (Login-Endpoint, HMAC-Token)
+     → ersetzt durch supabase.auth.signInWithPassword().
+     auth-token-issue Edge-Function existiert weiter, ist aber NUR
+     für admin-impersonate (mit x-internal-secret-Header).
+   - netlify-identity-widget.js (Register/Reset)
+     → ersetzt durch supabase.auth.signUp() + resetPasswordForEmail().
 
-   Eingebunden in: app-login.html (am Ende des <body> via
-   <script src="app-login-logic.js"></script>).
+   Storage-Keys werden weiter befüllt (prova_auth_token, prova_user,
+   prova_sv_email, prova_paket, etc.) damit auth-guard.js + Legacy-
+   Code unverändert weiter funktionieren.
+
+   Profil-Sync läuft jetzt über public.users + workspace_memberships
+   in Supabase (kein Airtable mehr).
+
+   Eingebunden in: app-login.html.
 ============================================================ */
 
 (function () {
@@ -64,15 +62,11 @@
   };
 
   /* ────────────────────────────────────────────
-     LOGIN — P4A.5-v2: gegen /.netlify/functions/auth-token-issue
+     LOGIN — MEGA⁴⁵: supabase.auth.signInWithPassword()
 
-     Erwartete Response (200): { token, sv: { email, sv_record_id,
-       paket, status, subscription_status, trial_end, sv_vorname,
-       sv_nachname, testpilot, verified, provisional } }
-     401 → Email/Passwort falsch oder Provisional-Lookup fehlgeschlagen
-     403 → Konto gesperrt
-     502 → Identity-Backend nicht erreichbar
-     500 → Server-Misconfig (AUTH_HMAC_SECRET fehlt)
+     Profil-Daten kommen aus public.users + workspace_memberships
+     (paket, vorname, nachname, abo_status, trial_endet_am).
+     Legacy-Storage-Keys werden für auth-guard.js weiter befüllt.
      ──────────────────────────────────────────── */
   // MEGA¹⁰ W5: Form-Validate-Migration via ProvaForm.validateField
   // Pseudo-Form: app-login.html nutzt kein <form>-Tag, sondern <div>-Wrapper mit Click-Handlers.
@@ -126,61 +120,85 @@
       if (btn)   { btn.disabled = false; btn.textContent = 'Anmelden'; }
     }
 
+    // MEGA⁴⁵-Fix: Login geht direkt über Supabase Auth (signInWithPassword).
+    // Frühere auth-token-issue-Bridge entfernt — diese Edge-Function ist
+    // jetzt NUR für admin-impersonate (mit x-internal-secret) reserviert.
     try {
-      var res = await provaFetch('/.netlify/functions/auth-token-issue', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email, password: pw })
-      });
+      var sbModule = await import('/lib/supabase-client.js');
+      var supabase = sbModule.supabase || sbModule.getSupabase();
 
-      if (res.status === 401) return fail('E-Mail oder Passwort falsch — oder E-Mail noch nicht bestätigt.');
-      if (res.status === 403) return fail('Konto gesperrt. Bitte kontakt@prova-systems.de kontaktieren.');
-      if (res.status === 502) return fail('Auth-Backend vorübergehend nicht erreichbar. Bitte erneut versuchen.');
-      if (!res.ok)            return fail('Anmeldung fehlgeschlagen (' + res.status + ').');
+      var signin = await supabase.auth.signInWithPassword({ email: email, password: pw });
 
-      var data = await res.json();
-      if (!data || !data.token || !data.sv) return fail('Ungültige Server-Antwort. Bitte erneut versuchen.');
+      if (signin.error) {
+        var msg = String(signin.error.message || '').toLowerCase();
+        if (msg.indexOf('email not confirmed') !== -1 || msg.indexOf('not confirmed') !== -1) {
+          return fail('E-Mail noch nicht bestätigt. Bitte den Link aus der Bestätigungs-Mail klicken.');
+        }
+        if (msg.indexOf('invalid login') !== -1 || msg.indexOf('invalid credentials') !== -1) {
+          return fail('E-Mail oder Passwort falsch.');
+        }
+        if (signin.error.status === 429 || msg.indexOf('rate limit') !== -1) {
+          return fail('Zu viele Login-Versuche. Bitte einige Minuten warten.');
+        }
+        return fail('Anmeldung fehlgeschlagen: ' + (signin.error.message || 'unbekannt'));
+      }
 
-      var sv = data.sv;
-      var resolvedEmail = String(sv.email || email).toLowerCase();
-      var displayName   = ((sv.sv_vorname || '') + ' ' + (sv.sv_nachname || '')).trim()
-                          || resolvedEmail.split('@')[0];
+      var session = signin.data && signin.data.session;
+      var user    = signin.data && signin.data.user;
+      if (!session || !user) return fail('Ungültige Server-Antwort. Bitte erneut versuchen.');
 
-      // Primary Auth-Anker fuer auth-guard.js (P4A.4 prueft prova_auth_token zuerst)
-      localStorage.setItem('prova_auth_token', data.token);
+      var resolvedEmail = String(user.email || email).toLowerCase();
 
+      // Profil-Daten aus public.users + workspace_memberships nachziehen
+      var displayName = resolvedEmail.split('@')[0];
+      var paket = 'Solo'; var aboStatus = null; var trialEnd = null;
+      var svVorname = ''; var svNachname = ''; var founding = false;
+      try {
+        var profileRes = await supabase
+          .from('users')
+          .select('vorname, nachname, paket, founding_member, workspace_memberships!inner(workspace_id, rolle, workspaces!inner(abo_status, trial_endet_am, paket))')
+          .eq('id', user.id)
+          .maybeSingle();
+        if (profileRes.data) {
+          svVorname  = profileRes.data.vorname || '';
+          svNachname = profileRes.data.nachname || '';
+          if (profileRes.data.paket) paket = profileRes.data.paket;
+          founding   = !!profileRes.data.founding_member;
+          var ws = (profileRes.data.workspace_memberships || [])[0];
+          if (ws && ws.workspaces) {
+            if (ws.workspaces.abo_status)     aboStatus = ws.workspaces.abo_status;
+            if (ws.workspaces.trial_endet_am) trialEnd  = ws.workspaces.trial_endet_am;
+            if (ws.workspaces.paket)          paket     = ws.workspaces.paket;
+          }
+          displayName = ((svVorname + ' ' + svNachname).trim()) || displayName;
+        }
+      } catch (eProfile) {
+        console.warn('[login] profil-lookup fail (non-blocking):', eProfile && eProfile.message);
+      }
+
+      // Legacy-Storage-Keys schreiben für auth-guard.js + bestehenden Code
+      localStorage.setItem('prova_auth_token', session.access_token);
       localStorage.setItem('prova_user', JSON.stringify({
         email:       resolvedEmail,
         name:        displayName,
-        token:       data.token,
-        verified:    !!sv.verified,
-        provisional: !!sv.provisional
+        token:       session.access_token,
+        verified:    true,            // Supabase confirms email natively
+        provisional: false
       }));
       localStorage.setItem('prova_sv_email', resolvedEmail);
       try { sessionStorage.setItem('prova_email', resolvedEmail); } catch (e) {}
 
-      if (sv.paket)               localStorage.setItem('prova_paket',               sv.paket);
-      if (sv.status)              localStorage.setItem('prova_status',              sv.status);
-      if (sv.subscription_status) localStorage.setItem('prova_subscription_status', sv.subscription_status);
-      if (sv.trial_end)           localStorage.setItem('prova_trial_end',           sv.trial_end);
-      if (sv.testpilot)           localStorage.setItem('prova_testpilot',           '1');
-      if (sv.sv_vorname)          localStorage.setItem('prova_sv_vorname',          sv.sv_vorname);
-      if (sv.sv_nachname)         localStorage.setItem('prova_sv_nachname',         sv.sv_nachname);
-      if (sv.sv_record_id)        localStorage.setItem('prova_at_sv_record_id',     sv.sv_record_id);
+      if (paket)      localStorage.setItem('prova_paket',               paket);
+      if (aboStatus)  localStorage.setItem('prova_subscription_status', aboStatus);
+      if (trialEnd)   localStorage.setItem('prova_trial_end',           trialEnd);
+      if (founding)   localStorage.setItem('prova_testpilot',           '1');
+      if (svVorname)  localStorage.setItem('prova_sv_vorname',          svVorname);
+      if (svNachname) localStorage.setItem('prova_sv_nachname',         svNachname);
 
       // Sekundaer: V2-Session als Uebergangs-Anker fuer auth-guard
-      // (Sprint P4B macht den Auth-Flow auf HMAC-Token-only)
       if (typeof window.provaCreateSession === 'function') {
         try { window.provaCreateSession({ email: resolvedEmail, name: displayName }); } catch (e) {}
       }
-
-      // Profil-Sync aus Airtable (zusaetzliche Felder wie sv_qualifikation,
-      // sv_telefon, sv_adresse — auth-token-issue liefert nur Kern-Stamm).
-      try {
-        if (typeof window.provaLoadSVProfilNachLogin === 'function') {
-          await window.provaLoadSVProfilNachLogin(resolvedEmail);
-        }
-      } catch (e2) { console.warn('[login] profil-sync', e2 && e2.message); }
 
       // Audit-Log (best-effort)
       try {
@@ -188,7 +206,7 @@
           await window.provaAuditLog({
             typ:     'Login',
             email:   resolvedEmail,
-            details: { provisional: !!sv.provisional, verified: !!sv.verified }
+            details: { source: 'supabase-auth' }
           });
         }
       } catch (e3) {}
@@ -255,32 +273,37 @@
       }
       return;
     }
-    if (typeof netlifyIdentity === 'undefined') {
-      if (errEl) {
-        errEl.textContent = 'Anmeldedienst wird nicht geladen.';
-        errEl.style.display = 'block';
-      }
-      return;
-    }
-
     if (btn) { btn.disabled = true; btn.textContent = '⏳ wird gesendet…'; }
 
+    // MEGA⁴⁵-Fix: Registrierung via Supabase Auth (netlify-identity-widget entfernt).
     try {
-      if (typeof netlifyIdentity.signup === 'function') {
-        await netlifyIdentity.signup({ email: email, password: pw, data: { full_name: name } });
-      } else {
-        netlifyIdentity.open('signup');
-        if (sucEl) {
-          sucEl.textContent =
-            'Bitte Registrierung im Fenster abschließen. Sie erhalten eine E-Mail mit Bestätigungslink — danach erscheint Ihr Datensatz in Airtable (Trial 14 Tage).';
-          sucEl.style.display = 'block';
+      var sbModule = await import('/lib/supabase-client.js');
+      var supabase = sbModule.supabase || sbModule.getSupabase();
+      var nameParts = name.split(/\s+/);
+      var firstName = nameParts.shift() || '';
+      var lastName  = nameParts.join(' ');
+
+      var signup = await supabase.auth.signUp({
+        email: email,
+        password: pw,
+        options: {
+          data: { full_name: name, vorname: firstName, nachname: lastName },
+          emailRedirectTo: window.location.origin + '/onboarding-supabase.html'
+        }
+      });
+      if (signup.error) {
+        var msg = String(signup.error.message || '').toLowerCase();
+        if (msg.indexOf('already registered') !== -1 || msg.indexOf('already exists') !== -1) {
+          if (errEl) { errEl.textContent = 'E-Mail bereits registriert. Bitte Login verwenden.'; errEl.style.display = 'block'; }
+        } else {
+          if (errEl) { errEl.textContent = signup.error.message || 'Registrierung fehlgeschlagen.'; errEl.style.display = 'block'; }
         }
         if (btn) { btn.disabled = false; btn.textContent = 'Konto erstellen & loslegen'; }
         return;
       }
       if (sucEl) {
         sucEl.textContent =
-          '✅ Bestätigungs-Mail ist unterwegs. Bitte Link in der E-Mail anklicken — danach anmelden. Erst dann wird Ihr SV-Datensatz angelegt (14 Tage Trial).';
+          '✅ Bestätigungs-Mail ist unterwegs. Bitte Link in der E-Mail anklicken — danach im Login-Tab anmelden. Trial: 90 Tage.';
         sucEl.style.display = 'block';
       }
     } catch (e) {
@@ -295,7 +318,7 @@
   /* ────────────────────────────────────────────
      PASSWORT-RESET — bleibt via netlifyIdentity.open('recovery')
      ──────────────────────────────────────────── */
-  window.resetPasswort = function () {
+  window.resetPasswort = async function () {
     var emailEl = document.getElementById('reset-email');
     var email = (emailEl.value || '').trim();
     // MEGA¹¹ W8: Field-Validation fuer Reset-Form
@@ -311,44 +334,31 @@
       }
     }
     if (!email) return;
-    if (typeof netlifyIdentity !== 'undefined' && netlifyIdentity.open) {
-      netlifyIdentity.open('recovery');
-    }
     var ok = document.getElementById('reset-success');
+    // MEGA⁴⁵-Fix: Passwort-Reset via Supabase Auth (netlify-identity-widget entfernt).
+    try {
+      var sbModule = await import('/lib/supabase-client.js');
+      var supabase = sbModule.supabase || sbModule.getSupabase();
+      await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: window.location.origin + '/auth-supabase.html?action=reset'
+      });
+    } catch (e) {
+      console.warn('[reset] supabase resetPasswordForEmail fail (non-blocking):', e && e.message);
+    }
+    // Immer success zeigen (Anti-Email-Enumeration: nicht verraten ob Email existiert)
     if (ok) ok.style.display = 'block';
   };
 
-  /* ────────────────────────────────────────────
-     netlifyIdentity Init — Invite/Recovery-URL-Hash-Routing
-     'login'-Handler ist BEWUSST entfernt (P4A.5-v2): auth-token-issue
-     ist der einzige Login-Pfad. Wenn das Identity-Widget einen Login
-     triggert (z.B. nach Recovery-Reset), laeuft das ohne unsere Logik
-     durch — der Auth-Guard auf den geschuetzten Seiten holt sich beim
-     naechsten Page-Load entweder einen prova_auth_token (gibt's dann
-     nicht -> Redirect zu Login) oder akzeptiert die V2-Session. Saubere
-     Loesung kommt in AUTH-PERFEKT 2.0.
-     ──────────────────────────────────────────── */
-  function initNetlifyIdentity() {
-    if (typeof netlifyIdentity === 'undefined') return;
-    netlifyIdentity.on('init', function () {
-      var hash = window.location.hash || '';
-      if (hash.indexOf('invite_token')   !== -1) netlifyIdentity.open('signup');
-      if (hash.indexOf('recovery_token') !== -1) netlifyIdentity.open('recovery');
-    });
-    netlifyIdentity.on('error', function (err) {
-      console.error('Netlify Identity Fehler:', err);
-    });
-    netlifyIdentity.init();
-  }
+  /* MEGA⁴⁵: netlifyIdentity-Init entfernt — Identity-Widget wurde aus
+     app-login.html entfernt (CSP-Block). Login/Register/Reset laufen
+     komplett über Supabase Auth. */
 
   /* ── DOM-Ready Init ── */
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', function () {
       initExpiredBanner();
-      initNetlifyIdentity();
     });
   } else {
     initExpiredBanner();
-    initNetlifyIdentity();
   }
 })();
