@@ -34,6 +34,50 @@
     }
   }
 
+  /* ── MEGA⁵⁰ Auto-Redirect bei Session vorhanden + Loop-Counter ──
+     Wenn User auf Login-Page landet aber bereits eingeloggt ist:
+       → ?next-Param respektieren ODER zum Dashboard
+     Loop-Counter via sessionStorage verhindert Endlos-Loops:
+       Wenn 3+ Redirects in 10s → bleibe auf Login + Console-Warning. */
+  async function initSessionAutoRedirect() {
+    var params = new URLSearchParams(window.location.search);
+    var reason = params.get('reason');
+    var nextUrl = params.get('next');
+
+    // Bei expliziten Reason-Codes (logout, token_expired) NICHT auto-redirect
+    if (reason === 'logout' || reason === 'token_expired' || reason === 'trial_expired') return;
+
+    // Loop-Counter
+    var LOOP_KEY = 'prova_login_redirect_count';
+    var LOOP_TS_KEY = 'prova_login_redirect_ts';
+    try {
+      var now = Date.now();
+      var lastTs = parseInt(sessionStorage.getItem(LOOP_TS_KEY) || '0', 10);
+      var count = parseInt(sessionStorage.getItem(LOOP_KEY) || '0', 10);
+      if (now - lastTs > 10000) { count = 0; }   // Reset nach 10s Inaktivität
+      if (count >= 3) {
+        console.warn('[auth] Loop-Counter > 3 — auto-redirect deaktiviert. Manuell einloggen.');
+        return;
+      }
+
+      var sbModule = await import('/lib/supabase-client.js');
+      var supabase = sbModule.supabase || (sbModule.getSupabase && sbModule.getSupabase());
+      if (!supabase) return;
+      var sess = await supabase.auth.getSession();
+      var session = sess && sess.data && sess.data.session;
+      if (!session) return;
+
+      sessionStorage.setItem(LOOP_KEY, String(count + 1));
+      sessionStorage.setItem(LOOP_TS_KEY, String(now));
+
+      var target = nextUrl && /^\/[^\/]/.test(nextUrl) ? decodeURIComponent(nextUrl) : '/dashboard.html';
+      console.debug('[auth] Session aktiv, redirect zu:', target);
+      window.location.replace(target);
+    } catch (e) {
+      console.warn('[auth] Auto-Redirect-Check failed:', e && e.message);
+    }
+  }
+
   /* ── Tab-Switching ── */
   window.showTab = function (tab) {
     var fLogin    = document.getElementById('form-login');
@@ -354,11 +398,13 @@
      komplett über Supabase Auth. */
 
   /* ── DOM-Ready Init ── */
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', function () {
-      initExpiredBanner();
-    });
-  } else {
+  function _bootInits() {
     initExpiredBanner();
+    initSessionAutoRedirect();
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', _bootInits);
+  } else {
+    _bootInits();
   }
 })();

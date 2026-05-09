@@ -36,6 +36,31 @@
 # Alte Login-URLs werden auf /login (App-Subdomain) zusammengefasst.
 # Diese Regeln gelten host-unabhaengig — egal woher der Request kommt,
 # Endziel ist immer app.prova-systems.de/login.
+#
+# MEGA⁵⁰: login.html (Legacy-Page) gelöscht. /login → 200-Rewrite zu
+# /app-login.html (URL bleibt /login). Query-Params (next, reason)
+# bleiben durch Splat erhalten.
+
+# Path-Rewrite: /login → /app-login.html (URL bleibt /login)
+[[redirects]]
+  from   = "/login"
+  to     = "/app-login.html"
+  status = 200
+  force  = true
+
+# Splat-Variante für /login?next=... oder /login?reason=...
+[[redirects]]
+  from   = "/login/*"
+  to     = "/app-login.html"
+  status = 200
+  force  = true
+
+# Legacy login.html → /login canonical
+[[redirects]]
+  from   = "/login.html"
+  to     = "/login"
+  status = 301
+  force  = true
 
 [[redirects]]
   from   = "/app-login.html"
