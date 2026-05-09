@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v1500-mega42-pilot-live-verified';   // MEGA⁴² FINAL — 13/13 Phasen Code-Done. 213 neue Tests gruen, 4377/4421 Total. Stepper-Bridge fuer 4 Flows + Performance-Suite mit Zahlen + Playwright E2E-Suite + Push-Alerts E2E + PDFMonkey-Audit + Mobile-Test-Plan + Auth-Audit (146 Lambdas, 92% Coverage, 0 Unintentional-Public) + RLS-Fix Migration 40 + DSGVO-Roundtrip + 5 Pilot-Mails + 12-Step-Tutorial + Demo-Seeder + Production-Runbook 8 Kapitel + Compound-Live-Test-Plan. CODE 100% PILOT-READY, LIVE-VERIFY pending Marcel-Pflicht-Sequenz.   // MEGA⁴² P1: scripts/run-all-tests.js stable cross-platform runner mit --test-force-exit. 4231/4231 M⁴⁰+M⁴¹ Tests grün in 19s. 32 Pre-M⁴⁰-Legacy-Fails dokumentiert (out-of-scope).
+const CACHE_VERSION = 'prova-v2000-mega43-44-edge-complete';   // MEGA⁴³+⁴⁴ FINAL — 144 Edge Functions ACTIVE, lib/edge-shim.js für transparentes /.netlify/functions/* → /functions/v1/* Rerouting. Welle 1-7 komplett: 23 Workspace+Auth+Cockpit + 17 KI-Pipeline + 13 Stripe+Email + 13 Auftrag+Fristen + 18 Document+PDF+Editor + 10 DSGVO+2FA+Compliance + 30 Admin+Workflow+Cron+Onboarding+Import. 2 deferred (parse-beweisbeschluss, parse-docx — Node-spezifisch). Marcel: ENV-Cleanup im Netlify Dashboard pflicht (siehe docs/MARCEL-FINAL-NETLIFY-ENV-CLEANUP.md) bevor v2000 live geht.
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
@@ -38,6 +38,7 @@ const APP_SHELL = [
   '/nav.js',
   // K-1.0 + K-1.3 lib-Stack (Supabase-Foundation)
   '/lib/prova-config.js',
+  '/lib/edge-shim.js',                  // MEGA⁴⁴: Frontend → Edge auto-reroute fetch-Shim
   '/lib/beweisbeschluss-upload.js',     // MEGA²³ Block 1: Beweisbeschluss-PDF-Upload-Library
   '/lib/archiv-filter.js',              // MEGA²⁸ V3.2-W2 KORR-10: Archiv-Filter-Library
   '/lib/global-search-engine.js',       // MEGA²⁸ V3.2-W2 KORR-7: Cmd+K Search-Engine (pure-fn)
