@@ -21,32 +21,49 @@
   var ACTIVITY_KEY   = 'prova_last_activity';
   var TOKEN_KEY      = 'prova_auth_token'; // P4A.4: HMAC-Token aus auth-token-issue
 
-  /* ── HMAC-Token Client-seitig validieren (Format + exp) ──
-     Echte HMAC-Verify findet server-seitig in jeder Function statt
-     (siehe netlify/functions/lib/auth-token.js). Hier nur:
-     - Format-Check (header.signature)
-     - exp-Check (Token nicht abgelaufen)
-     - sub vorhanden
-     Sicherheits-Note: Auth-Guard ist UX (kein Render auf gesperrten
-     Seiten). Ein Angreifer kann localStorage manipulieren — die
-     echte Sicherheit liegt in der HMAC-Verify der Server-Functions. */
+  /* ── Token-Validierung (MEGA⁵³ — beide Formate)
+     Akzeptiert beide:
+     - Supabase JWT (3 Teile: header.payload.signature) — Standard seit MEGA⁴⁵
+     - Legacy HMAC-Token (2 Teile: header.signature) — auth-token-issue (Pre-MEGA⁴⁵)
+
+     Nur Format-Check + exp + sub. Echte Verify ist server-side (Edge-Functions
+     via supabase.auth.getUser()). Hier ist das nur UX-Pre-Check.
+  */
   function verifyProvaToken(tok) {
     if (!tok || typeof tok !== 'string') return null;
     var parts = tok.split('.');
-    if (parts.length !== 2) return null;
+    var payloadIdx;
+    if (parts.length === 3) {
+      payloadIdx = 1;  // Supabase JWT: header.PAYLOAD.signature
+    } else if (parts.length === 2) {
+      payloadIdx = 0;  // Legacy HMAC: PAYLOAD.signature
+    } else {
+      return null;
+    }
     try {
-      var head = parts[0];
-      var pad = '='.repeat((4 - (head.length % 4)) % 4);
-      var b64 = (head + pad).replace(/-/g, '+').replace(/_/g, '/');
+      var raw = parts[payloadIdx];
+      var pad = '='.repeat((4 - (raw.length % 4)) % 4);
+      var b64 = (raw + pad).replace(/-/g, '+').replace(/_/g, '/');
       var payload = JSON.parse(atob(b64));
       if (!payload || typeof payload !== 'object') return null;
       if (!payload.sub || typeof payload.sub !== 'string') return null;
       var now = Math.floor(Date.now() / 1000);
-      if (typeof payload.exp !== 'number' || payload.exp <= now) return null;
+      if (typeof payload.exp !== 'number') return null;
+      // MEGA⁵³ Defense: 60s Clock-Skew-Toleranz (Browser-Clock kann driften)
+      if (payload.exp + 60 <= now) return null;
+      // Supabase-JWT hat email statt sub für Display — sub ist UUID. Beides OK.
       return payload;
     } catch (e) {
       return null;
     }
+  }
+
+  /* ── Email aus Token (Defense gegen lokale Manipulation) ── */
+  function extractEmailFromPayload(payload) {
+    if (!payload) return null;
+    if (typeof payload.email === 'string' && payload.email.indexOf('@') !== -1) return payload.email;
+    if (typeof payload.sub === 'string' && payload.sub.indexOf('@') !== -1) return payload.sub;
+    return null;  // Supabase-JWT: sub ist UUID, email kann fehlen
   }
 
   /* ── Öffentliche API ── */
@@ -102,24 +119,28 @@
   /* ── Private Helfer ── */
 
   function isValidSession() {
-    // S-SICHER P4B.9: HMAC-Token ist EINZIGER Auth-Anker.
-    // V2-Session-Sekundaer-Pfad und Legacy-prova_user-Migration komplett
-    // entfernt (Audit-Findings 7.1 / 7.2 / 7.3 endgueltig geschlossen).
+    // MEGA⁵³: Token = Supabase-JWT (3 Teile) ODER Legacy-HMAC (2 Teile).
+    // Beide Formate werden akzeptiert.
     var tok = localStorage.getItem(TOKEN_KEY);
     var tokPayload = tok ? verifyProvaToken(tok) : null;
     if (tokPayload) {
-      // sv_email aus Token-sub spiegeln (Defense gegen lokale Manipulation
-      // anderer localStorage-Keys: token.sub gewinnt).
-      try { localStorage.setItem('prova_sv_email', tokPayload.sub); } catch (e) {}
+      // Email aus payload extrahieren (Supabase: payload.email, Legacy: payload.sub)
+      var email = extractEmailFromPayload(tokPayload);
+      if (email) {
+        try { localStorage.setItem('prova_sv_email', email); } catch (e) {}
+      }
       return true;
     }
 
-    // Token vorhanden aber abgelaufen/ungueltig -> bereinigen.
+    // MEGA⁵³ FIX: Token NICHT mehr automatisch löschen wenn verify fail!
+    // Auto-Refresh läuft via supabase-js (autoRefreshToken: true). Wenn der
+    // Token wirklich expired, refresht supabase ihn. Wenn refresh auch fail,
+    // landet User bei nächstem Edge-Call mit 401 → kontrollierte Reaktion.
+    // Vorher: removeItem(TOKEN_KEY) hat Supabase-3-Teil-JWTs zerstört
+    //         (parts.length !== 2 → null → "ungültig" → gelöscht).
     if (tok && !tokPayload) {
-      try { localStorage.removeItem(TOKEN_KEY); } catch (e) {}
-      console.info('[Auth] HMAC-Token abgelaufen oder ungueltig — entfernt');
+      console.info('[Auth] Token-Verify fehlgeschlagen — aber NICHT gelöscht (supabase auto-refresh läuft)');
     }
-
     return false;
   }
 
