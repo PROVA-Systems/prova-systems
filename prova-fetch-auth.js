@@ -35,12 +35,18 @@
   var TOKEN_KEY = 'prova_auth_token';
   var FUNCTION_PREFIX = '/.netlify/functions/';
 
-  // MEGA⁵⁶: Dynamic window.fetch (NICHT cachen!) damit edge-shim.js
-  // Wrapper picked up wird, auch wenn edge-shim NACH prova-fetch-auth lädt.
-  // Vorher: nativeFetch = window.fetch.bind(window) hat ORIGINAL fetch
-  // gecached → provaFetch bypasst edge-shim → /.netlify/functions/* → 401/500.
-  // Jetzt: jeder Aufruf nutzt aktuellen window.fetch → edge-shim wird durchlaufen
-  // → /.netlify/functions/X automatisch zu /functions/v1/X umgeleitet.
+  // MEGA⁵⁶+⁵⁷ DEFINITIVER FIX: Dynamic window.fetch (NIEMALS cachen!)
+  //
+  // Grund: Wenn prova-fetch-auth.js VOR edge-shim.js lädt (was in 67 von 71
+  // HTMLs der Fall WAR vor MEGA⁵⁷), würde gecachter fetch den edge-shim
+  // Patch BYPASSEN. Mit dynamic call wird IMMER aktueller window.fetch
+  // genutzt → edge-shim greift IMMER, egal welche Loading-Order.
+  //
+  // Vorher (BIS MEGA⁵⁵): var nativeFetch = window.fetch.bind(window);
+  // → provaFetch bypasste edge-shim → /.netlify/functions/* → 401/500.
+  //
+  // MEGA⁵⁷-LIVE-VERIFY: curl /prova-fetch-auth.js | grep "MEGA⁵⁷"
+  //   muss Match haben für Deploy-Confirmation.
   function nativeFetch(url, options) {
     return window.fetch.call(window, url, options);
   }
