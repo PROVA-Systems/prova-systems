@@ -211,29 +211,44 @@
       throw err;
     }
 
-    // 401 von Function -> versuche Refresh-vor-Logout (Cutover Block 3 Phase 2)
+    // ════════════════════════════════════════════════════════════════
+    // MEGA⁵⁴: SOFT 401-Handling — KEIN Auto-Logout mehr.
+    //
+    // Vorher (bis MEGA⁵³): 401 → refresh-versuch → bei fail clearAuth +
+    //   redirect zu /app-login.html?reason=token_expired. Problem: aggressives
+    //   Auto-Logout reißt User raus (Race-Conditions im Refresh-Flow,
+    //   Edge-Function 401 wegen Permission statt Auth).
+    //
+    // Jetzt: 401 → refresh-versuch → bei fail nur Console-Warning. Caller
+    //   bekommt 401-Response unverändert. UI handled selbst (z.B. KPI auf "—").
+    //   Logout passiert NUR durch expliziten User-Klick auf Logout-Button
+    //   ODER auth-guard.js bei nicht-existentem Token.
+    //
+    // Single Responsibility: Bearer-Token-Injection + Refresh-Retry-Versuch.
+    // KEIN UI-Side-Effect (kein redirect) von prova-fetch-auth.js aus.
+    // ════════════════════════════════════════════════════════════════
     if (res && res.status === 401 && isFunctionUrl(url)) {
       var currentTok = getToken();
       if (isSupabaseJwt(currentTok)) {
         console.info('[fetch-auth] 401 with supabase-jwt, trying refresh...');
         var retryRes = await tryRefreshAndRetry(url, options);
         if (retryRes && retryRes.status !== 401) {
-          // Refresh + Retry erfolgreich → Caller bekommt frische Response
           return retryRes;
         }
-        console.warn('[fetch-auth] refresh-retry failed → logout');
+        console.warn('[fetch-auth] refresh-retry failed — Caller bekommt 401, KEIN Auto-Logout (MEGA⁵⁴)');
+      } else {
+        console.warn('[fetch-auth] 401 (kein Supabase-JWT) — Caller bekommt 401, KEIN Auto-Logout (MEGA⁵⁴)');
       }
-      // Alter HMAC-Token ODER Refresh failed → Auto-Logout
-      clearAuthAndRedirect();
     }
 
-    // MEGA⁵¹: 403 ist NIEMALS ein Logout-Trigger.
-    // 403 = Permission-Denied (nicht in Admin-Whitelist, keine 2FA, RLS, etc.)
-    // Token bleibt VALID → User soll eingeloggt bleiben.
-    // Caller (z.B. dashboard-logic.js loadKiTokenKpi) catched !ok und zeigt "—".
     if (res && res.status === 403 && isFunctionUrl(url)) {
-      var fnName = url.split(FUNCTION_PREFIX)[1]?.split('?')[0] ?? '?';
-      console.info('[fetch-auth] 403 forbidden on ' + fnName + ' — kein Logout (Permission-Denied, Token bleibt valid)');
+      var fnName403 = url.split(FUNCTION_PREFIX)[1]?.split('?')[0] ?? '?';
+      console.info('[fetch-auth] 403 forbidden on ' + fnName403 + ' — kein Logout (Permission-Denied)');
+    }
+
+    if (res && res.status >= 500 && isFunctionUrl(url)) {
+      var fnName500 = url.split(FUNCTION_PREFIX)[1]?.split('?')[0] ?? '?';
+      console.warn('[fetch-auth] ' + res.status + ' Server-Error on ' + fnName500 + ' — kein Logout');
     }
 
     return res;
