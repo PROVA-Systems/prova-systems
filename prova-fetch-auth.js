@@ -35,8 +35,15 @@
   var TOKEN_KEY = 'prova_auth_token';
   var FUNCTION_PREFIX = '/.netlify/functions/';
 
-  // Preserve native fetch for non-Function-Calls (Airtable direct etc.)
-  var nativeFetch = window.fetch.bind(window);
+  // MEGA⁵⁶: Dynamic window.fetch (NICHT cachen!) damit edge-shim.js
+  // Wrapper picked up wird, auch wenn edge-shim NACH prova-fetch-auth lädt.
+  // Vorher: nativeFetch = window.fetch.bind(window) hat ORIGINAL fetch
+  // gecached → provaFetch bypasst edge-shim → /.netlify/functions/* → 401/500.
+  // Jetzt: jeder Aufruf nutzt aktuellen window.fetch → edge-shim wird durchlaufen
+  // → /.netlify/functions/X automatisch zu /functions/v1/X umgeleitet.
+  function nativeFetch(url, options) {
+    return window.fetch.call(window, url, options);
+  }
 
   function isFunctionUrl(url) {
     if (typeof url !== 'string') return false;
