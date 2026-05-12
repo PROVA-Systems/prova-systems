@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v3030-mega57-loading-order-fix';   // MEGA⁴³+⁴⁴ FINAL — 144 Edge Functions ACTIVE, lib/edge-shim.js für transparentes /.netlify/functions/* → /functions/v1/* Rerouting. Welle 1-7 komplett: 23 Workspace+Auth+Cockpit + 17 KI-Pipeline + 13 Stripe+Email + 13 Auftrag+Fristen + 18 Document+PDF+Editor + 10 DSGVO+2FA+Compliance + 30 Admin+Workflow+Cron+Onboarding+Import. 2 deferred (parse-beweisbeschluss, parse-docx — Node-spezifisch). Marcel: ENV-Cleanup im Netlify Dashboard pflicht (siehe docs/MARCEL-FINAL-NETLIFY-ENV-CLEANUP.md) bevor v2000 live geht.
+const CACHE_VERSION = 'prova-v3160-mega69-final-3-pre-pilot-100-vision';   // MEGA⁶⁹-FINAL-3 Pre-Pilot 100% Vision: 8.1 anhang-process PDF/DOCX (Claude-Vision Native), 8.2a Inline-Text-Edit + 8.2b Drag-Resize-Handles, 8.3 Version-Diff Wort-Level Myers/LCS, 8.4 ki_lernpool als Wissenspool in Audit-Search, 8.5 KI-Garantie 5 Smoke-Tests Page, 8.6 iPad-Latenz-Test Page, 8.7 anhaenge-list Edge Fn, 8.8 3 E2E-Playwright Specs (Skizze/Mahnwesen/Fristen-Kalender) + README, 8.9 Performance-Check Page, 8.10 Akte-Tabs History-API Deep-Link, 8.11 Marcel 30-Punkt-Test-Suite mit JSON-Export, 8.12 PILOT-LAUNCH-READY.md. Pilot-Status: 100% Marcel-Vision erreicht.
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [

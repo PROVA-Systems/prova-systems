@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>MEGA⁶⁵ Cmd+K + KI-Suggestion + Wikilinks Demo</title>
+<meta name="robots" content="noindex,nofollow">
+<style>
+  body { margin: 0; font: 14px/1.5 system-ui, -apple-system, Segoe UI, sans-serif; color: #0b2228; background: #f8f9fa; }
+  header { padding: 14px 24px; background: #0b2228; color: #fff; display: flex; justify-content: space-between; }
+  header h1 { margin: 0; font: 600 16px/1.4 system-ui; }
+  main { display: grid; grid-template-columns: 1fr 360px; min-height: calc(100vh - 52px); }
+  .editor-pane { background: #fff; display: flex; flex-direction: column; border-right: 1px solid #e1e8eb; }
+  .editor-pane .info {
+    padding: 10px 24px; background: #f4f8fa; border-bottom: 1px solid #e1e8eb;
+    font-size: 12px; color: #4a5e63; display: flex; gap: 16px; flex-wrap: wrap;
+  }
+  .editor-pane .info kbd { background: #fff; border: 1px solid #d4dde0; padding: 2px 6px; border-radius: 3px; font: 11px ui-monospace, Menlo, monospace; }
+  #editor-mount { flex: 1; padding: 32px 48px 80px; overflow-y: auto; min-height: 480px; }
+  #editor-mount .ProseMirror { outline: none; font: 16px/1.7 'Inter', system-ui; max-width: 800px; margin: 0 auto; min-height: 300px; }
+  #editor-mount .ProseMirror p.is-editor-empty:first-child::before {
+    content: attr(data-placeholder); color: #94a3b8; float: left; pointer-events: none; height: 0;
+  }
+  #character-tracker-mount { border-top: 1px solid #e1e8eb; }
+  #sidebar-mount { background: #fff; }
+  .controls { padding: 12px 16px; background: #f4f8fa; border-bottom: 1px solid #e1e8eb; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .controls input { padding: 6px 10px; border: 1px solid #d4dde0; border-radius: 4px; font: inherit; }
+  .controls button { padding: 6px 12px; background: #0b2228; color: #fff; border: none; border-radius: 4px; font: inherit; cursor: pointer; }
+  .ki-stub-btn { padding: 8px 16px; background: #6366f1; color: #fff; border: none; border-radius: 6px; cursor: pointer; font: inherit; margin: 16px; }
+</style>
+</head>
+<body data-prova-editor-mega65="1">
+
+<header>
+  <h1>MEGA⁶⁵ — Cmd+K · KI-Suggestion · Wikilinks · Norm · Cheat-Sheet</h1>
+  <div style="font-size: 12px; opacity: .8;">Bundle lokal · Vanilla · 60ms-Target</div>
+</header>
+
+<div class="controls">
+  <label>auftrag_id:</label>
+  <input type="text" id="auftrag-id-input" size="36" placeholder="UUID — optional">
+  <button id="load-sidebar-btn">Sidebar laden</button>
+  <button class="ki-stub-btn" id="inject-ki-stub">↪ KI-Suggestion-Stub einfügen</button>
+</div>
+
+<main>
+  <div class="editor-pane">
+    <div class="info">
+      <span><kbd id="kbd-cmdk">⌘K</kbd> Command-Palette</span>
+      <span><kbd>?</kbd> Cheat-Sheet</span>
+      <span><kbd>/</kbd> Block-Menü</span>
+      <span><kbd>[[</kbd> Wikilink</span>
+      <span><kbd>@HH:MM</kbd> Zeitstempel</span>
+      <span><kbd id="kbd-norm">⌘⌥N</kbd> Norm-Picker</span>
+    </div>
+    <div id="editor-mount"></div>
+    <div id="character-tracker-mount"></div>
+  </div>
+  <aside id="sidebar-mount"></aside>
+</main>
+
+<script src="/lib/prova-platform.js"></script>
+<script src="/lib/editor-tiptap-bundle.js"></script>
+<script src="/lib/prova-editor.js"></script>
+<script src="/lib/prova-bubble-menu.js"></script>
+<script src="/lib/prova-floating-menu.js"></script>
+<script src="/lib/prova-slash-menu.js"></script>
+<script src="/lib/prova-focus-mode.js"></script>
+<script src="/lib/extensions/prova-callout.js"></script>
+<script src="/lib/extensions/prova-fragment-marker.js"></script>
+<script src="/lib/extensions/prova-textbaustein-block.js"></script>
+<script src="/lib/extensions/prova-foto-embed.js"></script>
+<script src="/lib/extensions/prova-skizze-embed.js"></script>
+<script src="/lib/prova-fragment-sidebar.js"></script>
+<script src="/lib/prova-character-tracker.js"></script>
+
+<!-- MEGA65 NEU -->
+<script src="/lib/prova-command-palette.js"></script>
+<script src="/lib/prova-commands-registry.js"></script>
+<script src="/lib/prova-cheat-sheet.js"></script>
+<script src="/lib/prova-timestamp-ref.js"></script>
+<script src="/lib/extensions/prova-ki-suggestion.js"></script>
+<script src="/lib/extensions/prova-wikilink.js"></script>
+<script src="/lib/extensions/prova-norm-citation.js"></script>
+<script src="/lib/prova-config.js"></script>
+
+<script>
+(async function () {
+  if (window.ProvaPlatform) {
+    document.getElementById('kbd-cmdk').textContent = ProvaPlatform.fmt('K', { mod: true });
+    document.getElementById('kbd-norm').textContent = ProvaPlatform.fmt('N', { mod: true, alt: true });
+  }
+
+  // Modules + Extensions
+  const modules = await ProvaEditor.getModules();
+  const ext = {
+    callout:            ProvaCalloutFactory(modules),
+    fragMarker:         ProvaFragmentMarkerFactory(modules),
+    textbaustein:       ProvaTextbausteinBlockFactory(modules),
+    foto:               ProvaFotoEmbedFactory(modules),
+    skizze:             ProvaSkizzeEmbedFactory(modules),
+    kiSuggestion:       ProvaKiSuggestionFactory(modules),
+    normCitation:       ProvaNormCitationFactory(modules),
+    wikilink:           ProvaWikilinkFactory(modules)
+  };
+
+  const editor = await ProvaEditor.create({
+    el: '#editor-mount',
+    mode: 'fachurteil',
+    placeholder: 'Tippe / für Blöcke, [[ für Wikilinks, @14:32 für Zeitstempel, oder ⌘K für Befehle',
+    content: '<h1>§6 Fachurteil</h1><p>Demo MEGA⁶⁵: probiere ⌘K, ?, [[, @, ⌘⌥N für Norm-Picker.</p>',
+    extraExtensions: Object.values(ext).filter(Boolean),
+    onUpdate: () => { /* save */ }
+  });
+
+  // Invocation-Layer
+  new ProvaBubbleMenu(editor.editor);
+  new ProvaFloatingMenu(editor.editor);
+  new ProvaSlashMenu(editor.editor, { onFotoPick: () => alert('Foto-Picker kommt MEGA⁶⁶') });
+  const focusMode = new ProvaFocusMode(editor.editor);
+  window.ProvaFocusMode_active = focusMode;
+
+  new CharacterTracker('#character-tracker-mount', editor.editor, { minEigenleistung: 500 });
+  new ProvaTimestampRef(editor.editor);
+  new ProvaCheatSheet();
+
+  // Command-Palette + Commands
+  const palette = new ProvaCommandPalette({
+    editor: editor.editor,
+    getContext: () => ({ section: 'fachurteil' })
+  });
+  const cmds = ProvaCommandsRegistry.build({
+    editor: editor.editor,
+    openCheatSheet: () => new ProvaCheatSheet().show(),
+    openKiPanel: () => alert('KI-Panel kommt MEGA⁶⁶'),
+    openNormPicker: () => ProvaNormPicker.open(editor.editor),
+    openFotoPicker: () => alert('Foto-Picker MEGA⁶⁶'),
+    openVersandModal: () => alert('Versand-Modal MEGA⁶⁷'),
+    onSave: () => alert('Auto-Save läuft im Hintergrund'),
+    onPdfExport: () => alert('PDF-Export MEGA⁶⁶'),
+    onDocxExport: () => alert('DOCX-Export MEGA⁶⁶')
+  });
+  palette.register(cmds);
+
+  // KI-Suggestion-Stub (Demo)
+  document.getElementById('inject-ki-stub').addEventListener('click', () => {
+    const text = 'könnte feucht sein';
+    editor.editor.chain().focus().insertContent({
+      type: 'text',
+      text,
+      marks: [{
+        type: 'provaKiSuggestion',
+        attrs: {
+          suggestionId: crypto.randomUUID(),
+          type: 'replace',
+          original: 'ist feucht',
+          newText: text,
+          providerHash: 'sha256:demo-1234abcd',
+          confidence: 0.87,
+          kiProtokollId: null,
+          createdAt: new Date().toISOString()
+        }
+      }]
+    }).run();
+  });
+
+  // FragmentSidebar
+  let sidebar = null;
+  document.getElementById('load-sidebar-btn').addEventListener('click', () => {
+    const auftragId = document.getElementById('auftrag-id-input').value.trim();
+    if (!auftragId) { alert('auftrag_id eingeben'); return; }
+    if (sidebar) sidebar.destroy();
+    sidebar = new FragmentSidebar('#sidebar-mount', editor.editor, { auftragId });
+    document.getElementById('sidebar-mount').classList.add('prova-fragment-sidebar');
+  });
+
+  // Globale Diagnose
+  window._demo = { editor, palette, cmds, focusMode };
+})();
+</script>
+
+</body>
+</html>

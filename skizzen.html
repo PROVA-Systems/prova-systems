@@ -62,6 +62,36 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
   <h1 class="sk-h1">Skizzen</h1>
   <p class="sk-sub">Hand-Skizzen für Schadensfälle (DIN ISO 5455 Maßstab) — direkt zeichnen, speichern, in PDF-Templates verwenden.</p>
 
+  <!-- MEGA⁶⁹-FINAL-2 — Neuer SVG-Editor -->
+  <div style="margin:14px 0 18px;padding:12px 16px;background:var(--surface,#1c2130);border:1px solid var(--accent,#4f8ef7);border-radius:10px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+    <span style="font-size:20px;">🎨</span>
+    <div style="flex:1;min-width:200px;">
+      <div style="font-weight:700;color:var(--text,#eaecf4);font-size:14px;">Neuer SVG-Skizze-Editor</div>
+      <div style="font-size:12px;color:var(--text2,#8b93ab);">9 Tools · Maßstab · Foto-Overlay · Mobile-tauglich · vector-Export</div>
+    </div>
+    <button type="button" onclick="openNeueSkizze()" style="padding:9px 18px;background:linear-gradient(135deg,var(--accent,#4f8ef7),var(--accent2,#3a7be0));color:#fff;border:none;border-radius:8px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;">+ Neue Skizze (Editor)</button>
+  </div>
+  <script src="/lib/prova-skizze-editor.js" defer></script>
+  <script src="/lib/prova-foto-picker.js" defer></script>
+  <script src="/lib/prova-asset-event-bus.js" defer></script>
+  <script src="/lib/prova-asset-trigger.js" defer></script>
+  <script>
+  function openNeueSkizze() {
+    if (!window.ProvaSkizzeEditor) { alert('Editor lädt noch — bitte 2s warten und erneut klicken.'); return; }
+    const aid = document.getElementById('sk-auftrag_id') ? document.getElementById('sk-auftrag_id').value.trim() : '';
+    const params = new URLSearchParams(location.search);
+    const queryAid = params.get('auftrag_id') || params.get('auftrag') || '';
+    const finalAid = aid || queryAid || null;
+    if (!finalAid) {
+      if (!confirm('Kein Auftrag-Kontext — Foto-Overlay wird deaktiviert sein. Trotzdem öffnen?')) return;
+    }
+    window.ProvaSkizzeEditor.openModal({
+      auftragId: finalAid,
+      onSave: () => { if (typeof loadList === 'function') loadList(); }
+    });
+  }
+  </script>
+
   <div class="sk-toolbar">
     <input type="text" class="sk-input" id="sk-titel" placeholder="Skizze-Titel (z.B. Erdgeschoss)" style="min-width:240px;">
     <input type="text" class="sk-input" id="sk-auftrag_id" placeholder="Auftrag-UUID" style="min-width:280px;">

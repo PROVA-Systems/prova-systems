@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bibliothek · PROVA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="/lib/prova-config.js"></script>
+<script src="/lib/edge-shim.js"></script>
+<script src="prova-fetch-auth.js"></script>
+<script>
+(function(){
+  try {
+    var token = localStorage.getItem('prova_auth_token');
+    var email = localStorage.getItem('prova_sv_email') || '';
+    if (!token || !email) { window.location.replace('/login?next=' + encodeURIComponent(location.pathname)); return; }
+  } catch (e) { window.location.replace('/login'); }
+})();
+</script>
+<script type="module">
+  import { runAuthGuard } from '/lib/auth-guard.js';
+  runAuthGuard().catch(e => console.error('[auth] guard failed', e));
+</script>
+<script src="theme.js"></script>
+<script src="prova-layout.config.js"></script>
+<script src="nav.js" defer></script>
+<link rel="stylesheet" href="prova-design.css">
+<style>
+:root {
+  --bg:#0b0d11; --surface:#1c2130; --surface2:#232a3a;
+  --border:rgba(255,255,255,0.06); --border2:rgba(255,255,255,0.11);
+  --text:#eaecf4; --text2:#8b93ab; --text3:#4d5568;
+  --accent:#4f8ef7; --accent2:#3a7be0;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'DM Sans', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; line-height: 1.55; }
+.bib-wrap { max-width: 1240px; margin: 0 auto; padding: 24px 20px 80px; }
+.bib-h1 { font-size: 24px; font-weight: 800; letter-spacing: -.025em; margin-bottom: 6px; }
+.bib-sub { font-size: 14px; color: var(--text2); margin-bottom: 20px; }
+
+.bib-tabs { display: flex; gap: 6px; margin-bottom: 18px; border-bottom: 1px solid var(--border2); }
+.bib-tab {
+  padding: 10px 16px;
+  background: transparent; border: none;
+  color: var(--text2); cursor: pointer;
+  font: 14px/1.4 'DM Sans', sans-serif;
+  border-bottom: 2px solid transparent;
+}
+.bib-tab.is-active { color: var(--text); border-bottom-color: var(--accent); font-weight: 600; }
+
+.bib-toolbar { display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+.bib-search {
+  flex: 1; min-width: 200px;
+  padding: 8px 14px;
+  background: var(--surface); border: 1px solid var(--border2); border-radius: 8px;
+  color: var(--text); font: 13px 'DM Sans', sans-serif;
+}
+.bib-filter {
+  padding: 8px 12px;
+  background: var(--surface); border: 1px solid var(--border2); border-radius: 8px;
+  color: var(--text); font: 13px 'DM Sans', sans-serif;
+}
+
+.bib-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
+}
+
+.bib-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px 16px;
+  cursor: pointer;
+  transition: border-color 80ms, transform 80ms;
+  position: relative;
+}
+.bib-card:hover { border-color: var(--accent); transform: translateY(-1px); }
+
+.bib-card-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 6px; }
+.bib-card-title { font-weight: 600; font-size: 14px; color: var(--text); flex: 1; }
+.bib-card-badge {
+  font-size: 10px; padding: 1px 6px; border-radius: 3px;
+  text-transform: uppercase; letter-spacing: 0.04em; flex-shrink: 0;
+}
+.bib-card-badge--norm { background: rgba(99, 102, 241, 0.18); color: #c4b5fd; }
+.bib-card-badge--baustein { background: rgba(16, 185, 129, 0.18); color: #86efac; }
+.bib-card-badge--brief { background: rgba(245, 158, 11, 0.18); color: #fcd34d; }
+
+.bib-card-sub { font-size: 12px; color: var(--text2); margin-bottom: 8px; }
+.bib-card-preview {
+  font-size: 12px;
+  color: var(--text2);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+.bib-card-meta { display: flex; gap: 12px; font-size: 11px; color: var(--text3); margin-top: 6px; }
+
+.bib-actions { display: flex; gap: 4px; margin-top: 8px; }
+.bib-actions button {
+  padding: 4px 10px; font-size: 11px;
+  background: transparent; border: 1px solid var(--border2);
+  border-radius: 4px; color: var(--text2); cursor: pointer;
+  font-family: inherit;
+}
+.bib-actions button:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+.bib-empty {
+  grid-column: 1 / -1;
+  padding: 48px 20px;
+  text-align: center;
+  color: var(--text3);
+}
+
+.bib-loading {
+  padding: 32px; text-align: center; color: var(--text3);
+}
+
+@media (max-width: 768px) {
+  .bib-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<div class="prova-app-shell" data-page="bibliothek">
+  <main class="bib-wrap">
+    <h1 class="bib-h1">Bibliothek</h1>
+    <p class="bib-sub">Normen · Textbausteine · Brief-Vorlagen — Wiederverwendbar im Editor.</p>
+
+    <nav class="bib-tabs">
+      <button class="bib-tab is-active" data-tab="normen">📐 Normen</button>
+      <button class="bib-tab" data-tab="textbausteine">📝 Textbausteine</button>
+      <button class="bib-tab" data-tab="briefe">✉ Brief-Vorlagen</button>
+    </nav>
+
+    <div class="bib-toolbar">
+      <input type="text" class="bib-search" id="bib-search" placeholder="Suche…">
+      <select class="bib-filter" id="bib-filter">
+        <option value="">Alle Kategorien</option>
+      </select>
+      <select class="bib-filter" id="bib-sort">
+        <option value="haeufigkeit">Häufigste zuerst</option>
+        <option value="alpha">Alphabetisch</option>
+        <option value="neueste">Neueste zuerst</option>
+      </select>
+    </div>
+
+    <div class="bib-grid" id="bib-grid">
+      <div class="bib-loading">Lade…</div>
+    </div>
+  </main>
+</div>
+
+<script type="module">
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.105.0';
+const SB_URL = window.PROVA_CONFIG.SUPABASE_URL;
+const SB_ANON = window.PROVA_CONFIG.SUPABASE_ANON_KEY;
+const sb = createClient(SB_URL, SB_ANON, { auth: { persistSession: true } });
+
+const grid = document.getElementById('bib-grid');
+const search = document.getElementById('bib-search');
+const filter = document.getElementById('bib-filter');
+const sort = document.getElementById('bib-sort');
+let currentTab = 'normen';
+let allItems = [];
+let timer = null;
+
+function esc(s) { return String(s || '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c])); }
+
+async function loadTab(tab) {
+  currentTab = tab;
+  grid.innerHTML = '<div class="bib-loading">Lade…</div>';
+  filter.innerHTML = '<option value="">Alle Kategorien</option>';
+
+  try {
+    if (tab === 'normen') {
+      const { data, error } = await sb.from('normen_bibliothek')
+        .select('id, norm_nr, titel, untertitel, bereich, schadensarten, aktuell_gueltig, haeufigkeit, nutzungs_count, version_jahr')
+        .eq('aktiv', true)
+        .order('nutzungs_count', { ascending: false, nullsFirst: false })
+        .order('haeufigkeit', { ascending: false, nullsFirst: false })
+        .limit(200);
+      if (error) throw error;
+      allItems = (data || []).map(n => ({
+        id: n.id, type: 'norm',
+        title: n.norm_nr + (n.version_jahr ? ` (${n.version_jahr})` : ''),
+        sub: n.titel || n.untertitel,
+        preview: n.untertitel || '',
+        kategorie: n.bereich,
+        haeufigkeit: n.haeufigkeit,
+        meta: [n.aktuell_gueltig === false ? '⚠ veraltet' : '✓ aktuell', n.bereich].filter(Boolean)
+      }));
+    } else if (tab === 'textbausteine') {
+      const { data, error } = await sb.from('textbausteine')
+        .select('id, titel, kategorie, text_content, is_global')
+        .limit(200);
+      if (error) throw error;
+      allItems = (data || []).map(b => ({
+        id: b.id, type: 'baustein',
+        title: b.titel,
+        sub: b.kategorie || '',
+        preview: (b.text_content || '').slice(0, 200),
+        kategorie: b.kategorie,
+        meta: [b.is_global ? 'global' : 'workspace'].filter(Boolean)
+      }));
+    } else if (tab === 'briefe') {
+      const { data, error } = await sb.from('dokument_templates')
+        .select('id, name, kategorie, beschreibung, datei_pfad')
+        .limit(100);
+      if (error) throw error;
+      allItems = (data || []).map(d => ({
+        id: d.id, type: 'brief',
+        title: d.name,
+        sub: d.kategorie,
+        preview: d.beschreibung || '',
+        kategorie: d.kategorie,
+        meta: []
+      }));
+    }
+    populateFilter();
+    render();
+  } catch (e) {
+    grid.innerHTML = `<div class="bib-empty">Fehler: ${esc(e.message)}</div>`;
+  }
+}
+
+function populateFilter() {
+  const cats = Array.from(new Set(allItems.map(i => i.kategorie).filter(Boolean))).sort();
+  filter.innerHTML = '<option value="">Alle Kategorien</option>' + cats.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
+}
+
+function render() {
+  const q = (search.value || '').toLowerCase().trim();
+  const fCat = filter.value;
+  let items = allItems;
+  if (q) {
+    items = items.filter(i =>
+      (i.title || '').toLowerCase().includes(q) ||
+      (i.sub || '').toLowerCase().includes(q) ||
+      (i.preview || '').toLowerCase().includes(q)
+    );
+  }
+  if (fCat) items = items.filter(i => i.kategorie === fCat);
+
+  const sortMode = sort.value;
+  if (sortMode === 'alpha') items = [...items].sort((a, b) => (a.title || '').localeCompare(b.title || ''));
+  // 'haeufigkeit' ist default (DB-Sortierung)
+  // 'neueste' wäre durch created_at — DEFER
+
+  if (items.length === 0) {
+    grid.innerHTML = '<div class="bib-empty">Keine Treffer</div>';
+    return;
+  }
+  grid.innerHTML = items.map(i => `
+    <div class="bib-card" data-id="${esc(i.id)}" data-type="${i.type}">
+      <div class="bib-card-head">
+        <div class="bib-card-title">${esc(i.title)}</div>
+        <span class="bib-card-badge bib-card-badge--${i.type}">${i.type}</span>
+      </div>
+      ${i.sub ? `<div class="bib-card-sub">${esc(i.sub)}</div>` : ''}
+      ${i.preview ? `<div class="bib-card-preview">${esc(i.preview)}</div>` : ''}
+      ${i.meta.length > 0 ? `<div class="bib-card-meta">${i.meta.map(m => esc(m)).join(' · ')}</div>` : ''}
+      <div class="bib-actions">
+        <button type="button" data-action="copy">Kopieren</button>
+        <button type="button" data-action="insert">In Editor</button>
+      </div>
+    </div>
+  `).join('');
+
+  grid.querySelectorAll('.bib-card').forEach(card => {
+    const id = card.dataset.id;
+    card.querySelector('[data-action="copy"]').addEventListener('click', (e) => {
+      e.stopPropagation();
+      const item = allItems.find(i => i.id === id);
+      if (item) {
+        navigator.clipboard.writeText(item.title + (item.preview ? '\n' + item.preview : ''));
+        e.target.textContent = '✓';
+        setTimeout(() => { e.target.textContent = 'Kopieren'; }, 1200);
+      }
+    });
+    card.querySelector('[data-action="insert"]').addEventListener('click', (e) => {
+      e.stopPropagation();
+      const item = allItems.find(i => i.id === id);
+      if (!item) return;
+      // Wenn ein Editor offen ist → einfügen, sonst zur Akte zurück
+      if (window.opener && window.opener.ProvaEditor) {
+        try {
+          if (item.type === 'baustein') {
+            window.opener.dispatchEvent(new CustomEvent('prova:insert-baustein', { detail: { bausteinId: item.id, content: item.preview, title: item.title } }));
+          } else if (item.type === 'norm') {
+            window.opener.dispatchEvent(new CustomEvent('prova:insert-norm', { detail: { norm: item.title } }));
+          }
+          window.close();
+        } catch (_) { alert('Bitte aus Editor öffnen.'); }
+      } else {
+        // localStorage als Bridge: nächste Akte/Stellungnahme.html liest aus
+        try {
+          localStorage.setItem('prova_bibliothek_pending_insert', JSON.stringify({ type: item.type, id: item.id, title: item.title, preview: item.preview, at: Date.now() }));
+          alert('Item gemerkt — beim nächsten Editor-Aufruf wird es eingefügt.');
+        } catch (_) {}
+      }
+    });
+  });
+}
+
+document.querySelectorAll('.bib-tab').forEach(t => {
+  t.addEventListener('click', () => {
+    document.querySelectorAll('.bib-tab').forEach(b => b.classList.remove('is-active'));
+    t.classList.add('is-active');
+    loadTab(t.dataset.tab);
+  });
+});
+
+search.addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(render, 150); });
+filter.addEventListener('change', render);
+sort.addEventListener('change', render);
+
+loadTab('normen');
+</script>
+</body>
+</html>

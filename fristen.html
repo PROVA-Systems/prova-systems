@@ -26,6 +26,7 @@
 <script src="prova-layout.config.js"></script>
 <script src="nav.js" defer></script>
 <script src="/lib/fristen-pipelines.js"></script>
+<script src="/lib/prova-workflow-engine.js"></script>
 <link rel="stylesheet" href="prova-design.css">
 <style>
 :root {
@@ -67,6 +68,35 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
 .fr-modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:16px;}
 .fr-modal-cancel{padding:8px 16px;background:transparent;border:1px solid var(--border2);color:var(--text2);border-radius:8px;cursor:pointer;font-family:inherit;}
 @media(max-width:700px){.fr-row{grid-template-columns:1fr;}.fr-row-header{display:none;}}
+/* MEGA⁶⁹-FINAL-1 C.5 — Kalender-View + View-Toggle */
+.fr-view-toggle{display:inline-flex;background:var(--surface);border:1px solid var(--border2);border-radius:8px;overflow:hidden;}
+.fr-view-toggle button{padding:7px 14px;background:transparent;border:none;color:var(--text2);font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;border-right:1px solid var(--border2);}
+.fr-view-toggle button:last-child{border-right:none;}
+.fr-view-toggle button.active{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;}
+.fr-calendar{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;}
+.cal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.cal-head h2{font-size:16px;font-weight:700;color:var(--text);font-family:inherit;}
+.cal-nav{display:flex;gap:8px;}
+.cal-nav button{padding:6px 12px;background:var(--surface2);border:1px solid var(--border2);color:var(--text2);border-radius:6px;cursor:pointer;font-family:inherit;font-size:13px;}
+.cal-nav button:hover{background:rgba(79,142,247,.1);color:var(--accent);}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}
+.cal-dow{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);font-weight:700;padding:6px 4px;text-align:center;}
+.cal-day{min-height:64px;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:6px;font-size:11px;cursor:pointer;display:flex;flex-direction:column;gap:3px;transition:all .12s;}
+.cal-day:hover{border-color:var(--accent);background:var(--surface2);}
+.cal-day.is-outside{opacity:.35;}
+.cal-day.is-today{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent);}
+.cal-day .dnum{font-weight:700;color:var(--text);font-size:12px;line-height:1;}
+.cal-day .dfristen{display:flex;flex-direction:column;gap:2px;}
+.cal-pill{font-size:9px;padding:2px 5px;border-radius:3px;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.cal-pill.is-overdue{background:rgba(239,68,68,.2);color:#fecaca;}
+.cal-pill.is-today{background:rgba(245,158,11,.2);color:#fcd34d;}
+.cal-pill.is-soon{background:rgba(79,142,247,.18);color:#93c5fd;}
+.cal-pill.is-ok{background:rgba(16,185,129,.15);color:#6ee7b7;}
+/* Workflow-Template-Preview im Pipeline-Modal */
+.fr-wf-preview{margin-top:10px;padding:10px;background:var(--bg);border-radius:8px;font-size:11px;border:1px dashed var(--border2);}
+.fr-wf-preview h4{font-size:11px;color:var(--accent);margin-bottom:6px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;}
+.fr-wf-tpl{padding:4px 0;display:flex;justify-content:space-between;color:var(--text2);}
+.fr-wf-tpl strong{color:var(--text);font-weight:600;}
 </style>
 </head>
 <body>
@@ -76,6 +106,10 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
   <p class="fr-sub">Reminder-System für 5 Pipelines (Schaden/Wert/Bauabnahme/Schiedsgutachten/Beweissicherung) — automatische E-Mail bei T-14/7/3/1 Tagen.</p>
 
   <div class="fr-toolbar">
+    <div class="fr-view-toggle" role="tablist" aria-label="Ansicht">
+      <button type="button" data-view="list" class="active" onclick="switchView('list')">📋 Liste</button>
+      <button type="button" data-view="calendar" onclick="switchView('calendar')">📅 Kalender</button>
+    </div>
     <select class="fr-input" id="f-status" onchange="loadFristen()">
       <option value="">Alle Status</option>
       <option value="offen">Offen</option>
@@ -94,11 +128,23 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
     <span style="margin-left:auto;font-size:12px;color:var(--text3);" id="fr-count">—</span>
   </div>
 
-  <div class="fr-list">
+  <div class="fr-list" id="fr-view-list">
     <div class="fr-row fr-row-header">
       <div>Datum</div><div>Typ</div><div>Notiz</div><div>Pipeline</div><div>Status</div><div>T-Tage</div><div></div>
     </div>
     <div id="fr-rows"></div>
+  </div>
+
+  <div class="fr-calendar" id="fr-view-calendar" hidden>
+    <header class="cal-head">
+      <h2 id="cal-month-label">—</h2>
+      <div class="cal-nav">
+        <button type="button" onclick="calNav(-1)" aria-label="Vorheriger Monat">‹ Zurück</button>
+        <button type="button" onclick="calToday()" aria-label="Heute">Heute</button>
+        <button type="button" onclick="calNav(1)" aria-label="Nächster Monat">Weiter ›</button>
+      </div>
+    </header>
+    <div class="cal-grid" id="cal-grid"></div>
   </div>
 
 </main>
@@ -138,6 +184,7 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
     </div>
     <div class="fr-form-group"><label class="fr-form-label">Stichtag (Auftragseingang/Beweisbeschluss/Ortstermin)</label><input type="date" class="fr-form-input" id="p-stichtag"></div>
     <div id="p-preview" style="margin-top:8px;padding:10px;background:var(--bg);border-radius:8px;font-size:11px;font-family:ui-monospace,monospace;color:var(--text2);max-height:200px;overflow-y:auto;"></div>
+    <div id="fr-wf-preview-wrap"></div>
     <div class="fr-modal-actions">
       <button class="fr-modal-cancel" type="button" onclick="closePipeline()">Abbrechen</button>
       <button class="fr-btn" type="button" onclick="applyPipeline()">Pipeline erstellen</button>
@@ -160,6 +207,8 @@ async function loadFristen() {
     const res = await provaFetch(url);
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const data = await res.json();
+    window.__frCache = data.fristen || [];
+    if (window.__frView === 'calendar') renderCalendar();
     document.getElementById('fr-count').textContent = data.total + ' Fristen';
     const rows = document.getElementById('fr-rows');
     if (!data.fristen || !data.fristen.length) {
@@ -270,6 +319,151 @@ async function markErfuellt(id) {
     loadFristen();
   } catch (e) { alert('Fehler: ' + e.message); }
 }
+
+/* ─── MEGA⁶⁹-FINAL-1 C.5 — View-Toggle + Kalender-View ─── */
+window.__frView = 'list';
+window.__calCursor = new Date();
+
+function switchView(name) {
+  window.__frView = name;
+  document.querySelectorAll('.fr-view-toggle button').forEach(b => {
+    b.classList.toggle('active', b.dataset.view === name);
+  });
+  const list = document.getElementById('fr-view-list');
+  const cal  = document.getElementById('fr-view-calendar');
+  if (list) list.hidden = name !== 'list';
+  if (cal)  cal.hidden  = name !== 'calendar';
+  if (name === 'calendar') renderCalendar();
+}
+
+function calNav(delta) {
+  const c = window.__calCursor;
+  c.setDate(1);
+  c.setMonth(c.getMonth() + delta);
+  renderCalendar();
+}
+function calToday() { window.__calCursor = new Date(); renderCalendar(); }
+
+function renderCalendar() {
+  const grid = document.getElementById('cal-grid');
+  const label = document.getElementById('cal-month-label');
+  if (!grid || !label) return;
+  const c = new Date(window.__calCursor);
+  c.setDate(1);
+  const year = c.getFullYear(), month = c.getMonth();
+  label.textContent = c.toLocaleDateString('de-DE', { month: 'long', year: 'numeric' });
+
+  // Monday-first calendar grid
+  const firstDow = (c.getDay() + 6) % 7;
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const today = new Date(); today.setHours(0,0,0,0);
+  const cache = window.__frCache || [];
+  const fristenByDay = {};
+  cache.forEach(f => {
+    const d = (f.datum_soll || '').slice(0,10);
+    if (!d) return;
+    (fristenByDay[d] = fristenByDay[d] || []).push(f);
+  });
+
+  let html = '';
+  const dows = ['Mo','Di','Mi','Do','Fr','Sa','So'];
+  dows.forEach(d => html += `<div class="cal-dow">${d}</div>`);
+
+  // Leading outside days
+  const prevDays = new Date(year, month, 0).getDate();
+  for (let i = firstDow - 1; i >= 0; i--) {
+    const dd = prevDays - i;
+    const dt = new Date(year, month - 1, dd);
+    html += renderCalDay(dt, fristenByDay, today, true);
+  }
+  // Current month
+  for (let dd = 1; dd <= daysInMonth; dd++) {
+    const dt = new Date(year, month, dd);
+    html += renderCalDay(dt, fristenByDay, today, false);
+  }
+  // Trailing outside days (fill to 42 cells = 6 weeks)
+  const cellsSoFar = firstDow + daysInMonth;
+  const trailing = (cellsSoFar % 7 === 0) ? 0 : (7 - (cellsSoFar % 7));
+  for (let dd = 1; dd <= trailing; dd++) {
+    const dt = new Date(year, month + 1, dd);
+    html += renderCalDay(dt, fristenByDay, today, true);
+  }
+  grid.innerHTML = html;
+}
+
+function renderCalDay(dt, fristenByDay, today, isOutside) {
+  const iso = dt.toISOString().slice(0,10);
+  const list = fristenByDay[iso] || [];
+  const isToday = dt.getTime() === today.getTime();
+  const cls = [
+    'cal-day',
+    isOutside ? 'is-outside' : '',
+    isToday ? 'is-today' : ''
+  ].filter(Boolean).join(' ');
+  const pills = list.slice(0, 3).map(f => {
+    const days = Math.round((dt - today) / 86400000);
+    const pillCls = (f.status === 'erfuellt') ? 'is-ok'
+      : days < 0 ? 'is-overdue'
+      : days <= 1 ? 'is-today'
+      : 'is-soon';
+    return `<span class="cal-pill ${pillCls}" title="${escHtml(f.frist_typ + ': ' + (f.notiz || ''))}">${escHtml(f.frist_typ)}</span>`;
+  }).join('');
+  const more = list.length > 3 ? `<span class="cal-pill is-soon">+${list.length - 3}</span>` : '';
+  return `<div class="${cls}" data-day="${iso}" onclick="calDayClick('${iso}')">
+    <span class="dnum">${dt.getDate()}</span>
+    <span class="dfristen">${pills}${more}</span>
+  </div>`;
+}
+
+function calDayClick(iso) {
+  switchView('list');
+  // optional: scroll to first matching row
+  setTimeout(() => {
+    const rows = document.querySelectorAll('.fr-row');
+    for (const r of rows) {
+      if ((r.textContent || '').includes(new Date(iso).toLocaleDateString('de-DE'))) {
+        r.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        r.style.outline = '2px solid var(--accent)';
+        setTimeout(() => r.style.outline = '', 1800);
+        break;
+      }
+    }
+  }, 80);
+}
+
+/* ─── Workflow-Template-Vorschau im Pipeline-Modal ─── */
+async function _previewWorkflowTemplates() {
+  const wrap = document.getElementById('fr-wf-preview-wrap');
+  if (!wrap) return;
+  const auftragId = (document.getElementById('p-auftrag_id').value || '').trim();
+  if (!auftragId || !window.ProvaWorkflowEngine) { wrap.innerHTML = ''; return; }
+  try {
+    const res = await provaFetch('/.netlify/functions/list-auftraege?id=' + encodeURIComponent(auftragId));
+    if (!res.ok) { wrap.innerHTML = ''; return; }
+    const d = await res.json();
+    const typ = (d.auftraege && d.auftraege[0] && d.auftraege[0].typ) || d.typ;
+    if (!typ) { wrap.innerHTML = ''; return; }
+    const tpls = window.ProvaWorkflowEngine.getFristTemplates(typ) || [];
+    if (!tpls.length) { wrap.innerHTML = ''; return; }
+    const stichtag = document.getElementById('p-stichtag').value || new Date().toISOString().slice(0,10);
+    const baseDate = new Date(stichtag + 'T00:00:00');
+    wrap.innerHTML = `<div class="fr-wf-preview"><h4>📐 Workflow-Engine-Templates für typ="${escHtml(typ)}"</h4>
+      ${tpls.map(t => {
+        const d = new Date(baseDate); d.setDate(d.getDate() + (t.daysFromNow || 0));
+        return `<div class="fr-wf-tpl"><span>${escHtml(t.titel)}${t.pipeline ? ' · <em>' + escHtml(t.pipeline) + '</em>' : ''}</span><strong>${d.toLocaleDateString('de-DE')} (+${t.daysFromNow}d)</strong></div>`;
+      }).join('')}
+      <p style="margin-top:6px;font-size:10px;color:var(--text3);">Diese Templates werden via "Pipeline erstellen" nicht automatisch angelegt — Quelle ProvaWorkflowEngine pro auftrag_typ (FRIST_TEMPLATES).</p>
+    </div>`;
+  } catch (e) { wrap.innerHTML = ''; }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  // Workflow-Preview trigger
+  const aid = document.getElementById('p-auftrag_id');
+  const st  = document.getElementById('p-stichtag');
+  if (aid) aid.addEventListener('change', _previewWorkflowTemplates);
+  if (st)  st.addEventListener('change', _previewWorkflowTemplates);
+});
 </script>
 <script src="sw-register.js" defer></script>
 </body>

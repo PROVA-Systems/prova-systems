@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>MEGA⁶⁶ Pipeline + Mobile + Dark Demo</title>
+<meta name="robots" content="noindex,nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  body { margin: 0; font: 14px/1.5 system-ui, -apple-system, Segoe UI, sans-serif; color: #0b2228; background: #f8f9fa; }
+  [data-theme="dark"] body { background: #0b1820; color: #e0eaee; }
+  header { padding: 14px 24px; background: #0b2228; color: #fff; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+  header h1 { margin: 0; font: 600 16px/1.4 system-ui; }
+  header .actions { display: flex; gap: 8px; }
+  header button { padding: 6px 12px; background: rgba(255,255,255,.1); color: #fff; border: 1px solid rgba(255,255,255,.2); border-radius: 6px; cursor: pointer; font: 12px system-ui; }
+  main { display: grid; grid-template-columns: 1fr 360px; min-height: calc(100vh - 60px); }
+  @media (max-width: 768px) { main { grid-template-columns: 1fr; } }
+  .editor-pane { background: #fff; display: flex; flex-direction: column; border-right: 1px solid #e1e8eb; }
+  [data-theme="dark"] .editor-pane { background: #0b1820; border-right-color: rgba(255,255,255,.12); }
+  .editor-pane .info { padding: 10px 24px; background: #f4f8fa; border-bottom: 1px solid #e1e8eb; font-size: 12px; color: #4a5e63; display: flex; gap: 12px; flex-wrap: wrap; }
+  [data-theme="dark"] .editor-pane .info { background: #14252e; color: #94a3b8; border-bottom-color: rgba(255,255,255,.12); }
+  .editor-pane .info kbd { background: #fff; border: 1px solid #d4dde0; padding: 2px 6px; border-radius: 3px; font: 11px ui-monospace; }
+  [data-theme="dark"] .editor-pane .info kbd { background: rgba(255,255,255,.06); border-color: rgba(255,255,255,.12); color: #e0eaee; }
+  #editor-mount { flex: 1; padding: 28px 40px 80px; overflow-y: auto; min-height: 400px; }
+  #editor-mount .ProseMirror { outline: none; font: 16px/1.7 'Inter', system-ui; max-width: 800px; margin: 0 auto; min-height: 300px; }
+  #character-tracker-mount { border-top: 1px solid #e1e8eb; }
+  #sidebar-mount { background: #fff; }
+  .controls { padding: 12px 16px; background: #f4f8fa; border-bottom: 1px solid #e1e8eb; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .controls input { padding: 6px 10px; border: 1px solid #d4dde0; border-radius: 4px; font: inherit; }
+  .controls button { padding: 6px 12px; background: #0b2228; color: #fff; border: none; border-radius: 4px; font: inherit; cursor: pointer; }
+  .pipeline-stub { padding: 8px 14px; background: #6366f1; color: #fff; border: none; border-radius: 6px; cursor: pointer; font: 13px system-ui; margin: 6px; }
+</style>
+</head>
+<body data-prova-editor-mega65="1">
+
+<header>
+  <h1>MEGA⁶⁶ — Pipeline + Mobile + Dark + Hard-Replace</h1>
+  <div class="actions">
+    <button id="btn-theme">🌙 Theme</button>
+    <button id="btn-cheat">? Cheat-Sheet</button>
+  </div>
+</header>
+
+<div class="controls">
+  <label>auftrag_id:</label>
+  <input type="text" id="auftrag-id-input" size="36" placeholder="UUID — Pipeline-Trigger braucht das">
+  <button id="load-sidebar-btn">Sidebar laden</button>
+  <button class="pipeline-stub" id="trigger-audio-stub">Audio-Trigger-Stub</button>
+  <button class="pipeline-stub" id="trigger-foto-stub">Foto-Trigger-Stub</button>
+  <button class="pipeline-stub" id="open-foto-picker">/foto Picker</button>
+  <button class="pipeline-stub" id="open-befundgen">Befund generieren</button>
+</div>
+
+<main>
+  <div class="editor-pane">
+    <div class="info">
+      <span><kbd id="kbd-cmdk">⌘K</kbd> Palette</span>
+      <span><kbd>?</kbd> Cheat-Sheet</span>
+      <span><kbd>/</kbd> Blöcke</span>
+      <span><kbd>[[</kbd> Wikilink (alle 5 Typen)</span>
+      <span><kbd>@HH:MM</kbd> Zeitstempel</span>
+      <span><kbd id="kbd-konj">⌘⌥K</kbd> Konjunktiv-KI (ki-proxy live)</span>
+    </div>
+    <div id="editor-mount"></div>
+    <div id="character-tracker-mount"></div>
+  </div>
+  <aside id="sidebar-mount" class="prova-fragment-sidebar"></aside>
+</main>
+
+<script src="/lib/prova-platform.js"></script>
+<script src="/lib/editor-tiptap-bundle.js"></script>
+<script src="/lib/prova-editor.js"></script>
+<script src="/lib/prova-bubble-menu.js"></script>
+<script src="/lib/prova-floating-menu.js"></script>
+<script src="/lib/prova-slash-menu.js"></script>
+<script src="/lib/prova-focus-mode.js"></script>
+<script src="/lib/extensions/prova-callout.js"></script>
+<script src="/lib/extensions/prova-fragment-marker.js"></script>
+<script src="/lib/extensions/prova-textbaustein-block.js"></script>
+<script src="/lib/extensions/prova-foto-embed.js"></script>
+<script src="/lib/extensions/prova-skizze-embed.js"></script>
+<script src="/lib/prova-fragment-sidebar.js"></script>
+<script src="/lib/prova-character-tracker.js"></script>
+<script src="/lib/prova-command-palette.js"></script>
+<script src="/lib/prova-commands-registry.js"></script>
+<script src="/lib/prova-cheat-sheet.js"></script>
+<script src="/lib/prova-timestamp-ref.js"></script>
+<script src="/lib/extensions/prova-ki-suggestion.js"></script>
+<script src="/lib/extensions/prova-wikilink.js"></script>
+<script src="/lib/extensions/prova-norm-citation.js"></script>
+
+<!-- MEGA66 NEU -->
+<script src="/lib/prova-asset-trigger.js"></script>
+<script src="/lib/prova-wikilink-source.js"></script>
+<script src="/lib/prova-foto-picker.js"></script>
+<script src="/lib/prova-ki-wire.js"></script>
+<script src="/lib/prova-befund-generator.js"></script>
+<script src="/lib/prova-fab.js"></script>
+<script src="/lib/prova-theme.js"></script>
+<script src="/lib/prova-config.js"></script>
+
+<script>
+(async function () {
+  if (window.ProvaPlatform) {
+    document.getElementById('kbd-cmdk').textContent = ProvaPlatform.fmt('K', { mod: true });
+    document.getElementById('kbd-konj').textContent = ProvaPlatform.fmt('K', { mod: true, alt: true });
+  }
+
+  const modules = await ProvaEditor.getModules();
+  const wikiSrc = ProvaWikilinkSource.create({ editor: null, auftragId: null });   // wird später ge-updated
+  const ext = {
+    callout:       ProvaCalloutFactory(modules),
+    fragMarker:    ProvaFragmentMarkerFactory(modules),
+    textbaustein:  ProvaTextbausteinBlockFactory(modules),
+    foto:          ProvaFotoEmbedFactory(modules),
+    skizze:        ProvaSkizzeEmbedFactory(modules),
+    kiSuggestion:  ProvaKiSuggestionFactory(modules),
+    normCitation:  ProvaNormCitationFactory(modules),
+    wikilink:      ProvaWikilinkFactory(modules, { searchSources: (q) => wikiSrc(q) })
+  };
+
+  const editor = await ProvaEditor.create({
+    el: '#editor-mount',
+    mode: 'fachurteil',
+    placeholder: '/ für Blöcke · [[ für Wikilinks · @HH:MM für Zeitstempel · ⌘K für Befehle',
+    content: '<h1>§6 Fachurteil</h1><p>Demo MEGA⁶⁶: alles ist verkabelt.</p>',
+    extraExtensions: Object.values(ext).filter(Boolean)
+  });
+
+  new ProvaBubbleMenu(editor.editor);
+  new ProvaFloatingMenu(editor.editor);
+  new ProvaSlashMenu(editor.editor, { onFotoPick: () => {
+    const aid = document.getElementById('auftrag-id-input').value.trim();
+    if (!aid) return alert('auftrag_id eingeben');
+    ProvaFotoPicker.open(editor.editor, aid);
+  }});
+  const focusMode = new ProvaFocusMode(editor.editor);
+  window.ProvaFocusMode_active = focusMode;
+  new CharacterTracker('#character-tracker-mount', editor.editor, { minEigenleistung: 500 });
+  new ProvaTimestampRef(editor.editor);
+
+  const cheat = new ProvaCheatSheet();
+  document.getElementById('btn-cheat').addEventListener('click', () => cheat.toggle());
+  document.getElementById('btn-theme').addEventListener('click', () => ProvaTheme.cycle());
+
+  const palette = new ProvaCommandPalette({ editor: editor.editor, getContext: () => ({ section: 'fachurteil' }) });
+  const cmds = ProvaCommandsRegistry.build({
+    editor: editor.editor,
+    openCheatSheet: () => cheat.show(),
+    openKiPanel: () => alert('KI-Panel kommt MEGA⁶⁸'),
+    openNormPicker: () => ProvaNormPicker.open(editor.editor),
+    openFotoPicker: () => {
+      const aid = document.getElementById('auftrag-id-input').value.trim();
+      if (!aid) return alert('auftrag_id eingeben');
+      ProvaFotoPicker.open(editor.editor, aid);
+    },
+    openVersandModal: () => alert('Versand kommt MEGA⁶⁷'),
+    onSave: () => alert('Auto-Save läuft'),
+    onPdfExport: () => alert('PDF-Export'),
+    onDocxExport: () => alert('DOCX-Export')
+  });
+  palette.register(cmds);
+
+  new ProvaFab({ palette });
+
+  let sidebar = null;
+  function setupForAuftrag(aid) {
+    // Update wikiSrc + load sidebar
+    Object.assign(wikiSrc, ProvaWikilinkSource.create({ editor: editor.editor, auftragId: aid }));
+    if (sidebar) sidebar.destroy();
+    sidebar = new FragmentSidebar('#sidebar-mount', editor.editor, { auftragId: aid });
+    document.getElementById('sidebar-mount').classList.add('prova-fragment-sidebar');
+    ProvaKiWire.activate({ editor: editor.editor, auftragId: aid, fragmentSidebar: sidebar });
+    document.addEventListener('prova:fragments-changed', () => { if (sidebar) sidebar.load(); });
+  }
+
+  document.getElementById('load-sidebar-btn').addEventListener('click', () => {
+    const aid = document.getElementById('auftrag-id-input').value.trim();
+    if (!aid) return alert('auftrag_id eingeben');
+    setupForAuftrag(aid);
+  });
+
+  document.getElementById('trigger-audio-stub').addEventListener('click', async () => {
+    const aid = document.getElementById('auftrag-id-input').value.trim();
+    if (!aid) return alert('auftrag_id eingeben');
+    const audioId = prompt('Audio-UUID (muss in audio_dateien existieren mit transkript_text):');
+    if (!audioId) return;
+    await ProvaAssetTrigger.processAudio(audioId, aid);
+  });
+
+  document.getElementById('trigger-foto-stub').addEventListener('click', async () => {
+    const aid = document.getElementById('auftrag-id-input').value.trim();
+    if (!aid) return alert('auftrag_id eingeben');
+    const fotoId = prompt('Foto-UUID:');
+    if (!fotoId) return;
+    await ProvaAssetTrigger.processFoto(fotoId, aid);
+  });
+
+  document.getElementById('open-foto-picker').addEventListener('click', () => {
+    const aid = document.getElementById('auftrag-id-input').value.trim();
+    if (!aid) return alert('auftrag_id eingeben');
+    ProvaFotoPicker.open(editor.editor, aid);
+  });
+
+  document.getElementById('open-befundgen').addEventListener('click', () => {
+    const aid = document.getElementById('auftrag-id-input').value.trim();
+    if (!aid) return alert('auftrag_id eingeben');
+    ProvaBefundGenerator.open(editor.editor, aid, sidebar);
+  });
+
+  window._demo = { editor, palette, sidebar, cheat, focusMode };
+})();
+</script>
+
+</body>
+</html>

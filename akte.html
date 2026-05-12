@@ -318,6 +318,9 @@ a{text-decoration:none;color:inherit;}button,input,select,textarea{font-family:i
         </div>
       </div>
 
+      <!-- MEGA⁶⁹-FINAL-1 D.5 — 12-Tab Quick-Action-Bar -->
+      <div id="akte-tabs"></div>
+
       <!-- MAIN GRID -->
       <div class="akte-grid">
 
@@ -896,6 +899,49 @@ a{text-decoration:none;color:inherit;}button,input,select,textarea{font-family:i
       }, 100);
     });
   })();
+</script>
+
+<!-- MEGA⁶⁹-FINAL-1 D.5 — Akte-Tabs Quick-Action-Bar + Modal-Libs -->
+<script src="/lib/prova-asset-autowire.js" defer></script>
+<script src="/lib/prova-asset-event-bus.js" defer></script>
+<script src="/lib/prova-asset-trigger.js" defer></script>
+<script src="/lib/prova-audit-trail-view.js" defer></script>
+<script src="/lib/prova-versand-modal.js" defer></script>
+<script src="/lib/prova-versand-historie.js" defer></script>
+<script src="/lib/prova-version-history.js" defer></script>
+<script src="/lib/prova-anhang-lightbox.js" defer></script>
+<script src="/lib/prova-externe-dokumente.js" defer></script>
+<script src="/lib/prova-akte-tabs.js" defer></script>
+<script>
+(function () {
+  // Mount Tab-Bar sobald _currentAuftrag verfügbar
+  document.addEventListener('DOMContentLoaded', function () {
+    let attempts = 0;
+    const maxAttempts = 80;  // 8s @ 100ms
+    const t = setInterval(function () {
+      attempts++;
+      if (window.ProvaAkteTabs && window._currentAuftrag && window._currentAuftrag.id) {
+        clearInterval(t);
+        try {
+          window.ProvaAkteTabs.render({
+            container: '#akte-tabs',
+            auftragId: window._currentAuftrag.id,
+            az: window._currentAuftrag.aktenzeichen || window._currentAuftrag.az,
+            activeTab: 'uebersicht'
+          });
+          // Activate Asset-Pipeline-Bus für diese Akte (Auto-Trigger nach Upload)
+          if (window.ProvaAssetEventBus && typeof window.ProvaAssetEventBus.activate === 'function') {
+            window.ProvaAssetEventBus.activate({ auftragId: window._currentAuftrag.id });
+          }
+        } catch (e) {
+          console.error('[akte-tabs] mount failed:', e);
+        }
+      } else if (attempts >= maxAttempts) {
+        clearInterval(t);
+      }
+    }, 100);
+  });
+})();
 </script>
 </body>
 </html>

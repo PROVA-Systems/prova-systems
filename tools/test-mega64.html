@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>MEGA⁶⁴ Editor-Fundament Demo</title>
+<meta name="robots" content="noindex,nofollow">
+<style>
+  :root { --bg:#fff; --text:#0b2228; --border:#e1e8eb; --accent:#0b2228; }
+  * { box-sizing: border-box; }
+  body { margin:0; font: 14px/1.5 system-ui, -apple-system, Segoe UI, sans-serif; color:var(--text); background:#f8f9fa; }
+  header { padding: 14px 24px; background:#0b2228; color:#fff; display:flex; align-items:center; justify-content:space-between; }
+  header h1 { margin:0; font:600 16px/1.4 system-ui; }
+  header .meta { font-size:12px; opacity:.8; }
+  main { display:grid; grid-template-columns: 1fr 360px; min-height: calc(100vh - 52px); }
+  .editor-pane { background:#fff; display:flex; flex-direction:column; border-right:1px solid var(--border); }
+  .editor-pane .editor-toolbar-info {
+    padding: 10px 24px; background:#f4f8fa; border-bottom:1px solid var(--border); font-size:12px; color:#4a5e63;
+    display:flex; gap:16px; flex-wrap:wrap;
+  }
+  .editor-pane .editor-toolbar-info kbd { background:#fff; border:1px solid #d4dde0; padding:2px 6px; border-radius:3px; font:11px ui-monospace,Menlo,monospace; }
+  #editor-mount { flex:1; padding: 32px 48px 80px; overflow-y:auto; min-height: 480px; }
+  #editor-mount .ProseMirror { outline:none; font:16px/1.7 'Inter', system-ui; max-width: 800px; margin:0 auto; min-height: 300px; }
+  #editor-mount .ProseMirror p.is-editor-empty:first-child::before {
+    content: attr(data-placeholder); color:#94a3b8; float:left; pointer-events:none; height:0;
+  }
+  #character-tracker-mount { border-top: 1px solid var(--border); }
+  #sidebar-mount { background:#fff; }
+  .controls { padding: 12px 16px; background:#f4f8fa; border-bottom:1px solid var(--border); display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+  .controls input { padding: 6px 10px; border: 1px solid #d4dde0; border-radius: 4px; font:inherit; }
+  .controls button { padding: 6px 12px; background:#0b2228; color:#fff; border:none; border-radius:4px; font:inherit; cursor:pointer; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>MEGA⁶⁴ — Editor-Fundament Demo</h1>
+  <div class="meta">TipTap-Bundle lokal · Vanilla-JS · DSGVO-konform</div>
+</header>
+
+<div class="controls">
+  <label>auftrag_id (für Sidebar):</label>
+  <input type="text" id="auftrag-id-input" size="36" placeholder="UUID — optional">
+  <button id="load-sidebar-btn">Sidebar laden</button>
+  <span style="margin-left:16px; color:#6b7c80; font-size:12px">
+    Login muss aktiv sein (Supabase-Session) für DB-Zugriff.
+  </span>
+</div>
+
+<main>
+  <div class="editor-pane">
+    <div class="editor-toolbar-info">
+      <span><strong>/</strong> öffnet Slash-Menu (12 Blöcke)</span>
+      <span><kbd id="kbd-bold">⌘B</kbd>/<kbd id="kbd-italic">⌘I</kbd>/<kbd id="kbd-underline">⌘U</kbd></span>
+      <span><kbd id="kbd-focus">⌘⇧F</kbd> Focus-Mode-Zyklus</span>
+      <span>Text markieren → Bubble-Menu</span>
+    </div>
+    <div id="editor-mount"></div>
+    <div id="character-tracker-mount"></div>
+  </div>
+  <aside id="sidebar-mount"></aside>
+</main>
+
+<script src="/lib/prova-platform.js"></script>
+<script src="/lib/editor-tiptap-bundle.js"></script>
+<script src="/lib/prova-editor.js"></script>
+<script src="/lib/prova-bubble-menu.js"></script>
+<script src="/lib/prova-floating-menu.js"></script>
+<script src="/lib/prova-slash-menu.js"></script>
+<script src="/lib/prova-focus-mode.js"></script>
+<script src="/lib/extensions/prova-callout.js"></script>
+<script src="/lib/extensions/prova-fragment-marker.js"></script>
+<script src="/lib/extensions/prova-textbaustein-block.js"></script>
+<script src="/lib/extensions/prova-foto-embed.js"></script>
+<script src="/lib/extensions/prova-skizze-embed.js"></script>
+<script src="/lib/prova-fragment-sidebar.js"></script>
+<script src="/lib/prova-character-tracker.js"></script>
+<script src="/lib/prova-config.js"></script>
+
+<script>
+(async function () {
+  // Plattform-Shortcut-Hints rendern
+  if (window.ProvaPlatform) {
+    document.getElementById('kbd-bold').textContent      = ProvaPlatform.fmt('B', { mod: true });
+    document.getElementById('kbd-italic').textContent    = ProvaPlatform.fmt('I', { mod: true });
+    document.getElementById('kbd-underline').textContent = ProvaPlatform.fmt('U', { mod: true });
+    document.getElementById('kbd-focus').textContent     = ProvaPlatform.fmt('F', { mod: true, shift: true });
+  }
+
+  // TipTap-Module holen + Custom-Extensions bauen
+  const modules = await ProvaEditor.getModules();
+  const provaCallout           = ProvaCalloutFactory(modules);
+  const provaFragmentMarker    = ProvaFragmentMarkerFactory(modules);
+  const provaTextbausteinBlock = ProvaTextbausteinBlockFactory(modules);
+  const provaFotoEmbed         = ProvaFotoEmbedFactory(modules);
+  const provaSkizzeEmbed       = ProvaSkizzeEmbedFactory(modules);
+
+  const editor = await ProvaEditor.create({
+    el: '#editor-mount',
+    mode: 'fachurteil',
+    placeholder: 'Hier tippen — / für Block-Menu',
+    content: '<h1>§6 Fachurteil</h1><p>Dies ist die Demo-Page für MEGA⁶⁴. Probiere "/" am Zeilenanfang, markiere Text für Bubble-Menu, drücke <kbd>⌘⇧F</kbd> für Focus-Mode.</p>',
+    extraExtensions: [provaCallout, provaFragmentMarker, provaTextbausteinBlock, provaFotoEmbed, provaSkizzeEmbed].filter(Boolean),
+    onUpdate: () => { /* kann z.B. an document-save schicken */ }
+  });
+
+  // Invocation-Layer aufsetzen
+  new ProvaBubbleMenu(editor.editor);
+  new ProvaFloatingMenu(editor.editor);
+  new ProvaSlashMenu(editor.editor, {
+    onFotoPick: () => { alert('Foto-Picker kommt — bis dahin /foto manuell einfügen'); }
+  });
+  new ProvaFocusMode(editor.editor);
+
+  // Character-Tracker
+  new CharacterTracker('#character-tracker-mount', editor.editor, { minEigenleistung: 500 });
+
+  // FragmentSidebar mit aufruferseitigem auftragId
+  let sidebar = null;
+  document.getElementById('load-sidebar-btn').addEventListener('click', () => {
+    const auftragId = document.getElementById('auftrag-id-input').value.trim();
+    if (!auftragId) { alert('auftrag_id eingeben'); return; }
+    if (sidebar) sidebar.destroy();
+    sidebar = new FragmentSidebar('#sidebar-mount', editor.editor, { auftragId });
+    // CSS-Klasse für Sidebar-Wrapper
+    document.getElementById('sidebar-mount').classList.add('prova-fragment-sidebar');
+  });
+
+  // Globale Diagnose im Window
+  window._demo = { editor, ProvaEditor };
+})();
+</script>
+
+</body>
+</html>

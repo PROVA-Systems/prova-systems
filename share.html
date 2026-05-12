@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>PROVA Gutachten-Zugriff</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<style>
+  body { margin: 0; font: 14px/1.5 system-ui, -apple-system, Segoe UI, sans-serif; color: #0b2228; background: #f4f8fa; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+  .card { width: 100%; max-width: 520px; background: #fff; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.08); padding: 32px; }
+  .card.fullpdf { max-width: 1080px; height: 90vh; padding: 16px; display: flex; flex-direction: column; }
+  h1 { margin: 0 0 8px; font: 600 18px/1.4 system-ui; }
+  .meta { color: #6b7c80; font-size: 13px; margin-bottom: 18px; }
+  label { display: block; margin: 12px 0 4px; font-size: 12px; color: #4a5e63; }
+  input[type="password"] { width: 100%; padding: 10px 12px; border: 1px solid #d4dde0; border-radius: 6px; font: 15px system-ui; }
+  button { width: 100%; padding: 12px 18px; margin-top: 16px; background: #0b2228; color: #fff; border: none; border-radius: 8px; cursor: pointer; font: 600 14px system-ui; }
+  button:disabled { opacity: .5; cursor: not-allowed; }
+  .disclaimer { margin-top: 18px; padding: 12px; background: #f4f8fa; border-radius: 6px; font-size: 12px; color: #6b7c80; }
+  .error { padding: 12px; background: #fef2f2; color: #7f1d1d; border-radius: 6px; margin-top: 10px; }
+  .pdf-frame { flex: 1; width: 100%; border: 1px solid #d4dde0; border-radius: 6px; }
+  .actions { display: flex; justify-content: space-between; align-items: center; padding: 10px 0 0; font-size: 12px; color: #6b7c80; }
+  .actions a { color: #0b2228; text-decoration: none; font-weight: 500; }
+</style>
+</head>
+<body>
+
+<div class="card" id="login-card">
+  <h1>PROVA Gutachten-Zugriff</h1>
+  <p class="meta">Sie greifen auf ein Gutachten eines ö.b.u.v. Sachverständigen zu. Bitte Zugriffspasswort eingeben.</p>
+  <form id="form">
+    <label for="pwd">Zugriffspasswort</label>
+    <input type="password" id="pwd" required autocomplete="off" autofocus>
+    <div id="err" class="error" style="display:none"></div>
+    <button type="submit" id="submit-btn">Zugriff anfordern →</button>
+  </form>
+  <div class="disclaimer">
+    Hinweis: Jeder Zugriff wird auditiert. Bei Verdacht auf unrechtmäßige Nutzung kontaktieren Sie bitte den Sachverständigen.
+  </div>
+</div>
+
+<div class="card fullpdf" id="pdf-card" style="display:none">
+  <div class="actions">
+    <div><strong id="pdf-titel">Gutachten</strong> · <span id="zugriffe-meta"></span></div>
+    <a href="" id="download-link" target="_blank" rel="noopener">⇣ PDF herunterladen</a>
+  </div>
+  <iframe class="pdf-frame" id="pdf-iframe" src="about:blank"></iframe>
+</div>
+
+<script src="/lib/prova-config.js"></script>
+<script>
+(function () {
+  const params = new URLSearchParams(window.location.search);
+  const token = params.get('token');
+  const form = document.getElementById('form');
+  const errEl = document.getElementById('err');
+  const submitBtn = document.getElementById('submit-btn');
+  if (!token) {
+    errEl.textContent = 'Kein Token in URL. Bitte vollständigen Link aus E-Mail nutzen.';
+    errEl.style.display = 'block';
+    submitBtn.disabled = true;
+    return;
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    errEl.style.display = 'none';
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Prüfe…';
+    const pwd = document.getElementById('pwd').value;
+    try {
+      const url = window.PROVA_CONFIG?.SUPABASE_URL;
+      const anon = window.PROVA_CONFIG?.SUPABASE_ANON_KEY;
+      if (!url) throw new Error('Config fehlt');
+      const resp = await fetch(`${url}/functions/v1/share-access`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': anon || '' },
+        body: JSON.stringify({ token, password: pwd })
+      });
+      const json = await resp.json();
+      if (!resp.ok || !json.success) {
+        const msg = ({
+          'INVALID_PASSWORD': 'Falsches Passwort.',
+          'TOKEN_NOT_FOUND':  'Token ungültig oder Link defekt.',
+          'EXPIRED':          'Link abgelaufen.',
+          'REVOKED':          'Link wurde widerrufen.',
+          'DELETED':          'Dokument wurde gelöscht.',
+          'MAX_ZUGRIFFE_REACHED': 'Maximale Zugriffe erreicht.'
+        })[json.error] || ('Fehler: ' + (json.error || 'unbekannt'));
+        errEl.textContent = msg;
+        errEl.style.display = 'block';
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Zugriff anfordern →';
+        return;
+      }
+      // Erfolg
+      document.getElementById('login-card').style.display = 'none';
+      document.getElementById('pdf-card').style.display = 'flex';
+      document.getElementById('pdf-titel').textContent = json.titel || 'Gutachten';
+      document.getElementById('zugriffe-meta').textContent = `Verbleibende Zugriffe: ${json.zugriffe_remaining}`;
+      if (json.pdf_url) {
+        document.getElementById('pdf-iframe').src = json.pdf_url;
+        document.getElementById('download-link').href = json.pdf_url;
+      } else {
+        document.getElementById('pdf-iframe').srcdoc = '<p style="padding:24px;font:14px system-ui">PDF-URL nicht verfügbar.</p>';
+      }
+    } catch (e) {
+      errEl.textContent = 'Netzwerkfehler: ' + (e.message || e);
+      errEl.style.display = 'block';
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Zugriff anfordern →';
+    }
+  });
+})();
+</script>
+</body>
+</html>

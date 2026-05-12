@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>MEGA⁶² Phase 0 Smoke-Test</title>
+<meta name="robots" content="noindex,nofollow">
+<style>
+  body { font: 14px/1.5 system-ui, -apple-system, Segoe UI, sans-serif; max-width: 880px; margin: 24px auto; padding: 0 16px; color: #111; }
+  h1 { font-size: 22px; margin: 0 0 8px; }
+  h2 { font-size: 16px; margin: 24px 0 8px; padding-top: 16px; border-top: 1px solid #ddd; }
+  .card { border: 1px solid #ddd; border-radius: 8px; padding: 12px 16px; margin: 8px 0; background: #fafafa; }
+  button { font: inherit; padding: 8px 14px; border: 1px solid #0b2228; background: #0b2228; color: #fff; border-radius: 6px; cursor: pointer; margin: 4px 6px 4px 0; }
+  button:disabled { opacity: .5; cursor: not-allowed; }
+  pre { background: #0b2228; color: #b8e0d2; padding: 10px 12px; border-radius: 6px; overflow: auto; max-height: 320px; font-size: 12px; }
+  .ok { color: #0a5e1f; font-weight: 600; }
+  .err { color: #a40000; font-weight: 600; }
+  .meta { color: #666; font-size: 12px; }
+  kbd { display: inline-block; background: #eee; border: 1px solid #ccc; border-radius: 4px; padding: 1px 6px; font: 12px ui-monospace, Menlo, monospace; }
+  table { border-collapse: collapse; width: 100%; font-size: 13px; }
+  td, th { padding: 4px 8px; border-bottom: 1px solid #eee; text-align: left; }
+</style>
+</head>
+<body>
+
+<h1>MEGA⁶² Phase 0 — Smoke-Test</h1>
+<p class="meta">
+  4 Edge Functions + lib/prova-platform.js. Login erforderlich (Supabase JWT).
+  Erwartung: Skelett-Items liefern <code>501 NOT_IMPLEMENTED</code>, Full-Items liefern Daten.
+</p>
+
+<h2>0.11 ProvaPlatform (Frontend-Lib)</h2>
+<div class="card" id="card-platform">
+  <p class="meta">Plattform-Erkennung läuft automatisch beim Laden.</p>
+  <table id="platform-table"></table>
+  <p>Shortcut-Beispiel: <span id="kbd-save"></span> = Speichern · <span id="kbd-bold"></span> = Fett</p>
+</div>
+
+<h2>Auth-Status</h2>
+<div class="card" id="card-auth">
+  <p id="auth-state" class="meta">Prüfe Session…</p>
+  <button id="btn-login">Login öffnen</button>
+</div>
+
+<h2>0.7 asset-to-fragments-v1 (Skelett)</h2>
+<div class="card">
+  <button data-test="asset-diktat" disabled>Test: asset_typ=diktat</button>
+  <button data-test="asset-foto" disabled>Test: asset_typ=foto</button>
+  <button data-test="asset-skizze" disabled>Test: asset_typ=skizze</button>
+  <button data-test="asset-notiz" disabled>Test: asset_typ=notiz</button>
+  <button data-test="asset-unknown" disabled>Test: asset_typ=foobar</button>
+  <p class="meta">Erwartung: 501 NOT_IMPLEMENTED_MEGA63_* bei valid typ · 400 UNKNOWN_ASSET_TYPE bei unbekannt.</p>
+  <pre id="out-asset"></pre>
+</div>
+
+<h2>0.8 fragments-to-befund-v1 (Skelett)</h2>
+<div class="card">
+  <button data-test="frag-empty" disabled>Test: leere fragment_ids</button>
+  <button data-test="frag-nofound" disabled>Test: dummy UUIDs</button>
+  <p class="meta">Erwartung: 400 BAD_REQUEST bei leer · 404 NO_FRAGMENTS_FOUND bei nicht-existenten IDs.</p>
+  <pre id="out-frag"></pre>
+</div>
+
+<h2>0.9 audit-narrative-v1 (FULL)</h2>
+<div class="card">
+  <button data-test="audit-recent" disabled>Test: letzte 5 Audit-Events</button>
+  <button data-test="audit-kategorie-auth" disabled>Test: kategorie=auth</button>
+  <button data-test="audit-inline" disabled>Test: inline-entries (synthetisch)</button>
+  <p class="meta">Erwartung: deutsche Klartext-Narrative pro Event.</p>
+  <pre id="out-audit"></pre>
+</div>
+
+<h2>0.10 similarity-v1 (FULL)</h2>
+<div class="card">
+  <button data-test="sim-dummy" disabled>Test: dummy fragment_id</button>
+  <button data-test="sim-bad-scope" disabled>Test: scope=invalid</button>
+  <p class="meta">Erwartung: 200 mit leerer Liste (keine Fragmente vorhanden) · 400 bei scope=invalid.</p>
+  <pre id="out-sim"></pre>
+</div>
+
+<script src="/lib/prova-platform.js"></script>
+<script src="/lib/prova-config.js"></script>
+<script src="/lib/edge-shim.js"></script>
+<script src="https://esm.sh/@supabase/supabase-js@2.105.0?bundle" type="module"></script>
+<script type="module">
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.105.0';
+
+// --- 0.11 ProvaPlatform live ---
+(function () {
+  var t = document.getElementById('platform-table');
+  if (!t || !window.ProvaPlatform) return;
+  var rows = [
+    ['isMac', ProvaPlatform.isMac],
+    ['isWindows', ProvaPlatform.isWindows],
+    ['isLinux', ProvaPlatform.isLinux],
+    ['isTouch', ProvaPlatform.isTouch],
+    ['hasKeyboard', ProvaPlatform.hasKeyboard],
+    ['keys.mod', ProvaPlatform.keys.mod],
+    ['keys.alt', ProvaPlatform.keys.alt],
+    ['keys.shift', ProvaPlatform.keys.shift],
+    ['fmt("S", {mod:true})', ProvaPlatform.fmt('S', { mod: true })],
+    ['fmt("S", {mod:true,shift:true})', ProvaPlatform.fmt('S', { mod: true, shift: true })]
+  ];
+  t.innerHTML = rows.map(r => `<tr><th>${r[0]}</th><td>${String(r[1])}</td></tr>`).join('');
+  document.getElementById('kbd-save').innerHTML = ProvaPlatform.kbd('S', { mod: true });
+  document.getElementById('kbd-bold').innerHTML = ProvaPlatform.kbd('B', { mod: true });
+})();
+
+// --- Supabase-Client ---
+const SUPABASE_URL = window.PROVA_CONFIG?.SUPABASE_URL || 'https://cngteblrbpwsyypexjrv.supabase.co';
+const SUPABASE_ANON = window.PROVA_CONFIG?.SUPABASE_ANON_KEY || '';
+
+const sb = createClient(SUPABASE_URL, SUPABASE_ANON, { auth: { persistSession: true, autoRefreshToken: true } });
+
+async function refreshAuth() {
+  const { data: { session } } = await sb.auth.getSession();
+  const state = document.getElementById('auth-state');
+  const allBtns = document.querySelectorAll('button[data-test]');
+  if (session?.user) {
+    state.innerHTML = `<span class="ok">✓ Eingeloggt als ${session.user.email}</span> <span class="meta">(workspace JWT vorhanden)</span>`;
+    allBtns.forEach(b => b.disabled = false);
+  } else {
+    state.innerHTML = `<span class="err">Nicht eingeloggt.</span> Bitte über /app-login.html anmelden.`;
+    allBtns.forEach(b => b.disabled = true);
+  }
+}
+refreshAuth();
+document.getElementById('btn-login').addEventListener('click', () => { location.href = '/app-login.html?return=/tools/test-mega62.html'; });
+
+async function call(fnName, body) {
+  const { data: { session } } = await sb.auth.getSession();
+  const tok = session?.access_token;
+  const res = await fetch(`${SUPABASE_URL}/functions/v1/${fnName}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${tok}`, 'apikey': SUPABASE_ANON },
+    body: JSON.stringify(body)
+  });
+  const text = await res.text();
+  let json; try { json = JSON.parse(text); } catch { json = { raw: text }; }
+  return { status: res.status, json };
+}
+
+function out(id, content) {
+  document.getElementById(id).textContent = JSON.stringify(content, null, 2);
+}
+
+document.addEventListener('click', async (e) => {
+  const btn = e.target.closest('button[data-test]');
+  if (!btn) return;
+  const test = btn.getAttribute('data-test');
+  const dummyId = '00000000-0000-0000-0000-000000000000';
+
+  try {
+    if (test === 'asset-diktat')   out('out-asset', await call('asset-to-fragments-v1', { asset_typ: 'diktat',  asset_id: dummyId, auftrag_id: dummyId }));
+    if (test === 'asset-foto')     out('out-asset', await call('asset-to-fragments-v1', { asset_typ: 'foto',    asset_id: dummyId, auftrag_id: dummyId }));
+    if (test === 'asset-skizze')   out('out-asset', await call('asset-to-fragments-v1', { asset_typ: 'skizze',  asset_id: dummyId, auftrag_id: dummyId }));
+    if (test === 'asset-notiz')    out('out-asset', await call('asset-to-fragments-v1', { asset_typ: 'notiz',   asset_id: dummyId, auftrag_id: dummyId }));
+    if (test === 'asset-unknown')  out('out-asset', await call('asset-to-fragments-v1', { asset_typ: 'foobar',  asset_id: dummyId, auftrag_id: dummyId }));
+
+    if (test === 'frag-empty')     out('out-frag',  await call('fragments-to-befund-v1', { fragment_ids: [],          auftrag_id: dummyId }));
+    if (test === 'frag-nofound')   out('out-frag',  await call('fragments-to-befund-v1', { fragment_ids: [dummyId],   auftrag_id: dummyId }));
+
+    if (test === 'audit-recent')           out('out-audit', await call('audit-narrative-v1', { limit: 5 }));
+    if (test === 'audit-kategorie-auth')   out('out-audit', await call('audit-narrative-v1', { kategorie: 'auth', limit: 5 }));
+    if (test === 'audit-inline')           out('out-audit', await call('audit-narrative-v1', {
+      entries: [
+        { id: 't1', action: 'login', entity_typ: null, entity_id: null, payload: {}, source: 'system', ki_model: null, kategorie: 'auth', created_at: new Date().toISOString() },
+        { id: 't2', action: 'create', entity_typ: 'auftrag', entity_id: 'X-1', payload: { az: 'SCH-2026-TEST' }, source: 'sv_eigen', ki_model: null, kategorie: 'datenbearbeitung', created_at: new Date().toISOString() },
+        { id: 't3', action: 'ki_response', entity_typ: null, entity_id: null, payload: { purpose: 'konjunktiv_check', wirkung: 'verworfen' }, source: 'ki', ki_model: null, kategorie: 'ki_einsatz', created_at: new Date().toISOString() }
+      ]
+    }));
+
+    if (test === 'sim-dummy')      out('out-sim',   await call('similarity-v1', { fragment_id: dummyId, scope: 'workspace', limit: 5 }));
+    if (test === 'sim-bad-scope')  out('out-sim',   await call('similarity-v1', { fragment_id: dummyId, scope: 'invalid', limit: 5 }));
+  } catch (err) {
+    alert('Fehler: ' + (err?.message || String(err)));
+  }
+});
+</script>
+
+</body>
+</html>

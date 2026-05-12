@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>iPad-Latenz-Test · MEGA⁶⁹-FINAL-3</title>
+<style>
+body { font-family: 'DM Sans', system-ui, sans-serif; background: #0b0d11; color: #eaecf4; margin: 0; padding: 24px; line-height: 1.5; }
+h1 { font-size: 22px; font-weight: 800; margin-bottom: 6px; }
+.sub { color: #8b93ab; font-size: 13px; margin-bottom: 24px; max-width: 720px; }
+.card { background: #1c2130; border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 18px 22px; margin-bottom: 14px; }
+.card h2 { font-size: 14px; margin-bottom: 8px; }
+.card p { font-size: 12px; color: #8b93ab; margin-bottom: 12px; }
+.metric { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.04); font-size: 13px; }
+.metric:last-child { border-bottom: none; }
+.metric-label { color: #8b93ab; }
+.metric-val { font-family: ui-monospace, Consolas, monospace; font-weight: 700; }
+.metric-val.is-good { color: #6ee7b7; }
+.metric-val.is-warn { color: #fcd34d; }
+.metric-val.is-bad { color: #fca5a5; }
+input[type=text], textarea { padding: 10px 14px; background: #0b0d11; border: 1px solid rgba(255,255,255,0.11); border-radius: 8px; color: #eaecf4; font-family: inherit; font-size: 14px; width: 100%; box-sizing: border-box; resize: vertical; }
+.test-svg { width: 100%; height: 200px; background: #fff; border-radius: 8px; cursor: crosshair; touch-action: none; }
+.btn { padding: 9px 18px; background: linear-gradient(135deg, #4f8ef7, #3a7be0); color: #fff; border: none; border-radius: 7px; font-weight: 700; font-size: 12px; cursor: pointer; }
+.summary { background: #161a22; border: 1px solid rgba(245,158,11,0.18); border-radius: 10px; padding: 14px 18px; margin-top: 20px; font-size: 13px; color: #fcd34d; }
+.legend { font-size: 11px; color: #4d5568; font-family: ui-monospace, monospace; }
+</style>
+</head>
+<body>
+
+<h1>⏱ iPad-Latenz-Test · 60ms-Doktrin (NinjaAI Session 5)</h1>
+<p class="sub">3 Latenz-Pfade. <strong>Ziel:</strong> &lt; 60ms (grün). 60-100ms (gelb) = noch akzeptabel. &gt;100ms (rot) = Optimierung nötig. <span class="legend">requestAnimationFrame() für RAF-Delta · performance.now() für Eingabe→Render-Delta</span></p>
+
+<div class="card">
+  <h2>Test 1 · Keystroke → Editor-Render</h2>
+  <p>Tippe schnell ins Textfeld. Gemessen: Delta zwischen <code>keydown</code> und nächstem <code>requestAnimationFrame</code>.</p>
+  <input type="text" id="keystroke-input" placeholder="Tippe hier schnell (mindestens 20 Zeichen)…">
+  <div class="metric"><span class="metric-label">Letzte Latenz</span><span class="metric-val" id="ks-last">— ms</span></div>
+  <div class="metric"><span class="metric-label">Durchschnitt</span><span class="metric-val" id="ks-avg">— ms</span></div>
+  <div class="metric"><span class="metric-label">P95 (Worst 5%)</span><span class="metric-val" id="ks-p95">— ms</span></div>
+  <div class="metric"><span class="metric-label">Samples</span><span class="metric-val" id="ks-n">0</span></div>
+</div>
+
+<div class="card">
+  <h2>Test 2 · Pen-Stroke → SVG-Render</h2>
+  <p>Zeichne Linien auf der weißen Fläche (Touch oder Stift). Gemessen: <code>pointermove</code> → SVG-Update.</p>
+  <svg class="test-svg" id="pen-svg" xmlns="http://www.w3.org/2000/svg"></svg>
+  <div class="metric"><span class="metric-label">Letzte Latenz</span><span class="metric-val" id="pen-last">— ms</span></div>
+  <div class="metric"><span class="metric-label">Durchschnitt</span><span class="metric-val" id="pen-avg">— ms</span></div>
+  <div class="metric"><span class="metric-label">P95</span><span class="metric-val" id="pen-p95">— ms</span></div>
+  <div class="metric"><span class="metric-label">Samples</span><span class="metric-val" id="pen-n">0</span></div>
+  <button class="btn" onclick="clearPen()">Canvas leeren</button>
+</div>
+
+<div class="card">
+  <h2>Test 3 · Cmd+K → Modal-Open</h2>
+  <p>Klick "Modal öffnen" 5×. Gemessen: Click-Event → Modal sichtbar (RAF-Tick).</p>
+  <button class="btn" onclick="openModal()">Modal öffnen (oder Ctrl/Cmd+K)</button>
+  <div class="metric"><span class="metric-label">Letzte Latenz</span><span class="metric-val" id="modal-last">— ms</span></div>
+  <div class="metric"><span class="metric-label">Durchschnitt</span><span class="metric-val" id="modal-avg">— ms</span></div>
+  <div class="metric"><span class="metric-label">P95</span><span class="metric-val" id="modal-p95">— ms</span></div>
+  <div class="metric"><span class="metric-label">Samples</span><span class="metric-val" id="modal-n">0</span></div>
+</div>
+
+<div class="summary" id="overall">
+  <strong>Gesamt-Bewertung:</strong> Tests durchführen → Erwartung: P95 ≤ 60ms für alle 3 Pfade auf iPad (Apple Pencil 2 / Safari).<br>
+  Fallback-Wert für Desktop-Browser: P95 ≤ 30ms.
+</div>
+
+<div id="latency-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;">
+  <div style="background:#1c2130;padding:24px;border-radius:12px;color:#eaecf4;min-width:300px;">
+    <h3 style="margin-bottom:8px;">Test-Modal</h3>
+    <p style="color:#8b93ab;font-size:13px;">Klick außerhalb zum Schließen.</p>
+    <button class="btn" onclick="closeModal()" style="margin-top:8px;">Schließen</button>
+  </div>
+</div>
+
+<script>
+function pct(arr, p) {
+  if (!arr.length) return '—';
+  const sorted = [...arr].sort((a,b) => a-b);
+  const idx = Math.min(sorted.length - 1, Math.floor(sorted.length * p));
+  return sorted[idx].toFixed(1);
+}
+function avg(arr) { return arr.length ? (arr.reduce((s,n) => s+n, 0) / arr.length).toFixed(1) : '—'; }
+function cls(v) { if (v === '—') return ''; const n = parseFloat(v); if (n <= 60) return 'is-good'; if (n <= 100) return 'is-warn'; return 'is-bad'; }
+function setMetric(id, val) {
+  const el = document.getElementById(id);
+  el.textContent = val === '—' ? '— ms' : (val + ' ms');
+  el.className = 'metric-val ' + cls(val);
+}
+
+// ── Test 1: Keystroke
+const ksSamples = [];
+const ksInput = document.getElementById('keystroke-input');
+ksInput.addEventListener('keydown', () => {
+  const t0 = performance.now();
+  requestAnimationFrame(() => {
+    const dt = performance.now() - t0;
+    ksSamples.push(dt);
+    setMetric('ks-last', dt.toFixed(1));
+    setMetric('ks-avg', avg(ksSamples));
+    setMetric('ks-p95', pct(ksSamples, 0.95));
+    document.getElementById('ks-n').textContent = ksSamples.length;
+  });
+});
+
+// ── Test 2: Pen-Stroke
+const penSamples = [];
+const penSvg = document.getElementById('pen-svg');
+let penDrawing = false, penLastX = 0, penLastY = 0;
+function svgCoords(e) {
+  const r = penSvg.getBoundingClientRect();
+  return { x: e.clientX - r.left, y: e.clientY - r.top };
+}
+penSvg.addEventListener('pointerdown', (e) => {
+  penDrawing = true;
+  const p = svgCoords(e); penLastX = p.x; penLastY = p.y;
+});
+penSvg.addEventListener('pointermove', (e) => {
+  if (!penDrawing) return;
+  const t0 = performance.now();
+  const p = svgCoords(e);
+  const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+  line.setAttribute('x1', penLastX); line.setAttribute('y1', penLastY);
+  line.setAttribute('x2', p.x); line.setAttribute('y2', p.y);
+  line.setAttribute('stroke', '#4f8ef7'); line.setAttribute('stroke-width', '2'); line.setAttribute('stroke-linecap', 'round');
+  penSvg.appendChild(line);
+  penLastX = p.x; penLastY = p.y;
+  requestAnimationFrame(() => {
+    const dt = performance.now() - t0;
+    penSamples.push(dt);
+    setMetric('pen-last', dt.toFixed(1));
+    setMetric('pen-avg', avg(penSamples));
+    setMetric('pen-p95', pct(penSamples, 0.95));
+    document.getElementById('pen-n').textContent = penSamples.length;
+  });
+});
+penSvg.addEventListener('pointerup', () => { penDrawing = false; });
+penSvg.addEventListener('pointercancel', () => { penDrawing = false; });
+function clearPen() { while (penSvg.firstChild) penSvg.removeChild(penSvg.firstChild); }
+
+// ── Test 3: Modal-Open
+const modalSamples = [];
+function openModal() {
+  const t0 = performance.now();
+  const m = document.getElementById('latency-modal');
+  m.style.display = 'flex';
+  requestAnimationFrame(() => {
+    const dt = performance.now() - t0;
+    modalSamples.push(dt);
+    setMetric('modal-last', dt.toFixed(1));
+    setMetric('modal-avg', avg(modalSamples));
+    setMetric('modal-p95', pct(modalSamples, 0.95));
+    document.getElementById('modal-n').textContent = modalSamples.length;
+  });
+}
+function closeModal() { document.getElementById('latency-modal').style.display = 'none'; }
+document.addEventListener('keydown', (e) => {
+  if ((e.metaKey || e.ctrlKey) && (e.key === 'k' || e.key === 'K')) {
+    e.preventDefault();
+    openModal();
+  }
+});
+document.getElementById('latency-modal').addEventListener('click', (e) => {
+  if (e.target.id === 'latency-modal') closeModal();
+});
+</script>
+
+</body>
+</html>

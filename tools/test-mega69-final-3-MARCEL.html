@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Marcel 30-Punkt-Test · MEGA⁶⁹-FINAL-3</title>
+<style>
+body { font-family: 'DM Sans', system-ui, sans-serif; background: #0b0d11; color: #eaecf4; margin: 0; padding: 24px; line-height: 1.5; max-width: 1100px; margin: 0 auto; }
+h1 { font-size: 24px; font-weight: 800; margin-bottom: 6px; padding: 24px 0 6px; }
+.sub { color: #8b93ab; font-size: 13px; margin-bottom: 24px; }
+.group { margin-bottom: 28px; }
+.group h2 { font-size: 14px; font-weight: 700; color: #93c5fd; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 10px; padding-bottom: 4px; border-bottom: 1px solid rgba(79,142,247,0.2); }
+.item { background: #1c2130; border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 10px 14px; margin-bottom: 6px; display: grid; grid-template-columns: 32px 1fr auto auto; gap: 10px; align-items: center; }
+.item-nr { font-family: ui-monospace, Consolas, monospace; color: #4d5568; font-size: 12px; text-align: right; }
+.item-text { font-size: 13px; color: #eaecf4; }
+.item-status { padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; font-family: inherit; cursor: pointer; border: 1px solid rgba(255,255,255,0.11); background: transparent; color: #8b93ab; }
+.item-status.is-pass { background: rgba(16,185,129,0.2); color: #6ee7b7; border-color: transparent; }
+.item-status.is-fail { background: rgba(239,68,68,0.2); color: #fca5a5; border-color: transparent; }
+.item-note { padding: 5px 8px; background: #0b0d11; border: 1px solid rgba(255,255,255,0.08); border-radius: 5px; color: #eaecf4; font-family: inherit; font-size: 11px; width: 220px; }
+.summary { position: sticky; top: 0; background: #161a22; border: 1px solid rgba(79,142,247,0.3); border-radius: 10px; padding: 14px 18px; margin-bottom: 24px; display: flex; align-items: center; gap: 16px; z-index: 10; }
+.bar { flex: 1; height: 8px; background: rgba(255,255,255,0.06); border-radius: 4px; overflow: hidden; }
+.bar-fill { height: 100%; background: linear-gradient(90deg, #10b981, #4f8ef7); transition: width .3s; }
+.export-btn { padding: 9px 18px; background: linear-gradient(135deg, #4f8ef7, #3a7be0); color: #fff; border: none; border-radius: 7px; font-weight: 700; font-size: 12px; cursor: pointer; font-family: inherit; }
+.legend { font-size: 11px; color: #4d5568; }
+</style>
+</head>
+<body>
+
+<h1>🛡 Marcel 30-Punkt-Final-Test · MEGA⁶⁹-FINAL-3</h1>
+<p class="sub">PILOT-LAUNCH-READINESS-Checklist. Pro Punkt: Pass/Fail-Button. Notiz-Feld für Befunde. JSON-Export am Ende → Marcel-Doku.</p>
+
+<div class="summary">
+  <span><strong id="summary-counter">0</strong> / 30 getestet</span>
+  <span class="legend">Pass: <strong id="pass-count" style="color:#6ee7b7;">0</strong> · Fail: <strong id="fail-count" style="color:#fca5a5;">0</strong></span>
+  <div class="bar"><div class="bar-fill" id="bar-fill" style="width:0%;"></div></div>
+  <button class="export-btn" onclick="exportReport()">📥 Test-Report exportieren</button>
+</div>
+
+<div id="test-list"></div>
+
+<script>
+const TESTS = [
+  // GROUP 1 — Login + Navigation (3)
+  { group: 'Login + Navigation', items: [
+    { n: 1, t: 'prova-systems.de Login → app.* OHNE Doppel-Eingabe' },
+    { n: 2, t: 'Sidebar zeigt Bibliothek + Mahnwesen + alle Workflows' },
+    { n: 3, t: 'Cmd+K → Global Search "Müller" → findet alle Entitäten (Auftrag/Kontakt/Brief)' }
+  ]},
+  // GROUP 2 — Dashboard (3)
+  { group: 'Dashboard', items: [
+    { n: 4, t: 'Workflow-Übersicht mit 5 Tiles sichtbar (Aktive/Fristen/Mahnwesen/KI-Stats/Aktivität)' },
+    { n: 5, t: 'Aktive Aufträge zeigen Phase-Stepper (Workflow-Engine integriert)' },
+    { n: 6, t: 'Fällige Fristen Color-Code: rot überfällig, gelb heute, blau bald' }
+  ]},
+  // GROUP 3 — Schadensgutachten-Workflow (8)
+  { group: 'SV-Workflow Schadensgutachten', items: [
+    { n: 7, t: 'Neuer Auftrag typ=schadensgutachten anlegen' },
+    { n: 8, t: 'Ortstermin: Diktat startet — manueller Mode-Switch stoppt Recorder SOFORT' },
+    { n: 9, t: 'Foto-Upload + Captions automatisch (Asset-Pipeline)' },
+    { n: 10, t: 'Slash /skizze in Editor → Skizze-Editor öffnet mit 9 Tools' },
+    { n: 11, t: 'Skizze-Maßstab: 2 Klicks + "5m" → weitere Maßlinien werden berechnet' },
+    { n: 12, t: 'Skizze Foto-Overlay: DSGVO exif_stripped Filter aktiv, drauf zeichnen' },
+    { n: 13, t: 'Befund-Generator → Markdown mit [F#nnnn] Fragment-Markern' },
+    { n: 14, t: '§6 Fachurteil → Cmd+K Norm-Picker funktioniert' }
+  ]},
+  // GROUP 4 — Admin-Workflow (5)
+  { group: 'Admin-Workflow', items: [
+    { n: 15, t: 'Audit-Trail Hash-Chain für alle Einträge ✓-grün' },
+    { n: 16, t: 'Externe Doku Upload → KI klassifiziert + Beweisfragen-Match' },
+    { n: 17, t: 'IHK-Export PDF + SMTP-Versand mit PDF-Anhang' },
+    { n: 18, t: 'Rechnung erstellen → Mahnwesen-Page zeigt offen in KPI-Tile' },
+    { n: 19, t: 'Mahnstufe 1 senden → Versand-Modal + Audit-Eintrag + Mahn-Gebühr +0€' }
+  ]},
+  // GROUP 5 — Andere Workflows (4)
+  { group: 'Beratung + Baubegleitung + Multi-Typ', items: [
+    { n: 20, t: 'typ=beratung: Beratungsnotiz → Brief → Rechnung (5-Phasen-Flow)' },
+    { n: 21, t: 'typ=baubegleitung: 3 Ortstermine in Phasen 2-4 angelegt' },
+    { n: 22, t: 'Phase-Stepper aktualisiert sich nach jedem Schritt (Workflow-Engine)' },
+    { n: 23, t: 'Helferlein-Buttons pro Phase erreichbar' }
+  ]},
+  // GROUP 6 — Pre-Pilot Qualität (7)
+  { group: 'Pre-Pilot Qualitäts-Checks', items: [
+    { n: 24, t: '/tools/test-ki-garantie.html → mindestens 4 von 5 PASS' },
+    { n: 25, t: '/tests/e2e/ Playwright-Suite: 3 MEGA⁶⁹-Specs grün (npx playwright test 09 10 11)' },
+    { n: 26, t: '/tools/test-latency.html: alle 3 P95 < 60ms auf iPad' },
+    { n: 27, t: 'Lighthouse Performance > 85 für / + /dashboard + /akte' },
+    { n: 28, t: 'Audit-Search findet "Konjunktiv" + zeigt Wissenspool-Count' },
+    { n: 29, t: 'Version-Diff zeigt Wort-Level grün/rot zwischen 2 Versionen' },
+    { n: 30, t: 'ki_lernpool-Einträge im Audit-Search als "Wissenspool"-Badge sichtbar' }
+  ]}
+];
+
+const state = {};
+
+function render() {
+  const container = document.getElementById('test-list');
+  container.innerHTML = TESTS.map(g => `
+    <div class="group">
+      <h2>${g.group}</h2>
+      ${g.items.map(it => `
+        <div class="item" data-nr="${it.n}">
+          <span class="item-nr">${it.n}.</span>
+          <span class="item-text">${it.t}</span>
+          <input type="text" class="item-note" placeholder="Notiz (optional)" data-nr="${it.n}" value="${(state[it.n] && state[it.n].note) || ''}">
+          <div style="display:flex;gap:4px;">
+            <button class="item-status ${state[it.n]?.status === 'pass' ? 'is-pass' : ''}" data-status="pass" data-nr="${it.n}">✓ Pass</button>
+            <button class="item-status ${state[it.n]?.status === 'fail' ? 'is-fail' : ''}" data-status="fail" data-nr="${it.n}">✗ Fail</button>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `).join('');
+  container.querySelectorAll('.item-status').forEach(b => b.addEventListener('click', () => setStatus(+b.dataset.nr, b.dataset.status)));
+  container.querySelectorAll('.item-note').forEach(i => i.addEventListener('input', (e) => {
+    state[i.dataset.nr] = { ...(state[i.dataset.nr] || {}), note: e.target.value };
+    persist();
+  }));
+  updateSummary();
+}
+
+function setStatus(nr, status) {
+  state[nr] = { ...(state[nr] || {}), status };
+  persist();
+  render();
+}
+
+function updateSummary() {
+  const tested = Object.keys(state).filter(k => state[k].status).length;
+  const pass = Object.keys(state).filter(k => state[k].status === 'pass').length;
+  const fail = Object.keys(state).filter(k => state[k].status === 'fail').length;
+  document.getElementById('summary-counter').textContent = tested;
+  document.getElementById('pass-count').textContent = pass;
+  document.getElementById('fail-count').textContent = fail;
+  document.getElementById('bar-fill').style.width = (tested / 30 * 100) + '%';
+}
+
+function persist() {
+  try { localStorage.setItem('mega69-final3-test-state', JSON.stringify(state)); } catch (_) {}
+}
+function restore() {
+  try {
+    const s = localStorage.getItem('mega69-final3-test-state');
+    if (s) Object.assign(state, JSON.parse(s));
+  } catch (_) {}
+}
+
+function exportReport() {
+  const report = {
+    sprint: 'MEGA⁶⁹-FINAL-3 Pre-Pilot 30-Punkt-Test',
+    datum: new Date().toISOString(),
+    tester: 'Marcel Schreiber',
+    results: TESTS.flatMap(g => g.items.map(it => ({
+      gruppe: g.group,
+      nr: it.n,
+      test: it.t,
+      status: state[it.n]?.status || 'untested',
+      notiz: state[it.n]?.note || ''
+    }))),
+    summary: {
+      total: 30,
+      tested: Object.keys(state).filter(k => state[k].status).length,
+      pass: Object.keys(state).filter(k => state[k].status === 'pass').length,
+      fail: Object.keys(state).filter(k => state[k].status === 'fail').length
+    }
+  };
+  const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `mega69-final3-test-report-${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+restore();
+render();
+</script>
+
+</body>
+</html>

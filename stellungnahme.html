@@ -601,7 +601,10 @@
   <!-- MEGA³¹ A2/A3: Quality-Markers + Editor-Gate Libs -->
   <script src="/lib/quality-markers.js" defer></script>
   <script src="/lib/editor-gate.js" defer></script>
-  <script src="/lib/ki-s-stufen.js" defer></script>
+  <script src="/lib/_deprecated/ki-s-stufen.js" defer></script>
+  <!-- MEGA⁶⁶: ki-s-stufen ist DEPRECATED. Ersetzt durch Cmd+K (Command-Palette MEGA⁶⁵) +
+       Bubble-Menu (MEGA⁶⁴) + Slash-Menu. Pfad bleibt für Test-Backwards-Compat. -->
+
   <script src="/lib/skizzen-embed.js" defer></script>
   <script src="/lib/diktat-struktur.js" defer></script>
   <script src="stellungnahme-logic.js" defer></script>
@@ -698,6 +701,116 @@
         }
       });
     })();
+  </script>
+
+  <!-- MEGA⁶⁶: Editor-Bundle (mega65 + Pipeline-Wire). Default ON; ?editor=off rollback. -->
+  <script>
+  (function () {
+    var params = new URLSearchParams(window.location.search);
+    var flagParam = params.get('editor');
+    // MEGA⁶⁹-FINAL-1 F.1: Default = mega69. Rollback via ?editor=off. mega68 bleibt als Alias.
+    if (flagParam === 'off') return;
+    var flag = (flagParam === 'mega64' || flagParam === 'mega65' || flagParam === 'mega66' || flagParam === 'mega67' || flagParam === 'mega68' || flagParam === 'mega69') ? flagParam : 'mega69';
+
+    // Marker auf body für CommandPalette-Aktivierung (Cmd+K-Capture)
+    if (flag === 'mega65' || flag === 'mega66' || flag === 'mega67' || flag === 'mega68' || flag === 'mega69') {
+      document.body.dataset.provaEditorMega65 = '1';
+    }
+
+    // Banner zeigen (visuelles Feedback dass Flag aktiv)
+    var banner = document.createElement('div');
+    banner.style.cssText = 'position:fixed;bottom:16px;right:16px;z-index:9999;padding:10px 14px;background:#0b2228;color:#fff;border-radius:8px;font:12px/1.4 system-ui;box-shadow:0 4px 12px rgba(0,0,0,.2);max-width:300px';
+    if (flag === 'mega69') {
+      banner.innerHTML = '<strong>MEGA⁶⁹ Pilot-Core-Ready</strong><br>Workflow-Engine · Akte-Tabs · Mahnwesen · Auto-Wire · ?editor=off zum Rollback';
+    } else if (flag === 'mega68') {
+      banner.innerHTML = '<strong>MEGA⁶⁸ Pilot-Final-Ready</strong><br>Externe · IHK · SMTP · Diff · ?editor=off zum Rollback';
+    } else if (flag === 'mega67') {
+      banner.innerHTML = '<strong>MEGA⁶⁷ Versand-Ready</strong><br>Audit · Versand · Versionen · ?editor=off zum Rollback';
+    } else if (flag === 'mega66') {
+      banner.innerHTML = '<strong>MEGA⁶⁶ Pilot-Ready</strong><br>Pipeline · Mobile · Dark-Mode · ?editor=off zum Rollback';
+    } else if (flag === 'mega65') {
+      banner.innerHTML = '<strong>MEGA⁶⁵ Editor aktiv</strong><br>Cmd+K · Wikilinks · KI-Diff · Norm-Picker · Cheat-Sheet (?)';
+    } else {
+      banner.innerHTML = '<strong>MEGA⁶⁴ Editor aktiv</strong><br>Bundle + Bubble/Slash/Focus geladen.';
+    }
+    document.body.appendChild(banner);
+    setTimeout(function () { banner.style.opacity = '0.5'; }, 5000);
+
+    // Bundle + neue Module nachladen (defer-style)
+    var srcs = [
+      '/lib/prova-platform.js',
+      '/lib/editor-tiptap-bundle.js',
+      '/lib/prova-bubble-menu.js',
+      '/lib/prova-floating-menu.js',
+      '/lib/prova-slash-menu.js',
+      '/lib/prova-focus-mode.js',
+      '/lib/extensions/prova-callout.js',
+      '/lib/extensions/prova-fragment-marker.js',
+      '/lib/extensions/prova-textbaustein-block.js',
+      '/lib/extensions/prova-foto-embed.js',
+      '/lib/extensions/prova-skizze-embed.js',
+      '/lib/prova-fragment-sidebar.js',
+      '/lib/prova-character-tracker.js'
+    ];
+    if (flag === 'mega65' || flag === 'mega66' || flag === 'mega67' || flag === 'mega68' || flag === 'mega69') {
+      srcs.push(
+        '/lib/prova-command-palette.js',
+        '/lib/prova-commands-registry.js',
+        '/lib/prova-cheat-sheet.js',
+        '/lib/prova-timestamp-ref.js',
+        '/lib/extensions/prova-ki-suggestion.js',
+        '/lib/extensions/prova-wikilink.js',
+        '/lib/extensions/prova-norm-citation.js'
+      );
+    }
+    if (flag === 'mega66' || flag === 'mega67' || flag === 'mega68' || flag === 'mega69') {
+      srcs.push(
+        '/lib/prova-asset-trigger.js',
+        '/lib/prova-wikilink-source.js',
+        '/lib/prova-foto-picker.js',
+        '/lib/prova-ki-wire.js',
+        '/lib/prova-befund-generator.js',
+        '/lib/prova-fab.js',
+        '/lib/prova-theme.js'
+      );
+    }
+    if (flag === 'mega67' || flag === 'mega68' || flag === 'mega69') {
+      srcs.push(
+        '/lib/prova-audit-trail-view.js',
+        '/lib/prova-versand-modal.js',
+        '/lib/prova-versand-historie.js',
+        '/lib/prova-version-history.js'
+      );
+    }
+    if (flag === 'mega69') {
+      srcs.push(
+        '/lib/prova-workflow-engine.js',
+        '/lib/prova-skizze-editor.js'
+      );
+    }
+    if (flag === 'mega68' || flag === 'mega69') {
+      srcs.push(
+        '/lib/prova-asset-autowire.js',
+        '/lib/prova-asset-event-bus.js',
+        '/lib/prova-externe-dokumente.js',
+        '/lib/prova-anhang-lightbox.js',
+        '/lib/prova-beweisfragen-panel.js',
+        '/lib/prova-inhaltsangabe.js',
+        '/lib/prova-versand-smtp.js',
+        '/lib/prova-audit-search.js',
+        '/lib/prova-version-diff.js'
+      );
+    }
+    srcs.forEach(function (src) {
+      var s = document.createElement('script');
+      s.src = src;
+      s.async = false;
+      document.body.appendChild(s);
+    });
+
+    console.log('[' + flag.toUpperCase() + '] Editor-Fundament geladen — ProvaEditor verfügbar via window.ProvaEditor');
+    console.log('[' + flag.toUpperCase() + '] Demo-Page: /tools/test-' + flag + '.html');
+  })();
   </script>
 </body>
 </html>

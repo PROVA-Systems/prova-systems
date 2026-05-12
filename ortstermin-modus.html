@@ -701,7 +701,8 @@ body {
 
       <div class="diktat-result" id="diktat-result" style="display:none">
         <div class="diktat-result-label">Transkript — zum Bearbeiten tippen</div>
-        <div class="diktat-result-text" id="diktat-text" contenteditable="true" spellcheck="true"></div>
+        <div class="diktat-result-text" id="diktat-text" contenteditable="true" spellcheck="true"
+             onfocus="autoStopDiktatBeiTextEingabe()"></div>
         <div class="prova-ki-disclaimer" role="note" style="margin-top:8px;padding:8px 12px;background:rgba(245,158,11,.08);border-left:3px solid rgba(245,158,11,.4);border-radius:4px;font-size:11px;color:#92400e;line-height:1.5;">
           <strong>📌 KI-Hinweis:</strong> Diktat-Transkript via Whisper. KI-§4-Strukturierung dient als Hilfe — SV ist nach §407a ZPO eigenverantwortlich fuer fachliche Pruefung.
         </div>
@@ -831,9 +832,10 @@ body {
         <button class="notiz-add-raum" onclick="raumHinzufuegen()" title="Raum hinzufügen">+</button>
       </div>
 
-      <textarea class="notiz-textarea" id="notiz-textarea" 
+      <textarea class="notiz-textarea" id="notiz-textarea"
         placeholder="Befund-Notizen für diesen Raum…&#10;&#10;Tip: Sprachaufnahme im Diktat-Tab, dann hier manuell ergänzen."
-        oninput="autoSaveNotiz()"></textarea>
+        oninput="autoSaveNotiz()"
+        onfocus="autoStopDiktatBeiTextEingabe()"></textarea>
 
       <button class="notiz-save-btn" id="notiz-save-btn" onclick="speichereNotiz()">
         💾 Notiz speichern
@@ -962,6 +964,19 @@ function stoppeDiktat(){
   zeigeDiktatUI(false);
   toast('⏳ Aufnahme wird verarbeitet…');
 }
+
+/**
+ * MEGA⁶⁸-FINAL B.3: Diktat-Mode-Bug-Fix (Marcel 5+× gemeldet seit April).
+ * Wenn SV beginnt manuell zu tippen während Aufnahme läuft, MUSS Aufnahme stoppen.
+ * Sonst läuft Mikrofon weiter, nimmt unbeabsichtigt Umgebungsgeräusche auf,
+ * und SV zahlt für unnötige Whisper-Sekunden.
+ */
+window.autoStopDiktatBeiTextEingabe = function(){
+  if (_isRecording) {
+    stoppeDiktat();
+    toast('🎙 Diktat gestoppt — manuelle Eingabe erkannt');
+  }
+};
 
 async function verarbeiteDiktat(stream){
   // Mikrofon freigeben

@@ -3,198 +3,288 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>PROVA — Mahnwesen</title>
-  <script src="prova-preise.js"></script>
-  <script src="paket-guard.js"></script>
-<script src="/lib/prova-config.js"></script>
-<script src="/lib/edge-shim.js"></script>
+  <title>Mahnwesen · PROVA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="/lib/prova-config.js"></script>
+  <script src="/lib/edge-shim.js"></script>
   <script src="prova-fetch-auth.js"></script>
-<script type="module">
-  import { runAuthGuard } from '/lib/auth-guard.js';
-  runAuthGuard().catch(e => console.error('[auth] guard failed', e));
-</script>
-<script src="prova-notifications.js" defer></script>
-  <script src="prova-auth-api.js"></script>
-  <script src="prova-sv-airtable.js"></script>
+  <script>
+  (function(){
+    try {
+      var token = localStorage.getItem('prova_auth_token');
+      var email = localStorage.getItem('prova_sv_email') || '';
+      if (!token || !email) { window.location.replace('/login?next=' + encodeURIComponent(location.pathname)); return; }
+    } catch (e) { window.location.replace('/login'); }
+  })();
+  </script>
+  <script type="module">
+    import { runAuthGuard } from '/lib/auth-guard.js';
+    runAuthGuard().catch(e => console.error('[auth] guard failed', e));
+  </script>
   <script src="theme.js"></script>
   <script src="prova-layout.config.js"></script>
-<script src="prova-api.js"></script>
-<script src="nav.js" defer></script>
-  <script src="global-search.js" defer></script>
-<script src="mahnwesen-logic.js"></script>
-  <link rel="stylesheet" href="mobile.css">
+  <script src="nav.js" defer></script>
   <link rel="stylesheet" href="prova-design.css">
   <style>
-    :root{--bg:#0d0f14;--bg2:#13161d;--text:#e8eaf0;--text2:#9da3b4;--accent:#4f8ef7;--border:rgba(255,255,255,0.08);}
+    :root {
+      --bg:#0b0d11; --surface:#1c2130; --surface2:#232a3a;
+      --border:rgba(255,255,255,0.06); --border2:rgba(255,255,255,0.11);
+      --text:#eaecf4; --text2:#8b93ab; --text3:#4d5568;
+      --accent:#4f8ef7; --accent2:#3a7be0;
+      --success:#10b981; --warning:#f59e0b; --danger:#ef4444;
+    }
     *{box-sizing:border-box;margin:0;padding:0;}
-    body{font-family:'Montserrat',system-ui,sans-serif;background:var(--bg);color:var(--text2);min-height:100vh;font-size:14px;}
-    .topbar{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 20px;height:52px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;}
-    .logo{font-family:'Fraunces',serif;font-weight:700;font-size:18px;color:var(--text);text-decoration:none;}
-    .logo span{color:var(--accent);}
-    
-    
-    
-    
-    .main{max-width:1100px;margin:0 auto;padding:24px;}
-    h1{font-family:'Fraunces',serif;color:var(--text);font-size:24px;margin-bottom:8px;}
-    .sub{font-size:13px;margin-bottom:20px;}
-    table{width:100%;border-collapse:collapse;font-size:13px;}
-    th{text-align:left;padding:10px 8px;color:#6b7280;font-size:11px;text-transform:uppercase;border-bottom:1px solid var(--border);}
-    td{padding:12px 8px;border-bottom:1px solid rgba(255,255,255,0.06);vertical-align:middle;}
-    .ampel{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;}
-    .ampel-gruen{background:#10b981;}
-    .ampel-gelb{background:#f59e0b;}
-    .ampel-rot{background:#ef4444;}
-    .btn{padding:6px 10px;border-radius:8px;border:1px solid rgba(255,255,255,0.12);background:rgba(79,142,247,0.2);color:#fff;font-size:12px;font-weight:700;cursor:pointer;margin:2px;}
-    .btn:hover{background:rgba(79,142,247,0.35);}
-    .mono{font-family:ui-monospace,monospace;}
-    .badge{font-size:11px;padding:2px 8px;border-radius:999px;font-weight:700;}
-    .st-offen{background:rgba(245,158,11,0.15);color:#fbbf24;}
-    .st-m1{background:rgba(59,130,246,0.15);color:#93c5fd;}
-    .st-m2{background:rgba(167,139,250,0.15);color:#c4b5fd;}
-    .st-m3{background:rgba(239,68,68,0.15);color:#fca5a5;}
-    .st-ink{background:rgba(127,29,29,0.35);color:#fecaca;}
-    .drawer-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:200;}.drawer-overlay.open{display:block;}
-    .drawer{position:fixed;top:0;left:0;bottom:0;width:260px;background:var(--bg2);border-right:1px solid var(--border);z-index:201;transform:translateX(-100%);transition:transform .25s ease;display:flex;flex-direction:column;}
-    .drawer.open{transform:translateX(0);}.drawer-header{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
-    .drawer-close{background:none;border:none;color:var(--text2);font-size:18px;cursor:pointer;}
-    .topbar-left{display:flex;align-items:center;gap:14px;}
-    .burger{display:none;background:none;border:none;cursor:pointer;flex-direction:column;gap:4px;padding:6px;}
-    .burger span{display:block;width:20px;height:2px;background:var(--text2);}
-    
-    .paket-badge{font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;}
-    .kpi-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:20px;}
-    .kpi-card{background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:12px;padding:14px 16px;}
-    .kpi-label{font-size:11px;text-transform:uppercase;color:#6b7280;margin-bottom:6px;}
-    .kpi-val{font-family:'Fraunces',serif;font-size:22px;color:var(--text);}
-    .skel{height:14px;border-radius:6px;background:linear-gradient(90deg,rgba(255,255,255,0.06),rgba(255,255,255,0.12),rgba(255,255,255,0.06));background-size:200% 100%;animation:sk 1.2s ease-in-out infinite;}
-    @keyframes sk{0%{background-position:200% 0}100%{background-position:-200% 0}}
-    .skel-row td{padding:14px 8px;}
-    #errBox{display:none;padding:12px 14px;border-radius:10px;background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.35);color:#fecaca;margin-bottom:16px;font-size:13px;}
-    @media(max-width:900px){.burger{display:flex;}body{padding-bottom:56px;}}
+    body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;line-height:1.55;}
+    .mh-wrap{max-width:1280px;margin:0 auto;padding:24px 20px 80px;}
+    .mh-h1{font-size:24px;font-weight:800;letter-spacing:-.025em;margin-bottom:6px;}
+    .mh-sub{font-size:13px;color:var(--text2);margin-bottom:20px;}
+    .mh-kpi{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:20px;}
+    .mh-kpi-tile{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;}
+    .mh-kpi-label{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);margin-bottom:6px;font-weight:700;}
+    .mh-kpi-value{font-size:20px;font-weight:800;color:var(--text);}
+    .mh-kpi-value.is-danger{color:var(--danger);}
+    .mh-kpi-value.is-warning{color:var(--warning);}
+    .mh-kpi-meta{font-size:11px;color:var(--text3);margin-top:4px;}
+    .mh-toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px;}
+    .mh-input{padding:8px 11px;background:var(--surface);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;}
+    .mh-btn-ghost{padding:8px 12px;background:var(--surface);border:1px solid var(--border2);border-radius:8px;color:var(--text2);font-size:12px;cursor:pointer;font-family:inherit;}
+    .mh-btn-ghost:hover{border-color:var(--accent);color:var(--accent);}
+    .mh-list{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
+    .mh-row{display:grid;grid-template-columns:130px 1fr 100px 100px 100px 90px 90px 120px;gap:10px;padding:14px 18px;border-bottom:1px solid var(--border);align-items:center;font-size:13px;}
+    .mh-row-header{background:var(--surface2);font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);font-weight:700;}
+    .mh-row:last-child{border-bottom:none;}
+    .mh-row:hover{background:rgba(79,142,247,0.03);}
+    .mh-nr{font-family:ui-monospace,Consolas,monospace;color:var(--text);font-size:12px;}
+    .mh-amt{font-family:ui-monospace,Consolas,monospace;color:var(--text);text-align:right;}
+    .mh-tage{font-family:ui-monospace,Consolas,monospace;text-align:right;}
+    .mh-tage.is-overdue{color:var(--danger);font-weight:700;}
+    .mh-tage.is-today{color:var(--warning);font-weight:700;}
+    .mh-tage.is-soon{color:var(--text2);}
+    .mh-stufe{font-size:10px;font-weight:700;padding:3px 7px;border-radius:4px;text-transform:uppercase;letter-spacing:.04em;width:fit-content;}
+    .mh-stufe.s0{background:rgba(79,142,247,.18);color:#93c5fd;}
+    .mh-stufe.s1{background:rgba(245,158,11,.18);color:#fcd34d;}
+    .mh-stufe.s2{background:rgba(167,139,250,.18);color:#c4b5fd;}
+    .mh-stufe.s3{background:rgba(239,68,68,.18);color:#fca5a5;}
+    .mh-zins{font-family:ui-monospace,Consolas,monospace;color:var(--warning);text-align:right;font-size:12px;}
+    .mh-act{display:flex;gap:4px;}
+    .mh-btn-mahn{padding:5px 10px;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:6px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;}
+    .mh-btn-mahn:hover{opacity:.9;}
+    .mh-btn-mahn:disabled{opacity:.4;cursor:not-allowed;}
+    .mh-empty{padding:48px 20px;text-align:center;color:var(--text3);}
+    .mh-empty-icon{font-size:40px;margin-bottom:12px;}
+    .mh-empty-title{font-size:15px;font-weight:700;color:var(--text);margin-bottom:6px;}
+    .mh-empty-sub{font-size:13px;margin-bottom:16px;}
+    .mh-empty a{color:var(--accent);font-weight:600;}
+    .mh-loading{padding:40px 20px;text-align:center;color:var(--text3);}
+    .mh-rg{font-size:11px;color:var(--text3);margin-top:14px;padding:10px 14px;background:var(--surface);border-radius:8px;border:1px dashed var(--border2);line-height:1.45;}
+    @media(max-width:900px){.mh-row{grid-template-columns:1fr;gap:6px;padding:14px;}.mh-row-header{display:none;}}
   </style>
 </head>
 <body data-page="mahnwesen">
-<div class="app-shell" id="app-shell">
-  <nav class="sidebar" id="sidebar"></nav>
-  <div class="sb-overlay" id="sb-overlay" onclick="closeMobileSidebar()"></div>
-  <div class="main-wrap" id="main-wrap">
-    <header class="topbar">
-      <div class="topbar-left">
-        <button class="burger" onclick="openMobileSidebar()"><span></span><span></span><span></span></button>
-        <div class="breadcrumb"><span>PROVA</span><span style="color:var(--text3)">›</span><strong>Mahnwesen</strong></div>
-      </div>
-    </header>
-    <div class="page-content" style="padding:24px 16px;">
-<div class="mahn-content" style="max-width:900px;margin:0 auto;">
-    <h1>Automatisches Mahnwesen</h1>
-    <p class="sub">Offene Rechnungen aus Airtable (Tabelle RECHNUNGEN, Status Offen/Überfällig, Filter <code>sv_email</code>). Mahnung setzt <code>Mahn_Status</code> per PATCH. Verzugszins ab Stufe 2: §288 BGB (vereinfacht Basiszinssatz + 9 %-Punkte p.a.).</p>
-    <div id="errBox"></div>
-    <div class="kpi-row" id="kpiRow">
-      <div class="kpi-card"><div class="kpi-label">Offene Forderungen (netto)</div><div class="kpi-val" id="kpiOffen">—</div></div>
-      <div class="kpi-card"><div class="kpi-label">Anzahl offen</div><div class="kpi-val" id="kpiAnzahl">—</div></div>
-    </div>
-    <div style="overflow:auto;">
-      <table>
-        <thead>
-          <tr>
-            <th>Ampel</th>
-            <th>Rechnung</th>
-            <th>Auftraggeber</th>
-            <th>Betrag netto</th>
-            <th>Tage seit Fälligkeit</th>
-            <th>Verzugszins (ca.)</th>
-            <th>Status</th>
-            <th>Aktion</th>
-          </tr>
-        </thead>
-        <tbody id="tbody"></tbody>
-      </table>
-    </div>
-    
-  </div>
-    <script>
-  (function(){
-    var api = window.MahnwesenAPI;
-    var tbody = document.getElementById('tbody');
-    var errBox = document.getElementById('errBox');
-    if(!api || !tbody){return;}
-    function skelHtml(){
-      var h = '';
-      for(var i=0;i<5;i++){
-        h += '<tr class="skel-row"><td><div class="skel" style="width:12px;height:12px;border-radius:50%"></div></td>';
-        for(var j=0;j<7;j++) h += '<td><div class="skel" style="width:90%"></div></td>';
-        h += '</tr>';
-      }
-      return h;
-    }
-    function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;'); }
-    tbody.innerHTML = skelHtml();
-    api.loadOpenFromAirtable().then(function(rows){
-      window.__mahnOpenRows = rows;
-      var sum = 0;
-      rows.forEach(function(r){ sum += Number(r.netto)||0; });
-      document.getElementById('kpiOffen').textContent = rows.length ? sum.toFixed(2).replace('.',',') + ' €' : '0,00 €';
-      document.getElementById('kpiAnzahl').textContent = String(rows.length);
-      if(!rows.length){
-        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:48px 20px;color:var(--text2);background:var(--surface);border-radius:var(--r-lg);">'
-          + '<div style="font-size:40px;margin-bottom:12px;">✅</div>'
-          + '<div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:6px;">Keine offenen Forderungen</div>'
-          + '<div style="font-size:13px;margin-bottom:16px;">Alle Rechnungen sind bezahlt oder nicht überfällig.</div>'
-          + '<a href="rechnungen.html" style="color:var(--accent);text-decoration:none;font-weight:600;">→ Zu den Rechnungen</a>'
-          + '</td></tr>';
-        return;
-      }
-      var html = '';
-      rows.forEach(function(r, idx){
-        r.faellig = r.faellig || '';
-        var n = api.daysOpen(r);
-        var amp = api.ampelClass(n);
-        var nr = r.rechnungsnummer || r.nr || '—';
-        var brutto = Number(r.brutto) || (Number(r.netto)||0) * (1 + (Number(r.ust_satz)||19)/100);
-        var zins = n > 0 ? api.verzugszins(brutto, n) : 0;
-        var st = r.mahn_status || 'Offen';
-        var sb = 'st-offen';
-        if(st==='Mahnung1') sb='st-m1';
-        else if(st==='Mahnung2') sb='st-m2';
-        else if(st==='Mahnung3') sb='st-m3';
-        else if(st==='Inkasso') sb='st-ink';
-        html += '<tr><td><span class="ampel '+amp+'"></span></td><td class="mono">'+esc(nr)+'</td><td>'+esc(r.empfaenger_name||'—')+'</td><td>'+(r.netto!=null?Number(r.netto).toFixed(2):'—')+' €</td><td>'+n+'</td><td>'+(n>0?zins.toFixed(2)+' €':'—')+'</td><td><span class="badge '+sb+'">'+esc(st)+'</span></td><td>';
-        html += '<button type="button" class="btn mahn-btn" data-idx="'+idx+'" data-stufe="1">Mahnung 1</button> ';
-        html += '<button type="button" class="btn mahn-btn" data-idx="'+idx+'" data-stufe="2">Mahnung 2</button> ';
-        html += '<button type="button" class="btn mahn-btn" data-idx="'+idx+'" data-stufe="3">Mahnung 3</button>';
-        html += '</td></tr>';
-      });
-      tbody.innerHTML = html;
-    }).catch(function(e){
-      errBox.style.display = 'block';
-      errBox.textContent = (e && e.message) ? e.message : String(e);
-      tbody.innerHTML = '<tr><td colspan="8">Daten konnten nicht geladen werden.</td></tr>';
-    });
-    tbody.addEventListener('click', function(ev){
-      var b = ev.target.closest('.mahn-btn');
-      if(!b) return;
-      var idx = parseInt(b.getAttribute('data-idx')||'-1',10);
-      var row = window.__mahnOpenRows && window.__mahnOpenRows[idx];
-      if(!row || !row.airtable_id) return;
-      var stufe = parseInt(b.getAttribute('data-stufe')||'1',10);
-      var nr = row.rechnungsnummer || row.nr || '';
-      b.disabled = true;
-      api.patchMahnStatus(row.airtable_id, stufe).then(function(){
-        try { sessionStorage.setItem('prova_mahn_last_row', JSON.stringify(row)); } catch(x) {}
-        window.location.href = 'mahnung.html?nr='+encodeURIComponent(nr)+'&stufe='+stufe+'&rec='+encodeURIComponent(row.airtable_id);
-      }).catch(function(err){
-        alert(err && err.message ? err.message : err);
-        b.disabled = false;
-      });
-    });
-  })();
-  </script>
-<script src="support-chat.js" defer></script>
 
-    </div>
+<main class="mh-wrap" id="main-content">
+
+  <h1 class="mh-h1">Mahnwesen</h1>
+  <p class="mh-sub">3-Stufen-Mahnflow nach §286 BGB · Rechnungen aus <code>dokumente</code> (typ=rechnung) Supabase-native · Versand via Versand-Modal (Stufe 1+2+3).</p>
+
+  <div class="mh-kpi" id="mh-kpi">
+    <div class="mh-kpi-tile"><div class="mh-kpi-label">Offene Rechnungen</div><div class="mh-kpi-value" id="kpi-offen">—</div><div class="mh-kpi-meta" id="kpi-offen-sum">—</div></div>
+    <div class="mh-kpi-tile"><div class="mh-kpi-label">Überfällig</div><div class="mh-kpi-value is-danger" id="kpi-ueberfaellig">—</div><div class="mh-kpi-meta" id="kpi-ueberfaellig-sum">—</div></div>
+    <div class="mh-kpi-tile"><div class="mh-kpi-label">Verzugszins-Anspruch</div><div class="mh-kpi-value is-warning" id="kpi-zinsen">—</div><div class="mh-kpi-meta">§288 BGB, B2B 8.62% p.a.</div></div>
+    <div class="mh-kpi-tile"><div class="mh-kpi-label">In Mahnstufe</div><div class="mh-kpi-value" id="kpi-stufen">—</div><div class="mh-kpi-meta" id="kpi-stufen-meta">M1·M2·M3</div></div>
   </div>
-</div>
+
+  <div class="mh-toolbar">
+    <select class="mh-input" id="f-status" onchange="loadRechnungen()">
+      <option value="">Alle offenen</option>
+      <option value="overdue">Nur überfällig</option>
+      <option value="m0">Nur noch nicht gemahnt</option>
+      <option value="m1">Mahnung 1 fällig</option>
+      <option value="m2">Mahnung 2 fällig</option>
+      <option value="m3">Mahnung 3 fällig</option>
+    </select>
+    <button class="mh-btn-ghost" type="button" onclick="loadRechnungen()">Neu laden</button>
+    <span style="margin-left:auto;font-size:12px;color:var(--text3);" id="mh-count">—</span>
+  </div>
+
+  <div class="mh-list">
+    <div class="mh-row mh-row-header">
+      <div>Rechnung</div>
+      <div>Auftrag / Kontakt</div>
+      <div style="text-align:right;">Netto</div>
+      <div style="text-align:right;">Brutto</div>
+      <div style="text-align:right;">Fällig</div>
+      <div style="text-align:right;">T-Tage</div>
+      <div>Mahnung</div>
+      <div>Aktion</div>
+    </div>
+    <div id="mh-rows"><div class="mh-loading">Lade Rechnungen…</div></div>
+  </div>
+
+  <div class="mh-rg">
+    <strong>Rechtsgrundlage:</strong> §286 BGB (Verzug ab Fälligkeit ohne Mahnung wenn Datum bestimmt) · §288 BGB (B2B-Verzugszins: Basiszinssatz + 9 Prozentpunkte p.a., aktuell ~8.62% p.a. Stand 2026) · §288 Abs. 5 BGB (Pauschale 40 € für jede Mahnung im B2B) · JVEG §3 (Zahlungsziele Gerichtsaufträge: Vergütung nach Erbringung) · Stufen-Standard: M1 freundlich (T+14), M2 Mahnung mit Gebühr (T+21), M3 letzte Mahnung (T+35) — Marcel-Standard aus mahnwesen-cron Edge Function.
+  </div>
+
+</main>
+
+<script>
+const BASISZINSSATZ_PROZENT = 3.62;  // Bundesbank Stand Anfang 2026, halbjährlich aktualisiert
+const VERZUGSZINS_B2B = BASISZINSSATZ_PROZENT + 9;  // §288 Abs. 2 BGB
+
+function escHtml(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function fmtDate(d){if(!d)return '—';try{return new Date(d).toLocaleDateString('de-DE');}catch(e){return d;}}
+function fmtEur(n){return new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR',maximumFractionDigits:2}).format(Number(n)||0);}
+function diffDays(d){if(!d)return 0;const t=new Date(d+'T00:00:00').getTime();const today=new Date();today.setHours(0,0,0,0);return Math.round((t-today.getTime())/86400000);}
+
+function verzugszins(brutto, tageVerzug) {
+  if (tageVerzug <= 0) return 0;
+  return (Number(brutto) || 0) * (VERZUGSZINS_B2B / 100) * (tageVerzug / 365);
+}
+
+async function _getSb() {
+  if (window.__mhSb) return window.__mhSb;
+  const mod = await import('https://esm.sh/@supabase/supabase-js@2.105.0');
+  window.__mhSb = mod.createClient(window.PROVA_CONFIG.SUPABASE_URL, window.PROVA_CONFIG.SUPABASE_ANON_KEY, { auth: { persistSession: true } });
+  return window.__mhSb;
+}
+
+async function loadRechnungen() {
+  const filter = document.getElementById('f-status').value;
+  const tbody = document.getElementById('mh-rows');
+  tbody.innerHTML = '<div class="mh-loading">Lade Rechnungen…</div>';
+  try {
+    const sb = await _getSb();
+    let q = sb.from('dokumente')
+      .select('id, doc_nummer, typ, auftrag_id, kontakt_id, betrag_netto, betrag_brutto, faelligkeit, mahn_stufe, mahn_gebuehr, mahn_datum_letzte, bezahlt_at, created_at')
+      .in('typ', ['rechnung','rechnung_jveg','rechnung_stunden'])
+      .is('bezahlt_at', null)
+      .is('deleted_at', null)
+      .order('faelligkeit', { ascending: true })
+      .limit(200);
+    if (filter === 'overdue') q = q.lt('faelligkeit', new Date().toISOString().slice(0,10));
+    if (filter === 'm0') q = q.or('mahn_stufe.is.null,mahn_stufe.eq.0');
+    if (filter === 'm1') q = q.eq('mahn_stufe', 1);
+    if (filter === 'm2') q = q.eq('mahn_stufe', 2);
+    if (filter === 'm3') q = q.eq('mahn_stufe', 3);
+    const { data: rows, error } = await q;
+    if (error) throw error;
+    window.__mhRows = rows || [];
+    renderRows(rows || []);
+    renderKpis(rows || []);
+    document.getElementById('mh-count').textContent = (rows || []).length + ' Einträge';
+  } catch (e) {
+    tbody.innerHTML = `<div class="mh-empty"><div class="mh-empty-icon">⚠</div><div class="mh-empty-title">Fehler beim Laden</div><div class="mh-empty-sub">${escHtml(e.message)}</div></div>`;
+  }
+}
+
+function renderRows(rows) {
+  const tbody = document.getElementById('mh-rows');
+  if (!rows.length) {
+    tbody.innerHTML = `<div class="mh-empty"><div class="mh-empty-icon">✅</div><div class="mh-empty-title">Keine offenen Forderungen</div><div class="mh-empty-sub">Alle Rechnungen sind bezahlt oder noch nicht fällig.</div><a href="/rechnungen">→ Zur Rechnungs-Übersicht</a></div>`;
+    return;
+  }
+  tbody.innerHTML = rows.map(r => {
+    const tage = diffDays(r.faelligkeit);
+    const tageCls = tage < 0 ? 'is-overdue' : (tage <= 1 ? 'is-today' : 'is-soon');
+    const tageTxt = tage < 0 ? `T+${Math.abs(tage)}` : (tage === 0 ? 'heute' : `T-${tage}`);
+    const stufe = Number(r.mahn_stufe) || 0;
+    const stufeLabel = stufe === 0 ? 'offen' : `Mahnung ${stufe}`;
+    const zins = verzugszins(r.betrag_brutto, Math.max(0, -tage));
+    const naechsteStufe = stufe < 3 ? (stufe + 1) : null;
+    const stufeAktionLabel = naechsteStufe === 1 ? 'M1 senden'
+      : naechsteStufe === 2 ? 'M2 senden'
+      : naechsteStufe === 3 ? 'M3 senden'
+      : 'voll';
+    return `<div class="mh-row">
+      <div><span class="mh-nr">${escHtml(r.doc_nummer || r.id.slice(0,8))}</span></div>
+      <div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text2);">
+        ${r.auftrag_id ? `<a href="/akte?id=${encodeURIComponent(r.auftrag_id)}" style="color:var(--text);">Auftrag</a>` : '—'}
+        ${r.kontakt_id ? ` · <a href="/kontakte?id=${encodeURIComponent(r.kontakt_id)}" style="color:var(--text2);">Kontakt</a>` : ''}
+      </div>
+      <div class="mh-amt">${fmtEur(r.betrag_netto)}</div>
+      <div class="mh-amt">${fmtEur(r.betrag_brutto)}</div>
+      <div class="mh-amt">${fmtDate(r.faelligkeit)}</div>
+      <div class="mh-tage ${tageCls}">${tageTxt}</div>
+      <div><span class="mh-stufe s${stufe}">${stufeLabel}</span>${stufe > 0 && r.mahn_gebuehr ? ` <span style="font-size:10px;color:var(--text3);">+${fmtEur(r.mahn_gebuehr)}</span>` : ''}</div>
+      <div class="mh-act">
+        <button class="mh-btn-mahn" ${naechsteStufe ? '' : 'disabled'} onclick="sendMahnung('${r.id}', ${naechsteStufe || 0})">${escHtml(stufeAktionLabel)}</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderKpis(rows) {
+  const today = new Date(); today.setHours(0,0,0,0);
+  const todayIso = today.toISOString().slice(0,10);
+  let offenSum = 0, ueberfSum = 0, ueberfCount = 0, zinsSum = 0;
+  const stufenCount = { 1: 0, 2: 0, 3: 0 };
+  rows.forEach(r => {
+    offenSum += Number(r.betrag_brutto) || 0;
+    if (r.faelligkeit && r.faelligkeit < todayIso) {
+      ueberfCount++;
+      ueberfSum += Number(r.betrag_brutto) || 0;
+      const tageVerzug = diffDays(r.faelligkeit);
+      zinsSum += verzugszins(r.betrag_brutto, Math.max(0, -tageVerzug));
+    }
+    const st = Number(r.mahn_stufe) || 0;
+    if (st >= 1) stufenCount[1]++;
+    if (st >= 2) stufenCount[2]++;
+    if (st >= 3) stufenCount[3]++;
+  });
+  document.getElementById('kpi-offen').textContent = rows.length;
+  document.getElementById('kpi-offen-sum').textContent = fmtEur(offenSum);
+  document.getElementById('kpi-ueberfaellig').textContent = ueberfCount;
+  document.getElementById('kpi-ueberfaellig-sum').textContent = fmtEur(ueberfSum);
+  document.getElementById('kpi-zinsen').textContent = fmtEur(zinsSum);
+  document.getElementById('kpi-stufen').textContent = stufenCount[1] + stufenCount[2] + stufenCount[3];
+  document.getElementById('kpi-stufen-meta').textContent = `M1: ${stufenCount[1]} · M2: ${stufenCount[2]} · M3: ${stufenCount[3]}`;
+}
+
+async function sendMahnung(rechnungId, naechsteStufe) {
+  if (!naechsteStufe || naechsteStufe > 3) { alert('Bereits in höchster Mahnstufe.'); return; }
+  if (!confirm(`Mahnung Stufe ${naechsteStufe} versenden?\n\nDie Rechnung wird auf Mahnstufe ${naechsteStufe} gesetzt + Mahngebühr wird gemäß §288 Abs. 5 BGB hinzugefügt (M1: 0€, M2: +5€, M3: +10€) + Audit-Eintrag.\n\nDer eigentliche Versand erfolgt im nächsten Schritt über das Versand-Modal.`)) return;
+  try {
+    const sb = await _getSb();
+    const heute = new Date().toISOString();
+    const gebuehrInkrement = naechsteStufe === 1 ? 0 : (naechsteStufe === 2 ? 5 : 10);
+    const row = (window.__mhRows || []).find(r => r.id === rechnungId);
+    const neueGebuehr = Number(row?.mahn_gebuehr || 0) + gebuehrInkrement;
+    const { error } = await sb.from('dokumente').update({
+      mahn_stufe: naechsteStufe,
+      mahn_datum_letzte: heute,
+      mahn_gebuehr: neueGebuehr
+    }).eq('id', rechnungId);
+    if (error) throw error;
+    // Audit-Eintrag
+    try {
+      const { data: doc } = await sb.from('dokumente').select('workspace_id').eq('id', rechnungId).single();
+      await sb.from('audit_trail').insert({
+        workspace_id: doc?.workspace_id,
+        action: 'create',
+        entity_typ: 'mahnung',
+        entity_id: rechnungId,
+        payload: { stufe: naechsteStufe, gebuehr_eur: gebuehrInkrement, source: 'mahnwesen-ui-manual' }
+      });
+    } catch (_) {}
+    // Versand-Modal triggern (existing lib)
+    if (window.ProvaVersandModal) {
+      window.ProvaVersandModal.open({
+        kontext: { entity_typ: 'mahnung', entity_id: rechnungId, stufe: naechsteStufe },
+        defaultTab: 'email',
+        templateHint: `F-0${naechsteStufe === 1 ? '5' : (naechsteStufe === 2 ? '7' : '8')}-MAHNUNG-${naechsteStufe}`
+      });
+    } else {
+      alert(`Mahnstufe ${naechsteStufe} eingetragen. Versand-Modal nicht verfügbar — bitte Rechnung in Akte öffnen und manuell versenden.`);
+    }
+    loadRechnungen();
+  } catch (e) {
+    alert('Fehler: ' + e.message);
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => { loadRechnungen(); });
+</script>
 <script src="support-chat.js" defer></script>
 <script src="sw-register.js" defer></script>
 </body>

@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Test MEGA⁶⁹-FINAL-2 · Skizze-Editor</title>
+<script src="/lib/prova-config.js"></script>
+<style>
+  body { font-family: 'DM Sans', system-ui, sans-serif; background: #0b0d11; color: #eaecf4; margin: 0; padding: 24px; line-height: 1.5; }
+  h1 { font-size: 22px; font-weight: 800; margin-bottom: 6px; }
+  .sub { color: #8b93ab; font-size: 13px; margin-bottom: 24px; }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 18px; align-items: center; }
+  input, button { font-family: inherit; font-size: 13px; }
+  input[type=text] { padding: 9px 12px; background: #1c2130; border: 1px solid rgba(255,255,255,0.11); border-radius: 8px; color: #eaecf4; min-width: 240px; }
+  button { padding: 9px 18px; background: linear-gradient(135deg, #4f8ef7, #3a7be0); border: none; border-radius: 8px; color: #fff; font-weight: 700; cursor: pointer; }
+  .check-list { background: #1c2130; border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 18px 24px; }
+  .check-list h3 { font-size: 14px; margin: 0 0 12px; }
+  .check-list ol { padding-left: 20px; }
+  .check-list li { padding: 6px 0; color: #8b93ab; font-size: 13px; }
+  .check-list li strong { color: #eaecf4; }
+  .meta { color: #4d5568; font-size: 11px; margin-top: 16px; }
+  code { background: #161a22; padding: 2px 6px; border-radius: 4px; color: #93c5fd; font-family: ui-monospace, Consolas, monospace; }
+</style>
+</head>
+<body>
+
+<h1>🎨 MEGA⁶⁹-FINAL-2 — Skizze-Editor Test-Page</h1>
+<p class="sub">Stand-alone Test des SVG-basierten Skizze-Editors. <code>lib/prova-skizze-editor.{js,css}</code></p>
+
+<div class="row">
+  <input type="text" id="t-auftrag" placeholder="Auftrag-UUID (optional, für Foto-Overlay nötig)" />
+  <button onclick="testOpen()">+ Neue Skizze öffnen</button>
+  <button onclick="testReopen()" style="background:#1c2130;border:1px solid rgba(255,255,255,0.11);color:#8b93ab;">Re-Open Test (skizze_id eingeben)</button>
+</div>
+
+<div class="check-list">
+  <h3>Test-Checklist (Marcel)</h3>
+  <ol>
+    <li><strong>Editor öffnet</strong> — Modal-Overlay mit Sidebar (9 Tools), Top-Bar (Farben+Strichstärken), Canvas, Layers-Sidebar</li>
+    <li><strong>9 Tools klickbar</strong> — Auswahl · Linie · Pfeil · Rechteck · Kreis · Text · Maß · Eraser · Foto</li>
+    <li><strong>Linie zeichnen</strong> — Klick+Drag → SVG-Linie sichtbar in gewählter Farbe + Strichstärke</li>
+    <li><strong>Pfeil zeichnen</strong> — Linie mit Pfeilkopf-Polyline</li>
+    <li><strong>Rechteck + Kreis</strong> — Click+Drag → Outline-Shape</li>
+    <li><strong>Text einfügen</strong> — Tool Text + Klick → prompt() → Text erscheint</li>
+    <li><strong>Maß-Tool:</strong> 2 Klicks → Modal "Wie lang?" → "5" + Einheit "m" → Strichlinie + Längen-Label</li>
+    <li><strong>Maß zweite Linie:</strong> wird automatisch gemäß Maßstab umgerechnet</li>
+    <li><strong>Foto-Overlay-Layer:</strong> Auftrag-UUID nötig — Klick "+ Foto-Overlay" → Foto-Picker → Bild als Layer 0</li>
+    <li><strong>Opacity-Slider</strong> — Foto-Layer fadet</li>
+    <li><strong>Undo/Redo:</strong> Buttons im Header (↶/↷) oder Ctrl+Z / Ctrl+Y</li>
+    <li><strong>Eraser:</strong> Klick auf Shape → entfernt</li>
+    <li><strong>Speichern:</strong> Button → POST <code>/functions/v1/skizzen-save</code> → console-Audit-Event dispatched</li>
+    <li><strong>Re-Open:</strong> skizze_id aus Datenbank → deserialize lädt Shapes korrekt</li>
+    <li><strong>Mobile:</strong> Touch funktioniert auf iPad, Pencil-Druck wird erkannt (lineWidth-Variation)</li>
+  </ol>
+</div>
+
+<div class="meta">
+  Bundle-Size: ~22 KB raw / ~8 KB gzipped (Editor) + ~5 KB raw / ~1.5 KB gzipped (CSS) = ~10 KB gzipped total. Unter 30 KB Budget → kein Lazy-Load nötig.
+</div>
+
+<script src="/lib/prova-asset-event-bus.js" defer></script>
+<script src="/lib/prova-asset-trigger.js" defer></script>
+<script src="/lib/prova-foto-picker.js" defer></script>
+<script src="/lib/prova-skizze-editor.js" defer></script>
+<script>
+function testOpen() {
+  if (!window.ProvaSkizzeEditor) { alert('Editor lädt noch.'); return; }
+  const aid = document.getElementById('t-auftrag').value.trim() || null;
+  window.ProvaSkizzeEditor.openModal({
+    auftragId: aid,
+    onSave: (result) => {
+      console.log('[test] Skizze gespeichert:', result);
+      alert('Saved: skizze_id = ' + result.skizzeId);
+    }
+  });
+}
+function testReopen() {
+  const id = prompt('skizze_id (UUID) eingeben:');
+  if (!id) return;
+  document.dispatchEvent(new CustomEvent('prova:skizze-open', { detail: { skizzeId: id } }));
+}
+</script>
+
+</body>
+</html>

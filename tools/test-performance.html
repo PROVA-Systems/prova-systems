@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Performance-Check · MEGA⁶⁹-FINAL-3</title>
+<style>
+body { font-family: 'DM Sans', system-ui, sans-serif; background: #0b0d11; color: #eaecf4; margin: 0; padding: 24px; line-height: 1.5; }
+h1 { font-size: 22px; font-weight: 800; margin-bottom: 6px; }
+.sub { color: #8b93ab; font-size: 13px; margin-bottom: 24px; max-width: 720px; }
+.card { background: #1c2130; border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 18px 22px; margin-bottom: 14px; }
+.card h2 { font-size: 14px; margin-bottom: 8px; }
+.metric { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.04); font-size: 13px; }
+.metric:last-child { border-bottom: none; }
+.metric-val { font-family: ui-monospace, Consolas, monospace; font-weight: 700; }
+.is-good { color: #6ee7b7; }
+.is-warn { color: #fcd34d; }
+.is-bad { color: #fca5a5; }
+.btn { padding: 9px 18px; background: linear-gradient(135deg, #4f8ef7, #3a7be0); color: #fff; border: none; border-radius: 7px; font-weight: 700; font-size: 12px; cursor: pointer; font-family: inherit; }
+ul { padding-left: 20px; color: #8b93ab; font-size: 13px; }
+ul li { padding: 4px 0; }
+code { background: #161a22; padding: 2px 6px; border-radius: 4px; color: #93c5fd; font-family: ui-monospace, monospace; font-size: 12px; }
+</style>
+</head>
+<body>
+
+<h1>⚡ Performance-Check · MEGA⁶⁹-FINAL-3 Item 8.9</h1>
+<p class="sub">Quick-Performance-Insights via Browser-PerformanceObserver. Vollständiges Lighthouse-Audit bitte separat in DevTools ausführen (Marcel-Direktive).</p>
+
+<div class="card">
+  <h2>Aktuelle Page-Metriken (Performance-API)</h2>
+  <div class="metric"><span>DOMContentLoaded</span><span class="metric-val" id="m-dcl">—</span></div>
+  <div class="metric"><span>Load Event</span><span class="metric-val" id="m-load">—</span></div>
+  <div class="metric"><span>First Contentful Paint (FCP)</span><span class="metric-val" id="m-fcp">—</span></div>
+  <div class="metric"><span>Largest Contentful Paint (LCP)</span><span class="metric-val" id="m-lcp">—</span></div>
+  <div class="metric"><span>Resources geladen</span><span class="metric-val" id="m-res">—</span></div>
+  <div class="metric"><span>JS-Transfer (sum)</span><span class="metric-val" id="m-js">—</span></div>
+  <div class="metric"><span>CSS-Transfer (sum)</span><span class="metric-val" id="m-css">—</span></div>
+</div>
+
+<div class="card">
+  <h2>Top-Performance-Optimierungen (durchgeführt MEGA⁶⁹-FINAL-3)</h2>
+  <ul>
+    <li>✓ Script-Tags mit <code>defer</code> wo möglich (nav.js, sentry-init, support-chat, etc.)</li>
+    <li>✓ CSS-Inline für initial render (Above-the-fold)</li>
+    <li>✓ Service-Worker Cache-First für Assets (sw.js v3160)</li>
+    <li>✓ <code>preconnect</code> zu Google Fonts</li>
+    <li>✓ Skizze-Editor + Editor-Bundle lazy-loaded (mega69-Flag-Block)</li>
+    <li>✓ Bundle-Size eingehalten: prova-skizze-editor.js ~10 KB gzipped</li>
+    <li>✓ ProvaDashboardWidgets async-rendered (kein blocking)</li>
+  </ul>
+</div>
+
+<div class="card">
+  <h2>Empfohlene Marcel-Lighthouse-Audits</h2>
+  <ul>
+    <li>Open DevTools → Lighthouse-Tab → Mode "Navigation" → Desktop+Mobile</li>
+    <li>Pages: <code>/</code>, <code>/dashboard</code>, <code>/akte?id=...</code>, <code>/stellungnahme?az=...</code></li>
+    <li>Ziel-Scores: Performance &gt; 85, Accessibility &gt; 90, Best Practices &gt; 90, SEO &gt; 90</li>
+    <li>Bei <85 Performance: häufigste Findings — Render-blocking JS, ungenutztes CSS, Image-Sizes</li>
+  </ul>
+</div>
+
+<div class="card">
+  <h2>Bekannte Performance-Limitierungen (Backlog MEGA⁷⁰)</h2>
+  <ul>
+    <li>tiptap-editor-bundle.js ~425 KB raw / ~134 KB gzipped — bereits lazy via mega69-Flag</li>
+    <li>Mobile-Bundle: 60ms-Doktrin auf iPad mit Apple Pencil messen (Marcel manuell, siehe /tools/test-latency.html)</li>
+    <li>Initial Dashboard-Render: viele Tile-Queries parallel — N+1 wenn N&gt;20 Aufträge</li>
+  </ul>
+</div>
+
+<button class="btn" onclick="recheck()">⟲ Neu messen</button>
+
+<script>
+function cls(v, good, warn) {
+  if (v === null || v === undefined || isNaN(v)) return '';
+  if (v <= good) return 'is-good';
+  if (v <= warn) return 'is-warn';
+  return 'is-bad';
+}
+function set(id, val, unit, c) {
+  const el = document.getElementById(id);
+  el.textContent = val === null ? '—' : (val + (unit || ''));
+  el.className = 'metric-val ' + (c || '');
+}
+function recheck() {
+  const nav = performance.getEntriesByType('navigation')[0];
+  if (nav) {
+    set('m-dcl', nav.domContentLoadedEventEnd.toFixed(0), ' ms', cls(nav.domContentLoadedEventEnd, 1500, 3000));
+    set('m-load', nav.loadEventEnd.toFixed(0), ' ms', cls(nav.loadEventEnd, 2500, 5000));
+  }
+  const paints = performance.getEntriesByType('paint');
+  const fcp = paints.find(p => p.name === 'first-contentful-paint');
+  if (fcp) set('m-fcp', fcp.startTime.toFixed(0), ' ms', cls(fcp.startTime, 1800, 3000));
+  const lcpObs = new PerformanceObserver(list => {
+    const entries = list.getEntries();
+    const last = entries[entries.length - 1];
+    if (last) set('m-lcp', last.startTime.toFixed(0), ' ms', cls(last.startTime, 2500, 4000));
+  });
+  try { lcpObs.observe({ type: 'largest-contentful-paint', buffered: true }); } catch (_) {}
+
+  const res = performance.getEntriesByType('resource');
+  set('m-res', res.length, '', '');
+  const jsSum = res.filter(r => r.initiatorType === 'script').reduce((s,r) => s + (r.transferSize || 0), 0);
+  const cssSum = res.filter(r => r.initiatorType === 'link' || r.initiatorType === 'css').reduce((s,r) => s + (r.transferSize || 0), 0);
+  set('m-js', Math.round(jsSum / 1024), ' KB', cls(jsSum / 1024, 200, 500));
+  set('m-css', Math.round(cssSum / 1024), ' KB', cls(cssSum / 1024, 50, 150));
+}
+window.addEventListener('load', () => setTimeout(recheck, 100));
+</script>
+
+</body>
+</html>

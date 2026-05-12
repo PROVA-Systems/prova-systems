@@ -107,12 +107,14 @@
   ];
   var BUERO = [
     { href: 'rechnungen.html',         icon: '💸', label: 'Rechnungen',         countKey: 'rechnungen_ueberfaellig', warn: true },
+    { href: 'mahnwesen.html',          icon: '⚠️',  label: 'Mahnwesen' },
     { href: 'briefe.html',             icon: '✉️',  label: 'Briefe' },
-    { href: 'kontakte-supabase.html',  icon: '👥', label: 'Kontakte',           countKey: 'kontakte' },
+    { href: 'kontakte.html',           icon: '👥', label: 'Kontakte',           countKey: 'kontakte' },
     { href: 'jahresbericht.html',      icon: '📊', label: 'Jahresbericht' },
   ];
   var WERKZEUGE = [
-    { href: 'normen.html',         icon: '📚',  label: 'Normen' },
+    { href: 'bibliothek.html',     icon: '📚',  label: 'Bibliothek' },
+    { href: 'normen.html',         icon: '📐',  label: 'Normen' },
     { href: 'textbausteine.html',  icon: '💬',  label: 'Textbausteine' },
     { href: 'jveg.html',           icon: '🧮',  label: 'JVEG-Rechner' },
     { href: 'positionen.html',     icon: '💰',  label: 'Positionen & Preise' },

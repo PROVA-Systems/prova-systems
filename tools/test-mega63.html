@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>MEGA⁶³ HERZSTÜCK Backend Smoke-Test</title>
+<meta name="robots" content="noindex,nofollow">
+<style>
+  body { font: 14px/1.5 system-ui, -apple-system, Segoe UI, sans-serif; max-width: 1000px; margin: 24px auto; padding: 0 16px; color: #111; }
+  h1 { font-size: 22px; margin: 0 0 8px; }
+  h2 { font-size: 16px; margin: 24px 0 8px; padding-top: 16px; border-top: 1px solid #ddd; }
+  .card { border: 1px solid #ddd; border-radius: 8px; padding: 12px 16px; margin: 8px 0; background: #fafafa; }
+  button { font: inherit; padding: 8px 14px; border: 1px solid #0b2228; background: #0b2228; color: #fff; border-radius: 6px; cursor: pointer; margin: 4px 6px 4px 0; }
+  button:disabled { opacity: .5; cursor: not-allowed; }
+  pre { background: #0b2228; color: #b8e0d2; padding: 10px 12px; border-radius: 6px; overflow: auto; max-height: 380px; font-size: 12px; }
+  .ok { color: #0a5e1f; font-weight: 600; }
+  .err { color: #a40000; font-weight: 600; }
+  .meta { color: #666; font-size: 12px; }
+  input, select { font: inherit; padding: 6px 10px; border: 1px solid #ccc; border-radius: 4px; margin: 4px 0; }
+  label { display: inline-block; min-width: 110px; font-size: 13px; }
+</style>
+</head>
+<body>
+
+<h1>MEGA⁶³ HERZSTÜCK Backend — Smoke-Test</h1>
+<p class="meta">
+  Voll-Implementation der Asset-Fusion-Pipeline. 2 Edge Functions deployed:
+  <code>asset-to-fragments-v1</code> + <code>fragments-to-befund-v1</code>.
+  Test-Page benötigt echte UUIDs aus deinem Workspace (Auftrag, Audio/Foto/Skizze/Notiz).
+</p>
+
+<h2>Auth-Status</h2>
+<div class="card" id="card-auth">
+  <p id="auth-state" class="meta">Prüfe Session…</p>
+  <button id="btn-login">Login öffnen</button>
+</div>
+
+<h2>1.1 Asset → Fragmente (Pipeline)</h2>
+<div class="card">
+  <div>
+    <label>auftrag_id</label> <input type="text" id="auftrag-id" placeholder="UUID" size="40">
+  </div>
+  <div>
+    <label>asset_typ</label>
+    <select id="asset-typ">
+      <option value="diktat">diktat (audio_dateien)</option>
+      <option value="foto">foto (fotos)</option>
+      <option value="skizze">skizze (skizzen)</option>
+      <option value="notiz">notiz (notizen)</option>
+    </select>
+  </div>
+  <div>
+    <label>asset_id</label> <input type="text" id="asset-id" placeholder="UUID" size="40">
+  </div>
+  <button id="btn-asset-to-frag" disabled>Extract Fragments →</button>
+  <p class="meta">
+    Erwartung: Status 200 mit <code>fragments_count &gt; 0</code> und Fragmente in DB.
+    Bei Fehler: Status 500 mit <code>detail</code> (z.B. AUDIO_NO_TRANSCRIPT).
+  </p>
+  <pre id="out-asset"></pre>
+</div>
+
+<h2>1.7 Fragmente → Befund-Entwurf</h2>
+<div class="card">
+  <div>
+    <label>auftrag_id</label> <input type="text" id="auftrag-id-2" placeholder="UUID" size="40">
+  </div>
+  <div>
+    <label>fragment_ids</label>
+    <input type="text" id="fragment-ids" placeholder="UUID1,UUID2,..." size="60">
+  </div>
+  <div>
+    <label>gutachten_teil</label>
+    <select id="gutachten-teil">
+      <option value="">(auto)</option>
+      <option value="sachverhalt">sachverhalt</option>
+      <option value="befund" selected>befund</option>
+      <option value="fachurteil">fachurteil</option>
+      <option value="zusammenfassung">zusammenfassung</option>
+    </select>
+  </div>
+  <div>
+    <label>sprachstil</label>
+    <select id="sprachstil">
+      <option value="sachlich" selected>sachlich</option>
+      <option value="detailliert">detailliert</option>
+      <option value="kurz">kurz</option>
+    </select>
+  </div>
+  <button id="btn-frag-to-befund" disabled>Generate Befund Markdown →</button>
+  <p class="meta">
+    Erwartung: Status 200 mit <code>markdown</code>, <code>marker_count == fragment_ids.length</code>,
+    <code>halluzinations_check_passed: true</code>, <code>kosten_eur</code>.
+  </p>
+  <pre id="out-frag"></pre>
+</div>
+
+<h2>Daten-Helfer</h2>
+<div class="card">
+  <button id="btn-list-frag" disabled>Liste meine letzten 20 Fragmente</button>
+  <button id="btn-list-audio" disabled>Liste meine Audio-Dateien</button>
+  <pre id="out-data"></pre>
+</div>
+
+<script src="/lib/prova-config.js"></script>
+<script src="/lib/edge-shim.js"></script>
+<script type="module">
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.105.0';
+
+const SUPABASE_URL = window.PROVA_CONFIG?.SUPABASE_URL || 'https://cngteblrbpwsyypexjrv.supabase.co';
+const SUPABASE_ANON = window.PROVA_CONFIG?.SUPABASE_ANON_KEY || '';
+const sb = createClient(SUPABASE_URL, SUPABASE_ANON, { auth: { persistSession: true, autoRefreshToken: true } });
+
+async function refreshAuth() {
+  const { data: { session } } = await sb.auth.getSession();
+  const state = document.getElementById('auth-state');
+  const btns = document.querySelectorAll('button[id^="btn-"]:not(#btn-login)');
+  if (session?.user) {
+    state.innerHTML = `<span class="ok">✓ Eingeloggt als ${session.user.email}</span>`;
+    btns.forEach(b => b.disabled = false);
+  } else {
+    state.innerHTML = `<span class="err">Nicht eingeloggt.</span> Bitte über /app-login.html anmelden.`;
+    btns.forEach(b => b.disabled = true);
+  }
+}
+refreshAuth();
+document.getElementById('btn-login').addEventListener('click', () => {
+  location.href = '/app-login.html?return=/tools/test-mega63.html';
+});
+
+async function call(fnName, body) {
+  const { data: { session } } = await sb.auth.getSession();
+  const tok = session?.access_token;
+  const res = await fetch(`${SUPABASE_URL}/functions/v1/${fnName}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${tok}`, 'apikey': SUPABASE_ANON },
+    body: JSON.stringify(body)
+  });
+  const text = await res.text();
+  let json; try { json = JSON.parse(text); } catch { json = { raw: text }; }
+  return { status: res.status, json };
+}
+
+function out(id, content) {
+  document.getElementById(id).textContent = JSON.stringify(content, null, 2);
+}
+
+document.getElementById('btn-asset-to-frag').addEventListener('click', async () => {
+  const auftrag_id = document.getElementById('auftrag-id').value.trim();
+  const asset_typ = document.getElementById('asset-typ').value;
+  const asset_id = document.getElementById('asset-id').value.trim();
+  if (!auftrag_id || !asset_id) { alert('auftrag_id + asset_id Pflicht'); return; }
+  out('out-asset', { status: 'running', _t0: Date.now() });
+  out('out-asset', await call('asset-to-fragments-v1', { auftrag_id, asset_typ, asset_id }));
+});
+
+document.getElementById('btn-frag-to-befund').addEventListener('click', async () => {
+  const auftrag_id = document.getElementById('auftrag-id-2').value.trim();
+  const fragment_ids = document.getElementById('fragment-ids').value.split(',').map(s => s.trim()).filter(Boolean);
+  const gutachten_teil = document.getElementById('gutachten-teil').value || undefined;
+  const sprachstil = document.getElementById('sprachstil').value;
+  if (!auftrag_id || fragment_ids.length === 0) { alert('auftrag_id + fragment_ids Pflicht'); return; }
+  out('out-frag', { status: 'running' });
+  out('out-frag', await call('fragments-to-befund-v1', { auftrag_id, fragment_ids, gutachten_teil, sprachstil }));
+});
+
+document.getElementById('btn-list-frag').addEventListener('click', async () => {
+  const { data, error } = await sb.from('befund_fragmente')
+    .select('id, text, quelle_typ, status, tags, raumbezug, gutachten_teil, created_at')
+    .order('created_at', { ascending: false }).limit(20);
+  out('out-data', error || data);
+});
+
+document.getElementById('btn-list-audio').addEventListener('click', async () => {
+  const { data, error } = await sb.from('audio_dateien')
+    .select('id, auftrag_id, transkript_text, word_timestamps, transkribiert_am')
+    .is('deleted_at', null)
+    .order('uploaded_at', { ascending: false }).limit(20);
+  out('out-data', error || data);
+});
+</script>
+
+</body>
+</html>
