@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v3160-mega69-final-3-pre-pilot-100-vision';   // MEGA⁶⁹-FINAL-3 Pre-Pilot 100% Vision: 8.1 anhang-process PDF/DOCX (Claude-Vision Native), 8.2a Inline-Text-Edit + 8.2b Drag-Resize-Handles, 8.3 Version-Diff Wort-Level Myers/LCS, 8.4 ki_lernpool als Wissenspool in Audit-Search, 8.5 KI-Garantie 5 Smoke-Tests Page, 8.6 iPad-Latenz-Test Page, 8.7 anhaenge-list Edge Fn, 8.8 3 E2E-Playwright Specs (Skizze/Mahnwesen/Fristen-Kalender) + README, 8.9 Performance-Check Page, 8.10 Akte-Tabs History-API Deep-Link, 8.11 Marcel 30-Punkt-Test-Suite mit JSON-Export, 8.12 PILOT-LAUNCH-READY.md. Pilot-Status: 100% Marcel-Vision erreicht.
+const CACHE_VERSION = 'prova-v3170-mega69-integration-hotfix';   // MEGA⁶⁹-INTEGRATION Hotfix nach Marcel-Test 12.05.2026: INT.1 bibliothek Schema-Drift (textbausteine.text statt text_content, document_templates statt dokument_templates), INT.2 Sidebar-Integration für mahnwesen/bibliothek/jahresbericht, INT.3 Mahnwesen SV-Untertitel (DEV-Sprache raus), INT.4 nav.js Werkzeuge konsolidiert (Bibliothek/Skizzen/JVEG/Positionen — Normen+Textbausteine raus weil in Bibliothek; Fristen in Cockpit), INT.5 Wizard auf Step 1 reduziert + Redirect zu /akte?id=NEU via auftragAnlegenUndOeffnen(), INT.6 Diktat-Mode-Bug-Fix in app-logic.js (switchDiktatTab stoppt Recorder + autoStopDiktatBeiTextEingabe onfocus/oninput), INT.7 Jahresbericht eigene Topbar+Drawer raus → Sidebar, INT.8 akte-Hub verifiziert (?id=UUID funktioniert).
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [

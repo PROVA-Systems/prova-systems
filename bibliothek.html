@@ -126,9 +126,12 @@ body { font-family: 'DM Sans', system-ui, sans-serif; background: var(--bg); col
 }
 </style>
 </head>
-<body>
+<body data-page="bibliothek">
 
-<div class="prova-app-shell" data-page="bibliothek">
+<div class="app-shell" id="app-shell">
+  <nav class="sidebar" id="sidebar"></nav>
+  <div class="sb-overlay" id="sb-overlay" onclick="closeMobileSidebar()"></div>
+  <div class="main-wrap" id="main-wrap">
   <main class="bib-wrap">
     <h1 class="bib-h1">Bibliothek</h1>
     <p class="bib-sub">Normen · Textbausteine · Brief-Vorlagen — Wiederverwendbar im Editor.</p>
@@ -155,7 +158,8 @@ body { font-family: 'DM Sans', system-ui, sans-serif; background: var(--bg); col
       <div class="bib-loading">Lade…</div>
     </div>
   </main>
-</div>
+  </div><!-- /main-wrap -->
+</div><!-- /app-shell -->
 
 <script type="module">
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.105.0';
@@ -198,29 +202,39 @@ async function loadTab(tab) {
       }));
     } else if (tab === 'textbausteine') {
       const { data, error } = await sb.from('textbausteine')
-        .select('id, titel, kategorie, text_content, is_global')
+        .select('id, titel, kategorie, schadenart, text, text_kurz, is_global, nutzungen, letzte_nutzung_at')
+        .is('deleted_at', null)
+        .order('nutzungen', { ascending: false, nullsFirst: false })
         .limit(200);
       if (error) throw error;
       allItems = (data || []).map(b => ({
         id: b.id, type: 'baustein',
         title: b.titel,
-        sub: b.kategorie || '',
-        preview: (b.text_content || '').slice(0, 200),
+        sub: [b.kategorie, b.schadenart].filter(Boolean).join(' · '),
+        preview: (b.text_kurz || b.text || '').slice(0, 200),
         kategorie: b.kategorie,
-        meta: [b.is_global ? 'global' : 'workspace'].filter(Boolean)
+        meta: [
+          b.is_global ? 'global' : 'workspace',
+          (b.nutzungen ? `${b.nutzungen}× genutzt` : null)
+        ].filter(Boolean)
       }));
     } else if (tab === 'briefe') {
-      const { data, error } = await sb.from('dokument_templates')
-        .select('id, name, kategorie, beschreibung, datei_pfad')
-        .limit(100);
+      const { data, error } = await sb.from('document_templates')
+        .select('id, titel, kategorie, beschreibung, weg, is_global, use_count, last_used_at')
+        .is('deleted_at', null)
+        .order('use_count', { ascending: false, nullsFirst: false })
+        .limit(200);
       if (error) throw error;
       allItems = (data || []).map(d => ({
         id: d.id, type: 'brief',
-        title: d.name,
-        sub: d.kategorie,
+        title: d.titel,
+        sub: [d.kategorie, d.weg].filter(Boolean).join(' · '),
         preview: d.beschreibung || '',
         kategorie: d.kategorie,
-        meta: []
+        meta: [
+          d.is_global ? 'global' : 'workspace',
+          (d.use_count ? `${d.use_count}× verwendet` : null)
+        ].filter(Boolean)
       }));
     }
     populateFilter();

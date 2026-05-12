@@ -546,7 +546,80 @@ window.weiterZuSchritt2 = function() {
     if (firstErr) firstErr.scrollIntoView({ behavior: 'smooth', block: 'center' });
     return;
   }
-  goToStep(2);
+  // MEGA⁶⁹-INTEGRATION INT.5 — statt goToStep(2) → INSERT in auftraege + Redirect zu /akte
+  // Marcel-Direktive Q1: Wizard Step 1 behalten für Stamm-Daten, dann Redirect zur Akte mit allen Features.
+  window.auftragAnlegenUndOeffnen();
+};
+
+// MEGA⁶⁹-INTEGRATION INT.5 — Auftrag-Insert + Redirect zu /akte?id=NEU
+window.auftragAnlegenUndOeffnen = async function() {
+  const UI_TO_DB_TYP = {
+    'Versicherungsgutachten': 'schaden',
+    'Privatgutachten':        'schaden',
+    'Gerichtsgutachten':      'gericht',
+    'Schiedsgutachten':       'schied',
+    'Beweissicherung':        'beweis',
+    'Baubegleitung':          'baubegleitung',
+    'Bauabnahme':             'baubegleitung',
+    'Kaufberatung':           'beratung',
+    'Sanierungsberatung':     'beratung'
+  };
+  const v = function(id) { var el = document.getElementById(id); return el ? (el.value || '').trim() : ''; };
+  const auftragsart = v('f-auftragsart');
+  const dbTyp = UI_TO_DB_TYP[auftragsart] || 'schaden';
+  const strasse = v('f-strasse'), plz = v('f-plz'), ort = v('f-ort');
+  const az = v('f-schadensnummer') || v('f-gerichts-az') || ('AZ-' + Date.now().toString().slice(-6));
+  const titel = [v('f-schadenart'), v('f-auftraggeber-name'), [strasse, plz, ort].filter(Boolean).join(', ')].filter(Boolean).join(' · ') || 'Neuer Auftrag';
+
+  const btn = document.querySelector('.btn-primary[onclick*="weiterZuSchritt2"], .btn-primary[onclick*="auftragAnlegenUndOeffnen"]');
+  if (btn) { btn.disabled = true; btn.textContent = 'Lege Auftrag an…'; }
+
+  try {
+    const mod = await import('https://esm.sh/@supabase/supabase-js@2.105.0');
+    const sb = mod.createClient(window.PROVA_CONFIG.SUPABASE_URL, window.PROVA_CONFIG.SUPABASE_ANON_KEY, { auth: { persistSession: true } });
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) throw new Error('Keine Anmeldung — bitte neu einloggen.');
+    const insertPayload = {
+      typ: dbTyp,
+      az: az,
+      titel: titel,
+      status: 'aktiv',
+      phase_aktuell: 1,
+      adresse_strasse: strasse || null,
+      adresse_plz: plz || null,
+      adresse_ort: ort || null,
+      auftraggeber_name: v('f-auftraggeber-name') || null,
+      auftraggeber_typ: v('f-auftraggeber-typ') || null,
+      schadenart: v('f-schadenart') || null,
+      schadensdatum: v('f-schadensdatum') || null,
+      ortstermin_datum: v('f-ortstermin-datum') || null,
+      beweisfragen: v('f-beweisfragen') || null
+    };
+    // Strip null-keys die in DB nicht existieren könnten — übergebe nur Kern-Felder + Extras defensiv
+    const coreKeys = ['typ','az','titel','status','phase_aktuell'];
+    const safe = {};
+    coreKeys.forEach(k => { if (insertPayload[k] !== undefined && insertPayload[k] !== null) safe[k] = insertPayload[k]; });
+    // Optionale Felder mit best-effort
+    ['adresse_strasse','adresse_plz','adresse_ort','auftraggeber_name','auftraggeber_typ','schadenart','schadensdatum','ortstermin_datum','beweisfragen'].forEach(k => {
+      if (insertPayload[k]) safe[k] = insertPayload[k];
+    });
+    const { data, error } = await sb.from('auftraege').insert(safe).select('id, az').single();
+    if (error) {
+      // Wenn Insert wegen unbekannter Spalte fehlschlägt → retry nur mit core
+      console.warn('[auftrag-insert] fehler:', error.message, '— retry mit Kern-Feldern');
+      const { data: d2, error: e2 } = await sb.from('auftraege').insert({
+        typ: safe.typ, az: safe.az, titel: safe.titel, status: safe.status, phase_aktuell: safe.phase_aktuell
+      }).select('id, az').single();
+      if (e2) throw new Error('Auftrag-Insert fehlgeschlagen: ' + e2.message);
+      window.location.href = '/akte?id=' + encodeURIComponent(d2.id);
+      return;
+    }
+    if (typeof showToast === 'function') showToast('Auftrag angelegt: ' + (data.az || data.id.slice(0,8)), 'success');
+    window.location.href = '/akte?id=' + encodeURIComponent(data.id);
+  } catch (e) {
+    if (typeof showToast === 'function') showToast('Fehler: ' + e.message, 'error');
+    if (btn) { btn.disabled = false; btn.textContent = 'Auftrag anlegen + öffnen'; }
+  }
 };
 
 /* ============================================================
@@ -2608,6 +2681,18 @@ window.switchDiktatTab = function(mode) {
     var ta = document.getElementById('transcriptManuell');
     if (ta && ta.value.trim()) window.transcriptText = ta.value.trim();
   } else {
+    // MEGA⁶⁹-INTEGRATION INT.6 — Bei Tab-Wechsel zu Eingabe: laufende Aufnahme stoppen.
+    // Verhindert Marcel-Bug-Pattern: Recorder läuft im Hintergrund während manuelle Texteingabe.
+    if (typeof isRecording !== 'undefined' && isRecording && typeof stoppeAufnahme === 'function') {
+      try { stoppeAufnahme(); } catch (_) {}
+      try {
+        var t = document.createElement('div');
+        t.textContent = '🎙 Diktat gestoppt — manuelle Eingabe erkannt';
+        t.style.cssText = 'position:fixed;top:14px;right:14px;z-index:9999;padding:10px 14px;background:#1f2937;color:#fff;border-radius:8px;font:13px system-ui;box-shadow:0 4px 12px rgba(0,0,0,.3);';
+        document.body.appendChild(t);
+        setTimeout(function(){ t.style.opacity='0'; t.style.transition='opacity .3s'; setTimeout(function(){ t.remove(); }, 300); }, 2200);
+      } catch (_) {}
+    }
     if (diktatPanel) diktatPanel.style.display = 'none';
     if (eingabePanel) eingabePanel.style.display = 'block';
     if (tabDiktat) { tabDiktat.classList.remove('active'); tabDiktat.setAttribute('aria-selected','false'); tabDiktat.tabIndex = -1; }
@@ -2616,6 +2701,23 @@ window.switchDiktatTab = function(mode) {
     if (ta) ta.value = window.transcriptText;
   }
 };
+
+// MEGA⁶⁹-INTEGRATION INT.6 — Auto-Stop bei Focus auf manueller Eingabe.
+// Falls SV mit Tastatur in transcriptManuell (Eingabe-Tab) klickt OHNE Tab-Switch,
+// stoppe Aufnahme defensiv.
+window.autoStopDiktatBeiTextEingabe = function() {
+  if (typeof isRecording !== 'undefined' && isRecording && typeof stoppeAufnahme === 'function') {
+    try { stoppeAufnahme(); } catch (_) {}
+  }
+};
+document.addEventListener('DOMContentLoaded', function() {
+  ['transcriptManuell', 'transcriptArea'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener('focus', window.autoStopDiktatBeiTextEingabe, { passive: true });
+    el.addEventListener('input', window.autoStopDiktatBeiTextEingabe, { passive: true });
+  });
+});
 
 window.syncManuellToTranscript = function() {
   var ta = document.getElementById('transcriptManuell');

@@ -104,6 +104,7 @@
     { href: 'dashboard.html',        icon: '🏠',  label: 'Zentrale' },
     { href: 'archiv.html',           icon: '📋',  label: 'Meine Aufträge', countKey: 'auftraege' },
     { href: 'termine.html',          icon: '📅',  label: 'Kalender',       countKey: 'kalender_heute' },
+    { href: 'fristen.html',          icon: '⏰',  label: 'Fristen' },
   ];
   var BUERO = [
     { href: 'rechnungen.html',         icon: '💸', label: 'Rechnungen',         countKey: 'rechnungen_ueberfaellig', warn: true },
@@ -112,10 +113,11 @@
     { href: 'kontakte.html',           icon: '👥', label: 'Kontakte',           countKey: 'kontakte' },
     { href: 'jahresbericht.html',      icon: '📊', label: 'Jahresbericht' },
   ];
+  // MEGA⁶⁹-INTEGRATION INT.4: Normen + Textbausteine → in Bibliothek konsolidiert
+  // Skizzen kommt als eigenes Werkzeug rein (führt zu skizzen.html mit "Neue Skizze (Editor)"-Button)
   var WERKZEUGE = [
     { href: 'bibliothek.html',     icon: '📚',  label: 'Bibliothek' },
-    { href: 'normen.html',         icon: '📐',  label: 'Normen' },
-    { href: 'textbausteine.html',  icon: '💬',  label: 'Textbausteine' },
+    { href: 'skizzen.html',        icon: '✏️',  label: 'Skizzen' },
     { href: 'jveg.html',           icon: '🧮',  label: 'JVEG-Rechner' },
     { href: 'positionen.html',     icon: '💰',  label: 'Positionen & Preise' },
   ];

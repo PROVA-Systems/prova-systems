@@ -26,6 +26,7 @@
   <script src="prova-layout.config.js"></script>
   <script src="nav.js" defer></script>
   <link rel="stylesheet" href="prova-design.css">
+  <link rel="stylesheet" href="mobile.css">
   <style>
     :root {
       --bg:#0b0d11; --surface:#1c2130; --surface2:#232a3a;
@@ -83,10 +84,15 @@
 </head>
 <body data-page="mahnwesen">
 
+<div class="app-shell" id="app-shell">
+  <nav class="sidebar" id="sidebar"></nav>
+  <div class="sb-overlay" id="sb-overlay" onclick="closeMobileSidebar()"></div>
+  <div class="main-wrap" id="main-wrap">
+
 <main class="mh-wrap" id="main-content">
 
   <h1 class="mh-h1">Mahnwesen</h1>
-  <p class="mh-sub">3-Stufen-Mahnflow nach §286 BGB · Rechnungen aus <code>dokumente</code> (typ=rechnung) Supabase-native · Versand via Versand-Modal (Stufe 1+2+3).</p>
+  <p class="mh-sub">Automatisches Mahnverfahren nach §286 BGB. 3 Stufen: freundliche Erinnerung, Mahnung mit Gebühr, letzte Mahnung vor Inkasso.</p>
 
   <div class="mh-kpi" id="mh-kpi">
     <div class="mh-kpi-tile"><div class="mh-kpi-label">Offene Rechnungen</div><div class="mh-kpi-value" id="kpi-offen">—</div><div class="mh-kpi-meta" id="kpi-offen-sum">—</div></div>
@@ -123,10 +129,12 @@
   </div>
 
   <div class="mh-rg">
-    <strong>Rechtsgrundlage:</strong> §286 BGB (Verzug ab Fälligkeit ohne Mahnung wenn Datum bestimmt) · §288 BGB (B2B-Verzugszins: Basiszinssatz + 9 Prozentpunkte p.a., aktuell ~8.62% p.a. Stand 2026) · §288 Abs. 5 BGB (Pauschale 40 € für jede Mahnung im B2B) · JVEG §3 (Zahlungsziele Gerichtsaufträge: Vergütung nach Erbringung) · Stufen-Standard: M1 freundlich (T+14), M2 Mahnung mit Gebühr (T+21), M3 letzte Mahnung (T+35) — Marcel-Standard aus mahnwesen-cron Edge Function.
+    <strong>Rechtsgrundlage:</strong> §286 BGB (Verzug ab Fälligkeit) · §288 BGB (B2B-Verzugszins: Basiszinssatz + 9 Prozentpunkte p.a., aktuell rd. 12,6% p.a.) · §288 Abs. 5 BGB (Pauschale 40 € pro Mahnung im B2B) · JVEG §3 (Zahlungsziele Gerichtsaufträge). Mahnstufen: M1 freundliche Erinnerung (ab 14 Tagen Verzug) · M2 Mahnung mit 5 € Gebühr (ab 21 Tagen) · M3 letzte Mahnung mit 10 € Gebühr (ab 35 Tagen).
   </div>
 
 </main>
+  </div><!-- /main-wrap -->
+</div><!-- /app-shell -->
 
 <script>
 const BASISZINSSATZ_PROZENT = 3.62;  // Bundesbank Stand Anfang 2026, halbjährlich aktualisiert
