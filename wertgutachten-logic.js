@@ -136,6 +136,17 @@
   window.wgToggleVerfahren = function(verf) {
     if (['sachwert','vergleich','ertrag'].indexOf(verf) === -1) return;
     var idx = _state.verfahrenSet.indexOf(verf);
+    // MEGA⁷⁰ Phase 1.4c — Confirm-Dialog bei Deaktivierung mit Daten
+    if (idx !== -1) {
+      var form = document.getElementById(verf + '-form');
+      if (form) {
+        var inputs = form.querySelectorAll('input[type="number"], input[type="text"], textarea');
+        var hasData = Array.from(inputs).some(function(i) { return i.value && i.value.trim().length > 0; });
+        if (hasData && !confirm('Verfahren "' + verf + '" deaktivieren?\n\nDie eingegebenen Daten bleiben im Formular, aber die Berechnung wird ausgesetzt. Fortfahren?')) {
+          return;
+        }
+      }
+    }
     if (idx === -1) _state.verfahrenSet.push(verf);
     else            _state.verfahrenSet.splice(idx, 1);
 

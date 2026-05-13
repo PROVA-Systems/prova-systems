@@ -303,18 +303,31 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
       </div>
 
-      <!-- Steps -->
-      <div class="steps">
+      <!-- MEGA⁶⁹-INTEGRATION-PATCH-1 PATCH.4: Stepper raus, Sticky-Header rein -->
+      <div class="steps" style="display:none;">
         <div class="step active" id="step-1"><div class="step-circle">1</div><span class="step-label">Stammdaten</span></div>
-        <div class="step-connector" id="conn-1"></div>
-        <div class="step" id="step-2"><div class="step-circle">2</div><span class="step-label">Diktat & Fotos</span></div>
-        <div class="step-connector" id="conn-2"></div>
-        <div class="step" id="step-3"><div class="step-circle">3</div><span class="step-label">Analyse</span></div>
-        <div class="step-connector" id="conn-3"></div>
-        <div class="step" id="step-4"><div class="step-circle">4</div><span class="step-label">Freigabe</span></div>
-        <div class="step-connector" id="conn-4"></div>
-        <div class="step" id="step-5"><div class="step-circle">5</div><span class="step-label">Export</span></div>
+        <div class="step" id="step-2" style="display:none;"></div>
+        <div class="step" id="step-3" style="display:none;"></div>
+        <div class="step" id="step-4" style="display:none;"></div>
+        <div class="step" id="step-5" style="display:none;"></div>
       </div>
+      <div class="page-header-sticky" style="position:sticky;top:0;z-index:60;background:var(--bg,#0b0d11);padding:18px 0 12px;margin-bottom:16px;border-bottom:1px solid rgba(255,255,255,.06);">
+        <h1 style="font-size:22px;font-weight:800;margin:0 0 4px;color:var(--text,#eaecf4);">Neuer Auftrag · <span id="page-header-typ">Stammdaten</span></h1>
+        <p style="font-size:13px;color:var(--text2,#8b93ab);margin:0;">Pflichtfelder ausfüllen, dann Auftrag anlegen — alle weiteren Schritte (Diktat, Fotos, Skizzen, Befund) in der Akte.</p>
+      </div>
+      <script>
+      (function(){
+        // Header-Typ aus URL-Param oder Default
+        var p = new URLSearchParams(location.search).get('typ');
+        var labelMap = {
+          'schaden':'Schadensgutachten','gericht':'Gerichtsgutachten','beratung':'Beratung',
+          'baubegleitung':'Baubegleitung','kurzstellungnahme':'Kurzstellungnahme',
+          'wertgutachten':'Wertgutachten','beweis':'Beweissicherung'
+        };
+        var el = document.getElementById('page-header-typ');
+        if (el && p && labelMap[p]) el.textContent = labelMap[p];
+      })();
+      </script>
 
       <!-- Step 1: Stammdaten -->
       <div id="step1-content">
@@ -587,7 +600,7 @@ document.addEventListener('DOMContentLoaded', function() {
         <div class="page-actions" style="position:sticky;bottom:0;z-index:50;background:var(--bg,#0b0d11);padding:14px 0;margin-top:16px;border-top:1px solid rgba(255,255,255,.08);">
           <button class="btn btn-ghost btn-sm" onclick="showToast('Entwurf gespeichert','success')">Entwurf speichern</button>
           <button class="btn btn-primary" onclick="weiterZuSchritt2()">
-            Auftrag anlegen + öffnen
+            Auftrag anlegen + Akte öffnen
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
           </button>
         </div>

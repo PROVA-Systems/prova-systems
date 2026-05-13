@@ -425,6 +425,55 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-ui);min-heigh
       <!-- §407a BESTÄTIGUNG -->
       <div class="primary-wrap">
         <div id="approve-content" style="display:none;">
+          <!-- MEGA⁷⁰ Phase 1.4b — Pre-Send Compliance-Card (Live-Status, Read-Only) -->
+          <div class="pre-send-compliance" style="background:var(--surface);border:1px solid var(--border2);border-radius:10px;padding:14px 18px;margin-bottom:14px;">
+            <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);margin-bottom:10px;display:flex;align-items:center;gap:6px;">
+              <span>🛡</span> Pre-Send-Compliance
+            </div>
+            <ul id="psc-list" style="list-style:none;padding:0;margin:0;font-size:12px;display:flex;flex-direction:column;gap:6px;">
+              <li id="psc-eigen" style="display:flex;gap:8px;align-items:flex-start;color:var(--text2);"><span class="psc-ic">⏳</span><span><strong style="color:var(--text);">§407a Eigenleistung:</strong> <span class="psc-val">prüfe…</span></span></li>
+              <li id="psc-eu" style="display:flex;gap:8px;align-items:flex-start;color:var(--text2);"><span class="psc-ic">⏳</span><span><strong style="color:var(--text);">EU AI Act Art. 13 (KI-Offenlegung):</strong> <span class="psc-val">prüfe…</span></span></li>
+              <li id="psc-konsi" style="display:flex;gap:8px;align-items:flex-start;color:var(--text2);"><span class="psc-ic">⏳</span><span><strong style="color:var(--text);">KI-Konsistenz §4 ↔ §6:</strong> <span class="psc-val">prüfe…</span></span></li>
+              <li id="psc-hall" style="display:flex;gap:8px;align-items:flex-start;color:var(--text2);"><span class="psc-ic">⏳</span><span><strong style="color:var(--text);">Halluzinations-Check:</strong> <span class="psc-val">prüfe…</span></span></li>
+              <li id="psc-konj" style="display:flex;gap:8px;align-items:flex-start;color:var(--text2);"><span class="psc-ic">⏳</span><span><strong style="color:var(--text);">Konjunktiv II in KI-Hinweisen:</strong> <span class="psc-val">prüfe…</span></span></li>
+              <li id="psc-exif" style="display:flex;gap:8px;align-items:flex-start;color:var(--text2);"><span class="psc-ic">⏳</span><span><strong style="color:var(--text);">Foto-EXIF-Strip (DSGVO):</strong> <span class="psc-val">prüfe…</span></span></li>
+            </ul>
+            <div id="psc-summary" style="margin-top:10px;padding-top:8px;border-top:1px solid var(--border);font-size:11px;color:var(--text3);">Live-Status aktualisiert nach jeder Änderung. Warnungen blockieren NICHT die Freigabe — SV entscheidet final.</div>
+          </div>
+          <script>
+          // MEGA⁷⁰ Phase 1.4b — Live-Update Pre-Send-Compliance (basiert auf existing-Checks im DOM)
+          (function() {
+            function setStatus(id, status, text) {
+              var el = document.getElementById(id); if (!el) return;
+              var icon = el.querySelector('.psc-ic');
+              var val = el.querySelector('.psc-val');
+              if (status === 'ok') { icon.textContent = '✅'; el.style.color = 'var(--text)'; }
+              else if (status === 'warn') { icon.textContent = '⚠'; el.style.color = '#fcd34d'; }
+              else if (status === 'err') { icon.textContent = '✗'; el.style.color = '#fca5a5'; }
+              else icon.textContent = '⏳';
+              if (val) val.textContent = text;
+            }
+            window.__updatePreSendCompliance = function(eigenChars) {
+              // §407a Eigenleistung: ≥500 Zeichen
+              var n = typeof eigenChars === 'number' ? eigenChars : (document.querySelector('[data-eigen-chars]')?.dataset.eigenChars || 0);
+              n = parseInt(n) || 0;
+              setStatus('psc-eigen', n >= 500 ? 'ok' : 'warn', n + ' Zeichen' + (n >= 500 ? ' (≥500)' : ' — mindestens 500 empfohlen'));
+              // EU AI Act: checking if KI-Offenlegung im Gutachten vorhanden
+              var hasEU = (document.querySelector('.eu-ai-disclosure, [data-eu-ai], .ki-offenlegung') !== null);
+              setStatus('psc-eu', hasEU ? 'ok' : 'warn', hasEU ? 'KI-Offenlegung erkannt' : 'Box im Gutachten prüfen');
+              // Konsistenz + Halluzinations + Konjunktiv: Status aus compliance-result panel falls vorhanden
+              var cr = document.getElementById('compliance-result');
+              var krText = (cr?.textContent || '').toLowerCase();
+              setStatus('psc-konsi', krText.includes('konsisten') ? 'ok' : (krText.includes('inkonsisten') ? 'warn' : ''), krText.includes('inkonsisten') ? 'Inkonsistenz gefunden' : (krText.includes('konsisten') ? 'bestanden' : 'noch nicht geprüft — Button unten'));
+              setStatus('psc-hall', krText.includes('halluzin') && !krText.includes('warn') ? 'ok' : 'warn', krText.includes('halluzin') ? 'durchgeführt' : 'noch nicht geprüft');
+              setStatus('psc-konj', krText.includes('konjunktiv') ? 'ok' : '', krText.includes('konjunktiv') ? 'erkannt' : 'noch nicht geprüft');
+              // EXIF (Foto-Check via fotos-Liste mit exif_stripped=false)
+              setStatus('psc-exif', '', 'wird bei Auftrag-Load geprüft');
+            };
+            document.addEventListener('DOMContentLoaded', function() { setTimeout(window.__updatePreSendCompliance, 500); });
+          })();
+          </script>
+
           <!-- STRIPE: Checklist-Pattern — keine Gating-Checkboxen, sondern Fortschritt -->
           <div id="compliance-confirm">
             <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);margin-bottom:10px;">Vor der Freigabe bestätigen</div>

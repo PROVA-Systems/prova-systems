@@ -575,8 +575,11 @@ window.auftragAnlegenUndOeffnen = async function() {
   if (btn) { btn.disabled = true; btn.textContent = 'Lege Auftrag an…'; }
 
   try {
-    const mod = await import('https://esm.sh/@supabase/supabase-js@2.105.0');
-    const sb = mod.createClient(window.PROVA_CONFIG.SUPABASE_URL, window.PROVA_CONFIG.SUPABASE_ANON_KEY, { auth: { persistSession: true } });
+    // MEGA⁶⁹-INTEGRATION-PATCH-1 PATCH.1: Singleton-Client von /lib/supabase-client.js
+    // verwenden (nutzt Cross-Domain-Cookie-Storage aus MEGA³⁹ P10 F1).
+    // Eigener createClient würde Standard-localStorage nutzen → Session-Lookup schlägt fehl.
+    const mod = await import('/lib/supabase-client.js');
+    const sb = mod.supabase;
     const { data: { session } } = await sb.auth.getSession();
     if (!session) throw new Error('Keine Anmeldung — bitte neu einloggen.');
     const insertPayload = {

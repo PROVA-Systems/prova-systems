@@ -26,104 +26,81 @@
 <script src="prova-layout.config.js"></script>
 <script src="nav.js" defer></script>
 <link rel="stylesheet" href="prova-design.css">
+<link rel="stylesheet" href="mobile.css">
 <style>
 :root {
   --bg:#0b0d11; --surface:#1c2130; --surface2:#232a3a;
   --border:rgba(255,255,255,0.06); --border2:rgba(255,255,255,0.11);
   --text:#eaecf4; --text2:#8b93ab; --text3:#4d5568;
   --accent:#4f8ef7; --accent2:#3a7be0;
+  --success:#10b981; --warning:#f59e0b; --danger:#ef4444; --purple:#8b5cf6;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: 'DM Sans', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; line-height: 1.55; }
-.bib-wrap { max-width: 1240px; margin: 0 auto; padding: 24px 20px 80px; }
-.bib-h1 { font-size: 24px; font-weight: 800; letter-spacing: -.025em; margin-bottom: 6px; }
-.bib-sub { font-size: 14px; color: var(--text2); margin-bottom: 20px; }
+.bib-wrap { max-width: 1280px; margin: 0 auto; padding: 24px 20px 80px; }
+.bib-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 18px; }
+.bib-head-left h1 { font-size: 24px; font-weight: 800; letter-spacing: -.025em; margin-bottom: 4px; }
+.bib-head-left p { font-size: 13px; color: var(--text2); }
+.bib-btn-add { padding: 9px 18px; background: linear-gradient(135deg, var(--accent), var(--accent2)); border: none; color: #fff; font: 700 13px inherit; border-radius: 8px; cursor: pointer; white-space: nowrap; }
+.bib-btn-add:hover { opacity: .92; }
 
-.bib-tabs { display: flex; gap: 6px; margin-bottom: 18px; border-bottom: 1px solid var(--border2); }
-.bib-tab {
-  padding: 10px 16px;
-  background: transparent; border: none;
-  color: var(--text2); cursor: pointer;
-  font: 14px/1.4 'DM Sans', sans-serif;
-  border-bottom: 2px solid transparent;
-}
+.bib-tabs { display: flex; gap: 6px; margin-bottom: 16px; border-bottom: 1px solid var(--border2); }
+.bib-tab { padding: 10px 18px; background: transparent; border: none; color: var(--text2); cursor: pointer; font: 14px/1.4 'DM Sans', sans-serif; border-bottom: 2px solid transparent; }
 .bib-tab.is-active { color: var(--text); border-bottom-color: var(--accent); font-weight: 600; }
 
-.bib-toolbar { display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
-.bib-search {
-  flex: 1; min-width: 200px;
-  padding: 8px 14px;
-  background: var(--surface); border: 1px solid var(--border2); border-radius: 8px;
-  color: var(--text); font: 13px 'DM Sans', sans-serif;
-}
-.bib-filter {
-  padding: 8px 12px;
-  background: var(--surface); border: 1px solid var(--border2); border-radius: 8px;
-  color: var(--text); font: 13px 'DM Sans', sans-serif;
-}
+.bib-toolbar { display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; align-items: center; }
+.bib-input, .bib-filter { padding: 8px 12px; background: var(--surface); border: 1px solid var(--border2); border-radius: 8px; color: var(--text); font: 13px 'DM Sans', sans-serif; font-family: inherit; }
+.bib-input { flex: 1; min-width: 200px; }
+.bib-count { margin-left: auto; font-size: 11px; color: var(--text3); }
 
-.bib-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 12px;
-}
+/* ── Card-Grid ── */
+.bib-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
+@media (max-width: 700px) { .bib-grid { grid-template-columns: 1fr; } }
 
-.bib-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 14px 16px;
-  cursor: pointer;
-  transition: border-color 80ms, transform 80ms;
-  position: relative;
-}
-.bib-card:hover { border-color: var(--accent); transform: translateY(-1px); }
+.bib-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; cursor: pointer; transition: all .15s ease; display: flex; flex-direction: column; gap: 8px; }
+.bib-card:hover { transform: translateY(-2px); border-color: var(--accent); box-shadow: 0 6px 16px rgba(0,0,0,.3); }
+.bib-card-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+.bib-card-title { font-weight: 700; font-size: 14px; color: var(--text); flex: 1; line-height: 1.35; }
+.bib-card-nr { font-family: ui-monospace, Consolas, monospace; font-size: 12px; color: var(--text2); font-weight: 600; }
+.bib-card-preview { font-size: 12px; color: var(--text2); line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.bib-card-meta { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+.bib-badge { font-size: 10px; padding: 2px 8px; border-radius: 4px; font-weight: 600; letter-spacing: .03em; white-space: nowrap; }
+.bib-badge--bereich { background: rgba(99, 102, 241, .18); color: #c4b5fd; }
+.bib-badge--schadenart { background: rgba(245, 158, 11, .18); color: #fcd34d; }
+.bib-badge--kategorie { background: rgba(16, 185, 129, .18); color: #86efac; }
+.bib-badge--haeufig { background: rgba(239, 68, 68, .18); color: #fca5a5; }
+.bib-badge--mittel { background: rgba(245, 158, 11, .18); color: #fcd34d; }
+.bib-badge--selten { background: rgba(79, 142, 247, .12); color: #93c5fd; }
+.bib-badge--global { background: rgba(139, 92, 246, .18); color: #c4b5fd; }
+.bib-badge--eigen { background: rgba(16, 185, 129, .18); color: #86efac; }
+.bib-card-footer { display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: var(--text3); margin-top: 4px; padding-top: 8px; border-top: 1px solid var(--border); }
 
-.bib-card-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 6px; }
-.bib-card-title { font-weight: 600; font-size: 14px; color: var(--text); flex: 1; }
-.bib-card-badge {
-  font-size: 10px; padding: 1px 6px; border-radius: 3px;
-  text-transform: uppercase; letter-spacing: 0.04em; flex-shrink: 0;
-}
-.bib-card-badge--norm { background: rgba(99, 102, 241, 0.18); color: #c4b5fd; }
-.bib-card-badge--baustein { background: rgba(16, 185, 129, 0.18); color: #86efac; }
-.bib-card-badge--brief { background: rgba(245, 158, 11, 0.18); color: #fcd34d; }
+.bib-empty { grid-column: 1 / -1; padding: 56px 20px; text-align: center; color: var(--text3); }
+.bib-loading { grid-column: 1 / -1; padding: 40px; text-align: center; color: var(--text3); }
 
-.bib-card-sub { font-size: 12px; color: var(--text2); margin-bottom: 8px; }
-.bib-card-preview {
-  font-size: 12px;
-  color: var(--text2);
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  margin-bottom: 8px;
-}
-.bib-card-meta { display: flex; gap: 12px; font-size: 11px; color: var(--text3); margin-top: 6px; }
+/* ── Modal (Detail + Create) ── */
+.bib-modal { position: fixed; inset: 0; background: rgba(0,0,0,.7); z-index: 1000; display: none; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(4px); }
+.bib-modal.is-open { display: flex; }
+.bib-modal-inner { background: var(--surface); border: 1px solid var(--border2); border-radius: 14px; max-width: 640px; width: 100%; max-height: 85vh; display: flex; flex-direction: column; }
+.bib-modal-head { padding: 18px 22px; border-bottom: 1px solid var(--border); display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.bib-modal-head h2 { font-size: 18px; font-weight: 700; flex: 1; }
+.bib-modal-close { background: transparent; border: none; color: var(--text2); font-size: 22px; cursor: pointer; padding: 4px 8px; }
+.bib-modal-body { padding: 18px 22px; overflow-y: auto; flex: 1; }
+.bib-modal-foot { padding: 14px 22px; border-top: 1px solid var(--border); display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+.bib-field { margin-bottom: 14px; }
+.bib-field-label { font-size: 10px; text-transform: uppercase; letter-spacing: .06em; color: var(--text3); font-weight: 700; margin-bottom: 6px; }
+.bib-field-value { font-size: 13px; color: var(--text); line-height: 1.55; white-space: pre-wrap; word-break: break-word; }
+.bib-field-input, .bib-field-textarea, .bib-field-select { width: 100%; padding: 9px 12px; background: var(--bg); border: 1px solid var(--border2); border-radius: 7px; color: var(--text); font: 13px 'DM Sans', sans-serif; font-family: inherit; }
+.bib-field-textarea { min-height: 100px; resize: vertical; }
+.bib-modal-btn { padding: 8px 16px; border-radius: 7px; font: 700 12px inherit; cursor: pointer; border: 1px solid var(--border2); background: transparent; color: var(--text2); }
+.bib-modal-btn:hover { border-color: var(--accent); color: var(--text); }
+.bib-modal-btn-primary { background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff; border: none; }
+.bib-modal-btn-primary:hover { opacity: .92; }
+.bib-modal-btn-danger { color: var(--danger); border-color: rgba(239,68,68,.4); }
+.bib-modal-btn-danger:hover { background: rgba(239,68,68,.1); border-color: var(--danger); }
 
-.bib-actions { display: flex; gap: 4px; margin-top: 8px; }
-.bib-actions button {
-  padding: 4px 10px; font-size: 11px;
-  background: transparent; border: 1px solid var(--border2);
-  border-radius: 4px; color: var(--text2); cursor: pointer;
-  font-family: inherit;
-}
-.bib-actions button:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
-
-.bib-empty {
-  grid-column: 1 / -1;
-  padding: 48px 20px;
-  text-align: center;
-  color: var(--text3);
-}
-
-.bib-loading {
-  padding: 32px; text-align: center; color: var(--text3);
-}
-
-@media (max-width: 768px) {
-  .bib-grid { grid-template-columns: 1fr; }
-}
+.bib-toast { position: fixed; bottom: 22px; right: 22px; padding: 12px 18px; background: var(--success); color: #fff; border-radius: 8px; font: 600 13px inherit; z-index: 1100; box-shadow: 0 4px 14px rgba(0,0,0,.3); opacity: 0; transition: opacity .25s; pointer-events: none; }
+.bib-toast.is-show { opacity: 1; }
 </style>
 </head>
 <body data-page="bibliothek">
@@ -132,210 +109,431 @@ body { font-family: 'DM Sans', system-ui, sans-serif; background: var(--bg); col
   <nav class="sidebar" id="sidebar"></nav>
   <div class="sb-overlay" id="sb-overlay" onclick="closeMobileSidebar()"></div>
   <div class="main-wrap" id="main-wrap">
-  <main class="bib-wrap">
-    <h1 class="bib-h1">Bibliothek</h1>
-    <p class="bib-sub">Normen · Textbausteine · Brief-Vorlagen — Wiederverwendbar im Editor.</p>
 
-    <nav class="bib-tabs">
-      <button class="bib-tab is-active" data-tab="normen">📐 Normen</button>
-      <button class="bib-tab" data-tab="textbausteine">📝 Textbausteine</button>
-      <button class="bib-tab" data-tab="briefe">✉ Brief-Vorlagen</button>
-    </nav>
+    <main class="bib-wrap">
+      <div class="bib-head">
+        <div class="bib-head-left">
+          <h1>Bibliothek</h1>
+          <p>Normen + Textbausteine — Wiederverwendbar im Gutachten-Editor. Brief-Vorlagen findest du in „Briefe" unter Büro.</p>
+        </div>
+        <button class="bib-btn-add" id="bib-btn-add" onclick="openCreateModal()">+ Neue Norm</button>
+      </div>
 
-    <div class="bib-toolbar">
-      <input type="text" class="bib-search" id="bib-search" placeholder="Suche…">
-      <select class="bib-filter" id="bib-filter">
-        <option value="">Alle Kategorien</option>
-      </select>
-      <select class="bib-filter" id="bib-sort">
-        <option value="haeufigkeit">Häufigste zuerst</option>
-        <option value="alpha">Alphabetisch</option>
-        <option value="neueste">Neueste zuerst</option>
-      </select>
+      <nav class="bib-tabs">
+        <button class="bib-tab is-active" data-tab="normen" onclick="switchTab('normen')">📐 Normen</button>
+        <button class="bib-tab" data-tab="textbausteine" onclick="switchTab('textbausteine')">📝 Textbausteine</button>
+      </nav>
+
+      <div class="bib-toolbar">
+        <input type="text" class="bib-input" id="bib-search" placeholder="Suche…">
+        <select class="bib-filter" id="bib-filter-1"><option value="">Alle</option></select>
+        <select class="bib-filter" id="bib-filter-2"><option value="">Alle</option></select>
+        <select class="bib-filter" id="bib-sort">
+          <option value="haeufigkeit">Häufigste / Genutzte zuerst</option>
+          <option value="alpha">Alphabetisch</option>
+          <option value="neueste">Neueste zuerst</option>
+        </select>
+        <span class="bib-count" id="bib-count">—</span>
+      </div>
+
+      <div class="bib-grid" id="bib-grid">
+        <div class="bib-loading">Lade…</div>
+      </div>
+    </main>
+
+  </div>
+</div>
+
+<!-- Detail-Modal -->
+<div class="bib-modal" id="modal-detail" onclick="if(event.target===this)closeDetailModal()">
+  <div class="bib-modal-inner">
+    <div class="bib-modal-head">
+      <h2 id="md-title">—</h2>
+      <button class="bib-modal-close" onclick="closeDetailModal()">×</button>
     </div>
+    <div class="bib-modal-body" id="md-body"></div>
+    <div class="bib-modal-foot" id="md-foot"></div>
+  </div>
+</div>
 
-    <div class="bib-grid" id="bib-grid">
-      <div class="bib-loading">Lade…</div>
+<!-- Create/Edit-Modal -->
+<div class="bib-modal" id="modal-create" onclick="if(event.target===this)closeCreateModal()">
+  <div class="bib-modal-inner">
+    <div class="bib-modal-head">
+      <h2 id="mc-title">Neuer Eintrag</h2>
+      <button class="bib-modal-close" onclick="closeCreateModal()">×</button>
     </div>
-  </main>
-  </div><!-- /main-wrap -->
-</div><!-- /app-shell -->
+    <div class="bib-modal-body" id="mc-body"></div>
+    <div class="bib-modal-foot">
+      <button class="bib-modal-btn" onclick="closeCreateModal()">Abbrechen</button>
+      <button class="bib-modal-btn bib-modal-btn-primary" id="mc-save" onclick="submitCreate()">Speichern</button>
+    </div>
+  </div>
+</div>
+
+<div class="bib-toast" id="bib-toast">—</div>
 
 <script type="module">
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.105.0';
-const SB_URL = window.PROVA_CONFIG.SUPABASE_URL;
-const SB_ANON = window.PROVA_CONFIG.SUPABASE_ANON_KEY;
-const sb = createClient(SB_URL, SB_ANON, { auth: { persistSession: true } });
+import { supabase } from '/lib/supabase-client.js';
+window.__sb = supabase;
 
-const grid = document.getElementById('bib-grid');
-const search = document.getElementById('bib-search');
-const filter = document.getElementById('bib-filter');
-const sort = document.getElementById('bib-sort');
-let currentTab = 'normen';
-let allItems = [];
-let timer = null;
+const BEREICH_OPTIONS = ['Wärmeschutz','Feuchteschutz','Schallschutz','Brandschutz','Statik','Sanierung','Baurecht','Sonstiges'];
+const SCHADENART_OPTIONS = ['Schimmel','Wasserschaden','Sturmschaden','Brand','Riss','Feuchtigkeit','Baumangel','Sonstiges'];
+const KATEGORIE_OPTIONS = ['Befund','Ursache','Beurteilung','Empfehlung','Sanierung','Kostenschätzung','Sonstiges'];
+const HAEUFIGKEIT_OPTIONS = ['Häufig','Mittel','Selten'];
 
-function esc(s) { return String(s || '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c])); }
+const state = {
+  tab: 'normen',
+  items: [],
+  filter1: '',
+  filter2: '',
+  search: '',
+  sort: 'haeufigkeit',
+  currentUser: null,
+  workspaceId: null,
+  editing: null
+};
+
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c])); }
+function toast(msg, kind) {
+  const t = document.getElementById('bib-toast');
+  t.textContent = msg;
+  t.style.background = kind === 'error' ? 'var(--danger)' : 'var(--success)';
+  t.classList.add('is-show');
+  setTimeout(() => t.classList.remove('is-show'), 2400);
+}
+
+async function loadCurrentUser() {
+  const { data: { session } } = await supabase.auth.getSession();
+  state.currentUser = session?.user || null;
+  if (state.currentUser) {
+    const { data } = await supabase.from('workspace_memberships').select('workspace_id').eq('user_id', state.currentUser.id).limit(1).single();
+    state.workspaceId = data?.workspace_id || null;
+  }
+}
 
 async function loadTab(tab) {
-  currentTab = tab;
+  state.tab = tab;
+  state.search = ''; state.filter1 = ''; state.filter2 = '';
+  document.getElementById('bib-search').value = '';
+  const grid = document.getElementById('bib-grid');
   grid.innerHTML = '<div class="bib-loading">Lade…</div>';
-  filter.innerHTML = '<option value="">Alle Kategorien</option>';
-
+  document.getElementById('bib-btn-add').textContent = tab === 'normen' ? '+ Neue Norm' : '+ Neuer Textbaustein';
+  // Filter-Dropdowns rebuilden
+  const f1 = document.getElementById('bib-filter-1');
+  const f2 = document.getElementById('bib-filter-2');
+  if (tab === 'normen') {
+    f1.innerHTML = '<option value="">Alle Bereiche</option>' + BEREICH_OPTIONS.map(b => `<option value="${esc(b)}">${esc(b)}</option>`).join('');
+    f2.innerHTML = '<option value="">Alle Häufigkeiten</option>' + HAEUFIGKEIT_OPTIONS.map(h => `<option value="${esc(h)}">${esc(h)}</option>`).join('');
+  } else {
+    f1.innerHTML = '<option value="">Alle Kategorien</option>' + KATEGORIE_OPTIONS.map(k => `<option value="${esc(k)}">${esc(k)}</option>`).join('');
+    f2.innerHTML = '<option value="">Alle Quellen</option><option value="global">Nur Master/global</option><option value="eigen">Nur eigene</option>';
+  }
   try {
     if (tab === 'normen') {
-      const { data, error } = await sb.from('normen_bibliothek')
-        .select('id, norm_nr, titel, untertitel, bereich, schadensarten, aktuell_gueltig, haeufigkeit, nutzungs_count, version_jahr')
-        .eq('aktiv', true)
+      const { data, error } = await supabase.from('normen_bibliothek')
+        .select('id, norm_nr, titel, untertitel, bereich, schadensarten, anwendung, grenzwerte, messtechnik, gutachter_hinweis, haeufigkeit, is_master, is_global, aktiv, letzte_pruefung, nutzungs_count, workspace_id, created_at')
+        .is('deleted_at', null)
         .order('nutzungs_count', { ascending: false, nullsFirst: false })
-        .order('haeufigkeit', { ascending: false, nullsFirst: false })
-        .limit(200);
+        .order('haeufigkeit', { ascending: true, nullsFirst: false })
+        .limit(500);
       if (error) throw error;
-      allItems = (data || []).map(n => ({
-        id: n.id, type: 'norm',
-        title: n.norm_nr + (n.version_jahr ? ` (${n.version_jahr})` : ''),
-        sub: n.titel || n.untertitel,
-        preview: n.untertitel || '',
-        kategorie: n.bereich,
-        haeufigkeit: n.haeufigkeit,
-        meta: [n.aktuell_gueltig === false ? '⚠ veraltet' : '✓ aktuell', n.bereich].filter(Boolean)
-      }));
-    } else if (tab === 'textbausteine') {
-      const { data, error } = await sb.from('textbausteine')
-        .select('id, titel, kategorie, schadenart, text, text_kurz, is_global, nutzungen, letzte_nutzung_at')
+      state.items = data || [];
+    } else {
+      const { data, error } = await supabase.from('textbausteine')
+        .select('id, titel, text, text_kurz, kategorie, schadenart, tags, is_global, nutzungen, letzte_nutzung_at, notiz, workspace_id, created_at')
         .is('deleted_at', null)
         .order('nutzungen', { ascending: false, nullsFirst: false })
-        .limit(200);
+        .limit(500);
       if (error) throw error;
-      allItems = (data || []).map(b => ({
-        id: b.id, type: 'baustein',
-        title: b.titel,
-        sub: [b.kategorie, b.schadenart].filter(Boolean).join(' · '),
-        preview: (b.text_kurz || b.text || '').slice(0, 200),
-        kategorie: b.kategorie,
-        meta: [
-          b.is_global ? 'global' : 'workspace',
-          (b.nutzungen ? `${b.nutzungen}× genutzt` : null)
-        ].filter(Boolean)
-      }));
-    } else if (tab === 'briefe') {
-      const { data, error } = await sb.from('document_templates')
-        .select('id, titel, kategorie, beschreibung, weg, is_global, use_count, last_used_at')
-        .is('deleted_at', null)
-        .order('use_count', { ascending: false, nullsFirst: false })
-        .limit(200);
-      if (error) throw error;
-      allItems = (data || []).map(d => ({
-        id: d.id, type: 'brief',
-        title: d.titel,
-        sub: [d.kategorie, d.weg].filter(Boolean).join(' · '),
-        preview: d.beschreibung || '',
-        kategorie: d.kategorie,
-        meta: [
-          d.is_global ? 'global' : 'workspace',
-          (d.use_count ? `${d.use_count}× verwendet` : null)
-        ].filter(Boolean)
-      }));
+      state.items = data || [];
     }
-    populateFilter();
     render();
   } catch (e) {
     grid.innerHTML = `<div class="bib-empty">Fehler: ${esc(e.message)}</div>`;
   }
 }
 
-function populateFilter() {
-  const cats = Array.from(new Set(allItems.map(i => i.kategorie).filter(Boolean))).sort();
-  filter.innerHTML = '<option value="">Alle Kategorien</option>' + cats.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
+function filterAndSort() {
+  let arr = state.items.slice();
+  const q = state.search.toLowerCase().trim();
+  if (q) {
+    arr = arr.filter(i => {
+      if (state.tab === 'normen') {
+        return ((i.norm_nr || '') + ' ' + (i.titel || '') + ' ' + (i.anwendung || '')).toLowerCase().includes(q);
+      } else {
+        return ((i.titel || '') + ' ' + (i.text || '') + ' ' + (i.kategorie || '')).toLowerCase().includes(q);
+      }
+    });
+  }
+  if (state.filter1) {
+    arr = state.tab === 'normen'
+      ? arr.filter(i => i.bereich === state.filter1)
+      : arr.filter(i => i.kategorie === state.filter1);
+  }
+  if (state.filter2) {
+    if (state.tab === 'normen') {
+      arr = arr.filter(i => i.haeufigkeit === state.filter2);
+    } else if (state.filter2 === 'global') {
+      arr = arr.filter(i => i.is_global === true);
+    } else if (state.filter2 === 'eigen') {
+      arr = arr.filter(i => i.is_global === false && i.workspace_id === state.workspaceId);
+    }
+  }
+  if (state.sort === 'alpha') {
+    arr.sort((a, b) => (a.titel || '').localeCompare(b.titel || ''));
+  } else if (state.sort === 'neueste') {
+    arr.sort((a, b) => (b.created_at || '').localeCompare(a.created_at || ''));
+  }
+  return arr;
 }
 
 function render() {
-  const q = (search.value || '').toLowerCase().trim();
-  const fCat = filter.value;
-  let items = allItems;
-  if (q) {
-    items = items.filter(i =>
-      (i.title || '').toLowerCase().includes(q) ||
-      (i.sub || '').toLowerCase().includes(q) ||
-      (i.preview || '').toLowerCase().includes(q)
-    );
-  }
-  if (fCat) items = items.filter(i => i.kategorie === fCat);
-
-  const sortMode = sort.value;
-  if (sortMode === 'alpha') items = [...items].sort((a, b) => (a.title || '').localeCompare(b.title || ''));
-  // 'haeufigkeit' ist default (DB-Sortierung)
-  // 'neueste' wäre durch created_at — DEFER
-
-  if (items.length === 0) {
-    grid.innerHTML = '<div class="bib-empty">Keine Treffer</div>';
+  const grid = document.getElementById('bib-grid');
+  const arr = filterAndSort();
+  document.getElementById('bib-count').textContent = arr.length + ' Einträge';
+  if (state.items.length === 0) {
+    const cfg = state.tab === 'normen'
+      ? { icon: '📐', label: 'Normen', target: '/normen.html', cta: '+ Erste Norm hinzufügen', hint: 'DIN-Normen + Grenzwerte + Anwendung — wiederverwendbar in jedem Gutachten. Oder Admin: /tools/migrate-bibliothek-airtable.html' }
+      : { icon: '📝', label: 'Textbausteine', target: '/textbausteine.html', cta: '+ Ersten Textbaustein anlegen', hint: 'Wiederkehrende Textpassagen mit Platzhaltern. Oder Admin: /tools/migrate-bibliothek-airtable.html' };
+    grid.innerHTML = `<div class="bib-empty">
+      <div style="font-size:48px;margin-bottom:12px;opacity:.4;">${cfg.icon}</div>
+      <div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:6px;">Noch keine ${cfg.label} hinterlegt</div>
+      <div style="font-size:13px;color:var(--text2);margin-bottom:18px;max-width:480px;margin:0 auto 18px;line-height:1.5;">${cfg.hint}</div>
+      <button class="bib-btn-add" onclick="openCreateModal()">${cfg.cta} →</button>
+    </div>`;
     return;
   }
-  grid.innerHTML = items.map(i => `
-    <div class="bib-card" data-id="${esc(i.id)}" data-type="${i.type}">
-      <div class="bib-card-head">
-        <div class="bib-card-title">${esc(i.title)}</div>
-        <span class="bib-card-badge bib-card-badge--${i.type}">${i.type}</span>
-      </div>
-      ${i.sub ? `<div class="bib-card-sub">${esc(i.sub)}</div>` : ''}
-      ${i.preview ? `<div class="bib-card-preview">${esc(i.preview)}</div>` : ''}
-      ${i.meta.length > 0 ? `<div class="bib-card-meta">${i.meta.map(m => esc(m)).join(' · ')}</div>` : ''}
-      <div class="bib-actions">
-        <button type="button" data-action="copy">Kopieren</button>
-        <button type="button" data-action="insert">In Editor</button>
-      </div>
-    </div>
-  `).join('');
-
-  grid.querySelectorAll('.bib-card').forEach(card => {
-    const id = card.dataset.id;
-    card.querySelector('[data-action="copy"]').addEventListener('click', (e) => {
-      e.stopPropagation();
-      const item = allItems.find(i => i.id === id);
-      if (item) {
-        navigator.clipboard.writeText(item.title + (item.preview ? '\n' + item.preview : ''));
-        e.target.textContent = '✓';
-        setTimeout(() => { e.target.textContent = 'Kopieren'; }, 1200);
-      }
-    });
-    card.querySelector('[data-action="insert"]').addEventListener('click', (e) => {
-      e.stopPropagation();
-      const item = allItems.find(i => i.id === id);
-      if (!item) return;
-      // Wenn ein Editor offen ist → einfügen, sonst zur Akte zurück
-      if (window.opener && window.opener.ProvaEditor) {
-        try {
-          if (item.type === 'baustein') {
-            window.opener.dispatchEvent(new CustomEvent('prova:insert-baustein', { detail: { bausteinId: item.id, content: item.preview, title: item.title } }));
-          } else if (item.type === 'norm') {
-            window.opener.dispatchEvent(new CustomEvent('prova:insert-norm', { detail: { norm: item.title } }));
-          }
-          window.close();
-        } catch (_) { alert('Bitte aus Editor öffnen.'); }
-      } else {
-        // localStorage als Bridge: nächste Akte/Stellungnahme.html liest aus
-        try {
-          localStorage.setItem('prova_bibliothek_pending_insert', JSON.stringify({ type: item.type, id: item.id, title: item.title, preview: item.preview, at: Date.now() }));
-          alert('Item gemerkt — beim nächsten Editor-Aufruf wird es eingefügt.');
-        } catch (_) {}
-      }
-    });
+  if (arr.length === 0) {
+    grid.innerHTML = '<div class="bib-empty">Keine Treffer für aktuellen Filter.</div>';
+    return;
+  }
+  grid.innerHTML = arr.map(it => state.tab === 'normen' ? renderNormCard(it) : renderBausteinCard(it)).join('');
+  grid.querySelectorAll('[data-card-id]').forEach(c => {
+    c.addEventListener('click', () => openDetailModal(c.dataset.cardId));
   });
 }
 
-document.querySelectorAll('.bib-tab').forEach(t => {
-  t.addEventListener('click', () => {
-    document.querySelectorAll('.bib-tab').forEach(b => b.classList.remove('is-active'));
-    t.classList.add('is-active');
-    loadTab(t.dataset.tab);
-  });
+function renderNormCard(n) {
+  const haeufigCls = n.haeufigkeit === 'Häufig' ? 'haeufig' : n.haeufigkeit === 'Mittel' ? 'mittel' : 'selten';
+  const sa = Array.isArray(n.schadensarten) ? n.schadensarten.slice(0, 2) : [];
+  return `<div class="bib-card" data-card-id="${esc(n.id)}">
+    <div class="bib-card-head">
+      <div class="bib-card-title">${esc(n.titel || '—')}</div>
+      <div class="bib-card-nr">${esc(n.norm_nr || '')}</div>
+    </div>
+    <div class="bib-card-preview">${esc(n.anwendung || n.untertitel || '')}</div>
+    <div class="bib-card-meta">
+      ${n.bereich ? `<span class="bib-badge bib-badge--bereich">${esc(n.bereich)}</span>` : ''}
+      ${sa.map(s => `<span class="bib-badge bib-badge--schadenart">${esc(s)}</span>`).join('')}
+      ${n.haeufigkeit ? `<span class="bib-badge bib-badge--${haeufigCls}">${esc(n.haeufigkeit)}</span>` : ''}
+    </div>
+    <div class="bib-card-footer">
+      <span>${n.is_master ? '★ Master' : (n.is_global ? 'Global' : 'Eigene')}</span>
+      <span>${n.nutzungs_count || 0}× genutzt</span>
+    </div>
+  </div>`;
+}
+
+function renderBausteinCard(b) {
+  const tags = Array.isArray(b.tags) ? b.tags.slice(0, 3) : [];
+  return `<div class="bib-card" data-card-id="${esc(b.id)}">
+    <div class="bib-card-head">
+      <div class="bib-card-title">${esc(b.titel || '—')}</div>
+    </div>
+    <div class="bib-card-preview">${esc(b.text_kurz || b.text || '')}</div>
+    <div class="bib-card-meta">
+      ${b.kategorie ? `<span class="bib-badge bib-badge--kategorie">${esc(b.kategorie)}</span>` : ''}
+      ${b.schadenart ? `<span class="bib-badge bib-badge--schadenart">${esc(b.schadenart)}</span>` : ''}
+      ${b.is_global ? '<span class="bib-badge bib-badge--global">Global</span>' : '<span class="bib-badge bib-badge--eigen">Eigene</span>'}
+    </div>
+    <div class="bib-card-footer">
+      <span>${tags.map(t => '#' + esc(t)).join(' ')}</span>
+      <span>${b.nutzungen || 0}× genutzt</span>
+    </div>
+  </div>`;
+}
+
+// ─── Detail-Modal ───
+window.openDetailModal = function(id) {
+  const it = state.items.find(x => x.id === id);
+  if (!it) return;
+  const modal = document.getElementById('modal-detail');
+  const isOwn = (!it.is_global) && it.workspace_id === state.workspaceId;
+  document.getElementById('md-title').textContent = (state.tab === 'normen' ? (it.norm_nr + ' · ') : '') + (it.titel || '—');
+  const body = document.getElementById('md-body');
+  if (state.tab === 'normen') {
+    body.innerHTML = `
+      ${it.bereich ? field('Bereich', it.bereich) : ''}
+      ${Array.isArray(it.schadensarten) && it.schadensarten.length ? field('Schadensarten', it.schadensarten.join(', ')) : ''}
+      ${it.anwendung ? field('Anwendung', it.anwendung) : ''}
+      ${it.grenzwerte ? field('Grenzwerte', it.grenzwerte) : ''}
+      ${it.messtechnik ? field('Messtechnik', it.messtechnik) : ''}
+      ${it.gutachter_hinweis ? field('Gutachter-Hinweis', it.gutachter_hinweis) : ''}
+      ${it.haeufigkeit ? field('Häufigkeit', it.haeufigkeit) : ''}
+      ${it.letzte_pruefung ? field('Letzte Prüfung', it.letzte_pruefung) : ''}
+      ${field('Quelle', it.is_master ? '★ Master-Daten' : (it.is_global ? 'Global' : 'Eigene'))}`;
+  } else {
+    body.innerHTML = `
+      ${it.kategorie ? field('Kategorie', it.kategorie) : ''}
+      ${it.schadenart ? field('Schadenart', it.schadenart) : ''}
+      ${field('Text', it.text || '—')}
+      ${it.notiz ? field('Notiz', it.notiz) : ''}
+      ${Array.isArray(it.tags) && it.tags.length ? field('Tags', it.tags.map(t => '#' + t).join(' ')) : ''}
+      ${field('Quelle', it.is_global ? 'Global (Master-Daten)' : 'Eigene')}`;
+  }
+  const foot = document.getElementById('md-foot');
+  const copyText = state.tab === 'normen' ? `${it.norm_nr || ''} · ${it.titel || ''}${it.anwendung ? '\n' + it.anwendung : ''}` : (it.text || it.titel || '');
+  foot.innerHTML = `
+    <button class="bib-modal-btn" onclick="copyText('${encodeURIComponent(copyText)}')">📋 Kopieren</button>
+    <button class="bib-modal-btn" onclick="insertInEditor('${esc(it.id)}')">✏ In Editor verwenden</button>
+    ${isOwn ? `<button class="bib-modal-btn" onclick="openCreateModal('${esc(it.id)}')">✏ Bearbeiten</button>` : ''}
+    ${isOwn ? `<button class="bib-modal-btn bib-modal-btn-danger" onclick="deleteItem('${esc(it.id)}')">🗑 Löschen</button>` : ''}
+  `;
+  modal.classList.add('is-open');
+};
+function field(label, value) {
+  return `<div class="bib-field"><div class="bib-field-label">${esc(label)}</div><div class="bib-field-value">${esc(value)}</div></div>`;
+}
+window.closeDetailModal = function() { document.getElementById('modal-detail').classList.remove('is-open'); };
+
+window.copyText = async function(encoded) {
+  try { await navigator.clipboard.writeText(decodeURIComponent(encoded)); toast('In Zwischenablage kopiert'); }
+  catch (e) { toast('Konnte nicht kopieren: ' + e.message, 'error'); }
+};
+window.insertInEditor = function(id) {
+  const it = state.items.find(x => x.id === id);
+  if (!it) return;
+  try {
+    if (window.opener && !window.opener.closed) {
+      const evt = state.tab === 'normen' ? 'prova:insert-norm' : 'prova:insert-baustein';
+      window.opener.dispatchEvent(new CustomEvent(evt, { detail: { id: it.id, titel: it.titel, text: it.text || it.anwendung, normNr: it.norm_nr } }));
+      toast('Eingefügt');
+      window.close();
+    } else {
+      localStorage.setItem('prova_bibliothek_pending_insert', JSON.stringify({ type: state.tab, id: it.id, titel: it.titel, text: it.text || it.anwendung, normNr: it.norm_nr, at: Date.now() }));
+      toast('Beim nächsten Editor-Aufruf wird eingefügt');
+    }
+  } catch (e) { toast('Fehler: ' + e.message, 'error'); }
+};
+window.deleteItem = async function(id) {
+  if (!confirm('Wirklich löschen? Dies kann nicht rückgängig gemacht werden.')) return;
+  try {
+    const tbl = state.tab === 'normen' ? 'normen_bibliothek' : 'textbausteine';
+    const { error } = await supabase.from(tbl).update({ deleted_at: new Date().toISOString() }).eq('id', id);
+    if (error) throw error;
+    toast('Gelöscht');
+    closeDetailModal();
+    loadTab(state.tab);
+  } catch (e) { toast('Fehler: ' + e.message, 'error'); }
+};
+
+// ─── Create/Edit-Modal ───
+window.openCreateModal = function(editId) {
+  state.editing = editId ? state.items.find(x => x.id === editId) : null;
+  const modal = document.getElementById('modal-create');
+  document.getElementById('mc-title').textContent = state.editing
+    ? (state.tab === 'normen' ? 'Norm bearbeiten' : 'Textbaustein bearbeiten')
+    : (state.tab === 'normen' ? 'Neue Norm' : 'Neuer Textbaustein');
+  const body = document.getElementById('mc-body');
+  if (state.tab === 'normen') {
+    const e = state.editing || {};
+    body.innerHTML = `
+      ${formInput('norm_nr', 'Norm-Nr *', e.norm_nr, 'z.B. DIN 4108-3:2024')}
+      ${formInput('titel', 'Titel *', e.titel)}
+      ${formSelect('bereich', 'Bereich', e.bereich, BEREICH_OPTIONS)}
+      ${formSelect('haeufigkeit', 'Häufigkeit', e.haeufigkeit, HAEUFIGKEIT_OPTIONS)}
+      ${formTextarea('anwendung', 'Anwendung', e.anwendung)}
+      ${formTextarea('grenzwerte', 'Grenzwerte', e.grenzwerte)}
+      ${formTextarea('gutachter_hinweis', 'Gutachter-Hinweis', e.gutachter_hinweis)}
+    `;
+  } else {
+    const e = state.editing || {};
+    body.innerHTML = `
+      ${formInput('titel', 'Titel *', e.titel)}
+      ${formTextarea('text', 'Text *', e.text)}
+      ${formSelect('kategorie', 'Kategorie', e.kategorie, KATEGORIE_OPTIONS)}
+      ${formSelect('schadenart', 'Schadenart', e.schadenart, SCHADENART_OPTIONS)}
+      ${formInput('tags', 'Tags (Komma-getrennt)', Array.isArray(e.tags) ? e.tags.join(', ') : e.tags)}
+      ${formTextarea('notiz', 'Notiz', e.notiz)}
+    `;
+  }
+  modal.classList.add('is-open');
+};
+function formInput(id, label, val, ph) { return `<div class="bib-field"><div class="bib-field-label">${esc(label)}</div><input type="text" class="bib-field-input" id="mc-${id}" value="${esc(val || '')}" placeholder="${esc(ph || '')}"></div>`; }
+function formTextarea(id, label, val) { return `<div class="bib-field"><div class="bib-field-label">${esc(label)}</div><textarea class="bib-field-textarea" id="mc-${id}">${esc(val || '')}</textarea></div>`; }
+function formSelect(id, label, val, opts) { return `<div class="bib-field"><div class="bib-field-label">${esc(label)}</div><select class="bib-field-select" id="mc-${id}"><option value="">— wählen —</option>${opts.map(o => `<option value="${esc(o)}" ${o === val ? 'selected' : ''}>${esc(o)}</option>`).join('')}</select></div>`; }
+window.closeCreateModal = function() { document.getElementById('modal-create').classList.remove('is-open'); state.editing = null; };
+
+window.submitCreate = async function() {
+  const v = id => (document.getElementById('mc-' + id) || {}).value;
+  try {
+    let payload;
+    if (state.tab === 'normen') {
+      const normNr = (v('norm_nr') || '').trim();
+      const titel = (v('titel') || '').trim();
+      if (!normNr || !titel) { toast('Norm-Nr + Titel sind Pflicht', 'error'); return; }
+      payload = {
+        norm_nr: normNr, titel,
+        bereich: v('bereich') || null,
+        haeufigkeit: v('haeufigkeit') || null,
+        anwendung: v('anwendung') || null,
+        grenzwerte: v('grenzwerte') || null,
+        gutachter_hinweis: v('gutachter_hinweis') || null,
+        is_master: false, is_global: false, aktiv: true,
+        workspace_id: state.workspaceId,
+        created_by_user_id: state.currentUser?.id
+      };
+    } else {
+      const titel = (v('titel') || '').trim();
+      const text = (v('text') || '').trim();
+      if (!titel || !text) { toast('Titel + Text sind Pflicht', 'error'); return; }
+      const tagsRaw = (v('tags') || '').trim();
+      payload = {
+        titel, text,
+        text_kurz: text.slice(0, 200),
+        kategorie: v('kategorie') || null,
+        schadenart: v('schadenart') || null,
+        notiz: v('notiz') || null,
+        tags: tagsRaw ? tagsRaw.split(',').map(t => t.trim()).filter(Boolean) : null,
+        is_global: false,
+        workspace_id: state.workspaceId,
+        created_by_user_id: state.currentUser?.id
+      };
+    }
+    const tbl = state.tab === 'normen' ? 'normen_bibliothek' : 'textbausteine';
+    if (state.editing) {
+      const { error } = await supabase.from(tbl).update(payload).eq('id', state.editing.id);
+      if (error) throw error;
+      toast('Gespeichert');
+    } else {
+      const { error } = await supabase.from(tbl).insert(payload);
+      if (error) throw error;
+      toast(state.tab === 'normen' ? 'Norm angelegt' : 'Textbaustein angelegt');
+    }
+    closeCreateModal(); closeDetailModal();
+    loadTab(state.tab);
+  } catch (e) { toast('Fehler: ' + e.message, 'error'); }
+};
+
+// ─── Tab + Filter Wiring ───
+window.switchTab = function(tab) {
+  document.querySelectorAll('.bib-tab').forEach(b => b.classList.toggle('is-active', b.dataset.tab === tab));
+  loadTab(tab);
+};
+document.getElementById('bib-search').addEventListener('input', e => { state.search = e.target.value; render(); });
+document.getElementById('bib-filter-1').addEventListener('change', e => { state.filter1 = e.target.value; render(); });
+document.getElementById('bib-filter-2').addEventListener('change', e => { state.filter2 = e.target.value; render(); });
+document.getElementById('bib-sort').addEventListener('change', e => { state.sort = e.target.value; render(); });
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') { closeDetailModal(); closeCreateModal(); }
 });
 
-search.addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(render, 150); });
-filter.addEventListener('change', render);
-sort.addEventListener('change', render);
-
-loadTab('normen');
+(async function init() {
+  await loadCurrentUser();
+  await loadTab('normen');
+})();
 </script>
+
 </body>
 </html>

@@ -1909,3 +1909,12 @@ document.addEventListener('DOMContentLoaded', function() {
     document.head.appendChild(s);
   }
 })();
+
+// MEGA⁷⁰ Phase 2.6 — Auto-Load Mobile-Bottom-Nav für alle Pages mit nav.js
+(function() {
+  if (document.querySelector('script[src*="prova-mobile-nav"]')) return;
+  var s = document.createElement('script');
+  s.src = '/lib/prova-mobile-nav.js';
+  s.defer = true;
+  document.head.appendChild(s);
+})();

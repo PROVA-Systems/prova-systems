@@ -1053,11 +1053,15 @@ if (document.readyState === 'loading') {
 // ── PUBLIC API ──────────────────────────────────────────────────────────
 window.PROVA_KONTEXT = {
   // Erlaubt anderen Scripts den Fall-Kontext zu setzen
-  setFall: function(az, schadenart, adresse, recordId) {
+  setFall: function(az, schadenart, adresse, recordId, phase) {
     if (az) localStorage.setItem('prova_letztes_az', az);
     if (schadenart) localStorage.setItem('prova_schadenart', schadenart);
     if (adresse) localStorage.setItem('prova_adresse', adresse);
     if (recordId) sessionStorage.setItem('prova_record_id', recordId);
+    // MEGA⁷⁰ Phase 1.2 — Phase-Tracking für aktiverFallBlock() Phase-spezifische CTA
+    if (typeof phase === 'number' || (phase && !isNaN(parseInt(phase)))) {
+      localStorage.setItem('prova_aktuelle_phase', String(phase));
+    }
     // Banner aktualisieren
     var existing = document.getElementById('prova-fall-kontext-banner');
     if (existing) existing.remove();

@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bibliothek-Migration · Admin</title>
+<script src="/lib/prova-config.js"></script>
+<style>
+body { font-family: 'DM Sans', system-ui, sans-serif; background: #0b0d11; color: #eaecf4; margin: 0; padding: 32px; line-height: 1.5; max-width: 900px; margin: 0 auto; }
+h1 { font-size: 24px; font-weight: 800; margin-bottom: 6px; }
+.sub { color: #8b93ab; font-size: 13px; margin-bottom: 24px; max-width: 720px; }
+.card { background: #1c2130; border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 22px 26px; margin-bottom: 18px; }
+.card h2 { font-size: 16px; margin-bottom: 8px; }
+.card p { font-size: 13px; color: #8b93ab; margin-bottom: 14px; }
+.btn { padding: 11px 22px; background: linear-gradient(135deg, #4f8ef7, #3a7be0); color: #fff; border: none; border-radius: 8px; font-weight: 700; font-size: 13px; cursor: pointer; font-family: inherit; }
+.btn:disabled { opacity: .5; cursor: not-allowed; }
+.btn-secondary { background: transparent; border: 1px solid rgba(255,255,255,0.11); color: #8b93ab; }
+.result { margin-top: 14px; padding: 12px 14px; background: #0b0d11; border-radius: 7px; font-family: ui-monospace, Consolas, monospace; font-size: 11px; color: #93c5fd; white-space: pre-wrap; max-height: 380px; overflow-y: auto; display: none; }
+.result.open { display: block; }
+.result.is-error { color: #fca5a5; }
+.warn { background: rgba(245,158,11,.08); border: 1px solid rgba(245,158,11,.25); padding: 12px 14px; border-radius: 8px; color: #fcd34d; font-size: 13px; margin-bottom: 18px; }
+code { background: #161a22; padding: 2px 6px; border-radius: 4px; color: #93c5fd; font-family: ui-monospace, monospace; font-size: 12px; }
+</style>
+</head>
+<body>
+
+<h1>🗂 Bibliothek-Migration · Admin-Tool</h1>
+<p class="sub">One-Off-Import von Airtable → Supabase. Idempotent (jede Norm/jeder Baustein wird nur einmal importiert via <code>airtable_record_id</code>).</p>
+
+<div class="warn">
+  ⚠ <strong>Admin-Only:</strong> Nur Marcel kann diese Migration ausführen.
+  Erfordert <code>AIRTABLE_PAT</code> in Supabase Edge Function Secrets.
+</div>
+
+<div class="card">
+  <h2>📐 Normen-Migration</h2>
+  <p>Quelle: Airtable <code>appJ7bLlAHZoxENWE/tblnceVJIW7BjHsPF</code> (100+ Normen)<br>
+  Ziel: <code>normen_bibliothek</code> mit <code>is_master=TRUE</code>, <code>is_global=TRUE</code></p>
+  <button class="btn" id="btn-normen" onclick="migrate('normen')">▶ Normen migrieren</button>
+  <pre class="result" id="res-normen"></pre>
+</div>
+
+<div class="card">
+  <h2>📝 Textbausteine-Migration</h2>
+  <p>Quellen: Airtable Master (<code>tbljPQrdMDsqUzieD</code>) + Custom (<code>tblDS8NQxzceGedJO</code>)<br>
+  Ziel: <code>textbausteine</code> (Master als <code>is_global=TRUE</code>, Custom in Marcel-Workspace)</p>
+  <button class="btn" id="btn-bausteine" onclick="migrate('textbausteine')">▶ Textbausteine migrieren</button>
+  <pre class="result" id="res-bausteine"></pre>
+</div>
+
+<div class="card">
+  <h2>🔍 Status-Check (DB)</h2>
+  <p>Aktuelle Anzahl in Supabase (vor/nach Migration vergleichen).</p>
+  <button class="btn btn-secondary" onclick="checkStatus()">Anzahl prüfen</button>
+  <pre class="result" id="res-status"></pre>
+</div>
+
+<script type="module">
+import { supabase } from '/lib/supabase-client.js';
+window.__sb = supabase;
+
+window.migrate = async function(kind) {
+  const btn = document.getElementById(kind === 'normen' ? 'btn-normen' : 'btn-bausteine');
+  const res = document.getElementById(kind === 'normen' ? 'res-normen' : 'res-bausteine');
+  btn.disabled = true; btn.textContent = '⏳ Läuft…';
+  res.className = 'result open'; res.textContent = 'Migration läuft, das kann 30s-2min dauern…';
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) throw new Error('Nicht eingeloggt — bitte neu einloggen.');
+    const fn = kind === 'normen' ? 'migrate-normen-airtable' : 'migrate-textbausteine-airtable';
+    const resp = await fetch(`${window.PROVA_CONFIG.SUPABASE_URL}/functions/v1/${fn}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session.access_token}`,
+        'apikey': window.PROVA_CONFIG.SUPABASE_ANON_KEY
+      },
+      body: JSON.stringify({})
+    });
+    const data = await resp.json();
+    if (!resp.ok) {
+      res.className = 'result open is-error';
+      res.textContent = `HTTP ${resp.status}\n` + JSON.stringify(data, null, 2);
+    } else {
+      res.className = 'result open';
+      res.textContent = JSON.stringify(data, null, 2);
+    }
+  } catch (e) {
+    res.className = 'result open is-error';
+    res.textContent = 'Fehler: ' + e.message;
+  } finally {
+    btn.disabled = false; btn.textContent = kind === 'normen' ? '▶ Normen migrieren' : '▶ Textbausteine migrieren';
+  }
+};
+
+window.checkStatus = async function() {
+  const res = document.getElementById('res-status');
+  res.className = 'result open'; res.textContent = 'Prüfe…';
+  try {
+    const { count: nCount } = await supabase.from('normen_bibliothek').select('id', { count: 'exact', head: true });
+    const { count: tCount } = await supabase.from('textbausteine').select('id', { count: 'exact', head: true });
+    const { count: nMaster } = await supabase.from('normen_bibliothek').select('id', { count: 'exact', head: true }).eq('is_master', true);
+    const { count: tGlobal } = await supabase.from('textbausteine').select('id', { count: 'exact', head: true }).eq('is_global', true);
+    res.textContent = `normen_bibliothek      : ${nCount} (davon is_master: ${nMaster})
+textbausteine          : ${tCount} (davon is_global: ${tGlobal})
+
+Erwartet nach Migration:
+  Normen     : ~100 (alle is_master=TRUE)
+  Bausteine  : ~50+ (Master + Marcel-Custom)`;
+  } catch (e) {
+    res.className = 'result open is-error';
+    res.textContent = 'Fehler: ' + e.message;
+  }
+};
+
+// Auto-Check beim Laden
+window.addEventListener('load', () => setTimeout(window.checkStatus, 400));
+</script>
+
+</body>
+</html>
