@@ -59,10 +59,9 @@ async function ladeFaelle(){
   zeigLadeAnimation();
 
   try{
-    // MEGA⁷²-Phase-A: Supabase-Migration. Datentrennung über RLS-Policy
-    // workspace_id automatisch durch Supabase-Auth-Context.
-    var mod = await import('/lib/supabase-client.js');
-    var sb = mod.supabase || mod.default;
+    // MEGA⁷²-Phase-B-mini: Adapter-Lib statt inline (DRY-Refactor).
+    var _ad = await import('/lib/prova-supabase-adapters.js');
+    var sb = await _ad.getSupabase();
     if (!sb) throw new Error('Supabase nicht verfügbar');
     var r = await sb.from('auftraege')
       .select('id, az, titel, status, phase_aktuell, typ, schadensart_label, schadensart_kategorie, objekt, details, auftraggeber_typ, fachurteil_text, tags, is_demo, created_at, updated_at, archiviert_am')
@@ -70,31 +69,15 @@ async function ladeFaelle(){
       .order('created_at', { ascending: false })
       .limit(100);
     if (r.error) throw new Error(r.error.message);
-    // Adapter: Supabase-Row → Airtable-Style {id, fields:{...}} damit downstream
-    // filterUndRender/renderTabelle/etc. unverändert weiterläuft. Siehe
-    // docs/CLEANUP-FIELD-MAPPING.md.
-    var _DB_STATUS_TO_UI = {'entwurf':'Entwurf','aktiv':'In Bearbeitung','abgeschlossen':'Abgeschlossen','archiv':'Archiv','storniert':'Storniert'};
+    // Adapter: auftragRowToFields liefert Airtable-Style — wrap mit {id, fields:...} für
+    // alleRecords-Format das downstream filterUndRender/renderTabelle erwartet.
     alleRecords = (r.data || []).map(function(row){
-      var o = row.objekt || {};
-      var d = row.details || {};
-      var ag = d.auftraggeber || {};
-      return { id: row.id, fields: {
-        Aktenzeichen: row.az || '',
-        Titel: row.titel || '',
-        Status: _DB_STATUS_TO_UI[row.status] || row.status || 'In Bearbeitung',
-        Timestamp: row.created_at || '',
-        Schaden_Strasse: o.adresse || o.strasse || '',
-        PLZ: o.plz || '',
-        Ort: o.ort || '',
-        Auftraggeber_Name: ag.name || '',
-        Auftraggeber_Typ: ag.typ_label || row.auftraggeber_typ || '',
-        sv_email: svEmail,
-        Schadensart: row.schadensart_label || '',
-        Schadenart: row.schadensart_label || '',
-        Flow: row.typ === 'wertgutachten' ? 'B' : row.typ === 'beratung' ? 'C' : row.typ === 'baubegleitung' ? 'D' : 'A',
-        Auftragstyp: row.typ || '',
-        Phase: row.phase_aktuell || 1
-      }};
+      var fields = _ad.auftragRowToFields(row);
+      // sv_email-Marker für admin-Anzeige (war Airtable-Server-Filter)
+      fields.sv_email = svEmail;
+      // Auftragstyp-Alias zusätzlich zum Typ (archiv-spezifisch)
+      fields.Auftragstyp = row.typ || '';
+      return { id: row.id, fields: fields };
     });
     try{
       if(alleRecords.length>0) {

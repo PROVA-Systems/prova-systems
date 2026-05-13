@@ -28,78 +28,17 @@ var aktenzeichen=new URLSearchParams(window.location.search).get('az')||'';
 var currentRecord=null;
 var currentFields={};
 
-// MEGA⁷²-Phase-A: Supabase-Singleton Lazy-Loader (vermeidet Top-Level-Await).
-var _sb = null;
-async function _getSupabase(){
-  if (_sb) return _sb;
-  try {
-    var mod = await import('/lib/supabase-client.js');
-    _sb = mod.supabase || mod.default;
-  } catch(e){ console.warn('[akte-logic] supabase-client import failed', e); _sb = null; }
-  return _sb;
+// MEGA⁷²-Phase-B-mini: Adapter-Lib (DRY — extrahiert aus Phase-A-Inline-Duplikat).
+// Siehe lib/prova-supabase-adapters.js + docs/CLEANUP-FIELD-MAPPING.md.
+var _ad = null;
+async function _ensureAdapters(){
+  if (_ad) return _ad;
+  try { _ad = await import('/lib/prova-supabase-adapters.js'); }
+  catch(e){ console.warn('[akte-logic] adapters-lib import failed', e); }
+  return _ad;
 }
-
-/* ─── MEGA⁷²-Phase-A Adapter: Supabase auftraege-Row → Airtable-Style fields-Object ───
-   Bewahrt Backward-Compat für downstream render-Code (renderAkte/renderTimeline/etc.)
-   ohne 80+ Field-Access-Stellen zu rewriten.
-   Siehe docs/CLEANUP-FIELD-MAPPING.md für die volle Mapping-Tabelle. */
-var _DB_STATUS_TO_UI = {
-  'entwurf':       'Entwurf',
-  'aktiv':         'In Bearbeitung',
-  'abgeschlossen': 'Abgeschlossen',
-  'archiv':        'Archiv',
-  'storniert':     'Storniert'
-};
-function _supabaseRowToFields(row){
-  if(!row) return {};
-  var o = row.objekt || {};
-  var d = row.details || {};
-  var ag = d.auftraggeber || {};
-  return {
-    // Kern
-    Aktenzeichen:       row.az || '',
-    Titel:              row.titel || '',
-    Status:             _DB_STATUS_TO_UI[row.status] || row.status || 'In Bearbeitung',
-    Phase:              row.phase_aktuell || 1,
-    Phase_Max:          row.phase_max || 9,
-    Typ:                row.typ || '',
-    Zweck:              row.zweck || '',
-    Fragestellung:      row.fragestellung || '',
-    // Schadens-Felder
-    Schadensart:        row.schadensart_label || '',
-    Schadenart:         row.schadensart_label || '',
-    Schadensdatum:      row.schadensstichtag || '',
-    Auftragsdatum:      row.auftragsdatum || '',
-    // objekt jsonb
-    Schaden_Strasse:    o.adresse || o.strasse || '',
-    Schaden_PLZ:        o.plz || '',
-    Schaden_Ort:        o.ort || '',
-    PLZ:                o.plz || '',
-    Ort:                o.ort || '',
-    Adresse:            o.adresse || '',
-    Gebaeudetyp:        o.objektart || o.gebaeudetyp || '',
-    Baujahr:            o.baujahr || '',
-    // details jsonb
-    Auftraggeber_Name:  ag.name || '',
-    Auftraggeber_Typ:   ag.typ_label || row.auftraggeber_typ || '',
-    Auftraggeber_Email: ag.email || '',
-    Ansprechpartner:    ag.ansprechpartner || '',
-    Ortstermin_Datum:   d.ortstermin_datum || '',
-    Beweisfragen:       d.beweisfragen || '',
-    // Fachurteil + Compliance
-    KI_Entwurf:         row.fachurteil_text || '',
-    Fachurteil:         row.fachurteil_text || '',
-    Kurzbeantwortung:   row.kurzbeantwortung || '',
-    // Timestamps
-    Timestamp:          row.created_at || '',
-    Updated_At:         row.updated_at || '',
-    // Notiz fallback (akte-spezifische Notes liegen weiterhin in localStorage)
-    Notiz:              row.notiz || '',
-    // Reverse-Refs für State-Mutation (PATCH-Calls in erhoehePhase + aktualisiereStatus)
-    _supabaseId:        row.id,
-    _supabaseRow:       row
-  };
-}
+async function _getSupabase(){ var a = await _ensureAdapters(); return a ? await a.getSupabase() : null; }
+function _supabaseRowToFields(row){ return _ad ? _ad.auftragRowToFields(row) : {}; }
 
 async function ladeRecord(){
   var sb = await _getSupabase();
@@ -716,17 +655,7 @@ function renderFristen(termine){
   }).join('');
 }
 
-/* ─── STATUS AKTUALISIEREN ─── MEGA⁷²-Phase-A: Supabase-Migration */
-// UI-Label → DB-Enum-Mapping (auftrag_status: entwurf/aktiv/abgeschlossen/archiv/storniert)
-var _UI_STATUS_TO_DB = {
-  'Entwurf':        'entwurf',
-  'In Bearbeitung': 'aktiv',
-  'Aktiv':          'aktiv',
-  'Abgeschlossen':  'abgeschlossen',
-  'Archiv':         'archiv',
-  'Archiviert':     'archiv',
-  'Storniert':      'storniert'
-};
+/* ─── STATUS AKTUALISIEREN ─── MEGA⁷²-Phase-B-mini: UI_STATUS_TO_DB jetzt aus Adapter-Lib */
 window.aktualisiereStatus=async function(){
   var newStatus=document.getElementById('status-select').value;
   var stClass=statusClass(newStatus);
@@ -736,7 +665,7 @@ window.aktualisiereStatus=async function(){
   try{
     var sb = await _getSupabase();
     if (!sb) throw new Error('Supabase nicht verfügbar');
-    var dbStatus = _UI_STATUS_TO_DB[newStatus] || (newStatus || '').toLowerCase();
+    var dbStatus = (_ad && _ad.UI_STATUS_TO_DB[newStatus]) || (newStatus || '').toLowerCase();
     var upd = await sb.from('auftraege').update({ status: dbStatus })
       .eq('id', recordId).select('id, status').single();
     if(upd.error) throw new Error(upd.error.message);

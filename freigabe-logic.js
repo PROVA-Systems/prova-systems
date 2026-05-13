@@ -44,53 +44,17 @@ function pruefeS6(){
   }
 }
 
-// MEGA⁷²-Phase-A: Supabase-Singleton + Adapter (gleiches Pattern wie akte/dashboard-logic.js)
-let _sb = null;
-async function _getSupabase(){
-  if (_sb) return _sb;
-  try { const mod = await import('/lib/supabase-client.js'); _sb = mod.supabase || mod.default; }
-  catch(e){ console.warn('[freigabe-logic] supabase-client import failed', e); _sb = null; }
-  return _sb;
+// MEGA⁷²-Phase-B-mini: Adapter-Lib (DRY — extrahiert aus Phase-A-Inline-Duplikat).
+// Siehe lib/prova-supabase-adapters.js + docs/CLEANUP-FIELD-MAPPING.md.
+let _ad = null;
+async function _ensureAdapters(){
+  if (_ad) return _ad;
+  try { _ad = await import('/lib/prova-supabase-adapters.js'); }
+  catch(e){ console.warn('[freigabe-logic] adapters-lib import failed', e); }
+  return _ad;
 }
-const _DB_STATUS_TO_UI = {
-  'entwurf':'Entwurf', 'aktiv':'In Bearbeitung', 'abgeschlossen':'Freigegeben',
-  'archiv':'Archiv', 'storniert':'Storniert'
-};
-function _auftragRowToFields(row){
-  if(!row) return {};
-  const o = row.objekt || {};
-  const d = row.details || {};
-  const ag = d.auftraggeber || {};
-  return {
-    id: row.id,
-    Aktenzeichen: row.az || '',
-    Titel: row.titel || '',
-    Status: _DB_STATUS_TO_UI[row.status] || row.status || 'In Bearbeitung',
-    Phase: row.phase_aktuell || 1,
-    Schadensart: row.schadensart_label || '',
-    Schadenart: row.schadensart_label || '',
-    Schadensdatum: row.schadensstichtag || '',
-    Auftragsdatum: row.auftragsdatum || '',
-    Schaden_Strasse: o.adresse || o.strasse || '',
-    Schaden_PLZ: o.plz || '',
-    Schaden_Ort: o.ort || '',
-    PLZ: o.plz || '',
-    Ort: o.ort || '',
-    Adresse: o.adresse || '',
-    Gebaeudetyp: o.objektart || '',
-    Baujahr: o.baujahr || '',
-    Auftraggeber_Name: ag.name || '',
-    Auftraggeber_Typ: ag.typ_label || row.auftraggeber_typ || '',
-    Auftraggeber_Email: ag.email || '',
-    KI_Entwurf: row.fachurteil_text || '',
-    Fachurteil: row.fachurteil_text || '',
-    Kurzbeantwortung: row.kurzbeantwortung || '',
-    Schadensnummer_Versicherung: d.schadensnummer_versicherung || '',
-    Timestamp: row.created_at || '',
-    Updated_At: row.updated_at || '',
-    SV_Email: localStorage.getItem('prova_sv_email') || ''
-  };
-}
+async function _getSupabase(){ const a = await _ensureAdapters(); return a ? await a.getSupabase() : null; }
+function _auftragRowToFields(row){ return _ad ? _ad.auftragRowToFields(row) : {}; }
 
 /* LADEN — MEGA⁷²-Phase-A: Supabase-Migration */
 async function ladeGutachten(){

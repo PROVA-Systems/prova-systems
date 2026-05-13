@@ -59,54 +59,17 @@ window.maxKontingent = maxKontingent;
 /* ══════════════════════════════════════════════════
    AIRTABLE FETCH via Netlify Proxy
 ══════════════════════════════════════════════════ */
-// MEGA⁷²-Phase-A: Supabase-Singleton Lazy-Loader.
-var _sb = null;
-async function _getSupabase(){
-  if (_sb) return _sb;
-  try { var mod = await import('/lib/supabase-client.js'); _sb = mod.supabase || mod.default; }
-  catch(e){ console.warn('[dashboard-logic] supabase-client import failed', e); _sb = null; }
-  return _sb;
+// MEGA⁷²-Phase-B-mini: Adapter-Lib (DRY — extrahiert aus Phase-A-Inline-Duplikat).
+// Siehe lib/prova-supabase-adapters.js + docs/CLEANUP-FIELD-MAPPING.md.
+var _ad = null;
+async function _ensureAdapters(){
+  if (_ad) return _ad;
+  try { _ad = await import('/lib/prova-supabase-adapters.js'); }
+  catch(e){ console.warn('[dashboard-logic] adapters-lib import failed', e); }
+  return _ad;
 }
-
-// Adapter: Supabase auftraege-Row → Airtable-Style fields-Object
-// (gleiches Pattern wie akte-logic.js — bewahrt Backward-Compat für renderKPIs/renderRecent/renderInboxKarte etc.)
-// Siehe docs/CLEANUP-FIELD-MAPPING.md
-var _DB_STATUS_TO_UI = {
-  'entwurf':'Entwurf', 'aktiv':'In Bearbeitung', 'abgeschlossen':'Abgeschlossen',
-  'archiv':'Archiv', 'storniert':'Storniert'
-};
-function _auftragRowToFields(row){
-  if(!row) return {};
-  var o = row.objekt || {};
-  var d = row.details || {};
-  var ag = d.auftraggeber || {};
-  return {
-    Aktenzeichen: row.az || '',
-    Titel: row.titel || '',
-    Status: _DB_STATUS_TO_UI[row.status] || row.status || 'In Bearbeitung',
-    Phase: row.phase_aktuell || 1,
-    Schadensart: row.schadensart_label || '',
-    Schadenart: row.schadensart_label || '',
-    Schadensdatum: row.schadensstichtag || '',
-    Auftragsdatum: row.auftragsdatum || '',
-    Schaden_Strasse: o.adresse || o.strasse || '',
-    Schaden_PLZ: o.plz || '',
-    Schaden_Ort: o.ort || '',
-    PLZ: o.plz || '',
-    Ort: o.ort || '',
-    Adresse: o.adresse || '',
-    Gebaeudetyp: o.objektart || '',
-    Baujahr: o.baujahr || '',
-    Auftraggeber_Name: ag.name || '',
-    Auftraggeber_Typ: ag.typ_label || row.auftraggeber_typ || '',
-    KI_Entwurf: row.fachurteil_text || '',
-    Fachurteil: row.fachurteil_text || '',
-    Kosten_Brutto: row.kosten_geschaetzt_brutto || null,
-    Kosten_Netto: row.kosten_geschaetzt_netto || null,
-    Timestamp: row.created_at || '',
-    Updated_At: row.updated_at || ''
-  };
-}
+async function _getSupabase(){ var a = await _ensureAdapters(); return a ? await a.getSupabase() : null; }
+function _auftragRowToFields(row){ return _ad ? _ad.auftragRowToFields(row) : {}; }
 
 /* MEGA⁷²-Phase-A: atFetch() jetzt Supabase-Adapter statt Airtable-Wrapper.
    Bisheriger Airtable-Filter-String wird ignoriert — Tabellen-spezifische
