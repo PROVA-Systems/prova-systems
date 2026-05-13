@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v3202-mega70-phase-1-2-2-naming-cleanup';   // MEGA70-Phase-1.2.2 (2026-05-13 16:00 GMT+2): Naming-Cleanup (stellungnahme.html → fachurteil.html, gutachterliche-stellungnahme.html → kurzstellungnahme.html, ~50 ref-updates inkl. tests + netlify.toml + _redirects mit 301 legacy) + Phase-Tracking (4 Files mit Phase-Setter 2/3/4 + Fall-Wechsel-Bug-Fix in akte-logic.js ladeFallKontext) + Pricing-Sync (PROVA-REGELN + AGB + ANWALT + 7 live HTMLs + Email-Templates: 149/279€ → 179/379€). Voraus MEGA70-Phase-1.1 v3200 (Kontrast-Token-Fix WCAG AA für --text3 6.35:1) + MEGA71 Datei-Kartographie (separater Branch docs/mega71-kartographie, Commit 96d5b9a).
+const CACHE_VERSION = 'prova-v3203-mega70-phase-1-2-3-yearly-pricing';   // MEGA70-Phase-1.2.3 (2026-05-13 19:00 GMT+2): Yearly-Stripe-Price-IDs verlinkt in prova-preise.js (Solo Yearly price_1TWfnx… 1788€/J, Team Yearly price_1TWfsz… 3780€/J), Team-Yearly-Werte korrigiert (299/3588/960 → 315/3780/768 Stripe-anchored), Drift-Kommentare gecleant (Z.6 Header, Z.74 Solo stripe_price_abo, Z.114 Team), PROVA-REGELN Regel 22 erweitert um Monthly/Yearly/Add-ons/Legacy-Tabelle + Anti-Pattern-Note. Voraus: v3202 MEGA70-Phase-1.2.2 (Naming + Phase-Tracking + Pricing-Sync), v3200 MEGA70-Phase-1.1 (Kontrast-Token-Fix WCAG AA).
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [

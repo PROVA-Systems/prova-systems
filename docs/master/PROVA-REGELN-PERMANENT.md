@@ -135,11 +135,24 @@ Bei neuer Version eines Rechtsdokuments (`rechtsdokumente.aktuell = TRUE`) müss
 > Bis 07.05.2026 standen hier Solo 149 €/Team 279 €.
 > Marcel-Direktive 07.05.2026 + Live-Stripe-Update: 179 €/379 €.
 
-### Regel 22 — Add-on-Stripe-IDs (aktualisiert 07.05.2026)
-- 5F = `price_1TSl2JRXumrtL2n52XSz85oC` (Foto-Slots +5)
-- 10F = `price_1TSl3fRXumrtL2n5Gur4BmWL` (Foto-Slots +10)
-- 20F = `price_1TSl4eRXumrtL2n5tIWx0ET8` (Foto-Slots +20)
-- Legacy `price_1TJLnv8` / `price_1TJLpG8` — deprecated, archiv-only.
+### Regel 22 — Stripe-Price-IDs (aktualisiert 13.05.2026, MEGA⁷⁰-Phase-1.2.3)
+
+**Monthly (Standard, seit 07.05.2026):**
+- Solo Monthly: `price_1TSjMZRXumrtL2n5fgToRwyr` (179 €/Mo) — Product `prod_URcbfbjhBLYPm4`
+- Team Monthly: `price_1TSjNXRXumrtL2n56c6emN2k` (379 €/Mo) — Product `prod_URccKYYHOVX42x`
+
+**Yearly (NEU seit 13.05.2026, MEGA⁷⁰-Phase-1.2.3):**
+- Solo Yearly: `price_1TWfnxRXumrtL2n5s4cgqMNP` (1788 €/Jahr = 149 €/Mo, Lookup `solo_yearly_v1`)
+- Team Yearly: `price_1TWfszRXumrtL2n5GnjpXHb4` (3780 €/Jahr = 315 €/Mo, Lookup `team_yearly_v1`)
+
+**Add-ons:**
+- 5F: `price_1TSl2JRXumrtL2n52XSz85oC` (25 € einmalig, +5 Foto-Slots)
+- 10F: `price_1TSl3fRXumrtL2n5Gur4BmWL` (45 €, +10 Foto-Slots)
+- 20F: `price_1TSl4eRXumrtL2n5tIWx0ET8` (80 €, +20 Foto-Slots)
+
+**Legacy (archiv-only, nicht aktiv):**
+- Old `price_1TJLnv8` / `price_1TJLpG8` — pre-07.05.2026 Add-ons, deprecated
+- Old STARTER `prod_USPFOII3IfSrqg` (89 €) — pre-Pricing-Refactor, archiviert
 
 ### Regel 23 — Founding-Members + Coupons
 - **Founding:** 99 €/Monat lifetime für erste 10 Pilotkunden — Coupon `FOUNDING-99` (80 € off forever → Solo wird 99 €/mo)
@@ -355,7 +368,8 @@ Bei neuen Usern: Demo-Fall-Link auf `SCH-DEMO-001` zeigen.
 
 ## Was du als Claude Code NIE tun darfst (CLAUDE.md kondensiert)
 
-- ❌ Pricing ändern (Solo 179 € / Team 379 € sind fix, Stand 07.05.2026)
+- ❌ Pricing ändern (Solo 179 € / Team 379 € Monthly sind fix, Stand 07.05.2026)
+- ❌ Yearly-Prices ändern ohne Marcel-Direktive (Solo 1788 €/J = 149 €/Mo, Team 3780 €/J = 315 €/Mo, fix seit 13.05.2026)
 - ❌ Neue Frameworks einführen (Vanilla-JS bleibt)
 - ❌ RLS-Policies umgehen mit Service-Role-Key im Frontend
 - ❌ KI-Bewertungen schreiben lassen (nur strukturierte Hilfen)

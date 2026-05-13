@@ -1,14 +1,15 @@
 /* ============================================================
    PROVA prova-preise.js — Zentrale Preiskonfiguration
-   
-   PROBLEM GELÖST: Preise standen an 3+ Stellen inkonsistent:
-   - trial-guard.js: Solo 89€, Team 179€ (FALSCH)
-   - stripe-checkout.js: Solo 149€, Team 349€ (RICHTIG)
-   - index.html/Landingpage: eigene Preise
-   
+
+   Live-Stripe-Stand (Stand 2026-05-13):
+   - Solo Monthly 179 €/Mo  → price_1TSjMZRXumrtL2n5fgToRwyr  (prod_URcbfbjhBLYPm4)
+   - Team Monthly 379 €/Mo  → price_1TSjNXRXumrtL2n56c6emN2k  (prod_URccKYYHOVX42x)
+   - Solo Yearly  1788 €/J  → price_1TWfnxRXumrtL2n5s4cgqMNP  (lookup solo_yearly_v1, ≙ 149 €/Mo)
+   - Team Yearly  3780 €/J  → price_1TWfszRXumrtL2n5GnjpXHb4  (lookup team_yearly_v1, ≙ 315 €/Mo)
+
    LÖSUNG: Eine einzige Quelle der Wahrheit.
    Alle UI-Komponenten lesen aus PROVA_PREISE.
-   
+
    EINBINDEN (ganz früh im <head>):
    <script src="prova-preise.js"></script>
 ============================================================ */
@@ -63,17 +64,18 @@
       tagline:           'Für den selbstständigen Sachverstaendigen',
       // MEGA²¹ Pricing-Update (Marcel-Direktive 2026-05-08): 149€ → 179€
       preis_monatlich:   179,          // €/Monat (war 149€)
-      preis_jaehrlich:   149,           // €/Monat bei Jahreszahlung
-      preis_jahr_total:  1788,         // 149 × 12
+      preis_jaehrlich:   149,          // €/Monat bei Jahreszahlung (Yearly-Discount)
+      preis_jahr_total:  1788,         // 149 × 12 = 1788 €/Jahr (Live: price_1TWfnx…)
       ersparnis_jahr:    360,          // (179-149) × 12
       onboarding:        179,          // Einmalige Onboarding-Gebuehr
       // MEGA²¹ NEU: Founding-Member-Discount
       preis_founding:    125,          // €/Monat fuer erste 10 Pilot-SVs
       founding_member_label: '🎁 Founding Members 125€/Mo',
       founding_member_max: 10,
-      stripe_price_abo:  'price_1TSjMZRXumrtL2n5fgToRwyr',  // OLD 149€ — Marcel-A1: ersetzt 179€-Price-ID manuell
-      stripe_price_founding: '',       // Marcel-A1: legt manuell an (125€-Price oder Coupon)
-      stripe_price_jahr: '',           // → Stripe Jahres-Price-ID eintragen
+      stripe_price_abo:    'price_1TSjMZRXumrtL2n5fgToRwyr',  // Solo Monthly 179€/Mo (Live seit 07.05.2026)
+      stripe_price_founding: '',                                // Marcel-A1: legt manuell an (125€-Price oder Coupon)
+      stripe_price_jahr:   'price_1TWfnxRXumrtL2n5s4cgqMNP',  // Solo Yearly 1788€/J (Live seit 13.05.2026, MEGA70-1.2.3)
+      stripe_price_yearly: 'price_1TWfnxRXumrtL2n5s4cgqMNP',  // Alias (Lookup solo_yearly_v1)
       trial_tage:        14,
       farbe:             '#4f8ef7',
       farbe_rgb:         '79,142,247',
@@ -107,12 +109,13 @@
       tagline:           'Für Büros mit mehreren Sachverständigen',
       // MEGA²¹ Pricing-Update (Marcel-Direktive 2026-05-08): 279€ → 379€ Coming Soon Juli
       preis_monatlich:   379,          // €/Monat (war 279€)
-      preis_jaehrlich:   299,           // €/Monat bei Jahreszahlung
-      preis_jahr_total:  3588,         // 299 × 12
-      ersparnis_jahr:    960,          // (379-299) × 12
+      preis_jaehrlich:   315,          // €/Monat bei Jahreszahlung (MEGA70-1.2.3: war 299€, Stripe-anchored)
+      preis_jahr_total:  3780,         // 315 × 12 = 3780 €/Jahr (Live: price_1TWfsz…)
+      ersparnis_jahr:    768,          // (379-315) × 12
       onboarding:        449,          // Einmalige Onboarding-Gebuehr
-      stripe_price_abo:  'price_1TSjNXRXumrtL2n56c6emN2k',  // OLD 279€ — Marcel-A1: ersetzt 379€-Price-ID manuell
-      stripe_price_jahr: '',           // → Stripe Jahres-Price-ID eintragen
+      stripe_price_abo:    'price_1TSjNXRXumrtL2n56c6emN2k',  // Team Monthly 379€/Mo (Live seit 07.05.2026)
+      stripe_price_jahr:   'price_1TWfszRXumrtL2n5GnjpXHb4',  // Team Yearly 3780€/J (Live seit 13.05.2026, MEGA70-1.2.3)
+      stripe_price_yearly: 'price_1TWfszRXumrtL2n5GnjpXHb4',  // Alias (Lookup team_yearly_v1)
       trial_tage:        14,
       coming_soon:       true,         // MEGA²¹: Frontend-Display als "Coming Soon" (Juli 2026)
       coming_soon_label: 'Juli 2026',
@@ -327,7 +330,7 @@ window.PROVA_PDFMONKEY_TEMPLATES = {
   'brief':             'BAD1170B-C2BC-4EE7-ACBB-CCBD158892C7',  // PROVA BRIEF
 
   // ── Paket-abhängige Gutachten-Templates ──────────────────
-  // Starter → Solo (149€), Pro → Zwischenstufe, Enterprise → Team (279€)
+  // Starter → Solo (179€, ehemals 149€), Pro → Zwischenstufe, Enterprise → Team (379€, ehemals 279€)
   'solo':              'EC64C790-3E04-4C66-BFF8-4A3BB0215B5F',  // GUTACHTEN STARTER/SOLO
   'pro':               'B04958ED-39F8-433F-9A4D-E8243B5DA022',  // GUTACHTEN PRO
   'team':              'E865E0CD-535A-4A25-85A8-917AC86E84F7',  // GUTACHTEN ENTERPRISE/TEAM
