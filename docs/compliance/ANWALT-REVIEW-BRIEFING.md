@@ -15,8 +15,8 @@
 Auftrag → Ortstermin → Diktat → KI-Strukturhilfe → §6 Fachurteil → Freigabe → PDF → E-Mail → Rechnung → Zahlung
 
 **Zielgruppe:**
-- Solo-SVs (5-30 Standardfälle/Monat) — 99-149 €/Monat
-- Team-Büros (Solo + Mitarbeiter) — 279 €/Monat
+- Solo-SVs (5-30 Standardfälle/Monat) — 99-179 €/Monat (Founding 99 €, Standard 179 €)
+- Team-Büros (Solo + Mitarbeiter) — 379 €/Monat
 
 **Tech-Stack:**
 - Frontend: Vanilla JavaScript

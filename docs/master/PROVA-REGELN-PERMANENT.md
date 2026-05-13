@@ -123,17 +123,28 @@ Bei neuer Version eines Rechtsdokuments (`rechtsdokumente.aktuell = TRUE`) müss
 
 ## Pricing (21-23)
 
-### Regel 21 — Tier-Namen + Preise sind fix
-- **Solo:** 149 €/Monat
-- **Team:** 279 €/Monat
+### Regel 21 — Tier-Namen + Preise sind fix (Stand 07.05.2026, Live)
+- **Solo:** 179 €/Monat — bis 30 Aufträge, 1 User, 5 GB
+  - Product: `prod_URcbfbjhBLYPm4` / Price: `price_1TSjMZRXumrtL2n5fgToRwyr`
+- **Team:** 379 €/Monat — unlimitiert, bis 5 User, 50 GB
+  - Product: `prod_URccKYYHOVX42x` / Price: `price_1TSjNXRXumrtL2n56c6emN2k`
 - KEINE anderen Tier-Namen (kein Starter/Pro/Enterprise mehr), NIEMALS andere Preise.
+- Legacy STARTER (`prod_USPFOII3IfSrqg`, 89 €) — archiv-only, nicht mehr aktiv.
 
-### Regel 22 — Add-on-Stripe-IDs
-- 5F = `price_1TJLnv8`
-- 10F = `price_1TJLpG8`
+> **Drift-Korrektur 2026-05-13 (MEGA⁷⁰-Phase-1.2.2):**
+> Bis 07.05.2026 standen hier Solo 149 €/Team 279 €.
+> Marcel-Direktive 07.05.2026 + Live-Stripe-Update: 179 €/379 €.
 
-### Regel 23 — Founding-Members
-99 € lifetime für erste 10 Pilotkunden (Stripe-Coupon `FOUNDING-99`).
+### Regel 22 — Add-on-Stripe-IDs (aktualisiert 07.05.2026)
+- 5F = `price_1TSl2JRXumrtL2n52XSz85oC` (Foto-Slots +5)
+- 10F = `price_1TSl3fRXumrtL2n5Gur4BmWL` (Foto-Slots +10)
+- 20F = `price_1TSl4eRXumrtL2n5tIWx0ET8` (Foto-Slots +20)
+- Legacy `price_1TJLnv8` / `price_1TJLpG8` — deprecated, archiv-only.
+
+### Regel 23 — Founding-Members + Coupons
+- **Founding:** 99 €/Monat lifetime für erste 10 Pilotkunden — Coupon `FOUNDING-99` (80 € off forever → Solo wird 99 €/mo)
+- **Friend:** Coupon `FRIEND-50`
+- **Referral:** Coupon `WERBER-MONAT-FREI` (1 Monat frei für werbenden User)
 
 ---
 
@@ -344,7 +355,7 @@ Bei neuen Usern: Demo-Fall-Link auf `SCH-DEMO-001` zeigen.
 
 ## Was du als Claude Code NIE tun darfst (CLAUDE.md kondensiert)
 
-- ❌ Pricing ändern (Solo 149 € / Team 279 € sind fix)
+- ❌ Pricing ändern (Solo 179 € / Team 379 € sind fix, Stand 07.05.2026)
 - ❌ Neue Frameworks einführen (Vanilla-JS bleibt)
 - ❌ RLS-Policies umgehen mit Service-Role-Key im Frontend
 - ❌ KI-Bewertungen schreiben lassen (nur strukturierte Hilfen)

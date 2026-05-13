@@ -15,9 +15,9 @@
 
 (1) Der Nutzer registriert sich auf app.prova-systems.de mit Email + Passwort. Mit Anlage des Workspaces kommt ein Vertrag mit dem Anbieter zustande.
 
-(2) Pakete:
-- **Solo:** 149 €/Monat (oder 99 €/Monat für Founding-Pilots, lifetime)
-- **Team:** 279 €/Monat
+(2) Pakete (Stand 07.05.2026):
+- **Solo:** 179 €/Monat (oder 99 €/Monat für Founding-Pilots, lifetime, Coupon FOUNDING-99)
+- **Team:** 379 €/Monat
 - **Trial:** 90 Tage kostenlos für Founding-Pilots
 
 ## § 3 Leistungsumfang
