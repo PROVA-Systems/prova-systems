@@ -34,17 +34,33 @@ function speichereInLS(arr){
 
 async function ladeTermine(){
   try{
-    var filter=svEmail?'{sv_email}="'+svEmail+'"':'NOT({termin_datum}="")';
-    var path='/v0/'+AT_BASE+'/'+AT_TERMINE+'?filterByFormula='+encodeURIComponent(filter)+'&maxRecords=200&sort[0][field]=termin_datum&sort[0][direction]=asc';
-    var res=await provaFetch('/.netlify/functions/airtable',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({method:'GET',path:path})});
-    if(!res.ok)throw new Error('HTTP '+res.status);
-    var data=await res.json();
-    var atTermine=(data.records||[]).map(function(r){
-      return{id:r.id,titel:r.fields.titel||r.fields.termin_titel||'Termin',typ:r.fields.termin_typ||'Sonstiges',datum:r.fields.termin_datum,uhrzeit:r.fields.uhrzeit||'',az:r.fields.aktenzeichen||'',notiz:r.fields.notiz||'',src:'at'};
+    // MEGA⁷²-Phase-B-mini: Supabase termine. RLS-Filter via workspace_id automatisch.
+    var _ad = await import('/lib/prova-supabase-adapters.js');
+    var sb = await _ad.getSupabase();
+    if (!sb) throw new Error('Supabase nicht verfügbar');
+    var r = await sb.from('termine')
+      .select('id, datum, uhrzeit_von, titel, beschreibung, typ, status, auftrag_id, notiz')
+      .is('deleted_at', null)
+      .order('datum', { ascending: true })
+      .limit(200);
+    if (r.error) throw new Error(r.error.message);
+    // Adapter zum Termine-spezifischen Mini-Format (id, titel, typ, datum, uhrzeit, az, notiz, src)
+    var atTermine = (r.data || []).map(function(t){
+      return {
+        id: t.id,
+        titel: t.titel || 'Termin',
+        typ:   t.typ || 'Sonstiges',
+        datum: t.datum,
+        uhrzeit: t.uhrzeit_von || '',
+        az: '',  // auftrag-az hat termine nicht direkt; auflösen via auftrag_id wenn nötig (TODO)
+        notiz: t.notiz || t.beschreibung || '',
+        src: 'sb'
+      };
     });
-    alleTermine=atTermine;
+    alleTermine = atTermine;
   }catch(e){
-    alleTermine=ladeAusLS();
+    console.warn('[ladeTermine]', e.message || e);
+    alleTermine = ladeAusLS();
   }
 
   // Session 28 Fix #4: Gutachten-Fristen aus Archiv-Cache einmischen
@@ -274,13 +290,9 @@ window.speichereTermin=async function(){
   updateStats();renderKalender();renderListe();
   zeigToast(editId?'Termin aktualisiert ✓':'Termin gespeichert ✓');
 
-  // Async: In Airtable speichern
-  try{
-    var fields={titel:titel,termin_typ:typ,termin_datum:datum,uhrzeit:uhrzeit,aktenzeichen:az,notiz:notiz,sv_email:svEmail};
-    var method=editId&&editId.startsWith('rec')?'PATCH':'POST';
-    var path=editId&&editId.startsWith('rec')?'/v0/'+AT_BASE+'/'+AT_TERMINE+'/'+editId:'/v0/'+AT_BASE+'/'+AT_TERMINE;
-    await provaFetch('/.netlify/functions/airtable',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({method:method,path:path,payload:{fields:fields}})});
-  }catch(e){}
+  // TODO MEGA⁷²-Phase-B-write: Termin-Save in Supabase (sb.from('termine').upsert(...)).
+  // Aktuell nur localStorage-Save oben (alleTermine + speichereInLS).
+  // Read-Only-Sprint § 1 Princ. 2 — Write-Path migration eigene Phase.
 };
 
 window.loescheTermin=function(id){
@@ -313,22 +325,32 @@ window.zeigToast=function(msg,typ){
 document.getElementById('t-datum').value=new Date().toISOString().slice(0,10);
 
 
-/* ─── FRIST-IMPORT AUS AIRTABLE-FÄLLEN ─── */
+/* ─── FRIST-IMPORT AUS FÄLLEN ─── MEGA⁷²-Phase-B-mini: aus Supabase auftraege */
 window.importFristenAusFaellen = async function() {
   var btn = document.querySelector('[onclick="importFristenAusFaellen()"]');
   if(btn){btn.disabled=true;btn.textContent='⏳ Lädt…';}
   try{
-    var AT_BASE='appJ7bLlAHZoxENWE';
-    var AT_FAELLE='tblSxV8bsXwd1pwa0';
-    var svEmail=localStorage.getItem('prova_sv_email')||'';
-    if(!svEmail){console.warn('[PROVA] Keine sv_email — keine Termine geladen');return;}
-    var filter='{sv_email}="'+svEmail+'"';
-    var path='/v0/'+AT_BASE+'/'+AT_FAELLE+'?filterByFormula='+encodeURIComponent(filter)
-      +'&fields[]=Aktenzeichen&fields[]=Fristdatum&fields[]=Termin_Gericht&fields[]=Termin_Ortstermin&fields[]=Schadensart&fields[]=Auftraggeber_Name&maxRecords=50';
-    var res=await provaFetch('/.netlify/functions/airtable',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({method:'GET',path:path})});
-    if(!res.ok)throw new Error('HTTP '+res.status);
-    var data=await res.json();
-    var records=data.records||[];
+    var _ad = await import('/lib/prova-supabase-adapters.js');
+    var sb = await _ad.getSupabase();
+    if (!sb) throw new Error('Supabase nicht verfügbar');
+    var r = await sb.from('auftraege')
+      .select('id, az, schadensart_label, schadensstichtag, details, objekt')
+      .is('deleted_at', null)
+      .limit(50);
+    if (r.error) throw new Error(r.error.message);
+    // Adapter pro Row + Ableitung relevanter Termine-Felder
+    var records = (r.data || []).map(function(row){
+      var d = row.details || {};
+      var ag = (d.auftraggeber || {}).name || '';
+      return { id: row.id, fields: {
+        Aktenzeichen: row.az || '',
+        Fristdatum: row.schadensstichtag || '',  // legacy Mapping; in MEGA70+ kommen Fristen aus fristen-Tabelle
+        Termin_Gericht: d.termin_gericht || '',
+        Termin_Ortstermin: d.ortstermin_datum || '',
+        Schadensart: row.schadensart_label || '',
+        Auftraggeber_Name: ag
+      }};
+    });
     var neu=0;
     var jetzt=new Date().toISOString().slice(0,10);
     var vorhandeneIds=new Set(alleTermine.map(function(t){return t.id;}));
