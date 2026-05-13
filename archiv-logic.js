@@ -59,21 +59,43 @@ async function ladeFaelle(){
   zeigLadeAnimation();
 
   try{
-    var isAdmin = localStorage.getItem('prova_is_admin')==='true'
-    || (svEmail.toLowerCase()==='admin@prova-systems.de');
-  // BUG #001 FIX: Server-seitiger SV_Email-Filter in airtable.js erzwingt Datentrennung.
-  // Client sendet nur einen Basis-Filter — airtable.js ergänzt AND({sv_email}="...") automatisch.
-  var filter = isAdmin
-    ? 'TRUE()'                        // Admin: alle Records (airtable.js Admin-Check)
-    : 'NOT({Aktenzeichen}="")';       // Normal-SV: Proxy ergänzt sv_email-Filter server-seitig
-    // FIX #010: fields[] Parameter — nur benötigte Felder laden (Performance +60%)
-    // Session 30: Flow, Auftragstyp, Phase ergänzt für 4-Flow-Architektur-Filter
-    var _archivFields=['Aktenzeichen','Status','Timestamp','Schaden_Strasse','Ort','Auftraggeber_Name','Auftraggeber_Typ','sv_email','Schadensart','Flow','Auftragstyp','Phase'].map(function(f){return'fields%5B%5D='+encodeURIComponent(f);}).join('&');
-    var path='/v0/'+AT_BASE+'/'+AT_FAELLE+'?filterByFormula='+encodeURIComponent(filter)+'&maxRecords=100&sort[0][field]=Timestamp&sort[0][direction]=desc&'+_archivFields;
-    var res=await provaFetch('/.netlify/functions/airtable',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({method:'GET',path:path})});
-    if(!res.ok)throw new Error('HTTP '+res.status);
-    var data=await res.json();
-    alleRecords=data.records||[];
+    // MEGA⁷²-Phase-A: Supabase-Migration. Datentrennung über RLS-Policy
+    // workspace_id automatisch durch Supabase-Auth-Context.
+    var mod = await import('/lib/supabase-client.js');
+    var sb = mod.supabase || mod.default;
+    if (!sb) throw new Error('Supabase nicht verfügbar');
+    var r = await sb.from('auftraege')
+      .select('id, az, titel, status, phase_aktuell, typ, schadensart_label, schadensart_kategorie, objekt, details, auftraggeber_typ, fachurteil_text, tags, is_demo, created_at, updated_at, archiviert_am')
+      .is('deleted_at', null)
+      .order('created_at', { ascending: false })
+      .limit(100);
+    if (r.error) throw new Error(r.error.message);
+    // Adapter: Supabase-Row → Airtable-Style {id, fields:{...}} damit downstream
+    // filterUndRender/renderTabelle/etc. unverändert weiterläuft. Siehe
+    // docs/CLEANUP-FIELD-MAPPING.md.
+    var _DB_STATUS_TO_UI = {'entwurf':'Entwurf','aktiv':'In Bearbeitung','abgeschlossen':'Abgeschlossen','archiv':'Archiv','storniert':'Storniert'};
+    alleRecords = (r.data || []).map(function(row){
+      var o = row.objekt || {};
+      var d = row.details || {};
+      var ag = d.auftraggeber || {};
+      return { id: row.id, fields: {
+        Aktenzeichen: row.az || '',
+        Titel: row.titel || '',
+        Status: _DB_STATUS_TO_UI[row.status] || row.status || 'In Bearbeitung',
+        Timestamp: row.created_at || '',
+        Schaden_Strasse: o.adresse || o.strasse || '',
+        PLZ: o.plz || '',
+        Ort: o.ort || '',
+        Auftraggeber_Name: ag.name || '',
+        Auftraggeber_Typ: ag.typ_label || row.auftraggeber_typ || '',
+        sv_email: svEmail,
+        Schadensart: row.schadensart_label || '',
+        Schadenart: row.schadensart_label || '',
+        Flow: row.typ === 'wertgutachten' ? 'B' : row.typ === 'beratung' ? 'C' : row.typ === 'baubegleitung' ? 'D' : 'A',
+        Auftragstyp: row.typ || '',
+        Phase: row.phase_aktuell || 1
+      }};
+    });
     try{
       if(alleRecords.length>0) {
         localStorage.setItem(cacheKey,JSON.stringify({time:Date.now(),data:alleRecords}));
