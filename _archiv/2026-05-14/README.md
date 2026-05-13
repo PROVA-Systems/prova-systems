@@ -1,8 +1,8 @@
-# Archiv 2026-05-14 — MEGA⁷² Phase-D Quarantine
+# Archiv 2026-05-14 — MEGA⁷² Phase-D Quarantine (revidiert nach MEGA⁷³ Phase 1)
 
 ## Inhalt
 
-11 Files die laut MEGA⁷¹-Kartographie als Zombies klassifiziert wurden (0 Inbound-Refs).
+9 Files in finaler Quarantäne. **2 Files (`share.html`, `datenschutz-intern.html`) wurden im MEGA⁷³ Phase-1 Sanity-Check zurückgeholt** — siehe Sektion „Rollback-Historie" unten.
 
 | File | Begründung |
 |---|---|
@@ -13,10 +13,15 @@
 | `test-mega62.html` (war tools/) | Alter Sprint-Test, nicht referenziert |
 | `test-mega63.html` (war tools/) | dito |
 | `test-mega64.html` (war tools/) | dito |
-| `datenschutz-intern.html` (war legal/) | Duplikat zu `datenschutz.html` Root |
-| `share.html` | Public-Share-Pattern, keine Routes/Refs in netlify.toml |
-| `anforderung-unterlagen-erweitert.html` | Brief-Vorlage ohne Inbound-Refs |
-| `ortstermin-arbeitsblatt.html` (war briefe/) | Brief-Vorlage ohne Inbound-Refs |
+| `anforderung-unterlagen-erweitert.html` | Brief-Vorlage ohne Inbound-Refs (MEGA⁷³ Phase 1 verified 0 hits) |
+| `ortstermin-arbeitsblatt.html` (war briefe/) | Brief-Vorlage ohne Inbound-Refs (MEGA⁷³ Phase 1 verified 0 hits) |
+
+## Rollback-Historie (MEGA⁷³ Phase 1, 2026-05-15)
+
+| File | Begründung | Wieder eingefügt |
+|---|---|---|
+| `share.html` | Public-Share-Feature mit Passwort-Schutz, PDF-iframe, noindex-Header — kein Zombie | Marcel-Verdikt: definitiv KEEP. `./share.html` |
+| `datenschutz-intern.html` | Eigenständiges Dokument (36 LOC vs. root 393 LOC, >20% Diff) — interner Datenschutz, KEIN Duplikat | Diff-Check: >20% Diff. `./legal/datenschutz-intern.html` |
 
 ## Quarantäne-Status
 
