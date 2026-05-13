@@ -59,26 +59,107 @@ window.maxKontingent = maxKontingent;
 /* ══════════════════════════════════════════════════
    AIRTABLE FETCH via Netlify Proxy
 ══════════════════════════════════════════════════ */
-async function atFetch(table, formula, maxRecords, sortField){
-  try{
-    // Session 28 Fix #6: Sort-Feld pro Tabelle waehlbar.
-    // RECHNUNGEN hat kein 'Timestamp'-Feld → musste 422 werfen.
-    // Jetzt gibt der Aufrufer das richtige Sortierfeld an (oder keines).
-    var sort = sortField === null ? '' : '&sort[0][field]=' + encodeURIComponent(sortField || 'Timestamp') + '&sort[0][direction]=desc';
-    var path='/v0/'+AT_BASE+'/'+table
-      +'?filterByFormula='+encodeURIComponent(formula)
-      +'&maxRecords='+(maxRecords||50)
-      +sort;
-    var res=await provaFetch('/.netlify/functions/airtable',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({method:'GET',path:path})
-    });
+// MEGA⁷²-Phase-A: Supabase-Singleton Lazy-Loader.
+var _sb = null;
+async function _getSupabase(){
+  if (_sb) return _sb;
+  try { var mod = await import('/lib/supabase-client.js'); _sb = mod.supabase || mod.default; }
+  catch(e){ console.warn('[dashboard-logic] supabase-client import failed', e); _sb = null; }
+  return _sb;
+}
 
-    if(!res.ok)return[];
-    var data=await res.json();
-    return data.records||[];
-  }catch(e){return[];}
+// Adapter: Supabase auftraege-Row → Airtable-Style fields-Object
+// (gleiches Pattern wie akte-logic.js — bewahrt Backward-Compat für renderKPIs/renderRecent/renderInboxKarte etc.)
+// Siehe docs/CLEANUP-FIELD-MAPPING.md
+var _DB_STATUS_TO_UI = {
+  'entwurf':'Entwurf', 'aktiv':'In Bearbeitung', 'abgeschlossen':'Abgeschlossen',
+  'archiv':'Archiv', 'storniert':'Storniert'
+};
+function _auftragRowToFields(row){
+  if(!row) return {};
+  var o = row.objekt || {};
+  var d = row.details || {};
+  var ag = d.auftraggeber || {};
+  return {
+    Aktenzeichen: row.az || '',
+    Titel: row.titel || '',
+    Status: _DB_STATUS_TO_UI[row.status] || row.status || 'In Bearbeitung',
+    Phase: row.phase_aktuell || 1,
+    Schadensart: row.schadensart_label || '',
+    Schadenart: row.schadensart_label || '',
+    Schadensdatum: row.schadensstichtag || '',
+    Auftragsdatum: row.auftragsdatum || '',
+    Schaden_Strasse: o.adresse || o.strasse || '',
+    Schaden_PLZ: o.plz || '',
+    Schaden_Ort: o.ort || '',
+    PLZ: o.plz || '',
+    Ort: o.ort || '',
+    Adresse: o.adresse || '',
+    Gebaeudetyp: o.objektart || '',
+    Baujahr: o.baujahr || '',
+    Auftraggeber_Name: ag.name || '',
+    Auftraggeber_Typ: ag.typ_label || row.auftraggeber_typ || '',
+    KI_Entwurf: row.fachurteil_text || '',
+    Fachurteil: row.fachurteil_text || '',
+    Kosten_Brutto: row.kosten_geschaetzt_brutto || null,
+    Kosten_Netto: row.kosten_geschaetzt_netto || null,
+    Timestamp: row.created_at || '',
+    Updated_At: row.updated_at || ''
+  };
+}
+
+/* MEGA⁷²-Phase-A: atFetch() jetzt Supabase-Adapter statt Airtable-Wrapper.
+   Bisheriger Airtable-Filter-String wird ignoriert — Tabellen-spezifische
+   Supabase-Queries replizieren die Live-Semantik. */
+async function atFetch(table, formula, maxRecords, sortField){
+  var sb = await _getSupabase();
+  if (!sb) return [];
+  try{
+    if (table === AT_FAELLE) {
+      var r = await sb.from('auftraege')
+        .select('id, az, titel, status, phase_aktuell, objekt, details, schadensart_label, schadensstichtag, auftragsdatum, fachurteil_text, auftraggeber_typ, kosten_geschaetzt_netto, kosten_geschaetzt_brutto, tags, is_demo, created_at, updated_at')
+        .is('deleted_at', null)
+        .order('created_at', { ascending: false })
+        .limit(maxRecords || 100);
+      if (r.error) return [];
+      return (r.data || []).map(function(row){ return { id: row.id, fields: _auftragRowToFields(row) }; });
+    }
+    if (table === AT_TERMINE) {
+      var rt = await sb.from('termine')
+        .select('id, datum, uhrzeit_von, titel, beschreibung, typ, status, auftrag_id')
+        .is('deleted_at', null)
+        .order('datum', { ascending: true })
+        .limit(maxRecords || 50);
+      if (rt.error) return [];
+      return (rt.data || []).map(function(t){
+        return { id: t.id, fields: {
+          titel: t.titel, termin_typ: t.typ, termin_datum: t.datum,
+          beschreibung: t.beschreibung, status: t.status, sv_email: localStorage.getItem('prova_sv_email')||''
+        }};
+      });
+    }
+    if (table === AT_RECHNUNGEN) {
+      var rr = await sb.from('dokumente')
+        .select('id, doc_nummer, typ, betreff, betrag_netto, betrag_brutto, faelligkeit, status, mahn_stufe, created_at, auftrag_id')
+        .eq('typ', 'rechnung').is('deleted_at', null)
+        .order('faelligkeit', { ascending: true })
+        .limit(maxRecords || 50);
+      if (rr.error) return [];
+      // Status-Filter clientseitig (Airtable-Formel war OR({Status}="Offen",{Status}="Überfällig"))
+      var rows = (rr.data || []).filter(function(x){
+        return x.status === 'offen' || x.status === 'ueberfaellig' || x.status === 'Offen' || x.status === 'Überfällig';
+      });
+      return rows.map(function(r){
+        return { id: r.id, fields: {
+          Rechnungsnummer: r.doc_nummer || '', Betreff: r.betreff || '',
+          Status: r.status, Mahn_Stufe: r.mahn_stufe || 0,
+          Betrag_Netto: r.betrag_netto, Betrag_Brutto: r.betrag_brutto,
+          Faelligkeit: r.faelligkeit, rechnungsdatum: r.created_at
+        }};
+      });
+    }
+    return [];
+  }catch(e){ console.warn('[atFetch-supabase]', e.message || e); return []; }
 }
 
 /* ══════════════════════════════════════════════════
@@ -146,17 +227,9 @@ function zeigOnboarding(){
     if(!localStorage.getItem('prova_onboarding_done')) {
       localStorage.setItem('prova_onboarding_done','true');
       var atRecId = localStorage.getItem('prova_at_sv_record_id');
-      if(atRecId) {
-        provaFetch('/.netlify/functions/airtable',{
-          method:'POST',
-          headers:{'Content-Type':'application/json'},
-          body:JSON.stringify({
-            method:'PATCH',
-            path:'/v0/appJ7bLlAHZoxENWE/tbladqEQT3tmx4DIB/'+atRecId,
-            payload:{fields:{onboarding_done:true}}
-          })
-        }).catch(function(e){console.warn('Onboarding-Flag Airtable-Patch fehlgeschlagen:',e);});
-      }
+      // TODO MEGA⁷²-Phase-B: Onboarding-Done Cross-Device-Sync auf Supabase users-table
+      // (Tabelle users.onboarding_completed_at oder feature_events). Aktuell localStorage-only.
+      // Bisheriger Airtable-Patch-Pfad entfernt (Regel 35a, kein neuer Airtable-Live-Code).
     }
     var feedCard = document.querySelector('.feed-card');
     if(feedCard) {
