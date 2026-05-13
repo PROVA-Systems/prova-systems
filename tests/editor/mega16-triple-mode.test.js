@@ -59,8 +59,8 @@ describe('W43: Mode B in akte.html', () => {
   });
 });
 
-describe('W44: Mode B in stellungnahme.html', () => {
-  const html = read('stellungnahme.html');
+describe('W44: Mode B in fachurteil.html', () => {
+  const html = read('fachurteil.html');
 
   test('stellungnahme-editor-mode-b Container vorhanden', () => {
     assert.match(html, /id="stellungnahme-editor-mode-b"/);

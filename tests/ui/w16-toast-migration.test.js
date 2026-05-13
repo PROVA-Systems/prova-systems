@@ -34,14 +34,14 @@ describe('W16 Toast-Migration: Migrated Files (1-Liner-Pattern)', () => {
     assert.match(src, /\(window\.provaAlert \|\| alert\)\(['"]Speichern fehlgeschlagen/);
   });
 
-  test('gutachterliche-stellungnahme-logic.js: 4 provaAlert-Migrations', () => {
-    const src = read('gutachterliche-stellungnahme-logic.js');
+  test('kurzstellungnahme-logic.js: 4 provaAlert-Migrations', () => {
+    const src = read('kurzstellungnahme-logic.js');
     const matches = (src.match(/\(window\.provaAlert \|\| alert\)/g) || []).length;
     assert.ok(matches >= 4, '4+ provaAlert-Aufrufe erwartet, gefunden: ' + matches);
   });
 
-  test('stellungnahme-logic.js: provaAlert fuer Speech-Browser', () => {
-    const src = read('stellungnahme-logic.js');
+  test('fachurteil-logic.js: provaAlert fuer Speech-Browser', () => {
+    const src = read('fachurteil-logic.js');
     assert.match(src, /\(window\.provaAlert \|\| alert\)\(['"]Spracherkennung/);
   });
 
@@ -78,13 +78,13 @@ describe('W16 Toast-Migration: HTML Library-Loading', () => {
     assert.match(html, /\/lib\/prova-alert\.js/);
   });
 
-  test('stellungnahme.html laedt /lib/prova-alert.js', () => {
-    const html = read('stellungnahme.html');
+  test('fachurteil.html laedt /lib/prova-alert.js', () => {
+    const html = read('fachurteil.html');
     assert.match(html, /\/lib\/prova-alert\.js/);
   });
 
-  test('gutachterliche-stellungnahme.html laedt /lib/prova-alert.js', () => {
-    const html = read('gutachterliche-stellungnahme.html');
+  test('kurzstellungnahme.html laedt /lib/prova-alert.js', () => {
+    const html = read('kurzstellungnahme.html');
     assert.match(html, /\/lib\/prova-alert\.js/);
   });
 });
@@ -97,8 +97,8 @@ describe('W16 Toast-Migration: Defense-in-Depth-Pattern', () => {
       'admin-dashboard-logic.js',
       'erechnung-logic.js',
       'gericht-auftrag-logic.js',
-      'gutachterliche-stellungnahme-logic.js',
-      'stellungnahme-logic.js',
+      'kurzstellungnahme-logic.js',
+      'fachurteil-logic.js',
       'rechnungen-logic.js'
     ];
     for (const f of files) {
@@ -113,8 +113,8 @@ describe('W16 Toast-Migration: Defense-in-Depth-Pattern', () => {
       'admin-dashboard-logic.js',
       'erechnung-logic.js',
       'gericht-auftrag-logic.js',
-      'gutachterliche-stellungnahme-logic.js',
-      'stellungnahme-logic.js',
+      'kurzstellungnahme-logic.js',
+      'fachurteil-logic.js',
       'rechnungen-logic.js'
     ];
     for (const f of files) {

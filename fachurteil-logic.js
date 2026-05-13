@@ -1,7 +1,7 @@
 /* ════════════════════════════════════════════════════════════
-   PROVA stellungnahme-logic.js
+   PROVA fachurteil-logic.js
    §6 Fachurteil — Komplette Logik
-   Extrahiert aus stellungnahme.html
+   Extrahiert aus fachurteil.html
    §407a ZPO · Konjunktiv II · KI-Assist · Audit-Trail
 ════════════════════════════════════════════════════════════ */
 
@@ -34,6 +34,12 @@ const obj = sessionStorage.getItem('prova_current_objekt') || '—';
 const datum = sessionStorage.getItem('prova_current_datum') || '—';
 const baujahr = sessionStorage.getItem('prova_current_baujahr') || localStorage.getItem('prova_baujahr') || '';
 const rid = sessionStorage.getItem('prova_record_id') || '';
+
+// MEGA⁷⁰ Phase 1.2.2 — Sidebar-Anker zeigt "Phase 3: Gutachten" + CTA "§6 schreiben"
+// (Datei heißt fachurteil.html, semantisch IST §6-Editor)
+if (az && az !== '—') {
+  try { localStorage.setItem('prova_aktuelle_phase', '3'); localStorage.setItem('prova_aktiver_fall', az); } catch(e){}
+}
 
 // ═══════════════════════════════════════════════════════
 // GUIDED WRITING v3.1 — KI-Analyse-Box

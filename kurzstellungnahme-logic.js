@@ -1,5 +1,5 @@
 /* ════════════════════════════════════════════════════════════════════
-   PROVA — gutachterliche-stellungnahme-logic.js (ESM)
+   PROVA — kurzstellungnahme-logic.js (ESM)
    Sprint K-1.3.A2 — Pilot komplett auf Supabase
 
    Refactor von Skeleton v1 (Sprint 04f P5f.X2):

@@ -6,8 +6,8 @@ const fs = require('fs');
 const path = require('path');
 
 const gateLibSrc = fs.readFileSync(path.join(__dirname, '..', '..', 'lib', 'editor-gate.js'), 'utf8');
-const html = fs.readFileSync(path.join(__dirname, '..', '..', 'stellungnahme.html'), 'utf8');
-const js = fs.readFileSync(path.join(__dirname, '..', '..', 'stellungnahme-logic.js'), 'utf8');
+const html = fs.readFileSync(path.join(__dirname, '..', '..', 'fachurteil.html'), 'utf8');
+const js = fs.readFileSync(path.join(__dirname, '..', '..', 'fachurteil-logic.js'), 'utf8');
 
 function evalLib() {
   const win = { provaFetch: null };
@@ -32,7 +32,7 @@ test('A2: zeichenWarnBanner für < 500 Zeichen', () => {
   assert.match(html, /Mindestens 500 Zeichen Eigenleistung/);
 });
 
-test('A2: editor-gate.js Lib eingebunden in stellungnahme.html', () => {
+test('A2: editor-gate.js Lib eingebunden in fachurteil.html', () => {
   assert.match(html, /\/lib\/editor-gate\.js/);
   assert.match(html, /\/lib\/quality-markers\.js/);
 });
@@ -50,7 +50,7 @@ test('A2: checkOrOverride API exposed', () => {
 });
 
 test('A2: speichereUndWeiter ruft checkOrOverride vor Redirect', () => {
-  // In stellungnahme-logic.js muss vor freigabe.html-Redirect ProvaEditorGate.checkOrOverride
+  // In fachurteil-logic.js muss vor freigabe.html-Redirect ProvaEditorGate.checkOrOverride
   const idx = js.indexOf('window.speichereUndWeiter');
   const slice = js.slice(idx, idx + 1500);
   assert.match(slice, /ProvaEditorGate/);

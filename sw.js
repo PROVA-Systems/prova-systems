@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v3200-mega70-phase-1-1-kontrast';   // MEGA⁶⁹-INTEGRATION-PATCH-2 nach Marcel-Test 13.05.2026 Mittag: PHASE A Airtable-Migration (A.1 migrate-normen-airtable + A.2 migrate-textbausteine-airtable Edge Functions, idempotent via airtable_record_id, admin-only Email-Check, Service-Role-Insert für is_global=TRUE, A.3 tools/migrate-bibliothek-airtable.html mit 2 Trigger-Buttons + Status-Check), PHASE B Bibliothek modernisiert (B.1 Card-Grid mit Hover-Lift, B.2 funktionale Filter pro Tab — Bereich/Häufigkeit für Normen, Kategorie/Quelle für Textbausteine, B.3 Detail-Modal mit allen Feldern + Kopieren/In-Editor/Bearbeiten/Löschen-Actions), PHASE C Create-Modal (C.1 Norm-Create mit Bereich/Häufigkeit-Dropdowns, C.2 Textbaustein-Create mit Tags+Notiz, Edit-Mode via openCreateModal(id)). bibliothek.html komplett neu (~430 LOC). Marcel deployed Edge Fns via supabase functions deploy + AIRTABLE_PAT Secret setzen.
+const CACHE_VERSION = 'prova-v3202-mega70-phase-1-2-2-naming-cleanup';   // MEGA70-Phase-1.2.2 (2026-05-13 16:00 GMT+2): Naming-Cleanup (stellungnahme.html → fachurteil.html, gutachterliche-stellungnahme.html → kurzstellungnahme.html, ~50 ref-updates inkl. tests + netlify.toml + _redirects mit 301 legacy) + Phase-Tracking (4 Files mit Phase-Setter 2/3/4 + Fall-Wechsel-Bug-Fix in akte-logic.js ladeFallKontext) + Pricing-Sync (PROVA-REGELN + AGB + ANWALT + 7 live HTMLs + Email-Templates: 149/279€ → 179/379€). Voraus MEGA70-Phase-1.1 v3200 (Kontrast-Token-Fix WCAG AA für --text3 6.35:1) + MEGA71 Datei-Kartographie (separater Branch docs/mega71-kartographie, Commit 96d5b9a).
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
@@ -23,7 +23,7 @@ const APP_SHELL = [
   '/akte.html',
   '/app.html',
   '/freigabe.html',
-  '/stellungnahme.html',
+  '/fachurteil.html',
   '/briefvorlagen.html',
   '/rechnungen.html',
   '/termine.html',
@@ -140,8 +140,8 @@ const APP_SHELL = [
   '/page-template.css',
   '/stellungnahme.css',                 // MEGA²⁸ V3.2-W3-I4 KORR-24: Inline-CSS Extract
   '/app.css',                           // MEGA²⁸ V3.2-W3-I4 KORR-24: Inline-CSS Extract
-  '/gutachterliche-stellungnahme.html',
-  '/gutachterliche-stellungnahme-logic.js',
+  '/kurzstellungnahme.html',
+  '/kurzstellungnahme-logic.js',
   '/onboarding-supabase-logic.js',
   '/auth-supabase-logic.js',
   '/app-login-logic.js',
@@ -149,7 +149,7 @@ const APP_SHELL = [
   '/diktat-parser.js',
   '/compliance-check.js',
   '/paragraph-generator.js',
-  '/stellungnahme-logic.js',
+  '/fachurteil-logic.js',
   '/beratung.html',
   '/beratung-logic.js',
   '/baubegleitung-polish.js',

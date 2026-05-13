@@ -81,7 +81,7 @@
     ── */
     wizard: [
       'freigabe.html',        // §407a Freigabe + PDF-Versand — kritischste Aktion
-      'stellungnahme.html',   // §6 Fachurteil schreiben — Fokus-Schreibmodus
+      'fachurteil.html',   // §6 Fachurteil schreiben — Fokus-Schreibmodus
       'stellungnahme-v3.1.html',
     ],
 

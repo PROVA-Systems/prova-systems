@@ -53,14 +53,14 @@ describe('Toast-Migration MEGA¹⁰ W5 (Pattern: alert -> ProvaUI.toast)', () =>
     assert.equal(r.ok, true, r.reason);
   });
 
-  test('gutachterliche-stellungnahme-logic.js: Pflichtfelder-Validation nutzt Toast', () => {
-    const src = read('gutachterliche-stellungnahme-logic.js');
+  test('kurzstellungnahme-logic.js: Pflichtfelder-Validation nutzt Toast', () => {
+    const src = read('kurzstellungnahme-logic.js');
     assert.ok(src.includes('ProvaUI.toast'), 'sollte ProvaUI.toast nutzen');
     assert.ok(src.includes('Bitte ausfüllen'));
   });
 
-  test('gutachterliche-stellungnahme-logic.js: PDF-Generation-Fehler nutzt Toast', () => {
-    const src = read('gutachterliche-stellungnahme-logic.js');
+  test('kurzstellungnahme-logic.js: PDF-Generation-Fehler nutzt Toast', () => {
+    const src = read('kurzstellungnahme-logic.js');
     const occurrences = (src.match(/PDF-Generation Fehler/g) || []).length;
     assert.ok(occurrences >= 2, 'PDF-Fehler sollte 2x vorkommen (resp.error + catch)');
     // ProvaUI.toast sollte mindestens 4x vorkommen (4 Migration-Stellen)
@@ -68,8 +68,8 @@ describe('Toast-Migration MEGA¹⁰ W5 (Pattern: alert -> ProvaUI.toast)', () =>
     assert.ok(toastCount >= 4, 'mindestens 4 ProvaUI.toast-Aufrufe erwartet, gefunden: ' + toastCount);
   });
 
-  test('stellungnahme-logic.js: Speech-Browser-Fehler nutzt Toast', () => {
-    const src = read('stellungnahme-logic.js');
+  test('fachurteil-logic.js: Speech-Browser-Fehler nutzt Toast', () => {
+    const src = read('fachurteil-logic.js');
     const r = hasToastWithFallback(src, 'Spracherkennung wird von Ihrem Browser nicht');
     assert.equal(r.ok, true, r.reason);
   });

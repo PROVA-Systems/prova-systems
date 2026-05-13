@@ -408,7 +408,7 @@ var WORKFLOW = [
   {
     schritt: 4,
     name: '§6 Fachurteil',
-    seite: 'stellungnahme.html',
+    seite: 'fachurteil.html',
     icon: '⚖️',
     farbe: '#f59e0b'
   },
@@ -532,7 +532,7 @@ function baueBanner(kontext, aktuellerSchritt, istWerkzeug) {
     if (naechster) {
       var naechsterUrl = naechster.seite;
       // AZ mitgeben wenn relevant
-      if (naechster.seite.indexOf('stellungnahme') >= 0 && az) {
+      if (naechster.seite.indexOf('fachurteil') >= 0 && az) {
         naechsterUrl = naechster.seite + '?az=' + encodeURIComponent(az);
       } else if (naechster.seite.indexOf('freigabe') >= 0 && recordId) {
         naechsterUrl = naechster.seite + '?id=' + recordId;

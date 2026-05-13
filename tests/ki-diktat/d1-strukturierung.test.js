@@ -8,7 +8,7 @@ const path = require('path');
 const Lambda = require('../../netlify/functions/ki-diktat-strukturierung');
 const lambdaSrc = fs.readFileSync(path.join(__dirname, '..', '..', 'netlify', 'functions', 'ki-diktat-strukturierung.js'), 'utf8');
 const masterSrc = fs.readFileSync(path.join(__dirname, '..', '..', 'KI-PROMPTS-MASTER.md'), 'utf8');
-const html = fs.readFileSync(path.join(__dirname, '..', '..', 'stellungnahme.html'), 'utf8');
+const html = fs.readFileSync(path.join(__dirname, '..', '..', 'fachurteil.html'), 'utf8');
 const libSrc = fs.readFileSync(path.join(__dirname, '..', '..', 'lib', 'diktat-struktur.js'), 'utf8');
 
 test('D1: Lambda-File existiert + Action diktat_strukturierung exposed', () => {

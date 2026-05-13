@@ -31,9 +31,9 @@ test('UI-EDGE-4: Empty-State-Pattern in Pages', () => {
   assert.match(arch, /empty|leer|noch keine|keine.*vorhanden/i);
 });
 
-test('UI-EDGE-5: Toast-Pattern für User-Feedback (in stellungnahme.html oder app.html)', () => {
+test('UI-EDGE-5: Toast-Pattern für User-Feedback (in fachurteil.html oder app.html)', () => {
   // Toast-Pattern in einer Production-Page
-  const stell = read('stellungnahme.html');
+  const stell = read('fachurteil.html');
   const app = read('app.html');
   assert.ok(/toast|ProvaUI|alert\(|notification/i.test(stell + app),
     'Toast/Alert-Pattern erwartet');

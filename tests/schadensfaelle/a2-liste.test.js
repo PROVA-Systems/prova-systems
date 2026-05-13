@@ -17,7 +17,7 @@ test('A2: schadensfaelle.html hat filter-bar + paginate Klassen', () => {
 test('A2: 11 Auftragstyp-Optionen (alle Flow A/B/C/D + 7 Spezial)', () => {
   ['schadensgutachten','wertgutachten','beratung','baubegleitung',
    'beweissicherung','gegengutachten','ergaenzungsgutachten','gerichtsgutachten',
-   'stellungnahme','gutachterliche-stellungnahme'].forEach(t => {
+   'stellungnahme','kurzstellungnahme'].forEach(t => {
     assert.match(html, new RegExp(`value="${t}"`));
   });
 });

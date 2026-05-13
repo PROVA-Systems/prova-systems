@@ -4,8 +4,8 @@
  */
 const { test, expect } = require('@playwright/test');
 
-test('03: stellungnahme.html lädt 60vw-Editor (CSS-Custom-Property)', async ({ page }) => {
-  await page.goto('/stellungnahme.html');
+test('03: fachurteil.html lädt 60vw-Editor (CSS-Custom-Property)', async ({ page }) => {
+  await page.goto('/fachurteil.html');
   // Login-Redirect ok für Smoke
   if (page.url().includes('stellungnahme')) {
     // CSS-Variable --editor-main-width muss 60vw sein (M31 A1)
@@ -18,7 +18,7 @@ test('03: stellungnahme.html lädt 60vw-Editor (CSS-Custom-Property)', async ({ 
 });
 
 test('03: §6-Fachurteil-Editor Marker in Page-Title', async ({ page }) => {
-  await page.goto('/stellungnahme.html');
+  await page.goto('/fachurteil.html');
   if (page.url().includes('stellungnahme')) {
     await expect(page).toHaveTitle(/(§6|Fachurteil|Stellungnahme)/i);
   }

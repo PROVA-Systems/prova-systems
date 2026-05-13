@@ -212,7 +212,7 @@ function zeigOnboarding(){
         +'<div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px;">Was steht heute an?</div>'
         +offene.slice(0,3).map(function(r){
           var f=r.fields||{};var az=f.Aktenzeichen||'—';var sa=f.Schadensart||'Schadenfall';
-          var naechst=!f.KI_Entwurf?{icon:'🎤',label:'Diktat aufnehmen',col:'#4f8ef7',href:'app.html'}:!f.Stellungnahme_Text?{icon:'⚖️',label:'§6 Fachurteil schreiben',col:'#f59e0b',href:'stellungnahme.html?az='+encodeURIComponent(az)}:{icon:'✅',label:'Freigeben & PDF erstellen',col:'#10b981',href:'freigabe.html?az='+encodeURIComponent(az)};
+          var naechst=!f.KI_Entwurf?{icon:'🎤',label:'Diktat aufnehmen',col:'#4f8ef7',href:'app.html'}:!f.Stellungnahme_Text?{icon:'⚖️',label:'§6 Fachurteil schreiben',col:'#f59e0b',href:'fachurteil.html?az='+encodeURIComponent(az)}:{icon:'✅',label:'Freigeben & PDF erstellen',col:'#10b981',href:'freigabe.html?az='+encodeURIComponent(az)};
           return '<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;margin-bottom:8px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:10px;cursor:pointer;" data-href="akte.html?id='+r.id+'" onclick="window.location.href=this.dataset.href">'
             +'<span style="font-size:16px;">'+naechst.icon+'</span>'
             +'<div style="flex:1;min-width:0;"><div style="font-size:12px;font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+az+' · '+sa+'</div>'
@@ -255,7 +255,7 @@ function renderAufgaben(faelle, termine) {
       aktion = {icon:'🎤', label:'Diktat aufnehmen', url:'app.html', cls:'neu'};
       prioritaet = tage !== null && tage <= 5 ? 3 : 1;
     } else if (!hatSt6) {
-      aktion = {icon:'⚖️', label:'§6 Fachurteil schreiben', url:'stellungnahme.html?az='+encodeURIComponent(az), cls:'aktiv'};
+      aktion = {icon:'⚖️', label:'§6 Fachurteil schreiben', url:'fachurteil.html?az='+encodeURIComponent(az), cls:'aktiv'};
       prioritaet = tage !== null && tage <= 3 ? 4 : 2;
     } else if (status !== 'Exportiert') {
       aktion = {icon:'✅', label:'Freigeben & PDF senden', url:'freigabe.html', cls:'freigabe'};
@@ -526,7 +526,7 @@ function renderFeed(faelle, termine, rechnungen, stats){
           var ns=!f.KI_Entwurf
             ?{icon:'🎤',label:'Diktat aufnehmen',col:'#4f8ef7',href:'app.html',prio:'blue'}
             :!(f.Stellungnahme_Text&&f.Stellungnahme_Text.length>30)
-            ?{icon:'⚖️',label:'§6 Fachurteil schreiben',col:'#f59e0b',href:'stellungnahme.html?az='+encodeURIComponent(az),prio:'warn'}
+            ?{icon:'⚖️',label:'§6 Fachurteil schreiben',col:'#f59e0b',href:'fachurteil.html?az='+encodeURIComponent(az),prio:'warn'}
             :f.Status!=='Freigegeben'
             ?{icon:'✅',label:'Freigeben & PDF erstellen',col:'#10b981',href:'freigabe.html?az='+encodeURIComponent(az),prio:'green'}
             :{icon:'💶',label:'Rechnung erstellen',col:'#8b5cf6',href:'rechnungen.html?az='+encodeURIComponent(az),prio:'purple'};
@@ -1118,7 +1118,7 @@ function renderAufgabenSofort() {
     if (!hat_diktat) {
       ns = { icon: '🎤', label: 'Diktat aufnehmen', col: '#4f8ef7', bg: 'rgba(79,142,247,.08)', bc: 'rgba(79,142,247,.2)', href: 'app.html', phase: 2 };
     } else if (!hat_stell) {
-      ns = { icon: '⚖️', label: '§6 Fachurteil schreiben', col: '#f59e0b', bg: 'rgba(245,158,11,.08)', bc: 'rgba(245,158,11,.2)', href: 'stellungnahme.html?az=' + encodeURIComponent(az), phase: 3 };
+      ns = { icon: '⚖️', label: '§6 Fachurteil schreiben', col: '#f59e0b', bg: 'rgba(245,158,11,.08)', bc: 'rgba(245,158,11,.2)', href: 'fachurteil.html?az=' + encodeURIComponent(az), phase: 3 };
     } else {
       ns = { icon: '✅', label: 'Freigeben & PDF erstellen', col: '#10b981', bg: 'rgba(16,185,129,.08)', bc: 'rgba(16,185,129,.2)', href: 'freigabe.html?az=' + encodeURIComponent(az), phase: 4 };
     }

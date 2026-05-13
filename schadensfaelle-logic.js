@@ -14,7 +14,7 @@
   if (typeof window === 'undefined' || typeof document === 'undefined') return;
   const SCHADENS_TYPEN = [
     'schadensgutachten', 'beweissicherung', 'ergaenzungsgutachten',
-    'gegengutachten', 'gerichtsgutachten', 'stellungnahme', 'gutachterliche-stellungnahme'
+    'gegengutachten', 'gerichtsgutachten', 'stellungnahme', 'kurzstellungnahme'
   ];
 
   let _all = [];
@@ -359,7 +359,7 @@ if (typeof module !== 'undefined' && module.exports) {
     },
     SCHADENS_TYPEN: [
       'schadensgutachten', 'beweissicherung', 'ergaenzungsgutachten',
-      'gegengutachten', 'gerichtsgutachten', 'stellungnahme', 'gutachterliche-stellungnahme'
+      'gegengutachten', 'gerichtsgutachten', 'stellungnahme', 'kurzstellungnahme'
     ]
   };
 }

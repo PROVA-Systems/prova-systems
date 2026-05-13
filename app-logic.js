@@ -1181,8 +1181,8 @@ function goToGate() {
   if (adr) sessionStorage.setItem('prova_current_objekt', adr);
   
   window.location.href = az
-    ? 'stellungnahme.html?az=' + encodeURIComponent(az)
-    : 'stellungnahme.html';
+    ? 'fachurteil.html?az=' + encodeURIComponent(az)
+    : 'fachurteil.html';
 }
 
 /* ── Block 10 ── */
@@ -2130,7 +2130,7 @@ var WORKFLOW = [
   {
     schritt: 4,
     name: '§6 Fachurteil',
-    seite: 'stellungnahme.html',
+    seite: 'fachurteil.html',
     icon: '⚖️',
     farbe: '#f59e0b'
   },
@@ -2254,7 +2254,7 @@ function baueBanner(kontext, aktuellerSchritt, istWerkzeug) {
     if (naechster) {
       var naechsterUrl = naechster.seite;
       // AZ mitgeben wenn relevant
-      if (naechster.seite.indexOf('stellungnahme') >= 0 && az) {
+      if (naechster.seite.indexOf('fachurteil') >= 0 && az) {
         naechsterUrl = naechster.seite + '?az=' + encodeURIComponent(az);
       } else if (naechster.seite.indexOf('freigabe') >= 0 && recordId) {
         naechsterUrl = naechster.seite + '?id=' + recordId;
@@ -3292,13 +3292,13 @@ window.weiterZuAnalyse = async function() {
     showToast('Bitte Diktat aufnehmen oder Text eingeben.', 'warning');
     return;
   }
-  // ── KRITISCH: Diktat + Messwerte in localStorage für stellungnahme.html ──
+  // ── KRITISCH: Diktat + Messwerte in localStorage für fachurteil.html ──
   localStorage.setItem('prova_transkript', window.transcriptText || transcriptText || '');
-  // Manuelle Eingabe separat für stellungnahme.html 3-Quellen-Diktat
+  // Manuelle Eingabe separat für fachurteil.html 3-Quellen-Diktat
   var manuellEl = document.getElementById('transcriptManuell');
   var manuellText = manuellEl ? manuellEl.value.trim() : '';
   if (manuellText) localStorage.setItem('prova_manuell_text', manuellText);
-  // Diktat-Nachtrag (leer beim ersten Durchgang — wird später in stellungnahme.html befüllt)
+  // Diktat-Nachtrag (leer beim ersten Durchgang — wird später in fachurteil.html befüllt)
   if (!localStorage.getItem('prova_diktat_nachtrag')) {
     localStorage.setItem('prova_diktat_nachtrag', '');
   }
@@ -3401,7 +3401,8 @@ async function sendeWebhook() {
       const _adr = [_daten.strasse, _daten.plz, _daten.ort].filter(Boolean).join(', ');
       
       if (typeof window.PROVA_KONTEXT !== 'undefined') {
-        window.PROVA_KONTEXT.setFall(_az, _sa, _adr, '');
+        // MEGA⁷⁰ Phase 1.2.2 — Phase=2 (Ortstermin/Diktat) für Sidebar-CTA
+        window.PROVA_KONTEXT.setFall(_az, _sa, _adr, '', 2);
       }
       
       // Schadenart und AZ für Banner speichern

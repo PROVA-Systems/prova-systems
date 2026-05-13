@@ -588,7 +588,7 @@ async function handleAssistInline(body, apiKey) {
     return jsonResponse({ vorschlag: '' });
   }
 
-  // Experten-System-Prompt: entweder aus Body (neue stellungnahme.html v6)
+  // Experten-System-Prompt: entweder aus Body (neue fachurteil.html v6)
   // oder Fallback auf Standard-Prompt
   const systemMsg = system_prompt || `Du bist ein öffentlich bestellter und vereidigter (ö.b.u.v.) Bausachverständiger mit 30 Jahren Gerichtserfahrung (§407a ZPO).
 

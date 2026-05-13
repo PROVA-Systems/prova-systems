@@ -20,12 +20,12 @@ function read(p) { return fs.readFileSync(path.join(ROOT, p), 'utf8'); }
 describe('Security-Audit — Disclaimer-Wiring (Pflicht-Pages)', () => {
   const PAGES = [
     'gericht-auftrag.html',
-    'stellungnahme.html',
+    'fachurteil.html',
     'ortstermin-modus.html',
     'akte.html',
     'app.html',
     'freigabe.html',
-    'gutachterliche-stellungnahme.html',
+    'kurzstellungnahme.html',
     'wertgutachten.html'
   ];
 
@@ -116,8 +116,8 @@ describe('Security-Audit — Disclaimer in KI-Output-Pages', () => {
     assert.ok(occurrences >= 2, 'Mindestens 2 §407a-Hinweise (Foto-KI + Diktat), gefunden: ' + occurrences);
   });
 
-  test('stellungnahme.html hat Disclaimer im KI-Assist-Panel', () => {
-    const html = read('stellungnahme.html');
+  test('fachurteil.html hat Disclaimer im KI-Assist-Panel', () => {
+    const html = read('fachurteil.html');
     assert.match(html, /class="prova-ki-disclaimer"/);
   });
 });

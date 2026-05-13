@@ -6,8 +6,8 @@ const fs = require('fs');
 const path = require('path');
 
 const css = fs.readFileSync(path.join(__dirname, '..', '..', 'stellungnahme.css'), 'utf8');
-const html = fs.readFileSync(path.join(__dirname, '..', '..', 'stellungnahme.html'), 'utf8');
-const js = fs.readFileSync(path.join(__dirname, '..', '..', 'stellungnahme-logic.js'), 'utf8');
+const html = fs.readFileSync(path.join(__dirname, '..', '..', 'fachurteil.html'), 'utf8');
+const js = fs.readFileSync(path.join(__dirname, '..', '..', 'fachurteil-logic.js'), 'utf8');
 
 test('A1: CSS-Variable --editor-main-width: 60vw existiert', () => {
   assert.match(css, /--editor-main-width:\s*60vw/);
@@ -39,7 +39,7 @@ test('A1: Befunde-Panel hat 5 Sektionen (§1-§5)', () => {
     assert.match(html, new RegExp(s)));
 });
 
-test('A1: Auto-Fokus-Code in stellungnahme-logic.js (svTextA.focus)', () => {
+test('A1: Auto-Fokus-Code in fachurteil-logic.js (svTextA.focus)', () => {
   assert.match(js, /MEGA³¹ A1.*Auto-Fokus|Auto-Fokus.*§6-Editor/);
   assert.match(js, /ta\.focus\(\)/);
 });
