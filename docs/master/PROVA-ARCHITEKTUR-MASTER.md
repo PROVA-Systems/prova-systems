@@ -3,6 +3,16 @@
 **Stand:** 02.05.2026 nachmittags (Tag 8, post-Voll-Cleanup-Sprint)
 **Single Source of Truth** — siehe `docs/master/README.md`
 
+> **Status-Update 2026-05-14 (MEGA⁷³):** Counts haben sich seit Tag 8 vervielfacht.
+> Aktueller Stand (verifiziert): **313 HTML-Files** (incl. Brief-Vorlagen, Form-Templates,
+> PDF-Templates, Tools), **115 Netlify Functions** (alle aktiv per sw.js APP_SHELL-Audit),
+> **143 Supabase Edge Functions** (deployed). Live-Auth-Stack: Supabase + `auth-guard.js`
+> (Netlify Identity ist tot). DRY-Migration-Foundation: `lib/prova-supabase-adapters.js`
+> (252 LOC) — wandelt Supabase-Rows zurück in Airtable-Style fields-Objects.
+> Drift-Stand: **0 Airtable-Reads in P1+P2-Files** (akte/dashboard/freigabe/archiv/termine/
+> rechnungen/beratung/wertgutachten/baubegleitung/erechnung/jahresbericht/statistiken).
+> P3-Backlog: tools/, admin/, einzelne Edge-Function-Trigger.
+
 ---
 
 ## High-Level
