@@ -420,25 +420,22 @@ window.generateAndDownload = function() {
   
   if(typeof zeigToast==='function') zeigToast(fmt === 'zugferd' ? 'ZUGFeRD-Datei heruntergeladen ✅' : 'XRechnung heruntergeladen ✅');
   
-  // In Airtable als E-Rechnung markieren (non-blocking)
+  // MEGA⁷³-Phase-2b: In Supabase dokumente als E-Rechnung markieren (non-blocking)
   var az = (document.getElementById('re-aktenzeichen') || {}).value || '';
   if (az) {
-    var svEmail = localStorage.getItem('prova_sv_email') || '';
-    provaFetch('/.netlify/functions/airtable', {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({method:'GET',
-        path:'/v0/appJ7bLlAHZoxENWE/tblF6MS7uiFAJDjiT?filterByFormula=' + 
-          encodeURIComponent('{aktenzeichen}="' + az + '"') + '&maxRecords=1'})
-    }).then(function(r){return r.json();}).then(function(d){
-      if (d.records && d.records[0]) {
-        provaFetch('/.netlify/functions/airtable', {
-          method:'POST', headers:{'Content-Type':'application/json'},
-          body: JSON.stringify({method:'PATCH',
-            path:'/v0/appJ7bLlAHZoxENWE/tblF6MS7uiFAJDjiT/' + d.records[0].id,
-            payload:{fields:{status: 'E-Rechnung erstellt'}}})
-        });
-      }
-    }).catch(function(){});
+    (async function(){
+      try {
+        var _ad = await import('/lib/prova-supabase-adapters.js');
+        var sb = await _ad.getSupabase();
+        if (!sb) return;
+        // Lookup Rechnung via doc_nummer ODER auftrag.az
+        var lookup = await sb.from('dokumente')
+          .select('id').eq('typ', 'rechnung').eq('doc_nummer', az).is('deleted_at', null).maybeSingle();
+        if (lookup.data && lookup.data.id) {
+          await sb.from('dokumente').update({ status: 'erechnung_erstellt' }).eq('id', lookup.data.id);
+        }
+      } catch(e) { console.warn('[erechnung-status-update]', e.message || e); }
+    })();
   }
 };
 
