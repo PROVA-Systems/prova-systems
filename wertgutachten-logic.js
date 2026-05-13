@@ -1222,27 +1222,35 @@
       if (!res.ok) throw new Error('HTTP ' + res.status);
       toast('✓ PDF-Erstellung gestartet — Zustellung per E-Mail', 'ok');
 
-      // Airtable-Sync (non-blocking)
-      try {
-        provaFetch('/.netlify/functions/airtable', {
-          method:'POST', headers:{'Content-Type':'application/json'},
-          body: JSON.stringify({
-            method:'POST',
-            path:'/v0/appJ7bLlAHZoxENWE/tblSxV8bsXwd1pwa0',
-            payload: { records:[{ fields: {
-              Aktenzeichen: o.az || '',
-              Flow: 'B',
-              Auftragstyp: _state.typ,
-              Phase: 'Gutachten erstellt',
-              Status: typLabel + ' — ' + fmtEUR(finalWert),
-              Auftraggeber_Name: o.auftraggeber || '',
-              Schaden_Strasse:   o.adresse || '',
-              Notizen:           _state.verfahrenSet.join('+') + ' · Baujahr ' + o.baujahr,
-              sv_email: svEmail
-            }}]}
-          })
-        }).catch(function(){});
-      } catch(err) {}
+      // MEGA⁷³-Phase-2b: Supabase auftraege Sync (non-blocking).
+      (async function(){
+        try {
+          var _ad = await import('/lib/prova-supabase-adapters.js');
+          var sb = await _ad.getSupabase();
+          if (!sb) return;
+          var sess = await sb.auth.getSession();
+          var userId = sess?.data?.session?.user?.id;
+          var wsId = localStorage.getItem('prova_workspace_id') || null;
+          await sb.from('auftraege').insert({
+            workspace_id: wsId,
+            typ: 'wertgutachten',
+            az: o.az || ('WG-' + Date.now().toString().slice(-6)),
+            titel: typLabel + ' — ' + fmtEUR(finalWert),
+            status: 'abgeschlossen',
+            phase_aktuell: 5,
+            schadensart_label: 'Wertgutachten',
+            objekt: { adresse: o.adresse || '', baujahr: o.baujahr || null },
+            details: {
+              auftraggeber: { name: o.auftraggeber || '' },
+              verfahren: _state.verfahrenSet,
+              verkehrswert: finalWert,
+              wertgutachten_typ: _state.typ
+            },
+            kosten_geschaetzt_brutto: finalWert,
+            created_by_user_id: userId
+          });
+        } catch(err) { console.warn('[wertgutachten-supabase-save]', err.message || err); }
+      })();
     } catch(err) { toast('Fehler: ' + err.message, 'err'); }
   };
 
