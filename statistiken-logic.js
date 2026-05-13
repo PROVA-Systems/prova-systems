@@ -47,24 +47,20 @@ function filterByDays(records) {
 // ── Airtable laden ──────────────────────────────────────────
 async function loadData() {
   try {
-    // Via Netlify Function proxyen (wie alle anderen Seiten)
-    var path = '/v0/' + AT_BASE + '/' + AT_TABLE
-      + '?fields[]=' + [AT_KEY_FIELD, AT_STATUS, AT_SCHADEN, AT_AG_TYP, AT_FOTOS, AT_ZEIT, AT_TS, AT_PAKET].join('&fields[]=')
-      + '&sort[0][field]=' + AT_TS + '&sort[0][direction]=desc'
-      + '&maxRecords=500';
-
-    var resp = await provaFetch('/.netlify/functions/airtable', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({method: 'GET', path: path, payload: null})
-    });
-
-    if (!resp.ok) throw new Error('Airtable Error: ' + resp.status);
-    var json = await resp.json();
-    if (json.error) throw new Error(json.error);
-    return (json.records || []).map(function(r) { return r.fields || r; });
+    // MEGA⁷³-Phase-2b: Supabase auftraege via Adapter
+    var _ad = await import('/lib/prova-supabase-adapters.js');
+    var sb = await _ad.getSupabase();
+    if (!sb) throw new Error('Supabase nicht verfügbar');
+    var r = await sb.from('auftraege')
+      .select('id, az, status, schadensart_label, schadensart_kategorie, auftraggeber_typ, umfang_fotos, created_at, updated_at, abgeschlossen_am, objekt, details, kosten_geschaetzt_brutto')
+      .is('deleted_at', null)
+      .order('created_at', { ascending: false })
+      .limit(500);
+    if (r.error) throw new Error(r.error.message);
+    // Adapter → CapitalCase fields für downstream Stats-Aggregations
+    return (r.data || []).map(function(row){ return _ad.auftragRowToFields(row); });
   } catch(e) {
-    console.warn('Statistiken: Airtable nicht erreichbar, zeige Demo-Daten', e);
+    console.warn('Statistiken: Supabase nicht erreichbar, zeige Demo-Daten', e.message || e);
     return getMockData();
   }
 }
@@ -209,18 +205,32 @@ window.exportStatistikenCSV = async function() {
 
     if (svEmail) {
       try {
-        var res = await provaFetch('/.netlify/functions/airtable', {
-          method: 'POST', headers: {'Content-Type':'application/json'},
-          body: JSON.stringify({
-            method: 'GET',
-            path: '/v0/appJ7bLlAHZoxENWE/tblb0j9qOhMExVEFH?filterByFormula=' +
-                  encodeURIComponent('{Aktenzeichen_Ref}!=""') +
-                  '&maxRecords=500&sort[0][field]=Datum&sort[0][direction]=desc' +
-                  '&fields[]=Monat&fields[]=Ereignis&fields[]=Schadensart' +
-                  '&fields[]=Auftraggeber_Typ&fields[]=Foto_Anzahl' +
-                  '&fields[]=Erstellungszeit_Sekunden&fields[]=PLZ&fields[]=Ort'
+        // MEGA⁷³-Phase-2b: Supabase auftraege für CSV-Export
+        var _adCsv = await import('/lib/prova-supabase-adapters.js');
+        var sbCsv = await _adCsv.getSupabase();
+        if (!sbCsv) throw new Error('Supabase nicht verfügbar');
+        var rCsv = await sbCsv.from('auftraege')
+          .select('id, az, status, schadensart_label, auftraggeber_typ, umfang_fotos, objekt, created_at')
+          .is('deleted_at', null)
+          .order('created_at', { ascending: false }).limit(500);
+        if (rCsv.error) throw new Error(rCsv.error.message);
+        // Adapter: Supabase rows → Airtable-Style {records:[{fields:...}]}
+        var res = { ok: true, json: function(){ return Promise.resolve({
+          records: (rCsv.data || []).map(function(row){
+            var dat = row.created_at ? new Date(row.created_at) : null;
+            var monatStr = dat ? dat.getFullYear()+'-'+String(dat.getMonth()+1).padStart(2,'0') : '';
+            return { id: row.id, fields: {
+              Monat: monatStr,
+              Ereignis: row.status,
+              Schadensart: row.schadensart_label,
+              Auftraggeber_Typ: row.auftraggeber_typ,
+              Foto_Anzahl: row.umfang_fotos || 0,
+              Erstellungszeit_Sekunden: null,
+              PLZ: (row.objekt || {}).plz || '',
+              Ort: (row.objekt || {}).ort || ''
+            }};
           })
-        });
+        }); }};
         var data = await res.json();
         (data.records || []).forEach(function(r) {
           var f = r.fields || {};
