@@ -582,30 +582,58 @@ window.auftragAnlegenUndOeffnen = async function() {
     const sb = mod.supabase;
     const { data: { session } } = await sb.auth.getSession();
     if (!session) throw new Error('Keine Anmeldung — bitte neu einloggen.');
-    const insertPayload = {
+    // MEGA⁷⁰-Phase-1.2.4: Schema-aligned Payload für auftraege-Insert.
+    // Adresse → objekt jsonb (siehe Migration 02_schema_kerngeschaeft.sql Z.327-333).
+    // Auftraggeber-Typ → enum (privat/gewerbe/gericht/versicherung/behoerde/andere).
+    // Inline-Auftraggeber-Daten → details.auftraggeber jsonb (kein flat-name-column).
+    const _agTypUi = v('f-auftraggeber-typ') || '';
+    const _agTypMap = {
+      'Privatperson': 'privat',
+      'Bauherr': 'privat',
+      'Versicherung': 'versicherung',
+      'Anwaltskanzlei': 'gewerbe',
+      'Wohnungsbaugesellschaft': 'gewerbe',
+      'Gericht': 'gericht',
+      'Behörde': 'behoerde',
+      'Behoerde': 'behoerde',
+      'Sonstiges': 'andere'
+    };
+    const _agTypEnum = _agTypMap[_agTypUi] || null;
+    const _agName = v('f-auftraggeber-name');
+    const _schadenart = v('f-schadenart');
+    const _schadensdatum = v('f-schadensdatum');
+    const _ortstermin = v('f-ortstermin-datum');
+    const _beweisfragen = v('f-beweisfragen');
+
+    // objekt jsonb: nur Felder die wirklich Werte haben
+    const _objekt = {};
+    if (strasse) _objekt.adresse = strasse;     // Schema-Konvention: 'adresse' = Straße+Hausnr kombiniert
+    if (plz)     _objekt.plz = plz;
+    if (ort)     _objekt.ort = ort;
+
+    // details jsonb: alles was kein Top-Level-Column hat
+    const _details = {};
+    if (_agName || _agTypUi) {
+      _details.auftraggeber = {};
+      if (_agName)   _details.auftraggeber.name = _agName;
+      if (_agTypUi)  _details.auftraggeber.typ_label = _agTypUi;  // UI-Label fürs spätere Re-Display
+    }
+    if (_ortstermin)   _details.ortstermin_datum = _ortstermin;
+    if (_beweisfragen) _details.beweisfragen = _beweisfragen;
+
+    // Schema-aligned payload (alle Keys sind echte Columns oder jsonb)
+    const safe = {
       typ: dbTyp,
       az: az,
       titel: titel,
       status: 'aktiv',
-      phase_aktuell: 1,
-      adresse_strasse: strasse || null,
-      adresse_plz: plz || null,
-      adresse_ort: ort || null,
-      auftraggeber_name: v('f-auftraggeber-name') || null,
-      auftraggeber_typ: v('f-auftraggeber-typ') || null,
-      schadenart: v('f-schadenart') || null,
-      schadensdatum: v('f-schadensdatum') || null,
-      ortstermin_datum: v('f-ortstermin-datum') || null,
-      beweisfragen: v('f-beweisfragen') || null
+      phase_aktuell: 1
     };
-    // Strip null-keys die in DB nicht existieren könnten — übergebe nur Kern-Felder + Extras defensiv
-    const coreKeys = ['typ','az','titel','status','phase_aktuell'];
-    const safe = {};
-    coreKeys.forEach(k => { if (insertPayload[k] !== undefined && insertPayload[k] !== null) safe[k] = insertPayload[k]; });
-    // Optionale Felder mit best-effort
-    ['adresse_strasse','adresse_plz','adresse_ort','auftraggeber_name','auftraggeber_typ','schadenart','schadensdatum','ortstermin_datum','beweisfragen'].forEach(k => {
-      if (insertPayload[k]) safe[k] = insertPayload[k];
-    });
+    if (Object.keys(_objekt).length > 0)  safe.objekt = _objekt;
+    if (Object.keys(_details).length > 0) safe.details = _details;
+    if (_agTypEnum)                       safe.auftraggeber_typ = _agTypEnum;
+    if (_schadenart)                      safe.schadensart_label = _schadenart;   // echte Column (NICHT "schadenart")
+    if (_schadensdatum)                   safe.schadensstichtag = _schadensdatum; // echte Column (NICHT "schadensdatum")
     const { data, error } = await sb.from('auftraege').insert(safe).select('id, az').single();
     if (error) {
       // Wenn Insert wegen unbekannter Spalte fehlschlägt → retry nur mit core

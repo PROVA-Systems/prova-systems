@@ -27,12 +27,13 @@ const DEMO_AUFTRAG = {
   schadensart_label: 'Wasserschaden — Leitungswasser',
   schadensart_kategorie: 'wasser',
   schadensstichtag: '2026-04-15',
+  // MEGA⁷⁰-Phase-1.2.4: objekt-jsonb-Keys an Schema-Konvention (02_schema_kerngeschaeft.sql Z.328)
+  // angepasst — PDF-Templates lesen objekt.adresse/.plz/.ort/.objektart/.baujahr.
   objekt: {
-    adresse_strasse: 'Musterstraße',
-    adresse_nr: '12',
+    adresse: 'Musterstraße 12',
     plz: '12345',
     ort: 'Musterstadt',
-    typ: 'einfamilienhaus',
+    objektart: 'einfamilienhaus',
     baujahr: 1985
   },
   details: {

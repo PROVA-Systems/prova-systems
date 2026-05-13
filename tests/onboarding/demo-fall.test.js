@@ -78,5 +78,6 @@ test('Demo-Schema: details JSONB strukturiert', () => {
 test('Demo-Schema: objekt JSONB Adresse', () => {
   const { __DEMO_AUFTRAG } = require('../../netlify/functions/onboarding-create-demo');
   assert.strictEqual(__DEMO_AUFTRAG.objekt.plz, '12345');
-  assert.strictEqual(__DEMO_AUFTRAG.objekt.adresse_strasse, 'Musterstraße');
+  // MEGA⁷⁰-Phase-1.2.4: objekt.adresse (kombiniert Straße+Nr) per Schema-Konvention
+  assert.strictEqual(__DEMO_AUFTRAG.objekt.adresse, 'Musterstraße 12');
 });
