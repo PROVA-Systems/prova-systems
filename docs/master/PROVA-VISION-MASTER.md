@@ -3,6 +3,12 @@
 **Stand:** 07.05.2026 (Tag 19) · **Vision: 100% Komplett** ✅✅
 **Tag:** v950 · **Branch:** `mega33-ui-integration-100-percent` → `mega34-final-100-percent`
 
+> **MEGA⁷⁰-Phase-1.2.2 Naming-Update (2026-05-13):**
+> §6-Fachurteil-Editor: Page wurde von `stellungnahme.html` → **`fachurteil.html`** umbenannt
+> (URL: `/fachurteil`, Logik: `fachurteil-logic.js`). Legacy `/stellungnahme*` → 301 → `/fachurteil`.
+> Mini-Stellungnahme: `gutachterliche-stellungnahme.html` → **`kurzstellungnahme.html`**.
+> Test-Suite `tests/fachurteil-editor/*` hatte schon den richtigen Namen.
+
 ---
 
 ## 🏁 100% Vision-Komplettheit erreicht
