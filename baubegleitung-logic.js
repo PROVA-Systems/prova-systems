@@ -396,28 +396,36 @@ function speichereProjekt() {
   if (_aktivProjektId) ladeProduktDetail(_aktivProjektId);
   zeigToast(_editProjektId ? 'Projekt aktualisiert ✅' : 'Projekt angelegt ✅');
 
-  // Session 30 Sprint 4: Airtable-Sync erweitert für Flow D — schreibt in SCHADENSFAELLE
-  try {
-    var _svE = localStorage.getItem('prova_sv_email')||'';
-    var _aktP = _data.projekte.find(function(p){return p.id===(_editProjektId||_data.projekte[0].id);});
-    if (_svE && _aktP) {
-      provaFetch('/.netlify/functions/airtable',{method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({method:'POST',path:'/v0/appJ7bLlAHZoxENWE/tblSxV8bsXwd1pwa0',
-          payload:{records:[{fields:{
-            Aktenzeichen: _aktP.az||'',
-            Flow: 'D',
-            Auftragstyp: 'baubegleitung',
-            Phase: 'Projekt angelegt',
-            Status: 'Baubegleitung — laufend',
-            Auftraggeber_Name: _aktP.auftraggeber||'',
-            Schaden_Strasse: _aktP.adresse||'',
-            Notizen: (_aktP.typ||'')+' · Baubeginn '+(_aktP.beginn||'?')+' · gepl. Abnahme '+(_aktP.abnahme||'?'),
-            sv_email: _svE
-          }}]}
-        })
-      }).catch(function(){});
-    }
-  } catch(e) {}
+  // MEGA⁷³-Phase-2b: Supabase auftraege Sync für Flow D Baubegleitung
+  (async function(){
+    try {
+      var _aktP = _data.projekte.find(function(p){return p.id===(_editProjektId||_data.projekte[0].id);});
+      if (!_aktP) return;
+      var _ad = await import('/lib/prova-supabase-adapters.js');
+      var sb = await _ad.getSupabase();
+      if (!sb) return;
+      var sess = await sb.auth.getSession();
+      var userId = sess?.data?.session?.user?.id;
+      var wsId = localStorage.getItem('prova_workspace_id') || null;
+      await sb.from('auftraege').insert({
+        workspace_id: wsId,
+        typ: 'baubegleitung',
+        az: _aktP.az || ('BB-' + Date.now().toString().slice(-6)),
+        titel: 'Baubegleitung — ' + (_aktP.typ || ''),
+        status: 'aktiv',
+        phase_aktuell: 1,
+        schadensart_label: _aktP.typ || 'Baubegleitung',
+        objekt: { adresse: _aktP.adresse || '' },
+        details: {
+          auftraggeber: { name: _aktP.auftraggeber || '' },
+          projekt_typ: _aktP.typ,
+          baubeginn: _aktP.beginn,
+          geplante_abnahme: _aktP.abnahme
+        },
+        created_by_user_id: userId
+      });
+    } catch(e) { console.warn('[baubegleitung-projekt-save]', e.message || e); }
+  })();
 }
 
 function speichereBegehung() {
@@ -448,29 +456,35 @@ function speichereBegehung() {
   });
   speichereDaten(_data);
 
-  // Session 30 Sprint 4: Airtable-Sync der Begehung (non-blocking, SCHADENSFAELLE)
-  try {
-    var _svE = localStorage.getItem('prova_sv_email')||'';
-    if (_svE) {
+  // MEGA⁷³-Phase-2b: Supabase eintraege INSERT für Begehungs-Notes
+  (async function(){
+    try {
       var begehungsSync = proj.begehungen[proj.begehungen.length-1];
-      provaFetch('/.netlify/functions/airtable',{method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({method:'POST',path:'/v0/appJ7bLlAHZoxENWE/tblSxV8bsXwd1pwa0',
-          payload:{records:[{fields:{
-            Aktenzeichen: proj.az||'',
-            Flow: 'D',
-            Auftragstyp: 'baubegleitung',
-            Phase: begehungsSync.phase||'',
-            Status: 'Baubegleitung — Begehung ' + proj.begehungen.length,
-            Auftraggeber_Name: proj.auftraggeber||'',
-            Schaden_Strasse: proj.adresse||'',
-            Timestamp_Iso: begehungsSync.erfasst,
-            Notizen: 'Begehung vom ' + begehungsSync.datum + ' — ' + (begehungsSync.phase||'keine Phase') + '\n\n' + begehungsSync.text,
-            sv_email: _svE
-          }}]}
-        })
-      }).catch(function(){});
-    }
-  } catch(e) {}
+      var _ad = await import('/lib/prova-supabase-adapters.js');
+      var sb = await _ad.getSupabase();
+      if (!sb) return;
+      var sess = await sb.auth.getSession();
+      var userId = sess?.data?.session?.user?.id;
+      var wsId = localStorage.getItem('prova_workspace_id') || null;
+      // Auftrag-Lookup via az
+      var auftragId = null;
+      if (proj.az) {
+        var lookup = await sb.from('auftraege').select('id').eq('az', proj.az).is('deleted_at', null).maybeSingle();
+        if (lookup.data) auftragId = lookup.data.id;
+      }
+      await sb.from('eintraege').insert({
+        workspace_id: wsId,
+        auftrag_id: auftragId,
+        typ: 'text',
+        titel: 'Begehung ' + begehungsSync.datum + ' — ' + (begehungsSync.phase || ''),
+        content: begehungsSync.text,
+        datum: begehungsSync.datum,
+        dauer_min: null,
+        created_by_user_id: userId
+      });
+    } catch(e) { console.warn('[baubegleitung-begehung-save]', e.message || e); }
+  })();
+  // (alter Airtable-Call ersetzt durch Adapter oben)
 
   closeModal('modal-begehung');
   ladeProduktDetail(_aktivProjektId);
