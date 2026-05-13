@@ -44,7 +44,55 @@ function pruefeS6(){
   }
 }
 
-/* LADEN */
+// MEGA⁷²-Phase-A: Supabase-Singleton + Adapter (gleiches Pattern wie akte/dashboard-logic.js)
+let _sb = null;
+async function _getSupabase(){
+  if (_sb) return _sb;
+  try { const mod = await import('/lib/supabase-client.js'); _sb = mod.supabase || mod.default; }
+  catch(e){ console.warn('[freigabe-logic] supabase-client import failed', e); _sb = null; }
+  return _sb;
+}
+const _DB_STATUS_TO_UI = {
+  'entwurf':'Entwurf', 'aktiv':'In Bearbeitung', 'abgeschlossen':'Freigegeben',
+  'archiv':'Archiv', 'storniert':'Storniert'
+};
+function _auftragRowToFields(row){
+  if(!row) return {};
+  const o = row.objekt || {};
+  const d = row.details || {};
+  const ag = d.auftraggeber || {};
+  return {
+    id: row.id,
+    Aktenzeichen: row.az || '',
+    Titel: row.titel || '',
+    Status: _DB_STATUS_TO_UI[row.status] || row.status || 'In Bearbeitung',
+    Phase: row.phase_aktuell || 1,
+    Schadensart: row.schadensart_label || '',
+    Schadenart: row.schadensart_label || '',
+    Schadensdatum: row.schadensstichtag || '',
+    Auftragsdatum: row.auftragsdatum || '',
+    Schaden_Strasse: o.adresse || o.strasse || '',
+    Schaden_PLZ: o.plz || '',
+    Schaden_Ort: o.ort || '',
+    PLZ: o.plz || '',
+    Ort: o.ort || '',
+    Adresse: o.adresse || '',
+    Gebaeudetyp: o.objektart || '',
+    Baujahr: o.baujahr || '',
+    Auftraggeber_Name: ag.name || '',
+    Auftraggeber_Typ: ag.typ_label || row.auftraggeber_typ || '',
+    Auftraggeber_Email: ag.email || '',
+    KI_Entwurf: row.fachurteil_text || '',
+    Fachurteil: row.fachurteil_text || '',
+    Kurzbeantwortung: row.kurzbeantwortung || '',
+    Schadensnummer_Versicherung: d.schadensnummer_versicherung || '',
+    Timestamp: row.created_at || '',
+    Updated_At: row.updated_at || '',
+    SV_Email: localStorage.getItem('prova_sv_email') || ''
+  };
+}
+
+/* LADEN — MEGA⁷²-Phase-A: Supabase-Migration */
 async function ladeGutachten(){
   const rid=sessionStorage.getItem('prova_record_id');
   // AZ aus mehreren Quellen laden (URL-Parameter, sessionStorage, localStorage)
@@ -54,21 +102,35 @@ async function ladeGutachten(){
     || sessionStorage.getItem('prova_current_az')
     || localStorage.getItem('prova_letztes_az')
     || '';
-  let url;
-  if(rid&&!fall){
-    url=`/v0/${AT_BASE}/${AT_TABLE}/${rid}`;
-  } else if(fall){
-    url=`/v0/${AT_BASE}/${AT_TABLE}?filterByFormula=${encodeURIComponent(`AND(OR({Aktenzeichen}="${fall}"),{KI_Entwurf}!="")`)}&sort[0][field]=Timestamp&sort[0][direction]=desc&maxRecords=1`;
-  } else {
-    url=`/v0/${AT_BASE}/${AT_TABLE}?filterByFormula=${encodeURIComponent('{KI_Entwurf}!=""')}&sort[0][field]=Timestamp&sort[0][direction]=desc&maxRecords=1`;
-  }
+  const sb = await _getSupabase();
+  if (!sb) throw new Error('Supabase nicht verfügbar');
   try {
-    const res=await provaFetch('/.netlify/functions/airtable',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({method:'GET',path:url})});
-    if(!res.ok) throw new Error('HTTP '+res.status);
-    const data=await res.json();
-    let rec=rid&&!fall ? data : data.records?.[0];
+    let rec = null;
+    const selectCols = 'id, az, titel, status, phase_aktuell, schadensart_label, schadensstichtag, auftragsdatum, objekt, details, auftraggeber_typ, fachurteil_text, kurzbeantwortung, created_at, updated_at';
+    if (rid && !fall) {
+      // Lookup by record-id (UUID)
+      const r = await sb.from('auftraege').select(selectCols)
+        .eq('id', rid).is('deleted_at', null).maybeSingle();
+      if (r.error) throw new Error(r.error.message);
+      rec = r.data;
+    } else if (fall) {
+      // Lookup by Aktenzeichen — bevorzugt mit fachurteil_text (entspricht alter Airtable-Filter "KI_Entwurf"!="")
+      const r = await sb.from('auftraege').select(selectCols)
+        .eq('az', fall).is('deleted_at', null)
+        .order('created_at', { ascending: false }).limit(1).maybeSingle();
+      if (r.error) throw new Error(r.error.message);
+      rec = r.data;
+    } else {
+      // Fallback: letzter Auftrag mit fachurteil_text
+      const r = await sb.from('auftraege').select(selectCols)
+        .not('fachurteil_text', 'is', null).is('deleted_at', null)
+        .order('created_at', { ascending: false }).limit(1).maybeSingle();
+      if (r.error) throw new Error(r.error.message);
+      rec = r.data;
+    }
     if(!rec) throw new Error('Kein Gutachten gefunden.');
-    recId=rec.id; recFields=rec.fields||{};
+    recId = rec.id;
+    recFields = _auftragRowToFields(rec);
     await ladeSVProfil();
     renderDoc();
     document.getElementById('loading-indicator').style.display='none';
@@ -133,17 +195,31 @@ async function ladeGutachten(){
   }
 }
 
-/* SV PROFIL */
+/* SV PROFIL — MEGA⁷²-Phase-A: localStorage-only Fallback (war Airtable-PATCH).
+   TODO Phase-B: SV-Profil aus users-Table / lib/supabase-client.getCurrentUser()
+   laden + caching. Aktuell: cached durch onboarding-Flow in localStorage. */
 async function ladeSVProfil(){
-  const email=localStorage.getItem('prova_sv_email')||recFields.SV_Email||'';
+  const email = localStorage.getItem('prova_sv_email') || recFields.SV_Email || '';
   if(!email) return;
-  try {
-    const url=`/v0/${AT_BASE}/tbladqEQT3tmx4DIB?filterByFormula=${encodeURIComponent(`{SV_Email}="${email}"`)}&maxRecords=1`;
-    const res=await provaFetch('/.netlify/functions/airtable',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({method:'GET',path:url})});
-    if(!res.ok) return;
-    const d=await res.json();
-    if(d?.records?.length){ svProfil=d.records[0].fields; svProfil.email=email; }
-  } catch(e){}
+  // Profil aus localStorage rekonstruieren (gespeichert beim Login-Flow)
+  svProfil = {
+    email,
+    SV_Email: email,
+    Vorname:    localStorage.getItem('prova_sv_vorname') || '',
+    Nachname:   localStorage.getItem('prova_sv_nachname') || '',
+    Titel:      localStorage.getItem('prova_sv_titel') || '',
+    Anrede:     localStorage.getItem('prova_sv_anrede') || '',
+    Bezeichnung_Lang: localStorage.getItem('prova_sv_bezeichnung_lang') || '',
+    Adresse:    localStorage.getItem('prova_sv_adresse') || '',
+    PLZ:        localStorage.getItem('prova_sv_plz') || '',
+    Ort:        localStorage.getItem('prova_sv_ort') || '',
+    Telefon:    localStorage.getItem('prova_sv_telefon') || '',
+    Mobil:      localStorage.getItem('prova_sv_mobil') || '',
+    USt_ID:     localStorage.getItem('prova_sv_ust_id') || '',
+    IBAN:       localStorage.getItem('prova_sv_iban') || '',
+    BIC:        localStorage.getItem('prova_sv_bic') || '',
+    Bank:       localStorage.getItem('prova_sv_bank') || ''
+  };
 }
 
 /* RENDER */
@@ -632,24 +708,20 @@ async function approveGutachten(){
     chip.innerHTML='<div style="width:7px;height:7px;border-radius:50%;background:currentColor;"></div> Freigegeben';
     localStorage.setItem('prova_stellungnahme_done','0');
 
-    // Airtable Status → "Freigegeben" (non-blocking)
+    // MEGA⁷²-Phase-A: Supabase Status-Update → 'abgeschlossen' (non-blocking)
     try {
-      provaFetch('/.netlify/functions/airtable', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          method: 'PATCH',
-          path: '/v0/' + AT_BASE + '/' + AT_TABLE + '/' + recId,
-          payload: {
-            fields: {
-              Status: 'Freigegeben',
-              Freigabe_Datum: new Date().toISOString().split('T')[0],
-              Freigabe_Durch: localStorage.getItem('prova_sv_email') || ''
-            }
-          }
-        })
-      }).catch(e => console.warn('Status-Update:', e));
-    } catch(e) { console.warn('Freigabe Status:', e); }
+      const sb = await _getSupabase();
+      if (sb && recId) {
+        sb.from('auftraege').update({
+          status: 'abgeschlossen',
+          abgeschlossen_am: new Date().toISOString()
+        }).eq('id', recId).then(function(r){
+          if (r.error) console.warn('[Freigabe-Status]', r.error.message);
+        });
+      }
+    } catch (e) { console.warn('[Freigabe-Status]', e); }
+    // Freigabe-Datum + Freigabe-Durch: TODO Phase-B als Audit-Trail-Insert
+    // (alter Airtable-PATCH-Path entfernt). Aktuell nur Status-Update oben + WH_S3-Webhook.
 
     // E-Mail CTA einblenden
     try {
@@ -733,14 +805,17 @@ async function speichereAenderungen(){
   const txt=document.getElementById('gutachten-entwurf-content').innerText;
   if(!recId){zeigToast('Kein Datensatz.','err');return;}
   try {
-    const url=`/v0/${AT_BASE}/${AT_TABLE}/${recId}`;
-    const res=await provaFetch('/.netlify/functions/airtable',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({method:'PATCH',path:url,payload:{fields:{KI_Entwurf:txt}}})});
-    if(!res.ok) throw new Error('HTTP '+res.status);
-    if(recFields) recFields.KI_Entwurf=txt;
-    localStorage.setItem('prova_entwurf_text',txt);
+    // MEGA⁷²-Phase-A: KI_Entwurf → fachurteil_text (auftraege)
+    const sb = await _getSupabase();
+    if (!sb) throw new Error('Supabase nicht verfügbar');
+    const upd = await sb.from('auftraege').update({ fachurteil_text: txt })
+      .eq('id', recId).select('id').single();
+    if(upd.error) throw new Error(upd.error.message);
+    if(recFields) recFields.KI_Entwurf = txt;
+    localStorage.setItem('prova_entwurf_text', txt);
     zeigToast('Gespeichert ✅','ok');
     toggleEdit();
-  } catch(e){ zeigToast('Fehler beim Speichern.','err'); }
+  } catch(e){ console.warn('[speichereAenderungen]', e.message || e); zeigToast('Fehler beim Speichern.','err'); }
 }
 
 /* PRÜFLISTE */
