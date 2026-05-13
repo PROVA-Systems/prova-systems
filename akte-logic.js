@@ -482,7 +482,7 @@ async function handleDokUpload(files) {
           var kiData = await kiRes.json();
           // Typ erkennen aus dem Inhalt
           if (kiData.beweisfragen && kiData.beweisfragen.length > 0) { typLabel = 'Beweisbeschluss'; icon = '⚖️'; }
-          else if (file.name.toLowerCase().indexOf('stellungnahme') >= 0) { typLabel = 'Stellungnahme'; icon = '💬'; }
+          else if (file.name.toLowerCase().indexOf('stellungnahme') >= 0 || file.name.toLowerCase().indexOf('fachurteil') >= 0) { typLabel = 'Stellungnahme'; icon = '💬'; }
           else if (file.name.toLowerCase().indexOf('rechnung') >= 0) { typLabel = 'Rechnung'; icon = '🧾'; }
           else if (kiData.frist) { typLabel = 'Gerichtsverfügung'; icon = '📋'; }
           else { typLabel = 'Schriftstück'; icon = '📄'; }
@@ -726,8 +726,8 @@ window.oeffneStellung = function() {
   if(obj.trim()) sessionStorage.setItem('prova_current_objekt', obj.trim());
   if(baujahr) sessionStorage.setItem('prova_current_baujahr', baujahr);
   // record_id bleibt aus sessionStorage (bereits gesetzt)
-  // az als URL-Parameter damit stellungnahme.html es auch ohne sessionStorage hat
-  window.location.href = az ? 'stellungnahme.html?az=' + encodeURIComponent(az) : 'stellungnahme.html';
+  // az als URL-Parameter damit fachurteil.html es auch ohne sessionStorage hat
+  window.location.href = az ? 'fachurteil.html?az=' + encodeURIComponent(az) : 'fachurteil.html';
 };
 
 /* ─────────────────────────────────────────── */
@@ -770,7 +770,7 @@ var WORKFLOW = [
   {
     schritt: 4,
     name: '§6 Fachurteil',
-    seite: 'stellungnahme.html',
+    seite: 'fachurteil.html',
     icon: '⚖️',
     farbe: '#f59e0b'
   },
@@ -847,7 +847,22 @@ function ladeFallKontext() {
                  || '';
   
   if (!az) return null;
-  
+
+  // MEGA⁷⁰ Phase 1.2.2 — Akte-Open setzt aktiven Fall für Sidebar-Anker.
+  // Fall-Wechsel-Bug-Fix: wenn neuer Fall ≠ vorheriger → Phase resetten,
+  // damit Sidebar nicht alte Phase aus anderem Fall zeigt (Web-Claude-Review 1.2).
+  try {
+    var prev = localStorage.getItem('prova_aktiver_fall') || '';
+    if (prev && prev !== az) {
+      localStorage.removeItem('prova_aktuelle_phase');
+    }
+    localStorage.setItem('prova_aktiver_fall', az);
+    if (schadenart) localStorage.setItem('prova_schadenart', schadenart);
+    if (adresse)    localStorage.setItem('prova_adresse', adresse);
+    // Default-Phase=2 (Ortstermin) wenn noch nie gesetzt (oder gerade resettet)
+    if (!localStorage.getItem('prova_aktuelle_phase')) localStorage.setItem('prova_aktuelle_phase', '2');
+  } catch(e){}
+
   return { az: az, schadenart: schadenart, adresse: adresse, recordId: recordId };
 }
 
@@ -894,7 +909,7 @@ function baueBanner(kontext, aktuellerSchritt, istWerkzeug) {
     if (naechster) {
       var naechsterUrl = naechster.seite;
       // AZ mitgeben wenn relevant
-      if (naechster.seite.indexOf('stellungnahme') >= 0 && az) {
+      if (naechster.seite.indexOf('fachurteil') >= 0 && az) {
         naechsterUrl = naechster.seite + '?az=' + encodeURIComponent(az);
       } else if (naechster.seite.indexOf('freigabe') >= 0 && recordId) {
         naechsterUrl = naechster.seite + '?id=' + recordId;

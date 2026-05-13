@@ -151,7 +151,7 @@
     } else if (phase === 3) {
       phaseTxt = 'Phase 3: Gutachten';
       ctaLabel = '§6 schreiben';
-      ctaHref  = 'stellungnahme.html?az=' + encodeURIComponent(az);
+      ctaHref  = 'fachurteil.html?az=' + encodeURIComponent(az);
       ctaColor = '#f59e0b';
     } else if (phase === 4) {
       phaseTxt = 'Phase 4: Freigabe';
@@ -562,7 +562,7 @@
       { id: 'beweissicherung',   icon: '🔍', label: 'Beweissicherung',            url: 'app.html?typ=beweis' },
       { id: 'ergaenzung',        icon: '📄', label: 'Ergänzungsgutachten (§411 ZPO)', url: 'ergaenzung.html' },
       { id: 'gegengutachten',    icon: '🔄', label: 'Gegengutachten / Erwiderung', url: 'widerspruch-gutachten.html' },
-      { id: 'stellungnahme',     icon: '✍️',  label: 'Gutachterliche Stellungnahme',   url: 'gutachterliche-stellungnahme.html' }
+      { id: 'kurzstellungnahme', icon: '✍️',  label: 'Gutachterliche Stellungnahme',   url: 'kurzstellungnahme.html' }
     ]},
     { group: 'B · Bewertung', items: [
       { id: 'wertgutachten', icon: '🏠', label: 'Wertgutachten', url: 'wertgutachten.html' }
@@ -1515,7 +1515,7 @@ window.provaSbLogout = function() {
       text: '💡 Dieser Button zeigt immer Ihren nächsten Schritt im Gutachten-Workflow.',
       pos: 'bottom', delay: 2000
     },
-    'stellungnahme.html': {
+    'fachurteil.html': {
       target: '#svTextA',
       text: '💡 Tippen Sie <kbd>/</kbd> für schnelle Einfügungen: Normen, Textbausteine, Phrasen.',
       pos: 'top', delay: 1800

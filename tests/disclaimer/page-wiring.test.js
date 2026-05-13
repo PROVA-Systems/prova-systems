@@ -24,18 +24,18 @@ const PARAGRAPH_407A = /§407a/;
 const SCRIPT_WIRED_PAGES = [
   'gericht-auftrag.html',
   'ortstermin-modus.html',
-  'stellungnahme.html',
+  'fachurteil.html',
   'akte.html',
   'app.html',
   'freigabe.html',
-  'gutachterliche-stellungnahme.html',
+  'kurzstellungnahme.html',
   'wertgutachten.html'
 ];
 
 const INLINE_DISCLAIMER_PAGES = [
   'gericht-auftrag.html',
   'ortstermin-modus.html',
-  'stellungnahme.html'
+  'fachurteil.html'
 ];
 
 describe('Disclaimer-Page-Wiring — script tag', () => {
@@ -77,8 +77,8 @@ describe('Disclaimer-Page-Wiring — Tooltip auf KI-Buttons', () => {
     assert.ok(m, 'ki-btn (Diktat) fehlt title-Attribut mit §407a');
   });
 
-  test('stellungnahme.html: KI-Assist-Button hat title-Attribut', () => {
-    const html = read('stellungnahme.html');
+  test('fachurteil.html: KI-Assist-Button hat title-Attribut', () => {
+    const html = read('fachurteil.html');
     const m = html.match(/onclick="kiAssist\('assist'\)"[^>]*title="[^"]*§407a/);
     assert.ok(m, 'KI-Assist-Button fehlt title-Attribut mit §407a');
   });

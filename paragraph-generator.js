@@ -346,7 +346,7 @@
   };
 
   /* ──────────────────────────────────────────────
-     UI-Helper: Guided-Analysis in stellungnahme.html rendern
+     UI-Helper: Guided-Analysis in fachurteil.html rendern
      (nicht-kopierbare Darstellung)
   ────────────────────────────────────────────── */
   PROVA.renderGuidedAnalysis = function(analyse, containerId) {

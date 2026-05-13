@@ -10,7 +10,7 @@
 //   ?mode=smart  → Provider filtert auf 15, KI wählt 3-5 kontext-relevante (~1.1s)
 //
 // Antwort ist bereits Frontend-kompatibel (Felder n, t, g statt num, titel, gw)
-// — ersetzt die lokale NORMEN_DB in stellungnahme-logic.js und wertgutachten-logic.js.
+// — ersetzt die lokale NORMEN_DB in fachurteil-logic.js und wertgutachten-logic.js.
 //
 // Beide Modi sind SAFE: bei Fehler → leere Liste + HTTP 200, kein Crash.
 // Frontend hat zusätzlich eigenen lokalen Fallback (NORMEN_DB bleibt als Notfall).

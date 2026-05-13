@@ -6,7 +6,7 @@ const fs = require('fs');
 const path = require('path');
 
 const Lib = require('../../lib/skizzen-embed');
-const html = fs.readFileSync(path.join(__dirname, '..', '..', 'stellungnahme.html'), 'utf8');
+const html = fs.readFileSync(path.join(__dirname, '..', '..', 'fachurteil.html'), 'utf8');
 const libSrc = fs.readFileSync(path.join(__dirname, '..', '..', 'lib', 'skizzen-embed.js'), 'utf8');
 
 test('A4: skizzen-list.js Lambda existiert (existing W12b)', () => {
@@ -14,7 +14,7 @@ test('A4: skizzen-list.js Lambda existiert (existing W12b)', () => {
   assert.ok(fs.existsSync(lambdaPath), 'skizzen-list.js fehlt');
 });
 
-test('A4: Sidebar skizzen-sidebar in stellungnahme.html', () => {
+test('A4: Sidebar skizzen-sidebar in fachurteil.html', () => {
   assert.match(html, /id="skizzen-sidebar"/);
 });
 
@@ -66,7 +66,7 @@ test('A4: HTML-Escape gegen XSS in name-Feld', () => {
   assert.match(result, /&lt;script&gt;/);
 });
 
-test('A4: Marker-Pattern \\[SKIZZE-N\\] in stellungnahme.html dokumentiert', () => {
+test('A4: Marker-Pattern \\[SKIZZE-N\\] in fachurteil.html dokumentiert', () => {
   // Lib enthält das Pattern (zumindest als Regex)
   assert.match(libSrc, /\\\[SKIZZE-/);
 });

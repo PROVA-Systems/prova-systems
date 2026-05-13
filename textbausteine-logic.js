@@ -390,7 +390,7 @@ function platzhalterEinfuegen(ph) {
 }
 
 // ============================================================
-// EINFÜGEN-FLOW (wird von stellungnahme.html aufgerufen)
+// EINFÜGEN-FLOW (wird von fachurteil.html aufgerufen)
 // ============================================================
 function bausteineEinfuegen(id) {
   var b = _bausteine.find(function(b){return b.id===id;});
@@ -407,7 +407,7 @@ function bausteineEinfuegen(id) {
   sessionStorage.setItem('prova_tb_einfuegen', text);
   sessionStorage.setItem('prova_tb_einfuegen_id', id);
 
-  // In Normen-Queue-Struktur → stellungnahme.html liest beide
+  // In Normen-Queue-Struktur → fachurteil.html liest beide
   try {
     var queue = JSON.parse(localStorage.getItem('prova_normen_queue') || '[]');
     queue.push({ num: b.titel || 'Textbaustein', text: text, ts: new Date().toISOString(), typ: 'baustein' });
@@ -428,7 +428,7 @@ function bausteineEinfuegen(id) {
   var az = localStorage.getItem('prova_aktiver_fall') || '';
   zeigeInlineBanner(
     '📋 ' + (b.titel||'Baustein') + ' gespeichert' + (az ? ' · Fall ' + az : ''),
-    az ? 'stellungnahme.html' : 'archiv.html',
+    az ? 'fachurteil.html' : 'archiv.html',
     az ? '→ Zur Stellungnahme' : '→ Fall auswählen'
   );
 }
@@ -468,7 +468,7 @@ function befuellePlatzhalter(text) {
   });
 }
 
-// ── Einfügen-Modal (aus stellungnahme.html als Popup) ──
+// ── Einfügen-Modal (aus fachurteil.html als Popup) ──
 function openEinfuegenModal() {
   document.getElementById('ei-search').value = '';
   renderEinfuegenListe();
@@ -704,7 +704,7 @@ var WORKFLOW = [
   {
     schritt: 4,
     name: '§6 Fachurteil',
-    seite: 'stellungnahme.html',
+    seite: 'fachurteil.html',
     icon: '⚖️',
     farbe: '#f59e0b'
   },
@@ -828,7 +828,7 @@ function baueBanner(kontext, aktuellerSchritt, istWerkzeug) {
     if (naechster) {
       var naechsterUrl = naechster.seite;
       // AZ mitgeben wenn relevant
-      if (naechster.seite.indexOf('stellungnahme') >= 0 && az) {
+      if (naechster.seite.indexOf('fachurteil') >= 0 && az) {
         naechsterUrl = naechster.seite + '?az=' + encodeURIComponent(az);
       } else if (naechster.seite.indexOf('freigabe') >= 0 && recordId) {
         naechsterUrl = naechster.seite + '?id=' + recordId;

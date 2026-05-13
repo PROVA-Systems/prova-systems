@@ -5,7 +5,7 @@ const assert = require('node:assert');
 const fs = require('fs');
 const path = require('path');
 
-const html = fs.readFileSync(path.join(__dirname, '..', '..', 'stellungnahme.html'), 'utf8');
+const html = fs.readFileSync(path.join(__dirname, '..', '..', 'fachurteil.html'), 'utf8');
 const libSrc = fs.readFileSync(path.join(__dirname, '..', '..', 'lib', 'ki-s-stufen.js'), 'utf8');
 
 function evalLib() {

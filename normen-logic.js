@@ -480,7 +480,7 @@ function zeigeEingefuegtBanner(normNum, istPopup) {
         (az ? ('Für Fall ' + az + ' · ') : '') + 'In §6 Stellungnahme verfügbar' +
       '</div>' +
     '</div>' +
-    (az ? '<a href="stellungnahme.html" style="padding:7px 14px;background:#10b981;color:#fff;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;white-space:nowrap;">→ Zu §6</a>' : '') +
+    (az ? '<a href="fachurteil.html" style="padding:7px 14px;background:#10b981;color:#fff;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;white-space:nowrap;">→ Zu §6</a>' : '') +
     '<button onclick="this.parentElement.remove()" style="background:none;border:none;color:var(--text3);font-size:18px;cursor:pointer;padding:0 4px;line-height:1;">×</button>';
 
   document.body.appendChild(banner);

@@ -74,6 +74,8 @@ async function ladeGutachten(){
     document.getElementById('loading-indicator').style.display='none';
     document.getElementById('doc-content-area').style.display='block';
     localStorage.setItem('prova_letztes_az', recFields.Aktenzeichen||'');
+    // MEGA⁷⁰ Phase 1.2.2 — Sidebar-Anker zeigt "Phase 4: Freigabe" + CTA "Freigeben & PDF"
+    if (recFields.Aktenzeichen) { localStorage.setItem('prova_aktiver_fall', recFields.Aktenzeichen); localStorage.setItem('prova_aktuelle_phase', '4'); }
   // Breadcrumb + Status befüllen
   var _az = recFields.Aktenzeichen || recFields.Schadensnummer_Versicherung || '—';
   var _sa = recFields.Schadenart || recFields.Schadensart || '—';

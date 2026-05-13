@@ -107,7 +107,7 @@
     {
       q: 'Wie lange ist der Trial?',
       keywords: ['trial', 'testphase', 'kostenlos', 'gratis', 'ausprobieren', 'test', '14 tage'],
-      a: 'Der Trial läuft 14 Tage kostenlos, ohne Kreditkarte. Sie erhalten den vollen Solo-Funktionsumfang: unbegrenzte Gutachten, alle KI-Funktionen, PDF-Generierung. Danach Solo (149 €/Monat) oder Team (279 €/Monat).'
+      a: 'Der Trial läuft 14 Tage kostenlos, ohne Kreditkarte. Sie erhalten den vollen Solo-Funktionsumfang: unbegrenzte Gutachten, alle KI-Funktionen, PDF-Generierung. Danach Solo (179 €/Monat) oder Team (379 €/Monat).'
     },
     {
       q: 'Kann ich auf mehreren Geräten arbeiten?',
@@ -287,7 +287,7 @@
 
     var seitenMap = {
       'app.html': 'Neues Gutachten (app.html)',
-      'stellungnahme.html': '§6 Fachurteil / Stellungnahme',
+      'fachurteil.html': '§6 Fachurteil / Stellungnahme',
       'freigabe.html': 'Freigabe & Export',
       'dashboard.html': 'Zentrale / Dashboard',
       'archiv.html': 'Archiv / Fälle',
@@ -375,7 +375,7 @@
     var svName  = (user.user_metadata && user.user_metadata.name) || svEmail || 'Unbekannt';
     var aktiverFall = localStorage.getItem('prova_aktiver_fall') || '';
     var seitenMap = {
-      'app.html':'Neues Gutachten','stellungnahme.html':'§6 Fachurteil',
+      'app.html':'Neues Gutachten','fachurteil.html':'§6 Fachurteil',
       'freigabe.html':'Freigabe','dashboard.html':'Zentrale',
       'archiv.html':'Archiv','jveg.html':'JVEG-Rechner',
       'erechnung.html':'E-Rechnung','rechnungen.html':'Rechnungen',

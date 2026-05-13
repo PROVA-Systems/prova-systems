@@ -38,7 +38,7 @@ var GEBAEUDETYPEN = ['EFH', 'MFH', 'WHG', 'Gewerbe', 'Büro', 'Halle', 'Sonstige
 /* ══════════════════════════════════════════════════════════
    STARTER-KITS — E: Vorauswahl von Normen nach Schadenart
    Wird beim Chip-Click ausgelöst, in localStorage gespeichert,
-   von stellungnahme.html als Normen-Pinnwand (F) gelesen.
+   von fachurteil.html als Normen-Pinnwand (F) gelesen.
    ══════════════════════════════════════════════════════════ */
 var STARTER_KITS = {
   wasser: {
@@ -163,7 +163,7 @@ function _ladeStarterKit(schadenartId) {
       'prova_fall_normen_' + az,
       JSON.stringify({ kit: schadenartId, normen: kit.normen, hinweise: kit.hinweise, ts: Date.now() })
     );
-    // Auch ohne AZ speichern (Fallback für stellungnahme.html)
+    // Auch ohne AZ speichern (Fallback für fachurteil.html)
     localStorage.setItem(
       'prova_starter_kit_aktiv',
       JSON.stringify({ kit: schadenartId, normen: kit.normen, hinweise: kit.hinweise, schadenart: kit.name })

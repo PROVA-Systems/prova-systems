@@ -1,6 +1,6 @@
 /**
  * Tests für Inline-CSS-Extraction (MEGA²⁸ V3.2-W3-I4 KORR-24)
- * Verifiziert dass stellungnahme.html + app.html keine inline <style>-Blöcke mehr haben
+ * Verifiziert dass fachurteil.html + app.html keine inline <style>-Blöcke mehr haben
  * und stattdessen externe CSS-Files referenzieren.
  */
 
@@ -15,14 +15,14 @@ function read(file) {
   return fs.readFileSync(path.join(ROOT, file), 'utf8');
 }
 
-test('stellungnahme.html: kein <style>-Block mehr', () => {
-  const html = read('stellungnahme.html');
+test('fachurteil.html: kein <style>-Block mehr', () => {
+  const html = read('fachurteil.html');
   assert.strictEqual(html.indexOf('<style>'), -1, 'Erwartet: keine <style>-Tags');
   assert.strictEqual(html.indexOf('</style>'), -1, 'Erwartet: keine </style>-Tags');
 });
 
-test('stellungnahme.html: referenziert stellungnahme.css', () => {
-  const html = read('stellungnahme.html');
+test('fachurteil.html: referenziert stellungnahme.css', () => {
+  const html = read('fachurteil.html');
   assert.match(html, /<link\s+rel="stylesheet"\s+href="stellungnahme\.css">/);
 });
 
@@ -49,8 +49,8 @@ test('app.css: existiert + hat substanziellen Inhalt', () => {
   assert.match(css, /:root/, 'erwartet :root Custom-Property-Block');
 });
 
-test('stellungnahme.html: Filesize reduziert (vorher >70KB → nachher <50KB)', () => {
-  const html = read('stellungnahme.html');
+test('fachurteil.html: Filesize reduziert (vorher >70KB → nachher <50KB)', () => {
+  const html = read('fachurteil.html');
   assert.ok(Buffer.byteLength(html, 'utf8') < 50000,
     'Erwartet: Inline-Extraction reduziert HTML auf < 50KB');
 });
@@ -67,6 +67,6 @@ test('stellungnahme.css + app.css beide enthalten Custom-Properties', () => {
 });
 
 test('Beide HTMLs behalten andere CSS-Links (mobile.css, page-template.css)', () => {
-  assert.match(read('stellungnahme.html'), /href="mobile\.css"/);
+  assert.match(read('fachurteil.html'), /href="mobile\.css"/);
   assert.match(read('app.html'), /href="mobile\.css"/);
 });
