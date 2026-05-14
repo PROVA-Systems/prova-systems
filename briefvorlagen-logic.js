@@ -225,13 +225,23 @@ function ladeFaelle(){
   try{cache=(JSON.parse(localStorage.getItem('prova_archiv_cache_v2')||'{}').data||[]).slice(0,12);}catch(e){}
   if(cache.length){bvRenderFaelle(cache,liste);return;}
   liste.innerHTML='<div style="text-align:center;padding:12px;font-size:12px;color:var(--text3);">Lädt…</div>';
-  var sv=localStorage.getItem('prova_sv_email')||'';
-  provaFetch('/.netlify/functions/airtable',{method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({method:'GET',path:'/v0/'+AT_BASE+'/'+AT_FAELLE
-      +'?pageSize=12&sort[0][field]=Timestamp&sort[0][direction]=desc'
-      +(sv?'&filterByFormula='+encodeURIComponent('{sv_email}="'+sv+'"'):'')})
-  }).then(function(r){return r.json();}).then(function(d){bvRenderFaelle(d.records||[],liste);})
-    .catch(function(){liste.innerHTML='<div style="font-size:12px;color:var(--text3);text-align:center;padding:12px;">Keine Verbindung</div>';});
+  // MEGA⁷⁵-F-Batch2 B3: auftraege via Supabase mit Adapter — RLS workspace-scoped.
+  (async function(){
+    try {
+      var ad = await import('/lib/prova-supabase-adapters.js');
+      var sb = await ad.getSupabase();
+      if (!sb) throw new Error('no-supabase');
+      var r = await sb.from('auftraege').select('*')
+        .is('deleted_at', null)
+        .order('created_at', { ascending: false })
+        .limit(12);
+      if (r.error) throw new Error(r.error.message);
+      var records = (r.data || []).map(function(row){ return { id: row.id, fields: ad.auftragRowToFields(row) }; });
+      bvRenderFaelle(records, liste);
+    } catch(e) {
+      liste.innerHTML='<div style="font-size:12px;color:var(--text3);text-align:center;padding:12px;">Keine Verbindung</div>';
+    }
+  })();
 }
 // P5.A3 (Finding 6.2): Airtable-Felder durch PROVA_SANITIZE.escapeHtml escapen.
 // f.Aktenzeichen/Schadenart/Adresse sind user-controlled (von SV im UI eingegeben
@@ -661,21 +671,19 @@ if (bvSrch) {
 window.provaBriefGesendet = async function(briefId) {
   if (!briefId) return;
   try {
-    await provaFetch('/.netlify/functions/airtable', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        method: 'PATCH',
-        path: '/v0/appJ7bLlAHZoxENWE/tblSzxvnkRE6B0thx/' + briefId,
-        payload: { fields: {
-          versand_status: 'Gesendet',
-          gesendet_am:    new Date().toISOString(),
-        }}
-      })
-    });
-    console.log('[PROVA] BRIEFE.versand_status → Gesendet ✅');
+    // MEGA⁷⁵-F-Batch2 B3: dokumente.update statt Airtable-BRIEFE-PATCH.
+    var mod = await import('/lib/supabase-client.js');
+    var sb = mod.supabase || (mod.getSupabase && mod.getSupabase());
+    if (!sb) return;
+    var upd = await sb.from('dokumente').update({
+      status: 'versendet',
+      sent_at: new Date().toISOString()
+    }).eq('id', briefId);
+    if (upd.error) {
+      console.warn('[PROVA] Brief-Status-Update fehlgeschlagen:', upd.error.message);
+    }
   } catch(e) {
-    console.warn('[PROVA] Brief-Status-Update fehlgeschlagen:', e.message);
+    console.warn('[PROVA] Brief-Status-Update fehlgeschlagen:', e && e.message);
   }
 };
 
