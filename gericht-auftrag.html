@@ -287,18 +287,33 @@ async function speichereAuftrag() {
     Schadensart:          'Gerichtsgutachten'
   };
   try {
-    var headers = Object.assign({'Content-Type':'application/json'}, window.provaAuthHeaders ? window.provaAuthHeaders() : {});
-    var r = await provaFetch('/.netlify/functions/airtable', {
-      method: 'POST', headers: headers,
-      body: JSON.stringify({ method:'POST', path:'/v0/appJ7bLlAHZoxENWE/tblSxV8bsXwd1pwa0', payload:{records:[{fields:felder}]} })
-    });
-    if (r.ok) {
-      document.getElementById('status-badge').className = 'status-badge badge-ok';
-      document.getElementById('status-badge').textContent = '✅ Gespeichert';
-      showMsg('✅ Gerichtsauftrag in Airtable gespeichert!', 'ok');
-      setTimeout(function(){ window.location.href='archiv.html'; }, 1500);
-    } else { showMsg('Fehler beim Speichern.', 'error'); }
-  } catch(e) { showMsg('Fehler: ' + e.message, 'error'); }
+    // MEGA⁷⁵-F-Batch2 B6: Gerichtsauftrag → Supabase auftraege.insert (typ='gericht').
+    var ad = await import('/lib/prova-supabase-adapters.js');
+    var sb = await ad.getSupabase();
+    var wsId = await ad.getCurrentWorkspaceId();
+    if (!sb || !wsId) throw new Error('no-supabase-or-workspace');
+    var r = await sb.from('auftraege').insert({
+      workspace_id:      wsId,
+      az:                felder.Aktenzeichen,
+      typ:               'gericht',
+      titel:             felder.Auftraggeber_Name || 'Gerichtsauftrag',
+      status:            'aktiv',
+      phase_aktuell:     1,
+      auftraggeber_typ:  'gericht',
+      schadensart_label: 'Gerichtsgutachten',
+      objekt:            { adresse: felder.Schaden_Strasse || '' },
+      details:           {
+        auftraggeber: { name: felder.Auftraggeber_Name || '' },
+        notizen: felder.Notizen || '',
+        abgabefrist: felder.Abgabefrist || null
+      }
+    }).select('id').maybeSingle();
+    if (r.error) throw new Error(r.error.message);
+    document.getElementById('status-badge').className = 'status-badge badge-ok';
+    document.getElementById('status-badge').textContent = '✅ Gespeichert';
+    showMsg('✅ Gerichtsauftrag gespeichert!', 'ok');
+    setTimeout(function(){ window.location.href='archiv.html'; }, 1500);
+  } catch(e) { showMsg('Fehler: ' + (e && e.message), 'error'); }
 }
 
 function showMsg(txt, type) {

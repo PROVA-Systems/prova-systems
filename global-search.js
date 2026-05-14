@@ -272,43 +272,41 @@ const PROVASearch = {
   },
 
   _searchAirtable(q) {
-    // Debounce: 400ms warten, dann suchen
+    // MEGA⁷⁵-F-Batch2 B8: Live-Suche jetzt direkt gegen Supabase auftraege.
+    // PostgREST .or(...ilike...) statt Airtable FIND/AND. RLS workspace-scoped.
     clearTimeout(this._atSearchTimer);
     this._atSearchQ = q;
-    this._atSearchTimer = setTimeout(() => {
+    this._atSearchTimer = setTimeout(async () => {
       if (q.length < 2 || q !== this._atSearchQ) return;
-      const svEmail = localStorage.getItem('prova_sv_email') || '';
-      if (!svEmail) return;
-      const formula = encodeURIComponent(
-        `AND(OR(FIND("${q}",LOWER({Aktenzeichen})),FIND("${q}",LOWER({Auftraggeber})),FIND("${q}",LOWER({Schaden_Strasse}))),{sv_email}="${svEmail}")`
-      );
-      provaFetch('/.netlify/functions/airtable', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          method: 'GET',
-          path: `/v0/appJ7bLlAHZoxENWE/tblSxV8bsXwd1pwa0?filterByFormula=${formula}&maxRecords=5&fields[]=Aktenzeichen&fields[]=Auftraggeber&fields[]=Adresse&fields[]=Schadenart`
-        })
-      }).then(r => r.json()).then(data => {
-        if (!data.records || !data.records.length) return;
-        // Nur anzeigen wenn Suche noch aktiv
+      try {
+        const ad = await import('/lib/prova-supabase-adapters.js');
+        const sb = await ad.getSupabase();
+        if (!sb) return;
+        const esc = q.replace(/[%]/g, '');
+        const sup = await sb.from('auftraege')
+          .select('id, az, titel, schadensart_label, details')
+          .is('deleted_at', null)
+          .or(`az.ilike.%${esc}%,titel.ilike.%${esc}%,schadensart_label.ilike.%${esc}%`)
+          .limit(5);
+        if (sup.error || !sup.data || !sup.data.length) return;
         if (q !== this._q) return;
-        const atResults = data.records.map(r => ({
-          type: 'case', label: r.fields.Aktenzeichen || '—', icon: '🔍',
-          href: 'akte.html?az=' + encodeURIComponent(r.fields.Aktenzeichen || ''),
-          sub: [r.fields.Auftraggeber, r.fields.Schadensart].filter(Boolean).join(' · ') + ' (Airtable)'
-        }));
-        // Ergebnisse ergänzen (doppelte entfernen)
+        const atResults = sup.data.map(row => {
+          const auftrName = (row.details && row.details.auftraggeber && row.details.auftraggeber.name) || '';
+          return {
+            type: 'case', label: row.az || '—', icon: '🔍',
+            href: 'akte.html?az=' + encodeURIComponent(row.az || ''),
+            sub: [auftrName, row.schadensart_label].filter(Boolean).join(' · ')
+          };
+        });
         const existing = document.querySelectorAll('.ps-item[data-href]');
         const existingHrefs = [...existing].map(e => e.dataset.href);
         const neu = atResults.filter(r => !existingHrefs.includes(r.href));
         if (!neu.length) return;
         const container = document.getElementById('prova-search-results');
         if (!container) return;
-        // Trennlinie + neue Ergebnisse
         const div = document.createElement('div');
         div.className = 'ps-group';
-        div.textContent = 'Aus Airtable';
+        div.textContent = 'Live aus DB';
         container.appendChild(div);
         neu.forEach(r => {
           const item = document.createElement('div');
@@ -319,7 +317,7 @@ const PROVASearch = {
           item.addEventListener('click', () => { window.location.href = r.href; });
           container.appendChild(item);
         });
-      }).catch(() => {});
+      } catch(_) { /* silent — Live-Search ist Komfort */ }
     }, 400);
   },
 
