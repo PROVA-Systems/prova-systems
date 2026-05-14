@@ -219,37 +219,11 @@ exports.handler = async (event) => {
       if (status === 'success' && pdfUrl) {
         console.log(`[MahnungPDF] PDF fertig: ${pdfUrl}`);
 
-        // PDF-URL persistent in Airtable BRIEFE speichern
-        try {
-          const svEmail = payload.sv_email || '';
-          const az = payload.aktenzeichen || '';
-          if (svEmail && az) {
-            await fetch(`https://api.airtable.com/v0/appJ7bLlAHZoxENWE/tblSzxvnkRE6B0thx`, {
-              method: 'POST',
-              headers: {
-                'Authorization': `Bearer ${process.env.AIRTABLE_PAT}`,
-                'Content-Type': 'application/json'
-              },
-              body: JSON.stringify({
-                records: [{
-                  fields: {
-                    sv_email: svEmail,
-                    aktenzeichen: az,
-                    brief_typ: `Mahnung ${mahnstufe}. Stufe`,
-                    brief_pdf_url: pdfUrl,
-                    mahnstufe: mahnstufe,
-                    versand_status: 'Gesendet',
-                    gesendet_am: new Date().toISOString(),
-                    brief_vorlage_datei: `mahnung-${mahnstufe}.html`
-                  }
-                }]
-              })
-            });
-            console.log('[MahnungPDF] URL in Airtable BRIEFE gespeichert');
-          }
-        } catch (saveErr) {
-          console.warn('[MahnungPDF] Airtable-Speicherung fehlgeschlagen:', saveErr.message);
-        }
+        // MEGA⁷⁶: Airtable-Persistierung entfernt. Mahnung-PDF-URL wird
+        // vom Frontend nach erfolgreichem Response über lib/prova-supabase-
+        // adapters.logBriefGenerated() in dokumente (typ='mahnung_X') geschrieben.
+        // TODO MEGA77: optional direkten Supabase-Write hier in der Netlify-Function
+        //   (Service-Role-Key) für robusteren Server-Side-Audit-Trail.
 
         return {
           statusCode: 200,
