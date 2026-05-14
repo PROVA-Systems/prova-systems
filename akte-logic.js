@@ -218,6 +218,27 @@ function speichereSkipBegruendung(recordId, phaseN, begruendung){
   localStorage.setItem('prova_phase_skips_'+recordId, JSON.stringify(data));
 }
 
+/* MEGA⁷⁷ B.1: applyPhaseVisibility — Progressive-Disclosure-Helper.
+   Steuert .sec-*-Sections per data-phase-Attribut basierend auf aktuellem
+   Auftrag-Status. War aus Vor-Refactoring-Phase verschwunden und wurde von
+   Z.149 aufgerufen → ReferenceError beim Akte-Load. Definition wiederhergestellt
+   als sichere Pass-Through-Implementierung: alle Sections bleiben sichtbar,
+   abgeschlossen-Auftraege bekommen optional ein readonly-Marker. */
+function applyPhaseVisibility(status){
+  try {
+    var sections = document.querySelectorAll('[data-phase]');
+    var isAbgeschlossen = String(status || '').toLowerCase() === 'abgeschlossen';
+    sections.forEach(function(el){
+      el.style.display = '';  // alle sichtbar lassen
+      if (isAbgeschlossen) el.classList.add('akte-readonly');
+      else el.classList.remove('akte-readonly');
+    });
+  } catch(e) {
+    // Defensiv — Akte-Load nie wegen DOM-Issues crashen lassen
+    console.warn('[applyPhaseVisibility] non-fatal:', e && e.message);
+  }
+}
+
 function renderTimeline(status,f){
   var recordId = (f && f._recordId) || window._currentAkteId || '';
   var aktuellePhase = getAktePhase(f);

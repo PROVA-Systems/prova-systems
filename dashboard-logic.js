@@ -144,36 +144,32 @@ async function loadKiTokenKpi(){
   var el=document.getElementById('kpi-ki-token');
   var sub=document.getElementById('kpi-ki-token-sub');
   if(!el)return;
-  // Spiegel der Liste aus supabase/functions/_shared/admin-auth.ts
-  var ADMIN_EMAILS = ['marcel.schreiber891@gmail.com','marcel.schreiber@prova-systems.de','marcel@prova-systems.de','kontakt@prova-systems.de','admin@prova-systems.de'];
-  var userEmail = (localStorage.getItem('prova_sv_email') || '').toLowerCase();
-  if (ADMIN_EMAILS.indexOf(userEmail) === -1) {
+  // MEGA⁷⁷ B.2: Pre-Check direkt gegen users.is_founder + users.totp_enabled
+  // (Live-Read aus Supabase statt Hardcoded-Email-Liste). Edge Function nutzt
+  // die selbe Truth-Source — keine Drift mehr zwischen Frontend und Backend.
+  var isFounder = false, totpEnabled = false;
+  try {
+    var modSb = await import('/lib/supabase-client.js');
+    var sbCheck = modSb.supabase || (modSb.getSupabase && modSb.getSupabase());
+    if (sbCheck) {
+      var sess = await sbCheck.auth.getSession();
+      var uid = sess?.data?.session?.user?.id;
+      if (uid) {
+        var ures = await sbCheck.from('users').select('is_founder, totp_enabled').eq('id', uid).maybeSingle();
+        isFounder   = !!(ures.data && ures.data.is_founder);
+        totpEnabled = !!(ures.data && ures.data.totp_enabled);
+        try { if (totpEnabled) localStorage.setItem('prova_2fa_enabled', '1'); } catch(_){}
+      }
+    }
+  } catch(_) { /* silent */ }
+  if (!isFounder) {
     el.textContent='—';
-    if(sub)sub.textContent='nur Admin';
+    if(sub)sub.textContent='nur Founder';
     return;
   }
-  // MEGA⁷⁵-F-Batch2 A2: admin-ki-aggregations verlangt zusätzlich aal2 (2FA).
-  // Wenn TOTP nicht aktiviert/verified, schlägt der Call mit 403 fehl bevor er
-  // sinnvolle Daten liefern kann. Tile silent halten statt 403-Spam.
-  var totpEnabled = localStorage.getItem('prova_2fa_enabled') === '1' || localStorage.getItem('prova_totp_enabled') === 'true';
-  if (!totpEnabled) {
-    try {
-      var modSb = await import('/lib/supabase-client.js');
-      var sbCheck = modSb.supabase || (modSb.getSupabase && modSb.getSupabase());
-      if (sbCheck) {
-        var sess = await sbCheck.auth.getSession();
-        var uid = sess?.data?.session?.user?.id;
-        if (uid) {
-          var ures = await sbCheck.from('users').select('totp_enabled').eq('id', uid).maybeSingle();
-          totpEnabled = !!(ures.data && ures.data.totp_enabled);
-          if (totpEnabled) try { localStorage.setItem('prova_2fa_enabled', '1'); } catch(_){}
-        }
-      }
-    } catch(_) { /* silent */ }
-  }
   if (!totpEnabled) {
     el.textContent='—';
-    if(sub)sub.textContent='Admin (2FA)';
+    if(sub)sub.textContent='2FA erforderlich';
     return;
   }
   try{
