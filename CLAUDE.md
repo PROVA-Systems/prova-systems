@@ -5,6 +5,28 @@
 
 ---
 
+## 🚀 Sprint-Stand 2026-05-14 (MEGA⁷⁰ → MEGA⁷³)
+
+| Sprint | Branch | Status |
+|---|---|---|
+| MEGA⁷⁰-Phase-1.1 Kontrast | merged | ✅ live (v3200) |
+| MEGA⁷⁰-Phase-1.2.2 Naming-Cleanup | merged | ✅ live (v3202) |
+| MEGA⁷⁰-Phase-1.2.4 Auftrag-Insert-Hotfix | `fix/mega70-phase-1-2-4-auftrag-insert-schema` | ⏳ pending review |
+| MEGA⁷¹ Datei-Kartographie | merged | ✅ (doc-only) |
+| MEGA⁷² Phase A+B-mini+D | `feat/mega72-full-marathon` | ⏳ pending review |
+| **MEGA⁷³ Autonom-Cleanup-Marathon** | `feat/mega73-cleanup-marathon` | ⏳ **review morgen früh** |
+
+**Phase-G-Plan (2026-05-22, nach 7 Tagen Live-Monitoring):**
+`rm -rf _archiv/2026-05-14/` (9 finale Quarantäne-Files) + Removal des 410-Wrappers in `prova-fetch-auth.js`.
+
+**Offene Folge-Sprints (Marcel-Augen-Sprints):**
+- Phase C Dashboard-Konsolidierung (UI-Polish, ~3-4h)
+- Phase E Function-Audit (115 Netlify + 143 Edge Functions, ~3-4h)
+
+---
+
+---
+
 ## 🎯 AKTIVER PLAN
 
 Ab 27. April 2026 läuft Sprint K-1 (Voll-Supabase-Migration in 6 Sub-Sprints):

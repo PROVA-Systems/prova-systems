@@ -1222,27 +1222,54 @@
       if (!res.ok) throw new Error('HTTP ' + res.status);
       toast('✓ PDF-Erstellung gestartet — Zustellung per E-Mail', 'ok');
 
-      // Airtable-Sync (non-blocking)
-      try {
-        provaFetch('/.netlify/functions/airtable', {
-          method:'POST', headers:{'Content-Type':'application/json'},
-          body: JSON.stringify({
-            method:'POST',
-            path:'/v0/appJ7bLlAHZoxENWE/tblSxV8bsXwd1pwa0',
-            payload: { records:[{ fields: {
-              Aktenzeichen: o.az || '',
-              Flow: 'B',
-              Auftragstyp: _state.typ,
-              Phase: 'Gutachten erstellt',
-              Status: typLabel + ' — ' + fmtEUR(finalWert),
-              Auftraggeber_Name: o.auftraggeber || '',
-              Schaden_Strasse:   o.adresse || '',
-              Notizen:           _state.verfahrenSet.join('+') + ' · Baujahr ' + o.baujahr,
-              sv_email: svEmail
-            }}]}
-          })
-        }).catch(function(){});
-      } catch(err) {}
+      // MEGA⁷³-Phase-2b + MEGA⁷³-Hotfix: Supabase auftraege UPSERT mit isUuid-Check
+      // (verhindert Duplikat-INSERTs bei wiederholtem Save). _state.supabase_id persistiert
+      // via speichern() im localStorage STORAGE_KEY für nächste Iteration.
+      (async function(){
+        try {
+          var _ad = await import('/lib/prova-supabase-adapters.js');
+          var sb = await _ad.getSupabase();
+          if (!sb) return;
+          var sess = await sb.auth.getSession();
+          var userId = sess?.data?.session?.user?.id;
+          var wsId = localStorage.getItem('prova_workspace_id') || null;
+          var existingId = _state.supabase_id
+            || sessionStorage.getItem('prova_wertgutachten_record_id')
+            || new URLSearchParams(window.location.search).get('id')
+            || null;
+          var sbPayload = {
+            workspace_id: wsId,
+            typ: 'wertgutachten',
+            az: o.az || ('WG-' + Date.now().toString().slice(-6)),
+            titel: typLabel + ' — ' + fmtEUR(finalWert),
+            status: 'abgeschlossen',
+            phase_aktuell: 5,
+            schadensart_label: 'Wertgutachten',
+            objekt: { adresse: o.adresse || '', baujahr: o.baujahr || null },
+            details: {
+              auftraggeber: { name: o.auftraggeber || '' },
+              verfahren: _state.verfahrenSet,
+              verkehrswert: finalWert,
+              wertgutachten_typ: _state.typ
+            },
+            kosten_geschaetzt_brutto: finalWert,
+            created_by_user_id: userId
+          };
+          var isUuid = existingId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(existingId);
+          var upd;
+          if (isUuid) {
+            upd = await sb.from('auftraege').update(sbPayload).eq('id', existingId).select('id').single();
+          } else {
+            upd = await sb.from('auftraege').insert(sbPayload).select('id').single();
+          }
+          if (upd.error) { console.warn('[wertgutachten-supabase-save]', upd.error.message); return; }
+          if (upd.data && upd.data.id && !isUuid) {
+            _state.supabase_id = upd.data.id;
+            sessionStorage.setItem('prova_wertgutachten_record_id', upd.data.id);
+            speichern();
+          }
+        } catch(err) { console.warn('[wertgutachten-supabase-save]', err.message || err); }
+      })();
     } catch(err) { toast('Fehler: ' + err.message, 'err'); }
   };
 

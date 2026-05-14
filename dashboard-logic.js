@@ -186,13 +186,23 @@ function zeigOnboarding(){
 
   // Alle erledigt → Box komplett ausblenden
   if(profilOk && kontakteOk) {
-    // Onboarding-Flag in Airtable setzen (cross-device Persistenz)
+    // MEGA⁷³-Phase-3 Track 3: Onboarding-Done in users.onboarding_completed_at persistieren
+    // (Schema-verifiziert via supabase-migrations/01_schema_foundation.sql Z.178)
     if(!localStorage.getItem('prova_onboarding_done')) {
       localStorage.setItem('prova_onboarding_done','true');
-      var atRecId = localStorage.getItem('prova_at_sv_record_id');
-      // TODO MEGA⁷²-Phase-B: Onboarding-Done Cross-Device-Sync auf Supabase users-table
-      // (Tabelle users.onboarding_completed_at oder feature_events). Aktuell localStorage-only.
-      // Bisheriger Airtable-Patch-Pfad entfernt (Regel 35a, kein neuer Airtable-Live-Code).
+      (async function(){
+        try {
+          var sb = await _getSupabase();
+          if (!sb) return;
+          var sess = await sb.auth.getSession();
+          var userId = sess?.data?.session?.user?.id;
+          if (!userId) return;
+          var upd = await sb.from('users').update({
+            onboarding_completed_at: new Date().toISOString()
+          }).eq('id', userId).select('id').single();
+          if (upd.error) console.warn('[onboarding-sync]', upd.error.message);
+        } catch(e) { console.warn('[onboarding-sync]', e.message || e); }
+      })();
     }
     var feedCard = document.querySelector('.feed-card');
     if(feedCard) {

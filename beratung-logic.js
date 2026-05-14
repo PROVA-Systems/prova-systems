@@ -360,26 +360,49 @@
     };
 
     try {
-      var method, path;
-      // MEGA⁷²-Phase-B-mini: Write-Path TODO Phase-B-write — sb.from('auftraege').upsert
-      // Aktuell: Airtable-410-Wrapper antwortet defensiv, lokal-only Save funktioniert.
-      var res = await provaFetch('/.netlify/functions/airtable', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ method: 'POST', path: '/v0/dummy', payload: payload })
-      });
-      if (!res.ok) throw new Error('HTTP ' + res.status);
-      var data = await res.json();
-      if (data.id) {
-        _recordId = data.id;
+      // MEGA⁷³-Phase-2a: Supabase auftraege upsert mit beratungs-spezifischen Feldern in details jsonb.
+      var _ad = await import('/lib/prova-supabase-adapters.js');
+      var sb = await _ad.getSupabase();
+      if (!sb) throw new Error('Supabase nicht verfügbar');
+      var sess = await sb.auth.getSession();
+      var userId = sess?.data?.session?.user?.id;
+      var wsId = localStorage.getItem('prova_workspace_id') || null;
+      var dbStatus = _phase === 3 ? 'abgeschlossen' : (_phase === 2 ? 'aktiv' : 'entwurf');
+      var sbPayload = {
+        workspace_id: wsId,
+        typ: 'beratung',
+        az: f['br-az'],
+        titel: f['br-thema'] || 'Beratung',
+        status: dbStatus,
+        phase_aktuell: _phase || 1,
+        schadensart_label: f['br-thema'] || null,
+        objekt: { adresse: f['br-obj'] || '' },
+        details: {
+          auftraggeber: { name: f['br-ag'] || '', email: f['br-ag-email'] || '' },
+          beratungs_thema: f['br-thema'] || '',
+          anwesende: f['br-anwesende'] || '',
+          termin_datum: f['br-termin-datum'] || null,
+          protokoll_text: f['br-protokoll'] || ''
+        },
+        created_by_user_id: userId
+      };
+      var isUuid = _recordId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(_recordId);
+      var upd;
+      if (isUuid) {
+        upd = await sb.from('auftraege').update(sbPayload).eq('id', _recordId).select('id').single();
+      } else {
+        upd = await sb.from('auftraege').insert(sbPayload).select('id').single();
+      }
+      if (upd.error) throw new Error(upd.error.message);
+      if (upd.data && upd.data.id) {
+        _recordId = upd.data.id;
         sessionStorage.setItem('prova_beratung_record_id', _recordId);
-        // URL aktualisieren damit Reload den Fall findet
         history.replaceState(null, '', 'beratung.html?id=' + _recordId);
       }
-      // Archiv-Cache invalidieren
       try { localStorage.removeItem('prova_archiv_cache_v2'); } catch(e){}
       toast('💾 Fall gespeichert', 'success');
     } catch(e) {
+      console.warn('[beratung-save]', e.message || e);
       toast('Speichern fehlgeschlagen: ' + e.message, 'error');
     }
   };

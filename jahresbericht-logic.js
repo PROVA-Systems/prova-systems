@@ -48,41 +48,21 @@ var ART_FARBEN = ['#4f8ef7','#10B981','#f59e0b','#a78bfa','#ef4444','#06b6d4','#
 // ── Daten laden ──
 async function ladeDaten() {
   try {
-    // P5.B4b: Airtable-Limit pageSize=100, vorher 200 -> 422 Unprocessable
-    // Entity. Mit pageSize=100 + maxRecords=200 + offset-Follow-up bleibt
-    // das Limit gleich (zwei Seiten a 100), nur der Request ist jetzt valid.
-    var svEmail = localStorage.getItem('prova_sv_email') || '';
-    var filterF = svEmail ? '&filterByFormula=' + encodeURIComponent('{sv_email}="' + svEmail + '"') : '';
-    var url = '/v0/' + AIRTABLE_BASE + '/' + AIRTABLE_TABLE
-      + '?pageSize=100&maxRecords=200&sort[0][field]=Timestamp&sort[0][direction]=desc' + filterF;
-    var res = await provaFetch('/.netlify/functions/airtable', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({method:'GET', path: url})
-    });
-    if (!res.ok) {
-      // Server-Body bei 4xx/5xx auslesen fuer besseres Logging — zeigt
-      // die echte Airtable-Fehlermeldung statt nur "HTTP 422".
-      var errBody = '';
-      try { errBody = await res.text(); } catch(_) {}
-      console.warn('[jahresbericht] airtable-error', res.status, errBody.slice(0, 300));
-      throw new Error('HTTP ' + res.status);
+    // MEGA⁷³-Phase-2b: Supabase auftraege via Adapter — RLS filtert workspace_id
+    var _ad = await import('/lib/prova-supabase-adapters.js');
+    var sb = await _ad.getSupabase();
+    if (!sb) throw new Error('Supabase nicht verfügbar');
+    var r = await sb.from('auftraege')
+      .select('id, az, titel, status, typ, schadensart_label, schadensstichtag, objekt, details, auftraggeber_typ, kosten_geschaetzt_brutto, fachurteil_text, abgeschlossen_am, created_at, updated_at')
+      .is('deleted_at', null)
+      .order('created_at', { ascending: false })
+      .limit(200);
+    if (r.error) {
+      console.warn('[jahresbericht] supabase-error', r.error.message);
+      throw new Error(r.error.message);
     }
-    var data = await res.json();
-    _alleRecords = (data.records || []).map(function(r){ return r.fields || {}; });
-
-    // Seite 2 wenn vorhanden (max 200 Records gesamt)
-    if (data.offset) {
-      var url2 = url + '&offset=' + encodeURIComponent(data.offset);
-      var res2 = await provaFetch('/.netlify/functions/airtable', {
-        method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({method:'GET', path: url2})
-      });
-      if (res2.ok) {
-        var data2 = await res2.json();
-        _alleRecords = _alleRecords.concat((data2.records||[]).map(function(r){return r.fields||{};}));
-      }
-    }
+    // Adapter pro Row → Airtable-Style fields für downstream renderBericht/ermittleJahre
+    _alleRecords = (r.data || []).map(function(row){ return _ad.auftragRowToFields(row); });
 
     // Jahre ermitteln und Buttons bauen
     var jahre = ermittleJahre(_alleRecords);

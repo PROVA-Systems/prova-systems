@@ -290,17 +290,68 @@ window.speichereTermin=async function(){
   updateStats();renderKalender();renderListe();
   zeigToast(editId?'Termin aktualisiert ✓':'Termin gespeichert ✓');
 
-  // TODO MEGA⁷²-Phase-B-write: Termin-Save in Supabase (sb.from('termine').upsert(...)).
-  // Aktuell nur localStorage-Save oben (alleTermine + speichereInLS).
-  // Read-Only-Sprint § 1 Princ. 2 — Write-Path migration eigene Phase.
+  // MEGA⁷³-Phase-2a: Termin-Save in Supabase termine-Tabelle.
+  try {
+    var _ad = await import('/lib/prova-supabase-adapters.js');
+    var sb = await _ad.getSupabase();
+    if (sb) {
+      var sess = await sb.auth.getSession();
+      var userId = sess?.data?.session?.user?.id;
+      var wsId = localStorage.getItem('prova_workspace_id') || null;
+      // Auftrag-Link via az → auftrag_id (best-effort, optional)
+      var auftragId = null;
+      if (az) {
+        try {
+          var lookup = await sb.from('auftraege').select('id').eq('az', az).is('deleted_at', null).maybeSingle();
+          if (lookup.data) auftragId = lookup.data.id;
+        } catch(_e) {}
+      }
+      var sbPayload = {
+        workspace_id: wsId,
+        auftrag_id:   auftragId,
+        titel:        titel,
+        typ:          typ,
+        datum:        datum,
+        uhrzeit_von:  uhrzeit || null,
+        notiz:        notiz || null,
+        status:       'offen',
+        created_by_user_id: userId
+      };
+      // Edit-Mode: UPDATE by UUID, sonst INSERT
+      var isUuid = editId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(editId);
+      var upd;
+      if (isUuid) {
+        upd = await sb.from('termine').update(sbPayload).eq('id', editId).select('id').single();
+      } else {
+        upd = await sb.from('termine').insert(sbPayload).select('id').single();
+      }
+      if (upd.error) console.warn('[termine-save]', upd.error.message);
+      else if (upd.data && !editId) {
+        // Lokale ID auf Supabase-UUID umstellen
+        var idx2 = alleTermine.findIndex(function(t){ return t.id === termin.id; });
+        if (idx2 >= 0) alleTermine[idx2].id = upd.data.id;
+        termin.id = upd.data.id;
+        speichereInLS(alleTermine);
+      }
+    }
+  } catch(e) { console.warn('[termine-save]', e.message || e); }
 };
 
-window.loescheTermin=function(id){
+window.loescheTermin=async function(id){
   if(!confirm('Termin löschen?'))return;
   alleTermine=alleTermine.filter(function(t){return t.id!==id;});
   speichereInLS(alleTermine);
   updateStats();renderKalender();renderListe();
   zeigToast('Termin gelöscht');
+  // MEGA⁷³-Phase-2a: Soft-Delete in Supabase
+  try {
+    var isUuid = id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+    if (isUuid) {
+      var _ad = await import('/lib/prova-supabase-adapters.js');
+      var sb = await _ad.getSupabase();
+      if (sb) await sb.from('termine').update({ deleted_at: new Date().toISOString() }).eq('id', id);
+    }
+  } catch(e) { console.warn('[termine-delete]', e); }
 };
 
 /* ─── VIEW TOGGLE ─── */

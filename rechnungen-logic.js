@@ -343,6 +343,30 @@ function speichereLokal(reNr,ag,brutto,status,datum){
   ls.unshift({re_nr:reNr,auftraggeber:ag,betrag_brutto:brutto,Status:status,datum:datum,sv_email:svEmail});
   if(ls.length>50)ls=ls.slice(0,50);
   try{localStorage.setItem('prova_rechnungen_local',JSON.stringify(ls));}catch(e){}
+  // MEGA⁷³-Phase-2a: Supabase Persistenz (fire-and-forget, blockt nicht den UI-Flow).
+  // Bestätigt Rechnung-Row in dokumente-Tabelle. WEBHOOK_S6 macht PDF + Email separat.
+  (async function(){
+    try {
+      var _ad = await import('/lib/prova-supabase-adapters.js');
+      var sb = await _ad.getSupabase();
+      if (!sb) return;
+      var sess = await sb.auth.getSession();
+      var userId = sess?.data?.session?.user?.id;
+      var wsId = localStorage.getItem('prova_workspace_id') || null;
+      // status UI ("Offen"/"Überfällig"/"Bezahlt") → DB (offen/ueberfaellig/bezahlt)
+      var dbStatus = {'Offen':'offen','Überfällig':'ueberfaellig','Bezahlt':'bezahlt','1. Mahnung':'mahnung_1','2. Mahnung':'mahnung_2'}[status] || 'offen';
+      await sb.from('dokumente').insert({
+        workspace_id: wsId,
+        doc_nummer: reNr,
+        typ: 'rechnung',
+        betreff: ag,
+        betrag_brutto: brutto,
+        status: dbStatus,
+        rechnungsdatum: datum || null,
+        created_by_user_id: userId
+      });
+    } catch(e) { console.warn('[rechnung-supabase-save]', e.message || e); }
+  })();
 }
 
 async function ladeListe(){

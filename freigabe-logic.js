@@ -159,13 +159,16 @@ async function ladeGutachten(){
   }
 }
 
-/* SV PROFIL — MEGA⁷²-Phase-A: localStorage-only Fallback (war Airtable-PATCH).
-   TODO Phase-B: SV-Profil aus users-Table / lib/supabase-client.getCurrentUser()
-   laden + caching. Aktuell: cached durch onboarding-Flow in localStorage. */
+/* SV PROFIL — MEGA⁷³-Phase-3: aus Supabase users-Tabelle laden.
+   Schema verifiziert via supabase-migrations/01_schema_foundation.sql Z.142+:
+   email, name, titel, qualifikation, sachgebiet, bestellungsstelle, anschrift,
+   plz, ort, telefon, mobil, fax, signatur_storage_path, stempel_storage_path,
+   letterhead_config (jsonb seit 20260429), onboarding_completed_at.
+   localStorage-Fallback bleibt als Offline-Cache. */
 async function ladeSVProfil(){
   const email = localStorage.getItem('prova_sv_email') || recFields.SV_Email || '';
   if(!email) return;
-  // Profil aus localStorage rekonstruieren (gespeichert beim Login-Flow)
+  // localStorage-Default für Offline + Initial-Pre-Fetch
   svProfil = {
     email,
     SV_Email: email,
@@ -184,6 +187,43 @@ async function ladeSVProfil(){
     BIC:        localStorage.getItem('prova_sv_bic') || '',
     Bank:       localStorage.getItem('prova_sv_bank') || ''
   };
+  // Supabase-Load (override mit aktuellen Daten)
+  try {
+    const sb = await _getSupabase();
+    if (!sb) return;
+    const { data: { user } } = await sb.auth.getUser();
+    if (!user) return;
+    const r = await sb.from('users')
+      .select('email, name, titel, qualifikation, sachgebiet, bestellungsstelle, anschrift, plz, ort, telefon, mobil, fax, signatur_storage_path, stempel_storage_path, letterhead_config')
+      .eq('id', user.id).maybeSingle();
+    if (r.error || !r.data) return;
+    const p = r.data;
+    // name → Vorname/Nachname-Split für Backward-Compat
+    const nameParts = (p.name || '').split(' ');
+    svProfil = Object.assign(svProfil, {
+      email: p.email || email,
+      SV_Email: p.email || email,
+      Name: p.name || '',
+      Vorname: nameParts[0] || svProfil.Vorname,
+      Nachname: nameParts.slice(1).join(' ') || svProfil.Nachname,
+      Titel: p.titel || svProfil.Titel,
+      Qualifikation: p.qualifikation || '',
+      Sachgebiet: p.sachgebiet || '',
+      Bestellungsstelle: p.bestellungsstelle || '',
+      Bezeichnung_Lang: p.qualifikation || p.sachgebiet || svProfil.Bezeichnung_Lang,
+      Adresse: p.anschrift || svProfil.Adresse,
+      Anschrift: p.anschrift || '',
+      PLZ: p.plz || svProfil.PLZ,
+      Ort: p.ort || svProfil.Ort,
+      Telefon: p.telefon || svProfil.Telefon,
+      Mobil: p.mobil || svProfil.Mobil,
+      Fax: p.fax || '',
+      Signatur_Storage_Path: p.signatur_storage_path || '',
+      Stempel_Storage_Path: p.stempel_storage_path || '',
+      Letterhead: p.letterhead_config || {}
+    });
+    localStorage.setItem('prova_sv_profil_cache', JSON.stringify(svProfil));
+  } catch(e) { console.warn('[ladeSVProfil-supabase]', e.message || e); }
 }
 
 /* RENDER */
@@ -673,6 +713,7 @@ async function approveGutachten(){
     localStorage.setItem('prova_stellungnahme_done','0');
 
     // MEGA⁷²-Phase-A: Supabase Status-Update → 'abgeschlossen' (non-blocking)
+    // MEGA⁷³-Phase-3: zusätzlich audit_trail INSERT für §407a-Compliance-Nachweis
     try {
       const sb = await _getSupabase();
       if (sb && recId) {
@@ -682,10 +723,29 @@ async function approveGutachten(){
         }).eq('id', recId).then(function(r){
           if (r.error) console.warn('[Freigabe-Status]', r.error.message);
         });
+        // MEGA⁷³-Phase-3 Track 1: audit_trail INSERT (action='update' weil enum-eingeschränkt;
+        // freigabe-Semantik via payload.action_subtype + entity_typ='auftrag')
+        try {
+          const sess = await sb.auth.getSession();
+          const userId = sess?.data?.session?.user?.id;
+          const wsId = localStorage.getItem('prova_workspace_id') || null;
+          await sb.from('audit_trail').insert({
+            workspace_id: wsId,
+            user_id: userId,
+            action: 'update',
+            entity_typ: 'auftrag',
+            entity_id: recId,
+            payload: {
+              action_subtype: 'freigabe_abgeschlossen',
+              freigabe_datum: new Date().toISOString(),
+              freigegeben_durch_email: localStorage.getItem('prova_sv_email') || '',
+              ki_entwurf_chars: (recFields.KI_Entwurf || '').length,
+              paragraph_407a_disclosed: true
+            }
+          });
+        } catch(eAt) { console.warn('[audit_trail-insert]', eAt.message || eAt); }
       }
     } catch (e) { console.warn('[Freigabe-Status]', e); }
-    // Freigabe-Datum + Freigabe-Durch: TODO Phase-B als Audit-Trail-Insert
-    // (alter Airtable-PATCH-Path entfernt). Aktuell nur Status-Update oben + WH_S3-Webhook.
 
     // E-Mail CTA einblenden
     try {
