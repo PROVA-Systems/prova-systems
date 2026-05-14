@@ -2,7 +2,77 @@
 
 **Stand:** 2026-05-14
 **Branch:** `feat/mega74-ein-system`
-**Sprints:** A (RLS workspace_id), B (fristen SyntaxError), C (parse-docx 501) …
+**Sprints:** A (RLS workspace_id), B (fristen SyntaxError), C (parse-docx 501), D (Dashboard 4 Endpoint-Bugs), E (GoTrueClient-Singleton), F-Batch1 (7 Heavy-Files), F-Batch2 (3 Mini-Fixes + 10 Files)
+
+---
+
+## Sprint F-Batch2 — Mini-Fixes + 10 Migrations
+
+### Teil A — 3 Mini-Fixes (Commit `3b643d7`)
+
+- **A1 fristen-Sidebar:** `prova-layout.config.js` shell-Array um `fristen.html`
+  erweitert. nav.js rendert jetzt automatisch Sidebar+Topbar.
+- **A2 admin-ki-aggregations 2FA:** `dashboard-logic.js loadKiTokenKpi` zusätzlich
+  totp_enabled-Check. Ohne 2FA zeigt Tile `Admin (2FA)` silent.
+- **A3 parse-docx lazy:** `einstellungen.html` ladeVorlagen() via
+  IntersectionObserver — Roundtrip erst wenn Container sichtbar.
+
+### Teil B — Airtable→Supabase 10 Files
+
+| Sub | Datei | Calls | Pattern | Commit |
+|---|---|---:|---|---|
+| B1 | `honorar-tracker.js` | 4 | dokumente list+update×3 | `8e37fff` |
+| B2 | `akte-logic.js` | 2 | auftraege+dokumente Read | `8883b60` |
+| B3 | `briefvorlagen-logic.js` | 2 | auftraege Read + dokumente.update | `d1c24e5` |
+| B4 | `import-assistent-logic.js` | 3 | kontakte+auftraege.insert mit az-Duplikat-Check | `d1c24e5` |
+| B5 | `vor-ort.html`+`vor-ort-logic.js` | 4 | auftraege+termine + Offline-Queue Supabase-Payload | `ab158b0` |
+| B6 | `gericht-auftrag.html`+`-logic.js` | 2 | auftraege.insert typ='gericht' | `caa03ea` |
+| B7 | `fachurteil-logic.js` | 1 | auftraege.fachurteil_text via az-Lookup | `caa03ea` |
+| B8 | `global-search.js` | 1 | PostgREST .or(.ilike) statt Airtable FIND | `caa03ea` |
+| B9 | 6 Single-Call-Files | 6 | dokumente/textbausteine/support_tickets/kontakte | `b3be7a7` |
+| B10 | 3 Wrapper-Files | — | Console-Warn-Stubs mit window-Symbol-Compat | `1ced8a2` |
+
+**Schema-Drift dokumentiert:**
+- `RECHNUNGEN` → `dokumente WHERE typ LIKE 'rechnung%'` (`doc_nummer`,
+  `mahn_stufe`, `faelligkeit`)
+- `TERMINE.termin_titel/typ/datum/notiz` → `termine.titel/typ/datum/beschreibung`
+- `Auftraggeber_Name` → `details.auftraggeber.name` jsonb
+- `Bereich/Schaden_Strasse` → `schadensart_label`/`objekt.adresse` jsonb
+- `SUPPORT_INBOX` → `support_tickets` (Migration 39)
+- `KONTAKTE.Name` → `kontakte.nachname` + `vorname` separate
+- Status-Enum: 'In Bearbeitung' → 'aktiv', 'Bezahlt' → 'bezahlt',
+  'Mahnung X' → 'ueberfaellig'+mahn_stufe, 'Storniert' → 'storniert'
+
+**Bilanz nach Batch 2:**
+
+| Vorher | Nachher |
+|---|---|
+| 42 Airtable-Caller-Files | **25 Files** (Sprint-Target ≤25 erfüllt) |
+| 3 aktive Wrapper-Files | 3 Deprecation-Stubs |
+| ~58 Fetch-Lines | ~25 Fetch-Lines |
+
+**Restbestand (25 Files für Batch 3):**
+
+| Kategorie | Anzahl | Behandlung |
+|---|---:|---|
+| Brief-Pattern-HTMLs (Log-only) | 13 | Bulk-No-Op nach airtable.js→410 ODER `logBriefGenerated()` |
+| Helper/Wrapper-Bridge | 5 | prova-fetch-auth, prova-auth-api, prova-api-cache, prova-error-handler, prova-notifications |
+| Verbleibende Single-Caller | 7 | 404, akte-lightbox, app.html, benachrichtigungen, freigabe-queue, offline-gutachten, onboarding-schnellstart |
+
+**STOP-Punkte für Batch 3:**
+
+- **Brief-HTMLs:** Empfehlung: pauschaler No-Op nach airtable.js→410-Stub
+  (Phase 4 Wrapper-Tötung erledigt es automatisch — Caller try/catch
+  schlucken).
+- **prova-fetch-auth.js:** Airtable-Reroute-Branch (Z.174) entfernen.
+  Sollte Letzter sein, weil Bridge-Layer für noch nicht migrierte HTMLs.
+
+**CACHE_VERSION:** v3236 → v3237
+
+---
+
+## Sprint A — RLS workspace_id Fix
+
 
 ---
 
