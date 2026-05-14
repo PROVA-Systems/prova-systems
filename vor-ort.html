@@ -751,6 +751,41 @@ function queueFlush() {
   }).catch(function() {});
 }
 
+// MEGA⁷⁶ Teil F: alte Airtable-Format-Einträge droppen.
+// Vor MEGA75-Batch2 hatten Queue-Einträge {url: '/.netlify/functions/airtable',
+// payload: {…Airtable-records…}}. Seit Batch2 nur noch
+// {payload: {_kind:'supabase_insert', table, row}}. Alte Format-Einträge
+// werden nach airtable.js → 410 nie wieder erfolgreich gesendet — droppen.
+function queueMigrateMega76() {
+  return queueDBOpen().then(function(db) {
+    return new Promise(function(res) {
+      var tx  = db.transaction(QUEUE_STR, 'readonly');
+      var req = tx.objectStore(QUEUE_STR).getAll();
+      req.onsuccess = function(e) {
+        var alle = e.target.result || [];
+        var obsolete = alle.filter(function(en) {
+          if (!en) return false;
+          if (en.url === '/.netlify/functions/airtable') return true;
+          var p = en.payload || {};
+          if (p.path && typeof p.path === 'string' && p.path.indexOf('/v0/app') === 0) return true;
+          if (p._kind === 'supabase_insert') return false;
+          // Unknown format → wahrscheinlich Legacy
+          return !p._kind;
+        });
+        if (!obsolete.length) { res(0); return; }
+        console.warn('[QUEUE] Lösche', obsolete.length, 'obsolete Airtable-Queue-Einträge (MEGA76)');
+        queueDBOpen().then(function(db2) {
+          var tx2 = db2.transaction(QUEUE_STR, 'readwrite');
+          var store = tx2.objectStore(QUEUE_STR);
+          obsolete.forEach(function(en) { store.delete(en.id); });
+          tx2.oncomplete = function() { res(obsolete.length); };
+        });
+      };
+      req.onerror = function() { res(0); };
+    });
+  }).catch(function() { return 0; });
+}
+
 function queueCount(callback) {
   queueDBOpen().then(function(db) {
     var req = db.transaction(QUEUE_STR, 'readonly').objectStore(QUEUE_STR).count();
@@ -764,10 +799,12 @@ window.addEventListener('online', function() {
   setTimeout(queueFlush, 1500);
 });
 
-// Beim Laden prüfen ob Queue-Einträge vorhanden
+// Beim Laden prüfen ob Queue-Einträge vorhanden + MEGA⁷⁶ Migration
 window.addEventListener('DOMContentLoaded', function() {
   if (navigator.onLine) {
-    setTimeout(function() {
+    setTimeout(async function() {
+      // Erst alte Airtable-Format-Einträge purgen
+      try { await queueMigrateMega76(); } catch(_) {}
       queueCount(function(n) {
         if (n > 0) {
           showToast(n + ' gespeicherte Anfrage(n) werden jetzt synchronisiert…', 'warn', 4000);
