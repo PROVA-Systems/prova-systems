@@ -404,51 +404,50 @@ const HonorarTracker = (() => {
   // ── Rechnungen laden ────────────────────────────────────────────
   async function ladeRechnungen(forceFresh = false) {
     if (!forceFresh && state.geladen) return state.rechnungen;
-
-    // Cache
     const cached = ladeAusCache();
 
+    // MEGA⁷⁵-F-Batch2 B1: RECHNUNGEN → dokumente WHERE typ LIKE 'rechnung%'.
+    // RLS filtert workspace-scoped automatisch. Field-Mapping in
+    // normalisiereRechnung (Schema-Aware seit Adapter-Lib).
     try {
-      const svEmail = localStorage.getItem('prova_sv_email') || '';
-      if (!svEmail) return cached;
-
-      const resp = await provaFetch('/.netlify/functions/airtable', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'same-origin',
-        body: JSON.stringify({
-          action: 'list',
-          tabelle: 'RECHNUNGEN',
-          filter: `{sv_email}="${svEmail}"`,
-          sort: [{ field: 'rechnungsdatum', direction: 'desc' }],
-          felder: ['Rechnungsnummer', 'empfaenger_name', 'brutto_betrag_eur', 'netto_betrag_eur',
-                   'rechnungsdatum', 'faellig_am', 'status', 'aktenzeichen',
-                   'mahnstufe', 'mahngebuehren_eur', 'Rechnungstyp', 'sv_email']
-        })
-      });
-
-      // MEGA¹⁹ W79: Status 410 = Airtable-Endpoint absichtlich disabled
-      // (Voll-Cleanup-Sprint 02.05.2026). Silent-Fallback zu Cache, kein
-      // Console-Spam — User sieht clean Dashboard.
-      if (resp.status === 410) {
+      const ad = await import('/lib/prova-supabase-adapters.js');
+      const sb = await ad.getSupabase();
+      if (!sb) return cached;
+      const r = await sb.from('dokumente')
+        .select('id, doc_nummer, betrag_netto, betrag_brutto, rechnungsdatum, faelligkeit, bezahlt_at, status, mahn_stufe, mahn_gebuehr, typ, kontakt_id, auftrag_id')
+        .in('typ', ['rechnung','rechnung_jveg','rechnung_stunden'])
+        .is('deleted_at', null)
+        .order('rechnungsdatum', { ascending: false, nullsFirst: false });
+      if (r.error) {
+        console.warn('[HonorarTracker] Supabase Fehler:', r.error.message);
         return cached;
       }
-      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-      const data   = await resp.json();
-      const liste  = (data.records || []).map(normalisiereRechnung);
-
-      state.rechnungen = liste;
-      state.geladen    = true;
+      // Airtable-Style-Format für normalisiereRechnung (downstream-compat)
+      const liste = (r.data || []).map(function(row){
+        return normalisiereRechnung({
+          id: row.id,
+          fields: {
+            Rechnungsnummer:   row.doc_nummer || '',
+            empfaenger_name:   '',   // TODO: kontakt-Lookup wenn nötig
+            brutto_betrag_eur: row.betrag_brutto,
+            netto_betrag_eur:  row.betrag_netto,
+            rechnungsdatum:    row.rechnungsdatum,
+            faellig_am:        row.faelligkeit,
+            status:            row.status,
+            mahnstufe:         row.mahn_stufe || 0,
+            mahngebuehren_eur: row.mahn_gebuehr || 0,
+            Rechnungstyp:      row.typ,
+            aktenzeichen:      ''
+          }
+        });
+      });
+      state.rechnungen   = liste;
+      state.geladen      = true;
       state.letzterCheck = Date.now();
       speichereInCache(liste);
       return liste;
-
     } catch (err) {
-      // MEGA¹⁹ W79: 410 ist erwarteter Disable-Zustand → kein Warning.
-      // Andere Errors weiterhin loggen (Network-Probleme etc.).
-      if (!/HTTP 410|airtable-disabled/.test(err.message || '')) {
-        console.warn('[HonorarTracker] Airtable Fehler:', err.message);
-      }
+      console.warn('[HonorarTracker] Migration-Fehler:', err && err.message);
       return cached;
     }
   }
@@ -783,22 +782,18 @@ const HonorarTracker = (() => {
   async function _markiereBezahlt(rechnungId) {
     if (!confirm('Rechnung als bezahlt markieren?')) return;
     try {
-      await provaFetch('/.netlify/functions/airtable', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'same-origin',
-        body: JSON.stringify({
-          action: 'update',
-          tabelle: 'RECHNUNGEN',
-          id: rechnungId,
-          felder: { status: 'Bezahlt', bezahlt_am: new Date().toISOString().split('T')[0] }
-        })
-      });
-      // State updaten
+      const ad = await import('/lib/prova-supabase-adapters.js');
+      const sb = await ad.getSupabase();
+      if (!sb) throw new Error('no-supabase');
+      const upd = await sb.from('dokumente').update({
+        status: 'bezahlt',
+        bezahlt_at: new Date().toISOString()
+      }).eq('id', rechnungId);
+      if (upd.error) throw new Error(upd.error.message);
       const r = state.rechnungen.find(r => r.id === rechnungId);
       if (r) { r.statusKey = 'BEZAHLT'; r.status = STATUS.BEZAHLT; }
       _refreshUI();
-    } catch (err) { alert('Fehler: ' + err.message); }
+    } catch (err) { alert('Fehler: ' + (err && err.message)); }
   }
 
   async function _sendeMahnung(rechnungId) {
@@ -808,47 +803,31 @@ const HonorarTracker = (() => {
     if (!confirm(`${stufe}. Mahnung für ${r.empfaenger} über ${r.betragBrutto.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' })} senden?`)) return;
 
     try {
-      // Make.com Mahnung-Szenario triggern
-      await provaFetch('/.netlify/functions/airtable', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'same-origin',
-        body: JSON.stringify({
-          action: 'update',
-          tabelle: 'RECHNUNGEN',
-          id: rechnungId,
-          // P5.B1: Airtable-Schema RECHNUNGEN hat 'status' (lowercase) +
-          // 'mahnstufe' (Number). 'Mahnungen' und 'Letzte_Mahnung' existieren
-          // im Schema nicht und wuerden 422 ausloesen.
-          felder: {
-            status: `Mahnung ${stufe}`,
-            mahnstufe: stufe
-          }
-        })
-      });
-      alert(`✅ ${stufe}. Mahnung wurde gespeichert. Make.com Szenario wird ausgeführt.`);
+      const ad = await import('/lib/prova-supabase-adapters.js');
+      const sb = await ad.getSupabase();
+      if (!sb) throw new Error('no-supabase');
+      const upd = await sb.from('dokumente').update({
+        status: 'ueberfaellig',  // dokument_status-Enum hat kein 'mahnung_X'; status='ueberfaellig' + mahn_stufe-Column
+        mahn_stufe: stufe
+      }).eq('id', rechnungId);
+      if (upd.error) throw new Error(upd.error.message);
+      alert(`✅ ${stufe}. Mahnung wurde gespeichert.`);
       const r_ref = state.rechnungen.find(r => r.id === rechnungId);
       if (r_ref) r_ref.mahnungen = stufe;
-    } catch (err) { alert('Fehler: ' + err.message); }
+    } catch (err) { alert('Fehler: ' + (err && err.message)); }
   }
 
   async function _stornieren(rechnungId) {
     if (!confirm('Rechnung wirklich stornieren? Diese Aktion kann nicht rückgängig gemacht werden.')) return;
     try {
-      await provaFetch('/.netlify/functions/airtable', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'same-origin',
-        body: JSON.stringify({
-          action: 'update',
-          tabelle: 'RECHNUNGEN',
-          id: rechnungId,
-          felder: { status: 'Storniert' }
-        })
-      });
+      const ad = await import('/lib/prova-supabase-adapters.js');
+      const sb = await ad.getSupabase();
+      if (!sb) throw new Error('no-supabase');
+      const upd = await sb.from('dokumente').update({ status: 'storniert' }).eq('id', rechnungId);
+      if (upd.error) throw new Error(upd.error.message);
       state.rechnungen = state.rechnungen.filter(r => r.id !== rechnungId);
       _refreshUI();
-    } catch (err) { alert('Fehler: ' + err.message); }
+    } catch (err) { alert('Fehler: ' + (err && err.message)); }
   }
 
   function _oeffneRechnung(rechnungId) {
