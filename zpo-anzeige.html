@@ -661,29 +661,44 @@ body{font-family:var(--font-ui,'DM Sans',system-serif);background:var(--bg,#0b0d
       var raw = p.get('fall') || p.get('az') || '';
       if (!raw) return;  // Standalone-Modus ohne Fall = kein Audit-Trail
 
-      var recId = resolveRecordId(raw);
-      if (!recId) { console.warn('[PROVA §407a] Record-ID nicht auflösbar — Audit-Trail übersprungen'); return; }
-
-      var fields = Object.assign({}, extraFields || {});
-      var nowIso = new Date().toISOString();
-      if (mode === 'erstellt') fields.zpo_anzeige_erstellt = nowIso;
-      if (mode === 'gesendet') fields.zpo_anzeige_gesendet = nowIso;
-
-      var res = await provaFetch('/.netlify/functions/airtable', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          method: 'PATCH',
-          path: '/v0/' + AT_BASE + '/' + AT_FAELLE + '/' + recId,
-          payload: { fields: fields }
-        })
-      });
-      if (!res.ok) {
-        console.warn('[PROVA §407a] Audit-Trail fehlgeschlagen:', res.status, await res.text());
+      // MEGA⁷⁶ B: §407a-Audit in audit_trail + auftraege.ki_anzeige_*-Cols.
+      // Funktionsname unverändert für Caller-Compat, intern komplett Supabase.
+      var ad = await import('/lib/prova-supabase-adapters.js');
+      var sb = await ad.getSupabase();
+      if (!sb) return;
+      // az aus localStorage oder URL — falls raw eine UUID ist, direkt nutzen
+      var auftragId = null, az = null;
+      if (/^[0-9a-f-]{36}$/i.test(raw)) {
+        auftragId = raw;
       } else {
-        console.log('[PROVA §407a] Audit-Trail persistiert:', mode);
+        az = raw;
+        var lookup = await sb.from('auftraege').select('id').eq('az', az).is('deleted_at', null).maybeSingle();
+        if (lookup.data) auftragId = lookup.data.id;
       }
-    } catch(e) { console.warn('[PROVA §407a] Audit-Trail-Exception:', e); }
+      if (!auftragId) { console.warn('[PROVA §407a] Auftrag-ID nicht auflösbar'); return; }
+
+      // auftraege-Update: ki_anzeige_datum + ki_anzeige_empfaenger nutzen
+      // wenn mode='gesendet' (Schema A.1: dafür gibts Spalten)
+      if (mode === 'gesendet') {
+        var upd = await sb.from('auftraege').update({
+          ki_anzeige_datum:      new Date().toISOString().slice(0, 10),
+          ki_anzeige_empfaenger: (extraFields && extraFields.empfaenger) || null
+        }).eq('id', auftragId);
+        if (upd.error) console.warn('[PROVA §407a] auftraege-Update:', upd.error.message);
+      }
+
+      // Audit-Trail-Eintrag (Pflicht für DSGVO/§407a-Compliance)
+      await ad.auditTrailInsert({
+        action:     'create',
+        entity_typ: 'ki_einsatz_407a_anzeige',
+        entity_id:  auftragId,
+        kategorie:  '407a_zpo_' + mode,
+        source:     'sv_eigen',
+        eu_ai_act_disclosed: true,
+        payload: Object.assign({ mode: mode, az: az }, extraFields || {})
+      });
+      console.log('[PROVA §407a] Audit-Trail persistiert:', mode);
+    } catch(e) { console.warn('[PROVA §407a] Audit-Trail-Exception:', e && e.message); }
   }
 
   // Hook 1: Brief-Generieren → 'erstellt' persistieren

@@ -198,42 +198,47 @@ function speichern() {
   if (!sa) { alert('Bitte Streitobjekt eintragen.'); return; }
   if (!hon) { alert('Bitte Honorar eintragen.'); return; }
 
-  var svEmail = localStorage.getItem('prova_sv_email') || '';
-
-  provaFetch('/.netlify/functions/airtable', {
-    method: 'POST',
-    headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({
-      action: 'create',
-      table: 'SCHADENSFAELLE',
-      fields: {
-        Auftragstyp: 'Schieds',
-        Auftraggeber_Name: aN,
-        Auftraggeber_Email: document.getElementById('a-email').value.trim(),
-        Auftraggeber_Adresse: document.getElementById('a-adresse').value.trim(),
-        Partei_B_Name: bN,
-        Partei_B_Email: document.getElementById('b-email').value.trim(),
-        Partei_B_Adresse: document.getElementById('b-adresse').value.trim(),
-        Objekt_Adresse: sa,
-        Schadenart: document.getElementById('schadensart').value.trim(),
-        Honorar_Netto: parseFloat(hon) || 0,
-        Kostenaufteilung: document.getElementById('kostenaufteilung').value,
-        Ortstermin: document.getElementById('ortstermin-schieds').value || null,
-        Status: 'Neu',
-        sv_email: svEmail
+  // MEGA⁷⁶ B: Schiedsgutachten in auftraege.insert. typ='schied'.
+  // Partei-B + Honorar + Kostenaufteilung in details jsonb.
+  (async function() {
+    try {
+      var ad = await import('/lib/prova-supabase-adapters.js');
+      var sb = await ad.getSupabase();
+      var wsId = await ad.getCurrentWorkspaceId();
+      if (!sb || !wsId) { alert('Kein Workspace — bitte neu einloggen.'); return; }
+      var ins = await sb.from('auftraege').insert({
+        workspace_id:    wsId,
+        typ:             'schied',
+        status:          'aktiv',
+        az:              'SCHI-' + Date.now().toString().slice(-6),
+        titel:           'Schiedsgutachten — ' + aN + ' vs. ' + bN,
+        schadensart_label: document.getElementById('schadensart').value.trim(),
+        kosten_geschaetzt_netto: parseFloat(hon) || 0,
+        objekt: { adresse: sa },
+        details: {
+          auftraggeber: {
+            name:    aN,
+            email:   document.getElementById('a-email').value.trim(),
+            adresse: document.getElementById('a-adresse').value.trim()
+          },
+          partei_b: {
+            name:    bN,
+            email:   document.getElementById('b-email').value.trim(),
+            adresse: document.getElementById('b-adresse').value.trim()
+          },
+          kostenaufteilung: document.getElementById('kostenaufteilung').value,
+          ortstermin_datum: document.getElementById('ortstermin-schieds').value || null
+        }
+      }).select('id, az').maybeSingle();
+      if (ins.error) throw new Error(ins.error.message);
+      if (ins.data && ins.data.id) {
+        alert('✅ Schiedsgutachten angelegt: ' + ins.data.az);
+        window.location.href = 'archiv.html';
+      } else {
+        alert('Fehler: Insert lieferte keine ID.');
       }
-    })
-  })
-  .then(function(r){ return r.json(); })
-  .then(function(data) {
-    if (data.id) {
-      alert('✅ Schiedsgutachten angelegt: ' + (data.fields && data.fields.Aktenzeichen || data.id));
-      window.location.href = 'archiv.html';
-    } else {
-      alert('Fehler: ' + JSON.stringify(data));
-    }
-  })
-  .catch(function(e){ alert('Fehler: ' + e.message); });
+    } catch(e) { alert('Fehler: ' + (e && e.message)); }
+  })();
 }
 </script>
 </html>
