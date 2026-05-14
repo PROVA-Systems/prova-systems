@@ -236,5 +236,93 @@ korrekt workspace-scoped.
 
 **Files:** 23 Frontend-Files + `sw.js` + `docs/MEGA75-DECISIONS.md`
 **CACHE_VERSION:** v3234 → v3235
+**Commit:** `a4305ce`
+
+---
+
+## Sprint F — Airtable End-State (Phase 1+2)
+
+**Ziel:** Airtable komplett ablösen — 0× `[airtable-wrapper-deprecated]` Warn,
+0× Calls auf `/.netlify/functions/airtable`, lib/prova-fetch-auth.js Airtable-
+Code raus, netlify/functions/airtable.js zu 410-Stub.
+
+### Phase 1 — Caller-Inventur ✅
+
+**Ergebnis:** 49 Caller-Files, 89 Fetch-Lines, 8 aktive Airtable-Tabellen.
+
+Vollständige Inventur: `docs/AIRTABLE-CALLER-AUDIT.md`.
+
+**Heavy-Files (15):** einstellungen-logic (8), prova-context (7), app-logic (6),
+onboarding-logic (5), honorar-tracker (4), vor-ort.html (3), prova-fetch-auth (3),
+prova-audit (3), import-assistent (3), stellungnahme-gegengutachten (2),
+prova-auth-api (2), onboarding-schnellstart (2), ergaenzung (2),
+briefvorlagen-logic (2), akte-logic (2).
+
+**Trivial (16 Brief-Logging-HTMLs):** abnahmeprotokoll, auftrag-ablehnung,
+begehungsprotokoll, datenschutz-einwilligung-gericht, ergaenzung×2,
+rechnungskorrektur, schiedsgutachten, stellungnahme×2, terminabsage,
+vollmacht-sv, widerspruch-gegengutachten, widerspruch-gutachten,
+zpo-anzeige, zwischenbericht.
+
+**Sonstige (18 Single-Call-Files):** kontakte-logic, gericht-auftrag×2,
+fachurteil-logic, global-search, mahnung-check, schnelle-rechnung-logic,
+textbausteine, akte-lightbox, fristen/freigabe/onboarding-related,
+offline-gutachten, 404, app.html, benachrichtigungen, hilfe-logic.
+
+### Phase 2 — Schema-Mapping ✅
+
+Vollständig: `docs/AIRTABLE-SUPABASE-MAPPING.md`.
+
+**Klare 1:1-Mappings (8 Tabellen):**
+
+| Airtable | Supabase |
+|---|---|
+| SCHADENSFAELLE | `auftraege` (mit `objekt`/`details` jsonb-Splits) |
+| SV | `users` + `workspaces` |
+| KONTAKTE | `kontakte` |
+| TERMINE | `termine` (`beschreibung` statt `notiz`!) |
+| RECHNUNGEN | `dokumente WHERE typ LIKE 'rechnung%'` (`doc_nummer`, `mahn_stufe`, `faelligkeit`) |
+| BRIEFE | `dokumente WHERE typ='brief'` |
+| AUDIT_TRAIL | `audit_trail` |
+| SUPPORT_INBOX | `support_tickets` (Migration 39 exists) |
+| NORMEN | `normen` |
+
+**STOP-Punkte (Marcel-Klärung nötig vor Phase 3):**
+
+1. **EINWILLIGUNGEN** (`tblwgUQgtBWckPMHp`): Keine Supabase-Tabelle. Optionen:
+   - (a) Neue Migration `??_einwilligungen.sql`
+   - (b) `users.einwilligungen_jsonb`-Column
+   - (c) No-Op (DSGVO-Risiko)
+   **Empfehlung:** (a) Eigene Tabelle, weil Audit-Trail-Pflicht.
+
+2. **PILOT_LIST** (`tblK7a3mBdsrxsrp5`): Reicht `users.founding_member`-BOOL
+   oder eigene `pilots`-Tabelle? **Empfehlung:** founding_member-Flag reicht
+   für Pilot-Pflege; tabelle wäre Over-Engineering.
+
+### Phase 3 — Bulk-Migration — REALITY-CHECK
+
+**Aufwand-Schätzung:**
+- 15 Heavy-Files: ~9-13h
+- 16 Brief-Pattern-HTMLs: ~1.5-3h
+- 18 Single-Call-Files: ~3-6h
+- Phase 4 (Wrapper-Tötung): 30 min
+- Phase 5 (echte Bugs): 1-2h
+- Phase 6 (Polish): 30 min
+
+**Gesamt: 15-25h** Code-Migration + node-Check + per-File-Commits.
+
+**STOP gemeldet** per Sprint-F-Spec: `Phase 3 dauert >15h → STOP, melden`.
+
+Phase 1+2 sind hier dokumentiert + committed. Phase 3 braucht Marcel-Decision:
+- (A) Marathon durchziehen (ein langer Session, Bug-Risk wegen Context-Pressure)
+- (B) Batch-Plan: Priorität-1 (5-7 heavy Files dieser Session) → push → Marcel-Test
+  → nächster Batch in eigener Session
+- (C) Scope-Cut: nur die Top-15 Heavy-Files; 16 Brief-Templates als 410-Stub
+  laufen lassen (User merkt nichts, Brief-Generierung läuft über die selben
+  Templates ja eh schon, Logging-Write wird obsolet wenn airtable.js 410 ist)
+
+**Files Phase 1+2:** `docs/AIRTABLE-CALLER-AUDIT.md`,
+`docs/AIRTABLE-SUPABASE-MAPPING.md`, `docs/MEGA75-DECISIONS.md`.
+**Commit:** wird gleich gemacht.
 
 ---
