@@ -1222,7 +1222,9 @@
       if (!res.ok) throw new Error('HTTP ' + res.status);
       toast('✓ PDF-Erstellung gestartet — Zustellung per E-Mail', 'ok');
 
-      // MEGA⁷³-Phase-2b: Supabase auftraege Sync (non-blocking).
+      // MEGA⁷³-Phase-2b + MEGA⁷³-Hotfix: Supabase auftraege UPSERT mit isUuid-Check
+      // (verhindert Duplikat-INSERTs bei wiederholtem Save). _state.supabase_id persistiert
+      // via speichern() im localStorage STORAGE_KEY für nächste Iteration.
       (async function(){
         try {
           var _ad = await import('/lib/prova-supabase-adapters.js');
@@ -1231,7 +1233,11 @@
           var sess = await sb.auth.getSession();
           var userId = sess?.data?.session?.user?.id;
           var wsId = localStorage.getItem('prova_workspace_id') || null;
-          await sb.from('auftraege').insert({
+          var existingId = _state.supabase_id
+            || sessionStorage.getItem('prova_wertgutachten_record_id')
+            || new URLSearchParams(window.location.search).get('id')
+            || null;
+          var sbPayload = {
             workspace_id: wsId,
             typ: 'wertgutachten',
             az: o.az || ('WG-' + Date.now().toString().slice(-6)),
@@ -1248,7 +1254,20 @@
             },
             kosten_geschaetzt_brutto: finalWert,
             created_by_user_id: userId
-          });
+          };
+          var isUuid = existingId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(existingId);
+          var upd;
+          if (isUuid) {
+            upd = await sb.from('auftraege').update(sbPayload).eq('id', existingId).select('id').single();
+          } else {
+            upd = await sb.from('auftraege').insert(sbPayload).select('id').single();
+          }
+          if (upd.error) { console.warn('[wertgutachten-supabase-save]', upd.error.message); return; }
+          if (upd.data && upd.data.id && !isUuid) {
+            _state.supabase_id = upd.data.id;
+            sessionStorage.setItem('prova_wertgutachten_record_id', upd.data.id);
+            speichern();
+          }
         } catch(err) { console.warn('[wertgutachten-supabase-save]', err.message || err); }
       })();
     } catch(err) { toast('Fehler: ' + err.message, 'err'); }
