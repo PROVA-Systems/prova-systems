@@ -105,26 +105,38 @@
     if (_overlay) _overlay.style.display = 'none';
   }
 
-  /* ── Fotos aus Airtable-Record laden ─────────────────────────── */
+  /* ── MEGA⁷⁶ D.2: Fotos via Supabase eintraege (typ='foto') laden ───
+       Airtable-Fotos sind weg. Lightbox liest jetzt aus eintraege-Tabelle
+       die ihrerseits Storage-Files referenziert. recordId = auftrag.id (UUID).
+       Wenn die Tabelle/Spalten anders heißen: Caller kriegt [] und Lightbox
+       bleibt leer — kein UI-Crash. */
   async function ladeFotosVonAirtable(recordId) {
     try {
-      var path = '/v0/appJ7bLlAHZoxENWE/tblSxV8bsXwd1pwa0/' + recordId
-        + '?fields[]=Fotos&fields[]=Foto_Captions';
-      var res  = await provaFetch('/.netlify/functions/airtable', {
-        method:  'POST',
-        headers: {'Content-Type': 'application/json'},
-        body:    JSON.stringify({method: 'GET', path: path})
-      });
-      if (!res.ok) throw new Error('HTTP ' + res.status);
-      var data   = await res.json();
-      var fields = data.fields || {};
-      var anhaenge = fields.Fotos || [];
-      var captions = (fields.Foto_Captions || '').split('\n');
-      return anhaenge.map(function(att, i) {
-        return {url: att.url, filename: att.filename || ('foto_' + (i+1) + '.jpg'), caption: captions[i] || ''};
-      });
+      var mod = await import('/lib/supabase-client.js');
+      var sb = mod.supabase || (mod.getSupabase && mod.getSupabase());
+      if (!sb || !recordId) return [];
+      var r = await sb.from('eintraege')
+        .select('id, anhang_storage_path, caption, anhang_metadata')
+        .eq('auftrag_id', recordId)
+        .eq('typ', 'foto')
+        .is('deleted_at', null)
+        .order('created_at', { ascending: true });
+      if (r.error || !r.data) return [];
+      var bucket = 'sv-files';
+      return r.data
+        .filter(function(row) { return !!row.anhang_storage_path; })
+        .map(function(row, i) {
+          var pub = sb.storage.from(bucket).getPublicUrl(row.anhang_storage_path);
+          var url = (pub && pub.data && pub.data.publicUrl) || row.anhang_storage_path;
+          var meta = row.anhang_metadata || {};
+          return {
+            url: url,
+            filename: meta.filename || ('foto_' + (i+1) + '.jpg'),
+            caption: row.caption || ''
+          };
+        });
     } catch(e) {
-      console.warn('[AkteLightbox] Laden fehlgeschlagen:', e.message);
+      console.warn('[AkteLightbox] Laden fehlgeschlagen:', e && e.message);
       return [];
     }
   }

@@ -149,36 +149,29 @@ body{font-family:var(--font-ui);background:var(--bg);color:var(--text);min-heigh
     if (!svEmail) { zeigeLoading(false); zeigeEmpty(true); return; }
 
     try {
-      var headers = { 'Content-Type': 'application/json' };
-      if (window.provaAuthHeaders) Object.assign(headers, window.provaAuthHeaders());
-
-      var fields = ['Aktenzeichen','Schadensart','Auftraggeber_Name','Adresse_Schadensort','erstellt_am','sv_email','Status','Phase'];
-      // Phase kann Zahl oder Text sein — beide versuchen
-      var filterText = encodeURIComponent('AND({Phase}="5",{sv_email}="' + svEmail + '")');
-      var filterNum  = encodeURIComponent('AND({Phase}=5,{sv_email}="' + svEmail + '")');
-      // Nutze Nummer-Filter (häufiger korrekt in Airtable)
-      var filter = filterNum;
-      var path = '/v0/' + AT_BASE + '/' + AT_FAELLE +
-                 '?filterByFormula=' + filter +
-                 '&sort[0][field]=erstellt_am&sort[0][direction]=desc&maxRecords=50' +
-                 fields.map(function(f){ return '&fields[]=' + encodeURIComponent(f); }).join('');
-
-      var res  = await provaFetch('/.netlify/functions/airtable', {
-        method: 'POST', headers: headers,
-        body: JSON.stringify({ method: 'GET', path: path })
+      // MEGA⁷⁶ D.5: Freigabe-Queue → Supabase auftraege WHERE phase_aktuell=5.
+      // RLS workspace-scoped. auftragRowToFields liefert Airtable-Style für renderFall().
+      var ad = await import('/lib/prova-supabase-adapters.js');
+      var sb = await ad.getSupabase();
+      if (!sb) throw new Error('no-supabase');
+      var r = await sb.from('auftraege')
+        .select('*')
+        .eq('phase_aktuell', 5)
+        .is('deleted_at', null)
+        .order('created_at', { ascending: false })
+        .limit(50);
+      if (r.error) throw new Error(r.error.message);
+      var records = (r.data || []).map(function(row) {
+        return { id: row.id, fields: ad.auftragRowToFields(row) };
       });
-      var data = await res.json();
-      var records = data.records || [];
 
       zeigeLoading(false);
-
       if (records.length === 0) { zeigeEmpty(true); return; }
 
       var liste = document.getElementById('fq-liste');
       records.forEach(function(rec) {
         liste.appendChild(renderFall(rec.fields || {}));
       });
-
     } catch(e) {
       zeigeLoading(false);
       document.getElementById('fq-liste').innerHTML =

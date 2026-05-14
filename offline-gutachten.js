@@ -162,40 +162,44 @@ window.ProvaOffline = (function() {
     });
   }
 
-  /* ── Einzelnen Entwurf synchronisieren ── */
+  /* ── MEGA⁷⁶ D.6: Einzelnen Entwurf synchronisieren via Supabase ──
+       Mappt Airtable-Style-Entwurf-Felder auf auftraege-Schema. */
   function _syncEntwurf(entwurf) {
-    var svEmail = localStorage.getItem('prova_sv_email') || '';
-    if (!svEmail) return Promise.resolve(false);
-
     var payload = Object.assign({}, entwurf);
     delete payload._offline;
     delete payload._gespeichert_am;
     delete payload._synced;
     delete payload.id;
 
-    return provaFetch('/.netlify/functions/airtable', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        method: 'POST',
-        path: '/v0/appJ7bLlAHZoxENWE/tblSxV8bsXwd1pwa0',
-        payload: {
-          records: [{ fields: Object.assign({}, payload, { sv_email: svEmail }) }]
-        }
-      })
-    })
-    .then(function(r) { return r.json(); })
-    .then(function(data) {
-      if (data.records && data.records[0]) {
-        // Entwurf als synced markieren dann löschen
-        return loeschen(entwurf.id).then(function() { return true; });
+    return (async function() {
+      try {
+        var ad = await import('/lib/prova-supabase-adapters.js');
+        var sb = await ad.getSupabase();
+        var wsId = await ad.getCurrentWorkspaceId();
+        if (!sb || !wsId) return false;
+        var row = {
+          workspace_id:      wsId,
+          typ:               (payload.Auftragstyp || 'schaden').toLowerCase().replace('schiedsgutachten','schied'),
+          status:            'aktiv',
+          az:                payload.Aktenzeichen || ('OFFL-' + Date.now().toString().slice(-6)),
+          titel:             [payload.Schadensart, payload.Auftraggeber_Name].filter(Boolean).join(' · '),
+          schadensart_label: payload.Schadensart || '',
+          objekt:            { adresse: payload.Schaden_Strasse || '', plz: payload.PLZ || '', ort: payload.Ort || '' },
+          details:           {
+            auftraggeber: { name: payload.Auftraggeber_Name || '' },
+            offline_synced_at: new Date().toISOString(),
+            offline_id: entwurf.id
+          }
+        };
+        var r = await sb.from('auftraege').insert(row).select('id').maybeSingle();
+        if (r.error || !r.data) return false;
+        await loeschen(entwurf.id);
+        return true;
+      } catch(e) {
+        console.warn('[ProvaOffline] Sync-Fehler:', entwurf.id, e && e.message);
+        return false;
       }
-      return false;
-    })
-    .catch(function(e) {
-      console.warn('[ProvaOffline] Sync-Fehler:', entwurf.id, e.message);
-      return false;
-    });
+    })();
   }
 
   /* ── Online/Offline prüfen ── */
