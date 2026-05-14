@@ -56,6 +56,7 @@
       'smtp-einrichtung.html',
       'benachrichtigungen.html',
       'kostenermittlung.html',
+      'fristen.html',
       'schnelle-rechnung.html',
       'mahnung.html',
       'effizienz.html',

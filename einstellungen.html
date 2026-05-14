@@ -1224,7 +1224,23 @@
     };
 
     document.addEventListener('DOMContentLoaded', function () {
-      ladeVorlagen();
+      // MEGA⁷⁵-F-Batch2 A3: Vorlagen lazy laden — nur wenn Container in
+      // Viewport scrollt ODER User auf Upload klickt. Spart unnötigen
+      // parse-docx-Roundtrip beim Profile-Load.
+      var listEl = document.getElementById('vorlagen-list');
+      if (listEl && 'IntersectionObserver' in window) {
+        var loaded = false;
+        var io = new IntersectionObserver(function(entries){
+          entries.forEach(function(en){
+            if (en.isIntersecting && !loaded) {
+              loaded = true;
+              io.disconnect();
+              ladeVorlagen();
+            }
+          });
+        }, { rootMargin: '100px' });
+        io.observe(listEl);
+      }
       var fileInput = document.getElementById('vorlage-file-input');
       if (fileInput) {
         fileInput.addEventListener('change', async function (e) {

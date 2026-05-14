@@ -152,6 +152,30 @@ async function loadKiTokenKpi(){
     if(sub)sub.textContent='nur Admin';
     return;
   }
+  // MEGA⁷⁵-F-Batch2 A2: admin-ki-aggregations verlangt zusätzlich aal2 (2FA).
+  // Wenn TOTP nicht aktiviert/verified, schlägt der Call mit 403 fehl bevor er
+  // sinnvolle Daten liefern kann. Tile silent halten statt 403-Spam.
+  var totpEnabled = localStorage.getItem('prova_2fa_enabled') === '1' || localStorage.getItem('prova_totp_enabled') === 'true';
+  if (!totpEnabled) {
+    try {
+      var modSb = await import('/lib/supabase-client.js');
+      var sbCheck = modSb.supabase || (modSb.getSupabase && modSb.getSupabase());
+      if (sbCheck) {
+        var sess = await sbCheck.auth.getSession();
+        var uid = sess?.data?.session?.user?.id;
+        if (uid) {
+          var ures = await sbCheck.from('users').select('totp_enabled').eq('id', uid).maybeSingle();
+          totpEnabled = !!(ures.data && ures.data.totp_enabled);
+          if (totpEnabled) try { localStorage.setItem('prova_2fa_enabled', '1'); } catch(_){}
+        }
+      }
+    } catch(_) { /* silent */ }
+  }
+  if (!totpEnabled) {
+    el.textContent='—';
+    if(sub)sub.textContent='Admin (2FA)';
+    return;
+  }
   try{
     var fetcher = window.provaFetch || window.fetch.bind(window);
     var resp = await fetcher('/.netlify/functions/admin-ki-aggregations?range=month',{
