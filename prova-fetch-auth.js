@@ -3,7 +3,7 @@
    Authorization-Header-Injection (S-SICHER P4B.8, 26.04.2026)
 
    Verwendung in *-logic.js, prova-* Helpers, etc.:
-     await provaFetch('/.netlify/functions/airtable', {
+     await provaFetch('/.netlify/functions/<name>', {
        method: 'POST',
        headers: { 'Content-Type': 'application/json' },
        body: JSON.stringify({...})
@@ -156,61 +156,13 @@
       && tok.split('.').length === 3;
   }
 
-  // Voll-Cleanup-Sprint Block 2 (02.05.2026): Airtable-Endpoint hart deaktiviert.
-  // PROVA ist seit K-1.5 auf Supabase. Calls zu /.netlify/functions/airtable
-  // werden mit fake-410 abgewiesen damit Logic-Files in catch-Pfad fallen
-  // statt User auszusperren. Code-Stellen werden parallel pro File entfernt
-  // (file-by-file Cleanup) bis grep -ri "airtable" nur noch in archivierten
-  // Pfaden Treffer hat.
-  //
-  // DEPRECATED in MEGA⁷²-Phase-A (2026-05-14). Diese 410-Stub bleibt bis 7-Tage-
-  // Live-Monitoring nach Migration-Abschluss zeigt dass keine Caller mehr 410
-  // produzieren — dann Removal in Phase B. Aktiver Audit + Migration-Status:
-  // → docs/MEGA72-PHASE-A-AUDIT.md (44 Caller, Priorisierung P1/P2/P3)
-  // → docs/CLEANUP-FIELD-MAPPING.md (Airtable-CapitalCase → Supabase-snake_case)
-  // Phase-A Stand 2026-05-14: 4 P1-Files migriert (akte/dashboard/freigabe/archiv-logic).
-  function isDisabledAirtableUrl(url) {
-    return typeof url === 'string'
-      && (url.indexOf('/.netlify/functions/airtable') !== -1
-          || url.indexOf('api.airtable.com') !== -1);
-  }
-
-  function makeAirtableDisabledResponse(url) {
-    var body = JSON.stringify({
-      error: 'airtable-disabled',
-      reason: 'Voll-Supabase-Cleanup-Sprint 02.05.2026 — Airtable ist nicht mehr Live-Datenpfad. Logic-Files werden parallel migriert; siehe docs/diagnose/AIRTABLE-DRIFT-AUDIT.md.',
-      records: [],
-      data: [],
-      items: []
-    });
-    return {
-      ok: false,
-      status: 410,
-      statusText: 'Gone',
-      url: String(url || ''),
-      headers: typeof Headers !== 'undefined' ? new Headers({'Content-Type': 'application/json'}) : null,
-      json: function () { return Promise.resolve(JSON.parse(body)); },
-      text: function () { return Promise.resolve(body); },
-      clone: function () { return makeAirtableDisabledResponse(url); }
-    };
-  }
+  // MEGA⁷⁶ C.1: Airtable-Reroute-Branch entfernt. Alle Caller sind migriert
+  // (Sprint F-Batch1 + F-Batch2 + MEGA76). netlify/functions/airtable.js
+  // selbst returnt jetzt 410 — kein clientseitiger Stub mehr nötig.
 
   window.provaFetch = async function provaFetch(url, options) {
     options = options || {};
     options.headers = options.headers || {};
-
-    // Voll-Cleanup: Airtable-URLs hart abweisen
-    if (isDisabledAirtableUrl(url)) {
-      // MEGA¹⁹ W79: console.info → console.debug. DevTools-Default-Filter
-      // zeigt INFO an, DEBUG nicht. User sieht clean Console.
-      // MEGA⁷²-Phase-A: zusätzlich console.warn für Monitoring während Migration-Phase.
-      try {
-        var _ref = (typeof document !== 'undefined' && document.referrer) || '';
-        console.warn('[airtable-wrapper-deprecated] MEGA72-Phase-A — Caller sollte migriert sein:', url, 'ref:', _ref);
-      } catch(_e) {}
-      console.debug('[airtable-cleanup] blocked legacy call:', url);
-      return makeAirtableDisabledResponse(url);
-    }
 
     if (isFunctionUrl(url)) {
       var tok = getToken();

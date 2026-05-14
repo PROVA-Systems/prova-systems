@@ -143,26 +143,14 @@
     throw err;
   }
 
-  /* ── Airtable Proxy mit Fehlerbehandlung ── */
-  async function atProxy(method, path, payload, provaOpts) {
-    var res = await safeFetch(
-      '/.netlify/functions/airtable',
-      {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ method: method, path: path, payload: payload || null })
-      },
-      provaOpts
-    );
-
-    if (!res.ok) {
-      var err = new Error('Airtable HTTP ' + res.status);
-      err.type   = classifyError(null, res.status);
-      err.status = res.status;
-      throw err;
+  /* ── MEGA⁷⁶ C.4: atProxy → Deprecation-Stub. safeFetch bleibt generisch. ── */
+  var _atProxyWarned = false;
+  async function atProxy(_method, _path, _payload, _provaOpts) {
+    if (!_atProxyWarned) {
+      _atProxyWarned = true;
+      console.warn('[atProxy] deprecated — migriere zu /lib/prova-supabase-adapters.js');
     }
-
-    return res.json();
+    return Promise.resolve({ records: [], error: 'airtable-deprecated' });
   }
 
   /* ── Offline-Queue: Aktionen speichern wenn offline ── */

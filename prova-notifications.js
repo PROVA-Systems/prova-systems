@@ -84,18 +84,11 @@
     return d.toLocaleString('de-DE', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' });
   }
 
-  async function atQuery(path) {
-    if (typeof window.provaFetch !== 'function') return [];
-    try {
-      var res = await window.provaFetch('/.netlify/functions/airtable', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ method: 'GET', path: path })
-      });
-      if (!res.ok) return [];
-      var data = await res.json();
-      return data.records || [];
-    } catch (e) { return []; }
+  // MEGA⁷⁶ C.5: atQuery → No-Op-Stub. Notifications werden in MEGA77 auf
+  // Supabase audit_trail-Reads umgestellt (entity_typ='frist|termin|rechnung').
+  // Bis dahin liefert die Funktion empty.
+  async function atQuery(_path) {
+    return [];
   }
 
   function buildPath(table, formula, fields, sort, max) {

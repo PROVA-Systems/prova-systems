@@ -82,19 +82,17 @@
   }
 
   /**
-   * Airtable-Abfrage mit Deduplication (Hauptfunktion)
-   * @param {string} path - Airtable API Pfad (z.B. /v0/appXXX/tblXXX?...)
-   * @param {number} [ttlMs] - Cache-TTL in ms (0 = kein Cache)
+   * MEGA⁷⁶ C.3: airtableGet → Deprecation-Stub. Cache-Layer (cachedFetch +
+   * invalidateCache + clearAll) bleibt generisch nutzbar für andere
+   * Netlify-Function-Aufrufe.
    */
-  function airtableGet(path, ttlMs) {
-    return cachedFetch(
-      '/.netlify/functions/airtable',
-      {
-        method: 'POST',
-        body: JSON.stringify({ method: 'GET', path: path })
-      },
-      ttlMs
-    );
+  var _airtableWarned = false;
+  function airtableGet(_path, _ttlMs) {
+    if (!_airtableWarned) {
+      _airtableWarned = true;
+      console.warn('[PROVA_API.airtableGet] deprecated — migriere zu /lib/prova-supabase-adapters.js');
+    }
+    return Promise.resolve({ ok: false, status: 410, records: [], data: [] });
   }
 
   /**
