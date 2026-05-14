@@ -418,7 +418,9 @@ function importAlles() {
     var newK = Object.assign({id:genId(),erstellt:new Date().toISOString(),faelle_anzahl:0},r);
     vorhandene.unshift(newK);
     neuK++;
-    // MEGA⁷⁵-F-Batch2 B4: Kontakt-Sync via Supabase (RLS workspace-scoped).
+    // MEGA⁷⁶ A.3: Schema-Fix kontakte-Insert. name NOT NULL ohne Default.
+    // Spalten: vorname/nachname/firma/plz/ort/typ (kein adresse_*-Prefix
+    // außer adresse_strasse). typ via mapKontaktTyp().
     (async function(){
       try {
         var ad = await import('/lib/prova-supabase-adapters.js');
@@ -426,18 +428,20 @@ function importAlles() {
         if (!sb) return;
         var wsId = await ad.getCurrentWorkspaceId();
         if (!wsId) return;
+        var fullName = [r.vorname, r.name].filter(Boolean).join(' ').trim() || r.firma || 'Unbekannt';
         await sb.from('kontakte').insert({
-          workspace_id:     wsId,
-          nachname:         r.name || '',
-          vorname:          r.vorname || '',
-          kontakt_typ:      r.typ || 'sonstiges',
-          firma:            r.firma || '',
-          adresse_strasse:  r.strasse || '',
-          adresse_plz:      String(r.plz || ''),
-          adresse_ort:      r.ort || '',
-          telefon:          r.telefon || '',
-          email:            r.email || '',
-          notizen:          r.notizen || ''
+          workspace_id:    wsId,
+          name:            fullName,
+          vorname:         r.vorname || null,
+          nachname:        r.name || null,
+          firma:           r.firma || null,
+          typ:             ad.mapKontaktTyp(r.typ),
+          adresse_strasse: r.strasse || null,
+          plz:             r.plz ? String(r.plz) : null,
+          ort:             r.ort || null,
+          telefon:         r.telefon || null,
+          email:           r.email || null,
+          notizen:         r.notizen || null
         });
       } catch(e) { console.warn('[Import] Kontakt-Sync:', e && e.message); }
     })();

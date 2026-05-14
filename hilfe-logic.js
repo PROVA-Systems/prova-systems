@@ -50,23 +50,17 @@ window.sendeHilfeTicket = async function() {
   if (btn) { btn.disabled = true; btn.textContent = '⏳ Wird gesendet…'; }
   
   try {
-    // MEGA⁷⁵-F-Batch2 B9: Hilfe-Ticket → support_tickets-Tabelle.
+    // MEGA⁷⁶ A.1: Schema-Fix → sendSupportTicket-Helper (titel/beschreibung/
+    // user_email, kategorie='hilfe-page', Audit-Trail automatisch).
     var ad = await import('/lib/prova-supabase-adapters.js');
-    var sb = await ad.getSupabase();
-    if (!sb) throw new Error('no-supabase');
-    var sess = await sb.auth.getSession();
-    var userId = sess?.data?.session?.user?.id || null;
-    var wsId = await ad.getCurrentWorkspaceId();
-    var ins = await sb.from('support_tickets').insert({
-      workspace_id: wsId,
-      user_id:      userId,
-      email:        svEmail,
-      betreff:      betreff,
-      nachricht:    nachricht,
-      quelle:       'hilfe',
-      status:       'offen'
+    var res = await ad.sendSupportTicket({
+      titel:        betreff,
+      beschreibung: nachricht,
+      user_email:   svEmail,
+      kategorie:    'hilfe-page',
+      typ:          'frage'
     });
-    if (ins.error) throw new Error(ins.error.message);
+    if (!res.ok) throw new Error(res.error || 'unknown');
     if(typeof showToast==='function') showToast('Ticket gesendet ✅ — Wir antworten innerhalb von 24h');
     // Felder leeren
     ['hilfe-betreff','hilfe-nachricht','ticket-betreff','ticket-text'].forEach(function(id) {

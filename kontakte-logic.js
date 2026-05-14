@@ -46,18 +46,20 @@ async function syncKontakteVonSupabase() {
       .limit(200);
     if (r.error || !r.data || !r.data.length) return;
     r.data.forEach(function(row) {
-      var fullName = [row.vorname, row.nachname].filter(Boolean).join(' ').trim() || row.firma || '';
+      // MEGA⁷⁶ A.4: Schema-Fix-Mapping (row.typ statt kontakt_typ; row.plz/
+      // row.ort ohne adresse_*-Prefix; row.name als single TEXT als Fallback).
+      var fullName = row.name || [row.vorname, row.nachname].filter(Boolean).join(' ').trim() || row.firma || '';
       var k = {
         id:              row.id,
         at_id:           row.id,
         name:            fullName,
         firma:           row.firma || '',
-        typ:             row.kontakt_typ || 'Sonstige',
+        typ:             row.typ || 'sonstiges',
         email:           row.email || '',
         telefon:         row.telefon || '',
         strasse:         row.adresse_strasse || '',
-        plz:             String(row.adresse_plz || ''),
-        ort:             row.adresse_ort || '',
+        plz:             String(row.plz || ''),
+        ort:             row.ort || '',
         ansprechpartner: '',
         notizen:         row.notizen || '',
         faelle_anzahl:   0,

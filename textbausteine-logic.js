@@ -1047,23 +1047,16 @@ window.sendeTicket = async function() {
   }
   
   try {
-    // MEGA⁷⁵-F-Batch2 B9: Support-Ticket → Supabase support_tickets (Migration 39).
+    // MEGA⁷⁶ A.2: Schema-Fix → sendSupportTicket-Helper (Schema-Aware DRY).
     var ad = await import('/lib/prova-supabase-adapters.js');
-    var sb = await ad.getSupabase();
-    if (!sb) throw new Error('no-supabase');
-    var sess = await sb.auth.getSession();
-    var userId = sess?.data?.session?.user?.id || null;
-    var wsId = await ad.getCurrentWorkspaceId();
-    var ins = await sb.from('support_tickets').insert({
-      workspace_id: wsId,
-      user_id:      userId,
-      email:        svEmail,
-      betreff:      betreff,
-      nachricht:    nachricht,
-      quelle:       window.location.pathname.replace(/^\//,'') || 'support',
-      status:       'offen'
+    var res = await ad.sendSupportTicket({
+      titel:        betreff,
+      beschreibung: nachricht,
+      user_email:   svEmail,
+      kategorie:    'textbausteine-page',
+      typ:          'frage'
     });
-    if (ins.error) throw new Error(ins.error.message);
+    if (!res.ok) throw new Error(res.error || 'unknown');
     if(typeof showToast==='function') showToast('Ticket gesendet ✅ — Wir melden uns bei Ihnen');
     if(typeof schliesseSupport==='function') schliesseSupport();
   } catch(e) {

@@ -796,20 +796,28 @@ async function fristAlsTermin(az, datum, schadensart, auftraggeber) {
     try { local = JSON.parse(localStorage.getItem('prova_termine') || '[]'); } catch(e) {}
     local.push(Object.assign({ id: 'frist_' + az.replace(/[^a-z0-9]/gi,'-'), src: 'auto' }, termin));
     localStorage.setItem('prova_termine', JSON.stringify(local));
-    // MEGA⁷⁵-F-Batch2 B5: fristAlsTermin → Supabase termine. Schema-Drift:
-    // termin_titel→titel, termin_typ→typ, termin_datum→datum, notiz→beschreibung.
+    // MEGA⁷⁶ A.5: Abgabefrist gehört in fristen-Tabelle, NICHT termine.
+    // termin_typ-Enum kennt kein 'frist'. frist_typ='gutachten-erstattung'.
+    // auftrag_id via az-Lookup (Auftrag wurde vorher angelegt).
     try {
       var ad = await import('/lib/prova-supabase-adapters.js');
       var sb = await ad.getSupabase();
       var wsId = await ad.getCurrentWorkspaceId();
-      if (sb && wsId) {
-        await sb.from('termine').insert({
-          workspace_id: wsId,
-          titel:        termin.termin_titel,
-          typ:          'frist',
-          datum:        termin.termin_datum,
-          beschreibung: termin.notiz || ''
-        });
+      if (sb && wsId && az) {
+        var aRes = await sb.from('auftraege').select('id').eq('az', az).is('deleted_at', null).maybeSingle();
+        if (aRes.data && aRes.data.id) {
+          var sess = await sb.auth.getSession();
+          var userId = sess?.data?.session?.user?.id;
+          await sb.from('fristen').insert({
+            workspace_id:       wsId,
+            auftrag_id:         aRes.data.id,
+            frist_typ:          'gutachten-erstattung',
+            datum_soll:         termin.termin_datum,
+            status:             'offen',
+            notiz:              termin.notiz || 'Abgabefrist (auto-erzeugt aus Vor-Ort-Wizard)',
+            created_by_user_id: userId
+          });
+        }
       }
     } catch(_) {}
     showToast('Abgabefrist im Kalender gespeichert ✓', 'ok', 3000);
