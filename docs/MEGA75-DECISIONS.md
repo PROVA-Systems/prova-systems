@@ -164,5 +164,77 @@ Edge-Function exponieren oder im JWT als Custom-Claim.
 **Files:** `lib/referral-system.js`, `lib/prova-dashboard-widgets.js`,
 `dashboard-logic.js`, `sw.js`, `docs/MEGA75-DECISIONS.md`
 **CACHE_VERSION:** v3233 → v3234
+**Commit:** `9bdfc3c`
+
+---
+
+## Sprint E — Multiple GoTrueClient Singleton-Dedup
+
+**Problem:** Jeder Page-Load warf 3-5× `Multiple GoTrueClient instances detected
+in the same browser context`. Ursache: 23 Frontend-Files erstellten je einen
+eigenen `createClient(...)` per dynamic-import von `esm.sh`, statt das zentrale
+Singleton aus `lib/supabase-client.js` zu reusen. Jeder dieser GoTrueClients hat
+seinen eigenen Refresh-Token-Loop + Storage-Layer — produzierte unter Last
+undefined behavior (Session-Drift, Race-Conditions beim Token-Refresh).
+
+**Entscheidung:** Alle 23 Files auf `await import('/lib/supabase-client.js')`
+umgestellt. Damit fließt jeder Read/Write durch denselben GoTrueClient mit
+`storageKey: 'prova-auth-token'` + `crossDomainStorage` (Cookie für
+`.prova-systems.de` + localStorage-Mirror).
+
+**Pattern (17 lib/prova-* mit `_getSb._c` Cache):**
+```js
+const mod = await import('/lib/supabase-client.js');
+_getSb._c = mod.supabase || (mod.getSupabase && mod.getSupabase());
+```
+Bulk-sed-Refactor in einem Pass — 2 Zeilen-Pattern identisch.
+
+**Files dedupelt (23):**
+
+| Datei | Vorher | Nachher |
+|---|---|---|
+| `lib/prova-anhang-lightbox.js` | `_getSb._c = mod.createClient(...)` | `mod.supabase \|\| mod.getSupabase()` |
+| `lib/prova-audit-search.js` | dito | dito |
+| `lib/prova-audit-trail-view.js` | dito | dito |
+| `lib/prova-befund-generator.js` | dito | dito |
+| `lib/prova-beweisfragen-panel.js` | dito | dito |
+| `lib/prova-dashboard-widgets.js` | dito | dito |
+| `lib/prova-externe-dokumente.js` | dito | dito |
+| `lib/prova-foto-picker.js` | dito | dito |
+| `lib/prova-global-search.js` | dito | dito |
+| `lib/prova-ki-wire.js` | dito | dito |
+| `lib/prova-kontakt-360.js` | dito | dito |
+| `lib/prova-mein-protokoll.js` | dito | dito |
+| `lib/prova-versand-historie.js` | dito | dito |
+| `lib/prova-versand-modal.js` | dito | dito |
+| `lib/prova-versand-smtp.js` | dito | dito |
+| `lib/prova-version-history.js` | dito | dito |
+| `lib/prova-wikilink-source.js` | dito | dito |
+| `lib/prova-asset-trigger.js` | `_getSupabase._cache = ...` | Singleton |
+| `lib/prova-fragment-sidebar.js` | `this._sb = ...` | Singleton |
+| `lib/prova-skizze-editor.js` | `this._sb = ...` | Singleton |
+| `lib/extensions/prova-ki-suggestion.js` | throwaway client für session | Singleton |
+| `lib/extensions/prova-norm-citation.js` | `_getSupabase()` return | Singleton |
+| `lib/extensions/prova-skizze-embed.js` | inline createClient | Singleton |
+| `mahnwesen.html` | `window.__mhSb = ...` | Singleton |
+
+**Bewusst nicht migriert:**
+
+- `lib/supabase-client.js` selbst — das IST das Singleton.
+- `netlify/functions/**` und `scripts/**` — server-side mit Service-Role-Key,
+  läuft nie im Browser, keine GoTrueClient-Konkurrenz.
+- `admin/index.html` und `admin/voll.html` — Admin-Pages haben eigenen
+  Auth-Flow mit Service-Role-Pattern (out-of-scope für Pilot).
+- `app-logic.js` Z.580 — nur ein Kommentar, kein eigentlicher Aufruf.
+
+**Side-Effect (gewollt):** Alle ehemals isolierten Clients teilen jetzt die
+Session aus `prova-auth-token`. Vorher hat z.B. `prova-dashboard-widgets`
+eigentlich ohne Session-Header gefeuert (eigener Client mit Default-Storage =
+"sb-cngteblrbpwsyypexjrv-auth-token") — RLS-Queries lief deshalb anonym
+durch. Nach dem Fix erbt jeder Caller den eingeloggten User → RLS funktioniert
+korrekt workspace-scoped.
+
+**Files:** 23 Frontend-Files + `sw.js` + `docs/MEGA75-DECISIONS.md`
+**CACHE_VERSION:** v3234 → v3235
 
 ---
