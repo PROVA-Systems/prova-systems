@@ -82,6 +82,87 @@ funktional fertig und Marcel sammelt damit DOCX-Vorlagen. Komplette Abschaltung
 wäre Feature-Regression ohne Gegenwert.
 
 **Files:** `lib/edge-shim.js`, `sw.js`
-**Commit:** wird gleich gemacht
+**Commit:** `c419117`
+
+---
+
+## Sprint D — Dashboard 4 Endpoint-Bugs
+
+### Bug 1 — `get-referral-stats` 401
+
+**Problem:** Endpoint existiert nirgendwo — weder `netlify/functions/get-referral-stats.js`
+noch `supabase/functions/get-referral-stats/index.ts`. MEGA⁵⁶-FUNCTION-MAP-Dokument
+behauptet "ACTIVE" (Z.68), die Files wurden aber nie deployed/committed. Frontend
+ruft sie aus `lib/referral-system.js:186` bei jedem Dashboard-Load → 401-Spam in
+Console.
+
+**Entscheidung:** Pfad B (defensives Deaktivieren). `getStats()` und `getHistory()`
+in `lib/referral-system.js` liefern jetzt Resolve-Promises mit Empty-Defaults statt
+fetch. Die Dashboard-Card mit Status-Counts zeigt "0 versendet, 0 belohnt" — exakt
+der Zustand für einen neuen User.
+
+**Pfad A (Endpoint bauen) verworfen:** Out-of-scope für mega75-D (Sprint-Grenze
+"KEINE neuen KPI-Tiles oder Widget-Features"). Sobald die Endpoints tatsächlich
+gebaut werden, hier den fetch-Call wieder reaktivieren.
+
+**File:** `lib/referral-system.js`
+
+### Bug 2 — `rechnungen` 404
+
+**Problem:** `lib/prova-dashboard-widgets.js widgetMahnungen()` rief `sb.from('rechnungen')`
+— diese Tabelle existiert nicht. Rechnungen sind als rows in `dokumente` mit
+`typ IN ('rechnung','rechnung_jveg','rechnung_stunden')` modelliert (siehe
+`supabase-migrations/03_schema_artefakte_storage.sql:163`). Spalten heißen
+`doc_nummer` (statt `rechnungsnr`), `mahn_stufe` (statt `mahnung_stufe`),
+`faelligkeit` (statt `faellig_am`). Status-Enum hat `versendet|ueberfaellig`
+(kein `mahnung_1/2/3` — Mahnungen sind separate dokumente-Rows mit
+`typ IN ('mahnung_1','mahnung_2','mahnung_3')`).
+
+**Entscheidung:** Widget direkt auf `dokumente` umgestellt mit korrekten
+Filter-Werten. Sprint-Scope-konform — kein Schema-Wechsel, nur Frontend-Query
+an existierendes Schema angepasst.
+
+**File:** `lib/prova-dashboard-widgets.js`
+
+### Bug 3 — `fristen` 400
+
+**Problem:** Gleiche Klasse von Schema-Drift wie Bug 2. `lib/prova-dashboard-widgets.js
+widgetFaelligeFristen()` nutzte `faellig_am` und `titel` — beide existieren nicht.
+Reale Spalten laut `supabase/migrations/2026_05_11_w12_fristen_system.sql:35-52`:
+`datum_soll DATE`, `frist_typ`, `notiz`, plus `deleted_at TIMESTAMPTZ NULL`.
+
+**Entscheidung:** Spalten auf reale Schema-Namen umgestellt, `.is('deleted_at', null)`
+ergänzt, Label-Fallback `notiz || frist_typ || 'Frist'`. ISO-Date statt ISO-Timestamp
+(DATE column).
+
+**File:** `lib/prova-dashboard-widgets.js`
+
+### Bug 4 — `admin-ki-aggregations` 403
+
+**Problem:** Edge-Function `admin-ki-aggregations` ist via
+`supabase/functions/_shared/admin-auth.ts requireAdmin()` admin-only — hardcoded
+Email-Whitelist + `PROVA_ADMIN_REQUIRE_2FA=true`. Marcel ist drin, aber 403 trotzdem
+wahrscheinlich wegen stale-AAL/2FA-Session. Für Non-Admin-User gibt's keinen Grund,
+den Call überhaupt zu machen.
+
+**Entscheidung:** Pfad (b)+(c)-Hybrid. Frontend-Pre-Check gegen die selbe
+Hardcoded-Email-Liste in `dashboard-logic.js loadKiTokenKpi()`: Wenn
+`localStorage.prova_sv_email` nicht in der Liste → Tile zeigt '—' / 'nur Admin'
+silent (kein 403). Wenn drin: Call läuft normal, existing catch-Block übernimmt
+falls 2FA-stale.
+
+**Pfad (a) verworfen:** Function-Policy auf Owner ausweiten widerspricht
+Daten-Sensibilität (globale KI-Token-Stats über alle Workspaces).
+
+**Trade-off:** Doppelte Hardcoded-Liste (Frontend ↔ Edge). Akzeptiert, weil sie
+sich faktisch nie ändert (5 Marcel-Aliase). TODO bei Multi-Admin-Rollout: über
+Edge-Function exponieren oder im JWT als Custom-Claim.
+
+**File:** `dashboard-logic.js`
+
+### Sprint-D Commit & sw.js
+**Files:** `lib/referral-system.js`, `lib/prova-dashboard-widgets.js`,
+`dashboard-logic.js`, `sw.js`, `docs/MEGA75-DECISIONS.md`
+**CACHE_VERSION:** v3233 → v3234
 
 ---

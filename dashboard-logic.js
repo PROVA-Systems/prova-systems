@@ -135,11 +135,23 @@ function zeigSkeleton(){
   });
 }
 
-/* M³⁹ P8 — KI-Token-Verbrauch-Widget (5. KPI) */
+/* M³⁹ P8 — KI-Token-Verbrauch-Widget (5. KPI)
+   MEGA⁷⁵-D Bug 4: admin-ki-aggregations ist admin-only (Hardcoded-Whitelist
+   in supabase/functions/_shared/admin-auth.ts + 2FA). Non-Admins bekamen 403
+   bei jedem Dashboard-Load. Frontend-Pre-Check spart den Call. Wenn 2FA-Stale
+   fällt der Call trotzdem auf 403 — der catch behandelt das defensiv. */
 async function loadKiTokenKpi(){
   var el=document.getElementById('kpi-ki-token');
   var sub=document.getElementById('kpi-ki-token-sub');
   if(!el)return;
+  // Spiegel der Liste aus supabase/functions/_shared/admin-auth.ts
+  var ADMIN_EMAILS = ['marcel.schreiber891@gmail.com','marcel.schreiber@prova-systems.de','marcel@prova-systems.de','kontakt@prova-systems.de','admin@prova-systems.de'];
+  var userEmail = (localStorage.getItem('prova_sv_email') || '').toLowerCase();
+  if (ADMIN_EMAILS.indexOf(userEmail) === -1) {
+    el.textContent='—';
+    if(sub)sub.textContent='nur Admin';
+    return;
+  }
   try{
     var fetcher = window.provaFetch || window.fetch.bind(window);
     var resp = await fetcher('/.netlify/functions/admin-ki-aggregations?range=month',{
