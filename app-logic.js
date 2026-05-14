@@ -582,6 +582,14 @@ window.auftragAnlegenUndOeffnen = async function() {
     const sb = mod.supabase;
     const { data: { session } } = await sb.auth.getSession();
     if (!session) throw new Error('Keine Anmeldung — bitte neu einloggen.');
+    // MEGA⁷⁵-A: workspace_id ist Pflicht für RLS-WITH-CHECK auf auftraege_insert.
+    // Ohne wsId scheitert der INSERT mit 403 (Policy-Violation). getCurrentWorkspaceId
+    // checkt localStorage.prova_workspace_id und lädt notfalls live aus Supabase.
+    const adapters = await import('/lib/prova-supabase-adapters.js');
+    const wsId = await adapters.getCurrentWorkspaceId();
+    if (!wsId) {
+      throw new Error('Kein Workspace gefunden — bitte ausloggen und neu einloggen.');
+    }
     // MEGA⁷⁰-Phase-1.2.4: Schema-aligned Payload für auftraege-Insert.
     // Adresse → objekt jsonb (siehe Migration 02_schema_kerngeschaeft.sql Z.327-333).
     // Auftraggeber-Typ → enum (privat/gewerbe/gericht/versicherung/behoerde/andere).
@@ -623,6 +631,7 @@ window.auftragAnlegenUndOeffnen = async function() {
 
     // Schema-aligned payload (alle Keys sind echte Columns oder jsonb)
     const safe = {
+      workspace_id: wsId,
       typ: dbTyp,
       az: az,
       titel: titel,
@@ -639,7 +648,7 @@ window.auftragAnlegenUndOeffnen = async function() {
       // Wenn Insert wegen unbekannter Spalte fehlschlägt → retry nur mit core
       console.warn('[auftrag-insert] fehler:', error.message, '— retry mit Kern-Feldern');
       const { data: d2, error: e2 } = await sb.from('auftraege').insert({
-        typ: safe.typ, az: safe.az, titel: safe.titel, status: safe.status, phase_aktuell: safe.phase_aktuell
+        workspace_id: safe.workspace_id, typ: safe.typ, az: safe.az, titel: safe.titel, status: safe.status, phase_aktuell: safe.phase_aktuell
       }).select('id, az').single();
       if (e2) throw new Error('Auftrag-Insert fehlgeschlagen: ' + e2.message);
       window.location.href = '/akte?id=' + encodeURIComponent(d2.id);

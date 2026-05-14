@@ -157,6 +157,7 @@
     try {
       localStorage.removeItem(SESSION_KEY);
       localStorage.removeItem(ACTIVITY_KEY);
+      localStorage.removeItem('prova_workspace_id');  // MEGA⁷⁵-A: nicht über Sessions vererben
       // Legacy-Key NICHT entfernen (enthält E-Mail für Re-Login)
     } catch (e) {}
   }

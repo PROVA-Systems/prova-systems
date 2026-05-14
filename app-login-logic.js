@@ -329,6 +329,7 @@
       var displayName = resolvedEmail.split('@')[0];
       var paket = 'Solo'; var aboStatus = null; var trialEnd = null;
       var svVorname = ''; var svNachname = ''; var founding = false;
+      var workspaceId = null;
       try {
         var profileRes = await supabase
           .from('users')
@@ -341,15 +342,34 @@
           if (profileRes.data.paket) paket = profileRes.data.paket;
           founding   = !!profileRes.data.founding_member;
           var ws = (profileRes.data.workspace_memberships || [])[0];
-          if (ws && ws.workspaces) {
-            if (ws.workspaces.abo_status)     aboStatus = ws.workspaces.abo_status;
-            if (ws.workspaces.trial_endet_am) trialEnd  = ws.workspaces.trial_endet_am;
-            if (ws.workspaces.paket)          paket     = ws.workspaces.paket;
+          if (ws) {
+            if (ws.workspace_id) workspaceId = ws.workspace_id;
+            if (ws.workspaces) {
+              if (ws.workspaces.abo_status)     aboStatus = ws.workspaces.abo_status;
+              if (ws.workspaces.trial_endet_am) trialEnd  = ws.workspaces.trial_endet_am;
+              if (ws.workspaces.paket)          paket     = ws.workspaces.paket;
+            }
           }
           displayName = ((svVorname + ' ' + svNachname).trim()) || displayName;
         }
       } catch (eProfile) {
         console.warn('[login] profil-lookup fail (non-blocking):', eProfile && eProfile.message);
+      }
+
+      // MEGA⁷⁵-A: workspace_id-Fallback wenn join nichts liefert (User mit nur memberships, ohne public.users-Row).
+      if (!workspaceId) {
+        try {
+          var wsRes = await supabase
+            .from('workspace_memberships')
+            .select('workspace_id')
+            .eq('user_id', user.id)
+            .eq('is_active', true)
+            .limit(1)
+            .maybeSingle();
+          if (wsRes.data && wsRes.data.workspace_id) workspaceId = wsRes.data.workspace_id;
+        } catch (eWs) {
+          console.warn('[login] workspace-fallback-lookup fail (non-blocking):', eWs && eWs.message);
+        }
       }
 
       // Legacy-Storage-Keys schreiben für auth-guard.js + bestehenden Code
@@ -370,6 +390,12 @@
       if (founding)   localStorage.setItem('prova_testpilot',           '1');
       if (svVorname)  localStorage.setItem('prova_sv_vorname',          svVorname);
       if (svNachname) localStorage.setItem('prova_sv_nachname',         svNachname);
+      // MEGA⁷⁵-A: workspace_id-Cache für RLS-Writes (INSERT auftraege etc.).
+      // Ohne diesen Key scheitert jede INSERT-Payload an workspace_id NOT NULL +
+      // RLS-WITH-CHECK. Fallback: lib/prova-supabase-adapters.js getCurrentWorkspaceId()
+      // lädt live aus workspace_memberships, wenn dieser Key fehlt.
+      if (workspaceId) localStorage.setItem('prova_workspace_id', workspaceId);
+      else console.warn('[login] kein workspace gefunden für user', user.id, '— INSERT-Writes werden fail bis Workspace existiert.');
 
       // Sekundaer: V2-Session als Uebergangs-Anker fuer auth-guard
       if (typeof window.provaCreateSession === 'function') {
