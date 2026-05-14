@@ -179,7 +179,7 @@ window.ProvaOffline = (function() {
         if (!sb || !wsId) return false;
         var row = {
           workspace_id:      wsId,
-          typ:               (payload.Auftragstyp || 'schaden').toLowerCase().replace('schiedsgutachten','schied'),
+          typ:               ad.mapAuftragTyp(payload.Auftragstyp),
           status:            'aktiv',
           az:                payload.Aktenzeichen || ('OFFL-' + Date.now().toString().slice(-6)),
           titel:             [payload.Schadensart, payload.Auftraggeber_Name].filter(Boolean).join(' · '),

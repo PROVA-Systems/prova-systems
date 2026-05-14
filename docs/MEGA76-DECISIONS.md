@@ -92,9 +92,40 @@ Batch-2 hat sie als "defer'd" markiert und stattdessen audit_trail benutzt. MEGA
 
 Können nach 14 Tagen Stable-Run komplett aus Repo entfernt werden. Frontend-Caller wurden in F-Batch2 schon migriert; die Files sind nur noch Compat-Layer für `<script>`-Loader in HTMLs. MEGA77 Cleanup: HTMLs die diese Scripts laden audited, Loader-`<script>`-Tags entfernen, dann Files löschen.
 
-### 3. `freigabe-pending` Enum-Erweiterung
+### 3. `freigabe-pending` Enum-Erweiterung + Dead-Filter-Warnung
 
-Per Spec D.5: `auftrag_status` kennt kein `freigabe-pending`. Aktuell nutzt `freigabe-queue.html` `phase_aktuell=5` als Filter — funktioniert, aber semantisch könnte ein expliziter Status-Wert klarer sein. **Defer** zu eigenem Schema-Migrations-Sprint.
+Per Spec D.5: `auftrag_status` kennt kein `freigabe-pending`. Aktuell nutzt
+`freigabe-queue.html` `phase_aktuell=5` als Filter.
+
+**Hotfix-MEGA76A-Finding:** `phase_max` hat Default `3` in `auftraege`-Schema
+(siehe Anhang A.1 MEGA76-Spec). `phase_aktuell=5` ist also ein **Dead-Filter** —
+die Page zeigt aktuell **immer eine leere Queue** weil kein Auftrag jemals
+phase 5 erreicht. Kein Crash, nur UX-Lücke.
+
+**MEGA77 Optionen:**
+- (a) `auftrag_status`-Enum um `'freigabe_pending'` erweitern + Status-Wechsel
+  beim §6-Fachurteil-Save in `fachurteil-logic.js`
+- (b) `details.freigabe.pending=true` jsonb-Flag setzen + freigabe-queue.html
+  filtert auf `details->freigabe->>'pending'='true'` (PostgREST-jsonb-Pfad)
+- (c) `phase_max` auf `5` setzen + `phase_aktuell=5` als Freigabe-Phase
+  beibehalten — semantisch sauber, aber schema-touch erforderlich
+
+**Empfehlung MEGA77:** Option (b) — kein Schema-Change, nur Frontend.
+
+### 4. app.html `abo_status='pausiert'` nicht geblockt
+
+MEGA76 D.3 blockt nur `gekuendigt` und `ueberfaellig`. `pausiert` (Marcel-
+manueller Pause-Status für Solo-User die kurzfristig nicht arbeiten) erlaubt
+aktuell Vollzugriff.
+
+**MEGA77 entscheiden:**
+- (a) Pausiert = Read-Only-Modus (alle write-Operations zeigen Toast "Account pausiert")
+- (b) Pausiert = Full-Block wie gekuendigt (Logout-Redirect)
+- (c) Pausiert = unverändert lassen (Marcel-Solo-Entscheidung; bei Team-Tier
+  jedes Member-Konto via `member_rolle='readonly'` einzeln)
+
+**Empfehlung:** (a) wenn Pause als Karenzzeit gedacht ist (Daten bleiben
+erreichbar), (b) wenn als Kündigungs-Vorstufe gemeint.
 
 ### 4. CACHE_VERSION-Kommentar-Pattern
 

@@ -105,34 +105,31 @@
     if (_overlay) _overlay.style.display = 'none';
   }
 
-  /* ── MEGA⁷⁶ D.2: Fotos via Supabase eintraege (typ='foto') laden ───
-       Airtable-Fotos sind weg. Lightbox liest jetzt aus eintraege-Tabelle
-       die ihrerseits Storage-Files referenziert. recordId = auftrag.id (UUID).
-       Wenn die Tabelle/Spalten anders heißen: Caller kriegt [] und Lightbox
-       bleibt leer — kein UI-Crash. */
+  /* ── MEGA⁷⁶A Hotfix: Fotos direkt aus fotos-Tabelle (nicht eintraege).
+       Schema: id, storage_bucket, storage_path, thumbnail_path,
+       original_filename, beschreibung, captured_at, position_in_dokument.
+       recordId = auftrag.id (UUID). */
   async function ladeFotosVonAirtable(recordId) {
     try {
       var mod = await import('/lib/supabase-client.js');
       var sb = mod.supabase || (mod.getSupabase && mod.getSupabase());
       if (!sb || !recordId) return [];
-      var r = await sb.from('eintraege')
-        .select('id, anhang_storage_path, caption, anhang_metadata')
+      var r = await sb.from('fotos')
+        .select('id, storage_bucket, storage_path, thumbnail_path, original_filename, beschreibung, captured_at, position_in_dokument')
         .eq('auftrag_id', recordId)
-        .eq('typ', 'foto')
         .is('deleted_at', null)
-        .order('created_at', { ascending: true });
+        .order('captured_at', { ascending: true, nullsFirst: true });
       if (r.error || !r.data) return [];
-      var bucket = 'sv-files';
       return r.data
-        .filter(function(row) { return !!row.anhang_storage_path; })
+        .filter(function(row) { return !!row.storage_path; })
         .map(function(row, i) {
-          var pub = sb.storage.from(bucket).getPublicUrl(row.anhang_storage_path);
-          var url = (pub && pub.data && pub.data.publicUrl) || row.anhang_storage_path;
-          var meta = row.anhang_metadata || {};
+          var bucket = row.storage_bucket || 'sv-files';
+          var pub = sb.storage.from(bucket).getPublicUrl(row.storage_path);
+          var url = (pub && pub.data && pub.data.publicUrl) || row.storage_path;
           return {
             url: url,
-            filename: meta.filename || ('foto_' + (i+1) + '.jpg'),
-            caption: row.caption || ''
+            filename: row.original_filename || ('foto_' + (i+1) + '.jpg'),
+            caption: row.beschreibung || ''
           };
         });
     } catch(e) {
