@@ -61,29 +61,12 @@ function zeigSyncBadge(elId, status, text){
   if(status==='ok')setTimeout(function(){b.style.display='none';},4000);
 }
 
-async function ladeSVRecordId(){
-  var email=localStorage.getItem('prova_sv_email')||'';
-  if(!email||_svRecordId)return _svRecordId;
-  try{
-    var path='/v0/'+AT_BASE+'/'+AT_SV_TABLE+'?filterByFormula='+encodeURIComponent('{Email}="'+email+'"')+'&maxRecords=1';
-    var res=await provaFetch('/.netlify/functions/airtable',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({method:'GET',path:path})});
-    if(!res.ok)return null;
-    var data=await res.json();
-    var rec=(data.records||[])[0];
-    if(rec){_svRecordId=rec.id;return _svRecordId;}
-  }catch(e){console.warn('AT record ID Fehler:',e);}
-  return null;
-}
-
-async function updateAirtableFelder(felder){
-  var recId=await ladeSVRecordId();
-  if(!recId){console.warn('Kein AT Record ID — Sync übersprungen');return false;}
-  try{
-    var path='/v0/'+AT_BASE+'/'+AT_SV_TABLE+'/'+recId;
-    var res=await provaFetch('/.netlify/functions/airtable',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({method:'PATCH',path:path,payload:{fields:felder}})});
-    return res.ok;
-  }catch(e){console.warn('AT PATCH Fehler:',e);return false;}
-}
+// MEGA⁷⁵-F: ladeSVRecordId/updateAirtableFelder → No-Op-Stubs.
+// Schreibpfad geht jetzt durch window.provaSync (s.u.) direkt auf
+// Supabase users + workspaces. Diese beiden Helper bleiben für
+// Legacy-Caller, liefern nur immer null/false.
+async function ladeSVRecordId(){ return null; }
+async function updateAirtableFelder(felder){ return false; }
 
 /* ── LADE ALLE WERTE ── */
 function ladeProfil(){
@@ -953,37 +936,64 @@ window.markiereGeaendert = function() {
    geladen — geräteübergreifend und browser-unabhängig.
 ══════════════════════════════════════════════════════════════ */
 
-/* ── Hilfsfunktion: Airtable PATCH für eigenen SV-Record ── */
+/* ── MEGA⁷⁵-F: syncZuAirtable() → Supabase-Write ──
+   felder: { Vorname, Nachname, Telefon, Zertifizierung, Firma, Strasse,
+            PLZ, Ort, IBAN, BIC, Steuer_Nr, ... }
+   → users.{name|telefon|qualifikation|anschrift|plz|ort}
+   → workspaces.briefkopf jsonb {kanzlei_name|anschrift|plz|ort|ust_id|steuernr|iban|bic|...}
+*/
 async function syncZuAirtable(felder) {
-  var svEmail = localStorage.getItem('prova_sv_email') || '';
-  if (!svEmail) return;
-
+  if (!felder || !Object.keys(felder).length) return;
   try {
-    // Eigenen Record per Email suchen
-    var filter = encodeURIComponent('{Email}="' + svEmail + '"');
-    var res = await provaFetch('/.netlify/functions/airtable', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ method: 'GET',
-        path: '/v0/appJ7bLlAHZoxENWE/tbladqEQT3tmx4DIB?filterByFormula=' + filter + '&maxRecords=1'
-      })
-    });
-    var d = await res.json();
-    if (!d.records || !d.records[0]) return;
-    var recId = d.records[0].id;
+    var mod = await import('/lib/supabase-client.js');
+    var sb = mod.supabase || (mod.getSupabase && mod.getSupabase());
+    if (!sb) return;
+    var sess = await sb.auth.getSession();
+    var userId = sess?.data?.session?.user?.id;
+    if (!userId) return;
 
-    // Felder schreiben
-    await provaFetch('/.netlify/functions/airtable', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ method: 'PATCH',
-        path: '/v0/appJ7bLlAHZoxENWE/tbladqEQT3tmx4DIB/' + recId,
-        payload: { fields: felder }
-      })
-    });
-    console.log('[PROVA] Profil → Airtable synced:', Object.keys(felder));
+    // users-Spalten
+    var userUpd = {};
+    if (felder.Vorname !== undefined || felder.Nachname !== undefined) {
+      var vn = (felder.Vorname !== undefined ? felder.Vorname : localStorage.getItem('prova_sv_vorname') || '');
+      var nn = (felder.Nachname !== undefined ? felder.Nachname : localStorage.getItem('prova_sv_nachname') || '');
+      userUpd.name = (vn + ' ' + nn).trim();
+    }
+    if (felder.Telefon !== undefined)       userUpd.telefon = felder.Telefon;
+    if (felder.Zertifizierung !== undefined) userUpd.qualifikation = felder.Zertifizierung;
+    if (felder.Titel !== undefined)         userUpd.titel = felder.Titel;
+    if (felder.Anschrift !== undefined)     userUpd.anschrift = felder.Anschrift;
+
+    if (Object.keys(userUpd).length) {
+      var uRes = await sb.from('users').update(userUpd).eq('id', userId);
+      if (uRes.error) console.warn('[einstellungen→users]', uRes.error.message);
+    }
+
+    // workspaces.briefkopf jsonb-Patch
+    var bkPatch = {};
+    if (felder.Firma !== undefined)     bkPatch.kanzlei_name = felder.Firma;
+    if (felder.Strasse !== undefined)   bkPatch.anschrift = felder.Strasse;
+    if (felder.PLZ !== undefined)       bkPatch.plz = String(felder.PLZ);
+    if (felder.Ort !== undefined)       bkPatch.ort = felder.Ort;
+    if (felder.IBAN !== undefined)      bkPatch.iban = felder.IBAN;
+    if (felder.BIC !== undefined)       bkPatch.bic = felder.BIC;
+    if (felder.Steuer_Nr !== undefined) bkPatch.steuernr = felder.Steuer_Nr;
+    if (felder.USt_IdNr !== undefined)  bkPatch.ust_id = felder.USt_IdNr;
+    if (felder.Website !== undefined)   bkPatch.website = felder.Website;
+
+    if (Object.keys(bkPatch).length) {
+      var ad = await import('/lib/prova-supabase-adapters.js');
+      var wsId = await ad.getCurrentWorkspaceId();
+      if (wsId) {
+        // Read-merge-write um nicht andere briefkopf-Felder zu killen
+        var cur = await sb.from('workspaces').select('briefkopf').eq('id', wsId).maybeSingle();
+        var merged = Object.assign({}, (cur.data && cur.data.briefkopf) || {}, bkPatch);
+        var wRes = await sb.from('workspaces').update({ briefkopf: merged }).eq('id', wsId);
+        if (wRes.error) console.warn('[einstellungen→workspaces.briefkopf]', wRes.error.message);
+      }
+    }
   } catch(e) {
-    console.warn('[PROVA] Airtable-Sync fehlgeschlagen:', e.message);
+    console.warn('[einstellungen] Profil-Sync fehlgeschlagen:', e && e.message);
   }
 }
 
@@ -1024,70 +1034,81 @@ window.speichereAbrechnung = function() {
   });
 };
 
-/* ── Beim Laden: Profil aus Airtable holen und Felder befüllen ── */
-(async function ladeProfilAusAirtable() {
-  var svEmail = localStorage.getItem('prova_sv_email') || '';
-  if (!svEmail) return;
-
-  try {
-    var filter = encodeURIComponent('{Email}="' + svEmail + '"');
-    var res = await provaFetch('/.netlify/functions/airtable', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ method: 'GET',
-        path: '/v0/appJ7bLlAHZoxENWE/tbladqEQT3tmx4DIB?filterByFormula=' + filter + '&maxRecords=1'
-      })
-    });
-    var d = await res.json();
-    if (!d.records || !d.records[0]) return;
-    var f = d.records[0].fields;
-
-    // In localStorage cachen
-    if (f.Vorname)   localStorage.setItem('prova_sv_vorname',  f.Vorname);
-    if (f.Nachname)  localStorage.setItem('prova_sv_nachname', f.Nachname);
-    if (f.Firma)     localStorage.setItem('prova_sv_firma',    f.Firma);
-    if (f.Strasse)   localStorage.setItem('prova_sv_strasse',  f.Strasse);
-    if (f.PLZ)       localStorage.setItem('prova_sv_plz',      String(f.PLZ));
-    if (f.Ort)       localStorage.setItem('prova_sv_ort',      f.Ort);
-    if (f.Telefon)   localStorage.setItem('prova_sv_telefon',  f.Telefon);
-    if (f.IBAN)      localStorage.setItem('prova_sv_iban',     f.IBAN);
-    if (f.BIC)       localStorage.setItem('prova_sv_bic',      f.BIC);
-    if (f.Steuer_Nr) localStorage.setItem('prova_sv_steuernr', f.Steuer_Nr);
-    if (f.Paket)     localStorage.setItem('prova_paket',       f.Paket);
-
-    // Formularfelder befüllen
-    var map = {
-      'e-vorname':  f.Vorname,
-      'e-nachname': f.Nachname,
-      'e-firma':    f.Firma,
-      'e-strasse':  f.Strasse,
-      'e-plz':      f.PLZ ? String(f.PLZ) : '',
-      'e-ort':      f.Ort,
-      'e-telefon':  f.Telefon,
-      'e-iban':     f.IBAN,
-      'e-bic':      f.BIC,
-      'e-steuernr': f.Steuer_Nr,
-    };
-    Object.keys(map).forEach(function(id) {
-      var el2 = document.getElementById(id);
-      if (el2 && map[id]) el2.value = map[id];
-    });
-    console.log('[PROVA] Profil aus Airtable geladen');
-  } catch(e) {
-    console.warn('[PROVA] Profil-Laden aus Airtable fehlgeschlagen:', e.message);
-    // Fallback: localStorage-Werte in Felder schreiben
+/* ── MEGA⁷⁵-F: Beim Laden Profil aus Supabase holen und Felder befüllen ── */
+(async function ladeProfilAusSupabase() {
+  function fillLsFallback() {
     var lsMap = {
       'e-vorname': 'prova_sv_vorname', 'e-nachname': 'prova_sv_nachname',
       'e-firma': 'prova_sv_firma',     'e-strasse': 'prova_sv_strasse',
       'e-plz': 'prova_sv_plz',         'e-ort': 'prova_sv_ort',
       'e-telefon': 'prova_sv_telefon', 'e-iban': 'prova_sv_iban',
-      'e-bic': 'prova_sv_bic',         'e-steuernr': 'prova_sv_steuernr',
+      'e-bic': 'prova_sv_bic',         'e-steuernr': 'prova_sv_steuernr'
     };
     Object.keys(lsMap).forEach(function(id) {
       var el2 = document.getElementById(id);
       var val = localStorage.getItem(lsMap[id]);
       if (el2 && val) el2.value = val;
     });
+  }
+
+  try {
+    var ad = await import('/lib/prova-supabase-adapters.js');
+    var prof = await ad.loadSvProfile();
+    if (!prof || prof.error) { fillLsFallback(); return; }
+    var u = prof.user || {};
+    var bk = (prof.workspace && prof.workspace.briefkopf) || {};
+
+    // name → Vorname/Nachname-Split (last word = nachname)
+    var fullName = (u.name || '').trim();
+    var vorname = '', nachname = '';
+    if (fullName) {
+      var parts = fullName.split(/\s+/);
+      nachname = parts.pop() || '';
+      vorname = parts.join(' ');
+    }
+
+    // localStorage cachen
+    if (vorname)        localStorage.setItem('prova_sv_vorname',  vorname);
+    if (nachname)       localStorage.setItem('prova_sv_nachname', nachname);
+    if (u.telefon)      localStorage.setItem('prova_sv_telefon',  u.telefon);
+    if (u.qualifikation) localStorage.setItem('prova_sv_quali',   u.qualifikation);
+    if (u.titel)        localStorage.setItem('prova_sv_titel',    u.titel);
+    if (bk.kanzlei_name) localStorage.setItem('prova_sv_firma',   bk.kanzlei_name);
+    if (bk.anschrift)   localStorage.setItem('prova_sv_strasse',  bk.anschrift);
+    if (bk.plz)         localStorage.setItem('prova_sv_plz',      String(bk.plz));
+    if (bk.ort)         localStorage.setItem('prova_sv_ort',      bk.ort);
+    if (bk.iban)        localStorage.setItem('prova_sv_iban',     bk.iban);
+    if (bk.bic)         localStorage.setItem('prova_sv_bic',      bk.bic);
+    if (bk.steuernr)    localStorage.setItem('prova_sv_steuernr', bk.steuernr);
+    if (bk.ust_id)      localStorage.setItem('prova_sv_ustid',    bk.ust_id);
+    if (bk.website)     localStorage.setItem('prova_sv_website',  bk.website);
+    if (prof.workspace && prof.workspace.abo_tier) localStorage.setItem('prova_paket', prof.workspace.abo_tier === 'team' ? 'Team' : 'Solo');
+
+    // Formularfelder
+    var map = {
+      'e-vorname':  vorname,
+      'e-nachname': nachname,
+      'e-firma':    bk.kanzlei_name || '',
+      'e-strasse':  bk.anschrift || '',
+      'e-plz':      bk.plz ? String(bk.plz) : '',
+      'e-ort':      bk.ort || '',
+      'e-telefon':  u.telefon || '',
+      'e-iban':     bk.iban || '',
+      'e-bic':      bk.bic || '',
+      'e-steuernr': bk.steuernr || '',
+      'e-ustid':    bk.ust_id || '',
+      'e-website':  bk.website || '',
+      'e-quali':    u.qualifikation || '',
+      'e-titel':    u.titel || ''
+    };
+    Object.keys(map).forEach(function(id) {
+      var el2 = document.getElementById(id);
+      if (el2 && map[id]) el2.value = map[id];
+    });
+    console.log('[PROVA] Profil aus Supabase geladen');
+  } catch(e) {
+    console.warn('[PROVA] Profil-Laden aus Supabase fehlgeschlagen:', e && e.message);
+    fillLsFallback();
   }
 })();
 
@@ -1131,17 +1152,16 @@ var PROVA_NUMERIC_FIELDS = new Set([
   'prova_sv_plz', 'prova_sv_mwst', 'prova_sv_zahlungsziel'
 ]);
 
-/* ── Alle geänderten Keys sofort nach Airtable schreiben ── */
+/* ── MEGA⁷⁵-F: Debounced Supabase-Sync für Profil-Felder ──
+   set(lsKey, value) puffert + flusht nach 800ms zu users/workspaces.
+   Schreibpfad nutzt syncZuAirtable() oben (Mapping Airtable-Name → SB-Spalte). */
 window.provaSync = {
-  _recId: null,
   _pending: {},
   _timer: null,
 
-  /* Einen Key in Airtable schreiben (debounced 1s) */
   set: function(lsKey, value) {
     var atField = PROVA_SYNC_MAP[lsKey];
     if (!atField) return;
-
     var val = PROVA_NUMERIC_FIELDS.has(lsKey) ? (parseFloat(value) || 0) : value;
     this._pending[atField] = val;
 
@@ -1151,67 +1171,50 @@ window.provaSync = {
     }, 800);
   },
 
-  /* Alle gepufferten Änderungen auf einmal schreiben */
   _flush: async function() {
     var felder = Object.assign({}, this._pending);
     this._pending = {};
     if (!Object.keys(felder).length) return;
-
-    var recId = await this._getRecId();
-    if (!recId) return;
-
-    try {
-      await provaFetch('/.netlify/functions/airtable', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          method: 'PATCH',
-          path: '/v0/appJ7bLlAHZoxENWE/tbladqEQT3tmx4DIB/' + recId,
-          payload: { fields: felder }
-        })
-      });
-    } catch(e) {
-      console.warn('[PROVA Sync] Fehler:', e.message);
-    }
+    // syncZuAirtable() heißt seit MEGA⁷⁵-F nicht mehr Airtable — Funktion bleibt
+    // für API-Compat, schreibt jetzt aber direkt nach Supabase.
+    await syncZuAirtable(felder);
   },
 
-  /* Record-ID cachen */
-  _getRecId: async function() {
-    if (this._recId) return this._recId;
-    var email = localStorage.getItem('prova_sv_email') || '';
-    if (!email) return null;
-    try {
-      var res = await provaFetch('/.netlify/functions/airtable', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ method: 'GET',
-          path: '/v0/appJ7bLlAHZoxENWE/tbladqEQT3tmx4DIB?filterByFormula=' +
-            encodeURIComponent('{Email}="' + email + '"') + '&maxRecords=1'
-        })
-      });
-      var d = await res.json();
-      if (d.records && d.records[0]) this._recId = d.records[0].id;
-    } catch(e) {}
-    return this._recId;
-  },
+  _getRecId: async function() { return null; },  // MEGA⁷⁵-F: obsolet
 
-  /* Alle SV-Daten aus Airtable laden und in localStorage + Formular schreiben */
   load: async function() {
-    var email = localStorage.getItem('prova_sv_email') || '';
-    if (!email) return;
     try {
-      var res = await provaFetch('/.netlify/functions/airtable', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ method: 'GET',
-          path: '/v0/appJ7bLlAHZoxENWE/tbladqEQT3tmx4DIB?filterByFormula=' +
-            encodeURIComponent('{Email}="' + email + '"') + '&maxRecords=1'
-        })
-      });
-      var d = await res.json();
-      if (!d.records || !d.records[0]) return;
-      var f = d.records[0].fields;
-      this._recId = d.records[0].id;
+      var ad = await import('/lib/prova-supabase-adapters.js');
+      var prof = await ad.loadSvProfile();
+      if (!prof || prof.error || !prof.user) return;
+      var u = prof.user;
+      var bk = (prof.workspace && prof.workspace.briefkopf) || {};
+
+      // Airtable-Style felder-Objekt rekonstruieren für legacy PROVA_SYNC_MAP-Loop
+      var fullName = (u.name || '').trim();
+      var parts = fullName.split(/\s+/);
+      var Nachname = parts.length > 1 ? parts.pop() : '';
+      var Vorname = parts.join(' ');
+      var f = {
+        Vorname: Vorname,
+        Nachname: Nachname,
+        Anrede: u.anrede || '',
+        Titel: u.titel || '',
+        Berufsbezeichnung: u.qualifikation || '',
+        Telefon: u.telefon || '',
+        Website: bk.website || '',
+        Firma: bk.kanzlei_name || '',
+        Strasse: bk.anschrift || '',
+        PLZ: bk.plz ? Number(bk.plz) : '',
+        Ort: bk.ort || '',
+        IBAN: bk.iban || '',
+        BIC: bk.bic || '',
+        Steuer_Nr: bk.steuernr || '',
+        USt_IdNr: bk.ust_id || '',
+        MwSt_Satz: bk.mwst_satz || '',
+        Zahlungsziel_Tage: bk.zahlungsziel_tage || '',
+        onboarding_done: u.onboarding_completed_at ? true : false
+      };
 
       /* localStorage befüllen */
       Object.keys(PROVA_SYNC_MAP).forEach(function(lsKey) {
@@ -1256,7 +1259,7 @@ window.provaSync = {
       if (f.app_theme && window.aendereTheme) window.aendereTheme(f.app_theme);
       if (f.app_fontsize && window.aendereFontsize) window.aendereFontsize(f.app_fontsize);
 
-      console.log('[PROVA] Profil aus Airtable geladen ✅');
+      console.log('[PROVA] Profil aus Supabase geladen ✅');
     } catch(e) {
       console.warn('[PROVA] Profil-Laden fehlgeschlagen:', e.message);
     }

@@ -57,36 +57,21 @@
     return sid;
   }
 
-  /* Einwilligung in Airtable EINWILLIGUNGEN speichern */
+  /* MEGA⁷⁵-F: Einwilligung in audit_trail loggen (eigene einwilligungen-Tabelle
+     defer'd, siehe MEGA75-DECISIONS Phase F). DSGVO-Audit-Proof bleibt erhalten. */
   async function schreibeEinwilligung(dokTyp, version, hash, paket, sessionId) {
-    var ts = new Date().toISOString();
-    var svEmail = localStorage.getItem('prova_sv_email') || '';
     try {
-      await provaFetch('/.netlify/functions/airtable', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({
-          method: 'POST',
-          path: '/v0/appJ7bLlAHZoxENWE/tblwgUQgtBWckPMHp',
-          payload: {
-            records: [{
-              fields: {
-                fldV8gB6F1WuRkvlO: svEmail,
-                fldsXjnnICjmQK9B9: dokTyp,
-                fldjLvsK59At0tA9c: version,
-                fldHNS2mTDLxNYMkZ: ts,
-                fld5NRZ6m2iO8M5Z9: hash,
-                fldkfTQ6NMZo7HojI: paket,
-                fldXWq6L6dsfoufUJ: sessionId,
-                fld1bKUIlP0it1aMO: 'Onboarding'
-              }
-            }]
-          }
-        })
+      var ad = await import('/lib/prova-supabase-adapters.js');
+      await ad.logEinwilligung({
+        dok_typ: dokTyp,
+        version: version,
+        hash: hash,
+        paket: paket,
+        session_id: sessionId,
+        email: localStorage.getItem('prova_sv_email') || ''
       });
     } catch(e) {
-      console.warn('Einwilligung Airtable-Sync fehlgeschlagen:', e.message);
-      // Stille Fehler — localStorage-Fallback ist bereits gesetzt
+      console.warn('Einwilligung-Sync fehlgeschlagen:', e && e.message);
     }
   }
 
@@ -185,102 +170,74 @@
     syncOnboardingSV();
   }
 
+  /* MEGA⁷⁵-F: syncOnboardingSV → direkter users-Update via Supabase.
+     users-Row existiert seit Signup (auth.users-Trigger); wir setzen nur
+     onboarding_completed_at + Profil-Felder. */
   async function syncOnboardingSV() {
+    var svp = {};
+    var paket = localStorage.getItem('prova_paket') || 'Solo';
     try {
-      var svp = JSON.parse(localStorage.getItem('prova_sv_profil') || '{}');
-      var paket = localStorage.getItem('prova_paket') || 'Solo';
-      if (!svp.email) return;
-      var fields = {
-        Name:          svp.name  || '',
-        Email:         svp.email || '',
-        Telefon:       svp.telefon || '',
-        Qualifikation: svp.qualifikation || '',
-        Paket:         paket,
-        Onboarding_Datum: new Date().toISOString().slice(0, 10),
-        avv_signed_ts: localStorage.getItem('prova_avv_ts') || new Date().toISOString()
+      svp = JSON.parse(localStorage.getItem('prova_sv_profil') || '{}');
+      if (!svp.Email && !svp.email) return;
+
+      var mod = await import('/lib/supabase-client.js');
+      var sb = mod.supabase || (mod.getSupabase && mod.getSupabase());
+      if (!sb) return;
+      var sess = await sb.auth.getSession();
+      var userId = sess?.data?.session?.user?.id;
+      if (!userId) return;
+
+      var vorname = svp.Vorname || localStorage.getItem('prova_sv_vorname') || '';
+      var nachname = svp.Nachname || localStorage.getItem('prova_sv_nachname') || '';
+      var userUpd = {
+        name: (vorname + ' ' + nachname).trim(),
+        telefon: svp.Telefon || localStorage.getItem('prova_sv_telefon') || '',
+        qualifikation: svp.Zertifizierung || svp.Qualifikation || localStorage.getItem('prova_sv_quali') || '',
+        onboarding_completed_at: new Date().toISOString()
       };
-      // Erst prüfen ob schon vorhanden
-      var checkRes = await provaFetch('/.netlify/functions/airtable', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          method: 'GET',
-          path: '/v0/appJ7bLlAHZoxENWE/tbladqEQT3tmx4DIB?filterByFormula=' +
-                encodeURIComponent('{Email}="' + svp.email + '"') + '&maxRecords=1'
-        })
-      });
-      if (checkRes.ok) {
-        var checkData = await checkRes.json();
-        if (checkData.records && checkData.records.length > 0) {
-          // Datensatz existiert → PATCH: onboarding_done + Paket + Datum setzen
-          var existingId = checkData.records[0].id;
-          localStorage.setItem('prova_sv_record_id', existingId);
-          await provaFetch('/.netlify/functions/airtable', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              method: 'PATCH',
-              path: '/v0/appJ7bLlAHZoxENWE/tbladqEQT3tmx4DIB/' + existingId,
-              payload: {
-                fields: {
-                  onboarding_done: true,
-                  Paket: localStorage.getItem('prova_paket') || 'Solo',
-                  Onboarding_Datum: new Date().toISOString().slice(0, 10),
-                  avv_signed_ts: localStorage.getItem('prova_avv_ts') || new Date().toISOString()
-                }
-              }
-            })
-          });
-          return;
-        }
+      var u = await sb.from('users').update(userUpd).eq('id', userId);
+      if (u.error) console.warn('[onboarding→users]', u.error.message);
+
+      // workspaces.abo_tier setzen (paket)
+      var ad = await import('/lib/prova-supabase-adapters.js');
+      var wsId = await ad.getCurrentWorkspaceId();
+      if (wsId) {
+        var aboTier = paket === 'Team' ? 'team' : 'solo';
+        var w = await sb.from('workspaces').update({ abo_tier: aboTier }).eq('id', wsId);
+        if (w.error) console.warn('[onboarding→workspaces]', w.error.message);
       }
-      // Neu anlegen (POST) — onboarding_done direkt mitgeben
-      fields.onboarding_done = true;
-      await provaFetch('/.netlify/functions/airtable', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          method: 'POST',
-          path: '/v0/appJ7bLlAHZoxENWE/tbladqEQT3tmx4DIB',
-          payload: { records: [{ fields: fields }] }
-        })
-      });
     } catch(e) {
-      console.warn('Onboarding Airtable sync:', e.message);
-      // Stille Fehler — Onboarding trotzdem abgeschlossen
+      console.warn('Onboarding-Sync:', e && e.message);
     }
-    // Pipeline-Eintrag anlegen (für Admin-Dashboard)
+    // Pipeline-Eintrag fürs Admin-Dashboard
     syncPipeline(svp, paket);
   }
 
+  /* MEGA⁷⁵-F: PILOT_LIST → users.is_founder + audit_trail-Event.
+     Sprint-F-Decision: keine eigene pilots-Tabelle, founding_member-Flag reicht. */
   async function syncPipeline(svp, paket) {
     try {
-      var vorname = localStorage.getItem('prova_sv_vorname') || svp.Vorname || '';
-      var nachname = localStorage.getItem('prova_sv_nachname') || svp.Nachname || '';
-      var email = localStorage.getItem('prova_sv_email') || svp.Email || '';
+      var email = localStorage.getItem('prova_sv_email') || svp.Email || svp.email || '';
       if (!email) return;
-      var fields = {
-        Vorname:   vorname,
-        Nachname:  nachname,
-        Email:     email,
-        Telefon:   localStorage.getItem('prova_sv_telefon') || '',
-        Quelle:    'Onboarding',
-        Stufe:     'Onboarding',
-        Status:    'Aktiv',
-        Erstkontakt_Datum: new Date().toISOString().slice(0, 10),
-        MRR_EUR:   paket === 'Team' ? 699 : paket === 'Pro' ? 369 : 179
-      };
-      await provaFetch('/.netlify/functions/airtable', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          method: 'POST',
-          path: '/v0/appJ7bLlAHZoxENWE/tblK7a3mBdsrxsrp5',
-          payload: { records: [{ fields: fields }] }
-        })
+      var ad = await import('/lib/prova-supabase-adapters.js');
+      await ad.auditTrailInsert({
+        action: 'pipeline.onboarding',
+        function_name: 'onboarding-logic',
+        payload: {
+          vorname:           localStorage.getItem('prova_sv_vorname') || svp.Vorname || '',
+          nachname:          localStorage.getItem('prova_sv_nachname') || svp.Nachname || '',
+          email:             email,
+          telefon:           localStorage.getItem('prova_sv_telefon') || '',
+          quelle:            'Onboarding',
+          stufe:             'Onboarding',
+          status:            'Aktiv',
+          erstkontakt_datum: new Date().toISOString().slice(0, 10),
+          mrr_eur:           paket === 'Team' ? 699 : paket === 'Pro' ? 369 : 179
+        },
+        result: 'ok'
       });
     } catch(e) {
-      console.warn('Pipeline sync:', e.message);
+      console.warn('Pipeline sync:', e && e.message);
     }
   }
 
