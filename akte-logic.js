@@ -28,40 +28,57 @@ var aktenzeichen=new URLSearchParams(window.location.search).get('az')||'';
 var currentRecord=null;
 var currentFields={};
 
+// MEGA⁷²-Phase-B-mini: Adapter-Lib (DRY — extrahiert aus Phase-A-Inline-Duplikat).
+// Siehe lib/prova-supabase-adapters.js + docs/CLEANUP-FIELD-MAPPING.md.
+var _ad = null;
+async function _ensureAdapters(){
+  if (_ad) return _ad;
+  try { _ad = await import('/lib/prova-supabase-adapters.js'); }
+  catch(e){ console.warn('[akte-logic] adapters-lib import failed', e); }
+  return _ad;
+}
+async function _getSupabase(){ var a = await _ensureAdapters(); return a ? await a.getSupabase() : null; }
+function _supabaseRowToFields(row){ return _ad ? _ad.auftragRowToFields(row) : {}; }
+
 async function ladeRecord(){
-  // Wenn nur az= übergeben (kein Record-ID) → per Aktenzeichen suchen
+  var sb = await _getSupabase();
+  if (!sb) { zeigNotFound(); return; }
+
+  // Wenn nur az= übergeben (kein Record-ID) → per Aktenzeichen lookup
   if(!recordId && aktenzeichen){
     try{
-      var searchPath='/v0/'+AT_BASE+'/'+AT_FAELLE+'?filterByFormula='+encodeURIComponent('{Aktenzeichen}="'+aktenzeichen+'"')+'&maxRecords=1';
-      var searchRes=await provaFetch('/.netlify/functions/airtable',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({method:'GET',path:searchPath})});
-      if(searchRes.ok){
-        var searchData=await searchRes.json();
-        if(searchData&&searchData.records&&searchData.records.length>0){
-          recordId=searchData.records[0].id;
-          sessionStorage.setItem('prova_record_id',recordId);
-        }
+      var lookup = await sb.from('auftraege')
+        .select('id').eq('az', aktenzeichen).is('deleted_at', null).maybeSingle();
+      if(lookup.data && lookup.data.id){
+        recordId = lookup.data.id;
+        sessionStorage.setItem('prova_record_id', recordId);
       }
     }catch(e){console.warn('AZ-Lookup Fehler:',e);}
   }
   if(!recordId){zeigNotFound();return;}
   try{
-    var path='/v0/'+AT_BASE+'/'+AT_FAELLE+'/'+recordId;
-    var res=await provaFetch('/.netlify/functions/airtable',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({method:'GET',path:path})});
-    if(!res.ok)throw new Error('HTTP '+res.status);
-    var data=await res.json();
-    if(!data||!data.id){zeigNotFound();return;}
-    currentRecord=data;
-    currentFields=data.fields||{};
+    // Vollständiger Auftrag-Load (alle Spalten die renderAkte/renderTimeline brauchen)
+    var res = await sb.from('auftraege')
+      .select('id, az, titel, status, phase_aktuell, phase_max, typ, zweck, fragestellung, schadensart_label, schadensart_kategorie, schadensstichtag, auftragsdatum, gutachtendatum, objekt, details, auftraggeber_typ, auftraggeber_kontakt_id, fachurteil_text, fachurteil_eigenleistung_chars, kurzbeantwortung, grenzen_sachkunde, kosten_geschaetzt_netto, kosten_geschaetzt_brutto, ki_anzeige_datum, ki_anzeige_empfaenger, umfang_seiten, umfang_anlagen, umfang_fotos, tags, is_demo, parent_auftrag_id, created_by_user_id, assigned_to_user_id, created_at, updated_at, abgeschlossen_am, archiviert_am')
+      .eq('id', recordId).is('deleted_at', null).maybeSingle();
+    if(res.error) throw new Error(res.error.message);
+    if(!res.data){zeigNotFound();return;}
+    currentRecord = res.data;
+    currentFields = _supabaseRowToFields(res.data);
     renderAkte();
-    // Termine laden
+    // Termine laden (Supabase)
     ladeTermine();
   }catch(e){
-    console.warn('Akte laden Fehler:',e);
-    // Fallback: aus localStorage-Cache
+    console.warn('Akte laden Fehler (Supabase):', e.message || e);
+    // Defensive Fallback: aus localStorage-Cache
     var cache=[];try{cache=JSON.parse(localStorage.getItem('prova_archiv_cache_v2')||'{"data":[]}').data||[];}catch(e2){}
     var local=cache.find(function(r){return r.id===recordId;});
-    if(local){currentRecord=local;currentFields=local.fields||{};renderAkte();}
-    else{zeigNotFound();}
+    if(local){
+      currentRecord=local;
+      // Cache könnte Airtable-Style ODER Supabase-Style sein — versuche beide
+      currentFields = local.fields ? local.fields : _supabaseRowToFields(local);
+      renderAkte();
+    } else { zeigNotFound(); }
   }
 }
 
@@ -288,18 +305,13 @@ window.phaseAbschliessen = async function(phaseN){
     else alert('Alle Phasen abgeschlossen. Fall kann archiviert werden.');
     return;
   }
-  // Airtable-Update der Phase
+  // MEGA⁷²-Phase-A: Supabase-Update der Phase
   try {
-    var res = await provaFetch('/.netlify/functions/airtable', {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({
-        method:'PATCH',
-        path:'/v0/appJ7bLlAHZoxENWE/tblSxV8bsXwd1pwa0/'+recordId,
-        payload:{ fields: { Phase: naechstePhase } }
-      })
-    });
-    if(!res.ok) throw new Error('HTTP '+res.status);
+    var sb = await _getSupabase();
+    if (!sb) throw new Error('Supabase nicht verfügbar');
+    var upd = await sb.from('auftraege').update({ phase_aktuell: naechstePhase })
+      .eq('id', recordId).select('id, phase_aktuell').single();
+    if(upd.error) throw new Error(upd.error.message);
     // Lokal re-render
     if(window._currentAkteFields){ window._currentAkteFields.Phase = naechstePhase; }
     // Cache invalidieren damit archiv.html den neuen Stand lädt
@@ -603,18 +615,29 @@ function renderSchnellaktionen(status,f,az){
   }).join('');
 }
 
-/* ─── TERMINE ─── */
+/* ─── TERMINE ─── MEGA⁷²-Phase-A: Supabase-Migration */
 async function ladeTermine(){
-  if(!currentFields.Aktenzeichen)return;
+  if(!currentRecord || !currentRecord.id) return;
   try{
-    var az=currentFields.Aktenzeichen;
-    var filter='{aktenzeichen}="'+az.replace(/"/g,'\\"')+'"';
-    var path='/v0/'+AT_BASE+'/'+AT_TERMINE+'?filterByFormula='+encodeURIComponent(filter)+'&maxRecords=10';
-    var res=await provaFetch('/.netlify/functions/airtable',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({method:'GET',path:path})});
-    var data=await res.json();
-    var termine=(data.records||[]).map(function(r){return r.fields;});
+    var sb = await _getSupabase();
+    if (!sb) return;
+    var res = await sb.from('termine')
+      .select('id, datum, uhrzeit_von, titel, beschreibung, typ, status')
+      .eq('auftrag_id', currentRecord.id).is('deleted_at', null)
+      .order('datum', { ascending: true }).limit(10);
+    if (res.error) { console.warn('[ladeTermine]', res.error.message); return; }
+    // Adapter: snake_case → Airtable-Style (renderFristen erwartet titel/termin_typ/termin_datum)
+    var termine = (res.data || []).map(function(t){
+      return {
+        titel: t.titel,
+        termin_typ: t.typ,
+        termin_datum: t.datum,
+        beschreibung: t.beschreibung,
+        status: t.status
+      };
+    });
     renderFristen(termine);
-  }catch(e){}
+  }catch(e){ console.warn('[ladeTermine]', e); }
 }
 
 function renderFristen(termine){
@@ -632,19 +655,27 @@ function renderFristen(termine){
   }).join('');
 }
 
-/* ─── STATUS AKTUALISIEREN ─── */
+/* ─── STATUS AKTUALISIEREN ─── MEGA⁷²-Phase-B-mini: UI_STATUS_TO_DB jetzt aus Adapter-Lib */
 window.aktualisiereStatus=async function(){
   var newStatus=document.getElementById('status-select').value;
   var stClass=statusClass(newStatus);
   document.getElementById('status-display').innerHTML='<span class="status-badge '+stClass+'">'+esc(newStatus)+'</span>';
   document.getElementById('status-hint').textContent=statusHint(newStatus);
-  if(!recordId||!recordId.startsWith('rec'))return;
+  if(!recordId) return;
   try{
-    await provaFetch('/.netlify/functions/airtable',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({method:'PATCH',path:'/v0/'+AT_BASE+'/'+AT_FAELLE+'/'+recordId,payload:{fields:{Status:newStatus}}})});
+    var sb = await _getSupabase();
+    if (!sb) throw new Error('Supabase nicht verfügbar');
+    var dbStatus = (_ad && _ad.UI_STATUS_TO_DB[newStatus]) || (newStatus || '').toLowerCase();
+    var upd = await sb.from('auftraege').update({ status: dbStatus })
+      .eq('id', recordId).select('id, status').single();
+    if(upd.error) throw new Error(upd.error.message);
     zeigToast('Status aktualisiert: '+newStatus);
-    // Cache invalidieren
+    // Cache invalidieren damit archiv/dashboard den neuen Stand laden
     localStorage.removeItem('prova_archiv_cache_v2');
-  }catch(e){zeigToast('Status konnte nicht gespeichert werden','err');}
+  }catch(e){
+    console.warn('[aktualisiereStatus]', e.message || e);
+    zeigToast('Status konnte nicht gespeichert werden','err');
+  }
 };
 
 /* ─── NAVIGATIONEN ─── */
@@ -1107,6 +1138,9 @@ window.exportWordAkte = async function() {
   if(typeof showToast==='function') showToast('Akte wird exportiert…');
 
   try {
+    // TODO MEGA⁷²-Phase-B: Export-Function noch auf Airtable-Wrapper. Selten genutzt (Akte-Export),
+    // Migration auf sb.from('auftraege') + sb.from('dokumente').eq('typ','brief') + workspace_id-Filter
+    // in eigenem Sprint da Brief-Schema noch nicht voll geklärt (Tabelle dokumente vs. briefe-Sub).
     // Falldaten laden
     var [fallRes, briefeRes] = await Promise.all([
       provaFetch('/.netlify/functions/airtable', {

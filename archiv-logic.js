@@ -59,21 +59,26 @@ async function ladeFaelle(){
   zeigLadeAnimation();
 
   try{
-    var isAdmin = localStorage.getItem('prova_is_admin')==='true'
-    || (svEmail.toLowerCase()==='admin@prova-systems.de');
-  // BUG #001 FIX: Server-seitiger SV_Email-Filter in airtable.js erzwingt Datentrennung.
-  // Client sendet nur einen Basis-Filter — airtable.js ergänzt AND({sv_email}="...") automatisch.
-  var filter = isAdmin
-    ? 'TRUE()'                        // Admin: alle Records (airtable.js Admin-Check)
-    : 'NOT({Aktenzeichen}="")';       // Normal-SV: Proxy ergänzt sv_email-Filter server-seitig
-    // FIX #010: fields[] Parameter — nur benötigte Felder laden (Performance +60%)
-    // Session 30: Flow, Auftragstyp, Phase ergänzt für 4-Flow-Architektur-Filter
-    var _archivFields=['Aktenzeichen','Status','Timestamp','Schaden_Strasse','Ort','Auftraggeber_Name','Auftraggeber_Typ','sv_email','Schadensart','Flow','Auftragstyp','Phase'].map(function(f){return'fields%5B%5D='+encodeURIComponent(f);}).join('&');
-    var path='/v0/'+AT_BASE+'/'+AT_FAELLE+'?filterByFormula='+encodeURIComponent(filter)+'&maxRecords=100&sort[0][field]=Timestamp&sort[0][direction]=desc&'+_archivFields;
-    var res=await provaFetch('/.netlify/functions/airtable',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({method:'GET',path:path})});
-    if(!res.ok)throw new Error('HTTP '+res.status);
-    var data=await res.json();
-    alleRecords=data.records||[];
+    // MEGA⁷²-Phase-B-mini: Adapter-Lib statt inline (DRY-Refactor).
+    var _ad = await import('/lib/prova-supabase-adapters.js');
+    var sb = await _ad.getSupabase();
+    if (!sb) throw new Error('Supabase nicht verfügbar');
+    var r = await sb.from('auftraege')
+      .select('id, az, titel, status, phase_aktuell, typ, schadensart_label, schadensart_kategorie, objekt, details, auftraggeber_typ, fachurteil_text, tags, is_demo, created_at, updated_at, archiviert_am')
+      .is('deleted_at', null)
+      .order('created_at', { ascending: false })
+      .limit(100);
+    if (r.error) throw new Error(r.error.message);
+    // Adapter: auftragRowToFields liefert Airtable-Style — wrap mit {id, fields:...} für
+    // alleRecords-Format das downstream filterUndRender/renderTabelle erwartet.
+    alleRecords = (r.data || []).map(function(row){
+      var fields = _ad.auftragRowToFields(row);
+      // sv_email-Marker für admin-Anzeige (war Airtable-Server-Filter)
+      fields.sv_email = svEmail;
+      // Auftragstyp-Alias zusätzlich zum Typ (archiv-spezifisch)
+      fields.Auftragstyp = row.typ || '';
+      return { id: row.id, fields: fields };
+    });
     try{
       if(alleRecords.length>0) {
         localStorage.setItem(cacheKey,JSON.stringify({time:Date.now(),data:alleRecords}));

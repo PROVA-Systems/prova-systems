@@ -122,21 +122,22 @@
     return sessionStorage.getItem('prova_beratung_record_id') || null;
   }
 
-  /* ── AIRTABLE: Fall laden ── */
+  /* ── SUPABASE: Fall laden (MEGA⁷²-Phase-B-mini) ── */
   async function ladeFallFromAirtable() {
     if (!_recordId) return;
     try {
-      var res = await provaFetch('/.netlify/functions/airtable', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          method: 'GET',
-          path: '/v0/' + AT_BASE + '/' + AT_FAELLE + '/' + _recordId
-        })
-      });
-      if (!res.ok) return;
-      var data = await res.json();
-      var f = data.fields || {};
+      var _ad = await import('/lib/prova-supabase-adapters.js');
+      var sb = await _ad.getSupabase();
+      if (!sb) return;
+      var r = await sb.from('auftraege')
+        .select('id, az, titel, status, objekt, details, schadensart_label, auftraggeber_typ')
+        .eq('id', _recordId).is('deleted_at', null).maybeSingle();
+      if (r.error || !r.data) return;
+      var f = _ad.auftragRowToFields(r.data);
+      // Beratungs-spezifische Felder aus details jsonb
+      var _d = r.data.details || {};
+      f.Beratungs_Thema = _d.beratungs_thema || '';
+      f.Anwesende = _d.anwesende || '';
 
       document.getElementById('br-az').value     = f.Aktenzeichen       || '';
       document.getElementById('br-ag').value     = f.Auftraggeber_Name  || '';
@@ -360,17 +361,12 @@
 
     try {
       var method, path;
-      if (_recordId) {
-        method = 'PATCH';
-        path = '/v0/' + AT_BASE + '/' + AT_FAELLE + '/' + _recordId;
-      } else {
-        method = 'POST';
-        path = '/v0/' + AT_BASE + '/' + AT_FAELLE;
-      }
+      // MEGA⁷²-Phase-B-mini: Write-Path TODO Phase-B-write — sb.from('auftraege').upsert
+      // Aktuell: Airtable-410-Wrapper antwortet defensiv, lokal-only Save funktioniert.
       var res = await provaFetch('/.netlify/functions/airtable', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ method: method, path: path, payload: payload })
+        body: JSON.stringify({ method: 'POST', path: '/v0/dummy', payload: payload })
       });
       if (!res.ok) throw new Error('HTTP ' + res.status);
       var data = await res.json();

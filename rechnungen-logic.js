@@ -348,20 +348,27 @@ function speichereLokal(reNr,ag,brutto,status,datum){
 async function ladeListe(){
   var liste=document.getElementById('rechnung-liste');
   try{
-    var filter=svEmail?'AND(NOT({Status}=""),{sv_email}="'+svEmail+'")':'NOT({Status}="")';
-    // MEGA²¹+²² W117 BUG-FIX RECHNUNGEN 422:
-    // RECHNUNGEN-Tabelle hat kein 'Timestamp'-Feld — Sort darauf wirft 422.
-    // Marcel-Direktive: RECHNUNGEN 422 fixen. Gleicher Fix wie in
-    // prova-context.js atFetch (Sort entfernt). 'Rechnungsdatum' als
-    // Alternative ist Schema-konform, sortiert ueber tatsaechliches Datum.
-    var path='/v0/'+AT_BASE+'/'+AT_RECHNUNGEN+'?filterByFormula='+encodeURIComponent(filter)+'&maxRecords=50&sort[0][field]=Rechnungsdatum&sort[0][direction]=desc';
-    var res=await provaFetch('/.netlify/functions/airtable',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({method:'GET',path:path})});
-    if(!res.ok)throw new Error('HTTP '+res.status);
-    var data=await res.json();
-    alleRechnungen=(data.records||[]).map(function(r){
-      return{id:r.id,re_nr:r.fields.Rechnungsnummer||r.fields.re_nr||'—',auftraggeber:r.fields.Auftraggeber_Name||r.fields.empfaenger_name||'—',betrag:parseFloat(r.fields.betrag_brutto||r.fields.brutto_betrag_eur||0),status:r.fields.Status||'Offen',datum:r.fields.Rechnungsdatum||r.fields.rechnungsdatum||''};
+    // MEGA⁷²-Phase-B-mini: Supabase dokumente WHERE typ='rechnung'.
+    var _ad = await import('/lib/prova-supabase-adapters.js');
+    var sb = await _ad.getSupabase();
+    if (!sb) throw new Error('Supabase nicht verfügbar');
+    var r = await sb.from('dokumente')
+      .select('id, doc_nummer, typ, betreff, betrag_netto, betrag_brutto, status, faelligkeit, mahn_stufe, auftrag_id, created_at, updated_at')
+      .eq('typ', 'rechnung').is('deleted_at', null)
+      .order('created_at', { ascending: false }).limit(50);
+    if (r.error) throw new Error(r.error.message);
+    alleRechnungen = (r.data || []).map(function(row){
+      return {
+        id: row.id,
+        re_nr: row.doc_nummer || '—',
+        auftraggeber: row.betreff || '—',     // betreff trägt häufig "Rechnung an X"; TODO: auftrag_id-Join für sauberen Auftraggeber_Name
+        betrag: parseFloat(row.betrag_brutto || 0),
+        status: row.status || 'Offen',
+        datum: row.created_at || ''
+      };
     });
   }catch(e){
+    console.warn('[rechnungen]', e.message || e);
     var ls=[];try{ls=JSON.parse(localStorage.getItem('prova_rechnungen_local')||'[]');}catch(e2){}
     alleRechnungen=ls.map(function(r){return{id:r.re_nr,re_nr:r.re_nr,auftraggeber:r.auftraggeber,betrag:parseFloat(r.betrag_brutto)||0,status:r.Status||'Offen',datum:r.datum};});
   }
@@ -648,19 +655,33 @@ window.rechnungPDFGenerieren = async function(rechnungId) {
   var svBic      = localStorage.getItem('prova_sv_bic')      || '';
   var svSteuernr = localStorage.getItem('prova_sv_steuernr') || '';
 
-  // Rechnung aus Airtable laden
-  var res = await provaFetch('/.netlify/functions/airtable', {
-    method:'POST', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({method:'GET',
-      path:'/v0/appJ7bLlAHZoxENWE/tblF6MS7uiFAJDjiT/' + rechnungId
-    })
-  });
-  var rec = await res.json();
-  if (!rec.fields) {
+  // MEGA⁷²-Phase-B-mini: Rechnung aus Supabase dokumente laden
+  var _ad = await import('/lib/prova-supabase-adapters.js');
+  var sb = await _ad.getSupabase();
+  if (!sb) { if(typeof zeigToast==='function') zeigToast('Supabase nicht verfügbar','error'); return; }
+  var recRes = await sb.from('dokumente')
+    .select('id, doc_nummer, typ, betreff, betrag_netto, betrag_brutto, status, faelligkeit, mahn_stufe, auftrag_id, created_at')
+    .eq('id', rechnungId).is('deleted_at', null).maybeSingle();
+  if (recRes.error || !recRes.data) {
     if(typeof zeigToast==='function') zeigToast('Rechnung nicht gefunden', 'error');
     return;
   }
-  var f = rec.fields;
+  // Adapter: dokumente-Row → fields-Style mit den Feldnamen die der downstream-Payload erwartet
+  var f = {
+    Rechnungstyp: 'Standard',
+    Rechnungsnummer: recRes.data.doc_nummer || '',
+    aktenzeichen: '',  // TODO Phase-B-write: via auftrag_id-Join → auftraege.az
+    leistungszeitraum: '',
+    empfaenger_name: recRes.data.betreff || '',
+    empfaenger_strasse: '',
+    empfaenger_plz: '',
+    empfaenger_ort: '',
+    netto_betrag_eur: recRes.data.betrag_netto || 0,
+    ust_satz: 19,
+    brutto_betrag_eur: recRes.data.betrag_brutto || 0,
+    zahlungsziel_tage: 14,
+    positionen: '[]'
+  };
 
   if(typeof zeigToast==='function') zeigToast('⏳ PDF wird generiert — dauert ca. 3 Minuten...');
 
@@ -718,19 +739,24 @@ window.exportDatevCSV = async function() {
   try {
     if(typeof zeigToast==='function') zeigToast('DATEV-Export wird vorbereitet…');
 
-    // Rechnungen direkt aus Airtable laden
-    var res = await provaFetch('/.netlify/functions/airtable', {
-      method: 'POST', headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({
-        method: 'GET',
-        path: '/v0/appJ7bLlAHZoxENWE/tblF6MS7uiFAJDjiT?filterByFormula=' +
-              encodeURIComponent('{sv_email}="' + svEmail + '"') +
-              '&maxRecords=100&sort[0][field]=Timestamp&sort[0][direction]=desc' +
-              '&fields[]=Rechnungsnummer&fields[]=empfaenger_name&fields[]=rechnungsdatum' +
-              '&fields[]=netto_betrag_eur&fields[]=brutto_betrag_eur&fields[]=ust_satz' +
-              '&fields[]=status&fields[]=aktenzeichen'
-      })
-    });
+    // MEGA⁷²-Phase-B-mini: Rechnungen aus Supabase dokumente laden für DATEV-Export.
+    // RLS filter über workspace_id automatisch; sv_email-Filter entfällt.
+    var _adDV = await import('/lib/prova-supabase-adapters.js');
+    var sbDV = await _adDV.getSupabase();
+    if (!sbDV) throw new Error('Supabase nicht verfügbar');
+    var resDV = await sbDV.from('dokumente')
+      .select('id, doc_nummer, betreff, betrag_netto, betrag_brutto, status, faelligkeit, created_at')
+      .eq('typ', 'rechnung').is('deleted_at', null).limit(500);
+    if (resDV.error) throw new Error(resDV.error.message);
+    // Adapter: Supabase rows → Airtable-Style { records: [{ fields: {...} }] } für downstream
+    var res = { ok: true, json: function(){ return Promise.resolve({
+      records: (resDV.data || []).map(function(d){ return { id: d.id, fields: {
+        Rechnungsnummer: d.doc_nummer, empfaenger_name: d.betreff, betrag_netto: d.betrag_netto,
+        betrag_brutto: d.betrag_brutto, Status: d.status, Faelligkeit: d.faelligkeit,
+        Rechnungsdatum: d.created_at
+      }}; })
+    }); }};
+    // (alter Airtable-Pfad entfernt — Adapter oben generiert kompatible {records:[…]}-Struktur)
     var data = await res.json();
     var records = data.records || [];
 

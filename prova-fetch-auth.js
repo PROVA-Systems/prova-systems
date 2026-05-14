@@ -162,6 +162,13 @@
   // statt User auszusperren. Code-Stellen werden parallel pro File entfernt
   // (file-by-file Cleanup) bis grep -ri "airtable" nur noch in archivierten
   // Pfaden Treffer hat.
+  //
+  // DEPRECATED in MEGA⁷²-Phase-A (2026-05-14). Diese 410-Stub bleibt bis 7-Tage-
+  // Live-Monitoring nach Migration-Abschluss zeigt dass keine Caller mehr 410
+  // produzieren — dann Removal in Phase B. Aktiver Audit + Migration-Status:
+  // → docs/MEGA72-PHASE-A-AUDIT.md (44 Caller, Priorisierung P1/P2/P3)
+  // → docs/CLEANUP-FIELD-MAPPING.md (Airtable-CapitalCase → Supabase-snake_case)
+  // Phase-A Stand 2026-05-14: 4 P1-Files migriert (akte/dashboard/freigabe/archiv-logic).
   function isDisabledAirtableUrl(url) {
     return typeof url === 'string'
       && (url.indexOf('/.netlify/functions/airtable') !== -1
@@ -196,6 +203,11 @@
     if (isDisabledAirtableUrl(url)) {
       // MEGA¹⁹ W79: console.info → console.debug. DevTools-Default-Filter
       // zeigt INFO an, DEBUG nicht. User sieht clean Console.
+      // MEGA⁷²-Phase-A: zusätzlich console.warn für Monitoring während Migration-Phase.
+      try {
+        var _ref = (typeof document !== 'undefined' && document.referrer) || '';
+        console.warn('[airtable-wrapper-deprecated] MEGA72-Phase-A — Caller sollte migriert sein:', url, 'ref:', _ref);
+      } catch(_e) {}
       console.debug('[airtable-cleanup] blocked legacy call:', url);
       return makeAirtableDisabledResponse(url);
     }
