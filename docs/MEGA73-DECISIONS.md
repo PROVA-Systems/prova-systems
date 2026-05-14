@@ -66,4 +66,18 @@ Branch von `feat/mega72-full-marathon` (statt `main`). main ist bei `3c141a5` (K
 
 ---
 
-*Decisions document final. Push folgt.*
+## Hotfix 2026-05-15 — Befund-1 (Web-Claude-Review)
+
+`wertgutachten-logic.js` + `baubegleitung-logic.js` machten **unkonditional INSERT** statt UPSERT bei Edit-Mode → Duplikat-Rows bei wiederholtem Save.
+
+**Fix:** `isUuid`-Check-Pattern aus `termine-logic.js` + `beratung-logic.js` übernommen.
+
+- `wertgutachten-logic.js`: `_state.supabase_id` (persistiert via `STORAGE_KEY` in localStorage) + sessionStorage + URL-Param-Fallback. UUID-Regex → UPDATE, sonst INSERT + ID-Persist.
+- `baubegleitung-logic.js` Stelle 1 (Projekt): `_aktP.supabase_id` (persistiert via `speichereDaten()`). Gleiches Pattern.
+- `baubegleitung-logic.js` Stelle 2 (Begehung): Skip-Check via `begehungsSync.supabase_eintrag_id` — verhindert duplicate-INSERT bei accidentaler 2× `speichereBegehung()`-Aufruf. Begehungen sind logisch immer NEU (jede = neuer Eintrag), daher kein UPDATE-Pfad nötig.
+
+**Acceptance:** 2× Save desselben Records → 1 Row. Acceptance-Test pro Marcel-Verifikation §5 der Hotfix-Spec.
+
+---
+
+*Decisions document final + Hotfix-Note. Push folgt.*

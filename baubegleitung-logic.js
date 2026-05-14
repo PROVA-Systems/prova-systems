@@ -396,7 +396,8 @@ function speichereProjekt() {
   if (_aktivProjektId) ladeProduktDetail(_aktivProjektId);
   zeigToast(_editProjektId ? 'Projekt aktualisiert ✅' : 'Projekt angelegt ✅');
 
-  // MEGA⁷³-Phase-2b: Supabase auftraege Sync für Flow D Baubegleitung
+  // MEGA⁷³-Phase-2b + MEGA⁷³-Hotfix: Supabase auftraege UPSERT mit isUuid-Check.
+  // _aktP.supabase_id persistiert via speichereDaten() für Idempotenz.
   (async function(){
     try {
       var _aktP = _data.projekte.find(function(p){return p.id===(_editProjektId||_data.projekte[0].id);});
@@ -407,7 +408,8 @@ function speichereProjekt() {
       var sess = await sb.auth.getSession();
       var userId = sess?.data?.session?.user?.id;
       var wsId = localStorage.getItem('prova_workspace_id') || null;
-      await sb.from('auftraege').insert({
+      var existingId = _aktP.supabase_id || null;
+      var sbPayload = {
         workspace_id: wsId,
         typ: 'baubegleitung',
         az: _aktP.az || ('BB-' + Date.now().toString().slice(-6)),
@@ -423,7 +425,19 @@ function speichereProjekt() {
           geplante_abnahme: _aktP.abnahme
         },
         created_by_user_id: userId
-      });
+      };
+      var isUuid = existingId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(existingId);
+      var upd;
+      if (isUuid) {
+        upd = await sb.from('auftraege').update(sbPayload).eq('id', existingId).select('id').single();
+      } else {
+        upd = await sb.from('auftraege').insert(sbPayload).select('id').single();
+      }
+      if (upd.error) { console.warn('[baubegleitung-projekt-save]', upd.error.message); return; }
+      if (upd.data && upd.data.id && !isUuid) {
+        _aktP.supabase_id = upd.data.id;
+        speichereDaten(_data);
+      }
     } catch(e) { console.warn('[baubegleitung-projekt-save]', e.message || e); }
   })();
 }
@@ -456,10 +470,13 @@ function speichereBegehung() {
   });
   speichereDaten(_data);
 
-  // MEGA⁷³-Phase-2b: Supabase eintraege INSERT für Begehungs-Notes
+  // MEGA⁷³-Phase-2b + MEGA⁷³-Hotfix: Supabase eintraege INSERT für Begehungs-Notes
+  // mit Skip-Check via begehungsSync.supabase_eintrag_id (verhindert Duplikate
+  // wenn speichereBegehung() versehentlich 2× für gleiches Begehungs-Objekt aufgerufen wird).
   (async function(){
     try {
       var begehungsSync = proj.begehungen[proj.begehungen.length-1];
+      if (begehungsSync.supabase_eintrag_id) return;  // Skip: bereits gesynced
       var _ad = await import('/lib/prova-supabase-adapters.js');
       var sb = await _ad.getSupabase();
       if (!sb) return;
@@ -472,7 +489,7 @@ function speichereBegehung() {
         var lookup = await sb.from('auftraege').select('id').eq('az', proj.az).is('deleted_at', null).maybeSingle();
         if (lookup.data) auftragId = lookup.data.id;
       }
-      await sb.from('eintraege').insert({
+      var ins = await sb.from('eintraege').insert({
         workspace_id: wsId,
         auftrag_id: auftragId,
         typ: 'text',
@@ -481,7 +498,11 @@ function speichereBegehung() {
         datum: begehungsSync.datum,
         dauer_min: null,
         created_by_user_id: userId
-      });
+      }).select('id').single();
+      if (!ins.error && ins.data && ins.data.id) {
+        begehungsSync.supabase_eintrag_id = ins.data.id;
+        speichereDaten(_data);
+      }
     } catch(e) { console.warn('[baubegleitung-begehung-save]', e.message || e); }
   })();
   // (alter Airtable-Call ersetzt durch Adapter oben)
