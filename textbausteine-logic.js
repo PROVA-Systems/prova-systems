@@ -1047,20 +1047,27 @@ window.sendeTicket = async function() {
   }
   
   try {
-    await provaFetch('/.netlify/functions/airtable', {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ method:'POST',
-        path:'/v0/appJ7bLlAHZoxENWE/tblEb3A4dukGX8GFs',
-        payload:{ fields:{
-          Betreff: betreff, Nachricht: nachricht,
-          'SV-Email': svEmail, Status: 'Offen', Prioritaet: 'Normal',
-          Seite: window.location.pathname, Datum: new Date().toISOString().slice(0,10)
-        }}})
+    // MEGA⁷⁵-F-Batch2 B9: Support-Ticket → Supabase support_tickets (Migration 39).
+    var ad = await import('/lib/prova-supabase-adapters.js');
+    var sb = await ad.getSupabase();
+    if (!sb) throw new Error('no-supabase');
+    var sess = await sb.auth.getSession();
+    var userId = sess?.data?.session?.user?.id || null;
+    var wsId = await ad.getCurrentWorkspaceId();
+    var ins = await sb.from('support_tickets').insert({
+      workspace_id: wsId,
+      user_id:      userId,
+      email:        svEmail,
+      betreff:      betreff,
+      nachricht:    nachricht,
+      quelle:       window.location.pathname.replace(/^\//,'') || 'support',
+      status:       'offen'
     });
+    if (ins.error) throw new Error(ins.error.message);
     if(typeof showToast==='function') showToast('Ticket gesendet ✅ — Wir melden uns bei Ihnen');
     if(typeof schliesseSupport==='function') schliesseSupport();
   } catch(e) {
-    if(typeof showToast==='function') showToast('Fehler: ' + e.message, 'error');
+    if(typeof showToast==='function') showToast('Fehler: ' + (e && e.message), 'error');
   }
 };
 

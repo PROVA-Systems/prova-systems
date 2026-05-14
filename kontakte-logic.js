@@ -27,68 +27,52 @@ var TYP_CONFIG = {
 // ============================================================
 // LADEN / SPEICHERN
 // ============================================================
-// ── Airtable-Proxy für Kontakte ──
-const AT_BASE_K = 'appJ7bLlAHZoxENWE';
-const AT_KONTAKTE = 'tblMKmPLjRelr6Hal';
-async function atKontakte(method, path, body) {
-  try {
-    var res = await provaFetch('/.netlify/functions/airtable', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({method: method, path: path, payload: body || null})
-    });
-
-    if (!res.ok) return null;
-    return await res.json();
-  } catch(e) { return null; }
-}
-
-// Aus localStorage + optional Airtable-Sync
+// MEGA⁷⁵-F-Batch2 B9: kontakte-Sync direkt aus Supabase (RLS workspace-scoped).
+// Aus localStorage + Supabase-Sync
 function ladeKontakte() {
   try { _kontakte = JSON.parse(localStorage.getItem(K_KEY) || '[]'); } catch(e) { _kontakte = []; }
-  // Async Airtable-Sync im Hintergrund
-  syncKontakteVonAirtable();
+  syncKontakteVonSupabase();
 }
 
-async function syncKontakteVonAirtable() {
-  var email = localStorage.getItem('prova_sv_email') || '';
-  if (!email) return;
-  // DSGVO-Multi-Tenant: sv_email-Filter clientseitig in URL eintragen (Konsistenz mit dashboard-logic.js)
-  var filter = '{sv_email}="' + String(email).replace(/"/g, '') + '"';
-  var path = '/v0/' + AT_BASE_K + '/' + AT_KONTAKTE
-    + '?maxRecords=200&filterByFormula=' + encodeURIComponent(filter)
-    + '&sort[0][field]=Name&sort[0][direction]=asc';
-  var data = await atKontakte('GET', path);
-  if (!data || !data.records || !data.records.length) return;
-  // Merge: Airtable-Datensätze in lokale Liste — AT-Datensätze haben Vorrang
-  var atIds = {};
-  data.records.forEach(function(rec) {
-    var f = rec.fields;
-    var k = {
-      id: rec.id, // Airtable Record-ID
-      at_id: rec.id,
-      name: f.Name || '',
-      firma: f.Firma || '',
-      typ: (f.Typ && f.Typ.name) ? f.Typ.name : (f.Typ || 'Sonstige'),
-      email: f.Email || '',
-      telefon: f.Telefon || '',
-      strasse: f.Strasse || '',
-      plz: String(f.PLZ || ''),
-      ort: f.Ort || '',
-      ansprechpartner: f.Ansprechpartner || '',
-      notizen: f.Notizen || '',
-      faelle_anzahl: parseInt(f.Faelle_Anzahl || 0),
-      erstellt: rec.createdTime || new Date().toISOString(),
-      import_quelle: 'Airtable'
-    };
-    atIds[rec.id] = true;
-    // Update oder hinzufügen
-    var idx = _kontakte.findIndex(function(x){return x.at_id === rec.id || x.id === rec.id;});
-    if (idx >= 0) { _kontakte[idx] = k; } else { _kontakte.unshift(k); }
-  });
-  speichereKontakte();
-  renderStats();
-  renderKontakte();
+async function syncKontakteVonSupabase() {
+  try {
+    var ad = await import('/lib/prova-supabase-adapters.js');
+    var sb = await ad.getSupabase();
+    if (!sb) return;
+    var r = await sb.from('kontakte')
+      .select('*')
+      .is('deleted_at', null)
+      .order('nachname', { ascending: true })
+      .limit(200);
+    if (r.error || !r.data || !r.data.length) return;
+    r.data.forEach(function(row) {
+      var fullName = [row.vorname, row.nachname].filter(Boolean).join(' ').trim() || row.firma || '';
+      var k = {
+        id:              row.id,
+        at_id:           row.id,
+        name:            fullName,
+        firma:           row.firma || '',
+        typ:             row.kontakt_typ || 'Sonstige',
+        email:           row.email || '',
+        telefon:         row.telefon || '',
+        strasse:         row.adresse_strasse || '',
+        plz:             String(row.adresse_plz || ''),
+        ort:             row.adresse_ort || '',
+        ansprechpartner: '',
+        notizen:         row.notizen || '',
+        faelle_anzahl:   0,
+        erstellt:        row.created_at || new Date().toISOString(),
+        import_quelle:   'Supabase'
+      };
+      var idx = _kontakte.findIndex(function(x){return x.at_id === row.id || x.id === row.id;});
+      if (idx >= 0) { _kontakte[idx] = k; } else { _kontakte.unshift(k); }
+    });
+    speichereKontakte();
+    renderStats();
+    renderKontakte();
+  } catch(e) {
+    console.warn('[kontakte] Supabase-Sync:', e && e.message);
+  }
 }
 
 function speichereKontakte() {

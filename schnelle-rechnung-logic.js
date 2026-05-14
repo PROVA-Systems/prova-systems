@@ -62,16 +62,32 @@
     });
   }
 
+  // MEGA⁷⁵-F-Batch2 B9: Rechnung → dokumente.insert (typ='rechnung_stunden'
+  // ist Standard für Schnellrechnung, kann via fields überschrieben werden).
   async function airtableCreateRechnung(fields){
-    return provaFetch('/.netlify/functions/airtable', {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({
-        method:'POST',
-        path:'/v0/'+AT_BASE+'/'+AT_RECHNUNGEN,
-        payload:{ records:[{ fields: fields }] }
-      })
-    });
+    try {
+      var ad = await import('/lib/prova-supabase-adapters.js');
+      var sb = await ad.getSupabase();
+      var wsId = await ad.getCurrentWorkspaceId();
+      if (!sb || !wsId) throw new Error('no-supabase-or-workspace');
+      var row = {
+        workspace_id:    wsId,
+        typ:             fields.Rechnungstyp || 'rechnung_stunden',
+        doc_nummer:      fields.Rechnungsnummer || null,
+        betrag_netto:    fields.netto_betrag_eur || fields.Betrag_Netto || 0,
+        betrag_brutto:   fields.brutto_betrag_eur || fields.Betrag_Brutto || 0,
+        mwst_satz:       fields.MwSt_Satz || 19,
+        rechnungsdatum:  fields.rechnungsdatum || new Date().toISOString().slice(0,10),
+        faelligkeit:     fields.faellig_am || null,
+        status:          'entwurf',
+        inhalt_strukturiert: fields.Positionen ? { positionen: fields.Positionen } : {}
+      };
+      var r = await sb.from('dokumente').insert(row).select('id').maybeSingle();
+      if (r.error) throw new Error(r.error.message);
+      return { ok: true, status: 200, id: r.data && r.data.id };
+    } catch(e) {
+      return { ok: false, status: 0, error: e && e.message };
+    }
   }
 
   function calc(){
