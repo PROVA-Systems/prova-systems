@@ -196,30 +196,43 @@ async function speichereUndWeiter() {
     if (bph || bl) felder.Notizen = 'Bauphase: ' + (bph||'') + (bl ? '\nBauleiter: ' + bl : '');
   }
 
-  // Airtable speichern
+  // MEGA⁷⁵-F-Batch2 B5: vor-ort-logic Submit → Supabase auftraege.insert.
   try {
-    var headers = Object.assign({'Content-Type':'application/json'},
-      window.provaAuthHeaders ? window.provaAuthHeaders() : {});
-    var r = await provaFetch('/.netlify/functions/airtable', {
-      method: 'POST', headers: headers,
-      body: JSON.stringify({
-        method:  'POST',
-        path:    '/v0/appJ7bLlAHZoxENWE/tblSxV8bsXwd1pwa0',
-        payload: { records: [{ fields: felder }] }
-      })
-    });
-    var d = await r.json();
-    if (r.ok && d.records && d.records[0]) {
-      localStorage.setItem('prova_letztes_az',    _az);
-      localStorage.setItem('prova_aktiver_fall',  _az);
-      localStorage.setItem('prova_schadenart',    felder.Schadensart);
-      localStorage.setItem('prova_auftragstyp',   _typ);
-      renderSchritt3();
-      geheZuSchritt(3);
-      showToast('Fall gespeichert: ' + _az, 'ok');
-    } else {
-      throw new Error(d.error || ('HTTP ' + r.status));
-    }
+    var ad = await import('/lib/prova-supabase-adapters.js');
+    var sb = await ad.getSupabase();
+    var wsId = await ad.getCurrentWorkspaceId();
+    if (!sb || !wsId) throw new Error('no-supabase-or-workspace');
+
+    var _ag_typ_map = { 'Privatperson':'privat','Bauherr':'privat','Versicherung':'versicherung','Anwaltskanzlei':'gewerbe','Wohnungsbaugesellschaft':'gewerbe','Gericht':'gericht','Behörde':'behoerde','Behoerde':'behoerde','Sonstiges':'andere' };
+    var _typMap = { 'schaden':'schaden','gericht':'gericht','schiedsgutachten':'schied','beweissicherung':'beweis','baubegleitung':'baubegleitung','beratung':'beratung' };
+    var _details = { auftraggeber: { name: felder.Auftraggeber_Name || '' } };
+    if (felder.Auftraggeber_Email)   _details.auftraggeber.email = felder.Auftraggeber_Email;
+    if (felder.Auftraggeber_Telefon) _details.auftraggeber.telefon = felder.Auftraggeber_Telefon;
+    if (felder.Notizen)              _details.notizen = felder.Notizen;
+    if (felder.Abgabefrist)          _details.abgabefrist = felder.Abgabefrist;
+    var _objekt = { adresse: felder.Schaden_Strasse || '', ort: felder.Ort || '' };
+    if (felder.PLZ) _objekt.plz = String(felder.PLZ);
+
+    var r = await sb.from('auftraege').insert({
+      workspace_id:      wsId,
+      az:                felder.Aktenzeichen,
+      typ:               _typMap[_typ] || 'schaden',
+      titel:             [felder.Schadensart, felder.Auftraggeber_Name].filter(Boolean).join(' · '),
+      status:            'aktiv',
+      phase_aktuell:     1,
+      auftraggeber_typ:  _ag_typ_map[felder.Auftraggeber_Typ] || null,
+      schadensart_label: felder.Schadensart || '',
+      objekt:            _objekt,
+      details:           _details
+    }).select('id').maybeSingle();
+    if (r.error || !r.data) throw new Error(r.error ? r.error.message : 'insert-fail');
+    localStorage.setItem('prova_letztes_az',    _az);
+    localStorage.setItem('prova_aktiver_fall',  _az);
+    localStorage.setItem('prova_schadenart',    felder.Schadensart);
+    localStorage.setItem('prova_auftragstyp',   _typ);
+    renderSchritt3();
+    geheZuSchritt(3);
+    showToast('Fall gespeichert: ' + _az, 'ok');
   } catch(e) {
     // Offline-Fallback
     localStorage.setItem('prova_letztes_az',   _az);
