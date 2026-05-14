@@ -1,14 +1,13 @@
 /* ══════════════════════════════════════════════════════════════
    PROVA AUDIT — Zentrale Logging-Funktionen
-   - AUDIT_TRAIL: §407a ZPO Compliance (tblqQmMwJKxltXXXl)
-   - STATISTIKEN: Jahresbericht-Daten (tblb0j9qOhMExVEFH)
-   - KI_STATISTIK: KI-Nutzungs-Tracking (tblv9F8LEnUC3mKru)
+   MEGA⁷⁵-F: Airtable-Calls (AUDIT_TRAIL/STATISTIKEN/KI_STATISTIK)
+   abgelöst. Alle drei Logger schreiben jetzt in Supabase audit_trail
+   mit unterschiedlichen action-Codes:
+     - 'sv.audit.407a'        (§407a-Compliance, vorher AUDIT_TRAIL)
+     - 'stat.jahresbericht'    (Jahresbericht-Daten, vorher STATISTIKEN)
+     - 'stat.ki_nutzung'       (KI-Tracking, vorher KI_STATISTIK)
+   ki_protokoll bleibt für echte KI-Calls (siehe ki-proxy / MEGA⁷³).
 ══════════════════════════════════════════════════════════════ */
-
-var AT_BASE = 'appJ7bLlAHZoxENWE';
-var AT_AUDIT = 'tblqQmMwJKxltXXXl';
-var AT_STAT  = 'tblb0j9qOhMExVEFH';
-var AT_KI    = 'tblv9F8LEnUC3mKru';
 
 /* ── AUDIT_TRAIL Eintrag schreiben (§407a ZPO) ── */
 window.provaAuditLog = async function(opts) {
@@ -18,40 +17,37 @@ window.provaAuditLog = async function(opts) {
        output_laenge, aenderungsquote, offenlegungstext, notizen
      }
   */
+  opts = opts || {};
   var svEmail = opts.sv_email || localStorage.getItem('prova_sv_email') || '';
   var paket   = opts.paket   || localStorage.getItem('prova_paket')    || 'Solo';
   var az      = opts.aktenzeichen || localStorage.getItem('prova_aktiver_fall') || '';
 
   try {
-    await provaFetch('/.netlify/functions/airtable', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        method: 'POST',
-        path: '/v0/' + AT_BASE + '/' + AT_AUDIT,
-        payload: { records: [{ fields: {
-          Name:              (opts.aktion || 'KI-Nutzung') + ' · ' + az,
-          aktenzeichen:      az,
-          sv_email:          svEmail,
-          paket:             paket,
-          aktion:            opts.aktion || 'KI-Assist',
-          ki_modell:         'PROVA KI',
-          sv_validiert:      !!opts.sv_validiert,
-          timestamp:         new Date().toISOString(),
-          input_hash:        opts.input_hash        || '',
-          output_laenge:     opts.output_laenge      || 0,
-          aenderungsquote:   opts.aenderungsquote    || 0,
-          offenlegungstext:  opts.offenlegungstext   || '',
-          notizen:           opts.notizen            || '',
-        }}]}
-      })
+    var ad = await import('/lib/prova-supabase-adapters.js');
+    await ad.auditTrailInsert({
+      action: 'sv.audit.407a',
+      function_name: opts.aktion || 'KI-Assist',
+      payload: {
+        aktenzeichen:     az,
+        sv_email:         svEmail,
+        paket:            paket,
+        aktion:           opts.aktion || 'KI-Assist',
+        ki_modell:        opts.ki_modell || 'PROVA KI',
+        sv_validiert:     !!opts.sv_validiert,
+        input_hash:       opts.input_hash       || '',
+        output_laenge:    opts.output_laenge    || 0,
+        aenderungsquote:  opts.aenderungsquote  || 0,
+        offenlegungstext: opts.offenlegungstext || '',
+        notizen:          opts.notizen          || ''
+      },
+      result: 'ok'
     });
   } catch(e) {
-    console.warn('[PROVA Audit] Fehler:', e.message);
+    console.warn('[PROVA Audit] Fehler:', e && e.message);
   }
 };
 
-/* ── STATISTIKEN Eintrag schreiben (Jahresbericht) ── */
+/* ── STATISTIKEN (Jahresbericht-Datenbasis) ── */
 window.provaStatLog = async function(opts) {
   /* opts: {
        aktenzeichen, paket, ereignis, schadensart,
@@ -59,35 +55,32 @@ window.provaStatLog = async function(opts) {
        foto_anzahl, erstellungszeit_sekunden, transkript_laenge
      }
   */
+  opts = opts || {};
   var jetzt = new Date();
-  var monat = jetzt.getFullYear() + '-' +
-              String(jetzt.getMonth() + 1).padStart(2, '0');
+  var monat = jetzt.getFullYear() + '-' + String(jetzt.getMonth() + 1).padStart(2, '0');
 
   try {
-    await provaFetch('/.netlify/functions/airtable', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        method: 'POST',
-        path: '/v0/' + AT_BASE + '/' + AT_STAT,
-        payload: { records: [{ fields: {
-          Aktenzeichen_Ref:       opts.aktenzeichen || '',
-          Paket:                  opts.paket || localStorage.getItem('prova_paket') || 'Solo',
-          Datum:                  jetzt.toISOString(),
-          Monat:                  monat,
-          Ereignis:               opts.ereignis || 'Gutachten_Erstellt',
-          Schadensart:            opts.schadensart || '',
-          PLZ:                    opts.plz || '',
-          Ort:                    opts.ort || '',
-          Auftraggeber_Typ:       opts.auftraggeber_typ || '',
-          Foto_Anzahl:            opts.foto_anzahl || 0,
-          Erstellungszeit_Sekunden: opts.erstellungszeit_sekunden || 0,
-          Transkript_Laenge:      opts.transkript_laenge || 0,
-        }}]}
-      })
+    var ad = await import('/lib/prova-supabase-adapters.js');
+    await ad.auditTrailInsert({
+      action: 'stat.jahresbericht',
+      function_name: 'prova-stat-log',
+      payload: {
+        aktenzeichen:             opts.aktenzeichen || '',
+        paket:                    opts.paket || localStorage.getItem('prova_paket') || 'Solo',
+        monat:                    monat,
+        ereignis:                 opts.ereignis || 'Gutachten_Erstellt',
+        schadensart:              opts.schadensart || '',
+        plz:                      opts.plz || '',
+        ort:                      opts.ort || '',
+        auftraggeber_typ:         opts.auftraggeber_typ || '',
+        foto_anzahl:              opts.foto_anzahl || 0,
+        erstellungszeit_sekunden: opts.erstellungszeit_sekunden || 0,
+        transkript_laenge:        opts.transkript_laenge || 0
+      },
+      result: 'ok'
     });
   } catch(e) {
-    console.warn('[PROVA Stat] Fehler:', e.message);
+    console.warn('[PROVA Stat] Fehler:', e && e.message);
   }
 };
 
@@ -98,25 +91,24 @@ window.provaKILog = async function(opts) {
        eigentext_zeichen, weg, diktat
      }
   */
+  opts = opts || {};
   try {
-    await provaFetch('/.netlify/functions/airtable', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        method: 'POST',
-        path: '/v0/' + AT_BASE + '/' + AT_KI,
-        payload: { records: [{ fields: {
-          Schadenart:         opts.schadenart || '',
-          Ursache_Quelle:     opts.ursache_quelle || 'KI-Vorschlag',
-          Ursache_Kategorien: opts.ursache_kategorien || '',
-          Eigentext_Zeichen:  opts.eigentext_zeichen || 0,
-          Weg:                opts.weg || 'Assistent',
-          Diktat:             !!opts.diktat,
-          Datum:              new Date().toISOString().split('T')[0],
-        }}]}
-      })
+    var ad = await import('/lib/prova-supabase-adapters.js');
+    await ad.auditTrailInsert({
+      action: 'stat.ki_nutzung',
+      function_name: 'prova-ki-log',
+      payload: {
+        schadenart:         opts.schadenart || '',
+        ursache_quelle:     opts.ursache_quelle || 'KI-Vorschlag',
+        ursache_kategorien: opts.ursache_kategorien || '',
+        eigentext_zeichen:  opts.eigentext_zeichen || 0,
+        weg:                opts.weg || 'Assistent',
+        diktat:             !!opts.diktat,
+        datum:              new Date().toISOString().split('T')[0]
+      },
+      result: 'ok'
     });
   } catch(e) {
-    console.warn('[PROVA KI-Log] Fehler:', e.message);
+    console.warn('[PROVA KI-Log] Fehler:', e && e.message);
   }
 };

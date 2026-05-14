@@ -808,71 +808,54 @@
     }
   }
 
-  async function fetchAirtableCount(path) {
-    if (typeof window.provaFetch !== 'function') return 0;
-    try {
-      var res = await window.provaFetch('/.netlify/functions/airtable', {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ method: 'GET', path: path })
-      });
-      if (!res.ok) return 0;
-      var data = await res.json();
-      return (data.records || []).length;
-    } catch (e) { return 0; }
-  }
-
+  /* MEGA⁷⁵-F: Sidebar-Badges via Supabase Count-Queries (head:true, count:exact).
+     RLS filtert workspace-scoped automatisch — kein sv_email-Match nötig. */
   async function loadSidebarCounts() {
-    if (typeof window.provaFetch !== 'function') return;
-    var svEmail = (localStorage.getItem('prova_sv_email') || '').toLowerCase();
-    if (!svEmail) return;
+    try {
+      var mod = await import('/lib/supabase-client.js');
+      var sb = mod.supabase || (mod.getSupabase && mod.getSupabase());
+      if (!sb) return;
+      var sess = await sb.auth.getSession();
+      if (!sess?.data?.session) return;
 
-    var BASE = 'appJ7bLlAHZoxENWE';
-    var TBL_FAELLE     = 'tblSxV8bsXwd1pwa0';
-    var TBL_TERMINE    = 'tblyMTTdtfGQjjmc2';
-    var TBL_RECHNUNGEN = 'tblF6MS7uiFAJDjiT';
-    var TBL_KONTAKTE   = 'tblMKmPLjRelr6Hal';
+      var today = new Date();
+      var todayStart = new Date(today); todayStart.setHours(0,0,0,0);
+      var todayEnd   = new Date(today); todayEnd.setHours(23,59,59,999);
+      var grenzVor14 = new Date(today.getTime() - 14 * 86400000).toISOString().slice(0, 10);
 
-    // ISO-Datum heute (YYYY-MM-DD), Datum vor 14 Tagen
-    var today = new Date();
-    var todayStr = today.toISOString().slice(0, 10);
-    var grenzVor14 = new Date(today.getTime() - 14 * 86400000).toISOString().slice(0, 10);
+      // Parallele Count-Queries
+      var results = await Promise.all([
+        // 1. auftraege offen (phase_aktuell != 5, nicht abgeschlossen)
+        sb.from('auftraege').select('id', { count: 'exact', head: true })
+          .is('deleted_at', null).neq('phase_aktuell', 5).neq('status', 'abgeschlossen'),
+        // 2. termine heute
+        sb.from('termine').select('id', { count: 'exact', head: true })
+          .is('deleted_at', null)
+          .gte('datum', todayStart.toISOString().slice(0,10))
+          .lte('datum', todayEnd.toISOString().slice(0,10)),
+        // 3. rechnungen überfällig (dokumente WHERE typ LIKE 'rechnung%', status NOT bezahlt, faelligkeit < grenzVor14)
+        sb.from('dokumente').select('id', { count: 'exact', head: true })
+          .is('deleted_at', null)
+          .in('typ', ['rechnung','rechnung_jveg','rechnung_stunden'])
+          .in('status', ['versendet','ueberfaellig'])
+          .lt('faelligkeit', grenzVor14),
+        // 4. kontakte
+        sb.from('kontakte').select('id', { count: 'exact', head: true })
+          .is('deleted_at', null)
+      ]);
 
-    // 1. SCHADENSFAELLE wo phase_aktuell != 5 + sv_email match
-    //    Schema: phase_aktuell (number), sv_email (singleLineText)
-    var auftraegeFormel = "AND({sv_email}='" + svEmail + "', OR({phase_aktuell}=BLANK(), {phase_aktuell}!=5))";
-    var auftraegePath = '/v0/' + BASE + '/' + TBL_FAELLE + '?filterByFormula=' + encodeURIComponent(auftraegeFormel) + '&fields[]=Aktenzeichen';
-
-    // 2. TERMINE heute + sv_email match
-    //    Schema: termin_datum (dateTime), sv_email (email)
-    var kalenderFormel = "AND({sv_email}='" + svEmail + "', DATETIME_FORMAT({termin_datum},'YYYY-MM-DD')='" + todayStr + "')";
-    var kalenderPath = '/v0/' + BASE + '/' + TBL_TERMINE + '?filterByFormula=' + encodeURIComponent(kalenderFormel) + '&fields[]=termin_datum';
-
-    // 3. RECHNUNGEN ueberfaellig: status='offen' + faellig_am < heute - 14
-    //    Schema: status (singleSelect, lowercase), faellig_am (date), sv_email (singleLineText)
-    var rechnungenFormel = "AND({sv_email}='" + svEmail + "', LOWER({status})='offen', IS_BEFORE({faellig_am}, '" + grenzVor14 + "'))";
-    var rechnungenPath = '/v0/' + BASE + '/' + TBL_RECHNUNGEN + '?filterByFormula=' + encodeURIComponent(rechnungenFormel) + '&fields[]=status';
-
-    // 4. KONTAKTE Anzahl (sv_email match)
-    var kontakteFormel = "{sv_email}='" + svEmail + "'";
-    var kontaktePath = '/v0/' + BASE + '/' + TBL_KONTAKTE + '?filterByFormula=' + encodeURIComponent(kontakteFormel) + '&fields[]=Name';
-
-    // Parallele Loads
-    var results = await Promise.all([
-      fetchAirtableCount(auftraegePath),
-      fetchAirtableCount(kalenderPath),
-      fetchAirtableCount(rechnungenPath),
-      fetchAirtableCount(kontaktePath)
-    ]);
-
-    var counts = {
-      auftraege:                  results[0],
-      kalender_heute:             results[1],
-      rechnungen_ueberfaellig:    results[2],
-      kontakte:                   results[3]
-    };
-    writeCountCache(counts);
-    applyCountsToBadges(counts);
+      var counts = {
+        auftraege:               results[0].count || 0,
+        kalender_heute:          results[1].count || 0,
+        rechnungen_ueberfaellig: results[2].count || 0,
+        kontakte:                results[3].count || 0
+      };
+      writeCountCache(counts);
+      applyCountsToBadges(counts);
+    } catch(e) {
+      // Silent — Badges sind Komfort, nicht critical
+      console.warn('[nav loadSidebarCounts]', e && e.message);
+    }
   }
 
   // Public API

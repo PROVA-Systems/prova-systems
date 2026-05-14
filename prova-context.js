@@ -89,7 +89,8 @@
     }
   };
 
-  /* ── Airtable Constants ── */
+  /* ── Airtable Constants (Legacy-Aliase fuer Tabellen-IDs) ──
+     MEGA⁷⁵-F: Routen jetzt auf Supabase-Tabellen via _AT_TO_SB_MAP. */
   var AT = {
     BASE:       'appJ7bLlAHZoxENWE',
     FAELLE:     'tblSxV8bsXwd1pwa0',
@@ -97,87 +98,135 @@
     TERMINE:    'tblyMTTdtfGQjjmc2',
     RECHNUNGEN: 'tblF6MS7uiFAJDjiT',
     NORMEN:     'tblFVcMxntQhusY2i',
+    KONTAKTE:   'tblMKmPLjRelr6Hal',
+    BRIEFE:     'tblSzxvnkRE6B0thx',
+    AUDIT:      'tblqQmMwJKxltXXXl'
   };
 
-  /* ── Zentraler Airtable-Proxy-Fetch ── */
+  /* ── Airtable-Tabellen-ID → { table, isDocSubset, adapter } ── */
+  var _AT_TO_SB_MAP = {
+    'tblSxV8bsXwd1pwa0': { table: 'auftraege', adapter: 'auftragRowToFields' },
+    'tblyMTTdtfGQjjmc2': { table: 'termine',   adapter: 'terminRowToFields' },
+    'tblF6MS7uiFAJDjiT': { table: 'dokumente', adapter: 'dokumentRowToFields', typFilter: ['rechnung','rechnung_jveg','rechnung_stunden'] },
+    'tblSzxvnkRE6B0thx': { table: 'dokumente', adapter: 'dokumentRowToFields', typFilter: ['brief'] },
+    'tblMKmPLjRelr6Hal': { table: 'kontakte',  adapter: 'kontaktRowToFields' },
+    'tbladqEQT3tmx4DIB': { table: 'users',     adapter: 'usersRowToFields' },
+    'tblFVcMxntQhusY2i': { table: 'normen',    adapter: null },
+    'tblqQmMwJKxltXXXl': { table: 'audit_trail', adapter: null }
+  };
+
+  async function _getAdapters() {
+    if (!_getAdapters._mod) {
+      _getAdapters._mod = await import('/lib/prova-supabase-adapters.js');
+    }
+    return _getAdapters._mod;
+  }
+
+  function _toAirtableRecord(row, adapterFn) {
+    if (!row) return null;
+    var fields = adapterFn ? adapterFn(row) : row;
+    return { id: row.id, fields: fields };
+  }
+
+  /* ── Zentraler Supabase-Fetch (Drop-In-Replacement für Airtable atFetch).
+       formula wird ignoriert — RLS filtert workspace-scoped automatisch.
+       Erweiterte filter: opts.eq, opts.neq, opts.in, opts.lte, opts.gte. */
   async function atFetch(table, formula, opts) {
     opts = opts || {};
     var maxRecords = opts.maxRecords || 100;
-    // O1-FIX: KEIN Default-Sort mehr — Tabellen wie RECHNUNGEN haben kein
-    // 'Timestamp'-Feld, was bei Default-Sort 422 ausloeste. Caller muss
-    // sort explizit setzen wenn gewuenscht.
     var sort       = opts.sort;
     var sortDir    = opts.sortDir || 'desc';
-    var fields     = opts.fields ? opts.fields.map(function(f){ return '&fields[]=' + encodeURIComponent(f); }).join('') : '';
 
-    var path = '/v0/' + AT.BASE + '/' + table
-      + '?filterByFormula=' + encodeURIComponent(formula || 'TRUE()')
-      + '&maxRecords=' + maxRecords
-      + (sort ? ('&sort[0][field]=' + encodeURIComponent(sort) + '&sort[0][direction]=' + sortDir) : '')
-      + fields;
-
+    var route = _AT_TO_SB_MAP[table];
+    if (!route) {
+      console.warn('[PROVA.atFetch] Unbekannte Tabelle:', table);
+      return [];
+    }
     try {
-      var res = await provaFetch('/.netlify/functions/airtable', {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ method: 'GET', path: path })
-      });
-      if (!res.ok) return [];
-      var data = await res.json();
-      return data.records || [];
+      var ad = await _getAdapters();
+      var sb = await ad.getSupabase();
+      if (!sb) return [];
+      var q = sb.from(route.table).select('*').limit(maxRecords);
+      if (route.typFilter) q = q.in('typ', route.typFilter);
+      if (sort)            q = q.order(sort, { ascending: sortDir !== 'desc' });
+      if (opts.eq)         Object.keys(opts.eq).forEach(function(k){ q = q.eq(k, opts.eq[k]); });
+      var r = await q;
+      if (r.error) {
+        console.warn('[PROVA.atFetch] Supabase-Fehler:', r.error.message);
+        return [];
+      }
+      var adapterFn = route.adapter ? ad[route.adapter] : null;
+      return (r.data || []).map(function(row){ return _toAirtableRecord(row, adapterFn); });
     } catch (e) {
-      console.warn('[PROVA.atFetch] Fehler:', e.message);
+      console.warn('[PROVA.atFetch] Fehler:', e && e.message);
       return [];
     }
   }
 
-  /* ── Einzelnen Record holen ── */
+  /* ── Einzelnen Record per Supabase-UUID holen.
+       Liefert Airtable-Style: { id, fields } */
   async function atGet(table, recordId) {
+    var route = _AT_TO_SB_MAP[table];
+    if (!route) return null;
     try {
-      var path = '/v0/' + AT.BASE + '/' + table + '/' + recordId;
-      var res = await provaFetch('/.netlify/functions/airtable', {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ method: 'GET', path: path })
-      });
-      if (!res.ok) return null;
-      return await res.json();
+      var ad = await _getAdapters();
+      var sb = await ad.getSupabase();
+      if (!sb) return null;
+      var q = sb.from(route.table).select('*').eq('id', recordId).maybeSingle();
+      var r = await q;
+      if (r.error || !r.data) return null;
+      var adapterFn = route.adapter ? ad[route.adapter] : null;
+      return _toAirtableRecord(r.data, adapterFn);
     } catch (e) {
-      console.warn('[PROVA.atGet] Fehler:', e.message);
+      console.warn('[PROVA.atGet] Fehler:', e && e.message);
       return null;
     }
   }
 
-  /* ── Record anlegen ── */
+  /* ── Record anlegen.
+       MEGA⁷⁵-F: Airtable-Field-Namen werden NICHT 1:1 in Supabase
+       übernommen — Caller die noch CapitalCase senden, müssen migriert
+       werden. Hier defensiver Insert: ungemappte Felder werden ignoriert. */
   async function atCreate(table, fields) {
+    var route = _AT_TO_SB_MAP[table];
+    if (!route) { console.warn('[PROVA.atCreate] Unbekannte Tabelle:', table); return null; }
     try {
-      var path = '/v0/' + AT.BASE + '/' + table;
-      var res = await provaFetch('/.netlify/functions/airtable', {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ method: 'POST', path: path, payload: { fields: fields } })
-      });
-      if (!res.ok) return null;
-      return await res.json();
+      var ad = await _getAdapters();
+      var sb = await ad.getSupabase();
+      if (!sb) return null;
+      var wsId = await ad.getCurrentWorkspaceId();
+      var row = Object.assign({}, fields || {});
+      if (wsId && !row.workspace_id) row.workspace_id = wsId;
+      var r = await sb.from(route.table).insert(row).select('*').maybeSingle();
+      if (r.error) {
+        console.warn('[PROVA.atCreate] Supabase-Fehler:', r.error.message);
+        return null;
+      }
+      var adapterFn = route.adapter ? ad[route.adapter] : null;
+      return _toAirtableRecord(r.data, adapterFn);
     } catch (e) {
-      console.warn('[PROVA.atCreate] Fehler:', e.message);
+      console.warn('[PROVA.atCreate] Fehler:', e && e.message);
       return null;
     }
   }
 
   /* ── Record aktualisieren ── */
   async function atPatch(table, recordId, fields) {
+    var route = _AT_TO_SB_MAP[table];
+    if (!route) return null;
     try {
-      var path = '/v0/' + AT.BASE + '/' + table + '/' + recordId;
-      var res = await provaFetch('/.netlify/functions/airtable', {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ method: 'PATCH', path: path, payload: { fields: fields } })
-      });
-      if (!res.ok) return null;
-      return await res.json();
+      var ad = await _getAdapters();
+      var sb = await ad.getSupabase();
+      if (!sb) return null;
+      var r = await sb.from(route.table).update(fields || {}).eq('id', recordId).select('*').maybeSingle();
+      if (r.error) {
+        console.warn('[PROVA.atPatch] Supabase-Fehler:', r.error.message);
+        return null;
+      }
+      var adapterFn = route.adapter ? ad[route.adapter] : null;
+      return _toAirtableRecord(r.data, adapterFn);
     } catch (e) {
-      console.warn('[PROVA.atPatch] Fehler:', e.message);
+      console.warn('[PROVA.atPatch] Fehler:', e && e.message);
       return null;
     }
   }
@@ -396,60 +445,28 @@
     // Lokal IMMER setzen — auch bei Netzwerk-Ausfall
     try { localStorage.setItem('prova_onboarding_done', 'true'); } catch(e) {}
 
-    // Airtable-Patch — fehlertolerant
+    // MEGA⁷⁵-F: direkter users.onboarding_completed_at-Update via Supabase.
+    // Email-Lookup obsolet — auth.user.id ist der Schlüssel.
     try {
-      var email = localStorage.getItem('prova_sv_email') || '';
-      if (!email) return { ok: false, grund: 'keine_email' };
-
-      var atId = localStorage.getItem('prova_at_sv_record_id') ||
-                 localStorage.getItem('prova_sv_record_id') || '';
-
-      // Wenn Record-ID schon bekannt: direkter PATCH
-      if (atId) {
-        await provaFetch('/.netlify/functions/airtable', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            method:  'PATCH',
-            path:    '/v0/appJ7bLlAHZoxENWE/tbladqEQT3tmx4DIB/' + atId,
-            payload: { fields: { onboarding_done: true } }
-          })
-        });
-        return { ok: true, via: 'direkt' };
+      var mod = await import('/lib/supabase-client.js');
+      var sb = mod.supabase || (mod.getSupabase && mod.getSupabase());
+      if (!sb) return { ok: false, grund: 'no_supabase' };
+      var sess = await sb.auth.getSession();
+      var userId = sess?.data?.session?.user?.id;
+      if (!userId) return { ok: false, grund: 'no_session' };
+      var upd = await sb.from('users')
+        .update({ onboarding_completed_at: new Date().toISOString() })
+        .eq('id', userId)
+        .select('id')
+        .maybeSingle();
+      if (upd.error) {
+        console.warn('[PROVA] Onboarding-Sync-Fehler:', upd.error.message);
+        return { ok: false, grund: 'supabase_error', error: upd.error.message };
       }
-
-      // Sonst: erst Record-ID per Email-Lookup holen, dann patchen
-      var findRes = await provaFetch('/.netlify/functions/airtable', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          method: 'GET',
-          path:   '/v0/appJ7bLlAHZoxENWE/tbladqEQT3tmx4DIB' +
-                  '?filterByFormula=' + encodeURIComponent('{Email}="' + email + '"') +
-                  '&maxRecords=1'
-        })
-      });
-      if (!findRes.ok) return { ok: false, grund: 'lookup_http_' + findRes.status };
-      var findData = await findRes.json();
-      var records = findData.records || [];
-      if (!records.length) return { ok: false, grund: 'kein_record' };
-
-      var recId = records[0].id;
-      try { localStorage.setItem('prova_at_sv_record_id', recId); } catch(e) {}
-
-      await provaFetch('/.netlify/functions/airtable', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          method:  'PATCH',
-          path:    '/v0/appJ7bLlAHZoxENWE/tbladqEQT3tmx4DIB/' + recId,
-          payload: { fields: { onboarding_done: true } }
-        })
-      });
-      return { ok: true, via: 'lookup' };
+      return { ok: true, via: 'supabase' };
     } catch(e) {
-      console.warn('[PROVA] Onboarding-Airtable-Sync fehlgeschlagen:', e.message);
-      return { ok: false, grund: 'exception', error: e.message };
+      console.warn('[PROVA] Onboarding-Sync fehlgeschlagen:', e && e.message);
+      return { ok: false, grund: 'exception', error: e && e.message };
     }
   };
 

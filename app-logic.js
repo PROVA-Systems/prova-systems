@@ -175,17 +175,12 @@ const on = (el, ev, fn) => el?.addEventListener(ev, fn);
 window.SV_PROFIL = null;
 window.SV_RECORD_ID = null;
 
+// MEGA⁷⁵-F: airtableProxy() — Stub für Legacy-Caller. Liefert leeres
+// records-Objekt. Direkter Supabase-Zugriff geht via window.PROVA.atFetch
+// (prova-context.js) oder import('/lib/prova-supabase-adapters.js').
 async function airtableProxy(method, path, body = null) {
-  const res = await provaFetch('/.netlify/functions/airtable', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ method, path, body })
-  });
-  const text = await res.text();
-  const isJson = (res.headers.get('content-type') || '').includes('application/json');
-  const data = isJson ? JSON.parse(text || '{}') : text;
-  if (!res.ok) throw new Error((data && data.error) ? data.error : ('HTTP ' + res.status));
-  return data;
+  console.warn('[airtableProxy] DEAD seit MEGA⁷⁵-F — Caller migrieren:', method, path);
+  return { records: [] };
 }
 
 window.setSVEmail = async function() {
@@ -195,30 +190,50 @@ window.setSVEmail = async function() {
   await ladeSVProfil();
 };
 
+// MEGA⁷⁵-F: ladeSVProfil() lädt jetzt aus users + workspaces.briefkopf.
 async function ladeSVProfil() {
-  const email = (sessionStorage.getItem('prova_email') || localStorage.getItem('prova_email') || '').trim();
-  if (!email) return null;
-  const path = `/v0/${AIRTABLE_BASE}/${AIRTABLE_SV_TABLE}?filterByFormula=${encodeURIComponent(`Email=\"${email}\"`)}&maxRecords=1`;
-  const data = await airtableProxy('GET', path);
-  const rec = (data.records || [])[0];
-  if (!rec) return null;
-  window.SV_PROFIL = rec.fields || null;
-  window.SV_RECORD_ID = rec.id || null;
-  // Cache SV-Felder in localStorage für Payload + andere Seiten
-  if (window.SV_PROFIL) {
+  try {
+    const ad = await import('/lib/prova-supabase-adapters.js');
+    const prof = await ad.loadSvProfile();
+    if (!prof || prof.error || !prof.user) return null;
+    const u = prof.user;
+    const bk = (prof.workspace && prof.workspace.briefkopf) || {};
+    const fullName = (u.name || '').trim();
+    const parts = fullName.split(/\s+/);
+    const Nachname = parts.length > 1 ? parts.pop() : '';
+    const Vorname = parts.join(' ');
+    const f = {
+      Email: u.email || '',
+      Vorname: Vorname,
+      Nachname: Nachname,
+      Zertifizierung: u.qualifikation || '',
+      Telefon: u.telefon || '',
+      Firma: bk.kanzlei_name || '',
+      Strasse: bk.anschrift || '',
+      PLZ: bk.plz || '',
+      Ort: bk.ort || '',
+      IBAN: bk.iban || '',
+      BIC: bk.bic || '',
+      Steuer_Nr: bk.steuernr || '',
+      USt_IdNr: bk.ust_id || ''
+    };
+    window.SV_PROFIL = f;
+    window.SV_RECORD_ID = u.id || null;
     try {
-      const f = window.SV_PROFIL;
-      if (f['Email']) localStorage.setItem('prova_sv_email', f['Email']);
-      if (f['Vorname']) localStorage.setItem('prova_sv_vorname', f['Vorname']);
-      if (f['Nachname']) localStorage.setItem('prova_sv_nachname', f['Nachname']);
-      if (f['Zertifizierung']) localStorage.setItem('prova_sv_quali', f['Zertifizierung']);
-      if (f['Firma']) localStorage.setItem('prova_sv_firma', f['Firma']);
-      if (f['Strasse']) localStorage.setItem('prova_sv_strasse', f['Strasse']);
-      if (f['PLZ']) localStorage.setItem('prova_sv_plz', String(f['PLZ']));
-      if (f['Ort']) localStorage.setItem('prova_sv_ort', f['Ort']);
+      if (f.Email)          localStorage.setItem('prova_sv_email',    f.Email);
+      if (f.Vorname)        localStorage.setItem('prova_sv_vorname',  f.Vorname);
+      if (f.Nachname)       localStorage.setItem('prova_sv_nachname', f.Nachname);
+      if (f.Zertifizierung) localStorage.setItem('prova_sv_quali',    f.Zertifizierung);
+      if (f.Firma)          localStorage.setItem('prova_sv_firma',    f.Firma);
+      if (f.Strasse)        localStorage.setItem('prova_sv_strasse',  f.Strasse);
+      if (f.PLZ)            localStorage.setItem('prova_sv_plz',      String(f.PLZ));
+      if (f.Ort)            localStorage.setItem('prova_sv_ort',      f.Ort);
     } catch(e) {}
+    return f;
+  } catch(e) {
+    console.warn('[ladeSVProfil] Supabase-Fehler:', e && e.message);
+    return null;
   }
-  return window.SV_PROFIL;
 }
 
 function getSVVal(key, fallback = '') {
@@ -2528,42 +2543,33 @@ window.PROVA_AUDIT = (function() {
     } catch(e) {}
   }
   
-  // In Airtable schreiben (Pro/Enterprise)
+  // MEGA⁷⁵-F: speichereAirtable → audit_trail-Insert via Supabase
   async function speichereAirtable(eintrag) {
     var paket = localStorage.getItem('prova_paket') || 'Solo';
     if (paket === 'Solo') return; // Starter nur localStorage
-    
     try {
-      var res = await provaFetch('/.netlify/functions/airtable', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({
-          method: 'POST',
-          path: '/v0/' + AT_BASE + '/tblqQmMwJKxltXXXl',
-          payload: {
-            records: [{
-              fields: {
-                fldBk9Qpni99KO5sc: eintrag.fall_id || eintrag.aktenzeichen || 'PROVA-' + Date.now(),
-                fldfbNMQDJSmmNnT7: eintrag.aktenzeichen || '',
-                fldgSoSEHNX7gDBCj: eintrag.sv_email || '',
-                fld4XDJA7wE54WYBg: paket,
-                fldT6ZDEhrNa38hyT: eintrag.aktion || '',
-                fldEXhCUAgokRJxSA: eintrag.ki_modell || '',
-                fldj2cR7sLY4tu8Mv: eintrag.sv_validiert || false,
-                fldrGtAJlW3aOoxgi: eintrag.timestamp || new Date().toISOString(),
-                fldXwHCuiidCkqQoo: eintrag.input_hash || '',
-                fld5wR400PRNE7hJL: eintrag.output_laenge || 0,
-                fldhzKP4LhG6HubZq: eintrag.aenderungsquote || 0,
-                fldk4V3tEinYwHeRQ: eintrag.offenlegungstext || '',
-                fld8EeypJENJPVFPJ: eintrag.notizen || ''
-              }
-            }]
-          }
-        })
+      var ad = await import('/lib/prova-supabase-adapters.js');
+      await ad.auditTrailInsert({
+        action: 'sv.audit.407a',
+        function_name: 'app-logic-audit',
+        payload: {
+          fall_id:          eintrag.fall_id || eintrag.aktenzeichen || ('PROVA-' + Date.now()),
+          aktenzeichen:     eintrag.aktenzeichen || '',
+          sv_email:         eintrag.sv_email || '',
+          paket:            paket,
+          aktion:           eintrag.aktion || '',
+          ki_modell:        eintrag.ki_modell || '',
+          sv_validiert:     !!eintrag.sv_validiert,
+          input_hash:       eintrag.input_hash || '',
+          output_laenge:    eintrag.output_laenge || 0,
+          aenderungsquote:  eintrag.aenderungsquote || 0,
+          offenlegungstext: eintrag.offenlegungstext || '',
+          notizen:          eintrag.notizen || ''
+        },
+        result: 'ok'
       });
-      if (!res.ok) console.warn('PROVA Audit-Trail: Airtable Fehler', res.status);
     } catch(e) {
-      console.warn('PROVA Audit-Trail: Netzwerkfehler', e.message);
+      console.warn('PROVA Audit-Trail: Supabase-Fehler', e && e.message);
     }
   }
   
@@ -3509,15 +3515,17 @@ async function ladeGutachtenListe() {
   const tbody = document.getElementById('gutachtenTableBody');
   if (tbody) tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--gray-400);padding:2rem">Wird geladen…</td></tr>';
   try {
-    const path = `/v0/${AIRTABLE_BASE}/${AIRTABLE_TABLE}?maxRecords=100&sort[0][field]=Timestamp&sort[0][direction]=desc`;
-    const res = await provaFetch('/.netlify/functions/airtable', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ method: 'GET', path })
-    });
-    if (!res.ok) throw new Error(res.status);
-    const data = await res.json();
-    alleGutachten = data.records || [];
+    // MEGA⁷⁵-F: auftraege via Supabase + Adapter (Airtable-Field-Style fürs Render).
+    const ad = await import('/lib/prova-supabase-adapters.js');
+    const sb = await ad.getSupabase();
+    if (!sb) throw new Error('no-supabase');
+    const r = await sb.from('auftraege')
+      .select('*')
+      .is('deleted_at', null)
+      .order('created_at', { ascending: false })
+      .limit(100);
+    if (r.error) throw new Error(r.error.message);
+    alleGutachten = (r.data || []).map(function(row){ return { id: row.id, fields: ad.auftragRowToFields(row) }; });
     const sub = document.getElementById('listSubtitle');
     if (sub) sub.textContent = alleGutachten.length + ' Gutachten insgesamt';
     const cnt = document.getElementById('gutachtenCount');
@@ -3526,7 +3534,7 @@ async function ladeGutachtenListe() {
   } catch(err) {
     const tbody = document.getElementById('gutachtenTableBody');
     if (tbody) tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--gray-400);padding:2rem">Fehler beim Laden. Seite neu laden.</td></tr>';
-    console.error('Airtable:', err);
+    console.error('[ladeGutachtenListe]:', err && err.message);
   }
 }
 
@@ -3580,15 +3588,17 @@ async function ladeArchivDaten() {
   if (tbody) tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--gray-400);padding:2rem">Wird geladen…</td></tr>';
 
   try {
-    const path = `/v0/${AIRTABLE_BASE}/${AIRTABLE_TABLE}?maxRecords=500&sort[0][field]=Timestamp&sort[0][direction]=desc`;
-    const res = await provaFetch('/.netlify/functions/airtable', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ method: 'GET', path })
-    });
-    if (!res.ok) throw new Error(res.status);
-    const data = await res.json();
-    alleArchivDaten = data.records || [];
+    // MEGA⁷⁵-F: auftraege-Read via Supabase mit Adapter
+    const ad = await import('/lib/prova-supabase-adapters.js');
+    const sb = await ad.getSupabase();
+    if (!sb) throw new Error('no-supabase');
+    const r = await sb.from('auftraege')
+      .select('*')
+      .is('deleted_at', null)
+      .order('created_at', { ascending: false })
+      .limit(500);
+    if (r.error) throw new Error(r.error.message);
+    alleArchivDaten = (r.data || []).map(function(row){ return { id: row.id, fields: ad.auftragRowToFields(row) }; });
 
     // Statistiken berechnen
     const gesamt = alleArchivDaten.length;
@@ -3766,42 +3776,13 @@ document.getElementById('f-schadenart')?.addEventListener('change', function() {
   try { window.updateMesswerteLayout(); } catch(e) {}
 });
 
-/* ── KONTAKTE.Faelle_Anzahl erhöhen wenn neuer Fall erstellt ── */
-window.provaKontaktFaelleErhoehen = async function(auftrNameOrEmail) {
-  if (!auftrNameOrEmail) return;
-  var svEmail = localStorage.getItem('prova_sv_email') || '';
-  if (!svEmail) return;
-
-  try {
-    // Kontakt per Name oder Email finden
-    var filter = encodeURIComponent(
-      'OR({Name}="' + auftrNameOrEmail + '",{Email}="' + auftrNameOrEmail + '")'
-    );
-    var res = await provaFetch('/.netlify/functions/airtable', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ method: 'GET',
-        path: '/v0/appJ7bLlAHZoxENWE/tblMKmPLjRelr6Hal?filterByFormula=' + filter + '&maxRecords=1'
-      })
-    });
-    var d = await res.json();
-    if (!d.records || !d.records[0]) return;
-
-    var rec    = d.records[0];
-    var aktuel = rec.fields.Faelle_Anzahl || 0;
-
-    await provaFetch('/.netlify/functions/airtable', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ method: 'PATCH',
-        path: '/v0/appJ7bLlAHZoxENWE/tblMKmPLjRelr6Hal/' + rec.id,
-        payload: { fields: { Faelle_Anzahl: aktuel + 1 }}
-      })
-    });
-    console.log('[PROVA] KONTAKTE.Faelle_Anzahl → ' + (aktuel + 1) + ' ✅');
-  } catch(e) {
-    console.warn('[PROVA] Kontakt-Faelle-Update fehlgeschlagen:', e.message);
-  }
+/* ── MEGA⁷⁵-F: KONTAKTE.Faelle_Anzahl obsolet ──
+   Counter wurde in Airtable manuell gepflegt; in Supabase ergibt sich der
+   Wert automatisch aus auftrag_kontakte-JOIN (COUNT(*) WHERE kontakt_id=X).
+   kontakte-Tabelle hat KEIN faelle_anzahl-Feld, daher No-Op. Wenn ein
+   Read-Caller den Counter braucht: live COUNT(*) FROM auftrag_kontakte. */
+window.provaKontaktFaelleErhoehen = async function(_auftrNameOrEmail) {
+  return; // No-Op
 };
 
 /* ── STATISTIKEN bei Fall-Erstellung ── */
