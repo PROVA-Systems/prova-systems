@@ -1,4 +1,10 @@
 -- MEGA⁷⁹ Phase E (Web-Claude-Self-Audit-Patch 2026-05-15)
+-- ⚠️ SUPERSEDED IN PART: Diese Function-Definition wird von Migration 54
+--    (54_mega79_hotfix_frist_status_enum.sql) per CREATE OR REPLACE
+--    überschrieben — `f.status NOT IN ('erledigt', ...)` ist falsch,
+--    Enum heißt `erfuellt` nicht `erledigt`. Wer die Migrations frisch
+--    applied, bekommt nach 54 die korrekte Version. Diese 53-Datei bleibt
+--    aus Forward-Only-Migration-Pflicht unverändert.
 -- Schema-Wahrheit via MCP verifiziert + Patch-Korrekturen vs Erstversion:
 --   1. pg_cron 1.6.4 ist schon aktiviert (kein CREATE EXTENSION)
 --   2. workspaces.owner_user_id existiert nicht → JOIN via workspace_memberships

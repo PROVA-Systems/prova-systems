@@ -83,7 +83,15 @@ supabase functions deploy ki-proxy --project-ref cngteblrbpwsyypexjrv
 
 ---
 
-## Phase E — pg_cron + Fristen-Erinnerungen ✅ Code-fertig (Web-Claude-Self-Audit-Patch angewendet)
+## Phase E — pg_cron + Fristen-Erinnerungen ✅ APPLIED auf Production (mit Hotfix)
+
+**Status 2026-05-15 13:11:** Migration 53 + Hotfix 54 applied auf Production via
+Supabase MCP. Live während MEGA79-Test fand Web-Claude einen weiteren Schema-
+Drift: `frist_status`-Enum-Wert ist `'erfuellt'`, nicht `'erledigt'`. Migration
+54 (`CREATE OR REPLACE`) überschreibt die Function mit der korrekten Enum-
+Referenz. Forward-Only: 53 bleibt unverändert im Repo, 54 ergänzt.
+
+
 
 **Web-Claude-Self-Audit-Patch 2026-05-15** brachte 5 echte Korrekturen vs. meiner Erstversion:
 
