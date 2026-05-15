@@ -2727,9 +2727,16 @@ window.switchDiktatTab = function(mode) {
     var ta = document.getElementById('transcriptManuell');
     if (ta && ta.value.trim()) window.transcriptText = ta.value.trim();
   } else {
-    // MEGA⁶⁹-INTEGRATION INT.6 — Bei Tab-Wechsel zu Eingabe: laufende Aufnahme stoppen.
-    // Verhindert Marcel-Bug-Pattern: Recorder läuft im Hintergrund während manuelle Texteingabe.
-    if (typeof isRecording !== 'undefined' && isRecording && typeof stoppeAufnahme === 'function') {
+    // MEGA⁸⁰ F.3: Tab-Wechsel zu Eingabe → harter Cleanup, nicht nur wenn
+    // isRecording-Flag true ist. Marcel hat 5× gemeldet dass Recorder im
+    // Hintergrund weiter lief. Sicherheitsnetz: prüfe Stream/Recorder direkt
+    // unabhängig vom isRecording-Flag.
+    var hatLaufendeAufnahme = (
+      (typeof isRecording !== 'undefined' && isRecording) ||
+      (typeof mediaRecorder !== 'undefined' && mediaRecorder && mediaRecorder.state && mediaRecorder.state !== 'inactive') ||
+      (window._provaAufnahmeStream && window._provaAufnahmeStream.getTracks().some(function(tr){ return tr.readyState === 'live'; }))
+    );
+    if (hatLaufendeAufnahme && typeof stoppeAufnahme === 'function') {
       try { stoppeAufnahme(); } catch (_) {}
       try {
         var t = document.createElement('div');
@@ -2822,7 +2829,10 @@ async function starteAufnahme() {
     return;
   }
   // 4. Mikrofon-Permission prüfen
-  var aufnahmeStream = null;
+  // MEGA⁸⁰ F.3: aufnahmeStream auf window-scope heben damit stoppeAufnahme()
+  // die Tracks killen kann — sonst bleibt das Mikrofon-LED an + Whisper-WS
+  // bei manuellem Tab-Switch im Hintergrund weiter aktiv.
+  window._provaAufnahmeStream = null;
   try {
     if(navigator.permissions) {
       try {
@@ -2833,7 +2843,8 @@ async function starteAufnahme() {
         }
       } catch(e) {} // permissions API nicht verfügbar — ignorieren
     }
-    aufnahmeStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    window._provaAufnahmeStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    var aufnahmeStream = window._provaAufnahmeStream;
   } catch(err) {
     if(err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
       showToast('Mikrofon-Zugriff verweigert. Klicken Sie auf das 🔒-Symbol in der Adressleiste und erlauben Sie das Mikrofon.', 'error');
@@ -2979,6 +2990,22 @@ function stoppeAufnahme() {
     try { mediaRecorder.stop(); } catch(e) {}
   }
   mediaRecorder = null;
+
+  // MEGA⁸⁰ F.3: Mikrofon-Stream-Tracks killen damit Browser-Tab-Indikator + LED
+  // wirklich aus geht (mediaRecorder.stop allein lässt den Stream offen).
+  // Plus Whisper-WebSocket falls vorhanden schließen.
+  try {
+    if (window._provaAufnahmeStream) {
+      window._provaAufnahmeStream.getTracks().forEach(function(t){ try { t.stop(); } catch(_) {} });
+      window._provaAufnahmeStream = null;
+    }
+  } catch(_) {}
+  try {
+    if (window._provaWhisperWs && typeof window._provaWhisperWs.close === 'function') {
+      window._provaWhisperWs.close();
+      window._provaWhisperWs = null;
+    }
+  } catch(_) {}
 
   // Nach Aufnahme: Text bereinigen + Diktat nummerieren
   if (window.transcriptText.trim().length > 20) {
