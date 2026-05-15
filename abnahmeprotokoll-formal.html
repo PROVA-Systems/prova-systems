@@ -146,18 +146,14 @@ window.sendeBriefAnAktiveFall = async function() {
   if (!svEmail) { if(typeof showToast==='function') showToast('Nicht eingeloggt', 'error'); return; }
   
   try {
-    await provaFetch('/.netlify/functions/airtable', {
-      method: 'POST', headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({method:'POST',
-        path:'/v0/appJ7bLlAHZoxENWE/tblSzxvnkRE6B0thx',
-        payload:{fields:{
-          aktenzeichen: az, sv_email: svEmail,
-          brief_typ: 'Förmliches Abnahmeprotokoll', betreff: betreff,
-          inhalt: inhalt.substring(0, 2000),
-          datum: new Date().toISOString().slice(0,10),
-          status: 'Entwurf'
-        }}})
+    var ad = await import('/lib/prova-supabase-adapters.js');
+    var brief = await ad.logBriefGenerated({
+      az: az, brief_typ: 'Förmliches Abnahmeprotokoll',
+      dokument_typ_enum: 'sonstiges_pdf',
+      betreff: betreff, inhalt_text: inhalt.substring(0, 2000),
+      status: 'entwurf'
     });
+    if (!brief.ok) throw new Error(brief.error || 'unknown');
     if(typeof showToast==='function') showToast('Brief gespeichert ✅');
     if (az) setTimeout(function(){window.location.href='akte.html?az='+encodeURIComponent(az);}, 1500);
   } catch(e) {

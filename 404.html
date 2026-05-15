@@ -164,23 +164,16 @@ function openSupportModal(){
     if (!nachricht.trim()) { alert('Bitte Beschreibung eingeben.'); return; }
     if (btn) { btn.disabled = true; btn.textContent = 'Wird gesendet…'; }
     try {
-      var svEmail = localStorage.getItem('prova_sv_email') || 'unbekannt';
-      await provaFetch('/.netlify/functions/airtable', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          method: 'POST',
-          path: '/v0/appJ7bLlAHZoxENWE/tblEb3A4dukGX8GFs',
-          payload: { records: [{ fields: {
-            Betreff:  '404: ' + betreff,
-            Nachricht: nachricht + '\nURL: ' + window.location.href,
-            Typ: 'Fehler',
-            'SV-Email': svEmail,
-            Datum: new Date().toISOString().slice(0,10),
-            Status: 'Offen'
-          }}]}
-        })
+      // MEGA⁷⁶ D.1: 404-Report → support_tickets via Adapter-Helper.
+      var ad = await import('/lib/prova-supabase-adapters.js');
+      var res = await ad.sendSupportTicket({
+        titel: '404: ' + betreff,
+        beschreibung: nachricht + '\nURL: ' + window.location.href,
+        user_email: localStorage.getItem('prova_sv_email') || 'unbekannt',
+        kategorie: 'page_not_found',
+        typ: 'bug'
       });
+      if (!res.ok) throw new Error(res.error || 'unknown');
       var fb = document.getElementById('support-form-body');
       if (fb) fb.innerHTML = '<div style="padding:20px;text-align:center;"><div style="font-size:32px;margin-bottom:12px;">✅</div><div style="color:#10b981;font-weight:600;">Nachricht gesendet — wir melden uns.</div></div>';
     } catch(e) {

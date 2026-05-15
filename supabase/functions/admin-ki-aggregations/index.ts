@@ -42,8 +42,17 @@ function aggregateRows(rawRows: ProtokollRow[], groupBy: string): AggregateRow[]
 
 Deno.serve(adminHandler(
     { functionName: 'admin-ki-aggregations' },
-    async (req, { sb }) => {
+    async (req, { sb, adminEmail }) => {
         if (req.method !== 'GET') return jsonResponse({ error: 'Method Not Allowed' }, 405);
+
+        // MEGA⁸¹ D.1 — Zusätzlich is_founder erforderlich (Email-Whitelist allein reicht nicht
+        // für KI-Kosten-Aggregationen über alle User hinweg). sb ist Service-Client → bypass RLS ok.
+        const { data: u } = await sb.from('users')
+            .select('is_founder, deleted_at')
+            .ilike('email', adminEmail)
+            .maybeSingle();
+        if (!u || u.deleted_at) return jsonResponse({ error: 'not_found' }, 404);
+        if (!u.is_founder) return jsonResponse({ error: 'founder_required' }, 403);
 
         const url = new URL(req.url);
         const rangeRaw = url.searchParams.get('range') ?? '30d';

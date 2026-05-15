@@ -1047,20 +1047,20 @@ window.sendeTicket = async function() {
   }
   
   try {
-    await provaFetch('/.netlify/functions/airtable', {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ method:'POST',
-        path:'/v0/appJ7bLlAHZoxENWE/tblEb3A4dukGX8GFs',
-        payload:{ fields:{
-          Betreff: betreff, Nachricht: nachricht,
-          'SV-Email': svEmail, Status: 'Offen', Prioritaet: 'Normal',
-          Seite: window.location.pathname, Datum: new Date().toISOString().slice(0,10)
-        }}})
+    // MEGA⁷⁶ A.2: Schema-Fix → sendSupportTicket-Helper (Schema-Aware DRY).
+    var ad = await import('/lib/prova-supabase-adapters.js');
+    var res = await ad.sendSupportTicket({
+      titel:        betreff,
+      beschreibung: nachricht,
+      user_email:   svEmail,
+      kategorie:    'textbausteine-page',
+      typ:          'frage'
     });
+    if (!res.ok) throw new Error(res.error || 'unknown');
     if(typeof showToast==='function') showToast('Ticket gesendet ✅ — Wir melden uns bei Ihnen');
     if(typeof schliesseSupport==='function') schliesseSupport();
   } catch(e) {
-    if(typeof showToast==='function') showToast('Fehler: ' + e.message, 'error');
+    if(typeof showToast==='function') showToast('Fehler: ' + (e && e.message), 'error');
   }
 };
 

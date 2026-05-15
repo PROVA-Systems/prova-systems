@@ -153,26 +153,23 @@ document.addEventListener('DOMContentLoaded', function() {
   if (el('sv-name-signatur')) el('sv-name-signatur').textContent = svName;
   if (el('betreff') && az) el('betreff').value = 'Stellungnahme zum Gegengutachten – Az.: ' + az;
 
-  // Empfänger aus Airtable-Falldaten laden wenn AZ bekannt
-  if (az && svEmail) {
-    provaFetch('/.netlify/functions/airtable', {
-      method: 'POST', headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({
-        action: 'list', table: 'SCHADENSFAELLE',
-        fields: ['Aktenzeichen','Auftraggeber','Auftraggeber_Adresse','Auftraggeber_Email'],
-        filterByFormula: "AND({Aktenzeichen}='" + az + "',{sv_email}='" + svEmail + "')",
-        maxRecords: 1
-      })
-    }).then(function(r){return r.json();}).then(function(data){
-      var r = data.records && data.records[0];
-      if (r && r.fields) {
-        var f = r.fields;
+  // MEGA⁷⁶ B: Empfänger aus auftraege.details.auftraggeber jsonb laden.
+  if (az) {
+    (async function(){
+      try {
+        var ad = await import('/lib/prova-supabase-adapters.js');
+        var sb = await ad.getSupabase();
+        if (!sb) return;
+        var r = await sb.from('auftraege').select('details, objekt').eq('az', az).is('deleted_at', null).maybeSingle();
+        if (!r.data) return;
+        var ag = (r.data.details && r.data.details.auftraggeber) || {};
         var emp = [];
-        if (f.Auftraggeber) emp.push(f.Auftraggeber);
-        if (f.Auftraggeber_Adresse) emp.push(f.Auftraggeber_Adresse);
+        if (ag.name) emp.push(ag.name);
+        if (ag.adresse) emp.push(ag.adresse);
+        else if (r.data.objekt && r.data.objekt.adresse) emp.push(r.data.objekt.adresse);
         if (emp.length && el('empfaenger')) el('empfaenger').value = emp.join('\n');
-      }
-    }).catch(function(){});
+      } catch(_) {}
+    })();
   }
 });
 
@@ -197,18 +194,14 @@ window.sendeBriefAnAktiveFall = async function() {
   if (!svEmail) { if(typeof showToast==='function') showToast('Nicht eingeloggt', 'error'); return; }
   
   try {
-    await provaFetch('/.netlify/functions/airtable', {
-      method: 'POST', headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({method:'POST',
-        path:'/v0/appJ7bLlAHZoxENWE/tblSzxvnkRE6B0thx',
-        payload:{fields:{
-          aktenzeichen: az, sv_email: svEmail,
-          brief_typ: 'Stellungnahme zum Gegengutachten', betreff: betreff,
-          inhalt: inhalt.substring(0, 2000),
-          datum: new Date().toISOString().slice(0,10),
-          status: 'Entwurf'
-        }}})
+    var ad = await import('/lib/prova-supabase-adapters.js');
+    var brief = await ad.logBriefGenerated({
+      az: az, brief_typ: 'Stellungnahme zum Gegengutachten',
+      dokument_typ_enum: 'kurzstellungnahme_pdf',
+      betreff: betreff, inhalt_text: inhalt.substring(0, 2000),
+      status: 'entwurf'
     });
+    if (!brief.ok) throw new Error(brief.error || 'unknown');
     if(typeof showToast==='function') showToast('Brief gespeichert ✅');
     if (az) setTimeout(function(){window.location.href='akte.html?az='+encodeURIComponent(az);}, 1500);
   } catch(e) {

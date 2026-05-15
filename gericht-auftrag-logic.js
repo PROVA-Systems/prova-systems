@@ -74,19 +74,34 @@
     try { if(typeof zeigToast==='function') zeigToast('§407a‑Text kopiert'); } catch(e) {}
   };
 
+  // MEGA⁷⁵-F-Batch2 B6: airtableCreate → Supabase auftraege.insert mit
+  // Airtable-Field-Mapping (Status 'In Bearbeitung' → 'aktiv', Messwerte
+  // → details.messwerte jsonb, Fristdatum → details.fristdatum).
   async function airtableCreate(fields){
-    var res = await provaFetch('/.netlify/functions/airtable', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        method: 'POST',
-        path: '/v0/' + AT_BASE + '/' + AT_TABLE,
-        payload: { records: [{ fields: fields }] }
-      })
-    });
-    var json = await res.json().catch(function(){ return {}; });
-    if(!res.ok) throw new Error((json && json.error) ? String(json.error) : ('HTTP ' + res.status));
-    return json;
+    var ad = await import('/lib/prova-supabase-adapters.js');
+    var sb = await ad.getSupabase();
+    var wsId = await ad.getCurrentWorkspaceId();
+    if (!sb || !wsId) throw new Error('no-supabase-or-workspace');
+    var statusMap = { 'In Bearbeitung':'aktiv', 'Auftrag erhalten':'aktiv', 'Abgeschlossen':'abgeschlossen', 'Archiviert':'abgeschlossen' };
+    var typMap = { 'Gericht':'gericht', 'Privatperson':'privat', 'Versicherung':'versicherung' };
+    var row = {
+      workspace_id:      wsId,
+      az:                fields.Aktenzeichen,
+      typ:               'gericht',
+      titel:             fields.Auftraggeber_Name || 'Auftrag',
+      status:            statusMap[fields.Status] || 'aktiv',
+      phase_aktuell:     1,
+      auftraggeber_typ:  typMap[fields.Auftraggeber_Typ] || null,
+      schadensart_label: fields.Bereich || '',
+      details:           {
+        auftraggeber: { name: fields.Auftraggeber_Name || '' },
+        fristdatum:   fields.Fristdatum || null,
+        messwerte:    fields.Messwerte || ''
+      }
+    };
+    var r = await sb.from('auftraege').insert(row).select('id').maybeSingle();
+    if (r.error) throw new Error(r.error.message);
+    return r.data;
   }
 
   window.saveGerichtsauftrag = async function(){

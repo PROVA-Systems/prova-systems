@@ -1242,29 +1242,26 @@ function weiterZuFreigabe() {
     }).catch(e => console.warn('KI-Statistik sync failed:', e));
   } catch (e) { console.warn('KI-Statistik sync error:', e); }
 
-  // §6-Text AUCH nach Airtable schreiben (non-blocking, als Backup)
+  // MEGA⁷⁵-F-Batch2 B7: §6-Text in Supabase auftraege.fachurteil_text speichern
+  // (KI-frei-Compliance via Trigger auftraege.fachurteil_eigenleistung_chars).
+  // Lookup über az statt Airtable-recordId.
   try {
-    var recordId = sessionStorage.getItem('prova_record_id') || localStorage.getItem('prova_record_id') || '';
     var az_write = localStorage.getItem('prova_letztes_az') || '';
-    if (recordId && az_write) {
-      provaFetch('/.netlify/functions/airtable', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          method: 'PATCH',
-          path: '/v0/appJ7bLlAHZoxENWE/tblSxV8bsXwd1pwa0/' + recordId,
-          payload: {
-            fields: {
-              Stellungnahme_Text: finalText,
-              Status: 'Entwurf',
-              Gutachten_Typ: selectedTyp,
-              Stellungnahme_Datum: ts
-            }
-          }
-        })
-      }).catch(e => console.warn('§6 Airtable-Sync:', e));
+    if (az_write) {
+      (async function() {
+        try {
+          var mod = await import('/lib/supabase-client.js');
+          var sb = mod.supabase || (mod.getSupabase && mod.getSupabase());
+          if (!sb) return;
+          await sb.from('auftraege').update({
+            fachurteil_text: finalText,
+            status:          'entwurf',
+            details:         { gutachten_typ: selectedTyp, stellungnahme_datum: ts }
+          }).eq('az', az_write).is('deleted_at', null);
+        } catch(e) { console.warn('§6 Supabase-Sync:', e && e.message); }
+      })();
     }
-  } catch(e) { console.warn('§6 Airtable-Write:', e); }
+  } catch(e) { console.warn('§6 Supabase-Write:', e); }
 
   // Schritt 5 visuell aktivieren
   var fs5 = document.getElementById('flow-step-freigabe');

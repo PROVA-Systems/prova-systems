@@ -131,40 +131,34 @@ select.doku-input{cursor:pointer;}
 <script src="ergaenzung-logic.js" defer></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-  // Hauptgutachten aus Airtable laden
-  var token = localStorage.getItem('prova_airtable_pat') || '';
-  if (!token) return;
-  
-  provaFetch('/.netlify/functions/airtable', {
-    method: 'POST',
-    headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({
-      action: 'list',
-      table: 'SCHADENSFAELLE',
-      fields: ['Aktenzeichen','Auftragstyp','Status'],
-      filterByFormula: "AND({Auftragstyp}!='Ergaenzung',{Status}!='Abgeschlossen')",
-      maxRecords: 50
-    })
-  })
-  .then(function(r){ return r.json(); })
-  .then(function(data) {
-    var sel = document.getElementById('hauptgutachten');
-    (data.records || []).forEach(function(r) {
-      var opt = document.createElement('option');
-      opt.value = r.id;
-      opt.textContent = r.fields.Aktenzeichen || r.id;
-      sel.appendChild(opt);
-    });
-    // URL-Parameter vorausfüllen
-    var az = new URLSearchParams(window.location.search).get('az');
-    if (az) {
-      for (var i = 0; i < sel.options.length; i++) {
-        if (sel.options[i].textContent === az) { sel.selectedIndex = i; fuelleAZ(); break; }
+  // MEGA⁷⁶ B: Hauptgutachten aus auftraege (RLS scope'd, neq typ='ergaenzung').
+  (async function() {
+    try {
+      var ad = await import('/lib/prova-supabase-adapters.js');
+      var sb = await ad.getSupabase();
+      if (!sb) return;
+      var r = await sb.from('auftraege')
+        .select('id, az, typ, status')
+        .neq('typ', 'ergaenzung')
+        .neq('status', 'abgeschlossen')
+        .is('deleted_at', null)
+        .limit(50);
+      if (r.error || !r.data) return;
+      var sel = document.getElementById('hauptgutachten');
+      r.data.forEach(function(row) {
+        var opt = document.createElement('option');
+        opt.value = row.id;
+        opt.textContent = row.az || row.id;
+        sel.appendChild(opt);
+      });
+      var az = new URLSearchParams(window.location.search).get('az');
+      if (az) {
+        for (var i = 0; i < sel.options.length; i++) {
+          if (sel.options[i].textContent === az) { sel.selectedIndex = i; fuelleAZ(); break; }
+        }
       }
-    }
-  })
-  .catch(function(){});
-  
+    } catch(_) {}
+  })();
   document.getElementById('hauptgutachten').addEventListener('change', fuelleAZ);
 });
 
@@ -186,36 +180,38 @@ function speichern() {
   if (!parentId) { alert('Bitte Hauptgutachten wählen.'); return; }
   if (!beweisfragen) { alert('Bitte Beweisfragen eintragen.'); return; }
 
-  var svEmail = localStorage.getItem('prova_sv_email') || '';
-
-  provaFetch('/.netlify/functions/airtable', {
-    method: 'POST',
-    headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({
-      action: 'create',
-      table: 'SCHADENSFAELLE',
-      fields: {
-        Auftragstyp: 'Ergaenzung',
-        Parent_AZ: parentAZ,
-        Beweisfragen: beweisfragen,
-        Anlass_Ergaenzung: anlass,
-        Ortstermin: termin || null,
-        Geschaetzte_Stunden: parseFloat(stunden) || 2,
-        Status: 'Neu',
-        sv_email: svEmail
+  // MEGA⁷⁶ B: Ergänzungsfall in auftraege.insert. parentId ist UUID,
+  // parentAZ wird zusätzlich in details fallback gespeichert.
+  (async function() {
+    try {
+      var ad = await import('/lib/prova-supabase-adapters.js');
+      var sb = await ad.getSupabase();
+      var wsId = await ad.getCurrentWorkspaceId();
+      if (!sb || !wsId) { alert('Kein Workspace — bitte neu einloggen.'); return; }
+      var ins = await sb.from('auftraege').insert({
+        workspace_id:      wsId,
+        typ:               'ergaenzung',
+        status:            'aktiv',
+        az:                'ERG-' + Date.now().toString().slice(-6),
+        titel:             'Ergänzung zu ' + parentAZ,
+        parent_auftrag_id: parentId,
+        fragestellung:     beweisfragen,
+        details: {
+          parent_az:          parentAZ,
+          anlass_ergaenzung:  anlass,
+          ortstermin:         termin || null,
+          geschaetzte_stunden: parseFloat(stunden) || 2
+        }
+      }).select('id, az').maybeSingle();
+      if (ins.error) throw new Error(ins.error.message);
+      if (ins.data && ins.data.id) {
+        alert('✅ Ergänzungsfall angelegt: ' + ins.data.az);
+        window.location.href = 'archiv.html';
+      } else {
+        alert('Fehler: Insert lieferte keine ID.');
       }
-    })
-  })
-  .then(function(r){ return r.json(); })
-  .then(function(data) {
-    if (data.id) {
-      alert('✅ Ergänzungsfall angelegt: ' + (data.fields && data.fields.Aktenzeichen || data.id));
-      window.location.href = 'archiv.html';
-    } else {
-      alert('Fehler: ' + JSON.stringify(data));
-    }
-  })
-  .catch(function(e){ alert('Fehler: ' + e.message); });
+    } catch(e) { alert('Fehler: ' + (e && e.message)); }
+  })();
 }
 </script>
 </html>

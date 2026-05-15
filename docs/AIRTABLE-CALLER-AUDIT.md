@@ -109,3 +109,44 @@ Die Aufwand-Schwerpunkte (Phase 3) sind diese 15 Files:
 - **EINWILLIGUNGEN existiert NICHT in Supabase**: Phase 3 muss entweder eine neue Tabelle `einwilligungen` anlegen (Migration) ODER `onboarding-logic.schreibeEinwilligung()` in einen sicheren No-Op verwandeln (Daten gehen verloren).
 - **AUDIT_TRAIL ist seit MEGA⁷³ in Supabase live** (`audit_trail`-Tabelle existiert) — Migration der Audit-Writes ist 1:1.
 - **PILOT_LIST**: `pilots`-Tabelle oder `users.is_pilot`-Boolean — Schema-Klärung nötig.
+
+---
+
+## MEGA⁷⁶ Final Status (2026-05-14, post-Push)
+
+**Sprint MEGA76 abgeschlossen. Alle Frontend-Caller migriert.**
+
+```
+grep -rln "/.netlify/functions/airtable" . --include="*.js" --include="*.html" \
+  --exclude-dir=_archiv --exclude-dir=node_modules \
+  --exclude-dir=tests --exclude-dir=docs --exclude-dir=tools
+→ 0 Hits
+
+grep -rln "airtable-wrapper-deprecated" . --include="*.js" --include="*.html"
+→ 0 Hits
+```
+
+**Migrationsverlauf-Bilanz:**
+
+| Sprint | Files migriert | Restbestand danach |
+|---|---:|---:|
+| MEGA72 Phase A | 4 P1-Logic-Files | 45 |
+| MEGA73 | 8 P2-Files | 37 |
+| MEGA75-F-Batch1 | 7 Heavy-Files (adapters/audit/context/einstellungen/app/onboarding/nav) | 42 (mit neuen Findings) |
+| MEGA75-F-Batch2 | 10 Heavy/Single + 3 Wrapper-Stubs | 25 |
+| **MEGA76** | **5 Schema-Bugs + 13 Brief-HTMLs + 5 Bridge-Files + 7 Single-Caller + Wrapper-Killing** | **0** |
+
+**Vorgeklärte STOP-Punkte beide gelöst:**
+- EINWILLIGUNGEN-Tabelle existiert tatsächlich (Anhang A.11 in MEGA76-Spec) → `logEinwilligung` schreibt jetzt dort.
+- PILOT_LIST → ersetzt durch `audit_trail` action='create' kategorie='pipeline.onboarding' (Solo-User-Pilot bleibt via `users.is_founder` flag).
+
+**Restbestand `airtable` (alle erlaubt/dokumentiert):**
+- Stub-Files mit Console-Warn (`prova-airtable-api.js`, `prova-api.js`, `prova-sv-airtable.js`, `prova-fetch-auth.js`, `prova-auth-api.js`, `prova-api-cache.js`, `prova-error-handler.js`, `prova-notifications.js`)
+- 410-Tombstone (`netlify/functions/airtable.js`)
+- Doku/Kommentare in `docs/` und `_archiv/`
+- 3 Server-Side-Netlify-Functions (`ki-statistik`, `push-notify`, `team-interest`) — deaktivieren sich automatisch nach Marcel-ENV-Cleanup (siehe `docs/MEGA76-MARCEL-CHECKLIST.md` G.1), Code-Removal in MEGA77
+- 1 Make-Webhook-Body-Key `airtable_id` in `freigabe-logic.js` Z.809 (kein Call, nur Payload-Field)
+
+**Adapter-Stand:** `lib/prova-supabase-adapters.js` ist Single-Source-of-Truth mit:
+- `auditTrailInsert`, `logBriefGenerated`, `logEinwilligung`, `sendSupportTicket`, `mapKontaktTyp`, `loadSvProfile`, `getCurrentWorkspaceId`, `getSupabase`
+- Row-Adapter: `auftragRowToFields`, `kontaktRowToFields`, `usersRowToFields`, `dokumentRowToFields`, `terminRowToFields`, `fristRowToFields`, `kiProtokollRowToFields`

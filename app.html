@@ -131,46 +131,28 @@
   // Solo und Team haben beide vollen Zugang — kein Feature-Gate nötig
   // Nur Login-Status prüfen (bereits oben erledigt)
 
-  // Hintergrund-Verifikation gegen Airtable (nicht-blockierend)
-  // Wenn localStorage manipuliert wurde → korrigieren
+  // MEGA⁷⁶ D.3: Hintergrund-Verifikation gegen Supabase users+workspaces.
+  // Liefert Paket + abo_status; bei gekündigt/pausiert → redirect.
   if (email) {
-    provaFetch('/.netlify/functions/airtable', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        method: 'GET',
-        path: '/v0/appJ7bLlAHZoxENWE/tbladqEQT3tmx4DIB?filterByFormula=' 
-              + encodeURIComponent('{Email}="' + email + '"')
-              + '&maxRecords=1&fields[]=Paket&fields[]=Email&fields[]=Status'
-      })
-    })
-    .then(function(r) { return r.json(); })
-    .then(function(data) {
-      var records = data.records || [];
-      if (records.length === 0) return;
-      
-      var f = records[0].fields || {};
-      var echtesPaket = (f.Paket && f.Paket.name) ? f.Paket.name : (f.Paket || 'Solo');
-      var status = (f.Status && f.Status.name) ? f.Status.name : (f.Status || '');
-      
-      // Paket normalisieren (alte Werte → Solo/Team)
-      var paketNorm = { Starter: 'Solo', Pro: 'Solo', Enterprise: 'Team' };
-      if (paketNorm[echtesPaket]) echtesPaket = paketNorm[echtesPaket];
-      
-      // Status check: gesperrte Accounts
-      if (status === 'Gesperrt' || status === 'Gekuendigt') {
-        localStorage.clear();
-        window.location.href = 'app-login.html?reason=account_locked';
-        return;
-      }
-      
-      // Paket korrekt setzen
-      if (echtesPaket && echtesPaket !== paket) {
-        localStorage.setItem('prova_paket', echtesPaket);
-        // Solo und Team bleiben beide auf app.html → kein Redirect nötig
-      }
-    })
-    .catch(function() {}); // Fehler ignorieren — nicht blockieren
+    (async function() {
+      try {
+        var ad = await import('/lib/prova-supabase-adapters.js');
+        var prof = await ad.loadSvProfile();
+        if (!prof || prof.error || !prof.workspace) return;
+        var ws = prof.workspace;
+        var echtesPaket = ws.abo_tier === 'team' ? 'Team' : 'Solo';
+        var aboStatus = ws.abo_status || '';
+        // Account gesperrt/gekündigt → Logout
+        if (aboStatus === 'gekuendigt' || aboStatus === 'ueberfaellig') {
+          localStorage.clear();
+          window.location.href = 'app-login.html?reason=account_locked';
+          return;
+        }
+        if (echtesPaket && echtesPaket !== paket) {
+          localStorage.setItem('prova_paket', echtesPaket);
+        }
+      } catch(_) {}
+    })();
   }
 })();
 

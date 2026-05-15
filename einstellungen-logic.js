@@ -848,6 +848,112 @@ window.saveSelect = function(key, value) {
   if (typeof zeigToast === 'function') zeigToast('Einstellung gespeichert ✅');
 };
 
+/* ── MEGA⁷⁷ C.1.3: user_workflow_settings UPSERT + Cache.
+   Diese 4 Felder werden tatsächlich vom KI-Proxy gelesen (siehe DECISIONS-
+   Block "Backend-Integration"). UPSERT erstellt eine Row falls noch keine
+   existiert (per user_id-UNIQUE). */
+window.provaSaveWorkflowField = async function(field, value) {
+  try {
+    var mod = await import('/lib/supabase-client.js');
+    var sb = mod.supabase || (mod.getSupabase && mod.getSupabase());
+    if (!sb) throw new Error('no-supabase');
+    var sess = await sb.auth.getSession();
+    var uid = sess?.data?.session?.user?.id;
+    if (!uid) throw new Error('no-session');
+    var update = {};
+    update[field] = value;
+    update.user_id = uid;
+    var r = await sb.from('user_workflow_settings').upsert(update, { onConflict: 'user_id' });
+    if (r.error) throw new Error(r.error.message);
+    // Lokaler Cache (für sofort wirksamen Pre-Read in ki-proxy)
+    try { localStorage.setItem('prova_workflow_' + field, JSON.stringify(value)); } catch(_) {}
+    if (typeof zeigToast === 'function') zeigToast('Einstellung gespeichert ✅');
+  } catch(e) {
+    console.warn('[provaSaveWorkflowField]', field, e && e.message);
+    if (typeof zeigToast === 'function') zeigToast('Speichern fehlgeschlagen: ' + (e && e.message), 'err');
+  }
+};
+
+/* ── MEGA⁷⁷ C.2: notification_settings jsonb-Patch (key-für-key, Read-Merge-Write) ── */
+window.provaSaveNotifField = async function(key, value) {
+  try {
+    var mod = await import('/lib/supabase-client.js');
+    var sb = mod.supabase || (mod.getSupabase && mod.getSupabase());
+    if (!sb) throw new Error('no-supabase');
+    var sess = await sb.auth.getSession();
+    var uid = sess?.data?.session?.user?.id;
+    if (!uid) throw new Error('no-session');
+    var cur = await sb.from('users').select('notification_settings').eq('id', uid).maybeSingle();
+    var existing = (cur.data && cur.data.notification_settings) || {};
+    existing[key] = value;
+    var upd = await sb.from('users').update({ notification_settings: existing }).eq('id', uid);
+    if (upd.error) throw new Error(upd.error.message);
+    if (typeof zeigToast === 'function') zeigToast('Einstellung gespeichert ✅');
+  } catch(e) {
+    console.warn('[provaSaveNotifField]', key, e && e.message);
+    if (typeof zeigToast === 'function') zeigToast('Speichern fehlgeschlagen', 'err');
+  }
+};
+
+/* ── MEGA⁷⁷ C.2: Load der notification_settings beim Page-Open ── */
+(async function provaLoadNotifSettings() {
+  try {
+    var mod = await import('/lib/supabase-client.js');
+    var sb = mod.supabase || (mod.getSupabase && mod.getSupabase());
+    if (!sb) return;
+    var sess = await sb.auth.getSession();
+    var uid = sess?.data?.session?.user?.id;
+    if (!uid) return;
+    var r = await sb.from('users').select('notification_settings').eq('id', uid).maybeSingle();
+    if (r.error || !r.data || !r.data.notification_settings) return;
+    var ns = r.data.notification_settings;
+    var map = {
+      'es-bn-fristen': 'fristen_alarm_enabled',
+      'es-bn-zahlung': 'zahlung_erinnerung_enabled',
+      'es-bn-termine': 'termin_erinnerung_enabled',
+      'es-bn-stillezeit': 'quiet_hours_enabled'
+    };
+    Object.keys(map).forEach(function(id){
+      var el = document.getElementById(id);
+      if (el && ns[map[id]] !== undefined) el.checked = !!ns[map[id]];
+    });
+  } catch(e) { console.warn('[provaLoadNotifSettings]', e && e.message); }
+})();
+
+/* ── MEGA⁷⁷ C.1.3: Load der 4 Workflow-Felder beim Settings-Page-Open ── */
+(async function provaLoadWorkflowSettings() {
+  try {
+    var mod = await import('/lib/supabase-client.js');
+    var sb = mod.supabase || (mod.getSupabase && mod.getSupabase());
+    if (!sb) return;
+    var sess = await sb.auth.getSession();
+    var uid = sess?.data?.session?.user?.id;
+    if (!uid) return;
+    var r = await sb.from('user_workflow_settings')
+      .select('diktat_sprache, inline_ki_suggestions_enabled, ki_lernpool_einwilligung, persoenlicher_ki_kontext')
+      .eq('user_id', uid)
+      .maybeSingle();
+    if (r.error || !r.data) return;
+    var row = r.data;
+    var el;
+    el = document.getElementById('es-diktat-sprache');
+    if (el && row.diktat_sprache) el.value = row.diktat_sprache;
+    el = document.getElementById('es-inline-suggestions');
+    if (el) el.checked = !!row.inline_ki_suggestions_enabled;
+    el = document.getElementById('es-lernpool-einwilligung');
+    if (el) el.checked = !!row.ki_lernpool_einwilligung;
+    el = document.getElementById('es-ki-kontext');
+    if (el && row.persoenlicher_ki_kontext) el.value = row.persoenlicher_ki_kontext;
+    // Cache für andere Module
+    try {
+      localStorage.setItem('prova_workflow_diktat_sprache', JSON.stringify(row.diktat_sprache || 'de-DE'));
+      localStorage.setItem('prova_workflow_inline_ki_suggestions_enabled', JSON.stringify(!!row.inline_ki_suggestions_enabled));
+      localStorage.setItem('prova_workflow_ki_lernpool_einwilligung', JSON.stringify(!!row.ki_lernpool_einwilligung));
+      if (row.persoenlicher_ki_kontext) localStorage.setItem('prova_workflow_persoenlicher_ki_kontext', JSON.stringify(row.persoenlicher_ki_kontext));
+    } catch(_){}
+  } catch(e) { console.warn('[provaLoadWorkflowSettings]', e && e.message); }
+})();
+
 /* ── Beim Laden: Schriftgröße + alle Toggles + Selects wiederherstellen ── */
 (function ladeAlleEinstellungen() {
   var ls = localStorage;

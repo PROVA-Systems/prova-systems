@@ -27,15 +27,32 @@ const KILernpool = (() => {
   };
 
   // ── Lernmodus-Guard (Session 22) ─────────────────────────────────
-  // Respektiert den Toggle aus Einstellungen → KI & Diktat → "KI-Lernmodus".
-  // Default: aktiv. Nur wenn User explizit false setzt, werden Write-Operationen
-  // blockiert (Lese- und Render-Funktionen bleiben unberührt).
+  // MEGA⁸⁰ E + DSGVO: Lernpool-Write erfordert explizite Einwilligung
+  // (Opt-In, Default FALSE). Quelle: user_workflow_settings.ki_lernpool_einwilligung,
+  // localStorage-Cache 'prova_workflow_ki_lernpool_einwilligung' aus MEGA77
+  // provaLoadWorkflowSettings(). Legacy-Key 'prova_einstellungen.lernmodus'
+  // bleibt als Fallback für Pre-MEGA77-Sessions.
   function lernmodusAktiv() {
     try {
+      var raw = localStorage.getItem('prova_workflow_ki_lernpool_einwilligung');
+      if (raw !== null) return JSON.parse(raw) === true;
+    } catch(_) {}
+    // Fallback: legacy Setting (DSGVO-neu: Default false statt true)
+    try {
       var s = JSON.parse(localStorage.getItem('prova_einstellungen') || '{}');
-      return s.lernmodus !== false;
-    } catch(e) { return true; }
+      return s.lernmodus === true;  // strict — Opt-In Default false
+    } catch(_) { return false; }
   }
+
+  // MEGA⁸⁰ E: Inline-KI-Vorschläge-Toggle (Default true).
+  // Global verfügbar damit andere Editor-Module ihn nutzen können.
+  window.provaInlineSuggestionsEnabled = function provaInlineSuggestionsEnabled() {
+    try {
+      var raw = localStorage.getItem('prova_workflow_inline_ki_suggestions_enabled');
+      if (raw !== null) return JSON.parse(raw) !== false;
+    } catch(_) {}
+    return true;
+  };
 
   // ── Kategorie-System ─────────────────────────────────────────────
   const KATEGORIEN = {

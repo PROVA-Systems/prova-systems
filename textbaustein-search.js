@@ -33,32 +33,25 @@
       return _cache.items;
     }
 
-    var formula = svEmail
-      ? 'OR({sv_email}="' + svEmail + '",{sv_email}="")'  // Eigene + globale
-      : '1=1';
+    // MEGA⁷⁵-F-Batch2 B9: textbausteine via Supabase (RLS workspace-scoped).
+    // Globale Bausteine (workspace_id NULL) sind via RLS-Policy auch lesbar.
+    var ad = await import('/lib/prova-supabase-adapters.js');
+    var sb = await ad.getSupabase();
+    if (!sb) throw new Error('no-supabase');
+    var r = await sb.from('textbausteine')
+      .select('id, titel, text, kategorie, tags, workspace_id')
+      .is('deleted_at', null)
+      .limit(500);
+    if (r.error) throw new Error(r.error.message);
 
-    var path = '/v0/' + AT_BASE + '/' + encodeURIComponent(AT_TABLE)
-      + '?filterByFormula=' + encodeURIComponent(formula)
-      + '&maxRecords=500'
-      + '&fields[]=Titel&fields[]=Text&fields[]=Kategorie&fields[]=Tags&fields[]=sv_email';
-
-    var res = await provaFetch('/.netlify/functions/airtable', {
-      method:  'POST',
-      headers: {'Content-Type': 'application/json'},
-      body:    JSON.stringify({method: 'GET', path: path})
-    });
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    var data = await res.json();
-
-    var items = (data.records || []).map(function(r) {
-      var f = r.fields || {};
+    var items = (r.data || []).map(function(row) {
       return {
-        id:        r.id,
-        titel:     f.Titel     || f.titel     || '',
-        text:      f.Text      || f.text      || '',
-        kategorie: f.Kategorie || f.kategorie || '',
-        tags:      f.Tags      || f.tags      || '',
-        global:    !f.sv_email || f.sv_email === '',
+        id:        row.id,
+        titel:     row.titel     || '',
+        text:      row.text      || '',
+        kategorie: row.kategorie || '',
+        tags:      row.tags      || '',
+        global:    !row.workspace_id
       };
     });
 

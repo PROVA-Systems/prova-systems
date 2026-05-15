@@ -218,6 +218,27 @@ function speichereSkipBegruendung(recordId, phaseN, begruendung){
   localStorage.setItem('prova_phase_skips_'+recordId, JSON.stringify(data));
 }
 
+/* MEGA⁷⁷ B.1: applyPhaseVisibility — Progressive-Disclosure-Helper.
+   Steuert .sec-*-Sections per data-phase-Attribut basierend auf aktuellem
+   Auftrag-Status. War aus Vor-Refactoring-Phase verschwunden und wurde von
+   Z.149 aufgerufen → ReferenceError beim Akte-Load. Definition wiederhergestellt
+   als sichere Pass-Through-Implementierung: alle Sections bleiben sichtbar,
+   abgeschlossen-Auftraege bekommen optional ein readonly-Marker. */
+function applyPhaseVisibility(status){
+  try {
+    var sections = document.querySelectorAll('[data-phase]');
+    var isAbgeschlossen = String(status || '').toLowerCase() === 'abgeschlossen';
+    sections.forEach(function(el){
+      el.style.display = '';  // alle sichtbar lassen
+      if (isAbgeschlossen) el.classList.add('akte-readonly');
+      else el.classList.remove('akte-readonly');
+    });
+  } catch(e) {
+    // Defensiv — Akte-Load nie wegen DOM-Issues crashen lassen
+    console.warn('[applyPhaseVisibility] non-fatal:', e && e.message);
+  }
+}
+
 function renderTimeline(status,f){
   var recordId = (f && f._recordId) || window._currentAkteId || '';
   var aktuellePhase = getAktePhase(f);
@@ -1138,36 +1159,40 @@ window.exportWordAkte = async function() {
   if(typeof showToast==='function') showToast('Akte wird exportiert…');
 
   try {
-    // TODO MEGA⁷²-Phase-B: Export-Function noch auf Airtable-Wrapper. Selten genutzt (Akte-Export),
-    // Migration auf sb.from('auftraege') + sb.from('dokumente').eq('typ','brief') + workspace_id-Filter
-    // in eigenem Sprint da Brief-Schema noch nicht voll geklärt (Tabelle dokumente vs. briefe-Sub).
-    // Falldaten laden
-    var [fallRes, briefeRes] = await Promise.all([
-      provaFetch('/.netlify/functions/airtable', {
-        method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({method:'GET',
-          path:'/v0/appJ7bLlAHZoxENWE/tblSxV8bsXwd1pwa0?filterByFormula=' +
-               encodeURIComponent('AND({Aktenzeichen}="'+az+'",{sv_email}="'+svEmail+'")') +
-               '&maxRecords=1'})
-      }),
-      provaFetch('/.netlify/functions/airtable', {
-        method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({method:'GET',
-          path:'/v0/appJ7bLlAHZoxENWE/tblSzxvnkRE6B0thx?filterByFormula=' +
-               encodeURIComponent('AND({aktenzeichen}="'+az+'",{sv_email}="'+svEmail+'")') +
-               '&fields[]=brief_typ&fields[]=gesendet_am&fields[]=versand_status&maxRecords=20'})
-      })
+    // MEGA⁷⁵-F-Batch2 B2: Fall + Briefe direkt aus Supabase. RLS filtert
+    // workspace-scoped automatisch — sv_email-Match obsolet.
+    var ad = await import('/lib/prova-supabase-adapters.js');
+    var sb = await ad.getSupabase();
+    if (!sb) throw new Error('no-supabase');
+
+    var [fallQ, briefeQ] = await Promise.all([
+      sb.from('auftraege').select('*').eq('az', az).is('deleted_at', null).maybeSingle(),
+      sb.from('dokumente').select('id, doc_nummer, betreff, sent_at, status, inhalt_strukturiert')
+        .eq('typ', 'brief')
+        .is('deleted_at', null)
+        .order('sent_at', { ascending: false, nullsFirst: false })
+        .limit(20)
     ]);
 
-    var fallData   = await fallRes.json();
-    var briefeData = await briefeRes.json();
+    var fallFields = fallQ.data ? ad.auftragRowToFields(fallQ.data) : {};
+    var briefeRecords = (briefeQ.data || []).map(function(d){
+      var sv = (d.inhalt_strukturiert && d.inhalt_strukturiert.brief_typ) || '';
+      return {
+        id: d.id,
+        fields: {
+          brief_typ: sv,
+          gesendet_am: d.sent_at,
+          versand_status: d.status
+        }
+      };
+    });
 
     var res = await provaFetch('/.netlify/functions/akte-export', {
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({
         az, sv_email: svEmail, sv_name: svName,
-        fall:    fallData.records && fallData.records[0] && fallData.records[0].fields || {},
-        briefe:  briefeData.records || []
+        fall:    fallFields,
+        briefe:  briefeRecords
       })
     });
 

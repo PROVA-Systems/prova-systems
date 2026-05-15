@@ -104,21 +104,24 @@ async function _parseDocx(buffer) {
   };
 }
 
+// MEGA⁷⁷ B.3: Lambda-Boundary mit hartem try/catch — verhindert 502
+// (Lambda Cold-Start-Crash oder uncaught Throw). Liefert immer JSON-Response.
 exports.handler = withSentry(requireAuth(async function (event, context) {
   const baseHeaders = { 'Content-Type': 'application/json; charset=utf-8', ...getCorsHeaders(event) };
-  const userId = context.userId || context.user_id || null;
+  try {
+    const userId = context.userId || context.user_id || null;
 
-  if (event.httpMethod === 'OPTIONS') {
-    return { statusCode: 204, headers: getCorsHeaders(event), body: '' };
-  }
-  if (!userId) {
-    return { statusCode: 401, headers: baseHeaders, body: JSON.stringify({ error: 'no user_id' }) };
-  }
+    if (event.httpMethod === 'OPTIONS') {
+      return { statusCode: 204, headers: getCorsHeaders(event), body: '' };
+    }
+    if (!userId) {
+      return { statusCode: 401, headers: baseHeaders, body: JSON.stringify({ error: 'no user_id' }) };
+    }
 
-  const sb = getSupabase();
-  if (!sb) {
-    return { statusCode: 503, headers: baseHeaders, body: JSON.stringify({ error: 'Supabase not configured' }) };
-  }
+    const sb = getSupabase();
+    if (!sb) {
+      return { statusCode: 503, headers: baseHeaders, body: JSON.stringify({ error: 'Supabase not configured' }) };
+    }
 
   // ─── GET: Liste der eigenen Vorlagen ──────────────────────────────
   if (event.httpMethod === 'GET') {
@@ -299,7 +302,16 @@ exports.handler = withSentry(requireAuth(async function (event, context) {
     }
   }
 
-  return { statusCode: 405, headers: baseHeaders, body: JSON.stringify({ error: 'Method Not Allowed', allowed: ['GET','POST','PUT','DELETE'] }) };
+    return { statusCode: 405, headers: baseHeaders, body: JSON.stringify({ error: 'Method Not Allowed', allowed: ['GET','POST','PUT','DELETE'] }) };
+  } catch (lambdaError) {
+    // MEGA⁷⁷ B.3: Lambda-Boundary — keine 502s mehr
+    console.error('[parse-docx] uncaught:', lambdaError);
+    return {
+      statusCode: 500,
+      headers: baseHeaders,
+      body: JSON.stringify({ error: 'lambda_error', detail: String(lambdaError && lambdaError.message || lambdaError) })
+    };
+  }
 }), { functionName: 'parse-docx' });
 
 // Test-Exports

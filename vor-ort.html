@@ -565,11 +565,30 @@ async function speichereUndWeiter() {
     if (pa || pb) felder.Notizen = 'Partei A: ' + (pa||'') + '\nPartei B: ' + (pb||'');
   }
 
-  // Airtable-Payload vorbereiten
-  var atPayload = {
-    method: 'POST',
-    path: '/v0/appJ7bLlAHZoxENWE/tblSxV8bsXwd1pwa0',
-    payload: { records: [{ fields: felder }] }
+  // MEGA⁷⁵-F-Batch2 B5: Vor-Ort-Submit → Supabase auftraege.insert.
+  // Airtable-Felder mappen auf Schema (objekt/details jsonb).
+  var _ag_typ_map = { 'Privatperson':'privat','Bauherr':'privat','Versicherung':'versicherung','Anwaltskanzlei':'gewerbe','Wohnungsbaugesellschaft':'gewerbe','Gericht':'gericht','Behörde':'behoerde','Behoerde':'behoerde','Sonstiges':'andere' };
+  var _details = { auftraggeber: { name: felder.Auftraggeber_Name || '' } };
+  if (felder.Auftraggeber_Email) _details.auftraggeber.email = felder.Auftraggeber_Email;
+  if (felder.Auftraggeber_Telefon) _details.auftraggeber.telefon = felder.Auftraggeber_Telefon;
+  if (felder.Notizen) _details.notizen = felder.Notizen;
+  if (felder.Abgabefrist) _details.abgabefrist = felder.Abgabefrist;
+  if (felder.Session_Typ) _details.session_typ = felder.Session_Typ;
+  if (felder.Session_Start) _details.session_start = felder.Session_Start;
+  var _objekt = { adresse: felder.Schaden_Strasse || '', ort: felder.Ort || '' };
+  if (plz) _objekt.plz = String(plz);
+
+  var _typMap = { 'schaden':'schaden','gericht':'gericht','schiedsgutachten':'schied','beweissicherung':'beweis','baubegleitung':'baubegleitung','beratung':'beratung' };
+  var sbPayload = {
+    az: felder.Aktenzeichen,
+    typ: _typMap[_typ] || 'schaden',
+    titel: [felder.Schadensart, felder.Auftraggeber_Name].filter(Boolean).join(' · '),
+    status: 'aktiv',
+    phase_aktuell: 1,
+    auftraggeber_typ: _ag_typ_map[felder.Auftraggeber_Typ] || null,
+    schadensart_label: felder.Schadensart || '',
+    objekt: _objekt,
+    details: _details
   };
 
   var _weiterMitErfolg = function() {
@@ -582,29 +601,30 @@ async function speichereUndWeiter() {
     geheZuSchritt(3);
   };
 
-  // Online → direkt senden
+  // Online → direkt nach Supabase senden
   if (navigator.onLine) {
     try {
-      var headers = Object.assign({'Content-Type':'application/json'}, window.provaAuthHeaders ? window.provaAuthHeaders() : {});
-      var r = await provaFetch('/.netlify/functions/airtable', {
-        method: 'POST', headers: headers,
-        body: JSON.stringify(atPayload)
-      });
-      var d = await r.json();
-      if (r.ok && d.records && d.records[0]) {
-        _weiterMitErfolg();
-        return;
+      var mod = await import('/lib/supabase-client.js');
+      var sb = mod.supabase || (mod.getSupabase && mod.getSupabase());
+      var ad = await import('/lib/prova-supabase-adapters.js');
+      var wsId = await ad.getCurrentWorkspaceId();
+      if (sb && wsId) {
+        sbPayload.workspace_id = wsId;
+        var r = await sb.from('auftraege').insert(sbPayload).select('id').maybeSingle();
+        if (!r.error && r.data) {
+          _weiterMitErfolg();
+          return;
+        }
       }
-      // Server-Fehler → Queue
       showToast('Server nicht erreichbar — lokal gespeichert', 'warn', 5000);
     } catch(e) {
       // Netz-Fehler → Queue
     }
   }
 
-  // Offline / Fehler → Queue + trotzdem weiter
+  // Offline / Fehler → Queue als Supabase-Payload + trotzdem weiter
   try {
-    await queueAdd(atPayload);
+    await queueAdd({ _kind: 'supabase_insert', table: 'auftraege', row: sbPayload });
     showToast('Offline — wird automatisch synchronisiert wenn online', 'warn', 6000);
   } catch(qe) {
     showToast('Lokal gespeichert — bitte manuell erneut senden', 'warn', 5000);
@@ -690,7 +710,7 @@ function queueAdd(payload) {
     return new Promise(function(res, rej) {
       var tx = db.transaction(QUEUE_STR, 'readwrite');
       tx.objectStore(QUEUE_STR).add({
-        url:     '/.netlify/functions/airtable',
+        // MEGA⁷⁵-F-Batch2: payload trägt jetzt _kind/table/row für Supabase-Insert
         payload: payload,
         ts:      Date.now()
       });
@@ -701,30 +721,69 @@ function queueAdd(payload) {
 }
 
 function queueFlush() {
-  queueDBOpen().then(function(db) {
+  queueDBOpen().then(async function(db) {
     var tx  = db.transaction(QUEUE_STR, 'readonly');
     var req = tx.objectStore(QUEUE_STR).getAll();
-    req.onsuccess = function(e) {
+    req.onsuccess = async function(e) {
       var alle = e.target.result || [];
       if (!alle.length) return;
-      alle.forEach(function(eintrag) {
-        var headers = Object.assign({'Content-Type':'application/json'}, window.provaAuthHeaders ? window.provaAuthHeaders() : {});
-        fetch(eintrag.url, {
-          method: 'POST',
-          headers: headers,
-          body: JSON.stringify(eintrag.payload)
-        }).then(function(r) {
-          if (r.ok) {
-            // Erfolgreich gesendet — aus Queue löschen
-            queueDBOpen().then(function(db2) {
-              db2.transaction(QUEUE_STR, 'readwrite').objectStore(QUEUE_STR).delete(eintrag.id);
-            });
-            showToast('Daten erfolgreich synchronisiert', 'ok', 4000);
+      try {
+        var mod = await import('/lib/supabase-client.js');
+        var sb = mod.supabase || (mod.getSupabase && mod.getSupabase());
+        if (!sb) return;
+        for (var i = 0; i < alle.length; i++) {
+          var eintrag = alle[i];
+          var p = eintrag.payload;
+          if (p && p._kind === 'supabase_insert' && p.table) {
+            try {
+              var r = await sb.from(p.table).insert(p.row || {});
+              if (!r.error) {
+                queueDBOpen().then(function(db2) {
+                  db2.transaction(QUEUE_STR, 'readwrite').objectStore(QUEUE_STR).delete(eintrag.id);
+                });
+                showToast('Daten erfolgreich synchronisiert', 'ok', 4000);
+              }
+            } catch(_) { /* noch kein Netz */ }
           }
-        }).catch(function() { /* noch kein Netz */ });
-      });
+        }
+      } catch(_) {}
     };
   }).catch(function() {});
+}
+
+// MEGA⁷⁶ Teil F: alte Airtable-Format-Einträge droppen.
+// Vor MEGA75-Batch2 hatten Queue-Einträge {url: '/.netlify/functions/airtable',
+// payload: {…Airtable-records…}}. Seit Batch2 nur noch
+// {payload: {_kind:'supabase_insert', table, row}}. Alte Format-Einträge
+// werden nach airtable.js → 410 nie wieder erfolgreich gesendet — droppen.
+function queueMigrateMega76() {
+  return queueDBOpen().then(function(db) {
+    return new Promise(function(res) {
+      var tx  = db.transaction(QUEUE_STR, 'readonly');
+      var req = tx.objectStore(QUEUE_STR).getAll();
+      req.onsuccess = function(e) {
+        var alle = e.target.result || [];
+        var obsolete = alle.filter(function(en) {
+          if (!en) return false;
+          if (en.url === '/.netlify/functions/airtable') return true;
+          var p = en.payload || {};
+          if (p.path && typeof p.path === 'string' && p.path.indexOf('/v0/app') === 0) return true;
+          if (p._kind === 'supabase_insert') return false;
+          // Unknown format → wahrscheinlich Legacy
+          return !p._kind;
+        });
+        if (!obsolete.length) { res(0); return; }
+        console.warn('[QUEUE] Lösche', obsolete.length, 'obsolete Airtable-Queue-Einträge (MEGA76)');
+        queueDBOpen().then(function(db2) {
+          var tx2 = db2.transaction(QUEUE_STR, 'readwrite');
+          var store = tx2.objectStore(QUEUE_STR);
+          obsolete.forEach(function(en) { store.delete(en.id); });
+          tx2.oncomplete = function() { res(obsolete.length); };
+        });
+      };
+      req.onerror = function() { res(0); };
+    });
+  }).catch(function() { return 0; });
 }
 
 function queueCount(callback) {
@@ -740,10 +799,12 @@ window.addEventListener('online', function() {
   setTimeout(queueFlush, 1500);
 });
 
-// Beim Laden prüfen ob Queue-Einträge vorhanden
+// Beim Laden prüfen ob Queue-Einträge vorhanden + MEGA⁷⁶ Migration
 window.addEventListener('DOMContentLoaded', function() {
   if (navigator.onLine) {
-    setTimeout(function() {
+    setTimeout(async function() {
+      // Erst alte Airtable-Format-Einträge purgen
+      try { await queueMigrateMega76(); } catch(_) {}
       queueCount(function(n) {
         if (n > 0) {
           showToast(n + ' gespeicherte Anfrage(n) werden jetzt synchronisiert…', 'warn', 4000);
@@ -772,11 +833,30 @@ async function fristAlsTermin(az, datum, schadensart, auftraggeber) {
     try { local = JSON.parse(localStorage.getItem('prova_termine') || '[]'); } catch(e) {}
     local.push(Object.assign({ id: 'frist_' + az.replace(/[^a-z0-9]/gi,'-'), src: 'auto' }, termin));
     localStorage.setItem('prova_termine', JSON.stringify(local));
-    var hdrs = Object.assign({'Content-Type':'application/json'}, window.provaAuthHeaders ? window.provaAuthHeaders() : {});
-    provaFetch('/.netlify/functions/airtable', {
-      method: 'POST', headers: hdrs,
-      body: JSON.stringify({ method: 'POST', path: '/v0/appJ7bLlAHZoxENWE/tblyMTTdtfGQjjmc2', payload: { records: [{ fields: termin }] } })
-    }).catch(function() {});
+    // MEGA⁷⁶ A.5: Abgabefrist gehört in fristen-Tabelle, NICHT termine.
+    // termin_typ-Enum kennt kein 'frist'. frist_typ='gutachten-erstattung'.
+    // auftrag_id via az-Lookup (Auftrag wurde vorher angelegt).
+    try {
+      var ad = await import('/lib/prova-supabase-adapters.js');
+      var sb = await ad.getSupabase();
+      var wsId = await ad.getCurrentWorkspaceId();
+      if (sb && wsId && az) {
+        var aRes = await sb.from('auftraege').select('id').eq('az', az).is('deleted_at', null).maybeSingle();
+        if (aRes.data && aRes.data.id) {
+          var sess = await sb.auth.getSession();
+          var userId = sess?.data?.session?.user?.id;
+          await sb.from('fristen').insert({
+            workspace_id:       wsId,
+            auftrag_id:         aRes.data.id,
+            frist_typ:          'gutachten-erstattung',
+            datum_soll:         termin.termin_datum,
+            status:             'offen',
+            notiz:              termin.notiz || 'Abgabefrist (auto-erzeugt aus Vor-Ort-Wizard)',
+            created_by_user_id: userId
+          });
+        }
+      }
+    } catch(_) {}
     showToast('Abgabefrist im Kalender gespeichert ✓', 'ok', 3000);
   } catch(e) {}
 }

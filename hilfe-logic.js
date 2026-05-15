@@ -50,19 +50,17 @@ window.sendeHilfeTicket = async function() {
   if (btn) { btn.disabled = true; btn.textContent = '⏳ Wird gesendet…'; }
   
   try {
-    await provaFetch('/.netlify/functions/airtable', {
-      method: 'POST', headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ method: 'POST',
-        path: '/v0/appJ7bLlAHZoxENWE/tblEb3A4dukGX8GFs',
-        payload: { fields: {
-          Betreff: betreff, Nachricht: nachricht,
-          'SV-Email': svEmail, Status: 'Offen',
-          Prioritaet: 'Normal', Paket: paket,
-          Seite: 'hilfe.html',
-          Datum: new Date().toISOString().slice(0,10)
-        }}
-      })
+    // MEGA⁷⁶ A.1: Schema-Fix → sendSupportTicket-Helper (titel/beschreibung/
+    // user_email, kategorie='hilfe-page', Audit-Trail automatisch).
+    var ad = await import('/lib/prova-supabase-adapters.js');
+    var res = await ad.sendSupportTicket({
+      titel:        betreff,
+      beschreibung: nachricht,
+      user_email:   svEmail,
+      kategorie:    'hilfe-page',
+      typ:          'frage'
     });
+    if (!res.ok) throw new Error(res.error || 'unknown');
     if(typeof showToast==='function') showToast('Ticket gesendet ✅ — Wir antworten innerhalb von 24h');
     // Felder leeren
     ['hilfe-betreff','hilfe-nachricht','ticket-betreff','ticket-text'].forEach(function(id) {

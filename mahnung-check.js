@@ -46,40 +46,27 @@
       cache = JSON.parse(localStorage.getItem(MAHN_CACHE_KEY) || '[]');
     } catch(e) {}
 
-    // Airtable im Hintergrund
+    // MEGA⁷⁵-F-Batch2 B9: Offene Rechnungen via Supabase dokumente.
     try {
-      var controller = new AbortController();
-      var tout = setTimeout(function() { controller.abort(); }, 6000);
-      var filter = 'AND({sv_email}="' + svEmail + '",OR({Status}="Offen",{Status}="1. Mahnung",{Status}="2. Mahnung",{Status}="Überfällig"))';
-      var path   = '/v0/' + AT_BASE + '/' + AT_RECHNUNGEN +
-                   '?filterByFormula=' + encodeURIComponent(filter) +
-                   '&maxRecords=100' +
-                   '&fields[]=Rechnungsnummer&fields[]=Auftraggeber_Name&fields[]=empfaenger_name' +
-                   '&fields[]=brutto_betrag_eur&fields[]=Betrag_Brutto' +
-                   '&fields[]=Rechnungsdatum&fields[]=rechnungsdatum' +
-                   '&fields[]=faellig_am&fields[]=Status';
-
-      var hdrs = Object.assign(
-        {'Content-Type': 'application/json'},
-        window.provaAuthHeaders ? window.provaAuthHeaders() : {}
-      );
-      var res  = await provaFetch('/.netlify/functions/airtable', {
-        method: 'POST', headers: hdrs, signal: controller.signal,
-        body: JSON.stringify({ method: 'GET', path: path })
-      });
-      clearTimeout(tout);
-      if (!res.ok) throw new Error('HTTP ' + res.status);
-      var data = await res.json();
-      var records = (data.records || []).map(function(r) {
-        var f = r.fields;
+      var ad = await import('/lib/prova-supabase-adapters.js');
+      var sb = await ad.getSupabase();
+      if (!sb) throw new Error('no-supabase');
+      var r = await sb.from('dokumente')
+        .select('id, doc_nummer, betrag_brutto, rechnungsdatum, faelligkeit, status, kontakt_id')
+        .in('typ', ['rechnung','rechnung_jveg','rechnung_stunden'])
+        .in('status', ['versendet','ueberfaellig'])
+        .is('deleted_at', null)
+        .limit(100);
+      if (r.error) throw new Error(r.error.message);
+      var records = (r.data || []).map(function(row) {
         return {
-          id:           r.id,
-          re_nr:        f.Rechnungsnummer || f.re_nr || '—',
-          auftraggeber: f.Auftraggeber_Name || f.empfaenger_name || '—',
-          betrag:       parseFloat(f.Betrag_Brutto || f.brutto_betrag_eur || 0),
-          datum:        f.Rechnungsdatum || f.rechnungsdatum || '',
-          faellig_am:   f.faellig_am || '',
-          status:       f.Status || 'Offen'
+          id:           row.id,
+          re_nr:        row.doc_nummer || '—',
+          auftraggeber: '—',  // kontakt-Lookup wäre extra Roundtrip
+          betrag:       parseFloat(row.betrag_brutto || 0),
+          datum:        row.rechnungsdatum || '',
+          faellig_am:   row.faelligkeit || '',
+          status:       row.status === 'ueberfaellig' ? 'Überfällig' : 'Offen'
         };
       });
       localStorage.setItem(MAHN_CACHE_KEY, JSON.stringify(records));

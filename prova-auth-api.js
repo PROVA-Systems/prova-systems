@@ -45,24 +45,7 @@
     var urlStr = String(url || '');
     var method = (options && options.method || 'GET').toUpperCase();
 
-    /* Nur GET-artige Airtable-Calls deduplizieren */
-    var isAirtableGet = urlStr.indexOf('/.netlify/functions/airtable') !== -1
-      && method === 'POST'; /* Airtable-Calls sind immer POST mit method:'GET' im Body */
-
-    if (isAirtableGet && options && options.body) {
-      try {
-        var b = JSON.parse(options.body);
-        if (b.method === 'GET') {
-          var dedupKey = b.path || urlStr;
-          if (_dedupMap[dedupKey]) return _dedupMap[dedupKey];
-          var promise = _originalFetch.apply(window, arguments);
-          _dedupMap[dedupKey] = promise;
-          promise.finally(function() { delete _dedupMap[dedupKey]; });
-          return promise;
-        }
-      } catch(e) {}
-    }
-    var urlStr = String(url || '');
+    // MEGA⁷⁶ C.2: Airtable-Dedup-Branch entfernt (kein Airtable mehr).
     if (urlStr.indexOf('/.netlify/functions/') !== -1) {
       var token = getToken();
       if (token) {
@@ -90,12 +73,17 @@
     return _originalFetch.apply(window, [url, options]);
   };
 
-  /* ── Convenience-Wrapper ── */
-  window.provaFetchAirtable = function (bodyObj) {
-    return provaFetch('/.netlify/functions/airtable', {
-      method:  'POST',
-      headers: window.provaAuthHeaders(),
-      body:    JSON.stringify(bodyObj)
+  /* ── MEGA⁷⁶ C.2: provaFetchAirtable → Deprecation-Stub ── */
+  var _airtableWarned = false;
+  window.provaFetchAirtable = function (_bodyObj) {
+    if (!_airtableWarned) {
+      _airtableWarned = true;
+      console.warn('[provaFetchAirtable] deprecated — migriere zu /lib/prova-supabase-adapters.js');
+    }
+    return Promise.resolve({
+      ok: false, status: 410,
+      json: function(){ return Promise.resolve({error:'airtable-deprecated', records: []}); },
+      text: function(){ return Promise.resolve('Airtable deprecated since MEGA76'); }
     });
   };
 

@@ -1026,27 +1026,30 @@ async function ladeBenachrichtigungen() {
   var lokal = [];
   try { lokal = JSON.parse(localStorage.getItem('prova_benachrichtigungen') || '[]'); } catch(e) {}
   
-  // Fälle mit offenen Aktionen aus Airtable
-  if (svEmail) {
-    try {
-      var filter = encodeURIComponent('AND({sv_email}="'+svEmail+'",OR({Status}="In Bearbeitung",{Status}="Offen"))');
-      var res = await provaFetch('/.netlify/functions/airtable', {
-        method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({method:'GET',
-          path:'/v0/appJ7bLlAHZoxENWE/tblSxV8bsXwd1pwa0?filterByFormula='+filter+'&maxRecords=20&fields[]=Aktenzeichen&fields[]=Status&fields[]=Schadensart&fields[]=Timestamp'})
-      });
-      var data = await res.json();
-      (data.records || []).forEach(function(r) {
-        lokal.push({
-          id: r.id, typ: 'fall', gelesen: false,
-          titel: 'Offener Fall: ' + (r.fields.Aktenzeichen || ''),
-          text: 'Status: ' + (r.fields.Status || '') + ' · ' + (r.fields.Schadensart || ''),
-          zeit: r.fields.Timestamp || new Date().toISOString(),
-          link: 'akte.html?az=' + encodeURIComponent(r.fields.Aktenzeichen || '')
+  // MEGA⁷⁶ D.4: Offene Fälle aus Supabase auftraege (status='aktiv', RLS-scoped).
+  try {
+    var ad = await import('/lib/prova-supabase-adapters.js');
+    var sb = await ad.getSupabase();
+    if (sb) {
+      var r = await sb.from('auftraege')
+        .select('id, az, status, schadensart_label, created_at')
+        .eq('status', 'aktiv')
+        .is('deleted_at', null)
+        .order('created_at', { ascending: false })
+        .limit(20);
+      if (!r.error && r.data) {
+        r.data.forEach(function(row) {
+          lokal.push({
+            id: row.id, typ: 'fall', gelesen: false,
+            titel: 'Offener Fall: ' + (row.az || ''),
+            text:  'Status: ' + (row.status || '') + ' · ' + (row.schadensart_label || ''),
+            zeit:  row.created_at || new Date().toISOString(),
+            link:  'akte.html?az=' + encodeURIComponent(row.az || '')
+          });
         });
-      });
-    } catch(e) {}
-  }
+      }
+    }
+  } catch(_) {}
   
   _alleNachrichten = lokal;
   renderBenachrichtigungen(_alleNachrichten);

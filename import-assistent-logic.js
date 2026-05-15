@@ -418,31 +418,33 @@ function importAlles() {
     var newK = Object.assign({id:genId(),erstellt:new Date().toISOString(),faelle_anzahl:0},r);
     vorhandene.unshift(newK);
     neuK++;
-    // Airtable-Sync
-    if (svEmail) {
-      provaFetch('/.netlify/functions/airtable', {
-        method: 'POST',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({
-          method: 'POST',
-          path: '/v0/' + AT_BASE_K + '/' + AT_KONTAKTE,
-          payload: { records: [{ fields: {
-            Name:           r.name || '',
-            Vorname:        r.vorname || '',
-            Typ:            r.typ || 'Sonstiges',
-            Firma:          r.firma || '',
-            Strasse:        r.strasse || '',
-            PLZ:            String(r.plz || ''),
-            Ort:            r.ort || '',
-            Telefon:        r.telefon || '',
-            Email:          r.email || '',
-            Notizen:        r.notizen || '',
-            Import_Quelle:  _selectedSw ? _selectedSw.id : 'Import',
-            sv_email:       svEmail
-          }}]}
-        })
-      }).catch(function(e){ console.warn('[Import] Kontakt Airtable sync:', e); });
-    }
+    // MEGA⁷⁶ A.3: Schema-Fix kontakte-Insert. name NOT NULL ohne Default.
+    // Spalten: vorname/nachname/firma/plz/ort/typ (kein adresse_*-Prefix
+    // außer adresse_strasse). typ via mapKontaktTyp().
+    (async function(){
+      try {
+        var ad = await import('/lib/prova-supabase-adapters.js');
+        var sb = await ad.getSupabase();
+        if (!sb) return;
+        var wsId = await ad.getCurrentWorkspaceId();
+        if (!wsId) return;
+        var fullName = [r.vorname, r.name].filter(Boolean).join(' ').trim() || r.firma || 'Unbekannt';
+        await sb.from('kontakte').insert({
+          workspace_id:    wsId,
+          name:            fullName,
+          vorname:         r.vorname || null,
+          nachname:        r.name || null,
+          firma:           r.firma || null,
+          typ:             ad.mapKontaktTyp(r.typ),
+          adresse_strasse: r.strasse || null,
+          plz:             r.plz ? String(r.plz) : null,
+          ort:             r.ort || null,
+          telefon:         r.telefon || null,
+          email:           r.email || null,
+          notizen:         r.notizen || null
+        });
+      } catch(e) { console.warn('[Import] Kontakt-Sync:', e && e.message); }
+    })();
   });
   localStorage.setItem('prova_kontakte',JSON.stringify(vorhandene));
   _result.kontakte=neuK;
@@ -484,44 +486,38 @@ function importAlles() {
   localStorage.setItem('prova_migration_done',new Date().toISOString());
   localStorage.setItem('prova_migration_sw',_selectedSw?_selectedSw.id:'');
 
-  // Airtable-Sync: Importierte Fälle nach Airtable schreiben
-  var svEmail = localStorage.getItem('prova_sv_email') || '';
-  var AT_BASE = 'appJ7bLlAHZoxENWE';
-  var AT_FAELLE = 'tblSxV8bsXwd1pwa0';
-  var faelleZuSync = _parsed.faelle.filter(function(r){return r._sel;}); // kein Limit mehr
-  if (svEmail && faelleZuSync.length) {
-    faelleZuSync.forEach(function(f) {
-      try {
-        // Duplikat-Check: Aktenzeichen bereits vorhanden?
-      var checkFilter = encodeURIComponent('AND({Aktenzeichen}="' + (f.aktenzeichen||'') + '",{sv_email}="' + svEmail + '")');
-      provaFetch('/.netlify/functions/airtable', {
-        method: 'POST',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({method:'GET', path:'/v0/'+AT_BASE+'/'+AT_FAELLE+'?filterByFormula='+checkFilter+'&maxRecords=1'})
-      }).then(function(r){return r.json();}).then(function(d){
-        if (d.records && d.records.length > 0) { console.log('[Import] Duplikat übersprungen:', f.aktenzeichen); return; }
-        // Kein Duplikat → schreiben
-        provaFetch('/.netlify/functions/airtable', {
-          method: 'POST',
-          headers: {'Content-Type':'application/json'},
-          body: JSON.stringify({
-            method: 'POST',
-            path: '/v0/' + AT_BASE + '/' + AT_FAELLE,
-            payload: { records: [{fields: {
-              Aktenzeichen: f.aktenzeichen || '',
-              Schadensart:  f.schadenart || '',
-              Status:       f.status || 'Archiviert',
-              Auftraggeber_Name: f.auftraggeber || '',
-              sv_email:     svEmail,
-              Timestamp:    f.schadensdatum || new Date().toISOString(),
-              Import_Quelle: _selectedSw ? _selectedSw.id : 'Import'
-            }}]}
-          })
-        }).catch(function(e){ console.warn('Airtable sync:', e); }); }).catch(function(){});
-      } catch(e){}
-    });
-    _result.faelle_synced = faelleZuSync.length;
-  }
+  // MEGA⁷⁵-F-Batch2 B4: Fälle-Import via Supabase auftraege (RLS scope'd).
+  // Duplikat-Check über az-Lookup. Inhalte ins details-jsonb wo nötig.
+  var faelleZuSync = _parsed.faelle.filter(function(r){return r._sel;});
+  (async function() {
+    try {
+      var ad = await import('/lib/prova-supabase-adapters.js');
+      var sb = await ad.getSupabase();
+      if (!sb) return;
+      var wsId = await ad.getCurrentWorkspaceId();
+      if (!wsId) return;
+      var synced = 0;
+      for (var i = 0; i < faelleZuSync.length; i++) {
+        var f = faelleZuSync[i];
+        try {
+          var dup = await sb.from('auftraege').select('id').eq('az', f.aktenzeichen || '').is('deleted_at', null).maybeSingle();
+          if (dup.data) continue;
+          var ins = await sb.from('auftraege').insert({
+            workspace_id:      wsId,
+            az:                f.aktenzeichen || '',
+            typ:               'schaden',
+            status:            f.status === 'Archiviert' ? 'abgeschlossen' : 'aktiv',
+            schadensart_label: f.schadenart || '',
+            schadensstichtag:  f.schadensdatum || null,
+            titel:             [f.schadenart, f.auftraggeber].filter(Boolean).join(' · '),
+            details:           { auftraggeber: { name: f.auftraggeber || '' }, import_quelle: _selectedSw ? _selectedSw.id : 'Import' }
+          });
+          if (!ins.error) synced++;
+        } catch(e) {}
+      }
+      _result.faelle_synced = synced;
+    } catch(e) { console.warn('[Import] Fälle-Sync:', e && e.message); }
+  })();
 
   goStep(4);
   renderErgebnis();

@@ -69,11 +69,24 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // 2. Whisper-API call
+    // MEGA⁸¹ D.2 — Sprache aus user_workflow_settings.diktat_sprache lesen.
+    // OpenAI Whisper erwartet ISO-639-1 ('de'), nicht regional ('de-DE'/'de-AT') →
+    // ersten Sub-Tag splitten. Fallback 'de'.
+    let whisperLang = 'de';
+    try {
+        const { data: ws } = await sb.from('user_workflow_settings')
+            .select('diktat_sprache')
+            .eq('user_id', ctx.user.id)
+            .maybeSingle();
+        const raw = (ws?.diktat_sprache || '').trim();
+        if (raw) whisperLang = raw.split('-')[0].toLowerCase();
+    } catch (_) { /* default 'de' */ }
+
     const filename = body.audio_storage_path.split('/').pop() || 'audio.opus';
     const form = new FormData();
     form.append('file', blob, filename);
     form.append('model', 'whisper-1');
-    form.append('language', 'de');
+    form.append('language', whisperLang);
     form.append('response_format', 'verbose_json');
 
     const t0 = Date.now();

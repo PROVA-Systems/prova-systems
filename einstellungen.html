@@ -257,7 +257,7 @@
           <span class="es-sidebar-icon">🔔</span> Benachrichtigungen
         </div>
         <div class="es-sidebar-item" data-section="integrationen" onclick="wechsleSektion('integrationen',this)">
-          <span class="es-sidebar-icon">🔗</span> Integrationen
+          <span class="es-sidebar-icon">📤</span> Export & Import
         </div>
         <div class="es-sidebar-item" data-section="datenschutz" onclick="wechsleSektion('datenschutz',this)">
           <span class="es-sidebar-icon">🔒</span> Datenschutz
@@ -386,46 +386,43 @@
               <div class="es-section-sub">PROVA KI, Spracherkennung und Lernmodus</div>
             </div>
           </div>
+          <!-- MEGA⁷⁷ C.1: KI-Settings entrümpelt. PROVA macht IMMER Top-Qualität —
+               "Schnell vs Präzise" und "Auto-Qualitätscheck" wurden entfernt.
+               4 echte Settings die ihre Wirkung in lib/prova-ki-settings.js
+               und der ki-proxy-Edge-Function tatsächlich entfalten. -->
           <div class="es-zeile">
             <div class="es-zeile-info">
               <div class="es-zeile-label">Diktat-Sprache</div>
-              <div class="es-zeile-sub">Sprache für die Whisper-Spracherkennung</div>
+              <div class="es-zeile-sub">Whisper-Spracherkennung — Default Deutsch.</div>
             </div>
-            <select class="es-select" id="es-diktat-sprache" onchange="saveSelect('diktat_sprache', this.value)">
+            <select class="es-select" id="es-diktat-sprache" onchange="provaSaveWorkflowField('diktat_sprache', this.value)">
               <option value="de-DE">🇩🇪 Deutsch (Deutschland)</option>
               <option value="de-AT">🇦🇹 Österreichisch</option>
               <option value="de-CH">🇨🇭 Schweizer Deutsch</option>
-              <option value="en-US">🇺🇸 Englisch (USA)</option>
-              <option value="en-GB">🇬🇧 Englisch (UK)</option>
             </select>
           </div>
           <div class="es-zeile">
-            <div class="es-zeile-info"><div class="es-zeile-label">Auto-Qualitätscheck</div><div class="es-zeile-sub">Score automatisch nach 3s Schreibpause berechnen</div></div>
-            <label class="es-toggle"><input type="checkbox" id="es-auto-quality" checked onchange="saveToggle('auto_quality', this.checked)" /><span class="es-toggle-slider"></span></label>
+            <div class="es-zeile-info">
+              <div class="es-zeile-label">Inline KI-Vorschläge</div>
+              <div class="es-zeile-sub">An: Editor zeigt automatische KI-Vorschläge. Aus: nur auf Slash-Befehl.</div>
+            </div>
+            <label class="es-toggle"><input type="checkbox" id="es-inline-suggestions" checked onchange="provaSaveWorkflowField('inline_ki_suggestions_enabled', this.checked)" /><span class="es-toggle-slider"></span></label>
           </div>
           <div class="es-zeile">
-            <div class="es-zeile-info"><div class="es-zeile-label">KI-Analyse-Modus</div><div class="es-zeile-sub">Schnell = kürzere Wartezeit · Präzise = ausführlichere Analyse</div></div>
-            <select class="es-select" id="es-ki-modell" onchange="saveSelect('ki_modell', this.value)">
-              <option value="schnell">⚡ Schnell (Standard)</option>
-              <option value="praezise">🎯 Präzise</option>
-            </select>
-          </div>
-          <div class="es-zeile">
-            <div class="es-zeile-info"><div class="es-zeile-label">KI-Lernmodus</div><div class="es-zeile-sub">KI lernt aus Diktat-Korrekturen automatisch</div></div>
-            <label class="es-toggle"><input type="checkbox" id="es-lernmodus" checked onchange="saveToggle('lernmodus', this.checked)" /><span class="es-toggle-slider"></span></label>
-          </div>
-          <div class="es-zeile">
-            <div class="es-zeile-info"><div class="es-zeile-label">Inline KI-Vorschläge</div><div class="es-zeile-sub">Verbesserungsvorschläge direkt im Text-Editor</div></div>
-            <label class="es-toggle"><input type="checkbox" id="es-inline-vorschlaege" checked onchange="saveToggle('inline_vorschlaege', this.checked)" /><span class="es-toggle-slider"></span></label>
+            <div class="es-zeile-info">
+              <div class="es-zeile-label">KI-Lernpool-Einwilligung</div>
+              <div class="es-zeile-sub">Erlauben Sie, dass anonymisierte „Andere Ursache"-Einträge aus Ihren Gutachten in den globalen Lernpool fließen, damit zukünftige KI-Vorschläge präziser werden. DSGVO: jederzeit widerrufbar. Default: aus.</div>
+            </div>
+            <label class="es-toggle"><input type="checkbox" id="es-lernpool-einwilligung" onchange="provaSaveWorkflowField('ki_lernpool_einwilligung', this.checked)" /><span class="es-toggle-slider"></span></label>
           </div>
           <div class="es-zeile vertikal">
             <div class="es-zeile-info">
               <div class="es-zeile-label">Persönlicher KI-Kontext</div>
-              <div class="es-zeile-sub">Wird jedem KI-Aufruf beigefügt (Spezialgebiet, bevorzugte Normen)</div>
+              <div class="es-zeile-sub">Wird jedem KI-Aufruf als Spezialisierungs-Hinweis beigefügt. Halluzinations-Verbot und Konjunktiv-II-Pflicht bleiben unberührt.</div>
             </div>
             <textarea class="es-input" id="es-ki-kontext" rows="3"
               placeholder="z.B. Spezialisierung: Feuchte- und Schimmelschäden. Bevorzugte Normen: DIN 4108, WTA-Merkblätter."
-              oninput="markiereGeaendert()" style="resize:vertical;min-height:70px"></textarea>
+              onblur="provaSaveWorkflowField('persoenlicher_ki_kontext', this.value)" style="resize:vertical;min-height:70px"></textarea>
           </div>
           <div class="es-zeile">
             <div class="es-zeile-info"><div class="es-zeile-label">KI-Lernpool verwalten</div><div class="es-zeile-sub">Gelernte Vokabeln, Korrekturen und Spracherkennung-Prompt</div></div>
@@ -551,60 +548,52 @@
           }
         </style>
 
-        <!-- BENACHRICHTIGUNGEN -->
-        <section class="es-section" id="es-sec-benachrichtigungen">
+        <!-- BENACHRICHTIGUNGEN (MEGA⁷⁷ C.2: "In Vorbereitung" — ehrlicher Status) -->
+        <section class="es-section" id="es-sec-benachrichtigungen" style="opacity:.92;">
           <div class="es-section-header">
             <span class="es-section-icon">🔔</span>
             <div class="es-section-info">
-              <div class="es-section-title">Benachrichtigungen</div>
-              <div class="es-section-sub">Push und In-App Einstellungen</div>
+              <div class="es-section-title">Benachrichtigungen · In Vorbereitung</div>
+              <div class="es-section-sub">Push- und Email-Benachrichtigungen werden in der nächsten Sprint-Welle freigeschaltet. Die hier gewählten Einstellungen werden bereits in <code>users.notification_settings</code> gespeichert und sind bei Aktivierung sofort wirksam.</div>
             </div>
           </div>
           <div class="es-zeile">
-            <div class="es-zeile-info"><div class="es-zeile-label">Fristen-Alarme</div><div class="es-zeile-sub">Push bei Fristen in 7, 3 und 1 Tag(en)</div></div>
-            <label class="es-toggle"><input type="checkbox" id="es-bn-fristen" checked onchange="saveToggle('bn_fristen', this.checked)" /><span class="es-toggle-slider"></span></label>
+            <div class="es-zeile-info"><div class="es-zeile-label">Fristen-Alarme <span style="font-size:10px;padding:1px 6px;border-radius:3px;background:rgba(245,158,11,.18);color:#f59e0b;margin-left:6px;">⏳ In Vorbereitung</span></div><div class="es-zeile-sub">Push bei Fristen in 7, 3 und 1 Tag(en)</div></div>
+            <label class="es-toggle"><input type="checkbox" id="es-bn-fristen" checked onchange="provaSaveNotifField('fristen_alarm_enabled', this.checked)" /><span class="es-toggle-slider"></span></label>
           </div>
           <div class="es-zeile">
-            <div class="es-zeile-info"><div class="es-zeile-label">Zahlungs-Erinnerungen</div><div class="es-zeile-sub">Bei überfälligen Rechnungen</div></div>
-            <label class="es-toggle"><input type="checkbox" id="es-bn-zahlung" checked onchange="saveToggle('bn_zahlung', this.checked)" /><span class="es-toggle-slider"></span></label>
+            <div class="es-zeile-info"><div class="es-zeile-label">Zahlungs-Erinnerungen <span style="font-size:10px;padding:1px 6px;border-radius:3px;background:rgba(245,158,11,.18);color:#f59e0b;margin-left:6px;">⏳ In Vorbereitung</span></div><div class="es-zeile-sub">Bei überfälligen Rechnungen</div></div>
+            <label class="es-toggle"><input type="checkbox" id="es-bn-zahlung" checked onchange="provaSaveNotifField('zahlung_erinnerung_enabled', this.checked)" /><span class="es-toggle-slider"></span></label>
           </div>
           <div class="es-zeile">
-            <div class="es-zeile-info"><div class="es-zeile-label">Stille Stunden</div><div class="es-zeile-sub">Keine Push zwischen 22:00 und 07:00 Uhr</div></div>
-            <label class="es-toggle"><input type="checkbox" id="es-bn-stillezeit" checked onchange="saveToggle('bn_stillezeit', this.checked)" /><span class="es-toggle-slider"></span></label>
+            <div class="es-zeile-info"><div class="es-zeile-label">Termin-Erinnerungen <span style="font-size:10px;padding:1px 6px;border-radius:3px;background:rgba(245,158,11,.18);color:#f59e0b;margin-left:6px;">⏳ In Vorbereitung</span></div><div class="es-zeile-sub">Push bei Ortsterminen + Gerichtsterminen</div></div>
+            <label class="es-toggle"><input type="checkbox" id="es-bn-termine" checked onchange="provaSaveNotifField('termin_erinnerung_enabled', this.checked)" /><span class="es-toggle-slider"></span></label>
           </div>
           <div class="es-zeile">
-            <div class="es-zeile-info"><div class="es-zeile-label">Benachrichtigungs-Verlauf</div><div class="es-zeile-sub">Alle Push und In-App Nachrichten</div></div>
+            <div class="es-zeile-info"><div class="es-zeile-label">Stille Stunden <span style="font-size:10px;padding:1px 6px;border-radius:3px;background:rgba(245,158,11,.18);color:#f59e0b;margin-left:6px;">⏳ In Vorbereitung</span></div><div class="es-zeile-sub">Keine Push zwischen 22:00 und 07:00 Uhr</div></div>
+            <label class="es-toggle"><input type="checkbox" id="es-bn-stillezeit" onchange="provaSaveNotifField('quiet_hours_enabled', this.checked)" /><span class="es-toggle-slider"></span></label>
+          </div>
+          <div class="es-zeile">
+            <div class="es-zeile-info"><div class="es-zeile-label">Benachrichtigungs-Verlauf</div><div class="es-zeile-sub">In-App-Liste der erhaltenen Benachrichtigungen (bereits verfügbar)</div></div>
             <a href="benachrichtigungen.html" class="es-btn">🔔 Öffnen →</a>
           </div>
         </section>
 
-        <!-- INTEGRATIONEN -->
+        <!-- EXPORT & IMPORT (MEGA⁷⁷ C.3: Airtable/Make-Cards weg, Stripe in Paket-Tab) -->
         <section class="es-section" id="es-sec-integrationen">
           <div class="es-section-header">
-            <span class="es-section-icon">🔗</span>
+            <span class="es-section-icon">📤</span>
             <div class="es-section-info">
-              <div class="es-section-title">Integrationen</div>
-              <div class="es-section-sub">Externe Dienste und Verbindungen</div>
+              <div class="es-section-title">Export & Import</div>
+              <div class="es-section-sub">Daten in/aus PROVA bewegen — Kalender, Fristen, Akten.</div>
             </div>
           </div>
           <div class="es-zeile">
-            <div class="es-zeile-info"><div class="es-zeile-label">Airtable Datenbank</div><div class="es-zeile-sub">Base ID: appJ7bLlAHZoxENWE · Alle Gutachten und Fälle</div></div>
-            <span class="es-status-badge ok"><span class="es-status-dot"></span> Verbunden</span>
-          </div>
-          <div class="es-zeile">
-            <div class="es-zeile-info"><div class="es-zeile-label">Make.com Automationen</div><div class="es-zeile-sub">10 aktive Szenarien (S1–S10) · E-Mail, PDF, CRM</div></div>
-            <span class="es-status-badge ok"><span class="es-status-dot"></span> Aktiv</span>
-          </div>
-          <div class="es-zeile">
-            <div class="es-zeile-info"><div class="es-zeile-label">Stripe Zahlungen</div><div class="es-zeile-sub">Solo 179€/mo · Team 379€/mo · SEPA + Karte</div></div>
-            <span class="es-status-badge ok"><span class="es-status-dot"></span> Aktiv</span>
-          </div>
-          <div class="es-zeile">
-            <div class="es-zeile-info"><div class="es-zeile-label">Kalender Export</div><div class="es-zeile-sub">ICS-Dateien für Google / Outlook / Apple Calendar</div></div>
+            <div class="es-zeile-info"><div class="es-zeile-label">Fristen-Export (ICS)</div><div class="es-zeile-sub">ICS-Dateien für Google / Outlook / Apple Calendar — einmaliger Download aller aktiven Fristen.</div></div>
             <button class="es-btn" onclick="exportAlleFresten()">📅 Fristen exportieren</button>
           </div>
           <div class="es-zeile">
-            <div class="es-zeile-info"><div class="es-zeile-label">Daten importieren</div><div class="es-zeile-sub">Fälle aus Excel / CSV importieren</div></div>
+            <div class="es-zeile-info"><div class="es-zeile-label">Daten-Import</div><div class="es-zeile-sub">Bestehende Fälle/Kontakte aus CSV oder Excel importieren.</div></div>
             <a href="import-assistent.html" class="es-btn">⬆️ Import-Assistent</a>
           </div>
         </section>
@@ -1224,7 +1213,23 @@
     };
 
     document.addEventListener('DOMContentLoaded', function () {
-      ladeVorlagen();
+      // MEGA⁷⁵-F-Batch2 A3: Vorlagen lazy laden — nur wenn Container in
+      // Viewport scrollt ODER User auf Upload klickt. Spart unnötigen
+      // parse-docx-Roundtrip beim Profile-Load.
+      var listEl = document.getElementById('vorlagen-list');
+      if (listEl && 'IntersectionObserver' in window) {
+        var loaded = false;
+        var io = new IntersectionObserver(function(entries){
+          entries.forEach(function(en){
+            if (en.isIntersecting && !loaded) {
+              loaded = true;
+              io.disconnect();
+              ladeVorlagen();
+            }
+          });
+        }, { rootMargin: '100px' });
+        io.observe(listEl);
+      }
       var fileInput = document.getElementById('vorlage-file-input');
       if (fileInput) {
         fileInput.addEventListener('change', async function (e) {
