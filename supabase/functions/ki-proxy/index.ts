@@ -202,7 +202,31 @@ const handler = async (req: Request): Promise<Response> => {
     const { pseudo, map } = pseudonymize(body.prompt);
     const ctxBlock = body.context ? `\n\nKontext:\n${pseudonymize(body.context).pseudo}` : '';
     const fullPrompt = pseudo + ctxBlock;
-    const systemPrompt = buildSystemPrompt(purpose);
+    let systemPrompt = buildSystemPrompt(purpose);
+
+    // MEGA⁷⁹ A.3: Persönlicher KI-Kontext aus user_workflow_settings anhängen.
+    // Additiv + defensiv: bei keiner Row / leerem Kontext / Read-Fehler → kein Effekt.
+    let hasPersonalContext = false;
+    try {
+        const wsRes = await sb.from('user_workflow_settings')
+            .select('persoenlicher_ki_kontext')
+            .eq('user_id', ctx.user.id)
+            .maybeSingle();
+        const pkk = (wsRes.data && wsRes.data.persoenlicher_ki_kontext) || '';
+        if (pkk && pkk.trim().length > 10) {
+            hasPersonalContext = true;
+            systemPrompt += '\n\n## Spezialisierung des Sachverständigen\n\n'
+                + pkk.trim()
+                + '\n\nDiese Spezialisierung erweitert den Kontext und beeinflusst Vorschläge zu bevorzugten Normen, typischen Schadensbildern und Bewertungs-Patterns. Sie überstimmt NICHT:\n'
+                + '- die Konjunktiv-II-Pflicht bei Ursache-Hinweisen\n'
+                + '- das Halluzinations-Verbot\n'
+                + '- die Pseudonymisierungs-Regel\n'
+                + '- die Pflicht zur eigenhändigen fachlichen Würdigung durch den Sachverständigen\n\n'
+                + 'Bei Konflikten zwischen Spezialisierungs-Hinweis und Regeln: die Regeln gewinnen.';
+        }
+    } catch (_e) {
+        // Defensiv: KI-Call darf nie wegen Setting-Read-Fehler crashen.
+    }
 
     // OpenAI-Call
     const t0 = Date.now();
@@ -260,12 +284,17 @@ const handler = async (req: Request): Promise<Response> => {
     const { data: protokollIns } = await sb.from('ki_protokoll').insert(protokollRow).select('id').single();
     kiProtokollId = protokollIns?.id ?? null;
 
-    // Audit
+    // Audit (MEGA⁷⁹ A.3 + A.5: has_personal_context-Flag für Web-Claude-Verify)
     await logAuditEvent(sb, {
         action: status === 'erfolg' ? 'ki_request' : 'ki_request',
         entityTyp: 'ki_protokoll',
         entityId: kiProtokollId,
-        payload: { purpose, status, tokens: openaiResult.tokensIn + openaiResult.tokensOut },
+        payload: {
+            purpose, status,
+            tokens: openaiResult.tokensIn + openaiResult.tokensOut,
+            has_personal_context: hasPersonalContext,
+            model: apiName
+        },
         workspaceId,
         userId: ctx.user.id
     }, req);
