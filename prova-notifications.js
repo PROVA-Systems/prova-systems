@@ -1,479 +1,293 @@
 /* ════════════════════════════════════════════════════════════════════
-   PROVA — In-App Benachrichtigungen (Glocke)
-   S-SICHER P5b.E (Sprint 04b, 26.04.2026)
+   PROVA — In-App Benachrichtigungen (Glocke) v3 — MEGA⁸¹
+   File: prova-notifications.js
 
-   Lebt rechts oben im Header / direkt rechts vom Sidebar-Toggle.
-   Vier Kategorien:
-     ⚡ Aufgaben — SCHADENSFAELLE phase_aktuell = 4 + BRIEFE wartet
-     ⏰ Termine  — TERMINE termin_datum innerhalb 4h / 24h
-     ⚠ Achtung  — RECHNUNGEN ueberfaellig + WORKFLOW_ERRORS letzte 24h
-     📰 System   — AUDIT_TRAIL info/success letzte 24h
+   Lebt rechts oben im Header (.prova-notif-slot oder .topbar-right).
+   Quelle: Supabase RPCs (siehe supabase-migrations/57_mega81_notification_rpcs.sql)
+     - notifications_unread_count()
+     - notifications_list(limit, kategorie, only_unread)
+     - notifications_mark_read(id)
+     - notifications_mark_all_read()
 
-   Schema-Query first verifiziert (Regel 28):
-     SCHADENSFAELLE: phase_aktuell (number), Aktenzeichen, Auftraggeber_Name,
-                     phase_4_completed_at (dateTime), sv_email
-     TERMINE:        termin_datum (dateTime), termin_typ, objekt_adresse,
-                     aktenzeichen, sv_email
-     RECHNUNGEN:     status (lowercase), faellig_am (date), aktenzeichen,
-                     empfaenger_name, brutto_betrag_eur, sv_email
-     WORKFLOW_ERRORS: timestamp, workflow, sv_email, error_message
-     AUDIT_TRAIL:    typ, sv_email, timestamp, aktion
+   Kategorien (Live aus notification_kategorie-Enum):
+     aufgaben ⚡  termine ⏰  achtung ⚠  system 📰
 
-   Polling: 60s.
-   Read-State: localStorage 'prova_notif_read_ids_v2' (Set).
+   Polling: 60s · Cross-Tab-Update via storage-Event auf prova_notif_last_seen
 ═══════════════════════════════════════════════════════════════════ */
 (function () {
   'use strict';
 
-  var READ_KEY = 'prova_notif_read_ids_v2';
   var POLL_MS = 60000;
-  var BASE = 'appJ7bLlAHZoxENWE';
-  var TBL_FAELLE = 'tblSxV8bsXwd1pwa0';
-  var TBL_TERMINE = 'tblyMTTdtfGQjjmc2';
-  var TBL_RECHNUNGEN = 'tblF6MS7uiFAJDjiT';
-  var TBL_AUDIT = 'tblqQmMwJKxltXXXl';
-  var TBL_ERRORS = 'tblgECx0eyrpQTN8e';
+  var LIMIT = 30;
 
-  var _items = [];
+  var _root = null;
+  var _btn = null;
+  var _dropdown = null;
+  var _badge = null;
   var _pollTimer = null;
+  var _items = [];
+  var _unreadCount = 0;
+  var _open = false;
 
-  function getReadSet() {
-    try {
-      var raw = localStorage.getItem(READ_KEY);
-      if (!raw) return {};
-      var arr = JSON.parse(raw);
-      return Array.isArray(arr) ? arr.reduce(function (o, id) { o[id] = 1; return o; }, {}) : {};
-    } catch (e) { return {}; }
-  }
-  function markRead(ids) {
-    var s = getReadSet();
-    (Array.isArray(ids) ? ids : [ids]).forEach(function (id) { s[id] = 1; });
-    try { localStorage.setItem(READ_KEY, JSON.stringify(Object.keys(s))); } catch (e) {}
-  }
-  function markAllRead() {
-    markRead(_items.map(function (n) { return n.id; }));
-    renderBadge();
-    var panel = document.getElementById('prova-notif-panel');
-    if (panel && panel.style.display === 'block') renderPanel(panel);
-  }
-  window.provaNotifMarkAllRead = markAllRead;
-
-  function escHtml(s) {
-    if (s == null) return '';
-    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-  }
-
-  function fmtRelative(ts) {
-    if (!ts) return '';
-    var d = new Date(ts);
-    if (isNaN(d)) return '';
-    var diffMs = Date.now() - d.getTime();
-    var mins = Math.floor(diffMs / 60000);
-    if (mins < 1)  return 'gerade eben';
-    if (mins < 60) return 'vor ' + mins + ' Min';
-    var hours = Math.floor(mins / 60);
-    if (hours < 24) return 'vor ' + hours + ' Std';
-    var days = Math.floor(hours / 24);
-    return 'vor ' + days + ' Tag' + (days === 1 ? '' : 'en');
-  }
-
-  function fmtDateTime(iso) {
-    if (!iso) return '';
-    var d = new Date(iso);
-    if (isNaN(d)) return '';
-    return d.toLocaleString('de-DE', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' });
-  }
-
-  // MEGA⁷⁶ C.5: atQuery → No-Op-Stub. Notifications werden in MEGA77 auf
-  // Supabase audit_trail-Reads umgestellt (entity_typ='frist|termin|rechnung').
-  // Bis dahin liefert die Funktion empty.
-  async function atQuery(_path) {
-    return [];
-  }
-
-  function buildPath(table, formula, fields, sort, max) {
-    var params = new URLSearchParams();
-    if (formula) params.set('filterByFormula', formula);
-    (fields || []).forEach(function (f) { params.append('fields[]', f); });
-    if (sort) {
-      params.append('sort[0][field]', sort.field);
-      params.append('sort[0][direction]', sort.direction || 'desc');
-    }
-    if (max) params.set('maxRecords', String(max));
-    params.set('pageSize', '50');
-    return '/v0/' + BASE + '/' + table + '?' + params.toString();
-  }
-
-  async function loadAll() {
-    var svEmail = (localStorage.getItem('prova_sv_email') || '').toLowerCase();
-    if (!svEmail) { _items = []; return; }
-
-    var todayIso = new Date().toISOString();
-    var grenz14 = new Date(Date.now() - 14 * 86400000).toISOString().slice(0, 10);
-    var grenz24h = new Date(Date.now() - 24 * 3600000).toISOString();
-
-    var [faelle, termine, rechnungen, errors, audits] = await Promise.all([
-      // 1. Aufgaben: phase_aktuell = 4 (Freigabe wartet)
-      atQuery(buildPath(TBL_FAELLE,
-        "AND({sv_email}='" + svEmail + "', {phase_aktuell}=4)",
-        ['Aktenzeichen', 'Auftraggeber_Name', 'phase_4_completed_at', 'Schadensart'],
-        { field: 'phase_4_completed_at', direction: 'asc' },
-        20
-      )),
-      // 2. Termine: naechste 24h
-      atQuery(buildPath(TBL_TERMINE,
-        "AND({sv_email}='" + svEmail + "', IS_AFTER({termin_datum},NOW()), DATETIME_DIFF({termin_datum},NOW(),'hours')<24)",
-        ['termin_datum', 'termin_typ', 'objekt_adresse', 'aktenzeichen'],
-        { field: 'termin_datum', direction: 'asc' },
-        10
-      )),
-      // 3. Achtung — Rechnungen ueberfaellig
-      atQuery(buildPath(TBL_RECHNUNGEN,
-        "AND({sv_email}='" + svEmail + "', LOWER({status})='offen', IS_BEFORE({faellig_am},'" + grenz14 + "'))",
-        ['Rechnungsnummer', 'aktenzeichen', 'empfaenger_name', 'brutto_betrag_eur', 'faellig_am'],
-        { field: 'faellig_am', direction: 'asc' },
-        10
-      )),
-      // 4. Achtung — Workflow-Errors letzte 24h
-      atQuery(buildPath(TBL_ERRORS,
-        "AND({sv_email}='" + svEmail + "', IS_AFTER({timestamp},'" + grenz24h + "'), NOT({resolved}))",
-        ['workflow', 'error_message', 'fall_az', 'timestamp'],
-        { field: 'timestamp', direction: 'desc' },
-        5
-      )),
-      // 5. System — Audit-Trail letzte 24h
-      atQuery(buildPath(TBL_AUDIT,
-        "AND({sv_email}='" + svEmail + "', IS_AFTER({timestamp},'" + grenz24h + "'))",
-        ['typ', 'aktion', 'timestamp', 'aktenzeichen'],
-        { field: 'timestamp', direction: 'desc' },
-        10
-      ))
-    ]);
-
-    var items = [];
-
-    faelle.forEach(function (r) {
-      var f = r.fields || {};
-      items.push({
-        id: 'auf-' + r.id, kategorie: 'aufgaben',
-        title: 'Entwurf wartet auf Freigabe',
-        sub: (f.Aktenzeichen || '—') + (f.Auftraggeber_Name ? ' · ' + f.Auftraggeber_Name : ''),
-        meta: f.phase_4_completed_at ? fmtRelative(f.phase_4_completed_at).replace('vor ', 'Seit ') + ' wartend' : '',
-        cta: 'Prüfen',
-        url: 'freigabe.html?az=' + encodeURIComponent(f.Aktenzeichen || ''),
-        ts: f.phase_4_completed_at || ''
-      });
-    });
-
-    termine.forEach(function (r) {
-      var f = r.fields || {};
-      var diffMs = new Date(f.termin_datum).getTime() - Date.now();
-      var diffHours = Math.round(diffMs / 3600000);
-      items.push({
-        id: 'trm-' + r.id, kategorie: 'termine',
-        title: (f.termin_typ || 'Termin') + (diffHours <= 4 ? ' in ' + diffHours + ' Stunden' : ' morgen'),
-        sub: (f.aktenzeichen || '—') + (f.objekt_adresse ? ' · ' + f.objekt_adresse : ''),
-        meta: fmtDateTime(f.termin_datum),
-        cta: 'Termin ansehen',
-        url: 'termine.html',
-        ts: f.termin_datum || ''
-      });
-    });
-
-    rechnungen.forEach(function (r) {
-      var f = r.fields || {};
-      var tageOffen = f.faellig_am
-        ? Math.floor((Date.now() - new Date(f.faellig_am).getTime()) / 86400000)
-        : 0;
-      var betragStr = (typeof f.brutto_betrag_eur === 'number')
-        ? f.brutto_betrag_eur.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' })
-        : '';
-      items.push({
-        id: 'rech-' + r.id, kategorie: 'achtung',
-        title: 'Rechnung überfällig',
-        sub: (f.Rechnungsnummer || '—') + ' · ' + tageOffen + ' Tage über Frist',
-        meta: (f.empfaenger_name || '') + (betragStr ? ' · ' + betragStr : ''),
-        cta: 'Prüfen',
-        url: 'rechnungen.html?id=' + encodeURIComponent(r.id),
-        ts: f.faellig_am || ''
-      });
-    });
-
-    errors.forEach(function (r) {
-      var f = r.fields || {};
-      items.push({
-        id: 'err-' + r.id, kategorie: 'achtung',
-        title: 'Workflow-Fehler: ' + (f.workflow || 'unbekannt'),
-        sub: (f.fall_az || '—'),
-        meta: (f.error_message || '').slice(0, 60),
-        cta: 'Details',
-        url: 'einstellungen.html#workflow',
-        ts: f.timestamp || ''
-      });
-    });
-
-    audits.forEach(function (r) {
-      var f = r.fields || {};
-      var typ = String(f.typ || '').toLowerCase();
-      // Filter: nur info/success-Events; Rate-Limit-Hit/Auth-Required uebersprungen
-      if (typ === 'auth-required' || typ === 'auth-mismatch' || typ === 'rate-limit-hit' || typ === 'origin-block') return;
-      items.push({
-        id: 'aud-' + r.id, kategorie: 'system',
-        title: f.typ || 'System-Ereignis',
-        sub: f.aktion || '',
-        meta: fmtRelative(f.timestamp),
-        cta: '',
-        url: '',
-        ts: f.timestamp || ''
-      });
-    });
-
-    _items = items;
-  }
-
-  function getUnreadCount() {
-    var read = getReadSet();
-    return _items.filter(function (n) { return !read[n.id]; }).length;
-  }
-
-  function renderBadge() {
-    var b = document.getElementById('prova-notif-badge');
-    if (!b) return;
-    var n = getUnreadCount();
-    if (n > 0) {
-      b.style.display = 'inline-flex';
-      b.textContent = n > 99 ? '99+' : String(n);
-    } else {
-      b.style.display = 'none';
-    }
-  }
-
-  function groupByKategorie() {
-    var groups = { aufgaben: [], termine: [], achtung: [], system: [] };
-    _items.forEach(function (n) {
-      if (groups[n.kategorie]) groups[n.kategorie].push(n);
-    });
-    return groups;
-  }
-
-  var KATEGORIE_META = {
-    aufgaben: { icon: '⚡', label: 'Aufgaben', color: '#fcd34d' },
-    termine:  { icon: '⏰', label: 'Termine',  color: '#93c5fd' },
-    achtung:  { icon: '⚠',  label: 'Achtung',  color: '#f87171' },
-    system:   { icon: '📰', label: 'System',   color: '#a78bfa' }
+  var KAT_ICON = {
+    aufgaben: '⚡',
+    termine:  '⏰',
+    achtung:  '⚠',
+    system:   '📰'
+  };
+  var KAT_LABEL = {
+    aufgaben: 'Aufgaben',
+    termine:  'Termine',
+    achtung:  'Achtung',
+    system:   'System'
   };
 
-  function renderPanel(panel) {
-    var read = getReadSet();
-    var unread = getUnreadCount();
-    var total = _items.length;
-    var groups = groupByKategorie();
-
-    var html = ''
-      + '<div class="prova-notif-head">'
-      +   '<div class="prova-notif-title">Benachrichtigungen' + (total ? ' (' + total + ')' : '') + '</div>';
-    if (unread > 0) {
-      html += '<button type="button" class="prova-notif-mark-all" onclick="provaNotifMarkAllRead()">Alle ✓</button>';
-    }
-    html += '</div>';
-
-    if (total === 0) {
-      html += '<div class="prova-notif-empty">'
-        +   '<div class="prova-notif-empty-icon">✓</div>'
-        +   '<div class="prova-notif-empty-title">Keine neuen Benachrichtigungen</div>'
-        +   '<div class="prova-notif-empty-sub">Alles erledigt!</div>'
-        + '</div>';
-    } else {
-      Object.keys(KATEGORIE_META).forEach(function (k) {
-        var arr = groups[k];
-        if (!arr || !arr.length) return;
-        var meta = KATEGORIE_META[k];
-        html += '<div class="prova-notif-group">'
-          +   '<div class="prova-notif-group-head" style="color:' + meta.color + ';">'
-          +     meta.icon + ' ' + meta.label + ' (' + arr.length + ')'
-          +   '</div>';
-        arr.forEach(function (n) {
-          var isRead = !!read[n.id];
-          html += '<div class="prova-notif-item' + (isRead ? ' read' : '') + '" data-id="' + escHtml(n.id) + '"'
-            +    (n.url ? ' data-url="' + escHtml(n.url) + '"' : '') + '>'
-            +    '<div class="prova-notif-item-title">' + escHtml(n.title) + '</div>'
-            +    (n.sub ? '<div class="prova-notif-item-sub">' + escHtml(n.sub) + '</div>' : '')
-            +    (n.meta ? '<div class="prova-notif-item-meta">' + escHtml(n.meta) + '</div>' : '')
-            +    (n.cta && n.url ? '<a class="prova-notif-item-cta" href="' + escHtml(n.url) + '">' + escHtml(n.cta) + ' →</a>' : '')
-            +  '</div>';
-        });
-        html += '</div>';
-      });
-    }
-    html += '<div class="prova-notif-foot">'
-      +   '<a href="benachrichtigungen.html">Alle Benachrichtigungen →</a>'
-      + '</div>';
-
-    panel.innerHTML = html;
-
-    // Click-Handler fuer Items
-    panel.querySelectorAll('.prova-notif-item').forEach(function (el) {
-      el.addEventListener('click', function (e) {
-        var id = el.getAttribute('data-id');
-        var url = el.getAttribute('data-url');
-        markRead(id);
-        el.classList.add('read');
-        renderBadge();
-        if (url && !e.target.closest('.prova-notif-item-cta')) {
-          window.location.href = url;
-        }
-      });
+  function _esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function(c) {
+      return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c];
     });
   }
 
-  function injectCss() {
-    if (document.getElementById('prova-notif-css')) return;
-    var css = ''
-      /* P5b.X1.2: Default ist fixed top-right; wenn ein Topbar-Slot
-         (.prova-notif-slot oder .topbar-right) gefunden wird, switched
-         injectBell() auf inline-Mode (#prova-notif-wrap.in-topbar). */
-      + '#prova-notif-wrap{position:fixed;top:14px;right:32px;z-index:550;}'
-      + '#prova-notif-wrap.in-topbar{position:relative;top:auto;right:auto;display:inline-flex;}'
-      + '@media(max-width:768px){#prova-notif-wrap:not(.in-topbar){top:10px;right:14px;}}'
-      + '#prova-notif-bell{'
-      +   'position:relative;width:38px;height:38px;border-radius:10px;'
-      +   'background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);'
-      +   'color:var(--text2,#aab4cb);font-size:17px;cursor:pointer;'
-      +   'display:flex;align-items:center;justify-content:center;'
-      +   'transition:all .15s;font-family:inherit;'
-      + '}'
-      + '#prova-notif-bell:hover{background:rgba(255,255,255,.1);color:var(--text);}'
-      + '#prova-notif-badge{'
-      +   'position:absolute;top:3px;right:3px;min-width:16px;height:16px;'
-      +   'padding:0 4px;border-radius:999px;background:#ef4444;color:#fff;'
-      +   'font-size:9.5px;font-weight:800;line-height:16px;'
-      +   'display:none;align-items:center;justify-content:center;'
-      +   'box-shadow:0 0 0 2px var(--bg,#0b0d11);'
-      + '}'
-      + '#prova-notif-panel{'
-      +   'display:none;position:absolute;top:calc(100% + 8px);right:0;'
-      +   'width:min(380px,calc(100vw - 24px));max-height:min(75vh,540px);'
-      +   'overflow:auto;background:var(--bg2,#13161d);'
-      +   'border:1px solid var(--border2,rgba(255,255,255,.12));'
-      +   'border-radius:12px;box-shadow:0 16px 48px rgba(0,0,0,.55);'
-      +   'font-family:inherit;'
-      + '}'
-      + '.prova-notif-head{'
-      +   'display:flex;align-items:center;justify-content:space-between;'
-      +   'padding:12px 14px;border-bottom:1px solid var(--border,rgba(255,255,255,.05));'
-      +   'position:sticky;top:0;background:var(--bg2);z-index:1;'
-      + '}'
-      + '.prova-notif-title{font-size:13px;font-weight:800;color:var(--text);}'
-      + '.prova-notif-mark-all{'
-      +   'background:rgba(79,142,247,.1);border:none;color:var(--accent);'
-      +   'font-size:11px;font-weight:700;padding:4px 10px;border-radius:6px;'
-      +   'cursor:pointer;font-family:inherit;'
-      + '}'
-      + '.prova-notif-mark-all:hover{background:rgba(79,142,247,.18);}'
-      + '.prova-notif-group{padding:6px 0;}'
-      + '.prova-notif-group:not(:last-child){border-bottom:1px solid var(--border,rgba(255,255,255,.04));}'
-      + '.prova-notif-group-head{'
-      +   'padding:8px 14px 4px;font-size:10px;font-weight:800;'
-      +   'text-transform:uppercase;letter-spacing:.08em;'
-      + '}'
-      + '.prova-notif-item{'
-      +   'padding:8px 14px 10px;cursor:pointer;'
-      +   'border-left:2px solid var(--accent,#4f8ef7);margin:2px 0;'
-      +   'background:rgba(79,142,247,.04);transition:background .15s;'
-      + '}'
-      + '.prova-notif-item.read{border-left-color:transparent;background:transparent;opacity:.65;}'
-      + '.prova-notif-item:hover{background:rgba(79,142,247,.1);}'
-      + '.prova-notif-item-title{font-size:12.5px;font-weight:700;color:var(--text);margin-bottom:2px;}'
-      + '.prova-notif-item-sub{font-size:11.5px;color:var(--text2,#aab4cb);margin-bottom:2px;}'
-      + '.prova-notif-item-meta{font-size:10.5px;color:var(--text3,#6b7280);}'
-      + '.prova-notif-item-cta{'
-      +   'display:inline-block;margin-top:6px;font-size:11px;font-weight:700;'
-      +   'color:var(--accent);text-decoration:none;'
-      + '}'
-      + '.prova-notif-item-cta:hover{text-decoration:underline;}'
-      + '.prova-notif-empty{padding:30px 18px;text-align:center;}'
-      + '.prova-notif-empty-icon{font-size:32px;color:var(--success,#10b981);margin-bottom:8px;}'
-      + '.prova-notif-empty-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px;}'
-      + '.prova-notif-empty-sub{font-size:11.5px;color:var(--text3);}'
-      + '.prova-notif-foot{'
-      +   'padding:10px 14px;border-top:1px solid var(--border,rgba(255,255,255,.05));'
-      +   'text-align:center;'
-      + '}'
-      + '.prova-notif-foot a{font-size:11.5px;color:var(--accent);text-decoration:none;font-weight:600;}'
-      + '.prova-notif-foot a:hover{text-decoration:underline;}'
-      + '.prova-notif-pulse{animation:provaNotifPulse 2s ease-in-out infinite;}'
-      + '@keyframes provaNotifPulse{0%,100%{transform:scale(1);}50%{transform:scale(1.06);}}'
-    ;
-    var style = document.createElement('style');
-    style.id = 'prova-notif-css';
-    style.textContent = css;
-    document.head.appendChild(style);
+  function _relativeTime(iso) {
+    if (!iso) return '';
+    var d = new Date(iso); if (isNaN(d.getTime())) return '';
+    var diff = Date.now() - d.getTime();
+    var s = Math.floor(diff / 1000);
+    if (s < 60) return 'gerade eben';
+    var m = Math.floor(s / 60); if (m < 60) return 'vor ' + m + ' Min';
+    var h = Math.floor(m / 60); if (h < 24) return 'vor ' + h + ' Std';
+    var t = Math.floor(h / 24); if (t < 7)  return 'vor ' + t + ' Tag' + (t === 1 ? '' : 'en');
+    return d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' });
   }
 
-  function injectBell() {
-    if (document.getElementById('prova-notif-wrap')) return;
-    injectCss();
+  async function _getSb() {
+    if (_getSb._c) return _getSb._c;
+    try {
+      var mod = await import('/lib/supabase-client.js');
+      _getSb._c = mod.supabase || (mod.getSupabase && mod.getSupabase());
+      return _getSb._c;
+    } catch (e) {
+      console.warn('[notif] supabase-client import failed:', e.message);
+      return null;
+    }
+  }
 
-    // P5b.X1.2: Bevorzugter Mount-Point ist .prova-notif-slot, dann .topbar-right.
-    // Nur wenn keiner gefunden wird, faellt die Glocke auf fixed top-right zurück.
+  function _injectStyle() {
+    if (document.getElementById('prova-notif-bell-style')) return;
+    var css = ''
+      + '.pn-bell-wrap{position:relative;display:inline-flex;}'
+      + '.pn-bell-btn{position:relative;display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;background:none;border:1px solid transparent;border-radius:8px;cursor:pointer;color:var(--text2,#cbd5e1);font-size:18px;transition:background .12s,border-color .12s;}'
+      + '.pn-bell-btn:hover{background:rgba(255,255,255,.05);border-color:var(--border2,rgba(255,255,255,.11));color:var(--text,#eaecf4);}'
+      + '.pn-bell-btn[aria-expanded="true"]{background:rgba(79,142,247,.12);border-color:rgba(79,142,247,.3);color:var(--accent,#4f8ef7);}'
+      + '.pn-bell-badge{position:absolute;top:4px;right:4px;min-width:16px;height:16px;border-radius:8px;background:#ef4444;color:#fff;font-size:10px;font-weight:700;line-height:16px;text-align:center;padding:0 5px;display:none;}'
+      + '.pn-bell-badge.is-active{display:inline-block;}'
+      + '.pn-dropdown{position:absolute;top:46px;right:0;width:min(380px,calc(100vw - 24px));max-height:520px;background:var(--surface,#1c2130);border:1px solid var(--border2,rgba(255,255,255,.11));border-radius:12px;box-shadow:0 8px 28px rgba(0,0,0,.4);z-index:200;display:none;flex-direction:column;overflow:hidden;}'
+      + '.pn-dropdown.is-open{display:flex;}'
+      + '.pn-head{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--border,rgba(255,255,255,.06));}'
+      + '.pn-head-title{font-size:13px;font-weight:700;color:var(--text,#eaecf4);}'
+      + '.pn-head-action{font-size:11px;color:var(--accent,#4f8ef7);background:none;border:none;cursor:pointer;font-weight:600;padding:4px 6px;border-radius:6px;}'
+      + '.pn-head-action:hover{background:rgba(79,142,247,.1);}'
+      + '.pn-head-action:disabled{color:var(--text3,#64748b);cursor:default;background:none;}'
+      + '.pn-list{flex:1;overflow-y:auto;}'
+      + '.pn-empty{padding:32px 16px;text-align:center;color:var(--text3,#64748b);font-size:12px;}'
+      + '.pn-row{display:flex;gap:10px;padding:12px 14px;border-bottom:1px solid var(--border,rgba(255,255,255,.06));cursor:pointer;transition:background .1s;text-decoration:none;color:inherit;}'
+      + '.pn-row:hover{background:rgba(255,255,255,.03);}'
+      + '.pn-row.is-unread{background:rgba(79,142,247,.04);}'
+      + '.pn-row-icon{font-size:18px;width:24px;text-align:center;flex-shrink:0;line-height:1.2;}'
+      + '.pn-row-body{flex:1;min-width:0;}'
+      + '.pn-row-titel{font-size:13px;font-weight:600;color:var(--text,#eaecf4);margin-bottom:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}'
+      + '.pn-row-sub{font-size:11px;color:var(--text2,#cbd5e1);line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}'
+      + '.pn-row-meta{font-size:10px;color:var(--text3,#64748b);margin-top:4px;display:flex;gap:8px;align-items:center;}'
+      + '.pn-foot{padding:8px 14px;border-top:1px solid var(--border,rgba(255,255,255,.06));text-align:center;}'
+      + '.pn-foot a{font-size:11px;color:var(--text2,#cbd5e1);text-decoration:none;}'
+      + '.pn-foot a:hover{color:var(--accent,#4f8ef7);}';
+    var st = document.createElement('style');
+    st.id = 'prova-notif-bell-style';
+    st.textContent = css;
+    document.head.appendChild(st);
+  }
+
+  function _ensureMounted() {
+    if (_root && document.body.contains(_root)) return _root;
     var slot = document.querySelector('.prova-notif-slot[data-prova-notif]')
             || document.querySelector('.topbar-right');
-    var wrap = document.createElement('div');
-    wrap.id = 'prova-notif-wrap';
-    if (slot) wrap.classList.add('in-topbar');
-    wrap.innerHTML = ''
-      + '<button type="button" id="prova-notif-bell" aria-label="Benachrichtigungen">'
-      +   '🔔<span id="prova-notif-badge"></span>'
+    if (!slot) return null;
+    _injectStyle();
+
+    _root = document.createElement('div');
+    _root.className = 'pn-bell-wrap';
+    _root.innerHTML = ''
+      + '<button class="pn-bell-btn" aria-label="Benachrichtigungen" aria-expanded="false" type="button">'
+      + '🔔<span class="pn-bell-badge" aria-hidden="true"></span>'
       + '</button>'
-      + '<div id="prova-notif-panel" role="dialog" aria-label="Benachrichtigungen"></div>';
-    if (slot) {
-      // Ins erste matchende Slot einfuegen (oder in topbar-right erste Position)
-      if (slot.classList.contains('prova-notif-slot')) {
-        slot.appendChild(wrap);
-      } else {
-        slot.insertBefore(wrap, slot.firstChild);
-      }
+      + '<div class="pn-dropdown" role="dialog" aria-label="Benachrichtigungen">'
+      + '  <div class="pn-head">'
+      + '    <span class="pn-head-title">Benachrichtigungen</span>'
+      + '    <button type="button" class="pn-head-action" data-mark-all>Alle als gelesen</button>'
+      + '  </div>'
+      + '  <div class="pn-list" data-list></div>'
+      + '  <div class="pn-foot"><a href="/benachrichtigungen.html">Vollständiges Protokoll →</a></div>'
+      + '</div>';
+
+    if (slot.classList.contains('prova-notif-slot')) {
+      slot.appendChild(_root);
     } else {
-      document.body.appendChild(wrap);
+      slot.insertBefore(_root, slot.firstChild);
     }
 
-    var btn = document.getElementById('prova-notif-bell');
-    var panel = document.getElementById('prova-notif-panel');
+    _btn = _root.querySelector('.pn-bell-btn');
+    _badge = _root.querySelector('.pn-bell-badge');
+    _dropdown = _root.querySelector('.pn-dropdown');
+    var markAllBtn = _root.querySelector('[data-mark-all]');
 
-    btn.addEventListener('click', function (e) {
+    _btn.addEventListener('click', function (e) {
       e.stopPropagation();
-      var open = panel.style.display !== 'block';
-      panel.style.display = open ? 'block' : 'none';
-      if (open) renderPanel(panel);
+      _open ? _close() : _openDropdown();
+    });
+    markAllBtn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      _markAllRead();
     });
     document.addEventListener('click', function (e) {
-      if (!wrap.contains(e.target)) panel.style.display = 'none';
+      if (_open && _root && !_root.contains(e.target)) _close();
     });
-    panel.addEventListener('click', function (e) { e.stopPropagation(); });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && _open) _close();
+    });
+    return _root;
   }
 
-  async function refresh() {
-    await loadAll();
-    renderBadge();
-    var panel = document.getElementById('prova-notif-panel');
-    if (panel && panel.style.display === 'block') renderPanel(panel);
+  function _renderBadge() {
+    if (!_badge) return;
+    if (_unreadCount > 0) {
+      _badge.textContent = _unreadCount > 99 ? '99+' : String(_unreadCount);
+      _badge.classList.add('is-active');
+    } else {
+      _badge.classList.remove('is-active');
+    }
   }
 
-  function init() {
-    if (!localStorage.getItem('prova_sv_email')) return; // nicht eingeloggt
-    // P5b.X1.6: Auf benachrichtigungen.html zeigt der Hauptbereich die volle
-    // Liste — die Glocke wird daneben redundant. Skip.
-    var path = (window.location && window.location.pathname || '').toLowerCase();
-    if (path.endsWith('/benachrichtigungen.html') || path.endsWith('benachrichtigungen.html')) return;
-    injectBell();
-    // Erste Last verzoegert (sidebar-counts haben Prio in den ersten 800ms)
-    setTimeout(refresh, 1500);
+  function _renderList() {
+    if (!_dropdown) return;
+    var list = _dropdown.querySelector('[data-list]');
+    if (!_items.length) {
+      list.innerHTML = '<div class="pn-empty">Keine Benachrichtigungen ✓</div>';
+      return;
+    }
+    list.innerHTML = _items.map(function (n) {
+      var unread = !n.read_at;
+      var kat = (n.kategorie || 'system');
+      var icon = KAT_ICON[kat] || '·';
+      var href = n.link_url || '#';
+      return ''
+        + '<a class="pn-row' + (unread ? ' is-unread' : '') + '" href="' + _esc(href) + '" data-id="' + _esc(n.id) + '">'
+        + '  <span class="pn-row-icon">' + icon + '</span>'
+        + '  <div class="pn-row-body">'
+        + '    <div class="pn-row-titel">' + _esc(n.titel) + '</div>'
+        + (n.body ? '    <div class="pn-row-sub">' + _esc(n.body) + '</div>' : '')
+        + '    <div class="pn-row-meta">'
+        + '      <span>' + _esc(KAT_LABEL[kat] || kat) + '</span>'
+        + '      <span>·</span>'
+        + '      <span>' + _esc(_relativeTime(n.created_at)) + '</span>'
+        + '    </div>'
+        + '  </div>'
+        + '</a>';
+    }).join('');
+    list.querySelectorAll('.pn-row').forEach(function (row) {
+      row.addEventListener('click', function (e) {
+        var id = row.getAttribute('data-id');
+        _markRead(id);
+        // Navigation läuft via href — kein preventDefault
+      });
+    });
+  }
+
+  async function _refresh() {
+    var sb = await _getSb();
+    if (!sb) return;
+    try {
+      var [cntRes, listRes] = await Promise.all([
+        sb.rpc('notifications_unread_count'),
+        sb.rpc('notifications_list', { p_limit: LIMIT, p_kategorie: null, p_only_unread: false })
+      ]);
+      if (cntRes.error) {
+        console.warn('[notif] unread_count error:', cntRes.error.message);
+      } else {
+        _unreadCount = Number(cntRes.data) || 0;
+      }
+      if (listRes.error) {
+        console.warn('[notif] list error:', listRes.error.message);
+      } else {
+        _items = listRes.data || [];
+      }
+      _renderBadge();
+      if (_open) _renderList();
+    } catch (e) {
+      console.warn('[notif] refresh failed:', e.message);
+    }
+  }
+
+  async function _markRead(id) {
+    if (!id) return;
+    var item = _items.find(function (i) { return i.id === id; });
+    if (item && !item.read_at) {
+      item.read_at = new Date().toISOString();
+      _unreadCount = Math.max(0, _unreadCount - 1);
+      _renderBadge();
+      _renderList();
+    }
+    var sb = await _getSb();
+    if (!sb) return;
+    try { await sb.rpc('notifications_mark_read', { p_id: id }); } catch(_) {}
+  }
+
+  async function _markAllRead() {
+    _items.forEach(function (i) { if (!i.read_at) i.read_at = new Date().toISOString(); });
+    _unreadCount = 0;
+    _renderBadge();
+    _renderList();
+    var sb = await _getSb();
+    if (!sb) return;
+    try { await sb.rpc('notifications_mark_all_read'); } catch(_) {}
+  }
+
+  function _openDropdown() {
+    if (!_dropdown) return;
+    _open = true;
+    _dropdown.classList.add('is-open');
+    _btn.setAttribute('aria-expanded', 'true');
+    _renderList();
+    _refresh();
+  }
+
+  function _close() {
+    if (!_dropdown) return;
+    _open = false;
+    _dropdown.classList.remove('is-open');
+    _btn.setAttribute('aria-expanded', 'false');
+  }
+
+  function _startPoll() {
     if (_pollTimer) clearInterval(_pollTimer);
-    _pollTimer = setInterval(refresh, POLL_MS);
+    _pollTimer = setInterval(_refresh, POLL_MS);
   }
 
-  window.provaNotifRefresh = refresh;
+  async function init() {
+    if (!_ensureMounted()) return;
+    await _refresh();
+    _startPoll();
+  }
 
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
-  else init();
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+
+  window.ProvaNotifications = {
+    refresh: _refresh,
+    open:    _openDropdown,
+    close:   _close,
+    markAllRead: _markAllRead
+  };
 })();
