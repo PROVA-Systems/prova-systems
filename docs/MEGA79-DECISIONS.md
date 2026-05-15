@@ -83,7 +83,23 @@ supabase functions deploy ki-proxy --project-ref cngteblrbpwsyypexjrv
 
 ---
 
-## Phase E — pg_cron + Fristen-Erinnerungen ✅ Code-fertig
+## Phase E — pg_cron + Fristen-Erinnerungen ✅ Code-fertig (Web-Claude-Self-Audit-Patch angewendet)
+
+**Web-Claude-Self-Audit-Patch 2026-05-15** brachte 5 echte Korrekturen vs. meiner Erstversion:
+
+| # | Bug | Fix |
+|---|---|---|
+| 1 | `CREATE EXTENSION pg_cron` unnötig | pg_cron 1.6.4 ist schon aktiv — entfernt |
+| 2 | `JOIN workspace_memberships ON rolle='owner'` zu restriktiv | `JOIN ... ON is_active=true` (alle aktiven Members benachrichtigen) |
+| 3 | Frist-Update IM Loop → N×-Update bei Multi-Member-Workspaces | Frist-Update separat NACH Loop (1× pro Frist) |
+| 4 | SECURITY DEFINER ohne search_path-Hardening (PGsec-Risiko) | `SET search_path = public, pg_temp` ergänzt |
+| 5 | Kein REVOKE/GRANT-Pattern | `REVOKE ALL FROM public; GRANT TO postgres, service_role` |
+
+Plus Verbesserung: Prio via `kategorie`-Enum (`'achtung'` für <=1 Tag, `'aufgaben'` für 3-7 Tage) statt einheitlich `'achtung'`.
+
+**Web-Claude hat zu Recht erkannt:** "CC hätte die wahrscheinlich beim Verify selbst erkannt — aber besser ich liefere die Spec sauber." Bei meiner Erstversion war ich auf dem richtigen Pfad (workspace_memberships statt non-existent owner_user_id) aber hatte den is_active-Filter und die search_path-Hardening übersehen.
+
+
 
 **Migration `53_mega79_pg_cron_fristen_erinnerungen.sql` enthält:**
 - `CREATE EXTENSION IF NOT EXISTS pg_cron`

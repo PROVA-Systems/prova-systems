@@ -22,7 +22,15 @@ supabase functions deploy ki-proxy --project-ref cngteblrbpwsyypexjrv
 
 ### A.2 Migration 53 (pg_cron + Fristen-Erinnerungen) (Phase E)
 
-**Variante (a): direkt auf Production** (schnell, riskanter):
+**Web-Claude-Self-Audit-Patch 2026-05-15 angewendet** — Schema-Drift-Bugs gefixt:
+- pg_cron-Extension ist **schon aktiv** (kein CREATE EXTENSION nötig)
+- `workspace_memberships.is_active = true`-JOIN statt `rolle='owner'`-Pattern (Multi-Member-Workspaces)
+- notifications-Schema: `kategorie` (enum), `link_typ/link_id/link_url` korrekt
+- Prio via kategorie ('achtung' bei <=1 Tag, sonst 'aufgaben')
+- `SET search_path=public,pg_temp` Hardening
+- REVOKE FROM public + GRANT TO postgres, service_role
+
+**Variante (a): direkt auf Production** (schnell, niedriges Risiko nach Patch):
 ```
 mcp Supabase apply_migration 
   project_id=cngteblrbpwsyypexjrv
@@ -38,13 +46,9 @@ mcp Supabase create_branch project_id=cngteblrbpwsyypexjrv name=mega79-edge conf
 # Apply auf Branch, testen, dann auf Production rebasen oder delete + neu auf Production
 ```
 
-**Production-Risiko Variante (a):**
-- pg_cron-Extension wird aktiviert (idempotent durch `IF NOT EXISTS`)
-- SECURITY-DEFINER-Function wird angelegt (kein RLS-Bypass im normalen User-Flow — nur Cron-Lauf läuft mit Superuser-Rechten)
-- Täglicher Cron-Schedule wird angelegt (07:00 UTC = 08:00/09:00 Berlin)
-- Erste Ausführung am nächsten Tag 07:00 UTC, kein sofortiger Effekt
-
-→ **Niedriges Risiko**, Function ist defensiv (Skip-bei-Disabled, Quiet-Hours-Check, Idempotenz).
+**Production-Risiko Variante (a):** niedrig — pg_cron schon aktiv, Function ist
+defensiv (Skip-bei-Disabled, Quiet-Hours-Check, Idempotenz), erste reale
+Ausführung erst nächster Tag 06:00 UTC.
 
 ### A.3 Test nach A.2-Apply
 
