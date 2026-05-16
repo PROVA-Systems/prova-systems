@@ -10,6 +10,11 @@ Format: **vNNNN-marker** | YYYY-MM-DD | Sprint | Kurz-Note
 
 ## 2026-05-16 — MEGA-Serie #8
 
+**v3248-mega82-hotfix2-cleanup-and-calendar** | 2026-05-16 | MEGA⁸²-Hotfix-2 AZ-Cleanup + Section-Labels + Kalender
+- A AZ-Frontend-Cleanup: Legacy-Auto-Generator (app-logic.js Z.2120-2155 generiereAZ/aktualisiereAZ) auf No-Op. DB-Trigger v2.0 (Migration mega82_hotfix_auftraege_az_conflict_resolve LIVE) generiert AZ kollisionsfrei. app.html Field-Label "Externes Aktenzeichen (optional)". Toast bei AZ-Mismatch nach Insert.
+- B Section-Labels prominenter: dashboard.html 11px→15px, color text3→text, Icon-Span getrennt, Trennlinie unter Header. Empty-Icon 36px in Empty-States. Mobile responsive.
+- C kalender.html universal NEU (475 Zeilen): 5 Quellen parallel (termine/fristen/dokumente.rechnung*/dokumente.mahnung*/auftraege.gutachtendatum). Monat+Listen-View. Filter-Toggles persist. Color-Coding nach Kategorie + frist-urgent bei <3T. Routing-Updates nav.js + prova-layout.config.js + sw.js APP_SHELL.
+
 **v3247-mega82-hotfix1-dashboard-clean** | 2026-05-16 | MEGA⁸²-Hotfix-1 Dashboard-Clean
 - H0 AZ-Frontend-Fix: app-logic.js generiert AZ NICHT mehr (war 'AZ-' + Date.now-slice → 409 Conflict bei Race). Frontend schickt az leer/null → DB-Trigger `auftraege_autogen_az` (Web-Claude appliziert) füllt mit `<PREFIX>-<JAHR>-<LFD-NR>`. .select() liefert generierten AZ zurück, UI zeigt es im Toast.
 - H1+H2 Dashboard-Redesign auf 5 Sektionen (Mission-Control Clean):

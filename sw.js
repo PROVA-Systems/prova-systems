@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v3247-mega82-hotfix1-dashboard-clean';   // MEGA⁸²-Hotfix-1 2026-05-16: H0 AZ-Frontend-Fix (Trigger fuellt AZ, Frontend laesst az leer bei Insert) + H1+H2 Dashboard-Redesign auf 5 Sektionen (Header+Status / Heute-Hero / 4 KPI-Kacheln / Aktive Faelle mit korrekter 4-Phasen-Anzeige / Aktivitaet kompakt) — T-NaN-Bug, Empty-State-Bug, dritte Fristen-Box alle weg durch Komplett-Replacement. Sprint-Historie: docs/SW-VERSION-HISTORY.md.
+const CACHE_VERSION = 'prova-v3248-mega82-hotfix2-cleanup-and-calendar';   // MEGA⁸²-Hotfix-2 2026-05-16: A AZ-Frontend-Cleanup (Legacy-Auto-Generator entfernt, DB-Trigger uebernimmt kollisionsfrei) + B Section-Labels prominenter (15px statt 11px, Icon-Span, Trennlinie) + C kalender.html universal (5 Quellen Termine/Fristen/Rechnungen/Mahnungen/Gutachten parallel, Monat+Listen-View, Filter persist). Sprint-Historie: docs/SW-VERSION-HISTORY.md.
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
