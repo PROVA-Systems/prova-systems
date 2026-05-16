@@ -31,15 +31,19 @@ const OPENAI_KEY = Deno.env.get('OPENAI_API_KEY') ?? '';
 
 // Modell-Mapping → OpenAI-API-Namen (intern, NIE im Frontend leaken)
 // MEGA³⁹ P1: Migration von gpt-4o-Stack auf gpt-5.5-Stack (gpt-4o deprecated Feb 2026)
+// MEGA⁸⁴ Block A.3: gpt-5.5-vision für Vision-Tasks
 const MODEL_API_NAME: Record<string, string> = {
     // Aktuelle Namen
     'praezise':       'gpt-5.5',
     'schnell':        'gpt-5.5-instant',
+    'vision':         'gpt-5.5-vision',
     'gpt_5_5':        'gpt-5.5',
     'gpt_5_5_instant':'gpt-5.5-instant',
+    'gpt_5_5_vision': 'gpt-5.5-vision',
     // Legacy-Aliase (Auto-Migration)
     'gpt_4o':         'gpt-5.5',           // ehem. gpt-4o
     'gpt_4o_mini':    'gpt-5.5-instant',   // ehem. gpt-4o-mini
+    'gpt_4o_vision':  'gpt-5.5-vision',    // ehem. gpt-4o-vision
     'gpt_4_turbo':    'gpt-5.5'            // ehem. gpt-4-turbo
 };
 
@@ -47,6 +51,7 @@ const MODEL_API_NAME: Record<string, string> = {
 const PRICE_PER_M_TOKENS: Record<string, { in: number; out: number }> = {
     'gpt-5.5':         { in: 2.50,  out: 10.00 },
     'gpt-5.5-instant': { in: 0.15,  out: 0.60  },
+    'gpt-5.5-vision':  { in: 5.00,  out: 15.00 },
     // Legacy (für historische ki_protokoll-Einträge)
     'gpt-4o':          { in: 2.50,  out: 10.00 },
     'gpt-4o-mini':     { in: 0.15,  out: 0.60  },
@@ -55,6 +60,8 @@ const PRICE_PER_M_TOKENS: Record<string, { in: number; out: number }> = {
 
 // Konjunktiv-Korrektur: ehem. gpt-4o-Pflicht → jetzt höchstes Modell gpt-5.5
 const FORCED_HIGH_MODEL_PURPOSES = new Set(['konjunktiv_korrektur', 'halluzinations_check', '407a_konsistenz']);
+// MEGA⁸⁴ A.3: Vision-Purposes erzwingen gpt-5.5-vision
+const VISION_PURPOSES = new Set(['foto_caption_vision', 'skizze_interpret']);
 
 interface PseudoMap {
     [token: string]: string;          // [AZ-1] -> 'SCH-2026-001'
@@ -133,9 +140,74 @@ function buildSystemPrompt(purpose: string): string {
             return base + 'Schlage relevante DIN/EN-Normen zum Thema vor. NUR existierende Normen, keine erfundenen.';
         case 'befund_generierung':
             return base + 'Hilf bei der Strukturierung von Befunden. Übernimm nur, was im Input steht.';
+        // MEGA⁸⁴ A.3 — KI-Vision Foto-Captions
+        case 'foto_caption_vision':
+            return 'Du bist Assistent eines ö.b.u.v. Bausachverständigen für Bauschäden.\n\n'
+                + 'AUFGABE: Beschreibe das vorliegende Foto sachlich und neutral.\n\n'
+                + 'REGELN:\n'
+                + '1. Konjunktiv II für alle Beobachtungen: "zeigt sich", "ist erkennbar", "weist auf X hin", "lässt vermuten" — NIE "ist", "wird", "bedeutet".\n'
+                + '2. Sachlich, ohne Wertung. Keine Diagnose.\n'
+                + '3. 1-2 Sätze, max 200 Zeichen.\n'
+                + '4. §-Zuordnung vorschlagen aus: §2 Sachverhalt / §3 Befund / §4 Ursachen / §5 Bewertung.\n'
+                + '5. Confidence von 0.0 bis 1.0 zur §-Zuordnung.\n\n'
+                + 'OUTPUT (NUR JSON, keine Markdown-Code-Fence): { "caption": "<1-2 Saetze>", "paragraph_suggestion": "§X", "confidence": 0.85 }\n\n'
+                + 'WICHTIG: Niemals Personen-Namen, niemals Adressen erkennen oder ausgeben.';
+        // MEGA⁸⁴ A.4 — Diktat → §§ Mapping mit Chips
+        case 'diktat_paragraph_mapping':
+            return 'Du bist Assistent eines ö.b.u.v. Bausachverständigen.\n\n'
+                + 'AUFGABE: Strukturiere das vorliegende Diktat in §§ 1-5 der Gutachten-Struktur nach IHK-SVO.\n\n'
+                + '§§-STRUKTUR (verbindlich):\n'
+                + '- §1 Anlass — Auftraggeber, Termin, Vor-Ort-Kontext\n'
+                + '- §2 Sachverhalt — Objekt, Raeumlichkeit, gegebene Umstaende\n'
+                + '- §3 Befund — was vor Ort beobachtet wurde (Konjunktiv II!)\n'
+                + '- §4 Ursachen — Ursachen-Hypothesen (NUR Konjunktiv II!)\n'
+                + '- §5 Bewertung — fachliche Einordnung (NUR Konjunktiv II!)\n\n'
+                + 'REGELN:\n'
+                + '1. NIEMALS §6 Fachurteil oder §7 Kosten generieren — das ist SV-Pflicht.\n'
+                + '2. Konjunktiv II ueberall in §§ 3-5.\n'
+                + '3. Pro § ein eigener Text-Block.\n'
+                + '4. Bei strittigen Saetzen: ALTERNATIVES mit 2 §-Vorschlaegen.\n'
+                + '5. NICHT halluzinieren — wenn Diktat-Info zu spaerlich, leerer Block.\n\n'
+                + 'OUTPUT (NUR JSON, keine Markdown-Code-Fence): [\n'
+                + '  { "paragraph": "§1", "text": "...", "confidence": 0.92 },\n'
+                + '  { "paragraph": "§3", "text": "...", "confidence": 0.85, "alternatives": [{ "paragraph": "§2", "confidence": 0.40 }] },\n'
+                + '  ...\n'
+                + ']';
         default:
             return base;
     }
+}
+
+// MEGA⁸⁴ A.3: Multi-Modal-Vision-Call (akzeptiert image_base64 zusätzlich zum Prompt)
+async function callOpenAIVision(model: string, prompt: string, system: string, imageBase64: string, maxTokens: number) {
+    // OpenAI Vision API erwartet image_url mit data:URL-Format
+    const imageDataUrl = imageBase64.startsWith('data:') ? imageBase64 : `data:image/jpeg;base64,${imageBase64}`;
+    const resp = await fetch(OPENAI_API, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${OPENAI_KEY}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            model,
+            messages: [
+                { role: 'system', content: system },
+                { role: 'user', content: [
+                    { type: 'text', text: prompt || 'Beschreibe das Foto gemaess deiner Direktive.' },
+                    { type: 'image_url', image_url: { url: imageDataUrl, detail: 'auto' } }
+                ]}
+            ],
+            max_tokens: maxTokens,
+            temperature: 0.2
+        })
+    });
+    if (!resp.ok) {
+        const err = await resp.text();
+        throw new HttpError(`OpenAI Vision ${resp.status}: ${err.slice(0, 300)}`, resp.status === 429 ? 429 : 502);
+    }
+    const json = await resp.json();
+    return {
+        text: json.choices?.[0]?.message?.content ?? '',
+        tokensIn: json.usage?.prompt_tokens ?? 0,
+        tokensOut: json.usage?.completion_tokens ?? 0
+    };
 }
 
 async function callOpenAI(model: string, prompt: string, system: string, maxTokens: number, temperature: number) {
@@ -188,18 +260,22 @@ const handler = async (req: Request): Promise<Response> => {
     const workspaceId = await getWorkspaceId(req, ctx);
     const sb = createSupabaseClient(req);
 
-    const body = await req.json() as KiProxyRequest;
-    if (!body.prompt) throw new HttpError('prompt required', 400);
-
+    const body = await req.json() as (KiProxyRequest & { image_base64?: string });
     const purpose = body.purpose ?? 'sonstiges';
+    // MEGA⁸⁴ A.3: Vision-Purposes erfordern image_base64, nicht prompt
+    const isVision = VISION_PURPOSES.has(purpose);
+    if (!isVision && !body.prompt) throw new HttpError('prompt required', 400);
+    if (isVision && !body.image_base64) throw new HttpError('image_base64 required for vision purpose', 400);
+
     // MEGA³⁹ P1: Default = 'schnell' (gpt-5.5-instant); High-Trust-Tasks → 'praezise'
     let model = body.model ?? 'schnell';
     if (FORCED_HIGH_MODEL_PURPOSES.has(purpose)) model = 'praezise';
+    if (isVision) model = 'vision';  // MEGA⁸⁴ A.3
     const apiName = MODEL_API_NAME[model];
     if (!apiName) throw new HttpError(`Unknown model: ${model}`, 400);
 
-    // Pseudonymisierung
-    const { pseudo, map } = pseudonymize(body.prompt);
+    // Pseudonymisierung (Vision skippt das — Bilder sind generisch genug, kein Text-PII)
+    const { pseudo, map } = isVision ? { pseudo: body.prompt || '', map: {} } : pseudonymize(body.prompt);
     const ctxBlock = body.context ? `\n\nKontext:\n${pseudonymize(body.context).pseudo}` : '';
     const fullPrompt = pseudo + ctxBlock;
     let systemPrompt = buildSystemPrompt(purpose);
@@ -234,13 +310,24 @@ const handler = async (req: Request): Promise<Response> => {
     let status: 'erfolg' | 'fehler' | 'timeout' | 'rate_limit' = 'erfolg';
     let errorMsg: string | null = null;
     try {
-        openaiResult = await callOpenAI(
-            apiName,
-            fullPrompt,
-            systemPrompt,
-            body.max_tokens ?? 1500,
-            body.temperature ?? 0.3
-        );
+        if (isVision) {
+            // MEGA⁸⁴ A.3: Multi-Modal-Vision-Call
+            openaiResult = await callOpenAIVision(
+                apiName,
+                fullPrompt,
+                systemPrompt,
+                body.image_base64 || '',
+                body.max_tokens ?? 500
+            );
+        } else {
+            openaiResult = await callOpenAI(
+                apiName,
+                fullPrompt,
+                systemPrompt,
+                body.max_tokens ?? 1500,
+                body.temperature ?? 0.3
+            );
+        }
     } catch (e) {
         if (e instanceof HttpError && e.status === 429) status = 'rate_limit';
         else status = 'fehler';
