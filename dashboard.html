@@ -807,103 +807,125 @@ window.addEventListener('error', function(ev) {
     <!-- Page Content -->
     <div id="fg-banner-container"></div>
 <main class="page-content" id="main-content">
+  <!-- ════════════════════════════════════════════════════════════════════
+       MEGA⁸²-HOTFIX-1 H2 — Dashboard-Redesign „Mission-Control Clean"
+       5 Sektionen: Header+Status / Heute (Hero) / 4 KPI-Kacheln /
+                    Aktive Fälle / Aktivität
+       Komplett-Replacement der alten 13-Sektionen-Struktur.
+  ════════════════════════════════════════════════════════════════════ -->
+  <style>
+    /* Dashboard-Clean spezifische Tokens */
+    .dc-section-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);}
+    .dc-section-cta{font-size:11px;color:var(--accent);text-decoration:none;font-weight:600;}
+    .dc-section-cta:hover{text-decoration:underline;}
+    .dc-heute-card{background:linear-gradient(135deg,rgba(79,142,247,.06),rgba(79,142,247,.01));border:1px solid var(--border2);border-radius:14px;padding:18px 22px;}
+    .dc-heute-row{display:flex;align-items:center;gap:14px;padding:12px 0;border-bottom:1px solid var(--border);}
+    .dc-heute-row:last-child{border-bottom:none;}
+    .dc-heute-icon{font-size:22px;flex-shrink:0;width:32px;text-align:center;}
+    .dc-heute-body{flex:1;min-width:0;}
+    .dc-heute-headline{font-size:14px;font-weight:700;color:var(--text);margin-bottom:2px;}
+    .dc-heute-detail{font-size:12px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    .dc-heute-cta{padding:7px 14px;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:12px;font-weight:600;text-decoration:none;flex-shrink:0;transition:all .15s;}
+    .dc-heute-cta:hover{background:var(--accent);border-color:var(--accent);color:#fff;}
+    .dc-heute-empty{text-align:center;padding:32px 16px;color:var(--text3);}
+    .dc-kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+    .dc-kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px;text-align:center;cursor:pointer;transition:border-color .15s,transform .15s;}
+    .dc-kpi-card:hover{border-color:var(--border2);transform:translateY(-1px);}
+    .dc-kpi-num{font-size:30px;font-weight:800;color:var(--text);letter-spacing:-.02em;line-height:1.1;}
+    .dc-kpi-num.warn{color:var(--warning,#f59e0b);}
+    .dc-kpi-num.danger{color:var(--danger,#ef4444);}
+    .dc-kpi-num.success{color:var(--success,#10b981);}
+    .dc-kpi-label{font-size:12px;color:var(--text3);margin-top:6px;font-weight:600;}
+    .dc-faelle-list{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
+    .dc-faelle-row{display:flex;align-items:center;gap:14px;padding:14px 18px;text-decoration:none;color:var(--text);transition:background .12s;border-bottom:1px solid var(--border);}
+    .dc-faelle-row:last-child{border-bottom:none;}
+    .dc-faelle-row:hover{background:rgba(79,142,247,.05);}
+    .dc-faelle-az{font:13px ui-monospace,Menlo,monospace;color:var(--accent);min-width:120px;flex-shrink:0;font-weight:600;}
+    .dc-faelle-title{flex:1;min-width:0;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    .dc-faelle-progress{display:flex;gap:3px;flex-shrink:0;}
+    .dc-faelle-seg{width:14px;height:6px;background:rgba(255,255,255,.08);border-radius:1px;}
+    .dc-faelle-seg.done{background:var(--accent);}
+    .dc-faelle-phase{font-size:11px;color:var(--text3);min-width:42px;text-align:right;flex-shrink:0;}
+    .dc-activity-row{display:flex;gap:14px;padding:10px 0;border-bottom:1px solid var(--border);font-size:13px;}
+    .dc-activity-row:last-child{border-bottom:none;}
+    .dc-activity-time{color:var(--text3);min-width:90px;flex-shrink:0;font-size:12px;}
+    .dc-activity-text{flex:1;color:var(--text2);}
+    .dc-activity-text a{color:var(--accent);text-decoration:none;}
+    .dc-activity-text a:hover{text-decoration:underline;}
+    .dc-empty{text-align:center;padding:28px 16px;color:var(--text3);font-size:13px;}
+    @media (max-width:768px){
+      .dc-kpi-grid{grid-template-columns:repeat(2,1fr);}
+      .dc-kpi-num{font-size:26px;}
+      .dc-faelle-az{min-width:100px;}
+    }
+  </style>
 
-  <!-- ── HEADER ── -->
-  <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:24px;flex-wrap:wrap;">
+  <!-- ─── Sektion 1: HEADER + STATUS-ZEILE ─── -->
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:28px;flex-wrap:wrap;">
     <div>
-      <h1 id="greeting-title" style="font-size:22px;font-weight:800;color:var(--text);margin-bottom:4px;">Willkommen 👋</h1>
-      <p id="greeting-sub" style="font-size:13px;color:var(--text3);">Ihr Überblick für heute — wird geladen…</p>
+      <h1 id="dc-greeting" style="font-size:24px;font-weight:800;color:var(--text);margin-bottom:4px;letter-spacing:-.02em;">Guten Morgen</h1>
+      <p id="dc-status-line" style="font-size:13px;color:var(--text3);">Wird geladen…</p>
     </div>
     <button id="dash-new-case-btn" onclick="window.location.href='neuer-fall.html'" aria-label="Neuen Fall anlegen" style="display:flex;align-items:center;gap:8px;padding:10px 18px;border-radius:10px;background:linear-gradient(135deg,var(--accent,#4f8ef7),var(--accent2,#3a7be0));border:none;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font-ui,sans-serif);white-space:nowrap;box-shadow:0 2px 12px rgba(79,142,247,.3);">
       <span>+</span> Neuer Fall
     </button>
   </div>
 
-  <!-- ── KPI STREIFEN — M³⁹ P8: 5 Widgets statt 4 (KI-Token ergänzt) ── -->
-  <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:24px;" id="kpi-row">
-    <div onclick="window.location.href='archiv.html'" style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;cursor:pointer;transition:border-color .15s;" onmouseover="this.style.borderColor='var(--border2)'" onmouseout="this.style.borderColor='var(--border)'">
-      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);margin-bottom:6px;">Aktive Fälle</div>
-      <div id="kpi-aktiv" style="font-size:22px;font-weight:800;color:var(--accent);">0</div>
+  <!-- ─── Sektion 2: HEUTE (Hero) ─── -->
+  <section style="margin-bottom:28px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+      <span class="dc-section-label">🔥 Heute</span>
+      <a href="termine.html" class="dc-section-cta" id="dc-heute-all-link" style="display:none;">Alle Aufgaben →</a>
     </div>
-    <div onclick="window.location.href='termine.html'" style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;cursor:pointer;transition:border-color .15s;" onmouseover="this.style.borderColor='var(--border2)'" onmouseout="this.style.borderColor='var(--border)'">
-      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);margin-bottom:6px;">Fristen diese Woche</div>
-      <div id="kpi-heute" style="font-size:22px;font-weight:800;color:var(--warning,#f59e0b);">0</div>
+    <div class="dc-heute-card" id="dc-heute-content">
+      <div class="dc-heute-empty">Wird geladen…</div>
     </div>
-    <div onclick="window.location.href='rechnungen.html'" style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;cursor:pointer;transition:border-color .15s;" onmouseover="this.style.borderColor='var(--border2)'" onmouseout="this.style.borderColor='var(--border)'">
-      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);margin-bottom:6px;">Offene Rechnungen</div>
-      <div id="kpi-rechnungen" style="font-size:22px;font-weight:800;color:var(--danger,#ef4444);">0</div>
-    </div>
-    <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;">
-      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);margin-bottom:6px;">Kontingent</div>
-      <div id="kpi-kontingent" style="font-size:22px;font-weight:800;color:var(--success,#10b981);">0</div>
-    </div>
-    <div onclick="window.location.href='einstellungen.html'" style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;cursor:pointer;transition:border-color .15s;" onmouseover="this.style.borderColor='var(--border2)'" onmouseout="this.style.borderColor='var(--border)'">
-      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);margin-bottom:6px;">KI-Verbrauch (Monat)</div>
-      <div id="kpi-ki-token" style="font-size:22px;font-weight:800;color:var(--accent);">— %</div>
-      <div id="kpi-ki-token-sub" style="font-size:10px;color:var(--text3);margin-top:2px;">— / — Token</div>
-    </div>
-  </div>
-
-  <!-- MEGA⁸² A.2: Anstehende-Fristen-Widget entfernt — Fristen jetzt einmalig
-       im widgetHeute + widgetFaelligeFristen (siehe ProvaDashboardWidgets) -->
-
-  <!-- MEGA⁶⁹-FINAL-1 D.6/F.2: Workflow-Widgets (ProvaDashboardWidgets) -->
-  <section style="margin-top:28px;">
-    <h2 style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:12px;text-transform:uppercase;letter-spacing:.04em;">Workflow-Übersicht</h2>
-    <div id="prova-dashboard-widgets-grid"></div>
   </section>
 
-  <!-- ── HAUPTBEREICH: Aufgaben + Kalender ── -->
-  <div style="display:grid;grid-template-columns:1fr 300px;gap:16px;align-items:start;" id="dash-grid">
-
-    <!-- LINKE SPALTE: Was steht an -->
-    <div>
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-        <div style="font-size:13px;font-weight:700;color:var(--text);">
-
-    <div class="dashboard-section-label">Was steht an?</div></div>
-        <a href="archiv.html" style="font-size:11px;color:var(--accent);text-decoration:none;font-weight:600;">Alle Fälle →</a>
-      </div>
-      <div id="aufgaben-feed" style="display:flex;flex-direction:column;gap:8px;">
-        <!-- Sofort aus Cache laden, skeleton zeigen -->
-        <div id="aufgaben-skeleton">
-          <div style="height:72px;border-radius:10px;background:var(--surface);margin-bottom:8px;animation:shimmer 1.5s infinite;background-size:200% 100%;background-image:linear-gradient(90deg,var(--surface) 25%,rgba(255,255,255,.04) 50%,var(--surface) 75%);"></div>
-          <div style="height:72px;border-radius:10px;background:var(--surface);margin-bottom:8px;animation:shimmer 1.5s infinite .2s;background-size:200% 100%;background-image:linear-gradient(90deg,var(--surface) 25%,rgba(255,255,255,.04) 50%,var(--surface) 75%);"></div>
-          <div style="height:72px;border-radius:10px;background:var(--surface);animation:shimmer 1.5s infinite .4s;background-size:200% 100%;background-image:linear-gradient(90deg,var(--surface) 25%,rgba(255,255,255,.04) 50%,var(--surface) 75%);"></div>
-        </div>
-      </div>
+  <!-- ─── Sektion 3: 4 KPI-KACHELN ─── -->
+  <section class="dc-kpi-grid" style="margin-bottom:28px;" id="dc-kpi-grid">
+    <div class="dc-kpi-card" onclick="window.location.href='archiv.html'">
+      <div class="dc-kpi-num" id="dc-kpi-aktive">—</div>
+      <div class="dc-kpi-label">Aktive Fälle</div>
     </div>
-
-    <!-- RECHTE SPALTE: Schnellzugriff (MEGA⁸² A.2: Fristen-Box entfernt — Single Source ist widgetHeute) -->
-    <div style="display:flex;flex-direction:column;gap:12px;">
-
-      <!-- Schnellzugriff -->
-      <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;">
-        <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:12px;">Schnellzugriff</div>
-        <div style="display:flex;flex-direction:column;gap:6px;">
-          <a id="letzter-fall-link" href="archiv.html" style="display:none;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;background:rgba(79,142,247,.07);border:1px solid rgba(79,142,247,.15);color:var(--text);text-decoration:none;font-size:12px;font-weight:700;transition:background .12s;" onmouseover="this.style.background='rgba(79,142,247,.12)'" onmouseout="this.style.background='rgba(79,142,247,.07)'">
-            <span>📂</span> Zuletzt geöffnet…
-          </a>
-          <a href="normen.html" style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;background:rgba(255,255,255,.03);color:var(--text2);text-decoration:none;font-size:12px;font-weight:600;transition:background .12s;" onmouseover="this.style.background='rgba(255,255,255,.06)'" onmouseout="this.style.background='rgba(255,255,255,.03)'">
-            <span>📚</span> Normendatenbank
-          </a>
-          <a href="jveg.html" style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;background:rgba(255,255,255,.03);color:var(--text2);text-decoration:none;font-size:12px;font-weight:600;transition:background .12s;" onmouseover="this.style.background='rgba(255,255,255,.06)'" onmouseout="this.style.background='rgba(255,255,255,.03)'">
-            <span>⚖️</span> JVEG-Rechner
-          </a>
-          <a href="briefvorlagen.html" style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;background:rgba(255,255,255,.03);color:var(--text2);text-decoration:none;font-size:12px;font-weight:600;transition:background .12s;" onmouseover="this.style.background='rgba(255,255,255,.06)'" onmouseout="this.style.background='rgba(255,255,255,.03)'">
-            <span>✉️</span> Briefvorlagen
-          </a>
-          <a href="einstellungen.html" style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;background:rgba(255,255,255,.03);color:var(--text2);text-decoration:none;font-size:12px;font-weight:600;transition:background .12s;" onmouseover="this.style.background='rgba(255,255,255,.06)'" onmouseout="this.style.background='rgba(255,255,255,.03)'">
-            <span>⚙️</span> Einstellungen
-          </a>
-        </div>
-      </div>
-
-      <!-- MEGA²⁷.5 Block 3: Referral-Card-Mount -->
-      <div id="referral-card-mount" style="margin-top:12px;"></div>
-
+    <div class="dc-kpi-card" onclick="window.location.href='mahnwesen.html'">
+      <div class="dc-kpi-num warn" id="dc-kpi-mahnungen">—</div>
+      <div class="dc-kpi-label">Mahnungen</div>
     </div>
-  </div>
+    <div class="dc-kpi-card" onclick="window.location.href='rechnungen.html'">
+      <div class="dc-kpi-num danger" id="dc-kpi-offen-betrag">—</div>
+      <div class="dc-kpi-label">offen</div>
+    </div>
+    <div class="dc-kpi-card" onclick="window.location.href='einstellungen.html#ki'">
+      <div class="dc-kpi-num" id="dc-kpi-ki">—</div>
+      <div class="dc-kpi-label">KI-Calls 30T</div>
+    </div>
+  </section>
+
+  <!-- ─── Sektion 4: AKTIVE FÄLLE ─── -->
+  <section style="margin-bottom:28px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+      <span class="dc-section-label" id="dc-faelle-label">📁 Aktive Fälle</span>
+      <a href="archiv.html" class="dc-section-cta">Alle Fälle →</a>
+    </div>
+    <div class="dc-faelle-list" id="dc-faelle-list">
+      <div class="dc-empty">Wird geladen…</div>
+    </div>
+  </section>
+
+  <!-- ─── Sektion 5: AKTIVITÄT ─── -->
+  <section style="margin-bottom:28px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+      <span class="dc-section-label">⏱️ Aktivität</span>
+      <a href="audit-trail.html" class="dc-section-cta">Alle Logs →</a>
+    </div>
+    <div id="dc-activity-list">
+      <div class="dc-empty">Wird geladen…</div>
+    </div>
+  </section>
+
+  <!-- Referral-Card-Mount bleibt erhalten (MEGA²⁷.5 Block 3) -->
+  <div id="referral-card-mount" style="margin-top:12px;"></div>
 
 </main>
 
@@ -992,15 +1014,17 @@ window.addEventListener('error', function(ev) {
   <!-- MEGA¹⁴ W24: Pull-to-Refresh in dashboard -->
   <script src="/lib/pull-to-refresh.js" defer></script>
   <script defer>
+    // MEGA⁸²-Hotfix-1 H2: Pull-to-Refresh bindet jetzt an main-content statt
+    // recent-list (existiert nicht mehr) und ruft ladeDashboard() das im
+    // inline-Render-Script unten als window.ladeDashboard exportiert wird.
     document.addEventListener('DOMContentLoaded', function () {
       if (!('ontouchstart' in window) || !window.ProvaPullToRefresh) return;
-      var listEl = document.getElementById('recent-list');
-      if (listEl && typeof ladeDashboard === 'function') {
-        window.ProvaPullToRefresh.bind(listEl, async function () { await ladeDashboard(); });
-      } else if (listEl && typeof window.location !== 'undefined') {
-        // Fallback: Page-Reload wenn keine ladeDashboard-Funktion
-        window.ProvaPullToRefresh.bind(listEl, async function () { window.location.reload(); });
-      }
+      var target = document.getElementById('main-content');
+      if (!target) return;
+      window.ProvaPullToRefresh.bind(target, async function () {
+        if (typeof window.ladeDashboard === 'function') await window.ladeDashboard();
+        else window.location.reload();
+      });
     });
   </script>
   <script src="global-search.js" defer></script>
@@ -1010,7 +1034,11 @@ window.addEventListener('error', function(ev) {
 <script src="support-chat.js"></script>
   <script src="onboarding-tour.js"></script>
   <script src="trial-guard.js"></script>
-  <script src="dashboard-logic.js" defer></script>
+  <!-- MEGA⁸²-Hotfix-1 H2: dashboard-logic.js entfernt — alte 13-Sektionen-Logik
+       wird ersetzt durch das neue inline Dashboard-Clean-Render unten.
+       dashboard-logic.js griff auf DOM-Elemente (greeting-title, kpi-aktiv,
+       aufgaben-feed) zu die nicht mehr existieren, plus Airtable-Calls die
+       seit MEGA75 obsolet sind. -->
 
   <script src="frist-guard.js" defer></script>
   <script src="honorar-tracker.js" defer></script>
@@ -1138,27 +1166,390 @@ window.addEventListener('error', function(ev) {
   })();
   </script>
 
-<!-- MEGA⁶⁹-FINAL-1 D.6/F.2 — Workflow-Widgets Mount -->
+<!-- prova-workflow-engine fuer Phasen-Helper (MEGA82) ist via akte-logic verfuegbar -->
 <script src="/lib/prova-workflow-engine.js" defer></script>
-<script src="/lib/prova-dashboard-widgets.js" defer></script>
+
+<!-- ════════════════════════════════════════════════════════════════════
+     MEGA⁸²-HOTFIX-1 H2 — Dashboard-Clean Render-Logic
+     Parallel-fetched alle 5 Sektionen via Promise.all.
+     Empty-States echt (kein „Loading"-Skeleton dauerhaft).
+═════════════════════════════════════════════════════════════════════ -->
 <script>
-(function () {
-  document.addEventListener('DOMContentLoaded', function () {
+(function(){
+  'use strict';
+
+  // ── Utilities ──────────────────────────────────────────────────────
+  function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
+  function eur(n){ return new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR',maximumFractionDigits:0}).format(Number(n)||0); }
+  function dateOnly(d){ return d ? String(d).slice(0,10) : null; }
+
+  function greeting(){
+    var h = new Date().getHours();
+    if (h < 11) return 'Guten Morgen';
+    if (h < 18) return 'Guten Tag';
+    return 'Guten Abend';
+  }
+
+  function relativeTime(iso){
+    if (!iso) return '';
+    var d = new Date(iso);
+    if (isNaN(d.getTime())) return '';
+    var diffMs = Date.now() - d.getTime();
+    var s = Math.floor(diffMs / 1000);
+    if (s < 60) return 'vor wenigen Sek';
+    var m = Math.floor(s / 60);
+    if (m < 60) return 'vor ' + m + ' Min';
+    var hours = Math.floor(m / 60);
+    if (hours < 24) return 'vor ' + hours + ' Std';
+    // Gestern?
+    var today = new Date();
+    today.setHours(0,0,0,0);
+    var yest = new Date(today); yest.setDate(yest.getDate() - 1);
+    if (d >= yest && d < today) return 'gestern';
+    // Älter: DD.MM.
+    return d.toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'});
+  }
+
+  async function getSb(){
+    if (getSb._c) return getSb._c;
+    try {
+      var mod = await import('/lib/supabase-client.js');
+      getSb._c = mod.supabase || (mod.getSupabase && mod.getSupabase());
+      return getSb._c;
+    } catch(e){ console.warn('[dc] supabase import failed', e); return null; }
+  }
+
+  async function getUserName(){
+    try {
+      var sb = await getSb();
+      if (!sb) return '';
+      var { data: { user } } = await sb.auth.getUser();
+      if (!user) return '';
+      var meta = user.user_metadata || {};
+      // Vorname aus name (split first), fallback email-prefix
+      var name = meta.vorname || (meta.name ? meta.name.split(' ')[0] : '') || (user.email ? user.email.split('@')[0] : '');
+      return name ? (', ' + name) : '';
+    } catch(_){ return ''; }
+  }
+
+  // ── Sektion 1: Header + Status-Zeile ────────────────────────────────
+  async function renderHeader(){
+    document.getElementById('dc-greeting').textContent = greeting() + (await getUserName());
+  }
+
+  function renderStatusLine(unreadNotif, fristenHeute, mahnungenOffen){
+    var parts = [];
+    if (unreadNotif > 0) parts.push(unreadNotif + ' Benachrichtigung' + (unreadNotif === 1 ? '' : 'en'));
+    if (fristenHeute > 0) parts.push(fristenHeute + ' Frist' + (fristenHeute === 1 ? '' : 'en') + ' heute');
+    if (mahnungenOffen > 0) parts.push(mahnungenOffen + ' Mahnung' + (mahnungenOffen === 1 ? '' : 'en') + ' offen');
+    var el = document.getElementById('dc-status-line');
+    el.textContent = parts.length ? parts.join(' · ') : 'Alles erledigt. Schönen Tag!';
+  }
+
+  // ── Sektion 2: HEUTE (Hero) ────────────────────────────────────────
+  async function loadHeute(){
+    var sb = await getSb();
+    if (!sb){ return { html: '<div class="dc-heute-empty">Verbindung fehlt</div>', total: 0 }; }
+    var today = dateOnly(new Date().toISOString());
+    var resFristen = await sb.from('fristen')
+      .select('id, frist_typ, notiz, datum_soll, status, auftrag_id, auftraege(az)')
+      .lte('datum_soll', today)
+      .in('status', ['offen','verlaengert'])
+      .is('deleted_at', null)
+      .order('datum_soll', { ascending: true })
+      .limit(5);
+    var resTermine = await sb.from('termine')
+      .select('id, titel, typ, uhrzeit_von, ort_name, ort_ort, status')
+      .eq('datum', today)
+      .is('deleted_at', null)
+      .not('status', 'in', '(durchgefuehrt,abgesagt,kein_zustandekommen)')
+      .order('uhrzeit_von', { ascending: true, nullsFirst: false })
+      .limit(5);
+    var unread = 0;
+    try {
+      var rpc = await sb.rpc('notifications_unread_count');
+      unread = Number(rpc.data) || 0;
+    } catch(_){}
+
+    var items = [];
+    (resFristen.data || []).forEach(function(f){
+      var due = f.datum_soll ? new Date(f.datum_soll + 'T00:00:00') : null;
+      var todayD = new Date(today + 'T00:00:00');
+      var icon = (due && due < todayD) ? '⚠️' : '📅';
+      var label = (due && due < todayD) ? 'Frist überfällig' : 'Frist heute';
+      var az = (f.auftraege && f.auftraege.az) ? ' · ' + f.auftraege.az : '';
+      var titel = f.notiz || (f.frist_typ || 'Frist');
+      items.push({
+        icon: icon,
+        headline: label + az,
+        detail: titel,
+        href: f.auftrag_id ? ('/akte?id=' + f.auftrag_id) : ('/fristen.html?id=' + f.id),
+        ctaLabel: f.auftrag_id ? 'Öffnen →' : 'Akte →',
+        prio: (due && due < todayD) ? 1 : 2
+      });
+    });
+    (resTermine.data || []).forEach(function(t){
+      var time = t.uhrzeit_von ? String(t.uhrzeit_von).slice(0,5) : 'ganztags';
+      var titel = t.titel || t.typ || 'Termin';
+      var ort = [t.ort_name, t.ort_ort].filter(Boolean).join(' · ');
+      items.push({
+        icon: '📅',
+        headline: time + ' · ' + titel,
+        detail: ort || (t.typ || 'Termin'),
+        href: '/termine.html?id=' + t.id,
+        ctaLabel: 'Akte →',
+        prio: 3
+      });
+    });
+    if (unread > 0){
+      items.push({
+        icon: '🔔',
+        headline: unread + ' ungelesene Benachrichtigung' + (unread === 1 ? '' : 'en'),
+        detail: 'Im Glocken-Menü ansehen',
+        href: '#',
+        ctaLabel: 'Alle →',
+        onclick: "window.ProvaNotifications && window.ProvaNotifications.open(); return false;",
+        prio: 4
+      });
+    }
+    items.sort(function(a,b){ return a.prio - b.prio; });
+
+    var html;
+    if (items.length === 0){
+      html = '<div class="dc-heute-empty"><div style="font-size:32px;margin-bottom:8px;">☀️</div>Keine Aufgaben für heute. Schöner Tag!</div>';
+    } else {
+      html = items.slice(0,5).map(function(it){
+        var onclick = it.onclick ? (' onclick="' + it.onclick + '"') : '';
+        return '<div class="dc-heute-row">'
+          + '<div class="dc-heute-icon">' + it.icon + '</div>'
+          + '<div class="dc-heute-body">'
+          +   '<div class="dc-heute-headline">' + esc(it.headline) + '</div>'
+          +   '<div class="dc-heute-detail">' + esc(it.detail) + '</div>'
+          + '</div>'
+          + '<a class="dc-heute-cta" href="' + esc(it.href) + '"' + onclick + '>' + esc(it.ctaLabel) + '</a>'
+          + '</div>';
+      }).join('');
+    }
+    document.getElementById('dc-heute-content').innerHTML = html;
+    if (items.length > 5){
+      var link = document.getElementById('dc-heute-all-link');
+      link.style.display = '';
+      link.textContent = 'Alle ' + items.length + ' Aufgaben →';
+    }
+    return { unread: unread, fristenHeute: (resFristen.data || []).length, terminCount: (resTermine.data || []).length };
+  }
+
+  // ── Sektion 3: 4 KPI-Kacheln ───────────────────────────────────────
+  async function loadKpis(){
+    var sb = await getSb();
+    if (!sb) return { mahnungenCount: 0 };
+    var since30 = new Date(Date.now() - 30 * 86400000).toISOString();
+
+    var [aktiveRes, mahnungenRes, offeneRes, kiRes] = await Promise.all([
+      sb.from('auftraege').select('id', { count: 'exact', head: true })
+        .eq('status', 'aktiv').is('deleted_at', null),
+      sb.from('dokumente').select('id', { count: 'exact', head: true })
+        .in('typ', ['mahnung_1','mahnung_2','mahnung_3'])
+        .neq('status', 'bezahlt').is('deleted_at', null),
+      sb.from('dokumente').select('betrag_brutto, status, typ, bezahlt_at')
+        .in('typ', ['rechnung','rechnung_jveg','rechnung_stunden'])
+        .in('status', ['versendet','gelesen','ueberfaellig'])
+        .is('bezahlt_at', null).is('deleted_at', null),
+      sb.from('ki_protokoll').select('id', { count: 'exact', head: true })
+        .gte('created_at', since30)
+    ]);
+
+    var aktiv = aktiveRes.count || 0;
+    var mahnungen = mahnungenRes.count || 0;
+    var offenSum = (offeneRes.data || []).reduce(function(s,r){ return s + (Number(r.betrag_brutto) || 0); }, 0);
+    var kiCount = kiRes.count || 0;
+
+    document.getElementById('dc-kpi-aktive').textContent = aktiv;
+    document.getElementById('dc-kpi-mahnungen').textContent = mahnungen;
+    document.getElementById('dc-kpi-offen-betrag').textContent = offenSum > 0 ? eur(offenSum) : '0 €';
+    document.getElementById('dc-kpi-ki').textContent = kiCount;
+
+    return { mahnungenCount: mahnungen };
+  }
+
+  // ── Sektion 4: Aktive Fälle ────────────────────────────────────────
+  async function loadAktiveFaelle(){
+    var sb = await getSb();
+    if (!sb) return;
+    var res = await sb.from('auftraege')
+      .select('id, az, typ, titel, schadensart_label, phase_aktuell, status, updated_at, details, objekt')
+      .eq('status', 'aktiv').is('deleted_at', null)
+      .order('updated_at', { ascending: false }).limit(5);
+    var rows = res.data || [];
+    var label = document.getElementById('dc-faelle-label');
+    label.textContent = '📁 Aktive Fälle (' + rows.length + ')';
+    var listEl = document.getElementById('dc-faelle-list');
+    if (rows.length === 0){
+      listEl.innerHTML = '<div class="dc-empty">Noch keine Aufträge. <a href="neuer-fall.html" style="color:var(--accent);text-decoration:none;font-weight:600;">+ Ersten Fall anlegen</a></div>';
+      return;
+    }
+    listEl.innerHTML = rows.map(function(a){
+      var phasen = (window.getAktePhasenForAuftrag ? window.getAktePhasenForAuftrag(a) : []);
+      var phasenMax = phasen.length || 4;
+      var curPhase = Number(a.phase_aktuell) || 1;
+      var segs = '';
+      for (var i = 1; i <= phasenMax; i++){
+        segs += '<span class="dc-faelle-seg' + (i <= curPhase ? ' done' : '') + '"></span>';
+      }
+      // Titel kompakt: Schadensart · Auftraggeber · Ort (keine Straße/PLZ)
+      var ag = (a.details && a.details.auftraggeber && a.details.auftraggeber.name) || '';
+      var ort = (a.objekt && a.objekt.ort) || '';
+      var schadensart = a.schadensart_label || '';
+      var titel = [schadensart, ag, ort].filter(Boolean).join(' · ') || a.titel || a.typ;
+      if (titel.length > 60) titel = titel.slice(0,57) + '…';
+      return '<a class="dc-faelle-row" href="/akte?id=' + encodeURIComponent(a.id) + '">'
+        + '<span class="dc-faelle-az">' + esc(a.az || a.id.slice(0,8)) + '</span>'
+        + '<span class="dc-faelle-title">' + esc(titel) + '</span>'
+        + '<span class="dc-faelle-progress">' + segs + '</span>'
+        + '<span class="dc-faelle-phase">' + curPhase + '/' + phasenMax + '</span>'
+        + '</a>';
+    }).join('');
+  }
+
+  // ── Sektion 5: Aktivität (kompakt) ─────────────────────────────────
+  // Format: <Zeit-relativ-oder-Datum> · <Aktion> in <Entity-Ref>
+  function formatActivity(row){
+    var time = relativeTime(row.created_at) || (row.created_at ? String(row.created_at).slice(0,10) : '');
+    var action = row.action || '';
+    var entityTyp = row.entity_typ || '';
+    var payload = row.payload || {};
+    // Verben pro action
+    var verbMap = {
+      create: 'angelegt', update: 'aktualisiert', read: 'geöffnet', delete: 'gelöscht',
+      export: 'exportiert', import: 'importiert', pdf_generate: 'PDF erstellt',
+      pdf_view: 'PDF angesehen', pdf_send: 'PDF versendet',
+      ki_request: 'KI gefragt', ki_response: 'KI-Antwort erhalten'
+    };
+    var verb = verbMap[action] || action;
+    // Entity-Label
+    var entityLabel = '';
+    if (entityTyp === 'auftrag') {
+      var az = payload.az || payload.aktenzeichen || row.entity_id;
+      entityLabel = '<a href="/akte?id=' + encodeURIComponent(row.entity_id || '') + '">Akte ' + esc(az || '') + '</a>';
+    } else if (entityTyp === 'eintrag') {
+      var az2 = payload.auftrag_az || payload.az || '';
+      entityLabel = az2 ? ('in <a href="/akte?az=' + encodeURIComponent(az2) + '">Akte ' + esc(az2) + '</a>') : 'Eintrag';
+    } else if (entityTyp === 'dokument') {
+      entityLabel = 'Dokument' + (payload.doc_nummer ? ' ' + esc(payload.doc_nummer) : '');
+    } else if (entityTyp === 'frist') {
+      entityLabel = 'Frist';
+    } else if (entityTyp === 'kontakt') {
+      entityLabel = 'Kontakt';
+    } else if (entityTyp === 'einwilligung') {
+      entityLabel = 'Einwilligung';
+    } else {
+      entityLabel = entityTyp ? esc(entityTyp) : '';
+    }
+    // Kompakt: „Eintrag in Akte XXX angelegt" oder „Akte XXX geöffnet"
+    var aktion;
+    if (entityTyp === 'eintrag') {
+      aktion = 'Eintrag ' + entityLabel + ' ' + verb;
+    } else {
+      aktion = entityLabel + (entityLabel ? ' ' : '') + verb;
+    }
+    return { time: time, html: aktion };
+  }
+
+  async function loadAktivitaet(){
+    var sb = await getSb();
+    if (!sb) return;
+    var { data: { user } } = await sb.auth.getUser();
+    if (!user) return;
+    var res = await sb.from('audit_trail')
+      .select('id, action, entity_typ, entity_id, payload, created_at')
+      .eq('user_id', user.id)
+      .neq('action', 'login')
+      .neq('action', 'logout')
+      .order('created_at', { ascending: false }).limit(5);
+    var rows = res.data || [];
+    var listEl = document.getElementById('dc-activity-list');
+    if (rows.length === 0){
+      listEl.innerHTML = '<div class="dc-empty">Noch keine Aktivität.</div>';
+      return;
+    }
+    listEl.innerHTML = rows.map(function(r){
+      var f = formatActivity(r);
+      return '<div class="dc-activity-row">'
+        + '<span class="dc-activity-time">' + esc(f.time) + '</span>'
+        + '<span class="dc-activity-text">' + f.html + '</span>'
+        + '</div>';
+    }).join('');
+  }
+
+  // ── Master Render Loader ───────────────────────────────────────────
+  async function renderDashboard(){
+    // Header sofort (synchron mit User-Name)
+    renderHeader();
+    // Sektionen parallel
+    var [heuteRes, kpiRes] = await Promise.all([
+      loadHeute().catch(function(e){ console.warn('[dc heute]', e); return {}; }),
+      loadKpis().catch(function(e){ console.warn('[dc kpi]', e); return {}; }),
+      loadAktiveFaelle().catch(function(e){ console.warn('[dc faelle]', e); }),
+      loadAktivitaet().catch(function(e){ console.warn('[dc activity]', e); })
+    ]);
+    renderStatusLine(
+      Number(heuteRes && heuteRes.unread) || 0,
+      Number(heuteRes && heuteRes.fristenHeute) || 0,
+      Number(kpiRes && kpiRes.mahnungenCount) || 0
+    );
+  }
+
+  // Init nach DOMContentLoaded — wartet auf akte-logic.js (Phasen-Helper)
+  function init(){
     var attempts = 0;
-    var t = setInterval(function () {
+    var t = setInterval(function(){
       attempts++;
-      if (window.ProvaDashboardWidgets) {
+      if (typeof window.getAktePhasenForAuftrag === 'function' || attempts >= 20){
         clearInterval(t);
-        try {
-          window.ProvaDashboardWidgets.render({
-            container: '#prova-dashboard-widgets-grid',
-            widgets: ['heute', 'aktive', 'fristen', 'mahnwesen', 'ki_stats', 'aktivitaet']
-          });
-        } catch (e) { console.error('[dashboard-widgets] mount failed:', e); }
-      } else if (attempts >= 40) { clearInterval(t); }
-    }, 100);
-  });
+        renderDashboard();
+      }
+    }, 50);
+  }
+  if (document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+
+  // Public-API fuer Pull-to-Refresh
+  window.ladeDashboard = renderDashboard;
 })();
 </script>
+
+<!-- MEGA⁸²-Hotfix-1 H2: getFlow + AKTE_PHASEN_V2 + getAktePhasenForAuftrag inline
+     (Duplikat von akte-logic.js Helper-Layer — vermeidet das Laden von akte-logic
+     auf dashboard.html wo currentRecord-Side-Effects unerwuenscht waeren). -->
+<script>
+(function(){
+  if (window.getAktePhasenForAuftrag) return;  // schon definiert (z.B. akte-logic.js)
+  window.getFlow = function getFlow(auftragTyp){
+    if (!auftragTyp) return 'A';
+    var t = String(auftragTyp).toLowerCase();
+    if (['schaden','beweis','ergaenzung','gegen','kurzstellungnahme','gericht'].indexOf(t) >= 0) return 'A';
+    if (t === 'wertgutachten') return 'B';
+    if (t === 'beratung') return 'C';
+    if (t === 'baubegleitung') return 'D';
+    if (t === 'schied') return 'A';
+    return 'A';
+  };
+  var V2 = {
+    A: [{n:1},{n:2},{n:3},{n:4}],
+    B: [{n:1},{n:2},{n:3},{n:4}],
+    C: [{n:1},{n:2},{n:3}],
+    D: [{n:1},{n:2},{n:3}]
+  };
+  window.getAktePhasenForAuftrag = function(auftrag){
+    auftrag = auftrag || {};
+    var flow = window.getFlow(auftrag.typ || auftrag.auftrag_typ || auftrag.Auftragstyp);
+    return (V2[flow] || V2.A).slice();
+  };
+})();
+</script>
+
 </body>
 </html>
