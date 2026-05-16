@@ -8,6 +8,18 @@ Format: **vNNNN-marker** | YYYY-MM-DD | Sprint | Kurz-Note
 
 ---
 
+## 2026-05-16 — MEGA-Serie #8
+
+**v3245-mega82-verkauf-ready** | 2026-05-16 | MEGA⁸² Verkauf-Ready (Pass 1)
+- Phase A: 5 Critical Bugs (CORS eintraege-list via SKIP_REROUTE, Dashboard-Triple-Fristen entfernt, skizzen.html app-shell-Wrapper, §§-Notation-Audit, Einstellungen-Tabs CSS-Fix)
+- Phase D: PDFMonkey-UI-Cleanup (11 Patches in 7 Files) + WORDING-STANDARDS.md + LG-Darmstadt-Warnbox in fachurteil.html + §407a-Disclosure-Doku
+- Phase E: Gutachten-CTA kontextuell (renderGutachtenCTA + updateGutachtenCTAButton) — Loop-Bug-Fix (oeffneGutachten sprang immer auf app.html)
+- Phase H: Landing-Trust-Block (LG Darmstadt 0€-Risiko + 4-Pfeiler PROVA-Lösung) + Pitch-Slide-Doku
+- Phase B.1 + C: 4-Phasen-Helper-Layer (getFlow, AKTE_PHASEN_V2, getAktePhasenForAuftrag, getAkteStatusAuto) — UI-Refactor DEFER MEGA83
+- DEFER MEGA83: Akte-UI-Refactor B.2-B.9 (Layout-komplett), Phase F.1 Login Cross-Domain, Phase G Edge-Reaping (Cloud-CLI-Action)
+
+---
+
 ## 2026-05-15 — MEGA-Serie #6/#7
 
 **v3244-mega81-mission-control** | 2026-05-15 | MEGA⁸¹ Dashboard + Repo-Sync
