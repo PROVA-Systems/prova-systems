@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v3400-mega84-pass1-vor-ort-power';   // MEGA⁸⁴/⁸⁵ Pass 1 2026-05-16: Block 0 (Akte-Section-Labels prominent + Bridge-Sweep 83 Pages + Edge-Reaping-CLI-Doku) + Block A Vor-Ort-Power-Foundation (skizzen.foto_pins JSONB Migration + lib/skizzen-pins.js mit Pin-Mode + ki-proxy gpt-5.5-vision foto_caption_vision + diktat_paragraph_mapping mit Chips-UI). Block A.5 Mobile-3-Tab und Block B-G DEFER Pass 2/3. Sprint-Historie: docs/SW-VERSION-HISTORY.md.
+const CACHE_VERSION = 'prova-v3500-mega84-pass2a-cockpit-mobile';   // MEGA⁸⁴/⁸⁵ Pass 2a 2026-05-16: Block A.5 vor-ort-tabs.html neu (Mobile-First 3-Tab Skizze/Foto/Diktat mit allen 3 Pass-1-Libs integriert + Save-Workflow auf dokumente/eintraege/auftraege.details) + Block B admin-kpis.html neu (Founder-Cockpit mit 8 KPIs parallel-fetched + Workspace-Liste mit Filter+Login-as-User via existing admin-impersonate Edge MEGA54 + 2FA-Check fuer admin.* + KI-Health-Bars + Audit-Events) + Block C KI-Disclosure-Audit (GPT-4o → gpt-5.5 in 5 User-facing Pages). Sprint-Historie: docs/SW-VERSION-HISTORY.md.
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [

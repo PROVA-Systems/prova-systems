@@ -10,6 +10,15 @@ Format: **vNNNN-marker** | YYYY-MM-DD | Sprint | Kurz-Note
 
 ## 2026-05-16 — MEGA-Serie #8/9/10
 
+**v3500-mega84-pass2a-cockpit-mobile** | 2026-05-16 | MEGA⁸⁴/⁸⁵ Pass 2a Cockpit + Mobile + Compliance
+- Block A.5 vor-ort-tabs.html NEU (Mobile-First 3-Tab-Layout, ~430 Zeilen) — Skizze (Pin-Mode via lib/skizzen-pins) / Foto (Capture + KI-Vision-Caption via lib/prova-ki-foto) / Diktat (Whisper + §§-Chips via lib/prova-ki-diktat-mapping) + Save-Workflow auf dokumente+eintraege+auftraege.details.paragraphen
+- Block B Founder-Cockpit admin-kpis.html NEU (~380 Zeilen): 4 Sektionen mit 8 KPIs parallel + Workspace-Liste mit Filter+Suche+Tier-Badges + Login-as-User via existing admin-impersonate Edge (MEGA54, workspace_id+reason-Pattern) + 2FA-Mandatory-Check fuer admin.* Subdomain + KI-Health-Bars (Top-8 Tasks + Konjunktiv/Halluzinations-Pass-Quoten) + 15 letzte Audit-Events
+- Block C KI-Disclosure-Audit: GPT-4o → gpt-5.5 in 5 User-facing Pages (hilfe.html FAQ-A, statistiken.html KPI-Sub, admin-dashboard.html 2x KPI-Sub, onboarding.html Feature-Liste, status.html Service-Desc)
+- DEFER Pass 2b: D PDF-Compliance + E Trial-Guard + F Global-Search-360
+- DEFER Pass 2c: G 5-Audit-Edges-Konsolidierung + H Bibliothek + I Sprint-Final
+
+---
+
 **v3400-mega84-pass1-vor-ort-power** | 2026-05-16 | MEGA⁸⁴/⁸⁵ Mega-Marathon Pass 1
 - Block 0.1 Akte-Section-Labels prominent (analog .dc-* aus Hotfix-2): 11px→15px, Icon-Span 20px, Trennlinie + Mobile-Responsive
 - Block 0.2 Bridge-Sweep: prova-legacy-bridge.js in 83 App-Pages eingebunden (sed-Bulk-Insert nach prova-config.js) — Cross-Subdomain-Auth-Bridge end-to-end
