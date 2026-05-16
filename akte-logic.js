@@ -993,7 +993,14 @@ window.updateGutachtenCTAButton = function updateGutachtenCTAButton(f){
 };
 window.oeffneFreigabe=function(){
   if(recordId)sessionStorage.setItem('prova_record_id',recordId);
-  window.location.href='freigabe.html';
+  // MEGA⁸³ B: Neuer 3-Step Wizard ist Default. Klassische freigabe.html bleibt
+  // erreichbar via ?legacy=true wenn der Wizard nicht passt.
+  var f = window.currentFields || currentFields || {};
+  var qs = '';
+  if (f.id || f._recordId) qs = '?id=' + encodeURIComponent(f.id || f._recordId);
+  else if (f.az) qs = '?az=' + encodeURIComponent(f.az);
+  else if (recordId) qs = '?id=' + encodeURIComponent(recordId);
+  window.location.href = 'freigabe-wizard.html' + qs;
 };
 
 /* ─── SECTION TOGGLE ─── */
