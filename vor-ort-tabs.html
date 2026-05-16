@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Vor-Ort · PROVA</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="/lib/prova-config.js"></script>
+<script src="/lib/prova-legacy-bridge.js"></script>
+<script src="/lib/edge-shim.js"></script>
+<script src="prova-fetch-auth.js"></script>
+<script>
+(function(){
+  try {
+    var token = localStorage.getItem('prova_auth_token');
+    var email = localStorage.getItem('prova_sv_email') || '';
+    if (!token || !email || email.indexOf('@') === -1) {
+      window.location.replace('/login?next=' + encodeURIComponent(location.pathname + location.search));
+      return;
+    }
+  } catch (e) { window.location.replace('/login'); }
+})();
+</script>
+<script type="module">
+  import { runAuthGuard } from '/lib/auth-guard.js';
+  runAuthGuard().catch(e => console.error('[auth] guard failed', e));
+</script>
+<style>
+:root{
+  --bg:#0b0d11;--bg2:#111318;--bg3:#161a22;
+  --surface:#1c2130;--surface2:#232a3a;
+  --border:rgba(255,255,255,.06);--border2:rgba(255,255,255,.11);
+  --text:#eaecf4;--text2:#8b93ab;--text3:#4d5568;
+  --accent:#4f8ef7;--accent2:#3a7be0;
+  --success:#10b981;--warning:#f59e0b;--danger:#ef4444;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;overflow-x:hidden;font-family:'DM Sans',system-ui,sans-serif;}
+body{background:var(--bg);color:var(--text2);line-height:1.5;font-size:14px;}
+button,input,textarea,select{font-family:inherit;font-size:inherit;}
+
+/* ─── HEADER ─── */
+.vot-header{position:sticky;top:0;z-index:100;background:var(--bg2);border-bottom:1px solid var(--border);padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px;}
+.vot-back{display:flex;align-items:center;gap:6px;color:var(--text2);font-size:13px;cursor:pointer;background:none;border:none;padding:6px 10px;border-radius:6px;font-family:inherit;min-height:36px;}
+.vot-back:hover{background:rgba(255,255,255,.05);color:var(--text);}
+.vot-title{flex:1;text-align:center;min-width:0;}
+.vot-title-main{font-size:14px;font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.vot-title-sub{font-size:11px;color:var(--text3);font-family:monospace;}
+.vot-settings{color:var(--text3);font-size:18px;text-decoration:none;padding:6px 8px;}
+
+/* ─── TAB-BAR ─── */
+.vot-tabs{display:flex;background:var(--bg2);border-bottom:1px solid var(--border);padding:0 12px;gap:0;overflow-x:auto;}
+.vot-tab{flex:1;min-width:90px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:11px 8px;background:none;border:none;color:var(--text3);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;border-bottom:2px solid transparent;min-height:60px;}
+.vot-tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+.vot-tab-icon{font-size:20px;line-height:1;}
+
+/* ─── MAIN ─── */
+.vot-main{padding:16px 14px 100px;min-height:calc(100vh - 122px);}
+.vot-pane{display:none;}
+.vot-pane.active{display:block;}
+
+/* ─── TAB 1: SKIZZE ─── */
+.vot-pane-skizze{display:flex;flex-direction:column;gap:12px;}
+.vot-svg-toolbar{display:flex;align-items:center;justify-content:space-between;background:var(--surface);padding:8px 12px;border-radius:8px;border:1px solid var(--border);}
+.vot-pin-toggle{display:flex;align-items:center;gap:6px;padding:7px 12px;background:var(--surface2);border:1px solid var(--border2);border-radius:6px;color:var(--text2);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;min-height:36px;}
+.vot-pin-toggle[data-active="true"]{background:rgba(79,142,247,.15);border-color:var(--accent);color:var(--accent);}
+.vot-svg-info{font-size:11px;color:var(--text3);}
+.sp-svg-wrap{background:#fff;border-radius:10px;overflow:hidden;border:1px solid var(--border2);}
+#vot-svg{width:100%;height:auto;min-height:400px;display:block;background:#fff;}
+
+/* ─── TAB 2: FOTO ─── */
+.vot-pane-foto{display:flex;flex-direction:column;gap:14px;}
+.vot-capture-bar{display:flex;gap:10px;}
+.vot-capture-btn{flex:1;padding:14px;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:10px;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;min-height:52px;}
+.vot-foto-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;}
+.vot-foto-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;}
+.vot-foto-img{width:100%;height:120px;object-fit:cover;background:var(--bg3);}
+.vot-foto-meta{padding:8px 10px;}
+.vot-foto-caption{font-size:11px;line-height:1.4;color:var(--text2);margin-bottom:6px;font-style:italic;}
+.vot-foto-paragraph-chip{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;background:rgba(79,142,247,.15);color:var(--accent);border:1px solid rgba(79,142,247,.3);border-radius:99px;font-size:10px;font-weight:700;}
+.vot-foto-loading{padding:24px;text-align:center;color:var(--accent);font-size:12px;font-style:italic;}
+.vot-foto-empty{padding:32px 16px;text-align:center;color:var(--text3);font-size:13px;}
+
+/* ─── TAB 3: DIKTAT ─── */
+.vot-pane-diktat{display:flex;flex-direction:column;gap:14px;}
+.vot-record-area{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:24px 16px;text-align:center;}
+.vot-record-btn{width:80px;height:80px;border-radius:50%;border:none;background:linear-gradient(135deg,var(--danger),#b91c1c);color:#fff;font-size:32px;cursor:pointer;margin:0 auto;display:flex;align-items:center;justify-content:center;font-family:inherit;box-shadow:0 4px 16px rgba(239,68,68,.4);transition:transform .15s;}
+.vot-record-btn:hover{transform:scale(1.05);}
+.vot-record-btn[data-recording="true"]{animation:vot-pulse 1.5s ease-in-out infinite;background:linear-gradient(135deg,#7f1d1d,#450a0a);}
+@keyframes vot-pulse{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.5);}50%{box-shadow:0 0 0 16px rgba(239,68,68,0);}}
+.vot-record-label{margin-top:14px;font-size:13px;color:var(--text2);}
+.vot-transkript-box{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;min-height:80px;font-size:13px;line-height:1.6;color:var(--text);white-space:pre-wrap;}
+.vot-transkript-box.empty{color:var(--text3);font-style:italic;text-align:center;padding:24px 14px;}
+.vot-chips-section{display:none;}
+.vot-chips-section.active{display:block;}
+.vot-chips-header{font-size:13px;font-weight:700;color:var(--text);margin-bottom:8px;}
+
+/* ─── BOTTOM-CTA ─── */
+.vot-bottom-bar{position:fixed;bottom:0;left:0;right:0;background:var(--bg2);border-top:1px solid var(--border2);padding:12px 14px;z-index:50;display:flex;gap:10px;backdrop-filter:blur(8px);}
+.vot-save-btn{flex:1;padding:14px;background:linear-gradient(135deg,var(--success),#059669);border:none;border-radius:10px;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;min-height:52px;}
+.vot-save-btn:disabled{opacity:.5;cursor:not-allowed;}
+
+/* ─── KI-DISCLOSURE ─── */
+.vot-ki-disclosure{background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.25);border-left:3px solid var(--warning);border-radius:8px;padding:10px 12px;font-size:11px;color:var(--text2);line-height:1.5;margin-bottom:14px;}
+.vot-ki-disclosure strong{color:var(--warning);}
+
+@media(min-width:768px){
+  .vot-main{max-width:720px;margin:0 auto;}
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="vot-header">
+  <button type="button" class="vot-back" onclick="window.votBack()">← Akte</button>
+  <div class="vot-title">
+    <div class="vot-title-main" id="vot-title-main">Vor-Ort-Termin</div>
+    <div class="vot-title-sub" id="vot-title-sub">—</div>
+  </div>
+  <a href="einstellungen.html" class="vot-settings" title="Einstellungen">⚙</a>
+</header>
+
+<!-- TABS -->
+<nav class="vot-tabs" role="tablist" aria-label="Vor-Ort-Bereiche">
+  <button class="vot-tab active" data-tab="skizze" role="tab" onclick="window.votSwitchTab('skizze')">
+    <span class="vot-tab-icon">✏️</span><span>Skizze</span>
+  </button>
+  <button class="vot-tab" data-tab="foto" role="tab" onclick="window.votSwitchTab('foto')">
+    <span class="vot-tab-icon">📸</span><span>Foto</span>
+  </button>
+  <button class="vot-tab" data-tab="diktat" role="tab" onclick="window.votSwitchTab('diktat')">
+    <span class="vot-tab-icon">🎙️</span><span>Diktat</span>
+  </button>
+</nav>
+
+<!-- MAIN -->
+<main class="vot-main">
+
+  <!-- TAB 1 — SKIZZE -->
+  <section class="vot-pane vot-pane-skizze active" id="vot-pane-skizze" role="tabpanel" aria-labelledby="tab-skizze">
+    <div class="vot-svg-toolbar">
+      <button type="button" class="vot-pin-toggle" id="vot-pin-toggle" data-active="false" onclick="window.votTogglePinMode()">
+        <span>📌</span><span>Pin-Mode</span>
+      </button>
+      <div class="vot-svg-info" id="vot-pin-count">0 Pins</div>
+    </div>
+    <div class="sp-svg-wrap">
+      <svg id="vot-svg" viewBox="0 0 800 600" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
+        <rect width="800" height="600" fill="#fff"/>
+        <text x="400" y="300" text-anchor="middle" fill="#9ca3af" font-family="sans-serif" font-size="20">Skizze (Click + Pin-Mode für Foto-Verknüpfung)</text>
+      </svg>
+    </div>
+  </section>
+
+  <!-- TAB 2 — FOTO -->
+  <section class="vot-pane vot-pane-foto" id="vot-pane-foto" role="tabpanel" aria-labelledby="tab-foto">
+    <div class="vot-ki-disclosure">
+      <strong>KI-Nutzung:</strong> Foto-Captions werden von KI-Werkzeugen (gpt-5.5-Reihe via OpenAI API) generiert. Die fachliche Bewertung trägt der SV (§ 407a Abs. 3 ZPO).
+    </div>
+    <div class="vot-capture-bar">
+      <button type="button" class="vot-capture-btn" onclick="window.votCaptureFoto()">
+        <span>📸</span><span>Foto aufnehmen / hochladen</span>
+      </button>
+    </div>
+    <input type="file" id="vot-foto-input" accept="image/*" capture="environment" multiple style="display:none;" onchange="window.votFotoUpload(this.files)">
+    <div class="vot-foto-grid" id="vot-foto-grid">
+      <div class="vot-foto-empty" style="grid-column:1/-1;">Noch keine Fotos. Tippe oben den Aufnahme-Button.</div>
+    </div>
+  </section>
+
+  <!-- TAB 3 — DIKTAT -->
+  <section class="vot-pane vot-pane-diktat" id="vot-pane-diktat" role="tabpanel" aria-labelledby="tab-diktat">
+    <div class="vot-ki-disclosure">
+      <strong>KI-Nutzung:</strong> Audio-Transkription via Whisper, §§-Mapping via gpt-5.5. § 6 Fachurteil bleibt SV-eigenhändig (LG Darmstadt 10.11.2025, Az. 19 O 527/16).
+    </div>
+    <div class="vot-record-area">
+      <button type="button" class="vot-record-btn" id="vot-record-btn" data-recording="false" onclick="window.votToggleRecord()" aria-label="Aufnahme starten/stoppen">🎙️</button>
+      <div class="vot-record-label" id="vot-record-label">Aufnahme starten</div>
+    </div>
+    <div>
+      <div class="vot-chips-header">📝 Transkript</div>
+      <div class="vot-transkript-box empty" id="vot-transkript-box">Diktiere zuerst — das Transkript erscheint hier.</div>
+    </div>
+    <div class="vot-chips-section" id="vot-chips-section">
+      <div class="vot-chips-header">📑 §§ 1–5 Mapping (editierbar)</div>
+      <div id="vot-chips-container"><!-- gefüllt via ProvaKiDiktatMapping --></div>
+    </div>
+  </section>
+
+</main>
+
+<!-- BOTTOM CTA -->
+<footer class="vot-bottom-bar">
+  <button type="button" class="vot-save-btn" id="vot-save-btn" onclick="window.votSaveAll()">
+    <span>💾</span><span>Speichern + zurück zur Akte</span>
+  </button>
+</footer>
+
+<!-- PASS-1-LIBS -->
+<script src="/lib/skizzen-pins.js"></script>
+<script src="/lib/prova-ki-foto.js"></script>
+<script src="/lib/prova-ki-diktat-mapping.js"></script>
+
+<!-- LOGIC -->
+<script type="module">
+  import { supabase } from '/lib/supabase-client.js';
+
+  const url = new URL(location.href);
+  const auftragId = url.searchParams.get('id');
+  const auftragAz = url.searchParams.get('az');
+  let auftragRow = null;
+  let skizzeId = null;
+  let fotos = [];          // [{ id, file, base64, caption, paragraph, foto_id_db? }]
+  let mappingChips = [];   // Akzeptierte Diktat-Chips
+  let transkript = '';
+  let mediaRecorder = null;
+  let recordedChunks = [];
+
+  // ── Auftrag laden ─────────────────────────────────────────────────
+  async function loadAuftrag(){
+    let q = supabase.from('auftraege')
+      .select('id, az, titel, typ, status, workspace_id')
+      .is('deleted_at', null).limit(1);
+    if (auftragId) q = q.eq('id', auftragId);
+    else if (auftragAz) q = q.eq('az', auftragAz);
+    else { alert('Kein Auftrag-Parameter.'); return null; }
+    const { data, error } = await q.single();
+    if (error || !data){ alert('Auftrag nicht gefunden.'); return null; }
+    return data;
+  }
+
+  async function findOrCreateSkizze(workspace_id, auftrag_id){
+    const exist = await supabase.from('skizzen')
+      .select('id, foto_pins')
+      .eq('auftrag_id', auftrag_id)
+      .order('created_at', { ascending: false }).limit(1);
+    if (exist.data && exist.data.length) return exist.data[0].id;
+    const created = await supabase.from('skizzen')
+      .insert({ workspace_id, auftrag_id, titel: 'Vor-Ort-Skizze', svg_content: '<svg/>' })
+      .select('id').single();
+    return created.data ? created.data.id : null;
+  }
+
+  // ── Tab-Switching ─────────────────────────────────────────────────
+  window.votSwitchTab = function(tab){
+    document.querySelectorAll('.vot-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+    document.querySelectorAll('.vot-pane').forEach(p => p.classList.toggle('active', p.id === 'vot-pane-' + tab));
+  };
+
+  window.votBack = function(){
+    if (auftragRow) location.href = '/akte?id=' + encodeURIComponent(auftragRow.id);
+    else history.back();
+  };
+
+  // ── TAB 1: Skizze + Pins ──────────────────────────────────────────
+  window.votTogglePinMode = function(){
+    const btn = document.getElementById('vot-pin-toggle');
+    const active = btn.getAttribute('data-active') === 'true';
+    btn.setAttribute('data-active', active ? 'false' : 'true');
+    if (window.ProvaSkizzePins) {
+      window.ProvaSkizzePins.setMode(document.getElementById('vot-svg'), active ? 'view' : 'pin');
+    }
+  };
+
+  // ── TAB 2: Foto ───────────────────────────────────────────────────
+  window.votCaptureFoto = function(){
+    document.getElementById('vot-foto-input').click();
+  };
+
+  function _renderFotoGrid(){
+    const grid = document.getElementById('vot-foto-grid');
+    if (!fotos.length) {
+      grid.innerHTML = '<div class="vot-foto-empty" style="grid-column:1/-1;">Noch keine Fotos. Tippe oben den Aufnahme-Button.</div>';
+      return;
+    }
+    grid.innerHTML = fotos.map(f => {
+      const chip = f.paragraph ? `<span class="vot-foto-paragraph-chip">${esc(f.paragraph)}</span>` : '';
+      const cap = f.caption || (f._loading ? '<span style="color:var(--accent);">KI analysiert…</span>' : '<span style="color:var(--text3);">Keine Caption</span>');
+      return `<div class="vot-foto-card" data-foto="${f.id}">
+        <img class="vot-foto-img" src="${f.base64}" alt="">
+        <div class="vot-foto-meta">
+          <div class="vot-foto-caption">${cap}</div>
+          ${chip}
+        </div>
+      </div>`;
+    }).join('');
+  }
+  function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
+  window.votFotoUpload = async function(files){
+    if (!files || !files.length) return;
+    for (const file of files) {
+      const reader = new FileReader();
+      const base64 = await new Promise(r => { reader.onload = () => r(reader.result); reader.readAsDataURL(file); });
+      const foto = { id: 'f_' + Date.now() + '_' + Math.random().toString(36).slice(2,6), file, base64, _loading: true };
+      fotos.push(foto);
+      _renderFotoGrid();
+      try {
+        const cap = await window.ProvaKiFoto.generateCaption({ imageBase64: base64, context: auftragRow?.titel || '' });
+        foto.caption = cap.caption;
+        foto.paragraph = cap.paragraph_suggestion;
+        foto._loading = false;
+        _renderFotoGrid();
+      } catch(e){
+        foto.caption = '⚠ KI-Caption fehlgeschlagen: ' + e.message.slice(0,80);
+        foto._loading = false;
+        _renderFotoGrid();
+      }
+    }
+  };
+
+  // ── TAB 3: Diktat ─────────────────────────────────────────────────
+  window.votToggleRecord = async function(){
+    const btn = document.getElementById('vot-record-btn');
+    const label = document.getElementById('vot-record-label');
+    const isRec = btn.getAttribute('data-recording') === 'true';
+    if (!isRec) {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        recordedChunks = [];
+        mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+        mediaRecorder.ondataavailable = e => { if (e.data.size > 0) recordedChunks.push(e.data); };
+        mediaRecorder.onstop = async () => {
+          stream.getTracks().forEach(t => t.stop());
+          const blob = new Blob(recordedChunks, { type: 'audio/webm' });
+          label.textContent = 'Wird transkribiert via Whisper…';
+          await _transcribeAndMap(blob);
+        };
+        mediaRecorder.start();
+        btn.setAttribute('data-recording', 'true');
+        btn.textContent = '⏹';
+        label.textContent = 'Aufnahme läuft… Tippen zum Stoppen';
+      } catch(e){
+        alert('Mikrofon-Zugriff verweigert: ' + e.message);
+      }
+    } else {
+      mediaRecorder && mediaRecorder.stop();
+      btn.setAttribute('data-recording', 'false');
+      btn.textContent = '🎙️';
+    }
+  };
+
+  async function _transcribeAndMap(blob){
+    const label = document.getElementById('vot-record-label');
+    const box = document.getElementById('vot-transkript-box');
+    try {
+      // Upload Blob via FormData zu Storage, dann whisper-diktat-Edge
+      const file = new File([blob], 'vor-ort-diktat-' + Date.now() + '.webm', { type: 'audio/webm' });
+      const wsId = auftragRow.workspace_id;
+      const storagePath = wsId + '/audio/' + Date.now() + '.webm';
+      const { error: upErr } = await supabase.storage.from('sv-files').upload(storagePath, file);
+      if (upErr) throw new Error('Upload fail: ' + upErr.message);
+      const { data: { session } } = await supabase.auth.getSession();
+      const url = (window.PROVA_CONFIG?.SUPABASE_URL || '').replace(/\/$/, '');
+      const res = await fetch(url + '/functions/v1/whisper-diktat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token },
+        body: JSON.stringify({ audio_storage_path: storagePath, auftrag_id: auftragRow.id })
+      });
+      if (!res.ok) throw new Error('Whisper-Edge: ' + res.status);
+      const result = await res.json();
+      transkript = result.transcript_text || '';
+      box.classList.remove('empty');
+      box.textContent = transkript;
+      label.textContent = 'Transkribiert. KI mappt §§…';
+      // Diktat → Chips
+      try {
+        const chips = await window.ProvaKiDiktatMapping.structure(transkript, { context: auftragRow.titel || '' });
+        document.getElementById('vot-chips-section').classList.add('active');
+        window.ProvaKiDiktatMapping.renderChips(
+          document.getElementById('vot-chips-container'),
+          chips,
+          (c) => { mappingChips.push(c); }
+        );
+        label.textContent = '✓ Transkript + §§-Mapping bereit';
+      } catch(e){
+        label.textContent = '⚠ Mapping-Fehler: ' + e.message.slice(0,60);
+      }
+    } catch(e){
+      label.textContent = '⚠ Fehler: ' + e.message.slice(0,80);
+    }
+  }
+
+  // ── Save All ──────────────────────────────────────────────────────
+  window.votSaveAll = async function(){
+    const btn = document.getElementById('vot-save-btn');
+    btn.disabled = true; btn.textContent = '⏳ Speichert…';
+    try {
+      // 1. Fotos → dokumente (typ=foto_befund, inhalt_strukturiert mit caption+§)
+      for (const f of fotos) {
+        if (f._saved) continue;
+        const wsId = auftragRow.workspace_id;
+        const storagePath = wsId + '/fotos/' + Date.now() + '_' + (f.file?.name || 'foto.jpg');
+        if (f.file) {
+          await supabase.storage.from('sv-files').upload(storagePath, f.file).catch(()=>{});
+        }
+        const { data: dok } = await supabase.from('dokumente').insert({
+          workspace_id: wsId,
+          auftrag_id: auftragRow.id,
+          typ: 'foto_befund',
+          betreff: 'Vor-Ort-Foto ' + new Date().toLocaleString('de-DE'),
+          storage_bucket: 'sv-files',
+          storage_path: storagePath,
+          inhalt_strukturiert: { ki_caption: f.caption, paragraph: f.paragraph },
+          status: 'generiert'
+        }).select('id').single();
+        f._saved = true;
+        f.foto_id_db = dok?.id;
+      }
+      // 2. Diktat → eintraege.text (kategorie=diktat) + Mapping → auftraege.details.paragraphen
+      if (transkript) {
+        await supabase.from('eintraege').insert({
+          workspace_id: auftragRow.workspace_id,
+          auftrag_id: auftragRow.id,
+          typ: 'diktat',
+          titel: 'Vor-Ort-Diktat',
+          content: transkript,
+          kategorie: 'diktat'
+        });
+      }
+      if (mappingChips.length) {
+        const { data: cur } = await supabase.from('auftraege').select('details').eq('id', auftragRow.id).single();
+        const details = cur?.details || {};
+        details.paragraphen = details.paragraphen || {};
+        for (const c of mappingChips) {
+          const key = c.paragraph.replace('§', 'p').toLowerCase(); // §1 → p1
+          details.paragraphen[key] = (details.paragraphen[key] || '') + (details.paragraphen[key] ? '\n\n' : '') + c.text;
+        }
+        await supabase.from('auftraege').update({ details }).eq('id', auftragRow.id);
+      }
+      // 3. Audit-Trail-Eintrag
+      try {
+        await supabase.from('audit_trail').insert({
+          workspace_id: auftragRow.workspace_id,
+          action: 'create',
+          entity_typ: 'auftrag',
+          entity_id: auftragRow.id,
+          payload: { source: 'vor-ort-tabs', fotos: fotos.length, hat_diktat: !!transkript, mapping_chips: mappingChips.length }
+        });
+      } catch(_){}
+      location.href = '/akte?id=' + encodeURIComponent(auftragRow.id);
+    } catch(e){
+      alert('Fehler: ' + e.message);
+      btn.disabled = false; btn.innerHTML = '<span>💾</span><span>Speichern + zurück</span>';
+    }
+  };
+
+  // ── INIT ──────────────────────────────────────────────────────────
+  (async function init(){
+    const a = await loadAuftrag();
+    if (!a) return;
+    auftragRow = a;
+    document.getElementById('vot-title-main').textContent = a.titel || a.az || 'Vor-Ort-Termin';
+    document.getElementById('vot-title-sub').textContent = a.az || '—';
+    skizzeId = await findOrCreateSkizze(a.workspace_id, a.id);
+    if (skizzeId && window.ProvaSkizzePins) {
+      window.ProvaSkizzePins.attach(document.getElementById('vot-svg'), { skizzeId: skizzeId });
+    }
+  })();
+</script>
+</body>
+</html>

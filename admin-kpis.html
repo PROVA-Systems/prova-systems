@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1, viewport-fit=cover">
+<title>Founder-Cockpit · PROVA Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="/lib/prova-config.js"></script>
+<script src="/lib/prova-legacy-bridge.js"></script>
+<script src="/lib/edge-shim.js"></script>
+<script src="prova-fetch-auth.js"></script>
+<script>
+(function(){
+  try {
+    var token = localStorage.getItem('prova_auth_token');
+    var email = (localStorage.getItem('prova_sv_email') || '').toLowerCase();
+    if (!token || !email) { window.location.replace('/login?next=' + encodeURIComponent(location.pathname)); return; }
+    var ADMIN_EMAILS = ['marcel.schreiber891@gmail.com','marcel.schreiber@prova-systems.de','marcel@prova-systems.de','kontakt@prova-systems.de','admin@prova-systems.de'];
+    if (ADMIN_EMAILS.indexOf(email) < 0) { window.location.replace('/dashboard.html'); return; }
+  } catch (e) { window.location.replace('/login'); }
+})();
+</script>
+<script type="module">
+  import { runAuthGuard } from '/lib/auth-guard.js';
+  runAuthGuard().catch(e => console.error('[auth] guard failed', e));
+
+  // MEGA84/85 Pass 2a B.4: 2FA-Mandatory-Check für admin.* Subdomain
+  if (location.hostname.startsWith('admin.')) {
+    import('/lib/supabase-client.js').then(async (mod) => {
+      const sb = mod.supabase;
+      const { data } = await sb.auth.getUser();
+      const factors = data?.user?.factors || [];
+      const has2FA = factors.some(f => f.factor_type === 'totp' && f.status === 'verified');
+      if (!has2FA) {
+        location.href = '/setup-2fa.html?required=admin&redirect=' + encodeURIComponent(location.pathname);
+      }
+    }).catch(()=>{});
+  }
+</script>
+<style>
+:root{
+  --bg:#0b0d11;--bg2:#111318;--bg3:#161a22;
+  --surface:#1c2130;--surface2:#232a3a;
+  --border:rgba(255,255,255,.06);--border2:rgba(255,255,255,.11);
+  --text:#eaecf4;--text2:#8b93ab;--text3:#4d5568;
+  --accent:#4f8ef7;--accent2:#3a7be0;
+  --success:#10b981;--warning:#f59e0b;--danger:#ef4444;--purple:#a855f7;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;}
+body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(--text2);line-height:1.5;font-size:14px;}
+button{font-family:inherit;font-size:inherit;}
+a{color:inherit;text-decoration:none;}
+
+.topbar{position:sticky;top:0;z-index:100;background:var(--bg2);border-bottom:1px solid var(--border);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;gap:14px;}
+.topbar-title{font-size:16px;font-weight:800;color:var(--text);display:flex;align-items:center;gap:10px;}
+.topbar-title .badge{font-size:10px;font-weight:700;background:var(--purple);color:#fff;padding:3px 8px;border-radius:99px;letter-spacing:.04em;text-transform:uppercase;}
+.topbar-meta{font-size:11px;color:var(--text3);}
+
+.main{max-width:1280px;margin:0 auto;padding:24px 20px 60px;}
+
+/* Section pattern (analog .dc-* aus Hotfix-2) */
+.cp-section-label{font-size:15px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:10px;margin:0;}
+.cp-section-label-icon{font-size:20px;line-height:1;}
+.cp-section-row{display:flex;align-items:center;justify-content:space-between;margin:0 0 14px;padding-bottom:8px;border-bottom:1px solid var(--border);}
+.cp-section{margin-bottom:32px;}
+
+/* KPI-Grid */
+.cp-kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;}
+.cp-kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px;text-align:left;cursor:pointer;transition:all .15s;}
+.cp-kpi-card:hover{border-color:var(--border2);transform:translateY(-1px);}
+.cp-kpi-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);margin-bottom:6px;display:flex;align-items:center;gap:6px;}
+.cp-kpi-num{font-size:28px;font-weight:800;color:var(--text);letter-spacing:-.02em;line-height:1.1;}
+.cp-kpi-num.warn{color:var(--warning);}
+.cp-kpi-num.danger{color:var(--danger);}
+.cp-kpi-num.success{color:var(--success);}
+.cp-kpi-num.purple{color:var(--purple);}
+.cp-kpi-sub{font-size:11px;color:var(--text3);margin-top:4px;}
+
+/* Workspace-Liste */
+.cp-ws-controls{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;}
+.cp-ws-filter{padding:7px 12px;background:var(--surface);border:1px solid var(--border2);border-radius:8px;color:var(--text2);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;}
+.cp-ws-filter.active{background:rgba(79,142,247,.15);border-color:var(--accent);color:var(--accent);}
+.cp-ws-search{flex:1;min-width:180px;padding:8px 12px;background:var(--surface);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;outline:none;}
+.cp-ws-search:focus{border-color:var(--accent);}
+.cp-ws-table{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;}
+.cp-ws-row{display:grid;grid-template-columns:1.5fr 2fr 0.7fr 1fr 1fr 0.8fr 0.9fr;gap:10px;padding:12px 16px;border-bottom:1px solid var(--border);align-items:center;font-size:12.5px;}
+.cp-ws-row.head{background:var(--bg2);font-weight:700;font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);padding:10px 16px;}
+.cp-ws-row:not(.head):hover{background:var(--surface2);cursor:pointer;}
+.cp-ws-row:last-child{border-bottom:none;}
+.cp-tier{font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;display:inline-block;}
+.cp-tier-solo{background:rgba(79,142,247,.18);color:#93c5fd;}
+.cp-tier-team{background:rgba(168,85,247,.18);color:#d8b4fe;}
+.cp-status-badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;display:inline-flex;align-items:center;gap:4px;}
+.cp-status-aktiv{background:rgba(16,185,129,.12);color:var(--success);border:1px solid rgba(16,185,129,.3);}
+.cp-status-trial{background:rgba(245,158,11,.12);color:var(--warning);border:1px solid rgba(245,158,11,.3);}
+.cp-status-gekuendigt{background:rgba(239,68,68,.12);color:var(--danger);border:1px solid rgba(239,68,68,.3);}
+.cp-impersonate-btn{padding:5px 10px;background:var(--purple);color:#fff;font-size:11px;font-weight:700;border:none;border-radius:6px;cursor:pointer;font-family:inherit;}
+
+/* KI-Health */
+.cp-kihealth{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.cp-kihealth-block{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px;}
+.cp-kihealth-block h4{font-size:12px;font-weight:700;color:var(--text);margin-bottom:10px;}
+.cp-bar-list{display:flex;flex-direction:column;gap:6px;}
+.cp-bar-row{display:flex;align-items:center;gap:10px;font-size:11px;}
+.cp-bar-label{flex:1;color:var(--text2);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.cp-bar-track{flex:2;height:7px;background:var(--bg3);border-radius:4px;overflow:hidden;}
+.cp-bar-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:4px;}
+.cp-bar-value{color:var(--text3);font-family:monospace;font-size:11px;min-width:60px;text-align:right;}
+
+/* Audit-Events */
+.cp-events{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;}
+.cp-event{padding:10px 16px;border-bottom:1px solid var(--border);font-size:12px;display:flex;gap:12px;}
+.cp-event:last-child{border-bottom:none;}
+.cp-event-time{color:var(--text3);min-width:90px;font-family:monospace;font-size:11px;}
+.cp-event-body{flex:1;color:var(--text2);}
+.cp-event-tag{font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;background:var(--bg3);color:var(--text2);}
+
+.cp-empty{padding:24px;text-align:center;color:var(--text3);font-style:italic;font-size:13px;}
+
+@media(max-width:1024px){
+  .cp-kpi-grid{grid-template-columns:repeat(2,1fr);}
+  .cp-kihealth{grid-template-columns:1fr;}
+  .cp-ws-row{grid-template-columns:1fr 1fr 0.6fr;}
+  .cp-ws-row > *:nth-child(n+4){display:none;}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-title">
+    <span>🎯 PROVA Admin · Cockpit</span>
+    <span class="badge">Super-Admin</span>
+  </div>
+  <div class="topbar-meta" id="cp-meta">—</div>
+</header>
+
+<main class="main">
+
+  <!-- KPIs -->
+  <section class="cp-section">
+    <div class="cp-section-row">
+      <h2 class="cp-section-label"><span class="cp-section-label-icon">📊</span>Live-KPIs</h2>
+      <span class="cp-section-cta" style="font-size:11px;color:var(--text3);" id="cp-kpi-updated">Wird geladen…</span>
+    </div>
+    <div class="cp-kpi-grid">
+      <div class="cp-kpi-card" onclick="location.href='#workspaces'">
+        <div class="cp-kpi-label"><span>💰</span>MRR</div>
+        <div class="cp-kpi-num success" id="kpi-mrr">—</div>
+        <div class="cp-kpi-sub">aktive Subscriptions</div>
+      </div>
+      <div class="cp-kpi-card">
+        <div class="cp-kpi-label"><span>👥</span>Active Workspaces</div>
+        <div class="cp-kpi-num" id="kpi-active">—</div>
+        <div class="cp-kpi-sub">abo_status=aktiv</div>
+      </div>
+      <div class="cp-kpi-card">
+        <div class="cp-kpi-label"><span>🆓</span>Trial-Workspaces</div>
+        <div class="cp-kpi-num warn" id="kpi-trial">—</div>
+        <div class="cp-kpi-sub">abo_status=trial</div>
+      </div>
+      <div class="cp-kpi-card">
+        <div class="cp-kpi-label"><span>📉</span>Churn 30T</div>
+        <div class="cp-kpi-num danger" id="kpi-churn">—</div>
+        <div class="cp-kpi-sub">abo_gekuendigt_am &lt; 30T</div>
+      </div>
+      <div class="cp-kpi-card" onclick="location.href='admin-ki-aggregations.html'">
+        <div class="cp-kpi-label"><span>🤖</span>KI-Calls 30T</div>
+        <div class="cp-kpi-num purple" id="kpi-ki-calls">—</div>
+        <div class="cp-kpi-sub">ki_protokoll</div>
+      </div>
+      <div class="cp-kpi-card">
+        <div class="cp-kpi-label"><span>💸</span>KI-Kosten 30T</div>
+        <div class="cp-kpi-num" id="kpi-ki-cost">—</div>
+        <div class="cp-kpi-sub">EUR (gpt-5.5-Stack)</div>
+      </div>
+      <div class="cp-kpi-card">
+        <div class="cp-kpi-label"><span>⚠️</span>Failed Logins 24h</div>
+        <div class="cp-kpi-num warn" id="kpi-failed-logins">—</div>
+        <div class="cp-kpi-sub">audit_trail action=*fail*</div>
+      </div>
+      <div class="cp-kpi-card">
+        <div class="cp-kpi-label"><span>👻</span>Halluzinations-Rate 30T</div>
+        <div class="cp-kpi-num" id="kpi-halluz">—</div>
+        <div class="cp-kpi-sub">ki_protokoll fail-Quote</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Workspaces -->
+  <section class="cp-section" id="workspaces">
+    <div class="cp-section-row">
+      <h2 class="cp-section-label"><span class="cp-section-label-icon">🏢</span>Workspaces</h2>
+      <span class="cp-section-cta" style="font-size:11px;color:var(--text3);" id="cp-ws-count">—</span>
+    </div>
+    <div class="cp-ws-controls">
+      <button type="button" class="cp-ws-filter active" data-filter="all">Alle</button>
+      <button type="button" class="cp-ws-filter" data-filter="aktiv">Aktiv</button>
+      <button type="button" class="cp-ws-filter" data-filter="trial">Trial</button>
+      <button type="button" class="cp-ws-filter" data-filter="gekuendigt">Gekündigt</button>
+      <button type="button" class="cp-ws-filter" data-filter="no2fa">2FA-fehlt</button>
+      <input type="search" class="cp-ws-search" id="cp-ws-search" placeholder="Suche nach Name oder Email...">
+    </div>
+    <div class="cp-ws-table" id="cp-ws-table">
+      <div class="cp-empty">Wird geladen…</div>
+    </div>
+  </section>
+
+  <!-- KI-Health -->
+  <section class="cp-section">
+    <div class="cp-section-row">
+      <h2 class="cp-section-label"><span class="cp-section-label-icon">🤖</span>KI-Health (30 Tage)</h2>
+    </div>
+    <div class="cp-kihealth">
+      <div class="cp-kihealth-block">
+        <h4>Top-Tasks nach Aufruf-Anzahl</h4>
+        <div class="cp-bar-list" id="cp-ki-tasks"><div class="cp-empty">—</div></div>
+      </div>
+      <div class="cp-kihealth-block">
+        <h4>Konjunktiv-II-Pass + Halluzinations-Pass</h4>
+        <div class="cp-bar-list" id="cp-ki-checks"><div class="cp-empty">—</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Audit-Events -->
+  <section class="cp-section">
+    <div class="cp-section-row">
+      <h2 class="cp-section-label"><span class="cp-section-label-icon">📋</span>Letzte Events</h2>
+      <a href="admin-audit-trail.html" class="cp-section-cta" style="font-size:11px;color:var(--accent);">Voll-Log →</a>
+    </div>
+    <div class="cp-events" id="cp-events"><div class="cp-empty">Wird geladen…</div></div>
+  </section>
+
+</main>
+
+<script type="module">
+  import { supabase } from '/lib/supabase-client.js';
+
+  function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+  function eur(n){return new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR',maximumFractionDigits:0}).format(Number(n)||0);}
+  function relTime(iso){
+    if(!iso)return '';
+    var d=new Date(iso);var ms=Date.now()-d.getTime();
+    if(ms<60000)return 'vor wenigen Sek';
+    var m=Math.floor(ms/60000);if(m<60)return 'vor '+m+' Min';
+    var h=Math.floor(m/60);if(h<24)return 'vor '+h+' Std';
+    return d.toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'});
+  }
+
+  let allWorkspaces = [];
+  let currentFilter = 'all';
+
+  // ── KPI-Loader (parallel) ──────────────────────────────────────
+  async function loadKpis(){
+    document.getElementById('cp-kpi-updated').textContent = 'Lade KPIs…';
+    var [mrr, active, trial, churn, kiCalls, kiCost, failed, halluz] = await Promise.all([
+      supabase.from('workspaces').select('mrr_eur_snapshot').eq('abo_status','aktiv').is('deleted_at',null),
+      supabase.from('workspaces').select('id',{count:'exact',head:true}).eq('abo_status','aktiv').is('deleted_at',null),
+      supabase.from('workspaces').select('id',{count:'exact',head:true}).eq('abo_status','trial'),
+      supabase.from('workspaces').select('id',{count:'exact',head:true}).gte('abo_gekuendigt_am', new Date(Date.now()-30*86400000).toISOString()),
+      supabase.from('ki_protokoll').select('id',{count:'exact',head:true}).gte('created_at', new Date(Date.now()-30*86400000).toISOString()),
+      supabase.from('ki_protokoll').select('kosten_eur').gte('created_at', new Date(Date.now()-30*86400000).toISOString()),
+      supabase.from('audit_trail').select('id',{count:'exact',head:true}).like('action','%fail%').gte('created_at', new Date(Date.now()-24*3600000).toISOString()),
+      supabase.from('ki_protokoll').select('halluzinations_check_passed').gte('created_at', new Date(Date.now()-30*86400000).toISOString())
+    ]);
+    var mrrSum = (mrr.data||[]).reduce((s,r)=>s+(Number(r.mrr_eur_snapshot)||0),0);
+    document.getElementById('kpi-mrr').textContent = eur(mrrSum);
+    document.getElementById('kpi-active').textContent = active.count || 0;
+    document.getElementById('kpi-trial').textContent = trial.count || 0;
+    document.getElementById('kpi-churn').textContent = churn.count || 0;
+    document.getElementById('kpi-ki-calls').textContent = (kiCalls.count || 0).toLocaleString('de-DE');
+    var costSum = (kiCost.data||[]).reduce((s,r)=>s+(Number(r.kosten_eur)||0),0);
+    document.getElementById('kpi-ki-cost').textContent = eur(costSum);
+    document.getElementById('kpi-failed-logins').textContent = failed.count || 0;
+    var hRows = halluz.data || [];
+    var hFail = hRows.filter(r => r.halluzinations_check_passed === false).length;
+    var hRate = hRows.length ? Math.round(100 * hFail / hRows.length * 10)/10 : 0;
+    document.getElementById('kpi-halluz').textContent = hRate + '%';
+    document.getElementById('cp-kpi-updated').textContent = 'Aktualisiert: ' + new Date().toLocaleTimeString('de-DE');
+  }
+
+  // ── Workspaces ─────────────────────────────────────────────────
+  async function loadWorkspaces(){
+    var res = await supabase.from('workspaces')
+      .select('id, name, abo_tier, abo_status, abo_trial_endet_am, mrr_eur_snapshot, billing_email, require_2fa_for_admins')
+      .is('deleted_at', null)
+      .order('mrr_eur_snapshot', { ascending: false }).limit(100);
+    allWorkspaces = res.data || [];
+    document.getElementById('cp-ws-count').textContent = allWorkspaces.length + ' Workspaces';
+    renderWorkspaces();
+  }
+
+  function renderWorkspaces(){
+    var search = (document.getElementById('cp-ws-search').value || '').toLowerCase();
+    var filtered = allWorkspaces.filter(w => {
+      if (currentFilter === 'aktiv' && w.abo_status !== 'aktiv') return false;
+      if (currentFilter === 'trial' && w.abo_status !== 'trial') return false;
+      if (currentFilter === 'gekuendigt' && w.abo_status !== 'gekuendigt') return false;
+      if (currentFilter === 'no2fa' && w.require_2fa_for_admins) return false;
+      if (search && !(w.name||'').toLowerCase().includes(search) && !(w.billing_email||'').toLowerCase().includes(search)) return false;
+      return true;
+    });
+    var table = document.getElementById('cp-ws-table');
+    if (!filtered.length) {
+      table.innerHTML = '<div class="cp-empty">Keine Workspaces im aktuellen Filter.</div>';
+      return;
+    }
+    table.innerHTML = '<div class="cp-ws-row head"><div>Name</div><div>Billing-Email</div><div>Tier</div><div>Status</div><div>MRR</div><div>2FA</div><div></div></div>'
+      + filtered.map(w => {
+        var tierCls = 'cp-tier-' + (w.abo_tier === 'team' ? 'team' : 'solo');
+        var statusCls = 'cp-status-' + (w.abo_status || 'aktiv').toLowerCase();
+        var statusLabel = { aktiv:'aktiv', trial:'Trial', gekuendigt:'Gekündigt', pausiert:'Pausiert' }[w.abo_status] || w.abo_status;
+        return `<div class="cp-ws-row">
+          <div style="font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;">${esc(w.name||'—')}</div>
+          <div style="overflow:hidden;text-overflow:ellipsis;">${esc(w.billing_email||'—')}</div>
+          <div><span class="cp-tier ${tierCls}">${esc((w.abo_tier||'solo').toUpperCase())}</span></div>
+          <div><span class="cp-status-badge ${statusCls}">${esc(statusLabel||'?')}</span></div>
+          <div>${eur(w.mrr_eur_snapshot)}</div>
+          <div>${w.require_2fa_for_admins ? '✓' : '<span style="color:var(--warning);">⚠</span>'}</div>
+          <div><button type="button" class="cp-impersonate-btn" onclick="window.cpImpersonate('${w.id}')">Login-as →</button></div>
+        </div>`;
+      }).join('');
+  }
+
+  document.querySelectorAll('.cp-ws-filter').forEach(b => b.addEventListener('click', function(){
+    document.querySelectorAll('.cp-ws-filter').forEach(x => x.classList.remove('active'));
+    b.classList.add('active');
+    currentFilter = b.dataset.filter;
+    renderWorkspaces();
+  }));
+  document.getElementById('cp-ws-search').addEventListener('input', renderWorkspaces);
+
+  // ── KI-Health ──────────────────────────────────────────────────
+  async function loadKiHealth(){
+    var res = await supabase.from('ki_protokoll')
+      .select('purpose, modell_version, konjunktiv_check_passed, halluzinations_check_passed')
+      .gte('created_at', new Date(Date.now()-30*86400000).toISOString())
+      .limit(5000);
+    var rows = res.data || [];
+    var byPurpose = {};
+    rows.forEach(r => { var p = r.purpose || 'unbekannt'; byPurpose[p] = (byPurpose[p]||0) + 1; });
+    var top = Object.entries(byPurpose).sort((a,b) => b[1] - a[1]).slice(0,8);
+    var maxV = Math.max(...top.map(t => t[1]), 1);
+    document.getElementById('cp-ki-tasks').innerHTML = top.length === 0
+      ? '<div class="cp-empty">Keine Daten 30T</div>'
+      : top.map(([p, c]) => `<div class="cp-bar-row">
+          <div class="cp-bar-label">${esc(p)}</div>
+          <div class="cp-bar-track"><div class="cp-bar-fill" style="width:${(c/maxV*100).toFixed(0)}%;"></div></div>
+          <div class="cp-bar-value">${c}</div>
+        </div>`).join('');
+
+    var konjPass = rows.filter(r => r.konjunktiv_check_passed === true).length;
+    var konjTotal = rows.filter(r => r.konjunktiv_check_passed !== null).length;
+    var halPass = rows.filter(r => r.halluzinations_check_passed === true).length;
+    var halTotal = rows.filter(r => r.halluzinations_check_passed !== null).length;
+    var konjPct = konjTotal ? Math.round(100*konjPass/konjTotal) : 0;
+    var halPct = halTotal ? Math.round(100*halPass/halTotal) : 0;
+    document.getElementById('cp-ki-checks').innerHTML = `
+      <div class="cp-bar-row">
+        <div class="cp-bar-label">Konjunktiv-II-Pass</div>
+        <div class="cp-bar-track"><div class="cp-bar-fill" style="width:${konjPct}%;background:linear-gradient(90deg,var(--success),#059669);"></div></div>
+        <div class="cp-bar-value">${konjPct}%</div>
+      </div>
+      <div class="cp-bar-row">
+        <div class="cp-bar-label">Halluzinations-Pass</div>
+        <div class="cp-bar-track"><div class="cp-bar-fill" style="width:${halPct}%;background:linear-gradient(90deg,var(--success),#059669);"></div></div>
+        <div class="cp-bar-value">${halPct}%</div>
+      </div>`;
+  }
+
+  // ── Audit-Events ───────────────────────────────────────────────
+  async function loadEvents(){
+    var res = await supabase.from('audit_trail')
+      .select('id, action, entity_typ, entity_id, payload, created_at')
+      .neq('action','read')
+      .order('created_at', { ascending: false }).limit(15);
+    var rows = res.data || [];
+    if (!rows.length) {
+      document.getElementById('cp-events').innerHTML = '<div class="cp-empty">Keine Events.</div>';
+      return;
+    }
+    document.getElementById('cp-events').innerHTML = rows.map(r => `
+      <div class="cp-event">
+        <div class="cp-event-time">${esc(relTime(r.created_at))}</div>
+        <div class="cp-event-body">
+          <span class="cp-event-tag">${esc(r.action)}</span>
+          <span style="margin-left:8px;">${esc(r.entity_typ || '')} ${esc((r.entity_id||'').slice(0,8))}</span>
+        </div>
+      </div>`).join('');
+  }
+
+  // ── Login-as-User (Impersonation via existing admin-impersonate Edge MEGA54) ──
+  // Edge erwartet workspace_id + reason (min 5 Zeichen, DSGVO-Doku), liefert HMAC-Token.
+  // Read-Only-Mode (kein Schreiben in fremde Workspace), max 3/24h pro Admin (Rate-Limit).
+  window.cpImpersonate = async function(workspaceId){
+    var reason = prompt('Grund für Impersonation (DSGVO-Pflicht, min. 5 Zeichen):\n\nz.B. "Support-Ticket #123 — User berichtet Schimmel-Foto-Upload-Bug"', 'support_request: ');
+    if (!reason || reason.trim().length < 5) { alert('Reason mindestens 5 Zeichen.'); return; }
+    try {
+      var { data: { session } } = await supabase.auth.getSession();
+      var url = (window.PROVA_CONFIG?.SUPABASE_URL || '').replace(/\/$/, '');
+      var res = await fetch(url + '/functions/v1/admin-impersonate', {
+        method: 'POST',
+        headers: { 'Content-Type':'application/json', 'Authorization':'Bearer '+session.access_token },
+        body: JSON.stringify({ workspace_id: workspaceId, reason: reason.trim() })
+      });
+      if (res.status === 429) { alert('Rate-Limit: max 3 Impersonations/24h erreicht.'); return; }
+      if (!res.ok) {
+        var err = await res.text();
+        alert('Impersonation fehlgeschlagen (' + res.status + '): ' + err.slice(0,200));
+        return;
+      }
+      var j = await res.json();
+      var redirectUrl = j.redirect_url || (j.token ? ('/dashboard.html?impersonation_token=' + encodeURIComponent(j.token)) : null);
+      if (redirectUrl) window.open(redirectUrl, '_blank');
+      else alert('Edge-Response unvollständig:\n' + JSON.stringify(j).slice(0,200));
+    } catch(e){ alert('Fehler: ' + e.message); }
+  };
+
+  // ── INIT ───────────────────────────────────────────────────────
+  document.getElementById('cp-meta').textContent = (localStorage.getItem('prova_sv_email') || '') + ' · ' + new Date().toLocaleString('de-DE');
+  loadKpis().catch(e => console.error('[cp kpis]', e));
+  loadWorkspaces().catch(e => console.error('[cp ws]', e));
+  loadKiHealth().catch(e => console.error('[cp ki]', e));
+  loadEvents().catch(e => console.error('[cp events]', e));
+  // Auto-Refresh KPIs alle 60s
+  setInterval(() => loadKpis().catch(()=>{}), 60000);
+</script>
+
+</body>
+</html>
