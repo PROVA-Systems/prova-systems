@@ -32,6 +32,7 @@
       'archiv.html',
       'schadensfaelle.html',
       'termine.html',
+      'kalender.html',
       'rechnungen.html',
       'jveg.html',
       'mahnwesen.html',

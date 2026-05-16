@@ -103,7 +103,7 @@
   var COCKPIT = [
     { href: 'dashboard.html',        icon: '🏠',  label: 'Zentrale' },
     { href: 'archiv.html',           icon: '📋',  label: 'Meine Aufträge', countKey: 'auftraege' },
-    { href: 'termine.html',          icon: '📅',  label: 'Kalender',       countKey: 'kalender_heute' },
+    { href: 'kalender.html',         icon: '📅',  label: 'Kalender',       countKey: 'kalender_heute' },
     { href: 'fristen.html',          icon: '⏰',  label: 'Fristen' },
   ];
   var BUERO = [
@@ -1183,7 +1183,7 @@ window.provaConfirm = function(msg, onYes) {
     { label: '§407a ZPO Anzeige', desc: 'KI-Anzeige an Gericht (Pflicht vor Gerichtsgutachten)', href: 'zpo-anzeige.html', icon: '⚖️' },
     { label: 'Fälle / Archiv', desc: 'Alle Fälle anzeigen', href: 'archiv.html', icon: '📂' },
     { label: 'Zentrale / Dashboard', desc: 'Was steht heute an?', href: 'dashboard.html', icon: '⊞' },
-    { label: 'Kalender', desc: 'Termine und Fristen', href: 'termine.html', icon: '📅' },
+    { label: 'Kalender', desc: 'Termine, Fristen, Rechnungen', href: 'kalender.html', icon: '📅' },
     { label: 'Normen-Datenbank', desc: 'DIN, VOB, WTA, ZPO', href: 'normen.html', icon: '📚' },
     { label: 'Textbausteine', desc: 'Wiederkehrende Formulierungen', href: 'textbausteine.html', icon: '📝' },
     { label: 'Positionen & Kosten', desc: 'BKI-Einheitspreise', href: 'positionen.html', icon: '🗂️' },
@@ -1704,7 +1704,7 @@ window.provaSbLogout = function() {
       { icon: '⊞', label: 'Zentrale', href: 'dashboard.html' },
       { icon: '📂', label: 'Fälle',   href: 'archiv.html'   },
       { icon: '➕', label: 'Neu',     href: 'app.html', highlight: true },
-      { icon: '📅', label: 'Termine', href: 'termine.html'  },
+      { icon: '📅', label: 'Kalender', href: 'kalender.html'  },
       { icon: '☰',  label: 'Menü',   href: '#menu'          },
     ];
 

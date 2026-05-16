@@ -27,6 +27,7 @@ const APP_SHELL = [
   '/briefvorlagen.html',
   '/rechnungen.html',
   '/termine.html',
+  '/kalender.html',
   '/jveg.html',
   '/einstellungen.html',
   '/kontakte.html',

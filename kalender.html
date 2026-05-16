@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<link rel="manifest" href="/manifest.json">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="viewport" content="width=device-width,initial-scale=1, viewport-fit=cover">
+<title>Kalender · PROVA</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="/lib/prova-config.js"></script>
+<script src="/lib/prova-legacy-bridge.js"></script>
+<script src="/lib/edge-shim.js"></script>
+<script src="prova-fetch-auth.js"></script>
+<script>
+(function(){
+  try {
+    var token = localStorage.getItem('prova_auth_token');
+    var email = localStorage.getItem('prova_sv_email') || '';
+    if (!token || !email || email.indexOf('@') === -1) {
+      window.location.replace('/login?next=' + encodeURIComponent(location.pathname));
+      return;
+    }
+  } catch (e) { window.location.replace('/login'); }
+})();
+</script>
+<script type="module">
+  import { runAuthGuard } from '/lib/auth-guard.js';
+  runAuthGuard().catch(e => console.error('[auth] guard failed', e));
+</script>
+<script src="theme.js"></script>
+<script src="nav.js" defer></script>
+<style>
+:root{
+  --bg:#0b0d11;--bg2:#111318;--bg3:#161a22;
+  --surface:#1c2130;--surface2:#232a3a;
+  --border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.11);
+  --text:#eaecf4;--text2:#8b93ab;--text3:#4d5568;
+  --accent:#4f8ef7;--accent2:#3a7be0;
+  --success:#10b981;--warning:#f59e0b;--danger:#ef4444;--purple:#a855f7;
+  --kal-frist:#f59e0b;--kal-frist-urgent:#dc2626;
+  --kal-termin:#4f8ef7;--kal-rechnung:#10b981;--kal-mahnung:#991b1b;--kal-gutachten:#a855f7;
+  --r-md:10px;--r-lg:14px;
+  --font-ui:'DM Sans',system-ui,sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{font-size:14px;}
+body{font-family:var(--font-ui);background:var(--bg);color:var(--text2);min-height:100vh;line-height:1.55;}
+a{color:inherit;text-decoration:none;}
+button{font-family:inherit;font-size:inherit;}
+
+.app-shell{display:flex;min-height:100vh;}
+.main-wrap{flex:1;min-width:0;display:flex;flex-direction:column;min-height:100vh;}
+.topbar{height:52px;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 24px;position:sticky;top:0;z-index:100;}
+.breadcrumb{font-size:13px;color:var(--text3);display:flex;align-items:center;gap:6px;}
+.breadcrumb strong{color:var(--text);font-weight:600;}
+.burger{display:none;flex-direction:column;gap:4.5px;background:none;border:none;cursor:pointer;padding:8px;}
+.burger span{display:block;width:18px;height:2px;background:var(--text2);border-radius:2px;}
+.sb-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:190;}
+.sb-overlay.open{display:block;}
+
+.page-content{padding:24px 28px 60px;max-width:1280px;width:100%;}
+
+/* ── HEADER ── */
+.kal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px;}
+.kal-title{font-size:24px;font-weight:800;color:var(--text);letter-spacing:-.02em;display:flex;align-items:center;gap:10px;}
+.kal-title-icon{font-size:26px;}
+.kal-nav-controls{display:flex;align-items:center;gap:8px;}
+.kal-btn{padding:7px 14px;background:var(--surface);border:1px solid var(--border2);border-radius:8px;color:var(--text2);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;}
+.kal-btn:hover{background:var(--surface2);color:var(--text);}
+.kal-btn.primary{background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;color:#fff;}
+.kal-btn-icon{padding:7px 10px;font-size:14px;}
+.kal-month-label{font-size:16px;font-weight:700;color:var(--text);min-width:170px;text-align:center;}
+
+/* ── FILTER-BAR ── */
+.kal-filter-bar{display:flex;align-items:center;gap:14px;padding:12px 16px;background:var(--surface);border:1px solid var(--border);border-radius:10px;margin-bottom:18px;flex-wrap:wrap;}
+.kal-filter-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);margin-right:4px;}
+.kal-filter-toggle{display:inline-flex;align-items:center;gap:6px;cursor:pointer;font-size:12px;color:var(--text2);user-select:none;}
+.kal-filter-toggle input{cursor:pointer;accent-color:var(--accent);}
+.kal-view-toggle{margin-left:auto;display:flex;gap:0;border:1px solid var(--border2);border-radius:8px;overflow:hidden;}
+.kal-view-toggle button{padding:6px 12px;background:transparent;border:none;color:var(--text3);font-size:12px;cursor:pointer;font-family:inherit;border-right:1px solid var(--border2);}
+.kal-view-toggle button:last-child{border-right:none;}
+.kal-view-toggle button.active{background:var(--accent);color:#fff;}
+
+/* ── MONATS-GRID ── */
+.kal-grid{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
+.kal-weekdays{display:grid;grid-template-columns:repeat(7,1fr);background:var(--bg2);border-bottom:1px solid var(--border);}
+.kal-wd{padding:10px 8px;text-align:center;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);}
+.kal-days{display:grid;grid-template-columns:repeat(7,1fr);}
+.kal-day{min-height:100px;border-right:1px solid var(--border);border-bottom:1px solid var(--border);padding:6px 8px;background:var(--surface);position:relative;cursor:pointer;transition:background .12s;}
+.kal-day:nth-child(7n){border-right:none;}
+.kal-day:hover{background:var(--bg3);}
+.kal-day.other-month{background:var(--bg);color:var(--text3);opacity:.5;}
+.kal-day.today{background:rgba(79,142,247,.06);}
+.kal-day.today .kal-day-num{color:var(--accent);font-weight:800;}
+.kal-day-num{font-size:13px;font-weight:600;color:var(--text2);margin-bottom:4px;}
+.kal-event{display:flex;align-items:center;gap:5px;padding:2px 6px;border-radius:4px;font-size:10px;font-weight:600;color:#fff;margin-bottom:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer;line-height:1.3;}
+.kal-event:hover{filter:brightness(1.15);}
+.kal-event-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+.kal-event-more{font-size:9px;color:var(--text3);padding:1px 6px;cursor:pointer;}
+
+/* ── LISTEN-VIEW ── */
+.kal-list{display:flex;flex-direction:column;gap:0;background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
+.kal-list-day{padding:14px 18px;border-bottom:1px solid var(--border);}
+.kal-list-day:last-child{border-bottom:none;}
+.kal-list-day.today{background:rgba(79,142,247,.06);}
+.kal-list-day-header{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);margin-bottom:8px;display:flex;align-items:center;gap:8px;}
+.kal-list-day.today .kal-list-day-header{color:var(--accent);}
+.kal-list-event{display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--bg3);border-radius:8px;margin-bottom:4px;cursor:pointer;transition:background .12s;text-decoration:none;color:inherit;}
+.kal-list-event:hover{background:var(--surface2);}
+.kal-list-event-color{width:4px;align-self:stretch;border-radius:2px;flex-shrink:0;}
+.kal-list-event-body{flex:1;min-width:0;}
+.kal-list-event-title{font-size:13px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.kal-list-event-meta{font-size:11px;color:var(--text3);margin-top:1px;}
+.kal-list-event-badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;flex-shrink:0;text-transform:uppercase;letter-spacing:.04em;}
+
+.kal-empty{padding:48px 24px;text-align:center;color:var(--text2);font-size:14px;}
+.kal-empty-icon{font-size:40px;display:block;margin-bottom:14px;opacity:.6;}
+
+/* ── COLOR-CODING ── */
+.cat-termin{background:var(--kal-termin);}
+.cat-frist{background:var(--kal-frist);}
+.cat-frist-urgent{background:var(--kal-frist-urgent);}
+.cat-rechnung{background:var(--kal-rechnung);}
+.cat-mahnung{background:var(--kal-mahnung);}
+.cat-gutachten{background:var(--kal-gutachten);}
+
+/* ── MOBILE ── */
+@media (max-width:768px){
+  .page-content{padding:14px 14px 60px;}
+  .kal-day{min-height:60px;padding:4px;}
+  .kal-event{font-size:9px;padding:1px 4px;}
+  .kal-wd{padding:6px 4px;font-size:10px;}
+  .kal-day-num{font-size:11px;}
+  .burger{display:flex;}
+}
+</style>
+</head>
+<body>
+
+<div class="app-shell">
+<nav class="sidebar" id="sidebar"></nav>
+<div class="sb-overlay" id="sb-overlay" onclick="closeMobileSidebar()"></div>
+
+<div class="main-wrap" id="main-wrap">
+  <header class="topbar">
+    <div style="display:flex;align-items:center;gap:12px;">
+      <button class="burger" onclick="openMobileSidebar()"><span></span><span></span><span></span></button>
+      <div class="breadcrumb">
+        <span>PROVA</span><span style="color:var(--text3)">›</span>
+        <strong>Kalender</strong>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <a href="einstellungen.html"><button class="kal-btn-icon kal-btn" title="Einstellungen">⚙</button></a>
+    </div>
+  </header>
+
+  <main class="page-content">
+    <!-- HEADER + NAV -->
+    <div class="kal-header">
+      <h1 class="kal-title"><span class="kal-title-icon">📅</span>Kalender</h1>
+      <div class="kal-nav-controls">
+        <button class="kal-btn kal-btn-icon" onclick="kalPrevMonth()" aria-label="Vorheriger Monat">←</button>
+        <div class="kal-month-label" id="kal-month-label">—</div>
+        <button class="kal-btn kal-btn-icon" onclick="kalNextMonth()" aria-label="Nächster Monat">→</button>
+        <button class="kal-btn primary" onclick="kalToday()">Heute</button>
+      </div>
+    </div>
+
+    <!-- FILTER + VIEW-TOGGLE -->
+    <div class="kal-filter-bar">
+      <span class="kal-filter-label">Zeigen:</span>
+      <label class="kal-filter-toggle"><input type="checkbox" data-cat="termin" checked> 📅 Termine</label>
+      <label class="kal-filter-toggle"><input type="checkbox" data-cat="frist" checked> ⚠️ Fristen</label>
+      <label class="kal-filter-toggle"><input type="checkbox" data-cat="rechnung" checked> 💶 Rechnungen</label>
+      <label class="kal-filter-toggle"><input type="checkbox" data-cat="mahnung" checked> 🔴 Mahnungen</label>
+      <label class="kal-filter-toggle"><input type="checkbox" data-cat="gutachten" checked> 📋 Gutachten-Plan</label>
+      <div class="kal-view-toggle">
+        <button data-view="month" class="active" onclick="kalSetView('month')">Monat</button>
+        <button data-view="list" onclick="kalSetView('list')">Liste</button>
+      </div>
+    </div>
+
+    <!-- MONATS-GRID -->
+    <div id="kal-month-view" class="kal-grid" style="display:block;">
+      <div class="kal-weekdays">
+        <div class="kal-wd">Mo</div><div class="kal-wd">Di</div><div class="kal-wd">Mi</div>
+        <div class="kal-wd">Do</div><div class="kal-wd">Fr</div><div class="kal-wd">Sa</div><div class="kal-wd">So</div>
+      </div>
+      <div class="kal-days" id="kal-days"></div>
+    </div>
+
+    <!-- LISTEN-VIEW -->
+    <div id="kal-list-view" class="kal-list" style="display:none;">
+      <div class="kal-empty"><span class="kal-empty-icon">📅</span>Wird geladen…</div>
+    </div>
+
+  </main>
+</div>
+</div>
+
+<script type="module">
+  import { supabase } from '/lib/supabase-client.js';
+
+  // ── State ─────────────────────────────────────────────────────────
+  let viewState = { year: new Date().getFullYear(), month: new Date().getMonth(), view: 'month' };
+  let currentEvents = [];
+  let filterState = { termin: true, frist: true, rechnung: true, mahnung: true, gutachten: true };
+
+  // ── Filter-Persist ────────────────────────────────────────────────
+  try {
+    const stored = JSON.parse(localStorage.getItem('prova_kalender_filters') || 'null');
+    if (stored && typeof stored === 'object') filterState = Object.assign(filterState, stored);
+  } catch(_){}
+  try {
+    const storedView = localStorage.getItem('prova_kalender_view');
+    if (storedView === 'list' || storedView === 'month') viewState.view = storedView;
+  } catch(_){}
+
+  function persistFilters(){
+    try { localStorage.setItem('prova_kalender_filters', JSON.stringify(filterState)); } catch(_){}
+  }
+  function persistView(){
+    try { localStorage.setItem('prova_kalender_view', viewState.view); } catch(_){}
+  }
+
+  function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+  function isoDate(d){ return d.toISOString().slice(0,10); }
+  function dateOnly(s){ return s ? String(s).slice(0,10) : null; }
+
+  // ── Loader: 5 Quellen parallel ────────────────────────────────────
+  async function loadCalendarEvents(rangeStart, rangeEnd){
+    const [termineR, fristenR, rechnungenR, mahnungenR, gutachtenR] = await Promise.all([
+      supabase.from('termine')
+        .select('id, titel, typ, datum, uhrzeit_von, uhrzeit_bis, ort_name, ort_ort, status, auftrag_id, auftraege(az)')
+        .gte('datum', rangeStart).lte('datum', rangeEnd)
+        .is('deleted_at', null)
+        .not('status', 'in', '(abgesagt,kein_zustandekommen)').catch(()=>({data:[]})),
+      supabase.from('fristen')
+        .select('id, frist_typ, notiz, datum_soll, status, auftrag_id, auftraege(az,titel)')
+        .gte('datum_soll', rangeStart).lte('datum_soll', rangeEnd)
+        .is('deleted_at', null).catch(()=>({data:[]})),
+      supabase.from('dokumente')
+        .select('id, doc_nummer, betrag_brutto, faelligkeit, status, auftrag_id, auftraege(az), typ')
+        .in('typ', ['rechnung','rechnung_jveg','rechnung_stunden'])
+        .gte('faelligkeit', rangeStart).lte('faelligkeit', rangeEnd)
+        .is('bezahlt_at', null).is('deleted_at', null).catch(()=>({data:[]})),
+      supabase.from('dokumente')
+        .select('id, doc_nummer, mahn_stufe, mahn_datum_letzte, auftrag_id, auftraege(az), typ')
+        .in('typ', ['mahnung_1','mahnung_2','mahnung_3'])
+        .gte('mahn_datum_letzte', rangeStart).lte('mahn_datum_letzte', rangeEnd)
+        .is('deleted_at', null).catch(()=>({data:[]})),
+      supabase.from('auftraege')
+        .select('id, az, titel, gutachtendatum, status')
+        .gte('gutachtendatum', rangeStart).lte('gutachtendatum', rangeEnd)
+        .is('deleted_at', null).neq('status', 'abgeschlossen').catch(()=>({data:[]}))
+    ]);
+
+    const todayD = new Date(); todayD.setHours(0,0,0,0);
+    const events = [];
+
+    (termineR.data || []).forEach(t => {
+      const az = (t.auftraege && t.auftraege.az) ? ' · ' + t.auftraege.az : '';
+      events.push({
+        id: 'termin_' + t.id, kategorie: 'termin',
+        title: (t.titel || t.typ || 'Termin') + az,
+        date: dateOnly(t.datum),
+        time: t.uhrzeit_von ? String(t.uhrzeit_von).slice(0,5) : null,
+        href: t.auftrag_id ? ('/akte?id=' + t.auftrag_id) : ('/termine.html?id=' + t.id),
+        cat: 'termin', color: 'cat-termin'
+      });
+    });
+    (fristenR.data || []).forEach(f => {
+      const dueDate = f.datum_soll ? new Date(f.datum_soll + 'T00:00:00') : null;
+      const isUrgent = dueDate && (dueDate < todayD || (dueDate - todayD) / 86400000 < 3);
+      const az = (f.auftraege && f.auftraege.az) ? ' · ' + f.auftraege.az : '';
+      events.push({
+        id: 'frist_' + f.id, kategorie: 'frist',
+        title: (f.frist_typ || 'Frist') + az,
+        detail: f.notiz || '',
+        date: dateOnly(f.datum_soll),
+        href: f.auftrag_id ? ('/akte?id=' + f.auftrag_id) : ('/fristen.html?id=' + f.id),
+        cat: 'frist', color: isUrgent ? 'cat-frist-urgent' : 'cat-frist'
+      });
+    });
+    (rechnungenR.data || []).forEach(r => {
+      const az = (r.auftraege && r.auftraege.az) ? r.auftraege.az + ' · ' : '';
+      events.push({
+        id: 'rechnung_' + r.id, kategorie: 'rechnung',
+        title: az + (r.doc_nummer || 'Rechnung') + ' fällig',
+        detail: r.betrag_brutto ? (Number(r.betrag_brutto).toFixed(2) + ' €') : '',
+        date: dateOnly(r.faelligkeit),
+        href: '/rechnungen.html?id=' + r.id,
+        cat: 'rechnung', color: 'cat-rechnung'
+      });
+    });
+    (mahnungenR.data || []).forEach(m => {
+      const az = (m.auftraege && m.auftraege.az) ? ' · ' + m.auftraege.az : '';
+      events.push({
+        id: 'mahnung_' + m.id, kategorie: 'mahnung',
+        title: 'Mahnung Stufe ' + (m.mahn_stufe || '?') + az,
+        date: dateOnly(m.mahn_datum_letzte),
+        href: '/mahnwesen.html?id=' + m.id,
+        cat: 'mahnung', color: 'cat-mahnung'
+      });
+    });
+    (gutachtenR.data || []).forEach(a => {
+      events.push({
+        id: 'gutachten_' + a.id, kategorie: 'gutachten',
+        title: 'Gutachten geplant: ' + (a.az || a.titel || a.id.slice(0,8)),
+        date: dateOnly(a.gutachtendatum),
+        href: '/akte?id=' + a.id,
+        cat: 'gutachten', color: 'cat-gutachten'
+      });
+    });
+
+    return events;
+  }
+
+  // ── Monats-Grid-Rendering ─────────────────────────────────────────
+  function getMonthRange(year, month){
+    const first = new Date(year, month, 1);
+    const last = new Date(year, month + 1, 0);
+    // erweitern auf Mo-So-Vollwochen
+    const startOffset = (first.getDay() + 6) % 7; // Mo=0
+    const start = new Date(first); start.setDate(first.getDate() - startOffset);
+    const endOffset = 6 - ((last.getDay() + 6) % 7);
+    const end = new Date(last); end.setDate(last.getDate() + endOffset);
+    return { start, end };
+  }
+
+  function renderMonthGrid(){
+    const { year, month } = viewState;
+    const monthLabel = new Date(year, month).toLocaleDateString('de-DE', { month:'long', year:'numeric' });
+    document.getElementById('kal-month-label').textContent = monthLabel;
+    const { start, end } = getMonthRange(year, month);
+    const grid = document.getElementById('kal-days');
+    const today = new Date(); today.setHours(0,0,0,0);
+    const eventsByDate = {};
+    currentEvents.forEach(e => {
+      if (!filterState[e.cat]) return;
+      if (!eventsByDate[e.date]) eventsByDate[e.date] = [];
+      eventsByDate[e.date].push(e);
+    });
+
+    let html = '';
+    const cursor = new Date(start);
+    while (cursor <= end) {
+      const iso = isoDate(cursor);
+      const dayOfMonth = cursor.getDate();
+      const isOtherMonth = cursor.getMonth() !== month;
+      const isToday = cursor.getTime() === today.getTime();
+      const events = eventsByDate[iso] || [];
+      const cls = ['kal-day'];
+      if (isOtherMonth) cls.push('other-month');
+      if (isToday) cls.push('today');
+      let eventsHtml = events.slice(0, 3).map(e => {
+        const timePrefix = e.time ? e.time + ' · ' : '';
+        return '<div class="kal-event ' + e.color + '" onclick="event.stopPropagation();window.location.href=\'' + esc(e.href) + '\'" title="' + esc(e.title) + (e.detail ? ' · ' + esc(e.detail) : '') + '">'
+          + esc(timePrefix + e.title).slice(0,40)
+          + '</div>';
+      }).join('');
+      if (events.length > 3) {
+        eventsHtml += '<div class="kal-event-more" onclick="event.stopPropagation();window.kalSetView(\'list\');">+ ' + (events.length - 3) + ' mehr</div>';
+      }
+      html += '<div class="' + cls.join(' ') + '" data-date="' + iso + '">'
+        + '<div class="kal-day-num">' + dayOfMonth + '</div>'
+        + eventsHtml
+        + '</div>';
+      cursor.setDate(cursor.getDate() + 1);
+    }
+    grid.innerHTML = html;
+  }
+
+  // ── Listen-View-Rendering ─────────────────────────────────────────
+  const catLabels = { termin:'Termin', frist:'Frist', rechnung:'Rechnung', mahnung:'Mahnung', gutachten:'Gutachten' };
+  const catIcons = { termin:'📅', frist:'⚠️', rechnung:'💶', mahnung:'🔴', gutachten:'📋' };
+
+  function renderListView(){
+    const view = document.getElementById('kal-list-view');
+    const filtered = currentEvents.filter(e => filterState[e.cat]);
+    if (filtered.length === 0){
+      view.innerHTML = '<div class="kal-empty"><span class="kal-empty-icon">📅</span>Keine Einträge in diesem Monat.</div>';
+      return;
+    }
+    // Group by date
+    const grouped = {};
+    filtered.forEach(e => { (grouped[e.date] = grouped[e.date] || []).push(e); });
+    const sortedDates = Object.keys(grouped).sort();
+    const today = isoDate(new Date());
+    let html = '';
+    sortedDates.forEach(date => {
+      const isToday = date === today;
+      const dObj = new Date(date + 'T00:00:00');
+      const dLabel = dObj.toLocaleDateString('de-DE', { weekday:'long', day:'2-digit', month:'2-digit', year:'numeric' });
+      html += '<div class="kal-list-day' + (isToday ? ' today' : '') + '">';
+      html += '<div class="kal-list-day-header">' + esc(dLabel) + (isToday ? ' · HEUTE' : '') + '</div>';
+      grouped[date].forEach(e => {
+        const time = e.time ? '<span style="margin-right:6px;color:var(--text2);">' + esc(e.time) + '</span>' : '';
+        const colorMap = { 'cat-termin':'var(--kal-termin)', 'cat-frist':'var(--kal-frist)', 'cat-frist-urgent':'var(--kal-frist-urgent)',
+                           'cat-rechnung':'var(--kal-rechnung)', 'cat-mahnung':'var(--kal-mahnung)', 'cat-gutachten':'var(--kal-gutachten)' };
+        const colorVal = colorMap[e.color] || 'var(--accent)';
+        html += '<a class="kal-list-event" href="' + esc(e.href) + '">'
+          + '<div class="kal-list-event-color" style="background:' + colorVal + ';"></div>'
+          + '<div class="kal-list-event-body">'
+          +   '<div class="kal-list-event-title">' + (catIcons[e.cat] || '·') + ' ' + time + esc(e.title) + '</div>'
+          +   (e.detail ? '<div class="kal-list-event-meta">' + esc(e.detail) + '</div>' : '')
+          + '</div>'
+          + '<div class="kal-list-event-badge" style="background:' + colorVal + ';color:#fff;">' + esc(catLabels[e.cat] || e.cat) + '</div>'
+          + '</a>';
+      });
+      html += '</div>';
+    });
+    view.innerHTML = html;
+  }
+
+  // ── Master-Render ─────────────────────────────────────────────────
+  async function reloadAndRender(){
+    const { year, month } = viewState;
+    const { start, end } = getMonthRange(year, month);
+    currentEvents = await loadCalendarEvents(isoDate(start), isoDate(end)).catch(e => { console.warn('[kal load]', e); return []; });
+    if (viewState.view === 'month') renderMonthGrid();
+    else renderListView();
+  }
+
+  // ── Navigation ────────────────────────────────────────────────────
+  window.kalPrevMonth = function(){
+    viewState.month--;
+    if (viewState.month < 0) { viewState.month = 11; viewState.year--; }
+    reloadAndRender();
+  };
+  window.kalNextMonth = function(){
+    viewState.month++;
+    if (viewState.month > 11) { viewState.month = 0; viewState.year++; }
+    reloadAndRender();
+  };
+  window.kalToday = function(){
+    const t = new Date();
+    viewState.year = t.getFullYear();
+    viewState.month = t.getMonth();
+    reloadAndRender();
+  };
+  window.kalSetView = function(v){
+    viewState.view = v;
+    persistView();
+    document.querySelectorAll('.kal-view-toggle button').forEach(b => b.classList.toggle('active', b.dataset.view === v));
+    document.getElementById('kal-month-view').style.display = v === 'month' ? 'block' : 'none';
+    document.getElementById('kal-list-view').style.display = v === 'list' ? 'block' : 'none';
+    if (v === 'month') renderMonthGrid(); else renderListView();
+  };
+
+  // ── Filter-Listener ───────────────────────────────────────────────
+  document.querySelectorAll('.kal-filter-toggle input').forEach(input => {
+    input.checked = filterState[input.dataset.cat] !== false;
+    input.addEventListener('change', () => {
+      filterState[input.dataset.cat] = input.checked;
+      persistFilters();
+      if (viewState.view === 'month') renderMonthGrid(); else renderListView();
+    });
+  });
+
+  // ── INIT ──────────────────────────────────────────────────────────
+  document.querySelectorAll('.kal-view-toggle button').forEach(b => b.classList.toggle('active', b.dataset.view === viewState.view));
+  document.getElementById('kal-month-view').style.display = viewState.view === 'month' ? 'block' : 'none';
+  document.getElementById('kal-list-view').style.display = viewState.view === 'list' ? 'block' : 'none';
+  reloadAndRender();
+</script>
+
+</body>
+</html>
