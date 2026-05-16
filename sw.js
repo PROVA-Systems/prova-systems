@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v3300-mega83-merge-hotfix2';   // MEGA⁸³ + MEGA⁸²-Hotfix-2 (Merge 2026-05-16): MEGA83 Akte-Mission-Control (5-Zonen-Layout + Phase-Stepper visuell + Stammdaten-Bar collapsible + Phase-Checklist Smart-Detection + Activity-Sidebar + Phase-Modal) + freigabe-wizard.html neu (3-Step §407a-Check + Erklaerung + PDF) + Cross-Domain-Bridge-Fix (ProvaLegacyBridge). PLUS Hotfix-2 (AZ-Frontend-Cleanup Auto-Generator weg + Section-Labels 15px prominenter + kalender.html universal 5 Quellen). Sprint-Historie: docs/SW-VERSION-HISTORY.md.
+const CACHE_VERSION = 'prova-v3400-mega84-pass1-vor-ort-power';   // MEGA⁸⁴/⁸⁵ Pass 1 2026-05-16: Block 0 (Akte-Section-Labels prominent + Bridge-Sweep 83 Pages + Edge-Reaping-CLI-Doku) + Block A Vor-Ort-Power-Foundation (skizzen.foto_pins JSONB Migration + lib/skizzen-pins.js mit Pin-Mode + ki-proxy gpt-5.5-vision foto_caption_vision + diktat_paragraph_mapping mit Chips-UI). Block A.5 Mobile-3-Tab und Block B-G DEFER Pass 2/3. Sprint-Historie: docs/SW-VERSION-HISTORY.md.
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [

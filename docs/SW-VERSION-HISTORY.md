@@ -8,6 +8,20 @@ Format: **vNNNN-marker** | YYYY-MM-DD | Sprint | Kurz-Note
 
 ---
 
+## 2026-05-16 — MEGA-Serie #8/9/10
+
+**v3400-mega84-pass1-vor-ort-power** | 2026-05-16 | MEGA⁸⁴/⁸⁵ Mega-Marathon Pass 1
+- Block 0.1 Akte-Section-Labels prominent (analog .dc-* aus Hotfix-2): 11px→15px, Icon-Span 20px, Trennlinie + Mobile-Responsive
+- Block 0.2 Bridge-Sweep: prova-legacy-bridge.js in 83 App-Pages eingebunden (sed-Bulk-Insert nach prova-config.js) — Cross-Subdomain-Auth-Bridge end-to-end
+- Block 0.3 docs/MEGA84-EDGE-DELETED.md mit Marcel-CLI-Apply-Pfad fuer 6 sichere Edge-Deletes
+- Block A.1 Migration 58 skizzen.foto_pins jsonb + GIN-Index (Pin-Format mit x_pct/y_pct/foto_id/label/ki_caption)
+- Block A.2 lib/skizzen-pins.js NEU: Pin-Mode-Toggle + Modal mit Label/Kategorie/Foto-ID + Lightbox + Persist via Supabase
+- Block A.3 KI-Vision-Captions: ki-proxy gpt-5.5-vision mit callOpenAIVision Multi-Modal-API + VISION_PURPOSES Set, neue purposes foto_caption_vision + diktat_paragraph_mapping mit verbindlichen Wortlauten
+- Block A.4 lib/prova-ki-foto.js (Frontend-Wrapper Vision-Captions) + lib/prova-ki-diktat-mapping.js (Diktat → §§-Chips mit editierbarem Paragraph-Select)
+- DEFER Pass 2: Block A.5 Vor-Ort-Mobile-3-Tab-Refactor, Block B Founder-Cockpit, Block C KI-Pipeline-Migration (gpt-4o-Legacy → gpt-5.5 ist bereits via MODEL_API_NAME-Aliase done), Block D-G
+
+---
+
 ## 2026-05-16 — MEGA-Serie #8/9
 
 **v3300-mega83-akte-mission-control** | 2026-05-16 | MEGA⁸³ Akte-Mission-Control + Freigabe-Wizard + Auth-Bridge
