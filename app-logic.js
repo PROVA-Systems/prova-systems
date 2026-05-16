@@ -583,7 +583,11 @@ window.auftragAnlegenUndOeffnen = async function() {
   const auftragsart = v('f-auftragsart');
   const dbTyp = UI_TO_DB_TYP[auftragsart] || 'schaden';
   const strasse = v('f-strasse'), plz = v('f-plz'), ort = v('f-ort');
-  const az = v('f-schadensnummer') || v('f-gerichts-az') || ('AZ-' + Date.now().toString().slice(-6));
+  // MEGA⁸²-Hotfix-1 H0: AZ NIE im Frontend generieren — DB-Trigger
+  // `auftraege_autogen_az` füllt NEW.az bei INSERT mit kollisionsfreiem
+  // <PREFIX>-<JAHR>-<LFD-NR> Format. Nur wenn User explizit eigenen AZ
+  // eingetippt hat (z.B. Gerichts-Aktenzeichen), wird er respektiert.
+  const azUserInput = v('f-schadensnummer') || v('f-gerichts-az');
   const titel = [v('f-schadenart'), v('f-auftraggeber-name'), [strasse, plz, ort].filter(Boolean).join(', ')].filter(Boolean).join(' · ') || 'Neuer Auftrag';
 
   const btn = document.querySelector('.btn-primary[onclick*="weiterZuSchritt2"], .btn-primary[onclick*="auftragAnlegenUndOeffnen"]');
@@ -644,15 +648,17 @@ window.auftragAnlegenUndOeffnen = async function() {
     if (_ortstermin)   _details.ortstermin_datum = _ortstermin;
     if (_beweisfragen) _details.beweisfragen = _beweisfragen;
 
-    // Schema-aligned payload (alle Keys sind echte Columns oder jsonb)
+    // Schema-aligned payload (alle Keys sind echte Columns oder jsonb).
+    // MEGA⁸²-Hotfix-1 H0: az NUR mitschicken wenn User-Input vorhanden,
+    // sonst leer lassen → DB-Trigger generiert <PREFIX>-<JAHR>-<LFD-NR>.
     const safe = {
       workspace_id: wsId,
       typ: dbTyp,
-      az: az,
       titel: titel,
       status: 'aktiv',
       phase_aktuell: 1
     };
+    if (azUserInput)                      safe.az = azUserInput;
     if (Object.keys(_objekt).length > 0)  safe.objekt = _objekt;
     if (Object.keys(_details).length > 0) safe.details = _details;
     if (_agTypEnum)                       safe.auftraggeber_typ = _agTypEnum;
@@ -660,12 +666,17 @@ window.auftragAnlegenUndOeffnen = async function() {
     if (_schadensdatum)                   safe.schadensstichtag = _schadensdatum; // echte Column (NICHT "schadensdatum")
     const { data, error } = await sb.from('auftraege').insert(safe).select('id, az').single();
     if (error) {
-      // Wenn Insert wegen unbekannter Spalte fehlschlägt → retry nur mit core
+      // Retry nur mit Kern-Feldern (falls Schema-Drift bei optionalen Feldern).
+      // az weiterhin weglassen wenn kein User-Input — Trigger füllt.
       console.warn('[auftrag-insert] fehler:', error.message, '— retry mit Kern-Feldern');
-      const { data: d2, error: e2 } = await sb.from('auftraege').insert({
-        workspace_id: safe.workspace_id, typ: safe.typ, az: safe.az, titel: safe.titel, status: safe.status, phase_aktuell: safe.phase_aktuell
-      }).select('id, az').single();
+      const _retry = {
+        workspace_id: safe.workspace_id, typ: safe.typ, titel: safe.titel,
+        status: safe.status, phase_aktuell: safe.phase_aktuell
+      };
+      if (azUserInput) _retry.az = azUserInput;
+      const { data: d2, error: e2 } = await sb.from('auftraege').insert(_retry).select('id, az').single();
       if (e2) throw new Error('Auftrag-Insert fehlgeschlagen: ' + e2.message);
+      if (typeof showToast === 'function') showToast('Auftrag angelegt: ' + (d2.az || d2.id.slice(0,8)), 'success');
       window.location.href = '/akte?id=' + encodeURIComponent(d2.id);
       return;
     }
