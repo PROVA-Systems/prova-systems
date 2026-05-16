@@ -173,8 +173,86 @@ function renderAkte(){
   document.getElementById('akte-content').style.display='block';
 }
 
-/* ─── TIMELINE — 9 Phasen (Flow A), Session 30 ─── */
-// Phasen-Definition laut Transport-Report §3
+/* ═══════════════════════════════════════════════════════════════════
+   MEGA⁸² B.1 + C.1 — 4-Phasen-Stepper (neue Struktur, parallel zur alten)
+   ═══════════════════════════════════════════════════════════════════
+   Marcel-Direktive 16.05.: Akte zeigt 4 (Flow A/B) bzw. 3 (Flow C/D)
+   Phasen. Phasen-Namen sind FINAL, keine Variation.
+   Diese Struktur ersetzt SCHRITTWEISE die alte 9-Phasen-Liste unten.
+   Die alte Struktur bleibt als Fallback bis akte.html-Layout (B.9) live.
+═════════════════════════════════════════════════════════════════════ */
+
+// Flow-Mapping aus DB-`auftrag_typ`-Enum auf 4 Flows (C.1)
+window.getFlow = function getFlow(auftragTyp) {
+  if (!auftragTyp) return 'A';
+  var t = String(auftragTyp).toLowerCase();
+  if (['schaden','beweis','ergaenzung','gegen','kurzstellungnahme','gericht'].indexOf(t) >= 0) return 'A';
+  if (t === 'wertgutachten') return 'B';
+  if (t === 'beratung') return 'C';
+  if (t === 'baubegleitung') return 'D';
+  if (t === 'schied') return 'A'; // Sonderfall: nutzt Flow-A-Pattern
+  return 'A';
+};
+
+// 4-Phasen-Struktur pro Flow (B.1 + C.2/C.3/C.4)
+window.AKTE_PHASEN_V2 = {
+  A: [
+    { n: 1, key: 'auftrag',   label: '1 Auftrag',   checklist: ['Stammdaten', 'Auftraggeber', 'opt. Auftragsbestätigung', 'opt. Honorar-Vereinbarung'] },
+    { n: 2, key: 'termin',    label: '2 Termin',    checklist: ['Termin anlegen', 'Diktat', 'Fotos', 'Skizze', 'Messwerte'] },
+    { n: 3, key: 'analyse',   label: '3 Analyse',   checklist: ['Recherche Normen/Bausteine', 'KI-Vorentwurf §§ 1–5', '§ 6 Fachurteil eigenhändig', '§ 7 Kosten', '§407a-Check'] },
+    { n: 4, key: 'abschluss', label: '4 Abschluss', checklist: ['Freigabe', 'PDF erstellen', 'Versand', 'Rechnung (JVEG/Pauschal)'] }
+  ],
+  B: [
+    { n: 1, key: 'auftrag',   label: '1 Auftrag',   checklist: ['Bewertungsanlass', 'Grundbuch-Daten', 'Verfahren-Vorauswahl', 'AG-Daten'] },
+    { n: 2, key: 'objekt',    label: '2 Objekt',    checklist: ['Ortstermin', 'Objektdaten', 'Zustand', 'Fotos', 'Baulastenauskunft'] },
+    { n: 3, key: 'bewertung', label: '3 Bewertung', checklist: ['Berechnung gewähltes Verfahren', 'Anpassungen', 'Plausibilitätscheck'] },
+    { n: 4, key: 'abschluss', label: '4 Abschluss', checklist: ['Freigabe', 'PDF', 'Versand', 'Honorar'] }
+  ],
+  C: [
+    { n: 1, key: 'auftrag',   label: '1 Auftrag',   checklist: ['Beratungsthema', 'AG-Daten', 'Honorar-Vereinbarung'] },
+    { n: 2, key: 'beratung',  label: '2 Beratung',  checklist: ['Termin (Telefon/Vor-Ort/Video)', 'Diktat/Protokoll', 'Handlungsempfehlungen'], optional: true, skipHint: 'Bei reiner Telefonberatung überspringbar' },
+    { n: 3, key: 'abschluss', label: '3 Abschluss', checklist: ['Kurzstellungnahme/Brief', 'PDF', 'Stundenabrechnung'] }
+  ],
+  D: [
+    { n: 1, key: 'auftrag',   label: '1 Auftrag',   checklist: ['Baubeschreibung', 'Bauphasen-Plan', 'Begehungsintervall'] },
+    { n: 2, key: 'begehung',  label: '2+n Begehung', checklist: ['Diktat', 'Fotos', 'Mängelerfassung'], repeatable: true },
+    { n: 3, key: 'abschluss', label: '3 Abschluss', checklist: ['Schluss-Bericht', 'Restmängel', 'Abnahme-PDF', 'JVEG/Pauschal'] }
+  ]
+};
+
+// Phasen-Liste für gegebenen Auftrag (B.1)
+window.getAktePhasenForAuftrag = function getAktePhasenForAuftrag(auftrag) {
+  auftrag = auftrag || {};
+  var typ = auftrag.typ || auftrag.auftrag_typ || auftrag.Auftragstyp || '';
+  var flow = window.getFlow(typ);
+  return (window.AKTE_PHASEN_V2[flow] || window.AKTE_PHASEN_V2.A).slice();
+};
+
+// MEGA⁸² B.7 — Status auto-derived (Status-Dropdown WEG, Badge auto)
+window.getAkteStatusAuto = function getAkteStatusAuto(auftrag) {
+  auftrag = auftrag || {};
+  var dbStatus = String(auftrag.status || auftrag.Status || '').toLowerCase();
+  if (dbStatus === 'archiv' || dbStatus === 'archiviert') {
+    return { db: 'archiv', label: 'Archiviert', color: 'muted' };
+  }
+  if (dbStatus === 'storniert') {
+    return { db: 'storniert', label: 'Storniert', color: 'muted' };
+  }
+  var phase = parseInt(auftrag.phase_aktuell || auftrag.Phase || 1, 10);
+  var freigegeben = !!(auftrag.gutachtendatum || auftrag.freigegeben_at || dbStatus === 'abgeschlossen');
+  if (phase === 1)                          return { db: 'entwurf', label: 'Neu',             color: 'gray' };
+  if (phase === 2)                          return { db: 'aktiv',   label: 'Ortstermin',      color: 'blue' };
+  if (phase === 3)                          return { db: 'aktiv',   label: 'In Bearbeitung',  color: 'blue' };
+  if (phase === 4 && !freigegeben)          return { db: 'aktiv',   label: 'Zur Freigabe',    color: 'orange' };
+  if (phase >= 4 && freigegeben)            return { db: 'abgeschlossen', label: 'Abgeschlossen', color: 'green' };
+  return { db: dbStatus || 'entwurf', label: 'Neu', color: 'gray' };
+};
+
+/* ─── TIMELINE — 9 Phasen (Flow A), Session 30 — LEGACY ───
+   MEGA⁸²-Hinweis: Diese Struktur ist DEFER zu MEGA83. Erst wenn akte.html
+   Layout (B.9) das neue 4-Phasen-Stepper-Markup hat, wird renderTimeline()
+   auf AKTE_PHASEN_V2 + getAktePhasenForAuftrag() umgestellt. Bis dahin
+   bleibt die alte 9-Phasen-Render als Fallback. */
 var AKTE_PHASEN = [
   {n:1, key:'auftragsannahme', label:'Auftragsannahme',     ki:'PDF-OCR, §407a-Plausibilität, Honorar-Auto',        skip:false, mussFlow:['A','B','C','D']},
   {n:2, key:'ortstermin',      label:'Ortstermin',           ki:'Diktat→Struktur, Foto-Caption, WTA-Grenzwerte',    skip:true,  skipHint:'Aktengutachten §411a',       mussFlow:['A','B','D']},
