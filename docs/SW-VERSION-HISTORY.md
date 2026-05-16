@@ -10,6 +10,17 @@ Format: **vNNNN-marker** | YYYY-MM-DD | Sprint | Kurz-Note
 
 ## 2026-05-16 — MEGA-Serie #8
 
+**v3247-mega82-hotfix1-dashboard-clean** | 2026-05-16 | MEGA⁸²-Hotfix-1 Dashboard-Clean
+- H0 AZ-Frontend-Fix: app-logic.js generiert AZ NICHT mehr (war 'AZ-' + Date.now-slice → 409 Conflict bei Race). Frontend schickt az leer/null → DB-Trigger `auftraege_autogen_az` (Web-Claude appliziert) füllt mit `<PREFIX>-<JAHR>-<LFD-NR>`. .select() liefert generierten AZ zurück, UI zeigt es im Toast.
+- H1+H2 Dashboard-Redesign auf 5 Sektionen (Mission-Control Clean):
+  1. Header + Status-Zeile (Tageszeit-Gruss + dynamische Aufgaben-Count)
+  2. Heute (Hero mit Fristen+Termine+Notifications)
+  3. 4 KPI-Kacheln (Aktive Fälle, Mahnungen, Offene Beträge EUR, KI-Calls 30T)
+  4. Aktive Fälle (max 5, mit korrekter 4-Phasen-Progress-Bar via MEGA82 Helper)
+  5. Aktivität (max 5 audit_trail-Einträge mit kompakten Texten "27.04. · Eintrag in Akte GS-2026-001 hinzugefügt")
+- T-NaN-Bug, "Noch kein Fall"-Empty-State, dritte Fristen-Box alle weg durch Komplett-Replacement
+- dashboard-logic.js Script-Tag entfernt (alte 13-Sektionen-Logic + Airtable-Pre-MEGA75)
+
 **v3246-mega82-pass2** | 2026-05-16 | MEGA⁸² Pass 2 (Marathon-Fortsetzung)
 - Phase B.5 Sticky-Action-Footer mit Phase-Switch-Helpers (aktePrevPhase/akteNextPhase mit Confirmation + DB-Persist via _akteUpdatePhase + Audit-Trail)
 - Phase B.6 Schnellaktionen kontextuell pro Phase (1=Auftrag, 2=Termin, 3=Analyse, 4=Abschluss) + "Mehr ▼"-Drawer

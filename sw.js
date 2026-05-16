@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v3246-mega82-pass2';   // MEGA⁸² Pass 2 2026-05-16: B.5 Sticky-Footer + B.6 Schnellaktionen kontextuell + B.7 Status-Badge auto (Status-Dropdown weg) + Phase-Switch-Helpers mit DB-Persist + F.2 Domain-Split-Audit (robots.txt + sitemap.xml Drift-Fixes) + G Edge-Reaping-Pre-Audit (6 sichere Delete-Kandidaten dokumentiert für Marcel-CLI). Sprint-Historie: docs/SW-VERSION-HISTORY.md.
+const CACHE_VERSION = 'prova-v3247-mega82-hotfix1-dashboard-clean';   // MEGA⁸²-Hotfix-1 2026-05-16: H0 AZ-Frontend-Fix (Trigger fuellt AZ, Frontend laesst az leer bei Insert) + H1+H2 Dashboard-Redesign auf 5 Sektionen (Header+Status / Heute-Hero / 4 KPI-Kacheln / Aktive Faelle mit korrekter 4-Phasen-Anzeige / Aktivitaet kompakt) — T-NaN-Bug, Empty-State-Bug, dritte Fristen-Box alle weg durch Komplett-Replacement. Sprint-Historie: docs/SW-VERSION-HISTORY.md.
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
