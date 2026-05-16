@@ -165,6 +165,9 @@ function renderAkte(){
   // Schnellaktionen
   renderSchnellaktionen(status,f,az);
 
+  // MEGA⁸² E.1: Kontextueller Gutachten-CTA-Text
+  try { window.updateGutachtenCTAButton && window.updateGutachtenCTAButton(f); } catch(_) {}
+
   // Anzeigen
   document.getElementById('loading-state').style.display='none';
   document.getElementById('akte-content').style.display='block';
@@ -700,9 +703,49 @@ window.aktualisiereStatus=async function(){
 };
 
 /* ─── NAVIGATIONEN ─── */
+
+/* MEGA⁸² E.1: Kontextueller CTA-Button für Gutachten.
+   Status- und Phase-abhängig navigiert auf den richtigen Editor.
+   Behebt Loop-Bug: vorher sprang oeffneGutachten() IMMER auf app.html
+   (Schadensgutachten-Wizard) — auch bei bereits aktiver Akte. */
+window.renderGutachtenCTA = function renderGutachtenCTA(f){
+  f = f || {};
+  var status = String(f.Status || f.status || '').toLowerCase();
+  var phase = parseInt(f.Phase || f.phase_aktuell || 0, 10);
+  var hasGutachten = !!(f.KI_Entwurf || f.fachurteil_text || f.kurzbeantwortung);
+  var freigegeben = status === 'abgeschlossen' || status === 'freigegeben' || status === 'versendet';
+  var az = encodeURIComponent(f.az || f.Aktenzeichen || '');
+  var id = encodeURIComponent(f._recordId || f.id || '');
+  var qs = az ? ('az=' + az) : (id ? ('id=' + id) : '');
+
+  if (freigegeben) {
+    return { text: 'Gutachten ansehen', target: 'fachurteil.html?' + qs + '&mode=view' };
+  }
+  if (phase >= 3 && hasGutachten) {
+    return { text: 'Gutachten bearbeiten →', target: 'fachurteil.html?' + qs };
+  }
+  if (phase >= 3 || hasGutachten) {
+    return { text: 'Gutachten bearbeiten →', target: 'fachurteil.html?' + qs };
+  }
+  // Phase 1/2: Auftrag noch in Stammdaten-/Termin-Phase — neue Akte wurde noch nicht "geschrieben"
+  return { text: 'Gutachten erstellen →', target: 'fachurteil.html?' + qs + '&new=1' };
+};
+
 window.oeffneGutachten=function(){
-  var appUrl=paket==='Team'?'app.html':paket==='Solo'?'app.html':'app.html';
-  window.location.href=appUrl;
+  var f = window.currentFields || currentFields || {};
+  var cta = window.renderGutachtenCTA(f);
+  window.location.href = cta.target;
+};
+
+/* MEGA⁸² E.1: Akte-Header-CTA-Button-Text dynamisch setzen.
+   Wird von ladeAkte() nach Render aufgerufen. */
+window.updateGutachtenCTAButton = function updateGutachtenCTAButton(f){
+  try {
+    var cta = window.renderGutachtenCTA(f);
+    document.querySelectorAll('[data-gutachten-cta], #akte-gutachten-cta').forEach(function(btn){
+      btn.textContent = '📄 ' + cta.text;
+    });
+  } catch(e) { /* defensiv — Header-Render darf nie crashen */ }
 };
 window.oeffneFreigabe=function(){
   if(recordId)sessionStorage.setItem('prova_record_id',recordId);
