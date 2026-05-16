@@ -167,6 +167,10 @@ function renderAkte(){
 
   // MEGA⁸² E.1: Kontextueller Gutachten-CTA-Text
   try { window.updateGutachtenCTAButton && window.updateGutachtenCTAButton(f); } catch(_) {}
+  // MEGA⁸² B.7: Status-Badge auto-render
+  try { window.renderAkteStatusBadge && window.renderAkteStatusBadge(f); } catch(_) {}
+  // MEGA⁸² B.5: Sticky-Footer rendern
+  try { window.renderAkteStickyFooter && window.renderAkteStickyFooter(f); } catch(_) {}
 
   // Anzeigen
   document.getElementById('loading-state').style.display='none';
@@ -226,6 +230,30 @@ window.getAktePhasenForAuftrag = function getAktePhasenForAuftrag(auftrag) {
   var typ = auftrag.typ || auftrag.auftrag_typ || auftrag.Auftragstyp || '';
   var flow = window.getFlow(typ);
   return (window.AKTE_PHASEN_V2[flow] || window.AKTE_PHASEN_V2.A).slice();
+};
+
+// MEGA⁸² B.7 — Status-Badge in Akte-Header rendern (Auto-Derive)
+window.renderAkteStatusBadge = function renderAkteStatusBadge(f){
+  try {
+    var info = window.getAkteStatusAuto(f);
+    var badge = document.getElementById('akte-status-badge');
+    var text = document.getElementById('akte-status-text');
+    if (!badge || !text) return;
+    text.textContent = info.label;
+    badge.setAttribute('data-color', info.color);
+    // Color-Tokens je Status
+    var colorMap = {
+      gray:   { bg: 'rgba(255,255,255,.06)', border: 'var(--border2)',         color: 'var(--text2)' },
+      blue:   { bg: 'rgba(79,142,247,.12)',  border: 'rgba(79,142,247,.35)',   color: '#93c5fd'      },
+      orange: { bg: 'rgba(245,158,11,.12)',  border: 'rgba(245,158,11,.35)',   color: '#fcd34d'      },
+      green:  { bg: 'rgba(16,185,129,.12)',  border: 'rgba(16,185,129,.35)',   color: '#6ee7b7'      },
+      muted:  { bg: 'rgba(255,255,255,.04)', border: 'rgba(255,255,255,.08)',  color: 'var(--text3)' }
+    };
+    var c = colorMap[info.color] || colorMap.gray;
+    badge.style.background = c.bg;
+    badge.style.borderColor = c.border;
+    badge.style.color = c.color;
+  } catch(e) { /* defensiv */ }
 };
 
 // MEGA⁸² B.7 — Status auto-derived (Status-Dropdown WEG, Badge auto)
@@ -692,30 +720,160 @@ function uebernimmFrist() {
   else alert('Frist ' + _erkFrist + ' eingetragen.');
 }
 
-/* ─── SCHNELLAKTIONEN ─── */
+/* ─── SCHNELLAKTIONEN ─── MEGA⁸² B.6: Phasen-kontextuelle Aktionen ─── */
 function renderSchnellaktionen(status,f,az){
-  var actions=[];
-  if(status==='In Bearbeitung'||status==='Auftrag erhalten'){
-    actions.push({icon:'📝',bg:'rgba(79,142,247,.1)',label:'Gutachten bearbeiten',sub:'App-Starter öffnen',action:"oeffneGutachten()"});
-  }
-  if(f.KI_Entwurf&&(status==='Entwurf'||status==='In Bearbeitung')){
-    actions.push({icon:'📋',bg:'rgba(139,92,246,.1)',label:'§6 Stellungnahme',sub:'Persönliches Fachurteil verfassen',action:"oeffneStellung()"});
-  }
-  if(f.KI_Entwurf&&(status==='Entwurf'||status==='In Bearbeitung')){
-    actions.push({icon:'✅',bg:'rgba(16,185,129,.1)',label:'Zur Freigabe',sub:'Gutachten prüfen und freigeben',action:"oeffneFreigabe()"});
-  }
-  actions.push({icon:'💶',bg:'rgba(245,158,11,.1)',label:'Rechnung erstellen',sub:'JVEG oder Pauschal',action:"window.location.href='rechnungen.html'"});
-  actions.push({icon:'✉️',bg:'rgba(139,92,246,.1)',label:'Brief schreiben',sub:'Aus Vorlage mit Fall-Daten',action:"window.location.href='briefvorlagen.html'"});
-  actions.push({icon:'📅',bg:'rgba(79,142,247,.08)',label:'Termin anlegen',sub:'Ortstermin, Frist etc.',action:"window.location.href='termine.html'"});
+  // Phase aus Auftrag (DB-style oder Airtable-Fallback)
+  var phase = parseInt(f.phase_aktuell || f.Phase || 1, 10);
+  var flow = window.getFlow ? window.getFlow(f.typ || f.auftrag_typ || f.Auftragstyp) : 'A';
+  var hasGutachten = !!(f.KI_Entwurf || f.fachurteil_text || f.kurzbeantwortung);
+  var actions = [];
 
-  document.getElementById('quick-actions').innerHTML=actions.map(function(a){
+  // ── Phasen-spezifische Primary-Aktionen ──
+  if (phase === 1) {
+    // Auftrag-Phase: Stammdaten finalisieren
+    actions.push({ icon:'✓', bg:'rgba(79,142,247,.1)', label:'Auftrag bestätigen', sub:'Auftragsbestätigung erstellen', action:"window.location.href='auftragsbestaetigung.html'" });
+    actions.push({ icon:'💰', bg:'rgba(16,185,129,.1)', label:'Honorar vereinbaren', sub:'Vereinbarung anhängen', action:"window.location.href='honorar-rechner.html'" });
+  } else if (phase === 2) {
+    // Termin/Objekt-Phase
+    actions.push({ icon:'📅', bg:'rgba(79,142,247,.1)', label:'Termin anlegen', sub:'Ortstermin/Beweisaufnahme', action:"window.location.href='termine.html'" });
+    if (flow === 'A' || flow === 'B') {
+      actions.push({ icon:'📸', bg:'rgba(139,92,246,.1)', label:'Foto hochladen', sub:'Aus Kamera oder Drag&Drop', action:"document.getElementById('dok-file-input') && document.getElementById('dok-file-input').click()" });
+      actions.push({ icon:'🎙️', bg:'rgba(245,158,11,.1)', label:'Diktat starten', sub:'Audio → Whisper → Text', action:"window.location.href='vor-ort.html?az=' + encodeURIComponent('"+(f.az||az||'')+"')" });
+      actions.push({ icon:'✏️', bg:'rgba(16,185,129,.1)', label:'Skizze erstellen', sub:'SVG-Editor', action:"window.location.href='skizzen.html'" });
+    }
+  } else if (phase === 3) {
+    // Analyse/Bewertung
+    actions.push({ icon:'📚', bg:'rgba(79,142,247,.1)', label:'Normen recherchieren', sub:'DIN/VOB/BGB-Bibliothek', action:"window.location.href='normen.html'" });
+    actions.push({ icon:'📋', bg:'rgba(139,92,246,.1)', label:'Textbausteine', sub:'Wiederverwendbare Vorlagen', action:"window.location.href='textbausteine.html'" });
+    actions.push({ icon:'⚖️', bg:'rgba(245,158,11,.1)', label:'§ 6 Fachurteil schreiben', sub:'Eigenleistung-Editor', action:"oeffneGutachten()" });
+    if (hasGutachten) {
+      actions.push({ icon:'✅', bg:'rgba(16,185,129,.1)', label:'Zur Freigabe', sub:'Gutachten prüfen', action:"oeffneFreigabe()" });
+    }
+  } else if (phase >= 4) {
+    // Abschluss-Phase
+    actions.push({ icon:'✅', bg:'rgba(16,185,129,.1)', label:'Freigabe-Wizard', sub:'§ 407a-Check + PDF-Erstellung', action:"oeffneFreigabe()" });
+    actions.push({ icon:'📄', bg:'rgba(79,142,247,.1)', label:'PDF erstellen', sub:'Gerichtsfestes Gutachten', action:"oeffneGutachten()" });
+    actions.push({ icon:'💶', bg:'rgba(245,158,11,.1)', label:'Rechnung erstellen', sub:'JVEG oder Pauschal', action:"window.location.href='rechnungen.html'" });
+    actions.push({ icon:'✉️', bg:'rgba(139,92,246,.08)', label:'Versenden', sub:'E-Mail / Post / beA', action:"window.location.href='briefvorlagen.html'" });
+  }
+
+  // ── „Mehr ▼" Sekundär-Aktionen (immer verfügbar) ──
+  actions.push({ icon:'✉️', bg:'rgba(255,255,255,.04)', label:'Brief schreiben', sub:'Aus Vorlage mit Fall-Daten', action:"window.location.href='briefvorlagen.html'", secondary:true });
+  actions.push({ icon:'📅', bg:'rgba(255,255,255,.04)', label:'Termin verschieben', sub:'Datum/Uhrzeit ändern', action:"window.location.href='termine.html'", secondary:true });
+  actions.push({ icon:'📤', bg:'rgba(255,255,255,.04)', label:'Akte exportieren', sub:'ZIP mit allen Dateien', action:"exportWordAkte && exportWordAkte()", secondary:true });
+
+  var primary = actions.filter(function(a){ return !a.secondary; });
+  var secondary = actions.filter(function(a){ return a.secondary; });
+
+  var html = primary.map(function(a){
     return '<div class="qa-btn" onclick="'+a.action+'">'
       +'<div class="qa-icon" style="background:'+a.bg+'">'+a.icon+'</div>'
       +'<div><div class="qa-label">'+a.label+'</div><div class="qa-sub">'+a.sub+'</div></div>'
       +'<div class="qa-arrow">›</div>'
       +'</div>';
   }).join('');
+
+  // Sekundär-Aktionen einklappbar
+  if (secondary.length) {
+    html += '<details style="margin-top:8px;">'
+      + '<summary style="cursor:pointer;font-size:11px;font-weight:600;color:var(--text3);padding:6px 0;list-style:none;">Mehr ▼</summary>'
+      + secondary.map(function(a){
+          return '<div class="qa-btn" style="margin-top:6px;opacity:.85;" onclick="'+a.action+'">'
+            +'<div class="qa-icon" style="background:'+a.bg+'">'+a.icon+'</div>'
+            +'<div><div class="qa-label">'+a.label+'</div><div class="qa-sub">'+a.sub+'</div></div>'
+            +'<div class="qa-arrow">›</div>'
+            +'</div>';
+        }).join('')
+      + '</details>';
+  }
+
+  var el = document.getElementById('quick-actions');
+  if (el) el.innerHTML = html;
 }
+
+// MEGA⁸² B.5 — Sticky-Action-Footer
+window.renderAkteStickyFooter = function renderAkteStickyFooter(f){
+  try {
+    var phase = parseInt(f.phase_aktuell || f.Phase || 1, 10);
+    var phasen = window.getAktePhasenForAuftrag ? window.getAktePhasenForAuftrag(f) : [];
+    var phasenMax = phasen.length || 4;
+    var currentPhase = phasen.find(function(p){ return p.n === phase; });
+    var checklistCount = (currentPhase && currentPhase.checklist && currentPhase.checklist.length) || 0;
+    var info = window.getAkteStatusAuto ? window.getAkteStatusAuto(f) : { label: '—' };
+
+    var existing = document.getElementById('akte-sticky-footer');
+    if (existing) existing.remove();
+
+    var footer = document.createElement('div');
+    footer.id = 'akte-sticky-footer';
+    footer.style.cssText = 'position:sticky;bottom:0;left:0;right:0;z-index:50;background:linear-gradient(180deg,rgba(11,13,17,.65),var(--bg,#0b0d11));border-top:1px solid var(--border2,rgba(255,255,255,.11));padding:12px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:24px;backdrop-filter:blur(8px);';
+
+    var prevBtn = phase > 1
+      ? '<button type="button" onclick="window.aktePrevPhase && window.aktePrevPhase()" style="background:none;border:1px solid var(--border2);color:var(--text2);padding:10px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;min-height:44px;font-family:inherit;">← Vorherige Phase</button>'
+      : '<span></span>';
+
+    var nextLabel = phase < phasenMax ? 'Phase abschließen →' : '✅ Akte abschließen';
+    var nextAction = phase < phasenMax ? 'window.akteNextPhase && window.akteNextPhase()' : 'oeffneFreigabe()';
+
+    var nextBtn = '<button type="button" onclick="'+nextAction+'" class="action-btn btn-primary" style="padding:10px 18px;font-size:13px;font-weight:700;min-height:44px;">'+nextLabel+'</button>';
+
+    footer.innerHTML = prevBtn
+      + '<div style="font-size:12px;color:var(--text2);text-align:center;flex:1;min-width:160px;">Phase <strong style="color:var(--text);">'+phase+'</strong> von '+phasenMax+(checklistCount?' · '+checklistCount+' Aufgaben':'')+' · '+_escHtml(info.label)+'</div>'
+      + nextBtn;
+
+    var main = document.getElementById('akte-content');
+    if (main) main.appendChild(footer);
+  } catch(e) { /* defensiv */ }
+};
+
+function _escHtml(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
+
+// MEGA⁸² B.5: Phase-Wechsel-Helpers (mit Confirmation für Rückwärts)
+window.aktePrevPhase = function aktePrevPhase(){
+  var f = window.currentFields || currentFields || {};
+  var phase = parseInt(f.phase_aktuell || f.Phase || 1, 10);
+  if (phase <= 1) return;
+  if (!confirm('Phase ' + (phase-1) + ' nochmals öffnen?\n\nBisherige Daten bleiben erhalten — nur der Phase-Pointer ändert sich.')) return;
+  window._akteUpdatePhase && window._akteUpdatePhase(phase - 1);
+};
+window.akteNextPhase = function akteNextPhase(){
+  var f = window.currentFields || currentFields || {};
+  var phase = parseInt(f.phase_aktuell || f.Phase || 1, 10);
+  var phasen = window.getAktePhasenForAuftrag ? window.getAktePhasenForAuftrag(f) : [];
+  if (phase >= (phasen.length || 4)) return;
+  window._akteUpdatePhase && window._akteUpdatePhase(phase + 1);
+};
+
+// _akteUpdatePhase: persistiert phase_aktuell in DB + reloaded UI
+window._akteUpdatePhase = async function _akteUpdatePhase(newPhase){
+  try {
+    var f = window.currentFields || currentFields || {};
+    var id = f.id || f._recordId;
+    if (!id || !window._getSupabase) return;
+    var sb = await window._getSupabase();
+    if (!sb) return;
+    var res = await sb.from('auftraege').update({ phase_aktuell: newPhase }).eq('id', id);
+    if (res.error) { console.warn('[_akteUpdatePhase]', res.error.message); return; }
+    f.phase_aktuell = newPhase;
+    // Re-Render abhängige Komponenten
+    if (window.renderAkteStatusBadge) window.renderAkteStatusBadge(f);
+    if (window.renderAkteStickyFooter) window.renderAkteStickyFooter(f);
+    if (window.updateGutachtenCTAButton) window.updateGutachtenCTAButton(f);
+    if (typeof renderSchnellaktionen === 'function') {
+      var status = String(f.status || f.Status || '');
+      renderSchnellaktionen(status, f, f.az || '');
+    }
+    // Audit-Trail-Eintrag (defensive: nur wenn Adapter verfügbar)
+    if (window.ad && window.ad.auditTrailInsert) {
+      try {
+        await window.ad.auditTrailInsert({
+          action: 'update', entity_typ: 'auftrag', entity_id: id,
+          payload: { phase_changed_to: newPhase, source: 'akte-sticky-footer' }
+        });
+      } catch(_) {}
+    }
+  } catch(e) { console.warn('[_akteUpdatePhase]', e); }
+};
 
 /* ─── TERMINE ─── MEGA⁷²-Phase-A: Supabase-Migration */
 async function ladeTermine(){
