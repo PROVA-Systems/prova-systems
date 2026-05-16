@@ -676,11 +676,17 @@ window.auftragAnlegenUndOeffnen = async function() {
       if (azUserInput) _retry.az = azUserInput;
       const { data: d2, error: e2 } = await sb.from('auftraege').insert(_retry).select('id, az').single();
       if (e2) throw new Error('Auftrag-Insert fehlgeschlagen: ' + e2.message);
-      if (typeof showToast === 'function') showToast('Auftrag angelegt: ' + (d2.az || d2.id.slice(0,8)), 'success');
+      // MEGA82-Hotfix-2 A.3: Bei AZ-Mismatch (DB hat umbenannt wegen Conflict) Info-Toast
+      if (azUserInput && d2.az && d2.az !== azUserInput) {
+        if (typeof showToast === 'function') showToast('Aktenzeichen ' + d2.az + ' wurde automatisch vergeben (Ihre Eingabe „' + azUserInput + '" war bereits vergeben)', 'info', 5000);
+      } else if (typeof showToast === 'function') showToast('Auftrag ' + (d2.az || d2.id.slice(0,8)) + ' angelegt', 'success');
       window.location.href = '/akte?id=' + encodeURIComponent(d2.id);
       return;
     }
-    if (typeof showToast === 'function') showToast('Auftrag angelegt: ' + (data.az || data.id.slice(0,8)), 'success');
+    // MEGA82-Hotfix-2 A.3: AZ-Mismatch-Toast
+    if (azUserInput && data.az && data.az !== azUserInput) {
+      if (typeof showToast === 'function') showToast('Aktenzeichen ' + data.az + ' wurde automatisch vergeben (Ihre Eingabe „' + azUserInput + '" war bereits vergeben)', 'info', 5000);
+    } else if (typeof showToast === 'function') showToast('Auftrag ' + (data.az || data.id.slice(0,8)) + ' angelegt', 'success');
     window.location.href = '/akte?id=' + encodeURIComponent(data.id);
   } catch (e) {
     if (typeof showToast === 'function') showToast('Fehler: ' + e.message, 'error');
@@ -2107,51 +2113,32 @@ function starteAufnahmeLimit() {
     'Sonstiger Schaden': 'SON'
   };
 
+  // MEGA⁸²-Hotfix-2 A.1: Legacy Auto-Generator entfernt — DB-Trigger
+  // `auftraege_autogen_az` (Migration mega82_hotfix_auftraege_az_*) generiert
+  // den AZ kollisionsfrei serverseitig. Frontend-Auto-Fill von f-schadensnummer
+  // mit localStorage-Counter führte zu 409 Conflicts wenn der lokale Counter
+  // hinter dem DB-Stand zurück lag (Multi-Device, Workspace-Wechsel, etc.).
+  // generiereAZ + aktualisiereAZ bleiben als No-Op stehen für Caller-Compat.
   function generiereAZ(schadenart) {
-    var kuerzel = KUERZEL[schadenart] || 'SON';
-    var jahr = new Date().getFullYear();
-    // Laufnummer aus localStorage
-    var counterKey = 'prova_az_counter_' + jahr;
-    var counter = parseInt(localStorage.getItem(counterKey) || '0') + 1;
-    localStorage.setItem(counterKey, counter);
-    var nr = String(counter).padStart(3, '0');
-    return kuerzel + '-' + jahr + '-' + nr;
+    // No-Op: Generator deaktiviert. DB-Trigger füllt az.
+    // Return-Value für ggf. anzeigende UI-Hints (z.B. "Vorschau") — aber nie
+    // mehr in INSERT-Payload mitschicken (siehe app-logic.js Z.660 azUserInput).
+    return '';
   }
 
   function aktualisiereAZ() {
-    var sel = document.getElementById('f-schadenart');
-    var azField = document.getElementById('f-schadensnummer');
-    if (!sel || !azField) return;
-    var schadenart = sel.value;
-    if (!schadenart) return;
-    // Nur generieren wenn Feld leer oder altes Format (PRO-V etc.)
-    var current = azField.value.trim();
-    var currentPrefix = current.split('-')[0];
-    var neuerPrefix = KUERZEL[schadenart] || 'SON';
-    // AZ: nur Prefix tauschen wenn Nummer schon existiert — KEIN Inkrement
-    if (!current) {
-      azField.value = generiereAZ(schadenart);
-    } else if (currentPrefix !== neuerPrefix) {
-      var parts = current.split('-');
-      parts[0] = neuerPrefix;
-      azField.value = parts.join('-');
-    }
-    // gleiche Schadenart → AZ unverändert
+    // No-Op: Kein Auto-Fill mehr von f-schadensnummer. User kann optional
+    // ein externes Aktenzeichen eingeben (Versicherungs-VN oder Gerichts-Az) —
+    // sonst vergibt PROVA automatisch nach Insert.
+    return;
   }
 
-  document.addEventListener('DOMContentLoaded', function() {
-    var sel = document.getElementById('f-schadenart');
-    if (sel) {
-      sel.addEventListener('change', aktualisiereAZ);
-      // Beim Laden sofort generieren falls Schadenart bereits gewählt
-      if (sel.value) aktualisiereAZ();
-    }
-  });
+  // KEIN DOMContentLoaded-Listener mehr für f-schadenart-Change → kein Auto-Fill
 
   window.generiereAZ = generiereAZ;
   window.aktualisiereAZ = aktualisiereAZ;
-  // Alias für onchange="onSchadenartChange()" im HTML
-  window.onSchadenartChange = function() { aktualisiereAZ(); };
+  // Alias für onchange="onSchadenartChange()" im HTML — bleibt no-op
+  window.onSchadenartChange = function() { /* MEGA82-Hotfix-2 A.1 no-op */ };
 })();
 
 /* ── Block 12 ── */
