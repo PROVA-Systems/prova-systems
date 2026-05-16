@@ -759,7 +759,7 @@
     'Du bist Assistent eines ö.b.u.v. Sachverständigen für Immobilienwertermittlung.',
     '',
     'RECHTSRAHMEN (zu berücksichtigen, aber nicht zu zitieren):',
-    '• Verkehrswert nach §§ 194-199 BauGB',
+    '• Verkehrswert nach §§ 194–199 BauGB',
     '• Allgemeine Grundsätze nach § 1 ImmoWertV',
     '• Verfahrenswahl nach § 8 ImmoWertV',
     '• Bindung an § 407a ZPO (höchstpersönliche Erstattung durch SV)',
