@@ -373,18 +373,21 @@
       }
 
       // Legacy-Storage-Keys schreiben für auth-guard.js + bestehenden Code
-      localStorage.setItem('prova_auth_token', session.access_token);
-      localStorage.setItem('prova_user', JSON.stringify({
+      // MEGA⁸³ C: ProvaLegacyBridge.set() schreibt sowohl localStorage als auch
+      // .prova-systems.de Cookie → Cross-Subdomain-Bridge ohne Doppel-Login.
+      var bridge = window.ProvaLegacyBridge || { set: function(k,v){ try{localStorage.setItem(k,v);}catch(_){} } };
+      bridge.set('prova_auth_token', session.access_token);
+      bridge.set('prova_user', JSON.stringify({
         email:       resolvedEmail,
         name:        displayName,
         token:       session.access_token,
         verified:    true,            // Supabase confirms email natively
         provisional: false
       }));
-      localStorage.setItem('prova_sv_email', resolvedEmail);
+      bridge.set('prova_sv_email', resolvedEmail);
       try { sessionStorage.setItem('prova_email', resolvedEmail); } catch (e) {}
 
-      if (paket)      localStorage.setItem('prova_paket',               paket);
+      if (paket)      bridge.set('prova_paket', paket);
       if (aboStatus)  localStorage.setItem('prova_subscription_status', aboStatus);
       if (trialEnd)   localStorage.setItem('prova_trial_end',           trialEnd);
       if (founding)   localStorage.setItem('prova_testpilot',           '1');

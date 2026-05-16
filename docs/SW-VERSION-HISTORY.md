@@ -8,6 +8,29 @@ Format: **vNNNN-marker** | YYYY-MM-DD | Sprint | Kurz-Note
 
 ---
 
+## 2026-05-16 — MEGA-Serie #8/9
+
+**v3300-mega83-akte-mission-control** | 2026-05-16 | MEGA⁸³ Akte-Mission-Control + Freigabe-Wizard + Auth-Bridge
+- Phase A: Akte-UI komplett 5-Zonen Mission-Control-Pattern
+  - A.1 Layout-Restructure (DOM additiv, alte sec-stamm+sec-timeline hidden)
+  - A.2 Visueller Phase-Stepper (4 Kreise Flow A/B, 3 Kreise Flow C/D, klickbar)
+  - A.3 Stammdaten-Bar collapsible + Inline-Edit + jsonb-Path-Support
+  - A.4 Phase-Confirm-Modal (statt browser confirm())
+  - A.5 Activity-Sidebar 5 Sub-Blocks (Activity Multi-Entity / Dokumente / Fristen / Termine / Mehr)
+  - A.6 Phase-Checklist mit Smart-Detection (termine/eintraege/dokumente/skizzen-Parallel-Query mappt auf done-keys)
+  - A.7 Phase-4-CTA via Sticky-Footer (akteNextPhase nutzt neues Modal)
+- Phase B: freigabe-wizard.html neu (3-Step Wizard)
+  - Step 1 §407a-Auto-Check (Fachurteil/Eigenleistung/Konjunktiv/Kurzbeantwortung/KI-Disclosure)
+  - Step 2 Erklaerung mit 3 Pflicht-Checkboxes + LG-Darmstadt-Warning (verbindlicher Wortlaut)
+  - Step 3 PDF-Erstellung + Versand (E-Mail/Download/beA disabled) + Rechnung-Vorschlag
+- Phase C: Auth-Cross-Domain Bridge-Fix
+  - ProvaLegacyBridge Helper-Lib (Cookie+localStorage sync via .prova-systems.de)
+  - app-login-logic.js + signOut() integriert
+  - Hydration-Script in dashboard/akte/fachurteil/freigabe-wizard
+- Phase D: Edge-Reaping Final-Doku + 5-Audit-Edges-Konsolidierungs-Plan (DEFER MEGA84)
+
+---
+
 ## 2026-05-16 — MEGA-Serie #8
 
 **v3248-mega82-hotfix2-cleanup-and-calendar** | 2026-05-16 | MEGA⁸²-Hotfix-2 AZ-Cleanup + Section-Labels + Kalender

@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v3248-mega82-hotfix2-cleanup-and-calendar';   // MEGA⁸²-Hotfix-2 2026-05-16: A AZ-Frontend-Cleanup (Legacy-Auto-Generator entfernt, DB-Trigger uebernimmt kollisionsfrei) + B Section-Labels prominenter (15px statt 11px, Icon-Span, Trennlinie) + C kalender.html universal (5 Quellen Termine/Fristen/Rechnungen/Mahnungen/Gutachten parallel, Monat+Listen-View, Filter persist). Sprint-Historie: docs/SW-VERSION-HISTORY.md.
+const CACHE_VERSION = 'prova-v3300-mega83-merge-hotfix2';   // MEGA⁸³ + MEGA⁸²-Hotfix-2 (Merge 2026-05-16): MEGA83 Akte-Mission-Control (5-Zonen-Layout + Phase-Stepper visuell + Stammdaten-Bar collapsible + Phase-Checklist Smart-Detection + Activity-Sidebar + Phase-Modal) + freigabe-wizard.html neu (3-Step §407a-Check + Erklaerung + PDF) + Cross-Domain-Bridge-Fix (ProvaLegacyBridge). PLUS Hotfix-2 (AZ-Frontend-Cleanup Auto-Generator weg + Section-Labels 15px prominenter + kalender.html universal 5 Quellen). Sprint-Historie: docs/SW-VERSION-HISTORY.md.
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [

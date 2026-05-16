@@ -171,6 +171,14 @@ function renderAkte(){
   try { window.renderAkteStatusBadge && window.renderAkteStatusBadge(f); } catch(_) {}
   // MEGA⁸² B.5: Sticky-Footer rendern
   try { window.renderAkteStickyFooter && window.renderAkteStickyFooter(f); } catch(_) {}
+  // MEGA⁸³ A.2: Phase-Stepper visuell rendern
+  try { window.renderAktePhaseStepper && window.renderAktePhaseStepper(f); } catch(_) {}
+  // MEGA⁸³ A.3: Stammdaten-Bar rendern
+  try { window.renderStammdatenBar && window.renderStammdatenBar(f); } catch(_) {}
+  // MEGA⁸³ A.6: Phase-Checklist mit Smart-Detection
+  try { window.renderPhaseChecklist && window.renderPhaseChecklist(f); } catch(_) {}
+  // MEGA⁸³ A.5: Activity-Sidebar (5 Sub-Blocks parallel)
+  try { window.renderActivitySidebar && window.renderActivitySidebar(f); } catch(_) {}
 
   // Anzeigen
   document.getElementById('loading-state').style.display='none';
@@ -985,7 +993,14 @@ window.updateGutachtenCTAButton = function updateGutachtenCTAButton(f){
 };
 window.oeffneFreigabe=function(){
   if(recordId)sessionStorage.setItem('prova_record_id',recordId);
-  window.location.href='freigabe.html';
+  // MEGA⁸³ B: Neuer 3-Step Wizard ist Default. Klassische freigabe.html bleibt
+  // erreichbar via ?legacy=true wenn der Wizard nicht passt.
+  var f = window.currentFields || currentFields || {};
+  var qs = '';
+  if (f.id || f._recordId) qs = '?id=' + encodeURIComponent(f.id || f._recordId);
+  else if (f.az) qs = '?az=' + encodeURIComponent(f.az);
+  else if (recordId) qs = '?id=' + encodeURIComponent(recordId);
+  window.location.href = 'freigabe-wizard.html' + qs;
 };
 
 /* ─── SECTION TOGGLE ─── */
@@ -1493,4 +1508,540 @@ window.exportWordAkte = async function() {
   } catch(e) {
     if(typeof showToast==='function') showToast('Fehler: ' + e.message, 'error');
   }
+};
+
+/* ═══════════════════════════════════════════════════════════════════
+   MEGA⁸³ A — Akte-Mission-Control Renderer (Stepper + Stammdaten +
+   Phase-Checklist + Activity-Sidebar + Phase-Confirm-Modal)
+═════════════════════════════════════════════════════════════════════ */
+
+function _ak_esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function _ak_relTime(iso){
+  if(!iso)return '';
+  var d=new Date(iso);if(isNaN(d.getTime()))return '';
+  var diffMs=Date.now()-d.getTime();
+  var s=Math.floor(diffMs/1000);if(s<60)return 'vor wenigen Sek';
+  var m=Math.floor(s/60);if(m<60)return 'vor '+m+' Min';
+  var h=Math.floor(m/60);if(h<24)return 'vor '+h+' Std';
+  var today=new Date();today.setHours(0,0,0,0);
+  var yest=new Date(today);yest.setDate(yest.getDate()-1);
+  if(d>=yest && d<today)return 'gestern';
+  return d.toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'});
+}
+function _ak_bytes(n){
+  if(!n||n<1024)return (n||0)+' B';
+  if(n<1024*1024)return Math.round(n/1024)+' KB';
+  return (n/1024/1024).toFixed(1)+' MB';
+}
+
+// ─── A.2: Phase-Stepper visuell ────────────────────────────────────
+window.renderAktePhaseStepper = function(f){
+  try {
+    var wrap = document.getElementById('ak-stepper-wrap');
+    if (!wrap) return;
+    var phasen = window.getAktePhasenForAuftrag ? window.getAktePhasenForAuftrag(f) : [];
+    if (!phasen.length) return;
+    var current = parseInt(f.phase_aktuell || f.Phase || 1, 10);
+    var phasenLabels = {
+      A: { auftrag:'1 Auftrag', termin:'2 Termin', analyse:'3 Analyse', abschluss:'4 Abschluss' },
+      B: { auftrag:'1 Auftrag', objekt:'2 Objekt', bewertung:'3 Bewertung', abschluss:'4 Abschluss' },
+      C: { auftrag:'1 Auftrag', beratung:'2 Beratung', abschluss:'3 Abschluss' },
+      D: { auftrag:'1 Auftrag', begehung:'2+n Begehung', abschluss:'3 Abschluss' }
+    };
+    var flow = window.getFlow ? window.getFlow(f.typ || f.auftrag_typ || f.Auftragstyp) : 'A';
+    var labelMap = phasenLabels[flow] || phasenLabels.A;
+    var html = '';
+    phasen.forEach(function(p, idx){
+      var cls = p.n < current ? 'done' : (p.n === current ? 'active' : 'pending');
+      var label = (p.label) || labelMap[p.key] || ('Phase ' + p.n);
+      var circle = p.n < current ? '✓' : String(p.n);
+      var aria = cls === 'pending' ? 'aria-disabled="true"' : '';
+      html += '<button type="button" class="ak-step ' + cls + '" data-phase="' + p.n + '" '
+            + aria + ' onclick="window.akteStepperClick && window.akteStepperClick(' + p.n + ')">'
+            + '<span class="ak-step-circle">' + circle + '</span>'
+            + '<span class="ak-step-label">' + _ak_esc(label) + '</span>'
+            + '</button>';
+      if (idx < phasen.length - 1) {
+        var connDone = p.n < current ? ' done' : '';
+        html += '<div class="ak-step-connector' + connDone + '"></div>';
+      }
+    });
+    wrap.innerHTML = html;
+  } catch(e) { console.warn('[renderAktePhaseStepper]', e.message); }
+};
+
+// Stepper-Click-Handler: aktive Phase ignorieren, pending blockieren, done → Modal
+window.akteStepperClick = function(targetPhase){
+  var f = window.currentFields || currentFields || {};
+  var current = parseInt(f.phase_aktuell || f.Phase || 1, 10);
+  if (targetPhase === current) return;  // active = no-op
+  if (targetPhase > current) {
+    if (typeof showToast === 'function') {
+      showToast('Vorherige Phase muss erst abgeschlossen werden', 'warning');
+    }
+    return;
+  }
+  // targetPhase < current → done-Step, Modal öffnen
+  window.openAkPhaseModal(targetPhase);
+};
+
+// ─── A.3: Stammdaten-Bar (kompakt + collapsible) ─────────────────────
+window.toggleStammdatenBar = function(){
+  var bar = document.getElementById('ak-stamm-bar');
+  if (!bar) return;
+  var open = bar.getAttribute('data-expanded') === 'true';
+  bar.setAttribute('data-expanded', open ? 'false' : 'true');
+  try { localStorage.setItem('prova_akte_stamm_open', open ? '0' : '1'); } catch(_){}
+};
+
+window.renderStammdatenBar = function(f){
+  try {
+    var compact = document.getElementById('ak-stamm-compact');
+    var grid = document.getElementById('ak-stamm-grid');
+    if (!compact || !grid) return;
+    var az = f.az || f.Aktenzeichen || '—';
+    var schadensart = f.schadensart_label || f.Schadensart || '';
+    var ag = (f.details && f.details.auftraggeber && f.details.auftraggeber.name)
+          || f.Auftraggeber_Name || '';
+    var ort = (f.objekt && f.objekt.ort) || f.Ort || '';
+    var compactParts = [_ak_esc(schadensart), _ak_esc(ag), _ak_esc(ort)].filter(Boolean);
+    compact.innerHTML = '<strong>' + _ak_esc(az) + '</strong>' + (compactParts.length ? ' · ' + compactParts.join(' · ') : '');
+
+    var schadensdatum = f.schadensstichtag || f.Schadensdatum || '';
+    var fragestellung = f.fragestellung || f.Fragestellung || '';
+    var strasse = (f.objekt && f.objekt.adresse) || f.Strasse || '';
+    var plz = (f.objekt && f.objekt.plz) || f.PLZ || '';
+    var typLabel = (f.details && f.details.auftraggeber && f.details.auftraggeber.typ_label) || '';
+    var gerichtsAz = (f.details && f.details.gerichts_az) || '';
+    var rows = [
+      ['Aktenzeichen', az, 'readonly'],
+      ['Schadensart', schadensart || '—', 'editable', 'schadensart_label'],
+      ['Schadensdatum', schadensdatum || '—', 'editable', 'schadensstichtag'],
+      ['Auftraggeber', ag + (typLabel ? ' (' + typLabel + ')' : ''), 'readonly'],
+      ['Objekt-Adresse', [strasse, plz, ort].filter(Boolean).join(', ') || '—', 'readonly'],
+      ['Fragestellung', fragestellung || '—', 'editable', 'fragestellung'],
+      ['Gerichts-Az', gerichtsAz || '—', 'editable', 'details.gerichts_az']
+    ];
+    grid.innerHTML = rows.map(function(r){
+      var editable = r[2] === 'editable';
+      var attr = editable
+        ? ' contenteditable="true" data-field="' + r[3] + '" onblur="window.saveStammdatenField && window.saveStammdatenField(this)"'
+        : '';
+      var cls = 'ak-stamm-field-value' + (editable ? '' : ' readonly');
+      return '<div class="ak-stamm-field">'
+           + '<span class="ak-stamm-field-label">' + _ak_esc(r[0]) + '</span>'
+           + '<span class="' + cls + '"' + attr + '>' + _ak_esc(r[1]) + '</span>'
+           + '</div>';
+    }).join('');
+
+    // localStorage Default-State
+    var bar = document.getElementById('ak-stamm-bar');
+    try {
+      var stored = localStorage.getItem('prova_akte_stamm_open');
+      if (stored === '1' && bar) bar.setAttribute('data-expanded', 'true');
+    } catch(_){}
+  } catch(e) { console.warn('[renderStammdatenBar]', e.message); }
+};
+
+window.saveStammdatenField = async function(el){
+  if (!el || !el.dataset || !el.dataset.field) return;
+  var field = el.dataset.field;
+  var value = (el.textContent || '').trim();
+  if (value === '—') value = '';
+  var f = window.currentFields || currentFields || {};
+  var id = f.id || f._recordId;
+  if (!id) return;
+  try {
+    var sb = await window._getSupabase();
+    if (!sb) return;
+    var update = {};
+    if (field.indexOf('.') > 0) {
+      // jsonb-Path z.B. details.gerichts_az
+      var parts = field.split('.');
+      var col = parts[0];
+      var sub = parts[1];
+      var current = f[col] || {};
+      current[sub] = value;
+      update[col] = current;
+    } else {
+      update[field] = value || null;
+    }
+    var res = await sb.from('auftraege').update(update).eq('id', id);
+    if (res.error) {
+      console.warn('[saveStammdatenField]', res.error.message);
+      if (typeof showToast === 'function') showToast('Fehler: ' + res.error.message, 'error');
+      return;
+    }
+    if (typeof showToast === 'function') showToast('Gespeichert ✓', 'success', 1500);
+    // Update in-memory + Compact-Display
+    if (field.indexOf('.') > 0) {
+      var parts2 = field.split('.');
+      f[parts2[0]] = f[parts2[0]] || {};
+      f[parts2[0]][parts2[1]] = value;
+    } else { f[field] = value; }
+    window.renderStammdatenBar(f);
+  } catch(e) { console.warn('[saveStammdatenField]', e); }
+};
+
+// ─── A.4: Phase-Confirm-Modal ────────────────────────────────────────
+window._akPendingPhaseTarget = null;
+window.openAkPhaseModal = function(targetPhase){
+  var modal = document.getElementById('ak-phase-modal');
+  if (!modal) return;
+  var f = window.currentFields || currentFields || {};
+  var current = parseInt(f.phase_aktuell || f.Phase || 1, 10);
+  var icon = document.getElementById('ak-modal-icon');
+  var title = document.getElementById('ak-modal-title');
+  var text = document.getElementById('ak-modal-text');
+  var btn = document.getElementById('ak-modal-confirm-btn');
+  if (targetPhase < current) {
+    if (icon) icon.textContent = '↩️';
+    if (title) title.textContent = 'Phase ' + targetPhase + ' nochmals öffnen?';
+    if (text) text.textContent = 'Bisherige Daten bleiben erhalten — nur der Phase-Pointer ändert sich. Du kannst jederzeit wieder nach vorne springen.';
+    if (btn) btn.textContent = 'Phase ' + targetPhase + ' öffnen';
+  } else {
+    if (icon) icon.textContent = '→';
+    if (title) title.textContent = 'Phase abschließen?';
+    if (text) text.textContent = 'Du wechselst von Phase ' + current + ' zu Phase ' + targetPhase + '.';
+    if (btn) btn.textContent = 'Phase wechseln';
+  }
+  window._akPendingPhaseTarget = targetPhase;
+  modal.classList.add('is-open');
+  // Esc + Click-outside
+  modal.addEventListener('click', function _e(e){ if (e.target === modal) { window.closeAkPhaseModal(); modal.removeEventListener('click', _e); } });
+  setTimeout(function(){ btn && btn.focus(); }, 50);
+};
+window.closeAkPhaseModal = function(){
+  var modal = document.getElementById('ak-phase-modal');
+  if (modal) modal.classList.remove('is-open');
+  window._akPendingPhaseTarget = null;
+};
+window.confirmAkPhaseModal = function(){
+  var target = window._akPendingPhaseTarget;
+  window.closeAkPhaseModal();
+  if (typeof target === 'number' && window._akteUpdatePhase) window._akteUpdatePhase(target);
+};
+document.addEventListener('keydown', function(e){
+  if (e.key === 'Escape') window.closeAkPhaseModal && window.closeAkPhaseModal();
+});
+
+// Ersetzt MEGA82 confirm()-basierte aktePrevPhase
+window.aktePrevPhase = function(){
+  var f = window.currentFields || currentFields || {};
+  var phase = parseInt(f.phase_aktuell || f.Phase || 1, 10);
+  if (phase <= 1) return;
+  window.openAkPhaseModal(phase - 1);
+};
+window.akteNextPhase = function(){
+  var f = window.currentFields || currentFields || {};
+  var phase = parseInt(f.phase_aktuell || f.Phase || 1, 10);
+  var phasen = window.getAktePhasenForAuftrag ? window.getAktePhasenForAuftrag(f) : [];
+  if (phase >= (phasen.length || 4)) return;
+  window.openAkPhaseModal(phase + 1);
+};
+
+// ─── A.6: Phase-Checklist mit Smart-Detection ──────────────────────
+// Pro Flow + Phase eine Liste mit { label, key (für Smart-Detection),
+// action (URL/Funktion), required (bool für Phase-Abschluss-Gate) }
+var AK_CHECKLISTS = {
+  A: {
+    1: [
+      { key:'stammdaten',   label:'Stammdaten erfasst',        required:true },
+      { key:'auftraggeber', label:'Auftraggeber zugewiesen',   required:true },
+      { key:'bestaetigung', label:'Auftragsbestätigung erstellt (optional)', action:'auftragsbestaetigung.html' },
+      { key:'honorar',      label:'Honorar-Vereinbarung (optional)', action:'honorar-rechner.html' }
+    ],
+    2: [
+      { key:'termin',  label:'Termin angelegt',     required:true, action:'termine.html' },
+      { key:'diktat',  label:'Diktat aufgenommen',  action:'vor-ort.html' },
+      { key:'foto',    label:'Fotos hochgeladen',   action:'#upload' },
+      { key:'skizze',  label:'Skizze erstellt',     action:'skizzen.html' },
+      { key:'messung', label:'Messwerte erfasst',   manual:true }
+    ],
+    3: [
+      { key:'normen',     label:'Recherche Normen/Bausteine', action:'normen.html' },
+      { key:'ki_entwurf', label:'§§ 1–5 KI-Vorentwurf' },
+      { key:'fachurteil', label:'§ 6 Fachurteil eigenhändig', required:true, action:'fachurteil.html' },
+      { key:'kosten',     label:'§ 7 Kostenermittlung' },
+      { key:'qualitaet',  label:'Qualitäts-/§407a-Check',     manual:true }
+    ],
+    4: [
+      { key:'freigabe', label:'Freigabe-Wizard durchgeführt', required:true, action:'freigabe.html' },
+      { key:'pdf',      label:'PDF erstellt' },
+      { key:'versand',  label:'Versendet' },
+      { key:'rechnung', label:'Rechnung erstellt',           action:'rechnungen.html' }
+    ]
+  },
+  B: {
+    1: [{ key:'stammdaten', label:'Bewertungsanlass + Grundbuch', required:true },
+        { key:'verfahren', label:'Verfahren-Vorauswahl' },
+        { key:'ag', label:'AG-Daten' }],
+    2: [{ key:'termin', label:'Ortstermin durchgeführt', required:true },
+        { key:'objektdaten', label:'Objektdaten erfasst' },
+        { key:'foto', label:'Fotos hochgeladen' },
+        { key:'baulasten', label:'Baulastenauskunft', manual:true }],
+    3: [{ key:'berechnung', label:'Berechnung gewähltes Verfahren', required:true },
+        { key:'anpassungen', label:'Anpassungen dokumentiert' },
+        { key:'plausibilitaet', label:'Plausibilitätscheck', manual:true }],
+    4: [{ key:'freigabe', label:'Freigabe-Wizard', required:true, action:'freigabe.html' },
+        { key:'pdf', label:'PDF erstellt' },
+        { key:'versand', label:'Versendet' },
+        { key:'honorar', label:'Rechnung erstellt', action:'rechnungen.html' }]
+  },
+  C: {
+    1: [{ key:'thema', label:'Beratungsthema dokumentiert', required:true },
+        { key:'ag', label:'AG-Daten' },
+        { key:'honorar', label:'Honorar-Vereinbarung' }],
+    2: [{ key:'termin', label:'Termin (Telefon/Vor-Ort/Video)' },
+        { key:'diktat', label:'Diktat/Protokoll', action:'vor-ort.html' },
+        { key:'empfehlungen', label:'Handlungsempfehlungen', manual:true }],
+    3: [{ key:'kurzstellungnahme', label:'Kurzstellungnahme/Brief erstellt', required:true },
+        { key:'pdf', label:'PDF erstellt' },
+        { key:'stundenabrechnung', label:'Stundenabrechnung', action:'rechnungen.html' }]
+  },
+  D: {
+    1: [{ key:'baubeschreibung', label:'Baubeschreibung erfasst', required:true },
+        { key:'phasenplan', label:'Bauphasen-Plan' },
+        { key:'intervall', label:'Begehungsintervall' }],
+    2: [{ key:'begehung', label:'Begehung durchgeführt', action:'vor-ort.html' },
+        { key:'foto', label:'Fotos pro Begehung' },
+        { key:'maengel', label:'Mängelerfassung', manual:true }],
+    3: [{ key:'schlussbericht', label:'Schluss-Bericht erstellt', required:true },
+        { key:'restmaengel', label:'Restmängel dokumentiert' },
+        { key:'pdf', label:'Abnahme-PDF erstellt' },
+        { key:'honorar', label:'Rechnung (JVEG/Pauschal)' }]
+  }
+};
+
+// Smart-Detection: Liefert Set der "done"-Keys basierend auf realen Daten
+async function _ak_smartDoneSet(auftragId){
+  var done = {};
+  try {
+    var sb = await window._getSupabase();
+    if (!sb || !auftragId) return done;
+    var [tRes, eRes, dRes, fRes, sRes] = await Promise.all([
+      sb.from('termine').select('id').eq('auftrag_id', auftragId).is('deleted_at', null).limit(1),
+      sb.from('eintraege').select('id, typ, kategorie').eq('auftrag_id', auftragId).is('deleted_at', null).limit(50),
+      sb.from('dokumente').select('id, typ, status').eq('auftrag_id', auftragId).is('deleted_at', null).limit(50),
+      sb.from('fristen').select('id').eq('auftrag_id', auftragId).is('deleted_at', null).limit(50),
+      sb.from('skizzen').select('id').eq('auftrag_id', auftragId).limit(1)
+    ]);
+    if ((tRes.data || []).length > 0) done.termin = true;
+    var eintraege = eRes.data || [];
+    eintraege.forEach(function(e){
+      var typ = String(e.typ || '').toLowerCase();
+      var kat = String(e.kategorie || '').toLowerCase();
+      if (typ === 'diktat' || kat.indexOf('diktat') >= 0) done.diktat = true;
+      if (typ === 'foto' || kat.indexOf('foto') >= 0) done.foto = true;
+      if (typ === 'mix') { done.diktat = done.diktat || true; }
+      if (kat.indexOf('messung') >= 0 || kat.indexOf('messwert') >= 0) done.messung = true;
+      if (kat.indexOf('befund') >= 0 || kat.indexOf('begehung') >= 0) done.begehung = true;
+    });
+    (dRes.data || []).forEach(function(d){
+      var typ = String(d.typ || '').toLowerCase();
+      if (typ.indexOf('rechnung') >= 0) done.rechnung = done.honorar = done.stundenabrechnung = true;
+      if (typ === 'auftragsbestaetigung') done.bestaetigung = true;
+      if (typ === 'brief') done.kurzstellungnahme = true;
+      if (typ.indexOf('mahnung') >= 0) done.mahnung = true;
+      if (d.status === 'versendet' || d.status === 'gelesen') done.versand = true;
+      if (d.status === 'generiert' || d.status === 'versendet') done.pdf = true;
+    });
+    if ((sRes.data || []).length > 0) done.skizze = true;
+  } catch(e) { console.warn('[_ak_smartDoneSet]', e.message); }
+  return done;
+}
+
+window.renderPhaseChecklist = async function(f){
+  try {
+    var phaseTitleEl = document.getElementById('ak-phase-title');
+    var phaseSubEl = document.getElementById('ak-phase-sub');
+    var listEl = document.getElementById('ak-checklist');
+    if (!listEl) return;
+    var phase = parseInt(f.phase_aktuell || f.Phase || 1, 10);
+    var flow = window.getFlow ? window.getFlow(f.typ || f.auftrag_typ || f.Auftragstyp) : 'A';
+    var checklist = (AK_CHECKLISTS[flow] && AK_CHECKLISTS[flow][phase]) || [];
+    if (!checklist.length) {
+      listEl.innerHTML = '<div class="ak-side-empty">Keine spezifischen Aufgaben.</div>';
+      return;
+    }
+    // Phase-Title + Sub
+    var phaseNames = { A:{1:'Auftrag',2:'Termin',3:'Analyse',4:'Abschluss'},
+                       B:{1:'Auftrag',2:'Objekt',3:'Bewertung',4:'Abschluss'},
+                       C:{1:'Auftrag',2:'Beratung',3:'Abschluss'},
+                       D:{1:'Auftrag',2:'+n Begehung',3:'Abschluss'} };
+    var pname = (phaseNames[flow] || phaseNames.A)[phase] || ('Phase ' + phase);
+    if (phaseTitleEl) phaseTitleEl.textContent = 'Phase ' + phase + ' — ' + pname;
+    if (phaseSubEl) phaseSubEl.textContent = checklist.length + ' Aufgabe' + (checklist.length === 1 ? '' : 'n') + ' für diese Phase';
+
+    // Smart-Detection: parallel zu Phase-Checks
+    var auftragId = f.id || f._recordId;
+    var done = await _ak_smartDoneSet(auftragId);
+    // Manuelle Checks aus auftraege.details->>'phase_checks'
+    var manualChecks = (f.details && f.details.phase_checks) || {};
+
+    listEl.innerHTML = checklist.map(function(item){
+      var isDone = !!done[item.key] || !!manualChecks[item.key];
+      var actionLink = '';
+      if (item.action) {
+        if (item.action === '#upload') {
+          actionLink = '<a class="ak-check-action" href="javascript:document.getElementById(\'dok-file-input\').click()">Hochladen →</a>';
+        } else {
+          actionLink = '<a class="ak-check-action" href="' + _ak_esc(item.action) + '">Öffnen →</a>';
+        }
+      }
+      var click = item.manual
+        ? ' onclick="window.togglePhaseCheck && window.togglePhaseCheck(\'' + _ak_esc(item.key) + '\')"'
+        : '';
+      return '<div class="ak-checklist-row' + (isDone ? ' done' : '') + '"' + click + '>'
+           + '<span class="ak-check-icon">' + (isDone ? '✓' : '') + '</span>'
+           + '<span class="ak-check-label">' + _ak_esc(item.label) + (item.required && !isDone ? ' <em style="color:var(--warning);font-style:normal;font-size:10px;">*</em>' : '') + '</span>'
+           + actionLink
+           + '</div>';
+    }).join('');
+  } catch(e) { console.warn('[renderPhaseChecklist]', e.message); }
+};
+
+// Manueller Toggle für Checklist-Items
+window.togglePhaseCheck = async function(key){
+  var f = window.currentFields || currentFields || {};
+  var id = f.id || f._recordId;
+  if (!id) return;
+  var details = f.details || {};
+  details.phase_checks = details.phase_checks || {};
+  details.phase_checks[key] = !details.phase_checks[key];
+  try {
+    var sb = await window._getSupabase();
+    if (!sb) return;
+    await sb.from('auftraege').update({ details: details }).eq('id', id);
+    f.details = details;
+    window.renderPhaseChecklist(f);
+  } catch(e) { console.warn('[togglePhaseCheck]', e); }
+};
+
+// ─── A.5: Activity-Sidebar — 5 Sub-Blocks parallel ────────────────
+window.renderActivitySidebar = async function(f){
+  try {
+    var auftragId = f.id || f._recordId;
+    if (!auftragId) return;
+    var sb = await window._getSupabase();
+    if (!sb) return;
+
+    var [actRes, dokRes, fristRes, terminRes] = await Promise.all([
+      // Multi-Entity-Audit-Trail: entity_typ=auftrag direkt OR payload.auftrag_id
+      sb.from('audit_trail')
+        .select('id, action, entity_typ, entity_id, payload, created_at')
+        .or('and(entity_typ.eq.auftrag,entity_id.eq.' + auftragId + '),payload->>auftrag_id.eq.' + auftragId)
+        .order('created_at', { ascending: false }).limit(5),
+      sb.from('dokumente')
+        .select('id, typ, doc_nummer, betreff, bytes, pdf_url, storage_path, created_at')
+        .eq('auftrag_id', auftragId).is('deleted_at', null)
+        .order('created_at', { ascending: false }).limit(5),
+      sb.from('fristen')
+        .select('id, frist_typ, notiz, datum_soll, status')
+        .eq('auftrag_id', auftragId).is('deleted_at', null).eq('status', 'offen')
+        .order('datum_soll', { ascending: true }).limit(3),
+      sb.from('termine')
+        .select('id, titel, typ, datum, uhrzeit_von, ort_name, status')
+        .eq('auftrag_id', auftragId).is('deleted_at', null)
+        .not('status', 'in', '(durchgefuehrt,abgesagt,kein_zustandekommen)')
+        .order('datum', { ascending: true }).limit(2)
+    ]);
+
+    // ── Aktivität ──
+    var actEl = document.getElementById('ak-side-activity');
+    if (actEl) {
+      var actRows = actRes.data || [];
+      if (!actRows.length) {
+        actEl.innerHTML = '<div class="ak-side-empty">Noch keine Aktivität.</div>';
+      } else {
+        var verbMap = { create:'angelegt', update:'aktualisiert', read:'geöffnet',
+          delete:'gelöscht', ki_request:'KI gefragt', ki_response:'KI-Antwort',
+          pdf_generate:'PDF erstellt', pdf_send:'PDF versendet', freigabe:'freigegeben' };
+        actEl.innerHTML = actRows.map(function(r){
+          var verb = verbMap[r.action] || r.action;
+          var entity = r.entity_typ || 'Item';
+          var label = entity.charAt(0).toUpperCase() + entity.slice(1);
+          return '<div class="ak-side-row">'
+               + '<span class="ak-side-row-icon">·</span>'
+               + '<div class="ak-side-row-body">' + _ak_esc(label) + ' ' + _ak_esc(verb)
+               + '<div class="ak-side-row-meta">' + _ak_esc(_ak_relTime(r.created_at)) + '</div>'
+               + '</div></div>';
+        }).join('');
+      }
+    }
+    var aTrailLink = document.getElementById('ak-side-activity-all');
+    if (aTrailLink) aTrailLink.href = 'audit-trail.html?auftrag=' + encodeURIComponent(f.az || auftragId);
+
+    // ── Dokumente ──
+    var dokEl = document.getElementById('ak-side-dokumente');
+    if (dokEl) {
+      var dokRows = dokRes.data || [];
+      if (!dokRows.length) {
+        dokEl.innerHTML = '<div class="ak-side-empty">Keine Dokumente.</div>';
+      } else {
+        var typIcons = { rechnung:'💶', rechnung_jveg:'💶', rechnung_stunden:'💶',
+          mahnung_1:'⚠️', mahnung_2:'⚠️', mahnung_3:'⚠️', brief:'✉️',
+          bescheinigung:'📑', gutachten:'📄' };
+        dokEl.innerHTML = dokRows.map(function(d){
+          var icon = typIcons[d.typ] || '📎';
+          var name = d.doc_nummer || d.betreff || (d.typ || 'Dokument');
+          var href = d.pdf_url || (d.storage_path ? '#' : '#');
+          return '<a class="ak-side-row" href="' + _ak_esc(href) + '" target="_blank" style="text-decoration:none;color:inherit;">'
+               + '<span class="ak-side-row-icon">' + icon + '</span>'
+               + '<div class="ak-side-row-body">' + _ak_esc(name)
+               + '<div class="ak-side-row-meta">' + _ak_bytes(d.bytes) + '</div>'
+               + '</div></a>';
+        }).join('');
+      }
+    }
+
+    // ── Fristen ──
+    var fristEl = document.getElementById('ak-side-fristen');
+    if (fristEl) {
+      var fristRows = fristRes.data || [];
+      if (!fristRows.length) {
+        fristEl.innerHTML = '<div class="ak-side-empty">Keine offenen Fristen.</div>';
+      } else {
+        var today = new Date();today.setHours(0,0,0,0);
+        fristEl.innerHTML = fristRows.map(function(fr){
+          var due = fr.datum_soll ? new Date(fr.datum_soll + 'T00:00:00') : null;
+          var days = due ? Math.floor((due - today) / 86400000) : null;
+          var color = days !== null && days < 3 ? 'var(--danger)' : (days !== null && days < 7 ? 'var(--warning)' : 'var(--text2)');
+          var label = days === null ? '—' : (days < 0 ? 'überfällig' : days === 0 ? 'heute' : 'in ' + days + ' Tag' + (days === 1 ? '' : 'en'));
+          var datStr = due ? due.toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'}) : '';
+          return '<div class="ak-side-row" style="color:' + color + ';">'
+               + '<span class="ak-side-row-icon">⏰</span>'
+               + '<div class="ak-side-row-body">' + _ak_esc(fr.frist_typ || 'Frist') + ' · ' + datStr
+               + '<div class="ak-side-row-meta">' + _ak_esc(label) + '</div>'
+               + '</div></div>';
+        }).join('');
+      }
+    }
+    var fristAdd = document.getElementById('ak-side-frist-add');
+    if (fristAdd) fristAdd.href = 'fristen.html?auftrag=' + encodeURIComponent(f.az || auftragId);
+
+    // ── Termine ──
+    var terminEl = document.getElementById('ak-side-termine');
+    if (terminEl) {
+      var terminRows = terminRes.data || [];
+      if (!terminRows.length) {
+        terminEl.innerHTML = '<div class="ak-side-empty">Keine offenen Termine.</div>';
+      } else {
+        terminEl.innerHTML = terminRows.map(function(t){
+          var d = t.datum ? new Date(t.datum + 'T00:00:00').toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'}) : '';
+          var time = t.uhrzeit_von ? String(t.uhrzeit_von).slice(0,5) : '';
+          var label = t.titel || t.typ || 'Termin';
+          var ort = t.ort_name || '';
+          return '<a class="ak-side-row" href="termine.html?id=' + encodeURIComponent(t.id) + '" style="text-decoration:none;color:inherit;">'
+               + '<span class="ak-side-row-icon">📅</span>'
+               + '<div class="ak-side-row-body">' + _ak_esc(d) + ' ' + _ak_esc(time) + ' · ' + _ak_esc(label)
+               + (ort ? '<div class="ak-side-row-meta">' + _ak_esc(ort) + '</div>' : '')
+               + '</div></a>';
+        }).join('');
+      }
+    }
+    var terminAdd = document.getElementById('ak-side-termin-add');
+    if (terminAdd) terminAdd.href = 'termine.html?auftrag=' + encodeURIComponent(f.az || auftragId);
+
+  } catch(e) { console.warn('[renderActivitySidebar]', e.message); }
 };

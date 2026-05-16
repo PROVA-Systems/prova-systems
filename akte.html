@@ -15,6 +15,7 @@
 <script src="paket-guard.js"></script>
 <script src="theme.js"></script>
 <script src="/lib/prova-config.js"></script>
+<script src="/lib/prova-legacy-bridge.js"></script>
 <script src="/lib/edge-shim.js"></script>
 <script src="prova-fetch-auth.js"></script>
 <script src="/lib/prova-disclaimer.js" defer></script>
@@ -22,6 +23,9 @@
 <script src="prova-notifications.js" defer></script>
 <script>
 (function(){
+  // MEGA⁸³ C: ProvaLegacyBridge hydrate() lief vorher synchron — Cookie→localStorage
+  // Cross-Subdomain-Bridge → Pre-Check unten findet prova_auth_token auch nach
+  // Subdomain-Wechsel.
   // Cutover-Block-3 Hybrid-Auth-Guard (01.05.2026):
   // Synchroner Pre-Check der Bridge-Keys, die lib/auth-guard.js writeLegacyBridge()
   // nach Supabase-Login schreibt. Bei fehlenden Keys: Redirect zu /login mit next=.
@@ -92,6 +96,85 @@ a{text-decoration:none;color:inherit;}button,input,select,textarea{font-family:i
 
 /* ─── AKTE PAGE ─── */
 .page-content{padding:24px 28px 48px;max-width:1200px;width:100%;}
+
+/* ═══════════════ MEGA⁸³ A — AKTE-MISSION-CONTROL TOKENS ═══════════════ */
+.ak-section-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);}
+.ak-section-cta{font-size:11px;color:var(--accent);text-decoration:none;font-weight:600;}
+.ak-section-cta:hover{text-decoration:underline;}
+
+/* PHASE-STEPPER (visuell, klickbar) — A.2 */
+.ak-stepper-wrap{display:flex;align-items:center;gap:0;padding:18px 0 22px;overflow-x:auto;}
+.ak-step{display:flex;flex-direction:column;align-items:center;gap:6px;padding:4px 8px;cursor:pointer;border-radius:8px;flex-shrink:0;transition:background .12s;background:none;border:none;font-family:inherit;}
+.ak-step:hover{background:rgba(255,255,255,.03);}
+.ak-step-circle{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;background:var(--bg3);color:var(--text3);border:2px solid var(--border2);transition:all .15s;}
+.ak-step.done .ak-step-circle{background:var(--success);color:#fff;border-color:var(--success);}
+.ak-step.active .ak-step-circle{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border-color:var(--accent);transform:scale(1.1);box-shadow:0 0 0 4px rgba(79,142,247,.18);}
+.ak-step-label{font-size:11px;font-weight:600;color:var(--text3);white-space:nowrap;}
+.ak-step.done .ak-step-label,.ak-step.active .ak-step-label{color:var(--text);}
+.ak-step.pending{cursor:not-allowed;}
+.ak-step.pending:hover{background:none;}
+.ak-step.pending .ak-step-circle{opacity:.55;}
+.ak-step-connector{flex:1;height:2px;background:var(--border2);margin:0 4px;min-width:24px;align-self:flex-start;margin-top:21px;transition:background .25s;}
+.ak-step-connector.done{background:var(--success);}
+@media(max-width:768px){
+  .ak-step-circle{width:28px;height:28px;font-size:12px;}
+  .ak-step-label{font-size:10px;}
+  .ak-step-connector{min-width:12px;}
+}
+
+/* STAMMDATEN-BAR (collapsible) — A.3 */
+.ak-stamm-bar{background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:12px 16px;margin-bottom:20px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:12px;transition:border-color .15s;}
+.ak-stamm-bar:hover{border-color:var(--accent);}
+.ak-stamm-compact{flex:1;min-width:0;font-size:13px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.ak-stamm-compact strong{color:var(--accent);font-family:var(--font-mono);margin-right:8px;font-size:12px;}
+.ak-stamm-toggle{font-size:11px;color:var(--text3);flex-shrink:0;transition:transform .2s;}
+.ak-stamm-bar[data-expanded="true"] .ak-stamm-toggle{transform:rotate(180deg);}
+.ak-stamm-expanded{background:var(--surface);border:1px solid var(--border);border-top:none;border-radius:0 0 10px 10px;padding:16px;margin-top:-21px;margin-bottom:20px;display:none;}
+.ak-stamm-bar[data-expanded="true"] + .ak-stamm-expanded{display:block;}
+.ak-stamm-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px 20px;}
+.ak-stamm-field{display:flex;flex-direction:column;gap:3px;}
+.ak-stamm-field-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);}
+.ak-stamm-field-value{font-size:13px;font-weight:500;color:var(--text);min-height:18px;border-bottom:1px dashed transparent;padding-bottom:1px;cursor:text;}
+.ak-stamm-field-value[contenteditable="true"]:focus{outline:none;border-bottom-color:var(--accent);}
+.ak-stamm-field-value.readonly{color:var(--text3);cursor:default;}
+@media(max-width:768px){.ak-stamm-grid{grid-template-columns:1fr;}}
+
+/* PHASE-CHECKLIST — A.6 */
+.ak-phase-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:12px;flex-wrap:wrap;}
+.ak-phase-title{font-size:16px;font-weight:700;color:var(--text);letter-spacing:-.01em;}
+.ak-phase-sub{font-size:12px;color:var(--text3);margin-top:2px;}
+.ak-checklist{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 18px;margin-bottom:18px;}
+.ak-checklist-row{display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid var(--border);font-size:13px;cursor:pointer;transition:background .1s;}
+.ak-checklist-row:last-child{border-bottom:none;}
+.ak-checklist-row:hover{background:rgba(255,255,255,.02);margin:0 -10px;padding-left:10px;padding-right:10px;border-radius:6px;}
+.ak-check-icon{width:18px;height:18px;border-radius:50%;border:2px solid var(--border2);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:11px;color:transparent;background:var(--bg3);transition:all .15s;}
+.ak-checklist-row.done .ak-check-icon{background:var(--success);border-color:var(--success);color:#fff;}
+.ak-check-label{flex:1;color:var(--text2);}
+.ak-checklist-row.done .ak-check-label{color:var(--text3);text-decoration:line-through;text-decoration-color:rgba(255,255,255,.2);}
+.ak-check-action{font-size:11px;color:var(--accent);text-decoration:none;font-weight:600;flex-shrink:0;}
+.ak-check-action:hover{text-decoration:underline;}
+
+/* ACTIVITY-SIDEBAR — A.5 */
+.ak-sidebar{display:flex;flex-direction:column;gap:18px;}
+.ak-side-block{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;}
+.ak-side-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.ak-side-row{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);font-size:12px;color:var(--text2);}
+.ak-side-row:last-child{border-bottom:none;}
+.ak-side-row-icon{flex-shrink:0;width:18px;text-align:center;color:var(--text3);}
+.ak-side-row-body{flex:1;min-width:0;line-height:1.4;}
+.ak-side-row-body a{color:var(--accent);}
+.ak-side-row-meta{font-size:10px;color:var(--text3);margin-top:2px;}
+.ak-side-empty{font-size:12px;color:var(--text3);padding:8px 0;text-align:center;font-style:italic;}
+
+/* PHASE-CONFIRM-MODAL — A.4 */
+.ak-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.65);backdrop-filter:blur(3px);z-index:1000;display:none;align-items:center;justify-content:center;padding:20px;}
+.ak-modal-overlay.is-open{display:flex;}
+.ak-modal-card{background:var(--surface);border:1px solid var(--border2);border-radius:14px;padding:24px;max-width:420px;width:100%;text-align:center;box-shadow:0 12px 40px rgba(0,0,0,.5);}
+.ak-modal-icon{font-size:36px;margin-bottom:12px;}
+.ak-modal-card h3{font-size:17px;font-weight:700;color:var(--text);margin-bottom:8px;}
+.ak-modal-card p{font-size:13px;color:var(--text2);line-height:1.55;margin-bottom:18px;}
+.ak-modal-actions{display:flex;gap:10px;justify-content:flex-end;}
+@media(max-width:480px){.ak-modal-actions{flex-direction:column-reverse;}.ak-modal-actions button{width:100%;}}
 
 /* HEADER */
 .akte-header{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;margin-bottom:24px;flex-wrap:wrap;}
@@ -325,6 +408,22 @@ a{text-decoration:none;color:inherit;}button,input,select,textarea{font-family:i
         </div>
       </div>
 
+      <!-- MEGA⁸³ A.2 — VISUELLER PHASE-STEPPER -->
+      <div class="ak-stepper-wrap" id="ak-stepper-wrap" role="navigation" aria-label="Akte-Phasen">
+        <!-- per JS gerendert via window.renderAktePhaseStepper(f) -->
+      </div>
+
+      <!-- MEGA⁸³ A.3 — STAMMDATEN-BAR (collapsible) -->
+      <div class="ak-stamm-bar" id="ak-stamm-bar" data-expanded="false" onclick="window.toggleStammdatenBar && window.toggleStammdatenBar()">
+        <div class="ak-stamm-compact" id="ak-stamm-compact">—</div>
+        <span class="ak-stamm-toggle">▼</span>
+      </div>
+      <div class="ak-stamm-expanded" id="ak-stamm-expanded">
+        <div class="ak-stamm-grid" id="ak-stamm-grid">
+          <!-- per JS gerendert via window.renderStammdatenBar(f) -->
+        </div>
+      </div>
+
       <!-- MEGA⁶⁹-FINAL-1 D.5 — 12-Tab Quick-Action-Bar -->
       <div id="akte-tabs"></div>
 
@@ -334,30 +433,29 @@ a{text-decoration:none;color:inherit;}button,input,select,textarea{font-family:i
         <!-- LINKE SPALTE -->
         <div>
 
-          <!-- STAMMDATEN -->
-          <div class="section-card" id="sec-stamm">
-            <div class="section-header" onclick="toggleSection('sec-stamm')">
-              <div class="section-title"><span class="section-title-icon">📋</span>Stammdaten</div>
-              <span class="section-toggle">▾</span>
-            </div>
-            <div class="section-body">
-              <div class="meta-grid" id="meta-grid">
-                <!-- Wird per JS befüllt -->
+          <!-- MEGA⁸³ A.6 — PHASE-CHECKLIST -->
+          <div id="ak-phase-section">
+            <div class="ak-phase-header">
+              <div>
+                <div class="ak-phase-title" id="ak-phase-title">Phase 1 — Auftrag</div>
+                <div class="ak-phase-sub" id="ak-phase-sub">Was zu tun ist:</div>
               </div>
+            </div>
+            <div class="ak-checklist" id="ak-checklist">
+              <!-- per JS via window.renderPhaseChecklist(f) -->
             </div>
           </div>
 
-          <!-- STATUS-TIMELINE -->
-          <div class="section-card" id="sec-timeline">
-            <div class="section-header" onclick="toggleSection('sec-timeline')">
-              <div class="section-title"><span class="section-title-icon">🔄</span>Bearbeitungs-Status</div>
-              <span class="section-toggle">▾</span>
-            </div>
-            <div class="section-body">
-              <div class="timeline" id="timeline-body">
-                <!-- Wird per JS befüllt -->
-              </div>
-            </div>
+          <!-- MEGA⁸³ A.1: sec-stamm + sec-timeline werden ausgeblendet, sind durch
+               die neue Stammdaten-Bar (oben) + Phase-Stepper ersetzt.
+               Beide Container bleiben im DOM, damit alte JS-Caller nicht crashen. -->
+          <div class="section-card" id="sec-stamm" style="display:none;">
+            <div class="section-header"><div class="section-title">Stammdaten (Legacy)</div></div>
+            <div class="section-body"><div class="meta-grid" id="meta-grid"></div></div>
+          </div>
+          <div class="section-card" id="sec-timeline" style="display:none;">
+            <div class="section-header"><div class="section-title">Bearbeitungs-Status (Legacy)</div></div>
+            <div class="section-body"><div class="timeline" id="timeline-body"></div></div>
           </div>
 
           <!-- DOKUMENTE -->
@@ -436,9 +534,58 @@ a{text-decoration:none;color:inherit;}button,input,select,textarea{font-family:i
         <!-- RECHTE SPALTE -->
         <div class="right-col">
 
-          <!-- STATUS KARTE -->
-          <div class="info-card">
-            <div class="info-card-title">Status</div>
+          <!-- MEGA⁸³ A.5 — ACTIVITY-SIDEBAR (Activity + Dokumente + Fristen + Termine + Mehr) -->
+          <div class="ak-sidebar">
+
+            <div class="ak-side-block">
+              <div class="ak-side-head">
+                <span class="ak-section-label">⏱️ Aktivität</span>
+                <a class="ak-section-cta" id="ak-side-activity-all" href="#">Alle Logs →</a>
+              </div>
+              <div id="ak-side-activity"><div class="ak-side-empty">Wird geladen…</div></div>
+            </div>
+
+            <div class="ak-side-block">
+              <div class="ak-side-head">
+                <span class="ak-section-label">📎 Dokumente</span>
+                <a class="ak-section-cta" href="javascript:document.getElementById('dok-file-input') && document.getElementById('dok-file-input').click()">+ Hinzufügen</a>
+              </div>
+              <div id="ak-side-dokumente"><div class="ak-side-empty">Wird geladen…</div></div>
+            </div>
+
+            <div class="ak-side-block">
+              <div class="ak-side-head">
+                <span class="ak-section-label">⏰ Fristen</span>
+                <a class="ak-section-cta" id="ak-side-frist-add" href="#">+ Hinzufügen</a>
+              </div>
+              <div id="ak-side-fristen"><div class="ak-side-empty">Wird geladen…</div></div>
+            </div>
+
+            <div class="ak-side-block">
+              <div class="ak-side-head">
+                <span class="ak-section-label">📅 Termine</span>
+                <a class="ak-section-cta" id="ak-side-termin-add" href="#">+ Hinzufügen</a>
+              </div>
+              <div id="ak-side-termine"><div class="ak-side-empty">Wird geladen…</div></div>
+            </div>
+
+            <details class="ak-side-block" style="cursor:pointer;">
+              <summary class="ak-section-label" style="list-style:none;outline:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;">
+                <span>▼ Mehr-Aktionen</span>
+              </summary>
+              <div style="margin-top:10px;display:flex;flex-direction:column;gap:8px;">
+                <a href="briefvorlagen.html" class="ak-side-row" style="text-decoration:none;color:var(--text2);"><span class="ak-side-row-icon">✉️</span><span class="ak-side-row-body">Brief schreiben</span></a>
+                <a href="termine.html" class="ak-side-row" style="text-decoration:none;color:var(--text2);"><span class="ak-side-row-icon">📆</span><span class="ak-side-row-body">Termin verschieben</span></a>
+                <a href="#" onclick="event.preventDefault();exportWordAkte&&exportWordAkte();" class="ak-side-row" style="text-decoration:none;color:var(--text2);"><span class="ak-side-row-icon">📤</span><span class="ak-side-row-body">Akte exportieren</span></a>
+                <a href="audit-trail.html" class="ak-side-row" style="text-decoration:none;color:var(--text2);"><span class="ak-side-row-icon">📋</span><span class="ak-side-row-body">Voll-Audit-Trail</span></a>
+              </div>
+            </details>
+
+          </div>
+
+          <!-- Legacy Status-Card (Hidden, wird durch Status-Badge im Header ersetzt) -->
+          <div class="info-card" style="display:none;">
+            <div class="info-card-title">Status (Legacy)</div>
             <div id="status-display" style="margin-bottom:12px;"></div>
             <div style="font-size:11px;color:var(--text3);line-height:1.6;" id="status-hint">—</div>
           </div>
@@ -524,6 +671,19 @@ a{text-decoration:none;color:inherit;}button,input,select,textarea{font-family:i
     </div>
   </main>
 </div>
+</div>
+
+<!-- MEGA⁸³ A.4 — PHASE-CONFIRM-MODAL -->
+<div class="ak-modal-overlay" id="ak-phase-modal" role="dialog" aria-modal="true" aria-labelledby="ak-modal-title">
+  <div class="ak-modal-card">
+    <div class="ak-modal-icon" id="ak-modal-icon">↩️</div>
+    <h3 id="ak-modal-title">Phase wechseln?</h3>
+    <p id="ak-modal-text">Bisherige Daten bleiben erhalten — nur der Phase-Pointer ändert sich.</p>
+    <div class="ak-modal-actions">
+      <button type="button" class="action-btn btn-ghost" onclick="window.closeAkPhaseModal && window.closeAkPhaseModal()">Abbrechen</button>
+      <button type="button" class="action-btn btn-primary" id="ak-modal-confirm-btn" onclick="window.confirmAkPhaseModal && window.confirmAkPhaseModal()">Phase wechseln</button>
+    </div>
+  </div>
 </div>
 
 <nav class="bottom-nav" style="display:none;">

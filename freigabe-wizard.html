@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<link rel="manifest" href="/manifest.json">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="viewport" content="width=device-width,initial-scale=1, viewport-fit=cover">
+<title>Freigabe-Wizard · PROVA</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="/lib/prova-config.js"></script>
+<script src="/lib/prova-legacy-bridge.js"></script>
+<script src="/lib/edge-shim.js"></script>
+<script src="prova-fetch-auth.js"></script>
+<script>
+(function(){
+  // Auth-Guard light (gleiches Pattern wie akte.html)
+  try {
+    var token = localStorage.getItem('prova_auth_token');
+    var email = localStorage.getItem('prova_sv_email') || '';
+    if (!token || !email || email.indexOf('@') === -1) {
+      window.location.replace('/login?next=' + encodeURIComponent(location.pathname + location.search));
+      return;
+    }
+  } catch (e) { window.location.replace('/login'); }
+})();
+</script>
+<script type="module">
+  import { runAuthGuard } from '/lib/auth-guard.js';
+  runAuthGuard().catch(e => console.error('[auth] guard failed', e));
+</script>
+<style>
+:root{
+  --bg:#0b0d11;--bg2:#111318;--bg3:#161a22;
+  --surface:#1c2130;--surface2:#232a3a;
+  --border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.11);
+  --text:#eaecf4;--text2:#8b93ab;--text3:#4d5568;
+  --accent:#4f8ef7;--accent2:#3a7be0;
+  --success:#10b981;--warning:#f59e0b;--danger:#ef4444;
+  --r-md:10px;--r-lg:14px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{font-size:14px;}
+body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(--text2);min-height:100vh;line-height:1.55;}
+a{color:inherit;text-decoration:none;}
+button,input,textarea{font-family:inherit;font-size:inherit;}
+
+/* HEADER (no sidebar — focus mode) */
+.fw-header{position:sticky;top:0;z-index:100;background:var(--bg2);border-bottom:1px solid var(--border);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;}
+.fw-back{display:flex;align-items:center;gap:8px;color:var(--text2);font-size:13px;cursor:pointer;background:none;border:none;font-family:inherit;}
+.fw-back:hover{color:var(--accent);}
+.fw-title{font-size:14px;font-weight:700;color:var(--text);}
+.fw-az{font-family:ui-monospace,monospace;font-size:12px;color:var(--accent);background:rgba(79,142,247,.1);padding:4px 10px;border-radius:6px;}
+
+/* PROGRESS-BAR */
+.fw-progress{display:flex;align-items:center;padding:24px;max-width:760px;margin:0 auto;gap:0;}
+.fw-step-indicator{flex:1;display:flex;align-items:center;gap:8px;}
+.fw-step-dot{width:32px;height:32px;border-radius:50%;background:var(--bg3);border:2px solid var(--border2);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:var(--text3);flex-shrink:0;transition:all .2s;}
+.fw-step-indicator.done .fw-step-dot{background:var(--success);border-color:var(--success);color:#fff;}
+.fw-step-indicator.active .fw-step-dot{background:linear-gradient(135deg,var(--accent),var(--accent2));border-color:var(--accent);color:#fff;transform:scale(1.1);box-shadow:0 0 0 4px rgba(79,142,247,.18);}
+.fw-step-label{font-size:12px;font-weight:600;color:var(--text3);}
+.fw-step-indicator.active .fw-step-label,.fw-step-indicator.done .fw-step-label{color:var(--text);}
+.fw-step-line{flex:1;height:2px;background:var(--border2);margin:0 8px;transition:background .3s;}
+.fw-step-line.done{background:var(--success);}
+
+/* MAIN */
+.fw-main{max-width:760px;margin:0 auto;padding:0 24px 100px;}
+.fw-step-content{display:none;}
+.fw-step-content.active{display:block;}
+
+/* STEP 1: Auto-Check */
+.fw-check-list{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:20px;}
+.fw-check-row{display:flex;align-items:flex-start;gap:14px;padding:14px 12px;border-bottom:1px solid var(--border);}
+.fw-check-row:last-child{border-bottom:none;}
+.fw-check-icon{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:13px;font-weight:700;}
+.fw-check-icon.pass{background:rgba(16,185,129,.15);color:var(--success);}
+.fw-check-icon.warn{background:rgba(245,158,11,.15);color:var(--warning);}
+.fw-check-icon.fail{background:rgba(239,68,68,.15);color:var(--danger);}
+.fw-check-body{flex:1;min-width:0;}
+.fw-check-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:2px;}
+.fw-check-detail{font-size:12px;color:var(--text3);line-height:1.5;}
+.fw-check-action{font-size:11px;color:var(--accent);text-decoration:none;font-weight:600;margin-top:4px;display:inline-block;}
+
+/* STEP 2: Erklärung */
+.fw-statement{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:24px;margin-bottom:20px;}
+.fw-statement h3{font-size:15px;font-weight:700;color:var(--text);margin-bottom:14px;}
+.fw-statement p{font-size:13px;line-height:1.7;color:var(--text2);margin-bottom:14px;}
+.fw-confirm-box{display:flex;align-items:flex-start;gap:10px;padding:12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;margin-bottom:10px;cursor:pointer;transition:border-color .15s;}
+.fw-confirm-box:hover{border-color:var(--border2);}
+.fw-confirm-box input[type="checkbox"]{margin-top:3px;cursor:pointer;flex-shrink:0;}
+.fw-confirm-label{font-size:13px;color:var(--text);line-height:1.5;}
+.fw-lg-warning{background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.25);border-left:4px solid var(--warning);border-radius:8px;padding:14px;margin:18px 0;font-size:12px;color:var(--text2);line-height:1.6;}
+.fw-lg-warning strong{color:var(--warning);}
+.fw-signature{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:16px;padding-top:14px;border-top:1px solid var(--border);}
+.fw-sig-label{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;}
+.fw-sig-value{font-size:14px;font-weight:600;color:var(--text);}
+
+/* STEP 3: PDF + Versand */
+.fw-pdf-section{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:24px;margin-bottom:20px;}
+.fw-pdf-section h3{font-size:15px;font-weight:700;color:var(--text);margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+.fw-pdf-status{padding:14px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;margin-bottom:14px;text-align:center;}
+.fw-pdf-status.success{background:rgba(16,185,129,.08);border-color:rgba(16,185,129,.25);color:var(--success);}
+.fw-pdf-status.loading{color:var(--accent);}
+.fw-pdf-status.error{background:rgba(239,68,68,.08);border-color:rgba(239,68,68,.25);color:var(--danger);}
+.fw-versand-options{display:grid;grid-template-columns:1fr;gap:10px;}
+.fw-versand-card{padding:14px 16px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;display:flex;align-items:center;gap:14px;transition:border-color .15s;}
+.fw-versand-card[data-disabled="true"]{opacity:.5;pointer-events:none;}
+.fw-versand-card:hover{border-color:var(--border2);}
+.fw-versand-icon{font-size:22px;flex-shrink:0;width:36px;text-align:center;}
+.fw-versand-body{flex:1;min-width:0;}
+.fw-versand-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:2px;}
+.fw-versand-sub{font-size:11px;color:var(--text3);}
+
+/* STICKY-FOOTER */
+.fw-footer{position:fixed;bottom:0;left:0;right:0;background:var(--bg2);border-top:1px solid var(--border2);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;gap:14px;z-index:100;backdrop-filter:blur(8px);}
+.fw-btn{padding:10px 20px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;border:none;min-height:44px;}
+.fw-btn-secondary{background:none;border:1px solid var(--border2);color:var(--text2);}
+.fw-btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;}
+.fw-btn-primary:disabled{opacity:.4;cursor:not-allowed;}
+
+@media (max-width:640px){
+  .fw-progress{padding:18px 12px;}
+  .fw-step-label{display:none;}
+  .fw-main{padding:0 14px 100px;}
+  .fw-signature{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="fw-header">
+  <button type="button" class="fw-back" onclick="window.fwBack()">← Zurück zur Akte</button>
+  <div class="fw-title">Freigabe-Wizard</div>
+  <span class="fw-az" id="fw-az">—</span>
+</header>
+
+<!-- PROGRESS-BAR -->
+<div class="fw-progress" role="navigation" aria-label="Wizard-Schritte">
+  <div class="fw-step-indicator active" id="fw-ind-1">
+    <div class="fw-step-dot">1</div>
+    <span class="fw-step-label">§ 407a-Prüfung</span>
+  </div>
+  <div class="fw-step-line" id="fw-line-1"></div>
+  <div class="fw-step-indicator" id="fw-ind-2">
+    <div class="fw-step-dot">2</div>
+    <span class="fw-step-label">Erklärung</span>
+  </div>
+  <div class="fw-step-line" id="fw-line-2"></div>
+  <div class="fw-step-indicator" id="fw-ind-3">
+    <div class="fw-step-dot">3</div>
+    <span class="fw-step-label">PDF + Versand</span>
+  </div>
+</div>
+
+<main class="fw-main">
+
+  <!-- ─── STEP 1: § 407a-Auto-Check ─── -->
+  <section class="fw-step-content active" id="fw-step-1" aria-labelledby="fw-step-1-title">
+    <h2 id="fw-step-1-title" style="font-size:20px;font-weight:800;color:var(--text);margin-bottom:8px;">§ 407a-Auto-Prüfung</h2>
+    <p style="font-size:13px;color:var(--text3);margin-bottom:18px;">PROVA prüft automatisch ob das Gutachten freigabe-bereit ist. Bei kritischen Fehlern (✗) ist die Freigabe blockiert.</p>
+    <div class="fw-check-list" id="fw-check-list">
+      <div style="text-align:center;padding:24px;color:var(--text3);">Wird geprüft…</div>
+    </div>
+    <div id="fw-step1-blocker" style="display:none;padding:14px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.25);border-radius:8px;color:var(--danger);font-size:12px;">
+      ❗ Bitte fehlende Pflicht-Punkte ergänzen, bevor die Freigabe fortgesetzt werden kann.
+    </div>
+  </section>
+
+  <!-- ─── STEP 2: Freigabe-Erklärung ─── -->
+  <section class="fw-step-content" id="fw-step-2" aria-labelledby="fw-step-2-title">
+    <h2 id="fw-step-2-title" style="font-size:20px;font-weight:800;color:var(--text);margin-bottom:8px;">Freigabe-Erklärung</h2>
+    <p style="font-size:13px;color:var(--text3);margin-bottom:18px;">Bestätige die persönliche fachliche Verantwortung gemäß § 407a ZPO.</p>
+    <div class="fw-statement">
+      <h3>Erklärung nach § 407a ZPO</h3>
+      <p>Ich, <strong id="fw-sv-name">—</strong>, erkläre hiermit, dass ich das vorliegende Gutachten zum Aktenzeichen <strong id="fw-stmt-az">—</strong> persönlich, unparteiisch und gewissenhaft erstattet habe.</p>
+      <p style="margin-bottom:8px;">Insbesondere bestätige ich:</p>
+      <label class="fw-confirm-box">
+        <input type="checkbox" id="fw-confirm-1" onchange="window.fwUpdateStep2Validity()">
+        <span class="fw-confirm-label">Das Fachurteil (§ 6) habe ich vollständig persönlich verfasst, ohne KI-Hilfe bei der inhaltlichen Urteilsbildung.</span>
+      </label>
+      <label class="fw-confirm-box">
+        <input type="checkbox" id="fw-confirm-2" onchange="window.fwUpdateStep2Validity()">
+        <span class="fw-confirm-label">Der Einsatz von KI-Werkzeugen in §§ 1–5 wurde transparent dokumentiert.</span>
+      </label>
+      <label class="fw-confirm-box">
+        <input type="checkbox" id="fw-confirm-3" onchange="window.fwUpdateStep2Validity()">
+        <span class="fw-confirm-label">Die fachliche Verantwortung für alle Aussagen liegt bei mir.</span>
+      </label>
+      <div class="fw-lg-warning">
+        <strong>Hinweis:</strong> Nach Beschluss des LG Darmstadt vom 10.11.2025 (Az.&nbsp;19&nbsp;O&nbsp;527/16) kann nicht offengelegter wesentlicher KI-Einsatz zur Vergütungsfestsetzung auf <strong>0 €</strong> führen.
+      </div>
+      <div class="fw-signature">
+        <div>
+          <div class="fw-sig-label">Datum</div>
+          <div class="fw-sig-value" id="fw-sig-date">—</div>
+        </div>
+        <div>
+          <div class="fw-sig-label">Unterschrift</div>
+          <div class="fw-sig-value" id="fw-sig-name">—</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── STEP 3: PDF + Versand ─── -->
+  <section class="fw-step-content" id="fw-step-3" aria-labelledby="fw-step-3-title">
+    <h2 id="fw-step-3-title" style="font-size:20px;font-weight:800;color:var(--text);margin-bottom:8px;">PDF + Versand</h2>
+    <p style="font-size:13px;color:var(--text3);margin-bottom:18px;">Erstelle das PDF und wähle einen Versand-Weg.</p>
+
+    <div class="fw-pdf-section">
+      <h3>📄 PDF-Erstellung</h3>
+      <div class="fw-pdf-status" id="fw-pdf-status">PDF wird bei „PDF erstellen"-Klick generiert.</div>
+      <button type="button" class="fw-btn fw-btn-primary" id="fw-pdf-btn" onclick="window.fwGeneratePdf()" style="width:100%;">📄 PDF erstellen</button>
+    </div>
+
+    <div class="fw-pdf-section" id="fw-versand-section" style="display:none;">
+      <h3>📨 Versand</h3>
+      <div class="fw-versand-options">
+        <div class="fw-versand-card" id="fw-vk-email">
+          <div class="fw-versand-icon">✉️</div>
+          <div class="fw-versand-body">
+            <div class="fw-versand-title">Per E-Mail</div>
+            <div class="fw-versand-sub">An Auftraggeber-E-Mail (SMTP konfiguriert)</div>
+          </div>
+          <button type="button" class="fw-btn fw-btn-secondary" onclick="window.fwSendEmail()">Senden</button>
+        </div>
+        <div class="fw-versand-card" id="fw-vk-download">
+          <div class="fw-versand-icon">⬇️</div>
+          <div class="fw-versand-body">
+            <div class="fw-versand-title">Download</div>
+            <div class="fw-versand-sub">PDF herunterladen + manuell per Post/Mail versenden</div>
+          </div>
+          <button type="button" class="fw-btn fw-btn-secondary" onclick="window.fwDownloadPdf()">⬇ PDF</button>
+        </div>
+        <div class="fw-versand-card" data-disabled="true">
+          <div class="fw-versand-icon">⚖️</div>
+          <div class="fw-versand-body">
+            <div class="fw-versand-title">beA/EGVP</div>
+            <div class="fw-versand-sub">Folgt in späterem Sprint</div>
+          </div>
+          <button type="button" class="fw-btn fw-btn-secondary" disabled>Bald</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="fw-pdf-section" id="fw-rechnung-section" style="display:none;">
+      <h3>💶 Rechnung</h3>
+      <p id="fw-rechnung-vorschlag" style="font-size:13px;color:var(--text2);margin-bottom:12px;">—</p>
+      <button type="button" class="fw-btn fw-btn-primary" id="fw-rechnung-btn" style="width:100%;">💶 Rechnung erstellen</button>
+    </div>
+
+  </section>
+
+</main>
+
+<!-- STICKY-FOOTER -->
+<footer class="fw-footer">
+  <button type="button" class="fw-btn fw-btn-secondary" id="fw-prev-btn" onclick="window.fwPrev()" style="visibility:hidden;">← Zurück</button>
+  <div style="font-size:12px;color:var(--text3);text-align:center;flex:1;" id="fw-step-counter">Schritt 1 von 3</div>
+  <button type="button" class="fw-btn fw-btn-primary" id="fw-next-btn" onclick="window.fwNext()" disabled>Weiter →</button>
+</footer>
+
+<!-- LOGIC -->
+<script type="module">
+  import { supabase } from '/lib/supabase-client.js';
+
+  const url = new URL(location.href);
+  const auftragId = url.searchParams.get('id');
+  const auftragAz = url.searchParams.get('az');
+  let currentStep = 1;
+  let auftragRow = null;
+  let step1Pass = false;
+  let step2Pass = false;
+  let pdfGenerated = false;
+
+  function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
+  async function loadAuftrag(){
+    let q = supabase.from('auftraege')
+      .select('id, az, typ, titel, status, phase_aktuell, fachurteil_text, fachurteil_eigenleistung_chars, kurzbeantwortung, ki_anzeige_datum, ki_tasks, details, gutachtendatum')
+      .is('deleted_at', null).limit(1);
+    if (auftragId) q = q.eq('id', auftragId);
+    else if (auftragAz) q = q.eq('az', auftragAz);
+    else { alert('Kein Auftrag-Parameter (id oder az) angegeben.'); return null; }
+    const { data, error } = await q.single();
+    if (error || !data){ console.error('[fw] load failed', error); return null; }
+    return data;
+  }
+
+  async function loadSvName(){
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return '—';
+      const meta = user.user_metadata || {};
+      return meta.name || meta.vorname + ' ' + (meta.nachname || '') || user.email || '—';
+    } catch(_) { return '—'; }
+  }
+
+  function runStep1Checks(a){
+    const checks = [];
+    // Fachurteil vorhanden
+    const fu = a.fachurteil_text || '';
+    checks.push({
+      key:'fachurteil',
+      status: fu.trim().length > 0 ? 'pass' : 'fail',
+      title: fu.trim().length > 0 ? 'Fachurteil vorhanden' : 'Fachurteil fehlt',
+      detail: fu.trim().length > 0 ? (fu.length + ' Zeichen geschrieben') : 'Bitte § 6 Fachurteil zunächst verfassen.',
+      action: fu.trim().length === 0 ? { label:'§ 6 Fachurteil schreiben →', href:'fachurteil.html?az='+encodeURIComponent(a.az||'') } : null,
+      critical: true
+    });
+    // Mindest-Eigenleistung
+    const chars = Number(a.fachurteil_eigenleistung_chars || 0);
+    checks.push({
+      key:'eigenleistung',
+      status: chars >= 500 ? 'pass' : (chars > 0 ? 'warn' : 'fail'),
+      title: 'Mindest-Eigenleistung (500 Zeichen)',
+      detail: chars + ' Zeichen Eigenleistung erfasst — Mindest-Threshold 500',
+      critical: true
+    });
+    // Eigenleistung-Marker (Konjunktiv-II) — Heuristik
+    const konjFound = (fu.match(/\b(könnte|sollte|würde|hätte|läge|wäre|dürfte|möchte|fände|gäbe|seien|seien|stamme)\b/gi) || []).length;
+    checks.push({
+      key:'marker',
+      status: konjFound >= 3 ? 'pass' : (konjFound > 0 ? 'warn' : 'warn'),
+      title: 'Eigenleistung-Marker (Konjunktiv II)',
+      detail: konjFound + ' Konjunktiv-II-Marker erkannt — empfohlen ≥ 3',
+      critical: false
+    });
+    // Kurzbeantwortung / Pflicht-§§
+    const kb = (a.kurzbeantwortung || '').trim();
+    checks.push({
+      key:'kurzbeantwortung',
+      status: kb.length > 0 ? 'pass' : 'warn',
+      title: 'Kurzbeantwortung / Zusammenfassung',
+      detail: kb.length > 0 ? (kb.length + ' Zeichen') : 'Empfohlen für Gerichts-Gutachten',
+      critical: false
+    });
+    // KI-Disclosure wenn ki_tasks nicht leer
+    const kiTasks = a.ki_tasks || {};
+    const hasKi = Object.keys(kiTasks).length > 0 || (Array.isArray(kiTasks) && kiTasks.length > 0);
+    const anzeigeDate = a.ki_anzeige_datum;
+    checks.push({
+      key:'ki_disclosure',
+      status: !hasKi ? 'pass' : (anzeigeDate ? 'pass' : 'warn'),
+      title: hasKi ? 'KI-Anzeige gemäß § 407a Abs. 3 ZPO' : 'KI-Disclosure nicht erforderlich',
+      detail: hasKi
+        ? (anzeigeDate ? 'KI-Einsatz angezeigt am ' + new Date(anzeigeDate).toLocaleDateString('de-DE') : 'KI-Tasks dokumentiert, Anzeige-Datum fehlt — wird in Step 2 gesetzt')
+        : 'Keine KI-gestützten Tasks im Auftrag dokumentiert.',
+      critical: false
+    });
+    return checks;
+  }
+
+  function renderStep1(a){
+    const checks = runStep1Checks(a);
+    const list = document.getElementById('fw-check-list');
+    list.innerHTML = checks.map(c => {
+      const icon = c.status === 'pass' ? '✓' : (c.status === 'warn' ? '!' : '×');
+      const action = c.action ? '<a class="fw-check-action" href="'+esc(c.action.href)+'">'+esc(c.action.label)+'</a>' : '';
+      return '<div class="fw-check-row">'
+        + '<div class="fw-check-icon '+c.status+'">'+icon+'</div>'
+        + '<div class="fw-check-body">'
+        +   '<div class="fw-check-title">'+esc(c.title)+'</div>'
+        +   '<div class="fw-check-detail">'+esc(c.detail)+'</div>'
+        +   action
+        + '</div></div>';
+    }).join('');
+    const criticalFail = checks.some(c => c.critical && c.status === 'fail');
+    step1Pass = !criticalFail;
+    document.getElementById('fw-step1-blocker').style.display = criticalFail ? 'block' : 'none';
+    updateNextButton();
+  }
+
+  window.fwUpdateStep2Validity = function(){
+    const c1 = document.getElementById('fw-confirm-1').checked;
+    const c2 = document.getElementById('fw-confirm-2').checked;
+    const c3 = document.getElementById('fw-confirm-3').checked;
+    step2Pass = c1 && c2 && c3;
+    updateNextButton();
+  };
+
+  function updateNextButton(){
+    const btn = document.getElementById('fw-next-btn');
+    if (currentStep === 1) {
+      btn.disabled = !step1Pass;
+      btn.textContent = 'Weiter →';
+    } else if (currentStep === 2) {
+      btn.disabled = !step2Pass;
+      btn.textContent = 'Bestätigen + Weiter →';
+    } else {
+      btn.disabled = !pdfGenerated;
+      btn.textContent = pdfGenerated ? 'Auftrag abschließen ✓' : 'Bitte zuerst PDF erstellen';
+    }
+  }
+
+  function showStep(n){
+    currentStep = n;
+    [1,2,3].forEach(i => {
+      document.getElementById('fw-step-'+i).classList.toggle('active', i === n);
+      document.getElementById('fw-ind-'+i).classList.toggle('active', i === n);
+      document.getElementById('fw-ind-'+i).classList.toggle('done', i < n);
+    });
+    document.getElementById('fw-line-1').classList.toggle('done', n > 1);
+    document.getElementById('fw-line-2').classList.toggle('done', n > 2);
+    document.getElementById('fw-step-counter').textContent = 'Schritt ' + n + ' von 3';
+    document.getElementById('fw-prev-btn').style.visibility = n > 1 ? 'visible' : 'hidden';
+    updateNextButton();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  window.fwBack = function(){
+    if (auftragRow) location.href = '/akte?id=' + encodeURIComponent(auftragRow.id);
+    else history.back();
+  };
+  window.fwPrev = function(){ if (currentStep > 1) showStep(currentStep - 1); };
+  window.fwNext = async function(){
+    if (currentStep === 1 && step1Pass) showStep(2);
+    else if (currentStep === 2 && step2Pass) {
+      // Persist Step-2-Erklärung
+      await persistFreigabeErklaerung();
+      showStep(3);
+    }
+    else if (currentStep === 3 && pdfGenerated) {
+      await finalizeAuftrag();
+    }
+  };
+
+  async function persistFreigabeErklaerung(){
+    if (!auftragRow) return;
+    try {
+      const today = new Date().toISOString().slice(0,10);
+      const update = {
+        gutachtendatum: today
+      };
+      // KI-Disclosure-Datum setzen wenn ki_tasks vorhanden + Datum noch leer
+      const kiTasks = auftragRow.ki_tasks || {};
+      const hasKi = Object.keys(kiTasks).length > 0 || (Array.isArray(kiTasks) && kiTasks.length > 0);
+      if (hasKi && !auftragRow.ki_anzeige_datum) update.ki_anzeige_datum = today;
+      const { error } = await supabase.from('auftraege').update(update).eq('id', auftragRow.id);
+      if (error) console.warn('[fw persist erklaerung]', error.message);
+      auftragRow.gutachtendatum = today;
+      // Audit-Trail
+      try {
+        await supabase.from('audit_trail').insert({
+          workspace_id: auftragRow.workspace_id,
+          action: 'update',
+          entity_typ: 'auftrag',
+          entity_id: auftragRow.id,
+          payload: { source:'freigabe-wizard', step:2, erklaerung_bestaetigt:true, sv_name: document.getElementById('fw-sv-name').textContent }
+        });
+      } catch(_){}
+    } catch(e){ console.warn('[fw persist erklaerung]', e); }
+  }
+
+  window.fwGeneratePdf = async function(){
+    const status = document.getElementById('fw-pdf-status');
+    const btn = document.getElementById('fw-pdf-btn');
+    status.className = 'fw-pdf-status loading';
+    status.textContent = '⏳ PDF wird erstellt…';
+    btn.disabled = true;
+    btn.textContent = '⏳ Wird erstellt…';
+    try {
+      // Bestehende PDF-Generator-Logic via Netlify-Function ansprechen
+      const { data: { session } } = await supabase.auth.getSession();
+      const tok = session && session.access_token;
+      const res = await fetch('/.netlify/functions/pdf-proxy', {
+        method:'POST',
+        headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer '+tok },
+        body: JSON.stringify({ auftrag_id: auftragRow.id, az: auftragRow.az })
+      });
+      if (!res.ok) {
+        const errText = await res.text();
+        throw new Error('HTTP ' + res.status + ': ' + errText.slice(0,200));
+      }
+      const result = await res.json();
+      status.className = 'fw-pdf-status success';
+      status.textContent = '✓ PDF erstellt' + (result.url ? ' — Vorschau wird geladen…' : '');
+      btn.style.display = 'none';
+      pdfGenerated = true;
+      window._fwPdfUrl = result.url || null;
+      // Versand-Section + Rechnung-Section sichtbar
+      document.getElementById('fw-versand-section').style.display = '';
+      document.getElementById('fw-rechnung-section').style.display = '';
+      renderRechnungVorschlag();
+      updateNextButton();
+    } catch(e){
+      status.className = 'fw-pdf-status error';
+      status.textContent = '✗ Fehler: ' + e.message;
+      btn.disabled = false;
+      btn.textContent = '📄 Erneut versuchen';
+    }
+  };
+
+  window.fwDownloadPdf = function(){
+    if (window._fwPdfUrl) window.open(window._fwPdfUrl, '_blank');
+    else alert('PDF-URL nicht verfügbar.');
+  };
+  window.fwSendEmail = function(){
+    alert('E-Mail-Versand kommt im nächsten Sprint. Bitte vorerst PDF herunterladen und manuell versenden.');
+  };
+
+  function renderRechnungVorschlag(){
+    if (!auftragRow) return;
+    const typ = auftragRow.typ || '';
+    let text, href;
+    if (typ === 'gericht') {
+      text = 'Gerichtsgutachten → JVEG-Rechnung empfohlen';
+      href = 'jveg.html?auftrag=' + encodeURIComponent(auftragRow.az || '');
+    } else if (typ === 'beratung') {
+      text = 'Beratung → Stundenabrechnung empfohlen';
+      href = 'rechnungen.html?auftrag=' + encodeURIComponent(auftragRow.az || '') + '&typ=stunden';
+    } else {
+      text = 'Pauschal-Rechnung empfohlen';
+      href = 'rechnungen.html?auftrag=' + encodeURIComponent(auftragRow.az || '') + '&typ=pauschal';
+    }
+    document.getElementById('fw-rechnung-vorschlag').textContent = text;
+    const btn = document.getElementById('fw-rechnung-btn');
+    btn.onclick = function(){ window.location.href = href; };
+  }
+
+  async function finalizeAuftrag(){
+    try {
+      const { error } = await supabase.from('auftraege')
+        .update({ status: 'abgeschlossen' })
+        .eq('id', auftragRow.id);
+      if (error){ alert('Fehler: ' + error.message); return; }
+      try {
+        await supabase.from('audit_trail').insert({
+          workspace_id: auftragRow.workspace_id,
+          action: 'update',
+          entity_typ: 'auftrag',
+          entity_id: auftragRow.id,
+          payload: { source:'freigabe-wizard', auftrag_abgeschlossen:true, sent_via: window._fwPdfUrl ? 'pdf_generated' : 'unknown' }
+        });
+      } catch(_){}
+      alert('Auftrag erfolgreich abgeschlossen ✓');
+      window.location.href = '/akte?id=' + encodeURIComponent(auftragRow.id);
+    } catch(e){ alert('Fehler: ' + e.message); }
+  }
+
+  // INIT
+  (async function init(){
+    const a = await loadAuftrag();
+    if (!a){
+      document.querySelector('.fw-main').innerHTML = '<div style="padding:32px;text-align:center;color:var(--text3);">Auftrag nicht gefunden.</div>';
+      return;
+    }
+    auftragRow = a;
+    document.getElementById('fw-az').textContent = a.az || '—';
+    document.getElementById('fw-stmt-az').textContent = a.az || '—';
+    const sv = await loadSvName();
+    document.getElementById('fw-sv-name').textContent = sv;
+    document.getElementById('fw-sig-name').textContent = sv;
+    document.getElementById('fw-sig-date').textContent = new Date().toLocaleDateString('de-DE');
+    renderStep1(a);
+  })();
+</script>
+
+</body>
+</html>
