@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v3247-mega82-hotfix1-dashboard-clean';   // MEGA⁸²-Hotfix-1 2026-05-16: H0 AZ-Frontend-Fix (Trigger fuellt AZ, Frontend laesst az leer bei Insert) + H1+H2 Dashboard-Redesign auf 5 Sektionen (Header+Status / Heute-Hero / 4 KPI-Kacheln / Aktive Faelle mit korrekter 4-Phasen-Anzeige / Aktivitaet kompakt) — T-NaN-Bug, Empty-State-Bug, dritte Fristen-Box alle weg durch Komplett-Replacement. Sprint-Historie: docs/SW-VERSION-HISTORY.md.
+const CACHE_VERSION = 'prova-v3300-mega83-akte-mission-control';   // MEGA⁸³ 2026-05-16: Akte-UI komplett Mission-Control-Pattern (Phase-Stepper visuell + Stammdaten-Bar collapsible + Phase-Checklist mit Smart-Detection + Activity-Sidebar 5-Sub-Blocks + Modal statt confirm()) + freigabe-wizard.html neu (3-Step §407a-Check + Erklaerung + PDF+Versand) + Cross-Domain-Auth-Bridge-Fix (Doppel-Login-Bug behoben via ProvaLegacyBridge). Sprint-Historie: docs/SW-VERSION-HISTORY.md.
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
