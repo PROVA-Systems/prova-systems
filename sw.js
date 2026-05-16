@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v3245-mega82-verkauf-ready';   // MEGA⁸² 2026-05-16: 5 Critical Bugs (CORS eintraege-list, Dashboard-Triple-Fristen, skizzen-Layout, §§-Notation, Settings-Tabs) + PDFMonkey-UI-Cleanup + LG-Darmstadt-Warnbox (fachurteil.html) + Landing-Trust-Block (index.html) + Gutachten-CTA-Loop-Fix + 4-Phasen-Helper-Layer (Flow-Mapping A/B/C/D). UI-Refactor Akte-Layout DEFER MEGA83. Sprint-Historie: docs/SW-VERSION-HISTORY.md.
+const CACHE_VERSION = 'prova-v3246-mega82-pass2';   // MEGA⁸² Pass 2 2026-05-16: B.5 Sticky-Footer + B.6 Schnellaktionen kontextuell + B.7 Status-Badge auto (Status-Dropdown weg) + Phase-Switch-Helpers mit DB-Persist + F.2 Domain-Split-Audit (robots.txt + sitemap.xml Drift-Fixes) + G Edge-Reaping-Pre-Audit (6 sichere Delete-Kandidaten dokumentiert für Marcel-CLI). Sprint-Historie: docs/SW-VERSION-HISTORY.md.
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [

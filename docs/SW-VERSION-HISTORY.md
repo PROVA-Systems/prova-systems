@@ -10,6 +10,14 @@ Format: **vNNNN-marker** | YYYY-MM-DD | Sprint | Kurz-Note
 
 ## 2026-05-16 — MEGA-Serie #8
 
+**v3246-mega82-pass2** | 2026-05-16 | MEGA⁸² Pass 2 (Marathon-Fortsetzung)
+- Phase B.5 Sticky-Action-Footer mit Phase-Switch-Helpers (aktePrevPhase/akteNextPhase mit Confirmation + DB-Persist via _akteUpdatePhase + Audit-Trail)
+- Phase B.6 Schnellaktionen kontextuell pro Phase (1=Auftrag, 2=Termin, 3=Analyse, 4=Abschluss) + "Mehr ▼"-Drawer
+- Phase B.7 Status-Auto-Badge ersetzt Status-Dropdown (5 Color-States via getAkteStatusAuto)
+- Phase F.2 Domain-Split-Audit + 2 Drift-Fixes (robots.txt: stellungnahme→fachurteil; sitemap.xml: pricing/demo/kontakt/avv/pilot ergänzt)
+- Phase G Edge-Reaping-Pre-Audit: 6 sichere Delete-Kandidaten dokumentiert (global-search, fristen-reminder-cron, mahnwesen-cron, migrate-normen-airtable, migrate-textbausteine-airtable, skizze-save) + 3 Duplicate-Pair-Findings + Marcel-CLI-Apply-Pfad
+- DEFER MEGA83: B.2/B.3/B.4/B.8/B.9 Akte-UI-Komplett-Refactor (Stammdaten-Bar, Stepper-Modal, Activity-Sidebar, Freigabe-Wizard, Layout-Pattern), F.1 Login Cross-Domain, G.3 5 Audit-Edges konsolidieren
+
 **v3245-mega82-verkauf-ready** | 2026-05-16 | MEGA⁸² Verkauf-Ready (Pass 1)
 - Phase A: 5 Critical Bugs (CORS eintraege-list via SKIP_REROUTE, Dashboard-Triple-Fristen entfernt, skizzen.html app-shell-Wrapper, §§-Notation-Audit, Einstellungen-Tabs CSS-Fix)
 - Phase D: PDFMonkey-UI-Cleanup (11 Patches in 7 Files) + WORDING-STANDARDS.md + LG-Darmstadt-Warnbox in fachurteil.html + §407a-Disclosure-Doku
