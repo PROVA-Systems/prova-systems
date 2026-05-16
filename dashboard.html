@@ -814,8 +814,10 @@ window.addEventListener('error', function(ev) {
        Komplett-Replacement der alten 13-Sektionen-Struktur.
   ════════════════════════════════════════════════════════════════════ -->
   <style>
-    /* Dashboard-Clean spezifische Tokens */
-    .dc-section-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);}
+    /* Dashboard-Clean spezifische Tokens — MEGA82-Hotfix-2 B: Section-Labels prominenter */
+    .dc-section-label{font-size:15px;font-weight:700;letter-spacing:-.005em;color:var(--text);display:flex;align-items:center;gap:10px;margin:0;}
+    .dc-section-label-icon{font-size:20px;line-height:1;flex-shrink:0;}
+    .dc-section-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;padding-bottom:8px;border-bottom:1px solid var(--border);}
     .dc-section-cta{font-size:11px;color:var(--accent);text-decoration:none;font-weight:600;}
     .dc-section-cta:hover{text-decoration:underline;}
     .dc-heute-card{background:linear-gradient(135deg,rgba(79,142,247,.06),rgba(79,142,247,.01));border:1px solid var(--border2);border-radius:14px;padding:18px 22px;}
@@ -852,11 +854,17 @@ window.addEventListener('error', function(ev) {
     .dc-activity-text{flex:1;color:var(--text2);}
     .dc-activity-text a{color:var(--accent);text-decoration:none;}
     .dc-activity-text a:hover{text-decoration:underline;}
-    .dc-empty{text-align:center;padding:28px 16px;color:var(--text3);font-size:13px;}
+    /* MEGA82-Hotfix-2 B.3: Empty-States prominenter */
+    .dc-empty{text-align:center;padding:32px 16px;color:var(--text2);font-size:14px;}
+    .dc-empty-icon{font-size:36px;display:block;margin-bottom:12px;opacity:0.6;}
     @media (max-width:768px){
       .dc-kpi-grid{grid-template-columns:repeat(2,1fr);}
       .dc-kpi-num{font-size:26px;}
       .dc-faelle-az{min-width:100px;}
+      /* MEGA82-Hotfix-2 B.4: Section-Labels Mobile etwas kleiner aber noch prominent */
+      .dc-section-label{font-size:14px;}
+      .dc-section-label-icon{font-size:18px;}
+      .dc-section-row{margin-bottom:12px;padding-bottom:6px;}
     }
   </style>
 
@@ -873,8 +881,8 @@ window.addEventListener('error', function(ev) {
 
   <!-- ─── Sektion 2: HEUTE (Hero) ─── -->
   <section style="margin-bottom:28px;">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-      <span class="dc-section-label">🔥 Heute</span>
+    <div class="dc-section-row">
+      <h2 class="dc-section-label"><span class="dc-section-label-icon">🔥</span>Heute</h2>
       <a href="termine.html" class="dc-section-cta" id="dc-heute-all-link" style="display:none;">Alle Aufgaben →</a>
     </div>
     <div class="dc-heute-card" id="dc-heute-content">
@@ -904,8 +912,8 @@ window.addEventListener('error', function(ev) {
 
   <!-- ─── Sektion 4: AKTIVE FÄLLE ─── -->
   <section style="margin-bottom:28px;">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-      <span class="dc-section-label" id="dc-faelle-label">📁 Aktive Fälle</span>
+    <div class="dc-section-row">
+      <h2 class="dc-section-label" id="dc-faelle-label"><span class="dc-section-label-icon">📁</span>Aktive Fälle</h2>
       <a href="archiv.html" class="dc-section-cta">Alle Fälle →</a>
     </div>
     <div class="dc-faelle-list" id="dc-faelle-list">
@@ -915,8 +923,8 @@ window.addEventListener('error', function(ev) {
 
   <!-- ─── Sektion 5: AKTIVITÄT ─── -->
   <section style="margin-bottom:28px;">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-      <span class="dc-section-label">⏱️ Aktivität</span>
+    <div class="dc-section-row">
+      <h2 class="dc-section-label"><span class="dc-section-label-icon">⏱️</span>Aktivität</h2>
       <a href="audit-trail.html" class="dc-section-cta">Alle Logs →</a>
     </div>
     <div id="dc-activity-list">
@@ -1382,10 +1390,11 @@ window.addEventListener('error', function(ev) {
       .order('updated_at', { ascending: false }).limit(5);
     var rows = res.data || [];
     var label = document.getElementById('dc-faelle-label');
-    label.textContent = '📁 Aktive Fälle (' + rows.length + ')';
+    // MEGA82-Hotfix-2 B.2: Label hat jetzt Icon-Span — Text-Update via innerHTML
+    label.innerHTML = '<span class="dc-section-label-icon">📁</span>Aktive Fälle (' + rows.length + ')';
     var listEl = document.getElementById('dc-faelle-list');
     if (rows.length === 0){
-      listEl.innerHTML = '<div class="dc-empty">Noch keine Aufträge. <a href="neuer-fall.html" style="color:var(--accent);text-decoration:none;font-weight:600;">+ Ersten Fall anlegen</a></div>';
+      listEl.innerHTML = '<div class="dc-empty"><span class="dc-empty-icon">📂</span>Noch keine Aufträge. <a href="neuer-fall.html" style="color:var(--accent);text-decoration:none;font-weight:600;">+ Ersten Fall anlegen</a></div>';
       return;
     }
     listEl.innerHTML = rows.map(function(a){
@@ -1469,7 +1478,7 @@ window.addEventListener('error', function(ev) {
     var rows = res.data || [];
     var listEl = document.getElementById('dc-activity-list');
     if (rows.length === 0){
-      listEl.innerHTML = '<div class="dc-empty">Noch keine Aktivität.</div>';
+      listEl.innerHTML = '<div class="dc-empty"><span class="dc-empty-icon">⏱️</span>Noch keine Aktivität.</div>';
       return;
     }
     listEl.innerHTML = rows.map(function(r){
