@@ -222,14 +222,34 @@ async function verifyTotp() {
   $('btn-verify').disabled = true;
   $('btn-verify').textContent = '⏳ Verifiziere…';
   try {
-    const ch = await supabase.auth.mfa.challenge({ factorId: _factorId });
+    // 1. Challenge
+    let ch;
+    try { ch = await supabase.auth.mfa.challenge({ factorId: _factorId }); }
+    catch (netErr) {
+      throw new Error('Verbindungsproblem. Bitte erneut versuchen.');
+    }
     if (ch.error) throw new Error(ch.error.message);
     _challengeId = ch.data.id;
+
+    // 2. Verify — User-friendly Fehler bei falschem Code
     const v = await supabase.auth.mfa.verify({ factorId: _factorId, challengeId: _challengeId, code });
-    if (v.error) throw new Error(v.error.message);
-    // MEGA88-C Block C: Fallback-Sync auf users.totp_enabled fuer den Fall dass DB-Trigger (Migration 62)
-    // nicht aktiv ist. Mit Trigger ist das ein No-Op (Trigger hat schon gesetzt). Ohne Trigger ist es
-    // der einzige Sync-Punkt zwischen auth.mfa_factors und public.users.totp_enabled.
+    if (v.error) {
+      const m = String(v.error.message || '').toLowerCase();
+      if (m.includes('invalid') || m.includes('totp') || m.includes('code')) {
+        throw new Error("Code ungültig. Versuch's mit einem frischen Code aus deiner App (wechselt alle 30 Sekunden).");
+      }
+      throw new Error('Verifizierung fehlgeschlagen: ' + v.error.message);
+    }
+
+    // 3. MEGA88-C-Sub: Session-Refresh + 150ms Trigger-Buffer
+    //    JWT muss aal2 enthalten bevor Edge generate-mfa-recovery-codes called wird,
+    //    sonst sieht der Edge-auth-Check noch aal1 → 401/400.
+    //    DB-Trigger (Migration 62) sync't users.totp_enabled — der 150ms-Buffer
+    //    gibt PostgreSQL Zeit den Sync abzuschliessen vor Edge-Lookup.
+    try { await supabase.auth.refreshSession(); } catch(_) {}
+    await new Promise(r => setTimeout(r, 150));
+
+    // 4. Fallback-Sync (Defense-in-Depth — Trigger uebernimmt wenn aktiv, sonst hier)
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
@@ -238,13 +258,24 @@ async function verifyTotp() {
           totp_last_used_at: new Date().toISOString()
         }).eq('id', user.id);
       }
-    } catch(_) { /* non-blocking — Trigger uebernimmt falls verfuegbar */ }
+    } catch(_) {}
+
     showMsg('msg-verify', '✅ 2FA aktiviert! Generiere Recovery-Codes…', 'success');
-    await generateRecoveryCodes(true);
+
+    // 5. Recovery-Codes generieren — UX-Fallback wenn Gen fehlschlägt
+    try {
+      await generateRecoveryCodes(true);
+    } catch (genErr) {
+      showMsg('msg-verify',
+        '2FA aktiv ✓ — Recovery-Codes konnten nicht generiert werden: ' + (genErr.message || 'unbekannt') +
+        '. Du kannst sie unter Account → 2FA-Status nachholen.', 'error');
+      $('btn-verify').disabled = false;
+      $('btn-verify').textContent = 'Recovery-Codes erneut versuchen';
+    }
   } catch (e) {
     $('btn-verify').disabled = false;
     $('btn-verify').textContent = 'Aktivieren';
-    showMsg('msg-verify', 'Fehler: ' + e.message, 'error');
+    showMsg('msg-verify', e.message || 'Fehler bei Verifizierung.', 'error');
   }
 }
 

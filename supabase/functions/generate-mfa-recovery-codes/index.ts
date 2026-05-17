@@ -41,30 +41,35 @@ const handler = async (req: Request): Promise<Response> => {
   const ctx = await verifyJwt(req);
   const svc = createServiceClient();
 
-  // MEGA88-C: TOTP-aktiv-Check robust — beide Quellen prüfen:
-  //   1. auth.mfa_factors (Supabase MFA-API Source-of-Truth)
-  //   2. users.totp_enabled (sekundär — App-Logic-Flag)
-  // Wenn EINER true ist → 2FA gilt als aktiv (Trigger aus Migration 62 sollte
-  // beide synchron halten, aber Defense-in-Depth).
-  const { data: u, error: uErr } = await svc
-    .from('users')
-    .select('totp_enabled')
-    .eq('id', ctx.user.id)
-    .single();
-  if (uErr || !u) throw new HttpError('User-Profil nicht gefunden', 404);
-
-  let totpActive = !!u.totp_enabled;
-  if (!totpActive) {
-    // Sekundär-Check auf auth.mfa_factors
-    try {
-      const { data: factors } = await svc
-        .from('mfa_factors').select('id,status').eq('user_id', ctx.user.id).eq('status', 'verified');
-      if (Array.isArray(factors) && factors.length > 0) totpActive = true;
-    } catch (_) {
-      // auth.mfa_factors RLS könnte blocken — service-Client sollte aber bypassen.
-    }
+  // MEGA88-C-Sub: TOTP-aktiv-Check — auth.mfa_factors ist Source-of-Truth.
+  // Reihenfolge invertiert vs erstem MEGA88-C-Commit:
+  //   1. PRIMARY: auth.mfa_factors WHERE status='verified' (Supabase MFA-API)
+  //   2. FALLBACK: users.totp_enabled (DB-Trigger Migration 62 sync't das ~100ms)
+  let totpActive = false;
+  try {
+    const { data: factors } = await svc
+      .schema('auth').from('mfa_factors')
+      .select('id,status').eq('user_id', ctx.user.id).eq('status', 'verified');
+    if (Array.isArray(factors) && factors.length > 0) totpActive = true;
+  } catch (_) {
+    // Schema-API kann je nach Client-Version variieren — fall through zu Fallback.
   }
-  if (!totpActive) throw new HttpError('2FA muss erst aktiviert sein.', 400);
+  if (!totpActive) {
+    // Fallback ohne schema-API (klappt bei manchen Supabase-Client-Versionen)
+    try {
+      const { data: f2 } = await svc.from('mfa_factors')
+        .select('id,status').eq('user_id', ctx.user.id).eq('status', 'verified');
+      if (Array.isArray(f2) && f2.length > 0) totpActive = true;
+    } catch(_) {}
+  }
+  if (!totpActive) {
+    // Final-Fallback: public.users.totp_enabled (DB-Trigger sync't)
+    const { data: u } = await svc.from('users').select('totp_enabled').eq('id', ctx.user.id).single();
+    if (u?.totp_enabled) totpActive = true;
+  }
+  if (!totpActive) {
+    throw new HttpError('2FA muss erst aktiviert sein. Falls du gerade verifiziert hast, lade die Seite einmal neu.', 400);
+  }
 
   // 10 frische Codes generieren
   const plainCodes: string[] = [];
