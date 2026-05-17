@@ -89,6 +89,15 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-ui);min-heigh
         onkeydown="if(event.key==='Enter')register()">
     </div>
 
+    <!-- MEGA84/85 Pass 2b E.3: Coupon-Code (FOUNDING-99 / FRIEND-50 / WERBER-MONAT-FREI) -->
+    <div class="form-group">
+      <label class="form-label">Coupon-Code <span style="color:var(--text3,#94a3b8);font-weight:400;font-size:11px;">(optional)</span></label>
+      <input class="form-input" id="r-coupon" type="text" placeholder="z.B. FOUNDING-99" autocomplete="off"
+        style="font-family:monospace;letter-spacing:.04em;text-transform:uppercase;"
+        oninput="checkCoupon()">
+      <div id="coupon-preview" style="display:none;margin-top:8px;padding:9px 12px;border-radius:8px;font-size:12px;line-height:1.4;"></div>
+    </div>
+
     <button class="btn" id="btn-reg" onclick="register()">Kostenlos registrieren</button>
 
     <div class="trial-badge">
@@ -108,6 +117,35 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-ui);min-heigh
 </div>
 
 <script>
+// MEGA84/85 Pass 2b E.3: Coupon-Code Live-Validation (Frontend-Preview, Stripe-Apply beim Checkout)
+var COUPON_DEFINITIONS = {
+  'FOUNDING-99':       { label:'Founding-Member', preview:'Solo 99 €/mo lifetime (statt 179 €). Erste 10 SVs.', success:true },
+  'FRIEND-50':         { label:'Freundschaftswerbung', preview:'50% Rabatt für 3 Monate (alle Tier).', success:true },
+  'WERBER-MONAT-FREI': { label:'Referral-Belohnung', preview:'1 Monat geschenkt nach erster Zahlung.', success:true }
+};
+function checkCoupon() {
+  var input = document.getElementById('r-coupon');
+  var preview = document.getElementById('coupon-preview');
+  if (!input || !preview) return;
+  var val = (input.value || '').trim().toUpperCase();
+  input.value = val;  // upper-case live
+  if (!val) { preview.style.display = 'none'; return; }
+  var def = COUPON_DEFINITIONS[val];
+  if (def) {
+    preview.style.display = 'block';
+    preview.style.background = 'rgba(16,185,129,.1)';
+    preview.style.border = '1px solid rgba(16,185,129,.3)';
+    preview.style.color = '#10b981';
+    preview.innerHTML = '✅ <strong>' + def.label + '</strong> · ' + def.preview;
+  } else {
+    preview.style.display = 'block';
+    preview.style.background = 'rgba(245,158,11,.1)';
+    preview.style.border = '1px solid rgba(245,158,11,.3)';
+    preview.style.color = '#f59e0b';
+    preview.innerHTML = '⚠ Coupon-Code unbekannt. Stripe prüft beim Checkout final.';
+  }
+}
+
 function checkPwStrength() {
   var pw = document.getElementById('r-passwort').value;
   var bar = document.getElementById('pw-strength');
@@ -138,6 +176,16 @@ async function register() {
   if (!email || !email.includes('@')) { showErr('Bitte gültige E-Mail eingeben.'); return; }
   if (pw.length < 8) { showErr('Passwort muss mindestens 8 Zeichen lang sein.'); return; }
   if (pw !== pw2) { showErr('Passwörter stimmen nicht überein.'); return; }
+
+  // MEGA84/85 Pass 2b E.3: Coupon-Code in localStorage persistieren fuer Stripe-Checkout
+  var couponEl = document.getElementById('r-coupon');
+  var couponVal = couponEl ? (couponEl.value || '').trim().toUpperCase() : '';
+  if (couponVal) {
+    try {
+      localStorage.setItem('prova_pending_coupon', couponVal);
+      localStorage.setItem('prova_pending_coupon_set_at', String(Date.now()));
+    } catch(_){}
+  }
 
   btn.disabled = true;
   btn.textContent = '⏳ Wird erstellt…';

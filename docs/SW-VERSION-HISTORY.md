@@ -8,6 +8,15 @@ Format: **vNNNN-marker** | YYYY-MM-DD | Sprint | Kurz-Note
 
 ---
 
+## 2026-05-17 — MEGA-Serie #10 Pass 2b
+
+**v3550-mega84-85-pass2b-compliance-search** | 2026-05-17 | MEGA⁸⁴/⁸⁵ Pass 2b PDF + Trial + Search
+- Block D PDF-Compliance LG-Disclosure: docs/MEGA84-PDF-LG-DISCLOSURE-PATCH-INSTRUCTIONS.md mit Liquid-Block fuer F-04/F-09/F-15 (Marcel-PDFMonkey-Task) + freigabe-wizard.html Pre-Render-Check (wenn ki_tasks vorhanden aber ki_anzeige_datum=NULL → Modal mit Datum-Pflicht-Eingabe + Persist + Audit-Trail-Eintrag lg_darmstadt_compliance=true)
+- Block E Trial-Guard + Coupons: lib/trial-banner.js NEU (auto-mount, 14T gelb dismissable / 3T rot persistent / expired Blocking-Modal "DSGVO-Export oder Upgrade") + app-register.html Coupon-Code-Field mit Live-Validation FOUNDING-99/FRIEND-50/WERBER-MONAT-FREI (localStorage prova_pending_coupon fuer Stripe-Checkout)
+- Block F Global-Search 360: Migration 59 global_search_v2 RPC (auftraege+dokumente+kontakte+textbausteine+normen mit per_source_limit 5+, SECURITY DEFINER + workspace_id-Pflicht) + lib/prova-global-search.js Refactor (ruft v2 mit Workspace-ID-Auto-Detect, Client-side Source-Filter, v1-Fallback bei v2-Fehler)
+
+---
+
 ## 2026-05-16 — MEGA-Serie #8/9/10
 
 **v3500-mega84-pass2a-cockpit-mobile** | 2026-05-16 | MEGA⁸⁴/⁸⁵ Pass 2a Cockpit + Mobile + Compliance

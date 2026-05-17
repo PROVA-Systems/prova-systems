@@ -452,9 +452,53 @@ button,input,textarea{font-family:inherit;font-size:inherit;}
     } catch(e){ console.warn('[fw persist erklaerung]', e); }
   }
 
+  // MEGA84/85 Pass 2b D.3: Pre-Render-Check für LG-Darmstadt-Compliance
+  async function _fwPreRenderCheck(){
+    if (!auftragRow) return true;
+    const hasKi = auftragRow.ki_tasks && (
+      Array.isArray(auftragRow.ki_tasks) ? auftragRow.ki_tasks.length > 0 :
+      Object.keys(auftragRow.ki_tasks).length > 0
+    );
+    if (!hasKi) return true;
+    if (auftragRow.ki_anzeige_datum) return true;
+    const anzeigeDate = prompt(
+      '⚠️ KI-EINSATZ DOKUMENTIERT — ANZEIGE-DATUM FEHLT\n\n' +
+      'Nach § 407a Abs. 3 ZPO und Beschluss LG Darmstadt 10.11.2025 muss\n' +
+      'der KI-Einsatz an Auftraggeber/Gericht angezeigt werden.\n\n' +
+      'Bitte gib das Datum ein (YYYY-MM-DD), an dem du die\n' +
+      'KI-Anzeige verschickt hast:\n\n' +
+      'Heute = ' + new Date().toISOString().slice(0,10),
+      new Date().toISOString().slice(0,10)
+    );
+    if (!anzeigeDate) return false;
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(anzeigeDate)) {
+      alert('Datum-Format ungültig. Erwartet: YYYY-MM-DD (z.B. 2026-05-17)');
+      return false;
+    }
+    const { error } = await supabase.from('auftraege')
+      .update({ ki_anzeige_datum: anzeigeDate }).eq('id', auftragRow.id);
+    if (error) { alert('Konnte Datum nicht speichern: ' + error.message); return false; }
+    auftragRow.ki_anzeige_datum = anzeigeDate;
+    try {
+      await supabase.from('audit_trail').insert({
+        workspace_id: auftragRow.workspace_id,
+        action: 'update', entity_typ: 'auftrag', entity_id: auftragRow.id,
+        payload: { source: 'freigabe-wizard', ki_anzeige_datum_set: anzeigeDate, lg_darmstadt_compliance: true }
+      });
+    } catch(_){}
+    return true;
+  }
+
   window.fwGeneratePdf = async function(){
     const status = document.getElementById('fw-pdf-status');
     const btn = document.getElementById('fw-pdf-btn');
+    // MEGA84/85 Pass 2b D.3: Pre-Render-Check
+    const okToRender = await _fwPreRenderCheck();
+    if (!okToRender) {
+      status.className = 'fw-pdf-status error';
+      status.textContent = '⛔ PDF-Generierung blockiert: KI-Anzeige-Datum erforderlich (§ 407a ZPO)';
+      return;
+    }
     status.className = 'fw-pdf-status loading';
     status.textContent = '⏳ PDF wird erstellt…';
     btn.disabled = true;

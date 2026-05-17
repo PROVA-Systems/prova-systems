@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v3500-mega84-pass2a-cockpit-mobile';   // MEGA⁸⁴/⁸⁵ Pass 2a 2026-05-16: Block A.5 vor-ort-tabs.html neu (Mobile-First 3-Tab Skizze/Foto/Diktat mit allen 3 Pass-1-Libs integriert + Save-Workflow auf dokumente/eintraege/auftraege.details) + Block B admin-kpis.html neu (Founder-Cockpit mit 8 KPIs parallel-fetched + Workspace-Liste mit Filter+Login-as-User via existing admin-impersonate Edge MEGA54 + 2FA-Check fuer admin.* + KI-Health-Bars + Audit-Events) + Block C KI-Disclosure-Audit (GPT-4o → gpt-5.5 in 5 User-facing Pages). Sprint-Historie: docs/SW-VERSION-HISTORY.md.
+const CACHE_VERSION = 'prova-v3550-mega84-85-pass2b-compliance-search';   // MEGA⁸⁴/⁸⁵ Pass 2b 2026-05-17: Block D PDF-Compliance LG-Disclosure (Liquid-Block-Doku fuer F-04/F-09/F-15 + freigabe-wizard Pre-Render-Check ki_anzeige_datum Pflicht) + Block E Trial-Guard (lib/trial-banner.js mit 14T/3T/expired-States + Coupon-UI in app-register fuer FOUNDING-99/FRIEND-50/WERBER-MONAT-FREI) + Block F Global-Search 360 (Migration 59 global_search_v2 RPC mit per-source-limit + lib/prova-global-search.js auf v2 mit v1-Fallback). Sprint-Historie: docs/SW-VERSION-HISTORY.md.
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
