@@ -53,11 +53,20 @@ input[type="text"]:focus{outline:2px solid #4f8ef7;outline-offset:-1px;}
 .app-list{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0;}
 .app-pill{background:#232a3a;padding:6px 12px;border-radius:14px;font-size:12px;color:#8b93ab;}
 @media print{body{background:#fff;color:#000;}.wrap{max-width:none;}.card{background:none;border:1px solid #000;}.no-print{display:none!important;}.recovery-list{color:#000;border-color:#000;}}
+.brand-banner{text-align:center;padding:0 0 22px;}
+.brand-banner img{height:50px;width:auto;}
 </style>
+<!-- MEGA88-A Brand-Assets -->
+<link rel="icon" type="image/svg+xml" href="/img/logo-icon-only.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="/img/logo-icon-32.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/img/logo-icon-512.png">
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#1a3a6b">
 </head>
 <body>
 <div class="wrap">
 
+<div class="brand-banner no-print"><a href="/dashboard.html"><img src="/img/logo-prova-systems.svg" alt="PROVA Systems"></a></div>
 <h1>🔐 Zwei-Faktor-Authentifizierung</h1>
 <p class="subtitle">Schützt deinen Account und Mandanten-Daten gegen Passwort-Kompromittierung.</p>
 
@@ -173,8 +182,10 @@ async function startEnroll() {
       if (f.status === 'unverified') await supabase.auth.mfa.unenroll({ factorId: f.id });
     }
   } catch (_) {}
+  // MEGA88-A: friendlyName mit User-Email für Authenticator-Display
+  const userEmailFn = localStorage.getItem('prova_sv_email') || 'user';
   const { data, error } = await supabase.auth.mfa.enroll({
-    factorType: 'totp', friendlyName: 'PROVA-Authenticator-' + new Date().toISOString().slice(0,10)
+    factorType: 'totp', friendlyName: 'PROVA · ' + userEmailFn
   });
   if (error) {
     $('btn-enroll').disabled = false;
@@ -183,7 +194,22 @@ async function startEnroll() {
     return;
   }
   _factorId = data.id;
-  $('qr-img').src = data.totp.qr_code;
+  // MEGA88-A: TOTP-URI um image-Param erweitern fuer Authenticator-Logo (Authy/1Password rendern es)
+  // data.totp.uri kommt als otpauth://totp/PROVA%20%C2%B7%20...?secret=XYZ&issuer=PROVA&...
+  // Wir fuegen image=https://prova-systems.de/img/logo-icon-512.png an und re-rendern QR via api.qrserver.com.
+  try {
+    var origUri = data.totp.uri || '';
+    if (origUri) {
+      var sep = origUri.includes('?') ? '&' : '?';
+      var enhancedUri = origUri + sep + 'image=' + encodeURIComponent('https://prova-systems.de/img/logo-icon-512.png');
+      // Externes QR-Service (kein lokales QR-Lib im Repo) — Marcel-Doku: ggf. durch lokales qrcode.js ersetzbar
+      $('qr-img').src = 'https://api.qrserver.com/v1/create-qr-code/?size=440x440&margin=10&data=' + encodeURIComponent(enhancedUri);
+    } else {
+      $('qr-img').src = data.totp.qr_code;
+    }
+  } catch(e) {
+    $('qr-img').src = data.totp.qr_code;
+  }
   $('manual-secret').textContent = data.totp.secret;
   $('setup-card').style.display = 'none';
   $('qr-card').style.display = 'block';

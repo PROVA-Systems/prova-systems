@@ -8,6 +8,19 @@ Format: **vNNNN-marker** | YYYY-MM-DD | Sprint | Kurz-Note
 
 ---
 
+## 2026-05-17 — MEGA-Serie #13 (MEGA⁸⁸-A Logo-Implementation)
+
+**v3850-mega88-a-logo-implementation** | 2026-05-17 | MEGA⁸⁸-A Logo-System
+- Block A Logo-Assets: img/logo-prova-systems.svg (Master 320×80), img/logo-prova.svg (Compact 200×60), img/logo-icon-only.svg (48×48 mit Gradient Schild), img/logo-icon-mono.svg (Mono Navy). tools/generate-logo-pngs.js Node-Script (sharp + png-to-ico) für Marcel-PNG-Run (32/192/512 + maskable + favicon.ico).
+- Block B App-Integration: nav.js Sidebar-Logo durch Schild-Logo ersetzt (.sb-logo-img mit Voll-Logo bei Expanded + Icon-Only bei Collapsed). 7 Auth-Pages mit Logo-Banner + Favicon-Refs eingebaut: app-login.html (Master-Logo Brightness-Invert für Dark-BG-Card), app-register.html, admin-login.html, setup-2fa.html, account-2fa-status.html, workspace-invite.html, workspace-accept-invitation.html.
+- Block C Landing-Integration: index.html nav-logo (Master-SVG mit white-filter), footer-logo-mark (Mono-SVG mit opacity .7) + Favicon-Refs im head (SVG primary + PNG-Fallback + apple-touch-icon + manifest + theme-color #1a3a6b).
+- Block D 2FA-Komplett: setup-2fa.html friendlyName 'PROVA · email' (zeigt User-Identifier in Authenticator) + TOTP-URI um image-Param erweitert (https://prova-systems.de/img/logo-icon-512.png) + QR-Render via api.qrserver.com (Authy + 1Password rendern Logo automatisch). Fallback auf Supabase-default qr_code wenn URI-Parsing fails.
+- Block E Manifest + PWA: manifest.json neu mit theme-color #1a3a6b (Navy statt #111827), 4 Icon-Sizes (SVG primary + PNG 192/512 + 512-maskable mit Navy-Padding für PWA-safe-zone).
+- Block F Email-Templates: email-templates/_shared/brand-header.html Snippet (Gradient-Background-Header mit Master-SVG, white-filter) + trial-welcome.html als Beispiel-Patch. Marcel-Smoke für 20+ weitere Templates dokumentiert.
+- Block G PDFmonkey: docs/MEGA88-A-PDFMONKEY-LOGO-CHECKLIST.md mit 16+ Templates (4 Gutachten F-04/F-09/F-15/F-19 + Korrespondenz + 12 Bescheinigungen + 4 Rechnungen + 3 Spezial), Liquid-Snippets für Header/Footer/Wasserzeichen, Logo-URLs (SVG primary + PNG-Fallback), LG-Darmstadt-Disclosure-Parallel-Check.
+
+---
+
 ## 2026-05-17 — MEGA-Serie #12 (MEGA⁸⁷ AUTH-PERFEKT 2.0)
 
 **v3800-mega87-auth-perfekt-2-0** | 2026-05-17 | MEGA⁸⁷ AUTH-PERFEKT 2.0 Voll-Rebuild
