@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v3710-mega86-hotfix-www-redirects';   // MEGA⁸⁶-HOTFIX 2026-05-17: netlify.toml v6.1 — 21 fehlende www-Varianten ergaenzt fuer Cross-Domain-Redirects (Flow B/C/D: baubegleitung/beratung/wertgutachten/ortstermin · Werkzeuge: jveg/normen/textbausteine/positionen/zpo-anzeige/jahresbericht/kostenermittlung/hilfe/statistiken · Sonstige: portal/benachrichtigungen/import-assistent/smtp-einrichtung/auftrag-neu · Admin: admin-dashboard/admin-login · bibliothek). Schliesst Index/App-Split-Polish-Issue aus MEGA86 Block A.2. Sprint-Historie: docs/SW-VERSION-HISTORY.md.
+const CACHE_VERSION = 'prova-v3800-mega87-auth-perfekt-2-0';   // MEGA⁸⁷ AUTH-PERFEKT 2.0 Voll-Rebuild 2026-05-17: Block A Audit + Inventory (member_rolle ENUM {owner,admin,sv,assistenz,readonly}) + Block B Netlify-Identity bereits seit MEGA46 entfernt + Block C Migration 61 (totp_recovery_codes_generated_at + _used_count) + Block D 2FA-Komplett (verify-mfa-recovery-code + generate-mfa-recovery-codes Edges + account-2fa-status.html) + Block E Workspace-Switcher (lib/workspace-switcher.js mit Auto-Mount) + Block F Workspace-Invitations (workspace-invite.html + send-workspace-invitation Edge + workspace-accept-invitation.html) + Block G Account-Settings + Block H Auth-Cockpit (Live-Sessions + Failed-Login-Drilldown). Sprint-Historie: docs/SW-VERSION-HISTORY.md.
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [

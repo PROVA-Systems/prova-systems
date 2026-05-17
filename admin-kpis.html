@@ -242,6 +242,15 @@ a{color:inherit;text-decoration:none;}
     <div id="cp-support-list" style="display:flex;flex-direction:column;gap:10px;"><div class="cp-empty">Wird geladen…</div></div>
   </section>
 
+  <!-- MEGA87 Block H: Live Sessions -->
+  <section class="cp-section">
+    <div class="cp-section-row">
+      <h2 class="cp-section-label"><span class="cp-section-label-icon">🟢</span>Live Sessions (15min)</h2>
+      <span class="cp-section-cta" id="cp-sessions-count" style="font-size:11px;color:var(--text2);">—</span>
+    </div>
+    <div id="cp-sessions-list" style="background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;"><div class="cp-empty">Wird geladen…</div></div>
+  </section>
+
 </main>
 
 <!-- MEGA86 Block E: Reply-Modal -->
@@ -260,6 +269,17 @@ a{color:inherit;text-decoration:none;}
       <button onclick="closeReplyModal()" style="padding:9px 18px;background:transparent;border:1px solid var(--border2);color:var(--text2);border-radius:7px;cursor:pointer;font:600 13px inherit;">Abbrechen</button>
       <button id="cp-reply-send" onclick="sendReply()" style="padding:9px 18px;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;color:#fff;border-radius:7px;cursor:pointer;font:700 13px inherit;">📨 Antwort senden</button>
     </div>
+  </div>
+</div>
+
+<!-- MEGA87 Block H: Failed-Login Drilldown Modal -->
+<div id="cp-failed-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9999;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px);">
+  <div style="background:var(--surface);border:1px solid var(--border2);border-radius:14px;max-width:720px;width:100%;display:flex;flex-direction:column;max-height:85vh;">
+    <div style="padding:16px 22px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
+      <h3 style="font-size:16px;font-weight:700;color:var(--text);">⚠ Failed Logins — letzte 24h</h3>
+      <button onclick="closeFailedModal()" style="background:transparent;border:none;color:var(--text2);font-size:22px;cursor:pointer;">×</button>
+    </div>
+    <div id="cp-failed-list" style="padding:16px 22px;overflow-y:auto;flex:1;"></div>
   </div>
 </div>
 
@@ -534,6 +554,96 @@ a{color:inherit;text-decoration:none;}
   loadKiHealth().catch(e => console.error('[cp ki]', e));
   loadEvents().catch(e => console.error('[cp events]', e));
   loadSupportInbox().catch(e => console.error('[cp support-inbox]', e));
+  loadLiveSessions().catch(e => console.error('[cp sessions]', e));
+
+  // MEGA87 Block H: Live-Sessions
+  async function loadLiveSessions(){
+    var cutoff = new Date(Date.now() - 15 * 60000).toISOString();
+    var res = await supabase.from('user_sessions')
+      .select('id, user_id, device_typ, device_name, ip_address, ip_country, ip_city, started_at, last_activity_at')
+      .gt('last_activity_at', cutoff)
+      .is('revoked_at', null)
+      .order('last_activity_at', { ascending: false })
+      .limit(20);
+    var rows = res.data || [];
+    document.getElementById('cp-sessions-count').textContent = rows.length + ' aktiv';
+    if (!rows.length) {
+      document.getElementById('cp-sessions-list').innerHTML = '<div class="cp-empty">Keine aktiven Sessions in den letzten 15 Minuten.</div>';
+      return;
+    }
+    // User-Emails parallel laden
+    var userIds = [...new Set(rows.map(r => r.user_id))];
+    var emailMap = {};
+    if (userIds.length) {
+      var u = await supabase.from('users').select('id, email').in('id', userIds);
+      (u.data || []).forEach(usr => { emailMap[usr.id] = usr.email; });
+    }
+    document.getElementById('cp-sessions-list').innerHTML = rows.map(r => {
+      var loc = [r.ip_city, r.ip_country].filter(Boolean).join(', ');
+      return `<div style="padding:10px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;font-size:12px;">
+        <span style="font-size:16px;">${r.device_typ === 'mobile' ? '📱' : '💻'}</span>
+        <div style="flex:1;min-width:0;">
+          <div style="color:var(--text);font-weight:600;">${esc(emailMap[r.user_id] || r.user_id.slice(0,8))}</div>
+          <div style="color:var(--text2);font-size:11px;">${esc(r.device_name || r.device_typ || 'unknown')} · ${esc(loc || '?')} · seit ${esc(relTime(r.started_at))}</div>
+        </div>
+        <button onclick="revokeSession('${esc(r.id)}')" style="padding:5px 10px;background:transparent;border:1px solid rgba(239,68,68,.4);color:var(--danger);border-radius:6px;cursor:pointer;font-size:11px;font-weight:700;">Beenden</button>
+      </div>`;
+    }).join('');
+  }
+  window.revokeSession = async function(sessionId){
+    if (!confirm('Session forciert beenden? User wird ausgeloggt.')) return;
+    try {
+      await supabase.from('user_sessions').update({
+        revoked_at: new Date().toISOString(),
+        revoke_reason: 'admin_force_signout'
+      }).eq('id', sessionId);
+      await supabase.functions.invoke('audit-log-v1', { body: {
+        task: 'admin_action', action: 'logout', entity_typ: 'user_session', entity_id: sessionId,
+        reason: 'Force-Sign-Out via Founder-Cockpit', kategorie: 'AUTH'
+      }}).catch(()=>{});
+      loadLiveSessions();
+    } catch(e) { alert('Fehler: ' + e.message); }
+  };
+
+  // MEGA87 Block H: Failed-Login Drilldown
+  document.querySelector('#kpi-failed-logins')?.closest('.cp-kpi-card')?.addEventListener('click', async () => {
+    var modal = document.getElementById('cp-failed-modal');
+    modal.style.display = 'flex';
+    var listEl = document.getElementById('cp-failed-list');
+    listEl.innerHTML = '<div class="cp-empty">Lade…</div>';
+    var since = new Date(Date.now() - 24 * 3600000).toISOString();
+    var res = await supabase.from('audit_trail')
+      .select('id, user_id, payload, ip_address, user_agent, created_at')
+      .eq('action', 'login_failed')
+      .gte('created_at', since)
+      .order('created_at', { ascending: false })
+      .limit(30);
+    var rows = res.data || [];
+    if (!rows.length) {
+      listEl.innerHTML = '<div class="cp-empty">Keine Failed-Logins in den letzten 24h. 🎉</div>';
+      return;
+    }
+    // Group by email + IP
+    var grouped = {};
+    rows.forEach(r => {
+      var email = (r.payload && (r.payload.email || r.payload.resolvedEmail)) || '?';
+      var ip = r.ip_address || '?';
+      var key = email + '|' + ip;
+      if (!grouped[key]) grouped[key] = { email, ip, count: 0, last: r.created_at, ua: r.user_agent };
+      grouped[key].count++;
+      if (r.created_at > grouped[key].last) grouped[key].last = r.created_at;
+    });
+    var top10 = Object.values(grouped).sort((a,b) => b.count - a.count).slice(0, 10);
+    listEl.innerHTML = '<table style="width:100%;border-collapse:collapse;font-size:12px;">' +
+      '<thead><tr style="text-align:left;color:var(--text3);text-transform:uppercase;font-size:10px;letter-spacing:.06em;"><th style="padding:8px 6px;">Email</th><th>IP</th><th>Anzahl</th><th>Letzter Versuch</th></tr></thead>' +
+      '<tbody>' + top10.map(g => `<tr style="border-top:1px solid var(--border);">
+        <td style="padding:8px 6px;color:var(--text);">${esc(g.email)}</td>
+        <td style="color:var(--text2);font-family:monospace;font-size:11px;">${esc(g.ip)}</td>
+        <td style="color:var(--warning);font-weight:700;">${g.count}</td>
+        <td style="color:var(--text2);">${esc(relTime(g.last))}</td>
+      </tr>`).join('') + '</tbody></table>';
+  });
+  window.closeFailedModal = function(){ document.getElementById('cp-failed-modal').style.display = 'none'; };
   // Auto-Refresh KPIs alle 60s
   setInterval(() => loadKpis().catch(()=>{}), 60000);
 </script>

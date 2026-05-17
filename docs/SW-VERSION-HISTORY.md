@@ -8,11 +8,32 @@ Format: **vNNNN-marker** | YYYY-MM-DD | Sprint | Kurz-Note
 
 ---
 
+## 2026-05-17 — MEGA-Serie #12 (MEGA⁸⁷ AUTH-PERFEKT 2.0)
+
+**v3800-mega87-auth-perfekt-2-0** | 2026-05-17 | MEGA⁸⁷ AUTH-PERFEKT 2.0 Voll-Rebuild
+- Block A Audit + Inventory: docs/MEGA87-AUTH-INVENTORY.md (29 Files mit netlifyIdentity-Refs alle ueber Polyfill) + docs/MEGA87-PERMISSION-MATRIX.md mit member_rolle ENUM-Wahrheit `{owner,admin,sv,assistenz,readonly}` (Abweichung von Marcel-Memory dokumentiert).
+- Block B Netlify-Identity-Removal: docs/MEGA87-NETLIFY-IDENTITY-REMOVAL.md — bereits seit MEGA46 (2026-05-09) entfernt, Polyfill bleibt als bewusste Compat-Architektur (verhindert 14 Files Refactor). ENV-Cleanup-Pfad dokumentiert.
+- Block C Migration 61: supabase-migrations/61_mega87_totp_recovery_codes_meta.sql — ALTER users ADD totp_recovery_codes_generated_at + totp_recovery_codes_used_count + Partial-Index totp_enabled. Idempotent.
+- Block D 2FA-Komplett: supabase/functions/verify-mfa-recovery-code/index.ts NEU (~140 Z) mit Email+Password Pre-Auth + constant-time sha256-Match gegen totp_recovery_codes-Array + Code-Verbrauch + last_used_at + audit-log-v1 + warning bei <=3 verbleibenden + Session-Return. supabase/functions/generate-mfa-recovery-codes/index.ts NEU (~110 Z) generiert 10 Codes Format XXXX-XXXX aus ALPHA ohne I/O/0/1, speichert sha256-Hashes, reset used_count. account-2fa-status.html NEU (~170 Z) als 2FA-Verwaltungs-Page mit Status + Recovery-Codes-Counter + Regen-Button + 2FA-Deaktivieren-Link.
+- Block E Workspace-Switcher: lib/workspace-switcher.js NEU (~165 Z) mit Auto-Mount-Dropdown (sucht #prova-ws-switcher-mount / .sb-account-footer / header.topbar) + nur sichtbar bei >=2 Memberships + Audit-Log bei Switch via audit-log-v1 + localStorage prova-active-workspace + Page-Reload mit neuem Context. dashboard.html eingebunden.
+- Block F Workspace-Invitations: workspace-invite.html NEU mit Email-Form + Rolle-Dropdown (4 Rollen mit Info-Text) + Persönliche-Nachricht. supabase/functions/send-workspace-invitation NEU (~110 Z) mit Permission-Check (owner/admin/can_invite_members) + 7d-Token + INSERT workspace_invitations + send-email-Wrapper + Audit-Log. workspace-accept-invitation.html NEU (~160 Z) mit Token-Verify + Status-Check + Ablauf-Check + Email-Match + Annehmen-Button (INSERT workspace_memberships + Update status) + Ablehnen-Button.
+- Block G Account-Settings: einstellungen.html erweitert (~80 Z additiv) um Alle-Sessions-Ausloggen-Button mit signOut({scope:'global'}) + 2FA-Status-Link zur neuen Page + Workspace-Mitgliedschaften-Summary (laedt via supabase mit Rolle-Anzeige) + Team-Invite-Link auf /workspace-invite.html (vorher disabled).
+- Block H Auth-Cockpit: admin-kpis.html Live-Sessions-Section (user_sessions WHERE last_activity_at > NOW-15min, mit Email-JOIN + Device-Icon + Geo + Force-Sign-Out-Button) + Failed-Login-Drilldown-Modal (auf KPI-Card-Click, Top-10 Email/IP-Aggregation aus audit_trail action=login_failed letzte 24h).
+
+---
+
+## 2026-05-17 — MEGA-Serie #11 Hotfix (www-Redirects)
+
+**v3710-mega86-hotfix-www-redirects** | 2026-05-17 | MEGA⁸⁶-HOTFIX Index/App-Split-Polish
+- netlify.toml v6.1: 21 fehlende www-Varianten für Cross-Domain-Redirects ergänzt (Flow B/C/D + Werkzeuge + Sonstige App-Pages + Admin + Bibliothek). 41 von 42 prova-systems.de-Redirects haben jetzt www-Variante. Doku docs/MEGA86-HOTFIX-WWW-REDIRECTS.md mit 10-URL-Test + curl-Snippet.
+
+---
+
 ## 2026-05-17 — MEGA-Serie #11 (MEGA⁸⁶ Final-2%-Sprint)
 
 **v3700-mega86-final-polish** | 2026-05-17 | MEGA⁸⁶ Pilot-Blocker-Fixes + 100%-Vision-Completion
 - Block A.1 Cross-Domain-Login: Architektur 3-Layer-Bridge (crossDomainStorage in supabase-client + ProvaLegacyBridge cross-subdomain-cookies + auth-guard.js) verifiziert. Diagnose-Logging in lib/prova-legacy-bridge.js hydrate() ergänzt (sichtbar wenn 0 cookies found). Doku docs/MEGA86-CROSS-DOMAIN-LOGIN-FIX.md mit Marcel-Reproducer + Browser-Console-Snippet + 8-Schritt-Test.
-- Block A.2 Index/App-Split: netlify.toml v6.0 (30.04.2026) Cross-Domain-Redirects audited. Status: sauber getrennt. Polish-Issue: 25 sekundäre App-Pages haben nur prova-systems.de Redirect, www-Variante fehlt (DEFER MEGA87). Doku docs/MEGA86-INDEX-APP-SPLIT-AUDIT.md mit 10-Punkte-URL-Test.
+- Block A.2 Index/App-Split: netlify.toml v6.0 (30.04.2026) Cross-Domain-Redirects audited. Status: sauber getrennt. Polish-Issue: 25 sekundäre App-Pages haben nur prova-systems.de Redirect, www-Variante fehlt (DEFER MEGA87 — durch HOTFIX v3710 erledigt). Doku docs/MEGA86-INDEX-APP-SPLIT-AUDIT.md mit 10-Punkte-URL-Test.
 - Block A.3 Diktat-Mode-Race-Fix: lib/prova-diktat-mode-guard.js NEU (~170 Z) als 4-fach-Defense Single-Source-of-Truth. Konsolidiert MEGA47/68/69/80-Fixes. APIs: stopAll(reason), bind(element), indicateMode(mode). Auto-Bind auf 5 bekannte Selektoren (#transcriptArea, #transcriptManuell, #notiz-textarea, #diktat-text, #vot-manual-text). Fixed-Position-Mode-Badge oben rechts mit 3 States (🔴 Aufnahme / ✏ Manuell / ⚪ Bereit). Audit-Log-v1-Call bei jedem Mode-Switch. Eingebaut in app.html + ortstermin-modus.html. Doku docs/MEGA86-DIKTAT-MODE-RACE-FIX.md mit 5-Schritt-Reproducer.
 - Block B Audit-Edges Phase B Caller-Migration: 3 Frontend-Caller migriert von audit-trail-write / audit-source-log → audit-log-v1 (freigabe-logic.js logComplianceBestaetigung, lib/editor-gate.js logOverrideToAudit, lib/audit-source-tracker.js markSvUebernommen). prova-audit.js nutzt direkt Supabase-Adapter (keine Migration nötig). Alte Edges bleiben aktiv (7-Tage-Probelauf). Doku-Update docs/MEGA84-AUDIT-EDGES-DEPRECATED.md Phase-B-Status.
 - Block C Bibliothek-Drawer: lib/prova-bibliothek-drawer.js NEU (~110 Z) — Right-Side-Slide-In mit 60vw Desktop / 100vw Mobile, Cmd+B/Ctrl+B Hotkey, postMessage-Bridge zur Parent-Window. bibliothek.html embedded-Mode (?embedded=1) versteckt Sidebar + Header. Mount in 5 Pages: akte/gericht-auftrag/kurzstellungnahme/freigabe-wizard/briefe.html (Script-Tag + Hotkey + custom-event 'prova:bib-insert' für Editor-Integration).

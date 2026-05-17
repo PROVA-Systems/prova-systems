@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Einladung annehmen · PROVA</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="/lib/prova-config.js"></script>
+<script src="/lib/prova-legacy-bridge.js"></script>
+<script src="/lib/edge-shim.js"></script>
+<script src="prova-fetch-auth.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',system-ui,sans-serif;background:#0b0d11;color:#eaecf4;min-height:100vh;line-height:1.5;padding:20px;}
+.wrap{max-width:540px;margin:0 auto;padding:50px 0;}
+h1{font-size:24px;font-weight:800;margin-bottom:6px;text-align:center;}
+.subtitle{color:#8b93ab;font-size:14px;margin-bottom:24px;text-align:center;}
+.card{background:#1c2130;border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:28px;text-align:center;}
+.icon{font-size:48px;margin-bottom:16px;}
+.detail-row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.06);font-size:14px;text-align:left;}
+.detail-label{color:#8b93ab;}
+.detail-value{font-weight:600;color:#eaecf4;}
+.msg-block{background:rgba(79,142,247,.08);border-left:3px solid #4f8ef7;padding:12px 14px;margin:14px 0;border-radius:6px;font-size:13px;color:#c8cee0;text-align:left;font-style:italic;}
+.btn{padding:12px 24px;border:none;border-radius:8px;font:700 14px inherit;cursor:pointer;min-height:44px;margin:4px;}
+.btn-primary{background:linear-gradient(135deg,#10b981,#059669);color:#fff;}
+.btn-secondary{background:transparent;border:1px solid rgba(239,68,68,.4);color:#ef4444;}
+.btn-link{background:transparent;border:none;color:#4f8ef7;text-decoration:underline;font-size:13px;cursor:pointer;font-family:inherit;}
+.loading{color:#8b93ab;padding:20px;}
+.error{color:#ef4444;padding:14px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.3);border-radius:8px;margin:14px 0;}
+.success{color:#10b981;padding:14px;background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.3);border-radius:8px;margin:14px 0;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>📨 Workspace-Einladung</h1>
+<p class="subtitle">Du wurdest zu einem PROVA-Workspace eingeladen.</p>
+
+<div class="card" id="card">
+  <div class="loading">⏳ Einladung wird geprüft…</div>
+</div>
+
+</div>
+
+<script type="module">
+import { supabase } from '/lib/supabase-client.js';
+
+const params = new URLSearchParams(location.search);
+const token = params.get('token');
+
+const $ = (id) => document.getElementById(id);
+
+async function load() {
+  if (!token) { $('card').innerHTML = '<div class="error">Kein Einladungs-Token in der URL gefunden.</div>'; return; }
+
+  // 1. Check ob User eingeloggt — falls nicht: zu Login mit Redirect-Param
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    const next = location.pathname + location.search;
+    window.location.href = '/login?next=' + encodeURIComponent(next);
+    return;
+  }
+
+  // 2. Invitation laden
+  const { data: inv, error } = await supabase.from('workspace_invitations')
+    .select('id, workspace_id, empfaenger_email, vorgeschlagene_rolle, status, ablauf_at, persoenliche_nachricht, workspaces!inner(name, paket)')
+    .eq('token', token)
+    .maybeSingle();
+
+  if (error || !inv) {
+    $('card').innerHTML = '<div class="error">Einladung nicht gefunden oder Token ungültig.</div>';
+    return;
+  }
+  if (inv.status !== 'offen') {
+    $('card').innerHTML = '<div class="error">Diese Einladung wurde bereits ' + inv.status + '. Keine Aktion möglich.</div>';
+    return;
+  }
+  if (inv.ablauf_at && new Date(inv.ablauf_at) < new Date()) {
+    $('card').innerHTML = '<div class="error">Diese Einladung ist abgelaufen (' + new Date(inv.ablauf_at).toLocaleDateString('de-DE') + '). Bitte neue anfordern.</div>';
+    return;
+  }
+  if (user.email && inv.empfaenger_email && user.email.toLowerCase() !== inv.empfaenger_email.toLowerCase()) {
+    $('card').innerHTML = '<div class="error">Diese Einladung ist an <strong>' + inv.empfaenger_email + '</strong> adressiert. Du bist aber als <strong>' + user.email + '</strong> eingeloggt. Bitte mit der richtigen Email anmelden.</div>';
+    return;
+  }
+
+  // 3. Anzeige
+  const wsName = inv.workspaces?.name || inv.workspace_id.slice(0,8);
+  const wsPaket = inv.workspaces?.paket || '';
+  const msgBlock = inv.persoenliche_nachricht
+    ? '<div class="msg-block">"' + escapeHtml(inv.persoenliche_nachricht) + '"</div>'
+    : '';
+
+  $('card').innerHTML = '<div class="icon">🏢</div>' +
+    '<div style="font-size:20px;font-weight:700;margin-bottom:14px;">' + escapeHtml(wsName) + '</div>' +
+    '<div class="detail-row"><span class="detail-label">Eingeladen als</span><span class="detail-value">' + escapeHtml(inv.vorgeschlagene_rolle) + '</span></div>' +
+    '<div class="detail-row"><span class="detail-label">Paket</span><span class="detail-value">' + escapeHtml(wsPaket || '—') + '</span></div>' +
+    '<div class="detail-row"><span class="detail-label">Gültig bis</span><span class="detail-value">' + new Date(inv.ablauf_at).toLocaleDateString('de-DE') + '</span></div>' +
+    msgBlock +
+    '<div style="margin-top:20px;">' +
+      '<button class="btn btn-primary" onclick="accept(\'' + inv.id + '\', \'' + inv.workspace_id + '\', \'' + inv.vorgeschlagene_rolle + '\')">✓ Annehmen</button>' +
+      '<button class="btn btn-secondary" onclick="decline(\'' + inv.id + '\')">✗ Ablehnen</button>' +
+    '</div>';
+}
+
+function escapeHtml(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
+window.accept = async function(invId, wsId, rolle) {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Nicht eingeloggt');
+
+    // INSERT in workspace_memberships
+    const { error: mErr } = await supabase.from('workspace_memberships').insert({
+      workspace_id: wsId,
+      user_id: user.id,
+      rolle: rolle,
+      is_active: true,
+      accepted_at: new Date().toISOString(),
+      invited_at: new Date().toISOString()
+    });
+    if (mErr && !String(mErr.message).includes('duplicate key')) throw mErr;
+
+    // Invitation-Status updaten
+    await supabase.from('workspace_invitations').update({
+      status: 'angenommen',
+      akzeptiert_at: new Date().toISOString(),
+      akzeptiert_durch_user_id: user.id
+    }).eq('id', invId);
+
+    // Audit-Log
+    try {
+      await supabase.functions.invoke('audit-log-v1', { body: {
+        task: 'admin_action',
+        action: 'create',
+        entity_typ: 'workspace_membership',
+        entity_id: invId,
+        reason: 'Workspace-Invitation angenommen',
+        payload: { workspace_id: wsId, rolle: rolle, accepted_by: user.id },
+        kategorie: 'AUTH'
+      }});
+    } catch(_){}
+
+    // Aktiven Workspace umschalten
+    localStorage.setItem('prova-active-workspace', wsId);
+    localStorage.setItem('prova_workspace_id', wsId);
+
+    $('card').innerHTML = '<div class="success">✅ Einladung angenommen! Du wirst zum neuen Workspace weitergeleitet…</div>';
+    setTimeout(() => { window.location.href = '/dashboard.html'; }, 1200);
+  } catch (e) {
+    $('card').innerHTML = '<div class="error">Fehler beim Annehmen: ' + escapeHtml(e.message) + '</div>';
+  }
+};
+
+window.decline = async function(invId) {
+  if (!confirm('Einladung wirklich ablehnen?')) return;
+  try {
+    await supabase.from('workspace_invitations').update({ status: 'abgelehnt' }).eq('id', invId);
+    $('card').innerHTML = '<div class="success">Einladung abgelehnt.</div>';
+    setTimeout(() => { window.location.href = '/dashboard.html'; }, 1200);
+  } catch (e) {
+    $('card').innerHTML = '<div class="error">Fehler: ' + escapeHtml(e.message) + '</div>';
+  }
+};
+
+load();
+</script>
+
+</body>
+</html>

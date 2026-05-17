@@ -631,6 +631,20 @@
             <div class="es-zeile-info"><div class="es-zeile-label">Lokalen Cache leeren</div><div class="es-zeile-sub">Gespeicherte Airtable-Daten aus Browser-Cache</div></div>
             <button class="es-btn" onclick="leerCache()">🧹 Cache leeren</button>
           </div>
+          <!-- MEGA87 Block G: Alle Sessions ausloggen -->
+          <div class="es-zeile">
+            <div class="es-zeile-info"><div class="es-zeile-label">Alle Sessions ausloggen</div><div class="es-zeile-sub">Loggt dich auf allen Geräten aus (Sicherheit bei Passwort-Verlust)</div></div>
+            <button class="es-btn danger" onclick="alleSessionsAusloggen()">🔒 Alle ausloggen</button>
+          </div>
+          <!-- MEGA87 Block G: 2FA-Status-Page Link -->
+          <div class="es-zeile">
+            <div class="es-zeile-info"><div class="es-zeile-label">2FA-Status & Recovery-Codes</div><div class="es-zeile-sub">Zwei-Faktor-Authentifizierung verwalten + Recovery-Codes regenerieren</div></div>
+            <a href="/account-2fa-status.html" class="es-btn">🔐 2FA-Status öffnen</a>
+          </div>
+          <!-- MEGA87 Block G: Workspace-Mitgliedschaften -->
+          <div class="es-zeile">
+            <div class="es-zeile-info"><div class="es-zeile-label">Workspace-Mitgliedschaften</div><div class="es-zeile-sub" id="es-ws-summary">Wird geladen…</div></div>
+          </div>
           <div class="es-zeile">
             <div class="es-zeile-info">
               <div class="es-zeile-label" style="color:#ef4444">⚠️ Konto löschen</div>
@@ -662,8 +676,8 @@
             <button class="es-btn" onclick="oeffneStripePortal()">💳 Portal öffnen</button>
           </div>
           <div class="es-zeile">
-            <div class="es-zeile-info"><div class="es-zeile-label">Team einladen</div><div class="es-zeile-sub">Kollegen zum Team-Paket hinzufügen</div></div>
-            <button class="es-btn" id="es-team-btn" disabled onclick="window.location='einstellungen.html#team'">👥 Team verwalten</button>
+            <div class="es-zeile-info"><div class="es-zeile-label">Team einladen</div><div class="es-zeile-sub">Kollegen zum Workspace einladen (Email + Rolle)</div></div>
+            <a href="/workspace-invite.html" class="es-btn primary">👥 Mitglied einladen</a>
           </div>
         </section>
 
@@ -695,7 +709,52 @@
       ladeProfil(); ladeEinstellungen(); ladePaketInfo();
       const hash = location.hash.replace('#','');
       if (hash) { const el = document.querySelector(`[data-section="${hash}"]`); if (el) wechsleSektion(hash, el); }
+      ladeWorkspaceSummary(); // MEGA87 Block G
     });
+
+    // MEGA87 Block G: Workspace-Mitgliedschaften laden
+    async function ladeWorkspaceSummary() {
+      const el = document.getElementById('es-ws-summary');
+      if (!el) return;
+      try {
+        const mod = await import('/lib/supabase-client.js');
+        const sb = mod.supabase;
+        const u = await sb.auth.getUser();
+        const uid = u?.data?.user?.id;
+        if (!uid) { el.textContent = '—'; return; }
+        const { data } = await sb.from('workspace_memberships')
+          .select('rolle, workspaces!inner(name)')
+          .eq('user_id', uid).eq('is_active', true);
+        const rows = data || [];
+        if (rows.length === 0) { el.textContent = 'Keine Workspaces'; return; }
+        const items = rows.map(r => (r.workspaces?.name || '?') + ' (' + r.rolle + ')').join(' · ');
+        el.textContent = rows.length + ' Workspace' + (rows.length === 1 ? '' : 's') + ': ' + items;
+      } catch(e) { el.textContent = 'Fehler beim Laden: ' + e.message.slice(0, 80); }
+    }
+
+    // MEGA87 Block G: Alle Sessions ausloggen
+    window.alleSessionsAusloggen = async function() {
+      if (!confirm('Du wirst auf ALLEN Geräten ausgeloggt — auch dieses Browser-Fenster.\n\nFortfahren?')) return;
+      try {
+        const mod = await import('/lib/supabase-client.js');
+        const sb = mod.supabase;
+        await sb.auth.signOut({ scope: 'global' });
+        try {
+          if (window.ProvaLegacyBridge) window.ProvaLegacyBridge.clear();
+        } catch(_){}
+        // Audit
+        try {
+          await sb.functions.invoke('audit-log-v1', { body: {
+            task: 'login',
+            action: 'logout',
+            entity_typ: 'user',
+            payload: { scope: 'global', reason: 'all_sessions_signout' },
+            kategorie: 'AUTH'
+          }});
+        } catch(_){}
+        window.location.href = '/login?reason=all_sessions_signout';
+      } catch(e) { alert('Fehler: ' + e.message); }
+    };
 
     function ladeProfil() {
       const email = localStorage.getItem('prova_sv_email') || '';

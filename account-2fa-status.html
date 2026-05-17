@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>2FA-Status · PROVA Account</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="/lib/prova-config.js"></script>
+<script src="/lib/prova-legacy-bridge.js"></script>
+<script src="/lib/edge-shim.js"></script>
+<script src="prova-fetch-auth.js"></script>
+<script>
+(function () {
+  try {
+    var token = localStorage.getItem('prova_auth_token');
+    if (!token) { window.location.replace('/login?next=' + encodeURIComponent(location.pathname)); return; }
+  } catch (e) { window.location.replace('/login'); }
+})();
+</script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'DM Sans', system-ui, sans-serif; background: #0b0d11; color: #eaecf4; min-height: 100vh; line-height: 1.5; padding: 20px; }
+.wrap { max-width: 600px; margin: 0 auto; padding: 32px 0; }
+h1 { font-size: 24px; font-weight: 800; margin-bottom: 6px; }
+.subtitle { color: #8b93ab; font-size: 14px; margin-bottom: 24px; }
+.card { background: #1c2130; border: 1px solid rgba(255,255,255,.08); border-radius: 14px; padding: 24px; margin-bottom: 16px; }
+.card h2 { font-size: 16px; font-weight: 700; margin-bottom: 14px; color: #eaecf4; display: flex; align-items: center; gap: 8px; }
+.row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,.06); font-size: 14px; }
+.row:last-child { border-bottom: none; }
+.row-label { color: #8b93ab; }
+.row-value { color: #eaecf4; font-weight: 600; }
+.row-value.success { color: #10b981; }
+.row-value.warning { color: #f59e0b; }
+.row-value.danger { color: #ef4444; }
+.btn { padding: 10px 18px; border: none; border-radius: 8px; font: 700 13px inherit; cursor: pointer; min-height: 40px; }
+.btn-primary { background: linear-gradient(135deg,#4f8ef7,#3a7be0); color: #fff; }
+.btn-primary:hover { opacity: .9; }
+.btn-secondary { background: #232a3a; color: #eaecf4; border: 1px solid rgba(255,255,255,.1); }
+.btn-danger { background: transparent; color: #ef4444; border: 1px solid rgba(239,68,68,.4); }
+.warning-box { background: rgba(245,158,11,.08); border: 1px solid rgba(245,158,11,.3); color: #fcd34d; padding: 12px 14px; border-radius: 8px; font-size: 13px; margin-top: 12px; }
+.actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+.back-link { color: #8b93ab; text-decoration: none; font-size: 13px; margin-bottom: 14px; display: inline-block; }
+.back-link:hover { color: #eaecf4; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<a href="/einstellungen.html" class="back-link">← Zurück zu Einstellungen</a>
+
+<h1>🔐 2FA-Status</h1>
+<p class="subtitle">Übersicht und Verwaltung deiner Zwei-Faktor-Authentifizierung.</p>
+
+<div class="card" id="status-card">
+  <h2>📊 Status</h2>
+  <div id="status-body"><div class="row"><span class="row-label">Wird geladen…</span></div></div>
+  <div class="actions" id="status-actions"></div>
+</div>
+
+<div class="card" id="codes-card" style="display:none;">
+  <h2>🔑 Recovery-Codes</h2>
+  <div id="codes-body"></div>
+  <div class="actions">
+    <button type="button" class="btn btn-primary" id="btn-regen">Neue Codes generieren</button>
+  </div>
+  <div class="warning-box">
+    Beim Generieren werden ALLE bisherigen Codes ungültig. Aktuelle Codes vorher sichern!
+  </div>
+</div>
+
+<div class="card" id="manage-card" style="display:none;">
+  <h2>⚙️ Verwaltung</h2>
+  <div class="actions">
+    <a href="/setup-2fa.html" class="btn btn-secondary">2FA neu einrichten</a>
+    <button type="button" class="btn btn-danger" onclick="window.location.href='/setup-2fa.html#disable'">2FA deaktivieren</button>
+  </div>
+</div>
+
+</div>
+
+<script type="module">
+import { supabase } from '/lib/supabase-client.js';
+
+const $ = (id) => document.getElementById(id);
+
+function formatDate(iso) {
+  if (!iso) return '—';
+  return new Date(iso).toLocaleDateString('de-DE') + ' ' + new Date(iso).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});
+}
+
+async function loadStatus() {
+  // 1. Supabase MFA-Factors
+  const { data: factors } = await supabase.auth.mfa.listFactors();
+  const verifiedTotp = (factors?.totp ?? []).find(f => f.status === 'verified');
+
+  // 2. App-Profil (totp_recovery_codes_*)
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) { window.location.href = '/login'; return; }
+  const { data: profile } = await supabase.from('users')
+    .select('totp_enabled, totp_recovery_codes, totp_recovery_codes_generated_at, totp_recovery_codes_used_count, totp_last_used_at, totp_setup_started_at')
+    .eq('id', user.id)
+    .maybeSingle();
+
+  const isActive = !!(verifiedTotp || profile?.totp_enabled);
+  const codes = Array.isArray(profile?.totp_recovery_codes) ? profile.totp_recovery_codes : [];
+  const usedCount = profile?.totp_recovery_codes_used_count ?? 0;
+  const remaining = codes.length;
+
+  let html = '';
+  if (isActive) {
+    html += '<div class="row"><span class="row-label">2FA-Status</span><span class="row-value success">✅ Aktiv</span></div>';
+    html += '<div class="row"><span class="row-label">Aktiviert seit</span><span class="row-value">' + formatDate(verifiedTotp?.created_at || profile?.totp_setup_started_at) + '</span></div>';
+    html += '<div class="row"><span class="row-label">Letzte Nutzung</span><span class="row-value">' + formatDate(profile?.totp_last_used_at) + '</span></div>';
+    html += '<div class="row"><span class="row-label">Recovery-Codes übrig</span>';
+    const cls = remaining <= 2 ? 'danger' : (remaining <= 5 ? 'warning' : 'success');
+    html += '<span class="row-value ' + cls + '">' + remaining + ' / 10 verfügbar</span></div>';
+    if (usedCount > 0) html += '<div class="row"><span class="row-label">Bisher verbraucht</span><span class="row-value">' + usedCount + '</span></div>';
+    if (profile?.totp_recovery_codes_generated_at) {
+      html += '<div class="row"><span class="row-label">Codes generiert</span><span class="row-value">' + formatDate(profile.totp_recovery_codes_generated_at) + '</span></div>';
+    }
+  } else {
+    html += '<div class="row"><span class="row-label">2FA-Status</span><span class="row-value warning">❌ Nicht aktiv</span></div>';
+    html += '<div class="row"><span class="row-label" style="line-height:1.55;">Du solltest 2FA aktivieren, um deine Mandanten-Daten gegen Passwort-Diebstahl zu schützen.</span></div>';
+  }
+  $('status-body').innerHTML = html;
+
+  if (isActive) {
+    $('status-actions').innerHTML = '<a href="/setup-2fa.html" class="btn btn-secondary">Setup-Page öffnen</a>';
+    $('codes-card').style.display = 'block';
+    $('manage-card').style.display = 'block';
+
+    if (remaining === 0) {
+      $('codes-body').innerHTML = '<div class="warning-box">⚠ Keine Recovery-Codes mehr verfügbar! Bei Verlust des Authenticators kommst du nicht mehr in deinen Account.</div>';
+    } else if (remaining <= 2) {
+      $('codes-body').innerHTML = '<div class="warning-box">⚠ Nur noch ' + remaining + ' Code' + (remaining === 1 ? '' : 's') + ' übrig — bitte neue generieren.</div>';
+    } else {
+      $('codes-body').innerHTML = '<p style="color:#8b93ab;font-size:13px;line-height:1.55;">Recovery-Codes sind Backup-Codes für den Fall, dass du dein 2FA-Gerät verlierst. Jeder Code ist nur einmal gültig.</p>';
+    }
+  } else {
+    $('status-actions').innerHTML = '<a href="/setup-2fa.html" class="btn btn-primary">2FA jetzt einrichten →</a>';
+  }
+}
+
+window.regenCodes = async function() {
+  if (!confirm('Alle bisherigen Recovery-Codes werden UNGÜLTIG.\n\nDu erhältst 10 neue Codes — bitte sicher speichern!\n\nFortfahren?')) return;
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    const url = (window.PROVA_CONFIG?.SUPABASE_URL || '').replace(/\/$/,'');
+    const res = await fetch(url + '/functions/v1/generate-mfa-recovery-codes', {
+      method: 'POST',
+      headers: { 'Content-Type':'application/json', 'Authorization':'Bearer ' + session.access_token, 'apikey': window.PROVA_CONFIG.SUPABASE_ANON_KEY }
+    });
+    const data = await res.json();
+    if (!res.ok || !data.codes) throw new Error(data.error || 'HTTP ' + res.status);
+    // Anzeige der neuen Codes
+    const codes = data.codes;
+    const text = '🔑 Neue Recovery-Codes (gerade generiert):\n\n' + codes.join('\n') +
+      '\n\nBitte sicher speichern — werden NICHT erneut angezeigt!';
+    alert(text);
+    // Optional: TXT-Download
+    const blob = new Blob([
+      'PROVA Systems — 2FA Recovery-Codes\n',
+      'Generiert: ' + new Date().toLocaleString('de-DE') + '\n',
+      'User: ' + (localStorage.getItem('prova_sv_email') || '?') + '\n\n',
+      codes.join('\n'),
+      '\n\nJeder Code nur einmal nutzbar.\n'
+    ], { type: 'text/plain' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'prova-recovery-codes-' + new Date().toISOString().slice(0,10) + '.txt';
+    a.click();
+    setTimeout(() => location.reload(), 1000);
+  } catch (e) {
+    alert('Fehler: ' + e.message);
+  }
+};
+
+document.getElementById('btn-regen').onclick = window.regenCodes;
+loadStatus();
+</script>
+
+</body>
+</html>
