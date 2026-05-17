@@ -8,6 +8,15 @@ Format: **vNNNN-marker** | YYYY-MM-DD | Sprint | Kurz-Note
 
 ---
 
+## 2026-05-18 — MEGA-Serie #15 (MEGA⁸⁸-D Coupon-Security + Founding-90d)
+
+**v3950-mega88-d-coupon-security** | 2026-05-18 | MEGA⁸⁸-D Coupon-Security + Founding-Trial-90d
+- Block A SECURITY (P0): FOUNDING-99 hartcoded aus lib/prova-onboarding-tour.js entfernt. Step 5 wird dynamisch via `_resolveCouponStep()` aus `workspaces.founding_status` befüllt. Standard-User sehen generischen 'Bereit für ersten Fall'-Step OHNE Coupon-Code. Founding/Pilot-Tester sehen Custom-Step mit Hinweis 'Coupon wird automatisch angewendet' — KEIN Code-Anzeige. Verhindert 80€/mo Verlust lifetime pro Missbrauch.
+- Block B Founding-Trial 90d: Migration 63 (workspaces.founding_status ENUM 'standard|founding_member|pilot_tester' DEFAULT 'standard' + founding_assigned_at + stripe_coupon_assigned + Index für non-standard). app-register.html: ?founding=1 / ?pilot=1 URL-Param-Detection → 90d Trial statt 14d + localStorage prova_founding_status_pending + Email-Webhook-Payload erweitert um trial_days + founding_status. lib/trial-banner.js: Founding-Variante mit 🌟 + 'Noch X Tage Founding-Trial — danach 99 €/mo lifetime (Coupon auto)'.
+- Block C Marcel-Founding-Invite-Tool: workspace-invite.html Founding-Tester-Checkbox (Marcel-only sichtbar via SUPER_ADMINS Email-Allow-List, _toggleFoundingField). send-workspace-invitation Edge: founding_invite-Flag → FOUNDING-MARKER in persoenliche_nachricht (workspace_invitations-Spalte). workspace-accept-invitation.html liest Marker beim Accept und setzt workspaces.founding_status='founding_member' + abo_trial_endet_am=NOW+90d.
+
+---
+
 ## 2026-05-18 — MEGA-Serie #14 (MEGA⁸⁸-C TOTP-Sync-Fix)
 
 **v3905-mega88-c-totp-sync-fix** | 2026-05-18 | MEGA⁸⁸-C TOTP-Sync-Bug-Fix (Hotfix)
