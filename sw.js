@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v3600-mega84-85-complete';   // MEGA⁸⁴/⁸⁵ Pass 2c Sprint-Final 2026-05-17: Block G audit-log-v1 (neue Edge supabase/functions/audit-log-v1 mit Task-Router ki_request|login|gdpr_export|gdpr_delete|admin_action|generic + Integrity-Hash-Kette prev_hash/integrity_hash + Rate-Limit 200/min + Konsolidierungs-Doku MEGA84-AUDIT-EDGES-DEPRECATED.md fuer 5 alte Caller, alte Edges bleiben funktional) + Block H Bibliothek-Funktion (bibliothek.html additiv um 3 Tabs erweitert: Briefe-Vorlagen aus user_vorlagen + Bescheinigungen mit 12 Static-Templates aus dokument_typ-ENUM + 360-Suche via global_search_v2 + Context-aware-Insert via URL-Param ?aktion=insert&auftrag_id=...). Sprint-Historie: docs/SW-VERSION-HISTORY.md.
+const CACHE_VERSION = 'prova-v3710-mega86-hotfix-www-redirects';   // MEGA⁸⁶-HOTFIX 2026-05-17: netlify.toml v6.1 — 21 fehlende www-Varianten ergaenzt fuer Cross-Domain-Redirects (Flow B/C/D: baubegleitung/beratung/wertgutachten/ortstermin · Werkzeuge: jveg/normen/textbausteine/positionen/zpo-anzeige/jahresbericht/kostenermittlung/hilfe/statistiken · Sonstige: portal/benachrichtigungen/import-assistent/smtp-einrichtung/auftrag-neu · Admin: admin-dashboard/admin-login · bibliothek). Schliesst Index/App-Split-Polish-Issue aus MEGA86 Block A.2. 41 von 42 prova-systems.de-Redirects haben jetzt www-Variante (1 Ausnahme: /status — Marketing-Rewrite). Doku: docs/MEGA86-HOTFIX-WWW-REDIRECTS.md. Sprint-Historie: docs/SW-VERSION-HISTORY.md.
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
