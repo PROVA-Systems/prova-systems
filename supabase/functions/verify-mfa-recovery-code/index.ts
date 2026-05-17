@@ -89,7 +89,17 @@ const handler = async (req: Request): Promise<Response> => {
     .eq('id', userId)
     .single();
   if (uErr || !userRow) throw new HttpError('User-Profil nicht gefunden', 404);
-  if (!userRow.totp_enabled) throw new HttpError('2FA für diesen Account nicht aktiv', 400);
+
+  // MEGA88-C: TOTP-aktiv-Check robust gegen Drift zwischen public.users + auth.mfa_factors
+  let totpActiveV = !!userRow.totp_enabled;
+  if (!totpActiveV) {
+    try {
+      const { data: factors } = await svc
+        .from('mfa_factors').select('id').eq('user_id', userId).eq('status', 'verified');
+      if (Array.isArray(factors) && factors.length > 0) totpActiveV = true;
+    } catch(_){}
+  }
+  if (!totpActiveV) throw new HttpError('2FA für diesen Account nicht aktiv', 400);
 
   const storedCodes: string[] = Array.isArray(userRow.totp_recovery_codes) ? userRow.totp_recovery_codes : [];
   if (storedCodes.length === 0) {

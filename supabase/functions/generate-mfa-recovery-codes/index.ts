@@ -41,14 +41,30 @@ const handler = async (req: Request): Promise<Response> => {
   const ctx = await verifyJwt(req);
   const svc = createServiceClient();
 
-  // Verify: TOTP muss aktiviert sein
+  // MEGA88-C: TOTP-aktiv-Check robust — beide Quellen prüfen:
+  //   1. auth.mfa_factors (Supabase MFA-API Source-of-Truth)
+  //   2. users.totp_enabled (sekundär — App-Logic-Flag)
+  // Wenn EINER true ist → 2FA gilt als aktiv (Trigger aus Migration 62 sollte
+  // beide synchron halten, aber Defense-in-Depth).
   const { data: u, error: uErr } = await svc
     .from('users')
     .select('totp_enabled')
     .eq('id', ctx.user.id)
     .single();
   if (uErr || !u) throw new HttpError('User-Profil nicht gefunden', 404);
-  if (!u.totp_enabled) throw new HttpError('2FA muss erst aktiviert sein.', 400);
+
+  let totpActive = !!u.totp_enabled;
+  if (!totpActive) {
+    // Sekundär-Check auf auth.mfa_factors
+    try {
+      const { data: factors } = await svc
+        .from('mfa_factors').select('id,status').eq('user_id', ctx.user.id).eq('status', 'verified');
+      if (Array.isArray(factors) && factors.length > 0) totpActive = true;
+    } catch (_) {
+      // auth.mfa_factors RLS könnte blocken — service-Client sollte aber bypassen.
+    }
+  }
+  if (!totpActive) throw new HttpError('2FA muss erst aktiviert sein.', 400);
 
   // 10 frische Codes generieren
   const plainCodes: string[] = [];

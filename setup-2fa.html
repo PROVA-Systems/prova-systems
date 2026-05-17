@@ -227,6 +227,18 @@ async function verifyTotp() {
     _challengeId = ch.data.id;
     const v = await supabase.auth.mfa.verify({ factorId: _factorId, challengeId: _challengeId, code });
     if (v.error) throw new Error(v.error.message);
+    // MEGA88-C Block C: Fallback-Sync auf users.totp_enabled fuer den Fall dass DB-Trigger (Migration 62)
+    // nicht aktiv ist. Mit Trigger ist das ein No-Op (Trigger hat schon gesetzt). Ohne Trigger ist es
+    // der einzige Sync-Punkt zwischen auth.mfa_factors und public.users.totp_enabled.
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        await supabase.from('users').update({
+          totp_enabled: true,
+          totp_last_used_at: new Date().toISOString()
+        }).eq('id', user.id);
+      }
+    } catch(_) { /* non-blocking — Trigger uebernimmt falls verfuegbar */ }
     showMsg('msg-verify', '✅ 2FA aktiviert! Generiere Recovery-Codes…', 'success');
     await generateRecoveryCodes(true);
   } catch (e) {
@@ -295,6 +307,17 @@ async function disable2FA() {
     for (const f of (factors?.totp ?? [])) {
       await supabase.auth.mfa.unenroll({ factorId: f.id });
     }
+    // MEGA88-C Block C: Fallback-Sync users.totp_enabled=false (Trigger uebernimmt falls aktiv)
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        await supabase.from('users').update({
+          totp_enabled: false,
+          totp_recovery_codes: [],
+          totp_recovery_codes_used_count: 0
+        }).eq('id', user.id);
+      }
+    } catch(_) {}
     showMsg('msg-disable', '✅ 2FA deaktiviert. Reload…', 'success');
     setTimeout(() => location.reload(), 1500);
   } catch (e) {

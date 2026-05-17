@@ -8,6 +8,15 @@ Format: **vNNNN-marker** | YYYY-MM-DD | Sprint | Kurz-Note
 
 ---
 
+## 2026-05-18 — MEGA-Serie #14 (MEGA⁸⁸-C TOTP-Sync-Fix)
+
+**v3905-mega88-c-totp-sync-fix** | 2026-05-18 | MEGA⁸⁸-C TOTP-Sync-Bug-Fix (Hotfix)
+- Block A DB-Trigger: supabase-migrations/62_mega88c_totp_sync_trigger.sql — AFTER INSERT/UPDATE/DELETE Trigger auf auth.mfa_factors → public.users.totp_enabled-Sync. Function `sync_users_totp_from_factors()` mit SECURITY DEFINER. verified→true+totp_last_used_at, unverified/delete OHNE anderen verified-Factor→false. Backfill für existing User (beide Richtungen). Idempotent (DROP TRIGGER IF EXISTS).
+- Block B Edge-Hardening: generate-mfa-recovery-codes + verify-mfa-recovery-code prüfen jetzt BEIDE Quellen — primär users.totp_enabled, sekundär auth.mfa_factors WHERE status='verified'. Defense-in-Depth gegen Drift falls Trigger fehlt oder Race-Condition.
+- Block C setup-2fa.html: nach erfolgreichem verifyTotp() expliziter UPDATE auf users.totp_enabled=true + totp_last_used_at (Fallback wenn Trigger inaktiv). Bei disable2FA(): explizit totp_enabled=false + totp_recovery_codes=[] + used_count=0. Beide Pfade non-blocking (Trigger übernimmt wenn aktiv).
+
+---
+
 ## 2026-05-17 — MEGA-Serie #13 (MEGA⁸⁸-A Logo-Implementation)
 
 **v3850-mega88-a-logo-implementation** | 2026-05-17 | MEGA⁸⁸-A Logo-System
