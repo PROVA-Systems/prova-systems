@@ -8,6 +8,15 @@ Format: **vNNNN-marker** | YYYY-MM-DD | Sprint | Kurz-Note
 
 ---
 
+## 2026-05-17 — MEGA-Serie #10 Pass 2c (Sprint-Final)
+
+**v3600-mega84-85-complete** | 2026-05-17 | MEGA⁸⁴/⁸⁵ Pass 2c Audit-Konsolidierung + Bibliothek + Sprint-Final
+- Block G audit-log-v1: supabase/functions/audit-log-v1/index.ts NEU (~190 Z) mit Task-Router (ki_request|login|gdpr_export|gdpr_delete|admin_action|generic, audit_action-ENUM-Mapping, admin reason min 5 chars) + Integrity-Hash-Kette (prev_hash=letztes integrity_hash der workspace_id, integrity_hash=sha256(prev||canonicalJson(payload))) + Rate-Limit 200/min + Default-Kategorie (KI/AUTH/DSGVO/ADMIN). docs/MEGA84-AUDIT-EDGES-DEPRECATED.md mit Caller-Inventory + Migrations-Snippets + 3-Phasen-Deprecation-Policy. **5 alte Writer-Edges bleiben funktional** (audit-write/audit-log/audit-trail-write/audit-source-log + Netlify prova-audit) — CC darf nicht eigenmächtig löschen.
+- Block H Bibliothek-Funktion: bibliothek.html additiv erweitert (existing 540 Z + ~190 Z) auf 5 Tabs: 📐 Normen + 📝 Textbausteine (bestehend) + 📨 Brief-Vorlagen (aus user_vorlagen, per-user via RLS) + 📋 Bescheinigungen (12 Static-Templates aus dokument_typ-ENUM, leitet auf /bescheinigungen.html?typ=...) + 🔎 360°-Suche (Volltext über alle Quellen via global_search_v2 RPC aus Pass 2b mit Source-Icons). Context-aware-Insert via URL-Param `?aktion=insert&auftrag_id=...` zeigt prominenten Banner + ersetzt CTA-Label "In Editor verwenden" → "In Akte XY-2024-001 einfügen" + leitet bei Klick direkt zur Akte mit localStorage-Pending-Insert.
+- Block I Sprint-Final: sw.js v3550 → v3600 + SW-VERSION-HISTORY-Eintrag + docs/MEGA84-85-PASS2C-DECISIONS.md + docs/MEGA84-85-PASS2C-MARCEL-CHECKLIST.md + CLAUDE.md Update + Commit+Push + Tag v3600-mega84-85-complete.
+
+---
+
 ## 2026-05-17 — MEGA-Serie #10 Pass 2b
 
 **v3550-mega84-85-pass2b-compliance-search** | 2026-05-17 | MEGA⁸⁴/⁸⁵ Pass 2b PDF + Trial + Search

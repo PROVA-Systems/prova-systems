@@ -112,10 +112,19 @@ body { font-family: 'DM Sans', system-ui, sans-serif; background: var(--bg); col
   <div class="main-wrap" id="main-wrap">
 
     <main class="bib-wrap">
+      <!-- MEGA84/85 Pass 2c Block H: Context-aware-Banner bei ?aktion=insert&auftrag_id=... -->
+      <div id="bib-context-banner" style="display:none;padding:12px 16px;margin-bottom:14px;background:linear-gradient(135deg,rgba(79,142,247,.15),rgba(58,123,224,.1));border:1px solid var(--accent);border-radius:10px;align-items:center;gap:12px;font-size:13px;">
+        <span style="font-size:18px;">📂</span>
+        <div style="flex:1;">
+          <strong>Einfügen-Modus:</strong> Treffer-CTAs übernehmen den Eintrag direkt in <span id="bib-ctx-az" style="font-family:ui-monospace,Consolas,monospace;font-weight:700;">Akte</span>.
+        </div>
+        <button onclick="window.location.href='/bibliothek.html'" style="padding:4px 10px;background:transparent;border:1px solid var(--border2);color:var(--text2);border-radius:6px;cursor:pointer;font-size:11px;">Abbrechen</button>
+      </div>
+
       <div class="bib-head">
         <div class="bib-head-left">
           <h1>Bibliothek</h1>
-          <p>Normen + Textbausteine — Wiederverwendbar im Gutachten-Editor. Brief-Vorlagen findest du in „Briefe" unter Büro.</p>
+          <p>Normen · Textbausteine · Brief-Vorlagen · Bescheinigungs-Templates — alles an einem Ort, wiederverwendbar.</p>
         </div>
         <button class="bib-btn-add" id="bib-btn-add" onclick="openCreateModal()">+ Neue Norm</button>
       </div>
@@ -123,6 +132,9 @@ body { font-family: 'DM Sans', system-ui, sans-serif; background: var(--bg); col
       <nav class="bib-tabs">
         <button class="bib-tab is-active" data-tab="normen" onclick="switchTab('normen')">📐 Normen</button>
         <button class="bib-tab" data-tab="textbausteine" onclick="switchTab('textbausteine')">📝 Textbausteine</button>
+        <button class="bib-tab" data-tab="briefe" onclick="switchTab('briefe')">📨 Brief-Vorlagen</button>
+        <button class="bib-tab" data-tab="bescheinigungen" onclick="switchTab('bescheinigungen')">📋 Bescheinigungen</button>
+        <button class="bib-tab" data-tab="suche360" onclick="switchTab('suche360')" title="Volltext über alle Quellen (global_search_v2)">🔎 360°-Suche</button>
       </nav>
 
       <div class="bib-toolbar">
@@ -183,6 +195,22 @@ const SCHADENART_OPTIONS = ['Schimmel','Wasserschaden','Sturmschaden','Brand','R
 const KATEGORIE_OPTIONS = ['Befund','Ursache','Beurteilung','Empfehlung','Sanierung','Kostenschätzung','Sonstiges'];
 const HAEUFIGKEIT_OPTIONS = ['Häufig','Mittel','Selten'];
 
+// MEGA84/85 Pass 2c Block H: 13 Bescheinigungs-Templates aus dokument_typ-ENUM
+const BESCHEINIGUNGS_TEMPLATES = [
+  { id: 'bsa_sv_bestaetigung',        typ: 'bescheinigung_sv_bestaetigung',   titel: 'SV-Bestätigung',                  beschreibung: 'Bestätigung als ö.b.u.v. Sachverständiger', kategorie: 'Identität' },
+  { id: 'bsa_ortsbesichtigung',       typ: 'bescheinigung_ortsbesichtigung',  titel: 'Ortsbesichtigung',                beschreibung: 'Bestätigung Ortstermin / Begehung',          kategorie: 'Termin' },
+  { id: 'bsa_auftragsannahme',        typ: 'bescheinigung_auftragsannahme',   titel: 'Auftragsannahme',                 beschreibung: 'Bestätigung Auftragsannahme + Honorar',      kategorie: 'Auftrag' },
+  { id: 'bsa_termin',                 typ: 'bescheinigung_termin',            titel: 'Termin-Bescheinigung',            beschreibung: 'Anwesenheit / Verhinderung',                 kategorie: 'Termin' },
+  { id: 'bsa_maengelfreiheit',        typ: 'bescheinigung_maengelfreiheit',   titel: 'Mängelfreiheit',                  beschreibung: 'Bestätigung mangelfreier Zustand',            kategorie: 'Zustand' },
+  { id: 'bsa_zustand',                typ: 'bescheinigung_zustand',           titel: 'Zustands-Bescheinigung',          beschreibung: 'Allgemeine Zustandsfeststellung',            kategorie: 'Zustand' },
+  { id: 'bsa_beweissicherung',        typ: 'bescheinigung_beweissicherung',   titel: 'Beweissicherung',                 beschreibung: 'Beweissichernde Feststellung',               kategorie: 'Beweissicherung' },
+  { id: 'bsa_schimmelfreiheit',       typ: 'bescheinigung_schimmelfreiheit',  titel: 'Schimmelfreiheit',                beschreibung: 'Bestätigung schimmelfreier Räume',           kategorie: 'Schaden' },
+  { id: 'bsa_feuchtigkeit',           typ: 'bescheinigung_feuchtigkeit',      titel: 'Feuchtigkeits-Bescheinigung',     beschreibung: 'Messwerte + Bewertung',                       kategorie: 'Schaden' },
+  { id: 'bsa_standsicherheit',        typ: 'bescheinigung_standsicherheit',   titel: 'Standsicherheit',                 beschreibung: 'Bestätigung Standsicherheit',                kategorie: 'Statik' },
+  { id: 'bsa_bedenken_vob',           typ: 'bescheinigung_bedenken_vob',      titel: 'Bedenken §4 Nr.3 VOB/B',          beschreibung: 'Anmeldung Bedenken (Auftragnehmer-Pflicht)', kategorie: 'VOB' },
+  { id: 'bsa_behinderung_vob',        typ: 'bescheinigung_behinderung_vob',   titel: 'Behinderung §6 Nr.1 VOB/B',       beschreibung: 'Anzeige Behinderung',                         kategorie: 'VOB' }
+];
+
 const state = {
   tab: 'normen',
   items: [],
@@ -192,8 +220,37 @@ const state = {
   sort: 'haeufigkeit',
   currentUser: null,
   workspaceId: null,
-  editing: null
+  editing: null,
+  // MEGA84/85 Pass 2c Block H: Context-aware-Insert via URL-Param
+  context: null  // { aktion:'insert', auftragId, az } oder null
 };
+
+// MEGA84/85 Pass 2c Block H: URL-Param-Handler — ?aktion=insert&auftrag_id=...
+function parseContextFromUrl() {
+  try {
+    const u = new URL(window.location.href);
+    const aktion = u.searchParams.get('aktion');
+    const auftragId = u.searchParams.get('auftrag_id');
+    if (aktion === 'insert' && auftragId) {
+      return { aktion, auftragId, az: null };
+    }
+  } catch(_) {}
+  return null;
+}
+
+async function _hydrateContextAz() {
+  if (!state.context?.auftragId) return;
+  try {
+    const { data } = await supabase.from('auftraege').select('az').eq('id', state.context.auftragId).maybeSingle();
+    if (data?.az) {
+      state.context.az = data.az;
+      const elAz = document.getElementById('bib-ctx-az');
+      if (elAz) elAz.textContent = 'Akte ' + data.az;
+      const banner = document.getElementById('bib-context-banner');
+      if (banner) banner.style.display = 'flex';
+    }
+  } catch(_) {}
+}
 
 function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c])); }
 function toast(msg, kind) {
@@ -219,17 +276,32 @@ async function loadTab(tab) {
   document.getElementById('bib-search').value = '';
   const grid = document.getElementById('bib-grid');
   grid.innerHTML = '<div class="bib-loading">Lade…</div>';
-  document.getElementById('bib-btn-add').textContent = tab === 'normen' ? '+ Neue Norm' : '+ Neuer Textbaustein';
+  // MEGA84/85 Pass 2c Block H: Add-Button-Label + Sichtbarkeit pro Tab
+  const addBtn = document.getElementById('bib-btn-add');
+  if (tab === 'normen')              addBtn.textContent = '+ Neue Norm';
+  else if (tab === 'textbausteine')  addBtn.textContent = '+ Neuer Textbaustein';
+  else if (tab === 'briefe')         addBtn.textContent = '+ Neue Brief-Vorlage';
+  else                                addBtn.textContent = '+ Eintrag';
+  addBtn.style.display = (tab === 'bescheinigungen' || tab === 'suche360') ? 'none' : '';
+
   // Filter-Dropdowns rebuilden
   const f1 = document.getElementById('bib-filter-1');
   const f2 = document.getElementById('bib-filter-2');
   if (tab === 'normen') {
     f1.innerHTML = '<option value="">Alle Bereiche</option>' + BEREICH_OPTIONS.map(b => `<option value="${esc(b)}">${esc(b)}</option>`).join('');
     f2.innerHTML = '<option value="">Alle Häufigkeiten</option>' + HAEUFIGKEIT_OPTIONS.map(h => `<option value="${esc(h)}">${esc(h)}</option>`).join('');
-  } else {
+  } else if (tab === 'textbausteine') {
     f1.innerHTML = '<option value="">Alle Kategorien</option>' + KATEGORIE_OPTIONS.map(k => `<option value="${esc(k)}">${esc(k)}</option>`).join('');
     f2.innerHTML = '<option value="">Alle Quellen</option><option value="global">Nur Master/global</option><option value="eigen">Nur eigene</option>';
+  } else if (tab === 'bescheinigungen') {
+    const cats = Array.from(new Set(BESCHEINIGUNGS_TEMPLATES.map(t => t.kategorie))).sort();
+    f1.innerHTML = '<option value="">Alle Kategorien</option>' + cats.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
+    f2.innerHTML = '<option value="">—</option>';
+  } else {
+    f1.innerHTML = '<option value="">—</option>';
+    f2.innerHTML = '<option value="">—</option>';
   }
+
   try {
     if (tab === 'normen') {
       const { data, error } = await supabase.from('normen_bibliothek')
@@ -240,7 +312,7 @@ async function loadTab(tab) {
         .limit(500);
       if (error) throw error;
       state.items = data || [];
-    } else {
+    } else if (tab === 'textbausteine') {
       const { data, error } = await supabase.from('textbausteine')
         .select('id, titel, text, text_kurz, kategorie, schadenart, tags, is_global, nutzungen, letzte_nutzung_at, notiz, workspace_id, created_at')
         .is('deleted_at', null)
@@ -248,11 +320,78 @@ async function loadTab(tab) {
         .limit(500);
       if (error) throw error;
       state.items = data || [];
+    } else if (tab === 'briefe') {
+      // MEGA84/85 Pass 2c Block H: Brief-Vorlagen aus user_vorlagen (per-user via RLS)
+      const { data, error } = await supabase.from('user_vorlagen')
+        .select('id, name, source_filename, variables, is_active, created_at, updated_at')
+        .eq('is_active', true)
+        .order('updated_at', { ascending: false, nullsFirst: false })
+        .limit(200);
+      if (error) throw error;
+      state.items = (data || []).map(v => ({
+        id: v.id,
+        titel: v.name,
+        source_filename: v.source_filename,
+        variables: v.variables,
+        text: '(HTML-Vorlage — wird in Brief-Editor gerendert)',
+        created_at: v.created_at,
+        updated_at: v.updated_at
+      }));
+    } else if (tab === 'bescheinigungen') {
+      // MEGA84/85 Pass 2c Block H: Static-Templates aus dokument_typ-ENUM (12 Stück)
+      state.items = BESCHEINIGUNGS_TEMPLATES.slice();
+    } else if (tab === 'suche360') {
+      state.items = [];
     }
     render();
   } catch (e) {
     grid.innerHTML = `<div class="bib-empty">Fehler: ${esc(e.message)}</div>`;
   }
+}
+
+// MEGA84/85 Pass 2c Block H: 360°-Suche via global_search_v2 RPC (Pass 2b Migration 59)
+async function runSuche360(q) {
+  const grid = document.getElementById('bib-grid');
+  if (!q || q.length < 2) {
+    grid.innerHTML = '<div class="bib-empty">Mindestens 2 Zeichen. Sucht in Aufträgen, Dokumenten, Kontakten, Textbausteinen, Normen.</div>';
+    state.items = [];
+    document.getElementById('bib-count').textContent = '—';
+    return;
+  }
+  grid.innerHTML = '<div class="bib-loading">Suche…</div>';
+  try {
+    let wsId = state.workspaceId;
+    const { data, error } = await supabase.rpc('global_search_v2', {
+      p_workspace_id: wsId, p_query: q, p_limit: 50
+    });
+    if (error) throw error;
+    state.items = (data || []).map(row => ({
+      id: row.id, titel: row.title,
+      source: row.source, subtitle: row.subtitle, href: row.href, rank: row.rank
+    }));
+    document.getElementById('bib-count').textContent = state.items.length + ' Treffer';
+    if (state.items.length === 0) {
+      grid.innerHTML = '<div class="bib-empty">Keine Treffer für „' + esc(q) + '"</div>';
+      return;
+    }
+    grid.innerHTML = state.items.map(renderSuche360Card).join('');
+    grid.querySelectorAll('[data-href]').forEach(c => {
+      c.addEventListener('click', () => { if (c.dataset.href) window.location.href = c.dataset.href; });
+    });
+  } catch (e) {
+    grid.innerHTML = `<div class="bib-empty">Fehler bei 360°-Suche: ${esc(e.message)}<br><br><small>Tipp: Migration 59 (global_search_v2) muss applied sein — siehe Pass 2b Checklist.</small></div>`;
+  }
+}
+
+function renderSuche360Card(it) {
+  const icon = ({auftrag:'📂',dokument:'📄',kontakt:'👥',textbaustein:'📝',norm:'📐'})[it.source] || '·';
+  return `<div class="bib-card" data-href="${esc(it.href || '#')}">
+    <div class="bib-card-head">
+      <div class="bib-card-title">${icon} ${esc(it.titel || '—')}</div>
+    </div>
+    <div class="bib-card-preview">${esc(it.subtitle || '')}</div>
+    <div class="bib-card-meta"><span class="bib-badge bib-badge--bereich">${esc(it.source)}</span></div>
+  </div>`;
 }
 
 function filterAndSort() {
@@ -262,15 +401,19 @@ function filterAndSort() {
     arr = arr.filter(i => {
       if (state.tab === 'normen') {
         return ((i.norm_nr || '') + ' ' + (i.titel || '') + ' ' + (i.anwendung || '')).toLowerCase().includes(q);
+      } else if (state.tab === 'briefe') {
+        return ((i.titel || '') + ' ' + (i.source_filename || '')).toLowerCase().includes(q);
+      } else if (state.tab === 'bescheinigungen') {
+        return ((i.titel || '') + ' ' + (i.beschreibung || '') + ' ' + (i.kategorie || '')).toLowerCase().includes(q);
       } else {
         return ((i.titel || '') + ' ' + (i.text || '') + ' ' + (i.kategorie || '')).toLowerCase().includes(q);
       }
     });
   }
   if (state.filter1) {
-    arr = state.tab === 'normen'
-      ? arr.filter(i => i.bereich === state.filter1)
-      : arr.filter(i => i.kategorie === state.filter1);
+    if (state.tab === 'normen')             arr = arr.filter(i => i.bereich === state.filter1);
+    else if (state.tab === 'bescheinigungen') arr = arr.filter(i => i.kategorie === state.filter1);
+    else                                     arr = arr.filter(i => i.kategorie === state.filter1);
   }
   if (state.filter2) {
     if (state.tab === 'normen') {
@@ -291,17 +434,29 @@ function filterAndSort() {
 
 function render() {
   const grid = document.getElementById('bib-grid');
+  // MEGA84/85 Pass 2c Block H: suche360-Tab nutzt eigenen Render-Path (runSuche360)
+  if (state.tab === 'suche360') {
+    if (!state.search || state.search.length < 2) {
+      grid.innerHTML = '<div class="bib-empty"><div style="font-size:36px;opacity:.4;margin-bottom:8px;">🔎</div><div style="font-size:14px;font-weight:600;color:var(--text);">360°-Suche</div><div style="font-size:12px;color:var(--text2);margin-top:6px;max-width:420px;margin:6px auto 0;line-height:1.5;">Volltext-Suche über Aufträge, Dokumente, Kontakte, Textbausteine und Normen via <code>global_search_v2</code>.</div></div>';
+      document.getElementById('bib-count').textContent = '—';
+    }
+    return;
+  }
   const arr = filterAndSort();
   document.getElementById('bib-count').textContent = arr.length + ' Einträge';
   if (state.items.length === 0) {
     const cfg = state.tab === 'normen'
       ? { icon: '📐', label: 'Normen', target: '/normen.html', cta: '+ Erste Norm hinzufügen', hint: 'DIN-Normen + Grenzwerte + Anwendung — wiederverwendbar in jedem Gutachten. Oder Admin: /tools/migrate-bibliothek-airtable.html' }
+      : state.tab === 'briefe'
+      ? { icon: '📨', label: 'Brief-Vorlagen', target: '/briefe.html', cta: '+ Erste Vorlage hochladen', hint: 'HTML-Vorlagen mit Variablen-Platzhaltern. Werden im Brief-Editor gerendert.' }
+      : state.tab === 'bescheinigungen'
+      ? { icon: '📋', label: 'Bescheinigungen', target: '/bescheinigungen.html', cta: 'Zum Bescheinigungs-Generator →', hint: '12 vordefinierte Bescheinigungs-Typen aus dem Dokument-ENUM. Erstelle eine Bescheinigung direkt für einen Auftrag.' }
       : { icon: '📝', label: 'Textbausteine', target: '/textbausteine.html', cta: '+ Ersten Textbaustein anlegen', hint: 'Wiederkehrende Textpassagen mit Platzhaltern. Oder Admin: /tools/migrate-bibliothek-airtable.html' };
     grid.innerHTML = `<div class="bib-empty">
       <div style="font-size:48px;margin-bottom:12px;opacity:.4;">${cfg.icon}</div>
       <div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:6px;">Noch keine ${cfg.label} hinterlegt</div>
       <div style="font-size:13px;color:var(--text2);margin-bottom:18px;max-width:480px;margin:0 auto 18px;line-height:1.5;">${cfg.hint}</div>
-      <button class="bib-btn-add" onclick="openCreateModal()">${cfg.cta} →</button>
+      <button class="bib-btn-add" onclick="${state.tab === 'bescheinigungen' ? `window.location.href='${cfg.target}'` : 'openCreateModal()'}">${cfg.cta} →</button>
     </div>`;
     return;
   }
@@ -309,10 +464,46 @@ function render() {
     grid.innerHTML = '<div class="bib-empty">Keine Treffer für aktuellen Filter.</div>';
     return;
   }
-  grid.innerHTML = arr.map(it => state.tab === 'normen' ? renderNormCard(it) : renderBausteinCard(it)).join('');
+  grid.innerHTML = arr.map(it => {
+    if (state.tab === 'normen')          return renderNormCard(it);
+    if (state.tab === 'briefe')          return renderBriefCard(it);
+    if (state.tab === 'bescheinigungen') return renderBescheinigungCard(it);
+    return renderBausteinCard(it);
+  }).join('');
   grid.querySelectorAll('[data-card-id]').forEach(c => {
     c.addEventListener('click', () => openDetailModal(c.dataset.cardId));
   });
+}
+
+// MEGA84/85 Pass 2c Block H: Brief-Vorlagen + Bescheinigungs-Karten
+function renderBriefCard(b) {
+  return `<div class="bib-card" data-card-id="${esc(b.id)}">
+    <div class="bib-card-head">
+      <div class="bib-card-title">📨 ${esc(b.titel || '—')}</div>
+    </div>
+    <div class="bib-card-preview">${esc(b.source_filename || 'HTML-Vorlage')}</div>
+    <div class="bib-card-meta">
+      <span class="bib-badge bib-badge--kategorie">Brief-Vorlage</span>
+    </div>
+    <div class="bib-card-footer">
+      <span>${b.variables ? Object.keys(b.variables).length + ' Variablen' : '0 Variablen'}</span>
+    </div>
+  </div>`;
+}
+
+function renderBescheinigungCard(t) {
+  return `<div class="bib-card" data-card-id="${esc(t.id)}">
+    <div class="bib-card-head">
+      <div class="bib-card-title">📋 ${esc(t.titel || '—')}</div>
+    </div>
+    <div class="bib-card-preview">${esc(t.beschreibung || '')}</div>
+    <div class="bib-card-meta">
+      <span class="bib-badge bib-badge--bereich">${esc(t.kategorie)}</span>
+    </div>
+    <div class="bib-card-footer">
+      <span style="font-family:ui-monospace,Consolas,monospace;font-size:10px;">${esc(t.typ)}</span>
+    </div>
+  </div>`;
 }
 
 function renderNormCard(n) {
@@ -363,6 +554,36 @@ window.openDetailModal = function(id) {
   const isOwn = (!it.is_global) && it.workspace_id === state.workspaceId;
   document.getElementById('md-title').textContent = (state.tab === 'normen' ? (it.norm_nr + ' · ') : '') + (it.titel || '—');
   const body = document.getElementById('md-body');
+  if (state.tab === 'briefe') {
+    body.innerHTML = `
+      ${field('Quelle', it.source_filename || '—')}
+      ${field('Aktiv', 'Ja')}
+      ${field('Variablen', it.variables ? Object.keys(it.variables).join(', ') || '(keine)' : '(keine)')}
+      <p style="margin-top:12px;font-size:12px;color:var(--text2);">HTML-Vorlage öffnen + verwenden: <a href="/briefe.html?vorlage_id=${esc(it.id)}" style="color:var(--accent);">Brief erstellen →</a></p>`;
+    const foot = document.getElementById('md-foot');
+    foot.innerHTML = state.context
+      ? `<button class="bib-modal-btn" onclick="closeDetailModal()">Schließen</button>
+         <button class="bib-modal-btn bib-modal-btn-primary" onclick="window.location.href='/briefe.html?vorlage_id=${esc(it.id)}&auftrag_id=${esc(state.context.auftragId)}'">📂 In Akte ${esc(state.context.az || '')} einfügen</button>`
+      : `<button class="bib-modal-btn" onclick="closeDetailModal()">Schließen</button>
+         <button class="bib-modal-btn bib-modal-btn-primary" onclick="window.location.href='/briefe.html?vorlage_id=${esc(it.id)}'">📨 Brief erstellen</button>`;
+    modal.classList.add('is-open');
+    return;
+  }
+  if (state.tab === 'bescheinigungen') {
+    body.innerHTML = `
+      ${field('Kategorie', it.kategorie)}
+      ${field('Dokument-Typ', it.typ)}
+      ${field('Beschreibung', it.beschreibung || '—')}
+      <p style="margin-top:12px;font-size:12px;color:var(--text2);">Diese Bescheinigung wird über den Bescheinigungs-Generator erstellt.</p>`;
+    const foot = document.getElementById('md-foot');
+    foot.innerHTML = state.context
+      ? `<button class="bib-modal-btn" onclick="closeDetailModal()">Schließen</button>
+         <button class="bib-modal-btn bib-modal-btn-primary" onclick="window.location.href='/bescheinigungen.html?typ=${esc(it.typ)}&auftrag_id=${esc(state.context.auftragId)}'">📂 Für Akte ${esc(state.context.az || '')} erstellen</button>`
+      : `<button class="bib-modal-btn" onclick="closeDetailModal()">Schließen</button>
+         <button class="bib-modal-btn bib-modal-btn-primary" onclick="window.location.href='/bescheinigungen.html?typ=${esc(it.typ)}'">📋 Bescheinigung erstellen</button>`;
+    modal.classList.add('is-open');
+    return;
+  }
   if (state.tab === 'normen') {
     body.innerHTML = `
       ${it.bereich ? field('Bereich', it.bereich) : ''}
@@ -385,9 +606,10 @@ window.openDetailModal = function(id) {
   }
   const foot = document.getElementById('md-foot');
   const copyText = state.tab === 'normen' ? `${it.norm_nr || ''} · ${it.titel || ''}${it.anwendung ? '\n' + it.anwendung : ''}` : (it.text || it.titel || '');
+  const ctaLabel = state.context ? `📂 In Akte ${esc(state.context.az || '')} einfügen` : '✏ In Editor verwenden';
   foot.innerHTML = `
     <button class="bib-modal-btn" onclick="copyText('${encodeURIComponent(copyText)}')">📋 Kopieren</button>
-    <button class="bib-modal-btn" onclick="insertInEditor('${esc(it.id)}')">✏ In Editor verwenden</button>
+    <button class="bib-modal-btn bib-modal-btn-primary" onclick="insertInEditor('${esc(it.id)}')">${ctaLabel}</button>
     ${isOwn ? `<button class="bib-modal-btn" onclick="openCreateModal('${esc(it.id)}')">✏ Bearbeiten</button>` : ''}
     ${isOwn ? `<button class="bib-modal-btn bib-modal-btn-danger" onclick="deleteItem('${esc(it.id)}')">🗑 Löschen</button>` : ''}
   `;
@@ -406,6 +628,17 @@ window.insertInEditor = function(id) {
   const it = state.items.find(x => x.id === id);
   if (!it) return;
   try {
+    // MEGA84/85 Pass 2c Block H: Context-aware-Insert
+    // Wenn ?aktion=insert&auftrag_id=... gesetzt → direkt zur Akte navigieren mit pending-insert.
+    if (state.context && state.context.auftragId) {
+      localStorage.setItem('prova_bibliothek_pending_insert', JSON.stringify({
+        type: state.tab, id: it.id, titel: it.titel,
+        text: it.text || it.anwendung, normNr: it.norm_nr,
+        auftragId: state.context.auftragId, at: Date.now()
+      }));
+      window.location.href = `/akte.html?id=${encodeURIComponent(state.context.auftragId)}&bib_insert=1`;
+      return;
+    }
     if (window.opener && !window.opener.closed) {
       const evt = state.tab === 'normen' ? 'prova:insert-norm' : 'prova:insert-baustein';
       window.opener.dispatchEvent(new CustomEvent(evt, { detail: { id: it.id, titel: it.titel, text: it.text || it.anwendung, normNr: it.norm_nr } }));
@@ -522,7 +755,17 @@ window.switchTab = function(tab) {
   document.querySelectorAll('.bib-tab').forEach(b => b.classList.toggle('is-active', b.dataset.tab === tab));
   loadTab(tab);
 };
-document.getElementById('bib-search').addEventListener('input', e => { state.search = e.target.value; render(); });
+// MEGA84/85 Pass 2c Block H: Search-Input — debounced + 360°-Tab nutzt global_search_v2
+let _searchDebounce = null;
+document.getElementById('bib-search').addEventListener('input', e => {
+  state.search = e.target.value;
+  if (state.tab === 'suche360') {
+    clearTimeout(_searchDebounce);
+    _searchDebounce = setTimeout(() => runSuche360(state.search), 240);
+  } else {
+    render();
+  }
+});
 document.getElementById('bib-filter-1').addEventListener('change', e => { state.filter1 = e.target.value; render(); });
 document.getElementById('bib-filter-2').addEventListener('change', e => { state.filter2 = e.target.value; render(); });
 document.getElementById('bib-sort').addEventListener('change', e => { state.sort = e.target.value; render(); });
@@ -531,7 +774,10 @@ document.addEventListener('keydown', e => {
 });
 
 (async function init() {
+  // MEGA84/85 Pass 2c Block H: Context-aware-Insert via URL-Param ?aktion=insert&auftrag_id=...
+  state.context = parseContextFromUrl();
   await loadCurrentUser();
+  if (state.context) { _hydrateContextAz(); }
   await loadTab('normen');
 })();
 </script>

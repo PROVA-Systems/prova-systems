@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v3550-mega84-85-pass2b-compliance-search';   // MEGA⁸⁴/⁸⁵ Pass 2b 2026-05-17: Block D PDF-Compliance LG-Disclosure (Liquid-Block-Doku fuer F-04/F-09/F-15 + freigabe-wizard Pre-Render-Check ki_anzeige_datum Pflicht) + Block E Trial-Guard (lib/trial-banner.js mit 14T/3T/expired-States + Coupon-UI in app-register fuer FOUNDING-99/FRIEND-50/WERBER-MONAT-FREI) + Block F Global-Search 360 (Migration 59 global_search_v2 RPC mit per-source-limit + lib/prova-global-search.js auf v2 mit v1-Fallback). Sprint-Historie: docs/SW-VERSION-HISTORY.md.
+const CACHE_VERSION = 'prova-v3600-mega84-85-complete';   // MEGA⁸⁴/⁸⁵ Pass 2c Sprint-Final 2026-05-17: Block G audit-log-v1 (neue Edge supabase/functions/audit-log-v1 mit Task-Router ki_request|login|gdpr_export|gdpr_delete|admin_action|generic + Integrity-Hash-Kette prev_hash/integrity_hash + Rate-Limit 200/min + Konsolidierungs-Doku MEGA84-AUDIT-EDGES-DEPRECATED.md fuer 5 alte Caller, alte Edges bleiben funktional) + Block H Bibliothek-Funktion (bibliothek.html additiv um 3 Tabs erweitert: Briefe-Vorlagen aus user_vorlagen + Bescheinigungen mit 12 Static-Templates aus dokument_typ-ENUM + 360-Suche via global_search_v2 + Context-aware-Insert via URL-Param ?aktion=insert&auftrag_id=...). Sprint-Historie: docs/SW-VERSION-HISTORY.md.
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
