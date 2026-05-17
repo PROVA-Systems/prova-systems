@@ -85,6 +85,9 @@ Diese Netlify Functions sind extern registriert oder zeitkritisch — **NIE in 4
 - **`git push` ohne Marcel-OK**: settings.json `ask`-Liste schützt — nie umgehen.
 - **Audit-Integrity-Hash-Chain** (MEGA⁸⁴/⁸⁵ Pass 2c Block G): `integrity_hash = sha256(prev_hash || canonicalJson({workspace_id,user_id,action,entity_*,payload,source,task}))`. `canonicalJson()` sortiert Keys → stabile Hashes. Pattern in `supabase/functions/audit-log-v1/index.ts` referenzierbar. Tampering bricht Kette für alle nachfolgenden Einträge.
 - **Additive Strategy bei Multi-Tab-Pages**: bestehende Tabs nicht refactorn, neue Tabs hinzufügen + Filter/Render/Empty-State pro Tab branchen. `bibliothek.html` Pass 2c als Referenz: 2 Tabs → 5 Tabs mit ~190 Z additiv, 0 Z Breaking.
+- **Memory ≠ DB-Wahrheit** (MEGA⁸⁷ Block A): Marcel-Memory zu `member_rolle` ENUM (super_admin/admin/sv/member/viewer) war falsch — DB hatte `{owner,admin,sv,assistenz,readonly}`. Pattern: bei jedem Auth/Permission-Sprint zuerst SQL `enum_range(...)` ausführen statt Memory vertrauen.
+- **Recovery-Codes Hash-Strategie** (MEGA⁸⁷ Block D): sha256 statt bcrypt für TOTP-Recovery-Codes — Performance (10ms vs 100ms) + Linear-Search über 10 Codes akzeptabel + Salt unnötig bei 32^8 Entropie. Constant-time Compare via eigene `timingSafeEqual`-Implementation. Plaintext-Code-Format `XXXX-XXXX` aus 32-Alpha ohne I/O/0/1 für Lesbarkeit.
+- **Polyfill als bewusste Compat-Architektur** (MEGA⁸⁷ Block B): Wenn 14+ Production-Files eine alte API (`window.netlifyIdentity.*`) callen, lieber Polyfill-Lib (~140 Z) die intern auf neue Stack umleitet — als 14-File-Refactor. `lib/netlify-identity-polyfill.js` als Referenz.
 
 ---
 

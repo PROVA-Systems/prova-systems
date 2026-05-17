@@ -8,6 +8,20 @@ Format: **vNNNN-marker** | YYYY-MM-DD | Sprint | Kurz-Note
 
 ---
 
+## 2026-05-17 — MEGA-Serie #12 (MEGA⁸⁷ AUTH-PERFEKT 2.0)
+
+**v3800-mega87-auth-perfekt-2-0** | 2026-05-17 | MEGA⁸⁷ AUTH-PERFEKT 2.0 Voll-Rebuild
+- Block A Audit + Inventory: docs/MEGA87-AUTH-INVENTORY.md (29 Files mit netlifyIdentity-Refs alle ueber Polyfill) + docs/MEGA87-PERMISSION-MATRIX.md mit member_rolle ENUM-Wahrheit `{owner,admin,sv,assistenz,readonly}` (Abweichung von Marcel-Memory dokumentiert).
+- Block B Netlify-Identity-Removal: docs/MEGA87-NETLIFY-IDENTITY-REMOVAL.md — bereits seit MEGA46 (2026-05-09) entfernt, Polyfill bleibt als bewusste Compat-Architektur (verhindert 14 Files Refactor). ENV-Cleanup-Pfad dokumentiert.
+- Block C Migration 61: supabase-migrations/61_mega87_totp_recovery_codes_meta.sql — ALTER users ADD totp_recovery_codes_generated_at + totp_recovery_codes_used_count + Partial-Index totp_enabled. Idempotent.
+- Block D 2FA-Komplett: supabase/functions/verify-mfa-recovery-code/index.ts NEU (~140 Z) mit Email+Password Pre-Auth + constant-time sha256-Match gegen totp_recovery_codes-Array + Code-Verbrauch + last_used_at + audit-log-v1 + warning bei <=3 verbleibenden + Session-Return. supabase/functions/generate-mfa-recovery-codes/index.ts NEU (~110 Z) generiert 10 Codes Format XXXX-XXXX aus ALPHA ohne I/O/0/1, speichert sha256-Hashes, reset used_count. account-2fa-status.html NEU (~170 Z) als 2FA-Verwaltungs-Page mit Status + Recovery-Codes-Counter + Regen-Button + 2FA-Deaktivieren-Link.
+- Block E Workspace-Switcher: lib/workspace-switcher.js NEU (~165 Z) mit Auto-Mount-Dropdown (sucht #prova-ws-switcher-mount / .sb-account-footer / header.topbar) + nur sichtbar bei >=2 Memberships + Audit-Log bei Switch via audit-log-v1 + localStorage prova-active-workspace + Page-Reload mit neuem Context. dashboard.html eingebunden.
+- Block F Workspace-Invitations: workspace-invite.html NEU mit Email-Form + Rolle-Dropdown (4 Rollen mit Info-Text) + Persönliche-Nachricht. supabase/functions/send-workspace-invitation NEU (~110 Z) mit Permission-Check (owner/admin/can_invite_members) + 7d-Token + INSERT workspace_invitations + send-email-Wrapper + Audit-Log. workspace-accept-invitation.html NEU (~160 Z) mit Token-Verify + Status-Check + Ablauf-Check + Email-Match + Annehmen-Button (INSERT workspace_memberships + Update status) + Ablehnen-Button.
+- Block G Account-Settings: einstellungen.html erweitert (~80 Z additiv) um Alle-Sessions-Ausloggen-Button mit signOut({scope:'global'}) + 2FA-Status-Link zur neuen Page + Workspace-Mitgliedschaften-Summary (laedt via supabase mit Rolle-Anzeige) + Team-Invite-Link auf /workspace-invite.html (vorher disabled).
+- Block H Auth-Cockpit: admin-kpis.html Live-Sessions-Section (user_sessions WHERE last_activity_at > NOW-15min, mit Email-JOIN + Device-Icon + Geo + Force-Sign-Out-Button) + Failed-Login-Drilldown-Modal (auf KPI-Card-Click, Top-10 Email/IP-Aggregation aus audit_trail action=login_failed letzte 24h).
+
+---
+
 ## 2026-05-17 — MEGA-Serie #10 Pass 2c (Sprint-Final)
 
 **v3600-mega84-85-complete** | 2026-05-17 | MEGA⁸⁴/⁸⁵ Pass 2c Audit-Konsolidierung + Bibliothek + Sprint-Final

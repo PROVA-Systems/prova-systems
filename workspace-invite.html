@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Workspace-Mitglied einladen · PROVA</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="/lib/prova-config.js"></script>
+<script src="/lib/prova-legacy-bridge.js"></script>
+<script src="/lib/edge-shim.js"></script>
+<script src="prova-fetch-auth.js"></script>
+<script>
+(function () {
+  try {
+    var token = localStorage.getItem('prova_auth_token');
+    if (!token) { window.location.replace('/login?next=' + encodeURIComponent(location.pathname)); return; }
+  } catch (e) { window.location.replace('/login'); }
+})();
+</script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',system-ui,sans-serif;background:#0b0d11;color:#eaecf4;min-height:100vh;line-height:1.5;padding:20px;}
+.wrap{max-width:560px;margin:0 auto;padding:32px 0;}
+h1{font-size:24px;font-weight:800;margin-bottom:6px;}
+.subtitle{color:#8b93ab;font-size:14px;margin-bottom:24px;}
+.card{background:#1c2130;border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:24px;}
+label{display:block;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#8b93ab;margin-bottom:6px;}
+input,select,textarea{width:100%;padding:10px 14px;background:#0b0d11;border:1px solid rgba(255,255,255,.13);border-radius:8px;color:#eaecf4;font:14px 'DM Sans',sans-serif;outline:none;}
+input:focus,select:focus,textarea:focus{border-color:#4f8ef7;}
+textarea{resize:vertical;min-height:80px;}
+.field{margin-bottom:16px;}
+.help{font-size:11.5px;color:#5a6380;margin-top:4px;}
+.btn{padding:11px 22px;background:linear-gradient(135deg,#4f8ef7,#3a7be0);border:none;color:#fff;border-radius:8px;font:700 14px inherit;cursor:pointer;min-height:44px;}
+.btn:disabled{opacity:.5;cursor:not-allowed;}
+.btn-ghost{background:transparent;border:1px solid rgba(255,255,255,.15);color:#8b93ab;}
+.msg{padding:10px 14px;border-radius:8px;font-size:13px;margin-top:14px;}
+.msg-success{background:rgba(16,185,129,.1);color:#10b981;border:1px solid rgba(16,185,129,.3);}
+.msg-error{background:rgba(239,68,68,.1);color:#ef4444;border:1px solid rgba(239,68,68,.3);}
+.back-link{color:#8b93ab;text-decoration:none;font-size:13px;margin-bottom:14px;display:inline-block;}
+.back-link:hover{color:#eaecf4;}
+.rolle-info{font-size:12px;color:#8b93ab;margin-top:8px;padding:8px 12px;background:rgba(79,142,247,.06);border-left:3px solid #4f8ef7;border-radius:4px;line-height:1.5;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<a href="/einstellungen.html" class="back-link">← Zurück</a>
+<h1>👥 Workspace-Mitglied einladen</h1>
+<p class="subtitle">Lade einen Sachverständigen oder Assistenz-Mitarbeiter zu deinem Workspace ein.</p>
+
+<div class="card">
+  <div class="field">
+    <label for="email">Email-Adresse</label>
+    <input type="email" id="email" placeholder="kollege@beispiel.de" autocomplete="email">
+  </div>
+  <div class="field">
+    <label for="rolle">Rolle</label>
+    <select id="rolle">
+      <option value="sv">Sachverständiger (SV)</option>
+      <option value="assistenz">Assistenz</option>
+      <option value="admin">Admin (Stellvertreter)</option>
+      <option value="readonly">Read-Only</option>
+    </select>
+    <div class="rolle-info" id="rolle-info">Sachverständiger — kann eigene Aufträge anlegen + bearbeiten, kein Member-Invite, kein Billing-Zugriff.</div>
+  </div>
+  <div class="field">
+    <label for="msg">Persönliche Nachricht (optional)</label>
+    <textarea id="msg" placeholder="Hi! Ich lade dich zu meinem PROVA-Workspace ein …"></textarea>
+    <div class="help">Wird in der Einladungs-Email angezeigt.</div>
+  </div>
+  <button class="btn" id="send-btn" onclick="sendInvite()">📨 Einladung senden</button>
+  <a href="/einstellungen.html" class="btn btn-ghost" style="margin-left:8px;text-decoration:none;display:inline-block;">Abbrechen</a>
+  <div id="msg" style="display:none;"></div>
+</div>
+
+</div>
+
+<script type="module">
+import { supabase, getActiveWorkspaceId } from '/lib/supabase-client.js';
+
+const ROLLE_INFOS = {
+  sv: 'Sachverständiger — kann eigene Aufträge anlegen + bearbeiten, kein Member-Invite, kein Billing-Zugriff.',
+  assistenz: 'Assistenz — read + create + bearbeiten zugewiesener Aufträge, keine Delete-Rechte.',
+  admin: 'Admin — Stellvertreter mit can_invite/billing/export/delete-Rechten.',
+  readonly: 'Read-Only — nur lesen, keine Änderungen möglich (z.B. für Share-Links).'
+};
+
+document.getElementById('rolle').addEventListener('change', (e) => {
+  document.getElementById('rolle-info').textContent = ROLLE_INFOS[e.target.value] || '';
+});
+
+window.sendInvite = async function() {
+  const email = document.getElementById('email').value.trim();
+  const rolle = document.getElementById('rolle').value;
+  const msg = document.getElementById('msg').value.trim();
+  const msgEl = document.getElementById('msg');
+  const btn = document.getElementById('send-btn');
+
+  function show(text, type) {
+    msgEl.style.display = 'block';
+    msgEl.className = 'msg msg-' + type;
+    msgEl.textContent = text;
+  }
+
+  if (!email.match(/^[^@\s]+@[^@\s]+\.[^@\s]+$/)) { show('Bitte gültige Email eingeben.', 'error'); return; }
+
+  btn.disabled = true; btn.textContent = '⏳ Sende…';
+  try {
+    const wsId = await getActiveWorkspaceId();
+    if (!wsId) throw new Error('Kein aktiver Workspace gefunden.');
+    const { data: { session } } = await supabase.auth.getSession();
+    const url = (window.PROVA_CONFIG?.SUPABASE_URL || '').replace(/\/$/,'');
+    const res = await fetch(url + '/functions/v1/send-workspace-invitation', {
+      method: 'POST',
+      headers: { 'Content-Type':'application/json', 'Authorization':'Bearer ' + session.access_token, 'apikey': window.PROVA_CONFIG.SUPABASE_ANON_KEY },
+      body: JSON.stringify({ workspace_id: wsId, email, rolle, persoenliche_nachricht: msg })
+    });
+    if (!res.ok) {
+      const err = await res.text();
+      throw new Error(err.slice(0, 200));
+    }
+    show('✅ Einladung gesendet an ' + email + ' (gültig 7 Tage)', 'success');
+    document.getElementById('email').value = '';
+    document.getElementById('msg').value = '';
+    btn.textContent = '📨 Einladung senden';
+    btn.disabled = false;
+  } catch (e) {
+    show('Fehler: ' + e.message, 'error');
+    btn.disabled = false;
+    btn.textContent = '📨 Einladung senden';
+  }
+};
+</script>
+
+</body>
+</html>
