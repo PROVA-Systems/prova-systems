@@ -641,14 +641,21 @@ function toggle407a(){
    Schema-konform: action='create', entity_typ='compliance_407a', payload JSONB. */
 async function logComplianceBestaetigung(auftragId) {
   try {
+    // MEGA86 Block B: Migration audit-trail-write → audit-log-v1 (task=generic)
     var fetcher = window.provaFetch || window.fetch.bind(window);
-    await fetcher('/.netlify/functions/audit-trail-write', {
+    var supabaseUrl = (window.PROVA_CONFIG && window.PROVA_CONFIG.SUPABASE_URL) || 'https://cngteblrbpwsyypexjrv.supabase.co';
+    var anonKey    = (window.PROVA_CONFIG && window.PROVA_CONFIG.SUPABASE_ANON_KEY) || '';
+    var jwt        = localStorage.getItem('prova_auth_token') || '';
+    await fetcher(supabaseUrl + '/functions/v1/audit-log-v1', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'apikey': anonKey, 'Authorization': 'Bearer ' + jwt },
       body: JSON.stringify({
+        task: 'generic',
         action: 'create',
         entity_typ: 'compliance_407a',
         entity_id: auftragId || null,
+        source: 'freigabe-logic',
+        kategorie: 'COMPLIANCE',
         payload: {
           kategorie: 'compliance_407a_bestaetigt',
           ts_407a:   localStorage.getItem('prova_407a_ts'),

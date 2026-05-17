@@ -233,7 +233,35 @@ a{color:inherit;text-decoration:none;}
     <div class="cp-events" id="cp-events"><div class="cp-empty">Wird geladen…</div></div>
   </section>
 
+  <!-- MEGA86 Block E: Support-Inbox mit Quick-Reply -->
+  <section class="cp-section">
+    <div class="cp-section-row">
+      <h2 class="cp-section-label"><span class="cp-section-label-icon">📨</span>Support-Inbox (offen)</h2>
+      <span class="cp-section-cta" id="cp-support-count" style="font-size:11px;color:var(--text2);">—</span>
+    </div>
+    <div id="cp-support-list" style="display:flex;flex-direction:column;gap:10px;"><div class="cp-empty">Wird geladen…</div></div>
+  </section>
+
 </main>
+
+<!-- MEGA86 Block E: Reply-Modal -->
+<div id="cp-reply-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9999;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px);">
+  <div style="background:var(--surface);border:1px solid var(--border2);border-radius:14px;max-width:640px;width:100%;display:flex;flex-direction:column;max-height:85vh;">
+    <div style="padding:18px 22px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
+      <h3 style="font-size:16px;font-weight:700;color:var(--text);" id="cp-reply-title">Support-Ticket beantworten</h3>
+      <button onclick="closeReplyModal()" style="background:transparent;border:none;color:var(--text2);font-size:22px;cursor:pointer;">×</button>
+    </div>
+    <div style="padding:18px 22px;overflow-y:auto;flex:1;">
+      <div id="cp-reply-context" style="font-size:12px;color:var(--text2);margin-bottom:14px;padding:10px 12px;background:var(--bg);border-radius:8px;border:1px solid var(--border);"></div>
+      <label style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;font-weight:700;display:block;margin-bottom:6px;">Antwort-Text</label>
+      <textarea id="cp-reply-text" style="width:100%;min-height:180px;padding:12px 14px;background:var(--bg);border:1px solid var(--border2);border-radius:8px;color:var(--text);font:14px 'DM Sans',sans-serif;resize:vertical;" placeholder="Hallo,&#10;&#10;vielen Dank für deine Anfrage..."></textarea>
+    </div>
+    <div style="padding:14px 22px;border-top:1px solid var(--border);display:flex;gap:10px;justify-content:flex-end;">
+      <button onclick="closeReplyModal()" style="padding:9px 18px;background:transparent;border:1px solid var(--border2);color:var(--text2);border-radius:7px;cursor:pointer;font:600 13px inherit;">Abbrechen</button>
+      <button id="cp-reply-send" onclick="sendReply()" style="padding:9px 18px;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;color:#fff;border-radius:7px;cursor:pointer;font:700 13px inherit;">📨 Antwort senden</button>
+    </div>
+  </div>
+</div>
 
 <script type="module">
   import { supabase } from '/lib/supabase-client.js';
@@ -418,12 +446,94 @@ a{color:inherit;text-decoration:none;}
     } catch(e){ alert('Fehler: ' + e.message); }
   };
 
+  // ── MEGA86 Block E: Support-Inbox + Quick-Reply ────────────────
+  let _supportTickets = [];
+  let _activeReplyTicket = null;
+  async function loadSupportInbox(){
+    try {
+      const { data, error } = await supabase.from('support_tickets')
+        .select('id, user_email, typ, prioritaet, status, titel, beschreibung, created_at, workspace_id')
+        .in('status', ['neu', 'in_bearbeitung'])
+        .order('created_at', { ascending: false })
+        .limit(15);
+      if (error) throw error;
+      _supportTickets = data || [];
+      document.getElementById('cp-support-count').textContent = _supportTickets.length + ' offen';
+      const wrap = document.getElementById('cp-support-list');
+      if (!_supportTickets.length) {
+        wrap.innerHTML = '<div class="cp-empty">Keine offenen Support-Anfragen 🎉</div>';
+        return;
+      }
+      wrap.innerHTML = _supportTickets.map(t => {
+        const prio = (t.prioritaet || 'normal').toUpperCase();
+        const prioColor = prio === 'KRITISCH' ? '#ef4444' : (prio === 'HOCH' ? '#f59e0b' : '#8b93ab');
+        return `<div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">
+          <div style="flex:1;min-width:0;">
+            <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px;flex-wrap:wrap;">
+              <span style="font-size:10px;font-weight:700;letter-spacing:.04em;color:${prioColor};">${prio}</span>
+              <span style="font-size:11px;color:var(--text3);">${esc(relTime(t.created_at))}</span>
+              <span style="font-size:11px;color:var(--text2);">${esc(t.user_email || '?')}</span>
+            </div>
+            <div style="font-weight:600;font-size:14px;color:var(--text);margin-bottom:4px;">${esc(t.titel || 'Ohne Titel')}</div>
+            <div style="font-size:12px;color:var(--text2);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">${esc(t.beschreibung || '')}</div>
+          </div>
+          <button onclick="openReplyModal('${esc(t.id)}')" style="padding:8px 14px;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;color:#fff;border-radius:7px;cursor:pointer;font:700 12px inherit;white-space:nowrap;">📨 Antworten</button>
+        </div>`;
+      }).join('');
+    } catch(e) {
+      console.error('[cp support]', e);
+      document.getElementById('cp-support-list').innerHTML = '<div class="cp-empty">Fehler beim Laden.</div>';
+    }
+  }
+  window.openReplyModal = function(id) {
+    _activeReplyTicket = _supportTickets.find(t => t.id === id);
+    if (!_activeReplyTicket) return;
+    document.getElementById('cp-reply-title').textContent = 'Beantworte: ' + (_activeReplyTicket.titel || 'Support-Ticket');
+    document.getElementById('cp-reply-context').innerHTML =
+      '<strong>Von:</strong> ' + esc(_activeReplyTicket.user_email || '?') + '<br>' +
+      '<strong>Typ:</strong> ' + esc(_activeReplyTicket.typ || '—') + ' · <strong>Priorität:</strong> ' + esc(_activeReplyTicket.prioritaet || '—') + '<br>' +
+      '<strong>Nachricht:</strong><br><div style="margin-top:6px;color:var(--text);">' + esc(_activeReplyTicket.beschreibung || '').replace(/\n/g,'<br>') + '</div>';
+    document.getElementById('cp-reply-text').value = '';
+    document.getElementById('cp-reply-modal').style.display = 'flex';
+  };
+  window.closeReplyModal = function() {
+    document.getElementById('cp-reply-modal').style.display = 'none';
+    _activeReplyTicket = null;
+  };
+  window.sendReply = async function() {
+    if (!_activeReplyTicket) return;
+    const text = document.getElementById('cp-reply-text').value.trim();
+    if (text.length < 5) { alert('Antwort zu kurz (min. 5 Zeichen).'); return; }
+    const btn = document.getElementById('cp-reply-send');
+    btn.disabled = true; btn.textContent = '⏳ Sende…';
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const url = (window.PROVA_CONFIG?.SUPABASE_URL || '').replace(/\/$/, '');
+      const res = await fetch(url + '/functions/v1/send-support-reply', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token },
+        body: JSON.stringify({ ticket_id: _activeReplyTicket.id, reply_text: text })
+      });
+      if (!res.ok) {
+        const errTxt = await res.text();
+        throw new Error('HTTP ' + res.status + ': ' + errTxt.slice(0,180));
+      }
+      alert('✅ Antwort gesendet an ' + _activeReplyTicket.user_email);
+      closeReplyModal();
+      loadSupportInbox();
+    } catch(e) {
+      alert('Fehler: ' + e.message);
+      btn.disabled = false; btn.textContent = '📨 Antwort senden';
+    }
+  };
+
   // ── INIT ───────────────────────────────────────────────────────
   document.getElementById('cp-meta').textContent = (localStorage.getItem('prova_sv_email') || '') + ' · ' + new Date().toLocaleString('de-DE');
   loadKpis().catch(e => console.error('[cp kpis]', e));
   loadWorkspaces().catch(e => console.error('[cp ws]', e));
   loadKiHealth().catch(e => console.error('[cp ki]', e));
   loadEvents().catch(e => console.error('[cp events]', e));
+  loadSupportInbox().catch(e => console.error('[cp support-inbox]', e));
   // Auto-Refresh KPIs alle 60s
   setInterval(() => loadKpis().catch(()=>{}), 60000);
 </script>

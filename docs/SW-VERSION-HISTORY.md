@@ -8,6 +8,21 @@ Format: **vNNNN-marker** | YYYY-MM-DD | Sprint | Kurz-Note
 
 ---
 
+## 2026-05-17 — MEGA-Serie #11 (MEGA⁸⁶ Final-2%-Sprint)
+
+**v3700-mega86-final-polish** | 2026-05-17 | MEGA⁸⁶ Pilot-Blocker-Fixes + 100%-Vision-Completion
+- Block A.1 Cross-Domain-Login: Architektur 3-Layer-Bridge (crossDomainStorage in supabase-client + ProvaLegacyBridge cross-subdomain-cookies + auth-guard.js) verifiziert. Diagnose-Logging in lib/prova-legacy-bridge.js hydrate() ergänzt (sichtbar wenn 0 cookies found). Doku docs/MEGA86-CROSS-DOMAIN-LOGIN-FIX.md mit Marcel-Reproducer + Browser-Console-Snippet + 8-Schritt-Test.
+- Block A.2 Index/App-Split: netlify.toml v6.0 (30.04.2026) Cross-Domain-Redirects audited. Status: sauber getrennt. Polish-Issue: 25 sekundäre App-Pages haben nur prova-systems.de Redirect, www-Variante fehlt (DEFER MEGA87). Doku docs/MEGA86-INDEX-APP-SPLIT-AUDIT.md mit 10-Punkte-URL-Test.
+- Block A.3 Diktat-Mode-Race-Fix: lib/prova-diktat-mode-guard.js NEU (~170 Z) als 4-fach-Defense Single-Source-of-Truth. Konsolidiert MEGA47/68/69/80-Fixes. APIs: stopAll(reason), bind(element), indicateMode(mode). Auto-Bind auf 5 bekannte Selektoren (#transcriptArea, #transcriptManuell, #notiz-textarea, #diktat-text, #vot-manual-text). Fixed-Position-Mode-Badge oben rechts mit 3 States (🔴 Aufnahme / ✏ Manuell / ⚪ Bereit). Audit-Log-v1-Call bei jedem Mode-Switch. Eingebaut in app.html + ortstermin-modus.html. Doku docs/MEGA86-DIKTAT-MODE-RACE-FIX.md mit 5-Schritt-Reproducer.
+- Block B Audit-Edges Phase B Caller-Migration: 3 Frontend-Caller migriert von audit-trail-write / audit-source-log → audit-log-v1 (freigabe-logic.js logComplianceBestaetigung, lib/editor-gate.js logOverrideToAudit, lib/audit-source-tracker.js markSvUebernommen). prova-audit.js nutzt direkt Supabase-Adapter (keine Migration nötig). Alte Edges bleiben aktiv (7-Tage-Probelauf). Doku-Update docs/MEGA84-AUDIT-EDGES-DEPRECATED.md Phase-B-Status.
+- Block C Bibliothek-Drawer: lib/prova-bibliothek-drawer.js NEU (~110 Z) — Right-Side-Slide-In mit 60vw Desktop / 100vw Mobile, Cmd+B/Ctrl+B Hotkey, postMessage-Bridge zur Parent-Window. bibliothek.html embedded-Mode (?embedded=1) versteckt Sidebar + Header. Mount in 5 Pages: akte/gericht-auftrag/kurzstellungnahme/freigabe-wizard/briefe.html (Script-Tag + Hotkey + custom-event 'prova:bib-insert' für Editor-Integration).
+- Block D Trial-Onboarding-Tour: supabase-migrations/60_mega86_onboarding_tour.sql NEU (ALTER user_workflow_settings ADD onboarding_tour_completed + _at). lib/prova-onboarding-tour.js NEU (~190 Z) mit 5-Step Carousel (Willkommen / Auftrag / Akte / KI-Diktat / FOUNDING-99-Coupon), Progress-Dots + Skip-Link + Persist nach DB. Auto-Trigger nach DOMContentLoaded auf /dashboard.html wenn localStorage.prova_onboarding_pending===1 OR DB.onboarding_tour_completed===false. app-register.html setzt Pending-Flag nach Register, dashboard.html lädt Lib.
+- Block E Support-Inbox-Quick-Reply: admin-kpis.html neue Section "Support-Inbox (offen)" listet open support_tickets mit Quick-Reply-Button → Modal mit Textarea → supabase/functions/send-support-reply NEU (Admin-Auth Marcel-only, Service-Client für RLS-bypass, send-email-Wrapper für Resend, support_tickets-Status auf 'beantwortet' + resolution_text + audit-log-v1 task=admin_action).
+- Block F Mobile-Sidebar: nav.js hat bereits debounced Resize-Listener (Z.1681 O1-FIX) — kein Code-Fix nötig. Auto-Collapse 769-1099 bewusst deaktiviert per älterer P5b.X1.4-Direktive — Konflikt mit MEGA86-Spec dokumentiert, default-Verhalten beibehalten bis Marcel-Klarstellung. Doku docs/MEGA86-TOUCH-TARGETS-AUDIT.md mit 9-Page-Stichprobe (alle WCAG-AA-konform, 2 Pages knapp).
+- Block G UX-Schliffe: docs/MEGA86-KONTRAST-AUDIT.md mit 9 Color-Pair-Ratios (alle Primary-Body-Pairs ≥ AA, 2 Improvements DEFER MEGA87). Akte-Stepper Rückwärts-Klickbarkeit verifiziert (akte.html dc-stepper). 7+ Empty-States bestätigt (Pass 2a/2c).
+
+---
+
 ## 2026-05-17 — MEGA-Serie #10 Pass 2c (Sprint-Final)
 
 **v3600-mega84-85-complete** | 2026-05-17 | MEGA⁸⁴/⁸⁵ Pass 2c Audit-Konsolidierung + Bibliothek + Sprint-Final

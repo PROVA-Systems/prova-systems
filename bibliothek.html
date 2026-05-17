@@ -226,16 +226,37 @@ const state = {
 };
 
 // MEGA84/85 Pass 2c Block H: URL-Param-Handler — ?aktion=insert&auftrag_id=...
+// MEGA86 Block C: zusätzlich ?embedded=1 für Drawer-Mode
 function parseContextFromUrl() {
   try {
     const u = new URL(window.location.href);
     const aktion = u.searchParams.get('aktion');
     const auftragId = u.searchParams.get('auftrag_id');
-    if (aktion === 'insert' && auftragId) {
-      return { aktion, auftragId, az: null };
+    const embedded = u.searchParams.get('embedded') === '1';
+    if (embedded) {
+      // Embedded-Mode: Header verstecken + postMessage statt navigate
+      document.body.classList.add('bib-embedded');
+      const style = document.createElement('style');
+      style.textContent = '.bib-embedded .sidebar,.bib-embedded #sb-overlay,.bib-embedded .bib-head{display:none!important;}' +
+                          '.bib-embedded .main-wrap{margin-left:0!important;}' +
+                          '.bib-embedded .bib-wrap{padding:14px 16px 40px;}';
+      document.head.appendChild(style);
     }
+    if (aktion === 'insert' && auftragId) {
+      return { aktion, auftragId, az: null, embedded };
+    }
+    if (embedded) return { aktion: null, auftragId: null, az: null, embedded };
   } catch(_) {}
   return null;
+}
+
+// MEGA86 Block C: postMessage zur Parent-Window wenn embedded
+function _bibPostInsert(payload) {
+  if (!state.context || !state.context.embedded) return false;
+  try {
+    window.parent.postMessage({ source: 'prova-bibliothek-embedded', type: 'insert', payload: payload }, '*');
+    return true;
+  } catch(_) { return false; }
 }
 
 async function _hydrateContextAz() {
@@ -628,6 +649,15 @@ window.insertInEditor = function(id) {
   const it = state.items.find(x => x.id === id);
   if (!it) return;
   try {
+    // MEGA86 Block C: Embedded-Mode → postMessage statt Navigate
+    if (state.context && state.context.embedded) {
+      const sent = _bibPostInsert({
+        type: state.tab, id: it.id, titel: it.titel,
+        text: it.text || it.anwendung, normNr: it.norm_nr,
+        auftragId: state.context.auftragId
+      });
+      if (sent) { toast('Eingefügt'); return; }
+    }
     // MEGA84/85 Pass 2c Block H: Context-aware-Insert
     // Wenn ?aktion=insert&auftrag_id=... gesetzt → direkt zur Akte navigieren mit pending-insert.
     if (state.context && state.context.auftragId) {

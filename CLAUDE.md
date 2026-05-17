@@ -85,6 +85,9 @@ Diese Netlify Functions sind extern registriert oder zeitkritisch — **NIE in 4
 - **`git push` ohne Marcel-OK**: settings.json `ask`-Liste schützt — nie umgehen.
 - **Audit-Integrity-Hash-Chain** (MEGA⁸⁴/⁸⁵ Pass 2c Block G): `integrity_hash = sha256(prev_hash || canonicalJson({workspace_id,user_id,action,entity_*,payload,source,task}))`. `canonicalJson()` sortiert Keys → stabile Hashes. Pattern in `supabase/functions/audit-log-v1/index.ts` referenzierbar. Tampering bricht Kette für alle nachfolgenden Einträge.
 - **Additive Strategy bei Multi-Tab-Pages**: bestehende Tabs nicht refactorn, neue Tabs hinzufügen + Filter/Render/Empty-State pro Tab branchen. `bibliothek.html` Pass 2c als Referenz: 2 Tabs → 5 Tabs mit ~190 Z additiv, 0 Z Breaking.
+- **Pilot-Blocker = Verify-First** (MEGA⁸⁶ Block A): Bei wiederholten User-Reports zu „Bug-XY" (mehrfach gemeldet seit Wochen) zuerst Architektur-Audit machen — oft sind Fixes bereits implementiert (MEGA47/68/69/80 Diktat-Race war 4-fach defensive done). Doku mit Reproducer + Diagnose-Logging hat mehr Wert als noch-ein-Fix.
+- **Cross-Domain-Auth 3-Layer-Pattern** (post-MEGA⁸³ + MEGA⁸⁶ A.1): Layer 1 = `crossDomainStorage` Adapter in `lib/supabase-client.js` schreibt Supabase-Session-Cookie auf `.prova-systems.de`. Layer 2 = `ProvaLegacyBridge` schreibt 5 Legacy-Keys Cross-Subdomain. Layer 3 = `auth-guard.js` liest aus localStorage (durch Bridge hydrated). Wenn 1 Layer fehlt → Doppel-Login. Diagnose via `console.log('[ProvaLegacyBridge] hydrate: …')` in hydrate().
+- **Drawer-Pattern via Iframe-Embed + postMessage** (MEGA⁸⁶ Block C): Vermeidet Inline-Reimplementierung großer Pages — `bibliothek.html?embedded=1` versteckt Sidebar+Header per body-Class, postet Insert-Events an Parent-Window. Parent reagiert via `addEventListener('prova:bib-insert', ...)`. Pattern in `lib/prova-bibliothek-drawer.js` referenzierbar.
 
 ---
 

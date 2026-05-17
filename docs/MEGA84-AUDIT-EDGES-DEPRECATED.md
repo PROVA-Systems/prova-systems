@@ -110,11 +110,27 @@ await sb.functions.invoke('audit-log-v1', {
 
 ## Deprecation-Policy
 
-- **Phase A (Pass 2c, jetzt):** v1 deployed, alte Edges bleiben aktiv. Neue Aufrufer → v1.
-- **Phase B (Pass 3, ~Q3 2026):** alte Edges loggen Deprecation-Warning ins Response-Header (`X-Prova-Deprecated: use audit-log-v1`).
-- **Phase C (Pass 4):** wenn 0 Calls/Woche in `function-logs`, alte Edges löschen.
+- **Phase A (Pass 2c, abgeschlossen):** v1 deployed, alte Edges bleiben aktiv. Neue Aufrufer → v1.
+- **Phase B (MEGA⁸⁶, 2026-05-17):** Bestehende Caller migriert. Alte Edges bleiben funktional, sollten 7-Tage-Probelauf 0-traffic erhalten.
+- **Phase C (Pass 4, future):** wenn 0 Calls/Woche in `function-logs`, alte Edges löschen.
 
 **CC darf alte Edges NICHT eigenmächtig löschen** — nur Marcel nach Telemetrie-Review.
+
+---
+
+## Phase-B Migration-Status (MEGA⁸⁶, 2026-05-17)
+
+| Caller-File | Alt-Edge | Neue Edge | Status |
+|---|---|---|---|
+| `freigabe-logic.js:642` `logComplianceBestaetigung` | `audit-trail-write` | `audit-log-v1` task=generic action=create kategorie=COMPLIANCE | ✅ migriert |
+| `lib/editor-gate.js:65` `logOverrideToAudit` | `audit-trail-write` | `audit-log-v1` task=generic action=create kategorie=COMPLIANCE | ✅ migriert |
+| `lib/audit-source-tracker.js:74` `markSvUebernommen` | `audit-source-log` | `audit-log-v1` task=generic action=update kategorie=KI | ✅ migriert |
+| `prova-audit.js` (3 Loggers) | direkter Supabase-Adapter (`auditTrailInsert` aus `prova-supabase-adapters.js`) | bleibt direct-Supabase | ⏭ kein Edge-Call, keine Migration nötig |
+| `audit-write`-Edge selbst | — | — | ⚠️ kein Frontend-Caller mehr (war historisch ki-proxy / dsgvo-export — Backend-Edges, separate Migration) |
+| `audit-log`-Edge | — | — | ⚠️ kein Frontend-Caller gefunden in Sweep — Edge bleibt für Legacy-Backend-Caller |
+
+### Verify nach 7 Tagen
+Marcel kann via Supabase-Dashboard → Edge Functions → Logs prüfen: alte Edges sollten **0 Requests / 24h** haben. Wenn nach 7 Tagen weiterhin 0 → bereit für Phase C Delete.
 
 ## Deployment
 
