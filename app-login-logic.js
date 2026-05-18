@@ -416,6 +416,34 @@
         }
       } catch (e3) {}
 
+      // MEGA89 Block C: record_user_login() — atomarer Login-Tracking-Insert.
+      // Schreibt users.last_login_at + user_sessions + audit_trail in einer Transaction.
+      // Idempotent: session-Token-Hash würde Duplikate verhindern, aber DB-Function
+      // schreibt einfach jedes Mal eine neue Session (page-reload nach Login = 1 Session, akzeptabel).
+      try {
+        if (!sessionStorage.getItem('prova_login_recorded_' + (session?.access_token || '').slice(-12))) {
+          var ua = navigator.userAgent || '';
+          var deviceTyp = /Mobile|Android|iPhone|iPad/.test(ua) ? 'mobile'
+                        : /Tablet|iPad/.test(ua) ? 'tablet'
+                        : 'desktop';
+          var deviceName = (function(){
+            var m = ua.match(/\(([^)]+)\)/);
+            return m ? m[1].split(';')[0].trim().slice(0, 60) : null;
+          })();
+          await supabase.rpc('record_user_login', {
+            p_ip_address: null,        // Server-side via X-Forwarded-For — DB-Function bekommt NULL, audit_trail-Trigger füllt aus headers
+            p_user_agent: ua.slice(0, 240),
+            p_device_typ: deviceTyp,
+            p_ip_country: null,
+            p_ip_city: null,
+            p_device_name: deviceName
+          });
+          sessionStorage.setItem('prova_login_recorded_' + (session?.access_token || '').slice(-12), '1');
+        }
+      } catch (eLogin) {
+        console.warn('[login] record_user_login fail (non-blocking):', eLogin && eLogin.message);
+      }
+
       window.location.href = 'dashboard.html';
   }
   /* ── End of _completeLogin ── */

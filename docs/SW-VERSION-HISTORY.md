@@ -8,6 +8,19 @@ Format: **vNNNN-marker** | YYYY-MM-DD | Sprint | Kurz-Note
 
 ---
 
+## 2026-05-18 — MEGA-Serie #16 (MEGA⁸⁹ Pilot-Security-Hardening)
+
+**v3950-mega89-pilot-security** | 2026-05-18 | MEGA⁸⁹ Pilot-Security-Hardening + Cockpit-Polish
+- **Trigger-Event:** Leon Lottermoser registriert 02.05., Trial expired 16.05., kam noch rein bis 18.05. → Auto-Expiry fehlte komplett, RLS-Read-Only nicht enforced.
+- Block A RLS-Read-Only-Lock: Migration 67 (workspace_is_writable() SECURITY DEFINER Helper) + Migration 68 (Policy-Patches auf 21 User-Content-Tabellen — auftraege/kontakte/dokumente/fotos/audio/eintraege/fristen/termine/ortstermine/skizzen/notizen/befund_fragmente/anhaenge/documents/documents_versions/document_images/ki_feedback/shares/textbausteine/normen/positionen mit AND public.workspace_is_writable(workspace_id) in INSERT/UPDATE/DELETE/ALL — Read-Policies UNVERÄNDERT für DSGVO).
+- Block B Auto-Trial-Expiry: Migration 69 (cron_lock_expired_trials() Function + pg_cron Schedule täglich 02:00 UTC — lockt trial-Workspaces deren abo_trial_endet_am<NOW, setzt abo_status=pausiert + max_auftraege=0 + audit_trail-Eintrag pro Lock).
+- Block C Login-Tracking: Migration 70 (record_user_login() atomarer Insert user_sessions + users.last_login_at + audit_trail) + app-login-logic.js _completeLogin ruft Function via supabase.rpc nach _completeLogin (idempotent via sessionStorage-Token-Hash) + lib/prova-session-heartbeat.js NEU (5min-Heartbeat auf users.last_active_at + user_sessions.last_activity_at, skipt bei visibilityState=hidden, in dashboard.html eingebaut).
+- Block D Cockpit-2FA-Fix: admin-kpis.html loadWorkspaces() Query refactored — JOIN workspace_memberships+users für owner.totp_enabled, ersetzt require_2fa_for_admins-Workspace-Setting in Anzeige. Filter no2fa nutzt jetzt owner_has_2fa.
+- Block E Suspicious-Activity: Migration 71 (suspicious_activity_v1 View mit high/medium-Klassifizierung — high=3+ Logins + 0 Aufträge + 7d alt, medium=1+ Login + 0 Aufträge + 14d alt) + supabase/functions/admin-suspend-workspace Edge NEU (Marcel-only, setzt abo_status=pausiert + Owner-Ban via auth.admin.updateUserById 30d + audit-log-v1) + admin-kpis.html Section mit 1-Click-Sperren-Button (Confirm-Modal mit Reason-Pflicht min 10 chars).
+- Block F Conversion-Funnel: admin-kpis.html neue Section mit 5 Steps (Registered → Workspace → 1.Auftrag → 1.PDF → Paid) + Bar-Chart per Step mit Drop-off-% (Color-Coded grün/orange/rot bei >30/>50%).
+
+---
+
 ## 2026-05-18 — MEGA-Serie #14 (MEGA⁸⁸-C TOTP-Sync-Fix)
 
 **v3905-mega88-c-totp-sync-fix** | 2026-05-18 | MEGA⁸⁸-C TOTP-Sync-Bug-Fix (Hotfix)

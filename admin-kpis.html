@@ -251,6 +251,23 @@ a{color:inherit;text-decoration:none;}
     <div id="cp-sessions-list" style="background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;"><div class="cp-empty">Wird geladen…</div></div>
   </section>
 
+  <!-- MEGA89 Block E: Suspicious-Activity -->
+  <section class="cp-section">
+    <div class="cp-section-row">
+      <h2 class="cp-section-label"><span class="cp-section-label-icon">⚠️</span>Suspicious Activity (Spion-Verdacht)</h2>
+      <span class="cp-section-cta" id="cp-suspicious-count" style="font-size:11px;color:var(--text2);">—</span>
+    </div>
+    <div id="cp-suspicious-list" style="background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;"><div class="cp-empty">Wird geladen…</div></div>
+  </section>
+
+  <!-- MEGA89 Block F: Conversion-Funnel -->
+  <section class="cp-section">
+    <div class="cp-section-row">
+      <h2 class="cp-section-label"><span class="cp-section-label-icon">🎯</span>Conversion-Funnel (30d)</h2>
+    </div>
+    <div id="cp-funnel" style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:18px;"><div class="cp-empty">Wird geladen…</div></div>
+  </section>
+
 </main>
 
 <!-- MEGA86 Block E: Reply-Modal -->
@@ -330,12 +347,24 @@ a{color:inherit;text-decoration:none;}
   }
 
   // ── Workspaces ─────────────────────────────────────────────────
+  // MEGA89 Block D: 2FA-Anzeige zeigt jetzt totp_enabled des OWNERS (statt require_2fa_for_admins-Setting).
+  // Query joined workspace_memberships (rolle=owner) → users.totp_enabled.
   async function loadWorkspaces(){
     var res = await supabase.from('workspaces')
-      .select('id, name, abo_tier, abo_status, abo_trial_endet_am, mrr_eur_snapshot, billing_email, require_2fa_for_admins')
+      .select('id, name, abo_tier, abo_status, abo_trial_endet_am, mrr_eur_snapshot, billing_email, require_2fa_for_admins, workspace_memberships!inner(rolle, is_active, users!inner(id, email, totp_enabled))')
       .is('deleted_at', null)
+      .eq('workspace_memberships.rolle', 'owner')
+      .eq('workspace_memberships.is_active', true)
       .order('mrr_eur_snapshot', { ascending: false }).limit(100);
-    allWorkspaces = res.data || [];
+    allWorkspaces = (res.data || []).map(w => {
+      var owner = (w.workspace_memberships || [])[0];
+      var ownerUser = owner && owner.users;
+      return {
+        ...w,
+        owner_email: ownerUser?.email,
+        owner_has_2fa: !!ownerUser?.totp_enabled
+      };
+    });
     document.getElementById('cp-ws-count').textContent = allWorkspaces.length + ' Workspaces';
     renderWorkspaces();
   }
@@ -346,7 +375,7 @@ a{color:inherit;text-decoration:none;}
       if (currentFilter === 'aktiv' && w.abo_status !== 'aktiv') return false;
       if (currentFilter === 'trial' && w.abo_status !== 'trial') return false;
       if (currentFilter === 'gekuendigt' && w.abo_status !== 'gekuendigt') return false;
-      if (currentFilter === 'no2fa' && w.require_2fa_for_admins) return false;
+      if (currentFilter === 'no2fa' && w.owner_has_2fa) return false;
       if (search && !(w.name||'').toLowerCase().includes(search) && !(w.billing_email||'').toLowerCase().includes(search)) return false;
       return true;
     });
@@ -366,7 +395,7 @@ a{color:inherit;text-decoration:none;}
           <div><span class="cp-tier ${tierCls}">${esc((w.abo_tier||'solo').toUpperCase())}</span></div>
           <div><span class="cp-status-badge ${statusCls}">${esc(statusLabel||'?')}</span></div>
           <div>${eur(w.mrr_eur_snapshot)}</div>
-          <div>${w.require_2fa_for_admins ? '✓' : '<span style="color:var(--warning);">⚠</span>'}</div>
+          <div title="Owner 2FA: ${w.owner_has_2fa ? 'aktiv' : 'fehlt'}">${w.owner_has_2fa ? '<span style="color:var(--success);">✓</span>' : '<span style="color:var(--warning);">⚠</span>'}</div>
           <div><button type="button" class="cp-impersonate-btn" onclick="window.cpImpersonate('${w.id}')">Login-as →</button></div>
         </div>`;
       }).join('');
@@ -555,6 +584,94 @@ a{color:inherit;text-decoration:none;}
   loadEvents().catch(e => console.error('[cp events]', e));
   loadSupportInbox().catch(e => console.error('[cp support-inbox]', e));
   loadLiveSessions().catch(e => console.error('[cp sessions]', e));
+  loadSuspicious().catch(e => console.error('[cp suspicious]', e));
+  loadFunnel().catch(e => console.error('[cp funnel]', e));
+
+  // MEGA89 Block E: Suspicious-Activity-Section
+  async function loadSuspicious(){
+    var res = await supabase.from('suspicious_activity_v1')
+      .select('workspace_id, workspace_name, email, days_since_register, login_count_30d, auftraege_count, suspicion_level')
+      .order('suspicion_level', { ascending: false })
+      .limit(20);
+    var rows = res.data || [];
+    document.getElementById('cp-suspicious-count').textContent = rows.length + ' Verdachtsfälle';
+    if (!rows.length) {
+      document.getElementById('cp-suspicious-list').innerHTML = '<div class="cp-empty">Keine verdächtigen Workspaces 🎉</div>';
+      return;
+    }
+    document.getElementById('cp-suspicious-list').innerHTML = rows.map(r => {
+      var lvlColor = r.suspicion_level === 'high_suspicion' ? '#ef4444' : '#f59e0b';
+      var lvlLabel = r.suspicion_level === 'high_suspicion' ? 'HIGH' : 'MEDIUM';
+      return `<div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:12px;">
+        <div style="flex:1;min-width:0;">
+          <div style="display:flex;gap:8px;align-items:center;margin-bottom:4px;flex-wrap:wrap;">
+            <span style="font-size:10px;font-weight:700;letter-spacing:.04em;color:${lvlColor};">${lvlLabel}</span>
+            <span style="font-weight:600;color:var(--text);">${esc(r.workspace_name || '?')}</span>
+          </div>
+          <div style="color:var(--text2);font-size:11px;">${esc(r.email || '?')} · ${r.days_since_register}d alt · ${r.login_count_30d} Logins · ${r.auftraege_count} Aufträge</div>
+        </div>
+        <button onclick="suspendWorkspace('${esc(r.workspace_id)}', '${esc(r.workspace_name || '?')}')" style="padding:6px 12px;background:transparent;border:1px solid ${lvlColor};color:${lvlColor};border-radius:6px;cursor:pointer;font-size:11px;font-weight:700;white-space:nowrap;">🔒 Sperren</button>
+      </div>`;
+    }).join('');
+  }
+  window.suspendWorkspace = async function(wsId, wsName) {
+    var reason = prompt(`Workspace "${wsName}" SPERREN — Grund (min. 10 Zeichen, DSGVO-Audit):`, 'Spion-Verdacht: ');
+    if (!reason || reason.trim().length < 10) { alert('Reason min. 10 Zeichen.'); return; }
+    if (!confirm(`Workspace "${wsName}" wirklich sperren?\n\nOwner wird für 30 Tage gesperrt + abo_status=pausiert.\n\nGrund: ${reason}`)) return;
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const url = (window.PROVA_CONFIG?.SUPABASE_URL || '').replace(/\/$/,'');
+      const res = await fetch(url + '/functions/v1/admin-suspend-workspace', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token },
+        body: JSON.stringify({ workspace_id: wsId, reason: reason.trim() })
+      });
+      if (!res.ok) throw new Error('HTTP ' + res.status + ': ' + (await res.text()).slice(0,180));
+      alert('✅ Workspace gesperrt + Owner 30d-Ban.');
+      loadSuspicious(); loadWorkspaces();
+    } catch(e) { alert('Fehler: ' + e.message); }
+  };
+
+  // MEGA89 Block F: Conversion-Funnel-Section
+  async function loadFunnel(){
+    var since = new Date(Date.now() - 30 * 86400000).toISOString();
+    var [usersRes, wsRes, auftraegeRes, dokRes] = await Promise.all([
+      supabase.from('users').select('id', { count: 'exact', head: true }).gte('created_at', since),
+      supabase.from('workspaces').select('id, abo_status', { count: 'exact' }).gte('created_at', since).is('deleted_at', null),
+      supabase.from('auftraege').select('workspace_id', { count: 'exact', head: true }).gte('created_at', since).is('deleted_at', null),
+      supabase.from('dokumente').select('id', { count: 'exact', head: true }).like('typ', '%_pdf').gte('created_at', since)
+    ]);
+    var registered = usersRes.count || 0;
+    var wsRows = wsRes.data || [];
+    var verifiedTrial = wsRows.length; // Workspace-Create = email-verified
+    var paidUsers = wsRows.filter(w => w.abo_status === 'aktiv').length;
+    var withAuftrag = auftraegeRes.count || 0;
+    var withPdf = dokRes.count || 0;
+    function pct(a, b) { return b > 0 ? Math.round(100 * a / b) : 0; }
+    function step(label, n, ofTotal, dropFromPrev) {
+      var width = ofTotal > 0 ? Math.max(5, Math.round(100 * n / ofTotal)) : 5;
+      var dropColor = dropFromPrev > 50 ? '#ef4444' : dropFromPrev > 30 ? '#f59e0b' : '#10b981';
+      return `<div style="margin-bottom:10px;">
+        <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text2);margin-bottom:4px;">
+          <span>${esc(label)}</span>
+          <span><strong style="color:var(--text);">${n}</strong> · ${pct(n, ofTotal)}%${dropFromPrev !== null ? ` · <span style="color:${dropColor};">−${dropFromPrev}%</span>` : ''}</span>
+        </div>
+        <div style="height:8px;background:var(--bg3);border-radius:4px;overflow:hidden;">
+          <div style="height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));width:${width}%;"></div>
+        </div>
+      </div>`;
+    }
+    var dropV = registered > 0 ? Math.round(100 * (registered - verifiedTrial) / registered) : 0;
+    var dropA = verifiedTrial > 0 ? Math.round(100 * (verifiedTrial - withAuftrag) / verifiedTrial) : 0;
+    var dropP = withAuftrag > 0 ? Math.round(100 * (withAuftrag - withPdf) / withAuftrag) : 0;
+    var dropPaid = withPdf > 0 ? Math.round(100 * (withPdf - paidUsers) / withPdf) : 0;
+    document.getElementById('cp-funnel').innerHTML =
+      step('1. Registriert', registered, registered, null) +
+      step('2. Workspace angelegt (Email-Verified)', verifiedTrial, registered, dropV) +
+      step('3. Erster Auftrag erstellt', withAuftrag, registered, dropA) +
+      step('4. Erstes PDF generiert', withPdf, registered, dropP) +
+      step('5. Paid (abo_status=aktiv)', paidUsers, registered, dropPaid);
+  }
 
   // MEGA87 Block H: Live-Sessions
   async function loadLiveSessions(){
