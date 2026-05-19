@@ -1,0 +1,361 @@
+/* ════════════════════════════════════════════════════════════════════
+   PROVA Button Design System (MEGA-Marathon Phase 3 / MEGA88-B)
+   ════════════════════════════════════════════════════════════════════
+   Token-System + 4 Varianten (primary/secondary/tertiary/destructive/success)
+   + 3 Sizes (sm/md/lg) + Loading + Icon-only + Disabled + Focus-Visible.
+
+   Vorbilder: Stripe-Dashboard, Linear, Vercel, Notion.
+   - Subtile Multi-Layer-Shadows (nicht flat!)
+   - Mikro-Lift bei :hover (translateY -1px)
+   - Mikro-Press bei :active (translateY 0px + inset shadow)
+   - Smooth-Transitions (cubic-bezier ease-out)
+   - Klare Focus-Ringe (Accessibility)
+
+   Dark-Mode-aware via body.theme-dark.
+   Legacy-Compat: .btn-primary etc. werden auf .prova-btn-Klassen gemappt.
+
+   Integration: <link rel="stylesheet" href="/lib/prova-button-tokens.css">
+═════════════════════════════════════════════════════════════════════ */
+
+:root {
+  /* Button Radius */
+  --pbtn-radius-sm: 6px;
+  --pbtn-radius-md: 8px;
+  --pbtn-radius-lg: 10px;
+
+  /* Multi-Layer-Shadows (Light-Mode) */
+  --pbtn-shadow-default: 0 1px 2px rgba(15, 23, 42, 0.08), 0 1px 1px rgba(15, 23, 42, 0.04);
+  --pbtn-shadow-hover: 0 4px 12px rgba(15, 23, 42, 0.12), 0 2px 4px rgba(15, 23, 42, 0.06);
+  --pbtn-shadow-active: inset 0 1px 2px rgba(15, 23, 42, 0.12);
+  --pbtn-shadow-focus: 0 0 0 3px rgba(59, 130, 246, 0.4);
+
+  /* Transition (Stripe/Linear-Style) */
+  --pbtn-transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Variant Colors (Light) */
+  --pbtn-primary-bg: linear-gradient(135deg, #1a3a6b 0%, #2c5191 100%);
+  --pbtn-primary-hover-bg: linear-gradient(135deg, #2c5191 0%, #3b62a8 100%);
+  --pbtn-primary-text: #ffffff;
+
+  --pbtn-secondary-bg: #ffffff;
+  --pbtn-secondary-hover-bg: #f8f9fc;
+  --pbtn-secondary-border: rgba(15, 23, 42, 0.12);
+  --pbtn-secondary-hover-border: rgba(15, 23, 42, 0.2);
+  --pbtn-secondary-text: #1a3a6b;
+
+  --pbtn-tertiary-bg: transparent;
+  --pbtn-tertiary-hover-bg: rgba(15, 23, 42, 0.05);
+  --pbtn-tertiary-text: #475569;
+  --pbtn-tertiary-hover-text: #1a3a6b;
+
+  --pbtn-destructive-bg: linear-gradient(135deg, #c1303f 0%, #d44a5a 100%);
+  --pbtn-destructive-hover-bg: linear-gradient(135deg, #d44a5a 0%, #e36573 100%);
+  --pbtn-destructive-text: #ffffff;
+
+  --pbtn-success-bg: linear-gradient(135deg, #0d8050 0%, #16a06b 100%);
+  --pbtn-success-hover-bg: linear-gradient(135deg, #16a06b 0%, #21bb82 100%);
+  --pbtn-success-text: #ffffff;
+}
+
+/* Dark-Mode Overrides (body.theme-dark or :root.dark — sniff aus prova-design.css) */
+body.theme-dark, body[data-theme="dark"], :root[data-theme="dark"], html.dark {
+  --pbtn-shadow-default: 0 1px 2px rgba(0, 0, 0, 0.4), 0 1px 1px rgba(0, 0, 0, 0.3);
+  --pbtn-shadow-hover: 0 4px 14px rgba(0, 0, 0, 0.5), 0 2px 4px rgba(0, 0, 0, 0.35);
+  --pbtn-shadow-active: inset 0 1px 2px rgba(0, 0, 0, 0.5);
+  --pbtn-shadow-focus: 0 0 0 3px rgba(79, 142, 247, 0.5);
+
+  --pbtn-secondary-bg: #1c2130;
+  --pbtn-secondary-hover-bg: #232a3a;
+  --pbtn-secondary-border: rgba(255, 255, 255, 0.11);
+  --pbtn-secondary-hover-border: rgba(255, 255, 255, 0.22);
+  --pbtn-secondary-text: #eaecf4;
+
+  --pbtn-tertiary-hover-bg: rgba(255, 255, 255, 0.06);
+  --pbtn-tertiary-text: #8b93ab;
+  --pbtn-tertiary-hover-text: #eaecf4;
+}
+
+/* ═════════════ Base ═════════════ */
+.prova-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 0;
+  cursor: pointer;
+  font-weight: 600;
+  font-family: 'DM Sans', 'Inter', system-ui, sans-serif;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  text-decoration: none;
+  transition: var(--pbtn-transition);
+  user-select: none;
+  position: relative;
+  outline: 0;
+}
+
+/* ═════════════ Sizes ═════════════ */
+.prova-btn--sm {
+  padding: 7px 14px;
+  font-size: 13px;
+  border-radius: var(--pbtn-radius-sm);
+  min-height: 32px;
+}
+.prova-btn--md {
+  padding: 10px 18px;
+  font-size: 14px;
+  border-radius: var(--pbtn-radius-md);
+  min-height: 40px;
+}
+.prova-btn--lg {
+  padding: 13px 24px;
+  font-size: 15px;
+  border-radius: var(--pbtn-radius-lg);
+  min-height: 48px;
+}
+
+/* Mobile: Touch-Target ≥ 44px für sm */
+@media (hover: none) and (pointer: coarse) {
+  .prova-btn--sm { min-height: 44px; padding: 10px 16px; }
+}
+
+/* ═════════════ Variants ═════════════ */
+
+/* PRIMARY */
+.prova-btn--primary {
+  background: var(--pbtn-primary-bg);
+  color: var(--pbtn-primary-text);
+  box-shadow: var(--pbtn-shadow-default);
+}
+.prova-btn--primary:hover:not(:disabled):not(.prova-btn--loading) {
+  background: var(--pbtn-primary-hover-bg);
+  box-shadow: var(--pbtn-shadow-hover);
+  transform: translateY(-1px);
+}
+.prova-btn--primary:active:not(:disabled):not(.prova-btn--loading) {
+  transform: translateY(0);
+  box-shadow: var(--pbtn-shadow-active);
+}
+
+/* SECONDARY */
+.prova-btn--secondary {
+  background: var(--pbtn-secondary-bg);
+  border: 1px solid var(--pbtn-secondary-border);
+  color: var(--pbtn-secondary-text);
+  box-shadow: var(--pbtn-shadow-default);
+}
+.prova-btn--secondary:hover:not(:disabled):not(.prova-btn--loading) {
+  background: var(--pbtn-secondary-hover-bg);
+  border-color: var(--pbtn-secondary-hover-border);
+  box-shadow: var(--pbtn-shadow-hover);
+  transform: translateY(-1px);
+}
+.prova-btn--secondary:active:not(:disabled):not(.prova-btn--loading) {
+  transform: translateY(0);
+  box-shadow: var(--pbtn-shadow-active);
+}
+
+/* TERTIARY (Ghost) */
+.prova-btn--tertiary {
+  background: var(--pbtn-tertiary-bg);
+  color: var(--pbtn-tertiary-text);
+}
+.prova-btn--tertiary:hover:not(:disabled):not(.prova-btn--loading) {
+  background: var(--pbtn-tertiary-hover-bg);
+  color: var(--pbtn-tertiary-hover-text);
+}
+
+/* DESTRUCTIVE */
+.prova-btn--destructive {
+  background: var(--pbtn-destructive-bg);
+  color: var(--pbtn-destructive-text);
+  box-shadow: var(--pbtn-shadow-default);
+}
+.prova-btn--destructive:hover:not(:disabled):not(.prova-btn--loading) {
+  background: var(--pbtn-destructive-hover-bg);
+  box-shadow: var(--pbtn-shadow-hover);
+  transform: translateY(-1px);
+}
+.prova-btn--destructive:active:not(:disabled):not(.prova-btn--loading) {
+  transform: translateY(0);
+  box-shadow: var(--pbtn-shadow-active);
+}
+
+/* SUCCESS */
+.prova-btn--success {
+  background: var(--pbtn-success-bg);
+  color: var(--pbtn-success-text);
+  box-shadow: var(--pbtn-shadow-default);
+}
+.prova-btn--success:hover:not(:disabled):not(.prova-btn--loading) {
+  background: var(--pbtn-success-hover-bg);
+  box-shadow: var(--pbtn-shadow-hover);
+  transform: translateY(-1px);
+}
+
+/* ═════════════ States ═════════════ */
+.prova-btn:disabled,
+.prova-btn[aria-disabled="true"] {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: var(--pbtn-shadow-default) !important;
+}
+
+.prova-btn:focus-visible {
+  outline: 0;
+  box-shadow: var(--pbtn-shadow-focus), var(--pbtn-shadow-default);
+}
+
+/* LOADING — CSS-Spinner */
+.prova-btn--loading {
+  color: transparent !important;
+  pointer-events: none;
+  cursor: wait;
+}
+.prova-btn--loading::after {
+  content: '';
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: prova-btn-spin 0.65s linear infinite;
+  color: var(--pbtn-primary-text);
+}
+.prova-btn--secondary.prova-btn--loading::after,
+.prova-btn--tertiary.prova-btn--loading::after { color: var(--pbtn-secondary-text); }
+@keyframes prova-btn-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ═════════════ Icon-only ═════════════ */
+.prova-btn--icon {
+  padding: 0 !important;
+  aspect-ratio: 1;
+  gap: 0;
+}
+.prova-btn--icon.prova-btn--sm { width: 32px; }
+.prova-btn--icon.prova-btn--md { width: 40px; }
+.prova-btn--icon.prova-btn--lg { width: 48px; }
+
+/* ═════════════ Button-Group ═════════════ */
+.prova-btn-group { display: inline-flex; gap: 8px; flex-wrap: wrap; }
+.prova-btn-group--tight { gap: 0; }
+.prova-btn-group--tight .prova-btn { border-radius: 0; }
+.prova-btn-group--tight .prova-btn:first-child { border-top-left-radius: var(--pbtn-radius-md); border-bottom-left-radius: var(--pbtn-radius-md); }
+.prova-btn-group--tight .prova-btn:last-child { border-top-right-radius: var(--pbtn-radius-md); border-bottom-right-radius: var(--pbtn-radius-md); }
+
+/* ═════════════ Legacy-Compat-Bridge ═════════════ */
+/* Bestehende Klassen werden auf prova-btn-Tokens gemappt.
+   Erlaubt globalen Visual-Upgrade ohne 200+ HTML-Files anzufassen.
+   HTML-Markup bleibt: <button class="btn-primary">…</button> sieht modern aus.
+   Pages koennen schrittweise auf .prova-btn umsteigen. */
+
+.btn-primary,
+.es-btn.primary,
+.cp-impersonate-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 0;
+  cursor: pointer;
+  font-weight: 600;
+  font-family: 'DM Sans', system-ui, sans-serif;
+  padding: 10px 18px;
+  font-size: 14px;
+  border-radius: 8px;
+  min-height: 40px;
+  background: var(--pbtn-primary-bg);
+  color: var(--pbtn-primary-text);
+  box-shadow: var(--pbtn-shadow-default);
+  transition: var(--pbtn-transition);
+}
+.btn-primary:hover:not(:disabled),
+.es-btn.primary:hover:not(:disabled),
+.cp-impersonate-btn:hover:not(:disabled) {
+  background: var(--pbtn-primary-hover-bg);
+  box-shadow: var(--pbtn-shadow-hover);
+  transform: translateY(-1px);
+}
+.btn-primary:active:not(:disabled),
+.es-btn.primary:active:not(:disabled),
+.cp-impersonate-btn:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: var(--pbtn-shadow-active);
+}
+
+.btn-secondary,
+.es-btn:not(.primary):not(.danger),
+.bib-modal-btn:not(.bib-modal-btn-primary):not(.bib-modal-btn-danger) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  font-family: 'DM Sans', system-ui, sans-serif;
+  padding: 10px 18px;
+  font-size: 14px;
+  border-radius: 8px;
+  min-height: 40px;
+  background: var(--pbtn-secondary-bg);
+  border: 1px solid var(--pbtn-secondary-border);
+  color: var(--pbtn-secondary-text);
+  box-shadow: var(--pbtn-shadow-default);
+  transition: var(--pbtn-transition);
+}
+.btn-secondary:hover:not(:disabled),
+.es-btn:not(.primary):not(.danger):hover:not(:disabled),
+.bib-modal-btn:not(.bib-modal-btn-primary):not(.bib-modal-btn-danger):hover:not(:disabled) {
+  background: var(--pbtn-secondary-hover-bg);
+  border-color: var(--pbtn-secondary-hover-border);
+  box-shadow: var(--pbtn-shadow-hover);
+  transform: translateY(-1px);
+}
+
+.btn-danger,
+.es-btn.danger,
+.bib-modal-btn.bib-modal-btn-danger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 0;
+  cursor: pointer;
+  font-weight: 600;
+  font-family: 'DM Sans', system-ui, sans-serif;
+  padding: 10px 18px;
+  font-size: 14px;
+  border-radius: 8px;
+  min-height: 40px;
+  background: var(--pbtn-destructive-bg);
+  color: var(--pbtn-destructive-text);
+  box-shadow: var(--pbtn-shadow-default);
+  transition: var(--pbtn-transition);
+}
+.btn-danger:hover:not(:disabled),
+.es-btn.danger:hover:not(:disabled),
+.bib-modal-btn.bib-modal-btn-danger:hover:not(:disabled) {
+  background: var(--pbtn-destructive-hover-bg);
+  box-shadow: var(--pbtn-shadow-hover);
+  transform: translateY(-1px);
+}
+
+/* Reduzierte Bewegung respektieren */
+@media (prefers-reduced-motion: reduce) {
+  .prova-btn, .btn-primary, .btn-secondary, .btn-danger, .es-btn, .cp-impersonate-btn, .bib-modal-btn {
+    transition: none;
+  }
+  .prova-btn:hover:not(:disabled),
+  .btn-primary:hover:not(:disabled),
+  .btn-secondary:hover:not(:disabled),
+  .btn-danger:hover:not(:disabled),
+  .es-btn:hover:not(:disabled),
+  .cp-impersonate-btn:hover:not(:disabled) {
+    transform: none;
+  }
+  .prova-btn--loading::after { animation: none; }
+}

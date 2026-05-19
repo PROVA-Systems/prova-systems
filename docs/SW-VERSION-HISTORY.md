@@ -8,10 +8,22 @@ Format: **vNNNN-marker** | YYYY-MM-DD | Sprint | Kurz-Note
 
 ---
 
-## 2026-05-19 — MEGA-Serie #17 (MEGA-Marathon Phase 2 Konsolidierung)
+## 2026-05-19 — MEGA-Serie #18 (MEGA-Marathon PILOT-LAUNCH-READY) ⭐
 
-**v3960-mega-marathon-merging** | 2026-05-19 | MEGA-Marathon Phase 2 Branches gemerged
-- Phase 1.2-1.5: Migrationen 67-71 + Hotfix-Migration 72 (cron_lock_expired_trials excludes founders) via MCP applied. Cron-Schedule live (job-id 11). Marcel-Workspaces restored (abo_status=aktiv + is_founder=true). Final-Tag v4000-pilot-launch-ready nach Phase 5.
+**v4000-pilot-launch-ready** | 2026-05-19 | MEGA-Marathon 5-Phasen + Phase 2.5 NEU
+- **Phase 1**: Migrationen 67-72 alle applied via MCP. Cron-Schedule live (job-id 11, daily 02:00 UTC). Founder-Exclude-Hotfix in Migration 72 (Marcel-Restore-Incident 19.05.).
+- **Phase 2**: MEGA88-D gemerged + Migration 63 (founding_status ENUM) + Marathon-Migration 73 (founding_assigned_by + extended_trial_days).
+- **Phase 2.5 NEU**: tools/pdfmonkey-bulk-patch.js (~250 Z) REST-API-Bulk-Patch-Tool für PDFmonkey-Templates. Patches: gpt-4o→gpt-5.5, Logo-Header (Master-SVG), EU AI Act Disclosure-Box (KI-Templates F-04/F-09/F-15/F-19). --dry-run/--execute/--only/--rollback. Backup-System mit ISO-Timestamp + _index.json. tools/pdfmonkey-README.md Marcel-Workflow. Ersetzt manuelle 16+ Template-Patches.
+- **Phase 3**: Button-Design-System lib/prova-button-tokens.css (~290 Z): 5 Varianten (primary/secondary/tertiary/destructive/success) × 3 Sizes (sm/md/lg) + States (default/hover/active/disabled/focus/loading) + Multi-Layer-Shadows (Stripe/Linear/Vercel-Style) + Hover-Lift (translateY -1px) + Press (inset shadow) + Loading-CSS-Spinner + Icon-only + Button-Group. Dark-Mode-Switch automatisch. Legacy-Compat-Bridge: .btn-primary/.es-btn/.cp-impersonate-btn/.bib-modal-btn auf Tokens gemappt → globaler Visual-Upgrade ohne HTML-Refactor. Eingebunden in einstellungen/akte/app/dashboard/admin-kpis (Marcel-Befund-Pages). docs/BUTTON-DESIGN-SYSTEM.md mit Decision-Tree + Code-Beispielen + A11y-Patterns.
+- **Phase 4 Polishing**: Resize-Listener bereits via O1-FIX in nav.js (MEGA86 Block F) — kein Code-Fix nötig.
+- **Phase 5 Final**: SW v3960→v4000-pilot-launch-ready + 2 neue CLAUDE.md Compounding Lessons (PDFmonkey-Bulk-Pattern + Button-Design-System-Patterns).
+
+---
+
+## 2026-05-19 — MEGA-Serie #17 (MEGA-Marathon Phase 2 Konsolidierung — Zwischenstand)
+
+**v3960-mega-marathon-merging** | 2026-05-19 | MEGA-Marathon Phase 2 Branches gemerged (Zwischenstand vor v4000)
+- Phase 1.2-1.5: Migrationen 67-71 + Hotfix-Migration 72 (cron_lock_expired_trials excludes founders) via MCP applied. Cron-Schedule live (job-id 11). Marcel-Workspaces restored (abo_status=aktiv + is_founder=true).
 
 ---
 

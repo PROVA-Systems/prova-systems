@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v3960-mega-marathon-merging';   // MEGA-Marathon Phase 2 merge 2026-05-19: MEGA89 (RLS Hard-Lock + Auto-Trial-Expiry + Login-Tracking + Cockpit-Polish, v3950-mega89-pilot-security) + MEGA88-D (Coupon-Security + 90d-Trial, v3950-mega88-d-coupon-security) konsolidiert. Final-Tag nach Phase 5: v4000-pilot-launch-ready. Sprint-Historie: docs/SW-VERSION-HISTORY.md.
+const CACHE_VERSION = 'prova-v4000-pilot-launch-ready';   // MEGA-Marathon 2026-05-19: PROVA Pilot-Launch-Ready. Phase 1 RLS Hard-Lock + Auto-Trial-Expiry + Login-Tracking + Founder-Exclude-Hotfix (Migrations 67-72 alle applied via MCP) + Phase 2 MEGA88-D Coupon-Security + Founding-90d-Trial (Migration 63 + Marathon-Migration 73 mit founding_assigned_by + extended_trial_days) + Phase 2.5 NEU PDFmonkey-Bulk-Patch-Tool (tools/pdfmonkey-bulk-patch.js REST-API mit --dry-run/--execute/--rollback + Backup-System) + Phase 3 Button-Design-System (lib/prova-button-tokens.css mit 5 Varianten + 3 Sizes + Multi-Layer-Shadows + Hover-Lift + Loading-State + Dark-Mode + Legacy-Compat-Bridge auf .btn-primary/.es-btn/.cp-impersonate-btn — eingebunden in einstellungen+akte+app+dashboard+admin-kpis) + Phase 4 Polishing (Resize-Listener bereits via O1-FIX in nav.js) + Phase 5 Final (4 Dokus + 2 neue CLAUDE.md Compounding Lessons). Tag v4000-pilot-launch-ready. Sprint-Historie: docs/SW-VERSION-HISTORY.md.
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
