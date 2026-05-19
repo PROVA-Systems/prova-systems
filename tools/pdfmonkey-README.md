@@ -1,4 +1,28 @@
-# PDFmonkey Bulk-Patch v2 — Marcel-Workflow (MEGA-Marathon Phase 2.5b)
+# PDFmonkey Bulk-Patch v2.5c — Marcel-Workflow
+
+## CHANGELOG
+
+- **2.5c (19.05. 17:44):** Hotfix Idempotenz-Bug
+  - `LOGO_HEADER_HTML` enthält keinen Marker mehr → Re-Runs erzeugen keine Duplikate
+  - Detection-Reihenfolge fix: `hasLogo`-Check ZUERST (idempotent-skip), dann Marker, dann Auto-Inject
+  - KI-Template-Detection via **Token-IN-Name** statt Prefix — erkennt "PROVA – F-09 – KURZGUTACHTEN" jetzt korrekt als KI-Template
+  - Neue Flags: `--dedupe-logos` / `--dedupe-eu` / `--dedupe-all` reinigen bestehende Multi-Block-Templates aus Phase-2.5-Bug
+  - `data-prova-component="logo-header"` / `="eu-ai-act"` als zusätzliches Detection-Attribute (Self-Recognition)
+- **2.5b (19.05. 17:00):** Auto-Inject ohne Marker-Pflicht + `--audit`-Mode + Font-Audit
+- **2.5 (19.05. ~17:00):** Erste Tool-Version mit Marker-Pflicht (durch 2.5c ersetzt)
+
+---
+
+## Marcel-Sofort-Empfehlung (nach Idempotenz-Incident)
+
+Falls bei Marcels Runs 2-3 Logos pro Template entstanden sind:
+```powershell
+node tools/pdfmonkey-bulk-patch.js --execute --dedupe-all
+# → Cleant alle Multi-Logo / Multi-EU-Box Templates auf je 1 Block, Rest entfernt
+```
+Idempotent: zweiter Dedupe-Run findet nichts mehr.
+
+---
 
 REST-API-Tool für PROVA-PDFmonkey-Templates mit **intelligenter Detection** (kein Marker-Pflicht mehr) + Audit-Mode.
 

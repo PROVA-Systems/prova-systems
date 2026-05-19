@@ -20,8 +20,17 @@
  *   --execute --inject-logo          Logo-Auto-Inject auch ohne Marker erzwingen
  *   --execute --inject-eu-disclosure EU-Box-Auto-Inject auch ohne Marker erzwingen
  *   --execute --inject-all           Beide Auto-Inject (Shortcut für oben)
+ *   --execute --dedupe-logos         Cleant mehrfache Logo-Blöcke (Phase 2.5c HOTFIX)
+ *   --execute --dedupe-eu            Cleant mehrfache EU-Boxes
+ *   --execute --dedupe-all           Beide Cleanups
  *   --execute --only=F-09            Filter auf 1 Template
  *   --rollback=<dir>                 Restore aus Backup-Dir
+ *
+ * Phase 2.5c HOTFIX (19.05.):
+ *   - LOGO_HEADER_HTML enthält KEINEN Marker mehr → keine Multiplikation bei Re-Runs
+ *   - Detection-Reihenfolge: hasLogo ZUERST (idempotent-skip), dann Marker, dann Auto-Inject
+ *   - KI-Template-Detection via Token-IN-Name (statt Prefix) — erkennt "PROVA – F-09 – ..."
+ *   - --dedupe-logos / --dedupe-eu cleant bestehende Duplikate aus Phase-2.5-Bug
  * ═══════════════════════════════════════════════════════════════════════
  */
 
@@ -36,24 +45,26 @@ const BACKUPS_ROOT = path.join(__dirname, 'pdfmonkey-backups');
 const AUDIT_DIR = path.join(__dirname, '..', 'docs');
 
 // ── Constants ───────────────────────────────────────────────────────────
-const KI_TEMPLATE_PREFIXES = ['F-04', 'F-09', 'F-15', 'F-19', 'KI-'];
+// MEGA-Marathon Phase 2.5c HOTFIX: Identifier-Tokens (überall im Template-Namen, nicht nur Prefix)
+const KI_TEMPLATE_TOKENS = ['F-04', 'F-09', 'F-10', 'F-11', 'F-12', 'F-13', 'F-14', 'F-15', 'F-16', 'F-17', 'F-18', 'F-19', 'KURZGUTACHTEN', 'GUTACHTEN', 'BEWEISSICHERUNG', 'WERTGUTACHTEN', 'GERICHTSGUTACHTEN', 'SCHIEDSGUTACHTEN', 'BAUMAENGEL', 'BRANDSCHADEN', 'ELEMENTARSCHADEN', 'FEUCHTE', 'SCHIMMEL', 'ERGAENZUNG', 'BAUABNAHME'];
 
+// MEGA-Marathon Phase 2.5c HOTFIX: KEIN Marker mehr im Replacement-HTML
+// (vorher: Marker enthalten → jeder Re-Run multiplizierte Block)
 const LOGO_HEADER_HTML =
-  '<!-- PROVA-LOGO-HEADER -->\n' +
-  '<div class="prova-pdf-logo" style="margin-bottom:18px;text-align:left;">' +
+  '<div class="prova-pdf-logo" data-prova-component="logo-header" style="margin-bottom:18px;text-align:left;">' +
   '<img src="https://prova-systems.de/img/logo-prova-systems.svg" alt="PROVA Systems" style="height:42px;width:auto;">' +
   '</div>';
 
 const EU_AI_ACT_BOX_HTML =
-  '<!-- EU-AI-ACT-DISCLOSURE -->\n' +
-  '<div class="prova-pdf-ai-disclosure" style="margin-top:14px;padding:10px 14px;border-left:3px solid #4f8ef7;background:#f5f7fb;font-size:11px;color:#374151;line-height:1.5;">' +
+  '<div class="prova-pdf-ai-disclosure" data-prova-component="eu-ai-act" style="margin-top:14px;padding:10px 14px;border-left:3px solid #4f8ef7;background:#f5f7fb;font-size:11px;color:#374151;line-height:1.5;">' +
   '<strong>Hinweis nach EU AI Act Art. 50 und § 407a ZPO:</strong> Teile dieses Dokuments wurden mit KI-Unterstützung erstellt. ' +
   'Alle fachlichen Schlussfolgerungen und Bewertungen wurden vom Sachverständigen persönlich vorgenommen und vor Ausstellung des Gutachtens überprüft.' +
   '</div>';
 
 // Detection-Regexes für „existiert schon"-Check (Skip-Heuristiken)
-const LOGO_EXISTS_RE = /<img[^>]*src=["'][^"']*(prova-systems\.de\/img\/logo|logo-prova|logo[_-]?prova)/i;
-const EU_AI_ACT_EXISTS_RE = /(EU\s*AI\s*Act|EU-AI-Act|Art\.?\s*50|EU\s+AI-Verordnung)/i;
+// Phase 2.5c: prova-pdf-logo-class + data-attribute werden auch erkannt (idempotenter Self-Check)
+const LOGO_EXISTS_RE = /<img[^>]*src=["'][^"']*(prova-systems\.de\/img\/logo|logo-prova|logo[_-]?prova)|class=["'][^"']*prova-pdf-logo|data-prova-component=["']logo-header/i;
+const EU_AI_ACT_EXISTS_RE = /(EU\s*AI\s*Act|EU-AI-Act|Art\.?\s*50|EU\s+AI-Verordnung|data-prova-component=["']eu-ai-act)/i;
 const GPT_4O_RE = /\bgpt-4o(?!-mini|-realtime)\b/g;
 const GPT_4O_MINI_RE = /\bgpt-4o-mini\b/g;
 
@@ -105,12 +116,18 @@ async function patchTemplate(id, body, scssStyle) {
   return api('PATCH', `/document_templates/${id}`, payload);
 }
 
+// MEGA-Marathon Phase 2.5c: KI-Detection via Token-IN-Name (statt Prefix)
+function isKiTemplate(identifier) {
+  const up = String(identifier || '').toUpperCase();
+  return KI_TEMPLATE_TOKENS.some(t => up.includes(t.toUpperCase()));
+}
+
 // ── Audit-Engine ────────────────────────────────────────────────────────
 function auditTemplate(template) {
   const body = String(template.body || '');
   const scss = String(template.scss_style || template.style || '');
   const identifier = template.identifier || template.name || '?';
-  const isKi = KI_TEMPLATE_PREFIXES.some(p => identifier.startsWith(p));
+  const isKi = isKiTemplate(identifier);
 
   const hasLogo = LOGO_EXISTS_RE.test(body);
   const hasLogoMarker = /<!--\s*PROVA-LOGO-HEADER\s*-->/.test(body);
@@ -143,13 +160,50 @@ function auditTemplate(template) {
   };
 }
 
+// ── Dedupe-Helper (Phase 2.5c) ──────────────────────────────────────────
+// Cleant mehrfache Logo-/EU-Blöcke die durch frühere idempotenz-bugs entstanden sind.
+// Erkennt: <div class="prova-pdf-logo"...>...</div> (mit oder ohne data-attribute)
+// Pattern: matche ALL Logo-Blocks, behalte ersten, entferne Rest.
+function dedupeBlocks(body, componentName) {
+  // Greedy-Lazy-Match auf den ganzen div-Block. Vorsicht: muss vor allen Re-Patches laufen.
+  const blockRe = new RegExp(
+    '<div\\s+class=["\'][^"\']*prova-pdf-' + componentName + '[^"\']*["\'][^>]*>[\\s\\S]*?<\\/div>',
+    'gi'
+  );
+  const matches = body.match(blockRe) || [];
+  if (matches.length <= 1) return { body, removed: 0 };
+  // Behalte den ersten, entferne alle weiteren
+  let kept = false;
+  const newBody = body.replace(blockRe, m => {
+    if (!kept) { kept = true; return m; }
+    return '';
+  });
+  return { body: newBody, removed: matches.length - 1 };
+}
+
 // ── Patch-Engine ────────────────────────────────────────────────────────
 function applyPatches(template, opts) {
   let body = String(template.body || '');
   const changes = [];
   const skipped = [];
   const identifier = template.identifier || template.name || '?';
-  const isKi = KI_TEMPLATE_PREFIXES.some(p => identifier.startsWith(p));
+  const isKi = isKiTemplate(identifier);
+
+  // 0. DEDUPE (Phase 2.5c HOTFIX) — laeuft NUR mit --dedupe-logos / --dedupe-eu / --dedupe-all
+  if (opts.dedupeLogos || opts.dedupeAll) {
+    const r = dedupeBlocks(body, 'logo');
+    if (r.removed > 0) {
+      body = r.body;
+      changes.push({ patch: 'Dedupe Logo-Blöcke', count: r.removed });
+    }
+  }
+  if (opts.dedupeEu || opts.dedupeAll) {
+    const r = dedupeBlocks(body, 'ai-disclosure');
+    if (r.removed > 0) {
+      body = r.body;
+      changes.push({ patch: 'Dedupe EU-Boxes', count: r.removed });
+    }
+  }
 
   // 1. gpt-4o-mini ZUERST (sonst greift gpt-4o auch in gpt-4o-mini)
   const miniMatches = body.match(GPT_4O_MINI_RE);
@@ -165,40 +219,40 @@ function applyPatches(template, opts) {
     changes.push({ patch: 'gpt-4o → gpt-5.5', count: goMatches.length });
   }
 
-  // 3. Logo-Header
+  // 3. Logo-Header — REIHENFOLGE FIX (Phase 2.5c): hasLogo ZUERST
+  // Nach Dedupe nochmal frisch checken
   const hasLogo = LOGO_EXISTS_RE.test(body);
   const logoMarkerRe = /<!--\s*PROVA-LOGO-HEADER\s*-->/g;
   const hasLogoMarker = logoMarkerRe.test(body);
-  if (hasLogoMarker) {
+  if (hasLogo) {
+    skipped.push('Logo already present (idempotent skip)');
+  } else if (hasLogoMarker) {
     body = body.replace(logoMarkerRe, LOGO_HEADER_HTML);
     changes.push({ patch: 'Logo (Marker→Block)', count: 1 });
-  } else if (!hasLogo && opts.injectLogo) {
-    // Auto-Inject nach <body…> — Suche öffnenden body-Tag
+  } else if (opts.injectLogo) {
     const bodyOpenRe = /<body\b[^>]*>/i;
     if (bodyOpenRe.test(body)) {
       body = body.replace(bodyOpenRe, m => m + '\n' + LOGO_HEADER_HTML);
       changes.push({ patch: 'Logo (Auto-Inject nach <body>)', count: 1 });
     } else {
-      // Kein <body>-Tag (Fragment-Template) → prepend
       body = LOGO_HEADER_HTML + '\n' + body;
       changes.push({ patch: 'Logo (Auto-Inject prepend, kein <body>)', count: 1 });
     }
-  } else if (hasLogo) {
-    skipped.push('Logo already present');
-  } else if (!opts.injectLogo) {
+  } else {
     skipped.push('Logo missing (use --inject-logo to force)');
   }
 
-  // 4. EU AI Act Disclosure (nur KI-Templates)
+  // 4. EU AI Act Disclosure (nur KI-Templates) — REIHENFOLGE FIX: hasEuBox ZUERST
   if (isKi) {
     const hasEuBox = EU_AI_ACT_EXISTS_RE.test(body);
     const euMarkerRe = /<!--\s*EU-AI-ACT-DISCLOSURE\s*-->/g;
     const hasEuMarker = euMarkerRe.test(body);
-    if (hasEuMarker) {
+    if (hasEuBox) {
+      skipped.push('EU-AI-Act already present (idempotent skip)');
+    } else if (hasEuMarker) {
       body = body.replace(euMarkerRe, EU_AI_ACT_BOX_HTML);
       changes.push({ patch: 'EU-AI-Act (Marker→Block)', count: 1 });
-    } else if (!hasEuBox && opts.injectEuDisclosure) {
-      // Auto-Inject vor </body> — falls vorhanden
+    } else if (opts.injectEuDisclosure) {
       const bodyCloseRe = /<\/body>/i;
       if (bodyCloseRe.test(body)) {
         body = body.replace(bodyCloseRe, '\n' + EU_AI_ACT_BOX_HTML + '\n</body>');
@@ -207,9 +261,7 @@ function applyPatches(template, opts) {
         body = body + '\n' + EU_AI_ACT_BOX_HTML;
         changes.push({ patch: 'EU-AI-Act (Auto-Inject append)', count: 1 });
       }
-    } else if (hasEuBox) {
-      skipped.push('EU-AI-Act already present');
-    } else if (!opts.injectEuDisclosure) {
+    } else {
       skipped.push('EU-AI-Act missing (use --inject-eu-disclosure to force, KI-Template)');
     }
   }
@@ -351,6 +403,10 @@ async function main() {
   const injectAll = args.includes('--inject-all');
   const injectLogo = injectAll || args.includes('--inject-logo');
   const injectEuDisclosure = injectAll || args.includes('--inject-eu-disclosure');
+  // MEGA-Marathon Phase 2.5c HOTFIX: Dedupe-Cleanup-Flags
+  const dedupeAll = args.includes('--dedupe-all');
+  const dedupeLogos = dedupeAll || args.includes('--dedupe-logos');
+  const dedupeEu = dedupeAll || args.includes('--dedupe-eu');
   const onlyMatch = args.find(a => a.startsWith('--only=') || a.startsWith('--only:'));
   const onlyTemplate = onlyMatch ? onlyMatch.split(/[=:]/)[1] : null;
   const rollbackMatch = args.find(a => a.startsWith('--rollback='));
@@ -383,8 +439,8 @@ async function main() {
     console.log(`📦 Backup-Dir: ${backupDir}`);
   }
 
-  const opts = { injectLogo, injectEuDisclosure };
-  console.log(`⚙ Optionen: inject-logo=${injectLogo}, inject-eu-disclosure=${injectEuDisclosure}`);
+  const opts = { injectLogo, injectEuDisclosure, dedupeLogos, dedupeEu, dedupeAll };
+  console.log(`⚙ Optionen: inject-logo=${injectLogo}, inject-eu-disclosure=${injectEuDisclosure}, dedupe-logos=${dedupeLogos}, dedupe-eu=${dedupeEu}`);
 
   const report = [];
   const indexEntries = {};
