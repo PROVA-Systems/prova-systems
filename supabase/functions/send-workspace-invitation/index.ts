@@ -21,7 +21,17 @@ interface ReqBody {
   email?: string;
   rolle?: string;
   persoenliche_nachricht?: string;
+  founding_invite?: boolean;  // MEGA88-D Block C
 }
+
+// MEGA88-D Block C: Super-Admins die Founding-Invites senden duerfen
+const SUPER_ADMINS = new Set([
+  'marcel.schreiber891@gmail.com',
+  'marcel@prova-systems.de',
+  'marcel.schreiber@prova-systems.de',
+  'kontakt@prova-systems.de',
+  'admin@prova-systems.de'
+]);
 
 const ALLOWED_ROLES = new Set(['owner', 'admin', 'sv', 'assistenz', 'readonly']);
 
@@ -39,6 +49,8 @@ const handler = async (req: Request): Promise<Response> => {
   const email = String(body.email ?? '').trim().toLowerCase();
   const rolle = String(body.rolle ?? 'sv').trim();
   const msg = String(body.persoenliche_nachricht ?? '').trim();
+  // MEGA88-D Block C: Founding-Invite-Flag — nur von Super-Admins gesetzt
+  const foundingInvite = body.founding_invite === true && SUPER_ADMINS.has((ctx.user.email || '').toLowerCase());
 
   if (!workspaceId) throw new HttpError('workspace_id required', 400);
   if (!email.match(/^[^@\s]+@[^@\s]+\.[^@\s]+$/)) throw new HttpError('Invalid email', 400);
@@ -61,6 +73,12 @@ const handler = async (req: Request): Promise<Response> => {
 
   // Invitation einfuegen (Service-Client falls RLS strikt)
   const svc = createServiceClient();
+  // MEGA88-D Block C: founding-Flag in persoenliche_nachricht JSON-encoded mit "founding"-Marker
+  // (workspace_invitations-Tabelle hat keine eigene Spalte — Marcel-Migration optional Pass 3+)
+  const msgPayload = foundingInvite
+    ? (msg ? msg + '\n\n[FOUNDING-MARKER: 90-Tage-Trial + Founding-Coupon]' : '[FOUNDING-MARKER: 90-Tage-Trial + Founding-Coupon]')
+    : (msg || null);
+
   const { data: inv, error: iErr } = await svc.from('workspace_invitations').insert({
     workspace_id: workspaceId,
     eingeladen_von_user_id: ctx.user.id,
@@ -70,7 +88,7 @@ const handler = async (req: Request): Promise<Response> => {
     status: 'offen',
     versendet_at: new Date().toISOString(),
     ablauf_at: ablaufAt,
-    persoenliche_nachricht: msg || null
+    persoenliche_nachricht: msgPayload
   }).select('id').single();
   if (iErr) throw new HttpError(`Insert fail: ${iErr.message}`, 500);
 

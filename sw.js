@@ -5,7 +5,7 @@
               Network-Only für APIs
 ============================================================ */
 
-const CACHE_VERSION = 'prova-v3950-mega89-pilot-security';   // MEGA⁸⁹ Pilot-Security-Hardening 2026-05-18: Block A Migration 67+68 (workspace_is_writable() Helper + Policy-Patches auf 21 User-Content-Tabellen — Hard-Lock fuer pausierte/gekuendigte Workspaces, Read-Policies unveraendert fuer DSGVO) + Block B Migration 69 (cron_lock_expired_trials täglich 02:00 UTC via pg_cron + Audit-Trail-Eintrag pro lock) + Block C Migration 70 (record_user_login Function für atomares Login-Tracking) + app-login-logic.js Frontend-Hook + lib/prova-session-heartbeat.js (5min-Heartbeat auf last_activity_at, in dashboard.html eingebaut) + Block D admin-kpis 2FA-Anzeige fixed (owner.totp_enabled statt require_2fa_for_admins) + Block E Migration 71 (suspicious_activity_v1 View mit high/medium-Klassifizierung) + admin-suspend-workspace Edge + Cockpit-Suspicious-Section mit 1-Click-Sperren + Block F Conversion-Funnel-Section (5 Steps: Registered → Workspace → 1.Auftrag → 1.PDF → Paid mit Drop-off-%). Sprint-Historie: docs/SW-VERSION-HISTORY.md.
+const CACHE_VERSION = 'prova-v3960-mega-marathon-merging';   // MEGA-Marathon Phase 2 merge 2026-05-19: MEGA89 (RLS Hard-Lock + Auto-Trial-Expiry + Login-Tracking + Cockpit-Polish, v3950-mega89-pilot-security) + MEGA88-D (Coupon-Security + 90d-Trial, v3950-mega88-d-coupon-security) konsolidiert. Final-Tag nach Phase 5: v4000-pilot-launch-ready. Sprint-Historie: docs/SW-VERSION-HISTORY.md.
 const SYNC_TAG = 'prova-sync-queue';
 
 const APP_SHELL = [
