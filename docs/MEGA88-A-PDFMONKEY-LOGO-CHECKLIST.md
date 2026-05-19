@@ -1,6 +1,28 @@
 # MEGA⁸⁸-A Block G — PDFmonkey-Logo-Checklist
 
-**Stand:** 2026-05-17 · Marcel-Task (CC kann PDFmonkey-Dashboard nicht direkt patchen)
+**Stand:** 2026-05-19 (Update) · Marcel-Task (CC kann PDFmonkey-Dashboard nicht direkt patchen)
+
+---
+
+## ⚡ UPDATE 2026-05-19: Bulk-Patch-Tool verfügbar
+
+**Statt manueller Patches:** nutze `tools/pdfmonkey-bulk-patch.js` (MEGA-Marathon Phase 2.5). Komplette REST-API-Automation mit Dry-Run, Backup, Rollback.
+
+**Workflow:**
+1. **Einmalig** in jedem Template HTML-Marker einbauen (Liste unten in der Liquid-Snippets-Sektion):
+   ```html
+   <!-- PROVA-LOGO-HEADER -->        ← Tool ersetzt das mit Logo-Block
+   <!-- EU-AI-ACT-DISCLOSURE -->     ← Tool ersetzt das mit Disclosure-Box (nur KI-Templates)
+   ```
+2. **Bulk-Patch ausführen:**
+   ```bash
+   $env:PDFMONKEY_API_KEY = "..."   # einmalig
+   node tools/pdfmonkey-bulk-patch.js --dry-run
+   node tools/pdfmonkey-bulk-patch.js --execute
+   ```
+3. Vollständige Doku: `tools/pdfmonkey-README.md`
+
+Die Original-Manual-Checklist unten bleibt als Referenz für die einmalige Marker-Einbau-Aktion + für Templates ohne API-Zugriff.
 
 ---
 

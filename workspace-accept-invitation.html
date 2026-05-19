@@ -119,6 +119,16 @@ window.accept = async function(invId, wsId, rolle) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('Nicht eingeloggt');
 
+    // MEGA88-D Block C: Founding-Marker aus persoenliche_nachricht erkennen
+    let isFoundingInvite = false;
+    try {
+      const { data: invRow } = await supabase.from('workspace_invitations')
+        .select('persoenliche_nachricht').eq('id', invId).maybeSingle();
+      if (invRow && invRow.persoenliche_nachricht && invRow.persoenliche_nachricht.includes('[FOUNDING-MARKER:')) {
+        isFoundingInvite = true;
+      }
+    } catch(_) {}
+
     // INSERT in workspace_memberships
     const { error: mErr } = await supabase.from('workspace_memberships').insert({
       workspace_id: wsId,
@@ -129,6 +139,18 @@ window.accept = async function(invId, wsId, rolle) {
       invited_at: new Date().toISOString()
     });
     if (mErr && !String(mErr.message).includes('duplicate key')) throw mErr;
+
+    // MEGA88-D Block C: Founding-Status auf Workspace setzen (wenn Marker erkannt)
+    if (isFoundingInvite) {
+      try {
+        const trialEnde90d = new Date(Date.now() + 90 * 86400000).toISOString();
+        await supabase.from('workspaces').update({
+          founding_status: 'founding_member',
+          founding_assigned_at: new Date().toISOString(),
+          abo_trial_endet_am: trialEnde90d
+        }).eq('id', wsId);
+      } catch(e) { console.warn('[founding-assign]', e.message); }
+    }
 
     // Invitation-Status updaten
     await supabase.from('workspace_invitations').update({

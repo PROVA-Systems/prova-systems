@@ -232,8 +232,16 @@ async function register() {
     var userData = await res.json();
 
     // Session direkt setzen — kein Token-Call nötig
+    // MEGA88-D Block B: Founding-Pfad via URL-Param ?founding=1 (Marcel-Link)
+    //   oder ?pilot=1 für Pilot-Tester. Beide bekommen 90-Tage-Trial statt 14.
+    var urlParams = new URLSearchParams(location.search);
+    var isFoundingSignup = urlParams.get('founding') === '1';
+    var isPilotSignup = urlParams.get('pilot') === '1';
+    var foundingStatus = isPilotSignup ? 'pilot_tester' : (isFoundingSignup ? 'founding_member' : 'standard');
+    var trialDays = (foundingStatus === 'standard') ? 14 : 90;
+
     var trialStart = new Date().toISOString();
-    var trialEnde = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000);
+    var trialEnde = new Date(Date.now() + trialDays * 24 * 60 * 60 * 1000);
     var trialEndeFormatted = trialEnde.toLocaleDateString('de-DE');
     var trialEndeISO = trialEnde.toISOString();
 
@@ -251,7 +259,12 @@ async function register() {
     localStorage.setItem('prova_paket', 'Solo');
     localStorage.setItem('prova_status', 'Trial');
     localStorage.setItem('prova_trial_start', trialStart);
-    localStorage.setItem('prova_trial_days', '14');
+    localStorage.setItem('prova_trial_days', String(trialDays));
+    // MEGA88-D: Founding-Marker für post-Login workspace_status-Sync (Backend-Hook liest das)
+    localStorage.setItem('prova_founding_status_pending', foundingStatus);
+    if (foundingStatus !== 'standard') {
+      localStorage.setItem('prova_founding_signup', '1');
+    }
 
     // Willkommensmail auslösen (Make.com L1 Webhook)
     try {
@@ -266,7 +279,9 @@ async function register() {
           paket: 'Solo',
           trial_start: trialStart,
           trial_ende: trialEndeISO,
-          trial_ende_formatted: trialEndeFormatted
+          trial_ende_formatted: trialEndeFormatted,
+          trial_days: trialDays,
+          founding_status: foundingStatus
         })
       });
     } catch(e) { /* Nicht blockierend */ }

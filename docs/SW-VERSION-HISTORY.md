@@ -8,16 +8,44 @@ Format: **vNNNN-marker** | YYYY-MM-DD | Sprint | Kurz-Note
 
 ---
 
+## 2026-05-19 — MEGA-Serie #18 (MEGA-Marathon PILOT-LAUNCH-READY) ⭐
+
+**v4000-pilot-launch-ready** | 2026-05-19 | MEGA-Marathon 5-Phasen + Phase 2.5 NEU
+- **Phase 1**: Migrationen 67-72 alle applied via MCP. Cron-Schedule live (job-id 11, daily 02:00 UTC). Founder-Exclude-Hotfix in Migration 72 (Marcel-Restore-Incident 19.05.).
+- **Phase 2**: MEGA88-D gemerged + Migration 63 (founding_status ENUM) + Marathon-Migration 73 (founding_assigned_by + extended_trial_days).
+- **Phase 2.5 NEU**: tools/pdfmonkey-bulk-patch.js (~250 Z) REST-API-Bulk-Patch-Tool für PDFmonkey-Templates. Patches: gpt-4o→gpt-5.5, Logo-Header (Master-SVG), EU AI Act Disclosure-Box (KI-Templates F-04/F-09/F-15/F-19). --dry-run/--execute/--only/--rollback. Backup-System mit ISO-Timestamp + _index.json. tools/pdfmonkey-README.md Marcel-Workflow. Ersetzt manuelle 16+ Template-Patches.
+- **Phase 3**: Button-Design-System lib/prova-button-tokens.css (~290 Z): 5 Varianten (primary/secondary/tertiary/destructive/success) × 3 Sizes (sm/md/lg) + States (default/hover/active/disabled/focus/loading) + Multi-Layer-Shadows (Stripe/Linear/Vercel-Style) + Hover-Lift (translateY -1px) + Press (inset shadow) + Loading-CSS-Spinner + Icon-only + Button-Group. Dark-Mode-Switch automatisch. Legacy-Compat-Bridge: .btn-primary/.es-btn/.cp-impersonate-btn/.bib-modal-btn auf Tokens gemappt → globaler Visual-Upgrade ohne HTML-Refactor. Eingebunden in einstellungen/akte/app/dashboard/admin-kpis (Marcel-Befund-Pages). docs/BUTTON-DESIGN-SYSTEM.md mit Decision-Tree + Code-Beispielen + A11y-Patterns.
+- **Phase 4 Polishing**: Resize-Listener bereits via O1-FIX in nav.js (MEGA86 Block F) — kein Code-Fix nötig.
+- **Phase 5 Final**: SW v3960→v4000-pilot-launch-ready + 2 neue CLAUDE.md Compounding Lessons (PDFmonkey-Bulk-Pattern + Button-Design-System-Patterns).
+
+---
+
+## 2026-05-19 — MEGA-Serie #17 (MEGA-Marathon Phase 2 Konsolidierung — Zwischenstand)
+
+**v3960-mega-marathon-merging** | 2026-05-19 | MEGA-Marathon Phase 2 Branches gemerged (Zwischenstand vor v4000)
+- Phase 1.2-1.5: Migrationen 67-71 + Hotfix-Migration 72 (cron_lock_expired_trials excludes founders) via MCP applied. Cron-Schedule live (job-id 11). Marcel-Workspaces restored (abo_status=aktiv + is_founder=true).
+
+---
+
 ## 2026-05-18 — MEGA-Serie #16 (MEGA⁸⁹ Pilot-Security-Hardening)
 
 **v3950-mega89-pilot-security** | 2026-05-18 | MEGA⁸⁹ Pilot-Security-Hardening + Cockpit-Polish
 - **Trigger-Event:** Leon Lottermoser registriert 02.05., Trial expired 16.05., kam noch rein bis 18.05. → Auto-Expiry fehlte komplett, RLS-Read-Only nicht enforced.
 - Block A RLS-Read-Only-Lock: Migration 67 (workspace_is_writable() SECURITY DEFINER Helper) + Migration 68 (Policy-Patches auf 21 User-Content-Tabellen — auftraege/kontakte/dokumente/fotos/audio/eintraege/fristen/termine/ortstermine/skizzen/notizen/befund_fragmente/anhaenge/documents/documents_versions/document_images/ki_feedback/shares/textbausteine/normen/positionen mit AND public.workspace_is_writable(workspace_id) in INSERT/UPDATE/DELETE/ALL — Read-Policies UNVERÄNDERT für DSGVO).
-- Block B Auto-Trial-Expiry: Migration 69 (cron_lock_expired_trials() Function + pg_cron Schedule täglich 02:00 UTC — lockt trial-Workspaces deren abo_trial_endet_am<NOW, setzt abo_status=pausiert + max_auftraege=0 + audit_trail-Eintrag pro Lock).
+- Block B Auto-Trial-Expiry: Migration 69 (cron_lock_expired_trials() Function + pg_cron Schedule täglich 02:00 UTC — lockt trial-Workspaces deren abo_trial_endet_am<NOW, setzt abo_status=pausiert + max_auftraege=0 + audit_trail-Eintrag pro Lock). Migration 72 Hotfix 19.05.: Function exkludiert is_founder=true Owner.
 - Block C Login-Tracking: Migration 70 (record_user_login() atomarer Insert user_sessions + users.last_login_at + audit_trail) + app-login-logic.js _completeLogin ruft Function via supabase.rpc nach _completeLogin (idempotent via sessionStorage-Token-Hash) + lib/prova-session-heartbeat.js NEU (5min-Heartbeat auf users.last_active_at + user_sessions.last_activity_at, skipt bei visibilityState=hidden, in dashboard.html eingebaut).
 - Block D Cockpit-2FA-Fix: admin-kpis.html loadWorkspaces() Query refactored — JOIN workspace_memberships+users für owner.totp_enabled, ersetzt require_2fa_for_admins-Workspace-Setting in Anzeige. Filter no2fa nutzt jetzt owner_has_2fa.
 - Block E Suspicious-Activity: Migration 71 (suspicious_activity_v1 View mit high/medium-Klassifizierung — high=3+ Logins + 0 Aufträge + 7d alt, medium=1+ Login + 0 Aufträge + 14d alt) + supabase/functions/admin-suspend-workspace Edge NEU (Marcel-only, setzt abo_status=pausiert + Owner-Ban via auth.admin.updateUserById 30d + audit-log-v1) + admin-kpis.html Section mit 1-Click-Sperren-Button (Confirm-Modal mit Reason-Pflicht min 10 chars).
 - Block F Conversion-Funnel: admin-kpis.html neue Section mit 5 Steps (Registered → Workspace → 1.Auftrag → 1.PDF → Paid) + Bar-Chart per Step mit Drop-off-% (Color-Coded grün/orange/rot bei >30/>50%).
+
+---
+
+## 2026-05-18 — MEGA-Serie #15 (MEGA⁸⁸-D Coupon-Security + Founding-90d)
+
+**v3950-mega88-d-coupon-security** | 2026-05-18 | MEGA⁸⁸-D Coupon-Security + Founding-Trial-90d
+- Block A SECURITY (P0): FOUNDING-99 hartcoded aus lib/prova-onboarding-tour.js entfernt. Step 5 wird dynamisch via `_resolveCouponStep()` aus `workspaces.founding_status` befüllt. Standard-User sehen generischen 'Bereit für ersten Fall'-Step OHNE Coupon-Code. Founding/Pilot-Tester sehen Custom-Step mit Hinweis 'Coupon wird automatisch angewendet' — KEIN Code-Anzeige. Verhindert 80€/mo Verlust lifetime pro Missbrauch.
+- Block B Founding-Trial 90d: Migration 63 (workspaces.founding_status ENUM 'standard|founding_member|pilot_tester' DEFAULT 'standard' + founding_assigned_at + stripe_coupon_assigned + Index für non-standard). app-register.html: ?founding=1 / ?pilot=1 URL-Param-Detection → 90d Trial statt 14d + localStorage prova_founding_status_pending + Email-Webhook-Payload erweitert um trial_days + founding_status. lib/trial-banner.js: Founding-Variante mit 🌟 + 'Noch X Tage Founding-Trial — danach 99 €/mo lifetime (Coupon auto)'.
+- Block C Marcel-Founding-Invite-Tool: workspace-invite.html Founding-Tester-Checkbox (Marcel-only sichtbar via SUPER_ADMINS Email-Allow-List, _toggleFoundingField). send-workspace-invitation Edge: founding_invite-Flag → FOUNDING-MARKER in persoenliche_nachricht (workspace_invitations-Spalte). workspace-accept-invitation.html liest Marker beim Accept und setzt workspaces.founding_status='founding_member' + abo_trial_endet_am=NOW+90d.
 
 ---
 

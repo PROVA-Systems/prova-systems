@@ -77,6 +77,14 @@ textarea{resize:vertical;min-height:80px;}
     <textarea id="msg" placeholder="Hi! Ich lade dich zu meinem PROVA-Workspace ein …"></textarea>
     <div class="help">Wird in der Einladungs-Email angezeigt.</div>
   </div>
+  <!-- MEGA88-D Block C: Founding-Tester-Checkbox (Marcel-only sichtbar via super_admin) -->
+  <div class="field" id="founding-field" style="display:none;">
+    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;color:#fcd34d;">
+      <input type="checkbox" id="founding-flag" style="width:auto;">
+      <span>🌟 Als <strong>Founding-Tester</strong> einladen (90 Tage kostenlos statt 14)</span>
+    </label>
+    <div class="help" style="margin-left:24px;">Nur für Marcel sichtbar — setzt founding_status='founding_member' beim Accept.</div>
+  </div>
   <button class="btn" id="send-btn" onclick="sendInvite()">📨 Einladung senden</button>
   <a href="/einstellungen.html" class="btn btn-ghost" style="margin-left:8px;text-decoration:none;display:inline-block;">Abbrechen</a>
   <div id="msg" style="display:none;"></div>
@@ -93,6 +101,18 @@ const ROLLE_INFOS = {
   admin: 'Admin — Stellvertreter mit can_invite/billing/export/delete-Rechten.',
   readonly: 'Read-Only — nur lesen, keine Änderungen möglich (z.B. für Share-Links).'
 };
+
+// MEGA88-D Block C: Founding-Checkbox nur für Marcel (super_admin Email-Allow-List) sichtbar
+(async function _toggleFoundingField(){
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    const SUPER_ADMINS = ['marcel.schreiber891@gmail.com','marcel@prova-systems.de','marcel.schreiber@prova-systems.de','kontakt@prova-systems.de','admin@prova-systems.de'];
+    if (user && SUPER_ADMINS.includes((user.email || '').toLowerCase())) {
+      const ff = document.getElementById('founding-field');
+      if (ff) ff.style.display = 'block';
+    }
+  } catch(_) {}
+})();
 
 document.getElementById('rolle').addEventListener('change', (e) => {
   document.getElementById('rolle-info').textContent = ROLLE_INFOS[e.target.value] || '';
@@ -122,7 +142,11 @@ window.sendInvite = async function() {
     const res = await fetch(url + '/functions/v1/send-workspace-invitation', {
       method: 'POST',
       headers: { 'Content-Type':'application/json', 'Authorization':'Bearer ' + session.access_token, 'apikey': window.PROVA_CONFIG.SUPABASE_ANON_KEY },
-      body: JSON.stringify({ workspace_id: wsId, email, rolle, persoenliche_nachricht: msg })
+      body: JSON.stringify({
+        workspace_id: wsId, email, rolle,
+        persoenliche_nachricht: msg,
+        founding_invite: !!document.getElementById('founding-flag')?.checked  // MEGA88-D Block C
+      })
     });
     if (!res.ok) {
       const err = await res.text();
