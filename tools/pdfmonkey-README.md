@@ -1,105 +1,120 @@
-# PDFmonkey Bulk-Patch — Marcel-Workflow (MEGA-Marathon Phase 2.5)
+# PDFmonkey Bulk-Patch v2 — Marcel-Workflow (MEGA-Marathon Phase 2.5b)
 
-REST-API-basiertes Bulk-Patch-Tool für PROVA-PDFmonkey-Templates. Ersetzt manuelle Patches im Dashboard. Schreibt Logo-Header, EU-AI-Act-Disclosure, gpt-4o→gpt-5.5 in alle Templates auf einmal.
+REST-API-Tool für PROVA-PDFmonkey-Templates mit **intelligenter Detection** (kein Marker-Pflicht mehr) + Audit-Mode.
 
 ---
 
 ## Voraussetzung (einmalig)
 
-**1. Node.js 18+** (native `fetch` benötigt) — schon vorhanden im Repo.
+**Node.js 18+** + **PDFMONKEY_API_KEY**:
 
-**2. PDFMONKEY_API_KEY als Env-Var:**
-
-Windows PowerShell:
 ```powershell
+# Windows PowerShell
 $env:PDFMONKEY_API_KEY = "dein_pdfmonkey_api_key"
 ```
-
-Bash/zsh:
 ```bash
+# Bash/zsh
 export PDFMONKEY_API_KEY="dein_pdfmonkey_api_key"
 ```
 
-Key holst du aus dem PDFmonkey-Dashboard → Settings → API Keys.
+Key holst du aus PDFmonkey-Dashboard → Settings → API Keys.
 
 ---
 
-## Workflow
+## Empfohlener Workflow
 
-### 1. **Dry-Run zuerst — PREVIEW was geändert würde**
+### Schritt 1: AUDIT — kein Schreiben, nur Bericht
 ```bash
-node tools/pdfmonkey-bulk-patch.js --dry-run
+node tools/pdfmonkey-bulk-patch.js --audit
 ```
-Zeigt Tabelle: `template-id | status | changes`. Status:
-- `preview`: würde gepatcht werden
-- `no_changes`: nichts zu tun (Patch-Marker fehlen)
-- `no_body`: Template hat kein body-Feld
+- Listet pro Template: Logo-Status, EU-Box-Status, gpt-4o-Count, Font-Audit, Recommended Actions
+- Schreibt `docs/PDFMONKEY-TEMPLATE-AUDIT-<YYYY-MM-DD>.md` mit kompletter Tabelle + Summary
+- Output: „X Templates brauchen Logo-Inject, Y brauchen EU-Box, Z gpt-4o-Updates"
+- **Mit konkreten Run-Befehlen am Ende.**
 
-### 2. **Wenn OK: echte Patches mit Backup**
+### Schritt 2: DRY-RUN — Preview was Patches ändern würden
 ```bash
+node tools/pdfmonkey-bulk-patch.js --dry-run --inject-logo --inject-eu-disclosure
+```
+Zeigt Tabelle mit `status=preview` und Skip-Reasons.
+
+### Schritt 3: EXECUTE — echte Patches mit Backup
+```bash
+# Nur gpt-4o-Fixes + Marker-Patches (keine Auto-Injects)
 node tools/pdfmonkey-bulk-patch.js --execute
-```
-- Erstellt `tools/pdfmonkey-backups/<ISO-timestamp>/` mit Original-Body pro Template + `_index.json`
-- Sendet PATCH-Requests an PDFmonkey-API
-- Output: `patched | error | no_changes` pro Template
 
-### 3. **Filter auf ein einzelnes Template (z.B. F-09)**
+# Plus Logo-Auto-Inject (für Templates ohne Logo und ohne Marker)
+node tools/pdfmonkey-bulk-patch.js --execute --inject-logo
+
+# Plus EU-Box-Auto-Inject (für KI-Templates ohne EU-Erwähnung)
+node tools/pdfmonkey-bulk-patch.js --execute --inject-eu-disclosure
+
+# Alle Injects auf einmal
+node tools/pdfmonkey-bulk-patch.js --execute --inject-all
+
+# Filter auf ein Template
+node tools/pdfmonkey-bulk-patch.js --execute --inject-all --only=F-09
+```
+
+### Schritt 4: ROLLBACK falls nötig
 ```bash
-node tools/pdfmonkey-bulk-patch.js --execute --only=F-09
+node tools/pdfmonkey-bulk-patch.js --rollback=tools/pdfmonkey-backups/2026-05-19T19-29-00-000Z
 ```
 
-### 4. **Rollback** (aus Backup-Dir)
-```bash
-node tools/pdfmonkey-bulk-patch.js --rollback=tools/pdfmonkey-backups/2026-05-19T18-30-00-000Z
-```
-Restored alle Templates aus dem Backup-Dir auf ihren Original-Body.
+---
+
+## Intelligente Detection-Heuristiken
+
+### Logo-Detection
+- **Hat Logo?** Regex `<img src="…logo-prova|prova-systems.de/img/logo|logo[_-]?prova"`
+- Mit `--inject-logo`: wenn weder Logo noch Marker → injiziert Logo-Block nach `<body>` (oder prepend bei Fragment-Templates ohne body-Tag)
+
+### EU-AI-Act-Detection (nur KI-Templates F-04/F-09/F-15/F-19/KI-*)
+- **Hat EU-Box?** Regex matched `EU AI Act|EU-AI-Act|Art. 50|EU AI-Verordnung`
+- Mit `--inject-eu-disclosure`: wenn weder vorhanden noch Marker → injiziert Box vor `</body>` (oder append bei Fragment-Templates)
+
+### gpt-4o-Detection
+- `\bgpt-4o(?!-mini|-realtime)\b` → ersetzt durch `gpt-5.5`
+- `\bgpt-4o-mini\b` → ersetzt durch `gpt-5.5-instant`
+- **gpt-4o-mini wird ZUERST gepatcht** (Reihenfolge wichtig — sonst greift gpt-4o auch in gpt-4o-mini)
+
+### Font-Audit (CSS scss_style/style)
+- **OK:** Inter, JetBrains Mono (Design-System v1.0 konform)
+- **Flagged:** Source Serif 4, Helvetica, Arial, Montserrat — Marcel-Manual-Review empfohlen
 
 ---
 
-## Was wird gepatcht
+## Sicherheits-Garantien
 
-### Alle Templates
-1. **gpt-4o → gpt-5.5** (Modell-Naming-Update, MEGA84/85 Direktive)
-2. **gpt-4o-mini → gpt-5.5-instant**
-3. **Logo-Header**: Stellen mit Marker `<!-- PROVA-LOGO-HEADER -->` bekommen Master-SVG eingebaut
-
-### Nur KI-Templates (F-04, F-09, F-15, F-19, KI-*)
-4. **EU AI Act Art. 50 Disclosure-Box**: Marker `<!-- EU-AI-ACT-DISCLOSURE -->` wird ersetzt durch verbindlichen Wortlaut
-
-### Wichtig: Marker-Approach
-Templates müssen die HTML-Comment-Marker enthalten (siehe `docs/MEGA88-A-PDFMONKEY-LOGO-CHECKLIST.md`). Falls Marker fehlt → kein Patch (status `no_changes`). Marker einmalig in PDFmonkey-Dashboard einbauen, danach Bulk-Tool für alle künftigen Patches nutzen.
+- **Backup vor jedem `--execute`** in `tools/pdfmonkey-backups/<ISO-timestamp>/` + `_index.json`
+- **Rollback** über `--rollback=<dir>` getestet
+- **Idempotent:** zweiter `--execute`-Run findet nichts mehr zu tun (Logo erkannt, gpt-5.5 schon da)
+- **`--dry-run` ist Default** — ohne expliziten Mode-Flag läuft nichts
 
 ---
 
-## Patches erweitern
+## CLI-Reference
 
-Editiere `tools/pdfmonkey-bulk-patch.js` → `PATCHES`-Array. Schema:
-```js
-{
-  name: 'Beschreibung',
-  regex: /pattern/g,        // ODER detect: /pattern/g
-  replacement: 'neuer Text',
-  applyToAll: true          // ODER applyToKiTemplates: true
-}
-```
-
-Nach Erweiterung: `--dry-run` zuerst, dann `--execute`.
-
----
-
-## Sicherheit
-
-- **Backup ist Pflicht vor jedem `--execute`** — Tool macht das automatisch
-- **Rollback ist getestet** über `--rollback=<dir>`-Pfad — Restored via PATCH der gesicherten Bodies
-- **--dry-run ist Default-Fallback** — ohne `--execute` läuft nichts gegen Production
-- **API-Key niemals committen** — nur Env-Var
+| Flag | Wirkung |
+|---|---|
+| `--audit` | Nur Bericht + `PDFMONKEY-TEMPLATE-AUDIT-<date>.md` schreiben |
+| `--dry-run` | Preview was gepatcht würde, kein Schreiben |
+| `--execute` | Echte Patches mit Backup |
+| `--inject-logo` | Auto-Inject Logo nach `<body>` auch ohne Marker |
+| `--inject-eu-disclosure` | Auto-Inject EU-Box vor `</body>` auch ohne Marker (KI-Templates) |
+| `--inject-all` | Shortcut: beide Auto-Injects |
+| `--only=<id>` | Filter auf 1 Template (z.B. `--only=F-09`) |
+| `--rollback=<dir>` | Restore aus Backup-Dir |
 
 ---
 
-## Acceptance MEGA-Marathon Phase 2.5
+## Acceptance (MEGA-Marathon Phase 2.5b)
 
-- [x] Tool läuft `--dry-run` ohne Errors
-- [x] Backup-Dir wird angelegt vor `--execute`
-- [x] Rollback-Mode funktional (auch wenn nicht aktiv getestet)
-- [x] Patches-Array erweiterbar
-- [x] Marcel-Anleitung in dieser README
+- [x] `--audit` Mode ohne API-Calls testen lokal
+- [x] Auto-Inject-Logic für Logo (nach `<body>`)
+- [x] Auto-Inject-Logic für EU-AI-Act (vor `</body>`, nur KI-Templates)
+- [x] Detection-Heuristiken für „schon vorhanden" Skip
+- [x] gpt-4o-mini-Fix vor gpt-4o-Fix (Reihenfolge-Bug verhindert)
+- [x] CSS-Font-Audit (Inter/JetBrains OK, Source Serif/Helvetica/Arial/Montserrat geflagged)
+- [x] Markdown-Audit-Report-Generierung
+- [x] Verbesserter Output mit Skip-Reasons + Concrete-Recommendations
